@@ -110,6 +110,22 @@ completebar — und genau den wieder loszuwerden ist `clear`s Aufgabe.
 etwas taugt: welche Clients im Buffer `codeActionProvider` melden, welche
 CodeActionKinds auf der Allowlist stehen, und ob gerade eine Markierung steht.
 
+## Auto-Restart nach Absturz
+
+| Command | Range | Effect |
+| --- | --- | --- |
+| `:Lsp autorestart [action]` | — | `action` ∈ `toggle` (Default), `on`, `off`, `status` |
+
+Kein Filetype-Argument und kein Keymap: anders als die Hint- und
+Indikator-Schalter wird der hier einmal gesetzt und dann nicht mehr angefasst.
+
+`status` ist die Ausgabe, die man liest, *nachdem* etwas schiefging: welcher
+Server fehlgeschlagene Versuche auf dem Konto hat, woran der letzte scheiterte,
+und wie weit der Backoff gekommen war. Es ist derselbe Zaehler, den
+`:LspDoctor startup` unter „Attempts" anzeigt — bis 2026-08-30 las der aus
+`lsp.usercmds.state`, einem Modul, das es nie gab, und stand deshalb immer auf
+0.
+
 ## Log
 
 | Command | Range | Effect |
@@ -237,6 +253,10 @@ mit einer enum also gar nicht ausdruecken.
   aus dem `:Bindings check` seine Vergleichsbasis zieht.
 - 2026-08-29 (2): `:Lsp hints` aus Roadmap-QW3 aufgenommen.
 - 2026-08-30: `:Lsp lightbulb` aus Roadmap-M2 aufgenommen.
+- 2026-08-30 (2): `:Lsp autorestart` aus Roadmap-M3 aufgenommen. Dabei
+  gefunden: `:Lsp restart <server>` stoppte den Client und startete ihn nie
+  wieder — die Config-Suche ging ueber `vim.lsp.config.get()`, das es auf
+  Neovim 0.12 nicht gibt. Behoben.
 - 2026-08-29 (5): `:Bindings check` hat beim Nachziehen von (4) einen
   Verweis auf `:LspStart` gemeldet — den Command gibt es nicht, er heisst
   `:LspStartHere` bzw. `:Lsp start`. Der Text stammte aus dem Plugin selbst,

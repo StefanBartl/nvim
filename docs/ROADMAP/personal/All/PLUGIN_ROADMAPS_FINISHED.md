@@ -32,6 +32,7 @@ Querverweis von aussen weiter aufgeht.
   - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor probe`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-probe)
   - [M16 · `lib.nvim` — `deps.health`-Migrationen](#m16-libnvim-depshealth-migrationen)
   - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
+  - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
 
 ---
 
@@ -1209,3 +1210,103 @@ plus Korrektur der Preset-Zeile, die noch auf 44/28 stand und seit QW3 falsch
 war — jetzt 47/31), `Usercmds/lsp.nvim.md` (neuer Abschnitt) und
 `Autocmds/lsp.nvim.md` (neue Augroup `lsp_nvim_lightbulb` plus die Kopfzahl
 oben).
+
+
+---
+
+### M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash
+
+**Erledigt am 2026-08-30. `lua/lsp/core/supervisor.lua`, 22 neue Specs.**
+
+Ursprünglich: „`core/attach.lua` hat heute keine Crash-Behandlung." Stimmte —
+79 Zeilen, keine Zeile davon über Exits. Der Punkt hat auch die richtige
+Reihenfolge vorgegeben: `usercmds/recovery.lua` führte bereits einen
+Versuchszähler, und darauf aufzusetzen statt danebenzubauen war die
+Vorbedingung, damit nicht zwei Stellen unabhängig mitzählen und sich im Report
+widersprechen.
+
+**Die eigentliche Schwierigkeit ist Absturz gegen Absicht, und sie ist nicht
+aus dem Exit-Code lösbar.** `vim.lsp.stop_client(id, true)` schickt SIGTERM —
+ein gewolltes `:Lsp restart` sieht am `on_exit` **exakt** aus wie ein Server,
+den der OOM-Killer erwischt hat. Beide Richtungen des Fehlers sind schlimm: rät
+man auf „Absturz", startet das Plugin neu, was man gerade gestoppt hat; rät man
+auf „Absicht", verpasst es genau den Fall, für den es existiert. Also wird
+Absicht **deklariert**: jeder gewollte Stopp im Plugin ruft vorher
+`expect_stop(id)`, und ein markierter Exit ist kein Absturz. Das betrifft
+`usercmds/stop.lua` (beide Pfade — der Graceful-Shutdown endet mit 0, der
+Force-Fallback mit SIGTERM), `usercmds/restart.lua` (beide Zweige) und
+`recovery.force_restart`.
+
+Drei weitere Exits zählen bewusst nicht als Absturz, jeder aus eigenem Grund:
+
+- **Ein sauberer Exit, den niemand verlangt hat** (`code == 0`, kein Signal).
+  Konstruktionsbedingt mehrdeutig; ein Neustart riskiert eine Schleife gegen
+  einen Server, der von sich aus fertig ist.
+- **Ein Exit während `:qa`.** `vim.v.exiting` ist erst gesetzt, wenn Neovim
+  schon abbaut — Clients sterben eine Spur davor. Deshalb zusätzlich ein
+  `VimLeavePre`-Flag.
+- **Ein Client, der starb, bevor er je attachte.** Es gibt keinen Namen und
+  keinen Buffer, in den er zurückgehörte — und ein Server, der *beim Start*
+  abstürzt, ist genau der Fall, in dem eine automatische Retry-Schleife
+  gefährlich ist. Der hat schon einen Besitzer: `:Lsp recover`.
+
+**Der Zähler wird durch Überleben zurückgesetzt, nicht durch Erfolg.** Ein neu
+gestarteter Client, der `reset_after_ms` später noch läuft, löscht ihn. Beim
+Attach zurückzusetzen wäre das Naheliegende und wäre falsch: ein Server, der
+zwei Sekunden nach jedem Attach abstürzt, würde ewig neu starten, weil jeder
+Attach den vorigen Absturz verzeiht.
+
+*Aufhängung*: `on_exit` einmal über `vim.lsp.config("*", …)` statt in jedem
+Servermodul — `"*"` wird in jede benannte Config gemergt, und die Auflösung ist
+lazy (auf 0.12.2 nachgemessen: auch eine *danach* registrierte Config bekommt
+den Hook). Ein Server, der morgen dazukommt, ist damit ohne Zutun überwacht.
+`on_exit` läuft im Fast-Event — ebenfalls nachgemessen — dort wird also nur
+eingesammelt und per `vim.schedule` entschieden.
+
+*Oberfläche*: `auto_restart = { enable, max_attempts, initial_delay_ms,
+max_delay_ms, reset_after_ms }` in den DEFAULTS, `:Lsp autorestart
+[toggle|on|off|status]`. **Kein Keymap** — anders als die Hint- und
+Indikator-Schalter wird der einmal gesetzt und nicht mehr angefasst; eine Taste
+dafür wäre eine Taste, die man nie drückt. `preset = "lean"` lässt ihn an, mit
+Begründung im Preset: er kostet nichts, solange nichts abstürzt, und eine
+schwache Maschine ist gerade die, auf der ein Server OOM-gekillt wird.
+
+**Zwei Bugs, beide in der Maschinerie, auf der das aufsetzt:**
+
+1. **`:Lsp restart <server>` hat noch nie etwas neu gestartet.** Die
+   Config-Suche lief über `vim.lsp.config.get()` — das gibt es auf Neovim 0.12
+   nicht (gegen 0.12.2 geprüft). Der Aufruf löste zu `nil` auf, der Lookup fiel
+   auf eine leere Tabelle durch, und das Kommando stoppte seinen Client und
+   meldete danach ein Scheitern, das von einem echten nicht zu unterscheiden
+   war. Läuft jetzt über `vim.lsp.config[name]`, und zwar in **einer**
+   Implementierung für Kommando und Supervisor.
+2. **`:LspDoctor startup` meldete immer „Attempts: 0".** Er las den Zähler aus
+   `lsp.usercmds.state` — ein Modul, das es in diesem Plugin nie gab. Der
+   `pcall` schlug also bei jedem Aufruf still fehl, während
+   `usercmds/recovery.lua` in eine Tabelle zählte, die niemand las, und der
+   Hinweis „Start failed — check `:LspLog`", den die Zahl freischaltet, konnte
+   nie erscheinen. Der Supervisor besitzt den Zähler jetzt für beide Seiten —
+   die verlangten Starts und die automatischen — und der Report liest daraus.
+
+*Verifiziert an einem echten abstürzenden Serverprozess*: ein minimaler
+stdio-LSP-Server (Node), der den `initialize`-Handshake beantwortet und beim
+ersten Lauf 1,2 s nach `initialized` mit Code 3 stirbt. Beobachtet: Client 1
+(PID 20084) attacht, stirbt, 400 ms später wird ein **zweiter Prozess** (PID
+37688) gestartet, Client 2 attacht, der Zähler fällt nach dem Überlebensfenster
+auf 0 zurück — und ein anschließend *deklarierter* Stopp desselben Clients
+(Exit 1, Signal 15, also die absturzähnlichste Variante) führt zu **keinem**
+Neustart und **keinem** Zähler. Der `:Lsp restart`-Fix separat am selben Server
+geprüft: id 1 → id 2, zwei Prozesse im Log, nicht als Absturz gezählt. Dazu:
+Suite grün über 20 Spec-Dateien, Smoke grün, `luacheck` 0/0 über 199 Dateien,
+`stylua` sauber, `gen_bindings.lua --check` sagt „current".
+
+*Nebenbefund, nicht mitgemacht*: `vim.lsp.stop_client()` ist auf 0.12
+deprecated und warnt bei jedem Stopp. Drei Aufrufstellen (`stop.lua`,
+`restart.lua`, `recovery.lua`); als eigene Aufgabe notiert, weil der Umbau auf
+`client:stop()` die Listen-Variante in `restart.lua` in eine Schleife auflösen
+muss und mit dem `expect_stop`-Vorlauf nicht kollidieren darf.
+
+*Bindings-Zettel*: `Usercmds/lsp.nvim.md` (neuer Abschnitt) und
+`Autocmds/lsp.nvim.md` (neue Augroup `lsp_nvim_supervisor`, Kopfzahl jetzt 31
+über 24). `Keymaps/lsp.nvim.md` nicht berührt — der Punkt fügt bewusst keine
+Taste hinzu.

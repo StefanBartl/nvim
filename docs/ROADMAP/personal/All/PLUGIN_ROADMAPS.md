@@ -33,7 +33,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
   - [1.2 Mittel (M)](#12-mittel-m)
-    - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
     - [M4 · `lsp.nvim` — Workspace-Symbol-/Call-Hierarchy-Picker über den `picker`-Adapter](#m4-lspnvim-workspace-symbol-call-hierarchy-picker-ber-den-picker-adapter)
     - [M5 · `lsp.nvim` — Sprung zur Lua-Tabellen-/Funktionswurzel (ehemals `<leader>gtt`)](#m5-lspnvim-sprung-zur-lua-tabellen-funktionswurzel-ehemals-leadergtt)
     - [M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge](#m9-gopathnvim-frecency-lernen-fr-alternate-vorschlge)
@@ -106,72 +105,74 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30 (4). Zuletzt erledigt: **M2** — der Code-Action-Indikator, und
-diesmal stimmte die Beschreibung. Der Ertrag liegt woanders: der Punkt, so wie
-er dastand, waere als naive Gluehbirne gebaut worden und nach einer Woche
-wieder abgeschaltet, weil `ts_ls` und `gopls` auf fast jeder Zeile Refactorings
-anbieten und eine Lampe, die immer leuchtet, nichts sagt. Die Kind-Allowlist
-(`quickfix`, `source`) ist deshalb nicht eine Verfeinerung des Punktes, sie ist
-der Punkt — erst mit ihr ist „an" als Default vertretbar. Davor am selben Tag
-**M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**,
-**A** und **B**. Notizen zu allen in
-[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
+Stand 2026-08-30 (5). Zuletzt erledigt: **M3** — Auto-Restart mit Backoff. Die
+Beschreibung stimmte, und der Hinweis aus der letzten Runde, auf
+`usercmds/recovery.lua` aufzusetzen statt danebenzubauen, war die richtige
+Vorbedingung: beim Aufsetzen kam heraus, dass dessen Zaehler von niemandem
+gelesen wurde. Davor am selben Tag **M2**, **M16**, **QW5**, **M1**,
+**M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**, **A** und **B**. Notizen
+zu allen in [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Was das ueber diese Liste sagt**: nach M16 und M1, deren Beschreibungen
-schlicht veraltet waren, ist M2 der andere Fall — die Beschreibung war
-richtig und trotzdem nicht baubar, weil sie die Entscheidung nicht enthielt,
-an der das Feature haengt. Beide Male hat erst das Nachsehen im Quelltext den
-Punkt richtig zugeschnitten. Fuer die naechsten Punkte bleibt es dabei: der
-Beschreibung glauben, aber vorher nachsehen.
+**Zwei Bugs, die M3 nebenbei gefunden hat**, beide in der Maschinerie, auf der
+er aufsetzt, und beide unsichtbar, weil sie *still* fehlschlugen:
+`:Lsp restart <server>` hat noch nie etwas neu gestartet (Config-Suche ueber
+`vim.lsp.config.get()`, das es auf Neovim 0.12 nicht gibt), und
+`:LspDoctor startup` meldete immer „Attempts: 0" (las aus
+`lsp.usercmds.state`, einem Modul, das es nie gab). Das ist das Muster hinter
+allen drei bisherigen Fundklassen: nicht was die Punkte behaupten ist das
+Problem, sondern was **niemand** behauptet.
 
-**Empfohlen: M3 — Auto-Restart mit Backoff bei Client-Crash** (`lsp.nvim`,
-Aufwand M, Nutzen mittel, siehe [1.2](#12-mittel-m)).
+**Empfohlen: M17/M12 — Runtime-Tab** (`documentation.nvim`-Verbund, Aufwand M,
+drei Repos, siehe [1.2](#12-mittel-m)).
 
-*Was*: stirbt ein Language Server mitten in der Arbeit, kommt er von selbst
-zurueck — mit wachsendem Abstand zwischen den Versuchen und einer Obergrenze,
-damit ein Server, der beim Start zuverlaessig abstuerzt, nicht in einer
-Endlosschleife neu gestartet wird.
+*Warum jetzt und nicht M4*: weil M4 so, wie er dasteht, nicht baubar ist. Er
+sagt, der Punkt ersetze das ad-hoc-Telescope in `ts_type_lookup` „durch die
+konsistente Picker-UI, die der Adapter schon bereitstellt" — und
+`integrations/picker.lua` stellt **nichts** bereit. Es sind 31 Zeilen, die
+melden, ob fzf-lua installiert ist, und die im eigenen Docstring schreiben,
+dass sie ausdruecklich keine Abstraktion sind. Die vier Picker-Keymaps sind
+hartcodierte `<cmd>FzfLua …<cr>`-Strings, `ts_type_lookup` bringt seinen
+eigenen 171-Zeilen-Telescope-Picker mit, und Call Hierarchy existiert im
+ganzen Repo nicht. M4 ist damit nicht „ein Picker umhaengen", sondern erst
+Roadmap-Abschnitt 7 (die Abstraktion ueber fzf-lua/telescope/snacks/pickers.nvim
+bauen) und dann M4 — zusammen deutlich mehr als das M, das dransteht. Der
+Punkt braucht einen neuen Zuschnitt, bevor er drankommt.
 
-*Warum jetzt*: derselbe Grund, der M2 vor M17/M12 gebracht hat — ein Repo,
-headless verifizierbar, und der Nutzen faellt sofort an statt erst, wenn etwas
-anderes darauf gebaut wird. Es ist der letzte verbliebene Punkt in `lsp.nvim`,
-der einen echten Ausfall schliesst statt eine vorhandene Faehigkeit zu
-verbessern.
+*Was M17/M12 ist*: ein Runtime-Tab in der generierten Doku-Seite. Leer und mit
+Begruendung, wenn nichts serviert; zur Laufzeit gefuellt, wenn doch — nie
+eingebacken, was eine der vier „Never"-Zeilen aus `ECOSYSTEM.md` §7 ist.
 
-*Konkrete Auswirkung*: heute merkt man einen abgestuerzten Server daran, dass
-Hover nichts mehr tut, Completion leer bleibt und Diagnostics einfrieren — man
-haelt es erst fuer Langsamkeit und tippt irgendwann `:Lsp restart`. Danach ist
-der Server in der Regel wieder da, bevor der naechste Tastendruck ihn braucht,
-und wenn nicht, sagt eine Meldung warum und dass aufgegeben wurde.
+*Konkrete Auswirkung*: die generierte Seite bekommt einen Reiter, der heute
+gar nicht existiert. Ohne laufenden Dienst steht dort, warum er leer ist,
+statt dass der Reiter fehlt — das ist der Unterschied zwischen „nichts da" und
+„weiss nicht, ob etwas da waere".
 
-*Was vorher nachzusehen ist*: `core/attach.lua` hat 79 Zeilen und **keinerlei**
-Crash-Behandlung — das stimmt, geprueft am 2026-08-30. Was der Punkt nicht
-sagt: `usercmds/recovery.lua` fuehrt bereits einen Versuchszaehler pro Server
-(`RecoveryState.attempts`), `retry_start` mit `max_attempts` und
-`force_restart` mit Aufraeumen. Der Backoff sollte darauf aufsetzen, nicht
-danebengebaut werden — sonst zaehlen zwei Stellen unabhaengig voneinander mit
-und widersprechen sich im Report. Zweitens ist die Aufhaengung zu klaeren:
-`vim.lsp.start` nimmt ein `on_exit`, das sagt, *ob* der Prozess sauber endete;
-ein gewolltes `:Lsp stop` darf keinen Restart ausloesen.
+*Warum trotz drei Repos*: `docmap-desktop/docs/PLAN.md` nennt ihn dort als
+naechsten, und innerhalb des Verbunds ist das richtig — M8 bis M11 brauchen
+diese Oberflaeche, bevor sie ueberhaupt etwas zeigen koennen; wer einen von
+ihnen zuerst baut, baut die Oberflaeche viermal an der falschen Stelle. Der
+Einwand, der ihn bisher hinten hielt (M8 bis M11 sind nicht angesetzt, also
+zahlt sich die Oberflaeche noch nicht aus), gilt weiter — er ist jetzt nur
+nicht mehr staerker als die Alternative, weil `lsp.nvim` keinen sauber
+zugeschnittenen Punkt mehr uebrig hat.
+
+*Was vorher nachzusehen ist*: `docmap-desktop/docs/PLAN.md` ist die einzige
+Warteschlange, die nie umgezogen ist — sie liegt noch dort. Vor dem Bauen
+gehoert geprueft, was von M17/M12s Beschreibung nach M17/M7 (Phase-0-IR) noch
+stimmt, und welches der drei Repos den Tab tatsaechlich rendert.
 
 **Danach, in dieser Reihenfolge:**
 
-**M17/M12 — Runtime-Tab** (Aufwand M, drei Repos).
-`docmap-desktop/docs/PLAN.md` nennt ihn *dort* als naechsten, und innerhalb des
-Verbunds ist das richtig: M8 bis M11 brauchen diese Oberflaeche, bevor sie
-ueberhaupt etwas zeigen koennen — wer einen von ihnen zuerst baut, baut die
-Oberflaeche viermal an der falschen Stelle. Dass er hier hinter M3 steht, ist
-kein Widerspruch dazu: M8 bis M11 sind heute nicht angesetzt, also zahlt sich
-die Oberflaeche noch nicht aus. *Konkrete Auswirkung*: ein Runtime-Tab in der
-generierten Seite, leer und mit Begruendung, wenn nichts serviert; zur Laufzeit
-gefuellt, wenn doch — nie eingebacken, was eine der vier „Never"-Zeilen aus
-`ECOSYSTEM.md` §7 ist.
+**M4 — neu zuschneiden, dann bauen** (`lsp.nvim`). Entweder als das, was er
+wirklich ist (Roadmap-Abschnitt 7: der Picker-Adapter), oder klein: das
+Telescope in `ts_type_lookup` auf dasselbe fzf-lua umstellen, das die vier
+Keymaps schon benutzen — dann ist es ein Backend statt zwei, ohne die
+Abstraktion zu bauen. *Konkrete Auswirkung* der kleinen Variante: `:TypeDef`
+und Verwandte oeffnen dieselbe Oberflaeche wie `<leader>wos`, und telescope
+faellt als Abhaengigkeit weg.
 
-**M4 — Workspace-Symbol-/Call-Hierarchy-Picker** (`lsp.nvim`, Aufwand M).
-*Konkrete Auswirkung*: `ts_type_lookup` oeffnet heute ein eigenes
-ad-hoc-Telescope; danach benutzt es dieselbe Picker-Oberflaeche wie alles
-andere im Plugin, und wer statt Telescope fzf-lua oder snacks fuehrt, bekommt
-seine.
+**M10 + Detection** (`images.nvim` Sixel-Paket) und **M9** (Frecency ueber drei
+Repos), je nach Bedarf.
 
 ---
 
@@ -220,9 +221,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 29 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 28 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. Alle neun Quick Wins (QW1, QW3,
-  QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M6 + M7**
+  QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M6 + M7**
   (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und **M17/M7** sind
   erledigt und stehen unter 1.0. Die Summe ist um drei statt um vier gefallen:
   M17/M7 hat seine offen gebliebene Haelfte als eigenen Punkt **M17/M7b**
@@ -250,7 +251,7 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW5**, **QW6**,
-**QW7**, **QW8**, **M1**, **M2** und **M6 + M7** (alle `lsp.nvim`), **QW9**
+**QW7**, **QW8**, **M1**, **M2**, **M3** und **M6 + M7** (alle `lsp.nvim`), **QW9**
 (`images.nvim`), **QW1** und **QW10** (beide `mdview.nvim`; QW10 fiel beim
 Durchtesten von QW1 an), **M16** (`lib.nvim` + `pdfport.nvim`), **M17/M7**
 (Phase-0-IR im documentation-Verbund) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B** (die
@@ -270,20 +271,36 @@ wandert und ein Querverweis von außen weiter aufgeht.
 
 ---
 
-### M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash
-
-**Aufwand M · Nutzen mittel**
-
-`core/attach.lua` hat heute keine Crash-Behandlung.
-
----
-
 ### M4 · `lsp.nvim` — Workspace-Symbol-/Call-Hierarchy-Picker über den `picker`-Adapter
 
-**Aufwand M · Nutzen mittel**
+**Aufwand M · Nutzen mittel** — **Zuschnitt stimmt nicht, siehe unten.**
 
 Ersetzt das ad-hoc-Telescope in `ts_type_lookup` durch die konsistente
 Picker-UI, die der Adapter schon bereitstellt.
+
+> **Am 2026-08-30 im Quelltext geprueft: den Adapter gibt es nicht.**
+> `lsp.nvim/lua/lsp/integrations/picker.lua` sind 31 Zeilen, die melden, ob
+> fzf-lua installiert ist, und die im eigenen Docstring festhalten, dass sie
+> ausdruecklich *keine* Abstraktion sind („an indirection with a single
+> implementation behind it buys nothing"). Die vier Picker-Keymaps
+> (`<leader>dos`, `<leader>wos`, `<leader>do`, `<leader>wo`) sind hartcodierte
+> `<cmd>FzfLua …<cr>`-Strings, `ts_type_lookup` bringt seinen eigenen
+> 171-Zeilen-Telescope-Picker mit, und **Call Hierarchy existiert im ganzen
+> Repo nicht** — weder Keymap noch Kommando noch `callHierarchy` irgendwo im
+> Quelltext.
+>
+> Der Punkt zerfaellt damit in zwei, und nur der zweite ist ein M:
+>
+> * **M4a — ein Backend statt zwei.** `ts_type_lookup` auf dasselbe fzf-lua
+>   umstellen, das die Keymaps schon benutzen. Telescope faellt als
+>   Abhaengigkeit weg, `:TypeDef` oeffnet dieselbe Oberflaeche wie
+>   `<leader>wos`. Aufwand eher S.
+> * **M4b — den Adapter tatsaechlich bauen** (Roadmap-Abschnitt 7: fzf-lua,
+>   telescope, snacks, pickers.nvim hinter einer Schnittstelle), und *dann*
+>   Workspace-Symbole und Call Hierarchy darueber anbieten. Aufwand L, nicht M.
+>
+> Die Call-Hierarchy-Haelfte des Titels ist ausserdem kein „Ersetzen", sondern
+> eine neue Faehigkeit.
 
 ---
 
@@ -775,24 +792,21 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M3** (`lsp.nvim` Auto-Restart mit Backoff, M) — ein gestorbener Server
-   kommt von selbst zurück, statt am ausbleibenden Hover aufzufallen. Der
-   letzte verbliebene `lsp.nvim`-Punkt, der einen echten Ausfall schließt statt
-   eine vorhandene Fähigkeit zu verbessern; ein Repo, headless verifizierbar.
-   Siehe „Naechster Schritt".
-2. **M17/M12** (Runtime-Tab, drei Repos) — die Oberfläche, die M8 bis M11
-   brauchen, bevor sie überhaupt etwas zeigen können. Steht hier hinter M3,
-   weil M8 bis M11 nicht angesetzt sind.
-3. **M4** (`lsp.nvim` Workspace-Symbol-/Call-Hierarchy-Picker, M) — ersetzt das
-   ad-hoc-Telescope in `ts_type_lookup` durch die Picker-Oberfläche, die der
-   Adapter schon bereitstellt.
-4. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
+1. **M17/M12** (Runtime-Tab, drei Repos) — die Oberfläche, die M8 bis M11
+   brauchen, bevor sie überhaupt etwas zeigen können. Rückt vor, weil
+   `lsp.nvim` keinen sauber zugeschnittenen Punkt mehr übrig hat. Siehe
+   „Naechster Schritt".
+2. **M4** (`lsp.nvim` Picker, M **oder mehr**) — braucht erst einen neuen
+   Zuschnitt: der Adapter, durch den er laut Beschreibung routen soll,
+   existiert nicht. Entweder Roadmap-Abschnitt 7 zuerst, oder klein als
+   „ts_type_lookup auf fzf-lua statt Telescope".
+3. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
    (Frecency über drei Repos), der Rest von `lsp.nvim` (M5).
 
-QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M6 und M7 (`lsp.nvim`),
-M16 (`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt (siehe 1.0). Die
-Quick-Win-Klasse ist damit leer, und M16 war der letzte reine S-Punkt, der
-sich delegieren ließ.
+QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M6 und M7
+(`lsp.nvim`), M16 (`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt
+(siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
 sagt selbst "vorerst nur beobachten"), BD4/BD5 (`mdview` externe Website und

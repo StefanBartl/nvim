@@ -1,28 +1,28 @@
 # lsp.nvim — Autocmds Cheatsheet
 
 Sources: `lua/lsp/bindings/autocmds.lua`, `core/inlay_hints.lua`,
-`core/lightbulb.lua`, `formatter/init.lua`, `servers/lua_ls/reload.lua`,
-`languages/**`, `tools/**`
+`core/lightbulb.lua`, `core/supervisor.lua`, `formatter/init.lua`,
+`servers/lua_ls/reload.lua`, `languages/**`, `tools/**`
 
 Erstellt 2026-08-25 im Zuge des Plugin-Sweeps. lsp.nvim war das einzige
 Personal-Plugin ohne Autocmds-Seite in diesem Baum.
 
 **Achtung — der eigene Docstring untertreibt.** `bindings/autocmds.lua` sagt
 "One group, `lsp_nvim`". Das gilt nur fuer *Keymap*-Autocmds. Tatsaechlich
-registriert das Plugin **29 Autocmds ueber 23 Augroups**, verteilt ueber
+registriert das Plugin **31 Autocmds ueber 24 Augroups**, verteilt ueber
 `languages/`, `tools/`, `formatter/`, `servers/` und `core/`. Diese Datei ist
 die vollstaendige Liste.
 
-(23 = 19 benannte Literale + `lsp_nvim`, `lsp_nvim_inlay_hints` und
-`lsp_nvim_lightbulb` aus `M.GROUP`-Konstanten + `LspSignaturePopup_<winid>`,
-dessen Name zur Laufzeit gebaut wird. `grep` auf Stringliterale findet die
-letzten vier nicht.)
+(24 = 19 benannte Literale + `lsp_nvim`, `lsp_nvim_inlay_hints`,
+`lsp_nvim_lightbulb` und `lsp_nvim_supervisor` aus `M.GROUP`-Konstanten +
+`LspSignaturePopup_<winid>`, dessen Name zur Laufzeit gebaut wird. `grep` auf
+Stringliterale findet die letzten fuenf nicht.)
 
 Gezaehlt werden Aufrufstellen, nicht Event-Registrierungen: der
 Lightbulb-Aufruf horcht auf vier Events, `nvim_get_autocmds` zaehlt ihn also
 vierfach. Die 29 sind, wie oft `autocmd.create` aufgerufen wird.
 
-Alle 29 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der
+Alle 31 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf der
 Roh-API. Der Inlay-Hints-Autocmd von 2026-08-29 war beim ersten Wurf die
 Ausnahme; nachgezogen, bevor er committet wurde, genau wegen dieser Zeile.
 Die *Augroups* sind gemischt: teils `Autocmd.group(name, true)`, teils
@@ -79,6 +79,24 @@ Eigene Augroup aus demselben Grund wie bei den Inlay Hints. `M.detach()`
 raeumt sie ab und macht einen von `setup()` eingeplanten Refresh unwirksam —
 sonst zeichnet ein Callback, der den Zustand ueberlebt hat, eine Markierung,
 die danach niemand mehr wegnimmt.
+
+## Auto-Restart — `core/supervisor.lua`
+
+| Augroup (clear=true) | Event | Pattern | Bedingung | Aktion |
+| --- | --- | --- | --- | --- |
+| `lsp_nvim_supervisor` | `LspAttach` | — | — | Merkt sich pro Client-ID Servername, Buffer und Startzeit |
+| `lsp_nvim_supervisor` | `VimLeavePre` | — | — | Setzt das Flag, das Client-Exits waehrend `:qa` nicht mehr als Absturz zaehlt |
+
+**Warum ueberhaupt Buchfuehrung beim Attach:** der eigentliche Trigger ist kein
+Autocmd, sondern `on_exit` aus der `vim.lsp.config("*")`-Konfiguration. Der
+bekommt `code`, `signal` und eine Client-ID — sonst nichts, und zu einem
+Zeitpunkt, an dem der Client schon im Abbau ist. Ohne diese zwei Zeilen weiss
+der Handler nicht, *welcher Server* gestorben ist und in *welchen Buffer* er
+zurueckgehoert.
+
+`on_exit` laeuft ausserdem im Fast-Event (auf 0.12.2 nachgemessen:
+`vim.in_fast_event()` ist darin `true`), also wird dort nur eingesammelt und
+per `vim.schedule` auf dem Mainloop entschieden.
 
 ## Formatter
 
@@ -199,6 +217,8 @@ dass es die Gruppe zur Laufzeit je gab.
 
 ## Changelog
 
+- 2026-08-30 (2): `lsp_nvim_supervisor` aus Roadmap-M3 aufgenommen (zwei
+  Aufrufstellen, zwei Events). Jetzt 31 ueber 24.
 - 2026-08-30: `lsp_nvim_lightbulb` aus Roadmap-M2 aufgenommen (drei
   Aufrufstellen, sechs Events). Bei der Gelegenheit die Kopfzahl korrigiert:
   sie stand auf "26 Autocmds ueber 21 Augroups", waehrend die eigene
