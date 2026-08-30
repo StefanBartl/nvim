@@ -1,6 +1,6 @@
 # Plugin-Roadmaps — konsolidierter Report
 
-Stand: 2026-08-29. Quelle: `docs/ROADMAP.md` bzw. `docs/ROADMAP/` aus allen 31
+Stand: 2026-08-30 (Erhebung 2026-08-29). Quelle: `docs/ROADMAP.md` bzw. `docs/ROADMAP/` aus allen 31
 `*.nvim`-Repos unter `C:\repos`, plus die drei Dokumente, auf die diese
 Roadmaps als eigentliche Warteschlange verweisen (`docmap-desktop/docs/PLAN.md`
 sowie die damaligen `images.nvim`-CROSS-PLUGIN- und
@@ -26,6 +26,10 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
   - [Arbeitsmodus](#arbeitsmodus)
   - [Naechster Schritt](#naechster-schritt)
+    - [Erledigt am 2026-08-30: die Source-Achse (Option A)](#erledigt-am-2026-08-30-die-source-achse-option-a)
+    - [Erledigt am 2026-08-30: Option B — die echten Audit-Zeilen](#erledigt-am-2026-08-30-option-b--die-echten-audit-zeilen)
+    - [Offen: die Live-Achse braucht eine echte Sitzung](#offen-die-live-achse-braucht-eine-echte-sitzung)
+    - [Falls stattdessen Feature-Arbeit: QW8 vor QW5](#falls-stattdessen-feature-arbeit-qw8-vor-qw5)
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
   - [1.0 Erledigt](#10-erledigt)
@@ -103,41 +107,131 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-29, Ende der Sitzung. Wer hier wieder einsteigt, faengt am
-besten hiermit an — Begruendung darunter.
+Stand 2026-08-30. Der Abschnitt von 2026-08-29 empfahl die Audit-Dokumente von
+`lsp.nvim` und danach Teil 3.1 insgesamt. Beides ist ueberholt, und zwar aus
+drei nachpruefbaren Gruenden — sie stehen hier, weil dieselbe Empfehlung sonst
+zum dritten Mal aufgeschrieben wird.
 
-**1. Empfohlen: die Audit-Dokumente von `lsp.nvim`, dann Teil 3.1 insgesamt.**
+**Die Empfehlung war nicht ausfuehrbar.** `lsp.nvim` hat keine
+Audit-Dokumente; sein ROADMAP-Ordner enthaelt nur `ROADMAP.md`. Das Trio
+`Arch&Coding.md`/`Checklist.md`/`Zentral-Prinzipien.md` liegt in neun anderen
+Repos, nie in diesem.
 
-Diese Sitzung hat vier Roadmap-Punkte gebaut und dabei *sieben* Fehler in
-Dokumenten und Reports gefunden, die keiner davon war:
+**Teil 3.1 ist inzwischen erledigt**, siehe den Erledigt-Block dort (WKDBooks
+`205f152`, neun Dateien, Befunde korrigiert statt nur markiert). Und die drei
+Dokumente sind seither ohnehin in
+[`docs/NOTES/RULES.md`](../../../NOTES/RULES.md) aufgegangen — Details im
+Abschnitt 3.1.
 
-| Fund | Art |
-| --- | --- |
-| `filter.dedup` verglich LSP-Payloads auf Position (0,0) | echter Defekt, verwarf Diagnostics |
-| `:LspDoctor` nannte `lua_ls` als Formatter, waehrend `stylua` lief | falsche Aussage im Diagnosewerkzeug |
-| `:LspStart` als Handlungsanweisung — Command existiert nicht | Anweisung fuehrt zu E492 |
-| `M.all` rief `inspect.deep` nach der Umbenennung | `:LspDoctor` ohne Argument war kaputt |
-| `Keymaps/lsp.nvim.md`: „keine Keymaps" bei 44 gebundenen | 5 Monate Drift |
-| `Usercmds/lsp.nvim.md`: 5 von 17 Routen, „nicht installiert" | 5 Monate Drift |
-| `lspdoctor/README.md`: dokumentierte eine API von vor der Migration | komplett veraltet |
+**Von den verbliebenen `🟡`-Markierungen sind die meisten Phantome.** 109 der
+179 stehen in `gopath.nvim`s Checkliste, die eine woertliche Kopie der
+*generischen* Vorlage ist — dort heisst `🟡` „EMPFOHLEN", nicht „offener
+Befund". Vier weitere sind `spotlight.nvim`s Prioritaetsspalte, eine ist in
+`migrate.nvim` als `n/a` gekennzeichnet. Echt pruefbar bleiben rund 14 Zeilen
+(github_stats 10, markdown 2, color_my_ascii 2) — das ist Option B unten.
 
-Das ist keine Pechstraehne, das ist der Querschnittsbefund aus **Teil 3.1**
-(„Die Audit-Dokumente sind veraltet — und zwar systematisch", fuenf von fuenf
-Stichproben veraltet) in Aktion. Die Trefferquote beim gezielten Nachsehen war
-in dieser Sitzung hoeher als der Nutzen der gebauten Features. Wer als
-naechstes `Arch&Coding.md`, `Checklist.md` und `Zentral-Prinzipien.md` von
-`lsp.nvim` gegen die Quelle prueft, findet mit hoher Wahrscheinlichkeit mehr —
-und danach lohnt derselbe Durchgang fuer die restlichen sieben Repos.
+---
 
-**Das Werkzeug dafuer steht bereits und wird zu wenig benutzt.**
-`:Bindings check <plugin>` hat in dieser Sitzung zwei der sieben Funde
-gefunden, davon einen transitiv (den `:LspStart`-Verweis, der aus dem Plugin
-in den Zettel gewandert war). Es laesst sich auch headless aufrufen —
-`drift.check(plugin)` gibt die Befunde als Lua-Werte zurueck, `drift.describe`
-rendert sie. Ein Lauf **ohne** Argument prueft zusaetzlich die Source-Achse,
-die pro Plugin nicht konsultiert wird; der ist noch nie gelaufen.
+### Erledigt am 2026-08-30: die Source-Achse (Option A)
 
-**2. Falls stattdessen Feature-Arbeit: QW8 vor QW5.**
+Die nie gelaufene Pruefung aus dem alten Abschnitt — `:Bindings check` ohne
+Argument, also die Source-Achse — ist nachgeholt und abgearbeitet. Sie hat
+**150 Befunde gemeldet und dabei ueber sich selbst mehr verraten als ueber die
+Doku**:
+
+| | Befunde | Was es wirklich war |
+| --- | ---: | --- |
+| Ausgangslage | 150 | |
+| Veraltetes Kartenartefakt | −49 | `docs/map/module_map.json` war sechs Tage alt und beschrieb noch `lua/lsp/`, das laengst nach `lsp.nvim` ausgezogen ist. 44 Befunde zeigten auf geloeschte Dateien |
+| Werkzeugfehler: Spaltennamen | −50 | `drift.lua`s `LHS_HEADERS` kannte nur `lhs`/`key`/`keys`; der Korpus ist zweisprachig und schreibt `Taste`/`Mapping`/`Modus`. **601 Tabellenzeilen** waren dadurch fuer *beide* Achsen unsichtbar. `<leader>gb` steht woertlich in `Snacks.md` und wurde trotzdem als undokumentiert gemeldet |
+| Echte Doku-Luecke | 51 | dokumentiert, siehe unten |
+| **Rest** | **0** | |
+
+Ein zweiter Werkzeugfehler fiel erst beim Gegenpruefen auf, und er betraf die
+*Live*-Achse im ganzen Korpus: `nvim_get_keymap` liefert `<C-a>` in der
+modifier-erhaltenden Form `{128,252,4,65}`, `nvim_replace_termcodes` in der
+klassischen Steuerbyte-Form `{1}`. `is_live` verglich die beiden auf
+Gleichheit — **jede dokumentierte Ctrl-Kombination** meldete deshalb
+„dokumentiert, nicht live". Behoben ueber `key_forms()`, das beide Seiten
+durch dieselbe Normalform schickt.
+
+Was daraus geworden ist:
+
+- **`lua/bindings/usrcmds/bindings_explorer/drift.lua`** — beide Fehler
+  behoben, jeweils mit der Messung im Kommentar. Vier deutsche Spaltennamen
+  sind bewusst *nicht* aufgenommen (`Eintrag`, `Tab`, `Modul`, `Vorschlag`),
+  weil deren Zellen keine Tasten enthalten; die Begruendung steht bei
+  `LHS_HEADERS`.
+- **`Keymaps/nvim-config.md` und `Usercmds/nvim-config.md`** (neu) — die
+  Keymaps und Commands, die *diese Config selbst* registriert und die nie ein
+  Cheatsheet hatten. Der Baum kannte bis dahin nur „Personal-Plugin" und
+  „Extern-Plugin", nicht „die Config selbst".
+- **`Keymaps/dap.nvim.md`** — eine Tabelle hatte durch dazwischenliegende
+  Prosa ihre Kopfzeile verloren; der Parser las die erste Datenzeile als
+  Header und verwarf zehn Keymaps.
+
+Konkrete Auswirkung: `:Bindings check` meldet fuer diese Config **261 statt
+680 Befunde**, die Source-Achse null. Wer eine Taste nachschlaegt, findet sie
+jetzt — vorher standen 40 Keymaps und 11 Commands ausschliesslich im Code.
+
+**Ein echter Defekt nebenbei gefunden**: `:WKDDiffProfile` ist in
+`wkdoptions/commands/register.lua` definiert, aber `register_diff_profile()`
+hat keinen Aufrufer — der Command existiert in keiner laufenden Sitzung. Nicht
+stillschweigend verkabelt, weil das Verhalten aendert; dokumentiert in
+`Usercmds/nvim-config.md`.
+
+---
+
+### Erledigt am 2026-08-30: Option B — die echten Audit-Zeilen
+
+Aufwand XS, wie geschaetzt. Alle vier Dateien einzeln gegen den Code gehalten;
+korrigiert wurde, was nicht mehr stimmte, und ausdruecklich vermerkt, was
+geprueft wurde und weiterhin gilt — damit die Dateien lesbar sind, ohne jede
+Zeile nochmal nachzuschlagen.
+
+**`color_my_ascii.nvim`** — der Befund „kein automatisiertes Test-Framework"
+war komplett ueberholt, nicht halb: `TESTS/` hat 14 `_spec.lua`, einen
+repo-eigenen Runner (`run.lua` + `harness.lua`) *und* einen dritten CI-Job
+`tests (headless)` in `lint.yml` neben stylua/luacheck. Die
+`@types`-Ordner-Zeile ist nachgeprueft und unveraendert zutreffend.
+
+**`markdown.nvim`** — das Dokument widersprach **sich selbst**: der Durchgang
+vom 2026-08-29 hatte §5 auf „A3 done" korrigiert, aber zwei `🟡`-Zeilen
+stehengelassen, die dieselbe Luecke weiter behaupteten. Beide korrigiert.
+Dazu **A2** beantwortet, das als offene Frage formuliert war
+(„confirm every deferred callback re-validates"): `tableview/renderer.lua`
+enthaelt gar kein `vim.schedule`/`defer_fn`, es gibt also keinen verzoegerten
+Callback, dessen Handle veralten koennte — und jede Handle-Nutzung ist ohnehin
+durch `nvim_win_is_valid`/`nvim_buf_is_valid` abgesichert (zehn Stellen).
+
+**`github_stats.nvim`** — drei Stellen fuehrten den *gefixten* Global-Leak in
+`dashboard/init.lua` weiter als Teilerfuellung; auf ✅ korrigiert, mit der
+Historie als Notiz und dem Hinweis, dass `luacheck` im CI den Zustand haelt.
+Die uebrigen `🟡` sind geprueft und bleiben zu Recht stehen: Type Guards nur
+punktuell, keine echte Dependency Injection, Import-Reihenfolge konsistent
+aber nicht normiert, keine Tabellen-Vorreservierung (`table.new` kommt im
+ganzen Repo nicht vor).
+
+*Konkrete Auswirkung*: wie angekuendigt **im taeglichen Gebrauch gar nichts.**
+Danach stimmt die Beschreibung, und Teil 3.1 ist vollstaendig abgeschlossen
+statt zu neun Zehnteln.
+
+### Offen: die Live-Achse braucht eine echte Sitzung
+
+Die 261 verbliebenen Befunde sind zu zwei Dritteln
+`usercmd-undocumented` (166) — der bekannte Abschnitt mit fremder
+Plugin-Infrastruktur, die dieser Korpus nie abdecken sollte. Die 88
+`keymap-not-live` sind ueberwiegend fensterlokale Tasten von Plugins, deren
+UI headless nicht offen ist. Beides laesst sich nur in einer laufenden,
+benutzten Sitzung sinnvoll durchgehen, nicht headless.
+
+**Empfehlung**: A und B sind beide erledigt. Als naechstes Feature-Arbeit
+nach der Reihenfolge in Teil 4 — nicht die Live-Achse, solange niemand
+danebensitzt.
+
+---
+
+### Falls stattdessen Feature-Arbeit: QW8 vor QW5
 
 Beide sind die letzten offenen `lsp.nvim`-Quick-Wins. QW8
 (Multi-Root-Switcher) zuerst, weil M7 (`.nvim-lsp.json` im Repo-Root) spaeter
@@ -146,15 +240,13 @@ fest, den QW8 danach ersetzen will. QW5 (Hover-Cache) spart 10–50 ms bei
 `lua_ls`/`gopls`, also unterhalb der Wahrnehmungsschwelle; spuerbar waere er
 nur bei `jdtls`/`omnisharp`, die beide nicht aktiv sind.
 
-**3. Nicht als naechstes: M6 und M7 einzeln.**
-
-Sie gehoeren mit QW8 zusammen gebaut. `config/init.lua` hat heute *eine*
-Merge-Ebene (User-Opts ueber DEFAULTS). M6 schiebt eine Preset-Ebene darunter,
-M7 eine Projekt-Ebene darueber. Einzeln gebaut heisst: Normalisierung *und*
-Warnungssammlung zweimal umschreiben, weil eine Warnung dann sagen muss, aus
-welcher Ebene der schlechte Wert kam. Das ist derselbe Fall, den §3.4 fuer
-Sixel/Detection und mdview/color_my_ascii bereits benennt — fuer diese drei
-aber noch nicht.
+**Nicht als naechstes: M6 und M7 einzeln.** Sie gehoeren mit QW8 zusammen
+gebaut. `config/init.lua` hat heute *eine* Merge-Ebene (User-Opts ueber
+DEFAULTS). M6 schiebt eine Preset-Ebene darunter, M7 eine Projekt-Ebene
+darueber. Einzeln gebaut heisst: Normalisierung *und* Warnungssammlung
+zweimal umschreiben, weil eine Warnung dann sagen muss, aus welcher Ebene der
+schlechte Wert kam. Das ist derselbe Fall, den §3.4 fuer Sixel/Detection und
+mdview/color_my_ascii bereits benennt — fuer diese drei aber noch nicht.
 
 ---
 
@@ -194,8 +286,15 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   QW4, QW6, QW7, QW9) sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
-  führen noch Lücken (`❌`), die längst geschlossen sind — stichprobenhaft
-  geprüft, und **alle fünf Stichproben waren veraltet**. Details in Teil 3.
+  führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
+  geprüft, und **alle fünf Stichproben waren veraltet**. Am 2026-08-29
+  korrigiert; die Dokumente sind seither in
+  [`docs/NOTES/RULES.md`](../../../NOTES/RULES.md) aufgegangen. Details in
+  Teil 3.
+- **Die Bindings-Drift-Achse war zu 2/3 Werkzeugfehler**: von 150
+  Source-Achsen-Befunden blieben nach zwei Fixes in `drift.lua` und einer
+  frischen Karte 51 echte übrig, und die sind seit 2026-08-30 dokumentiert.
+  Siehe „Naechster Schritt".
 
 ---
 
@@ -706,9 +805,37 @@ strukturierte Fehlertypen, `@error`/`@raises`, Snapshot/Restore und
 Tabellen-Vorreservierung (alle fünf zutreffend, drei mit eigener Begründung im
 Dokument), sowie `pdfport`s `cleanup_all`.
 
-*Was offen bleibt*: die `🟡`-Zeilen wurden nur dort mitgezogen, wo eine
-korrigierte `❌`-Zeile sie direkt widerlegt — systematisch durchgeprüft sind
-sie nicht.
+*Die `🟡`-Zeilen, am 2026-08-30 nachgeholt*: der erste Durchgang hatte sie nur
+dort mitgezogen, wo eine korrigierte `❌`-Zeile sie direkt widerlegte. Die
+Nachzählung ergab 179 Markierungen, davon 114 Phantome (109 in `gopath.nvim`s
+wörtlicher Kopie der *generischen* Vorlage, wo `🟡` „EMPFOHLEN" heißt; vier
+Prioritätsspalten in `spotlight.nvim`; eine als `n/a` markierte in
+`migrate.nvim`). Die echt prüfbaren Zeilen in `github_stats.nvim`,
+`markdown.nvim` und `color_my_ascii.nvim` sind einzeln geprüft und korrigiert
+— siehe „Naechster Schritt", Option B. Damit ist Teil 3.1 abgeschlossen.
+
+**Die drei Dokumente sind aufgegangen — Einstieg ist jetzt
+[`docs/NOTES/RULES.md`](../../../NOTES/RULES.md).** `Arch&Coding.md`,
+`Checklist.md` und `Zentral-Prinzipien.md` sind keine eigenständige
+Regelquelle mehr; ihr Inhalt liegt in der einen kanonischen Sammlung, auf die
+`RULES.md` verweist (`WKDBooks/Development/wkdbook-Lua/Checklists/` — Belege
+unter `belege/`, Regeln unter `regeln/`, Einstieg über dessen `README.md` und
+`WORKFLOW.md`). Wer künftig „was gilt hier eigentlich" fragt, liest dort, nicht
+in einem Repo-ROADMAP-Ordner.
+
+Zwei Dinge dazu, geprüft am 2026-08-30, damit der Verweis nicht mehr verspricht
+als er hält:
+
+- **Die Kopien in den Repos existieren weiter.** Unter
+  `wkdbook-myplugins/<plugin>/ROADMAP/` liegen die 27 Dateien (neun Repos mal
+  drei) unverändert. Sie sind ab jetzt historischer Stand, keine Quelle — der
+  Abschnitt oben über die korrigierten `❌`-Zeilen beschreibt genau diese
+  Dateien.
+- **`RULES.md` nennt einen Pfad, den es auf dieser Maschine nicht gibt.** Dort
+  steht `E:epos\WKDBooks\...`; die Sammlung liegt unter
+  `C:epos\WKDBooks\...`. Nicht mit korrigiert, weil der Laufwerksbuchstabe
+  pro Maschine verschieden sein kann und die Datei nicht sagt, welche gemeint
+  ist.
 
 ---
 
