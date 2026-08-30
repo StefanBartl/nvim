@@ -30,6 +30,7 @@ Querverweis von aussen weiter aufgeht.
   - [M17/M7 · `documentation.nvim` — Phase-0-IR: der besitzende Scope](#m17m7-documentationnvim-phase-0-ir-der-besitzende-scope)
   - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
   - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor probe`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-probe)
+  - [M16 · `lib.nvim` — `deps.health`-Migrationen](#m16-libnvim-depshealth-migrationen)
 
 ---
 
@@ -989,3 +990,118 @@ falsch gelassen. Als eigener Aufräumpunkt vermerkt, nicht hier miterledigt.
 nachgezogen — sechs statt fünf Reports, ein eigener Abschnitt zu `probe`
 inklusive der Grenze, die er nicht sehen kann, und ein Changelog-Eintrag mit
 der Notiz, dass die Roadmap ihn unter dem alten Namen `deep` führte.
+
+
+---
+
+### M16 · `lib.nvim` — `deps.health`-Migrationen
+
+**Erledigt am 2026-08-30. `lib.nvim` (neu: `lua/lib/nvim/deps/detect.lua`),
+`pdfport.nvim` (`docs/install.json`, `lua/pdfport/health.lua`, neuer Spec-Test).
+Zwei Repos, beide gepusht.**
+
+Ursprünglich: „`images.nvim` und `language.nvim` rufen bereits
+`deps.health.report_for`. Offen ist allein `pdfport.nvim`, das `check_exe` noch
+selbst rollt — acht Aufrufstellen."
+
+**Die Prämisse trug nicht, und das ist der eigentliche Ertrag dieses Punktes.**
+Im Quelltext nachgesehen, bevor gebaut wurde:
+
+- `pdfport.nvim` ruft `deps.health.report_for` **längst**
+  (`lua/pdfport/health.lua:373`) — genau wie die beiden „erledigten" Repos.
+- Sein `check_exe` rollt **keine eigene Erkennung**: `platform.has` delegiert an
+  `lib.nvim.core.has_exec`, `platform.first_available` an
+  `lib.nvim.core.first_available`. Lokal ist nur der *Wortlaut* der drei
+  Health-Zeilen.
+- `language.nvim` — eines der zwei als erledigt geführten Repos — hat sein
+  eigenes `vim.fn.executable(bin) == 1` in `health.lua:15`. Nach dem Kriterium
+  des Punktes wäre es genauso offen wie pdfport.
+- Und die Doppelmeldung ist **Absicht**: der Kommentar in `images.nvim` sagt es
+  selbst — *„the same tools `check_imagemagick()`/`check_clipboard()` already
+  cover, but with the declared `why`"*. Die Deps-Sektion ist ein Inventar
+  **neben** den Fähigkeitsprüfungen, kein Ersatz für sie. Die handgerollte
+  Hälfte wegzuräumen hätte genau die Zeilen gekostet, für die
+  `:checkhealth pdfport` da ist („pandoc gefunden, aber keine PDF-Engine",
+  „ollama-Daemon läuft nicht", „tesseract braucht auch pdftoppm").
+
+Migriert war also alles. Was **wirklich** offen war, waren drei Stellen, an
+denen ein einziger `:checkhealth`-Lauf sich selbst widersprach — und das ist
+das eine, was ein Diagnosewerkzeug nicht tun darf.
+
+**1. `curl` war „required" und „optional" zugleich.** `check_exe("curl", true)`
+meldete einen **Fehler**, `docs/install.json` deklarierte `required: false`.
+Die Spec hatte recht: curl brauchen nur der claude-Backend und der
+ollama-Daemon-Check, beide optional, und `backends/claude.lua` gibt in
+`available()` ohnehin `false` zurück, wenn curl fehlt.
+
+**2. Ghostscript heißt auf Windows anders.** Der Producer prüfte
+`gs`/`gswin64c`/`gswin32c` und meldete „ghostscript producer: ready (exe:
+gswin64c)"; die Deklarations-Sektion kannte nur `gs` und meldete es als
+fehlend — auf demselben Rechner, im selben Lauf. Das war **nicht** in
+`pdfport` zu reparieren: `Lib.Deps.Tool` hatte genau ein `bin`.
+
+*Dafür hat `lib.nvim` ein Feld bekommen: `bin_alternatives`.* Andere
+Schreibweisen **desselben** Programms, nur für die Erkennung; `bin` bleibt
+kanonisch für Identität, Anzeigename, Install-Ziel und `pkg`-Schlüssel. Die
+Meldung nennt die Schreibweise, die geantwortet hat — `gs found (as gswin64c)`,
+weil „gs found" auf einem Rechner ohne `gs` wahr und irreführend in derselben
+Zeile ist.
+
+**Drei Entscheidungen dazu, die im Auftrag nicht standen.**
+
+*Erstens: Erkennung wandert in ein eigenes Modul* (`deps.detect`) statt dreimal
+inline zu stehen. Alle drei Stellen, die „ist es da" fragen, gehen darüber:
+die Health-Zeile, `install.plan` (sonst würde ein unter seinem Windows-Namen
+vorhandenes Tool zur Installation eingeplant) und die
+„schon-installiert"-Absage in `view`. `forget` löscht den gemerkten
+PATH-Befund für **jeden** Namen — nach einer Installation ist es womöglich die
+Alternative, die aufgetaucht ist.
+
+*Zweitens: ein blanker String wird abgewiesen, nicht angenommen.*
+`bin_alternatives = "gswin64c"` ist die naheliegende Art, das Feld falsch zu
+schreiben, und die einzige, die sonst still durchginge: ein String iteriert als
+leere Liste, die Alternative würde nie geprüft, und das Tool meldete weiter
+„fehlt" — auf genau der Plattform, für die das Feld eingeführt wurde.
+
+*Drittens: es ist keine Liste von Ersatzprogrammen.* Ein anderes Programm, das
+die Aufgabe auch erledigt, ist ein eigenes Tool mit eigenem `why` und eigenem
+`pkg`. `qpdf` und `pdftk` mergen beide PDFs und bleiben zwei Einträge. Der Test
+ist, ob **eine** `pkg`-Zuordnung für alle ehrlich wäre.
+
+**3. Zwei geprüfte Tools fehlten im Inventar, ohne dass irgendwo stand warum.**
+Hier ist das Ergebnis ein anderes als die Ankündigung, und zwar in beide
+Richtungen:
+
+- `ueberzugpp` ist jetzt deklariert — mit `pacman` und **sonst nichts**. Es
+  liegt in Arch' `extra`-Repo; auf Debian, Ubuntu, Fedora und openSUSE
+  existiert es nur in einem Fremd-Repository, das man erst hinzufügen muss.
+  Ein `apt`- oder `brew`-Schlüssel hätte ein Install-Kommando gebaut, das
+  fehlschlägt. Ein fehlender Schlüssel heißt „kein bekanntes Paket für diesen
+  Manager", und genau das ist hier wahr.
+- `marker_single` bleibt **nicht** deklariert, sagt aber jetzt warum:
+  `marker-pdf` kommt aus `pip`, kein OS-Paketmanager führt es, und ein Eintrag
+  bräuchte eine `pkg`-Map, die er nicht ehrlich füllen kann. Dieselbe Grenze,
+  die schon um `pdfplumber` und `docling` lag — geprüft, nirgends deklariert,
+  bis jetzt ohne Begründung.
+
+**Neu: ein Test für die Spec-Datei selbst** (`TESTS/install_spec_spec.lua`).
+`docs/install.json` ist Daten, die sonst niemand liest: kein Modul requiret
+sie, `luacheck` sieht sie nicht, und ein abgewiesener Eintrag wird still aus
+`tools` fallen gelassen. Ein Tippfehler zeigt sich also nur als ein Tool, das
+leise aus dem Report verschwindet — und das sieht genauso aus wie ein Tool, das
+nie jemand deklariert hat. Der Test parst die echte Datei mit dem echten Parser
+und besteht auf **null** Fehlern.
+
+*Verifiziert an einem echten `:checkhealth pdfport`*, inklusive eines
+simulierten Rechners ohne `gs` und ohne `curl` (die eine PATH-Abfrage, durch
+die alles läuft, lügt über genau zwei Namen — sonst ist nichts gestubbt):
+`⚠️ curl NOT found (optional)` in **beiden** Sektionen statt Fehler hier und
+Warnung dort, und `gs found (as gswin64c)` neben „ghostscript producer: ready
+(exe: gswin64c)". Dazu: lib.nvim-Suite grün (neue Fälle für `detect`, den
+Parser in beiden Formaten und die Install-Planung), `luacheck` 0/0 über 341
+Dateien; pdfport-Suite grün mit dem neuen Spec-Test, `luacheck` 0/0 über 60
+Dateien, `stylua` in beiden Repos sauber.
+
+*Bindings-Zettel*: nicht berührt. Der Punkt fügt weder Keymap noch Usercmd noch
+Autocmd hinzu; `:checkhealth pdfport` und `:Lib deps show pdfport.nvim` sagen
+dasselbe wie vorher, nur ohne sich zu widersprechen.

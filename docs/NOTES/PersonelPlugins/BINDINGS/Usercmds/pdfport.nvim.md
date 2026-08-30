@@ -119,15 +119,48 @@ name when `[path]` is omitted — unchanged from the original.
 
 ## Notes (2026-08 deps pass)
 
-- `docs/install.json` declares pdfport.nvim's 6 optional external tools
-  (pdftotext, pdftoppm, tesseract, curl, ollama, chafa) for
-  `lib.nvim.deps` — the first plugin to ship one. Each entry carries a
-  required `why` (see the `lib.nvim.md` cheatsheet's `:Lib deps` section for
-  the mechanism); `:PdfPort health`'s own `:checkhealth` output is
-  unchanged, this is a separate, cross-plugin-aware surface
-  (`:Lib deps show pdfport.nvim`), not a replacement for it.
+- `docs/install.json` declares pdfport.nvim's optional external tools for
+  `lib.nvim.deps` — the first plugin to ship one. Started at 6 (the
+  extraction backends: pdftotext, pdftoppm, tesseract, curl, ollama, chafa),
+  grew to 14 with the create()/merge() producers, and to **15** on
+  2026-08-30 with `ueberzugpp`. Each entry carries a required `why` (see the
+  `lib.nvim.md` cheatsheet's `:Lib deps` section for the mechanism);
+  `:PdfPort health`'s own `:checkhealth` output is a separate,
+  capability-oriented surface, not a replacement for
+  `:Lib deps show pdfport.nvim` — the two deliberately overlap and answer
+  different questions ("can pdfport do this" against "what does it want, why,
+  and how do I get it").
+
 - `pdftotext` and `pdftoppm` are declared as two tool entries sharing one
   `poppler-utils`/`poppler` package on most managers — worth knowing if this
   file is used as a template: `lib.nvim.deps.install.plan` de-duplicates the
   package name in the composed command, but both tools still show
   individually in `:Lib deps show`.
+
+## Notes (2026-08-30, Roadmap-M16)
+
+Three places where one `:checkhealth pdfport` run contradicted itself,
+all closed:
+
+- **`curl` was reported required and declared optional.** The spec was the
+  half that was right — only the claude backend and the ollama daemon check
+  use curl, both optional, and `backends/claude.lua`'s `available()` already
+  returns false without it. `health.lua` now reports it as optional too.
+- **Ghostscript is spelled differently on Windows.** The producer check
+  probed `gs`/`gswin64c`/`gswin32c` and reported "ready (exe: gswin64c)";
+  the declared-tools section knew only `gs` and reported it missing, same
+  host, same run. Fixed in `lib.nvim` with `bin_alternatives` (see the
+  `lib.nvim.md` cheatsheet) and declared here.
+- **Two probed tools were missing from the inventory with no reason given.**
+  `ueberzugpp` is now declared, with a `pacman` package and nothing else: it
+  is in Arch's `extra` repo, everywhere else only in a third-party repository
+  that has to be added first, so an `apt`/`brew` key would compose an install
+  command that fails. `marker_single` stays undeclared and now says why —
+  `marker-pdf` is pip-only, like `pdfplumber` and `docling`, and an entry
+  needs a `pkg` map it cannot honestly fill.
+
+`TESTS/install_spec_spec.lua` now parses the real `docs/install.json` with
+the real parser and insists on **zero** validation errors. That file is data
+nothing else reads — no module requires it, luacheck does not see it, and a
+rejected entry is silently dropped, so a typo shows up only as a tool quietly
+missing from a report.

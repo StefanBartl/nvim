@@ -44,15 +44,48 @@ Tools declared: 14  ·  present: 9  ·  missing: 5
 (`docs/install.json`, 6 tools originally for the extraction backends; grew
 to 14 on 2026-08-09 when the create()/merge() producers — img2pdf, magick,
 pandoc, weasyprint, soffice, qpdf, pdftk, ghostscript — got their own
-entries alongside the extraction ones). Nothing installs on its own:
+entries alongside the extraction ones, and to 15 on 2026-08-30 with
+`ueberzugpp`). Nothing installs on its own:
 `:Lib deps install` composes the command for whatever package manager is on
 this host (winget/scoop/choco here, apt/dnf/pacman/zypper/apk on Linux,
 brew on macOS), asks for confirmation, then **types** the command into a
 terminal split without submitting it — the sudo/UAC prompt, if any, is
 answered at that real terminal, not by a backgrounded job.
 
-Under the hood this needed a fix that's worth knowing about if `:Lib deps`
-ever looks like it's missing a plugin: `runtimepath` alone only sees
+### One tool, several spellings — `bin_alternatives` (2026-08-30)
+
+A tool entry may declare `bin_alternatives`: other executable names the
+**same** program is installed as on some platform. Ghostscript is `gs` on
+Linux and macOS and `gswin64c`/`gswin32c` on Windows — same program, same
+package, same reason to want it.
+
+```json
+{ "bin": "gs", "bin_alternatives": ["gswin64c", "gswin32c"], "why": "…", "pkg": { … } }
+```
+
+Detection only. `bin` stays canonical for identity, display label, install
+target and the `pkg` map; the report names the spelling that answered:
+
+```
+gs found (as gswin64c)
+```
+
+Without it, this machine got the contradiction the field was added for:
+`:checkhealth pdfport` said "ghostscript producer: ready (exe: gswin64c)" in
+one section and "gs NOT found" in the next.
+
+It is **not** a list of substitutes — a different program that would also do
+the job is a different tool with its own `why` and `pkg` (`qpdf` and `pdftk`
+both merge PDFs and stay two entries). A bare string instead of a list is
+rejected at validation, because a string iterates as an empty list and the
+alternative would silently never be probed.
+
+Shared by all three callers that ask "is it here" via `lib.nvim.deps.detect`:
+the `:checkhealth` line, `install.plan` (so a tool present under its Windows
+name is not planned for installation) and `:Lib deps show`'s `i` key.
+
+Under the hood the lookup needed a fix that's worth knowing about if
+`:Lib deps` ever looks like it's missing a plugin: `runtimepath` alone only sees
 plugins lazy.nvim has actually **loaded**. Measured on this config while
 building it — 120 plugins configured, 44 loaded at startup, 76 pending —
 `lib.nvim.deps.spec.find`/`plugins` therefore also consults
