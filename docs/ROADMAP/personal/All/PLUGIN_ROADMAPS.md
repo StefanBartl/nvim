@@ -26,8 +26,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
   - [Arbeitsmodus](#arbeitsmodus)
   - [Naechster Schritt](#naechster-schritt)
-    - [Erledigt am 2026-08-30: die Source-Achse (Option A)](#erledigt-am-2026-08-30-die-source-achse-option-a)
-    - [Erledigt am 2026-08-30: Option B — die echten Audit-Zeilen](#erledigt-am-2026-08-30-option-b--die-echten-audit-zeilen)
     - [Offen: die Live-Achse braucht eine echte Sitzung](#offen-die-live-achse-braucht-eine-echte-sitzung)
     - [Falls stattdessen Feature-Arbeit: QW8 vor QW5](#falls-stattdessen-feature-arbeit-qw8-vor-qw5)
   - [Legende](#legende)
@@ -107,133 +105,44 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30. Der Abschnitt von 2026-08-29 empfahl die Audit-Dokumente von
-`lsp.nvim` und danach Teil 3.1 insgesamt. Beides ist ueberholt, und zwar aus
-drei nachpruefbaren Gruenden — sie stehen hier, weil dieselbe Empfehlung sonst
-zum dritten Mal aufgeschrieben wird.
+Stand 2026-08-30. Zuletzt erledigt: die **Source-Achse** von `:Bindings check`
+und die **verbliebenen Audit-Zeilen** — beides samt Notizen in
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) unter `A` und
+`B`. Damit ist Teil 3.1 abgeschlossen und der Bindings-Baum deckungsgleich mit
+dem Code.
 
-**Die Empfehlung war nicht ausfuehrbar.** `lsp.nvim` hat keine
-Audit-Dokumente; sein ROADMAP-Ordner enthaelt nur `ROADMAP.md`. Das Trio
-`Arch&Coding.md`/`Checklist.md`/`Zentral-Prinzipien.md` liegt in neun anderen
-Repos, nie in diesem.
+**Empfohlen: QW1 — `mdview.nvim`s `experimental.any_file` in echtem Neovim
+durchtesten.** Aufwand XS, Nutzen hoch, **braucht dich** (siehe [1.1](#11-quick-wins-xss-nutzen-mittel-bis-hoch)).
 
-**Teil 3.1 ist inzwischen erledigt**, siehe den Erledigt-Block dort (WKDBooks
-`205f152`, neun Dateien, Befunde korrigiert statt nur markiert). Und die drei
-Dokumente sind seither ohnehin in
-[`docs/NOTES/RULES.md`](../../../NOTES/RULES.md) aufgegangen — Details im
-Abschnitt 3.1.
+*Warum dieser*: er ist der einzige Punkt auf der ganzen Liste, der über ein
+**bereits gebautes** Feature entscheidet. `any_file` ist seit 2026-08-24 fertig
+und über 55 Lua-Tests, 95 Client-Tests und einen Browser-Check verifiziert —
+nur der Pfad durch echtes Neovim nicht, weshalb es nicht als ausgeliefert
+gilt. Eine halbe Stunde entscheidet zwischen „fertig" und „Nacharbeit"; jeder
+andere Punkt baut etwas Neues, das danach ebenfalls getestet werden will.
 
-**Von den verbliebenen `🟡`-Markierungen sind die meisten Phantome.** 109 der
-179 stehen in `gopath.nvim`s Checkliste, die eine woertliche Kopie der
-*generischen* Vorlage ist — dort heisst `🟡` „EMPFOHLEN", nicht „offener
-Befund". Vier weitere sind `spotlight.nvim`s Prioritaetsspalte, eine ist in
-`migrate.nvim` als `n/a` gekennzeichnet. Echt pruefbar bleiben rund 14 Zeilen
-(github_stats 10, markdown 2, color_my_ascii 2) — das ist Option B unten.
+*Konkrete Auswirkung*: danach rendert `:MDView start` auf einer `.lua`- oder
+`.py`-Datei — oder es ist belegt, dass es das nicht tut. Heute weiß es
+niemand. Die fünf Fälle stehen fertig ausformuliert bei QW1.
 
----
-
-### Erledigt am 2026-08-30: die Source-Achse (Option A)
-
-Die nie gelaufene Pruefung aus dem alten Abschnitt — `:Bindings check` ohne
-Argument, also die Source-Achse — ist nachgeholt und abgearbeitet. Sie hat
-**150 Befunde gemeldet und dabei ueber sich selbst mehr verraten als ueber die
-Doku**:
-
-| | Befunde | Was es wirklich war |
-| --- | ---: | --- |
-| Ausgangslage | 150 | |
-| Veraltetes Kartenartefakt | −49 | `docs/map/module_map.json` war sechs Tage alt und beschrieb noch `lua/lsp/`, das laengst nach `lsp.nvim` ausgezogen ist. 44 Befunde zeigten auf geloeschte Dateien |
-| Werkzeugfehler: Spaltennamen | −50 | `drift.lua`s `LHS_HEADERS` kannte nur `lhs`/`key`/`keys`; der Korpus ist zweisprachig und schreibt `Taste`/`Mapping`/`Modus`. **601 Tabellenzeilen** waren dadurch fuer *beide* Achsen unsichtbar. `<leader>gb` steht woertlich in `Snacks.md` und wurde trotzdem als undokumentiert gemeldet |
-| Echte Doku-Luecke | 51 | dokumentiert, siehe unten |
-| **Rest** | **0** | |
-
-Ein zweiter Werkzeugfehler fiel erst beim Gegenpruefen auf, und er betraf die
-*Live*-Achse im ganzen Korpus: `nvim_get_keymap` liefert `<C-a>` in der
-modifier-erhaltenden Form `{128,252,4,65}`, `nvim_replace_termcodes` in der
-klassischen Steuerbyte-Form `{1}`. `is_live` verglich die beiden auf
-Gleichheit — **jede dokumentierte Ctrl-Kombination** meldete deshalb
-„dokumentiert, nicht live". Behoben ueber `key_forms()`, das beide Seiten
-durch dieselbe Normalform schickt.
-
-Was daraus geworden ist:
-
-- **`lua/bindings/usrcmds/bindings_explorer/drift.lua`** — beide Fehler
-  behoben, jeweils mit der Messung im Kommentar. Vier deutsche Spaltennamen
-  sind bewusst *nicht* aufgenommen (`Eintrag`, `Tab`, `Modul`, `Vorschlag`),
-  weil deren Zellen keine Tasten enthalten; die Begruendung steht bei
-  `LHS_HEADERS`.
-- **`Keymaps/nvim-config.md` und `Usercmds/nvim-config.md`** (neu) — die
-  Keymaps und Commands, die *diese Config selbst* registriert und die nie ein
-  Cheatsheet hatten. Der Baum kannte bis dahin nur „Personal-Plugin" und
-  „Extern-Plugin", nicht „die Config selbst".
-- **`Keymaps/dap.nvim.md`** — eine Tabelle hatte durch dazwischenliegende
-  Prosa ihre Kopfzeile verloren; der Parser las die erste Datenzeile als
-  Header und verwarf zehn Keymaps.
-
-Konkrete Auswirkung: `:Bindings check` meldet fuer diese Config **261 statt
-680 Befunde**, die Source-Achse null. Wer eine Taste nachschlaegt, findet sie
-jetzt — vorher standen 40 Keymaps und 11 Commands ausschliesslich im Code.
-
-**Zwei echte Defekte nebenbei gefunden, beide behoben:**
-
-- `:WKDDiffProfile` war in `wkdoptions/commands/register.lua` definiert, aber
-  `register_diff_profile()` hatte keinen Aufrufer — der Command existierte in
-  keiner laufenden Sitzung. `wkdoptions/init.lua`s `setup()` ruft ihn jetzt
-  auf, bei den anderen eigenstaendigen Features. Nachgewiesen: alle vier
-  Profile schalten `diffopt`, Completion liefert die vier Namen. Nur *beide*
-  Achsen zusammen konnten das finden — in der Quelle vorhanden, in
-  `nvim_get_commands` nicht.
-- `terminal.lua`s `<C-j>` trug `desc = "[Terminal Down"` mit offener Klammer.
-  An der Quelle korrigiert, das Cheatsheet zieht nach.
+**Danach, falls du delegieren willst: M17/M7** (Phase-0-IR im
+documentation-Verbund, M). Der einzige offene Punkt, der etwas *anderes*
+aufhält: ohne besitzenden Scope haben Klassen und `impl`-Blöcke keinen Ort,
+und M8 bis M13 hängen daran.
 
 ---
-
-### Erledigt am 2026-08-30: Option B — die echten Audit-Zeilen
-
-Aufwand XS, wie geschaetzt. Alle vier Dateien einzeln gegen den Code gehalten;
-korrigiert wurde, was nicht mehr stimmte, und ausdruecklich vermerkt, was
-geprueft wurde und weiterhin gilt — damit die Dateien lesbar sind, ohne jede
-Zeile nochmal nachzuschlagen.
-
-**`color_my_ascii.nvim`** — der Befund „kein automatisiertes Test-Framework"
-war komplett ueberholt, nicht halb: `TESTS/` hat 14 `_spec.lua`, einen
-repo-eigenen Runner (`run.lua` + `harness.lua`) *und* einen dritten CI-Job
-`tests (headless)` in `lint.yml` neben stylua/luacheck. Die
-`@types`-Ordner-Zeile ist nachgeprueft und unveraendert zutreffend.
-
-**`markdown.nvim`** — das Dokument widersprach **sich selbst**: der Durchgang
-vom 2026-08-29 hatte §5 auf „A3 done" korrigiert, aber zwei `🟡`-Zeilen
-stehengelassen, die dieselbe Luecke weiter behaupteten. Beide korrigiert.
-Dazu **A2** beantwortet, das als offene Frage formuliert war
-(„confirm every deferred callback re-validates"): `tableview/renderer.lua`
-enthaelt gar kein `vim.schedule`/`defer_fn`, es gibt also keinen verzoegerten
-Callback, dessen Handle veralten koennte — und jede Handle-Nutzung ist ohnehin
-durch `nvim_win_is_valid`/`nvim_buf_is_valid` abgesichert (zehn Stellen).
-
-**`github_stats.nvim`** — drei Stellen fuehrten den *gefixten* Global-Leak in
-`dashboard/init.lua` weiter als Teilerfuellung; auf ✅ korrigiert, mit der
-Historie als Notiz und dem Hinweis, dass `luacheck` im CI den Zustand haelt.
-Die uebrigen `🟡` sind geprueft und bleiben zu Recht stehen: Type Guards nur
-punktuell, keine echte Dependency Injection, Import-Reihenfolge konsistent
-aber nicht normiert, keine Tabellen-Vorreservierung (`table.new` kommt im
-ganzen Repo nicht vor).
-
-*Konkrete Auswirkung*: wie angekuendigt **im taeglichen Gebrauch gar nichts.**
-Danach stimmt die Beschreibung, und Teil 3.1 ist vollstaendig abgeschlossen
-statt zu neun Zehnteln.
 
 ### Offen: die Live-Achse braucht eine echte Sitzung
 
-Die 261 verbliebenen Befunde sind zu zwei Dritteln
+Die 260 verbliebenen Befunde sind zu zwei Dritteln
 `usercmd-undocumented` (166) — der bekannte Abschnitt mit fremder
 Plugin-Infrastruktur, die dieser Korpus nie abdecken sollte. Die 88
 `keymap-not-live` sind ueberwiegend fensterlokale Tasten von Plugins, deren
 UI headless nicht offen ist. Beides laesst sich nur in einer laufenden,
 benutzten Sitzung sinnvoll durchgehen, nicht headless.
 
-**Empfehlung**: A und B sind beide erledigt. Als naechstes Feature-Arbeit
-nach der Reihenfolge in Teil 4 — nicht die Live-Achse, solange niemand
-danebensitzt.
+**Empfehlung**: nicht angehen, solange niemand danebensitzt. Der Rest der
+Reihenfolge steht in Teil 4.
 
 ---
 
@@ -313,7 +222,8 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**
-(alle `lsp.nvim`) und **QW9** (`images.nvim`).
+(alle `lsp.nvim`), **QW9** (`images.nvim`) sowie **A** (Source-Achse von
+`:Bindings check`, nvim-config) und **B** (die verbliebenen Audit-Zeilen).
 
 ---
 

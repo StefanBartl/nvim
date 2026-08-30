@@ -89,7 +89,7 @@
 ---    modifier chord differently, so every documented Ctrl key read as
 ---    missing). Measured on this config, both fixes plus the two
 ---    `nvim-config` cheatsheets they made writable: 150 source-axis findings
----    became 0, and the whole report went from 680 findings to 261.
+---    became 0, and the whole report went from 680 findings to 260.
 ---
 --- Usercmds are checked BOTH directions, since `nvim_get_commands({})`
 --- only ever returns user-defined commands (no vim-default flood): the
