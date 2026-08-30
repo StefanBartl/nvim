@@ -2,6 +2,12 @@
 
 All plugin keymap cheatsheets in this folder.
 
+**Config-internal** (not a plugin's own keys):
+
+- [nvim-config](./nvim-config.md) — every keymap this config registers itself, from `lua/bindings/mappings/*`
+
+**Per plugin:**
+
 - [buffer-ctx.nvim](./buffer-ctx.md)
 - [cascade.nvim](./cascade.nvim.md)
 - [color_my_ascii.nvim](./color_my_ascii.nvim.md)
