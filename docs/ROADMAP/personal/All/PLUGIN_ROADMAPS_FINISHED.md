@@ -48,6 +48,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M17/M13 · `documentation.nvim`-Verbund — ein `ECOSYSTEM.md`, fünf Repos erreichen es](#m17m13-documentationnvim-verbund-ein-ecosystemmd-fnf-repos-erreichen-es)
   - [M17/M8 · `documentation.nvim` — `:DocMap impact`, gewichtet nach Runtime-Reichweite](#m17m8-documentationnvim-docmap-impact-gewichtet-nach-runtime-reichweite)
   - [M17/M9 · `documentation.nvim` — `:DocMap why` × Call-Trees](#m17m9-documentationnvim-docmap-why--call-trees)
+  - [M17/M14 · `documentation.nvim` — Cross-Repo-Doku-Verweise, per CI geprueft](#m17m14-documentationnvim--cross-repo-doku-verweise-per-ci-geprueft)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -1582,6 +1583,71 @@ Lädt-ruft-aber-nie-Fälle oben stammen.
 
 *Bindings-Zettel*: nicht berührt. Kein neuer Usercmd, keine neue Taste;
 `:DocMap why` gibt mehr Zeilen in dieselbe Quickfix-Liste.
+
+---
+
+### M17/M14 · `documentation.nvim` — Cross-Repo-Doku-Verweise, per CI geprueft
+
+**Erledigt am 2026-08-31. `documentation.nvim` `66c429f`,
+`runtime-analysis.nvim` `ae7af45`, dazu `ce9f90e` fuer `PLAN.md`/`PLAN-DONE.md`.
+Ausgeliefert als Check `sibling-reference-missing`.**
+
+Der Punkt entstand am 2026-08-30 aus M17/M13: neun tote `docs/ECOSYSTEM.md`-
+Verweise in `runtime-analysis.nvim`, jeder tot ab der Sekunde seines
+Entstehens, und keiner der beiden vorhandenen Checks konnte sie melden.
+
+**Groesser als angeschrieben — und das ist die Notiz.** Ich hatte gesagt,
+`external_repos` trage die noetige Zuordnung bereits. Tut es nicht ganz:
+`external_repos` **und** `tag_files` sind nach **Modul-Praefix** geschluesselt,
+eine Doku-Zitierung nach **Repo-Verzeichnisname**. Fuer `lib.nvim` faellt beides
+zusammen, fuer `documentation.nvim` nicht — dessen Praefix ist `documentation`,
+und genau dorthin zeigten die neun toten Verweise. Dazu deklarierte
+`documentation.nvim`s eigene `.docmap.json` ueberhaupt keine `external_repos`,
+und das Schema verbot `local_path` per `additionalProperties: false`. Also:
+Konfigurationsform **plus** Check, nicht Check allein.
+
+*Was ausgeliefert wurde*: `name` auf `Documentation.ExternalRepo` (der
+Verzeichnisname, von Hand gesetzt), `local_path` ins Schema aufgenommen und
+**relativ zu `opts.root`** aufloesbar gemacht — damit eine eingecheckte
+`.docmap.json` `../sibling` sagen kann und auf jeder Maschine stimmt, statt den
+absoluten Pfad eines Entwicklers zu tragen.
+
+**Zwei Fehlalarme auf echten Dokumenten, beide aus URL-foermigem Text, beide
+per Regel ausgeschlossen statt weggestellt.** Der erste Lauf meldete
+`lib.nvim/blob/main/lua/lib/nvim/notify/init.lua` aus dem eigenen
+`FEATURE_LOG.md` — ein GitHub-Blob-Link enthaelt einen Repo-Namen gefolgt von
+einem Pfad und passt damit auf jedes `<name>/<pfad>`-Muster. Volle URLs zu
+strippen loeste die Haelfte; die andere war derselbe Link **ohne Schema**, den
+kein URL-Stripper sieht. `<repo>/blob/<ref>/…` und `<repo>/tree/<ref>/…` sind
+jetzt als die URL-Pfade ausgeschlossen, die sie sind. Beide Regeln stehen samt
+ihrem Ausloeser im Quelltext, weil „warum ignoriert der Check das" sonst eine
+Frage ohne Antwort ist.
+
+*Die Disziplin, die ihn benutzbar haelt*: nur ein erstes Segment, das einem
+**deklarierten** `name` entspricht, wird ueberhaupt betrachtet. Nichts wird aus
+der Pfadform erschlossen. Ein Check, der raet, feuert ueberall und ist binnen
+eines Tages abgeschaltet — schlechter als keiner.
+
+*Ein Defekt, den die Suite gefangen hat, und genau dafuer ist sie da*:
+`vim.fs.normalize` war der naheliegende Weg, Root und Relativpfad zu
+verbinden, und steht nicht im Standalone-Shim. `shim_contract_spec.lua` fiel
+darueber — der Spec, der geschrieben wurde, nachdem zweimal ein Release genau
+daran zerbrochen war. Stattdessen blosse Konkatenation; `uv.fs_stat` loest `..`
+selbst auf.
+
+*Wo er tatsaechlich laeuft*: `documentation.nvim` und `runtime-analysis.nvim` —
+die beiden Repos mit docmap-Konfiguration und Map-Gate. `lib.nvim` und
+`mdview.nvim` haben weder `.docmap.json` noch `gen_map.lua`, dort gibt es keine
+Oberflaeche dafuer. Das ausdruecklich zu sagen ist besser, als fuenf abgedeckte
+Repos zu suggerieren.
+
+*Verifiziert*: alle vier Gates gruen, zwoelf Assertions im neuen
+`sibling_references_spec.lua` ueber einen Zwei-Baum-Fixture — plus je eine
+Probe in beiden Repos gegen echte Checkouts: der tote Geschwister-Pfad wird
+gemeldet, der lebendige daneben nicht.
+
+*Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste — ein Check-Code
+mehr in `:DocMap check`.
 
 ---
 

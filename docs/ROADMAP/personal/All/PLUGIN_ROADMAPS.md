@@ -103,46 +103,44 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30 (11). Zuletzt erledigt: **M17/M9** — `:DocMap why`
-beantwortet jetzt beide Ketten, nicht nur die require-Kette. Davor am selben
-Tag **M17/M8**, **M17/M13**, **Call Hierarchy**, **M5**, **M4a**, **M3**,
-**M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**,
-**QW1**, **A** und **B**; zurueckgestellt sind **M4b** und **M17/M12**.
-Notizen zu allen in
+Stand 2026-08-31. Zuletzt erledigt: **M17/M14** — Cross-Repo-Doku-Verweise
+werden jetzt per CI geprueft. Am Vortag **M17/M9**, **M17/M8**, **M17/M13**,
+**Call Hierarchy**, **M5**, **M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**,
+**M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**, **A** und **B**;
+zurueckgestellt sind **M4b** und **M17/M12**. Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Der Befund haerte sich**: M17/M9 stand unter `runtime-analysis` und war gar
-kein Runtime-Punkt — die Call-Kanten liegen seit jeher in jeder erzeugten
-Karte. Damit sind **vier der letzten acht Beschreibungen** dieses Verbunds
-danebengelegen: M12 war schon gebaut, M13 schlimmer als beschrieben, M8 und M9
-beide kleiner, M9 zusaetzlich falsch einsortiert. Vor dem Bauen den Quelltext
-lesen ist hier nicht Sorgfalt, sondern die Haelfte der Arbeit.
+**Die Klasse der kleinen Punkte ist leer.** Was bleibt, ist jeweils eine
+Sitzung oder mehr. Und der Befund hat sich noch einmal verschaerft: **fuenf der
+letzten neun Beschreibungen** dieses Verbunds lagen daneben — M12 war schon
+gebaut, M13 schlimmer als beschrieben, M8 und M9 kleiner, M9 falsch
+einsortiert, M14 **groesser**, weil die Konfigurationsform, auf der er
+aufsetzen sollte, gar nicht existierte. Erst den Quelltext lesen ist hier keine
+Vorsicht mehr, sondern die Regel.
 
-**Empfohlen: M17/M14 — Cross-Repo-Doku-Verweise, per CI geprueft**
-(`documentation.nvim`, Aufwand M, siehe [1.2](#12-mittel-m)).
+**Empfohlen: M17/M7b — eine Datei, viele Module** (`documentation.nvim`,
+Aufwand M, Engine, siehe [1.2](#12-mittel-m)).
 
-*Warum jetzt*: er ist der letzte kleine Punkt der Liste, und der einzige
-verbliebene, dessen Nutzen **belegt** statt argumentiert ist. Neun tote
-Cross-Repo-Verweise lagen im August wochenlang unbemerkt da, und keiner der
-beiden vorhandenen Checks haette sie finden koennen:
-`doc-references-missing` loest *Code-Bezeichner* gegen die eigene Modulkarte
-auf, `dead-readme-link` loest *Markdown-Links* innerhalb **eines** Repos auf
-und streift vorher Code-Spans ab. Beide sind korrekt; die dritte Form fehlt.
+*Warum jetzt*: von allem Verbliebenen ist er der einzige, der **falsch** ist
+statt **fehlend**. M17/M7 hat `owner`/`owner_kind` eingefuehrt, aber ein Scope
+ist kein Knoten — ein Rust `mod x { … }` haengt weiterhin als Gruppierung unter
+seiner Datei und traegt damit eine falsche Identitaet: keine eigene id, keine
+Summary, keine Coverage, keine Kanten. Eine falsche Identitaet ist ein
+schlechterer Zustand als ein fehlendes Feature, weil jeder Konsument sie fuer
+bare Muenze nimmt.
 
-*Was schon bereitliegt*: `external_repos` traegt die noetige Zuordnung —
-`repo` plus optionales `local_path`, per `uv.fs_stat` geprueft, ohne Netz. Es
-ist eine Erweiterung, kein neues Subsystem.
+*Konkrete Auswirkung*: ein `mod`, eine `class`, ein `impl`-Block wird ein
+**Knoten** — mit eigener id, Summary, Coverage und Kanten — statt einer
+Beschriftung ueber Funktionen, die fuer jeden Konsumenten weiterhin der Datei
+ringsum gehoeren.
 
-*Konkrete Auswirkung*: `scripts/ci.sh map` faellt auf einem Geschwister-Pfad
-um, den es nicht mehr gibt, statt dass ein Leser ihn Jahre spaeter findet. Und
-es ist auf-These: das Oekosystem liefert ein Plugin aus, dessen ganzer Zweck
-das Finden von Stellen ist, an denen Doku und Code aufhoeren uebereinzustimmen
-— nur auf seine eigenen Geschwister zeigt es noch nicht.
+*Was vorher nachzusehen ist*: was `core/scopes.lua` seit M17/M7 schon liefert
+und wo `Documentation.ScopeInfo` bewusst abgeleitet statt serialisiert ist —
+die PLAN-DONE-Notiz zu M7 nennt das als Entscheidung, nicht als Luecke.
 
-**Danach wird es groesser.** Uebrig bleiben **M17/M7b** (ein Scope ist kein
-Knoten), **M17/M10** und **M17/M11**, **M17/QW6**, dazu `images.nvim` M10–M13,
-M9 (Frecency), M14 (`filetree.nvim`) und die L-Punkte. Keiner davon ist mehr
-die Sitzungsgroesse der letzten elf.
+**Die Alternative, wenn `documentation.nvim` gerade nicht dran sein soll:
+M10 + Detection** (`images.nvim`, Sixel-Paket) — repo-uebergreifend, mit
+Vorbedingung, und seit Langem unveraendert offen.
 
 ---
 
@@ -191,12 +189,12 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 23 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 22 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
   mehr**. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
   **M6 + M7** (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und
-  **M17/M7**, **M17/M13**, **M17/M8** und **M17/M9** sind erledigt und stehen unter 1.0, ebenso **M5** —
+  **M17/M7**, **M17/M13**, **M17/M8**, **M17/M9** und **M17/M14** sind erledigt und stehen unter 1.0, ebenso **M5** —
   der ist als Treesitter-Konfiguration im Config-Repo gelandet statt als
   Plugin-Feature. **M4b** und **M17/M12** sind zurueckgestellt und stehen mit
   Begruendung im selben Dokument. Die Summe faellt trotzdem nur um eins:
@@ -233,8 +231,9 @@ Plugin-Feature), **QW9**
 Durchtesten von QW1 an), **M16** (`lib.nvim` + `pdfport.nvim`), **M17/M7**
 (Phase-0-IR im documentation-Verbund), **M17/M13** (ein `ECOSYSTEM.md`, fuenf
 Repos erreichen es), **M17/M8** (`:DocMap impact` nach Runtime-Reichweite),
-**M17/M9** (`:DocMap why` × Call-Trees) sowie **A** (Source-Achse von
-`:Bindings check`, nvim-config) und **B** (die verbliebenen Audit-Zeilen). **Zurueckgestellt**,
+**M17/M9** (`:DocMap why` × Call-Trees), **M17/M14** (Cross-Repo-Doku-Verweise
+per CI) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B**
+(die verbliebenen Audit-Zeilen). **Zurueckgestellt**,
 mit Begruendung im selben Dokument: **M4b** und **M17/M12**.
 
 ---
@@ -346,7 +345,7 @@ Offen sind dort:
 | **M11** | Endpoint-Inventar × Request-History × Response-Shape | M |
 | ~~**M12**~~ | ~~Runtime-Tab im ausgelieferten Artefakt~~ — **zurueckgestellt 2026-08-30**, die Substanz war gebaut | — |
 | ~~**M13**~~ | ~~Ein `ECOSYSTEM.md`, vier Repos lesen es~~ — **erledigt 2026-08-30** | — |
-| **M14** | Cross-Repo-Doku-Verweise, per CI geprueft — die zweite Haelfte von M13 | M |
+| ~~**M14**~~ | ~~Cross-Repo-Doku-Verweise, per CI geprueft~~ — **erledigt 2026-08-31**, und groesser als beschrieben: die Konfigurationsform fehlte noch | — |
 | **QW6** | Fenced Blocks auf der generierten Seite (war mal ein Quick Win, ist heute M) | M |
 
 **M7 ist am 2026-08-30 gebaut** — `owner`/`owner_kind` auf
@@ -367,9 +366,12 @@ Einträge unter siebzehn), und die trägt sich erst mit dem dritten Bewohner.
 und war genau das, wonach er aussah, nur kleiner: eine Kreuzung zweier
 vorhandener Antworten über einen gemeinsamen Schlüssel. **M9 ist am selben Tag erledigt** und
 war gar kein Runtime-Punkt: die Call-Kanten liegen seit jeher in jeder
-erzeugten Karte, gefehlt hat nur die Traversierung. Die dortige Empfehlung ist
-jetzt **M14** — der letzte kleine Punkt, und der einzige, dessen Nutzen belegt
-statt argumentiert ist.
+erzeugten Karte, gefehlt hat nur die Traversierung. **M14 ist am 2026-08-31 erledigt** und war
+groesser als beschrieben: `external_repos` ist nach Modul-Praefix
+geschluesselt, eine Doku-Zitierung nach Repo-Verzeichnisname, und die beiden
+fallen ausgerechnet bei `documentation.nvim` auseinander. Die dortige
+Empfehlung ist jetzt **M7b** — von allem Verbliebenen der einzige, der falsch
+ist statt fehlend.
 
 **M13 ist erledigt** und hat einen neuen Punkt hinterlassen: **M14**, die
 Hälfte, die kein Zeiger war — Cross-Repo-Doku-Verweise, per CI geprüft.
@@ -747,17 +749,16 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M17/M14** (Cross-Repo-Doku-Verweise, per CI geprüft) — der letzte kleine
-   Punkt, und der einzige verbliebene, dessen Nutzen belegt statt argumentiert
-   ist. Siehe „Naechster Schritt".
-2. Danach wird es größer: **M17/M7b**, **M17/M10**, **M17/M11**, **M17/QW6**,
-   **M10 + Detection** (`images` Sixel-Paket), **M9** (Frecency über drei
-   Repos). Keiner davon ist mehr die Sitzungsgröße der letzten elf.
+1. **M17/M7b** (ein Scope ist kein Knoten) — von allem Verbliebenen der
+   einzige, der *falsch* ist statt *fehlend*. Siehe „Naechster Schritt".
+2. Danach nach Bedarf: **M17/M10**, **M17/M11**, **M17/QW6**, **M10 +
+   Detection** (`images` Sixel-Paket), **M9** (Frecency über drei Repos),
+   **M14** (`filetree.nvim`). Die Klasse der kleinen Punkte ist leer.
 
 QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6, M7 und die
 Call-Hierarchy-Resthälfte von M4 (`lsp.nvim`), M5 (nvim-config), M16
-(`lib.nvim` + `pdfport.nvim`) sowie M17/M7, M17/M13, M17/M8 und M17/M9 sind
-erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+(`lib.nvim` + `pdfport.nvim`) sowie M17/M7, M17/M13, M17/M8, M17/M9 und
+M17/M14 sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
 S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
