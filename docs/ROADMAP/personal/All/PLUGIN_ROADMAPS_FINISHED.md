@@ -546,7 +546,7 @@ korrigiert; die Stellen sagen jetzt, was gilt und was bis 2026-08-30 galt.
 ### QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher
 
 **Erledigt am 2026-08-30. `lsp.nvim` `860cd44`, auf `main` gepusht. Zwei neue
-Module, 27 neue Specs, ein Nebenbefund in der Config-Normalisierung.**
+Module, 24 neue Specs, ein Nebenbefund in der Config-Normalisierung.**
 
 Ursprünglich: *„Formalisiert, was in `root_scope_picker` halb existiert. Kein
 neues Konzept, nur ein sauberer Einstiegspunkt."* Aufwand S, Nutzen mittel.
@@ -628,12 +628,15 @@ Beide neuen Listen-Optionen hätten denselben Fehler geerbt; sie und `servers`
 lesen jetzt die rohe User-Tabelle. **Das ist eine Verhaltensänderung**: eine
 Config, die Server nennt, bekommt ab jetzt genau diese.
 
-*Verifiziert*: 261 Specs grün (27 neu — 16 in `workspace_folders_spec.lua`, 11
+*Verifiziert*: 261 Specs grün (24 neu — 16 in `workspace_folders_spec.lua`, 8
 in `config_spec.lua`), Smoke-Test grün, `stylua`, `luacheck` und
 `gen_bindings --check` sauber. Dazu ein Durchlauf in echtem Neovim gegen einen
 angelegten Monorepo-Baum: Routen und Completion, Kandidatensuche inklusive
 Geschwister-Paket und markerlosem Verzeichnis, das Capability-Skip mit Grund,
 der Duplikat-Guard, der Report und `:Lsp root list` in den Scratch-Split.
+
+*Zahlendreher in der Commit-Message*: `860cd44` sagt „27 of them new (16 …, 11
+in config_spec)". Es sind 24 (16 + 8). Die Gesamtzahl 261 stimmt.
 
 *Bindings-Zettel*: `Keymaps/lsp.nvim.md` und `Usercmds/lsp.nvim.md` tragen den
 neuen Eintrag samt der Begründung, warum `<leader>lsp` und `<leader>lsw`
