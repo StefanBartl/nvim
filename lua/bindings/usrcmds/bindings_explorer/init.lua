@@ -26,6 +26,12 @@
 --- Drift-Bericht (dokumentiert-aber-nicht-live / live-aber-undokumentiert)
 --- gegen `nvim_get_keymap`/`nvim_get_commands`, siehe `drift.lua`s
 --- Moduldoc für den genauen (bewusst eingeschränkten) Scope.
+--- `:Bindings check repo [plugin]` bzw. `:Bindings check <plugin> repo`
+--- schaltet zusätzlich die Checkout-Achse zu (`repo.lua`): dokumentierte
+--- Bindings von Plugins, die diese Session nie geladen hat und die die
+--- Live-Achse deshalb nur als „skipped" durchwinkt, werden im lokalen
+--- Quellbaum des Plugins gesucht. Opt-in, weil sie als einzige Achse von
+--- der Platte liest statt eine laufende Session zu befragen.
 
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -112,12 +118,18 @@ end
 
 --- Drift-Bericht (`drift.lua`) in einem read-only Viewer anzeigen.
 ---@param plugin string|nil
+---@param opts { repo?: boolean, repo_root?: string }|nil `repo` schaltet die
+---Checkout-Achse zu (siehe `drift.lua`s Moduldoc, "The repo axis") — bewusst
+---opt-in, weil sie als einzige Achse ~20 Repos von der Platte liest statt
+---eine laufende Session zu befragen. `repo_root` richtet dieselbe Achse auf
+---ein Sammelverzeichnis mit mehreren Lua-Projekten statt auf die
+---Lazy-Spec-Auflösung und impliziert `repo`.
 ---@return nil
-function M.check(plugin)
-  local findings, skipped, source_reason = drift.check(plugin)
+function M.check(plugin, opts)
+  local findings, skipped, source_reason, repo_info = drift.check(plugin, opts)
   require("lib.nvim.ui.kit.viewer").open({
     title = ("Bindings — check (%d)"):format(#findings),
-    lines = drift.describe(findings, skipped, source_reason),
+    lines = drift.describe(findings, skipped, source_reason, repo_info),
   })
 end
 
@@ -213,10 +225,34 @@ function M.enable()
       },
       {
         path = { "check" },
-        args = { { name = "plugin", type = "STRING", optional = true } },
+        args = {
+          { name = "plugin", type = "STRING", optional = true },
+          { name = "axis", type = "STRING", enum = { "repo" }, optional = true },
+        },
+        -- `root=` als kv, nicht als dritter Positionswert: ein Pfad und ein
+        -- Plugin-Name sind beide freie Strings, und der Composer bindet
+        -- Positionen der Reihe nach — `:Bindings check C:/repos` würde den
+        -- Pfad still als Plugin-Namen binden. Mit dem Schlüssel davor ist die
+        -- Zuordnung unabhängig von der Stellung, und `<Tab>` nach `root=`
+        -- vervollständigt Verzeichnisse (`type = "DIR"`).
+        kv = { { key = "root", type = "DIR" } },
         desc = "Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only)",
         run = function(ctx)
-          M.check(ctx.args.plugin)
+          M.check(ctx.args.plugin, { repo = ctx.args.axis == "repo", repo_root = ctx.kv.root })
+        end,
+      },
+      -- Dieselbe Achse ohne Plugin-Argument. Nötig als eigene Route, nicht
+      -- als bloßer zweiter Positionswert: `:Bindings check repo` würde sonst
+      -- „repo" als Plugin-Namen binden und stillschweigend einen leeren
+      -- Bericht liefern. Als literales Kind von `check` gewinnt der
+      -- Baum-Walk (siehe composer `tree.walk`), und `<Tab>` schlägt es vor.
+      {
+        path = { "check", "repo" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        kv = { { key = "root", type = "DIR" } },
+        desc = "Drift-Bericht mit der Checkout-Achse: dokumentierte Bindings ungeladener Plugins gegen deren lokalen Quellbaum; `root=<dir>` nimmt jedes Lua-Projekt unter einem Sammelverzeichnis statt der Lazy-Spec-Auflösung",
+        run = function(ctx)
+          M.check(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root })
         end,
       },
     },
