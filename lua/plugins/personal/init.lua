@@ -759,8 +759,8 @@ plugins.add({
     --               vs. cascade `cycle_pick`                (global preset)
     --     An exact duplicate. `bindings.mappings` runs in the UIReady phase,
     --     i.e. AFTER cascade's VeryLazy setup, so custom.lua silently
-    --     overwrote cascade's -- the same load-order trap that made
-    --     ctrl_cycle shadow cascade's <C-y>/<C-x> (see the note in
+    --     overwrote cascade's -- the same load-order trap this config has
+    --     paid for once before (see the note at the top of
     --     bindings/mappings/init.lua). Nothing was broken for the config, but
     --     cascade's picker was unreachable.
     --

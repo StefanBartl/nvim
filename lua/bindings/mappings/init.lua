@@ -11,18 +11,19 @@ function M.setup()
   -- four LSP lines from `fzf.lua` and inc-rename's `<leader>rn`, so that one
   -- module owns every LSP key instead of five. Same keys, one owner.
 
+  -- NOTE on load order, for everything in this list: the mappings phase runs
+  -- at UIReady, which is AFTER a plugin that sets its keys at VeryLazy. A key
+  -- mapped here therefore wins over a plugin's, silently -- the plugin's key
+  -- is simply gone, with nothing said. Two of those have already been paid
+  -- for; both are written up in
+  -- docs/NOTES/PersonelPlugins/BINDINGS/Keymaps/Collisions.md. Check that
+  -- file first whenever a plugin key "does nothing", and before adding a key
+  -- here that a plugin might already own.
+
   require("bindings.mappings.buf_win_tab").setup()
   require("bindings.mappings.buffer_jump").setup()
   require("bindings.mappings.custom").setup()
   require("bindings.mappings.context_open").setup()
-  -- ctrl_cycle is the ancestor cascade.nvim's cycle domain was ported from,
-  -- and cascade now supersedes it: it covers all 24 of ctrl_cycle's active
-  -- groups plus operator flips, ISO dates, single-letter stepping, counts,
-  -- dot-repeat and a picker. Binding both was a silent regression -- this
-  -- phase runs at UIReady, i.e. AFTER cascade's VeryLazy setup, so
-  -- ctrl_cycle's <C-y>/<C-x> overwrote cascade's, and everything cascade
-  -- adds beyond plain word groups fell through to a native <C-a>/<C-x> that
-  -- does nothing on a letter, date or operator.
   require("bindings.mappings.editing").setup()
   require("bindings.mappings.fzf").setup()
   require("bindings.mappings.general").setup()

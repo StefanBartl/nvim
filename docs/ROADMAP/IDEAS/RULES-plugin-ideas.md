@@ -268,9 +268,13 @@ Ideas framed as an entirely new *.nvim project, not just a lib.nvim module.
 - **Explorer-Singleton plugin** generalizing the "two competing file-browser
   UIs displace/restore each other" logic out of a config-local autocmd file —
   from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
-- **Word/Number-Cycler plugin** (`cycler.nvim`) extracting `ctrl_cycle.lua`'s
-  case-aware cycling of configurable word pairs — from
-  [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
+- ~~**Word/Number-Cycler plugin** (`cycler.nvim`) extracting `ctrl_cycle.lua`'s
+  case-aware cycling of configurable word pairs~~ — **done, as
+  [cascade.nvim](https://github.com/StefanBartl/cascade.nvim)'s cycle domain.**
+  It went well past the original idea: operator flips, ISO dates, single-letter
+  and in-word character stepping, counts, dot-repeat, a picker and language
+  packs. The config-local source file was deleted on 2026-08-30 after checking
+  that all 49 words of its 24 groups are covered by cascade's defaults.
 - **EmmyLua-aware comment-toggler** handling `---@` annotations distinctly
   from normal comments — from [nvim-config](E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/belege/nvim-config.md).
 - **sticky-marks.nvim**: multi-colored, named, persistent line marks with

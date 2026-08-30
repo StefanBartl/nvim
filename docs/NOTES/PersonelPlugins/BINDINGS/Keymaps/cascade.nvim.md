@@ -143,6 +143,14 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-30: **`lua/bindings/mappings/ctrl_cycle.lua` gelöscht.** Seit dem
+  Eintrag vom 2026-08-29 war die Datei nur noch tot im Baum — nirgends mehr
+  `require`d, 6 KB. Vor dem Löschen geprüft: alle 49 Wörter ihrer 24 Gruppen
+  stecken in cascades Defaults, inklusive des 3-Zustands-Zyklus `. → / → \`.
+  Die Ladereihenfolge-Warnung, die an ihr hing, steht jetzt allgemein
+  formuliert oben in `bindings/mappings/init.lua` und ausführlich in
+  [Collisions.md](./Collisions.md#config-vs-plugin-resolved-2026-08-30) — sie
+  galt nie nur für diese eine Datei.
 - 2026-08-30: `<leader>cp`/`<leader>cs` gegen diese Config kollidiert und in
   der Lazy-Spec aufgelöst (`cycle_pick` → `<leader>cP`, list `sort` →
   `<leader>cS`). Ersteres war ein exaktes Duplikat, das die UIReady-Phase
