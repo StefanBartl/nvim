@@ -15,6 +15,8 @@ directly — a missing nvim-dap degrades gracefully instead of aborting the
 rest of `setup()` (which-key/autocmds still get wired). `B`/`L` prompt via
 `lib.nvim.ui.kit.input` (non-blocking), not `vim.fn.input`.
 
+## Session control -- step and continue
+
 | lhs (after prefix) | mode | action | desc |
 | --- | --- | --- | --- |
 | `c` | n | `dap.continue` | "[DAP] Continue" |
@@ -50,6 +52,11 @@ clears the value rather than cancelling; `<Esc>` cancels. The same module now
 backs `:Dap conditional-breakpoint`/`log-point` and the nvzone/menu entries,
 which each used to carry their own copy of the empty prompt. The `desc`
 strings are unchanged.
+
+## Breakpoints, panels and the REPL
+
+| lhs (after prefix) | mode | action | desc |
+| --- | --- | --- | --- |
 | `t` | n | `dap.terminate` | "[DAP] Terminate" |
 | `r` | n | `dap.restart` | "[DAP] Restart" |
 | `b` | n | `dap.toggle_breakpoint` | "[DAP] Toggle Breakpoint" |

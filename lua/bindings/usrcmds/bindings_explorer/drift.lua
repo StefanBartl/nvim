@@ -81,6 +81,16 @@
 ---    suspect; re-run `:Bindings check` after actually exercising that
 ---    plugin's feature before trusting the finding.
 ---
+--- 6. **Two false-positive classes were removed on 2026-08-30**, both of
+---    them silent: a row the scraper could not read yielded no lhs and was
+---    dropped from every axis without a word. See `LHS_HEADERS` (the header
+---    allow-list was English-only against a bilingual corpus -- 601 rows
+---    invisible) and `key_forms` (the live and documented sides encode a
+---    modifier chord differently, so every documented Ctrl key read as
+---    missing). Measured on this config, both fixes plus the two
+---    `nvim-config` cheatsheets they made writable: 150 source-axis findings
+---    became 0, and the whole report went from 680 findings to 261.
+---
 --- Usercmds are checked BOTH directions, since `nvim_get_commands({})`
 --- only ever returns user-defined commands (no vim-default flood): the
 --- live-undocumented direction is cross-checked against Personal AND
@@ -129,9 +139,55 @@ local M = {}
 --- the lhs/mode — see the module doc on how inconsistent real column
 --- naming turned out to be across the 137-file corpus (checked
 --- empirically before writing this list).
-local LHS_HEADERS = { lhs = true, key = true, keys = true, ["action key"] = true }
-local MODE_HEADERS = { mode = true, modes = true }
-local USERCMD_HEADERS = { command = true, invocation = true, subcommand = true }
+---
+--- **The corpus is bilingual and this list was not** (fixed 2026-08-30).
+--- `ExternPlugins/Bindings/*` is written in German throughout, so its key
+--- column is spelled `Taste`, `Mapping`, `Taste(n)` or `Taste (in LazyGit)`,
+--- never `lhs`/`key`. A row whose header matches nothing here yields no lhs
+--- at all, and both axes then drop it without saying so: the source axis
+--- reported `<leader>gb` as undocumented while it sat in `Snacks.md`'s Git
+--- table, and the live axis never checked those rows in either direction.
+--- 601 rows of the corpus were invisible this way -- counted, not estimated.
+---
+--- Four German-corpus headers are deliberately NOT added, because their
+--- cells are not keys and admitting them would let unrelated text
+--- "document" a binding:
+---   - `Eintrag` (`Menu.md`) -- nvzone/menu entry labels ("Format Buffer").
+---   - `Tab` (`Search.md`) -- search.nvim tab names ("All Files").
+---   - `Modul` (`Snacks.md`) -- module names (`snacks.picker`).
+---   - `Vorschlag (README)` (`Gitsigns.md`) -- keys upstream's README
+---     *suggests* and this config did not bind. Counting those as
+---     documented would suppress a real finding for a key bound elsewhere.
+--- `` `lhs` key `` (fileops.nvim.md) and `` `keymaps.<name>` ``
+--- (diff.nvim.md) name a config KEY (`delete_force`), not a keystroke, and
+--- stay excluded for the same reason -- `normalize_lhs`'s `_`/`.` guard
+--- would reject their cells anyway.
+local LHS_HEADERS = {
+  lhs = true,
+  key = true,
+  keys = true,
+  ["action key"] = true,
+  -- German corpus. Every one checked against its actual cells first.
+  mapping = true,
+  taste = true,
+  -- `Telescope.md`'s in-picker table, whose cells read `` `<A-c>` / `c` ``;
+  -- `first_token` takes the first backticked group, i.e. the insert-mode key.
+  ["insert/normal"] = true,
+  -- `pickers.nvim.md`'s cross-picker table (`Action | Default | telescope |
+  -- fzf-lua | snacks`), whose `Default` column holds `<C-Left>` and friends.
+  default = true,
+}
+local MODE_HEADERS = { mode = true, modes = true, modus = true, modi = true }
+local USERCMD_HEADERS = {
+  command = true,
+  invocation = true,
+  subcommand = true,
+  -- `Dap.md`/`Harpoon.md`/`NvChadUI.md`/`Treesitter.md` head their verb
+  -- tables `Aufruf`; `lsp.nvim.md`/`Harpoon.md` list the flat shorthand for
+  -- a verb route under `Alias`.
+  aufruf = true,
+  alias = true,
+}
 local DESC_HEADERS = { desc = true, description = true }
 
 --- Cells that fill a `desc` column without naming a description. Checked
@@ -144,8 +200,15 @@ local VALID_MODE_CHARS =
 ---@param h string
 ---@return string
 local function normalize_header(h)
-  h = vim.trim((h:lower():gsub("%s*%b()", "")))
-  h = h:gsub("^default%s+", ""):gsub("^config%s+", ""):gsub("^user%-chosen%s+", "")
+  -- Backticks come off first: a column headed `` `lhs` key `` has to
+  -- normalize the same way as `lhs key`, or the markup alone would decide
+  -- whether the column is findable.
+  h = vim.trim((h:lower():gsub("`", ""):gsub("%s*%b()", "")))
+  -- `Default-Mapping (Plugin)` (`VisualMulti.md`) is the hyphenated spelling
+  -- of `Default lhs` -- one character apart, same meaning, so one pattern.
+  -- A bare `Default` keeps its name (nothing follows to strip) and is
+  -- matched by `LHS_HEADERS` instead.
+  h = h:gsub("^default[%s%-]+", ""):gsub("^config%s+", ""):gsub("^user%-chosen%s+", "")
   return h
 end
 
@@ -419,6 +482,57 @@ local function command_owner(name, lazy_owners, defs)
   return "unknown"
 end
 
+--- Every byte string that legitimately spells the same keystroke.
+---
+--- The two sides of the live comparison do not agree on how to encode a
+--- modifier chord, and both are right:
+---   - `nvim_get_keymap` reports `<C-a>` modifier-preserving, as
+---     `K_SPECIAL KS_MODIFIER MOD_CTRL 'A'` = `{128,252,4,65}`.
+---   - the documented side goes through `nvim_replace_termcodes`, which
+---     collapses the same key to the traditional control byte `{1}`.
+--- Comparing those raw made EVERY documented Ctrl chord in the corpus report
+--- as "documented, not live" -- measured, and the single largest remaining
+--- false-positive class after the buffer-local one. `<C-S-k>` disagreed
+--- twice over (`{128,252,6,75}` vs `{128,252,2,11}`).
+---
+--- `keytrans()` renders both spellings as `<C-A>`, which fixes most of it,
+--- but not the keys whose control byte has an older name: byte 10 renders as
+--- `<NL>` from the collapsed side and `<C-J>` from the modifier-preserving
+--- one. Feeding the display form back through `nvim_replace_termcodes` lands
+--- both on `{10}`, so the third form closes that gap.
+---
+--- Returned as a LIST of forms rather than one canonical string, and indexed
+--- in addition to the raw key rather than instead of it: nothing that matched
+--- before this can stop matching. Both sides go through this same function,
+--- which is what keeps `normalize_lhs`'s warning from applying -- that one is
+--- about comparing `keytrans()` output against `.lhs`, an asymmetry where a
+--- leader space stays a literal space on one side and renders as `<Space>` on
+--- the other. Symmetric use has no such problem.
+---@param raw string
+---@return string[]
+local function key_forms(raw)
+  local forms, seen = { raw }, { [raw] = true }
+  local function push(v)
+    if type(v) == "string" and v ~= "" and not seen[v] then
+      seen[v] = true
+      forms[#forms + 1] = v
+    end
+  end
+
+  local ok_disp, disp = pcall(vim.fn.keytrans, raw)
+  if ok_disp then
+    push(disp)
+    if type(disp) == "string" and disp ~= "" then
+      local ok_back, back = pcall(vim.api.nvim_replace_termcodes, disp, true, true, true)
+      if ok_back then
+        push(back)
+      end
+    end
+  end
+
+  return forms
+end
+
 --- Global keymaps PLUS the buffer-local keymaps of every buffer that
 --- happens to be loaded right now.
 ---
@@ -444,8 +558,10 @@ local function live_keymaps(modes)
     local function add(maps)
       for _, m in ipairs(maps) do
         if m.lhsraw then
-          set[m.lhsraw] = set[m.lhsraw] or {}
-          table.insert(set[m.lhsraw], m.desc or "")
+          for _, form in ipairs(key_forms(m.lhsraw)) do
+            set[form] = set[form] or {}
+            table.insert(set[form], m.desc or "")
+          end
         end
       end
     end
@@ -496,8 +612,21 @@ end
 ---@param doc_desc string|nil
 ---@return boolean
 local function is_live(live_maps, modes, lhs, doc_desc)
+  -- Looked up under every spelling `live_keymaps` indexed, for the encoding
+  -- mismatch `key_forms` documents.
+  local forms = key_forms(lhs)
+
   for _, mode in ipairs(modes) do
-    local descs = live_maps[mode] and live_maps[mode][lhs]
+    local in_mode = live_maps[mode]
+    local descs
+    if in_mode then
+      for _, form in ipairs(forms) do
+        descs = in_mode[form]
+        if descs then
+          break
+        end
+      end
+    end
     if descs then
       if not doc_desc then
         return true
