@@ -139,7 +139,19 @@ Alle mit `requires = "fzf-lua"`.
 | Key | Mode | Effect | Option/Source |
 | --- | --- | --- | --- |
 | `<leader>lsp` | n | Root-Scope waehlen (cwd / Git-Root / Dateipfad) | `root_scope_pick` |
+| `<leader>lsw` | n | Workspace-Folder hinzufuegen (Multi-Root / Monorepo) | `workspace_folder_add` |
 | `<leader>lb` | n | Marksman-Markdown-Hints umschalten | `marksman_hints` |
+
+`<leader>lsp` und `<leader>lsw` sehen benachbart aus, bewegen aber zwei
+verschiedene Dinge. `lsp` schaltet die *Strategie*, mit der ein Root gesucht
+wird, und erreicht nur die Server, deren `root_dir` eine Funktion ist
+(`lua_ls`, `marksman`) — `gopls`, `ts_ls`, `clangd`, `csharp` deklarieren
+`root_markers`, die Neovim selbst aufloest, ohne Haken. `lsw` fuegt einen
+*Workspace-Folder* ueber `workspace/didChangeWorkspaceFolders` hinzu und
+erreicht damit jeden Server, der `changeNotifications` ankuendigt, ohne
+Neustart. Nur `add` hat eine Taste; `remove` und `list` laufen ueber
+`:Lsp root remove` / `:Lsp root list` — eine zweite Taste daneben waere einen
+Anschlag davon entfernt, den Ordner zu entfernen, den man hinzufuegen wollte.
 
 ## which-key
 

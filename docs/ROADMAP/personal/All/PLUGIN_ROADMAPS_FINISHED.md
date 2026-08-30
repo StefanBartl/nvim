@@ -25,6 +25,7 @@ Querverweis von aussen weiter aufgeht.
   - [B · Die verbliebenen Audit-Zeilen prüfen](#b-die-verbliebenen-audit-zeilen-prfen)
   - [QW1 · `mdview.nvim` — `any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-any_file-in-echtem-neovim-durchtesten)
   - [QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay](#qw10-mdviewnvim-auf-windows-startet-kein-lokal-gebauter-relay)
+  - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
 
 ---
 
@@ -539,3 +540,102 @@ Eigenschaft der Welt („no `.exe` suffix, also on Windows — the `-o` name is
 literal"), nicht als Fehler. `docs/server/Testanweisugen.md` trug die
 Handarbeit-Umgehung `go build -o mdview-server.exe .` als Anleitung. Alles
 korrigiert; die Stellen sagen jetzt, was gilt und was bis 2026-08-30 galt.
+
+---
+
+### QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher
+
+**Erledigt am 2026-08-30. `lsp.nvim` `860cd44`, auf `main` gepusht. Zwei neue
+Module, 27 neue Specs, ein Nebenbefund in der Config-Normalisierung.**
+
+Ursprünglich: *„Formalisiert, was in `root_scope_picker` halb existiert. Kein
+neues Konzept, nur ein sauberer Einstiegspunkt."* Aufwand S, Nutzen mittel.
+
+**Die Beschreibung stimmte nicht ganz, und das ist der wichtigste Teil dieser
+Notiz.** Der naheliegende Zuschnitt wäre eine vierte `root_scope`-Strategie
+gewesen — `cwd`/`git`/`path` plus ein gepinntes Verzeichnis. Der hätte
+ausgerechnet dort nichts getan, wo man ihn braucht: `root_scope` wird nur von
+Resolvern gelesen, die als *Funktion* an `root_dir` hängen, und das sind in
+diesem Repo genau zwei — `lua_ls` und `marksman`. `gopls`, `ts_ls`, `clangd`
+und `csharp` deklarieren `root_markers`, die Neovim selbst auflöst; dort gibt
+es keinen Haken, an dem eine Strategie greifen könnte. Ein Pin hätte also
+lautlos die Server verfehlt, für die ein Monorepo-Switcher überhaupt existiert.
+
+*Gebaut wurde stattdessen LSPs echter Multi-Root-Mechanismus*: ein laufender
+Client führt eine **Liste** von Workspace-Foldern und nimmt
+`workspace/didChangeWorkspaceFolders` entgegen, um sie zur Laufzeit zu ändern.
+Das erreicht jeden Server, der die Notification ankündigt — `root_markers`-Server
+eingeschlossen — und wirkt **ohne Neustart**.
+
+*Konkrete Auswirkung*: `gopls` steht in `packages/api`; `<leader>lsw`, in der
+Liste `packages/web` wählen — Go-to-Definition über die Paketgrenze löst auf.
+Kein Client-Neustart, kein Re-Index des ganzen Repos.
+
+*Oberfläche*: `:Lsp root` bekommt `add`, `remove` und `list` neben `pick` und
+`show`; `<leader>lsw` öffnet den Add-Picker. Neue Module
+`lua/lsp/core/workspace_folders.lua` (redet mit den Clients) und
+`lua/lsp/core/workspace_picker.lua` (die zwei Chooser) — getrennt, damit das
+erste ohne UI testbar bleibt. Neue Config-Keys `workspace.markers` und
+`workspace.containers`.
+
+*Die Kandidatensuche ist die eigentliche Arbeit.* Aufwärts von der Datei jedes
+Verzeichnis mit einem Marker — das findet das eigene Paket und das Repo-Root.
+Danach liest sie die Kinder des **äußersten** gefundenen Projekts und steigt
+genau **eine** Ebene durch `containers` (`packages`, `apps`, `services`, …) ab.
+Ohne diesen zweiten Teil taugt die Funktion für Monorepos nichts: von
+`packages/api` aus liegt `packages/web` niemals *über* einem, ein reiner
+Aufwärtslauf sieht es nie. Begrenzt ist er trotzdem — ein `readdir` pro
+Container-Name, sonst würde ein Picker ein ganzes Repository durchstaten.
+
+*Drei Dinge, die Neovims eigene `add`/`remove`/`list_workspace_folders` nicht
+tun und die den Wrapper rechtfertigen*:
+
+1. **Capability-Gate.** Die LSP-Spec trennt zwei Fragen, die Neovim als eine
+   behandelt: `workspaceFolders.supported` heißt „der Server versteht Folder
+   beim Initialize", `changeNotifications` heißt „er will zur Laufzeit davon
+   hören". Nur die zweite lizenziert, was dieses Modul tut. Ein Client, der sie
+   nicht ankündigt, wird übersprungen und mit Grund im Report genannt, statt
+   eine Notification zu bekommen, um die er nie gebeten hat.
+2. **Client-Zuordnung.** `list_workspace_folders()` wirft die Folder aller
+   Clients in eine namenlose Liste. Welcher Client welchen hält, ist genau die
+   Frage, mit der man ankommt, wenn ein Sprung nicht auflöst.
+3. **Ehrliche Rückmeldung.** `Client:_add_workspace_folder` antwortet auf ein
+   Duplikat mit einem nackten `print()`; `vim.lsp.buf.remove_workspace_folder`
+   meldet *„is not currently part of the workspace"* **bedingungslos** — auch
+   im Erfolgsfall, und mit fehlendem Leerzeichen. Duplikate und unbekannte
+   Folder werden deshalb hier aufgelöst, bevor die Builtins erreicht werden.
+
+*Ein Detail, das sonst Zeit gekostet hätte*: `Client:_remove_workspace_folder`
+vergleicht `folder.name == dir` **wörtlich**. Übergibt man die normalisierte
+Schreibweise, geht die Notification an den Server raus und der Eintrag bleibt
+lokal trotzdem stehen. `M.folders()` führt deshalb `path` (normalisiert, für
+Anzeige und Vergleich) und `raw` (die Schreibweise des Clients, fürs Entfernen)
+nebeneinander.
+
+*Zwei Änderungen über das Feature hinaus.* `:Lsp root` ohne Argument macht
+jetzt `show` statt `pick` — ein blankes Verb, das einen modalen Picker öffnet,
+war der überraschendere Default, und `show` ist inzwischen der volle Report:
+Scope, plus pro Client der aufgelöste Root, seine Folder und ob er
+Laufzeitänderungen annimmt. Der Scope allein sagt nie, *wo* er die Server
+hingesetzt hat, und das ist die Frage, mit der man ankommt.
+
+*Nebenbefund, im selben Commit behoben*: `servers` wurde aus der
+**gemergten** Tabelle gelesen. `vim.tbl_deep_extend` verschmilzt Arrays
+indexweise, also kam `servers = { "lua_ls" }` als `{ "lua_ls", "gopls",
+"marksman", "html", … }` heraus — jeder Default ab Index zwei überlebte. Die
+Server-Liste einzuschränken tat also fast nichts und sagte nichts darüber.
+Beide neuen Listen-Optionen hätten denselben Fehler geerbt; sie und `servers`
+lesen jetzt die rohe User-Tabelle. **Das ist eine Verhaltensänderung**: eine
+Config, die Server nennt, bekommt ab jetzt genau diese.
+
+*Verifiziert*: 261 Specs grün (27 neu — 16 in `workspace_folders_spec.lua`, 11
+in `config_spec.lua`), Smoke-Test grün, `stylua`, `luacheck` und
+`gen_bindings --check` sauber. Dazu ein Durchlauf in echtem Neovim gegen einen
+angelegten Monorepo-Baum: Routen und Completion, Kandidatensuche inklusive
+Geschwister-Paket und markerlosem Verzeichnis, das Capability-Skip mit Grund,
+der Duplikat-Guard, der Report und `:Lsp root list` in den Scratch-Split.
+
+*Bindings-Zettel*: `Keymaps/lsp.nvim.md` und `Usercmds/lsp.nvim.md` tragen den
+neuen Eintrag samt der Begründung, warum `<leader>lsp` und `<leader>lsw`
+nebeneinander liegen, aber verschiedene Dinge bewegen — und warum `remove`
+bewusst *keine* Taste bekommt.

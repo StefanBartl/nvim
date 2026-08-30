@@ -52,7 +52,22 @@ Server dazukommt (NEW-26).
 | `:Lsp format [action]` | — | `once` (Default), `on`, `off`, `toggle`, `status`, `which` |
 | `:Lsp diag {action} [list]` | — | `action` ∈ `qf`, `loc`, `next`, `prev`; `list` ∈ `qf`, `loc` (Default `loc`) |
 | `:Lsp workspace [action]` | — | Workspace-weite Diagnostics beim Attach: `on`, `off`, `toggle`, `status` (Default), `now` |
-| `:Lsp root [action]` | — | Root-Scope: `pick` (Default), `show` — cwd / Git-Root / Dateipfad |
+| `:Lsp root [action]` | — | Roots und Workspace-Folders: `show` (Default), `pick`, `add`, `remove`, `list` |
+
+`:Lsp root` traegt zwei verschiedene Mechanismen unter einem Wort. `pick`
+schaltet die Aufloesungs-*Strategie* (cwd / Git-Root / Dateipfad) und erreicht
+nur die Server, deren `root_dir` eine Funktion ist — `lua_ls` und `marksman`.
+`gopls`, `ts_ls`, `clangd` und `csharp` deklarieren `root_markers`, die Neovim
+selbst aufloest; dort gibt es keinen Haken, an dem die Strategie greifen
+koennte. `add`/`remove` bewegen dagegen LSPs eigene Workspace-Folders ueber
+`workspace/didChangeWorkspaceFolders` — das erreicht jeden Server, der
+`changeNotifications` ankuendigt, `root_markers`-Server eingeschlossen, und
+wirkt ohne Neustart. Ein Server, der das nie angekuendigt hat, wird
+uebersprungen statt benachrichtigt; `:Lsp root show` nennt ihn samt Grund.
+
+Der Default wechselte von `pick` auf `show`: ein blankes `:Lsp root` oeffnete
+bisher einen modalen Picker, jetzt meldet es Scope, aufgeloesten Root pro
+Client und dessen Workspace-Folders in einen Scratch-Split.
 
 `:Lsp diag next`/`prev` benutzt bewusst `1` und nicht `v:count1` als Default:
 `v:count` haelt, was der letzte Tastendruck hinterlassen hat, nicht was jemand
