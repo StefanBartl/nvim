@@ -128,8 +128,8 @@ simply never fires. `<M-k>`/`<M-j>` is free and is the portable fallback.
 
 | Key | Mode | Effect | desc | Source |
 | --- | --- | --- | --- | --- |
-| `[b` | n, x, o | Jump to the head of the structure the cursor is inside; repeat to climb a level further out | `Jump to the head of the enclosing structure (repeatable)` | `treesitter_structure.lua` |
-| `]b` | n, x, o | The same downward, to the closing end | `Jump to the end of the enclosing structure (repeatable)` | `treesitter_structure.lua` |
+| `[u` | n, x, o | Jump to the head of the structure the cursor is inside; repeat to climb a level further out | `Jump to the head of the enclosing structure (repeatable)` | `treesitter_structure.lua` |
+| `]u` | n, x, o | The same downward, to the closing end | `Jump to the end of the enclosing structure (repeatable)` | `treesitter_structure.lua` |
 
 Roadmap-M5, gebaut als Treesitter-Bewegung statt als Feature-Modul.
 `nvim-treesitter-textobjects`' `move.goto_previous_start` geht zur naechsten
@@ -151,8 +151,31 @@ er laesst die ganze `textobjects`-Query dieser Sprache nicht mehr parsen.
 Block-Sprachen (go, c, typescript, …) funktionieren fuer ihre Bloecke ohne
 eigene Datei.
 
-`[b`/`]b` waren frei; die anderen Klammerpaare in Gebrauch sind
-`[f [F [p [r [s [t` hier und `[d [l [q [w` aus lsp.nvim.
+**Zur Tastenwahl, und das ist die Lehre daraus:** es war zuerst `[b`/`]b`, auf
+Basis eines Greps ueber `lua/`, der dort nichts fand. Der Grep war das falsche
+Werkzeug — `[b ]b [B ]B` sind **Neovims eigene 0.12-Defaults** fuer
+Buffer-Navigation (`vim/_core/defaults.lua`), stehen also in keiner
+Config-Datei und waren nie frei. Aufgefallen ist es erst, als der laufende
+Editor gefragt wurde statt der Quelltexte; `maparg().desc` sagte
+`:bprevious`. Ein `maparg() ~= nil`-Test haette es *nicht* gezeigt, weil
+Neovims Default ebenfalls ein Lua-Callback ist.
+
+Tatsaechlich belegt (im laufenden Editor erhoben): `[a ]a [A ]A [b ]b [B ]B
+[t ]t [T ]T [L ]L [Q ]Q` von Neovim, `[d ]d [D ]D [l ]l [q ]q [w ]w` aus
+lsp.nvim, `[s ]s` von snacks.nvim' Scope-Bewegung — der naechste Nachbar
+dieser Funktion. `[u`/`]u` ist frei: `u` fuer „up and out", der Buchstabe
+benennt die Funktion, die Klammer die Richtung, wie bei `[d`/`]d`.
+
+**Zwei Abschalter, auf den zwei Ebenen, auf denen man das nicht wollen kann:**
+
+- *Das Plugin*: `["nvim-treesitter-textobjects"] = "disabled"` in der
+  `modes`-Tabelle von `plugins/treesitter.lua`. Das Mapping-Modul bindet dann
+  **gar nichts** — die Tasten bleiben frei, statt belegt zu sein und beim
+  Druecken zu klagen.
+- *Nur diese Tasten*: `setup({ enable = false })` in
+  `bindings/mappings/init.lua`, oder `setup({ keys = { up = …, down = … } })`
+  zum Verschieben; `down = false` laesst eine Richtung weg. Das ist der
+  Schalter fuer „Plugin ja, diese Tasten nein".
 
 ## Smart Del (`smart_del_key.lua`)
 
@@ -255,6 +278,14 @@ prefixes therefore comes from whichever plugin registered it, not from here.
 
 ## Changelog
 
+- 2026-08-30 (5): Tasten von `[b`/`]b` auf `[u`/`]u` korrigiert — `[b`/`]b`
+  sind Neovim-0.12-Defaults (`:bprevious`/`:bnext`) und waren nie frei; der
+  urspruengliche Grep hat nur `lua/` gesehen.
+- 2026-08-30 (4): zwei Abschalter nachgezogen — die
+  `modes`-Tabelle in `plugins/treesitter.lua` (dafuer auf
+  `plugins.control.mode` umgestellt, wie `misc.lua`) und ein `opts`-Argument
+  am `setup()`-Aufruf. Ohne verfuegbares Plugin bindet das Modul jetzt nichts,
+  statt Tasten zu belegen, die nur klagen.
 - 2026-08-30 (3): `[b`/`]b` aus `treesitter_structure.lua` aufgenommen
   (Roadmap-M5). Erster Nutzer von `nvim-treesitter-textobjects`, das seit
   jeher installiert und nirgends konfiguriert war.

@@ -13,7 +13,23 @@ local notify = require("lib.nvim.notify").create("[plugins.treesitter]")
 -- was never installed (see docs/ROADMAP/personal/lsp.md, 2026-07-26).
 local INJECTION_PARSERS = { "luadoc", "vimdoc" }
 
-return {
+local plugins = require("plugins.control.mode").new()
+
+-- Repos hier zentral deaktivieren (Basename -> "disabled"), statt weiter unten
+-- im jeweiligen Spec `enabled = false` zu setzen.
+--
+-- `nvim-treesitter-textobjects` ist der Schalter fuer die
+-- Struktur-Bewegung `[b`/`]b` (bindings/mappings/treesitter_structure.lua):
+-- wird es hier abgeschaltet, bindet das Mapping-Modul die beiden Tasten gar
+-- nicht erst, statt sie zu belegen und beim Druecken zu klagen. Die Queries
+-- unter `after/queries/*/textobjects.scm` sind dann ebenfalls wirkungslos,
+-- aber harmlos -- sie erweitern nur eine Capture, die niemand abfragt.
+plugins.modes({
+  -- ["nvim-treesitter-textobjects"] = "disabled",
+  -- ["nvim-treesitter-context"] = "disabled",
+})
+
+plugins.add({
   ---------------------------------------------------------------------------
   -- Core Treesitter
   ---------------------------------------------------------------------------
@@ -164,4 +180,6 @@ return {
       max_lines = 3,
     },
   },
-}
+})
+
+return plugins.export()

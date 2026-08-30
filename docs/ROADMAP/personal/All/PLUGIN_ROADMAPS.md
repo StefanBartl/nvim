@@ -103,12 +103,20 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30 (7). Zuletzt erledigt: **M5** — und er ist nicht dort gelandet,
+Stand 2026-08-30 (8). Zuletzt erledigt: **Call Hierarchy** (`lsc`/`lsC`, die
+Resthaelfte von M4 — zwei Katalogeintraege auf fzf-luas Provider, kein
+Geruest) und die zwei Abschalter fuer M5s `[u`/`]u`: die `modes`-Tabelle in
+`plugins/treesitter.lua` fuer das Plugin, ein `opts`-Argument am
+`setup()`-Aufruf fuer nur die Tasten. Ohne verfuegbares Plugin bindet das
+Modul jetzt gar nichts — eine belegte Taste, die nur klagt, steht einem
+anderen Mapping im Weg und sieht wie ein Defekt aus.
+
+Davor **M5** — und er ist nicht dort gelandet,
 wo er stand. Der Punkt lag unter `lsp.nvim`, weil die Taste jahrelang in der
 LSP-Keymap-Datei stand; der Kopf einer umschliessenden Struktur ist aber eine
 Treesitter-Frage. Auf Entscheid des Auftraggebers als **Konfiguration** gebaut
 statt als Feature: sechs `after/queries/*/textobjects.scm`-Dateien und zwei
-Tasten (`[b`/`]b`) im Config-Repo, kein Modul in `lsp.nvim`. Davor am selben Tag
+Tasten (`[u`/`]u`) im Config-Repo, kein Modul in `lsp.nvim`. Davor am selben Tag
 **M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**,
 **QW8**, **QW10**, **QW1**, **A** und **B**; **M4b** ist zurueckgestellt.
 Notizen zu allen in
@@ -152,15 +160,9 @@ drei Repos den Tab tatsaechlich rendert. Nach der Trefferquote dieses Tages —
 drei von sechs Beschreibungen waren in irgendeiner Form falsch — ist das keine
 Formalie.
 
-**Danach, in dieser Reihenfolge:**
-
-**Call Hierarchy als XS-Punkt** (`lsp.nvim`), falls gewuenscht: fzf-lua bringt
-`lsp_incoming_calls` und `lsp_outgoing_calls` mit, die vier vorhandenen
-Picker-Keymaps sind das Muster. Zwei Katalogeintraege, kein Geruest. Das ist
-die Haelfte von M4, die nach M4a uebrig ist, und sie haengt nicht an M4b.
-
-**M10 + Detection** (`images.nvim` Sixel-Paket) und **M9** (Frecency ueber
-drei Repos), je nach Bedarf.
+**Danach:** **M10 + Detection** (`images.nvim` Sixel-Paket) und **M9**
+(Frecency ueber drei Repos), je nach Bedarf. Beide sind repo-uebergreifend,
+beide haben eine Vorbedingung — es gibt keinen Ein-Repo-Punkt mehr.
 
 ---
 
@@ -745,15 +747,13 @@ offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
    brauchen, bevor sie überhaupt etwas zeigen können. Rückt vor, weil
    `lsp.nvim` keinen sauber zugeschnittenen Punkt mehr übrig hat. Siehe
    „Naechster Schritt".
-2. **Call Hierarchy** (`lsp.nvim`, XS) — zwei Katalogeinträge auf fzf-luas
-   `lsp_incoming_calls`/`lsp_outgoing_calls`, im Muster der vier vorhandenen
-   Picker-Keymaps. Die Hälfte von M4, die nach M4a übrig ist.
-3. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
-   (Frecency über drei Repos).
+2. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
+   (Frecency über drei Repos). Beide repo-übergreifend — ein Ein-Repo-Punkt
+   ist keiner mehr übrig.
 
-QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6 und M7
-(`lsp.nvim`), M5 (nvim-config), M16 (`lib.nvim` + `pdfport.nvim`) sowie
-M17/M7 sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6, M7 und die
+Call-Hierarchy-Resthälfte von M4 (`lsp.nvim`), M5 (nvim-config), M16
+(`lib.nvim` + `pdfport.nvim`) sowie M17/M7 sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
 S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap

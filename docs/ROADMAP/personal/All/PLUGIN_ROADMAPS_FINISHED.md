@@ -44,6 +44,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
   - [M4a · `lsp.nvim` — ein Picker-Backend statt zwei](#m4a-lspnvim-ein-picker-backend-statt-zwei)
   - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
+  - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
 
@@ -1444,8 +1445,8 @@ der Auftraggeber beantwortet: solche Bewegungen laufen hier ueber Treesitter
 und sollen dort bleiben. Damit aendert sich nicht nur der Ort, sondern die
 Bauform: **es ist kein Feature-Modul geworden, sondern eine Konfiguration.**
 
-*Was es tut*: `[b` setzt den Cursor auf den Kopf der Struktur, in der er
-steht; nochmal gedrueckt eine Ebene weiter raus, bis zur aeussersten. `]b`
+*Was es tut*: `[u` setzt den Cursor auf den Kopf der Struktur, in der er
+steht; nochmal gedrueckt eine Ebene weiter raus, bis zur aeussersten. `]u`
 dasselbe abwaerts, zum schliessenden Ende. In einer Funktion klettert es
 `for` → `if` → `function`, in einer Konfigurationstabelle Tabellenkopf um
 Tabellenkopf.
@@ -1491,7 +1492,7 @@ ihre *Bloecke* schon ohne eigene Datei.
 *Verifiziert in der echten Config*, jeweils mit gedrueckter Taste, nicht ueber
 die API:
 
-| Sprache | von | `[b`-Kette |
+| Sprache | von | `[u`-Kette |
 | --- | --- | --- |
 | lua (Konfigurationstabelle) | 9 | 9 → 8 → 7 → 6 → 5 → 4 → 3 |
 | lua (Funktion mit `if`/`for`) | 6 | 6 → 5 → 4 → 3 → 1 |
@@ -1501,7 +1502,7 @@ die API:
 | yaml | 4 | 4 → 3 → 2 → 1 |
 | rust | 4 | 4 → 3 → 2 → 1 |
 
-`]b` ebenso abwaerts (in der Tabelle `9:6 → 9:30 → 10 → 11 → 12 → 13 → 14` —
+`]u` ebenso abwaerts (in der Tabelle `9:6 → 9:30 → 10 → 11 → 12 → 13 → 14` —
 der erste Schritt bleibt in derselben Zeile, weil dort die innerste Tabelle
 endet; eine Zeilen-nur-Messung sieht darin faelschlich „keine Bewegung").
 Alle sechs Query-Dateien parsen gegen die echte Grammatik, und die
@@ -1515,3 +1516,70 @@ betroffen ist.
 Lua-Implementierung einer Baumsuche, kein `<leader>gtt`. Der Punkt stand
 jahrelang als „Feature, das gewollt, aber nie gebaut wurde" auf der Liste —
 die Antwort war, dass das Werkzeug dafuer schon im Ladenregal stand.
+
+**Nachgereicht am selben Tag: zwei Abschalter**, auf Wunsch des Auftraggebers
+und auf den zwei Ebenen, auf denen man das nicht wollen kann.
+
+- *Das Plugin*: `plugins/treesitter.lua` ist dafuer auf
+  `plugins.control.mode` umgestellt — dieselbe `modes`-Tabelle am Dateikopf,
+  die `misc.lua` schon fuehrt, mit einer auskommentierten Zeile
+  `["nvim-treesitter-textobjects"] = "disabled"`. Das ist die
+  Installations-Spec, in der diese Config ohnehin ihr An/Aus fuehrt.
+- *Nur die Tasten*: `setup({ enable = false })` am Aufruf in
+  `bindings/mappings/init.lua`, im selben Muster wie `smart_del_key.setup({
+  set_cr = true })`; `keys = { up = …, down = … }` verschiebt sie, `down =
+  false` laesst eine Richtung weg.
+
+**Und ein Fehler, den derselbe Durchgang gefunden hat**: die Tasten waren
+zuerst `[b`/`]b`, weil ein Grep ueber `lua/` dort nichts fand. `[b ]b [B ]B`
+sind aber **Neovims eigene 0.12-Defaults** fuer Buffer-Navigation — sie stehen
+in keiner Config-Datei und waren nie frei. Der Grep war das falsche Werkzeug;
+gefunden hat es erst die Frage an den laufenden Editor, und auch die nur, weil
+ich `maparg().desc` gelesen habe statt nur „ist belegt": Neovims Default ist
+ebenfalls ein Lua-Callback, ein Vorhandensein-Test haette „ja, gebunden"
+gesagt und gemeint „ja, von jemand anderem". Jetzt `[u`/`]u`, gegen die im
+laufenden Editor erhobene Belegung geprueft. Nebenbei sichtbar geworden:
+`[s`/`]s` ist snacks.nvim' Scope-Bewegung, der naechste Nachbar dieser
+Funktion.
+
+Wichtiger als die Schalter selbst ist, **was ohne Plugin passiert**: das Modul
+prueft die Verfuegbarkeit **einmal beim Setup** und bindet dann gar nichts,
+statt die Tasten zu belegen und beim Druecken zu klagen. Eine belegte Taste,
+die nur eine Warnung produziert, ist schlechter als eine freie — sie steht
+einem anderen Mapping im Weg und sieht wie ein Defekt aus. Alle vier Zustaende
+nachgemessen: Default bindet beide, `enable = false` bindet nichts, eigene
+Tasten binden nur die eigenen, Plugin weg bindet nichts.
+
+---
+
+### Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4
+
+**Erledigt am 2026-08-30. Zwei Katalogeintraege, kein Modul.**
+
+Der XS-Punkt, der aus M4 uebrig blieb, nachdem M4a das Backend
+vereinheitlicht und M4b sich damit erledigt hatte. Call Hierarchy existierte
+im Repo nirgends — weder Keymap noch Kommando noch `callHierarchy` im
+Quelltext. Gebraucht wurde dafuer: nichts ausser zwei Zeilen im Katalog, weil
+fzf-lua `lsp_incoming_calls` und `lsp_outgoing_calls` mitbringt und die vier
+vorhandenen Picker-Eintraege das Muster sind.
+
+`lsc` fragt, wer das Symbol unter dem Cursor aufruft; `lsC`, was es aufruft.
+Das Paar folgt `lsd`/`lsD`: kleine Taste die haeufigere Richtung, geshiftet
+das Gegenstueck. `lsi` war von den Implementierungen belegt und `<leader>c*`
+in der Host-Config voll, also war die praefixlose `ls*`-Familie der einzige
+stimmige Platz.
+
+*Ehrlich zum Nutzen*: Neovim hat `vim.lsp.buf.incoming_calls` durchaus — das
+ist also keine fehlende Faehigkeit, sondern eine benutzbare. Die native
+Variante kippt in die Quickfix-Liste und verliert damit den Baum, den das
+Protokoll zurueckgibt; fzf-luas Provider halten ihn durchklickbar und mit
+Preview.
+
+`default` bindet jetzt 49 Eintraege, `minimal` 33 — beide neuen sind in
+`minimal`, aus demselben Grund wie die anderen Picker-Tasten: es gibt fuer
+keine der beiden eine native Taste. `docs/BINDINGS.md` neu generiert
+(`gen_bindings.lua --check` sagt „current"), Suite gruen ueber 23
+Spec-Dateien.
+
+*Bindings-Zettel*: `Keymaps/lsp.nvim.md` — neuer Abschnitt, Preset-Zeile auf
+49/33.

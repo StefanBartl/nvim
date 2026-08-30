@@ -37,7 +37,10 @@ function M.setup()
   require("bindings.mappings.telescope").setup()
   require("bindings.mappings.terminal").setup()
   require("bindings.mappings.toggle_comment").setup()
-  require("bindings.mappings.treesitter_structure").setup()
+  -- `enable = false` here drops just the two keys; switching the plugin off
+  -- in `plugins/treesitter.lua`'s `modes` table drops them too, and is the
+  -- switch for "I do not want this at all".
+  require("bindings.mappings.treesitter_structure").setup({ enable = true })
   require("bindings.mappings.window_orientation").setup()
 
   -- require("bindings.mappings.view_scroll").map_default_keys('<C-d>', '<C-u>')

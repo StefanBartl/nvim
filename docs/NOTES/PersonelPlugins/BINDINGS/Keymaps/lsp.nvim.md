@@ -26,7 +26,7 @@ driften. Diese Datei kann es, und hat es: sie stand von 2026-08-23 bis
 | Config | Wirkung |
 | --- | --- |
 | `keymaps.enable = false` | Gar nichts binden |
-| `keymaps.preset` | `"default"` (alle 47) / `"minimal"` (31) / `"none"` (keine) |
+| `keymaps.preset` | `"default"` (alle 49) / `"minimal"` (33) / `"none"` (keine) |
 | `keymaps.map.<action> = "<lhs>"` | Aktion auf eine andere Taste legen |
 | `keymaps.map.<action> = false` | Diese Map weglassen |
 
@@ -58,6 +58,23 @@ Beide gehen durch **dieselbe** Aktion, die den Backend aus `rename.provider`
 waehlt (`"auto"` / `"inc_rename"` / `"native"`). Frueher lief `grn` das native
 Rename und `<leader>rn` `:IncRename` — zwei Tasten, dieselbe Operation,
 verschiedenes Verhalten. Das war Roadmap-Befund B9.
+
+## Call Hierarchy
+
+| Key | Mode | Effect | Option/Source |
+| --- | --- | --- | --- |
+| `lsc` | n | Eingehende Aufrufe: wer ruft dieses Symbol | `picker_incoming_calls` |
+| `lsC` | n | Ausgehende Aufrufe: was ruft dieses Symbol | `picker_outgoing_calls` |
+
+Beides `<cmd>FzfLua …<cr>` wie die vier anderen Picker-Tasten, `requires =
+"fzf-lua"`. Das Paar folgt `lsd`/`lsD`: die kleine Taste ist die Richtung, die
+man weit oefter braucht, die geshiftete ihr Gegenstueck. `lsi` war schon von
+den Implementierungen belegt, und `<leader>c*` ist in dieser Config voll —
+die praefixlose `ls*`-Familie war der einzige stimmige Platz.
+
+Neovim hat `vim.lsp.buf.incoming_calls` durchaus, aber es kippt in die
+Quickfix-Liste und verliert damit den Baum, den das Protokoll zurueckgibt;
+fzf-luas Provider halten ihn durchklickbar.
 
 ## Formatter
 
@@ -219,6 +236,10 @@ ganz diesem Plugin gehoert.
   Katalog erzeugt und in CI geprueft wird.
 - 2026-08-29 (2): `hints_toggle` / `hints_toggle_filetype` (`<leader>th`,
   `<leader>tH`) aus Roadmap-QW3 aufgenommen.
+- 2026-08-30 (2): `picker_incoming_calls` / `picker_outgoing_calls`
+  (`lsc`, `lsC`) aufgenommen — die Haelfte von Roadmap-M4, die nach M4a uebrig
+  war, und ohne Geruest zu haben: fzf-lua bringt die beiden Provider mit.
+  Preset-Zeile jetzt 49/33.
 - 2026-08-30: `lightbulb_toggle` / `lightbulb_toggle_filetype` (`<leader>tl`,
   `<leader>tL`) aus Roadmap-M2 aufgenommen. Bei der Gelegenheit die
   Preset-Zeile korrigiert: sie stand noch auf 44/28 und war seit QW3 (45/29)
