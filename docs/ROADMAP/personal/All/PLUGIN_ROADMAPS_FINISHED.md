@@ -47,6 +47,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [M17/M13 · `documentation.nvim`-Verbund — ein `ECOSYSTEM.md`, fünf Repos erreichen es](#m17m13-documentationnvim-verbund-ein-ecosystemmd-fnf-repos-erreichen-es)
   - [M17/M8 · `documentation.nvim` — `:DocMap impact`, gewichtet nach Runtime-Reichweite](#m17m8-documentationnvim-docmap-impact-gewichtet-nach-runtime-reichweite)
+  - [M17/M9 · `documentation.nvim` — `:DocMap why` × Call-Trees](#m17m9-documentationnvim-docmap-why--call-trees)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -1509,6 +1510,78 @@ den echten Arbeits-Diff dieses Repos, nicht nur gegen die Fixtures.
 
 *Bindings-Zettel*: nicht berührt. Kein neuer Usercmd, keine neue Taste;
 `:DocMap impact` gibt dieselbe Quickfix-Liste in anderer Reihenfolge aus.
+
+---
+
+### M17/M9 · `documentation.nvim` — `:DocMap why` × Call-Trees
+
+**Erledigt am 2026-08-30. `documentation.nvim` `ff18561`, auf `main` gepusht.
+Dazu `a746880` fuer `PLAN.md`/`PLAN-DONE.md`.**
+
+Ursprünglich: *„`why <a> <b>` läuft heute den **statischen require-Graphen** ab.
+Der Call-Tree ist die andere Kette: nicht ‚was lädt was', sondern ‚was ruft
+was'. Zwei Antworten auf zwei Fragen, die leicht verwechselt werden."* Aufwand
+M, einsortiert unter `runtime-analysis`.
+
+**Und genau das war er nicht — kein Runtime-Punkt.** Die Call-Kanten liegen
+seit `calls.build` in **jeder** erzeugten Karte: `from`, `from_fn`, `to`,
+`to_fn`, `line`, `confidence`. Es brauchte weder Telemetrie noch ein Plugin
+noch eine laufende Sitzung. Das ist der vierte von acht Einträgen dieses
+Verbunds, dessen Beschreibung in irgendeiner Richtung danebenlag — und der
+zweite an zwei Tagen.
+
+**Was tatsächlich fehlte, war eine Traversierung**, und die Vorprüfung hat das
+bestätigt, bevor eine Zeile geschrieben war: `deps.path` war der einzige
+Pfadfinder im Baum und läuft ausschliesslich über `require`-Kanten; die
+`calls`-Ansicht in `:DocBrowse` ist **ein** Hop rein oder raus, kein Lauf;
+`core/calls.lua` exportierte `extract`, `identifier_counts` und `build` — und
+keinen Pfad. Kanten ja, Weg nein.
+
+*Konkrete Auswirkung*: `:DocMap why a b` beantwortete eine Frage und sah aus,
+als beantworte es die andere. Jetzt beide, und die Call-Kette ist
+**funktionsgenau**, weil die Kanten es sind:
+
+```
+loads · 1 hop, all at load time:  documentation.bindings.usrcmds.why → documentation.core.deps
+calls · 1 hop:  documentation.bindings.usrcmds.why#M.run → documentation.core.deps#M.path
+```
+
+`deps.path` kann immer nur sagen „A erreicht B". Das hier sagt, **durch welche
+Funktionen** — die Hälfte, die man vorher in der Deps-Ansicht von Hand
+rekonstruiert hat.
+
+**Der Ertrag ist die Uneinigkeit der beiden Ketten**, nicht ein Nebeneffekt.
+Zwei Formen, beide in diesem Repo real:
+
+- **Lädt, ruft aber nie.** Das oberste Modul `documentation` requiret
+  `core.cli`, `core.diff` und beide Renderer und ruft in keinen davon hinein.
+  Im require-Graphen allein ist das von einer lebendigen Abhängigkeit **nicht
+  unterscheidbar** — genau deshalb musste die zweite Kette existieren, bevor es
+  überhaupt jemand sehen konnte.
+- **Ruft ohne require-Pfad.** Der statische Graph untertreibt die Verbindung:
+  ein deferred oder dynamisch gebautes `require`, dem `deps` nicht folgen kann.
+
+*Die Entscheidung, die bleibt*: heuristische Sprünge werden **durchlaufen und
+markiert**, nicht verworfen. `build` kennzeichnet einen Bare-Name-Treffer als
+`"heuristic"`; sie wegzulassen würde echte Ketten verstecken, sie
+stillschweigend mitzunehmen würde eine Vermutung als Tatsache ausgeben.
+`chain_confidence` kollabiert eine Kette auf ihren schwächsten Sprung — ein
+heuristisches Glied macht die ganze Kette heuristisch, denn das *ist* die
+Sicherheit einer Kette. Das `~` ist dasselbe Zeichen, das die Calls-Ansicht
+schon für denselben Sachverhalt benutzt.
+
+*Ein Detail, das die Fixtures nicht abdecken konnten*: dieses Repo hat **null**
+heuristische Call-Kanten, die Markierung wird also nur von einer konstruierten
+Assertion ausgeübt. Ausdrücklich gesagt, statt wie Abdeckung auszusehen.
+
+*Verifiziert*: alle vier Gates gruen (`stylua`, `luacheck`, Specs,
+`map --check`), zwölf Assertions im neuen `call_path_spec.lua` auf einem
+Fixture-Baum, in dem die beiden Graphen wirklich auseinandergehen — plus ein
+Durchlauf gegen die echte Karte dieses Repos, aus dem die vier
+Lädt-ruft-aber-nie-Fälle oben stammen.
+
+*Bindings-Zettel*: nicht berührt. Kein neuer Usercmd, keine neue Taste;
+`:DocMap why` gibt mehr Zeilen in dieselbe Quickfix-Liste.
 
 ---
 
