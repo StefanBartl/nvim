@@ -6,7 +6,264 @@ nvim-Config.
 
 ---
 
+## 2026-08-29
+
+### Diagnostik über alle Repos
+
+- [x] **`<leader>wq`: alle damit auffindbaren Issues durchgegangen — als
+      einmaliger Scan über alle 31 Plugins plus diese Config statt live pro
+      Buffer.** Vollständiger Befund in
+      `docs/ROADMAP/personal/All/Diagnostics.md`.
+
+      **Der Trick war, den Keybind headless nachzubauen.** `<leader>wq` ist
+      `vim.diagnostic.setqflist()` über alle geladenen Buffer; das Äquivalent
+      ohne Session ist `lua-language-server --check` pro Repo. Naiv aufgerufen
+      lügt das aber: die `.luarc.json` der Repos ist nicht, was lua_ls im
+      Editor sieht. `lsp.nvim` injiziert `$VIMRUNTIME/lua` und die
+      `${3rd}`-Metas erst in `before_init` (11 der 31 `.luarc.json` führen
+      `$VIMRUNTIME/lua` selbst nicht), und lazydev zieht die Cross-Repo-Typen
+      erst beim `require` nach. Die Prüf-Config wurde deshalb pro Repo aus
+      allen drei Quellen zusammengesetzt, inklusive transitiver
+      Repo-Abhängigkeiten. Gegenprobe: ohne diese Angleichung meldet der Lauf
+      4139 Warnungen, mit ihr 3781 — die Differenz waren Phantom-Befunde auf
+      `Lib.*`- und `RA.*`-Typen, die es im Editor nie gibt.
+
+      **Ergebnis: 3600 Diagnosen in 742 Dateien, alle `Warning`, kein einziger
+      `Error`.** Die Hälfte (1770) liegt in `TESTS/`, nicht im ausgelieferten
+      Code. Vier der größten Repos stellen 52 Prozent; sieben Repos sind
+      einstellig und praktisch fertig.
+
+      **Vier der sechs Ursachen sind musterhaft, nicht einzeln zu beheben.**
+      Der lohnendste Einzelbefund ist ein fehlender `assert`-Typ: LuaLS kennt
+      den globalen `assert` nur als Lua-Standardfunktion, und
+      `${3rd}/busted/library` — was `lsp.nvim` heute anhängt — deckt luassert
+      nicht ab. Vier Zeilen `---@meta` / `---@type luassert` senken **lsp.nvim
+      von 465 auf 233 Warnungen**, gemessen, nicht hochgerechnet; über alle
+      Repos 3966 → 3600. Dazu: `---@param node userdata` statt `TSNode` in
+      documentation.nvims Sprachmodulen (210 Stück), `@class *.Config` mit
+      lauter Pflichtfeldern, an denen jedes partielle `setup({…})` scheitert
+      (441), und `pcall(vim.cmd, …)`, das an Neovims aufrufbarer Tabelle
+      hängenbleibt (60).
+
+      **Die ~90 echten Einzelbefunde** stehen in Abschnitt 5 des Reports mit
+      `file:line`: 23 deprecated APIs (`vim.lsp.stop_client`, `vim.diff`,
+      `vim.fn.termopen`, …), sechs Aufrufe mit zu wenig Argumenten, sieben
+      Annotationen, deren Klammer fehlt und die deshalb gar nicht geparst
+      werden, ein `unbalanced-assignments` in lib.nvim. Sechs der deprecated
+      Treffer sind bewusste Alt-API-Fallbacks und sollen bleiben — das ist im
+      Report markiert, damit sie niemand "repariert".
+
+      **`stylua --check` gleich mitgelaufen:** 28 von 31 Repos sauber, vier
+      Dateien abweichend, alle derselbe Fall (einzeiliges `function() … end`).
+      Zwei Randbefunde: `mdview.nvim` formatiert als einziges Repo mit Tabs
+      (`stylua.toml`, konsistent durchgezogen — Entscheidung, kein Fehler),
+      und in `open.nvim` liegt noch ein Claude-Worktree
+      (`.claude/worktrees/cool-benz-a3f6a1` plus Branch), obwohl der
+      2026-08-26-Eintrag alle als abgeräumt meldet. Ohne LSP-Effekt: LuaLS
+      indiziert Punkt-Verzeichnisse nicht, im Scan-Log verifiziert.
+
+      **Beide Randbefunde noch am selben Tag erledigt:** mdview.nvim steht
+      jetzt auf `Spaces` / `2` wie die anderen 30 Repos, und der Worktree in
+      open.nvim ist weg — nachdem geprüft war, dass seine zwei Commits
+      inhaltlich schon auf `main` liegen. Details in
+      `docs/ROADMAP/Diagnostics_FINISHED.md`.
+
+      **Nicht erledigt, weiterhin offen:** das Beheben selbst, und das
+      Refactoring der `wq`-Logik nach `lib.nvim.ui` — `lib.nvim/ui/` hat kein
+      Quickfix-Modul, während 20 Dateien in 14 Repos ihre `setqflist`-Senke
+      selbst bauen. Beides in Abschnitt 8 und 9 des Reports aufbereitet.
+
+### Bugfixes in Plugins
+
+- [x] **Astro konfiguriert `nvim-ts-autotag` nicht mehr — und die Annahme, es
+      würde die globalen Flags der Config überschreiben, war falsch.**
+      Nachgegangen als Folgepunkt zur Startup-Runde von gestern.
+
+      **Die Prämisse hielt nicht.** `nvim-ts-autotag`s `setup()` steigt in
+      Zeile 3 aus, wenn `did_setup()` schon `true` ist, und lazy.nvim führt das
+      `config` des Hosts während genau des `require` aus, das das Plugin lädt.
+      Der Aufruf des Hosts kommt also immer zuerst. Gemessen in einem echten
+      `.astro`-Buffer: `enable_close_on_slash = false`,
+      `per_filetype.html.enable_close = false` — beides unverändert die Werte
+      aus `plugins/editing.lua`.
+
+      **Der eigentliche Fehler war das Gegenteil, und es sind zwei.** Astros
+      `autotag.setup({…})` war unter lazy.nvim **toter Code**: auch Astros
+      eigenes `per_filetype.astro` (es wollte `enable_close_on_slash = true`)
+      kam nie an. Und unter einem Host, der das Plugin installiert, aber nicht
+      konfiguriert, kippt dieselbe Zeile ins andere Extrem — dann *ist* Astros
+      Tabelle die globale Konfiguration. Welches von beidem passierte, hing an
+      der Ladereihenfolge; beides war ein Unfall. Nebenbei: der `skip_tags`-Key
+      in dem Aufruf wird von `setup()` überhaupt nicht gelesen, Skip-Patterns
+      sind `skip_tag_pattern`-Einträge pro Filetype in
+      `nvim-ts-autotag.config.init`.
+
+      **`M.setup()` heißt jetzt `M.available()` und konfiguriert nichts.** Es
+      fragt, statt zu bestimmen — und es reicht nicht, „installiert" zu melden:
+      ohne `setup()` registriert das Plugin keine Autocmds und hängt sich an
+      keinen Buffer, also prüft `available()` auch `did_setup()`. Ist ein
+      Upstream-Interna umbenannt, gilt „vermutlich in Ordnung": ein
+      verschobenes Modul ist kein Beweis, dass das Plugin unkonfiguriert ist,
+      und ohne Not auf den handgeschriebenen Fallback zu fallen wäre der
+      schlechtere Fehler.
+
+      **Verifiziert am echten Buffer:** nach `nvim probe.astro` sind alle vier
+      Host-Optionen unverändert, Astro fügt keinen `per_filetype`-Eintrag
+      hinzu, und im Buffer hängt **genau ein** `>`-Handler — der des Plugins,
+      nicht zusätzlich der Fallback. Dazu sieben neue Specs
+      (`TESTS/lsp/astro_autotag_spec.lua`), darunter der eigentliche Guard:
+      `available()` ruft `setup()` null mal. Suite 178 → 185 grün, Smoke grün,
+      `stylua --check` sauber.
+
+      **Regel dazu** in `lsp.nvim/docs/architecture.md`, als Geschwister der
+      gestrigen: *ein Modul konfiguriert kein Plugin, das ihm nicht gehört.* Ein
+      Plugin mit einem einzigen globalen `setup()` hat genau einen Besitzer —
+      den, der es installiert.
+
+      **Zwei Befunde nebenbei, beide unabhängig von dieser Änderung:**
+      - Auf dieser Maschine sind **nur sechs Treesitter-Parser installiert**
+        (`lua`, `luadoc`, `markdown`, `markdown_inline`, `toml`, `vimdoc`) —
+        kein `astro`, kein `html`, kein `tsx`. `nvim-ts-autotag` arbeitet über
+        Treesitter, also schließt es in `.astro` faktisch gar nichts, weder
+        vorher noch nachher. Das ist der Grund, warum ein Tipp-Test hier in
+        beiden Ständen `<div>` statt `<div></div>` liefert.
+      - Naheliegend wäre, `available()` zusätzlich auf einen vorhandenen Parser
+        prüfen zu lassen, damit der Fallback greift, wo das Plugin nicht kann.
+        Bewusst nicht gemacht: der handgeschriebene Fallback mappt auch `/` und
+        schließt Tags bei `<tag /`, also genau das
+        `enable_close_on_slash`-Verhalten, das die Config global auf `false`
+        gestellt hat. Ihn automatisch einzuschalten wäre dieselbe Sorte
+        Übergriff, nur durch eine andere Tür — das ist eine Entscheidung für
+        dich, nicht für mich.
+
 ## 2026-08-28
+
+### Performance
+
+- [x] **Startup optimieren — jetzt vollständig, der Task ist geschlossen.**
+      Die `lsp`-Phase fällt von **~330ms auf ~145ms (−56%)**, der ganze Startup
+      von **~1188ms auf ~977ms (−18%)**, eager geladene Plugins **28 → 26**.
+      Der interessante Teil ist wieder, dass die Diagnose aus der letzten Runde
+      in einem Punkt schlicht falsch war.
+
+      **Gemessen, nicht geraten — und diesmal verschränkt.** Die Maschine
+      driftete während der Session um den Faktor 5 (derselbe unveränderte
+      Startup zwischen 850ms und 6100ms), also wäre ein Vorher-Block gefolgt
+      von einem Nachher-Block wertlos gewesen. Stattdessen A/B/A verschränkt
+      über `git stash`, 5 Läufe je Block, Median — und jeder einzelne
+      Nachher-Lauf liegt unter jedem einzelnen Vorher-Lauf. Zahlen aus
+      `--startuptime` (Total) und dem Phasen-Mark der Config (`lsp`).
+
+      **Der größte Posten war nicht blink, sondern `shellcheck` — zweimal.**
+      `lsp.servers.bashls` und `lsp.languages.scripting.shell` waren
+      byte-für-byte dieselbe Datei: dasselbe `vim.lsp.config("bashls", …)`,
+      dasselbe `vim.lsp.enable`, dasselbe
+      `shellcheckPath = vim.fn.exepath("shellcheck")`. shellcheck ist hier
+      nicht installiert, und ein *fehlschlagendes* `exepath()` ist genau die
+      Windows-Falle aus der letzten Runde — 68 PATH-Einträge × 11
+      PATHEXT-Endungen, gemessen 25-200ms je nach Cache-Wärme, ohne jedes
+      Caching. Das lief **zweimal pro Startup**, zusammen etwa ein Viertel der
+      ganzen Phase.
+
+      Zwei Fixes, beide ohne Verhaltensänderung:
+
+      - Das Sprachmodul ist weg. Serverkonfiguration gehört `servers/`; ein
+        `languages/`-Modul ist für Filetype-QoL da, und shell hatte keine.
+        Nebenbei behob das einen echten Fehler: `enable_all()` ruft `enable()`
+        **ohne Argumente** auf, das Duplikat registrierte bashls also ohne
+        Capabilities, Sekundenbruchteile bevor die Registry es richtig
+        registrierte.
+      - Die verbleibende Probe wanderte nach `before_init`. Das ist der letzte
+        Moment vor der `initialize`-Anfrage, und sie schreibt **in die
+        vorhandene Settings-Tabelle hinein**, weil `vim.lsp.Client.create()`
+        `settings = config.settings` schon vorher als `self.settings`
+        festhält — ein `config.settings = vim.tbl_deep_extend(…)` (was
+        `:h vim.lsp.ClientConfig` für andere Felder zeigt) wäre still
+        verpufft. Verifiziert an einem echten Client: `nvim probe.sh` startet
+        bashls, und `client.settings.bashIde.shellcheckPath` ist `""` —
+        derselbe Wert wie vorher, nur bezahlt von der Session, die auch
+        wirklich ein Shell-Skript öffnet.
+
+      **Der vorgeschlagene blink-Ansatz war falsch, und zwar hart.** Der offene
+      Punkt schlug vor, die blink-Capabilities auf `LspAttach` zu verschieben.
+      `LspAttach` feuert *nach* der `initialize`-Anfrage — Capabilities werden
+      mit `initialize` verschickt, sie dort zu setzen käme grundsätzlich zu
+      spät, unabhängig vom Startup-Timing. Das ist genau das Fehlerbild
+      „Completion ist manchmal kaputt", das der Punkt selbst gefürchtet hat.
+
+      **Was tatsächlich hinter den 84ms steckte, war schlimmer als
+      Langsamkeit.** `lsp.integrations.blink` machte `require("blink.cmp")`, um
+      dessen Capability-Tabelle zu lesen. Unter einem Lazy-Manager **ist** ein
+      `require` der Ladetrigger, also zog dieser Blick die komplette Engine in
+      jeden Startup. Und beim Nachsehen in `lazy.core.config`: blinks Spec hat
+      **kein `event`, kein `cmd`, kein `keys`**, und die Config läuft mit
+      `defaults.lazy = true` — die Completion-Engine lebte also
+      *ausschließlich* deshalb, weil ein LSP-Detail sie versehentlich hochzog.
+      `plugin._.loaded.source` sagte es wörtlich:
+      `C:/repos/lsp.nvim/lua/lsp/integrations/blink.lua`. Wer diesen `require`
+      „wegoptimiert" hätte, ohne das zu bemerken, hätte Completion still
+      abgeschaltet.
+
+      Dieselbe Falle ein zweites Mal: `nvim-ts-autotag` hatte in
+      `plugins/editing.lua` ebenfalls keinen Trigger und lebte nur, weil das
+      Astro-Modul es beim Start `require`te — Tag-Autoclose in HTML/TSX hing an
+      einem Astro-Detail. Beide haben jetzt den Trigger, den sie brauchen
+      (`InsertEnter`, bei blink zusätzlich `CmdlineEnter`, weil blinks
+      Cmdline-Completion in 1.x default an ist und `InsertEnter` bei `:` nie
+      feuert), und Astros Zugriff auf nvim-ts-autotag passiert erst beim
+      ersten Astro-Buffer (am 2026-08-29 zu `available()` umgebaut, siehe
+      dort — es konfiguriert das Plugin seither gar nicht mehr).
+
+      **Die Capabilities kommen jetzt ohne blink zustande, exakt.** Der Adapter
+      spiegelt blinks statische Tabelle — `get_lsp_capabilities` liest weder
+      Config noch Provider, sie ist eine Compile-Zeit-Konstante — und benutzt
+      das echte blink weiterhin, sobald es ohnehin geladen ist. Gegen Drift
+      steht ein Spec-Test, der die Spiegelung mit blinks echter Ausgabe
+      vergleicht, wo blink installiert ist, und sonst `pending` meldet: ein
+      abwesendes blink ist kein Beweis, dass die Kopie stimmt.
+
+      **Der Beweis, den der Punkt verlangt hat, liegt vor, in zwei Formen:**
+
+      - `vim.lsp.config["*"].capabilities` vorher und nachher gedumpt und
+        verglichen: **byte-identisch**. Nicht „äquivalent", identisch.
+      - Ende-zu-Ende: `nvim probe.lua` — also ein Client, der *während* des
+        Startups startet — bekommt `insertTextMode = 1` und
+        `insertTextModeSupport`, blinks eigenen Beitrag, während
+        `package.loaded["blink.cmp"]` nil bleibt.
+
+      Dazu vier neue Spec-Fälle für den Adapter (beiträgt ohne zu laden,
+      Override-Reihenfolge, echtes blink gewinnt, Drift-Guard) und vier für
+      bashls. Die Suite bleibt grün, `stylua --check` sauber, Smoke-Test grün,
+      0 fehlgeschlagene Startup-Phasen, 0 `status().warnings`, weiterhin alle
+      8 Server konfiguriert.
+
+      **Als Regel festgehalten** in `lsp.nvim/docs/architecture.md`, weil sie
+      allgemeiner ist als dieser eine Adapter: *ein Adapter darf sein Plugin
+      während `setup()` nicht laden.* `capabilities()` und die Attach-Hooks
+      lesen `package.loaded[…]`, nie `require`; `available()` darf `require`,
+      weil es nur `:checkhealth` liest; und jedes Plugin im Pack trägt seinen
+      eigenen Lazy-Trigger — von jemand anderem `require`t zu werden ist kein
+      Trigger, sondern ein Zufall.
+
+      **Gemessen und bewusst nicht angefasst:**
+
+      - `apply_capabilities()` baut den Capability-Satz ein zweites Mal auf
+        (die Config ruft es nach `setup()` selbst noch einmal). Mit blink aus
+        dem Spiel kostet das noch ~4ms; ein Cache dafür wäre mehr Zustand als
+        Gewinn.
+      - Der cmp-Adapter `require`t `cmp_nvim_lsp`, das hier gar nicht mehr
+        installiert ist (der Pack wählt blink). Ein *fehlschlagendes* `require`
+        kostet im eingeschwungenen Zustand ~1ms — die 13-36ms aus dem Profil
+        waren der einmalige rtp-Scan, nicht der Require. Auf `package.loaded`
+        umzustellen wäre hier falsch: `cmp_nvim_lsp` ist eine passive
+        Bibliothek, die niemand sonst lädt, ein cmp-Nutzer würde seine
+        Capabilities verlieren.
+
+      **Der Nebenbefund von letzter Runde hat sich erledigt**: der
+      auskommentierte WORKSTATION-FREEZE-FIX in `options.lua` ist am
+      2026-08-26 mit `aeaad383` ganz entfernt worden, zusammen mit dem Umbau
+      der pwsh-Erkennung. Die Entscheidung ist also gefallen und braucht keinen
+      Roadmap-Punkt mehr.
 
 ### Architektur & Strategie
 

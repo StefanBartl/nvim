@@ -108,6 +108,16 @@ function M.setup(opts)
     require("wkdoptions.italic_keywords").setup()
   end
 
+  -- Neither highlight- nor options-specific, so it is registered here with
+  -- the other standalone features rather than from one of the two subsystem
+  -- `enable()`s. It had no caller at all until 2026-08-30: the command was
+  -- defined in `commands/register.lua`, but only from `M.register_all()`,
+  -- which nothing calls -- the other three registrars in that module are each
+  -- reached directly. Found by `:Bindings check` reporting `:WKDDiffProfile`
+  -- on both axes at once, present in the source map and absent from
+  -- `nvim_get_commands`.
+  require("wkdoptions.commands").register_diff_profile()
+
   require("wkdoptions.qflist")
   normalize_inactice_win_hl()
   set_diagnostic_signs()

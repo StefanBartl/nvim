@@ -12,6 +12,7 @@ CONTENTS                                            *bindings_explorer-contents*
         2.2 :Bindings browse ................ |bindings_explorer-browse|
         2.3 :Bindings path ................... |bindings_explorer-path|
         2.4 :Bindings check .................. |bindings_explorer-check|
+        2.5 :Bindings check repo ............. |bindings_explorer-check-repo|
     3. Architecture .......................... |bindings_explorer-architecture|
 
 ==============================================================================
@@ -101,6 +102,75 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
         :Bindings check images.nvim
 <
 
+------------------------------------------------------------------------------
+2.5 :BINDINGS CHECK REPO                           *bindings_explorer-check-repo*
+
+:Bindings check repo [{plugin}]
+:Bindings check {plugin} repo
+:Bindings check repo [{plugin}] root={dir}
+    The same report, plus a fourth axis: the plugin's own local checkout.
+    Opt-in, off by default.
+
+    "Plugins not yet loaded this session are skipped" (above) is honest but
+    empty - skipped is not checked, and in a normal session that is most of
+    the personal plugins. For those, the one source that needs no running
+    session is the checkout on disk: `repo.lua` searches its .lua/.vim files
+    for the documented lhs / command name AS A QUOTED STRING LITERAL.
+
+    New finding kinds `keymap-not-in-repo` / `usercmd-not-in-repo`, in their
+    own report section. Points worth knowing before trusting one:
+
+    • A grep, not an API query. An lhs the plugin composes at runtime
+      (`prefix .. "m"`) is registered and ungreppable - the known false
+      finding of this axis, labelled as such on the section itself.
+    • Keymaps are matched case-insensitively (`<Leader>` = `<leader>`),
+      command names case-sensitively (folding case makes `:Images` match
+      the word "images" throughout images.nvim).
+    • Three suppressors: reported only when the literal is in neither the
+      plugin's checkout, nor this config's own `lua/` tree, nor the live
+      keymaps/commands.
+    • A plugin the axis answered for no longer counts as "skipped". One
+      with no resolvable checkout, or whose checkout holds no readable
+      source, still does.
+    • Off by default because it reads ~30 checkouts off disk (measured:
+      940ms, 2861 source files, 28 MiB released again at the end of the
+      run), unlike the three axes that probe a running session.
+
+    The checkout list comes from `config.repo_dirs()`, whose default calls
+    `plugins.personal.export.projects()`; `config.set_repo_dirs()` replaces
+    it (the tests use a fixture repo in a temp directory).
+
+    ROOT={DIR} - ONE PATH INSTEAD OF THE PLUGIN LIST
+
+    `root=` points the axis at a collection directory holding several Lua
+    projects and takes every one of them (`config.repo_dirs_under`), instead
+    of resolving through the Lazy spec. A subdirectory counts as a project
+    when it has a `lua/` or a top-level `.lua` file - not when it has a
+    `.git`, because this axis reads source, not history. One level deep
+    only, or every checkout's own `lua/` and `tests/` would report as
+    further "repos".
+
+    `root=` implies `repo`, is position-independent (a `kv` argument; <Tab>
+    completes directories) and combines with the {plugin} filter.
+
+    Two things it does that the default resolution cannot: it needs no
+    loaded `plugins.personal` layer, and it covers every checkout in the
+    path rather than only the ones enabled as plugins. Measured against
+    C:/repos: 31 projects resolved, 30 answered, `skipped` 38 -> 8.
+
+    It also adds one report line of its own: projects under the path that
+    this corpus does not document at all. That is not drift - no documented
+    claim exists to be wrong - but it is the one statement a whole-path
+    report can make and a per-plugin report structurally cannot.
+
+    Examples: >vim
+        :Bindings check repo
+        :Bindings check repo images.nvim
+        :Bindings check images.nvim repo
+        :Bindings check repo root=C:/repos
+        :Bindings check images.nvim root=C:/repos
+<
+
 ==============================================================================
 3. ARCHITECTURE                                 *bindings_explorer-architecture*
 
@@ -113,6 +183,8 @@ Module: `lua/bindings/usrcmds/bindings_explorer/`
   • records.lua  - tolerant table-row scraper (Phase 2)
   • browse.lua   - kit.select wiring for records.lua's rows
   • drift.lua    - documented-vs-live comparison (Phase 3)
+  • source.lua   - what this config's source registers, from module_map.json
+  • repo.lua     - "is this literal in that checkout's source" (repo axis)
   • init.lua     - composer verb ":Bindings" + all routes
 
 ==============================================================================

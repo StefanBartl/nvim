@@ -81,6 +81,16 @@
 ---    suspect; re-run `:Bindings check` after actually exercising that
 ---    plugin's feature before trusting the finding.
 ---
+--- 6. **Two false-positive classes were removed on 2026-08-30**, both of
+---    them silent: a row the scraper could not read yielded no lhs and was
+---    dropped from every axis without a word. See `LHS_HEADERS` (the header
+---    allow-list was English-only against a bilingual corpus -- 601 rows
+---    invisible) and `key_forms` (the live and documented sides encode a
+---    modifier chord differently, so every documented Ctrl key read as
+---    missing). Measured on this config, both fixes plus the two
+---    `nvim-config` cheatsheets they made writable: 150 source-axis findings
+---    became 0, and the whole report went from 680 findings to 260.
+---
 --- Usercmds are checked BOTH directions, since `nvim_get_commands({})`
 --- only ever returns user-defined commands (no vim-default flood): the
 --- live-undocumented direction is cross-checked against Personal AND
@@ -88,8 +98,40 @@
 --- elsewhere — but plugin-manager/infra commands (`:Lazy`, `:Mason`, ...)
 --- with no cheatsheet at all will still show up; no ignore-list is
 --- maintained for those.
+---
+--- **The repo axis (opt-in, `opts.repo`).** Point 4 above is honest but
+--- empty: a skipped plugin is not a checked plugin, and in a normal session
+--- most personal plugins are skipped, so most of the corpus is judged by
+--- nothing at all. The one thing available for those is the plugin's own
+--- local checkout, which is on disk whether or not lazy.nvim loaded it —
+--- so `opts.repo` searches it for the documented lhs / command name as a
+--- quoted string literal (`repo.lua`), and reports what is written down
+--- nowhere. Three properties, all deliberate:
+---
+---   - **Off by default.** The existing axes probe an already-running
+---     session and cost nothing worth mentioning; reading ~20 checkouts off
+---     disk is not in that class, and should never be a silent cost of a
+---     command someone ran to see the usual report.
+---   - **A grep, not an API query, and ranked accordingly.** A computed lhs
+---     (`prefix .. "v"`, a key read out of a user config) is registered and
+---     ungreppable, so the axis produces false findings that the live axis
+---     never would. `M.describe` says so on the section itself.
+---   - **Three suppressors, so what survives is worth reading**: the
+---     literal is absent from the plugin's checkout AND absent from this
+---     config's own `lua/` tree (a personal plugin's `<leader>` entry point
+---     is very often registered here, in a lazy `keys` spec, not over
+---     there) AND not live right now (`is_live`, desc-matched like
+---     everywhere else). Only then is it reported.
+---
+--- A plugin the repo axis actually answered for is no longer counted as
+--- "skipped" — it was checked, just by a weaker instrument, and saying
+--- otherwise would understate the report in one direction while
+--- overstating the axis in the other. One with no resolvable checkout, or
+--- whose checkout yielded no readable source, stays skipped.
 
 local records = require("bindings.usrcmds.bindings_explorer.records")
+local config = require("bindings.usrcmds.bindings_explorer.config")
+local repo = require("bindings.usrcmds.bindings_explorer.repo")
 
 local M = {}
 
@@ -97,9 +139,55 @@ local M = {}
 --- the lhs/mode — see the module doc on how inconsistent real column
 --- naming turned out to be across the 137-file corpus (checked
 --- empirically before writing this list).
-local LHS_HEADERS = { lhs = true, key = true, keys = true, ["action key"] = true }
-local MODE_HEADERS = { mode = true, modes = true }
-local USERCMD_HEADERS = { command = true, invocation = true, subcommand = true }
+---
+--- **The corpus is bilingual and this list was not** (fixed 2026-08-30).
+--- `ExternPlugins/Bindings/*` is written in German throughout, so its key
+--- column is spelled `Taste`, `Mapping`, `Taste(n)` or `Taste (in LazyGit)`,
+--- never `lhs`/`key`. A row whose header matches nothing here yields no lhs
+--- at all, and both axes then drop it without saying so: the source axis
+--- reported `<leader>gb` as undocumented while it sat in `Snacks.md`'s Git
+--- table, and the live axis never checked those rows in either direction.
+--- 601 rows of the corpus were invisible this way -- counted, not estimated.
+---
+--- Four German-corpus headers are deliberately NOT added, because their
+--- cells are not keys and admitting them would let unrelated text
+--- "document" a binding:
+---   - `Eintrag` (`Menu.md`) -- nvzone/menu entry labels ("Format Buffer").
+---   - `Tab` (`Search.md`) -- search.nvim tab names ("All Files").
+---   - `Modul` (`Snacks.md`) -- module names (`snacks.picker`).
+---   - `Vorschlag (README)` (`Gitsigns.md`) -- keys upstream's README
+---     *suggests* and this config did not bind. Counting those as
+---     documented would suppress a real finding for a key bound elsewhere.
+--- `` `lhs` key `` (fileops.nvim.md) and `` `keymaps.<name>` ``
+--- (diff.nvim.md) name a config KEY (`delete_force`), not a keystroke, and
+--- stay excluded for the same reason -- `normalize_lhs`'s `_`/`.` guard
+--- would reject their cells anyway.
+local LHS_HEADERS = {
+  lhs = true,
+  key = true,
+  keys = true,
+  ["action key"] = true,
+  -- German corpus. Every one checked against its actual cells first.
+  mapping = true,
+  taste = true,
+  -- `Telescope.md`'s in-picker table, whose cells read `` `<A-c>` / `c` ``;
+  -- `first_token` takes the first backticked group, i.e. the insert-mode key.
+  ["insert/normal"] = true,
+  -- `pickers.nvim.md`'s cross-picker table (`Action | Default | telescope |
+  -- fzf-lua | snacks`), whose `Default` column holds `<C-Left>` and friends.
+  default = true,
+}
+local MODE_HEADERS = { mode = true, modes = true, modus = true, modi = true }
+local USERCMD_HEADERS = {
+  command = true,
+  invocation = true,
+  subcommand = true,
+  -- `Dap.md`/`Harpoon.md`/`NvChadUI.md`/`Treesitter.md` head their verb
+  -- tables `Aufruf`; `lsp.nvim.md`/`Harpoon.md` list the flat shorthand for
+  -- a verb route under `Alias`.
+  aufruf = true,
+  alias = true,
+}
 local DESC_HEADERS = { desc = true, description = true }
 
 --- Cells that fill a `desc` column without naming a description. Checked
@@ -112,8 +200,15 @@ local VALID_MODE_CHARS =
 ---@param h string
 ---@return string
 local function normalize_header(h)
-  h = vim.trim((h:lower():gsub("%s*%b()", "")))
-  h = h:gsub("^default%s+", ""):gsub("^config%s+", ""):gsub("^user%-chosen%s+", "")
+  -- Backticks come off first: a column headed `` `lhs` key `` has to
+  -- normalize the same way as `lhs key`, or the markup alone would decide
+  -- whether the column is findable.
+  h = vim.trim((h:lower():gsub("`", ""):gsub("%s*%b()", "")))
+  -- `Default-Mapping (Plugin)` (`VisualMulti.md`) is the hyphenated spelling
+  -- of `Default lhs` -- one character apart, same meaning, so one pattern.
+  -- A bare `Default` keeps its name (nothing follows to strip) and is
+  -- matched by `LHS_HEADERS` instead.
+  h = h:gsub("^default[%s%-]+", ""):gsub("^config%s+", ""):gsub("^user%-chosen%s+", "")
   return h
 end
 
@@ -228,15 +323,27 @@ local function extract_desc(rec)
   return desc
 end
 
+--- The lhs of a row exactly as the cheatsheet writes it (`<leader>iv`),
+--- before `normalize_lhs` turns it into the raw bytes the live axis needs.
+--- The repo axis wants this form and not that one: a checkout's source
+--- spells its keymaps the same way the cheatsheet does, in `<>` notation,
+--- never in expanded termcodes.
 ---@param rec Bindings.Record
----@return string|nil normalized lhs, nil if no usable lhs column/cell
-local function extract_lhs(rec)
+---@return string|nil
+local function extract_lhs_token(rec)
   local idx = column_index(rec, LHS_HEADERS)
   local cell = idx and rec.cells[idx]
   if not cell or cell == "" then
     return nil
   end
-  return normalize_lhs(first_token(cell))
+  return first_token(cell)
+end
+
+---@param rec Bindings.Record
+---@return string|nil normalized lhs, nil if no usable lhs column/cell
+local function extract_lhs(rec)
+  local token = extract_lhs_token(rec)
+  return token and normalize_lhs(token)
 end
 
 ---@param rec Bindings.Record
@@ -375,6 +482,57 @@ local function command_owner(name, lazy_owners, defs)
   return "unknown"
 end
 
+--- Every byte string that legitimately spells the same keystroke.
+---
+--- The two sides of the live comparison do not agree on how to encode a
+--- modifier chord, and both are right:
+---   - `nvim_get_keymap` reports `<C-a>` modifier-preserving, as
+---     `K_SPECIAL KS_MODIFIER MOD_CTRL 'A'` = `{128,252,4,65}`.
+---   - the documented side goes through `nvim_replace_termcodes`, which
+---     collapses the same key to the traditional control byte `{1}`.
+--- Comparing those raw made EVERY documented Ctrl chord in the corpus report
+--- as "documented, not live" -- measured, and the single largest remaining
+--- false-positive class after the buffer-local one. `<C-S-k>` disagreed
+--- twice over (`{128,252,6,75}` vs `{128,252,2,11}`).
+---
+--- `keytrans()` renders both spellings as `<C-A>`, which fixes most of it,
+--- but not the keys whose control byte has an older name: byte 10 renders as
+--- `<NL>` from the collapsed side and `<C-J>` from the modifier-preserving
+--- one. Feeding the display form back through `nvim_replace_termcodes` lands
+--- both on `{10}`, so the third form closes that gap.
+---
+--- Returned as a LIST of forms rather than one canonical string, and indexed
+--- in addition to the raw key rather than instead of it: nothing that matched
+--- before this can stop matching. Both sides go through this same function,
+--- which is what keeps `normalize_lhs`'s warning from applying -- that one is
+--- about comparing `keytrans()` output against `.lhs`, an asymmetry where a
+--- leader space stays a literal space on one side and renders as `<Space>` on
+--- the other. Symmetric use has no such problem.
+---@param raw string
+---@return string[]
+local function key_forms(raw)
+  local forms, seen = { raw }, { [raw] = true }
+  local function push(v)
+    if type(v) == "string" and v ~= "" and not seen[v] then
+      seen[v] = true
+      forms[#forms + 1] = v
+    end
+  end
+
+  local ok_disp, disp = pcall(vim.fn.keytrans, raw)
+  if ok_disp then
+    push(disp)
+    if type(disp) == "string" and disp ~= "" then
+      local ok_back, back = pcall(vim.api.nvim_replace_termcodes, disp, true, true, true)
+      if ok_back then
+        push(back)
+      end
+    end
+  end
+
+  return forms
+end
+
 --- Global keymaps PLUS the buffer-local keymaps of every buffer that
 --- happens to be loaded right now.
 ---
@@ -400,8 +558,10 @@ local function live_keymaps(modes)
     local function add(maps)
       for _, m in ipairs(maps) do
         if m.lhsraw then
-          set[m.lhsraw] = set[m.lhsraw] or {}
-          table.insert(set[m.lhsraw], m.desc or "")
+          for _, form in ipairs(key_forms(m.lhsraw)) do
+            set[form] = set[form] or {}
+            table.insert(set[form], m.desc or "")
+          end
         end
       end
     end
@@ -452,8 +612,21 @@ end
 ---@param doc_desc string|nil
 ---@return boolean
 local function is_live(live_maps, modes, lhs, doc_desc)
+  -- Looked up under every spelling `live_keymaps` indexed, for the encoding
+  -- mismatch `key_forms` documents.
+  local forms = key_forms(lhs)
+
   for _, mode in ipairs(modes) do
-    local descs = live_maps[mode] and live_maps[mode][lhs]
+    local in_mode = live_maps[mode]
+    local descs
+    if in_mode then
+      for _, form in ipairs(forms) do
+        descs = in_mode[form]
+        if descs then
+          break
+        end
+      end
+    end
     if descs then
       if not doc_desc then
         return true
@@ -478,7 +651,7 @@ local function is_live(live_maps, modes, lhs, doc_desc)
 end
 
 ---@class Bindings.DriftFinding
----@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"
+---@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"|"keymap-undocumented"|"usercmd-undocumented-source"|"keymap-not-in-repo"|"usercmd-not-in-repo"
 ---@field plugin string|nil
 ---@field heading string|nil  # the record's table heading, keymap axis only
 ---@field group string|nil    # plugin + heading, the verdict's grouping key
@@ -487,6 +660,14 @@ end
 ---@field line integer|nil
 ---@field unverifiable boolean|nil  # see `M.check`'s per-table verdict
 
+---@class Bindings.RepoInfo
+---@field ran boolean whether `opts.repo` asked for the axis at all
+---@field reason string|nil why it could not be consulted, when it could not
+---@field checked string[] plugins the axis actually answered for, sorted
+---@field root string|nil the scanned collection directory, when `opts.repo_root` named one
+---@field resolved string[] every project the resolver returned, sorted
+---@field undocumented string[] resolved projects with no cheatsheet in this corpus, sorted
+
 --- @param plugin string|nil narrow to one plugin's own files
 ---   (`records.lua`'s `plugin` field, i.e. the filename stem). With a
 ---   plugin given, the usercmd-undocumented direction is skipped — there
@@ -494,15 +675,60 @@ end
 ---   specific plugin, and the per-plugin `unverifiable` verdict below is
 ---   not applied — asking about one plugin explicitly is a request to see
 ---   its findings, not to have them summarized away.
+--- @param opts { repo?: boolean, repo_root?: string }|nil additive; every
+---   field defaults to off, so an existing single-argument caller gets
+---   exactly the report it got before. `repo` enables the checkout axis
+---   (module doc, "The repo axis"). `repo_root` points that axis at one
+---   collection directory holding several Lua projects instead of the
+---   default per-plugin resolution, and implies `repo` -- naming a root is
+---   already the request, and making the caller pass both would only create
+---   a combination (`repo_root` without `repo`) whose sole possible meaning
+---   is "ignore what I just said".
 --- @return Bindings.DriftFinding[]
 --- @return string[] skipped_plugins plugin names excluded because they
----   aren't loaded in this session (module doc point 4), sorted, deduped
-function M.check(plugin)
+---   aren't loaded in this session (module doc point 4) AND the repo axis
+---   could not answer for them either, sorted, deduped
+--- @return string|nil source_reason
+--- @return Bindings.RepoInfo repo_info
+function M.check(plugin, opts)
+  opts = opts or {}
   local findings = {}
   local skipped = {}
 
+  -- Repo axis, resolved up front: the per-record loops below need to know
+  -- whether an unloaded plugin has a checkout to fall back on before they
+  -- decide to skip it.
+  ---@type table<string, string>|nil
+  local repo_dirs = nil
+  local repo_reason = nil
+  local repo_resolved = {}
+  local want_repo = opts.repo == true or type(opts.repo_root) == "string"
+  if want_repo then
+    repo.reset()
+    local dirs, reason
+    if type(opts.repo_root) == "string" then
+      dirs, reason = config.repo_dirs_under(opts.repo_root)
+    else
+      dirs, reason = config.repo_dirs()
+    end
+    repo_reason = reason
+    if dirs then
+      repo_dirs = {}
+      for _, entry in ipairs(dirs) do
+        repo_dirs[entry.name] = entry.dir
+        repo_resolved[#repo_resolved + 1] = entry.name
+      end
+    end
+  end
+  local config_lua = repo_dirs and config.config_lua_root() or nil
+  -- Candidate: had a checkout to look in. Answered: the look succeeded.
+  -- A candidate that never got answered is still an unchecked plugin and
+  -- has to land back in `skipped`, see the fold-in near the end.
+  local repo_candidates, repo_answered = {}, {}
+
   -- Keymaps: documented (Personal) but not live.
   local checkable, needed_modes = {}, {}
+  local repo_keymaps = {}
   for _, rec in ipairs(records.list("Keymaps", "personal")) do
     if (not plugin or rec.plugin == plugin) and is_plugin_loaded(rec.plugin) then
       local lhs = extract_lhs(rec)
@@ -515,7 +741,31 @@ function M.check(plugin)
           { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
       end
     elseif not plugin or rec.plugin == plugin then
-      skipped[rec.plugin] = true
+      local dir = repo_dirs and repo_dirs[rec.plugin]
+      if not dir then
+        skipped[rec.plugin] = true
+      else
+        repo_candidates[rec.plugin] = true
+        local token = extract_lhs_token(rec)
+        local lhs = token and normalize_lhs(token)
+        if lhs then
+          -- The modes matter here too: the live suppressor below runs
+          -- `is_live` over exactly the same mode set, so these have to be
+          -- collected before `live_keymaps` is built.
+          local modes = extract_modes(rec)
+          for _, m in ipairs(modes) do
+            needed_modes[m] = true
+          end
+          repo_keymaps[#repo_keymaps + 1] = {
+            rec = rec,
+            dir = dir,
+            token = token,
+            lhs = lhs,
+            modes = modes,
+            desc = extract_desc(rec),
+          }
+        end
+      end
     end
   end
   local mode_list = vim.tbl_keys(needed_modes)
@@ -591,6 +841,36 @@ function M.check(plugin)
     findings[#findings + 1] = f
   end
 
+  -- Repo axis, keymaps: an unloaded plugin's documented key, looked for in
+  -- the one place that exists without a session — its checkout on disk.
+  --
+  -- Reported only when all three suppressors agree the key is written down
+  -- nowhere (module doc, "The repo axis"): not in the plugin's own source,
+  -- not in this config's own lua tree, and not registered right now. The
+  -- per-table `unverifiable` verdict deliberately does not apply — that
+  -- verdict is about a buffer-local scope not being open, which is a
+  -- statement about the LIVE axis and says nothing about a source tree.
+  for _, entry in ipairs(repo_keymaps) do
+    local in_repo = repo.mentions(entry.dir, entry.token, { ignore_case = true })
+    if in_repo ~= nil then
+      repo_answered[entry.rec.plugin] = true
+      if
+        not in_repo
+        and repo.mentions(config_lua, entry.token, { ignore_case = true }) ~= true
+        and not is_live(live_maps, entry.modes, entry.lhs, entry.desc)
+      then
+        findings[#findings + 1] = {
+          kind = "keymap-not-in-repo",
+          plugin = entry.rec.plugin,
+          heading = entry.rec.heading,
+          notation = entry.token,
+          file = entry.rec.file,
+          line = entry.rec.line,
+        }
+      end
+    end
+  end
+
   -- Usercmds: documented (Personal) but not live.
   local live_cmds = live_commands()
   local seen_personal = {}
@@ -610,8 +890,56 @@ function M.check(plugin)
         end
       end
     elseif not plugin or rec.plugin == plugin then
-      skipped[rec.plugin] = true
+      local dir = repo_dirs and repo_dirs[rec.plugin]
+      if not dir then
+        skipped[rec.plugin] = true
+      else
+        repo_candidates[rec.plugin] = true
+        -- Repo axis, usercmds. Case-SENSITIVE here, unlike the keymap side:
+        -- a command name is a capitalized identifier, and folding case makes
+        -- `:Images` match the word "images" in half of images.nvim's own
+        -- source — every command would count as found and the axis would
+        -- never report anything. Key notation has the opposite problem
+        -- (`<Leader>` vs `<leader>`), hence the difference.
+        local name = extract_usercmd(rec)
+        if name and not seen_personal[name] then
+          seen_personal[name] = true
+          local in_repo = repo.mentions(dir, name)
+          if in_repo ~= nil then
+            repo_answered[rec.plugin] = true
+            if not in_repo and repo.mentions(config_lua, name) ~= true and not live_cmds[name] then
+              findings[#findings + 1] = {
+                kind = "usercmd-not-in-repo",
+                plugin = rec.plugin,
+                notation = ":" .. name,
+                file = rec.file,
+                line = rec.line,
+              }
+            end
+          end
+        end
+      end
     end
+  end
+
+  -- A plugin the repo axis had a checkout for but never got an answer from
+  -- (no readable source in it, or not one of its rows carried a usable lhs
+  -- or command name) is an unchecked plugin like any other, and belongs in
+  -- the skipped list rather than in the "checked against its checkout"
+  -- count. `repo_answered` is what the report may claim.
+  for name in pairs(repo_candidates) do
+    if not repo_answered[name] then
+      skipped[name] = true
+    end
+  end
+
+  -- Hand the indexed trees back. Measured over the real checkouts, holding
+  -- them costs 28 MiB for the rest of the session, which is not a price a
+  -- report someone ran once should keep charging — and the next run must
+  -- re-read anyway (`repo.reset()` at the top), so nothing is saved by
+  -- keeping them.
+  if want_repo then
+    repo.reset()
   end
 
   -- Third axis (source) is resolved BEFORE the live-undocumented direction
@@ -692,7 +1020,41 @@ function M.check(plugin)
 
   local skipped_list = vim.tbl_keys(skipped)
   table.sort(skipped_list)
-  return findings, skipped_list, source_reason
+
+  local repo_checked = vim.tbl_keys(repo_answered)
+  table.sort(repo_checked)
+  table.sort(repo_resolved)
+
+  -- Which resolved projects this corpus has no cheatsheet for. Only asked
+  -- when a root was scanned: with the default per-plugin resolution the
+  -- answer is trivially empty (that resolver starts from the plugin list),
+  -- whereas a collection directory is whatever the user happens to keep
+  -- there -- and "this checkout is documented nowhere" is precisely the
+  -- part of a whole-path report that no other axis reports.
+  local repo_undocumented = {}
+  if type(opts.repo_root) == "string" and #repo_resolved > 0 then
+    local documented = {}
+    for _, rec in ipairs(records.list(nil, "personal")) do
+      documented[rec.plugin] = true
+    end
+    for _, name in ipairs(repo_resolved) do
+      if not documented[name] then
+        repo_undocumented[#repo_undocumented + 1] = name
+      end
+    end
+  end
+
+  ---@type Bindings.RepoInfo
+  local repo_info = {
+    ran = want_repo,
+    reason = repo_reason,
+    checked = repo_checked,
+    root = type(opts.repo_root) == "string" and opts.repo_root or nil,
+    resolved = repo_resolved,
+    undocumented = repo_undocumented,
+  }
+
+  return findings, skipped_list, source_reason, repo_info
 end
 
 ---The source axis on its own — `M.check` folds this in, exposed separately
@@ -816,6 +1178,11 @@ local function render(f)
     return ("  %-22s %-20s %s:%d"):format(f.plugin, readable(f.notation), f.file, f.line)
   elseif f.kind == "usercmd-not-live" then
     return ("  %-22s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
+  elseif f.kind == "keymap-not-in-repo" or f.kind == "usercmd-not-in-repo" then
+    -- No `readable()` here, unlike the not-live kinds: a repo finding's
+    -- notation is the cheatsheet's own `<leader>iv` text, never the raw
+    -- byte form, because that is the form a source tree is searched for.
+    return ("  %-22s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
   elseif f.kind == "keymap-undocumented" then
     return ("  %-20s %s:%d"):format(readable(f.notation), f.file or "?", f.line or 0)
   elseif f.kind == "usercmd-undocumented-source" then
@@ -840,6 +1207,11 @@ local SECTIONS = {
     -- Accurate for a scoped run too, where the per-table verdict does not
     -- run at all and this section holds every keymap finding.
     note = "not found globally, nor in any buffer open right now",
+  },
+  {
+    kinds = { ["keymap-not-in-repo"] = true, ["usercmd-not-in-repo"] = true },
+    title = "Documented, and nowhere in the plugin's own checkout",
+    note = "source grep, not an API query: an lhs the plugin computes at runtime is a false finding here",
   },
   {
     kinds = { ["keymap-undocumented"] = true, ["usercmd-undocumented-source"] = true },
@@ -869,8 +1241,13 @@ local SECTIONS = {
 ---source axis could not be consulted, when it could not. Rendered rather
 ---than dropped: a report silently missing a whole axis reads exactly like
 ---one where that axis found nothing.
+---@param repo_info Bindings.RepoInfo|nil `M.check`'s fourth return value.
+---With a scanned root it additionally carries what that path holds, which
+---is what turns the report from "these plugins" into "this path".
+---Omitted (nil) reads as "the repo axis was never asked for", which is what
+---a pre-existing three-argument caller means.
 ---@return string[]
-function M.describe(findings, skipped, source_reason)
+function M.describe(findings, skipped, source_reason, repo_info)
   local lines = {}
   if #findings == 0 then
     lines[1] = "No drift found (Keymaps: documented-not-live + source-not-documented; "
@@ -952,12 +1329,49 @@ function M.describe(findings, skipped, source_reason)
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Source axis not consulted: " .. source_reason
   end
+  local repo_ran = repo_info ~= nil and repo_info.ran == true
+  if repo_info and repo_info.reason then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "Repo axis not consulted: " .. repo_info.reason
+  end
+  if repo_ran and repo_info.root then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = ("Repo root: %s -- %d Lua project%s found"):format(
+      repo_info.root,
+      #repo_info.resolved,
+      #repo_info.resolved == 1 and "" or "s"
+    )
+  end
+  if repo_ran and #repo_info.checked > 0 then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = ("Checked against their local checkout, not live (%d): %s"):format(
+      #repo_info.checked,
+      table.concat(repo_info.checked, ", ")
+    )
+  end
+  -- Only reachable with a scanned root, see `M.check`. A checkout nobody
+  -- wrote a cheatsheet for is not a drift finding -- there is no documented
+  -- claim to be wrong about -- but it is the one thing a report over a whole
+  -- path can say that a per-plugin report structurally cannot.
+  if repo_ran and #repo_info.undocumented > 0 then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = ("No cheatsheet under BINDINGS (%d): %s"):format(
+      #repo_info.undocumented,
+      table.concat(repo_info.undocumented, ", ")
+    )
+    lines[#lines + 1] =
+      "  -- a checkout in this path that nothing in the corpus documents; not drift, just uncovered."
+  end
   if skipped and #skipped > 0 then
     lines[#lines + 1] = ""
     lines[#lines + 1] = ("Not loaded this session, skipped (%d): %s"):format(
       #skipped,
       table.concat(skipped, ", ")
     )
+    if not repo_ran then
+      lines[#lines + 1] =
+        "  -- :Bindings check repo additionally greps these plugins' local checkouts."
+    end
   end
   return lines
 end

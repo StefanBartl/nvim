@@ -11,7 +11,8 @@ Roadmap gelöscht (Feature ist längst umgesetzt, Phase 1–3 alle fertig).
 Module: `lua/bindings/usrcmds/bindings_explorer/` — `init.lua` (Composer-
 Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
 `ui.lua` (Phase 1 Fallback-Suche), `live.lua` (Phase 1 Live-Grep),
-`records.lua` + `browse.lua` (Phase 2 Tabellen-Scraper + Picker).
+`records.lua` + `browse.lua` (Phase 2 Tabellen-Scraper + Picker),
+`drift.lua` + `source.lua` + `repo.lua` (Phase 3 Drift-Bericht, vier Achsen).
 
 ## Volltextsuche (`:Bindings search`)
 
@@ -80,6 +81,14 @@ Spaltenzahl/-namen sind bewusst nicht festgeschrieben (siehe
 ohne saubere Tabelle unter einer Überschrift liefern hier einfach keine
 Treffer, bleiben aber über `:Bindings search` weiterhin auffindbar.
 
+Getrennt wird nur an **unescapten** `|`. Ein `\|` ist markdowns
+Literal-Pipe-Escape und bleibt Teil der Zelle, im Zellwert zu einem schlichten
+`|` aufgelöst — `Keymaps/markdown.nvim.md`s Zelle `` `]\|` / `[\|` `` ist eine
+Zelle, keine drei. Bis 2026-08-30 trennte der Scraper auch dort: das gab 74
+Zeilen des Korpus mehr Zellen, als ihre Kopfzeile Spalten hat, und verschob
+damit jede Spaltenzuordnung dahinter. Sichtbar wurde es erst über den
+Drift-Bericht, der das Bruchstück `` `]\ `` als dokumentierten lhs meldete.
+
 `browse.lua`s Picker (`kit.select`, wie Phase 1s Fallback) zeigt jede Zeile
 als `[Scope/Plugin] Heading — Spalte1: Wert1  Spalte2: Wert2  ...`; `<CR>`
 springt an die Fundstelle in der Quelldatei.
@@ -93,9 +102,10 @@ Beispiele:
 :Bindings browse usercmds extern
 ```
 
-Gegen den echten Bestand verifiziert (headless, 2026-08-09):
-`records.list()` liefert 1641 Datensätze über den ganzen Korpus, davon 414
-für `Keymaps personal` allein.
+Gegen den echten Bestand verifiziert (headless, 2026-08-30):
+`records.list()` liefert 1940 Datensätze über den ganzen Korpus, davon 561
+für `Keymaps personal` allein — und in keinem einzigen weicht die Zellenzahl
+von der Spaltenzahl seiner Kopfzeile ab.
 
 ## Drift-Bericht (`:Bindings check`)
 
@@ -162,4 +172,90 @@ Beispiele:
 ```vim
 :Bindings check
 :Bindings check images.nvim
+```
+
+### Die vierte Achse: der lokale Checkout (`:Bindings check repo`)
+
+`:Bindings check repo [plugin]` — oder, mit dem Plugin zuerst,
+`:Bindings check <plugin> repo`.
+
+Die Einschränkung "noch nicht geladene Plugins werden übersprungen" oben ist
+ehrlich, aber leer: übersprungen ist nicht geprüft, und in einer normalen
+Session ist das die Mehrheit der Personal-Plugins. Für die gibt es genau eine
+Quelle, die keine laufende Session braucht — den lokalen Checkout auf der
+Platte. `repo.lua` durchsucht dessen `.lua`/`.vim`-Dateien nach dem
+dokumentierten `lhs` bzw. Commandnamen **als String-Literal in Quotes**
+(`vim.keymap.set("n", "<leader>iv", ...)`, `composer.verb("Images", ...)`,
+`["<leader>iv"] = ...`).
+
+Neue Finding-Arten: `keymap-not-in-repo` / `usercmd-not-in-repo`, mit eigenem
+Abschnitt im Bericht.
+
+- **Opt-in, Default aus.** Die drei bestehenden Achsen befragen eine laufende
+  Session; diese liest ~30 Repos von der Platte. Gemessen: 940 ms, 2861
+  Quelldateien, 28 MiB Zwischenspeicher, der am Ende des Laufs wieder
+  freigegeben wird. Kein stiller Kostenfaktor eines Kommandos, das man für
+  den üblichen Bericht tippt.
+- **Ein Grep, keine API-Abfrage — und im Bericht so gekennzeichnet.** Ein zur
+  Laufzeit zusammengesetztes `lhs` (`prefix .. "m"`) ist registriert und
+  nicht greppbar. Das ist der bekannte Falschbefund dieser Achse.
+- **Case-Regel nach Art des Tokens.** Keymaps case-unabhängig (`<Leader>` und
+  `<leader>` sind dieselbe Taste), Commandnamen case-abhängig — sonst trifft
+  `:Images` das Wort "images" in jeder zweiten Zeile von images.nvim und die
+  Achse meldet nie etwas.
+- **Drei Unterdrücker.** Gemeldet wird nur, was in keinem der drei steht: im
+  Checkout des Plugins, im `lua/`-Baum dieser Config (der `<leader>`-Einstieg
+  eines Personal-Plugins wird sehr oft hier registriert, in einer
+  lazy-`keys`-Spec), und in den gerade registrierten Keymaps/Commands.
+- **Wer beantwortet wurde, gilt nicht mehr als "skipped".** Ein Plugin ohne
+  auflösbaren Checkout, oder eines dessen Checkout keine lesbare Quelle
+  enthält, bleibt übersprungen — "nichts gefunden" und "konnte nicht
+  nachsehen" bleiben getrennt.
+- **Auflösung austauschbar.** `config.repo_dirs()` liefert `{name, dir}` je
+  Plugin; Default ist `plugins.personal.export.projects()` (aus dem echten
+  Lazy-Spec abgeleitet, nicht aus einer handgepflegten Liste).
+  `config.set_repo_dirs(fn)` ersetzt sie — die Tests hängen daran und laufen
+  gegen ein Fixture-Repo im Temp-Verzeichnis statt gegen echte
+  `C:\repos\*`-Checkouts.
+- **Oder ein ganzes Sammelverzeichnis: `root=<dir>`.** `:Bindings check repo
+  root=C:/repos` löst nicht über den Lazy-Spec auf, sondern nimmt jedes
+  Lua-Projekt direkt unter dem Pfad (`config.repo_dirs_under`) — ein
+  Verzeichnis gilt als Projekt, wenn es ein `lua/` oder eine `.lua`-Datei
+  obenauf hat, nicht wenn es ein `.git` hat: die Achse liest Quelltext, nicht
+  Historie. Nur eine Ebene tief, sonst meldete jeder Checkout sein eigenes
+  `lua/` und `tests/` als weitere „Repos". `root=` impliziert `repo`, ist
+  positionsunabhängig (`kv`-Argument, `<Tab>` vervollständigt Verzeichnisse)
+  und mit einem Plugin-Filter kombinierbar.
+
+  Der Fall, für den das existiert: die Default-Auflösung setzt eine geladene
+  `plugins.personal`-Ebene voraus und liefert nur die als Plugin *aktivierten*
+  Checkouts. Ein Pfad setzt nichts voraus und deckt alles ab, was dort liegt —
+  gemessen an `C:/repos`: 31 Projekte aufgelöst, 30 gegen ihren Checkout
+  beantwortet, `skipped` von 38 auf 8. Was dabei zusätzlich abfällt, ist eine
+  eigene Berichtszeile wert: **Projekte unter dem Pfad, die dieser Korpus gar
+  nicht dokumentiert.** Das ist kein Drift (es gibt keine dokumentierte
+  Behauptung, die falsch sein könnte), aber die einzige Aussage, die ein
+  Bericht über einen ganzen Pfad machen kann und ein Bericht über eine
+  Plugin-Liste strukturell nie.
+
+Erster echter Lauf (headless, alle 30 auflösbaren Plugins künstlich als
+ungeladen — der Worst Case, für den die Achse existiert): 30 von 30 Checkouts
+beantwortet, 10 Findings. 7 davon sind `debugging.nvim`s zusammengesetzter
+`prefix .. "m"` (der dokumentierte Falschbefund), 1 war ein Parser-Artefakt aus
+einer Tabellenzelle mit escaptem `\|` — ein vorbestehender Defekt in
+`records.lua`s `split_cells`, den dieser Lauf erstmals sichtbar machte und der
+seither behoben ist (`472822d8`), womit dieses Finding entfällt —, und 2 echte
+Funde:
+`cmdlog.nvim`s `ctrl-f`, das in dessen Quelltext nirgends steht, und
+`:RATelemetry`, dokumentiert in `Usercmds/lib.nvim.md`, aber registriert in
+runtime-analysis.nvim — ein Fund, den die Live-Achse strukturell nie machen
+kann, weil das Command ja existiert, nur nicht dort, wo das Cheatsheet es
+verortet.
+
+```vim
+:Bindings check repo
+:Bindings check repo images.nvim
+:Bindings check images.nvim repo
+:Bindings check repo root=C:/repos
+:Bindings check images.nvim root=C:/repos
 ```

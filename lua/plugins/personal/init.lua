@@ -46,6 +46,8 @@ plugins.add({
       -- zeichnet Bilder, pdfport rastert PDF-Seiten, gopath.nvim loest
       -- truncated Pfade auf -- alle optional.
       require("lib.nvim.hover").enable()
+
+      require("lib.nvim.lastcmd").setup({ experimental = true })
     end,
   },
 

@@ -4,6 +4,7 @@ All plugin user-command cheatsheets in this folder.
 
 **Config-internal** (not a plugin's own command — manages the list below):
 
+- [nvim-config](./nvim-config.md) — the rest of this config's own commands: window layout, `:CopyLocation`/`:CwdHere`/`:PowershellProfile`, startup report, diff profile, plugin-command aliases
 - [MyPlugins](./MyPlugins.md) — clone/remove/list the personal plugin checkouts, switch their dir/remote/auto source mode
 - [MyReposUpdate](./MyReposUpdate.md) — fetch + ff-only pull every git repo in a directory (not just the listed plugins)
 - [WhoLocks](./WhoLocks.md) — diagnose a Windows file lock: live probe, holding processes, neo-tree watchers

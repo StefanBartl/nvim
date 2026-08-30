@@ -44,3 +44,15 @@ was cut.
 ## Notes
 
 - `docs/templates/autocmds.lua`/`usercmds.lua` are scaffolding/boilerplate under `docs/templates/`, not `lua/` — not wired into anything, don't mistake these for live registrations.
+- **What `defaults.ft_pattern` actually is** (every row above resolves to it):
+  `{ "*.md", "*.markdown", "*.mdx" }` by default, and `{ "*" }` when the
+  `any_file` key is on — which is *the* thing that config key does. With it on,
+  every row above fires for every named buffer, and the exclusion of terminal /
+  help / quickfix / scratch / binary / unnamed buffers moves into
+  `lua/mdview/helper/previewable.lua`, which each handler calls first. Verified
+  against a running session on 2026-08-30 (`any_file` left `experimental` that
+  day; `experimental.any_file` still works as an alias).
+- `.markdown` in that list was a bare extension until 2026-08-30, so it matched
+  only a file *named* `.markdown` — `notes.markdown` reached none of these
+  autocmds. Fixed to `*.markdown`; a bare-extension pattern is now caught by
+  `TESTS/nvim/config_spec.lua`.

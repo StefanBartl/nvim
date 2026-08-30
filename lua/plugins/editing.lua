@@ -25,6 +25,14 @@ return {
   -- Treesitter-based HTML tag closing and renaming
   {
     "windwp/nvim-ts-autotag",
+    -- Its own trigger, and it needs one: closing and renaming tags is an
+    -- insert-mode feature, so InsertEnter is early enough by definition.
+    -- Until 2026-08-28 this spec had no trigger at all and the plugin was
+    -- loaded only because lsp.nvim's Astro module required it during startup --
+    -- an Astro detail keeping HTML/TSX tag closing alive by accident. That
+    -- require is deferred to the first Astro buffer now, so without this the
+    -- plugin would never load in a session that opens no .astro file.
+    event = "InsertEnter",
     -- New setup layout (top-level enable_* flags are deprecated as of the
     -- plugin's own config/plugin.lua: a top-level enable_rename/enable_close/
     -- enable_close_on_slash now prints a one-time "legacy setup opts" warning
