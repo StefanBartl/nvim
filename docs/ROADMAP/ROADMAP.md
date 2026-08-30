@@ -17,7 +17,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     13:30       |    19% / 49%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     22:40       |    83% / 24%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     02:50       |    91% / 27%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     23:50       |    55% / 34%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     21:10       |    59% / 11%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
@@ -27,22 +27,23 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ## Lists
 
-- [ ] E:\repos\WKDBooks\Development\wkdbook-myplugins - Erstelle einen Implementierungsplan, um die Roadmap tasks aller plugins zu implementieren - repo für repo. vorher aber: beschreibe mir jedemn roadap task vorschlag: Was? Wie implementiert? Was bringt mir das als user? wie viel aufwand/nutzen? Epmfgehlung: Was würdetr du machen? Ich entscheide dann, ob wir die task implementieren oder nicht. Danach der Implement-Plan. Du kannst ihn hier hin scheriben: C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/
-
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/MERGED.md
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md
-  - [ ]  [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
-  -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.
-    Zusatz Feature: Alle im `h deprecated` implementieren
-    - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
-    - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
-    - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/WQ.md
 
 ---
 
 ## Misc
+
+- [ ] :checkhealth filetree zeigt zusätzlich, wie viele stale IDs geheilt wurden — steht da nach einer Weile eine Zahl > 0, hat die Session den Bug getroffen und überlebt.
+- [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
+     [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
+  -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.
+    Zusatz Feature: Alle im `h deprecated` implementieren
+    - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
+    - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
+    - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
 
 - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
 - [ ] `:Bindings [options?]` verbessern, andere optionen durchgehen, bestehdne ausbauen und optimieren

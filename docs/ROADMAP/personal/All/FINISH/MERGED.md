@@ -17,7 +17,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
   - [ ] Gleich mitchecken, o die usrmd optionen wirklich gut bennant sind. Zb `:LspDoctor deep` wurde gennant für eine aktion, die ausgegebn hat, welcher formatter gerade aktiv ist.... daher wurde es umbenannt auf `LspDoctor fmt_check`
 - [ ] `:Recommender perf` durch alle Module laufen lassen und Ergebnisse sichten. (Ausführen + Sichten = du; die daraus resultierenden Fixes = delegierbar, siehe Liste B.)
 
-
 ---
 
 ## Ganz zum Schluss erst erledigen - wenn alles fertig ist
@@ -37,5 +36,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
 - [ ] Alle docs/ Files in jedem .nvim repo müssen nochmal überprüft werden, auf aktualitöt & korrektheit - Doppelungen entfernen, stimmt alles was behauptet wird, Referenzen updaten, usw...  docs/README Themenaufteilung / docs Struktur überelgen - einheitiche struktur finden für alle repos; Deutsche docs nur, wenn eine englische Hauptversions der file besteht und explizit eine deutsche version von mir verlangt wird. Weiteres auf das überprüftr werden soll gleich am anfang mit ausfschreiben, man könte für diesen duirchgang eien art docs checklist machen.
+  - [ ] Generell soll das Prinzip herrschen: `Nicht "so viel wie möglich" in die docs, sondern nur das, was für User und Devs auch tatsächlich interessant sein kann. Der Rest nach WKDBooks/Deveolpment/wkdbook-myplugins/ - da können auch reine informations docs ausgelagert werden, die entwedet "zu tief" gehen für normale repo docs oder weder für devs noch für user einen naheliegenden Mehrwert haben. wkdbook-myplugins ist kein "Downgrade", sondern meine interne Notizensammlung`
 
 ---

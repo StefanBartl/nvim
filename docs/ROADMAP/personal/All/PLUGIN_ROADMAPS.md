@@ -34,7 +34,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
   - [1.2 Mittel (M)](#12-mittel-m)
-    - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-deep)
+    - [M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`) (LSPDoctor paramter options, glaub capabilitiesr deep wurde umbenannt, glaub capabilities)](#m1-lspnvim-fehler-provozieren-als-testhilfe-lspdoctor-deep-lspdoctor-paramter-options-glaub-capabilitiesr-deep-wurde-umbenannt-glaub-capabilities)
     - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
     - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
     - [M4 · `lsp.nvim` — Workspace-Symbol-/Call-Hierarchy-Picker über den `picker`-Adapter](#m4-lspnvim-workspace-symbol-call-hierarchy-picker-ber-den-picker-adapter)
@@ -69,9 +69,9 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
 ## TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)
 
-In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw. dann gehe den nächsten schrtt an.
+In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw. Erkläre mir den Task dann im sinne von Was? Warum? Was bringt es Usern? Aufwand/Nutzen? Empfehlung von dir: Implementieren oder nicht, anders,... Ich netscheide dann, ob wir den punkt imlementieren, ersatzlos streichen oder markiert und begründet zurückstellen. dann gehe den nächsten schritt an oder wenn abgelehnt, such den nächsten von der liste und das geliche nochmal von vorne.
 
-comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren.
+comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest (momentan in der Empfehlung enthalten).
 
 ---
 
@@ -268,7 +268,7 @@ einen Roundtrip. Schlüssel: `(bufnr, changedtick, row, col)`.
 
 ---
 
-### M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`)
+### M1 · `lsp.nvim` — Fehler provozieren als Testhilfe (`:LspDoctor deep`) (LSPDoctor paramter options, glaub capabilitiesr deep wurde umbenannt, glaub capabilities)
 
 **Aufwand M · Nutzen hoch**
 
