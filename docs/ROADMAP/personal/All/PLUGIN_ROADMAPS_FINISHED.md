@@ -27,6 +27,7 @@ Querverweis von aussen weiter aufgeht.
   - [QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay](#qw10-mdviewnvim-auf-windows-startet-kein-lokal-gebauter-relay)
   - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
   - [M6 + M7 · `lsp.nvim` — Profile-Presets und Per-Projekt-Override](#m6--m7-lspnvim-profile-presets-und-per-projekt-override)
+  - [M17/M7 · `documentation.nvim` — Phase-0-IR: der besitzende Scope](#m17m7-documentationnvim-phase-0-ir-der-besitzende-scope)
 
 ---
 
@@ -754,3 +755,90 @@ Arbeitsverzeichnis heraus hängt davon ab, wie der jeweilige Test-Runner die
 `runtimepath` gesetzt hat — lokal mit `PlenaryBustedFile` schlug es fehl, mit
 `PlenaryBustedDirectory` (was die CI benutzt) nicht. Nur `setup()` muss aus dem
 Projekt heraus laufen; das `require` gehört nicht zum Testgegenstand.
+
+---
+
+### M17/M7 · `documentation.nvim` — Phase-0-IR: der besitzende Scope
+
+**Erledigt am 2026-08-30. `documentation.nvim` [`ffc24a5`](https://github.com/StefanBartl/documentation.nvim/commit/ffc24a5),
+`docmap-desktop` `b303bc0`, `WKDBooks` `f15aa52`.**
+
+Ursprünglich: „Phase-0-IR: besitzender Scope, eine Datei / viele Module" — der
+einzige Punkt der Liste, der etwas anderes aufhielt, weil
+`Documentation.FunctionInfo` keinen besitzenden Scope kannte und Python-Klassen
+und Rust-`impl`-Blöcke damit keinen Ort hatten.
+
+**Was gebaut wurde**: zwei Felder auf `Documentation.FunctionInfo` — `owner`
+(die Klasse, der `impl`-Block, das Trait, der Receiver-Typ oder das Inline-Modul)
+und `owner_kind` daneben, gesetzt vom jeweiligen Backend genau dort, wo der
+Parse-Baum noch existiert. Schema 6. Vierzehn der zwanzig Backend-Dateien
+setzen sie.
+
+*Konkrete Auswirkung, und sie ist genau die versprochene*: eine Python-Datei mit
+zwei Klassen liest sich im Detail-Panel jetzt als `Functions (6, 2 scopes)` —
+drei Methoden unter `class Widget`, zwei unter `class Gadget`, die freie
+Funktion darüber. Eine Rust-Datei trennt `impl Widget`, `trait Doer` und
+`module inner`. Vorher waren das zwölf gleichrangige Zeilen neben einem
+Klassennamen, der nichts besaß. `:DocMap` gibt zusätzlich eine Zeile aus („3
+scopes owning 12 of 15 functions") — und für einen Lua- oder C-Baum
+**gar keine**, weil eine dauerhafte „0 scopes"-Zeile wie ein Defekt aussieht
+statt wie eine Spracheigenschaft.
+
+**Die Entscheidung, die im Auftrag nicht stand: ein Feld statt eines besseren
+Strings.** Jedes Backend kannte den Besitzer längst und gab ihn im Namen aus
+(`Class.method`, `Widget::new`, `Doer::go`). Der Name ist richtig und war nie
+die ganze Auskunft — er lässt sich nicht rückwärts lesen:
+
+- `Class.helper` auf Modulebene und `helper` innerhalb von `class Class`
+  ergeben denselben `name`.
+- Luas eigenes `function M.foo()` ist gepunktet, weil `M` die Modultabelle ist
+  — ein Präfix-Match würde in *jeder* Lua-Datei einen Scope namens `M`
+  erfinden.
+- Ruby schreibt `Class#method` und `Class.method`, PHP und Rust `::`. Eine
+  Frage, vier Trennzeichen.
+
+`TESTS/scopes_spec.lua` prüft genau diese drei Fälle — sie sind der einzige
+Grund, warum die IR ein Feld bekommen hat und nicht eine Namenskonvention.
+
+**Was das Bauen gelehrt hat und in keiner Beschreibung stand: die *Art* des
+Scopes wiegt schwerer als sein Name.** Rust hat es erzwungen — `Widget::new`,
+`Doer::go` und `inner::helper` sind identisch geschrieben und sind eine
+inhärente Methode, eine Trait-Methode und die Funktion eines Inline-Moduls. Ein
+normalisiertes „type" hätte alle drei zu „class" verflacht und damit das eine
+weggeworfen, wonach man in dieser Datei sucht. `Documentation.ScopeKind` behält
+deshalb das Konstrukt so, wie die Sprache es nennt — inklusive `receiver` für
+Go, das gar keinen umschließenden Block hat.
+
+**Abgeleitet, nie serialisiert.** `Documentation.ScopeInfo` ist Gruppierung,
+keine Daten: `core/scopes.lua` für die Lua-Seite, dieselbe Gruppierung in
+JavaScript auf der Seite. Bewusst die umgekehrte Entscheidung zu
+`ir.duplicates` — dessen eigene Begründung (die Seite hat keinen Parse-Baum,
+um `fn.shape` nachzurechnen) trägt hier nicht: `fn.owner` liegt ihr vor.
+
+*Verifiziert an echten Parses der beiden Sprachen, um die es ging.* Python- und
+Rust-Grammatiken waren vorhanden, also prüfen `lang_python_spec.lua` und
+`lang_rust_spec.lua` Besitzer und Art an echten Bäumen; dazu wurde ein
+polyglottes Wegwerf-Repo generiert und **durch die tatsächliche Seite**
+zurückgelesen, nicht nur über Unit-Assertions. Alle fünf CI-Gates grün
+(`stylua`, `luacheck`, Tests, `map --check`; `standalone` lokal übersprungen).
+
+*Drei Backends könnten einen Besitzer setzen und tun es nicht* — Haskells
+`class`/`instance`, OCamls `module X = struct … end`, Zigs
+`const S = struct { … }`. Jedes bräuchte Walk-Verkabelung, die es nicht gibt,
+und keines ließ sich auf dieser Maschine an einem echten Parse prüfen. In
+`docs/LANGUAGES.md` ausdrücklich als **Lücken** geführt, nicht als
+Spracheigenschaften — sonst liest sich ein Defizit wie eine Tatsache.
+
+**Was offen bleibt, und der Punkt wurde nicht stillschweigend eingedampft**:
+die zweite Hälfte des ursprünglichen Titels, „eine Datei / viele Module". Ein
+Scope ist **kein** Knoten — keine Summary, keine Coverage, keine Kanten, keine
+id. Ein Rust-`mod x { … }` wird weiterhin als Teil seiner Datei gelesen; Elixir
+ist der zweite Fall und kommt von der anderen Seite (eine `.ex`-Datei hält
+regelmäßig mehrere `defmodule`). Das ist eine falsche *Identität*, keine
+fehlenden Daten — der Grund, warum es bis heute nicht weh getan hat. Es läuft
+ab sofort als eigener Punkt **M17/M7b** in `docmap-desktop/docs/PLAN.md`, samt
+der Bedingung, unter der es aufhört, kosmetisch zu sein.
+
+*Bindings-Zettel*: nicht berührt. Der Punkt fügt weder Keymap noch Usercmd noch
+Autocmd hinzu; `:DocMap` gibt eine Zeile mehr aus, wenn der Baum überhaupt
+Scopes hat.
