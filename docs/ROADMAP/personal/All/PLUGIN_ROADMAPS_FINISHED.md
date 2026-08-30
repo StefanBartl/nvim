@@ -747,3 +747,10 @@ Allowlist.
 
 *Bindings-Zettel*: nicht berührt. Der Punkt fügt weder Keymap noch Usercmd noch
 Autocmd hinzu; `:Lsp status` gibt nur zwei Zeilen mehr aus.
+
+*Nachtrag `e050778`*: die Projektdatei-Specs laden `lsp.config` jetzt **vor**
+dem `chdir` ins Temp-Verzeichnis. Ein `require` aus einem fremden
+Arbeitsverzeichnis heraus hängt davon ab, wie der jeweilige Test-Runner die
+`runtimepath` gesetzt hat — lokal mit `PlenaryBustedFile` schlug es fehl, mit
+`PlenaryBustedDirectory` (was die CI benutzt) nicht. Nur `setup()` muss aus dem
+Projekt heraus laufen; das `require` gehört nicht zum Testgegenstand.
