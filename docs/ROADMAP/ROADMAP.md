@@ -39,29 +39,22 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/WQ.md
 
 ---
+C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\Diagnostics.md
+
+---
 
 ## Misc
 
-- [ ] `lib.nvim`-`hover` Modul braucht einen `quit` keymap. Manchmal möchte ich kein hover sehen, muss aber auf dem Pfad bleiben... da wäre es gut einen qiut, oder eigentich besser einen toggle zu haben, mit dem ich das hover für den spzifischen pfad zu image/pdf/textfile/usw.. ausschalten kann und wenn ich ihn wieder haben wilk an schalten kann. bzw.: Eigentlich gar nicht für "das eine", sondern auch ein genereeller toggle könnte reichen oder sinnvoll sein, weil: wenn ich sage "ich will gerade kein over sehen" dreh ich ab (für alle), dann wenn wich wieder haben will auf - da ja immer nur ein hover zur selben zeit sein kann, kann es auch nicht sein "ah ichhab hove rabgedreht und will aber dort einen haben" - denn da nn muss ich dorthin hin mit dem cursor und einfach wieder ienschalten. siehst dudas auch so?
 - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
-- [ ] `:Bindings search` verbessern, andere optionen durchgehen
+- [ ] `:Bindings [options?]` verbessern, andere optionen durchgehen, bestehdne ausbauen und optimieren
+  - [ ] "Dashboard"-Funktionen wie `?`-Cheatsheet, keys, usw... Beispiele: `:Reposcope status`
 
 - [ ] Anticheat knacken
 - [ ] alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
 - [ ] Github Stats auswerten / backupen
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
-- [ ] TAKT
-- [ ] **mdview: live ansehen, wie Nicht-Markdown-Dateien aussehen.** `experimental.any_file = true`
-  weitet die Vorschau von Markdown auf jede normale Textdatei aus; `.lua`/`.py`/`.sh` landen
-  dann als hervorgehobene Code-Ansicht im Browser statt im Markdown-Renderer. Gebaut am
-  2026-08-24, aber nie durch ein echtes Neovim gelaufen — nur Lua-Harness, Client-vitest und
-  Standalone-Relay, und keiner der drei geht durch die Autocmd-Kette, die das Flag verändert.
-  Checkliste mit den fünf Fällen (Rendern, proportionaler Scroll-Sync, Breadcrumbs auf
-  `#`-Kommentarsprachen, Ausschluss von Terminal/Help/Quickfix/Log-Buffer, Regression mit Flag
-  aus) plus vier Fixtures liegt in `C:/repos/mdview.nvim/TESTS/CHECK.md` unter
-  *„`experimental.any_file` — release check"*. Ergebnis entscheidet, ob das Flag `experimental`
-  verlieren kann.
+- [ ] TAKT -> aai impllementierung von anfang an mitbauen
 
 ---
 
