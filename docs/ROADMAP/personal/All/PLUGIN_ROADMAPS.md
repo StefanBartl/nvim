@@ -174,11 +174,17 @@ Konkrete Auswirkung: `:Bindings check` meldet fuer diese Config **261 statt
 680 Befunde**, die Source-Achse null. Wer eine Taste nachschlaegt, findet sie
 jetzt — vorher standen 40 Keymaps und 11 Commands ausschliesslich im Code.
 
-**Ein echter Defekt nebenbei gefunden**: `:WKDDiffProfile` ist in
-`wkdoptions/commands/register.lua` definiert, aber `register_diff_profile()`
-hat keinen Aufrufer — der Command existiert in keiner laufenden Sitzung. Nicht
-stillschweigend verkabelt, weil das Verhalten aendert; dokumentiert in
-`Usercmds/nvim-config.md`.
+**Zwei echte Defekte nebenbei gefunden, beide behoben:**
+
+- `:WKDDiffProfile` war in `wkdoptions/commands/register.lua` definiert, aber
+  `register_diff_profile()` hatte keinen Aufrufer — der Command existierte in
+  keiner laufenden Sitzung. `wkdoptions/init.lua`s `setup()` ruft ihn jetzt
+  auf, bei den anderen eigenstaendigen Features. Nachgewiesen: alle vier
+  Profile schalten `diffopt`, Completion liefert die vier Namen. Nur *beide*
+  Achsen zusammen konnten das finden — in der Quelle vorhanden, in
+  `nvim_get_commands` nicht.
+- `terminal.lua`s `<C-j>` trug `desc = "[Terminal Down"` mit offener Klammer.
+  An der Quelle korrigiert, das Cheatsheet zieht nach.
 
 ---
 
@@ -831,11 +837,13 @@ als er hält:
   drei) unverändert. Sie sind ab jetzt historischer Stand, keine Quelle — der
   Abschnitt oben über die korrigierten `❌`-Zeilen beschreibt genau diese
   Dateien.
-- **`RULES.md` nennt einen Pfad, den es auf dieser Maschine nicht gibt.** Dort
-  steht `E:epos\WKDBooks\...`; die Sammlung liegt unter
-  `C:epos\WKDBooks\...`. Nicht mit korrigiert, weil der Laufwerksbuchstabe
-  pro Maschine verschieden sein kann und die Datei nicht sagt, welche gemeint
-  ist.
+- **`RULES.md` nannte einen Pfad, den es auf dieser Maschine nicht gibt** —
+  ein fest verdrahtetes `E:`, während die Sammlung unter `C:` liegt. Am
+  2026-08-30 korrigiert, und zwar nicht durch einen anderen festen
+  Laufwerksbuchstaben: der Pfad steht jetzt als `<repos>/WKDBooks/...` da, mit
+  der Auflösungsregel daneben (`$REPOS_DIR`, sonst `E:`/`D:`/`C:`/`/repos` in
+  dieser Reihenfolge) — dieselbe, die `plugins/personal/utils.lua` für die
+  Plugin-Checkouts benutzt. Damit stimmt die Datei auf jeder der Maschinen.
 
 ---
 
