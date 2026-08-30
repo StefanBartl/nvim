@@ -748,8 +748,34 @@ plugins.add({
     -- the keymap preset has to be asked for (cascade ships `preset = false`,
     -- so the opinionated keys are opt-in). The per-feature switches and what
     -- they bind are documented in cascade's own config/DEFAULTS.lua.
+    --
+    -- Two of cascade's preset keys are moved out of the way of keys this
+    -- config already owns in `bindings/mappings/custom.lua`. Both are cascade
+    -- losing, not the config: the config's two are long-standing muscle
+    -- memory, and moving a plugin default is exactly what `keymaps.globals` /
+    -- `keymaps.list` exist for.
+    --
+    --   <leader>cp  custom.lua: copy the current file path  (global)
+    --               vs. cascade `cycle_pick`                (global preset)
+    --     An exact duplicate. `bindings.mappings` runs in the UIReady phase,
+    --     i.e. AFTER cascade's VeryLazy setup, so custom.lua silently
+    --     overwrote cascade's -- the same load-order trap that made
+    --     ctrl_cycle shadow cascade's <C-y>/<C-x> (see the note in
+    --     bindings/mappings/init.lua). Nothing was broken for the config, but
+    --     cascade's picker was unreachable.
+    --
+    --   <leader>cs  custom.lua: save a casedesk session      (global)
+    --               vs. cascade `sort` (list surface)        (buffer-local)
+    --     Cross-scope: cascade's buffer-local key wins inside its
+    --     `lists.filetypes` (markdown, markdown.mdx, text, tex, norg) -- which
+    --     is precisely where casedesk notes live, so session save was the one
+    --     that went missing, in the only buffers it matters.
     opts = {
-      keymaps = { preset = true }, -- bind the opinionated default keys
+      keymaps = {
+        preset = true, -- bind the opinionated default keys
+        globals = { cycle_pick = "<leader>cP" },
+        list = { sort = "<leader>cS" },
+      },
     },
   },
 

@@ -10,6 +10,12 @@ Cross-reference: `docs/BINDINGS.md` in this repo is kept in sync with source
 All of the below is gated by the top-level switch `cfg.keymaps.preset`
 (default **off**), plus each group's own feature flag.
 
+**Two preset keys are moved in this config** (see
+[Collisions](./Collisions.md#config-vs-plugin-resolved-2026-08-30)):
+`cycle_pick` sits on `<leader>cP` because `<leader>cp` copies the file path,
+and the list `sort` on `<leader>cS` because `<leader>cs` saves a casedesk
+session. The tables below name cascade's own defaults.
+
 ## Global preset (`cfg.keymaps.preset == true`)
 
 ### Cycle/increment (`cfg.cycle.enable and features.word`)
@@ -137,6 +143,10 @@ installed and preset keymaps are enabled. No-op otherwise.
 
 ## Changelog
 
+- 2026-08-30: `<leader>cp`/`<leader>cs` gegen diese Config kollidiert und in
+  der Lazy-Spec aufgelöst (`cycle_pick` → `<leader>cP`, list `sort` →
+  `<leader>cS`). Ersteres war ein exaktes Duplikat, das die UIReady-Phase
+  still gewann — dieselbe Ladereihenfolge-Falle wie bei `ctrl_cycle` unten.
 - 2026-08-30: **In-Word-Char-Cycle** (`<C-M-y>`/`<C-M-x>`, `cycle.features.char`)
   in cascade.nvim ergänzt — die Lücke, die die dictionary-getriebene
   `<C-y>`-Kette per Design offenlässt: ein einzelner Buchstabe cycled, derselbe

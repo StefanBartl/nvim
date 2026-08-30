@@ -14,6 +14,7 @@ cheatsheets — the defaults were read out of each plugin's `keymaps.lua` /
   - [Why scope decides everything](#why-scope-decides-everything)
   - [The global set](#the-global-set)
   - [Exact duplicates](#exact-duplicates)
+  - [Config vs. plugin](#config-vs-plugin-resolved-2026-08-30)
   - [Cross-scope shadowing](#cross-scope-shadowing)
   - [Builtins that get overridden](#builtins-that-get-overridden)
   - [Prefix waits](#prefix-waits)
@@ -64,12 +65,45 @@ matters below.
 
 ## Exact duplicates
 
-**None.** No two plugins claim the same `lhs` in the same scope and mode.
+**None between plugins.** No two plugins claim the same `lhs` in the same
+scope and mode. That axis is plugin-vs-plugin only — the keys this config
+registers in its own Lua live in [nvim-config.md](./nvim-config.md) and are
+covered one section down, where there *were* two.
 
 That is a real result, not an absence of evidence: the global set above is 100
 mappings across twelve plugins, and the per-plugin prefixes (`cn`, `e`, `n`/`p`,
 `g`, `f`/`p`, `x`/`ls`, `d`/`f`/`g`/`l`, `lr`, `r`, `s`) were evidently chosen
 against each other rather than in isolation.
+
+## Config vs. plugin (resolved 2026-08-30)
+
+The section above compares plugins with each other. This config's own 40 keys
+are a third owner, and cascade.nvim's opt-in preset landed on two of them:
+
+| lhs | Config owner | cascade owner | What actually happened |
+| --- | --- | --- | --- |
+| `<leader>cp` | `mappings/custom.lua:12` — copy the current file path (global) | `cycle_pick` (global preset) | Exact duplicate. `bindings.mappings` runs in the **UIReady** phase, i.e. *after* cascade's `VeryLazy` setup, so custom.lua's overwrote cascade's. The config's key worked; cascade's picker was silently unreachable |
+| `<leader>cs` | `mappings/custom.lua:22` — save a casedesk session (global) | `sort`, list surface (buffer-local) | Cross-scope. cascade's buffer-local key wins inside `lists.filetypes` (markdown, markdown.mdx, text, tex, norg) — exactly where casedesk notes live, so it was *session save* that went missing, in the only buffers it mattered |
+
+Both are resolved in the cascade spec in
+[`lua/plugins/personal/init.lua`](../../../../../lua/plugins/personal/init.lua),
+by moving cascade rather than the config — the two config keys are
+long-standing muscle memory, and `keymaps.globals` / `keymaps.list` exist for
+exactly this:
+
+```lua
+keymaps = {
+  preset  = true,
+  globals = { cycle_pick = "<leader>cP" },
+  list    = { sort = "<leader>cS" },
+},
+```
+
+The `<leader>cp` case is the same load-order trap as the `ctrl_cycle`
+regression in the changelog of [cascade.nvim.md](./cascade.nvim.md): anything
+registered in the UIReady mappings phase silently outranks a plugin that set
+its keys at `VeryLazy`. Worth checking first whenever a plugin key "does
+nothing".
 
 ## Cross-scope shadowing
 
