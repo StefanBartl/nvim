@@ -12,6 +12,15 @@ Nebenbefunde, und die Entscheidungen, die im Auftrag nicht standen.
 Nummerierung und Titel bleiben die aus `PLUGIN_ROADMAPS.md`, damit ein
 Querverweis von aussen weiter aufgeht.
 
+Seit dem 2026-08-30 fuehrt die Datei **zwei** Sorten geschlossener Punkte. Das
+Erledigte steht unten, davor ein Abschnitt
+[Zurueckgestellt](#zurueckgestellt) fuer Punkte, die aus
+`PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein. Sie stehen hier
+und nicht dort, weil sie keine offene Arbeit mehr sind — und sie sind nicht
+geloescht, weil ein stillschweigend verschwundener Punkt in einem halben Jahr
+als neue Idee wiederkommt. Zu jedem gehoert, **warum** er zurueckgestellt ist
+und **was ihn wieder aufmachen wuerde**.
+
 ---
 
 ## Table of content
@@ -33,6 +42,9 @@ Querverweis von aussen weiter aufgeht.
   - [M16 · `lib.nvim` — `deps.health`-Migrationen](#m16-libnvim-depshealth-migrationen)
   - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
   - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
+  - [M4a · `lsp.nvim` — ein Picker-Backend statt zwei](#m4a-lspnvim-ein-picker-backend-statt-zwei)
+  - [Zurueckgestellt](#zurueckgestellt)
+    - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
 
 ---
 
@@ -1310,3 +1322,108 @@ muss und mit dem `expect_stop`-Vorlauf nicht kollidieren darf.
 `Autocmds/lsp.nvim.md` (neue Augroup `lsp_nvim_supervisor`, Kopfzahl jetzt 31
 über 24). `Keymaps/lsp.nvim.md` nicht berührt — der Punkt fügt bewusst keine
 Taste hinzu.
+
+
+---
+
+### M4a · `lsp.nvim` — ein Picker-Backend statt zwei
+
+**Erledigt am 2026-08-30. `lua/lsp/tools/ts_type_lookup/symbol_picker.lua`,
+6 neue Specs. `ts_telescope_picker.lua` geloescht.**
+
+Die Haelfte von M4, die sich bauen liess. M4 stand als „Workspace-Symbol-/
+Call-Hierarchy-Picker ueber den `picker`-Adapter" da; die Pruefung am
+2026-08-30 ergab, dass es diesen Adapter nicht gibt (31 Zeilen
+Presence-Reporting, die im eigenen Docstring festhalten, dass sie keine
+Abstraktion sind). Der Punkt zerfiel damit in M4a — hier — und M4b, das jetzt
+unter [Zurueckgestellt](#zurueckgestellt) steht.
+
+Gebaut: `:TypeDefPick` benutzt dieselbe Oberflaeche wie `<leader>wos`. Vorher
+waren es 171 Zeilen handgeschriebenes Telescope — eigener Finder, eigener
+Entry-Maker, ein Previewer, der die Datei mit `readfile()` las und drei Zeilen
+drumherum zeigte, und eine `<CR>`-Aktion, die ein Vsplit oeffnete. Alles, um
+die Antwort auf **eine** `workspace/symbol`-Anfrage anzuzeigen, die fzf-lua mit
+`lsp_workspace_symbols` beantwortet. Danach: 74 Zeilen, die delegieren. Die
+Datei heisst jetzt `symbol_picker.lua` — der alte Name waere eine Luege
+gewesen.
+
+**Die Entscheidung, an der es haengt, ist eine Option**: `lsp_query`, nicht
+`query`. Die erste geht als `workspace/symbol` an den Server, die zweite ist
+fzf-luas Filter ueber das, was zurueckkam. Die zweite zu benutzen wuerde den
+Server nach *allem* fragen und lokal filtern — was auf einem kleinen Projekt
+funktioniert und auf einem grossen umfaellt, also genau dort auffaellt, wo es
+zu spaet ist. Der Spec prueft beides: dass die eine gesetzt ist und die andere
+**nicht**.
+
+**Was M4a ausdruecklich nicht liefert, obwohl der Punkt es nahelegt:**
+Telescope faellt *nicht* als Abhaengigkeit weg. `languages/webdev/astro` nutzt
+`telescope.builtin` weiter fuer Komponenten-, Layout- und Seiten-Navigation
+(`gC`, `gL`, `gP` und zwei Astro-Usercmds), hinter einem
+`FileType astro`-Autocmd und einem lazy `require`. Weg ist ein **zweiter Picker
+fuer dieselbe Liste**, nicht Telescope. Das steht so auch in `docs/FEATURES.md`
+— die urspruengliche Formulierung „telescope faellt als Abhaengigkeit weg" war
+zu grosszuegig, und ich habe sie beim Pruefen selbst geschrieben.
+
+*Konkrete Auswirkung*: `:TypeDefPick` oeffnet dasselbe Fenster wie
+`<leader>wos`, mit fzf-luas Preview und dessen Oeffnen-Aktionen, statt eines
+Telescope-Fensters, dessen einzige Aktion ein Vsplit war.
+
+*Verifiziert gegen das installierte fzf-lua*: `:TypeDefPick` loest
+`lsp_workspace_symbols` auf und uebergibt `lsp_query = <cword>`,
+`:TypeDefPick Foo` uebergibt `lsp_query = "Foo"`, und Telescope wird von
+keinem der beiden geladen. Dazu: Suite gruen ueber 23 Spec-Dateien, Smoke
+gruen, `luacheck` 0/0 ueber 202 Dateien, `stylua` sauber,
+`gen_bindings.lua --check` sagt „current".
+
+*Bindings-Zettel*: nicht beruehrt. `:TypeDefPick` gab es vorher und gibt es
+nachher, mit derselben Grammatik; keine Keymap, kein Autocmd geaendert.
+
+---
+
+## Zurueckgestellt
+
+Punkte, die aus `PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein.
+Nicht geloescht: ein Punkt, der still verschwindet, kommt in einem halben Jahr
+als neue Idee wieder, und dann fehlt die Begruendung, die es schon einmal gab.
+
+---
+
+### M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)
+
+**Zurueckgestellt am 2026-08-30. Nicht gebaut, nicht geplant.**
+
+*Was er waere*: `lsp.integrations.picker` zu einer echten Abstraktion ueber
+fzf-lua, telescope, snacks und pickers.nvim ausbauen, die vier Picker-Keymaps
+und `:TypeDefPick` darueber routen, und darauf dann Workspace-Symbole und Call
+Hierarchy anbieten. Aufwand L, nicht das M, das an M4 stand.
+
+**Warum zurueckgestellt, und zwar in dieser Reihenfolge:**
+
+1. **Es gibt nichts mehr zu abstrahieren.** Eine Abstraktion ueber N Backends
+   lohnt sich, wenn N > 1 *benutzt* wird. Nach M4a benutzt dieses Plugin fuer
+   Symbol- und Diagnostics-Listen genau eines: fzf-lua. Der Adapter wuerde eine
+   Indirektion mit einer einzigen Implementierung dahinter einziehen — genau
+   das, was `integrations/picker.lua` in seinem eigenen Docstring als
+   nutzlos abgelehnt hat („an indirection with a single implementation behind
+   it buys nothing"). M4a hat das Problem nicht geloest, das M4b loesen wollte;
+   es hat es **entfernt**.
+2. **Die Faehigkeit, die M4 zusaetzlich versprach, ist eine Zeile.** Call
+   Hierarchy existiert im Repo nirgends — aber fzf-lua bringt
+   `lsp_incoming_calls` und `lsp_outgoing_calls` mit. Wer sie will, braucht
+   zwei Katalogeintraege im Muster der vier vorhandenen, kein
+   Abstraktionsgeruest. Das ist ein XS-Punkt, kein L-Punkt, und er haengt nicht
+   an M4b.
+3. **Der Nutzen ist hypothetisch.** Er faellt erst an, wenn jemand den Picker
+   *wechselt*. Das ist bisher nicht passiert und steht auf keiner Liste.
+
+**Was ihn wieder aufmachen wuerde** — und das ist der Punkt, an dem er hier
+herausgeholt gehoert, nicht neu erfunden:
+
+- Ein zweiter Picker kommt tatsaechlich in Gebrauch (snacks.picker verdraengt
+  fzf-lua, oder eine zweite Maschine fuehrt einen anderen).
+- Oder: die vier Keymaps sollen konfigurierbar werden, statt als
+  `<cmd>FzfLua …<cr>`-Strings im Katalog zu stehen — dann ist der Adapter die
+  Form, die diese Konfiguration bekommt.
+
+Bis dahin ist die ehrliche Antwort auf „welchen Picker benutzt lsp.nvim" ein
+Name und keine Schnittstelle.
