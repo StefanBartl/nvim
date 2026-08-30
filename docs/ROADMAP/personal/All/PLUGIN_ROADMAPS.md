@@ -9,7 +9,6 @@ sowie die damaligen `images.nvim`-CROSS-PLUGIN- und
 > **Wo die Quellen jetzt liegen.** Am 2026-08-29 wurden sämtliche
 > `docs/ROADMAP`-Bäume aus den Plugin-Repos herausgelöst und nach
 > `C:\repos\WKDBooks\Development\wkdbook-myplugins\<plugin>\ROADMAP\`
-> verschoben — nichts gelöscht, 105 Dateien. Die Repos selbst tragen keine
 > Verweise mehr darauf, weder Links noch Prosa-Zitate. Dateipfade wie
 > `images.nvim/docs/ROADMAP/TERMINALS.md`, die dieser Report weiter unten
 > nennt, meinen also den Stand *vor* dem Umzug; die Datei liegt heute unter
@@ -29,6 +28,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [Naechster Schritt](#naechster-schritt)
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
+  - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-experimentalany_file-in-echtem-neovim-durchtesten)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
@@ -90,7 +90,7 @@ Sitzung neu verhandelt werden.
   "verkabeln" beschreiben die Arbeit, nicht die Folge; die Folge ist das, was
   die Entscheidung traegt.
 - **Erledigtes wandert nach
-  [`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md)**, samt der
+  [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md)**, samt der
   Notizen, die beim Bauen angefallen sind. Diese Datei bleibt damit eine Liste
   offener Arbeit und nicht eine Mischung aus beidem.
 - **Bindings-Zettel mitpruefen.** Aendert ein Punkt Usercmds, Autocmds oder
@@ -206,7 +206,7 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 ## 1.0 Erledigt
 
 Ausgelagert nach
-[`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**
 (alle `lsp.nvim`) und **QW9** (`images.nvim`).
 

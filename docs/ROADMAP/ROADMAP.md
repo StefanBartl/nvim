@@ -14,8 +14,8 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:30       |    60% / 27%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     --:--       |    91% / -9%     |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     13:30       |    19% / 49%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     --:--       |    20% / 12%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     02:50       |    91% / 27%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     --:--       |    --% / --%     |
 
@@ -32,7 +32,8 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 - [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md der Punkt:
     [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
-  -> das zeigt an, was in `migrate.nvim` implementiert werden soll.
+
+-> das zeigt an, was in `migrate.nvim` implementiert werden soll.
   Zusatz Feature: Alle im `h deprecated` implementieren
     - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
     - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen

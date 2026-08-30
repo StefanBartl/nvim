@@ -36,6 +36,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
-- [ ] Alle docs/ Files in jedem .nvim repo müssen nochmal überprüft werden, auf aktualitöt & korrektheit - Doppelungen entfernen, docs/README Themenaufteilung / docs Struktur überelgen - einheitiche struktur finden für alle repos; Deutsceh docs nur, wenn eine englische hauptversions der file besteht und explizit eine deutsche versoin von mir verlangt wird.  usw...
+- [ ] Alle docs/ Files in jedem .nvim repo müssen nochmal überprüft werden, auf aktualitöt & korrektheit - Doppelungen entfernen, docs/README Themenaufteilung / docs Struktur überelgen - einheitiche struktur finden für alle repos; Deutsceh docs nur, wenn eine englische hauptversions der file besteht und explizit eine deutsche versoin von mir verlangt wird. lg  usw...
 
 ---

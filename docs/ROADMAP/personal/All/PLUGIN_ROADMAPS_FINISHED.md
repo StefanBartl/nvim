@@ -238,14 +238,42 @@ reposcope hat den README-Text ohnehin im eigenen Cache, also kostet
 Request. Der häufige Fall (zwei Drittel) kostet damit *nichts* und bietet
 korrekt gar keinen Hover statt eines leeren.
 
-**Vier Bedingungen, falls gebaut wird** (Aufwand: S–M, die Arbeit liegt in
-reposcope, nicht in images.nvim): auf Anforderung statt automatisch; kein
-Bild → kein Hover und kein Platzhalter; **Negativ-Cache** neben dem
-Positiv-Cache, sonst leitet der Zwei-Drittel-Fall seine eigene Leere bei
-jedem Neustart neu her; und ein Größenlimit weit unter `images.remote`s
-20-MB-Default. Alles Nötige existiert bereits —
+**README-Bild: gebaut am 2026-08-29**, als `reposcope.ui.preview.preview_image`
+mit `<C-p>` im Prompt. In images.nvim war dafür nichts nötig:
 `images.browse.draw_in_window()` zeichnet in ein fremdes Fenster,
-`images.remote` lädt asynchron in einen SHA256-Cache.
+`images.remote.fetch` lädt asynchron in einen SHA256-Cache. Dazu Docs in
+reposcope (BINDINGS, COMMANDS, CONFIGURATION, FEATURES, FEATURES/UI, vimdoc),
+ein Health-Abschnitt und ein Spec für die reine Erkennungsfunktion.
+
+**Zwei der vier vorab notierten Bedingungen sind beim Bauen gefallen**, und
+das ist der lehrreiche Teil des Punkts:
+
+- Der **Negativ-Cache** war rückwärts gedacht. „Dieses Repo hat kein Bild"
+  wird zwar bei jedem Neustart neu hergeleitet — aber aus einem README, das
+  ohnehin in reposcopes Dateicache liegt, per Pattern-Match, in Mikrosekunden,
+  ohne Request. Der Cache hätte etwas gespart, das bereits gratis ist. Was
+  ihn hätte rechtfertigen können, wäre ein *fehlgeschlagener* Download — und
+  selbst der gehört wiederholt, weil die übliche Ursache ein transienter
+  Netzfehler ist und ein zweiter Tastendruck genau die Bitte ist, es nochmal
+  zu versuchen.
+- Das **Größenlimit** lässt sich auf der reposcope-Seite nicht durchsetzen:
+  der Transfer passiert in `images.remote.fetch`, das `max_bytes` aus
+  images.nvims eigener Config liest. Ein Limit danach würde nur das Zeichnen
+  von Bytes verweigern, die längst bezahlt sind. Stattdessen meldet
+  `:checkhealth reposcope` den effektiven Wert und benennt, wo er zu ändern
+  ist — die ehrliche Fassung eines Limits, das es nicht erzwingen kann.
+
+Die beiden Bedingungen, die hielten, betrafen **Verhalten**: auf Anforderung
+statt automatisch, und kein unaufgeforderter Hover ohne Bild. Bei der zweiten
+kam beim Schreiben eine Unterscheidung dazu, die vorher nicht sichtbar war:
+die Regel gilt für *unaufgeforderte* UI. Auf ein ausdrückliches `<C-p>` hat
+der Nutzer eine Frage gestellt, und jeder Fehlerpfad antwortet — „README noch
+nicht geladen", „dieses README hat kein Bild", oder images.remotes eigene
+Meldung, die den abgeschalteten Schalter benennt. Schweigen wäre dort ein
+Bug, kein Prinzip.
+
+Die zwei, die fielen, betrafen **Mechanik** — und beide unterstellten Kosten,
+die die vorhandenen Caches längst beseitigt hatten.
 
 ---
 
