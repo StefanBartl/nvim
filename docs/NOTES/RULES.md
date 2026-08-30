@@ -1,11 +1,19 @@
 # RULES — verschoben
 
-**Stand 2026-08-18.** Der Ordner `docs/ROADMAP/RULES/` gibt es nicht mehr. Sein Inhalt
+**Stand 2026-08-18, Pfad korrigiert 2026-08-30.** Der Ordner `docs/ROADMAP/RULES/` gibt es nicht mehr. Sein Inhalt
 ist in die kanonische Regelsammlung gemergt:
 
 ```
-E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists
+<repos>/WKDBooks/Development/wkdbook-Lua/Checklists
 ```
+
+`<repos>` ist das Repo-Wurzelverzeichnis dieser Maschine — also `$REPOS_DIR`,
+falls gesetzt, sonst der erste existierende Kandidat aus `E:`, `D:`, `C:`,
+`/repos`, in genau dieser Reihenfolge. Das ist dieselbe Auflösung, die
+[`lua/plugins/personal/utils.lua`](../../lua/plugins/personal/utils.lua) für die
+lokalen Plugin-Checkouts benutzt; `require("plugins.personal.utils").repos_path`
+gibt sie in einer laufenden Sitzung aus. Hier stand bis 2026-08-30 fest `E:`,
+was auf dieser Maschine ins Leere zeigte — die Sammlung liegt unter `C:`.
 
 Es gibt jetzt nur noch **einen** Ort für Regeln.
 
@@ -19,3 +27,16 @@ Es gibt jetzt nur noch **einen** Ort für Regeln.
 
 Ideen sind **Backlog** und bleiben deshalb in der Roadmap: sie werden abgearbeitet und
 gestrichen. Regeln nicht — die gelten weiter und leben in `Checklists/`.
+
+Einstieg dort: `Checklists/README.md` (Struktur, Regel-IDs) und
+`Checklists/WORKFLOW.md` (welche Liste wann); die Begründung der Struktur und
+der Ablauf der Zusammenführung stehen in `Checklists/KONZEPT.md`.
+
+**Auch die Plugin-Audits sind hier aufgegangen.** `Arch&Coding.md`,
+`Checklist.md` und `Zentral-Prinzipien.md` sind keine eigenständige Regelquelle
+mehr — wer wissen will, was gilt, liest in `Checklists/`, nicht in einem
+Repo-ROADMAP-Ordner. Die Kopien unter `wkdbook-myplugins/<plugin>/ROADMAP/`
+existieren weiter, sind aber ab jetzt historischer Stand. Der Abgleich gegen
+den Code ist in
+[PLUGIN_ROADMAPS.md §3.1](../ROADMAP/personal/All/PLUGIN_ROADMAPS.md)
+protokolliert.
