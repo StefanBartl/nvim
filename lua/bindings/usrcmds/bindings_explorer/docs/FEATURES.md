@@ -81,6 +81,14 @@ Spaltenzahl/-namen sind bewusst nicht festgeschrieben (siehe
 ohne saubere Tabelle unter einer Überschrift liefern hier einfach keine
 Treffer, bleiben aber über `:Bindings search` weiterhin auffindbar.
 
+Getrennt wird nur an **unescapten** `|`. Ein `\|` ist markdowns
+Literal-Pipe-Escape und bleibt Teil der Zelle, im Zellwert zu einem schlichten
+`|` aufgelöst — `Keymaps/markdown.nvim.md`s Zelle `` `]\|` / `[\|` `` ist eine
+Zelle, keine drei. Bis 2026-08-30 trennte der Scraper auch dort: das gab 74
+Zeilen des Korpus mehr Zellen, als ihre Kopfzeile Spalten hat, und verschob
+damit jede Spaltenzuordnung dahinter. Sichtbar wurde es erst über den
+Drift-Bericht, der das Bruchstück `` `]\ `` als dokumentierten lhs meldete.
+
 `browse.lua`s Picker (`kit.select`, wie Phase 1s Fallback) zeigt jede Zeile
 als `[Scope/Plugin] Heading — Spalte1: Wert1  Spalte2: Wert2  ...`; `<CR>`
 springt an die Fundstelle in der Quelldatei.
@@ -94,9 +102,10 @@ Beispiele:
 :Bindings browse usercmds extern
 ```
 
-Gegen den echten Bestand verifiziert (headless, 2026-08-09):
-`records.list()` liefert 1641 Datensätze über den ganzen Korpus, davon 414
-für `Keymaps personal` allein.
+Gegen den echten Bestand verifiziert (headless, 2026-08-30):
+`records.list()` liefert 1940 Datensätze über den ganzen Korpus, davon 561
+für `Keymaps personal` allein — und in keinem einzigen weicht die Zellenzahl
+von der Spaltenzahl seiner Kopfzeile ab.
 
 ## Drift-Bericht (`:Bindings check`)
 

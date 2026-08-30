@@ -45,14 +45,46 @@ local function is_separator_row(line)
   return line:match("^%s*|[%s%-:|]+|%s*$") ~= nil
 end
 
+--- Split a row at its column separators, which are the UNESCAPED `|`
+--- only. `\|` is markdown's literal-pipe escape — the sole way to write a
+--- `|` inside a cell — and is resolved back to a plain `|` in the cell
+--- value, so a caller sees the text the row renders as. Splitting on it
+--- too (this function's original behaviour) shredded every such row into
+--- fragments: `` `]\|` / `[\|` `` in `Keymaps/markdown.nvim.md` became a
+--- cell `` `]\ ``, which `drift.lua` then dutifully reported as a
+--- documented-but-not-live keymap.
+---
+--- `\` before anything else is NOT an escape here and stays literal — the
+--- corpus writes keys like `` `g\` `` (gopath.nvim), and only `|` needs
+--- escaping for a table row to survive. It does consume the next byte
+--- though, so a doubled `\\` cannot swallow the separator behind it.
 ---@param line string
 ---@return string[]
 local function split_cells(line)
-  local trimmed = vim.trim(line):gsub("^|", ""):gsub("|$", "")
-  local cells = {}
-  for cell in (trimmed .. "|"):gmatch("(.-)|") do
-    cells[#cells + 1] = vim.trim(cell)
+  local trimmed = vim.trim(line):gsub("^|", "")
+  -- Only an unescaped trailing `|` closes the row; a `\|` ending the line
+  -- is a literal pipe whose cell simply runs to the end.
+  if trimmed:sub(-1) == "|" and trimmed:sub(-2, -2) ~= "\\" then
+    trimmed = trimmed:sub(1, -2)
   end
+
+  local cells, buf, i = {}, {}, 1
+  while i <= #trimmed do
+    local c = trimmed:sub(i, i)
+    if c == "\\" then
+      local nxt = trimmed:sub(i + 1, i + 1)
+      buf[#buf + 1] = nxt == "|" and "|" or (c .. nxt)
+      i = i + 2
+    elseif c == "|" then
+      cells[#cells + 1] = vim.trim(table.concat(buf))
+      buf, i = {}, i + 1
+    else
+      buf[#buf + 1] = c
+      i = i + 1
+    end
+  end
+  cells[#cells + 1] = vim.trim(table.concat(buf))
+
   return cells
 end
 
