@@ -33,7 +33,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [Kurzfassung](#kurzfassung)
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
-    - [QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-experimentalany_file-in-echtem-neovim-durchtesten)
+    - [QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay](#qw10-mdviewnvim-auf-windows-startet-kein-lokal-gebauter-relay)
     - [QW5 · `lsp.nvim` — Hover-Cache über `lib.lua.memo`](#qw5-lspnvim-hover-cache-ber-libluamemo)
     - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
   - [1.2 Mittel (M)](#12-mittel-m)
@@ -115,30 +115,39 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30. Zuletzt erledigt: die **Source-Achse** von `:Bindings check`
-und die **verbliebenen Audit-Zeilen** — beides samt Notizen in
-[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) unter `A` und
-`B`. Damit ist Teil 3.1 abgeschlossen und der Bindings-Baum deckungsgleich mit
-dem Code.
+Stand 2026-08-30. Zuletzt erledigt: **QW1** — `any_file` in `mdview.nvim` ist
+in echtem Neovim durchgetestet, hat alle fuenf Faelle bestanden und heisst
+seither `any_file` statt `experimental.any_file`. Notizen samt der beiden
+Nebenbefunde in [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
+Davor: die **Source-Achse** von `:Bindings check` und die **verbliebenen
+Audit-Zeilen** (dort unter `A` und `B`), womit Teil 3.1 abgeschlossen ist.
 
-**Empfohlen: QW1 — `mdview.nvim`s `experimental.any_file` in echtem Neovim
-durchtesten.** Aufwand XS, Nutzen hoch, **braucht dich** (siehe [1.1](#11-quick-wins-xss-nutzen-mittel-bis-hoch)).
+**Empfohlen: QW10 — `mdview.nvim`s lokal gebauter Relay startet auf Windows
+nicht.** Aufwand XS, Nutzen hoch (siehe [1.1](#11-quick-wins-xss-nutzen-mittel-bis-hoch)).
 
-*Warum dieser*: er ist der einzige Punkt auf der ganzen Liste, der über ein
-**bereits gebautes** Feature entscheidet. `any_file` ist seit 2026-08-24 fertig
-und über 55 Lua-Tests, 95 Client-Tests und einen Browser-Check verifiziert —
-nur der Pfad durch echtes Neovim nicht, weshalb es nicht als ausgeliefert
-gilt. Eine halbe Stunde entscheidet zwischen „fertig" und „Nacharbeit"; jeder
-andere Punkt baut etwas Neues, das danach ebenfalls getestet werden will.
+*Warum dieser*: er ist die kleinste offene Position auf der Liste und der
+einzige Punkt, der die Werkzeuge betrifft, mit denen die anderen gebaut
+werden. `npm run build:go` schreibt auf Windows eine Datei ohne `.exe`,
+`uv.spawn()` startet die nicht, und `:MDView start` sagt dazu nur „failed to
+start server process". Wer mdview gegen lokale Aenderungen testen will,
+laeuft zuerst dagegen — QW1 hat genau das getan und musste sich mit einer
+Kopie behelfen. Eine halbe Stunde, und die naechste mdview-Sitzung faengt bei
+der Arbeit an statt beim Werkzeug.
 
-*Konkrete Auswirkung*: danach rendert `:MDView start` auf einer `.lua`- oder
-`.py`-Datei — oder es ist belegt, dass es das nicht tut. Heute weiß es
-niemand. Die fünf Fälle stehen fertig ausformuliert bei QW1.
+*Konkrete Auswirkung*: nach `npm run build:go` startet `:MDView start` im
+Checkout gegen den frisch gebauten Relay, ohne dass man die Datei von Hand
+nach `.exe` kopiert. Und eine alte endungslose Datei fuehrt danach zu einer
+Warnung, die den Neubau nennt, statt zu einem `ENOENT` im Log-Ring.
 
-**Danach, falls du delegieren willst: M17/M7** (Phase-0-IR im
-documentation-Verbund, M). Der einzige offene Punkt, der etwas *anderes*
-aufhält: ohne besitzenden Scope haben Klassen und `impl`-Blöcke keinen Ort,
-und M8 bis M13 hängen daran.
+**Danach der eigentliche Block: M17/M7** (Phase-0-IR im documentation-Verbund,
+M). Der einzige offene Punkt, der etwas *anderes* aufhaelt: ohne besitzenden
+Scope haben Klassen und `impl`-Bloecke keinen Ort, und M8 bis M13 haengen
+daran. Das ist der Punkt, an dem sich delegieren lohnt — QW10 ist dafuer zu
+klein.
+
+*Falls stattdessen `lsp.nvim` dran sein soll*: **M1** (Diagnostics provozieren,
+`:LspDoctor deep`) vor QW8 und QW5, weil es als einziger Check die LSP-Kette
+End-to-End prueft statt Zustaende abzufragen.
 
 ---
 
@@ -207,8 +216,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
 - **Insgesamt 37 offene Punkte**, davon 3 Quick Wins (XS/S mit Nutzen
-  mittel bis hoch) und 4, die dich brauchen. Fuenf weitere Quick Wins (QW3,
-  QW4, QW6, QW7, QW9) sind erledigt und stehen unter 1.0.
+  mittel bis hoch) und 4, die dich brauchen. Sechs weitere Quick Wins (QW1,
+  QW3, QW4, QW6, QW7, QW9) sind erledigt und stehen unter 1.0; QW10 ist neu
+  und stammt aus dem QW1-Durchlauf.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
@@ -232,8 +242,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**
-(alle `lsp.nvim`), **QW9** (`images.nvim`) sowie **A** (Source-Achse von
-`:Bindings check`, nvim-config) und **B** (die verbliebenen Audit-Zeilen).
+(alle `lsp.nvim`), **QW9** (`images.nvim`), **QW1** (`mdview.nvim`, dabei fiel
+QW10 an) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und
+**B** (die verbliebenen Audit-Zeilen).
 
 ---
 
@@ -241,26 +252,39 @@ die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**
 
 ---
 
-### QW1 · `mdview.nvim` — `experimental.any_file` in echtem Neovim durchtesten
+### QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay
 
-**Aufwand XS · Nutzen hoch · braucht dich**
+**Aufwand XS · Nutzen hoch**
 
-Implementiert am 2026-08-24, aber nur über den Lua-Harness (55 Tests), das
-Client-vitest (95 Tests) und einen Browser-Check über den Relay im
-Standalone-`--watch` verifiziert. Der Pfad durch reales Neovim ist
-ungetestet — das Feature gilt damit nicht als fertig.
+Gefunden am 2026-08-30 beim Durchtesten von QW1 (siehe
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md)), dort umgangen
+statt behoben, weil es ein anderes Thema ist.
 
-*Umsetzung*: `setup({ experimental = { any_file = true } })`, dann fünf
-Fälle abarbeiten, die die Roadmap bereits benennt: (1) `.lua`/`.py` öffnen +
-`:MDView start`, rendert es hervorgehoben? (2) Scroll-Sync (proportional
-erwartet, keine exakte Zeilenmarke). (3) `:MDViewBreadcrumbs` auf einer
-`.py`/`.sh` mit `#`-Kommentaren — es dürfen keine Fake-Überschriften
-gesammelt werden. (4) Terminal, `:help`, Quickfix, mdviews eigener
-Log-Buffer bleiben ausgeschlossen. (5) `any_file = false` verhält sich exakt
-wie vorher.
+*Der Defekt*: `npm run build:go` ist `go build -o mdview-server .` — Go nimmt
+den `-o`-Namen woertlich, auf Windows entsteht also eine Datei **ohne `.exe`**.
+`server_args.local_built_binary()` findet sie (`vim.fn.executable()` liefert
+dafuer `1`, der Kommentar dort haelt das ausdruecklich fuer in Ordnung), und
+`uv.spawn()` scheitert dann mit `ENOENT`. Sichtbar ist davon nur „[mdview]
+failed to start server process"; der eigentliche Grund steht im Log-Ring, den
+in dieser Lage niemand mehr oeffnet, weil keine Sitzung laeuft.
 
-*Warum zuerst*: kostet eine halbe Stunde und entscheidet, ob ein bereits
-gebautes Feature ausgeliefert werden kann oder Nacharbeit braucht.
+*Betroffen ist der Dev-Pfad, nicht der Alltag*: der ausgelieferte Relay kommt
+ueber `install` und ist ein sauberes `.exe`. Es trifft genau die Situation, in
+der man mdview gegen lokale Aenderungen testen will — also jede kuenftige
+mdview-Sitzung auf dieser Maschine. Einmal Zeit gekostet hat es schon: die
+Notiz dazu steht seit laengerem in `lua/plugins/personal/init.lua` neben dem
+auskommentierten `dev.binary_path`.
+
+*Umsetzung*: `build:go` die plattformrichtige Endung schreiben lassen (`go env
+GOEXE` liefert sie, ein `scripts/build-go.mjs` ist der portable Weg — npm
+startet Skripte auf Windows in `cmd.exe`, `$(...)` gaebe es dort nicht). Dazu
+`local_built_binary()` einen endungslosen Fund auf Windows ueberspringen
+lassen, mit einer Warnung, die den Neubau nennt — sonst bleibt eine alte Datei
+liegen und der `ENOENT` kommt wieder.
+
+*Konkrete Auswirkung*: `npm run build:go` und danach `:MDView start` in einem
+Checkout funktionieren auf Windows ohne Handgriff. Heute muss man die Datei
+selbst nach `.exe` kopieren, und man erfaehrt das nur, wenn man den Log liest.
 
 ---
 
@@ -611,7 +635,7 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 |---|---|---|
 | `lsp.nvim` | 13 | Feature-Tabelle §14 plus 2 Punkte aus der geretteten LSPDoctor-Analyse |
 | `images.nvim` | 8 | Backends (Sixel, Kitty APC), Detection, 5 Cross-Plugin-Kreuzungen |
-| `mdview.nvim` | 3 + 1 | 1 Testfreigabe, 2 Grundsatzfragen, plus L4 aus dem SCHLACHTPLAN |
+| `mdview.nvim` | 3 + 1 | 1 Windows-Defekt im Dev-Pfad, 2 Grundsatzfragen, plus L4 aus dem SCHLACHTPLAN |
 | `lib.nvim` | 2 | eine `deps.health`-Migration, Windows-Elevation |
 | `open.nvim` | 1 | plattformabhängig, braucht dich |
 | `filetree.nvim` | 1 | Badge-Optimierung |
@@ -825,8 +849,9 @@ Die anderen beiden sind gewachsen.
 Nicht als Plan, sondern als Vorschlag mit Begründung. Erst das, was etwas
 abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 
-1. **QW1** (`mdview` any_file testen, XS) — entscheidet über ein bereits
-   gebautes Feature.
+1. **QW10** (`mdview` Relay-Start auf Windows, XS) — repariert das Werkzeug,
+   mit dem an diesem Repo gearbeitet wird. QW1 stand hier bis 2026-08-30 und
+   ist erledigt; QW10 ist der Nebenbefund daraus.
 2. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
    der ganzen Liste, der etwas anderes aufhält.
 3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige

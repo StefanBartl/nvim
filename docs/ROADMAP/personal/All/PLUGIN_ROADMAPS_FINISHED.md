@@ -23,6 +23,7 @@ Querverweis von aussen weiter aufgeht.
   - [QW9 · `images.nvim` — Trial-Run für die `reposcope.nvim`-Kreuzung](#qw9-imagesnvim-trial-run-fr-die-reposcopenvim-kreuzung)
   - [A · `nvim-config` — die Source-Achse von `:Bindings check` abarbeiten](#a-nvim-config-die-source-achse-von-bindings-check-abarbeiten)
   - [B · Die verbliebenen Audit-Zeilen prüfen](#b-die-verbliebenen-audit-zeilen-prfen)
+  - [QW1 · `mdview.nvim` — `any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-any_file-in-echtem-neovim-durchtesten)
 
 ---
 
@@ -396,3 +397,87 @@ ganzen Repo nicht vor).
 nachzuschlagen — auch dort, wo der Befund stehen bleibt, steht jetzt daneben,
 dass er geprüft wurde. Teil 3.1 ist damit vollständig abgeschlossen statt zu
 neun Zehnteln.
+
+---
+
+### QW1 · `mdview.nvim` — `any_file` in echtem Neovim durchtesten
+
+**Erledigt am 2026-08-30. `mdview.nvim` `6a12aa5` (Freigabe) und `8f24847`
+(Nebenbefund), beide auf `main` gepusht.**
+
+Ursprünglich: `experimental.any_file` war seit 2026-08-24 gebaut und über den
+Lua-Harness (55 Tests), das Client-vitest (95 Tests) und einen Browser-Check im
+Standalone-`--watch` verifiziert — nur nicht durch Neovims Autocmd-Kette, und
+genau die ändert das Flag. Fünf Fälle in `TESTS/CHECK.md` sollten entscheiden,
+ob es ausgeliefert werden kann.
+
+**Ergebnis: alle fünf bestanden. Der Schlüssel heißt jetzt `any_file`,
+ohne `experimental`,** und ist in `configuration.md`, `FEATURES.md`,
+`WORKFLOW.md` und `doc/mdview.txt` als unterstützt dokumentiert.
+`experimental.any_file` bleibt als veralteter Alias funktionsfähig — DEFAULTS
+führt ihn nicht mehr, er ist also nur wahr, wenn ihn jemand übergeben hat, und
+ein ausdrückliches `any_file = false` im selben `setup()` gewinnt.
+
+*Wie „echtes Neovim" hier aussah*, weil der Punkt als „braucht dich"
+eingestuft war: `nvim --headless --listen 127.0.0.1:6789`, gesteuert über
+`--remote-expr` — also ein laufender Prozess mit normaler Event-Loop, in dem
+jedes Autocmd echt feuert, nicht ein Harness, der Funktionen direkt aufruft.
+Auf dem rtp lagen nur mdview.nvim und lib.nvim, der Relay war der lokal
+gebaute, der Client `dist/client`, und der Preview-Tab wurde von Hand auf
+**die URL** gestellt, die der Produktions-Launcher gebaut hat.
+
+*Die fünf Ergebnisse*:
+
+1. **Rendern**: `.lua`, `.py` und `.sh` erscheinen als hervorgehobener Code.
+   Die als Überschrift geformten `#`-Zeilen in den Python- und Shell-Fixtures
+   bleiben Kommentare — der Markdown-Renderer läuft nicht mit.
+2. **Scroll-Sync**: proportional, wie versprochen. Cursor auf Zeile 35 von 70
+   ergab Scroll-Ratio 0.486, Zeile 70 ergab 0.985; auf dem Code-Pfad kein
+   `.mdview-cursor-bar` und null `[data-sourcepos]`-Knoten, auf `control.md`
+   dagegen ein sichtbarer Balken und 20 Knoten.
+3. **Breadcrumbs**: `.py` und `.sh` liefern ausschließlich `(top)`, auch nach
+   einem Lauf über jede überschriftförmige Kommentarzeile — und `control.md`
+   sammelt in derselben Sitzung seine vier echten Überschriften ein. Das Gate
+   ist damit ein Gate und kein toter Zweig. Der Export schreibt dasselbe.
+4. **Ausschlüsse**: `:terminal`, `:help`, `:copen` und mdviews eigener
+   Log-Buffer liefern alle `previewable.is() == false`, die Vorschau blieb
+   durchgehend auf `sample.lua`, und der Log-Ring stand danach bei 7 Zeilen —
+   die befürchtete Rückkopplung über den Log-Buffer gibt es nicht.
+5. **Flag aus**: `control.md` behält Sourcepos und Cursor-Balken; in
+   `sample.lua` ist `previewable.is()` falsch, und eine ungespeicherte
+   Probe-Änderung samt Cursor-Bewegung erreicht den Browser nie. Die eine
+   Erwartung, die dort „aus dem Code hergeleitet, nicht gemessen" markiert war,
+   stimmt also wie aufgeschrieben.
+
+*Was offen bleibt und nicht delegierbar ist*: ob die proportionale
+Scroll-Verzögerung sich **gut anfühlt**. Gemessen ist sie, beurteilt nicht —
+das braucht jemanden, der scrollt. Steht so in `CHECK.md`.
+
+*Nebenbefund, eigener Commit*: `ft_pattern`s erster Eintrag war `.markdown`
+statt `*.markdown`. Ein Autocmd-Pattern ohne `/` wird gegen den Dateinamen
+gematcht, dieser eine traf also nur eine Datei, die **`.markdown` heißt** — und
+weil die anderen beiden `*.md` und `*.mdx` sind, deckte kein Default
+`notes.markdown` ab. Der Fehler war still: `:MDView start` schiebt den aktuellen
+Buffer unabhängig vom Filetype, die Vorschau kam also korrekt hoch und
+aktualisierte sich danach nie wieder. Vorher und nachher mit identischem
+Ablauf reproduziert. Gefunden hat ihn Fall 5, der genau danach fragt, was
+`ft_pattern` bei ausgeschaltetem Flag enthält.
+
+*Zweiter Nebenbefund, nicht behoben — siehe `PLUGIN_ROADMAPS.md`, QW10*: auf
+Windows lässt sich ein lokal gebauter Relay gar nicht starten. `npm run
+build:go` schreibt `mdview-server` ohne `.exe`, `vim.fn.executable()` sagt dazu
+`1`, `uv.spawn()` scheitert mit `ENOENT` — `:MDView start` meldet nur „failed
+to start server process". Für diesen Testlauf mit einer Kopie als `.exe`
+umgangen.
+
+*Verifiziert*: 62 Lua/nvim-Specs grün (7 neu in `TESTS/nvim/config_spec.lua`,
+darunter der Alias und ein Regressionstest gegen jedes nackte
+Extension-Pattern), 95 vitest grün, `tsc --noEmit` und `stylua` sauber, dazu
+der komplette Fünf-Fall-Durchlauf oben — und ein zweiter Durchlauf mit dem
+alten `experimental.any_file`, der belegt, dass der Alias in echtem Neovim
+trägt.
+
+*Bindings-Zettel*: `docs/NOTES/PersonelPlugins/BINDINGS/Autocmds/mdview.nvim.md`
+nennt in jeder Zeile `defaults.ft_pattern` symbolisch, driftete durch den Fix
+also nicht — hat aber nirgends gesagt, was dahinter steht. Steht jetzt dort,
+samt der Rolle von `any_file` und dem Glob-Fehler.
