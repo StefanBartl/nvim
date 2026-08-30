@@ -109,6 +109,7 @@ Sitzung neu verhandelt werden.
   `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/<plugin>.md`
   geprueft — das ist der Baum, aus dem `:Bindings browse`/`:Bindings check`
   liest, und der driftet still.
+- Mit mir redest du im chat auf deutsch, im Source Code aber alles Englisch - egal ob Code, Kommentare oder Docs.
 
 ---
 
