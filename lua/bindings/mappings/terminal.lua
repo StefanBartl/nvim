@@ -17,7 +17,7 @@ function M.setup()
   -- Window movement
   map("t", "<C-h>", "<C-\\><C-w>h", { desc = "[Terminal] Left" })
   map("t", "<C-l>", "<C-\\><C-w>l", { desc = "[Terminal] Right" })
-  map("t", "<C-j>", "<C-\\><C-w>j", { desc = "[Terminal Down" })
+  map("t", "<C-j>", "<C-\\><C-w>j", { desc = "[Terminal] Down" })
   map("t", "<C-k>", "<C-\\><C-w>k", { desc = "[Terminal] Up" })
 
   map({ "n", "t" }, "<A-h>", function()

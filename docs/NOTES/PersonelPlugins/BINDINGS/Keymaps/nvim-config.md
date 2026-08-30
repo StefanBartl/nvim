@@ -138,14 +138,15 @@ simply never fires. `<M-k>`/`<M-j>` is free and is the portable fallback.
 | `<C-c>` | t | Leave terminal mode, second binding | `[Terminal] Exit terminal mode` | `terminal.lua` |
 | `<C-h>` | t | Window left from inside a terminal buffer | `[Terminal] Left` | `terminal.lua` |
 | `<C-l>` | t | Window right | `[Terminal] Right` | `terminal.lua` |
-| `<C-j>` | t | Window down | `[Terminal Down` | `terminal.lua` |
+| `<C-j>` | t | Window down | `[Terminal] Down` | `terminal.lua` |
 | `<C-k>` | t | Window up | `[Terminal] Up` | `terminal.lua` |
 | `<A-h>` | n, t | Toggle NvChad's floating terminal (`floatTerm`); no-op when `nvchad.term` is absent | `[Term] Toggle floating` | `terminal.lua` |
 
-The `<C-j>` desc really is `[Terminal Down` — an unclosed bracket in
-`terminal.lua`. Reproduced verbatim rather than tidied, because `is_live`
-compares this column against the live string and a "fixed" copy here would
-report the key as missing. Fix the source first, then this row.
+The `<C-j>` desc used to read `[Terminal Down`, with the bracket left open.
+It was reproduced verbatim here at first, because `is_live` compares this
+column against the live string and a "fixed" copy would have reported the key
+as missing. `terminal.lua` is corrected as of 2026-08-30, so both sides now
+say `[Terminal] Down`.
 
 ## Against NvChad's own features (`nvchad.lua`)
 
@@ -224,6 +225,8 @@ prefixes therefore comes from whichever plugin registered it, not from here.
 
 ## Changelog
 
+- 2026-08-30 (2): `terminal.lua`'s `<C-j>` desc lost its closing bracket
+  (`[Terminal Down`); fixed at the source, and this sheet follows it.
 - 2026-08-30: created. Closes the `keymap-undocumented` findings that
   `:Bindings check`'s source axis raised for `lua/bindings/mappings/*`, which
   had never had a cheatsheet to be compared against.
