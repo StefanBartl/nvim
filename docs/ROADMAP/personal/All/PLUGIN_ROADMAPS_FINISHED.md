@@ -26,6 +26,7 @@ Querverweis von aussen weiter aufgeht.
   - [QW1 · `mdview.nvim` — `any_file` in echtem Neovim durchtesten](#qw1-mdviewnvim-any_file-in-echtem-neovim-durchtesten)
   - [QW10 · `mdview.nvim` — auf Windows startet kein lokal gebauter Relay](#qw10-mdviewnvim-auf-windows-startet-kein-lokal-gebauter-relay)
   - [QW8 · `lsp.nvim` — Multi-Root-/Monorepo-Workspace-Switcher](#qw8-lspnvim-multi-root-monorepo-workspace-switcher)
+  - [M6 + M7 · `lsp.nvim` — Profile-Presets und Per-Projekt-Override](#m6--m7-lspnvim-profile-presets-und-per-projekt-override)
 
 ---
 
@@ -642,3 +643,107 @@ in config_spec)". Es sind 24 (16 + 8). Die Gesamtzahl 261 stimmt.
 neuen Eintrag samt der Begründung, warum `<leader>lsp` und `<leader>lsw`
 nebeneinander liegen, aber verschiedene Dinge bewegen — und warum `remove`
 bewusst *keine* Taste bekommt.
+
+
+---
+
+### M6 + M7 · `lsp.nvim` — Profile-Presets und Per-Projekt-Override
+
+**Erledigt am 2026-08-30. `lsp.nvim` `80b858b`, auf `main` gepusht. Zwei neue
+Module, 25 neue Specs, sechs Doku-Dateien.**
+
+Ursprünglich zwei Zeilen: M6 *„Ein Schalter statt 20 Einzeloptionen für
+‚schlank auf schwacher Maschine'"* (Aufwand M, Nutzen mittel), M7 *„Server X in
+Projekt Y abschalten, ohne die globale Config anzufassen"* (Aufwand M–L, Nutzen
+mittel).
+
+**Die Kopplung hat gehalten, und zwar genau an der vorhergesagten Stelle.**
+`config/init.lua` hatte *eine* Merge-Ebene; jetzt sind es vier — `DEFAULTS`,
+das Preset, die `setup()`-Optionen, die `.nvim-lsp.json`. Was einzeln zweimal
+zu schreiben gewesen wäre, ist die Ebenen-Zuordnung: die Listen-Optionen müssen
+aus der Ebene gelesen werden, die sie geliefert hat (nicht aus der gemergten
+Tabelle), und jede Warnung muss sagen, aus welcher Ebene der beanstandete Wert
+kam. Beides ist derselbe Mechanismus (`_layers` als Daten, `source_of()`
+darüber), einmal geschrieben.
+
+*Konkrete Auswirkung, M7*: eine `.nvim-lsp.json` mit `{"servers":["lua_ls"]}`
+im Repo-Root — und in **diesem** Checkout laufen `ts_ls` und `gopls` nicht mehr,
+während die globale Config unangetastet bleibt. `:Lsp status` und
+`:checkhealth lsp` nennen die Datei beim Namen.
+
+*Konkrete Auswirkung, M6*: `preset = "lean"` ersetzt rund zwanzig Felder durch
+ein Wort — Virtual Text aus, `signatureHelp` aus, Workspace-Scan beim Attach
+aus, Debounce 400 statt 150ms, `keymaps.preset = "minimal"`, die ~25 Legacy-
+Kommandos weg.
+
+**Vier Entscheidungen, die im Auftrag nicht standen:**
+
+1. **Die Reihenfolge der Ebenen ist das eigentliche Argument.** Das Preset
+   liegt *unter* den User-Optionen, die Projektdatei *darüber*. Anders herum
+   wäre beides sinnlos: ein Preset, das explizite Optionen überstimmt, macht
+   `preset = "lean", inlay_hints = { enable = true }` unlesbar; eine
+   Projektdatei, die es nicht tut, ist keine Projektdatei.
+2. **JSON statt Lua, und das ist die Sicherheitsgrenze selbst.** Eine
+   Projektdatei schreibt, wer das Repository geschrieben hat, und Neovim liest
+   sie, weil man ein Verzeichnis geöffnet hat. Lua hieße: ein `git clone`
+   genügt, um fremden Code auszuführen. JSON kann keine Funktion ausdrücken —
+   es gibt nichts zu exekutieren, ohne dass man sich auf eine Konvention
+   verlassen müsste.
+3. **Allowlist statt Filter, und die Trennlinie ist nicht „was könnte kaputt
+   gehen".** Erlaubt sind `servers`, `diagnostics`, `formatter`,
+   `inlay_hints`, `attach`, `workspace`, `tools`, `languages` — die acht
+   Fragen, die das *Repository* beantworten kann. `keymaps`, `usrcmds`,
+   `which_key`, `menu` gehören dem Benutzer; ein Checkout verschiebt keine
+   Taste. `mason` installiert Software. `preset` ist eine Eigenschaft der
+   Maschine, nicht des Repos. Alles andere fliegt mit einer Warnung raus.
+4. **Kein Preset setzt jemals `mason.ensure_install` oder
+   `formatter.on_save`.** Das eine installiert Software, das andere schreibt
+   Dateien. Ein Profil ist ein Leistungsregler, keine Einwilligung — genau das
+   macht `preset = "full"` gefahrlos wählbar, ohne vorher `PRESETS.lua` zu
+   lesen.
+
+**Zwei Details, die sonst Zeit gekostet hätten:**
+
+*Zweistufige Auflösung.* `project.enable` und `project.file` kommen aus den
+Ebenen 1–3, also müssen die zuerst gemergt werden. Eine Projektdatei kann
+dadurch nicht entscheiden, ob Projektdateien gelesen werden — und ihren eigenen
+Nachfolger nicht umbenennen. Ohne die Trennung wäre das ein Henne-Ei-Problem
+mit stiller Auflösung.
+
+*Eine defekte Liste stoppt die Suche, statt die Ebene darunter einspringen zu
+lassen.* `"servers": "lua_ls"` (String statt Liste) in der Projektdatei
+degradiert auf die Defaults und warnt — es greift **nicht** auf die
+`setup()`-Liste darunter zurück. Sonst wäre der Tippfehler unsichtbar, und
+unsichtbar ist die einzige Variante, die wirklich Zeit kostet.
+
+*`preset = "default"` ist eine leere Tabelle*, keine Kopie der Defaults. Eine
+Kopie wäre eine zweite Stelle zum Ändern und die erste Gelegenheit für beide,
+sich zu widersprechen.
+
+*JSON `null`* wird als „keine Meinung" gelesen (`luanil`), nicht als
+`vim.NIL` — sonst läge ein Sentinel-Userdata dort, wo jeder Konsument einen
+Wert erwartet.
+
+*Namenskollision, bewusst in Kauf genommen*: `preset` und `keymaps.preset` sind
+zwei verschiedene Dinge. Der Roadmap-Wortlaut gab `preset` vor; die Doku sagt
+an drei Stellen, dass das eine Tasten wählt und das andere Optionen — und dass
+eine der Optionen `keymaps.preset` ist.
+
+*Sichtbarkeit*: `:Lsp status` bekommt zwei Zeilen (`preset`, `project
+override`), `:checkhealth lsp` zwei Info-Zeilen **vor** den Warnungen — in
+dieser Reihenfolge, weil „(from .nvim-lsp.json)" erst dann etwas nützt, wenn
+man weiß, dass überhaupt eine Projektdatei gefunden wurde und welche.
+
+*Neue Module*: `lua/lsp/config/PRESETS.lua` (die drei Profile),
+`lua/lsp/config/project.lua` (Suche, Dekodierung, Allowlist). Neue Config-Keys
+`preset` und `project.{enable,file}`.
+
+*Verifiziert*: 286 Specs grün (25 neu in `config_layers_spec.lua`), Smoke-Test
+grün (5 neue Zeilen), `stylua`, `luacheck` und `gen_bindings --check` sauber.
+Dazu ein Durchlauf in echtem Neovim: `.nvim-lsp.json` in einem Temp-Verzeichnis
+mit `preset = "lean"` und einer abgewiesenen `keymaps`-Sektion — die Serverliste
+kam aus der Datei, `keymaps.enable` blieb `true`, die Warnung nannte Datei und
+Allowlist.
+
+*Bindings-Zettel*: nicht berührt. Der Punkt fügt weder Keymap noch Usercmd noch
+Autocmd hinzu; `:Lsp status` gibt nur zwei Zeilen mehr aus.

@@ -39,8 +39,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
     - [M4 · `lsp.nvim` — Workspace-Symbol-/Call-Hierarchy-Picker über den `picker`-Adapter](#m4-lspnvim-workspace-symbol-call-hierarchy-picker-ber-den-picker-adapter)
     - [M5 · `lsp.nvim` — Sprung zur Lua-Tabellen-/Funktionswurzel (ehemals `<leader>gtt`)](#m5-lspnvim-sprung-zur-lua-tabellen-funktionswurzel-ehemals-leadergtt)
-    - [M6 · `lsp.nvim` — Profile-Presets (`preset = "lean"|"default"|"full"`)](#m6-lspnvim-profile-presets-preset-leandefaultfull)
-    - [M7 · `lsp.nvim` — Per-Projekt-Override (`.nvim-lsp.json` im Repo-Root)](#m7-lspnvim-per-projekt-override-nvim-lspjson-im-repo-root)
     - [M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge](#m9-gopathnvim-frecency-lernen-fr-alternate-vorschlge)
     - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
     - [M11 · `images.nvim` — OCR-Kreuzung mit `language.nvim`](#m11-imagesnvim-ocr-kreuzung-mit-languagenvim)
@@ -112,62 +110,50 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-30. Zuletzt erledigt: **QW8** — `lsp.nvim` kann Workspace-Folder
-zur Laufzeit umschalten (`:Lsp root add|remove|list`, `<leader>lsw`), gebaut
-ueber `workspace/didChangeWorkspaceFolders` statt als vierte
-Root-Scope-Strategie, weil eine solche ausgerechnet die `root_markers`-Server
-verfehlt haette. Davor am selben Tag **QW10** und **QW1** (beide `mdview.nvim`)
-sowie **A** und **B** (Source-Achse von `:Bindings check`, verbliebene
-Audit-Zeilen), womit Teil 3.1 abgeschlossen ist. Notizen zu allen fuenf in
+Stand 2026-08-30. Zuletzt erledigt: **M6 + M7** — `lsp.nvim` loest seine
+Optionen jetzt aus vier Ebenen statt einer (`DEFAULTS` → `preset` →
+`setup()`-Optionen → `.nvim-lsp.json`), und jede Warnung nennt die Ebene, aus
+der der beanstandete Wert kam. Davor am selben Tag **QW8**, **QW10**, **QW1**,
+**A** und **B**. Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-Damit steht im Quick-Win-Block nur noch **QW5**.
+**Damit ist die letzte Kopplung innerhalb von `lsp.nvim` aufgeloest.** Was dort
+noch offen ist (QW5, M1 bis M5), haengt an nichts und haelt nichts auf — jeder
+Punkt ist einzeln machbar, in beliebiger Reihenfolge. Im Quick-Win-Block steht
+weiterhin nur **QW5**.
 
-**Empfohlen: M6 + M7 zusammen — `lsp.nvim`-Konfigurationsebenen.** Aufwand M
-(zusammen kaum mehr als einzeln, siehe unten), Nutzen mittel bis hoch,
-delegierbar. M6 = Profile-Presets (`preset = "lean"|"default"|"full"`), M7 =
-Per-Projekt-Override (`.nvim-lsp.json` im Repo-Root); beide in
-[1.2](#12-mittel-m).
+**Empfohlen: M17/M7 — Phase-0-IR im documentation-Verbund.** Aufwand M, Nutzen
+hoch, delegierbar. Siehe [1.2](#12-mittel-m) und
+`docmap-desktop/docs/PLAN.md` §M7.
 
-*Warum jetzt, und warum diese beiden zusammen*: bis heute standen sie hinter
-QW8 in der Schlange, weil M7 dessen Root-Begriff erben sollte. **Diese Sperre
-ist weg, und zwar anders als erwartet** — QW8 hat gar keinen neuen Root-Begriff
-eingefuehrt: der Punkt wurde ueber LSPs eigene Workspace-Folder geloest und
-laesst die Root-Aufloesung unberuehrt. M7 darf seinen Root-Begriff also frei
-definieren, ohne mit etwas zu kollidieren.
+*Warum jetzt*: er ist der **einzige offene Punkt der ganzen Liste, der etwas
+anderes aufhaelt**. `Documentation.FunctionInfo` kennt keinen besitzenden
+Scope, also kann kein Backend tiefer gehen als „Funktionen einer Datei" — und
+M8 bis M13 setzen darauf auf. Bis heute stand er hinter M6/M7, weil die
+guenstiger lagen; dieses Argument ist jetzt verbraucht, und uebrig bleibt das
+staerkere.
 
-Untereinander bleiben M6 und M7 dagegen gekoppelt, und der Grund ist konkreter
-als vorher: `config/init.lua` hat heute *eine* Merge-Ebene (User-Opts ueber
-DEFAULTS). M6 schiebt eine Preset-Ebene darunter, M7 eine Projekt-Ebene
-darueber. Einzeln gebaut heisst, Normalisierung **und** Warnungssammlung
-zweimal umzuschreiben, weil eine Warnung dann sagen muss, aus welcher Ebene der
-schlechte Wert kam.
+*Und er wird nicht billiger.* Der Punkt beruehrt **jeden** Konsumenten von
+`Documentation.FunctionInfo`. Jedes weitere Backend und jede weitere Ansicht,
+die vorher entsteht, ist eine Aufrufstelle mehr, die er mitschleppen muss. Das
+ist der Grund, warum er vor die fuenf runtime-analysis-Punkte gehoert und nicht
+dazwischen.
 
-*Was QW8 dafuer schon vorbereitet hat*: dieselbe Datei wurde gerade angefasst.
-`user_list()` ist der erste benannte Ort, an dem die Normalisierung
-unterscheidet, **welche Ebene** einen Wert geliefert hat — eingefuehrt, weil
-`vim.tbl_deep_extend` Arrays indexweise verschmilzt und `servers = { "lua_ls" }`
-deshalb jahrelang die halben Defaults mitschleppte. Mit drei Ebenen ist genau
-diese Frage die zentrale, und sie steht jetzt als Konzept im Code statt als
-Zufall.
+*Konkrete Auswirkung*: eine Python-Klasse und ein Rust-`impl`-Block erscheinen
+in der Karte als das, was sie sind — mit ihren Methoden darunter, statt als
+flache Liste danebenliegender Funktionen neben einer namenlosen Klasse. Heute
+ist eine Datei mit drei Klassen zu je vier Methoden in der Karte zwoelf
+gleichrangige Eintraege.
 
-*Konkrete Auswirkung*: eine `.nvim-lsp.json` im Repo-Root schaltet `ts_ls` in
-**diesem einen** Projekt ab, ohne die globale Config anzufassen — heute geht
-das nur global oder gar nicht. Und `preset = "lean"` ersetzt auf einer
-schwachen Maschine rund 20 Einzeloptionen durch einen Schalter. Zusaetzlich
-sagt jede Warnung danach, aus welcher Ebene der beanstandete Wert kam, statt
-nur, dass er falsch war.
-
-**Die Alternative, falls der documentation-Verbund naeher liegt: M17/M7 —
-Phase-0-IR** (Aufwand M, Nutzen hoch, siehe [1.2](#12-mittel-m) und
-`docmap-desktop/docs/PLAN.md`). Er bleibt der einzige offene Punkt der ganzen
-Liste, der etwas **anderes** aufhaelt: `Documentation.FunctionInfo` kennt keinen
-besitzenden Scope, also kann kein Backend tiefer gehen als „Funktionen einer
-Datei", und M8 bis M13 haengen daran. *Konkrete Auswirkung*: eine
-Python-Klasse und ein Rust-`impl`-Block erscheinen in der Karte als das, was
-sie sind — mit ihren Methoden darunter statt als flache Liste danebenliegender
-Funktionen. Er steht hier nur deshalb an zweiter Stelle, weil M6/M7 gerade
-guenstig liegen und er das in einer Woche genauso tut.
+**Die Alternative, falls `lsp.nvim` naeher liegt: M1 — `:LspDoctor deep`**
+(Aufwand M, Nutzen hoch, siehe [1.2](#12-mittel-m)). Er ist der einzige Check
+im Repo, der die LSP-Kette **End-to-End** prueft statt Zustaende abzufragen.
+*Konkrete Auswirkung*: `:LspDoctor deep` legt einen Scratch-Buffer mit
+garantiert fehlerhaftem Inhalt an (Go: fehlende Klammer, JS: `const x =`) und
+wartet auf Diagnostics. Kommt innerhalb des Timeouts keine, sagt der Report
+„Diagnostics kommen ueberhaupt nicht an" statt „keine Fehler" — das ist genau
+der Unterschied, der sonst Stunden kostet, weil beide Zustaende identisch
+aussehen. Er steht hier nur an zweiter Stelle, weil er nichts anderes aufhaelt.
 
 **Nicht als naechstes: QW5** (Hover-Cache, der letzte Quick Win). Er spart
 10–50 ms bei `lua_ls`/`gopls`, also unterhalb der Wahrnehmungsschwelle;
@@ -221,9 +207,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 35 offene Punkte**, davon **ein** Quick Win (QW5, `lsp.nvim`) und
+- **Insgesamt 33 offene Punkte**, davon **ein** Quick Win (QW5, `lsp.nvim`) und
   4, die dich brauchen. Acht Quick Wins (QW1, QW3, QW4, QW6, QW7, QW8, QW9,
-  QW10) sind erledigt und stehen unter 1.0.
+  QW10) sowie **M6 + M7** sind erledigt und stehen unter 1.0.
 - **Ein Querschnittsbefund, der Zeit spart**: die Audit-Dokumente
   (`Arch&Coding.md`, `Checklist.md`, `Zentral-Prinzipien.md`) in acht Repos
   führten noch Lücken (`❌`), die längst geschlossen waren — stichprobenhaft
@@ -247,10 +233,10 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
 die beim Bauen angefallen sind. Bisher: **QW3**, **QW4**, **QW6**, **QW7**,
-**QW8** (alle `lsp.nvim`), **QW9** (`images.nvim`), **QW1** und **QW10** (beide
-`mdview.nvim`; QW10 fiel beim Durchtesten von QW1 an) sowie **A**
-(Source-Achse von `:Bindings check`, nvim-config) und **B** (die verbliebenen
-Audit-Zeilen).
+**QW8** und **M6 + M7** (alle `lsp.nvim`), **QW9** (`images.nvim`), **QW1** und
+**QW10** (beide `mdview.nvim`; QW10 fiel beim Durchtesten von QW1 an) sowie
+**A** (Source-Achse von `:Bindings check`, nvim-config) und **B** (die
+verbliebenen Audit-Zeilen).
 
 ---
 
@@ -318,22 +304,6 @@ Aus B2 gerettet: aus einer tief verschachtelten Lua-Tabelle an den Kopf der
 umschließenden Struktur springen, optional zentriert. Die Taste war jahrelang
 auf ein Modul gemappt, das nie existierte — das Feature war also gewollt, nur
 nie gebaut.
-
----
-
-### M6 · `lsp.nvim` — Profile-Presets (`preset = "lean"|"default"|"full"`)
-
-**Aufwand M · Nutzen mittel**
-
-Ein Schalter statt 20 Einzeloptionen für "schlank auf schwacher Maschine".
-
----
-
-### M7 · `lsp.nvim` — Per-Projekt-Override (`.nvim-lsp.json` im Repo-Root)
-
-**Aufwand M–L · Nutzen mittel**
-
-Server X in Projekt Y abschalten, ohne die globale Config anzufassen.
 
 ---
 
@@ -802,14 +772,13 @@ Die anderen beiden sind gewachsen.
   sie steht schon (`highlight_export.runs_for_block`). Was fehlt, ist die
   Entscheidung, sie als öffentliche API zu führen, bevor mdview sie
   konsumiert. Zweimal gebaut wäre es zweimal falsch.
-- **`lsp.nvim` M6 und M7**: `config/init.lua` hat *eine* Merge-Ebene. M6
-  schiebt eine Preset-Ebene darunter, M7 eine Projekt-Ebene darüber. Einzeln
-  gebaut heißt, Normalisierung **und** Warnungssammlung zweimal umzuschreiben,
-  weil eine Warnung dann sagen muss, aus welcher Ebene der schlechte Wert kam.
-  Der dritte Punkt, der hier bis 2026-08-30 mitgezählt wurde — QW8, dessen
-  Root-Begriff M7 erben sollte — ist erledigt und war am Ende keine Kopplung:
-  QW8 wurde über LSPs eigene Workspace-Folder gelöst und führte gar keinen
-  neuen Root-Begriff ein. M7 darf seinen frei definieren.
+- ~~**`lsp.nvim` M6 und M7**~~ — **erledigt am 2026-08-30, zusammen gebaut,
+  und die Kopplung hat gehalten.** `config/init.lua` hatte *eine* Merge-Ebene
+  und hat jetzt vier. Der einmal geschriebene Mechanismus, der sonst zweimal
+  fällig gewesen wäre: die Ebenen als Daten (`_layers`), Listen aus der Ebene
+  gelesen, die sie geliefert hat, und jede Warnung mit der Ebene beschriftet,
+  aus der der schlechte Wert kam. Notizen in
+  [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
 ---
 
@@ -818,22 +787,21 @@ Die anderen beiden sind gewachsen.
 Nicht als Plan, sondern als Vorschlag mit Begründung. Erst das, was etwas
 abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 
-1. **M6 + M7 zusammen** (`lsp.nvim`-Konfigurationsebenen, M) — seit QW8 nicht
-   mehr blockiert, und `config/init.lua` ist gerade angefasst worden; die
-   Ebenen-Frage steht dort jetzt als benanntes Konzept (`user_list`) statt als
-   Zufall. Siehe „Naechster Schritt".
-2. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
-   der ganzen Liste, der etwas anderes aufhält. QW1 und QW10 standen hier bis
-   2026-08-30 und sind beide erledigt.
-3. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
+1. **M17/M7** (Phase-0-IR im documentation-Verbund, M) — der einzige Punkt auf
+   der ganzen Liste, der etwas anderes aufhält, und er wird mit jedem neuen
+   Konsumenten von `Documentation.FunctionInfo` teurer. Siehe „Naechster
+   Schritt". QW1, QW10 und M6/M7 standen hier bis 2026-08-30 und sind erledigt.
+2. **M1** (`lsp.nvim` Diagnostics provozieren, M) — der einzige
    End-to-End-Check der LSP-Kette.
-4. Danach nach Bedarf: **M17/M12** (Runtime-Tab), **M10 + Detection**
-   (`images` Sixel-Paket), **M9** (Frecency über drei Repos).
+3. **M17/M12** (Runtime-Tab) — die Oberfläche, die M8 bis M11 brauchen, bevor
+   sie überhaupt etwas zeigen können.
+4. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket), **M9**
+   (Frecency über drei Repos), der Rest von `lsp.nvim` (M2 bis M5).
 
 **QW5** (Hover-Cache, S) ist der letzte offene Quick Win und steht bewusst
 *nicht* in dieser Reihenfolge: der Gewinn liegt unterhalb der
-Wahrnehmungsschwelle. QW1, QW3, QW4, QW6, QW7, QW8, QW9 und QW10 sind erledigt
-(siehe 1.0).
+Wahrnehmungsschwelle. QW1, QW3, QW4, QW6, QW7, QW8, QW9, QW10 sowie M6 und M7
+sind erledigt (siehe 1.0).
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
 sagt selbst "vorerst nur beobachten"), BD4/BD5 (`mdview` externe Website und
