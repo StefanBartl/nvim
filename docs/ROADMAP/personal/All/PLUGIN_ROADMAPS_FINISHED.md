@@ -12,6 +12,11 @@ Nebenbefunde, und die Entscheidungen, die im Auftrag nicht standen.
 Nummerierung und Titel bleiben die aus `PLUGIN_ROADMAPS.md`, damit ein
 Querverweis von aussen weiter aufgeht.
 
+**Wie man das Gebaute nachprueft**, steht in der dritten Datei:
+[`PLUGIN_ROADMAPS_TESTPLAN.md`](./PLUGIN_ROADMAPS_TESTPLAN.md) — dieselben IDs,
+aber als Handgriffe statt als Begruendungen. Wer hier liest *warum* etwas so
+gebaut wurde, findet dort *wie* man sieht, dass es stimmt.
+
 Seit dem 2026-08-30 fuehrt die Datei **zwei** Sorten geschlossener Punkte. Das
 Erledigte steht oben, am Ende ein Abschnitt
 [Zurueckgestellt](#zurueckgestellt) fuer Punkte, die aus
