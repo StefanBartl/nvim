@@ -211,8 +211,15 @@ plugins.add({
     -- calibration written by `:Image calibrate` (stdpath("data")/images.nvim),
     -- and an explicit option here would silently override it. draw_inset
     -- catches whatever sub-cell remainder is left after that.
+    --
+    -- ocr.lang: `:Image ocr` and `:Case ocr` read customer screenshots, and
+    -- those are German or English depending on which system produced them --
+    -- tesseract takes both at once in this form. Both language files are
+    -- installed here; `:checkhealth images` checks each half separately and
+    -- says so if one goes missing.
     opts = {
       display = { cell_aspect = 0.46 },
+      ocr = { lang = "deu+eng" },
     },
   },
 
