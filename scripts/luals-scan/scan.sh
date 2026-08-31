@@ -20,6 +20,11 @@ set -u
 abspath() { (cd "$1" && { pwd -W 2>/dev/null || pwd; }); }
 
 here="$(abspath "$(dirname "${BASH_SOURCE[0]}")")"
+# In a git worktree this is the worktree, not the main checkout -- that copy
+# is the one being measured, and it is filed under "nvim-config" all the same.
+# dump_library.lua cannot work that name out from the path (it runs with the
+# real config and only knows its own stdpath("config")), so the index name is
+# handed over with the root below.
 nvim_config="$(abspath "$here/../..")"
 
 if [ $# -lt 1 ]; then
@@ -81,7 +86,7 @@ while IFS=$'\t' read -r name root; do
   name="${name%$'\r'}"; root="${root%$'\r'}"
   [ -z "$name" ] && continue
   if [ ! -f "$libdir/$name.json" ] || [ -n "${LUALS_SCAN_REFRESH:-}" ]; then
-    missing="${missing}${root};"
+    missing="${missing}${name}=${root};"
   fi
 done < "$index"
 

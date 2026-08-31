@@ -48,6 +48,27 @@ sind nach Datei gruppiert -- für Fragen wie „welche Datei trägt die 173
 | `LUALS_SCAN_JOBS` | parallele LuaLS-Instanzen, Standard 3 |
 | `LUALS_SCAN_REFRESH=1` | injizierte Library neu holen statt aus dem Cache |
 
+### Läufe aus einem git-Worktree
+
+`nvim-config` ist immer **die Config, aus der `scan.sh` gestartet wurde** -- in
+einem Worktree also der Worktree, nicht der Haupt-Checkout. Gemessen werden
+dessen Lua-Dateien und dessen `.luarc.json`; für die Arbeit an einem Branch
+ist das genau richtig, man sollte es nur wissen.
+
+Zwei Dinge folgen daraus:
+
+- Der Library-Cache ist **nicht** nach Worktree getrennt -- es gibt nur ein
+  `library/nvim-config.json`. Wer den Vorher-Lauf aus dem Worktree und den
+  Nachher-Lauf aus dem Haupt-Checkout fährt, misst den zweiten mit der
+  Library des ersten. Beim Wechsel einmal mit `LUALS_SCAN_REFRESH=1` laufen
+  lassen.
+- Beide Läufe einer Messreihe gehören in dieselbe Arbeitskopie, sonst
+  vergleicht man zwei Checkouts statt einer Änderung.
+
+Das headless nvim des Dumps läuft dabei immer mit der echten Config
+(`stdpath("config")`), egal von wo aus gestartet -- die injizierte Library ist
+also die des installierten Plugin-Bestands. Nur der geprüfte Root wechselt.
+
 ---
 
 ## Wie die Messung dem Editor entspricht
