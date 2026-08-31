@@ -58,6 +58,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M11 · `images.nvim` + casedesk — OCR, und wofuer sie eigentlich da ist](#m11-imagesnvim--casedesk--ocr-und-wofuer-sie-eigentlich-da-ist)
   - [M13 · `images.nvim` — Bildoperationen als Dateioperationen](#m13-imagesnvim--bildoperationen-als-dateioperationen)
   - [M17/QW6 · `documentation.nvim` — Fenced Blocks auf der generierten Seite](#m17qw6-documentationnvim--fenced-blocks-auf-der-generierten-seite)
+  - [M12 · `runtime-analysis.nvim` + `images.nvim` — Flamegraphs als Bild](#m12-runtime-analysisnvim--imagesnvim--flamegraphs-als-bild)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2309,6 +2310,91 @@ Verkabelungshaelfte bleibt trotzdem — als Zusicherung, dass nie wieder jemand
 sein eigenes `<pre><code>` schreibt.
 
 *Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste, keine Autocmd.
+
+---
+
+### M12 · `runtime-analysis.nvim` + `images.nvim` — Flamegraphs als Bild
+
+**Erledigt am 2026-08-31. `runtime-analysis.nvim` `d7def81`.**
+**Die zweite Haelfte des Eintrags bleibt offen und heisst jetzt M12b** — siehe
+unten, sie war keine Kreuzung, sondern ein eigener Punkt.
+
+**Der Eintrag setzte einen Flamegraph voraus, den es nicht gab.** „In 60×25
+Zellen nur eine grobe Uebersicht — aber das Bild landet ohnehin als Datei auf
+der Platte" beschreibt eine *Darstellungsumstellung*. `grep -i flame` ueber
+`runtime-analysis.nvim` war leer: kein Modul, kein Befehl, nicht einmal das
+Wort. Wie geschrieben haette der Punkt „einen Profiler bauen" bedeutet, und das
+ist ein L.
+
+**Was es stattdessen gab, und zwar genau richtig geschnitten**:
+`telemetry/startup.lua` umhuellt das globale `require`, misst jeden Cache-Miss
+gegen einen Stack, und jeder Eintrag traegt `depth`, `total_ms` und ein
+`self_ms`, aus dem die Kinder herausgerechnet sind. Das *ist* ein Flamegraph —
+Breite ist Zeit, Tiefe ist Verschachtelung, und der unbedeckte Streifen eines
+Elternteils ist seine Eigenarbeit. Gefehlt hat nur das Bild. Der Punkt wurde
+damit zu einem dritten Renderer neben `lines()` und `markdown()`, ueber
+denselben Report.
+
+*Ausgeliefert*: `:RATelemetry flamegraph [path]`, gerendert von
+`telemetry/renderers/flamegraph.lua` — dort, wo `renderers/html.lua` und
+`renderers/mdview.lua` schon liegen.
+
+**Der Baum wird rekonstruiert, nicht aufgezeichnet, und das ist die eigentliche
+Einsicht.** `startup.lua` speichert keinen Elternzeiger — nur eine Tiefe. Es
+braucht auch keinen: Eintraege werden angehaengt, wenn ein Laden **beginnt**,
+die Liste ist also eine Preorder-Traversierung, und Preorder plus eine Tiefe
+pro Knoten legt den Baum eindeutig fest. `M.tree` laeuft sie mit einem Stack
+ab, der nach Tiefe indiziert ist — derselbe Stack, den der Rekorder benutzt
+hat, nachtraeglich wiederhergestellt.
+
+*Und deshalb hat der Report ein `order` bekommen*: `modules` ist nach
+Selbstzeit sortiert und wird von `top` abgeschnitten. Beides zerstoert die
+Rekonstruktion — Sortieren verliert die Preorder, `top` wirft ganze Teilbaeume
+weg — und **beides erzeugt trotzdem ein plausibel aussehendes Bild**. Das ist
+der gefaehrliche Teil, und `order` existiert, damit es nicht passieren kann.
+
+*SVG, weil es Text ist*: diffbar, ohne Bildbibliothek erzeugbar, und scharf bei
+jedem Zoom — was hier zaehlt, weil die interessanten Frames die schmalen sind.
+**Die images.nvim-Kreuzung brauchte daraufhin null Zeilen Code**: `:Image show`
+wandelt SVG ohnehin ueber seinen gecachten Pfad in PNG um, gegen eine echte
+Aufzeichnung geprueft (1200×186, 18 KB). Der Befehl bevorzugt images.nvim und
+faellt sonst auf den System-Opener zurueck.
+
+**Ein Fehler, der nur auf die eine Art zu finden war: das Ergebnis rastern und
+hinsehen.** Die Farben waren als `hsl()` aus einem Hash der Modulwurzel
+berechnet — im Browser korrekt, durch ImageMagicks librsvg-Delegate **komplett
+schwarz**, weil dieses `hsl()` in einem `fill` nicht implementiert und auf den
+Initialwert zurueckfaellt. Genau dieser Delegate ist der Weg, ueber den
+images.nvim die Datei zeichnet: der Hauptkonsument haette schwarze Kaesten mit
+schwarzer Schrift darauf bekommen. Jetzt eine feste Hex-Palette, per Spec
+festgenagelt, damit es nicht als „schoenere Farbberechnung" zurueckkommt.
+
+*Gemessen an einer echten Aufzeichnung* (33 Module ueber fuenf Plugin-Wurzeln,
+sechs Ebenen tief, 22 ms): die Breiten verschachteln sich korrekt, die Labels
+kuerzen sauber, eine Farbe pro Wurzel, Legende darunter — und das PNG ist
+lesbar.
+
+*Verifiziert*: Suite gruen, `flamegraph_spec.lua` neu — die Baumrekonstruktion
+gegen handgebaute Sequenzen mit bekannter Form (verschachtelt, flach,
+Tiefensprung), das SVG nur auf die Eigenschaften, auf die sich ein Leser
+verlaesst (jeder Frame da, Inhalt escapt, leerer Fall sagt warum, keine
+`hsl()`), und die `order`-Invariante gegen echte `require`-Aufrufe mit `top=1`
+und `sort="name"`. Bewusst **nicht** auf Pixelgeometrie — das ist
+Layout-Geschmack und wuerde bei jeder Anpassung brechen.
+
+*Bindings-Zettel*: `docs/BINDINGS.md` um die Zeile erweitert;
+`docs/FEATURES/TELEMETRY.md` um den Abschnitt. `install.json` unveraendert —
+der Renderer braucht kein externes Werkzeug, `magick` deklariert images.nvim
+fuer seinen eigenen SVG-Schritt selbst.
+
+**Offen geblieben, als eigener Punkt M12b**: „Dieselbe Grafik gehoert
+zusaetzlich in `documentation.nvim`, wo der Abschnitt fuer Runtime-Daten heute
+nur Text zeigt." Nachgesehen, und das ist keine Kreuzung, sondern ein zweiter
+Punkt: `documentation.nvim`s Telemetry-Panel verbindet **Aufrufzaehler pro
+Funktion** mit der IR (`core/api.lua`, `telemetry_join`). Startup-Daten
+kommen dort ueberhaupt nicht vor — es gibt keinen Abschnitt, in den das Bild
+gehoerte, sondern es braeuchte einen eigenen Endpunkt und ein eigenes
+Analysis-Werkzeug. Der Eintrag las sich, als gaebe es die Oberflaeche schon.
 
 ---
 
