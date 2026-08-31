@@ -16,9 +16,9 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     22:40       |    83% / 24%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     10:40       |    77% / 39%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     23:50       |    55% / 34%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     21:10       |    59% / 11%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     15:30       |    62% / 27%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -35,6 +35,10 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 ---
 
 ## Misc
+
+- [ ] docmap-deskztop app icon desktop
+
+- [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab;
 
 - [ ] Unter der Tableiste ist nich im buffer / file kontext infios: Parent folder > Fileaname > 1. Markdown Headline > 2. MD Healdline (TOC) -> TOC Entrys
 Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)

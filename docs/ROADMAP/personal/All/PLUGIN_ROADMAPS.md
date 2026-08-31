@@ -30,30 +30,34 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [Offen: die Live-Achse braucht eine echte Sitzung](#offen-die-live-achse-braucht-eine-echte-sitzung)
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
-  - [1.0 Erledigt](#10-erledigt)
-  - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
-  - [1.2 Mittel (M)](#12-mittel-m)
-    - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
-    - [M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)](#m12-imagesnvim-flamegraphs-als-bild-runtime-analysisnvim)
-    - [M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren](#m14-filetreenvim-cwd_mode-badge-optimieren)
-    - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m11)
-  - [1.3 Groß (L)](#13-gro-l)
-    - [L1 · `images.nvim` — Kitty-APC-Backend](#l1-imagesnvim-kitty-apc-backend)
-    - [L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen](#l3-lspnvim-das-signature-help-modul-schrumpfen)
-    - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
-    - [L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`](#l5-documentationnvim-verbund-l1-bis-l9-aus-planmd)
-  - [1.4 Braucht dich](#14-braucht-dich)
-    - [BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen](#bd2-opennvim-die-nicht-windows-reveal-pfade-auf-echter-hardware-prfen)
-    - [BD3 · `lib.nvim` — Windows-Elevation im Dependency-Installer](#bd3-libnvim-windows-elevation-im-dependency-installer)
-    - [BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)](#bd4-mdviewnvim-externe-renderer-website-opt-in)
-    - [BD5 · `mdview.nvim` — PDF-Seiten-Preview im Link-Hover](#bd5-mdviewnvim-pdf-seiten-preview-im-link-hover)
-  - [2.1 Repos mit offener Arbeit](#21-repos-mit-offener-arbeit)
-    - [`color_my_ascii.nvim` — zwei Konzepte ohne Umsetzungsentscheidung](#color_my_asciinvim-zwei-konzepte-ohne-umsetzungsentscheidung)
-  - [2.2 Repos ohne offene Arbeit](#22-repos-ohne-offene-arbeit)
-  - [3.1 Die Audit-Dokumente sind veraltet — und zwar systematisch](#31-die-audit-dokumente-sind-veraltet-und-zwar-systematisch)
-  - [3.2 `ROADMAP.md` heißt in diesen Repos vier verschiedene Dinge](#32-roadmapmd-heit-in-diesen-repos-vier-verschiedene-dinge)
-  - [3.3 Die Warteschlangen liegen zu dritt außerhalb der Roadmaps](#33-die-warteschlangen-liegen-zu-dritt-auerhalb-der-roadmaps)
-  - [3.4 Drei Punktpaare hängen aneinander und sollten zusammen gebaut werden](#34-drei-punktpaare-hngen-aneinander-und-sollten-zusammen-gebaut-werden)
+  - [Teil 1 — Die offene Arbeit, nach Verhältnis sortiert](#teil-1-die-offene-arbeit-nach-verhltnis-sortiert)
+    - [1.0 Erledigt](#10-erledigt)
+    - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
+    - [1.2 Mittel (M)](#12-mittel-m)
+      - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
+      - [M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)](#m12-imagesnvim-flamegraphs-als-bild-runtime-analysisnvim)
+      - [M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren](#m14-filetreenvim-cwd_mode-badge-optimieren)
+      - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m11)
+    - [1.3 Groß (L)](#13-gro-l)
+      - [L1 · `images.nvim` — Kitty-APC-Backend](#l1-imagesnvim-kitty-apc-backend)
+      - [L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen](#l3-lspnvim-das-signature-help-modul-schrumpfen)
+      - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
+      - [L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`](#l5-documentationnvim-verbund-l1-bis-l9-aus-planmd)
+    - [1.4 Braucht dich](#14-braucht-dich)
+      - [BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen](#bd2-opennvim-die-nicht-windows-reveal-pfade-auf-echter-hardware-prfen)
+      - [BD3 · `lib.nvim` — Windows-Elevation im Dependency-Installer](#bd3-libnvim-windows-elevation-im-dependency-installer)
+      - [BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)](#bd4-mdviewnvim-externe-renderer-website-opt-in)
+      - [BD5 · `mdview.nvim` — PDF-Seiten-Preview im Link-Hover](#bd5-mdviewnvim-pdf-seiten-preview-im-link-hover)
+  - [Teil 2 — Plugin für Plugin](#teil-2-plugin-fr-plugin)
+    - [2.1 Repos mit offener Arbeit](#21-repos-mit-offener-arbeit)
+      - [`color_my_ascii.nvim` — zwei Konzepte ohne Umsetzungsentscheidung](#color_my_asciinvim-zwei-konzepte-ohne-umsetzungsentscheidung)
+    - [2.2 Repos ohne offene Arbeit](#22-repos-ohne-offene-arbeit)
+  - [Teil 3 — Querschnittsbefunde](#teil-3-querschnittsbefunde)
+    - [3.1 Die Audit-Dokumente sind veraltet — und zwar systematisch](#31-die-audit-dokumente-sind-veraltet-und-zwar-systematisch)
+    - [3.2 `ROADMAP.md` heißt in diesen Repos vier verschiedene Dinge](#32-roadmapmd-heit-in-diesen-repos-vier-verschiedene-dinge)
+    - [3.3 Die Warteschlangen liegen zu dritt außerhalb der Roadmaps](#33-die-warteschlangen-liegen-zu-dritt-auerhalb-der-roadmaps)
+    - [3.4 Drei Punktpaare hängen aneinander und sollten zusammen gebaut werden](#34-drei-punktpaare-hngen-aneinander-und-sollten-zusammen-gebaut-werden)
+  - [Teil 4 — Empfohlene Reihenfolge](#teil-4-empfohlene-reihenfolge)
 
 ---
 
@@ -231,11 +235,11 @@ oder eine Namens-/Scope-Entscheidung verlangt.
 
 ---
 
-# Teil 1 — Die offene Arbeit, nach Verhältnis sortiert
+## Teil 1 — Die offene Arbeit, nach Verhältnis sortiert
 
 ---
 
-## 1.0 Erledigt
+### 1.0 Erledigt
 
 Ausgelagert nach
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md), samt den Notizen,
@@ -262,7 +266,7 @@ mit Begruendung im selben Dokument: **M4b**, **M17/M12** und **M17/M7b**.
 
 ---
 
-## 1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)
+### 1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)
 
 **Leer seit 2026-08-30.** Alle neun sind gebaut; QW5 war der letzte. Der
 Abschnitt bleibt stehen, damit die Nummerierung der anderen Abschnitte nicht
@@ -270,11 +274,11 @@ wandert und ein Querverweis von außen weiter aufgeht.
 
 ---
 
-## 1.2 Mittel (M)
+### 1.2 Mittel (M)
 
 ---
 
-### M10 · `images.nvim` — Sixel-Backend
+#### M10 · `images.nvim` — Sixel-Backend
 
 **Aufwand M–L · Nutzen mittel**
 
@@ -289,7 +293,7 @@ zur Voraussetzung. Also: Sixel und XTVERSION-Detection sind ein Paket.
 
 ---
 
-### M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)
+#### M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)
 
 **Aufwand M · Nutzen mittel**
 
@@ -300,7 +304,7 @@ voller Auflösung lesbar. Dieselbe Grafik gehört zusätzlich in
 
 ---
 
-### M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren
+#### M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren
 
 **Aufwand S–M · Nutzen niedrig**
 
@@ -313,7 +317,7 @@ wechselt — bis dahin billig und korrekt zu machen lohnt.
 
 ---
 
-### M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11
+#### M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11
 
 **Aufwand je M · Nutzen mittel bis hoch**
 
@@ -393,11 +397,11 @@ trägt die Zuordnung dafür schon.
 
 ---
 
-## 1.3 Groß (L)
+### 1.3 Groß (L)
 
 ---
 
-### L1 · `images.nvim` — Kitty-APC-Backend
+#### L1 · `images.nvim` — Kitty-APC-Backend
 
 **Aufwand L · Nutzen hoch**
 
@@ -408,7 +412,7 @@ und entsprechend teuer.
 
 ---
 
-### L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen
+#### L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen
 
 **Aufwand L · Nutzen niedrig**
 
@@ -417,7 +421,7 @@ LOC). Die Roadmap sagt selbst: "vorerst nur beobachten". Bleibt so.
 
 ---
 
-### L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln
+#### L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln
 
 **Aufwand M (war L) · Nutzen mittel — die Hälfte des Wegs steht schon**
 
@@ -442,7 +446,7 @@ davon unberührt.
 
 ---
 
-### L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`
+#### L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`
 
 **Aufwand je L · Nutzen gemischt**
 
@@ -459,11 +463,11 @@ weil dieses Dokument sonst zur zweiten Wahrheit wird — genau das Problem, das
 
 ---
 
-## 1.4 Braucht dich
+### 1.4 Braucht dich
 
 ---
 
-### BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen
+#### BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen
 
 **Aufwand S · Nutzen mittel · braucht einen Linux- und einen macOS-Host**
 
@@ -475,7 +479,7 @@ abgeleitet, nicht ausgeführt**. macOS `open -R` ist genauso unverifiziert.
 
 ---
 
-### BD3 · `lib.nvim` — Windows-Elevation im Dependency-Installer
+#### BD3 · `lib.nvim` — Windows-Elevation im Dependency-Installer
 
 **Aufwand S · Nutzen mittel · braucht eine Maschine, die Elevation wirklich verlangt**
 
@@ -486,7 +490,7 @@ ausprobiert.
 
 ---
 
-### BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)
+#### BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)
 
 **Aufwand M · Nutzen niedrig · Entscheidung liegt bei dir**
 
@@ -501,7 +505,7 @@ kostet bei jedem Durchgang erneut Lesezeit.
 
 ---
 
-### BD5 · `mdview.nvim` — PDF-Seiten-Preview im Link-Hover
+#### BD5 · `mdview.nvim` — PDF-Seiten-Preview im Link-Hover
 
 **Aufwand M–L · Nutzen niedrig · bewusst zurückgestellt seit 2026-08-17**
 
@@ -525,11 +529,11 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 
 ---
 
-# Teil 2 — Plugin für Plugin
+## Teil 2 — Plugin für Plugin
 
 ---
 
-## 2.1 Repos mit offener Arbeit
+### 2.1 Repos mit offener Arbeit
 
 | Plugin | Offen | Schwerpunkt |
 |---|---|---|
@@ -545,7 +549,7 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 
 ---
 
-### `color_my_ascii.nvim` — zwei Konzepte ohne Umsetzungsentscheidung
+#### `color_my_ascii.nvim` — zwei Konzepte ohne Umsetzungsentscheidung
 
 **je M–L · Nutzen mittel**
 
@@ -570,7 +574,7 @@ Schnittstelle zu deklarieren statt als Interna von `:Fence export`.
 
 ---
 
-## 2.2 Repos ohne offene Arbeit
+### 2.2 Repos ohne offene Arbeit
 
 Zwanzig Plugins. Aufgeteilt danach, *warum* nichts offen ist — das ist der
 Unterschied zwischen "fertig" und "noch nie befüllt":
@@ -602,11 +606,11 @@ bei jedem künftigen Durchgang genau diese Rückfrage spart.
 
 ---
 
-# Teil 3 — Querschnittsbefunde
+## Teil 3 — Querschnittsbefunde
 
 ---
 
-## 3.1 Die Audit-Dokumente sind veraltet — und zwar systematisch
+### 3.1 Die Audit-Dokumente sind veraltet — und zwar systematisch
 
 In acht Repos standen in
 `docs/ROADMAP/{Arch&Coding,Checklist,Zentral-Prinzipien}.md` noch Lücken mit
@@ -691,7 +695,7 @@ als er hält:
 
 ---
 
-## 3.2 `ROADMAP.md` heißt in diesen Repos vier verschiedene Dinge
+### 3.2 `ROADMAP.md` heißt in diesen Repos vier verschiedene Dinge
 
 Die Datei ist mal Aufgabenliste, mal Shipped-Log, mal Index über einen Ordner,
 mal Prosa-Ausblick, der auf die eigentliche Warteschlange woanders verweist:
@@ -715,7 +719,7 @@ Repo.
 
 ---
 
-## 3.3 Die Warteschlangen liegen zu dritt außerhalb der Roadmaps
+### 3.3 Die Warteschlangen liegen zu dritt außerhalb der Roadmaps
 
 Drei Dokumente tragen deutlich mehr offene Arbeit als sämtliche
 `ROADMAP.md`-Dateien zusammen, und keines davon heißt so:
@@ -732,7 +736,7 @@ Die anderen beiden sind gewachsen.
 
 ---
 
-## 3.4 Drei Punktpaare hängen aneinander und sollten zusammen gebaut werden
+### 3.4 Drei Punktpaare hängen aneinander und sollten zusammen gebaut werden
 
 - **Sixel (M10) und XTVERSION-Detection**: Erkennung lohnt erst mit einem
   zweiten Backend, das zweite Backend braucht Erkennung. Ein Paket.
@@ -751,7 +755,7 @@ Die anderen beiden sind gewachsen.
 
 ---
 
-# Teil 4 — Empfohlene Reihenfolge
+## Teil 4 — Empfohlene Reihenfolge
 
 Nicht als Plan, sondern als Vorschlag mit Begründung. Erst das, was etwas
 abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
