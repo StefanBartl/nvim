@@ -1,4 +1,5 @@
--- Ask lsp.nvim what workspace.library it injects, instead of modelling it.
+-- Ask lsp.nvim what workspace.library and workspace.ignoreDir it injects,
+-- instead of modelling them.
 --
 -- Run headless with the normal config, so the runtimepath is the real one.
 -- LUALS_SCAN_ROOTS is a ";"-separated list. An entry is either a plain root or
@@ -29,6 +30,21 @@ if not ok or type(build) ~= "function" then
   die("lsp.servers.lua_ls.build_library did not load: " .. tostring(build))
   return
 end
+
+-- Root-independent, so it is dumped once into _meta.json rather than per
+-- workspace. It matters as much as the library does: a stale git worktree
+-- under `.claude/` holding an older copy of a plugin makes every `@class` in
+-- that plugin a duplicate of itself, and this is the list that keeps such a
+-- directory out of the index.
+local ignore_dirs = {}
+local ok_ignore, ignore = pcall(require, "lsp.servers.lua_ls.ignore")
+if ok_ignore and type(ignore) == "table" and type(ignore.as_luals_patterns) == "function" then
+  local ok_pats, pats = pcall(ignore.as_luals_patterns)
+  if ok_pats and type(pats) == "table" then
+    ignore_dirs = pats
+  end
+end
+io.stderr:write(("DUMP ignoreDir %d patterns\n"):format(#ignore_dirs))
 
 vim.fn.mkdir(out_dir, "p")
 
@@ -90,6 +106,7 @@ local meta = assert(io.open(out_dir .. "/_meta.json", "w"))
 meta:write(vim.json.encode({
   vimruntime = (vim.env.VIMRUNTIME or ""):gsub("\\", "/"),
   nvim_config = config_root,
+  ignore_dirs = ignore_dirs,
   written_at = os.date("!%Y-%m-%dT%H:%M:%SZ"),
 }))
 meta:close()

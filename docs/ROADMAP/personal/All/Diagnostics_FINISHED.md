@@ -8,6 +8,14 @@ alles, was noch offen ist.
 
 ## Table of content
 
+  - [2026-09-01](#2026-09-01)
+    - [Die Messgrundlage, zweiter Teil -- luassert, und 180 Befunde, die keinem Repo gehoerten](#die-messgrundlage-zweiter-teil-luassert-und-180-befunde-die-keinem-repo-gehoerten)
+      - [Die Hypothese, die die Messung widerlegt hat](#die-hypothese-die-die-messung-widerlegt-hat)
+      - [Was es wirklich war: `relatedInformation` fragen statt raten](#was-es-wirklich-war-relatedinformation-fragen-statt-raten)
+      - [Der Schluessel war da, er kam nur nirgends an](#der-schluessel-war-da-er-kam-nur-nirgends-an)
+      - [Gemessen](#gemessen)
+      - [Die +36 sind der eigentliche Ertrag](#die-36-sind-der-eigentliche-ertrag)
+      - [Was daraus offen bleibt](#was-daraus-offen-bleibt)
   - [2026-08-31](#2026-08-31)
     - [lib.nvim fertig -- der zweite vertikale Durchgang](#libnvim-fertig-der-zweite-vertikale-durchgang)
       - [Zwei echte Fehler](#zwei-echte-fehler)
@@ -21,7 +29,7 @@ alles, was noch offen ist.
       - [Die Klammer, die eine Signatur rettet](#die-klammer-die-eine-signatur-rettet)
       - [Unterdrueckt, mit der Begruendung daneben](#unterdrueckt-mit-der-begruendung-daneben)
       - [Was offen bleibt: eine Zeile, und sie gehoert nach lsp.nvim](#was-offen-bleibt-eine-zeile-und-sie-gehoert-nach-lspnvim)
-      - [Gemessen](#gemessen)
+      - [Gemessen](#gemessen-1)
     - [Sechs Repos pruefen wieder gegen Neovims Typen](#sechs-repos-pruefen-wieder-gegen-neovims-typen)
       - [Die Zahl steigt, und das ist der Zweck](#die-zahl-steigt-und-das-ist-der-zweck)
       - [Eine Hypothese, die die Messung widerlegt hat](#eine-hypothese-die-die-messung-widerlegt-hat)
@@ -32,7 +40,7 @@ alles, was noch offen ist.
       - [Ein Typ, der nicht bloss zu frueh, sondern falsch war](#ein-typ-der-nicht-bloss-zu-frueh-sondern-falsch-war)
       - [Neun Schluessel, die es nur unter einer Strategie gibt](#neun-schluessel-die-es-nur-unter-einer-strategie-gibt)
       - [Der Alias, der eine echte Luecke zugedeckt hat](#der-alias-der-eine-echte-luecke-zugedeckt-hat)
-      - [Gemessen](#gemessen-1)
+      - [Gemessen](#gemessen-2)
     - [documentation.nvim: die restlichen 155 -- der erste vertikale Durchgang](#documentationnvim-die-restlichen-155-der-erste-vertikale-durchgang)
       - [Das Muster, das die Haelfte erklaert: der Guard sitzt auf einem Feld](#das-muster-das-die-haelfte-erklaert-der-guard-sitzt-auf-einem-feld)
       - [Die Kinder eines Treesitter-Knotens](#die-kinder-eines-treesitter-knotens)
@@ -41,7 +49,7 @@ alles, was noch offen ist.
       - [Annotationen, die schlicht falsch waren](#annotationen-die-schlicht-falsch-waren)
       - [Der Overload, der die Zahl verschlechtert hat](#der-overload-der-die-zahl-verschlechtert-hat)
       - [Unterdrueckt, mit der Begruendung daneben](#unterdrueckt-mit-der-begruendung-daneben-1)
-      - [Gemessen](#gemessen-2)
+      - [Gemessen](#gemessen-3)
     - [Cluster D: `userdata` statt `TSNode` -- documentation.nvim](#cluster-d-userdata-statt-tsnode-documentationnvim)
       - [Warum `userdata` der teuerste Annotationsfehler ist](#warum-userdata-der-teuerste-annotationsfehler-ist)
       - [Was gemacht wurde -- 154 Annotationen in 18 Dateien](#was-gemacht-wurde-154-annotationen-in-18-dateien)
@@ -72,6 +80,163 @@ alles, was noch offen ist.
     - [`lib.nvim.ui.list` -- eine Listen-Senke statt vierzehn](#libnvimuilist-eine-listen-senke-statt-vierzehn)
     - [mdview.nvim formatiert jetzt wie die anderen 30 Repos](#mdviewnvim-formatiert-jetzt-wie-die-anderen-30-repos)
     - [open.nvim: uebrig gebliebener Claude-Worktree abgeraeumt](#opennvim-uebrig-gebliebener-claude-worktree-abgeraeumt)
+
+---
+
+## 2026-09-01
+
+---
+
+### Die Messgrundlage, zweiter Teil -- luassert, und 180 Befunde, die keinem Repo gehoerten
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 1)*
+
+Angefangen als Ein-Zeilen-Punkt: `${3rd}/luassert/library` fehlte in
+`lsp.nvim`s `build_library.lua`, und deshalb blieb in lib.nvim genau ein
+`undefined-doc-name` stehen. Die Zeile ist drin, lib.nvim steht auf **0**, und
+lsp.nvim verlor dabei 12 Befunde.
+
+Beim Nachmessen des Rests fiel dann etwas Groesseres auf.
+
+---
+
+#### Die Hypothese, die die Messung widerlegt hat
+
+Zuerst sah es aus wie ein Wiedergaenger von `bb66d37`: `build_library` haengt
+ueber `find_type_dirs(root)` und zwei weitere Abschnitte die **eigenen
+`@types`-Pfade des Workspace** an die Library -- in lsp.nvims Fall sieben
+Eintraege. Ein Workspace, der seine eigene Library ist, wird zweimal gelesen;
+genau das hat `bb66d37` fuer die runtimepath-Eintraege behoben und dabei 1085
+der 1222 Warnungen der Config erklaert.
+
+Der Ausschluss wurde also verallgemeinert (kein Pfad unterhalb von `root`), die
+Library schrumpfte von 44 auf 37 Eintraege -- und die Messung ergab **exakt
+null Aenderung**. LuaLS dedupliziert einen Library-Pfad, der innerhalb des
+Workspace liegt, offenbar von sich aus. Die Aenderung wurde zurueckgenommen:
+was nichts bewirkt, gehoert nicht ins Repo, und wer die Idee spaeter wieder
+hat, findet hier, dass sie geprueft ist.
+
+---
+
+#### Was es wirklich war: `relatedInformation` fragen statt raten
+
+Der naechste Schritt war, LuaLS selbst zu fragen, wo die *zweite* Definition
+liegt. Die JSON-Ausgabe von `--check` fuehrt sie mit:
+
+```
+"message": "Duplicate defined fields `ensure_installing`.",
+"relatedInformation": [{ "location": { "uri":
+  "file:///c%3A/Users/bartl/AppData/Local/nvim/.claude/worktrees/
+   filetree-statusline-modes-c96cc9/lua/lsp/%40types/init.lua" }}]
+```
+
+Die nvim-Config haelt **elf git-Worktrees** unter `.claude/worktrees/`, jeder
+eine volle Kopie von ihr. Der Config-Root ist fuer jedes Repo ein
+Library-Eintrag. Und einer dieser Worktrees stammt aus der Zeit **vor** der
+Extraktion von lsp.nvim und traegt noch ein vollstaendiges `lua/lsp/**`.
+
+lua_ls las also eine aeltere Kopie von lsp.nvim neben der echten, und jedes
+`@class` darin kollidierte mit sich selbst. Ausgezaehlt ueber alle Befunde mit
+`relatedInformation` in einen `.claude`-Worktree:
+
+| Repo | Befunde | davon aus einem `.claude`-Worktree |
+|---|---:|---:|
+| lsp.nvim | 359 | **180** |
+| nvim-config | 128 | 3 |
+| lib.nvim | 0 | 0 |
+
+157 `duplicate-doc-field` und 23 `duplicate-set-field`. Die Haelfte des Repos.
+
+---
+
+#### Der Schluessel war da, er kam nur nirgends an
+
+`.claude` steht seit jeher in lib.nvims gemeinsamer Ignore-Liste
+(`lib.nvim.fs.ignore.list`), und `lsp.servers.lua_ls.ignore.as_luals_patterns()`
+macht daraus 124 Muster fuer `workspace.ignoreDir`. Zwei Stellen haben das
+ausgehebelt:
+
+1. **Die Messreihe hat `ignoreDir` nie gesetzt.** `mkcfg.py` modellierte von
+   der Injektion nur `library`, `runtime.version`, `diagnostics.globals` und
+   `checkThirdParty`. Der Kommentar dort sagte, die uebrigen Defaults wuerden
+   von den Repos ohnehin ueberschrieben -- was bei `ignoreDir` gerade der
+   Befund ist und nicht die Entwarnung.
+2. **`.luarc.json` ersetzt auch diesen Schluessel.** Dieselbe Falle wie bei
+   `workspace.library` in Cluster A, nur eine Ebene weiter. lsp.nvims
+   `.luarc.json` nannte drei Eintraege -- `.git`, `.deps`, `docs/map` -- und
+   warf damit alle 124 weg. Zwei der drei Verzeichnisse existieren in dem Repo
+   nicht einmal.
+
+Behoben: `dump_library.lua` holt die Musterliste jetzt genauso aus dem
+laufenden nvim wie die Library (`DUMP ignoreDir 124 patterns`), `mkcfg.py`
+setzt sie, und lsp.nvims `.luarc.json` nennt den Schluessel nicht mehr.
+
+---
+
+#### Gemessen
+
+| Schritt | lsp.nvim | lib.nvim |
+|---|---:|---:|
+| Ausgangsstand | 371 | 1 |
+| `${3rd}/luassert` | 359 | **0** |
+| Workspace-Ausschluss (verworfen) | 359 | 0 |
+| `ignoreDir` injiziert | **172** | 0 |
+
+`worse: nothing` in jedem Schritt. lsp.nvims Suite gruen (0 Failed, 0 Errors),
+stylua sauber.
+
+Nach Regel, im letzten Schritt:
+
+| Regel | Delta | |
+|---|---:|---|
+| `duplicate-doc-field` | **-143** | 173 -> 30 |
+| `redundant-parameter` | -28 | 43 -> 15 |
+| `undefined-field` | -26 | 29 -> 3 |
+| `duplicate-set-field` | -21 | 29 -> 8 |
+| `duplicate-doc-alias` | -5 | 5 -> 0 |
+| `undefined-doc-name` | **+19** | 0 -> 19 |
+| `assign-type-mismatch` | +8 | 13 -> 21 |
+| `param-type-mismatch` | +5 | 27 -> 32 |
+| `inject-field`, `need-check-nil` | +4 | |
+
+---
+
+#### Die +36 sind der eigentliche Ertrag
+
+Wie bei der Library-Korrektur im August ist der Zuwachs kein Rueckschritt --
+nur diesmal noch deutlicher, weil die verdeckten Befunde benannt sind:
+
+- `Lsp.Languages.ConfiguredLangs.Go.Module`, `.Lua.Module`, `.C.Module`,
+  `.Zig.Module`, `.CSharp.Module`, `.Dart.Module`, `.Java.Module`,
+  `.Webdev.Astro.Module` und `.Literal.App`
+- `FormatterApi`, `FormatterOptions`, `FormatterState`
+
+Diese Typen werden in lsp.nvim referenziert und sind dort **nirgends
+definiert**. Sie loesten die ganze Zeit gegen die veraltete Kopie im Worktree
+auf -- also gegen einen Stand von vor der Extraktion, der noch nicht einmal
+mehr der Wahrheit entsprechen muss. Das ist der Grund, aus dem sich der
+Umweg gelohnt hat: nicht die 180, die verschwinden, sondern die 36, die
+sichtbar werden.
+
+---
+
+#### Was daraus offen bleibt
+
+Elf Repos und die Config nennen `workspace.ignoreDir` in ihrer `.luarc.json`
+und werfen damit dieselben 124 Muster weg: `cmdlog`, `dap`, `debugging`,
+`diff`, `filetree`, `neotree-fs-refactor`, `open`, `pdfport`, `recommender`,
+`sandbox`. Was das dort kostet, ist ungemessen -- es gehoert vor den naechsten
+Gesamtlauf.
+
+Die elf Worktrees selbst bleiben stehen. Mit dem injizierten `ignoreDir` sind
+sie fuer LuaLS unsichtbar, das Problem ist entschaerft; ob die veralteten
+aufgeraeumt werden, ist eine Frage an den Autor und keine Messfrage. Eine
+Session lief waehrend dieser Arbeit selbst in einem davon.
+
+Und eine Korrektur am Report: Abschnitt 1 behauptete, LuaLS indiziere
+Punkt-Verzeichnisse nicht, `.claude/` bleibe also aussen vor -- "im Scan-Log
+verifiziert". Das gilt fuer den *Workspace*, nicht fuer die *Library*. Der
+Satz steht dort jetzt richtig.
 
 ---
 

@@ -73,6 +73,7 @@ def main():
 
     meta = load_jsonc(os.path.join(args.library, "_meta.json"))
     vimruntime = meta.get("vimruntime", "")
+    ignore_dirs = meta.get("ignore_dirs") or []
 
     os.makedirs(args.out, exist_ok=True)
     made = 0
@@ -90,13 +91,14 @@ def main():
                 print("NO LIBRARY DUMP for %s -- run the dump first" % name, file=sys.stderr)
                 return 1
 
-            # Only the library part of the injection is dumped; these are the
-            # remaining defaults lsp.nvim sets. Repos overwhelmingly override
-            # them in their own .luarc.json anyway.
+            # The library and ignoreDir halves of the injection are dumped from
+            # a running nvim; these are the remaining defaults lsp.nvim sets.
+            # Repos overwhelmingly override those in their own .luarc.json.
             injected = {
                 "runtime": {"version": "LuaJIT"},
                 "workspace": {
                     "library": list(injected_library),
+                    "ignoreDir": list(ignore_dirs),
                     "checkThirdParty": False,
                 },
                 "diagnostics": {"globals": ["vim"]},

@@ -75,37 +75,38 @@ committet und auf `main` gepusht.
 
 ### Gerade in Arbeit
 
-*Nichts.* Am 2026-08-31 ist lib.nvim durch -- 273 -> 1, der zweite Repo, der
-praktisch auf null steht.
+**lsp.nvim.** Die Messgrundlage ist am 2026-09-01 korrigiert (siehe unten),
+damit steht das Repo bei **172** statt 359. Die Codearbeit daran hat noch
+nicht angefangen.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**lsp.nvim** (379). Mit lib.nvims 273 weg ist es das größte verbliebene Repo,
-und der Hauptposten hat eine benannte Ursache:
+**lsp.nvim vertikal** (172). Die Zahl ist neu und niedriger als die 379 im
+Report: am 2026-09-01 hat sich herausgestellt, dass **180 der 359 Befunde gar
+nicht dem Repo gehörten** -- dazu unten mehr. Was übrig bleibt, hat keinen
+einzelnen großen Posten mehr:
 
-- `duplicate-doc-field` **173** -- `lua/lsp/@types/vim_lsp.lua` deklariert
-  Felder nach, die Neovims eigenes Meta bereits führt. Jedes doppelt
-  deklarierte Feld ist ein Befund in *beiden* Dateien; das ist derselbe
-  Mechanismus, der in lib.nvim `Lib.Deps.View.ToolUiState` und die beiden
-  Namen aus der Config betraf, nur zehnmal so groß
-- `redundant-parameter` **48** -- lohnt eine eigene Durchsicht, statt sie
-  wegzuannotieren: in lib.nvim war genau diese Regel einmal ein echter Fehler
-  (eine still verworfene Seitenzahl) und einmal eine kaputte Signatur
-- dazu die acht `deprecated` und die sechs `missing-parameter` aus
-  Abschnitt 5, die alle in diesem Repo liegen
-
-**Eine Zeile davon gehört zwingend dazu**, und sie ist der Grund, warum
-lsp.nvim vor den fünf kleinen Repos steht: `build_library.lua` hängt
-`${3rd}/busted/library` und `${3rd}/luv/library` an, **luassert aber nicht**.
-Deshalb bleibt in lib.nvim genau ein Befund stehen (`undefined-doc-name` auf
-`luassert`), und dasselbe gilt für jedes andere Repo mit Testsuite. Der Fix
-ist eine Zeile und wirkt auf alle 31 -- er gehört gemessen, bevor der nächste
-vertikale Durchgang seine Vorher-Zahl nimmt.
+- `param-type-mismatch` **32**, `duplicate-doc-field` **30**,
+  `assign-type-mismatch` **21**, `undefined-doc-name` **19**,
+  `need-check-nil` **17**, `redundant-parameter` **15**
+- Die 19 `undefined-doc-name` zuerst: `Lsp.Languages.ConfiguredLangs.*.Module`
+  (acht Sprachmodule), `FormatterApi`, `FormatterOptions`, `FormatterState`.
+  Diese Typen werden referenziert und sind in lsp.nvim **nirgends definiert** --
+  sie haben bis zum 01.09. still gegen eine veraltete Kopie des Repos
+  aufgelöst. Das ist der interessanteste Teil des Repos, nicht der lästigste
+- die 30 verbliebenen `duplicate-doc-field` sind der Rest von
+  `lua/lsp/@types/vim_lsp.lua`: Neovim 0.12 führt alle sieben dort
+  nachdeklarierten Klassen selbst (`vim.lsp.Client`, `ClientConfig`,
+  `get_clients.Filter`, `start.Opts`, `buf.{format,code_action,rename}.Opts`).
+  Der Dateikopf sagt „missing from Neovim's builtin types" -- das stimmt nicht
+  mehr
 
 Danach die fünf kleineren der sechs (`buffer-ctx` 8, `emojis` 13, `sessions`
-15, `fileops` 35, `gopath` 67) -- je ein kurzer Durchgang, zusammen 138.
+15, `fileops` 35, `gopath` 67) -- je ein kurzer Durchgang, zusammen 138. Deren
+Zahlen sind allerdings ebenfalls vor der Korrektur der Messgrundlage
+entstanden und gehören neu genommen.
 
 ---
 
@@ -121,6 +122,7 @@ Danach die fünf kleineren der sechs (`buffer-ctx` 8, `emojis` 13, `sessions`
 | F | **`inject-field` in lib.nvim** -- plus die `missing-fields`-Reste aus C | **381 -> 244** in dem Repo, `inject-field` 108 -> 0, `missing-fields` 22 -> 0. Eine Schreibweise (`---@type` auf einer Tabelle, die erst danach gefüllt wird), drei Ursachen darunter -- acht leere „Zombie“-Klassen hinter einem `return`, durch die die `Lib`-Fassade vier Namespaces untypisiert anbot; elf Module, deren Annotation nur auf der falschen Zeile stand; ein Typ, der schlicht falsch war. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | L | **`$VIMRUNTIME/lua` in sechs `.luarc.json`** -- die Messgrundlage | **356 -> 411** über die sechs. `buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib` und `sessions` setzten `workspace.library` selbst und warfen damit die Injektion weg; `vim` war dort ein Global vom Typ `any`. Der Zuwachs ist der Zweck: 60 Befunde fallen weg, weil Typen auflösen, 119 kommen an Stellen dazu, die vorher niemand geprüft hat -- darunter fünf `deprecated`, die seit dem Erstscan in Abschnitt 5 stehen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | V2 | **lib.nvim fertig** -- der zweite vertikale Durchgang | **273 -> 1**. Zwanzig kleine Ursachen, darunter zwei echte Fehler: `getbufinfo()` liefert kein `filetype` (jede Filetype-Ausschlussliste in `buffer_utils` war wirkungslos) und `page_key` verwarf still die Seitenzahl (alle Seiten eines PDFs teilten sich einen Hover-Cache-Slot). Der eine Rest gehört nach lsp.nvim. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| M | **Die Messgrundlage, zweiter Teil** (2026-09-01) | `${3rd}/luassert` fehlte in der Injektion, und `workspace.ignoreDir` wurde von der Messreihe gar nicht gesetzt. Letzteres liess LuaLS elf Config-Kopien unter `.claude/worktrees/` mitlesen, eine davon mit einem `lua/lsp/**` von vor der Extraktion: **180 von lsp.nvims 359 Befunden** waren Kollisionen des Repos mit einer alten Kopie seiner selbst. lsp.nvim **359 -> 172**, lib.nvim **1 -> 0**. Details unten unter „Offen“ und in [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
@@ -137,17 +139,23 @@ Abschnitt 1.
 
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
-| lsp.nvim | 379 | `duplicate-doc-field` 173, `redundant-parameter` 48 |
+| lsp.nvim | **172** | `param-type-mismatch` 32, `duplicate-doc-field` 30 |
 | filetree.nvim | 167 | `undefined-field` 60, `need-check-nil` 43 |
 | nvim-config | 137 | `param-type-mismatch` 38, `assign-type-mismatch` 26 |
 | runtime-analysis.nvim | 119 | `param-type-mismatch` 47, `undefined-field` 30 |
 | documentation.nvim | **0** | -- |
 | lib.nvim | **1** | `undefined-doc-name` auf `luassert` -- gehört nach lsp.nvim |
-| **Summe (alle 33)** | **1552** | |
+| **Summe (alle 33)** | **1365** | |
 
 Zwei Repos stehen jetzt praktisch auf null, und beide sind vertikal
-durchgegangen worden. Die Summe ist fortgeschrieben (1824 - 272), nicht neu
-über alle 33 gemessen; der nächste Gesamtlauf steht aus.
+durchgegangen worden. Die Summe ist fortgeschrieben (1824 - 272 - 187), nicht
+neu über alle 33 gemessen.
+
+**Der Gesamtlauf steht jetzt nicht mehr nur aus, er ist fällig.** Die
+Korrektur vom 01.09. wirkt auf jedes Repo, dessen `.luarc.json` einen
+`workspace.ignoreDir` nennt -- das sind elf plus die Config -- und auf jedes
+mit Testsuite (luassert). Alle Zahlen oben ausser lsp.nvim und lib.nvim sind
+vor dieser Korrektur entstanden.
 
 **Die 55 aus dem Library-Fix bleiben ein Vorzeichenwechsel, kein Rückschritt.**
 Bis dahin hieß eine fallende Zahl "behoben". Bei den sechs Repos ohne
@@ -162,36 +170,47 @@ sie sind jetzt echt abgearbeitet, nicht bloß wieder unsichtbar.
 Reihenfolge wie in Abschnitt 8, dazu zwei Nachträge aus der B-Runde (9 und 10).
 Kurz:
 
-1. **`${3rd}/luassert/library` in `lsp.nvim`s `build_library.lua`** -- eine
-   Zeile neben `busted` und `luv`. Ohne sie ist der `luassert`-Typ in jedem
-   Repo mit Testsuite undefiniert; in lib.nvim ist das der einzige
-   verbliebene Befund. Gehört gemessen, bevor der nächste Durchgang seine
-   Vorher-Zahl nimmt
-2. **lsp.nvim vertikal** (379) -- `duplicate-doc-field` 173 (`@types/vim_lsp.lua`
-   deklariert Felder nach, die Neovims Meta schon führt), `redundant-parameter`
-   48. Vorgeschlagener nächster Schritt, siehe oben
-3. **Die fünf kleineren der sechs** (`buffer-ctx` 8, `emojis` 13, `sessions` 15,
-   `fileops` 35, `gopath` 67) -- je ein kurzer Durchgang, zusammen 138
-4. **`pcall(vim.cmd, ...)`** (E) -- 50 der 60 offen, lib.nvims 10 erledigt.
+1. **`workspace.ignoreDir` in elf `.luarc.json` plus der Config** --
+   `cmdlog`, `dap`, `debugging`, `diff`, `filetree`, `neotree-fs-refactor`,
+   `open`, `pdfport`, `recommender`, `sandbox` und die nvim-Config nennen den
+   Schlüssel und werfen damit die 124 injizierten Muster weg, `**/.claude`
+   darunter. Dieselbe Falle wie bei `workspace.library` in Cluster A, nur auf
+   einem zweiten Schlüssel. In lsp.nvim ist er entfernt (2026-09-01) und hat
+   dort 187 Befunde gekostet -- bei den übrigen ist die Wirkung ungemessen.
+   **Vor** dem nächsten Gesamtlauf zu erledigen
+2. **Gesamtlauf über alle 33 Workspaces** -- die erste Summe, die nach der
+   korrigierten Messgrundlage entsteht. Alles darunter rechnet gegen sie
+3. **lsp.nvim vertikal** (172) -- vorgeschlagener nächster Schritt, siehe oben
+4. **Die fünf kleineren der sechs** (`buffer-ctx` 8, `emojis` 13, `sessions` 15,
+   `fileops` 35, `gopath` 67) -- Zahlen vor der Korrektur, neu zu nehmen
+5. **`pcall(vim.cmd, ...)`** (E) -- 50 der 60 offen, lib.nvims 10 erledigt.
    Mechanisch, über mehrere Repos
-5. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil;
+6. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil;
    documentation.nvims und lib.nvims Anteil daran ist erledigt
-6. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
+7. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
    `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an,
    nicht als eigener Durchgang
-7. **`scripts/luals-scan` dumpt die falsche Library-Funktion** --
-   `dump_library.lua` ruft `build_library(root)` (37-146 Einträge), der
+8. **`scripts/luals-scan` dumpt die falsche Library-Funktion** --
+   `dump_library.lua` ruft `build_library(root)` (37-147 Einträge), der
    Attach-Pfad des Editors benutzt `library_profiles.build_runtime_library()`
    (drei). Praktisch ersetzt das Werkzeug damit lazydev, was als Annäherung
    taugt -- aber der README beschreibt es als das, was der Editor tut
-8. **Die drei Aggregator-Strategien von lib.nvim decken sich nicht** -- `lazy`
+9. **Die drei Aggregator-Strategien von lib.nvim decken sich nicht** -- `lazy`
    exportiert neun Schlüssel, die `metatable` (die Voreinstellung) nicht kennt;
    `eager` nennt `augroup` `autogroup` und mutiert beim Aufbau die Modultabelle
    von `lib.lua.json`. Kein LuaLS-Befund, aufgefallen bei Cluster F
-9. **`diff.nvim/plugin/diff.lua` auf LF umstellen** -- CRLF seit `4cb35d4`
-   (2026-08-06), fällt bei `stylua --check` durch
-10. Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
+10. **`diff.nvim/plugin/diff.lua` auf LF umstellen** -- CRLF seit `4cb35d4`
+    (2026-08-06), fällt bei `stylua --check` durch
+11. Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
     Annotationsfehler)
+
+**Nicht von Claude entschieden:** die elf git-Worktrees unter
+`C:/Users/bartl/AppData/Local/nvim/.claude/worktrees/`. Einer davon
+(`filetree-statusline-modes-c96cc9`) trägt noch ein `lua/lsp/**` aus der Zeit
+vor der Extraktion von lsp.nvim und ist die Quelle der 180. Mit dem
+injizierten `ignoreDir` sind sie für LuaLS unsichtbar, das Problem ist also
+entschärft; ob die veralteten weg sollen, ist eine Aufräumfrage und keine
+Messfrage.
 
 ---
 
@@ -284,8 +303,16 @@ Ergebnis zu melden.
 **Grenze der Methode.** `--checklevel=Warning` erfasst `Error` + `Warning`.
 `Hint`/`Information` (ungenutzte Locals, fehlende Felder in Hover-Doku) sind
 bewusst draußen -- die zeigt `<leader>wq` zwar auch, sie sind aber keine
-Fehlerklasse. Außerdem indiziert LuaLS Punkt-Verzeichnisse nicht, `.claude/`
-und `.git/` bleiben also außen vor (im Scan-Log verifiziert).
+Fehlerklasse.
+
+**Korrektur (2026-09-01).** Hier stand, LuaLS indiziere Punkt-Verzeichnisse
+nicht, `.claude/` und `.git/` blieben also außen vor. Das gilt für den
+*Workspace*, nicht für die *Library*: der Config-Root ist für jedes Repo ein
+Library-Eintrag, und dessen `.claude/worktrees/` wurde mitgelesen -- elf
+Kopien der Config, eine davon mit einem `lua/lsp/**` aus der Zeit vor der
+Extraktion von lsp.nvim. Draußen bleiben sie erst durch das injizierte
+`workspace.ignoreDir`, das die Messreihe bis dahin gar nicht gesetzt hat.
+Allein in lsp.nvim waren das 180 von 359 Befunden.
 
 ---
 

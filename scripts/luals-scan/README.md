@@ -78,14 +78,24 @@ ganze Punkt:
 
 1. `lsp.nvim` übergibt `lua_ls` eine Settings-Tabelle. Deren `workspace.library`
    baut `lsp/servers/lua_ls/build_library.lua` zur Laufzeit -- `runtimepath`,
-   geladene Plugins, `$VIMRUNTIME`, `${3rd}/luv`, `${3rd}/busted`.
+   geladene Plugins, `$VIMRUNTIME`, `${3rd}/luv`, `${3rd}/busted`,
+   `${3rd}/luassert`. Dazu ein `workspace.ignoreDir` aus lib.nvims
+   gemeinsamer Ignore-Liste: 124 Muster, `**/.claude` darunter.
 2. Liegt im Workspace eine `.luarc.json`, **ersetzt** sie jeden Schlüssel, den
    sie nennt. Bei Listen wie `workspace.library` gibt es keinen Merge: die
    Liste aus Schritt 1 ist dann weg.
 
 Genau das bildet `mkcfg.py` ab. Und weil Schritt 1 zu wichtig ist, um ihn
-nachzumodellieren, holt `dump_library.lua` die Liste direkt aus einem laufenden
-nvim, statt sie hier nachzubauen.
+nachzumodellieren, holt `dump_library.lua` **beide** Listen direkt aus einem
+laufenden nvim, statt sie hier nachzubauen.
+
+`ignoreDir` steht nicht aus Ordnungsliebe dabei. Die nvim-Config haelt elf
+git-Worktrees unter `.claude/worktrees/`, jeder eine volle Kopie von ihr, und
+der Config-Root ist fuer jedes Repo ein Library-Eintrag. Einer dieser
+Worktrees stammt aus der Zeit vor der Extraktion von lsp.nvim und traegt noch
+`lua/lsp/**` -- ohne `**/.claude` liest lua_ls also eine aeltere Kopie des
+Plugins neben der echten, und jedes `@class` darin kollidiert mit sich selbst.
+In lsp.nvim waren das 180 von 359 Befunden.
 
 > Ausführlich, mit Nachweis:
 > `E:/repos/WKDBooks/Development/wkdbook-Lua/LuaLanguageServer/_luarc_json/Reichweite-und-Praezedenz.md`
@@ -97,7 +107,7 @@ nvim, statt sie hier nachzubauen.
 | Datei | Aufgabe |
 |---|---|
 | `scan.sh` | Index bauen, Library-Dump anstoßen, Configs erzeugen, `--check` fahren |
-| `dump_library.lua` | `build_library(root)` in laufendem nvim, Ergebnis als JSON |
+| `dump_library.lua` | `build_library(root)` + `ignore.as_luals_patterns()` in laufendem nvim, Ergebnis als JSON |
 | `mkcfg.py` | injizierte Defaults + `.luarc.json` des Repos -> eine Config pro Workspace |
 | `compare.py` | einen Lauf zusammenfassen oder zwei vergleichen |
 
@@ -148,10 +158,12 @@ eine Datei umleiten und die beobachten.
   Kandidat (einmal gemessen: dasselbe Repo, keine Änderung, -7 und später +7).
   `compare.py` markiert Verschlechterungen unter 10 als „within noise" --
   ohne zweiten Lauf sind sie kein Befund.
-- **Es bleibt ein Modell des Editors.** Nur die Library wird echt geholt; die
-  übrigen Injektions-Defaults (`runtime.version`, `diagnostics.globals`) sind
-  hier nachgebildet. In fast allen Repos überschreibt die `.luarc.json` sie
-  ohnehin.
+- **Es bleibt ein Modell des Editors.** Library und `ignoreDir` werden echt
+  geholt; die übrigen Injektions-Defaults (`runtime.version`,
+  `diagnostics.globals`) sind hier nachgebildet. In fast allen Repos
+  überschreibt die `.luarc.json` sie ohnehin -- was bei `ignoreDir` der
+  eigentliche Befund ist und nicht die Entwarnung: elf Repos und die Config
+  nennen den Schlüssel und werfen damit die 124 injizierten Muster weg.
 - **Absolutzahlen sind nur innerhalb einer Messreihe vergleichbar.** Gegen
   ältere Zahlen aus `Diagnostics.md` Abschnitt 2 und 3 zu rechnen, führt in
   die Irre -- die sind mit einer anderen Prüf-Config entstanden.
