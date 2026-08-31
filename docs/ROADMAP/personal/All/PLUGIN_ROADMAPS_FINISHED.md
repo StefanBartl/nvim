@@ -55,6 +55,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [M9 · `gopath.nvim` + `pickers.nvim` + `lib.nvim` — Frecency fuer Alternate-Vorschlaege](#m9-gopathnvim--pickersnvim--libnvim--frecency-fuer-alternate-vorschlaege)
   - [M17/M10 · `documentation.nvim` + `runtime-analysis.nvim` — Laufzeit-Evidenz als Check-Input](#m17m10-documentationnvim--runtime-analysisnvim--laufzeit-evidenz-als-check-input)
+  - [M11 · `images.nvim` + casedesk — OCR, und wofuer sie eigentlich da ist](#m11-imagesnvim--casedesk--ocr-und-wofuer-sie-eigentlich-da-ist)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2029,6 +2030,121 @@ Instanzen samt der zwei **verschiedenen** Routen (Telemetrie fuer die eine,
 `loaded`-Snapshot fuer die andere).
 
 *Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste.
+
+---
+
+### M11 · `images.nvim` + casedesk — OCR, und wofuer sie eigentlich da ist
+
+**Erledigt am 2026-08-31. `images.nvim` `9a8ff03` (+ `2f8da54` stylua),
+`nvim-config` `a118958e`.**
+
+**Der Eintrag hat den Nutzen an der falschen Stelle gesucht.** Er begruendete
+M11 mit *Uebersetzung*: fremdsprachige Fehlermeldung, Text heraus, uebersetzen.
+Das ist die kleinere Haelfte. Die groessere ist casedesk: `attachments.lua`
+legt Kundendateien als Pixel unter `assets/` ab, und ab da ist ein Screenshot
+fuer **jedes** textbasierte casedesk-Feature unsichtbar — `:Cases grep` findet
+die Fehlermeldung nicht, `:Case ki` kann sie nicht in den Prompt legen, und der
+einzige Weg, sie zu benutzen, ist Abtippen. Ein Tosca-Kunde schickt den
+Screenshot einer Exception; der Stacktrace darin ist genau das, was den Case
+identifiziert. Gebaut wurde deshalb beides, in einer Sitzung.
+
+**Und der Punkt war kleiner als sein Aufwand-M, aus dem Grund, den der Eintrag
+selbst vermutet hatte.** `language.translate`s oeffentliche Einstiege sind alle
+bufferbezogen (`run_region` will `bufnr` plus Koordinaten). Landet der Text in
+einem Buffer — und das will man ohnehin —, dann **ist** `:Translate` auf der
+Visual-Selection schon die Kreuzung, ueber Tasten, die es gibt. Es wurde keine
+Zeile Bruecke geschrieben; `images/ocr.lua` macht OCR und hoert dort auf, wo
+ein Buffer anfaengt. Dazu kam, dass `convert.lua` das Muster fuer ein externes
+Binary bereits vollstaendig vorgibt (argv, async `vim.system`, `vim.schedule`,
+Callback) — `M.export` war eine 15-Zeilen-Vorlage.
+
+*Was ausgeliefert wurde, Teil 1 — `images.nvim`*: `:Image ocr [path]
+[--lang=<code>]`. Ohne Pfad das Bild unter dem Cursor, wie `info`/`export`/
+`redact`. Das Ergebnis kommt in einen Scratch-Split mit `filetype=markdown`,
+benannt nach dem Quellbild und wiederverwendet — ein zweiter Lauf auf demselben
+Screenshot ersetzt das vorige Ergebnis, zwei verschiedene Bilder bekommen zwei
+Buffer. SVG geht durch die vorhandene, gecachte SVG→PNG-Umwandlung, weil
+tesseract nur Rasterformate liest.
+
+**Ein Split, kein Popup**, und das ist die Entwurfsentscheidung, die den Rest
+traegt: `:Image info` nimmt `kit.viewer`, `:Image zen` einen Float — beide sind
+zum *Anschauen*. Erkannter Text ist Rohmaterial. Man korrigiert ein verlesenes
+Zeichen, markiert einen Absatz und drueckt `:Translate`, yankt einen Stacktrace,
+schreibt ihn neben ein Ticket. Ein Fenster, das auf `q` zugeht, ist fuer alles
+davon falsch.
+
+*Was ausgeliefert wurde, Teil 2 — casedesk*: `:Case ocr [nr] [--force]
+[--lang=<code>]` schickt jedes Bild unter `assets/` durch `images.ocr` und
+schreibt das Ergebnis als `<bild>.ocr.md` **neben** das Bild. Diese eine
+Entscheidung ist die ganze Arbeit: `query.grep` laeuft ohnehin rekursiv ueber
+jede `*.md` unter einem Case-Verzeichnis (`collect_recursive.files` ohne
+Ausschluesse, gegen den Quelltext geprueft), also wird der erkannte Text
+greppbar, **ohne dass dort eine Zeile geaendert werden musste**. Der Sidecar ist
+ein gewoehnliches Dokument, kein Cache: H1, relativer Bildlink zurueck zur
+Quelle, Vorbehalt als Blockquote, dann der Text — von Hand korrigierbar.
+
+**Zwei Befunde, die der Eintrag nicht kennen konnte, weil sie erst beim
+Nachsehen auf der Maschine auftauchten.**
+
+*Erstens: „tesseract wird als vorhanden angenommen" war eine Haltung, keine
+Tatsache.* Der UB-Mannheim-Installer — derselbe, den `install.json` jetzt
+nennt — laesst sein „Add to PATH" ungehakt. Auf dieser Maschine lag
+tesseract 5.4.0 unter `C:/Program Files/Tesseract-OCR/`, und weder Machine-
+noch User-PATH kannten es. Der Fehler sieht dann exakt aus wie „nicht
+installiert", direkt nachdem man installiert hat. PATH wird weiterhin zuerst
+gefragt; die zwei bekannten Verzeichnisse werden nur geprueft, wenn PATH leer
+bleibt, und `ocr.bin` schlaegt beides. `:checkhealth images` druckt, **welcher**
+der drei Wege gegriffen hat — „gefunden" allein wuerde verschweigen, dass die
+Shell `tesseract` immer noch nicht ausfuehren kann.
+
+*Zweitens: die Sprachdaten sind ein eigener Download.* Installiert waren `eng`
+und `osd`, kein `deu`. Ein falsches `-l` ist damit ein Normalzustand, kein
+Tippfehler — die Meldung nennt deshalb, was **statt dessen** da ist, und
+`:checkhealth` prueft `ocr.lang` teilweise (`"deu+eng"` scheitert an jeder
+Haelfte einzeln).
+
+**`:Case ki` bekommt den Text mit — `:Case similar` bewusst nicht.** Der Prompt
+bekommt einen eigenen Abschnitt „Text aus den Screenshots (maschinell
+gelesen)", neben `{facts}`, aber ausdruecklich nicht als dieselbe Klasse von
+Beleg: Fakten sind aus Dateien geparst, die der Kunde geschickt hat, das hier
+ist aus Pixeln geraten, und ein Modell muss den Unterschied sehen koennen, sonst
+argumentiert es souveraen ueber eine verlesene Versionsnummer. Gelesen wird nur,
+was schon auf Platte liegt; `:Case ki` startet nie selbst eine OCR — ein
+Ein-Tasten-Befehl still in einen halbminuetigen tesseract-Lauf zu verwandeln
+waere ein anderer Befehl unter demselben Namen.
+
+`:Case similar` bleibt aussen vor, und das ist kein Vergessen: das Ranking ist
+TF-IDF ueber `Summary.md` + `Notes.md`, und TF-IDF gewichtet **seltene**
+Begriffe am hoechsten. Ein verlesenes Wort („Excepticn", „l0cked") ist
+konstruktionsbedingt der seltenste Begriff im ganzen Korpus — jeder
+Erkennungsfehler landete also mit maximalem Gewicht im Ranking. Das waere nicht
+bloss nutzlos, sondern schaedlich.
+
+*Die kleine Entscheidung, die sich noch auszahlen wird*: ob neu gelesen wird,
+entscheidet die **mtime**, nicht blosse Existenz. `:Image redact` und
+`:Case normalize` schreiben Attachments in place, und ein Sidecar vom Stand
+*vor* der Schwaerzung waere schlimmer als gar keiner — er bewahrte genau den
+Text auf, der unkenntlich gemacht wurde. Zweiter Lauf ueber denselben Case
+kostet damit nichts (`skipped`), `--force` liest trotzdem alles neu. Und
+gelaufen wird strikt ein Bild nach dem anderen: tesseract ist CPU-gebunden, ein
+Case hat auch mal zwei Dutzend Anhaenge, und die Warteschlange ist keine
+Sekunde langsamer als zwei Dutzend gleichzeitige Prozesse auf der Maschine, an
+der gerade gearbeitet wird.
+
+*Verifiziert*: `images.nvim`s Suite gruen, 23 Specs inklusive des neuen
+`ocr_spec.lua` — das die Erkennung wirklich prueft, indem es sich mit
+ImageMagick ein Bild mit bekanntem Text baut, statt „irgendetwas kam zurueck"
+zu behaupten. End-to-end auf der echten Maschine: `:Image ocr` auf einem
+erzeugten Screenshot liefert „Tosca error 4711 / Workspace locked", die
+Flag-Form und der Sprachfehler ebenso; `:Case ocr` schreibt den Sidecar,
+ueberspringt ihn beim zweiten Lauf und `render` baut den Prompt-Block. `stylua`
+und `luacheck` sauber in beiden Repos.
+
+*Bindings-Zettel*: nachgezogen. `docs/BINDINGS.md` (images.nvim),
+`docs/NOTES/casedesk/Usercmds.md` (neue Zeile plus die `:Cases grep`-Zeile, die
+seit heute nicht mehr stimmte), `docs/NOTES/casedesk/Workflow.md` §2,
+`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/Case.md` (Verbliste) und
+`lua/bindings/usrcmds/case/docs/FEATURES.md`.
 
 ---
 
