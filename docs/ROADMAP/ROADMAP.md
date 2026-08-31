@@ -16,7 +16,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     10:40       |    77% / 39%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     20:30       |    54% / 44%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     18:30       |    86% / 42%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     15:30       |    92% / 30%     |
 
@@ -35,6 +35,24 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 ---
 
 ## Misc
+- [ ] `M-c` im normalmode bullets in cascade.nvim: neben leer und X auch eine ~ state
+- [ ]
+- [x]
+- [~] NEU
+
+- [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
+
+- [ ] `:checkhealth` jedes plugins ausgeben und analysieren: Gehört noch checks hinein, sollte man noch weitere  Infos dazu scheriben, Formatierungen usw...
+  - [ ] Kann man hier bei so sachen wie not installed aber nicht problemtaich was anderes als Warning als icon + tag machen? das ist ja eher eine info statt warning
+      ```vim
+      - ✅ OK netrw (netrw (builtin)) — available
+      - ⚠️ WARNING oil (oil.nvim) — not installed
+      - ⚠️ WARNING mini_files (mini.files) — not installed
+      - ✅ OK Active adapter: neotree (closed)
+      - ✅ OK Trash backend: PowerShell Recycl
+      ```
+
+- [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
 
 - [ ] docmap-deskztop app icon desktop
 
@@ -45,13 +63,10 @@ Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlin
 
 - [ ] Wenn man in einer md file eine Referenz aus einen markdown link entfernt, dann soll es euinen keymap dafür eben, zb `DD` (statt `dd`), dass die Referenz file auch gleidh entfernt. Es soll aber einen lib.nvim ui.kit prompt geben, ob die file gefunden wurde und man sie wriklcijh löschen will.
 
-```markdown
-- [ ] Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
-```
-
+- [ ] Untere Tableist: Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten headlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
 
 - [ ] lspdoctor legacy names nicht mehr callbar machen/entfernen
-- [ ] :checkhealth filetree zeigt zusätzlich, wie viele stale IDs geheilt wurden — steht da nach einer Weile eine Zahl > 0, hat die Session den Bug getroffen und überlebt.
+
 - [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
      [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
   -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.

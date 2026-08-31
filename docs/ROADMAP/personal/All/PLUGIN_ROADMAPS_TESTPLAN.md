@@ -1,7 +1,7 @@
 # Plugin-Roadmaps — Testplan für das Gebaute
 
-Dritte Datei neben [`PLUGIN_ROADMAPS.md`](PLUGIN_ROADMAPS.md) (offene Arbeit)
-und [`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md) (was gebaut
+Dritte Datei neben [`PLUGIN_ROADMAPS.md`](./PLUGIN_ROADMAPS.md) (offene Arbeit)
+und [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) (was gebaut
 wurde und warum so). **Diese hier beantwortet die dritte Frage: wie prüfe ich
 von Hand nach, dass es tut, was dort steht.**
 
@@ -26,13 +26,41 @@ stillschweigend abgehakt.
 
   - [Vorbereitung](#vorbereitung)
   - [`lsp.nvim`](#lspnvim)
+    - [QW3 · Inlay-Hints-Toggle](#qw3-inlay-hints-toggle)
+    - [QW7 · „installed vs. attached" im Healthcheck](#qw7-installed-vs-attached-im-healthcheck)
+    - [QW8 · Multi-Root-/Monorepo-Workspace-Switcher](#qw8-multi-root-monorepo-workspace-switcher)
+    - [M2 · Code-Action-Indikator](#m2-code-action-indikator)
+    - [M3 · Auto-Restart mit Backoff bei Client-Crash](#m3-auto-restart-mit-backoff-bei-client-crash)
+    - [M4a + Call Hierarchy · Picker](#m4a-call-hierarchy-picker)
+    - [M6 + M7 · Profile-Presets und Per-Projekt-Override](#m6-m7-profile-presets-und-per-projekt-override)
+    - [M1 · `:LspDoctor probe`](#m1-lspdoctor-probe)
   - [`mdview.nvim`](#mdviewnvim)
-  - [`images.nvim` (+ casedesk)](#imagesnvim--casedesk)
-  - [`documentation.nvim` / `runtime-analysis.nvim`](#documentationnvim--runtime-analysisnvim)
+    - [SEL · Visuelle Auswahl im Browser spiegeln](#sel-visuelle-auswahl-im-browser-spiegeln)
+    - [L4 · `highlighter = "nvim"`](#l4-highlighter-nvim)
+    - [QW1 · `any_file`](#qw1-any_file)
+    - [QW10 · Lokal gebautes Relay unter Windows](#qw10-lokal-gebautes-relay-unter-windows)
+  - [`images.nvim` (+ casedesk)](#imagesnvim-casedesk)
+    - [M11 · OCR](#m11-ocr)
+    - [M13 · Bildoperationen als Dateioperationen](#m13-bildoperationen-als-dateioperationen)
+    - [M12 · Flamegraph als Bild](#m12-flamegraph-als-bild)
+  - [`documentation.nvim` / `runtime-analysis.nvim`](#documentationnvim-runtime-analysisnvim)
+    - [M17/M8 · `:DocMap impact` nach Runtime-Reichweite](#m17m8-docmap-impact-nach-runtime-reichweite)
+    - [M17/M9 · `:DocMap why` × Call-Trees](#m17m9-docmap-why-call-trees)
+    - [M17/M14 · `sibling-reference-missing`](#m17m14-sibling-reference-missing)
+    - [M17/M7c · `file-holds-many-modules`](#m17m7c-file-holds-many-modules)
+    - [M17/M10 · Laufzeit-Evidenz unterdrückt `unreferenced-module`](#m17m10-laufzeit-evidenz-unterdrckt-unreferenced-module)
+    - [M17/QW6 · Fenced Blocks auf der generierten Seite](#m17qw6-fenced-blocks-auf-der-generierten-seite)
+    - [M12b · Analysis → Startup](#m12b-analysis-startup)
   - [`color_my_ascii.nvim`](#color_my_asciinvim)
-  - [`gopath.nvim` / `pickers.nvim` / `lib.nvim`](#gopathnvim--pickersnvim--libnvim)
+    - [Öffentliche Highlight-API (aus L4)](#ffentliche-highlight-api-aus-l4)
+  - [`gopath.nvim` / `pickers.nvim` / `lib.nvim`](#gopathnvim-pickersnvim-libnvim)
+    - [M9 · Frecency für Alternate-Vorschläge](#m9-frecency-fr-alternate-vorschlge)
+    - [M16 · `deps.health`-Migration](#m16-depshealth-migration)
   - [nvim-config](#nvim-config)
-  - [Nicht von Hand prüfbar — und was stattdessen gilt](#nicht-von-hand-prfbar--und-was-stattdessen-gilt)
+    - [M5 · Sprung zur umschließenden Struktur](#m5-sprung-zur-umschlieenden-struktur)
+    - [A · Source-Achse von `:Bindings check`](#a-source-achse-von-bindings-check)
+  - [Nicht von Hand prüfbar — und was stattdessen gilt](#nicht-von-hand-prfbar-und-was-stattdessen-gilt)
+  - [Wenn etwas nicht stimmt](#wenn-etwas-nicht-stimmt)
 
 ---
 
@@ -58,6 +86,8 @@ Einmalig, bevor irgendetwas davon Sinn ergibt.
 Der größte Block. Ein Buffer mit laufendem Sprachserver ist die Voraussetzung
 für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 
+---
+
 ### QW3 · Inlay-Hints-Toggle
 
 - [ ] `:Lsp hints` schaltet Inlay-Hints im aktuellen Buffer um; `<leader>th`
@@ -68,6 +98,8 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
       „keine Meinung" und „hier ausdrücklich aus" sind verschiedene Zustände.
       Genau das kann eine Liste nicht, und deshalb ist es eine Map.
 
+---
+
 ### QW7 · „installed vs. attached" im Healthcheck
 
 - [ ] `:checkhealth lsp` zeigt vier Zahlen in einer Kette: **installed →
@@ -76,6 +108,8 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 - [ ] Bei einem schweren Server über vielen Buffern erscheint eine Warnung.
       Zum Provozieren: viele Dateien desselben Filetyps öffnen (`:args **/*.ts`,
       `:argdo edit`).
+
+---
 
 ### QW8 · Multi-Root-/Monorepo-Workspace-Switcher
 
@@ -89,6 +123,8 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
       der Weg, den der Punkt eigentlich gebaut hat (eine vierte
       `root_scope`-Strategie hätte hier nichts getan).
 
+---
+
 ### M2 · Code-Action-Indikator
 
 - [ ] Cursor auf eine Zeile mit verfügbarer Code-Action (eine Diagnostic ist der
@@ -99,6 +135,8 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
       liefern viele Server ständig etwas). Auf einer unauffälligen Zeile ohne
       Diagnostic muss er dunkel bleiben — leuchtet er dauernd, ist die Allowlist
       umgangen und der Indikator wertlos.
+
+---
 
 ### M3 · Auto-Restart mit Backoff bei Client-Crash
 
@@ -112,12 +150,16 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
       manuellen Weg. Beide zählen **denselben** Zähler — zwei Stellen, die
       unabhängig zählen und sich widersprechen, war die vermiedene Falle.
 
+---
+
 ### M4a + Call Hierarchy · Picker
 
 - [ ] `:TypeDefPick` und `<leader>wos` öffnen **dieselbe** Oberfläche (vorher
       zwei verschiedene Backends).
 - [ ] `lsc` zeigt, wer das Symbol unter dem Cursor aufruft; `lsC`, was es
       aufruft.
+
+---
 
 ### M6 + M7 · Profile-Presets und Per-Projekt-Override
 
@@ -128,6 +170,8 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 - [ ] **Die Ebenen sind der Test**: eine Warnung über einen schlechten Wert muss
       sagen, aus welcher Ebene er stammt. Ohne diese Beschriftung ist eine
       vierstufige Merge-Kette nicht debuggbar.
+
+---
 
 ### M1 · `:LspDoctor probe`
 
@@ -145,21 +189,37 @@ Ausführlicher (inklusive der älteren Features) in
 [`TO_CHECK_FEATURES/mdview.md`](../../../NOTES/PersonelPlugins/TO_CHECK_FEATURES/mdview.md),
 Abschnitte 3b und 3c.
 
+---
+
 ### SEL · Visuelle Auswahl im Browser spiegeln
 
-- [ ] `:MDView` auf einer Markdown-Datei, dann `:MDView selection` (Default ist
+- [x] `:MDView` auf einer Markdown-Datei, dann `:MDView selection` (Default ist
       **aus**).
-- [ ] `v` + Bewegung → die Hervorhebung folgt der wachsenden Auswahl, über
+- [x] `v` + Bewegung → die Hervorhebung folgt der wachsenden Auswahl, über
       Zeilenenden hinweg. `V` → ein Balken pro Zeile, jeder auf Textbreite.
       `CTRL-V` → ein Spaltenband. `<Esc>` → weg.
-- [ ] **Innerhalb eines Codeblocks markieren** — der Weg dorthin ist ein anderer
+- [x] **Innerhalb eines Codeblocks markieren** — der Weg dorthin ist ein anderer
       (Codeblöcke tragen keine Inline-Quellpositionen, die Zeilenstruktur des
       Blocks wird benutzt) und genau der Fall, den eine README-Führung trifft.
-- [ ] `:MDView selection` erneut → die gezeichnete Hervorhebung verschwindet,
+- [x] `:MDView selection` erneut → die gezeichnete Hervorhebung verschwindet,
       statt im Tab hängen zu bleiben.
-- [ ] *Bekannte Grenze, kein Fehler*: an Markup-Rändern kann die Hervorhebung
+- [x] *Bekannte Grenze, kein Fehler*: an Markup-Rändern kann die Hervorhebung
       ein, zwei Zeichen abweichen — `**fett**` ist in der Quelle vier Zeichen
       breiter als im Browser. In Codeblöcken und Fließtext ist sie exakt.
+
+Resultat: alles funktoiert wudnerbar. einzig: bei V-line also `V`, wird ja sofrt wenn man `V` eingibt die aktuellöel Zeile markiert. im mdview broswer muss der cursor einmal bewegt werden, dann zeigt es auch da dann das korrekte markierten bBereich an. Vielleicht läst sich das auch noch fixen.
+
+Testblock:
+```lua
+vim.g.start_time = vim.uv.hrtime()
+
+-- Enable vim.loader for faster module loading
+local loader_ok = pcall(function()
+  vim.loader.enable()
+end)
+```
+
+---
 
 ### L4 · `highlighter = "nvim"`
 
@@ -177,6 +237,8 @@ Abschnitte 3b und 3c.
 - [ ] Ohne `color_my_ascii.nvim`: alles fällt auf highlight.js zurück, nichts
       bricht.
 
+---
+
 ### QW1 · `any_file`
 
 - [ ] `experimental.any_file = true`, eine **Nicht**-Markdown-Datei öffnen,
@@ -184,6 +246,8 @@ Abschnitte 3b und 3c.
       gefärbter Codeblock statt durch den Markdown-Renderer.
 - [ ] Die Torwächter greifen weiter: ein Terminal-, Hilfe- oder Quickfix-Buffer,
       eine Binärdatei und mdviews eigener Log-Buffer werden **nicht** gepusht.
+
+---
 
 ### QW10 · Lokal gebautes Relay unter Windows
 
@@ -195,6 +259,8 @@ Abschnitte 3b und 3c.
 
 ## `images.nvim` (+ casedesk)
 
+---
+
 ### M11 · OCR
 
 - [ ] `:Image ocr` auf einem Bild mit Text → der Text landet in einem
@@ -205,6 +271,8 @@ Abschnitte 3b und 3c.
       `:Case ki`-Prompt ihn sieht. Vorher war ein Screenshot für **jedes**
       textbasierte casedesk-Feature unsichtbar. Test: einen Screenshot an einen
       Case hängen, `:Case ocr`, dann nach einem Wort aus dem Bild greppen.
+
+---
 
 ### M13 · Bildoperationen als Dateioperationen
 
@@ -220,6 +288,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 - [ ] Ohne Argument arbeiten alle auf dem Bild **unter dem Cursor** — das ist
       der Grund, warum sie unter `:Image` liegen und nicht unter `:File`.
 
+---
+
 ### M12 · Flamegraph als Bild
 
 - [ ] `:RATelemetry flamegraph` → der Startup-Require-Baum als SVG. Breite ist
@@ -232,11 +302,15 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
 ## `documentation.nvim` / `runtime-analysis.nvim`
 
+---
+
 ### M17/M8 · `:DocMap impact` nach Runtime-Reichweite
 
 - [ ] Ein paar Zeilen ändern, `:DocMap impact` → die betroffenen Funktionen,
       **nach tatsächlicher Aufrufhäufigkeit sortiert** statt alphabetisch. Ohne
       Telemetriedaten bleibt es eine Liste; mit ihnen wird es eine Rangfolge.
+
+---
 
 ### M17/M9 · `:DocMap why` × Call-Trees
 
@@ -246,6 +320,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 - [ ] Die Call-Kanten stecken in jeder erzeugten Karte; es braucht **keine**
       Telemetrie und kein zusätzliches Plugin dafür.
 
+---
+
 ### M17/M14 · `sibling-reference-missing`
 
 - [ ] Einen Verweis der Form `<repo>/<pfad>` in eine Doku schreiben, der ins
@@ -254,6 +330,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 - [ ] Gegenprobe: ein gültiger Geschwister-Verweis darf **nicht** gemeldet
       werden.
 
+---
+
 ### M17/M7c · `file-holds-many-modules`
 
 - [ ] `:DocMap check` gegen ein Repo mit Inline-Modulen (`docmap-desktop` ist
@@ -261,6 +339,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
       Modul-Identitäten wird gemeldet, statt still für alle zu antworten.
 - [ ] Auf dem eigenen Korpus muss der Check **still bleiben** — ein Check, der
       überall anschlägt, wird ignoriert.
+
+---
 
 ### M17/M10 · Laufzeit-Evidenz unterdrückt `unreferenced-module`
 
@@ -271,6 +351,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 - [ ] Gemessen wurde: 71 Befunde vorher, 68 nachher, **0 neu erzeugt** — die
       letzte Zahl ist die wichtige.
 
+---
+
 ### M17/QW6 · Fenced Blocks auf der generierten Seite
 
 - [ ] `:DocMap serve` (oder das erzeugte Artefakt) öffnen: ein Codeblock in
@@ -278,6 +360,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
       erhalten** — vorher wurde sie ein Zeichen vor dem Gebrauch weggeworfen.
 - [ ] Auch im `@description`-Rumpf eines Moduls und in `@example` prüfen; das
       waren die beiden Oberflächen, die vorher gar nicht an Fences trennten.
+
+---
 
 ### M12b · Analysis → Startup
 
@@ -291,6 +375,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 ---
 
 ## `color_my_ascii.nvim`
+
+---
 
 ### Öffentliche Highlight-API (aus L4)
 
@@ -307,6 +393,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
 ## `gopath.nvim` / `pickers.nvim` / `lib.nvim`
 
+---
+
 ### M9 · Frecency für Alternate-Vorschläge
 
 - [ ] Zwischen Alternate-Dateien hin- und herspringen. Nach einigen Sprüngen
@@ -315,6 +403,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 - [ ] Die Frecency-Daten liegen in `lib.nvim` und werden von `pickers.nvim` und
       `gopath.nvim` geteilt — der Test ist, dass beide **dieselbe** Rangfolge
       zeigen, nicht zwei eigene.
+
+---
 
 ### M16 · `deps.health`-Migration
 
@@ -326,6 +416,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 ---
 
 ## nvim-config
+
+---
 
 ### M5 · Sprung zur umschließenden Struktur
 
@@ -339,6 +431,8 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
       fehlende Query fällt sonst erst im Alltag auf.
 - [ ] Es ist eine **Konfiguration**, kein Feature-Modul: `[b`/`]b` und `[s`/`]s`
       aus derselben Familie müssen unberührt weiter funktionieren.
+
+---
 
 ### A · Source-Achse von `:Bindings check`
 
@@ -369,13 +463,16 @@ Vollständigkeitshalber, damit niemand danach sucht.
 
 ## Wenn etwas nicht stimmt
 
-1. In [`PLUGIN_ROADMAPS_FINISHED.md`](PLUGIN_ROADMAPS_FINISHED.md) den Eintrag
+1. In [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) den Eintrag
    zur ID lesen — dort steht, **was genau** gebaut wurde und was bewusst nicht.
    Ein gutes Drittel der Einträge korrigiert die ursprüngliche Beschreibung;
    die Erwartung kann also am falschen Text hängen.
 2. Prüfen, ob der Punkt eine Vorbedingung hat, die hier oben unter
    *Vorbereitung* steht (Rebuild, externes Werkzeug).
 3. Bleibt es ein echter Befund: als offener Punkt zurück in
-   [`PLUGIN_ROADMAPS.md`](PLUGIN_ROADMAPS.md), mit der ID des ursprünglichen
+   [`PLUGIN_ROADMAPS.md`](./PLUGIN_ROADMAPS.md), mit der ID des ursprünglichen
    Punktes im Text — sonst geht der Zusammenhang beim nächsten Durchgang
    verloren.
+
+---
+
