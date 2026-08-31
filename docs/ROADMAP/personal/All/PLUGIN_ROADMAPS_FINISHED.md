@@ -57,6 +57,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M17/M10 · `documentation.nvim` + `runtime-analysis.nvim` — Laufzeit-Evidenz als Check-Input](#m17m10-documentationnvim--runtime-analysisnvim--laufzeit-evidenz-als-check-input)
   - [M11 · `images.nvim` + casedesk — OCR, und wofuer sie eigentlich da ist](#m11-imagesnvim--casedesk--ocr-und-wofuer-sie-eigentlich-da-ist)
   - [M13 · `images.nvim` — Bildoperationen als Dateioperationen](#m13-imagesnvim--bildoperationen-als-dateioperationen)
+  - [M17/QW6 · `documentation.nvim` — Fenced Blocks auf der generierten Seite](#m17qw6-documentationnvim--fenced-blocks-auf-der-generierten-seite)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2225,6 +2226,89 @@ statt nur zu existieren. `stylua` und `luacheck` sauber ueber alle 59 Dateien.
 *Bindings-Zettel*: `docs/BINDINGS.md` um drei Zeilen erweitert, Vimdoc um
 `images-fileops` plus drei API-Eintraege, und `doc/tags` neu erzeugt — dabei
 fiel auf, dass die OCR-Tags aus M11 dort noch fehlten.
+
+---
+
+### M17/QW6 · `documentation.nvim` — Fenced Blocks auf der generierten Seite
+
+**Erledigt am 2026-08-31. `documentation.nvim` `ccab142`, `docmap-desktop`
+`69125b3`.**
+
+**Zum ersten Mal lag eine Beschreibung nach der *anderen* Seite daneben.** Acht
+von zwoelf Eintraegen dieses Verbunds waren inzwischen falsch, und alle bisher
+in dieselbe Richtung: schon gebaut, groesser als gedacht, kleiner als gedacht.
+Dieser hier war zu *pessimistisch*. Die Features-Tab hat Fences schon immer
+gesplittet — `renderFeatureBody` matcht `/^```/`, seit es sie gibt. Sie hat
+dabei nur ihr eigenes `<pre><code>` geschrieben und die Sprache weggeworfen,
+ein Zeichen bevor sie gebraucht wurde: das Muster sagte „hier faengt ein Fence
+an" und nichts fing das `lua` danach ein. Zu bauen war also nicht „ein
+Fence-Renderer", sondern „einer statt zweier, und mit der Sprache".
+
+*Was ausgeliefert wurde*: ein `fenceHTML(src, lang)`, die Features-Tab
+darauf umgeleitet, und die beiden Oberflaechen verkabelt, die ueberhaupt nicht
+splitteten — der `@description`-Rumpf eines Moduls (ueber ein neues
+`richText`, das an Fences trennt und alles andere an `prose` weiterreicht) und
+`@example` (ueber `exampleHTML`).
+
+**Die Entscheidung, die alles traegt: die Hervorhebung benutzt
+`snipBodyHTML` wieder** — den Tokenizer, den die Quelltext-Ausschnitte auf
+derselben Seite schon verwenden. Er ist glossargesteuert, kennt Strings und
+Kommentare und ist nach Dateiendung geschluesselt; die Info-Zeichenkette eines
+Fences *ist* diese Endung fuer die meisten Sprachen, also reicht ein
+synthetischer Pfad `fence.lua`, um ihn ganz wiederzuverwenden. Die Folge ist
+der Punkt: ein `lua`-Fence und ein Lua-Ausschnitt sehen identisch aus, teilen
+die Keyword-Karte, und jede kuenftige Sprache faellt in dem Moment an, in dem
+ein Backend sie deklariert.
+
+*Und deshalb ausdruecklich **nicht** im Erzeuger* — die Variante, die vor dem
+Bauen zur Wahl stand. Fertiges Markup in Lua vorzuberechnen haette (1) dieselbe
+Lua-Zeile auf einer Seite zweimal verschieden ausgesehen lassen, (2)
+Praesentation in eine Datenstruktur gelegt, die auch `docmap-desktop` und die
+MCP-Schicht lesen, und (3) dem eigenen Kopfkommentar von `html.lua`
+widersprochen: *„the IR is embedded as JSON rather than being expanded into
+markup at generation time"*. Nachgesehen hat den Ausschlag gegeben, dass die
+Detailansicht ohnehin **im Browser** aus dem JSON gerendert wird — der
+„Erzeuger" ist bei dieser Seite gar nicht die Stelle, an der Markup entsteht.
+
+**Ein Fehler, der beim Verkabeln auffiel, und er war einen Satz davon entfernt,
+verhindert zu sein.** Die Keyword-Karte suchte ihr Glossar ueber
+`closest(".fn-snip")` — ein dekoriertes Schluesselwort irgendwo sonst, also ab
+sofort in einem Fence, haette keinen Container gefunden, kein Glossar gelesen
+und beim Klick nichts gezeigt. Der Kommentar von `snippetHTML` beschreibt die
+Absicht laengst: *„the path rides on the container … and the lookup walks up to
+it, which is what `.closest` is for."* Als Klassenname geschrieben hiess das
+still „und nur Ausschnitte". Der Selektor sagt jetzt `[data-path]`.
+
+*Bewusst unveraendert*: ein `@example` ohne Fence bleibt escapt und sonst
+nichts — ein Backtick in einem Shell-Beispiel ist ein Backtick, und `prose()`
+darueber wuerde Markup erfinden. Ein nicht geschlossener Fence kommt genau so
+zurueck, wie er dasteht, Eroeffnungszeile eingeschlossen: dieselbe Haltung, die
+`prose()` bei einem unpaarigen Backtick einnimmt, aus demselben Grund — ein
+halber Block ist ein Tippfehler, und ihn zu schlucken versteckt genau das, was
+der Autor sehen muss.
+
+**Gemessen, und die Zahl steht nicht in diesem Repo.** 5 Modul-Rumpfe hier
+tragen einen Fence, `@example`-Bloecke gibt es **null** — das ist QW8s Zaehlung
+vom August, unveraendert, und fuer sich genommen liesse das den Punkt
+kosmetisch aussehen. Die Auszahlung liegt in den Features-Korpora:
+**`lib.nvim` allein hat 43 ```` ```lua ````-Bloecke** unter `docs/FEATURES/`,
+von denen bis heute jeder undekoriert gerendert wurde, dazu vier in
+`filetree.nvim`. Das sind die Seiten, die jemand tatsaechlich liest, um eine
+API zu lernen.
+
+*Verifiziert*: die Suite gruen, und der neue `fence_render_spec.lua` hebt den
+reinen Renderer aus der eingebetteten `JS`-Zeichenkette heraus und laesst ihn
+in **node** gegen echte Eingaben laufen — 24 Zusicherungen ueber Hervorhebung,
+Alias-Namen, Degradation bei unbekannter Sprache, Escaping, offene Fences,
+`@example` und das Ueberspringen von Strings und Kommentaren. Ohne node
+ueberspringt er, statt zu scheitern. Sein Nachbar `prose_render_spec.lua`
+beginnt mit dem Satz, dass keine Lua-Spec ein `<code>`-Element sehen kann, und
+begnuegt sich mit der Verkabelung; das war die ehrliche Antwort auf das, was
+er erreichen konnte, und diese hier muss sich nicht mehr begnuegen. Die
+Verkabelungshaelfte bleibt trotzdem — als Zusicherung, dass nie wieder jemand
+sein eigenes `<pre><code>` schreibt.
+
+*Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste, keine Autocmd.
 
 ---
 

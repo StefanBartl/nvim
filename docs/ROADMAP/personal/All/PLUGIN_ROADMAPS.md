@@ -36,7 +36,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
     - [M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)](#m12-imagesnvim-flamegraphs-als-bild-runtime-analysisnvim)
     - [M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren](#m14-filetreenvim-cwd_mode-badge-optimieren)
-    - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11, QW6](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m11-qw6)
+    - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m11)
   - [1.3 Groß (L)](#13-gro-l)
     - [L1 · `images.nvim` — Kitty-APC-Backend](#l1-imagesnvim-kitty-apc-backend)
     - [L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen](#l3-lspnvim-das-signature-help-modul-schrumpfen)
@@ -100,52 +100,57 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-31. Zuletzt erledigt: **M13** — `:Image scale` / `:Image
-optimise` / `:Image convert`, unter `:Image` statt `:File`. Davor **M11**
-(OCR, in beiden Haelften: `:Image ocr` und `:Case ocr`), **M17/M10**,
-**M9** (Frecency ueber drei Repos), **M17/M7c** (und im selben Zug **M17/M7b
-zurueckgestellt**), **M17/M14**, **M17/M9**, **M17/M8**,
-**M17/M13**, **Call Hierarchy**, **M5**, **M4a**, **M3**, **M2**, **M16**,
-**QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**, **A** und
-**B**; zurueckgestellt sind ausserdem **M4b** und **M17/M12**. Notizen zu allen
-in [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
+Stand 2026-08-31. Zuletzt erledigt: **M17/QW6** — Fenced Blocks auf der
+generierten Seite, und der Eintrag lag zum ersten Mal nach der *anderen* Seite
+daneben: die Features-Tab splittete Fences laengst und warf nur die Sprache
+weg. Davor **M13** (`:Image scale`/`optimise`/`convert`), **M11** (OCR, in
+beiden Haelften), **M17/M10**, **M9** (Frecency ueber drei Repos), **M17/M7c**
+(und im selben Zug **M17/M7b zurueckgestellt**), **M17/M14**, **M17/M9**,
+**M17/M8**, **M17/M13**, **Call Hierarchy**, **M5**, **M4a**, **M3**, **M2**,
+**M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**,
+**A** und **B**; zurueckgestellt sind ausserdem **M4b** und **M17/M12**.
+Notizen zu allen in
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**`images.nvim` hat damit keinen offenen Punkt mehr ausser dem
-Sixel-Paket.** M11 und M13 waren die beiden letzten Kreuzungen aus
-`CROSS-PLUGIN.md`, die etwas hinzufuegten; was dort bleibt, ist M10
-(Sixel + XTVERSION), M12 (Flamegraphs, die es noch nicht gibt) und L1
-(Kitty-APC, dessen Nutzlosigkeit aus Neovim heraus in diesem Repo seit jeher
-dokumentiert ist).
+**Der documentation-Verbund hat damit ausser den L-Punkten nur noch M17/M11**,
+und der steht seit dem 2026-08-31 mit dem Befund da, dass **kein** Repo hier
+Routen deklariert, die der Endpoint-Scanner sieht. `images.nvim` hat nur noch
+das Sixel-Paket. Was uebrig bleibt, ist duenn — und der naechste Punkt ist der
+erste seit Langem, dessen Beschreibung eine **Voraussetzung** unterstellt, die
+es nicht gibt.
 
-**Empfohlen: M17/QW6 — Fenced Blocks auf der generierten Seite**
-(`documentation.nvim` + `docmap-desktop`, Aufwand M, siehe
-[1.2](#12-mittel-m)).
+**Empfohlen: M12 — Flamegraphs als Bild, aber neu zugeschnitten**
+(`runtime-analysis.nvim` + `images.nvim` + `documentation.nvim`, Aufwand M,
+siehe [1.2](#12-mittel-m)).
 
-*Warum jetzt*: es ist der letzte Punkt im documentation-Verbund, der nicht
-entweder ein L ist oder in diesem Korpus nichts zu tun hat. `M17/M11`
-(Endpoint-Inventar) steht seit dem 2026-08-31 mit dem Befund da, dass **kein**
-Repo hier Routen deklariert, die der Scanner sieht.
+*Nachgesehen, und der Eintrag setzt etwas voraus, das fehlt*: in
+`runtime-analysis.nvim` gibt es **keinen Flamegraph**. Kein Modul, kein Befehl,
+nicht einmal das Wort — `grep -i flame` ueber den ganzen Baum ist leer. „Als
+Bild rendern statt als Textbaum" beschreibt also eine Umstellung, die kein
+Original hat.
 
-*Nachgesehen, und der Eintrag stimmt ausnahmsweise* — was nach sieben von elf
-danebenliegenden Beschreibungen erwaehnenswert ist. `render/html.lua` rendert
-`@example` heute als `'<div class="fn-ex">' + esc(fn.example) + '</div>'`:
-escapter Text, keine Fence-Erkennung, keine Hervorhebung. Stufe 1 (`inline`
-code ueber eine `prose()`-Funktion, dreizehn Oberflaechen) ist gebaut und steht
-in `PLAN-DONE.md`; Stufe 2 wurde damals bewusst weggelassen, weil ein Summary
-einzeilig ist und der mehrzeilige Fall `@example` heisst — eine andere
-Oberflaeche mit anderer Form.
+*Aber das Material dafuer liegt da, und zwar genau richtig geschnitten*:
+`telemetry/startup.lua` umhuellt das globale `require` und misst jeden
+Cache-Miss, mit einem Stack. Jeder Eintrag traegt `depth`, `total_ms` und
+`self_ms` — die Selbstzeit ist die Gesamtzeit minus alles, was das Modul
+seinerseits nachgeladen hat. Das *ist* die Datenstruktur eines Flamegraphs:
+verschachtelte Rechtecke, Breite = Zeit, Tiefe = Verschachtelung. Gerendert
+wird sie heute als `M.lines` (Text) und `M.markdown`.
 
-*Und der Eintrag nennt selbst, was hier NICHT hilft*: `color_my_ascii.nvim`s
-Fence-API ist pufferbasiert und braucht ein Neovim. Die erzeugte Seite ist ein
-alleinstehendes Artefakt im Browser, und die Standalone-Engine laeuft ganz ohne
-Neovim. Fuer `:DocBrowse` half es sehr wohl — das war QW8, und der ist
-erledigt.
+*Der Zuschnitt, der daraus einen M macht statt eines L*: **nicht** „einen
+Profiler bauen", sondern „den Require-Baum, der ohnehin gemessen wird, als
+SVG zeichnen". Ein drittes `M.svg` neben `lines` und `markdown`, aus denselben
+Eintraegen. Danach ist die Kreuzung trivial: eine SVG-Datei zeigt `:Image`
+ueber die vorhandene, gecachte SVG→PNG-Umwandlung, und
+`documentation.nvim`s Runtime-Abschnitt — der heute nur Text zeigt — bekommt
+dasselbe Bild.
 
-*Was vorher zu entscheiden ist*: ob die Hervorhebung im Erzeuger passiert
-(Lua/Rust schreibt fertiges Markup) oder auf der Seite (ein eingebetteter
-Highlighter im ausgelieferten HTML). Das erste haelt das Artefakt
-abhaengigkeitsfrei, kostet aber einen Tokenizer pro Sprache; das zweite ist
-eine Datei mehr im Artefakt. Die Entscheidung gehoert vor den Code.
+*Was vorher zu entscheiden ist*: ob der Graph nach Startup-Zeit **oder** nach
+`:RA usage`-Daten gezeichnet wird. Beide haben Stacks, aber nur der
+Startup-Baum hat sie vollstaendig; `usage` zaehlt Aufrufe pro Funktion ohne
+Elternkette. Der Startup-Baum ist damit der einzige, aus dem heute ein
+korrekter Flamegraph faellt — und zugleich der, dessen Frage („warum startet
+das so langsam") man tatsaechlich stellt.
 
 ---
 
@@ -194,15 +199,16 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 17 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 16 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
   mehr**, `gopath.nvim` ebenfalls keinen. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
   **M6 + M7** (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und
   **M17/M7**, **M17/M13**, **M17/M8**, **M17/M9**, **M17/M14**, **M17/M7c**,
   **M17/M10**, **M9** (Frecency ueber drei Repos), **M11** (OCR —
-  `:Image ocr` plus `:Case ocr`, `images.nvim` und casedesk) und **M13**
-  (`:Image scale`/`optimise`/`convert`)
+  `:Image ocr` plus `:Case ocr`, `images.nvim` und casedesk), **M13**
+  (`:Image scale`/`optimise`/`convert`) und **M17/QW6** (Fenced Blocks auf
+  der generierten Seite)
   sind erledigt und stehen unter 1.0, ebenso **M5** —
   der ist als Treesitter-Konfiguration im Config-Repo gelandet statt als
   Plugin-Feature. **M4b**, **M17/M12** und **M17/M7b** sind zurueckgestellt und
@@ -248,7 +254,8 @@ geerbt), **M9** (Frecency ueber `lib.nvim` + `pickers.nvim` + `gopath.nvim`),
 (OCR — `:Image ocr` in `images.nvim` und `:Case ocr` in casedesk, wo der
 Screenshot-Text seither in `:Cases grep` und im `:Case ki`-Prompt landet),
 **M13** (`:Image scale`/`optimise`/`convert` — unter `:Image` entschieden,
-nicht unter `:File`)
+nicht unter `:File`), **M17/QW6** (Fenced Blocks auf der generierten Seite,
+hervorgehoben durch den Tokenizer, den die Quelltext-Ausschnitte schon nutzen)
 sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B**
 (die verbliebenen Audit-Zeilen). **Zurueckgestellt**,
 mit Begruendung im selben Dokument: **M4b**, **M17/M12** und **M17/M7b**.
@@ -306,7 +313,7 @@ wechselt — bis dahin billig und korrekt zu machen lohnt.
 
 ---
 
-### M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11, QW6
+### M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11
 
 **Aufwand je M · Nutzen mittel bis hoch**
 
@@ -326,7 +333,7 @@ Offen sind dort:
 | ~~**M12**~~ | ~~Runtime-Tab im ausgelieferten Artefakt~~ — **zurueckgestellt 2026-08-30**, die Substanz war gebaut | — |
 | ~~**M13**~~ | ~~Ein `ECOSYSTEM.md`, vier Repos lesen es~~ — **erledigt 2026-08-30** | — |
 | ~~**M14**~~ | ~~Cross-Repo-Doku-Verweise, per CI geprueft~~ — **erledigt 2026-08-31**, und groesser als beschrieben: die Konfigurationsform fehlte noch | — |
-| **QW6** | Fenced Blocks auf der generierten Seite (war mal ein Quick Win, ist heute M) | M |
+| ~~**QW6**~~ | ~~Fenced Blocks auf der generierten Seite~~ — **erledigt 2026-08-31**, und der Eintrag war zu pessimistisch: die Features-Tab splittete Fences laengst | — |
 
 **M7 ist am 2026-08-30 gebaut** — `owner`/`owner_kind` auf
 `Documentation.FunctionInfo`, Schema 6, vierzehn der zwanzig Backend-Dateien
@@ -364,17 +371,17 @@ war gar kein Runtime-Punkt: die Call-Kanten liegen seit jeher in jeder
 erzeugten Karte, gefehlt hat nur die Traversierung. **M14 ist am 2026-08-31 erledigt** und war
 groesser als beschrieben: `external_repos` ist nach Modul-Praefix
 geschluesselt, eine Doku-Zitierung nach Repo-Verzeichnisname, und die beiden
-fallen ausgerechnet bei `documentation.nvim` auseinander. **Offen sind in
-diesem Verbund damit noch M11 und QW6** — beide fehlende Faehigkeiten, keine
-falschen Auskuenfte.
+fallen ausgerechnet bei `documentation.nvim` auseinander. **Offen ist in
+diesem Verbund damit nur noch M11** — eine fehlende Faehigkeit, keine
+falsche Auskunft.
 
 **M10 ist am 2026-08-31 erledigt**, und die Haelfte war schon gebaut —
 `dead-function` las Telemetrie bereits als Unterdrueckung. Gefehlt hat die
 zweite Stelle: `unreferenced-module`, das seinen Vorbehalt selbst im Quelltext
 stehen hatte („a module may legitimately be reached only through the
 aggregator's string map") und damit `lib.nvim` beschreibt. Gemessen dort: 71
-Befunde vorher, 68 nachher, 0 neu erzeugt. **Offen sind in diesem Verbund
-damit noch M11 und QW6.**
+Befunde vorher, 68 nachher, 0 neu erzeugt. **Offen ist in diesem Verbund
+damit nur noch M11.**
 
 **M13 ist erledigt** und hat einen neuen Punkt hinterlassen: **M14**, die
 Hälfte, die kein Zeiger war — Cross-Repo-Doku-Verweise, per CI geprüft.
@@ -752,9 +759,9 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M17/QW6** (Fenced Blocks auf der generierten Seite) — der letzte
-   Punkt im documentation-Verbund, der weder ein L ist noch in diesem
-   Korpus nichts zu tun hat. Siehe „Naechster Schritt".
+1. **M12** (Flamegraphs als Bild) — neu zugeschnitten, weil es den
+   Flamegraph, den der Eintrag als vorhanden unterstellt, gar nicht gibt;
+   die Daten dafuer aber schon. Siehe „Naechster Schritt".
 2. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket — mit dem
    dort genannten Vorbehalt), **M14** (`filetree.nvim`). Die Klasse der
    kleinen Punkte ist leer.
@@ -767,8 +774,8 @@ nichts zu kreuzen.
 QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6, M7 und die
 Call-Hierarchy-Resthälfte von M4 (`lsp.nvim`), M5 (nvim-config), M16
 (`lib.nvim` + `pdfport.nvim`), M9 (Frecency ueber drei Repos) sowie M17/M7,
-M17/M13, M17/M8, M17/M9, M17/M14, M17/M7c, M17/M10, M11 (OCR, in beiden
-Haelften) und M13 (die drei Bildoperationen) sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+M17/M13, M17/M8, M17/M9, M17/M14, M17/M7c, M17/M10, M17/QW6, M11 (OCR, in
+beiden Haelften) und M13 (die drei Bildoperationen) sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
 S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
