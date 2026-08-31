@@ -166,7 +166,11 @@ Regeln, die sich in Cluster C bewährt haben und weiter gelten:
 
 - **Messen statt schätzen.** Pro Repo ein Scan vor und nach der Änderung, und
   der Vergleich zeigt *alle* Regeln, nicht nur die bearbeitete. Bei C hat genau
-  das sechs Repos davor bewahrt, Warnungen gegen neue einzutauschen.
+  das sechs Repos davor bewahrt, Warnungen gegen neue einzutauschen. Das
+  Werkzeug dafür liegt seit 2026-08-31 fest im Repo:
+  [`scripts/luals-scan/`](../../../../scripts/luals-scan/README.md) --
+  `scan.sh before <repo>`, ändern, `scan.sh after <repo>`,
+  `compare.py before after`.
 - **Kein Fix, der eine Warnung nur verschiebt.** Wenn eine Änderung anderswo
   neue Befunde erzeugt, ist sie unfertig -- entweder das Muster wechseln oder
   die Folgestelle mitreparieren.
