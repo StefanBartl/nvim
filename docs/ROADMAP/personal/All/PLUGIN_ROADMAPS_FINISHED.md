@@ -59,6 +59,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M13 · `images.nvim` — Bildoperationen als Dateioperationen](#m13-imagesnvim--bildoperationen-als-dateioperationen)
   - [M17/QW6 · `documentation.nvim` — Fenced Blocks auf der generierten Seite](#m17qw6-documentationnvim--fenced-blocks-auf-der-generierten-seite)
   - [M12 · `runtime-analysis.nvim` + `images.nvim` — Flamegraphs als Bild](#m12-runtime-analysisnvim--imagesnvim--flamegraphs-als-bild)
+  - [M12b · `documentation.nvim` — die Startup-Grafik auf der generierten Seite](#m12b-documentationnvim--die-startup-grafik-auf-der-generierten-seite)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2395,6 +2396,85 @@ Funktion** mit der IR (`core/api.lua`, `telemetry_join`). Startup-Daten
 kommen dort ueberhaupt nicht vor — es gibt keinen Abschnitt, in den das Bild
 gehoerte, sondern es braeuchte einen eigenen Endpunkt und ein eigenes
 Analysis-Werkzeug. Der Eintrag las sich, als gaebe es die Oberflaeche schon.
+
+---
+
+### M12b · `documentation.nvim` — die Startup-Grafik auf der generierten Seite
+
+**Erledigt am 2026-08-31. `documentation.nvim` `d810f15`.**
+
+Die Haelfte von **M12**, die als eigener Punkt stehen geblieben war — zu Recht:
+der urspruengliche Eintrag las sich, als gaebe es in `documentation.nvim` schon
+einen Runtime-Abschnitt, in den das Bild nur noch hineingehoert. Es gab keinen.
+Das Telemetry-Panel dort verbindet Aufrufzaehler pro Funktion mit der IR;
+Startup-Daten kamen im ganzen Repo nicht vor.
+
+*Ausgeliefert*: **Analysis → Startup**, ein neues Werkzeug im selben Reiter wie
+Telemetry und Loaded, mit der Flamegraph-SVG **eingebettet** statt nachgeladen.
+
+**Und genau darin liegt das Argument.** Telemetry und Loaded brauchen
+`:DocMap serve`, weil ihre Antworten sich weiter aendern — Zaehler wachsen, ein
+neuerer Snapshot loest einen aelteren ab —, eine eingebackene Zahl waere also
+falsch, bevor sie gelesen wird. Startup-Attribution ist das Gegenteil: sie
+entsteht einmal pro Sitzung, ist vorbei, bevor die UI steht, und akkumuliert
+nicht. Einbetten ist hier kein Kompromiss, sondern die einzige Form, in der die
+Grafik den erreicht, der die Seite aus `gh-pages` oeffnet — und das ist der,
+der fragt, warum das Ding so langsam startet.
+
+*Die Datei, nie das laufende Modul*: `telemetry.startup` haelt seine Daten im
+Prozesszustand. Von dort zu lesen haette eingebettet, was die
+`:DocMap`-ausfuehrende Sitzung zufaellig aufgezeichnet hat — meist nichts, weil
+das selten die messende Sitzung ist — und haette das Artefakt zwischen zwei
+Laeufen ueber identischem Quelltext verschieden gemacht. Eine Datei, die jemand
+absichtlich geschrieben hat, ist Evidenz im selben Sinn wie ein
+`loaded`-Snapshot; `core/loaded_diff.lua` hatte dieselbe Wahl schon getroffen.
+
+*Geprueft, nicht vertraut*: der Pfad ist konfigurierbar, „das haben wir selbst
+geschrieben" stimmt also nicht mehr, sobald er auf ein heruntergeladenes
+CI-Artefakt zeigt — und der Inhalt landet unveraendert im ausgelieferten
+Dokument. `is_safe` **verweigert** eine Datei mit `<script>`, einem
+`on…=`-Attribut, einem `javascript:`-Ziel oder einem `foreignObject`, statt zu
+saeubern: ein Sanitizer braucht eine Liste von allem, was in einem SVG
+ausfuehrbar ist, und diese Liste veraltet lautlos.
+
+**Der eine Punkt, an dem die naive Umsetzung alles kaputtgemacht haette:
+`--check`.** Das Gate vergleicht `index.html` **byteweise** und laeuft in der
+CI fremder Repos. Ein maschinenlokaler Graph, in diesem Vergleich belassen,
+haette jedes Repo dauerhaft als „stale" gemeldet — exakt der Fehler, den
+`action.yml` fuer den parserlosen Standalone-Build bereits beschreibt, nur aus
+der anderen Richtung. Der Graph wird deshalb auf **beiden** Seiten
+herausgerechnet (`startup_graph.strip`). Das ist keine Ausnahme von dem, was
+`--check` bedeutet, sondern genau das, was es bedeutet: das Gate fragt, ob die
+Karte den aktuellen Quelltext beschreibt, und eine Messung beschreibt eine
+Sitzung — sie kann veralten, ohne dass sich eine Zeile aendert, und ueber ein
+Refactoring hinweg richtig bleiben, das jede Zeile anfasst.
+
+*Eine Entwurfsentscheidung, die sich beim Schreiben verschoben hat*: der erste
+Zuschnitt gab die SVG als String an `renderAnalysis` zurueck, wie jedes andere
+Panel — und damit waere der Inhalt ein zweites Mal geparst worden, ueber
+`innerHTML`. Jetzt liegt er in einem `<template>` und wird per `importNode`
+geklont: genau einmal geparst, beim Laden, vom HTML-Parser, aus Bytes, die Lua
+nach der Pruefung geschrieben hat. Nebeneffekt, den man behalten will: ein
+`<script>`, das doch so weit kaeme, wuerde auf diesem Weg nicht ausgefuehrt.
+
+*Abwesenheit ist der Normalfall und ist still*: kein Plugin, keine Datei oder
+eine verweigerte Datei — dann wird weder der Knopf noch das Template
+ausgegeben. Ein Werkzeug, das immer da und meistens leer ist, bringt dem Leser
+bei, es zu ueberspringen; dieselbe Begruendung, die `docTrigger` fuer sein
+eigenes Symbol schon gibt.
+
+*Verifiziert im Browser*, an einer echten Aufzeichnung: das Panel zeigt den
+Graphen samt Legende und Messdatum, der Deep-Link
+`#tab=analysis&atool=startup` stellt ihn wieder her, und `strip(mit) ==
+strip(ohne)` — die Eigenschaft, auf der `--check` steht. Suite gruen,
+`luacheck` sauber ueber 230 Dateien. **Der neue Spec war nicht der einzige
+Waechter**: `analysis_tools_spec.lua` hat den URL-Validator gefunden, den ich
+vergessen hatte — genau der Vier-Stellen-Fehler, fuer den dieser Spec
+existiert, und der laut seinem eigenen Kopfkommentar „die schlimmste Form
+eines Fehlers" hat, weil nichts leer ist und nichts kracht.
+
+*Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste, keine Autocmd —
+nur eine Option (`opts.startup_flamegraph`) und ein Panel.
 
 ---
 

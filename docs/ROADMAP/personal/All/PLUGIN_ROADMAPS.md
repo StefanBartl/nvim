@@ -35,7 +35,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
     - [1.2 Mittel (M)](#12-mittel-m)
       - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
-      - [M12b · `documentation.nvim` — die Startup-Grafik auf der generierten Seite](#m12b-documentationnvim-die-startup-grafik-auf-der-generierten-seite)
       - [M14 · `filetree.nvim` — `cwd_mode`-Badge optimieren](#m14-filetreenvim-cwd_mode-badge-optimieren)
       - [M17 · `documentation.nvim` / `runtime-analysis.nvim` / `docmap-desktop` — M11](#m17-documentationnvim-runtime-analysisnvim-docmap-desktop-m11)
     - [1.3 Groß (L)](#13-gro-l)
@@ -103,56 +102,58 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-31. Zuletzt erledigt: **M12** — `:RATelemetry flamegraph`, der
-Startup-Require-Baum als Bild; der Eintrag hatte einen Flamegraph
-vorausgesetzt, den es nicht gab, und die Daten dafuer lagen trotzdem fertig da.
-Davor **M17/QW6**, **M13** (`:Image scale`/`optimise`/`convert`), **M11** (OCR,
-in beiden Haelften), **M17/M10**, **M9** (Frecency ueber drei Repos),
-**M17/M7c** (und im selben Zug **M17/M7b zurueckgestellt**), **M17/M14**,
-**M17/M9**, **M17/M8**, **M17/M13**, **Call Hierarchy**, **M5**, **M4a**,
-**M3**, **M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**,
-**QW10**, **QW1**, **A** und **B**; zurueckgestellt sind ausserdem **M4b** und
-**M17/M12**. Notizen zu allen in
+Stand 2026-08-31. Zuletzt erledigt: **M12b** — Analysis → Startup, der
+Flamegraph in die generierte Seite eingebettet, samt der `--check`-Ausnahme,
+ohne die jedes fremde Repo sich dauerhaft als „stale" gemeldet haette. Davor
+**M12**, **M17/QW6**, **M13**, **M11** (OCR, in beiden Haelften), **M17/M10**,
+**M9**, **M17/M7c** (und im selben Zug **M17/M7b zurueckgestellt**),
+**M17/M14**, **M17/M9**, **M17/M8**, **M17/M13**, **Call Hierarchy**, **M5**,
+**M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**,
+**QW8**, **QW10**, **QW1**, **A** und **B**; zurueckgestellt sind ausserdem
+**M4b** und **M17/M12**. Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Vier der letzten vier Punkte waren anders zugeschnitten als beschrieben**, in
-allen vier Richtungen: M11 hatte den Nutzen an der falschen Stelle, M13 eine
-offene Namensfrage, M17/QW6 war weiter als gedacht, M12 setzte eine
-Voraussetzung voraus, die fehlte. Das ist kein Zufall mehr — es ist der
-Normalfall fuer eine Liste, die aus einer Erhebung stammt und nicht aus dem
-Quelltext. Erst lesen, dann zuschneiden, dann bauen.
+**Die M-Klasse ist damit praktisch leer, und das ist diesmal keine Floskel.**
+Was unter 1.2 noch steht, ist nach Quelltextpruefung Folgendes: **M10**
+(Sixel) kauft Reichweite auf Terminals, die hier niemand benutzt — WezTerm
+spricht OSC 1337. **M14** wurde am 2026-08-31 nachgesehen, und die eigene
+Einschaetzung „Nutzen niedrig" stimmt: `badge_text()` ist im Normalfall vier
+Tabellenzugriffe, `nvim_win_get_width` und `path_shorten` laufen nur bei
+angehefteter und angezeigter Pfadangabe. Die Vermutung, das sei ein heisser
+Pfad, weil die Config das Badge tatsaechlich in ihrer Statusline fuehrt, hat
+sich **nicht** bestaetigt. **M17/M11** hat in diesem Korpus nichts zu kreuzen.
 
-**Empfohlen: M12b — die Startup-Grafik in `documentation.nvim`**
-(`documentation.nvim` + `runtime-analysis.nvim`, Aufwand S–M, siehe
-[1.2](#12-mittel-m)).
+Was mit echtem Nutzen bleibt, ist damit ein L — und einer davon ist laengst
+keiner mehr.
 
-*Warum jetzt*: es ist die Haelfte von M12, die stehen geblieben ist, und sie
-ist es genau deshalb, weil sie **kein** Anhaengsel war. Der Eintrag las sich,
-als gaebe es in `documentation.nvim` schon einen Runtime-Abschnitt, in den das
-Bild nur noch hineingehoert. Nachgesehen: das Telemetry-Panel dort verbindet
-**Aufrufzaehler pro Funktion** mit der IR (`core/api.lua`,
-`core/telemetry_join.lua`). Startup-Daten kommen in dem ganzen Repo nicht vor.
+**Empfohlen: L4 — das nvim-Highlighting im Browser spiegeln**
+(`mdview.nvim` + `color_my_ascii.nvim`, Aufwand **M**, siehe
+[1.3](#13-gro-l)).
 
-*Was das konkret heisst*: ein `/api/startup`-Endpunkt neben den vorhandenen
-`/api/telemetry` und `/api/loaded` — beide holen ihre Daten schon per
-`soft_require.probe("runtime-analysis.…")`, also ist der Zugriffsweg gebaut und
-erprobt — plus ein drittes Analysis-Werkzeug, das die SVG einbettet. Das
-Artefakt ist selbstenthaltend und die Grafik ist selbstenthaltendes SVG; sie
-laesst sich also woertlich hineinschreiben, ohne Datei, ohne Netzzugriff.
+*Warum jetzt*: der Eintrag ist selbst schon von L auf M korrigiert, weil
+**zwei seiner vier Schritte gebaut sind**. Nachgesehen und bestaetigt:
+`color_my_ascii/highlight_export.lua:64` hat `runs_for_block(bufnr, block)`
+— die Spans eines Fence als row/col/hl_group aus den eigenen Extmarks —, und
+dieselbe Datei loest `hl_group → #hex` ueber `nvim_get_hl` auf. Offen sind nur
+Schritt 3 (die Spans pro Codeblock an den Client transportieren, gebunden an
+die `data-sourcepos` des `<pre>`) und Schritt 4 (der Client legt sie um den
+Code).
 
-*Und der Grund, warum es die Muehe wert ist*: `:RATelemetry flamegraph` zeigt
-das Bild dem, der gerade in Neovim sitzt. Die generierte Seite ist das, was man
-verschickt und was in einem `gh-pages`-Branch stehen bleibt — dort ist „warum
-startet das so langsam" eine Frage, die jemand anders stellt, und heute
-bekommt er darauf nur Text.
+*Und der Nutzen ist konkret*: `mdview.nvim` haengt fuer Syntax-Highlighting
+heute an JavaScript-Bibliotheken — `hljs`/`shiki` stehen in
+`config/DEFAULTS.lua` und `bindings/usrcmds/standalone.lua`. Danach faerbt die
+Vorschau **dasselbe** wie der Puffer daneben, weil es dieselben Extmarks sind,
+und eine Fremdabhaengigkeit faellt weg. Es ist ausserdem die dritte Stelle in
+Folge, an der dieselbe Frage „wie kommt Neovims Faerbung nach draussen"
+beantwortet wird — nach `:DocBrowse` (QW8) und der generierten Seite
+(M17/QW6), diesmal fuer den Browser.
 
-*Was vorher zu entscheiden ist*: ob die Seite die SVG **einbettet** (ein
-Bild, immer da, aber vom Zeitpunkt der Erzeugung) oder sie **zur Ansichtszeit
-holt** wie `Telemetry` und `Loaded` es tun (immer aktuell, aber leer, wenn
-niemand gemessen hat). Die beiden Nachbarn im selben Reiter tun das Zweite,
-was fuer Konsistenz spricht — dagegen spricht, dass Startup-Daten anders als
-Telemetriezaehler nicht nachwachsen: sie entstehen einmal pro Sitzung, ganz am
-Anfang.
+*Die eine Einschraenkung, die der Eintrag selbst nennt und die stimmt*:
+`runs_for_block` liest, was color_my_ascii **selbst gemalt hat** — es liefert
+also nichts fuer einen Block, den color_my_ascii nicht einfaerbt. Die
+Alternative aus `SCHLACHTPLAN.md` (Treesitter direkt in mdview, allgemeiner,
+keine Fremdabhaengigkeit) bleibt davon unberuehrt und ist die Entscheidung,
+die vor Schritt 3 zu treffen ist.
 
 ---
 
@@ -200,7 +201,7 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 16 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 15 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
   mehr**, `gopath.nvim` ebenfalls keinen. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
@@ -209,8 +210,8 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   **M17/M10**, **M9** (Frecency ueber drei Repos), **M11** (OCR —
   `:Image ocr` plus `:Case ocr`, `images.nvim` und casedesk), **M13**
   (`:Image scale`/`optimise`/`convert`), **M17/QW6** (Fenced Blocks auf
-  der generierten Seite) und **M12** (`:RATelemetry flamegraph`; die
-  documentation-Haelfte lebt als **M12b** weiter)
+  der generierten Seite), **M12** (`:RATelemetry flamegraph`) und **M12b**
+  (Analysis → Startup, dieselbe Grafik in die generierte Seite eingebettet)
   sind erledigt und stehen unter 1.0, ebenso **M5** —
   der ist als Treesitter-Konfiguration im Config-Repo gelandet statt als
   Plugin-Feature. **M4b**, **M17/M12** und **M17/M7b** sind zurueckgestellt und
@@ -259,7 +260,8 @@ Screenshot-Text seither in `:Cases grep` und im `:Case ki`-Prompt landet),
 nicht unter `:File`), **M17/QW6** (Fenced Blocks auf der generierten Seite,
 hervorgehoben durch den Tokenizer, den die Quelltext-Ausschnitte schon nutzen)
 und **M12** (`:RATelemetry flamegraph` — der Startup-Require-Baum als SVG,
-von `:Image` ohne eine Zeile Kreuzungscode gezeichnet)
+von `:Image` ohne eine Zeile Kreuzungscode gezeichnet) sowie **M12b**
+(dieselbe Grafik als Analysis-Werkzeug in der generierten Seite)
 sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B**
 (die verbliebenen Audit-Zeilen). **Zurueckgestellt**,
 mit Begruendung im selben Dokument: **M4b**, **M17/M12** und **M17/M7b**.
@@ -290,30 +292,6 @@ die zweitgrößte Reichweite.
 `ESC [ > q` (XTVERSION, **S**). Solange es genau ein Backend gibt, entscheidet
 Erkennung nur, ob eine Warnung erscheint; mit einem zweiten Backend wird sie
 zur Voraussetzung. Also: Sixel und XTVERSION-Detection sind ein Paket.
-
----
-
-#### M12b · `documentation.nvim` — die Startup-Grafik auf der generierten Seite
-
-**Aufwand S–M · Nutzen mittel**
-
-Die Haelfte von **M12**, die stehen geblieben ist, und sie ist es, weil sie
-kein Anhaengsel war. Der urspruengliche Eintrag las sich, als gaebe es in
-`documentation.nvim` schon einen Runtime-Abschnitt, in den das Bild nur noch
-hineingehoert. Nachgesehen am 2026-08-31: das Telemetry-Panel dort verbindet
-**Aufrufzaehler pro Funktion** mit der IR (`core/api.lua`,
-`core/telemetry_join.lua`); Startup-Daten kommen im ganzen Repo nicht vor.
-
-Zu bauen ist also ein `/api/startup`-Endpunkt neben `/api/telemetry` und
-`/api/loaded` — beide holen ihre Daten bereits per
-`soft_require.probe("runtime-analysis.…")`, der Zugriffsweg steht also — plus
-ein drittes Analysis-Werkzeug, das die SVG einbettet. Beide Artefakte sind
-selbstenthaltend, die Grafik laesst sich woertlich hineinschreiben.
-
-*Vorher zu entscheiden*: einbetten (immer da, aber vom Erzeugungszeitpunkt)
-oder zur Ansichtszeit holen wie die beiden Nachbarn im selben Reiter (immer
-aktuell, aber leer ohne Messung). Startup-Daten wachsen anders als
-Telemetriezaehler nicht nach — sie entstehen einmal pro Sitzung.
 
 ---
 
