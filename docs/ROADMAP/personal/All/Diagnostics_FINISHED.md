@@ -9,6 +9,10 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-08-31](#2026-08-31)
+    - [Sechs Repos pruefen wieder gegen Neovims Typen](#sechs-repos-pruefen-wieder-gegen-neovims-typen)
+      - [Die Zahl steigt, und das ist der Zweck](#die-zahl-steigt-und-das-ist-der-zweck)
+      - [Eine Hypothese, die die Messung widerlegt hat](#eine-hypothese-die-die-messung-widerlegt-hat)
+      - [Nebenbefund: das Werkzeug dumpt die falsche Funktion](#nebenbefund-das-werkzeug-dumpt-die-falsche-funktion)
     - [Cluster F: `inject-field` in lib.nvim -- und die `missing-fields`-Reste daneben](#cluster-f-inject-field-in-libnvim-und-die-missing-fields-reste-daneben)
       - [Die Zombie-Klassen, und was sie verdeckt haben](#die-zombie-klassen-und-was-sie-verdeckt-haben)
       - [Die Annotation stand nur auf der falschen Zeile](#die-annotation-stand-nur-auf-der-falschen-zeile)
@@ -59,6 +63,117 @@ alles, was noch offen ist.
 ---
 
 ## 2026-08-31
+
+---
+
+### Sechs Repos pruefen wieder gegen Neovims Typen
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 1)*
+
+`buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib` und `sessions` nannten in
+ihrer `.luarc.json` ein eigenes `workspace.library` -- und weil eine
+`.luarc.json` jeden Schluessel, den sie nennt, **ersetzt** statt ihn zu
+ergaenzen, warf das die Liste weg, die `lsp.nvim` mitschickt:
+
+```json
+"diagnostics.globals": ["vim"],
+"workspace.library": ["${3rd}/luv/library"]
+```
+
+Uebrig blieb luv. Kein `$VIMRUNTIME/lua`, keine Plugin-Typen, kein lib.nvim.
+`vim` war in diesen sechs Repos ein deklariertes Global vom Typ `any`:
+`vim.fn.expand(...)` gab `any` zurueck, `vim.api.*` wurde nicht geprueft, und
+`vim.SystemCompleted` existierte nicht -- obwohl Neovim 0.12 die Klasse in
+`$VIMRUNTIME/lua/vim/_core/system.lua` fuehrt. Die niedrige Warnungszahl kam
+daher, dass nicht geprueft wurde.
+
+Das ist derselbe Mechanismus wie Cluster A, und dort wurde die Zeile schon aus
+20 `.luarc.json` entfernt -- **aber nur dort, wo die Messung sofort eine
+Verbesserung zeigte**. Genau deshalb blieben diese sechs zurueck: bei ihnen
+stieg die Zahl. Ohne die Zeile sind ihre `.luarc.json` jetzt identisch zu
+documentation.nvim, dem Repo, das auf 0 steht.
+
+---
+
+#### Die Zahl steigt, und das ist der Zweck
+
+| Repo | vorher | nachher |
+|---|---:|---:|
+| lib.nvim | 244 | 273 |
+| gopath.nvim | 67 | 67 |
+| fileops.nvim | 20 | 35 |
+| sessions.nvim | 8 | 15 |
+| emojis.nvim | 13 | 13 |
+| buffer-ctx.nvim | 4 | 8 |
+| **Summe** | **356** | **411** |
+
+Nach Regel, und daran liest sich, was passiert ist:
+
+| Regel | Delta | warum |
+|---|---:|---|
+| `undefined-doc-name` | **-37** | `vim.SystemCompleted` / `vim.SystemObj` loesen auf |
+| `undefined-field` | **-23** | dito, auf `vim.*`-Feldern |
+| `param-type-mismatch` | +57 | typisierte `vim.fn.*`-Rueckgaben, meist `\|nil` |
+| `need-check-nil` | +28 | dieselbe Ursache, andere Regel |
+| `assign-type-mismatch` | +11 | |
+| `deprecated` | +5 | veraltete Neovim-APIs, vorher unsichtbar |
+| Rest | +14 | `duplicate-*`, `cast-*`, `return-type-mismatch` |
+
+60 Befunde verschwinden, 119 kommen dazu. Die neuen liegen ausnahmslos an
+Stellen, die vorher **niemand** geprueft hat.
+
+Die fuenf `deprecated` sind der beste Beleg dafuer, dass hier nichts kaputt
+gemacht, sondern etwas wieder sichtbar wurde: `nvim_buf_get_option` in
+`lib.nvim/buf_win_tab/get_option/init.lua:24` steht seit dem Erstscan vom
+29.08. in Abschnitt 5 des Reports -- und war in der gesamten laufenden
+Messreihe unsichtbar.
+
+Und ein Beispiel aus fileops.nvim, das zeigt, dass es nicht nur um `vim.*`
+geht: `bindings/keymaps.lua:110` reicht `bulk.execute(...)` direkt in
+`notify.report(...)` weiter und uebergibt dabei ein `integer` an einen
+`boolean`-Parameter. Sichtbar erst jetzt -- lib.nvim war vorher gar nicht in
+fileops' Library.
+
+---
+
+#### Eine Hypothese, die die Messung widerlegt hat
+
+Der erste Nachher-Lauf brachte drei `duplicate-doc-alias` und drei zusaetzliche
+`duplicate-doc-field` mit, und die Vermutung lag nahe: `build_library` sammelt
+ueber `find_type_dirs(root)` die `@types/`-Verzeichnisse **des gemessenen
+Workspace** ein -- bei lib.nvim 110 von 146 Eintraegen -- also liest LuaLS
+diese Dateien zweimal und meldet jede `@class` gegen sich selbst. Das waere
+Cluster As zweite Ursache eine Ebene tiefer gewesen.
+
+Ein Filter im Dump, ein zweiter kompletter Lauf: **exakt dieselben 411**, Regel
+fuer Regel. Die Hypothese ist falsch -- LuaLS indiziert einen Pfad, der im
+Workspace liegt, ohnehin als Workspace-Datei, und die Library-Nennung aendert
+daran nichts. Der Filter ist deshalb wieder draussen; eine Aenderung ohne
+messbare Wirkung gehoert nicht ins Werkzeug.
+
+Die `duplicate-doc-field` in `lib.nvim/deps/` sind stattdessen echt:
+`view.lua:49` und `@types/init.lua:99` deklarieren beide
+`Lib.Deps.View.ToolUiState`. Dasselbe in gopath zwischen
+`@types/resolvers.lua` und `resolve.lua`.
+
+---
+
+#### Nebenbefund: das Werkzeug dumpt die falsche Funktion
+
+Beim Nachsehen ist aufgefallen, dass `scripts/luals-scan/dump_library.lua`
+`build_library(root)` aufruft -- 37 bis 146 Eintraege --, waehrend der
+Attach-Pfad des Editors `library_profiles.build_runtime_library()` benutzt und
+damit **drei**: `${3rd}/luv/library`, `${3rd}/busted/library`,
+`$VIMRUNTIME/lua`. `build_library` erreicht den laufenden Server nur ueber
+`:LuaLsReloadLibrary` von Hand; lsp.nvims eigener Kommentar in
+`lua_ls/init.lua` haelt fest, dass die fruehere Verdrahtung ueber
+`on_new_config` toter Code war.
+
+Der Unterschied ist nicht folgenlos: das Werkzeug ersetzt damit faktisch
+lazydev, das im Editor die Plugin-Typen bei Bedarf nachzieht. Das ist eine
+brauchbare Annaeherung -- aber der README von `luals-scan` beschreibt sie als
+das, was der Editor tut, und das stimmt so nicht. Steht als offener Punkt im
+Report.
 
 ---
 
