@@ -9,6 +9,12 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-08-31](#2026-08-31)
+    - [Cluster D: `userdata` statt `TSNode` -- documentation.nvim](#cluster-d-userdata-statt-tsnode-documentationnvim)
+      - [Warum `userdata` der teuerste Annotationsfehler ist](#warum-userdata-der-teuerste-annotationsfehler-ist)
+      - [Was gemacht wurde -- 154 Annotationen in 18 Dateien](#was-gemacht-wurde-154-annotationen-in-18-dateien)
+      - [Zwei Nachbarn derselben Klasse](#zwei-nachbarn-derselben-klasse)
+      - [Ergebnis: 383 -> 155](#ergebnis-383-155)
+      - [Was von den `undefined-field` uebrig ist](#was-von-den-undefined-field-uebrig-ist)
     - [Cluster B: `need-check-nil` in Tests -- unterdrueckt, nicht auszementiert](#cluster-b-need-check-nil-in-tests-unterdrueckt-nicht-auszementiert)
       - [Der Befund, der die Umsetzung geaendert hat](#der-befund-der-die-umsetzung-geaendert-hat)
       - [Was gemacht wurde -- 19 Repos, 93 Dateien](#was-gemacht-wurde-19-repos-93-dateien)
@@ -37,6 +43,103 @@ alles, was noch offen ist.
 ---
 
 ## 2026-08-31
+
+---
+
+### Cluster D: `userdata` statt `TSNode` -- documentation.nvim
+
+*(war: Diagnostics-Report Abschnitt 4 D und Abschnitt 8, Punkt 2)*
+
+Der erste vertikale Durchgang, und er faengt beim groessten Einzelposten der
+ganzen Liste an: 237 `undefined-field` in einem Repo, davon 211 auf vier
+Methodennamen -- `iter_children` 92, `start` 65, `end_` 28, `type` 26.
+
+---
+
+#### Warum `userdata` der teuerste Annotationsfehler ist
+
+`---@param node userdata` sieht aus wie "ein Objekt, das die Sprache nicht
+naeher beschreibt". LuaLS liest es strenger: `userdata` ist ein Typ **ohne
+Felder**, also ist jeder Zugriff darauf ein Befund. Eine einzige Annotation,
+ueber 17 Sprachmodule wiederholt, erzeugt so ein Vielfaches an Warnungen --
+eine pro Aufrufstelle, nicht eine pro Deklaration.
+
+Der Typ, der gemeint war, liegt die ganze Zeit im Runtime:
+`$VIMRUNTIME/lua/vim/treesitter/_meta/tsnode.lua` deklariert `TSNode` mit genau
+diesen Methoden. Es war also nichts nachzubauen und nichts zu unterdruecken,
+sondern nur der richtige Name einzusetzen.
+
+---
+
+#### Was gemacht wurde -- 154 Annotationen in 18 Dateien
+
+`userdata` -> `TSNode` in jeder `@param`/`@return`/`@type`-Zeile der 17
+Sprachmodule und in `core/plugins.lua`. Prosa blieb unangetastet: in
+`core/artifact.lua` und im Lua-Glossar steht das Wort als Fliesstext ueber Luas
+`type()`, und dort ist es richtig.
+
+Kein Zeichen Code geaendert, nur Annotationen.
+
+---
+
+#### Zwei Nachbarn derselben Klasse
+
+Die Messung hat zwei weitere Stellen mitgezeigt, an denen `userdata` einen
+vorhandenen Typ verdeckt hat:
+
+- **`editor/serve.lua`** (11 Befunde): die Client-Handles kommen aus
+  `uv.new_tcp()` und sind `uv.uv_tcp_t`. Die luv-Meta kennt `write`, `close`,
+  `is_closing`, `read_start` und `read_stop`; `---@param client userdata` hat
+  genau das weggeworfen, was der Server benutzt.
+- **`standalone/treesitter.lua`** (2 Befunde): hier waere `TSNode` **falsch**.
+  Die Datei uebersetzt `lua-tree-sitter` auf Neovims Oberflaeche, und die
+  Knoten der Bindung tragen die Byte-Offsets der C-API (`start_byte`,
+  `end_byte`) statt `start()`/`end_()` -- das ist eine der sechs Luecken, die
+  die Datei ueberhaupt erst schliesst. Ihre Knoten haben deshalb eine eigene,
+  benannte Klasse bekommen, mit dem Grund darueber, statt Neovims Typ
+  aufgedrueckt zu bekommen.
+
+Das ist der Unterschied zwischen "die Warnung ist weg" und "der Typ stimmt":
+`TSNode` haette dort ebenfalls 2 Befunde beseitigt und dafuer eine Behauptung
+aufgestellt, die beim naechsten Leser als Tatsache durchgeht.
+
+---
+
+#### Ergebnis: 383 -> 155
+
+| Regel | vorher | nachher |
+|---|---:|---:|
+| `undefined-field` | 237 | **9** |
+| `param-type-mismatch` | 47 | 47 |
+| `need-check-nil` | 44 | 44 |
+| `duplicate-set-field` | 13 | 13 |
+| `redundant-parameter` | 13 | 13 |
+| `assign-type-mismatch` | 8 | 8 |
+| **gesamt** | **383** | **155** |
+
+**Keine andere Regel hat sich um einen einzigen Zaehler bewegt.** Das war die
+Frage, wegen der ueberhaupt vor *und* nach der Aenderung gemessen wird: ein
+echter Typ kann anderswo neue Befunde ausloesen (ein `TSNode?`, das an ein
+`TSNode` gereicht wird), und dann waere der Fix nur eine Verschiebung gewesen.
+
+Gates vor dem Commit: 96 Spec-Dateien gruen, `stylua --check .` sauber,
+luacheck 0 Warnungen / 0 Fehler ueber 135 Dateien. Ein Commit, `c98ea46`,
+gepusht.
+
+---
+
+#### Was von den `undefined-field` uebrig ist
+
+Neun, und sie haben eine andere Ursache -- fehlende Feld-Deklarationen, keine
+falschen Typen:
+
+- `Documentation.Browse.Entry` fuehrt kein `spec`, obwohl
+  `kind="endpoint"`-Zeilen eines tragen: 2 in `lua/`, 4 im Spec dazu.
+- `TESTS/mcp_spec.lua` greift auf `text`, `commits` und `last_commit` eines
+  MCP-Ergebnisses zu, die der Typ nicht nennt.
+
+Beides sind Ein-Zeilen-Nachtraege am jeweiligen `@class` und gehoeren in den
+naechsten Durchgang durch dieses Repo, nicht zu Cluster D.
 
 ---
 
