@@ -8,14 +8,15 @@
     - [Gerade in Arbeit](#gerade-in-arbeit)
     - [Vorschlag nächster Schritt](#vorschlag-nchster-schritt)
     - [Erledigt](#erledigt)
+    - [Stand nach Cluster A (2026-08-31)](#stand-nach-cluster-a-2026-08-31)
     - [Offen](#offen)
     - [Arbeitsmodus](#arbeitsmodus)
   - [1. Methode](#1-methode)
   - [2. Gesamtbild pro Repo](#2-gesamtbild-pro-repo)
   - [3. Verteilung nach Regel](#3-verteilung-nach-regel)
   - [4. Die Ursachen-Cluster](#4-die-ursachen-cluster)
-    - [A. Fehlender `assert`-Typ in den Tests -- gemessen, nicht geschätzt](#a-fehlender-assert-typ-in-den-tests-gemessen-nicht-geschtzt)
-    - [B. `need-check-nil` in Tests -- 925 Stück, mechanisch](#b-need-check-nil-in-tests-925-stck-mechanisch)
+    - [A. Fehlender `assert`-Typ in den Tests -- ERLEDIGT 2026-08-31](#a-fehlender-assert-typ-in-den-tests-erledigt-2026-08-31)
+    - [B. `need-check-nil` in Tests -- 920 Stück, mechanisch](#b-need-check-nil-in-tests-920-stck-mechanisch)
     - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
     - [D. `userdata` statt `TSNode` in documentation.nvim -- 210 Stück](#d-userdata-statt-tsnode-in-documentationnvim-210-stck)
     - [E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos](#e-pcallvimcmd-60-stck-ber-alle-repos)
@@ -67,21 +68,32 @@ machen -- eine separate Handover-Datei gibt es bewusst nicht.
 
 ## 0. Stand, Arbeitsmodus, nächster Schritt
 
-**Stand: 2026-08-29.** Alles unten Genannte ist in den jeweiligen Repos
+**Stand: 2026-08-31.** Alles unten Genannte ist in den jeweiligen Repos
 committet und auf `main` gepusht.
 
 ---
 
 ### Gerade in Arbeit
 
-*Nichts.* Cluster C ist abgeschlossen; die Umstellung auf den vertikalen
-Arbeitsmodus (siehe unten) wartet auf ein Go.
+*Nichts.* Cluster A ist am 2026-08-31 abgeschlossen. Die beiden horizontalen
+Vorarbeiten sind damit halb erledigt -- offen bleibt nur noch **deine
+Entscheidung zu `need-check-nil` in Tests**, danach geht es vertikal weiter.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-Zuerst horizontal das assert-Meta (vier Zeilen in lib.nvim, gemessene 366 Warnungen, und es macht die Testdateien überhaupt erst typgeprüft), dann die Entscheidung zu need-check-nil in Tests — die brauche ich von dir, sie ist keine Arbeit, sondern eine Wahl: unterdrücken oder auszementieren. Danach vertikal, Repo für Repo, nach Befundzahl sortiert\
+**`need-check-nil` in Tests** (Cluster B). Nach der Bereinigung vom 31.08. ist
+das mit 1128 Befunden die mit Abstand größte verbliebene Gruppe -- **920 davon
+in `TESTS/` und `scripts/`**, nur 207 in `lua/`. Das ist keine Arbeit, sondern
+eine Wahl, und sie gehört dir: entweder `need-check-nil` in einer
+`TESTS/.luarc.json` pro Repo abschalten (der Befund ist dort meist Absicht --
+schlägt `pcall(require, …)` fehl, *soll* der Test krachen), oder überall
+`assert(mod)` davorsetzen und die Nil-Prüfung auszementieren. Nicht beides.
+
+Sobald das entschieden ist, beginnt der vertikale Modus, und zwar bei
+**documentation.nvim** (732) -- dort liegen nach den 393 `need-check-nil` noch
+237 `undefined-field`, und das ist Cluster D, die `TSNode`-Annotationen.
 
 ---
 
@@ -89,10 +101,35 @@ Zuerst horizontal das assert-Meta (vier Zeilen in lib.nvim, gemessene 366 Warnun
 
 | # | Punkt | Ergebnis |
 |---|---|---|
-| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](../Diagnostics_FINISHED.md) |
+| A | **`assert`-Typ**, und die Library-Auflösung dahinter | **6344 -> 3204** über alle 33 Workspaces. `.luarc.json` ersetzt `workspace.library` komplett, deshalb kam lsp.nvims Injektion in 31 Repos nie an. Details: [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md) |
+| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
+
+---
+
+### Stand nach Cluster A (2026-08-31)
+
+Nur die Repos über 100 Befunden; Summe über alle 33 Workspaces. Gemessen in der
+Messreihe vom 31.08., nicht gegen die eingefrorene Tabelle in Abschnitt 2.
+
+| Repo | gesamt | die zwei größten Regeln darin |
+|---|---:|---|
+| documentation.nvim | 732 | `need-check-nil` 393, `undefined-field` 237 |
+| lib.nvim | 505 | `need-check-nil` 142, `inject-field` 108 |
+| lsp.nvim | 392 | `duplicate-doc-field` 173, `redundant-parameter` 48 |
+| runtime-analysis.nvim | 273 | `need-check-nil` 158, `param-type-mismatch` 47 |
+| filetree.nvim | 226 | `need-check-nil` 102, `undefined-field` 60 |
+| nvim-config | 137 | `param-type-mismatch` 38, `assign-type-mismatch` 26 |
+| spotlight.nvim | 105 | `need-check-nil` 57, `param-type-mismatch` 15 |
+| gopath.nvim | 101 | `need-check-nil` 48, `param-type-mismatch` 22 |
+| **Summe (alle 33)** | **3204** | |
+
+Nach Regel: `need-check-nil` 1128, `undefined-field` 562,
+`param-type-mismatch` 452, `duplicate-doc-field` 192, `duplicate-set-field`
+160, `assign-type-mismatch` 137, `inject-field` 118. `undefined-global` steht
+auf 0.
 
 ---
 
@@ -100,14 +137,14 @@ Zuerst horizontal das assert-Meta (vier Zeilen in lib.nvim, gemessene 366 Warnun
 
 Reihenfolge wie in Abschnitt 8. Kurz:
 
-1. **`assert`-Meta** (A) -- 366 Warnungen, vier Zeilen, **horizontal zuerst**
-2. **`need-check-nil` in Tests** (B, 925) -- Entscheidung nötig, **horizontal zuerst**
-3. **`TSNode` statt `userdata`** (D, 210) -- nur documentation.nvim
-4. **`inject-field`** (F, 119 + die 21 `missing-fields`-Reste) -- fast nur lib.nvim
+1. **`need-check-nil` in Tests** (B, 920) -- Entscheidung nötig, **horizontal zuerst**
+2. **`TSNode` statt `userdata`** (D) -- documentation.nvim, jetzt 237 `undefined-field`
+3. **`duplicate-doc-field` in lsp.nvim** (173) -- neu sichtbar geworden: `lua/lsp/@types/vim_lsp.lua` deklariert Felder nach, die Neovims eigenes Meta schon führt
+4. **`inject-field`** (F, 118 + die `missing-fields`-Reste) -- fast nur lib.nvim
 5. **`pcall(vim.cmd, ...)`** (E, 60) -- mechanisch, über mehrere Repos
 6. **Die ~90 Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil
-7. Der Rest der Verteilung aus Abschnitt 3 (`param-type-mismatch`,
-   `undefined-field`, Annotationsfehler)
+7. Der Rest der Verteilung (`param-type-mismatch` 452,
+   `assign-type-mismatch` 137, Annotationsfehler)
 
 ---
 
@@ -282,36 +319,32 @@ statt 441, alle verbliebenen in lib.nvim (Cluster F).
 
 ---
 
-### A. Fehlender `assert`-Typ in den Tests -- gemessen, nicht geschätzt
+### A. Fehlender `assert`-Typ in den Tests -- ERLEDIGT 2026-08-31
 
-`assert.are.same(...)`, `assert.is_true(...)`, `assert.is_nil(...)`: LuaLS kennt
-den globalen `assert` nur als Lua-Standardfunktion, nicht als luassert. Jedes
-Feld daran ist `undefined-field`. `${3rd}/busted/library` -- was `lsp.nvim`
-heute anhängt -- deckt das **nicht** ab, `${3rd}/luassert/library` definiert die
-Klasse, aber nicht den globalen Namen.
+`assert.are.same(...)`, `assert.is_true(...)`: LuaLS kannte den globalen
+`assert` nur als Lua-Standardfunktion, jedes Feld daran war `undefined-field`.
 
-Vier Zeilen genügen:
+Die Diagnose hier war zu kurz gegriffen. Die Meta-Datei, die den globalen
+`assert` typisiert, war schnell gebaut und richtig -- sie **erreichte nur 2 von
+33 Workspaces**. Die eigentliche Ursache liegt eine Ebene tiefer und ist
+inzwischen im Editor nachgewiesen: **`.luarc.json` ersetzt
+`workspace.library` vollständig**, sie ergänzt sie nicht. 31 Repos führten eine
+eigene Liste aus ein bis sieben Einträgen und warfen damit die 43 Einträge weg,
+die `lsp.nvim` zur Laufzeit zusammenstellt -- busted, `$VIMRUNTIME`, sämtliche
+Plugin-Typen und lib.nvim inklusive.
 
-```lua
----@meta
----@type luassert
-assert = assert
-```
+Dazu kam ein zweiter Befund: `build_library.lua` hängte den `runtimepath`
+ungefiltert an, also auch das Repo, das gerade offen ist. Ein Workspace, der
+seine eigene Library ist, wird zweimal gelesen -- allein in der nvim-Config
+waren das 1085 `duplicate-doc-field`.
 
-Als Library-Pfad eingehängt (oder als Datei im Repo mit `---@meta`) fällt
-**lsp.nvim von 465 auf 233 Warnungen** -- gemessen, nicht hochgerechnet:
-`undefined-field` -272, dafür `redundant-parameter` +40, weil die
-LuaLS-Signaturen für luassert enger sind als dessen tatsächliche variadische
-API. Über alle Repos: 3966 -> 3600. Der Effekt trifft die Repos ungleich, weil
-nicht alle im selben Stil assertieren -- documentation.nvim,
-runtime-analysis.nvim und filetree.nvim ändern sich dadurch gar nicht.
-
-Alle Zahlen in diesem Dokument sind **nach** diesem Fix gemessen. Er ist noch
-nirgends eingebaut.
+**Über alle 33 Workspaces von 6344 auf 3204**, kein Repo verschlechtert.
+Vollständige Aufstellung samt Messmethode:
+[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
 
 ---
 
-### B. `need-check-nil` in Tests -- 925 Stück, mechanisch
+### B. `need-check-nil` in Tests -- 920 Stück, mechanisch
 
 Das dominante Muster in `TESTS/`: `local ok, mod = pcall(require, "x")` und
 danach `mod.foo()` ohne Nil-Prüfung, bzw. `vim.fn.getreg`-Rückgaben direkt
@@ -351,7 +384,7 @@ der Code die aufgelöste Config direkt liest -- dort wurde die **Opts**-Klasse
 (Eingabe) von der **Config**-Klasse (nach `vim.tbl_deep_extend`) getrennt.
 
 Vollständige Aufstellung, samt der Nebenbefunde, die dabei sichtbar wurden:
-[`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
 
 ---
 
@@ -535,7 +568,7 @@ einzeiliges `function() ... end`, das stylua aufklappen will:
 Dazu die Ausreißer-Entscheidung: `mdview.nvim` formatierte als einziges der 31
 Repos mit Tabs (`indent_type = "Tabs"`, `indent_width = 4`) und steht jetzt auf
 der Repo-Konvention `Spaces` / `2`. Siehe
-[`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
 
 ---
 
@@ -545,7 +578,7 @@ der Repo-Konvention `Spaces` / `2`. Siehe
   2026-08-29:** Worktree und beide Altbranches entfernt, nachdem geprüft war,
   dass ihre zwei Commits inhaltlich schon auf `main` liegen. `.claude/` ist
   dort jetzt gitignored. Siehe
-  [`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
+  [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
 - **Zwei Worktrees in dieser Config:**
   `.claude/worktrees/dazzling-chaplygin-5284d5` und `serene-gagarin-e46262`,
   zusammen 1620 Lua-Dateien. Hier ist `.claude/` gitignored, also auch für
@@ -554,12 +587,18 @@ der Repo-Konvention `Spaces` / `2`. Siehe
   lib, markdown, mdview, recommender, replacer) -- in allen sieben ist das
   Verzeichnis leer, also folgenlos, solange dort kein Worktree entsteht.
   open.nvim war der achte und ist seit 2026-08-29 versorgt.
-- **11 von 31 `.luarc.json` führen `$VIMRUNTIME/lua` nicht** und verlassen sich
-  darauf, dass `lsp.nvim` es zur Laufzeit injiziert. Für den Editor reicht das;
-  jedes CI, das `lua-language-server --check` direkt aufruft, bekommt dort eine
-  andere Typwelt als der Editor. Betrifft buffer-ctx, color_my_ascii,
-  documentation, emojis, fileops, github_stats, gopath, insights, lib,
-  replacer, runtime-analysis, sandbox, sessions.
+- ~~**11 von 31 `.luarc.json` führen `$VIMRUNTIME/lua` nicht**~~ -- die Frage
+  hat sich umgedreht und ist am 2026-08-31 beantwortet: `.luarc.json`
+  **ersetzt** `workspace.library`, also kam bei den 31 Repos mit eigener Liste
+  gar nichts von der Injektion an, `$VIMRUNTIME` eingeschlossen. In den 20
+  Repos, wo die Messung dafür sprach, ist die Liste jetzt weg. Kein CI ruft
+  `lua-language-server` auf, das war also folgenlos. Siehe
+  [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+- **Die 20 bereinigten Repos hängen jetzt an `lsp.nvim`.** Ohne diese Config
+  geöffnet -- anderer Editor, `lua-language-server` von Hand -- bekommen sie
+  eine leere Library. Bewusst in Kauf genommen: die entfernten Listen waren
+  ohnehin unvollständig, und kein CI prüft mit LuaLS. Die 11 Repos, bei denen
+  die Messung gegen den Fix sprach, behalten ihre Liste.
 
 ---
 
@@ -569,11 +608,12 @@ Nach Aufwand-zu-Wirkung geordnet. Punkt 1 und 5 laufen **horizontal** (sie
 verändern die Zahlen aller Repos), alles danach **vertikal pro Repo** -- siehe
 Arbeitsmodus in Abschnitt 0.
 
-1. **`assert`-Meta einbauen** -- vier Zeilen, gemessene 366 Warnungen weniger,
-   und es macht die Testdateien überhaupt erst typgeprüft. Sinnvollerweise in
-   lib.nvim, damit alle Repos denselben Pfad einhängen. **Horizontal, zuerst.**
+1. ~~**`assert`-Meta einbauen**~~ -- **erledigt 2026-08-31**, aber anders als
+   hier vermutet: nicht die vier Zeilen waren das Problem, sondern dass
+   `.luarc.json` die Library-Injektion ersetzte und die Meta-Datei deshalb
+   nirgends ankam. 6344 -> 3204 über alle 33 Workspaces.
 2. **`TSNode` statt `userdata` in documentation.nvim** -- eine Annotation pro
-   Sprachmodul, ~210 Warnungen.
+   Sprachmodul, jetzt 237 `undefined-field`.
 3. ~~**Opts/Config trennen** (Cluster C)~~ -- **erledigt 2026-08-29**, 518 -> 21.
 4. **Die ~90 kleinen Befunde aus Abschnitt 5** -- der Teil, bei dem Durchgehen
    tatsächlich Fehler findet statt Rauschen. Hier liegen die einzigen
@@ -621,7 +661,7 @@ Korrektur zur Vermutung oben: `lsp.nvim/lua/lsp/diagnostics/*` war gerade
 mit eigener Severity-Behandlung und einer zwischen Neovim 0.10 und 0.11
 geänderten Signatur, und blieb unangetastet. Details, inklusive der vier
 Unterschiede, die die Eigenbauten stillschweigend hatten, in
-[`Diagnostics_FINISHED.md`](../../../Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
 
 ---
 

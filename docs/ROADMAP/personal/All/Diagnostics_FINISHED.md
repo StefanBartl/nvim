@@ -6,6 +6,140 @@ alles, was noch offen ist.
 
 ---
 
+## 2026-08-31
+
+### Cluster A: der `assert`-Typ -- und warum der erste Anlauf ins Leere lief
+
+*(war: Diagnostics-Report Abschnitt 4 A, Abschnitt 8 Punkt 1, und der
+unverifizierte Nebenbefund aus Abschnitt 7)*
+
+Am 30.08. lagen zwei Dinge vor: die Meta-Datei
+`lib.nvim/lua/lib/@types/luassert.lua`, die den globalen `assert` als `luassert`
+typisiert, und in vier `.luarc.json` die neue Zeile
+`${3rd}/luassert/library`. Nachgemessen hat das zusammen so gut wie nichts
+bewirkt:
+
+| Repo | 2026-08-29 | nach den Commits vom 30.08. |
+|---|---:|---:|
+| lsp.nvim | 1333 | 1333 |
+| sandbox.nvim | 223 | 223 |
+| dap.nvim | 60 | 60 |
+| lib.nvim | 505 | 505 |
+| github_stats.nvim | 88 | **60** |
+
+Nur github_stats.nvim hat reagiert -- als einziges der vier fuehrte seine
+`.luarc.json` auch `${3rd}/busted/library`, und erst die Meta von busted
+verdrahtet `assert` ueberhaupt mit luassert.
+
+#### Die Ursache, jetzt gemessen statt vermutet
+
+Der Nebenbefund vom 29.08. stimmt, und er ist groesser als dort geschaetzt:
+**`.luarc.json` ersetzt `workspace.library` vollstaendig**, sie ergaenzt nicht.
+Was `lsp.nvim` dem Server mitschickt, kommt nie an.
+
+Nachweis im echten Editor, nicht im Modell: headless nvim, `lua_ls` an
+`lsp.nvim/TESTS/lsp/config_spec.lua`. Der Client sendet
+`${3rd}/busted/library` mit -- der Server meldet trotzdem
+`Undefined global 'describe'` und `'it'`.
+
+Betroffen waren **31 von 33 Workspaces**. Sie alle deklarierten eine eigene
+Library-Liste aus ein bis sieben Eintraegen und warfen damit die
+43 Eintraege weg, die `build_library.lua` zusammenstellt -- darunter busted,
+`$VIMRUNTIME`, saemtliche Plugin-Typen und lib.nvim, also auch die Meta-Datei.
+Die erreichte nur `nvim-config` und `runtime-analysis.nvim`, die keine eigene
+Liste fuehren.
+
+Bei sandbox.nvim standen in dieser Liste ausserdem vier
+`$HOME/.local/share/nvim/lazy/…`-Pfade, die auf dieser Maschine ins Leere
+zeigen.
+
+#### Die zweite Ursache: der Workspace als seine eigene Library
+
+`build_library.lua` haengte jeden `runtimepath`-Eintrag an. Die Dev-Repos liegen
+auf dem `runtimepath`, also auch das Repo, das gerade offen ist. LuaLS liest
+dessen Dateien dann zweimal, und jede `@class` darin meldet
+`duplicate-doc-field` gegen sich selbst: **1085 der 1222 Warnungen der
+nvim-Config** und 212 in runtime-analysis.nvim.
+
+#### Was gemacht wurde
+
+1. **`workspace.library` aus 20 `.luarc.json` entfernt** -- genau dort, wo die
+   Messung eine Verbesserung zeigt. Jede Datei hat nur diesen einen Block
+   verloren.
+2. **`lsp.nvim/lua/lsp/servers/lua_ls/build_library.lua`**: der
+   `runtimepath` wird gefiltert, der Workspace landet nicht mehr in seiner
+   eigenen Library.
+
+Die Meta-Datei aus dem ersten Anlauf bleibt unveraendert -- sie war nie das
+Problem, sie kam nur nirgends an. Jetzt tut sie, wofuer sie gebaut wurde:
+`assert.are.same(...)` loest auf, in lsp.nvim bleiben von 665
+`undefined-field` noch 36, davon sieben echte (`has_no`, `are_not` -- Namen,
+die die Meta-Datei noch nicht kennt).
+
+#### Ergebnis: 6344 -> 3204
+
+| Repo | vorher | nachher |
+|---|---:|---:|
+| lsp.nvim | 1333 | 392 |
+| nvim-config | 1222 | 137 |
+| documentation.nvim | 1048 | 732 |
+| runtime-analysis.nvim | 485 | 273 |
+| filetree.nvim | 312 | 226 |
+| sandbox.nvim | 223 | 44 |
+| images.nvim | 150 | 44 |
+| open.nvim | 102 | 85 |
+| markdown.nvim | 91 | 59 |
+| pdfport.nvim | 72 | 62 |
+| replacer.nvim | 71 | 60 |
+| dap.nvim | 60 | 10 |
+| github_stats.nvim | 60 | 52 |
+| insights.nvim | 57 | 29 |
+| diff.nvim | 50 | 48 |
+| pickers.nvim | 43 | 27 |
+| cascade.nvim | 38 | 32 |
+| recommender.nvim | 23 | 12 |
+| reposcope.nvim | 23 | 10 |
+| color_my_ascii.nvim | 16 | 8 |
+| debugging.nvim | 9 | 8 |
+| cmdlog.nvim | 6 | 4 |
+| **Summe (alle 33 Workspaces)** | **6344** | **3204** |
+
+Nach Regel: `undefined-field` 1741 -> 562, `duplicate-doc-field` 1235 -> 192,
+`undefined-global` 511 -> **0**, `undefined-doc-name` 328 -> 87,
+`redundant-parameter` 252 -> 84.
+
+#### Was absichtlich unangetastet blieb
+
+Acht Repos wuerden durch den Fix **schlechter** -- ihre `.luarc.json` behaelt
+ihre Library-Liste, und damit bleibt fuer sie auch Fix 2 wirkungslos:
+spotlight (+340), mdview (+75), lib (+35), fileops (+15), sessions (+7),
+buffer-ctx (+4), neotree-fs-refactor (+4), migrate (+1). Drei weitere aendern
+sich gar nicht: emojis, gopath, language.
+
+Dass lib.nvim dabei ist, ist die unangenehme Pointe: das Repo, das die
+Meta-Datei traegt, sieht sie selbst nur, weil sie in seinem eigenen Workspace
+liegt.
+
+#### Wie gemessen wurde
+
+`lua-language-server --check` pro Workspace, mit einer Config, die die
+Injektion aus `build_library.lua` nachbaut und die `.luarc.json` des Repos
+darueberlegt -- also genau die Reihenfolge, die auch der Editor herstellt. Zur
+Kontrolle wurde die Modell-Library fuer lsp.nvim gegen die **echte**
+43-Eintraege-Liste getauscht, die `build_library("E:/repos/lsp.nvim")` im
+laufenden nvim zurueckgibt: identisches Ergebnis, 392.
+
+Der Vorher-Lauf hat die Meta-Datei beiseitegelegt und die vier
+`luassert`-Zeilen entfernt, statt in der Historie zu blaettern; die Datei kam
+per `trap` zurueck, `git status` war danach sauber.
+
+Zwei Sachen, an denen das Skript zuerst gescheitert ist, fuer den naechsten
+Anlauf: Windows-Python schreibt die Index-Datei mit CRLF, und das CR haengt am
+Pfad; und parallele `lua-language-server`-Instanzen brauchen je einen eigenen
+`--metapath`, sonst kommt jeder Lauf leer zurueck.
+
+---
+
 ## 2026-08-29
 
 ### Cluster C: `missing-fields` -- 518 auf 21, ueber alle 31 Plugins plus Config
