@@ -48,14 +48,13 @@ direkt darüber steht.
    2289 aktualisieren, Abschnitt 4 B als erledigt markieren, Abschnitt 8
    Punkt 5 durchstreichen; in `Diagnostics_FINISHED.md` einen Abschnitt
    *Cluster B* unter dem Datum 2026-08-31 anlegen.
-2. **Report nach
-   `E:\repos\WKDBooks\Development\wkdbook-Lua\LuaLanguageServer\_luarc_json`.**
-   Vom Nutzer ausdrücklich gewünscht. Inhalt: die beiden Befunde zu
-   `.luarc.json` -- sie *ersetzt* `workspace.library` statt zu ergänzen, und
-   sie wird nur im Wurzelverzeichnis gelesen -- plus der Workspace-als-eigene-
-   Library-Fehler und die Messmethode. Dort liegen schon `Overview.md`,
-   `Presedence.md` und `nvim-template.luarc.json`; Stil ist Deutsch,
-   strukturiertes Markdown.
+2. ~~**Report nach
+   `E:\repos\WKDBooks\…\LuaLanguageServer\_luarc_json`.**~~ **Erledigt
+   2026-08-31:** `Reichweite-und-Praezedenz.md`, committet als `074da57` in
+   `WKDBooks`. Enthält die drei Befunde, die Kette hinter dem globalen
+   `assert`, die Messmethode samt ihrer vier Fallen und die Zahlen. In
+   `Presedence.md` ist die Aussage „überschreibt oder ergänzt" dabei
+   korrigiert worden -- der zweite Teil stimmt nicht.
 
 ---
 
