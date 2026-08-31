@@ -46,7 +46,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [1.4 Braucht dich](#14-braucht-dich)
       - [BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen](#bd2-opennvim-die-nicht-windows-reveal-pfade-auf-echter-hardware-prfen)
       - [BD3 · `lib.nvim` — Windows-Elevation im Dependency-Installer](#bd3-libnvim-windows-elevation-im-dependency-installer)
-      - [BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)](#bd4-mdviewnvim-externe-renderer-website-opt-in)
       - [BD5 · `mdview.nvim` — PDF-Seiten-Preview im Link-Hover](#bd5-mdviewnvim-pdf-seiten-preview-im-link-hover)
   - [Teil 2 — Plugin für Plugin](#teil-2-plugin-fr-plugin)
     - [2.1 Repos mit offener Arbeit](#21-repos-mit-offener-arbeit)
@@ -135,32 +134,25 @@ nach Quelltextpruefung Folgendes:
 - **L3** sagt selbst „vorerst nur beobachten". **L5** ist neunmal zuerst eine
   Scope-Entscheidung und steht vollstaendig in `PLAN.md`.
 
-**Empfohlen: BD4 entscheiden — `mdview.nvim`s externe Renderer-Website
-(Aufwand XS als Entscheidung, siehe [1.4](#14-braucht-dich)).**
+**Empfohlen: die sieben leeren `ROADMAP.md`-Dateien aus [2.2](#22-repos-ohne-offene-arbeit) beschriften**
+(Aufwand **XS gesamt**, Nutzen mittel).
 
-*Warum das und nicht ein Feature*: der Eintrag empfiehlt sich selbst zur
-Ablehnung („ablehnen und aus der Roadmap streichen, oder als *explizit nicht
-geplant* festschreiben"), und die Begruendung dafuer ist seit dem 2026-08-31
-staerker als vorher: mdview hat jetzt **drei** Kanaele, die Pufferzustand ins
-Fenster tragen — Inhalt, Auswahl (SEL), Faerbung (L4) —, und alle drei sind
-Loopback-only. Eine externe Renderer-Website waere die eine Stelle, an der
-Dokumentinhalt das Geraet verlaesst, und sie wuerde dieses Modell fuer einen
-Bedarf brechen, den `browser.open_url` groesstenteils schon deckt.
+*Warum jetzt*: bei `buffer-ctx.nvim`, `cmdlog.nvim`, `diff.nvim`,
+`language.nvim`, `lib.nvim`, `spotlight.nvim` und `fileops.nvim` ist „keine
+offene Arbeit" eine **Annahme**, keine Aussage — die Datei enthaelt nur
+Ueberschrift und Trennlinie. Jeder Durchgang durch diesen Report muss diese
+sieben erneut aufmachen, um festzustellen, dass nichts drinsteht.
 
-*Und die konkrete Auswirkung ist echt, auch wenn nichts gebaut wird*: dieser
-Punkt kostet bei **jedem** Durchgang durch diese Liste erneut Lesezeit, weil
-er als offener Punkt dasteht, obwohl er inhaltlich entschieden ist. Ein Satz
-„explizit nicht geplant, weil Loopback-only" macht 1.4 von vier Punkten auf
-drei — und die verbliebenen drei (**BD2**, **BD3**, **BD5**) brauchen alle
-fremde Hardware oder einen konkreten Anlass, sind also ohnehin nicht
-delegierbar.
+*Konkrete Auswirkung*: ein Satz je Datei nach dem Muster, das `emojis.nvim`,
+`dap.nvim` und `open.nvim` schon verwenden („leer aus Absicht, nicht aus
+Vernachlaessigung"), plus die Rollenzeile aus [3.2](#32-roadmapmd-heit-in-diesen-repos-vier-verschiedene-dinge).
+Danach beantwortet die Datei selbst, was heute jedes Mal nachgesehen werden
+muss. Gebaut wird nichts, und genau das ist der Punkt: es ist die letzte
+Aufraeumarbeit, die diesen Report kuerzer macht, statt ihn zu verlaengern.
 
-**Wenn stattdessen gebaut werden soll**: der naechstbeste Kandidat ist die
-Aufraeumarbeit aus 2.2 — sieben Repos mit leerer `ROADMAP.md`, bei denen
-„keine offene Arbeit" eine Annahme statt einer Aussage ist. Ein Satz je Datei
-nach dem Muster, das `emojis.nvim` und `dap.nvim` schon verwenden
-(**XS gesamt, Nutzen mittel**), und der naechste Durchgang durch diesen Report
-spart sich genau diese Rueckfrage.
+**Was danach bleibt, ist teuer oder braucht dich** — die vier Punkte aus der
+Aufzaehlung oben, plus **BD2**, **BD3** und **BD5**, die alle fremde Hardware
+oder einen konkreten Anlass verlangen.
 
 ---
 
@@ -216,8 +208,9 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 15 offene Punkte**, davon **kein** Quick Win mehr und 4, die
-  dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
+- **Insgesamt 13 offene Punkte**, davon **kein** Quick Win mehr und 3, die
+  dich brauchen (BD4 ist am 2026-08-31 abgelehnt und festgeschrieben, L4 am
+  selben Tag gebaut). `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
   mehr**, `gopath.nvim` ebenfalls keinen. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
   **M6 + M7** (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und
@@ -482,18 +475,15 @@ ausprobiert.
 
 ---
 
-#### BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)
+#### ~~BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)~~
 
-**Aufwand M · Nutzen niedrig · Entscheidung liegt bei dir**
-
-Rendering optional an eine externe Website auslagern. **Der Vorbehalt**: das
-widerspricht dem Loopback-only-Modell, Dokumentinhalt verließe das Gerät. Nur
-als ausdrückliches Opt-in mit klarem Datenschutzhinweis denkbar.
-`browser.open_url` deckt einen Teil des Bedarfs bereits ab.
-
-*Empfehlung*: ablehnen und aus der Roadmap streichen, oder als "explizit nicht
-geplant" festschreiben. Ein offener Punkt, den man aus Prinzip nicht baut,
-kostet bei jedem Durchgang erneut Lesezeit.
+**Abgelehnt am 2026-08-31** und in der Repo-Roadmap als „explicitly not
+planned" festgeschrieben, samt der Bedingung, die ihn wieder aufmachen wuerde.
+Begruendung in
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md): mdview traegt
+inzwischen vier loopback-only-Kanaele mit Pufferzustand in den Browser, und
+dieser Punkt waere die eine Stelle, an der Dokumentinhalt das Geraet verlaesst
+— fuer einen Bedarf, den `browser.open_url` groesstenteils schon deckt.
 
 ---
 
@@ -531,7 +521,7 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 |---|---|---|
 | `lsp.nvim` | 13 | Feature-Tabelle §14 plus 2 Punkte aus der geretteten LSPDoctor-Analyse |
 | `images.nvim` | 8 | Backends (Sixel, Kitty APC), Detection, 5 Cross-Plugin-Kreuzungen |
-| `mdview.nvim` | 2 | 2 Grundsatzfragen (BD4, BD5); L4 aus dem SCHLACHTPLAN ist am 2026-08-31 gebaut |
+| `mdview.nvim` | 1 | BD5 (PDF-Hover, bewusst liegen gelassen); L4 gebaut und BD4 abgelehnt, beides 2026-08-31 |
 | `lib.nvim` | 2 | eine `deps.health`-Migration, Windows-Elevation |
 | `open.nvim` | 1 | plattformabhängig, braucht dich |
 | `filetree.nvim` | 1 | Badge-Optimierung |

@@ -134,6 +134,68 @@ toggle, not cycling through all four.
 
 ---
 
+## 3b. Visual selection mirror — the presenting switch (new 2026-08-31)
+
+**Off by default.** This is the one to reach for when showing a document to
+someone rather than editing it.
+
+**Steps**
+
+```vim
+:MDView selection
+```
+then, in the buffer, `v` + some motion, `V` over three lines, and `CTRL-V`
+over a column block. Then `:MDView selection` again to switch it back off.
+
+**Expect**: with it **off**, selecting text changes nothing in the browser —
+that is the point, an audience should not watch you select things you are only
+operating on. Switching it **on** re-renders the tab once (invisible, but it is
+why the first thing you point at appears without a hitch) and immediately draws
+a selection that is already active. Then:
+
+- `v` → the highlight follows the selection as it grows, across line ends.
+- `V` → one bar per line, each hugging that line's text.
+- `CTRL-V` → a column band, one rectangle per line.
+- `<Esc>` → the highlight disappears at once.
+- Switching it off again clears a highlight that is currently drawn, rather
+  than leaving it stranded in the tab.
+
+Also select **inside a fenced code block** — that path is resolved differently
+(code blocks carry no inline source spans, so the block's own line structure is
+used) and is exactly the case a README walkthrough hits.
+
+*Known limit*: source columns include markup characters the browser does not
+render (`**bold**` is four characters wider in the source), so at markup
+boundaries the highlight can be a character or two off. Inside code blocks and
+plain text it is exact.
+
+---
+
+## 3c. `highlighter = "nvim"` — the buffer's own colors (new 2026-08-31)
+
+**Not this config's current value** (`hljs` is). Worth switching to once to see
+it, since it is the whole point of the color_my_ascii pairing.
+
+**Prerequisite**: `color_my_ascii.nvim` updated to the commit that added
+`color_my_ascii.highlight` (2026-08-31), and mdview rebuilt — **including
+`npm run build:go`**, since the relay grew a `/spans` route.
+
+**Steps**: set `highlighter = "nvim"` in the mdview spec, restart, open a
+markdown file with a ```lua or ```bash block *and* a ```yaml one, `:MDView`.
+
+**Expect**: the lua/bash blocks are colored **exactly like the buffer next to
+them** — same colorscheme, same groups. Change `:colorscheme` in Neovim, edit
+one character to trigger a push, and the browser follows. The yaml block is
+colored differently: it goes to highlight.js, because color_my_ascii's fence
+map does not cover yaml. That mixture on one page is correct, not a bug — 31
+fence tags against highlight.js's ~190 languages.
+
+Reload the browser tab: the blocks must come back colored **immediately**, not
+only after the next edit (the relay stores the last spans per room for exactly
+this).
+
+---
+
 ## 4. Reverse scroll and click-to-navigate (both enabled in this config)
 
 **`experimental.reverse_scroll = true`** — non-default, deliberately turned

@@ -62,6 +62,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M12b · `documentation.nvim` — die Startup-Grafik auf der generierten Seite](#m12b-documentationnvim--die-startup-grafik-auf-der-generierten-seite)
   - [SEL · `mdview.nvim` — die visuelle Auswahl im Browser spiegeln](#sel-mdviewnvim-die-visuelle-auswahl-im-browser-spiegeln)
   - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
+  - [BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)](#bd4-mdviewnvim-externe-renderer-website-opt-in)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2620,6 +2621,41 @@ neue Spec-Faelle in color_my_ascii, 2 Go-Tests fuer die Registry. Alles gruen:
 
 *Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste, keine Autocmd —
 nur ein neuer Wert fuer `browser.highlighter`.
+
+---
+
+### BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)
+
+**Abgelehnt am 2026-08-31.** Nicht zurueckgestellt: entschieden.
+Festgeschrieben in `wkdbook-myplugins/mdview.nvim/ROADMAP/ROADMAP.md`
+(WKDBooks `ef267a9`) als **„explicitly not planned"**, mit der Bedingung
+daneben, die ihn wieder aufmachen wuerde.
+
+Der Punkt hatte seinen Vorbehalt von Anfang an im Text — Dokumentinhalt
+verliesse das Geraet, was dem Loopback-only-Modell widerspricht. Was ihn
+entscheidbar gemacht hat, ist, **wie viel inzwischen an diesem Modell haengt**:
+mdview traegt am Ende dieses Tages vier Kanaele mit Pufferzustand in den
+Browser — Inhalt, Cursor/Scroll, die visuelle Auswahl (SEL) und die
+Fence-Faerbung (L4) —, und jeder davon ist loopback-only, tokengated,
+Origin-geprueft. Eine externe Renderer-Website waere die eine Stelle, an der
+das aufhoert zu gelten, fuer einen Bedarf, den `browser.open_url` groesstenteils
+schon deckt und der lokale WASM-Renderer ganz ohne Server erfuellt.
+
+*Warum ein Opt-in die Frage nicht loest*: es verschiebt die Entscheidung zu
+jemandem, der nicht pruefen kann, was die Gegenstelle mit dem Dokument tut. Die
+ehrliche Position ist, es nicht anzubieten — nicht, es anzubieten und zu warnen.
+
+*Was ihn wieder aufmachen wuerde*: ein konkreter Fall, in dem lokales Rendering
+die Aufgabe wirklich nicht erfuellt — ein Renderer, dessen Ausgabe mdview nicht
+reproduzieren kann, gewuenscht fuer Dokumente, die nicht vertraulich sind.
+Nicht „es waere schoen, die Wahl zu haben".
+
+*Die eigentliche Ersparnis ist Lesezeit*: der Punkt stand seit dem 2026-08-29 in
+1.4 als offene Arbeit, obwohl er inhaltlich nie offen war — der Eintrag hat sich
+selbst zur Ablehnung empfohlen. Jeder Durchgang durch diesen Report hat ihn
+erneut gelesen und erneut verworfen. 1.4 geht damit von vier Punkten auf drei,
+und die drei verbliebenen (**BD2**, **BD3**, **BD5**) brauchen alle fremde
+Hardware oder einen konkreten Anlass.
 
 ---
 

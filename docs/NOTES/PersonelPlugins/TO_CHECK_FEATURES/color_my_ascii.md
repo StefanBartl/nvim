@@ -218,3 +218,23 @@ Lowest priority — both off in this config.
       by design). If no host is configured,
       `require("color_my_ascii.integrations.menu").items()` should still
       return a real table without erroring.
+
+---
+
+## 9. Highlight read-back API (new 2026-08-31)
+
+Not a user-facing feature — a surface other plugins consume. Checked here
+because a break in it is invisible from inside this repo, and because it
+already has a consumer in this very config.
+
+- [ ] `:lua =vim.tbl_keys(require("color_my_ascii").highlight)` in a Markdown
+      buffer → `runs_for_block` and `attrs_for_group`, without `setup()`
+      having been called explicitly.
+- [ ] `:lua =require("color_my_ascii").highlight.attrs_for_group("Comment")`
+      → colors as `"#rrggbb"` strings, not integers; an unset attribute is
+      absent rather than a default.
+- [ ] The real check is the consumer: with `highlighter = "nvim"` in mdview's
+      spec, code blocks in the browser preview match the buffer — see section
+      3c of [mdview.md](mdview.md). If those colors are right, this API is
+      right; if the preview shows uncolored blocks where the buffer is
+      colored, this is the first place to look.
