@@ -27,7 +27,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)](#task-an-claude-delegieren-claude-soll-diesen-punkt-nicht-bearbeiten)
   - [Arbeitsmodus](#arbeitsmodus)
   - [Naechster Schritt](#naechster-schritt)
-  - [Letzte Task, wenn kein sinnvoller Tassk mehr da ist](#letzte-task-wenn-kein-sinnvoller-tassk-mehr-da-ist)
     - [Offen: die Live-Achse braucht eine echte Sitzung](#offen-die-live-achse-braucht-eine-echte-sitzung)
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
@@ -41,7 +40,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [1.3 Groß (L)](#13-gro-l)
       - [L1 · `images.nvim` — Kitty-APC-Backend](#l1-imagesnvim-kitty-apc-backend)
       - [L3 · `lsp.nvim` — das Signature-Help-Modul schrumpfen](#l3-lspnvim-das-signature-help-modul-schrumpfen)
-      - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
       - [L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`](#l5-documentationnvim-verbund-l1-bis-l9-aus-planmd)
     - [1.4 Braucht dich](#14-braucht-dich)
       - [BD2 · `open.nvim` — die Nicht-Windows-Reveal-Pfade auf echter Hardware prüfen](#bd2-opennvim-die-nicht-windows-reveal-pfade-auf-echter-hardware-prfen)
@@ -420,17 +418,6 @@ LOC). Die Roadmap sagt selbst: "vorerst nur beobachten". Bleibt so.
 
 ---
 
-#### ~~L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln~~
-
-**Erledigt am 2026-08-31**, siehe
-[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md). Ausgeliefert als
-`browser.highlighter = "nvim"`, mit einer eigenen `/spans`-Route (`/control`
-haette nicht gereicht: 1255 Bytes fuer ein 25-Zeilen-Dokument gegen 1 KiB Limit)
-und der oeffentlichen `color_my_ascii.highlight`-API, die Querschnittsbefund
-3.4 dafuer verlangt hat.
-
----
-
 #### L5 · `documentation.nvim`-Verbund — L1 bis L9 aus `PLAN.md`
 
 **Aufwand je L · Nutzen gemischt**
@@ -472,18 +459,6 @@ abgeleitet, nicht ausgeführt**. macOS `open -R` ist genauso unverifiziert.
 aktuelle Design reicht beides an das Terminal weiter, in dem der Nutzer den
 Befehl abschickt — die richtige Grenze, aber bisher nur durchdacht, nicht
 ausprobiert.
-
----
-
-#### ~~BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)~~
-
-**Abgelehnt am 2026-08-31** und in der Repo-Roadmap als „explicitly not
-planned" festgeschrieben, samt der Bedingung, die ihn wieder aufmachen wuerde.
-Begruendung in
-[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md): mdview traegt
-inzwischen vier loopback-only-Kanaele mit Pufferzustand in den Browser, und
-dieser Punkt waere die eine Stelle, an der Dokumentinhalt das Geraet verlaesst
-— fuer einen Bedarf, den `browser.open_url` groesstenteils schon deckt.
 
 ---
 
