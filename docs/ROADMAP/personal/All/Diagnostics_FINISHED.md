@@ -9,6 +9,13 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-08-31](#2026-08-31)
+    - [Cluster B: `need-check-nil` in Tests -- unterdrueckt, nicht auszementiert](#cluster-b-need-check-nil-in-tests-unterdrueckt-nicht-auszementiert)
+      - [Der Befund, der die Umsetzung geaendert hat](#der-befund-der-die-umsetzung-geaendert-hat)
+      - [Was gemacht wurde -- 19 Repos, 93 Dateien](#was-gemacht-wurde-19-repos-93-dateien)
+      - [Ergebnis: 3204 -> 2289](#ergebnis-3204-2289)
+      - [Gegenprobe mit dem festen Harness](#gegenprobe-mit-dem-festen-harness)
+      - [Zwei Sachen, die beim Messen aufgefallen sind](#zwei-sachen-die-beim-messen-aufgefallen-sind)
+      - [Die Messumgebung liegt jetzt fest im Repo](#die-messumgebung-liegt-jetzt-fest-im-repo)
     - [Cluster A: der `assert`-Typ -- und warum der erste Anlauf ins Leere lief](#cluster-a-der-assert-typ-und-warum-der-erste-anlauf-ins-leere-lief)
       - [Die Ursache, jetzt gemessen statt vermutet](#die-ursache-jetzt-gemessen-statt-vermutet)
       - [Die zweite Ursache: der Workspace als seine eigene Library](#die-zweite-ursache-der-workspace-als-seine-eigene-library)
@@ -30,6 +37,161 @@ alles, was noch offen ist.
 ---
 
 ## 2026-08-31
+
+---
+
+### Cluster B: `need-check-nil` in Tests -- unterdrueckt, nicht auszementiert
+
+*(war: Diagnostics-Report Abschnitt 4 B und Abschnitt 8, Punkt 5)*
+
+Der Report hatte die Wahl offen gelassen, weil sie keine Arbeit ist, sondern
+eine Entscheidung: die 920 `need-check-nil` aus `TESTS/` und `scripts/`
+entweder mit `assert(mod)` auszementieren, oder dort abschalten, wo der Befund
+invertiert ist. Entschieden wurde das Abschalten.
+
+Der Grund ist der Zweck der Dateien. Kommt in einem Test etwas als `nil`
+zurueck -- ein `pcall(require, ...)`, ein Fixture-Read, ein uv-Handle --, dann
+*soll* die Datei krachen und das `nil` benennen. Die Nil-Pruefung, die LuaLS
+verlangt, wuerde genau den Fehlschlag verstecken, fuer dessen Meldung der Test
+existiert. Ein `assert(mod)` davor waere 920-mal Code, der eine Pruefung
+nachbaut, die der Test ohnehin ist.
+
+---
+
+#### Der Befund, der die Umsetzung geaendert hat
+
+Geplant war eine `TESTS/.luarc.json` pro Repo: Verzeichnisebene statt
+Dateiebene, 19 Eintraege statt 93. **Das geht nicht.** LuaLS liest
+ausschliesslich die `.luarc.json` im Wurzelverzeichnis des Workspace; eine in
+einem Unterverzeichnis wird nicht etwa daruebergelegt, sondern ignoriert.
+
+Zweimal gegengeprueft, weil eine Verneinung sonst nur eine Vermutung bleibt:
+einmal per `lua-language-server --check` mit einer probeweise angelegten
+`TESTS/.luarc.json`, einmal gegen einen laufenden Server im Editor
+(`runtime-analysis.nvim/TESTS/telemetry_spec.lua` -- 52 Befunde vorher wie
+nachher).
+
+Dateiebene ist damit die feinste Granularitaet, die der Server anbietet. Sie
+erfuellt nebenbei die stehende Regel *"Unterdrueckung braucht eine Begruendung
+im Code"* besser als der urspruengliche Plan: die Begruendung steht ueber dem
+Code, den sie betrifft, statt in einer JSON-Datei ein Verzeichnis hoeher.
+
+---
+
+#### Was gemacht wurde -- 19 Repos, 93 Dateien
+
+19 Repos, 93 Testdateien, je vier Zeilen am Dateikopf:
+
+```lua
+-- Test code: when something here comes back nil -- a `pcall(require, ...)`,
+-- a fixture read, a uv handle -- this file must crash and name it. The nil
+-- guards LuaLS asks for below would hide the very failure it exists to report.
+---@diagnostic disable: need-check-nil
+```
+
+Verteilung der 93 Dateien: documentation 40, lib 11, markdown 8,
+runtime-analysis 8, spotlight 7, filetree 3, open 3, diff 2, und je eine in
+fileops, github_stats, gopath, images, lsp, mdview, pickers, replacer,
+reposcope, sandbox, sessions.
+
+**Kein Zeichen Code geaendert** -- ueber alle 19 Commits sind saemtliche
+hinzugefuegten Zeilen Kommentarzeilen, geloescht wurde nichts. Ein Commit pro
+Repo, alle auf `main` gepusht: diff `ca102cf`, documentation `430ed61`, fileops
+`2e68761`, filetree `63b88f2`, github_stats `66487dc`, gopath `4aaad96`, images
+`59395b4`, lib `a0232a0`, lsp `fde2de3`, markdown `fae1b92`, mdview `ec3c7a7`,
+open `1d5ecde`, pickers `c9fd4fe`, replacer `deb279b`, reposcope `2bb7c69`,
+runtime-analysis `5be8414`, sandbox `283af24`, sessions `9394c52`, spotlight
+`01dca91`.
+
+---
+
+#### Ergebnis: 3204 -> 2289
+
+Messreihe vom 31.08., dieselbe Config-Herstellung wie bei Cluster A.
+Aufgefuehrt sind die Repos, fuer die beide Messungen vorliegen; die Summe geht
+ueber alle 33 Workspaces.
+
+| Repo | vorher | nachher |
+|---|---:|---:|
+| documentation.nvim | 732 | 383 |
+| lib.nvim | 505 | 381 |
+| lsp.nvim | 392 | 379 |
+| runtime-analysis.nvim | 273 | 119 |
+| filetree.nvim | 226 | 167 |
+| nvim-config | 137 | 137 |
+| **Summe (alle 33 Workspaces)** | **3204** | **2289** |
+
+`need-check-nil` selbst: **1128 -> 208**, also genau die 920 aus `TESTS/` und
+`scripts/`. Die 208 Reste liegen in `lua/` und sind echt -- dort wird ein
+`string|nil` ungeprueft weitergereicht, das ist keine Testabsicht, sondern eine
+offene Stelle. Nach Repo: documentation 44, filetree 43, lib 18, lsp 15,
+gopath 14, nvim-config 11, github_stats 10, mdview 10, der Rest verteilt.
+
+Die Rangfolge der Regeln danach: `undefined-field` 562,
+`param-type-mismatch` 458, `need-check-nil` 208, `duplicate-doc-field` 192,
+`duplicate-set-field` 160, `assign-type-mismatch` 135, `inject-field` 118,
+`undefined-doc-name` 87, `redundant-parameter` 84.
+
+---
+
+#### Gegenprobe mit dem festen Harness
+
+Dieselbe Messung ein zweites Mal, mit `scripts/luals-scan` statt der
+Ad-hoc-Umgebung: **2285** statt 2289. Vier Zaehler ueber 33 Workspaces -- genau
+das Rauschen, das unten beschrieben ist, und kein Repo, das sich anders
+verhaelt als gemeldet. Repoweise identisch bis auf den Zaehler:
+documentation 383, lib 381, lsp 379, filetree 167, runtime-analysis 119. Auch
+`need-check-nil` kommt wieder auf 208, davon 197 in den 32 Plugin-Workspaces
+und 11 in der Config -- und **kein einziger mehr in `TESTS/` oder `scripts/`**,
+was die Unterdrueckung an genau der beabsichtigten Stelle bestaetigt.
+
+Die Gegenprobe zeigt nebenbei, wo die zwei Repos gelandet sind, die aus der
+100er-Tabelle in Abschnitt 0 des Reports gefallen sind: spotlight.nvim
+105 -> 49, gopath.nvim 101 -> 67.
+
+---
+
+#### Zwei Sachen, die beim Messen aufgefallen sind
+
+**Die Messung rauscht.** `param-type-mismatch` schwankt zwischen zwei Laeufen
+ueber denselben unveraenderten Stand um einige Zaehler -- pdfport.nvim, in
+dieser Runde nicht angefasst, kam einmal mit -7 und einmal mit +7 zurueck. Ein
+Delta unter etwa 10 in einem einzelnen Repo ist ohne Gegenprobe nicht
+belastbar, und zwar in beide Richtungen: ein Minus als Erfolg zu lesen waere
+derselbe Fehler wie ein Plus als Regression.
+
+**`diff.nvim/plugin/diff.lua` hat CRLF-Zeilenenden** und faellt deshalb bei
+`stylua --check` durch. Nicht von dieser Arbeit verursacht -- die Datei wurde
+hier nicht angefasst, die Zeilenenden stammen aus `4cb35d4` vom 2026-08-06.
+Damit stimmt Abschnitt 6 des Reports nicht mehr, der stylua ueber alle 31 Repos
+sauber meldet; der Punkt steht dort jetzt wieder offen.
+
+---
+
+#### Die Messumgebung liegt jetzt fest im Repo
+
+Nach zwei weggeworfenen Ad-hoc-Varianten steht sie als
+[`scripts/luals-scan/`](../../../../scripts/luals-scan/README.md) im
+Config-Repo: `scan.sh <pass> [repo ...]`, dann
+`compare.py <vorher> <nachher>`. Die injizierte `workspace.library` wird darin
+nicht mehr nachmodelliert, sondern per `build_library(root)` aus einem
+laufenden nvim geholt -- damit entfaellt die Frage, ob das Modell dem Editor
+entspricht. `compare.py` markiert Deltas unterhalb der Rauschgrenze, statt sie
+als Ergebnis zu melden.
+
+Zwei Fallen, die je einen Anlauf gekostet haben und in der README stehen:
+`pwd` antwortet in Git Bash mit `/c/Users/…`, was das Windows-`nvim` nicht
+findet -- headless nvim wartet dann stumm bis zum Timeout, statt zu scheitern
+(dieselbe Klasse Haenger wie ein fehlendes `PLENARY_PATH` in der lsp.nvim-Suite).
+Und `| tail` oder `| grep` puffern die Ausgabe, wodurch ein laufender Scan wie
+ein haengender aussieht.
+
+Beim Nachmessen fuer diesen Eintrag kam eine dritte dazu: der volle Lauf ohne
+Repo-Argumente bricht ab, wenn er aus einem Worktree gestartet wird -- die
+Config landet im Dump unter dem Ordnernamen des Worktrees, `scan.sh` sucht
+`nvim-config.json` und findet nichts. Aus dem Haupt-Checkout tritt das nicht
+auf, deshalb war es beim Bauen nicht aufgefallen. Behoben am 2026-08-31 in
+`8e3d7ef4`.
 
 ---
 

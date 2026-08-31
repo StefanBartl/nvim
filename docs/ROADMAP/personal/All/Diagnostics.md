@@ -8,7 +8,7 @@
     - [Gerade in Arbeit](#gerade-in-arbeit)
     - [Vorschlag nächster Schritt](#vorschlag-nchster-schritt)
     - [Erledigt](#erledigt)
-    - [Stand nach Cluster A (2026-08-31)](#stand-nach-cluster-a-2026-08-31)
+    - [Stand nach Cluster B (2026-08-31)](#stand-nach-cluster-b-2026-08-31)
     - [Offen](#offen)
     - [Arbeitsmodus](#arbeitsmodus)
   - [1. Methode](#1-methode)
@@ -16,7 +16,7 @@
   - [3. Verteilung nach Regel](#3-verteilung-nach-regel)
   - [4. Die Ursachen-Cluster](#4-die-ursachen-cluster)
     - [A. Fehlender `assert`-Typ in den Tests -- ERLEDIGT 2026-08-31](#a-fehlender-assert-typ-in-den-tests-erledigt-2026-08-31)
-    - [B. `need-check-nil` in Tests -- 920 Stück, mechanisch](#b-need-check-nil-in-tests-920-stck-mechanisch)
+    - [B. `need-check-nil` in Tests -- ERLEDIGT 2026-08-31](#b-need-check-nil-in-tests-erledigt-2026-08-31)
     - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
     - [D. `userdata` statt `TSNode` in documentation.nvim -- 210 Stück](#d-userdata-statt-tsnode-in-documentationnvim-210-stck)
     - [E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos](#e-pcallvimcmd-60-stck-ber-alle-repos)
@@ -75,25 +75,23 @@ committet und auf `main` gepusht.
 
 ### Gerade in Arbeit
 
-*Nichts.* Cluster A ist am 2026-08-31 abgeschlossen. Die beiden horizontalen
-Vorarbeiten sind damit halb erledigt -- offen bleibt nur noch **deine
-Entscheidung zu `need-check-nil` in Tests**, danach geht es vertikal weiter.
+*Nichts.* Cluster A und B sind beide am 2026-08-31 abgeschlossen. Damit sind
+die zwei horizontalen Vorarbeiten erledigt -- ab hier wird **vertikal**
+gearbeitet, ein Repo nach dem anderen.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**`need-check-nil` in Tests** (Cluster B). Nach der Bereinigung vom 31.08. ist
-das mit 1128 Befunden die mit Abstand größte verbliebene Gruppe -- **920 davon
-in `TESTS/` und `scripts/`**, nur 207 in `lua/`. Das ist keine Arbeit, sondern
-eine Wahl, und sie gehört dir: entweder `need-check-nil` in einer
-`TESTS/.luarc.json` pro Repo abschalten (der Befund ist dort meist Absicht --
-schlägt `pcall(require, …)` fehl, *soll* der Test krachen), oder überall
-`assert(mod)` davorsetzen und die Nil-Prüfung auszementieren. Nicht beides.
+**documentation.nvim** (383), und damit beginnt der vertikale Modus. Es ist
+auch nach Cluster B das größte Repo, und die 237 `undefined-field` darin sind
+Cluster D: `userdata` statt `TSNode`, eine Annotation pro Sprachmodul. Ein
+Denkschritt für den größten Einzelposten der ganzen Liste.
 
-Sobald das entschieden ist, beginnt der vertikale Modus, und zwar bei
-**documentation.nvim** (732) -- dort liegen nach den 393 `need-check-nil` noch
-237 `undefined-field`, und das ist Cluster D, die `TSNode`-Annotationen.
+Danach bieten sich **lib.nvim** (381, davon 108 `inject-field` -- Cluster F)
+und **lsp.nvim** (379, davon 173 `duplicate-doc-field`) an. Bei lsp.nvim ist die
+Ursache schon benannt: `lua/lsp/@types/vim_lsp.lua` deklariert Felder nach, die
+Neovims eigenes Meta bereits führt.
 
 ---
 
@@ -102,6 +100,7 @@ Sobald das entschieden ist, beginnt der vertikale Modus, und zwar bei
 | # | Punkt | Ergebnis |
 |---|---|---|
 | A | **`assert`-Typ**, und die Library-Auflösung dahinter | **6344 -> 3204** über alle 33 Workspaces. `.luarc.json` ersetzt `workspace.library` komplett, deshalb kam lsp.nvims Injektion in 31 Repos nie an. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| B | **`need-check-nil` in Tests** -- unterdrückt, nicht auszementiert | **3204 -> 2289** über alle 33 Workspaces, `need-check-nil` 1128 -> 208. 19 Repos, 93 Testdateien, je ein Kopf-Kommentar mit Begründung. Die geplante `TESTS/.luarc.json` geht nicht -- LuaLS liest nur die im Wurzelverzeichnis. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
@@ -109,42 +108,48 @@ Sobald das entschieden ist, beginnt der vertikale Modus, und zwar bei
 
 ---
 
-### Stand nach Cluster A (2026-08-31)
+### Stand nach Cluster B (2026-08-31)
 
 Nur die Repos über 100 Befunden; Summe über alle 33 Workspaces. Gemessen in der
-Messreihe vom 31.08., nicht gegen die eingefrorene Tabelle in Abschnitt 2.
+Messreihe vom 31.08., nicht gegen die eingefrorene Tabelle in Abschnitt 2. Eine
+Gegenprobe mit `scripts/luals-scan` kam auf 2285 -- vier Zähler daneben, bei
+repoweise identischen Zahlen. Das ist das Rauschen aus Abschnitt 1.
 
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
-| documentation.nvim | 732 | `need-check-nil` 393, `undefined-field` 237 |
-| lib.nvim | 505 | `need-check-nil` 142, `inject-field` 108 |
-| lsp.nvim | 392 | `duplicate-doc-field` 173, `redundant-parameter` 48 |
-| runtime-analysis.nvim | 273 | `need-check-nil` 158, `param-type-mismatch` 47 |
-| filetree.nvim | 226 | `need-check-nil` 102, `undefined-field` 60 |
+| documentation.nvim | 383 | `undefined-field` 237, `param-type-mismatch` 47 |
+| lib.nvim | 381 | `inject-field` 108, `param-type-mismatch` 71 |
+| lsp.nvim | 379 | `duplicate-doc-field` 173, `redundant-parameter` 48 |
+| filetree.nvim | 167 | `undefined-field` 60, `need-check-nil` 43 |
 | nvim-config | 137 | `param-type-mismatch` 38, `assign-type-mismatch` 26 |
-| spotlight.nvim | 105 | `need-check-nil` 57, `param-type-mismatch` 15 |
-| gopath.nvim | 101 | `need-check-nil` 48, `param-type-mismatch` 22 |
-| **Summe (alle 33)** | **3204** | |
+| runtime-analysis.nvim | 119 | `param-type-mismatch` 47, `undefined-field` 30 |
+| **Summe (alle 33)** | **2289** | |
 
-Nach Regel: `need-check-nil` 1128, `undefined-field` 562,
-`param-type-mismatch` 452, `duplicate-doc-field` 192, `duplicate-set-field`
-160, `assign-type-mismatch` 137, `inject-field` 118. `undefined-global` steht
-auf 0.
+Nach Regel: `undefined-field` 562, `param-type-mismatch` 458,
+`need-check-nil` 208, `duplicate-doc-field` 192, `duplicate-set-field` 160,
+`assign-type-mismatch` 135, `inject-field` 118, `undefined-doc-name` 87,
+`redundant-parameter` 84. `undefined-global` steht auf 0.
+
+Die vier größten Repos tragen 1310 der 2289 Befunde, und keines davon hängt
+noch an einem Cluster, der die Zahlen aller anderen mitbewegt -- deshalb ab
+hier der vertikale Modus.
 
 ---
 
 ### Offen
 
-Reihenfolge wie in Abschnitt 8. Kurz:
+Reihenfolge wie in Abschnitt 8, dazu zwei Nachträge aus der B-Runde (6 und 7).
+Kurz:
 
-1. **`need-check-nil` in Tests** (B, 920) -- Entscheidung nötig, **horizontal zuerst**
-2. **`TSNode` statt `userdata`** (D) -- documentation.nvim, jetzt 237 `undefined-field`
-3. **`duplicate-doc-field` in lsp.nvim** (173) -- neu sichtbar geworden: `lua/lsp/@types/vim_lsp.lua` deklariert Felder nach, die Neovims eigenes Meta schon führt
-4. **`inject-field`** (F, 118 + die `missing-fields`-Reste) -- fast nur lib.nvim
-5. **`pcall(vim.cmd, ...)`** (E, 60) -- mechanisch, über mehrere Repos
-6. **Die ~90 Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil
-7. Der Rest der Verteilung (`param-type-mismatch` 452,
-   `assign-type-mismatch` 137, Annotationsfehler)
+1. **`TSNode` statt `userdata`** (D) -- documentation.nvim, 237 `undefined-field`
+2. **`duplicate-doc-field` in lsp.nvim** (173) -- `lua/lsp/@types/vim_lsp.lua` deklariert Felder nach, die Neovims eigenes Meta schon führt
+3. **`inject-field`** (F, 118 + die `missing-fields`-Reste) -- fast nur lib.nvim
+4. **`pcall(vim.cmd, ...)`** (E, 60) -- mechanisch, über mehrere Repos
+5. **Die ~90 Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil
+6. **Die 208 verbliebenen `need-check-nil`** -- die in `lua/`, und die sind echt: ein `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an, nicht als eigener Durchgang
+7. **`diff.nvim/plugin/diff.lua` auf LF umstellen** -- CRLF seit `4cb35d4` (2026-08-06), fällt bei `stylua --check` durch
+8. Der Rest der Verteilung (`param-type-mismatch` 458,
+   `assign-type-mismatch` 135, Annotationsfehler)
 
 ---
 
@@ -155,12 +160,14 @@ Repos. Begründung: der Denkanteil pro Cluster fällt nur einmal an (bei C waren
 das die Werkzeuge und die Entscheidung, wann welches Muster gilt), der
 Overhead pro Repo dagegen -- Scan davor, Scan danach, Testsuite, Commit --
 fällt horizontal **pro Punkt** an, vertikal nur **einmal für alle Punkte**. Bei
-sechs offenen Clustern ist das grob Faktor 4 bis 5.
+den verbliebenen Clustern (D, E, F plus die Einzelbefunde) ist das grob Faktor
+4 bis 5.
 
-**Zwei Ausnahmen laufen vorher horizontal**, weil sie die Zahlen aller anderen
+**Zwei Ausnahmen liefen vorher horizontal**, weil sie die Zahlen aller anderen
 Repos verändern: das `assert`-Meta (A) und die Entscheidung zu
-`need-check-nil` in Tests (B). Solange die drin sind, geht man in jedem Repo
-dieselbe Phantomliste durch.
+`need-check-nil` in Tests (B) -- solange die drin sind, geht man in jedem Repo
+dieselbe Phantomliste durch. Beide sind seit dem 2026-08-31 erledigt, damit
+gilt ab jetzt nur noch der vertikale Modus.
 
 Regeln, die sich in Cluster C bewährt haben und weiter gelten:
 
@@ -223,6 +230,14 @@ lua-language-server --check "E:/repos/<repo>" --checklevel=Warning --check_forma
 ```
 
 Laufzeit gesamt: rund 10 Minuten. LuaLS 3.18.2-dev, Neovim 0.12.2.
+
+**Die Messung rauscht.** Zwei Läufe über denselben unveränderten Stand
+unterscheiden sich um einige Zähler, `param-type-mismatch` ist der unruhigste
+Posten: pdfport.nvim, in der B-Runde nicht angefasst, kam einmal mit -7 und
+einmal mit +7 zurück. Ein Delta unter etwa 10 in einem einzelnen Repo ist ohne
+Gegenprobe nicht belastbar, und zwar in beide Richtungen --
+`scripts/luals-scan/compare.py` markiert solche Deltas deshalb, statt sie als
+Ergebnis zu melden.
 
 **Grenze der Methode.** `--checklevel=Warning` erfasst `Error` + `Warning`.
 `Hint`/`Information` (ungenutzte Locals, fehlende Felder in Hover-Doku) sind
@@ -319,7 +334,9 @@ einstelligen bis niedrigen zweistelligen Bereich und sind praktisch fertig.
 | `unbalanced-assignments` | 1 | 1 |
 
 Ebenfalls Ausgangsstand. `missing-fields` steht seit dem 2026-08-29 bei 21
-statt 441, alle verbliebenen in lib.nvim (Cluster F).
+statt 441, alle verbliebenen in lib.nvim (Cluster F). `need-check-nil` steht
+seit dem 2026-08-31 bei 208 statt 1190 -- die aus `TESTS/` und `scripts/` sind
+dort unterdrückt, die in `lua/` stehen noch.
 
 ---
 
@@ -352,23 +369,31 @@ Vollständige Aufstellung samt Messmethode:
 
 ---
 
-### B. `need-check-nil` in Tests -- 920 Stück, mechanisch
+### B. `need-check-nil` in Tests -- ERLEDIGT 2026-08-31
 
 Das dominante Muster in `TESTS/`: `local ok, mod = pcall(require, "x")` und
 danach `mod.foo()` ohne Nil-Prüfung, bzw. `vim.fn.getreg`-Rückgaben direkt
-weiterverwendet. In Testcode ist das absichtlich -- schlägt der `require` fehl,
-soll der Test krachen. Behebbar entweder durch `assert(mod)` vor der Nutzung
-oder durch `diagnostics.disable` für `need-check-nil` in einer
-`TESTS/.luarc.json`.
+weiterverwendet. In Testcode ist der Befund invertiert -- kommt dort etwas als
+`nil` zurück, *soll* die Datei krachen und es benennen; die verlangte
+Nil-Prüfung würde genau den Fehlschlag verstecken, für dessen Meldung der Test
+existiert.
 
-Hotspots: `filetree.nvim/TESTS/units.lua` (31),
-`runtime-analysis.nvim/TESTS/telemetry_spec.lua` (52),
-`documentation.nvim/TESTS/mcp_spec.lua` (41),
-`gopath.nvim/scripts/ci/functional_tests.lua` (34),
-`open.nvim/TESTS/usrcmds_spec.lua` (29).
+Entschieden wurde deshalb **unterdrücken statt auszementieren**. Die geplante
+`TESTS/.luarc.json` pro Repo geht allerdings nicht: **LuaLS liest
+ausschließlich die `.luarc.json` im Wurzelverzeichnis des Workspace**, eine in
+einem Unterverzeichnis wird ignoriert -- zweimal gegengeprüft, per
+`lua-language-server --check` und gegen einen laufenden Server. Also
+Dateiebene: 19 Repos, 93 Testdateien, je ein Kopf-Kommentar mit der Begründung
+plus `---@diagnostic disable: need-check-nil`. Kein Zeichen Code geändert.
 
-Die restlichen 265 `need-check-nil` liegen in `lua/` und sind **echt** -- das
-sind Stellen, an denen ein `string|nil` ungeprüft weitergereicht wird.
+**Über alle 33 Workspaces von 3204 auf 2289**, `need-check-nil` selbst von
+1128 auf 208. Vollständige Aufstellung:
+[`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
+
+Die verbliebenen 208 liegen in `lua/` und sind **echt** -- das sind Stellen, an
+denen ein `string|nil` ungeprüft weitergereicht wird. Nach Repo: documentation
+44, filetree 43, lib 18, lsp 15, gopath 14, nvim-config 11, github_stats 10,
+mdview 10, der Rest verteilt.
 
 ---
 
@@ -565,7 +590,12 @@ delegierbar.
 
 ## 6. stylua
 
-**ERLEDIGT 2026-08-29.** `stylua --check` über alle 31 Repos ist sauber.
+**ERLEDIGT 2026-08-29** -- mit einer Ausnahme, die am 2026-08-31 aufgefallen
+ist: `diff.nvim/plugin/diff.lua` hat CRLF-Zeilenenden und fällt deshalb bei
+`stylua --check` durch. Nicht von den Formatierungen unten verursacht, die
+Zeilenenden stammen aus `4cb35d4` vom 2026-08-06; der Punkt steht in
+Abschnitt 0 unter *Offen*. Sonst ist `stylua --check` über alle 31 Repos
+sauber.
 
 Ursprünglich wichen vier Dateien in drei Repos ab, alle derselbe Fall -- ein
 einzeiliges `function() ... end`, das stylua aufklappen will:
@@ -612,9 +642,9 @@ der Repo-Konvention `Spaces` / `2`. Siehe
 
 ## 8. Was daraus folgt
 
-Nach Aufwand-zu-Wirkung geordnet. Punkt 1 und 5 laufen **horizontal** (sie
-verändern die Zahlen aller Repos), alles danach **vertikal pro Repo** -- siehe
-Arbeitsmodus in Abschnitt 0.
+Nach Aufwand-zu-Wirkung geordnet. Punkt 1 und 5 liefen **horizontal**, weil sie
+die Zahlen aller Repos verändern; beide sind seit dem 2026-08-31 erledigt. Was
+bleibt, läuft **vertikal pro Repo** -- siehe Arbeitsmodus in Abschnitt 0.
 
 1. ~~**`assert`-Meta einbauen**~~ -- **erledigt 2026-08-31**, aber anders als
    hier vermutet: nicht die vier Zeilen waren das Problem, sondern dass
@@ -627,8 +657,10 @@ Arbeitsmodus in Abschnitt 0.
    tatsächlich Fehler findet statt Rauschen. Hier liegen die einzigen
    Kandidaten für echte Laufzeitfehler (`missing-parameter`,
    `unbalanced-assignments`, `luadoc-miss-symbol`).
-5. **`need-check-nil` in Tests** (925) -- Entscheidung nötig: unterdrücken oder
-   auszementieren. Nicht beides. **Horizontal, zuerst.**
+5. ~~**`need-check-nil` in Tests** (920)~~ -- **erledigt 2026-08-31**:
+   unterdrückt, nicht auszementiert, mit der Begründung im Kopf jeder
+   betroffenen Testdatei. Nicht auf Verzeichnisebene wie geplant -- LuaLS liest
+   nur die `.luarc.json` im Wurzelverzeichnis. 3204 -> 2289.
 6. **`inject-field` in lib.nvim** (119, plus die 21 `missing-fields`-Reste
    derselben Ursache) und der `pcall(vim.cmd, ...)`-Fix (60) -- beides
    mechanisch.
@@ -636,8 +668,8 @@ Arbeitsmodus in Abschnitt 0.
    formatiert, mdview.nvim auf `Spaces`/`2` umgestellt. `stylua --check` ist
    über alle 31 Repos sauber.
 
-Punkt 1, 2 und 6 sind zusammen ~700 Warnungen und rein mechanisch. Punkt 4 ist
-der inhaltlich interessante Teil.
+Von den offenen sind Punkt 2 und 6 zusammen gut 400 Warnungen und rein
+mechanisch. Punkt 4 ist der inhaltlich interessante Teil.
 
 ---
 
