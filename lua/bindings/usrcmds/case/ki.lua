@@ -40,6 +40,7 @@ local DIGIT_KEY = {
 ---@field name string|nil
 ---@field sla string|nil  One-line SLA context (SLA.md §6E) — priority + the most urgent clock's remaining time, so the AI scopes its answer to how much time this actually has. `{sla}`, deliberately no underscore: templates.lua's `%{(%w+)%}` substitution pattern doesn't match one (see `{activitystream}`'s own comment below).
 ---@field facts string|nil  The "Ermittelte Fakten" block (EXTRACTION.md §7 Richtung 1, `extract.facts.render`) — everything deterministically parsable (versions, SAP Component, SLA state, doc-link versions) as ground truth in the prompt instead of left for the model to guess. `{facts}`, same no-underscore reason as `{sla}`.
+---@field screenshots string|nil  The text `:Case ocr` read out of this case's attachments (`ocr.render`) — the one part of a case that used to be unreadable to every text-based feature here. Carries its own "machine-read, may be wrong" caveat inside the block rather than beside it, because `{facts}` and this must not read as the same class of evidence: facts are parsed from files the customer sent, this is guessed from pixels. `{screenshots}`, same no-underscore reason as `{sla}`.
 
 --- Assemble the full prompt for this case's activity stream.
 ---@param tokens Lib.Case.KiTokens
@@ -53,6 +54,7 @@ function M.build_prompt(tokens, activity_stream)
     name = tokens.name,
     sla = tokens.sla,
     facts = tokens.facts,
+    screenshots = tokens.screenshots,
     activitystream = vim.trim(activity_stream or ""),
     -- `{reporoot}`, deliberately no underscore: templates.lua's
     -- `%{(%w+)%}` substitution pattern doesn't match one (see `{sla}`'s

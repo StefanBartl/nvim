@@ -15,7 +15,7 @@ Three verbs, one line each:
 
 - **`:Case`** — always resolves to exactly **one** case (explicit arg →
   current buffer → `kit.select`): `new`/`info`/`summary`/`notes`/
-  `similar`/`timeline`/`ki`/`ki import`/`copy`/`sync`/`versions`/
+  `similar`/`timeline`/`ki`/`ki import`/`ocr`/`copy`/`sync`/`versions`/
   `doclinks`/`close`/`reassign`/`snow`/`sla`/`reply check`/…
 - **`:Cases`** — the cross-case querschnitt: `list`/`close`/`find`/`grep`/
   `stale`/`sla`/`sla report`/`history`/`recent`/`stats`/`doctor`/

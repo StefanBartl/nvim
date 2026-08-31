@@ -173,6 +173,16 @@ buffer resolves it:
   `Workflow/Templates/` — it shows up in the picker with no code change.
 - `:Case copy <path>` — pull a screenshot/log/attachment in; you pick the
   target folder (`Replies`/`Research`/`assets`/case root).
+- `:Case ocr` — the customer sent screenshots instead of text? This reads
+  every image under `assets/` with tesseract and writes the words next to
+  each one as `<image>.ocr.md`. The payoff is not the file, it is that the
+  stack trace in that screenshot is now findable: `:Cases grep "Unmapped
+  Control"` starts hitting inside screenshots, and `:Case ki` puts the text
+  into the prompt (clearly marked as machine-read, so the model doesn't
+  treat a misread version number as fact). Run it again after new
+  attachments arrive — images that were already read are skipped, so it
+  costs nothing. Correct a misrecognized line in the `.ocr.md`, not in the
+  image; nothing overwrites it unless the image itself changes.
 - `:Case ki` / `:Case ki import` — the AI-analysis round trip, covered in
   §1 above (usually the very first thing you run on a new ticket, but
   nothing stops you running it again mid-case with a fresh activity

@@ -23,6 +23,8 @@ keine Doku-Version empfehlen, die von "Tosca Commander"/"Tosca Server"
 oben abweicht). Wo eine Zeile "unbekannt" sagt, ist das eine echte Lücke,
 keine Einladung zu raten.
 
+{screenshots}
+
 ## Task
 
 Kannst du diesen Activity Stream analysieren? Gib dann eine mögliche Solution und eine Einschätzung, wie schwer der Case zu lösen ist — richte den Umfang deiner Antwort nach der SLA-Dringlichkeit oben: bei einer engen Frist (Stunden) reicht ein sofort umsetzbarer Aktionsplan, bei einer weiten Frist (Wochen) darf die Lösung ausführlicher sein.

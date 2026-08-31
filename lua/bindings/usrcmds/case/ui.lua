@@ -852,6 +852,12 @@ function M.ki(case_arg)
     local m = meta.read(entry.dir)
     local ok_facts, facts_lines =
       pcall(require("bindings.usrcmds.case.extract.facts").render, entry)
+    -- Whatever `:Case ocr` has already read out of this case's screenshots.
+    -- Only what is on disk — this never triggers OCR itself: `:Case ki` is a
+    -- one-keystroke "give me the prompt", and silently turning it into a
+    -- half-minute tesseract run over a dozen attachments would be a different
+    -- command wearing this one's name.
+    local ok_shots, shots = pcall(require("bindings.usrcmds.case.ocr").render, entry)
     local prompt = ki.build_prompt({
       case = entry.short,
       title = m and m.title,
@@ -859,6 +865,7 @@ function M.ki(case_arg)
       name = m and m.name,
       sla = sla_context_line(entry),
       facts = ok_facts and table.concat(facts_lines, "\n") or nil,
+      screenshots = ok_shots and shots or nil,
     }, content)
     if prompt == "" then
       notify.error("ki: prompt template missing or empty (templates/KiPrompt.md)")
@@ -3040,6 +3047,73 @@ function M.linkcheck(case_arg)
         ),
         lines = lines,
       })
+    end)
+  end)
+end
+
+--- `:Case ocr [nr] [--force] [--lang=<code>]` — read the text out of this
+--- case's screenshots and write one `<image>.ocr.md` sidecar per image
+--- (`ocr.lua`). The point is not the buffer it could open, it is that the text
+--- afterwards EXISTS as a file: `query.grep` walks every `*.md` under a case
+--- directory recursively, so `:Case grep "Unmapped Control"` starts finding
+--- hits inside screenshots without a line of change there.
+---
+--- Skips images whose sidecar is already current, so running it over a case a
+--- second time costs nothing and re-reads only what changed (a redacted
+--- screenshot, a replaced attachment). `--force` re-reads everything.
+---@param case_arg string|nil
+---@param opts Lib.Case.OcrOpts|nil
+function M.ocr(case_arg, opts)
+  resolve.pick(case_arg, function(entry)
+    if not entry then
+      notify.warn("no case to read screenshots for")
+      return
+    end
+
+    local ocr = require("bindings.usrcmds.case.ocr")
+    local images = ocr.images(entry)
+    if #images == 0 then
+      notify.warn(("%s: no images in %s/"):format(entry.short, config.assets_dirname))
+      return
+    end
+
+    -- Counted before starting, not reported after: OCR on a dozen attachments
+    -- is tens of seconds of nothing visible happening, and "0 written" at the
+    -- end reads as a failure when it actually means "already done".
+    local pending = 0
+    for _, path in ipairs(images) do
+      if (opts and opts.force) or ocr.is_stale(path) then
+        pending = pending + 1
+      end
+    end
+    if pending == 0 then
+      notify.info(("%s: all %d image(s) already read"):format(entry.short, #images))
+      return
+    end
+    notify.info(("%s: reading %d image(s)…"):format(entry.short, pending))
+
+    ocr.run(entry, opts, function(result)
+      vim.schedule(function()
+        if #result.errors > 0 then
+          notify.warn(
+            ("%s: %d read, %d skipped, %d failed\n%s"):format(
+              entry.short,
+              result.written,
+              result.skipped,
+              #result.errors,
+              table.concat(result.errors, "\n")
+            )
+          )
+          return
+        end
+        notify.info(
+          ("%s: %d image(s) read, %d already current"):format(
+            entry.short,
+            result.written,
+            result.skipped
+          )
+        )
+      end)
     end)
   end)
 end

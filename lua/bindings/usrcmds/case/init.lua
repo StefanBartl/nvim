@@ -308,6 +308,18 @@ function M.enable()
       end,
     },
     {
+      path = { "ocr" },
+      args = { { name = "case", type = "CASE", optional = true } },
+      flags = {
+        { name = "force", bool = true },
+        { name = "lang", short = "l", type = "STRING" },
+      },
+      desc = "Read the text out of this case's screenshots into <image>.ocr.md sidecars, so :Case grep finds it (needs tesseract)",
+      run = function(ctx)
+        ui.ocr(ctx.args.case, { force = ctx.flags.force, lang = ctx.flags.lang })
+      end,
+    },
+    {
       path = { "doclinks" },
       args = { { name = "case", type = "CASE", optional = true } },
       desc = "docs.tricentis.com links (Activity Streams + Replies) pointing at a different Tosca version than the customer's own",

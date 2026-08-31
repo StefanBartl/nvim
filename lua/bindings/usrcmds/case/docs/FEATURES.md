@@ -12,6 +12,56 @@ listed here only as a pointer.
 
 Module: `lua/bindings/usrcmds/case/`.
 
+## `:Case ocr` — der Text in den Screenshots wird zu Text
+
+Kein ROADMAP-Paket, sondern die casedesk-Hälfte von **M11** aus
+`PLUGIN_ROADMAPS.md` (images.nvim, „OCR-Kreuzung mit language.nvim").
+
+Der Ausgangsbefund: Ein Kunde schickt einen Screenshot einer Exception.
+Der Stacktrace darin ist genau das, was den Case identifiziert — und genau
+das, was hier niemand lesen kann, weil `attachments.lua` die Datei als
+Pixel unter `assets/` ablegt. `:Cases grep` findet sie nicht, `:Case ki`
+kann sie nicht in einen Prompt legen, und der einzige Weg, sie zu benutzen,
+ist Abtippen.
+
+- **`ocr.lua`** schickt jedes Bild unter `assets/` durch `images.ocr`
+  (images.nvim, `pcall`-weich) und schreibt das Ergebnis als
+  `<bild>.ocr.md` **neben** das Bild. Diese eine Entscheidung ist die ganze
+  Arbeit: `query.grep` läuft ohnehin rekursiv über jede `*.md` unter einem
+  Case-Verzeichnis, also wird der erkannte Text greppbar, ohne dass dort
+  eine Zeile geändert werden müsste.
+- **Der Sidecar ist ein gewöhnliches Dokument**, kein Cache: H1, ein
+  relativer Bildlink zurück zur Quelle (`:Image` zeigt den Screenshot damit
+  aus der Datei heraus), ein Blockquote mit dem Vorbehalt, dann der Text.
+  Ein Erkennungsfehler wird **im Sidecar** korrigiert, nicht im Bild.
+- **mtime statt bloßer Existenz** entscheidet, ob neu gelesen wird.
+  `:Image redact` und `:Case normalize` schreiben Attachments in place —
+  und ein Sidecar, der den Stand *vor* der Schwärzung beschreibt, ist
+  schlimmer als gar keiner: er bewahrt genau den Text auf, der unkenntlich
+  gemacht wurde. Zweiter Lauf über denselben Case kostet deshalb nichts
+  (`skipped`), `--force` liest trotzdem alles neu.
+- **Streng ein Bild nach dem anderen.** tesseract ist CPU-gebunden, ein
+  Case hat auch mal zwei Dutzend Anhänge — alle gleichzeitig zu starten
+  legt jeden Kern der Maschine lahm, an der gerade gearbeitet wird, und die
+  Warteschlange ist dabei keine Sekunde langsamer.
+- **`:Case ki` bekommt den Text mit**, unter eigener Überschrift „Text aus
+  den Screenshots (maschinell gelesen)" und mit eigenem Vorbehalt — neben
+  `{facts}`, aber ausdrücklich nicht als dieselbe Klasse von Beleg: Fakten
+  sind aus Dateien geparst, die der Kunde geschickt hat, das hier ist aus
+  Pixeln geraten. Gelesen wird nur, was schon auf Platte liegt; `:Case ki`
+  startet nie selbst eine OCR.
+- **`:Case similar` bekommt ihn bewusst NICHT.** Das Ranking ist
+  TF-IDF über `Summary.md` + `Notes.md`, und TF-IDF gewichtet seltene
+  Begriffe am höchsten. Ein verlesenes Wort („Excepticn", „l0cked") ist
+  konstruktionsbedingt der seltenste Begriff im ganzen Korpus — jeder
+  Erkennungsfehler landete also mit maximalem Gewicht im Ranking. Das wäre
+  nicht bloß nutzlos, sondern schädlich.
+- **Voraussetzung:** `tesseract` plus die Sprachdaten. Unter Windows trägt
+  sich der UB-Mannheim-Installer nicht in die PATH ein — images.nvim sucht
+  deshalb zusätzlich in `C:/Program Files/Tesseract-OCR/`.
+  `:checkhealth images` sagt, was gefunden wurde und welche Sprachen da
+  sind.
+
 ## CLI-Befehls-Index (`:Tricentis commands` / `:Tricentis cheatsheet`)
 
 Kein eigenes ROADMAP-Paket — aus der Arbeit an der Mobile Engine
