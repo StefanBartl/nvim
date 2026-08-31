@@ -1924,18 +1924,45 @@ Absturz zu verlieren.
 *Getrennte Namespaces, ausdruecklich*: ein Pfad, den du im Picker oft
 oeffnest, sagt nichts darueber, welches Alternate du hier gemeint hast.
 
-*Ein Datenformat-Bruch, benannt statt migriert*: pickers' Datei liegt weiter
-unter `stdpath("data")/pickers.nvim/frecency.json`, hat aber jetzt die Form von
-`cache.disk` (`{ saved_at, data }`). Ein aelterer Store liest leer und faengt
-neu an. Vertretbar, weil das Feature per Default aus ist — nachgesehen: es
-existierte keine `frecency.json` — und weil ein paar Tage Besuche durch
-Benutzen zurueckkommen. Steht so in `PERSISTENCE.md`.
+*Ein Datenformat-Bruch — erst dokumentiert, dann behoben, und das ist die
+lehrreichere Haelfte*: pickers' Datei liegt weiter unter
+`stdpath("data")/pickers.nvim/frecency.json`, hat aber jetzt die Form von
+`cache.disk` (`{ saved_at, data }`). Die erste Fassung schrieb in
+`PERSISTENCE.md`, ein aelterer Store lese leer und fange neu an — vertretbar,
+weil das Feature per Default aus ist und hier nachweislich keine Datei
+existierte. **Das war die falsche Entscheidung**, und die Begruendung verraet
+warum: „per Default aus" sagt, wie *viele* Leute es trifft, nicht ob es
+passieren soll. Diese Zaehler sind Monate echter Benutzung und lassen sich
+nicht regenerieren.
 
-*Verifiziert*: lib.nvim-Suite gruen (19 neue Assertions), pickers 294/294,
+Behoben in `lib.nvim` `2e73c25` + `pickers.nvim` `919880d`: `store:seed()`
+uebernimmt Zaehler von anderswo und **verweigert** einen Store, der schon
+etwas enthaelt — eine einmalige Migration, die zweimal laufen kann, ist
+stiller Datenverlust. `migrate_legacy` liest die alte Form einmal pro
+Verzeichnis, seedet und schreibt in der neuen Form zurueck; danach ist die
+alte Form weg und der Zweig unerreichbar. Unterschieden werden die beiden an
+der dekodierten Tabelle (die alte hat weder `saved_at` noch `data`), nicht an
+einem Versionsfeld, das nie jemand geschrieben hat.
+
+*Verifiziert*: lib.nvim-Suite gruen (28 neue Assertions), pickers 297/297,
 gopath functional tests gruen (8 neue Assertions, darunter die zwei, die sonst
 still brechen: der klare Sieger, der nicht invertiert werden darf, und das
 Gleichstands-Paar — `table.sort` ist nicht stabil). stylua und luacheck in
 allen drei Repos.
+
+*Doku, in zwei Runden*: der Feature-Commit fasste `configuration.md`,
+`FEATURES/NAVIGATION.md` und `RESOLUTION.md` an und liess vier Stellen
+zurueck, die dasselbe anders erzaehlten — `doc/gopath.txt` (das `:help`, das
+man ohne Browser liest), `RESOLUTION-DE.md` (die deutsche Haelfte, die still
+hinterherhinkte und dadurch aktuell *aussieht*), `WORKFLOW.md` und die
+Developer-Notes. Nachgezogen in `gopath.nvim` `4fcdbc5`.
+
+*Ein offener Nebenbefund, nicht in diesem Zug erledigt*: `gopath.nvim/docs/map/`
+ist eine eingecheckte docmap auf **Schema 2** (aktuell ist 6), ohne
+`.docmap.json`, ohne `gen_map.lua` und ohne CI-Gate — sie kennt
+`alternate/frecency.lua` nicht und kannte auch vorher schon nicht mehr den
+aktuellen Stand. Das ist ein eigener Punkt (Karte regenerieren oder loeschen),
+kein Teil von M9.
 
 *Bindings-Zettel*: nicht beruehrt. Das neue `VimLeavePre` in lib.nvim ist
 opt-in (`autoflush`) und wird von beiden Konsumenten ausgeschaltet — pickers
