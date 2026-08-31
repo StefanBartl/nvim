@@ -9,6 +9,13 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-08-31](#2026-08-31)
+    - [Cluster F: `inject-field` in lib.nvim -- und die `missing-fields`-Reste daneben](#cluster-f-inject-field-in-libnvim-und-die-missing-fields-reste-daneben)
+      - [Die Zombie-Klassen, und was sie verdeckt haben](#die-zombie-klassen-und-was-sie-verdeckt-haben)
+      - [Die Annotation stand nur auf der falschen Zeile](#die-annotation-stand-nur-auf-der-falschen-zeile)
+      - [Ein Typ, der nicht bloss zu frueh, sondern falsch war](#ein-typ-der-nicht-bloss-zu-frueh-sondern-falsch-war)
+      - [Neun Schluessel, die es nur unter einer Strategie gibt](#neun-schluessel-die-es-nur-unter-einer-strategie-gibt)
+      - [Der Alias, der eine echte Luecke zugedeckt hat](#der-alias-der-eine-echte-luecke-zugedeckt-hat)
+      - [Gemessen](#gemessen-1)
     - [documentation.nvim: die restlichen 155 -- der erste vertikale Durchgang](#documentationnvim-die-restlichen-155-der-erste-vertikale-durchgang)
       - [Das Muster, das die Haelfte erklaert: der Guard sitzt auf einem Feld](#das-muster-das-die-haelfte-erklaert-der-guard-sitzt-auf-einem-feld)
       - [Die Kinder eines Treesitter-Knotens](#die-kinder-eines-treesitter-knotens)
@@ -52,6 +59,213 @@ alles, was noch offen ist.
 ---
 
 ## 2026-08-31
+
+---
+
+### Cluster F: `inject-field` in lib.nvim -- und die `missing-fields`-Reste daneben
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 1)*
+
+Beide Regeln, 108 und 22, hingen an **einer** Schreibweise:
+
+```lua
+---@type LibStringsCore
+local S = {}
+
+function S.trim(s) ... end   -- 21x: "Fields cannot be injected into
+                             --       the reference of `LibStringsCore`"
+```
+
+`---@type` sagt „diese Tabelle *ist* bereits jene Klasse“. Alles, was danach
+hineingeschrieben wird, ist fuer LuaLS eine Injektion in eine geschlossene
+Referenz -- und das leere Literal davor eine Klasse, der ihre Felder fehlen.
+Dieselbe Zeile erzeugt also je nach Klasse `inject-field` oder
+`missing-fields`; welche von beiden, haengt nur daran, ob die Klasse Felder
+deklariert.
+
+**381 -> 244**, ein Commit (`e42235d`). Keine andere Regel hat sich
+verschlechtert, Suite gruen, `stylua --check` sauber.
+
+---
+
+#### Die Zombie-Klassen, und was sie verdeckt haben
+
+`lua/lib/lua/tables/@types/init.lua` endete so:
+
+```lua
+return {}
+
+---@class LibTablesSafe
+
+---@class TablesSet
+
+---@class LibTablesFn
+```
+
+Acht leere Klassendeklarationen, hinter dem `return`, ueber zwei Dateien
+(`tables` und `strings`) -- und genau auf die zeigten die acht
+Implementierungen. Die echten, gefuellten Klassen lagen daneben:
+`Lib.Tables.Core`, `Lib.Strings.Core` und so weiter, je eine Datei pro Modul.
+
+Die Annotation trug damit **keine** Typinformation. Sie schaltete nur die
+Ableitung ab, die ohne sie das Richtige getan haette -- und produzierte 99 der
+108 `inject-field`.
+
+**Der teure Teil stand woanders.** `lua/lib/@types/all_functions.lua`, die
+Beschreibung von `require("lib")`, routete vier Namespaces durch dieselben
+Leichen:
+
+```lua
+---@field array TablesArray      -- leer
+---@field core LibTablesCore     -- leer
+---@field dict TablesDict        -- leer
+---@field functional LibTablesFn -- leer
+```
+
+`lib.core.deep_copy(...)` bot im Editor also gar nichts an: keine Completion,
+keine Signatur, keine Pruefung. Vier von rund dreissig Namespaces der
+Hauptfassade, still.
+
+Die Fassade nennt jetzt die echten Klassen. Vorher gegengeprueft, Feld fuer
+Feld, ueber alle acht Paare: `---@field`-Liste und
+`function M.<name>`-Definitionen sind deckungsgleich, in beide Richtungen. Die
+Umstellung kostet also keine Zeile Dokumentation. Der tote Block ist weg, die
+Implementierungen annotieren nicht mehr -- so, wie es `case.lua`, `wrap.lua`,
+`links.lua` und `distance.lua` in demselben Verzeichnis schon immer gemacht
+haben.
+
+---
+
+#### Die Annotation stand nur auf der falschen Zeile
+
+Fuer die Module, deren Klasse echt gefuellt ist, lag der Fix bereits im Repo
+vor -- `cache/init.lua` und `store/init.lua` schreiben ihn hin:
+
+```lua
+local M = {}
+M.disk = require("lib.nvim.cache.disk")
+M.memory = require("lib.nvim.cache.memory")
+
+---@type Lib.Cache
+return M
+```
+
+Am `return` ist die Tabelle vollstaendig, dort prueft LuaLS sie gegen die
+Klasse, und die Klasse bleibt erhalten. Elf weitere Module ziehen jetzt nach
+(`dump`, `error`, `uuid`, `yaml`, `diff/lines`, `diff/myers`,
+`numeral/roman`, `numeral/alpha`, `time/format`, `time/presets`,
+`parser_policy`). `diff/init.lua` und `numeral/init.lua` bauen ihr Aggregat
+stattdessen als ein Literal -- zwei `require`s, die ohnehin nebeneinander
+standen.
+
+Dieselbe Bewegung bei den drei lokalen Kontext-Tabellen: in
+`buffer/context` und `window/context` steht die Klasse bereits am `---@return`
+der Funktion, und die Methoden werden erst unter dem Literal angehaengt. Die
+zweite Annotation auf dem Literal war schlicht zu frueh.
+
+---
+
+#### Ein Typ, der nicht bloss zu frueh, sondern falsch war
+
+`bindings/autocmd/dispatcher/init.lua` fuehrt eine Liste jedes erzeugten
+Dispatchers:
+
+```lua
+---@type Lib.Autocmd.Dispatcher.Entry[]
+local live = {}
+```
+
+`Entry` ist aber, was `M.registry()` daraus **baut** -- mit `attached`, `mode`
+und `handlers`. Was `live` haelt, ist die Rohregistrierung: `name`, `events`,
+`group` und ein `handle`, von dem jene drei Felder erst zur Abfragezeit
+gelesen werden. `handle` kennt `Entry` gar nicht.
+
+Die Liste hat jetzt ihre eigene Klasse, `Lib.Autocmd.Dispatcher.LiveEntry`.
+Das raeumt neben der `missing-fields` auch sechs `undefined-field` auf
+`entry.handle` ab -- an sechs Stellen, an denen der Editor bisher auf einem
+Feld, das es wirklich gibt, nichts anzubieten hatte.
+
+---
+
+#### Neun Schluessel, die es nur unter einer Strategie gibt
+
+Die restlichen neun `inject-field` lagen in `strategies/lazy.lua` -- und die
+waren kein Annotationsfehler, sondern ein Befund: `lazy` exportiert
+`augroup`, `augroup_create_clear`, `unique`, `unique_by`, `is_unique` und drei
+`json_*`, die `Lib` nicht kennt. Die **Standard**strategie (`metatable`)
+registriert sie ebenfalls nicht; ihr `__index` wirft dort
+`lib: unknown key '<name>'`.
+
+Sie einfach auf `Lib` nachzutragen haette eine injizierte Warnung gegen eine
+Phantom-Zusage getauscht: die Fassade haette unter der Voreinstellung etwas
+versprochen, das nicht existiert. Sie stehen deshalb auf einer Unterklasse,
+`---@class Lib.Strategy.Lazy : Lib`, die nur `lazy.lua` an seinem `return`
+fuehrt. Wer die Strategie waehlt, bekommt die Typen; wer sie nicht waehlt,
+bekommt keine Zusage.
+
+`deps` war der eine Schluessel, den beide Strategien fuehren und nur die
+Fassade nicht kannte -- der steht jetzt auf `Lib` selbst.
+
+Das dahinterliegende Problem bleibt offen und ist im Report notiert: die drei
+Strategien haben drei verschiedene Oberflaechen, `eager.lua` nennt `augroup`
+sogar `autogroup`. Der Kommentar bei `noop`/`identity` in `metatable.lua`
+beschreibt genau denselben Fall, einmal schon behoben.
+
+---
+
+#### Der Alias, der eine echte Luecke zugedeckt hat
+
+Im geloeschten Zombie-Block stand, ganz am Ende, `---@alias K any`. Mit ihm
+verschwanden fuenf `undefined-doc-name` -- die der erste Nachher-Lauf prompt
+gemeldet hat, und ohne den waeren sie unbemerkt in die Zahl gewandert.
+
+Vier davon sind eine bekannte Grenze von LuaLS: ein `---@type table<K, ...>`
+*im Rumpf* einer Funktion loest deren Typparameter nicht auf. Da `K` durch den
+Alias ohnehin `any` war, steht dort jetzt `any` -- gleiche Bedeutung, ehrlich
+benannt; die Signatur typisiert weiter, und die sieht der Aufrufer.
+
+Die fuenfte war ein echter Fehler:
+
+```lua
+---@generic T            -- K fehlt
+---@param key fun(item:T):K
+---@return table<K, T[]>
+function M.group_by(list, key)
+```
+
+`count_by`, dreissig Zeilen darunter, macht es richtig (`---@generic T,K`).
+`group_by` hat `K` nie deklariert -- die Zusage `table<K, T[]>` war seit jeher
+`table<any, any[]>`, nur hat es niemand gesehen.
+
+Und noch eine Unterdrueckung, die eine Zeile zu hoch sass: in
+`TESTS/frecency_spec.lua` stand `---@diagnostic disable-next-line:
+missing-fields` ueber `eq(`, waehrend der Befund auf dem `pcall`-Argument in
+der Zeile darunter lag. Sie deckt jetzt die Zeile, die sie meinen sollte.
+
+---
+
+#### Gemessen
+
+`scripts/luals-scan`, ein Lauf vor und einer nach der Aenderung, gleiche
+Arbeitskopie.
+
+| Regel | vorher | nachher |
+|---|---:|---:|
+| `inject-field` | 108 | **0** |
+| `missing-fields` | 22 | **0** |
+| `undefined-field` | 58 | 52 |
+| `undefined-doc-name` | 35 | 34 |
+| `assign-type-mismatch` | 27 | 26 |
+| **lib.nvim gesamt** | **381** | **244** |
+
+`compare.py` meldet `worse: nothing`. Was in lib.nvim bleibt, hat keine
+gemeinsame Ursache mehr: `param-type-mismatch` 71, `undefined-field` 52
+(davon 12 in `bindings/audit.lua`, alle aus einem Union-Rueckgabetyp:
+`keymap.registered()` gibt `table<string, Registered[]>|Registered[]` zurueck,
+je nach Argument, und in `pairs(buckets)` kann LuaLS dann nicht entscheiden,
+welcher der beiden Zweige vorliegt), `undefined-doc-name` 34 -- **19 davon**
+`vim.SystemCompleted` / `vim.SystemObj`, die Neovims Meta unter diesen Namen
+nicht fuehrt.
 
 ---
 
