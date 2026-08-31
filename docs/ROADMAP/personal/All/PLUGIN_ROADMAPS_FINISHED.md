@@ -54,6 +54,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
   - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [M9 · `gopath.nvim` + `pickers.nvim` + `lib.nvim` — Frecency fuer Alternate-Vorschlaege](#m9-gopathnvim--pickersnvim--libnvim--frecency-fuer-alternate-vorschlaege)
+  - [M17/M10 · `documentation.nvim` + `runtime-analysis.nvim` — Laufzeit-Evidenz als Check-Input](#m17m10-documentationnvim--runtime-analysisnvim--laufzeit-evidenz-als-check-input)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -1968,6 +1969,66 @@ kein Teil von M9.
 opt-in (`autoflush`) und wird von beiden Konsumenten ausgeschaltet — pickers
 behaelt seine zwei Autocmds in seiner eigenen Gruppe, gopath registriert
 keines.
+
+---
+
+### M17/M10 · `documentation.nvim` + `runtime-analysis.nvim` — Laufzeit-Evidenz als Check-Input
+
+**Erledigt am 2026-08-31. `documentation.nvim` `b632673`,
+`runtime-analysis.nvim` `0b3b895`, `docmap-desktop` `b699984`.**
+
+**Die Haelfte war schon gebaut, und der Eintrag sagte es nicht.**
+`dead-function` liest Telemetrie seit dem 2026-08-30 als Unterdrueckung — mit
+genau der Begruendung, die §1.5 fuer die allgemeine Form nennt. Offen war die
+zweite Stelle, an der dasselbe Argument gilt, und die ist die schaerfere.
+
+`unreferenced-module` traegt sein Gegenargument seit jeher im eigenen
+Quelltext: *„a module may legitimately be reached only through the
+aggregator's string map rather than a literal require"*. Das ist kein
+Sonderfall-Vorbehalt, das ist eine Beschreibung von `lib.nvim` — dessen ganze
+Oberflaeche laeuft ueber `strategies/metatable.lua`, eine Namens-zu-Modulpfad-
+Tabelle, die erst beim Zugriff requiret. Es gibt dort **kein** literales
+`require`, das ein statischer Scan finden koennte. Der Check meldete diese
+Module seither dauerhaft als verdaechtig.
+
+*Was ausgeliefert wurde*: `loaded_diff.loaded_modules(opts)` — die grobe Frage
+(*war dieses Modul ueberhaupt geladen*) neben dem Feld-Diff, den `rows` schon
+beantwortet (*welche exportierten Funktionen liegen auf der Tabelle*).
+`check_orphans` liest sie und ueberspringt, was die Evidenz deckt.
+
+**Die eine Entwurfsentscheidung, die es wert ist, behalten zu werden: der
+laufende Prozess ist die falsche Quelle.** `package.loaded` im Prozess, der
+den Check ausfuehrt, ist vom Check selbst verunreinigt — `core/scan.lua`
+requiret die Module des gepruefften Baums, um sie zu lesen. Ein Selbst-Scan
+faende also fast alles „geladen" und unterdrueckte jeden Befund. Evidenz, die
+durch die Beobachtung entsteht, ist keine Evidenz. Gelesen wird stattdessen
+der **neueste Snapshot** — absichtlich genommen, in einer Sitzung, in der
+jemand tatsaechlich gearbeitet hat.
+
+*Gemessen an genau dem Baum, um den es geht.* `lib.nvim` gescannt, zehn seiner
+Module geladen als Platzhalter fuer eine Sitzung: **71 Befunde vorher, 68
+nachher, 0 neu erzeugt**. Die drei unterdrueckten sind exakt die vorhergesagte
+Form — `lib.strategies.metatable` (der Aggregator selbst), `lib.lua.memo.memo`
+und `lib.nvim.frecency`, dessen einzige Konsumenten in anderen Repos liegen.
+Eine echte Sitzung laedt Hunderte statt zehn.
+
+*Unterdrueckung, nie Eskalation* — die Linie aus `PLAN.md` §7, jetzt an einer
+zweiten Stelle festgeschrieben: kein Snapshot, kein `runtime-analysis`, kein
+eindeutiger Root-Prefix — jedes davon laesst den Check exakt so arbeiten wie
+bisher. Das ist auch CIs Normalzustand.
+
+*Verifiziert*: alle vier Gates gruen, neunzehn Assertions im neuen
+`loaded_suppression_spec.lua`. Vier davon decken die Abwesenheitsfaelle ab —
+kein Snapshot, kein runtime-analysis, eine werfende Probe, ein unlesbarer
+Snapshot — weil „keine Daten aendern nichts" die Eigenschaft ist, die eine
+Unterdrueckung sicher macht, und die still bricht.
+
+*Nachgezogen, damit die Beschreibung nicht wieder driftet*: `IDEAS.md` §1.5 in
+`runtime-analysis.nvim` las sich weiter wie ein Entwurf und nennt jetzt beide
+Instanzen samt der zwei **verschiedenen** Routen (Telemetrie fuer die eine,
+`loaded`-Snapshot fuer die andere).
+
+*Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste.
 
 ---
 
