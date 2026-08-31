@@ -15,6 +15,29 @@ local opt_local = vim.opt_local
 -- Enable truecolor support in compatible terminals.
 opt.termguicolors = true
 
+-- Measure emoji the way the terminal draws them, not the way Unicode 14 says.
+--
+-- 'emoji' on (the default) makes Neovim treat every emoji codepoint as full
+-- width, including the East-Asian-*Ambiguous* ones that only become emoji
+-- through a trailing variation selector U+FE0F -- so nvim counts U+26A0 U+FE0F
+-- (the WARNING sign :checkhealth emits) as 2 cells. WezTerm's `unicode_version`
+-- defaults to 9, where U+FE0F widens nothing, and draws the same sequence in 1.
+--
+-- One cell of disagreement is enough to corrupt the line. Everything right of
+-- the emoji sits one column left of where nvim believes it is; a full-line
+-- redraw hides that, but as soon as nvim rewrites only a *span* of the line
+-- (cursor enters the region, a highlight attribute changes) it positions the
+-- terminal cursor absolutely and the span lands one column too far right,
+-- overwriting the following character while leaving the previous one standing:
+-- "WARNING oil" renders as "WWARNINGoil".
+--
+-- Off falls back to 'ambiwidth' for exactly those ambiguous codepoints -- i.e.
+-- Unicode 9 widths, which is what WezTerm is using. Genuinely wide emoji
+-- (U+2705, U+274C, U+1F600, ...) stay 2 cells on both sides. The alternative fix
+-- is `unicode_version = 14` in the WezTerm config; pick one, setting both just
+-- moves the mismatch to the other side.
+opt.emoji = false
+
 -- Line numbers: absolute + relative for efficient motions.
 -- opt.number = true
 -- opt.relativenumber = true
