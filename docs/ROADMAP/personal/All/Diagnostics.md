@@ -8,7 +8,7 @@
     - [Gerade in Arbeit](#gerade-in-arbeit)
     - [Vorschlag nächster Schritt](#vorschlag-nchster-schritt)
     - [Erledigt](#erledigt)
-    - [Stand nach Cluster F und der Library-Korrektur (2026-08-31)](#stand-nach-cluster-f-und-der-library-korrektur-2026-08-31)
+    - [Stand nach dem lib.nvim-Durchgang (2026-08-31)](#stand-nach-dem-libnvim-durchgang-2026-08-31)
     - [Offen](#offen)
     - [Arbeitsmodus](#arbeitsmodus)
   - [1. Methode](#1-methode)
@@ -19,7 +19,7 @@
     - [B. `need-check-nil` in Tests -- ERLEDIGT 2026-08-31](#b-need-check-nil-in-tests-erledigt-2026-08-31)
     - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
     - [D. `userdata` statt `TSNode` in documentation.nvim -- ERLEDIGT 2026-08-31](#d-userdata-statt-tsnode-in-documentationnvim-erledigt-2026-08-31)
-    - [E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos](#e-pcallvimcmd-60-stck-ber-alle-repos)
+    - [E. `pcall(vim.cmd, ...)` -- 50 offen, lib.nvims 10 erledigt](#e-pcallvimcmd-50-offen-libnvims-10-erledigt)
     - [F. `inject-field` (119) -- fast vollständig lib.nvim -- ERLEDIGT 2026-08-31](#f-inject-field-119-fast-vollstndig-libnvim-erledigt-2026-08-31)
   - [5. Die kleinen, echten Befunde](#5-die-kleinen-echten-befunde)
     - [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
@@ -75,35 +75,37 @@ committet und auf `main` gepusht.
 
 ### Gerade in Arbeit
 
-*Nichts.* Am 2026-08-31 sind Cluster F und die Messgrundlage der sechs Repos
-ohne `$VIMRUNTIME/lua` erledigt.
+*Nichts.* Am 2026-08-31 ist lib.nvim durch -- 273 -> 1, der zweite Repo, der
+praktisch auf null steht.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**lib.nvim weiter vertikal** (273). Der Typbestand stimmt jetzt, die Zahlen
-sind mit documentation.nvims Null vergleichbar, und die Verteilung hat drei
-benannte Posten:
+**lsp.nvim** (379). Mit lib.nvims 273 weg ist es das größte verbliebene Repo,
+und der Hauptposten hat eine benannte Ursache:
 
-- `param-type-mismatch` **101** und `need-check-nil` **45** -- dieselbe Sache in zwei
-  Regeln: ein Optional wird ungeprüft weitergereicht, überwiegend eine
-  typisierte `vim.fn.*`-Rückgabe. Häufungen in `nvim/selection/init.lua`,
-  `bindings/usercmd/composer/parse.lua`, `TESTS/cwd_spec.lua`
-- `undefined-field` **34**, davon 12 in `bindings/audit.lua` aus einer Ursache:
-  `keymap.registered()` gibt je nach Argument `table<string, Registered[]>`
-  **oder** `Registered[]` zurück, und in `pairs(buckets)` kann LuaLS den Zweig
-  nicht mehr entscheiden
-- die `deprecated` und die 13 `duplicate-doc-field`, überwiegend in `deps/`
-  (`view.lua:49` und `@types/init.lua:99` deklarieren beide
-  `Lib.Deps.View.ToolUiState`) -- klein, benannt, sofort erledigt
+- `duplicate-doc-field` **173** -- `lua/lsp/@types/vim_lsp.lua` deklariert
+  Felder nach, die Neovims eigenes Meta bereits führt. Jedes doppelt
+  deklarierte Feld ist ein Befund in *beiden* Dateien; das ist derselbe
+  Mechanismus, der in lib.nvim `Lib.Deps.View.ToolUiState` und die beiden
+  Namen aus der Config betraf, nur zehnmal so groß
+- `redundant-parameter` **48** -- lohnt eine eigene Durchsicht, statt sie
+  wegzuannotieren: in lib.nvim war genau diese Regel einmal ein echter Fehler
+  (eine still verworfene Seitenzahl) und einmal eine kaputte Signatur
+- dazu die acht `deprecated` und die sechs `missing-parameter` aus
+  Abschnitt 5, die alle in diesem Repo liegen
 
-Die fünf kleineren der sechs (`buffer-ctx` 8, `emojis` 13, `sessions` 15,
-`fileops` 35, `gopath` 67) sind danach je ein kurzer Durchgang; zusammen 138.
+**Eine Zeile davon gehört zwingend dazu**, und sie ist der Grund, warum
+lsp.nvim vor den fünf kleinen Repos steht: `build_library.lua` hängt
+`${3rd}/busted/library` und `${3rd}/luv/library` an, **luassert aber nicht**.
+Deshalb bleibt in lib.nvim genau ein Befund stehen (`undefined-doc-name` auf
+`luassert`), und dasselbe gilt für jedes andere Repo mit Testsuite. Der Fix
+ist eine Zeile und wirkt auf alle 31 -- er gehört gemessen, bevor der nächste
+vertikale Durchgang seine Vorher-Zahl nimmt.
 
-Danach **lsp.nvim** (379, davon 173 `duplicate-doc-field`): dort deklariert
-`lua/lsp/@types/vim_lsp.lua` Felder nach, die Neovims eigenes Meta bereits
-führt.
+Danach die fünf kleineren der sechs (`buffer-ctx` 8, `emojis` 13, `sessions`
+15, `fileops` 35, `gopath` 67) -- je ein kurzer Durchgang, zusammen 138.
 
 ---
 
@@ -118,13 +120,14 @@ führt.
 | C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | F | **`inject-field` in lib.nvim** -- plus die `missing-fields`-Reste aus C | **381 -> 244** in dem Repo, `inject-field` 108 -> 0, `missing-fields` 22 -> 0. Eine Schreibweise (`---@type` auf einer Tabelle, die erst danach gefüllt wird), drei Ursachen darunter -- acht leere „Zombie“-Klassen hinter einem `return`, durch die die `Lib`-Fassade vier Namespaces untypisiert anbot; elf Module, deren Annotation nur auf der falschen Zeile stand; ein Typ, der schlicht falsch war. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | L | **`$VIMRUNTIME/lua` in sechs `.luarc.json`** -- die Messgrundlage | **356 -> 411** über die sechs. `buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib` und `sessions` setzten `workspace.library` selbst und warfen damit die Injektion weg; `vim` war dort ein Global vom Typ `any`. Der Zuwachs ist der Zweck: 60 Befunde fallen weg, weil Typen auflösen, 119 kommen an Stellen dazu, die vorher niemand geprüft hat -- darunter fünf `deprecated`, die seit dem Erstscan in Abschnitt 5 stehen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| V2 | **lib.nvim fertig** -- der zweite vertikale Durchgang | **273 -> 1**. Zwanzig kleine Ursachen, darunter zwei echte Fehler: `getbufinfo()` liefert kein `filetype` (jede Filetype-Ausschlussliste in `buffer_utils` war wirkungslos) und `page_key` verwarf still die Seitenzahl (alle Seiten eines PDFs teilten sich einen Hover-Cache-Slot). Der eine Rest gehört nach lsp.nvim. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
 
 ---
 
-### Stand nach Cluster F und der Library-Korrektur (2026-08-31)
+### Stand nach dem lib.nvim-Durchgang (2026-08-31)
 
 Nur die Repos über 100 Befunden; Summe über alle 33 Workspaces. Gemessen in der
 Messreihe vom 31.08., nicht gegen die eingefrorene Tabelle in Abschnitt 2. Eine
@@ -135,23 +138,22 @@ Abschnitt 1.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | lsp.nvim | 379 | `duplicate-doc-field` 173, `redundant-parameter` 48 |
-| lib.nvim | 273 | `param-type-mismatch` 101, `need-check-nil` 45 |
 | filetree.nvim | 167 | `undefined-field` 60, `need-check-nil` 43 |
 | nvim-config | 137 | `param-type-mismatch` 38, `assign-type-mismatch` 26 |
 | runtime-analysis.nvim | 119 | `param-type-mismatch` 47, `undefined-field` 30 |
 | documentation.nvim | **0** | -- |
-| **Summe (alle 33)** | **1824** | |
+| lib.nvim | **1** | `undefined-doc-name` auf `luassert` -- gehört nach lsp.nvim |
+| **Summe (alle 33)** | **1552** | |
 
-`param-type-mismatch` ist die größte verbliebene Regel und liegt verteilt statt
-geballt -- kein Cluster mehr, der ein Repo allein trägt. Die Summe ist
-fortgeschrieben (1906 - 137 + 55), nicht neu über alle 33 gemessen; der nächste
-Gesamtlauf steht aus.
+Zwei Repos stehen jetzt praktisch auf null, und beide sind vertikal
+durchgegangen worden. Die Summe ist fortgeschrieben (1824 - 272), nicht neu
+über alle 33 gemessen; der nächste Gesamtlauf steht aus.
 
-**Die 55 sind ein Vorzeichenwechsel, kein Rückschritt.** Bis hierher hiess eine
-fallende Zahl "behoben". Bei den sechs Repos ohne `$VIMRUNTIME/lua` hiess die
-niedrige Zahl "nicht geprüft", und sie steigt, weil jetzt geprüft wird. Beides
-in derselben Spalte zu addieren geht nur, solange man dazusagt, welche Summe
-welchen Zustand meint.
+**Die 55 aus dem Library-Fix bleiben ein Vorzeichenwechsel, kein Rückschritt.**
+Bis dahin hieß eine fallende Zahl "behoben". Bei den sechs Repos ohne
+`$VIMRUNTIME/lua` hieß die niedrige Zahl "nicht geprüft", und sie stieg, weil
+jetzt geprüft wird. lib.nvims 273 sind genau diese Sorte Zahl gewesen -- und
+sie sind jetzt echt abgearbeitet, nicht bloß wieder unsichtbar.
 
 ---
 
@@ -160,17 +162,36 @@ welchen Zustand meint.
 Reihenfolge wie in Abschnitt 8, dazu zwei Nachträge aus der B-Runde (9 und 10).
 Kurz:
 
-1. **lib.nvim weiter vertikal** (273) -- `param-type-mismatch` 101, `need-check-nil` 45, dazu die 12 `undefined-field` in `bindings/audit.lua`. Vorgeschlagener nächster Schritt, siehe oben
-2. **Die fünf kleineren der sechs** (`buffer-ctx` 8, `emojis` 13, `sessions` 15, `fileops` 35, `gopath` 67) -- je ein kurzer Durchgang, zusammen 138
-3. **`duplicate-doc-field` in lsp.nvim** (173) -- `lua/lsp/@types/vim_lsp.lua` deklariert Felder nach, die Neovims eigenes Meta schon führt
-4. **`pcall(vim.cmd, ...)`** (E, 60) -- mechanisch, über mehrere Repos
-5. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil; documentation.nvims Anteil daran ist erledigt, lib.nvims teilweise
-6. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an, nicht als eigener Durchgang
-8. **`scripts/luals-scan` dumpt die falsche Library-Funktion** -- `dump_library.lua` ruft `build_library(root)` (37-146 Einträge), der Attach-Pfad des Editors benutzt `library_profiles.build_runtime_library()` (drei). Praktisch ersetzt das Werkzeug damit lazydev, was als Annäherung taugt -- aber der README beschreibt es als das, was der Editor tut
-7. **Die drei Aggregator-Strategien von lib.nvim decken sich nicht** -- `lazy` exportiert neun Schlüssel, die `metatable` (die Voreinstellung) nicht kennt; `eager` nennt `augroup` `autogroup` und mutiert beim Aufbau die Modultabelle von `lib.lua.json`. Kein LuaLS-Befund, aufgefallen bei Cluster F
-9. **`diff.nvim/plugin/diff.lua` auf LF umstellen** -- CRLF seit `4cb35d4` (2026-08-06), fällt bei `stylua --check` durch
-10. Der Rest der Verteilung (`param-type-mismatch` 411,
-   `assign-type-mismatch` 127, Annotationsfehler)
+1. **`${3rd}/luassert/library` in `lsp.nvim`s `build_library.lua`** -- eine
+   Zeile neben `busted` und `luv`. Ohne sie ist der `luassert`-Typ in jedem
+   Repo mit Testsuite undefiniert; in lib.nvim ist das der einzige
+   verbliebene Befund. Gehört gemessen, bevor der nächste Durchgang seine
+   Vorher-Zahl nimmt
+2. **lsp.nvim vertikal** (379) -- `duplicate-doc-field` 173 (`@types/vim_lsp.lua`
+   deklariert Felder nach, die Neovims Meta schon führt), `redundant-parameter`
+   48. Vorgeschlagener nächster Schritt, siehe oben
+3. **Die fünf kleineren der sechs** (`buffer-ctx` 8, `emojis` 13, `sessions` 15,
+   `fileops` 35, `gopath` 67) -- je ein kurzer Durchgang, zusammen 138
+4. **`pcall(vim.cmd, ...)`** (E) -- 50 der 60 offen, lib.nvims 10 erledigt.
+   Mechanisch, über mehrere Repos
+5. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil;
+   documentation.nvims und lib.nvims Anteil daran ist erledigt
+6. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
+   `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an,
+   nicht als eigener Durchgang
+7. **`scripts/luals-scan` dumpt die falsche Library-Funktion** --
+   `dump_library.lua` ruft `build_library(root)` (37-146 Einträge), der
+   Attach-Pfad des Editors benutzt `library_profiles.build_runtime_library()`
+   (drei). Praktisch ersetzt das Werkzeug damit lazydev, was als Annäherung
+   taugt -- aber der README beschreibt es als das, was der Editor tut
+8. **Die drei Aggregator-Strategien von lib.nvim decken sich nicht** -- `lazy`
+   exportiert neun Schlüssel, die `metatable` (die Voreinstellung) nicht kennt;
+   `eager` nennt `augroup` `autogroup` und mutiert beim Aufbau die Modultabelle
+   von `lib.lua.json`. Kein LuaLS-Befund, aufgefallen bei Cluster F
+9. **`diff.nvim/plugin/diff.lua` auf LF umstellen** -- CRLF seit `4cb35d4`
+   (2026-08-06), fällt bei `stylua --check` durch
+10. Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
+    Annotationsfehler)
 
 ---
 
@@ -472,7 +493,7 @@ hat sich um einen Zähler bewegt. Vollständige Aufstellung:
 
 ---
 
-### E. `pcall(vim.cmd, ...)` -- 60 Stück über alle Repos
+### E. `pcall(vim.cmd, ...)` -- 50 offen, lib.nvims 10 erledigt
 
 `Cannot assign 'table' to parameter 'fun(...any):...unknown'`. `vim.cmd` ist in
 Neovims Meta-Definition eine aufrufbare **Tabelle**, keine Funktion, passt also
@@ -482,6 +503,10 @@ einwandfrei, LuaLS kann es nur nicht ausdrücken.
 Fix: `pcall(function() vim.cmd(...) end)`. Häufungen in
 `fileops.nvim/lua/fileops/ops/file.lua` (12), `ops/cycle.lua` (6),
 `filetree.nvim/lua/filetree/adapter/{netrw,oil}.lua`, `sessions.nvim/core.lua`.
+
+**lib.nvims zehn sind erledigt (2026-08-31)** -- sieben in `lua/`, drei in
+`TESTS/`, genau in dieser Form. `vim.cmd.edit` / `vim.cmd.colorscheme` sind
+davon nicht betroffen: die Feldform *ist* eine Funktion.
 
 ---
 
@@ -519,7 +544,7 @@ Diese sind **nicht** musterhaft, sondern einzeln zu prüfen. Zusammen ~90 Stück
 | `vim.lsp.stop_client` | `client:stop()` | lsp.nvim: `usercmds/stop.lua:39,43,55,88`, `usercmds/restart.lua:67,99`, `usercmds/recovery.lua:137` |
 | `vim.diff` | `vim.text.diff` | diff.nvim: `core/render.lua:26,398,442`, `health.lua:25` |
 | `vim.fn.termopen` | `vim.fn.jobstart(..., {term=true})` | debugging.nvim `tools/proc_trace.lua:130`, filetree.nvim `features/system/shell_run/init.lua:58` |
-| `vim.api.nvim_buf_get_option` | `nvim_get_option_value` | lib.nvim `buf_win_tab/get_option/init.lua:24` |
+| `vim.api.nvim_buf_get_option` | `nvim_get_option_value` | ~~lib.nvim `buf_win_tab/get_option/init.lua:24`~~ -- **2026-08-31**: bewusster Kompatibilitätszweig, läuft nur wenn `nvim_get_option_value` davor scheitert; unterdrückt mit Begründung |
 | `vim.api.nvim_buf_add_highlight` | `vim.hl.range` / Extmarks | sandbox.nvim `ui/list_view.lua:47` |
 | `vim.lsp.get_log_path` | `vim.lsp.log.get_filename()` | lsp.nvim `bindings/usrcmds.lua:405` |
 
@@ -545,13 +570,21 @@ im Alt-API-Zweig (language.nvim `spell/init.lua:170`).
 ### `luadoc-miss-symbol` (7) -- kaputte Annotation, Klammer fehlt
 
 - `fileops.nvim/lua/fileops/ops/file.lua:628` (`}` erwartet)
-- `lib.nvim/lua/lib/nvim/buf_win_tab/@types/resize_guarded.lua:40`
-- `lib.nvim/lua/lib/nvim/cross/@types/init.lua:20`
-- `lib.nvim/lua/lib/nvim/cross/fs/mutate/@types/init.lua:13`
+- ~~`lib.nvim/lua/lib/nvim/buf_win_tab/@types/resize_guarded.lua:40`~~
+- ~~`lib.nvim/lua/lib/nvim/cross/@types/init.lua:20`~~
+- ~~`lib.nvim/lua/lib/nvim/cross/fs/mutate/@types/init.lua:13`~~
 - `pickers.nvim/lua/pickers/ui/{action_picker.lua:9,dir_nav_picker.lua:15,scope_picker.lua:34}`
 
 Diese sieben sind der einzige Fall, in dem eine Annotation gar nicht geparst
 wird -- der dokumentierte Typ existiert dort effektiv nicht.
+
+**lib.nvims drei sind erledigt (2026-08-31).** Alle drei hatten dieselbe
+Ursache: ein inneres `fun(): X` in einer Signatur frisst jeden Parameter, der
+danach kommt. Klammern drum -- `(fun(): X)` -- und die Annotation parst. Der
+Fix ist selbst eine Fehlerquelle: dieselbe Form in `Lib.AutoCmd.create` hat
+`create` still auf zwei Parameter reduziert und vier `redundant-parameter` an
+der Aufrufstelle erzeugt, ohne dass die `@types`-Datei selbst einen Befund
+bekam.
 
 ---
 
@@ -559,7 +592,7 @@ wird -- der dokumentierte Typ existiert dort effektiv nicht.
 
 - `filetree.nvim/lua/filetree/features/infra/watcher_quarantine/init.lua:76` -- `notify`
 - `images.nvim/lua/images/debug.lua:86` -- `draw`
-- `lib.nvim/lua/lib/nvim/system/proc_trace.lua:144,158` -- `system`, `jobstart`
+- ~~`lib.nvim/lua/lib/nvim/system/proc_trace.lua:144,158`~~ -- `system`, `jobstart`. **2026-08-31**: bestätigt Monkey-Patching, unterdrückt mit Begründung
 - `sandbox.nvim/lua/sandbox/bindings/usrcmds/init.lua:74` -- `notify`
 - `nvim-config/lua/bindings/mappings/editing.lua:216` -- `paste`
 - `nvim-config/lua/config/todo_comments/init.lua:42` -- `nvim_buf_set_extmark`
@@ -572,22 +605,31 @@ Monkey-Patching; die übrigen sind zu prüfen.
 
 ### `duplicate-doc-alias` (5) -- derselbe Typname zweimal definiert
 
-`LogLevel` existiert dreifach: `lib.nvim/lua/lib/nvim/notify/@types/init.lua:9`,
+`LogLevel` existierte dreifach: `lib.nvim/lua/lib/nvim/notify/@types/init.lua:9`,
 `gopath.nvim/lua/gopath/util/@types/init.lua:28` und
 `nvim-config/lua/@types/log.lua:20`. Dazu `LogLevelNumber`
 (`nvim-config/lua/@types/log.lua:12`) und `Result`
 (`nvim-config/lua/@types/functional.lua:26`) gegen lib.nvim.
 
 Das ist echt und fällt im Editor an, weil lazydev lib.nvim mitlädt: welche
-Definition gewinnt, ist nicht bestimmt. Kandidat für "einmal in lib.nvim
-definieren, überall referenzieren".
+Definition gewinnt, ist nicht bestimmt.
+
+**lib.nvims Anteil ist erledigt (2026-08-31)** -- und zwar andersherum als
+hier vermutet: nicht einmal gemeinsam definieren, sondern getrennt benennen.
+Was der Library gehört, heißt jetzt `Lib.Notify.LogLevel*`; was die Config
+global braucht, behält seinen Namen. Dasselbe für
+`AutoCmds.General.MD.GotoFile.Cfg`, das lib.nvim von der Config geborgt
+hatte und jetzt `Lib.Fs.Open.Url.SystemOpener.Cfg` heißt. Offen bleiben
+gopath.nvims `LogLevel` und `Result`.
 
 ---
 
 ### `unbalanced-assignments` (1)
 
-`lib.nvim/lua/lib/nvim/bindings/autocmd/docs.lua:591` -- eine Variable bekommt
-still `nil`, weil die rechte Seite zu wenige Werte liefert.
+~~`lib.nvim/lua/lib/nvim/bindings/autocmd/docs.lua:591`~~ -- eine Variable bekam
+still `nil`, weil die rechte Seite zu wenige Werte lieferte. **Erledigt
+2026-08-31**: `local ok, err, written = true, nil, nil`. Absicht war es, die
+dritte Variable erst weiter unten zu setzen -- das schreibt man jetzt hin.
 
 ---
 
@@ -704,14 +746,19 @@ bleibt, läuft **vertikal pro Repo** -- siehe Arbeitsmodus in Abschnitt 0.
 6. ~~**`inject-field` in lib.nvim**~~ -- **erledigt 2026-08-31**, 108 -> 0
    samt der 22 `missing-fields`-Reste. Mechanisch war daran nur die Form;
    die Ursache waren acht leere Klassen, durch die die `Lib`-Fassade vier
-   Namespaces untypisiert anbot. Der `pcall(vim.cmd, ...)`-Fix (60) steht
-   noch aus.
-7. ~~**stylua**~~ -- **erledigt 2026-08-29**: alle vier abweichenden Dateien
+   Namespaces untypisiert anbot.
+7. ~~**lib.nvim vertikal**~~ -- **erledigt 2026-08-31**, 273 -> 1. Zwanzig
+   kleine Ursachen statt einer großen, zwei davon echte Fehler. Zehn der
+   60 `pcall(vim.cmd, ...)` sind dabei mit weggegangen; 50 stehen noch aus.
+8. ~~**stylua**~~ -- **erledigt 2026-08-29**: alle vier abweichenden Dateien
    formatiert, mdview.nvim auf `Spaces`/`2` umgestellt. `stylua --check` ist
    über alle 31 Repos sauber.
 
-Von den offenen ist der `pcall(vim.cmd, ...)`-Fix (60) der mechanische
-Rest. Punkt 4 ist der inhaltlich interessante Teil.
+Von den offenen ist der `pcall(vim.cmd, ...)`-Fix (50) der mechanische
+Rest. Punkt 4 ist der inhaltlich interessante Teil -- und zwei vertikale
+Durchgänge haben inzwischen gezeigt, dass er das zu Recht ist: die einzigen
+echten Laufzeitfehler, die diese Arbeit gefunden hat, standen alle in
+Regeln, die von außen wie Kosmetik aussehen.
 
 ---
 

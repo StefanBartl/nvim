@@ -9,6 +9,19 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-08-31](#2026-08-31)
+    - [lib.nvim fertig -- der zweite vertikale Durchgang](#libnvim-fertig-der-zweite-vertikale-durchgang)
+      - [Zwei echte Fehler](#zwei-echte-fehler)
+      - [Zwei Annotationen, die etwas anderes beschrieben als der Code tut](#zwei-annotationen-die-etwas-anderes-beschrieben-als-der-code-tut)
+      - [Das Muster, das ein Drittel erklaert: der Guard sitzt auf dem Feld](#das-muster-das-ein-drittel-erklaert-der-guard-sitzt-auf-dem-feld)
+      - [Rueckgaben, die es ganz oder gar nicht gibt](#rueckgaben-die-es-ganz-oder-gar-nicht-gibt)
+      - [libuv antwortet mit nil, statt zu werfen](#libuv-antwortet-mit-nil-statt-zu-werfen)
+      - [Cluster E, lib.nvims Anteil](#cluster-e-libnvims-anteil)
+      - [Typen, die etwas anderes beschrieben haben](#typen-die-etwas-anderes-beschrieben-haben)
+      - [Zwei Namen, die der nvim-Config gehoeren](#zwei-namen-die-der-nvim-config-gehoeren)
+      - [Die Klammer, die eine Signatur rettet](#die-klammer-die-eine-signatur-rettet)
+      - [Unterdrueckt, mit der Begruendung daneben](#unterdrueckt-mit-der-begruendung-daneben)
+      - [Was offen bleibt: eine Zeile, und sie gehoert nach lsp.nvim](#was-offen-bleibt-eine-zeile-und-sie-gehoert-nach-lspnvim)
+      - [Gemessen](#gemessen)
     - [Sechs Repos pruefen wieder gegen Neovims Typen](#sechs-repos-pruefen-wieder-gegen-neovims-typen)
       - [Die Zahl steigt, und das ist der Zweck](#die-zahl-steigt-und-das-ist-der-zweck)
       - [Eine Hypothese, die die Messung widerlegt hat](#eine-hypothese-die-die-messung-widerlegt-hat)
@@ -19,7 +32,7 @@ alles, was noch offen ist.
       - [Ein Typ, der nicht bloss zu frueh, sondern falsch war](#ein-typ-der-nicht-bloss-zu-frueh-sondern-falsch-war)
       - [Neun Schluessel, die es nur unter einer Strategie gibt](#neun-schluessel-die-es-nur-unter-einer-strategie-gibt)
       - [Der Alias, der eine echte Luecke zugedeckt hat](#der-alias-der-eine-echte-luecke-zugedeckt-hat)
-      - [Gemessen](#gemessen)
+      - [Gemessen](#gemessen-1)
     - [documentation.nvim: die restlichen 155 -- der erste vertikale Durchgang](#documentationnvim-die-restlichen-155-der-erste-vertikale-durchgang)
       - [Das Muster, das die Haelfte erklaert: der Guard sitzt auf einem Feld](#das-muster-das-die-haelfte-erklaert-der-guard-sitzt-auf-einem-feld)
       - [Die Kinder eines Treesitter-Knotens](#die-kinder-eines-treesitter-knotens)
@@ -27,8 +40,8 @@ alles, was noch offen ist.
       - [Zwei verwaiste Doc-Bloecke](#zwei-verwaiste-doc-bloecke)
       - [Annotationen, die schlicht falsch waren](#annotationen-die-schlicht-falsch-waren)
       - [Der Overload, der die Zahl verschlechtert hat](#der-overload-der-die-zahl-verschlechtert-hat)
-      - [Unterdrueckt, mit der Begruendung daneben](#unterdrueckt-mit-der-begruendung-daneben)
-      - [Gemessen](#gemessen-1)
+      - [Unterdrueckt, mit der Begruendung daneben](#unterdrueckt-mit-der-begruendung-daneben-1)
+      - [Gemessen](#gemessen-2)
     - [Cluster D: `userdata` statt `TSNode` -- documentation.nvim](#cluster-d-userdata-statt-tsnode-documentationnvim)
       - [Warum `userdata` der teuerste Annotationsfehler ist](#warum-userdata-der-teuerste-annotationsfehler-ist)
       - [Was gemacht wurde -- 154 Annotationen in 18 Dateien](#was-gemacht-wurde-154-annotationen-in-18-dateien)
@@ -63,6 +76,268 @@ alles, was noch offen ist.
 ---
 
 ## 2026-08-31
+
+---
+
+### lib.nvim fertig -- der zweite vertikale Durchgang
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 1)*
+
+**273 -> 1.** Ein Repo, ein Commit
+([`197a7c7`](https://github.com/StefanBartl/lib.nvim/commit/197a7c7)), 92
+Dateien. Anders als bei Cluster F gab es hier keine eine Ursache -- gut zwanzig
+kleine, und zwei davon waren echte Fehler.
+
+| Regel | vorher | nachher |
+|---|---:|---:|
+| `param-type-mismatch` | 108 | 7 |
+| `need-check-nil` | 47 | 2 |
+| `undefined-field` | 34 | 0 |
+| `assign-type-mismatch` | 26 | 0 |
+| `redundant-return-value` | 14 | 1 |
+| `duplicate-doc-field` | 13 | 0 |
+| `undefined-doc-name` | 11 | 1 |
+| `return-type-mismatch` | 11 | 2 |
+| Rest (12 Regeln) | 9 | 0 |
+| **gesamt** | **273** | **1** |
+
+Die Nachher-Spalte ist die Messung *vor* der letzten Korrekturrunde: sie zaehlt
+noch die sieben `param-type-mismatch` und den Rest, die der Bestaetigungslauf
+danach auf 1 gebracht hat. `worse: nothing` in beiden Laeufen. Suite gruen (42
+Specs), stylua sauber.
+
+---
+
+#### Zwei echte Fehler
+
+**`getbufinfo()` liefert kein `filetype` -- und hat das nie getan.**
+`buf_win_tab/buffer_utils.lua`s `count_real_listed_buffers` las `b.filetype`
+von den Eintraegen, die diese Funktion zurueckgibt. Vim dokumentiert dort
+`bufnr`, `changed`, `hidden`, `lastused`, `listed`, `lnum`, `linecount`,
+`loaded`, `name`, `signs`, `variables`, `windows` -- kein `filetype`. `ft` war
+also immer `""`, und `DEFAULT_EXCLUDE_FILETYPES` mit seinen neun Eintraegen
+(neo-tree, quickfix, TelescopePrompt, help, ...) hat **nie einen Buffer
+ausgeschlossen**. Die Funktion lieferte damit dasselbe wie
+`count_listed_buffers` direkt daneben. `list_listed_buffers_info` meldete aus
+demselben Grund fuer jeden Buffer `filetype = ""`.
+
+Der Befund war ein `undefined-field` auf `b.filetype` -- zwei Zeilen, die
+LuaLS seit dem Erstscan gemeldet hat. Behoben wird er, indem beide Stellen die
+Option am Buffer lesen, so wie `get_buffer_info` nebenan es die ganze Zeit
+schon tut.
+
+**Jede Seite eines PDFs teilte sich einen Hover-Cache-Slot.**
+`hover/preview/media.lua`s `page_key` war als `page_key(path)` deklariert und
+definiert, wurde aber als `page_key(target.path, page)` aufgerufen -- Lua wirft
+das zweite Argument still weg. Der Schluessel war `path .. NUL .. mtime`, fuer
+jede Seite derselbe. Folge: Seite 2 rendern speicherte ihr PNG unter Seite 1s
+Schluessel und `os.remove`te dabei Seite 1s Datei, und ein spaeterer Hover auf
+Seite 1 bekam Seite 2s Bild geliefert.
+
+Der Befund war ein `redundant-parameter` -- eine einzelne Zeile, die aussieht
+wie Kosmetik.
+
+---
+
+#### Zwei Annotationen, die etwas anderes beschrieben als der Code tut
+
+`hover/registry.lua` deklarierte `contribution.sources` als **eine** Funktion.
+`register()` iteriert das Feld seit jeher mit `ipairs`, und jeder Aufrufer
+uebergibt eine Liste -- inklusive vier Faellen in `hover_registry_spec`, die
+genau deshalb als `assign-type-mismatch` gemeldet wurden. Die Tests hatten
+recht, die Annotation nicht.
+
+Der `ArgType`-Alias des Composers fuehrte `WINDOW` nicht, obwohl `argtypes` den
+Typ neben den acht anderen registriert -- und war eine geschlossene Union,
+obwohl `composer.register_type(name, def)` oeffentliche API ist: kein
+selbstregistrierter Typname konnte sie je erfuellen. Jetzt
+`Lib.UserCmd.Composer.ArgTypeBuiltin|string`, mit `WINDOW` in der Liste.
+
+---
+
+#### Das Muster, das ein Drittel erklaert: der Guard sitzt auf dem Feld
+
+Dasselbe wie bei documentation.nvim, nur an anderen Stellen. `parse.dispatch`
+prueft `node.route` und liest das Feld drei Aufrufe spaeter erneut in `route`
+-- acht `param-type-mismatch` und drei `need-check-nil` aus dieser einen Form.
+Dazu `autocmd.docs` (`r.pattern`), `usercmd.create` (`opts.complete`),
+`reveal_in_fm` (`opts.command`), `lua_ls.insert.module_annotation`
+(`opts.row`).
+
+Bei `proc_trace` ist es nicht einmal pedantisch: die Funktion prueft
+`vim.system` und **ersetzt es wenige Zeilen weiter unten selbst**. Der
+Re-Read greift dort tatsaechlich auf etwas anderes zu als der Test.
+
+---
+
+#### Rueckgaben, die es ganz oder gar nicht gibt
+
+`selection.chars()` gibt drei Werte zurueck oder keinen, `parse_kv_token` zwei
+oder keinen, `vim.ui.select` ein Item mit seinem Index oder nichts,
+`parse_raw_response` eine Antwort oder einen Fehler. Zehn Befunde; die
+Bedingung prueft jetzt jeweils den Wert statt seinen Partner.
+
+Zwei davon sind eine Spur mehr als Formsache: in `curl` steht die Kopplung
+"`err` ist genau dann gesetzt, wenn `response` nil ist" nur in Prosa, nicht in
+den zwei Rueckgabe-Slots. Statt ein `nil` als Fehlermeldung weiterzureichen,
+haben die vier Aufrufstellen jetzt einen gemeinsamen Fallback-Text.
+
+---
+
+#### libuv antwortet mit nil, statt zu werfen
+
+`uv.new_pipe()` / `uv.new_timer()` sind `|nil` typisiert -- libuv gibt kein
+Handle mehr aus, wenn keines mehr zu haben ist -- und wurden ungeprueft
+benutzt: in `spawn_capture`, `spawn_stream`, `wait_until`, beiden Debouncern
+und drei `ui.kit`-Oberflaechen. 15 `need-check-nil`.
+
+Jede Stelle hat jetzt eine Antwort darauf, und zwar die, die zum Ort passt:
+
+- `spawn_capture`/`spawn_stream` melden es wie einen fehlgeschlagenen Spawn
+  -- derselbe Ergebnis-Shape, ein anderer Text. Nebenbei fiel auf, dass
+  `spawn_capture`s frueher Ausstieg bei `not handle` seine beiden Pipes offen
+  liess; der gemeinsame `fail()` schliesst sie.
+- `wait_until` meldet es wie einen erschoepften Poll.
+- Die Debouncer rufen die Funktion **undebounced** auf. Den Debounce zu
+  verlieren ist schlecht, den Aufruf zu verlieren waere schlimmer.
+- Ein Timeout-Timer, den es nicht gibt, heisst schlicht: kein Timeout. Einen
+  laufenden Prozess zu killen, weil libuv keine Handles mehr hatte, waere das
+  schlechtere von beiden Ergebnissen.
+
+---
+
+#### Cluster E, lib.nvims Anteil
+
+Die zehn `pcall(vim.cmd, "...")` in diesem Repo sind
+`pcall(function() vim.cmd(...) end)`, wie im Report vorgeschlagen. Sieben in
+`lua/`, drei in `TESTS/`. Der Rest der 60 liegt in anderen Repos und bleibt
+offen.
+
+---
+
+#### Typen, die etwas anderes beschrieben haben
+
+- **`Lib.Notify.Notifier`**: alle fuenf Felder optional, obwohl `create()`
+  jedes einzelne setzt. Deshalb brauchte `notify().info(...)` in `deps.view`
+  an sieben Stellen eine nil-Pruefung. Und `Lib.Notify.Safe` behauptete,
+  `create_safe` gebe einen `Notifier` zurueck -- es ist ein `Safe.Notifier`.
+- **`Lib.Deps.View.ToolUiState`** war zweimal deklariert, in `@types` und
+  noch einmal in `view.lua`. Fuenf `duplicate-doc-field` pro Kopie.
+- **`Lib.Cache.SaveOpts`** war eine leere Unterklasse von `Lib.Cache.Opts` --
+  nominal also nicht dasselbe, weshalb ein Aufrufer mit dem Basistyp sie nicht
+  uebergeben konnte. `deps.first_run` reicht genau eine Options-Tabelle an
+  `load` *und* `save` weiter. Jetzt ein Alias.
+- **`Composer.DocsOpts`** machte zwei Jobs: die partielle Ueberschreibung, die
+  ein Aufrufer `setup()` gibt, und die aufgeloesten Defaults, die
+  `registry.docs` haelt. Getrennt in `DocsOpts` und `DocsDefaults`.
+- **`Lib.Deps.ManagerOpts`** ersetzt das fuenfmal ausgeschriebene
+  `{ manager?: Lib.Deps.Manager }`. LuaLS normalisiert einen Inline-Tabellentyp
+  an einer Deklaration anders als an einer Aufrufstelle -- dieselbe
+  Schreibweise passte irgendwann nicht mehr auf sich selbst.
+- **`Lib.System.ProcTrace.Saved`** ersetzt `table<string, function>` auf einer
+  Tabelle, die auch das offene Log-Handle haelt. Und `uv_hrtime` war ein
+  Typname, den es nie gegeben hat; `uv.hrtime()` gibt eine Zahl zurueck.
+- **Tabpage-Handles** in `tabs_utils` waren `userdata`. Sie sind Integer, in
+  beiden Richtungen der API -- dieselbe Klasse Fehler wie Cluster D, nur fuenf
+  Befunde statt 154.
+- **`Lib.Frecency`** wurde von der `Lib`-Fassade referenziert und war nirgends
+  deklariert. **`Lib.Logger.Instance`** fehlten `level` und `file`, die
+  `:checkhealth` von einer Instanz liest. **`Route.run`** und `Spec.default`
+  waren als "gibt nichts zurueck" deklariert, obwohl `dispatch` genau das
+  zurueckgibt, was sie liefern.
+- Ein `@param`/`@return`-Paar stand auf `M.is_ike = M.is_like` -- einer
+  schlichten Zuweisung ohne Funktion, an die es binden koennte.
+
+---
+
+#### Zwei Namen, die der nvim-Config gehoeren
+
+`LogLevel`/`LogLevelNumber` und `AutoCmds.General.MD.GotoFile.Cfg` deklariert
+die Config des Autors ebenfalls global, und zwei globale Deklarationen eines
+Namens sind in **beiden** Dateien ein `duplicate-doc-alias` beziehungsweise
+`duplicate-doc-field`. Diese Library nennt ihre jetzt `Lib.Notify.LogLevel*`
+und `Lib.Fs.Open.Url.SystemOpener.Cfg`.
+
+Damit ist der Kandidat aus Abschnitt 5 des Reports ("einmal in lib.nvim
+definieren, ueberall referenzieren") von der anderen Seite geloest: nicht
+gemeinsam definieren, sondern getrennt benennen. Was lib.nvim gehoert, heisst
+`Lib.*`; was die Config global braucht, behaelt seinen Namen.
+
+---
+
+#### Die Klammer, die eine Signatur rettet
+
+Ein inneres `fun(): X` frisst in einer Signatur alles, was danach kommt:
+
+```lua
+---@field create fun(cmd: string|fun(): string, exclude_filetypes?: string[], lhs?: string): function
+```
+
+LuaLS liest das als "innere Funktion gibt `string` und `exclude_filetypes`
+zurueck" und scheitert dann an der schliessenden Klammer -- `luadoc-miss-symbol`
+plus zwei `undefined-doc-name` auf Parameternamen, die es als Typen liest. Die
+Annotation existiert danach gar nicht.
+
+Vier Vorkommen: `resize_guarded`, `cross`, `cross.fs.mutate` -- und
+`Lib.AutoCmd.create`, wo es beim Fix erst entstanden ist. Dort hat es `create`
+still auf zwei Parameter reduziert, was vier `redundant-parameter` im
+Dispatcher ausgeloest hat, der die Funktion mit dreien aufruft. Der
+Zwischenscan hat das gefangen; Klammern drum, weg.
+
+Das ist die Lehre daraus: ein Fix in einer `@types`-Datei kann eine Signatur
+kaputtmachen, ohne dass die Datei selbst einen Befund bekommt.
+
+---
+
+#### Unterdrueckt, mit der Begruendung daneben
+
+`nvim_buf_get_option` und `vim.tbl_islist` sind Kompatibilitaetszweige, deren
+ganzer Sinn ihre Veraltetheit ist -- beide laufen nur, wenn der moderne Weg
+davor schon gescheitert ist. `proc_trace`, das `vim.system` und
+`vim.fn.jobstart` ersetzt, *ist* Monkey-Patching; das war schon im Report
+(Abschnitt 5, `duplicate-set-field`) so vermutet.
+
+In den Specs: sieben absichtlich ungueltige Argumente (ein unbekannter
+chdir-Scope, ein Nicht-Tabellen-Submenu, ein malformter Frecency-Eintrag, eine
+Nicht-Funktion als Sink, zwei unbekannte Format-Styles, ein nicht-numerisches
+Buffer-Handle) und zwei `vim.notify`-Doubles.
+
+Und eine in `docs/EXAMPLES/composer-flags-and-kv.lua`: `require("diff")` meint
+diff.nvim, loest innerhalb *dieses* Workspace aber auf `lib.lua.diff` auf. Fuer
+einen Leser mit installiertem diff.nvim ist die Zeile richtig.
+
+---
+
+#### Was offen bleibt: eine Zeile, und sie gehoert nach lsp.nvim
+
+Der eine verbliebene Befund ist `undefined-doc-name` auf `luassert` in
+`lua/lib/@types/luassert.lua:83`. Die Datei sagt selbst, warum: der Typ loest
+nur auf, wo `${3rd}/luassert/library` auf dem Library-Pfad liegt, und
+`lsp.nvim`s `build_library.lua` haengt `${3rd}/busted/library` und
+`${3rd}/luv/library` an -- luassert nicht.
+
+Aus lib.nvim ist das nicht zu schliessen. Eine eigene `workspace.library` in
+der `.luarc.json` waere genau der Fehler, den `dd40880` einen Tag vorher
+behoben hat: die Liste **ersetzt** die Injektion, statt sie zu ergaenzen. Der
+Fix ist eine Zeile in lsp.nvim und wirkt auf alle 31 Repos mit Testsuite --
+deshalb steht er dort und nicht hier.
+
+---
+
+#### Gemessen
+
+```
+scripts/luals-scan/scan.sh before lib.nvim
+# ... 92 Dateien ...
+scripts/luals-scan/scan.sh after lib.nvim
+python scripts/luals-scan/compare.py before after
+```
+
+Drei Laeufe statt zwei: einer nach dem `lua/`-Durchgang (273 -> 91, `worse:
+nothing`), einer nach `TESTS/` (273 -> 8), einer nach der Korrektur der vier
+`redundant-parameter`, die der zweite aufgedeckt hatte (273 -> 1). Der
+Zwischenlauf hat sich bezahlt gemacht: ohne ihn waere die kaputte
+`create`-Signatur mit committet worden.
 
 ---
 
