@@ -105,58 +105,62 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-31. Zuletzt erledigt: **M12b** — Analysis → Startup, der
-Flamegraph in die generierte Seite eingebettet, samt der `--check`-Ausnahme,
-ohne die jedes fremde Repo sich dauerhaft als „stale" gemeldet haette. Davor
-**M12**, **M17/QW6**, **M13**, **M11** (OCR, in beiden Haelften), **M17/M10**,
-**M9**, **M17/M7c** (und im selben Zug **M17/M7b zurueckgestellt**),
-**M17/M14**, **M17/M9**, **M17/M8**, **M17/M13**, **Call Hierarchy**, **M5**,
-**M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**, **M17/M7**, **M6 + M7**,
-**QW8**, **QW10**, **QW1**, **A** und **B**; zurueckgestellt sind ausserdem
-**M4b** und **M17/M12**. Notizen zu allen in
+Stand 2026-08-31. Zuletzt erledigt: **L4** — `browser.highlighter = "nvim"`,
+die Vorschau faerbt Codebloecke mit den Farben, die Neovim ohnehin zeigt, statt
+die Sprache im Browser ein zweites Mal zu raten. Davor **SEL** (die visuelle
+Auswahl im Browser gespiegelt, kein Roadmap-Punkt, direkt beauftragt) und
+**M12b**. Davor **M12**, **M17/QW6**, **M13**, **M11** (OCR, in beiden
+Haelften), **M17/M10**, **M9**, **M17/M7c** (und im selben Zug **M17/M7b
+zurueckgestellt**), **M17/M14**, **M17/M9**, **M17/M8**, **M17/M13**, **Call
+Hierarchy**, **M5**, **M4a**, **M3**, **M2**, **M16**, **QW5**, **M1**,
+**M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**, **A** und **B**;
+zurueckgestellt sind ausserdem **M4b** und **M17/M12**. Notizen zu allen in
 [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-**Die M-Klasse ist damit praktisch leer, und das ist diesmal keine Floskel.**
-Was unter 1.2 noch steht, ist nach Quelltextpruefung Folgendes: **M10**
-(Sixel) kauft Reichweite auf Terminals, die hier niemand benutzt — WezTerm
-spricht OSC 1337. **M14** wurde am 2026-08-31 nachgesehen, und die eigene
-Einschaetzung „Nutzen niedrig" stimmt: `badge_text()` ist im Normalfall vier
-Tabellenzugriffe, `nvim_win_get_width` und `path_shorten` laufen nur bei
-angehefteter und angezeigter Pfadangabe. Die Vermutung, das sei ein heisser
-Pfad, weil die Config das Badge tatsaechlich in ihrer Statusline fuehrt, hat
-sich **nicht** bestaetigt. **M17/M11** hat in diesem Korpus nichts zu kreuzen.
+**Damit ist die Liste an einem anderen Punkt als bei jedem bisherigen
+Durchgang.** Die M-Klasse war schon leer; jetzt ist auch der einzige L-Punkt
+weg, der noch echten Nutzen trug. Was unter 1.2 und 1.3 stehen bleibt, ist
+nach Quelltextpruefung Folgendes:
 
-Was mit echtem Nutzen bleibt, ist damit ein L — und einer davon ist laengst
-keiner mehr.
+- **M10** (Sixel) kauft Reichweite auf Terminals, die hier niemand benutzt —
+  WezTerm spricht OSC 1337; **M14** wurde am 2026-08-31 nachgesehen und ist
+  wirklich kalt (`badge_text()` sind im Normalfall vier Tabellenzugriffe);
+  **M17/M11** hat in diesem Korpus nichts zu kreuzen.
+- **L1** (Kitty-APC) ist der groesste Faehigkeitssprung der ganzen Liste —
+  echtes Inline-Rendering im Textfluss — und der einzige verbliebene Punkt mit
+  hohem Nutzen. Er ist auch der teuerste (**L**, mehrere Sessions), und er
+  zahlt sich auf **dieser** Maschine nicht aus: hier laeuft WezTerm, und der
+  Befund aus dem eigenen Notizbestand ist eindeutig, dass Kitty-APC aus nvim
+  heraus hier nie gerendert hat.
+- **L3** sagt selbst „vorerst nur beobachten". **L5** ist neunmal zuerst eine
+  Scope-Entscheidung und steht vollstaendig in `PLAN.md`.
 
-**Empfohlen: L4 — das nvim-Highlighting im Browser spiegeln**
-(`mdview.nvim` + `color_my_ascii.nvim`, Aufwand **M**, siehe
-[1.3](#13-gro-l)).
+**Empfohlen: BD4 entscheiden — `mdview.nvim`s externe Renderer-Website
+(Aufwand XS als Entscheidung, siehe [1.4](#14-braucht-dich)).**
 
-*Warum jetzt*: der Eintrag ist selbst schon von L auf M korrigiert, weil
-**zwei seiner vier Schritte gebaut sind**. Nachgesehen und bestaetigt:
-`color_my_ascii/highlight_export.lua:64` hat `runs_for_block(bufnr, block)`
-— die Spans eines Fence als row/col/hl_group aus den eigenen Extmarks —, und
-dieselbe Datei loest `hl_group → #hex` ueber `nvim_get_hl` auf. Offen sind nur
-Schritt 3 (die Spans pro Codeblock an den Client transportieren, gebunden an
-die `data-sourcepos` des `<pre>`) und Schritt 4 (der Client legt sie um den
-Code).
+*Warum das und nicht ein Feature*: der Eintrag empfiehlt sich selbst zur
+Ablehnung („ablehnen und aus der Roadmap streichen, oder als *explizit nicht
+geplant* festschreiben"), und die Begruendung dafuer ist seit dem 2026-08-31
+staerker als vorher: mdview hat jetzt **drei** Kanaele, die Pufferzustand ins
+Fenster tragen — Inhalt, Auswahl (SEL), Faerbung (L4) —, und alle drei sind
+Loopback-only. Eine externe Renderer-Website waere die eine Stelle, an der
+Dokumentinhalt das Geraet verlaesst, und sie wuerde dieses Modell fuer einen
+Bedarf brechen, den `browser.open_url` groesstenteils schon deckt.
 
-*Und der Nutzen ist konkret*: `mdview.nvim` haengt fuer Syntax-Highlighting
-heute an JavaScript-Bibliotheken — `hljs`/`shiki` stehen in
-`config/DEFAULTS.lua` und `bindings/usrcmds/standalone.lua`. Danach faerbt die
-Vorschau **dasselbe** wie der Puffer daneben, weil es dieselben Extmarks sind,
-und eine Fremdabhaengigkeit faellt weg. Es ist ausserdem die dritte Stelle in
-Folge, an der dieselbe Frage „wie kommt Neovims Faerbung nach draussen"
-beantwortet wird — nach `:DocBrowse` (QW8) und der generierten Seite
-(M17/QW6), diesmal fuer den Browser.
+*Und die konkrete Auswirkung ist echt, auch wenn nichts gebaut wird*: dieser
+Punkt kostet bei **jedem** Durchgang durch diese Liste erneut Lesezeit, weil
+er als offener Punkt dasteht, obwohl er inhaltlich entschieden ist. Ein Satz
+„explizit nicht geplant, weil Loopback-only" macht 1.4 von vier Punkten auf
+drei — und die verbliebenen drei (**BD2**, **BD3**, **BD5**) brauchen alle
+fremde Hardware oder einen konkreten Anlass, sind also ohnehin nicht
+delegierbar.
 
-*Die eine Einschraenkung, die der Eintrag selbst nennt und die stimmt*:
-`runs_for_block` liest, was color_my_ascii **selbst gemalt hat** — es liefert
-also nichts fuer einen Block, den color_my_ascii nicht einfaerbt. Die
-Alternative aus `SCHLACHTPLAN.md` (Treesitter direkt in mdview, allgemeiner,
-keine Fremdabhaengigkeit) bleibt davon unberuehrt und ist die Entscheidung,
-die vor Schritt 3 zu treffen ist.
+**Wenn stattdessen gebaut werden soll**: der naechstbeste Kandidat ist die
+Aufraeumarbeit aus 2.2 — sieben Repos mit leerer `ROADMAP.md`, bei denen
+„keine offene Arbeit" eine Annahme statt einer Aussage ist. Ein Satz je Datei
+nach dem Muster, das `emojis.nvim` und `dap.nvim` schon verwenden
+(**XS gesamt, Nutzen mittel**), und der naechste Durchgang durch diesen Report
+spart sich genau diese Rueckfrage.
 
 ---
 
@@ -423,28 +427,14 @@ LOC). Die Roadmap sagt selbst: "vorerst nur beobachten". Bleibt so.
 
 ---
 
-#### L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln
+#### ~~L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln~~
 
-**Aufwand M (war L) · Nutzen mittel — die Hälfte des Wegs steht schon**
-
-Aus dem `SCHLACHTPLAN.md`. Vier Schritte, würde die JS-Abhängigkeiten
-(hljs/shiki) ersetzen:
-
-1. **gebaut** — `color_my_ascii.highlight_export.runs_for_block(bufnr, block)`
-   liefert die Spans eines Fence als row/col/hl_group, gelesen aus den
-   `ColorMyAscii`-Extmarks. Genau die Export-Funktion, die der Plan als
-   `tokenize_block` beschreibt.
-2. **gebaut** — dieselbe Datei löst `hl_group -> #hex` über `nvim_get_hl`
-   auf (`resolve_attrs`/`int_to_hex`), heute für `:Fence export --html`.
-3. offen — Transport der Spans pro Codeblock an den Client, gebunden an die
-   `data-sourcepos` des `<pre>`.
-4. offen — der Client legt die Spans um den Code.
-
-*Die eine Einschränkung*: `runs_for_block` liest die Extmarks, die
-color_my_ascii selbst gemalt hat — es liefert also nur dort etwas, wo
-color_my_ascii den Block schon eingefärbt hat. Die Alternative aus dem Plan
-(Treesitter direkt in mdview, allgemeiner, keine Fremdabhängigkeit) bleibt
-davon unberührt.
+**Erledigt am 2026-08-31**, siehe
+[`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md). Ausgeliefert als
+`browser.highlighter = "nvim"`, mit einer eigenen `/spans`-Route (`/control`
+haette nicht gereicht: 1255 Bytes fuer ein 25-Zeilen-Dokument gegen 1 KiB Limit)
+und der oeffentlichen `color_my_ascii.highlight`-API, die Querschnittsbefund
+3.4 dafuer verlangt hat.
 
 ---
 
@@ -541,7 +531,7 @@ Schreibzugriff neben dem Dokument (Cache-Verzeichnis, Aufräumen,
 |---|---|---|
 | `lsp.nvim` | 13 | Feature-Tabelle §14 plus 2 Punkte aus der geretteten LSPDoctor-Analyse |
 | `images.nvim` | 8 | Backends (Sixel, Kitty APC), Detection, 5 Cross-Plugin-Kreuzungen |
-| `mdview.nvim` | 2 + 1 | 2 Grundsatzfragen (BD4, BD5), plus L4 aus dem SCHLACHTPLAN |
+| `mdview.nvim` | 2 | 2 Grundsatzfragen (BD4, BD5); L4 aus dem SCHLACHTPLAN ist am 2026-08-31 gebaut |
 | `lib.nvim` | 2 | eine `deps.health`-Migration, Windows-Elevation |
 | `open.nvim` | 1 | plattformabhängig, braucht dich |
 | `filetree.nvim` | 1 | Badge-Optimierung |
@@ -567,12 +557,13 @@ unter `docs/ROADMAP/` beschreiben je einen ungebauten Weg:
 - **`lsp_integration_fence.md`** — zwei Wege zu vollem LSP (Completion, Hover,
   Diagnostics) innerhalb eines Fence.
 
-Beide hängen an L4 (`mdview.nvim`) — und dessen erster Schritt ist
-inzwischen gebaut: `color_my_ascii.highlight_export.runs_for_block` gibt die
-Spans eines Fence zurück, statt sie nur zu malen, und `to_html` löst die
-Highlight-Gruppen nach `#hex` auf. Damit existiert der kleinste sinnvolle
-Baustein der Fence-Highlighter-API bereits; offen ist, ihn als *öffentliche*
-Schnittstelle zu deklarieren statt als Interna von `:Fence export`.
+**Der erste — `fence_highlighter_api.md` — ist am 2026-08-31 zur Hälfte
+beantwortet**: `color_my_ascii.highlight` ist seither eine deklarierte
+öffentliche Fläche (`runs_for_block` + `attrs_for_group`), und `mdview.nvim`
+konsumiert sie als erster Fremdkonsument (L4). Das war die *Lese*-Richtung.
+Offen bleibt die *Schreib*-Richtung, die das Konzeptdokument eigentlich meint:
+kann ein anderes Plugin das Highlighting innerhalb eines Fence **übernehmen
+oder steuern**. Der zweite (`lsp_integration_fence.md`) ist unberührt.
 
 ---
 
@@ -742,11 +733,14 @@ Die anderen beiden sind gewachsen.
 
 - **Sixel (M10) und XTVERSION-Detection**: Erkennung lohnt erst mit einem
   zweiten Backend, das zweite Backend braucht Erkennung. Ein Paket.
-- **mdview L4 und die `color_my_ascii`-Fence-API**: die Exportfunktion, die
-  L4 braucht, ist der erste sinnvolle Schritt der Fence-Highlighter-API — und
-  sie steht schon (`highlight_export.runs_for_block`). Was fehlt, ist die
-  Entscheidung, sie als öffentliche API zu führen, bevor mdview sie
-  konsumiert. Zweimal gebaut wäre es zweimal falsch.
+- ~~**mdview L4 und die `color_my_ascii`-Fence-API**~~ — **erledigt am
+  2026-08-31, in dieser Reihenfolge, und die Kopplung hat gehalten.** Zuerst
+  `color_my_ascii.highlight` als deklarierte öffentliche Fläche
+  (`runs_for_block` plus das neue `attrs_for_group`), erst danach der Konsument
+  in mdview. Hätte mdview zuerst gebaut, wäre die Auflösung von
+  `hl_group → #hex` ein zweites Mal entstanden — genau das, was dieser Befund
+  verhindern sollte. Notizen in
+  [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 - ~~**`lsp.nvim` M6 und M7**~~ — **erledigt am 2026-08-30, zusammen gebaut,
   und die Kopplung hat gehalten.** `config/init.lua` hatte *eine* Merge-Ebene
   und hat jetzt vier. Der einmal geschriebene Mechanismus, der sonst zweimal

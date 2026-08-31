@@ -30,6 +30,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | --- | --- |
 | `:MDView theme [name]` | Switch preview theme (tab-completed) |
 | `:MDView cursor [line\|caret\|section\|off\|toggle]` | Cursor marker mode in the preview; `toggle` flips section on/off specifically |
+| `:MDView selection [on\|off\|toggle]` | Mirror the visual selection (`v`/`V`/`CTRL-V`) into the preview as a highlight (`browser.selection_sync`, **default on**); off clears a highlight that is drawn |
 | `:MDView sync [action]` | Pause/resume nvim→browser scroll sync (paused ⇒ "⏸ paused" pill in the tab) |
 | `:MDView zoom [+\|-\|reset\|<factor>]` | Preview font-size zoom. An out-of-range number is clamped **and reported** since 2026-08-24 |
 | `:MDView reveal [action]` | Reveal/hide ```private blocks |

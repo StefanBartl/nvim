@@ -60,6 +60,8 @@ und **was ihn wieder aufmachen wuerde**.
   - [M17/QW6 · `documentation.nvim` — Fenced Blocks auf der generierten Seite](#m17qw6-documentationnvim--fenced-blocks-auf-der-generierten-seite)
   - [M12 · `runtime-analysis.nvim` + `images.nvim` — Flamegraphs als Bild](#m12-runtime-analysisnvim--imagesnvim--flamegraphs-als-bild)
   - [M12b · `documentation.nvim` — die Startup-Grafik auf der generierten Seite](#m12b-documentationnvim--die-startup-grafik-auf-der-generierten-seite)
+  - [SEL · `mdview.nvim` — die visuelle Auswahl im Browser spiegeln](#sel-mdviewnvim-die-visuelle-auswahl-im-browser-spiegeln)
+  - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2475,6 +2477,149 @@ eines Fehlers" hat, weil nichts leer ist und nichts kracht.
 
 *Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste, keine Autocmd —
 nur eine Option (`opts.startup_flamegraph`) und ein Panel.
+
+---
+
+### SEL · `mdview.nvim` — die visuelle Auswahl im Browser spiegeln
+
+**Erledigt am 2026-08-31. `mdview.nvim` `9f93fd9`.**
+
+**Kein Roadmap-Punkt** — direkt beauftragt, während L4 zur Entscheidung stand,
+und ausdrücklich etwas anderes als L4: der spiegelt die *Syntaxfärbung* von
+Codeblöcken, dieser die *Auswahl*. Der Anwendungsfall stand im Auftrag:
+während einer Lecture eine Checkliste oder ein README herzeigen und sagen
+können „hier, das markiere ich gerade“ — in dem Fenster, das die Zuschauer
+ansehen, nicht in dem, in dem getippt wird.
+
+*Ausgeliefert*: was in nvim mit `v` / `V` / `CTRL-V` ausgewählt ist, wird in
+der Vorschau hervorgehoben, live während des Ziehens, und verschwindet beim
+Verlassen des Visual-Mode. Alle drei Formen behalten ihre Gestalt
+(charwise läuft über Zeilenenden, linewise nimmt ganze Zeilen, blockwise malt
+den Spaltenbereich auf jeder Zeile). **Default an** (`browser.selection_sync`),
+Opt-out über `:MDView selection off` — wie beauftragt, und mit dem Argument,
+das der Auftrag mitliefert: gebraucht wird es genau dann, wenn niemand vorher
+etwas einschalten will.
+
+**Kein Go-Code**, und das war die tragende Entscheidung. Der Kontrollkanal
+`/control` existiert (er trägt `:MDView cursor`/`zoom`) und ist auf 1 KiB
+gedeckelt — eine Auswahl ist fünf Zahlen, das passt zwanzigfach. Eine eigene
+Route `/spans` hätte ein neues Relay-Binary verlangt; so läuft das Feature auf
+dem Relay, das schon installiert ist.
+
+*Was die Beschreibung nicht hergab, weil es sie nicht gab*: der Client hatte
+die halbe Lösung bereits. Der WASM-Renderer hängt an jeden Inline-Textlauf ein
+`data-sp="Zeile:Spalte:Zeile:Spalte"` (**Byte**spalten, dieselbe Zählung wie
+Neovims Cursor), und `cursorMarker.ts` konnte daraus schon eine DOM-Position
+bauen — für den Caret. Diese Auflösung ist jetzt `render/sourcePos.ts`, von
+beiden benutzt, statt zweimal zu existieren.
+
+*Zwei Dinge, die dabei dazukamen*:
+
+- **Codeblöcke.** `annotate_source_positions` lässt sie absichtlich in Ruhe
+  (ein Client-Highlighter würde innere Spans zerstören) — der Caret fällt dort
+  auf den Zeilenbalken zurück. Für eine Lecture wäre das die falsche
+  Einschränkung, denn ein Codeblock ist genau das, worauf gezeigt wird. Also
+  über `data-sourcepos` des `<pre>` und dessen eigene Zeilenstruktur aufgelöst,
+  gefenced und eingerückt unterschieden über die Zeilenzahl statt über
+  Backticks, die im gerenderten DOM nicht mehr stehen.
+- **Ein Index.** Eine Position aufzulösen scannt das Dokument; ein `ggVG` hätte
+  es einmal pro Zeile gescannt. Jetzt einmal pro Auswahl.
+
+**Der eine echte Fehler kam erst im echten Browser heraus** — headless nicht
+findbar, weil jsdom kein Layout hat. Das Theme-Stylesheet wird *lazy*
+importiert; trifft eine Auswahl ein, bevor es da ist, wird gegen ein halb
+gebautes Layout gemessen, und es entstehen 105 zeichenbreite Rechtecke, die
+dann stehen bleiben. Ein `ResizeObserver` auf dem Container misst seither bei
+jedem Reflow neu — das deckt denselben Fall, Fenstergröße, `:MDView zoom` und
+nachladende Webfonts mit ab.
+
+*Gezeichnet wird über Rechtecke, nicht über Markup*: eine Auswahl in der Quelle
+überschreitet Elementgrenzen nach Belieben (halber Absatz in eine Liste, eine
+Überschrift plus den Codeblock darunter), was kein einzelner Wrapper ausdrücken
+kann. Linewise bekommt eine Range **pro Zeile**: mit einer einzigen meldeten die
+mittleren Zeilen die volle Breite ihrer Blockbox, und die Auswahl las sich als
+zwei textbreite Balken um einen randbreiten herum.
+
+*Getestet*: 13 Client-Tests (Byte→UTF-16 über Mehrbyte-Zeichen, Spalten in
+Codeblöcken beider Sorten, Payload-Validierung), 10 nvim-Tests für die
+Koordinaten inklusive `'selection'=exclusive`, und **vier eigene für das
+Feuern der Autocmds** — das `ModeChanged`-Muster enthält ein wortwörtliches
+CTRL-V-Byte in einer Zeichenklasse, und ein Muster, das nichts trifft, ist von
+einem abgeschalteten Feature nicht zu unterscheiden. Dazu von Hand im Browser
+gegen alle drei Formen, gegen einen Codeblock, und gegen ein Re-Render bei
+aktiver Auswahl.
+
+*Bindings-Zettel*: beide nachgezogen — `:MDView selection` in
+`BINDINGS/Usercmds/mdview.nvim.md`, `selection_sync.lua` in
+`BINDINGS/Autocmds/mdview.nvim.md`.
+
+---
+
+### L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln
+
+**Erledigt am 2026-08-31. `mdview.nvim` `f29be3c`, `color_my_ascii.nvim` `08be52e`.**
+
+Der letzte Punkt mit echtem Nutzen aus 1.3, und er war so zugeschnitten, wie
+der Eintrag es versprochen hat: von den vier Schritten waren zwei gebaut, der
+dritte und vierte sind es jetzt. `browser.highlighter = "nvim"` faerbt
+Codebloecke in der Vorschau mit **den Farben, die Neovim ohnehin zeigt** —
+gleiche Colorscheme, gleiche Highlight-Gruppen, und ein `:colorscheme` in nvim
+erreicht den Browser mit dem naechsten Push.
+
+**Zuerst die oeffentliche API, wie es Querschnittsbefund 3.4 verlangt.**
+`color_my_ascii.highlight` (`api/highlight.lua`) fuehrt `runs_for_block` und
+das neue `attrs_for_group` (`#rrggbb` plus Stilflags, `link=`-Ketten aufgeloest)
+als *deklarierte* Flaeche, statt mdview in `highlight_export`s Interna greifen
+zu lassen. Der Vertrag steht in einem eigenen Spec, weil ein Konsument
+ausserhalb des Repos nicht sehen kann, wenn er bricht: Runs setzen ihre
+Quellzeile byteweise wieder zusammen, ein nicht gesetztes Attribut bleibt nil
+statt Default zu werden, und ein **nicht bemalter Block meldet gar keine
+Gruppen** — die ehrliche Antwort und das Signal zum Zurueckfallen.
+
+**Der Transport wurde groesser als gedacht, und zwar aus zwei Gruenden, die
+sich beim Bauen gezeigt haben.** Die urspruengliche Idee, `/control`
+mitzubenutzen (siehe „Naechster Schritt" vom selben Tag), traegt nicht: das
+Payload eines **25-Zeilen**-Demodokuments ist bereits **1255 Bytes**, das
+`/control`-Limit sind absichtliche 1 KiB. Also eine eigene Route `/spans` — und
+die musste **speichernd** sein statt ephemer, was vorher niemand auf dem Zettel
+hatte: Inhalt ueberlebt einen Reload ueber `LastPayload`, ephemere Spans nicht,
+und der Tab haette das Dokument nach jedem Reload ungefaerbt gezeigt, bis
+zufaellig die naechste Bearbeitung eintrifft. Die Registry haelt Spans jetzt
+**neben** — nie statt — dem Inhalt und seedet eine neue Verbindung mit beidem,
+Inhalt zuerst.
+
+**Die Einschraenkung, die der Eintrag nannte, ist zur Konstruktion geworden.**
+Ein Block, den color_my_ascii nicht bemalt, geht an highlight.js — nicht in
+einen grauen Kasten. Und das ist der Normalfall, nicht der Randfall: die
+`fence_language_map` deckt 31 Fence-Tags ab, highlight.js kennt rund 190
+Sprachen. Damit ist `"nvim"` eine **Ergaenzung** des JS-Highlighters fuer die
+Sprachen, die beide kennen, und nie ein Ersatz, der Reichweite kostet. Im
+Browser verifiziert an einem Dokument mit ```lua, ```bash und ```yaml: die
+ersten beiden aus Neovim gefaerbt (39 Inline-Spans), das dritte von
+highlight.js, auf einer Seite.
+
+*Was die Alternative angeht* — Treesitter direkt in mdview, wie
+`SCHLACHTPLAN.md` sie nennt: sie bleibt ungebaut und das war richtig. Auf
+dieser Maschine liegen elf Parser, kein bash, kein typescript, kein go. Der
+```bash-Block im Demodokument, der jetzt gefaerbt ist, waere farblos geblieben.
+
+*Zwei Details, die ihre Kommentare wert waren*: das Bemalen erhaelt den
+Abschluss-Newline, den comrak schreibt, sonst saesse ein bemalter Block auf
+derselben Seite minimal anders als ein unbemalter; und ein Block, dessen
+gerenderte Zeilenzahl nicht zum Payload passt, bleibt unberuehrt — dann ist
+zwischen Inhalts- und Span-Push eine Bearbeitung gelandet und die Spalten
+waeren falsch.
+
+*Getestet*: 10 Client-Tests (Payload-Validierung inkl. unbekannter Version,
+Zuordnung ueber die erste Inhaltszeile, Bytespalten mit Mehrbyte-Zeichen, der
+Zeilenzahl-Waechter, und dass Codetext nie zu Markup werden kann), 7 nvim-Tests
+fuer die Uebersetzung (mit gestubbtem color_my_ascii — der Punkt ist die
+Uebersetzung, nicht die farbschema-abhaengige Ausgabe des echten Plugins), 4
+neue Spec-Faelle in color_my_ascii, 2 Go-Tests fuer die Registry. Alles gruen:
+118 Client, 88 nvim, Go, stylua, luacheck, eslint, tsc.
+
+*Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste, keine Autocmd —
+nur ein neuer Wert fuer `browser.highlighter`.
 
 ---
 
