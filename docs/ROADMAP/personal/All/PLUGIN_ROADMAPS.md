@@ -57,7 +57,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
     - [3.2 `ROADMAP.md` heißt in diesen Repos vier verschiedene Dinge](#32-roadmapmd-heit-in-diesen-repos-vier-verschiedene-dinge)
     - [3.3 Die Warteschlangen liegen zu dritt außerhalb der Roadmaps](#33-die-warteschlangen-liegen-zu-dritt-auerhalb-der-roadmaps)
     - [3.4 Drei Punktpaare hängen aneinander und sollten zusammen gebaut werden](#34-drei-punktpaare-hngen-aneinander-und-sollten-zusammen-gebaut-werden)
-  - [Teil 4 — Empfohlene Reihenfolge](#teil-4-empfohlene-reihenfolge)
 
 ---
 
@@ -755,46 +754,4 @@ Die anderen beiden sind gewachsen.
 
 ---
 
-## Teil 4 — Empfohlene Reihenfolge
-
-Nicht als Plan, sondern als Vorschlag mit Begründung. Erst das, was etwas
-abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
-
-**Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
-offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
-
-1. **M12** (Flamegraphs als Bild) — neu zugeschnitten, weil es den
-   Flamegraph, den der Eintrag als vorhanden unterstellt, gar nicht gibt;
-   die Daten dafuer aber schon. Siehe „Naechster Schritt".
-2. Danach nach Bedarf: **M10 + Detection** (`images` Sixel-Paket — mit dem
-   dort genannten Vorbehalt), **M14** (`filetree.nvim`). Die Klasse der
-   kleinen Punkte ist leer.
-
-**M17/M11** (Endpoint-Inventar × Request-History) steht bewusst nicht in
-dieser Reihenfolge: nachgesehen am 2026-08-31 deklariert **kein** Repo dieses
-Oekosystems Routen, die der Endpoint-Scanner sieht — der Punkt haette heute
-nichts zu kreuzen.
-
-QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6, M7 und die
-Call-Hierarchy-Resthälfte von M4 (`lsp.nvim`), M5 (nvim-config), M16
-(`lib.nvim` + `pdfport.nvim`), M9 (Frecency ueber drei Repos) sowie M17/M7,
-M17/M13, M17/M8, M17/M9, M17/M14, M17/M7c, M17/M10, M17/QW6, M11 (OCR, in
-beiden Haelften) und M13 (die drei Bildoperationen) sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
-S-Punkt, der sich delegieren ließ.
-
-**Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap
-sagt selbst "vorerst nur beobachten"), BD4/BD5 (`mdview` externe Website und
-PDF-Hover — beide teuer, beide klein im Nutzen, beide besser als "explizit
-nicht geplant" festgeschrieben als offen gelassen).
-
-**Zurückgestellt, mit Begründung und Wiedervorlage-Bedingung**: M4b (der
-Picker-Adapter), M17/M12 (der Runtime-Reiter) und seit dem 2026-08-31 M17/M7b
-(ein Scope ist kein Knoten). Alle drei stehen unter
-[Zurueckgestellt](./PLUGIN_ROADMAPS_FINISHED.md#zurueckgestellt) statt hier —
-sie sind keine offene Arbeit mehr, aber auch nicht gelöscht. M17/M12 kommt mit
-dem ersten von M8 bis M11 zurück, M4b mit einem zweiten benutzten Picker, und
-M17/M7b meldet sich selbst: sobald ein Baum mit echten Inline-Modulen kartiert
-wird, sagt `file-holds-many-modules` es.
-
----
 
