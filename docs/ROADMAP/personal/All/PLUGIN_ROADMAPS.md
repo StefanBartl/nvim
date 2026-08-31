@@ -27,6 +27,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)](#task-an-claude-delegieren-claude-soll-diesen-punkt-nicht-bearbeiten)
   - [Arbeitsmodus](#arbeitsmodus)
   - [Naechster Schritt](#naechster-schritt)
+  - [Letzte Task, wenn kein sinnvoller Tassk mehr da ist](#letzte-task-wenn-kein-sinnvoller-tassk-mehr-da-ist)
     - [Offen: die Live-Achse braucht eine echte Sitzung](#offen-die-live-achse-braucht-eine-echte-sitzung)
   - [Legende](#legende)
   - [Kurzfassung](#kurzfassung)
@@ -62,6 +63,8 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 ## TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)
 
 In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw. Erkläre mir den Task dann im sinne von Was? Warum? Was bringt es Usern? Aufwand/Nutzen? Empfehlung von dir: Implementieren oder nicht, anders,... Ich netscheide dann, ob wir den punkt imlementieren, ersatzlos streichen oder markiert und begründet zurückstellen. dann gehe den nächsten schritt an oder wenn abgelehnt, such den nächsten von der liste und das geliche nochmal von vorne.
+
+docs updatn im repo nihcjt vergessen. und wenn ein binding betroffen war, dann auch  uC:\Users\bartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins updaten
 
 comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest.
 
@@ -154,6 +157,14 @@ also nichts fuer einen Block, den color_my_ascii nicht einfaerbt. Die
 Alternative aus `SCHLACHTPLAN.md` (Treesitter direkt in mdview, allgemeiner,
 keine Fremdabhaengigkeit) bleibt davon unberuehrt und ist die Entscheidung,
 die vor Schritt 3 zu treffen ist.
+
+---
+
+## Letzte Task, wenn kein sinnvoller Tassk mehr da ist
+
+Alle änmderungen, die in plugins geamcht wurden, stehen ja in C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md - ,anchmal habe ich vergessen dazu zu sagen, das bei nderungen auch die docs updatet werden müssen in den plugin repos. und wenn ein binding betroffen war, dann auch c:\Users\bartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins updaten.
+
+Daher müssen wir nun alles nochmal durchgehen, jede Task "Was hat es geändert" und die docs checken ob diese aktuell sind.-
 
 ---
 
