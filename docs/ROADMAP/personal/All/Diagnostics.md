@@ -306,32 +306,32 @@ einstelligen bis niedrigen zweistelligen Bereich und sind praktisch fertig.
 
 ## 3. Verteilung nach Regel
 
-| Regel | gesamt | davon `lua/` |
-|---|---:|---:|
-| `need-check-nil` | 1190 | 265 |
-| `param-type-mismatch` | 510 | 336 |
-| `undefined-field` | 507 | 396 |
-| `missing-fields` | 441 | 111 |
-| `assign-type-mismatch` | 160 | 122 |
-| `duplicate-set-field` | 135 | 8 |
-| `redundant-parameter` | 126 | 27 |
-| `inject-field` | 120 | 119 |
-| `undefined-doc-name` | 55 | 48 |
-| `return-type-mismatch` | 52 | 44 |
-| `duplicate-doc-field` | 47 | 47 |
-| `different-requires` | 41 | 41 |
-| `undefined-doc-param` | 37 | 37 |
-| `missing-return-value` | 35 | 35 |
-| `duplicate-doc-param` | 30 | 30 |
-| `cast-local-type` | 26 | 26 |
-| `redundant-return-value` | 25 | 14 |
-| `deprecated` | 23 | 23 |
-| `missing-return` | 17 | 9 |
-| `missing-parameter` | 8 | 6 |
-| `luadoc-miss-symbol` | 7 | 7 |
-| `duplicate-doc-alias` | 5 | 5 |
-| `invisible` | 2 | 1 |
-| `unbalanced-assignments` | 1 | 1 |
+|          Regel           | gesamt | davon `lua/` |
+|--------------------------|--------|--------------|
+|     `need-check-nil`     |  1190  |     265      |
+|  `param-type-mismatch`   |  510   |     336      |
+|    `undefined-field`     |  507   |     396      |
+|     `missing-fields`     |  441   |     111      |
+|  `assign-type-mismatch`  |  160   |     122      |
+|  `duplicate-set-field`   |  135   |      8       |
+|  `redundant-parameter`   |  126   |      27      |
+|      `inject-field`      |  120   |     119      |
+|   `undefined-doc-name`   |   55   |      48      |
+|  `return-type-mismatch`  |   52   |      44      |
+|  `duplicate-doc-field`   |   47   |      47      |
+|   `different-requires`   |   41   |      41      |
+|  `undefined-doc-param`   |   37   |      37      |
+|  `missing-return-value`  |   35   |      35      |
+|  `duplicate-doc-param`   |   30   |      30      |
+|    `cast-local-type`     |   26   |      26      |
+| `redundant-return-value` |   25   |      14      |
+|       `deprecated`       |   23   |      23      |
+|     `missing-return`     |   17   |      9       |
+|   `missing-parameter`    |   8    |      6       |
+|   `luadoc-miss-symbol`   |   7    |      7       |
+|  `duplicate-doc-alias`   |   5    |      5       |
+|       `invisible`        |   2    |      1       |
+| `unbalanced-assignments` |   1    |      1       |
 
 Ebenfalls Ausgangsstand. `missing-fields` steht seit dem 2026-08-29 bei 21
 statt 441, alle verbliebenen in lib.nvim (Cluster F). `need-check-nil` steht
