@@ -33,7 +33,6 @@ konkret besteht, und schätzt Aufwand und Nutzen.
   - [1.0 Erledigt](#10-erledigt)
   - [1.1 Quick Wins (XS–S, Nutzen mittel bis hoch)](#11-quick-wins-xss-nutzen-mittel-bis-hoch)
   - [1.2 Mittel (M)](#12-mittel-m)
-    - [M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge](#m9-gopathnvim-frecency-lernen-fr-alternate-vorschlge)
     - [M10 · `images.nvim` — Sixel-Backend](#m10-imagesnvim-sixel-backend)
     - [M11 · `images.nvim` — OCR-Kreuzung mit `language.nvim`](#m11-imagesnvim-ocr-kreuzung-mit-languagenvim)
     - [M12 · `images.nvim` — Flamegraphs als Bild (`runtime-analysis.nvim`)](#m12-imagesnvim-flamegraphs-als-bild-runtime-analysisnvim)
@@ -103,9 +102,10 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-31. Zuletzt erledigt: **M17/M7c** — eine Datei mit mehreren
-Modul-Identitaeten wird gemeldet, statt still fuer alle zu antworten; im selben
-Zug ist **M17/M7b zurueckgestellt**. Davor **M17/M14**, **M17/M9**, **M17/M8**,
+Stand 2026-08-31. Zuletzt erledigt: **M9** — Frecency ueber drei Repos, in
+einer Sitzung statt der veranschlagten mehreren, weil `frecency.lua` keinen
+einzigen `require` hatte. Davor **M17/M7c** (und im selben Zug **M17/M7b
+zurueckgestellt**), **M17/M14**, **M17/M9**, **M17/M8**,
 **M17/M13**, **Call Hierarchy**, **M5**, **M4a**, **M3**, **M2**, **M16**,
 **QW5**, **M1**, **M17/M7**, **M6 + M7**, **QW8**, **QW10**, **QW1**, **A** und
 **B**; zurueckgestellt sind ausserdem **M4b** und **M17/M12**. Notizen zu allen
@@ -120,48 +120,38 @@ kein M, sondern ein L mit Nutzen null im eigenen Korpus. Erst den Quelltext
 lesen ist hier keine Vorsicht mehr, sondern die Regel — und beim letzten Punkt
 hat sie aus einem L einen Nachmittag gemacht.
 
-**Empfohlen: M9 — Frecency-Lernen fuer Alternate-Vorschlaege**
-(`gopath.nvim` + `pickers.nvim` + `lib.nvim`, Aufwand M, siehe
-[1.2](#12-mittel-m)).
+**Empfohlen: M17/M10, die Resthaelfte — Laufzeit-Evidenz auch fuer
+`unreferenced-module`** (`documentation.nvim` + `runtime-analysis.nvim`,
+Aufwand S–M statt des angeschriebenen M, siehe [1.2](#12-mittel-m)).
 
-*Warum jetzt*: er ist der einzige verbliebene Punkt, dessen Verhalten schon
-**bewiesen** ist. `pickers.nvim/lua/pickers/smart/frecency.lua` laeuft seit
-Langem produktiv; nachgesehen: 193 Zeilen, und `lib.nvim` hat bisher nichts
-Vergleichbares. Es ist also keine Erfindung, sondern eine Extraktion — genau
-das Muster, das dieses Oekosystem schon zweimal durchgezogen hat.
+*Nachgesehen, und die Beschreibung stimmt nur noch halb*: „Runtime-Evidenz als
+Check-**Input**, nur als Unterdrueckung" ist fuer **`dead-function` bereits
+gebaut** — `check.lua` laedt `telemetry_join`, und ein Fund verschwindet, wenn
+die Funktion nachweislich lief. Genau mit der Begruendung, die `PLAN.md` fuer
+M10 nennt. Offen ist die zweite Stelle, an der dasselbe Argument gilt.
 
-*Konkrete Auswirkung*: `gopath.nvim` schlaegt Alternates in der Reihenfolge
-vor, in der du sie tatsaechlich benutzt, statt in der, die der Resolver
-zufaellig erzeugt. Der haeufig gewaehlte Test zu einer Datei steht oben, nicht
-an vierter Stelle.
+*Warum diese Stelle*: `check_orphans` meldet `unreferenced-module`, wenn kein
+`require` im Baum auf ein Modul zeigt — und schreibt den Vorbehalt selbst in
+den Quelltext: „a module may legitimately be reached only through the
+aggregator's string map rather than a literal require". Das ist keine
+Vermutung, das ist `lib.nvim`s Aggregator, und dort ist der Befund
+systematisch falsch. Die Evidenz dagegen liegt schon vor:
+`core/loaded_diff.lua` weiss, welche Module tatsaechlich geladen waren.
 
-*Reihenfolge, die der Report schon nennt und die stimmt*: erst
-`lib.nvim.frecency` aus pickers herausloesen, dann pickers auf die geteilte
-Fassung umstellen (dort ist das Verhalten bewiesen, dort faellt eine
-Regression sofort auf), dann `gopath.nvim/lua/gopath/alternate/` anschliessen.
-Der letzte Schritt ist der kleinste.
+*Konkrete Auswirkung*: `:DocMap check` auf `lib.nvim` hoert auf, Module als
+unreferenziert zu melden, die bei jedem Start geladen werden. Ohne Telemetrie
+aendert sich nichts — Unterdrueckung, nie Eskalation, damit keine Warnung
+entsteht, die es auf einer Maschine gibt und auf der anderen nicht.
 
-*Nachgesehen, damit die Schaetzung nicht wieder danebenliegt*: `frecency.lua`
-hat **keinen einzigen `require`** — nichts aus pickers haengt daran. Was
-haengt, sind zwei Dinge, und das zweite ist die eigentliche Arbeit:
+*Was vorher nachzusehen ist*: ob `loaded_diff.rows(ir)` nach Knoten-id
+schluesselt (dann ist es dieselbe Kreuzung wie bei M8) oder nach Modulpfad —
+davon haengt ab, ob das ein Nachmittag oder eine Sitzung ist.
 
-1. Jede oeffentliche Funktion nimmt `cfg: Pickers.Config` und liest daraus
-   `smart.frecency.{enabled,dir,weight}`. Mechanisch: aus `cfg` werden
-   Parameter.
-2. Der Store ist ein **Modul-Singleton** (`local store = nil`) auf einer festen
-   `frecency.json`. Zwei Konsumenten mit einer Datei wuerden ihre Daten
-   mischen — Dateipfade aus pickers, Alternates aus gopath. `lib.nvim.frecency`
-   braucht also eine **Instanzform** (`new{ dir, name }`) statt eines Moduls
-   mit Zustand. Das ist eine kleine Umschreibung, keine Verschiebung, aber auf
-   193 Zeilen ueberschaubar — und pickers ist der Ort, an dem eine Regression
-   sofort auffaellt.
-
-**Die Alternative, wenn `gopath.nvim` gerade nicht dran sein soll:
-M10 + Detection** (`images.nvim`, Sixel-Paket). Mit einem Vorbehalt, der vor
-dem Bauen zu klaeren ist: `images.nvim` hat heute kein Backend-System, sondern
-ein einzelnes OSC-1337-Modul (`lua/images/terminal.lua`), und ob Sixel
-ueberhaupt durch Neovims Ausgabeschicht kommt, ist ungeprueft — an genau dieser
-Stelle ist Kitty-APC gescheitert. Beides zusammen macht aus dem M eher ein L.
+**Die Alternative, wenn der documentation-Verbund gerade nicht dran sein soll:
+M11** (`images.nvim` OCR × `language.nvim`) — Screenshot einer
+fremdsprachigen Fehlermeldung, Text heraus, uebersetzt. Nachgesehen:
+`images.nvim` hat heute **kein** OCR, `language.nvim` hat `translate/`. Also
+eine echte neue Faehigkeit, Aufwand M, und die Haelfte davon existiert.
 
 ---
 
@@ -210,12 +200,13 @@ oder eine Namens-/Scope-Entscheidung verlangt.
   `mdview.nvim`, `open.nvim`, `filetree.nvim`, `gopath.nvim`, `lib.nvim`,
   sowie der Dreier-Verbund `documentation.nvim` / `runtime-analysis.nvim` /
   `docmap-desktop`.
-- **Insgesamt 21 offene Punkte**, davon **kein** Quick Win mehr und 4, die
+- **Insgesamt 20 offene Punkte**, davon **kein** Quick Win mehr und 4, die
   dich brauchen. `lsp.nvim` hat ausser den L-Punkten **keinen offenen Punkt
-  mehr**. Alle neun Quick Wins (QW1, QW3,
+  mehr**, `gopath.nvim` ebenfalls keinen. Alle neun Quick Wins (QW1, QW3,
   QW4, QW5, QW6, QW7, QW8, QW9, QW10) sowie **M1**, **M2**, **M3**, **M4a** und
   **M6 + M7** (`lsp.nvim`), **M16** (`lib.nvim` + `pdfport.nvim`) und
-  **M17/M7**, **M17/M13**, **M17/M8**, **M17/M9**, **M17/M14** und **M17/M7c**
+  **M17/M7**, **M17/M13**, **M17/M8**, **M17/M9**, **M17/M14**, **M17/M7c**
+  und **M9** (Frecency ueber drei Repos)
   sind erledigt und stehen unter 1.0, ebenso **M5** —
   der ist als Treesitter-Konfiguration im Config-Repo gelandet statt als
   Plugin-Feature. **M4b**, **M17/M12** und **M17/M7b** sind zurueckgestellt und
@@ -256,7 +247,8 @@ Durchtesten von QW1 an), **M16** (`lib.nvim` + `pdfport.nvim`), **M17/M7**
 Repos erreichen es), **M17/M8** (`:DocMap impact` nach Runtime-Reichweite),
 **M17/M9** (`:DocMap why` × Call-Trees), **M17/M14** (Cross-Repo-Doku-Verweise
 per CI), **M17/M7c** (eine Datei, mehrere Modul-Identitaeten — gemeldet statt
-geerbt) sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B**
+geerbt), **M9** (Frecency ueber `lib.nvim` + `pickers.nvim` + `gopath.nvim`)
+sowie **A** (Source-Achse von `:Bindings check`, nvim-config) und **B**
 (die verbliebenen Audit-Zeilen). **Zurueckgestellt**,
 mit Begruendung im selben Dokument: **M4b**, **M17/M12** und **M17/M7b**.
 
@@ -271,21 +263,6 @@ wandert und ein Querverweis von außen weiter aufgeht.
 ---
 
 ## 1.2 Mittel (M)
-
----
-
-### M9 · `gopath.nvim` — Frecency-Lernen für Alternate-Vorschläge
-
-**Aufwand M (repo-übergreifend) · Nutzen mittel**
-
-Häufig gewählte Alternates nach oben sortieren. `pickers.nvim` hat die
-Implementierung bereits in `smart/frecency.lua` — die gehört über `lib.nvim`
-geteilt, nicht in gopath nachgebaut. Drei Repos (lib.nvim + pickers.nvim +
-gopath.nvim), deshalb nicht in einer Session.
-
-*Reihenfolge*: erst `lib.nvim.frecency` als Extraktion aus pickers (das
-Verhalten ist dort bewiesen), dann pickers auf die geteilte Fassung
-umstellen, dann gopath anschließen. Der letzte Schritt ist der kleinste.
 
 ---
 
@@ -365,7 +342,7 @@ Offen sind dort:
 | ~~**M7b**~~ | ~~Eine Datei / viele Module~~ — **zurueckgestellt 2026-08-31**; an seiner Stelle **M7c**, der Befund `file-holds-many-modules`, **erledigt 2026-08-31** | — |
 | ~~**M8**~~ | ~~`:DocMap impact`, gewichtet nach Runtime-Reichweite~~ — **erledigt 2026-08-30** | — |
 | ~~**M9**~~ | ~~`:DocMap why` × Call-Trees~~ — **erledigt 2026-08-30**, und es war gar kein Runtime-Punkt | — |
-| **M10** | Runtime-Evidenz als Check-*Input* (nur als Unterdrückung) | M |
+| **M10** | Runtime-Evidenz als Check-*Input* (nur als Unterdrückung) — **zur Haelfte gebaut**: `dead-function` nutzt sie schon, `unreferenced-module` nicht | S–M |
 | **M11** | Endpoint-Inventar × Request-History × Response-Shape | M |
 | ~~**M12**~~ | ~~Runtime-Tab im ausgelieferten Artefakt~~ — **zurueckgestellt 2026-08-30**, die Substanz war gebaut | — |
 | ~~**M13**~~ | ~~Ein `ECOSYSTEM.md`, vier Repos lesen es~~ — **erledigt 2026-08-30** | — |
@@ -411,6 +388,16 @@ geschluesselt, eine Doku-Zitierung nach Repo-Verzeichnisname, und die beiden
 fallen ausgerechnet bei `documentation.nvim` auseinander. **Offen sind in
 diesem Verbund damit noch M10, M11 und QW6** — alle drei fehlende Faehigkeiten,
 keine falschen Auskuenfte.
+
+**M10 ist am 2026-08-31 gegen den Quelltext geprueft und zur Haelfte schon
+gebaut.** `check.lua` laedt `telemetry_join` und laesst einen
+`dead-function`-Fund verschwinden, wenn die Funktion nachweislich lief — mit
+genau der Begruendung, die `PLAN.md` fuer M10 nennt. Was fehlt, ist die zweite
+Stelle, an der dasselbe Argument gilt: `check_orphans` meldet
+`unreferenced-module` und schreibt den Vorbehalt selbst in den Quelltext („a
+module may legitimately be reached only through the aggregator's string map"),
+waehrend `core/loaded_diff.lua` bereits weiss, welche Module geladen waren.
+Deshalb S–M statt M.
 
 **M13 ist erledigt** und hat einen neuen Punkt hinterlassen: **M14**, die
 Hälfte, die kein Zeiger war — Cross-Repo-Doku-Verweise, per CI geprüft.
@@ -788,17 +775,18 @@ abschließt oder anderes freigibt; dann Nutzen vor Aufwand.
 **Das erste Kriterium ist seit dem 2026-08-30 leer**: mit M17/M7 haelt kein
 offener Punkt mehr einen anderen auf. Es bleibt Nutzen vor Aufwand.
 
-1. **M9** (Frecency über drei Repos) — der einzige verbliebene Punkt, dessen
-   Verhalten in einem anderen Repo schon bewiesen ist: eine Extraktion, keine
-   Erfindung. Siehe „Naechster Schritt".
-2. Danach nach Bedarf: **M17/M10**, **M17/M11**, **M17/QW6**, **M10 +
-   Detection** (`images` Sixel-Paket — mit dem dort genannten Vorbehalt),
-   **M14** (`filetree.nvim`). Die Klasse der kleinen Punkte ist leer.
+1. **M17/M10, die Resthaelfte** — die Haelfte fuer `dead-function` ist
+   gebaut; `unreferenced-module` hat denselben Vorbehalt im eigenen Quelltext
+   stehen und dieselbe Evidenz verfuegbar. Siehe „Naechster Schritt".
+2. Danach nach Bedarf: **M11** (`images` OCR × `language.nvim`),
+   **M17/M11**, **M17/QW6**, **M10 + Detection** (`images` Sixel-Paket — mit
+   dem dort genannten Vorbehalt), **M14** (`filetree.nvim`). Die Klasse der
+   kleinen Punkte ist leer.
 
 QW1, QW3, QW4, QW5, QW6, QW7, QW8, QW9, QW10, M1, M2, M3, M4a, M6, M7 und die
 Call-Hierarchy-Resthälfte von M4 (`lsp.nvim`), M5 (nvim-config), M16
-(`lib.nvim` + `pdfport.nvim`) sowie M17/M7, M17/M13, M17/M8, M17/M9, M17/M14
-und M17/M7c sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
+(`lib.nvim` + `pdfport.nvim`), M9 (Frecency ueber drei Repos) sowie M17/M7,
+M17/M13, M17/M8, M17/M9, M17/M14 und M17/M7c sind erledigt (siehe 1.0). Die Quick-Win-Klasse ist damit leer, und M16 war der letzte reine
 S-Punkt, der sich delegieren ließ.
 
 **Nicht angehen, mit Begründung**: L3 (`lsp` Signature-Help — die Roadmap

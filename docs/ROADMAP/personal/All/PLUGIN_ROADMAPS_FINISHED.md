@@ -53,6 +53,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M17/M7c · `documentation.nvim` — der Befund statt des Umbaus](#m17m7c-documentationnvim--der-befund-statt-des-umbaus)
   - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
   - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
+  - [M9 · `gopath.nvim` + `pickers.nvim` + `lib.nvim` — Frecency fuer Alternate-Vorschlaege](#m9-gopathnvim--pickersnvim--libnvim--frecency-fuer-alternate-vorschlaege)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -1864,6 +1865,82 @@ Spec-Dateien.
 
 *Bindings-Zettel*: `Keymaps/lsp.nvim.md` — neuer Abschnitt, Preset-Zeile auf
 49/33.
+
+---
+
+### M9 · `gopath.nvim` + `pickers.nvim` + `lib.nvim` — Frecency fuer Alternate-Vorschlaege
+
+**Erledigt am 2026-08-31 in einer Sitzung. `lib.nvim` `dd1c9ca` + `440bad0`,
+`pickers.nvim` `786d2c0`, `gopath.nvim` `1721604`.**
+
+*Die erste Notiz betrifft die Schaetzung*: der Punkt stand mit „drei Repos,
+deshalb nicht in einer Session". Es ging in einer — weil der Quelltext vorher
+gelesen wurde und die Antwort guenstig ausfiel: `frecency.lua` hatte **keinen
+einzigen `require`**. Zu loesen waren nur der `cfg`-Parameter und, das war die
+eigentliche Arbeit, der Modul-Singleton.
+
+*Was ausgeliefert wurde*, in der Reihenfolge, in der es gebaut wurde:
+
+1. **`lib.nvim.frecency`** — `store{ namespace }` liefert ein Handle mit
+   `record`/`score`/`lookup`/`flush`/`clear`. Persistenz ueber
+   `lib.nvim.cache.disk` (keine zweite Kopie der JSON-Logik), Ablage unter
+   `stdpath("data")`, nicht `stdpath("cache")`: diese Zahlen werden ueber
+   Monate verdient und lassen sich nicht regenerieren.
+2. **`pickers.nvim`** — dasselbe Modul, jetzt von aussen. Was blieb, ist das,
+   was wirklich diesem Plugin gehoert: die Konfigurationsform, die
+   `BufReadPost`-Definition von „ein Besuch" und das Enabled-Gate. Oeffentliche
+   API byte-gleich, 294 Assertions unveraendert gruen.
+3. **`gopath.nvim`** — der eigentliche Nutzen: die Alternate-Liste wird nach
+   dem geordnet, was du in genau diesem Dialog vorher gewaehlt hast.
+
+**Zwei Defekte, die die Extraktion behoben statt mitgenommen hat**, beide
+sichtbar erst dadurch, dass ein zweiter Konsument dazukam:
+
+- Der Store war ein **Modul-Upvalue** auf einer festen `frecency.json`. Ein
+  zweiter Konsument haette die Rankings des ersten mittrainiert. Das geteilte
+  Modul schluesselt ein Handle nach dir+namespace und gibt dasselbe zurueck —
+  zwei Handles auf eine Datei ueberschreiben sonst gegenseitig ihre Besuche,
+  und das faellt erst Monate spaeter als „meine Zaehler setzen sich manchmal
+  zurueck" auf.
+- **`weight` wurde beim Verkabeln zum Argument.** Als Store-Option haette ein
+  Handle, das die ganze Sitzung lebt, den Wert eingefroren, der bei seiner
+  ersten Oeffnung konfiguriert war. Gefunden, weil pickers zuerst umgestellt
+  wurde — genau der Grund, aus dem die Reihenfolge so gewaehlt war.
+
+**Die Deckelung in gopath ist der Entwurf, nicht ein Detail.** Der Bonus
+saettigt (`score / (score + K)` mal `max_bonus`) statt mit der Besuchszahl zu
+wachsen. Ohne Deckel scoret ein einziger Besuch `log(2) × 100 ≈ 69` auf
+derselben 0–100-Skala, auf der die Aehnlichkeit selbst liegt — die Liste waere
+nach Historie sortiert und die Aehnlichkeit Dekoration. Bei 10 gedeckelt, mit
+einer Schwelle, die alles ab 75 zulaesst: sortiert innerhalb eines Bandes um,
+kann einen 95-%-Treffer nie unter einen mit 76 % schieben.
+
+*Aufgezeichnet wird die **Wahl**, nicht das Oeffnen.* Eine Datei wird aus einem
+Dutzend Gruenden geoeffnet; aus dieser Liste gewaehlt wird sie aus genau
+einem. Sofort geschrieben statt beim Beenden — der Dialog ist selten genug,
+dass der Write nichts kostet, und die Alternative ist, das Gelernte an einen
+Absturz zu verlieren.
+
+*Getrennte Namespaces, ausdruecklich*: ein Pfad, den du im Picker oft
+oeffnest, sagt nichts darueber, welches Alternate du hier gemeint hast.
+
+*Ein Datenformat-Bruch, benannt statt migriert*: pickers' Datei liegt weiter
+unter `stdpath("data")/pickers.nvim/frecency.json`, hat aber jetzt die Form von
+`cache.disk` (`{ saved_at, data }`). Ein aelterer Store liest leer und faengt
+neu an. Vertretbar, weil das Feature per Default aus ist — nachgesehen: es
+existierte keine `frecency.json` — und weil ein paar Tage Besuche durch
+Benutzen zurueckkommen. Steht so in `PERSISTENCE.md`.
+
+*Verifiziert*: lib.nvim-Suite gruen (19 neue Assertions), pickers 294/294,
+gopath functional tests gruen (8 neue Assertions, darunter die zwei, die sonst
+still brechen: der klare Sieger, der nicht invertiert werden darf, und das
+Gleichstands-Paar — `table.sort` ist nicht stabil). stylua und luacheck in
+allen drei Repos.
+
+*Bindings-Zettel*: nicht beruehrt. Das neue `VimLeavePre` in lib.nvim ist
+opt-in (`autoflush`) und wird von beiden Konsumenten ausgeschaltet — pickers
+behaelt seine zwei Autocmds in seiner eigenen Gruppe, gopath registriert
+keines.
 
 ---
 
