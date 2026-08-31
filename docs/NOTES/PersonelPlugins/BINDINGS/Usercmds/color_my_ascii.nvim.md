@@ -42,6 +42,7 @@ now a full small literate-programming toolkit:
 | `:Fence select` | Visually (linewise) select the block interior |
 | `:[range]Fence wrap [language]` | Wrap the current line/range in a fence |
 | `:Fence unwrap` | Remove the fence delimiters around the block under the cursor |
+| `:Fence align` | Verzogene Box-Drawing-Kanten im Block geradeziehen: jede Box wird auf ihre eigene breiteste Zeile aufgefuellt, Inhalt wird also nie abgeschnitten. Verzeichnisbaum-Verbinder und alles, was kein sauberes Rechteck ist, bleiben unberuehrt |
 
 Each of the argument-less ones above also has an opt-in default keymap action
 (`fence_yank`, `fence_open`, `fence_run`, `fence_format`, `fence_select`,
@@ -64,6 +65,7 @@ Each of the argument-less ones above also has an opt-in default keymap action
 | `:ColorMyAscii inspect inline` | Inspect inline code on the current line |
 | `:ColorMyAscii inspect highlight <hl>` | Every group using a highlight |
 | `:ColorMyAscii stats` | Comprehensive plugin statistics |
+| `:ColorMyAscii hover` | Float mit dem angewandten Highlight, der Gruppe/Override aus der Config und der Keyword-Sprachinfo fuer das Zeichen unter dem Cursor — derselbe Text landet in einem Register, zum Einfuegen in einen Bug-Report |
 
 ## Notes
 

@@ -28,6 +28,12 @@ Docs: `docs/BINDINGS.md`, `docs/ROADMAP/`, `README.md`, `doc/images.txt`
 | `:Image draw <position> [path]` | — | Bild an einer benannten Position im aktuellen Fenster zeichnen ("full" oder eine von acht Ecken/Kanten), auch als `images.draw()` |
 | `:Image pin` | — | Anzeige festhalten statt bei Cursorbewegung aufzuräumen |
 | `:Image check` | — | Terminal-Fähigkeit neu prüfen und melden |
+| `:Image calibrate` | — | Bildplatzierung dieses Terminals ausmessen (Testbild, per Tastatur zurechtgerückt); die Korrektur wird gespeichert |
+| `:Image ocr [path] [--lang=<code>]` | — | Text aus einem Bild in einen Markdown-Scratch-Split lesen (braucht `tesseract`); `--lang`/`-l` überschreibt `ocr.lang` — **M11** |
+| `:Image scale <size> [path]` | — | Skalierte Kopie neben der Quelle (`photo.png` → `photo.scaled.png`); `size` ist `50%`, `800x600`, `800x`, `x600` oder `800x600!` (braucht ImageMagick) — **M13** |
+| `:Image optimise [path] [--quality=<n>]` | — | Kleinere Kopie neben der Quelle (`photo.png` → `photo.optimised.png`): Metadaten weg, beste Kompression. Ein Ergebnis, das nicht kleiner ist, wird gelöscht und gemeldet (braucht ImageMagick) — **M13** |
+| `:Image convert <format> [path]` | — | Kopie in einem anderen Format, gleicher Stamm (`photo.jpg` → `photo.png`); `pdf` nimmt denselben Weg wie `:Image export` (braucht ImageMagick) — **M13** |
+| `:Image debug` | — | Interner Zustandsbericht (Backend, Platzierung, aktive Anzeigen) |
 | `:Image clear` | — | Angezeigte Bilder entfernen, Pin lösen, offenes Zen-Fenster schließen |
 
 Der Command-Name folgt der Option `command`.

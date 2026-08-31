@@ -1,6 +1,6 @@
 # markdown.nvim — User Commands Cheatsheet
 
-`:Markdown` (global, 13 subcommands) plus 25 buffer-local commands
+`:Markdown` (global, 14 subcommands) plus 25 buffer-local commands
 (`OpenWithSystemApplication`, `MarkdownNvimUnderlineHeadings`,
 `TableViewToggle`, `TableViewMarkdown`,
 `TableViewBox`, `TableViewSelect`, `TableViewClose`, `TableViewOpenBrowser`,
@@ -14,7 +14,7 @@ Docs: `doc/markdown.nvim.txt`, `docs/installation.md`, `README.md`, `docs/health
 
 | Command | Scope | Grammar |
 | --- | --- | --- |
-| `:[range]Markdown {links\|toc\|refs\|table\|render\|preview\|mdview\|create\|scope\|list\|headline_spacing\|image\|export} [args…]` | global | see `commands/*.lua` per-subcommand grammar (list corrected 2026-08-09 — `gaps` no longer exists as a separate top-level subcommand, was stale; `export` is new; `list` added 2026-08-23) |
+| `:[range]Markdown {links\|toc\|gaps\|refs\|table\|render\|preview\|mdview\|create\|scope\|list\|headline_spacing\|image\|export} [args…]` | global | see `commands/*.lua` per-subcommand grammar. **14** Subcommands (`export` neu; `list` seit 2026-08-23). *Korrektur 2026-08-31*: die Zeile hatte `gaps` seit dem 2026-08-09 gestrichen, mit der Begruendung, es sei veraltet — das stimmt nicht. `gaps` steht in `SUBCOMMAND_NAMES` (`bindings/usrcmds.lua`) und wird im Dispatcher namentlich behandelt; die Kopfzeile oben sagte deshalb auch 13 statt 14. |
 | `:OpenWithSystemApplication` | buffer-local | open image/url/file under cursor |
 | `:MarkdownNvimUnderlineHeadings` | buffer-local | underline every ATX heading's text with `=` (Setext-style decoration, idempotent) |
 | `:TableViewToggle\|Markdown\|Box [scope]` | buffer-local | toggle table preview (config/markdown/box style) |

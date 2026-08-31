@@ -134,33 +134,27 @@ nach Quelltextpruefung Folgendes:
 - **L3** sagt selbst „vorerst nur beobachten". **L5** ist neunmal zuerst eine
   Scope-Entscheidung und steht vollstaendig in `PLAN.md`.
 
-**Empfohlen: die sieben leeren `ROADMAP.md`-Dateien aus [2.2](#22-repos-ohne-offene-arbeit) beschriften**
-(Aufwand **XS gesamt**, Nutzen mittel).
+**Zuletzt erledigt: die sieben leeren `ROADMAP.md` (2026-08-31) und der
+Doku-Durchgang ueber alles Erledigte** (die „Letzte Task" oben) — Notizen zu
+beidem in [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md).
 
-*Warum jetzt*: bei `buffer-ctx.nvim`, `cmdlog.nvim`, `diff.nvim`,
-`language.nvim`, `lib.nvim`, `spotlight.nvim` und `fileops.nvim` ist „keine
-offene Arbeit" eine **Annahme**, keine Aussage — die Datei enthaelt nur
-Ueberschrift und Trennlinie. Jeder Durchgang durch diesen Report muss diese
-sieben erneut aufmachen, um festzustellen, dass nichts drinsteht.
+**Empfohlen: nichts mehr aus dieser Liste.** Was uebrig ist, ist entweder teuer
+ohne Gegenwert auf dieser Maschine oder nicht delegierbar:
 
-*Konkrete Auswirkung*: ein Satz je Datei nach dem Muster, das `emojis.nvim`,
-`dap.nvim` und `open.nvim` schon verwenden („leer aus Absicht, nicht aus
-Vernachlaessigung"), plus die Rollenzeile aus [3.2](#32-roadmapmd-heit-in-diesen-repos-vier-verschiedene-dinge).
-Danach beantwortet die Datei selbst, was heute jedes Mal nachgesehen werden
-muss. Gebaut wird nichts, und genau das ist der Punkt: es ist die letzte
-Aufraeumarbeit, die diesen Report kuerzer macht, statt ihn zu verlaengern.
+- **L1** (Kitty-APC) ist der groesste Faehigkeitssprung der ganzen Liste — und
+  hier laeuft WezTerm, wo Kitty-APC aus nvim heraus nie gerendert hat. Er lohnt
+  sich, wenn das Terminal wechselt, nicht vorher.
+- **L5** ist neunmal zuerst eine Scope-Entscheidung und steht vollstaendig in
+  `PLAN.md`; **L3** sagt selbst „vorerst nur beobachten".
+- **M10** (Sixel), **M14** (Badge) und **M17/M11** sind nach Quelltextpruefung
+  ohne Nutzen in diesem Korpus.
+- **BD2**, **BD3** und **BD5** brauchen fremde Hardware oder einen konkreten
+  Anlass.
 
-**Was danach bleibt, ist teuer oder braucht dich** — die vier Punkte aus der
-Aufzaehlung oben, plus **BD2**, **BD3** und **BD5**, die alle fremde Hardware
-oder einen konkreten Anlass verlangen.
-
----
-
-## Letzte Task, wenn kein sinnvoller Tassk mehr da ist
-
-Alle änmderungen, die in plugins geamcht wurden, stehen ja in C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md - ,anchmal habe ich vergessen dazu zu sagen, das bei nderungen auch die docs updatet werden müssen in den plugin repos. und wenn ein binding betroffen war, dann auch c:\Users\bartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins updaten.
-
-Daher müssen wir nun alles nochmal durchgehen, jede Task "Was hat es geändert" und die docs checken ob diese aktuell sind.-
+*Damit ist dieser Report an dem Punkt, auf den er hinarbeiten sollte*: er
+fuehrt keine Arbeit mehr, die sich ohne neuen Anlass lohnt. Der naechste
+sinnvolle Auftrag kommt von aussen — ein Feature, das jemand vermisst, ein
+Fehler, der auffaellt — nicht mehr aus dieser Datei.
 
 ---
 
@@ -581,11 +575,17 @@ fertig oder nie gepflegt):
 `dependency-installer.md` daneben, nicht in der Roadmap-Datei),
 `spotlight.nvim`, `fileops.nvim`
 
-*Befund dazu*: bei diesen sieben ist "keine offene Arbeit" eine Annahme, keine
-Aussage. Das ist billig zu reparieren — ein Satz je Datei nach dem Muster, das
-`emojis.nvim`, `dap.nvim` und `open.nvim` schon verwenden ("leer aus Absicht,
-nicht aus Vernachlässigung"). **Aufwand XS gesamt, Nutzen mittel**, weil es
-bei jedem künftigen Durchgang genau diese Rückfrage spart.
+*Befund dazu — **erledigt am 2026-08-31** (WKDBooks `c4c1af9`)*: bei diesen
+sieben war "keine offene Arbeit" eine Annahme, keine Aussage. Jede traegt jetzt
+ihre Rolle und einen Status, der sagt, **warum** sie leer ist — und beim
+Nachsehen waren drei der sieben nicht dasselbe: `lib.nvim` ist gar nicht leer
+im Sinne von "nichts offen" (die Arbeit steht in `dependency-installer.md`
+daneben, die `ROADMAP.md` ist ein Index und sagt das jetzt), `buffer-ctx.nvim`
+hat ein Nachbardokument, das wie offene Arbeit aussieht und implementiert ist,
+und `spotlight.nvim` hat die drei Audit-Dateien daneben, die seit 2026-08-29
+nur noch historischer Stand sind. Bei `language.nvim` ausserdem ein
+Widerspruch aufgeloest: Notizen, die "Phase 4–9 offen" sagen, sind ueberholt —
+der `BUILD_LOG` zeigt Phase 1–6 plus Nachtraege erledigt.
 
 ---
 

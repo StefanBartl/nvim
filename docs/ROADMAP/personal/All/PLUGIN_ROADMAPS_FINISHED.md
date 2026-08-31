@@ -63,6 +63,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [SEL · `mdview.nvim` — die visuelle Auswahl im Browser spiegeln](#sel-mdviewnvim-die-visuelle-auswahl-im-browser-spiegeln)
   - [L4 · `mdview.nvim` — das nvim-Highlighting im Browser spiegeln](#l4-mdviewnvim-das-nvim-highlighting-im-browser-spiegeln)
   - [BD4 · `mdview.nvim` — externe Renderer-Website (opt-in)](#bd4-mdviewnvim-externe-renderer-website-opt-in)
+  - [AUDIT · Alle erledigten Punkte gegen ihre Doku pruefen](#audit-alle-erledigten-punkte-gegen-ihre-doku-pruefen)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2656,6 +2657,70 @@ selbst zur Ablehnung empfohlen. Jeder Durchgang durch diesen Report hat ihn
 erneut gelesen und erneut verworfen. 1.4 geht damit von vier Punkten auf drei,
 und die drei verbliebenen (**BD2**, **BD3**, **BD5**) brauchen alle fremde
 Hardware oder einen konkreten Anlass.
+
+---
+
+### AUDIT · Alle erledigten Punkte gegen ihre Doku pruefen
+
+**Erledigt am 2026-08-31.** `nvim` (Notizen), `filetree.nvim` `feef030`.
+Die „Letzte Task" aus `PLUGIN_ROADMAPS.md`: jeden erledigten Punkt daraufhin
+nachsehen, ob die Doku im Plugin-Repo und — bei betroffenen Bindings — die
+Zettel unter `docs/NOTES/PersonelPlugins` mitgezogen wurden.
+
+**Methode, und warum sie nicht „die Eintraege lesen" war.** Der erste Ansatz
+— jeden Eintrag danach filtern, ob er selbst eine *Bindings-Zettel*-Zeile
+traegt — misst die Selbstauskunft des Reports, nicht die Wirklichkeit.
+Stattdessen gegen den Quelltext gepruefte Mengen: die tatsaechliche
+Subcommand-Liste jedes Plugins (aus `usrcmds.lua`/`commands.lua`, sonst aus der
+Kommandoreferenz des Repos) gegen das, was der jeweilige Zettel fuehrt, und in
+beide Richtungen.
+
+**Sechs Zettel waren hinter der Wirklichkeit**, davon drei mit direktem Bezug
+zu erledigten Punkten dieses Reports:
+
+| Zettel | fehlte | Herkunft |
+|---|---|---|
+| `images.nvim` | `ocr`, `scale`, `optimise`, `convert`, `calibrate`, `debug` | **M11**, **M13** |
+| `runtime-analysis.nvim` | `:RATelemetry flamegraph`, `flush`, `:RA startup start/watch/report/probe` | **M12** |
+| `documentation.nvim` | `annotate`, `browse`, `checklist`, `consumers`, `endpoints`, `mermaid`, `pick`, `untested` | aelter |
+| `color_my_ascii.nvim` | `:ColorMyAscii hover`, `:Fence align` | aelter |
+| `lib.nvim` | `:Lib hover` | aelter |
+| `markdown.nvim` | `gaps` — **und eine falsche Behauptung dazu** | aelter |
+
+**Der `markdown.nvim`-Fund ist der unangenehmste**, weil er nicht nur fehlte,
+sondern falsch dastand: der Zettel hatte `gaps` am 2026-08-09 aus der Zeile
+gestrichen, mit der Begruendung, das Subcommand existiere nicht mehr. Es
+existiert — `SUBCOMMAND_NAMES` in `bindings/usrcmds.lua` fuehrt es, der
+Dispatcher behandelt es namentlich. Die Kopfzeile sagte deshalb auch 13 statt
+14. Beides korrigiert, mitsamt der Notiz, dass die Streichung der Fehler war.
+
+**Und ein Befund in der anderen Richtung**, den man sonst nie sucht: bei
+`filetree.nvim` kannte der *Zettel* zwei Kommandos, die die
+*Kommandoreferenz des Repos* nicht kannte — `:Filetree copymove dry-run` und
+`:Filetree renamebatch dry-run` stehen in `commands.lua` und in
+`FEATURES/FILEOPS.md`, aber nicht in `BINDINGS/USERCOMMANDS.md`, der Datei, die
+von sich sagt, sie liste jedes Sub-Kommando. Im Repo nachgetragen, samt der
+Namensbegruendung (`renamebatch`, nicht `rename`, weil `rename` schon ein
+Blattkommando ist und eine Tabelle unter demselben Schluessel still
+ueberschrieben wird).
+
+**Was geprueft war und stimmte** — festgehalten, damit der naechste Durchgang
+es nicht wiederholt: alle Keymaps aus erledigten Punkten (`<leader>th/tH` QW3,
+`<leader>tl/tL` M2, `<leader>wos` M4a, `<leader>lsw` QW8, `[u`/`]u` M5 unter
+seinem neuen Namen), die Autocmd-Module von M2 (`lightbulb.lua`), M3
+(`supervisor.lua`) und QW3 (`inlay_hints.lua`), sowie saemtliche
+`:DocMap`-Punkte des M17-Verbunds (`impact`, `why`, `check`).
+
+**Drei Klassen von Falschalarm**, die eine automatische Pruefung erzeugt und
+die kuenftig Zeit sparen, wenn man sie kennt: gruppierte Zeilen
+(`:RATelemetry start [ns]` / `stop [ns]` / `reset [ns]` in *einer* Zeile),
+parametrisierte Zeilen (`:Pickers {scope}` mit der Scope-Liste im Feld
+daneben), und Prosa, die ein Kommando nur *erwaehnt* (`:MDView detach` steht im
+Zettel als historische Notiz, nicht als Behauptung, es existiere).
+
+*Kein Plugin-Repo hatte eine Luecke bei den eigenen Feature-Docs* — die
+Kommandoreferenzen der Repos waren durchgehend vollstaendig; die Drift sass in
+den persoenlichen Zetteln, mit `filetree.nvim` als einziger Ausnahme.
 
 ---
 

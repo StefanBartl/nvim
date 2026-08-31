@@ -12,6 +12,7 @@ repo, unlike published standalone plugins, opted for alongside not replace).
 | `:Lib helptags` | Regenerate all helptags now | (was autocmd-only before) |
 | `:Lib deps show [plugin]` | Declared external tools for `plugin` (why each matters, present/missing), or every plugin shipping a spec if omitted | none — new surface |
 | `:Lib deps install plugin` | Compose an install command for whatever `plugin` is missing, confirm, hand off to a terminal | none — new surface |
+| `:Lib hover toggle` / `on` / `off` | Den Pfad-/Link-Hover fuer diese Sitzung aus- und wieder einschalten; `on`/`off` sagen es ausdruecklich, statt zu kippen |
 
 Gated by `nvim_usrcmds.setup({ lib_verb = true })` (default: on). Set
 `lib_verb = false` to disable the `:Lib` verb and keep only the flat commands.
