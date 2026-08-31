@@ -121,7 +121,7 @@ Attached via the `FileType` autocmd — see [Autocmds cheatsheet](../Autocmds/ca
 | `<A-->` | n, x | `bullet_toggle` | Toggle bullet point. `N` = the next N lines (normal mode) |
 | `<A-*>` | n, x | `bullet_toggle` | Toggle star bullet |
 | `<A-0>` | n, x | `number_toggle` | Toggle numbered list |
-| `<A-c>` | n, x | `checkbox_toggle` | Toggle checkbox bullet |
+| `<A-c>` | n, x | `checkbox_toggle` | Toggle checkbox bullet: plain -> `- [ ]` -> `- [x]` -> `- [~]` -> plain |
 | `<leader>ct` / `<leader>cT` | n | `cycle_type` | Cycle list type forward / back |
 | `<leader>cr` | n | unconditional (inside preset) | Renumber |
 | `<leader>cf` / `<leader>cF` | n, x | `rotate` | Rotate list form forward / back |
@@ -130,6 +130,8 @@ Attached via the `FileType` autocmd — see [Autocmds cheatsheet](../Autocmds/ca
 | `<leader>cX` | n, x | `strip` | Strip checkboxes |
 
 `<leader>cX` (strip) is deliberately a different key from `<leader>cx` (toggle) to avoid a mapping clash.
+
+The checkbox states come from `lists.checkbox.states` (default `{ " ", "x", "~" }` — open, done, in progress), so `<leader>cx` and `<A-c>` both step through all three.
 
 ## which-key
 
