@@ -141,10 +141,20 @@ Fassung umstellen (dort ist das Verhalten bewiesen, dort faellt eine
 Regression sofort auf), dann `gopath.nvim/lua/gopath/alternate/` anschliessen.
 Der letzte Schritt ist der kleinste.
 
-*Was vorher nachzusehen ist*: ob `frecency.lua` an pickers-eigene Typen oder an
-dessen Store gebunden ist — davon haengt ab, ob die Extraktion eine
-Verschiebung oder eine Umschreibung ist, und damit, ob drei Repos in eine
-Sitzung passen.
+*Nachgesehen, damit die Schaetzung nicht wieder danebenliegt*: `frecency.lua`
+hat **keinen einzigen `require`** — nichts aus pickers haengt daran. Was
+haengt, sind zwei Dinge, und das zweite ist die eigentliche Arbeit:
+
+1. Jede oeffentliche Funktion nimmt `cfg: Pickers.Config` und liest daraus
+   `smart.frecency.{enabled,dir,weight}`. Mechanisch: aus `cfg` werden
+   Parameter.
+2. Der Store ist ein **Modul-Singleton** (`local store = nil`) auf einer festen
+   `frecency.json`. Zwei Konsumenten mit einer Datei wuerden ihre Daten
+   mischen — Dateipfade aus pickers, Alternates aus gopath. `lib.nvim.frecency`
+   braucht also eine **Instanzform** (`new{ dir, name }`) statt eines Moduls
+   mit Zustand. Das ist eine kleine Umschreibung, keine Verschiebung, aber auf
+   193 Zeilen ueberschaubar — und pickers ist der Ort, an dem eine Regression
+   sofort auffaellt.
 
 **Die Alternative, wenn `gopath.nvim` gerade nicht dran sein soll:
 M10 + Detection** (`images.nvim`, Sixel-Paket). Mit einem Vorbehalt, der vor
