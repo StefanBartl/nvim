@@ -9,6 +9,15 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-08-31](#2026-08-31)
+    - [documentation.nvim: die restlichen 155 -- der erste vertikale Durchgang](#documentationnvim-die-restlichen-155-der-erste-vertikale-durchgang)
+      - [Das Muster, das die Haelfte erklaert: der Guard sitzt auf einem Feld](#das-muster-das-die-haelfte-erklaert-der-guard-sitzt-auf-einem-feld)
+      - [Die Kinder eines Treesitter-Knotens](#die-kinder-eines-treesitter-knotens)
+      - [Ein echter Fehler: zwoelf Advice-Listen, die nie jemand gesehen hat](#ein-echter-fehler-zwoelf-advice-listen-die-nie-jemand-gesehen-hat)
+      - [Zwei verwaiste Doc-Bloecke](#zwei-verwaiste-doc-bloecke)
+      - [Annotationen, die schlicht falsch waren](#annotationen-die-schlicht-falsch-waren)
+      - [Der Overload, der die Zahl verschlechtert hat](#der-overload-der-die-zahl-verschlechtert-hat)
+      - [Unterdrueckt, mit der Begruendung daneben](#unterdrueckt-mit-der-begruendung-daneben)
+      - [Gemessen](#gemessen)
     - [Cluster D: `userdata` statt `TSNode` -- documentation.nvim](#cluster-d-userdata-statt-tsnode-documentationnvim)
       - [Warum `userdata` der teuerste Annotationsfehler ist](#warum-userdata-der-teuerste-annotationsfehler-ist)
       - [Was gemacht wurde -- 154 Annotationen in 18 Dateien](#was-gemacht-wurde-154-annotationen-in-18-dateien)
@@ -43,6 +52,161 @@ alles, was noch offen ist.
 ---
 
 ## 2026-08-31
+
+---
+
+### documentation.nvim: die restlichen 155 -- der erste vertikale Durchgang
+
+*(war: Diagnostics-Report Abschnitt 0, "documentation.nvim zu Ende bringen")*
+
+Nach Cluster D standen in dem Repo noch 155 Befunde, und sie hatten keine
+gemeinsame Ursache mehr: dreizehn Regeln, verteilt ueber 44 Dateien. Genau
+dafuer ist der vertikale Modus gedacht -- der Overhead (Scan davor, Scan
+danach, Testsuite, Commit) faellt einmal an, nicht einmal pro Regel.
+
+**155 -> 0.** Zwei Commits: `9f128bb` fuer den einen echten Fehler,
+`9e81344` fuer den Rest.
+
+---
+
+#### Das Muster, das die Haelfte erklaert: der Guard sitzt auf einem Feld
+
+```lua
+if e.pin then
+  local p = e.pin   -- p ist trotzdem `Pin?`
+  go(st, { mode = p.mode, ... })
+```
+
+Die Pruefung engt nur den Ausdruck ein, den sie prueft. Die zweite Lesung
+desselben Feldes ist fuer den Typpruefer ein neuer Ausdruck, und der ist wieder
+nil-behaftet. An acht Stellen zuerst an eine Lokale gebunden und dann geprueft
+-- in `browse/init.lua`, `browse/view.lua`, `core/docs.lua`,
+`bindings/usrcmds/bindings.lua` und `mcp/tools.lua`.
+
+Wo das Feld eine Invariante der Datenstruktur ist -- eine `kind="endpoint"`-Zeile
+*hat* ihr `spec` --, steht jetzt ein `assert` statt eines erfundenen Fallbacks:
+es benennt die Invariante und kracht, wenn sie je verletzt wird.
+
+---
+
+#### Die Kinder eines Treesitter-Knotens
+
+`node:child(i)` ist `TSNode?`. Innerhalb von `0 .. child_count()-1` kann es
+nicht nil sein, aber das weiss der Typpruefer nicht, und ein Guard, der nie
+zuschlagen kann, waere gelogener Code. Die Index-Schleifen in
+`core/lang/ecma.lua` laufen deshalb ueber `iter_children()`: liefert `TSNode`
+ohne nil und besucht exakt dieselben Kinder.
+
+**Und dann hat ein Gate des Repos zugeschlagen.** `TESTS/shim_contract_spec.lua`
+verlangt, dass jede Treesitter-Methode, die `core/` aufruft, im Standalone-Shim
+klassifiziert ist. Der erste Anlauf benutzte `named_children()` -- eine
+Neovim-Bequemlichkeit, die die `lua-tree-sitter`-Bindung des Standalone-Builds
+nicht hat. Im Editor waere das nie aufgefallen; der Build waere gescheitert.
+Dort steht jetzt wieder `named_child(i)`, mit `assert` fuer die Index-Invariante.
+
+---
+
+#### Ein echter Fehler: zwoelf Advice-Listen, die nie jemand gesehen hat
+
+`vim.health.info(msg)` nimmt eine Nachricht und sonst nichts -- anders als
+`warn` und `error` hat es **keinen** Advice-Parameter. Zwoelf Aufrufe in
+`editor/health.lua` haben trotzdem eine Liste mitgegeben:
+
+```lua
+h_info("lua-language-server not on PATH", {
+  "Only :DocMap full needs it; a plain :DocMap never calls it.",
+  "In Neovim: :Mason, then install lua-language-server.",
+})
+```
+
+Lua nimmt das entgegen und wirft es weg. Keine dieser Zeilen stand je in einem
+`:checkhealth`. LuaLS hat es als `redundant-parameter` gemeldet -- eine Meldung,
+die wie eine Stilnote klingt und ein fehlendes Feature ist. Der lokale Shim
+rendert die Hinweise jetzt in die Nachricht, in derselben Form, die
+`vim.health` der Advice einer Warnung gibt.
+
+---
+
+#### Zwei verwaiste Doc-Bloecke
+
+In `core/check.lua` und in `scripts/ci.lua` stand je ein Kommentarblock einer
+frueheren Fassung ueber der falschen Funktion -- ohne Leerzeile dazwischen, also
+verschmolzen mit dem naechsten. Folgen: `check_require_cycles` galt als
+undokumentiert (seine Beschreibung klebte 350 Zeilen weiter oben an
+`check_binding_conflicts`), und `puc_lua` schien drei Rueckgabewerte zu
+deklarieren, weshalb die Meldung "Rueckgabewert #2 ist `string?`" sich auf die
+Annotation der Vorgaengerversion bezog. Beide zusammengefuehrt.
+
+---
+
+#### Annotationen, die schlicht falsch waren
+
+Jede davon eine Aussage ueber diesen Code, keine Typ-Kosmetik:
+
+- `core/lang/ocaml.lua`: `doc_blocks` gibt zwei Tabellen zurueck, deklariert war
+  eine -- beide Aufrufer benutzen beide.
+- `editor/callhierarchy.lua`: `make_client` baut einen
+  `vim.lsp.rpc.PublicClient` (die vier Methoden, die `vim.lsp.start` verlangt),
+  deklariert war `Client`.
+- `config.sources`: auf `Documentation.Opts` annotiert, obwohl der eigene Header
+  sagt, dass **jeder** Konsument hier durchgeht. Der Browser reichte seine
+  eigene Opts-Klasse hinein -- richtig, und trotzdem gemeldet.
+- `Documentation.Browse.KeyAction` kannte `send_request` nicht: wer `gs` ueber
+  `opts.keys` umbinden wollte, war fuer den Typ ein Fehler und fuer den Code
+  nicht.
+- `Documentation.Browse.Entry` deklarierte kein `spec`, obwohl jede
+  `kind="endpoint"`-Zeile eines traegt.
+- `Documentation.Config` deklarierte kein `git` -- den Host-Hook, den
+  `core/api.lua` seit jeher aufruft und beide Hosts setzen.
+
+---
+
+#### Der Overload, der die Zahl verschlechtert hat
+
+Fuenf `missing-return` kamen daher, dass die Haelfte der Scan-Stages nichts
+zurueckgibt, `timing.measure`s `fun(): T` aber von jedem Rueckruf einen Wert
+verlangt. Erster Versuch: die void-Form als `@overload` deklarieren. Gemessen:
+**aus 5 Befunden wurden 13.** Mit der Ueberladung wird der Rueckgabewert *jedes*
+`measure`-Aufrufs nil-behaftet, also war `ir` ploetzlich `Documentation.IR|nil`
+und jede Weitergabe davon ein neuer Befund.
+
+Genau der Fall, wegen dem vorher *und* nachher gemessen wird. Stattdessen
+`timing.stage(t, name, fn)`: dieselbe Messung ohne Wert. Warum der Overload
+nicht geht, steht jetzt in der Doku der Funktion -- sonst probiert es der
+naechste noch einmal.
+
+---
+
+#### Unterdrueckt, mit der Begruendung daneben
+
+Nur dort, wo der Befund die Absicht des Codes meldet:
+
+- `scripts/bundle_manifest.lua` ersetzt `os.exit`, `scripts/mcp_server.lua`
+  ersetzt `vim.notify` -- beides der Zweck der jeweiligen Datei.
+- Test-Doubles, die pro Fall einen eigenen Stub ueber dasselbe Feld legen
+  (`docmap_browse_spec`, `usrcmds_generate_all_spec`).
+- Teil-Fixturen, die nur die Felder tragen, die die gepruefte Einheit liest
+  (`call_path_spec`, `scopes_spec`).
+- Aufrufe, die absichtlich `nil` oder `42` hineinreichen, weil die Abweisung
+  das Testobjekt ist (`docmap_spec`, `tags_spec`, `check_policy_spec`).
+
+Wo der Test selbst schon prueft (`ok(x ~= nil, ...)`), steht ein `---@cast`
+statt einer Unterdrueckung: er sagt dem Typpruefer, was die Zeile darueber
+bereits behauptet.
+
+---
+
+#### Gemessen
+
+`155 -> 0`, mit `scripts/luals-scan` vor und nach jeder Runde. Gates vor dem
+Commit: **96 Spec-Dateien gruen**, `stylua --check .` sauber, luacheck 0
+Warnungen / 0 Fehler ueber 244 Dateien.
+
+Der Zuschnitt der beiden Durchgaenge ist der Unterschied, den der Arbeitsmodus
+in Abschnitt 0 beschreibt: Cluster D war **eine** Ursache, 154-mal angewendet;
+diese Runde waren **dreizehn** Ursachen ueber 44 Dateien, jede einzeln zu lesen
+und einzeln zu entscheiden. Die zweite Sorte laesst sich nicht horizontal
+abarbeiten -- deshalb steht sie hinter dem Repo, nicht hinter der Regel.
 
 ---
 
