@@ -13,9 +13,12 @@ Nummerierung und Titel bleiben die aus `PLUGIN_ROADMAPS.md`, damit ein
 Querverweis von aussen weiter aufgeht.
 
 Seit dem 2026-08-30 fuehrt die Datei **zwei** Sorten geschlossener Punkte. Das
-Erledigte steht unten, davor ein Abschnitt
+Erledigte steht oben, am Ende ein Abschnitt
 [Zurueckgestellt](#zurueckgestellt) fuer Punkte, die aus
-`PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein. Sie stehen hier
+`PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein. (Am 2026-08-31
+sortiert: zwei erledigte Punkte — M5 und die Call-Hierarchy-Resthaelfte —
+waren hinter der Trennlinie gelandet und sahen damit aus wie zurueckgestellte.
+Nur verschoben, kein Wort geaendert.) Sie stehen hier
 und nicht dort, weil sie keine offene Arbeit mehr sind — und sie sind nicht
 geloescht, weil ein stillschweigend verschwundener Punkt in einem halben Jahr
 als neue Idee wiederkommt. Zu jedem gehoert, **warum** er zurueckgestellt ist
@@ -43,15 +46,17 @@ und **was ihn wieder aufmachen wuerde**.
   - [M2 · `lsp.nvim` — Code-Action-Indikator](#m2-lspnvim-code-action-indikator)
   - [M3 · `lsp.nvim` — Auto-Restart mit Backoff bei Client-Crash](#m3-lspnvim-auto-restart-mit-backoff-bei-client-crash)
   - [M4a · `lsp.nvim` — ein Picker-Backend statt zwei](#m4a-lspnvim-ein-picker-backend-statt-zwei)
-  - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
-  - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [M17/M13 · `documentation.nvim`-Verbund — ein `ECOSYSTEM.md`, fünf Repos erreichen es](#m17m13-documentationnvim-verbund-ein-ecosystemmd-fnf-repos-erreichen-es)
   - [M17/M8 · `documentation.nvim` — `:DocMap impact`, gewichtet nach Runtime-Reichweite](#m17m8-documentationnvim-docmap-impact-gewichtet-nach-runtime-reichweite)
   - [M17/M9 · `documentation.nvim` — `:DocMap why` × Call-Trees](#m17m9-documentationnvim-docmap-why--call-trees)
   - [M17/M14 · `documentation.nvim` — Cross-Repo-Doku-Verweise, per CI geprueft](#m17m14-documentationnvim--cross-repo-doku-verweise-per-ci-geprueft)
+  - [M17/M7c · `documentation.nvim` — der Befund statt des Umbaus](#m17m7c-documentationnvim--der-befund-statt-des-umbaus)
+  - [M5 · `nvim-config` — Sprung zur umschliessenden Struktur (ehemals `<leader>gtt`)](#m5-nvim-config-sprung-zur-umschliessenden-struktur-ehemals-leadergtt)
+  - [Call Hierarchy · `lsp.nvim` — die Resthaelfte von M4](#call-hierarchy-lspnvim-die-resthaelfte-von-m4)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
+    - [M17/M7b · `documentation.nvim` — ein Scope ist kein Knoten](#m17m7b-documentationnvim--ein-scope-ist-kein-knoten)
 
 ---
 
@@ -305,8 +310,6 @@ Bug, kein Prinzip.
 
 Die zwei, die fielen, betrafen **Mechanik** — und beide unterstellten Kosten,
 die die vorhandenen Caches längst beseitigt hatten.
-
----
 
 ---
 
@@ -1651,87 +1654,63 @@ mehr in `:DocMap check`.
 
 ---
 
-## Zurueckgestellt
+### M17/M7c · `documentation.nvim` — der Befund statt des Umbaus
 
-Punkte, die aus `PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein.
-Nicht geloescht: ein Punkt, der still verschwindet, kommt in einem halben Jahr
-als neue Idee wieder, und dann fehlt die Begruendung, die es schon einmal gab.
+**Erledigt am 2026-08-31. `documentation.nvim` `1e95a40`. Ausgeliefert als
+Check `file-holds-many-modules`.**
 
----
+Der Punkt entstand in derselben Sitzung, in der **M17/M7b zurueckgestellt**
+wurde (siehe dort). M7b wollte aus einem Scope einen Knoten machen; das ist
+eine Id-Form-Aenderung quer durch die Pipeline. Was davon *heute* nuetzlich
+ist, ist nicht der Umbau, sondern die Auskunft: eine Datei, die mehrere
+Modul-Identitaeten traegt, wird gemeldet, statt still fuer alle zu antworten.
 
-### M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)
+*Konkrete Auswirkung*: `:DocMap check` in einem Rust- oder Elixir-Baum sagt
+jetzt `src/lib.rs holds 2 module identities the map cannot separate: lib, x`.
+Vorher erbte `x` schweigend die Zahlen von `lib.rs` — Coverage, Summary,
+Kanten — und kein Konsument konnte wissen, dass er die falsche Frage
+beantwortet bekam.
 
-**Zurueckgestellt am 2026-08-30. Nicht gebaut, nicht geplant.**
+**Der Test-Modul-Filter ist der ganze Check, nicht die Feinheit.** Rust
+schreibt `#[cfg(test)] mod tests { … }` in die Datei, die es testet. Gemessen:
+`docmap-desktop` hat elf Rust-Dateien, jede haelt genau ein Inline-Modul, und
+es ist **jedes Mal** `mod tests` — daneben stehen ueberall freie Funktionen.
+Ohne den Filter haette dieser Check auf dem einzigen echten Rust-Baum dieses
+Oekosystems elfmal gefeuert und waere noch am selben Tag abgeschaltet worden.
+Mit ihm: null Befunde, gegen genau diesen Checkout verifiziert.
 
-*Was er waere*: `lsp.integrations.picker` zu einer echten Abstraktion ueber
-fzf-lua, telescope, snacks und pickers.nvim ausbauen, die vier Picker-Keymaps
-und `:TypeDefPick` darueber routen, und darauf dann Workspace-Symbole und Call
-Hierarchy anbieten. Aufwand L, nicht das M, das an M4 stand.
+*Was noch nicht zaehlt und warum*: eine `class`, ein `impl`-Block, ein `trait`
+sind besessen, aber nicht von einem Modul — sie gehoeren zur Datei und zaehlen
+zu deren eigener Identitaet. Ein einzelnes `defmodule` in einer `.ex`-Datei
+ist die Identitaet der Datei, kein zweite; Elixir setzt `owner_kind = "module"`
+auf **jede** Funktion, ein Check, der Besitzer statt Identitaeten zaehlt,
+haette jede korrekte `.ex`-Datei der Welt gemeldet.
 
-**Warum zurueckgestellt, und zwar in dieser Reihenfolge:**
+*Severity `info`, nicht `warn`*: Rust und Elixir werden absichtlich so
+geschrieben. Es gibt nichts, was der Autor des geprueften Baums beheben
+koennte — dieselbe Begruendung, aus der `missing-readme` ein `info` ist. Ein
+`warn` haette ein korrektes Elixir-Repo dauerhaft gelb gefaerbt.
 
-1. **Es gibt nichts mehr zu abstrahieren.** Eine Abstraktion ueber N Backends
-   lohnt sich, wenn N > 1 *benutzt* wird. Nach M4a benutzt dieses Plugin fuer
-   Symbol- und Diagnostics-Listen genau eines: fzf-lua. Der Adapter wuerde eine
-   Indirektion mit einer einzigen Implementierung dahinter einziehen — genau
-   das, was `integrations/picker.lua` in seinem eigenen Docstring als
-   nutzlos abgelehnt hat („an indirection with a single implementation behind
-   it buys nothing"). M4a hat das Problem nicht geloest, das M4b loesen wollte;
-   es hat es **entfernt**.
-2. **Die Faehigkeit, die M4 zusaetzlich versprach, ist eine Zeile.** Call
-   Hierarchy existiert im Repo nirgends — aber fzf-lua bringt
-   `lsp_incoming_calls` und `lsp_outgoing_calls` mit. Wer sie will, braucht
-   zwei Katalogeintraege im Muster der vier vorhandenen, kein
-   Abstraktionsgeruest. Das ist ein XS-Punkt, kein L-Punkt, und er haengt nicht
-   an M4b.
-3. **Der Nutzen ist hypothetisch.** Er faellt erst an, wenn jemand den Picker
-   *wechselt*. Das ist bisher nicht passiert und steht auf keiner Liste.
+*Eine Disziplin, die im Quelltext steht*: gezaehlt wird ueber
+`core/scopes.lua`, nie ueber `fn.owner` direkt. Dieses Modul erklaert sich
+selbst zum einzigen Leser von `owner`/`owner_kind`, und eine zweite
+Gruppierung in einem Check waere genau die Drift, die dieses Plugin zu finden
+gebaut ist.
 
-**Was ihn wieder aufmachen wuerde** — und das ist der Punkt, an dem er hier
-herausgeholt gehoert, nicht neu erfunden:
+*Verifiziert*: alle vier lokalen Gates gruen (standalone ohne Rocks
+uebersprungen), dreizehn Assertions im neuen `many_modules_spec.lua` ueber ein
+synthetisches IR — ein Rust- oder Elixir-Fixture haette die Assertions an
+Treesitter-Grammatiken gekoppelt, die ein lokaler Lauf nicht hat, und *was die
+Backends setzen* ist ohnehin Sache von `lang_rust_spec.lua` und
+`lang_elixir_spec.lua`. Dazu die Live-Probe gegen `docmap-desktop`.
 
-- Ein zweiter Picker kommt tatsaechlich in Gebrauch (snacks.picker verdraengt
-  fzf-lua, oder eine zweite Maschine fuehrt einen anderen).
-- Oder: die vier Keymaps sollen konfigurierbar werden, statt als
-  `<cmd>FzfLua …<cr>`-Strings im Katalog zu stehen — dann ist der Adapter die
-  Form, die diese Konfiguration bekommt.
+*Nebenbefund, mitgenommen*: die Check-Liste in `README.md` fuehrte
+`sibling-reference-missing` nicht — der Commit vom Vortag hatte sie dort
+vergessen. Beide stehen jetzt drin.
 
-Bis dahin ist die ehrliche Antwort auf „welchen Picker benutzt lsp.nvim" ein
-Name und keine Schnittstelle.
+*Bindings-Zettel*: nicht beruehrt. Kein Usercmd, keine Taste — ein Check-Code
+mehr in `:DocMap check`.
 
-
----
-
-### M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt
-
-**Zurueckgestellt am 2026-08-30. Nicht gebaut — weil die Substanz schon
-gebaut ist.**
-
-*Was er waere*: „`ECOSYSTEM.md` §7 surface 2 — ein Runtime-Reiter, **immer**
-zur Laufzeit gefuellt, nie eingebacken." Aufwand M, drei Repos.
-
-**Gegen den Quelltext geprueft, und die Beschreibung stimmt nicht mehr:**
-
-1. **Die Oberflaeche existiert.** `core/render/html.lua` liefert `Telemetry`
-   und `Loaded` als `plugin-gated` Analysis-Werkzeuge, die ihre Daten zur
-   **Ansichtszeit** per `fetch("/api/telemetry")`, `/api/loaded` und deren
-   `…/snapshots`-Geschwistern holen. Nichts eingebacken, das
-   Byte-Vergleichs-Gate bleibt unberuehrt.
-2. **Der ehrliche Leerzustand ist sogar Prinzip.** `core/api.lua` schreibt ihn
-   als Regel fest: *„Absence answers `{ available = false, reason = … }` … A
-   panel that says why it is empty beats one that is silently blank."*
-3. **Beide Hosts antworten.** `editor/serve.lua` in Neovim,
-   `docmap-desktop/src-tauri/src/server.rs` ausserhalb.
-4. **Auch §7s Surface 1 ist da**, die das Dokument als „start here" markiert:
-   `:DocBrowse` hat die Modi `telemetry` (8) und `loaded` (9).
-
-*Was tatsaechlich offen bleibt*, ist keine Oberflaeche, sondern eine
-**Gruppierung**: die zwei Panels liegen unter siebzehn Analysis-Werkzeugen
-statt unter einem eigenen Top-Level-Reiter. Das ist XS–S, nicht M.
-
-**Was ihn wieder aufmacht**: der erste von M8 bis M11. Dann bekommt der Reiter
-einen dritten Bewohner, und die Umgruppierung traegt sich selbst. Vorher ist
-sie ein beschrifteter Rahmen um zwei Panels — Aufwand vor Nutzen.
 
 ---
 
@@ -1885,3 +1864,128 @@ Spec-Dateien.
 
 *Bindings-Zettel*: `Keymaps/lsp.nvim.md` — neuer Abschnitt, Preset-Zeile auf
 49/33.
+
+---
+
+## Zurueckgestellt
+
+Punkte, die aus `PLUGIN_ROADMAPS.md` heraus sind, ohne gebaut worden zu sein.
+Nicht geloescht: ein Punkt, der still verschwindet, kommt in einem halben Jahr
+als neue Idee wieder, und dann fehlt die Begruendung, die es schon einmal gab.
+
+---
+
+### M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)
+
+**Zurueckgestellt am 2026-08-30. Nicht gebaut, nicht geplant.**
+
+*Was er waere*: `lsp.integrations.picker` zu einer echten Abstraktion ueber
+fzf-lua, telescope, snacks und pickers.nvim ausbauen, die vier Picker-Keymaps
+und `:TypeDefPick` darueber routen, und darauf dann Workspace-Symbole und Call
+Hierarchy anbieten. Aufwand L, nicht das M, das an M4 stand.
+
+**Warum zurueckgestellt, und zwar in dieser Reihenfolge:**
+
+1. **Es gibt nichts mehr zu abstrahieren.** Eine Abstraktion ueber N Backends
+   lohnt sich, wenn N > 1 *benutzt* wird. Nach M4a benutzt dieses Plugin fuer
+   Symbol- und Diagnostics-Listen genau eines: fzf-lua. Der Adapter wuerde eine
+   Indirektion mit einer einzigen Implementierung dahinter einziehen — genau
+   das, was `integrations/picker.lua` in seinem eigenen Docstring als
+   nutzlos abgelehnt hat („an indirection with a single implementation behind
+   it buys nothing"). M4a hat das Problem nicht geloest, das M4b loesen wollte;
+   es hat es **entfernt**.
+2. **Die Faehigkeit, die M4 zusaetzlich versprach, ist eine Zeile.** Call
+   Hierarchy existiert im Repo nirgends — aber fzf-lua bringt
+   `lsp_incoming_calls` und `lsp_outgoing_calls` mit. Wer sie will, braucht
+   zwei Katalogeintraege im Muster der vier vorhandenen, kein
+   Abstraktionsgeruest. Das ist ein XS-Punkt, kein L-Punkt, und er haengt nicht
+   an M4b.
+3. **Der Nutzen ist hypothetisch.** Er faellt erst an, wenn jemand den Picker
+   *wechselt*. Das ist bisher nicht passiert und steht auf keiner Liste.
+
+**Was ihn wieder aufmachen wuerde** — und das ist der Punkt, an dem er hier
+herausgeholt gehoert, nicht neu erfunden:
+
+- Ein zweiter Picker kommt tatsaechlich in Gebrauch (snacks.picker verdraengt
+  fzf-lua, oder eine zweite Maschine fuehrt einen anderen).
+- Oder: die vier Keymaps sollen konfigurierbar werden, statt als
+  `<cmd>FzfLua …<cr>`-Strings im Katalog zu stehen — dann ist der Adapter die
+  Form, die diese Konfiguration bekommt.
+
+Bis dahin ist die ehrliche Antwort auf „welchen Picker benutzt lsp.nvim" ein
+Name und keine Schnittstelle.
+
+
+---
+
+### M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt
+
+**Zurueckgestellt am 2026-08-30. Nicht gebaut — weil die Substanz schon
+gebaut ist.**
+
+*Was er waere*: „`ECOSYSTEM.md` §7 surface 2 — ein Runtime-Reiter, **immer**
+zur Laufzeit gefuellt, nie eingebacken." Aufwand M, drei Repos.
+
+**Gegen den Quelltext geprueft, und die Beschreibung stimmt nicht mehr:**
+
+1. **Die Oberflaeche existiert.** `core/render/html.lua` liefert `Telemetry`
+   und `Loaded` als `plugin-gated` Analysis-Werkzeuge, die ihre Daten zur
+   **Ansichtszeit** per `fetch("/api/telemetry")`, `/api/loaded` und deren
+   `…/snapshots`-Geschwistern holen. Nichts eingebacken, das
+   Byte-Vergleichs-Gate bleibt unberuehrt.
+2. **Der ehrliche Leerzustand ist sogar Prinzip.** `core/api.lua` schreibt ihn
+   als Regel fest: *„Absence answers `{ available = false, reason = … }` … A
+   panel that says why it is empty beats one that is silently blank."*
+3. **Beide Hosts antworten.** `editor/serve.lua` in Neovim,
+   `docmap-desktop/src-tauri/src/server.rs` ausserhalb.
+4. **Auch §7s Surface 1 ist da**, die das Dokument als „start here" markiert:
+   `:DocBrowse` hat die Modi `telemetry` (8) und `loaded` (9).
+
+*Was tatsaechlich offen bleibt*, ist keine Oberflaeche, sondern eine
+**Gruppierung**: die zwei Panels liegen unter siebzehn Analysis-Werkzeugen
+statt unter einem eigenen Top-Level-Reiter. Das ist XS–S, nicht M.
+
+**Was ihn wieder aufmacht**: der erste von M8 bis M11. Dann bekommt der Reiter
+einen dritten Bewohner, und die Umgruppierung traegt sich selbst. Vorher ist
+sie ein beschrifteter Rahmen um zwei Panels — Aufwand vor Nutzen.
+
+
+---
+
+### M17/M7b · `documentation.nvim` — ein Scope ist kein Knoten
+
+**Zurueckgestellt am 2026-08-31. Nicht gebaut — stattdessen wurde der Befund
+ausgeliefert, siehe [M17/M7c](#m17m7c-documentationnvim--der-befund-statt-des-umbaus).**
+
+*Was er waere*: aus einem Scope einen Knoten machen. Ein Rust `mod x { … }`,
+ein zweites `defmodule` in einer `.ex`-Datei bekaemen eine eigene `id`, eine
+eigene Summary, eigene Coverage und eigene Kanten, statt als Gruppierung unter
+ihrer Datei zu haengen. Der Report fuehrte ihn als **M** und als den einzigen
+verbliebenen Punkt, der *falsch* statt *fehlend* ist.
+
+**Warum zurueckgestellt, und zwar in dieser Reihenfolge:**
+
+1. **Es ist kein M, es ist ein L.** `Documentation.Node.id` **ist** der
+   repo-relative Pfad — im Walk, in `stats`, in `parent`/`children`, in jeder
+   `id`, im ausgelieferten Artefakt. Ein Knoten, der kein Pfad ist, bricht
+   diese Invariante an 31 Lua-Dateien des Plugins und 23 Stellen im
+   Rust-Server von `docmap-desktop`, dazu Schema-Bump und beide Konsumenten.
+2. **Der Nutzen im eigenen Korpus ist null — nachgezaehlt, nicht geschaetzt.**
+   `docmap-desktop` ist der einzige Rust-Baum unter den 31 Repos und haelt elf
+   Inline-Module, davon elf `mod tests`. Elixir kommt in keinem Repo vor. Der
+   Rest ist Lua, eine Sprache ganz ohne diese Konstruktion. Gebaut, wuerde
+   M7b zuerst Test-Module zu Knoten befoerdern und den Baum damit
+   verschlechtern.
+3. **Die Quelle plant ihn selbst nicht ein.** `docmap-desktop/docs/PLAN.md`
+   schreibt bei M7b woertlich „not scheduled by that argument alone" — der
+   Eintrag stehe da, damit die Form der Antwort aufgeschrieben ist, falls die
+   Frage je gestellt wird. Beim Hochstufen in den konsolidierten Report ist
+   dieser Satz verlorengegangen.
+
+**Was ihn wieder aufmachen wuerde:**
+
+- Ein Rust- oder Elixir-Projekt mit echten Inline-Modulen wird kartiert — dann
+  meldet `file-holds-many-modules` es von selbst, und der Befund ist die
+  Wiedervorlage.
+- Oder eine Frage wird tatsaechlich auf Modul-Identitaet geschluesselt: „was
+  braucht dieses Modul", „wie dokumentiert ist es". Heute stellt sie niemand.
