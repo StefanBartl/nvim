@@ -37,6 +37,7 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 | heading_inc_visual / _dec_visual | v,x | `<C-Right>`/`<C-Left>` | Shift visual selection's headings | — |
 | heading_inc_all / _dec_all | n | `<S-Right>`/`<S-Left>` | Shift ALL headings, or (if fenced-scope on and cursor inside a fenced block) only that block's | — |
 | table_next_cell / _prev_cell | n | `]\|` / `[\|` | Next/prev table cell. `3]\|` moves 3 cells (`vim.v.count1`, since 2026-07-31), stopping early at a table edge rather than erroring | feature `table` |
+| table_format | n | `<leader>mtf` | Format the table at the cursor — routed through `commands.table.run({"format"})`, i.e. literally the argument-less `:Markdown table format` (same cursor scope, same `config.table` alignment, same "Table formatted" notify) rather than calling `table_fmt` directly, so key and command can't drift (since 2026-08-31) | feature `table` |
 
 ## TableView keys (`M.apply_tableview`, independent of `enable_keymaps`)
 
@@ -114,11 +115,12 @@ closing does.
 
 ## which-key
 
-`bindings/which_key.lua`, `M.setup()` — labels `<leader>t` as "Markdown"
-and `<leader>tv` as "Markdown TableView" (the two leader-prefixed groups;
-every other default key is a bare motion/bracket pair with its own `desc`,
-no group needed). Soft-guarded, no-op if which-key is absent. Handles v3
-(`wk.add`) and v2 (`wk.register`).
+`bindings/init.lua`, `M.setup()` — labels `<leader>t` as "Markdown",
+`<leader>tv` as "Markdown TableView" and `<leader>mt` as "Markdown Table"
+(the leader-prefixed groups; every other default key is a bare
+motion/bracket pair with its own `desc`, no group needed). Soft-guarded,
+no-op if which-key is absent. Handles v3 (`wk.add`) and v2
+(`wk.register`).
 
 ## Notes
 
@@ -128,3 +130,4 @@ no group needed). Soft-guarded, no-op if which-key is absent. Handles v3
 
 - 2026-08-08: added the "TableView popup keys" section — `<M-Right>`/`<M-Left>`/`<M-Up>`/`<M-Down>` interactive column-resize and row-insert/remove keymaps, buffer-local to the floating preview.
 - 2026-08-08 (2): row keys reported not working; changed from insert/remove-row to move-row (swap with the row above/below) per feedback, added `<M-h>`/`<M-j>`/`<M-k>`/`<M-l>` as terminal-safe alternates, and added `:w` write-back (row order only, to the source buffer or file — see the popup-keys section above for the `acwrite`/`BufWriteCmd` mechanism).
+- 2026-08-31: added `<leader>mtf` (id `table_format`) — the argument-less `:Markdown table format` on a key, plus the `<leader>mt` which-key group it needs.
