@@ -102,9 +102,13 @@ Sitzung neu verhandelt werden.
 
 ## Naechster Schritt
 
-Stand 2026-08-31. Zuletzt erledigt: **M12b** — Analysis → Startup, der
-Flamegraph in die generierte Seite eingebettet, samt der `--check`-Ausnahme,
-ohne die jedes fremde Repo sich dauerhaft als „stale" gemeldet haette. Davor
+Stand 2026-08-31. Zuletzt erledigt: **SEL** — die visuelle Auswahl aus nvim
+wird in `mdview.nvim` im Browser gespiegelt, damit man beim Herzeigen einer
+Checkliste oder eines README sagen kann „hier, das markiere ich gerade", und
+zwar in dem Fenster, das die Zuschauer ansehen. **Kein Roadmap-Punkt**,
+sondern direkt beauftragt; Default an, Opt-out ueber
+`:MDView selection off`. Davor **M12b** — Analysis → Startup, der Flamegraph
+in die generierte Seite eingebettet, samt der `--check`-Ausnahme. Davor
 **M12**, **M17/QW6**, **M13**, **M11** (OCR, in beiden Haelften), **M17/M10**,
 **M9**, **M17/M7c** (und im selben Zug **M17/M7b zurueckgestellt**),
 **M17/M14**, **M17/M9**, **M17/M8**, **M17/M13**, **Call Hierarchy**, **M5**,
@@ -131,29 +135,40 @@ keiner mehr.
 [1.3](#13-gro-l)).
 
 *Warum jetzt*: der Eintrag ist selbst schon von L auf M korrigiert, weil
-**zwei seiner vier Schritte gebaut sind**. Nachgesehen und bestaetigt:
+**zwei seiner vier Schritte gebaut sind** — und seit SEL ist ein Teil des
+dritten und vierten Schritts es auch. Nachgesehen und bestaetigt:
 `color_my_ascii/highlight_export.lua:64` hat `runs_for_block(bufnr, block)`
 — die Spans eines Fence als row/col/hl_group aus den eigenen Extmarks —, und
-dieselbe Datei loest `hl_group → #hex` ueber `nvim_get_hl` auf. Offen sind nur
-Schritt 3 (die Spans pro Codeblock an den Client transportieren, gebunden an
-die `data-sourcepos` des `<pre>`) und Schritt 4 (der Client legt sie um den
-Code).
+dieselbe Datei loest `hl_group → #hex` ueber `nvim_get_hl` auf.
 
-*Und der Nutzen ist konkret*: `mdview.nvim` haengt fuer Syntax-Highlighting
-heute an JavaScript-Bibliotheken — `hljs`/`shiki` stehen in
+*Und SEL hat den Rest billiger gemacht*, was beim Bauen nicht geplant war:
+
+- **Der Transport steht schon.** SEL faehrt ueber `/control`, das auf 1 KiB
+  gedeckelt ist. Fuer Spans reicht das nicht — aber der Beleg, dass ein
+  Kontrollobjekt vom Puffer bis in die Seite durchkommt, ohne das Relay
+  anzufassen, liegt jetzt vor, und die Frage schrumpft auf „eigene Route oder
+  Limit anheben".
+- **Schritt 4 hat ein Zuhause und ein Vorbild.** `src/client/render/sourcePos.ts`
+  ist neu und loest Quellzeile+Bytespalte auf eine DOM-Position auf — inklusive
+  des Pfads **innerhalb eines `<pre>`**, ueber `data-sourcepos` und die
+  Zeilenstruktur des Blocks. Genau diese Rechnung braucht L4, um Spans um
+  Code zu legen; sie ist gebaut, getestet und im Browser verifiziert.
+
+*Der Nutzen ist unveraendert konkret*: `mdview.nvim` haengt fuer
+Syntax-Highlighting heute an JavaScript-Bibliotheken — `hljs`/`shiki` stehen in
 `config/DEFAULTS.lua` und `bindings/usrcmds/standalone.lua`. Danach faerbt die
-Vorschau **dasselbe** wie der Puffer daneben, weil es dieselben Extmarks sind,
-und eine Fremdabhaengigkeit faellt weg. Es ist ausserdem die dritte Stelle in
-Folge, an der dieselbe Frage „wie kommt Neovims Faerbung nach draussen"
-beantwortet wird — nach `:DocBrowse` (QW8) und der generierten Seite
-(M17/QW6), diesmal fuer den Browser.
+Vorschau **dasselbe** wie der Puffer daneben, weil es dieselben Extmarks sind.
 
 *Die eine Einschraenkung, die der Eintrag selbst nennt und die stimmt*:
 `runs_for_block` liest, was color_my_ascii **selbst gemalt hat** — es liefert
-also nichts fuer einen Block, den color_my_ascii nicht einfaerbt. Die
-Alternative aus `SCHLACHTPLAN.md` (Treesitter direkt in mdview, allgemeiner,
-keine Fremdabhaengigkeit) bleibt davon unberuehrt und ist die Entscheidung,
-die vor Schritt 3 zu treffen ist.
+also nichts fuer einen Block, den color_my_ascii nicht einfaerbt. Dessen
+`fence_language_map` deckt 31 Sprachtags ab; was nicht darin steht (yaml, toml,
+dockerfile, diff, xml) bekaeme gar keine Farbe, waehrend hljs ~190 Sprachen
+kennt. Als **Opt-in neben** hljs ist das kein Rueckschritt, als Ersatz schon.
+Die Alternative aus `SCHLACHTPLAN.md` (Treesitter direkt in mdview) verliert
+auf dieser Maschine: in `nvim-data/site/parser` liegen elf Parser, kein bash,
+kein typescript, kein go — ein ```bash-Block bliebe farblos, waehrend
+color_my_ascii ihn heuristisch ohne Parser einfaerbt.
 
 ---
 
@@ -426,8 +441,12 @@ Aus dem `SCHLACHTPLAN.md`. Vier Schritte, würde die JS-Abhängigkeiten
 2. **gebaut** — dieselbe Datei löst `hl_group -> #hex` über `nvim_get_hl`
    auf (`resolve_attrs`/`int_to_hex`), heute für `:Fence export --html`.
 3. offen — Transport der Spans pro Codeblock an den Client, gebunden an die
-   `data-sourcepos` des `<pre>`.
-4. offen — der Client legt die Spans um den Code.
+   `data-sourcepos` des `<pre>`. (`/control` traegt seit SEL nachweislich
+   Kontrollobjekte bis in die Seite, ist aber auf 1 KiB gedeckelt — offen ist
+   damit nur noch: eigene Route oder Limit anheben.)
+4. offen — der Client legt die Spans um den Code. (Die Rechnung dafuer steht
+   seit SEL: `src/client/render/sourcePos.ts` loest Quellzeile+Bytespalte auf
+   eine DOM-Position auf, **inklusive innerhalb eines `<pre>`**.)
 
 *Die eine Einschränkung*: `runs_for_block` liest die Extmarks, die
 color_my_ascii selbst gemalt hat — es liefert also nur dort etwas, wo
