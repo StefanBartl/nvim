@@ -56,6 +56,7 @@ und **was ihn wieder aufmachen wuerde**.
   - [M9 · `gopath.nvim` + `pickers.nvim` + `lib.nvim` — Frecency fuer Alternate-Vorschlaege](#m9-gopathnvim--pickersnvim--libnvim--frecency-fuer-alternate-vorschlaege)
   - [M17/M10 · `documentation.nvim` + `runtime-analysis.nvim` — Laufzeit-Evidenz als Check-Input](#m17m10-documentationnvim--runtime-analysisnvim--laufzeit-evidenz-als-check-input)
   - [M11 · `images.nvim` + casedesk — OCR, und wofuer sie eigentlich da ist](#m11-imagesnvim--casedesk--ocr-und-wofuer-sie-eigentlich-da-ist)
+  - [M13 · `images.nvim` — Bildoperationen als Dateioperationen](#m13-imagesnvim--bildoperationen-als-dateioperationen)
   - [Zurueckgestellt](#zurueckgestellt)
     - [M4b · `lsp.nvim` — der Picker-Adapter (Roadmap-Abschnitt 7)](#m4b-lspnvim-der-picker-adapter-roadmap-abschnitt-7)
     - [M17/M12 · `documentation.nvim`-Verbund — Runtime-Tab im ausgelieferten Artefakt](#m17m12-documentationnvim-verbund-runtime-tab-im-ausgelieferten-artefakt)
@@ -2145,6 +2146,85 @@ und `luacheck` sauber in beiden Repos.
 seit heute nicht mehr stimmte), `docs/NOTES/casedesk/Workflow.md` §2,
 `docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/Case.md` (Verbliste) und
 `lua/bindings/usrcmds/case/docs/FEATURES.md`.
+
+---
+
+### M13 · `images.nvim` — Bildoperationen als Dateioperationen
+
+**Erledigt am 2026-08-31. `images.nvim` `9d9a297`.**
+
+**Die Namensfrage ist entschieden: `:Image`, nicht `:File`.** Der Eintrag stand
+unter „ein Befehl, alle Operationen" und deutete damit auf `fileops.nvim`;
+gebaut wurde unter `:Image`, und die Gruende sind beide praktisch. Die drei
+vorhandenen Schreiboperationen (`export`, `redact` — und seit M11 `ocr`) liegen
+schon dort, und `resolve.path_or_cursor` loest genau das Argument auf, das man
+tippen will: das Bild unter dem Cursor. `fileops.nvim` haette beides erst
+bekommen muessen. Beide Verben zu bedienen waere Doppelpflege gewesen.
+
+*Was ausgeliefert wurde*, alle drei in `convert.lua` statt in einem neuen
+Modul — dessen eigener Kopfkommentar nennt den Grund bereits: dieselbe
+`magick`-Abhaengigkeit, dieselbe argv-plus-async-`vim.system`-Form, dieselbe
+Fehlerbehandlung. Nach Thema getrennt waeren es zwei Module mit je einem
+identischen Fehlerpfad geworden.
+
+| | schreibt | |
+|---|---|---|
+| `:Image scale <size> [path]` | `photo.scaled.png` | `50%`, `800x600`, `800x`, `x600`, `800x600!` |
+| `:Image optimise [path] [--quality=<n>]` | `photo.optimised.png` | Metadaten weg, beste Kompression |
+| `:Image convert <format> [path]` | `photo.<format>` | gleicher Stamm, `<Tab>`-vervollstaendigt |
+
+**Die Entscheidung, die den Punkt vor einem stillen Fehlschlag bewahrt: die
+Geometrie wird in Lua geprueft, bevor `magick` laeuft.** `magick` behandelt ein
+unlesbares `-resize`-Argument als *gar keine* Groessenaenderung und beendet sich
+mit 0. Ein Tippfehler haette also eine `.scaled.`-Kopie in Originalgroesse
+erzeugt — mit jedem Anzeichen von Erfolg. Genau dieselbe Klasse von Problem wie
+bei `:Image ocr`s Sprachfehler: das externe Werkzeug ist zufrieden, das
+Ergebnis ist falsch, und nur der Aufrufer kann den Unterschied kennen.
+
+**`optimise` loescht ein Ergebnis, das nicht kleiner ist.** Wer optimiert,
+will eine kleinere Datei; ihm eine groessere zu geben und das Erfolg zu nennen
+waere eine Luege, und sie neben dem Original liegen zu lassen ist Muell, den er
+danach wegraeumt. Die Meldung nennt beide Groessen so oder so — „schon optimal"
+kommt mit Zahlen statt als Achselzucken.
+
+*Was `-strip` tatsaechlich entfernt, und warum das der Punkt ist*: EXIF,
+Farbprofile — und bei einem Screenshot den Fenstertitel. Das ist die
+Metadatenzeile, an die niemand denkt, bevor er ein Bild an ein Ticket haengt.
+PNG bekommt zusaetzlich ImageMagicks hoechste Kompressionsstufe, die
+definitionsgemaess verlustfrei ist. JPEG wird in jedem Fall neu kodiert —
+`magick` kann ein JPEG nicht strippen, ohne es zu dekodieren; ohne `--quality`
+uebernimmt ImageMagick die Qualitaetseinstellung der Quelle, was diese
+Neukodierung so nah an einen No-Op bringt, wie das Format es zulaesst.
+
+*Die Quelle wird nie in place bearbeitet* — dieselbe Haltung wie bei `redact`,
+und aus demselben Grund: das sind Anhaenge, ein Screenshot, den ein Kunde
+geschickt hat. Eine Operation, die das Original ueberschreibt, ist ein
+Rueckgaengig von verlorenem Beweismaterial entfernt. `convert` ist der einzige,
+der auf einen existierenden Namen treffen kann, und er verweigert genau den
+Fall, in dem Ziel und Quelle dieselbe Datei waeren.
+
+*Ein PDF-Pfad, nicht zwei*: `:Image convert pdf` laeuft durch `to_pdf` —
+inklusive `pdfport.nvim`s verlustfreiem `img2pdf`, wenn es installiert ist.
+Zwei Wege, ein PDF zu erzeugen, die sich unterschiedlich verhalten, waeren
+genau die Drift, vor der die Docs dieses Repos staendig warnen.
+
+*Zur Namenskollision, die keine ist*: `images.scale` ist ein anderes Modul —
+reine Anzeige-Arithmetik (Zellen, Seitenverhaeltnis, Anker), das nie eine Datei
+anfasst. Der Befehl heisst trotzdem `:Image scale`, weil das das Wort ist, nach
+dem man greift; die interne Funktion heisst `convert.resize`, damit Prosa ueber
+`images.scale` weiter genau eine Sache bedeutet. In den Modul-Docs, der Vimdoc
+und `M.scale`s Kommentar festgehalten.
+
+*Verifiziert an einem echten 1,1-MB-Foto*: 3968×2640 → 800×532 bei 91 KB,
+`--quality=60` → 437 KB, jpg→png sauber, jpg→jpg korrekt verweigert
+(„shot.jpg is already jpg"). Suite gruen, `convert_spec.lua` um 40 Assertions
+erweitert, darunter beide Ausgaenge von `optimise` (geschrieben *oder*
+geloescht) und der Nachweis, dass die verkleinerte Datei wirklich schmaler ist
+statt nur zu existieren. `stylua` und `luacheck` sauber ueber alle 59 Dateien.
+
+*Bindings-Zettel*: `docs/BINDINGS.md` um drei Zeilen erweitert, Vimdoc um
+`images-fileops` plus drei API-Eintraege, und `doc/tags` neu erzeugt — dabei
+fiel auf, dass die OCR-Tags aus M11 dort noch fehlten.
 
 ---
 
