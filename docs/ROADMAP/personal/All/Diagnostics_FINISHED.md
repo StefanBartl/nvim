@@ -6,7 +6,32 @@ alles, was noch offen ist.
 
 ---
 
+## Table of content
+
+  - [2026-08-31](#2026-08-31)
+    - [Cluster A: der `assert`-Typ -- und warum der erste Anlauf ins Leere lief](#cluster-a-der-assert-typ-und-warum-der-erste-anlauf-ins-leere-lief)
+      - [Die Ursache, jetzt gemessen statt vermutet](#die-ursache-jetzt-gemessen-statt-vermutet)
+      - [Die zweite Ursache: der Workspace als seine eigene Library](#die-zweite-ursache-der-workspace-als-seine-eigene-library)
+      - [Was gemacht wurde](#was-gemacht-wurde)
+      - [Ergebnis: 6344 -> 3204](#ergebnis-6344-3204)
+      - [Was absichtlich unangetastet blieb](#was-absichtlich-unangetastet-blieb)
+      - [Wie gemessen wurde](#wie-gemessen-wurde)
+  - [2026-08-29](#2026-08-29)
+    - [Cluster C: `missing-fields` -- 518 auf 21, ueber alle 31 Plugins plus Config](#cluster-c-missing-fields-518-auf-21-ueber-alle-31-plugins-plus-config)
+      - [Der Fix war nicht ueberall derselbe -- und das liess sich nur messen](#der-fix-war-nicht-ueberall-derselbe-und-das-liess-sich-nur-messen)
+      - [Was dabei an echten Fehlern herausfiel](#was-dabei-an-echten-fehlern-herausfiel)
+      - [Was Pflicht blieb, und warum](#was-pflicht-blieb-und-warum)
+      - [Unterdrueckt, mit Begruendung im Code](#unterdrueckt-mit-begruendung-im-code)
+      - [Werkzeug](#werkzeug)
+    - [`lib.nvim.ui.list` -- eine Listen-Senke statt vierzehn](#libnvimuilist-eine-listen-senke-statt-vierzehn)
+    - [mdview.nvim formatiert jetzt wie die anderen 30 Repos](#mdviewnvim-formatiert-jetzt-wie-die-anderen-30-repos)
+    - [open.nvim: uebrig gebliebener Claude-Worktree abgeraeumt](#opennvim-uebrig-gebliebener-claude-worktree-abgeraeumt)
+
+---
+
 ## 2026-08-31
+
+---
 
 ### Cluster A: der `assert`-Typ -- und warum der erste Anlauf ins Leere lief
 
@@ -31,6 +56,8 @@ Nur github_stats.nvim hat reagiert -- als einziges der vier fuehrte seine
 `.luarc.json` auch `${3rd}/busted/library`, und erst die Meta von busted
 verdrahtet `assert` ueberhaupt mit luassert.
 
+---
+
 #### Die Ursache, jetzt gemessen statt vermutet
 
 Der Nebenbefund vom 29.08. stimmt, und er ist groesser als dort geschaetzt:
@@ -53,6 +80,8 @@ Bei sandbox.nvim standen in dieser Liste ausserdem vier
 `$HOME/.local/share/nvim/lazy/…`-Pfade, die auf dieser Maschine ins Leere
 zeigen.
 
+---
+
 #### Die zweite Ursache: der Workspace als seine eigene Library
 
 `build_library.lua` haengte jeden `runtimepath`-Eintrag an. Die Dev-Repos liegen
@@ -60,6 +89,8 @@ auf dem `runtimepath`, also auch das Repo, das gerade offen ist. LuaLS liest
 dessen Dateien dann zweimal, und jede `@class` darin meldet
 `duplicate-doc-field` gegen sich selbst: **1085 der 1222 Warnungen der
 nvim-Config** und 212 in runtime-analysis.nvim.
+
+---
 
 #### Was gemacht wurde
 
@@ -75,6 +106,8 @@ Problem, sie kam nur nirgends an. Jetzt tut sie, wofuer sie gebaut wurde:
 `assert.are.same(...)` loest auf, in lsp.nvim bleiben von 665
 `undefined-field` noch 36, davon sieben echte (`has_no`, `are_not` -- Namen,
 die die Meta-Datei noch nicht kennt).
+
+---
 
 #### Ergebnis: 6344 -> 3204
 
@@ -108,6 +141,8 @@ Nach Regel: `undefined-field` 1741 -> 562, `duplicate-doc-field` 1235 -> 192,
 `undefined-global` 511 -> **0**, `undefined-doc-name` 328 -> 87,
 `redundant-parameter` 252 -> 84.
 
+---
+
 #### Was absichtlich unangetastet blieb
 
 Acht Repos wuerden durch den Fix **schlechter** -- ihre `.luarc.json` behaelt
@@ -119,6 +154,8 @@ sich gar nicht: emojis, gopath, language.
 Dass lib.nvim dabei ist, ist die unangenehme Pointe: das Repo, das die
 Meta-Datei traegt, sieht sie selbst nur, weil sie in seinem eigenen Workspace
 liegt.
+
+---
 
 #### Wie gemessen wurde
 
@@ -141,6 +178,8 @@ Pfad; und parallele `lua-language-server`-Instanzen brauchen je einen eigenen
 ---
 
 ## 2026-08-29
+
+---
 
 ### Cluster C: `missing-fields` -- 518 auf 21, ueber alle 31 Plugins plus Config
 

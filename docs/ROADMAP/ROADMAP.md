@@ -16,7 +16,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     20:30       |    54% / 44%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     20:30       |    88% / 47%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     18:30       |    86% / 42%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     15:30       |    92% / 30%     |
 

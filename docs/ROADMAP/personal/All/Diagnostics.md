@@ -101,8 +101,8 @@ Sobald das entschieden ist, beginnt der vertikale Modus, und zwar bei
 
 | # | Punkt | Ergebnis |
 |---|---|---|
-| A | **`assert`-Typ**, und die Library-Auflösung dahinter | **6344 -> 3204** über alle 33 Workspaces. `.luarc.json` ersetzt `workspace.library` komplett, deshalb kam lsp.nvims Injektion in 31 Repos nie an. Details: [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md) |
-| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md) |
+| A | **`assert`-Typ**, und die Library-Auflösung dahinter | **6344 -> 3204** über alle 33 Workspaces. `.luarc.json` ersetzt `workspace.library` komplett, deshalb kam lsp.nvims Injektion in 31 Repos nie an. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| C | **`missing-fields`** über alle 31 Plugins + Config | **518 -> 21**, die 21 Reste sind lib.nvims Aggregator-Klassen und gehören zu Cluster F. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
@@ -214,8 +214,12 @@ Repos überhaupt keine `vim.*`-Typen.
 
 Kommandozeile pro Repo:
 
-```bash
-lua-language-server --check "C:/repos/<repo>" --checklevel=Warning --check_format=json --check_out_path=<out>.json --configpath=<merged>.json
+```
+PC:
+lua-language-server --check "E:/repos/<repo>" --checklevel=Warning --check_format=json --check_out_path=<out>.json --configpath=<merged>.json
+
+workstation/laptop:
+lua-language-server --check "E:/repos/<repo>" --checklevel=Warning --check_format=json --check_out_path=<out>.json --configpath=<merged>.json
 ```
 
 Laufzeit gesamt: rund 10 Minuten. LuaLS 3.18.2-dev, Neovim 0.12.2.
@@ -344,7 +348,7 @@ waren das 1085 `duplicate-doc-field`.
 
 **Über alle 33 Workspaces von 6344 auf 3204**, kein Repo verschlechtert.
 Vollständige Aufstellung samt Messmethode:
-[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
 
 ---
 
@@ -388,7 +392,7 @@ der Code die aufgelöste Config direkt liest -- dort wurde die **Opts**-Klasse
 (Eingabe) von der **Config**-Klasse (nach `vim.tbl_deep_extend`) getrennt.
 
 Vollständige Aufstellung, samt der Nebenbefunde, die dabei sichtbar wurden:
-[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
 
 ---
 
@@ -572,7 +576,7 @@ einzeiliges `function() ... end`, das stylua aufklappen will:
 Dazu die Ausreißer-Entscheidung: `mdview.nvim` formatierte als einziges der 31
 Repos mit Tabs (`indent_type = "Tabs"`, `indent_width = 4`) und steht jetzt auf
 der Repo-Konvention `Spaces` / `2`. Siehe
-[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
 
 ---
 
@@ -582,7 +586,7 @@ der Repo-Konvention `Spaces` / `2`. Siehe
   2026-08-29:** Worktree und beide Altbranches entfernt, nachdem geprüft war,
   dass ihre zwei Commits inhaltlich schon auf `main` liegen. `.claude/` ist
   dort jetzt gitignored. Siehe
-  [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+  [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
 - **Zwei Worktrees in dieser Config:**
   `.claude/worktrees/dazzling-chaplygin-5284d5` und `serene-gagarin-e46262`,
   zusammen 1620 Lua-Dateien. Hier ist `.claude/` gitignored, also auch für
@@ -597,7 +601,7 @@ der Repo-Konvention `Spaces` / `2`. Siehe
   gar nichts von der Injektion an, `$VIMRUNTIME` eingeschlossen. In den 20
   Repos, wo die Messung dafür sprach, ist die Liste jetzt weg. Kein CI ruft
   `lua-language-server` auf, das war also folgenlos. Siehe
-  [`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+  [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
 - **Die 20 bereinigten Repos hängen jetzt an `lsp.nvim`.** Ohne diese Config
   geöffnet -- anderer Editor, `lua-language-server` von Hand -- bekommen sie
   eine leere Library. Bewusst in Kauf genommen: die entfernten Listen waren
@@ -665,7 +669,7 @@ Korrektur zur Vermutung oben: `lsp.nvim/lua/lsp/diagnostics/*` war gerade
 mit eigener Severity-Behandlung und einer zwischen Neovim 0.10 und 0.11
 geänderten Signatur, und blieb unangetastet. Details, inklusive der vier
 Unterschiede, die die Eigenbauten stillschweigend hatten, in
-[`Diagnostics_FINISHED.md`](Diagnostics_FINISHED.md).
+[`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
 
 ---
 
