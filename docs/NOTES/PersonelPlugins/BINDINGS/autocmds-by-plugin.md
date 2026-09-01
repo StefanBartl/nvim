@@ -1,6 +1,6 @@
 # Autocmds — consolidated, by plugin
 
-One scrollable/searchable document with every autocmd across all 26
+One scrollable/searchable document with every autocmd across all 29
 plugins, condensed to event/augroup/pattern/action. For full prose
 (why each one exists, known issues, doc-staleness notes), follow the link
 to that plugin's own file in [Autocmds/All.md](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/All.md).
@@ -99,6 +99,15 @@ opt-in).
 | --- | --- | --- | --- |
 | `BufWritePost` | `GopathPathCacheInvalidate` | — | Drop directory-listing caches (always on) |
 | `BufWritePost` | `GopathCacheAutoRebuild` | `{*.lua,*.vim}` | Debounced truncated-path cache rebuild (opt-in) |
+
+## [hover.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/hover.nvim.md)
+
+| Event(s) | Augroup | Pattern | Action |
+| --- | --- | --- | --- |
+| `FileType` | `HoverEnable` | `filetypes` (default `*`) | Attach the path/link hover to this buffer |
+| `CursorHold` | `HoverBuf<n>` | one buffer | Trigger the hover (default trigger) |
+| `CursorMoved` | `HoverBuf<n>` | one buffer | Trigger, under `trigger = { "cursor" }` or `{ "mouse" }` |
+| `BufLeave`, `InsertEnter` | `HoverBuf<n>` | one buffer | Hide the float |
 
 ## [insights.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/insights.nvim.md)
 

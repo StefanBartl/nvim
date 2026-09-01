@@ -81,6 +81,17 @@ callback" — a normal, safe pattern (cheaper than a real Vim pattern glob in
 some cases, since the callback can consult live plugin state the pattern
 syntax can't express), not a performance concern at this scale.
 
+hover.nvim belongs here as well, and is global by *design* in a third way
+again: its `HoverEnable` group really does carry a pattern (`filetypes`,
+default `*`), so it is not "global registration, self-filtering callback" —
+it is a genuine every-filetype attach, on purpose, because a path written as
+plain text is a target in any buffer. The filtering that does happen is by
+buffer *kind* rather than filetype: a non-empty `'buftype'` is never attached
+to, which takes out pickers, trees, terminals and dashboards in one check
+instead of a filetype blocklist that could never keep up. The per-buffer
+`HoverBuf<n>` groups it creates are then buffer-local by construction and
+carry no pattern at all.
+
 spotlight.nvim belongs here too, and is the one case that is global by
 *design* rather than by convenience: its `spotlight_windows` group
 (`WinNew`/`BufWinEnter`/`TabNewEntered`/`WinClosed`) genuinely has to reach

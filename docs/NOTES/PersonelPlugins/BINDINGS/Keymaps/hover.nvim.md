@@ -50,3 +50,17 @@ combination when no key is bound. **Not set in this config today.**
 A configured list **replaces** the default rather than extending it; an empty
 list binds nothing at all, which is how you take the scrolling over with your
 own mappings (`require("hover").scroll(1)` / `(-1)`).
+
+## Notes
+
+- **Kein which-key** — geprüft und verneint: `lua/hover/` enthält kein
+  `which_key`-Modul und keinen `which_key`-Config-Key. Es gibt auch nichts zu
+  gruppieren: der einzige *besessene* Key ist `keymaps.show`, per Default
+  ungebunden, und alle übrigen sind geliehen und existieren nur, solange ein
+  Float offen ist — ein Präfix-Menü über Tasten, die es meistens nicht gibt,
+  wäre irreführend.
+
+## Changelog
+
+- 2026-09-01: unverändert durch hover.nvim `b2b4b2c` (`:Hover paths code`) —
+  der neue Schalter ist ein Usercommand ohne Taste, wie alle anderen auch.

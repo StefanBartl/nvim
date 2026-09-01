@@ -1,9 +1,10 @@
 # hover.nvim — User Commands Cheatsheet
 
 New repository, 2026-09-01. Extracted from `lib.nvim.hover`, whose
-`:Lib hover …` routes this replaces — those are switched off in the config
-(`lib.nvim_usrcmds.setup({ hover = false })`) and can be deleted from lib.nvim
-outright once its `lua/lib/nvim/hover/` goes.
+`:Lib hover …` routes this replaces. Those are **gone** as of 2026-09-01
+(lib.nvim `5450dd4`): the module, the routes, the `hover` field on
+`Lib.NvimUsrCmds.Options` and the `hover = false` line in this config all went
+together, so `:Lib hover …` no longer exists in any form.
 
 Built on `lib.nvim.bindings.usercmd.composer`. Registered from
 `plugin/hover.lua`, so `:Hover` exists before `setup()` runs and in a session
@@ -17,7 +18,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | Command | Args | Notes |
 | --- | --- | --- |
 | `:Hover show` | — | one hover, here, now; ignores every volume switch |
-| `:Hover status` | — | mode + all seven switches in one message |
+| `:Hover status` | — | mode + all eight switches in one message |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
@@ -25,6 +26,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover links web fetch [state]` | `on\|off\|toggle` | status code + title. Implies `links web on` |
 | `:Hover paths [state]` | `on\|off\|toggle` | bare paths in prose |
 | `:Hover paths missing [state]` | `on\|off\|toggle` | mark a path that resolves to nothing |
+| `:Hover paths code [state]` | `on\|off\|toggle` | hover a path inside executable code, not just comments and strings. **Default off.** Implies `paths on` |
 | `:Hover images [state]` | `on\|off\|toggle` | draw pictures, or describe them |
 | `:Hover office [state]` | `on\|off\|toggle` | render office docs via PDF |
 
@@ -35,8 +37,9 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
 
 - **Routes are generated, not written.** `switch_route(name)` builds one route
   per entry in `hover.switches`; the same table feeds `:Hover status` and the
-  `:checkhealth hover` section. An eighth switch is one table entry and
-  nothing else, and dispatch/completion/docs cannot drift apart.
+  `:checkhealth hover` section. A ninth switch is one table entry and nothing
+  else, and dispatch/completion/docs cannot drift apart. `paths code` was the
+  eighth and cost exactly that — one entry plus one name in `ORDER`.
 
 - **`web` and `fetch` nest under `links` in the command tree** even though
   they are flat entries in the switch table (`route_path()` maps them). The
@@ -56,3 +59,18 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `scroll(-1)`) are keys, not commands, and borrowed ones at that — a count
   prefix typed at a borrowed key is indistinguishable from one meant for the
   mapping it displaced. Noted in the plugin's `docs/ROADMAP.md`.
+
+- **`paths code` is about *where*, not *what*.** Every other switch decides
+  which kind of target may hover. This one decides whether the cursor's
+  *position* disqualifies it: off, a spot Treesitter identifies as executable
+  code is skipped, so `vim.api.foo` and `a / b` stop opening floats while a
+  path in a comment or a string still does. Prose is untouched — no parser, no
+  captures, or an unfamiliar capture family all fall through to "look anyway".
+  `:Hover show` ignores it entirely.
+
+## Changelog
+
+- 2026-09-01: `:Hover paths code` added (hover.nvim `b2b4b2c`) — eighth
+  switch, default off. `:Hover status` now lists eight.
+- 2026-09-01: `:Lib hover …` is gone rather than merely switched off —
+  lib.nvim `5450dd4` deleted the module the routes drove.

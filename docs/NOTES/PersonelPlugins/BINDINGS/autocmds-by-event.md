@@ -176,7 +176,29 @@ features turned on).
 Hit by: filetree.nvim (breadcrumbs, preview live-update, size_info opt-in,
 git_status opt-in), fileops.nvim (on_hold preview, opt-in), color_my_ascii.nvim
 (Telescope scheme-preview), reposcope.nvim (cursor-line-2 guard),
-pickers.nvim (selected_index overlay). All buffer/plugin-scoped, no overlap.
+pickers.nvim (selected_index overlay), **hover.nvim** (the path/link hover).
+
+All of those except the last are buffer- or plugin-scoped and do not overlap.
+**hover.nvim is the exception and the one worth knowing about**: its
+`filetypes` defaults to `*`, so it installs a `CursorHold` in *every* ordinary
+buffer, which is the point — a path in a `.txt`, a code comment or a
+`:messages` dump is a target too. Three things keep that affordable and are
+worth repeating here rather than only in its own cheatsheet:
+
+- A non-empty `'buftype'` is never attached to, so pickers, trees, terminals
+  and dashboards are out regardless of filetype.
+- With nothing that could answer (`paths.enabled = false` and no registered
+  source) no trigger is installed at all, rather than one that wakes to find
+  that out.
+- The handler's own gates are ordered cheapest-first: a non-blank character
+  check, then `<cfile>` plus a shape test (~1.1 µs, and it rejects ~99.8% of
+  cursor positions), and only then the Treesitter position gate (~90 µs) and
+  the filesystem resolver (~100 µs mean). Measured 2026-09-01 on a 728-line
+  Lua buffer.
+
+`fileops.nvim`'s on_hold preview is the one to watch alongside it: both react
+to the same event in the same buffer, both open a float. fileops' is opt-in
+and off.
 
 ## `WinEnter` / `WinLeave` (+ `Win*` family)
 
@@ -238,7 +260,8 @@ these itself (dap.nvim's pair comes from nvim-dap-ui, an external plugin).
 `VimResized` (filetree, opt-in), `WinScrolled` (language, opt-in),
 `OptionSet` (diff, opt-in), `DiagnosticChanged` (filetree, opt-in),
 `DirChanged` (filetree, opt-in), `TermOpen`/`TermRequest` (insights),
-`ModeChanged` (fileops), `BufWinEnter`/`BufWinLeave` (debugging, filetree,
+`ModeChanged` (fileops), `BufLeave` (hover.nvim only — one half of the
+"hide the float" pair, per buffer), `BufWinEnter`/`BufWinLeave` (debugging, filetree,
 mdview — different purposes, no overlap), `BufHidden` (filetree, sessions —
 different purposes), `QuitPre` (reposcope only — and the one autocmd in
 this whole audit that skips `nvim_create_augroup` entirely, see

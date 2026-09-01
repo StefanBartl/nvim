@@ -20,6 +20,7 @@ All plugin keymap cheatsheets in this folder.
 - [filetree.nvim](./filetree.nvim.md)
 - [github_stats.nvim](./github_stats.nvim.md)
 - [gopath.nvim](./gopath.nvim.md)
+- [hover.nvim](./hover.nvim.md)
 - [images.nvim](./images.nvim.md)
 - [insights.nvim](./insights.nvim.md)
 - [language.nvim](./language.nvim.md)
