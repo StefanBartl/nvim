@@ -42,6 +42,8 @@
     "workspace.useGitIgnore": true,
     "workspace.checkThirdParty": false,
     "workspace.ignoreDir": [
+        ".claude",
+        "**/.claude",
         ".dependencies",
         ".git",
         ".luarocks",
