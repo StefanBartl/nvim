@@ -25,6 +25,25 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [Die Achter-Runde -- die letzten acht Plugins, 50 auf 0](#die-achter-runde-die-letzten-acht-plugins-50-auf-0)
+      - [Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen](#ein-alias-auf-eine-vim-funktion-kann-nil-behaftet-zurueckkommen)
+      - [migrate.nvim: Cluster L zum achten Mal -- und diesmal faellt die Zahl](#migratenvim-cluster-l-zum-achten-mal-und-diesmal-faellt-die-zahl)
+      - [dap.nvim: der Test-Runner, vierter Fall -- und eine zweite Fehlerart](#dapnvim-der-test-runner-vierter-fall-und-eine-zweite-fehlerart)
+      - [color_my_ascii.nvim: ein Argument, das still verfiel -- und ein Fix, der den Befund verschob](#color_my_asciinvim-ein-argument-das-still-verfiel-und-ein-fix-der-den-befund-verschob)
+      - [Der Rest, nach Familien](#der-rest-nach-familien-1)
+      - [Cluster E ist damit leer -- bis auf die Config](#cluster-e-ist-damit-leer-bis-auf-die-config)
+    - [Die Dreier-Runde -- pickers, insights und recommender, 73 auf 0](#die-dreier-runde-pickers-insights-und-recommender-73-auf-0)
+      - [Vorab: die zwei billigen Pruefungen, dreimal umsonst](#vorab-die-zwei-billigen-pruefungen-dreimal-umsonst)
+      - [pickers: `fun(T)` ist keine Signatur -- elf Befunde aus drei Zeilen](#pickers-funt-ist-keine-signatur-elf-befunde-aus-drei-zeilen)
+      - [insights: dieselbe Familie, Form B -- und drei Namen fuer eine Gestalt](#insights-dieselbe-familie-form-b-und-drei-namen-fuer-eine-gestalt)
+      - [recommender: ein Testfall, der nie gelaufen ist](#recommender-ein-testfall-der-nie-gelaufen-ist)
+      - [Was der Nachher-Lauf noch gezeigt hat: ein Cast endet an der naechsten Zuweisung](#was-der-nachher-lauf-noch-gezeigt-hat-ein-cast-endet-an-der-naechsten-zuweisung)
+    - [markdown.nvim -- 30 auf 0, ein Timer ohne Antwort und ein Cast, der selbst gemeldet wird](#markdownnvim-30-auf-0-ein-timer-ohne-antwort-und-ein-cast-der-selbst-gemeldet-wird)
+      - [`.luarc.json` und `health.lua`: diesmal beide sauber](#luarcjson-und-healthlua-diesmal-beide-sauber)
+      - [A1 zum vierten Mal: der Debounce-Timer der Live-Referenzen](#a1-zum-vierten-mal-der-debounce-timer-der-live-referenzen)
+      - [Die Nutzlast dieses Plugins auf dem Typ eines fremden](#die-nutzlast-dieses-plugins-auf-dem-typ-eines-fremden)
+      - [Ein `---@cast` zwischen zwei Klassen wird selbst gemeldet](#ein-cast-zwischen-zwei-klassen-wird-selbst-gemeldet)
+      - [Der Rest, nach Familien](#der-rest-nach-familien)
     - [diff.nvim -- 31 auf 0, ein Typname, den es nicht gibt, und `vim.diff`](#diffnvim-31-auf-0-ein-typname-den-es-nicht-gibt-und-vimdiff)
       - [Sieben Befunde an einem Namen](#sieben-befunde-an-einem-namen)
       - [`vim.diff` ist deprecated, und `:checkhealth` log darueber](#vimdiff-ist-deprecated-und-checkhealth-log-darueber)
@@ -233,7 +252,7 @@ steht nur, was sich wiederholt hat.
 Nach Haeufigkeit. Diese vier Familien haben in jedem Durchgang mindestens
 einen echten Bug ergeben -- in zehn Durchgaengen ohne Ausnahme.
 
-#### A1. `vim.uv.new_timer()` ungeprueft -- 21 Stellen, drei Repos in Folge
+#### A1. `vim.uv.new_timer()` ungeprueft -- 22 Stellen, vier Repos in Folge
 
 **Signatur:** `need-check-nil` unmittelbar nach `vim.uv.new_timer()`, oft
 zusammen mit einem `cast-local-type`, wenn das Ziel-Local schon als
@@ -244,7 +263,7 @@ local timer = vim.uv.new_timer()   -- uv_timer_t|nil
 timer:start(...)                   -- wirft, wenn nil
 ```
 
-Verteilung bisher: mdview 10, language 8, github_stats 3.
+Verteilung bisher: mdview 10, language 8, github_stats 3, markdown 1.
 
 **Der Griff ist nicht der Punkt, die Frage ist es.** Nicht *"wie bekomme ich
 den Befund weg"*, sondern **was die Funktion ohne Timer tun soll**. In
@@ -257,7 +276,9 @@ github_stats waren das drei verschiedene Antworten in einer Datei:
 | Render-Debounce | **sofort rendern** -- nicht zurueckkehren, sonst faellt das Bild aus |
 
 Der Debounce-Fall ist der lehrreiche: die naheliegende Antwort (`return`) ist
-dort die falsche.
+dort die falsche. In markdown.nvim kam er zum zweiten Mal vor -- der Timer
+entprellt die Live-Referenzpruefung, und ein `return` haette die Ansicht fuer
+den Rest der Sitzung stillgelegt, ohne das je zu sagen.
 
 **Nebenregel:** wenn das Ziel-Local aus einer Tabelle nicht-optionaler Timer
 kommt, gehoert der optionale Rueckgabewert in ein **eigenes** Local --
@@ -339,6 +360,33 @@ Dahinter stecken drei verschiedene Ursachen, die im Report gleich aussehen:
    Funktionen hinter dem fehlenden Typ ohne einen einzigen Aufrufer da -- der
    Kommentar nennt eine Telescope-Anbindung, die nie entstanden ist.
 
+5. **Der Traeger gehoert einem anderen Repo.** Ein Konsument haengt seine
+   eigene Nutzlast an die Struktur einer Bibliothek -- markdown.nvim setzt
+   `subcmd` auf jeden Argument-Slot, den es bei lib.nvims composer registriert,
+   und liest es im `complete`-Callback zurueck. Der fremde Typ kennt das Feld
+   nicht, und **das ist richtig so**: es ist nicht seine Sache.
+
+   **Griff:** die abgeleitete Klasse im eigenen Repo, plus ein `---@cast` an
+   der Lesestelle.
+
+   ```lua
+   ---@class Mkdn.SubargSpec : Lib.UserCmd.Composer.ArgSpec
+   ---@field subcmd string
+   ```
+
+   Nicht die Bibliotheksklasse aufbohren: die Erweiterung gehoert dorthin, wo
+   die Nutzlast entsteht.
+
+6. **In `TESTS/`: ein Fall, der sich selbst ueberspringt.** In recommender
+   pruefte `config_spec` den Deep-Merge gegen `DEFAULTS.float` -- einen
+   Schluessel, den es nie gab. Die eigene Wache (`if type(...) == "table"`)
+   hat den ganzen Block uebersprungen, still, und er sah wie Abdeckung aus.
+   Fuenf `undefined-field` aus einem Fall, der nie gelaufen ist.
+
+   **Daraus:** `undefined-field` in `TESTS/` ist nicht automatisch
+   Testrauschen. Wo es auf eine Option oder ein Fixture-Feld zeigt, das es
+   nicht gibt, steht dahinter oft ein Fall, der nichts prueft.
+
 **Bei Fall 4 nicht loeschen.** Ob die Funktion gebraucht wird, ist eine
 Produktentscheidung; der Durchgang schreibt eine Notiz an die Stelle und
 meldet den Fund.
@@ -388,7 +436,13 @@ waren, sondern die Messung (`Lib.Keymap.Action` galt als undefiniert, und die
 vier Feldzugriffe darauf gleich mit).
 
 Betroffen waren: `buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib`,
-`sessions`, `language`. `github_stats` hatte es als einziges selbst erledigt.
+`sessions`, `language`, `migrate`. `github_stats` hatte es als einziges selbst
+erledigt.
+
+**Die Richtung der Summe sagt nichts darueber, ob die Korrektur richtig war.**
+Ueber die sechs Repos der M-Runde stieg sie (356 -> 411), in migrate fiel sie
+(4 -> 2): dort waren drei der vier Befunde Phantome fehlender Typen, und dafuer
+wurde eine Stelle sichtbar, die vorher niemand geprueft hatte.
 
 **Der Zuwachs ist der Zweck.** Nach der Korrektur faellt ein Teil weg (Typen
 loesen auf) und ein Teil kommt **dazu** -- an Stellen, die vorher niemand
@@ -482,10 +536,34 @@ meldet die alte Fassung **gar nichts**.
 Verwandt: `string.find` gibt beide Bounds zurueck oder keine, und ein Guard
 auf nur `s` laesst `e` optional (replacer, `debug.lua`).
 
+#### C6. `fun(T)` ohne Parameternamen parst nicht
+
+```lua
+---@param callback fun(string|nil)          -- parst nicht
+---@param callback fun(choice: string|nil)  -- parst
+```
+
+**Signatur:** `luadoc-miss-symbol` (*"`)` expected"*) auf einer
+`@param`-Zeile -- und darunter eine Traube `need-check-nil` oder
+`param-type-mismatch` an jeder Stelle, die den Callback benutzt.
+
+Ein `fun(...)`-Typ braucht benannte Parameter. Ohne Namen liest LuaLS den
+Typnamen als Parameternamen und bleibt am `|` haengen; der Callback-Typ ist
+damit kaputt, und alles daran haengende ebenso. In pickers trugen **drei
+solche Zeilen elf Befunde**, davon sechs `need-check-nil` in einer einzigen
+Datei.
+
+Damit sind es drei Formen derselben Familie -- A (der Inline-Tabellentyp),
+B (die nachgestellten Woerter am `@return`) und C6 (der namenlose
+`fun`-Parameter). Alle drei sehen im Bericht nach Kleinkram aus und tragen
+zweistellige Zahlen.
+
 #### C5. Weitere Formen, je einmal gesehen
 
-- **Form B:** `---@return <typ>  <wort>,` ohne Namen -- wird als zwei
-  Rueckgabewerte gelesen (pdfport: acht Befunde).
+- **Form B:** `---@return <typ>  <wort>,` ohne Namen -- die nachgestellten
+  Woerter werden als weitere Rueckgabewerte gelesen (pdfport: acht Befunde;
+  insights: **drei Zeilen, sechzehn Befunde**, darunter zwei
+  `redundant-return-value` bei Aufrufern, die korrekt annotiert waren).
 - **Verirrte Doc-Bloecke** -- sechs Repos in Folge, je fuenf bis acht Befunde
   aus einer Ursache. Signatur: `undefined-doc-param` und
   `duplicate-doc-param`. In images dreimal derselbe Griff: ein nachgeruesteter
@@ -505,12 +583,70 @@ Problem, die Zuweisung der Union ist es.
 gilt; `---@type` *deklariert*, was die Variable sein soll -- und stolpert dann
 ueber das, was zugewiesen wird.
 
+#### D4. `---@cast` quer ueber zwei unverwandte Klassen wird selbst gemeldet
+
+**Signatur:** `cast-type-mismatch` auf der Cast-Zeile, die gerade eingefuegt
+wurde, um einen `param-type-mismatch` zu beseitigen.
+
+`---@cast` funktioniert **entlang einer Linie** -- `-nil`, Ober- nach
+Untertyp -- nicht quer ueber zwei unabhaengige Klassen. Das ist F1 von der
+anderen Seite: LuaLS entscheidet ueber den Namen, und wo es die Zuweisung
+verweigert, verweigert es auch die Behauptung.
+
+Gesehen an `nvim_get_hl` -> `nvim_set_hl` in markdown.nvim: dieselbe Tabelle,
+von der Lese- und der Schreibseite gesehen (`get_hl_info` markiert jedes
+Attribut `true?`, weil es nur die gesetzten meldet; `highlight` nimmt
+`boolean?`, weil es sie auch loeschen kann).
+
+**Griff: die Zieltabelle bauen statt casten.**
+
+```lua
+local hl = vim.tbl_extend("force", {}, base, { underline = want, undercurl = false })
+vim.api.nvim_set_hl(0, group, hl)
+```
+
+`vim.tbl_extend` gibt `table` zurueck, und ein `table` erfuellt jede Klasse.
+Die gebaute Fassung ist ausserdem die ehrlichere: sie sagt, welche der beiden
+Seiten gemeint ist, behaelt jedes Attribut des Colorschemes und braucht keine
+Feldliste, die veralten kann.
+
+#### D5. Ein `---@cast` endet an der naechsten Zuweisung
+
+**Signatur:** derselbe Befund taucht ein paar Zeilen unter einem frisch
+gesetzten Cast wieder auf -- meist in einer Testdatei, die ein Local pro Fall
+zurueckstellt.
+
+```lua
+---@cast captured table
+...
+captured = nil        -- ab hier gilt der Cast nicht mehr
+cmd.handle({ ... })
+check("...", captured.find.hidden == false)   -- undefined-field
+```
+
+Ein Cast behauptet etwas ueber den **aktuellen** Wert, nicht ueber die
+Variable. Jede Zuweisung hebt ihn auf. Derselbe Fehlermodus wie die
+unvollstaendige Cast-Liste in A5, nur zeitlich statt ueber die Werte verteilt:
+die erste Stelle sieht man, die zweite sieht genauso aus.
+
+**Griff:** pro Abschnitt zwischen zwei Zuweisungen einen eigenen Cast -- oder,
+wo es geht, das Local nicht zuruecksetzen, sondern pro Fall ein neues nehmen.
+
 #### D2. Ein Fix, der die Warnung nur weiterschiebt
 
 In language haette der erste Timer-Fix den Befund von `timer` auf
 `opts.timeout_ms` verschoben, weil der zweite `if` ausserhalb der Pruefung des
 ersten stand. **Wenn eine Aenderung anderswo neue Befunde erzeugt, ist sie
 unfertig.**
+
+In color_my_ascii ist genau das passiert und erst der naechste Lauf hat es
+gezeigt: der Befund auf `ts_parser:parse()[1]:root()` sah nach dem *Baum* aus,
+war aber auch der **Parser** -- `get_parser` antwortet mit nil, wenn die
+Grammatik fehlt. Und der richtige Griff hing daran, was der Aufrufer mit dem
+Ergebnis macht: er prueft `markdown_available()` und faengt den Aufruf mit
+`pcall` ab, um auf den heuristischen Scanner zurueckzufallen. Eine leere Liste
+haette *"diese Datei hat keine Fences"* gesagt statt *"Treesitter kann hier
+nicht"*, also `assert`.
 
 #### D3. `pcall(vim.cmd, ...)` -- und nicht nur `vim.cmd`
 
@@ -571,6 +707,26 @@ nachsehen:** `vim.lsp.Client`, `lsp.ServerCapabilities`,
 `lsp.TextDocumentIdentifier`, `lsp.Position`, `lsp.Range`,
 `lsp.CodeActionParams`, `lsp.VersionedTextDocumentIdentifier`.
 
+#### F5. Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen
+
+**Signatur:** `need-check-nil` an einer Aufrufstelle, deren Ziel ein
+Modulkopf-Local ist -- `local set_km = vim.keymap.set` und dergleichen.
+
+Der Wert ist nie nil, und isolierte Reproduktionen bleiben sauber; im
+Workspace steht der Befund trotzdem. Ein explizites `---@type` auf der
+Alias-Zeile beseitigt ihn:
+
+```lua
+---@type fun(mode: string|string[], lhs: string, rhs: string|function, opts?: table)
+local set_km = vim.keymap.set
+```
+
+**Das trifft ein Idiom, das viele dieser Repos benutzen** -- `vim.*`-Funktionen
+am Modulkopf in Locals ziehen, aus Performancegruenden. Wer das tut, typisiert
+den Alias mit; sonst zahlt jede Aufrufstelle dafuer, und die Meldung steht
+dort, wo der Fehler nicht ist. In reposcope waren es zwei Aufrufstellen aus
+einer Zeile.
+
 #### F2. `vim.health.info` und `.ok` nehmen **kein** zweites Argument
 
 Sechs Repos in Folge haben ihnen eine Advice-Liste gegeben, die sie wegwerfen.
@@ -624,7 +780,12 @@ Voraussetzungen nicht meldet**:
 |---|---|
 | neotree-fs-refactor | *"All tests passed"*, Exit-Code **0** |
 | lsp.nvim | **wartet stumm** -- sieben Minuten ohne ein Byte Ausgabe |
+| dap.nvim | ohne `PLENARY_PATH` **stumm**, ohne `LIB_NVIM_PATH` **vier rote Tests** |
 | **github_stats.nvim** | Meldung mit drei Fundorten, Exit-Code **1** |
+
+**dap.nvim hat die dritte Fehlerart gezeigt, und sie ist die teuerste:** vier
+Faelle scheitern mit `module 'lib.nvim.notify' not found`, was aussieht wie ein
+Defekt im Code. Wer gerade etwas geaendert hat, sucht erst bei sich.
 
 Beide Fehlerfaelle sehen fuer den Aufrufer aus wie *"die Tests laufen gerade"*.
 Das ist kein Windows-Problem, wie es lange in Offen-Punkt 13 stand: in lsp.nvim
@@ -656,9 +817,466 @@ Fuer neue Repos ist das der Massstab, nicht eine allgemeine Formulierung.
    das ist Minutenarbeit und sagt nichts ueber den Code.
 8. **Zweimal nachmessen** (B2), Testsuite, ein Commit pro Repo, direkt gepusht.
 
+Die Schritte 1, 3 und 4 kosten zusammen wenige Minuten und gehen auch dann
+nicht ins Leere, wenn sie nichts finden: in markdown.nvim waren `.luarc.json`,
+`health.lua` und die Doc-Bloecke allesamt sauber, und danach war klar, dass die
+dreissig Befunde tatsaechlich dreissig einzelne sind und keine Messfrage.
+
 ---
 
 ## 2026-09-02
+
+---
+
+### Die Achter-Runde -- die letzten acht Plugins, 50 auf 0
+
+*(war: Diagnostics-Report Abschnitt 0, "die acht kleinen Repos in einem Zug")*
+
+**50 -> 0** (reposcope 9, color_my_ascii 8, debugging 8, dap 7, filetree 6,
+cmdlog 4, migrate 4, runtime-analysis 4), in zwei weiteren Laeufen bestaetigt,
+`worse: nothing`. Jede Suite gruen, `stylua --check` sauber, luacheck
+unveraendert. Acht Commits: `6c70fca`, `dbceedf`, `e64b275`, `55003bc`,
+`c0e195d`, `609d73e`, `a7c7ae7`, `d23fa09`.
+
+**Damit stehen einunddreissig der 32 Workspaces auf Null.** Offen ist nur noch
+die nvim-Config.
+
+Die dritte Runde dieser Form (nach der Sechser- und der Dreier-Runde) und die
+mit dem groessten Streuungsgrad: acht Repos, zwoelf Ursachen, kaum
+Wiederholung -- und trotzdem war der Zuschnitt richtig, weil der Overhead pro
+Repo (Scan, Suite, Commit) bei vier bis neun Befunden der groessere Posten ist.
+
+---
+
+#### Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen
+
+Der Fund, der am laengsten gedauert hat, und der einzige, den ich beim Lesen
+nicht erklaeren konnte.
+
+```lua
+local set_km = vim.keymap.set   -- Modulkopf
+...
+set_km(modes, lhs, rhs, map_opts)   -- need-check-nil
+```
+
+`vim.keymap.set` ist nie nil. **Vier isolierte Reproduktionen blieben sauber**
+-- mit den echten Annotationen der Funktion, mit der globalen Funktionsform,
+mit derselben Aufrufform, mit denselben Parametertypen. Im Workspace blieb der
+Befund an beiden Aufrufstellen stehen.
+
+Ein explizites `---@type` auf der Alias-Zeile hat beide beseitigt:
+
+```lua
+---@type fun(mode: string|string[], lhs: string, rhs: string|function, opts?: table)
+local set_km = vim.keymap.set
+```
+
+**Das trifft ein Idiom, das mehrere dieser Repos benutzen**: `vim.*`-Funktionen
+am Modulkopf in Locals ziehen, aus Performancegruenden. Wer das tut, sollte den
+Alias typisieren -- sonst zahlt jede Aufrufstelle dafuer, und die Meldung steht
+dann dort, wo der Fehler nicht ist. Neuer Musterpunkt F5.
+
+---
+
+#### migrate.nvim: Cluster L zum achten Mal -- und diesmal faellt die Zahl
+
+`.luarc.json` deklarierte `workspace.library` und warf damit die Injektion weg.
+Anders als bei den sechs Repos der M-Runde und bei language.nvim ist die Zahl
+danach **gesunken**, nicht gestiegen: **4 -> 2**.
+
+| | vorher (falsche Grundlage) | nachher |
+|---|---|---|
+| `Lib.Keymap.Action` / `.Registered` | 2 Befunde | weg -- die Typen sind jetzt sichtbar |
+| `LogLevelString` | 1 Befund | weg |
+| `pcall(vim.cmd, ...)` | 1 | 1 |
+| `ensure_buffer` gibt den Fehler-Slot zurueck | -- | **neu sichtbar** |
+
+Beide Richtungen gehoeren zusammen: ein Teil faellt weg, weil Typen aufloesen,
+ein Teil kommt dazu, weil Stellen geprueft werden, die vorher niemand
+angesehen hat. **Die Richtung der Summe sagt nichts darueber, ob die Korrektur
+richtig war.**
+
+---
+
+#### dap.nvim: der Test-Runner, vierter Fall -- und eine zweite Fehlerart
+
+`TESTS/minimal_init.lua` sucht plenary **und** lib.nvim ueber Umgebungsvariablen,
+die nur CI setzt. Ohne sie:
+
+| fehlt | Verhalten |
+|---|---|
+| `PLENARY_PATH` | **wartet stumm** -- kein Byte Ausgabe (wie lsp.nvim) |
+| `LIB_NVIM_PATH` | **vier rote Tests**, `module 'lib.nvim.notify' not found` |
+
+Die zweite ist die gefaehrlichere und in der Tabelle in Abschnitt G bisher
+nicht vertreten: der Lauf sieht aus wie ein echter Defekt im Code. Ich habe
+zuerst geprueft, ob meine eigene Aenderung ihn verursacht hat -- genau die
+Minuten, die ein Runner mit einer Meldung spart.
+
+Mit beiden Variablen: 25 Faelle, 0 Fehler.
+
+---
+
+#### color_my_ascii.nvim: ein Argument, das still verfiel -- und ein Fix, der den Befund verschob
+
+**`:Fence export` hat sein zweites Argument verloren.** Die Subkommando-Tabelle
+deklariert `fun(argv, ctx)`, der export-Eintrag reichte beides an `export.run`
+weiter, das eines nimmt. Lua nimmt das hin; `redundant-parameter` ist die
+einzige Stelle, die es sagt. Die zwei Eintraege direkt darunter (`yank`,
+`open`) machen es schon richtig.
+
+Und ein Lehrstueck zu D2: der Befund auf `ts_parser:parse()[1]:root()` schien
+der Baum zu sein, also habe ich den Baum geprueft -- und der naechste Lauf
+zeigte denselben Befund eine Zeile hoeher, auf dem **Parser**.
+`vim.treesitter.get_parser` antwortet mit nil, wenn die Grammatik fehlt.
+
+Die Antwort war dann nicht "leere Liste zurueckgeben": der Aufrufer prueft
+`markdown_available()` und wickelt den Aufruf in ein `pcall`, um auf den
+heuristischen Scanner zurueckzufallen. Ein leeres Ergebnis haette gesagt *"diese
+Datei hat keine Fences"* statt *"Treesitter kann hier nicht"* -- also `assert`,
+damit der Rueckfall greift. **Der richtige Griff haengt daran, was der Aufrufer
+mit dem Ergebnis macht.**
+
+---
+
+#### Der Rest, nach Familien
+
+- **cmdlog: C2**, drei Befunde aus einer Zeile.
+  `---@return (fun(...): string[])|nil` wird als `fun(...): string[]|nil`
+  gelesen -- die Klammern binden nicht so, wie sie aussehen. Der ganze
+  Funktionstyp heisst jetzt `Cmdlog.ShellHistoryParser`.
+- **debugging: `cmd.buffer`.** `nvim_get_autocmds` antwortet mit **beidem**,
+  `buf` und `buffer`; in Neovims Meta steht nur `buf`. Empirisch geprueft, nicht
+  aus der Doku gelesen.
+- **debugging: `Dbg.Tools.ProcTraceOpts`** war eine zweite Klasse fuer eine
+  Gestalt, die lib.nvim schon beschreibt -- und Klassen sind ueber den Namen
+  zuweisbar (F1), eine Parallelklasse kann der Funktion, fuer die sie
+  geschrieben wurde, nie uebergeben werden. Jetzt ein `@alias`.
+- **debugging: `vim.fn.termopen`** ist deprecated, die Nachfolge
+  (`jobstart({ term = true })`) gibt es erst ab 0.11, das README nennt 0.9+ --
+  bewusster Rueckfall, unterdrueckt mit dieser Begruendung (Regel E).
+- **reposcope: `"clos"` war kein Tippfehler.** Die Meldung haengt `ing` an,
+  `"close"` haette *closeing* ergeben. Hier war die **Annotation** falsch.
+- **reposcope: `return x:gsub(...)`** aus einer Funktion, die einen Wert
+  verspricht -- `gsub` gibt String *und* Ersetzungszahl zurueck. Geklammert.
+- **reposcope: `nvim_get_hl` -> `nvim_set_hl`**, dieselbe Zwei-Klassen-Runde
+  wie in markdown.nvim; die Schreibtabelle wird gebaut statt mutiert (D4).
+- **dap: zwei Anfragen, die keine Provider sind.** `'auto'` und `'none'` sind
+  das, was der Benutzer *fragen* darf; gespeichert wird nur eines der zwei
+  echten. Drei Befunde daraus.
+- **dap: drei Re-Exporte mit `@param`** -- Annotationen, die eine
+  Parameterliste brauchen, die eine Zuweisung nicht hat.
+- **filetree: sechsmal `vim.notify`**, fuenf Test-Doubles und **eine
+  Produktionsstelle**: `watcher_quarantine` ersetzt `vim.notify`, um die
+  EPERM-Zeilen der Datei-Watcher zu schlucken, haelt das Original und stellt es
+  zurueck. Beides ist der Zweck des Codes, beides mit dem Satz daneben
+  unterdrueckt.
+- **runtime-analysis: vier Doubles**, gleiche Behandlung.
+
+---
+
+#### Cluster E ist damit leer -- bis auf die Config
+
+Nach migrate und color_my_ascii steht in den 31 Plugins kein
+`pcall(vim.cmd, ...)` mehr. Was die Suche noch findet, ist durchweg die
+**Feldform** (`pcall(vim.cmd.edit, ...)`, `vim.cmd.helptags`, `vim.cmd.cd`) --
+und die ist eine echte Funktion, also kein Befund. Die einzige verbliebene
+Stelle der Tabellenform liegt in `nvim/lua/config/menu/custom_menu/init.lua`.
+
+---
+
+### Die Dreier-Runde -- pickers, insights und recommender, 73 auf 0
+
+*(war: Diagnostics-Report Abschnitt 0, "pickers.nvim / insights.nvim" und der
+Rest der kleinen Repos)*
+
+**73 -> 0** (pickers 32, insights 29, recommender 12), in zwei weiteren
+Laeufen bestaetigt, `worse: nothing`. Jede Suite gruen: 297 Faelle in pickers,
+`INSIGHTS_TESTS_OK`, `RECOMMENDER_TESTS_OK`. `stylua --check` sauber, luacheck
+0/0 in allen dreien. Commits: `9fa84de`, `786225e`, `5af81d5`.
+
+Drei Repos in einem Zug, wie die Sechser-Runde -- und wieder hat sich der
+Zuschnitt ausgezahlt: **zwei der drei hatten dieselbe Ursachenfamilie**
+(eine Annotation, die nicht parst und alles unter sich mitnimmt), nur in zwei
+verschiedenen Formen. Der Denkanteil fiel einmal an.
+
+---
+
+#### Vorab: die zwei billigen Pruefungen, dreimal umsonst
+
+`.luarc.json` setzt in keinem der drei `workspace.library` (Cluster L trifft
+nicht zu), und keine der `info`/`ok`-Stellen in den drei `health.lua`
+uebergibt eine Advice-Liste (F2 bleibt zum zweiten Mal in Folge aus). Das
+kostet zusammen zwei Minuten und ist die Voraussetzung dafuer, den Zahlen zu
+glauben -- siehe den Nachtrag zu H.
+
+---
+
+#### pickers: `fun(T)` ist keine Signatur -- elf Befunde aus drei Zeilen
+
+```lua
+---@param callback fun(string|nil)          -- parst nicht
+---@param callback fun(choice: string|nil)  -- parst
+```
+
+Ein `fun(...)`-Typ braucht **benannte** Parameter. Ohne Namen liest LuaLS den
+Typnamen als Parameter*namen* und bleibt am `|` haengen -- gemeldet als
+`luadoc-miss-symbol` (*"`)` expected"*). Der Callback-Typ ist damit kaputt, und
+alles, was an ihm haengt, ebenso:
+
+| Datei | Folgebefunde |
+|---|---|
+| `ui/dir_nav_picker.lua` | **6 `need-check-nil`** an jedem `callback(...)` |
+| `ui/action_picker.lua` | 1 `param-type-mismatch` an `vim.ui.select` |
+| `ui/scope_picker.lua` | 1 `param-type-mismatch` an `vim.ui.select` |
+
+**Drei Zeilen, elf Befunde.** Dieselbe Rechnung wie Form A in pdfport (28 aus
+einer Zeile) und Form B in insights (16 aus dreien) -- nur eine dritte Form.
+
+Dazu ein verirrter Doc-Block: die zwei `@param` von `M.get` standen zwanzig
+Zeilen hoeher ueber `M.is_windows()`, das keine nimmt. Sechstes Repo in Folge
+mit dieser Ursache.
+
+---
+
+#### insights: dieselbe Familie, Form B -- und drei Namen fuer eine Gestalt
+
+```lua
+---@return table[], string|nil   entries, status_message
+```
+
+Die nachgestellten Woerter sind keine Beschreibung: LuaLS liest sie als
+**dritten** Rueckgabewert vom Typ `status_message`, den es nicht gibt. Drei
+solche Zeilen trugen sechzehn Befunde -- drei `undefined-doc-name`, sechs
+`missing-return-value` (*"at least 3 required"*), vier `return-type-mismatch`
+fuer eine #3, die nie zurueckkam, und zwei `redundant-return-value` **bei
+korrekt annotierten Aufrufern**.
+
+Beim Aufschreiben der richtigen Form fiel der eigentliche Riss auf: **die drei
+Lua-Scanner geben dieselbe Gestalt zurueck und nennen sie verschieden.**
+
+| Modul | deklariert | setzt |
+|---|---|---|
+| `symbols/ts_lua.lua` | `file: string\|nil` | `file = nil` (legt in Lua **keinen** Schluessel an) |
+| `symbols/ts_lua_strings.lua` | `filename`, `func_type` | beide |
+| `symbols/ts_lua_tables.lua` | `filename`, `func_type` | beide |
+
+Gelesen wird ueberall `filename` -- vom Stempel in `symbols/init.lua` bis zur
+Anzeige in `symbols/open.lua`. `file` liest und schreibt niemand. Jetzt einmal
+als `Insights.Symbols.Match` ausgeschrieben und von allen dreien benutzt; das
+tote `file = nil` ist weg, und `func_type` steht als das optionale Feld da, das
+es ist (der Picker zeigt `?` fuer den Scanner, der es nicht setzt).
+
+**Das ist der Griff aus C1 -- eine benannte Klasse -- und der Nebeneffekt ist
+wieder der eigentliche Gewinn:** die Inline-Form hat den Namensunterschied
+zwischen drei Geschwistermodulen verdeckt.
+
+---
+
+#### recommender: ein Testfall, der nie gelaufen ist
+
+Fuenf der zwoelf Befunde waren `undefined-field` in **einer** Testdatei:
+
+```lua
+if type(DEFAULTS.float) == "table" then    -- gibt es nicht
+  local sub = next(DEFAULTS.float)
+  ...
+```
+
+`config_spec` prueft, dass ein Deep-Merge die Geschwister des gesetzten
+Schluessels behaelt -- gegen `DEFAULTS.float`, einen Schluessel, den diese
+Config nie hatte. Der Fall hat sich mit seiner eigenen Wache uebersprungen,
+lief nie, und sah im Bericht wie Abdeckung aus. Er zeigt jetzt auf
+`custom_aliases`, die verschachtelte Tabelle, um die es geht, und laeuft.
+
+**Daraus die Regel:** `undefined-field` in `TESTS/` ist nicht automatisch
+Testrauschen. Wo es auf eine Konfigurationsoption oder ein Fixture-Feld zeigt,
+das es nicht gibt, steht dahinter oft ein Fall, der sich selbst ueberspringt.
+
+Dazu ein Analyzer, den die eigene Signatur nicht kannte: `get_analyzer`
+akzeptierte vier Namen, `ANALYZER_NAMES` -- die Liste, gegen die die
+Kommandozeile validiert -- fuehrt fuenf. `perf` hat ein eigenes Modul, eine
+eigene Health-Zeile und einen Eintrag im oeffentlichen Config-Typ; nur diese
+eine Annotation hatte nie von ihm gehoert.
+
+Und `pcall(lib_map, ...)`: `lib.nvim.bindings.keymap` exportiert sich als
+aufrufbare Tabelle, nicht als Funktion -- **dieselbe Gestalt wie
+`pcall(vim.cmd, ...)`**, dieselbe Closure-Form als Griff. Wer nach Cluster E
+sucht, sucht nach der Meldung, nicht nach `vim.cmd`.
+
+---
+
+#### Was der Nachher-Lauf noch gezeigt hat: ein Cast endet an der naechsten Zuweisung
+
+Der erste Nachher-Lauf stand bei 1 statt 0, und zwar in einer Datei, die ich
+gerade bearbeitet hatte. `TESTS/pickers_spec.lua` faengt die Optionen eines
+Doubles in einem Local, prueft sie, **setzt das Local dann auf `nil` zurueck**
+und fuellt es fuer den naechsten Fall neu:
+
+```lua
+check("...", captured and captured.find and captured.find.hidden == true)
+---@cast captured table          -- gilt ab hier
+...
+captured = nil                   -- und hier ist es wieder vorbei
+cmd.handle({ ... })
+check("...", captured.find.hidden == false)   -- undefined-field
+```
+
+**Eine Zuweisung hebt die Einengung auf** -- ein `---@cast` gilt bis dahin und
+keine Zeile weiter. Das ist derselbe Fehlermodus wie die unvollstaendige
+Cast-Liste in A5, nur zeitlich statt ueber die Werte verteilt: man sieht die
+erste Stelle, repariert sie, und uebersieht die zweite, weil sie gleich
+aussieht.
+
+---
+
+### markdown.nvim -- 30 auf 0, ein Timer ohne Antwort und ein Cast, der selbst gemeldet wird
+
+*(war: Diagnostics-Report Abschnitt 0, "markdown.nvim")*
+
+**30 -> 0**, in zwei Laeufen bestaetigt, `worse: nothing`. Alle 26
+Spec-Dateien gruen (`MARKDOWN_TESTS_OK`), `stylua --check .` sauber, luacheck
+unveraendert (fuenf Bestandswarnungen, alle in Zeilen, die dieser Durchgang
+nicht angefasst hat). Ein Commit, `689cafc`.
+
+Die Verteilung war die guenstigste der Reihe: **zwanzig der dreissig lagen in
+`TESTS/`** und waren Minutenarbeit (Doubles, Casts hinter Zusicherungen, die
+der Test schon ausspricht). Die zehn in `lua/` hatten sechs Ursachen, zwei
+davon lehrreich.
+
+---
+
+#### `.luarc.json` und `health.lua`: diesmal beide sauber
+
+Die zwei ersten Schritte der Reihenfolge (H) haben hier nichts ergeben, und
+das ist die Meldung wert: markdown.nvim setzt `workspace.library` **nicht**
+(Cluster L trifft nicht zu, die Messgrundlage stimmt ab dem ersten Lauf), und
+keine der 18 `info`/`ok`-Stellen in `health.lua` uebergibt eine Advice-Liste
+(F2, das erste Repo seit sechs ohne diesen Fund). Auch keine verirrten
+Doc-Bloecke -- weder `undefined-doc-param` noch `duplicate-doc-param` im
+Bericht.
+
+**Zwei Minuten Pruefung, drei Ursachen ausgeschlossen.** Genau dafuer steht
+die Reihenfolge da.
+
+---
+
+#### A1 zum vierten Mal: der Debounce-Timer der Live-Referenzen
+
+```lua
+local timer = uv.new_timer()   -- uv_timer_t|nil
+st.timer = timer
+timer:start(delay, 0, function() ... end)
+```
+
+`core/refs.lua` haelt die Referenzen einer Datei beim Tippen nach und
+entprellt den Abgleich. Die Frage ist nach A1 nie, wie der Befund weggeht,
+sondern **was die Funktion ohne Timer tun soll** -- und hier war die
+naheliegende Antwort wieder die falsche: ein `return` haette die Live-Ansicht
+fuer den Rest der Sitzung stillgelegt, ohne das je zu sagen. Sie gleicht jetzt
+**einmal sofort** ab, scheduled, so wie es der entprellte Pfad auch tut.
+
+Verteilung damit: mdview 10, language 8, github_stats 3, markdown 1.
+
+---
+
+#### Die Nutzlast dieses Plugins auf dem Typ eines fremden
+
+Das einzige `undefined-field` in `lua/`:
+
+```lua
+args[i] = { name = "a" .. i, type = "MARKDOWN_SUBARG", optional = true, subcmd = name }
+...
+complete = function(arg_lead, spec, cmd_line)
+  if not line or line == "" then line = "Markdown " .. spec.subcmd .. " " .. arg_lead end
+```
+
+markdown.nvim haengt beim Registrieren ein eigenes Feld an jeden
+Argument-Slot und liest es im `complete`-Callback des Typs wieder aus -- um
+eine Kommandozeile zu synthetisieren, wenn es keine zu lesen gibt (ein
+direkter Aufruf im Test). Composers `Lib.UserCmd.Composer.ArgSpec` kennt
+`subcmd` nicht, und das ist richtig so: es ist die Nutzlast des Konsumenten,
+nicht Teil der Bibliothek.
+
+**Das ist A4 Fall 2 in einer Variante, die eigens genannt gehoert:** der Typ
+fehlt nicht, weil jemand ihn vergessen hat, sondern weil der Traeger einem
+anderen Repo gehoert. Der Griff ist die abgeleitete Klasse im eigenen Repo:
+
+```lua
+---@class Mkdn.SubargSpec : Lib.UserCmd.Composer.ArgSpec
+---@field subcmd string
+```
+
+und ein `---@cast spec Mkdn.SubargSpec` an der Lesestelle. Damit steht die
+Erweiterung dort, wo sie hingehoert, und lib.nvim muss nichts von ihr wissen.
+
+---
+
+#### Ein `---@cast` zwischen zwei Klassen wird selbst gemeldet
+
+Der interessanteste Fund, und er kam erst im **Nachher**-Lauf.
+
+`hl_options/hl_groups/link.lua` liest eine Highlight-Gruppe, streicht die
+Unterstreichung und schreibt sie zurueck:
+
+```lua
+local base = vim.api.nvim_get_hl(0, { name = base_name, link = false })
+base.underline = want_underline
+base.undercurl = false
+vim.api.nvim_set_hl(0, group, base)
+```
+
+Zwei Befunde: `nvim_get_hl` antwortet mit `vim.api.keyset.get_hl_info`,
+`nvim_set_hl` nimmt `vim.api.keyset.highlight`. Es ist dieselbe Tabelle, von
+der Lese- und von der Schreibseite gesehen -- die Leseseite markiert jedes
+Attribut als `true?`, weil sie nur die **gesetzten** meldet; die Schreibseite
+nimmt `boolean?`, weil sie sie auch loeschen kann. Der Round-Trip
+get -> set ist Neovims dokumentiertes Idiom.
+
+Der naheliegende Griff war ein `---@cast base vim.api.keyset.highlight`.
+**Der Cast wurde selbst gemeldet:**
+
+```
+cast-type-mismatch: Cannot convert `vim.api.keyset.get_hl_info`
+                    to `vim.api.keyset.highlight`
+```
+
+Das ist F1 von der anderen Seite: LuaLS entscheidet Zuweisbarkeit ueber den
+**Namen**, und weil die zwei Klassen nicht verwandt sind, verweigert es auch
+die Behauptung. **Ein `---@cast` ist kein Universalschluessel** -- er
+funktioniert entlang einer Vererbungslinie (`-nil`, Ober- nach Untertyp), nicht
+quer ueber zwei unabhaengige Klassen.
+
+Der Griff ist, die Schreibtabelle zu **bauen statt zu mutieren**:
+
+```lua
+local hl = vim.tbl_extend("force", {}, base, {
+  underline = want_underline,
+  undercurl = false,
+})
+vim.api.nvim_set_hl(0, group, hl)
+```
+
+`vim.tbl_extend` gibt `table` zurueck, und ein `table` erfuellt jede Klasse.
+Das ist keine Umgehung, sondern die ehrlichere Fassung: sie sagt, welche der
+beiden Seiten hier gemeint ist, behaelt jedes Attribut, das das Colorscheme
+gesetzt hat, und braucht keine Feldliste, die veralten kann.
+
+---
+
+#### Der Rest, nach Familien
+
+- **`pcall(vim.cmd, ...)` sechsmal** (D3) -- drei in `lua/`
+  (`commands/mdtable.lua`), drei in `TESTS/`. Cluster E steht damit auf fuenf.
+- **Ein Bereich, den Neovim gefuellt hat**: `ctx.line1`/`ctx.line2` sind
+  optional typisiert, weil ein Aufruf ohne `-range` beide nicht traegt. Im
+  Range-Zweig sind sie da -- `assert` statt eines erfundenen Rueckfalls.
+- **`vim.fn.getreg("+")`** ist `string|string[]`, aber die Listenform braucht
+  das dritte Argument. Ein `---@cast reg string` mit genau diesem Satz daneben.
+- **In `TESTS/`**: sechs Doubles ueber `vim.ui.open`/`.select` (unterdrueckt,
+  mit Begruendung -- E), vier `---@cast` dort, wo der Fall selbst schon
+  `ok(x ~= nil, ...)` sagt, zwei `assert` dort, wo nichts prueft, und ein
+  fehlender zweiter `@return` an einem Helfer, der zwei Werte liefert.
 
 ---
 
