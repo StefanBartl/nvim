@@ -9,6 +9,13 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [lsp.nvim -- 172 auf 35, und die Typen, die es hier nie gab](#lspnvim-172-auf-35-und-die-typen-die-es-hier-nie-gab)
+      - [Ein echter Fehler: `:LspLuaLsReload` hat den Server nie benachrichtigt](#ein-echter-fehler-lsplualsreload-hat-den-server-nie-benachrichtigt)
+      - [Die drei Typdateien](#die-drei-typdateien)
+      - [`LspNvim.Config` sagte das eine und deklarierte das andere](#lspnvimconfig-sagte-das-eine-und-deklarierte-das-andere)
+      - [Eine Vermutung, die beim Hinsehen gefallen ist](#eine-vermutung-die-beim-hinsehen-gefallen-ist)
+      - [Der Rest](#der-rest)
+      - [Was uebrig ist: 35, und sie sind einzeln](#was-uebrig-ist-35-und-sie-sind-einzeln)
     - [Die Messgrundlage, zweiter Teil -- luassert, und 180 Befunde, die keinem Repo gehoerten](#die-messgrundlage-zweiter-teil-luassert-und-180-befunde-die-keinem-repo-gehoerten)
       - [Die Hypothese, die die Messung widerlegt hat](#die-hypothese-die-die-messung-widerlegt-hat)
       - [Was es wirklich war: `relatedInformation` fragen statt raten](#was-es-wirklich-war-relatedinformation-fragen-statt-raten)
@@ -84,6 +91,140 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### lsp.nvim -- 172 auf 35, und die Typen, die es hier nie gab
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 1)*
+
+Der dritte vertikale Durchgang. **172 -> 35**, `worse: nothing`, Suite gruen
+(395 Assertions, 0 Failed, 0 Errors), stylua sauber.
+
+Die interessante Haelfte waren Annotationen, die auf Typen zeigten, die es in
+diesem Repo nicht gibt. Sie loesten trotzdem auf -- gegen eine Kopie eines
+aelteren lsp.nvim, die in einem git-Worktree unter `.claude/` der nvim-Config
+lag und auf dem Library-Pfad jedes Workspace stand. `lsp/languages/**` und
+`lsp/formatter` wurden also gegen eine Version ihrer selbst geprueft. Mit der
+Kopie draussen (siehe den Eintrag darueber) kamen sie als
+`undefined-doc-name` heraus.
+
+---
+
+#### Ein echter Fehler: `:LspLuaLsReload` hat den Server nie benachrichtigt
+
+`servers/lua_ls/reload.lua` rief
+
+```lua
+client.notify("workspace/didChangeConfiguration", { settings = ... })
+```
+
+`notify` ist eine **Methode** -- `Client:notify(method, params)`. Der
+Methodenname ging also als `self` hinein, die Params als `method`, und der
+Aufruf ist jedes Mal innerhalb von `Client:notify` gescheitert: die
+Settings-Tabelle wurde aktualisiert, der Server nie informiert. Zwei Dateien
+weiter macht `core/workspace_diagnostics.lua` es zweimal richtig, einmal als
+`client:notify(...)` und einmal als `client.notify(client, ...)`.
+
+Gemeldet war das als `missing-parameter` -- "diese Funktion braucht 3
+Argumente, bekommt 2". Dritte Regel in dieser Arbeit, die von aussen wie
+Kosmetik aussieht und einen kaputten Codepfad verdeckt hat.
+
+---
+
+#### Die drei Typdateien
+
+**`lsp/languages/@types`** deklariert die fuenf
+`ConfiguredLangs.Literal.*`-Unions und die zehn `*.Module`-Namen. Alle zehn
+Sprachmodule exportieren genau `enable()`, also sind es Aliase auf eine
+`ConfiguredLangs.Module` statt zehn Kopien derselben Form. Die Literal-Unions
+bleiben literal, weil `enable_all()` aus jedem Eintrag einen `require`-Pfad
+baut: ein Tippfehler dort ist ein Modul, das still nie laedt.
+
+**`lsp/formatter/@types`** deklariert `FormatterOptions`, `FormatterState` und
+`FormatterApi` -- abgelesen an dem, was `build()` tatsaechlich annimmt,
+behaelt und zurueckgibt.
+
+**`@types/vim_lsp.lua` ist geloescht.** Sie deklarierte sieben
+`vim.lsp.*`-Klassen als "missing from Neovim's builtin types"; Neovim 0.12
+fuehrt alle sieben, also war jedes Feld darin ein Duplikat des echten. Dazu
+machten ihre `---@class vim.lsp` und `---@class vim.lsp.buf` die Modultabellen
+wieder auf. 30 `duplicate-doc-field`.
+
+---
+
+#### `LspNvim.Config` sagte das eine und deklarierte das andere
+
+Der Klassenkommentar liest sich als "jedes Feld unten ist garantiert vorhanden
+und gueltig" -- darunter zwanzig Felder mit `?`. Dasselbe Muster wie
+`Composer.DocsOpts` in lib.nvim, nur groesser.
+
+Getrennt: `LspNvim.Config` ist die aufgeloeste Form mit Pflichtfeldern,
+`LspNvim.Opts` die partielle, die die beiden `setup()`-Eingaenge nehmen.
+`LspNvim.Tools`/`LspNvim.Tool` und `LspNvim.Workspace` tun dasselbe fuer die
+zwei verschachtelten Tabellen, die `normalize_switch` beziehungsweise
+`normalize_workspace` garantieren und deren Leser sich darauf verlassen.
+
+Und `completion` steht seit dem 2026-08-23 in `DEFAULTS.lua` und stand in
+keiner einzigen Klasse -- daher las sich `cfg.completion` an beiden
+Aufrufstellen als undefiniertes Feld. Jetzt `LspNvim.CompletionOpts`.
+
+---
+
+#### Eine Vermutung, die beim Hinsehen gefallen ist
+
+Die dreizehn `redundant-parameter` in `TESTS/lsp/completion_spec.lua` sahen
+nach der luassert-Luecke aus, die lib.nvims `@types/luassert.lua` beschreibt --
+es waren aber gar keine. `with_temp_state` ist als `---@param fn fun()`
+annotiert und ruft seinen Callback mit `pcall(fn, fresh, store)`. Ein Blick in
+die Funktion statt in die Regel hat das in einer Minute geklaert.
+
+(Die luassert-Luecke gibt es trotzdem: lib.nvim weitet acht Assertion-Namen
+auf, lsp.nvim benutzt zusaetzlich `are.equal` 237-mal, `are.same` 97-mal und
+`is_string`. Nach der luassert-Zeile in der Injektion fielen davon nur fuenf
+`redundant-parameter` weg. Das gehoert nach lib.nvim und steht als
+Offen-Punkt.)
+
+---
+
+#### Der Rest
+
+- `has_eslint`/`has_prettier` nehmen laut ihrer eigenen ersten Zeile ein
+  `nil`-Root entgegen; die Annotation sagte `string`.
+- `usage.load()` gibt die Tabelle jetzt zurueck, statt sie nur in ein Upvalue
+  zu schreiben, das kein Aufrufer als gefuellt sehen kann.
+- Acht `@param`-Namen hatten den Unterstrich-Praefix des echten Parameters
+  nicht mitbekommen (`err` gegen `_err`).
+- Vier `pcall(vim.cmd, ...)` sind Closures (Cluster E, lsp.nvims Anteil).
+- `handlers.lua` bindet die Payload vor dem Guard statt danach.
+
+Unterdrueckt, mit der Begruendung daneben: acht Stdlib-Doubles in den Specs
+(jeweils direkt danach zurueckgesetzt), drei absichtlich kaputte Config-Werte
+in `smoke.lua`, und der Zwei-Argument-Zweig von `setloclist`, den zur Laufzeit
+ohnehin eine Probe absichert.
+
+---
+
+#### Was uebrig ist: 35, und sie sind einzeln
+
+Keine Regel mehr ueber 12. `param-type-mismatch` 12, `assign-type-mismatch` 7,
+je 3 `missing-fields`, `deprecated`, `inject-field`, je 2 `need-check-nil`,
+`invisible`, `return-type-mismatch`, 1 `redundant-parameter`.
+
+Zwei Posten lohnen eine eigene Entscheidung:
+
+- **`LspMod.Client` / `LspMod.TextDocumentIdentifier`** in
+  `@types/subsystem.lua` sind Parallel-Deklarationen zu Neovims
+  `vim.lsp.Client` und `lsp.TextDocumentIdentifier`. Solange `vim_lsp.lua`
+  danebenlag, ist das nicht aufgefallen; jetzt kollidieren sie in
+  `languages/webdev/typescript.lua` dreimal. Die Frage ist nicht, wie man die
+  drei wegannotiert, sondern ob `LspMod.*` ueberhaupt noch etwas beschreibt,
+  das Neovim nicht selbst fuehrt.
+- **`integrations/trouble.lua`** greift auf
+  `vim.treesitter.highlighter._on_win` zu -- privates Upstream-Feld, im Report
+  seit dem Erstscan als "bekannt riskant, aber bewusst; gehoert dokumentiert
+  statt behoben" vermerkt. Die zwei `invisible` und ein `inject-field` gehoeren
+  dorthin.
 
 ---
 
