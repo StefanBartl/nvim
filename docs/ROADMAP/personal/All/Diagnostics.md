@@ -2,7 +2,6 @@
 
 ## Table of content
 
-  - [TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)](#task-an-claude-delegieren-claude-soll-diesen-punkt-nicht-bearbeiten)
   - [Letze Task, nachdem alles fertig ist](#letze-task-nachdem-alles-fertig-ist)
   - [Intro](#intro)
   - [0. Stand, Arbeitsmodus, nächster Schritt](#0-stand-arbeitsmodus-nchster-schritt)
@@ -37,16 +36,6 @@
   - [7. Nebenbefunde](#7-nebenbefunde)
   - [8. Was daraus folgt](#8-was-daraus-folgt)
   - [9. Anhang: der delegierbare Teil des Roadmap-Punkts](#9-anhang-der-delegierbare-teil-des-roadmap-punkts)
-
----
-
-## TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)
-
-In C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw.
-
-comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig,  die erledigt task nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest.
-
-Halte durchaus informationen in Diagnostics_FINISHED fest, die ich später in `## letze-task-nachdem-alles-fertig-ist` ineressant sein kann.
 
 ---
 
