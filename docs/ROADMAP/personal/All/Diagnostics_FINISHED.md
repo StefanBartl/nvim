@@ -9,6 +9,12 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [pdfport.nvim -- 61 auf 0, und der Notifier, den niemand sehen konnte](#pdfportnvim-61-auf-0-und-der-notifier-den-niemand-sehen-konnte)
+      - [Achtundzwanzig Befunde waren eine Zeile](#achtundzwanzig-befunde-waren-eine-zeile)
+      - [Acht weitere: dasselbe, andersherum](#acht-weitere-dasselbe-andersherum)
+      - [Und acht: zwei Doc-Bloecke uebereinander](#und-acht-zwei-doc-bloecke-uebereinander)
+      - [Der Rest -- fuenf kleine Ursachen](#der-rest-fuenf-kleine-ursachen)
+      - [Der Befund, der erst beim dritten Lauf kam](#der-befund-der-erst-beim-dritten-lauf-kam)
     - [neotree-fs-refactor.nvim -- ausserhalb des Umfangs, versehentlich bearbeitet](#neotree-fs-refactornvim-ausserhalb-des-umfangs-versehentlich-bearbeitet)
     - [Die Sechser-Runde -- fuenf Repos, 126 auf 0](#die-sechser-runde-fuenf-repos-126-auf-0)
       - [fileops: zwei Tastenkuerzel, die nichts gesagt haben](#fileops-zwei-tastenkuerzel-die-nichts-gesagt-haben)
@@ -116,6 +122,108 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### pdfport.nvim -- 61 auf 0, und der Notifier, den niemand sehen konnte
+
+*(war: Diagnostics-Report Abschnitt 0, „Vorschlag naechster Schritt" und Offen-Punkt 1)*
+
+Der siebte vertikale Durchgang. **61 -> 0**, `worse: nothing`, alle sieben
+Specs gruen, stylua sauber. Bestaetigt durch **zwei** Laeufe, weil ein Befund
+in `marker.lua` erst beim dritten Scan auftauchte -- dazu unten.
+
+---
+
+#### Achtundzwanzig Befunde waren eine Zeile
+
+`util.notify.create` deklarierte seinen Rueckgabewert als Inline-Tabellentyp:
+
+```lua
+---@return { info: fun(msg: string): nil, warn: fun(msg: string): nil, error: ..., debug: ... }
+```
+
+Innerhalb eines Tabellenliterals verschluckt ein `fun(...): nil` **alles nach
+seinem Rueckgabetyp**. LuaLS sah also nur `info`; `warn`, `error` und `debug`
+lasen sich danach an **jeder** ihrer 28 Aufrufstellen als undefiniert -- ueber
+sieben Dateien verteilt, weshalb es wie ein Streuproblem aussah und keins war.
+Jetzt eine benannte `PdfPort.Notifier`-Klasse.
+
+Dieselbe Falle wie fileops.nvims `on_before_delete?: fun(path: string):
+boolean|nil` am Tag zuvor. Es ist damit das zweite Repo, in dem eine einzige
+nicht parsende Annotation zweistellig viele Befunde erzeugt hat -- der
+Posten lohnt eine eigene Suche ueber die restlichen Repos.
+
+---
+
+#### Acht weitere: dasselbe, andersherum
+
+```lua
+---@return string|nil  pdf_path, or nil if cursor is not on a PDF
+```
+
+Ohne Namen liest LuaLS `pdf_path,` als den Namen und `or` als **zweiten
+Rueckgabetyp**. `M.current_pdf_path` musste damit zwei Werte liefern, und alle
+acht `return`-Zeilen in `integrations/init.lua` „fehlte" einer. Dieselbe Form
+wie gopaths `---@return GopathResult|nil, string|nil` und fileops'
+`---@return string[]  Absolute, canonicalized paths.` -- dreimal an drei Tagen,
+immer dieselbe Ursache: **eine `@return`-Zeile, die als zwei gelesen wird.**
+
+---
+
+#### Und acht: zwei Doc-Bloecke uebereinander
+
+Ein Merge-Ueberbleibsel in `M.open`, in `core/dispatcher.lua` **und** in
+`init.lua`. Der erste Block trug das typisierte `opts` und die Prosa zu
+`on_error`, der zweite ergaenzte `on_done` und weitete `opts` wieder auf
+`table`. Jetzt je ein Block, mit beiden Haelften. Dasselbe Muster wie in
+emojis' `search.M.run`.
+
+---
+
+#### Der Rest -- fuenf kleine Ursachen
+
+- **`dispatch()` las `opts.path` viermal neu.** `ExtractOpts.path` ist
+  optional, `OpenOpts.path` nicht -- also war jede Lesestelle vielleicht-nil,
+  obwohl das `assert` am Funktionsanfang die Frage laengst beantwortet hatte.
+  Einmal gebunden.
+- **Die `system`- und `terminal`-Zweige** reichen `opts` an einen Renderer
+  weiter, der `RenderOpts` will. Diese Zweige *sind* die `OpenOpts`-Haelfte der
+  Union; das steht jetzt als `---@cast` da -- dieselbe Begruendung, die die
+  `--[[@as PdfPort.OpenOpts]]`-Casts zwanzig Zeilen weiter unten schon tragen.
+- **`vim.tbl_deep_extend`** typisiert seinen Rueckgabewert als Union seiner
+  Argumente. Das `---@type` auf der Bindung wurde deshalb gegen
+  `PdfPort.Config|PdfPort.CreateOpts|nil` geprueft, statt das Ergebnis zu
+  beschreiben. Ein `---@cast` **nach** dem Aufruf, in composer und dispatcher.
+- **`pages` in ollama und tesseract**: bar deklariert, von drei Zweigen
+  gefuellt und dann in einer Closure gelesen, die von dieser Verengung nichts
+  mitbekommt -- und `opts.pages` wurde direkt hineingeschrieben, was die
+  Feldpruefung ebenfalls nicht mittraegt. Der Vorgabewert ist jetzt der
+  Initialisierer, das Feld geht ueber ein lokales.
+- **`uv.fs_realpath`** hat eine asynchrone Ueberladung, die ein Request-Handle
+  liefert; sein Typ ist `string|uv.uv_fs_t`. markers blosser Wahrheitstest
+  liess die Handle-Haelfte in `tmp_dir` landen.
+
+---
+
+#### Der Befund, der erst beim dritten Lauf kam
+
+Die `marker.lua`-Stelle stand weder im Vorher-Lauf noch in den ersten beiden
+Nachher-Laeufen, obwohl die Datei die ganze Zeit unveraendert war. Sie tauchte
+erst auf, als ollama und tesseract sauber wurden.
+
+Praktisch heisst das: **ein einzelner Nachher-Lauf beweist keine Null.** Der
+Vergleich sagt zwar zuverlaessig, ob etwas *schlechter* geworden ist, aber
+„0" beim ersten Versuch kann heissen, dass ein Befund noch nicht an der Reihe
+war. Hier wurde deshalb zweimal gemessen, und beide Laeufe sagen 0. Fuer die
+naechsten Durchgaenge gilt dasselbe.
+
+---
+
+Unterdrueckt, mit Begruendung: sechs absichtlich falsch getypte Werte in den
+Specs (ein nil-Seitenbereich, zwei `available`-Felder, die keine Funktion
+sind, drei Renderer-Modi ausserhalb des Alias), wo das Zurueckweisen statt
+Werfen genau das ist, was geprueft wird.
 
 ---
 
