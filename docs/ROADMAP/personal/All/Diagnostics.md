@@ -128,40 +128,37 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **pickers.nvim, insights.nvim und recommender.nvim stehen auf Null**
-(73 -> 0 in einem Zug, 2026-09-02), damit **dreiundzwanzig der 32 Workspaces**
-im Umfang. Offen sind noch acht kleine Repos (49 zusammen) und die
-nvim-Config (120).
+*Nichts.* **Die letzten acht Plugins stehen auf Null** (50 -> 0 in einem Zug,
+2026-09-02), damit **einunddreißig der 32 Workspaces** im Umfang -- **alle 31
+Plugins sind fertig**. Offen ist nur noch die nvim-Config (120).
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**Die acht kleinen Repos in einem Zug** (49 zusammen). Die Sechser-Runde
-(126 -> 0 ueber fuenf Repos) und die Dreier-Runde (73 -> 0) haben denselben
-Befund geliefert: der Denkanteil pro Ursache faellt einmal an, und die
-Ursachen wiederholen sich zwischen den Repos. Bei acht Repos mit im Schnitt
-sechs Befunden ist der Overhead pro Repo -- Scan, Suite, Commit -- der
-groessere Posten.
+**Die nvim-Config** (120) -- der letzte Posten, und der einzige, der noch
+offen ist. `param-type-mismatch` 38, `need-check-nil` 17.
 
-| Repo | gesamt |
-|---|---:|
-| reposcope.nvim | 9 |
-| color_my_ascii.nvim | 8 |
-| debugging.nvim | 8 |
-| dap.nvim | 6 |
-| filetree.nvim | 6 |
-| cmdlog.nvim / migrate.nvim / runtime-analysis.nvim | je 4 |
-
-**Danach die nvim-Config** (120) als letzter grosser Posten -- weiterhin mit
-der Worktree-Frage davor, siehe „Nicht von Claude entschieden".
+**Davor gehört die Worktree-Frage beantwortet**, siehe „Nicht von Claude
+entschieden": `nvim-config` ist im Scan immer *die Config, aus der `scan.sh`
+gestartet wurde*, und darunter liegen elf Worktrees. Ein vertikaler Durchgang
+will erst wissen, gegen welchen Baum gemessen wird -- sonst misst der
+Nachher-Lauf etwas anderes als der Vorher-Lauf.
 
 Die Einstiegs-Checkliste steht unter
 [„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`]
 (./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules),
-Abschnitt H hat die Reihenfolge. Was sich zuletzt am haeufigsten ausgezahlt
-hat, sind die drei Annotationsformen (C1, C5 Form B, C6): sie sehen im Bericht
-nach Kleinkram aus und trugen zuletzt 28, 16 und 11 Befunde.
+Abschnitt H hat die Reihenfolge. Für die Config besonders zu erwarten:
+
+- **die drei Annotationsformen** (C1, C5 Form B, C6) -- sie sehen im Bericht
+  nach Kleinkram aus und trugen zuletzt 28, 16 und 11 Befunde;
+- **F5, der typisierte Alias** -- die Config zieht `vim.*`-Funktionen an vielen
+  Stellen in Modulkopf-Locals;
+- **`different-requires` (41)**, das es ausschließlich dort gibt (Abschnitt 5).
+
+Danach ist der Roadmap-Punkt abgearbeitet, und es folgt die
+[letzte Task](#letze-task-nachdem-alles-fertig-ist): die Ableitung nach
+`WKDBooks/Development/wkdbook-Lua/Checklists`.
 
 **Die neun kleinen Repos zusammen** (61) sind der andere sinnvolle Zuschnitt:
 die Sechser-Runde hat gezeigt, dass fünf Repos in einem Zug gehen (126 -> 0),
@@ -198,6 +195,7 @@ ausgezahlt haben:
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| T8 | **Die Achter-Runde** -- die letzten acht Plugins (2026-09-02) | **50 -> 0** (reposcope 9, color_my_ascii 8, debugging 8, dap 7, filetree 6, cmdlog/migrate/runtime-analysis je 4), in zwei Läufen bestätigt, `worse: nothing`, jede Suite grün. **Damit sind alle 31 Plugins fertig.** Drei Funde, die über das Repo hinausgehen: **ein Alias auf eine `vim.*`-Funktion kommt nil-behaftet zurück** (`local set_km = vim.keymap.set` -- zwei Befunde aus einer Zeile, vier isolierte Reproduktionen blieben sauber; ein `---@type` auf der Alias-Zeile beseitigt sie, neuer Musterpunkt F5); **migrate ist das achte Cluster-L-Repo**, und dort fällt die Zahl nach der Korrektur (4 -> 2) statt zu steigen; und **dap.nvim ist der vierte Test-Runner** der Reihe, der ohne seine Env-Variablen nicht sagt, was fehlt -- hier mit vier roten Tests, die wie ein Defekt im Code aussehen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | T3 | **Die Dreier-Runde** -- pickers, insights, recommender (2026-09-02) | **73 -> 0** (32/29/12), in zwei Laeufen bestaetigt, `worse: nothing`, jede Suite gruen. **Zwei der drei hatten dieselbe Ursachenfamilie in zwei Formen**: `fun(T)` ohne Parameternamen parst nicht (pickers: drei Zeilen, elf Befunde, davon sechs `need-check-nil` in einer Datei -- neuer Musterpunkt C6), und `---@return T, U  wort, wort` liest die nachgestellten Woerter als dritten Rueckgabewert (insights: drei Zeilen, sechzehn Befunde). Dabei kam heraus, dass **drei Scanner dieselbe Gestalt verschieden nennen** -- `ts_lua` deklarierte ein `file`, das niemand liest und niemand setzt. In recommender waren fuenf Befunde **ein Testfall, der sich selbst uebersprungen hat** (Deep-Merge gegen `DEFAULTS.float`, einen Schluessel, den es nie gab). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | MD | **markdown.nvim** -- vertikal (2026-09-02) | **30 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 26 Specs grün. Zwei Drittel lagen in `TESTS/` und waren Minutenarbeit; die andere Hälfte war **A1 zum vierten Mal** (der Debounce-Timer der Live-Referenzprüfung, ungeprüft -- ein `return` hätte die Ansicht für die Sitzung stillgelegt) und ein `undefined-field`, hinter dem **die Nutzlast dieses Plugins auf einem fremden Typ** stand (`subcmd` auf composers `ArgSpec`, jetzt `Mkdn.SubargSpec`). Neuer Musterpunkt F5: **ein `---@cast` zwischen zwei unverwandten Klassen wird selbst gemeldet** -- `nvim_get_hl` -> `nvim_set_hl` ist keine Cast-Frage, sondern eine, die man baut. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | DF | **diff.nvim** -- vertikal (2026-09-02) | **31 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. **Sieben Befunde an einer Zeile**: `register_shortcuts` war mit `Diff.Config` annotiert, der Typ heißt `DiffNvim.Config` -- ein `undefined-doc-name`, drei `undefined-field` auf Feldern, die es gibt, und ein `param-type-mismatch` beim korrekten Aufrufer. Darüber klebte der ältere Doc-Block derselben Funktion. Dazu `vim.diff` (deprecated zugunsten `vim.text.diff`, README nennt 0.9+): **einmal aufgelöst statt dreimal unterdrückt**, und `health.lua` fragt jetzt nach demselben Paar -- vorher hätte `:checkhealth` „vim.diff is missing“ gemeldet für ein Neovim, auf dem alles läuft. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -246,9 +244,13 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| *(acht Repos unter 10)* | 49 | `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(dreiundzwanzig Repos auf Null)* | **0** | buffer-ctx, cascade, diff, documentation, emojis, fileops, github_stats, gopath, images, **insights**, language, lib, lsp, markdown, mdview, open, pdfport, **pickers**, **recommender**, replacer, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **169** | |
+| *(die acht kleinen Repos)* | **0** | reposcope, color_my_ascii, debugging, dap, filetree, cmdlog, migrate, runtime-analysis |
+| *(die übrigen 23 Repos)* | **0** | buffer-ctx, cascade, diff, documentation, emojis, fileops, github_stats, gopath, images, insights, language, lib, lsp, markdown, mdview, open, pdfport, pickers, recommender, replacer, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **120** | |
+
+**Alle 31 Plugins stehen auf Null.** Was bleibt, ist die Config -- und die
+Zahl daneben ist die einzige der Tabelle, die noch nie gegen einen bereinigten
+Baum gemessen wurde (siehe die Worktree-Frage oben).
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
 minus die 37 von images, minus die 34 von language, minus die 35 von
@@ -278,9 +280,8 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **Die acht kleinen Repos in einem Zug** (49 zusammen) -- vorgeschlagener
-   nächster Schritt, siehe oben. Zwei Runden dieser Form (Sechser, Dreier)
-   haben gezeigt, dass der Zuschnitt trägt
+1. **Die nvim-Config** (120) -- der letzte offene Posten, siehe oben. Braucht
+   vorher die Worktree-Frage
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
    Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
@@ -714,7 +715,7 @@ hat sich um einen Zähler bewegt. Vollständige Aufstellung:
 
 ---
 
-### E. `pcall(vim.cmd, ...)` -- fünf offen
+### E. `pcall(vim.cmd, ...)` -- ERLEDIGT in allen 31 Plugins
 
 `Cannot assign 'table' to parameter 'fun(...any):...unknown'`. `vim.cmd` ist in
 Neovims Meta-Definition eine aufrufbare **Tabelle**, keine Funktion, passt also
@@ -724,6 +725,12 @@ einwandfrei, LuaLS kann es nur nicht ausdrücken.
 Fix: `pcall(function() vim.cmd(...) end)`. Häufungen in
 `fileops.nvim/lua/fileops/ops/file.lua` (12), `ops/cycle.lua` (6),
 `filetree.nvim/lua/filetree/adapter/{netrw,oil}.lua`, `sessions.nvim/core.lua`.
+
+**Seit dem 2026-09-02 ist in den 31 Plugins keine Stelle mehr offen.** Was
+die Suche dort noch findet, ist durchweg die **Feldform**
+(`pcall(vim.cmd.edit, ...)`, `vim.cmd.helptags`, `vim.cmd.cd`) -- und die ist
+eine echte Funktion, also kein Befund. Die einzige verbliebene Stelle der
+Tabellenform liegt in `nvim/lua/config/menu/custom_menu/init.lua`.
 
 **In recommender.nvim ist die Familie ohne `vim.cmd` aufgetaucht**:
 `pcall(lib_map, ...)` auf `lib.nvim.bindings.keymap`, das sich ebenfalls als

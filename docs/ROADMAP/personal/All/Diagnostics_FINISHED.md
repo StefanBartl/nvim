@@ -25,6 +25,13 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [Die Achter-Runde -- die letzten acht Plugins, 50 auf 0](#die-achter-runde-die-letzten-acht-plugins-50-auf-0)
+      - [Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen](#ein-alias-auf-eine-vim-funktion-kann-nil-behaftet-zurueckkommen)
+      - [migrate.nvim: Cluster L zum achten Mal -- und diesmal faellt die Zahl](#migratenvim-cluster-l-zum-achten-mal-und-diesmal-faellt-die-zahl)
+      - [dap.nvim: der Test-Runner, vierter Fall -- und eine zweite Fehlerart](#dapnvim-der-test-runner-vierter-fall-und-eine-zweite-fehlerart)
+      - [color_my_ascii.nvim: ein Argument, das still verfiel -- und ein Fix, der den Befund verschob](#color_my_asciinvim-ein-argument-das-still-verfiel-und-ein-fix-der-den-befund-verschob)
+      - [Der Rest, nach Familien](#der-rest-nach-familien-1)
+      - [Cluster E ist damit leer -- bis auf die Config](#cluster-e-ist-damit-leer-bis-auf-die-config)
     - [Die Dreier-Runde -- pickers, insights und recommender, 73 auf 0](#die-dreier-runde-pickers-insights-und-recommender-73-auf-0)
       - [Vorab: die zwei billigen Pruefungen, dreimal umsonst](#vorab-die-zwei-billigen-pruefungen-dreimal-umsonst)
       - [pickers: `fun(T)` ist keine Signatur -- elf Befunde aus drei Zeilen](#pickers-funt-ist-keine-signatur-elf-befunde-aus-drei-zeilen)
@@ -429,7 +436,13 @@ waren, sondern die Messung (`Lib.Keymap.Action` galt als undefiniert, und die
 vier Feldzugriffe darauf gleich mit).
 
 Betroffen waren: `buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib`,
-`sessions`, `language`. `github_stats` hatte es als einziges selbst erledigt.
+`sessions`, `language`, `migrate`. `github_stats` hatte es als einziges selbst
+erledigt.
+
+**Die Richtung der Summe sagt nichts darueber, ob die Korrektur richtig war.**
+Ueber die sechs Repos der M-Runde stieg sie (356 -> 411), in migrate fiel sie
+(4 -> 2): dort waren drei der vier Befunde Phantome fehlender Typen, und dafuer
+wurde eine Stelle sichtbar, die vorher niemand geprueft hatte.
 
 **Der Zuwachs ist der Zweck.** Nach der Korrektur faellt ein Teil weg (Typen
 loesen auf) und ein Teil kommt **dazu** -- an Stellen, die vorher niemand
@@ -626,6 +639,15 @@ In language haette der erste Timer-Fix den Befund von `timer` auf
 ersten stand. **Wenn eine Aenderung anderswo neue Befunde erzeugt, ist sie
 unfertig.**
 
+In color_my_ascii ist genau das passiert und erst der naechste Lauf hat es
+gezeigt: der Befund auf `ts_parser:parse()[1]:root()` sah nach dem *Baum* aus,
+war aber auch der **Parser** -- `get_parser` antwortet mit nil, wenn die
+Grammatik fehlt. Und der richtige Griff hing daran, was der Aufrufer mit dem
+Ergebnis macht: er prueft `markdown_available()` und faengt den Aufruf mit
+`pcall` ab, um auf den heuristischen Scanner zurueckzufallen. Eine leere Liste
+haette *"diese Datei hat keine Fences"* gesagt statt *"Treesitter kann hier
+nicht"*, also `assert`.
+
 #### D3. `pcall(vim.cmd, ...)` -- und nicht nur `vim.cmd`
 
 **Signatur:** `Cannot assign 'table' to parameter 'fun(...any):...unknown'`.
@@ -685,6 +707,26 @@ nachsehen:** `vim.lsp.Client`, `lsp.ServerCapabilities`,
 `lsp.TextDocumentIdentifier`, `lsp.Position`, `lsp.Range`,
 `lsp.CodeActionParams`, `lsp.VersionedTextDocumentIdentifier`.
 
+#### F5. Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen
+
+**Signatur:** `need-check-nil` an einer Aufrufstelle, deren Ziel ein
+Modulkopf-Local ist -- `local set_km = vim.keymap.set` und dergleichen.
+
+Der Wert ist nie nil, und isolierte Reproduktionen bleiben sauber; im
+Workspace steht der Befund trotzdem. Ein explizites `---@type` auf der
+Alias-Zeile beseitigt ihn:
+
+```lua
+---@type fun(mode: string|string[], lhs: string, rhs: string|function, opts?: table)
+local set_km = vim.keymap.set
+```
+
+**Das trifft ein Idiom, das viele dieser Repos benutzen** -- `vim.*`-Funktionen
+am Modulkopf in Locals ziehen, aus Performancegruenden. Wer das tut, typisiert
+den Alias mit; sonst zahlt jede Aufrufstelle dafuer, und die Meldung steht
+dort, wo der Fehler nicht ist. In reposcope waren es zwei Aufrufstellen aus
+einer Zeile.
+
 #### F2. `vim.health.info` und `.ok` nehmen **kein** zweites Argument
 
 Sechs Repos in Folge haben ihnen eine Advice-Liste gegeben, die sie wegwerfen.
@@ -738,7 +780,12 @@ Voraussetzungen nicht meldet**:
 |---|---|
 | neotree-fs-refactor | *"All tests passed"*, Exit-Code **0** |
 | lsp.nvim | **wartet stumm** -- sieben Minuten ohne ein Byte Ausgabe |
+| dap.nvim | ohne `PLENARY_PATH` **stumm**, ohne `LIB_NVIM_PATH` **vier rote Tests** |
 | **github_stats.nvim** | Meldung mit drei Fundorten, Exit-Code **1** |
+
+**dap.nvim hat die dritte Fehlerart gezeigt, und sie ist die teuerste:** vier
+Faelle scheitern mit `module 'lib.nvim.notify' not found`, was aussieht wie ein
+Defekt im Code. Wer gerade etwas geaendert hat, sucht erst bei sich.
 
 Beide Fehlerfaelle sehen fuer den Aufrufer aus wie *"die Tests laufen gerade"*.
 Das ist kein Windows-Problem, wie es lange in Offen-Punkt 13 stand: in lsp.nvim
@@ -778,6 +825,163 @@ dreissig Befunde tatsaechlich dreissig einzelne sind und keine Messfrage.
 ---
 
 ## 2026-09-02
+
+---
+
+### Die Achter-Runde -- die letzten acht Plugins, 50 auf 0
+
+*(war: Diagnostics-Report Abschnitt 0, "die acht kleinen Repos in einem Zug")*
+
+**50 -> 0** (reposcope 9, color_my_ascii 8, debugging 8, dap 7, filetree 6,
+cmdlog 4, migrate 4, runtime-analysis 4), in zwei weiteren Laeufen bestaetigt,
+`worse: nothing`. Jede Suite gruen, `stylua --check` sauber, luacheck
+unveraendert. Acht Commits: `6c70fca`, `dbceedf`, `e64b275`, `55003bc`,
+`c0e195d`, `609d73e`, `a7c7ae7`, `d23fa09`.
+
+**Damit stehen einunddreissig der 32 Workspaces auf Null.** Offen ist nur noch
+die nvim-Config.
+
+Die dritte Runde dieser Form (nach der Sechser- und der Dreier-Runde) und die
+mit dem groessten Streuungsgrad: acht Repos, zwoelf Ursachen, kaum
+Wiederholung -- und trotzdem war der Zuschnitt richtig, weil der Overhead pro
+Repo (Scan, Suite, Commit) bei vier bis neun Befunden der groessere Posten ist.
+
+---
+
+#### Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen
+
+Der Fund, der am laengsten gedauert hat, und der einzige, den ich beim Lesen
+nicht erklaeren konnte.
+
+```lua
+local set_km = vim.keymap.set   -- Modulkopf
+...
+set_km(modes, lhs, rhs, map_opts)   -- need-check-nil
+```
+
+`vim.keymap.set` ist nie nil. **Vier isolierte Reproduktionen blieben sauber**
+-- mit den echten Annotationen der Funktion, mit der globalen Funktionsform,
+mit derselben Aufrufform, mit denselben Parametertypen. Im Workspace blieb der
+Befund an beiden Aufrufstellen stehen.
+
+Ein explizites `---@type` auf der Alias-Zeile hat beide beseitigt:
+
+```lua
+---@type fun(mode: string|string[], lhs: string, rhs: string|function, opts?: table)
+local set_km = vim.keymap.set
+```
+
+**Das trifft ein Idiom, das mehrere dieser Repos benutzen**: `vim.*`-Funktionen
+am Modulkopf in Locals ziehen, aus Performancegruenden. Wer das tut, sollte den
+Alias typisieren -- sonst zahlt jede Aufrufstelle dafuer, und die Meldung steht
+dann dort, wo der Fehler nicht ist. Neuer Musterpunkt F5.
+
+---
+
+#### migrate.nvim: Cluster L zum achten Mal -- und diesmal faellt die Zahl
+
+`.luarc.json` deklarierte `workspace.library` und warf damit die Injektion weg.
+Anders als bei den sechs Repos der M-Runde und bei language.nvim ist die Zahl
+danach **gesunken**, nicht gestiegen: **4 -> 2**.
+
+| | vorher (falsche Grundlage) | nachher |
+|---|---|---|
+| `Lib.Keymap.Action` / `.Registered` | 2 Befunde | weg -- die Typen sind jetzt sichtbar |
+| `LogLevelString` | 1 Befund | weg |
+| `pcall(vim.cmd, ...)` | 1 | 1 |
+| `ensure_buffer` gibt den Fehler-Slot zurueck | -- | **neu sichtbar** |
+
+Beide Richtungen gehoeren zusammen: ein Teil faellt weg, weil Typen aufloesen,
+ein Teil kommt dazu, weil Stellen geprueft werden, die vorher niemand
+angesehen hat. **Die Richtung der Summe sagt nichts darueber, ob die Korrektur
+richtig war.**
+
+---
+
+#### dap.nvim: der Test-Runner, vierter Fall -- und eine zweite Fehlerart
+
+`TESTS/minimal_init.lua` sucht plenary **und** lib.nvim ueber Umgebungsvariablen,
+die nur CI setzt. Ohne sie:
+
+| fehlt | Verhalten |
+|---|---|
+| `PLENARY_PATH` | **wartet stumm** -- kein Byte Ausgabe (wie lsp.nvim) |
+| `LIB_NVIM_PATH` | **vier rote Tests**, `module 'lib.nvim.notify' not found` |
+
+Die zweite ist die gefaehrlichere und in der Tabelle in Abschnitt G bisher
+nicht vertreten: der Lauf sieht aus wie ein echter Defekt im Code. Ich habe
+zuerst geprueft, ob meine eigene Aenderung ihn verursacht hat -- genau die
+Minuten, die ein Runner mit einer Meldung spart.
+
+Mit beiden Variablen: 25 Faelle, 0 Fehler.
+
+---
+
+#### color_my_ascii.nvim: ein Argument, das still verfiel -- und ein Fix, der den Befund verschob
+
+**`:Fence export` hat sein zweites Argument verloren.** Die Subkommando-Tabelle
+deklariert `fun(argv, ctx)`, der export-Eintrag reichte beides an `export.run`
+weiter, das eines nimmt. Lua nimmt das hin; `redundant-parameter` ist die
+einzige Stelle, die es sagt. Die zwei Eintraege direkt darunter (`yank`,
+`open`) machen es schon richtig.
+
+Und ein Lehrstueck zu D2: der Befund auf `ts_parser:parse()[1]:root()` schien
+der Baum zu sein, also habe ich den Baum geprueft -- und der naechste Lauf
+zeigte denselben Befund eine Zeile hoeher, auf dem **Parser**.
+`vim.treesitter.get_parser` antwortet mit nil, wenn die Grammatik fehlt.
+
+Die Antwort war dann nicht "leere Liste zurueckgeben": der Aufrufer prueft
+`markdown_available()` und wickelt den Aufruf in ein `pcall`, um auf den
+heuristischen Scanner zurueckzufallen. Ein leeres Ergebnis haette gesagt *"diese
+Datei hat keine Fences"* statt *"Treesitter kann hier nicht"* -- also `assert`,
+damit der Rueckfall greift. **Der richtige Griff haengt daran, was der Aufrufer
+mit dem Ergebnis macht.**
+
+---
+
+#### Der Rest, nach Familien
+
+- **cmdlog: C2**, drei Befunde aus einer Zeile.
+  `---@return (fun(...): string[])|nil` wird als `fun(...): string[]|nil`
+  gelesen -- die Klammern binden nicht so, wie sie aussehen. Der ganze
+  Funktionstyp heisst jetzt `Cmdlog.ShellHistoryParser`.
+- **debugging: `cmd.buffer`.** `nvim_get_autocmds` antwortet mit **beidem**,
+  `buf` und `buffer`; in Neovims Meta steht nur `buf`. Empirisch geprueft, nicht
+  aus der Doku gelesen.
+- **debugging: `Dbg.Tools.ProcTraceOpts`** war eine zweite Klasse fuer eine
+  Gestalt, die lib.nvim schon beschreibt -- und Klassen sind ueber den Namen
+  zuweisbar (F1), eine Parallelklasse kann der Funktion, fuer die sie
+  geschrieben wurde, nie uebergeben werden. Jetzt ein `@alias`.
+- **debugging: `vim.fn.termopen`** ist deprecated, die Nachfolge
+  (`jobstart({ term = true })`) gibt es erst ab 0.11, das README nennt 0.9+ --
+  bewusster Rueckfall, unterdrueckt mit dieser Begruendung (Regel E).
+- **reposcope: `"clos"` war kein Tippfehler.** Die Meldung haengt `ing` an,
+  `"close"` haette *closeing* ergeben. Hier war die **Annotation** falsch.
+- **reposcope: `return x:gsub(...)`** aus einer Funktion, die einen Wert
+  verspricht -- `gsub` gibt String *und* Ersetzungszahl zurueck. Geklammert.
+- **reposcope: `nvim_get_hl` -> `nvim_set_hl`**, dieselbe Zwei-Klassen-Runde
+  wie in markdown.nvim; die Schreibtabelle wird gebaut statt mutiert (D4).
+- **dap: zwei Anfragen, die keine Provider sind.** `'auto'` und `'none'` sind
+  das, was der Benutzer *fragen* darf; gespeichert wird nur eines der zwei
+  echten. Drei Befunde daraus.
+- **dap: drei Re-Exporte mit `@param`** -- Annotationen, die eine
+  Parameterliste brauchen, die eine Zuweisung nicht hat.
+- **filetree: sechsmal `vim.notify`**, fuenf Test-Doubles und **eine
+  Produktionsstelle**: `watcher_quarantine` ersetzt `vim.notify`, um die
+  EPERM-Zeilen der Datei-Watcher zu schlucken, haelt das Original und stellt es
+  zurueck. Beides ist der Zweck des Codes, beides mit dem Satz daneben
+  unterdrueckt.
+- **runtime-analysis: vier Doubles**, gleiche Behandlung.
+
+---
+
+#### Cluster E ist damit leer -- bis auf die Config
+
+Nach migrate und color_my_ascii steht in den 31 Plugins kein
+`pcall(vim.cmd, ...)` mehr. Was die Suche noch findet, ist durchweg die
+**Feldform** (`pcall(vim.cmd.edit, ...)`, `vim.cmd.helptags`, `vim.cmd.cd`) --
+und die ist eine echte Funktion, also kein Befund. Die einzige verbliebene
+Stelle der Tabellenform liegt in `nvim/lua/config/menu/custom_menu/init.lua`.
 
 ---
 
