@@ -9,6 +9,17 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [neotree-fs-refactor.nvim -- die Null war „nicht geprueft", jetzt ist sie gemessen](#neotree-fs-refactornvim-die-null-war-nicht-geprueft-jetzt-ist-sie-gemessen)
+    - [Die Sechser-Runde -- fuenf Repos, 126 auf 0](#die-sechser-runde-fuenf-repos-126-auf-0)
+      - [fileops: zwei Tastenkuerzel, die nichts gesagt haben](#fileops-zwei-tastenkuerzel-die-nichts-gesagt-haben)
+      - [gopath: ein Ergebnis, das gelogen hat](#gopath-ein-ergebnis-das-gelogen-hat)
+      - [buffer-ctx: eine API, die seit 0.11 anders heisst](#buffer-ctx-eine-api-die-seit-011-anders-heisst)
+      - [Der Rest, und was sich wiederholt](#der-rest-und-was-sich-wiederholt)
+    - [runtime-analysis.nvim -- 109 auf 0, und die Hinweise, die niemand sah](#runtime-analysisnvim-109-auf-0-und-die-hinweise-die-niemand-sah)
+      - [Derselbe Fehler wie in documentation.nvim](#derselbe-fehler-wie-in-documentationnvim)
+      - [`uv_tcp_t` ist kein Typ](#uv_tcp_t-ist-kein-typ)
+      - [Zwei Zeilen, die nie geschrieben wurden](#zwei-zeilen-die-nie-geschrieben-wurden)
+      - [Der Rest -- zehn kleine Ursachen](#der-rest-zehn-kleine-ursachen)
     - [filetree.nvim -- 80 auf 0, und vier Dinge, die nie liefen](#filetreenvim-80-auf-0-und-vier-dinge-die-nie-liefen)
       - [Der Einstieg war der vorgeschlagene, und er trug 24](#der-einstieg-war-der-vorgeschlagene-und-er-trug-24)
       - [Vier Stellen, die nie gelaufen sein koennen](#vier-stellen-die-nie-gelaufen-sein-koennen)
@@ -105,6 +116,228 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### neotree-fs-refactor.nvim -- die Null war „nicht geprueft", jetzt ist sie gemessen
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 12)*
+
+Das Repo setzte weiterhin `workspace.library` selbst -- `${3rd}/luv/library`
+und `$VIMRUNTIME/lua`, sonst nichts. Der Schluessel **ersetzt** die Injektion
+von lsp.nvim, er ergaenzt sie nicht, also war hier jeder Plugin-Typ und auch
+luassert unsichtbar. Die 0, die der Report fuer dieses Repo fuehrte, hiess
+„nichts wurde geprueft", nicht „nichts ist kaputt". Dieselbe Korrektur wie bei
+den sechs Repos im August; dieses war das uebrig gebliebene.
+
+Auf der korrigierten Grundlage: **4**, und beide Ursachen sind Namenskollisionen.
+
+- `LogLevel` kollidiert mit dem Alias, den lib.nvims notify-Modul
+  veroeffentlicht -- eine andere Sache (eine Zahl oder ein String, nicht diese
+  vier Werte). Namespaced wie die uebrigen Typen des Repos.
+- `tests/@types.lua` deklariert eine eigene `Luassert`-Klasse. plenary.nvim
+  liefert eine oeffentliche mit denselben drei Container-Feldern, die Kopie ist
+  also eine Dopplung und keine Ergaenzung. Sie heisst jetzt wie das, was sie
+  ist: ein privater Platzhalter.
+
+**4 -> 0**, `worse: nothing`. Beides sind Annotationen -- ausserhalb von
+Kommentaren hat sich nichts geaendert, und das Plugin laedt unveraendert.
+
+Zwei Nebenbefunde, die dabei aufgefallen sind und nicht angefasst wurden:
+
+- **`stylua` ohne `stylua.toml`.** 30 der 32 Repos haben eine;
+  `neotree-fs-refactor.nvim` und `learn-cli.nvim` nicht. Ohne Konfiguration
+  formatiert stylua mit **Tabs**, die Dateien beider Repos sind aber
+  zweispaltig eingerueckt -- ein `stylua .` dort schreibt also das ganze Repo
+  um. Beim ersten Versuch genau das passiert und wieder verworfen.
+- **`tests/run_tests.sh` meldet „All tests passed" auch dann**, wenn
+  `plenary.test_harness` gar nicht geladen werden konnte: nvim beendet sich
+  mit 0, und `set -e` sieht keinen Fehler. Die Suite lief hier deshalb nicht --
+  `PlenaryBustedDirectory` startet Kind-Prozesse und haengt auf dieser
+  Windows-Maschine headless. Nichts in dem Commit ist zur Laufzeit erreichbar,
+  darum wurde er trotzdem gemacht.
+
+---
+
+### Die Sechser-Runde -- fuenf Repos, 126 auf 0
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 3)*
+
+`buffer-ctx` (5), `sessions` (6), `emojis` (13), `fileops` (35) und `gopath`
+(67): die Repos, deren `.luarc.json` im August die Messgrundlage bekam und die
+danach nie durchgegangen wurden. **126 -> 0** ueber alle fuenf,
+`worse: nothing`, jede Suite gruen, stylua sauber. Fuenf Commits, einer pro
+Repo.
+
+Ein Muster zieht sich durch: **die interessanten Befunde sind Aufrufe, die nie
+funktioniert haben koennen** -- dieselbe Familie wie `get_node_at_line` und
+`node.line` in filetree.nvim.
+
+---
+
+#### fileops: zwei Tastenkuerzel, die nichts gesagt haben
+
+`<leader>fR` (bulk rename) reichte das Paar `(renamed, err)` von
+`bulk.execute` an `notify.report(ok, msg)` weiter. Die Zahl ging als `ok`
+hinein, `nil` als Nachricht -- und `report` gibt nichts aus, wenn die Nachricht
+nil ist. Das Kuerzel meldete also weder „12 Dateien umbenannt" noch, woran es
+gescheitert war; der `:File bulk`-Pfad direkt daneben meldete beides. Jetzt
+mit demselben Wortlaut.
+
+Das lockinfo-Kuerzel rief `ops.file.diagnose_lock()` ohne Argumente.
+`diagnose_lock` ist asynchron und nimmt den Callback als **erstes, notwendiges**
+Argument -- die Taste warf also, statt etwas zu melden. Sie geht jetzt ueber
+den oeffentlichen Einstiegspunkt, der den notify-Callback mitbringt.
+
+Und `cfg.bulk` ist kein Konfigurationsabschnitt und war nie einer: beide
+Lesestellen im bulk-Kuerzel ergaben immer `{}`. Genau das steht jetzt da, damit
+es nicht mehr aussieht wie eine Einstellung, die jemand setzen koennte.
+
+Dazu zwei Annotationen, die nicht geparst haben -- und alles, was darunter
+stand:
+
+- `on_before_delete?: fun(path: string): boolean|nil` **innerhalb** eines
+  Tabellen-Typs verschluckt den Rest des Literals. LuaLS bleibt bei
+  „`}` expected" stehen, und `refresh_explorers`, `git_aware`,
+  `git_warn_only`, `git_cmd` und `retry` lesen sich danach als undefinierte
+  Felder. Klammern drumherum.
+- `---@return string[]  Absolute, canonicalized paths.` liest die Beschreibung
+  als zweiten Rueckgabetyp, also musste `list_files` zwei Werte liefern. Der
+  Rueckgabewert hat jetzt einen Namen, damit die Prosa Prosa bleibt.
+
+---
+
+#### gopath: ein Ergebnis, das gelogen hat
+
+`make_result` versprach eine Tabelle fuer einen `path`, den `pick_best` bei
+leerer Liste als nil beantwortet. Es baute sie trotzdem: `path = nil` neben
+`exists = true` -- ein Ergebnis, das behauptet, an nirgendwo liege eine Datei.
+Es gibt jetzt nil zurueck, wofuer jeder Aufrufer ohnehin einen Zweig hat. Sechs
+Befunde, eine echte Luege.
+
+Zwei Annotationen trugen den groessten Teil des Rests. `---@return
+GopathResult|nil, string|nil  result, error` **in einer Zeile** sind fuer LuaLS
+nicht zwei Rueckgabewerte -- es las drei, also fehlte elf `return a, b`-Zeilen
+in `resolve.lua` je einer, und `error` las sich als undefinierter Typ. Und
+`GopathResolveOpts` war zweimal deklariert, einmal in `resolve.lua` und einmal
+in `@types/resolvers.lua`.
+
+`providers.treesitter.node_at_cursor` gab `userdata|nil` zurueck -- genau der
+Befund, den documentation.nvims eigener Durchgang hatte. Der Typ heisst
+`TSNode`, und ohne ihn hatte `node:type()` keine Methode zum Auflaesen.
+
+---
+
+#### buffer-ctx: eine API, die seit 0.11 anders heisst
+
+`get_char_at_pos` rief `vim.str_utfindex` und `vim.str_byteindex` in der
+Zwei-Argument-Form von vor 0.11. Seit 0.11 nehmen beide an zweiter Stelle eine
+**Kodierung** -- der Byte-Offset landete also dort, wo `"utf-8"` hingehoert.
+`vim.str_utf_end` beantwortet die eigentliche Frage (wie viele Bytes bis zum
+Ende der Sequenz, zu der dieses Byte gehoert) in einem Aufruf, ab 0.9, ohne
+Kodierungsargument. Der `if not char_idx`-Guard, den es ersetzt, war tot:
+`str_utfindex` wirft bei einem Index ausserhalb des Strings, statt nil zu
+liefern.
+
+---
+
+#### Der Rest, und was sich wiederholt
+
+- **Cluster E, dritte bis fuenfte Wiederholung:** 4 in sessions, 16 in fileops,
+  2 in gopath, 1 in emojis (dort lib.nvims Keymap-Modul, eine aufrufbare
+  Tabelle -- fuer den Typpruefer kein `function`, auch wenn
+  `vim.is_callable` ja sagt).
+- **Zwei gestapelte Doc-Bloecke** in `emojis.search.M.run`, ein
+  Merge-Ueberbleibsel: `action` und `extra_globs` zweimal deklariert,
+  `no_ignore` unter der zweiten Kopie.
+- **`AST.parse` gibt `(root, src)` zurueck**, und zwei gopath-Aufrufer prueften
+  nur `root` -- elf Aufrufe reichten danach eine Vielleicht-nil-Quelle weiter.
+- **Feldverengung traegt nicht in eine frische Lesestelle:**
+  `:GopathDebug` pruefte `info.cache_info` und las es danach in ein lokales;
+  dreizehn Zeilen lasen sich deshalb als vielleicht-nil. Erst das lokale, dann
+  die Pruefung darauf.
+- **`LogLevel`** kollidiert auch in gopath mit lib.nvims Alias. Namespaced.
+
+Unterdrueckt, mit Begruendung: `vim.lsp.get_active_clients` in gopaths
+health.lua (der Pfad vor 0.10, nur erreichbar wenn `get_clients` fehlt), fuenf
+Test-Doubles, und vier absichtlich ungueltige Eingaben, bei denen das
+Zurueckweisen genau das ist, was geprueft wird.
+
+---
+
+### runtime-analysis.nvim -- 109 auf 0, und die Hinweise, die niemand sah
+
+*(war: Diagnostics-Report Abschnitt 0, „Vorschlag naechster Schritt" und Offen-Punkt 2)*
+
+Der sechste vertikale Durchgang. **109 -> 0**, `worse: nothing`, alle 25 Specs
+gruen, stylua sauber. Das groesste Repo, das seit dem Erstscan unangetastet
+war -- und es waren vier Posten mit je einer Ursache statt hundert Einzelfaelle.
+
+---
+
+#### Derselbe Fehler wie in documentation.nvim
+
+`vim.health.info` nimmt eine Nachricht und sonst nichts; `warn` und `error`
+sind die, die Hinweise nehmen. Vier `h_info(msg, { ... })`-Aufrufe hier gaben
+ein zweites Argument mit, das `:checkhealth` fallen liess: mdviews
+Fallback-Notiz, pdfports zwei und die von lib.nvim.progress. Derselbe Wrapper
+wie in documentation.nvims `editor/health.lua`, aus demselben Grund.
+
+---
+
+#### `uv_tcp_t` ist kein Typ
+
+Er heisst `uv.uv_tcp_t`. Fuenf Test-Helper annotierten ein Server-Handle mit
+dem Namen, der nicht aufloest -- und deshalb las sich jedes `server:close()`
+danach als undefiniertes Feld. **Fuenfzehn `close`-Befunde und zehn
+Annotationsbefunde waren ein falsches Praefix.** Die Handles selbst sind jetzt
+`assert(uv.new_tcp())`: `new_tcp` kann nil liefern, und ein nil-Handle fiel
+vorher erst zwei Zeilen spaeter bei `bind` auf.
+
+---
+
+#### Zwei Zeilen, die nie geschrieben wurden
+
+`_cache_opts` und `_snapshot_retention` werden auf jede Telemetrie-Instanz
+gesetzt und aus drei Dateien gelesen, und `RA.Telemetry.Instance` deklarierte
+keins von beiden. Zwoelf Befunde, ein fehlendes Zeilenpaar.
+
+---
+
+#### Der Rest -- zehn kleine Ursachen
+
+- **Zehn `notify.error(err)`** reichen den zweiten Rueckgabewert eines
+  fehlgeschlagenen Aufrufs durch, also ein `string?`. Jeder hat jetzt eine
+  Ersatznachricht -- was der Leser auch statt eines leeren Fehler-Popups
+  bekommt.
+- **`runner`s `(ok, resp)`-Vertrag** -- `resp` ist die Fehlermeldung, wenn
+  `ok` falsch ist, und die Antwort, wenn es wahr ist -- stand an zwei Stellen
+  in Prosa da und ist jetzt an beiden ein `---@cast`.
+- **`flamegraph.svg`** liest `order`, `roots` und `total_ms` und sonst nichts,
+  nimmt also `RA.Telemetry.Startup.Drawable` (aus `Startup.Report`
+  herausgeloest, das jetzt davon erbt). Ein Aufrufer muss `running` und
+  `modules` nicht mehr faelschen fuer eine Funktion, die nie hinsieht.
+- **`provenance.inspect`** gab ein zwoelfteiliges Inline-Tabellenliteral
+  zurueck, das von `RA.Provenance.Info` abgedriftet war -- `proc_trace` stand
+  auf dem Wert und in keinem von beiden.
+- **`usage.mode_key`** versprach `string` und lieferte `string|string[]`;
+  `record_command` und der Keymap-Wrapper riefen ueber Handles, die ausserhalb
+  einer laufenden Sitzung nil sind.
+- **`os.date(...)`** ist `string|osdate`; zwei Snapshot-Namen sagen, welches.
+- **`inspect`** baut einen Report, indem es `module_id` an einen gelaufenen
+  Knoten haengt -- was der Report *ist*: ein `---@cast` statt eines injizierten
+  Feldes.
+- **`_G.require`** wird vom Startup-Recorder absichtlich ersetzt; das ist der
+  ganze Mechanismus, und es ist mit der Begruendung unterdrueckt.
+- **Zwei `M.x = local_fn`-Exporte** trugen `---@param`-Zeilen, die an einer
+  Zuweisung an nichts andocken. Jetzt `---@type fun(...)`.
+- **`export()`s `.pdf`-Zweig** braucht den Callback, den sein eigener Doc-Text
+  als notwendig bezeichnet.
+
+Unterdrueckt, mit Begruendung: vier absichtlich ungueltige Eingaben in den
+Specs (ein nil-Namespace, eine Nicht-Tabelle als Kandidatenliste, eine nil
+Modul-Id, ein Stil ausserhalb des Alias). Zwei Test-Fixtures nehmen `...`, weil
+die Aufrufe darunter ihnen Argumente uebergeben.
 
 ---
 
