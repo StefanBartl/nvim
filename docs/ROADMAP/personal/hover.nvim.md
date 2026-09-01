@@ -274,14 +274,45 @@ funktionsfähig ausgesehen. Interaktiv verdeckt der Highlighter das, headless
 nicht. Der erste Entwurf hatte genau diesen Bug; die Real-Buffer-Specs fangen
 ihn.
 
-18 Specs, Suite 96 grün, stylua sauber, luacheck 0/0.
+18 Specs, Suite 98 grün, stylua sauber, luacheck 0/0, LuaLS **0 Befunde**.
 
-Nebenbei: das im Handover genannte `scripts/luals-scan/` liegt **nirgends** —
-weder im Repo noch sonst unter `E:/repos`. Die LuaLS-Messung ist mit einer
-nachgebauten injizierten Library gelaufen (VIMRUNTIME + lib.nvim + plenary);
-darin ist die Baseline 1 Befund (`registry_spec.lua:74`, `assert.is_not_nil`),
-und der neue Code trägt 0 dazu bei. Wenn das Skript noch existiert, gehört es
-ins Repo.
+**`scripts/luals-scan/` liegt in der Config, nicht im Plugin-Repo** —
+`C:/Users/bartl/AppData/Local/nvim/scripts/luals-scan/`. Der Aufruf, der
+funktioniert:
+
+```
+cd C:/Users/bartl/AppData/Local/nvim/scripts/luals-scan
+REPOS_DIR=E:/repos bash scan.sh <pass> hover.nvim
+python compare.py <pass>
+```
+
+Eine Falle dabei, die 101 Phantom-Befunde erzeugt: **nicht den Worktree
+scannen.** `scan.sh` nimmt `$REPOS_DIR/<name>` als Workspace, die injizierte
+Library kommt aber vom Haupt-Checkout — dieselben `Hover.*`-Klassen also
+zweimal, Ergebnis 97× `duplicate-doc-field` und 4× `duplicate-doc-alias`, alle
+unecht. Erst den Haupt-Checkout auf den Stand ziehen, dann den scannen.
+
+### 2b. Gefundener Bug: `:Hover code` statt `:Hover paths code` (`ac50599`)
+
+Aufgetaucht beim Nachtragen der Bindings-Cheatsheets, und nur deshalb: die
+Tabelle gegen die *echten* registrierten Routen zu prüfen statt sie aus der
+Doku abzuschreiben.
+
+`usrcmds.route_path` war der einzige Konsument von `hover.switches`, der
+`hover.switches` nicht las — eine handgeschriebene `if name == "web" …
+elseif`-Kette. Ein neuer Schalter ohne passenden Zweig fällt darin auf die
+oberste Ebene durch. Nichts schlug fehl: die Route existierte, completete und
+funktionierte, sie stand nur am falschen Platz, und jedes Dokument dazu nannte
+einen Befehl, den es nicht gab.
+
+Jetzt aus `implies` abgeleitet — was für jeden vorher existierenden Schalter
+denselben Pfad ergibt und nicht mehr zurückfallen kann. Zwei Specs dafür,
+beide **gegen den Bug geprüft**, nicht nur gegen den Fix: mit
+wiedereingebautem Fehler fallen sie um.
+
+Lehre fürs nächste Mal: „eine Tabelle speist alles" gilt nur für die
+Konsumenten, die die Tabelle wirklich lesen. Der Anspruch stand im
+Modulkopf von `switches.lua` und war für genau einen Konsumenten falsch.
 
 ### 3. Beobachten, ob `manual` der bessere Default ist
 
