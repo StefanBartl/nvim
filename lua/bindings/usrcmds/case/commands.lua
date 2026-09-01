@@ -256,8 +256,14 @@ end
 --- Only the picker uses this — `M.find`'s own result stays complete, and
 --- the cheat sheet renders every occurrence in place (there a repeat is
 --- context, not duplication).
+--- A hit as `M.dedupe` hands it out. The count only exists on that side:
+--- `M.find`'s own result keeps every occurrence, so a plain hit has nothing
+--- to count.
+---@class Lib.Case.CommandHitDeduped : Lib.Case.CommandHit
+---@field count integer  Identical occurrences this row stands for (>= 1).
+
 ---@param hits Lib.Case.CommandHit[]
----@return Lib.Case.CommandHit[]  Each with an added `count` field.
+---@return Lib.Case.CommandHitDeduped[]
 function M.dedupe(hits)
   local out, index = {}, {}
   for _, h in ipairs(hits) do

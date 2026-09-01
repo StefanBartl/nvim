@@ -140,7 +140,7 @@ function M.list_themes()
   end
 
   -- Method 3: Fallback list
-  notify.notify("[ui.command.themes] themes list cant be laoded", vim.log.levels.info)
+  notify.notify("[ui.command.themes] themes list cannot be loaded", vim.log.levels.INFO)
   return FALLBACK_THEMES
 end
 

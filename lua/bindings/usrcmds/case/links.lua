@@ -73,8 +73,8 @@ function M.find(scope)
           local lineno = 0
           for line in (content:gsub("\r", "") .. "\n"):gmatch("([^\n]*)\n") do
             lineno = lineno + 1
-            for url in line:gmatch(URL_PATTERN) do
-              url = url:gsub("[%.,;:%)]+$", "") -- trailing prose punctuation
+            for match in line:gmatch(URL_PATTERN) do
+              local url = match:gsub("[%.,;:%)]+$", "") -- trailing prose punctuation
               -- Prose writes placeholders that look like URLs: "ändern Sie
               -- den Wert von `http://...` auf ...". Stripping the trailing
               -- dots above leaves a bare scheme, i.e. a row with nothing on
@@ -82,10 +82,7 @@ function M.find(scope)
               -- (deliberately not "a host with a dot in it" — `http://localhost:4723`
               -- is a real and frequently written one here).
               local host = url:match("^https?://([^/]*)")
-              if not host or host == "" then
-                url = nil
-              end
-              if url and not seen_in_file[url] then
+              if host and host ~= "" and not seen_in_file[url] then
                 seen_in_file[url] = true
                 out[#out + 1] = { area = area.name, path = path, line = lineno, url = url }
               end

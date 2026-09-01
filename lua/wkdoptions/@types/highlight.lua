@@ -226,6 +226,9 @@
 ---@field container_join string # Join string between container segments
 ---@field container_max_depth integer # Max container segments to collect
 ---@field providers_order string[] # Provider execution order
+---@field _base_symbol? string # Not user configuration: `breadcrumbs.ctx`
+--- writes the resolved symbol here before running the provider chain, and
+--- the container provider prepends the owner to it.
 
 ---@class lua_table_root_opt
 ---@field enable boolean

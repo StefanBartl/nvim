@@ -41,7 +41,7 @@ end
 ---see plugins.personal.source). Pulls pdfport.nvim in as soon as telescope
 ---itself loads (telescope is already `cmd`-lazy) — same trade-off pdfport's
 ---own integrations doc accepts for its global filetype_hook example.
----@return fun(filepath: string, bufnr: integer, opts: table): boolean|nil
+---@return (fun(filepath: string, bufnr: integer, opts: table): boolean|nil)|nil
 local function pdf_filetype_hook()
   local ok, pdfport_tel = pcall(require, "pdfport.integrations.telescope")
   if not ok then

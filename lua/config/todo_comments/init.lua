@@ -33,12 +33,19 @@ local function patch_highlight_endcol()
   local api = vim.api
   local orig = hl.highlight
 
+  -- Deliberate override: the wrapper documented above, with the original
+  -- kept in `orig` and called from inside it. LuaLS reports any write to a
+  -- field it already types, upstream module or `vim.*` alike.
+  ---@diagnostic disable-next-line: duplicate-set-field
   hl.highlight = function(buf, first, last, event)
     if not api.nvim_buf_is_valid(buf) then
       return
     end
 
     local orig_set = api.nvim_buf_set_extmark
+    -- Deliberate override for the duration of one `orig` call: `orig_set` is
+    -- restored below, and clamping the column is the whole workaround.
+    ---@diagnostic disable-next-line: duplicate-set-field
     api.nvim_buf_set_extmark = function(b, ns, line, col, opts)
       local snapshot = api.nvim_buf_get_lines(b, line, line + 1, false)
       local len = snapshot[1] and #snapshot[1] or nil

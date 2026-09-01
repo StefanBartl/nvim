@@ -66,7 +66,9 @@ end
 ---@return nil
 local function open_unicode_table()
   -- Check if unicode.vim is available
-  local ok = pcall(vim.cmd, "UnicodeTable")
+  local ok = pcall(function()
+    vim.cmd("UnicodeTable")
+  end)
 
   if not ok then
     notify.warn("unicode.vim plugin not available")

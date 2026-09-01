@@ -59,6 +59,9 @@ local function entry_actions()
   if not ok then
     return empty_entry_actions()
   end
+  -- `pcall(require, ...)` answers `boolean, any`, so the module arrives
+  -- untyped; the adapter named above is exactly this shape.
+  ---@cast mod Cfg.Snacks.EntryActions
   return mod
 end
 

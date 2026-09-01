@@ -140,6 +140,10 @@ local function run_clone_phase(planned, base_dir, on_done)
   local prog = new_progress("[usrcmds.plugin_repos.picker] cloning")
   notify.info(("Cloning %d plugin(s)..."):format(#planned))
   ops.run_sequential(planned, function(p, cb)
+    -- `Plugins.Personal.Entry` is exactly this `{ name, repo }` shape, but
+    -- LuaLS decides assignability by class NAME -- so the anonymous form
+    -- this pipeline carries gets named where it crosses into `ops`.
+    ---@cast p Plugins.Personal.Entry
     ops.clone_one(p, base_dir, function(status, err)
       cb(status ~= "failed", err)
     end)

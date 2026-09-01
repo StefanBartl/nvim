@@ -95,7 +95,11 @@ local function parse_snow(text)
     if line == "Priority" or line == "Impact" then
       local value = lines[i + 1] and vim.trim(lines[i + 1]) or ""
       if value ~= "" then
-        out[line == "Priority" and "priority" or "impact"] = value
+        if line == "Priority" then
+          out.priority = value
+        else
+          out.impact = value
+        end
       end
     end
 

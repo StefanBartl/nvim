@@ -104,7 +104,7 @@ plugins.add({
           if ok then
             notify.info("mode set to " .. mode)
           else
-            notify.warn(err)
+            notify.warn(err or ("could not set mode to " .. tostring(mode)))
           end
         end
       end, {

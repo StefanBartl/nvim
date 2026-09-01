@@ -144,7 +144,10 @@ end
 --- different claims, and reporting the second as the first would turn one
 --- unreadable directory into a documented binding's worth of false findings
 --- per row — the same distinction `source.lua` draws for its artifact.
----@param dir string Absolute path to a local checkout.
+---@param dir string|nil Absolute path to a local checkout. `nil` answers
+---`nil` by the same rule: `drift.lua` hands over an optional second search
+---tree (this config's own `lua/`) that only exists once the resolver found
+---repo dirs at all, and "could not look" is the honest answer for it.
 ---@param literal string Searched as `"literal"` and `'literal'`, never bare.
 ---@param opts? { ignore_case?: boolean } Case-insensitive for key notation
 ---(`<Leader>` and `<leader>` are the same key); leave off for command names,

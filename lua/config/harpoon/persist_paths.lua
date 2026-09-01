@@ -231,6 +231,14 @@ function M.with_pins_key(fn)
   end
 
   local ok_run, result = pcall(function()
+    -- `harpoon:list()` is typed `HarpoonList` upstream while this config
+    -- describes the same object with its own stand-in `Cfg.Harpoon.List`
+    -- (config.harpoon.types), so that it type-checks with harpoon absent.
+    -- LuaLS decides assignability by class NAME and rejects a `---@cast`
+    -- straight between two unrelated ones -- so the upstream name is dropped
+    -- first. `table` is what the check below actually establishes, and from
+    -- there the stand-in is a claim LuaLS accepts.
+    ---@type table
     local list = harpoon:list()
     if type(list) ~= "table" then
       return false

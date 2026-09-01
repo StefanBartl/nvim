@@ -35,7 +35,11 @@ return {
     -- or a keymap is a directory argument, so check for exactly that.
     init = function()
       if vim.fn.argc(-1) == 1 then
-        local stat = (vim.uv or vim.loop).fs_stat(vim.fn.argv(0))
+        -- Bound and checked: `argv(0)` answers the one argument as a string,
+        -- while the `string[]` half of its declared type belongs to the
+        -- index-less form (`argv()` = the whole list).
+        local arg = vim.fn.argv(0)
+        local stat = type(arg) == "string" and (vim.uv or vim.loop).fs_stat(arg)
         if stat and stat.type == "directory" then
           require("neo-tree")
         end

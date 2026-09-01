@@ -16,15 +16,31 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
 
   - [Wiederkehrende Muster -- die Ableitung fuer RULES](#wiederkehrende-muster-die-ableitung-fuer-rules)
     - [A. Echte Fehler, die der Pruefer gefunden hat](#a-echte-fehler-die-der-pruefer-gefunden-hat)
+      - [A6. Ein `pcall` um einen Aufruf mit falscher Signatur](#a6-ein-pcall-um-einen-aufruf-mit-falscher-signatur)
     - [B. Die Messgrundlage -- bevor irgendetwas gezaehlt wird](#b-die-messgrundlage-bevor-irgendetwas-gezaehlt-wird)
     - [C. Annotationsformen, die etwas verschlucken](#c-annotationsformen-die-etwas-verschlucken)
+      - [C7. `{ k: T|nil }` macht den Schluessel zur Pflicht](#c7--k-tnil--macht-den-schluessel-zur-pflicht)
+      - [C8. Eine Funktion in einem Options-Table typisiert als bare `function`](#c8-eine-funktion-in-einem-options-table-typisiert-als-bare-function)
     - [D. Griffe, die nichts loesen](#d-griffe-die-nichts-loesen)
+      - [D6. Der Zwei-Schritt zwischen einem Stand-in und dem Original](#d6-der-zwei-schritt-zwischen-einem-stand-in-und-dem-original)
     - [E. Wann Unterdruecken richtig ist](#e-wann-unterdruecken-richtig-ist)
     - [F. Was Neovim schon fuehrt](#f-was-neovim-schon-fuehrt)
+      - [F6. Ein Stand-in ist in beide Richtungen zu pruefen](#f6-ein-stand-in-ist-in-beide-richtungen-zu-pruefen)
     - [G. Der Test-Runner](#g-der-test-runner)
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [Die nvim-Config, zweite Haelfte -- 39 auf 0, und der letzte Befund lag woanders](#die-nvim-config-zweite-haelfte-39-auf-0-und-der-letzte-befund-lag-woanders)
+      - [Drei echte Fehler](#drei-echte-fehler)
+      - [C7 (neu): `{ k: T|nil }` macht den Schluessel zur Pflicht](#c7-neu--k-tnil--macht-den-schluessel-zur-pflicht)
+      - [C8 (neu): eine Funktion in einem Options-Table typisiert als bare `function`](#c8-neu-eine-funktion-in-einem-options-table-typisiert-als-bare-function)
+      - [C2 zum zweiten Mal -- und diesmal in einem fremden Repo](#c2-zum-zweiten-mal-und-diesmal-in-einem-fremden-repo)
+      - [C4 zum siebten Mal, mit neuem Abstand](#c4-zum-siebten-mal-mit-neuem-abstand)
+      - [D6 (neu): der Zwei-Schritt zwischen Stand-in und Original](#d6-neu-der-zwei-schritt-zwischen-stand-in-und-original)
+      - [F6 (neu): ein Stand-in ist in beide Richtungen zu pruefen](#f6-neu-ein-stand-in-ist-in-beide-richtungen-zu-pruefen)
+      - [D3 noch einmal -- und diesmal hilft der Klassenname nicht](#d3-noch-einmal-und-diesmal-hilft-der-klassenname-nicht)
+      - [Der Rest, nach Familien -- der Config-Anteil](#der-rest-nach-familien-der-config-anteil)
+      - [Zwei Dinge fuer die Abschluss-Task, die hier aufgefallen sind](#zwei-dinge-fuer-die-abschluss-task-die-hier-aufgefallen-sind)
     - [Die Achter-Runde -- die letzten acht Plugins, 50 auf 0](#die-achter-runde-die-letzten-acht-plugins-50-auf-0)
       - [Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen](#ein-alias-auf-eine-vim-funktion-kann-nil-behaftet-zurueckkommen)
       - [migrate.nvim: Cluster L zum achten Mal -- und diesmal faellt die Zahl](#migratenvim-cluster-l-zum-achten-mal-und-diesmal-faellt-die-zahl)
@@ -235,7 +251,7 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
 
 ## Wiederkehrende Muster -- die Ableitung fuer RULES
 
-**Was das hier ist.** Dreizehn vertikale Durchgaenge haben dieselben Ursachen
+**Was das hier ist.** Vierzehn vertikale Durchgaenge haben dieselben Ursachen
 mehrfach zutage gefoerdert. Dieser Abschnitt sammelt sie -- nach Haeufigkeit,
 mit der **Signatur, an der man sie erkennt**, und mit dem Griff, der sich
 bewaehrt hat. Gedacht als Checkliste fuer den naechsten Durchgang und als
@@ -249,8 +265,8 @@ steht nur, was sich wiederholt hat.
 
 ### A. Echte Fehler, die der Pruefer gefunden hat
 
-Nach Haeufigkeit. Diese vier Familien haben in jedem Durchgang mindestens
-einen echten Bug ergeben -- in zehn Durchgaengen ohne Ausnahme.
+Nach Haeufigkeit. Diese Familien haben in jedem Durchgang mindestens einen
+echten Bug ergeben -- in elf Durchgaengen ohne Ausnahme.
 
 #### A1. `vim.uv.new_timer()` ungeprueft -- 22 Stellen, vier Repos in Folge
 
@@ -391,6 +407,20 @@ Dahinter stecken drei verschiedene Ursachen, die im Report gleich aussehen:
 Produktentscheidung; der Durchgang schreibt eine Notiz an die Stelle und
 meldet den Fund.
 
+**Und: ein `undefined-field` verdeckt jede Pruefung, die dahinter laege.**
+Solange LuaLS das Feld nicht kennt, prueft es die Argumente des Aufrufs
+nicht. In der Config stand hinter `snacks.picker.todo_comments` -- einer
+Quelle, die todo-comments.nvim zur Laufzeit registriert und die deshalb in
+keinem Typ steht -- ein Aufruf, der die **Keyword-Tabelle** uebergab, wo eine
+**Liste von Keyword-Namen** erwartet wird; das Suchmuster wurde mit leerer
+Keyword-Alternative gebaut, und die Tastenkombination hat nie das gesucht,
+was ihr `desc` verspricht.
+
+Praktisch heisst das: **ein Feld zu deklarieren ist nicht das Ende der Arbeit
+an einer Zeile, sondern ihr Anfang** -- danach steht dort der naechste
+Befund. Das ist der zweite Grund, warum `undefined-field` in `lua/` zuerst
+drankommt (H, Schritt 5).
+
 #### A5. Eine Cast-Liste anstelle eines Guards wird unvollstaendig
 
 **Signatur:** eine Funktion liefert N Werte oder keinen, der Guard prueft
@@ -424,6 +454,26 @@ uebersehen ist derselbe Fehlermodus wie der, den man repariert.
 ---
 
 ### B. Die Messgrundlage -- bevor irgendetwas gezaehlt wird
+
+#### A6. Ein `pcall` um einen Aufruf mit falscher Signatur
+
+**Signatur:** ein `param-type-mismatch` an einem Aufruf, der **innerhalb eines
+`pcall`** steht.
+
+Das ist nie kosmetisch: die Absicherung ist genau das, was den Bruch
+unsichtbar haelt. In der nvim-Config rief `dedup_in_place_safe` harpoons
+`list:remove(j)` mit einem **Index**, waehrend `remove` ein **Item** nimmt und
+es an `config.equals` gibt -- das indiziert sein Argument, eine Zahl wirft
+dort, der `pcall` schluckte es, und **die Funktion hat nie ein Duplikat
+entfernt.** Richtig war `remove_at`, das im Typ schon stand.
+
+Dazu gehoert ein zweiter, unabhaengiger Satz, der denselben Fall verdeckt hat:
+**eine Funktion, die ihre Rueckgabe aus der geplanten statt der
+tatsaechlichen Arbeit bildet, kann nicht auffallen.** `return #to_remove`
+meldet die Anzahl der *vorgesehenen* Loeschungen, nicht der erfolgten -- ein
+`return removed` haette den Bruch beim ersten Aufruf sichtbar gemacht.
+
+---
 
 #### B1. `.luarc.json` liest man zuerst -- Cluster L, sieben Repos
 
@@ -503,6 +553,23 @@ noch seine eigene Zuweisung.
 **Griff:** den **ganzen Funktionstyp** benennen, nicht nur seinen Rueckgabetyp:
 `---@alias Reader fun(): Entry[]` und dann `---@type Reader|nil`.
 
+**Zweimal gesehen, und beim zweiten Mal in einem `@field`.** lsp.nvim hatte
+den Alias bereits -- samt Kommentar, der genau das erklaert -- und trotzdem
+stand `LspNvim.PersonalNamesOpts.labels` weiter inline da. Das kostete das
+Repo einen eigenen Befund (`lsp/init.lua:295`) und die Host-Config ihren
+letzten. **Also gilt die Regel nicht nur fuer `@type` auf einem Local,
+sondern genauso fuer jedes `@field` und jedes `@param`** -- und wer den Alias
+einfuehrt, greppt einmal nach der Inline-Form.
+
+Beim Suchen hilft: **die Meldung rendert die Klammern nicht.** Sie kann
+buchstabenweise identisch auf beiden Seiten stehen und trotzdem ein Befund
+sein:
+
+```
+Cannot assign `fun():string|{ name: string }[]`
+           to `fun():string|{ name: string }[]`
+```
+
 #### C3. Eine Mehrfachrueckgabe, die alles-oder-nichts ist
 
 ```lua
@@ -558,6 +625,46 @@ B (die nachgestellten Woerter am `@return`) und C6 (der namenlose
 `fun`-Parameter). Alle drei sehen im Bericht nach Kleinkram aus und tragen
 zweistellige Zahlen.
 
+#### C7. `{ k: T|nil }` macht den Schluessel zur Pflicht
+
+```lua
+---@param flags { exact: boolean|nil, re: boolean|nil }|nil   -- exact MUSS da sein
+---@param flags { exact?: boolean,     re?: boolean     }|nil   -- exact darf fehlen
+```
+
+Die beiden Formen sehen gleich aus und sind es nicht: die erste verlangt den
+**Schluessel** und erlaubt nur seinem Wert, nil zu sein.
+
+**Signatur:** ein `param-type-mismatch` zwischen zwei Inline-Tabellentypen, bei
+dem der uebergebene eine **Teilmenge** des erwarteten ist -- in der Config
+`{ re: boolean|nil }` an `{ exact: boolean|nil, re: boolean|nil }`. Keine der
+beiden Seiten sieht falsch aus, und genau deshalb sucht man an der falschen.
+
+**Griff:** die optionale Form ueberall dort, wo die Funktion das Feld
+defensiv liest (`flags and flags.exact`) -- was sie meistens tut.
+
+#### C8. Eine Funktion in einem Options-Table typisiert als bare `function`
+
+**Signatur:** `Cannot assign 'function' to 'fun(): T'` -- oder, verwirrender,
+eine Meldung, in der links **die Vereinigung** aus deklariertem Feldtyp und
+inferiertem Literal steht:
+
+```
+Cannot assign `function|fun():string|{ name: string }[]|nil`
+           to `fun():string|{ name: string }[]|nil`
+```
+
+Der `function|`-Teil ganz vorne ist die geschriebene Closure.
+
+Eine benannte lokale Funktion mit `---@return` reicht **nicht** -- dann heisst
+es nur noch `Cannot assign 'function'`. Was hilft, ist C2s Griff: **den ganzen
+Funktionstyp benennen** und ihn per `---@type` an die Variable haengen.
+
+```lua
+---@type LspNvim.PersonalNames.Reader
+local personal_name_labels = function() ... end
+```
+
 #### C5. Weitere Formen, je einmal gesehen
 
 - **Form B:** `---@return <typ>  <wort>,` ohne Namen -- die nachgestellten
@@ -609,6 +716,35 @@ vim.api.nvim_set_hl(0, group, hl)
 Die gebaute Fassung ist ausserdem die ehrlichere: sie sagt, welche der beiden
 Seiten gemeint ist, behaelt jedes Attribut des Colorschemes und braucht keine
 Feldliste, die veralten kann.
+
+#### D6. Der Zwei-Schritt zwischen einem Stand-in und dem Original
+
+D4s Griff -- "die Zieltabelle bauen" -- funktioniert nur bei Klassen **ohne
+Pflichtfelder**. Der Satz *"ein `table` erfuellt jede Klasse"* stimmt so
+nicht: er stimmt fuer Neovims `keyset`-Klassen, deren Felder allesamt
+optional sind, und nicht fuer eine Klasse wie `Cfg.Harpoon.List` mit `items`
+und `_length`. Dort meldet die Uebergabe *"Missing required fields"*, und der
+Fix hat den Befund nur verschoben (D2).
+
+Wo beide Namen fuer **dieselbe Sache** stehen -- ein handgeschriebener
+Stand-in und der Originaltyp des Plugins -- geht es in **zwei Schritten**:
+
+```lua
+---@type table                    -- 1. den fremden Namen fallen lassen
+local list = harpoon:list()
+if type(list) ~= "table" then
+  return false
+end
+---@cast list Cfg.Harpoon.List    -- 2. den eigenen behaupten
+```
+
+Jeder Schritt ist fuer sich legal: Klasse -> `table` ist eine Verbreiterung,
+`table` -> Klasse eine Behauptung. Nur der direkte Weg zwischen den beiden
+Namen ist keins von beidem.
+
+Derselbe Zwei-Schritt loest auch `{ name, repo }` -> `Plugins.Personal.Entry`
+(feldgleich, trotzdem nicht zuweisbar -- F1) und den Modulwert aus
+`pcall(require, ...)`, der als `any` ankommt.
 
 #### D5. Ein `---@cast` endet an der naechsten Zuweisung
 
@@ -662,6 +798,16 @@ als aufrufbare Tabelle exportiert, faellt hierunter.
 Spec `vim.cmd` selbst und liest den Kommandonamen aus dem ersten Argument --
 die Unterkommando-Form haette den Test still blind gemacht.
 
+**Nachtrag aus der Config: eine solche Tabelle laesst sich auch nicht als
+Parameter typisieren.** `bindings/mappings/harpoon.lua` reichte
+`lib.nvim.bindings.keymap` an eine lokale Funktion weiter. Den Parameter von
+`fun(mode, lhs, rhs, opts)` auf `Lib.Keymap` umzustellen half nicht: `require`
+typisiert das Modul als schlichtes `table` (sein Return laeuft durch
+`setmetatable`), und `table` erfuellt eine Klasse mit Pflichtfeldern nicht
+(D6). Aufgeloest hat es erst, den Parameter zu streichen und das Modul in der
+Funktion selbst zu `require`n. **Ein Modul, das sich als aufrufbare Tabelle
+exportiert, reicht man nicht herum -- man holt es sich.**
+
 ---
 
 ### E. Wann Unterdruecken richtig ist
@@ -706,6 +852,28 @@ Klassen; Neovim hat jede davon, und praeziser (`offset_encoding` als
 nachsehen:** `vim.lsp.Client`, `lsp.ServerCapabilities`,
 `lsp.TextDocumentIdentifier`, `lsp.Position`, `lsp.Range`,
 `lsp.CodeActionParams`, `lsp.VersionedTextDocumentIdentifier`.
+
+#### F6. Ein Stand-in ist in **beide** Richtungen zu pruefen
+
+Ein handgeschriebener Typ fuer einen fremden ist zweimal falsch zu bekommen,
+und beide Fehler sehen im Report verschieden aus:
+
+| Was | Signatur | Beispiel |
+|---|---|---|
+| Er **laesst weg**, was seine Aufrufer benutzen | `undefined-field` am Aufrufer | `Cfg.Harpoon.List` fuehrte drei Member, der Code ruft sieben (8 Befunde) |
+| Er **wiederholt**, was das Original schon fuehrt | `duplicate-doc-field` an der Deklaration | `snacks.picker.Item` mit `file`/`text`, die snacks selbst deklariert |
+
+Der erste Fall meldet den **Aufrufer** als falsch statt den Typ als
+unvollstaendig -- deshalb sucht man leicht an der falschen Stelle. Beim
+zweiten ist zu wissen: eine Klasse wieder aufzumachen, um ein Feld zu
+wiederholen, ist **keine Ueberschreibung**, sondern ein Duplikat.
+
+**Und der dritte Fall derselben Familie kann jahrelang schlafen:**
+`---@alias Path string` in der Config kollidierte mit plenarys
+`---@class Path`. **Aliasnamen sind global.** Ein Ein-Wort-Name wie `Path`,
+`Config`, `Entry` oder `Result` gehoert damit niemandem -- fuer einen eigenen
+Alias einen Namensraum davor (`Cfg.…`, `Lib.…`), oder ihn weglassen, wenn ihn
+ohnehin nichts benutzt.
 
 #### F5. Ein Alias auf eine `vim.*`-Funktion kann nil-behaftet zurueckkommen
 
@@ -803,6 +971,20 @@ war die Ursache, dass `TESTS/minimal_init.lua` plenary ausschliesslich ueber
 
 Fuer neue Repos ist das der Massstab, nicht eine allgemeine Formulierung.
 
+**Der Sonderfall am Ende der Reihe: die nvim-Config hat gar keine Suite.**
+Kein `TESTS/`, kein `scripts/test.sh` -- ausgerechnet der Workspace, der die
+anderen 31 konfiguriert, ist der einzige ohne. Was an seine Stelle getreten
+ist und fuer jedes Repo ohne Suite gilt: **`stylua --check` parst jede Datei
+vollstaendig** und faengt damit jeden Syntaxfehler, den eine Aenderung
+einschleppen kann -- der billigste Rauchtest, den es gibt, und einer, der
+ohnehin schon konfiguriert ist.
+
+Was **nicht** funktioniert: die Config aus einem Worktree heraus einmal
+wirklich hochzufahren. Mit
+`XDG_CONFIG_HOME=<worktrees> NVIM_APPNAME=<worktree>` startet sie, aber
+`stdpath("data")` haengt am `NVIM_APPNAME` -- lazy.nvim legt ein frisches
+Datenverzeichnis an und klont **jedes** Plugin neu (185 MB).
+
 ---
 
 ### H. Arbeitsreihenfolge, die sich bewaehrt hat
@@ -884,9 +1066,289 @@ nicht als Library setzen.
 
 ---
 
+### Die nvim-Config, zweite Haelfte -- 39 auf 0, und der letzte Befund lag woanders
+
+`worse: nothing`, in zwei Laeufen bestaetigt. **Damit stehen alle 32
+Workspaces des Umfangs auf Null.**
+
+Zur Groessenordnung: 39 Befunde, **21 Ursachen**. Die Config ist damit der
+einzige Workspace der Reihe, in dem fast jeder Befund fuer sich steht -- in
+der ersten Haelfte war es genau umgekehrt (120 Befunde, sieben Ursachen), und
+dort galt noch, *die Config hatte keine eigenen Muster*. Fuer die zweite
+Haelfte stimmt das nur zur Haelfte: die vier `duplicate-set-field` und die
+`os.date`-Familie waren Wiederholungen, aber vier Musterpunkte sind hier zum
+ersten Mal aufgetaucht.
+
+#### Drei echte Fehler
+
+**1. `list:remove(j)` mit einem Index statt einem Item.**
+`config/harpoon/utils/sanitize.lua`s `dedup_in_place_safe` sammelt die
+Indizes der Duplikate und ruft dann `list:remove(j)`. Harpoons `remove` nimmt
+ein **Item** und gibt es an `config.equals`, das sein Argument indiziert --
+eine Zahl wirft dort. Der Aufruf stand in einem `pcall`, also fiel nichts auf:
+**die Funktion hat nie ein Duplikat entfernt und trotzdem `#to_remove` als
+Anzahl gemeldet.** Richtig ist `remove_at`, das im Stand-in-Typ auch schon
+stand. Gemeldet als `param-type-mismatch`: `integer` an
+`(string|Cfg.Harpoon.Item)?`.
+
+Zwei verallgemeinerbare Saetze stecken darin:
+
+- **Ein `pcall` um einen Aufruf mit falscher Signatur macht aus einem Fehler
+  eine stille Nulloperation.** Wo ein `pcall` einen Aufruf schuetzt, dessen
+  Argumente der Pruefer bemaengelt, ist der Befund nie kosmetisch -- die
+  Absicherung ist genau das, was den Bruch unsichtbar haelt.
+- **Eine Funktion, die ihre Rueckgabe aus der geplanten statt der
+  tatsaechlichen Arbeit bildet, kann nicht auffallen.** `return #to_remove`
+  haette `return removed` heissen muessen.
+
+**2. `snacks.picker.todo_comments({ keywords = KEYWORDS })` mit der falschen
+Gestalt** (`plugins/workflow.lua`, `<leader>sT`). Die Quelle will eine **Liste
+von Keyword-Namen**; uebergeben wurde die **Keyword-Tabelle**
+(`FIX = { icon, color, alt }`). Ihr `vim.tbl_filter` schlaegt jeden Eintrag in
+`todo-comments`' Namenstabelle nach, keiner der `{ icon, ... }`-Werte ist
+dort ein Schluessel, und `Config.search_regex({})` baut das Suchmuster mit
+einer **leeren** Keyword-Alternative. `<leader>sT` hat also nie
+"Todo/Fix/Fixme" gesucht.
+
+**Der Weg dahin ist der eigentliche Punkt.** Der Befund an dieser Zeile war
+ein `undefined-field` auf `todo_comments`, und solange der stand, hat niemand
+das Argument geprueft: **ein `undefined-field` verdeckt jede Pruefung, die
+dahinter laege.** Ein Feld zu deklarieren ist deshalb nicht das Ende der
+Arbeit an einer Zeile, sondern ihr Anfang -- danach steht der naechste Befund
+an derselben Stelle. Fuer die Reihenfolge heisst das: `undefined-field` in
+`lua/` zuerst (H, Schritt 5) ist nicht nur wegen der echten Bugs richtig,
+sondern weil dahinter Pruefungen freigelegt werden, die vorher nicht liefen.
+
+**3. `vim.log.levels.info`** (`wkdnvchad/usrcmd/themes/init.lua:143`) --
+kleingeschrieben, und die gibt es nicht. Der Fallback-Hinweis der Themenliste
+ging mit `nil` als Level heraus. Gemeldet als `undefined-field`; eine Zeile,
+ein Buchstabe.
+
+Dazu ein vierter, der praktisch nie zuschlaegt und trotzdem falsch war:
+`is_business_day(d.wday, window)` vergleicht mit `==`, und `osdate` typisiert
+seine Felder als `integer|string` (F4). Ein String haette dort **nie** einen
+Wochentag getroffen -- stumm, nicht mit einem Fehler. Der Griff ist der, den
+dieselbe Datei fuer `utc_captures` schon benutzt: `assert(tonumber(...))`.
+
+#### C7 (neu): `{ k: T|nil }` macht den Schluessel zur Pflicht
+
+`{ exact: boolean|nil, re: boolean|nil }` und
+`{ exact?: boolean, re?: boolean }` sehen gleich aus und sind es nicht: die
+erste Form verlangt, dass der **Schluessel** vorhanden ist, und erlaubt nur
+seinem Wert, nil zu sein. `case/ui.lua`s `flag_suffix` war so annotiert,
+`M.grep` reicht Flags herein, die nur `re` fuehren -- `param-type-mismatch`,
+und keine der beiden Seiten sieht falsch aus.
+
+#### C8 (neu): eine Funktion in einem Options-Table typisiert als bare `function`
+
+In `init.lua` bekam `completion.personal_names.labels` eine Closure. Die
+Meldung liest sich zunaechst unverstaendlich, weil LuaLS **die Vereinigung**
+aus deklariertem Feldtyp und inferiertem Literal gegen den deklarierten haelt:
+
+```
+Cannot assign `function|fun():string|{ name: string }[]|nil`
+           to `fun():string|{ name: string }[]|nil`
+```
+
+Der `function|`-Teil ganz vorne ist die Closure. Sie in eine **benannte
+lokale Funktion mit `---@return`** zu heben half nicht -- dann steht dort nur
+noch `Cannot assign 'function'`. Was hilft, ist **den ganzen Funktionstyp zu
+benennen** (C2s Griff) und ihn per `---@type` an die Variable zu haengen:
+
+```lua
+---@type LspNvim.PersonalNames.Reader
+local personal_name_labels = function() ... end
+```
+
+Beim Ausschreiben kam nebenbei heraus, dass die Closure `list.read()` direkt
+weiterreichte -- also `entries, err`, **zwei** Werte, von denen die Gegenseite
+per `pcall` nur den ersten sieht.
+
+#### C2 zum zweiten Mal -- und diesmal in einem fremden Repo
+
+Danach blieb **ein** Befund stehen, und die Meldung war die aufschlussreichste
+des Durchgangs:
+
+```
+Cannot assign `fun():string|{ name: string }[]`
+           to `fun():string|{ name: string }[]`
+```
+
+Zweimal dieselbe gerenderte Zeichenkette, und trotzdem kein Treffer -- weil
+LuaLS beim Rendern die Klammern wegwirft. Deklariert war das Feld in lsp.nvim
+als `(fun(): (string|{ name: string })[])|nil`, und **genau das ist C2**: das
+`|nil` wandert in den Rueckgabetyp statt an das Feld. Zwei Dateien weiter
+steht in lsp.nvim ein Kommentar, der das erklaert, und ein Alias
+`LspNvim.PersonalNames.Reader`, der genau deswegen existiert -- **dieses eine
+Feld war beim Aufraeumen uebersehen worden.**
+
+Der Vorher-Lauf ueber lsp.nvim hat es bestaetigt: das Repo stand nicht auf 0,
+sondern auf **1**, und dieser eine Befund war derselbe Feldtyp von der
+anderen Seite (`lsp/init.lua:295`, die eigene `personal_names.setup`).
+Eine Zeile in `lsp/@types/init.lua` --
+`---@field labels LspNvim.PersonalNames.Reader|nil` -- raeumt beide weg.
+lsp.nvim: **1 -> 0**, 23 Spec-Dateien und der Smoke-Test gruen.
+
+**Daraus, fuer die RULES:** einen `fun(...)`-Typ, der irgendwo optional sein
+soll, schreibt man **nie** inline. Ein `@alias` fuer den Funktionstyp, und
+`|nil` nur an der Verwendung. Und: **wenn ein Befund im eigenen Workspace an
+einem Typ eines Nachbarrepos haengt, gehoert er dorthin repariert** -- die
+Alternative waere ein Workaround auf der Aufruferseite gewesen, der die Falle
+fuer jeden weiteren Nutzer stehenlaesst.
+
+#### C4 zum siebten Mal, mit neuem Abstand
+
+In `case/ui.lua` stand der Doc-Block von `:Tricentis links [scope]` samt
+`---@param scope` **fuenfundvierzig Zeilen** ueber seiner Funktion und klebte
+an `link_label`, das kein `scope` hat -- waehrend `M.tricentis_links` gar
+keinen Block hatte. Signatur wie immer: `undefined-doc-param`.
+
+Kleiner, aber derselbe Gedanke: `M.tokenize = tokenize` in `case/similar.lua`
+trug `---@param`/`---@return`. **Eine Zuweisung nimmt keine Parameter an** --
+fuer einen exportierten Alias ist `---@type fun(text: string): string[]` die
+Form; die Parameter gehoeren an die Definition.
+
+#### D6 (neu): der Zwei-Schritt zwischen Stand-in und Original
+
+D4 sagt, dass ein `---@cast` quer ueber zwei unverwandte Klassen selbst
+gemeldet wird, und nennt als Griff "die Zieltabelle bauen". Das geht bei
+`keyset`-Klassen, deren Felder alle optional sind -- **ein `table` erfuellt
+eben nicht jede Klasse, sondern nur eine ohne Pflichtfelder.** Bei
+`Cfg.Harpoon.List` (Pflichtfelder `items`, `_length`, ...) ist der Bau keine
+Option, und der erste Versuch mit `---@type table` allein hat den Befund nur
+von der Cast-Zeile auf die Uebergabe verschoben (D2).
+
+Was funktioniert, sind **zwei Schritte statt einem**:
+
+```lua
+---@type table                    -- 1. den fremden Namen fallen lassen
+local list = harpoon:list()
+if type(list) ~= "table" then
+  return false
+end
+---@cast list Cfg.Harpoon.List    -- 2. den eigenen behaupten
+```
+
+Jeder Schritt ist fuer sich legal -- Klasse -> `table` ist eine
+Verbreiterung, `table` -> Klasse eine Behauptung -- und nur der direkte Weg
+zwischen den beiden Namen ist es nicht. **Das ist der allgemeine Griff
+zwischen einem Stand-in und dem Original, das er nachbildet.** Derselbe
+Zwei-Schritt loest auch `{ name, repo }` -> `Plugins.Personal.Entry`
+(feldgleich, trotzdem nicht zuweisbar, F1) und den Modulwert aus
+`pcall(require, ...)`, der als `any` ankommt.
+
+#### F6 (neu): ein Stand-in ist in beide Richtungen zu pruefen
+
+Die erste Haelfte hat den einen Fall gezeigt: `Cfg.Harpoon.List` fuehrte drei
+Member, waehrend der Code sieben ruft -- **was fehlt, meldet den Aufrufer als
+falsch.** Diese Haelfte hat den umgekehrten: `config/snacks/@types` deklariert
+`snacks.picker.Item` mit `file` und `text`, **die snacks selbst schon
+deklariert** (`picker/config/defaults.lua`) -- `duplicate-doc-field`. Eine
+Klasse wieder aufzumachen, um ein Feld zu wiederholen, ist keine
+Ueberschreibung.
+
+Also: einen Stand-in fuer einen fremden Typ prueft man auf **beides** -- was
+seine Aufrufer benutzen und er nicht fuehrt, und was er fuehrt und das
+Original ebenfalls.
+
+Dritter Fall derselben Familie, und der unangenehmste, weil er jahrelang
+schlafen kann: **`---@alias Path string`** in `lua/@types/aliases.lua`
+kollidierte mit plenarys `---@class Path`. Aliasnamen sind **global**, und ein
+Ein-Wort-Name wie `Path`, `Config` oder `Entry` gehoert damit niemandem.
+Verwendet hat ihn hier keine einzige Stelle; er ist raus, `FilePath`/`DirPath`
+sagen dasselbe unmissverstaendlich.
+
+#### D3 noch einmal -- und diesmal hilft der Klassenname nicht
+
+`bindings/mappings/harpoon.lua` reichte `lib.nvim.bindings.keymap` als
+Parameter weiter, annotiert als `fun(mode, lhs, rhs, opts)`. D3 nennt genau
+dieses Modul als `__call`-Tabelle, der naheliegende Griff war also, den
+Parameter `Lib.Keymap` zu nennen und `map.set(...)` zu rufen. **Der Befund
+blieb**, nur mit neuem Wortlaut: `require` typisiert das Modul als schlichtes
+`table` (sein Return laeuft durch `setmetatable`), und `table` erfuellt
+`Lib.Keymap` mit seinen Pflichtfeldern nicht.
+
+Aufgeloest hat es erst, den Parameter ganz zu streichen -- die Funktion
+`require`t das Modul selbst. **Ein Modul, das sich als aufrufbare Tabelle
+exportiert, laesst sich nicht sinnvoll als Parameter typisieren:** man reicht
+es nicht herum, man holt es sich.
+
+Zusammen mit dem Harpoon-Cast oben sind das die zwei verschobenen Befunde,
+die der **Zwischenlauf nach dem ersten Drittel** (`39 -> 24`) gezeigt hat.
+Beide standen an Zeilen, die gerade angefasst worden waren. **Der
+Zwischenlauf hat sich damit bezahlt gemacht** -- ohne ihn waeren sie im
+Schlusslauf zwischen achtzehn anderen Aenderungen gelandet, und D2 sagt genau
+das: eine Aenderung, die anderswo neue Befunde erzeugt, ist unfertig.
+
+#### Der Rest, nach Familien -- der Config-Anteil
+
+- **`duplicate-set-field` (4)** -- alle absichtlich: `vim.paste` (der
+  Paste-Trimmer), `vim.ui.open` (die `explorer.exe`-Umleitung fuer URLs) und
+  in `config/todo_comments` zwei -- der Wrapper um `highlight` und das fuer
+  die Dauer eines Aufrufs getauschte `nvim_buf_set_extmark`. Je ein Satz
+  daneben, wie in E beschrieben. Damit ist der Posten ueber alle Workspaces
+  leer, und die images-Entscheidung ("faellt vertikal an") hat gehalten.
+  **Eine Notationsfalle dabei:** `---@diagnostic disable-next-line` muss die
+  **letzte Zeile des Doc-Blocks** sein -- ein gewoehnlicher `--`-Kommentar
+  dazwischen schneidet den Block von seiner Funktion ab (C4 von der anderen
+  Seite). Die Begruendung steht deshalb *ueber* dem Block, die
+  Unterdrueckung direkt an der Zuweisung.
+- **Narrowing, das durch eine zweite Variable laeuft (3)** -- `drift.lua`s
+  `config_lua` (`repo_dirs and … or nil` behaelt den Typ der **Wache** in der
+  Union, hier `string|table<string, string>|nil`), `sla/init.lua`s `digit`
+  (kommt mit `level` zusammen aus `level_of`, geprueft wurde nur `level`),
+  `case/ui.lua`s `stream_path` (eine gefundene Server-Version impliziert die
+  Datei, aus der sie kam -- ueber zwei `and`-Ketten hinweg). Dieselbe Familie
+  wie der `repo`-Local der ersten Haelfte, und in allen drei Faellen ist der
+  Griff, den verengten Wert selbst zu binden oder mitzupruefen.
+- **Locals, die ihren Typ wechseln (2)** -- `case/links.lua` setzte die
+  `gmatch`-Laufvariable auf `nil`, um "kein Link" zu sagen;
+  `indent_scope.lua` ueberschrieb das `string[]` aus `nvim_buf_get_lines` mit
+  seiner ersten Zeile. Signatur `cast-local-type`; der Griff ist beide Male
+  ein eigenes Local statt einer Umwidmung.
+- **Felder, die es zur Laufzeit gibt und in keinem Typ (4)** --
+  `snacks.picker.todo_comments` (von todo-comments.nvim im eigenen `setup()`
+  in `Snacks.picker.sources` eingehaengt; snacks' generiertes
+  `picker/types.lua` listet naturgemaess nur snacks' eigene Quellen),
+  `_base_symbol` auf `WKDOptionsBreadcrumbsCtx` (die ctx-Pipeline schreibt es
+  vor dem Provider-Lauf hinein), `owner` auf `Bindings.DriftFinding` (nur die
+  `usercmd-undocumented`-Befunde tragen es) und der `count`, den
+  `commands.dedupe` addiert -- letzterer als eigene Unterklasse
+  `Lib.Case.CommandHitDeduped`, weil ein Roh-Hit ihn nicht hat.
+- **Einzelne** -- ein berechneter Schluessel in `sla/stream.lua`
+  (`out[cond and "priority" or "impact"] = value`, ausgeschrieben als
+  `if`/`else`), `vim.fn.argv(0)` in `plugins/neotree.lua` (`string|string[]`:
+  die Listenhaelfte gehoert der indexlosen Form), `err` ohne Fallbacktext in
+  `plugins/treesitter.lua` (C4), und die `@return`-Annotation von
+  `telescope/init.lua`s `pdf_filetype_hook`, die das `nil` verschwieg, das
+  ihr eigener `pcall` genau dafuer erzeugt.
+- **Cluster E, der Config-Anteil** -- eine Stelle
+  (`config/menu/custom_menu/init.lua`, `pcall(vim.cmd, "UnicodeTable")`), in
+  der Closure-Form. Der Report fuehrte hier zwei; die zweite existiert nur
+  noch als Codebeispiel in einer Doku-Datei.
+
+#### Zwei Dinge fuer die Abschluss-Task, die hier aufgefallen sind
+
+**Die Config hat keine Testsuite.** Kein `TESTS/`, kein `scripts/test.sh` --
+die Regel "Testsuite pro Repo laufen lassen" hat hier nichts zum Laufen.
+Ausgerechnet der Workspace, der die anderen 31 konfiguriert, ist der einzige
+ohne Suite. Der Ersatz war `stylua --check` ueber alle 30 geaenderten
+Dateien -- **das parst jede davon vollstaendig und ist damit der billigste
+Syntaxtest, den ein Repo ohne Suite hat** -- plus die beiden LuaLS-Laeufe.
+
+**Einen Worktree als Config zu starten kostet 185 MB.** Der Versuch, die
+Aenderungen mit `XDG_CONFIG_HOME=<worktrees> NVIM_APPNAME=<worktree>` einmal
+wirklich hochzufahren, funktioniert -- aber `stdpath("data")` haengt am
+`NVIM_APPNAME`, also legt lazy.nvim ein frisches Datenverzeichnis an und
+klont **jedes** Plugin neu. Als Rauchtest fuer eine Aenderung ist das der
+falsche Weg (Verzeichnis danach wieder entfernt).
+
+---
+
 ### Die nvim-Config, erste Haelfte -- 120 auf 39
 
-*(unterbrochen; der Rest steht im Report unter „Wiedereinstieg")*
+*(damals unterbrochen; die restlichen 39 stehen im Eintrag darueber --
+der Abschnitt „Wiedereinstieg" im Report ist damit erledigt und weg)*
 
 `worse: nothing`. Die grossen Posten sind weg, und es waren durchweg
 Wiederholungen aus den Plugin-Durchgaengen -- was fuer die letzte Task das

@@ -176,12 +176,12 @@ function M.refresh(cfg)
     return
   end
 
-  curline = curline[1] or ""
-  if curline:match("^%s*$") then
+  local curtext = curline[1] or ""
+  if curtext:match("^%s*$") then
     return -- empty line
   end
 
-  local curindent = indent_of(curline)
+  local curindent = indent_of(curtext)
 
   --- Get indent for viewport line i (1-based in viewport)
   ---@param i integer

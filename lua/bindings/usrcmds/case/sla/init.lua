@@ -177,7 +177,10 @@ end
 function M.status(entry)
   local m = meta.read(entry.dir)
   local digit, level = level_of(m)
-  if not level then
+  -- Both or neither: `level_of` answers `nil, nil` or a digit with the level
+  -- it looked up. Checking only `level` left `digit` as `string|nil` for the
+  -- status table, which declares it `string`.
+  if not level or not digit then
     return nil
   end
 

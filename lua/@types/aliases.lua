@@ -3,7 +3,9 @@
 
 -- Basis-Typen
 ---@alias void nil
----@alias Path string
+-- No bare `Path` alias: plenary declares `---@class Path` for its own path
+-- object, and a second global definition of that name is a duplicate. Nothing
+-- here referred to it; `FilePath`/`DirPath` say the same thing unambiguously.
 ---@alias FilePath string
 ---@alias DirPath string
 

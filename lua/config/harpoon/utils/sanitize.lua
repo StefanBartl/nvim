@@ -64,9 +64,13 @@ function M.dedup_in_place_safe(list)
   end
   for idx = #to_remove, 1, -1 do
     local j = to_remove[idx]
-    if type(list.remove) == "function" then
+    -- `remove_at`, not `remove`: `j` is an index, and harpoon's `remove`
+    -- takes an ITEM which it hands to `config.equals` -- that indexes its
+    -- argument, so an integer threw inside this pcall and nothing was ever
+    -- removed, while the count below still claimed it had been.
+    if type(list.remove_at) == "function" then
       pcall(function()
-        list:remove(j)
+        list:remove_at(j)
       end)
     else
       table.remove(list.items, j)

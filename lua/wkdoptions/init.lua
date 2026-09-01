@@ -20,16 +20,27 @@ local get_hl_config = lazy.require("wkdoptions.hl_config")
 local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local function normalize_inactice_win_hl()
-  Autocmd.create("ColorScheme", function()
-    -- Kopiere Normal zu NormalNC (macht sie identisch)
+  --- Copy `Normal` onto `NormalNC`, making an inactive window look identical
+  --- to the active one.
+  ---
+  --- The table is rebuilt rather than passed straight through: `nvim_get_hl`
+  --- answers with `vim.api.keyset.get_hl_info` and `nvim_set_hl` takes
+  --- `vim.api.keyset.highlight` -- the same table seen from the read and the
+  --- write side, and LuaLS refuses both the direct assignment and a `---@cast`
+  --- between them, because it decides assignability by class NAME. A plain
+  --- `table` satisfies either, keeps every attribute the colorscheme set, and
+  --- needs no field list that can go stale.
+  ---@return nil
+  local function copy_normal_to_normal_nc()
     local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
-    vim.api.nvim_set_hl(0, "NormalNC", normal)
-  end, {
+    vim.api.nvim_set_hl(0, "NormalNC", vim.tbl_extend("force", {}, normal))
+  end
+
+  Autocmd.create("ColorScheme", copy_normal_to_normal_nc, {
     pattern = "*",
   })
 
-  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
-  vim.api.nvim_set_hl(0, "NormalNC", normal)
+  copy_normal_to_normal_nc()
 end
 
 -- Define diagnostic signs with modern API and fallback for older versions

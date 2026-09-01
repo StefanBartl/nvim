@@ -170,6 +170,34 @@ end)
 -- globally before any client attaches, which can happen on the first
 -- BufReadPost of a startup-argument file.
 vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
+
+--- Reader for `lsp.completion.personal_names`: the plugin names this config
+--- knows about, in the shape that option documents.
+---
+--- Three things about the form, each of which the option needs:
+---
+--- * **`---@type` on the variable, naming lsp.nvim's own alias.** A function
+---   written into the option table -- inline or by name -- is inferred as a
+---   bare `function`, which satisfies no declared `fun(): T`. Naming the whole
+---   function type is the same griff the plugin uses for its own
+---   `label_source`, and the reason its `Reader` alias exists at all.
+--- * **A list is built rather than handed over.** `list.read()` answers
+---   `entries, err` -- two values, and of a class (`Plugins.Personal.Entry`)
+---   that the option does not name. Only `name` is ever read on the other
+---   side, in `collect_labels`.
+--- * **`or {}`**, so a failed read is an empty completion source rather than
+---   a nil the reader would have to guard.
+---@type LspNvim.PersonalNames.Reader
+local personal_name_labels = function()
+  local entries = require("plugins.personal.list").read() or {}
+  ---@type LspNvim.PersonalNames.Entry[]
+  local out = {}
+  for _, entry in ipairs(entries) do
+    out[#out + 1] = { name = entry.name }
+  end
+  return out
+end
+
 startup.now("lsp", function()
   -- `require("lsp")` resolves to the lsp.nvim plugin (lazy = false, so it is on
   -- the runtimepath by the time this runs). This config's former lua/lsp/**
@@ -183,9 +211,8 @@ startup.now("lsp", function()
     -- blink silently dropped the source.
     completion = {
       personal_names = {
-        labels = function()
-          return require("plugins.personal.list").read()
-        end,
+        enable = true,
+        labels = personal_name_labels,
       },
     },
   })

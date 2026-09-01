@@ -52,12 +52,21 @@ Halte durchaus informationen in Diagnostics_FINISHED fest, die ich später in `#
 
 ## Letze Task, nachdem alles fertig ist
 
-- [ ] **Vorarbeit liegt vor:** der Abschnitt [„Wiederkehrende Muster -- die
-  Ableitung fuer RULES“](./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules)
-  sammelt seit 2026-09-02, was sich ueber die Durchgaenge wiederholt hat --
-  nach Haeufigkeit, mit der Signatur zum Wiedererkennen und dem bewaehrten
-  Griff. Er wird bei jedem Durchgang fortgeschrieben und ist die Grundlage
-  fuer diesen Punkt.
+- [ ] **Vorarbeit liegt vollstaendig vor:** der Abschnitt [„Wiederkehrende
+  Muster -- die Ableitung fuer RULES“](./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules)
+  sammelt, was sich ueber die Durchgaenge wiederholt hat -- nach Haeufigkeit,
+  mit der Signatur zum Wiedererkennen und dem bewaehrten Griff. Er ist ueber
+  **vierzehn** Durchgaenge fortgeschrieben und mit dem letzten (nvim-Config)
+  um **C7, C8, D6 und F6** ergaenzt worden. Alle 32 Workspaces stehen auf
+  Null, es kommt nichts mehr dazu -- der Abschnitt ist fertig.
+- [ ] **Drei Dinge aus dem letzten Durchgang, die nirgends sonst als Regel
+  stehen:** die nvim-Config ist der **einzige der 32 Workspaces ohne
+  Testsuite** (kein `TESTS/`, kein `scripts/test.sh`) -- ausgerechnet der,
+  der die anderen 31 konfiguriert; `stylua --check` parst jede Datei
+  vollstaendig und ist damit der billigste Syntax-Rauchtest, den ein Repo
+  ohne Suite hat; und einen Worktree als Config hochzufahren geht **nicht**
+  ueber `NVIM_APPNAME`, ohne dass lazy.nvim ein eigenes Datenverzeichnis
+  anlegt und jedes Plugin neu klont (185 MB).
 - [ ] Aus C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md ableitungen treffen, wie künftiger Repos zb die /TEST/ files geschrieben werden, auf was wier aufpassen  üssen in normalen source code usw... sodass wir dies von anfang an einbauen können. Den Report erstmal nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/ schreiben. Außerdem alles was sinnvoll ist in die RULES files in WKDBooks/Development/wkdbook-Lua/Checklists schreiben, dort gibt es als beispiel eine filöe für neue projekte, dort kann man ereinschreiben, wie die /TEST/ aufgebaut sein soll buzw was hier wichtig ist um dieagnsotics zu berücksichtigen usw...
 
 ---
@@ -130,11 +139,12 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-**Die nvim-Config, mittendrin: 120 -> 39**, `worse: nothing` (2026-09-02,
-unterbrochen). Alle 31 Plugins stehen auf Null. Was noch offen ist, steht
-Zeile für Zeile unter „Wiedereinstieg" gleich hier drunter.
+**Nichts.** Die nvim-Config ist fertig -- **39 -> 0**, in zwei Läufen
+bestätigt, `worse: nothing`. Damit stehen **alle 32 Workspaces des Umfangs
+auf Null**, und der Roadmap-Punkt ist inhaltlich abgeschlossen; offen ist nur
+noch die [letzte Task](#letze-task-nachdem-alles-fertig-ist).
 
-Zwei Dinge sind dabei vorab geklärt worden und stehen fest:
+Zwei Dinge, die im Lauf davor geklärt wurden und weiter gelten:
 
 - **Die Worktree-Frage ist beantwortet** -- und sie war kein Aufräumthema,
   sondern ein Messfehler. Siehe „Nicht von Claude entschieden" unten.
@@ -143,47 +153,18 @@ Zwei Dinge sind dabei vorab geklärt worden und stehen fest:
 
 ---
 
-### Wiedereinstieg: die 39, die noch offen sind
-
-Gemessen am 2026-09-02 (`scan.sh cfgmid3 nvim-config`). Reihenfolge nach
-Ursache, nicht nach Datei — die Einzelfälle unten sind wirklich einzeln.
-
-**Erledigt sind diese Cluster schon** (81 Befunde), zur Orientierung, was
-nicht mehr zu suchen ist: `utc_captures` in `sla/clock.lua` (18),
-`os.date` -> `tostring` (10), `Cfg.Harpoon.List` vervollständigt (8),
-`Lib.UserCmd.Composer.RouteSpec` -> `Route` (5), `drift.lua`s `repo`-Local
-(10), F5 auf `local system = vim.system` (6), beide Annotationsformen
-(7), plus Einzelne.
-
-| # | Posten | Anzahl | Griff |
-|---|---|---:|---|
-| 1 | **`duplicate-set-field`** — `editing.lua:216` (`paste`), `todo_comments/init.lua:36,42`, `ui_open.lua:43` | 4 | In jedem Plugin-Durchgang waren das ausnahmslos absichtliche Überschreibungen. Prüfen, ob es hier auch so ist, dann pro Zeile mit Begründung unterdrücken |
-| 2 | **harpoon, der Rest** — `mappings/harpoon.lua:144,154`, `persist_paths.lua:238` (`HarpoonList` -> `Cfg.Harpoon.List`), `utils/sanitize.lua:69` | 4 | Die Stand-in-Klasse ist jetzt vollständig; diese vier sind die *andere* Richtung — echte harpoon-Typen, die gegen den Stand-in laufen. Vermutlich reicht ein `---@cast` an der Übergabestelle |
-| 3 | **`wkdoptions/init.lua:26,32`** — `vim.api.keyset.get_hl_info` an `vim.api.keyset.highlight` | 2 | `nvim_get_hl` liefert die Info-Form, `nvim_set_hl` will die Setz-Form. Upstream-Meta unterscheidet sie strenger als die Praxis; Cast oder Feld-für-Feld-Kopie |
-| 4 | **`snacks/@types/init.lua:14,18`** — `file`/`text` doppelt | 2 | Eine Klasse, die ein Feld deklariert, das die geerbte schon hat |
-| 5 | **`plugins/workflow.lua:27,40`** — `todo_comments` undefined | 2 | Ein Feld auf einer Plugin-Spec-Klasse, das dort nicht deklariert ist |
-| 6 | **`drift.lua:859,910`** — `string\|table<string, string>\|nil` an `string` | 2 | Dieselbe Familie wie der `repo`-Local: der Wert ist geprüft, die Signatur weiß es nicht |
-| 7 | **`case/ui.lua`** — `1026` (`@param scope`), `1687`, `3010`, `3354` (`count`) | 4 | Einzeln |
-| 8 | **`return-type-mismatch`** — `sla/init.lua:268`, `snacks/picker/init.lua:62`, `telescope/init.lua:48` | 3 | Je ein Rückgabewert, der die deklarierte Gestalt knapp verfehlt |
-| 9 | **Der Rest, wirklich einzeln** — `init.lua:185,186`, `@types/aliases.lua:6` (`Path` doppelt), `case/links.lua:86`, `case/similar.lua:392`, `sla/clock.lua:65,106`, `sla/stream.lua:98`, `plugin_repos/picker.lua:143`, `menu/custom_menu/init.lua:69`, `plugins/neotree.lua:38`, `plugins/treesitter.lua:107`, `themes/init.lua:143`, `breadcrumbs/.../container.lua:23`, `indent_scope.lua:179` | 16 | — |
-
-**Vorgehen beim Wiedereinstieg:**
-
-1. `REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh <pass> nvim-config`
-   als neuen Vorher-Lauf — die 39 oben sind der Stand, nicht die Basis.
-2. Cluster 1 bis 6 zuerst; das sind 16 der 39 und alle haben einen bekannten
-   Griff.
-3. Am Ende **zweimal messen** (die Regel aus dem Arbeitsmodus).
-4. Danach ist der Roadmap-Punkt fertig, und es folgt die
-   [letzte Task](#letze-task-nachdem-alles-fertig-ist).
-
----
-
 ### Vorschlag nächster Schritt
 
-**Die Config fertig machen** — die 39 unter „Wiedereinstieg" oben, mit der
-Reihenfolge und dem jeweiligen Griff. Danach die
-[letzte Task](#letze-task-nachdem-alles-fertig-ist).
+**Die [letzte Task](#letze-task-nachdem-alles-fertig-ist)** -- die
+RULES-Ableitung aus [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
+Die Vorarbeit liegt vollständig vor: der dortige Abschnitt „Wiederkehrende
+Muster" ist über vierzehn Durchgänge fortgeschrieben und durch den
+Config-Durchgang um vier Punkte ergänzt worden (C7, C8, D6, F6).
+
+Was sonst noch unter „Offen" steht, ist **keine Diagnose-Arbeit mehr**: die
+neun roten Tests in sandbox.nvim samt seinem Runner (Punkt 1c), die
+Adapter-Designfrage (4) und die drei lib.nvim-Aggregatoren (11) sind je eine
+eigene Entscheidung.
 
 ---
 
@@ -191,6 +172,7 @@ Reihenfolge und dem jeweiligen Griff. Danach die
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| CFG | **Die nvim-Config fertig** -- der letzte offene Workspace | **39 -> 0**, in zwei Läufen bestätigt, `worse: nothing`. **Damit stehen alle 32 Workspaces des Umfangs auf Null.** 39 Befunde, 21 Ursachen -- der einzige Workspace der Reihe, in dem fast jeder Befund für sich steht. Drei echte Fehler: **`list:remove(j)` mit einem Index statt einem Item** in `config/harpoon/utils/sanitize.lua` -- harpoons `remove` gibt sein Argument an `config.equals`, das es indiziert, also warf der Aufruf, der `pcall` schluckte es, und `dedup_in_place_safe` hat **nie ein Duplikat entfernt** und trotzdem eine Anzahl gemeldet; **`snacks.picker.todo_comments` mit der Keyword-*Tabelle* statt der Namensliste** (`<leader>sT` suchte mit leerer Keyword-Alternative -- sichtbar erst, nachdem der `undefined-field` behoben war, weil ein undefiniertes Feld jede Prüfung dahinter verdeckt); und `vim.log.levels.info` statt `.INFO`. Vier neue Musterpunkte (C7, C8, D6, F6), und der letzte Befund hing an einem Feldtyp in **lsp.nvim**, der dort selbst einen trug: 1 -> 0, Suite grün. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | T8 | **Die Achter-Runde** -- die letzten acht Plugins (2026-09-02) | **50 -> 0** (reposcope 9, color_my_ascii 8, debugging 8, dap 7, filetree 6, cmdlog/migrate/runtime-analysis je 4), in zwei Läufen bestätigt, `worse: nothing`, jede Suite grün. **Damit sind alle 31 Plugins fertig.** Drei Funde, die über das Repo hinausgehen: **ein Alias auf eine `vim.*`-Funktion kommt nil-behaftet zurück** (`local set_km = vim.keymap.set` -- zwei Befunde aus einer Zeile, vier isolierte Reproduktionen blieben sauber; ein `---@type` auf der Alias-Zeile beseitigt sie, neuer Musterpunkt F5); **migrate ist das achte Cluster-L-Repo**, und dort fällt die Zahl nach der Korrektur (4 -> 2) statt zu steigen; und **dap.nvim ist der vierte Test-Runner** der Reihe, der ohne seine Env-Variablen nicht sagt, was fehlt -- hier mit vier roten Tests, die wie ein Defekt im Code aussehen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | T3 | **Die Dreier-Runde** -- pickers, insights, recommender (2026-09-02) | **73 -> 0** (32/29/12), in zwei Laeufen bestaetigt, `worse: nothing`, jede Suite gruen. **Zwei der drei hatten dieselbe Ursachenfamilie in zwei Formen**: `fun(T)` ohne Parameternamen parst nicht (pickers: drei Zeilen, elf Befunde, davon sechs `need-check-nil` in einer Datei -- neuer Musterpunkt C6), und `---@return T, U  wort, wort` liest die nachgestellten Woerter als dritten Rueckgabewert (insights: drei Zeilen, sechzehn Befunde). Dabei kam heraus, dass **drei Scanner dieselbe Gestalt verschieden nennen** -- `ts_lua` deklarierte ein `file`, das niemand liest und niemand setzt. In recommender waren fuenf Befunde **ein Testfall, der sich selbst uebersprungen hat** (Deep-Merge gegen `DEFAULTS.float`, einen Schluessel, den es nie gab). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | MD | **markdown.nvim** -- vertikal (2026-09-02) | **30 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 26 Specs grün. Zwei Drittel lagen in `TESTS/` und waren Minutenarbeit; die andere Hälfte war **A1 zum vierten Mal** (der Debounce-Timer der Live-Referenzprüfung, ungeprüft -- ein `return` hätte die Ansicht für die Sitzung stillgelegt) und ein `undefined-field`, hinter dem **die Nutzlast dieses Plugins auf einem fremden Typ** stand (`subcmd` auf composers `ArgSpec`, jetzt `Mkdn.SubargSpec`). Neuer Musterpunkt F5: **ein `---@cast` zwischen zwei unverwandten Klassen wird selbst gemeldet** -- `nvim_get_hl` -> `nvim_set_hl` ist keine Cast-Frage, sondern eine, die man baut. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -239,14 +221,24 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
-| nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
+| nvim-config | **0** | 120 -> 39 -> 0, in zwei Etappen |
 | *(die acht kleinen Repos)* | **0** | reposcope, color_my_ascii, debugging, dap, filetree, cmdlog, migrate, runtime-analysis |
 | *(die übrigen 23 Repos)* | **0** | buffer-ctx, cascade, diff, documentation, emojis, fileops, github_stats, gopath, images, insights, language, lib, lsp, markdown, mdview, open, pdfport, pickers, recommender, replacer, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **120** | |
+| **Summe (alle 32 im Umfang)** | **0** | |
 
-**Alle 31 Plugins stehen auf Null.** Was bleibt, ist die Config -- und die
-Zahl daneben ist die einzige der Tabelle, die noch nie gegen einen bereinigten
-Baum gemessen wurde (siehe die Worktree-Frage oben).
+**Alle 32 Workspaces stehen auf Null.** Die Config war der letzte Posten und
+ist in zwei Etappen gefallen: 120 -> 39 am 2026-09-02, 39 -> 0 im Durchgang
+danach. Ihre Zahl ist die einzige der Tabelle, die ursprünglich nie gegen
+einen bereinigten Baum gemessen worden war -- inzwischen schon, siehe die
+Worktree-Frage oben.
+
+**Der Nulllauf hat einen Nachbarn mitgenommen:** die letzte Zeile der Config
+hängte an einem Feldtyp in lsp.nvim (`LspNvim.PersonalNamesOpts.labels`,
+inline statt über die vorhandene `Reader`-Alias geschrieben -- Musterpunkt
+C2). Derselbe Feldtyp trug in lsp.nvim selbst einen Befund, den der
+Gesamtlauf noch nicht gesehen hatte; das Repo stand also auf **1**, nicht auf
+0, und steht mit der Korrektur wieder auf 0 (Suite grün: 23 Spec-Dateien,
+Smoke-Test).
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
 minus die 37 von images, minus die 34 von language, minus die 35 von
@@ -276,8 +268,8 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **Die nvim-Config** (120) -- der letzte offene Posten, siehe oben. Braucht
-   vorher die Worktree-Frage
+1. ~~**Die nvim-Config**~~ -- **erledigt**, 120 -> 39 -> 0, in zwei Läufen
+   bestätigt. Damit ist kein Workspace des Umfangs mehr offen
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
    Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
@@ -285,24 +277,27 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    Spec-Dateien abgearbeitet und sich sauber beendet -- dieselbe Falle wie
    in Offen-Punkt 13, hier aber im Umfang. Der Runner ist das größere der
    beiden Probleme
-1b. **`duplicate-set-field` steht auf 30** und damit weiter an zweiter Stelle
+1b. ~~**`duplicate-set-field`**~~ -- **erledigt.** Der Posten stand auf 30 und
+   ist mit dem letzten Workspace leer; die vier der Config waren allesamt
+   absichtliche Überschreibungen (`vim.paste`, `vim.ui.open`, zwei in
+   `config/todo_comments`) und sind mit je einem Satz unterdrückt. Der
+   ursprüngliche Wortlaut, zur Nachvollziehbarkeit: **stand auf 30** und damit weiter an zweiter Stelle
    der Gesamtverteilung -- fast durchweg Test-Doubles über typisierte
    `vim.*`-Oberfläche. Häufungen: `cascade` 14, `diff` 11, `filetree` 6,
    `markdown` 6. **Entschieden am images-Durchgang: fällt vertikal an.** Neun
    der zehn dort waren Doubles in `TESTS/`, unterdrückt mit Begründung; das
    kostet pro Repo Minuten und rechtfertigt keinen eigenen horizontalen Lauf
-2. **Die nvim-Config selbst** (120) -- das größte Einzelvorkommen;
-   `param-type-mismatch` 38, `need-check-nil` 17. Braucht vorher die
-   Worktree-Frage unten
-3. **Drei Stellen der zwei Annotationsformen**, alle drei in der
-   nvim-Config. Form A (ein `fun(...): T` im Tabellentyp, auf das noch ein
-   Feld folgt): `nvim/lua/config/snacks/picker/init.lua` Zeile 25 und 45.
-   Form B (`@return <typ>  <wort>,` ohne Namen):
-   `nvim/lua/bindings/usrcmds/case/extract/doclinks.lua:25`. Fällt beim
-   jeweiligen Repo an -- als eigener Durchgang zu klein. **Die beiden
-   language-Stellen sind erledigt** (2026-09-02): sie kosteten dort einen
-   `undefined-field` und verbargen nebenbei, dass `custom.cmd` mit zwei
-   Parametern deklariert und mit drei gerufen wird
+2. *(war: die nvim-Config selbst -- siehe Punkt 1)*
+3. ~~**Die zwei Annotationsformen**~~ -- **erledigt.** Die drei
+   Config-Stellen sind mit der ersten Hälfte gefallen (2026-09-02), die
+   beiden in language davor. **Die Familie ist damit aber nicht zu Ende:**
+   der Config-Durchgang hat zwei weitere Formen ergeben, die in
+   [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) als **C7** und
+   **C8** stehen -- `{ k: T|nil }` macht den Schlüssel zur Pflicht (die
+   optionale Form ist `k?: T`), und ein anonymes `function` in einem
+   Table-Literal typisiert als bare `function`. Dazu **C2 zum zweiten Mal**,
+   diesmal in einem Feldtyp von lsp.nvim, der den einen Befund der Config
+   getragen hat
 4. **`get_node_at_line` und die drei anderen Adapter-Fähigkeiten** --
    deklariert, von keinem Backend implementiert, und fünf Features warten
    darauf. neo-tree und nvim-tree führen interne Zeilenindizes, oil und netrw
@@ -328,9 +323,12 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    zuweisbar. Nebenbefund: `publishDiagnosticsProvider` in
    `LspMod.Client.Capabilities` war eine **erfundene** Capability, und
    `:LspDoctor` hat sie abgefragt
-7. **`pcall(vim.cmd, ...)`** (E) -- **11 offen**: `markdown` 6, dazu je eines
-   in `color_my_ascii`, `mdview`, `migrate` und zwei in der nvim-Config.
-   Erledigt sind 68 (lib 10, lsp 4, filetree 15, fileops 16, sessions 4,
+7. ~~**`pcall(vim.cmd, ...)`**~~ (E) -- **erledigt, kein Befund mehr in
+   irgendeinem Workspace.** Die Config trug zuletzt eine Stelle
+   (`config/menu/custom_menu/init.lua`, `UnicodeTable`), umgestellt auf die
+   Closure-Form; die im Report geführte zweite existiert nur noch als
+   Codebeispiel in einer Doku-Datei. Was daran zu wissen bleibt:
+   Erledigt waren zuvor 68 (lib 10, lsp 4, filetree 15, fileops 16, sessions 4,
    runtime-analysis 9, gopath 2, images 2, language 4, emojis 1, open 1)
    -- die 60 aus dem Erstscan waren eine Schätzung. Mechanisch, fällt beim
    jeweiligen Repo an. **`vim.cmd` ist nicht die einzige `__call`-Tabelle:**
@@ -341,11 +339,15 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    images tauscht ein Spec `vim.cmd` selbst und liest den Kommandonamen aus
    dem ersten Argument -- die Unterkommando-Form hätte den Test still blind
    gemacht. Die Closure-Form ist die sichere
-8. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil;
-   der Anteil der elf durchgegangenen Repos daran ist erledigt
-9. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
-   `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an,
-   nicht als eigener Durchgang
+8. ~~**Die Einzelbefunde** aus Abschnitt 5~~ -- **erledigt**, mit dem letzten
+   Workspace. Abschnitt 5 bleibt als Befundbeschreibung stehen, ist aber
+   keine Arbeitsliste mehr
+9. ~~**Die verbliebenen `need-check-nil` in `lua/`**~~ -- **erledigt**, mit
+   dem letzten Workspace; der Posten fiel wie vorgesehen beim jeweiligen Repo
+   an. Die Verallgemeinerung steht als Familie in
+   [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md): ein Wert, der nur
+   über die Wahrheit einer *anderen* Variablen verengt ist, ist für den
+   Prüfer nicht verengt -- der verengte Wert selbst muss gebunden werden
 10. ~~**`scripts/luals-scan` dumpt die falsche Library-Funktion**~~ --
    **erledigt 2026-09-01** beim spotlight-Durchgang, wo es vom Kosmetischen
    ins Blockierende kippte: die Repo-*Wurzeln* aus dem `runtimepath` brachten
@@ -384,8 +386,8 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
     .deps/plenary.nvim, or place it beside this repo"* -- und **endet mit
     Exit-Code 1**. Das ist die Fassung, gegen die die anderen beiden zu
     messen sind, und die Vorlage für die RULES-Ableitung der Abschluss-Task
-14. Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
-    Annotationsfehler)
+14. ~~Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
+    Annotationsfehler)~~ -- **erledigt**, alle 32 Workspaces stehen auf Null
 
 **Entschieden am 2026-09-02** (war: „die elf git-Worktrees"). Die Regel
 lautet: ein Worktree, der älter als zwei Tage ist und keinen Commit hält, der

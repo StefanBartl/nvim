@@ -659,6 +659,7 @@ end
 ---@field file string|nil
 ---@field line integer|nil
 ---@field unverifiable boolean|nil  # see `M.check`'s per-table verdict
+---@field owner string|nil    # `usercmd-undocumented` only: who registered it
 
 ---@class Bindings.RepoInfo
 ---@field ran boolean whether `opts.repo` asked for the axis at all
@@ -720,7 +721,13 @@ function M.check(plugin, opts)
       end
     end
   end
-  local config_lua = repo_dirs and config.config_lua_root() or nil
+  -- Written as an `if` rather than `repo_dirs and … or nil`: the `and/or`
+  -- form keeps the guard's own type in the inferred union, so the local read
+  -- as `string|table<string, string>|nil` at both search sites below.
+  local config_lua ---@type string|nil
+  if repo_dirs then
+    config_lua = config.config_lua_root()
+  end
   -- Candidate: had a checkout to look in. Answered: the look succeeded.
   -- A candidate that never got answered is still an unchecked plugin and
   -- has to land back in `skipped`, see the fold-in near the end.

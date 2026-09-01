@@ -40,6 +40,10 @@ function M.setup()
   end
 
   local orig_open = vim.ui.open
+  -- Deliberate override, and the point of this module: core's `vim.ui.open`
+  -- stays reachable as `orig_open` and every call still ends up there. LuaLS
+  -- reports any write to a `vim.*` field it already types.
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.ui.open = function(target, opt)
     if type(target) == "string" and not (opt and opt.cmd) and is_url(target) then
       opt = vim.tbl_extend("force", opt or {}, { cmd = { "explorer.exe" } })

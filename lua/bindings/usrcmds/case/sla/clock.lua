@@ -62,7 +62,11 @@ function M.elapsed(from, to, window)
     local midnight = cursor - (d.hour * 3600 + d.min * 60 + d.sec)
     local day_end = math.min(to, midnight + DAY_SECONDS)
 
-    if is_business_day(d.wday, window) then
+    -- `assert(tonumber(...))` as in `M.utc_captures`: `osdate` types every
+    -- part as `integer|string` (the class doubles as the table `os.time`
+    -- accepts), and `is_business_day` compares with `==`, where a string
+    -- would silently never match a weekday number.
+    if is_business_day(assert(tonumber(d.wday)), window) then
       local win_start = midnight + window.from * 3600
       local win_end = midnight + window.to * 3600
       local overlap_start = math.max(cursor, win_start)
@@ -103,7 +107,11 @@ function M.deadline(from, budget, window)
     local midnight = cursor - (d.hour * 3600 + d.min * 60 + d.sec)
     local next_midnight = midnight + DAY_SECONDS
 
-    if is_business_day(d.wday, window) then
+    -- `assert(tonumber(...))` as in `M.utc_captures`: `osdate` types every
+    -- part as `integer|string` (the class doubles as the table `os.time`
+    -- accepts), and `is_business_day` compares with `==`, where a string
+    -- would silently never match a weekday number.
+    if is_business_day(assert(tonumber(d.wday)), window) then
       local win_start = midnight + window.from * 3600
       local win_end = midnight + window.to * 3600
       local seg_start = math.max(cursor, win_start)

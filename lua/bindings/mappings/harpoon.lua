@@ -73,12 +73,16 @@ local function add_to_which_key()
 end
 
 ---Create the mappings without which-key, from the same spec.
----@param map fun(mode: string, lhs: string, rhs: string, opts: table)
+---The module is required here rather than handed in: `require` types it as a
+---plain `table` (its return goes through `setmetatable`), so a parameter for
+---it can only be annotated with something the call site does not satisfy.
+---`set` is the same function the module's `__call` forwards to.
 ---@return nil
-local function map_plain(map)
+local function map_plain()
+  local map = require("lib.nvim.bindings.keymap")
   for _, entry in ipairs(M.spec) do
     if not entry.group then
-      map("n", entry[1], entry[2], { desc = entry.desc, silent = true })
+      map.set("n", entry[1], entry[2], { desc = entry.desc, silent = true })
     end
   end
 end
@@ -110,7 +114,6 @@ local function register_which_key_when_loaded()
 end
 
 function M.setup()
-  local map = require("lib.nvim.bindings.keymap")
   local ok_hp, harpoon = pcall(require, "harpoon")
   if not ok_hp or not harpoon then
     notify.warn("[harpoon] not installed")
@@ -141,6 +144,10 @@ function M.setup()
       if info and info.nparams and info.nparams >= 2 then
         harpoon:setup({ settings = settings })
       else
+        -- Only reached when `setup` takes fewer than two parameters, i.e.
+        -- NOT harpoon2's `Harpoon.setup(self, partial_config)` -- so the
+        -- table here is a config, never the `self` LuaLS assumes.
+        ---@diagnostic disable-next-line: missing-fields
         harpoon.setup({ settings = settings })
       end
     end
@@ -151,7 +158,7 @@ function M.setup()
   -- pinned version — no `vim.keymap.set` happens), so relying on it would
   -- leave the mappings nonexistent whenever which-key is absent or lazy.
   -- which-key then contributes the group label on top.
-  map_plain(map)
+  map_plain()
 
   if not add_to_which_key() then
     register_which_key_when_loaded()

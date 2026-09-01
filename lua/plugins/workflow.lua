@@ -35,7 +35,12 @@ return {
         "<leader>sT",
         function()
           local snacks = require("snacks")
-          local KEYWORDS = require("config.todo_comments.keywords")
+          -- `vim.tbl_keys`, not the table itself: the source's `keywords`
+          -- is a list of keyword NAMES, which it filters against
+          -- `todo-comments`' own name table. Handed the keyword table, each
+          -- entry looked up was a `{ icon, color, alt }` value, nothing
+          -- matched, and the search regex was built from an empty list.
+          local KEYWORDS = vim.tbl_keys(require("config.todo_comments.keywords"))
           if snacks and snacks.picker and KEYWORDS then
             snacks.picker.todo_comments({ keywords = KEYWORDS })
           else

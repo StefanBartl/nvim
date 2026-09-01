@@ -1019,11 +1019,6 @@ end
 
 -- ── :Tricentis links ─────────────────────────────────────────────────────
 
---- `:Tricentis links [scope]` — every link across the work repo (or one
---- area of it), picked and opened externally. Supersedes hand-maintaining
---- `Notes/Links.md`: this reads what's already written everywhere else
---- instead of asking you to copy it a second time.
----@param scope string|nil
 --- What a link row shows instead of the raw URL. First three cuts, all of
 --- them removing characters that are identical on nearly every row of this
 --- bestand and therefore carry no information: the scheme, a `www.`, and
@@ -1064,6 +1059,11 @@ local function link_label(url, width)
   return ("%s/%s/…/%s"):format(host, first, last)
 end
 
+--- `:Tricentis links [scope]` — every link across the work repo (or one
+--- area of it), picked and opened externally. Supersedes hand-maintaining
+--- `Notes/Links.md`: this reads what's already written everywhere else
+--- instead of asking you to copy it a second time.
+---@param scope string|nil
 function M.tricentis_links(scope)
   local links = require("bindings.usrcmds.case.links")
   local hits = links.dedupe(links.find(scope))
@@ -1679,7 +1679,12 @@ function M.versions(component_arg, case_arg, flags)
       local stream_path = stream_mod.find(entry.dir)
       local stream_content = stream_path and read(stream_path)
       local server = stream_content and stream_mod.versions_in_text(stream_content).server
-      if server then
+      -- `stream_path` is checked alongside `server` not because it could be
+      -- nil here -- a server version implies the file it was read from --
+      -- but because that implication runs through two `and` chains, and a
+      -- value narrowed only through another local is not narrowed for the
+      -- checker. The file name is used inside.
+      if server and stream_path then
         require("lib.nvim.cross.copy_to_clipboard")(server)
         notify.info(
           ("Tosca Server: %s (copied, from %s)"):format(
@@ -2556,7 +2561,10 @@ local function show_results(results, label)
   })
 end
 
----@param flags { exact: boolean|nil, re: boolean|nil }|nil
+--- Optional-key form (`exact?:`) rather than `exact: boolean|nil`: the
+--- latter makes the KEY required, and `M.grep` passes flags that carry only
+--- `re`. This reads both, defensively, and needs neither.
+---@param flags { exact?: boolean, re?: boolean }|nil
 ---@return string
 local function flag_suffix(flags)
   if flags and flags.exact then
@@ -3340,7 +3348,7 @@ end
 --- source file does NOT get one: at ~40 characters of repo-relative path it
 --- pushed the command itself off the row, and the notify after selecting
 --- names it anyway.
----@param h Lib.Case.CommandHit
+---@param h Lib.Case.CommandHitDeduped
 ---@return string
 local function command_row(h)
   local cmd = h.first_line

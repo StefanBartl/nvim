@@ -389,8 +389,7 @@ end
 --- Markdown-/Box-Zeichen-Filter). Eine zweite Kopie dieser Regeln würde
 --- genau dort auseinanderlaufen, wo es weh tut: zwei Suchen über denselben
 --- Bestand, die unterschiedliche Wörter für relevant halten.
----@param text string
----@return string[]
+---@type fun(text: string): string[]
 M.tokenize = tokenize
 
 return M

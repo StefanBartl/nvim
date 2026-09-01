@@ -210,9 +210,13 @@ local function install_paste_trim()
   local original = vim.paste
   local seen_content = false
 
+  -- Deliberate override: `vim.paste` is core's documented paste entry point,
+  -- and the wrapper documented above calls `original` for every chunk. LuaLS
+  -- reports any write to a `vim.*` field it already types.
   ---@param lines string[]
   ---@param phase integer
   ---@return boolean
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.paste = function(lines, phase)
     if phase == -1 or phase == 1 then
       seen_content = false
