@@ -35,25 +35,51 @@ plugins.add({
         helptags = true,
         cwd_here = true,
         powershell_profile = true,
+        -- `:Lib hover ...` gehoert jetzt hover.nvim und heisst dort `:Hover`.
+        -- lib.nvim.hover liegt noch im Repo, wird aber von niemandem mehr
+        -- `enable()`-t -- die Routen wuerden also einen Hover schalten, der
+        -- keine Autocmds hat, und nichts sichtbar tun. Kann weg, sobald
+        -- lib.nvim.hover geloescht ist (siehe Handover).
+        hover = false,
       })
 
-      -- Path/link hover in JEDEM Filetype. Bewusst hier und nicht in
-      -- markdown.nvim: das Plugin ist ft-lazy auf Markdown, also wuerde eine
-      -- Session, die nie eine .md oeffnet, gar keinen Hover bekommen -- und
-      -- genau das ist der Fall, den dieses Feature abdecken soll (Pfade in
-      -- .txt, in Code-Kommentaren, in :messages). markdown.nvim ergaenzt beim
-      -- Laden seine Link-Erkennung und die #anchor-Previews; images.nvim
-      -- zeichnet Bilder, pdfport rastert PDF-Seiten, gopath.nvim loest
-      -- truncated Pfade auf -- alle optional.
-      --
-      -- Zwei Previews sind bewusst NICHT an: Web-Links (`:Lib hover web on`,
-      -- dazu `:Lib hover web fetch on` fuer Statuscode/Titel) und
-      -- Office-Dokumente (`:Lib hover office on`, konvertiert ueber pdfport
-      -- nach PDF). Beides sind Sitzungsschalter statt Defaults -- Dev-Docs
-      -- bestehen aus Links, und eine Konvertierung startet LibreOffice.
-      require("lib.nvim.hover").enable()
+      -- Der Path/Link-Hover ist seit 2026-09-01 ein eigenes Plugin
+      -- (hover.nvim, siehe unten) -- der `enable()`-Aufruf stand frueher hier.
 
       require("lib.nvim.lastcmd").setup({ experimental = true })
+    end,
+  },
+
+  {
+    -- Path/Link-Hover in JEDEM Filetype. Frueher lib.nvim.hover; ausgezogen
+    -- 2026-09-01, weil es das einzige lib.nvim-Modul war, das Fenster oeffnet,
+    -- Autocmds in jedem Buffer installiert, Keymaps borgt, Usercommands
+    -- mitbringt und vier Geschwister-Plugins namentlich kennt. Die
+    -- Oekosystem-Regel dazu steht in documentation.nvim/docs/ECOSYSTEM.md.
+    --
+    -- `lazy = false`, weil `enable()` aus etwas heraus laufen muss, das nicht
+    -- lazy ist: markdown.nvim ist ft-lazy auf Markdown, also haette eine
+    -- Session, die nie eine .md oeffnet, gar keinen Hover -- und genau das ist
+    -- der Fall, den das Feature abdecken soll (Pfade in .txt, in
+    -- Code-Kommentaren, in :messages). `priority` unter lib.nvim, weil das
+    -- eine harte Dependency ist.
+    --
+    -- Was NICHT default an ist und warum: Web-Links (`:Hover links web on`,
+    -- dazu `:Hover links web fetch on` fuer Statuscode/Titel -- letzteres ist
+    -- eine Disclosure, jeder gestreifte Link wird eine Anfrage an seinen Host)
+    -- und Office-Dokumente (`:Hover office on`, konvertiert ueber pdfport nach
+    -- PDF -- kostet einen LibreOffice-Start pro Dokument).
+    --
+    -- Wenn der Hover beim Lesen stoert, ist `:Hover mode manual` der Schalter:
+    -- alle Previews bleiben, nur nichts oeffnet mehr von selbst. `:Hover show`
+    -- oder `keymaps.show` beantworten dann weiterhin alles, Web-Links
+    -- inklusive. `:Hover status` zeigt, was gerade an ist.
+    "StefanBartl/hover.nvim",
+    lazy = false,
+    priority = 900,
+    dependencies = { "StefanBartl/lib.nvim" },
+    config = function()
+      require("hover").enable()
     end,
   },
 
@@ -698,6 +724,7 @@ plugins.add({
           "StefanBartl/filetree.nvim",
           "StefanBartl/github_stats.nvim",
           "StefanBartl/gopath.nvim",
+          "StefanBartl/hover.nvim",
           "StefanBartl/language.nvim",
           "StefanBartl/lib.nvim",
           "StefanBartl/lsp.nvim",
