@@ -122,32 +122,30 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **language.nvim steht auf Null** (34 -> 28 -> 0, 2026-09-02), damit
-vierzehn der 32 Workspaces im Umfang.
+*Nichts.* **lsp.nvim steht auf Null** (35 -> 0, 2026-09-02), damit
+fünfzehn der 32 Workspaces im Umfang.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**lsp.nvim vertikal** (35) -- der Rest des dritten Durchgangs (V3, 172 -> 35),
-also genau das, was dort bewusst liegen blieb. Es ist damit das größte
-verbliebene Plugin und zugleich das, an dem zwei der offenen
-Entscheidungspunkte hängen:
+**github_stats.nvim** (33) oder **cascade.nvim** (32) -- die beiden größten
+verbliebenen Plugins. github_stats ist der ergiebigere: 17 seiner 33 liegen in
+`lua/`, bei cascade sind es 17 von 32, aber davon allein **14
+`duplicate-set-field`**, elf davon in einer einzigen Testdatei. images hat
+gezeigt, wie dieser Posten ausgeht -- Doubles, unterdrückt mit Begründung, in
+Minuten erledigt und ohne Erkenntnis.
 
-- **Offen-Punkt 6** (`LspMod.*` gegen Neovims eigene LSP-Typen) -- drei der 35
-  liegen in `languages/webdev/typescript.lua` und sind genau diese Kollision.
-- **Offen-Punkt 5** (`luassert` in lib.nvim aufweiten) -- verändert die Zahlen
-  **jedes** Repos mit Testsuite und gehört deshalb bewusst begonnen.
+| Repo | gesamt | in `lua/` | größte Regel |
+|---|---:|---:|---|
+| github_stats.nvim | 33 | 17 | `param-type-mismatch` 14 |
+| cascade.nvim | 32 | 17 | `duplicate-set-field` 14 |
+| pickers.nvim | 32 | -- | `param-type-mismatch` 8 |
+| replacer.nvim | 32 | -- | `param-type-mismatch` 12, `undefined-field` 11 |
 
-Die Verteilung, am 2026-09-02 nachgemessen: **25 in `lua/`, 10 in `TESTS/`**,
-und ungewöhnlich flach -- größte Regel `param-type-mismatch` 12, danach
-`assign-type-mismatch` 7, dann nur noch Dreier und kleiner. Anders als in
-language, wo sechs Ursachen 28 Befunde trugen, sind das hier viele kleine.
-
-**Danach github_stats.nvim** (33) oder **cascade.nvim** (32). cascade ist der
-billigste Posten, aber der flachste: 14 der 32 sind `duplicate-set-field`,
-davon 11 allein in `TESTS/lib_util_spec.lua`. images hat gezeigt, wie dieser
-Posten ausgeht -- Doubles, unterdrückt mit Begründung.
+replacer.nvim ist der interessanteste Außenseiter: **elf `undefined-field`**
+sind die Signatur, die in filetree und den S6-Repos jedes Mal Aufrufe zutage
+gefördert hat, die nie funktioniert haben können.
 
 **Danach die nvim-Config selbst** (120) -- das größte Einzelvorkommen. Es
 ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
@@ -156,34 +154,38 @@ Worktrees darunter. Ein vertikaler Durchgang dort will erst die Frage
 geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
-**Vier Dinge, die die letzten sieben Durchgänge gelehrt haben** und die den
+**Fünf Dinge, die die letzten acht Durchgänge gelehrt haben** und die den
 Einstieg abkürzen:
 
 - **Zuerst nach verirrten Doc-Blöcken suchen.** Sechs Repos in Folge hatten
   welche, und sie kosten je fünf bis acht Befunde aus einer Ursache.
-  `undefined-doc-param` und `duplicate-doc-param` sind ihre Signatur. In
-  images war es dreimal derselbe Griff: ein nachgerüsteter Parameter, dessen
-  Doc-Block angehängt statt bearbeitet wurde.
+  `undefined-doc-param` und `duplicate-doc-param` sind ihre Signatur.
 - **Dann die `.luarc.json` lesen.** Bei spotlight steckten dreizehn Befunde
   in `workspace.library`, bei sandbox zeigte `runtime.path` auf ein
   Verzeichnis, das es nur auf Windows gibt -- und bei language warf sie die
   Injektion komplett weg, das **siebte** Repo aus Cluster L. Sechs Befunde
   waren dort gar keine, sondern die Messung.
-- **`vim.health.info` prüfen.** Fünf Repos in Folge haben ihm eine
-  Advice-Liste als zweites Argument gegeben, die es wegwirft. Der Befund heißt
-  `redundant-parameter` und klingt nach Stil; er ist ein fehlendes Feature.
-  In lsp.nvim steht genau ein `redundant-parameter`, in `health.lua`.
+- **`vim.health.info` prüfen.** Jetzt **sechs** Repos in Folge, zuletzt
+  lsp.nvim: eine Advice-Liste als zweites Argument, die die Funktion wegwirft.
+  Der Befund heißt `redundant-parameter` und klingt nach Stil; er ist ein
+  fehlendes Feature. In einer `health.lua` ist er nie Stil.
 - **Ein `deprecated` ist nicht automatisch eine Schuld.** In language waren
-  alle drei bewusste Fallbacks für Neovim 0.9/0.10 -- das README nennt
-  `>= 0.9`, und `vim.diagnostic.jump` gibt es erst ab 0.11. Solche Stellen
-  wollen eine Begründung, keine Reparatur. Von den 23 im Gesamtlauf dürfte
-  ein Teil aus demselben Grund dort stehen.
+  alle drei bewusste Fallbacks (README: Neovim `>= 0.9`), in lsp.nvim waren
+  zwei von dreien which-key-v2-Fallbacks und nur einer echt migrierbar. Erst
+  die Mindestversion im README lesen, dann entscheiden.
+- **Eine Bedingung, die der Prüfer beanstandet, prüft manchmal gar nichts.**
+  Der ergiebigste Fund in lsp.nvim war ein `param-type-mismatch` an einem
+  `supports_method(...)`: der Name war keine LSP-Methode, und Neovim antwortet
+  auf unbekannte Namen mit **`true`**. Wo ein Typfehler an einer *Bedingung*
+  steht, lohnt die Frage, was sie im Ernstfall zurückgibt -- nicht nur, wie
+  man den Typ glattzieht.
 
 ---
 ### Erledigt
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| LS | **lsp.nvim** -- vertikal (2026-09-02) | **35 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 23 Specs grün (372 Fälle). Der flachste Posten der Runde und der ergiebigste seit filetree: **drei Befunde waren Bedingungen, die nie etwas ausgeschlossen haben.** `workspace_diagnostics` bewachte sein `didOpen` mit `supports_method("textDocumentSync/openClose")` -- kein Methodenname, sondern ein Capability-Pfad, und Neovim antwortet auf unbekannte Namen mit `true`; `loclist` übergab `win_id`, wo Neovim `winnr` liest; `:LspDoctor` prüfte `publishDiagnosticsProvider`, eine Capability, die es im LSP nicht gibt. Dazu **Offen-Punkt 6 beantwortet** (`LspMod.*` beschreibt nichts, was Neovim nicht führt) und `vim.health.info` zum sechsten Mal. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | LG | **language.nvim** -- vertikal (2026-09-02) | **34 -> 28 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle vier Specs grün. Der Einstieg war nicht der geplante: die `.luarc.json` setzte `workspace.library` selbst und warf die Injektion weg -- Cluster L zum **siebten** Mal. LuaLS sah hier kein einziges Plugin, und sieben Befunde waren nur das (`Lib.Keymap.Action`/`.Registered` und vier Feldzugriffe darauf). Danach sechs Ursachen für 28: vier `pcall(vim.cmd, ...)` (Cluster E hier leer), acht ungeprüfte `vim.uv.new_timer()`, eine Mehrfachrückgabe, die alles-oder-nichts ist und als vier Optionals deklariert war (sechs Befunde aus zwei Zeilen), Form A aus Offen-Punkt 3 an beiden hiesigen Stellen -- dabei fiel auf, dass `custom.cmd` mit zwei Parametern deklariert und mit drei gerufen wird. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | IM | **images.nvim** -- vertikal (2026-09-01) | **37 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 23 Specs grün. Zwei echte Fehler: `scale.compute`/`fit_cells` bewachten ihren dokumentierten Rückfall mit `a.width > 0` -- ohne ImageMagick ist das ein Vergleich mit `nil` und damit ein Fehler statt eines Rückfalls, erreichbar über `:Image compare`; und `vim.health.info` warf die drei tesseract-Installationshinweise weg (derselbe Fund zum fünften Mal). Dazu die Klassenfrage dahinter: `Images.Scale.Dims` behauptete zwei Maße, die `info.collect` nur mit ImageMagick liefert -- aufgeteilt in `MaybeDims` und `Dims : MaybeDims`. **LuaLS entscheidet Klassenzuweisbarkeit über den Namen, nicht über die Gestalt.** Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | A | **`assert`-Typ**, und die Library-Auflösung dahinter | **6344 -> 3204** über alle 33 Workspaces. `.luarc.json` ersetzt `workspace.library` komplett, deshalb kam lsp.nvims Injektion in 31 Repos nie an. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -225,7 +227,6 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| lsp.nvim | 35 | `param-type-mismatch` 12, `assign-type-mismatch` 7 |
 | github_stats.nvim | 33 | `param-type-mismatch` 14, `need-check-nil` 10 |
 | cascade.nvim | 32 | `duplicate-set-field` 14, `param-type-mismatch` 9 |
 | pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
@@ -234,12 +235,12 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
 | *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(vierzehn Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, gopath, images, **language**, lib, mdview, open, pdfport, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **435** | |
+| *(fünfzehn Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, gopath, images, language, lib, **lsp**, mdview, open, pdfport, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **400** | |
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
-minus die 37 von images, minus die 34 von language -- alle drei stehen
-inzwischen auf 0. Bei language waren es auf korrigierter Messgrundlage nur
+minus die 37 von images, minus die 34 von language, minus die 35 von
+lsp -- alle vier stehen inzwischen auf 0. Bei language waren es auf korrigierter Messgrundlage nur
 28; die Summe rechnet mit der geführten 34, weil die übrigen Zeilen dieser
 Tabelle ebenfalls auf der jeweils eigenen Grundlage stehen. **Wo ein Repo
 `workspace.library` noch selbst setzt, ist seine Zahl mit Vorsicht zu lesen.** Die Zeile der
@@ -263,9 +264,13 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **lsp.nvim vertikal** (35) -- vorgeschlagener nächster Schritt, siehe
-   oben; 25 in `lua/`, 10 in `TESTS/`, dazu Offen-Punkt 6 (drei Befunde in
-   `languages/webdev/typescript.lua`) und der Einstieg in Offen-Punkt 5
+1. **github_stats.nvim** (33) oder **cascade.nvim** (32) -- vorgeschlagener
+   nächster Schritt, siehe oben. github_stats ist der ergiebigere;
+   cascades 32 sind zu 14 `duplicate-set-field` aus einer Testdatei.
+   **replacer.nvim** (32) ist der interessanteste Außenseiter: elf
+   `undefined-field` sind die Signatur, die in filetree und den S6-Repos
+   jedes Mal Aufrufe zutage gefördert hat, die nie funktioniert haben
+   können
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
    Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
@@ -296,23 +301,36 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    darauf. neo-tree und nvim-tree führen interne Zeilenindizes, oil und netrw
    müssten ihren eigenen Puffer parsen: eine Designfrage, keine Aufräumarbeit.
    **Entscheidung offen**, siehe [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md)
-5. **`luassert`s Assertionen in lib.nvim weiter aufweiten** --
-   `lua/lib/@types/luassert.lua` deckt acht Namen ab; lsp.nvim benutzt
-   zusätzlich `are.equal` (237-mal), `are.same` (97) und `is_string`. Die
-   Datei sagt selbst, dass neue Namen dort nachzutragen sind. Wirkt auf jedes
-   Repo mit Testsuite
-6. **`LspMod.*` gegen Neovims eigene LSP-Typen** -- `lsp.nvim`s
-   `@types/subsystem.lua` führt `LspMod.Client` und
-   `LspMod.TextDocumentIdentifier` parallel zu `vim.lsp.Client` und
-   `lsp.TextDocumentIdentifier`. Solange `vim_lsp.lua` danebenlag, fiel das
-   nicht auf; jetzt kollidiert es dreimal in `languages/webdev/typescript.lua`.
-   Die Frage ist, ob `LspMod.*` noch etwas beschreibt, das Neovim nicht führt
+5. ~~**`luassert`s Assertionen in lib.nvim weiter aufweiten**~~ --
+   **gegenstandslos, nachgemessen 2026-09-02.** Die Zahlen des Punkts stimmen
+   aufs Wort (`are.equal` 237, `are.same` 97, davon 102 Aufrufe **mit**
+   Failure-Message, also genau die Form, die laut der Typdatei
+   `redundant-parameter` auslöst) -- nur löst sie keinen aus. Im gemessenen
+   Lauf steht `redundant-parameter` über lsp.nvim auf **eins**, und das ist
+   `health.lua`. Seit `${3rd}/luassert` in der Injektion liegt
+   (Erledigt-Punkt M) ist der Zustand weg; die Aufweitung hätte die Zahlen
+   keines Repos verändert
+6. ~~**`LspMod.*` gegen Neovims eigene LSP-Typen**~~ -- **beantwortet und
+   erledigt 2026-09-02.** Die Frage war, ob `LspMod.*` noch etwas beschreibt,
+   das Neovim nicht führt. Feld für Feld nachgesehen: **nein**, in allen
+   sechs Fällen (`Client`, `Client.Capabilities`, `TextDocumentIdentifier`,
+   `Position`, `Range`, `CodeAction.Params`), und Neovims Fassungen sind
+   präziser. Ein zweiter Name ist dabei nicht gratis: LuaLS entscheidet
+   Klassenzuweisbarkeit über den **Namen**, nie über die Gestalt -- ein
+   `LspMod.Client` ist aus einem `vim.lsp.Client` grundsätzlich nicht
+   zuweisbar. Nebenbefund: `publishDiagnosticsProvider` in
+   `LspMod.Client.Capabilities` war eine **erfundene** Capability, und
+   `:LspDoctor` hat sie abgefragt
 7. **`pcall(vim.cmd, ...)`** (E) -- **11 offen**: `markdown` 6, dazu je eines
    in `color_my_ascii`, `mdview`, `migrate` und zwei in der nvim-Config.
    Erledigt sind 68 (lib 10, lsp 4, filetree 15, fileops 16, sessions 4,
    runtime-analysis 9, gopath 2, images 2, language 4, emojis 1, open 1)
    -- die 60 aus dem Erstscan waren eine Schätzung. Mechanisch, fällt beim
-   jeweiligen Repo an. **Nicht blind auf `vim.cmd.<name>` umschreiben:** in
+   jeweiligen Repo an. **`vim.cmd` ist nicht die einzige `__call`-Tabelle:**
+   in lsp.nvim trug `pcall(vim.lsp.config, ...)` denselben Befund mit
+   demselben Wortlaut. Wer nach dem Cluster sucht, sucht nach
+   `Cannot assign 'table' to parameter 'fun(...any):...unknown'`, nicht nach
+   `vim.cmd`. **Nicht blind auf `vim.cmd.<name>` umschreiben:** in
    images tauscht ein Spec `vim.cmd` selbst und liest den Kommandonamen aus
    dem ersten Argument -- die Unterkommando-Form hätte den Test still blind
    gemacht. Die Closure-Form ist die sichere
@@ -338,11 +356,20 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
     Repos sind aber zweispaltig eingerückt, ein `stylua .` schreibt dort also
     das ganze Repo um. Aufgefallen am 2026-09-01, nicht angefasst -- eine
     Formatierungsentscheidung, kein Diagnose-Befund
-13. **`tests/run_tests.sh` in neotree-fs-refactor.nvim meldet Erfolg zu früh**
-    (**ausserhalb des Umfangs**, nur der Vollständigkeit halber notiert) --
-    "All tests passed" auch dann, wenn `plenary.test_harness` gar nicht
-    geladen werden konnte: nvim beendet sich mit 0, `set -e` sieht nichts.
-    Dazu hängt `PlenaryBustedDirectory` headless unter Windows
+13. **Test-Runner melden fehlende Voraussetzungen nicht** -- am 2026-09-02
+    in lsp.nvim auf eine konkrete Ursache zurückgeführt, und damit kein
+    Windows-Problem mehr. `TESTS/minimal_init.lua` löst plenary und lib.nvim
+    über `PLENARY_PATH`/`LIB_NVIM_PATH` auf; ohne sie lädt
+    `runtime plugin/plenary.vim` nichts, `PlenaryBustedFile` existiert als
+    Kommando nicht, und **headless nvim meldet das nicht, es wartet** --
+    sieben Minuten ohne ein Byte Ausgabe. Mit gesetzten Variablen laufen die
+    23 Specs durch (372 Fälle, 0 Fehler). Der gemeinsame Nenner mit
+    neotree-fs-refactor (dort: "All tests passed" **ohne** geladenen Harness)
+    ist nicht das Betriebssystem, sondern dieselbe Lücke an derselben Stelle:
+    beide Male sieht das Ergebnis aus wie "die Tests laufen gerade". **Ein
+    Runner gehört so gebaut, dass ein fehlender Harness scheitert und nicht
+    wartet oder grün meldet** -- der Rest von neotree-fs-refactor liegt
+    weiterhin ausserhalb des Umfangs
 14. Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
     Annotationsfehler)
 

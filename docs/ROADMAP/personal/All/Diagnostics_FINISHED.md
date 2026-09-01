@@ -9,6 +9,15 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-02](#2026-09-02)
+    - [lsp.nvim -- 35 auf 0, und drei Waechter, die nie etwas ausgeschlossen haben](#lspnvim-35-auf-0-und-drei-waechter-die-nie-etwas-ausgeschlossen-haben)
+      - [`supports_method("textDocumentSync/openClose")` -- die Wache, die immer Ja sagt](#supports_methodtextdocumentsyncopenclose-die-wache-die-immer-ja-sagt)
+      - [`win_id`, wo Neovim `winnr` liest](#win_id-wo-neovim-winnr-liest)
+      - [`publishDiagnosticsProvider` -- eine Capability, die es nicht gibt](#publishdiagnosticsprovider-eine-capability-die-es-nicht-gibt)
+      - [Offen-Punkt 6, beantwortet: `LspMod.*` beschreibt nichts, was Neovim nicht fuehrt](#offen-punkt-6-beantwortet-lspmod-beschreibt-nichts-was-neovim-nicht-fuehrt)
+      - [Offen-Punkt 5, nachgemessen: der Zustand existiert nicht mehr](#offen-punkt-5-nachgemessen-der-zustand-existiert-nicht-mehr)
+      - [`vim.health.info` -- das sechste Repo in Folge](#vimhealthinfo-das-sechste-repo-in-folge)
+      - [Der Rest -- neun kleine Ursachen](#der-rest-neun-kleine-ursachen)
+      - [Nachtrag: der Runner haengt nicht „unter Windows“, er haengt ohne zwei Env-Variablen](#nachtrag-der-runner-haengt-nicht-unter-windows-er-haengt-ohne-zwei-env-variablen)
     - [language.nvim -- 34 auf 0, und die siebte `.luarc.json`, die ihre Library wegwarf](#languagenvim-34-auf-0-und-die-siebte-luarcjson-die-ihre-library-wegwarf)
       - [Sechs waren gar keine Befunde, sondern die Messung](#sechs-waren-gar-keine-befunde-sondern-die-messung)
       - [Cluster E, vier Stellen, und warum `vim.cmd` kein `function` ist](#cluster-e-vier-stellen-und-warum-vimcmd-kein-function-ist)
@@ -169,6 +178,280 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-02
+
+---
+
+### lsp.nvim -- 35 auf 0, und drei Waechter, die nie etwas ausgeschlossen haben
+
+*(war: Diagnostics-Report Abschnitt 0, "lsp.nvim vertikal" -- der Rest des
+dritten Durchgangs V3, 172 -> 35)*
+
+**35 -> 0**, in zwei Laeufen bestaetigt. `stylua --check` sauber.
+`worse: nothing`.
+
+Der Posten war als der flachste der verbliebenen angekuendigt -- 35 Befunde,
+groesste Regel `param-type-mismatch` 12, danach nur Siebener und kleiner, keine
+Haeufung, die sich auf eine Zeile zurueckfuehren liesse. Das hat gestimmt und
+war trotzdem der ergiebigste Durchgang seit filetree: **drei der Befunde waren
+Bedingungen, die nie etwas ausgeschlossen haben**, und alle drei in Code, der
+taeglich laeuft.
+
+---
+
+#### `supports_method("textDocumentSync/openClose")` -- die Wache, die immer Ja sagt
+
+`lsp.core.workspace_diagnostics` ist das Modul, das `<leader>wq` ueberhaupt
+erst etwas zu zeigen gibt: es schickt `textDocument/didOpen` fuer jede Datei
+des Workspace, damit der Server auch das diagnostiziert, was gerade in keinem
+Puffer offen ist. Davor stand:
+
+```lua
+if not client:supports_method("textDocumentSync/openClose") then
+  return
+end
+```
+
+`textDocumentSync/openClose` ist **keine LSP-Methode**. Es ist ein
+Capability-Pfad -- `server_capabilities.textDocumentSync.openClose`. Der
+Prueferbefund war ein `param-type-mismatch` gegen die Union der 77 echten
+Methodennamen, und das klingt nach Annotationspflege.
+
+Der Blick in Neovims `Client:supports_method` sagt, was der Aufruf wirklich
+tut. Die letzte Zeile der Funktion:
+
+```lua
+-- if we don't know about the method, assume that the client supports it.
+-- This needs to be at the end, so that dynamic_capabilities are checked first
+return required_capability == nil
+```
+
+Fuer einen erfundenen Namen ist `required_capability` nil, also ist die Antwort
+**`true`**. Die Wache hat nie einen Server ausgeschlossen -- auch keinen, der
+`openClose` gar nicht anbietet. Sie sah aus wie eine Pruefung und war eine
+Zusicherung.
+
+Der Fix ist exakt, weil Neovim die Zuordnung selbst fuehrt:
+
+```lua
+['textDocument/didOpen'] = { 'textDocumentSync', 'openClose' },
+```
+
+`client:supports_method("textDocument/didOpen")` prueft also genau die
+Capability, die die alte Zeile prueft*en wollte* -- und ist zugleich die
+Notification, die die Funktion tatsaechlich sendet.
+
+**Die Lehre ist nicht "Tippfehler".** Ein `supports_method` mit einem Namen,
+den Neovim nicht kennt, ist stumm wahr. Wer eine Capability meint, muss den
+Methodennamen nehmen, den Neovim darauf abbildet -- oder die Capability direkt
+lesen.
+
+---
+
+#### `win_id`, wo Neovim `winnr` liest
+
+`lsp.diagnostics.loclist.to_loc` baut seine Optionen so:
+
+```lua
+local locopts = {
+  open = (opts.open ~= false),
+  win_id = opts.win_id or 0,
+  bufnr = opts.bufnr,
+  ...
+```
+
+Neovims `vim.diagnostic.setloclist` liest `opts.winnr`. `win_id` faellt still
+durch. Und `bufnr` ebenso, aus einem anderen Grund -- fuer eine Location-Liste
+leitet `set_list` den Puffer aus dem Fenster ab:
+
+```lua
+local winnr = opts.winnr or 0
+local bufnr
+if loclist then
+  bufnr = api.nvim_win_get_buf(winnr)
+end
+```
+
+Sichtbar war davon bisher nichts, weil die einzige Aufrufstelle
+`win_id = 0` uebergibt und Neovims Vorgabe ebenfalls 0 ist. Die dokumentierte
+Option war trotzdem tot: ein Aufrufer mit einer anderen Fenster-ID haette sie
+stillschweigend verloren.
+
+Dazu kommt der Kompatibilitaetspfad darueber, der auf 0.10 zeigt, waehrend das
+README **Neovim 0.11+** verlangt. Er ist nicht angefasst worden -- er ist
+tot, aber sein Entfernen ist eine Verhaltensentscheidung und kein
+Diagnose-Befund.
+
+---
+
+#### `publishDiagnosticsProvider` -- eine Capability, die es nicht gibt
+
+`:LspDoctor` warnt, wenn mehrere Server dieselbe Aufgabe beanspruchen:
+
+```lua
+if caps.diagnosticProvider or caps.publishDiagnosticsProvider then
+```
+
+`publishDiagnosticsProvider` kommt in Neovims gesamtem Protokoll-Meta **null
+Mal** vor. Es gibt sie im LSP nicht: Push-Diagnostics
+(`textDocument/publishDiagnostics`) haben ueberhaupt keine Capability, ein
+Server sendet sie einfach. Der zweite Zweig war immer `nil`.
+
+Der Fund ist unangenehmer als die anderen beiden, weil er sich nicht
+"reparieren" laesst -- der `or` ist raus, aber die Erkennung sieht weiterhin
+nur Pull-Diagnostics. Das steht jetzt als Kommentar an der Zeile, damit der
+naechste Leser nicht dasselbe Feld noch einmal erfindet.
+
+Sichtbar wurde er ueberhaupt erst durch den Punkt unten: solange
+`LspMod.Client.Capabilities` danebenlag, war `publishDiagnosticsProvider` ein
+deklariertes Feld -- der Report hat die Erfindung mitgetragen.
+
+---
+
+#### Offen-Punkt 6, beantwortet: `LspMod.*` beschreibt nichts, was Neovim nicht fuehrt
+
+Die offene Frage war, "ob `LspMod.*` noch etwas beschreibt, das Neovim nicht
+fuehrt". Feld fuer Feld nachgesehen, lautet die Antwort **nein**:
+
+| `LspMod.*` | Neovim | |
+|---|---|---|
+| `LspMod.Client` | `vim.lsp.Client` | jedes der neun Felder, dazu `request`/`supports_method` als Methoden |
+| `LspMod.Client.Capabilities` | `lsp.ServerCapabilities` | die vollstaendige Menge statt der elf, die wir zufaellig benutzen |
+| `LspMod.TextDocumentIdentifier` | `lsp.TextDocumentIdentifier` | identisch |
+| `LspMod.Position` / `LspMod.Range` | `lsp.Position` / `lsp.Range` | identisch |
+| `LspMod.CodeAction.Params` | `lsp.CodeActionParams` | identisch |
+
+Neovims Fassungen sind dabei praeziser, nicht nur gleichwertig:
+`offset_encoding` ist dort `'utf-8'|'utf-16'|'utf-32'` statt `string|nil`,
+`workspace_folders` ist `lsp.WorkspaceFolder[]` statt einer Inline-Tabelle.
+
+Und die Kosten des Parallelnamens sind keine Geschmacksfrage. **LuaLS
+entscheidet Klassenzuweisbarkeit ueber den Namen, nicht ueber die Gestalt** --
+dieselbe Lehre wie bei `Images.Scale.Dims`. Ein `LspMod.Client` kann deshalb
+niemals aus einem `vim.lsp.Client` zugewiesen werden, so deckungsgleich die
+Felder auch sind. Genau daran ist `languages/webdev/typescript.lua` dreimal
+haengengeblieben.
+
+Nebenbefund beim Aufraeumen: `integrations/inc_rename/setup.lua` fuehrte eine
+Klasse namens `LspVersionedLspMod.TextDocumentIdentifier` -- die Narbe eines
+Suchen-und-Ersetzens, das `TextDocumentIdentifier` durch
+`LspMod.TextDocumentIdentifier` getauscht und dabei das `LspVersioned`-Praefix
+stehen gelassen hat. Neovim hat den Typ als
+`lsp.VersionedTextDocumentIdentifier`.
+
+---
+
+#### Offen-Punkt 5, nachgemessen: der Zustand existiert nicht mehr
+
+Der Punkt sagt, `luassert`s Assertionen in lib.nvim seien aufzuweiten, weil
+lsp.nvim zusaetzlich `are.equal` (237-mal), `are.same` (97) und `is_string`
+benutzt. Nachgezaehlt stimmen die Zahlen aufs Wort -- 237 und 97, davon 102
+Aufrufe **mit** Failure-Message, also genau die Form, die laut der
+Typdatei `redundant-parameter` ausloest.
+
+Sie loest keinen aus. Im gemessenen Lauf steht `redundant-parameter` auf
+**eins**, und das ist `health.lua`. Der Zustand, den der Punkt beschreibt, ist
+seit der Injektions-Korrektur (`${3rd}/luassert` in der Library, Erledigt-Punkt
+M) nicht mehr da. **Der Punkt ist gegenstandslos, nicht offen** -- und die
+Aufweitung haette die Zahlen keines Repos veraendert.
+
+---
+
+#### `vim.health.info` -- das sechste Repo in Folge
+
+```lua
+health.info(("project override: %s"):format(layers.project), {
+  "Merged over your setup() options. Allowed keys: servers, diagnostics, ...",
+})
+```
+
+`vim.health.info` nimmt ein Argument. Die Liste der erlaubten Keys eines
+Projekt-Overrides -- die einzige Stelle, an der sie dem Benutzer je gezeigt
+wurde -- hat kein `:checkhealth` je ausgegeben.
+
+Damit ist es das **sechste** Repo mit demselben Fund, nach documentation,
+runtime-analysis, images und zweien aus der Sechser-Runde. Die Einstiegsregel
+im Report ist entsprechend zu lesen: `redundant-parameter` in einer
+`health.lua` ist nie Stil.
+
+---
+
+#### Der Rest -- neun kleine Ursachen
+
+- **Zwei `pcall` auf eine `__call`-Tabelle.** `vim.lsp.config` ist dieselbe
+  Gestalt wie `vim.cmd`: eine Tabelle mit Metamethode, die `pcall`s
+  `fun(...any):...unknown` nicht erfuellt. Closure-Form, wie in Cluster E.
+- **`---@type table` auf einem Local verschiebt den Befund nur.** Zwei Stellen
+  in `config/init.lua` trugen genau diesen Reparaturversuch samt Kommentar:
+  die Deklaration ist nicht das Problem, die *Zuweisung* der Union ist es. Ein
+  `---@cast` auf den Wert behauptet, was gilt, statt es zu deklarieren.
+- **`make_range_params` liefert keine CodeActionParams.** `lightbulb` liess
+  sich eine Range-Anfrage bauen und haengte `context` daran -- ein Feld, das
+  die Gestalt nicht hat. Jetzt als `lsp.CodeActionParams` zusammengesetzt.
+- **Ein `deprecated` war echt.** `vim.lsp.get_log_path()` ist bei 0.11+
+  ersetzbar durch `vim.lsp.log.get_filename()`, auf das es ohnehin
+  weiterleitet. Die beiden anderen sind which-key v2s `register`, erreichbar
+  nur, wenn v3s `add` fehlt -- also Absicht, unterdrueckt mit Begruendung.
+- **Ein bewusster Griff in fremde private Felder** (`trouble`s Patch von
+  `vim.treesitter.highlighter._on_win`/`_on_line`) trug drei Befunde, die alle
+  dasselbe Wahre sagen. Ein `---@cast` auf ein untypisiertes Handle sagt die
+  Absicht einmal, statt sie dreimal zu unterdruecken.
+- **Zwei Narrowing-Verluste**: eine Bedingung, deren Beweis in einer Variablen
+  steckt, die der Pruefer nicht in den Zweig traegt; und ein Feld, das nach
+  seinem eigenen `type()`-Test noch zweimal frisch gelesen wird.
+- **`(string|{name: string})[]` in einem `fun()`-Rueckgabetyp** wird als
+  Union `string | {name:string}[]` gelesen, und diese Gestalt erfuellt
+  `pcall`s Parameter nicht. Ein benannter Alias macht das Array eindeutig --
+  derselbe Griff wie `Language.Translate.Span` in language.nvim.
+- **Ein `CodeActionKind`, den Neovims Meta nicht kennt** (`source.organizeImports.astro`).
+  Das Protokoll definiert CodeActionKind als offenes String-Enum; der Befund
+  ist sachlich falsch, unterdrueckt mit Begruendung.
+- **Die Tests**: drei Handler-Fakes waren ein Feld zu kurz (`lsp.HandlerContext`
+  verlangt `method`) -- ergaenzt statt unterdrueckt, der Fake ist damit naeher
+  an dem, was der Wrapper in Produktion bekommt. Zwei Faelle uebergeben
+  absichtlich `nil` und heissen auch so ("returns nothing without a shared
+  table"). Ein `stub(name, nil)` ist die dokumentierte Art, ein fehlendes
+  Modul zu simulieren -- die Signatur sagt das jetzt.
+
+---
+
+#### Nachtrag: der Runner haengt nicht "unter Windows", er haengt ohne zwei Env-Variablen
+
+Der CI-Befehl des Repos hat headless **kein einziges Byte** ausgegeben und
+musste nach sieben Minuten abgebrochen werden -- scheinbar dieselbe Falle wie
+in Offen-Punkt 13 und in sandbox (Offen-Punkt 1c). Diesmal ist die Ursache
+gefunden, und sie ist konkreter als "haengt unter Windows".
+
+`TESTS/minimal_init.lua` loest plenary und lib.nvim ueber Umgebungsvariablen
+auf, statt Pfade fest zu verdrahten:
+
+```lua
+prepend_env("PLENARY_PATH")
+prepend_env("LIB_NVIM_PATH")
+vim.cmd("runtime plugin/plenary.vim")
+```
+
+Sind die nicht gesetzt -- und lokal ist das der Normalfall, die Workflow-Datei
+setzt sie --, liegt plenary nicht auf dem `runtimepath`, `runtime
+plugin/plenary.vim` laedt nichts, und `PlenaryBustedFile` existiert als
+Kommando nicht. **Headless nvim meldet das nicht, es wartet.**
+
+Mit gesetzten Variablen laeuft alles:
+
+```bash
+PLENARY_PATH=.../lazy/plenary.nvim LIB_NVIM_PATH=E:/repos/lib.nvim \
+  nvim --headless --noplugin -u TESTS/minimal_init.lua \
+       -c "PlenaryBustedFile TESTS/lsp/<spec>.lua" </dev/null
+```
+
+**23 Specs, 372 Faelle, 0 Fehler, 0 Errors.** Gegengeprueft, dass das Haengen
+Bestand ist und nicht aus diesem Durchgang stammt: auf dem unveraenderten
+`9b8a6e6` haengt derselbe Aufruf genauso.
+
+Das aendert den Charakter von Offen-Punkt 13. Der gemeinsame Nenner der drei
+Repos ist nicht das Betriebssystem, sondern **ein Runner, der fehlende
+Voraussetzungen nicht meldet**: in neotree-fs-refactor meldet er faelschlich
+Erfolg, hier wartet er stumm. Beides ist dieselbe Luecke an derselben Stelle,
+und beide Male sieht das Ergebnis aus wie "die Tests laufen gerade".
 
 ---
 
