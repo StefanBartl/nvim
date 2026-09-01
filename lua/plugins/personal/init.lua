@@ -45,6 +45,12 @@ plugins.add({
       -- Laden seine Link-Erkennung und die #anchor-Previews; images.nvim
       -- zeichnet Bilder, pdfport rastert PDF-Seiten, gopath.nvim loest
       -- truncated Pfade auf -- alle optional.
+      --
+      -- Zwei Previews sind bewusst NICHT an: Web-Links (`:Lib hover web on`,
+      -- dazu `:Lib hover web fetch on` fuer Statuscode/Titel) und
+      -- Office-Dokumente (`:Lib hover office on`, konvertiert ueber pdfport
+      -- nach PDF). Beides sind Sitzungsschalter statt Defaults -- Dev-Docs
+      -- bestehen aus Links, und eine Konvertierung startet LibreOffice.
       require("lib.nvim.hover").enable()
 
       require("lib.nvim.lastcmd").setup({ experimental = true })

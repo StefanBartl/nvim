@@ -13,10 +13,53 @@ repo, unlike published standalone plugins, opted for alongside not replace).
 | `:Lib deps show [plugin]` | Declared external tools for `plugin` (why each matters, present/missing), or every plugin shipping a spec if omitted | none — new surface |
 | `:Lib deps install plugin` | Compose an install command for whatever `plugin` is missing, confirm, hand off to a terminal | none — new surface |
 | `:Lib hover toggle` / `on` / `off` | Den Pfad-/Link-Hover fuer diese Sitzung aus- und wieder einschalten; `on`/`off` sagen es ausdruecklich, statt zu kippen |
+| `:Lib hover web toggle` / `on` / `off` | Whether http(s) links hover at all. Off by default — see below | none — new surface |
+| `:Lib hover web fetch toggle` / `on` / `off` | Whether a hovered link is fetched for its status code, `<title>` and description. Implies `web on` | none — new surface |
+| `:Lib hover office toggle` / `on` / `off` | Whether `.docx`/`.xlsx`/`.pptx`/… are rendered through a PDF (pdfport.nvim + LibreOffice) instead of showing a badge | none — new surface |
 
 Gated by `nvim_usrcmds.setup({ lib_verb = true })` (default: on). Set
 `lib_verb = false` to disable the `:Lib` verb and keep only the flat commands.
 `deps = false` disables just the `deps` routes and keeps the rest of `:Lib`.
+
+### `:Lib hover web` / `:Lib hover office` — the two opt-in previews
+
+Both are off by default, and both are commands rather than settings because
+they are things you switch **while chasing something** and switch back
+afterwards.
+
+**`web`** — links do not hover unless asked. Dev documentation is made of
+links; with the hover on, resting the cursor almost anywhere in a paragraph
+opens a float over the sentence being read. Two levels:
+
+```vim
+:Lib hover web on          " parsed offline: host, path, decoded query
+:Lib hover web fetch on    " …plus HTTP status, <title>, content type
+:Lib hover web off         " silence on links again
+```
+
+`fetch` is what answers "is this link dead": the float leads with
+`HTTP 404 Not Found` / `HTTP 500 Internal Server Error`, marked through
+`LibHoverError`. It is separate from `web on` because fetching discloses every
+link the cursor rests on to its host. Results are cached for the session;
+toggling drops the cache.
+
+Works in **every** filetype, not only markdown — markdown.nvim finds links
+inside `.md`, lib.nvim's own `bare_url` source finds a URL in a Lua comment, a
+`.txt` or a `:messages` dump. `http:\\example.com` (Windows-keyboard typo) and
+`www.example.com` are both recognized and repaired.
+
+**`office`** — a `.docx` cannot be read as text; it is a ZIP container, and
+the hover used to show its bytes. Now it shows a badge (`◆ Word document ·
+DOCX · 24 KB`), and so does anything else whose bytes are not text — archives,
+executables, media — decided by looking at the bytes, not at a list of
+extensions. With `:Lib hover office on`, pdfport.nvim converts the document to
+a PDF through LibreOffice and the first page is drawn like any other picture,
+with the same paging keys. Opt-in because the first conversion of each
+document starts LibreOffice (seconds); afterwards it is cached per file and
+mtime.
+
+Needs `soffice` on `PATH` — `:Lib deps show pdfport.nvim` says whether it is
+there, and the badge itself says so when it is not.
 
 ### `:Lib deps` — declared external tools (`lib.nvim.deps`)
 
