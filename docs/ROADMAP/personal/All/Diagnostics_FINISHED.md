@@ -9,6 +9,13 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-02](#2026-09-02)
+    - [github_stats.nvim -- 31 auf 0, und ein Test-Runner, den die anderen kopieren sollten](#github_statsnvim-31-auf-0-und-ein-test-runner-den-die-anderen-kopieren-sollten)
+      - [Zwei Boolean-Helfer, die keine Type-Guards sind](#zwei-boolean-helfer-die-keine-type-guards-sind)
+      - [`vim.uv.new_timer()` -- das dritte Repo in Folge](#vimuvnew_timer-das-dritte-repo-in-folge)
+      - [Eine Option, die es gibt, aber in keinem Typ steht](#eine-option-die-es-gibt-aber-in-keinem-typ-steht)
+      - [Eine Klasse, die genau dafuer da war und zurueckgefallen ist](#eine-klasse-die-genau-dafuer-da-war-und-zurueckgefallen-ist)
+      - [Der Rest](#der-rest)
+      - [Der Test-Runner: der erste, der es richtig macht](#der-test-runner-der-erste-der-es-richtig-macht)
     - [lsp.nvim -- 35 auf 0, und drei Waechter, die nie etwas ausgeschlossen haben](#lspnvim-35-auf-0-und-drei-waechter-die-nie-etwas-ausgeschlossen-haben)
       - [`supports_method("textDocumentSync/openClose")` -- die Wache, die immer Ja sagt](#supports_methodtextdocumentsyncopenclose-die-wache-die-immer-ja-sagt)
       - [`win_id`, wo Neovim `winnr` liest](#win_id-wo-neovim-winnr-liest)
@@ -178,6 +185,181 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-02
+
+---
+
+### github_stats.nvim -- 31 auf 0, und ein Test-Runner, den die anderen kopieren sollten
+
+*(war: Diagnostics-Report Abschnitt 0, "github_stats.nvim")*
+
+**31 -> 0**, in zwei Laeufen bestaetigt. `stylua --check` sauber, alle 9 Specs
+gruen (108 Faelle). `worse: nothing`.
+
+Der Report fuehrte 33; gemessen waren es **31**. Die Differenz sind die beiden
+Commits, die seit dem Gesamtlauf hier gelandet sind (`b4ace17` hat
+`workspace.library` aus der `.luarc.json` genommen, `66487dc` die
+`need-check-nil` pro Testdatei unterdrueckt). Das Repo hatte Cluster L also
+**schon selbst erledigt** -- als einziges der bisher durchgegangenen.
+
+---
+
+#### Zwei Boolean-Helfer, die keine Type-Guards sind
+
+Zehn der 31 waren `need-check-nil`, und neun davon gehen auf zwei Funktionen
+derselben Bauart zurueck:
+
+```lua
+---@param state GHStats.DashboardState?
+---@return boolean
+local function has_selection(state)
+  return state ~= nil and state.current_index >= 1 and state.current_index <= #state.repos
+end
+```
+
+Der Aufrufer schreibt dann das Naheliegende:
+
+```lua
+local s = dashboard_state.get_state()
+if has_selection(s) then
+  show_detail(s.repos[s.current_index])   -- s ist hier immer noch `State?`
+end
+```
+
+**Eine Funktion, die `boolean` zurueckgibt, verengt nichts.** Der Beweis, den
+sie fuehrt, bleibt in ihr; der Aufrufer indiziert weiter einen optionalen Wert.
+Das ist kein Prueferartefakt: faellt die Vorbedingung eines Tages weg, wirft
+genau diese Zeile.
+
+`has_selection` ist deshalb `selected_repo` geworden -- es gibt zurueck, was
+die Aufrufer eigentlich wollten:
+
+```lua
+---@return string|nil
+local function selected_repo(state)
+  if state == nil or state.current_index < 1 or state.current_index > #state.repos then
+    return nil
+  end
+  return state.repos[state.current_index]
+end
+```
+
+Vier Befunde weg, und die Aufrufstellen wurden kuerzer statt laenger. Der
+zweite Fall (`has_days` in `dashboard/render.lua`) wird an drei Stellen und in
+zwei verschiedenen Bedeutungen gebraucht, deshalb dort der kleinere Griff:
+`if stats_clones and has_days(stats_clones) then` -- die Bedingung sagt jetzt,
+was sie prueft.
+
+**Fuer die RULES-Ableitung:** ein `---@return boolean`-Helfer ueber einem
+optionalen Argument ist ein wiederkehrendes Muster mit einem eingebauten
+Folgefehler. Wo die Aufrufer nach dem `if` auf das Argument zugreifen, gehoert
+der Wert zurueckgegeben, nicht die Antwort.
+
+---
+
+#### `vim.uv.new_timer()` -- das dritte Repo in Folge
+
+Drei weitere ungeprueft benutzte Timer, nach mdview (zehn Befunde) und
+language (acht):
+
+| Datei | ohne Timer |
+|---|---|
+| `background.lua` | der wiederkehrende Fetch-Zyklus startet nicht -- der einmalige `defer_fn` davor ist schon gelaufen |
+| `dashboard/init.lua` (Debounce) | kein Debounce, also **sofort** rendern statt das Bild fallenzulassen |
+| `dashboard/init.lua` (Auto-Refresh) | kein Auto-Refresh; die Refresh-Tasten funktionieren weiter |
+
+Die dritte Spalte ist der eigentliche Punkt. `new_timer()` liefert
+`uv_timer_t|nil`, und die Frage ist nie "wie mache ich den Prueferbefund weg",
+sondern **was die Funktion ohne Timer tun soll**. Dreimal drei verschiedene
+Antworten, und beim Debounce ist die richtige nicht "zurueckkehren", sondern
+"jetzt rendern".
+
+**Das ist inzwischen der haeufigste echte Befund der ganzen Reihe** -- 21
+Stellen in drei Repos, immer dieselbe Ursache.
+
+---
+
+#### Eine Option, die es gibt, aber in keinem Typ steht
+
+`integrations/menu.lua:31` las `cfg.dashboard.menu` und bekam einen
+`undefined-field`. Die Option existiert: `DEFAULTS` setzt
+`dashboard.menu = { enable = true }`, mit einem drei Zeilen langen Kommentar
+darueber, was sie tut. Nur deklariert hat sie nie jemand --
+`GHStats.DashboardConfig` kennt zehn Felder und dieses nicht.
+
+Kein Laufzeitfehler, aber die Option war fuer jeden unsichtbar, der die Typen
+liest statt die Defaults. Jetzt als `GHStats.DashboardMenuConfig` deklariert,
+mit dem Kommentar, der schon in DEFAULTS stand.
+
+---
+
+#### Eine Klasse, die genau dafuer da war und zurueckgefallen ist
+
+Nachdem die `menu`-Luecke zu war, tauchten in `dashboard/state.lua` zwei
+Befunde auf, die vorher nicht sichtbar waren:
+
+```lua
+sort_by = dashboard_cfg.sort_by or DEFAULTS.dashboard.sort_by,
+time_range = dashboard_cfg.time_range or DEFAULTS.dashboard.time_range,
+```
+
+`DEFAULTS.dashboard` ist als `GHStats.Dashboard.Resolved` typisiert, und diese
+Klasse existiert genau fuer diesen Fall -- ihr eigener Doc-Kommentar sagt:
+*"die zwei Felder, die das Dashboard ohne Fallback liest, sind nach dem Merge
+garantiert"*. Sie fuehrte `enabled` und `refresh_interval_seconds`.
+
+Inzwischen sind es vier. Eine `or`-Kette, die bei DEFAULTS endet, ist nur so
+gut wie DEFAULTS' Deklaration: steht dort `sort_by?`, ist die Kette offen --
+und `GHStats.DashboardState` verlangt beide Felder non-optional. Die Klasse ist
+um die zwei nachgezogen worden, samt einem Satz, der sagt, wann ein Feld
+hierhergehoert.
+
+---
+
+#### Der Rest
+
+- **`os.date("!*t", ts)`** liefert eine Tabelle, aber LuaLS' `osdate` beschreibt
+  auch die String-Form desselben Aufrufs und weitet seine Felder deshalb auf
+  `integer|string`. Ein `---@cast` auf `osdate` reicht darum **nicht** --
+  `math.min(parts.day, ...)` beanstandet danach immer noch den String-Ast. Der
+  Cast muss die drei Zahlen benennen, die dieser Aufruf wirklich liefert.
+- **Acht `get_buf()` in `dashboard_render_spec`** trugen neun Befunde: der
+  Handle ist `integer?`, und jeder Fall liest direkt danach Zeilen daraus.
+  Jeder holt ihn sich jetzt mit einem `assert` ab, das beim Bruch die
+  Vorbedingung benennt (`dashboard.open() must have created a buffer`) statt
+  zwei Zeilen spaeter mit "index a nil value" zu scheitern -- derselbe Griff
+  wie in open.nvims `usrcmds_spec`.
+- **`PATHS` in `config/init.lua`** wird mit drei `nil` initialisiert und erst
+  in `setup()` gefuellt; drei Leser mussten deshalb `string|nil` weiterreichen.
+  Die Gestalt ist jetzt deklariert, und `ensure_config_exists` sagt seine
+  Vorbedingung mit einem `assert`, statt sie anzunehmen.
+- **Fuenf `duplicate-set-field`** sind Test-Doubles ueber `config.get`,
+  `config.get_repos` und `analytics.query_metric` -- unterdrueckt mit
+  Begruendung, wie in images entschieden. Dazu ein Helfer, der absichtlich
+  auch Strings als Intervall annimmt, weil die Faelle darunter genau das
+  pruefen.
+
+---
+
+#### Der Test-Runner: der erste, der es richtig macht
+
+Nach zwei Repos mit kaputten Runnern -- neotree-fs-refactor meldet Erfolg ohne
+geladenen Harness, lsp.nvim wartet stumm ohne `PLENARY_PATH` -- ist
+`scripts/test.sh` hier die Gegenprobe. Ohne plenary:
+
+```
+scripts/minimal_init.lua: plenary.nvim not found.
+  Set PLENARY_DIR, or clone it to .deps/plenary.nvim, or place it beside this repo.
+```
+
+**Exit-Code 1.** Das ist der Unterschied, um den es in Offen-Punkt 13 geht: die
+Meldung sagt, was fehlt *und* wie man es behebt, und der Lauf scheitert, statt
+gruen zu melden oder zu haengen. Dazu sucht `minimal_init.lua` selbst an drei
+Orten (`$PLENARY_DIR`, `.deps/`, daneben), statt sich auf eine Env-Variable zu
+verlassen, die nur CI setzt.
+
+**Diese Datei ist die Vorlage fuer die RULES-Ableitung**, nicht irgendeine
+allgemeine Formulierung: drei Fundorte mit Fallback, eine Fehlermeldung, die
+alle drei nennt, und ein Exit-Code, der nicht luegt.
 
 ---
 
