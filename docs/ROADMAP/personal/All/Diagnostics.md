@@ -128,38 +128,40 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **markdown.nvim steht auf Null** (30 -> 0, 2026-09-02), damit
-**zwanzig der 32 Workspaces** im Umfang. Cluster E ist damit bis auf fuenf
-Stellen abgetragen.
+*Nichts.* **pickers.nvim, insights.nvim und recommender.nvim stehen auf Null**
+(73 -> 0 in einem Zug, 2026-09-02), damit **dreiundzwanzig der 32 Workspaces**
+im Umfang. Offen sind noch acht kleine Repos (49 zusammen) und die
+nvim-Config (120).
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**pickers.nvim** (32). Beide Kandidaten sind am 2026-09-02 einzeln
-nachgemessen worden, und die Verteilung sagt mehr als die Summe -- **bei
-beiden liegen 26 der Befunde in `lua/`**, nicht in `TESTS/`:
+**Die acht kleinen Repos in einem Zug** (49 zusammen). Die Sechser-Runde
+(126 -> 0 ueber fuenf Repos) und die Dreier-Runde (73 -> 0) haben denselben
+Befund geliefert: der Denkanteil pro Ursache faellt einmal an, und die
+Ursachen wiederholen sich zwischen den Repos. Bei acht Repos mit im Schnitt
+sechs Befunden ist der Overhead pro Repo -- Scan, Suite, Commit -- der
+groessere Posten.
 
-| Repo | gesamt | `lua/` | die Regeln, auf die es ankommt |
-|---|---:|---:|---|
-| pickers.nvim | 32 | 26 | `undefined-field` 3, **`luadoc-miss-symbol` 3**, `need-check-nil` 6 + `cast-local-type` 3 |
-| insights.nvim | 29 | 26 | **13 zu Rueckgabewerten** (`missing-return-value` 6, `return-type-mismatch` 4, `redundant-return-value` 3), `undefined-doc-name` 3 |
-| *(neun Repos unter 15)* | 61 | -- | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, … |
+| Repo | gesamt |
+|---|---:|
+| reposcope.nvim | 9 |
+| color_my_ascii.nvim | 8 |
+| debugging.nvim | 8 |
+| dap.nvim | 6 |
+| filetree.nvim | 6 |
+| cmdlog.nvim / migrate.nvim / runtime-analysis.nvim | je 4 |
 
-**Warum pickers zuerst.** Die drei `luadoc-miss-symbol` heissen, dass
-mindestens eine Annotation **nicht parst** -- und in der Sechser-Runde haben
-genau solche Zeilen alles unter sich mitgenommen, die Zahl also billiger
-fallen lassen, als sie aussieht. Dazu drei `undefined-field` in `lua/`, wo
-nach A4 die echten Fehler sitzen, und die Kombination `need-check-nil` 6 mit
-`cast-local-type` 3, die nach A1 auf einen ungeprueften `vim.uv`-Aufruf
-zeigt, dessen Ziel-Local schon typisiert ist. Haeufung:
-`ui/dir_nav_picker.lua` traegt 7.
+**Danach die nvim-Config** (120) als letzter grosser Posten -- weiterhin mit
+der Worktree-Frage davor, siehe „Nicht von Claude entschieden".
 
-**insights.nvim** ist danach der interessantere Durchgang, aber der
-unbekanntere: die dreizehn Befunde zu Rueckgabewerten sind eine Familie, die
-in keinem der bisherigen Durchgaenge vorkam, und `symbols/init.lua` und
-`symbols/rg_index.lua` tragen je 6. Wer dort anfaengt, sollte damit rechnen,
-dass die Musterliste ihm diesmal wenig hilft.
+Die Einstiegs-Checkliste steht unter
+[„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`]
+(./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules),
+Abschnitt H hat die Reihenfolge. Was sich zuletzt am haeufigsten ausgezahlt
+hat, sind die drei Annotationsformen (C1, C5 Form B, C6): sie sehen im Bericht
+nach Kleinkram aus und trugen zuletzt 28, 16 und 11 Befunde.
 
 **Die neun kleinen Repos zusammen** (61) sind der andere sinnvolle Zuschnitt:
 die Sechser-Runde hat gezeigt, dass fünf Repos in einem Zug gehen (126 -> 0),
@@ -196,6 +198,7 @@ ausgezahlt haben:
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| T3 | **Die Dreier-Runde** -- pickers, insights, recommender (2026-09-02) | **73 -> 0** (32/29/12), in zwei Laeufen bestaetigt, `worse: nothing`, jede Suite gruen. **Zwei der drei hatten dieselbe Ursachenfamilie in zwei Formen**: `fun(T)` ohne Parameternamen parst nicht (pickers: drei Zeilen, elf Befunde, davon sechs `need-check-nil` in einer Datei -- neuer Musterpunkt C6), und `---@return T, U  wort, wort` liest die nachgestellten Woerter als dritten Rueckgabewert (insights: drei Zeilen, sechzehn Befunde). Dabei kam heraus, dass **drei Scanner dieselbe Gestalt verschieden nennen** -- `ts_lua` deklarierte ein `file`, das niemand liest und niemand setzt. In recommender waren fuenf Befunde **ein Testfall, der sich selbst uebersprungen hat** (Deep-Merge gegen `DEFAULTS.float`, einen Schluessel, den es nie gab). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | MD | **markdown.nvim** -- vertikal (2026-09-02) | **30 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 26 Specs grün. Zwei Drittel lagen in `TESTS/` und waren Minutenarbeit; die andere Hälfte war **A1 zum vierten Mal** (der Debounce-Timer der Live-Referenzprüfung, ungeprüft -- ein `return` hätte die Ansicht für die Sitzung stillgelegt) und ein `undefined-field`, hinter dem **die Nutzlast dieses Plugins auf einem fremden Typ** stand (`subcmd` auf composers `ArgSpec`, jetzt `Mkdn.SubargSpec`). Neuer Musterpunkt F5: **ein `---@cast` zwischen zwei unverwandten Klassen wird selbst gemeldet** -- `nvim_get_hl` -> `nvim_set_hl` ist keine Cast-Frage, sondern eine, die man baut. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | DF | **diff.nvim** -- vertikal (2026-09-02) | **31 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. **Sieben Befunde an einer Zeile**: `register_shortcuts` war mit `Diff.Config` annotiert, der Typ heißt `DiffNvim.Config` -- ein `undefined-doc-name`, drei `undefined-field` auf Feldern, die es gibt, und ein `param-type-mismatch` beim korrekten Aufrufer. Darüber klebte der ältere Doc-Block derselben Funktion. Dazu `vim.diff` (deprecated zugunsten `vim.text.diff`, README nennt 0.9+): **einmal aufgelöst statt dreimal unterdrückt**, und `health.lua` fragt jetzt nach demselben Paar -- vorher hätte `:checkhealth` „vim.diff is missing“ gemeldet für ein Neovim, auf dem alles läuft. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | CS | **cascade.nvim** -- vertikal (2026-09-02) | **32 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. Als flachster Posten angekündigt (14 Test-Doubles) und in der anderen Hälfte nicht flach: ein Doc-Block, den eine **nachträglich dazwischengesetzte Variable** von seiner Funktion abgeschnitten hat, und **fünfmal dieselbe Familie** -- eine Funktion liefert N Werte, der Guard prüft einen, der Rest wird per `---@cast` nachgezogen und einer vergessen. Neuer Musterpunkt A5. Dabei ist mir die fünfte Stelle selbst entgangen, weil der zweite Messlauf gegen eine noch nicht fertige Ausgabe lief (nachgereicht mit `2e66c29`). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -243,11 +246,9 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
-| *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(zwanzig Repos auf Null)* | **0** | buffer-ctx, cascade, diff, documentation, emojis, fileops, github_stats, gopath, images, language, lib, lsp, **markdown**, mdview, open, pdfport, replacer, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **242** | |
+| *(acht Repos unter 10)* | 49 | `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
+| *(dreiundzwanzig Repos auf Null)* | **0** | buffer-ctx, cascade, diff, documentation, emojis, fileops, github_stats, gopath, images, **insights**, language, lib, lsp, markdown, mdview, open, pdfport, **pickers**, **recommender**, replacer, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **169** | |
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
 minus die 37 von images, minus die 34 von language, minus die 35 von
@@ -277,9 +278,9 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **pickers.nvim** (32) oder **insights.nvim** (29) -- vorgeschlagener
-   nächster Schritt, siehe oben. Alternativ **die neun kleinen Repos in einem
-   Zug** (61 zusammen), wie in der Sechser-Runde
+1. **Die acht kleinen Repos in einem Zug** (49 zusammen) -- vorgeschlagener
+   nächster Schritt, siehe oben. Zwei Runden dieser Form (Sechser, Dreier)
+   haben gezeigt, dass der Zuschnitt trägt
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
    Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
@@ -723,6 +724,11 @@ einwandfrei, LuaLS kann es nur nicht ausdrücken.
 Fix: `pcall(function() vim.cmd(...) end)`. Häufungen in
 `fileops.nvim/lua/fileops/ops/file.lua` (12), `ops/cycle.lua` (6),
 `filetree.nvim/lua/filetree/adapter/{netrw,oil}.lua`, `sessions.nvim/core.lua`.
+
+**In recommender.nvim ist die Familie ohne `vim.cmd` aufgetaucht**:
+`pcall(lib_map, ...)` auf `lib.nvim.bindings.keymap`, das sich ebenfalls als
+aufrufbare Tabelle exportiert. Wer den Cluster sucht, sucht nach der Meldung,
+nicht nach `vim.cmd` -- siehe D3 in der Musterliste.
 
 **lib.nvims zehn sind erledigt (2026-08-31)** -- sieben in `lua/`, drei in
 `TESTS/`, genau in dieser Form. `vim.cmd.edit` / `vim.cmd.colorscheme` sind

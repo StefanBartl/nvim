@@ -25,6 +25,12 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [Die Dreier-Runde -- pickers, insights und recommender, 73 auf 0](#die-dreier-runde-pickers-insights-und-recommender-73-auf-0)
+      - [Vorab: die zwei billigen Pruefungen, dreimal umsonst](#vorab-die-zwei-billigen-pruefungen-dreimal-umsonst)
+      - [pickers: `fun(T)` ist keine Signatur -- elf Befunde aus drei Zeilen](#pickers-funt-ist-keine-signatur-elf-befunde-aus-drei-zeilen)
+      - [insights: dieselbe Familie, Form B -- und drei Namen fuer eine Gestalt](#insights-dieselbe-familie-form-b-und-drei-namen-fuer-eine-gestalt)
+      - [recommender: ein Testfall, der nie gelaufen ist](#recommender-ein-testfall-der-nie-gelaufen-ist)
+      - [Was der Nachher-Lauf noch gezeigt hat: ein Cast endet an der naechsten Zuweisung](#was-der-nachher-lauf-noch-gezeigt-hat-ein-cast-endet-an-der-naechsten-zuweisung)
     - [markdown.nvim -- 30 auf 0, ein Timer ohne Antwort und ein Cast, der selbst gemeldet wird](#markdownnvim-30-auf-0-ein-timer-ohne-antwort-und-ein-cast-der-selbst-gemeldet-wird)
       - [`.luarc.json` und `health.lua`: diesmal beide sauber](#luarcjson-und-healthlua-diesmal-beide-sauber)
       - [A1 zum vierten Mal: der Debounce-Timer der Live-Referenzen](#a1-zum-vierten-mal-der-debounce-timer-der-live-referenzen)
@@ -364,6 +370,16 @@ Dahinter stecken drei verschiedene Ursachen, die im Report gleich aussehen:
    Nicht die Bibliotheksklasse aufbohren: die Erweiterung gehoert dorthin, wo
    die Nutzlast entsteht.
 
+6. **In `TESTS/`: ein Fall, der sich selbst ueberspringt.** In recommender
+   pruefte `config_spec` den Deep-Merge gegen `DEFAULTS.float` -- einen
+   Schluessel, den es nie gab. Die eigene Wache (`if type(...) == "table"`)
+   hat den ganzen Block uebersprungen, still, und er sah wie Abdeckung aus.
+   Fuenf `undefined-field` aus einem Fall, der nie gelaufen ist.
+
+   **Daraus:** `undefined-field` in `TESTS/` ist nicht automatisch
+   Testrauschen. Wo es auf eine Option oder ein Fixture-Feld zeigt, das es
+   nicht gibt, steht dahinter oft ein Fall, der nichts prueft.
+
 **Bei Fall 4 nicht loeschen.** Ob die Funktion gebraucht wird, ist eine
 Produktentscheidung; der Durchgang schreibt eine Notiz an die Stelle und
 meldet den Fund.
@@ -507,10 +523,34 @@ meldet die alte Fassung **gar nichts**.
 Verwandt: `string.find` gibt beide Bounds zurueck oder keine, und ein Guard
 auf nur `s` laesst `e` optional (replacer, `debug.lua`).
 
+#### C6. `fun(T)` ohne Parameternamen parst nicht
+
+```lua
+---@param callback fun(string|nil)          -- parst nicht
+---@param callback fun(choice: string|nil)  -- parst
+```
+
+**Signatur:** `luadoc-miss-symbol` (*"`)` expected"*) auf einer
+`@param`-Zeile -- und darunter eine Traube `need-check-nil` oder
+`param-type-mismatch` an jeder Stelle, die den Callback benutzt.
+
+Ein `fun(...)`-Typ braucht benannte Parameter. Ohne Namen liest LuaLS den
+Typnamen als Parameternamen und bleibt am `|` haengen; der Callback-Typ ist
+damit kaputt, und alles daran haengende ebenso. In pickers trugen **drei
+solche Zeilen elf Befunde**, davon sechs `need-check-nil` in einer einzigen
+Datei.
+
+Damit sind es drei Formen derselben Familie -- A (der Inline-Tabellentyp),
+B (die nachgestellten Woerter am `@return`) und C6 (der namenlose
+`fun`-Parameter). Alle drei sehen im Bericht nach Kleinkram aus und tragen
+zweistellige Zahlen.
+
 #### C5. Weitere Formen, je einmal gesehen
 
-- **Form B:** `---@return <typ>  <wort>,` ohne Namen -- wird als zwei
-  Rueckgabewerte gelesen (pdfport: acht Befunde).
+- **Form B:** `---@return <typ>  <wort>,` ohne Namen -- die nachgestellten
+  Woerter werden als weitere Rueckgabewerte gelesen (pdfport: acht Befunde;
+  insights: **drei Zeilen, sechzehn Befunde**, darunter zwei
+  `redundant-return-value` bei Aufrufern, die korrekt annotiert waren).
 - **Verirrte Doc-Bloecke** -- sechs Repos in Folge, je fuenf bis acht Befunde
   aus einer Ursache. Signatur: `undefined-doc-param` und
   `duplicate-doc-param`. In images dreimal derselbe Griff: ein nachgeruesteter
@@ -556,6 +596,28 @@ vim.api.nvim_set_hl(0, group, hl)
 Die gebaute Fassung ist ausserdem die ehrlichere: sie sagt, welche der beiden
 Seiten gemeint ist, behaelt jedes Attribut des Colorschemes und braucht keine
 Feldliste, die veralten kann.
+
+#### D5. Ein `---@cast` endet an der naechsten Zuweisung
+
+**Signatur:** derselbe Befund taucht ein paar Zeilen unter einem frisch
+gesetzten Cast wieder auf -- meist in einer Testdatei, die ein Local pro Fall
+zurueckstellt.
+
+```lua
+---@cast captured table
+...
+captured = nil        -- ab hier gilt der Cast nicht mehr
+cmd.handle({ ... })
+check("...", captured.find.hidden == false)   -- undefined-field
+```
+
+Ein Cast behauptet etwas ueber den **aktuellen** Wert, nicht ueber die
+Variable. Jede Zuweisung hebt ihn auf. Derselbe Fehlermodus wie die
+unvollstaendige Cast-Liste in A5, nur zeitlich statt ueber die Werte verteilt:
+die erste Stelle sieht man, die zweite sieht genauso aus.
+
+**Griff:** pro Abschnitt zwischen zwei Zuweisungen einen eigenen Cast -- oder,
+wo es geht, das Local nicht zuruecksetzen, sondern pro Fall ein neues nehmen.
 
 #### D2. Ein Fix, der die Warnung nur weiterschiebt
 
@@ -716,6 +778,151 @@ dreissig Befunde tatsaechlich dreissig einzelne sind und keine Messfrage.
 ---
 
 ## 2026-09-02
+
+---
+
+### Die Dreier-Runde -- pickers, insights und recommender, 73 auf 0
+
+*(war: Diagnostics-Report Abschnitt 0, "pickers.nvim / insights.nvim" und der
+Rest der kleinen Repos)*
+
+**73 -> 0** (pickers 32, insights 29, recommender 12), in zwei weiteren
+Laeufen bestaetigt, `worse: nothing`. Jede Suite gruen: 297 Faelle in pickers,
+`INSIGHTS_TESTS_OK`, `RECOMMENDER_TESTS_OK`. `stylua --check` sauber, luacheck
+0/0 in allen dreien. Commits: `9fa84de`, `786225e`, `5af81d5`.
+
+Drei Repos in einem Zug, wie die Sechser-Runde -- und wieder hat sich der
+Zuschnitt ausgezahlt: **zwei der drei hatten dieselbe Ursachenfamilie**
+(eine Annotation, die nicht parst und alles unter sich mitnimmt), nur in zwei
+verschiedenen Formen. Der Denkanteil fiel einmal an.
+
+---
+
+#### Vorab: die zwei billigen Pruefungen, dreimal umsonst
+
+`.luarc.json` setzt in keinem der drei `workspace.library` (Cluster L trifft
+nicht zu), und keine der `info`/`ok`-Stellen in den drei `health.lua`
+uebergibt eine Advice-Liste (F2 bleibt zum zweiten Mal in Folge aus). Das
+kostet zusammen zwei Minuten und ist die Voraussetzung dafuer, den Zahlen zu
+glauben -- siehe den Nachtrag zu H.
+
+---
+
+#### pickers: `fun(T)` ist keine Signatur -- elf Befunde aus drei Zeilen
+
+```lua
+---@param callback fun(string|nil)          -- parst nicht
+---@param callback fun(choice: string|nil)  -- parst
+```
+
+Ein `fun(...)`-Typ braucht **benannte** Parameter. Ohne Namen liest LuaLS den
+Typnamen als Parameter*namen* und bleibt am `|` haengen -- gemeldet als
+`luadoc-miss-symbol` (*"`)` expected"*). Der Callback-Typ ist damit kaputt, und
+alles, was an ihm haengt, ebenso:
+
+| Datei | Folgebefunde |
+|---|---|
+| `ui/dir_nav_picker.lua` | **6 `need-check-nil`** an jedem `callback(...)` |
+| `ui/action_picker.lua` | 1 `param-type-mismatch` an `vim.ui.select` |
+| `ui/scope_picker.lua` | 1 `param-type-mismatch` an `vim.ui.select` |
+
+**Drei Zeilen, elf Befunde.** Dieselbe Rechnung wie Form A in pdfport (28 aus
+einer Zeile) und Form B in insights (16 aus dreien) -- nur eine dritte Form.
+
+Dazu ein verirrter Doc-Block: die zwei `@param` von `M.get` standen zwanzig
+Zeilen hoeher ueber `M.is_windows()`, das keine nimmt. Sechstes Repo in Folge
+mit dieser Ursache.
+
+---
+
+#### insights: dieselbe Familie, Form B -- und drei Namen fuer eine Gestalt
+
+```lua
+---@return table[], string|nil   entries, status_message
+```
+
+Die nachgestellten Woerter sind keine Beschreibung: LuaLS liest sie als
+**dritten** Rueckgabewert vom Typ `status_message`, den es nicht gibt. Drei
+solche Zeilen trugen sechzehn Befunde -- drei `undefined-doc-name`, sechs
+`missing-return-value` (*"at least 3 required"*), vier `return-type-mismatch`
+fuer eine #3, die nie zurueckkam, und zwei `redundant-return-value` **bei
+korrekt annotierten Aufrufern**.
+
+Beim Aufschreiben der richtigen Form fiel der eigentliche Riss auf: **die drei
+Lua-Scanner geben dieselbe Gestalt zurueck und nennen sie verschieden.**
+
+| Modul | deklariert | setzt |
+|---|---|---|
+| `symbols/ts_lua.lua` | `file: string\|nil` | `file = nil` (legt in Lua **keinen** Schluessel an) |
+| `symbols/ts_lua_strings.lua` | `filename`, `func_type` | beide |
+| `symbols/ts_lua_tables.lua` | `filename`, `func_type` | beide |
+
+Gelesen wird ueberall `filename` -- vom Stempel in `symbols/init.lua` bis zur
+Anzeige in `symbols/open.lua`. `file` liest und schreibt niemand. Jetzt einmal
+als `Insights.Symbols.Match` ausgeschrieben und von allen dreien benutzt; das
+tote `file = nil` ist weg, und `func_type` steht als das optionale Feld da, das
+es ist (der Picker zeigt `?` fuer den Scanner, der es nicht setzt).
+
+**Das ist der Griff aus C1 -- eine benannte Klasse -- und der Nebeneffekt ist
+wieder der eigentliche Gewinn:** die Inline-Form hat den Namensunterschied
+zwischen drei Geschwistermodulen verdeckt.
+
+---
+
+#### recommender: ein Testfall, der nie gelaufen ist
+
+Fuenf der zwoelf Befunde waren `undefined-field` in **einer** Testdatei:
+
+```lua
+if type(DEFAULTS.float) == "table" then    -- gibt es nicht
+  local sub = next(DEFAULTS.float)
+  ...
+```
+
+`config_spec` prueft, dass ein Deep-Merge die Geschwister des gesetzten
+Schluessels behaelt -- gegen `DEFAULTS.float`, einen Schluessel, den diese
+Config nie hatte. Der Fall hat sich mit seiner eigenen Wache uebersprungen,
+lief nie, und sah im Bericht wie Abdeckung aus. Er zeigt jetzt auf
+`custom_aliases`, die verschachtelte Tabelle, um die es geht, und laeuft.
+
+**Daraus die Regel:** `undefined-field` in `TESTS/` ist nicht automatisch
+Testrauschen. Wo es auf eine Konfigurationsoption oder ein Fixture-Feld zeigt,
+das es nicht gibt, steht dahinter oft ein Fall, der sich selbst ueberspringt.
+
+Dazu ein Analyzer, den die eigene Signatur nicht kannte: `get_analyzer`
+akzeptierte vier Namen, `ANALYZER_NAMES` -- die Liste, gegen die die
+Kommandozeile validiert -- fuehrt fuenf. `perf` hat ein eigenes Modul, eine
+eigene Health-Zeile und einen Eintrag im oeffentlichen Config-Typ; nur diese
+eine Annotation hatte nie von ihm gehoert.
+
+Und `pcall(lib_map, ...)`: `lib.nvim.bindings.keymap` exportiert sich als
+aufrufbare Tabelle, nicht als Funktion -- **dieselbe Gestalt wie
+`pcall(vim.cmd, ...)`**, dieselbe Closure-Form als Griff. Wer nach Cluster E
+sucht, sucht nach der Meldung, nicht nach `vim.cmd`.
+
+---
+
+#### Was der Nachher-Lauf noch gezeigt hat: ein Cast endet an der naechsten Zuweisung
+
+Der erste Nachher-Lauf stand bei 1 statt 0, und zwar in einer Datei, die ich
+gerade bearbeitet hatte. `TESTS/pickers_spec.lua` faengt die Optionen eines
+Doubles in einem Local, prueft sie, **setzt das Local dann auf `nil` zurueck**
+und fuellt es fuer den naechsten Fall neu:
+
+```lua
+check("...", captured and captured.find and captured.find.hidden == true)
+---@cast captured table          -- gilt ab hier
+...
+captured = nil                   -- und hier ist es wieder vorbei
+cmd.handle({ ... })
+check("...", captured.find.hidden == false)   -- undefined-field
+```
+
+**Eine Zuweisung hebt die Einengung auf** -- ein `---@cast` gilt bis dahin und
+keine Zeile weiter. Das ist derselbe Fehlermodus wie die unvollstaendige
+Cast-Liste in A5, nur zeitlich statt ueber die Werte verteilt: man sieht die
+erste Stelle, repariert sie, und uebersieht die zweite, weil sie gleich
+aussieht.
 
 ---
 
