@@ -25,6 +25,12 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [replacer.nvim -- 32 auf 0, ein toter Typ, eine tote API und ein Aufruf, der seit 0.11 wirft](#replacernvim-32-auf-0-ein-toter-typ-eine-tote-api-und-ein-aufruf-der-seit-011-wirft)
+      - [Zwoelf Befunde aus einem Typ, den es nicht gibt](#zwoelf-befunde-aus-einem-typ-den-es-nicht-gibt)
+      - [Und die beiden Funktionen ruft niemand](#und-die-beiden-funktionen-ruft-niemand)
+      - [`vim.str_utfindex` hat in 0.11 die Signatur getauscht, und `:ReplaceDebug` merkt es](#vimstr_utfindex-hat-in-011-die-signatur-getauscht-und-replacedebug-merkt-es)
+      - [Ein Feld, das drei Geschwister hat und selbst fehlte](#ein-feld-das-drei-geschwister-hat-und-selbst-fehlte)
+      - [Der Rest -- sieben kleine Ursachen](#der-rest-sieben-kleine-ursachen)
     - [github_stats.nvim -- 31 auf 0, und ein Test-Runner, den die anderen kopieren sollten](#github_statsnvim-31-auf-0-und-ein-test-runner-den-die-anderen-kopieren-sollten)
       - [Zwei Boolean-Helfer, die keine Type-Guards sind](#zwei-boolean-helfer-die-keine-type-guards-sind)
       - [`vim.uv.new_timer()` -- das dritte Repo in Folge](#vimuvnew_timer-das-dritte-repo-in-folge)
@@ -202,7 +208,7 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
 
 ## Wiederkehrende Muster -- die Ableitung fuer RULES
 
-**Was das hier ist.** Neun vertikale Durchgaenge haben dieselben Ursachen
+**Was das hier ist.** Zehn vertikale Durchgaenge haben dieselben Ursachen
 mehrfach zutage gefoerdert. Dieser Abschnitt sammelt sie -- nach Haeufigkeit,
 mit der **Signatur, an der man sie erkennt**, und mit dem Griff, der sich
 bewaehrt hat. Gedacht als Checkliste fuer den naechsten Durchgang und als
@@ -217,7 +223,7 @@ steht nur, was sich wiederholt hat.
 ### A. Echte Fehler, die der Pruefer gefunden hat
 
 Nach Haeufigkeit. Diese vier Familien haben in jedem Durchgang mindestens
-einen echten Bug ergeben.
+einen echten Bug ergeben -- in zehn Durchgaengen ohne Ausnahme.
 
 #### A1. `vim.uv.new_timer()` ungeprueft -- 21 Stellen, drei Repos in Folge
 
@@ -308,6 +314,22 @@ github_stats (eine Option, die es gibt und die in keinem Typ steht) jedes Mal
 etwas ergeben. **Bei einem Repo mit zweistelligem `undefined-field` lohnt der
 Durchgang allein deswegen.**
 
+Dahinter stecken drei verschiedene Ursachen, die im Report gleich aussehen:
+
+1. **Der Zugriff ist falsch** -- ein Name, den es nicht gibt (filetree:
+   `get_root` statt `get_root_path`; lsp.nvim: `publishDiagnosticsProvider`).
+2. **Der Typ fehlt** -- der Zugriff stimmt, die Klasse existiert nicht. In
+   replacer trug ein einziges undefiniertes `RP_HighlightConfig` **zwoelf**
+   Befunde, in language waren es sieben aus `Lib.Keymap.*` (dort, weil die
+   Library-Injektion fehlte, siehe B1).
+3. **Die Umkehrung: der Code wird nie gerufen.** In replacer standen die zwei
+   Funktionen hinter dem fehlenden Typ ohne einen einzigen Aufrufer da -- der
+   Kommentar nennt eine Telescope-Anbindung, die nie entstanden ist.
+
+**Bei Fall 3 nicht loeschen.** Ob die Funktion gebraucht wird, ist eine
+Produktentscheidung; der Durchgang schreibt eine Notiz an die Stelle und
+meldet den Fund.
+
 ---
 
 ### B. Die Messgrundlage -- bevor irgendetwas gezaehlt wird
@@ -390,7 +412,27 @@ die falsche Aussage, wenn die Funktion entweder alle vier liefert oder `nil`.
 **Mit einer Annotation nicht zu reparieren** -- die Gestalt muss eine Tabelle
 werden, dann verengt `if span then` alles auf einmal.
 
-#### C4. Weitere Formen, je einmal gesehen
+#### C4. Das `value, err`-Idiom traegt seine Zusage nicht im Typ
+
+```lua
+---@return T|nil, string|nil
+local x, err = f()
+if not x then
+  notify.error(err)   -- err ist hier `string|nil`
+end
+```
+
+Vier Stellen in replacer, zwei in language. Der Aufrufer weiss, dass `err`
+gesetzt ist, wenn `x` fehlt; der Pruefer sieht zwei unabhaengige Optionals.
+
+**Griff:** `err or "<konkreter Text>"`. Das ist nicht nur
+Prueferberuhigung -- faellt der Fehlerpfad wirklich einmal ohne Nachricht an,
+meldet die alte Fassung **gar nichts**.
+
+Verwandt: `string.find` gibt beide Bounds zurueck oder keine, und ein Guard
+auf nur `s` laesst `e` optional (replacer, `debug.lua`).
+
+#### C5. Weitere Formen, je einmal gesehen
 
 - **Form B:** `---@return <typ>  <wort>,` ohne Namen -- wird als zwei
   Rueckgabewerte gelesen (pdfport: acht Befunde).
@@ -425,9 +467,10 @@ unfertig.**
 **Signatur:** `Cannot assign 'table' to parameter 'fun(...any):...unknown'`.
 
 `vim.cmd` ist eine Tabelle mit `__call`-Metamethode, kein `function`; die
-Metamethode rettet das im Typsystem nicht. **`vim.lsp.config` ist dieselbe
-Gestalt** -- wer nach dem Cluster sucht, sucht nach der Meldung, nicht nach
-`vim.cmd`.
+Metamethode rettet das im Typsystem nicht. **`vim.lsp.config` und
+`lib.nvim.bindings.keymap` sind dieselbe Gestalt** -- wer nach dem Cluster
+sucht, sucht nach der Meldung, nicht nach `vim.cmd`. Jedes Modul, das sich
+als aufrufbare Tabelle exportiert, faellt hierunter.
 
 **Griff: die Closure-Form**, nicht `vim.cmd.<name>`. In images tauscht ein
 Spec `vim.cmd` selbst und liest den Kommandonamen aus dem ersten Argument --
@@ -487,7 +530,27 @@ Sechs Repos in Folge haben ihnen eine Advice-Liste gegeben, die sie wegwerfen.
 fehlendes Feature** -- die Hinweise hat kein `:checkhealth` je gezeigt. In
 einer `health.lua` ist `redundant-parameter` nie Stil.
 
-#### F3. `os.date("*t")` liefert eine Tabelle, deren Felder LuaLS aufweitet
+#### F3. Eine geaenderte Signatur meldet sich als `param-type-mismatch`
+
+Nicht jede API-Aenderung in Neovim ist als `deprecated` markiert. Manche
+**tauschen die Bedeutung eines Arguments**, und der einzige Hinweis ist ein
+Typfehler an einer Stelle, die jahrelang funktioniert hat.
+
+`vim.str_utfindex(str, index)` bis 0.10, `vim.str_utfindex(str, encoding,
+index, strict)` seit 0.11 -- der alte Aufruf uebergibt seinen Index dort, wo
+jetzt die Kodierung erwartet wird, und wirft. In replacer war das
+`:ReplaceDebug`, gemeldet als
+`Cannot assign 'integer' to parameter '"utf-16"|"utf-32"|"utf-8"'`.
+
+**Signatur:** ein `param-type-mismatch` gegen eine String-Union an einem
+`vim.*`-Aufruf. Gegenprobe: nachsehen, wie **Neovim die Funktion selbst
+ruft** -- `grep` im Runtime-Verzeichnis ist schneller als die Doku.
+
+Bei breiter Versionsspanne im README ist die Antwort eine **Probe**, keine
+Migration (`pcall` auf die neue Form, Rueckfall auf die alte) -- siehe auch
+die `deprecated`-Regel in Abschnitt E.
+
+#### F4. `os.date("*t")` liefert eine Tabelle, deren Felder LuaLS aufweitet
 
 `---@cast parts osdate` reicht **nicht**: dieselbe Klasse beschreibt auch die
 String-Form des Aufrufs, deshalb sind ihre Felder `integer|string`. Der Cast
@@ -539,6 +602,153 @@ Fuer neue Repos ist das der Massstab, nicht eine allgemeine Formulierung.
 ---
 
 ## 2026-09-02
+
+---
+
+### replacer.nvim -- 32 auf 0, ein toter Typ, eine tote API und ein Aufruf, der seit 0.11 wirft
+
+*(war: Diagnostics-Report Abschnitt 0, "replacer.nvim")*
+
+**32 -> 0**, in zwei Laeufen bestaetigt. `stylua --check` sauber, alle
+Smoke-Suiten gruen (feature 155, surround 26, async_utf8 7, je 0 failed).
+`worse: nothing`.
+
+Der Einstieg war die Vorhersage aus dem Report -- **elf `undefined-field`**,
+und die Regel hatte in filetree, in der Sechser-Runde und in github_stats
+jedes Mal etwas ergeben. Hier waren es zwei getrennte Funde, und der zweite
+kam von woanders.
+
+---
+
+#### Zwoelf Befunde aus einem Typ, den es nicht gibt
+
+`pickers/utils.lua` annotiert zwei Funktionen mit `---@param cfg
+RP_HighlightConfig`. **Diese Klasse ist nirgends definiert** -- und weil der
+Typ unbekannt ist, ist jeder Feldzugriff darauf undefiniert: `enabled`,
+`old_bg`, `old_fg`, `underline`, `strikethrough`, `new_fg`, `ansi_old_bg`,
+`ansi_new_fg`. Zwei `undefined-doc-name` plus zehn `undefined-field`, **zwoelf
+der 32 Befunde aus einer fehlenden Klasse.**
+
+Dasselbe Muster wie `Lib.Keymap.Action` in language, nur mit anderer Ursache:
+dort war der Typ da und die Library-Injektion weg, hier ist die Injektion in
+Ordnung und der Typ existiert schlicht nicht.
+
+Die Klasse ist jetzt in `types/pickers.lua` definiert, mit den Feldern, die
+die beiden Leser tatsaechlich lesen, und jedes als optional -- beide haben
+Fallbacks (`ansi_snippets` auf `"41"`/`"32"`, das Gruppen-Setup auf `false`).
+
+---
+
+#### Und die beiden Funktionen ruft niemand
+
+Beim Aufschreiben der Felder fiel das hier auf. Der Doc-Kommentar sagt:
+
+```lua
+--- This acts as small API that telescope's ensure_highlight_groups will call.
+```
+
+Es gibt kein `ensure_highlight_groups` im Repo. `setup_highlight_groups` und
+`ansi_snippets` haben **keinen einzigen Aufrufer**, und die Highlight-Gruppen,
+die sie definieren (`ReplacerOld`, `ReplacerNew`,
+`ReplacerOldStrikethrough`), werden nirgends sonst referenziert. Die
+Telescope-Anbindung, fuer die das geschrieben wurde, ist nie entstanden.
+
+**Nicht geloescht**, sondern als Notiz an die Funktion geschrieben: ob das
+Preview hervorgehoben werden soll, ist eine Produktentscheidung und kein
+Diagnose-Befund. Der Fund gehoert dem Repo-Besitzer, nicht diesem Durchgang.
+
+Das ist die Umkehrung der A4-Familie: nicht ein Aufruf, der nie funktionieren
+konnte, sondern eine Funktion, die nie gerufen wurde. **Beide sehen im Report
+gleich aus** -- `undefined-field` in `lua/`.
+
+---
+
+#### `vim.str_utfindex` hat in 0.11 die Signatur getauscht, und `:ReplaceDebug` merkt es
+
+`debug.lua`s `analyze_line` -- erreichbar ueber `:ReplaceDebug`, das
+`replacer.debug.register_command()` registriert -- rechnet Byte- in
+Zeichenpositionen um:
+
+```lua
+vim.str_utfindex(line, s - 1) or -1,
+vim.str_utfindex(line, e) or -1,
+```
+
+Bis Neovim 0.10 war das zweite Argument der Byte-Index. **Seit 0.11 ist es die
+Kodierung**, und Neovim ruft es selbst so:
+
+```lua
+col = vim.str_utfindex(line, position_encoding, col, false)
+```
+
+Auf jedem aktuellen Build wird `s - 1` also als Kodierung gelesen, und der
+Aufruf wirft. Der Pruefer meldete das als zwei `param-type-mismatch`
+(`Cannot assign 'integer' to parameter '"utf-16"|"utf-32"|"utf-8"'`) -- die
+Sorte Befund, die nach Annotationspflege aussieht und keine ist.
+
+Das README nennt **Neovim 0.9+**, also reicht es nicht, auf die neue Form
+umzustellen. Ein `char_index`-Helfer probiert jetzt erst die aktuelle Form und
+faellt auf die alte zurueck; das `or -1` des Originals ist als Rueckgabewert
+erhalten.
+
+**Fuer die RULES-Ableitung:** das ist derselbe Mechanismus wie
+`vim.diagnostic.jump` vs `goto_next` und `vim.lsp.get_log_path`, nur ohne
+`deprecated`-Markierung. Eine geaenderte Signatur meldet sich als
+`param-type-mismatch` an einer Stelle, die jahrelang funktioniert hat -- und
+in einem Repo mit breiter Versionsspanne ist die Antwort eine Probe, keine
+Migration.
+
+---
+
+#### Ein Feld, das drei Geschwister hat und selbst fehlte
+
+`init.lua` setzt vier interne Felder auf die aufgeloeste Config:
+
+```lua
+cfg._line_range = request.line_range
+cfg._old_len = ...
+cfg._changed_only = ...
+cfg._also_rename_file = ...
+```
+
+`RP_Config` deklariert **drei** davon. `_line_range` fehlte -- ein
+`inject-field` beim Schreiben in `init.lua`, ein `undefined-field` beim Lesen
+in `rg.lua`. Zwei Befunde, ein vergessenes Feld beim Nachruesten.
+
+Das laesst sich als Regel schreiben: **wo eine Klasse interne `_`-Felder
+fuehrt, sind es entweder alle oder keins.** Drei von vier ist die Signatur
+eines Nachtrags, der einmal vergessen wurde.
+
+---
+
+#### Der Rest -- sieben kleine Ursachen
+
+- **Das `value, err`-Idiom**, viermal (`batch` 2, `root`, `surround`):
+  `local x, err = f()` mit `---@return T|nil, string|nil`, dann
+  `if not x then notify.error(err)`. Der Aufrufer weiss, dass `err` gesetzt
+  ist, der Pruefer nicht. Die Fassung mit `err or "<konkreter Text>"` behebt
+  nicht nur den Befund -- sie meldet auch dann etwas, wenn der Fehlerpfad
+  wirklich einmal ohne Nachricht erreicht wird.
+- **`string.find` gibt beide Bounds oder keine**, aber der Guard prueft nur
+  `s`. Derselbe Kopf wie die Mehrfachrueckgabe in language (C3): nur der
+  erste Wert wird verengt.
+- **`pcall` auf eine `__call`-Tabelle** -- diesmal
+  `lib.nvim.bindings.keymap`, nach `vim.cmd` und `vim.lsp.config` die dritte.
+  Die Meldung ist immer dieselbe:
+  `Cannot assign 'table' to parameter 'fun(...any):...unknown'`.
+- **Eine `or`-Kette von Gleichheitstests verengt keine String-Union**
+  (`pick_picker`), wie schon in lsp.nvims `output.apply`. Ein `---@cast` auf
+  das, was der Zweig gerade bewiesen hat.
+- **`#(src or {})` bewacht die Schleifengrenze, nicht die Lesezugriffe
+  darin.** Der Fallback gehoert in ein Local, dann gilt er fuer beides.
+- **Zwei optionale Config-Felder ohne Endpunkt der Fallback-Kette**
+  (`default_scope`, `Defaults.keymaps`) -- dasselbe wie in github_stats'
+  `Dashboard.Resolved`. Wo die Kette bei DEFAULTS endet, muss DEFAULTS' Typ
+  sie schliessen, sonst braucht sie ein letztes `or`.
+- **Ein Testaufruf mit einem Argument zu viel**: `check(name, cond, extra)`
+  bekam vier. Das vierte fiel still weg, also zeigte eine fehlgeschlagene
+  Zaehler-Zusicherung nur den einen Wert und nie den, gegen den verglichen
+  wird. Beide stehen jetzt in einem `extra`.
 
 ---
 

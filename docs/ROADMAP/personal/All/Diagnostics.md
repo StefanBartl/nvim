@@ -128,8 +128,8 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **github_stats.nvim steht auf Null** (31 -> 0, 2026-09-02), damit
-sechzehn der 32 Workspaces im Umfang -- die Hälfte.
+*Nichts.* **replacer.nvim steht auf Null** (32 -> 0, 2026-09-02), damit
+siebzehn der 32 Workspaces im Umfang.
 
 ---
 
@@ -195,6 +195,7 @@ abkürzen -- die vollständige Sammlung samt Signaturen und Griffen steht unter
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| RP | **replacer.nvim** -- vertikal (2026-09-02) | **32 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Smoke-Suiten grün (155/26/7). Zwölf der 32 kamen aus **einer Klasse, die es nicht gibt** (`RP_HighlightConfig`) -- und beim Definieren fiel auf, dass die zwei Funktionen dahinter **keinen Aufrufer haben**: die Telescope-Anbindung, für die sie geschrieben wurden, ist nie entstanden (nicht gelöscht, als Notiz vermerkt). Dazu ein echter Fehler ohne `deprecated`-Markierung: **`vim.str_utfindex` hat in 0.11 die Signatur getauscht** -- das zweite Argument war der Byte-Index und ist jetzt die Kodierung, `:ReplaceDebug` lief damit auf jedem aktuellen Build in einen Fehler. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | GS | **github_stats.nvim** -- vertikal (2026-09-02) | **31 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 9 Specs grün (108 Fälle). Neun der zehn `need-check-nil` gingen auf zwei `---@return boolean`-Helfer über optionalen Argumenten zurück -- **so eine Funktion verengt nichts**, der Aufrufer indiziert nach dem `if` weiter einen optionalen Wert. Dazu drei ungeprüfte `vim.uv.new_timer()` (drittes Repo in Folge), eine Option, die es gibt und die in keinem Typ stand (`dashboard.menu.enable`), und eine Klasse, die genau für solche Fälle existiert und zurückgefallen war. Nebenbefund: **`scripts/test.sh` ist der erste Test-Runner der Reihe, der es richtig macht** -- siehe Offen-Punkt 13. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | LS | **lsp.nvim** -- vertikal (2026-09-02) | **35 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 23 Specs grün (372 Fälle). Der flachste Posten der Runde und der ergiebigste seit filetree: **drei Befunde waren Bedingungen, die nie etwas ausgeschlossen haben.** `workspace_diagnostics` bewachte sein `didOpen` mit `supports_method("textDocumentSync/openClose")` -- kein Methodenname, sondern ein Capability-Pfad, und Neovim antwortet auf unbekannte Namen mit `true`; `loclist` übergab `win_id`, wo Neovim `winnr` liest; `:LspDoctor` prüfte `publishDiagnosticsProvider`, eine Capability, die es im LSP nicht gibt. Dazu **Offen-Punkt 6 beantwortet** (`LspMod.*` beschreibt nichts, was Neovim nicht führt) und `vim.health.info` zum sechsten Mal. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | LG | **language.nvim** -- vertikal (2026-09-02) | **34 -> 28 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle vier Specs grün. Der Einstieg war nicht der geplante: die `.luarc.json` setzte `workspace.library` selbst und warf die Injektion weg -- Cluster L zum **siebten** Mal. LuaLS sah hier kein einziges Plugin, und sieben Befunde waren nur das (`Lib.Keymap.Action`/`.Registered` und vier Feldzugriffe darauf). Danach sechs Ursachen für 28: vier `pcall(vim.cmd, ...)` (Cluster E hier leer), acht ungeprüfte `vim.uv.new_timer()`, eine Mehrfachrückgabe, die alles-oder-nichts ist und als vier Optionals deklariert war (sechs Befunde aus zwei Zeilen), Form A aus Offen-Punkt 3 an beiden hiesigen Stellen -- dabei fiel auf, dass `custom.cmd` mit zwei Parametern deklariert und mit drei gerufen wird. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -240,17 +241,17 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
 | cascade.nvim | 32 | `duplicate-set-field` 14, `param-type-mismatch` 9 |
 | pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| replacer.nvim | 32 | `param-type-mismatch` 12, `undefined-field` 11 |
 | diff.nvim | 31 | `duplicate-set-field` 11, `param-type-mismatch` 9 |
 | markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
 | *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(sechzehn Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, **github_stats**, gopath, images, language, lib, lsp, mdview, open, pdfport, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **367** | |
+| *(siebzehn Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, github_stats, gopath, images, language, lib, lsp, mdview, open, pdfport, **replacer**, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **335** | |
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
 minus die 37 von images, minus die 34 von language, minus die 35 von
-lsp, minus die 33 von github_stats -- alle fünf stehen inzwischen auf 0. Bei language waren es auf korrigierter Messgrundlage nur
+lsp, minus die 33 von github_stats, minus die 32 von replacer -- alle
+sechs stehen inzwischen auf 0. Bei language waren es auf korrigierter Messgrundlage nur
 28 und bei github_stats 31 statt 33; die Summe rechnet mit den geführten
 Zahlen, weil die übrigen Zeilen dieser Tabelle ebenfalls auf der jeweils
 eigenen Grundlage stehen. **Wo ein Repo
