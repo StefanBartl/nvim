@@ -115,39 +115,35 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* Am 2026-09-01 sind sieben Repos fertig geworden: filetree (80),
-runtime-analysis (109), die fünf der Sechser-Runde (126 zusammen) und
-pdfport (61). **Zehn der 32 Workspaces im Umfang stehen jetzt auf Null.**
+*Nichts.* Am 2026-09-01 sind acht Repos fertig geworden: filetree (80),
+runtime-analysis (109), die fünf der Sechser-Runde (126 zusammen), pdfport
+(61) und open (48). **Elf der 32 Workspaces im Umfang stehen jetzt auf
+Null.**
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**open.nvim vertikal** (48, frisch gemessen am 2026-09-01). Wieder zwei
-Posten statt achtundvierzig Fälle:
+**spotlight.nvim vertikal** (49, frisch gemessen am 2026-09-01). Das größte
+verbliebene Plugin nach der nvim-Config. Die Verteilung ist flacher als bei
+den letzten dreien — kein Posten trägt die Hälfte — aber die Cluster sind
+alle schon einmal dagewesen:
 
 | Posten | Anzahl | was es ist |
 |---|---:|---|
-| `undefined-field` | 30 | und davon `kind` 7, `scope` 7, `sort`/`out`/`unique` je 2 -- die Verteilung sieht nach ein bis zwei Klassen aus, denen Felder fehlen, nicht nach dreißig Einzelfällen |
-| `duplicate-set-field` | 11 | `dispatch` 5, `select` 2 -- die Form, die in filetree und emojis ausnahmslos Test-Doubles waren |
+| `Spotlight.Item|nil` an einen `Spotlight.Item`-Parameter | 7 | die Form, die in gopath `make_result` war: ein Wert, den der Aufrufer geprüft hat und die Signatur nicht |
+| `string|nil` an `string` | 5 | dieselbe Familie; zuletzt `notify.error(err)` in open und runtime-analysis |
+| `undefined-field` `line1` / `range` | 5 | Kommando-Kontextfelder — **genau der Posten, den open.nvim gerade hatte**, dort war es ein `@param opts table` |
+| `Lib.ContextMenu.Item` undefiniert | 2 | ein lib.nvim-Typ, den es unter dem Namen nicht gibt |
 
-Der Rest ist einzeln: 5 `param-type-mismatch`, je 1 `redundant-parameter`
-und `cast-local-type`.
+Konzentriert in zwei Dateien: `bindings/usrcmds.lua` (9) und `ui/list.lua`
+(8), dazu 16 über vier Spec-Dateien.
 
-**Ein Posten quer über alle Repos, der sich lohnt:** dreimal an drei Tagen
-hat eine **einzelne nicht parsende Annotation** zweistellig viele Befunde
-erzeugt -- pdfports Notifier (28), fileops' `on_before_delete` (6 plus die
-Folgefelder), gopaths einzeilige Doppelrückgabe (13). Beide Formen sind
-mechanisch zu finden: ein `fun(...): X` ohne Klammern **innerhalb** eines
-Tabellentyps, und eine `@return`-Zeile, deren Beschreibung ohne Namen
-beginnt. Eine Suche danach über die verbleibenden Repos ist billiger als
-sie einzeln wieder zu entdecken.
-
-**Danach die nvim-Config selbst** (118) -- das größte Einzelvorkommen. Es
+**Danach die nvim-Config selbst** (118) — das größte Einzelvorkommen. Es
 ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
 immer *die Config, aus der `scan.sh` gestartet wurde*, und es liegen elf
 Worktrees darunter. Ein vertikaler Durchgang dort will erst die Frage
-geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
+geklärt haben, gegen welchen Baum gemessen wird — siehe „Nicht von Claude
 entschieden" unten.
 
 ---
@@ -165,6 +161,7 @@ entschieden" unten.
 | L | **`$VIMRUNTIME/lua` in sechs `.luarc.json`** -- die Messgrundlage | **356 -> 411** über die sechs. `buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib` und `sessions` setzten `workspace.library` selbst und warfen damit die Injektion weg; `vim` war dort ein Global vom Typ `any`. Der Zuwachs ist der Zweck: 60 Befunde fallen weg, weil Typen auflösen, 119 kommen an Stellen dazu, die vorher niemand geprüft hat -- darunter fünf `deprecated`, die seit dem Erstscan in Abschnitt 5 stehen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | V2 | **lib.nvim fertig** -- der zweite vertikale Durchgang | **273 -> 1**. Zwanzig kleine Ursachen, darunter zwei echte Fehler: `getbufinfo()` liefert kein `filetype` (jede Filetype-Ausschlussliste in `buffer_utils` war wirkungslos) und `page_key` verwarf still die Seitenzahl (alle Seiten eines PDFs teilten sich einen Hover-Cache-Slot). Der eine Rest gehört nach lsp.nvim. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | V4 | **filetree.nvim** -- der vierte vertikale Durchgang (2026-09-01) | **161 -> 80**, `worse: nothing`. `undefined-field` 60 -> 9. Der Posten war kein Annotationsproblem: `get_node_at_line` wird von fünf Feature-Modulen gerufen und von keinem Adapter implementiert, also rendern `git_status`, `lsp_diagnostics`, `copy_move`, `search.filter` und `ui.size_info` nie etwas. Dazu ein Wort: `org.session` fragte nach `get_root` statt `get_root_path` und hat jede Session mit `root = nil` gespeichert. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| V9 | **open.nvim fertig** -- der achte vertikale Durchgang (2026-09-01) | **48 -> 0**, `worse: nothing`, alle 6 Specs grün. Ungewöhnliche Verteilung: 42 der 48 lagen in `TESTS/`. `viewer.run` nahm `---@param opts table` und liest zwölf Schlüssel daraus -- die Gestalt heißt jetzt `OpenNvim.Viewer.RunOpts`. Die interessantere Hälfte: `usrcmds_spec` setzt seinen Fang vor jedem Fall zurück, und ein zurückgesetztes Local ist für den Prüfer `nil` -- jeder Fall holt ihn sich jetzt mit einem `assert` ab, das beim Bruch den Fall benennt statt drei Zeilen später mit „index a nil value" zu scheitern. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | V7 | **pdfport.nvim fertig** -- der siebte vertikale Durchgang (2026-09-01) | **61 -> 0**, `worse: nothing`, alle 7 Specs grün. Achtundzwanzig Befunde waren **eine Zeile**: `util.notify.create` deklarierte seinen Rückgabewert als Inline-Tabellentyp, in dem ein `fun(...): nil` alles nach sich verschluckt -- LuaLS sah nur `info`, und `warn`/`error`/`debug` lasen sich an allen 28 Aufrufstellen als undefiniert. Dazu acht `return`-Zeilen hinter einer `@return`-Annotation, die als zwei gelesen wird, und acht aus zwei gestapelten Doc-Blöcken. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | V8 | **neotree-fs-refactor.nvim** -- **gehört nicht zum Umfang**, versehentlich bearbeitet (2026-09-01) | Das Repo steht nicht auf der Plugin-Liste oben; es hat nur eine `.luarc.json` und wurde deshalb vom Scan als Workspace geführt. Der Durchgang ist gemacht und gepusht, zählt aber gegen keine Summe hier. Inhaltlich: **4 -> 0** auf der korrigierten Messgrundlage. Das Repo setzte weiter `workspace.library` selbst, also war hier nie etwas geprüft. Beide Ursachen sind Namenskollisionen (`LogLevel` mit lib.nvims Alias, `Luassert` mit plenarys Klasse), beide reine Annotationen. Nebenbefund: zwei Repos haben keine `stylua.toml`, und `tests/run_tests.sh` meldet Erfolg auch ohne geladenen Harness. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | S6 | **Die Sechser-Runde** -- fünf Repos in einem Zug (2026-09-01) | **126 -> 0** (`buffer-ctx` 5, `sessions` 6, `emojis` 13, `fileops` 35, `gopath` 67), `worse: nothing`, jede Suite grün. Dieselbe Familie wie in filetree: Aufrufe, die nie funktioniert haben können -- fileops' bulk-Tastenkürzel meldete weder Erfolg noch Fehler, sein lockinfo-Kürzel warf statt zu melden, und gopaths `make_result` baute Ergebnisse mit `path = nil` neben `exists = true`. Dazu zwei Annotationen, die nicht parsen und alles unter sich mitnehmen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -192,7 +189,7 @@ bei 1353; die Differenz ist genau das, was Fortschreiben von Messen
 unterscheidet.
 
 Die Tabelle unten ist um die Durchgänge vom selben Tag fortgeschrieben
-(**1254 - 137 - 81 - 80 - 109 - 126 - 61 = 660**); alle anderen Zeilen sind
+(**1254 - 137 - 81 - 80 - 109 - 126 - 61 - 48 = 612**); alle anderen Zeilen sind
 gemessen. `lsp.nvim` ist durchgegangen worden und steht trotzdem bei 35 --
 Einzelfälle, keine Cluster; es hat deshalb eine eigene Zeile und steht nicht
 bei den Nullen.
@@ -201,7 +198,6 @@ bei den Nullen.
 |---|---:|---|
 | nvim-config | 118 | `param-type-mismatch` 38, `need-check-nil` 17 |
 | spotlight.nvim | 49 | `param-type-mismatch` 15, `assign-type-mismatch` 10 |
-| open.nvim | 48 | `undefined-field` 30, `duplicate-set-field` 11 |
 | mdview.nvim | 44 | `param-type-mismatch` 19, `need-check-nil` 10 |
 | sandbox.nvim | 40 | `undefined-doc-param` 10, `need-check-nil` 7 |
 | images.nvim | 38 | `param-type-mismatch` 14, `duplicate-set-field` 11 |
@@ -215,8 +211,8 @@ bei den Nullen.
 | cascade.nvim | 25 | `param-type-mismatch` 9, `duplicate-set-field` 7 |
 | lsp.nvim | **35** | seit 2026-09-01 durchgegangen; nichts über 12 |
 | *(sieben Repos unter 25)* | 51 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `dap` 8, `debugging` 6, `cmdlog` 4, `migrate` 4 |
-| *(zehn Repos auf Null)* | **0** | documentation, lib, filetree, runtime-analysis, gopath, fileops, pdfport, emojis, sessions, buffer-ctx |
-| **Summe (alle 32 im Umfang)** | **660** | |
+| *(elf Repos auf Null)* | **0** | documentation, lib, filetree, runtime-analysis, gopath, fileops, pdfport, open, emojis, sessions, buffer-ctx |
+| **Summe (alle 32 im Umfang)** | **612** | |
 
 Nach Regel -- die Zahlen sind der **gemessene** Lauf (1254), nicht die
 fortgeschriebene Summe darüber; die sieben Durchgänge vom selben Tag sind hier
@@ -255,20 +251,21 @@ Umfang (siehe oben).
 
 Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. Alle Zahlen aus dem Gesamtlauf vom 01.09.,
-open.nvim frisch nachgemessen. Kurz:
+spotlight.nvim frisch nachgemessen. Kurz:
 
-1. **open.nvim vertikal** (48) -- vorgeschlagener nächster Schritt, siehe
-   oben; `undefined-field` 30, `duplicate-set-field` 11
-2. **Die zwei Annotationsformen, die still zweistellig kosten** -- ein
-   `fun(...): X` ohne Klammern *innerhalb* eines Tabellentyps verschluckt
-   alles danach; eine `@return`-Zeile, deren Beschreibung ohne Namen
-   beginnt, wird als zwei Rückgabewerte gelesen. Dreimal an drei Tagen
-   aufgetreten (pdfport 28, fileops 6+, gopath 13). Beide sind mechanisch
-   suchbar; einmal quer über die verbleibenden Repos ist billiger als sie
-   einzeln wiederzufinden
-3. **Die nvim-Config selbst** (118) -- das größte Einzelvorkommen;
+1. **spotlight.nvim vertikal** (49) -- vorgeschlagener nächster Schritt,
+   siehe oben; `param-type-mismatch` 15, `assign-type-mismatch` 10
+2. **Die nvim-Config selbst** (118) -- das größte Einzelvorkommen;
    `param-type-mismatch` 38, `need-check-nil` 17. Braucht vorher die
    Worktree-Frage unten
+3. **Die fünf Stellen der zwei Annotationsformen** -- am 2026-09-01
+   gesucht und damit vermessen, nachdem sie dreimal zweistellig gekostet
+   hatten. Form A (ein `fun(...): T` im Tabellentyp, auf das noch ein Feld
+   folgt): `language.nvim/lua/language/config/@types/init.lua` Zeile 96 und
+   196, `nvim/lua/config/snacks/picker/init.lua` Zeile 25 und 45. Form B
+   (`@return <typ>  <wort>,` ohne Namen):
+   `nvim/lua/bindings/usrcmds/case/extract/doclinks.lua:25`. Fällt beim
+   jeweiligen Repo an -- als eigener Durchgang zu klein
 4. **`get_node_at_line` und die drei anderen Adapter-Fähigkeiten** --
    deklariert, von keinem Backend implementiert, und fünf Features warten
    darauf. neo-tree und nvim-tree führen interne Zeilenindizes, oil und netrw
@@ -285,14 +282,14 @@ open.nvim frisch nachgemessen. Kurz:
    `lsp.TextDocumentIdentifier`. Solange `vim_lsp.lua` danebenlag, fiel das
    nicht auf; jetzt kollidiert es dreimal in `languages/webdev/typescript.lua`.
    Die Frage ist, ob `LspMod.*` noch etwas beschreibt, das Neovim nicht führt
-7. **`pcall(vim.cmd, ...)`** (E) -- **18 offen**, nachgezählt am 2026-09-01
-   statt fortgeschrieben: `markdown` 6, `language` 4, `images` 2, dazu je
-   eines in `color_my_ascii`, `mdview`, `migrate`, `open` und zwei in der
-   nvim-Config. Erledigt sind 61 (lib 10, lsp 4, filetree 15, fileops 16,
-   sessions 4, runtime-analysis 9, gopath 2, emojis 1) -- die 60 aus dem
-   Erstscan waren eine Schätzung. Mechanisch, fällt beim jeweiligen Repo an
+7. **`pcall(vim.cmd, ...)`** (E) -- **17 offen**: `markdown` 6, `language` 4,
+   `images` 2, dazu je eines in `color_my_ascii`, `mdview`, `migrate` und
+   zwei in der nvim-Config. Erledigt sind 62 (lib 10, lsp 4, filetree 15,
+   fileops 16, sessions 4, runtime-analysis 9, gopath 2, emojis 1, open 1)
+   -- die 60 aus dem Erstscan waren eine Schätzung. Mechanisch, fällt beim
+   jeweiligen Repo an
 8. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil;
-   der Anteil der zehn durchgegangenen Repos daran ist erledigt
+   der Anteil der elf durchgegangenen Repos daran ist erledigt
 9. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
    `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an,
    nicht als eigener Durchgang

@@ -9,6 +9,11 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [open.nvim -- 48 auf 0, und ein Spec, das unbrauchbar haette scheitern koennen](#opennvim-48-auf-0-und-ein-spec-das-unbrauchbar-haette-scheitern-koennen)
+      - [Ein `table`, das zwoelf Schluessel verschwieg](#ein-table-das-zwoelf-schluessel-verschwieg)
+      - [Zwei Felder gerettet, siebenundzwanzig nicht](#zwei-felder-gerettet-siebenundzwanzig-nicht-und-das-war-die-interessante-haelfte)
+      - [Die sechs in `lua/`](#die-sechs-in-lua)
+      - [Nebenher: der Querschnittsposten ist vermessen](#nebenher-der-querschnittsposten-ist-vermessen)
     - [pdfport.nvim -- 61 auf 0, und der Notifier, den niemand sehen konnte](#pdfportnvim-61-auf-0-und-der-notifier-den-niemand-sehen-konnte)
       - [Achtundzwanzig Befunde waren eine Zeile](#achtundzwanzig-befunde-waren-eine-zeile)
       - [Acht weitere: dasselbe, andersherum](#acht-weitere-dasselbe-andersherum)
@@ -122,6 +127,104 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### open.nvim -- 48 auf 0, und ein Spec, das unbrauchbar haette scheitern koennen
+
+*(war: Diagnostics-Report Abschnitt 0, „Vorschlag naechster Schritt" und Offen-Punkt 1)*
+
+Der achte vertikale Durchgang. **48 -> 0**, `worse: nothing`, alle sechs Specs
+gruen, stylua sauber, durch zwei Laeufe bestaetigt.
+
+Ungewoehnliche Verteilung fuer diese Reihe: **42 der 48 lagen in `TESTS/`**,
+nur 6 in `lua/`. Beide Haelften liefen auf dasselbe hinaus -- einen Typ, der
+weniger beschrieb, als der Code tut.
+
+---
+
+#### Ein `table`, das zwoelf Schluessel verschwieg
+
+`viewer.run` nahm `---@param opts table`. Es liest zwoelf Schluessel aus dieser
+Tabelle, und `bindings/usrcmds.lua` baut jeden einzelnen aus der geparsten
+Kommandozeile -- `table` sagte davon nichts. Die Gestalt heisst jetzt
+`OpenNvim.Viewer.RunOpts` und steht bei den `OpenNvim.Viewer.*`-Typen, die
+ohnehin schon da waren; dazu `OpenNvim.Viewer.CollectOpts` fuer die Teilmenge,
+die `M.collect` nimmt.
+
+Das ist die vollstaendige Oberflaeche von `:Open viewer` und seinen
+Wrapper-Kommandos -- zum ersten Mal aufgeschrieben.
+
+---
+
+#### Zwei Felder gerettet, siebenundzwanzig nicht -- und das war die interessante Haelfte
+
+Der Typ reparierte die ersten beiden Feldzugriffe in `usrcmds_spec` und keinen
+der 27 danach. Der Grund:
+
+```lua
+    got = nil
+    vim.cmd("Open viewer urls")
+    H.eq(got.kind, "urls", ...)   -- got ist hier `nil`, fuer den Pruefer
+```
+
+Das Zuruecksetzen ist **Absicht** -- es beweist, dass das naechste Kommando
+wirklich neu dispatcht hat. Fuer LuaLS ist ein zurueckgesetztes Local danach
+aber `nil`, und jeder Feldzugriff darauf ein undefiniertes Feld.
+
+Das Zuruecksetzen bleibt also, und jeder Fall holt sich seinen Fang jetzt ab:
+
+```lua
+    got = nil
+    vim.cmd("Open viewer urls")
+    got = assert(got, ":Open viewer urls did not reach viewer.run")
+```
+
+Das ist genau das, was der Kopfkommentar der Datei ohnehin verlangt („when
+something here comes back nil, this file must crash and name it"). **Vorher
+scheiterte ein Kommando, das nicht mehr zu `viewer.run` routet, drei Zeilen
+spaeter mit „index a nil value" und ohne einen Hinweis darauf, welcher Fall
+kaputt ist.** Zehn Stellen in `usrcmds_spec`, eine in `viewer_spec`.
+
+---
+
+#### Die sechs in `lua/`
+
+- Vier `notify.error(err)` reichen den zweiten Rueckgabewert von
+  `run_detached` durch, also ein `string?`. Jeder hat jetzt eine
+  Ersatznachricht -- was der Leser auch statt eines leeren Fehler-Popups
+  bekommt.
+- Ein `pcall(vim.cmd, ...)` ist eine Closure (Cluster E; der ganze Anteil
+  dieses Repos).
+- `keywords.lua` wies demselben Local erst einen getrimmten String und dann
+  nil zu; der getrimmte Wert bekommt ein eigenes.
+
+Unterdrueckt, mit Begruendung: elf Test-Doubles ueber drei Spec-Dateien, jedes
+fuer die Dauer eines Falls getauscht und direkt danach zurueckgesetzt; und
+`vim.system`s Stelligkeit in `features_spec`, wo die mitgelieferte Meta zwei
+Parameter deklariert und die Funktion zur Laufzeit drei nimmt (nachgemessen) --
+ein getreues Double liest sich damit als eines zu viel.
+
+---
+
+#### Nebenher: der Querschnittsposten ist vermessen
+
+Offen-Punkt 2 („die zwei Annotationsformen, die still zweistellig kosten")
+war bis hierher eine Vermutung ohne Zahl. Eine Suche ueber alle 31 Plugins
+plus die Config, auf **das** gemustert, was den Parser wirklich bricht:
+
+- **Form A** -- ein `fun(...): T` im Tabellentyp, auf das **noch ein Feld
+  folgt**: **4 Stellen**. `language.nvim/config/@types/init.lua` zweimal
+  (`custom = { cmd: fun(...): string[], parse: fun(...): string[] }`, wo
+  `parse` verschwindet) und `nvim/lua/config/snacks/picker/init.lua`
+  zweimal. Ein `fun(...)` als **letzter** Eintrag ist harmlos, ein
+  geklammertes `(fun(...): T)` ueberall -- beide zaehlen nicht mit.
+- **Form B** -- `@return <typ>  <wort>,` ohne Namen: **1 Stelle**,
+  `nvim/lua/bindings/usrcmds/case/extract/doclinks.lua:25`.
+
+Also fuenf Stellen in zwei Workspaces, nicht der grosse Posten, nach dem es
+nach drei Wiederholungen aussah. Sie fallen beim jeweiligen Repo an; der
+Punkt ist damit von „unbekannt gross" auf „benannt" geschrumpft.
 
 ---
 
