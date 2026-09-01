@@ -24,13 +24,11 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     11:40       |    45% / 60%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     02:00       |    62% / 48%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     00:30       |    89% / 39%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     17 20       |    74% / 56%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     14:10       |    87% / 47%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-
----
 
 ---
 
@@ -43,18 +41,23 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ---
 
----
-
 ## Misc
+
+- [ ] http links in markdown links bzw als freitiext: lib.nvim hover -> macht es sin, dort wirklich ie websiten zu previewwne? cool wäre es schon... vor allem, wenn man error codes 500 oder so sehen könnte, dannusw...
+screenhot vom momentanen bei htrtp: ![http hover](./assets/ROADMAP-1788258986.png)
+
+[google](http:\\www.google-com)  -> hover wie im screenshot
+http:\\www.google.com -> moemntan kein hover
+
+Hier brauchen wir ein sinnvlkles konzept. ich tendiere dazu, dieses spezifische feature opt-in zui machen, also verfügabr, aber wenn es hover soll, dann zuerst :Lib hover web on/off/toggle oder s ähkichh, denn website links gibt es sicherlich immer viele in dev docs, daher soll es nich tüberfrachtet sein. oder?
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
 
-
 - [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
 
-- [ ] docmap-deskztop app icon desktop
+- [ ] docmap-desktop app icon desktop
 
-- [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab;
+- [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab/Cases;
 
 - [ ] Unter der Tableiste ist nich im buffer / file kontext infios: Parent folder > Fileaname > 1. Markdown Headline > 2. MD Healdline (TOC) -> TOC Entrys
 Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
@@ -86,15 +89,11 @@ Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlin
 
 ---
 
----
-
 ## true check
 
 Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codequalität ist, inahltlich ist mir alles klar, also was die plugins machen, aber ich will keine schlechte codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gut als auch schlecht), was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand, usw...
   Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass soll es nämlich auch nicht sein, leider ist mir klar das dass ein wenig meine wünsche konterkariert. Ich denke, du must da einen goldenen Zwischenweg finden.
   Wenn dir Logikfehler, offensichtliche Bugs oder docs Probleme auffallen in einen Plugin, dann notiere diese gleich.
-
----
 
 ---
 
@@ -135,8 +134,6 @@ sessions.nvim
 spotlight.nvim
 
 und das native: docmap-desktop
-
----
 
 ---
 

@@ -3,6 +3,7 @@
 ## Table of content
 
   - [TASK an Claude delegieren (Claude soll diesen Punkt nicht bearbeiten!)](#task-an-claude-delegieren-claude-soll-diesen-punkt-nicht-bearbeiten)
+  - [Letze Task, nachdem alles fertig ist](#letze-task-nachdem-alles-fertig-ist)
   - [Intro](#intro)
   - [0. Stand, Arbeitsmodus, nächster Schritt](#0-stand-arbeitsmodus-nchster-schritt)
     - [Umfang: welche Repos dazugehören](#umfang-welche-repos-dazugehren)
@@ -44,6 +45,12 @@
 In C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw.
 
 comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig,  die erledigt task nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest.
+
+---
+
+## Letze Task, nachdem alles fertig ist
+
+- [ ] Aus C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md ableitungen treffen, wie künftiger Repos zb die /TEST/ files geschrieben werden, auf was wier aufpassen  üssen in normalen source code usw... sodass wir dies von anfang an einbauen können. Den Report erstmal nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/ schreiben. Außerdem alles was sinnvoll ist in die RULES files in WKDBooks/Development/wkdbook-Lua/Checklists schreiben, dort gibt es als beispiel eine filöe für neue projekte, dort kann man ereinschreiben, wie die /TEST/ aufgebaut sein soll buzw was hier wichtig ist um dieagnsotics zu berücksichtigen usw...
 
 ---
 
@@ -152,6 +159,7 @@ geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
 ---
+
 ### Erledigt
 
 | # | Punkt | Ergebnis |
@@ -220,6 +228,7 @@ quer über die Repos liegt statt in einem; ob er horizontal oder weiter
 vertikal abgearbeitet wird, entscheidet sich am nächsten Durchgang.
 
 ---
+
 ### Offen
 
 Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
