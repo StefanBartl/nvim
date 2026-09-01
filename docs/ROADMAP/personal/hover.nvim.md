@@ -1,6 +1,7 @@
 # hover.nvim — Extraktion aus lib.nvim
 
-Handover-Dokument. Stand: **2026-09-01**, Session „lib.nvim hover analysis".
+Handover-Dokument. Stand: **2026-09-01**, Sessions „lib.nvim hover analysis"
+und „hover.nvim docs + Phase 2".
 
 Repo: <https://github.com/StefanBartl/hover.nvim> · lokal `E:/repos/hover.nvim`
 Branch: **`main`** — kein Feature-Branch, alles ist gepusht.
@@ -14,10 +15,15 @@ die Config eingebunden, markdown.nvim hängt daran, und ein echter Start von
 Neovim mit deiner Config liefert einen funktionierenden Hover. Nichts ist
 halbfertig liegen geblieben.
 
-**Phase 2 ist noch offen:** `lua/lib/nvim/hover/` liegt *noch in lib.nvim*.
-Es wird von niemandem mehr aufgerufen, tut also nichts — aber es ist eine tote
-Kopie und gehört gelöscht. Das ist der eine Punkt, an dem hier weitergearbeitet
-wird. Details unter [Offene Punkte](#offene-punkte).
+**Phase 2 ist ebenfalls erledigt.** `lua/lib/nvim/hover/` ist aus lib.nvim
+gelöscht (`5450dd4`), samt Specs, `:Lib hover`-Routen, Options-Feld und
+Doku-Zeilen; `hover = false` ist aus der Config wieder raus. Damit ist auch
+das NUL-Byte in `preview/media.lua` endgültig weg.
+
+**Was noch offen ist,** sind die beiden Punkte, die nie an der Extraktion
+hingen: Bare Paths auf Kommentare/Strings scopen, und die Beobachtung, ob
+`manual` der bessere Default wäre. Details unter
+[Offene Punkte](#offene-punkte).
 
 ---
 
@@ -73,8 +79,9 @@ documentation.nvim, `lib.nvim.telemetry` (2 915 LOC) → runtime-analysis.nvim
 ## Der Namensentscheid, und was daran offen bleibt
 
 Du hast `hover.nvim` gewählt, nachdem ich Einspruch erhoben hatte. Der
-Einspruch bleibt gültig und ist im README dokumentiert, damit er nicht
-vergessen wird:
+Einspruch stand zunächst im README; **auf deine Anweisung ist er dort und im
+Vimdoc entfernt** — im Repo steht jetzt nirgends mehr etwas über den fremden
+Repo-Namen. Er lebt nur noch hier, damit er nicht ganz verloren geht:
 
 `lewis6991/hover.nvim` existiert und ist verbreitet. Die *Repo*-Namen
 kollidieren nicht, die **Lua-Modulwurzel schon**: beide liefern `lua/hover/`,
@@ -141,8 +148,9 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
   tatsächlich aufgerufenen Entry Point fragt statt nur nach dem Modul.
 - **Gefundener Altbestand-Bug:** `preview/media.lua:376` enthielt ein **rohes
   NUL-Byte** im Quelltext (Cache-Key-Separator). Jetzt als `"\0"`-Escape. Der
-  Bug steckt **weiterhin in lib.nvims Kopie**, solange die existiert — git und
-  stylua behandeln die Datei deshalb als binär.
+  Bug steckte danach nur noch in lib.nvims Kopie, wo git und stylua die Datei
+  deshalb als binär behandelten — **mit `5450dd4` ist die Kopie gelöscht und
+  in `lua/` findet sich kein NUL-Byte mehr.**
 
 ---
 
@@ -152,8 +160,8 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 | --- | --- | --- |
 | **hover.nvim** (neu) | gepusht, `main` | `feat: hover.nvim -- the path/link preview, extracted from lib.nvim` |
 | **markdown.nvim** | gepusht, `main` | `bd53428` + `634121f` |
-| **nvim-config** | gepusht, `main` | `97051225` |
-| **lib.nvim** | **unberührt** | — |
+| **nvim-config** | gepusht, `main` | `97051225`, `69907c0e` |
+| **lib.nvim** | gepusht, `main` | `5450dd4` — der Hover ist gelöscht |
 
 ### markdown.nvim
 
@@ -200,23 +208,39 @@ also der klassische `LLS-01`-Messfehler (CLI ohne injizierte Library). Mit
 
 ## Offene Punkte
 
-### 1. `lua/lib/nvim/hover/` aus lib.nvim löschen  — **der nächste Schritt**
+### 1. `lua/lib/nvim/hover/` aus lib.nvim löschen — **erledigt** (`5450dd4`)
 
-Steht noch da, wird von nichts mehr aufgerufen. Zu tun:
+15 Dateien, 3 949 LOC, dazu 6 Specs. Was tatsächlich mit dranhing, und zwei
+Abweichungen von der obigen Planung:
 
-- [ ] `lua/lib/nvim/hover/` löschen (18 Dateien, ~3 950 LOC)
-- [ ] `lua/lib/nvim_usrcmds/usrcmds.lua:77` — den `hover.routes()`-Block raus
-- [ ] `lua/lib/nvim_usrcmds/init.lua:27` — `hover = true` raus, und das Feld
-      aus `@types/init.lua:10`
-- [ ] `TESTS/hover_*_spec.lua` (6 Dateien) löschen
-- [ ] `README.md` — die drei `:Lib hover`-Zeilen aus der Kommandotabelle
-- [ ] `docs/modules.md` — den Hover-Eintrag
-- [ ] `lib.nvim.image_preview` **bleibt** — das ist der echte generische
-      Helper und die „thin caller"-Rolle, die `wrap_lib()` bei telemetry hatte
-- [ ] danach in der Config `hover = false` wieder rausnehmen (der Key
-      existiert dann nicht mehr)
+- [x] `lua/lib/nvim/hover/` gelöscht — 15 Dateien, nicht 18
+- [x] `nvim_usrcmds/usrcmds.lua` — der `hover.routes()`-Block samt Kommentar
+- [x] `nvim_usrcmds/init.lua` — `hover = true`, und das Feld aus `@types`
+- [x] `TESTS/hover_*_spec.lua` (6 Dateien)
+- [x] **`TESTS/run.lua`** — stand nicht auf der Liste und war der Punkt, an
+      dem es zuerst geknallt hat: der Runner führt eine explizite Dateiliste,
+      keinen Glob. Die sechs Einträge stehen zu lassen macht aus der ganzen
+      Suite einen `dofile`-Fehler auf einem fehlenden Pfad, nicht sechs
+      übersprungene Specs
+- [x] `README.md` — die drei `:Lib hover`-Zeilen
+- [x] `docs/BINDINGS.md` — fünf Routen-Zeilen, das Setup-Beispiel, und der
+      Absatz „warum Command und nicht Keymap", dessen Schluss-Link ins
+      gelöschte Verzeichnis zeigte. Der Absatz ist geblieben und
+      verallgemeinert: die Begründung gilt dem Namespace, nicht dem Hover
+- [x] `docs/BINDINGS/Usercmds.md` — **regeneriert** über
+      `composer.document()`, nicht von Hand editiert (die Datei sagt selbst,
+      dass sie generiert ist)
+- [x] `lib.nvim.image_preview` ist geblieben
+- [x] Config: `hover = false` raus
 
-Erst danach ist der NUL-Byte-Bug in `preview/media.lua` wirklich weg.
+**`docs/modules.md` stand auf der Liste, hatte aber gar keinen Eintrag** — die
+drei Treffer dort sind alle `ui.hover_select`, ein anderes Modul.
+
+`docs/map/` ist seit `052001b` nicht mehr getrackt, also nichts zu tun; die
+lokalen Artefakte sind ohnehin vom 15. Aug und damit schon vorher veraltet.
+
+Gates danach: `LIB_TESTS_OK`, stylua sauber, luacheck 0 Fehler (die eine
+verbliebene Warnung sitzt in `bindings/autocmd/docs.lua` und ist älter).
 
 ### 2. Bare Paths auf Kommentare/Strings scopen
 

@@ -35,12 +35,6 @@ plugins.add({
         helptags = true,
         cwd_here = true,
         powershell_profile = true,
-        -- `:Lib hover ...` gehoert jetzt hover.nvim und heisst dort `:Hover`.
-        -- lib.nvim.hover liegt noch im Repo, wird aber von niemandem mehr
-        -- `enable()`-t -- die Routen wuerden also einen Hover schalten, der
-        -- keine Autocmds hat, und nichts sichtbar tun. Kann weg, sobald
-        -- lib.nvim.hover geloescht ist (siehe Handover).
-        hover = false,
       })
 
       -- Der Path/Link-Hover ist seit 2026-09-01 ein eigenes Plugin
