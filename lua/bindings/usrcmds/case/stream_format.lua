@@ -61,11 +61,11 @@ local function saperesolve_datetime(date_part, time_part)
     h = 0
   end
   return os.time({
-    year = 2000 + tonumber(yy),
-    month = tonumber(mo),
-    day = tonumber(d),
+    year = 2000 + assert(tonumber(yy)),
+    month = assert(tonumber(mo)),
+    day = assert(tonumber(d)),
     hour = h,
-    min = tonumber(mi),
+    min = assert(tonumber(mi)),
     sec = 0,
   })
 end
@@ -95,8 +95,8 @@ function M.saperesolve_header(line)
     return nil
   end
   return {
-    idx = tonumber(idx),
-    total = tonumber(total),
+    idx = assert(tonumber(idx)),
+    total = assert(tonumber(total)),
     at = at,
     actor = vim.trim(actor),
     action = vim.trim(action),

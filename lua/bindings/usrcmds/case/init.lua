@@ -51,7 +51,7 @@ local function register_case_type()
   })
 end
 
----@return Lib.UserCmd.Composer.RouteSpec[]
+---@return Lib.UserCmd.Composer.Route[]
 local function file_verb_routes()
   local routes = {}
   for _, node in ipairs(blueprint.all_keyed_nodes()) do
@@ -78,7 +78,7 @@ end
 --- `:Case close` to ask WHERE first (any other state, or permanent delete),
 --- not assume "Closed" — every other state-move verb keeps the old direct
 --- behavior.
----@return Lib.UserCmd.Composer.RouteSpec[]
+---@return Lib.UserCmd.Composer.Route[]
 local function state_verb_routes()
   local routes = {}
   for _, state in ipairs(config.states) do
@@ -114,7 +114,7 @@ local MATCH_FLAGS = {
 --- One `:Cases <field> [pattern] [--exact|-e] [--re|-r]` per
 --- config.infocard_fields entry — substring, case-insensitive by default;
 --- empty pattern means "field is set at all".
----@return Lib.UserCmd.Composer.RouteSpec[]
+---@return Lib.UserCmd.Composer.Route[]
 local function filter_routes()
   local routes = {}
   for _, field in ipairs(config.infocard_fields) do
@@ -135,7 +135,7 @@ end
 --- AND-combination across several fields at once, via composer's `kv`
 --- grammar (bare `key=value`, no dashes). Every `config.infocard_fields`
 --- entry is a possible key; `ctx.kv` only carries the ones actually passed.
----@return Lib.UserCmd.Composer.RouteSpec
+---@return Lib.UserCmd.Composer.Route
 local function find_route()
   local kv_specs = {}
   for _, field in ipairs(config.infocard_fields) do
@@ -163,7 +163,7 @@ end
 
 --- `:Cases grep <pattern> [--re|-r]` — full-text search over every case's
 --- markdown files.
----@return Lib.UserCmd.Composer.RouteSpec
+---@return Lib.UserCmd.Composer.Route
 local function grep_route()
   return {
     path = { "grep" },

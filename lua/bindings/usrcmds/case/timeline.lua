@@ -49,7 +49,7 @@ end
 --- just "still the same sitting" (gap under `config.timeline_session_gap_minutes`)
 --- vs. "came back later" (a new session starts).
 ---@param case_dir string
----@return Lib.Case.TimelineSession[] ascending, oldest first
+---@return Lib.Case.TimelineSession[] sessions # ascending, oldest first
 function M.sessions(case_dir)
   local evs = events(case_dir)
   if #evs == 0 then

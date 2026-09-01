@@ -15,7 +15,11 @@ local expand_path = require("lib.nvim.cross.fs.expand_path")
 local M = {}
 
 local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
-local system, fnamemodify = vim.system, fn.fnamemodify
+-- F5: an alias on a `vim.*` function reads as nil-bearing at its call
+-- sites without an explicit type on the alias line.
+---@type fun(cmd: string[], opts?: table, on_exit?: fun(out: vim.SystemCompleted)): vim.SystemObj
+local system = vim.system
+local fnamemodify = fn.fnamemodify
 
 -- Optional: per-repo progress, since fetch+pull over a whole directory of
 -- repos is exactly the kind of path-driven, potentially long-running

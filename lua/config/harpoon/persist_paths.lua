@@ -380,6 +380,10 @@ function M.inject_now()
     notify.error("[harpoon] persistpaths: inject_now failed: " .. tostring(result))
     return false
   end
+  -- `with_pins_key`'s second value is the callback's own boolean when `ok`,
+  -- and the error string only when it is not -- which the guard above has
+  -- already ruled out.
+  ---@cast result boolean
   return result
 end
 
@@ -466,6 +470,7 @@ function M.insert_into_list(path, opts)
     notify.error("[harpoon] insert_into_list failed: " .. tostring(result))
     return false
   end
+  ---@cast result boolean
   return result
 end
 

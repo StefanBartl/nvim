@@ -64,6 +64,43 @@ def nest(cfg):
     return out
 
 
+def own_trees(root):
+    """The directories whose files ARE this workspace's own.
+
+    Normally just `root`. When `root` is a git worktree
+    (`<tree>/.claude/worktrees/<name>`), the tree it was cut from holds the
+    same files under a different path, so it counts too.
+    """
+    roots = [os.path.normcase(os.path.abspath(root))]
+    marker = os.path.normcase(os.path.join(".claude", "worktrees"))
+    norm = roots[0]
+    if marker in norm:
+        roots.append(norm.split(marker)[0].rstrip("\\/"))
+    return roots
+
+
+def drop_own(library, root):
+    """Remove library entries that point back at the workspace's own files.
+
+    lua_ls treats `workspace.library` as *other people's* code, and lsp.nvim's
+    injection lists every `@types` directory it can find -- including this
+    config's own. While the workspace root and those paths are the same
+    directory that is harmless; from a worktree they are two directories
+    holding identical declarations, and every class and alias is then defined
+    twice. Measured: the nvim config reported 872 findings from a worktree and
+    120 from its own root, 755 of the difference being `duplicate-doc-field`
+    and `duplicate-doc-alias`.
+    """
+    roots = own_trees(root)
+    kept = []
+    for entry in library:
+        norm = os.path.normcase(os.path.abspath(entry))
+        if any(norm == r or norm.startswith(r + os.sep) for r in roots):
+            continue
+        kept.append(entry)
+    return kept
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--index", required=True, help="TSV: name<TAB>root per line")
@@ -109,10 +146,10 @@ def main():
             # the settings reach lua_ls. The CLI does not know it, and without
             # the expansion every `vim.*` reads as undefined-global.
             library = merged.get("workspace", {}).get("library")
-            if isinstance(library, list) and vimruntime:
-                merged["workspace"]["library"] = [
-                    entry.replace("$VIMRUNTIME", vimruntime) for entry in library
-                ]
+            if isinstance(library, list):
+                if vimruntime:
+                    library = [entry.replace("$VIMRUNTIME", vimruntime) for entry in library]
+                merged["workspace"]["library"] = drop_own(library, root)
 
             with open(os.path.join(args.out, name + ".json"), "w", encoding="utf-8") as out:
                 json.dump(merged, out, indent=2)

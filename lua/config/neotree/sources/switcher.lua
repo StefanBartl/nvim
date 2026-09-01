@@ -36,14 +36,15 @@ local function get_available_sources()
       local plugins = lazy_config.plugins or {}
       local spec = plugins["neo-tree.nvim"]
       if spec and spec.opts then
-        local opts = spec.opts
-        if type(opts) == "function" then
-          local ok_exec, result = pcall(opts)
-          if ok_exec and type(result) == "table" then
-            opts = result
-          end
+        -- `spec.opts` is a table or a builder function. The resolved table
+        -- goes into its own local, so the read below cannot land on the
+        -- function half of the union.
+        local resolved = spec.opts
+        if type(resolved) == "function" then
+          local ok_exec, result = pcall(resolved)
+          resolved = (ok_exec and type(result) == "table") and result or nil
         end
-        sources = opts.sources or {}
+        sources = (type(resolved) == "table" and resolved.sources) or {}
       end
     end
   end
