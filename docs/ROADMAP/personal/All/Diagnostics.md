@@ -50,6 +50,12 @@ comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden 
 
 ## Letze Task, nachdem alles fertig ist
 
+- [ ] **Vorarbeit liegt vor:** der Abschnitt [„Wiederkehrende Muster -- die
+  Ableitung fuer RULES“](./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules)
+  sammelt seit 2026-09-02, was sich ueber die Durchgaenge wiederholt hat --
+  nach Haeufigkeit, mit der Signatur zum Wiedererkennen und dem bewaehrten
+  Griff. Er wird bei jedem Durchgang fortgeschrieben und ist die Grundlage
+  fuer diesen Punkt.
 - [ ] Aus C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md ableitungen treffen, wie künftiger Repos zb die /TEST/ files geschrieben werden, auf was wier aufpassen  üssen in normalen source code usw... sodass wir dies von anfang an einbauen können. Den Report erstmal nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/ schreiben. Außerdem alles was sinnvoll ist in die RULES files in WKDBooks/Development/wkdbook-Lua/Checklists schreiben, dort gibt es als beispiel eine filöe für neue projekte, dort kann man ereinschreiben, wie die /TEST/ aufgebaut sein soll buzw was hier wichtig ist um dieagnsotics zu berücksichtigen usw...
 
 ---
@@ -157,7 +163,8 @@ geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
 **Sechs Dinge, die die neun Durchgänge gelehrt haben** und die den Einstieg
-abkürzen:
+abkürzen -- die vollständige Sammlung samt Signaturen und Griffen steht unter
+[„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules):
 
 - **`vim.uv.new_timer()` ist der häufigste echte Befund der Reihe** -- 21
   Stellen in drei Repos in Folge (mdview 10, language 8, github_stats 3). Der

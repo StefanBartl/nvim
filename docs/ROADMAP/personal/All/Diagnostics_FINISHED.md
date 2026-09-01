@@ -4,9 +4,25 @@ Aus `docs/ROADMAP/personal/All/Diagnostics.md` herausgenommene Punkte, sobald
 sie abgeschlossen sind. Neueste zuerst. Der Report dort bleibt die Quelle fuer
 alles, was noch offen ist.
 
+**Der Abschnitt direkt unten -- „Wiederkehrende Muster“ -- ist die
+Zusammenfassung ueber alle Durchgaenge hinweg:** was sich wiederholt hat, an
+welcher Signatur man es erkennt, und welcher Griff sich bewaehrt hat. Er ist
+als Checkliste fuer den naechsten Durchgang gedacht und als Vorlage fuer die
+RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
+
 ---
 
 ## Table of content
+
+  - [Wiederkehrende Muster -- die Ableitung fuer RULES](#wiederkehrende-muster-die-ableitung-fuer-rules)
+    - [A. Echte Fehler, die der Pruefer gefunden hat](#a-echte-fehler-die-der-pruefer-gefunden-hat)
+    - [B. Die Messgrundlage -- bevor irgendetwas gezaehlt wird](#b-die-messgrundlage-bevor-irgendetwas-gezaehlt-wird)
+    - [C. Annotationsformen, die etwas verschlucken](#c-annotationsformen-die-etwas-verschlucken)
+    - [D. Griffe, die nichts loesen](#d-griffe-die-nichts-loesen)
+    - [E. Wann Unterdruecken richtig ist](#e-wann-unterdruecken-richtig-ist)
+    - [F. Was Neovim schon fuehrt](#f-was-neovim-schon-fuehrt)
+    - [G. Der Test-Runner](#g-der-test-runner)
+    - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
     - [github_stats.nvim -- 31 auf 0, und ein Test-Runner, den die anderen kopieren sollten](#github_statsnvim-31-auf-0-und-ein-test-runner-den-die-anderen-kopieren-sollten)
@@ -181,6 +197,344 @@ alles, was noch offen ist.
     - [`lib.nvim.ui.list` -- eine Listen-Senke statt vierzehn](#libnvimuilist-eine-listen-senke-statt-vierzehn)
     - [mdview.nvim formatiert jetzt wie die anderen 30 Repos](#mdviewnvim-formatiert-jetzt-wie-die-anderen-30-repos)
     - [open.nvim: uebrig gebliebener Claude-Worktree abgeraeumt](#opennvim-uebrig-gebliebener-claude-worktree-abgeraeumt)
+
+---
+
+## Wiederkehrende Muster -- die Ableitung fuer RULES
+
+**Was das hier ist.** Neun vertikale Durchgaenge haben dieselben Ursachen
+mehrfach zutage gefoerdert. Dieser Abschnitt sammelt sie -- nach Haeufigkeit,
+mit der **Signatur, an der man sie erkennt**, und mit dem Griff, der sich
+bewaehrt hat. Gedacht als Checkliste fuer den naechsten Durchgang und als
+Vorlage fuer die RULES-Dateien in
+`WKDBooks/Development/wkdbook-Lua/Checklists`.
+
+Die Details und die Begruendungen stehen jeweils beim Repo weiter unten; hier
+steht nur, was sich wiederholt hat.
+
+---
+
+### A. Echte Fehler, die der Pruefer gefunden hat
+
+Nach Haeufigkeit. Diese vier Familien haben in jedem Durchgang mindestens
+einen echten Bug ergeben.
+
+#### A1. `vim.uv.new_timer()` ungeprueft -- 21 Stellen, drei Repos in Folge
+
+**Signatur:** `need-check-nil` unmittelbar nach `vim.uv.new_timer()`, oft
+zusammen mit einem `cast-local-type`, wenn das Ziel-Local schon als
+`uv.uv_timer_t` typisiert war.
+
+```lua
+local timer = vim.uv.new_timer()   -- uv_timer_t|nil
+timer:start(...)                   -- wirft, wenn nil
+```
+
+Verteilung bisher: mdview 10, language 8, github_stats 3.
+
+**Der Griff ist nicht der Punkt, die Frage ist es.** Nicht *"wie bekomme ich
+den Befund weg"*, sondern **was die Funktion ohne Timer tun soll**. In
+github_stats waren das drei verschiedene Antworten in einer Datei:
+
+| Stelle | ohne Timer |
+|---|---|
+| Fetch-Zyklus | startet nicht (der einmalige `defer_fn` davor lief schon) |
+| Auto-Refresh | entfaellt; die Refresh-Tasten funktionieren weiter |
+| Render-Debounce | **sofort rendern** -- nicht zurueckkehren, sonst faellt das Bild aus |
+
+Der Debounce-Fall ist der lehrreiche: die naheliegende Antwort (`return`) ist
+dort die falsche.
+
+**Nebenregel:** wenn das Ziel-Local aus einer Tabelle nicht-optionaler Timer
+kommt, gehoert der optionale Rueckgabewert in ein **eigenes** Local --
+`local fresh = vim.uv.new_timer(); if not fresh then return end; t = fresh` --
+sonst wandert der Befund von `need-check-nil` nach `cast-local-type`.
+
+#### A2. Eine Bedingung, die gar nichts prueft
+
+**Signatur:** ein `param-type-mismatch` oder `undefined-field` **an einer
+Bedingung**. Das sieht nach Annotationspflege aus und ist es oft nicht.
+
+Drei Faelle, alle in lsp.nvim, alle in taeglich laufendem Code:
+
+1. `client:supports_method("textDocumentSync/openClose")` -- kein
+   Methodenname, sondern ein Capability-Pfad. Neovims `supports_method` endet
+   mit `return required_capability == nil`, kommentiert mit *"if we don't know
+   about the method, assume that the client supports it"*. Fuer einen
+   erfundenen Namen ist die Antwort **immer `true`**: die Wache sah aus wie
+   eine Pruefung und war eine Zusicherung.
+2. `caps.publishDiagnosticsProvider` -- diese Capability gibt es im LSP nicht.
+   Push-Diagnostics haben ueberhaupt keine. Der Zweig war immer `nil`.
+3. `win_id` an `vim.diagnostic.setloclist`, das `winnr` liest -- die
+   dokumentierte Option fiel still durch.
+
+**Regel:** wo ein Typfehler an einer Bedingung steht, erst fragen, **was sie
+im Ernstfall zurueckgibt**, dann den Typ glattziehen. Ein `supports_method`
+mit einem Namen, den Neovim nicht kennt, ist stumm wahr.
+
+#### A3. Ein `---@return boolean`-Helfer ueber einem optionalen Argument
+
+**Signatur:** mehrere `need-check-nil` **nach** einem `if helper(x) then`, alle
+auf demselben `x`.
+
+```lua
+---@param state State?
+---@return boolean
+local function has_selection(state) ... end
+
+if has_selection(s) then
+  show_detail(s.repos[s.current_index])   -- s ist hier immer noch State?
+end
+```
+
+Neun der zehn `need-check-nil` in github_stats gingen darauf zurueck. **Eine
+Funktion, die `boolean` zurueckgibt, verengt nichts** -- der Beweis bleibt in
+ihr, der Aufrufer indiziert weiter einen optionalen Wert. Das ist kein
+Prueferartefakt: faellt die Vorbedingung eines Tages weg, wirft genau die
+Zeile nach dem `if`.
+
+**Griff:** den **Wert** zurueckgeben statt der Antwort
+(`has_selection` -> `selected_repo`). Die Aufrufstellen werden dabei kuerzer,
+nicht laenger. Wo der Helfer in mehreren Bedeutungen gebraucht wird, reicht
+`if x and helper(x) then`.
+
+#### A4. Aufrufe, die nie funktioniert haben koennen
+
+**Signatur:** `undefined-field` in `lua/`, besonders in Haeufung.
+
+Diese Regel hat in filetree (fuenf Features, die nie etwas rendern), in der
+Sechser-Runde (`make_result` mit `path = nil` neben `exists = true`) und in
+github_stats (eine Option, die es gibt und die in keinem Typ steht) jedes Mal
+etwas ergeben. **Bei einem Repo mit zweistelligem `undefined-field` lohnt der
+Durchgang allein deswegen.**
+
+---
+
+### B. Die Messgrundlage -- bevor irgendetwas gezaehlt wird
+
+#### B1. `.luarc.json` liest man zuerst -- Cluster L, sieben Repos
+
+**Signatur:** die Datei nennt `workspace.library`.
+
+Eine `.luarc.json` **ersetzt** `workspace.library` komplett, sie ergaenzt
+nicht. Wer den Schluessel setzt, wirft die Injektion aus lsp.nvim weg -- und
+damit jeden Plugin-Typ. In language kostete das sechs Befunde, die gar keine
+waren, sondern die Messung (`Lib.Keymap.Action` galt als undefiniert, und die
+vier Feldzugriffe darauf gleich mit).
+
+Betroffen waren: `buffer-ctx`, `emojis`, `fileops`, `gopath`, `lib`,
+`sessions`, `language`. `github_stats` hatte es als einziges selbst erledigt.
+
+**Der Zuwachs ist der Zweck.** Nach der Korrektur faellt ein Teil weg (Typen
+loesen auf) und ein Teil kommt **dazu** -- an Stellen, die vorher niemand
+geprueft hat. Ueber die sechs Repos aus Cluster L stieg die Summe von 356 auf
+411, und das war richtig so.
+
+Weiter zu pruefen: `runtime.path` (bei sandbox zeigte er auf ein Verzeichnis,
+das es nur unter Windows gibt) und `workspace.ignoreDir`.
+
+#### B2. Ein Nachher-Lauf beweist keine Null
+
+Bei pdfport tauchte ein Befund in einer **unveraenderten** Datei erst im
+dritten Lauf auf. In lsp.nvim zeigte der zweite Lauf einen `cast-local-type`,
+den der erste nicht hatte; in language waren es zwei.
+
+Der Vergleich sagt zuverlaessig, ob etwas **schlechter** wurde. Eine `0` beim
+ersten Versuch kann dagegen heissen, dass ein Befund noch nicht an der Reihe
+war. **Bei einem Ergebnis von 0 also zweimal messen.**
+
+---
+
+### C. Annotationsformen, die etwas verschlucken
+
+Drei verschiedene Faelle, dieselbe Ursache: **LuaLS liest eine inline
+geschriebene Funktionssignatur nicht so geklammert, wie sie dasteht.**
+
+#### C1. Form A -- `fun(...): T` im Inline-Tabellentyp frisst das naechste Feld
+
+```lua
+---@field custom { cmd: fun(a: string): string[], parse: fun(out: string): string[] }|nil
+--                                              ^ ab hier verschluckt
+```
+
+Der Rueckgabetyp nimmt das Komma und alles danach mit. In pdfport trug **eine
+solche Zeile 28 Befunde** (alle Aufrufstellen von `warn`/`error`/`debug` lasen
+sich als undefiniert), in language einen (`parse`).
+
+**Griff:** eine benannte Klasse. Nebenbei faellt dabei auf, was die Inline-Form
+verdeckt hat -- in language war `cmd` mit zwei Parametern deklariert und wurde
+mit drei gerufen.
+
+#### C2. Ein Funktionstyp in einer Union zieht das `|nil` in den Rueckgabetyp
+
+```lua
+---@type (fun(): Entry[])|nil     -- gelesen als: fun(): Entry[]|nil
+```
+
+Die Klammern helfen nicht. Der Wert erfuellt danach weder `pcall`s Parameter
+noch seine eigene Zuweisung.
+
+**Griff:** den **ganzen Funktionstyp** benennen, nicht nur seinen Rueckgabetyp:
+`---@alias Reader fun(): Entry[]` und dann `---@type Reader|nil`.
+
+#### C3. Eine Mehrfachrueckgabe, die alles-oder-nichts ist
+
+```lua
+---@return integer?, integer?, integer?, integer?
+local sr, sc, er, ec = region_bounds(...)
+if sr then ... end   -- verengt genau einen von vieren
+```
+
+Sechs Befunde aus zwei Zeilen in language. Vier unabhaengige Optionals sind
+die falsche Aussage, wenn die Funktion entweder alle vier liefert oder `nil`.
+**Mit einer Annotation nicht zu reparieren** -- die Gestalt muss eine Tabelle
+werden, dann verengt `if span then` alles auf einmal.
+
+#### C4. Weitere Formen, je einmal gesehen
+
+- **Form B:** `---@return <typ>  <wort>,` ohne Namen -- wird als zwei
+  Rueckgabewerte gelesen (pdfport: acht Befunde).
+- **Verirrte Doc-Bloecke** -- sechs Repos in Folge, je fuenf bis acht Befunde
+  aus einer Ursache. Signatur: `undefined-doc-param` und
+  `duplicate-doc-param`. In images dreimal derselbe Griff: ein nachgeruesteter
+  Parameter, dessen Doc-Block **angehaengt statt bearbeitet** wurde.
+
+---
+
+### D. Griffe, die nichts loesen
+
+#### D1. `---@type X` auf einem Local verschiebt den Befund auf die Zuweisung
+
+Zwei Stellen in lsp.nvims `config/init.lua` trugen genau diesen
+Reparaturversuch **samt erklaerendem Kommentar**. Die Deklaration ist nicht das
+Problem, die Zuweisung der Union ist es.
+
+**Griff:** `---@cast` auf den Wert. Der Cast *behauptet*, was an dieser Stelle
+gilt; `---@type` *deklariert*, was die Variable sein soll -- und stolpert dann
+ueber das, was zugewiesen wird.
+
+#### D2. Ein Fix, der die Warnung nur weiterschiebt
+
+In language haette der erste Timer-Fix den Befund von `timer` auf
+`opts.timeout_ms` verschoben, weil der zweite `if` ausserhalb der Pruefung des
+ersten stand. **Wenn eine Aenderung anderswo neue Befunde erzeugt, ist sie
+unfertig.**
+
+#### D3. `pcall(vim.cmd, ...)` -- und nicht nur `vim.cmd`
+
+**Signatur:** `Cannot assign 'table' to parameter 'fun(...any):...unknown'`.
+
+`vim.cmd` ist eine Tabelle mit `__call`-Metamethode, kein `function`; die
+Metamethode rettet das im Typsystem nicht. **`vim.lsp.config` ist dieselbe
+Gestalt** -- wer nach dem Cluster sucht, sucht nach der Meldung, nicht nach
+`vim.cmd`.
+
+**Griff: die Closure-Form**, nicht `vim.cmd.<name>`. In images tauscht ein
+Spec `vim.cmd` selbst und liest den Kommandonamen aus dem ersten Argument --
+die Unterkommando-Form haette den Test still blind gemacht.
+
+---
+
+### E. Wann Unterdruecken richtig ist
+
+Nur wo der Befund **sachlich falsch** ist oder das Verhalten **Absicht** --
+und dann mit einem Satz, der sagt warum. Was sich in neun Durchgaengen als
+diese Kategorie herausgestellt hat:
+
+- **Test-Doubles ueber typisierter `vim.*`- oder Modul-Oberflaeche**
+  (`duplicate-set-field`). Am images-Durchgang entschieden: faellt vertikal
+  an, braucht keinen eigenen horizontalen Lauf. Kostet pro Repo Minuten.
+- **Absichtlich ungueltige Testeingaben** -- `add_session(nil)`,
+  `setup_all(nil, ...)`. Der Testname sagt meist schon warum
+  (*"returns nothing without a shared table"*).
+- **Bewusste Griffe in fremde private Felder** -- lsp.nvims Patch von
+  `vim.treesitter.highlighter._on_win`. Drei Befunde, die alle dasselbe Wahre
+  sagen: ein `---@cast` auf ein untypisiertes Handle sagt die Absicht einmal,
+  statt sie dreimal zu unterdruecken.
+- **Offene String-Enums des Protokolls** -- `source.organizeImports.astro` ist
+  ein gueltiger CodeActionKind, Neovims Meta listet nur die Standard-Kinds.
+
+#### `deprecated` ist nicht automatisch eine Schuld
+
+**Erst die Mindestversion im README lesen, dann entscheiden.** In language
+waren alle drei bewusste Fallbacks (README: Neovim `>= 0.9`, und
+`vim.diagnostic.jump` gibt es erst ab 0.11). In lsp.nvim (README: 0.11+) waren
+zwei which-key-v2-Fallbacks und **nur einer** echt migrierbar.
+
+---
+
+### F. Was Neovim schon fuehrt
+
+#### F1. LuaLS entscheidet Zuweisbarkeit ueber den **Namen**, nicht die Gestalt
+
+Zweimal dieselbe Lehre: bei `Images.Scale.Dims` und bei lsp.nvims `LspMod.*`.
+Ein Parallelname mit identischen Feldern ist deshalb nicht gratis -- er kann
+**niemals** aus dem Original zugewiesen werden. lsp.nvim fuehrte sechs solche
+Klassen; Neovim hat jede davon, und praeziser (`offset_encoding` als
+`'utf-8'|'utf-16'|'utf-32'` statt `string|nil`).
+
+**Vor einer eigenen `@class` fuer etwas, das Neovim beschreibt, erst dort
+nachsehen:** `vim.lsp.Client`, `lsp.ServerCapabilities`,
+`lsp.TextDocumentIdentifier`, `lsp.Position`, `lsp.Range`,
+`lsp.CodeActionParams`, `lsp.VersionedTextDocumentIdentifier`.
+
+#### F2. `vim.health.info` und `.ok` nehmen **kein** zweites Argument
+
+Sechs Repos in Folge haben ihnen eine Advice-Liste gegeben, die sie wegwerfen.
+`health.error` und `health.warn` nehmen eine, `info` und `ok` nicht.
+
+**Der Befund heisst `redundant-parameter` und klingt nach Stil; er ist ein
+fehlendes Feature** -- die Hinweise hat kein `:checkhealth` je gezeigt. In
+einer `health.lua` ist `redundant-parameter` nie Stil.
+
+#### F3. `os.date("*t")` liefert eine Tabelle, deren Felder LuaLS aufweitet
+
+`---@cast parts osdate` reicht **nicht**: dieselbe Klasse beschreibt auch die
+String-Form des Aufrufs, deshalb sind ihre Felder `integer|string`. Der Cast
+muss die Felder benennen, die dieser Aufruf wirklich liefert.
+
+---
+
+### G. Der Test-Runner
+
+Drei Repos, dasselbe Loch an derselben Stelle -- **ein Runner, der fehlende
+Voraussetzungen nicht meldet**:
+
+| Repo | Verhalten ohne Harness |
+|---|---|
+| neotree-fs-refactor | *"All tests passed"*, Exit-Code **0** |
+| lsp.nvim | **wartet stumm** -- sieben Minuten ohne ein Byte Ausgabe |
+| **github_stats.nvim** | Meldung mit drei Fundorten, Exit-Code **1** |
+
+Beide Fehlerfaelle sehen fuer den Aufrufer aus wie *"die Tests laufen gerade"*.
+Das ist kein Windows-Problem, wie es lange in Offen-Punkt 13 stand: in lsp.nvim
+war die Ursache, dass `TESTS/minimal_init.lua` plenary ausschliesslich ueber
+`$PLENARY_PATH` sucht -- eine Variable, die nur CI setzt.
+
+**Die Vorlage ist `github_stats.nvim/scripts/test.sh` mit
+`scripts/minimal_init.lua`:**
+
+1. **drei Fundorte mit Fallback** -- `$PLENARY_DIR`, `.deps/`, daneben;
+2. **eine Fehlermeldung, die alle drei nennt** --
+   *"Set PLENARY_DIR, or clone it to .deps/plenary.nvim, or place it beside
+   this repo"*;
+3. **ein Exit-Code, der nicht luegt.**
+
+Fuer neue Repos ist das der Massstab, nicht eine allgemeine Formulierung.
+
+---
+
+### H. Arbeitsreihenfolge, die sich bewaehrt hat
+
+1. **`.luarc.json` lesen** (B1) -- vor jeder Zahl.
+2. **Vorher-Scan**, ein Repo (`scan.sh before <repo>`).
+3. **Nach verirrten Doc-Bloecken suchen** (C4) -- die billigste Haeufung.
+4. **`health.lua` pruefen** (F2) -- ein Blick, sechs Repos in Folge ein Treffer.
+5. **`undefined-field` in `lua/` zuerst** (A4) -- dort liegen die echten Bugs.
+6. **`need-check-nil` gruppieren** -- meist ein bis zwei Ursachen (A1, A3).
+7. **`TESTS/` zuletzt** -- Doubles und absichtlich ungueltige Eingaben (E),
+   das ist Minutenarbeit und sagt nichts ueber den Code.
+8. **Zweimal nachmessen** (B2), Testsuite, ein Commit pro Repo, direkt gepusht.
 
 ---
 
