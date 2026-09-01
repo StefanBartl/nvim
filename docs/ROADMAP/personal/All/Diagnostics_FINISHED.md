@@ -9,6 +9,14 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [filetree.nvim -- 80 auf 0, und vier Dinge, die nie liefen](#filetreenvim-80-auf-0-und-vier-dinge-die-nie-liefen)
+      - [Der Einstieg war der vorgeschlagene, und er trug 24](#der-einstieg-war-der-vorgeschlagene-und-er-trug-24)
+      - [Vier Stellen, die nie gelaufen sein koennen](#vier-stellen-die-nie-gelaufen-sein-koennen)
+      - [Cluster E, filetree.nvims ganzer Anteil](#cluster-e-filetreenvims-ganzer-anteil)
+      - [Der Rest -- neun kleine Ursachen](#der-rest-neun-kleine-ursachen)
+      - [Zweimal die Regel angewandt, die es dafuer gibt](#zweimal-die-regel-angewandt-die-es-dafuer-gibt)
+      - [Unterdrueckt, mit Begruendung](#unterdrueckt-mit-begruendung)
+      - [Was uebrig ist](#was-uebrig-ist)
     - [filetree.nvim -- 161 auf 80, und fuenf Features, die nie rendern](#filetreenvim-161-auf-80-und-fuenf-features-die-nie-rendern)
       - [`get_node_at_line` ruft niemand auf, weil es niemand hat](#get_node_at_line-ruft-niemand-auf-weil-es-niemand-hat)
       - [Ein Wort: `get_root` gegen `get_root_path`](#ein-wort-get_root-gegen-get_root_path)
@@ -97,6 +105,150 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### filetree.nvim -- 80 auf 0, und vier Dinge, die nie liefen
+
+*(war: Diagnostics-Report Abschnitt 0, „Vorschlag naechster Schritt" und Offen-Punkt 1)*
+
+Der fuenfte vertikale Durchgang, und der letzte Rest des Repos. **80 -> 0**,
+`worse: nothing`, alle fuenf Suiten gruen (19 + 252 + 15 + 122 + 54 Checks,
+0 failed), stylua sauber. Damit ist filetree.nvim das dritte Repo auf Null --
+nach documentation.nvim und lib.nvim, und diesmal ohne Sternchen.
+
+---
+
+#### Der Einstieg war der vorgeschlagene, und er trug 24
+
+`FiletreeConfig` markierte alle vierzehn Felder optional, obwohl `setup()`
+neun davon aus `config.DEFAULTS` normalisiert. Jeder Leser hinter `setup()`
+pruefte damit noch einmal, was `setup()` bereits garantiert hatte. Der Split
+ist derselbe wie bei `LspNvim.Config` einen Tag zuvor:
+
+- `FiletreeConfig` -- die **aufgeloeste** Gestalt, wie `config.get()` sie
+  zurueckgibt: die neun aus DEFAULTS als Pflichtfelder, die fuenf, die
+  niemand fuellt (`keymaps`, `adapter_keymaps`, `command`, `autocmds`,
+  `confirmations`), bleiben optional. Das ist die ehrliche Zeile: nicht
+  „alles da", sondern „genau das, was DEFAULTS traegt".
+- `FiletreeOpts` -- die partielle Gestalt, die ein Aufrufer uebergibt.
+
+Dasselbe fuer `FiletreeCwdModeConfig`/`FiletreeCwdModeOpts`. Dort war die
+Wirkung am sichtbarsten: `indicator` als optional zu fuehren machte
+`_cfg.indicator` an **fuenf** Stellen innerhalb einer einzigen Funktion
+(`badge_text`) zu einem Vielleicht-nil.
+
+Ein Nebenbefund des Splits: `config.get()` gab vor `setup()` `{}` zurueck,
+obwohl jedes Feature-Modul es liest, als stuenden die Defaults. Es startet
+jetzt auf einer Kopie von DEFAULTS.
+
+Und ein Fehler, den der Split erst erzeugt und dann sichtbar gemacht hat:
+`FiletreeCwdModeConfig` liess sich nicht mehr an ein `FiletreeCwdModeOpts?`
+zuweisen. Die aufgeloeste Klasse erbt jetzt von der partiellen, was auch die
+richtige Aussage ist -- ein aufgeloester Wert *ist* ein zulaessiger Eingabewert.
+
+---
+
+#### Vier Stellen, die nie gelaufen sein koennen
+
+Dieselbe Familie wie `get_node_at_line` im vierten Durchgang: nicht
+Annotationen, die hinterherhinken, sondern Code, der auf etwas zeigt, das es
+nicht gibt.
+
+- **`find_files`** bewachte sein Reveal mit `_adapter.reveal`. `reveal` ist
+  kein Adapter-Member und war nie eines -- die Bedingung war immer falsch.
+  `reveal_on_open` steht standardmaessig auf `true` und hat nie etwas
+  aufgedeckt. Die Faehigkeit heisst `open_reveal`, und jedes Backend im Repo
+  hat sie.
+- **`live_search`** las `node.line`. Das Feld heisst `line_number`. Der Guard
+  davor (`if not node.path or not node.line then goto continue end`) griff
+  also fuer **jeden** Knoten: die Overlay-Suche hat nie etwas hervorgehoben
+  und nie etwas abgedunkelt.
+- **`preview`s snacks-Backend** rief `snacks.image.open()`. Die Funktion gibt
+  es in snacks.nvim nicht (`supports`, `supports_file`, `hover`, `setup` --
+  kein `open`). Der Aufruf lief in einem `pcall`, warf bei jedem Bild und fiel
+  durch. snacks.image zeichnet einen Bildpuffer, wenn einer angezeigt wird;
+  `supports()` ist die oeffentliche Frage danach, und die Datei zu oeffnen ist
+  das, was snacks zustaendig macht.
+- **`refs`' Provider-Klasse** deklarierte weder `lsp_exempt` noch
+  `delete_target` -- die beiden Felder, die der markdown- und der lua-Provider
+  setzen und die `refs` liest. Hier war nur die Deklaration unvollstaendig,
+  der Code stimmte.
+
+---
+
+#### Cluster E, filetree.nvims ganzer Anteil
+
+Fuenfzehn `pcall(vim.cmd, ...)` sind jetzt Closures. `vim.cmd` ist eine
+aufrufbare Tabelle, kein `function` -- dieselbe Form wie in lib.nvim (10) und
+lsp.nvim (4). Damit sind von den urspruenglich 60 noch 31 offen, verteilt auf
+die uebrigen Repos.
+
+---
+
+#### Der Rest -- neun kleine Ursachen
+
+- **Zehn Debounce-Handles** werden vor `.call()` geprueft. Sie werden in
+  `setup()` gebaut; die Aufrufer sind Autocmd-Callbacks, die es ohne `setup()`
+  nicht gaebe -- eine Invariante, die LuaLS nicht sehen kann und die ohne
+  `setup()` ein echter Laufzeitfehler waere.
+- **Fuenf `pcall(require, ...)`-Ergebnisse** pruefen jetzt den Wert statt des
+  Flags. Dasselbe Muster wie in lib.nvim, lsp.nvim und im vierten Durchgang,
+  hier zum vierten Mal.
+- **`FiletreeRootFinder`** war in `cwd_sync` und `path_copy` zweimal von Hand
+  deklariert -- eine Kopie von lib.nvims `Lib.Fs.FindRoot`, die inzwischen
+  existiert. Beide Kopien sind weg, beide `cast-local-type` damit auch.
+- **`_badge` und `_float`**: beide werden im „Fenster hat gewechselt"-Zweig
+  gesetzt und danach beschrieben. Ein gescheitertes `attach` verlaesst den
+  Zweig aber ohne Segment, also ist die Pruefung danach richtig und nicht nur
+  ruhigstellend.
+- **`termopen()`** ist seit 0.11 veraltet; `jobstart(cmd, { term = true })`
+  tut dasselbe. Der README verspricht 0.8, also steht der alte Aufruf hinter
+  einem `has("nvim-0.11")` -- und nur dort unterdrueckt, wo die Veraltung der
+  Punkt ist.
+- **`pdf_open`s fuenf Keymap-Felder** sagen jetzt `string|false`, weil genau
+  das drinsteht: `false` ist im Keymap-Registry die Abschaltung, nicht ein
+  falscher Typ. Die Klasse war falsch, nicht der Code.
+- **`tree_integrity`** liest nuis internen Knoten-Speicher. nui liefert keine
+  Annotationen, also traegt der Speicher jetzt eine eigene Klasse
+  (`FiletreeNuiNodeStore`) mit den zwei Feldern, die dieses Feature begeht --
+  statt als nacktes `table` gelesen zu werden, an dem `root_ids` dann
+  undefiniert ist.
+- **Zwei `gsub`-Rueckgaben** in Klammern (`gsub` liefert `(str, count)`), ein
+  `@return string|nil`, wo `nil` rein und `nil` raus geht, und zwei Guards
+  (`python`s `rest`, `ts_js`' `e`), die ihren zweiten Rueckgabewert nicht
+  mitgeprueft haben.
+
+---
+
+#### Zweimal die Regel angewandt, die es dafuer gibt
+
+„Kein Fix, der eine Warnung nur verschiebt": der erste Nachher-Lauf stand bei
+8 statt 0. Beides waren eigene Verschiebungen -- ein `---@type string?` auf
+`dst` in `move`, das sieben neue `param-type-mismatch` erzeugte (jetzt ein
+`skip`-Flag statt `dst = nil`), und eine Enum-Verengung in
+`create_from_template`, die LuaLS ueber `==` nicht mitgeht (jetzt ein
+`---@cast`). Der zweite Lauf stand bei 0.
+
+---
+
+#### Unterdrueckt, mit Begruendung
+
+Eine Stelle: ein absichtlich ungueltiger Scope in `TESTS/cwd_mode.lua`, wo das
+Zurueckweisen genau das ist, was geprueft wird. Die fuenf Test-Doubles geben
+stattdessen den Boolean zurueck, den ihre Annotation verspricht -- das ist
+kein Zugestaendnis an den Linter, sondern die Signatur, die der echte Adapter
+auch hat.
+
+---
+
+#### Was uebrig ist
+
+Nichts in diesem Repo. Was aus dem vierten Durchgang stehen blieb, bleibt
+stehen: `get_node_at_line` und die drei anderen Adapter-Faehigkeiten sind
+deklariert, von keinem Backend implementiert, und fuenf Features warten
+darauf. Das ist eine Designfrage und kein Diagnose-Befund -- Offen-Punkt 4 im
+Report.
 
 ---
 
