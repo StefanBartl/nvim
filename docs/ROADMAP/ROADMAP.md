@@ -25,7 +25,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    75% / 64%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     19:40       |    83% / 68%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     17 20       |    95% / 58%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     14:10       |    87% / 47%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     21:50       |    94% / 56%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden

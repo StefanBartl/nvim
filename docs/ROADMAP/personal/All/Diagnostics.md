@@ -21,7 +21,7 @@
     - [B. `need-check-nil` in Tests -- ERLEDIGT 2026-08-31](#b-need-check-nil-in-tests-erledigt-2026-08-31)
     - [C. `missing-fields` -- ERLEDIGT 2026-08-29](#c-missing-fields-erledigt-2026-08-29)
     - [D. `userdata` statt `TSNode` in documentation.nvim -- ERLEDIGT 2026-08-31](#d-userdata-statt-tsnode-in-documentationnvim-erledigt-2026-08-31)
-    - [E. `pcall(vim.cmd, ...)` -- 46 offen, lib.nvim und lsp.nvim erledigt](#e-pcallvimcmd-46-offen-libnvim-und-lspnvim-erledigt)
+    - [E. `pcall(vim.cmd, ...)` -- ERLEDIGT in allen 31 Plugins](#e-pcallvimcmd-erledigt-in-allen-31-plugins)
     - [F. `inject-field` (119) -- fast vollständig lib.nvim -- ERLEDIGT 2026-08-31](#f-inject-field-119-fast-vollstndig-libnvim-erledigt-2026-08-31)
   - [5. Die kleinen, echten Befunde](#5-die-kleinen-echten-befunde)
     - [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
