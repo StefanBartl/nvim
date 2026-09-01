@@ -20,10 +20,12 @@ gelöscht (`5450dd4`), samt Specs, `:Lib hover`-Routen, Options-Feld und
 Doku-Zeilen; `hover = false` ist aus der Config wieder raus. Damit ist auch
 das NUL-Byte in `preview/media.lua` endgültig weg.
 
-**Was noch offen ist,** sind die beiden Punkte, die nie an der Extraktion
-hingen: Bare Paths auf Kommentare/Strings scopen, und die Beobachtung, ob
-`manual` der bessere Default wäre. Details unter
-[Offene Punkte](#offene-punkte).
+**Auch das Scoping ist gebaut** (`b2b4b2c`): `hover.scope` fragt vor dem
+Resolver, ob der Cursor überhaupt an einer Stelle sitzt, an der ein Pfad
+stehen kann. Damit ist die zweite Hälfte des Rauschproblems weg.
+
+**Offen ist nur noch Beobachtung**, kein Bauauftrag: ob `manual` der bessere
+Default wäre. Details unter [Offene Punkte](#offene-punkte).
 
 ---
 
@@ -242,11 +244,44 @@ lokalen Artefakte sind ohnehin vom 15. Aug und damit schon vorher veraltet.
 Gates danach: `LIB_TESTS_OK`, stylua sauber, luacheck 0 Fehler (die eine
 verbliebene Warnung sitzt in `bindings/autocmd/docs.lua` und ist älter).
 
-### 2. Bare Paths auf Kommentare/Strings scopen
+### 2. Bare Paths scopen — **erledigt** (`b2b4b2c`)
 
-Die verbleibende Hälfte des Rauschproblems. Konzept steht in
-`hover.nvim/docs/ROADMAP.md` samt den zwei Dingen, die vorher zu klären sind
-(fail-open, und die Kosten pro `CursorHold` messen statt annehmen).
+Neues Modul `hover.scope`, neuer Schalter `:Hover paths code` (Default off).
+Zwei Dinge daran sind anders gelaufen als die Roadmap es beschrieb, und beide
+sind der Grund, warum das Ergebnis trägt:
+
+**Die Roadmap-Regel war falsch.** „Nur in Kommentaren und Strings erlauben"
+setzt voraus, dass Prosa-Buffer keinen Parser haben — markdown, gitcommit und
+rst haben aber einen. Nach dieser Regel hätte ein Pfad in einem ganz normalen
+Markdown-Absatz aufgehört zu hovern, also genau der Fall, für den es das
+Feature gibt. Gefragt wird jetzt umgekehrt: ist die Position *positiv als Code
+identifizierbar*? Nur dann wird abgelehnt. Drei von fünf Ausgängen sind
+erlaubend (kein Parser, keine Captures, unbekannte Capture-Familie) — das ist
+`ERR-20` auf ein Gate angewandt.
+
+**Die Messung ergab das Gegenteil der Intuition.** Auf einem 728-Zeilen-
+Lua-Buffer: Token-Gate 1,1 µs Median, dieses Gate 90,2 µs warm und 318,3 µs
+direkt nach einer Änderung — rund achtzigmal teurer, weil Antworten Parsen
+heißt. Die Roadmap wollte es *vor* dem `<cfile>`-Gate; dort hätte es jeden
+CursorHold 90 µs gekostet. Dahinter läuft es auf der einen von 531 Positionen,
+die das Token-Gate überlebt, also ~0,2 µs amortisiert.
+
+**Eine Falle, die still in die falsche Richtung kippt:**
+`vim.treesitter.get_captures_at_pos` **parst nicht**. Auf einem ungeparsten
+Baum antwortet es `{}` statt zu scheitern, und `{}` ist von „hier ist reiner
+Text" nicht zu unterscheiden — das Gate hätte alles durchgelassen und dabei
+funktionsfähig ausgesehen. Interaktiv verdeckt der Highlighter das, headless
+nicht. Der erste Entwurf hatte genau diesen Bug; die Real-Buffer-Specs fangen
+ihn.
+
+18 Specs, Suite 96 grün, stylua sauber, luacheck 0/0.
+
+Nebenbei: das im Handover genannte `scripts/luals-scan/` liegt **nirgends** —
+weder im Repo noch sonst unter `E:/repos`. Die LuaLS-Messung ist mit einer
+nachgebauten injizierten Library gelaufen (VIMRUNTIME + lib.nvim + plenary);
+darin ist die Baseline 1 Befund (`registry_spec.lua:74`, `assert.is_not_nil`),
+und der neue Code trägt 0 dazu bei. Wenn das Skript noch existiert, gehört es
+ins Repo.
 
 ### 3. Beobachten, ob `manual` der bessere Default ist
 
