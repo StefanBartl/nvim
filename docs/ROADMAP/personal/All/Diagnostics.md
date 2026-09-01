@@ -136,17 +136,30 @@ Stellen abgetragen.
 
 ### Vorschlag nächster Schritt
 
-**pickers.nvim** (32) -- das größte verbliebene Plugin, und mit
-`need-check-nil` 6 neben `param-type-mismatch` 8 ein Zuschnitt, bei dem die
-Ursachenzahl klein bleiben dürfte. **insights.nvim** (29) ist der andere
-Kandidat: seine sechs `missing-return-value` sind eine Form, die bisher in
-keinem Durchgang vorkam.
+**pickers.nvim** (32). Beide Kandidaten sind am 2026-09-02 einzeln
+nachgemessen worden, und die Verteilung sagt mehr als die Summe -- **bei
+beiden liegen 26 der Befunde in `lua/`**, nicht in `TESTS/`:
 
-| Repo | gesamt | größte Regeln |
-|---|---:|---|
-| pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
-| *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, … |
+| Repo | gesamt | `lua/` | die Regeln, auf die es ankommt |
+|---|---:|---:|---|
+| pickers.nvim | 32 | 26 | `undefined-field` 3, **`luadoc-miss-symbol` 3**, `need-check-nil` 6 + `cast-local-type` 3 |
+| insights.nvim | 29 | 26 | **13 zu Rueckgabewerten** (`missing-return-value` 6, `return-type-mismatch` 4, `redundant-return-value` 3), `undefined-doc-name` 3 |
+| *(neun Repos unter 15)* | 61 | -- | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, … |
+
+**Warum pickers zuerst.** Die drei `luadoc-miss-symbol` heissen, dass
+mindestens eine Annotation **nicht parst** -- und in der Sechser-Runde haben
+genau solche Zeilen alles unter sich mitgenommen, die Zahl also billiger
+fallen lassen, als sie aussieht. Dazu drei `undefined-field` in `lua/`, wo
+nach A4 die echten Fehler sitzen, und die Kombination `need-check-nil` 6 mit
+`cast-local-type` 3, die nach A1 auf einen ungeprueften `vim.uv`-Aufruf
+zeigt, dessen Ziel-Local schon typisiert ist. Haeufung:
+`ui/dir_nav_picker.lua` traegt 7.
+
+**insights.nvim** ist danach der interessantere Durchgang, aber der
+unbekanntere: die dreizehn Befunde zu Rueckgabewerten sind eine Familie, die
+in keinem der bisherigen Durchgaenge vorkam, und `symbols/init.lua` und
+`symbols/rg_index.lua` tragen je 6. Wer dort anfaengt, sollte damit rechnen,
+dass die Musterliste ihm diesmal wenig hilft.
 
 **Die neun kleinen Repos zusammen** (61) sind der andere sinnvolle Zuschnitt:
 die Sechser-Runde hat gezeigt, dass fünf Repos in einem Zug gehen (126 -> 0),
