@@ -44,6 +44,9 @@ function M.read(case_dir)
     end
     return nil
   end
+  -- `json.read` answers a plain decoded table; this module owns the sidecar's
+  -- shape, so it is the one place that can say which table it is.
+  ---@cast decoded Lib.Case.Meta
   return decoded
 end
 

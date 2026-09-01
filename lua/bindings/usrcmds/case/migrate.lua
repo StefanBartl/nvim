@@ -137,7 +137,7 @@ function M.run(steps)
     end
     m.year = m.year or os.date("%Y")
     m.blueprint = m.blueprint or config.default_blueprint
-    m.created = m.created or os.date("!%Y-%m-%dT%H:%M:%SZ")
+    m.created = m.created or tostring(os.date("!%Y-%m-%dT%H:%M:%SZ"))
     meta.write(s.from, m)
 
     mkdirp(config.state_dir(s.state))

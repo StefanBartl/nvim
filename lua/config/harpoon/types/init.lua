@@ -18,9 +18,21 @@
 ---@field value string|nil        -- might be missing; normalize it
 ---@field context Cfg.Harpoon.Context|nil
 
+--- A hand-written stand-in for harpoon's own `HarpoonList`, so this config
+--- type-checks whether or not the plugin is on the runtimepath.
+---
+--- It listed three members while the code here calls seven, which is where the
+--- `remove_at` / `prepend` / `_length` findings came from: a stand-in that
+--- omits what its callers use reports the caller as wrong, not itself as
+--- incomplete. The list below is what `lua/config/harpoon/` actually touches.
 ---@class Cfg.Harpoon.List
 ---@field items (Cfg.Harpoon.Item|Cfg.Harpoon.ItemLegacy|string)[]  -- allow union
----@field remove fun(self: Cfg.Harpoon.List, index: integer)
+---@field _length integer  -- harpoon's own count; `#items` disagrees with it after a remove_at, which only nils the slot
+---@field add fun(self: Cfg.Harpoon.List, item?: Cfg.Harpoon.Item|string): Cfg.Harpoon.List
+---@field append fun(self: Cfg.Harpoon.List, item?: Cfg.Harpoon.Item|string): Cfg.Harpoon.List
+---@field prepend fun(self: Cfg.Harpoon.List, item?: Cfg.Harpoon.Item|string): Cfg.Harpoon.List
+---@field remove fun(self: Cfg.Harpoon.List, item?: Cfg.Harpoon.Item|string): Cfg.Harpoon.List
+---@field remove_at fun(self: Cfg.Harpoon.List, index: integer): Cfg.Harpoon.List
 ---@field save fun(self: Cfg.Harpoon.List)
 
 ---@class Cfg.Harpoon.Api

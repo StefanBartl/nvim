@@ -133,14 +133,14 @@ end
 ---@param resolve_link string|nil
 function M.create(short, title, company, name, snow_link, resolve_link)
   local dir = registry.new_dir(short)
-  local year = os.date("%Y")
+  local year = tostring(os.date("%Y"))
   local tokens = {
     case = short,
     title = (title and title ~= "") and title or nil,
     company = (company and company ~= "") and company or nil,
     name = (name and name ~= "") and name or nil,
     year = year,
-    today = os.date("%Y-%m-%d"),
+    today = tostring(os.date("%Y-%m-%d")),
     snow = render.to_snow(short, year),
   }
 
@@ -183,7 +183,7 @@ function M.create(short, title, company, name, snow_link, resolve_link)
         notes = "",
         links = links,
         blueprint = blueprint_name,
-        created = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        created = tostring(os.date("!%Y-%m-%dT%H:%M:%SZ")),
       })
 
       registry.invalidate()
@@ -340,7 +340,7 @@ function M.edit_info(entry, m)
         notes = values.notes,
         links = links,
         blueprint = m.blueprint or config.default_blueprint,
-        created = m.created or os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        created = m.created or tostring(os.date("!%Y-%m-%dT%H:%M:%SZ")),
       })
       if ok then
         notify.info(("case %s updated"):format(entry.short))
@@ -1124,8 +1124,8 @@ function M.template(name_arg)
     title = m and m.title or nil,
     company = m and m.company or nil,
     name = m and m.name or nil,
-    year = m and m.year or os.date("%Y"),
-    today = os.date("%Y-%m-%d"),
+    year = m and m.year or tostring(os.date("%Y")),
+    today = tostring(os.date("%Y-%m-%d")),
   }
   if entry then
     tokens.snow = render.to_snow(entry.short, tokens.year)
@@ -2185,7 +2185,7 @@ function M.snow(case_arg)
       return
     end
     local m = meta.read(entry.dir)
-    local year = m and m.year or os.date("%Y")
+    local year = m and m.year or tostring(os.date("%Y"))
     local snow = render.to_snow(entry.short, year)
 
     if config.snow_url_format then
@@ -2243,9 +2243,9 @@ local function insert_value(entry, m, key)
   if key == "case" then
     return entry.short
   elseif key == "snow" then
-    return render.to_snow(entry.short, (m and m.year) or os.date("%Y"))
+    return render.to_snow(entry.short, (m and m.year) or tostring(os.date("%Y")))
   elseif key == "link" then
-    local snow = render.to_snow(entry.short, (m and m.year) or os.date("%Y"))
+    local snow = render.to_snow(entry.short, (m and m.year) or tostring(os.date("%Y")))
     return (config.snow_url_format and (config.snow_url_format .. snow)) or snow
   elseif key == "title" then
     return m and m.title

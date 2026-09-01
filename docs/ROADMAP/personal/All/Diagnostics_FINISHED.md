@@ -828,6 +828,105 @@ dreissig Befunde tatsaechlich dreissig einzelne sind und keine Messfrage.
 
 ---
 
+### Der Messfehler, den ein Worktree erzeugt -- und `mkcfg.py`s `drop_own`
+
+*(war: Diagnostics-Report Abschnitt 0, „Nicht von Claude entschieden")*
+
+Die Worktree-Frage stand seit dem Erstscan als Aufraeumthema im Report. Sie
+war keins. Sie war ein Messfehler, und er war gross genug, den letzten
+Durchgang unmoeglich zu machen.
+
+**Der Befund.** Die nvim-Config meldete **872** statt der 120 aus jedem
+frueheren Lauf -- 674 `duplicate-doc-field` und 81 `duplicate-doc-alias`
+davon, also 755 Kollisionen.
+
+**Die Ursache.** lsp.nvims `build_library()` nimmt jedes `@types`-Verzeichnis,
+das es findet, in `workspace.library` auf. Fuer ein Plugin ist das der Zweck.
+Fuer die Config zeigen diese Pfade auf `C:/Users/bartl/AppData/Local/nvim/...`
+-- den **Haupt-Checkout**. Laeuft der Scan aus einem Worktree, ist der
+Workspace ein *anderes* Verzeichnis mit denselben Dateien. Jede Klasse und
+jeder Alias existiert dann zweimal, und LuaLS meldet jede einzelne davon.
+
+Aus dem Haupt-Checkout heraus faellt das nie auf: dort sind Workspace und
+Library dasselbe Verzeichnis, und LuaLS zaehlt nichts doppelt.
+
+**Der Griff.** `mkcfg.py` filtert `workspace.library` jetzt gegen die eigenen
+Baeume des Workspace (`drop_own`): `root` selbst, und -- wenn `root` unter
+`<tree>/.claude/worktrees/<name>` liegt -- auch `<tree>`. Eine Library ist
+fremder Code; lua_ls sagt in seiner eigenen Doku, man solle den Workspace
+nicht als Library setzen.
+
+**Gegengeprueft, in beide Richtungen:**
+
+- die Config misst danach wieder **exakt 120** -- die Zahl aus `base0901`,
+  `base0902` und `igafter2`, also aus Laeufen, die aus dem Haupt-Checkout
+  kamen;
+- `filetree.nvim`, `pdfport.nvim` bleiben auf 0, `lib.nvim` meldete die eine
+  neue Stelle aus dem Hover-Modul. Der Fix ist fuer Plugins neutral.
+
+**Was daraus fuer `## letze-task` folgt** -- das ist der eigentliche Ertrag:
+
+- **Eine Messgrundlage muss man gegen einen bekannten Wert pruefen, nicht nur
+  gegen sich selbst.** Der Vergleich Vorher/Nachher haette hier nie etwas
+  gemerkt: beide Laeufe waeren aus demselben Worktree gekommen und beide
+  haetten 872 gesagt. Aufgefallen ist es nur, weil im Report eine Zahl aus
+  einer *anderen* Umgebung stand. **Historische Zahlen aufheben ist Teil des
+  Werkzeugs, nicht Dokumentation daneben.**
+- **„Der Workspace ist nicht seine eigene Library" ist eine Regel, kein
+  Sonderfall.** Sie greift ueberall dort, wo dieselben Dateien ueber zwei
+  Pfade erreichbar sind: Worktrees, Symlinks, eine zweite Checkout-Kopie,
+  ein `build/stage`-Verzeichnis.
+- **Der Zaehler `duplicate-doc-*` ist ein Umgebungs-Kanarienvogel.** Er
+  entsteht fast nie aus echtem Code. Steht er zweistellig, ist mit hoher
+  Wahrscheinlichkeit die Messung falsch und nicht der Quelltext -- dieselbe
+  Signatur wie bei lsp.nvims 180 im August und bei
+  `neotree-fs-refactor.nvim`s `Luassert` gegen plenarys.
+
+---
+
+### Die nvim-Config, erste Haelfte -- 120 auf 39
+
+*(unterbrochen; der Rest steht im Report unter „Wiedereinstieg")*
+
+`worse: nothing`. Die grossen Posten sind weg, und es waren durchweg
+Wiederholungen aus den Plugin-Durchgaengen -- was fuer die letzte Task das
+Wichtigste ist: **die Config hatte keine eigenen Muster.**
+
+- **`clock.utc_captures` (18).** Drei Aufrufer bauten je sechs `tonumber()`
+  aus `%d+`-Captures und gaben sie an `clock.utc`, das `integer` will.
+  `tonumber` antwortet `number|nil` fuer *jeden* String -- aber ein Capture,
+  das bereits gematcht hat, kann nicht fehlschlagen. Ein Helfer sagt das
+  einmal, statt es dreimal offenzulassen. Dieselbe Familie noch zweimal bei
+  `os.time` (`assert(tonumber(...))`).
+- **`os.date` -> `tostring` (10).** Zum dritten Mal nach runtime-analysis und
+  markdown: `os.date(fmt)` ist `string|osdate`, nur `"*t"` liefert die
+  Tabelle.
+- **`Cfg.Harpoon.List` (8).** Ein handgeschriebener Stand-in fuer harpoons
+  `HarpoonList` fuehrte drei Member, waehrend der Code sieben ruft
+  (`remove_at`, `prepend`, `_length`, ...). **Ein Stand-in, der weglaesst, was
+  seine Aufrufer benutzen, meldet den Aufrufer als falsch, nicht sich selbst
+  als unvollstaendig** -- das ist die verallgemeinerbare Lehre.
+- **`Lib.UserCmd.Composer.RouteSpec` (5).** Den Typ gibt es nicht; lib.nvim
+  veroeffentlicht `Lib.UserCmd.Composer.Route`. Ein Name, fuenf Befunde.
+- **`drift.lua`s `repo`-Local (10).** `local repo_ran = repo_info ~= nil and
+  ...` -- ein **Boolean ueber** einen Wert traegt dessen Verengung nicht. Der
+  verengte Wert selbst muss gebunden werden. Dieselbe Form wie in gopaths
+  `:GopathDebug` und open.nvims `got`.
+- **F5 auf `local system = vim.system` (6).** Der typisierte Alias, in zwei
+  Dateien.
+- **Beide Annotationsformen aus dem Querschnittspunkt (7).** Genau dort, wo
+  die Suche am 2026-09-01 sie vorhergesagt hatte: Form A zweimal in
+  `snacks/picker/init.lua` (ein `fun(): table` im Tabellentyp verschluckt
+  `get_input_keys` und `get_actions`), Form B dreimal
+  (`epoch, the most recent occurrence` -- `the` wird als zweiter
+  Rueckgabetyp gelesen). **Die Vorhersage hat gehalten**, was den Wert einer
+  gemusterten Suche gegenueber dem Wiederfinden pro Repo belegt.
+
+---
+
+
+---
+
 ### Die Achter-Runde -- die letzten acht Plugins, 50 auf 0
 
 *(war: Diagnostics-Report Abschnitt 0, "die acht kleinen Repos in einem Zug")*

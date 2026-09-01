@@ -64,7 +64,7 @@ function M.find(case_dir)
     local n = name:match("^(%d+)_ActivityStream%.md$")
     if n then
       local num = tonumber(n)
-      if num > best_n then
+      if num and num > best_n then
         best_n, best = num, research_dir .. "/" .. name
       end
     end
@@ -358,8 +358,7 @@ local function last_reply_sent_at_snow(text)
       local gmt = at_line:match("^at:%s*(%d+%-%d+%-%d+ %d+:%d+:%d+)%s*GMT$")
       if gmt then
         local y, mo, d, h, mi, s = gmt:match("(%d+)%-(%d+)%-(%d+) (%d+):(%d+):(%d+)")
-        local epoch =
-          clock.utc(tonumber(y), tonumber(mo), tonumber(d), tonumber(h), tonumber(mi), tonumber(s))
+        local epoch = clock.utc_captures(y, mo, d, h, mi, s)
         if not latest or epoch > latest then
           latest = epoch
         end
@@ -376,7 +375,7 @@ end
 --- the 19-entry sample, EXTRACTION.md §13), where SNOW's wording has never
 --- yet turned up in real data.
 ---@param text string
----@return integer|nil epoch, the most recent occurrence
+---@return integer|nil epoch # the most recent occurrence
 local function last_reply_sent_at_saperesolve(text)
   local latest = nil
   for line in ((text or ""):gsub("\r", "")):gmatch("[^\n]+") do
@@ -389,7 +388,7 @@ local function last_reply_sent_at_saperesolve(text)
 end
 
 ---@param text string
----@return integer|nil epoch, the most recent occurrence
+---@return integer|nil epoch # the most recent occurrence
 function M.last_reply_sent_at(text)
   if stream_format.detect(text) == "saperesolve" then
     return last_reply_sent_at_saperesolve(text)

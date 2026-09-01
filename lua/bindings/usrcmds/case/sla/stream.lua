@@ -51,7 +51,7 @@ local function parse_gmt(value)
   if not y then
     return nil
   end
-  return clock.utc(tonumber(y), tonumber(mo), tonumber(d), tonumber(h), tonumber(mi), tonumber(s))
+  return clock.utc_captures(y, mo, d, h, mi, s)
 end
 
 ---@param value string  e.g. "2026-08-05 16:26:34" (LOCAL time, no GMT suffix —
@@ -63,12 +63,12 @@ local function parse_local(value)
     return nil
   end
   return os.time({
-    year = tonumber(y),
-    month = tonumber(mo),
-    day = tonumber(d),
-    hour = tonumber(h),
-    min = tonumber(mi),
-    sec = tonumber(s),
+    year = assert(tonumber(y)),
+    month = assert(tonumber(mo)),
+    day = assert(tonumber(d)),
+    hour = assert(tonumber(h)),
+    min = assert(tonumber(mi)),
+    sec = assert(tonumber(s)),
   })
 end
 

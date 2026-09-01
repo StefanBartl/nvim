@@ -130,67 +130,60 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **Die letzten acht Plugins stehen auf Null** (50 -> 0 in einem Zug,
-2026-09-02), damit **einunddreißig der 32 Workspaces** im Umfang -- **alle 31
-Plugins sind fertig**. Offen ist nur noch die nvim-Config (120).
+**Die nvim-Config, mittendrin: 120 -> 39**, `worse: nothing` (2026-09-02,
+unterbrochen). Alle 31 Plugins stehen auf Null. Was noch offen ist, steht
+Zeile für Zeile unter „Wiedereinstieg" gleich hier drunter.
+
+Zwei Dinge sind dabei vorab geklärt worden und stehen fest:
+
+- **Die Worktree-Frage ist beantwortet** -- und sie war kein Aufräumthema,
+  sondern ein Messfehler. Siehe „Nicht von Claude entschieden" unten.
+- **`scripts/luals-scan/mkcfg.py` ist repariert.** Ohne den Fix meldet die
+  Config aus einem Worktree heraus **872** statt 120.
+
+---
+
+### Wiedereinstieg: die 39, die noch offen sind
+
+Gemessen am 2026-09-02 (`scan.sh cfgmid3 nvim-config`). Reihenfolge nach
+Ursache, nicht nach Datei — die Einzelfälle unten sind wirklich einzeln.
+
+**Erledigt sind diese Cluster schon** (81 Befunde), zur Orientierung, was
+nicht mehr zu suchen ist: `utc_captures` in `sla/clock.lua` (18),
+`os.date` -> `tostring` (10), `Cfg.Harpoon.List` vervollständigt (8),
+`Lib.UserCmd.Composer.RouteSpec` -> `Route` (5), `drift.lua`s `repo`-Local
+(10), F5 auf `local system = vim.system` (6), beide Annotationsformen
+(7), plus Einzelne.
+
+| # | Posten | Anzahl | Griff |
+|---|---|---:|---|
+| 1 | **`duplicate-set-field`** — `editing.lua:216` (`paste`), `todo_comments/init.lua:36,42`, `ui_open.lua:43` | 4 | In jedem Plugin-Durchgang waren das ausnahmslos absichtliche Überschreibungen. Prüfen, ob es hier auch so ist, dann pro Zeile mit Begründung unterdrücken |
+| 2 | **harpoon, der Rest** — `mappings/harpoon.lua:144,154`, `persist_paths.lua:238` (`HarpoonList` -> `Cfg.Harpoon.List`), `utils/sanitize.lua:69` | 4 | Die Stand-in-Klasse ist jetzt vollständig; diese vier sind die *andere* Richtung — echte harpoon-Typen, die gegen den Stand-in laufen. Vermutlich reicht ein `---@cast` an der Übergabestelle |
+| 3 | **`wkdoptions/init.lua:26,32`** — `vim.api.keyset.get_hl_info` an `vim.api.keyset.highlight` | 2 | `nvim_get_hl` liefert die Info-Form, `nvim_set_hl` will die Setz-Form. Upstream-Meta unterscheidet sie strenger als die Praxis; Cast oder Feld-für-Feld-Kopie |
+| 4 | **`snacks/@types/init.lua:14,18`** — `file`/`text` doppelt | 2 | Eine Klasse, die ein Feld deklariert, das die geerbte schon hat |
+| 5 | **`plugins/workflow.lua:27,40`** — `todo_comments` undefined | 2 | Ein Feld auf einer Plugin-Spec-Klasse, das dort nicht deklariert ist |
+| 6 | **`drift.lua:859,910`** — `string\|table<string, string>\|nil` an `string` | 2 | Dieselbe Familie wie der `repo`-Local: der Wert ist geprüft, die Signatur weiß es nicht |
+| 7 | **`case/ui.lua`** — `1026` (`@param scope`), `1687`, `3010`, `3354` (`count`) | 4 | Einzeln |
+| 8 | **`return-type-mismatch`** — `sla/init.lua:268`, `snacks/picker/init.lua:62`, `telescope/init.lua:48` | 3 | Je ein Rückgabewert, der die deklarierte Gestalt knapp verfehlt |
+| 9 | **Der Rest, wirklich einzeln** — `init.lua:185,186`, `@types/aliases.lua:6` (`Path` doppelt), `case/links.lua:86`, `case/similar.lua:392`, `sla/clock.lua:65,106`, `sla/stream.lua:98`, `plugin_repos/picker.lua:143`, `menu/custom_menu/init.lua:69`, `plugins/neotree.lua:38`, `plugins/treesitter.lua:107`, `themes/init.lua:143`, `breadcrumbs/.../container.lua:23`, `indent_scope.lua:179` | 16 | — |
+
+**Vorgehen beim Wiedereinstieg:**
+
+1. `REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh <pass> nvim-config`
+   als neuen Vorher-Lauf — die 39 oben sind der Stand, nicht die Basis.
+2. Cluster 1 bis 6 zuerst; das sind 16 der 39 und alle haben einen bekannten
+   Griff.
+3. Am Ende **zweimal messen** (die Regel aus dem Arbeitsmodus).
+4. Danach ist der Roadmap-Punkt fertig, und es folgt die
+   [letzte Task](#letze-task-nachdem-alles-fertig-ist).
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**Die nvim-Config** (120) -- der letzte Posten, und der einzige, der noch
-offen ist. `param-type-mismatch` 38, `need-check-nil` 17.
-
-**Davor gehört die Worktree-Frage beantwortet**, siehe „Nicht von Claude
-entschieden": `nvim-config` ist im Scan immer *die Config, aus der `scan.sh`
-gestartet wurde*, und darunter liegen elf Worktrees. Ein vertikaler Durchgang
-will erst wissen, gegen welchen Baum gemessen wird -- sonst misst der
-Nachher-Lauf etwas anderes als der Vorher-Lauf.
-
-Die Einstiegs-Checkliste steht unter
-[„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`]
-(./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules),
-Abschnitt H hat die Reihenfolge. Für die Config besonders zu erwarten:
-
-- **die drei Annotationsformen** (C1, C5 Form B, C6) -- sie sehen im Bericht
-  nach Kleinkram aus und trugen zuletzt 28, 16 und 11 Befunde;
-- **F5, der typisierte Alias** -- die Config zieht `vim.*`-Funktionen an vielen
-  Stellen in Modulkopf-Locals;
-- **`different-requires` (41)**, das es ausschließlich dort gibt (Abschnitt 5).
-
-Danach ist der Roadmap-Punkt abgearbeitet, und es folgt die
-[letzte Task](#letze-task-nachdem-alles-fertig-ist): die Ableitung nach
-`WKDBooks/Development/wkdbook-Lua/Checklists`.
-
-**Die neun kleinen Repos zusammen** (61) sind der andere sinnvolle Zuschnitt:
-die Sechser-Runde hat gezeigt, dass fünf Repos in einem Zug gehen (126 -> 0),
-weil der Denkanteil pro Ursache nur einmal anfällt und die Ursachen sich
-wiederholen.
-
-**Danach die nvim-Config selbst** (120) -- das größte Einzelvorkommen. Es
-ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
-immer *die Config, aus der `scan.sh` gestartet wurde*, und es liegen elf
-Worktrees darunter. Ein vertikaler Durchgang dort will erst die Frage
-geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
-entschieden" unten.
-
-**Die Einstiegs-Checkliste** steht vollständig unter
-[„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`]
-(./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules),
-Abschnitt H hat die Reihenfolge. Die vier, die sich zuletzt am häufigsten
-ausgezahlt haben:
-
-- **`vim.uv.new_timer()`** -- 21 Stellen in drei Repos; die Frage ist nie, wie
-  der Befund weggeht, sondern was die Funktion **ohne** Timer tun soll.
-- **Eine Cast-Liste anstelle eines Guards** (A5) -- fünf Stellen allein in
-  cascade, und eine davon habe ich beim ersten Durchgang übersehen.
-- **`undefined-field` in `lua/`** -- vier verschiedene Ursachen, die im Report
-  identisch aussehen: falscher Zugriff, fehlender Typ, **anders heißender
-  Typ** (diff.nvim: sieben Befunde an einer Zeile), oder Code, den niemand
-  ruft.
-- **`health.lua` gegen den Code prüfen** -- in beide Richtungen: eine
-  Advice-Liste, die `info`/`ok` wegwerfen (sechs Repos), und ein
-  `deprecated`, das der Health-Check noch nicht kennt (diff.nvim).
+**Die Config fertig machen** — die 39 unter „Wiedereinstieg" oben, mit der
+Reihenfolge und dem jeweiligen Griff. Danach die
+[letzte Task](#letze-task-nachdem-alles-fertig-ist).
 
 ---
 
@@ -394,13 +387,36 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 14. Der Rest der Verteilung (`param-type-mismatch`, `assign-type-mismatch`,
     Annotationsfehler)
 
-**Nicht von Claude entschieden:** die elf git-Worktrees unter
-`C:/Users/bartl/AppData/Local/nvim/.claude/worktrees/`. Einer davon
-(`filetree-statusline-modes-c96cc9`) trägt noch ein `lua/lsp/**` aus der Zeit
-vor der Extraktion von lsp.nvim und ist die Quelle der 180. Mit dem
-injizierten `ignoreDir` sind sie für LuaLS unsichtbar, das Problem ist also
-entschärft; ob die veralteten weg sollen, ist eine Aufräumfrage und keine
-Messfrage.
+**Entschieden am 2026-09-02** (war: „die elf git-Worktrees"). Die Regel
+lautet: ein Worktree, der älter als zwei Tage ist und keinen Commit hält, der
+wichtig oder noch nicht integriert ist, darf weg.
+
+- **`filetree-statusline-modes-c96cc9` ist entfernt.** 22 Tage alt, und sein
+  Branch war **vollständig in `origin/main` enthalten** — jeder Commit, den er
+  je hatte, liegt dort. Die Frage „wurde darin ein Bug gefixt, der im neuen
+  lsp.nvim fehlt" beantwortet sich damit von selbst: es gab nichts Eigenes.
+  Untracked lagen nur 2,4 MB generierter `docs/map/`-Output.
+- **`cascade-nvim-bullet-fixes-b99bf1` bleibt.** Vier Tage alt, aber er hält
+  **einen Commit, der nicht in `origin/main` ist** (`6938692b docs`, 3301
+  Zeilen: elf `NOTES/PersonelPlugins/TO_CHECK_FEATURES/*.md` plus ROADMAP und
+  TELEMETRY/Improve). Genau der Fall, den die Regel schützt — der Inhalt
+  existiert sonst nirgends. **Offen: soll er nach main?**
+- Die übrigen neun sind ≤ 1 Tag alt und bleiben.
+
+**Und es war kein Aufräumthema, sondern ein Messfehler.** Ein Worktree ist
+eine zweite Kopie derselben Dateien. lsp.nvims Injektion nimmt jedes
+`@types`-Verzeichnis in `workspace.library` auf — für ein Plugin richtig, für
+die Config zeigt sie damit auf **den Haupt-Checkout**, während der Workspace
+der Worktree ist. Zwei Verzeichnisse, identische Deklarationen, also jede
+Klasse und jeder Alias doppelt: die Config meldete aus einem Worktree heraus
+**872 statt 120**, davon 674 `duplicate-doc-field` und 81
+`duplicate-doc-alias`.
+
+`scripts/luals-scan/mkcfg.py` wirft solche Einträge jetzt heraus
+(`drop_own`): eine Library ist fremder Code, nicht der Workspace selbst — was
+lua_ls in seiner eigenen Doku ebenfalls so sagt. Gegengeprüft: die Config
+misst danach wieder exakt die 120 aus den historischen Läufen, und
+filetree/pdfport bleiben auf 0.
 
 ---
 

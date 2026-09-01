@@ -39,7 +39,7 @@ local function newest_activity_stream(dir)
     local n = name:match("^(%d+)_ActivityStream%.md$")
     if n then
       local num = tonumber(n)
-      if num > best_n then
+      if num and num > best_n then
         best_n, best = num, research_dir .. "/" .. name
       end
     end
@@ -57,7 +57,7 @@ local function parse_iso(iso)
   if not y then
     return nil
   end
-  return clock.utc(tonumber(y), tonumber(mo), tonumber(d), tonumber(h), tonumber(mi), tonumber(s))
+  return clock.utc_captures(y, mo, d, h, mi, s)
 end
 
 ---@param m Lib.Case.Meta|nil

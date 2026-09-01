@@ -17,12 +17,23 @@
 
 local M = {}
 
+--- The three accessors pickers.nvim's snacks adapter exposes, and the shape
+--- both functions below hand back.
+---
+--- A named class rather than the inline table type these carried: inside a
+--- table type a `fun(): T` swallows everything after its return type, so only
+--- `get_keys` survived and the other two read as undefined at every call site.
+---@class Cfg.Snacks.EntryActions
+---@field get_keys       fun(): table
+---@field get_input_keys fun(): table
+---@field get_actions    fun(): table
+
 --- Empty entry-actions skeleton, used when pickers.nvim is not (yet) on the
 --- runtimepath. Mirrors pickers_win()'s degrade pattern below so a load-order
 --- slip silently yields "no extra actions" instead of an error in Snacks'
 --- opts(), which would otherwise drop the entire picker config (including
 --- unrelated keys like preview scroll).
----@return { get_keys: fun(): table, get_input_keys: fun(): table, get_actions: fun(): table }
+---@return Cfg.Snacks.EntryActions
 local function empty_entry_actions()
   return {
     get_keys = function()
@@ -42,7 +53,7 @@ end
 -- explicit `dependencies = { "StefanBartl/pickers.nvim" }` to guarantee load
 -- order, but this pcall stays as a second line of defense (e.g. plugin
 -- renamed/removed) rather than hard-failing Snacks.setup().
----@return { get_keys: fun(): table, get_input_keys: fun(): table, get_actions: fun(): table }
+---@return Cfg.Snacks.EntryActions
 local function entry_actions()
   local ok, mod = pcall(require, "pickers.entry_actions.adapters.snacks")
   if not ok then

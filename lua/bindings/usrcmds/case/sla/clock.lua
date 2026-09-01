@@ -49,13 +49,16 @@ function M.elapsed(from, to, window)
   if window == M.ALWAYS then
     return to - from
   end
+  -- Everything past the early return is the table half of the union; a
+  -- comparison against a module field does not carry that on its own.
+  ---@cast window Lib.Case.SlaWindow
 
   -- Walk day by day rather than second by second — O(days between from
   -- and to), and a day is only ever partially in-window at its two ends.
   local total = 0
   local cursor = from
   while cursor < to do
-    local d = os.date("*t", cursor)
+    local d = os.date("*t", cursor) --[[@as osdate]]
     local midnight = cursor - (d.hour * 3600 + d.min * 60 + d.sec)
     local day_end = math.min(to, midnight + DAY_SECONDS)
 
@@ -88,6 +91,7 @@ function M.deadline(from, budget, window)
   if window == M.ALWAYS then
     return from + budget
   end
+  ---@cast window Lib.Case.SlaWindow
 
   local remaining = budget
   local cursor = from
@@ -95,7 +99,7 @@ function M.deadline(from, budget, window)
   -- window (e.g. empty `days`) fails loud (returns `cursor` at the bound)
   -- instead of spinning.
   for _ = 1, 366 do
-    local d = os.date("*t", cursor)
+    local d = os.date("*t", cursor) --[[@as osdate]]
     local midnight = cursor - (d.hour * 3600 + d.min * 60 + d.sec)
     local next_midnight = midnight + DAY_SECONDS
 
@@ -138,6 +142,32 @@ local function days_from_civil(y, mo, d)
   local doy = math.floor((153 * mp + 2) / 5) + d - 1
   local doe = yoe * 365 + math.floor(yoe / 4) - math.floor(yoe / 100) + doy
   return era * 146097 + doe - 719468
+end
+
+--- Epoch of the six components of a timestamp that was just captured with
+--- `%d+` patterns.
+---
+--- The captures are strings, and `tonumber` answers `number|nil` for any
+--- string -- but a `%d+` capture that has already matched cannot fail to
+--- convert. Three callers did this by hand with six `tonumber()` calls each,
+--- which is where eighteen of this config's findings came from; the assert
+--- states the guarantee once, here.
+---@param y string
+---@param mo string
+---@param d string
+---@param h string
+---@param mi string
+---@param s string
+---@return integer epoch
+function M.utc_captures(y, mo, d, h, mi, s)
+  return M.utc(
+    assert(tonumber(y)),
+    assert(tonumber(mo)),
+    assert(tonumber(d)),
+    assert(tonumber(h)),
+    assert(tonumber(mi)),
+    assert(tonumber(s))
+  )
 end
 
 --- Epoch of `y-mo-d h:mi:s` interpreted as **UTC**, independent of the

@@ -9,7 +9,11 @@
 local M = {}
 
 local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
-local system, fnamemodify = vim.system, fn.fnamemodify
+-- F5: an alias on a `vim.*` function reads as nil-bearing at its call
+-- sites without an explicit type on the alias line.
+---@type fun(cmd: string[], opts?: table, on_exit?: fun(out: vim.SystemCompleted)): vim.SystemObj
+local system = vim.system
+local fnamemodify = fn.fnamemodify
 
 ---@param override string|nil
 ---@return string|nil
@@ -147,9 +151,10 @@ end
 ---@param on_finish fun(ok_items: T[], failed: {item: T, err: string}[])
 ---@param prog table|nil lib.nvim.progress handle, or nil to skip progress reporting
 function M.run_sequential(list, worker, describe, on_finish, prog)
-  ---@type T[]
+  -- No `---@type T[]` here: `@generic T` is scoped to the signature above,
+  -- so `T` does not exist in the body. Inference from the two `insert`s is
+  -- what carries the element type anyway.
   local ok_items = {}
-  ---@type {item: T, err: string}[]
   local failed = {}
   local index = 1
   local total = #list

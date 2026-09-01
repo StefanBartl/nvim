@@ -1329,35 +1329,40 @@ function M.describe(findings, skipped, source_reason, repo_info)
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Source axis not consulted: " .. source_reason
   end
-  local repo_ran = repo_info ~= nil and repo_info.ran == true
+  -- The narrowed value, not just a boolean about it: `repo_ran` says
+  -- `repo_info` is non-nil, but a boolean carries none of that to the ten
+  -- reads below. `repo_ran` itself stays -- one branch further down asks
+  -- only whether the axis ran.
+  local repo = (repo_info ~= nil and repo_info.ran == true) and repo_info or nil
+  local repo_ran = repo ~= nil
   if repo_info and repo_info.reason then
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Repo axis not consulted: " .. repo_info.reason
   end
-  if repo_ran and repo_info.root then
+  if repo and repo.root then
     lines[#lines + 1] = ""
     lines[#lines + 1] = ("Repo root: %s -- %d Lua project%s found"):format(
-      repo_info.root,
-      #repo_info.resolved,
-      #repo_info.resolved == 1 and "" or "s"
+      repo.root,
+      #repo.resolved,
+      #repo.resolved == 1 and "" or "s"
     )
   end
-  if repo_ran and #repo_info.checked > 0 then
+  if repo and #repo.checked > 0 then
     lines[#lines + 1] = ""
     lines[#lines + 1] = ("Checked against their local checkout, not live (%d): %s"):format(
-      #repo_info.checked,
-      table.concat(repo_info.checked, ", ")
+      #repo.checked,
+      table.concat(repo.checked, ", ")
     )
   end
   -- Only reachable with a scanned root, see `M.check`. A checkout nobody
   -- wrote a cheatsheet for is not a drift finding -- there is no documented
   -- claim to be wrong about -- but it is the one thing a report over a whole
   -- path can say that a per-plugin report structurally cannot.
-  if repo_ran and #repo_info.undocumented > 0 then
+  if repo and #repo.undocumented > 0 then
     lines[#lines + 1] = ""
     lines[#lines + 1] = ("No cheatsheet under BINDINGS (%d): %s"):format(
-      #repo_info.undocumented,
-      table.concat(repo_info.undocumented, ", ")
+      #repo.undocumented,
+      table.concat(repo.undocumented, ", ")
     )
     lines[#lines + 1] =
       "  -- a checkout in this path that nothing in the corpus documents; not drift, just uncovered."
