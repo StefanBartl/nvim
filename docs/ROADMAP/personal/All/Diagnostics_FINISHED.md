@@ -30,6 +30,11 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [Die Abschluss-Task -- 14 Durchgaenge werden 34 Regeln](#die-abschluss-task-14-durchgaenge-werden-34-regeln)
+      - [Die Ablage-Entscheidung, und warum sie vom Vorschlag abweicht](#die-ablage-entscheidung-und-warum-sie-vom-vorschlag-abweicht)
+      - [Was beim Einsortieren an der Sammlung selbst falsch war](#was-beim-einsortieren-an-der-sammlung-selbst-falsch-war)
+      - [Was bewusst keine Regel geworden ist](#was-bewusst-keine-regel-geworden-ist)
+      - [Der Kern, in fuenf Saetzen](#der-kern-in-fuenf-saetzen)
     - [Die nvim-Config, zweite Haelfte -- 39 auf 0, und der letzte Befund lag woanders](#die-nvim-config-zweite-haelfte-39-auf-0-und-der-letzte-befund-lag-woanders)
       - [Drei echte Fehler](#drei-echte-fehler)
       - [C7 (neu): `{ k: T|nil }` macht den Schluessel zur Pflicht](#c7-neu--k-tnil--macht-den-schluessel-zur-pflicht)
@@ -1007,6 +1012,112 @@ dreissig Befunde tatsaechlich dreissig einzelne sind und keine Messfrage.
 ---
 
 ## 2026-09-02
+
+---
+
+### Die Abschluss-Task -- 14 Durchgaenge werden 34 Regeln
+
+Der letzte Punkt des Roadmap-Punkts: aus
+[dem Abschnitt „Wiederkehrende Muster"](#wiederkehrende-muster-die-ableitung-fuer-rules)
+ableiten, wie kuenftige Repos geschrieben werden, und das Ergebnis in die
+kanonische Regelsammlung schreiben
+(`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists`).
+
+**Ergebnis: 34 Regeln (`LLS-01` … `LLS-43`), 11 Gate-Punkte
+(`NEW-36` … `NEW-46`), vier Zeilen in der Review-Checkliste.** Uebergabe-Report
+im nvim-Repo: [`Diagnostics_RULES.md`](./Diagnostics_RULES.md).
+
+#### Die Ablage-Entscheidung, und warum sie vom Vorschlag abweicht
+
+Vorgeschlagen war ein Ordner `Checklists/luals/` mit dem gesammelten Report
+darin. Der Ordner ist entstanden, das Regelwerk liegt aber **nicht** dort --
+und der Grund steht in der Sammlung selbst.
+
+`Checklists/` ist nach **Fragen** geschnitten, nicht nach Themen: `regeln/`
+(*Was gilt?*), `gates/` (*Bin ich fertig?*), `belege/` (*Woher kommt die
+Regel?*). Ein Ordner, der nach einem **Werkzeug** benannt ist, beantwortet
+keine davon. Haette das Regelwerk dort gelegen, gaebe es Regeln an zwei Orten
+-- genau das, was der Grundsatz *„Jede Regel steht genau einmal"* verhindern
+soll -- und `WORKFLOW.md`, das fuer jede Situation einen Einstiegspunkt nennt,
+haette fuer diesen Ordner keinen gehabt.
+
+Die Aufteilung ist deshalb:
+
+- **`luals/` ist deskriptiv** und beantwortet die Frage, die keine der drei
+  Schichten stellt: *wie verhaelt sich das Werkzeug?* Damit steht es neben
+  `nachschlagen/`. Zwei Dateien: das Dossier (`README.md`) und eine
+  Nachschlagetabelle `DIAGNOSEN.md` -- Diagnose-Code → wahrscheinlichste
+  Ursachen nach Haeufigkeit → Griff → Regel-ID. Letztere ist die Datei fuer
+  den Alltag: eine Warnung steht da, was ist wahrscheinlich los.
+- **Die Regeln stehen in `regeln/LUA_NVIM.md`** mit stabilen IDs wie jede
+  andere Regel. Das ist nicht Formalismus: `KONZEPT.md § 6.1` haelt fest, dass
+  das geplante `rules.nvim` ohne ID-Verankerung Befunde nicht auf Regeln
+  abbilden kann.
+- **Das Dossier wiederholt die Regeln nicht**, es begruendet sie; die Regeln
+  verweisen zurueck. Das ist die *Beleg-Kante* aus `KONZEPT.md § 6.2`.
+
+Neues Praefix `LLS-`, weil die Regeln nicht unter `LUA-` passen und die
+Nummernkreise kollidiert waeren -- derselbe Grund, aus dem `TS-` und `DEP-`
+seinerzeit dazugekommen sind.
+
+#### Was beim Einsortieren an der Sammlung selbst falsch war
+
+Der unangenehmste Fund der Abschluss-Task, und er stand in der
+Review-Checkliste:
+
+> `gates/REVIEW.md § 8`: *„Lua LS Settings -- `diagnostics.globals=vim`;
+> `workspace.library`; Hints an"*
+
+**Wer dieser Zeile folgte, schaltete die Typpruefung fuer sein ganzes Repo
+praktisch ab.** `workspace.library` in der `.luarc.json` *ersetzt* die
+Library-Injektion; danach sieht LuaLS weder `$VIMRUNTIME/lua` noch ein anderes
+Plugin. Das war in **7 von 31** Repos passiert und ist der teuerste
+Einzelfehler der ganzen Erhebung -- die Checkliste hat ihn nicht nur nicht
+verhindert, sie hat ihn empfohlen. Und `diagnostics.globals=vim` ist genau
+dann noetig, wenn `$VIMRUNTIME/lua` **fehlt**; liegt es in der Library, ist
+`vim` typisiert statt `any`, und der Eintrag verschenkt das.
+
+Zwei weitere Luecken kamen dabei heraus:
+
+- **`NEW_PROJECT.md` hatte keinen einzigen Punkt zu `TESTS/`.** Der
+  Verzeichnisbaum dort kannte das Verzeichnis nicht -- in einem Regelwerk fuer
+  ein Plugin-Oekosystem mit Spec-Suiten in jedem Repo.
+- **`REVIEW.md` verwies fuer „Formatter/Linter" auf einen
+  `NEW_PROJECT`-Abschnitt, in dem `stylua` gar nicht vorkommt.** Passend dazu
+  der Befund aus dem Durchgang: zwei Repos ohne `stylua.toml`, wo ein
+  `stylua .` den ganzen Quelltext auf Tabs umgeschrieben haette.
+
+**Die Lehre daraus ist allgemeiner als das Thema:** eine Regel, die nie gegen
+echten Code gemessen wurde, kann jahrelang falsch dastehen, ohne dass es
+auffaellt -- und eine Checkliste, die den haeufigsten Fehler *empfiehlt*, ist
+schlechter als keine. `WORKFLOW.md § F` (*„erst der Fall, dann die Regel")*
+war schon vorher die richtige Reihenfolge; dieser Fund ist ihr bester Beleg.
+
+#### Was bewusst keine Regel geworden ist
+
+Drei Dinge aus den Durchgaengen sind nicht gewandert, weil sie
+Produktentscheidungen an konkreten Repos sind und keine verallgemeinerbaren
+Regeln: die **Adapter-Designfrage aus filetree** (deklarierte Faehigkeiten,
+die kein Backend implementiert), die **drei Aggregator-Strategien von
+lib.nvim**, und die **neun roten Tests in sandbox.nvim**. Alle drei stehen
+weiter unter *Offen* im Report.
+
+#### Der Kern, in fuenf Saetzen
+
+Was von der ganzen Erhebung uebrig bleibt, wenn man alles andere streicht:
+
+1. **Eine Haeufung gleichartiger Befunde ist fast nie eine Haeufung von
+   Fehlern** -- sie ist eine falsche Messgrundlage oder *ein* Fehler mit
+   vielen Symptomen.
+2. **Vor der ersten Zahl die `.luarc.json` lesen.**
+3. **LuaLS entscheidet Zuweisbarkeit ueber den Namen, nie ueber die Gestalt.**
+4. **Ein `pcall` um einen Aufruf, dessen Argumente der Pruefer bemaengelt, ist
+   nie kosmetisch.**
+5. **Ein `undefined-field` verdeckt jede Pruefung, die dahinter laege.**
+
+Und der Satz, der den Aufwand rechtfertigt: **in elf von vierzehn Durchgaengen
+steckte mindestens ein echter Fehler**, den keine Testsuite gefunden hatte --
+weil er entweder nie lief oder in einem `pcall` stumm scheiterte.
 
 ---
 

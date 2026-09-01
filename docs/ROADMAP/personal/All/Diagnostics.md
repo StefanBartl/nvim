@@ -2,7 +2,6 @@
 
 ## Table of content
 
-  - [Letze Task, nachdem alles fertig ist](#letze-task-nachdem-alles-fertig-ist)
   - [Intro](#intro)
   - [0. Stand, Arbeitsmodus, nächster Schritt](#0-stand-arbeitsmodus-nchster-schritt)
     - [Umfang: welche Repos dazugehören](#umfang-welche-repos-dazugehren)
@@ -36,27 +35,6 @@
   - [7. Nebenbefunde](#7-nebenbefunde)
   - [8. Was daraus folgt](#8-was-daraus-folgt)
   - [9. Anhang: der delegierbare Teil des Roadmap-Punkts](#9-anhang-der-delegierbare-teil-des-roadmap-punkts)
-
----
-
-## Letze Task, nachdem alles fertig ist
-
-- [ ] **Vorarbeit liegt vollstaendig vor:** der Abschnitt [„Wiederkehrende
-  Muster -- die Ableitung fuer RULES“](./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules)
-  sammelt, was sich ueber die Durchgaenge wiederholt hat -- nach Haeufigkeit,
-  mit der Signatur zum Wiedererkennen und dem bewaehrten Griff. Er ist ueber
-  **vierzehn** Durchgaenge fortgeschrieben und mit dem letzten (nvim-Config)
-  um **C7, C8, D6 und F6** ergaenzt worden. Alle 32 Workspaces stehen auf
-  Null, es kommt nichts mehr dazu -- der Abschnitt ist fertig.
-- [ ] **Drei Dinge aus dem letzten Durchgang, die nirgends sonst als Regel
-  stehen:** die nvim-Config ist der **einzige der 32 Workspaces ohne
-  Testsuite** (kein `TESTS/`, kein `scripts/test.sh`) -- ausgerechnet der,
-  der die anderen 31 konfiguriert; `stylua --check` parst jede Datei
-  vollstaendig und ist damit der billigste Syntax-Rauchtest, den ein Repo
-  ohne Suite hat; und einen Worktree als Config hochzufahren geht **nicht**
-  ueber `NVIM_APPNAME`, ohne dass lazy.nvim ein eigenes Datenverzeichnis
-  anlegt und jedes Plugin neu klont (185 MB).
-- [ ] Aus C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md ableitungen treffen, wie künftiger Repos zb die /TEST/ files geschrieben werden, auf was wier aufpassen  üssen in normalen source code usw... sodass wir dies von anfang an einbauen können. Den Report erstmal nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/ schreiben. Außerdem alles was sinnvoll ist in die RULES files in WKDBooks/Development/wkdbook-Lua/Checklists schreiben, dort gibt es als beispiel eine filöe für neue projekte, dort kann man ereinschreiben, wie die /TEST/ aufgebaut sein soll buzw was hier wichtig ist um dieagnsotics zu berücksichtigen usw...
 
 ---
 
@@ -128,10 +106,15 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-**Nichts.** Die nvim-Config ist fertig -- **39 -> 0**, in zwei Läufen
-bestätigt, `worse: nothing`. Damit stehen **alle 32 Workspaces des Umfangs
-auf Null**, und der Roadmap-Punkt ist inhaltlich abgeschlossen; offen ist nur
-noch die [letzte Task](#letze-task-nachdem-alles-fertig-ist).
+**Nichts. Der Roadmap-Punkt ist abgeschlossen.** Alle 32 Workspaces stehen auf
+Null (die nvim-Config zuletzt, 120 -> 39 -> 0), und die Abschluss-Task ist
+erledigt: aus den 14 Durchgängen sind **34 Regeln** (`LLS-01` … `LLS-43`) und
+**11 Gate-Punkte** (`NEW-36` … `NEW-46`) in die kanonische Regelsammlung
+gewandert. Übergabe-Report: [`Diagnostics_RULES.md`](./Diagnostics_RULES.md).
+
+Was unter „Offen" stehen bleibt, ist **keine Diagnose-Arbeit mehr** -- drei
+Einzelentscheidungen, die hier nur aufbewahrt werden, damit sie nicht
+verlorengehen.
 
 Zwei Dinge, die im Lauf davor geklärt wurden und weiter gelten:
 
@@ -144,16 +127,21 @@ Zwei Dinge, die im Lauf davor geklärt wurden und weiter gelten:
 
 ### Vorschlag nächster Schritt
 
-**Die [letzte Task](#letze-task-nachdem-alles-fertig-ist)** -- die
-RULES-Ableitung aus [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md).
-Die Vorarbeit liegt vollständig vor: der dortige Abschnitt „Wiederkehrende
-Muster" ist über vierzehn Durchgänge fortgeschrieben und durch den
-Config-Durchgang um vier Punkte ergänzt worden (C7, C8, D6, F6).
+**Für diesen Punkt: keiner mehr.** Wenn etwas davon weitergeht, dann als
+eigener Roadmap-Punkt, nicht als Fortsetzung hier:
 
-Was sonst noch unter „Offen" steht, ist **keine Diagnose-Arbeit mehr**: die
-neun roten Tests in sandbox.nvim samt seinem Runner (Punkt 1c), die
-Adapter-Designfrage (4) und die drei lib.nvim-Aggregatoren (11) sind je eine
-eigene Entscheidung.
+1. **sandbox.nvims neun rote Tests und sein Runner** (Offen 1c). Der Runner
+   ist das größere der beiden Probleme, und die Vorlage dafür steht jetzt als
+   Gate-Punkt `NEW-40` in der Regelsammlung.
+2. **Die Adapter-Designfrage aus filetree** (Offen 4) -- eine
+   Produktentscheidung, keine Aufräumarbeit.
+3. **Die drei Aggregator-Strategien von lib.nvim** (Offen 11).
+
+Der eigentliche Nachfolger ist keiner dieser drei, sondern die Regelsammlung
+selbst: sie ist ab jetzt der Ort, an dem das Thema weiterlebt. Wer ein neues
+Repo anlegt, geht `gates/NEW_PROJECT.md § 3` durch und misst vor dem ersten
+Push -- ein frisches Repo hat keine historische Last, dort ist null der
+billigste Zustand, den es je haben wird.
 
 ---
 
@@ -161,6 +149,7 @@ eigene Entscheidung.
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| RUL | **Die Abschluss-Task** -- die RULES-Ableitung, damit ein neues Repo gar nicht erst dreistellige Zahlen aufbaut | **34 Regeln** (`LLS-01` … `LLS-43`) in `regeln/LUA_NVIM.md § LuaLS-Diagnosen`, **11 Gate-Punkte** (`NEW-36` … `NEW-46`) in `gates/NEW_PROJECT.md § 3` -- dem Abschnitt, den es vorher **gar nicht gab**: `NEW_PROJECT.md` hatte keinen einzigen Punkt zu `TESTS/`, sein Verzeichnisbaum kannte das Verzeichnis nicht. Dazu vier Zeilen in `gates/REVIEW.md § 8`, von denen eine eine **falsche** ersetzt: die Checkliste empfahl `workspace.library` in der `.luarc.json` -- genau den Eintrag, der die Typprüfung fürs ganze Repo abschaltet und der in 7 von 31 Repos der teuerste Einzelfehler der Erhebung war. Das Dossier (deskriptiv, mit Nachschlagetabelle Diagnose → Ursache → Griff) liegt unter `Checklists/luals/`; die Regeln stehen bewusst **nicht** dort, sondern in `regeln/`, damit es sie weiter genau einmal gibt. Übergabe-Report: [`Diagnostics_RULES.md`](./Diagnostics_RULES.md), Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | CFG | **Die nvim-Config fertig** -- der letzte offene Workspace | **39 -> 0**, in zwei Läufen bestätigt, `worse: nothing`. **Damit stehen alle 32 Workspaces des Umfangs auf Null.** 39 Befunde, 21 Ursachen -- der einzige Workspace der Reihe, in dem fast jeder Befund für sich steht. Drei echte Fehler: **`list:remove(j)` mit einem Index statt einem Item** in `config/harpoon/utils/sanitize.lua` -- harpoons `remove` gibt sein Argument an `config.equals`, das es indiziert, also warf der Aufruf, der `pcall` schluckte es, und `dedup_in_place_safe` hat **nie ein Duplikat entfernt** und trotzdem eine Anzahl gemeldet; **`snacks.picker.todo_comments` mit der Keyword-*Tabelle* statt der Namensliste** (`<leader>sT` suchte mit leerer Keyword-Alternative -- sichtbar erst, nachdem der `undefined-field` behoben war, weil ein undefiniertes Feld jede Prüfung dahinter verdeckt); und `vim.log.levels.info` statt `.INFO`. Vier neue Musterpunkte (C7, C8, D6, F6), und der letzte Befund hing an einem Feldtyp in **lsp.nvim**, der dort selbst einen trug: 1 -> 0, Suite grün. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | T8 | **Die Achter-Runde** -- die letzten acht Plugins (2026-09-02) | **50 -> 0** (reposcope 9, color_my_ascii 8, debugging 8, dap 7, filetree 6, cmdlog/migrate/runtime-analysis je 4), in zwei Läufen bestätigt, `worse: nothing`, jede Suite grün. **Damit sind alle 31 Plugins fertig.** Drei Funde, die über das Repo hinausgehen: **ein Alias auf eine `vim.*`-Funktion kommt nil-behaftet zurück** (`local set_km = vim.keymap.set` -- zwei Befunde aus einer Zeile, vier isolierte Reproduktionen blieben sauber; ein `---@type` auf der Alias-Zeile beseitigt sie, neuer Musterpunkt F5); **migrate ist das achte Cluster-L-Repo**, und dort fällt die Zahl nach der Korrektur (4 -> 2) statt zu steigen; und **dap.nvim ist der vierte Test-Runner** der Reihe, der ohne seine Env-Variablen nicht sagt, was fehlt -- hier mit vier roten Tests, die wie ein Defekt im Code aussehen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | T3 | **Die Dreier-Runde** -- pickers, insights, recommender (2026-09-02) | **73 -> 0** (32/29/12), in zwei Laeufen bestaetigt, `worse: nothing`, jede Suite gruen. **Zwei der drei hatten dieselbe Ursachenfamilie in zwei Formen**: `fun(T)` ohne Parameternamen parst nicht (pickers: drei Zeilen, elf Befunde, davon sechs `need-check-nil` in einer Datei -- neuer Musterpunkt C6), und `---@return T, U  wort, wort` liest die nachgestellten Woerter als dritten Rueckgabewert (insights: drei Zeilen, sechzehn Befunde). Dabei kam heraus, dass **drei Scanner dieselbe Gestalt verschieden nennen** -- `ts_lua` deklarierte ein `file`, das niemand liest und niemand setzt. In recommender waren fuenf Befunde **ein Testfall, der sich selbst uebersprungen hat** (Deep-Merge gegen `DEFAULTS.float`, einen Schluessel, den es nie gab). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
