@@ -97,6 +97,26 @@ Worktrees stammt aus der Zeit vor der Extraktion von lsp.nvim und traegt noch
 Plugins neben der echten, und jedes `@class` darin kollidiert mit sich selbst.
 In lsp.nvim waren das 180 von 359 Befunden.
 
+### Warum der Dump nicht ganz die Injektion ist
+
+`dump_library.lua` ruft `build_library(root)`. Der **Attach-Pfad des Editors**
+benutzt dagegen `library_profiles.build_runtime_library()` -- drei Pfade
+(`${3rd}/luv`, `${3rd}/busted`, `$VIMRUNTIME/lua`); die Plugin-Typen zieht
+lazydev bei Bedarf nach. `build_library` erreicht den laufenden Server nur
+über `:LuaLsReloadLibrary` von Hand.
+
+Der Dump ersetzt damit faktisch lazydev, und das ist Absicht: ohne die
+Plugin-Typen meldet der Scan Hunderte Phantome auf `Lib.*`, `RA.*` und
+Konsorten. **Eine Sache musste dafür aber angeglichen werden.** lazydev trägt
+`<plugin>/lua` ein, `build_library` dagegen den `runtimepath`-Eintrag, also die
+**Wurzel** -- und damit auch das `TESTS/` jedes Plugins. Bei 21 Repos mit einer
+`TESTS/harness.lua` findet ein `require("harness")` dann 21 Kandidaten, und
+LuaLS greift irgendeinen: bei spotlight.nvim gemessen 346
+`param-type-mismatch` gegen die `H.eq(a, b, msg)` eines fremden Repos, von
+denen eine laufende Session (`vim.diagnostic.get`) keinen einzigen zeigt.
+
+Deshalb trägt der Dump `<plugin>/lua` ein, wo es das gibt.
+
 > Ausführlich, mit Nachweis:
 > `E:/repos/WKDBooks/Development/wkdbook-Lua/LuaLanguageServer/_luarc_json/Reichweite-und-Praezedenz.md`
 
@@ -107,7 +127,7 @@ In lsp.nvim waren das 180 von 359 Befunden.
 | Datei | Aufgabe |
 |---|---|
 | `scan.sh` | Index bauen, Library-Dump anstoßen, Configs erzeugen, `--check` fahren |
-| `dump_library.lua` | `build_library(root)` + `ignore.as_luals_patterns()` in laufendem nvim, Ergebnis als JSON |
+| `dump_library.lua` | `build_library(root)` + `ignore.as_luals_patterns()` in laufendem nvim, Ergebnis als JSON. Plugin-Wurzeln werden dabei durch ihr `lua/` ersetzt -- siehe oben |
 | `mkcfg.py` | injizierte Defaults + `.luarc.json` des Repos -> eine Config pro Workspace |
 | `compare.py` | einen Lauf zusammenfassen oder zwei vergleichen |
 

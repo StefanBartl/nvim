@@ -89,7 +89,21 @@ for entry in vim.gsplit(roots_env, "[;\n]", { trimempty = true }) do
   if root ~= "" and name ~= "" then
     local list = {}
     for path in pairs(build(root)) do
-      list[#list + 1] = (path:gsub("\\", "/"))
+      path = (path:gsub("\\", "/"))
+      -- A runtimepath entry is a plugin ROOT, and `build_library` takes it
+      -- whole. lazydev -- which is what actually supplies plugin types in the
+      -- editor -- adds `<plugin>/lua` instead, and the difference is not
+      -- cosmetic: a root drags in the plugin's `TESTS/` as well, so a spec
+      -- doing `require("harness")` finds twenty-one candidates and LuaLS
+      -- picks a foreign one. Measured on spotlight.nvim: 346 phantom
+      -- `param-type-mismatch` against another repo's `H.eq(a, b, msg)`, none
+      -- of which a real session reports (`vim.diagnostic.get` on the same
+      -- file: 0).
+      local lua_dir = path .. "/lua"
+      if vim.fn.isdirectory(lua_dir) == 1 then
+        path = lua_dir
+      end
+      list[#list + 1] = path
     end
     table.sort(list)
 

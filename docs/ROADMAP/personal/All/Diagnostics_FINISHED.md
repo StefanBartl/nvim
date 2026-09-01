@@ -9,6 +9,13 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [spotlight.nvim -- 37 auf 0, nachdem die Messung erst einmal stimmte](#spotlightnvim-37-auf-0-nachdem-die-messung-erst-einmal-stimmte)
+      - [Dreizehn Befunde waren eine Zeile in der `.luarc.json`](#dreizehn-befunde-waren-eine-zeile-in-der-luarcjson)
+      - [Und 346 waren die Messung selbst](#und-346-waren-die-messung-selbst)
+      - [Die Ursache im Werkzeug, und was sie nicht war](#die-ursache-im-werkzeug-und-was-sie-nicht-war)
+      - [Was danach an echtem Code uebrig war](#was-danach-an-echtem-code-uebrig-war)
+      - [Die Tests: acht Invarianten benannt, zehn Absichten unterdrueckt](#die-tests-acht-invarianten-benannt-zehn-absichten-unterdrueckt)
+      - [Nachtrag: filetree.nvim steht nicht mehr auf Null](#nachtrag-filetreenvim-steht-nicht-mehr-auf-null)
     - [open.nvim -- 48 auf 0, und ein Spec, das unbrauchbar haette scheitern koennen](#opennvim-48-auf-0-und-ein-spec-das-unbrauchbar-haette-scheitern-koennen)
       - [Ein `table`, das zwoelf Schluessel verschwieg](#ein-table-das-zwoelf-schluessel-verschwieg)
       - [Zwei Felder gerettet, siebenundzwanzig nicht](#zwei-felder-gerettet-siebenundzwanzig-nicht-und-das-war-die-interessante-haelfte)
@@ -127,6 +134,176 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### spotlight.nvim -- 37 auf 0, nachdem die Messung erst einmal stimmte
+
+*(war: Diagnostics-Report Abschnitt 0, "spotlight.nvim vertikal")*
+
+Der Report nannte 49. Gemessen wurden am Ende **37 -> 0** -- und die Differenz
+ist die eigentliche Geschichte dieses Durchgangs.
+
+Commit `f0d0287`, 453 Tests gruen, `stylua --check` sauber, Null in zwei
+Laeufen bestaetigt.
+
+---
+
+#### Dreizehn Befunde waren eine Zeile in der `.luarc.json`
+
+`Lib.Keymap.Registered`, `Lib.Keymap.Spec`, `Lib.UserCmd.Composer.RangeInfo`,
+`Lib.ContextMenu.Item` -- der Scan meldete alle vier als undefiniert, und der
+Report hatte den letzten schon als „ein lib.nvim-Typ, den es unter dem Namen
+nicht gibt" notiert. Es gibt sie alle vier:
+
+```
+lib.nvim/lua/lib/nvim/bindings/keymap/@types/init.lua:58   Lib.Keymap.Spec
+lib.nvim/lua/lib/nvim/bindings/keymap/@types/init.lua:71   Lib.Keymap.Registered
+lib.nvim/lua/lib/nvim/bindings/usercmd/composer/@types/init.lua:99
+lib.nvim/lua/lib/nvim/contextmenu/@types/init.lua:6        Lib.ContextMenu.Item
+```
+
+spotlights `.luarc.json` setzte `workspace.library` auf `$VIMRUNTIME/lua` und
+`${3rd}/luv/library` -- und weil eine `.luarc.json` jeden Schluessel, den sie
+nennt, **ersetzt**, war lib.nvim damit draussen. Cluster A hat genau das
+schon in 20 Repos abgeraeumt, und die Sechser-Runde in sechs weiteren; hier
+fiel es durchs Raster, weil `$VIMRUNTIME` ja drinstand.
+
+Die acht `undefined-field` auf `range`, `line1`, `line2`, `col1`, `col2`
+hingen direkt daran: ohne `RangeInfo` ist der Parameter untypisiert und seine
+Felder unbekannt.
+
+---
+
+#### Und 346 waren die Messung selbst
+
+Nach dem Entfernen der Zeile sprang der Scan von 49 auf **386**. Fast alles
+davon `param-type-mismatch` in Testdateien, in dieser Form:
+
+```
+TESTS/commands_spec.lua:31  Cannot assign `integer` to parameter `string|nil`
+```
+
+spotlights Specs machen `local t = require("harness")`, und `TESTS/run.lua`
+setzt dafuer `package.path`. LuaLS kennt diesen Weg nicht und loest ueber
+Suffix-Matching auf -- mit **21** Dateien namens `TESTS/harness.lua` in den
+Repos. Es griff die falsche, deren `H.eq(a, b, msg)` einen `string|nil` als
+dritten Parameter hat, wo spotlights `M.eq(name, got, want)` `any` nimmt.
+
+**Die Gegenprobe im laufenden Server** hat das entschieden -- die Regel aus
+Abschnitt 1, hier zum ersten Mal zwingend:
+
+| Datei | `vim.diagnostic.get` | Scan vorher | Scan nachher |
+|---|---:|---:|---:|
+| `ui/list.lua` | 8 | 8 | 8 |
+| `bindings/usrcmds.lua` | **1** | 9 | 1 |
+| `TESTS/commands_spec.lua` | **0** | 0 | 37 |
+
+Der Editor kennt weder die neun noch die siebenunddreissig. Die
+`.luarc.json`-Aenderung ist also richtig, und die 346 sind ein Artefakt des
+Werkzeugs.
+
+---
+
+#### Die Ursache im Werkzeug, und was sie nicht war
+
+`dump_library.lua` uebernimmt aus `build_library(root)` jeden
+`runtimepath`-Eintrag **als Repo-Wurzel** -- `E:/repos/lib.nvim`,
+`E:/repos/insights.nvim`, und damit deren `TESTS/`. Der Editor bekommt diese
+Wurzeln nie: sein Attach-Pfad nutzt `build_runtime_library()` mit drei
+Pfaden, und die Plugin-Typen zieht lazydev nach -- als `<plugin>/lua`, nicht
+als Wurzel.
+
+Genau das tut der Dump jetzt auch: liegt unter einem Eintrag ein `lua/`, wird
+dieses eingetragen statt der Wurzel. spotlights Library schrumpft damit von
+38 auf 37 Eintraege, und die 346 Phantome verschwinden.
+
+**Eine Hypothese davor war falsch und ist es wert, notiert zu werden.**
+Zuerst schien der Fehler ein anderer: `find_type_dirs(root)` sammelt auch die
+`@types/`-Verzeichnisse des gemessenen Workspace ein -- bei lib.nvim 110 von
+146 Eintraegen --, also muesste LuaLS jede `@class` darin zweimal sehen und
+gegen sich selbst melden. Ein Filter dafuer, ein zweiter vollstaendiger Lauf:
+**Regel fuer Regel dieselben 411**. LuaLS indiziert einen Pfad im Workspace
+ohnehin als Workspace-Datei; die Library-Nennung aendert daran nichts. Der
+Filter kam wieder raus.
+
+Der Nebenbefund aus dem Report (Offen-Punkt 8, „das Werkzeug dumpt die falsche
+Funktion") ist damit von kosmetisch zu blockierend geworden und erledigt.
+
+---
+
+#### Was danach an echtem Code uebrig war
+
+**Ein Doc-Block, vierzig Zeilen zu weit oben.** `ui/list.lua` dokumentiert
+`M.open` -- der Block klebte am Kommentar von `M.filter`, und `M.open` selbst
+hatte gar keinen. Zwei `---@param mode` uebereinander, ein `---@param filter`,
+den `M.filter` nicht kennt, und ein `---@return nil`, das damit `M.filter`s
+**Rueckgabewert #1** wurde. Deshalb meldete `items = M.filter(items, filter)`
+darunter `cast-local-type` und die Zeile danach `param-type-mismatch`. Sieben
+Befunde, ein verschobener Block.
+
+Dieselbe Klasse Fehler wie die zwei verwaisten Doc-Bloecke in
+documentation.nvim und die zwei uebereinander in pdfport -- inzwischen der
+dritte Fund dieser Art.
+
+**Zwei Signaturen, die ihre eigene Funktion falsch beschrieben.**
+
+`TESTS/harness.lua` deklarierte `contains(name, haystack: string, needle)`,
+obwohl der Rumpf `type(haystack) == "string"` prueft und sonst die Assertion
+fehlschlagen laesst. Genau dafuer rufen die Specs sie auf: mit einem `err`,
+das `string|nil` ist und dessen Gesetztsein die Assertion pruefen soll. Eine
+Assertion, die ihren Pruefgegenstand nicht annehmen darf, ist keine.
+
+`sets.save` deklarierte `name string` und antwortet eine Zeile spaeter
+`false, "a set needs a name"` auf alles, was kein String ist.
+
+**Eine Einengung, die ein Swap zunichtemacht.** In `bindings/usrcmds.lua`
+pruefen zwei `type(...)`-Guards `r.col1`/`r.col2` -- und danach stellt
+`scol, ecol = ecol, scol` das deklarierte `integer?` der Locals wieder her.
+Die geprueften Werte gehen jetzt in frische Locals, dann darf getauscht
+werden.
+
+**Ein fehlbarer Aufruf ohne Guard.** `uv.new_timer()` kann nil liefern.
+Debouncing ist in diesem Fallback die Annehmlichkeit, das Ausfuehren der
+Funktion der Vertrag -- ohne Timer laeuft der Callback jetzt sofort statt
+verschluckt zu werden.
+
+**`try_require` liefert `table|function|nil`.** `mod.save` abzufragen engt
+nichts ein: eine Funktion antwortet dort einfach nil. `persist` und `sets`
+fragen jetzt nach der Tabelle, die ihre Annotation verspricht -- was auch die
+ehrlichere Pruefung ist.
+
+---
+
+#### Die Tests: acht Invarianten benannt, zehn Absichten unterdrueckt
+
+Acht `param-type-mismatch` waren `Spotlight.Item|nil` an einem
+`Spotlight.Item`-Parameter, an Stellen, an denen der Test das Item zwei Zeilen
+vorher selbst angelegt hat. Dort steht jetzt `assert(..., "…")`: das benennt
+die Invariante und macht aus einem stillen nil-Index einen Fehlschlag mit
+Namen.
+
+Die uebrigen zehn sind absichtlich ungueltige Eingaben -- `swatch = 42`,
+`count_scope = "bogus"`, `locked = "yes"`, ein Store-Literal, das auf sechs
+Arten kaputt ist. Sie sind unterdrueckt, jede mit einem Satz Begruendung.
+
+**Zwei Dinge dabei, die beim naechsten Mal Zeit sparen:**
+`---@diagnostic disable-next-line` deckt genau eine Zeile -- bei einem
+mehrzeiligen Tabellenliteral liegt der Befund auf einer der Innenzeilen und
+bleibt stehen. Dort gehoert ein `disable`/`enable`-Paar hin. Und ein `disable`
+ohne `enable` gilt bis zum Dateiende und verdeckt still den ganzen Rest.
+
+---
+
+#### Nachtrag: filetree.nvim steht nicht mehr auf Null
+
+Der Kontrolllauf nach der Werkzeugkorrektur ueber vier fertige Repos:
+documentation, open und pdfport bleiben bei 0, **filetree zeigt 6** --
+durchweg `duplicate-set-field` auf `vim.notify`, fuenf in Testdateien und
+einer in `features/infra/watcher_quarantine/init.lua:76`. Der letzte ist ein
+bewusster Monkey-Patch mit Wiederherstellung (EPERM-Rauschen der
+File-Watcher), also derselbe Fall wie ein Test-Double: eine Unterdrueckung
+mit Begruendung, kein Umbau.
 
 ---
 

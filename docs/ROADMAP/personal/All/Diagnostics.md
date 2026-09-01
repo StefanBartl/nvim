@@ -115,39 +115,35 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* Am 2026-09-01 sind acht Repos fertig geworden: filetree (80),
-runtime-analysis (109), die fünf der Sechser-Runde (126 zusammen), pdfport
-(61) und open (48). **Elf der 32 Workspaces im Umfang stehen jetzt auf
-Null.**
+*Nichts.* **spotlight.nvim steht auf Null** (2026-09-01), damit zwölf der 32
+Workspaces im Umfang. Im selben Durchgang ist der Nebenbefund am Messwerkzeug
+aus Offen-Punkt 8 erledigt -- er war vom Kosmetischen ins Blockierende
+gekippt.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**spotlight.nvim vertikal** (49, frisch gemessen am 2026-09-01). Das größte
-verbliebene Plugin nach der nvim-Config. Die Verteilung ist flacher als bei
-den letzten dreien — kein Posten trägt die Hälfte — aber die Cluster sind
-alle schon einmal dagewesen:
+**mdview.nvim vertikal** (44) -- nach der nvim-Config das größte verbliebene
+Plugin. `param-type-mismatch` 19 und `need-check-nil` 10 tragen zwei Drittel,
+und das ist in jedem Durchgang bisher dieselbe Sache in zwei Regeln gewesen:
+ein Optional, das ungeprüft weitergereicht wird.
 
-| Posten | Anzahl | was es ist |
-|---|---:|---|
-| `Spotlight.Item|nil` an einen `Spotlight.Item`-Parameter | 7 | die Form, die in gopath `make_result` war: ein Wert, den der Aufrufer geprüft hat und die Signatur nicht |
-| `string|nil` an `string` | 5 | dieselbe Familie; zuletzt `notify.error(err)` in open und runtime-analysis |
-| `undefined-field` `line1` / `range` | 5 | Kommando-Kontextfelder — **genau der Posten, den open.nvim gerade hatte**, dort war es ein `@param opts table` |
-| `Lib.ContextMenu.Item` undefiniert | 2 | ein lib.nvim-Typ, den es unter dem Namen nicht gibt |
+**Vorher lohnt ein Blick auf die `.luarc.json`.** mdview führt als einziges
+Repo `"workspace.library": ["$VIMRUNTIME"]` -- ohne `/lua` und ohne luv. Bei
+spotlight steckten dreizehn der 37 Befunde in genau dieser Zeile, und die
+beiden übrigen Repos mit eigener Library (`language`, `migrate`) stehen
+danach an. Das ist kein eigener Punkt mehr, sondern der erste Handgriff im
+jeweiligen Durchgang.
 
-Konzentriert in zwei Dateien: `bindings/usrcmds.lua` (9) und `ui/list.lua`
-(8), dazu 16 über vier Spec-Dateien.
-
-**Danach die nvim-Config selbst** (118) — das größte Einzelvorkommen. Es
+**Danach die nvim-Config selbst** (118) -- das größte Einzelvorkommen. Es
 ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
 immer *die Config, aus der `scan.sh` gestartet wurde*, und es liegen elf
 Worktrees darunter. Ein vertikaler Durchgang dort will erst die Frage
-geklärt haben, gegen welchen Baum gemessen wird — siehe „Nicht von Claude
+geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
 ---
-
 ### Erledigt
 
 | # | Punkt | Ergebnis |
@@ -171,6 +167,7 @@ entschieden" unten.
 | G | **Gesamtlauf über alle 33 Workspaces** (2026-09-01) | **1254**, der erste Lauf auf der korrigierten Messgrundlage. Ersetzt die fortgeschriebene 1353. Verteilung und Tabelle oben unter „Stand“. Der Lauf umfasste 33 Workspaces, davon 32 im Umfang; `neotree-fs-refactor.nvim` steuerte damals 0 bei, die Summe ist also unberührt |
 | M2 | **`workspace.ignoreDir` in elf `.luarc.json`** (2026-09-01) | **495 -> 483** ueber die elf, `worse: nothing`. Neun Repos nennen den Schluessel nicht mehr, filetree.nvim und die Config haben `**/.claude` ergaenzt (ihre `docs`-Ausschluesse sind gewollt). Der erwartete grosse Gewinn kam nicht: die 180 waren lsp.nvim-spezifisch, weil nur dort eine alte Kopie *desselben* Plugins herumlag. Bleibt trotzdem richtig -- die `.luarc.json` warfen 124 injizierte Muster fuer nichts weg, teils fuer Verzeichnisse, die es gar nicht gibt |
 | M | **Die Messgrundlage, zweiter Teil** (2026-09-01) | `${3rd}/luassert` fehlte in der Injektion, und `workspace.ignoreDir` wurde von der Messreihe gar nicht gesetzt. Letzteres liess LuaLS elf Config-Kopien unter `.claude/worktrees/` mitlesen, eine davon mit einem `lua/lsp/**` von vor der Extraktion: **180 von lsp.nvims 359 Befunden** waren Kollisionen des Repos mit einer alten Kopie seiner selbst. lsp.nvim **359 -> 172**, lib.nvim **1 -> 0**. Details unten unter „Offen“ und in [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| S | **spotlight.nvim** -- vertikal | **37 -> 0**, in zwei Läufen bestätigt. Dreizehn Befunde steckten in `workspace.library`, sieben in einem Doc-Block, der vierzig Zeilen zu weit oben stand, zwei in Signaturen, die ihre eigene Funktion falsch beschrieben. Der Scan meldete zwischendurch 386 -- eine Gegenprobe im laufenden Server hat 346 davon als Werkzeug-Artefakt entlarvt. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
@@ -197,7 +194,6 @@ bei den Nullen.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 118 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| spotlight.nvim | 49 | `param-type-mismatch` 15, `assign-type-mismatch` 10 |
 | mdview.nvim | 44 | `param-type-mismatch` 19, `need-check-nil` 10 |
 | sandbox.nvim | 40 | `undefined-doc-param` 10, `need-check-nil` 7 |
 | images.nvim | 38 | `param-type-mismatch` 14, `duplicate-set-field` 11 |
@@ -211,8 +207,9 @@ bei den Nullen.
 | cascade.nvim | 25 | `param-type-mismatch` 9, `duplicate-set-field` 7 |
 | lsp.nvim | **35** | seit 2026-09-01 durchgegangen; nichts über 12 |
 | *(sieben Repos unter 25)* | 51 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `dap` 8, `debugging` 6, `cmdlog` 4, `migrate` 4 |
-| *(elf Repos auf Null)* | **0** | documentation, lib, filetree, runtime-analysis, gopath, fileops, pdfport, open, emojis, sessions, buffer-ctx |
-| **Summe (alle 32 im Umfang)** | **612** | |
+| *(elf Repos auf Null)* | **0** | documentation, lib, runtime-analysis, gopath, fileops, pdfport, open, emojis, sessions, buffer-ctx, **spotlight** |
+| filetree.nvim | 6 | stand auf Null; nach der Werkzeug-Korrektur sichtbar geworden (`duplicate-set-field` auf `vim.notify`) |
+| **Summe (alle 32 im Umfang)** | **569** | |
 
 Nach Regel -- die Zahlen sind der **gemessene** Lauf (1254), nicht die
 fortgeschriebene Summe darüber; die sieben Durchgänge vom selben Tag sind hier
@@ -253,8 +250,14 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. Alle Zahlen aus dem Gesamtlauf vom 01.09.,
 spotlight.nvim frisch nachgemessen. Kurz:
 
-1. **spotlight.nvim vertikal** (49) -- vorgeschlagener nächster Schritt,
-   siehe oben; `param-type-mismatch` 15, `assign-type-mismatch` 10
+1. **mdview.nvim vertikal** (44) -- vorgeschlagener nächster Schritt,
+   siehe oben; `param-type-mismatch` 19, `need-check-nil` 10, und als erster
+   Handgriff die `.luarc.json`
+1b. **filetree.nvim: sechs `duplicate-set-field`** -- stand auf Null, nach der
+   Werkzeug-Korrektur sichtbar geworden. Alle auf `vim.notify`: fünf
+   Test-Doubles und ein bewusster Monkey-Patch in
+   `features/infra/watcher_quarantine/init.lua:76`. Unterdrückung mit
+   Begründung, ein kurzer Durchgang
 2. **Die nvim-Config selbst** (118) -- das größte Einzelvorkommen;
    `param-type-mismatch` 38, `need-check-nil` 17. Braucht vorher die
    Worktree-Frage unten
@@ -293,11 +296,13 @@ spotlight.nvim frisch nachgemessen. Kurz:
 9. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
    `string|nil` wird ungeprüft weitergereicht. Fällt beim jeweiligen Repo an,
    nicht als eigener Durchgang
-10. **`scripts/luals-scan` dumpt die falsche Library-Funktion** --
-   `dump_library.lua` ruft `build_library(root)` (37-147 Einträge), der
-   Attach-Pfad des Editors benutzt `library_profiles.build_runtime_library()`
-   (drei). Praktisch ersetzt das Werkzeug damit lazydev, was als Annäherung
-   taugt -- aber der README beschreibt es als das, was der Editor tut
+10. ~~**`scripts/luals-scan` dumpt die falsche Library-Funktion**~~ --
+   **erledigt 2026-09-01** beim spotlight-Durchgang, wo es vom Kosmetischen
+   ins Blockierende kippte: die Repo-*Wurzeln* aus dem `runtimepath` brachten
+   die `TESTS/` aller Plugins mit, und ein `require("harness")` fand 21
+   Kandidaten. Der Dump trägt jetzt `<plugin>/lua` ein, wie lazydev es tut.
+   346 Phantombefunde weg -- und filetree.nvim ist dabei von 0 auf 6
+   gesprungen, siehe 1b
 11. **Die drei Aggregator-Strategien von lib.nvim decken sich nicht** -- `lazy`
    exportiert neun Schlüssel, die `metatable` (die Voreinstellung) nicht kennt;
    `eager` nennt `augroup` `autogroup` und mutiert beim Aufbau die Modultabelle
