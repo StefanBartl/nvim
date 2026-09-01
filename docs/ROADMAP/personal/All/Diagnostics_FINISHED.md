@@ -9,7 +9,7 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
-    - [neotree-fs-refactor.nvim -- die Null war „nicht geprueft", jetzt ist sie gemessen](#neotree-fs-refactornvim-die-null-war-nicht-geprueft-jetzt-ist-sie-gemessen)
+    - [neotree-fs-refactor.nvim -- ausserhalb des Umfangs, versehentlich bearbeitet](#neotree-fs-refactornvim-ausserhalb-des-umfangs-versehentlich-bearbeitet)
     - [Die Sechser-Runde -- fuenf Repos, 126 auf 0](#die-sechser-runde-fuenf-repos-126-auf-0)
       - [fileops: zwei Tastenkuerzel, die nichts gesagt haben](#fileops-zwei-tastenkuerzel-die-nichts-gesagt-haben)
       - [gopath: ein Ergebnis, das gelogen hat](#gopath-ein-ergebnis-das-gelogen-hat)
@@ -119,9 +119,16 @@ alles, was noch offen ist.
 
 ---
 
-### neotree-fs-refactor.nvim -- die Null war „nicht geprueft", jetzt ist sie gemessen
+### neotree-fs-refactor.nvim -- ausserhalb des Umfangs, versehentlich bearbeitet
 
 *(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 12)*
+
+> **Dieses Repo gehoert nicht dazu.** Es steht nicht auf der Plugin-Liste in
+> Abschnitt 0 des Reports; es hat nur eine `.luarc.json` und wurde deshalb vom
+> Scan als Workspace gefuehrt. Der Durchgang unten ist gemacht und gepusht,
+> zaehlt aber gegen keine Summe -- und der Offen-Punkt, der ihn ausgeloest hat,
+> haette gar nicht dort stehen duerfen. Die Liste in Abschnitt 0 steht seit
+> dem 2026-09-01 da, damit das nicht wieder passiert.
 
 Das Repo setzte weiterhin `workspace.library` selbst -- `${3rd}/luv/library`
 und `$VIMRUNTIME/lua`, sonst nichts. Der Schluessel **ersetzt** die Injektion
