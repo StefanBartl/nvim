@@ -38,5 +38,5 @@ mehr — wer wissen will, was gilt, liest in `Checklists/`, nicht in einem
 Repo-ROADMAP-Ordner. Die Kopien unter `wkdbook-myplugins/<plugin>/ROADMAP/`
 existieren weiter, sind aber ab jetzt historischer Stand. Der Abgleich gegen
 den Code ist in
-[PLUGIN_ROADMAPS.md §3.1](../ROADMAP/personal/All/PLUGIN_ROADMAPS.md)
+[PLUGIN_ROADMAPS.md §3.1](../ROADMAP/personal/All/FINISH/ERLEDIGT/ROADMAPS/PLUGIN_ROADMAPS.md)
 protokolliert.

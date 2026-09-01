@@ -61,7 +61,7 @@ konkret besteht, und schätzt Aufwand und Nutzen.
 
 In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md: lese dir die ersten punkte durch, arbeitsmodi, nächster empfohlener schritt usw. Erkläre mir den Task dann im sinne von Was? Warum? Was bringt es Usern? Aufwand/Nutzen? Empfehlung von dir: Implementieren oder nicht, anders,... Ich netscheide dann, ob wir den punkt imlementieren, ersatzlos streichen oder markiert und begründet zurückstellen. dann gehe den nächsten schritt an oder wenn abgelehnt, such den nächsten von der liste und das geliche nochmal von vorne.
 
-docs updatn im repo nihcjt vergessen. und wenn ein binding betroffen war, dann auch  uC:\Users\bartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins updaten
+docs updatn im repo nihcjt vergessen. und wenn ein binding betroffen war, dann auch hier updaten::\Users\bartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins updaten
 
 comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig, update C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md - die erledigt task nach C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest.
 
@@ -311,6 +311,8 @@ keins eine Abhängigkeit). Der Redraw-Pfad rechnet bei jedem Aufruf neu, und
 `refresh()` bittet den Host um ein Redraw statt umgekehrt. Es ist das Stück,
 das angefasst wird, wenn die persönliche Config je ihr Statusline-Framework
 wechselt — bis dahin billig und korrekt zu machen lohnt.
+
+Beobachtung: Stimmt so gar nicht, in der statulsine wird momentan der cwd badge genau so wie die anderen badges gerendert, also innehralb eines gefärbten rechtecks, desssen rechte obere kante länger ist und so "nach rechts" zeigt. Das ist in ordnungn so, den punkt sehe ich als erledigt an.
 
 ---
 

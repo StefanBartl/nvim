@@ -2,7 +2,7 @@
 
 Zählt die LuaLS-Befunde über die Lua-Workspaces dieser Maschine, so wie der
 Editor sie sieht, und vergleicht zwei Läufe. Gebaut für die Roadmap-Arbeit in
-[`docs/ROADMAP/personal/All/Diagnostics.md`](../../docs/ROADMAP/personal/All/Diagnostics.md),
+[`docs/ROADMAP/personal/All/Diagnostics.md`](../../docs/ROADMAP/personal/All/FINISH/ERLEDIGT/DIAGNOSTICS/Diagnostics.md),
 deren stehende Regel „Messen statt schätzen" pro Repo je einen Scan davor und
 danach verlangt.
 

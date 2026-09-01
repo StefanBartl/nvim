@@ -5,6 +5,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
   - [cdx](#cdx)
   - [Lists](#lists)
+  - [Roadmaps](#roadmaps)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
@@ -24,7 +25,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    75% / 64%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     19:40       |    83% / 68%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     23:50       |    28% / 61%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     00:50       |    28% / 02%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     21:50       |    94% / 56%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
@@ -41,13 +42,29 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ---
 
+## Roadmaps
+
+- `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
+
+- - `lib.nvim/docs/ROADMAP/dependency-installer.md` — 4 offene Punkte, versteckt
+  unter "Recommendation", "Open questions" und "Still worth doing"
+
+Hier finde ich nichts dazu in der lib - vielleich t schoin umgestzt?
+
+  - [ ] wie funktionert das mit den deoendencies checker nun genau? Ziel sollte ja sein, dass
+      - [ ] Wenn ein neues plugin installiert wird, gecheckt wird, ob cli tools zu isntallieren sind und diese vorschlägt
+      - [ ] Man auf diese checken kann mit scope cwd/path/pluginnname/...sinnvolles...
+
+---
+
 ## Misc
 
-- [ ] lib.nvim hover
-  - [ ] Mitlerweiele poppt oft ein hover auf -> checken, was opt-in sein sollte
-  - [ ] Zahl sich ein eigenes Repo mittlerweile aus dafür?
+- [ ] filetree.nvim
+  - [ ] Wenn man  mit `C-w C-w` oder `C-h` in einen filetre springt, soll es dorthin springen, wo die file ist, also mitr dme cursor auf die filetree node. momentan macht es dass nicht zuverlässig.
 
-- [ ] Wenn man  mit `C-w C-w` oder `C-h` in einen filetre springt, soll es dorthin springen, wo die file ist, also mitr dme cursor auf die filetree node. momentan macht es dass nicht zuverlässig.
+- [ ] lsp.nvim:
+  - [ ] `leader tl` -> neues mapping, dieses ist bereits vergeben
+
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
 
