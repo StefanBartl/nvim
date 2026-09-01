@@ -128,32 +128,29 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **replacer.nvim steht auf Null** (32 -> 0, 2026-09-02), damit
-siebzehn der 32 Workspaces im Umfang.
+*Nichts.* **cascade.nvim und diff.nvim stehen auf Null** (32 -> 0 und
+31 -> 0, 2026-09-02), damit **neunzehn der 32 Workspaces** im Umfang.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**replacer.nvim** (32). Nicht das größte der verbliebenen, aber das mit der
-ergiebigsten Signatur: **elf `undefined-field`** neben zwölf
-`param-type-mismatch`. Diese Regel hat in filetree, in der Sechser-Runde und
-zuletzt in github_stats jedes Mal etwas zutage gefördert, das nicht
-funktionieren konnte -- ein Feld, das kein Adapter implementiert, ein Name,
-der sich vertippt hat, eine Option, die in keinem Typ steht.
+**pickers.nvim** (32) und **markdown.nvim** (30) -- die zwei größten
+verbliebenen Plugins. markdown ist der ergiebigere Einstieg: es trägt
+**sechs der elf verbliebenen `pcall(vim.cmd, ...)`** aus Cluster E und mit
+`param-type-mismatch` 16 die höchste Einzelkonzentration aller offenen Repos.
 
 | Repo | gesamt | größte Regeln |
 |---|---:|---|
-| replacer.nvim | 32 | `param-type-mismatch` 12, **`undefined-field` 11** |
-| cascade.nvim | 32 | `duplicate-set-field` 14, `param-type-mismatch` 9 |
 | pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| diff.nvim | 31 | `duplicate-set-field` 11, `param-type-mismatch` 9 |
 | markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
+| insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
+| *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, … |
 
-cascade und diff sind die billigsten Posten und die flachsten: zusammen 25
-`duplicate-set-field`, also Test-Doubles, die nach der images-Entscheidung mit
-einer Begründung unterdrückt werden. markdown.nvim trägt daneben **sechs der
-elf verbliebenen `pcall(vim.cmd, ...)`** aus Cluster E.
+**Die neun kleinen Repos zusammen** (61) sind der andere sinnvolle Zuschnitt:
+die Sechser-Runde hat gezeigt, dass fünf Repos in einem Zug gehen (126 -> 0),
+weil der Denkanteil pro Ursache nur einmal anfällt und die Ursachen sich
+wiederholen.
 
 **Danach die nvim-Config selbst** (120) -- das größte Einzelvorkommen. Es
 ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
@@ -162,39 +159,31 @@ Worktrees darunter. Ein vertikaler Durchgang dort will erst die Frage
 geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
-**Sechs Dinge, die die neun Durchgänge gelehrt haben** und die den Einstieg
-abkürzen -- die vollständige Sammlung samt Signaturen und Griffen steht unter
-[„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules):
+**Die Einstiegs-Checkliste** steht vollständig unter
+[„Wiederkehrende Muster“ in `Diagnostics_FINISHED.md`]
+(./Diagnostics_FINISHED.md#wiederkehrende-muster-die-ableitung-fuer-rules),
+Abschnitt H hat die Reihenfolge. Die vier, die sich zuletzt am häufigsten
+ausgezahlt haben:
 
-- **`vim.uv.new_timer()` ist der häufigste echte Befund der Reihe** -- 21
-  Stellen in drei Repos in Folge (mdview 10, language 8, github_stats 3). Der
-  Rückgabewert ist optional, und die Frage ist nie, wie der Befund weggeht,
-  sondern **was die Funktion ohne Timer tun soll**. In github_stats waren das
-  drei verschiedene Antworten, und beim Debounce hieß die richtige nicht
-  „zurückkehren", sondern „jetzt rendern".
-- **Ein `---@return boolean`-Helfer über einem optionalen Argument verengt
-  nichts.** Neun Befunde in github_stats gingen darauf zurück. Wo die Aufrufer
-  nach dem `if` auf das Argument zugreifen, gehört der **Wert**
-  zurückgegeben, nicht die Antwort -- die Aufrufstellen werden dabei kürzer.
-- **Zuerst nach verirrten Doc-Blöcken suchen.** Sechs Repos in Folge hatten
-  welche, je fünf bis acht Befunde aus einer Ursache.
-  `undefined-doc-param` und `duplicate-doc-param` sind ihre Signatur.
-- **Dann die `.luarc.json` lesen.** Cluster L ist bei sieben Repos angekommen;
-  bei language kostete es sechs Befunde, die gar keine waren, sondern die
-  Messung. github_stats hatte es als einziges schon selbst erledigt.
-- **`vim.health.info` prüfen** -- sechs Repos in Folge eine Advice-Liste, die
-  die Funktion wegwirft. `health.error` und `health.warn` nehmen eine,
-  `info` und `ok` nicht; der Befund heißt `redundant-parameter`.
-- **Eine Bedingung, die der Prüfer beanstandet, prüft manchmal gar nichts.**
-  Der ergiebigste Fund in lsp.nvim war ein `param-type-mismatch` an einem
-  `supports_method(...)`, dessen Name keine LSP-Methode war -- Neovim antwortet
-  auf unbekannte Namen mit `true`.
+- **`vim.uv.new_timer()`** -- 21 Stellen in drei Repos; die Frage ist nie, wie
+  der Befund weggeht, sondern was die Funktion **ohne** Timer tun soll.
+- **Eine Cast-Liste anstelle eines Guards** (A5) -- fünf Stellen allein in
+  cascade, und eine davon habe ich beim ersten Durchgang übersehen.
+- **`undefined-field` in `lua/`** -- vier verschiedene Ursachen, die im Report
+  identisch aussehen: falscher Zugriff, fehlender Typ, **anders heißender
+  Typ** (diff.nvim: sieben Befunde an einer Zeile), oder Code, den niemand
+  ruft.
+- **`health.lua` gegen den Code prüfen** -- in beide Richtungen: eine
+  Advice-Liste, die `info`/`ok` wegwerfen (sechs Repos), und ein
+  `deprecated`, das der Health-Check noch nicht kennt (diff.nvim).
 
 ---
 ### Erledigt
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| DF | **diff.nvim** -- vertikal (2026-09-02) | **31 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. **Sieben Befunde an einer Zeile**: `register_shortcuts` war mit `Diff.Config` annotiert, der Typ heißt `DiffNvim.Config` -- ein `undefined-doc-name`, drei `undefined-field` auf Feldern, die es gibt, und ein `param-type-mismatch` beim korrekten Aufrufer. Darüber klebte der ältere Doc-Block derselben Funktion. Dazu `vim.diff` (deprecated zugunsten `vim.text.diff`, README nennt 0.9+): **einmal aufgelöst statt dreimal unterdrückt**, und `health.lua` fragt jetzt nach demselben Paar -- vorher hätte `:checkhealth` „vim.diff is missing“ gemeldet für ein Neovim, auf dem alles läuft. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| CS | **cascade.nvim** -- vertikal (2026-09-02) | **32 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. Als flachster Posten angekündigt (14 Test-Doubles) und in der anderen Hälfte nicht flach: ein Doc-Block, den eine **nachträglich dazwischengesetzte Variable** von seiner Funktion abgeschnitten hat, und **fünfmal dieselbe Familie** -- eine Funktion liefert N Werte, der Guard prüft einen, der Rest wird per `---@cast` nachgezogen und einer vergessen. Neuer Musterpunkt A5. Dabei ist mir die fünfte Stelle selbst entgangen, weil der zweite Messlauf gegen eine noch nicht fertige Ausgabe lief (nachgereicht mit `2e66c29`). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | RP | **replacer.nvim** -- vertikal (2026-09-02) | **32 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Smoke-Suiten grün (155/26/7). Zwölf der 32 kamen aus **einer Klasse, die es nicht gibt** (`RP_HighlightConfig`) -- und beim Definieren fiel auf, dass die zwei Funktionen dahinter **keinen Aufrufer haben**: die Telescope-Anbindung, für die sie geschrieben wurden, ist nie entstanden (nicht gelöscht, als Notiz vermerkt). Dazu ein echter Fehler ohne `deprecated`-Markierung: **`vim.str_utfindex` hat in 0.11 die Signatur getauscht** -- das zweite Argument war der Byte-Index und ist jetzt die Kodierung, `:ReplaceDebug` lief damit auf jedem aktuellen Build in einen Fehler. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | GS | **github_stats.nvim** -- vertikal (2026-09-02) | **31 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 9 Specs grün (108 Fälle). Neun der zehn `need-check-nil` gingen auf zwei `---@return boolean`-Helfer über optionalen Argumenten zurück -- **so eine Funktion verengt nichts**, der Aufrufer indiziert nach dem `if` weiter einen optionalen Wert. Dazu drei ungeprüfte `vim.uv.new_timer()` (drittes Repo in Folge), eine Option, die es gibt und die in keinem Typ stand (`dashboard.menu.enable`), und eine Klasse, die genau für solche Fälle existiert und zurückgefallen war. Nebenbefund: **`scripts/test.sh` ist der erste Test-Runner der Reihe, der es richtig macht** -- siehe Offen-Punkt 13. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | LS | **lsp.nvim** -- vertikal (2026-09-02) | **35 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 23 Specs grün (372 Fälle). Der flachste Posten der Runde und der ergiebigste seit filetree: **drei Befunde waren Bedingungen, die nie etwas ausgeschlossen haben.** `workspace_diagnostics` bewachte sein `didOpen` mit `supports_method("textDocumentSync/openClose")` -- kein Methodenname, sondern ein Capability-Pfad, und Neovim antwortet auf unbekannte Namen mit `true`; `loclist` übergab `win_id`, wo Neovim `winnr` liest; `:LspDoctor` prüfte `publishDiagnosticsProvider`, eine Capability, die es im LSP nicht gibt. Dazu **Offen-Punkt 6 beantwortet** (`LspMod.*` beschreibt nichts, was Neovim nicht führt) und `vim.health.info` zum sechsten Mal. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -239,19 +228,17 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| cascade.nvim | 32 | `duplicate-set-field` 14, `param-type-mismatch` 9 |
 | pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| diff.nvim | 31 | `duplicate-set-field` 11, `param-type-mismatch` 9 |
 | markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
 | *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(siebzehn Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, github_stats, gopath, images, language, lib, lsp, mdview, open, pdfport, **replacer**, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **335** | |
+| *(neunzehn Repos auf Null)* | **0** | buffer-ctx, **cascade**, **diff**, documentation, emojis, fileops, github_stats, gopath, images, language, lib, lsp, mdview, open, pdfport, replacer, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **272** | |
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
 minus die 37 von images, minus die 34 von language, minus die 35 von
-lsp, minus die 33 von github_stats, minus die 32 von replacer -- alle
-sechs stehen inzwischen auf 0. Bei language waren es auf korrigierter Messgrundlage nur
+lsp, minus die 33 von github_stats, minus die 32 von replacer, minus die
+32 von cascade und die 31 von diff -- alle acht stehen inzwischen auf 0. Bei language waren es auf korrigierter Messgrundlage nur
 28 und bei github_stats 31 statt 33; die Summe rechnet mit den geführten
 Zahlen, weil die übrigen Zeilen dieser Tabelle ebenfalls auf der jeweils
 eigenen Grundlage stehen. **Wo ein Repo
@@ -276,12 +263,11 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **replacer.nvim** (32) -- vorgeschlagener nächster Schritt, siehe oben.
-   Elf `undefined-field` sind die Signatur, die in filetree, in der
-   Sechser-Runde und zuletzt in github_stats jedes Mal etwas zutage
-   gefördert hat, das nicht funktionieren konnte. **cascade.nvim** (32) und
-   **diff.nvim** (31) sind die billigsten Posten und die flachsten:
-   zusammen 25 `duplicate-set-field`, also Test-Doubles
+1. **markdown.nvim** (30) oder **pickers.nvim** (32) -- vorgeschlagener
+   nächster Schritt, siehe oben. markdown trägt **sechs der elf
+   verbliebenen `pcall(vim.cmd, ...)`** und mit `param-type-mismatch` 16 die
+   höchste Einzelkonzentration. Alternativ **die neun kleinen Repos in einem
+   Zug** (61 zusammen), wie in der Sechser-Runde
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
    Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
@@ -289,7 +275,7 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    Spec-Dateien abgearbeitet und sich sauber beendet -- dieselbe Falle wie
    in Offen-Punkt 13, hier aber im Umfang. Der Runner ist das größere der
    beiden Probleme
-1b. **`duplicate-set-field` steht auf 55** und damit weiter an zweiter Stelle
+1b. **`duplicate-set-field` steht auf 30** und damit weiter an zweiter Stelle
    der Gesamtverteilung -- fast durchweg Test-Doubles über typisierte
    `vim.*`-Oberfläche. Häufungen: `cascade` 14, `diff` 11, `filetree` 6,
    `markdown` 6. **Entschieden am images-Durchgang: fällt vertikal an.** Neun

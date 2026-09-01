@@ -25,6 +25,14 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [diff.nvim -- 31 auf 0, ein Typname, den es nicht gibt, und `vim.diff`](#diffnvim-31-auf-0-ein-typname-den-es-nicht-gibt-und-vimdiff)
+      - [Sieben Befunde an einem Namen](#sieben-befunde-an-einem-namen)
+      - [`vim.diff` ist deprecated, und `:checkhealth` log darueber](#vimdiff-ist-deprecated-und-checkhealth-log-darueber)
+      - [Eine Gestalt, zweimal ausgeschrieben, in einem Feld verschieden](#eine-gestalt-zweimal-ausgeschrieben-in-einem-feld-verschieden)
+    - [cascade.nvim -- 32 auf 0, ein abgeschnittener Doc-Block und fuenf vergessene Werte](#cascadenvim-32-auf-0-ein-abgeschnittener-doc-block-und-fuenf-vergessene-werte)
+      - [Ein Doc-Block, den eine neue Variable abgeschnitten hat](#ein-doc-block-den-eine-neue-variable-abgeschnitten-hat)
+      - [Fuenfmal: N Rueckgabewerte, ein Guard, eine Cast-Liste](#fuenfmal-n-rueckgabewerte-ein-guard-eine-cast-liste)
+      - [Und ein Fehler in der Messung, der hierher gehoert](#und-ein-fehler-in-der-messung-der-hierher-gehoert)
     - [replacer.nvim -- 32 auf 0, ein toter Typ, eine tote API und ein Aufruf, der seit 0.11 wirft](#replacernvim-32-auf-0-ein-toter-typ-eine-tote-api-und-ein-aufruf-der-seit-011-wirft)
       - [Zwoelf Befunde aus einem Typ, den es nicht gibt](#zwoelf-befunde-aus-einem-typ-den-es-nicht-gibt)
       - [Und die beiden Funktionen ruft niemand](#und-die-beiden-funktionen-ruft-niemand)
@@ -208,7 +216,7 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
 
 ## Wiederkehrende Muster -- die Ableitung fuer RULES
 
-**Was das hier ist.** Zehn vertikale Durchgaenge haben dieselben Ursachen
+**Was das hier ist.** Dreizehn vertikale Durchgaenge haben dieselben Ursachen
 mehrfach zutage gefoerdert. Dieser Abschnitt sammelt sie -- nach Haeufigkeit,
 mit der **Signatur, an der man sie erkennt**, und mit dem Griff, der sich
 bewaehrt hat. Gedacht als Checkliste fuer den naechsten Durchgang und als
@@ -322,13 +330,48 @@ Dahinter stecken drei verschiedene Ursachen, die im Report gleich aussehen:
    replacer trug ein einziges undefiniertes `RP_HighlightConfig` **zwoelf**
    Befunde, in language waren es sieben aus `Lib.Keymap.*` (dort, weil die
    Library-Injektion fehlte, siehe B1).
-3. **Die Umkehrung: der Code wird nie gerufen.** In replacer standen die zwei
+3. **Der Typ heisst anders** -- in diff.nvim stand `Diff.Config`, wo
+   `DiffNvim.Config` gemeint war: ein `undefined-doc-name`, drei
+   `undefined-field` auf Feldern, die es sehr wohl gibt, und ein
+   `param-type-mismatch` beim korrekten Aufrufer. **Sieben Befunde an einer
+   Zeile.**
+4. **Die Umkehrung: der Code wird nie gerufen.** In replacer standen die zwei
    Funktionen hinter dem fehlenden Typ ohne einen einzigen Aufrufer da -- der
    Kommentar nennt eine Telescope-Anbindung, die nie entstanden ist.
 
-**Bei Fall 3 nicht loeschen.** Ob die Funktion gebraucht wird, ist eine
+**Bei Fall 4 nicht loeschen.** Ob die Funktion gebraucht wird, ist eine
 Produktentscheidung; der Durchgang schreibt eine Notiz an die Stelle und
 meldet den Fund.
+
+#### A5. Eine Cast-Liste anstelle eines Guards wird unvollstaendig
+
+**Signatur:** eine Funktion liefert N Werte oder keinen, der Guard prueft
+einen davon, und der Rest wird per `---@cast` nachgezogen.
+
+```lua
+local s, e, found, idx, shape = resolve(ctx, opts)
+if not found then return false end
+---@cast e integer
+---@cast idx integer     -- und `s`?
+```
+
+Fuenf solche Stellen in cascade, dazu je eine in language, lsp.nvim und
+replacer. **Eine Cast-Liste ist eine Aufzaehlung, und Aufzaehlungen werden
+unvollstaendig** -- in cascade fehlte an zwei Stellen `s`, an einer `e0`, an
+einer `text`, an einer `scol`/`ecol`.
+
+**Griff, nach Vorzug:**
+
+1. **Den Guard alle Werte pruefen lassen** -- `if not s0 or not e0 then`.
+   Dann kann nichts vergessen werden.
+2. **Die Gestalt zu einer Tabelle machen**, wenn es wirklich
+   alles-oder-nichts ist (C3). `if span then` verengt alles auf einmal.
+3. Casts nur dort, wo der Aufrufer den Beweis wirklich nicht selbst fuehren
+   kann -- und dann vollzaehlig.
+
+Anmerkung aus dem cascade-Durchgang: **diese Familie findet man selten
+vollstaendig beim ersten Durchgang.** Vier Stellen zu sehen und die fuenfte zu
+uebersehen ist derselbe Fehlermodus wie der, den man repariert.
 
 ---
 
@@ -364,6 +407,13 @@ den der erste nicht hatte; in language waren es zwei.
 Der Vergleich sagt zuverlaessig, ob etwas **schlechter** wurde. Eine `0` beim
 ersten Versuch kann dagegen heissen, dass ein Befund noch nicht an der Reihe
 war. **Bei einem Ergebnis von 0 also zweimal messen.**
+
+**Und der zweite Lauf muss nachweislich fertig sein.** Im cascade-Durchgang
+lief `compare.py` gegen ein Pass-Verzeichnis, das noch geschrieben wurde, und
+meldete still 0 -- der Commit trug daraufhin faelschlich „in zwei Laeufen
+bestaetigt“, und der uebersehene Befund kam erst im Lauf danach zum
+Vorschein. Wer die Scans im Hintergrund faehrt, wartet auf die Zeile
+`pass '<name>' -> ...`, nicht darauf, dass das Verzeichnis existiert.
 
 ---
 
@@ -530,6 +580,13 @@ Sechs Repos in Folge haben ihnen eine Advice-Liste gegeben, die sie wegwerfen.
 fehlendes Feature** -- die Hinweise hat kein `:checkhealth` je gezeigt. In
 einer `health.lua` ist `redundant-parameter` nie Stil.
 
+**Und umgekehrt: ein `deprecated` im Code heisst, dass `health.lua` dieselbe
+Frage neu beantworten muss.** In diff.nvim prueft der Health-Check
+`type(vim.diff) == "function"`, waehrend der Code auf `vim.text.diff`
+umgestellt wurde -- das haette `:checkhealth` irgendwann *"vim.diff is
+missing"* melden lassen fuer ein Neovim, auf dem alles funktioniert. Die
+beiden Stellen gehoeren zusammen geprueft.
+
 #### F3. Eine geaenderte Signatur meldet sich als `param-type-mismatch`
 
 Nicht jede API-Aenderung in Neovim ist als `deprecated` markiert. Manche
@@ -602,6 +659,216 @@ Fuer neue Repos ist das der Massstab, nicht eine allgemeine Formulierung.
 ---
 
 ## 2026-09-02
+
+---
+
+### diff.nvim -- 31 auf 0, ein Typname, den es nicht gibt, und `vim.diff`
+
+*(war: Diagnostics-Report Abschnitt 0, "diff.nvim")*
+
+**31 -> 0**, in zwei Laeufen bestaetigt. `stylua --check` sauber, alle Specs
+gruen (`DIFF_NVIM_TESTS_OK`). `worse: nothing`.
+
+---
+
+#### Sieben Befunde an einem Namen
+
+`bindings/keymaps.lua` annotiert `register_shortcuts` mit `---@param cfg
+Diff.Config`. Der Typ heisst `DiffNvim.Config`. Ein Buchstabendreher an einer
+einzigen Zeile, und der Report zeigt:
+
+- 1 `undefined-doc-name` (`Diff.Config`),
+- 3 `undefined-field` auf `keymaps`, `commands` und `features` -- Felder, die
+  es sehr wohl gibt, nur eben auf dem Typ, der hier nicht steht,
+- 1 `param-type-mismatch` beim Aufrufer in `bindings/init.lua`, der korrekt
+  `DiffNvim.Config` uebergibt.
+
+Dazu zwei `duplicate-doc-param`: unmittelbar darueber klebte der **aeltere
+Doc-Block derselben Funktion**, beim Umschreiben stehen geblieben. Sein
+`---@return nil` war ausserdem falsch -- `register_shortcuts` gibt die
+Registrierungen zurueck.
+
+**Das ist die dritte Variante des `undefined-field`-Musters** (siehe A4): nicht
+der Zugriff ist falsch und nicht der Typ fehlt, sondern der Typ heisst anders.
+Alle drei sehen im Report identisch aus.
+
+---
+
+#### `vim.diff` ist deprecated, und `:checkhealth` log darueber
+
+`vim.diff` ist zugunsten von `vim.text.diff` (0.11+) veraltet, und es ist die
+zentrale Funktion dieses Plugins -- drei Aufrufstellen in `render.lua`. Das
+README nennt **Neovim 0.9+**, wo nur der alte Name existiert.
+
+Statt dreimal zu unterdruecken loest `render.lua` die Funktion jetzt **einmal**
+auf, und die Begruendung sitzt an der Auflösung statt an den Aufrufen:
+
+```lua
+---@diagnostic disable-next-line: deprecated
+local diff_fn = (vim.text and vim.text.diff) or vim.diff
+```
+
+Der interessantere Teil steckte in `health.lua`. Es fragte:
+
+```lua
+if type(vim.diff) == "function" then
+  vim.health.ok("vim.diff is available")
+else
+  vim.health.error("vim.diff is missing — ... will fail")
+end
+```
+
+Auf einem Neovim, das den Nachfolger laengst hat und den alten Namen
+irgendwann fallen laesst, haette `:checkhealth` **"vim.diff is missing"**
+gemeldet, waehrend das Plugin einwandfrei funktioniert -- oder umgekehrt ein
+`ok` fuer einen Namen, den das Plugin gar nicht mehr benutzt. Der Check fragt
+jetzt nach demselben Paar wie der Code und sagt auch, welchen der beiden Namen
+er gefunden hat.
+
+**Merksatz fuer die RULES:** ein `deprecated` an einer Stelle heisst, dass
+`health.lua` dieselbe Frage neu beantworten muss. Die beiden gehoeren
+zusammen geprueft.
+
+---
+
+#### Eine Gestalt, zweimal ausgeschrieben, in einem Feld verschieden
+
+```lua
+-- M.stat:
+---@param list_opts? { list: ("off"|"qf"|"loc")?, mode: ..., target: ... }
+-- M.push_stat_list:
+---@param list_opts  { list: "qf"|"loc",          mode: ..., target: ... }
+```
+
+Der Unterschied ist genau das, was der Guard des Aufrufers herstellt
+(`list_opts.list == "qf" or ... == "loc"`) -- und eine `or`-Kette von
+Gleichheitstests verengt eine String-Union nicht (dasselbe wie in lsp.nvims
+`output.apply`). Als `DiffNvim.StatList.Opts` und
+`DiffNvim.StatList.Wanted : ...Opts` benannt: die zweite Klasse **ist** die
+Aussage, die der Guard trifft.
+
+---
+
+#### Der Rest
+
+- **Elf `duplicate-set-field`** -- Test-Doubles ueber `vim.notify`,
+  `vim.fn.executable` und `diff_core.execute`, unterdrueckt mit Begruendung.
+- **Vier `render.inline()`-Aufrufe in den Specs** holen ihren Puffer jetzt mit
+  einem `assert` ab. Beim ersten Durchgang hatte ich drei davon erwischt und
+  `buf_utf` uebersehen -- der zweite Lauf hat es gezeigt, was genau der Grund
+  fuer die Regel "zweimal messen" ist.
+- **Zwei absichtlich entartete Testeingaben** (`{ key = { "", 42 } }`,
+  `parse_args(nil)`), beide mit einem Kommentar, der schon vorher dastand.
+
+---
+
+### cascade.nvim -- 32 auf 0, ein abgeschnittener Doc-Block und fuenf vergessene Werte
+
+*(war: Diagnostics-Report Abschnitt 0, "cascade.nvim")*
+
+**32 -> 0**, in zwei Laeufen bestaetigt. `stylua --check` sauber, alle Specs
+gruen (`CASCADE_TESTS_OK`). `worse: nothing`.
+
+Angekuendigt als der **billigste und flachste** Posten -- 14 der 32 sind
+`duplicate-set-field`, elf davon in einer Datei. Das stimmte fuer diese 14
+(Minutenarbeit, unterdrueckt mit Begruendung). Die anderen 18 waren nicht
+flach.
+
+---
+
+#### Ein Doc-Block, den eine neue Variable abgeschnitten hat
+
+```lua
+---@param dir integer
+---@param number_key string # native key that increments/decrements numbers.
+---@param own_key string # the key this action is bound to.
+---@return fun()
+--- Count for the cycle keys, captured the same way as ...
+---@type integer
+local pending_cycle_count = 1
+```
+
+Die vier Zeilen gehoeren zu `cycle_word_work`, das dreissig Zeilen weiter
+unten steht. Jemand hat `pending_cycle_count` **zwischen** den Doc-Block und
+seine Funktion gesetzt -- seither beschrieben drei `@param`-Zeilen ein
+Integer-Local, und die Funktion stand undokumentiert da.
+
+Das ist die sechste Variante derselben Familie (verirrte Doc-Bloecke, sieben
+Repos), und diesmal ist die Ursache besonders klar zu benennen: **nicht der
+Block ist gewandert, sondern etwas hat sich dazwischengesetzt.**
+`undefined-doc-param` ist die Signatur.
+
+---
+
+#### Fuenfmal: N Rueckgabewerte, ein Guard, eine Cast-Liste
+
+Der ergiebigste Fund, und er hat mich selbst erwischt.
+
+```lua
+local s, e, found, idx, shape = resolve(ctx, opts)
+if not found then
+  return false
+end
+---@cast e integer
+---@cast idx integer      -- und `s`?
+```
+
+`resolve` liefert fuenf Werte oder keinen. Der Guard prueft **einen** davon,
+und der Autor hat die uebrigen per `---@cast` nachgezogen -- zwei von drei.
+Dasselbe an vier weiteren Stellen:
+
+| Stelle | geprueft | gecastet | vergessen |
+|---|---|---|---|
+| `word_cycle.cycle` | `found` | `e`, `idx` | `s` |
+| `word_cycle.cycle_pick` | `found` | `e` | `s` |
+| `init.lua` (date) | `s0` | -- | `e0` |
+| `init.lua` (token) | `s` | `e` | `text` |
+| `util/lib.keep_chars` | `row` | -- | `scol`, `ecol` |
+
+**Eine Cast-Liste anstelle eines Guards hat einen eingebauten Fehlermodus:
+sie ist eine Aufzaehlung, und Aufzaehlungen werden unvollstaendig.** Wo der
+Guard selbst alle Werte prueft (`if not s0 or not e0 then`), kann nichts
+vergessen werden.
+
+Ich bin in denselben Fehler gelaufen: vier Stellen gefunden, die fuenfte
+uebersehen, und der erste Nachher-Lauf sah sauber aus. Erst der zweite hat sie
+gezeigt -- siehe unten.
+
+---
+
+#### Und ein Fehler in der Messung, der hierher gehoert
+
+Der cascade-Commit `ed1c231` behauptet "in zwei Laeufen bestaetigt", und das
+stimmte nicht: der zweite `compare.py`-Aufruf lief gegen eine Scan-Ausgabe,
+die noch geschrieben wurde, und meldete deshalb 0. Der Befund kam erst im
+naechsten Lauf zum Vorschein und ist mit `2e66c29` nachgereicht.
+
+**Die Lehre ist nicht "zweimal messen"** -- das stand schon in den Regeln --
+**sondern: der zweite Lauf muss nachweislich fertig sein.** Ein `compare.py`
+gegen ein halb geschriebenes Pass-Verzeichnis meldet still zu wenig. Wer die
+Laeufe im Hintergrund faehrt, wartet auf den `pass '<name>' -> ...`-Satz,
+nicht auf das Verzeichnis.
+
+---
+
+#### Der Rest
+
+- **Drei `missing-return`** aus einer Signatur, die mehr verspricht als
+  gebraucht wird: `keep_lines` ist generisch ueber den Rueckgabewert seines
+  Callbacks (`---@param fn fun(...): T`, `---@return T`), und **kein einziger
+  Aufrufer nutzt ihn** -- alle drei rufen es fuer die Wirkung. Ein `T?` laesst
+  den Callback enden, ohne einen Wert zu schulden.
+- **Zwei Optionen, die es gibt und die in keinem Typ standen**:
+  `keymaps.globals` und `keymaps.list`, beide in DEFAULTS mit einem
+  sechszeiligen Kommentar erklaert, beide in `CascadeKeymapOpts` nicht
+  vorhanden. Derselbe Fund wie `dashboard.menu` in github_stats -- **das
+  dritte Repo in Folge.**
+- **`vim.treesitter.get_parser` kann nil liefern**, und der nil-Fall endete
+  bisher als gefangener Fehler im umschliessenden `pcall` statt als sauberes
+  `false`.
+- **`vim.is_callable(x)` ist kein Type-Guard** -- dieselbe Familie wie die
+  boolean-Helfer in github_stats, nur mit einer eingebauten Funktion. Und das
+  Ziel war wieder eine `__call`-Tabelle, die `pcall` nicht erfuellt.
 
 ---
 
