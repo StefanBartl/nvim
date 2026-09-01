@@ -25,6 +25,12 @@ RULES-Dateien; die Einzelheiten stehen jeweils beim Repo darunter.
     - [H. Arbeitsreihenfolge, die sich bewaehrt hat](#h-arbeitsreihenfolge-die-sich-bewaehrt-hat)
 
   - [2026-09-02](#2026-09-02)
+    - [markdown.nvim -- 30 auf 0, ein Timer ohne Antwort und ein Cast, der selbst gemeldet wird](#markdownnvim-30-auf-0-ein-timer-ohne-antwort-und-ein-cast-der-selbst-gemeldet-wird)
+      - [`.luarc.json` und `health.lua`: diesmal beide sauber](#luarcjson-und-healthlua-diesmal-beide-sauber)
+      - [A1 zum vierten Mal: der Debounce-Timer der Live-Referenzen](#a1-zum-vierten-mal-der-debounce-timer-der-live-referenzen)
+      - [Die Nutzlast dieses Plugins auf dem Typ eines fremden](#die-nutzlast-dieses-plugins-auf-dem-typ-eines-fremden)
+      - [Ein `---@cast` zwischen zwei Klassen wird selbst gemeldet](#ein-cast-zwischen-zwei-klassen-wird-selbst-gemeldet)
+      - [Der Rest, nach Familien](#der-rest-nach-familien)
     - [diff.nvim -- 31 auf 0, ein Typname, den es nicht gibt, und `vim.diff`](#diffnvim-31-auf-0-ein-typname-den-es-nicht-gibt-und-vimdiff)
       - [Sieben Befunde an einem Namen](#sieben-befunde-an-einem-namen)
       - [`vim.diff` ist deprecated, und `:checkhealth` log darueber](#vimdiff-ist-deprecated-und-checkhealth-log-darueber)
@@ -233,7 +239,7 @@ steht nur, was sich wiederholt hat.
 Nach Haeufigkeit. Diese vier Familien haben in jedem Durchgang mindestens
 einen echten Bug ergeben -- in zehn Durchgaengen ohne Ausnahme.
 
-#### A1. `vim.uv.new_timer()` ungeprueft -- 21 Stellen, drei Repos in Folge
+#### A1. `vim.uv.new_timer()` ungeprueft -- 22 Stellen, vier Repos in Folge
 
 **Signatur:** `need-check-nil` unmittelbar nach `vim.uv.new_timer()`, oft
 zusammen mit einem `cast-local-type`, wenn das Ziel-Local schon als
@@ -244,7 +250,7 @@ local timer = vim.uv.new_timer()   -- uv_timer_t|nil
 timer:start(...)                   -- wirft, wenn nil
 ```
 
-Verteilung bisher: mdview 10, language 8, github_stats 3.
+Verteilung bisher: mdview 10, language 8, github_stats 3, markdown 1.
 
 **Der Griff ist nicht der Punkt, die Frage ist es.** Nicht *"wie bekomme ich
 den Befund weg"*, sondern **was die Funktion ohne Timer tun soll**. In
@@ -257,7 +263,9 @@ github_stats waren das drei verschiedene Antworten in einer Datei:
 | Render-Debounce | **sofort rendern** -- nicht zurueckkehren, sonst faellt das Bild aus |
 
 Der Debounce-Fall ist der lehrreiche: die naheliegende Antwort (`return`) ist
-dort die falsche.
+dort die falsche. In markdown.nvim kam er zum zweiten Mal vor -- der Timer
+entprellt die Live-Referenzpruefung, und ein `return` haette die Ansicht fuer
+den Rest der Sitzung stillgelegt, ohne das je zu sagen.
 
 **Nebenregel:** wenn das Ziel-Local aus einer Tabelle nicht-optionaler Timer
 kommt, gehoert der optionale Rueckgabewert in ein **eigenes** Local --
@@ -338,6 +346,23 @@ Dahinter stecken drei verschiedene Ursachen, die im Report gleich aussehen:
 4. **Die Umkehrung: der Code wird nie gerufen.** In replacer standen die zwei
    Funktionen hinter dem fehlenden Typ ohne einen einzigen Aufrufer da -- der
    Kommentar nennt eine Telescope-Anbindung, die nie entstanden ist.
+
+5. **Der Traeger gehoert einem anderen Repo.** Ein Konsument haengt seine
+   eigene Nutzlast an die Struktur einer Bibliothek -- markdown.nvim setzt
+   `subcmd` auf jeden Argument-Slot, den es bei lib.nvims composer registriert,
+   und liest es im `complete`-Callback zurueck. Der fremde Typ kennt das Feld
+   nicht, und **das ist richtig so**: es ist nicht seine Sache.
+
+   **Griff:** die abgeleitete Klasse im eigenen Repo, plus ein `---@cast` an
+   der Lesestelle.
+
+   ```lua
+   ---@class Mkdn.SubargSpec : Lib.UserCmd.Composer.ArgSpec
+   ---@field subcmd string
+   ```
+
+   Nicht die Bibliotheksklasse aufbohren: die Erweiterung gehoert dorthin, wo
+   die Nutzlast entsteht.
 
 **Bei Fall 4 nicht loeschen.** Ob die Funktion gebraucht wird, ist eine
 Produktentscheidung; der Durchgang schreibt eine Notiz an die Stelle und
@@ -505,6 +530,33 @@ Problem, die Zuweisung der Union ist es.
 gilt; `---@type` *deklariert*, was die Variable sein soll -- und stolpert dann
 ueber das, was zugewiesen wird.
 
+#### D4. `---@cast` quer ueber zwei unverwandte Klassen wird selbst gemeldet
+
+**Signatur:** `cast-type-mismatch` auf der Cast-Zeile, die gerade eingefuegt
+wurde, um einen `param-type-mismatch` zu beseitigen.
+
+`---@cast` funktioniert **entlang einer Linie** -- `-nil`, Ober- nach
+Untertyp -- nicht quer ueber zwei unabhaengige Klassen. Das ist F1 von der
+anderen Seite: LuaLS entscheidet ueber den Namen, und wo es die Zuweisung
+verweigert, verweigert es auch die Behauptung.
+
+Gesehen an `nvim_get_hl` -> `nvim_set_hl` in markdown.nvim: dieselbe Tabelle,
+von der Lese- und der Schreibseite gesehen (`get_hl_info` markiert jedes
+Attribut `true?`, weil es nur die gesetzten meldet; `highlight` nimmt
+`boolean?`, weil es sie auch loeschen kann).
+
+**Griff: die Zieltabelle bauen statt casten.**
+
+```lua
+local hl = vim.tbl_extend("force", {}, base, { underline = want, undercurl = false })
+vim.api.nvim_set_hl(0, group, hl)
+```
+
+`vim.tbl_extend` gibt `table` zurueck, und ein `table` erfuellt jede Klasse.
+Die gebaute Fassung ist ausserdem die ehrlichere: sie sagt, welche der beiden
+Seiten gemeint ist, behaelt jedes Attribut des Colorschemes und braucht keine
+Feldliste, die veralten kann.
+
 #### D2. Ein Fix, der die Warnung nur weiterschiebt
 
 In language haette der erste Timer-Fix den Befund von `timer` auf
@@ -656,9 +708,164 @@ Fuer neue Repos ist das der Massstab, nicht eine allgemeine Formulierung.
    das ist Minutenarbeit und sagt nichts ueber den Code.
 8. **Zweimal nachmessen** (B2), Testsuite, ein Commit pro Repo, direkt gepusht.
 
+Die Schritte 1, 3 und 4 kosten zusammen wenige Minuten und gehen auch dann
+nicht ins Leere, wenn sie nichts finden: in markdown.nvim waren `.luarc.json`,
+`health.lua` und die Doc-Bloecke allesamt sauber, und danach war klar, dass die
+dreissig Befunde tatsaechlich dreissig einzelne sind und keine Messfrage.
+
 ---
 
 ## 2026-09-02
+
+---
+
+### markdown.nvim -- 30 auf 0, ein Timer ohne Antwort und ein Cast, der selbst gemeldet wird
+
+*(war: Diagnostics-Report Abschnitt 0, "markdown.nvim")*
+
+**30 -> 0**, in zwei Laeufen bestaetigt, `worse: nothing`. Alle 26
+Spec-Dateien gruen (`MARKDOWN_TESTS_OK`), `stylua --check .` sauber, luacheck
+unveraendert (fuenf Bestandswarnungen, alle in Zeilen, die dieser Durchgang
+nicht angefasst hat). Ein Commit, `689cafc`.
+
+Die Verteilung war die guenstigste der Reihe: **zwanzig der dreissig lagen in
+`TESTS/`** und waren Minutenarbeit (Doubles, Casts hinter Zusicherungen, die
+der Test schon ausspricht). Die zehn in `lua/` hatten sechs Ursachen, zwei
+davon lehrreich.
+
+---
+
+#### `.luarc.json` und `health.lua`: diesmal beide sauber
+
+Die zwei ersten Schritte der Reihenfolge (H) haben hier nichts ergeben, und
+das ist die Meldung wert: markdown.nvim setzt `workspace.library` **nicht**
+(Cluster L trifft nicht zu, die Messgrundlage stimmt ab dem ersten Lauf), und
+keine der 18 `info`/`ok`-Stellen in `health.lua` uebergibt eine Advice-Liste
+(F2, das erste Repo seit sechs ohne diesen Fund). Auch keine verirrten
+Doc-Bloecke -- weder `undefined-doc-param` noch `duplicate-doc-param` im
+Bericht.
+
+**Zwei Minuten Pruefung, drei Ursachen ausgeschlossen.** Genau dafuer steht
+die Reihenfolge da.
+
+---
+
+#### A1 zum vierten Mal: der Debounce-Timer der Live-Referenzen
+
+```lua
+local timer = uv.new_timer()   -- uv_timer_t|nil
+st.timer = timer
+timer:start(delay, 0, function() ... end)
+```
+
+`core/refs.lua` haelt die Referenzen einer Datei beim Tippen nach und
+entprellt den Abgleich. Die Frage ist nach A1 nie, wie der Befund weggeht,
+sondern **was die Funktion ohne Timer tun soll** -- und hier war die
+naheliegende Antwort wieder die falsche: ein `return` haette die Live-Ansicht
+fuer den Rest der Sitzung stillgelegt, ohne das je zu sagen. Sie gleicht jetzt
+**einmal sofort** ab, scheduled, so wie es der entprellte Pfad auch tut.
+
+Verteilung damit: mdview 10, language 8, github_stats 3, markdown 1.
+
+---
+
+#### Die Nutzlast dieses Plugins auf dem Typ eines fremden
+
+Das einzige `undefined-field` in `lua/`:
+
+```lua
+args[i] = { name = "a" .. i, type = "MARKDOWN_SUBARG", optional = true, subcmd = name }
+...
+complete = function(arg_lead, spec, cmd_line)
+  if not line or line == "" then line = "Markdown " .. spec.subcmd .. " " .. arg_lead end
+```
+
+markdown.nvim haengt beim Registrieren ein eigenes Feld an jeden
+Argument-Slot und liest es im `complete`-Callback des Typs wieder aus -- um
+eine Kommandozeile zu synthetisieren, wenn es keine zu lesen gibt (ein
+direkter Aufruf im Test). Composers `Lib.UserCmd.Composer.ArgSpec` kennt
+`subcmd` nicht, und das ist richtig so: es ist die Nutzlast des Konsumenten,
+nicht Teil der Bibliothek.
+
+**Das ist A4 Fall 2 in einer Variante, die eigens genannt gehoert:** der Typ
+fehlt nicht, weil jemand ihn vergessen hat, sondern weil der Traeger einem
+anderen Repo gehoert. Der Griff ist die abgeleitete Klasse im eigenen Repo:
+
+```lua
+---@class Mkdn.SubargSpec : Lib.UserCmd.Composer.ArgSpec
+---@field subcmd string
+```
+
+und ein `---@cast spec Mkdn.SubargSpec` an der Lesestelle. Damit steht die
+Erweiterung dort, wo sie hingehoert, und lib.nvim muss nichts von ihr wissen.
+
+---
+
+#### Ein `---@cast` zwischen zwei Klassen wird selbst gemeldet
+
+Der interessanteste Fund, und er kam erst im **Nachher**-Lauf.
+
+`hl_options/hl_groups/link.lua` liest eine Highlight-Gruppe, streicht die
+Unterstreichung und schreibt sie zurueck:
+
+```lua
+local base = vim.api.nvim_get_hl(0, { name = base_name, link = false })
+base.underline = want_underline
+base.undercurl = false
+vim.api.nvim_set_hl(0, group, base)
+```
+
+Zwei Befunde: `nvim_get_hl` antwortet mit `vim.api.keyset.get_hl_info`,
+`nvim_set_hl` nimmt `vim.api.keyset.highlight`. Es ist dieselbe Tabelle, von
+der Lese- und von der Schreibseite gesehen -- die Leseseite markiert jedes
+Attribut als `true?`, weil sie nur die **gesetzten** meldet; die Schreibseite
+nimmt `boolean?`, weil sie sie auch loeschen kann. Der Round-Trip
+get -> set ist Neovims dokumentiertes Idiom.
+
+Der naheliegende Griff war ein `---@cast base vim.api.keyset.highlight`.
+**Der Cast wurde selbst gemeldet:**
+
+```
+cast-type-mismatch: Cannot convert `vim.api.keyset.get_hl_info`
+                    to `vim.api.keyset.highlight`
+```
+
+Das ist F1 von der anderen Seite: LuaLS entscheidet Zuweisbarkeit ueber den
+**Namen**, und weil die zwei Klassen nicht verwandt sind, verweigert es auch
+die Behauptung. **Ein `---@cast` ist kein Universalschluessel** -- er
+funktioniert entlang einer Vererbungslinie (`-nil`, Ober- nach Untertyp), nicht
+quer ueber zwei unabhaengige Klassen.
+
+Der Griff ist, die Schreibtabelle zu **bauen statt zu mutieren**:
+
+```lua
+local hl = vim.tbl_extend("force", {}, base, {
+  underline = want_underline,
+  undercurl = false,
+})
+vim.api.nvim_set_hl(0, group, hl)
+```
+
+`vim.tbl_extend` gibt `table` zurueck, und ein `table` erfuellt jede Klasse.
+Das ist keine Umgehung, sondern die ehrlichere Fassung: sie sagt, welche der
+beiden Seiten hier gemeint ist, behaelt jedes Attribut, das das Colorscheme
+gesetzt hat, und braucht keine Feldliste, die veralten kann.
+
+---
+
+#### Der Rest, nach Familien
+
+- **`pcall(vim.cmd, ...)` sechsmal** (D3) -- drei in `lua/`
+  (`commands/mdtable.lua`), drei in `TESTS/`. Cluster E steht damit auf fuenf.
+- **Ein Bereich, den Neovim gefuellt hat**: `ctx.line1`/`ctx.line2` sind
+  optional typisiert, weil ein Aufruf ohne `-range` beide nicht traegt. Im
+  Range-Zweig sind sie da -- `assert` statt eines erfundenen Rueckfalls.
+- **`vim.fn.getreg("+")`** ist `string|string[]`, aber die Listenform braucht
+  das dritte Argument. Ein `---@cast reg string` mit genau diesem Satz daneben.
+- **In `TESTS/`**: sechs Doubles ueber `vim.ui.open`/`.select` (unterdrueckt,
+  mit Begruendung -- E), vier `---@cast` dort, wo der Fall selbst schon
+  `ok(x ~= nil, ...)` sagt, zwei `assert` dort, wo nichts prueft, und ein
+  fehlender zweiter `@return` an einem Helfer, der zwei Werte liefert.
 
 ---
 

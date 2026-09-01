@@ -128,22 +128,23 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **cascade.nvim und diff.nvim stehen auf Null** (32 -> 0 und
-31 -> 0, 2026-09-02), damit **neunzehn der 32 Workspaces** im Umfang.
+*Nichts.* **markdown.nvim steht auf Null** (30 -> 0, 2026-09-02), damit
+**zwanzig der 32 Workspaces** im Umfang. Cluster E ist damit bis auf fuenf
+Stellen abgetragen.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**pickers.nvim** (32) und **markdown.nvim** (30) -- die zwei größten
-verbliebenen Plugins. markdown ist der ergiebigere Einstieg: es trägt
-**sechs der elf verbliebenen `pcall(vim.cmd, ...)`** aus Cluster E und mit
-`param-type-mismatch` 16 die höchste Einzelkonzentration aller offenen Repos.
+**pickers.nvim** (32) -- das größte verbliebene Plugin, und mit
+`need-check-nil` 6 neben `param-type-mismatch` 8 ein Zuschnitt, bei dem die
+Ursachenzahl klein bleiben dürfte. **insights.nvim** (29) ist der andere
+Kandidat: seine sechs `missing-return-value` sind eine Form, die bisher in
+keinem Durchgang vorkam.
 
 | Repo | gesamt | größte Regeln |
 |---|---:|---|
 | pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
 | *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, … |
 
@@ -182,6 +183,7 @@ ausgezahlt haben:
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| MD | **markdown.nvim** -- vertikal (2026-09-02) | **30 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 26 Specs grün. Zwei Drittel lagen in `TESTS/` und waren Minutenarbeit; die andere Hälfte war **A1 zum vierten Mal** (der Debounce-Timer der Live-Referenzprüfung, ungeprüft -- ein `return` hätte die Ansicht für die Sitzung stillgelegt) und ein `undefined-field`, hinter dem **die Nutzlast dieses Plugins auf einem fremden Typ** stand (`subcmd` auf composers `ArgSpec`, jetzt `Mkdn.SubargSpec`). Neuer Musterpunkt F5: **ein `---@cast` zwischen zwei unverwandten Klassen wird selbst gemeldet** -- `nvim_get_hl` -> `nvim_set_hl` ist keine Cast-Frage, sondern eine, die man baut. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | DF | **diff.nvim** -- vertikal (2026-09-02) | **31 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. **Sieben Befunde an einer Zeile**: `register_shortcuts` war mit `Diff.Config` annotiert, der Typ heißt `DiffNvim.Config` -- ein `undefined-doc-name`, drei `undefined-field` auf Feldern, die es gibt, und ein `param-type-mismatch` beim korrekten Aufrufer. Darüber klebte der ältere Doc-Block derselben Funktion. Dazu `vim.diff` (deprecated zugunsten `vim.text.diff`, README nennt 0.9+): **einmal aufgelöst statt dreimal unterdrückt**, und `health.lua` fragt jetzt nach demselben Paar -- vorher hätte `:checkhealth` „vim.diff is missing“ gemeldet für ein Neovim, auf dem alles läuft. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | CS | **cascade.nvim** -- vertikal (2026-09-02) | **32 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Specs grün. Als flachster Posten angekündigt (14 Test-Doubles) und in der anderen Hälfte nicht flach: ein Doc-Block, den eine **nachträglich dazwischengesetzte Variable** von seiner Funktion abgeschnitten hat, und **fünfmal dieselbe Familie** -- eine Funktion liefert N Werte, der Guard prüft einen, der Rest wird per `---@cast` nachgezogen und einer vergessen. Neuer Musterpunkt A5. Dabei ist mir die fünfte Stelle selbst entgangen, weil der zweite Messlauf gegen eine noch nicht fertige Ausgabe lief (nachgereicht mit `2e66c29`). Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | RP | **replacer.nvim** -- vertikal (2026-09-02) | **32 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle Smoke-Suiten grün (155/26/7). Zwölf der 32 kamen aus **einer Klasse, die es nicht gibt** (`RP_HighlightConfig`) -- und beim Definieren fiel auf, dass die zwei Funktionen dahinter **keinen Aufrufer haben**: die Telescope-Anbindung, für die sie geschrieben wurden, ist nie entstanden (nicht gelöscht, als Notiz vermerkt). Dazu ein echter Fehler ohne `deprecated`-Markierung: **`vim.str_utfindex` hat in 0.11 die Signatur getauscht** -- das zweite Argument war der Byte-Index und ist jetzt die Kodierung, `:ReplaceDebug` lief damit auf jedem aktuellen Build in einen Fehler. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -229,11 +231,10 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
 | pickers.nvim | 32 | `param-type-mismatch` 8, `need-check-nil` 6 |
-| markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
 | *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(neunzehn Repos auf Null)* | **0** | buffer-ctx, **cascade**, **diff**, documentation, emojis, fileops, github_stats, gopath, images, language, lib, lsp, mdview, open, pdfport, replacer, sandbox, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **272** | |
+| *(zwanzig Repos auf Null)* | **0** | buffer-ctx, cascade, diff, documentation, emojis, fileops, github_stats, gopath, images, language, lib, lsp, **markdown**, mdview, open, pdfport, replacer, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **242** | |
 
 Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
 minus die 37 von images, minus die 34 von language, minus die 35 von
@@ -263,10 +264,8 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **markdown.nvim** (30) oder **pickers.nvim** (32) -- vorgeschlagener
-   nächster Schritt, siehe oben. markdown trägt **sechs der elf
-   verbliebenen `pcall(vim.cmd, ...)`** und mit `param-type-mismatch` 16 die
-   höchste Einzelkonzentration. Alternativ **die neun kleinen Repos in einem
+1. **pickers.nvim** (32) oder **insights.nvim** (29) -- vorgeschlagener
+   nächster Schritt, siehe oben. Alternativ **die neun kleinen Repos in einem
    Zug** (61 zusammen), wie in der Sechser-Runde
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
@@ -701,7 +700,7 @@ hat sich um einen Zähler bewegt. Vollständige Aufstellung:
 
 ---
 
-### E. `pcall(vim.cmd, ...)` -- 46 offen, lib.nvim und lsp.nvim erledigt
+### E. `pcall(vim.cmd, ...)` -- fünf offen
 
 `Cannot assign 'table' to parameter 'fun(...any):...unknown'`. `vim.cmd` ist in
 Neovims Meta-Definition eine aufrufbare **Tabelle**, keine Funktion, passt also
@@ -715,7 +714,9 @@ Fix: `pcall(function() vim.cmd(...) end)`. Häufungen in
 **lib.nvims zehn sind erledigt (2026-08-31)** -- sieben in `lua/`, drei in
 `TESTS/`, genau in dieser Form. `vim.cmd.edit` / `vim.cmd.colorscheme` sind
 davon nicht betroffen: die Feldform *ist* eine Funktion. **lsp.nvims vier
-folgten am 2026-09-01** (`bindings/actions.lua`, `diagnostics/quickfix.lua`).
+folgten am 2026-09-01** (`bindings/actions.lua`, `diagnostics/quickfix.lua`),
+**markdowns sechs am 2026-09-02** (drei in `lua/`, drei in `TESTS/`). Es
+bleiben fünf, verteilt über die noch offenen Repos.
 
 ---
 
