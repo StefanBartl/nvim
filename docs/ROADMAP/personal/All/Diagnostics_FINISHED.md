@@ -9,12 +9,18 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [filetree.nvim -- 161 auf 80, und fuenf Features, die nie rendern](#filetreenvim-161-auf-80-und-fuenf-features-die-nie-rendern)
+      - [`get_node_at_line` ruft niemand auf, weil es niemand hat](#get_node_at_line-ruft-niemand-auf-weil-es-niemand-hat)
+      - [Ein Wort: `get_root` gegen `get_root_path`](#ein-wort-get_root-gegen-get_root_path)
+      - [Deklariert, nicht implementiert -- und das steht jetzt da](#deklariert-nicht-implementiert-und-das-steht-jetzt-da)
+      - [Der Rest](#der-rest)
+      - [Was uebrig ist: dieselbe Form wie in lsp.nvim](#was-uebrig-ist-dieselbe-form-wie-in-lspnvim)
     - [lsp.nvim -- 172 auf 35, und die Typen, die es hier nie gab](#lspnvim-172-auf-35-und-die-typen-die-es-hier-nie-gab)
       - [Ein echter Fehler: `:LspLuaLsReload` hat den Server nie benachrichtigt](#ein-echter-fehler-lsplualsreload-hat-den-server-nie-benachrichtigt)
       - [Die drei Typdateien](#die-drei-typdateien)
       - [`LspNvim.Config` sagte das eine und deklarierte das andere](#lspnvimconfig-sagte-das-eine-und-deklarierte-das-andere)
       - [Eine Vermutung, die beim Hinsehen gefallen ist](#eine-vermutung-die-beim-hinsehen-gefallen-ist)
-      - [Der Rest](#der-rest)
+      - [Der Rest](#der-rest-1)
       - [Was uebrig ist: 35, und sie sind einzeln](#was-uebrig-ist-35-und-sie-sind-einzeln)
     - [Die Messgrundlage, zweiter Teil -- luassert, und 180 Befunde, die keinem Repo gehoerten](#die-messgrundlage-zweiter-teil-luassert-und-180-befunde-die-keinem-repo-gehoerten)
       - [Die Hypothese, die die Messung widerlegt hat](#die-hypothese-die-die-messung-widerlegt-hat)
@@ -91,6 +97,100 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### filetree.nvim -- 161 auf 80, und fuenf Features, die nie rendern
+
+*(war: Diagnostics-Report Abschnitt 0, Offen-Punkt 1)*
+
+Der vierte vertikale Durchgang. **161 -> 80**, `worse: nothing`, alle fuenf
+Suiten gruen (19 + 252 + 15 + 122 + 54 Checks, 0 failed), stylua sauber.
+
+`undefined-field` war mit 60 der groesste Einzelposten der ganzen Verteilung --
+und es war kein Annotationsproblem.
+
+---
+
+#### `get_node_at_line` ruft niemand auf, weil es niemand hat
+
+Fuenf Feature-Module rufen `_adapter.get_node_at_line`. **Kein einziger der
+fuenf Adapter implementiert es.** Alle fuenf haben dieselbe Form:
+
+```lua
+vim.api.nvim_buf_clear_namespace(bufnr, _ns, 0, -1)
+if not _adapter.get_node_at_line then return end   -- immer wahr
+```
+
+Also: Namespace leeren, zurueckkehren. Betroffen sind `git_status`,
+`lsp_diagnostics`, `copy_move`, `search.filter` und `ui.size_info` -- Git-
+Zeichen, Diagnose-Marker und Dateigroessen erscheinen **nie** im Baum. Dreissig
+der sechzig Befunde waren dieser eine Aufruf.
+
+Dieselbe Geschichte im selben Feature-Bereich: `org.session` fragt nach
+`get_expanded_paths` und `expand_paths`, beide nirgends implementiert -- eine
+Session speichert und stellt also keinen Expansionszustand wieder her.
+
+---
+
+#### Ein Wort: `get_root` gegen `get_root_path`
+
+`org.session` schrieb
+
+```lua
+local root = _adapter.get_root and _adapter.get_root() or nil
+```
+
+Jeder Adapter schreibt die Methode `get_root_path`, und hat das immer getan.
+Der kurze Name war also nil, der `and`/`or`-Ausdruck fiel auf `nil` zurueck,
+und **jede gespeicherte Session hat `root = nil` aufgezeichnet**. Behoben.
+
+---
+
+#### Deklariert, nicht implementiert -- und das steht jetzt da
+
+Die vier Faehigkeiten (`get_node_at_line`, `get_expanded_paths`,
+`expand_paths`, dazu `install_reveal_guard`, das immerhin der neo-tree-Adapter
+hat) stehen jetzt im Optional-Abschnitt von `FiletreeAdapter`, mit einem
+Vermerk im Kopf: kein Backend hat sie, der aufrufende Code ist geschrieben und
+wartet.
+
+**Sie zu implementieren ist ein Feature, kein Diagnose-Fix.** Fuenf Adapter um
+eine Zeilen-zu-Knoten-Abbildung zu erweitern ist eine Designfrage (neo-tree
+und nvim-tree haben interne Zeilenindizes, oil und netrw parsen ihren eigenen
+Puffer), keine Aufraeumarbeit. Das gehoert entschieden, nicht nebenbei
+erledigt -- siehe den offenen Punkt im Report.
+
+---
+
+#### Der Rest
+
+- `features.load()` gibt `(ok, mod|nil)` zurueck, und `tree_reset` pruefte
+  `ok`, bevor es ein Feld von `mod` las. Der Guard muss auf dem Wert sitzen,
+  der danach gelesen wird -- dasselbe Muster wie in lib.nvim und lsp.nvim, hier
+  zum dritten Mal.
+- Die zwanzig `duplicate-set-field` sind ausnahmslos Test-Doubles: eine
+  Stdlib-Funktion, ein `package.loaded`-Eintrag oder eine Plattform-Probe wird
+  fuer die Dauer eines Falls ersetzt und direkt danach zurueckgesetzt.
+  Unterdrueckt pro Zeile, mit der Begruendung als Kopf-Notiz in jeder der drei
+  Dateien statt zwanzigmal wiederholt.
+- `file_watcher`s Debounce-Handle ist bis `setup()` nil und wurde ungeprueft
+  gelesen. `tree_integrity` laeuft ueber nuis eigenes `root_ids`, das
+  upstream keine Annotation traegt.
+
+---
+
+#### Was uebrig ist: dieselbe Form wie in lsp.nvim
+
+80 Befunde, davon `need-check-nil` 33 und `param-type-mismatch` 21. Der
+Hauptteil hat eine Ursache, und es ist die, die lsp.nvim gerade hinter sich
+hat: `FiletreeCwdModeConfig` und seine Geschwister markieren jedes Feld
+optional, obwohl `setup()` sie normalisiert. `cwd_mode` (8) und `config/init`
+(5) lesen also garantierte Werte als vielleicht-nil.
+
+Derselbe Split wie bei `LspNvim.Config`: eine aufgeloeste Klasse mit
+Pflichtfeldern, eine partielle fuer den Aufrufer. Das ist der naechste Schritt
+in diesem Repo.
 
 ---
 
