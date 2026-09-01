@@ -8,6 +8,16 @@ alles, was noch offen ist.
 
 ## Table of content
 
+  - [2026-09-02](#2026-09-02)
+    - [language.nvim -- 34 auf 0, und die siebte `.luarc.json`, die ihre Library wegwarf](#languagenvim-34-auf-0-und-die-siebte-luarcjson-die-ihre-library-wegwarf)
+      - [Sechs waren gar keine Befunde, sondern die Messung](#sechs-waren-gar-keine-befunde-sondern-die-messung)
+      - [Cluster E, vier Stellen, und warum `vim.cmd` kein `function` ist](#cluster-e-vier-stellen-und-warum-vimcmd-kein-function-ist)
+      - [Acht ungeprueft benutzte Timer -- derselbe Fund wie in mdview](#acht-ungeprueft-benutzte-timer-derselbe-fund-wie-in-mdview)
+      - [`region_bounds`: alles oder nichts, in vier Optionals geschrieben](#region_bounds-alles-oder-nichts-in-vier-optionals-geschrieben)
+      - [Form A, das dritte Mal -- und ein Parameter, der dabei auffiel](#form-a-das-dritte-mal-und-ein-parameter-der-dabei-auffiel)
+      - [Der Rest -- fuenf kleine Ursachen](#der-rest-fuenf-kleine-ursachen)
+      - [Drei `deprecated`, die keine Schuld sind](#drei-deprecated-die-keine-schuld-sind)
+      - [Ein Nebenbefund, der eine Entscheidung braucht](#ein-nebenbefund-der-eine-entscheidung-braucht)
   - [2026-09-01](#2026-09-01)
     - [images.nvim -- 37 auf 0, und ein `compare`, das ohne ImageMagick geworfen haette](#imagesnvim-37-auf-0-und-ein-compare-das-ohne-imagemagick-geworfen-haette)
       - [Zwei Zahlen, die nie verglichen werden konnten](#zwei-zahlen-die-nie-verglichen-werden-konnten)
@@ -155,6 +165,247 @@ alles, was noch offen ist.
     - [`lib.nvim.ui.list` -- eine Listen-Senke statt vierzehn](#libnvimuilist-eine-listen-senke-statt-vierzehn)
     - [mdview.nvim formatiert jetzt wie die anderen 30 Repos](#mdviewnvim-formatiert-jetzt-wie-die-anderen-30-repos)
     - [open.nvim: uebrig gebliebener Claude-Worktree abgeraeumt](#opennvim-uebrig-gebliebener-claude-worktree-abgeraeumt)
+
+---
+
+## 2026-09-02
+
+---
+
+### language.nvim -- 34 auf 0, und die siebte `.luarc.json`, die ihre Library wegwarf
+
+*(war: Diagnostics-Report Abschnitt 0, "language.nvim vertikal")*
+
+**34 -> 28 -> 0**, in zwei Laeufen bestaetigt. Commit `afe629d`,
+`stylua --check` sauber, alle vier Specs gruen. `worse: nothing`.
+
+Der vorgeschlagene Einstieg war "32 der 34 liegen in `lua/`" -- der hoechste
+Anteil an ausgeliefertem Code unter den verbliebenen Repos. Das hat gestimmt,
+aber der erste Befund lag vor allen anderen und stand nicht auf der Liste.
+
+---
+
+#### Sechs waren gar keine Befunde, sondern die Messung
+
+Die zweite der drei stehenden Einstiegsregeln -- **dann die `.luarc.json`
+lesen** -- hat hier den ganzen Durchgang umsortiert. Sie enthielt:
+
+```json
+"workspace": {
+  "library": ["$VIMRUNTIME/lua", "${3rd}/luv/library"],
+  "checkThirdParty": false
+}
+```
+
+Das ist Cluster L zum **siebten** Mal, nach `buffer-ctx`, `emojis`, `fileops`,
+`gopath`, `lib` und `sessions`. Eine `.luarc.json` ersetzt `workspace.library`
+komplett statt zu ergaenzen, also kam von der Injektion aus lsp.nvim nichts an:
+LuaLS sah hier **kein einziges Plugin**, lib.nvim eingeschlossen. Sichtbar
+wurde das an sieben Befunden, die alle dieselbe Ursache hatten --
+`Lib.Keymap.Action` und `Lib.Keymap.Registered` galten als undefinierte Typen
+(drei `undefined-doc-name`), und die vier Feldzugriffe auf eine so
+"undefinierte" Registrierung gleich mit (`bound`, `lhs`, `mode`, `lhs`).
+
+Beide Typen existieren und sind vollstaendig beschrieben, in
+`lib.nvim/lua/lib/nvim/bindings/keymap/@types/init.lua`. Es hat sie nur nie
+jemand gelesen.
+
+Nach dem Entfernen des Schluessels: **34 -> 28**. Der Rueckgang ist nicht die
+ganze Geschichte -- `translate/history.lua` kam als Stelle **dazu**, die vorher
+gar nicht geprueft werden konnte. Das ist derselbe Effekt wie bei den sechs
+Repos in Cluster L, wo die Summe unterm Strich sogar stieg (356 -> 411): sechs
+Befunde fallen weg, weil Typen auflösen, einer kommt an einer Stelle dazu, die
+vorher niemand geprueft hat.
+
+---
+
+#### Cluster E, vier Stellen, und warum `vim.cmd` kein `function` ist
+
+Vier `param-type-mismatch` mit demselben Wortlaut --
+`Cannot assign 'table' to parameter 'fun(...any):...unknown'` -- waren
+`pcall(vim.cmd, ...)`. `vim.cmd` ist eine Tabelle mit `__call`-Metamethode,
+kein `function`; `pcall` verlangt eine Funktion, und die Metamethode rettet das
+im Typsystem nicht.
+
+Umgestellt auf die Closure-Form, wie es der Report vorgibt:
+
+```lua
+pcall(function()
+  vim.cmd("silent spellgood! " .. w)
+end)
+```
+
+**Nicht** auf `vim.cmd.spellgood(...)`: der Report notiert aus dem
+images-Durchgang, dass ein Spec dort `vim.cmd` selbst tauscht und den
+Kommandonamen aus dem ersten Argument liest -- die Unterkommando-Form haette
+den Test still blind gemacht. Hier gegengeprueft: `TESTS/` in language.nvim
+fasst `vim.cmd` nicht an, aber die Closure-Form ist die, die in beiden Faellen
+richtig bleibt.
+
+Damit ist **Cluster E in language.nvim leer**; offen bleiben elf, davon sechs
+in markdown.nvim.
+
+---
+
+#### Acht ungeprueft benutzte Timer -- derselbe Fund wie in mdview
+
+`vim.uv.new_timer()` gibt `uv_timer_t|nil` zurueck. An vier Stellen wurde der
+Rueckgabewert direkt indiziert:
+
+| Datei | was ohne Timer passiert waere |
+|---|---|
+| `spell/live.lua` | `t:stop()` auf `nil` -- der Debounce-Pfad wirft |
+| `spell/providers/cspell_server.lua` | `timer:start(...)` wirft, und die Closure haette `timer:stop()` auf `nil` gerufen |
+| `util/job/init.lua` (zweimal) | `timer:start(...)` wirft, einmal im `vim.system`-Pfad, einmal im `jobstart`-Fallback |
+
+Der Fall ist selten (Erschoepfung der libuv-Handles), aber der Unterschied ist
+der zwischen "kein Timeout" und "Absturz beim Aufsetzen". Behandelt wurde er
+jeweils so, dass die Funktion ohne Timer **weiterarbeitet**: der Job laeuft und
+meldet, nur ohne Timeout-Wache; der Debounce kehrt zurueck statt zu werfen.
+
+In `util/job` kam dabei die Regel *kein Fix, der eine Warnung nur verschiebt*
+zum Tragen. Der erste Versuch --
+
+```lua
+if opts.timeout_ms and opts.timeout_ms > 0 then
+  timer = vim.uv.new_timer()
+end
+if timer then
+  timer:start(opts.timeout_ms, 0, ...)   -- opts.timeout_ms ist hier wieder `integer|nil`
+```
+
+-- haette den Befund von `timer` auf `opts.timeout_ms` verschoben, weil der
+zweite `if` ausserhalb der Pruefung des ersten steht. Die Fassung, die bleibt,
+zieht die Zahl in ein Local und schachtelt die Timer-Pruefung hinein.
+
+---
+
+#### `region_bounds`: alles oder nichts, in vier Optionals geschrieben
+
+Sechs der 34 lagen auf zwei Zeilen in `translate/motion.lua`, und beide sahen
+so aus:
+
+```lua
+local sr, sc, er, ec = region_bounds(p1, p2, "v")
+if sr then
+  translate_region(bufnr, sr, sc, er, ec)   -- sc, er, ec: `integer?`
+```
+
+Die Funktion gibt entweder alle vier Werte zurueck oder `nil`, aber deklariert
+war `---@return integer?, integer?, integer?, integer?` -- vier voneinander
+unabhaengige Optionals. `if sr then` verengt genau einen davon; die anderen
+drei bleiben fuer den Pruefer `nil`, und `translate_region` will vier `integer`.
+Drei Befunde pro Aufrufstelle, zweimal.
+
+Das laesst sich nicht mit einer Annotation reparieren, weil die Aussage falsch
+ist: die vier Werte sind eine Gestalt, kein Quartett. Also sind sie jetzt eine:
+
+```lua
+---@class Language.Translate.Span
+---@field sr integer  # start row, 0-based
+---@field sc integer  # start col, 0-based byte
+---@field er integer  # end row, 0-based
+---@field ec integer  # end col, 0-based byte, exclusive
+```
+
+`if span then` verengt danach alles auf einmal. **Eine Mehrfachrueckgabe, die
+alles-oder-nichts ist, ist im Typsystem nicht ausdrueckbar** -- die Tabelle ist
+nicht Geschmack, sondern die einzige Form, in der die Zusage stehen kann.
+
+---
+
+#### Form A, das dritte Mal -- und ein Parameter, der dabei auffiel
+
+Offen-Punkt 3 nennt fuenf Stellen mit zwei Annotationsformen, die reihenweise
+Befunde erzeugen. Zwei davon lagen hier, in
+`config/@types/init.lua` Zeile 96 und 196:
+
+```lua
+---@field custom { cmd: fun(text: string[], target: string): string[], parse: fun(out: string): string[] }|nil
+```
+
+**Form A**: ein `fun(...): T` in einem Inline-Tabellentyp verschluckt alles,
+was danach kommt. Der Rueckgabetyp frisst das Komma und das naechste Feld --
+`parse` existierte fuer LuaLS nicht, und `translate/providers/custom.lua:50`
+las sich als `undefined-field`. Derselbe Mechanismus, der in pdfport 28 Befunde
+aus einer Zeile getragen hat.
+
+Die Loesung stand im selben Repo, fuenfundsiebzig Zeilen weiter oben: die
+Spell-Seite hat fuer genau dieselbe Gestalt eine benannte Klasse
+(`LanguageSpellCustomProviderCfg`). Die Translate-Seite hat jetzt auch eine.
+
+Beim Aufschreiben fiel der zweite Fehler in derselben Zeile auf: `cmd` war mit
+**zwei** Parametern deklariert (`text, target`) und wird mit **drei** gerufen
+(`custom.cmd(lines, target, source)`) -- so steht es auch im Modulkopf von
+`providers/custom.lua`. Kein Befund, weil die Signatur ohnehin nie gelesen
+wurde; ein Benutzer, der sich auf die Doku verlaesst, haette `source` nicht
+gefunden.
+
+Offen-Punkt 3 hat damit noch drei Stellen, alle drei in der nvim-Config.
+
+---
+
+#### Der Rest -- fuenf kleine Ursachen
+
+- **`history.save()` las den Ring als Upvalue.** Seine Vorbedingung -- "der
+  Ring ist geladen" -- war nirgends aufgeschrieben; beide Aufrufer erfuellen
+  sie, aber der Pruefer sieht das nicht ueber Funktionsgrenzen. Nimmt ihn jetzt
+  als Parameter, damit steht die Abhaengigkeit in der Signatur.
+- **`win_valid` gab `nil` statt `false`.** `win and api.nvim_win_is_valid(win)`
+  ist fuer ein nil-Fenster `nil`, und `M.is_open()` verspricht `boolean`.
+  Der zweite Lauf hat gezeigt, dass es hier zwei Stellen waren: der Body **und**
+  die eigene `@return boolean|nil`-Annotation der Hilfsfunktion.
+- **`output.apply`** prueft vier Layout-Werte in einer `or`-Kette; LuaLS
+  verengt eine String-Union daran nicht. Ein `---@cast` auf die vier, die der
+  Zweig gerade bewiesen hat.
+- **`usrcmds`**: `is_dir_path` beweist, dass `scope.path` ein String ist, aber
+  der Beweis steckt in einer Variablen, die der Pruefer nicht in den Zweig
+  traegt.
+- **Zwei Testeingaben sind absichtlich typfremd** -- `add_session(nil)` (die
+  Begruendung stand schon als Kommentar daneben) und ein `changed`-Wert, der
+  per Konstruktion nicht zur Option passt. Unterdrueckt mit je einem Satz.
+
+---
+
+#### Drei `deprecated`, die keine Schuld sind
+
+`vim.diagnostic.goto_next`/`goto_prev` und `vim.lsp.get_active_clients` sind
+deprecated -- und stehen hier ausschliesslich als Fallback:
+
+```lua
+local ok = pcall(function()
+  vim.diagnostic.jump({ count = count, ... })
+end)
+if not ok then
+  local step = count > 0 and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
+```
+
+Das README nennt **Neovim >= 0.9**, `vim.diagnostic.jump` gibt es ab 0.11.
+Der veraltete Name ist der Zweck der Zeile. Unterdrueckt mit Begruendung, nach
+der Regel: nur wo der Befund sachlich falsch ist oder das Verhalten Absicht ist.
+
+Das ist ein Muster, das noch oefter kommen wird, solange die Repos 0.9
+unterstuetzen. `deprecated` steht im Gesamtlauf auf 23; ein Teil davon duerfte
+aus demselben Grund dort stehen und will nicht "repariert", sondern begruendet
+werden.
+
+---
+
+#### Ein Nebenbefund, der eine Entscheidung braucht
+
+`spell/providers/cspell_server.lua:292`:
+
+```lua
+timer:start(cfg.scan_debounce_ms and 6000 or 6000, 0, function()
+```
+
+Beide Zweige sind `6000`. Der Ausdruck sieht aus, als haenge das Timeout an der
+Konfiguration, und tut es nicht -- `scan_debounce_ms` (Vorgabe 400) hat hier
+keine Wirkung. Kein LuaLS-Befund, deshalb nicht angefasst: ob daraus
+`cfg.scan_debounce_ms or 6000` werden soll oder eine schlichte Konstante, ist
+eine Verhaltensfrage. Ein Debounce von 400 ms und ein Server-Timeout von 6 s
+sind verschiedene Dinge; die Konstante ist vermutlich richtig und der
+Ausdruck ein Rest.
 
 ---
 
