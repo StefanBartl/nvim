@@ -9,6 +9,14 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [images.nvim -- 37 auf 0, und ein `compare`, das ohne ImageMagick geworfen haette](#imagesnvim-37-auf-0-und-ein-compare-das-ohne-imagemagick-geworfen-haette)
+      - [Zwei Zahlen, die nie verglichen werden konnten](#zwei-zahlen-die-nie-verglichen-werden-konnten)
+      - [`Dims` und `MaybeDims` -- ein Unterschied, den der Code schon machte](#dims-und-maybedims-ein-unterschied-den-der-code-schon-machte)
+      - [Drei Advice-Zeilen, die kein `:checkhealth` je gezeigt hat](#drei-advice-zeilen-die-kein-checkhealth-je-gezeigt-hat)
+      - [Drei Doc-Bloecke, verdoppelt beim Nachruesten eines Parameters](#drei-doc-bloecke-verdoppelt-beim-nachruesten-eines-parameters)
+      - [Ein `@return` mit einem Komma](#ein-return-mit-einem-komma)
+      - [Der Rest -- vier kleine Ursachen](#der-rest-vier-kleine-ursachen)
+      - [Die Tests: neun Doubles unterdrueckt, sieben `assert` gesetzt](#die-tests-neun-doubles-unterdrueckt-sieben-assert-gesetzt)
     - [sandbox.nvim -- 39 auf 0, und Ports, die ihre eigenen Parameter nicht fanden](#sandboxnvim-39-auf-0-und-ports-die-ihre-eigenen-parameter-nicht-fanden)
       - [Ein `runtime.path`, der auf ein Verzeichnis zeigt, das es nicht gibt](#ein-runtimepath-der-auf-ein-verzeichnis-zeigt-das-es-nicht-gibt)
       - [Fuenf Ports, die ihre eigenen Parameter nicht fanden](#fuenf-ports-die-ihre-eigenen-parameter-nicht-fanden)
@@ -151,6 +159,184 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### images.nvim -- 37 auf 0, und ein `compare`, das ohne ImageMagick geworfen haette
+
+*(war: Diagnostics-Report Abschnitt 0, "images.nvim vertikal")*
+
+**37 -> 0**, in zwei Laeufen bestaetigt. Commit `c3e415c`, `stylua --check`
+sauber, alle 23 Specs gruen. `worse: nothing`.
+
+Der Einstieg war der vorgeschlagene und er hat gehalten: **zuerst nach
+verirrten Doc-Bloecken suchen** brachte acht Befunde aus drei Stellen, das
+sechste Repo in Folge mit dieser Familie. Die `.luarc.json` dagegen war diesmal
+in Ordnung -- sie nennt `workspace.library` nicht mehr (seit `8a5f819`) und
+`workspace.ignoreDir` gar nicht, also kam die Injektion an. Das ist relevant,
+weil unter `images.nvim/.claude/worktrees/` eine volle Kopie des Repos liegt:
+ohne die injizierten 124 Muster waere das dieselbe Selbstkollision gewesen, die
+in lsp.nvim 180 Befunde getragen hat.
+
+---
+
+#### Zwei Zahlen, die nie verglichen werden konnten
+
+`images.scale.compute` und `images.scale.fit_cells` beschreiben beide einen
+Rueckfall fuer Bilder, deren Masse sich nicht lesen liessen -- und bewachten
+ihn beide so:
+
+```lua
+if not (a and b and a.width > 0 and a.height > 0 and b.width > 0 and b.height > 0) then
+  return { a = 1, b = 1 }
+end
+```
+
+`images.info.collect` fuellt `width`/`height` nur, wenn ImageMagick installiert
+ist. Ohne es ist `a.width` also `nil`, und `nil > 0` ist in Lua kein `false`,
+sondern ein Fehler. Der Rueckfall, den der Kommentar darueber verspricht, war
+genau der Fall, in dem die Zeile wirft.
+
+Erreichbar war das ueber `:Image compare`: `compare.on_compare` reicht die
+beiden Ergebnisse von `info.collect` ungeprueft weiter, mit einem Kommentar
+daneben, der die Erwartung ausspricht -- *"missing dimensions -> scale.compute
+falls back to 1/1"*. `zen` und `redact` pruefen vorher und kamen deshalb nie
+dort an; `compare` auf einer Maschine ohne `magick` schon.
+
+Beide Wachen fragen jetzt nach dem Wert, bevor sie ihn vergleichen. Gefunden
+hat das nicht ein Test, sondern der Typ: der Prueferbefund lautete
+`Images.Info` passt nicht auf `Images.Scale.Dims`, und der Grund dafuer war
+genau dieser Unterschied.
+
+---
+
+#### `Dims` und `MaybeDims` -- ein Unterschied, den der Code schon machte
+
+Fuenf der 37 Befunde hingen daran, dass eine Klasse zwei verschiedene Dinge
+beschrieb. `Images.Scale.Dims` deklarierte `width`/`height` als `integer`;
+`images.info.collect` liefert sie als `integer|nil`. Drei Verbraucher, zwei
+Anspruechen:
+
+- `compute` und `fit_cells` kommen ohne die Masse aus -- steht in ihrem eigenen
+  Kopf.
+- `cell_box_to_pixels` teilt durch beide und braucht sie wirklich.
+
+Aufgeteilt statt weggeschrieben: `Images.Scale.MaybeDims` (das Paar, wie
+`collect` es liefert) und `Images.Scale.Dims : Images.Scale.MaybeDims` (beide
+bekannt). `Images.Info` erbt die erste. In `images.redact` wird einmal
+verengt -- an der Stelle, die ohnehin prueft --, statt die `Info` zu speichern
+und spaeter zu hoffen.
+
+**Eine Sache dabei ist es wert, notiert zu werden:** der erste Versuch hatte
+`MaybeDims` nur als eigene Klasse angelegt, ohne Vererbung, und der
+Nachher-Lauf stand auf 1 statt 0 -- `Images.Scale.Dims` passte nicht auf
+`Images.Scale.MaybeDims`. **LuaLS entscheidet Klassenzuweisbarkeit ueber den
+Namen, nicht ueber die Gestalt.** Zwei Klassen mit identischen Feldern sind
+fuer den Pruefer nicht dieselbe; die Beziehung muss mit `: Basis` dastehen.
+
+---
+
+#### Drei Advice-Zeilen, die kein `:checkhealth` je gezeigt hat
+
+Derselbe echte Fehler wie in documentation.nvim, runtime-analysis.nvim, mdview
+und pdfport: `vim.health.info` nimmt eine Nachricht und sonst nichts. `warn`
+und `error` nehmen Hinweise als Varargs, `info` nicht.
+
+```lua
+vim.health.info("`tesseract` not found — …", {
+  "winget install UB-Mannheim.TesseractOCR  (Windows)",
+  "apt install tesseract-ocr  /  brew install tesseract",
+  "installed somewhere unusual? set `ocr.bin` to its path",
+})
+```
+
+Das sind die drei nuetzlichsten Zeilen der ganzen Datei, und sie standen nie in
+einem `:checkhealth`. Derselbe lokale Shim wie in den anderen Repos rendert sie
+jetzt in die Nachricht. **Das ist der fuenfte Fund dieser Art** -- der Posten
+ist damit kein Zufall mehr, sondern ein Muster, das in die RULES-Ableitung am
+Ende gehoert.
+
+---
+
+#### Drei Doc-Bloecke, verdoppelt beim Nachruesten eines Parameters
+
+`force_ask` ist spaeter dazugekommen, und an drei Stellen wurde der Doc-Block
+nicht bearbeitet, sondern ein zweiter dahintergehaengt:
+
+```lua
+---@param name string|nil a file name already given — skips any name prompt
+---@return nil
+---@param name string|nil
+---@param force_ask boolean|nil  # prompt for a name even when `ask_filename` is off
+```
+
+Acht `duplicate-doc-param` aus drei Ursachen (`images.paste`, `paste.M.run`,
+`paste.capture_with_optional_name`). Die zweite Kopie war jedesmal die
+aermere -- in `capture_with_optional_name` stand `capture` dort als blankes
+`function` statt als `fun(out: string, cb: fun(ok: boolean, err: string|nil))`,
+also hat der Nachtrag die Signatur des Callbacks mitgenommen.
+
+Nebenbefund derselben Familie: zweimal stand `---@return` vor `---@param`.
+Kein Befund, aber dieselbe Handschrift; mitgezogen.
+
+---
+
+#### Ein `@return` mit einem Komma
+
+Form B aus Offen-Punkt 3, hier zum ersten Mal ausserhalb der genannten Liste:
+
+```lua
+---@return table|nil snacks.picker, if installed
+```
+
+LuaLS liest das als **zwei** Rueckgabewerte. `if` wurde fuer einen Typnamen
+gehalten (`undefined-doc-name`), und `snacks_picker` schien einen zweiten Wert
+zu schulden, den es nicht zurueckgibt (`missing-return-value`). Zwei Befunde
+aus einem Komma. Die Beschreibung steht jetzt hinter einem `#`.
+
+---
+
+#### Der Rest -- vier kleine Ursachen
+
+- **Zwei `pcall(vim.cmd, ...)`** (Cluster E, der ganze Anteil dieses Repos) sind
+  Closures. Hier ausdruecklich *nicht* `vim.cmd.redraw`: `terminal_draw_spec`
+  tauscht `vim.cmd` selbst und liest den Kommandonamen aus dem ersten Argument
+  -- die Unterkommando-Form haette den Test still blind gemacht.
+- **`convert.valid_geometry`** prueft `type(spec) ~= "string"` in seiner ersten
+  Zeile und `tostring`t den Wert in der Fehlermeldung. Nur die Annotation
+  behauptete einen String; der Test uebergibt `nil` und erwartet `false`.
+- **`debug.border_of`** liest `cfg.border` jetzt ueber ein Local. `border` ist
+  eine Union aus den Preset-Namen und einer Segmentliste, und
+  `type(...) ~= "table"` verengt ein Local, kein Feld.
+- **`calibrate`** ruft `vim.keymap.set` direkt, wie der Rest des Repos. Das
+  lokale Alias `local map = vim.keymap.set` war die einzige Stelle, an der der
+  Pruefer `need-check-nil` meldete -- `debug.lua` ruft dieselbe Funktion zweimal
+  direkt und ohne Befund.
+
+---
+
+#### Die Tests: neun Doubles unterdrueckt, sieben `assert` gesetzt
+
+Sechzehn der 37 lagen in `TESTS/`, und sie zerfallen sauber in zwei Haelften.
+
+**Neun `duplicate-set-field`** sind Doubles: `images.terminal.draw` viermal in
+`anchor_spec`, `vim.api.nvim_ui_send` dreimal, `calibration.path` zweimal (der
+Sandbox-Pfad, damit kein Lauf die echte Kalibrierung des Entwicklers liest).
+Jeweils fuer die Dauer eines Falls getauscht und direkt danach zurueckgesetzt
+-- unterdrueckt mit der Begruendung daneben, wie in open.nvim und filetree.nvim.
+Dazu die eine im Quellcode: der Recorder in `images.debug` ueberschreibt
+`terminal.draw` absichtlich und legt das Original vorher auf dem Modul ab.
+
+**Sieben `param-type-mismatch`**, davon sechs Werte, die mit `H.ok` geprueft
+und danach trotzdem benutzt wurden -- `convert.to_png` gibt `string|nil`,
+`vim.uv.cwd()` gibt `string|nil`, die IDAT-Suche in `testcard_spec` findet
+vielleicht nichts. `assert` an sieben Stellen (vier in `convert_spec`, eine in
+`browse_spec`, zwei in `testcard_spec`), so wie `convert_spec` es an anderen
+schon tat: es benennt die Zeile, die gebrochen ist, statt fuenf Zeilen spaeter
+mit "arithmetic on a nil value" zu scheitern. Dieselbe Bewegung wie in
+open.nvims `usrcmds_spec`. Der siebte Befund war `valid_geometry(nil)` -- eine
+absichtlich ungueltige Eingabe, die jetzt in der Signatur der Funktion steht
+statt im Spec unterdrueckt zu werden.
 
 ---
 

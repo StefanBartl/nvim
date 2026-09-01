@@ -122,30 +122,49 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* **sandbox.nvim steht auf Null** (39 -> 0, 2026-09-02), damit
-zwölf der 32 Workspaces im Umfang.
+*Nichts.* **images.nvim steht auf Null** (37 -> 0, 2026-09-01), damit
+dreizehn der 32 Workspaces im Umfang.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**images.nvim vertikal** (37). Nach der zurückgestellten nvim-Config das
-größte Repo. `param-type-mismatch` 14 und `duplicate-set-field` 10 tragen
-zwei Drittel -- und der zweite Posten ist hier interessanter als die Zahl:
-`duplicate-set-field` steht über alle Repos auf 70 und damit an zweiter
-Stelle der Gesamtverteilung. images ist mit 10 die drittgrößte Häufung, also
-der Ort, an dem sich zeigt, ob das ein vertikaler oder ein horizontaler
-Posten ist.
+**language.nvim vertikal** (34). Nicht das größte der verbliebenen Repos --
+lsp.nvim hat 35 --, aber das mit dem größten Anteil an ausgeliefertem Code:
+**32 seiner 34 Befunde liegen in `lua/`**, nur zwei in `TESTS/`. Zum Vergleich,
+am 2026-09-01 nachgemessen:
 
-**Zwei Dinge, die die letzten fünf Durchgänge gelehrt haben** und die den
-Einstieg abkürzen:
+| Repo | gesamt | in `lua/` | in `TESTS/` |
+|---|---:|---:|---:|
+| lsp.nvim | 35 | 25 | 10 |
+| language.nvim | 34 | **32** | 2 |
+| github_stats.nvim | 33 | 17 | 16 |
+| cascade.nvim | 32 | 17 | 15 |
 
-- **Zuerst nach verirrten Doc-Blöcken suchen.** Fünf Repos in Folge hatten
-  welche, und sie kosten je fünf bis acht Befunde aus einer Ursache.
-  `undefined-doc-param` und `duplicate-doc-param` sind ihre Signatur.
-- **Dann die `.luarc.json` lesen.** Bei spotlight steckten dreizehn Befunde
-  in `workspace.library`, bei sandbox zeigte `runtime.path` auf ein
-  Verzeichnis, das es nur auf Windows gibt.
+Das ist nach images das Kriterium, das zählt. Dort lagen 16 der 37 in `TESTS/`,
+und sie waren ausnahmslos Doubles und `assert`s -- richtig, aber nichts, was
+über den Code etwas aussagt. Die beiden echten Fehler kamen aus den 21 in
+`lua/`. Wo der Anteil so hoch ist wie in language, ist die Ausbeute an echten
+Befunden entsprechend höher.
+
+Dazu kommt, dass language zwei offene Punkte mit abräumt: **zwei der fünf
+Stellen aus Offen-Punkt 3** (Form A, `config/@types/init.lua` Zeile 96 und 196)
+und **vier der fünfzehn verbliebenen `pcall(vim.cmd, ...)`** aus Cluster E --
+der größte Einzelanteil, der noch offen ist. Die Häufungen: `spell/init.lua` 8,
+`translate/motion.lua` 6, `spell/live.lua` 3, `spell/providers/cspell_server.lua`
+3. Regelverteilung `param-type-mismatch` 12, `need-check-nil` 7,
+`undefined-field` 5, dazu drei `deprecated` aus Abschnitt 5.
+
+**Danach lsp.nvim** (35) -- der Rest des dritten Durchgangs (V3, 172 -> 35),
+also genau das, was dort bewusst liegen blieb: Offen-Punkt 6 (`LspMod.*` gegen
+Neovims eigene LSP-Typen) und Offen-Punkt 5 (`luassert` in lib.nvim aufweiten).
+Beide sind Entscheidungen, nicht Aufräumarbeit, und die zweite verändert die
+Zahlen **jedes** Repos mit Testsuite -- deshalb gehört sie bewusst begonnen und
+nicht nebenbei.
+
+**cascade.nvim** (32) ist der billigste Posten, aber der flachste: 14 der 32
+sind `duplicate-set-field`, davon 11 allein in `TESTS/lib_util_spec.lua`. images
+hat gezeigt, wie dieser Posten ausgeht -- Doubles, unterdrückt mit Begründung.
 
 **Danach die nvim-Config selbst** (120) -- das größte Einzelvorkommen. Es
 ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
@@ -154,11 +173,29 @@ Worktrees darunter. Ein vertikaler Durchgang dort will erst die Frage
 geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
+**Drei Dinge, die die letzten sechs Durchgänge gelehrt haben** und die den
+Einstieg abkürzen:
+
+- **Zuerst nach verirrten Doc-Blöcken suchen.** Sechs Repos in Folge hatten
+  welche, und sie kosten je fünf bis acht Befunde aus einer Ursache.
+  `undefined-doc-param` und `duplicate-doc-param` sind ihre Signatur. In
+  images war es dreimal derselbe Griff: ein nachgerüsteter Parameter, dessen
+  Doc-Block angehängt statt bearbeitet wurde.
+- **Dann die `.luarc.json` lesen.** Bei spotlight steckten dreizehn Befunde
+  in `workspace.library`, bei sandbox zeigte `runtime.path` auf ein
+  Verzeichnis, das es nur auf Windows gibt. Bei images war sie in Ordnung --
+  und genau deshalb blieb die volle Repo-Kopie unter `.claude/worktrees/`
+  folgenlos.
+- **`vim.health.info` prüfen.** Fünf Repos in Folge haben ihm eine
+  Advice-Liste als zweites Argument gegeben, die es wegwirft. Der Befund heißt
+  `redundant-parameter` und klingt nach Stil; er ist ein fehlendes Feature.
+
 ---
 ### Erledigt
 
 | # | Punkt | Ergebnis |
 |---|---|---|
+| IM | **images.nvim** -- vertikal (2026-09-01) | **37 -> 0**, in zwei Läufen bestätigt, `worse: nothing`, alle 23 Specs grün. Zwei echte Fehler: `scale.compute`/`fit_cells` bewachten ihren dokumentierten Rückfall mit `a.width > 0` -- ohne ImageMagick ist das ein Vergleich mit `nil` und damit ein Fehler statt eines Rückfalls, erreichbar über `:Image compare`; und `vim.health.info` warf die drei tesseract-Installationshinweise weg (derselbe Fund zum fünften Mal). Dazu die Klassenfrage dahinter: `Images.Scale.Dims` behauptete zwei Maße, die `info.collect` nur mit ImageMagick liefert -- aufgeteilt in `MaybeDims` und `Dims : MaybeDims`. **LuaLS entscheidet Klassenzuweisbarkeit über den Namen, nicht über die Gestalt.** Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | A | **`assert`-Typ**, und die Library-Auflösung dahinter | **6344 -> 3204** über alle 33 Workspaces. `.luarc.json` ersetzt `workspace.library` komplett, deshalb kam lsp.nvims Injektion in 31 Repos nie an. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | B | **`need-check-nil` in Tests** -- unterdrückt, nicht auszementiert | **3204 -> 2289** über alle 33 Workspaces, `need-check-nil` 1128 -> 208. 19 Repos, 93 Testdateien, je ein Kopf-Kommentar mit Begründung. Die geplante `TESTS/.luarc.json` geht nicht -- LuaLS liest nur die im Wurzelverzeichnis. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | D | **`userdata` statt `TSNode`** in documentation.nvim | **383 -> 155** in dem Repo, `undefined-field` 237 -> 9. 154 Annotationen in 18 Dateien, dazu `uv.uv_tcp_t` in `serve.lua` und eine eigene Klasse für die Fremdbindung in `standalone/`. Keine andere Regel hat sich um einen Zähler bewegt. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
@@ -198,7 +235,6 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| images.nvim | 37 | `param-type-mismatch` 14, `duplicate-set-field` 10 |
 | lsp.nvim | 35 | `param-type-mismatch` 12, `assign-type-mismatch` 7 |
 | language.nvim | 34 | `param-type-mismatch` 12, `need-check-nil` 7 |
 | github_stats.nvim | 33 | `param-type-mismatch` 14, `need-check-nil` 10 |
@@ -208,19 +244,23 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | diff.nvim | 31 | `duplicate-set-field` 11, `param-type-mismatch` 9 |
 | markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
-| *(sieben Repos unter 15)* | 49 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(zwölf Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, gopath, lib, mdview, open, pdfport, **sandbox**, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **506** | |
+| *(neun Repos unter 15)* | 61 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
+| *(dreizehn Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, gopath, **images**, lib, mdview, open, pdfport, sandbox, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **469** | |
 
-Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug
-und die inzwischen auf 0 stehen.
+Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug,
+minus die 37 von images -- beide stehen inzwischen auf 0. Die Zeile der
+kleinen Repos stand vorher auf „sieben Repos / 49"; die neun Zahlen daneben
+ergeben 61, und die Summe rechnete immer schon mit 61. Korrigiert, nicht neu
+gemessen.
 
 **Die Verteilung hat sich verschoben.** `param-type-mismatch` bleibt die
-größte Regel (178), aber `duplicate-set-field` steht jetzt auf **70** und
-damit an zweiter Stelle -- fast durchweg Test-Doubles über typisierte
-`vim.*`-Oberfläche. Das ist der erste Posten seit Cluster B, der wieder
-quer über die Repos liegt statt in einem; ob er horizontal oder weiter
-vertikal abgearbeitet wird, entscheidet sich am nächsten Durchgang.
+größte Regel (164), `duplicate-set-field` steht auf **60** und damit weiter an
+zweiter Stelle -- fast durchweg Test-Doubles über typisierte
+`vim.*`-Oberfläche. images hat die Frage beantwortet, die dazu offen war: von
+seinen zehn waren neun Doubles in `TESTS/`, unterdrückt mit einer Begründung
+daneben, und die Arbeit daran war ein Bruchteil des Durchgangs. **Der Posten
+fällt vertikal an und braucht keinen eigenen horizontalen Durchgang.**
 
 ---
 
@@ -230,8 +270,9 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **images.nvim vertikal** (37) -- vorgeschlagener nächster Schritt,
-   siehe oben; `param-type-mismatch` 14, `duplicate-set-field` 10
+1. **language.nvim vertikal** (34) -- vorgeschlagener nächster Schritt,
+   siehe oben; 32 der 34 in `lua/`, dazu zwei Stellen aus Punkt 3 und vier aus
+   Punkt 7
 1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
    `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
    Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
@@ -239,12 +280,12 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    Spec-Dateien abgearbeitet und sich sauber beendet -- dieselbe Falle wie
    in Offen-Punkt 13, hier aber im Umfang. Der Runner ist das größere der
    beiden Probleme
-1b. **`duplicate-set-field` steht auf 70** und damit an zweiter Stelle der
-   Gesamtverteilung -- fast durchweg Test-Doubles über typisierte
-   `vim.*`-Oberfläche. Häufungen: `cascade` 14, `diff` 11, `images` 10,
-   `filetree` 6, `markdown` 6. Der erste Posten seit Cluster B, der wieder
-   quer liegt; ob horizontal oder weiter vertikal, entscheidet der nächste
-   Durchgang
+1b. **`duplicate-set-field` steht auf 60** und damit weiter an zweiter Stelle
+   der Gesamtverteilung -- fast durchweg Test-Doubles über typisierte
+   `vim.*`-Oberfläche. Häufungen: `cascade` 14, `diff` 11, `filetree` 6,
+   `markdown` 6. **Entschieden am images-Durchgang: fällt vertikal an.** Neun
+   der zehn dort waren Doubles in `TESTS/`, unterdrückt mit Begründung; das
+   kostet pro Repo Minuten und rechtfertigt keinen eigenen horizontalen Lauf
 2. **Die nvim-Config selbst** (120) -- das größte Einzelvorkommen;
    `param-type-mismatch` 38, `need-check-nil` 17. Braucht vorher die
    Worktree-Frage unten
@@ -272,12 +313,15 @@ Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
    `lsp.TextDocumentIdentifier`. Solange `vim_lsp.lua` danebenlag, fiel das
    nicht auf; jetzt kollidiert es dreimal in `languages/webdev/typescript.lua`.
    Die Frage ist, ob `LspMod.*` noch etwas beschreibt, das Neovim nicht führt
-7. **`pcall(vim.cmd, ...)`** (E) -- **17 offen**: `markdown` 6, `language` 4,
-   `images` 2, dazu je eines in `color_my_ascii`, `mdview`, `migrate` und
-   zwei in der nvim-Config. Erledigt sind 62 (lib 10, lsp 4, filetree 15,
-   fileops 16, sessions 4, runtime-analysis 9, gopath 2, emojis 1, open 1)
+7. **`pcall(vim.cmd, ...)`** (E) -- **15 offen**: `markdown` 6, `language` 4,
+   dazu je eines in `color_my_ascii`, `mdview`, `migrate` und zwei in der
+   nvim-Config. Erledigt sind 64 (lib 10, lsp 4, filetree 15, fileops 16,
+   sessions 4, runtime-analysis 9, gopath 2, images 2, emojis 1, open 1)
    -- die 60 aus dem Erstscan waren eine Schätzung. Mechanisch, fällt beim
-   jeweiligen Repo an
+   jeweiligen Repo an. **Nicht blind auf `vim.cmd.<name>` umschreiben:** in
+   images tauscht ein Spec `vim.cmd` selbst und liest den Kommandonamen aus
+   dem ersten Argument -- die Unterkommando-Form hätte den Test still blind
+   gemacht. Die Closure-Form ist die sichere
 8. **Die Einzelbefunde** aus Abschnitt 5 -- der inhaltlich interessante Teil;
    der Anteil der elf durchgegangenen Repos daran ist erledigt
 9. **Die verbliebenen `need-check-nil` in `lua/`** -- die sind echt: ein
