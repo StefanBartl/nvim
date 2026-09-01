@@ -9,6 +9,15 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [mdview.nvim -- 44 auf 0, und ein `assert`, das seinen Wert verschluckt hat](#mdviewnvim-44-auf-0-und-ein-assert-das-seinen-wert-verschluckt-hat)
+      - [Der Prozess-Zustand war dreimal beschrieben, zweimal falsch](#der-prozess-zustand-war-dreimal-beschrieben-zweimal-falsch)
+      - [Alle zehn `need-check-nil` waren zwei ungeprüfte libuv-Aufrufe](#alle-zehn-need-check-nil-waren-zwei-ungeprfte-libuv-aufrufe)
+      - [Wieder zwei verirrte Doc-Bloecke](#wieder-zwei-verirrte-doc-bloecke)
+      - [Drei Signaturen, die ihre eigene Funktion falsch beschrieben](#drei-signaturen-die-ihre-eigene-funktion-falsch-beschrieben)
+      - [Der Fund, der nicht in der Zaehlung steht](#der-fund-der-nicht-in-der-zaehlung-steht)
+      - [Der Rest](#der-rest)
+    - [Der Gesamtlauf auf der korrigierten Messgrundlage -- 1254 auf 570](#der-gesamtlauf-auf-der-korrigierten-messgrundlage-1254-auf-570)
+      - [sandbox.nvim: 40 -> 64 -> 39, und ein Stub, der ein Repo lahmlegte](#sandboxnvim-40-64-39-und-ein-stub-der-ein-repo-lahmlegte)
     - [spotlight.nvim -- 37 auf 0, nachdem die Messung erst einmal stimmte](#spotlightnvim-37-auf-0-nachdem-die-messung-erst-einmal-stimmte)
       - [Dreizehn Befunde waren eine Zeile in der `.luarc.json`](#dreizehn-befunde-waren-eine-zeile-in-der-luarcjson)
       - [Und 346 waren die Messung selbst](#und-346-waren-die-messung-selbst)
@@ -134,6 +143,228 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### mdview.nvim -- 44 auf 0, und ein `assert`, das seinen Wert verschluckt hat
+
+*(war: Diagnostics-Report Abschnitt 0, "mdview.nvim vertikal")*
+
+**44 -> 0**, in zwei Laeufen bestaetigt. Commit `53e02c9`, 88 Tests gruen,
+`stylua --check` sauber.
+
+Der erste Griff war wieder die `.luarc.json`: sie fuehrte
+`"workspace.library": ["$VIMRUNTIME"]` -- ohne `/lua`, ohne luv, ohne die
+Plugin-Typen -- und ersetzte damit die Injektion. mdview `require`t lib.nvim an
+46 Stellen. Das kostete hier allerdings nur zwei Befunde, nicht dreizehn wie
+bei spotlight; die Zeile ist ein Handgriff, kein Cluster.
+
+---
+
+#### Der Prozess-Zustand war dreimal beschrieben, zweimal falsch
+
+`state.lua` haelt den laufenden Relay-Prozess. Sein Typ stand an drei Stellen:
+
+| Ort | sagt | ist |
+|---|---|---|
+| `types/core.lua` `mdview.core.state.runner.proc` | `integer\|nil` | ein `SpawnedProcess` |
+| `types/init.lua` `mdview.runner` | `proc table\|nil`, `handle userdata\|nil` | von nirgends referenziert |
+| `types/adapter.lua` `SpawnedProcess` | richtig -- bis auf `handle userdata` | |
+
+`runner.lua:187` legt dort `{ handle, pid, stdout, stderr, cwd }` ab, und
+`state.lua` liest `proc.handle` wieder heraus. Der Kommentar daneben sagt es
+sogar ausdruecklich ("the handle lives in `M.runner.proc`, see M.set_proc") --
+die Annotation eine Datei weiter sagte etwas anderes.
+
+`mdview.runner` ist geloescht: eine dritte Beschreibung desselben Zustands,
+die niemand referenziert, ist keine Dokumentation, sondern eine Falle.
+
+Und `SpawnedProcess.handle` trug `userdata`. Das ist Cluster D in klein:
+`userdata` hat keine Methoden, also fand `proc.handle:is_closing()` nichts.
+Jetzt `uv.uv_process_t` und `uv.uv_pipe_t` -- **mit** dem `uv.`-Praefix, das
+lib.nvim seit Cluster D verwendet; ohne Praefix meldet LuaLS
+`undefined-doc-name`, was der erste Anlauf prompt gezeigt hat.
+
+---
+
+#### Alle zehn `need-check-nil` waren zwei ungeprüfte libuv-Aufrufe
+
+```lua
+local stdout = uv.new_pipe(false)
+local stderr = uv.new_pipe(false)
+```
+
+Beide sind `uv_pipe_t|nil`, und `start_server` benutzt sie danach an sechs
+Stellen -- `pcall(stdout.close, stdout)`, `stdout:read_start(...)`,
+`stderr:read_start(...)`. Ohne Guard wird aus einer erschoepften Handle-Tabelle
+ein "index a nil value" statt des sauberen `nil`-Returns, den dieselbe Funktion
+fuer jeden anderen Fehlerfall liefert. Der Guard folgt jetzt derselben
+Konvention wie die Pruefungen darunter: loggen, `nil` zurueckgeben, den
+Aufrufer melden lassen.
+
+Dazu zwei `uv.new_timer()` ohne Guard, in `inbound_poll` und `live_push`.
+Beide Male ist die Antwort dieselbe wie in spotlight: das Feature ist die
+Annehmlichkeit, der Callback der Vertrag.
+
+---
+
+#### Wieder zwei verirrte Doc-Bloecke
+
+Das **vierte** Repo mit diesem Muster nach documentation, pdfport und
+spotlight.
+
+In `inbound_poll.lua` klebten `---@param key` und `---@param href` an
+`is_absolute(p)`, die keinen der beiden Parameter hat -- `handle_nav(key,
+href)` steht vierzig Zeilen tiefer und fuehrt sie selbst. Ersatzlos weg.
+
+In `standalone.lua` stand die ganze Prosa zu `supports_watch` ueber der
+Cache-Tabelle `watch_support_cache`, mitsamt `---@param bin string` und
+`---@return boolean`. Das `@return` stammt aus der Zeit vor dem Umbau auf
+`vim.system()` -- der Text daneben beschreibt den Umbau ("It used to run
+through vim.fn.system()"), waehrend die Annotation den alten Rueckgabewert
+weiterfuehrte. Die Funktion antwortet laengst per Callback.
+
+---
+
+#### Drei Signaturen, die ihre eigene Funktion falsch beschrieben
+
+```lua
+---@param path string
+---@return string|nil
+function M.path(path)
+  if not path then
+    return nil
+  end
+```
+
+`normalize.path` und `normalize.path_for_url` deklarierten beide `path string`
+und pruefen in der Zeile darunter auf genau das Gegenteil. Derselbe Fall wie
+`sets.save` in spotlight und `harness.contains` -- inzwischen ein eigenes
+kleines Muster: **eine Signatur, die den Guard direkt unter ihr nicht kennt.**
+
+Dazu `parse_start_args`, das `file, cwd, port` zurueckgibt und zwei davon
+annotiert hatte.
+
+---
+
+#### Der Fund, der nicht in der Zaehlung steht
+
+`TESTS/nvim/harness.lua` ersetzt das **globale** `assert` durch eine Tabelle
+mit luassert-aehnlicher Oberflaeche:
+
+```lua
+__call = function(_, cond, msg)
+  if not cond then
+    error(msg or "assert failed", 2)
+  end
+end,
+```
+
+Kein `return`. Lua's eigenes `assert` gibt seine Argumente zurueck -- deshalb
+schreibt man ueberhaupt `local x = assert(f(), "…")`. Hier band dasselbe
+Muster still `nil`.
+
+Aufgefallen ist es, weil genau diese Schreibweise der Fix fuer dreizehn
+`param-type-mismatch` war: die Specs binden ihren Fixture-Key mit
+`normalize.path(...)`, das `string|nil` liefert. Nach dem `assert` fielen
+16 Tests um -- nicht wegen der Aenderung, sondern weil der Harness das
+`assert` unbrauchbar machte.
+
+Zwei Dinge daran sind ueber diesen Durchgang hinaus interessant. Erstens
+ersetzt der Harness das *globale* `assert`, also sieht auch der Code unter Test
+diese Version -- ein `assert(x, ...)` im Produktivcode, dessen Rueckgabewert
+gebraucht wird, waere waehrend der Tests still nil geworden. Zweitens: die
+Nachbildung gibt jetzt **alle** Argumente zurueck, wie das Original, und genau
+das hat vier weitere Tests gekippt --
+`vim.json.decode(assert(json, "…"))` expandiert dann zu
+`decode(json, "…")`, und `decode`s zweites Argument ist ein Options-Table. Die
+Bindung steht deshalb auf einer eigenen Zeile. Das ist kein Sonderfall dieses
+Harness, sondern gilt fuer Lua's `assert` genauso.
+
+---
+
+#### Der Rest
+
+`assert.is._true(true)` in `TESTS/lua/smoke_spec.lua` -> `assert.is_true`.
+`_true` ist luasserts maskierte Schreibweise fuer das reservierte Wort und
+zur Laufzeit dieselbe Assertion; das Typ-Meta in lib.nvim kennt nur die
+geläufige Form (siehe Offen-Punkt „luasserts Assertionen aufweiten").
+
+Ein `pcall(vim.cmd, ...)` aus Cluster E in `usrcmds/diagnose.lua`. Vier
+Test-Doubles (`ws.send_content`, `ws.send_markdown`, `ws.send_scroll`,
+`vim.fn.jobstart`) unterdrueckt. Und `experimental.any_file` -- ein bewusst
+weitergefuehrter Alias, dessen Feld beim Umzug ans Top-Level aus der Klasse
+fiel -- ist als deprecated wieder deklariert, statt den Zugriff zu
+unterdruecken.
+
+---
+
+### Der Gesamtlauf auf der korrigierten Messgrundlage -- 1254 auf 570
+
+*(Folge des spotlight-Durchgangs; kein eigener Roadmap-Punkt)*
+
+Nach der Werkzeug-Korrektur (`dump_library.lua` traegt `<plugin>/lua` statt
+der Repo-Wurzel) einmal ueber alle 33 Workspaces, gegen den Lauf vom
+2026-09-01 gestellt.
+
+**1254 -> 570.** Davon sind **93 gearbeitet** (spotlight 49, mdview 44); die
+uebrigen **591 waren Phantome**, die das Werkzeug selbst erzeugt hatte.
+
+| Repo | 01.09. | 02.09. | was das war |
+|---|---:|---:|---|
+| filetree.nvim | 161 | **6** | stand in der Tabelle auf 0 -- fortgeschrieben, nicht gemessen |
+| lsp.nvim | 172 | 35 | die Tabelle sagte 35; der Rohlauf sagte 172 |
+| runtime-analysis.nvim | 109 | **4** | dito, Tabelle 0 |
+| gopath / open / pdfport | 67 / 48 / 61 | **0** | dito |
+| fileops / emojis / sessions | 35 / 13 / 6 | **0** | dito |
+| sandbox.nvim | 40 | 64 | **schlechter** -- siehe unten |
+| **Summe** | **1254** | **570** | |
+
+Der Befund dahinter ist unangenehm und gehoert festgehalten: **die
+Stand-Tabelle im Report war seit dem 01.09. fortgeschrieben, der Rohlauf
+darunter sagte etwas anderes.** Elf Repos standen dort auf Null, waehrend
+`base0901` fuer sie zusammen 500 Befunde fuehrte -- allesamt Phantome aus den
+fremden `TESTS/`-Verzeichnissen, die als Library mitliefen. Die Durchgaenge
+selbst waren richtig (jeder hat sein Repo einzeln vor und nach gemessen und
+auf 0 gebracht); nur der Gesamtstand daneben war es nicht.
+
+Ab hier ist die Tabelle in Abschnitt 0 wieder gemessen.
+
+---
+
+#### sandbox.nvim: 40 -> 64 -> 39, und ein Stub, der ein Repo lahmlegte
+
+Das einzige Repo, das der Lauf als *worse* meldete. 24 neue
+`redundant-parameter`, alle in dieser Form:
+
+```
+TESTS/minimal_init.lua:22  This function expects a maximum of 0 argument(s)
+                           but instead it is receiving 1.
+```
+
+Die Zeile ist `vim.cmd("runtime plugin/plenary.vim")`. Die Ursache steht in
+einer ganz anderen Datei:
+
+```lua
+-- exec_workdir_spec.lua, before_each
+vim.cmd = function() end
+```
+
+Ein Test-Double, das den Split und den Terminal-Modus des Adapters wegnimmt --
+beides nicht Gegenstand des Tests, und als Absicht auch kommentiert. **LuaLS
+traegt die Signatur eines solchen Stubs aber in den ganzen Workspace.** Eine
+nullary `vim.cmd` liess damit alle 24 echten `vim.cmd("…")`-Aufrufe des Repos
+melden, in `lua/` wie in `TESTS/`. `function(...)` genuegt.
+
+Warum erst jetzt: solange fremde Repo-Wurzeln in der Library lagen, gewann
+irgendeine andere `vim.cmd`-Definition. Der Befund ist aelter als die
+Korrektur, die ihn sichtbar gemacht hat. Commit `94193cd`, 12 Tests der
+beruehrten Datei gruen -- **39**, also unter dem Ausgangswert.
+
+Das ist die dritte Ausgabe desselben Themas an einem Tag: ein Stub oder eine
+Signatur, die enger ist als das, was sie ersetzt, und die dann anderswo Schaden
+anrichtet -- nach `harness.contains` in spotlight und dem `assert` in mdviews
+Harness.
 
 ---
 
