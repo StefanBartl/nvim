@@ -8,7 +8,12 @@ Basis: Survey vom 2026-07-29 über `lua/plugins/*.lua` (~60 externe Specs, davon
 26 mit aktiven Bindings — reine Dependencies/Type-Stubs/deaktivierte Specs ohne
 eigene Bindings sind ausgeschlossen).
 
-## Erledigt (26 / 26) — komplett
+Nachtrag 2026-09-01: `blink.cmp` stand im Survey noch als „deaktiviert" in der
+Ausschlussliste. Seit dem Default-Wechsel in `lsp.nvim` (2026-08-24) ist es die
+aktive Completion-Engine und hat eigene `[custom]`-Keys — daher 27 statt 26,
+siehe [Keymaps/Blink.md](Keymaps/Blink.md).
+
+## Erledigt (27 / 27) — komplett
 
 - [x] `ThePrimeagen/harpoon` — bereits vor dieser Initiative dokumentiert
 - [x] `nvim-telescope/telescope.nvim` + `nvim-telescope/telescope-file-browser.nvim`
@@ -33,6 +38,7 @@ eigene Bindings sind ausgeschlossen).
 - [x] `nvim-neotest/neotest`
 - [x] `chrisbra/unicode.vim`
 - [x] `FabianWirth/search.nvim`
+- [x] `saghen/blink.cmp` — nachgezogen 2026-09-01, siehe Nachtrag oben
 
 ## Findings aus der Doku-Initiative — Status
 
@@ -76,11 +82,13 @@ auskommentiert, oder schlicht ohne `keys`/`vim.keymap.set`/Autocmd/Usercmd):
 `structlog.nvim`, `git-conflict.nvim`, `vim-matchup`, `nvim-lsp-file-operations`,
 `nvim-puppeteer`, `vim-table-mode`, `vim-startuptime`,
 `mini.ai`, `mini.icons`, `mini.nvim`, `lazydev.nvim`, `zen-mode.nvim`,
-`autolist.nvim` (deaktiviert), `nvim-cmp`, `csharp.nvim` (deaktiviert),
+`autolist.nvim` (deaktiviert), `nvim-cmp` (nicht installiert; die schlafende
+Keymap dafür steht in [Keymaps/Blink.md](Keymaps/Blink.md)),
+`csharp.nvim` (deaktiviert),
 `markdown-preview.nvim`, `mkdir.nvim`, `resty.nvim`,
 `nvim-tree.lua` (nicht installiert), `nvim-web-devicons`,
 `treesitter-context`, `treesitter-textobjects`, `lspsaga.nvim`, `lensline.nvim`,
-`nvim-notify`, `blink.cmp` (deaktiviert), `triptych.nvim` (nicht installiert),
+`nvim-notify`, `triptych.nvim` (nicht installiert),
 `vim-rhubarb`, `vim-wakatime` (deaktiviert), `targets.vim`, `mason.nvim`,
 `nvim-ts-autotag`, `telescope-fzf-native.nvim`, `telescope-github.nvim` (ungenutzt),
 `plenary.nvim`.
