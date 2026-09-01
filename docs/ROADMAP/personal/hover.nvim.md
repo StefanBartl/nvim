@@ -152,7 +152,7 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 | --- | --- | --- |
 | **hover.nvim** (neu) | gepusht, `main` | `feat: hover.nvim -- the path/link preview, extracted from lib.nvim` |
 | **markdown.nvim** | gepusht, `main` | `bd53428` + `634121f` |
-| **nvim-config** | siehe unten | noch zu committen |
+| **nvim-config** | gepusht, `main` | `97051225` |
 | **lib.nvim** | **unberührt** | — |
 
 ### markdown.nvim
@@ -230,11 +230,18 @@ Die Config läuft heute auf `auto`. Wenn es weiter nervt, ist der Griff
 `:Hover mode manual` plus ein `keymaps.show`-Key — und wenn *das* sich als das
 Richtige erweist, gehört es in die Spec statt in eine Sitzung.
 
-### 4. `REL-19`: auf POSIX prüfen
+### 4. `REL-19`: POSIX — erledigt
 
-Alles hier ist auf Windows gelaufen. Der Code ist cross-plattform geschrieben
-(vom Vorgänger übernommen), aber CI ist der erste POSIX-Lauf — nach dem ersten
-Push mal reinschauen.
+CI ist auf Ubuntu grün (Run `33550871954`): Specs, stylua und luacheck alle
+drei. Der erste Lauf scheiterte an etwas anderem — `scripts/test.sh` war aus
+einem Windows-Checkout heraus als `100644` committet, also „Permission
+denied" statt Testlauf. `git update-index --chmod=+x` ist von dieser Seite der
+einzige Weg; **daran denken bei jedem neuen `scripts/*.sh` in diesem
+Ökosystem.**
+
+Was damit *nicht* geprüft ist: die Teile, die ein Terminal brauchen — das
+Zeichnen von Bildern, die PDF-Rasterisierung, die LibreOffice-Konvertierung.
+Die laufen in keiner CI und sind weiterhin nur auf dieser Maschine belegt.
 
 ---
 
