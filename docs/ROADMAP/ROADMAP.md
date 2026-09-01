@@ -24,7 +24,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     11:40       |    45% / 60%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     17 20       |    74% / 56%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     17 20       |    95% / 58%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     14:10       |    87% / 47%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
@@ -42,14 +42,6 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 ---
 
 ## Misc
-
-- [ ] http links in markdown links bzw als freitiext: lib.nvim hover -> macht es sin, dort wirklich ie websiten zu previewwne? cool wäre es schon... vor allem, wenn man error codes 500 oder so sehen könnte, dannusw...
-screenhot vom momentanen bei htrtp: ![http hover](./assets/ROADMAP-1788258986.png)
-
-[google](http:\\www.google-com)  -> hover wie im screenshot
-http:\\www.google.com -> moemntan kein hover
-
-Hier brauchen wir ein sinnvlkles konzept. ich tendiere dazu, dieses spezifische feature opt-in zui machen, also verfügabr, aber wenn es hover soll, dann zuerst :Lib hover web on/off/toggle oder s ähkichh, denn website links gibt es sicherlich immer viele in dev docs, daher soll es nich tüberfrachtet sein. oder?
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
 

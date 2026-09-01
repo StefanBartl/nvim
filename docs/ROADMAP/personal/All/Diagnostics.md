@@ -122,34 +122,30 @@ Praktisch heißt das:
 
 ### Gerade in Arbeit
 
-*Nichts.* Am 2026-09-02 sind **mdview.nvim** (44 -> 0) und **spotlight.nvim**
-(37 -> 0) fertig geworden, dazu eine Korrektur am Messwerkzeug, die den
-Gesamtstand von 1254 auf 570 gebracht hat -- **591 davon waren Phantome**,
-nur 93 gearbeitet. Elf der 32 Workspaces im Umfang stehen auf Null.
+*Nichts.* **sandbox.nvim steht auf Null** (39 -> 0, 2026-09-02), damit
+zwölf der 32 Workspaces im Umfang.
 
 ---
 
 ### Vorschlag nächster Schritt
 
-**sandbox.nvim vertikal** (39). Nach der zurückgestellten nvim-Config das
-größte Repo, und die Verteilung ist bereits aufgeschlüsselt -- die 24
-`redundant-parameter`, die es am 02.09. kurzzeitig auf 64 gebracht hatten,
-sind schon weg (ein `vim.cmd`-Stub ohne Parameter, siehe
-[`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md)):
+**images.nvim vertikal** (37). Nach der zurückgestellten nvim-Config das
+größte Repo. `param-type-mismatch` 14 und `duplicate-set-field` 10 tragen
+zwei Drittel -- und der zweite Posten ist hier interessanter als die Zahl:
+`duplicate-set-field` steht über alle Repos auf 70 und damit an zweiter
+Stelle der Gesamtverteilung. images ist mit 10 die drittgrößte Häufung, also
+der Ort, an dem sich zeigt, ob das ein vertikaler oder ein horizontaler
+Posten ist.
 
-| Posten | Anzahl | was es ist |
-|---|---:|---|
-| `undefined-doc-param` | 10 | Annotationen, die keinen Parameter dieses Namens finden -- in jedem Durchgang bisher ein verirrter oder veralteter Doc-Block |
-| `need-check-nil` | 7 | die echten in `lua/`: ein Optional wird ungeprüft weitergereicht |
-| `return-type-mismatch` | 6 | |
-| `param-type-mismatch` | 5 | |
-| `undefined-field` | 5 | |
-| `duplicate-set-field` | 3 | Test-Doubles |
+**Zwei Dinge, die die letzten fünf Durchgänge gelehrt haben** und die den
+Einstieg abkürzen:
 
-**Ein Fund liegt schon vor dem Scan.** sandbox' `.luarc.json` führt
-`"runtime.path": [… , "tests/?.lua"]`, das Verzeichnis heißt aber `TESTS/`.
-Auf Windows fällt das nicht auf, auf Arch/Ubuntu schon -- dort löst
-`require` in den Specs dann nicht auf. Erster Handgriff im Durchgang.
+- **Zuerst nach verirrten Doc-Blöcken suchen.** Fünf Repos in Folge hatten
+  welche, und sie kosten je fünf bis acht Befunde aus einer Ursache.
+  `undefined-doc-param` und `duplicate-doc-param` sind ihre Signatur.
+- **Dann die `.luarc.json` lesen.** Bei spotlight steckten dreizehn Befunde
+  in `workspace.library`, bei sandbox zeigte `runtime.path` auf ein
+  Verzeichnis, das es nur auf Windows gibt.
 
 **Danach die nvim-Config selbst** (120) -- das größte Einzelvorkommen. Es
 ist weiterhin bewusst nicht der nächste Schritt: `nvim-config` ist im Scan
@@ -159,7 +155,6 @@ geklärt haben, gegen welchen Baum gemessen wird -- siehe „Nicht von Claude
 entschieden" unten.
 
 ---
-
 ### Erledigt
 
 | # | Punkt | Ergebnis |
@@ -186,6 +181,7 @@ entschieden" unten.
 | S | **spotlight.nvim** -- vertikal | **37 -> 0**, in zwei Läufen bestätigt. Dreizehn Befunde steckten in `workspace.library`, sieben in einem Doc-Block, der vierzig Zeilen zu weit oben stand, zwei in Signaturen, die ihre eigene Funktion falsch beschrieben. Der Scan meldete zwischendurch 386 -- eine Gegenprobe im laufenden Server hat 346 davon als Werkzeug-Artefakt entlarvt. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | M | **mdview.nvim** -- vertikal | **44 -> 0**, in zwei Läufen bestätigt. Der Prozess-Zustand war dreimal beschrieben und zweimal falsch; alle zehn `need-check-nil` waren zwei ungeprüfte libuv-Aufrufe; wieder zwei verirrte Doc-Blöcke. Dazu ein Fund neben der Zählung: der Test-Harness ersetzt das globale `assert` durch eine Fassung, die ihren Wert nicht zurückgibt. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | G | **Gesamtlauf auf der korrigierten Messgrundlage** | **1254 -> 570**, davon nur 93 gearbeitet. Elf Repos standen in der Tabelle auf Null, während der Rohlauf für sie zusammen 500 führte -- Phantome aus den fremden `TESTS/`-Verzeichnissen. Die Tabelle unten ist wieder gemessen. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
+| SB | **sandbox.nvim** -- vertikal | **39 -> 0**, in zwei Läufen bestätigt. Fünf Ports fanden ihre eigenen Parameter nicht (`_on_line` gegen `@param on_line`), fünf verirrte Doc-Blöcke, `WslEngine` deklarierte vier von neun Methoden. Dazu ein echter Bug, den die Typen gefunden haben: eine verschachtelte Tastenliste in `list_actions`. Details: [`Diagnostics_FINISHED.md`](./Diagnostics_FINISHED.md) |
 | 6 | **stylua** | alle 4 abweichenden Dateien formatiert, mdview auf `Spaces`/`2` umgestellt |
 | 7 | **Claude-Worktree in open.nvim** | entfernt, `.claude/` dort gitignored |
 | 9 | **`lib.nvim.ui.list`** | gebaut, 20 Aufrufstellen in 12 Repos umgestellt |
@@ -202,7 +198,6 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | Repo | gesamt | die zwei größten Regeln darin |
 |---|---:|---|
 | nvim-config | 120 | `param-type-mismatch` 38, `need-check-nil` 17 |
-| sandbox.nvim | 39 | `undefined-doc-param` 10, `need-check-nil` 7 |
 | images.nvim | 37 | `param-type-mismatch` 14, `duplicate-set-field` 10 |
 | lsp.nvim | 35 | `param-type-mismatch` 12, `assign-type-mismatch` 7 |
 | language.nvim | 34 | `param-type-mismatch` 12, `need-check-nil` 7 |
@@ -214,11 +209,11 @@ alles; ältere Zahlen sind mit ihr nicht vergleichbar.
 | markdown.nvim | 30 | `param-type-mismatch` 16, `duplicate-set-field` 6 |
 | insights.nvim | 29 | `param-type-mismatch` 6, `missing-return-value` 6 |
 | *(sieben Repos unter 15)* | 49 | `recommender` 12, `reposcope` 9, `color_my_ascii` 8, `debugging` 8, `dap` 6, `filetree` 6, `cmdlog`/`migrate`/`runtime-analysis` je 4 |
-| *(elf Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, gopath, lib, mdview, open, pdfport, sessions, spotlight |
-| **Summe (alle 32 im Umfang)** | **545** | |
+| *(zwölf Repos auf Null)* | **0** | buffer-ctx, documentation, emojis, fileops, gopath, lib, mdview, open, pdfport, **sandbox**, sessions, spotlight |
+| **Summe (alle 32 im Umfang)** | **506** | |
 
-Die Summe ist die 570 des Laufs minus die 25, die der `vim.cmd`-Stub in
-sandbox danach noch gekostet hat.
+Die Summe ist die 570 des Laufs minus die 64, die sandbox darin noch trug
+und die inzwischen auf 0 stehen.
 
 **Die Verteilung hat sich verschoben.** `param-type-mismatch` bleibt die
 größte Regel (178), aber `duplicate-set-field` steht jetzt auf **70** und
@@ -235,10 +230,15 @@ Reihenfolge wie in Abschnitt 8, dazu die Nachträge aus der B-Runde und dem
 Messgrundlagen-Durchgang. **Alle Zahlen aus dem gemessenen Gesamtlauf vom
 02.09.**, sandbox danach um den `vim.cmd`-Stub bereinigt. Kurz:
 
-1. **sandbox.nvim vertikal** (39) -- vorgeschlagener nächster Schritt,
-   siehe oben; `undefined-doc-param` 10, `need-check-nil` 7, und als erster
-   Handgriff das `tests/?.lua` in seiner `.luarc.json`, das auf Linux ins
-   Leere zeigt
+1. **images.nvim vertikal** (37) -- vorgeschlagener nächster Schritt,
+   siehe oben; `param-type-mismatch` 14, `duplicate-set-field` 10
+1c. **Neun rote Tests in sandbox.nvim** -- `init_spec` 4,
+   `project_config_spec` 4, `run_argv_spec` 1. Bestand, nicht aus dem
+   Durchgang (gegengeprüft auf `94193cd`). **Und der Runner merkt es
+   nicht:** `PlenaryBustedDirectory` hat headless unter Windows 2 von 13
+   Spec-Dateien abgearbeitet und sich sauber beendet -- dieselbe Falle wie
+   in Offen-Punkt 13, hier aber im Umfang. Der Runner ist das größere der
+   beiden Probleme
 1b. **`duplicate-set-field` steht auf 70** und damit an zweiter Stelle der
    Gesamtverteilung -- fast durchweg Test-Doubles über typisierte
    `vim.*`-Oberfläche. Häufungen: `cascade` 14, `diff` 11, `images` 10,

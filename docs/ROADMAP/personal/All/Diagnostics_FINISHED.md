@@ -9,6 +9,14 @@ alles, was noch offen ist.
 ## Table of content
 
   - [2026-09-01](#2026-09-01)
+    - [sandbox.nvim -- 39 auf 0, und Ports, die ihre eigenen Parameter nicht fanden](#sandboxnvim-39-auf-0-und-ports-die-ihre-eigenen-parameter-nicht-fanden)
+      - [Ein `runtime.path`, der auf ein Verzeichnis zeigt, das es nicht gibt](#ein-runtimepath-der-auf-ein-verzeichnis-zeigt-das-es-nicht-gibt)
+      - [Fuenf Ports, die ihre eigenen Parameter nicht fanden](#fuenf-ports-die-ihre-eigenen-parameter-nicht-fanden)
+      - [Fuenf verirrte Doc-Bloecke -- das fuenfte Repo](#fuenf-verirrte-doc-bloecke-das-fuenfte-repo)
+      - [Eine Klasse, die halb so viel deklariert, wie der Port kann](#eine-klasse-die-halb-so-viel-deklariert-wie-der-port-kann)
+      - [Die Completion-Quellen reichten `nil` weiter](#die-completion-quellen-reichten-nil-weiter)
+      - [Ein Bug, den die Typen gefunden haben](#ein-bug-den-die-typen-gefunden-haben)
+      - [Nachtrag: neun rote Tests, und ein Runner, der es nicht merkt](#nachtrag-neun-rote-tests-und-ein-runner-der-es-nicht-merkt)
     - [mdview.nvim -- 44 auf 0, und ein `assert`, das seinen Wert verschluckt hat](#mdviewnvim-44-auf-0-und-ein-assert-das-seinen-wert-verschluckt-hat)
       - [Der Prozess-Zustand war dreimal beschrieben, zweimal falsch](#der-prozess-zustand-war-dreimal-beschrieben-zweimal-falsch)
       - [Alle zehn `need-check-nil` waren zwei ungeprüfte libuv-Aufrufe](#alle-zehn-need-check-nil-waren-zwei-ungeprfte-libuv-aufrufe)
@@ -143,6 +151,163 @@ alles, was noch offen ist.
 ---
 
 ## 2026-09-01
+
+---
+
+### sandbox.nvim -- 39 auf 0, und Ports, die ihre eigenen Parameter nicht fanden
+
+*(war: Diagnostics-Report Abschnitt 0, "sandbox.nvim vertikal")*
+
+**39 -> 0**, in zwei Laeufen bestaetigt. Commit `9bc3d12`, `stylua --check`
+sauber. Zu den Tests siehe unten -- sie sind der eigentliche Nachtrag dieses
+Durchgangs.
+
+---
+
+#### Ein `runtime.path`, der auf ein Verzeichnis zeigt, das es nicht gibt
+
+```json
+"runtime.path": ["lua/?.lua", "lua/?/init.lua", "tests/?.lua"]
+```
+
+Das Verzeichnis heisst `TESTS/`; `git ls-files` fuehrt 16 Dateien darunter und
+keine einzige unter `tests/`. Auf Windows ist das folgenlos, weil das
+Dateisystem die Schreibweise ignoriert -- auf Arch/Ubuntu loest `require` in
+den Specs damit nicht auf. Der Fund kostet keinen Befund und stand trotzdem am
+Anfang des Durchgangs, weil er sonst nur auf der anderen Maschine auffaellt.
+
+---
+
+#### Fuenf Ports, die ihre eigenen Parameter nicht fanden
+
+```lua
+--- @param on_line fun(line: string)
+--- @param on_exit? fun(code: integer|nil)
+follow_logs = function(id, _on_line, _on_exit)
+  error(id .. ": follow_logs not implemented.")
+end,
+```
+
+`core/ports/container_engine.lua` ist die Schnittstellendefinition: lauter
+Stubs, die `error()` werfen, damit ein Adapter merkt, was er nicht
+implementiert hat. Der Unterstrich sollte "hier ungenutzt" sagen -- und liess
+dabei jede Annotation daneben ins Leere greifen. Fuenfmal
+`undefined-doc-param`, in `follow_logs`, `pull_image`, `push_image` und
+`login_registry`.
+
+Die Port-Datei *ist* die Doku dieser Schnittstelle. Ihre Parameter tragen
+jetzt die Namen, die sie dokumentiert.
+
+---
+
+#### Fuenf verirrte Doc-Bloecke -- das fuenfte Repo
+
+```lua
+--- @param images table[]
+local notify = require("sandbox.notify")
+local list_actions = require("sandbox.ui.list_actions")
+return function(images)
+```
+
+In allen vier `*_list_view*`-Dateien steht der `@param` **vor** den
+`require`-Zeilen und haengt sich damit an `local notify = …` statt an die
+Funktion drei Zeilen tiefer. In `list_view.lua` war es sogar eine Dublette --
+die richtige Annotation stand bereits ueber `return function(containers, all)`.
+
+Nach documentation, pdfport, spotlight und mdview ist das der fuenfte
+Durchgang mit demselben Muster. Es lohnt sich, danach zu suchen, bevor man die
+Einzelbefunde liest: `undefined-doc-param` und `duplicate-doc-param` sind
+seine Signatur.
+
+---
+
+#### Eine Klasse, die halb so viel deklariert, wie der Port kann
+
+`WslEngine` in `lua/@types/wsl.lua` fuehrte vier Felder --
+`list_distros`, `start_distro`, `stop_distro`, `exec_in_distro`. Der Port
+`core/ports/wsl_engine.lua` implementiert neun. Die fuenf fehlenden
+(`set_default_distro`, `set_version_distro`, `export_distro`, `import_distro`,
+`shutdown_all`) werden von je einem Use Case aufgerufen -- das waren die fuenf
+`undefined-field`. Nachgetragen, mit den Signaturen aus dem Port.
+
+---
+
+#### Die Completion-Quellen reichten `nil` weiter
+
+Fuenfmal dieselbe Form:
+
+```lua
+local names = cached_names("containers", function()
+  local core = require("sandbox")
+  return require("…list_containers")(core.get_engine())
+end, …)
+```
+
+`cached_names` will ein `fun(): table[]`. `get_engine()` ist aber `table|nil`,
+und der Use Case gibt `table[]|nil, string|nil` zurueck. Vier
+`param-type-mismatch` und sechs `return-type-mismatch` aus einer Form.
+
+Fuer eine Completion-Quelle bedeuten beide Faelle dasselbe -- keine
+Kandidaten --, und das steht jetzt auch so da: Engine pruefen, Ergebnis auf
+`{}` normalisieren.
+
+---
+
+#### Ein Bug, den die Typen gefunden haben
+
+```lua
+local list = type(existing.default) == "table" and existing.default or { existing.default }
+list[#list + 1] = k.lhs
+```
+
+`actions_from` fasst Eintraege mit gleichem `desc` zu **einer** Aktion mit
+mehreren Standardtasten zusammen -- „jede Liste bindet `<CR>` und `i` auf
+inspect, das ist eine Sache, die ein Nutzer verschieben will, nicht zwei". Nur
+ist `lhs` selbst `string|string[]`: hat einer der Eintraege bereits mehrere
+Tasten, landete das ganze Array **als ein Element** in der Liste statt sie zu
+erweitern.
+
+Der Typ-Befund lautete `assign-type-mismatch`; der Fehler dahinter ist eine
+verschachtelte Tastenliste, die niemand so gemeint hat.
+
+**Zweimal dabei gelernt, was LuaLS nicht einengt:**
+
+* `local x = type(v) == "table" and v or { v }` -- der `and`/`or`-Ausdruck
+  bleibt `string|table`. Erst ein `if` verengt.
+* Ein Guard auf einem **Feld** (`type(k.lhs) == "table"`, dann `ipairs(k.lhs)`)
+  verengt nur den geprueften Ausdruck; die zweite Lesung ist eine neue. Das ist
+  dasselbe Muster, das in documentation.nvim die Haelfte des Durchgangs
+  ausmachte -- an eine Lokale binden, dann pruefen.
+
+---
+
+#### Der Rest
+
+Ein `uv.new_timer()` ohne Guard in `list_actions.lua` -- **heute der dritte**
+nach spotlight und mdview. `nvim_buf_add_highlight` -> `vim.hl.range`, seit
+dem Erstscan in Abschnitt 5 gelistet. `command_tail`s `nil` in die Signatur
+geschrieben, weil „kein Kommando" die Antwort ist, auf die die Aufrufer
+reagieren. Und die beiden `inspect_container`-Adapter, deren async-Pfad
+`return` ohne Wert macht.
+
+---
+
+#### Nachtrag: neun rote Tests, und ein Runner, der es nicht merkt
+
+Der erste Testlauf meldete **17 bestanden, 0 fehlgeschlagen** und war eine
+Falschmeldung: `PlenaryBustedDirectory` hat headless unter Windows **2 von 13**
+Spec-Dateien abgearbeitet und sich dann sauber beendet. Genau die Falle, die
+im Report unter Offen-Punkt 13 fuer `neotree-fs-refactor` steht -- nur liegt
+sandbox im Umfang.
+
+Einzeln gefahren (`PlenaryBustedFile` pro Datei): **86 bestanden, 9
+fehlgeschlagen** -- `init_spec` 4, `project_config_spec` 4, `run_argv_spec` 1.
+
+Gegengeprueft in einem Worktree auf `94193cd`, also dem Stand vor diesem
+Durchgang: **dieselben neun, gleiche Namen, gleiche Zahlen.** Es ist Bestand.
+Als eigener Punkt im Report notiert, zusammen mit dem Runner -- ein Lauf, der
+elf Dateien ueberspringt und Erfolg meldet, ist das groessere Problem von
+beiden.
 
 ---
 
