@@ -22,8 +22,8 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:30       |    69% / 56%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     11:40       |    45% / 60%     |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    75% / 64%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     19:40       |    83% / 68%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     17 20       |    95% / 58%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     14:10       |    87% / 47%     |
 
@@ -42,6 +42,12 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 ---
 
 ## Misc
+
+- [ ] lib.nvim hover
+  - [ ] Mitlerweiele poppt oft ein hover auf -> checken, was opt-in sein sollte
+  - [ ] Zahl sich ein eigenes Repo mittlerweile aus dafür?
+
+- [ ] Wenn man  mit `C-w C-w` oder `C-h` in einen filetre springt, soll es dorthin springen, wo die file ist, also mitr dme cursor auf die filetree node. momentan macht es dass nicht zuverlässig.
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
 

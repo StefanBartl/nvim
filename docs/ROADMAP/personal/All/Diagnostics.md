@@ -46,6 +46,8 @@ In C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md: l
 
 comitte und push/pull immer auf main wenn fertig, damit ich es gleich verwenden kann. wenn fertig,  die erledigt task nach C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics_FINISHED.md und den nächsten empfohlenen schritt analysieren - dab ei brauchst du aber nicht begrpnden, welche task du nicht machen würdest.
 
+Halte durchaus informationen in Diagnostics_FINISHED fest, die ich später in `## letze-task-nachdem-alles-fertig-ist` ineressant sein kann.
+
 ---
 
 ## Letze Task, nachdem alles fertig ist
@@ -178,6 +180,7 @@ ausgezahlt haben:
   `deprecated`, das der Health-Check noch nicht kennt (diff.nvim).
 
 ---
+
 ### Erledigt
 
 | # | Punkt | Ergebnis |
