@@ -46,8 +46,16 @@ Repo statt nur hier. Sie hat drei Dinge gefunden, alle im
 einen sandbox.nvim-Auftrag (Abschnitt 4), eine vierte Wiederholung der
 Doku-Drift-Klasse, und dass **die LuaLS-Messung flackert**.
 
-**Damit brauchen beide verbliebenen Messungen dich** (Demo-GIF, Office-Pfad
-von Hand) — siehe [Abschnitt 3](#3-messungen-die-offen-sind).
+**Stand der Handprüfungen am 2026-09-02:** Office-Pfad und Bild-Resize sind
+bestätigt. Übrig sind drei Reste, alle klein und alle brauchen dich: der
+Office-**Sweep** (eine Datei zurückdatieren), die **Texthälfte** des Resize
+(`:Hover resize` über einer Textdatei), und das **Demo-GIF** — siehe
+[Abschnitt 3](#3-messungen-die-offen-sind).
+
+**Abschnitt 2 ist damit leer.** 2.1 bis 2.3 sind gebaut, 2.4 liegt in
+gopath.nvim, 2.5 ist gemessen und die Antwort war nein. Was als Nächstes zu
+bauen wäre, steht jetzt in [Abschnitt 4](#4-auftrge-die-woanders-liegen) —
+zwei der Aufträge dort sind gemessen, klein, und ihr Nutzen entsteht hier.
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -399,7 +407,8 @@ dann entscheiden.
 | Was | Warum offen |
 | --- | --- |
 | ~~**LuaLS**~~ | **zu**, aber mit einem neuen Vorbehalt. Fünfmal auf dem Haupt-Checkout gemessen: `post-b` nach `3e12c9f`, `post-c` nach `4e1760f`, `post-d` nach `aca73fa`, `post-e`/`post-e2` nach `b7c4c45`, `post-f` nach `e62f5e9`. **`post-e` meldete 1 Befund auf Quelltext, den der Commit nicht angefasst hatte; `post-e2` auf identischem Baum meldete 0.** Der Scan ist also nicht deterministisch — ein einzelner `+1` ist kein Beweis, ein zweiter Lauf kostet eine Minute und entscheidet. Die Stelle ist mit `e62f5e9` festgenagelt. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
-| **Office-Pfad von Hand** | `docs/MANUAL-EVIDENCE.md`: seit der Cache-Änderung `bba2064` nicht wieder durchgespielt. Keine CI kann das. |
+| ~~**Office-Pfad von Hand**~~ | **zu, bis auf die Kehrwoche.** Am 2026-09-02 durchgespielt und am selben Tag ein zweites Mal bestätigt: Konvertierung, Badge, und der Cache, der die Sitzung überlebt (Neustart → kein zweiter LibreOffice-Start). Offen bleibt allein der **altersbasierte Sweep** (`office.cache_days`, Default 7) — eine Datei dort zurückdatieren und irgendein Office-Dokument hovern, mehr ist es nicht. |
+| **Resize von Hand** | **halb zu.** Die Bildhälfte ist am 2026-09-02 gesehen worden — das Bild folgt der Fläche, statt dass der Rahmen um ein stehendes Bild wächst. Offen ist die **Texthälfte**: `:Hover resize` über einer Textdatei, und *mehr Zeilen* im Float. Genau die Unterscheidung, für die umbenannt wurde, und die, bei der eine Geometrie-Zusicherung am wenigsten sagt. |
 | **Demo-GIF** | `REL-09`, der letzte offene 🟢 des Release-Gates. **Braucht dich** — ich kann nicht aufnehmen. |
 | ~~**`on_request` gegen einen laufenden Daemon**~~ | **zu.** Am 2026-09-02 gegen Docker Engine 29.5.3 gelaufen, jetzt als Sonde (`hover.nvim/scripts/onrequest_probe.lua`) statt ad hoc, mit der Zeile in `docs/MANUAL-EVIDENCE.md` statt nur im Handover. 566/558/294/0 ms, Engine-Aufrufe 2/2/1/0, auf dem automatischen Trigger jedes Mal still. Wieder fällig, wenn sich am `on_request`-Pfad etwas ändert — der Lauf kostet eine Minute. |
 
