@@ -2,9 +2,9 @@
 
 Fortsetzung von [TASKS-2026-09-02.md](../personal/All/FINISH/ERLEDIGT/TASKS-2026-09-02.md), dessen
 sieben Punkte alle zu sind. Hier stehen die vier Nacharbeiten, die der
-Driftreport übrig gelassen hatte. **Drei sind fertig, die vierte ist nur
-untersucht** — die Untersuchung steht unten, damit sie nicht nochmal gemacht
-werden muss.
+Driftreport übrig gelassen hatte. **Alle vier sind zu** — Punkt 4 seit dem
+Nachtrag am Ende dieser Datei, und er endete ohne Umzug: den vermuteten
+Konflikt gibt es nicht.
 
 ## Wo weiterarbeiten
 
@@ -34,7 +34,7 @@ Schalter. Nach einem `git pull` im Haupt-Checkout erübrigt sich das.
 | 1 | Die filetype-gebundenen lsp.nvim-Commands nachtragen | ✅ |
 | 2 | pickers.nvim: den Generator dokumentieren, `check` Familien beibringen | ✅ |
 | 3 | Ein Ort für die Commands der Config selbst (`:MyOpt*`, `:WKDOptions*`) | ✅ |
-| 4 | `<leader>th` ist mehrfach beansprucht | 🔶 nur untersucht, siehe unten |
+| 4 | `<leader>th` ist mehrfach beansprucht | ✅ — **die Annahme war falsch**, siehe unten |
 
 Wirkung der drei fertigen Punkte, gemessen am selben Lauf:
 
@@ -103,10 +103,11 @@ Live-Namen nichts findet.
 
 ---
 
-## 4 — `<leader>th` 🔶 offen, aber durchgemessen
+## 4 — `<leader>th` ✅ ein globaler Anspruch, kein Konflikt
 
 **Der Auftrag lautete ursprünglich: vierfach vergeben (NvChad, filetree.nvim,
-language.nvim, lsp.nvim). Nach der Prüfung sind es zwei.**
+language.nvim, lsp.nvim). Nach der Prüfung sind es zwei — und die beiden
+kollidieren nicht, sie verdecken einander.**
 
 | Anspruch | Befund |
 | --- | --- |
@@ -115,17 +116,71 @@ language.nvim, lsp.nvim). Nach der Prüfung sind es zwei.**
 | **filetree.nvim** — Trash-History | **Kein Konflikt.** `<leader>th` ist dort der Default des Config-Feldes `keymap_history`, registriert aus `attach.lua` mit `scope = "tree"` — buffer-lokal am Baum-Buffer, wie die beiden neo-tree-Keymaps der Config auch |
 | **language.nvim** — Thesaurus | **Kein Anspruch.** `config/DEFAULTS.lua:117` hat `keymap = false` mit dem Kommentar „opt-in"; die Taste wird per Default nicht gebunden. Der Kommentar in `thesaurus/init.lua:145` (`3<leader>th`) beschreibt nur, wie ein Count wirken *würde* |
 
-**Nächster Schritt:** klären, ob `wkdnvchad.mappings.setup({ all = true })`
-NvChads `<leader>th` tatsächlich setzt. Falls ja, ist es dieselbe Lage wie bei
-`<leader>tl` in Punkt 1 des Hauptblocks — eine der beiden Funktionen verliert
-je nach Ladereihenfolge ihre Taste, und die willkürlichere zieht um.
+### Die offene Frage, beantwortet (2026-09-02, nachmittags)
+
+**Nein.** `wkdnvchad.mappings.setup({ all = true })` setzt NvChads
+`<leader>th` nicht. Es ist ein anderes Modul und bindet ausschließlich
+`<Tab>`, `<S-Tab>`, `<leader>bc`, `<leader>tr`, `<leader>tl` und `<leader>tt`
+(`lua/wkdnvchad/mappings/init.lua`). NvChads eigenes `lua/nvchad/mappings.lua`,
+in dem der Theme-Picker steht, wird von dieser Config **nirgends** `require`d —
+nach einem vollen Start ist `package.loaded["nvchad.mappings"]` `false`. Der
+einzige weitere Treffer im Repo ist eine Legacy-Notiz unter
+`docs/NOTES/ExternPlugins/Legacy-Notes-Import/`.
+
+Damit endet der Auftrag, ohne dass etwas umzieht. Gemessen headless gegen den
+echten Config-Start:
+
+```
+global n-mode hits: 1
+  lhs=" th"  desc=LSP: Toggle inlay hints (global)
+    src=E:/repos/lsp.nvim/lua/lsp/bindings/actions.lua:192
+package.loaded['nvchad.mappings'] = false
+```
+
+Und im geöffneten Baum (`:Neotree show filesystem`, dann
+`nvim_buf_get_keymap`): ebenfalls genau ein Treffer,
+`filetree: show trash history`.
+
+**Was es stattdessen ist: Cross-Scope-Shadowing** — die Kategorie, die
+`Keymaps/Collisions.md` schon für `<leader>ps`, `gP` und `+`/`-` führt. Dort
+steht `<leader>th` jetzt als vierte Zeile, mit beiden widerlegten Ansprüchen
+daneben, damit diese Untersuchung kein drittes Mal gemacht wird.
+`Keymaps/lsp.nvim.md` und `Keymaps/filetree.nvim.md` verweisen darauf.
+
+**Ein Unterschied zu den drei bestehenden Zeilen, der benannt gehört:** deren
+Begründung — „im Baum gibt es keine Datei, auf die die globale Taste wirken
+könnte, also geht nichts verloren" — trägt hier nicht. lsp.nvims Toggle ist
+*global*, keine Aktion auf dem Knoten unter dem Cursor. Im Baum ist er also
+wirklich unerreichbar, nicht bloß gegenstandslos. Ausweg: Baum verlassen, oder
+`<leader>tH` fürs aktuelle Filetype.
+
+**Zwei Sackgassen, die eine Neuauflage sich sparen kann.** Beide sahen nach
+einem Fund aus und waren keiner:
+
+* filetrees `attach.lua` schreibt seine Keymaps mit `w.mappings[k] = v`
+  bedingungslos in neo-trees `window.mappings` — es sah so aus, als
+  überschriebe das die `noop`s der Config. Gemessen: tut es nicht.
+  `<leader>th` steht in *keiner* `window.mappings`; filetree bindet die Taste
+  über seinen tree-attach-Dispatcher buffer-lokal.
+* neo-trees `normalize_map_key("<leader>th")` liefert `"<leader>th"` zurück,
+  unverändert. Es gibt also keine zweite Schreibweise (`" th"`), unter der ein
+  Eintrag „versteckt" läge.
+
+**Nebenbefund, der nirgends stand:** die Config schaltet `<leader>th` in
+neo-trees beiden read-only-Quellen bewusst ab —
+`config/neotree/keymaps/diagnostics.lua:78` und `document_symbols.lua:75`
+mappen sie auf `noop`, zusammen mit den übrigen dateiverändernden Tasten. In
+einer Diagnoseliste gibt es nichts zu löschen. Steht jetzt in
+`Collisions.md`.
 
 **Freie `t`-Tasten** (aus Punkt 1 des Hauptblocks, damals gegen nvim-config,
 NvChad-Defaults und alle Repos unter `E:\repos` geprüft): `ta td ti tj tk tm
-tu ty tz` — `tb` ist seither an lsp.nvims Lightbulb vergeben.
+tu ty tz` — `tb` ist seither an lsp.nvims Lightbulb vergeben. Ein Gegencheck
+gegen die laufende Session bestätigt sie: global belegt sind unter `<leader>t`
+nur `tB tH tb tft th tl tq tr tt`.
 
-Wenn es umzieht, gehören mit: das Cheatsheet des betroffenen Repos, die
-`Keymaps/*.md` in der Config, und `Keymaps/Collisions.md`.
+Falls je etwas umziehen sollte, gehören mit: das Cheatsheet des betroffenen
+Repos, die `Keymaps/*.md` in der Config, und `Keymaps/Collisions.md`.
 
 ---
 
