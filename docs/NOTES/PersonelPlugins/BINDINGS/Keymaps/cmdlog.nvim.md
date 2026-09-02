@@ -36,12 +36,13 @@ Used by every picker except `favorites_picker`.
 | `<C-r>` | i | Closes + manually refreshes the picker |
 | `<C-x>` | i | Deletes the selected entry — or, when entries are marked, every marked one — from its underlying history (Neovim `:` history via `histdel()`, or the shell history file with a confirmation prompt). Only bound where the caller passes a `delete_fn` — not in `favorites_picker` (`<Tab>` already removes a favorite there) |
 | `<C-Space>` | i | Marks/unmarks the entry for a batch delete and moves down (`actions.toggle_selection` + `move_selection_worse`). Telescope's own multi-select key is `<Tab>`, which is `toggle_favorite` here, hence a separate key |
+| `<C-t>` | i | Prompts (`vim.ui.input`) for a tag and attaches it to the selected favorite via `core/tags.lua`, then refreshes the picker. Favorites picker only (`opts.tag = true`) — tags are stored per favorite, so a command that is not one has nothing to attach to |
 | `<C-s>` | i | Rotates to the next picker (nvim → shell → favorites → project → …), keeping the current prompt text. Implemented in `lua/cmdlog/ui/cycle.lua`, bound in `nvim`/`shell`/`favorites`/`project` pickers only. Telescope only. **Added 2026-08-09.** |
 | `<C-z>` | i | Undoes the most recent favorite toggle (single-level, session-local). Bound wherever `<Tab>` is (any picker with `toggle_favorite`). **Added 2026-08-09.** |
 | `<C-Up>` | i | Moves the selected favorite up one slot in the persisted order. Favorites picker only (`opts.reorder = true`). **Added 2026-08-09.** |
 | `<C-Down>` | i | Moves the selected favorite down one slot in the persisted order. Favorites picker only. **Added 2026-08-09.** |
 
-All eight are configurable/disableable via `setup({ mappings = { ... } })`
+Alle zehn sind konfigurierbar/abschaltbar über `setup({ mappings = { ... } })`
 **Batch delete (since 2026-08-24):** a batch asks once ("Delete N selected
 entries...") and then suppresses the per-command shell confirmation — five
 marked entries would otherwise raise five separate prompts. With nothing
@@ -56,37 +57,63 @@ callback never fired and the picker stayed open on a stale list;
 `attempt to call local 'on_done' (a nil value)`. Each picker now wraps its
 source in an adapter.
 
-(`select`/`toggle_favorite`/`refresh`/`delete`/`cycle_source`/
-`undo_favorite`/`move_favorite_up`/`move_favorite_down`, each
+(`select`/`toggle_favorite`/`refresh`/`delete`/`toggle_selection`/`tag`/
+`cycle_source`/`undo_favorite`/`move_favorite_up`/`move_favorite_down`, each
 `string|false`), see `docs/OPTIONS.md`. A legend of the active ones is
 generated from `config.options.mappings` and shown in the Telescope
 prompt title (`ui/picker_utils.lua`'s `build_legend()`).
 
-`lua/cmdlog/ui/favorites_picker.lua` has its own inline `attach_mappings`
-duplicating the `<CR>`/`<Tab>` behavior above, plus one addition (since
-2026-07-25): `<C-t>` prompts (`vim.ui.input`) for a tag and attaches it to
-the selected favorite via `core/tags.lua`, then refreshes the picker.
-Tags are stored separately from `favorites.json` and shown next to each
-favorite's entry. Not present in the shared `mappings.lua`, so only the
-favorites picker has it.
+`favorites_picker` hatte für `<C-t>` einmal ein eigenes, inline geschriebenes
+`attach_mappings` (seit `7fcb21c`, 2026-07-25). **Das stimmt seit `ed60f8f`
+nicht mehr:** der Picker ruft dasselbe geteilte Modul wie alle anderen und
+schaltet die Sonderfälle über Flags frei — `{ tag = true, reorder = true }`.
+`tag` steht damit in `DEFAULTS.mappings` wie jede andere Taste auch. Tags
+liegen getrennt von `favorites.json` und werden neben dem Eintrag angezeigt.
+
+Derselbe Merge hat also zwei Dinge auf einmal getan: die Telescope-Tasten ins
+geteilte Modul gezogen (gewollt, und hier nachgetragen) und den
+fzf-lua-`actions`-Block ersatzlos gelöscht (nicht gewollt, siehe unten).
 
 ## fzf-lua backend
 
 | lhs | picker(s) | action |
 | --- | --- | --- |
-| `default` (`<CR>`) | all except `favorites` | Executes the command directly (`vim.cmd(selected[1])`) — **differs from Telescope's insert-only `<CR>`** |
-| `ctrl-f` | `favorites` picker only | Toggles favorite, reopens the picker |
-| `ctrl-t` | `favorites` picker only | Prompts for a tag (`vim.ui.input`) and attaches it to the selected favorite (since 2026-07-25) |
+| `default` (`<CR>`) | all | Executes the command directly (`vim.cmd(selected[1])`) — **differs from Telescope's insert-only `<CR>`** |
 
-Under fzf-lua, only the dedicated `:Cmdlog favorites` picker gets a
-favorite-toggle/tag key — the other nine pickers (`all`, `all-unique`,
-`nvim`, `nvim-full`, `shell`, `shell-full`, `project`, `lua`, `stats`) get
-none. Known-error highlighting (`core/errors.lua`, since 2026-07-25) is
-Telescope-only for the same reason `ctrl-f`/`ctrl-t` are favorites-only:
-fzf-lua entries double as the value fed back into `actions`, so decorating
-them risks corrupting `vim.cmd(selected[1])`.
+**Das ist die ganze Tabelle.** Unter `picker = "fzf"` bindet cmdlog.nvim genau
+eine Aktion. Die Keys aus `config.options.mappings` gehen über
+`attach_mappings` an Telescope, und die fzf-lua-Hälfte von
+`ui/picker_utils.lua:164-179` reicht `attach_mappings` nicht weiter — sie setzt
+`prompt`, `previewer` und `actions`, und `opts.actions` übergibt kein einziger
+Picker. Kein Favoriten-Toggle, kein Tag, kein Delete, in keinem Picker.
+
+Known-error highlighting (`core/errors.lua`) ist aus verwandtem Grund
+Telescope-only: fzf-lua-Einträge sind zugleich der Wert, der an `actions`
+zurückgeht, dekorieren würde `vim.cmd(selected[1])` beschädigen.
+
+### Wie das hier auffiel (2026-09-02)
+
+Diese Tabelle führte bis heute `ctrl-f` (Favorit umschalten) und `ctrl-t`
+(Tag). Beides gab es einmal: `favorites_picker.lua` hatte einen eigenen
+`actions`-Block, `ctrl-f` seit `388ef16`, `ctrl-t` seit `7fcb21c`
+(2026-07-25). Der Merge **`ed60f8f` „Merge feature-notes into main"
+(2026-07-30)** hat den Block beim Auflösen mitgelöscht — die Commit-Message
+sagt „keep both wherever complementary", der Diff entfernt
+`actions = { ["ctrl-f"] = …, ["ctrl-t"] = … }` ersatzlos. Seither behaupteten
+drei Dokumente ein Feature, das der Code nicht mehr hat: dieses Cheatsheet,
+cmdlog.nvims `README.md` (Backend-Vergleichstabelle *und* die Shortcut-Liste)
+und implizit `docs/OPTIONS.md`. Alle drei sind nachgezogen; der Code bleibt
+wie er ist — die Entscheidung war „Doku auf die Realität ziehen", nicht
+„Feature wiederherstellen".
+
+Gefunden hat es `:Bindings check`: nach dem Quelltext-Fallback war `ctrl-f`
+der einzige von 52 `keymap-not-live`-Befunden, der übrig blieb. `ctrl-t` fiel
+dabei *nicht* auf — das Literal steht zufällig in
+`lua/config/fzf/init.lua` dieser Config, wo es `file_tabedit` bindet, und der
+Grep kann die beiden nicht unterscheiden. Der dokumentierte Preis der Achse,
+hier einmal in freier Wildbahn.
 
 ## Notes
 
-- A comment on `ui/mappings.lua:2` (`--- Handles <CR> to execute, <C-f> to toggle favorite, <C-r> to refresh`) is **stale/inaccurate**: actual bindings are `<CR>` (insert, not execute) and `<Tab>` (not `<C-f>`) for favorites — `<C-f>` only exists in the fzf-lua backend's actions table.
+- Ein Kommentar auf `ui/mappings.lua:2` (`--- Handles <CR> to execute, <C-f> to toggle favorite, <C-r> to refresh`) ist **stale/inaccurate**: die tatsächlichen Bindings sind `<CR>` (einfügen, nicht ausführen) und `<Tab>` (nicht `<C-f>`) für Favoriten. `<C-f>` existiert nirgends mehr — auch nicht im fzf-lua-Backend, siehe oben.
 - No conditional flags gate these beyond the `picker` config option — no "enable keymaps" toggle exists.
