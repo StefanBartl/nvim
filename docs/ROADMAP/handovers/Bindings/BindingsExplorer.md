@@ -77,14 +77,21 @@ existiert ja, nur nicht dort, wo das Cheatsheet es verortet.
 Der Zwischenspeicher (28 MiB über 30 Repos) wird am Ende des Laufs wieder
 freigegeben, nicht für den Rest der Session gehalten.
 
-### Zwei Nebenbefunde, nicht mitgefixt
+### Zwei Nebenbefunde, damals nicht mitgefixt — beide inzwischen zu (2026-09-02)
 
-1. **`records.lua`s `split_cells` zerlegt escapte Pipes.** Eine Tabellenzelle
-   mit `` `]\|` `` wird an dem escapten `|` getrennt; als „lhs" kommt `` `]\ ``
-   heraus. Vorbestehender Scraper-Defekt, betrifft auch `browse`, hier nur
-   erstmals sichtbar geworden (markdown.nvim, Zeile 39).
-2. **`lua/plugins/personal/init.lua` fehlt im Working Tree** (in HEAD
-   vorhanden, unstaged gelöscht). Damit schlägt `require("plugins.personal")`
-   fehl — die Default-Auflösung der neuen Achse meldet das korrekt als Grund,
-   aber die Config lädt in diesem Zustand überhaupt keine Personal-Plugins.
-   Nicht angefasst, weil parallele Sessions in diesem Repo arbeiten.
+1. ~~**`records.lua`s `split_cells` zerlegt escapte Pipes.**~~ **Behoben in
+   `472822d8`.** Eine Tabellenzelle mit `` `]\|` `` wurde an dem escapten `|`
+   getrennt; als „lhs" kam `` `]\ `` heraus — vorbestehender Scraper-Defekt,
+   der auch `browse` betraf und hier nur erstmals sichtbar wurde
+   (markdown.nvim, Zeile 39). `split_cells` trennt jetzt nur noch an
+   unescapten Pipes, der lhs liest sich als `]|`. Der Korpus enthält weiterhin
+   escapte Pipes (`Usercmds/bindings_explorer.md`, `Usercmds/buffer-ctx.md`),
+   und keine davon erzeugt noch einen Befund.
+2. ~~**`lua/plugins/personal/init.lua` fehlt im Working Tree**~~ **Erledigt.**
+   Die Datei war in HEAD vorhanden, aber unstaged gelöscht, womit
+   `require("plugins.personal")` fehlschlug — die Default-Auflösung der neuen
+   Achse meldete das korrekt als Grund, aber die Config lud in diesem Zustand
+   gar keine Personal-Plugins. Damals bewusst nicht angefasst, weil parallele
+   Sessions in diesem Repo arbeiteten; die haben es inzwischen selbst
+   aufgelöst. Die Datei ist getrackt und der Working Tree an dieser Stelle
+   sauber.
