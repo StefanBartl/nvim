@@ -7,10 +7,12 @@ Nachtrag weiter unten, und er endete ohne Umzug: den vermuteten Konflikt gibt
 es nicht.
 
 > **Ab „Block 2" (2026-09-02, nachmittags) geht es nicht mehr um diese vier.**
-> Der Anschlussauftrag lautete „korrigiere die 200 Befunde"; daraus ist ein
-> eigener Block geworden, der ganz unten steht. **Wer hier weiterarbeitet,
-> springt direkt zu [Block 2](#block-2--die-200-befunde-2026-09-02-nachmittags)
-> und dort zu „Was als Nächstes zu bauen ist".**
+> Der Anschlussauftrag lautete „korrigiere die 200 Befunde"; daraus sind zwei
+> weitere Blöcke geworden, die unten stehen. **Wer hier weiterarbeitet,
+> springt direkt zu
+> [Block 3](#block-3--der-repo-fallback-ist-gebaut-2026-09-02-abends) und dort
+> zu „Was danach immer noch offen ist".** Block 2s Auftrag („Repo-Fallback im
+> Default") ist gebaut, Block 3 ist der Bericht darüber.
 
 ## Wo weiterarbeiten
 
@@ -349,7 +351,12 @@ dokumentiert sich selbst als lazy).
 
 ---
 
-## Was als Nächstes zu bauen ist — **entschieden, nicht gebaut**
+## Was als Nächstes zu bauen ist — ✅ **gebaut, siehe [Block 3](#block-3--der-repo-fallback-ist-gebaut-2026-09-02-abends)**
+
+Der folgende Abschnitt ist der Stand *vor* der Umsetzung und bleibt stehen,
+weil die Messungen darin die Entscheidung begründen. Wo die Umsetzung von der
+Skizze abweicht, sagt es Block 3 — drei Punkte, einer davon hätte die
+opt-in-Achse stillschweigend zum Default gemacht.
 
 **Auftrag: Repo-Fallback im Default.** Findet der Live-Check eine
 dokumentierte Taste nicht, soll der Quelltext des Plugins gegriffen werden,
@@ -484,3 +491,127 @@ Alles in `lua/bindings/usrcmds/bindings_explorer/drift.lua`, in `M.check`:
    Für Messungen gegen Worktree-Doku `config.roots` umbiegen — oder vorher
    pushen und im Haupt-Checkout pullen.
 
+
+---
+
+# Block 3 — der Repo-Fallback ist gebaut (2026-09-02, abends)
+
+Der Auftrag aus Block 2 („Was als Nächstes zu bauen ist — **entschieden, nicht
+gebaut**") ist erledigt, und der eine Befund, der danach übrig blieb, ebenfalls.
+**`:Bindings check` meldet jetzt einen Befund statt 53, und der ist ein
+bekannter Nicht-Befund.**
+
+## Wo weiterarbeiten
+
+| | |
+| --- | --- |
+| Repo | nvim-config (`C:/Users/bartl/AppData/Local/nvim`) |
+| Branch | `claude/bindings-drift-followups-7946d4`, deckungsgleich mit `origin/main` |
+| Worktree | `.claude/worktrees/plugin-roadmap-review-3cb74b` |
+| Stand | alles committet, nach `origin/main` gepusht, Haupt-Checkout nachgezogen |
+| cmdlog.nvim | `E:/repos/cmdlog.nvim`, `main`, gepusht — `6fa8593` gehört zu diesem Block |
+
+## Was gebaut wurde
+
+| Commit | Was |
+| --- | --- |
+| `66ab7d15` | Quelltext-Fallback im Default (`drift.lua`, `report.lua`, beide Dokus) |
+| `51e52db1` | `Keymaps/cmdlog.nvim.md` — der eine übriggebliebene Befund, aufgeklärt |
+| cmdlog `6fa8593` | dessen `README.md`/`docs/BINDINGS.md`/`docs/OPTIONS.md` |
+
+### Die Zahlen, gemessen headless mit geladener `UIReady`-Phase
+
+| Route | `keymap-not-live` vorher | nachher | im Quelltext bestätigt |
+| --- | ---: | ---: | ---: |
+| `:Bindings check` | 52 | **0** | 51 |
+| `:Bindings check extern` | 309 | 84 | 225 |
+
+`:Bindings check` steht damit bei **1 Befund** — `:LibLogger`, das sich selbst
+als lazy registriert dokumentiert (Moduldoc Punkt 5, bestätigter Nicht-Befund).
+Alle anderen Achsen unverändert: `skipped` 22, `hidden` 54, und `check repo`
+liefert weiterhin genau seine 7 `keymap-not-in-repo`. Laufzeit warm 550 ms
+(vorher 149 ms), zweimal nacheinander gemessen — der erste Lauf nach einem
+`git pull` zeigt ~12 s und ist Plattencache, keine Regression.
+
+### Drei Umsetzungsdetails, die von der Skizze abweichen
+
+Die Skizze in Block 2 stimmt in der Sache, hat aber drei Dinge nicht gesehen:
+
+1. **`repo_dirs` immer aufzulösen genügt nicht — die Achse muss trotzdem
+   opt-in bleiben.** Der `elseif ours`-Zweig (ungeladene Plugins) hängt an
+   genau diesem `repo_dirs`; ihn mit aufzumachen hätte die opt-in-Achse
+   stillschweigend zum Default gemacht und 32 Checkouts pro Lauf indiziert.
+   Beide Zweige tragen jetzt ein explizites `want_repo`.
+2. **Ein Treffer muss wie `found_count` zählen** — das stand in der Skizze und
+   ist wichtiger, als es klingt: sonst kippt eine Tabelle, deren Tasten der
+   Fallback gerade bestätigt hat, in das Verdikt „not one key of this table
+   is live".
+3. **Die Abschnittsnotiz musste eine Funktion werden.** Ein Befund, bei dem
+   der Fallback nachsehen konnte, trägt eine stärkere Aussage als einer, bei
+   dem er es nicht konnte — `note` in `SECTIONS` darf jetzt `fun(matched)`
+   sein und formuliert entsprechend. Im `extern`-Scope antwortet ausschließlich
+   der `lua/`-Baum dieser Config (fremde Stämme haben keinen Checkout), deshalb
+   „any source that could be read" statt „im Quelltext des Plugins".
+
+Dazu, ohne die es unehrlich wäre: `repo_info` trägt `fallback` und
+`fallback_confirmed`, `describe` und `report.render` zeigen die Zahl. Sonst
+verschwinden zwischen zwei Läufen desselben Kommandos 51 Befunde, und das ist
+die Form eines Bugs, nicht die einer Verbesserung. `repo.reset()` läuft
+unbedingt am Ende, nicht mehr nur `if want_repo`.
+
+## Der eine echte Befund, aufgeklärt
+
+`Keymaps/cmdlog.nvim.md` dokumentierte für das fzf-lua-Backend `ctrl-f`
+(Favorit umschalten) und `ctrl-t` (Tag). **Beide gibt es nicht.**
+`ui/picker_utils.lua`s fzf-Zweig reicht `attach_mappings` nicht weiter und
+setzt nur `actions` — und `opts.actions` übergibt kein einziger Picker. Unter
+`picker = "fzf"` ist genau eine Aktion gebunden: `default`.
+
+Es gab beides einmal. Der Merge **`ed60f8f`** („Merge feature-notes into main",
+2026-07-30) hat den `actions`-Block ersatzlos gelöscht — in derselben
+Änderung, die die Telescope-Keys ins geteilte `ui/mappings.lua` gezogen hat,
+was gewollt war. Die Behauptung stand danach an drei Stellen: in diesem
+Cheatsheet, in cmdlog.nvims `README.md` (Backend-Vergleichstabelle *und*
+Shortcut-Liste) und implizit in `docs/OPTIONS.md`.
+
+**Entschieden wurde: Doku auf die Realität ziehen, Feature nicht
+wiederherstellen.** Beide Repos sind nachgezogen. Wer das je umdrehen will,
+findet den gelöschten Block in `git show 7fcb21c:lua/cmdlog/ui/favorites_picker.lua`.
+
+Zwei Nebenfunde aus derselben Durchsicht, beide mit korrigiert: cmdlog.nvims
+README führte `<C-e>`/`<C-g>` für Favorite-Notes, ein Feature, das `6dbcbef`
+entfernt hat; und dieses Cheatsheet behauptete für `<C-t>` ein eigenes inline
+`attach_mappings` in `favorites_picker`, das seit demselben Merge nicht mehr
+existiert.
+
+## Was das über die Achse sagt — der Preis, einmal in freier Wildbahn
+
+`ctrl-t` ist genauso tot wie `ctrl-f` und **fällt dem Check trotzdem nicht
+auf**: das Literal steht zufällig in `lua/config/fzf/init.lua` dieser Config,
+wo es `file_tabedit` bindet, und der Grep kann die beiden nicht auseinander
+halten. Genau der Falschunterdrücker, den `repo.lua`s Moduldoc vorab benannt
+hat („ein verpasster Fund ist billiger als ein falscher"). Steht jetzt im
+Cheatsheet als Beispiel, damit die Einschränkung nicht bloß behauptet ist.
+
+## Eine Sackgasse, die eine Neuauflage sich sparen kann
+
+Block 2 kündigte an, „die drei Options-Pfade in `Keymaps/insights.nvim.md` als
+Format-Defekt separat zu fixen" (`def_cfg.keymaps.jump` & Co. in der
+Key-Spalte). **Es gibt dort keinen Defekt.** `first_token` liest die Form
+`` `pfad` (`taste`) `` seit jeher richtig und nimmt die Klammer-Gruppe; die
+Zeilen werden geprüft und sind seit dem Fallback bestätigt. Die Messung in
+Block 2 kam von einem eigenen Dump, der `first_token` nicht benutzt hat.
+
+## Was danach immer noch offen ist
+
+Unverändert aus Block 2, nichts davon angefasst:
+
+* **54 fremde undokumentierte Commands** — durch die Scope-Achse aus dem
+  Default heraus, inhaltlich unentschieden: soll `ExternPlugins/Bindings` sie
+  je abdecken?
+* **`:Bindings check extern` meldet 154** (vorher 379, der Fallback hat 225
+  davon aufgelöst). Immer noch ein Korpus, der nie durchgesehen wurde — 84
+  `keymap-not-live`, 16 `usercmd-not-live`, 54 undokumentierte Commands. Keine
+  Regression, eine ungesichtete Achse.
+* **7 `keymap-not-in-repo`** — unverändert debugging.nvims berechnetes
+  `prefix .. "m"`, nur unter `:Bindings check repo` sichtbar.
