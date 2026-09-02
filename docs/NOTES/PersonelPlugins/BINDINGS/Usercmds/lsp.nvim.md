@@ -269,10 +269,17 @@ mit einer enum also gar nicht ausdruecken.
   Umbenennung am 2026-08-29, `deep` ist heute `capabilities`; er ist ein
   eigener Report geworden und kein Modus eines bestehenden. Neue Option
   `lspdoctor.probe_timeout` (5000 ms).
+- 2026-09-02: die vier alten Modusnamen sind weg (lsp.nvim `d6f0378`). Damit
+  faellt auch der Argtype `LSP_DOCTOR_MODE`: er existierte nur, weil
+  „akzeptiert" und „angeboten" auseinanderfielen, solange die Altnamen
+  galten. Beide Commands nehmen jetzt `lspdoctor.MODES` als `enum` — dieselbe
+  Tabelle, damit `:Lsp doctor` und `:LspDoctor` nicht auseinanderlaufen
+  koennen. `:LspDoctor deep` antwortet mit „expected one of
+  startup|resolve|buffer|capabilities|probe|all".
 - 2026-08-29 (4): `:LspDoctor`/`:Lsp doctor`-Modi umbenannt:
   `health`->`startup`, `debug`->`resolve`, `quick`->`buffer`,
-  `deep`->`capabilities`. Alte Namen bleiben gueltig, werden aber nicht mehr
-  angeboten.
+  `deep`->`capabilities`. Alte Namen blieben zunaechst gueltig, wurden aber
+  nicht mehr angeboten (bis 2026-09-02, siehe oben).
 - 2026-08-29 (3): Klammer-Kurzschreibweise (`:LspFormat{,On,Off,…}`) durch
   ausgeschriebene Namen ersetzt. `:Bindings check lsp.nvim` hatte
   `:LspWorkspaceDiagnostics` als "dokumentiert, nicht registriert" gemeldet —

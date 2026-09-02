@@ -270,23 +270,31 @@ for buffers that need them, and running `restart` in the recover scenario
 
 ---
 
-## 10. `:LspDoctor` — five modes
+## 10. `:LspDoctor` — six reports
 
 **Steps**
 
 ```vim
-:LspDoctor health
-:LspDoctor quick
-:LspDoctor debug
-:LspDoctor deep
+:LspDoctor startup
+:LspDoctor resolve
+:LspDoctor buffer
+:LspDoctor capabilities
+:LspDoctor probe
 :LspDoctor all
 ```
 
-**Expect**: each mode's own answer — `health` (= `:Lsp doctor` default):
-configured/running/executable; `quick`: a fast subset; `debug`: raw
-client/capability dump; `deep`: capability and provider-overlap detail (§1);
-`all`: everything combined. Confirm the five are visibly different in depth,
-not the same report five times.
+**Expect**: each report's own answer — `startup` (= `:Lsp doctor` default):
+configured/running/executable; `resolve`: where the filetype → server chain
+breaks; `buffer`: clients, diagnostic counts, provider conflicts, lists capped;
+`capabilities`: the same uncapped, plus root_dir/workspace and the full
+capability set (§1); `probe`: whether diagnostics actually come back — the only
+one that provokes, and the only one *not* in `all`; `all`: the four observing
+ones combined. Confirm they are visibly different, not the same report six
+times.
+
+The names were `health`, `quick`, `debug` and `deep` until 2026-08-29 and kept
+working unlisted until 2026-09-02 (lsp.nvim `d6f0378`); they are refused now,
+with the six valid names in the message.
 
 ---
 
