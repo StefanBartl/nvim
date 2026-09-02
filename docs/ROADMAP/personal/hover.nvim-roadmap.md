@@ -32,7 +32,8 @@ in [Abschnitt 4](#4-aufträge-die-woanders-liegen) steht.
 
 **Damit ist Abschnitt 2 leer.** Was offen bleibt, wartet auf etwas, das nicht
 hier liegt: [2.4](#24-gopath-ein-billiger-früh-ausstieg--fremdes-repo-größter-hebel-hier)
-auf gopath.nvim, zwei neue Aufträge auf documentation.nvim und sandbox.nvim.
+auf gopath.nvim, ein neuer Auftrag auf documentation.nvim. Der zweite neue,
+**sandbox.nvim, ist noch am selben Tag erledigt worden** (`deb45bc`).
 
 Die dritte der offenen Messungen — die einzige, die dich nicht braucht — ist
 seither gelaufen: der **`on_request`-Pfad gegen eine echte Engine**
@@ -373,18 +374,20 @@ dann entscheiden.
   `usercmd.composer`. Gemessen am 2026-09-02: eine Zeile gelöscht, beide Läufe
   melden „keine Drift". In der Sache dasselbe wie 2.1, eine Ebene höher.
 - **gopath.nvim** — siehe 2.4.
-- **sandbox.nvim** — `engine_utils.get_engine()` wählt die Engine nach reiner
-  PATH-Anwesenheit, in der Reihenfolge podman → docker → nerdctl, und fragt
-  **nie**, ob sie antworten kann. Auf dieser Maschine liegt `podman.exe` von
-  Podman Desktop auf dem PATH, aber die Linux-VM läuft nicht — also gewinnt
-  podman, jeder Ask lehnt nach ~370 ms still ab, und die laufende
-  Docker-Engine mit vier Images wird nie gefragt. Gemessen am 2026-09-02 mit
-  `hover.nvim/scripts/onrequest_probe.lua` ohne Argument; mit `docker`
-  antwortet derselbe Pfad in 294–566 ms. Dieselbe Form wie `836a15a`:
-  registriert, in allen Specs grün, auf der Maschine stumm. Ein
-  Erkennungs-Schritt, der einmal `list_images` versucht und beim Fehlschlag
-  weiterrückt, genügt. **Umgehung bis dahin:** `opts.engine = "docker"` in der
-  lazy-Spec, oder `:Sandbox engine set docker` je Sitzung.
+- ~~**sandbox.nvim**~~ — **erledigt am 2026-09-02** (sandbox.nvim `deb45bc`).
+  `engine_utils.get_engine()` wählte nach reiner PATH-Anwesenheit und fragte
+  nie, ob die Engine antworten kann; hier gewann podman mit gestoppter VM,
+  jeder Ask lehnte nach ~370 ms still ab, die laufende Docker-Engine wurde nie
+  gefragt. Jetzt nimmt die Erkennung die erste **antwortende** Engine —
+  `get_live_engine`, faul und pro Sitzung gemerkt, weil eine Lebendprüfung
+  ~385 ms kostet und beim Start nichts zu suchen hat. Eine *benannte* Engine
+  (`opts.engine`, `.sandboxrc`, `:Sandbox engine set`) wird nie geprüft: das
+  ist eine Anweisung, keine Vermutung. Verifiziert mit derselben Sonde, die
+  den Fehler fand — sie wählt jetzt docker und antwortet. Zwei Funde nebenbei:
+  `container_commands_buffer` las `config.options.engine` direkt und ignorierte
+  damit still beide Overrides, und der LuaLS-Scan des Repos stand auf 5 statt
+  0 (vier davon aus `3647a17`, nach dem „auf 0"-Commit hereingekommen und nie
+  gescannt). Alles behoben, Scan wieder 0.
 - **documentation.nvim** — `find_map` in `lua/documentation/hover.lua:54` steigt
   bis zu **24 Verzeichnisebenen** mit je einem `uv.fs_stat` nach
   `docs/map/module_map.json` auf, **ohne negativen Cache**: `_maps` merkt sich

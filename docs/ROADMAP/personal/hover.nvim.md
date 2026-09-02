@@ -26,7 +26,7 @@
     - [Und eine vierte Klasse: eine Funktion, zwei Fragen](#und-eine-vierte-klasse-eine-funktion-zwei-fragen)
   - [Offene Punkte](#offene-punkte)
     - [1. Demo-GIF — **braucht dich**](#1-demo-gif-braucht-dich)
-    - [2. Sechs Aufträge liegen in fremden Repos](#2-sechs-auftrge-liegen-in-fremden-repos)
+    - [2. Fünf Aufträge liegen in fremden Repos](#2-fnf-auftrge-liegen-in-fremden-repos)
     - [3. Beobachten, ob `manual` der bessere Default ist](#3-beobachten-ob-manual-der-bessere-default-ist)
     - [4. Was keine CI prüft](#4-was-keine-ci-prft)
   - [Aufträge aus der Sitzung vom 2026-09-02](#auftrge-aus-der-sitzung-vom-2026-09-02)
@@ -471,14 +471,15 @@ Gefühl — und zu zeigen wäre gerade, wie wenig es beim Lesen stört.
 
 ---
 
-### 2. Sechs Aufträge liegen in fremden Repos
+### 2. Fünf Aufträge liegen in fremden Repos
 
 Die Liste steht **einmal**, in
 [Roadmap Abschnitt 4](./hover.nvim-roadmap.md#4-aufträge-die-woanders-liegen):
-gopath.nvim, documentation.nvim, sandbox.nvim, language.nvim,
-bindings-explorer.nvim, insights.nvim. Jeder Eintrag dort nennt Adressat,
-Messung und Umgehung. Hier steht nur, was dort nicht hingehört, weil es die
-*Begründung* ist und nicht der Auftrag:
+gopath.nvim, documentation.nvim, language.nvim, bindings-explorer.nvim,
+insights.nvim. Jeder Eintrag dort nennt Adressat, Messung und Umgehung. Ein
+sechster, **sandbox.nvim, ist am 2026-09-02 erledigt** (`deb45bc`) und steht
+dort durchgestrichen mit dem Befund. Hier steht nur, was dort nicht hingehört,
+weil es die *Begründung* ist und nicht der Auftrag:
 
 **Warum `on_request` bei language.nvim nicht dasselbe ist wie bei sandbox.**
 Bei sandbox entscheidet eine billige Textprüfung *vor* jedem Prozessstart, ob
