@@ -142,15 +142,27 @@ the lib.nvim repo, `:help lib.nvim-deps`.
 
 ## Module control commands (separate from the `:Lib` verb)
 
-Two modules ship their own flat control command. Neither goes through the
+Some modules ship their own flat control command. None goes through the
 composer — they predate/sit outside the verb and are about *runtime state of
-that module*, not about lib.nvim as a plugin.
+that module*, not about lib.nvim as a plugin. (No count in that sentence on
+purpose: the previous one said "two" while the table listed three.)
 
 | Command | Registered when | Effect |
 | --- | --- | --- |
 | `:LibLogger [show\|on\|off\|level <l>\|dump\|clear\|tags]` | automatically, on the first `logger.new()` | Flip logging on/off, change level, inspect/dump/clear the ring buffer |
 | `:RATelemetry [report\|start\|stop\|reset\|coverage\|export\|open]` | **only** after `require("runtime-analysis.telemetry.command").setup()` | Read/steer call-counting across every live telemetry instance |
 | `:KitPreview` | `require("lib.nvim.ui.kit")` dev-tool | Live theme playground (see the Keymaps cheatsheet for its in-buffer keys) |
+| `:LibAutocmdDocs` / `:LibAutocmdDocsCheck` | `autocmd.docs.create_usercmd()` | Write the registered autocmds into `bindings/autocmd` as markdown / report whether that folder still matches what is registered, naming the stale files |
+| `:LibUsercmdDocs` / `:LibUsercmdDocsCheck` | `usercmd.docs.create_usercmd()` | Same for user commands, into `bindings/usercmd` |
+
+**Why the `…Check` halves are easy to miss.** Each pair comes out of a single
+`create_usercmd(name)` call that registers `base` and `base .. "Check"` — so
+grepping a source tree for the literal string `LibAutocmdDocsCheck` finds
+nothing, and a cheatsheet written from such a grep lists only the base. Same
+shape as the `:MyOpt*` / `:WKDOptions*` registrar in
+[nvim-config.md](./nvim-config.md#options): document the generator, not one of
+its results. `name` is the caller's, so a repo that renames the base renames
+its `Check` twin with it.
 
 ### `:RATelemetry`
 

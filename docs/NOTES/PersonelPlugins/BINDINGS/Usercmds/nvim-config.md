@@ -23,6 +23,8 @@ All of these go through `lib.nvim.bindings.usercmd`'s `create`.
 | `:WinVertical` | — | `:wincmd H` — move the current window into a vertical split, left side. Same action as `<leader>wl` |
 | `:WinHorizontal` | — | `:wincmd K` — move it into a horizontal split, top. Same action as `<leader>wh` |
 
+| `:ToggleInlineDiff` | — | Invert gitsigns' `word_diff` and `linehl` and preview the current hunk inline. Same action as `<leader>di` (`bindings/mappings/git.lua`) |
+
 Only two of the five `window_orientation` moves have a command; the right,
 bottom and rotate variants are keymap-only.
 
@@ -34,6 +36,7 @@ bottom and rotate variants are keymap-only.
 | `:BindingsPath` | — | Copy `<stdpath('config')>/docs/NOTES/BINDINGS` to the `+` register. Also on `<leader>BI`. Marked `TEMP` in the source |
 | `:CwdHere` | — | `:lcd` to the directory of the current buffer's file. Window-local, not global. Known gap: an open `neo-tree`/`nvim-tree`/`netrw` does not pick the new cwd up until it is reloaded |
 | `:PowershellProfile` | — | Resolve `$PROFILE` through `powershell -NoProfile` and `:edit` it. Errors out when `powershell` is not executable |
+| `:ContextOpen` / `:ContextOpen list` | — | Open whatever is under the cursor, through one verb instead of five plugin-specific keys: gopath, markdown, images, pdfport and open.nvim are tried in turn. `list` shows every openable target in the buffer and jumps to the one you pick |
 
 `:BindingsPath` points at `docs/NOTES/BINDINGS`, which is not where this
 corpus lives — the two trees are `docs/NOTES/PersonelPlugins/BINDINGS` and
