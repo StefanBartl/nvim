@@ -13,15 +13,15 @@ Buffer-local, installed on `FileType` for markdown/mdx/md (see
 
 | id | mode | lhs | action | feature/flag |
 | --- | --- | --- | --- | --- |
-| toggle_bold | v | `**` | Wrap selection in `**bold**` | `map_double_asterisk` (default on) |
+| toggle_bold | v | `**` | Wrap selection in `**bold**`. Charwise (`v`) wraps the selection; linewise (`V`) wraps the whole line, one span per selected line (since 2026-09-02 — `V` used to read the cursor and anchor *columns* anyway, so it opened `**` mid-word and closed it a few chars later). Indent, `>`, list bullet/number, task checkbox, ATX hashes and trailing hard-break spaces stay outside the wrap; a range that is already bold throughout unwraps | `map_double_asterisk` (default on) |
 | wrap_link_n | n | `<leader>[` | Wrap word under cursor in a link (auto-detects URL/path→target vs plain text→label) | `map_wrap_link` (default on) |
 | wrap_link_v | v | `<leader>[` | Same, visual | `map_wrap_link` |
-| prev_heading | n,v,x | `<C-p>` | Goto previous heading | — |
+| prev_heading | n,v,x | `<C-p>` | Goto previous heading **or fenced-code delimiter** (opening ```lang / closing ```) — since 2026-09-02, config `nav.fences` (default true) | — |
 | prev_heading_bracket | n | `[[` | Same, alt key | — |
-| next_heading | n,v,x | `<C-f>` | Goto next heading | — |
+| next_heading | n,v,x | `<C-f>` | Goto next heading **or fenced-code delimiter** — same `nav.fences` gate | — |
 | next_heading_bracket | n | `]]` | Same, alt key | — |
-| prev_heading_level | n | `<leader><C-p>` | Goto prev heading at count-level | — |
-| next_heading_level | n | `<leader><C-f>` | Goto next heading at count-level | — |
+| prev_heading_level | n | `<leader><C-p>` | Goto prev heading at count-level. Headings-only even when `nav.fences` is on — this is what keeps heading-only navigation available | — |
+| next_heading_level | n | `<leader><C-f>` | Goto next heading at count-level. Headings-only, same as above | — |
 | fold_toggle_zf | n | `zf` | Toggle fold under cursor (overrides built-in `zf`) | `use_zf_override` (default on) |
 | fold_toggle | n | `<localleader>f` | Same, non-overriding | — |
 | unfold_all | n | `zu` | Unfold all, center | — |
@@ -131,3 +131,5 @@ no-op if which-key is absent. Handles v3 (`wk.add`) and v2
 - 2026-08-08: added the "TableView popup keys" section — `<M-Right>`/`<M-Left>`/`<M-Up>`/`<M-Down>` interactive column-resize and row-insert/remove keymaps, buffer-local to the floating preview.
 - 2026-08-08 (2): row keys reported not working; changed from insert/remove-row to move-row (swap with the row above/below) per feedback, added `<M-h>`/`<M-j>`/`<M-k>`/`<M-l>` as terminal-safe alternates, and added `:w` write-back (row order only, to the source buffer or file — see the popup-keys section above for the `acwrite`/`BufWriteCmd` mechanism).
 - 2026-08-31: added `<leader>mtf` (id `table_format`) — the argument-less `:Markdown table format` on a key, plus the `<leader>mt` which-key group it needs.
+- 2026-09-02: `<C-p>`/`<C-f>` (and `[[`/`]]`) now stop on fenced-code delimiter lines as well as headings — a code block is the other landmark of a markdown file and used to need a separate motion. New config `nav = { fences = true }`; set `false` for the old behaviour. The `<leader>` by-level hops stay headings-only on purpose. Implemented in markdown.nvim (`core/headings.lua`), NOT in color_my_ascii.nvim — that plugin owns `%`-style fence-pair jumping (`ColorMyAscii fence-jump`), whose keymaps are opt-in and would collide with these keys in markdown buffers.
+- 2026-09-02 (2): `**` in linewise visual (`V`) bolds the whole line instead of a column range guessed from the cursor and anchor. Multi-line `V` wraps each line; a fully-bold range unwraps; block markers (indent, `>`, `-`/`1.`, `[ ]`, `##`) and trailing hard-break spaces stay outside the wrap.
