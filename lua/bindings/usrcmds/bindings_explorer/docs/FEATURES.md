@@ -129,11 +129,15 @@ Begründung):
   jeder Vim-Default) und wäre Rauschen ohne Ende.
 - **Nur Personal, nicht Extern** — Extern dokumentiert fremde
   Plugin-Defaults, die dieses Config selbst meist nie registriert.
-- **Buffer-lokale/filetype-gescopte Keymaps sind ein bekannter
-  False-Positive-Fall**: `nvim_get_keymap` sieht nur globale Maps. UI-Plugins
+- **Buffer-lokale/filetype-gescopte Keymaps waren der dominante
+  False-Positive-Fall** — `nvim_get_keymap` sieht nur globale Maps, UI-Plugins
   mit eigenem Buffer (filetree.nvim, github_stats.nvim, pickers.nvim, ...)
-  tauchen deshalb systematisch als "missing" auf, obwohl sie korrekt
-  registriert sind — manuell verifizieren, nicht blind vertrauen.
+  tauchten deshalb systematisch als "missing" auf. Drei Dinge adressieren das,
+  keines davon durch Wegwerfen von Befunden: `live_keymaps` liest auch
+  `nvim_buf_get_keymap` jedes offenen Buffers, der Quelltext-Fallback (unten)
+  greift die Taste im Plugin selbst ab, und was danach übrig bleibt, bekommt
+  das Pro-Tabellen-Verdikt „not verifiable from here" statt N Einzelbefunde.
+  Gemessen ist von 52 solchen Meldungen genau eine übrig.
 - **Noch nicht geladene Plugins werden übersprungen, nicht fälschlich als
   fehlend gemeldet**: `records.lua`s `plugin`-Feld wird gegen
   `require("lazy.core.config").plugins[name]._.loaded` geprüft; ein
@@ -260,6 +264,56 @@ verortet.
 :Bindings check repo root=C:/repos
 :Bindings check images.nvim root=C:/repos
 ```
+
+### Der Quelltext-Fallback (immer an, seit 2026-09-02)
+
+Die vierte Achse oben beantwortet Plugins, die **nie geladen** wurden. Der
+Fallback beantwortet eine andere Frage für die, die **geladen sind**: findet
+die Live-Achse eine dokumentierte Taste nicht, wird sie im Quelltext gesucht,
+bevor daraus ein `keymap-not-live` wird. Dasselbe Werkzeug (`repo.mentions`),
+dieselben zwei Bäume, umgekehrter Default — und der Grund für den umgekehrten
+Default ist die Messung:
+
+| Route | `keymap-not-live` vorher | nachher | im Quelltext bestätigt |
+| --- | ---: | ---: | ---: |
+| `:Bindings check` | 52 | **1** | 51 |
+| `:Bindings check extern` | 309 | **84** | 225 |
+
+Der eine Übriggebliebene ist `cmdlog.nvim`s `ctrl-f`: fzf-lua-Notation in
+einem Korpus, der sonst Vim-Notation schreibt. **Ein Befund aus 52.** Ein
+Abschnitt, der zu 98 % Rauschen ist, wird nicht gelesen; die Achse, die das
+Rauschen entfernt, kostet einen Grep.
+
+- **Warum nicht einfach die buffer-lokalen Tasten ausgliedern?** Weil
+  `keymap-not-live` kein Kollisionscheck ist: dort wird nie buffer-lokal gegen
+  global verglichen, die Achse fragt nur „das Cheatsheet dokumentiert diese
+  Taste — gibt es sie?". Eine ganze Klasse von dieser Frage auszunehmen hieße,
+  dass eine buffer-lokale Taste, die ihr Plugin inzwischen umbenannt oder
+  entfernt hat, nie wieder auffiele — still. Der Fallback behält die Frage und
+  beantwortet sie besser.
+- **`extern` profitiert aus einem anderen Grund.** Ein fremder
+  Cheatsheet-Stamm hat keinen lokalen Checkout; der Baum, der dort antwortet,
+  ist der `lua/`-Baum dieser Config — genau die Stelle, an der diese Tasten
+  gebunden werden (lazy-`keys`-Spec). Deshalb sagt die Abschnittsnotiz „any
+  source that could be read" und nicht „im Quelltext des Plugins".
+- **Kosten, gemessen.** `check` läuft ~150 ms ohne, ~550 ms mit Fallback. Ein
+  Checkout wird erst indiziert, wenn eine Taste dieses Plugins tatsächlich
+  gefehlt hat — in einem Default-Lauf eine Handvoll, nicht alle 32. Die
+  Entscheidung dafür ist mit dieser Zahl vor Augen gefallen.
+- **Der bekannte Preis: ein Grep unterdrückt gelegentlich auch zu Recht
+  Gemeldetes.** `cmdlog.nvim`s `ctrl-t` steht in keiner Zeile von cmdlog.nvim
+  — wohl aber in `lua/config/fzf/init.lua` dieser Config, wo dasselbe Literal
+  eine völlig andere Aktion bindet. Das genügt, der Fund entfällt. Dieselbe
+  Haltung wie in `repo.lua`s Moduldoc: ein verpasster Fund ist billiger als
+  ein falscher.
+- **Die Zahl steht im Bericht.** Laufkopf-Zeile „Quelltext-Fallback" und ein
+  eigener Abschnitt „Confirmed by source instead of by the session (n)" —
+  sonst verschwinden zwischen zwei Läufen desselben Kommandos 51 Befunde, und
+  das ist die Form eines Bugs, nicht die einer Verbesserung.
+- **Zwei getrennte Schalter, absichtlich.** `repo` indiziert den Checkout
+  jedes ungeladenen Plugins, zweiunddreißig Bäume, ob mit ihnen etwas nicht
+  stimmt oder nicht. Der Fallback fasst einen Checkout erst an, nachdem eine
+  Taste gefehlt hat. Deshalb ist das eine opt-in und das andere nicht.
 
 ## Bericht als Datei (`:Bindings report`)
 

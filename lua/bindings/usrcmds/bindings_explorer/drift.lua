@@ -128,6 +128,47 @@
 --- otherwise would understate the report in one direction while
 --- overstating the axis in the other. One with no resolvable checkout, or
 --- whose checkout yielded no readable source, stays skipped.
+---
+--- **The repo fallback (always on, 2026-09-02).** The axis above answers for
+--- plugins that never loaded. The fallback answers a different question, for
+--- plugins that DID load: a documented key the live probe cannot find is
+--- looked for in the plugin's own source before it becomes a finding. Same
+--- primitive, same two trees, opposite default — and the reason for the
+--- opposite default is the measurement:
+---
+--- ```
+--- :Bindings check          keymap-not-live   52 -> 1     (51 confirmed by source)
+--- :Bindings check extern   keymap-not-live  309 -> 84   (225 confirmed by source)
+--- ```
+---
+--- The one survivor in the default scope is `cmdlog.nvim`'s `ctrl-f`, which
+--- is written in fzf-lua notation where the corpus otherwise uses vim's —
+--- a real defect, and the only one. **One finding in 52.** A section that is
+--- 98% noise is a section nobody reads, and the axis that removes the noise
+--- costs a grep.
+---
+--- The `extern` scope profits from the same fallback for a different reason:
+--- a third-party cheatsheet's stem has no local checkout, so the tree that
+--- answers there is this config's own `lua/` — which is exactly where those
+--- keys are bound, in a lazy `keys` spec. Hence the note in `SECTIONS` says
+--- "any source that could be read" rather than naming the plugin's.
+---
+--- Why not the obvious alternative — dropping buffer-local keys from the
+--- live axis wholesale? Because `keymap-not-live` is not a collision check:
+--- it never compares buffer-local against global, it only asks whether a
+--- documented key exists. Excusing a whole class from that question means a
+--- buffer-local key its plugin has since renamed would never be noticed
+--- again. The fallback keeps the question and answers it better.
+---
+--- Cost, measured on this config: `check` is ~150 ms without the fallback
+--- and ~550 ms with it, because a checkout is only indexed once a key of
+--- that plugin actually came up missing. Paid deliberately, for a report
+--- whose keymap section is worth reading.
+---
+--- The two are still separate switches. `opts.repo` indexes the checkout of
+--- every unloaded plugin, twenty-odd trees whether or not anything is wrong
+--- with them; the fallback touches a checkout only after a key came up
+--- missing. That is why one is opt-in and the other is not.
 
 local records = require("bindings.usrcmds.bindings_explorer.records")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -819,6 +860,9 @@ end
 ---@field file string|nil
 ---@field line integer|nil
 ---@field unverifiable boolean|nil  # see `M.check`'s per-table verdict
+---@field repo_absent boolean|nil   # `keymap-not-live` only: the source
+---  fallback looked and did not find the key either, so the finding says
+---  "written down nowhere" and not just "not registered right now"
 ---@field owner string|nil    # `usercmd-undocumented` only: who registered it
 
 ---@class Bindings.RepoInfo
@@ -828,6 +872,13 @@ end
 ---@field root string|nil the scanned collection directory, when `opts.repo_root` named one
 ---@field resolved string[] every project the resolver returned, sorted
 ---@field undocumented string[] resolved projects with no cheatsheet in this corpus, sorted
+---@field fallback boolean whether the default source fallback had a
+---  checkout mapping to work with -- false means every `keymap-not-live`
+---  finding below is the weaker, live-only claim
+---@field fallback_confirmed integer documented keys that were not live but
+---  ARE written in their plugin's own source, and are therefore not
+---  reported. Carried so a reader can reconcile this run's count with one
+---  from before the fallback existed.
 
 ---@class Bindings.ScopeInfo
 ---@field scope "personal"|"extern"|"all" what was asked for
@@ -843,10 +894,12 @@ end
 ---   not applied — asking about one plugin explicitly is a request to see
 ---   its findings, not to have them summarized away.
 --- @param opts { repo?: boolean, repo_root?: string, scope?: "personal"|"extern"|"all" }|nil additive; every
----   field defaults to off, so an existing single-argument caller gets
----   exactly the report it got before. `repo` enables the checkout axis
----   (module doc, "The repo axis"). `repo_root` points that axis at one
----   collection directory holding several Lua projects instead of the
+---   field defaults to off. `repo` enables the checkout axis for plugins
+---   that never loaded (module doc, "The repo axis") -- NOT the source
+---   fallback for the ones that did, which runs in every scope with no
+---   option at all (module doc, "The repo fallback"). `repo_root` points
+---   the axis at one collection directory holding several Lua projects
+---   instead of the
 ---   default per-plugin resolution, and implies `repo` -- naming a root is
 ---   already the request, and making the caller pass both would only create
 ---   a combination (`repo_root` without `repo`) whose sole possible meaning
@@ -913,13 +966,21 @@ function M.check(plugin, opts)
   -- Repo axis, resolved up front: the per-record loops below need to know
   -- whether an unloaded plugin has a checkout to fall back on before they
   -- decide to skip it.
+  --
+  -- Resolved on EVERY run, not only when `opts.repo` asked for the axis --
+  -- the live axis' fallback (module doc, "The repo fallback") needs the same
+  -- mapping in the default report. Resolving is cheap on its own: it reads a
+  -- Lua spec, no file in any checkout is opened until `repo.mentions` is
+  -- actually asked something, which happens per not-live key and not per
+  -- plugin. What stays gated on `want_repo` is the *unloaded-plugin* axis
+  -- further down -- that one would index every checkout in the list.
   ---@type table<string, string>|nil
   local repo_dirs = nil
   local repo_reason = nil
   local repo_resolved = {}
   local want_repo = opts.repo == true or type(opts.repo_root) == "string"
-  if want_repo then
-    repo.reset()
+  repo.reset()
+  do
     local dirs, reason
     if type(opts.repo_root) == "string" then
       dirs, reason = config.repo_dirs_under(opts.repo_root)
@@ -957,17 +1018,27 @@ function M.check(plugin, opts)
     -- the live-but-undocumented one below still counts them as documentation.
     local ours = (not plugin or rec.plugin == plugin) and not rec.meta
     if ours and is_plugin_loaded(rec.plugin) then
-      local lhs = extract_lhs(rec)
+      -- Both forms are kept, not just the normalized one: `lhs` is the raw
+      -- byte string the live probe compares against, `token` the
+      -- cheatsheet's own `<leader>iv` text the source fallback greps for.
+      -- Deriving the second from the first is not possible in general --
+      -- `normalize_lhs` is lossy about spelling (`<Leader>` vs `<leader>`).
+      local token = extract_lhs_token(rec)
+      local lhs = token and normalize_lhs(token)
       if lhs then
         local modes = extract_modes(rec)
         for _, m in ipairs(modes) do
           needed_modes[m] = true
         end
         checkable[#checkable + 1] =
-          { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
+          { rec = rec, lhs = lhs, token = token, modes = modes, desc = extract_desc(rec) }
       end
     elseif ours then
-      local dir = repo_dirs and repo_dirs[rec.plugin]
+      -- Only when the axis was asked for: this branch indexes the checkout of
+      -- every unloaded plugin, which is the cost the axis is opt-in for. The
+      -- fallback below pays a per-key price instead, on the handful of
+      -- plugins that actually have a not-live documented key.
+      local dir = want_repo and repo_dirs and repo_dirs[rec.plugin] or nil
       if not dir then
         skipped[rec.plugin] = true
       else
@@ -1022,21 +1093,67 @@ function M.check(plugin, opts)
     return rec.plugin .. "\0" .. (rec.heading or "")
   end
 
+  -- The source fallback for a documented key the live probe did not find.
+  -- See the module doc, "The repo fallback", for why this runs by default
+  -- while the unloaded-plugin axis above stays opt-in.
+  --
+  -- Two trees, same pair and same order as the opt-in axis: the plugin's own
+  -- checkout, then this config's `lua/` — a personal plugin's `<leader>`
+  -- entry point is very often registered over here, in a lazy `keys` spec,
+  -- and not in the plugin at all.
+  ---@param entry { rec: Bindings.Record, token: string|nil }
+  ---@return boolean found written as a string literal in either tree
+  ---@return boolean answered at least one of the two trees was readable
+  local function in_source(entry)
+    if not repo_dirs or not entry.token then
+      return false, false
+    end
+    local dir = repo_dirs[entry.rec.plugin]
+    local in_plugin = repo.mentions(dir, entry.token, { ignore_case = true })
+    if in_plugin == true then
+      return true, true
+    end
+    local in_config = repo.mentions(config_lua, entry.token, { ignore_case = true })
+    if in_config == true then
+      return true, true
+    end
+    return false, (in_plugin ~= nil) or (in_config ~= nil)
+  end
+
+  -- Counted for the report, not for a verdict: without it a reader cannot
+  -- reconcile this run's number with the last one, and "48 findings vanished"
+  -- is exactly the kind of drop that has to be explained rather than enjoyed.
+  local fallback_confirmed = 0
+
   for _, entry in ipairs(checkable) do
     local group = group_of(entry.rec)
     checked_count[group] = (checked_count[group] or 0) + 1
     if is_live(live_maps, entry.modes, entry.lhs, entry.desc) then
       found_count[group] = (found_count[group] or 0) + 1
     else
-      keymap_findings[#keymap_findings + 1] = {
-        kind = "keymap-not-live",
-        plugin = entry.rec.plugin,
-        heading = entry.rec.heading,
-        group = group,
-        notation = entry.lhs,
-        file = entry.rec.file,
-        line = entry.rec.line,
-      }
+      local found, answered = in_source(entry)
+      if found then
+        -- Counted as found, not merely dropped. The per-table verdict below
+        -- reads `found_count`, and leaving these out would flip a table into
+        -- "not one of its keys is live" — the buffer-local scope verdict —
+        -- on the strength of keys this axis just confirmed.
+        found_count[group] = (found_count[group] or 0) + 1
+        fallback_confirmed = fallback_confirmed + 1
+      else
+        keymap_findings[#keymap_findings + 1] = {
+          kind = "keymap-not-live",
+          plugin = entry.rec.plugin,
+          heading = entry.rec.heading,
+          group = group,
+          notation = entry.lhs,
+          file = entry.rec.file,
+          line = entry.rec.line,
+          -- Nothing when the fallback could not look: the claim is then the
+          -- old, weaker one ("not registered right now"), and `M.describe`
+          -- says which of the two a section holds.
+          repo_absent = answered or nil,
+        }
+      end
     end
   end
 
@@ -1118,7 +1235,9 @@ function M.check(plugin, opts)
         end
       end
     elseif ours then
-      local dir = repo_dirs and repo_dirs[rec.plugin]
+      -- Same `want_repo` gate as the keymap side above, and for the same
+      -- reason: this branch is the opt-in axis, not the default fallback.
+      local dir = want_repo and repo_dirs and repo_dirs[rec.plugin] or nil
       if not dir then
         skipped[rec.plugin] = true
       else
@@ -1166,9 +1285,12 @@ function M.check(plugin, opts)
   -- report someone ran once should keep charging — and the next run must
   -- re-read anyway (`repo.reset()` at the top), so nothing is saved by
   -- keeping them.
-  if want_repo then
-    repo.reset()
-  end
+  --
+  -- Unconditional since the fallback exists: `if want_repo` used to be the
+  -- whole truth about who indexed a tree, and is not any more — a default
+  -- run that greps five checkouts would otherwise leave them resident for
+  -- the session while claiming the axis never ran.
+  repo.reset()
 
   -- Third axis (source) is resolved BEFORE the live-undocumented direction
   -- below, which consults it to avoid reporting the same command twice —
@@ -1347,6 +1469,8 @@ function M.check(plugin, opts)
     root = type(opts.repo_root) == "string" and opts.repo_root or nil,
     resolved = repo_resolved,
     undocumented = repo_undocumented,
+    fallback = repo_dirs ~= nil,
+    fallback_confirmed = fallback_confirmed,
   }
 
   return findings, skipped_list, source_reason, repo_info, scope_info
@@ -1533,9 +1657,37 @@ local SECTIONS = {
   {
     kinds = { ["keymap-not-live"] = true },
     title = "Keymaps — documented, not registered",
-    -- Accurate for a scoped run too, where the per-table verdict does not
-    -- run at all and this section holds every keymap finding.
-    note = "not found globally, nor in any buffer open right now",
+    -- A function, not a string, because the claim this section makes now
+    -- depends on whether the source fallback could look (`repo_absent`).
+    -- Written down nowhere at all is a strictly stronger statement than not
+    -- registered in this session, and printing the strong one over findings
+    -- the fallback never reached would be the report lying about its own
+    -- evidence. Accurate for a scoped run too, where the per-table verdict
+    -- does not run and this section holds every keymap finding.
+    note = function(matched)
+      local checked = 0
+      for _, f in ipairs(matched) do
+        if f.repo_absent then
+          checked = checked + 1
+        end
+      end
+      if checked == 0 then
+        return "not found globally, nor in any buffer open right now"
+      end
+      -- "any source that could be read", not "the plugin's own source": in
+      -- the `extern` scope the cheatsheet's stem is a third-party plugin
+      -- with no local checkout, and the only tree that answers is this
+      -- config's own `lua/` -- which is where those keys are bound anyway.
+      -- Naming the plugin's source there would claim a look that never
+      -- happened.
+      if checked == #matched then
+        return "not live anywhere, and not a string literal in any source that could be read"
+      end
+      return ("not found globally, nor in any buffer open right now; %d of %d also absent from every readable source tree"):format(
+        checked,
+        #matched
+      )
+    end,
   },
   {
     kinds = { ["keymap-not-in-repo"] = true, ["usercmd-not-in-repo"] = true },
@@ -1655,7 +1807,11 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info)
           lines[#lines + 1] = ""
         end
         lines[#lines + 1] = ("%s (%d)"):format(section.title, #hits)
-        lines[#lines + 1] = ("  -- %s"):format(section.note)
+        local note = section.note
+        if type(note) == "function" then
+          note = note(matched)
+        end
+        lines[#lines + 1] = ("  -- %s"):format(note)
         vim.list_extend(lines, hits)
       end
     end
@@ -1732,9 +1888,31 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info)
   -- only whether the axis ran.
   local repo = (repo_info ~= nil and repo_info.ran == true) and repo_info or nil
   local repo_ran = repo ~= nil
+  -- Reported whether or not `opts.repo` was given: since the source fallback
+  -- runs by default, a resolver that cannot answer weakens the keymap
+  -- section of EVERY run, not only of an opt-in one.
   if repo_info and repo_info.reason then
     lines[#lines + 1] = ""
-    lines[#lines + 1] = "Repo axis not consulted: " .. repo_info.reason
+    lines[#lines + 1] = "No plugin checkout could be resolved: " .. repo_info.reason
+    if not repo_ran then
+      lines[#lines + 1] =
+        "  -- the source fallback could not run either, so the keymap findings above"
+      lines[#lines + 1] = "  -- are the live-only claim: not registered now, source unread."
+    end
+  end
+  -- The number that reconciles this run with one from before the fallback
+  -- existed. Without it, 48 findings simply disappear between two runs of
+  -- the same command, which is the shape of a bug and not of an improvement.
+  if repo_info and (repo_info.fallback_confirmed or 0) > 0 then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = ("Confirmed by source instead of by the session (%d)"):format(
+      repo_info.fallback_confirmed
+    )
+    lines[#lines + 1] =
+      "  -- documented keys not registered right now, but written as a string literal in"
+    lines[#lines + 1] =
+      "  -- the plugin's checkout or this config's own lua/: buffer-local keys of a UI"
+    lines[#lines + 1] = "  -- nobody has open. Not reported."
   end
   if repo and repo.root then
     lines[#lines + 1] = ""

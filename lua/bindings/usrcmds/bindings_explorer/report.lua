@@ -173,6 +173,21 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
       lines[#lines + 1] = ("| Repo-Achse nicht befragbar | %s |"):format(repo_info.reason)
     end
   end
+  -- Its own row rather than part of the repo-axis block above, because the
+  -- fallback runs in every report, `repo` or not. The number is the bridge
+  -- to any older report: exactly that many findings are missing below
+  -- without a single line of the corpus having changed.
+  if repo_info then
+    if repo_info.fallback then
+      lines[#lines + 1] = ("| Quelltext-Fallback | an — %d dokumentierte Tasten im Quelltext bestätigt statt live |"):format(
+        repo_info.fallback_confirmed or 0
+      )
+    else
+      lines[#lines + 1] = ("| Quelltext-Fallback | aus: %s |"):format(
+        repo_info.reason or "kein Checkout auflösbar"
+      )
+    end
+  end
   lines[#lines + 1] = ("| Übersprungen (gar nicht geprüft) | %d |"):format(#(skipped or {}))
   local pending = pending_phases()
   if #pending > 0 then

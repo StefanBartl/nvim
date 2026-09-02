@@ -39,10 +39,11 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
   Tabellenzeilen (strukturierter, aber blind für alles außerhalb einer
   Tabelle). Siehe `docs/FEATURES.md` für die volle Begründung.
 - **`check` ist bewusst eingeschränkt** (nur Personal, nur eine Richtung
-  bei Keymaps, buffer-lokale/filetype-gescopte Keymaps sind ein bekannter
-  False-Positive-Fall, noch nicht geladene Plugins werden übersprungen und
+  bei Keymaps, noch nicht geladene Plugins werden übersprungen und
   namentlich gemeldet statt fälschlich als fehlend) — volle Begründung in
-  `drift.lua`s Moduldoc, nicht hier dupliziert.
+  `drift.lua`s Moduldoc, nicht hier dupliziert. Buffer-lokale und
+  filetype-gescopte Keymaps waren der dominante False-Positive-Fall und sind
+  es seit dem Quelltext-Fallback nicht mehr, siehe unten.
 ## Scope: eigen und fremd sind zwei Fragen (2026-09-02)
 
 `:Bindings check` prüft per Default **nur die eigenen** Bindings, und das ist
@@ -90,6 +91,44 @@ weiterhin beide Bäume, in jedem Scope.
   bestehen, zeigt aber weiterhin auf den nie existierenden Pfad
   `docs/NOTES/BINDINGS` statt der beiden echten Wurzeln.
 
+## Der Quelltext-Fallback (2026-09-02)
+
+Findet die Live-Achse eine dokumentierte Taste nicht, wird sie im Quelltext
+gesucht, bevor daraus ein `keymap-not-live` wird — im Checkout des Plugins und
+im `lua/`-Baum dieser Config. **Kein Schalter, das läuft in jedem Lauf.**
+
+| Route | `keymap-not-live` vorher | nachher | im Quelltext bestätigt |
+| --- | ---: | ---: | ---: |
+| `:Bindings check` | 52 | **1** | 51 |
+| `:Bindings check extern` | 309 | **84** | 225 |
+
+Der eine Übriggebliebene ist `cmdlog.nvim`s `ctrl-f` — fzf-lua-Notation in
+einem Korpus, der sonst Vim-Notation schreibt.
+
+**Warum nicht einfach die buffer-lokalen Tasten ausgliedern?** Weil
+`keymap-not-live` kein Kollisionscheck ist: dort wird nie buffer-lokal gegen
+global verglichen, die Achse fragt nur „das Cheatsheet dokumentiert diese Taste
+— gibt es sie?". Eine ganze Klasse davon auszunehmen hieße, dass eine
+buffer-lokale Taste, die ihr Plugin inzwischen umbenannt hat, nie wieder
+auffiele. Der Fallback behält die Frage und beantwortet sie besser.
+
+**Was das mit `check repo` zu tun hat: nichts.** Die Achse darüber liest den
+Checkout jedes *ungeladenen* Plugins, zweiunddreißig Bäume auf Verdacht — sie
+bleibt opt-in. Der Fallback fasst einen Checkout erst an, nachdem eine Taste
+gefehlt hat, in einem Default-Lauf also eine Handvoll. Gemessene Kosten: `check`
+~150 ms ohne, ~550 ms mit.
+
+**Der bekannte Preis.** Ein Grep unterdrückt gelegentlich auch einen echten
+Fund: `cmdlog.nvim`s `ctrl-t` steht in keiner Zeile von cmdlog.nvim, wohl aber
+in `lua/config/fzf/init.lua` dieser Config, wo dasselbe Literal etwas ganz
+anderes bindet. Dieselbe Haltung wie überall in `repo.lua`: ein verpasster Fund
+ist billiger als ein falscher.
+
+**Der Bericht sagt die Zahl.** Laufkopf-Zeile „Quelltext-Fallback" und ein
+eigener Abschnitt „Confirmed by source instead of by the session (n)" — sonst
+verschwinden zwischen zwei Läufen desselben Kommandos 51 Befunde, und das ist
+die Form eines Bugs, nicht die einer Verbesserung.
+
 ## Changelog
 
 - 2026-08-07: `:Bindings search`/`path` (Phase 1) implementiert.
@@ -109,6 +148,9 @@ weiterhin beide Bäume, in jedem Scope.
 - 2026-09-02 (2): `check`/`report` nennen den Eigentümer jedes
   undokumentierten Live-Commands statt „owner not recorded" — siehe den
   letzten Abschnitt.
+- 2026-09-02 (3): Quelltext-Fallback im Default — eine dokumentierte Taste,
+  die nicht live ist, wird im Quelltext gesucht, bevor sie ein Befund wird.
+  `keymap-not-live` 52 → 1. Siehe den Abschnitt darüber.
 
 ## `:Bindings check` — die dritte Achse: Source (2026-08-15)
 
