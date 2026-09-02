@@ -27,10 +27,22 @@ aufnehmen). `REVIEW.md`: grün, ein behobener Befund (`LUA-61/62`).
 **Das Plugin kann heute deutlich mehr als nach der Extraktion.** Position-
 Previews, `:Hover why`, `:Hover pin`, Zeilen und Ranges (`init.lua:42`,
 `file.lua:10-20`), Git-Objekte, `gf` zum Öffnen, ein Schalter-Chooser über
-lib.nvims UI-Kit. Und vier Nachbarplugins steuern jetzt etwas bei.
+lib.nvims UI-Kit. Und **fünf** Nachbarplugins steuern jetzt etwas bei.
+
+**Der letzte Framework-Mangel ist weg.** Ein Beitrag kann seit `731bbe2`
+sagen, dass seine eigene Antwort teuer ist (`on_request`), und wird dann nur
+auf ausdrückliche Nachfrage gefragt. Das war der Blocker für sandbox.nvim,
+das jetzt verdrahtet ist — und beim echten Verdrahten fiel auf, dass das
+Feature selbst nie erreichbar war (`836a15a`, siehe unten).
 
 **Offen ist wenig, und das Meiste davon bewusst.** Details unter
 [Offene Punkte](#offene-punkte).
+
+**Was als Nächstes ansteht**, steht unter [Aufträge aus der Sitzung vom
+2026-09-02](#aufträge-aus-der-sitzung-vom-2026-09-02) — sechs Punkte, jeder
+schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. Der
+größte davon ist eine **Beitrags-API für Nutzer** (D): die gibt es technisch
+längst, sie ist nur nirgends als solche angeboten.
 
 ---
 
@@ -240,9 +252,18 @@ gebaut — die Datei führt keine erledigten Punkte.
 - **Git-Objekt unter dem Cursor** (`4cad7dc`) — nur auf `:Hover show`.
 - **`gf` öffnet, was der Float zeigt** (`f2e0788`) — geroutet durch open.nvim.
 - **`:Hover status` als Auswahl** (`144c405`) — lib.nvims UI-Kit.
-- **Vier Nachbarplugins verdrahtet** — migrate (veraltete API auf dieser
+- **`on_request`** (`731bbe2`) — ein Beitrag darf sagen, dass seine Antwort
+  teuer ist, und wird dann nur bei `:Hover show` gefragt. Entschieden wurde
+  die **Tabellenform** (`{ fn = …, on_request = true }`), nicht eine vierte
+  Beitragsart: das Flag gilt für `sources` und `positions` identisch, und ein
+  Paar `sources_on_request`/`positions_on_request` hätte von Hand in Schritt
+  gehalten werden müssen — genau die Bug-Klasse, die dieses Repo dreimal
+  getroffen hat.
+- **Fünf Nachbarplugins verdrahtet** — migrate (veraltete API auf dieser
   Zeile), reposcope (`owner/repo` → gecachter README), documentation (was ist
-  dieses Modul), spotlight (wie oft kommt dieser Token vor).
+  dieses Modul), spotlight (wie oft kommt dieser Token vor), sandbox
+  (`nginx:1.27-alpine` — geholt? wie groß? läuft was davon?, nur auf
+  Nachfrage).
 
 ### Drei Messungen, die alle der Intuition widersprachen
 
@@ -279,6 +300,31 @@ Alle drei sind jetzt abgeleitet statt aufgezählt, und die Specs dagegen sind
 Schalter ab seiner Deklaration mitgedeckt ist. **Wenn eine vierte solche
 Stelle auftaucht, ist das der erste Verdacht.**
 
+### Und eine vierte Klasse: eine Funktion, zwei Fragen
+
+`has_positions()` beantwortet **eine** Frage: „soll für diesen Buffer
+überhaupt ein `CursorHold` installiert werden?". Ein `on_request`-Beitrag
+zählt dafür bewusst nicht — ein Trigger, der aufwacht, niemanden fragt und
+wieder einschläft, ist reine Kosten.
+
+`show_position` benutzte dieselbe Funktion als Vorab-Wächter, **vor** der
+`force`-Prüfung. Damit lehnte ein Buffer, dessen einziger Beitrag
+nachfrage-only war, auf beiden Wegen ab: automatisch richtig, ausdrücklich aus
+Versehen. Das Feature aus `731bbe2` war nie erreichbar.
+
+Zwei Dinge daran sind das Lernstück:
+
+- **Gefunden nur durch echtes Verdrahten.** Die Registry-Specs riefen
+  `position_at` direkt — unterhalb des Wächters. Erst der Weg über
+  `hover.show` kreuzt ihn, und erst sandbox.nvim ging diesen Weg. Ein Feature,
+  das nur seine eigene Unit-Spec hat, ist nicht bewiesen.
+- **Der Fix darf die andere Frage nicht mitverkaufen.** Erreichbarkeit
+  dadurch zu kaufen, dass der Trigger doch installiert wird, hätte den Grund
+  für `on_request` beseitigt. Eine der vier neuen Specs hält genau das fest.
+
+Behoben in `836a15a`, mit Sabotage-Test: der alte Code lässt zwei der vier
+neuen Fälle fallen.
+
 ---
 
 ## Offene Punkte
@@ -294,19 +340,19 @@ nicht erledigen kann: ich kann keine Bildschirmaufnahme machen. Die README
 trägt ein ASCII-Modell des Floats, das die Idee erklärt, aber nicht das
 Gefühl — und zu zeigen wäre gerade, wie wenig es beim Lesen stört.
 
-### 2. Eine registrierte Quelle, die nur auf Nachfrage antwortet
+### 2. language.nvim — der zweite Kandidat für `on_request`
 
-**Der eine echte Framework-Mangel**, und zwei Dinge warten darauf. Ein
-registrierter Beitrag wird bei jedem Trigger gefragt; es gibt keine Möglichkeit
-zu sagen „frag mich nur, wenn der Leser gefragt hat". `hover.bare_git` bekommt
-das, weil es eingebaut ist und `show()` es unter `force` ruft.
+`on_request` ist gebaut und mit sandbox.nvim einmal durch die volle Strecke
+gefahren. Der zweite Wartende ist **language.nvim** (Wort-Nachschlag), und der
+ist nicht dasselbe: bei sandbox entscheidet eine billige Textprüfung *vor*
+jedem Prozessstart, ob überhaupt etwas gefragt wird — `init.lua:42` wird in
+1 ms abgelehnt. Bei einem Wort-Nachschlag ist **jedes Wort ein Wort**; es gibt
+keine solche Vorprüfung, also ist auch unter `force` jede Position ein Treffer.
 
-Wartend: **sandbox.nvim** (Container-Engine, 230–490 ms gemessen) und
-**language.nvim** (Wort-Nachschlag — jedes Wort ist ein Wort).
-
-Zu klären: woran das Flag hängt. Tabellenform
-(`{ fn = …, on_request = true }`, rückwärtskompatibel, liest sich schlechter)
-oder eine vierte Beitragsart (ehrlicher, ein Begriff mehr).
+Das ist eher eine Produktfrage als eine technische: soll ein Druck auf
+`:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Wenn ja, ist die
+Integration klein. Wenn nein, braucht es vorher eine Regel dafür, wann ein Wort
+nachschlagenswert ist — und die gehört nach language.nvim, nicht hierher.
 
 ### 3. insights.nvim braucht erst einen Index
 
@@ -332,6 +378,213 @@ haben.
 PDF-Seiten, konvertierte Office-Dokumente. Der Office-Pfad ist seit der
 Cache-Änderung (`bba2064`, überlebt jetzt die Sitzung) **nicht** mehr von Hand
 geprüft, und was daran zu bestätigen wäre, steht dort.
+
+Dazu kommt jetzt der **`on_request`-Pfad**: eine CI hat keinen laufenden
+Container-Daemon, also kann keine Maschine bestätigen, dass ein
+nachfrage-only-Beitrag am Ende wirklich eine Antwort auf den Schirm bringt.
+Genau da saß der Fehler aus `836a15a`. Gemessen am **2026-09-02** gegen eine
+laufende Docker-Engine, Tastendruck bis fertiger Float:
+
+| Referenz | Antwort | Dauer | Engine-Aufrufe |
+| --- | --- | --- | --- |
+| `alpine:edge` | geholt, kein Container | 754 ms | 2 |
+| `lazyvim_starter:latest` | geholt, 1 Container | 560 ms | 2 |
+| `nginx:1.27-alpine` | nicht geholt | 286 ms | 1 |
+| `init.lua:42` | abgelehnt | 1 ms | 0 |
+
+Alle vier antworteten auf dem automatischen Trigger mit `false`. Die 286 ms
+sind der Beleg für den zweiten Engine-Aufruf, der nur bei Treffer passiert;
+die 1 ms dafür, dass die Namenskollision abgelehnt wird, **bevor** ein Prozess
+startet. Vorher lief dieselbe Strecke gegen einen gestoppten Daemon und
+erzeugte korrekt Schweigen statt eines selbstbewussten „not pulled“ — der
+Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
+
+
+---
+
+## Aufträge aus der Sitzung vom 2026-09-02
+
+Sechs Punkte, alle noch offen. Was hier steht, ist jeweils schon **nachgesehen**
+— die Notiz sagt den Befund, nicht nur die Frage.
+
+### A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**
+
+**Die drei Dateien existierten, waren aber veraltet.**
+
+```
+docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/hover.nvim.md
+```
+
+Die Usercmds-Datei führt sieben Routen (`show`, `toggle`, `status`, `links`,
+`links off`, `mode auto`, `paths code`). Tatsächlich gibt es außerdem
+mindestens `why`, `pin`, `positions`, `positions off`, `office`, `office on`,
+`images`, `paths missing`, `mode` und `off` — plus neun Schalter
+(`links, web, fetch, paths, missing, code, positions, images, office`).
+
+Zu beachten:
+
+- **Format ist vorgeschrieben:** `docs/NOTES/BINDINGS-FORMAT.md` — Titel,
+  `Source:`-Zeile, Intro, Haupttabelle mit eigener Überschrift über *jeder*
+  Tabelle, `## which-key`, `## Notes`, `## Changelog`.
+- **Es gibt einen Parser dafür.** `bindings-explorer.nvim` liest genau diese
+  Tabellen (`records.lua` → `drift.lua`). Nach dem Schreiben also
+  `:Bindings check` laufen lassen — das ist die Drift-Erkennung, und sie ist
+  der eigentliche Zweck der Formatpflicht.
+- Die Schalter sollten **abgeleitet** aufgeschrieben werden, nicht abgetippt:
+  `switches.names()` ist die Quelle, und dieses Repo ist dreimal daran
+  gescheitert, so eine Liste von Hand zu führen (siehe [Dieselbe Bug-Klasse
+  dreimal](#dieselbe-bug-klasse-dreimal)).
+
+**Was tatsächlich fehlte**, gegen `composer.document("Hover")` abgeglichen:
+
+- **Usercmds:** `:Hover why`, `:Hover pin`, `:Hover positions` fehlten ganz;
+  die Datei führte 7 von 15 Aufrufen und nannte neun Schalter „acht".
+- **Keymaps:** `open_keys` (`gf`) fehlte — seit `f2e0788` geliehen und die
+  einzige geliehene Taste, die ein Vim-Builtin verdrängt.
+- **Autocmds:** die Regel „nichts, was antworten könnte" hatte eine dritte
+  Frage bekommen (Position-Previews); der Changelog-Eintrag behauptete
+  ausdrücklich das Gegenteil. Dazu `hide_unless_pinned()` statt `hide()` und
+  der `mouse`-Trigger.
+
+**Und ein Befund, der über hover.nvim hinausgeht:**
+
+> `:Bindings check` deckt diese Tabelle **nicht** ab, sieht aber so aus, als
+> täte es das. Gemessen: eine Zeile aus der Tabelle gelöscht, und sowohl
+> `:Bindings check hover.nvim` als auch der volle Lauf melden *keine Drift*.
+> hover.nvim war dabei geladen — es steht nicht unter „skipped".
+>
+> Der Grund: verglichen wird gegen `nvim_get_commands({})`, und dort stehen
+> nur **Kommandos oberster Ebene**. Dieses Plugin registriert genau eines,
+> `Hover`; alle fünfzehn Zeilen fallen darauf zusammen, es existiert, beide
+> Richtungen bestehen trivial.
+>
+> Das betrifft **jedes** Plugin auf `usercmd.composer` — also die halbe
+> Personal-Sammlung. Ein bestehender Check auf einer verrotteten Tabelle ist
+> schlechter als gar keiner, deshalb gehört das als Task nach
+> bindings-explorer. Maßgeblich ist bis dahin `composer.document("<Verb>")`
+> (schreibt eine **Datei** mit dem Namen des Kommandos und gibt `true`
+> zurück — nicht den Text).
+
+### B. Die Docs der eingebundenen Plugins durchgehen
+
+**images.nvim, markdown.nvim, pdfport.nvim, gopath.nvim** — jeweils prüfen, ob
+ihre eigene Doku erwähnt, was sie zum Hover beitragen, und ob das noch stimmt.
+
+Anlass: in `b61b347`, `b43fd1c` und `c61493f` wurden dort bereits veraltete
+Verweise korrigiert, aber nur die, die beim Umbenennen auffielen. Nicht geprüft
+ist, ob die vier eine *inhaltlich* aktuelle Beschreibung ihres Hover-Anteils
+haben — z. B. dass pdfport seit `:Hover office on` auch `.docx`/`.xlsx`/`.pptx`
+über LibreOffice liefert, oder dass gopath vor Vims eigenem `<cfile>` gefragt
+wird.
+
+Die fünf über die Registry angebundenen (migrate, reposcope, documentation,
+spotlight, sandbox) haben jeweils ein eigenes `docs/hover.md` und sind aktuell
+— die sind in dieser Runde entstanden.
+
+### C. Die README von hover.nvim — **erledigt 2026-09-02** (`a57d390`)
+
+**a) Struktur gegen die Geschwister.** Die Grundform stimmt bereits
+(Inhaltsverzeichnis → Fähigkeiten → Quickstart → Integrations → Configuration →
+Documentation). Zwei Abschnitte fehlen, die spotlight.nvim und
+documentation.nvim beide haben:
+
+- **`## Installation`** — hover verweist nur in einer Zeile auf
+  `docs/installation.md`; die Geschwister haben den Block in der README.
+- **`## Health`** — `lua/hover/health.lua` existiert, `:checkhealth hover`
+  wird viermal im Fließtext erwähnt, hat aber keine eigene Überschrift.
+
+`## License` fehlt bewusst (`REL-28`, keine Lizenzdatei) — das ist kein Befund.
+
+**b) Die Integrations-Tabelle ist veraltet.** Sie existiert und hat die vier
+Spalten (Plugin / was es allein ist / was es zum Hover beiträgt / ohne es),
+aber sie ist vor den fünf Verdrahtungen geschrieben worden:
+
+- **reposcope.nvim steht dort als „*planned*"** — ist seit `b4d6eff` verdrahtet.
+- **migrate, documentation, spotlight, sandbox fehlen ganz.**
+- Die Tabelle „Die zwei Türen" nennt als Registry-Ankömmling nur
+  markdown.nvim; es sind inzwischen sechs.
+
+Dazu der ausdrückliche Wunsch: die Tabelle soll die eigenen Plugins nicht nur
+auflisten, sondern **empfehlen** — also sagen, was der Leser gewinnt, wenn er
+sie installiert, nicht nur was er ohne sie verliert.
+
+**Umgesetzt in `a57d390`:** reposcope-Zeile korrigiert, fünf Zeilen ergänzt,
+die Türen-Tabelle nennt jetzt alle sechs Registry-Ankömmlinge, ein
+Abschnitt „Worth installing alongside it" vor der Tabelle, und ein
+`## Health`-Abschnitt (der Healthcheck hat vier Sektionen, weil „der Hover
+tut nichts" vier Ursachen hat, die von außen gleich aussehen). sandbox.nvim
+zusätzlich in beide Tabellen von `docs/INTEGRATIONS.md`.
+
+**Zur Strukturfrage revidiert:** `## Installation` fehlt *nicht* wirklich —
+`## Quickstart` ist faktisch dieser Abschnitt, und images.nvim nennt ihn
+genauso. Es gibt hier keine einheitliche Geschwister-Konvention, also war das
+kein Befund. `## Health` war einer und ist behoben.
+
+### D. Eine Beitrags-API für Nutzer — Nutzen/Aufwand
+
+**Der Befund: die API gibt es schon, sie ist nur nicht als Nutzer-API
+gedacht.** `require("hover.registry").register(name, contribution)` ist ein
+öffentliches Modul und funktioniert aus einer `init.lua` genauso wie aus einem
+Plugin. `enable(opts)` nimmt dagegen **nur** Konfiguration — Beiträge gehen
+ausschließlich über die Registry.
+
+Was tatsächlich fehlt, ist klein:
+
+1. **Ein Durchreichen in `enable()`** — `sources`/`positions`/`previews` als
+   Options-Feld, das intern `register("user", …)` ruft. Damit steht das
+   Feature dort, wo ein Nutzer es sucht: in seiner eigenen Setup-Tabelle.
+2. **Ein Doku-Abschnitt aus Nutzersicht.** `docs/INTEGRATIONS.md` ist an
+   Plugin-Autoren adressiert („Contributing from a plugin"). Derselbe
+   Mechanismus als „so baust du dir einen eigenen Hover" ist ein anderer Text,
+   kein anderer Code.
+
+**Aufwand:** klein — ein Options-Feld, ein `register`-Aufruf, ein Spec, ein
+Doku-Abschnitt. **Nutzen:** groß, weil es die Einstiegshürde von „schreib ein
+Plugin" auf „schreib eine Funktion" senkt. **Empfehlung: bauen.** Der einzige
+Entwurfspunkt ist, ob `enable()` bei wiederholtem Aufruf die Nutzerbeiträge
+ersetzt — `register` tut das bereits pro Name, also fällt das von selbst
+richtig aus.
+
+### E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/`
+
+Eine Analyse zu Optimierung und neuen Features, geschrieben als eigene Datei
+neben dieser hier. **Nicht zu verwechseln** mit `hover.nvim/docs/ROADMAP.md`
+— die liegt im Repo, ist an Mitlesende adressiert und führt bewusst keine
+erledigten Punkte. Die Datei hier ist die persönliche, längere Fassung.
+
+Abzugrenzen ist beim Schreiben, was in welche der beiden gehört, sonst driften
+sie auseinander.
+
+### F. Zoom im Float — Machbarkeit geprüft, die Antwort ist zweigeteilt
+
+Die Idee: mit der Maus in den Hover, Mausrad bzw. `<C-ScrollWheel>` zoomt.
+
+**Für Text geht es nicht, und zwar grundsätzlich.** Die Schriftgröße gehört
+dem Terminal-Emulator; Neovim kann sie nicht ändern. „Zoom" könnte für Text
+nur heißen: das Float größer machen — das zeigt *mehr*, aber nichts
+*größer*. Das ist ein anderes Feature und sollte auch anders heißen.
+
+**Für Bilder geht es wirklich.** Ein Bild wird über images.nvim in eine
+Zellfläche gezeichnet; dieselbe Fläche größer angefordert heißt echte
+Vergrößerung. Dasselbe gilt für eine rasterisierte PDF-Seite über pdfport.
+Das ist der Fall, in dem „Zoom" das Wort trifft.
+
+Zwei technische Voraussetzungen, beide geprüft:
+
+- **Das Float ist `focusable = opts.focusable == true`**, also standardmäßig
+  *nicht* fokussierbar (`float.lua:293`). Die Maus kann so nicht hineinklicken.
+  Man bräuchte entweder `focusable`, oder — sauberer — `getmousepos()` in
+  einer globalen `<ScrollWheelUp>`-Map, um zu erkennen, dass der Zeiger über
+  dem Hover steht, ohne den Fokus anzufassen.
+- **Ein Scroll-Mechanismus existiert schon** (`bindings/keymaps.lua`):
+  `scroll_keys` werden nur installiert, solange ein Float offen ist *und* es
+  etwas zu scrollen gibt, und werden beim Schließen wieder eingesammelt.
+  Zoom sollte an derselben Stelle andocken statt einen zweiten Weg aufzumachen
+  — dieselbe Aufräum-Disziplin ist der Grund, warum die Keymaps dort so
+  vorsichtig geschrieben sind.
+
+`mouse` muss beim Nutzer gesetzt sein (`set mouse=a`), sonst kommt gar kein
+Rad-Event an. Das ist ein Fall für `:Hover why`.
 
 ---
 

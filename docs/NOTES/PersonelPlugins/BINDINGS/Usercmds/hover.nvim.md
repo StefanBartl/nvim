@@ -15,10 +15,14 @@ Source: `lua/hover/bindings/usrcmds.lua` (routes generated from
 `lua/hover/switches.lua`)
 Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 
+## Routes
+
 | Command | Args | Notes |
 | --- | --- | --- |
 | `:Hover show` | — | one hover, here, now; ignores every volume switch |
-| `:Hover status` | — | mode + all eight switches in one message |
+| `:Hover status` | — | mode + all nine switches, as a selectable list |
+| `:Hover why` | — | why nothing hovered here — names which gate declined |
+| `:Hover pin` | — | keep this float on screen while the cursor moves away |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
@@ -28,6 +32,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover paths missing [state]` | `on\|off\|toggle` | mark a path that resolves to nothing |
 | `:Hover paths code [state]` | `on\|off\|toggle` | hover a path inside executable code, not just comments and strings. **Default off.** Implies `paths on` |
 | `:Hover images [state]` | `on\|off\|toggle` | draw pictures, or describe them |
+| `:Hover positions [state]` | `on\|off\|toggle` | whether a plugin may speak about a cursor position that points at nothing |
 | `:Hover office [state]` | `on\|off\|toggle` | render office docs via PDF |
 
 Every `state` argument is an `enum`, so it completes. **Omitting it toggles** —
@@ -37,9 +42,39 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
 
 - **Routes are generated, not written.** `switch_route(name)` builds one route
   per entry in `hover.switches`; the same table feeds `:Hover status` and the
-  `:checkhealth hover` section. A ninth switch is one table entry and nothing
+  `:checkhealth hover` section. A tenth switch is one table entry and nothing
   else, and dispatch/completion/docs cannot drift apart. `paths code` was the
   eighth and cost exactly that — one entry plus one name in `ORDER`.
+
+  **This has been the repository's recurring bug, three times.** Every place
+  that kept its own list of switches by hand eventually fell behind the table
+  without anything failing: `route_path` filed a new switch at top level
+  instead of under its parent, `switches.effective` reported one as off while
+  it was on (so `:Hover status` *and* `:checkhealth` both lied), and a preview
+  badge advertised a command that no longer existed. All three are derived
+  now. **The same applies to this file** — but see the next entry for what
+  can and cannot check it.
+
+- **`:Bindings check` does not cover this table, and it looks like it does.**
+  Measured on 2026-09-02: a row was deleted from the table above and both
+  `:Bindings check hover.nvim` and the full `:Bindings check` reported *no
+  drift*. hover.nvim was loaded and checked — it does not appear under
+  "not loaded this session, skipped" — so this is not a gap in coverage but
+  in resolution.
+
+  The reason: the checker compares documented commands against
+  `nvim_get_commands({})`, which lists **top-level Vim commands only**. This
+  plugin registers exactly one, `Hover`; every route above is a composer
+  sub-route and is invisible there. All fifteen rows collapse onto the same
+  live name, it exists, and both directions pass trivially.
+
+  So the authority for this table is **`composer.document("Hover")`**, which
+  is the mechanical dump of the route tree. Note that it *writes a file* named
+  after the command and returns `true` — it does not return the text.
+
+  This is worth a bindings-explorer task: every plugin built on
+  `usercmd.composer` has the same blind spot, and a passing check on a rotten
+  table is worse than no check.
 
 - **`web` and `fetch` nest under `links` in the command tree** even though
   they are flat entries in the switch table (`route_path()` maps them). The
@@ -60,6 +95,24 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   prefix typed at a borrowed key is indistinguishable from one meant for the
   mapping it displaced. Noted in the plugin's `docs/ROADMAP.md`.
 
+- **`:Hover why` is the one route that answers about an *absence*.**
+  Everything else acts or reports state; this one explains why nothing
+  happened, by naming which of the gates declined — mode, a switch, the
+  scope gate, no source, no preview, nothing under the cursor. It exists
+  because "no float appeared" is the plugin's most common failure mode and
+  was, until then, indistinguishable from "the plugin is broken".
+
+- **`:Hover pin` has no `unpin`.** A pinned float is dismissed the same way
+  any float is; a second verb for the reverse would have to be typed *into*
+  a window that is deliberately not focused.
+
+- **`positions` guards a different trust boundary than the other switches.**
+  The others decide which kind of *target* may hover. This one decides
+  whether a registered plugin may speak about a position that points at
+  nothing — which is the only class where the content is authored entirely
+  elsewhere. With nothing registered it costs nothing: the trigger is not
+  installed at all.
+
 - **`paths code` is about *where*, not *what*.** Every other switch decides
   which kind of target may hover. This one decides whether the cursor's
   *position* disqualifies it: off, a spot Treesitter identifies as executable
@@ -70,6 +123,11 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
 
 ## Changelog
 
+- 2026-09-02: three routes were missing here entirely — `:Hover why`,
+  `:Hover pin` and `:Hover positions`. The file documented 7 of 15
+  invocations and called the switch count eight when it was nine. Rebuilt
+  against `composer.document("Hover")`, which is the mechanical dump, rather
+  than against the README.
 - 2026-09-01: `:Hover paths code` added (hover.nvim `b2b4b2c`) — eighth
   switch, default off. `:Hover status` now lists eight.
 - 2026-09-01: `:Lib hover …` is gone rather than merely switched off —

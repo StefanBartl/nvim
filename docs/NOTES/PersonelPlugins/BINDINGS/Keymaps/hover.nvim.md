@@ -28,6 +28,7 @@ combination when no key is bound. **Not set in this config today.**
 | Config key | Default | Bound for | Action |
 | --- | --- | --- | --- |
 | `dismiss_keys` | `q`, `<Esc>` | every hover | dismiss until the cursor reaches another target |
+| `open_keys` | `gf` | every hover | open what the float is showing — routed through open.nvim when present, else `vim.ui.open` |
 | `scroll_keys.down` | `<M-PageDown>`, `<C-Down>` | scrollable only | next screenful / next PDF page |
 | `scroll_keys.up` | `<M-PageUp>`, `<C-Up>` | scrollable only | back |
 
@@ -42,6 +43,15 @@ combination when no key is bound. **Not set in this config today.**
   because the latter is a widespread "move this line" binding. Both pairs are
   bound because PageUp/PageDown is an Fn chord on laptop and 60% layouts, and
   nothing at runtime can tell which keyboard this is.
+- **`gf` is a Vim builtin, and this displaces it while a float is up.** That
+  is the intent rather than an accident: with a hover open, the file `gf`
+  would jump to and the file the float is showing are the same one, and the
+  float already resolved it — including the cases `gf` cannot do, such as a
+  truncated path or a `:line:col` suffix. With no float open, `gf` is
+  untouched.
+- **The open key is taken *before* the scroll keys**, so a key configured as
+  both opens rather than scrolls. Opening is what a reader means by pressing
+  something; scrolling has two keys of its own either way.
 - **A key listed in both lists is taken once, as a dismiss key** — the binding
   that always applies beats the one that only sometimes does. Without that, an
   unbind would "restore" one of our own mappings and it would outlive the
@@ -62,5 +72,8 @@ own mappings (`require("hover").scroll(1)` / `(-1)`).
 
 ## Changelog
 
+- 2026-09-02: `open_keys` (`gf`) fehlte hier ganz — seit hover.nvim `f2e0788`
+  geliehen, wie die Dismiss- und Scroll-Tasten, und die einzige davon, die
+  ein Vim-Builtin verdrängt. Kollisionsabschnitt entsprechend ergänzt.
 - 2026-09-01: unverändert durch hover.nvim `b2b4b2c` (`:Hover paths code`) —
   der neue Schalter ist ein Usercommand ohne Taste, wie alle anderen auch.
