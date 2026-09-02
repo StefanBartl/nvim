@@ -185,7 +185,7 @@ Gegen den echten, voll geladenen Bestand verifiziert (headless, über einen
 `XDG_CONFIG_HOME`-Junction-Trick, der `stdpath("config")` auf diesen
 Branch zeigen lässt, ohne `stdpath("data")`/die echten Plugin-Installationen
 anzufassen — siehe git-Historie dieser Datei für die Kommandos): fand u.a.
-`Usercmds/dap.nvimMERGE.md`s bereits in `BINDINGS-FORMAT.md` §6 (dem
+`Usercmds/dap.nvimMERGE.md`s bereits in `BINDINGS-FORMAT.md` §7 (dem
 Retrofit-Abschnitt) als
 Merge-Artefakt vermuteten `:Dap` (mittlerweile geprüft: enthielt echten,
 nirgends sonst dokumentierten Inhalt zum `languages/<lang>.lua`-Merge und
@@ -536,6 +536,42 @@ Lücke, die man schließt.
 Eine ältere Notiz in MEASURING.md behauptete, `LibLogger` stehe in lib.nvim
 nirgends als Quoted-Literal, der Fallback würde diesen Befund also stehen
 lassen. Das war falsch gemessen; die Korrektur steht dort.
+
+## Eine Tabelle, die gar nichts über diese Session sagt (2026-09-02)
+
+Die Keymap-Achse fragt: ist diese dokumentierte Taste jetzt registriert? Drei
+Sorten Tabelle im Korpus beantworten diese Frage nicht — ein abgeschalteter
+Plugin-Default, eine Taste im LazyGit-TUI, eine Verweistabelle auf andere
+Blätter. Sie melden sich trotzdem, weil der Scraper ihre Key-Spalte findet.
+
+Sie können es jetzt sagen: eine Zeile `**Nicht live:**` direkt unter der
+Überschrift markiert alle Tabellen dieses Abschnitts als unprüfbar
+(`records.lua`s `NOT_LIVE_MARKER`, Format in
+[`BINDINGS-FORMAT.md`](../../../../../docs/NOTES/BINDINGS-FORMAT.md) §6).
+Nur die Live-Richtung ehrt ihn; die Zeilen bleiben in `browse` und zählen als
+Dokumentation — dieselbe Trennung wie bei `META_FILES`.
+
+**Warum ein Marker und keine Header-Umbenennung.** `normalize_header` wirft
+eine Klammer-Gruppe absichtlich weg, damit `Default-Mapping (Plugin)` und
+`Taste (in LazyGit)` als lhs-Spalte erkannt werden — der Korpus schreibt
+diese Spalte in einem Dutzend Varianten, und die Toleranz ist der Grund, warum
+der Scraper überhaupt funktioniert. Einen Header umzubenennen, damit der
+Parser wegschaut, wäre eine versteckte Kopplung zwischen Prosa und
+Parser-Interna.
+
+**Gemessen** (alle Extern-Plugins geladen): `keymap-not-live` 16 → **10**.
+Die fünf markierten Zeilen sind drei abgeschaltete VisualMulti-Defaults, eine
+LazyGit-TUI-Taste und ein Verweis auf ein Astro-Keymap; die sechste war ein
+echter Notationsfehler (siehe unten). Der Bericht druckt die Zahl der
+markierten Zeilen mit, damit ein Opt-out nicht unsichtbar wird — aktuell 16.
+
+### Der sechste war kein Opt-out, sondern ein Fehler
+
+`Keymaps/Fugitive.md` dokumentierte `["x]y<C-G>`. Das ist keine Taste, sondern
+`fugitive.txt`s Schreibweise für „optionales Register, dann `y<C-G>`". Live
+geprüft: die Map heißt `y<C-G>` (Normal-Modus,
+`setreg(v:register, fugitive#Object(@%))`), und das Register-Präfix wirkt wie
+überall in Vim. Korrigiert; die Zeile ist seither live und ein Befund weniger.
 
 ## Wie ein Cheatsheet-Stamm zu seinem Plugin findet (2026-09-02)
 

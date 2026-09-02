@@ -103,9 +103,9 @@ den ein benutzter Editor nach einer Weile erreicht:
 | --- | ---: | ---: | ---: |
 | `usercmd-undocumented` | 0 | 80 | **0** |
 | `usercmd-not-live` | 0 | 0 | **0** |
-| `keymap-not-live` | 0 | 16 | 16 |
-| extern gesamt | 4 | 140 | **19** |
-| `all` gesamt | 14 | 151 | **27** |
+| `keymap-not-live` | 0 | 16 | **10** |
+| extern gesamt | 4 | 140 | **13** |
+| `all` gesamt | 14 | 151 | **21** |
 | übersprungene Stämme (extern) | 17 | 0 | 0 |
 
 Die 80 nach Eigentümer:
@@ -167,11 +167,35 @@ korrigiert.
 
 ---
 
-Die 16 verbliebenen `keymap-not-live` sind dagegen **kein** offener Punkt:
-13 davon sind die dokumentierten Notationsdifferenzen (Telescope schreibt
-`<A-c>`, die Quelle `<M-c>`; VisualMulti trägt den Leader `\\` im Key), plus
-`["x]y<C-G>`, das eine Register-Notation ist und keine Taste. Höchstens vier
-echte Kandidaten, alle in MEASURING.md aufgeführt.
+### Die 16 Keymap-Zeilen, einzeln nachgesehen — null echte Kandidaten
+
+Hier stand „höchstens vier echte Kandidaten". Einzeln angesehen sind es
+**null**; die Überschrift der jeweiligen Tabelle sagt es meist selbst.
+
+| Klasse | n | Was getan wurde |
+| --- | ---: | --- |
+| Abgeschalteter Plugin-Default (`VM_default_mappings = 0`) | 3 | `**Nicht live:**`-Marker |
+| Taste einer fremden Oberfläche (LazyGit-TUI) | 1 | `**Nicht live:**`-Marker |
+| Verweistabelle auf andere Blätter | 1 | `**Nicht live:**`-Marker |
+| Keine Taste, sondern Vim-Doku-Notation | 1 | Notation korrigiert |
+| Buffer-lokal, UI nicht offen | 10 | nichts — korrekt gemeldet |
+
+`keymap-not-live` steht damit bei geladenen Plugins auf **10**, und die zehn
+sind ausschließlich die dokumentierte Nicht-Befund-Klasse 1: sieben Tasten im
+Telescope-Picker, `zo` im Trouble-Fenster, zwei im VM-Modus. Sie wären live,
+sobald das jeweilige Fenster offen ist.
+
+**Der `**Nicht live:**`-Marker ist neu** und in
+[`BINDINGS-FORMAT.md`](../../../NOTES/BINDINGS-FORMAT.md) §6 beschrieben: eine
+Zeile unter der Überschrift nimmt die Tabellen eines Abschnitts von der
+Live-Prüfung aus. Drei Sorten Tabelle brauchen ihn — abgeschaltete Defaults,
+Tasten einer fremden Oberfläche, Verweistabellen. Nur die Live-Richtung ehrt
+ihn; die Zeilen bleiben in `browse` und zählen als Dokumentation, und der
+Bericht druckt die Zahl der markierten Zeilen (aktuell 16).
+
+**Der eine echte Fehler:** `Keymaps/Fugitive.md` schrieb die Vim-Doku-Notation
+für „optionales Register, dann `y<C-G>`" als wäre sie eine Taste. Live
+nachgesehen heißt die Map schlicht `y<C-G>`. Korrigiert.
 
 ---
 

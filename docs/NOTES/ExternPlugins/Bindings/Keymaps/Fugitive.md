@@ -102,7 +102,7 @@ Fugitive-Objektbuffern (Blob, Commit, …), sofern dort sinnvoll. Alle
 | `.` | `:`-Kommandozeile mit Datei unter Cursor vorbelegt starten | [default] |
 | `g?` | Hilfe zu `fugitive-maps` | [default] |
 | `<C-R><C-G>` (Command-Line, global) | Pfad zum aktuellen Fugitive-Objekt einfügen | [default] |
-| `["x]y<C-G>` (global) | Pfad zum aktuellen Fugitive-Objekt yanken | [default] |
+| `y<C-G>` (global, Normal-Modus) | Pfad zum aktuellen Fugitive-Objekt yanken. Ein vorangestelltes Register wirkt wie überall (`"xy<C-G>` yankt nach `x`) — `fugitive.txt` schreibt das als `["x]y<C-G>`. | [default] |
 
 ### In `:Git blame`
 

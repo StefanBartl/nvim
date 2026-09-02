@@ -74,6 +74,10 @@ später reaktiviert werden.
 Diese öffnen ebenfalls Telescope-Picker, gehören aber zu anderen Plugins/
 Features und werden dort dokumentiert, nicht hier:
 
+**Nicht live:** eine Verweistabelle. Sie zeigt auf Maps, die **andere**
+Blätter besitzen (Harpoon, Astro-Buffer, LSP-Tools); geprüft werden sie
+dort, wo sie registriert werden, nicht hier.
+
 | Mapping | Aktion | Quelle |
 |---|---|---|
 | `<leader>ht` | Harpoon-Liste als Telescope-Picker | [Harpoon.md](Harpoon.md), `config/harpoon/ui/menu_telescope.lua` |

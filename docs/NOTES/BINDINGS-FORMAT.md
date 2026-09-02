@@ -170,7 +170,53 @@ für ein Plugin meldet, das gar nicht läuft. Alles Weitere in
 [FEATURES.md](../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md),
 „Wie ein Cheatsheet-Stamm zu seinem Plugin findet".
 
-## 6. Retrofit — durchgeführt (2026-08-07)
+## 6. `**Nicht live:**` — wenn eine Tabelle gar nichts über diese Session sagt (2026-09-02)
+
+Optional, und die meisten Tabellen brauchen es nicht. `:Bindings check`
+vergleicht jede Keymap-Zeile mit dem, was gerade registriert ist. Drei Sorten
+Tabelle beantworten diese Frage aber gar nicht — sie beschreiben etwas
+anderes:
+
+* **Abgeschaltete Plugin-Defaults.** `Keymaps/VisualMulti.md` listet, was
+  vim-visual-multi mitbringt und was diese Config mit
+  `VM_default_mappings = 0` abschaltet. Nie registriert, absichtlich.
+* **Tasten einer fremden Oberfläche.** `Keymaps/Lazygit.md`s Spalte
+  „Taste (in LazyGit)" nennt Tasten des LazyGit-TUI. Neovim registriert sie
+  nie, egal ob LazyGit gerade läuft.
+* **Verweistabellen.** `Keymaps/Telescope.md`s „Verwandte Keymaps außerhalb
+  dieser Datei" zeigt auf Maps, die andere Blätter besitzen.
+
+Solche Abschnitte sagen es selbst — als Zeile **direkt unter der
+Überschrift**, vor der Tabelle:
+
+```markdown
+### Durch `VM_default_mappings = 0` deaktiviert
+
+**Nicht live:** Plugin-Defaults, die diese Config abschaltet.
+```
+
+Der Text nach dem Marker ist frei und für Menschen; gelesen wird nur der
+Marker selbst. Er gilt **bis zur nächsten Überschrift**, ein Blatt kann also
+eine unprüfbare Tabelle neben fünf gewöhnlichen haben — `VisualMulti.md` tut
+genau das.
+
+**Nur die Live-Richtung ehrt ihn.** Die Zeilen werden weiter geparst,
+erscheinen in `:Bindings browse` und zählen als Dokumentation für die
+Gegenrichtung. Dieselbe Trennung, die `META_FILES` (`All.md`,
+`Collisions.md`, `Overview.md`) macht.
+
+**Warum nicht einfach die Spalte umbenennen.** Weil der Scraper eine
+Klammer-Gruppe im Header absichtlich wegwirft: `Default-Mapping (Plugin)` und
+`Taste (in LazyGit)` werden beide zu einem bekannten lhs-Header. Das ist
+gewollt — der Korpus schreibt die Key-Spalte in einem Dutzend Varianten.
+Einen Header umzubenennen, damit der Parser wegschaut, koppelt die Formulierung
+an Parser-Interna und bricht beim nächsten Umformulieren. Ein Marker sagt,
+was er meint.
+
+Der Bericht zählt die markierten Zeilen und druckt sie unter den Befunden
+(„16 documented rows marked …"), damit ein Opt-out nicht unsichtbar wird.
+
+## 7. Retrofit — durchgeführt (2026-08-07)
 
 Ursprünglich als 5-Schritt-Plan über vermutlich alle 137 Dateien angelegt —
 die tatsächliche Prüfung ergab einen viel kleineren echten Korrekturbedarf,

@@ -35,11 +35,38 @@ local ROOT_SCOPES = { "Personal", "Extern" }
 --- it just is not owned there. See `drift.lua`'s use of the flag.
 local META_FILES = { All = true, Collisions = true, Overview = true }
 
+--- A section that declares its own rows unverifiable against a live session.
+---
+--- Written directly under the heading, on its own line:
+---
+---     ### Durch `VM_default_mappings = 0` deaktiviert
+---
+---     **Nicht live:** Plugin-Defaults, die diese Config abschaltet.
+---
+--- Three shapes of table need it, and all three exist in the corpus today:
+--- keys a plugin ships but this config switched off, keys of a foreign TUI
+--- that Neovim never registers (`Keymaps/Lazygit.md`'s LazyGit column), and
+--- cross-reference tables that point at other sheets rather than claiming
+--- anything.
+---
+--- **Why not just rename the column.** `normalize_header` strips a
+--- parenthesised group on purpose, so `Default-Mapping (Plugin)` and
+--- `Taste (in LazyGit)` both reduce to a known lhs header -- deliberately, so
+--- the scraper survives the corpus' dozen spellings. Renaming a header to
+--- dodge that would couple prose wording to parser internals and break the
+--- next time someone rewords it. A marker says what it means.
+---
+--- Only the LIVE direction honours it. The rows still parse, still show up in
+--- `:Bindings browse`, and still count as documentation for the
+--- live-but-undocumented direction -- the same split `META_FILES` makes.
+local NOT_LIVE_MARKER = "^%*%*Nicht live:%*%*"
+
 ---@class Bindings.Record
 ---@field scope "Personal"|"Extern"
 ---@field category "Keymaps"|"Usercmds"|"Autocmds"
 ---@field plugin string filename without extension, e.g. "images.nvim" or "Telescope"
 ---@field meta boolean true for a corpus-level file (see `META_FILES`), which owns no bindings of its own
+---@field not_live boolean true when the section this row sits in declared itself unverifiable against a running session (see `NOT_LIVE_MARKER`)
 ---@field heading string|nil nearest `##`/`###` heading above the table, nil if the table opens the file with no heading yet
 ---@field columns string[] header-row cells, free-form
 ---@field cells string[] this row's cells, same length as `columns` when the table is well-formed
@@ -116,12 +143,22 @@ local function parse_file(path, scope, category)
   local meta = META_FILES[plugin] == true
   local records = {}
   local heading, columns, awaiting_separator = nil, nil, false
+  -- Scoped to the section, not to the file: a sheet can hold one unverifiable
+  -- table next to five ordinary ones, and `Keymaps/VisualMulti.md` does.
+  local not_live = false
 
   local lines = vim.split(content:gsub("\r", ""), "\n", { plain = true })
   for lnum, line in ipairs(lines) do
     local h = line:match("^##+%s+(.+)$")
     if h then
       heading, columns, awaiting_separator = vim.trim(h), nil, false
+      not_live = false
+    elseif line:match(NOT_LIVE_MARKER) then
+      -- Ends a running table exactly like any other prose line would, so the
+      -- marker behaves as text that happens to carry a flag rather than as a
+      -- third kind of line the parser has to be careful around.
+      not_live = true
+      columns, awaiting_separator = nil, false
     elseif is_table_row(line) then
       if not columns then
         columns, awaiting_separator = split_cells(line), true
@@ -134,6 +171,7 @@ local function parse_file(path, scope, category)
           category = category,
           plugin = plugin,
           meta = meta,
+          not_live = not_live,
           heading = heading,
           columns = columns,
           cells = split_cells(line),

@@ -32,6 +32,11 @@ hier nicht dokumentiert.
 Zwei Tasten sind in dieser Config per LazyGit-`customCommands` **zusätzlich**
 belegt, um Dateien zurück in die Eltern-Neovim-Instanz zu holen (nvr-Bridge):
 
+**Nicht live:** die Tastenspalte nennt Tasten des **LazyGit-TUI**, nicht
+Neovims. `nvim_get_keymap` sieht sie nie, egal ob LazyGit gerade läuft.
+Was Neovim davon registriert, sind die zwei `:Lazygit*`-Commands in der
+Effekt-Spalte — siehe [Usercmds/Lazygit.md](../Usercmds/Lazygit.md).
+
 | Taste (in LazyGit) | Aktion | Effekt in Neovim | Status |
 |---|---|---|---|
 | `o` | LazyGit-Default | Datei im System-Dateimanager öffnen | **[default]** (lazygit-TUI, nicht Neovim) |

@@ -506,16 +506,43 @@ dafür, dass die Zeilen überhaupt geprüft werden.
 | | Standardlauf | alle 17 Extern-Plugins geladen |
 | --- | ---: | ---: |
 | `personal` | 10 | 8 |
-| `extern` | 4 | 19 |
-| **`all`** | **14** | **27** |
+| `extern` | 4 | **13** |
+| **`all`** | **14** | **21** |
 
 Aufschlüsselung `all`, Standardlauf: 14 `autocmd-not-live`, sonst nichts.
-Mit geladenen Plugins: 11 `autocmd-not-live` + 16 `keymap-not-live`.
+Mit geladenen Plugins: 11 `autocmd-not-live` + 10 `keymap-not-live`.
 
 **Alle drei Usercmd-Kategorien stehen in beiden Spalten auf 0**, ebenso
-`autocmd-undocumented`. Was bleibt, ist zweierlei: Autocmds, deren Feature
-aus oder deren Plugin ungeladen ist, und 16 Keymap-Zeilen, von denen 13
-Notationsdifferenzen sind.
+`autocmd-undocumented`.
+
+### Die 16 Keymap-Zeilen, einzeln nachgesehen
+
+Der Handover hatte „höchstens vier echte Kandidaten" vermutet. Einzeln
+angesehen sind es **null** — jede der 16 fällt in eine von vier Klassen, und
+die Überschrift der jeweiligen Tabelle sagt es meist selbst:
+
+| Klasse | n | Was getan wurde |
+| --- | ---: | --- |
+| Abgeschalteter Plugin-Default (`VM_default_mappings = 0`) | 3 | `**Nicht live:**`-Marker |
+| Taste einer fremden Oberfläche (LazyGit-TUI) | 1 | `**Nicht live:**`-Marker |
+| Verweistabelle auf andere Blätter | 1 | `**Nicht live:**`-Marker |
+| Keine Taste, sondern Vim-Doku-Notation (`["x]y<C-G>`) | 1 | Notation korrigiert |
+| **Buffer-lokal, UI nicht offen** | **10** | nichts — korrekt gemeldet |
+
+`keymap-not-live` fällt damit von 16 auf **10**, und die zehn sind
+ausschließlich die dokumentierte Nicht-Befund-Klasse 1: sieben Tasten im
+Telescope-Picker (davon sechs von `telescope-file-browser.nvim`), `zo` im
+Trouble-Fenster, zwei im VM-Modus. Sie wären live, sobald das jeweilige
+Fenster offen ist.
+
+**Der eine echte Fehler war die Notation.** `Keymaps/Fugitive.md` schrieb
+`["x]y<C-G>` — das ist `fugitive.txt`s Schreibweise für „optionales
+Register, dann `y<C-G>`", keine Taste. Live nachgesehen heißt die Map
+`y<C-G>` im Normal-Modus. Korrigiert.
+
+Der Bericht druckt jetzt zusätzlich, wie viele Zeilen ein Abschnitt selbst als
+`**Nicht live:**` markiert hat (aktuell 16 über drei Abschnitte), damit ein
+Opt-out nicht unsichtbar wird.
 
 **Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
 Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —

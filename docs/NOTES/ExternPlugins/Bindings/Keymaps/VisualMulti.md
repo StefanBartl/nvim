@@ -49,6 +49,11 @@ Alle übrigen permanenten Default-Mappings aus `vm-mappings.txt` sind in
 dieser Config **nicht** verfügbar (bewusst abgeschaltet, keine Ersatzbindung
 in `VM_maps`):
 
+**Nicht live:** diese Tabelle listet Plugin-Defaults, die diese Config mit
+`VM_default_mappings = 0` abschaltet. Sie sind nie registriert, und
+`:Bindings check` prüft sie deshalb nicht — siehe `records.lua`s
+`NOT_LIVE_MARKER`.
+
 | Default-Mapping (Plugin) | Aktion |
 |---|---|
 | `<Esc>` | VM verlassen (`Exit`) |

@@ -1255,6 +1255,10 @@ end
 ---  axes on purpose: it answers "how many findings did the fallback
 ---  suppress", and splitting it would invite the two halves to be compared
 ---  with each other, which means nothing.
+---@field declared_not_live integer documented rows whose own section marked
+---  them unverifiable against a live session (`records.lua`'s
+---  `NOT_LIVE_MARKER`). Separate from `skipped_rows`: that one is about this
+---  session's plugin set, this one about what the row claims at all.
 ---@field skipped_rows integer documented rows dropped because their plugin
 ---  is not loaded — the same reasoning as `AutocmdInfo.unanchored`. The
 ---  skipped *plugin* count was always printed; the row count was not, and
@@ -1326,6 +1330,11 @@ function M.check(plugin, opts)
   -- pass over the corpus to re-derive the same number would both cost a
   -- full re-read and be free to disagree with them.
   local skipped_rows = 0
+  -- Rows a section marked `**Nicht live:**` (see `records.lua`'s
+  -- `NOT_LIVE_MARKER`). Counted rather than silently dropped, for the same
+  -- reason `skipped_rows` is: a number the report does not print is a number
+  -- nobody can reconcile.
+  local declared_not_live = 0
 
   -- Scope of the live-undocumented direction. Resolved before the axes run
   -- so the filter and the report agree on one answer, and so an
@@ -1423,7 +1432,16 @@ function M.check(plugin, opts)
     -- `Overview.md`) documents nothing of its own, so nothing in it can be
     -- missing. See `records.lua`'s `META_FILES`. This direction skips them;
     -- the live-but-undocumented one below still counts them as documentation.
-    local ours = (not plugin or rec.plugin == plugin) and not rec.meta
+    --
+    -- `rec.not_live`: the section said so itself. Three real shapes in the
+    -- corpus -- a plugin default this config switched off, a key of a foreign
+    -- TUI, a cross-reference table -- and all three are claims about
+    -- something OTHER than this Neovim session. Checking them against
+    -- `nvim_get_keymap` asks a question the row never answered.
+    if rec.not_live and not rec.meta then
+      declared_not_live = declared_not_live + 1
+    end
+    local ours = (not plugin or rec.plugin == plugin) and not rec.meta and not rec.not_live
     if ours and is_plugin_loaded(rec.plugin) then
       -- Both forms are kept, not just the normalized one: `lhs` is the raw
       -- byte string the live probe compares against, `token` the
@@ -2103,6 +2121,7 @@ function M.check(plugin, opts)
     fallback = repo_dirs ~= nil,
     fallback_confirmed = fallback_confirmed,
     skipped_rows = skipped_rows,
+    declared_not_live = declared_not_live,
   }
 
   return findings,
@@ -2614,6 +2633,15 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info, aut
       autocmd_info.registry == 1 and "" or "s"
     )
     lines[#lines + 1] = "  -- not checkable = the row names no augroup, or no event Neovim knows"
+  end
+  if repo_info and (repo_info.declared_not_live or 0) > 0 then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = ("%d documented row%s marked \"Nicht live\" by their own section"):format(
+      repo_info.declared_not_live,
+      repo_info.declared_not_live == 1 and "" or "s"
+    )
+    lines[#lines + 1] =
+      "  -- a switched-off plugin default, a foreign TUI's key, a cross-reference table"
   end
   if skipped and #skipped > 0 then
     lines[#lines + 1] = ""
