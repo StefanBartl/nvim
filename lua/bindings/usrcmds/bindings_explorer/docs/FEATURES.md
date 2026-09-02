@@ -15,6 +15,12 @@ Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
 `drift.lua` + `source.lua` + `repo.lua` (Phase 3 Drift-Bericht, vier Achsen),
 `report.lua` + `status.lua` (Phase 4 Berichtsdatei + Dashboard).
 
+**Zahlen kommen aus [MEASURING.md](./MEASURING.md)**, nicht von hier: dort
+stehen die gemessenen Stände mit Datum, die fünf Fallen, die eine
+headless-Messung still falsch machen, und die drei Klassen von Befund, die
+korrekt gemeldet werden und trotzdem kein Problem sind. Wer eine Zahl aus
+dieser Datei nachprüfen will, liest zuerst dort die Vorkehrungen.
+
 ## Volltextsuche (`:Bindings search`)
 
 `:Bindings search [keymaps|usercmds|autocmds] [query]`

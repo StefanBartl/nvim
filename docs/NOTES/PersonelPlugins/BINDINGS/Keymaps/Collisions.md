@@ -63,6 +63,22 @@ Everything that is live in an ordinary buffer, by owner:
 suggests `<leader>ssa` / `<leader>slo` / `<leader>sli` as example values, which
 matters below.
 
+### Free `<leader>t…` keys
+
+The complement of the table above for the one prefix that keeps coming up in
+relocation questions. Checked against nvim-config, the NvChad defaults and
+every repo under `E:\repos`, then verified a second time against a running
+session:
+
+```
+free:   ta  td  ti  tj  tk  tm  tu  ty  tz
+taken:  tB  tH  tb  tft th  tl  tq  tr  tt
+```
+
+`tb` went to lsp.nvim's lightbulb after the first pass, which is why the list
+is worth re-checking rather than trusting: `:Bindings check` does not police
+free keys, only documented ones.
+
 ## Exact duplicates
 
 **None between plugins.** No two plugins claim the same `lhs` in the same
