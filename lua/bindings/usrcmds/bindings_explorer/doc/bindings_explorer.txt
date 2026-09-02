@@ -98,6 +98,17 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
       by name, not reported as false "missing".
     • Usercmds are checked both directions (much lower noise, since
       `nvim_get_commands({})` never includes vim/plugin defaults).
+    • Autocmds are checked both directions too, since 2026-09-02. Forward
+      against `nvim_get_autocmds({})`, one finding per documented ROW with
+      the events of it that are missing. Backward against lib.nvim's autocmd
+      registry, which holds only registrations that went through the helpers
+      - Neovim's own and a third-party plugin's are invisible there, which is
+      what keeps the reverse direction answerable at all.
+    • The corpus counts CALL SITES, `nvim_get_autocmds` counts EVENT
+      REGISTRATIONS. Neither number is compared to the other: both sides are
+      flattened to (augroup, event) pairs first.
+    • A row naming no augroup, or no event Neovim knows, is not checkable.
+      Those are counted and reported under the findings, never guessed at.
 
     Examples: >vim
         :Bindings check

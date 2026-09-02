@@ -9,6 +9,14 @@
 ---
 --- Deliberately narrower than the roadmap's original sketch, in four ways:
 ---
+--- 0. **All three categories are checked** since 2026-09-02. Keymaps and
+---    Usercmds were the original two; `Autocmds/` was read for command names
+---    and never compared against anything, so 241 documented rows sat outside
+---    every number this module printed. What closed it is described at
+---    `live_autocmds` — including why the reverse direction is answerable
+---    there when limitation 1 rules it out for keymaps, and how the corpus'
+---    call-site counting is reconciled with `nvim_get_autocmds`' per-event
+---    counting without the two ever being compared.
 --- 1. **Keymaps checked one direction only** (documented-but-not-live).
 ---    The reverse (live-but-undocumented) would mean diffing against
 ---    EVERY global keymap — vim's own defaults, matchit, every plugin's
@@ -231,6 +239,23 @@ local USERCMD_HEADERS = {
 }
 local DESC_HEADERS = { desc = true, description = true }
 
+--- Autocmds columns. `normalize_header` lowercases and strips a trailing
+--- parenthesis group, so `Augroup (clear=true)` and `Event(s)` arrive here as
+--- `augroup` and `event` -- the corpus spells both a dozen ways across its 33
+--- Autocmds sheets and every spelling below was read off a real header row.
+local AUGROUP_HEADERS = {
+  augroup = true,
+  ["augroup name"] = true,
+  group = true,
+  gruppe = true,
+}
+
+--- Two event-ish headers are deliberately absent. `Neo-tree-Event`
+--- (`NeoTree.md`) names neo-tree's own callback events, which no augroup ever
+--- registers; `Trigger` (`buffer-ctx.md`'s module summary) names what causes a
+--- module to load. Admitting either would let unrelated text claim an autocmd.
+local EVENT_HEADERS = { event = true, events = true, ereignis = true }
+
 --- Cells that fill a `desc` column without naming a description. Checked
 --- lowercased, after `strip_quotes`.
 local EMPTY_DESC = { [""] = true, none = true, ["-"] = true, ["—"] = true, ["n/a"] = true }
@@ -410,6 +435,69 @@ local function extract_lhs(rec)
   return token and normalize_lhs(token)
 end
 
+--- The augroup a row names, or nil when the row names none that can be
+--- checked.
+---
+--- Three shapes are rejected rather than guessed at, all real:
+---   * no augroup column at all -- eight sheets document events without one
+---     (`| Event(s) | Condition | Action | desc |`). An event on its own is
+---     not checkable: every plugin registers `BufEnter`.
+---   * a placeholder (`—`, `*(none)*`), same guard the key column uses.
+---   * a name built at runtime, spelled with a `<...>` slot --
+---     `LspSignaturePopup_<winid>` is one augroup per window and matches no
+---     literal.
+---@param rec Bindings.Record
+---@return string|nil
+local function extract_augroup(rec)
+  local idx = column_index(rec, AUGROUP_HEADERS)
+  local cell = idx and rec.cells[idx]
+  if not cell or cell == "" or is_placeholder_key(cell) then
+    return nil
+  end
+  -- `**none** -- registered directly via `nvim_create_autocmd`, id tracked
+  -- manually ...` is `Autocmds/reposcope.nvim.md`'s way of saying there is no
+  -- augroup. `first_token` dutifully returns the first backticked group of
+  -- that sentence, which is a function name, and the axis then reported a
+  -- missing augroup called `nvim_create_autocmd`. A cell that OPENS with a
+  -- none-word is answering "which augroup" with "there is none".
+  local bare = vim.trim((cell:gsub("[%*_]", "")):lower())
+  if bare:match("^none%f[%W]") or bare:match("^keine%f[%W]") then
+    return nil
+  end
+
+  local token = first_token(cell)
+  if token == "" or token:find("<") or token:find("%s") then
+    return nil
+  end
+  return token
+end
+
+--- Every event name a row lists, validated against Neovim itself.
+---
+--- `vim.fn.exists("##" .. name)` is the authoritative answer and costs nothing
+--- -- an allowlist of event names would be one more hand-kept mirror, and it
+--- would go stale on the next Neovim release rather than on a corpus edit.
+--- It also does the filtering this needs for free: the events cell often
+--- carries prose beside the names (`User LspRootScopeChanged`, `BufWritePre`
+--- *on save*), and only the real event names survive.
+---@param rec Bindings.Record
+---@return string[]
+local function extract_events(rec)
+  local idx = column_index(rec, EVENT_HEADERS)
+  local cell = idx and rec.cells[idx]
+  if not cell or cell == "" then
+    return {}
+  end
+  local seen, out = {}, {}
+  for word in cell:gmatch("[%a][%w_]*") do
+    if not seen[word] and vim.fn.exists("##" .. word) == 1 then
+      seen[word] = true
+      out[#out + 1] = word
+    end
+  end
+  return out
+end
+
 ---@param rec Bindings.Record
 ---@return string|nil base command name, e.g. "Bindings" from "`:Bindings search`"
 local function extract_usercmd(rec)
@@ -583,6 +671,72 @@ local function owner_plugin(owner)
     return nil
   end
   return (owner:match("^([^%s(]+)"))
+end
+
+---@class Bindings.AutocmdRegistration
+---@field group string augroup name
+---@field event string one event; a handler on four events yields four of these
+---@field src string  # "file:line" of the registering call
+---@field desc string|nil
+
+--- Every `(augroup, event)` pair registered right now, plus the same pairs
+--- restricted to what THIS config and its plugins registered.
+---
+--- **Why two sets and not one.** `nvim_get_autocmds({})` is complete but
+--- unattributable -- 324 entries here, most of them Neovim's own and every
+--- plugin's. It answers "is this documented pair live", which is the
+--- documented->live direction. It cannot answer the reverse without flooding,
+--- exactly as `M.check`'s limitation 1 says for keymaps.
+---
+--- `lib.nvim.bindings.autocmd.registered()` answers the reverse precisely: it
+--- holds only registrations that went through the helpers, with the call site
+--- attached. Same shape of trick as the usercmd registry, and the reason an
+--- Autocmds axis is cheaper to build than the three before it.
+---
+--- **The counting trap this sidesteps.** The corpus counts *call sites* (a
+--- handler on four events is one documented row), `nvim_get_autocmds` counts
+--- *event registrations* (the same handler appears four times). Nothing here
+--- compares counts: both sides are flattened to `(group, event)` pairs, so a
+--- four-event handler contributes four pairs on both sides and the two
+--- notions never meet.
+---@return table<string, true> live_pairs  # "group::event"
+---@return Bindings.AutocmdRegistration[] ours
+local function live_autocmds()
+  local live, ours = {}, {}
+
+  local by_id = {}
+  local ok, entries = pcall(vim.api.nvim_get_autocmds, {})
+  if ok then
+    for _, au in ipairs(entries) do
+      -- `id` is present only for autocmds created through the API; one
+      -- defined in Vimscript has none, and indexing with it threw.
+      if au.group_name and au.event then
+        live[au.group_name .. "::" .. au.event] = true
+        if au.id then
+          by_id[au.id] = au.group_name
+        end
+      end
+    end
+  end
+
+  local ok_lib, autocmd = pcall(require, "lib.nvim.bindings.autocmd")
+  if not ok_lib or type(autocmd.registered) ~= "function" then
+    return live, ours
+  end
+  for _, r in ipairs(autocmd.registered()) do
+    -- `record.group` is only filled when the augroup was created through
+    -- lib.nvim; the raw `nvim_create_augroup` half of this config passes an
+    -- integer id, and lib.nvim has no name for it. The live table does --
+    -- `nvim_get_autocmds` reports `group_name` however the group was made --
+    -- so the id closes the gap exactly, without guessing.
+    local group = r.group or by_id[r.id]
+    if group and r.src then
+      for _, event in ipairs(r.events or {}) do
+        ours[#ours + 1] = { group = group, event = event, src = r.src, desc = r.desc }
+      end
+    end
+  end
+  return live, ours
 end
 
 --- `name -> file:line` for every global command lib.nvim's usercmd registry
@@ -852,7 +1006,7 @@ local function is_live(live_maps, modes, lhs, doc_desc)
 end
 
 ---@class Bindings.DriftFinding
----@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"|"keymap-undocumented"|"usercmd-undocumented-source"|"keymap-not-in-repo"|"usercmd-not-in-repo"
+---@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"|"keymap-undocumented"|"usercmd-undocumented-source"|"keymap-not-in-repo"|"usercmd-not-in-repo"|"autocmd-not-live"|"autocmd-undocumented"
 ---@field plugin string|nil
 ---@field heading string|nil  # the record's table heading, keymap axis only
 ---@field group string|nil    # plugin + heading, the verdict's grouping key
@@ -879,6 +1033,10 @@ end
 ---  ARE written in their plugin's own source, and are therefore not
 ---  reported. Carried so a reader can reconcile this run's count with one
 ---  from before the fallback existed.
+
+---@class Bindings.AutocmdInfo
+---@field registry integer  # `(augroup, event)` pairs lib.nvim's registry could attribute
+---@field unanchored integer  # documented Autocmds rows this axis cannot reach
 
 ---@class Bindings.ScopeInfo
 ---@field scope "personal"|"extern"|"all" what was asked for
@@ -926,6 +1084,10 @@ end
 --- @return Bindings.ScopeInfo scope_info what the `scope` option did, so a
 ---   report can say which commands it chose not to show rather than leaving
 ---   the reader to wonder why a number dropped.
+--- @return Bindings.AutocmdInfo autocmd_info how much of the Autocmds corpus
+---   the axis could not reach, and how many registrations it had to compare
+---   against. The same reasoning as `scope_info`: a small finding count means
+---   two very different things depending on how much was looked at.
 function M.check(plugin, opts)
   opts = opts or {}
   local findings = {}
@@ -1404,6 +1566,156 @@ function M.check(plugin, opts)
     end
   end
 
+  -- Autocmds, both directions. Added 2026-09-02; until then the third of the
+  -- corpus under `Autocmds/` was read for command names and never checked
+  -- against anything -- 241 documented rows, and a report saying "1 finding"
+  -- while none of them had been looked at. What made it worth building was
+  -- evidence that the surface drifts: lsp.nvim's `b260fc8` registered two
+  -- autocmds on the raw API and falsified two explicit sentences of
+  -- `Autocmds/lsp.nvim.md`, and a person found it, not a checker.
+  local live_pairs, our_autocmds = live_autocmds()
+  local documented_pairs = {}
+  -- The reverse direction asks "does the corpus document this at all", so it
+  -- reads BOTH trees whatever the scope is -- exactly like the usercmd
+  -- direction's `documented_anywhere`. Built from the scoped set alone, the
+  -- personal run reported 77 undocumented autocmds and the `all` run 70: the
+  -- seven differences were ours, documented in the Extern tree, and the
+  -- narrower question had made them look like gaps.
+  local documented_anywhere_pairs = {}
+  local autocmd_unanchored = 0
+
+  for _, rec in ipairs(records.list("Autocmds", corpus_scope)) do
+    local ours_row = (not plugin or rec.plugin == plugin) and not rec.meta
+    if ours_row then
+      local group = extract_augroup(rec)
+      local events = extract_events(rec)
+      if not group or #events == 0 then
+        -- Counted, not reported. A row with no augroup column (or no event
+        -- Neovim knows) is not a defect in the plugin, it is a row this axis
+        -- cannot reach -- and saying how many there are is the honest half of
+        -- a check that skips them.
+        autocmd_unanchored = autocmd_unanchored + 1
+      else
+        for _, event in ipairs(events) do
+          documented_pairs[group .. "::" .. event] = true
+        end
+        if is_plugin_loaded(rec.plugin) then
+          local missing = {}
+          for _, event in ipairs(events) do
+            if not live_pairs[group .. "::" .. event] then
+              missing[#missing + 1] = event
+            end
+          end
+          -- One finding per row, not per event: the row is the documented
+          -- claim, and a handler that lost two of its four events is one
+          -- thing to go and look at, not two.
+          if #missing > 0 then
+            findings[#findings + 1] = {
+              kind = "autocmd-not-live",
+              plugin = rec.plugin,
+              heading = rec.heading,
+              notation = group .. " (" .. table.concat(missing, ", ") .. ")",
+              file = rec.file,
+              line = rec.line,
+            }
+          end
+        else
+          skipped[rec.plugin] = true
+        end
+      end
+    end
+  end
+
+  -- The reverse direction, and the only one that can be asked without
+  -- flooding: lib.nvim's registry holds our own registrations, never
+  -- Neovim's defaults or a third-party plugin's. Unscoped only, for the same
+  -- reason the usercmd one is -- see the `plugin` param doc.
+  if not plugin then
+    for _, rec in ipairs(records.list("Autocmds")) do
+      local g = extract_augroup(rec)
+      if g then
+        for _, event in ipairs(extract_events(rec)) do
+          documented_anywhere_pairs[g .. "::" .. event] = true
+        end
+      end
+    end
+
+    -- Does this plugin's own sheet name the augroup in prose? Cached per
+    -- plugin: `sheet_text` re-reads files, and one lookup per registration
+    -- would read the same sheet a dozen times.
+    local prose_cache = {}
+    ---@param owner string|nil
+    ---@param group string
+    ---@return boolean
+    local function named_in_prose(owner, group)
+      if not owner then
+        return false
+      end
+      local text = prose_cache[owner]
+      if text == nil then
+        text = records.sheet_text("Autocmds", owner)
+        prose_cache[owner] = text
+      end
+      if text == "" then
+        return false
+      end
+      local escaped = group:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")
+      return text:find("%f[%w_]" .. escaped .. "%f[^%w_]") ~= nil
+    end
+
+    -- Grouped by call site, not by event. `SessionsNvim` is one
+    -- `autocmd.create` on six events; six findings for it would be the very
+    -- "event registrations instead of call sites" confusion this axis was
+    -- built to avoid, and on the side of the report a reader acts on.
+    local groups, order = {}, {}
+    for _, r in ipairs(our_autocmds) do
+      local key = r.group .. "::" .. r.src
+      if not documented_pairs[r.group .. "::" .. r.event] then
+        if not groups[key] then
+          groups[key] = { group = r.group, src = r.src, events = {}, seen = {} }
+          order[#order + 1] = key
+        end
+        local g = groups[key]
+        if not g.seen[r.event] then
+          g.seen[r.event] = true
+          g.events[#g.events + 1] = r.event
+        end
+      end
+    end
+
+    for _, key in ipairs(order) do
+      local g = groups[key]
+      local owner, rest = owner_of_path(g.src)
+      local covered = named_in_prose(owner, g.group)
+      if not covered then
+        for _, event in ipairs(g.events) do
+          if documented_anywhere_pairs[g.group .. "::" .. event] then
+            covered = true
+            break
+          end
+        end
+      end
+      if not covered then
+        local in_scope = true
+        if scope ~= "all" and own_set then
+          local is_ours = owner ~= nil and own_set[owner] == true
+          in_scope = (scope == "personal") == is_ours
+        end
+        if in_scope then
+          table.sort(g.events)
+          findings[#findings + 1] = {
+            kind = "autocmd-undocumented",
+            plugin = owner,
+            notation = g.group .. " (" .. table.concat(g.events, ", ") .. ")",
+            owner = owner and (owner .. " (" .. rest .. ")") or g.src,
+          }
+        else
+          scope_info.hidden = scope_info.hidden + 1
+        end
+      end
+    end
+  end
+
   -- Third axis (source): registered in THIS repository's own Lua, but not
   -- documented anywhere. This is the direction limitation 1 above rules out
   -- for the *live* axis, and the reason it is answerable here: the source
@@ -1473,7 +1785,15 @@ function M.check(plugin, opts)
     fallback_confirmed = fallback_confirmed,
   }
 
-  return findings, skipped_list, source_reason, repo_info, scope_info
+  return findings,
+    skipped_list,
+    source_reason,
+    repo_info,
+    scope_info,
+    {
+      registry = #our_autocmds,
+      unanchored = autocmd_unanchored,
+    }
 end
 
 ---The source axis on its own — `M.check` folds this in, exposed separately
@@ -1606,6 +1926,11 @@ local function render(f)
     return ("  %-20s %s:%d"):format(readable(f.notation), f.file or "?", f.line or 0)
   elseif f.kind == "usercmd-undocumented-source" then
     return ("  %-20s %s:%d"):format(f.notation, f.file or "?", f.line or 0)
+  elseif f.kind == "autocmd-not-live" then
+    -- Wider notation column than the keymap kinds: an augroup name plus the
+    -- events that are missing does not fit in 20, and truncating the events
+    -- would remove the only part that says what to go and look at.
+    return ("  %-22s %-38s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
   end
   return ("  %-28s %s"):format(f.notation, f.owner or "unknown")
 end
@@ -1700,6 +2025,20 @@ local SECTIONS = {
     note = "from docs/map/module_map.json — only as fresh as the last :DocMap",
   },
   {
+    kinds = { ["autocmd-not-live"] = true },
+    title = "Autocmds — documented, not registered",
+    -- The dominant class here is neither drift nor a tool defect: an autocmd
+    -- whose feature is off (`LspFormatOnSave` exists only while format-on-save
+    -- is on, and its own sheet says so) or whose plugin loads on a trigger
+    -- this session never pulled. Naming it is what keeps the section readable.
+    note = "one line per documented ROW, listing the events of it that are missing; a feature-gated or not-yet-triggered autocmd lands here without anything being wrong",
+  },
+  {
+    kinds = { ["autocmd-undocumented"] = true },
+    title = "Autocmds registered through lib.nvim with no cheatsheet row",
+    note = "only registrations that went through the helpers -- Neovim's own and a third-party plugin's are invisible here by construction, which is what keeps this direction answerable",
+  },
+  {
     kinds = { ["usercmd-undocumented"] = true },
     title = "Live commands with no cheatsheet, by origin",
     -- The note used to read "mostly third-party infra this corpus never
@@ -1735,8 +2074,12 @@ local SECTIONS = {
 ---@param scope_info Bindings.ScopeInfo|nil `M.check`'s fifth return value.
 ---Omitted reads as "the default scope, nothing to explain", which is what a
 ---pre-existing four-argument caller means.
+---@param autocmd_info Bindings.AutocmdInfo|nil `M.check`'s sixth return
+---value: how much of the Autocmds corpus the axis could not reach, and how
+---many registrations it had to compare against. Omitted prints no limit
+---line, which is right for a caller that predates the axis.
 ---@return string[]
-function M.describe(findings, skipped, source_reason, repo_info, scope_info)
+function M.describe(findings, skipped, source_reason, repo_info, scope_info, autocmd_info)
   local lines = {}
 
   -- Above everything, including "no drift found": if the config's own
@@ -1752,17 +2095,14 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info)
       #pending == 1 and "" or "s",
       table.concat(pending, ", ")
     )
-    lines[#lines + 1] =
-      "  -- Their commands and keymaps are therefore NOT live, and every one of"
-    lines[#lines + 1] =
-      "  -- them is counted below as documented-but-not-registered. The findings"
+    lines[#lines + 1] = "  -- Their commands and keymaps are therefore NOT live, and every one of"
+    lines[#lines + 1] = "  -- them is counted below as documented-but-not-registered. The findings"
     lines[#lines + 1] = "  -- are inflated; do not quote these numbers."
     lines[#lines + 1] =
-      "  -- Usual cause: `nvim --headless -c \"luafile ...\"` runs the script before"
+      '  -- Usual cause: `nvim --headless -c "luafile ..."` runs the script before'
     lines[#lines + 1] =
       "  -- VimEnter, so the UIReady phase never fires. Run :Bindings check from a"
-    lines[#lines + 1] =
-      "  -- real session, or load the phase first. :StartupCheck lists them too."
+    lines[#lines + 1] = "  -- real session, or load the phase first. :StartupCheck lists them too."
     lines[#lines + 1] = ""
   end
 
@@ -1856,8 +2196,7 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info)
         scope_info.scope,
         scope_info.reason or "own/third-party split unavailable"
       )
-      lines[#lines + 1] =
-        "  -- every live undocumented command is listed, ours and theirs alike."
+      lines[#lines + 1] = "  -- every live undocumented command is listed, ours and theirs alike."
     elseif scope_info.hidden > 0 then
       lines[#lines + 1] = ""
       if scope_info.scope == "personal" then
@@ -1941,6 +2280,20 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info)
     )
     lines[#lines + 1] =
       "  -- a checkout in this path that nothing in the corpus documents; not drift, just uncovered."
+  end
+  -- What the Autocmds axis could not look at, stated rather than left to be
+  -- inferred from a small number. A row with no augroup column, or none whose
+  -- events Neovim recognizes, is not checkable -- and eight sheets document
+  -- their autocmds without ever naming a group in a column of its own.
+  if autocmd_info and autocmd_info.unanchored > 0 then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = ("Autocmds axis: %d documented row%s not checkable, %d registration%s attributable"):format(
+      autocmd_info.unanchored,
+      autocmd_info.unanchored == 1 and "" or "s",
+      autocmd_info.registry,
+      autocmd_info.registry == 1 and "" or "s"
+    )
+    lines[#lines + 1] = "  -- not checkable = the row names no augroup, or no event Neovim knows"
   end
   if skipped and #skipped > 0 then
     lines[#lines + 1] = ""

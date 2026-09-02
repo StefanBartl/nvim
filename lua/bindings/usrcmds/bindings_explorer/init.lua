@@ -136,7 +136,8 @@ end
 ---von fremden Live-Commands, Default `"personal"` — siehe `drift.check`.
 ---@return nil
 function M.check(plugin, opts)
-  local findings, skipped, source_reason, repo_info, scope_info = drift.check(plugin, opts)
+  local findings, skipped, source_reason, repo_info, scope_info, autocmd_info =
+    drift.check(plugin, opts)
   -- Der Scope steht im Titel, nicht nur im Bericht: der Unterschied
   -- zwischen 53 und 107 Befunden ist sonst nicht erklärbar, ohne bis zur
   -- Scope-Notiz zu scrollen.
@@ -145,7 +146,7 @@ function M.check(plugin, opts)
     or ""
   require("lib.nvim.ui.kit.viewer").open({
     title = ("Bindings — check%s (%d)"):format(label, #findings),
-    lines = drift.describe(findings, skipped, source_reason, repo_info, scope_info),
+    lines = drift.describe(findings, skipped, source_reason, repo_info, scope_info, autocmd_info),
   })
 end
 
@@ -354,10 +355,7 @@ function M.enable()
         kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
         desc = "Nur die fremden, als Markdown-Datei",
         run = function(ctx)
-          M.report(
-            ctx.args.plugin,
-            { repo_root = ctx.kv.root, out = ctx.kv.out, scope = "extern" }
-          )
+          M.report(ctx.args.plugin, { repo_root = ctx.kv.root, out = ctx.kv.out, scope = "extern" })
         end,
       },
       {

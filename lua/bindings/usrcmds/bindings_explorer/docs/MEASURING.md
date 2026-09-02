@@ -191,6 +191,41 @@ der ganze Grund, warum das eine Default ist und das andere nicht.
 
 ---
 
+### Die Autocmds-Achse, erster Lauf (2026-09-02)
+
+Dieselben Vorkehrungen wie oben. Die drei Zahlen davor waren 1 / 154 / 155;
+die Differenz ist ausschließlich die neue Achse.
+
+| Scope | vorher | nachher | Autocmds darin |
+| --- | ---: | ---: | --- |
+| `personal` | 1 | **56** | 8 `autocmd-not-live`, 47 `autocmd-undocumented` |
+| `extern` | 154 | **158** | 4 `autocmd-not-live` |
+| `all` | 155 | **214** | 12 / 47 |
+
+Dazu die zwei Zahlen, die unter dem Bericht stehen: **102 dokumentierte
+Zeilen nicht prüfbar** (keine Augroup-Spalte, oder kein Event, das Neovim
+kennt) und **116 Registrierungen zuzuordnen**. Sie stehen dort, damit eine
+kleine Befundzahl nicht mit einer gründlichen Prüfung verwechselt wird.
+
+**Die 8 im personal-Scope sind fast alle der erwartbare Fall**, nicht Drift:
+ein Autocmd, dessen Feature aus ist (`LspFormatOnSave` existiert nur, solange
+Format-on-save an ist, und sein Sheet sagt das), oder dessen Plugin auf einen
+Trigger lädt, den diese Session nie gezogen hat (`LspNvimSagaWinbarDepth`
+hängt an `LspAttach`). Dieselbe Klasse wie `:LibLogger` auf der Usercmd-Achse.
+
+**Die 47 sind der eigentliche Fund.** 35 davon gehören `nvim-config` selbst,
+und es gibt **kein** `Autocmds/nvim-config.md` — die Config registriert
+Autocmds in `lua/config/**` und `lua/wkdnvchad/**`, und keiner davon hat je
+ein Blatt gehabt. 15 sind runtime-analysis.nvims `ra_telemetry_<plugin>`,
+eine generierte Familie. Einer gehört lib.nvim.
+
+**Eine Warnung zur Reproduzierbarkeit:** die Undokumentiert-Richtung sieht
+nur, was *diese* Session registriert hat. Zwei Läufe hintereinander
+unterschieden sich um vier Befunde, weil `cmdlog.nvim` und `insights.nvim` im
+zweiten nie geladen haben und ihre Telemetrie-Augroups damit fehlten. Das ist
+keine Instabilität der Achse, sondern Lazy-Loading — dieselbe Abhängigkeit,
+die Falle 1 für die andere Richtung beschreibt.
+
 ## Was ein Befund nicht ist
 
 Drei Klassen, die korrekt gemeldet werden und trotzdem kein Problem sind. Wer

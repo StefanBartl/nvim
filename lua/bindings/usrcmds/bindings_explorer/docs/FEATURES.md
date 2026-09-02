@@ -453,3 +453,93 @@ erzeugten Scope-Commands (`:NotesFiles`, `:WkdbooksGrep`, …) landen alle auf
 Bericht damit als ein Block untereinander. Genau die Aussage, die der
 Driftreport von Hand getroffen hat: hier ist der Generator zu dokumentieren,
 nicht seine 23 Ergebnisse.
+
+## Die Autocmds-Achse (2026-09-02)
+
+`:Bindings check` verglich Keymaps und Usercmds gegen die laufende Session.
+Die dritte Kategorie wurde nur *gelesen* — `records.mentions()` holt sich
+Commandnamen auch aus `Autocmds/*.md` —, aber keine Autocmd-Zeile wurde je
+gegen `nvim_get_autocmds` gehalten. **241 dokumentierte Zeilen in 33 Dateien
+standen damit außerhalb jeder Zahl, die dieser Bericht gedruckt hat.**
+
+**Der Anlass war ein Beleg, keine Vermutung.** lsp.nvims `b260fc8` hat zwei
+Autocmds auf der Roh-API registriert und damit zwei ausdrückliche Aussagen von
+`Autocmds/lsp.nvim.md` falsch gemacht — die Kopfzahl und den Satz „kein
+einziger auf der Roh-API". Gefunden hat das ein Mensch, kein Prüfer.
+
+### Zwei Richtungen, und warum die zweite hier geht
+
+**Dokumentiert, nicht registriert** (`autocmd-not-live`): jede Zeile mit einer
+Augroup und mindestens einem Event, das Neovim kennt, wird gegen
+`nvim_get_autocmds({})` geprüft. Ein Befund pro **Zeile**, nicht pro Event —
+die Zeile ist die dokumentierte Behauptung, und ein Handler, der zwei seiner
+vier Events verloren hat, ist eine Stelle zum Nachsehen, nicht zwei.
+
+**Registriert, nicht dokumentiert** (`autocmd-undocumented`): hier liefert
+`lib.nvim.bindings.autocmd.registered()` die Antwort, und zwar präzise.
+Einschränkung 1 des Moduldocs verbietet diese Richtung für Keymaps, weil man
+gegen *jeden* globalen Keymap diffen müsste. Die Registry enthält
+bauartbedingt nur Registrierungen, die durch die Helfer gelaufen sind —
+Neovims eigene und die eines Fremdplugins sind darin unsichtbar. Dieselbe
+Eigenschaft, die auf der Usercmd-Seite aus „owner not recorded" eine Datei mit
+Zeilennummer gemacht hat.
+
+Ein Detail, das dort nötig war: `Lib.Autocmd.Record.group` trägt nur dann
+einen Namen, wenn die Augroup über lib.nvim angelegt wurde. Die Hälfte dieser
+Config benutzt `vim.api.nvim_create_augroup` und übergibt eine Zahl, für die
+lib.nvim keinen Namen kennt. `nvim_get_autocmds` kennt ihn immer, also schließt
+die Autocmd-`id` die Lücke exakt, statt zu raten.
+
+### Die Zählfalle, die umgangen statt gelöst wird
+
+Der Korpus zählt **Aufrufstellen** (`Autocmds/lsp.nvim.md` sagt das
+ausdrücklich), `nvim_get_autocmds` zählt **Event-Registrierungen** — ein
+Handler auf vier Events erscheint dort viermal. Nichts hier vergleicht Zahlen:
+beide Seiten werden zu `(Augroup, Event)`-Paaren flachgeklopft, ein
+Vier-Event-Handler liefert auf beiden Seiten vier Paare, und die zwei
+Zählweisen begegnen sich nie.
+
+### Was die Achse nicht erreicht, und was sie stattdessen tut
+
+* **Zeilen ohne Augroup-Spalte.** Acht Sheets dokumentieren ihre Autocmds,
+  ohne je eine Gruppe in einer eigenen Spalte zu nennen. Ein Event allein ist
+  nicht prüfbar — jedes Plugin registriert `BufEnter`. Diese Zeilen werden
+  **gezählt und im Bericht genannt**, nicht als Befund gemeldet.
+* **Die Prosa-Rückfallebene.** `Autocmds/sessions.nvim.md` nennt seine Augroup
+  in einem Satz über der Tabelle („Single augroup `SessionsNvim`") und hat gar
+  keine Augroup-Spalte. Für die Undokumentiert-Richtung zählt deshalb auch
+  eine Nennung im **eigenen Sheet des Plugins** (`records.sheet_text`) —
+  derselbe Grundsatz wie bei `records.mentions` für Commands, und aus
+  demselben Grund nur in diese eine Richtung. Auf das eigene Sheet begrenzt,
+  weil eine Augroup, die wie ihr Plugin heißt (`pickers.nvim` ist eine), sonst
+  irgendwo in 33 Dateien träfe und „dokumentiert" aufhörte, etwas zu bedeuten.
+* **Ein Zellentext, der „keine" sagt.** `Autocmds/reposcope.nvim.md` schreibt
+  in die Augroup-Spalte „**none** — registered directly via
+  `nvim_create_autocmd`, id tracked manually …". `first_token` nahm brav den
+  ersten Backtick-Ausdruck dieses Satzes, und die Achse meldete eine fehlende
+  Augroup namens `nvim_create_autocmd`. Eine Zelle, die mit einem
+  Keine-Wort *beginnt*, beantwortet „welche Augroup" mit „gar keine".
+* **Nur diese Session.** Die Registry kennt, was tatsächlich registriert
+  wurde. Welche Plugins das waren, hängt am Lazy-Loading — zwei headless-Läufe
+  unterschieden sich um vier `ra_telemetry_<plugin>`-Gruppen, weil zwei
+  Plugins im einen Lauf nie geladen haben.
+
+### Erster echter Lauf
+
+| Scope | Befunde | davon Autocmds |
+| --- | ---: | --- |
+| `personal` | 56 | 8 nicht registriert, 47 nicht dokumentiert |
+| `extern` | 158 | 4 nicht registriert |
+| `all` | 214 | 12 / 47 |
+
+102 dokumentierte Zeilen sind nicht prüfbar, 116 Registrierungen waren
+zuzuordnen — beides steht als eigene Zeile unter dem Bericht, damit eine
+kleine Befundzahl nicht mit einer gründlichen Prüfung verwechselt wird.
+
+**Der strukturelle Fund des ersten Laufs:** 35 der 47 undokumentierten
+Autocmds gehören `nvim-config` selbst, und es gibt **kein**
+`Autocmds/nvim-config.md`. Dieselbe Lücke, die die Usercmd-Seite mit den
+`:MyOpt*`-Commands hatte — dort existierte das Blatt immerhin. 15 weitere sind
+runtime-analysis.nvims `ra_telemetry_<plugin>`-Gruppen, also eine generierte
+Familie: derselbe Fall wie pickers.nvims Scope-Commands, und derselbe
+Vorschlag — den Generator dokumentieren, nicht seine Ergebnisse.

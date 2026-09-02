@@ -136,7 +136,7 @@ end
 ---@param skipped string[]|nil `drift.check`'s second return value
 ---@param source_reason string|nil its third
 ---@param repo_info Bindings.RepoInfo|nil its fourth
----@param meta { plugin?: string, duration_ms?: number, scope_info?: Bindings.ScopeInfo }|nil
+---@param meta { plugin?: string, duration_ms?: number, scope_info?: Bindings.ScopeInfo, autocmd_info?: Bindings.AutocmdInfo }|nil
 ---@return string[]
 function M.render(findings, skipped, source_reason, repo_info, meta)
   meta = meta or {}
@@ -210,7 +210,8 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
     )
     lines[#lines + 1] = "> registrierten Commands und Keymaps sind also nicht live — und stehen"
     lines[#lines + 1] = "> unten samt und sonders als „dokumentiert, nicht registriert“ drin."
-    lines[#lines + 1] = "> Übliche Ursache: `nvim --headless -c \"luafile …\"` führt das Skript vor"
+    lines[#lines + 1] =
+      '> Übliche Ursache: `nvim --headless -c "luafile …"` führt das Skript vor'
     lines[#lines + 1] = "> VimEnter aus, womit die `UIReady`-Phase nie feuert. Aus einer echten"
     lines[#lines + 1] = "> Session neu messen, oder die Phase vorher laden. `:StartupCheck` zeigt"
     lines[#lines + 1] = "> dieselben Phasen."
@@ -251,7 +252,8 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
         si.hidden
       )
       lines[#lines + 1] = "im Besitz eines Plugins, das dieser Korpus nicht abdeckt."
-      lines[#lines + 1] = "`:Bindings report extern` listet genau die, `:Bindings report all` beide."
+      lines[#lines + 1] =
+        "`:Bindings report extern` listet genau die, `:Bindings report all` beide."
     else
       lines[#lines + 1] = ("Nicht gezeigt: **%d eigene Commands** — die zeigt"):format(si.hidden)
       lines[#lines + 1] = "`:Bindings report` ohne Scope."
@@ -272,7 +274,10 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
   lines[#lines + 1] = "in den Viewer schreibt."
   lines[#lines + 1] = ""
   lines[#lines + 1] = "```text"
-  vim.list_extend(lines, drift.describe(findings, skipped, source_reason, repo_info))
+  vim.list_extend(
+    lines,
+    drift.describe(findings, skipped, source_reason, repo_info, nil, meta.autocmd_info)
+  )
   lines[#lines + 1] = "```"
 
   return lines

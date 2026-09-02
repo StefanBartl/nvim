@@ -281,6 +281,29 @@ function M.mentions()
   return out
 end
 
+--- The raw text of one plugin's sheets in `category`, both roots joined.
+---
+--- For the questions a table row cannot answer. `Autocmds/sessions.nvim.md`
+--- names its augroup in a sentence above the table ("Single augroup
+--- `SessionsNvim`") and has no Augroup column at all -- six rows that document
+--- their group perfectly well and that a column reader cannot see.
+---
+--- Scoped to the owning plugin's own sheet, not the whole corpus: an augroup
+--- named after its plugin (`pickers.nvim` is one) would match somewhere in
+--- 33 files no matter what, and "documented" would stop meaning anything.
+---@param category "Keymaps"|"Usercmds"|"Autocmds"
+---@param plugin string  # a `Bindings.Record.plugin`, i.e. a filename stem
+---@return string  # "" when the plugin has no sheet in this category
+function M.sheet_text(category, plugin)
+  local parts = {}
+  each_file({ category }, nil, function(path)
+    if vim.fn.fnamemodify(path, ":t:r") == plugin then
+      parts[#parts + 1] = read(path) or ""
+    end
+  end)
+  return table.concat(parts, "\n")
+end
+
 ---@class Bindings.FamilyClaim
 ---@field plugin string the claiming cheatsheet's stem, e.g. "pickers.nvim"
 ---@field pattern string anchored Lua pattern over the command name
