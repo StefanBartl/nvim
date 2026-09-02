@@ -31,10 +31,10 @@ combination when no key is bound. **Not set in this config today.**
 | `open_keys` | `gf` | every hover | open what the float is showing — routed through open.nvim when present, else `vim.ui.open` |
 | `scroll_keys.down` | `<M-PageDown>`, `<C-Down>` | scrollable only | next screenful / next PDF page |
 | `scroll_keys.up` | `<M-PageUp>`, `<C-Up>` | scrollable only | back |
-| `zoom_keys.larger` | `+` | **hovers with a picture only** | die Bildfläche einen Schritt (×1,25) größer |
-| `zoom_keys.smaller` | `-` | **hovers with a picture only** | einen Schritt kleiner |
-| `zoom_keys.wheel_larger` | `<M-ScrollWheelUp>` | **Bild-Hovers, und nur solange der Zeiger über dem Float steht** (Rahmen zählt mit) | einen Schritt größer |
-| `zoom_keys.wheel_smaller` | `<M-ScrollWheelDown>` | wie oben | einen Schritt kleiner |
+| `resize_keys.larger` | `+` | **nur Hovers mit Bild** | das Float einen Schritt (×1,25) größer |
+| `resize_keys.smaller` | `-` | **nur Hovers mit Bild** | einen Schritt kleiner |
+| `resize_keys.wheel_larger` | `<M-ScrollWheelUp>` | **jeder** Hover — aber nur, solange der Zeiger über dem Float steht (Rahmen zählt mit) | einen Schritt größer |
+| `resize_keys.wheel_smaller` | `<M-ScrollWheelDown>` | wie oben | einen Schritt kleiner |
 
 ## Collisions to know about
 
@@ -53,12 +53,18 @@ combination when no key is bound. **Not set in this config today.**
   float already resolved it — including the cases `gf` cannot do, such as a
   truncated path or a `:line:col` suffix. With no float open, `gf` is
   untouched.
-- **Zoom hängt an einer *anderen* Bedingung als Scroll**, und musste das.
-  Scroll hängt an `content.scroll`, das ein Bild bewusst nicht deklariert —
-  Zoom liest `content.canvas`. Hätte man Zoom an die Scroll-Bedingung gehängt,
-  wäre es für jeden Fall außer dem eigenen gebunden gewesen. Praktisch heißt
-  das: `+` und `-` sind auf einem Text-Hover **frei** und behalten dort, was
-  sie sonst bedeuten (`+`/`-` als Zeilenbewegung).
+- **`+` und `-` hängen an einer *anderen* Bedingung als Scroll**, und mussten
+  das. Scroll hängt an `content.scroll`, das ein Bild bewusst nicht
+  deklariert — die beiden lesen `content.canvas`. An die Scroll-Bedingung
+  gehängt wären sie für jeden Fall außer dem eigenen gebunden gewesen.
+  Praktisch heißt das: `+` und `-` sind auf einem Text-Hover **frei** und
+  behalten dort, was sie sonst bedeuten (Zeilenbewegung).
+- **Und das bleibt so, obwohl das Feature seit `8ec5b40` auch für Text gilt.**
+  Die Entscheidung ist eine über den *Preis* einer Taste: `+` und `-` sind
+  echte Motions, und die für ein Bild zu verdrängen lohnt, für jedes
+  Text-Float nicht. Das Rad und `:Hover resize` kosten keine Taste und gelten
+  deshalb für **jeden** Hover. Für einen Text-Hover ist die Route der
+  Tastaturweg.
 - **The open key is taken *before* the scroll keys**, so a key configured as
   both opens rather than scrolls. Opening is what a reader means by pressing
   something; scrolling has two keys of its own either way.
@@ -71,11 +77,10 @@ A configured list **replaces** the default rather than extending it; an empty
 list binds nothing at all, which is how you take the scrolling over with your
 own mappings (`require("hover").scroll(1)` / `(-1)`).
 
-## Reserviert und ausgeschlossen — für den Zoom-Ausbau
+## Reserviert und ausgeschlossen — für den Resize-Ausbau
 
-Festgehalten am **2026-09-02**, bevor gebaut wird: welche Akkorde für Schritt 3
-des Zooms (Mausrad) und für einen zweiten Tastensatz überhaupt zur Verfügung
-stehen. Die Liste ist eine Aussage über **diese** Config, nicht über das
+Festgehalten am **2026-09-02**, bevor gebaut wird: welche Akkorde für das
+Mausrad und für einen zweiten Tastensatz überhaupt zur Verfügung stehen. Die Liste ist eine Aussage über **diese** Config, nicht über das
 Plugin — hover.nvims Defaults bleiben `+` / `-`.
 
 | Akkord | Status | Grund |
@@ -100,11 +105,11 @@ bevor darauf gebaut wird. Der Test ist eine Minute:
 :nnoremap <S-+> :echo "S-plus kommt an"<CR>
 ```
 
-**Beide Griffe ohne Akkord gibt es jetzt:** `:Hover zoom [in|out]` (ohne
-Argument hinein) und das Rad, `<M-ScrollWheelUp/Down>` über dem Float. Der
-`<S-+>`-Test unten ist damit endgültig eine Komfortfrage. Damit ist Zoom erreichbar, ohne dass eine Taste geliehen sein
-muss — und ohne Akkord, was den offenen `<S-+>`-Test oben entschärft: er
-entscheidet nur noch über Komfort, nicht mehr über Erreichbarkeit.
+**Beide Griffe ohne Akkord gibt es jetzt:** `:Hover resize [bigger|smaller]`
+(ohne Argument größer) und das Rad, `<M-ScrollWheelUp/Down>` über dem Float.
+Damit ist die Funktion erreichbar, ohne dass eine Taste geliehen sein muss,
+und der offene `<S-+>`-Test oben entscheidet nur noch über Komfort, nicht mehr
+über Erreichbarkeit.
 
 **Nebenbei korrigiert:** hier stand, es gebe eine `:Hover`-Route für `scroll`
 und keine für Zoom. Eine für `scroll` gibt es **nicht** — nachgezählt gegen
@@ -121,6 +126,13 @@ ausschließlich über die geliehenen Tasten.
   wäre irreführend.
 
 ## Changelog
+
+- 2026-09-02: **`zoom_keys` heißt `resize_keys`** (hover.nvim `8ec5b40`), und
+  das Rad gilt jetzt für **jeden** Hover statt nur für Bild-Hovers. Der Grund
+  steht in den Kollisionen oben: `zoom` las genau ein Feld, und das
+  vergrößerte die Kiste — für Text heißt dieselbe Operation „mehr Zeilen",
+  also hat sie dort auch eine Antwort. `+` und `-` bleiben bei Bildern, weil
+  sie Motions sind. Alte Schreibweise wird von `config.normalize()` gefaltet.
 
 - 2026-09-02: **das Rad ist gebaut** (hover.nvim `83922f0`).
   `<M-ScrollWheelUp/Down>`, geliehen auf derselben Bedingung wie `+` / `-`,

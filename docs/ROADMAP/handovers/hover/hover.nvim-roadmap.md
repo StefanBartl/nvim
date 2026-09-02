@@ -6,7 +6,7 @@
   - [1. Abgrenzung: was in welche der beiden Roadmaps gehört](#1-abgrenzung-was-in-welche-der-beiden-roadmaps-gehrt)
   - [2. Was ich als Nächstes bauen würde, in dieser Reihenfolge](#2-was-ich-als-nchstes-bauen-wrde-in-dieser-reihenfolge)
     - [2.1 Ein Spec, das die Doku gegen die Quelle prüft — **gebaut** (`4e1760f`)](#21-ein-spec-das-die-doku-gegen-die-quelle-prft-gebaut-4e1760f)
-    - [2.2 Zoom für Bilder — **gebaut, bis auf den scharfen PDF-Zoom**](#22-zoom-für-bilder--gebaut-bis-auf-den-scharfen-pdf-zoom)
+    - [2.2 Resize — **gebaut, und unterwegs umbenannt**](#22-resize--gebaut-und-unterwegs-umbenannt)
       - [Die ursprüngliche Reihenfolge, zur Begründung](#die-ursprngliche-reihenfolge-zur-begrndung)
     - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
     - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
@@ -24,7 +24,7 @@
 
 Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
 seither sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
-die Tastenhälfte von [2.2](#22-zoom-für-bilder--gebaut-bis-auf-den-scharfen-pdf-zoom)
+die Tastenhälfte von [2.2](#22-resize--gebaut-und-unterwegs-umbenannt)
 und [2.3](#23-eine-checkhealth-zeile-für-contribute--gebaut-aca73fa) gebaut und
 die LuaLS-Messung nachgeholt worden.
 
@@ -146,13 +146,33 @@ und prompt gedriftet war. Genau dafür war der Punkt hier der erste.*
 
 ---
 
-### 2.2 Zoom für Bilder — **gebaut, bis auf den scharfen PDF-Zoom**
+### 2.2 Resize — **gebaut, und unterwegs umbenannt**
 
-> **Erledigt am 2026-09-02.** `+` und `-` über eine eigene Leih-Bedingung;
-> `hover.zoom(delta)` ist öffentlich, und seit `2493e1b` gibt es
-> **`:Hover zoom [in|out]`** dazu, und seit `83922f0` das Rad. Offen bleibt **4
-> (scharfes PDF)**, beide jetzt in `hover.nvim/docs/ROADMAP.md` — sie sind
-> Konzepte mit einer offenen Vorfrage, und damit gehören sie dorthin.
+> **Erledigt am 2026-09-02.** `+` / `-` über eine eigene Leih-Bedingung
+> (`204d083`), `:Hover resize` (`2493e1b`), das Rad mit Zeigerprüfung
+> (`83922f0`) — und dann die Umbenennung von `zoom` auf **`resize`**
+> (`8ec5b40`), mit der das Feature für **jeden** Hover gilt statt nur für
+> gezeichnete. Offen bleibt der scharfe PDF-Zoom, jetzt zusammen mit dem
+> *echten* Zoom (Ausschnitt + Schwenken) als ein Eintrag in
+> `hover.nvim/docs/ROADMAP.md` — für eine gerasterte Seite sind beide
+> dasselbe zweite Rendern. Die ganze Begründung steht im Repo unter
+> `docs/FEATURES/RESIZE.md`.
+>
+> **Die Umbenennung hat Code entfernt, nicht gekostet — und der Anlass war
+> eine Beobachtung von dir**, nicht eine Messung: der Ausschnitt ändert sich
+> nie, also ist es kein Zoom. Am Code bestätigt: `opts.zoom` wurde an
+> **genau einer** Stelle gelesen (`canvas_cells`), wo es `max_width` und
+> `max_lines` für diese eine Vorschau multiplizierte. Nie ein Crop, nie ein
+> Viewport. Die Config-Felder hatten es vom ersten Tag an gesagt — sie hießen
+> immer `larger`/`smaller`, nie `in`/`out`. Damit hat die Operation auch für
+> Text eine Antwort (mehr Zeilen), das Feld `zoom` fällt ersatzlos weg, und
+> ein Sonderfall verlässt den Media-Previewer.
+>
+> **Die eine Entscheidung, die dabei anfiel: was eine Taste kostet.** `+` und
+> `-` sind echte Motions — sie für ein Bild zu verdrängen lohnt, für jedes
+> Text-Float nicht. Sie bleiben also an `content.canvas`; Rad und Route
+> kosten keine Taste und gelten überall. Für einen Text-Hover ist die Route
+> der Tastaturweg.
 >
 > **Die Messung, die die Bauform entschieden hat** (echtes Neovim,
 > 1200×675-Bild, Defaults 80×20, 2026-09-02):
@@ -436,9 +456,16 @@ dann entscheiden.
 
 ## 5. Geprüft und *nicht* aufgenommen
 
-- **Text-Zoom.** Die Schriftgröße gehört dem Terminal-Emulator. „Zoom" hieße
-  dort „größeres Float", also *mehr* statt *größer* — ein anderes Feature, das
-  auch anders heißen müsste.
+- **Text-*Zoom*** — und die Ablehnung war richtig, hatte aber die falsche
+  Schlussfolgerung. „Die Schriftgröße gehört dem Terminal-Emulator, ein
+  größeres Float zeigt *mehr* statt *größer*, das wäre ein anderes Feature und
+  müsste anders heißen" — genau das ist am 2026-09-02 passiert: es heißt
+  `resize`, und dann gilt es auch für Text. Was hier stand, war kein Argument
+  gegen das Feature, sondern gegen seinen Namen. Siehe
+  [2.2](#22-resize--gebaut-und-unterwegs-umbenannt).
+- **Ein *echter* Zoom für Text.** Der bleibt abgelehnt und ist nicht dasselbe:
+  Ausschnitt vergrößern kann Neovim für Text nicht, weil die Zellgröße dem
+  Terminal gehört. Für Bilder steht er auf der Repo-Roadmap.
 - **`contribute` auch für Plugins.** Alle Nutzerbeiträge teilen sich den Namen
   `"user"`; zwei Aufrufer löschen einander still. Ein Plugin hat `register` mit
   eigenem Namen, und das ist kein Umweg, sondern der Punkt.

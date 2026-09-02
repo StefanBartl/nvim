@@ -23,7 +23,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover status` | — | mode + all nine switches, as a selectable list |
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
-| `:Hover zoom [direction]` | `in\|out` | make the picture in the open hover bigger or smaller. Omitted: **in**. Drawn hovers only |
+| `:Hover resize [direction]` | `bigger\|smaller` | make the hover on screen bigger or smaller. Omitted: **bigger**. **Any** hover — a picture is drawn larger, a text preview shows more lines |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
@@ -103,12 +103,15 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   because "no float appeared" is the plugin's most common failure mode and
   was, until then, indistinguishable from "the plugin is broken".
 
-- **`:Hover zoom` exists because the keys are a *borrow*.** `+` and `-` are
-  bound only while a hover with a picture is on screen, so someone who has
-  never had one open has no way to find the feature — and `:Hover` completion
-  is where the rest of this plugin is found. The route is also the only way in
-  that needs no chord, which matters for the reserved combinations listed in
-  the keymaps file.
+- **`:Hover resize` exists for two reasons, and the second one grew.** First,
+  the keys are a *borrow*: `+` and `-` are bound only while a hover with a
+  picture is on screen, so someone who has never had one open has no way to
+  find the feature — and `:Hover` completion is where the rest of this plugin
+  is found. Second, since the rename (hover.nvim `8ec5b40`) `+` and `-` are
+  deliberately **not** bound for a text hover at all, because they are motions
+  there. For text this route *is* the keyboard way in; the wheel is the other.
+  It also needs no chord, which matters for the reserved combinations listed
+  in the keymaps file.
 
   It works at all because **entering the command line moves no cursor**: the
   float's dismissal hangs on `CursorMoved`, `InsertEnter`, `BufLeave` and
@@ -116,8 +119,9 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   rather than assumed — if it were false the route would be a command that
   closes the thing it acts on.
 
-  Omitting the direction zooms **in**, not "toggle" like the switches: a step
-  has no reverse reading, and `out` undoes a wrong guess in one keypress.
+  Omitting the direction makes it **bigger**, not "toggle" like the switches:
+  a step has no reverse reading, and `smaller` undoes a wrong guess in one
+  keypress.
 
 - **`:Hover pin` has no `unpin`.** A pinned float is dismissed the same way
   any float is; a second verb for the reverse would have to be typed *into*
@@ -139,6 +143,15 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-02: **`:Hover zoom` heißt `:Hover resize`** (hover.nvim `8ec5b40`),
+  und die Argumente `in|out` heißen `bigger|smaller`. Immer noch sechzehn
+  Routen. Der Grund ist kein Namensgeschmack: `zoom` las genau *ein* Feld,
+  und das multiplizierte `max_width`/`max_lines` für eine Vorschau — also
+  „größere Kiste, ganzes Bild hineinskaliert", nie ein Ausschnitt. Damit hat
+  die Operation auch für Text eine Antwort (mehr Zeilen), und die Route gilt
+  jetzt für **jeden** Hover statt nur für gezeichnete. `zoom_keys` wird von
+  `config.normalize()` gefaltet, `hover.zoom()` bleibt als Alias.
 
 - 2026-09-02: **`:Hover zoom [in|out]` added** (hover.nvim `2493e1b`). Sixteen
   routes now. Zoom itself shipped with `204d083` as borrowed keys only; this

@@ -40,22 +40,23 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `2927e38`:**
+**Gemessen nach `8474d14`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **233 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 13, registry 71, scope 26, switches 30, zoom 18) |
+| Specs | **234 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30) |
 | `stylua --check` / `luacheck` | sauber (30 Dateien) |
-| LuaLS (`scan.sh`, echte injizierte Library) | 0 Befunde, Pass `post-f` — **mit Vorbehalt**, siehe Roadmap §3 |
+| LuaLS (`scan.sh`, echte injizierte Library) | 0 Befunde, Pass `resize-post2` — **mit Vorbehalt**, siehe Roadmap §3 |
 | CI | grün auf beiden Runnern |
-| Helptags | 30 |
+| Helptags | 33 |
 
 **Was es kann**, in einem Satz je Klasse: Datei- und Verzeichnisvorschauen,
 Bilder und PDF-Seiten gezeichnet, Office-Dokumente über LibreOffice (opt-in),
 URLs mit optionalem Abruf, Bare Paths mit Zeilen und Ranges
 (`init.lua:42`, `file.lua:10-20`), Git-Objekte auf Nachfrage,
-Position-Previews fremder Plugins, `:Hover why`, `:Hover pin`, Zoom für Bilder
-(Tasten, Rad, Route), ein Schalter-Chooser über lib.nvims UI-Kit — und seit
+Position-Previews fremder Plugins, `:Hover why`, `:Hover pin`, Resize für
+**jeden** Hover (`+`/`-` über Bildern, Rad und `:Hover resize` überall), ein
+Schalter-Chooser über lib.nvims UI-Kit — und seit
 `c374d5e` ein eigener Hover **ohne Plugin drumherum** (`setup({ contribute })`).
 
 Einzelheiten im Repo: [README](https://github.com/StefanBartl/hover.nvim),
@@ -106,12 +107,19 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
 - **LuaLS messen:** `REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh <pass>
   hover.nvim`, dann `python scripts/luals-scan/compare.py <pass>`. Die nackte
   `lua-language-server --check`-Zahl ist wertlos (`LLS-01`).
-- **Der Scan sieht `TESTS/` mit, und das ist nicht theoretisch.** Am
-  2026-09-02 kam `zoom-post` mit **+2** zurück, beide Befunde im neuen
-  `docs_spec.lua`. Die Suite war grün, stylua sauber, CI grün — **nur der Scan
-  hat es gesehen** (behoben in `65ba8dd`). Ein Spec ist Code, und nach dem
-  Schreiben eines gehört ein Lauf dazu, nicht nur nach einer Änderung an
-  `lua/`.
+- **Der Scan sieht `TESTS/` mit, und das ist nicht theoretisch — zweimal
+  belegt.** Am 2026-09-02 kam `zoom-post` mit **+2** zurück (beide im neuen
+  `docs_spec.lua`, behoben in `65ba8dd`) und `resize-post` mit **+7** (alle im
+  neuen `resize_spec.lua`, behoben in `bbd9dec`). Beide Male: Suite grün,
+  stylua sauber, CI grün — **nur der Scan hat es gesehen.** Ein Spec ist Code,
+  und nach dem Schreiben eines gehört ein Lauf dazu, nicht nur nach einer
+  Änderung an `lua/`.
+- **In einer Spec ist `assert` *luassert*, nicht Lua.** Es gibt mehr als einen
+  Wert zurück. `nvim_win_get_position(assert(float.win()))` schickt dadurch
+  ein zweites Argument und die API lehnt ab — innerhalb eines `pcall` sieht
+  das aus wie „der Test ist fehlgeschlagen", nicht wie ein Arity-Fehler.
+  Immer erst an ein `local` binden. Gefunden am 2026-09-02 beim Beheben der
+  sieben Befunde oben.
 - **Git-Bash-Falle:** headless nvim mit einem `/tmp/...`-Pfad **hängt still**,
   statt zu scheitern. Windows-Pfade verwenden. (Steht auch in
   `scripts/luals-scan/scan.sh`.)
@@ -146,7 +154,7 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
 | --- | --- |
 | Was tut es, wie konfiguriere ich es | `README.md` im Repo |
 | Welche Taste, welches Kommando, welcher Autocmd | `docs/BINDINGS.md` |
-| **Warum** ist das so gebaut | `docs/FEATURES/` |
+| **Warum** ist das so gebaut | `docs/FEATURES/` — QUIET, BARE-PATHS, CONTRIBUTIONS, RESIZE |
 | Wer ist wie angebunden, was fällt ohne ihn aus | `docs/INTEGRATIONS.md` |
 | Was ist bewusst *nicht* gebaut | `docs/ROADMAP.md` (an Mitlesende) |
 | Was kann keine CI prüfen | `docs/MANUAL-EVIDENCE.md` |
@@ -158,9 +166,14 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `8474d14` — `docs/FEATURES/RESIZE.md`: warum es Resize heißt und warum die
+  drei Wege verschieden gebunden sind.
+- `8ec5b40`, `bbd9dec` — **`zoom` heißt `resize`**, und gilt jetzt für jeden
+  Hover statt nur für gezeichnete. `zoom_keys` wird gefaltet, `hover.zoom()`
+  bleibt als Alias. Dazu sieben LuaLS-Befunde, die nur der Scan sah.
 - `2927e38` — `docs/FEATURES/` angelegt, diese Datei ausgemistet.
-- `c11e397`, `83922f0`, `2493e1b`, `204d083` — Zoom für Bilder: Tasten, Route
-  `:Hover zoom`, Mausrad mit Zeigerprüfung.
+- `c11e397`, `83922f0`, `2493e1b`, `204d083` — Resize: Tasten, Route, Mausrad
+  mit Zeigerprüfung (damals noch unter dem Namen Zoom).
 - `e62f5e9`, `b7c4c45` — `on_request` als wiederholbare Sonde
   (`scripts/onrequest_probe.lua`) plus Evidenzzeile; ein flackernder
   LuaLS-Befund festgenagelt.
