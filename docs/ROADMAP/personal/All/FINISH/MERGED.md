@@ -21,6 +21,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
+- [ ] Diagnostics ncohmal drüber laufen lassen, es gab noch das ein oder andere zu implementieren.
 - [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind. Die lib.nvim ist für mich umso mehr wert, umso besser die docs sind. Dabei auch gleich feature ideen einbringenh, sprich bei jedem modul am ende auch checken "fehlt etwass sinnvolles?"
 - [ ] nochmal alle keymaps checken, ob kein keymap doppelt vergeben ist, über alles repos hinweg + nvim-config
 - [ ] claude: "Eine Sache habe ich ins Handover als Arbeitsregel geschrieben, weil sie mir zweimal passiert ist: stylua lua nie über die nvim-Config laufen lassen — sie ist nicht stylua-formatiert, ein Lauf formatiert 141 Dateien nebenbei um." - sollten sie aber schoin sein, also dem nachgehen
@@ -39,5 +40,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 - [ ] Alle docs/ Files in jedem .nvim repo müssen nochmal überprüft werden, auf aktualitöt & korrektheit - Doppelungen entfernen, stimmt alles was behauptet wird, Referenzen updaten, usw...  docs/README Themenaufteilung / docs Struktur überelgen - einheitiche struktur finden für alle repos; Deutsche docs nur, wenn eine englische Hauptversions der file besteht und explizit eine deutsche version von mir verlangt wird. Weiteres auf das überprüftr werden soll gleich am anfang mit ausfschreiben, man könte für diesen duirchgang eien art docs checklist machen.
   - [ ] Generell soll das Prinzip herrschen: `Nicht "so viel wie möglich" in die docs, sondern nur das, was für User und Devs auch tatsächlich interessant sein kann. Der Rest nach WKDBooks/Deveolpment/wkdbook-myplugins/ - da können auch reine informations docs ausgelagert werden, die entwedet "zu tief" gehen für normale repo docs oder weder für devs noch für user einen naheliegenden Mehrwert haben. wkdbook-myplugins ist kein "Downgrade", sondern meine interne Notizensammlung`
   - [ ] Das gleiche mit den Kommentaren im Source code.
+  - [ ] C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS muss durch gecheckt werden. Dies soll ja CHeatsheet für bindings sein, in manchen files stehen aber mehr infos drinnen, teilweiese sogar roadmap/handover notes usw... Wenn die infos dort drinnen wichtig sind, dann gehören sie ind die docs des repos nicht zu mienen bindings doc
 
 ---

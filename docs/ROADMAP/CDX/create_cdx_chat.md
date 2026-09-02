@@ -9,7 +9,7 @@
 
 Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 
-Beachte ein "Lesson learned": [Heredoc for ai - lesson learned](./Heredoc.md)
+Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
 
 ---
 
