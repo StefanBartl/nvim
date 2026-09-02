@@ -32,10 +32,18 @@ in [Abschnitt 4](#4-aufträge-die-woanders-liegen) steht.
 
 **Damit ist Abschnitt 2 leer.** Was offen bleibt, wartet auf etwas, das nicht
 hier liegt: [2.4](#24-gopath-ein-billiger-früh-ausstieg--fremdes-repo-größter-hebel-hier)
-auf gopath.nvim, der neue Auftrag auf documentation.nvim. Der nächste Griff in
-diese Datei ist eine der drei verbliebenen Messungen aus
-[Abschnitt 3](#3-messungen-die-offen-sind) — **zwei davon brauchen dich**
-(Demo-GIF, Office-Pfad von Hand).
+auf gopath.nvim, zwei neue Aufträge auf documentation.nvim und sandbox.nvim.
+
+Die dritte der offenen Messungen — die einzige, die dich nicht braucht — ist
+seither gelaufen: der **`on_request`-Pfad gegen eine echte Engine**
+(`b7c4c45`), diesmal als wiederholbare Sonde statt ad hoc, mit der Zeile im
+Repo statt nur hier. Sie hat drei Dinge gefunden, alle im
+[Handover unter J](./hover.nvim.md#j-die-on_request-messung-gelaufen-und-sie-hat-drei-dinge-gefunden-b7c4c45-e62f5e9):
+einen sandbox.nvim-Auftrag (Abschnitt 4), eine vierte Wiederholung der
+Doku-Drift-Klasse, und dass **die LuaLS-Messung flackert**.
+
+**Damit brauchen beide verbliebenen Messungen dich** (Demo-GIF, Office-Pfad
+von Hand) — siehe [Abschnitt 3](#3-messungen-die-offen-sind).
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -127,9 +135,10 @@ Erstes** — es ist die Voraussetzung dafür, dass alles Folgende dokumentiert
 
 *Tatsächlich geworden: ein Spec-File, acht Extraktoren, neun Prüfungen — die
 Schätzung lag zu niedrig, weil beim Schreiben drei weitere prüfbare Listen
-auffielen. Inzwischen elf: `204d083` brachte zwei Tastentabellen mit, und die
-erste Frage danach war „prüft das jemand?". Genau dafür war der Punkt hier der
-erste.*
+auffielen. Inzwischen dreizehn: `204d083` brachte zwei Tastentabellen mit, und
+die erste Frage danach war „prüft das jemand?"; `b7c4c45` zwei weitere, weil
+`docs/MANUAL-EVIDENCE.md` als einziges Dokument außerhalb der Reichweite lag
+und prompt gedriftet war. Genau dafür war der Punkt hier der erste.*
 
 ---
 
@@ -312,10 +321,10 @@ dann entscheiden.
 
 | Was | Warum offen |
 | --- | --- |
-| ~~**LuaLS**~~ | **zu.** Dreimal auf dem Haupt-Checkout gemessen: Pass `post-b` nach `3e12c9f`, `post-c` nach `4e1760f`, `post-d` nach `aca73fa`. Alle 0 Befunde, Delta `+0`. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
+| ~~**LuaLS**~~ | **zu**, aber mit einem neuen Vorbehalt. Fünfmal auf dem Haupt-Checkout gemessen: `post-b` nach `3e12c9f`, `post-c` nach `4e1760f`, `post-d` nach `aca73fa`, `post-e`/`post-e2` nach `b7c4c45`, `post-f` nach `e62f5e9`. **`post-e` meldete 1 Befund auf Quelltext, den der Commit nicht angefasst hatte; `post-e2` auf identischem Baum meldete 0.** Der Scan ist also nicht deterministisch — ein einzelner `+1` ist kein Beweis, ein zweiter Lauf kostet eine Minute und entscheidet. Die Stelle ist mit `e62f5e9` festgenagelt. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
 | **Office-Pfad von Hand** | `docs/MANUAL-EVIDENCE.md`: seit der Cache-Änderung `bba2064` nicht wieder durchgespielt. Keine CI kann das. |
 | **Demo-GIF** | `REL-09`, der letzte offene 🟢 des Release-Gates. **Braucht dich** — ich kann nicht aufnehmen. |
-| **`on_request` gegen einen laufenden Daemon** | einmal gemacht (Tabelle im Handover), aber genau dort saß `836a15a`, und keine CI hat einen Container-Daemon. |
+| ~~**`on_request` gegen einen laufenden Daemon**~~ | **zu.** Am 2026-09-02 gegen Docker Engine 29.5.3 gelaufen, jetzt als Sonde (`hover.nvim/scripts/onrequest_probe.lua`) statt ad hoc, mit der Zeile in `docs/MANUAL-EVIDENCE.md` statt nur im Handover. 566/558/294/0 ms, Engine-Aufrufe 2/2/1/0, auf dem automatischen Trigger jedes Mal still. Wieder fällig, wenn sich am `on_request`-Pfad etwas ändert — der Lauf kostet eine Minute. |
 
 ---
 
@@ -328,6 +337,18 @@ dann entscheiden.
   `usercmd.composer`. Gemessen am 2026-09-02: eine Zeile gelöscht, beide Läufe
   melden „keine Drift". In der Sache dasselbe wie 2.1, eine Ebene höher.
 - **gopath.nvim** — siehe 2.4.
+- **sandbox.nvim** — `engine_utils.get_engine()` wählt die Engine nach reiner
+  PATH-Anwesenheit, in der Reihenfolge podman → docker → nerdctl, und fragt
+  **nie**, ob sie antworten kann. Auf dieser Maschine liegt `podman.exe` von
+  Podman Desktop auf dem PATH, aber die Linux-VM läuft nicht — also gewinnt
+  podman, jeder Ask lehnt nach ~370 ms still ab, und die laufende
+  Docker-Engine mit vier Images wird nie gefragt. Gemessen am 2026-09-02 mit
+  `hover.nvim/scripts/onrequest_probe.lua` ohne Argument; mit `docker`
+  antwortet derselbe Pfad in 294–566 ms. Dieselbe Form wie `836a15a`:
+  registriert, in allen Specs grün, auf der Maschine stumm. Ein
+  Erkennungs-Schritt, der einmal `list_images` versucht und beim Fehlschlag
+  weiterrückt, genügt. **Umgehung bis dahin:** `opts.engine = "docker"` in der
+  lazy-Spec, oder `:Sandbox engine set docker` je Sitzung.
 - **documentation.nvim** — `find_map` in `lua/documentation/hover.lua:54` steigt
   bis zu **24 Verzeichnisebenen** mit je einem `uv.fs_stat` nach
   `docs/map/module_map.json` auf, **ohne negativen Cache**: `_maps` merkt sich

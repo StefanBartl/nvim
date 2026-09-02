@@ -45,6 +45,10 @@
       - [Messung 2 — was kostet ein Ask? Und damit war die Häufigkeit egal](#messung-2-was-kostet-ein-ask-und-damit-war-die-hufigkeit-egal)
       - [Was dabei herausfiel: ein Auftrag für documentation.nvim](#was-dabei-herausfiel-ein-auftrag-fr-documentationnvim)
       - [Wo die Messwerkzeuge liegen](#wo-die-messwerkzeuge-liegen)
+    - [J. Die `on_request`-Messung — gelaufen, und sie hat drei Dinge gefunden (`b7c4c45`, `e62f5e9`)](#j-die-on_request-messung-gelaufen-und-sie-hat-drei-dinge-gefunden-b7c4c45-e62f5e9)
+      - [Fund 1: die Engine-Erkennung wählt hier `podman`, und der antwortet nicht](#fund-1-die-engine-erkennung-whlt-hier-podman-und-der-antwortet-nicht)
+      - [Fund 2: `MANUAL-EVIDENCE.md` hatte vier Zeilen und sagte dreimal „drei"](#fund-2-manual-evidencemd-hatte-vier-zeilen-und-sagte-dreimal-drei)
+      - [Fund 3: die LuaLS-Messung flackert](#fund-3-die-luals-messung-flackert)
   - [Was beim Weiterarbeiten zu wissen ist](#was-beim-weiterarbeiten-zu-wissen-ist)
 
 ---
@@ -1169,6 +1173,127 @@ Sitzungshäufigkeit. Die Sonde läuft in einer echten Sitzung mit
 `require("position_probe").install()` und berichtet mit `.report()`. Für die
 Entscheidung zu 2.5 wird sie nicht mehr gebraucht — bei 26 µs pro Ask ändert
 keine Häufigkeit das Ergebnis.
+
+---
+
+### J. Die `on_request`-Messung — gelaufen, und sie hat drei Dinge gefunden (`b7c4c45`, `e62f5e9`)
+
+Die letzte der drei offenen Messungen aus Abschnitt 3, die **nicht** dich
+braucht. Sie war am 2026-09-02 schon einmal gelaufen, aber ad hoc und nur ins
+Handover geschrieben; im Repo kannte `docs/MANUAL-EVIDENCE.md` den Pfad gar
+nicht. Jetzt ist sie ein Skript, und die Zeile steht dort, wo sie hingehört.
+
+**Was gebaut ist:** `hover.nvim/scripts/onrequest_probe.lua`. Vier Referenzen
+in einem Buffer, jede zweimal gefragt — einmal auf dem automatischen Trigger,
+einmal erzwungen —, und der Float wird **zurückgelesen** statt dem Rückgabewert
+geglaubt. Genau in dieser Lücke saß `836a15a`. Abhängigkeiten wie in
+`scripts/minimal_init.lua`: Env-Var, `.deps/<name>`, oder Nachbarverzeichnis.
+
+```bash
+LIB_NVIM_DIR=E:/repos/lib.nvim SANDBOX_NVIM_DIR=E:/repos/sandbox.nvim \
+  nvim --clean --headless -l scripts/onrequest_probe.lua docker
+```
+
+**Gemessen am 2026-09-02 gegen Docker Engine 29.5.3**, Tastendruck bis
+fertiger Float:
+
+| Referenz | Antwort | erzwungen | Engine-Aufrufe |
+| --- | --- | --- | --- |
+| `alpine:edge` | geholt, kein Container | 566 ms | 2 |
+| `lazyvim_starter:latest` | geholt, 1 Container | 558 ms | 2 |
+| `nginx:1.27-alpine` | nicht geholt | 294 ms | 1 |
+| `init.lua:42` | abgelehnt | 0 ms | 0 |
+
+Alle vier blieben auf dem automatischen Trigger still. Das reproduziert die
+Erstmessung (754/560/286/1 ms) in Form und Größenordnung; die Streuung nach
+unten ist ein warmer Docker-Daemon, kein anderer Pfad.
+
+---
+
+#### Fund 1: die Engine-Erkennung wählt hier `podman`, und der antwortet nicht
+
+**Ohne Argument** benutzt die Sonde sandbox.nvims eigene Erkennung — und die
+wählt auf dieser Maschine `podman`. `podman.exe` liegt auf dem PATH (Podman
+Desktop), aber die Linux-VM läuft nicht:
+
+```
+Cannot connect to Podman ... try `podman machine init` and `podman machine start`
+```
+
+`sandbox.engine_utils.get_engine()` fragt nur `has_exec("podman")` und nimmt
+den ersten Treffer in der Reihenfolge podman → docker → nerdctl. **Ob die
+Engine antworten kann, wird nie gefragt.** Ergebnis in deiner echten Config:
+jede Zeile lehnt nach ~370 ms ab, still, während eine funktionierende
+Docker-Engine mit vier Images danebensteht.
+
+Das ist dieselbe Form wie `836a15a` — registriert, in allen Specs grün, auf der
+Maschine stumm — nur liegt die Ursache diesmal in sandbox.nvim. Der Auftrag
+steht in [Abschnitt 4 der Roadmap](./hover.nvim-roadmap.md#4-auftrge-die-woanders-liegen).
+In hover.nvims Doku steht davon nur der Satz, den ein Leser braucht: *prüf,
+welche Engine gewählt wurde, bevor du den Hover verdächtigst.*
+
+**Sofort-Abhilfe, falls es stört:** `:Sandbox engine set docker` setzt
+`vim.g.sandbox_engine` für die Sitzung; dauerhaft `opts.engine = "docker"` in
+der lazy-Spec von sandbox.nvim.
+
+---
+
+#### Fund 2: `MANUAL-EVIDENCE.md` hatte vier Zeilen und sagte dreimal „drei"
+
+Beim Eintragen aufgefallen: `204d083` hatte die Zoom-Zeile ergänzt, aber
+`README.md` sagte weiter „the three things no CI can check", und die
+Evidenzdatei selbst zweimal „three". Vierte Wiederholung derselben Klasse, die
+`docs_spec.lua` überhaupt erst gebaut hat — **in dem einen Dokument, das
+außerhalb seiner Reichweite lag**.
+
+Deshalb prüft der Spec die Datei jetzt gegen ihre **eigenen zwei Regeln**:
+
+1. Jede Zeile trägt die Felder, die `## How to read a row` für eine Zeile
+   nennt. Die Feldnamen werden aus dieser Legende *gelesen*, nicht im Spec
+   wiederholt — eine zweite Kopie der Definition wäre genau der Fehler, gegen
+   den die Datei geschrieben ist.
+2. Jede ausgeschriebene Zahl dieser Zeilen, in jedem Dokument, stimmt mit der
+   Anzahl überein. Zwei Formulierungen an zwei Stellen: „one of the five paths
+   above" und „the five things no CI can check".
+
+Beide sabotage-getestet (Hausregel): „four paths" statt „five" lässt Prüfung 2
+fallen, ein entferntes `**Checked**` lässt Prüfung 1 fallen. `claimed_switch_counts`
+heißt jetzt `claimed_counts(text, noun)` — derselbe Fenster-Suchlauf, zweiter
+Aufrufer.
+
+Es sind jetzt **fünf** Zeilen: gezeichnetes Bild, gezoomtes Bild, PDF-Seite,
+Office-Dokument, `on_request`-Beitrag. Der Rahmensatz der Datei ist mitgezogen:
+sie deckt nicht mehr nur ab, was ein Terminal zum Zeichnen braucht, sondern
+auch, was einen **Daemon zum Antworten** braucht.
+
+---
+
+#### Fund 3: die LuaLS-Messung flackert
+
+Der Pass nach dem Commit (`post-e`) meldete **1 Befund** — `cast-local-type` in
+`TESTS/switches_spec.lua:492`, einer Datei, die der Commit nicht anfasst und
+die seit `3e12c9f` unverändert ist, also vor den drei Nullpässen `post-b`,
+`post-c`, `post-d`. Zweiter Lauf auf identischem Baum (`post-e2`): **0**.
+
+Also **nicht deterministisch**: derselbe Quelltext, einmal in fünf Läufen ein
+Befund. Das ist schlimmer als ein stehender Befund, weil dieser Scan als
+Regressionssignal gelesen wird und ein `+1` die nächste Sitzung auf die Suche
+nach einer Änderung schickt, die es nicht gab.
+
+Festgenagelt mit `---@type any` auf dem Abstieg durch die Defaults (`e62f5e9`)
+— der Abstieg beginnt bei `Hover.Config` und führt hinaus, und genau das ist,
+was die Regel meint; nur kam die Inferenz nur manchmal dort an. Danach
+`post-f`: **0 Befunde**.
+
+**Für die nächste Lesung wichtig:** die Regel „0 Befunde, Delta +0" ist ab
+jetzt mit einem Vorbehalt zu lesen. Ein einzelner `+1` ist kein Beweis; ein
+zweiter Lauf auf demselben Baum kostet eine Minute und entscheidet.
+
+---
+
+**Verifikation:** Suite 8 Dateien / 0 Fehler, `stylua --check` sauber,
+`luacheck` 0/0 über 32 Dateien, LuaLS `post-f` 0 Befunde auf dem
+Haupt-Checkout. Sonde in beiden Modi gelaufen.
 
 ---
 
