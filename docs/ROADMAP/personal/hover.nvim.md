@@ -40,9 +40,11 @@ Feature selbst nie erreichbar war (`836a15a`, siehe unten).
 
 **Was als Nächstes ansteht**, steht unter [Aufträge aus der Sitzung vom
 2026-09-02](#aufträge-aus-der-sitzung-vom-2026-09-02) — sechs Punkte, jeder
-schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. Der
-größte davon ist eine **Beitrags-API für Nutzer** (D): die gibt es technisch
-längst, sie ist nur nirgends als solche angeboten.
+schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. Zwei
+davon (A, C) sind erledigt; F ist entschieden statt gebaut — **Zoom nur für
+Bilder**, PDF-Seiten optional, Text gar nicht. Der größte offene ist eine
+**Beitrags-API für Nutzer** (D): die gibt es technisch längst, sie ist nur
+nirgends als solche angeboten.
 
 ---
 
@@ -182,9 +184,9 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 
 | Repo | Stand | Commit |
 | --- | --- | --- |
-| **hover.nvim** (neu) | gepusht, `main` | Extraktion, dann ~25 weitere bis `5bc630f` |
+| **hover.nvim** (neu) | gepusht, `main` | Extraktion, dann ~30 weitere bis `745c678` |
 | **markdown.nvim** | gepusht, `main` | `bd53428`, `634121f`, `c61493f` |
-| **nvim-config** | gepusht, `main` | `97051225`, `69907c0e`, `af1a8c60`, `7a0027b4`, `4e2cf2c4` |
+| **nvim-config** | `main`, **letzter Commit noch nicht gepusht** | `97051225`, `69907c0e`, `af1a8c60`, `7a0027b4`, `4e2cf2c4`, `b98eac26`, `ab92f427` |
 | **lib.nvim** | gepusht, `main` | `5450dd4` (Hover gelöscht), `556ee50` (safe_api-Typen) |
 | **images.nvim** | gepusht, `main` | `b61b347` — stale Verweise auf `markdown.hover` |
 | **pdfport.nvim** | gepusht, `main` | `b43fd1c` — dito, plus `docs/install.json` |
@@ -192,6 +194,7 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 | **reposcope.nvim** | gepusht, `main` | `b4d6eff` — `owner/repo`-Source |
 | **documentation.nvim** | gepusht, `main` | `b23ab85` — Modul-Preview |
 | **spotlight.nvim** | gepusht, `main` | `23f3f25` — Token-Zähler |
+| **sandbox.nvim** | gepusht, `main` | `3647a17` — Container-Image, nur auf Nachfrage (`on_request`) |
 
 ### markdown.nvim
 
@@ -404,8 +407,10 @@ Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
 
 ## Aufträge aus der Sitzung vom 2026-09-02
 
-Sechs Punkte, alle noch offen. Was hier steht, ist jeweils schon **nachgesehen**
-— die Notiz sagt den Befund, nicht nur die Frage.
+Sechs Punkte. **Zwei sind erledigt** (A, C), **einer ist eingegrenzt statt
+gebaut** (F — nur Bilder, siehe dort), **drei sind offen** (B, D, E). Was hier
+steht, ist jeweils schon **nachgesehen** — die Notiz sagt den Befund, nicht
+nur die Frage.
 
 ### A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**
 
@@ -555,9 +560,37 @@ erledigten Punkte. Die Datei hier ist die persönliche, längere Fassung.
 Abzugrenzen ist beim Schreiben, was in welche der beiden gehört, sonst driften
 sie auseinander.
 
-### F. Zoom im Float — Machbarkeit geprüft, die Antwort ist zweigeteilt
+**Und die Repo-Roadmap ist bereits gedriftet** — nachgesehen am 2026-09-02,
+bevor irgendetwas Neues danebengelegt wird:
+
+- `docs/ROADMAP.md:23` sagt „**Four** of the candidates […] are built" und
+  zählt migrate, reposcope, documentation, spotlight auf. Es sind **fünf**;
+  sandbox.nvim fehlt in der Aufzählung.
+- Der Abschnitt „`sandbox.nvim` — the image under the cursor" steht dort noch
+  als *offen*: „What is left is on sandbox.nvim's side […] and the
+  registration itself." Beides ist erledigt — `3647a17` auf sandbox-Seite,
+  `731bbe2`/`836a15a` hier.
+- Die Folgefrage darunter — „an image reference collides with `path:line`
+  syntax […] Registration order decides it" — ist beim Verdrahten beantwortet
+  worden: `init.lua:42` wird in 1 ms abgelehnt (Messtabelle unter [Was keine
+  CI prüft](#5-was-keine-ci-prüft)).
+
+Das ist derselbe Defekt wie in C: veröffentlichte Doku behauptet etwas
+Falsches, nicht bloß etwas Fehlendes. Und die Datei hat die Regel „führt keine
+erledigten Punkte" — der Abschnitt gehört also **gelöscht**, nicht
+umgeschrieben, und was daran gelernt wurde, steht schon hier.
+
+Nach dem Entscheid unter F gehört außerdem **Zoom für Bilder** in die
+Repo-Roadmap (unter `## Features`, wo heute nur das Demo-GIF steht) — das ist
+ein geplantes Feature für Mitlesende, kein persönlicher Befund.
+
+### F. Zoom im Float — **eingegrenzt 2026-09-02: Bilder**
 
 Die Idee: mit der Maus in den Hover, Mausrad bzw. `<C-ScrollWheel>` zoomt.
+
+**Der Umfang ist entschieden.** Gewollt sind **Bilder und Screenshots**.
+PDF-Seiten, wenn es sich ergibt — **nicht zwingend**. Text fällt damit weg,
+und das trifft sich, denn dort ginge es ohnehin nicht:
 
 **Für Text geht es nicht, und zwar grundsätzlich.** Die Schriftgröße gehört
 dem Terminal-Emulator; Neovim kann sie nicht ändern. „Zoom" könnte für Text
@@ -566,25 +599,61 @@ nur heißen: das Float größer machen — das zeigt *mehr*, aber nichts
 
 **Für Bilder geht es wirklich.** Ein Bild wird über images.nvim in eine
 Zellfläche gezeichnet; dieselbe Fläche größer angefordert heißt echte
-Vergrößerung. Dasselbe gilt für eine rasterisierte PDF-Seite über pdfport.
-Das ist der Fall, in dem „Zoom" das Wort trifft.
+Vergrößerung. Das ist der Fall, in dem „Zoom" das Wort trifft.
 
-Zwei technische Voraussetzungen, beide geprüft:
+**Wo es andockt** (am Code nachgesehen, nicht geschätzt):
+
+- **Die Fläche entsteht in `canvas_cells`** (`preview/media.lua:196`). Sie
+  klemmt auf `opts.max_width` / `opts.max_lines` und den Bildschirm. Ein Zoom
+  ist genau das Anheben dieser beiden Schranken für *diese eine* Vorschau —
+  kein neuer Zeichenweg, und das Letterboxing über `images.scale.fit_cells`
+  bleibt unangetastet.
+- **Das Wiederanfordern gibt es schon.** `M.scroll(delta)` (`init.lua:841`)
+  setzt `preview_opts.page` und lässt den Previewer erneut laufen; `_open`
+  (`init.lua:503`) hält den Zustand dazu (`target`, `bufnr`, `offset`,
+  `page`). Ein Zoomfaktor gehört an dieselbe Stelle: `_open.zoom` →
+  `preview_opts` → `canvas_cells`. Kein zweiter Weg neben dem bestehenden.
+
+**Und genau hier liegt die Arbeit, nicht beim Zeichnen:** die geliehenen
+Tasten decken ausgerechnet den gewollten Fall nicht ab.
+
+- **Für ein Bild wird heute gar keine Taste geliehen.** `keys.borrow`
+  (`bindings/keymaps.lua:111`) installiert die Scroll-Tasten nur für Inhalte
+  mit `content.scroll` — und ein Bild hat das nicht (`canvas_for` gibt
+  `lines`, `canvas`, `image_path` zurück, sonst nichts). Das ist Absicht und
+  im Modulkopf begründet: „Scrolling an image […] is meaningless". Zoom
+  braucht dort eine **eigene** Leih-Bedingung, naheliegend
+  `content.image_path ~= nil`.
+- **Bei PDFs ist es umgekehrt:** dort *sind* die Scroll-Tasten geliehen, aber
+  sie blättern. Zoom müsste sich dort andere Tasten nehmen, sonst kollidiert
+  er mit dem Blättern. **Das** ist der Grund, warum „Bilder zuerst, PDF
+  optional" die richtige Reihenfolge ist — nicht der Zeichenweg, der ist
+  derselbe.
+
+**Was PDFs kosten würden, falls doch.** Eine Seite ist nach
+`pdfport.render_page` ein PNG und nimmt ab da denselben Weg wie jedes Bild —
+`M.canvas_for` ist genau dafür öffentlich. Ein *unscharfer* Zoom fällt also
+gratis mit ab: dasselbe PNG in eine größere Fläche. Ein *scharfer* wäre ein
+zweites Rastern; `render_page` nimmt dafür `opts.dpi` (Default 216), hover
+übergibt heute `nil`. Dagegen steht der Seiten-Cache: sein Schlüssel ist
+`Pfad\0mtime\0Seite` (`media.lua:371`), **ohne DPI** — zwei Auflösungen
+derselben Seite würden einander überschreiben. Mehr ist es nicht: ein DPI im
+Schlüssel, ein DPI im Aufruf. Office-Dokumente hängen mit dran, sie *sind* an
+dieser Stelle PDFs.
+
+**Zur Maus zwei Voraussetzungen, beide geprüft:**
 
 - **Das Float ist `focusable = opts.focusable == true`**, also standardmäßig
   *nicht* fokussierbar (`float.lua:293`). Die Maus kann so nicht hineinklicken.
   Man bräuchte entweder `focusable`, oder — sauberer — `getmousepos()` in
   einer globalen `<ScrollWheelUp>`-Map, um zu erkennen, dass der Zeiger über
   dem Hover steht, ohne den Fokus anzufassen.
-- **Ein Scroll-Mechanismus existiert schon** (`bindings/keymaps.lua`):
-  `scroll_keys` werden nur installiert, solange ein Float offen ist *und* es
-  etwas zu scrollen gibt, und werden beim Schließen wieder eingesammelt.
-  Zoom sollte an derselben Stelle andocken statt einen zweiten Weg aufzumachen
-  — dieselbe Aufräum-Disziplin ist der Grund, warum die Keymaps dort so
-  vorsichtig geschrieben sind.
+- **`mouse` muss beim Nutzer gesetzt sein** (`set mouse=a`), sonst kommt gar
+  kein Rad-Event an. Das ist ein Fall für `:Hover why`.
 
-`mouse` muss beim Nutzer gesetzt sein (`set mouse=a`), sonst kommt gar kein
-Rad-Event an. Das ist ein Fall für `:Hover why`.
+Beides gilt nur fürs Rad. Ein Tastenpaar (`+`/`-`) über dieselbe Leihe wie
+`scroll_keys` hat **keine** dieser Voraussetzungen und ist außerdem die
+kleinere Änderung — sinnvoll als erster Schritt, das Mausrad als zweiter.
 
 ---
 
