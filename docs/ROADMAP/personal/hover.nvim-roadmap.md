@@ -203,6 +203,42 @@ Fläche noch niemand.*
 
 ---
 
+#### Die Tastenfrage für Schritt 3, entschieden am 2026-09-02
+
+**Anlass:** beim Nachlesen fiel auf, dass `zoom_keys` in den Config-Notes
+(`docs/NOTES/PersonelPlugins/BINDINGS/Keymaps/hover.nvim.md`) **gar nicht
+standen** — seit `204d083` geliehen, in hover.nvims eigener `docs/BINDINGS.md`
+dokumentiert, in meiner Übersicht nicht. Nachgetragen; die Akkord-Tabelle
+steht dort.
+
+Was für den Ausbau feststeht, als Aussage über **diese** Config:
+
+| Akkord | Status |
+| --- | --- |
+| `<C-+>` / `<C-->` | **ausgeschlossen** — allgemeines Fenster-Zoom |
+| `<C-ScrollWheel>` | **ausgeschlossen** — dieselbe Erwartung, auch wo es hier nicht zoomt |
+| `<M-->` | **vergeben** (cascade.nvim, Bullet Points) und bleibt |
+| `<M-+>` | frei, aber ohne Partner — ein Regler mit einer Richtung ist keiner |
+| `<M-ScrollWheelUp/Down>` | **frei, und damit der Kandidat für Schritt 3** |
+| `<S-+>` / `<S-->`, `<C-S-+>` / `<C-S-->` | frei, **aber ungeprüft** |
+
+**Die ungeprüfte Stelle.** Neovim nimmt `<S-+>` an und hält es von `+`
+getrennt (mit `maparg` nachgemessen). Ob das *Terminal* es sendet, ist eine
+andere Frage: auf deutscher Tastatur ist Shift+`+` das Zeichen `*`, und ohne
+Kitty-Keyboard-Protokoll kommt nie ein `<S-+>` an. WezTerm kann das Protokoll
+— plausibel, ungeprüft, und der Test kostet eine Minute
+(`:nnoremap <S-+> :echo "kommt an"<CR>`). **Erst messen, dann darauf bauen.**
+
+**Und das eigentlich Fehlende ist kein Akkord, sondern eine Route.**
+`hover.zoom(delta)` ist öffentlich, aber es gibt **keine `:Hover`-Route**
+dafür — anders als bei `scroll`. Damit ist Zoom heute *nur* über die geliehene
+Taste erreichbar, also nur, solange ein Float mit Bild offen ist und nur mit
+`+`/`-`. Ein `:Hover zoom in|out` wäre der kleinere Bau als das Mausrad und
+löst das Akkord-Problem ganz, weil es keinen braucht. **Empfehlung: die Route
+vor dem Mausrad**, und `<M-ScrollWheelUp/Down>` danach.
+
+---
+
 ### 2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)
 
 > **Erledigt am 2026-09-02.** `registry.contributors()`, zwei Health-Zeilen,

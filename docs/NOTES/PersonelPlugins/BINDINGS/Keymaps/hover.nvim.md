@@ -31,6 +31,8 @@ combination when no key is bound. **Not set in this config today.**
 | `open_keys` | `gf` | every hover | open what the float is showing — routed through open.nvim when present, else `vim.ui.open` |
 | `scroll_keys.down` | `<M-PageDown>`, `<C-Down>` | scrollable only | next screenful / next PDF page |
 | `scroll_keys.up` | `<M-PageUp>`, `<C-Up>` | scrollable only | back |
+| `zoom_keys.larger` | `+` | **hovers with a picture only** | die Bildfläche einen Schritt (×1,25) größer |
+| `zoom_keys.smaller` | `-` | **hovers with a picture only** | einen Schritt kleiner |
 
 ## Collisions to know about
 
@@ -49,6 +51,12 @@ combination when no key is bound. **Not set in this config today.**
   float already resolved it — including the cases `gf` cannot do, such as a
   truncated path or a `:line:col` suffix. With no float open, `gf` is
   untouched.
+- **Zoom hängt an einer *anderen* Bedingung als Scroll**, und musste das.
+  Scroll hängt an `content.scroll`, das ein Bild bewusst nicht deklariert —
+  Zoom liest `content.canvas`. Hätte man Zoom an die Scroll-Bedingung gehängt,
+  wäre es für jeden Fall außer dem eigenen gebunden gewesen. Praktisch heißt
+  das: `+` und `-` sind auf einem Text-Hover **frei** und behalten dort, was
+  sie sonst bedeuten (`+`/`-` als Zeilenbewegung).
 - **The open key is taken *before* the scroll keys**, so a key configured as
   both opens rather than scrolls. Opening is what a reader means by pressing
   something; scrolling has two keys of its own either way.
@@ -61,6 +69,39 @@ A configured list **replaces** the default rather than extending it; an empty
 list binds nothing at all, which is how you take the scrolling over with your
 own mappings (`require("hover").scroll(1)` / `(-1)`).
 
+## Reserviert und ausgeschlossen — für den Zoom-Ausbau
+
+Festgehalten am **2026-09-02**, bevor gebaut wird: welche Akkorde für Schritt 3
+des Zooms (Mausrad) und für einen zweiten Tastensatz überhaupt zur Verfügung
+stehen. Die Liste ist eine Aussage über **diese** Config, nicht über das
+Plugin — hover.nvims Defaults bleiben `+` / `-`.
+
+| Akkord | Status | Grund |
+| --- | --- | --- |
+| `<C-+>` / `<C-->` | **ausgeschlossen** | das allgemeine Fenster-Zoom, gehört nicht dem Plugin |
+| `<C-ScrollWheel>` | **ausgeschlossen** | dieselbe Bedeutung wie oben; in WezTerm zoomt es hier zwar nicht, aber die Erwartung ist gesetzt |
+| `<M-->` | **vergeben** | cascade.nvim, Bullet Points — bleibt, wo es ist |
+| `<M-+>` | frei | aber ohne Partner: `<M-->` ist weg, ein Regler mit nur einer Richtung ist keiner |
+| `<M-ScrollWheelUp/Down>` | **frei, und der Kandidat für Schritt 3** | kollidiert mit nichts, und Schritt 3 braucht ohnehin `getmousepos()` in einer globalen Map |
+| `<S-+>` / `<S-->` | frei, **aber ungeprüft** | siehe unten |
+| `<C-S-+>` / `<C-S-->` | frei, **aber ungeprüft** | dito |
+
+**Die ungeprüfte Stelle, und sie ist keine Kleinigkeit.** Neovim *nimmt* diese
+Schreibweisen an und hält sie von `+` / `-` getrennt (nachgemessen 2026-09-02
+mit `maparg`). Ob das Terminal sie je **sendet**, ist eine andere Frage: auf
+deutscher Tastatur ist Shift+`+` das Zeichen `*`, und ohne
+Kitty-Keyboard-Protokoll kommt bei Neovim nie ein `<S-+>` an, sondern ein
+`*`. WezTerm beherrscht das Protokoll, es ist also plausibel — aber zu prüfen,
+bevor darauf gebaut wird. Der Test ist eine Minute:
+
+```vim
+:nnoremap <S-+> :echo "S-plus kommt an"<CR>
+```
+
+**Und ein Usercommand fehlt ganz.** Es gibt `hover.zoom(delta)` öffentlich,
+aber keine `:Hover`-Route dafür — anders als bei `scroll`. Für einen Zoom, der
+ohne Tastenleihe erreichbar ist, ist das der eigentliche Griff.
+
 ## Notes
 
 - **Kein which-key** — geprüft und verneint: `lua/hover/` enthält kein
@@ -72,6 +113,10 @@ own mappings (`require("hover").scroll(1)` / `(-1)`).
 
 ## Changelog
 
+- 2026-09-02: **`zoom_keys` fehlten hier ganz** — seit hover.nvim `204d083`
+  geliehen (`+` / `-`, nur für Hovers mit Bild), in hover.nvims eigener
+  `docs/BINDINGS.md` dokumentiert, in dieser Datei nicht. Dazu der Abschnitt
+  über reservierte Akkorde für den Ausbau.
 - 2026-09-02: `open_keys` (`gf`) fehlte hier ganz — seit hover.nvim `f2e0788`
   geliehen, wie die Dismiss- und Scroll-Tasten, und die einzige davon, die
   ein Vim-Builtin verdrängt. Kollisionsabschnitt entsprechend ergänzt.
