@@ -74,18 +74,22 @@ Die vier Subcommands `history`, `last`, `errors` und `all` sind nicht fest
 eingebaut, sondern Einträge aus `opts.commands`. Diese Config überschreibt sie
 nicht, es gelten also Noices Defaults.
 
-**Erwartete Befunde, und warum sie keine sind.** In einer Session, die noice
-nie geladen hat, existieren von diesen 17 Einzelcommands nur die, die auch
-Lazy-Trigger sind. `:Bindings check` meldet den Rest als `usercmd-not-live` —
-die dokumentierte Klasse „lazy, noch nicht ausgelöst", nicht Drift. Gemessen
-am 2026-09-02: **14** Zeilen, nämlich 17 minus `:NoiceAll`, `:NoiceDismiss`
-und `:NoiceHistory`. Mit dem korrigierten Trigger `NoiceErrors` sind es 13.
+**Was `:Bindings check` mit diesem Blatt macht.** In einer Session, die noice
+nie geladen hat, ist keiner dieser Commands registriert — die Achse
+überspringt das ganze Blatt und meldet null. Zwischenzeitlich meldete sie 14
+Zeilen als `usercmd-not-live`, weil sie den Blattnamen `Noice` nicht mit dem
+lazy-Plugin `noice.nvim` in Verbindung brachte und einen unbekannten Namen
+als „immer geladen" behandelte; seit die Stämme aufgelöst werden, tut sie das
+nicht mehr.
 
-Streng genommen müssten es null sein: die Achse überspringt eine Zeile, deren
-Plugin nicht geladen ist. Sie tut es hier nicht, weil sie den Blattnamen
-`Noice` nicht mit dem lazy-Plugin `noice.nvim` in Verbindung bringt und einen
-unbekannten Namen als „immer geladen" behandelt. Dieselbe Ursache steht hinter
-den meisten `usercmd-not-live`-Zeilen des Extern-Korpus.
+**Und was die Repo-Achse damit macht — ein dokumentierter Falschbefund.**
+`:Bindings check repo extern` sucht die Commandnamen als Quoted-Literal im
+Baum des Plugins und findet 13 der 17 nicht. Sie stehen dort auch nicht:
+noice **baut** sie zur Laufzeit aus den Keys seiner Command-Tabelle
+(`"Noice" .. name:sub(1, 1):upper() .. name:sub(2)`). Im Quelltext steht
+`stats`, nie `NoiceStats`. Das ist dieselbe Klasse wie debugging.nvims zur
+Laufzeit gebautes `prefix .. "m"` — der Preis dafür, dass die Repo-Achse ein
+Grep ist und kein API-Aufruf, und kein Grund, hier etwas zu ändern.
 
 ## Die vier Lazy-Trigger
 

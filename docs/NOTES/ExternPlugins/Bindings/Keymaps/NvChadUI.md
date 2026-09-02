@@ -1,5 +1,7 @@
 # nvchad/ui — Keymaps
 
+**Repo:** `NvChad/ui` — gelesen von `:Bindings check`, weil das Repo schlicht `ui` heißt.
+
 `nvchad/ui` selbst (Statusline/Tabufline/Base46) bringt in dieser Config keine
 verwendeten Default-Keymaps mit — sie sind entweder deaktiviert oder durch
 eigene Mappings ersetzt. Alle folgenden Einträge sind **[custom]**.

@@ -16,7 +16,7 @@ Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
 `report.lua` + `status.lua` (Phase 4 Berichtsdatei + Dashboard).
 
 **Zahlen kommen aus [MEASURING.md](./MEASURING.md)**, nicht von hier: dort
-stehen die gemessenen Stände mit Datum, die fünf Fallen, die eine
+stehen die gemessenen Stände mit Datum, die sechs Fallen, die eine
 headless-Messung still falsch machen, und die drei Klassen von Befund, die
 korrekt gemeldet werden und trotzdem kein Problem sind. Wer eine Zahl aus
 dieser Datei nachprüfen will, liest zuerst dort die Vorkehrungen.
@@ -145,12 +145,16 @@ Begründung):
   das Pro-Tabellen-Verdikt „not verifiable from here" statt N Einzelbefunde.
   Gemessen ist von 52 solchen Meldungen genau eine übrig.
 - **Noch nicht geladene Plugins werden übersprungen, nicht fälschlich als
-  fehlend gemeldet**: `records.lua`s `plugin`-Feld wird gegen
-  `require("lazy.core.config").plugins[name]._.loaded` geprüft; ein
-  Plugin, das lazy.nvim in dieser Session noch nicht geladen hat, wird
-  namentlich als "skipped" aufgeführt statt Falschalarme zu erzeugen.
-  Empirisch wichtig: in einer frisch gestarteten Session war das kein
-  Randfall — die Mehrheit der Personal-Keymaps-Plugins war noch ungeladen.
+  fehlend gemeldet**: `records.lua`s `plugin`-Feld wird über `stem_plugin`
+  (siehe „Wie ein Cheatsheet-Stamm zu seinem Plugin findet") auf den
+  lazy.nvim-Namen aufgelöst und dessen `._.loaded` geprüft; ein Plugin, das
+  lazy.nvim in dieser Session noch nicht geladen hat, wird namentlich als
+  "skipped" aufgeführt statt Falschalarme zu erzeugen. Empirisch wichtig: in
+  einer frisch gestarteten Session war das kein Randfall — die Mehrheit der
+  Personal-Keymaps-Plugins war noch ungeladen, und seit der Auflösung gilt
+  dasselbe für 17 der 24 Extern-Stämme. Der Bericht nennt deshalb neben der
+  übersprungenen Plugin-Liste auch, **wie viele dokumentierte Zeilen** an ihr
+  hängen.
 - **Usercmds: beide Richtungen**, da `nvim_get_commands({})` nie
   Vim-Defaults enthält (kein Rauschen von dort). Die Rückrichtung
   (live-aber-undokumentiert) zieht zur Rauschreduktion auch Extern-Doku
@@ -167,7 +171,8 @@ Gegen den echten, voll geladenen Bestand verifiziert (headless, über einen
 `XDG_CONFIG_HOME`-Junction-Trick, der `stdpath("config")` auf diesen
 Branch zeigen lässt, ohne `stdpath("data")`/die echten Plugin-Installationen
 anzufassen — siehe git-Historie dieser Datei für die Kommandos): fand u.a.
-`Usercmds/dap.nvimMERGE.md`s bereits in `BINDINGS-FORMAT.md` §5 als
+`Usercmds/dap.nvimMERGE.md`s bereits in `BINDINGS-FORMAT.md` §6 (dem
+Retrofit-Abschnitt) als
 Merge-Artefakt vermuteten `:Dap` (mittlerweile geprüft: enthielt echten,
 nirgends sonst dokumentierten Inhalt zum `languages/<lang>.lua`-Merge und
 `auto_install`/`replace = true` — in `dap.nvim.md` nachgezogen, Datei
@@ -487,6 +492,85 @@ erzeugten Scope-Commands (`:NotesFiles`, `:WkdbooksGrep`, …) landen alle auf
 Bericht damit als ein Block untereinander. Genau die Aussage, die der
 Driftreport von Hand getroffen hat: hier ist der Generator zu dokumentieren,
 nicht seine 23 Ergebnisse.
+
+## Wie ein Cheatsheet-Stamm zu seinem Plugin findet (2026-09-02)
+
+Zwei Fragen des Prüfers hängen daran, und beide wurden für den ganzen
+Extern-Korpus falsch beantwortet: **ist dieses Plugin geladen** (sonst ist
+eine fehlende Registrierung keine Aussage) und **wo liegt sein Quelltext**
+(für den Fallback und die Repo-Achse).
+
+Beide fragten `lazy_config.plugins[stamm]`, und **kein einziger der 24
+Extern-Stämme ist so geschrieben, wie lazy.nvim seine Tabelle schlüsselt**:
+
+```
+Diffview -> diffview.nvim      Fugitive  -> vim-fugitive
+Telescope -> telescope.nvim    NeoTree   -> neo-tree.nvim
+VisualMulti -> vim-visual-multi
+```
+
+Jeder Lookup ging daneben, und ein danebengegangener Lookup hieß „kein
+Plugin, also immer geladen". `skipped` stand im Extern-Scope folglich auf
+**0**, und jede dokumentierte Zeile wurde gegen eine Session geprüft, die
+ihr Plugin womöglich nie geladen hatte.
+
+### Drei Schritte, keiner davon rät
+
+1. **Die `**Repo:**`-Zeile des Blattes**, wenn es eine hat. Sie gewinnt immer.
+2. **Der Stamm wörtlich**, für ein Blatt, das schon nach seinem Repo heißt.
+3. **Der eindeutige normalisierte Treffer**: klein, ohne die
+   `nvim`/`vim`-Affixe und ohne `-`, `_`, `.`. `NeoTree` und `neo-tree.nvim`
+   werden beide zu `neotree`.
+
+Mehrdeutigkeit wird **verworfen, nicht aufgelöst**: `dap.nvim` und `nvim-dap`
+normalisieren beide auf `dap`, und eine Münze zu werfen und das Ergebnis als
+Tatsache zu drucken ist schlimmer als nichts zu sagen. Solche Blätter sagen
+es selbst (Schritt 1).
+
+**Kein Teilstring-Rückfall.** Der naheliegende „längster passender
+Teilstring" liegt über dem echten Korpus zweimal daneben, und zwar still:
+`Telescope` → `telescope-file-browser.nvim`, `NeoTree` →
+`neo-tree-tests-source.nvim`. Der kürzeste Treffer verschiebt nur, welche
+Paare er falsch macht. Gemessen lösen die drei Schritte 21 der 24 Stämme
+allein auf; die verbleibenden drei — `Blink` → `blink.cmp`, `Dap` →
+`dap.nvim`, `NvChadUI` → `ui` — tragen ihre `**Repo:**`-Zeile. Damit kauft
+das Raten nichts und kostet Korrektheit.
+
+### Was die Auflösung an den Zahlen getan hat
+
+| | vorher | nachher |
+| --- | ---: | ---: |
+| `keymap-not-live` (extern) | 84 | **0** |
+| `usercmd-not-live` (all) | 31 | **2** |
+| `autocmd-not-live` (all) | 12 | 11 |
+| übersprungene Stämme (extern) | 0 | **17** |
+
+**Das ist kein sauberer Korpus, sondern eine ehrliche Messung.** Die 84
+verschwundenen Keymap-Befunde sind nicht geprüft und für gut befunden worden
+— sie gehören zu Plugins, die diese Session nie geladen hat, und über die
+kann der Live-Zustand nichts sagen. Deshalb druckt der Bericht jetzt eine
+zweite Zahl unter der übersprungenen Liste: **wie viele dokumentierte Zeilen**
+an ihr hängen (extern 541, insgesamt 1377). Ohne sie liest sich „54 Befunde"
+wie ein Urteil über den Korpus statt wie eine Tatsache über die Session.
+
+Der eine `autocmd-not-live` weniger ist ein Personal-Blatt: `buffer-ctx`
+heißt so, sein Repo `buffer-ctx.nvim`. Auch der Personal-Korpus hatte also
+Stämme, die nicht trafen — nur weniger auffällig.
+
+### Wo die 84 wirklich landen
+
+Auf der opt-in-Achse, die sie jetzt zum ersten Mal prüfen *kann*:
+`:Bindings check repo extern` findet die Checkouts der 17 übersprungenen
+Stämme und meldet **18 `keymap-not-in-repo`** statt 84 (1146 ms). Davon sind
+13 die bekannten Notationsdifferenzen — Telescope schreibt `<A-c>`, die
+Quelle `<M-c>`; VisualMulti trägt den Leader `\\` im Key —, plus
+`["x]y<C-G>`, das keine Taste ist, sondern eine Register-Notation. Übrig
+bleiben eine Handvoll echter Kandidaten.
+
+Dazu 15 `usercmd-not-in-repo`, von denen 13 ein dokumentierter Falschbefund
+sind: noice **generiert** seine Einzelcommands zur Laufzeit, im Quelltext
+steht `stats` und nie `NoiceStats`. Dieselbe Klasse wie debugging.nvims
+`prefix .. "m"` — der Preis dafür, dass diese Achse ein Grep ist.
 
 ## Die Autocmds-Achse (2026-09-02)
 

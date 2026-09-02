@@ -1,5 +1,7 @@
 # nvchad/ui — User-Commands
 
+**Repo:** `NvChad/ui` — gelesen von `:Bindings check`, weil das Repo schlicht `ui` heißt.
+
 Zwei Quellen: die Upstream-Plugin-Commands aus (der lokal überschriebenen)
 `nvchad.au` sowie die eigene Theme-/Transparenz-Steuerung in
 [lua/wkdnvchad/usrcmd/](../../../../../lua/wkdnvchad/usrcmd). Registriert über

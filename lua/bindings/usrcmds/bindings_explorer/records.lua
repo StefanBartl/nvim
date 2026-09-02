@@ -331,6 +331,43 @@ function M.mentions()
   return out
 end
 
+--- What a sheet says its plugin is called, for the sheets where guessing
+--- would be wrong.
+---
+--- A cheatsheet's stem is a human's name for a plugin (`NvChadUI`), the
+--- package manager's is the repository's (`ui`). For 21 of the extern
+--- corpus' 24 stems the two meet after normalization; for three they do not,
+--- and no amount of string surgery gets `Blink` to `blink.cmp` or `Dap` to
+--- one of `dap.nvim`/`nvim-dap` rather than the other. Those three say it
+--- themselves, in a line the reader sees too:
+---
+---     **Repo:** `NvChad/ui`
+---
+--- Either half of an `owner/name` slug is accepted; the last segment is what
+--- lazy.nvim keys its plugin table by. Read from the file's prose rather
+--- than from a table row on purpose -- it is a statement about the sheet,
+--- not a binding, and a table row would have to be excluded from every other
+--- axis by hand.
+---@return table<string, string>  # sheet stem -> plugin name
+function M.repo_hints()
+  local out = {}
+  each_file({ "Keymaps", "Usercmds", "Autocmds" }, nil, function(path)
+    local stem = vim.fn.fnamemodify(path, ":t:r")
+    if out[stem] then
+      return
+    end
+    local content = read(path)
+    if not content then
+      return
+    end
+    local slug = content:match("%*%*Repo:%*%*%s*`([^`]+)`")
+    if slug then
+      out[stem] = vim.trim(slug:match("([^/]+)$") or slug)
+    end
+  end)
+  return out
+end
+
 --- The raw text of one plugin's sheets in `category`, both roots joined.
 ---
 --- For the questions a table row cannot answer. `Autocmds/sessions.nvim.md`

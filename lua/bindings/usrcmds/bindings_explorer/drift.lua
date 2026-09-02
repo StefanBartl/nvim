@@ -521,6 +521,118 @@ local function extract_usercmd(rec)
   return nil
 end
 
+--- A plugin name reduced to what a cheatsheet stem and a repository name
+--- have in common: case, the `nvim`/`vim` affixes everyone spells
+--- differently, and the separators.
+---
+--- Deliberately not a similarity score. Every transformation here removes
+--- something both sides agree is decoration; nothing here shortens one name
+--- towards another.
+---@param s string
+---@return string
+local function normalize_plugin_name(s)
+  s = s:lower()
+  s = s:gsub("%.nvim$", ""):gsub("^nvim%-", ""):gsub("^vim%-", ""):gsub("%-vim$", ""):gsub("%.vim$", "")
+  return (s:gsub("[%-_%.]", ""))
+end
+
+---@type table<string, string>|nil  normalized name -> the one plugin with it
+local plugin_by_norm_cache = nil
+---@type table<string, string|false>|nil  stem -> plugin name, false = none
+local stem_plugin_cache = nil
+---@type table<string, string>|nil  `records.repo_hints()`, read once per run
+local repo_hints_cache = nil
+
+--- Drop what one run resolved. Called at the top of `M.check` for the same
+--- reason `repo.reset()` is: the corpus and the loaded-plugin set both change
+--- between two runs in one session, and a report that answers from the
+--- previous run's cache is a report about the previous run.
+local function reset_plugin_cache()
+  plugin_by_norm_cache = nil
+  stem_plugin_cache = nil
+  repo_hints_cache = nil
+end
+
+--- Every lazy plugin whose normalized name is unambiguous.
+---
+--- Ambiguity is dropped rather than resolved: `dap.nvim` and `nvim-dap` both
+--- normalize to `dap`, and picking either would be a coin flip printed as a
+--- fact. A sheet in that position says which one it means (`repo_hints`).
+---@return table<string, string>
+local function plugin_by_norm()
+  if plugin_by_norm_cache then
+    return plugin_by_norm_cache
+  end
+  local out, seen = {}, {}
+  local ok, lazy_config = pcall(require, "lazy.core.config")
+  if ok then
+    for name in pairs(lazy_config.plugins) do
+      local key = normalize_plugin_name(name)
+      if seen[key] then
+        out[key] = nil
+      else
+        seen[key] = true
+        out[key] = name
+      end
+    end
+  end
+  plugin_by_norm_cache = out
+  return out
+end
+
+--- The lazy.nvim plugin a cheatsheet stem names, or `nil`.
+---
+--- **Why this is not just `lazy_config.plugins[stem]`.** It was, and the
+--- consequence ran through the whole extern scope: not one of the corpus'
+--- 24 extern stems is spelled the way lazy.nvim keys its table.
+--- `Diffview` is `diffview.nvim`, `Fugitive` is `vim-fugitive`, `NeoTree`
+--- is `neo-tree.nvim`. Every lookup missed, and a missed lookup was read as
+--- "not a plugin, so treat it as always loaded" -- which made `skipped` 0 in
+--- the extern scope and checked every documented row against a session that
+--- may never have loaded its plugin.
+---
+--- Three steps, in this order, and none of them guesses:
+---   1. the sheet's own `**Repo:**` line, which always wins;
+---   2. the stem verbatim, for a sheet already named after its repository;
+---   3. the unique normalized match (`normalize_plugin_name`).
+---
+--- **No substring fallback.** The obvious "longest matching substring" is
+--- wrong twice over the real corpus, and silently: `Telescope` resolves to
+--- `telescope-file-browser.nvim` and `NeoTree` to
+--- `neo-tree-tests-source.nvim`. Shortest-match instead only moves which
+--- pairs it gets wrong. Measured, the three steps above resolve 21 of the 24
+--- stems on their own; the remaining three (`Blink`, `Dap`, `NvChadUI`) name
+--- their repository, so the substring guess buys nothing and costs
+--- correctness.
+---@param stem string
+---@return string|nil
+local function stem_plugin(stem)
+  stem_plugin_cache = stem_plugin_cache or {}
+  local cached = stem_plugin_cache[stem]
+  if cached ~= nil then
+    if cached == false then
+      return nil
+    end
+    return cached
+  end
+
+  local ok, lazy_config = pcall(require, "lazy.core.config")
+  local resolved = nil
+  if ok then
+    repo_hints_cache = repo_hints_cache or records.repo_hints()
+    local hint = repo_hints_cache[stem]
+    if hint and lazy_config.plugins[hint] then
+      resolved = hint
+    elseif lazy_config.plugins[stem] then
+      resolved = stem
+    else
+      resolved = plugin_by_norm()[normalize_plugin_name(stem)]
+    end
+  end
+  stem_plugin_cache[stem] = resolved or false
+  return resolved
+end
+
 --- Whether `plugin` (a `records.lua` `plugin` field, i.e. a cheatsheet's
 --- filename stem) is loaded in THIS session — see the module doc's point
 --- 4. A name lazy.nvim's plugin registry doesn't know about at all (a
@@ -533,11 +645,41 @@ local function is_plugin_loaded(plugin)
   if not ok then
     return true
   end
-  local spec = lazy_config.plugins[plugin]
+  local name = stem_plugin(plugin)
+  local spec = name and lazy_config.plugins[name]
   if not spec then
     return true
   end
   return spec._ ~= nil and spec._.loaded ~= nil
+end
+
+--- The on-disk checkout of every extern cheatsheet's plugin, keyed by the
+--- stem the corpus uses.
+---
+--- The counterpart to `config.repo_dirs()`, which resolves the *personal*
+--- plugins and by construction knows nothing about a third-party one. Both
+--- feed the same two lookups -- the source fallback and the opt-in repo axis
+--- -- and until this existed the extern half of both could only ever grep
+--- this config's own `lua/` tree, never the tree of the plugin whose key was
+--- missing.
+---@return table<string, string>  # stem -> absolute directory
+local function extern_plugin_dirs()
+  local out = {}
+  local ok, lazy_config = pcall(require, "lazy.core.config")
+  if not ok then
+    return out
+  end
+  for _, rec in ipairs(records.list(nil, "extern")) do
+    if not out[rec.plugin] then
+      local name = stem_plugin(rec.plugin)
+      local spec = name and lazy_config.plugins[name]
+      local dir = spec and spec.dir
+      if type(dir) == "string" and dir ~= "" and vim.fn.isdirectory(dir) == 1 then
+        out[rec.plugin] = dir
+      end
+    end
+  end
+  return out
 end
 
 ---@return table<string, boolean>
@@ -1095,6 +1237,13 @@ end
 ---  ARE written in their plugin's own source, and are therefore not
 ---  reported. Carried so a reader can reconcile this run's count with one
 ---  from before the fallback existed.
+---@field skipped_rows integer documented rows dropped because their plugin
+---  is not loaded — the same reasoning as `AutocmdInfo.unanchored`. The
+---  skipped *plugin* count was always printed; the row count was not, and
+---  the two are far apart: the 17 skipped extern stems of a normal run are
+---  541 unexamined rows. A report that prints "0 findings" over that has
+---  to say so, or the number reads as a verdict about the corpus instead
+---  of a fact about this session.
 
 ---@class Bindings.AutocmdInfo
 ---@field registry integer  # `(augroup, event)` pairs lib.nvim's registry could attribute
@@ -1154,6 +1303,11 @@ function M.check(plugin, opts)
   opts = opts or {}
   local findings = {}
   local skipped = {}
+  -- Counted where the row is dropped rather than reconstructed afterwards:
+  -- the three sites below know exactly which rows they let go, and a second
+  -- pass over the corpus to re-derive the same number would both cost a
+  -- full re-read and be free to disagree with them.
+  local skipped_rows = 0
 
   -- Scope of the live-undocumented direction. Resolved before the axes run
   -- so the filter and the report agree on one answer, and so an
@@ -1204,6 +1358,7 @@ function M.check(plugin, opts)
   local repo_resolved = {}
   local want_repo = opts.repo == true or type(opts.repo_root) == "string"
   repo.reset()
+  reset_plugin_cache()
   do
     local dirs, reason
     if type(opts.repo_root) == "string" then
@@ -1217,6 +1372,16 @@ function M.check(plugin, opts)
       for _, entry in ipairs(dirs) do
         repo_dirs[entry.name] = entry.dir
         repo_resolved[#repo_resolved + 1] = entry.name
+      end
+      -- The extern half, which `config.repo_dirs()` cannot know about: it
+      -- resolves the plugins this config *owns*. Added after, never over --
+      -- a stem that names a personal checkout keeps it, and a lazy install
+      -- of the same name does not shadow the tree being worked in.
+      for stem, dir in pairs(extern_plugin_dirs()) do
+        if not repo_dirs[stem] then
+          repo_dirs[stem] = dir
+          repo_resolved[#repo_resolved + 1] = stem
+        end
       end
     end
   end
@@ -1265,6 +1430,7 @@ function M.check(plugin, opts)
       local dir = want_repo and repo_dirs and repo_dirs[rec.plugin] or nil
       if not dir then
         skipped[rec.plugin] = true
+        skipped_rows = skipped_rows + 1
       else
         repo_candidates[rec.plugin] = true
         local token = extract_lhs_token(rec)
@@ -1464,6 +1630,7 @@ function M.check(plugin, opts)
       local dir = want_repo and repo_dirs and repo_dirs[rec.plugin] or nil
       if not dir then
         skipped[rec.plugin] = true
+        skipped_rows = skipped_rows + 1
       else
         repo_candidates[rec.plugin] = true
         -- Repo axis, usercmds. Case-SENSITIVE here, unlike the keymap side:
@@ -1699,6 +1866,7 @@ function M.check(plugin, opts)
           end
         else
           skipped[rec.plugin] = true
+          skipped_rows = skipped_rows + 1
         end
       end
     end
@@ -1873,6 +2041,7 @@ function M.check(plugin, opts)
     undocumented = repo_undocumented,
     fallback = repo_dirs ~= nil,
     fallback_confirmed = fallback_confirmed,
+    skipped_rows = skipped_rows,
   }
 
   return findings,
@@ -2391,6 +2560,17 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info, aut
       #skipped,
       table.concat(skipped, ", ")
     )
+    -- The row count, not just the plugin count. A skipped plugin sounds
+    -- like one thing missing from the report; 17 of them are 541 rows this
+    -- run never looked at, and without the second number a small finding
+    -- count reads as a verdict about the corpus. Same reasoning as the
+    -- Autocmds axis' "not checkable" line above.
+    if repo_info and (repo_info.skipped_rows or 0) > 0 then
+      lines[#lines + 1] = ("  -- %d documented row%s belong to them and were not checked"):format(
+        repo_info.skipped_rows,
+        repo_info.skipped_rows == 1 and "" or "s"
+      )
+    end
     if not repo_ran then
       lines[#lines + 1] =
         "  -- :Bindings check repo additionally greps these plugins' local checkouts."

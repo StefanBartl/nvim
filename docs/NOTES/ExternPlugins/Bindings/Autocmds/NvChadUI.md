@@ -1,5 +1,7 @@
 # nvchad/ui — Autocmds
 
+**Repo:** `NvChad/ui` — gelesen von `:Bindings check`, weil das Repo schlicht `ui` heißt.
+
 `nvchad/ui` ist die NvChad-Basis (Statusline, Tabufline, Themes, Base46). Ihre
 eigenen Autocmds stammen aus `lua/nvchad/au.lua` im Plugin-Repo, werden aber in
 dieser Config **überschrieben**: der Runtimepath dieser Nvim-Config legt

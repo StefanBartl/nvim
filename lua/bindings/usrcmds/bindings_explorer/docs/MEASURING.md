@@ -3,7 +3,7 @@
 `FEATURES.md` beschreibt, was die Routen tun. Diese Datei beschreibt, wie man
 sie **misst**, und trägt die Zahlen, auf die sich Entscheidungen berufen haben.
 
-Sie existiert, weil dieselben fünf Fehler in drei aufeinanderfolgenden
+Sie existiert, weil dieselben Fehler in aufeinanderfolgenden
 Sessions gemacht wurden — zwei davon zweimal. Jeder einzelne erzeugt Zahlen,
 die plausibel aussehen und falsch sind, und aus zwei davon wurde bereits in
 geschriebene Berichte zitiert.
@@ -13,7 +13,7 @@ geschriebene Berichte zitiert.
 ## Table of content
 
 - [Der eine Satz, der am meisten spart](#der-eine-satz-der-am-meisten-spart)
-- [Die fünf Fallen](#die-fünf-fallen)
+- [Die sechs Fallen](#die-sechs-fallen)
 - [Ein Mess-Skript, das stimmt](#ein-mess-skript-das-stimmt)
 - [Gemessene Stände](#gemessene-stände)
 - [Was ein Befund nicht ist](#was-ein-befund-nicht-ist)
@@ -22,14 +22,20 @@ geschriebene Berichte zitiert.
 
 ## Der eine Satz, der am meisten spart
 
-**Interaktiv gemessen ist richtig, headless gemessen ist es erst nach drei
+**Interaktiv gemessen ist richtig, headless gemessen ist es erst nach vier
 Vorkehrungen.** Wer eine Zahl nur einmal braucht, tippt `:Bindings check` im
 laufenden Editor und ist fertig. Alles unten gilt für den headless-Fall, den
 man nimmt, weil er reproduzierbar und skriptbar ist.
 
+Die vier: `UIReady` nachholen (Falle 1), den Worktree-Code über
+`package.preload` einhängen (Falle 2), den Korpus auf den Worktree biegen oder
+vorher pushen (Falle 3), und seit dem 2026-09-02 den Lauf hinter `VimEnter`
+starten (Falle 5) — sonst misst man eine Session, die weniger Plugins geladen
+hat als jede echte.
+
 ---
 
-## Die fünf Fallen
+## Die sechs Fallen
 
 ### 1. Ohne `UIReady` misst man einen halb gestarteten Editor
 
@@ -105,7 +111,34 @@ das Ergebnis nach einem Befund aus und war ein Messfehler:
 Immer ein explizites `if`. Der Produktivcode trägt an beiden Stellen einen
 Kommentar, der das erklärt.
 
-### 5. `f.notation` ist die Vergleichsform, nicht die Anzeigeform
+### 5. Seit die Stämme auflösen, misst man auch, welche Plugins geladen sind
+
+Neu am 2026-09-02, und die Falle mit der größten Hebelwirkung auf die
+Befundzahl. Bis dahin traf `lazy_config.plugins[stamm]` für **keinen**
+Extern-Stamm, und ein Fehltreffer hieß „immer geladen" — der Ladezustand der
+Plugins war für den Extern-Scope schlicht irrelevant. Seit
+`stem_plugin` (FEATURES.md, „Wie ein Cheatsheet-Stamm zu seinem Plugin
+findet") ist er es nicht mehr: ein nicht geladenes Plugin wird übersprungen.
+
+Damit hängt die Befundzahl daran, **wie viel die Messsession geladen hat**,
+und das sind headless und interaktiv verschiedene Mengen:
+
+* Ein `luafile` läuft vor `VimEnter`, also haben lazy.nvims
+  `VeryLazy`-Handler nie gefeuert. Wer das misst, überspringt mehr als ein
+  echter Editor.
+* Gemessen mit nachgeholtem `VimEnter` gegen ohne: 24 gegen 23 übersprungene
+  Personal-Stämme, extern in beiden Fällen 17. Die `cmd`/`keys`-lazy
+  Plugins (Telescope, NeoTree, Diffview, Neogit, Trouble, Noice) laden auch
+  interaktiv erst beim Benutzen — die 17 sind also keine Eigenart des
+  Messaufbaus.
+
+**Vorkehrung:** das Messskript in einem einmaligen `VimEnter`-Autocmd starten
+(`nvim --headless -c "luafile wrap.lua"`, das Skript per `dofile` aus dem
+Callback), sonst misst man eine Session, die weniger geladen hat als jede
+echte. Und die zwei Zahlen immer zusammen zitieren — Befunde **und**
+übersprungene Zeilen; siehe unten.
+
+### 6. `f.notation` ist die Vergleichsform, nicht die Anzeigeform
 
 `keymap-not-live`-Befunde tragen die **rohe Byte-Form**, die `normalize_lhs`
 erzeugt hat — das ist ihr Zweck, `nvim_get_keymap`s `.lhsraw` wird dagegen
@@ -268,6 +301,53 @@ ist. Beim Hoisten in eine benannte Tabelle verloren sie ihre doppelten
 Prozentzeichen — kein Fehler, sondern 18 korrekt unterdrückte Befunde, die
 zurückkamen. Wer hier etwas an `records.wildcard_pattern` ändert, misst
 danach beide Kategorien, nicht nur die geänderte.
+
+### Nach der Stamm-Auflösung (2026-09-02)
+
+Dieselben Vorkehrungen, zweimal hintereinander gelaufen, beide Ausgaben
+identisch. Die Änderung ist `stem_plugin` (FEATURES.md, „Wie ein
+Cheatsheet-Stamm zu seinem Plugin findet").
+
+| Scope | vorher | nachher | übersprungene Stämme | deren Zeilen |
+| --- | ---: | ---: | ---: | ---: |
+| `personal` | 9 | **8** | 24 | 836 |
+| `extern` | 159 | **46** | 17 | 541 |
+| `all` | 168 | **54** | 41 | 1377 |
+
+Aufschlüsselung `all`: `usercmd-undocumented` 41, `autocmd-not-live` 11,
+`usercmd-not-live` 2, `keymap-not-live` **0**.
+
+**Die zweite Zahlenspalte ist die wichtigere.** 84 Keymap-Befunde sind nicht
+verschwunden, weil etwas repariert wurde, sondern weil ihre Plugins in dieser
+Session nie geladen haben und der Live-Zustand über sie nichts sagen kann.
+Der Bericht druckt die Zeilenzahl deshalb unter der übersprungenen Liste;
+wer nur „54" zitiert, zitiert die halbe Messung.
+
+Der eine Personal-Befund weniger ist `buffer-ctx BufferCtxMarkCleanup`: das
+Blatt heißt `buffer-ctx`, das Repo `buffer-ctx.nvim`. Auch der
+Personal-Korpus hatte also Stämme, die nicht trafen.
+
+### `:Bindings check repo extern`, jetzt erstmals sinnvoll
+
+Bis zur Stamm-Auflösung fand die Repo-Achse für keinen Extern-Stamm einen
+Checkout. Jetzt findet sie alle 17 übersprungenen:
+
+| | n |
+| --- | ---: |
+| Laufzeit | 1146 ms |
+| `keymap-not-in-repo` | **18** |
+| `usercmd-not-in-repo` | 15 |
+| `fallback_confirmed` | 4 |
+
+Die 18 sind fast genau die von Hand vorhergesagten: 8× Telescope
+(`<A-c>` dokumentiert, `<M-c>` in der Quelle), 5× VisualMulti (Leader `\\`
+im Key), `["x]y<C-G>` (eine Register-Notation, keine Taste), plus vier echte
+Kandidaten (`Lazygit <C-o>`, `Trouble zo`, `Telescope <bs>`/`gC`).
+
+13 der 15 Usercmd-Befunde sind ein dokumentierter Falschbefund: noice
+generiert seine Einzelcommands zur Laufzeit (`"Noice" .. key`), im Quelltext
+steht `stats` und nie `NoiceStats`. Dieselbe Klasse wie debugging.nvims
+`prefix .. "m"`.
 
 **Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
 Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —

@@ -1,5 +1,7 @@
 # nvim-dap (via StefanBartl/dap.nvim) — Keymaps
 
+**Repo:** `StefanBartl/dap.nvim` — gelesen von `:Bindings check`, weil `Dap` sonst mehrdeutig zwischen `dap.nvim` und `nvim-dap` wäre.
+
 `nvim-dap` selbst bringt **keine einzige Default-Keymap** mit (Design-
 Entscheidung des Plugins, siehe dessen README: "The arrow keys are good
 candidates for keymaps…" — bewusst dem Nutzer überlassen). Alles, was hier

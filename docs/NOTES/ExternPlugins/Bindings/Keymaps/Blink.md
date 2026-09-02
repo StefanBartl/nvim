@@ -1,5 +1,7 @@
 # blink.cmp — Keymaps
 
+**Repo:** `Saghen/blink.cmp` — gelesen von `:Bindings check`, weil der Stamm `Blink` durch keine Normalisierung auf `blink.cmp` trifft.
+
 `blink.cmp` ist die aktive Completion-Engine dieser Config. Installiert und
 mit einem Preset versorgt wird sie **nicht hier**, sondern von `lsp.nvim`
 (`lua/lsp/pack/completion_blink.lua`); diese Config steuert nur einen

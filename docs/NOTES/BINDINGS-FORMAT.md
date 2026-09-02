@@ -134,7 +134,43 @@ Muster) reicht die pro-Tabelle-Überschrift aus §1, wenn eine ganze Tabelle
 durchgehend denselben Status hat — dann genügt ein Satz direkt unter der
 Überschrift statt einer Spalte pro Zeile.
 
-## 5. Retrofit — durchgeführt (2026-08-07)
+## 5. `**Repo:**` — wenn der Dateiname nicht auf das Plugin führt (2026-09-02)
+
+Optional, und für die meisten Blätter überflüssig. `:Bindings check` muss zu
+jedem Blatt wissen, welches lazy.nvim-Plugin gemeint ist — davon hängt ab, ob
+eine fehlende Registrierung überhaupt eine Aussage ist (nicht geladenes
+Plugin = übersprungen) und wo der Quelltext liegt. Der Prüfer leitet das aus
+dem Dateinamen ab, normalisiert um Groß-/Kleinschreibung, die
+`nvim`/`vim`-Affixe und die Trennzeichen: `NeoTree.md` und `neo-tree.nvim`
+treffen sich so, ebenso `Fugitive` und `vim-fugitive`.
+
+Wo das nicht reicht, sagt es das Blatt selbst — als **zweite Zeile unter dem
+Titel**, in genau dieser Form:
+
+```markdown
+# nvchad/ui — Keymaps
+
+**Repo:** `NvChad/ui` — kurze Begründung, warum die Ableitung hier nicht trägt.
+```
+
+Der Slug darf `owner/name` oder nur `name` sein; gelesen wird das letzte
+Segment. Die Zeile gewinnt immer gegen die Ableitung.
+
+Drei Fälle im heutigen Korpus, und alle drei brauchen sie wirklich:
+
+| Blatt | Repo | Warum |
+| --- | --- | --- |
+| `Blink` | `Saghen/blink.cmp` | keine Normalisierung führt von `Blink` auf `blink.cmp` |
+| `Dap` | `StefanBartl/dap.nvim` | `dap.nvim` und `nvim-dap` normalisieren beide auf `dap` — mehrdeutig |
+| `NvChadUI` | `NvChad/ui` | das Repo heißt schlicht `ui` |
+
+Eine neue Zeile ist nur nötig, wenn `:Bindings check` das Blatt als
+übersprungen führt, obwohl sein Plugin geladen ist — oder umgekehrt Befunde
+für ein Plugin meldet, das gar nicht läuft. Alles Weitere in
+[FEATURES.md](../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md),
+„Wie ein Cheatsheet-Stamm zu seinem Plugin findet".
+
+## 6. Retrofit — durchgeführt (2026-08-07)
 
 Ursprünglich als 5-Schritt-Plan über vermutlich alle 137 Dateien angelegt —
 die tatsächliche Prüfung ergab einen viel kleineren echten Korrekturbedarf,
