@@ -40,15 +40,15 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `ade6c1f`:**
+**Gemessen nach `e5aef5c`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **251 grün**, 0 Fehler, **0 pending** (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 17**) |
+| Specs | **258 grün**, 0 Fehler, **0 pending** (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 24**) |
 | `stylua --check` / `luacheck` | sauber (30 Dateien) |
 | LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `zoom-post2`. Der Weg dorthin: `zoom-post` (nach `9fba190`, nie gelaufen) meldete **+16**, `zoom-fix` und `zoom-post2` je 0 |
 | CI | grün auf beiden Runnern |
-| Helptags | 33 |
+| Helptags | 35 |
 
 **Die 0 pending sind neu und die Zahl, auf die zu achten ist.** Sie stand
 vorher nicht in dieser Tabelle, und genau deshalb konnte ein Spec monatelang
@@ -60,7 +60,8 @@ URLs mit optionalem Abruf, Bare Paths mit Zeilen und Ranges
 (`init.lua:42`, `file.lua:10-20`), Git-Objekte auf Nachfrage,
 Position-Previews fremder Plugins, `:Hover why`, `:Hover pin`, Resize für
 **jeden** Hover (`+`/`-` über Bildern, Rad und `:Hover resize` überall),
-**echter Zoom** für Bilder (`:Hover zoom`, `h/j/k/l` zum Schwenken), ein
+**echter Zoom** für Bilder (`<M-z>` / `<M-Z>` / `<M-R>`, `:Hover zoom`,
+`h/j/k/l` zum Schwenken), ein
 Schalter-Chooser über lib.nvims UI-Kit — und seit
 `c374d5e` ein eigener Hover **ohne Plugin drumherum** (`setup({ contribute })`).
 
@@ -322,6 +323,31 @@ reset -> ganzes Bild;  pan ohne Zoom -> false
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `e5aef5c` — die Zoom-Zeile in `MANUAL-EVIDENCE.md` nannte nur die Route.
+  Gedrückt wird `<M-z>`, und die erste Art, wie das scheitert, ist genau die,
+  für die diese Datei da ist: ein Alt-Akkord, den das Terminal nicht sendet,
+  sieht aus wie ein Bild, das sich nicht zoomen lässt.
+- `efafb82` — **der Zoom bekommt Tasten** (`<M-z>` hinein, `<M-Z>` heraus,
+  `<M-R>` zurück aufs ganze Bild), und **`:Hover pan` heißt `:Hover nav`**
+  (samt `pan_keys` → `nav_keys`, `hover.pan` → `hover.nav`). Umbenannt statt
+  aliasiert — ein Alias für eine umbenannte Operation ist genau das, was
+  `bd72836` erzeugt hat.
+
+  Zwei Dinge daran sind mehr als Umbenennung. **`zoom_keys` musste der
+  Legacy-Schreibweise von `resize_keys` wieder abgenommen werden**, und die
+  alte Form wird jetzt **gemeldet und ignoriert** statt gefaltet: still
+  gefaltet hätte eine Config, die für die alte Bedeutung geschrieben ist, eine
+  258-ms-Ausschnittsoperation auf die Taste gelegt, die jemand für einen
+  kostenlosen Resize-Schritt gewählt hat. Unterschieden wird an der *Form*
+  (`larger/smaller` gegen `into/out/reset`), nicht am Datum. Und `into` statt
+  `in`, weil `in` ein Lua-Schlüsselwort ist und sonst in jeder Nutzer-Config
+  `["in"]` heißen müsste.
+
+  Dazu zwei weitere Treffer der handgeführten-Listen-Klasse:
+  `config.replace_key_lists` führte eine Literalliste unter einem Kommentar,
+  der „declared rather than written out" behauptete, und `switches_spec` eine
+  zweite handgeschriebene Liste der Routen-Argumentwerte — kürzer als die, die
+  `docs_spec` schon hatte. Beide leiten jetzt ab.
 - `ade6c1f` — der Crop-Spec lief nie: ein `nil`-Loch in `minimal_init`, zwei
   verschiedene Umgebungen zwischen Einzeldatei- und Directory-Lauf, und eine
   Fixture ohne Pixel. Alle drei behoben, Suite jetzt mit **0 pending**.
@@ -332,7 +358,8 @@ den Commits und unter `docs/FEATURES/`.
   `resize`-Alias war seit `9fba190` tot, die README behauptete ihn weiter.
   Gefunden vom LuaLS-Scan, den `9fba190` nie bekommen hatte (+16).
 - `9fba190` — **echter Zoom**: `:Hover zoom [in|out|reset]`, Schwenken über
-  `h/j/k/l` (nur solange gezoomt) und `:Hover pan`. Baut auf
+  `h/j/k/l` (nur solange gezoomt) und `:Hover nav` (damals `:Hover pan`).
+  Baut auf
   `images.convert.crop`, das dafür in images.nvim entstand (`22213de`).
   Nebenbei zwei Funde behoben: Scrollen setzte einen resizeten Hover auf die
   konfigurierte Größe zurück, und `keys.borrow` nimmt jetzt eine

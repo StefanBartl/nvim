@@ -309,7 +309,7 @@ es wirkt. Steht als Spec da, nicht als Annahme.
 > der **scharfe PDF-Zoom**.
 >
 > `:Hover zoom [in|out|reset]`, Schwenken über `h/j/k/l` (geliehen nur solange
-> gezoomt) und `:Hover pan`. `hover.zoom(delta)` und `hover.pan(dx, dy)` sind
+> gezoomt) und `:Hover nav`. `hover.zoom(delta)` und `hover.nav(dx, dy)` sind
 > öffentlich. Gebaut auf `images.convert.crop`, das dafür in images.nvim
 > entstanden ist (`22213de`) — hover ruft `magick` nicht selbst auf, und ein
 > Ausschnitt gehört neben `resize` und `redact`.
@@ -333,9 +333,13 @@ es wirkt. Steht als Spec da, nicht als Annahme.
 > also gehört er in genau deren Maschinerie (async, Platzhalter nach der
 > Gnadenfrist, Cache über die Sitzung, Kehrwoche bei `VimLeavePre`).
 >
-> **Die Tastenaufteilung folgt derselben Kostenlogik wie bei Resize.** Zoom
-> selbst bekommt *keine* Taste: eine Viertelsekunde je Schritt macht es zur
-> ausdrücklichen Handlung, und die leben hier auf `:Hover`. Schwenken bekommt
+> **Die Tastenaufteilung folgt derselben Kostenlogik wie bei Resize** — mit
+> einer Korrektur, die zwei Tage später kam. Zoom bekam zunächst *keine*
+> Taste: eine Viertelsekunde je Schritt macht es zur ausdrücklichen Handlung.
+> Seit `efafb82` hat es doch welche (`<M-z>` / `<M-Z>` / `<M-R>`), und was
+> sich geändert hat, ist der Akkord und nicht die Begründung: das Argument
+> galt `+` und `-`, die echte Motions sind. Ein Alt-Akkord verdrängt nichts,
+> also gelingt der Tausch, der dort scheiterte. Schwenken bekommt
 > vier — auf der engsten Leih-Bedingung des Plugins und mit dem stärksten
 > Argument, das eine Motion je hatte: ungebunden bewegt `h` den Cursor, und
 > die Abweisung hängt an `CursorMoved` — der Tastendruck **nimmt das Bild
@@ -352,9 +356,17 @@ es wirkt. Steht als Spec da, nicht als Annahme.
 > `keys.borrow` nimmt eine Handler-Tabelle statt eines dritten
 > Positionsarguments.
 >
-> **Was fehlt:** die Begründungsseite `docs/FEATURES/ZOOM.md`, eine
-> Evidenzzeile, und die Spec-Deckung des Ausschnitts selbst — siehe
-> [Handover](hover.nvim.md#direkt-offen-nach-9fba190).
+> **Die vier Reste sind erledigt** (`a18880a`, `ade6c1f`, `efafb82`,
+> `e5aef5c`): `docs/FEATURES/ZOOM.md`, die Evidenzzeile, die Spec-Deckung des
+> Ausschnitts — und die Tasten. Der Weg dahin steht im
+> [Handover](hover.nvim.md); die drei Funde dabei waren ein echter Bug, den
+> nur der LuaLS-Scan sah, ein Crop-Spec, der auf dieser Maschine seit jeher
+> „pending" meldete, und der Doku-Spec, der seine eigene handgepflegte Liste
+> hinter der Quelle fand.
+>
+> **Offen bleibt allein die PDF-Hälfte**, in `hover.nvim/docs/ROADMAP.md`:
+> eine Seite scharf zu zoomen heißt bei 2× DPI neu rastern, gemessen **3,3 s**
+> je Schritt, und der Seiten-Cache ist ohne DPI verschlüsselt.
 
 ---
 
