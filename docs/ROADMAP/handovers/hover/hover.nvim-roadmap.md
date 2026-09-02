@@ -14,6 +14,9 @@
   - [3. Messungen, die offen sind](#3-messungen-die-offen-sind)
   - [4. Aufträge, die woanders liegen](#4-auftrge-die-woanders-liegen)
   - [5. Geprüft und *nicht* aufgenommen](#5-geprft-und-nicht-aufgenommen)
+  - [6. Offene Entscheidungen](#6-offene-entscheidungen)
+    - [6.1 Die Lua-Modulwurzel kollidiert](#61-die-lua-modulwurzel-kollidiert)
+    - [6.2 Ist `manual` der bessere Default?](#62-ist-manual-der-bessere-default)
 
 ---
 
@@ -418,6 +421,14 @@ dann entscheiden.
   `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
   (`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
   ein Wort nachschlagenswert ist, und die gehört dorthin.
+
+  **Der Mechanismus überträgt sich, die Sparsamkeit nicht** — das ist der Kern
+  und der Grund, warum es hier nicht als „klein" geführt wird. Bei sandbox
+  entscheidet eine billige Textprüfung *vor* jedem Prozessstart, ob überhaupt
+  gefragt wird: `init.lua:42` fällt in unter 1 ms durch, weil die letzte
+  Namenskomponente eine Endung trägt. Bei einem Wort-Nachschlag ist **jedes
+  Wort ein Wort**; es gibt keine solche Vorprüfung, also ist auch unter `force`
+  jede Position ein Treffer.
 - **insights.nvim** — braucht einen Cache-Index, bevor „wer importiert dieses
   Modul" eine Hover-Frage sein kann. Jede Abfrage scannt heute neu.
 
@@ -439,3 +450,45 @@ dann entscheiden.
 
 ---
 
+## 6. Offene Entscheidungen
+
+Nicht „was bauen wir", sondern „was ist noch nicht entschieden". Beide Punkte
+lagen bis 2026-09-02 im Handover; hier stehen sie, weil sie die Zukunft
+betreffen und nicht den Stand.
+
+### 6.1 Die Lua-Modulwurzel kollidiert
+
+`lewis6991/hover.nvim` existiert und ist verbreitet. Die **Repo**-Namen
+kollidieren nicht, die **Modulwurzel schon**: beide liefern `lua/hover/`, und
+wer beide installiert, bekommt still das, was früher auf der `runtimepath`
+liegt. Für ein öffentliches Plugin ist das ein echter Defekt, kein
+Schönheitsfehler.
+
+Im Repo steht davon **nichts** — der Einspruch stand einmal im README und im
+Vimdoc und ist auf deine Anweisung dort entfernt. Er lebt hier weiter, damit
+er nicht verlorengeht.
+
+**Falls je umbenannt wird**, ist der Aufwand heute klein und wächst mit jedem
+Konsumenten: Verzeichnis `lua/hover/` → `lua/<neu>/`, ein `sed` über die
+Require-Pfade, der `Hover.`-Typnamensraum, `:Hover` → `:<Neu>`,
+`vim.g.hover_disable`, die drei Highlight-Gruppen, markdown.nvims fünf
+Require-Zeilen, die Config-Spec. Kandidaten waren `pathhover.nvim` und
+`hoverport.nvim` (Anschluss an `pdfport`).
+
+**Meine Einschätzung:** entscheiden, solange es sechs Konsumenten sind. Jeder
+weitere Registry-Beitragende macht es teurer, und die Kosten sind einmalig,
+während der Defekt bleibt.
+
+### 6.2 Ist `manual` der bessere Default?
+
+Die Config läuft auf `auto`. Der Griff wäre `:Hover mode manual` plus ein
+`keymaps.show`-Key — und wenn *das* sich als das Richtige erweist, gehört es
+in die Spec statt in eine Sitzung.
+
+Zwei Dinge stellen die Frage inzwischen schärfer, als sie gestellt wurde:
+`:Hover why` sagt, warum ein Float **nicht** aufging, und das Positions-Gate
+hat die Hälfte des Rauschens ohnehin entfernt. Gut möglich, dass sich die
+Frage erledigt hat — aber das ist eine Beobachtung über Wochen, keine Messung
+über Minuten, und deshalb steht sie hier statt in Abschnitt 3.
+
+---
