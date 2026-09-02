@@ -1,0 +1,7 @@
+buffer: init.lua, 1202 lines; 1396 sampled positions
+cost of one ask, by who is registered:
+  nothing registered                      0.0 us/ask      0.0 ms over 1396 asks
+  spotlight.nvim alone                    1.0 us/ask      1.4 ms over 1396 asks
+  migrate.nvim alone                      2.4 us/ask      3.3 ms over 1396 asks
+  documentation.nvim alone               24.2 us/ask     33.8 ms over 1396 asks
+  all three                              26.3 us/ask     36.7 ms over 1396 asks

@@ -1,0 +1,12 @@
+  spotlight.hover          registered
+  migrate.hover            registered
+  documentation.hover      registered
+registered contributors:
+  documentation.nvim       sources=0 previews=0 positions=1 on_request=0
+  migrate.nvim             sources=0 previews=0 positions=1 on_request=0
+  spotlight.nvim           sources=0 previews=0 positions=1 on_request=0
+buffer: init.lua, 1202 lines
+sampled positions: 1396 (first word of each line, plus every dotted name)
+cost of one ask:
+  automatic trigger        1396 asks      27.3 us/ask    38.1 ms total  (0 answered)
+  explicit :Hover show     1396 asks      25.1 us/ask    35.0 ms total  (0 answered)

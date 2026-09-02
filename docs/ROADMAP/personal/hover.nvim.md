@@ -950,6 +950,114 @@ Sorte, die nur beim Lesen auffällt.
 
 ---
 
+### I. Die Messung für 2.5 — gelaufen, und die Antwort ist **nein**
+
+Punkt 2.5 (ein Memo über `(bufnr, row, col, changedtick)` für Position-Previews)
+stand unter „erst zählen, dann entscheiden". Gezählt ist jetzt. **Das Memo
+gehört nicht gebaut**, und der Grund ist nicht die Häufigkeit, sondern der
+Preis: die Häufigkeitsfrage hat sich durch die zweite Messung erledigt.
+
+**Sitzung am 2026-09-02 unterbrochen** — die Messungen sind vollständig, die
+Einarbeitung in `hover.nvim-roadmap.md` ist gemacht, nichts hängt halb.
+
+#### Was die Struktur schon sagt, ohne Messung
+
+`position_at` wird in `show_position` **vor** jeder Unterdrückungsprüfung
+aufgerufen und `_open` wird gar nicht gelesen. Ein offenes Float, das die
+Antwort gerade zeigt, verhindert also nicht, dass alle Beiträge erneut gefragt
+werden. Einzige Ausnahme: ein **gepinntes** Float — `M.show` steigt bei
+`_open.pinned` aus, bevor irgendetwas gefragt wird.
+
+#### Messung 1 — wie oft wiederholt sich der Schlüssel?
+
+Echtes Neovim über RPC, `updatetime = 200` (was `lua/options.lua` setzt),
+hover auf Defaults, eine Sonde als Position-Beitrag, die immer `nil`
+zurückgibt und nur zählt. **Ein Ask pro Tastendruck-und-Ruhe, ausnahmslos** —
+`+asks` war bei allen 16 Gesten genau 1, ob der Cursor sich bewegt hat oder
+nicht.
+
+| | Gesten |
+| --- | --- |
+| **wiederholen den Schlüssel** | `<Esc>`, `<Esc>` nochmal, `zz`, `:` + `<Esc>`, `0h` in Spalte 0, `j` in der letzten Zeile, `<C-e>` |
+| **wiederholen einen *früher* gesehenen** | `h` nach `l`, `b` nach `w` — ein Memo der Größe 1 verpasst die, ein LRU nicht |
+| **neuer Schlüssel** | `j`, `l`, `G`, `w`, `x`, `u` (`changedtick` springt korrekt) |
+
+`asks=16 distinct=7 repeats=9 (56,2 %) consecutive=7 same_row=11`
+
+**Die 56 % sind nicht die Sitzungshäufigkeit** — der Gestenmix ist meiner, nicht
+der eines Menschen. Was der Lauf hart zeigt: die Wiederholung ist real und
+völlig ungebremst, und *welche* Gesten sie erzeugen.
+
+Der Nebenbefund `same_row = 11` gegen `repeats = 9`: ein rein zeilenweiser
+Schlüssel träfe öfter — und wäre **falsch**, weil drei der vier ausgelieferten
+Beiträge spaltenabhängig sind (documentation: der dotted Modulname unter dem
+Cursor, spotlight: das Token, sandbox: der Image-Name). Die Spalte im
+Schlüssel ist richtig.
+
+#### Messung 2 — was kostet ein Ask? Und damit war die Häufigkeit egal
+
+1202-Zeilen-Lua-Buffer, 1396 abgetastete Positionen, die drei echten
+Position-Beiträge dieser Maschine, alle ablehnend (die Ablehnung *ist* die
+Population, gleiche Begründung wie bei gopath):
+
+| registriert | pro Ask |
+| --- | --- |
+| nichts | 0,0 µs |
+| spotlight.nvim | 1,0 µs |
+| migrate.nvim | 2,4 µs |
+| **documentation.nvim** | **24,2 µs** |
+| alle drei | **26,3 µs** |
+
+Bei `updatetime = 200` sind das höchstens fünf Asks pro Sekunde: **~132 µs/s,
+also 0,013 % eines Kerns.** Zum Vergleich der Maßstab, der in diesem Repo
+gilt: ein fehlschlagendes `gopath.resolve_at_cursor` kostet 13,2 ms — das
+**500-fache der gesamten Pipeline**. Ein Memo spart hiervon bestenfalls die
+Hälfte und handelt sich dafür genau die Fehlerfläche ein, die 2.5 selbst
+benennt: ein veralteter Eintrag wäre eine *falsche* Antwort, keine alte.
+
+**Ein methodischer Fehler, der fast durchgegangen wäre.** Der erste Durchlauf
+tastete Spalte 0 ab und ergab 3,7 µs — schmeichelhaft um den Faktor 7, und aus
+einem Grund, der mit der Pipeline nichts zu tun hat: Spalte 0 einer Lua-Datei
+ist Einrückung, `token_at` und `dotted_at` lehnen auf Whitespace sofort ab, und
+`find_map` wird nie erreicht. Gemessen wird jetzt zwei Zeichen im ersten Wort
+und zusätzlich in jedem dotted Namen — dort, wo ein Cursor tatsächlich steht.
+
+#### Was dabei herausfiel: ein Auftrag für documentation.nvim
+
+**92 % der Kosten der gesamten Position-Pipeline liegen in einem Beitrag**, und
+zwar an einer Stelle, die ihn nichts kosten müsste. `find_map(start)` in
+`documentation/lua/documentation/hover.lua:54` läuft bis zu **24
+Verzeichnisebenen** mit je einem `uv.fs_stat` nach `docs/map/module_map.json`
+— **ohne negativen Cache**. `_maps[path]` (Zeile 112) merkt sich nur
+*erfolgreiche* Ladungen. In jedem Projekt ohne generierte Map — hover.nvim
+selbst ist eines — zahlt damit jeder einzelne Ask den vollen Aufstieg.
+
+Gleiche Form wie der gopath-Befund: **die Kosten sitzen im Beitrag, und die
+Reparatur gehört dorthin.** Ein negativer Cache pro Startverzeichnis, und die
+Pipeline liegt bei ~2 µs. Steht als Auftrag in `hover.nvim-roadmap.md`
+Abschnitt 4.
+
+#### Wo die Messwerkzeuge liegen
+
+`nvim/scripts/hover-position-probe/` — nach dem Vorbild von
+`scripts/luals-scan/` im Config-Repo, weil eine Messsonde kein Plugin-Feature
+ist:
+
+| Datei | wofür |
+| --- | --- |
+| `position_probe.lua` | der Zähl-Beitrag; `install()`, `line()`, `report()` |
+| `init.lua` + `drive.py` | die skriptgesteuerte Sitzung über RPC (Client braucht `--headless`, sonst kommen Terminal-Escapes statt des Ergebnisses zurück) |
+| `cost.lua`, `cost2.lua` | die Kostenmessung, gesamt und je Beitrag |
+| `cost.txt`, `cost2.txt` | die Ausgaben oben |
+
+**Was offen bleibt und keinen Blocker darstellt:** die echte
+Sitzungshäufigkeit. Die Sonde läuft in einer echten Sitzung mit
+`require("position_probe").install()` und berichtet mit `.report()`. Für die
+Entscheidung zu 2.5 wird sie nicht mehr gebraucht — bei 26 µs pro Ask ändert
+keine Häufigkeit das Ergebnis.
+
+---
+
 ---
 
 ## Was beim Weiterarbeiten zu wissen ist

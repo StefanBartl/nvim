@@ -10,7 +10,7 @@
       - [Die ursprüngliche Reihenfolge, zur Begründung](#die-ursprngliche-reihenfolge-zur-begrndung)
     - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
     - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
-    - [2.5 Ein Memo für Position-Previews — **ungemessen**, und die Hausregel heißt erst messen](#25-ein-memo-fr-position-previews-ungemessen-und-die-hausregel-heit-erst-messen)
+    - [2.5 Ein Memo für Position-Previews — **gemessen, und die Antwort ist nein**](#25-ein-memo-fr-position-previews-gemessen-und-die-antwort-ist-nein)
   - [3. Messungen, die offen sind](#3-messungen-die-offen-sind)
   - [4. Aufträge, die woanders liegen](#4-auftrge-die-woanders-liegen)
   - [5. Geprüft und *nicht* aufgenommen](#5-geprft-und-nicht-aufgenommen)
@@ -25,12 +25,17 @@ die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-und-2-gebaut-204d08
 und [2.3](#23-eine-checkhealth-zeile-für-contribute--gebaut-aca73fa) gebaut und
 die LuaLS-Messung nachgeholt worden.
 
-**Offen ist damit nur noch, was auf etwas wartet, das nicht hier liegt:**
-[2.4](#24-gopath-ein-billiger-früh-ausstieg--fremdes-repo-größter-hebel-hier)
-auf gopath.nvim, [2.5](#25-ein-memo-für-position-previews--ungemessen-und-die-hausregel-heißt-erst-messen)
-auf eine Zählung, die es noch nicht gibt. Der nächste Griff in diese Datei
-sollte deshalb **eine Messung sein, keine Implementierung** — die Zählung für
-2.5, oder eine der vier aus [Abschnitt 3](#3-messungen-die-offen-sind).
+Danach war der nächste Griff **eine Messung, keine Implementierung** — und die
+ist gelaufen: [2.5](#25-ein-memo-für-position-previews--gemessen-und-die-antwort-ist-nein)
+ist gemessen und **abgelehnt**, mitsamt einem Auftrag, der dabei herausfiel und
+in [Abschnitt 4](#4-aufträge-die-woanders-liegen) steht.
+
+**Damit ist Abschnitt 2 leer.** Was offen bleibt, wartet auf etwas, das nicht
+hier liegt: [2.4](#24-gopath-ein-billiger-früh-ausstieg--fremdes-repo-größter-hebel-hier)
+auf gopath.nvim, der neue Auftrag auf documentation.nvim. Der nächste Griff in
+diese Datei ist eine der drei verbliebenen Messungen aus
+[Abschnitt 3](#3-messungen-die-offen-sind) — **zwei davon brauchen dich**
+(Demo-GIF, Office-Pfad von Hand).
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -251,7 +256,38 @@ die Gate-Zeile ist richtig, solange die Messung gilt.
 
 ---
 
-### 2.5 Ein Memo für Position-Previews — **ungemessen**, und die Hausregel heißt erst messen
+### 2.5 Ein Memo für Position-Previews — **gemessen, und die Antwort ist nein**
+
+> **Gemessen am 2026-09-02.** Beide Messungen stehen im
+> [Handover unter I](./hover.nvim.md#i-die-messung-für-25--gelaufen-und-die-antwort-ist-nein),
+> die Werkzeuge unter `nvim/scripts/hover-position-probe/`.
+>
+> **Die Wiederholung ist real und ungebremst.** Ein Ask pro Tastendruck-und-
+> Ruhe, ausnahmslos, ob der Cursor sich bewegt hat oder nicht; `position_at`
+> läuft vor jeder Unterdrückungsprüfung, und ein offenes Float hält nichts auf
+> (ein *gepinntes* schon). Im skriptgesteuerten Lauf: 16 Asks, 7 verschiedene
+> Schlüssel, **9 Wiederholungen**. Die Quote ist mein Gestenmix, nicht der
+> eines Menschen — welche Gesten wiederholen, steht im Handover.
+>
+> **Und trotzdem nein, weil die zweite Messung die erste erledigt hat.** Ein
+> Ask kostet mit allen drei echten Beiträgen **26,3 µs**. Bei
+> `updatetime = 200` sind das ~132 µs/s, **0,013 % eines Kerns** — gegen ein
+> fehlschlagendes `gopath.resolve_at_cursor` mit 13,2 ms, dem 500-fachen der
+> ganzen Pipeline. Ein Memo spart davon einen Bruchteil und handelt sich die
+> Fehlerfläche ein, die der Text unten selbst benennt: ein veralteter Eintrag
+> wäre eine *falsche* Antwort, keine alte. **Keine Häufigkeit könnte das
+> drehen**, und deshalb ist die Zählung, die hier gefordert war, nicht mehr
+> nötig.
+>
+> **Ein Detail, das die Bauform betroffen hätte:** ein rein zeilenweiser
+> Schlüssel träfe öfter (11 statt 9) und wäre falsch — drei der vier
+> ausgelieferten Beiträge lesen das Token *unter* dem Cursor. Die Spalte
+> gehört in den Schlüssel, falls der Punkt je wiederkommt.
+>
+> **Fast danebengegriffen:** der erste Durchlauf tastete Spalte 0 ab und ergab
+> 3,7 µs — Faktor 7 zu schön, weil Spalte 0 Einrückung ist und beide
+> Token-Prüfungen dort sofort ablehnen. Eine Kostenmessung muss dort messen,
+> wo der Cursor steht.
 
 `position_at` fragt bei jedem Trigger jeden Beitrag erneut. Gecacht wird
 bewusst nichts: eine Position hat keine Identität, an der ein Cache hinge, und
@@ -292,6 +328,15 @@ dann entscheiden.
   `usercmd.composer`. Gemessen am 2026-09-02: eine Zeile gelöscht, beide Läufe
   melden „keine Drift". In der Sache dasselbe wie 2.1, eine Ebene höher.
 - **gopath.nvim** — siehe 2.4.
+- **documentation.nvim** — `find_map` in `lua/documentation/hover.lua:54` steigt
+  bis zu **24 Verzeichnisebenen** mit je einem `uv.fs_stat` nach
+  `docs/map/module_map.json` auf, **ohne negativen Cache**: `_maps` merkt sich
+  nur erfolgreiche Ladungen. In jedem Projekt ohne generierte Map — hover.nvim
+  selbst ist eines — zahlt jeder einzelne Position-Ask den vollen Aufstieg.
+  Gemessen am 2026-09-02: **24,2 von 26,3 µs der gesamten Pipeline, 92 %**,
+  gegen 1,0 µs für spotlight.nvim und 2,4 µs für migrate.nvim. Dieselbe Form
+  wie 2.4 — der Nutzen entsteht hier, die Arbeit liegt dort. Ein negativer
+  Cache pro Startverzeichnis genügt.
 - **language.nvim** — die Produktfrage *vor* der Integration: soll ein Druck auf
   `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
   (`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
