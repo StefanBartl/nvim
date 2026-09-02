@@ -1,5 +1,56 @@
 # hover.nvim — Extraktion aus lib.nvim
 
+## Table of content
+
+  - [Intro](#intro)
+  - [Kurzfassung: wo wir stehen](#kurzfassung-wo-wir-stehen)
+  - [Was wir getan haben, und warum](#was-wir-getan-haben-und-warum)
+    - [Die Ausgangsfrage](#die-ausgangsfrage)
+    - [Der Befund zum Rauschen](#der-befund-zum-rauschen)
+    - [Die Repo-Frage](#die-repo-frage)
+  - [Der Namensentscheid, und was daran offen bleibt](#der-namensentscheid-und-was-daran-offen-bleibt)
+  - [Was im Plugin neu ist (nicht nur umgezogen)](#was-im-plugin-neu-ist-nicht-nur-umgezogen)
+    - [1. Das Opt-in-Modell](#1-das-opt-in-modell)
+    - [2. `mode`: auto | manual | off](#2-mode-auto-manual-off)
+    - [3. Schalter aus **einer** Tabelle](#3-schalter-aus-einer-tabelle)
+    - [4. Die verschärfte Bare-Path-Regel](#4-die-verschrfte-bare-path-regel)
+    - [5. Kleineres](#5-kleineres)
+  - [Was wo geändert wurde](#was-wo-gendert-wurde)
+    - [markdown.nvim](#markdownnvim)
+    - [nvim-config](#nvim-config)
+  - [Verifikation (alles tatsächlich gelaufen)](#verifikation-alles-tatschlich-gelaufen)
+  - [Was seit der Extraktion passiert ist](#was-seit-der-extraktion-passiert-ist)
+    - [Gebaut](#gebaut)
+    - [Drei Messungen, die alle der Intuition widersprachen](#drei-messungen-die-alle-der-intuition-widersprachen)
+    - [Dieselbe Bug-Klasse dreimal](#dieselbe-bug-klasse-dreimal)
+    - [Und eine vierte Klasse: eine Funktion, zwei Fragen](#und-eine-vierte-klasse-eine-funktion-zwei-fragen)
+  - [Offene Punkte](#offene-punkte)
+    - [1. Demo-GIF — **braucht dich**](#1-demo-gif-braucht-dich)
+    - [2. language.nvim — der zweite Kandidat für `on_request`](#2-languagenvim-der-zweite-kandidat-fr-on_request)
+    - [3. insights.nvim braucht erst einen Index](#3-insightsnvim-braucht-erst-einen-index)
+    - [4. Beobachten, ob `manual` der bessere Default ist](#4-beobachten-ob-manual-der-bessere-default-ist)
+    - [5. Was keine CI prüft](#5-was-keine-ci-prft)
+  - [Aufträge aus der Sitzung vom 2026-09-02](#auftrge-aus-der-sitzung-vom-2026-09-02)
+    - [A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**](#a-die-bindings-notes-fr-hovernvim-nachziehen-erledigt-2026-09-02)
+    - [B. Die Docs der eingebundenen Plugins durchgehen — **erledigt 2026-09-02**](#b-die-docs-der-eingebundenen-plugins-durchgehen-erledigt-2026-09-02)
+    - [C. Die README von hover.nvim — **erledigt 2026-09-02** (`a57d390`)](#c-die-readme-von-hovernvim-erledigt-2026-09-02-a57d390)
+    - [D. Eine Beitrags-API für Nutzer — **erledigt 2026-09-02** (`c374d5e`)](#d-eine-beitrags-api-fr-nutzer-erledigt-2026-09-02-c374d5e)
+    - [E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/` — **erledigt 2026-09-02**](#e-eine-roadmap-datei-unter-docsroadmappersonal-erledigt-2026-09-02)
+    - [F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten gebaut (`204d083`)**](#f-zoom-im-float-eingegrenzt-2026-09-02-tasten-gebaut-204d083)
+    - [G. Ein Spec, das die Doku gegen die Quelle prüft — **erledigt 2026-09-02** (`4e1760f`)](#g-ein-spec-das-die-doku-gegen-die-quelle-prft-erledigt-2026-09-02-4e1760f)
+    - [H. Eine `:checkhealth`-Zeile für `contribute` — **erledigt 2026-09-02** (`aca73fa`)](#h-eine-checkhealth-zeile-fr-contribute-erledigt-2026-09-02-aca73fa)
+    - [I. Die Messung für 2.5 — gelaufen, und die Antwort ist **nein**](#i-die-messung-fr-25-gelaufen-und-die-antwort-ist-nein)
+      - [Was die Struktur schon sagt, ohne Messung](#was-die-struktur-schon-sagt-ohne-messung)
+      - [Messung 1 — wie oft wiederholt sich der Schlüssel?](#messung-1-wie-oft-wiederholt-sich-der-schlssel)
+      - [Messung 2 — was kostet ein Ask? Und damit war die Häufigkeit egal](#messung-2-was-kostet-ein-ask-und-damit-war-die-hufigkeit-egal)
+      - [Was dabei herausfiel: ein Auftrag für documentation.nvim](#was-dabei-herausfiel-ein-auftrag-fr-documentationnvim)
+      - [Wo die Messwerkzeuge liegen](#wo-die-messwerkzeuge-liegen)
+  - [Was beim Weiterarbeiten zu wissen ist](#was-beim-weiterarbeiten-zu-wissen-ist)
+
+---
+
+## Intro
+
 Handover-Dokument. Stand: **2026-09-02**. Angelegt in der Session
 „lib.nvim hover analysis"; seither fortgeschrieben.
 
@@ -65,10 +116,14 @@ Einstiegshürde ist damit eine Funktion statt eines Repos.
 
 ## Was wir getan haben, und warum
 
+---
+
 ### Die Ausgangsfrage
 
 Zwei Todo-Punkte: „Mittlerweile poppt oft ein Hover auf → checken, was opt-in
 sein sollte" und „Zahlt sich ein eigenes Repo mittlerweile aus?"
+
+---
 
 ### Der Befund zum Rauschen
 
@@ -86,6 +141,8 @@ Drei getrennte Ursachen, nicht eine:
    `./components/Button` (jeder erweiterungslose JS-Import), `TODO/FIXME/DONE`,
    `read/write/execute`, `key/value/pair`, `a/b/c` — alle als „kaputter Pfad"
    markiert.
+
+---
 
 ### Die Repo-Frage
 
@@ -141,6 +198,8 @@ Klassifikation, Registry und beide Placement-Invarianten sind unverändert
 übernommen. Neu ist das, was der Umzug der richtige Moment war, **einmal statt
 zweimal** zu schreiben:
 
+---
+
 ### 1. Das Opt-in-Modell
 
 Zwei Achsen statt „Zieltyp": **wie explizit war das Ziel** (Link-Syntax = der
@@ -149,6 +208,8 @@ was nicht schon dasteht** (ein Dateikopf steht nicht im Linktext; Host und
 Pfad einer URL schon). Kosten als Stichentscheid. Das Modell **leitet jeden
 bestehenden Default korrekt her** und zeigt genau die zwei, die falsch waren.
 
+---
+
 ### 2. `mode`: auto | manual | off
 
 `manual` behält jede Preview und gibt nur den automatischen Auslöser auf. Das
@@ -156,6 +217,8 @@ ist die Antwort auf „ich lese gerade ein Dokument aus Links", ohne Klasse für
 Klasse entscheiden zu müssen. `:Hover show`, `keymaps.show` und
 `show({ force = true })` antworten dann weiterhin **voll**, Web-Links
 inklusive.
+
+---
 
 ### 3. Schalter aus **einer** Tabelle
 
@@ -173,12 +236,16 @@ antwortet die Leseseite (`config.web_enabled()` ist
 `links_enabled() and links.web`), so dass `:Hover links off` Web-Links
 stummschaltet, ohne ihr Flag zu löschen.
 
+---
+
 ### 4. Die verschärfte Bare-Path-Regel
 
 Eine Endung muss auf der **letzten** Komponente sitzen, und das `./`-Präfix
 zählt nicht mehr für sich allein. Das kostet echte True Positives (`~/notes`,
 `/etc/hosts`, `lua/lib/nvim` wenn sie nicht existieren) — mit Absicht: es ist
 die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
+
+---
 
 ### 5. Kleineres
 
@@ -211,6 +278,8 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 | **spotlight.nvim** | gepusht, `main` | `23f3f25` — Token-Zähler |
 | **sandbox.nvim** | gepusht, `main` | `3647a17` — Container-Image, nur auf Nachfrage (`on_request`) |
 
+---
+
 ### markdown.nvim
 
 Reines Require-Pfad-Rename plus Typnamen. `Mkdn.HoverUrlConfig` zeigt jetzt
@@ -218,6 +287,8 @@ auf `Hover.LegacyUrlConfig`, nicht auf `Hover.LinksConfig` — bewusst, weil
 markdown.nvim weiterhin `url = { hover, fetch }` übergibt und hover.nvim das
 normalisiert. Ein Verhaltens-Pin musste mit: `HoverMissing` statt
 `LibHoverMissing`. Volle Suite grün (27 Specs).
+
+---
 
 ### nvim-config
 
@@ -253,6 +324,8 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 Grob chronologisch. Was in `hover.nvim/docs/ROADMAP.md` gelöscht wurde, ist
 gebaut — die Datei führt keine erledigten Punkte.
+
+---
 
 ### Gebaut
 
@@ -290,6 +363,8 @@ gebaut — die Datei führt keine erledigten Punkte.
   nicht für die Keymap eines Hosts. Ein Veto, das ein Tastendruck aushebelt,
   ist keines. Details unter [B](#b-die-docs-der-eingebundenen-plugins-durchgehen--erledigt-2026-09-02).
 
+---
+
 ### Drei Messungen, die alle der Intuition widersprachen
 
 Das ist das Muster dieser Sitzungen und der Grund, warum in `hover.nvim`
@@ -307,6 +382,8 @@ nichts ohne Zahl optimiert wird:
 3. **Ein Git-Spawn kostet 41 ms, ein Docker-Spawn 230 ms, Podman 490 ms** —
    Fehlgriff wie Treffer. Das hat entschieden, dass die Git-Klasse nur auf
    ausdrückliche Nachfrage antwortet und sandbox.nvim gar nicht geht.
+
+---
 
 ### Dieselbe Bug-Klasse dreimal
 
@@ -342,6 +419,8 @@ Highlight-Gruppen. Damit ist das erste Mal *derselbe* Mechanismus hinter der
 Doku wie hinter dem Code: eine Liste, die von Hand geführt wird, fällt beim
 nächsten `scripts/test.sh` auf. Details unter [G](#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f).
 
+---
+
 ### Und eine vierte Klasse: eine Funktion, zwei Fragen
 
 `has_positions()` beantwortet **eine** Frage: „soll für diesen Buffer
@@ -375,12 +454,16 @@ Die vier Punkte, die hier standen, sind erledigt; was an ihnen gelernt wurde,
 steht unter [Was seit der Extraktion passiert
 ist](#was-seit-der-extraktion-passiert-ist). Was übrig ist:
 
+---
+
 ### 1. Demo-GIF — **braucht dich**
 
 `REL-09`, der letzte offene Punkt des Release-Gates und der einzige, den ich
 nicht erledigen kann: ich kann keine Bildschirmaufnahme machen. Die README
 trägt ein ASCII-Modell des Floats, das die Idee erklärt, aber nicht das
 Gefühl — und zu zeigen wäre gerade, wie wenig es beim Lesen stört.
+
+---
 
 ### 2. language.nvim — der zweite Kandidat für `on_request`
 
@@ -396,12 +479,16 @@ Das ist eher eine Produktfrage als eine technische: soll ein Druck auf
 Integration klein. Wenn nein, braucht es vorher eine Regel dafür, wann ein Wort
 nachschlagenswert ist — und die gehört nach language.nvim, nicht hierher.
 
+---
+
 ### 3. insights.nvim braucht erst einen Index
 
 Nicht hier zu lösen. `run_reverse` läuft `scan_cwd_async` — einen vollen
 Durchlauf des Arbeitsverzeichnisses — und öffnet einen Scratch-Buffer. Jede
 Abfrage scannt neu, es gibt nichts nachzuschlagen. Der Cache-Index gehört in
 insights.nvim, und danach ist die Integration klein.
+
+---
 
 ### 4. Beobachten, ob `manual` der bessere Default ist
 
@@ -413,6 +500,8 @@ Inzwischen gibt es zwei Werkzeuge, die diese Frage schärfer stellen als vorher:
 `:Hover why` sagt, warum ein Float *nicht* aufging, und das Positions-Gate hat
 die Hälfte des Rauschens ohnehin entfernt. Die Frage könnte sich erledigt
 haben.
+
+---
 
 ### 5. Was keine CI prüft
 
@@ -441,7 +530,6 @@ startet. Vorher lief dieselbe Strecke gegen einen gestoppten Daemon und
 erzeugte korrekt Schweigen statt eines selbstbewussten „not pulled“ — der
 Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
 
-
 ---
 
 ## Aufträge aus der Sitzung vom 2026-09-02
@@ -455,6 +543,8 @@ kam in der Folgesitzung desselben Tages dazu** — nicht aus dieser Liste,
 sondern der erste Punkt der [persönlichen
 Roadmap](hover.nvim-roadmap.md#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
 weil er die Voraussetzung dafür ist, dass alles Obige dokumentiert *bleibt*.
+
+---
 
 ### A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**
 
@@ -513,6 +603,8 @@ Zu beachten:
 > bindings-explorer. Maßgeblich ist bis dahin `composer.document("<Verb>")`
 > (schreibt eine **Datei** mit dem Namen des Kommandos und gibt `true`
 > zurück — nicht den Text).
+
+---
 
 ### B. Die Docs der eingebundenen Plugins durchgehen — **erledigt 2026-09-02**
 
@@ -581,6 +673,8 @@ BINDINGS-Notes „zwei Augroups" führten: eine Suche nach `Hover` in der Quelle
 fand sie nicht. Es sind vier. Beide Tabellen korrigiert (`ee826ea5` in der
 Config).
 
+---
+
 ### C. Die README von hover.nvim — **erledigt 2026-09-02** (`a57d390`)
 
 **a) Struktur gegen die Geschwister.** Die Grundform stimmt bereits
@@ -619,6 +713,8 @@ zusätzlich in beide Tabellen von `docs/INTEGRATIONS.md`.
 `## Quickstart` ist faktisch dieser Abschnitt, und images.nvim nennt ihn
 genauso. Es gibt hier keine einheitliche Geschwister-Konvention, also war das
 kein Befund. `## Health` war einer und ist behoben.
+
+---
 
 ### D. Eine Beitrags-API für Nutzer — **erledigt 2026-09-02** (`c374d5e`)
 
@@ -678,6 +774,8 @@ daraus *neu* folgt und dokumentiert gehörte: ein Plugin darf dieses Feld nicht
 benutzen, weil alle Nutzer-Beiträge sich den einen Namen `"user"` teilen und
 zwei Aufrufer einander damit still löschen würden.
 
+---
+
 ### E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/` — **erledigt 2026-09-02**
 
 Eine Analyse zu Optimierung und neuen Features, geschrieben als eigene Datei
@@ -724,7 +822,7 @@ Code**, wo nichts fehlschlägt und keine Spec ihn merken kann. Korrigiert in
 Hochzählen; die Vimdoc-Zeile nennt jetzt `switches.names()` als Quelle, damit
 der nächste Leser nachsehen kann statt zu glauben.
 
-**Geschrieben:** [hover.nvim-roadmap.md](hover.nvim-roadmap.md). §1 ist die
+**Geschrieben:** [hover.nvim-roadmap.md](./hover.nvim-roadmap.md). §1 ist die
 Abgrenzung, um die es hier ging, mit einer Regel gegen genau diese Drift:
 *jeder Punkt lebt in genau einer der beiden Dateien* — wird etwas
 veröffentlichungsreif, wandert er ins Repo und hinterlässt hier eine Zeile mit
@@ -737,6 +835,8 @@ die Aufträge in fremden Repos, und was ich geprüft und verworfen habe. Der
 erste Vorschlag ist die Konsequenz aus den vier Zahlen oben: ein Spec, das die
 Schalterliste im Vimdoc und die Routentabellen gegen die Quelle prüft, weil
 diese Klasse im Code dreimal und in der Doku viermal zugeschlagen hat.
+
+---
 
 ### F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten gebaut (`204d083`)**
 
@@ -840,6 +940,8 @@ Beides gilt nur fürs Rad. Ein Tastenpaar (`+`/`-`) über dieselbe Leihe wie
 `scroll_keys` hat **keine** dieser Voraussetzungen und ist außerdem die
 kleinere Änderung — sinnvoll als erster Schritt, das Mausrad als zweiter.
 
+---
+
 ### G. Ein Spec, das die Doku gegen die Quelle prüft — **erledigt 2026-09-02** (`4e1760f`)
 
 Nicht aus der Auftragsliste, sondern Punkt 2.1 der persönlichen Roadmap — dort
@@ -886,6 +988,8 @@ aufgenommen wird, ohne einen Zweig zu bekommen, der ihn zeigt.
 Beschreibung *stimmt*, sagt es nicht — dafür gibt es die Runde durch die Docs.
 Es sagt nur, dass keine Liste hinter der Quelle zurückfällt, und das ist die
 Hälfte, die von allein passiert.
+
+---
 
 ### H. Eine `:checkhealth`-Zeile für `contribute` — **erledigt 2026-09-02** (`aca73fa`)
 
@@ -960,6 +1064,8 @@ Preis: die Häufigkeitsfrage hat sich durch die zweite Messung erledigt.
 **Sitzung am 2026-09-02 unterbrochen** — die Messungen sind vollständig, die
 Einarbeitung in `hover.nvim-roadmap.md` ist gemacht, nichts hängt halb.
 
+---
+
 #### Was die Struktur schon sagt, ohne Messung
 
 `position_at` wird in `show_position` **vor** jeder Unterdrückungsprüfung
@@ -967,6 +1073,8 @@ aufgerufen und `_open` wird gar nicht gelesen. Ein offenes Float, das die
 Antwort gerade zeigt, verhindert also nicht, dass alle Beiträge erneut gefragt
 werden. Einzige Ausnahme: ein **gepinntes** Float — `M.show` steigt bei
 `_open.pinned` aus, bevor irgendetwas gefragt wird.
+
+---
 
 #### Messung 1 — wie oft wiederholt sich der Schlüssel?
 
@@ -993,6 +1101,8 @@ Schlüssel träfe öfter — und wäre **falsch**, weil drei der vier ausgeliefe
 Beiträge spaltenabhängig sind (documentation: der dotted Modulname unter dem
 Cursor, spotlight: das Token, sandbox: der Image-Name). Die Spalte im
 Schlüssel ist richtig.
+
+---
 
 #### Messung 2 — was kostet ein Ask? Und damit war die Häufigkeit egal
 
@@ -1022,6 +1132,8 @@ ist Einrückung, `token_at` und `dotted_at` lehnen auf Whitespace sofort ab, und
 `find_map` wird nie erreicht. Gemessen wird jetzt zwei Zeichen im ersten Wort
 und zusätzlich in jedem dotted Namen — dort, wo ein Cursor tatsächlich steht.
 
+---
+
 #### Was dabei herausfiel: ein Auftrag für documentation.nvim
 
 **92 % der Kosten der gesamten Position-Pipeline liegen in einem Beitrag**, und
@@ -1036,6 +1148,8 @@ Gleiche Form wie der gopath-Befund: **die Kosten sitzen im Beitrag, und die
 Reparatur gehört dorthin.** Ein negativer Cache pro Startverzeichnis, und die
 Pipeline liegt bei ~2 µs. Steht als Auftrag in `hover.nvim-roadmap.md`
 Abschnitt 4.
+
+---
 
 #### Wo die Messwerkzeuge liegen
 
@@ -1055,8 +1169,6 @@ Sitzungshäufigkeit. Die Sonde läuft in einer echten Sitzung mit
 `require("position_probe").install()` und berichtet mit `.report()`. Für die
 Entscheidung zu 2.5 wird sie nicht mehr gebraucht — bei 26 µs pro Ask ändert
 keine Häufigkeit das Ergebnis.
-
----
 
 ---
 
@@ -1103,3 +1215,6 @@ keine Häufigkeit das Ergebnis.
   die falsche. Die Zahlen stehen in den Modulköpfen von `hover.scope` und
   `hover.bare_path`, nicht in Commit-Messages, damit sie beim Ändern des
   Codes gelesen werden.
+
+---
+

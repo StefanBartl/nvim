@@ -5,6 +5,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
   - [cdx](#cdx)
   - [Lists](#lists)
+  - [TOP intereessant gerade](#top-intereessant-gerade)
   - [hover.nvim](#hovernvim)
   - [Misc](#misc)
   - [true check](#true-check)
@@ -23,13 +24,14 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    75% / 64%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     19:40       |    83% / 68%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     16:50       |    00% / 00%     |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:00       |   100% / 10%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     18:40       |    95% / 09%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     16:50       |   100% / 19%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     13:30       |    98% / 28%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
+Keine Co-Author nennung von claude in den git commits.^
 
 ---
 
@@ -41,19 +43,21 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 
 ---
 
+## TOP intereessant gerade
+
+- [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
+    Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
+- [ ] TAKT -> aai impllementierung von anfang an mitbauen
+
+---
+
 ## hover.nvim
 
 ---
 
 ## Misc
 
-
-
-- [ ]  was mit C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\tools machen ?
-
-- [ ] lsp.nvim:
-  - [ ] `leader tl` -> neues mapping, dieses ist bereits vergeben
-
+- [ ] C:\Users\bartl\AppData\Local\nvim\lua\plugins\personal\README.md sollte die api auflisten, eie man listen auskgeben kann, welche optionen man hat usw...
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
 
@@ -62,15 +66,6 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 - [ ] docmap-desktop app icon desktop
 
 - [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab/Cases;
-
-- [ ] Unter der Tableiste ist nich im buffer / file kontext infios: Parent folder > Fileaname > 1. Markdown Headline > 2. MD Healdline (TOC) -> TOC Entrys
-Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
-
-- [ ] Wenn man in einer md file eine Referenz aus einen markdown link entfernt, dann soll es euinen keymap dafür eben, zb `DD` (statt `dd`), dass die Referenz file auch gleidh entfernt. Es soll aber einen lib.nvim ui.kit prompt geben, ob die file gefunden wurde und man sie wriklcijh löschen will.
-
-- [ ] Untere Tableist: Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten headlines + toc einträge ist zu viel. ichj hab nachegesehn, es ist nur markdown fies so, bei zb lua ist nor der folder + filename anegegebn. Von wpo kommt das überhaupt her? plugin das mit nvchad mitkam? ![unter tableiste screenshot mit marks](./assets/ROADMAP-1788114014.png)
-
-- [ ] lspdoctor legacy names nicht mehr callbar machen/entfernen
 
 - [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
      [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
@@ -85,15 +80,8 @@ Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlin
 
 - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
 
-- [ ] `:Bindings [options?]` verbessern, andere optionen durchgehen, bestehdne ausbauen und optimieren
-  - [ ] "Dashboard"-Funktionen wie `?`-Cheatsheet, keys, usw... Beispiele: `:Reposcope status`
-
 - [ ] Anticheat knacken
-- [ ] alle keymaps der nvim config durcsheen ob die wirlich gebraucht werden
 - [ ] Github Stats auswerten / backupen
-- [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
-    Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
-- [ ] TAKT -> aai impllementierung von anfang an mitbauen
 
 ---
 

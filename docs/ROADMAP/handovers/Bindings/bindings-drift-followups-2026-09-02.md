@@ -1,6 +1,6 @@
 # Handover — Drift-Folgearbeiten 2026-09-02
 
-Fortsetzung von [TASKS-2026-09-02.md](../personal/All/TASKS-2026-09-02.md), dessen
+Fortsetzung von [TASKS-2026-09-02.md](../personal/All/FINISH/ERLEDIGT/TASKS-2026-09-02.md), dessen
 sieben Punkte alle zu sind. Hier stehen die vier Nacharbeiten, die der
 Driftreport übrig gelassen hatte. **Drei sind fertig, die vierte ist nur
 untersucht** — die Untersuchung steht unten, damit sie nicht nochmal gemacht
