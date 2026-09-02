@@ -156,10 +156,25 @@
 --- costs a grep.
 ---
 --- The `extern` scope profits from the same fallback for a different reason:
---- a third-party cheatsheet's stem has no local checkout, so the tree that
---- answers there is this config's own `lua/` — which is exactly where those
---- keys are bound, in a lazy `keys` spec. Hence the note in `SECTIONS` says
---- "any source that could be read" rather than naming the plugin's.
+--- a third-party cheatsheet's stem had no local checkout, so the tree that
+--- answered there was this config's own `lua/` — which is exactly where
+--- those keys are bound, in a lazy `keys` spec. Hence the note in `SECTIONS`
+--- says "any source that could be read" rather than naming the plugin's.
+--- Since `stem_plugin` resolves the extern stems too, that half now has the
+--- plugin's own tree available as well.
+---
+--- **The fallback runs on the usercmd axis too (2026-09-02).** It always
+--- should have — it is the same question about the same two trees — and the
+--- asymmetry was an omission, not a decision. One difference, and it is
+--- deliberate: the usercmd side is case-SENSITIVE, because folding case
+--- makes `:Images` match the word "images" in half of images.nvim's own
+--- source, and every command would then count as written down. The opt-in
+--- axis below already draws that line, for the same reason.
+---
+--- What it cannot answer is structural rather than a gap to close:
+--- `repo.mentions` matches quoted literals, and a Vimscript
+--- `com! -bang UnicodeDownload …` is unquoted. `:UnicodeDownload` and
+--- `:DigraphNew` therefore stay reported however loaded their plugin is.
 ---
 --- Why not the obvious alternative — dropping buffer-local keys from the
 --- live axis wholesale? Because `keymap-not-live` is not a collision check:
@@ -1233,10 +1248,13 @@ end
 ---@field fallback boolean whether the default source fallback had a
 ---  checkout mapping to work with -- false means every `keymap-not-live`
 ---  finding below is the weaker, live-only claim
----@field fallback_confirmed integer documented keys that were not live but
----  ARE written in their plugin's own source, and are therefore not
----  reported. Carried so a reader can reconcile this run's count with one
----  from before the fallback existed.
+---@field fallback_confirmed integer documented keys AND command names that
+---  were not live but ARE written in their plugin's own source, and are
+---  therefore not reported. Carried so a reader can reconcile this run's
+---  count with one from before the fallback existed. One number for both
+---  axes on purpose: it answers "how many findings did the fallback
+---  suppress", and splitting it would invite the two halves to be compared
+---  with each other, which means nothing.
 ---@field skipped_rows integer documented rows dropped because their plugin
 ---  is not loaded — the same reasoning as `AutocmdInfo.unanchored`. The
 ---  skipped *plugin* count was always printed; the row count was not, and
@@ -1604,6 +1622,40 @@ function M.check(plugin, opts)
     end
   end
 
+  -- The same source fallback the keymap axis has had since the start, on the
+  -- usercmd axis. Same two trees, same order, same three-way answer -- one
+  -- difference, and it is the whole reason this needed its own function:
+  --
+  -- **Case-SENSITIVE.** The keymap side folds case because the corpus writes
+  -- `<Leader>` where the source writes `<leader>`; a command name has no such
+  -- spelling variance, and folding it makes `:Images` match the word "images"
+  -- in half of images.nvim's own source. Every command would then count as
+  -- written down and the axis would confirm everything. The opt-in repo axis
+  -- below already draws exactly this distinction, for exactly this reason.
+  --
+  -- What it cannot see, and this is structural rather than a gap to close:
+  -- a Vimscript `com! -bang UnicodeDownload …` is unquoted, and
+  -- `repo.mentions` only matches quoted literals. `:UnicodeDownload` and
+  -- `:DigraphNew` therefore stay reported however loaded their plugin is.
+  ---@param stem string  # the cheatsheet stem, i.e. `rec.plugin`
+  ---@param name string  # the bare command name, no leading colon
+  ---@return boolean found written as a quoted string literal in either tree
+  ---@return boolean answered at least one of the two trees was readable
+  local function cmd_in_source(stem, name)
+    if not repo_dirs then
+      return false, false
+    end
+    local in_plugin = repo.mentions(repo_dirs[stem], name)
+    if in_plugin == true then
+      return true, true
+    end
+    local in_config = repo.mentions(config_lua, name)
+    if in_config == true then
+      return true, true
+    end
+    return false, (in_plugin ~= nil) or (in_config ~= nil)
+  end
+
   -- Usercmds: documented (Personal) but not live.
   local live_cmds = live_commands()
   local seen_personal = {}
@@ -1615,13 +1667,22 @@ function M.check(plugin, opts)
       if name and not seen_personal[name] then
         seen_personal[name] = true
         if not live_cmds[name] then
-          findings[#findings + 1] = {
-            kind = "usercmd-not-live",
-            plugin = rec.plugin,
-            notation = ":" .. name,
-            file = rec.file,
-            line = rec.line,
-          }
+          local found, answered = cmd_in_source(rec.plugin, name)
+          if found then
+            fallback_confirmed = fallback_confirmed + 1
+          else
+            findings[#findings + 1] = {
+              kind = "usercmd-not-live",
+              plugin = rec.plugin,
+              notation = ":" .. name,
+              file = rec.file,
+              line = rec.line,
+              -- Same meaning as on the keymap side: nothing when neither
+              -- tree could be read, because the claim is then the weaker,
+              -- live-only one.
+              repo_absent = answered or nil,
+            }
+          end
         end
       end
     elseif ours then

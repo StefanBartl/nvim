@@ -493,6 +493,36 @@ Bericht damit als ein Block untereinander. Genau die Aussage, die der
 Driftreport von Hand getroffen hat: hier ist der Generator zu dokumentieren,
 nicht seine 23 Ergebnisse.
 
+## Der Quelltext-Fallback gilt jetzt auch für Commands (2026-09-02)
+
+Eine dokumentierte Taste, die der Live-Test nicht findet, wird seit jeher
+erst im Quelltext gesucht, bevor sie ein Befund wird — zwei Bäume, der des
+Plugins und der `lua/`-Baum dieser Config. Ein dokumentiertes **Command**
+wurde das nie. Das war eine Auslassung, keine Entscheidung.
+
+Ein Unterschied ist nötig, und er ist derselbe, den die opt-in-Repo-Achse
+schon macht: **case-sensitiv**. Die Keymap-Seite faltet Groß- und
+Kleinschreibung, weil der Korpus `<Leader>` schreibt, wo die Quelle
+`<leader>` schreibt. Ein Commandname hat diese Varianz nicht — dafür trifft
+`:Images` case-insensitiv das Wort „images" in jeder zweiten Zeile von
+images.nvims eigener Quelle, und jedes Command würde als aufgeschrieben
+gelten.
+
+Was er strukturell nicht sehen kann: `repo.mentions` findet nur
+Quoted-Literals, und ein Vimscript-`com! -bang UnicodeDownload …` ist
+unquoted. `:UnicodeDownload` und `:DigraphNew` bleiben also gemeldet, egal
+wie geladen ihr Plugin ist. Das ist eine Grenze, die man benennt, keine
+Lücke, die man schließt.
+
+**Gemessen:** `usercmd-not-live` fällt in allen drei Scopes auf **0** (8/46/54
+→ 7/45/52). Die zwei betroffenen Zeilen sind beide bestätigte Nicht-Befunde:
+`:MasonInstallAll` steht in der lokalen `nvchad/au.lua`-Kopie dieser Config,
+`:LibLogger` in lib.nvims `logger/command.lua` — beide registrieren lazy.
+
+Eine ältere Notiz in MEASURING.md behauptete, `LibLogger` stehe in lib.nvim
+nirgends als Quoted-Literal, der Fallback würde diesen Befund also stehen
+lassen. Das war falsch gemessen; die Korrektur steht dort.
+
 ## Wie ein Cheatsheet-Stamm zu seinem Plugin findet (2026-09-02)
 
 Zwei Fragen des Prüfers hängen daran, und beide wurden für den ganzen
@@ -713,6 +743,10 @@ waren, kamen zurück**. Gemessen aufgefallen, nicht gelesen.
 
 `autocmd-undocumented` steht damit auf **0**. Übrig bleiben 8
 `autocmd-not-live` (feature-gated oder lazy, siehe oben) und `:LibLogger`.
+
+> Zeitpunkt-Stand. Danach haben die Stamm-Auflösung und der
+> Usercmd-Fallback ihn weiterbewegt — aktuell **7 / 45 / 52**, `:LibLogger`
+> ist weg. Die Reihe steht in MEASURING.md, „Gemessene Stände".
 
 Zwei echte Funde hat der Weg dorthin noch abgeworfen, beide von der Achse
 gefunden und beide nachgetragen: runtime-analysis.nvims

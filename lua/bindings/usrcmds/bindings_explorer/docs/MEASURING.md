@@ -188,9 +188,16 @@ den echten Bestand dieser Config.
 
 Der eine verbliebene Befund ist `:LibLogger`, das sich selbst als lazy
 registriert dokumentiert (`drift.lua`s Moduldoc Punkt 5) — ein bestätigter
-Nicht-Befund. Nachgemessen: der Quelltext-Fallback würde ihn **nicht**
-unterdrücken, weil `LibLogger` in lib.nvim nirgends als Quoted-Literal steht.
-Die Achse behält also ihre eine ehrliche Meldung.
+Nicht-Befund.
+
+> **Korrektur, 2026-09-02.** Hier stand, der Quelltext-Fallback würde
+> `:LibLogger` **nicht** unterdrücken, weil das Literal in lib.nvim nirgends
+> stehe. Das war falsch gemessen: es steht in
+> `lua/lib/nvim/logger/command.lua:42` als `usercmd.create("LibLogger", …)`.
+> Seit der Fallback auch auf der Usercmd-Achse läuft, ist der Befund weg,
+> und das ist richtig — er war ein bestätigter Nicht-Befund. Die ursprüngliche
+> Gegenprobe lief über ein eigenes Skript statt über `repo.mentions`; genau
+> die Klasse Fehler, für die Falle 4 steht.
 
 ### `:Bindings check extern`
 
@@ -269,7 +276,9 @@ eine Zahl senken will, muss zuerst wissen, welche davon er vor sich hat.
    antworten kann, greift das Pro-Tabellen-Verdikt „not verifiable from here".
 2. **Lazy, noch nicht ausgelöst.** Ein Command, dessen Cheatsheet eine
    „Registered when"-Spalte hat, ist verdächtig, bevor man das Feature einmal
-   benutzt hat. `:LibLogger` ist der dokumentierte Beispielfall.
+   benutzt hat. `:LibLogger` ist der dokumentierte Beispielfall — und seit
+   dem 2026-09-02 auch der Beleg dafür, dass der Quelltext-Fallback diese
+   Klasse auf der Usercmd-Achse genauso abräumt wie auf der Keymap-Achse.
 3. **Notation statt Drift.** Der Korpus und die Quelle schreiben dieselbe
    Taste verschieden: Telescope `<A-c>` gegen `<M-c>`, cmdlog `ctrl-f` in
    fzf-lua-Notation, VisualMulti mit dem Leader `\\` im Key. 13 der 16
@@ -294,6 +303,9 @@ sie wieder gesenkt.
 
 `autocmd-undocumented` steht auf **0**. Übrig: 8 `autocmd-not-live` (alle
 feature-gated oder lazy, siehe FEATURES.md) und `:LibLogger`.
+
+> Zeitpunkt-Stand, nicht der aktuelle. Die zwei Abschnitte darunter führen
+> ihn auf **7 / 45 / 52** weiter.
 
 **Beim Messen aufgefallen, nicht beim Lesen:** die Zeichenklassen der
 Familien-Notation gehen durch `gsub`s Ersatz-Argument, in dem `%` ein Escape
@@ -348,6 +360,42 @@ Kandidaten (`Lazygit <C-o>`, `Trouble zo`, `Telescope <bs>`/`gC`).
 generiert seine Einzelcommands zur Laufzeit (`"Noice" .. key`), im Quelltext
 steht `stats` und nie `NoiceStats`. Dieselbe Klasse wie debugging.nvims
 `prefix .. "m"`.
+
+### Nach dem Quelltext-Fallback auf der Usercmd-Achse (2026-09-02)
+
+Der Fallback lief seit jeher nur auf der Keymap-Achse. Auf der Usercmd-Achse
+ist es dieselbe Frage an dieselben zwei Bäume, nur case-sensitiv.
+
+| Scope | vorher | nachher |
+| --- | ---: | ---: |
+| `personal` | 8 | **7** |
+| `extern` | 46 | **45** |
+| `all` | 54 | **52** |
+
+`usercmd-not-live` steht damit in **allen drei Scopes auf 0**. Die zwei
+verschwundenen Befunde sind beide bestätigte Nicht-Befunde: `:LibLogger`
+(siehe die Korrektur oben) und `:MasonInstallAll`, das in der lokalen
+Override-Kopie `lua/nvchad/au.lua` dieser Config steht und dort lazy
+registriert wird.
+
+**Die Messung, die den Wert wirklich zeigt**, ist eine andere: mit allen 17
+Extern-Plugins per `Lazy! load` geladen, also der Zustand, den ein benutzter
+Editor nach einer Weile erreicht.
+
+| | ohne Usercmd-Fallback | mit |
+| --- | ---: | ---: |
+| `skipped` (extern) | 0 | 0 |
+| `keymap-not-live` (extern) | 16 | 16 |
+| `usercmd-not-live` (all) | 1 | **0** |
+| `fallback_confirmed` (all) | 320 | **321** |
+| `usercmd-undocumented` (extern) | 121 | 121 |
+
+Zwei Dinge daran sind bemerkenswert. Erstens bestätigt der Lauf die
+Handvorhersage für Punkt 3 exakt: **16** verbliebene Keymap-Befunde, wenn
+wirklich jedes Plugin geladen ist. Zweitens steigt `usercmd-undocumented` auf
+121, weil geladene Plugins ihre Commands tatsächlich registrieren — die 41
+aus dem Standardlauf sind kein kleinerer Korpus, sondern eine kleinere
+Session.
 
 **Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
 Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —
