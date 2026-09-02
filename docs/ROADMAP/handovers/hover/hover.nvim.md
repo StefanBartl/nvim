@@ -44,7 +44,7 @@ Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **258 grün**, 0 Fehler, **0 pending** (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 24**) |
+| Specs | **258 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 24**) |
 | `stylua --check` / `luacheck` | sauber (30 Dateien) |
 | LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `zoom-post2`. Der Weg dorthin: `zoom-post` (nach `9fba190`, nie gelaufen) meldete **+16**, `zoom-fix` und `zoom-post2` je 0 |
 | CI | grün auf beiden Runnern |
@@ -107,9 +107,18 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
   wie markdown.nvim (`"Always"`) — der übernommene Code ist in lib.nvims Stil
   geschrieben, und eine Extraktion ist der falsche Moment, den ganzen
   Quelltext umzuformatieren.
-- **Tests:** `LIB_NVIM_DIR=E:/repos/lib.nvim
+- **Tests:** `IMAGES_NVIM_DIR=E:/repos/images.nvim
+  LIB_NVIM_DIR=E:/repos/lib.nvim
   PLENARY_DIR=C:/Users/bartl/AppData/Local/nvim-data/lazy/plenary.nvim
   bash scripts/test.sh`
+
+  **`IMAGES_NVIM_DIR` ist aus einem Worktree Pflicht**, nicht Zierde.
+  `minimal_init` findet images.nvim über die Variable, ein `.deps/`-Checkout
+  oder das *Nachbarverzeichnis* — und aus `.claude/worktrees/<name>/` ist der
+  Nachbar der Worktree-Pool, nicht `E:/repos`. Ohne die Variable überspringt
+  der Crop-Spec, und zwar als „Success". Dieselbe Form wie die
+  LuaLS-Regel „nicht den Worktree scannen": der Worktree ist keine
+  wahrheitsgetreue Umgebung.
 - **LuaLS messen:** `REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh <pass>
   hover.nvim`, dann `python scripts/luals-scan/compare.py <pass>`. Die nackte
   `lua-language-server --check`-Zahl ist wertlos (`LLS-01`).
@@ -126,11 +135,24 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
   das aus wie „der Test ist fehlgeschlagen", nicht wie ein Arity-Fehler.
   Immer erst an ein `local` binden. Gefunden am 2026-09-02 beim Beheben der
   sieben Befunde oben.
-- **Auf `pending` achten, nicht nur auf `Failed`.** Ein Spec, der mit
-  plausibler Begründung überspringt, ist die Art fehlender Abdeckung, die man
-  am längsten behält: der Crop-Check meldete „kein ImageMagick hier" auf einer
+- **`pending` ist jetzt ein Wächter statt eines Merkpostens** (`e5fca52`).
+  Vorher stand hier „darauf achten" — und darauf achten hat nicht
+  funktioniert: der Crop-Check meldete „kein ImageMagick hier" auf einer
   Maschine, die seit jeher eines hat, und dahinter lagen drei Defekte
-  (`ade6c1f`). Die Zahl steht seither in der Messtabelle oben.
+  (`ade6c1f`).
+
+  Gemessen am 2026-09-03, und die Zusammenfassung ist schlimmer als gedacht —
+  in zwei Formen. `pending()` auf describe-Ebene wird **nirgends** gezählt
+  (die Success-Zahl wird nur kleiner). `pending()` **innerhalb** eines `it` —
+  die Form, die ein abgesicherter Spec hat — druckt eine Pending-Zeile **und
+  zählt den `it` als Success**: `zoom_spec` hat 24 `it`-Blöcke und meldete
+  „Success: 24", während einer davon nichts geprüft hat. Der Exit-Code bleibt
+  in beiden Fällen 0.
+
+  `scripts/test.sh` benennt sie jetzt nach dem Lauf und bricht ab, außer
+  `HOVER_ALLOW_PENDING=1` ist gesetzt. Die CI setzt es — dort ist der
+  Crop-Check zu Recht pending —, aber gedruckt wird die Liste auch dort, damit
+  ein *neuer* Fall sichtbar ist, wo er nicht fatal sein kann.
 - **Beide Laufarten sind jetzt dieselbe Umgebung, und waren es nicht.**
   `PlenaryBustedFile` landet in `test_harness.test_file`, das den Runner
   **ohne Optionen** aufruft — das Kind bekommt `--noplugin` und kein `-u`,
