@@ -397,6 +397,58 @@ wirklich jedes Plugin geladen ist. Zweitens steigt `usercmd-undocumented` auf
 aus dem Standardlauf sind kein kleinerer Korpus, sondern eine kleinere
 Session.
 
+### Nach der Scope-Entscheidung (2026-09-02, Endstand des Blocks)
+
+Punkt 5 des Handovers beantwortet: ein fremdes Plugin bekommt ein
+Usercmds-Blatt, wenn seine Commands zu einem Arbeitsablauf gehören; Werkzeuge
+bekommen eine Zeile in `Usercmds/Overview.md`. Drei neue Blätter
+(`GitConflict`, `Matchup`, `Puppeteer`, zusammen 18 Commands), eine
+Meta-Datei für die restlichen vier plus die 15 lazy-Stubs und Neovims eigene
+vier.
+
+| Scope | vorher | nachher |
+| --- | ---: | ---: |
+| `personal` | 7 | **7** |
+| `extern` | 45 | **4** |
+| `all` | 52 | **11** |
+
+`usercmd-undocumented` steht auf **0**, und damit sind alle drei
+Usercmd-Kategorien leer. Übrig sind ausschließlich die 11
+`autocmd-not-live` — alle feature-gated oder lazy.
+
+**Die ganze Reihe des Blocks**, damit die Sprungstellen nachvollziehbar
+bleiben:
+
+| Schritt | all |
+| --- | ---: |
+| Ausgangsstand | 167 |
+| Punkt 1 — `getscriptinfo` | 167 |
+| Punkt 4 — dreizehn Zeilen + drei Blätter | 168 |
+| Punkt 3 — Stamm-Auflösung | 54 |
+| Punkt 2 — Usercmd-Fallback | 52 |
+| Punkt 5 — Scope-Entscheidung | **11** |
+
+### Und was die Null nicht heißt
+
+Derselbe Endstand, aber mit allen 17 Extern-Plugins per `Lazy! load` geladen:
+
+| | Standardlauf | alle geladen |
+| --- | ---: | ---: |
+| `usercmd-undocumented` | 0 | **80** |
+| `keymap-not-live` | 0 | 16 |
+| übersprungene Stämme (extern) | 17 | 0 |
+| `fallback_confirmed` | — | 321 |
+
+Die 80 verteilen sich auf `vim-fugitive` (30), `nvim-dap` (13),
+`nvim-dap-view` (11), `vim-visual-multi` (7), `vim-test` (6),
+`nvim-dap-virtual-text` (4) und fünf weitere. Sie sind der nächste Block
+Doku-Arbeit, nicht ein Versehen dieser Runde — die Aufstellung steht in
+[`Usercmds/Overview.md`](../../../../../docs/NOTES/ExternPlugins/Bindings/Usercmds/Overview.md),
+Abschnitt „Was die Null nicht heißt".
+
+**Wer eine Zahl aus diesem Abschnitt zitiert, zitiert beide Spalten.** Genau
+dafür steht Falle 5.
+
 **Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
 Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —
 wie viele `ra_telemetry_<plugin>`-Instanzen existieren, hängt daran, welche
