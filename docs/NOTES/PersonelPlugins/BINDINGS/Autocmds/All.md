@@ -2,6 +2,12 @@
 
 All plugin autocmd cheatsheets in this folder.
 
+**Config-internal** (not a plugin's own autocmds):
+
+- [nvim-config](./nvim-config.md) — the 55 autocmds this config registers itself, from `lua/autocmds/**`, `lua/wkdoptions/**` and six other trees; includes the fifteen that carry no augroup at all
+
+**Per plugin:**
+
 - [buffer-ctx.nvim](./buffer-ctx.md)
 - [cascade.nvim](./cascade.nvim.md)
 - [color_my_ascii.nvim](./color_my_ascii.nvim.md)
