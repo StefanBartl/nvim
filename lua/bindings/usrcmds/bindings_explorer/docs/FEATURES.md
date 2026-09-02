@@ -2,7 +2,7 @@
 
 `:Bindings` — Picker über die eigenen BINDINGS-Cheatsheets
 (`docs/NOTES/PersonelPlugins/BINDINGS/` + `docs/NOTES/ExternPlugins/Bindings/`,
-137 Dateien, drei Kategorien: Keymaps/Usercmds/Autocmds).
+160 Dateien, drei Kategorien: Keymaps/Usercmds/Autocmds).
 Vimdoc: `:help bindings_explorer` (siehe [`doc/bindings_explorer.txt`](../doc/bindings_explorer.txt)).
 Diese Datei ist die aktuelle Doku — der ursprüngliche Konzept-Entwurf unter
 `docs/ROADMAP/personal/bindings-explorer.nvim.md` wurde beim Aufräumen der
@@ -109,10 +109,24 @@ Beispiele:
 :Bindings browse usercmds extern
 ```
 
-Gegen den echten Bestand verifiziert (headless, 2026-08-30):
-`records.list()` liefert 1940 Datensätze über den ganzen Korpus, davon 561
-für `Keymaps personal` allein — und in keinem einzigen weicht die Zellenzahl
-von der Spaltenzahl seiner Kopfzeile ab.
+Gegen den echten Bestand verifiziert. Am 2026-08-30 lieferte
+`records.list()` 1940 Datensätze über den ganzen Korpus, davon 561 für
+`Keymaps personal`, und in keinem einzigen wich die Zellenzahl von der
+Spaltenzahl seiner Kopfzeile ab.
+
+Nachgemessen am **2026-09-02**: **2333** Datensätze (Keymaps 1230, Usercmds
+811, Autocmds 292), davon 678 für `Keymaps personal`. Der Korpus ist seither
+also um gut ein Fünftel gewachsen.
+
+**Und die Null stimmt nicht mehr: neun Zeilen weichen ab**, alle im
+Personal-Korpus — acht in `Usercmds/documentation.nvim.md` (Z. 99–106) und
+eine in `Usercmds/lib.nvim.md` (Z. 15). Alle neun haben eine dreispaltige
+Kopfzeile und nur zwei Zellen: die dritte Spalte (bei `:DocMap` die
+„schreibt?"-Spalte) fehlt schlicht. Für die Prüfung ist das folgenlos — die
+Achsen greifen über den Header-Index auf die Command-Spalte zu, und die ist
+vorhanden —, aber die Behauptung „keine einzige" darf nicht stehenbleiben.
+Was in die fehlende Spalte gehört, sagt nur die jeweilige Quelle; geraten
+wird hier nichts.
 
 ## Drift-Bericht (`:Bindings check`)
 

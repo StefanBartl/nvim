@@ -124,6 +124,26 @@ Arbeitsablauf bekommt ein Blatt, Werkzeug bekommt eine Zeile. Angewendet
 hieße das ungefähr: `Usercmds/Fugitive.md` (30) und der `Dap`-Komplex (28)
 sind Blätter, `vim-test` und `nvim-dap-virtual-text` wären zu entscheiden.
 
+### Kleiner Nebenfund: neun Zeilen mit fehlender dritter Spalte
+
+Beim Nachzählen des Korpus aufgefallen, nicht beim Prüfen. `records.list()`
+liefert heute **2333** Datensätze (2026-08-30 waren es 1940), und **neun**
+davon haben eine dreispaltige Kopfzeile bei nur zwei Zellen:
+
+* `Usercmds/documentation.nvim.md`, Z. 99–106 — acht `:DocMap`-Zeilen, denen
+  die „schreibt?"-Spalte fehlt (`:DocMap serve` und `:DocMap helptags` direkt
+  darüber haben sie).
+* `Usercmds/lib.nvim.md`, Z. 15 — dieselbe Form.
+
+**Folgenlos für jede Achse**: die Zuordnung läuft über den Header-Index auf
+die Command-Spalte, und die ist vorhanden. Es ist eine reine
+Format-Abweichung. Was in die fehlende Spalte gehört, sagt nur die jeweilige
+Quelle — deshalb ist hier nichts geraten und nichts geändert worden; die
+FEATURES.md-Behauptung „in keinem einzigen weicht die Zellenzahl ab" ist
+korrigiert.
+
+---
+
 Die 16 verbliebenen `keymap-not-live` sind dagegen **kein** offener Punkt:
 13 davon sind die dokumentierten Notationsdifferenzen (Telescope schreibt
 `<A-c>`, die Quelle `<M-c>`; VisualMulti trägt den Leader `\\` im Key), plus
