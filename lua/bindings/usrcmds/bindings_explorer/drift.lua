@@ -1361,6 +1361,40 @@ local function render(f)
   return ("  %-28s %s"):format(f.notation, f.owner or "unknown")
 end
 
+--- Startup phases of this config that never ran, by label.
+---
+--- The whole point: this config registers its own commands and keymaps in a
+--- `startup.on("UIReady", ...)` phase, and "UIReady" is VimEnter plus a
+--- `vim.schedule`. A `nvim --headless -c "luafile ..."` run executes its
+--- script *before* that, so `bindings.usrcmds` and `bindings.mappings` are
+--- never loaded -- and every binding they would have registered is reported
+--- as documented-but-not-live. Measured 2026-09-02: 200 findings become 111
+--- once the phase is loaded by hand, i.e. **89 of them were the measurement,
+--- not the corpus**. Interactive `:Bindings check` never sees this, which is
+--- exactly why it went unnoticed until a headless report was believed.
+---
+--- Soft dependency on purpose: `startup` is this config's module, and the
+--- rest of `bindings_explorer` is written to survive a move into its own
+--- repo. No module, no claim -- `nil` reads as "no information", never as
+--- "nothing pending".
+---@return string[]|nil labels nil when the startup module is unavailable
+local function pending_phases()
+  local ok, startup = pcall(require, "startup")
+  if not ok or type(startup) ~= "table" or type(startup.pending) ~= "function" then
+    return nil
+  end
+  local ok_call, marks = pcall(startup.pending)
+  if not ok_call or type(marks) ~= "table" then
+    return nil
+  end
+  local labels = {}
+  for _, m in ipairs(marks) do
+    labels[#labels + 1] = tostring(m.label or "?")
+  end
+  table.sort(labels)
+  return labels
+end
+
 --- The sections, in descending order of how much a finding in them is
 --- worth acting on, each with the `kind`s it collects and a subtitle
 --- naming its known noise. Order matters: a 600-line report is only usable
@@ -1424,6 +1458,34 @@ local SECTIONS = {
 ---@return string[]
 function M.describe(findings, skipped, source_reason, repo_info)
   local lines = {}
+
+  -- Above everything, including "no drift found": if the config's own
+  -- startup phases have not run, the counts below are not a measurement of
+  -- the corpus, they are a measurement of an incompletely started Neovim.
+  -- Same reasoning as the section order -- only the first screen is read --
+  -- but one step earlier, because this decides whether the rest means
+  -- anything at all.
+  local pending = pending_phases()
+  if pending and #pending > 0 then
+    lines[#lines + 1] = ("!! %d startup phase%s of this config never ran: %s"):format(
+      #pending,
+      #pending == 1 and "" or "s",
+      table.concat(pending, ", ")
+    )
+    lines[#lines + 1] =
+      "  -- Their commands and keymaps are therefore NOT live, and every one of"
+    lines[#lines + 1] =
+      "  -- them is counted below as documented-but-not-registered. The findings"
+    lines[#lines + 1] = "  -- are inflated; do not quote these numbers."
+    lines[#lines + 1] =
+      "  -- Usual cause: `nvim --headless -c \"luafile ...\"` runs the script before"
+    lines[#lines + 1] =
+      "  -- VimEnter, so the UIReady phase never fires. Run :Bindings check from a"
+    lines[#lines + 1] =
+      "  -- real session, or load the phase first. :StartupCheck lists them too."
+    lines[#lines + 1] = ""
+  end
+
   if #findings == 0 then
     lines[1] = "No drift found (Keymaps: documented-not-live + source-not-documented; "
       .. "Usercmds: both directions)."

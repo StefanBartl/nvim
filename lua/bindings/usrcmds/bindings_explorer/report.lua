@@ -84,6 +84,29 @@ local function count_kinds(findings)
   return out
 end
 
+--- Startup phases of this config that never ran, by label. Same soft
+--- dependency and same reason as `drift.lua`'s copy: a report is the artifact
+--- that gets committed and quoted months later, so the one condition that
+--- invalidates every number in it belongs in the run header, not only in the
+--- viewer output that nobody kept.
+---@return string[]
+local function pending_phases()
+  local ok, startup = pcall(require, "startup")
+  if not ok or type(startup) ~= "table" or type(startup.pending) ~= "function" then
+    return {}
+  end
+  local ok_call, marks = pcall(startup.pending)
+  if not ok_call or type(marks) ~= "table" then
+    return {}
+  end
+  local labels = {}
+  for _, m in ipairs(marks) do
+    labels[#labels + 1] = tostring(m.label or "?")
+  end
+  table.sort(labels)
+  return labels
+end
+
 --- Render the report as Markdown lines.
 ---@param findings Bindings.DriftFinding[]
 ---@param skipped string[]|nil `drift.check`'s second return value
@@ -126,8 +149,33 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
     end
   end
   lines[#lines + 1] = ("| Übersprungen (gar nicht geprüft) | %d |"):format(#(skipped or {}))
+  local pending = pending_phases()
+  if #pending > 0 then
+    lines[#lines + 1] = ("| **Startphasen nicht gelaufen** | **%s** |"):format(
+      table.concat(pending, ", ")
+    )
+  end
   lines[#lines + 1] = ("| Befunde | %d |"):format(#findings)
   lines[#lines + 1] = ""
+
+  -- Directly under the run table, above the counts it invalidates.
+  if #pending > 0 then
+    lines[#lines + 1] = ("> **Diese Zahlen sind nicht belastbar.** %d Startphase%s dieser"):format(
+      #pending,
+      #pending == 1 and "" or "n"
+    )
+    lines[#lines + 1] = ("> Config (`%s`) %s in diesem Prozess nie, die dort"):format(
+      table.concat(pending, "`, `"),
+      #pending == 1 and "lief" or "liefen"
+    )
+    lines[#lines + 1] = "> registrierten Commands und Keymaps sind also nicht live — und stehen"
+    lines[#lines + 1] = "> unten samt und sonders als „dokumentiert, nicht registriert“ drin."
+    lines[#lines + 1] = "> Übliche Ursache: `nvim --headless -c \"luafile …\"` führt das Skript vor"
+    lines[#lines + 1] = "> VimEnter aus, womit die `UIReady`-Phase nie feuert. Aus einer echten"
+    lines[#lines + 1] = "> Session neu messen, oder die Phase vorher laden. `:StartupCheck` zeigt"
+    lines[#lines + 1] = "> dieselben Phasen."
+    lines[#lines + 1] = ""
+  end
 
   lines[#lines + 1] = "## Befunde nach Art"
   lines[#lines + 1] = ""
