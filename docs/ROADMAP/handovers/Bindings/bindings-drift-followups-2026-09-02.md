@@ -3,8 +3,14 @@
 Fortsetzung von [TASKS-2026-09-02.md](../personal/All/FINISH/ERLEDIGT/TASKS-2026-09-02.md), dessen
 sieben Punkte alle zu sind. Hier stehen die vier Nacharbeiten, die der
 Driftreport übrig gelassen hatte. **Alle vier sind zu** — Punkt 4 seit dem
-Nachtrag am Ende dieser Datei, und er endete ohne Umzug: den vermuteten
-Konflikt gibt es nicht.
+Nachtrag weiter unten, und er endete ohne Umzug: den vermuteten Konflikt gibt
+es nicht.
+
+> **Ab „Block 2" (2026-09-02, nachmittags) geht es nicht mehr um diese vier.**
+> Der Anschlussauftrag lautete „korrigiere die 200 Befunde"; daraus ist ein
+> eigener Block geworden, der ganz unten steht. **Wer hier weiterarbeitet,
+> springt direkt zu [Block 2](#block-2--die-200-befunde-2026-09-02-nachmittags)
+> und dort zu „Was als Nächstes zu bauen ist".**
 
 ## Wo weiterarbeiten
 
@@ -266,3 +272,215 @@ Blockquote über die Zahlen, die sie entwertet. Beide fragen
   Korrekt gemeldet; kleiner zu kriegen nur durch Messen mit offenen UIs.
 * **7 `keymap-not-in-repo`** — unverändert debugging.nvims berechnetes
   `prefix .. "m"`.
+
+---
+
+# Block 2 — „die 200 Befunde" (2026-09-02, nachmittags)
+
+Anschlussauftrag: *„jetzt müssen die 200 Befunde noch korrigiert werden."*
+Die Prämisse stimmte nicht — 200 waren nie 200 Probleme — und was übrig
+blieb, ist unten aufgeteilt. **Eine Sache ist entschieden und noch nicht
+gebaut**, sie steht als Letztes.
+
+## Wo weiterarbeiten
+
+| | |
+| --- | --- |
+| Repo | nvim-config (`C:/Users/bartl/AppData/Local/nvim`) |
+| Branch | `claude/bindings-tasks-6256e4`, deckungsgleich mit `origin/main` |
+| Worktree | `.claude/worktrees/plugin-documentation-workflows-042b81` |
+| Stand | **alles committet und nach `origin/main` gepusht**, Haupt-Checkout nachgezogen |
+| Letzter Commit | `f64ff903` feat(bindings): eigen und fremd sind zwei Fragen |
+
+**Achtung, fremde Arbeit im selben Worktree:** `docs/TESTING/hover.md` ist
+dort modifiziert und gehört einer *parallelen* Session (Umbenennung aus
+`image_hover.md`). Nicht mitcommitten. Für einen Rebase musste sie einmal
+beiseite — byteweise gesichert und mit identischer MD5 zurückgelegt.
+
+## Was in diesem Block gebaut wurde
+
+| Commit | Was |
+| --- | --- |
+| `e616a325` | Startphasen-Wächter: `check`/`report` merken, wenn `UIReady` nie lief |
+| `262b3816` | Die vier eigenen undokumentierten Commands nachgetragen |
+| `030c8e1e` | Zahlen in diesem Handover korrigiert |
+| `f64ff903` | Scope-Achse `personal` / `extern` / `all` |
+
+### Der Fund, der die Zahl erklärt
+
+Diese Config registriert ihre Commands und Keymaps in
+`startup.on("UIReady", …)`, und `UIReady` ist VimEnter + `vim.schedule`. Ein
+`nvim --headless -c "luafile …"` führt sein Skript **vor** VimEnter aus —
+`bindings.usrcmds` und `bindings.mappings` werden nie geladen. **89 der 200
+Befunde waren die Messung, nicht die Doku.** Interaktiv sieht man das nie.
+
+`drift.describe` stellt die Warnung jetzt ganz nach oben, `report.render` in
+den Lauf-Kopf plus Blockquote; beide über `startup.pending()`, per `pcall`.
+
+### Die Scope-Achse
+
+| Route | Dokumentierte Seite | Live-Commands ohne Cheatsheet | Befunde |
+| --- | --- | --- | ---: |
+| `:Bindings check` | `PersonelPlugins/BINDINGS` | nur eigene | **53** |
+| `:Bindings check extern` | `ExternPlugins/Bindings` | nur fremde | 379 |
+| `:Bindings check all` | beide | beide | 432 |
+
+`report` spiegelt alle drei. Exakt additiv: 53 + 379 = 432. `search`/`browse`
+sind ausgenommen und lesen in jedem Scope beide Bäume (655 Personal- + 552
+Extern-Records) — ausdrücklicher Wunsch: wer eine Taste sucht, sucht sie
+unabhängig davon, wer sie registriert.
+
+„Eigen" hängt an `config.repo_dirs()` + `nvim-config`, nicht an einer
+handgepflegten Liste. Ist sie nicht auflösbar, wird **nicht** gefiltert und
+der Bericht sagt das im Kopf.
+
+## Bilanz
+
+| | |
+| --- | ---: |
+| Ausgangszahl | 200 |
+| Messartefakt (UIReady) | −89 |
+| eigene Doku-Lücken, nachgetragen | −4 |
+| fremde, jetzt außerhalb des Default-Scopes | −54 |
+| **`:Bindings check` heute** | **53** |
+
+Die 53 = 52 `keymap-not-live` + 1 `usercmd-not-live` (`:LibLogger`,
+dokumentiert sich selbst als lazy).
+
+---
+
+## Was als Nächstes zu bauen ist — **entschieden, nicht gebaut**
+
+**Auftrag: Repo-Fallback im Default.** Findet der Live-Check eine
+dokumentierte Taste nicht, soll der Quelltext des Plugins gegriffen werden,
+bevor ein `keymap-not-live` entsteht.
+
+### Warum, und warum nicht der naheliegende Weg
+
+Die Frage im Chat war: *„warum tauchen die buffer-lokalen in `check`
+überhaupt auf — könnte man die nicht generell ausgliedern?"*
+
+Dazu drei gemessene Punkte, damit sie nicht neu erhoben werden:
+
+1. **Buffer-lokal gewinnt immer**, und zwar per Präzedenzregel, **nicht**
+   weil zuletzt registriert. Beide Reihenfolgen getestet:
+
+   ```
+   buffer-lokal zuerst, global danach  -> buffer=1
+   global zuerst, buffer-lokal danach  -> buffer=1
+   nach nvim_buf_delete                -> buffer=0 (global ist zurück)
+   ```
+
+2. **`keymap-not-live` ist kein Kollisionscheck.** Dort wird nie
+   buffer-lokal gegen global verglichen. Die Achse fragt nur: „das
+   Cheatsheet dokumentiert diese Taste — gibt es sie?" Über den
+   Live-Zustand ist das bei einer buffer-lokalen Taste nur beantwortbar,
+   solange der Buffer offen ist.
+
+3. **Deshalb wäre pauschales Ausgliedern ein schlechter Tausch:** eine
+   buffer-lokale Taste, die ein Plugin entfernt oder umbenannt hat, fiele
+   danach nie mehr auf — still.
+
+### Die Messung, die den Weg begründet
+
+Die Repo-Achse grept Quelltext und braucht **keinen offenen Buffer**. Fragt
+man sie so, wie `drift.lua` sie fragt (Cheatsheet-Token, `ignore_case`, plus
+`config.config_lua_root()` als zweite Suchstelle):
+
+```
+keymap-not-live               52
+  im Quelltext gefunden       48   <- still korrekt, kein Buffer nötig
+  nicht gefunden               4   <- blieben echte Befunde
+```
+
+Und von den 4 sind **drei gar keine Tasten**, sondern Options-Pfade in der
+Key-Spalte von `Keymaps/insights.nvim.md` (`def_cfg.keymaps.jump`,
+`def_cfg.keymaps.preview`, `ui_cfg.follow_key`) — ein Format-Defekt, keine
+Drift. Der vierte ist `cmdlog.nvim`s `ctrl-f` (fzf-lua-Notation, nicht
+vim-Notation). **Real bleibt einer.**
+
+Kosten, gemessen: `check` ohne Repo-Achse **165 ms**, Fallback-Greps
+**+427 ms** (nur die Plugins mit Befunden, hier fünf). Der Default wird also
+~3,5× langsamer. Die Entscheidung dafür ist gefallen, mit dieser Zahl vor
+Augen.
+
+### Umsetzungsskizze
+
+Alles in `lua/bindings/usrcmds/bindings_explorer/drift.lua`, in `M.check`:
+
+1. **`repo_dirs` immer auflösen**, nicht nur bei `want_repo`
+   (heute ~Z. 912–936: `if want_repo then … config.repo_dirs() … end`).
+   `config_lua` entsprechend immer setzen.
+2. **`checkable` braucht das Token.** Der Eintrag hält heute nur `lhs`
+   (normalisiert); für den Grep wird `extract_lhs_token(rec)` gebraucht —
+   dasselbe, was der bestehende `repo_keymaps`-Zweig einträgt.
+3. **In der Verdikt-Schleife** (heute ~Z. 1025–1041, `for _, entry in
+   ipairs(checkable)`), im `else`-Zweig von `is_live`, vor dem Anlegen des
+   Findings:
+   * `repo.mentions(dir, entry.token, { ignore_case = true })`, bei
+     `~= true` zusätzlich gegen `config_lua`.
+   * Treffer → **wie `found_count` zählen** (durch die Quelle bestätigt),
+     kein Finding. Wichtig fürs Verdikt: sonst kippt eine Tabelle
+     fälschlich in „not verifiable from here".
+   * Kein Treffer → Finding wie bisher. Die Aussage ist jetzt **stärker**
+     (weder live noch im Quelltext) — die Abschnittsnotiz in `SECTIONS`
+     (`"not found globally, nor in any buffer open right now"`) gehört
+     entsprechend nachgezogen.
+   * Achse konnte nicht antworten (kein Checkout / nicht lesbar) → Finding
+     wie bisher, und das `unverifiable`-Verdikt greift weiter.
+4. **`repo.reset()`** läuft heute nur `if want_repo`. Muss künftig auch
+   laufen, wenn nur der Fallback die Bäume indiziert hat — sonst bleiben die
+   ~28 MiB für den Rest der Session liegen.
+5. **Gegenprobe:** `keymap-not-live` muss von 52 auf 4 fallen, die anderen
+   Achsen unverändert. Danach die drei Options-Pfade in
+   `Keymaps/insights.nvim.md` als Format-Defekt separat fixen.
+
+### Danach noch offen
+
+* **54 fremde undokumentierte Commands** — durch die Scope-Achse aus dem
+  Default heraus, aber inhaltlich unentschieden: soll
+  `ExternPlugins/Bindings` sie je abdecken?
+* **`:Bindings check extern` meldet 379** — ein Korpus, der nie geprüft
+  wurde. Keine Regression, eine neue Achse. Ungesichtet.
+* **7 `keymap-not-in-repo`** — unverändert debugging.nvims berechnetes
+  `prefix .. "m"`.
+
+## Fallen, die diese Session gekostet haben
+
+1. **`vim.loader` cacht Modulname → Datei auf den Haupt-Checkout.** Ein
+   `rtp`-Prepend reicht nicht, `vim.loader.reset()` auch nicht. Worktree-Code
+   nur über `package.preload` + `loadfile` laden:
+
+   ```lua
+   for _, n in ipairs({ "config", "records", "source", "repo", "drift", "report", "status" }) do
+     local mod = "bindings.usrcmds.bindings_explorer." .. n
+     package.loaded[mod] = nil
+     package.preload[mod] = assert(loadfile(WT .. "/lua/bindings/usrcmds/bindings_explorer/" .. n .. ".lua"))
+   end
+   ```
+
+2. **Headless misst falsch, solange `UIReady` aussteht.** Vor jeder Messung:
+
+   ```lua
+   require("bindings.usrcmds")
+   require("bindings.mappings").setup()
+   local st = require("startup")
+   for _, m in ipairs(st.marks) do
+     if m.label == "usrcmds" or m.label == "mappings" then m.at = m.at or st.elapsed() end
+   end
+   ```
+
+3. **`(cond) and nil or x` kollabiert in Lua** zum `or`-Zweig. Hat hier
+   `corpus_scope = "all"` erzeugt, was auf keine Wurzel passt — die
+   dokumentierte Seite meldete still null Befunde (54 statt 432). Immer ein
+   explizites `if`.
+
+4. **`f.notation` ist die Vergleichsform, nicht die Anzeigeform.** Ein
+   eigener Dump liest sonst rohe Termcodes (`\x80kD`); `drift.describe`
+   rendert korrekt über `vim.fn.keytrans`. Beinahe als Werkzeugfehler
+   gemeldet, war keiner.
+
+5. **Korpus kommt aus `stdpath("config")`**, also aus dem Haupt-Checkout.
+   Für Messungen gegen Worktree-Doku `config.roots` umbiegen — oder vorher
+   pushen und im Haupt-Checkout pullen.
+
