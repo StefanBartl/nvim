@@ -1,17 +1,43 @@
 # hover.nvim — Roadmap (persönlich)
 
+## Table of content
+
+  - [Intro](#intro)
+  - [1. Abgrenzung: was in welche der beiden Roadmaps gehört](#1-abgrenzung-was-in-welche-der-beiden-roadmaps-gehrt)
+  - [2. Was ich als Nächstes bauen würde, in dieser Reihenfolge](#2-was-ich-als-nchstes-bauen-wrde-in-dieser-reihenfolge)
+    - [2.1 Ein Spec, das die Doku gegen die Quelle prüft — **gebaut** (`4e1760f`)](#21-ein-spec-das-die-doku-gegen-die-quelle-prft-gebaut-4e1760f)
+    - [2.2 Zoom für Bilder — **Schritte 1 und 2 gebaut** (`204d083`)](#22-zoom-fr-bilder-schritte-1-und-2-gebaut-204d083)
+      - [Die ursprüngliche Reihenfolge, zur Begründung](#die-ursprngliche-reihenfolge-zur-begrndung)
+    - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
+    - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
+    - [2.5 Ein Memo für Position-Previews — **ungemessen**, und die Hausregel heißt erst messen](#25-ein-memo-fr-position-previews-ungemessen-und-die-hausregel-heit-erst-messen)
+  - [3. Messungen, die offen sind](#3-messungen-die-offen-sind)
+  - [4. Aufträge, die woanders liegen](#4-auftrge-die-woanders-liegen)
+  - [5. Geprüft und *nicht* aufgenommen](#5-geprft-und-nicht-aufgenommen)
+
+---
+
+## Intro
+
 Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
-in der Folgesitzung sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f)
-und die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-und-2-gebaut-204d083)
-gebaut und die LuaLS-Messung nachgeholt worden. Nächster offener Punkt der
-Reihenfolge: **2.3**.
+seither sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
+die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-und-2-gebaut-204d083)
+und [2.3](#23-eine-checkhealth-zeile-für-contribute--gebaut-aca73fa) gebaut und
+die LuaLS-Messung nachgeholt worden.
+
+**Offen ist damit nur noch, was auf etwas wartet, das nicht hier liegt:**
+[2.4](#24-gopath-ein-billiger-früh-ausstieg--fremdes-repo-größter-hebel-hier)
+auf gopath.nvim, [2.5](#25-ein-memo-für-position-previews--ungemessen-und-die-hausregel-heißt-erst-messen)
+auf eine Zählung, die es noch nicht gibt. Der nächste Griff in diese Datei
+sollte deshalb **eine Messung sein, keine Implementierung** — die Zählung für
+2.5, oder eine der vier aus [Abschnitt 3](#3-messungen-die-offen-sind).
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
 
 | Datei | Adressat | Frage |
 | --- | --- | --- |
-| [hover.nvim.md](hover.nvim.md) | ich, beim Wiedereinstieg | **was ist passiert und warum** |
+| [hover.nvim.md](./hover.nvim.md) | ich, beim Wiedereinstieg | **was ist passiert und warum** |
 | `hover.nvim/docs/ROADMAP.md` | wer mitliest oder das Plugin benutzt | **was ist bewusst noch nicht gebaut** |
 | diese hier | ich, beim Weiterbauen | **was würde ich als Nächstes tun, und warum das** |
 
@@ -40,11 +66,13 @@ sind der Anfang jeder Drift, und diese Sitzung hat vier davon gefunden.
 
 ## 2. Was ich als Nächstes bauen würde, in dieser Reihenfolge
 
+---
+
 ### 2.1 Ein Spec, das die Doku gegen die Quelle prüft — **gebaut** (`4e1760f`)
 
 > **Erledigt am 2026-09-02**, in der Folgesitzung.
 > `hover.nvim/TESTS/docs_spec.lua`, neun Prüfungen; die Tabelle dazu steht im
-> [Handover unter G](hover.nvim.md#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f).
+> [Handover unter G](./hover.nvim.md#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f).
 > Die Begründung unten bleibt stehen — sie ist der Wert dieses Eintrags, nicht
 > der Haken.
 >
@@ -98,6 +126,8 @@ auffielen. Inzwischen elf: `204d083` brachte zwei Tastentabellen mit, und die
 erste Frage danach war „prüft das jemand?". Genau dafür war der Punkt hier der
 erste.*
 
+---
+
 ### 2.2 Zoom für Bilder — **Schritte 1 und 2 gebaut** (`204d083`)
 
 > **Erledigt am 2026-09-02.** `+` und `-` über eine eigene Leih-Bedingung;
@@ -129,6 +159,8 @@ erste.*
 > Scroll-Tasten; Zoom hat eigene. PDF-Seiten zoomen seither mit, gratis und
 > unscharf.
 
+---
+
 #### Die ursprüngliche Reihenfolge, zur Begründung
 
 Der Umfang steht (Auftrag F im Handover): **Bilder und Screenshots**,
@@ -155,7 +187,32 @@ steht — und die Zeile in `docs/MANUAL-EVIDENCE.md` ist bewusst auf `never`
 datiert: gemessen ist die Geometrie, gesehen hat das Bild in der größeren
 Fläche noch niemand.*
 
-### 2.3 Eine `:checkhealth`-Zeile für `contribute` — winzig, und die neue Zielgruppe braucht sie
+---
+
+### 2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)
+
+> **Erledigt am 2026-09-02.** `registry.contributors()`, zwei Health-Zeilen,
+> sieben Specs; die Einzelheiten stehen im
+> [Handover unter H](./hover.nvim.md#h-eine-checkhealth-zeile-für-contribute--erledigt-2026-09-02-aca73fa).
+>
+> **Gegen die eigene Empfehlung gebaut.** Unten stand „sobald `contribute` das
+> erste Mal wirklich benutzt wird", und benutzt worden ist es nicht. Das ist
+> keine Kleinigkeit, sondern genau die Umgehung, gegen die die Hausregel
+> geschrieben ist — festgehalten, damit die nächste Lesung dieser Datei nicht
+> glaubt, der Vorbehalt sei eingetreten.
+>
+> **Was die Vermutung dann doch getragen hat:** `has_sources()` ist die
+> Funktion, die auf „ist meiner registriert?" zu antworten scheint, und sie
+> antwortet in *beide* Richtungen falsch — `false` für einen Beitrag, der ein
+> Position-Preview ist, `true` (über markdown.nvim) für einen, der nie ankam.
+> Beides steht jetzt als Spec da. Das war unten nicht aufgeschrieben und ist
+> das eigentliche Argument für den Punkt gewesen.
+>
+> **Zwei Abweichungen vom Vorschlag unten.** Es ist nicht *eine* Health-Zeile,
+> sondern eine je registriertem Namen plus eine für den leeren Fall; und der
+> Accessor gibt Zahlen statt Funktionen zurück, weil er sonst ein zweiter Weg
+> wäre, einen Beitrag aufzurufen — außerhalb des `pcall`, der einen kaputten
+> Beitrag vom Rest fernhält.
 
 Seit `c374d5e` kann ein Nutzer einen Hover aus der eigenen Config beitragen.
 Die erste Frage danach ist „ist meine Funktion überhaupt registriert?", und
@@ -169,6 +226,8 @@ Introspektion, und eine ohne Konsumenten wäre Ballast. Jetzt gäbe es einen.
 **Aufwand:** ein Accessor, eine Health-Zeile, ein Spec. **Empfehlung: bauen,
 sobald `contribute` das erste Mal wirklich benutzt wird** — vorher ist es eine
 Vermutung darüber, was jemand fragen wird.
+
+---
 
 ### 2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier
 
@@ -189,6 +248,8 @@ dessen Arbeit woanders liegt.
 
 **Adressat:** gopath.nvim. **Empfehlung:** dort einplanen, hier nichts tun —
 die Gate-Zeile ist richtig, solange die Messung gilt.
+
+---
 
 ### 2.5 Ein Memo für Position-Previews — **ungemessen**, und die Hausregel heißt erst messen
 
@@ -215,7 +276,7 @@ dann entscheiden.
 
 | Was | Warum offen |
 | --- | --- |
-| ~~**LuaLS**~~ | **zu.** Zweimal auf dem Haupt-Checkout gemessen: Pass `post-b` nach `3e12c9f`, Pass `post-c` nach `4e1760f`. Beide 0 Befunde, Delta `+0`. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
+| ~~**LuaLS**~~ | **zu.** Dreimal auf dem Haupt-Checkout gemessen: Pass `post-b` nach `3e12c9f`, `post-c` nach `4e1760f`, `post-d` nach `aca73fa`. Alle 0 Befunde, Delta `+0`. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
 | **Office-Pfad von Hand** | `docs/MANUAL-EVIDENCE.md`: seit der Cache-Änderung `bba2064` nicht wieder durchgespielt. Keine CI kann das. |
 | **Demo-GIF** | `REL-09`, der letzte offene 🟢 des Release-Gates. **Braucht dich** — ich kann nicht aufnehmen. |
 | **`on_request` gegen einen laufenden Daemon** | einmal gemacht (Tabelle im Handover), aber genau dort saß `836a15a`, und keine CI hat einen Container-Daemon. |
@@ -253,3 +314,6 @@ dann entscheiden.
 - **Ein Health-Check, der die Testsuite fährt.** Steht als abgelehnt in der
   Repo-Roadmap und bleibt dort: er würde über die Maschine berichten, auf der
   er zufällig läuft, statt über die Installation.
+
+---
+

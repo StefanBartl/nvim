@@ -887,6 +887,69 @@ Beschreibung *stimmt*, sagt es nicht — dafür gibt es die Runde durch die Docs
 Es sagt nur, dass keine Liste hinter der Quelle zurückfällt, und das ist die
 Hälfte, die von allein passiert.
 
+### H. Eine `:checkhealth`-Zeile für `contribute` — **erledigt 2026-09-02** (`aca73fa`)
+
+Punkt 2.3 der persönlichen Roadmap, und dort mit einem Vorbehalt versehen:
+*„bauen, sobald `contribute` das erste Mal wirklich benutzt wird"*. Der ist
+**nicht** eingetreten — gebaut auf Ansage, nicht auf Bedarf, und das gehört
+hierher, weil die Hausregel sonst still umgangen wäre.
+
+Was die Vermutung trug, hat der Einbau allerdings bestätigt und zwei Specs
+halten es jetzt fest: `has_sources()` ist die Funktion, die auf die Frage „ist
+meiner registriert?" zu antworten *scheint*, und sie antwortet **in beide
+Richtungen falsch**.
+
+| Lage | `has_sources()` | was gilt |
+| --- | --- | --- |
+| Der Beitrag ist ein Position-Preview | `false` | ist registriert |
+| Der eigene Beitrag kam nie an, markdown.nvim ist installiert | `true` | ist *nicht* registriert |
+
+Beides sind genau die Lesarten, die jemand als Defekt des Plugins meldet, und
+deshalb stehen sie als Assertions da, nicht als Kommentar.
+
+**Der Accessor: `registry.contributors()`.** Es gab bewusst keine
+Introspektion im Modul — eine ohne Konsumenten wäre Ballast. Drei
+Entscheidungen, die keine Formsache sind:
+
+- **Zahlen, nicht die Funktionen.** Die Frage braucht Ankunft und Menge. Gäbe
+  der Accessor die Callables heraus, wäre er ein zweiter Weg, sie
+  aufzurufen — *außerhalb* des `pcall`, der verhindert, dass ein kaputter
+  Beitrag den Hover für alle anderen mitnimmt.
+- **Nach Namen sortiert.** Zwei der drei gelesenen Listen sind Arrays, die
+  dritte (`previews`) ist nach Zieltyp verschlüsselt, und `pairs` hat keine
+  stabile Reihenfolge. Ein Health-Report, der zwischen zwei Läufen auf
+  derselben Konfiguration umsortiert, lässt sich nicht mit sich selbst
+  vergleichen — und das ist das meiste, wofür ein Health-Report da ist.
+- **`on_request` wird mitgezählt**, über beide Arten hinweg. Registriert,
+  korrekt und trotzdem still auf dem automatischen Trigger: genau der Zustand,
+  den jemand als „geht nicht" meldet.
+
+**Die Ausgabe** unter *optional contributors*:
+
+```
+registry: markdown.nvim -- 2 sources, 2 previews
+registry: user -- 2 position previews (1 asked only on `:Hover show`)
+```
+
+Leer bleibt es ein `info`, kein `warn`: keine Contributors installiert ist die
+unterstützte Konfiguration, und bare paths, bare URLs und Git-Objekt-IDs sind
+eingebaut.
+
+**Sieben Specs, zwei davon sabotage-getestet** (Hausregel): ohne das
+`table.sort` fällt der Sortier-Spec, ohne die `on_request`-Zählung auf den
+Sources fällt der Zähl-Spec.
+
+**Ein Fund nebenbei, in `@types`:** die Beschreibung von `Hover.SourceFn` hatte
+sich gelöst und saß auf `Hover.OnRequest`, dessen eigener Text ohne Leerzeile
+direkt darunter weiterlief. Zurück an den Alias gehängt, den sie beschreibt.
+Kein LuaLS-Befund — ein Doc-Kommentar an der falschen Klasse ist genau die
+Sorte, die nur beim Lesen auffällt.
+
+**Gemessen nach dem Commit:** LuaLS-Pass `post-d` auf dem Haupt-Checkout,
+**0 Befunde**, Delta `+0` gegen `post-c`. Suite 227 grün, luacheck 0/0.
+
+---
+
 ---
 
 ## Was beim Weiterarbeiten zu wissen ist
