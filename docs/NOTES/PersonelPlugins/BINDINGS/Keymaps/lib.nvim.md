@@ -50,7 +50,7 @@ Not the same tool as `lib.nvim.dotrepeat` — that wires one specific buffer
 change through Vim's `operatorfunc` so native `.` itself repeats it; `lastcmd`
 is a separate keymap that repeats whatever ran last. A third member of the
 family is still only a concept: the `\`/`?` result modifiers, see
-[modifier-keymaps.md](../../../../ROADMAP/personal/modifier-keymaps.md).
+[modifier-keymaps.md](../../../../ROADMAP/personal/All/FINISH/modifier-keymaps.md).
 
 **Known limits** (from the README): native non-change commands (`zz`, `:w`)
 are invisible to `changedtick`; undo/redo count as a native change; an lhs
@@ -62,7 +62,7 @@ indistinguishable from normal mode inside `on_key`.
 
 Source: `lua/lib/nvim/bindings/keymap/modifier/init.lua`
 Docs: `lua/lib/nvim/bindings/keymap/modifier/README.md`
-Concept: [modifier-keymaps.md](../../../../ROADMAP/personal/modifier-keymaps.md)
+Concept: [modifier-keymaps.md](../../../../ROADMAP/personal/All/FINISH/modifier-keymaps.md)
 
 The second and third Super-Keymaps. Press the modifier, then whatever keys you
 would normally press: the target mapping runs as it always does, and the string
