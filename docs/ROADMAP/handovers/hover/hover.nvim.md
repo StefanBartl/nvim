@@ -40,15 +40,19 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `9fba190`:**
+**Gemessen nach `ade6c1f`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **251 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 17**) |
+| Specs | **251 grün**, 0 Fehler, **0 pending** (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 17**) |
 | `stylua --check` / `luacheck` | sauber (30 Dateien) |
-| LuaLS (`scan.sh`, echte injizierte Library) | 0 Befunde, Pass `resize-post2` (nach `bbd9dec`). **Nach `9fba190` noch nicht gelaufen** — siehe Offene Punkte |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `zoom-post2`. Der Weg dorthin: `zoom-post` (nach `9fba190`, nie gelaufen) meldete **+16**, `zoom-fix` und `zoom-post2` je 0 |
 | CI | grün auf beiden Runnern |
 | Helptags | 33 |
+
+**Die 0 pending sind neu und die Zahl, auf die zu achten ist.** Sie stand
+vorher nicht in dieser Tabelle, und genau deshalb konnte ein Spec monatelang
+überspringen, ohne dass es jemandem auffiel.
 
 **Was es kann**, in einem Satz je Klasse: Datei- und Verzeichnisvorschauen,
 Bilder und PDF-Seiten gezeichnet, Office-Dokumente über LibreOffice (opt-in),
@@ -121,6 +125,22 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
   das aus wie „der Test ist fehlgeschlagen", nicht wie ein Arity-Fehler.
   Immer erst an ein `local` binden. Gefunden am 2026-09-02 beim Beheben der
   sieben Befunde oben.
+- **Auf `pending` achten, nicht nur auf `Failed`.** Ein Spec, der mit
+  plausibler Begründung überspringt, ist die Art fehlender Abdeckung, die man
+  am längsten behält: der Crop-Check meldete „kein ImageMagick hier" auf einer
+  Maschine, die seit jeher eines hat, und dahinter lagen drei Defekte
+  (`ade6c1f`). Die Zahl steht seither in der Messtabelle oben.
+- **Beide Laufarten sind jetzt dieselbe Umgebung, und waren es nicht.**
+  `PlenaryBustedFile` landet in `test_harness.test_file`, das den Runner
+  **ohne Optionen** aufruft — das Kind bekommt `--noplugin` und kein `-u`,
+  also nicht `scripts/minimal_init.lua`. Ein Einzeldatei-Lauf hatte damit
+  andere Plugins auf dem rtp als der Suite-Lauf. `scripts/test.sh` fährt eine
+  Einzeldatei seit `ade6c1f` über `plenary.busted.run` im schon aufgesetzten
+  Prozess.
+- **Eine Tabelle in einer Lua-Datei nie als Literal mit einem optionalen
+  ersten Element bauen.** `{ vim.env.FOO, "a", "b" }` ist bei ungesetztem
+  `FOO` ein Loch an Index 1: `#t` meldet 3, `ipairs` läuft **null** mal. Genau
+  so hat `minimal_init` seine Fallbacks nie probiert.
 - **Git-Bash-Falle:** headless nvim mit einem `/tmp/...`-Pfad **hängt still**,
   statt zu scheitern. Windows-Pfade verwenden. (Steht auch in
   `scripts/luals-scan/scan.sh`.)
@@ -168,17 +188,85 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
 | --- | --- |
 | Was tut es, wie konfiguriere ich es | `README.md` im Repo |
 | Welche Taste, welches Kommando, welcher Autocmd | `docs/BINDINGS.md` |
-| **Warum** ist das so gebaut | `docs/FEATURES/` — QUIET, BARE-PATHS, CONTRIBUTIONS, RESIZE (**ZOOM.md fehlt noch**, siehe Roadmap §3) |
+| **Warum** ist das so gebaut | `docs/FEATURES/` — QUIET, BARE-PATHS, CONTRIBUTIONS, RESIZE, **ZOOM** |
 | Wer ist wie angebunden, was fällt ohne ihn aus | `docs/INTEGRATIONS.md` |
 | Was ist bewusst *nicht* gebaut | `docs/ROADMAP.md` (an Mitlesende) |
 | Was kann keine CI prüfen | `docs/MANUAL-EVIDENCE.md` |
 | Was baue ich als Nächstes, was ist unentschieden | [hover.nvim-roadmap.md](hover.nvim-roadmap.md) |
 | Welche Tasten/Kommandos/Autocmds in **dieser** Config | `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/hover.nvim.md` |
 
-## Direkt offen nach `9fba190`
+## Nach `9fba190`: alle vier Reste erledigt — und drei Funde dabei
 
-Drei kleine Reste aus der Zoom-Sitzung, absichtlich hier und nicht in der
-Roadmap, weil sie in Minuten zu erledigen sind und nichts zu entscheiden ist:
+**Stand `ade6c1f`.** Die vier Punkte unten sind abgearbeitet. Sie haben mehr
+zutage gefördert als erwartet, deshalb steht hier, *was*, und nicht nur *dass*.
+
+### Der Scan hat einen echten Bug gefunden, keinen Lint-Fund
+
+`zoom-post` kam mit **+16** zurück. Zwei davon waren `duplicate-set-field` auf
+`init.lua`, und das war ein Fehler mit Wirkung: `8ec5b40` hatte `M.zoom` als
+veralteten Alias für `resize` behalten, `9fba190` definierte 73 Zeilen weiter
+unten ein **echtes** `M.zoom`, und Lua nimmt die zweite Definition. Der Alias
+war ab dem Tag tot; `hover.zoom(delta)` hörte still auf, resize zu bedeuten,
+und fing an, ein anderes Feature zu sein — mit anderen Voraussetzungen
+(images.nvim plus ImageMagick) und anderen Kosten (258 ms statt keiner).
+
+**Nichts ist fehlgeschlagen.** Suite grün, CI grün, das Vimdoc beschrieb den
+echten Zoom korrekt — nur die README behauptete weiter, der Alias leite an
+`resize` weiter. Zwei Dokumente widersprachen sich, eines hatte recht. Behoben
+in `bd72836`, der Name gehört jetzt eindeutig dem echten Zoom.
+
+Die anderen vierzehn waren dieselbe Form eine Ebene tiefer: `_open` ist
+nilable deklariert, `zoomable()` hatte gerade bewiesen, dass es das nicht ist,
+und jeder Aufrufer las das Feld danach neu und verlor den Beweis. `zoomable`
+gibt jetzt Hover und Target mit heraus. Pass `zoom-fix`: **0 Befunde, +0**.
+
+### Der Crop-Spec meldete überall „pending", und keiner der drei Gründe war ImageMagick
+
+Der Punkt unten stand hier als „`minimal_init` lädt images.nvim nicht in die
+Spec, direkt aufgerufen geht es". **Die zweite Hälfte war falsch** — direkt
+ging es auch nicht; wer das gemessen hat, hatte `IMAGES_NVIM_DIR` exportiert.
+Drei Defekte übereinander:
+
+1. **Ein `nil`-Loch.** `add_optional` baute seine Kandidatenliste als Literal
+   mit `vim.env[env_var]` an Position 1. Nicht gesetzt heißt `nil` an Index 1,
+   `ipairs` hält dort sofort an — die Schleife lief **null** mal, weder
+   `.deps/` noch der Geschwisterpfad wurden je probiert. `#t` meldet für
+   `{ nil, "a", "b" }` eine **3**, `ipairs` liefert nichts; deshalb liest es
+   sich wie eine dreielementige Liste. `add_dep` zwanzig Zeilen darüber baut
+   die Liste sorgfältig und tat das immer.
+2. **Zwei verschiedene Umgebungen.** `scripts/test.sh` schickte eine
+   Einzeldatei durch `PlenaryBustedFile` → `test_harness.test_file`, und das
+   ruft den Runner **ohne jede Option** auf: das Kind bekommt `--noplugin` und
+   kein `-u`, also nicht den Bootstrap dieses Repos. Gemessen: images.nvim war
+   bei einem Directory-Lauf auf dem rtp und bei einem Einzeldatei-Lauf
+   **derselben Datei** nicht. Läuft jetzt über `plenary.busted.run` im schon
+   aufgesetzten Prozess; Exit-Code sabotage-geprüft.
+3. **Die Fixture.** Mit laufendem Spec fiel er: `fake_png` schreibt einen
+   PNG-**Header** ohne Pixel — richtig für `pixel_size`, unmöglich für einen
+   Crop. Die Zusicherung hätte auf keiner Maschine mit magick je bestehen
+   können. Der Test baut sich jetzt ein echtes 1200×800-Bild mit demselben
+   magick, das sein eigener Guard schon bestätigt hat.
+
+**Was davon bleibt, ist eine Regel über das Wort „pending".** Alle drei waren
+unsichtbar, weil der Spec einen plausibel klingenden Grund fürs Überspringen
+nannte — „kein ImageMagick hier" — auf einer Maschine, die seit jeher eines
+hat. Ein Skip mit guter Begründung ist die Art fehlender Abdeckung, die man am
+längsten behält.
+
+### Und ein Fund im Doku-Spec selbst
+
+`documented_routes` führte eine handgeschriebene Liste der Argumentwerte, die
+ein Dokument hinter einer Route schreiben darf. Sie entstand, als `resize` die
+neueste Route war, und `9fba190` erweiterte sie nicht — also meldete das erste
+Dokument mit `:Hover zoom out` einen Befehl, den es nicht gebe, gegen einen,
+den es gibt. **Vierte Wiederholung dieser Klasse in diesem Repo, und die erste
+innerhalb des Specs, der genau dafür geschrieben wurde.** Die Routen
+deklarieren `args[].enum` für ihre eigene Completion; die Liste wird jetzt
+dort gelesen.
+
+### Die Punkte, wie sie hier standen
+
+Zur Nachvollziehbarkeit stehen sie unverändert:
 
 1. **LuaLS nach `9fba190` messen.** Der Pass steht noch auf `resize-post2`
    (nach `bbd9dec`). Der Zoom hat viel Code gebracht, und die Regel „der Scan
@@ -234,6 +322,15 @@ reset -> ganzes Bild;  pan ohne Zoom -> false
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `ade6c1f` — der Crop-Spec lief nie: ein `nil`-Loch in `minimal_init`, zwei
+  verschiedene Umgebungen zwischen Einzeldatei- und Directory-Lauf, und eine
+  Fixture ohne Pixel. Alle drei behoben, Suite jetzt mit **0 pending**.
+- `a18880a` — `docs/FEATURES/ZOOM.md`, dazu RESIZE.md, `docs/ROADMAP.md` und
+  FEATURES/README.md nachgezogen. Der Doku-Spec fand dabei seine eigene
+  handgepflegte Liste hinter der Quelle.
+- `bd72836` — **zwei Funktionen hießen `zoom`, die zweite gewann.** Der
+  `resize`-Alias war seit `9fba190` tot, die README behauptete ihn weiter.
+  Gefunden vom LuaLS-Scan, den `9fba190` nie bekommen hatte (+16).
 - `9fba190` — **echter Zoom**: `:Hover zoom [in|out|reset]`, Schwenken über
   `h/j/k/l` (nur solange gezoomt) und `:Hover pan`. Baut auf
   `images.convert.crop`, das dafür in images.nvim entstand (`22213de`).
