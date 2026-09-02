@@ -107,7 +107,7 @@ nothing".
 
 ## Cross-scope shadowing
 
-Three cases where a buffer-local mapping covers a global one. None is a bug —
+Four cases where a buffer-local mapping covers a global one. None is a bug —
 the local one is what you want in that buffer — but each is a surprise if you
 hit it without knowing:
 
@@ -116,11 +116,44 @@ hit it without knowing:
 | `<leader>ps` | insights.nvim — symbol picker (telescope) | pdfport.nvim — open with system application | Inside a file-tree buffer (netrw / oil / nvim-tree / neo-tree), where pdfport installs its buffer-local keys |
 | `gP` | gopath.nvim — resolve path under cursor, open here | filetree.nvim — create PDF(s) from the node via pdfport | Inside the tree window |
 | `+` / `-` | cascade.nvim — increment/decrement *(opt-in preset)* | filetree.nvim — set node as root / go to parent | Inside the tree window |
+| `<leader>th` | lsp.nvim — toggle inlay hints globally | filetree.nvim — show trash history | Inside the tree window |
 
-The pattern is the same each time: a plugin that operates on the *thing under
-the cursor in a tree* takes a key a plugin that operates on the *thing under
-the cursor in a file* already owns. In the tree there is no file to act on, so
-nothing is lost.
+The pattern is the same for the first three: a plugin that operates on the
+*thing under the cursor in a tree* takes a key a plugin that operates on the
+*thing under the cursor in a file* already owns. In the tree there is no file
+to act on, so nothing is lost.
+
+`<leader>th` is the one row where that reading does not hold, and it is worth
+the extra paragraph because it has now been investigated twice. lsp.nvim's is a
+**global** toggle, not an action on the node under the cursor, so inside the
+tree it is genuinely unreachable rather than merely pointless. Leave the tree,
+or use `<leader>tH` for the current filetype.
+
+Measured 2026-09-02, both directions: `nvim_get_keymap("n")` returns **exactly
+one** `<leader>th` — lsp.nvim's, from
+`lsp.nvim/lua/lsp/bindings/actions.lua:192` — and `nvim_buf_get_keymap` on an
+open neo-tree buffer returns exactly one, `filetree: show trash history`.
+filetree binds it through its own tree-attach dispatcher, not through
+`window.mappings`, which is why the key is absent from
+`require("neo-tree").config.filesystem.window.mappings`.
+
+**Two further owners are commonly assumed and are not real:**
+
+* **NvChad** does bind `<leader>th` to its theme picker
+  (`NvChad/lua/nvchad/mappings.lua:67`, `require("nvchad.themes").open()`), but
+  **this config never requires that module** — `package.loaded["nvchad.mappings"]`
+  is `false` after a full start. `wkdnvchad.mappings.setup({ all = true })` is a
+  different module and sets only `<Tab>`, `<S-Tab>`, `<leader>bc`,
+  `<leader>tr`, `<leader>tl` and `<leader>tt`.
+* **language.nvim**'s thesaurus ships `keymap = false`
+  (`config/DEFAULTS.lua:117`, marked opt-in), so it binds nothing. The
+  `3<leader>th` in `thesaurus/init.lua:145` is a comment describing how a count
+  *would* act, not a registration.
+
+In neo-tree's two read-only sources the key is switched **off** on purpose:
+`config/neotree/keymaps/diagnostics.lua` and `document_symbols.lua` map it to
+`noop` alongside the other filesystem-mutating keys, because trashing has no
+meaning in a diagnostics list or a symbol outline.
 
 `<2-LeftMouse>` deserves a mention on its own: **images.nvim** and
 **markdown.nvim** both bind it, both buffer-locally on markdown filetypes, and
