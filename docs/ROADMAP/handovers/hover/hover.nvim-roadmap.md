@@ -520,15 +520,39 @@ dann entscheiden.
   damit still beide Overrides, und der LuaLS-Scan des Repos stand auf 5 statt
   0 (vier davon aus `3647a17`, nach dem „auf 0"-Commit hereingekommen und nie
   gescannt). Alles behoben, Scan wieder 0.
-- **documentation.nvim** — `find_map` in `lua/documentation/hover.lua:54` steigt
-  bis zu **24 Verzeichnisebenen** mit je einem `uv.fs_stat` nach
-  `docs/map/module_map.json` auf, **ohne negativen Cache**: `_maps` merkt sich
-  nur erfolgreiche Ladungen. In jedem Projekt ohne generierte Map — hover.nvim
-  selbst ist eines — zahlt jeder einzelne Position-Ask den vollen Aufstieg.
-  Gemessen am 2026-09-02: **24,2 von 26,3 µs der gesamten Pipeline, 92 %**,
-  gegen 1,0 µs für spotlight.nvim und 2,4 µs für migrate.nvim. Dieselbe Form
-  wie 2.4 — der Nutzen entsteht hier, die Arbeit liegt dort. Ein negativer
-  Cache pro Startverzeichnis genügt.
+- ~~**documentation.nvim — der fehlende Negativ-Cache**~~ — **erledigt am
+  2026-09-03** (documentation.nvim `bdfbc9f`). `find_map` stieg bis zu 24
+  Verzeichnisebenen mit je einem `uv.fs_stat` auf und cachte im Fehlschlag
+  nichts; `_maps` merkte sich nur erfolgreiche Ladungen. In jedem Projekt ohne
+  generierte Map — hover.nvim selbst ist eines — zahlte jeder Position-Ask den
+  vollen Aufstieg, um nichts zu beantworten.
+
+  Vor dem Bauen nachgemessen, und die alte Notiz (24,2 von 26,3 µs, 92 %) war
+  zu freundlich. Gegen den echten registrierten Callback, 2000 Wiederholungen:
+
+  | Wo | vorher | nachher |
+  | --- | --- | --- |
+  | hover.nvim/lua/hover/preview, ohne Map | 97,3 µs | **2,9 µs** |
+  | hover.nvim an der Wurzel, ohne Map | 50,9 µs | 2,7 µs |
+  | documentation.nvim, **mit** Map | 117,1 µs | 40,2 µs |
+
+  Der Aufstieg allein war 331,5 µs gegen 1,6 µs für die Namenserkennung —
+  **98 %** des Asks. Der Treffer wird mitgecacht, deshalb bewegt sich auch die
+  dritte Zeile. Der Preis ist eine schmale Staleness: eine Map, die *auftaucht*
+  wo keine war, wird bis `_reset()` nicht bemerkt; eine *neu generierte* ist
+  unberührt, weil der Cache den Pfad hält und das Parsen längst auf mtime
+  schlüsselt. Spec zählt `fs_stat`-Aufrufe statt zu takten (eine Zeitmessung
+  über einen Verzeichnisaufstieg ist ein Flackern auf einem langsamen Runner),
+  sabotage-getestet: ohne Cache 13 Stats beim zweiten Ask.
+
+- **documentation.nvim — `out_dir` wird im Hover ignoriert.** Beim Messen
+  aufgefallen und **nicht** mitgefixt, weil es eine Verhaltensänderung ist:
+  `find_map` verdrahtet `docs/map/module_map.json` fest, während `out_dir`
+  überall sonst konfigurierbar ist (`config/DEFAULTS.lua:27`, Default
+  `docs/map`). Wer ihn umstellt, bekommt **gar keinen** Modul-Hover — und zwar
+  still, was die schlechteste Form ist. Dieselbe Klasse wie überall hier: eine
+  handgeschriebene zweite Kopie von etwas, das die Konfiguration schon weiß.
+  Der Fix ist klein; der Cache-Schlüssel müsste den `out_dir` mittragen.
 - **language.nvim** — die Produktfrage *vor* der Integration: soll ein Druck auf
   `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
   (`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
