@@ -43,7 +43,14 @@ Feature selbst nie erreichbar war (`836a15a`, siehe unten).
 schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. **Alle
 sechs sind abgeschlossen**: A, B, C, D und E gebaut bzw. geschrieben, F
 entschieden statt gebaut — **Zoom nur für Bilder**, PDF-Seiten optional, Text
-gar nicht.
+gar nicht. Dazu **G**, in der Folgesitzung: das Spec, das die Doku gegen die
+Quelle prüft.
+
+**Die Doku hat jetzt denselben Mechanismus wie der Code.** Seit `4e1760f`
+prüft `TESTS/docs_spec.lua` neun Listen der Dokumente gegen die Quelle, die
+sie beschreiben — die Klasse, die an einem Tag viermal die Doku und dreimal
+den Code getroffen hat, fällt ab jetzt beim Testlauf auf. Drei Funde beim
+Einbau, alle behoben.
 
 **Ein eigener Hover braucht seit `c374d5e` kein Plugin mehr.** `setup` nimmt
 ein Feld `contribute`, und zwar genau die Tabelle, die `register` nimmt — die
@@ -227,10 +234,10 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **195 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, registry 64, scope 26, switches 30), gemessen 2026-09-02 nach `3e12c9f` |
+| Specs hover.nvim | **204 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, **docs 9**, registry 64, scope 26, switches 30), gemessen 2026-09-02 nach `4e1760f` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde** — zuletzt vor `c374d5e` gemessen, seither nicht wieder (der Worktree taugt dafür nicht, siehe unten) |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, zweimal auf dem Haupt-Checkout gemessen: Pass `post-b` nach `3e12c9f`, Pass `post-c` nach `4e1760f`. Delta beide Male `+0` |
 | CI | grün auf **ubuntu-latest und windows-latest** (Run `33604859057`) |
 | Helptags | 30 Tags (`hover-contribute` kam mit `c374d5e` dazu) |
 | Doku-Beispiele | 23 ```lua-Blöcke laden, die ausführbaren laufen; 32 dokumentierte `:Hover`-Routen sind alle echt |
@@ -321,6 +328,14 @@ Wirklichkeit lagen. Dieselbe Klasse, eine Stufe schlechter: in Code deckt
 irgendwann eine Spec sie auf, in Doku merkt es niemand. Behoben in `c374d5e`
 und `15837dd`, wo es ging durch Streichen der Zahl — Details unter
 [E](#e-eine-roadmap-datei-unter-docsroadmappersonal--erledigt-2026-09-02).
+
+**Seit `4e1760f` deckt sie auch in der Doku eine Spec auf.**
+`TESTS/docs_spec.lua` fragt neun Behauptungen der Dokumente gegen die Quelle
+ab — Schalternamen, jede ausgeschriebene Schalterzahl, jede `:Hover`-Route in
+beide Richtungen, die beanspruchbaren Zieltypen, die Augroups und die
+Highlight-Gruppen. Damit ist das erste Mal *derselbe* Mechanismus hinter der
+Doku wie hinter dem Code: eine Liste, die von Hand geführt wird, fällt beim
+nächsten `scripts/test.sh` auf. Details unter [G](#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f).
 
 ### Und eine vierte Klasse: eine Funktion, zwei Fragen
 
@@ -429,6 +444,12 @@ Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
 Sechs Punkte, **alle abgeschlossen**: A, B, C, D, E erledigt, F entschieden
 statt gebaut (nur Bilder, siehe dort). Was hier steht, ist jeweils schon
 **nachgesehen** — die Notiz sagt den Befund, nicht nur die Frage.
+
+**[G](#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f)
+kam in der Folgesitzung desselben Tages dazu** — nicht aus dieser Liste,
+sondern der erste Punkt der [persönlichen
+Roadmap](hover.nvim-roadmap.md#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
+weil er die Voraussetzung dafür ist, dass alles Obige dokumentiert *bleibt*.
 
 ### A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**
 
@@ -782,6 +803,53 @@ dieser Stelle PDFs.
 Beides gilt nur fürs Rad. Ein Tastenpaar (`+`/`-`) über dieselbe Leihe wie
 `scroll_keys` hat **keine** dieser Voraussetzungen und ist außerdem die
 kleinere Änderung — sinnvoll als erster Schritt, das Mausrad als zweiter.
+
+### G. Ein Spec, das die Doku gegen die Quelle prüft — **erledigt 2026-09-02** (`4e1760f`)
+
+Nicht aus der Auftragsliste, sondern Punkt 2.1 der persönlichen Roadmap — dort
+als „als Erstes" empfohlen, weil die Klasse an einem Tag viermal die Doku und
+dreimal den Code getroffen hat. `TESTS/docs_spec.lua`, neun Prüfungen:
+
+| Prüfung | Quelle |
+| --- | --- |
+| Schalternamen im Vimdoc bei `hover.set()`, in Reihenfolge | `switches.names()` |
+| jede ausgeschriebene Schalterzahl in *jedem* Dokument | `#switches.names()` |
+| die Schalter-Zeile der README: Zahl und jeder Name als Routenpfad | `switches.spec().implies` |
+| jede `:Hover`-Route, in beide Richtungen, in allen drei Tabellen (README, Vimdoc, `docs/BINDINGS.md`) | `usrcmds.routes()` |
+| die beanspruchbaren Zieltypen im Vimdoc | die deklarierte Union `Hover.Target.type` |
+| diese Union gegen die Dispatch-Kette | `build()` in `init.lua` |
+| die Augroup-Tabelle | `autocmd.group("Hover…")` in der Quelle |
+| die Highlight-Tabelle, **als Paare** | `HL_DEFAULTS` in `float.lua` |
+
+Die Highlight-Prüfung vergleicht Name *und* Ziel: eine Tabelle kann alle drei
+Gruppen führen und eine davon auf die falsche Farbe zeigen lassen.
+
+**Bewusst außen vor: die Integrations-Tabellen.** Sie beschreiben fremde
+Plugins; ein Spec dafür müsste alle sechs laden und prüfte dann die
+Installation dieser Maschine statt das Dokument. Das bleibt eine menschliche
+Behauptung.
+
+**Drei Funde, alle behoben:**
+
+- **`doc/hover.txt` nannte neun beanspruchbare Zieltypen, es sind zehn.**
+  `registry.preview_for(target.type)` läuft *vor* der Dispatch-Kette, für
+  jedes Ziel — `git` eingeschlossen. Ein Plugin kann eine Git-Objekt-ID
+  genauso beanspruchen, wie markdown.nvim `anchor` beansprucht; die Doku sagte
+  ihm, es ginge nicht.
+- **`docs/INTEGRATIONS.md` schrieb `:Hover off`.** Den Befehl gibt es nicht —
+  es ist `:Hover mode off`. Genau die Sorte, die `preview/office.lua` schon
+  einmal hatte (`:Lib hover office on`).
+- **`docs/installation.md`: „the mode and all seven switches"** — auf der
+  Seite, die `:Hover status` erklärt. Es sind neun.
+
+**Sabotage-Test gelaufen:** acht der neun fallen gegen die Dokumente, wie sie
+vor diesem Commit standen; die neunte gegen einen Typ, der in die Union
+aufgenommen wird, ohne einen Zweig zu bekommen, der ihn zeigt.
+
+**Was das nicht kann.** Es prüft Mengen und Zahlen, keine Sätze. Ob eine
+Beschreibung *stimmt*, sagt es nicht — dafür gibt es die Runde durch die Docs.
+Es sagt nur, dass keine Liste hinter der Quelle zurückfällt, und das ist die
+Hälfte, die von allein passiert.
 
 ---
 

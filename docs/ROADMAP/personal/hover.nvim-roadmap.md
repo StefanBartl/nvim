@@ -1,6 +1,8 @@
 # hover.nvim — Roadmap (persönlich)
 
-Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag.
+Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
+in der Folgesitzung ist [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f)
+gebaut und die LuaLS-Messung nachgeholt worden.
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -36,7 +38,27 @@ sind der Anfang jeder Drift, und diese Sitzung hat vier davon gefunden.
 
 ## 2. Was ich als Nächstes bauen würde, in dieser Reihenfolge
 
-### 2.1 Ein Spec, das die Doku gegen die Quelle prüft — klein, und heute vierfach begründet
+### 2.1 Ein Spec, das die Doku gegen die Quelle prüft — **gebaut** (`4e1760f`)
+
+> **Erledigt am 2026-09-02**, in der Folgesitzung.
+> `hover.nvim/TESTS/docs_spec.lua`, neun Prüfungen; die Tabelle dazu steht im
+> [Handover unter G](hover.nvim.md#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f).
+> Die Begründung unten bleibt stehen — sie ist der Wert dieses Eintrags, nicht
+> der Haken.
+>
+> **Was der Einbau gefunden hat**, alles behoben im selben Commit: das Vimdoc
+> nannte neun beanspruchbare Zieltypen statt zehn (`git` fehlte, obwohl
+> `registry.preview_for` auch dafür läuft), `docs/INTEGRATIONS.md` nannte den
+> Befehl `:Hover off`, den es nicht gibt, und `docs/installation.md` sprach
+> von „all seven switches" auf der Seite, die `:Hover status` erklärt.
+>
+> **Zwei Abweichungen vom Vorschlag unten.** Die Zieltypen werden nicht gegen
+> `classify` geprüft, sondern gegen die deklarierte Union `Hover.Target.type`
+> — `classify` erzeugt neun der zehn, `git` kommt aus `bare_git`, und geprüft
+> gehört, was der Dispatcher zu sehen bekommt. Dazu kamen drei Prüfungen, die
+> hier nicht standen: jede ausgeschriebene Schalterzahl in jedem Dokument, die
+> Augroup-Tabelle und die Highlight-Tabelle. Die letzten beiden, weil genau
+> dort der jüngste Fehler saß (`87a1017`).
 
 **Der Anlass ist gezählt, nicht befürchtet.** Am 2026-09-02 waren gleichzeitig
 falsch: die Schalterliste von `hover.set()` im Vimdoc (sieben von neun), drei
@@ -67,6 +89,10 @@ Installation statt die Doku.
 die sich hier vierfach wiederholt hat, wird ab dann laut. **Empfehlung: als
 Erstes** — es ist die Voraussetzung dafür, dass alles Folgende dokumentiert
 *bleibt*, statt dokumentiert worden zu sein.
+
+*Tatsächlich geworden: ein Spec-File, acht Extraktoren, neun Prüfungen — die
+Schätzung lag zu niedrig, weil beim Schreiben drei weitere prüfbare Listen
+auffielen. Nächster Punkt der Reihenfolge ist damit 2.2.*
 
 ### 2.2 Zoom für Bilder — entschieden, nicht gebaut
 
@@ -149,7 +175,7 @@ dann entscheiden.
 
 | Was | Warum offen |
 | --- | --- |
-| **LuaLS** | seit `c374d5e` nicht neu gemessen. Der Worktree taugt nicht dafür (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`); gehört auf den Haupt-Checkout. |
+| ~~**LuaLS**~~ | **zu.** Zweimal auf dem Haupt-Checkout gemessen: Pass `post-b` nach `3e12c9f`, Pass `post-c` nach `4e1760f`. Beide 0 Befunde, Delta `+0`. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
 | **Office-Pfad von Hand** | `docs/MANUAL-EVIDENCE.md`: seit der Cache-Änderung `bba2064` nicht wieder durchgespielt. Keine CI kann das. |
 | **Demo-GIF** | `REL-09`, der letzte offene 🟢 des Release-Gates. **Braucht dich** — ich kann nicht aufnehmen. |
 | **`on_request` gegen einen laufenden Daemon** | einmal gemacht (Tabelle im Handover), aber genau dort saß `836a15a`, und keine CI hat einen Container-Daemon. |
