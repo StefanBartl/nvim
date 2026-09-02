@@ -100,8 +100,8 @@ Toggle still zurueckdrehen. `:Lsp hints clear <ft>` nimmt den Override zurueck.
 
 | Key | Mode | Effect | Option/Source |
 | --- | --- | --- | --- |
-| `<leader>tl` | n | Code-Action-Indikator global umschalten | `lightbulb_toggle` |
-| `<leader>tL` | n | Code-Action-Indikator fuer dieses Filetype umschalten | `lightbulb_toggle_filetype` |
+| `<leader>tb` | n | Code-Action-Indikator global umschalten | `lightbulb_toggle` |
+| `<leader>tB` | n | Code-Action-Indikator fuer dieses Filetype umschalten | `lightbulb_toggle_filetype` |
 
 Dieselbe Global/Shift-Paarung wie bei den Inlay Hints, und aus demselben Grund:
 es ist derselbe Schaltertyp. Der Indikator markiert die Zeile, sobald
@@ -244,3 +244,11 @@ ganz diesem Plugin gehoert.
   `<leader>tL`) aus Roadmap-M2 aufgenommen. Bei der Gelegenheit die
   Preset-Zeile korrigiert: sie stand noch auf 44/28 und war seit QW3 (45/29)
   falsch; jetzt 47/31.
+- 2026-09-02: dieselben beiden auf `<leader>tb` / `<leader>tB` verschoben.
+  `<leader>tl` war seit dem Tag der Aufnahme doppelt vergeben: NvChads
+  Tabline bindet es als "Tab nach links", Gegenstueck zu `<leader>tr`. Wer
+  von beiden gewinnt, haengt an der Ladereihenfolge — also war immer eine der
+  zwei Funktionen still kaputt. Das `tr`/`tl`-Paar ist positionell und kann
+  nicht weg, ein Merkbuchstabe fuer "lightbulb" schon. Frei waren zu dem
+  Zeitpunkt `ta tb td ti tj tk tm tu ty tz` (geprueft gegen nvim-config,
+  NvChad-Defaults und alle Repos unter `E:\repos`).
