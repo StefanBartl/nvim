@@ -11,6 +11,7 @@
     - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
     - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
     - [2.5 Ein Memo für Position-Previews — **gemessen, und die Antwort ist nein**](#25-ein-memo-fr-position-previews-gemessen-und-die-antwort-ist-nein)
+    - [2.6 Echter Zoom — **gebaut, außer der PDF-Hälfte**](#26-echter-zoom--gebaut-ausser-der-pdf-hlfte-9fba190)
   - [3. Messungen, die offen sind](#3-messungen-die-offen-sind)
   - [4. Aufträge, die woanders liegen](#4-auftrge-die-woanders-liegen)
   - [5. Geprüft und *nicht* aufgenommen](#5-geprft-und-nicht-aufgenommen)
@@ -52,10 +53,22 @@ Office-**Sweep** (eine Datei zurückdatieren), die **Texthälfte** des Resize
 (`:Hover resize` über einer Textdatei), und das **Demo-GIF** — siehe
 [Abschnitt 3](#3-messungen-die-offen-sind).
 
-**Abschnitt 2 ist damit leer.** 2.1 bis 2.3 sind gebaut, 2.4 liegt in
-gopath.nvim, 2.5 ist gemessen und die Antwort war nein. Was als Nächstes zu
-bauen wäre, steht jetzt in [Abschnitt 4](#4-auftrge-die-woanders-liegen) —
-zwei der Aufträge dort sind gemessen, klein, und ihr Nutzen entsteht hier.
+**Abschnitt 2 ist abgearbeitet.** 2.1 bis 2.3 sind gebaut, 2.4 liegt in
+gopath.nvim, 2.5 ist gemessen und die Antwort war nein.
+
+**Dazugekommen ist danach der echte Zoom** (`9fba190`), der nicht aus
+Abschnitt 2 stammt, sondern aus der Repo-Roadmap — er steht jetzt als
+[2.6](#26-echter-zoom--gebaut-ausser-der-pdf-hlfte-9fba190) hier, weil dort
+nur bleiben soll, was noch offen ist. Was als Nächstes zu bauen wäre, steht
+in [Abschnitt 4](#4-auftrge-die-woanders-liegen) — zwei der Aufträge dort
+sind gemessen, klein, und ihr Nutzen entsteht hier.
+
+**Kurzfristig offen sind vier Kleinigkeiten aus der Zoom-Sitzung**, und die
+stehen im [Handover](hover.nvim.md#direkt-offen-nach-9fba190), nicht hier:
+LuaLS nachmessen, `docs/FEATURES/ZOOM.md` schreiben (und `RESIZE.md` plus
+`docs/ROADMAP.md` dabei mitziehen), eine Evidenzzeile, und eine echte kleine
+Fehlersuche — `scripts/minimal_init.lua` lädt images.nvim nicht in die Spec,
+weshalb der Ausschnitt selbst ungedeckt ist.
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -288,6 +301,63 @@ es wirkt. Steht als Spec da, nicht als Annahme.
 
 ---
 
+### 2.6 Echter Zoom — **gebaut, außer der PDF-Hälfte** (`9fba190`)
+
+> **Erledigt am 2026-09-02**, und nicht aus dieser Liste: der Punkt stand in
+> `hover.nvim/docs/ROADMAP.md` als „a real zoom — a cropped detail, panned"
+> und ist auf deine Ansage vorgezogen worden. Übrig ist dort jetzt nur noch
+> der **scharfe PDF-Zoom**.
+>
+> `:Hover zoom [in|out|reset]`, Schwenken über `h/j/k/l` (geliehen nur solange
+> gezoomt) und `:Hover pan`. `hover.zoom(delta)` und `hover.pan(dx, dy)` sind
+> öffentlich. Gebaut auf `images.convert.crop`, das dafür in images.nvim
+> entstanden ist (`22213de`) — hover ruft `magick` nicht selbst auf, und ein
+> Ausschnitt gehört neben `resize` und `redact`.
+>
+> **Die Messung, die den Entwurf entschieden hat** — und sie hat der
+> Erwartung widersprochen, wie so oft in diesem Repo. Windows, 2026-09-02:
+>
+> | Operation | je Schritt |
+> | --- | --- |
+> | `magick`-Prozessstart allein | 71 ms |
+> | Ausschnitt + einpassen, 1920×1080-Screenshot | **258 ms** |
+> | dasselbe, dichtes Bild | 502 ms |
+> | dasselbe, 4K-Quelle | ~900 ms |
+> | PDF-Seite neu rastern bei 2× DPI | **3,3 s** |
+> | *zum Vergleich:* eine PDF-Seite, wie sie längst ausgeliefert wird | 1150 ms |
+>
+> Kein Format- oder Kompressionstrick brachte es unter ~150 ms, und mehrere
+> Ausschnitte in **einem** Prozess sparten nur den Start (marginal ~153 ms).
+> Daraus zwei Schlüsse: ein Zoomschritt ist **kein Regler zum Gedrückthalten**
+> — aber er ist *schneller* als die PDF-Seitenvorschau, die es längst gibt,
+> also gehört er in genau deren Maschinerie (async, Platzhalter nach der
+> Gnadenfrist, Cache über die Sitzung, Kehrwoche bei `VimLeavePre`).
+>
+> **Die Tastenaufteilung folgt derselben Kostenlogik wie bei Resize.** Zoom
+> selbst bekommt *keine* Taste: eine Viertelsekunde je Schritt macht es zur
+> ausdrücklichen Handlung, und die leben hier auf `:Hover`. Schwenken bekommt
+> vier — auf der engsten Leih-Bedingung des Plugins und mit dem stärksten
+> Argument, das eine Motion je hatte: ungebunden bewegt `h` den Cursor, und
+> die Abweisung hängt an `CursorMoved` — der Tastendruck **nimmt das Bild
+> weg**. Das meint niemand.
+>
+> **Die Decke wird beantwortet statt gefunden**, umgekehrt zu Resize: dort
+> weiß nur das Terminal, wo der Platz endet, hier sind es die Pixel der
+> Quelle. Ein abgelehnter Schritt kostet also keinen `magick`-Lauf.
+>
+> **Zwei Funde nebenbei, beide behoben:** Scrollen setzte einen resizeten
+> Hover auf die konfigurierte Größe zurück (`scroll` baute seine
+> `preview_opts` selbst und wusste nichts vom Resize-Level — vierte
+> handgeführte Kopie derselben Klasse, jetzt `current_preview_opts()`), und
+> `keys.borrow` nimmt eine Handler-Tabelle statt eines dritten
+> Positionsarguments.
+>
+> **Was fehlt:** die Begründungsseite `docs/FEATURES/ZOOM.md`, eine
+> Evidenzzeile, und die Spec-Deckung des Ausschnitts selbst — siehe
+> [Handover](hover.nvim.md#direkt-offen-nach-9fba190).
+
+---
+
 ### 2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)
 
 > **Erledigt am 2026-09-02.** `registry.contributors()`, zwei Health-Zeilen,
@@ -409,6 +479,7 @@ dann entscheiden.
 | ~~**LuaLS**~~ | **zu**, aber mit einem neuen Vorbehalt. Fünfmal auf dem Haupt-Checkout gemessen: `post-b` nach `3e12c9f`, `post-c` nach `4e1760f`, `post-d` nach `aca73fa`, `post-e`/`post-e2` nach `b7c4c45`, `post-f` nach `e62f5e9`. **`post-e` meldete 1 Befund auf Quelltext, den der Commit nicht angefasst hatte; `post-e2` auf identischem Baum meldete 0.** Der Scan ist also nicht deterministisch — ein einzelner `+1` ist kein Beweis, ein zweiter Lauf kostet eine Minute und entscheidet. Die Stelle ist mit `e62f5e9` festgenagelt. Die Regel bleibt: **nicht den Worktree scannen** (doppelte Library-Injektion → ~100 unechte `duplicate-doc-field`). |
 | ~~**Office-Pfad von Hand**~~ | **zu, bis auf die Kehrwoche.** Am 2026-09-02 durchgespielt und am selben Tag ein zweites Mal bestätigt: Konvertierung, Badge, und der Cache, der die Sitzung überlebt (Neustart → kein zweiter LibreOffice-Start). Offen bleibt allein der **altersbasierte Sweep** (`office.cache_days`, Default 7) — eine Datei dort zurückdatieren und irgendein Office-Dokument hovern, mehr ist es nicht. |
 | **Resize von Hand** | **halb zu.** Die Bildhälfte ist am 2026-09-02 gesehen worden — das Bild folgt der Fläche, statt dass der Rahmen um ein stehendes Bild wächst. Offen ist die **Texthälfte**: `:Hover resize` über einer Textdatei, und *mehr Zeilen* im Float. Genau die Unterscheidung, für die umbenannt wurde, und die, bei der eine Geometrie-Zusicherung am wenigsten sagt. |
+| **Zoom von Hand** | **offen.** Gemessen ist die Arithmetik, und außerhalb der Suite ist bestätigt, dass die Ausschnitte geschrieben werden und schrumpfen wie berechnet. *Gesehen* hat den vergrößerten Ausschnitt im Terminal noch niemand — und ob `h/j/k/l` sich beim Schwenken richtig anfühlen, sagt ohnehin nur eine Hand. |
 | **Demo-GIF** | `REL-09`, der letzte offene 🟢 des Release-Gates. **Braucht dich** — ich kann nicht aufnehmen. |
 | ~~**`on_request` gegen einen laufenden Daemon**~~ | **zu.** Am 2026-09-02 gegen Docker Engine 29.5.3 gelaufen, jetzt als Sonde (`hover.nvim/scripts/onrequest_probe.lua`) statt ad hoc, mit der Zeile in `docs/MANUAL-EVIDENCE.md` statt nur im Handover. 566/558/294/0 ms, Engine-Aufrufe 2/2/1/0, auf dem automatischen Trigger jedes Mal still. Wieder fällig, wenn sich am `on_request`-Pfad etwas ändert — der Lauf kostet eine Minute. |
 
@@ -474,7 +545,8 @@ dann entscheiden.
   [2.2](#22-resize--gebaut-und-unterwegs-umbenannt).
 - **Ein *echter* Zoom für Text.** Der bleibt abgelehnt und ist nicht dasselbe:
   Ausschnitt vergrößern kann Neovim für Text nicht, weil die Zellgröße dem
-  Terminal gehört. Für Bilder steht er auf der Repo-Roadmap.
+  Terminal gehört. **Für Bilder ist er seit `9fba190` gebaut** — siehe
+  [2.6](#26-echter-zoom--gebaut-ausser-der-pdf-hlfte-9fba190).
 - **`contribute` auch für Plugins.** Alle Nutzerbeiträge teilen sich den Namen
   `"user"`; zwei Aufrufer löschen einander still. Ein Plugin hat `register` mit
   eigenem Namen, und das ist kein Umweg, sondern der Punkt.

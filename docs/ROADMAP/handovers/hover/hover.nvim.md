@@ -40,13 +40,13 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `8474d14`:**
+**Gemessen nach `9fba190`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **234 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30) |
+| Specs | **251 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 17**) |
 | `stylua --check` / `luacheck` | sauber (30 Dateien) |
-| LuaLS (`scan.sh`, echte injizierte Library) | 0 Befunde, Pass `resize-post2` — **mit Vorbehalt**, siehe Roadmap §3 |
+| LuaLS (`scan.sh`, echte injizierte Library) | 0 Befunde, Pass `resize-post2` (nach `bbd9dec`). **Nach `9fba190` noch nicht gelaufen** — siehe Offene Punkte |
 | CI | grün auf beiden Runnern |
 | Helptags | 33 |
 
@@ -55,7 +55,8 @@ Bilder und PDF-Seiten gezeichnet, Office-Dokumente über LibreOffice (opt-in),
 URLs mit optionalem Abruf, Bare Paths mit Zeilen und Ranges
 (`init.lua:42`, `file.lua:10-20`), Git-Objekte auf Nachfrage,
 Position-Previews fremder Plugins, `:Hover why`, `:Hover pin`, Resize für
-**jeden** Hover (`+`/`-` über Bildern, Rad und `:Hover resize` überall), ein
+**jeden** Hover (`+`/`-` über Bildern, Rad und `:Hover resize` überall),
+**echter Zoom** für Bilder (`:Hover zoom`, `h/j/k/l` zum Schwenken), ein
 Schalter-Chooser über lib.nvims UI-Kit — und seit
 `c374d5e` ein eigener Hover **ohne Plugin drumherum** (`setup({ contribute })`).
 
@@ -130,6 +131,19 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
   Haupt-Checkout nachziehen, dann den scannen.
 - **Ein voller Config-Start headless hängt still.** Auch mit Windows-Pfaden.
   Isoliert prüfen (`-u NONE` plus `set rtp+=`) oder interaktiv.
+- **In einer Spec ist `assert` *luassert*, nicht Lua.** Es gibt mehr als
+  einen Wert zurück, also wird `nvim_win_get_position(assert(float.win()))`
+  zu einem zweiten Argument, das die API ablehnt — im `pcall` sieht das aus
+  wie ein fehlgeschlagener Test, nicht wie ein Arity-Fehler. Immer erst an
+  ein `local` binden.
+- **Heredocs mit viel Inhalt sind hier eine Falle.** Ein `<<'PY'`-Block hat
+  am 2026-09-02 ein echtes **NUL-Byte** in `preview/media.lua` geschrieben
+  (genau der Fehler, den die Extraktion aus lib.nvim einmal beseitigt hatte),
+  und ein zweiter ist ab ~140 Zeilen an der Terminator-Erkennung
+  gescheitert. Größere Patches als Datei schreiben und mit `python <datei>`
+  laufen lassen; danach `open(f,'rb').read().count(bytes([0]))` prüfen.
+- **`convert` auf PATH ist Windows' eigenes `convert.exe`**, nicht
+  ImageMagick. Immer `magick` aufrufen.
 - **Mauseingaben lassen sich headless nicht treiben.** `nvim_input_mouse`
   feuert ohne angehängtes UI **null** Mappings; `feedkeys` mit demselben
   Termcode feuert eines. Was ein echtes Rad angeht, ist deshalb Handprüfung.
@@ -154,18 +168,79 @@ Wenig, und das meiste bewusst. Es steht **einmal**, in der
 | --- | --- |
 | Was tut es, wie konfiguriere ich es | `README.md` im Repo |
 | Welche Taste, welches Kommando, welcher Autocmd | `docs/BINDINGS.md` |
-| **Warum** ist das so gebaut | `docs/FEATURES/` — QUIET, BARE-PATHS, CONTRIBUTIONS, RESIZE |
+| **Warum** ist das so gebaut | `docs/FEATURES/` — QUIET, BARE-PATHS, CONTRIBUTIONS, RESIZE (**ZOOM.md fehlt noch**, siehe Roadmap §3) |
 | Wer ist wie angebunden, was fällt ohne ihn aus | `docs/INTEGRATIONS.md` |
 | Was ist bewusst *nicht* gebaut | `docs/ROADMAP.md` (an Mitlesende) |
 | Was kann keine CI prüfen | `docs/MANUAL-EVIDENCE.md` |
 | Was baue ich als Nächstes, was ist unentschieden | [hover.nvim-roadmap.md](hover.nvim-roadmap.md) |
 | Welche Tasten/Kommandos/Autocmds in **dieser** Config | `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/hover.nvim.md` |
 
+## Direkt offen nach `9fba190`
+
+Drei kleine Reste aus der Zoom-Sitzung, absichtlich hier und nicht in der
+Roadmap, weil sie in Minuten zu erledigen sind und nichts zu entscheiden ist:
+
+1. **LuaLS nach `9fba190` messen.** Der Pass steht noch auf `resize-post2`
+   (nach `bbd9dec`). Der Zoom hat viel Code gebracht, und die Regel „der Scan
+   sieht `TESTS/` mit" hat in dieser Sitzung schon zweimal zugeschlagen:
+   ```bash
+   cd C:/Users/bartl/AppData/Local/nvim
+   REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh zoom-post hover.nvim
+   python scripts/luals-scan/compare.py resize-post2 zoom-post
+   ```
+2. **`docs/FEATURES/ZOOM.md` schreibt sich noch nicht von selbst.** README,
+   Vimdoc und `docs/BINDINGS.md` sind vollständig; die Begründungsseite fehlt,
+   und der Stoff dafür steht in der Commit-Message von `9fba190` und in den
+   Modulköpfen von `hover.zoom` und `preview.media.zoomed`. `RESIZE.md` sagt
+   noch, ein echter Zoom stehe „on ROADMAP.md" — das stimmt jetzt nur noch für
+   die PDF-Hälfte und ist beim Schreiben mitzuziehen. Ebenso `docs/ROADMAP.md`:
+   der Eintrag „A real zoom — a cropped detail, panned" ist zur Hälfte gebaut,
+   übrig ist nur der **scharfe PDF-Zoom**.
+3. **Eine Zeile in `docs/MANUAL-EVIDENCE.md` für den Zoom.** Gemessen ist die
+   Arithmetik und dass die Ausschnitte geschrieben werden; *gesehen* hat den
+   vergrößerten Ausschnitt im Terminal noch niemand.
+
+Und ein vierter Punkt, der eine echte kleine Fehlersuche ist:
+
+4. **`scripts/minimal_init.lua` lädt images.nvim nicht in die Spec.** Ein
+   `add_optional("IMAGES_NVIM_DIR", ...)` ist dort eingebaut, und direkt
+   aufgerufen funktioniert es (`nvim -u scripts/minimal_init.lua -c 'lua ...'`
+   meldet `images.convert=true`). Unter `bash scripts/test.sh` meldet dieselbe
+   Prüfung **innerhalb** der Spec `require=false` und `rtp has images: false`.
+   Folge: der Spec `hover.zoom … really cuts the source` läuft als *Pending*
+   statt zu prüfen — die Zoom-Arithmetik und die Leih-Bedingungen sind
+   gedeckt, **der Ausschnitt selbst nicht**. Er ist von Hand bestätigt
+   (Sonde, siehe unten), aber die Suite deckt ihn nicht.
+   Zum Nachstellen: eine Datei `TESTS/zz_probe_spec.lua` mit einem `it`, das
+   `vim.o.runtimepath:find("images")` und `pcall(require,"images.convert")`
+   ausgibt, dann einmal mit und einmal ohne `IMAGES_NVIM_DIR` laufen lassen.
+
+**Der Ende-zu-Ende-Beweis, den es gibt**, außerhalb der Suite gegen ein echtes
+ImageMagick gelaufen (1200×800-Bild, Quadranten in Rot und Blau):
+
+```
+level 1 -> 800x533+200+133      zoom in #1 -> geschrieben: 800x533
+level 2 -> 533x355+333+222      zoom in #2 -> 533x355 800x533
+level 3 -> 355x237+422+281      zoom in #3 -> 355x237 533x355 800x533
+Mitte 0,0 auf Level 2 -> 533x355+0+0   (nicht negativ, ins Bild geschoben)
+pan rechts/runter/links -> je ein neues 355x237
+reset -> ganzes Bild;  pan ohne Zoom -> false
+```
+
+---
+
 ## Zuletzt passiert
 
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `9fba190` — **echter Zoom**: `:Hover zoom [in|out|reset]`, Schwenken über
+  `h/j/k/l` (nur solange gezoomt) und `:Hover pan`. Baut auf
+  `images.convert.crop`, das dafür in images.nvim entstand (`22213de`).
+  Nebenbei zwei Funde behoben: Scrollen setzte einen resizeten Hover auf die
+  konfigurierte Größe zurück, und `keys.borrow` nimmt jetzt eine
+  Handler-Tabelle statt eines dritten Positionsarguments.
+- `1234bb2` — die Resize-Handprüfung ist bestätigt (Bildhälfte).
 - `8474d14` — `docs/FEATURES/RESIZE.md`: warum es Resize heißt und warum die
   drei Wege verschieden gebunden sind.
 - `8ec5b40`, `bbd9dec` — **`zoom` heißt `resize`**, und gilt jetzt für jeden
