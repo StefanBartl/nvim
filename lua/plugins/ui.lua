@@ -38,7 +38,11 @@ return {
   {
     "folke/noice.nvim",
     event = "VeryLazy",
-    cmd = { "Noice", "NoiceAll", "NoiceHistory", "NoiceDismiss", "NoiceError" },
+    -- `NoiceErrors`, Plural: noice builds its single commands from the keys
+    -- of its command table, and that key is `errors`. `NoiceError` was a
+    -- stub that no plugin command ever replaced -- it loaded noice, did
+    -- nothing, and answered E492 on the second call.
+    cmd = { "Noice", "NoiceAll", "NoiceHistory", "NoiceDismiss", "NoiceErrors" },
     opts = require("config.noice"),
     dependencies = {
       "MunifTanjim/nui.nvim",

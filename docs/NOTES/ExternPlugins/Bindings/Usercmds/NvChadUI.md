@@ -12,6 +12,19 @@ Zwei Quellen: die Upstream-Plugin-Commands aus (der lokal überschriebenen)
 | Command | Quelle | Wirkung |
 |---|---|---|
 | `:MasonInstallAll` | [lua/nvchad/au.lua](../../../../../lua/nvchad/au.lua) (lokale Override-Kopie von `nvchad/au.lua`, siehe [Autocmds/NvChadUI.md](../Autocmds/NvChadUI.md)) | `require("nvchad.mason").install_all()` — installiert alle in NvChad-Config referenzierten Mason-Pakete. |
+| `:Nvdash` | `lazy/ui/lua/nvchad/init.lua` | Toggle des NvChad-Dashboards: ist es offen (`vim.g.nvdash_displayed`), schließt `tabufline.close_buffer` seinen Buffer, sonst öffnet `nvchad.nvdash.open()`. |
+| `:NvCheatsheet` | `lazy/ui/lua/nvchad/init.lua` | Toggle des NvChad-Cheatsheets: ist es offen (`vim.g.nvcheatsheet_displayed`), `:bw`, sonst `require("nvchad.cheatsheet." .. config.cheatsheet.theme)()`. Das Theme kommt aus `chadrc`. |
+
+Beide Toggles sind **nicht** gebunden — es gibt in dieser Config keine Taste
+für `:Nvdash` oder `:NvCheatsheet`; sie sind nur über die Command-Zeile
+erreichbar.
+
+Eine Namensnotiz, die beim Prüfen aufgefallen ist: das Repo heißt bei
+lazy.nvim schlicht `ui` (`NvChad/ui`), dieses Blatt heißt `NvChadUI`. Die
+Eigentümerspalte von `:Bindings check` nennt für die beiden folglich `ui`,
+und kein Auflösungsschritt verbindet die zwei Namen automatisch — dieselbe
+Stamm-gegen-Reponame-Frage, die auch `Telescope` → `telescope.nvim` und
+`NeoTree` → `neo-tree.nvim` betrifft.
 
 ## [custom] `:UI` — Runtime-UI-Kontrolle
 

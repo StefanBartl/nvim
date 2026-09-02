@@ -1,10 +1,24 @@
 # conform.nvim — User-Commands
 
-`conform.nvim` selbst ist eine reine Lib ohne eigene Usercmds oder Keymaps
-(siehe [conform.nvim README](https://github.com/stevearc/conform.nvim) —
-kein `user_commands`-Abschnitt, keine `vim.keymap.set`-Aufrufe im Plugin-Code).
-Alles, was hier dokumentiert ist, ist daher **[custom]** — eine eigene
-Wrapper-Schicht dieser Config um `require("conform")`.
+`conform.nvim` bringt **ein** eigenes Command mit und keine Keymaps (keine
+`vim.keymap.set`-Aufrufe im Plugin-Code). Alles Weitere hier ist **[custom]**
+— eine eigene Wrapper-Schicht dieser Config um `require("conform")`.
+
+## [default] Aus dem Plugin selbst
+
+| Command | Quelle | Wirkung |
+|---|---|---|
+| `:ConformInfo` | `lazy/conform.nvim/plugin/conform.lua` | `require("conform.health").show_window()` — Fenster mit den für den aktuellen Buffer konfigurierten Formattern, ihrem Auflösungsstatus (gefunden / nicht im `PATH`) und dem Log. Der schnellste Weg zur Frage „warum formatiert das nicht". |
+
+Registriert wird es aus dem `plugin/`-Verzeichnis des Plugins, also sobald
+lazy.nvim conform lädt — nicht erst durch `conform.setup()`.
+
+Frühere Fassungen dieses Blattes behaupteten, conform.nvim habe „keine
+eigenen Usercmds". Das war falsch und ist von `:Bindings check` gefunden
+worden: `:ConformInfo` stand als undokumentiertes Live-Command im Bericht,
+mit `conform.nvim` in der Eigentümerspalte.
+
+## Die eigene Wrapper-Schicht
 
 Zwei Setup-Stellen rufen `conform.setup()` auf (letzter Aufruf gewinnt):
 
