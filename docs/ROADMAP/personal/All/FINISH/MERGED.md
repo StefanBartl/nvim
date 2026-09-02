@@ -41,5 +41,13 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
   - [ ] Generell soll das Prinzip herrschen: `Nicht "so viel wie möglich" in die docs, sondern nur das, was für User und Devs auch tatsächlich interessant sein kann. Der Rest nach WKDBooks/Deveolpment/wkdbook-myplugins/ - da können auch reine informations docs ausgelagert werden, die entwedet "zu tief" gehen für normale repo docs oder weder für devs noch für user einen naheliegenden Mehrwert haben. wkdbook-myplugins ist kein "Downgrade", sondern meine interne Notizensammlung`
   - [ ] Das gleiche mit den Kommentaren im Source code.
   - [ ] C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS muss durch gecheckt werden. Dies soll ja CHeatsheet für bindings sein, in manchen files stehen aber mehr infos drinnen, teilweiese sogar roadmap/handover notes usw... Wenn die infos dort drinnen wichtig sind, dann gehören sie ind die docs des repos nicht zu mienen bindings doc
+  - [ ] In jedem PLugin, wenn eine api angeboten wird, dann einen /docs/Usecases/** (oder so ähnlich) dazu erstellen
+  - [ ] Folder wir worekflow/usecases könnten eine Overview.md oder so ähnlich haben, die auf alle usecases files vewreist und diese kurz beschreibt., so soll bessere übersicht herrschenn und die README.-md kann auf diese übersicsfiles vewreiesen, anstsatt beispiehaft auf irgendeine file des folders
+  - [ ] Die README.md ist wichtig: es ist dass, was die devs/users als erstes sehen und wo wisie priomär iohre informationen beziehen bevor sie sich entscheiden ob die da splugin installieren. daher sollte dort auch ein guters Konzept ver folgt werden:
+    - [ ] Alle sollen "Alpha stagge" disclaimer haen, breaking changes müssen erwartet werden
+    - [ ] Einmleitend hinweiße auf 2-3 repos aus emeiner plugin sammlung
+    - [ ] ASCII-Art Block + passende Badges
+    - [ ] Hinweis auf workflow/usecase/api usw... files in der docs um zu zeigen: Wenn du m öchtest, die docs isnf gut ausgebaut, hier kannst du infos bekommen
+    - [ ] ....
 
 ---

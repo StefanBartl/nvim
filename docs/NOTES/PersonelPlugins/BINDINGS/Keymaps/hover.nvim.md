@@ -46,14 +46,17 @@ Kombination. **Hier nicht gesetzt.**
 | `<M-PageUp>`, `<C-Up>` | n | zurück | `scroll_keys.up` | nur scrollbar |
 | `+` | n | Float einen Schritt (×1,25) größer | `resize_keys.larger` | nur Hovers **mit Bild** |
 | `-` | n | einen Schritt kleiner | `resize_keys.smaller` | nur Hovers **mit Bild** |
-| `h` | n | vergrößerten Ausschnitt nach links schwenken | `pan_keys.left` | nur solange **gezoomt** |
-| `l` | n | nach rechts | `pan_keys.right` | nur solange gezoomt |
-| `k` | n | nach oben | `pan_keys.up` | nur solange gezoomt |
-| `j` | n | nach unten | `pan_keys.down` | nur solange gezoomt |
+| `<M-z>` | n | einen Schritt in das Bild hinein | `zoom_keys.into` | Hovers, deren Bild **zoombar** ist |
+| `<M-Z>` | n | einen Schritt heraus | `zoom_keys.out` | wie oben |
+| `<M-R>` | n | zurück zum ganzen Bild | `zoom_keys.reset` | wie oben |
+| `h` | n | vergrößerten Ausschnitt nach links bewegen | `nav_keys.left` | nur solange **gezoomt** |
+| `l` | n | nach rechts | `nav_keys.right` | nur solange gezoomt |
+| `k` | n | nach oben | `nav_keys.up` | nur solange gezoomt |
+| `j` | n | nach unten | `nav_keys.down` | nur solange gezoomt |
 
-Reihenfolge beim Binden: Dismiss vor Open vor Scroll vor Resize vor Pan — eine
-Taste, die in zwei Listen steht, wird einmal genommen, und zwar für die
-Bedeutung, die immer gilt.
+Reihenfolge beim Binden: Dismiss vor Open vor Scroll vor Resize vor Zoom vor
+Nav — eine Taste, die in zwei Listen steht, wird einmal genommen, und zwar für
+die Bedeutung, die immer gilt.
 
 ## Kollisionen — was man wissen muss
 
@@ -64,12 +67,19 @@ Bedeutung, die immer gilt.
 | `gf` | verdrängt das Vim-Builtin; gewollt, weil das Float die Datei bereits aufgelöst hat, auch truncated und mit `:line:col` |
 | `<C-Down>` / `<C-Up>` | bewusst statt `<M-Down>`/`<M-Up>` (verbreitetes „move line") |
 | `h` `j` `k` `l` | **nur während gezoomt** keine Cursorbewegung. Ohne diese Leihe würde `h` über einem vergrößerten Bild den Cursor bewegen und damit das Float wegnehmen |
+| `<M-z>` `<M-Z>` `<M-R>` | nichts — Alt-Akkorde, die hier nichts verdrängen. `<M-r>` (klein) gehört NeoTree; das ist ein anderer Akkord |
 
 **Warum `+`/`-` nur bei Bildern, das Rad aber überall:** das ist eine
 Entscheidung über den *Preis* einer Taste, keine über die Fähigkeit — begründet
 in `hover.nvim/docs/FEATURES/RESIZE.md`. Praktisch heißt es: auf einem
 Text-Hover sind `+` und `-` frei und behalten ihre Zeilenbewegung; der
 Tastaturweg dorthin ist `:Hover resize`.
+
+**Und warum der Zoom Alt-Akkorde bekommt und keine blanken Tasten:** derselbe
+Preis-Gedanke, andere Antwort. Ein Zoom-Schritt kostet ~258 ms, taugt also
+nicht zum Gedrückthalten — deshalb gab es lange gar keine Taste. Der Einwand
+galt aber `+`/`-`, echten Motions. `<M-z>` verdrängt nichts, also trägt der
+Handel hier. Begründung in `hover.nvim/docs/FEATURES/ZOOM.md`.
 
 ## Reservierte Akkorde in dieser Config
 
@@ -81,6 +91,7 @@ Aussage über **diese** Config, nicht über das Plugin.
 | `<M-->` | **vergeben** an cascade.nvim (Bullet Points) |
 | `<M-+>` | frei, aber ohne Partner — ein Regler mit einer Richtung ist keiner |
 | `<M-ScrollWheelUp/Down>` | **vergeben** — hover.nvims Default fürs Rad |
+| `<M-z>` / `<M-Z>` / `<M-R>` | **vergeben** — hover.nvims Zoom seit `efafb82`. Vor der Vergabe gegen diese Config geprüft: frei. `<M-r>` klein gehört NeoTree und bleibt unberührt |
 | `<S-+>` / `<C-S-+>` und Gegenstücke | frei, **aber ungeprüft** — siehe Notes |
 
 ## Notes
@@ -107,6 +118,13 @@ Aussage über **diese** Config, nicht über das Plugin.
 
 ## Changelog
 
+- 2026-09-02 (5): **Zoom-Tasten und `pan` heißt `nav`** (hover.nvim
+  `efafb82`). `<M-z>` / `<M-Z>` / `<M-R>` sind neu und geliehen, sobald das
+  Bild überhaupt zoombar ist — weiter als die `h/j/k/l`-Bedingung, weil
+  Alt-Akkorde nichts verdrängen und `out`/`reset` bei Stufe 0 ohnehin
+  ablehnen. `pan_keys` heißen `nav_keys`, die Route `:Hover pan` heißt
+  `:Hover nav`; umbenannt statt aliasiert, weil ein Alias für eine umbenannte
+  Operation genau der Bug von `bd72836` war.
 - 2026-09-02 (4): **`pan_keys` ergänzt** — `h/j/k/l`, seit hover.nvim
   `9fba190` geliehen, solange ein Hover gezoomt ist. Fehlten hier ganz. Dabei
   die Datei auf das Cheatsheet-Format zurückgeschnitten: die Begründungen zu

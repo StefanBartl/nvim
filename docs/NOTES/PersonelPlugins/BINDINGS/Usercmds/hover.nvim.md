@@ -24,8 +24,8 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
 | `:Hover resize [direction]` | `bigger\|smaller` | make the hover on screen bigger or smaller. Omitted: **bigger**. **Any** hover — a picture is drawn larger, a text preview shows more lines |
-| `:Hover zoom [direction]` | `in\|out\|reset` | magnify a *detail* of the picture on screen. Omitted: **in**. Pictures only — not PDF pages. A step costs ~258 ms, which is why it is a route and not a key pair |
-| `:Hover pan {direction}` | `left\|right\|up\|down` | move the magnified view. Required argument. The keyboard counterpart to the borrowed `h/j/k/l`, which only exist while zoomed and are therefore undiscoverable |
+| `:Hover zoom [direction]` | `in\|out\|reset` | magnify a *detail* of the picture on screen. Omitted: **in**. Pictures only — not PDF pages. A step costs ~258 ms — zu langsam zum Gedrueckthalten, weshalb die Tasten dafuer Alt-Akkorde sind (`<M-z>`/`<M-Z>`/`<M-R>`) und keine blanken |
+| `:Hover nav {direction}` | `left\|right\|up\|down` | move the magnified view. Required argument. The keyboard counterpart to the borrowed `h/j/k/l`, which only exist while zoomed and are therefore undiscoverable |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
@@ -145,6 +145,12 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-02 (4): **`:Hover pan` heißt `:Hover nav`** (hover.nvim `efafb82`).
+  Weiter achtzehn Routen. Umbenannt statt aliasiert: `pan` ist das präzisere
+  Wort für die Operation und das falsche für ein Verb, das jemand tippt — und
+  ein Alias für eine umbenannte Operation ist genau der Bug von `bd72836`. Der
+  Name war einen Tag alt.
 
 - 2026-09-02 (3): **`:Hover zoom` und `:Hover pan` fehlten hier ganz** — seit
   hover.nvim `9fba190`. Damit sind es **achtzehn** Routen, nicht sechzehn.
