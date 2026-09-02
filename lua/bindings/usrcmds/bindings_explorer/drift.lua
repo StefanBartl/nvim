@@ -496,6 +496,54 @@ local function owner_of_path(path)
   return nil, src
 end
 
+--- The plugin names this config considers its own, plus `nvim-config`
+--- itself.
+---
+--- Derived, never hand-kept: `config.repo_dirs()` resolves the enabled
+--- personal plugins from the lazy spec (see `plugins/personal/list.lua`'s
+--- module doc on why the Markdown list was given up as a source).
+---
+--- `nil` rather than an empty set when the resolution fails, and the caller
+--- must treat that as "cannot tell" instead of "nothing is ours" -- silently
+--- classifying every command as third-party would make the default scope
+--- hide real findings, which is the one failure mode this whole axis exists
+--- to prevent.
+---@return table<string, true>|nil
+---@return string|nil reason
+local function own_plugins()
+  local dirs, reason = config.repo_dirs()
+  if not dirs then
+    return nil, reason or "personal plugin list unresolvable"
+  end
+  local set = { ["nvim-config"] = true }
+  for _, d in ipairs(dirs) do
+    if d.name then
+      set[d.name] = true
+    end
+  end
+  return set, nil
+end
+
+--- The bare plugin name inside a `command_owner` answer.
+---
+--- `command_owner` returns one of a handful of shapes, and only the leading
+--- token identifies the plugin: `"noice.nvim (lazy cmd stub)"`,
+--- `"lib.nvim (lua/lib/...:644)"`, `"nvim-treesitter"`. The two that carry
+--- no plugin at all -- `"neovim runtime: ..."` and
+--- `"vimscript script_id=7"` -- are third-party by construction and must not
+--- accidentally parse into one, hence the explicit rejects.
+---@param owner string
+---@return string|nil
+local function owner_plugin(owner)
+  if owner == "" or owner == "unknown" then
+    return nil
+  end
+  if owner:match("^neovim runtime") or owner:match("^vimscript script_id=") then
+    return nil
+  end
+  return (owner:match("^([^%s(]+)"))
+end
+
 --- `name -> file:line` for every global command lib.nvim's usercmd registry
 --- knows about.
 ---
@@ -781,6 +829,12 @@ end
 ---@field resolved string[] every project the resolver returned, sorted
 ---@field undocumented string[] resolved projects with no cheatsheet in this corpus, sorted
 
+---@class Bindings.ScopeInfo
+---@field scope "personal"|"extern"|"all" what was asked for
+---@field applied boolean whether the own/third-party split could be made
+---@field hidden integer live undocumented commands the scope filtered out
+---@field reason string|nil why the split could not be made, when it could not
+
 --- @param plugin string|nil narrow to one plugin's own files
 ---   (`records.lua`'s `plugin` field, i.e. the filename stem). With a
 ---   plugin given, the usercmd-undocumented direction is skipped — there
@@ -788,7 +842,7 @@ end
 ---   specific plugin, and the per-plugin `unverifiable` verdict below is
 ---   not applied — asking about one plugin explicitly is a request to see
 ---   its findings, not to have them summarized away.
---- @param opts { repo?: boolean, repo_root?: string }|nil additive; every
+--- @param opts { repo?: boolean, repo_root?: string, scope?: "personal"|"extern"|"all" }|nil additive; every
 ---   field defaults to off, so an existing single-argument caller gets
 ---   exactly the report it got before. `repo` enables the checkout axis
 ---   (module doc, "The repo axis"). `repo_root` points that axis at one
@@ -796,17 +850,65 @@ end
 ---   default per-plugin resolution, and implies `repo` -- naming a root is
 ---   already the request, and making the caller pass both would only create
 ---   a combination (`repo_root` without `repo`) whose sole possible meaning
----   is "ignore what I just said".
+---   is "ignore what I just said". `scope` decides which side of the
+---   own/third-party line the *live, undocumented commands* direction
+---   reports; it does not touch the other axes, which only ever read the
+---   corpus it reads. `"personal"` (the default) reports only
+---   commands this config or one of its own plugins registers -- a
+---   third-party command with no cheatsheet is not drift, it is a corpus
+---   this config never claimed to cover; the documented-side axes read
+---   `PersonelPlugins/BINDINGS`. `"extern"` is the mirror image --
+---   third-party commands, checked against `ExternPlugins/Bindings`.
+---   `"all"` reads both trees and reports both sides (the behaviour before
+---   this option existed).
+---   Browsing and searching are unaffected in every scope: `:Bindings
+---   search`/`browse` read both trees, because looking for a key means
+---   looking for it wherever it comes from.
 --- @return Bindings.DriftFinding[]
 --- @return string[] skipped_plugins plugin names excluded because they
 ---   aren't loaded in this session (module doc point 4) AND the repo axis
 ---   could not answer for them either, sorted, deduped
 --- @return string|nil source_reason
 --- @return Bindings.RepoInfo repo_info
+--- @return Bindings.ScopeInfo scope_info what the `scope` option did, so a
+---   report can say which commands it chose not to show rather than leaving
+---   the reader to wonder why a number dropped.
 function M.check(plugin, opts)
   opts = opts or {}
   local findings = {}
   local skipped = {}
+
+  -- Scope of the live-undocumented direction. Resolved before the axes run
+  -- so the filter and the report agree on one answer, and so an
+  -- unresolvable personal list degrades to "show everything" rather than to
+  -- "show nothing" -- see `own_plugins`.
+  local scope = opts.scope or "personal"
+  if scope ~= "personal" and scope ~= "extern" and scope ~= "all" then
+    scope = "personal"
+  end
+  -- Which of the two BINDINGS trees the *documented -> live* axes read.
+  -- `nil` is `records.list`'s "both". Without this, `scope = "extern"` was
+  -- half an answer: it switched the live->documented direction over to
+  -- third-party commands while the other axes kept checking the personal
+  -- cheatsheets, so "only the external ones" still reported our keymaps.
+  -- Explicit `if`, not `(scope == "all") and nil or scope`: that idiom
+  -- collapses, because `and nil` makes the whole expression fall through to
+  -- the `or` branch and hands back `"all"` -- a value matching neither root,
+  -- so `records.list` returned nothing and the documented-side axes silently
+  -- reported zero findings. Measured before the fix: 54 instead of 383.
+  local corpus_scope = scope
+  if scope == "all" then
+    corpus_scope = nil
+  end
+
+  local own_set, own_reason = own_plugins()
+  ---@type Bindings.ScopeInfo
+  local scope_info = {
+    scope = scope,
+    applied = (scope == "all") or (own_set ~= nil),
+    hidden = 0,
+    reason = (scope ~= "all") and own_reason or nil,
+  }
 
   -- Repo axis, resolved up front: the per-record loops below need to know
   -- whether an unloaded plugin has a checkout to fall back on before they
@@ -848,7 +950,7 @@ function M.check(plugin, opts)
   -- Keymaps: documented (Personal) but not live.
   local checkable, needed_modes = {}, {}
   local repo_keymaps = {}
-  for _, rec in ipairs(records.list("Keymaps", "personal")) do
+  for _, rec in ipairs(records.list("Keymaps", corpus_scope)) do
     -- `rec.meta`: a corpus-level file (`All.md`, `Collisions.md`,
     -- `Overview.md`) documents nothing of its own, so nothing in it can be
     -- missing. See `records.lua`'s `META_FILES`. This direction skips them;
@@ -998,7 +1100,7 @@ function M.check(plugin, opts)
   -- Usercmds: documented (Personal) but not live.
   local live_cmds = live_commands()
   local seen_personal = {}
-  for _, rec in ipairs(records.list("Usercmds", "personal")) do
+  for _, rec in ipairs(records.list("Usercmds", corpus_scope)) do
     -- Same `rec.meta` skip as the keymap direction above.
     local ours = (not plugin or rec.plugin == plugin) and not rec.meta
     if ours and is_plugin_loaded(rec.plugin) then
@@ -1151,12 +1253,30 @@ function M.check(plugin, opts)
         -- inside the finding: the two questions share one answer.
         local owner = command_owner(name, lazy_owners, command_defs, lib_sites)
         if not claimed_by_family(name, owner) then
-          findings[#findings + 1] = {
-            kind = "usercmd-undocumented",
-            plugin = nil,
-            notation = ":" .. name,
-            owner = owner,
-          }
+          -- `own_set == nil` means the personal list could not be resolved,
+          -- and `in_scope` then stays true for every command: a scope that
+          -- cannot tell the two apart must not quietly drop half the report.
+          -- `scope_info.applied` carries that to the reader.
+          local in_scope = true
+          if own_set then
+            local p = owner_plugin(owner)
+            local ours = (p ~= nil) and own_set[p] == true
+            if scope == "personal" then
+              in_scope = ours
+            elseif scope == "extern" then
+              in_scope = not ours
+            end
+          end
+          if in_scope then
+            findings[#findings + 1] = {
+              kind = "usercmd-undocumented",
+              plugin = nil,
+              notation = ":" .. name,
+              owner = owner,
+            }
+          else
+            scope_info.hidden = scope_info.hidden + 1
+          end
         end
       end
     end
@@ -1204,7 +1324,12 @@ function M.check(plugin, opts)
   local repo_undocumented = {}
   if type(opts.repo_root) == "string" and #repo_resolved > 0 then
     local documented = {}
-    for _, rec in ipairs(records.list(nil, "personal")) do
+    -- Both trees, deliberately: the question is whether this corpus
+    -- documents the checkout at all, and a cheatsheet under
+    -- `ExternPlugins/Bindings` answers it just as well as one under
+    -- `PersonelPlugins`. Reading only the personal tree reported every
+    -- externally-documented project as undocumented.
+    for _, rec in ipairs(records.list(nil, nil)) do
       documented[rec.plugin] = true
     end
     for _, name in ipairs(repo_resolved) do
@@ -1224,7 +1349,7 @@ function M.check(plugin, opts)
     undocumented = repo_undocumented,
   }
 
-  return findings, skipped_list, source_reason, repo_info
+  return findings, skipped_list, source_reason, repo_info, scope_info
 end
 
 ---The source axis on its own — `M.check` folds this in, exposed separately
@@ -1455,8 +1580,11 @@ local SECTIONS = {
 ---is what turns the report from "these plugins" into "this path".
 ---Omitted (nil) reads as "the repo axis was never asked for", which is what
 ---a pre-existing three-argument caller means.
+---@param scope_info Bindings.ScopeInfo|nil `M.check`'s fifth return value.
+---Omitted reads as "the default scope, nothing to explain", which is what a
+---pre-existing four-argument caller means.
 ---@return string[]
-function M.describe(findings, skipped, source_reason, repo_info)
+function M.describe(findings, skipped, source_reason, repo_info, scope_info)
   local lines = {}
 
   -- Above everything, including "no drift found": if the config's own
@@ -1559,6 +1687,38 @@ function M.describe(findings, skipped, source_reason, repo_info)
           b.file or "?",
           b.line or 0
         )
+      end
+    end
+  end
+  -- Before the axis notes: a count the reader cannot reconcile with the
+  -- last run is the first thing they will ask about, and the answer is
+  -- usually "you asked for a narrower scope", not a defect.
+  if scope_info then
+    if not scope_info.applied then
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = ("Scope %q requested but NOT applied: %s"):format(
+        scope_info.scope,
+        scope_info.reason or "own/third-party split unavailable"
+      )
+      lines[#lines + 1] =
+        "  -- every live undocumented command is listed, ours and theirs alike."
+    elseif scope_info.hidden > 0 then
+      lines[#lines + 1] = ""
+      if scope_info.scope == "personal" then
+        lines[#lines + 1] = ("Scope: personal -- %d third-party command%s not shown"):format(
+          scope_info.hidden,
+          scope_info.hidden == 1 and "" or "s"
+        )
+        lines[#lines + 1] =
+          "  -- live, undocumented, and owned by a plugin this corpus does not cover."
+        lines[#lines + 1] =
+          "  -- :Bindings check extern lists exactly those; :Bindings check all lists both."
+      else
+        lines[#lines + 1] = ("Scope: extern -- %d of our own command%s not shown"):format(
+          scope_info.hidden,
+          scope_info.hidden == 1 and "" or "s"
+        )
+        lines[#lines + 1] = "  -- :Bindings check (no scope) is the one that reports those."
       end
     end
   end

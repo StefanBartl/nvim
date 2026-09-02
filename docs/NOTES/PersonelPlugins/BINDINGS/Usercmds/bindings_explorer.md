@@ -15,6 +15,8 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
 | `:Bindings browse keymaps\|usercmds\|autocmds [scope]` | Dieselbe Tabellenzeilen-Suche, auf eine Kategorie gescopt |
 | `:Bindings path [personal\|extern]` | BINDINGS-Wurzel(n) in die Zwischenablage kopieren |
 | `:Bindings check [plugin]` | Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only) |
+| `:Bindings check extern [plugin]` | Derselbe Bericht über den Extern-Korpus: `ExternPlugins/Bindings` gegen live, plus die fremden Commands ohne Cheatsheet |
+| `:Bindings check all [plugin]` | Beide Korpora zusammen — das Verhalten vor der Scope-Trennung |
 | `:Bindings check repo [plugin]` | Derselbe Bericht plus Checkout-Achse: dokumentierte Bindings ungeladener Plugins gegen deren lokalen Quellbaum |
 | `:Bindings check <plugin> repo` | Dieselbe Achse, Plugin zuerst — identisch zur Zeile darüber |
 | `:Bindings check repo root=<dir>` | Dieselbe Achse, aber jedes Lua-Projekt unter `<dir>` statt der Lazy-Spec-Auflösung; `root=` impliziert `repo` |
@@ -41,6 +43,42 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
   False-Positive-Fall, noch nicht geladene Plugins werden übersprungen und
   namentlich gemeldet statt fälschlich als fehlend) — volle Begründung in
   `drift.lua`s Moduldoc, nicht hier dupliziert.
+## Scope: eigen und fremd sind zwei Fragen (2026-09-02)
+
+`:Bindings check` prüft per Default **nur die eigenen** Bindings, und das ist
+seit diesem Datum eine ausgesprochene Regel statt eines Zufalls.
+
+| Route | Dokumentierte Seite | Live-Commands ohne Cheatsheet |
+| --- | --- | --- |
+| `:Bindings check` | `PersonelPlugins/BINDINGS` | nur eigene |
+| `:Bindings check extern` | `ExternPlugins/Bindings` | nur fremde |
+| `:Bindings check all` | beide Bäume | beide |
+
+`report` spiegelt alle drei (`:Bindings report extern`, `… all`).
+
+**Warum der Default eng ist.** Ein fremdes Command ohne Cheatsheet ist keine
+Drift — es ist ein Korpus, den diese Config nie zu decken behauptet hat.
+Gemessen am 2026-09-02: von 107 Befunden waren 54 genau das, und alle 54
+gehörten Fremdplugins (git-conflict 9, noice 4, treesitter 3, Mason,
+Vimscript-Plugins, Neovims eigene). Mit dem Default bleiben 53, und jeder
+davon ist eine Aussage über etwas, das dieses Repo selbst registriert.
+
+**Warum es trotzdem eine Route gibt.** `extern` ist kein Abfallprodukt: der
+Extern-Korpus (552 Keymap- und 107 Usercmd-Zeilen) wurde von diesem Prüfer
+noch nie gegen die Realität gehalten. Der erste Lauf meldet 379 Befunde — das
+ist keine Regression, sondern eine Achse, die vorher gar nicht existierte.
+
+**Woran „eigen" hängt.** An `config.repo_dirs()`, also an der aus dem
+Lazy-Spec abgeleiteten Liste der Personal-Plugins, plus `nvim-config` selbst
+— keine handgepflegte Namensliste. Lässt sie sich nicht auflösen, wird
+*nicht* gefiltert: der Bericht zeigt dann alles und sagt im Kopf, dass der
+Scope nicht angewandt werden konnte. Eine Trennung, die im Zweifel Befunde
+verschluckt, wäre schlimmer als keine.
+
+**`search` und `browse` sind ausgenommen** und bleiben es. Wer eine Taste
+sucht, sucht sie unabhängig davon, wer sie registriert — beide Routen lesen
+weiterhin beide Bäume, in jedem Scope.
+
 - **`check repo` ist opt-in, nicht Default.** Die drei bestehenden Achsen
   befragen eine laufende Session und kosten nichts Nennenswertes; die
   Checkout-Achse liest ~30 Repos von der Platte (gemessen: 940 ms, 2861

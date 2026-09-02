@@ -127,26 +127,34 @@ end
 
 --- Drift-Bericht (`drift.lua`) in einem read-only Viewer anzeigen.
 ---@param plugin string|nil
----@param opts { repo?: boolean, repo_root?: string }|nil `repo` schaltet die
----Checkout-Achse zu (siehe `drift.lua`s Moduldoc, "The repo axis") — bewusst
----opt-in, weil sie als einzige Achse ~20 Repos von der Platte liest statt
----eine laufende Session zu befragen. `repo_root` richtet dieselbe Achse auf
----ein Sammelverzeichnis mit mehreren Lua-Projekten statt auf die
----Lazy-Spec-Auflösung und impliziert `repo`.
+---@param opts { repo?: boolean, repo_root?: string, scope?: "personal"|"extern"|"all" }|nil
+---`repo` schaltet die Checkout-Achse zu (siehe `drift.lua`s Moduldoc, "The
+---repo axis") — bewusst opt-in, weil sie als einzige Achse ~20 Repos von der
+---Platte liest statt eine laufende Session zu befragen. `repo_root` richtet
+---dieselbe Achse auf ein Sammelverzeichnis mit mehreren Lua-Projekten statt
+---auf die Lazy-Spec-Auflösung und impliziert `repo`. `scope` trennt eigene
+---von fremden Live-Commands, Default `"personal"` — siehe `drift.check`.
 ---@return nil
 function M.check(plugin, opts)
-  local findings, skipped, source_reason, repo_info = drift.check(plugin, opts)
+  local findings, skipped, source_reason, repo_info, scope_info = drift.check(plugin, opts)
+  -- Der Scope steht im Titel, nicht nur im Bericht: der Unterschied
+  -- zwischen 53 und 107 Befunden ist sonst nicht erklärbar, ohne bis zur
+  -- Scope-Notiz zu scrollen.
+  local label = (scope_info and scope_info.scope ~= "personal")
+      and (" [" .. scope_info.scope .. "]")
+    or ""
   require("lib.nvim.ui.kit.viewer").open({
-    title = ("Bindings — check (%d)"):format(#findings),
-    lines = drift.describe(findings, skipped, source_reason, repo_info),
+    title = ("Bindings — check%s (%d)"):format(label, #findings),
+    lines = drift.describe(findings, skipped, source_reason, repo_info, scope_info),
   })
 end
 
 --- Denselben Bericht als Markdown-Datei schreiben (`report.lua`).
 ---@param plugin string|nil
----@param opts { repo?: boolean, repo_root?: string, out?: string }|nil `out`
----darf ein Verzeichnis oder ein Dateiname sein; ohne `out` landet der
----Bericht als `BINDINGS-DRIFT-<datum>.md` in `config.report_dir()`.
+---@param opts { repo?: boolean, repo_root?: string, out?: string, scope?: "personal"|"extern"|"all" }|nil
+---`out` darf ein Verzeichnis oder ein Dateiname sein; ohne `out` landet der
+---Bericht als `BINDINGS-DRIFT-<datum>.md` in `config.report_dir()`. `scope`
+---wie bei `M.check`.
 ---@return nil
 function M.report(plugin, opts)
   opts = opts or {}
@@ -155,6 +163,7 @@ function M.report(plugin, opts)
     repo = opts.repo,
     repo_root = opts.repo_root,
     out = opts.out,
+    scope = opts.scope,
   })
   if not path then
     notify().error("Bericht nicht geschrieben: " .. (err or "unbekannter Fehler"))
@@ -263,7 +272,7 @@ function M.enable()
         path = { "check" },
         args = {
           { name = "plugin", type = "STRING", optional = true },
-          { name = "axis", type = "STRING", enum = { "repo" }, optional = true },
+          { name = "axis", type = "STRING", enum = { "repo", "extern", "all" }, optional = true },
         },
         -- `root=` als kv, nicht als dritter Positionswert: ein Pfad und ein
         -- Plugin-Name sind beide freie Strings, und der Composer bindet
@@ -274,7 +283,11 @@ function M.enable()
         kv = { { key = "root", type = "DIR" } },
         desc = "Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only)",
         run = function(ctx)
-          M.check(ctx.args.plugin, { repo = ctx.args.axis == "repo", repo_root = ctx.kv.root })
+          M.check(ctx.args.plugin, {
+            repo = ctx.args.axis == "repo",
+            repo_root = ctx.kv.root,
+            scope = (ctx.args.axis == "extern" or ctx.args.axis == "all") and ctx.args.axis or nil,
+          })
         end,
       },
       -- Dieselbe Achse ohne Plugin-Argument. Nötig als eigene Route, nicht
@@ -291,6 +304,27 @@ function M.enable()
           M.check(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root })
         end,
       },
+      -- `extern`/`all` brauchen dieselbe literale Kind-Route wie `repo`, und
+      -- aus demselben Grund: `:Bindings check extern` bände „extern" sonst
+      -- als Plugin-Namen und lieferte still einen leeren Bericht.
+      {
+        path = { "check", "extern" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        kv = { { key = "root", type = "DIR" } },
+        desc = "Nur die fremden: live registrierte Commands ohne Cheatsheet, deren Plugin dieser Korpus nicht abdeckt",
+        run = function(ctx)
+          M.check(ctx.args.plugin, { repo_root = ctx.kv.root, scope = "extern" })
+        end,
+      },
+      {
+        path = { "check", "all" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        kv = { { key = "root", type = "DIR" } },
+        desc = "Eigene und fremde zusammen — das Verhalten vor der Scope-Trennung",
+        run = function(ctx)
+          M.check(ctx.args.plugin, { repo_root = ctx.kv.root, scope = "all" })
+        end,
+      },
       -- `report` spiegelt `check` inklusive der zweiten Route für `repo`,
       -- aus demselben Grund: ohne literales Kind bände `:Bindings report
       -- repo` „repo" als Plugin-Namen. `out` ist `PATH`, nicht `FILE` —
@@ -300,15 +334,39 @@ function M.enable()
         path = { "report" },
         args = {
           { name = "plugin", type = "STRING", optional = true },
-          { name = "axis", type = "STRING", enum = { "repo" }, optional = true },
+          { name = "axis", type = "STRING", enum = { "repo", "extern", "all" }, optional = true },
         },
         kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
         desc = "Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md",
         run = function(ctx)
+          M.report(ctx.args.plugin, {
+            repo = ctx.args.axis == "repo",
+            repo_root = ctx.kv.root,
+            out = ctx.kv.out,
+            scope = (ctx.args.axis == "extern" or ctx.args.axis == "all") and ctx.args.axis or nil,
+          })
+        end,
+      },
+      -- Dieselben literalen Kinder wie bei `check`, aus demselben Grund.
+      {
+        path = { "report", "extern" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        desc = "Nur die fremden, als Markdown-Datei",
+        run = function(ctx)
           M.report(
             ctx.args.plugin,
-            { repo = ctx.args.axis == "repo", repo_root = ctx.kv.root, out = ctx.kv.out }
+            { repo_root = ctx.kv.root, out = ctx.kv.out, scope = "extern" }
           )
+        end,
+      },
+      {
+        path = { "report", "all" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        desc = "Eigene und fremde zusammen, als Markdown-Datei",
+        run = function(ctx)
+          M.report(ctx.args.plugin, { repo_root = ctx.kv.root, out = ctx.kv.out, scope = "all" })
         end,
       },
       {

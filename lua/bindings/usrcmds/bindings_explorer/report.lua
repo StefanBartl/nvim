@@ -84,6 +84,30 @@ local function count_kinds(findings)
   return out
 end
 
+--- Wie der Scope im Lauf-Kopf steht. Eigene Funktion, weil der Default
+--- ("personal") die interessante Aussage ist und nicht weggelassen gehört:
+--- ein Bericht ohne Scope-Zeile liest sich wie einer über alles.
+---@param si Bindings.ScopeInfo|nil
+---@return string
+local function scope_row(si)
+  if not si then
+    return "personal (Default)"
+  end
+  if not si.applied then
+    return ("%s — **nicht angewandt**"):format(si.scope)
+  end
+  if si.scope == "personal" then
+    return ("nur eigene%s"):format(
+      si.hidden > 0 and (" (%d fremde ausgeblendet)"):format(si.hidden) or ""
+    )
+  elseif si.scope == "extern" then
+    return ("nur fremde%s"):format(
+      si.hidden > 0 and (" (%d eigene ausgeblendet)"):format(si.hidden) or ""
+    )
+  end
+  return "eigene und fremde"
+end
+
 --- Startup phases of this config that never ran, by label. Same soft
 --- dependency and same reason as `drift.lua`'s copy: a report is the artifact
 --- that gets committed and quoted months later, so the one condition that
@@ -112,7 +136,7 @@ end
 ---@param skipped string[]|nil `drift.check`'s second return value
 ---@param source_reason string|nil its third
 ---@param repo_info Bindings.RepoInfo|nil its fourth
----@param meta { plugin?: string, duration_ms?: number }|nil
+---@param meta { plugin?: string, duration_ms?: number, scope_info?: Bindings.ScopeInfo }|nil
 ---@return string[]
 function M.render(findings, skipped, source_reason, repo_info, meta)
   meta = meta or {}
@@ -136,6 +160,7 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
     ("| Repo-Achse | %s |"):format(
       (repo_info and repo_info.ran) and "an" or "aus (`:Bindings report repo` schaltet sie zu)"
     ),
+    ("| Scope | %s |"):format(scope_row(meta.scope_info)),
   }
 
   if meta.duration_ms then
@@ -196,6 +221,29 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
 
   -- The sentence the handwritten 2026-09-02 report sets in bold, because it
   -- is the actual reading aid. It belongs in every run, not just that one.
+  local si = meta.scope_info
+  if si and not si.applied then
+    lines[#lines + 1] = ("> **Scope `%s` angefordert, aber nicht angewandt:** %s"):format(
+      si.scope,
+      si.reason or "die Trennung eigen/fremd war nicht möglich"
+    )
+    lines[#lines + 1] = "> Der Bericht listet alle live registrierten undokumentierten Commands,"
+    lines[#lines + 1] = "> eigene wie fremde."
+    lines[#lines + 1] = ""
+  elseif si and si.hidden > 0 then
+    if si.scope == "personal" then
+      lines[#lines + 1] = ("Nicht gezeigt: **%d fremde Commands** — live, undokumentiert, und"):format(
+        si.hidden
+      )
+      lines[#lines + 1] = "im Besitz eines Plugins, das dieser Korpus nicht abdeckt."
+      lines[#lines + 1] = "`:Bindings report extern` listet genau die, `:Bindings report all` beide."
+    else
+      lines[#lines + 1] = ("Nicht gezeigt: **%d eigene Commands** — die zeigt"):format(si.hidden)
+      lines[#lines + 1] = "`:Bindings report` ohne Scope."
+    end
+    lines[#lines + 1] = ""
+  end
+
   lines[#lines + 1] = "**Eine Zahl hier ist ein Befund, kein Problem.** Welcher davon eine echte"
   lines[#lines + 1] = "Doku-Lücke ist und welcher ein Werkzeugfehler oder ein erwartbarer Effekt"
   lines[#lines + 1] = "(buffer-lokale UI nicht offen, lazy nicht ausgelöst), entscheidet die"
@@ -228,13 +276,14 @@ function M.write(opts)
   end
 
   local t0 = vim.uv.hrtime()
-  local findings, skipped, source_reason, repo_info =
-    drift.check(opts.plugin, { repo = opts.repo, repo_root = opts.repo_root })
+  local findings, skipped, source_reason, repo_info, scope_info =
+    drift.check(opts.plugin, { repo = opts.repo, repo_root = opts.repo_root, scope = opts.scope })
   local ms = (vim.uv.hrtime() - t0) / 1e6
 
   local lines = M.render(findings, skipped, source_reason, repo_info, {
     plugin = opts.plugin,
     duration_ms = ms,
+    scope_info = scope_info,
   })
 
   -- `writefile` returns 0 on success and -1 on failure, and throws for an
