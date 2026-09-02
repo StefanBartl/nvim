@@ -274,3 +274,26 @@ Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —
 wie viele `ra_telemetry_<plugin>`-Instanzen existieren, hängt daran, welche
 Plugins die Session geladen hat. Kein Grund zur Beunruhigung, aber ein Grund,
 `registry` nicht als Konstante zu zitieren.
+
+### Nach der Eigentümer-Auflösung über `getscriptinfo` (2026-09-02)
+
+Dieselben Vorkehrungen, zweimal hintereinander gelaufen. **9 / 158 / 167,
+unverändert**, und die zweite Ausgabe war mit der ersten byteweise identisch.
+
+Das ist das Ergebnis, das die Änderung haben sollte: sie ersetzt in elf Zeilen
+der Eigentümerspalte eine sitzungsabhängige Zahl durch einen Namen, und alle
+elf gehören Fremdplugins — der Scope-Split verschiebt also nichts.
+
+**Eine Zahl, die *nicht* schwankt, obwohl sie so aussah:** die `script_id`
+selbst. Drei aufgezeichnete Läufe derselben Config nennen für dasselbe
+Command drei verschiedene ids —
+
+| Command | Archiv-Lauf | Handover-Lauf | Gegenprobe |
+| --- | ---: | ---: | ---: |
+| `:StartupTime` | 10 | 9 → 25 | 25 |
+| `:TodoLocList` | 13 | 25 → 12 | 19 |
+| `:DoMatchParen` | 18 | 13 → 16 | 10 |
+
+— und alle drei Läufe meinen dieselben drei Plugins. Wer eine sid aus einem
+älteren Bericht nachschlagen will, kann das nicht; wer den Namen nachschlägt,
+schon. Das ist der ganze Grund für `script_path`.

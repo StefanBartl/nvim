@@ -661,6 +661,14 @@ end
 --- no plugin at all -- `"neovim runtime: ..."` and
 --- `"vimscript script_id=7"` -- are third-party by construction and must not
 --- accidentally parse into one, hence the explicit rejects.
+---
+--- The second reject used to cover 11 commands and now covers close to none:
+--- since `command_owner` resolves a `script_id` back to its file
+--- (`script_path`), a Vimscript command normally arrives here as
+--- `"todo-comments.nvim"` or `"nvim-config"` and takes part in the scope
+--- split like any other. The reject stays for the case that resolution
+--- fails, where the shape means "origin unresolved" -- and "cannot tell"
+--- must not read as "ours".
 ---@param owner string
 ---@return string|nil
 local function owner_plugin(owner)
@@ -761,6 +769,44 @@ local function lib_command_sites()
   return out
 end
 
+--- The file a Vimscript `script_id` came from, or `nil` when Neovim cannot
+--- say.
+---
+--- **Why this exists at all.** `nvim_get_commands` answers "defined in
+--- Vimscript" with a number, and the number is *session-local*. Measured
+--- across two runs of the same config, nothing changed in between:
+---
+---     TodoLocList   sid=25 -> sid=12
+---     StartupTime   sid=9  -> sid=25
+---     DoMatchParen  sid=13 -> sid=16
+---
+--- Printing it -- which this column did for 11 of its 54 lines -- claimed an
+--- origin that identified nothing and read differently on the next
+--- invocation. `getscriptinfo` turns the number back into the path, which is
+--- exactly the shape `owner_of_path` already places for Lua sources:
+--- `sid=19` is `lazy/todo-comments.nvim/plugin/todo.vim`, and
+--- `todo-comments.nvim` is a name -- one the extern corpus even has a
+--- cheatsheet stem for.
+---@param sid integer
+---@return string|nil
+local function script_path(sid)
+  if type(sid) ~= "number" or sid <= 0 then
+    return nil
+  end
+  -- Guarded rather than trusted: a filter dict is a newer `getscriptinfo`
+  -- than the bare call, and an id whose script is no longer sourced answers
+  -- with an empty list rather than an error.
+  local ok, info = pcall(vim.fn.getscriptinfo, { sid = sid })
+  if not ok or type(info) ~= "table" or type(info[1]) ~= "table" then
+    return nil
+  end
+  local name = info[1].name
+  if type(name) ~= "string" or name == "" then
+    return nil
+  end
+  return name
+end
+
 --- Best-effort answer to "who registered this command", for the live
 --- commands that have no cheatsheet. Not a verdict and never a filter -- the
 --- section stays complete either way; this only lets a reader see at a glance
@@ -771,8 +817,9 @@ end
 ---   2. lib.nvim's usercmd registry, which records the call site.
 ---   3. the callback's defining file, via `debug.getinfo` -- for a plugin
 ---      that calls `nvim_create_user_command` itself.
----   4. the `script_id`, for anything defined in Vimscript, where there is
----      no callback to inspect.
+---   4. the `script_id` resolved back to its file (`script_path`), for
+---      anything defined in Vimscript, where there is no callback to
+---      inspect.
 ---
 --- **Source 2 is new (2026-09-02) and it is the one that mattered.** Until
 --- it existed this function went straight to `debug.getinfo`, which reports
@@ -832,6 +879,21 @@ local function command_owner(name, lazy_owners, defs, lib_sites)
     end
   end
   if def and def.script_id then
+    -- Same answer as source 3, reached differently: a Vimscript command has
+    -- no callback to inspect, so the path comes from the id instead of from
+    -- `debug.getinfo`. Shaped identically on purpose -- the report's reading
+    -- rule ("a bare plugin name is third-party infra") has to keep holding.
+    local path = script_path(def.script_id)
+    if path then
+      local owner, rest = owner_of_path(path)
+      if owner then
+        return owner == "neovim runtime" and ("neovim runtime: " .. rest) or owner
+      end
+      return path
+    end
+    -- Only when `getscriptinfo` cannot place the id. The number is
+    -- session-local and identifies nothing (see `script_path`), so it is a
+    -- last resort that says "Vimscript, origin unresolved" -- not an origin.
     return ("vimscript script_id=%d"):format(def.script_id)
   end
   return "unknown"

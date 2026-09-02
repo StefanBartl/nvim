@@ -442,6 +442,40 @@ Plugins, die selbst registrieren, und die `script_id` für Vimscript.
 Checkout unter `<laufwerk>:/repos/`, dieser Config-Baum (`nvim-config`) oder
 Neovims Runtime — und hängt die Fundstelle innerhalb dessen an.
 
+### Die vierte Quelle druckte eine Zahl, die zwischen zwei Läufen wechselte
+
+Sie tat es zunächst wörtlich: `vimscript script_id=%d`. Die `script_id` ist
+aber sitzungsabhängig, und drei aufgezeichnete Läufe derselben Config
+widersprechen sich vollständig — `:StartupTime` stand auf `10`, dann `9`,
+dann `25`, `:TodoLocList` auf `13`, dann `25`, dann `12`. **11 der 54
+undokumentierten Commands** trugen ein Label, das nichts identifiziert und
+beim nächsten Aufruf anders lautet.
+
+`vim.fn.getscriptinfo({ sid = N })` gibt den Pfad zurück, und der ist genau
+die Form, die `owner_of_path` für Lua-Quellen ohnehin schon einordnet. Alle
+elf tragen seither einen Namen:
+
+| Vorher | Jetzt |
+| --- | --- |
+| `vimscript script_id=19` | `todo-comments.nvim` (2×) |
+| `vimscript script_id=12`/`13` | `vim-matchup` (4×) |
+| `vimscript script_id=10` | `vim-matchup` — `:DoMatchParen`/`:NoMatchParen`, das Plugin ersetzt Neovims eigenes `matchparen` |
+| `vimscript script_id=17` | `plenary.nvim` (2×) |
+| `vimscript script_id=25` | `vim-startuptime` |
+
+Die Befundzahlen bewegt das nicht (9 / 158 / 167 vor und nach der Änderung),
+und das ist das erwartete Ergebnis: alle elf gehören Fremdplugins und bleiben
+damit im selben Scope. Bewegt hat sich, was in der Spalte steht — und
+`owner_plugin` kann die Zeilen jetzt überhaupt erst einordnen, statt sie
+pauschal als „third-party by construction" abzuweisen. Die alte Form bleibt
+als letzter Rückfall bestehen, für den Fall, dass `getscriptinfo` die id nicht
+auflösen kann; sie bedeutet dann „Vimscript, Herkunft ungeklärt" und nicht
+mehr eine Herkunft.
+
+Zwei der elf haben damit ein Cheatsheet-Ziel, das es gibt: `:TodoFzfLua` und
+`:TodoLocList` gehören zu `todo-comments.nvim`, und `TodoComments` ist einer
+der Stämme des Extern-Korpus.
+
 Gemessen an einem echten Lauf: **0 unbekannte Eigentümer**, 53 der 109
 Befunde sind eigene mit `file:line`, 56 sind fremde. Die Note unter der
 Überschrift sagt jetzt, wie die Spalte zu lesen ist, statt zu raten, was in
