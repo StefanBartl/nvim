@@ -40,11 +40,14 @@ Feature selbst nie erreichbar war (`836a15a`, siehe unten).
 
 **Was als Nächstes ansteht**, steht unter [Aufträge aus der Sitzung vom
 2026-09-02](#aufträge-aus-der-sitzung-vom-2026-09-02) — sechs Punkte, jeder
-schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. Zwei
-davon (A, C) sind erledigt; F ist entschieden statt gebaut — **Zoom nur für
-Bilder**, PDF-Seiten optional, Text gar nicht. Der größte offene ist eine
-**Beitrags-API für Nutzer** (D): die gibt es technisch längst, sie ist nur
-nirgends als solche angeboten.
+schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. Drei
+davon (A, C, D) sind erledigt; F ist entschieden statt gebaut — **Zoom nur für
+Bilder**, PDF-Seiten optional, Text gar nicht. Offen sind **B** (die Doku der
+vier namentlich eingebundenen Plugins) und **E** (diese Roadmap-Datei selbst).
+
+**Ein eigener Hover braucht seit `c374d5e` kein Plugin mehr.** `setup` nimmt
+ein Feld `contribute`, und zwar genau die Tabelle, die `register` nimmt — die
+Einstiegshürde ist damit eine Funktion statt eines Repos.
 
 ---
 
@@ -184,7 +187,7 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 
 | Repo | Stand | Commit |
 | --- | --- | --- |
-| **hover.nvim** (neu) | gepusht, `main` | Extraktion, dann ~30 weitere bis `745c678` |
+| **hover.nvim** (neu) | `main` bis `745c678`, **drei weitere noch nicht gepusht** | Extraktion, dann ~33 bis `15837dd` |
 | **markdown.nvim** | gepusht, `main` | `bd53428`, `634121f`, `c61493f` |
 | **nvim-config** | `main`, **letzter Commit noch nicht gepusht** | `97051225`, `69907c0e`, `af1a8c60`, `7a0027b4`, `4e2cf2c4`, `b98eac26`, `ab92f427` |
 | **lib.nvim** | gepusht, `main` | `5450dd4` (Hover gelöscht), `556ee50` (safe_api-Typen) |
@@ -224,12 +227,12 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **177 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, registry 49, scope 26, switches 27) |
+| Specs hover.nvim | **192 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, registry 64, scope 26, switches 27), gemessen 2026-09-02 nach `c374d5e` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde** |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde** — zuletzt vor `c374d5e` gemessen, seither nicht wieder (der Worktree taugt dafür nicht, siehe unten) |
 | CI | grün auf **ubuntu-latest und windows-latest** (Run `33604859057`) |
-| Helptags | 29 Tags |
+| Helptags | 30 Tags (`hover-contribute` kam mit `c374d5e` dazu) |
 | Doku-Beispiele | 23 ```lua-Blöcke laden, die ausführbaren laufen; 32 dokumentierte `:Hover`-Routen sind alle echt |
 
 ---
@@ -267,6 +270,9 @@ gebaut — die Datei führt keine erledigten Punkte.
   dieses Modul), spotlight (wie oft kommt dieser Token vor), sandbox
   (`nginx:1.27-alpine` — geholt? wie groß? läuft was davon?, nur auf
   Nachfrage).
+- **`contribute` in `setup()`** (`c374d5e`) — ein eigener Hover ohne Plugin
+  drumherum: dasselbe Tabellenformat, das `register` nimmt, registriert unter
+  dem Namen `"user"`. Die API war immer öffentlich; angeboten wurde sie nie.
 
 ### Drei Messungen, die alle der Intuition widersprachen
 
@@ -302,6 +308,15 @@ Alle drei sind jetzt abgeleitet statt aufgezählt, und die Specs dagegen sind
 über `switches.names()` geschrieben statt über eine Liste, damit ein zehnter
 Schalter ab seiner Deklaration mitgedeckt ist. **Wenn eine vierte solche
 Stelle auftaucht, ist das der erste Verdacht.**
+
+**Die vierte Stelle ist am 2026-09-02 aufgetaucht — in der Doku.** Die
+Namensliste von `hover.set()` im Vimdoc führte sieben von neun Schaltern
+(`code` und `positions` fehlten), und in `docs/INTEGRATIONS.md` und
+`docs/ROADMAP.md` standen vier handgezählte Zahlen, die alle hinter der
+Wirklichkeit lagen. Dieselbe Klasse, eine Stufe schlechter: in Code deckt
+irgendwann eine Spec sie auf, in Doku merkt es niemand. Behoben in `c374d5e`
+und `15837dd`, wo es ging durch Streichen der Zahl — Details unter
+[E](#e-eine-roadmap-datei-unter-docsroadmappersonal).
 
 ### Und eine vierte Klasse: eine Funktion, zwei Fragen
 
@@ -407,8 +422,8 @@ Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
 
 ## Aufträge aus der Sitzung vom 2026-09-02
 
-Sechs Punkte. **Zwei sind erledigt** (A, C), **einer ist eingegrenzt statt
-gebaut** (F — nur Bilder, siehe dort), **drei sind offen** (B, D, E). Was hier
+Sechs Punkte. **Drei sind erledigt** (A, C, D), **einer ist entschieden statt
+gebaut** (F — nur Bilder, siehe dort), **zwei sind offen** (B, E). Was hier
 steht, ist jeweils schon **nachgesehen** — die Notiz sagt den Befund, nicht
 nur die Frage.
 
@@ -525,7 +540,7 @@ zusätzlich in beide Tabellen von `docs/INTEGRATIONS.md`.
 genauso. Es gibt hier keine einheitliche Geschwister-Konvention, also war das
 kein Befund. `## Health` war einer und ist behoben.
 
-### D. Eine Beitrags-API für Nutzer — Nutzen/Aufwand
+### D. Eine Beitrags-API für Nutzer — **erledigt 2026-09-02** (`c374d5e`)
 
 **Der Befund: die API gibt es schon, sie ist nur nicht als Nutzer-API
 gedacht.** `require("hover.registry").register(name, contribution)` ist ein
@@ -550,6 +565,39 @@ Entwurfspunkt ist, ob `enable()` bei wiederholtem Aufruf die Nutzerbeiträge
 ersetzt — `register` tut das bereits pro Name, also fällt das von selbst
 richtig aus.
 
+
+**Umgesetzt in `c374d5e`.** `setup`/`enable` nehmen ein Feld `contribute`, und
+es nimmt *genau* die Tabelle, die `register` nimmt — `sources`, `previews`,
+`positions` und die `{ fn = …, on_request = true }`-Form eingeschlossen.
+Bewusst kein zweiter Mechanismus: ein Vertrag zu lernen, einer zu
+dokumentieren. Registriert wird unter dem Namen `"user"`.
+
+Zwei Eigenschaften waren beim Bauen wichtiger als das Feld selbst, und beide
+sind Spec-gedeckt:
+
+- **Es landet nicht in der Options-Tabelle.** Funktionen sind keine
+  Konfiguration, und `config.setup` mergt Listen per Index — zwei
+  aufeinanderfolgende `contribute`-Listen würden sich verschränken statt zu
+  ersetzen. Genau die Klasse, für die `replace_key_lists` existiert.
+- **Die Tabelle des Aufrufers wird nicht verändert.** Das Feld wird aus einer
+  flachen Kopie entfernt, nicht in der übergebenen Tabelle gelöscht — ein Host
+  reicht seine eigene lebende Config durch (markdown.nvim tut das).
+
+`enable()` läuft jetzt über `M.setup` statt direkt über `config.setup`. Damit
+bleibt „akzeptiert dieselben Optionen wie `setup`" wahr, und die Registrierung
+passiert *vor* `autocmds.enable()`, das entscheidet, ob ein Buffer überhaupt
+einen Trigger bekommt.
+
+Sechs Specs, drei davon gegen das, was **nicht** passieren darf. Dazu ein Lauf
+gegen ein echtes Neovim über `enable()`, weil die Specs über `setup()` gehen
+und die Doku `enable()` zeigt.
+
+Der Entwurfspunkt von oben ist so ausgefallen wie vermutet: `register` ersetzt
+pro Name, also ersetzt ein zweiter `setup()` den Nutzerbeitrag von selbst. Was
+daraus *neu* folgt und dokumentiert gehörte: ein Plugin darf dieses Feld nicht
+benutzen, weil alle Nutzer-Beiträge sich den einen Namen `"user"` teilen und
+zwei Aufrufer einander damit still löschen würden.
+
 ### E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/`
 
 Eine Analyse zu Optimierung und neuen Features, geschrieben als eigene Datei
@@ -560,29 +608,41 @@ erledigten Punkte. Die Datei hier ist die persönliche, längere Fassung.
 Abzugrenzen ist beim Schreiben, was in welche der beiden gehört, sonst driften
 sie auseinander.
 
-**Und die Repo-Roadmap ist bereits gedriftet** — nachgesehen am 2026-09-02,
-bevor irgendetwas Neues danebengelegt wird:
+**Die Repo-Roadmap war selbst gedriftet — behoben in `f01511f`**, bevor etwas
+Neues danebengelegt wird. Drei Falschaussagen, alle aus derselben Wurzel
+(sandbox ist verdrahtet, `on_request` existiert):
 
-- `docs/ROADMAP.md:23` sagt „**Four** of the candidates […] are built" und
-  zählt migrate, reposcope, documentation, spotlight auf. Es sind **fünf**;
-  sandbox.nvim fehlt in der Aufzählung.
-- Der Abschnitt „`sandbox.nvim` — the image under the cursor" steht dort noch
-  als *offen*: „What is left is on sandbox.nvim's side […] and the
-  registration itself." Beides ist erledigt — `3647a17` auf sandbox-Seite,
-  `731bbe2`/`836a15a` hier.
-- Die Folgefrage darunter — „an image reference collides with `path:line`
-  syntax […] Registration order decides it" — ist beim Verdrahten beantwortet
-  worden: `init.lua:42` wird in 1 ms abgelehnt (Messtabelle unter [Was keine
-  CI prüft](#5-was-keine-ci-prüft)).
+- „**Four** of the candidates […] are built" — es sind fünf.
+- Der Abschnitt „`sandbox.nvim` — the image under the cursor" stand noch als
+  *offen* („What is left is on sandbox.nvim's side […] and the registration
+  itself") und stellte eine Frage, die das Verdrahten längst beantwortet
+  hatte: `nginx:1.27` und `init.lua:42` sind dieselbe Form, und die
+  Registrierungsreihenfolge entscheide es. Sie tut es — in 1 ms.
+- Der `language.nvim`-Eintrag behauptete, „behind `:Hover show` only" sei per
+  Source **nicht** ausdrückbar. Genau das ist `on_request`. Der Eintrag nennt
+  jetzt, was wirklich offen ist: nicht der Mechanismus, sondern die
+  Produktfrage — sandbox kommt mit `on_request` durch, weil eine billige
+  Textprüfung die meisten Positionen vor jedem Prozessstart ablehnt, und ein
+  Wort-Nachschlag hat keine solche Vorprüfung.
 
-Das ist derselbe Defekt wie in C: veröffentlichte Doku behauptet etwas
-Falsches, nicht bloß etwas Fehlendes. Und die Datei hat die Regel „führt keine
-erledigten Punkte" — der Abschnitt gehört also **gelöscht**, nicht
-umgeschrieben, und was daran gelernt wurde, steht schon hier.
+Die Datei hat die Regel „ein Konzept, das ausgeliefert wird, wird gelöscht
+statt abgehakt" — der sandbox-Abschnitt ist deshalb gelöscht, nicht
+umgeschrieben. **Zoom für Bilder** steht jetzt unter `## Features` daneben, in
+der Fassung für Mitlesende (kürzer als F hier, und ohne die Messungen).
 
-Nach dem Entscheid unter F gehört außerdem **Zoom für Bilder** in die
-Repo-Roadmap (unter `## Features`, wo heute nur das Demo-GIF steht) — das ist
-ein geplantes Feature für Mitlesende, kein persönlicher Befund.
+**Dieselbe Drift eine Ebene tiefer.** `docs/INTEGRATIONS.md` trug vier
+handgezählte Zahlen, die keine mehr stimmte: „one of five plugins", „adding a
+sixth contributor", „the four that arrive through the registry" über einer
+Tabelle mit sechs Zeilen, und ein Abschnitt überschrieben „markdown.nvim — the
+only registry contributor today". Dazu im Vimdoc die Namensliste von
+`hover.set()`: **sieben von neun Schaltern**, `code` und `positions` fehlten.
+
+Das ist **der vierte Treffer der Bug-Klasse aus [Dieselbe Bug-Klasse
+dreimal](#dieselbe-bug-klasse-dreimal) — und der erste in Doku statt in
+Code**, wo nichts fehlschlägt und keine Spec ihn merken kann. Korrigiert in
+`c374d5e` und `15837dd`, wo möglich durch **Streichen der Zahl** statt
+Hochzählen; die Vimdoc-Zeile nennt jetzt `switches.names()` als Quelle, damit
+der nächste Leser nachsehen kann statt zu glauben.
 
 ### F. Zoom im Float — **eingegrenzt 2026-09-02: Bilder**
 
