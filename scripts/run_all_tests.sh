@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # Run every plugin's test suite, finding the runner instead of assuming one.
 #
+# Lived in docs/ROADMAP/tools/ until 2026-09-02, together with seven scripts
+# that have since become plugin commands. This one has no plugin to become:
+# it assumes THIS machine's checkout layout (thirty sibling repos under
+# E:/repos), which is exactly what no published plugin should ship. So it
+# stays a script, in the folder for scripts rather than the one for open
+# questions. See docs/ROADMAP/personal/All/FINISH/ERLEDIGT/
+# roadmap-tools-analysis.md for the other seven.
+#
 # The point is the "no runner found" case: during the keymap migration I called
 # TESTS/run.lua in a repo whose runner is TESTS/pickers_spec.lua, got "cannot
 # open", and read the missing output as success. A stale spec stayed red for

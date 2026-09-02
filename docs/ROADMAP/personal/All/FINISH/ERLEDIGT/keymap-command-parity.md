@@ -74,11 +74,17 @@ netrw-Adapter greift.
 
 ## Wiederholen
 
+Das Skript `docs/ROADMAP/tools/keymap_command_audit.lua`, das diesen Report
+erzeugt hat, ist seit 2026-09-02 kein Skript mehr, sondern lib.nvims
+`:LibBindingsAudit` (die Lückenliste: `:LibBindingsAuditGaps`) — siehe
+[`roadmap-tools-analysis.md`](roadmap-tools-analysis.md). Der alte Aufruf
+lautete:
+
 ```bash
 nvim --clean -l docs/ROADMAP/tools/keymap_command_audit.lua E:/repos/<plugin>.nvim <modul>
 ```
 
-Ausgabe ist TSV auf stdout, damit `grep`/`cut` reichen. Der Vergleich selbst
+Ausgabe war TSV auf stdout, damit `grep`/`cut` reichen. Der Vergleich selbst
 ist bewusst *kein* Teil des Skripts: die Paarung ist eine Ermessensfrage
 (siehe `:Open firefox`), und ein Skript, das sie als Urteil ausgibt, würde
 falsche Sicherheit erzeugen.

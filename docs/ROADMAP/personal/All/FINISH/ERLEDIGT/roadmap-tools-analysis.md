@@ -1,5 +1,27 @@
 # `docs/ROADMAP/tools/` — could any of these become real modules?
 
+> **Nachtrag 2026-09-02 — der Ordner ist weg, das hier ist sein Nachlass.**
+> Diese Datei hieß `docs/ROADMAP/tools/ANALYSIS.md` und lag bei den acht
+> Skripten, die sie bespricht. Die Antwort unten war für sieben von ihnen ein
+> Ja oder ein bewusstes Nein, also blieb nichts zu tun — und ein Ordner, der
+> nur noch aus erledigten Fragen besteht, liest sich beim nächsten Blick wie
+> offene Arbeit.
+>
+> * Die **sechs portierten Skripte** sind gelöscht. Ihr Inhalt lebt in den
+>   Plugin-Commands weiter (siehe die Tabelle gleich unten); die Python- und
+>   Lua-Fassungen daneben stehen zu lassen hieße, zwei Implementierungen
+>   derselben Sache zu pflegen — genau die Fehlerquelle, gegen die dieses Repo
+>   sonst überall argumentiert. `git log` hat sie, falls eine je gebraucht
+>   wird.
+> * `platform_branches.py` war schon hier als verworfen notiert und ist mit
+>   ihnen gegangen.
+> * **`run_all_tests.sh` liegt jetzt in `scripts/`** — die Filing-Entscheidung,
+>   die der letzte Abschnitt dieser Datei selbst vorschlägt. Es ist
+>   Werkzeug dieser Maschine, kein Roadmap-Punkt.
+> * Diese Analyse ist hierher gewandert, weil sie die Herleitung trägt: welcher
+>   Scan wo gelandet ist und warum, samt des Lua-Pattern-Bugs am Ende, der
+>   jeden künftigen Regex-Port betrifft.
+
 Roadmap question: *"könnten daraus echte Module für die nvim-config/lib.nvim
 entstehen?"*, later widened to *"oder für eines der Plugins"* — so each of the
 eight scripts here was checked against nvim-config, lib.nvim, and the full

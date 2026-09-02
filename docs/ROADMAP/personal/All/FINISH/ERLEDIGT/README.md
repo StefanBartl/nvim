@@ -30,15 +30,25 @@ Wo ein Punkt in einer Quelle durch konkrete Arbeit geschlossen wurde, steht
 dort ein `[x]` mit ✅-Datum und dem Verweis auf `Merged_Finished.md` — der
 Rest der Datei bleibt als Checkliste brauchbar.
 
-## Die Reports liegen woanders
+## Die Reports
 
-Die Ergebnisse der größeren Analysen sind **keine** Roadmap-Einträge und
-liegen deshalb eine Ebene höher in [`docs/ROADMAP/`](../../../):
+Die Ergebnisse der größeren Analysen sind **keine** Roadmap-Einträge, liegen
+aber inzwischen in genau diesem Ordner (der Satz „eine Ebene höher in
+`docs/ROADMAP/`" stand hier bis 2026-09-02 und stimmte da schon nicht mehr):
 
 - `keymap-command-parity.md` — ist jede Keymap auch als Kommando erreichbar?
 - `nicht-konfigurierbare-features.md` — benannte Konstanten, die Config-Keys sein sollten
 - `zahlen-ohne-namen.md` — Zahlen direkt im Aufruf, plus Plattform-Verzweigungen
-- `tools/` — die Skripte dazu, alle wiederholbar
+- `roadmap-tools-analysis.md` — was aus den Skripten wurde, die diese drei
+  Reports erzeugt haben
+
+Die Skripte selbst gibt es nicht mehr als Skripte. Sechs sind zu
+Plugin-Commands geworden (`:LibBindingsAudit`, `:LibBindingsAuditGaps`,
+`:LibDuplicateScan`, lib.nvims `scripts/bench_dispatcher.lua`,
+`:Insights smells`), einer wurde verworfen, und `run_all_tests.sh` liegt in
+[`scripts/`](../../../../../../scripts/run_all_tests.sh). Wiederholbar sind die
+Analysen damit weiterhin — nur über die Commands statt über den Ordner.
+`roadmap-tools-analysis.md` sagt für jedes Skript, welcher es ist und warum.
 
 `Merged_Finished.md` fasst zusammen, was daraus umgesetzt wurde, und
 verweist auf den jeweiligen Report für die Details.
