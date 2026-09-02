@@ -5,7 +5,7 @@ leader np / leader pf sind vertauscht  fileops.nvim
 
   - [cdx](#cdx)
   - [Lists](#lists)
-  - [Roadmaps](#roadmaps)
+  - [hover.nvim](#hovernvim)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
@@ -25,8 +25,8 @@ leader np / leader pf sind vertauscht  fileops.nvim
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    75% / 64%     |
 | **dev**  |    03. Sep    |   Sa., 22:00    |     19:40       |    83% / 68%     |
-| **work** |   20. Sept    |   Sa., 06:00    |     00:50       |    28% / 02%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     21:50       |    94% / 56%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     16:50       |    00% / 00%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     13:30       |    98% / 28%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -36,31 +36,20 @@ antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Engli
 ## Lists
 
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/MERGED.md
-- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS.md
-- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md
-- [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/WQ.md
+
+- [ ] `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
 
 ---
 
-## Roadmaps
-
-- `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
-
-- - `lib.nvim/docs/ROADMAP/dependency-installer.md` — 4 offene Punkte, versteckt
-  unter "Recommendation", "Open questions" und "Still worth doing"
-
-Hier finde ich nichts dazu in der lib - vielleich t schoin umgestzt?
-
-  - [ ] wie funktionert das mit den deoendencies checker nun genau? Ziel sollte ja sein, dass
-      - [ ] Wenn ein neues plugin installiert wird, gecheckt wird, ob cli tools zu isntallieren sind und diese vorschlägt
-      - [ ] Man auf diese checken kann mit scope cwd/path/pluginnname/...sinnvolles...
+## hover.nvim
 
 ---
 
 ## Misc
 
-- [ ] filetree.nvim
-  - [ ] Wenn man  mit `C-w C-w` oder `C-h` in einen filetre springt, soll es dorthin springen, wo die file ist, also mitr dme cursor auf die filetree node. momentan macht es dass nicht zuverlässig.
+
+
+- [ ]  was mit C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\tools machen ?
 
 - [ ] lsp.nvim:
   - [ ] `leader tl` -> neues mapping, dieses ist bereits vergeben
@@ -91,7 +80,11 @@ Parent folder, Filenam & Erste headline ist ok, aber dann die nächsten jheadlin
     - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
     - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
 
+- [ ] recommender.nvim
+  - [ ] `:Recommender perf` asynchron machen und mit statusline progress
+
 - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
+
 - [ ] `:Bindings [options?]` verbessern, andere optionen durchgehen, bestehdne ausbauen und optimieren
   - [ ] "Dashboard"-Funktionen wie `?`-Cheatsheet, keys, usw... Beispiele: `:Reposcope status`
 
@@ -129,6 +122,7 @@ fileops.nvim
 filetree.nvim
 github_stats.nvim
 gopath.nvim
+hover.nvim
 images.nvim
 insights.nvim
 language.nvim
