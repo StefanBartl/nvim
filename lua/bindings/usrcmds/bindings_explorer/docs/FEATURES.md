@@ -354,3 +354,42 @@ nur nicht registriert. Nur die Richtung „dokumentiert, aber nicht live"
 reicht eine Erwähnung, denn die Frage lautet allein, ob der Korpus den Command
 überhaupt kennt. Für die Gegenrichtung reicht sie nicht: eine Erwähnung trägt
 weder Taste noch Modus noch Fundstelle, gegen die sich etwas prüfen ließe.
+
+## Wer hat dieses Command registriert (2026-09-02)
+
+Der Abschnitt „Live commands with no cheatsheet, by origin" trug für 88 seiner
+166 Zeilen die Herkunft *„via lib.nvim usercmd helpers — owner not recorded"*,
+darunter eine Note, die sich für Fremdinfrastruktur entschuldigte. Beides war
+falsch: es waren fast ausschließlich eigene Commands.
+
+**Die Ursache war nicht, dass die Information fehlte.** lib.nvims Registry
+hält den Aufrufort seit jeher fest (`Lib.UserCommand.Record.src`). Zwei
+Stellen haben ihn nur nie erreicht:
+
+* `drift.lua` hat die Registry nie gefragt, sondern
+  `debug.getinfo(def.callback)` gelesen — und das ist die pcall-Hülle, die
+  `usercmd.create` um jeden Callback legt. Sie ist in lib.nvim definiert, also
+  meldete *jedes* über die Helfer angelegte Command lib.nvim als Quelle.
+* `composer.verb` hat `create`s `src`-Option nie durchgereicht, obwohl deren
+  Doku genau diesen Fall beschreibt („a wrapper creating a command on a
+  caller's behalf"). Alle zwölf Verben einer Session lagen damit auf einer
+  Zeile von `composer/init.lua` (behoben in lib.nvim `bfa09e5`).
+
+`command_owner` fragt jetzt vier Quellen, absteigend nach Direktheit: lazys
+`cmd`-Spec für Lazy-Stubs, **lib.nvims Registry**, `debug.getinfo` für
+Plugins, die selbst registrieren, und die `script_id` für Vimscript.
+`owner_of_path` macht aus einem Pfad einen Eigentümer — Lazy-Install,
+Checkout unter `<laufwerk>:/repos/`, dieser Config-Baum (`nvim-config`) oder
+Neovims Runtime — und hängt die Fundstelle innerhalb dessen an.
+
+Gemessen an einem echten Lauf: **0 unbekannte Eigentümer**, 53 der 109
+Befunde sind eigene mit `file:line`, 56 sind fremde. Die Note unter der
+Überschrift sagt jetzt, wie die Spalte zu lesen ist, statt zu raten, was in
+ihr steht.
+
+**Der Nebeneffekt, der die Doku-Arbeit lenkt:** die 23 von pickers.nvim
+erzeugten Scope-Commands (`:NotesFiles`, `:WkdbooksGrep`, …) landen alle auf
+*derselben* Generatorzeile (`lua/pickers/bindings/util.lua:33`) und stehen im
+Bericht damit als ein Block untereinander. Genau die Aussage, die der
+Driftreport von Hand getroffen hat: hier ist der Generator zu dokumentieren,
+nicht seine 23 Ergebnisse.

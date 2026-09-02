@@ -68,6 +68,9 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
 - 2026-09-02: `:Bindings report` (Bericht als Datei) und `:Bindings status`
   (Dashboard) ergänzt, dazu vier Fixes am Scraper — siehe den Abschnitt
   ganz unten.
+- 2026-09-02 (2): `check`/`report` nennen den Eigentümer jedes
+  undokumentierten Live-Commands statt „owner not recorded" — siehe den
+  letzten Abschnitt.
 
 ## `:Bindings check` — die dritte Achse: Source (2026-08-15)
 
@@ -259,3 +262,33 @@ eine Erwähnung, denn die Frage lautet nur, ob der Korpus den Command
 überhaupt kennt. Für die Gegenrichtung reicht sie nicht — eine Erwähnung
 trägt weder Taste noch Modus noch Fundstelle, gegen die sich etwas prüfen
 ließe.
+
+## `:Bindings check` sagt jetzt, wem ein Command gehört (2026-09-02)
+
+Der größte Posten des Driftreports war die Zeile *„88 live commands, origin:
+via lib.nvim usercmd helpers — owner not recorded"*. Der Befund hinter dem
+Befund war anders als dort vermutet: **die Information fehlte nie.** lib.nvims
+Registry hält den Aufrufort fest (`Lib.UserCommand.Record.src`). Nur haben
+zwei Stellen ihn nicht benutzt:
+
+* `drift.lua` fragte die Registry gar nicht, sondern las
+  `debug.getinfo(def.callback)` — die pcall-Hülle, die `usercmd.create` um
+  jeden Callback legt. Die ist in lib.nvim definiert, also meldete jedes über
+  die Helfer angelegte Command lib.nvim als Quelle.
+* `composer.verb` reichte `create`s `src`-Option nie durch, obwohl deren Doku
+  genau diesen Fall beschreibt. Alle zwölf Verben einer Session lagen auf
+  einer Zeile von `composer/init.lua`. Behoben in lib.nvim `bfa09e5`; danach
+  nennen 136 von 139 Registry-Einträgen einen echten Eigentümer, und die drei
+  übrigen (`:KitPreview`, `:Lib`, `:SystemInfo`) sind lib.nvims eigene.
+
+Im Bericht sieht man das an der Herkunftsspalte: **0 unbekannte Eigentümer**,
+53 der 109 undokumentierten Live-Commands sind eigene mit `file:line`, 56 sind
+fremde. Ein Eintrag mit Fundstelle ist einer, für den eine Cheatsheet-Zeile
+fehlt; ein blanker Pluginname ist Fremdinfrastruktur, die dieser Korpus nie
+abgedeckt hat. Die alte, entschuldigende Note unter der Überschrift ist genau
+dadurch ersetzt worden.
+
+Nebeneffekt, der die weitere Doku-Arbeit lenkt: die 23 von pickers.nvim
+erzeugten Scope-Commands teilen sich eine Generatorzeile und stehen deshalb
+als ein Block im Bericht — sichtbar als das, was sie sind, und damit als
+Argument für „den Generator dokumentieren, nicht seine 23 Ergebnisse".

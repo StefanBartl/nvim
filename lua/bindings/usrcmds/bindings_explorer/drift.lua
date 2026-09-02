@@ -449,51 +449,140 @@ local function lazy_cmd_owners()
   return out
 end
 
---- Best-effort answer to "who registered this command", for the live
---- commands that have no cheatsheet. Not a verdict and never a filter —
---- the section stays complete either way; this only lets a reader see at a
---- glance that a run of lines is somebody else's plugin.
+---@type string|nil
+local config_root_cached = nil
+
+---@return string
+local function config_root()
+  if not config_root_cached then
+    config_root_cached = vim.fs.normalize(vim.fn.stdpath("config")):gsub("/+$", "")
+  end
+  return config_root_cached
+end
+
+--- Who owns a source path, and where inside their tree it sits.
 ---
---- Three sources, in descending order of how directly they know:
----   1. lazy.nvim's `cmd` spec, for lazy-load stubs (see `lazy_cmd_owners`).
----   2. the callback's defining file, via `debug.getinfo` — reliable for a
----      plugin that registers its own commands directly.
----   3. the `script_id`, for anything defined in Vimscript, where there is
+--- `nil` for a path this config cannot place -- which is an answer, and a
+--- different one from "third-party": it means the file is neither a plugin
+--- checkout, nor a lazy install, nor this config.
+---@param path string  # a plain path, or lib.nvim's recorded `file:line`
+---@return string|nil owner, string rest
+local function owner_of_path(path)
+  local src = (path or ""):gsub("\\", "/")
+  if src == "" then
+    return nil, ""
+  end
+
+  local plugin, rest = src:match("/lazy/([^/]+)/(.*)$")
+  if plugin then
+    return plugin, rest
+  end
+
+  plugin, rest = src:match("^%a:/repos/([^/]+)/(.*)$")
+  if plugin then
+    return plugin, rest
+  end
+
+  local prefix = config_root() .. "/"
+  if src:sub(1, #prefix) == prefix then
+    return "nvim-config", src:sub(#prefix + 1)
+  end
+
+  local runtime = src:match("/runtime/(.+)$") or src:match("^vim/(.+)$")
+  if runtime then
+    return "neovim runtime", runtime
+  end
+
+  return nil, src
+end
+
+--- `name -> file:line` for every global command lib.nvim's usercmd registry
+--- knows about.
+---
+--- Built once per report: `registered()` deep-copies its whole list per call.
+--- Buffer-local records are left out -- the live axis this feeds compares
+--- against `nvim_get_commands({})`, which is global only, so a buffer-local
+--- record could only mis-attribute a same-named global one.
+---@return table<string, string>
+local function lib_command_sites()
+  local ok, usercmd = pcall(require, "lib.nvim.bindings.usercmd")
+  if not ok or type(usercmd.registered) ~= "function" then
+    return {}
+  end
+  local out = {}
+  for _, r in ipairs(usercmd.registered()) do
+    if r.name and r.src and not r.buffer then
+      out[r.name] = r.src
+    end
+  end
+  return out
+end
+
+--- Best-effort answer to "who registered this command", for the live
+--- commands that have no cheatsheet. Not a verdict and never a filter -- the
+--- section stays complete either way; this only lets a reader see at a glance
+--- which run of lines is somebody else's plugin and which is their own.
+---
+--- Four sources, in descending order of how directly they know:
+---   1. lazy.nvim's `cmd` spec, for lazy-load stubs (`lazy_cmd_owners`).
+---   2. lib.nvim's usercmd registry, which records the call site.
+---   3. the callback's defining file, via `debug.getinfo` -- for a plugin
+---      that calls `nvim_create_user_command` itself.
+---   4. the `script_id`, for anything defined in Vimscript, where there is
 ---      no callback to inspect.
 ---
---- One case stays unresolved and is labelled as such rather than guessed
---- at: commands registered through lib.nvim's usercmd helpers all report
---- that shared registrar as their origin (64 of them here), and lib.nvim
---- keeps no owner alongside them — `composer.registry()` hands out handles
---- with `check`/`document`/`name`/`spec` and no source. Recovering those
---- would mean lib.nvim recording its caller at registration time, which is
---- a change in that repository, not something to fake from this side.
+--- **Source 2 is new (2026-09-02) and it is the one that mattered.** Until
+--- it existed this function went straight to `debug.getinfo`, which reports
+--- the pcall wrapper `usercmd.create` builds -- a closure defined in
+--- lib.nvim. Every command created through the helpers therefore came back
+--- as the library, and the report filed 88 of them under "owner not
+--- recorded", beneath a heading note apologizing for third-party
+--- infrastructure the corpus never covered. That note was right about the
+--- other 78 and wrong about these: they were almost all ours.
+---
+--- The registry had the answer the whole time (`Lib.UserCommand.Record.src`,
+--- the caller site). What it did not have was the composer's verbs, which
+--- were all recorded at `composer/init.lua`'s own `create` call -- fixed on
+--- the lib.nvim side by passing `src`, so `:Lsp`, `:Lib`, `:Session` and the
+--- other nine name their declaring file too.
 ---@param name string
 ---@param lazy_owners table<string, string>
 ---@param defs table  # `nvim_get_commands({})`, passed in: rebuilding it per
 ---                     name would mean one full command-table build per
 ---                     finding, 156 of them in a real run
+---@param lib_sites table<string, string>  # `lib_command_sites()`, likewise
 ---@return string
-local function command_owner(name, lazy_owners, defs)
+local function command_owner(name, lazy_owners, defs, lib_sites)
   if lazy_owners[name] then
     return lazy_owners[name] .. " (lazy cmd stub)"
   end
 
+  -- lib.nvim's registry BEFORE `debug.getinfo`, and this order is the whole
+  -- point. `usercmd.create` wraps every callback in a pcall closure defined
+  -- inside lib.nvim, so the live command's function reports lib.nvim as its
+  -- source for every command created through the helpers -- 88 of them in the
+  -- 2026-09-02 report, all lumped under "owner not recorded" beneath a note
+  -- apologizing for third-party infrastructure, when almost every one was
+  -- ours. The registry records the CALL SITE, which is the question being
+  -- asked; `nvim_get_commands` was only ever able to answer "it exists".
+  local recorded = lib_sites[name]
+  if recorded then
+    local owner, rest = owner_of_path(recorded)
+    return owner and ("%s (%s)"):format(owner, rest) or recorded
+  end
+
   local def = defs[name]
   if def and type(def.callback) == "function" then
-    local info = debug.getinfo(def.callback, "S")
-    local src = ((info and info.short_src) or ""):gsub("\\", "/")
-    local lib = src:match("/lib%.nvim/") or src:match("^%a:/repos/lib%.nvim")
-    if lib then
-      return "via lib.nvim usercmd helpers — owner not recorded"
+    local src = ((debug.getinfo(def.callback, "S") or {}).short_src or ""):gsub("\\", "/")
+    -- Still reachable, and now it means something narrower: a command whose
+    -- callback lives in lib.nvim but which the registry does not hold was
+    -- created around the helpers, not through them.
+    if src:match("/lib%.nvim/") or src:match("^%a:/repos/lib%.nvim") then
+      return "lib.nvim (created outside its own usercmd registry)"
     end
-    local plugin = src:match("/lazy/([^/]+)/") or src:match("^%a:/repos/([^/]+)")
-    if plugin then
-      return plugin
-    end
-    local runtime = src:match("/runtime/(.+)$") or src:match("^vim/(.+)$")
-    if runtime then
-      return "neovim runtime: " .. runtime
+    local owner, rest = owner_of_path(src)
+    if owner then
+      return owner == "neovim runtime" and ("neovim runtime: " .. rest) or owner
     end
     if src ~= "" then
       return src
@@ -1021,6 +1110,7 @@ function M.check(plugin, opts)
 
     local lazy_owners = lazy_cmd_owners()
     local command_defs = vim.api.nvim_get_commands({})
+    local lib_sites = lib_command_sites()
     local names = vim.tbl_keys(live_cmds)
     table.sort(names)
     for _, name in ipairs(names) do
@@ -1029,7 +1119,7 @@ function M.check(plugin, opts)
           kind = "usercmd-undocumented",
           plugin = nil,
           notation = ":" .. name,
-          owner = command_owner(name, lazy_owners, command_defs),
+          owner = command_owner(name, lazy_owners, command_defs, lib_sites),
         }
       end
     end
@@ -1264,7 +1354,12 @@ local SECTIONS = {
   {
     kinds = { ["usercmd-undocumented"] = true },
     title = "Live commands with no cheatsheet, by origin",
-    note = "mostly third-party infra this corpus never covered; grouped so it can be skimmed",
+    -- The note used to read "mostly third-party infra this corpus never
+    -- covered", which was an apology for a column that could not tell the
+    -- difference. It can now (see `command_owner`), and the honest split in
+    -- the run that changed it was 53 ours to 56 theirs -- so the note says
+    -- how to read the column instead of guessing at its contents.
+    note = "an origin with a file:line is ours and wants a cheatsheet row; a bare plugin name is third-party infra this corpus never covered",
     -- Sorted by owner, not by name: this section is read to find out
     -- whether anything in it is *yours*, and clustering a plugin's dozen
     -- commands onto adjacent lines answers that in one glance.

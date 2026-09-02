@@ -120,6 +120,26 @@ eigenen zuspitzen. Verwandt mit dem bereits bekannten Fund `:RATelemetry`
 (steht in `Usercmds/lib.nvim.md`, registriert wird es von
 runtime-analysis.nvim) — dieselbe fehlende Zuordnung, andere Richtung.
 
+**Nachtrag, noch am 2026-09-02 — erledigt, und der Befund war zur Hälfte
+falsch.** Die Registry hält den Aufrufort sehr wohl fest:
+`Lib.UserCommand.Record.src`, gesetzt aus `caller_site(3)`. Was fehlte, war
+etwas Kleineres und Konkreteres:
+
+* `:Bindings check` hat die Registry nie gefragt. Es las
+  `debug.getinfo(def.callback)` — und das ist die pcall-Hülle, die
+  `usercmd.create` baut, also lib.nvim, für *jedes* so angelegte Command.
+* `composer.verb` hat `create`s `src`-Option nie durchgereicht, also lagen
+  alle zwölf Verben der Session auf einer Zeile von `composer/init.lua`.
+
+Beides behoben (lib.nvim `bfa09e5`, nvim-config im Commit unter diesem
+Nachtrag). Gemessen: 136 von 139 Registry-Einträgen nennen jetzt einen echten
+Eigentümer, und die 109 undokumentierten Live-Commands teilen sich in **53
+eigene mit `file:line` und 56 fremde**. Die drei verbleibenden
+lib.nvim-Einträge (`:KitPreview`, `:Lib`, `:SystemInfo`) sind lib.nvims eigene
+Commands, also richtig zugeordnet. Die entschuldigende Note unter der
+Überschrift im Anhang ist ersetzt: sie sagt jetzt, wie die Spalte zu lesen
+ist, statt zu raten, was in ihr steht.
+
 ## 3. Werkzeugfehler: was der Scraper falsch liest
 
 Vier Klassen, alle im selben Modul (`bindings_explorer/records.lua`):
