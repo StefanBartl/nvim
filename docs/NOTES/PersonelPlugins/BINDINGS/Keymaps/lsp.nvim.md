@@ -96,10 +96,15 @@ schreibt einen expliziten Override, auch wenn das Ergebnis dem globalen Default
 entspricht — sonst wuerde eine spaetere globale Aenderung den gerade gemachten
 Toggle still zurueckdrehen. `:Lsp hints clear <ft>` nimmt den Override zurueck.
 
-`<leader>th` ist im neo-tree-Buffer verdeckt: filetree.nvim bindet dort
+`<leader>th` ist im neo-tree-Dateibaum verdeckt: filetree.nvim bindet dort
 buffer-lokal seinen Trash-Verlauf auf dieselbe Taste. Global gibt es nur diesen
-einen Anspruch (gemessen 2026-09-02), im Baum gewinnt filetree — Baum
-verlassen, oder `<leader>tH` fuer das aktuelle Filetype nehmen. Siehe
+einen Anspruch (gemessen 2026-09-02), im Dateibaum gewinnt filetree — Baum
+verlassen, oder `<leader>tH` fuer das aktuelle Filetype nehmen.
+
+**Nur noch dort.** Bis 2026-09-02 galt das fuer jeden neo-tree-Baum, weil alle
+fuenf Sources dasselbe Filetype tragen. filetree.nvim `71eaa54` schraenkt sein
+`trash`-Feature auf die `filesystem`-Source ein, also kommt der Toggle im
+Diagnostics-Baum und im Symbol-Outline jetzt durch. Siehe
 [Collisions.md](./Collisions.md#cross-scope-shadowing).
 
 ## Code-Action-Indikator

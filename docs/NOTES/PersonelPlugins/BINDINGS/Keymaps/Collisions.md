@@ -132,7 +132,7 @@ hit it without knowing:
 | `<leader>ps` | insights.nvim — symbol picker (telescope) | pdfport.nvim — open with system application | Inside a file-tree buffer (netrw / oil / nvim-tree / neo-tree), where pdfport installs its buffer-local keys |
 | `gP` | gopath.nvim — resolve path under cursor, open here | filetree.nvim — create PDF(s) from the node via pdfport | Inside the tree window |
 | `+` / `-` | cascade.nvim — increment/decrement *(opt-in preset)* | filetree.nvim — set node as root / go to parent | Inside the tree window |
-| `<leader>th` | lsp.nvim — toggle inlay hints globally | filetree.nvim — show trash history | Inside the tree window |
+| `<leader>th` | lsp.nvim — toggle inlay hints globally | filetree.nvim — show trash history | Inside the tree window, **`filesystem` source only** (since 2026-09-02) |
 
 The pattern is the same for the first three: a plugin that operates on the
 *thing under the cursor in a tree* takes a key a plugin that operates on the
@@ -166,10 +166,29 @@ filetree binds it through its own tree-attach dispatcher, not through
   `3<leader>th` in `thesaurus/init.lua:145` is a comment describing how a count
   *would* act, not a registration.
 
-In neo-tree's two read-only sources the key is switched **off** on purpose:
-`config/neotree/keymaps/diagnostics.lua` and `document_symbols.lua` map it to
-`noop` alongside the other filesystem-mutating keys, because trashing has no
-meaning in a diagnostics list or a symbol outline.
+**Resolved on the filetree side, 2026-09-02** (filetree.nvim `71eaa54`). Until
+then the key was bound in every neo-tree source, because neo-tree draws all
+five of them through one `neo-tree` filetype and filetree's tree-attach
+dispatcher had no finer distinction available. It now consults
+`lua/filetree/sources.lua`, which restricts `trash` (`d`, `U`, `<leader>th`) to
+the `filesystem` source — so in a diagnostics list or a symbol outline the key
+is not bound at all and lsp.nvim's global toggle comes through.
+
+That list is read by both paths that put a key into a tree — the dispatcher
+that binds it and the `window.mappings` injection that describes it in `?` — so
+the two cannot come to disagree.
+
+The config used to defend itself here with
+`config/neotree/keymaps/{diagnostics,document_symbols}.lua` mapping the key to
+`noop` alongside the other filesystem-mutating keys. Two things were wrong with
+that, and both are gone with the noop:
+
+* It did not work. `attach.inject` runs *after* `neo-tree.setup()` and writes
+  into the already-merged config, so filetree's entry was the last word and the
+  explicit "no filesystem operations in this tree" lost to load order.
+* A `noop` is a buffer-local mapping to nothing, so even where it did win it
+  swallowed lsp.nvim's global toggle rather than letting it through — the key
+  did nothing at all in the tree built out of LSP data.
 
 `<2-LeftMouse>` deserves a mention on its own: **images.nvim** and
 **markdown.nvim** both bind it, both buffer-locally on markdown filetypes, and

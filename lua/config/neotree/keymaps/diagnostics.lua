@@ -75,5 +75,11 @@ return {
 
   -- leader keys
   ["<leader>mc"] = "noop",
-  ["<leader>th"] = "noop",
+  -- `<leader>th` used to be noop'd here too. It no longer has to be:
+  -- filetree.nvim restricts its trash keymaps to the `filesystem` source
+  -- (filetree.nvim 71eaa54, `lua/filetree/sources.lua`), so nothing claims it
+  -- in this tree any more. And a `noop` is not free -- it is a buffer-local
+  -- mapping to nothing, which also swallowed lsp.nvim's global inlay-hint
+  -- toggle. Leaving the key unmapped lets that one through, which is the
+  -- useful answer in a tree built out of LSP data.
 }
