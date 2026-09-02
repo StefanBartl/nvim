@@ -32,6 +32,38 @@ config doesn't use it, still bring-your-own-engine). See
 | `:PickersScopes` | — | List every resolvable scope (built-ins + collections) via `notify.info` — added 2026-07-22 |
 | `:PickersResume` | — | Reopen the last picker with its last query — thin wrapper over `:Pickers builtin resume` (the engine's own native resume, fzf-lua excepted). Added 2026-07-22 |
 | `:Pickers {scope} files all` | — | "Find all" escape hatch — forces `hidden`+`no_ignore`+`follow` for that one search only, regardless of configured `find.*` defaults. Works for every built-in scope/collection, not `dir`. No-op on `grep`/`smart` (silently ignored). Added 2026-07-26. |
+| `:*Files` / `:*Grep` / `:*Smart` | — | One generated command per collection and action — `:{PascalName}Files` → `:Pickers {name} files`, and the same for `grep`/`smart`. The set is whatever collections are configured, not a fixed list; see below |
+
+## The generated per-collection commands (`:*Files` / `:*Grep` / `:*Smart`)
+
+`bindings/collections.lua` registers three compat commands for every
+configured collection: `:{PascalName}Files`, `:{PascalName}Grep` and
+`:{PascalName}Smart`, each a thin forward to `:Pickers {name} {action}`. In
+this config that currently comes to 23 commands — `:NotesFiles`,
+`:NotesLuaGrep`, `:WkdbooksNvimSmart`, `:SpickzettelFiles`,
+`:ChecklistsGrep` and so on.
+
+**They are documented as a family on purpose, and the row above is written
+`:*Files` for exactly that reason.** The names come out of a loop over the
+collection list in the config, so a cheatsheet that spelled all 23 out would
+be a hand-kept copy of a generated set — the failure mode this repo names as
+a defect everywhere else, and one that goes stale the first time a collection
+is added. `:Bindings check` understands the `*` and accepts a generated name
+as covered (`records.command_globs`); `:PickersScopes` prints the collections
+that actually exist right now, which is the answer no document can keep true.
+
+The check's side of that bargain is narrower than it first looks, and had to
+be: a family only covers commands the check attributes to **this** plugin.
+The loose first version let `:*Files` swallow diffview.nvim's
+`:DiffviewFocusFiles` and `:DiffviewToggleFiles` — two third-party commands
+quietly marked as documented by a sheet that never mentions them. Only a row
+in a table counts as a claim, too; the `:Lsp*`/`:Diff*`/`:Copy*` that this
+corpus writes in sentences are typography, not a claim to every name that
+fits.
+
+A collection whose command name already exists is skipped rather than
+overwritten (`vim.fn.exists(":" .. cmd) ~= 2`), which is why `:WkdBookFiles`
+from `usrcmds.lua` wins over a `wkd_book` collection's generated one.
 
 ## Compat aliases (unchanged from the composer migration)
 

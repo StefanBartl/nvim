@@ -340,7 +340,7 @@ Befunde vorher, 262 nachher, kein einziger echter darunter.
 | --- | --- | ---: |
 | Platzhalter in der Key-Spalte (`—`, `*(unset)*`, `*(your lhs)*`) sind keine Taste | `drift.is_placeholder_key` | 3 |
 | Korpus-Dateien (`All.md`, `Collisions.md`, `Overview.md`) sind keine Cheatsheets | `records.META_FILES` | 17 |
-| `:Name` direkt hinter einem Wortzeichen ist Prosa, kein Command (`path:L1-L2` → `:L1`) | `records.command_names` | 1 |
+| Ein Commandname direkt hinter einem Wortzeichen ist Prosa (`path:L1-L2` wurde als fehlendes Kommando gemeldet) | `records.command_names` | 1 |
 | Ein im Fließtext dokumentierter Command gilt als dokumentiert | `records.mentions` | 48 |
 
 **Korpus-Dateien werden markiert, nicht verworfen** (`Bindings.Record.meta`).

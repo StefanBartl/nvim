@@ -1108,6 +1108,38 @@ function M.check(plugin, opts)
       end
     end
 
+    -- A documented FAMILY (`:*Files` in `pickers.nvim.md`'s table) covers its
+    -- members. The 23 scope commands pickers.nvim generates from a collection
+    -- list are the motivating case: listing them one by one would be the
+    -- hand-kept mirror this repo calls a defect everywhere else, so the sheet
+    -- documents the generator and this accepts what the generator makes.
+    --
+    -- The claim is checked against the command's OWNER, not just its name.
+    -- Without that, `:*Files` also swallowed diffview.nvim's
+    -- `:DiffviewFocusFiles` -- a third-party command marked documented by a
+    -- sheet that never mentions it. This pairing is only possible since
+    -- `command_owner` learned to answer at all; see there.
+    local family_claims = records.family_claims()
+
+    ---@param owner string  # `command_owner`'s answer
+    ---@param plugin string # the claiming sheet's stem
+    ---@return boolean
+    local function owner_is(owner, plugin)
+      return owner == plugin or owner:sub(1, #plugin + 1) == plugin .. " "
+    end
+
+    ---@param cmd string
+    ---@param owner string
+    ---@return boolean
+    local function claimed_by_family(cmd, owner)
+      for _, claim in ipairs(family_claims) do
+        if cmd:match(claim.pattern) and owner_is(owner, claim.plugin) then
+          return true
+        end
+      end
+      return false
+    end
+
     local lazy_owners = lazy_cmd_owners()
     local command_defs = vim.api.nvim_get_commands({})
     local lib_sites = lib_command_sites()
@@ -1115,12 +1147,17 @@ function M.check(plugin, opts)
     table.sort(names)
     for _, name in ipairs(names) do
       if not documented_anywhere[name] and not reported_by_source[name] then
-        findings[#findings + 1] = {
-          kind = "usercmd-undocumented",
-          plugin = nil,
-          notation = ":" .. name,
-          owner = command_owner(name, lazy_owners, command_defs, lib_sites),
-        }
+        -- Resolved before the family check, which needs it, rather than
+        -- inside the finding: the two questions share one answer.
+        local owner = command_owner(name, lazy_owners, command_defs, lib_sites)
+        if not claimed_by_family(name, owner) then
+          findings[#findings + 1] = {
+            kind = "usercmd-undocumented",
+            plugin = nil,
+            notation = ":" .. name,
+            owner = owner,
+          }
+        end
       end
     end
   end

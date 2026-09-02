@@ -170,6 +170,72 @@ Aus demselben Grund sind `:TypeDef*`, `:EslintFix`, `:AstroDevStart`,
 `:MdFormat` und `:LuaLsReloadLibrary` unangetastet: filetype-gebunden, und sie
 gehoeren dem Modul, das sie besitzt.
 
+Die Begruendung stand hier seit jeher, die Liste nicht — nachgetragen im
+naechsten Abschnitt, nachdem der Driftreport vom 2026-09-02 genau diese
+22 Commands als live-aber-undokumentiert gemeldet hat.
+
+## Die filetype-gebundenen Commands
+
+Kein `:Lsp`-Subcommand, sondern eigene Namen, weil sie einem Modul gehoeren
+und nur dort Sinn ergeben. Sie werden registriert, wenn ihr Modul laedt — also
+nicht in jeder Session, was `:Bindings check` als `usercmd-not-live` melden
+kann, ohne dass etwas kaputt ist.
+
+### Astro (`languages/webdev/astro/usercmds.lua`)
+
+| Command | Effect |
+| --- | --- |
+| `:AstroDevStart` | Astro-Dev-Server starten |
+| `:AstroDevStop` | Ihn wieder stoppen |
+| `:AstroBuild` | Projekt bauen |
+| `:AstroPreview` | Den Build lokal ansehen |
+| `:AstroNewComponent {name}` | Neue Komponente anlegen |
+| `:AstroNewPage {name}` | Neue Seite anlegen |
+| `:AstroListComponents` | Alle Komponenten des Projekts auflisten |
+| `:AstroFindUsage` | Verwendungsstellen einer Komponente suchen |
+| `:AstroCheckStructure` | Projektstruktur pruefen |
+
+### TypeScript-Typen (`tools/ts_type_lookup/`)
+
+| Command | Effect |
+| --- | --- |
+| `:TypeDefGoTo [symbol]` | Zur Typdefinition springen (vsplit). Ohne Argument `<cword>` |
+| `:TypeDefPeek [symbol]` | Dieselbe Definition im Float statt im Split. Ohne Argument `<cword>` |
+| `:TypeDefFindInNodeModules [symbol]` | Symbol in `node_modules` suchen (ripgrep-Fallback). Ohne Argument `<cword>` |
+| `:TypeDefPick [query]` | Workspace-Symbole zu einer Anfrage. Ohne Argument das Wort unter dem Cursor |
+| `:TypeDefAttachNoiceKeys` | Die Typ-Lookup-Tasten an den aktuellen Noice-Buffer haengen |
+
+### eslint / prettier (`tools/eslint_prettier/usercmds/`)
+
+| Command | Effect |
+| --- | --- |
+| `:EslintFix` | `eslint_d --fix` auf der aktuellen Datei. Braucht eine eslint-Konfiguration in der Projektwurzel |
+| `:PrettierFormat` | `prettier --write` auf der aktuellen Datei. Braucht eine prettier-Konfiguration |
+| `:LintAndFormat` | Beides nacheinander: erst `eslint_d --fix`, dann `prettier --write` |
+| `:ToggleLintFormatOnSave` | Lint+Format beim Speichern an-/abschalten |
+
+### lua_ls (`servers/lua_ls/reload.lua`)
+
+| Command | Effect |
+| --- | --- |
+| `:LuaLsReloadLibrary` | Workspace-Library neu laden — der Griff, wenn `@types` nicht erkannt wurden |
+| `:LuaLsInspectLibrary` | Zeigt die aktuelle Workspace-Library-Konfiguration |
+| `:LuaLsSetProfile {profile}` | Library-Profil setzen: `minimal`, `normal` oder `full` |
+
+### Markdown-Woerter (`languages/documentation/markdown_words/`)
+
+| Command | Effect |
+| --- | --- |
+| `:MdSetRoot [pfad]` | Projektwurzel fuer das Woerter-Scannen setzen. Leer = cwd |
+| `:MdRebuildWords` | Vollen Neuaufbau des projektweiten Wort-Caches erzwingen |
+| `:MdWordStats` | Statistik des Wort-Caches anzeigen |
+
+### Completion (`completion/personal_names/`)
+
+| Command | Effect |
+| --- | --- |
+| `:CmpReloadWords` | `extra.lua` und die Personal-Plugin-Liste neu laden, ohne Neustart |
+
 ### Die sechs Reports
 
 Der Name nennt die Frage, nicht die Ausgabemenge. Fuenf lesen Zustand, einer

@@ -213,6 +213,48 @@ function M.command_names(text)
   end
 end
 
+--- The command-name FAMILIES a text claims with a `*`, as Lua patterns.
+---
+--- A generated family has no business being listed one member at a time. The
+--- 2026-09-02 drift report made the case on pickers.nvim's 23 scope commands
+--- (`:NotesFiles`, `:WkdbooksGrep`, `:SpickzettelSmart`, ...): they come out
+--- of a loop over a collection list in the config, so writing them into a
+--- cheatsheet by hand would be exactly the hand-kept mirror this repo treats
+--- as a defect everywhere else. Its conclusion was that the sheet should
+--- document the GENERATOR, and that the check should accept a family
+--- described that way. This is the second half of that.
+---
+--- `*` stands for one or more word characters, so `:*Files` claims
+--- `:NotesFiles` but not a bare `:Files`. At least three literal word
+--- characters are required: `:*` or `:A*` would claim most of the corpus at
+--- once, which is not documentation.
+---
+--- **Only for the live-but-undocumented direction.** A family carries no
+--- concrete command, so nothing about it can be checked for liveness -- the
+--- same asymmetry `M.mentions` has, and for the same reason.
+---
+--- Text in, patterns out. Which text counts as a claim is `M.family_claims`'
+--- decision, and it is narrower than "anywhere in the file".
+---@param text string
+---@return string[] lua patterns, anchored
+function M.command_globs(text)
+  local out, init = {}, 1
+  while true do
+    local s, e, glob = text:find(":([%w_]*%*[%w_%*]*)", init)
+    if not s then
+      return out
+    end
+    local prev = s > 1 and text:sub(s - 1, s - 1) or ""
+    local literal = glob:gsub("%*", "")
+    if not prev:match("[%w_]") and #literal >= 3 then
+      out[#out + 1] = "^"
+        .. glob:gsub("[%^%$%(%)%%%.%[%]%+%-%?]", "%%%0"):gsub("%*", "[%%w_]+")
+        .. "$"
+    end
+    init = e + 1
+  end
+end
+
 --- Every command name mentioned ANYWHERE in the corpus, tables and prose
 --- alike.
 ---
@@ -236,6 +278,40 @@ function M.mentions()
       out[name] = true
     end
   end)
+  return out
+end
+
+---@class Bindings.FamilyClaim
+---@field plugin string the claiming cheatsheet's stem, e.g. "pickers.nvim"
+---@field pattern string anchored Lua pattern over the command name
+
+--- Every command FAMILY the corpus claims, each tied to the sheet claiming it.
+---
+--- Two deliberate narrowings, both found by measuring the loose version
+--- against the real corpus:
+---
+--- **Table rows only, never prose.** The corpus writes `:Lsp*`, `:Diff*`,
+--- `:Copy*`, `:Image*` in sentences as a typographic shorthand for "those
+--- commands", not as a claim to every name that fits. Reading prose globs
+--- turned 18 families loose on the report, `^Lsp[%w_]+$` among them. A table
+--- row is the deliberate statement; a sentence is not.
+---
+--- **A family only covers its own plugin's commands.** `:*Files` from
+--- `pickers.nvim.md` otherwise also claimed diffview.nvim's
+--- `:DiffviewFocusFiles` and `:DiffviewToggleFiles` -- two third-party
+--- commands silently marked as documented by a sheet that says nothing about
+--- them. `drift.lua` pairs each claim with `command_owner`'s answer, which is
+--- the piece that only became available once the owner was recorded at all.
+---@return Bindings.FamilyClaim[]
+function M.family_claims()
+  local out = {}
+  for _, rec in ipairs(M.list("Usercmds")) do
+    for _, cell in ipairs(rec.cells) do
+      for _, pattern in ipairs(M.command_globs(cell)) do
+        out[#out + 1] = { plugin = rec.plugin, pattern = pattern }
+      end
+    end
+  end
   return out
 end
 

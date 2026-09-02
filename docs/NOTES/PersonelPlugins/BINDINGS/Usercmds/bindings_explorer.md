@@ -249,7 +249,7 @@ den Fixes, und keiner der 69 entfernten war ein echter.
 | --- | --- | ---: |
 | Platzhalter in der Key-Spalte (`—`, `*(unset)*`, `*(your lhs)*`) zählen nicht als Taste | `drift.is_placeholder_key` | 3 |
 | Korpus-Dateien (`All.md`, `Collisions.md`, `Overview.md`) sind keine Cheatsheets | `records.META_FILES` | 17 |
-| Ein `:Name` direkt hinter einem Wortzeichen ist Prosa, kein Command (`path:L1-L2` → `:L1`) | `records.command_names` | 1 |
+| Ein Commandname direkt hinter einem Wortzeichen ist Prosa (`path:L1-L2` wurde als fehlendes Kommando gemeldet) | `records.command_names` | 1 |
 | Ein im Fließtext dokumentierter Command gilt als dokumentiert | `records.mentions` | 48 |
 
 Die Korpus-Dateien werden **markiert, nicht verworfen**: `browse`/`search`

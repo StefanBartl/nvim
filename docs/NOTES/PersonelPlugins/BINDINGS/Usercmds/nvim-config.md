@@ -52,6 +52,27 @@ here.
 | Command | Range | Effect |
 | --- | --- | --- |
 | `:WKDDiffProfile {profile}` | — | Set `diffopt` from a named profile — `minimal`, `context`, `review` or `strict` (`wkdoptions/set_diff_profile/profiles.lua`). `nargs = 1` with completion over the four names |
+| `:MyOptSet[!] {keypath} [value]` | — | Set one options-config key. `<Tab>` completes the key paths. With `!` and no value it toggles the key instead |
+| `:MyOptShow [keypath]` | — | Print one key's value; without an argument, the whole options table |
+| `:MyOptList` | — | List every options-config key path |
+| `:WKDOptionsHLSet[!] {keypath} [value]` | — | The same three, for the highlight config. `!` without a value toggles |
+| `:WKDOptionsHLShow [keypath]` | — | One highlight key, or the whole table |
+| `:WKDOptionsHLList` | — | Every highlight-config key path |
+| `:WKDOptionsHLDebugCtx` | — | Dump what the breadcrumb context resolver currently produces: LSP function, treesitter symbol, language extra, word fallback, and the separator it would use |
+
+**Two subsystems, one registrar, and that is why the names look unrelated.**
+`wkdoptions/commands/register.lua` defines all seven generically, with default
+names `WKDOptSet`/`WKDHighlightSet`/… — and both callers override them:
+`options_config/init.lua` asks for `MyOpt*`, `hl_config/init.lua` for
+`WKDOptionsHL*`. Neither default name exists in a running session, so grepping
+the registrar for the live names finds nothing.
+
+Nachgetragen 2026-09-02. Der Driftreport hatte diese sieben als
+"Commands dieser Config selbst — kein Plugin, also auch kein
+Cheatsheet-Eigentuemer" gefuehrt und daraus eine Luecke im Aufbau des Korpus
+gefolgert. Das war ein Trugschluss: dieses Blatt ist genau der Ort dafuer,
+es nennt `wkdoptions/commands/register.lua` seit jeher als Quelle — die Zeilen
+fehlten einfach.
 
 **Registered since 2026-08-30, and it was not before.**
 `wkdoptions/commands/register.lua` had always defined the command, but only
