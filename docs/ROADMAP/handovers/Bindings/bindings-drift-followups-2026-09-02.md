@@ -1,4 +1,4 @@
-# Handover — BINDINGS-Drift, was noch offen ist
+# Handover — BINDINGS-Drift, abgeschlossen
 
 ## Table of content
 
@@ -12,8 +12,12 @@
 ## Aktueller Stand
 
 Stand 2026-09-02, nachts. **Alle fünf Punkte dieser Datei sind zu** — vier
-gebaut, einer entschieden. Was von ihnen dauerhaft gilt, steht dort, wo es
-hingehört:
+gebaut, einer entschieden — und die drei Blöcke, die aus ihrer Bearbeitung
+entstanden sind (die 80 Commands, drei fehlende Autocmds, die 16
+Keymap-Zeilen) ebenfalls. **Diese Datei hat nichts Offenes mehr**; sie kann
+ins ERLEDIGT-Archiv, sobald jemand die Bilanz gelesen hat.
+
+Was von ihr dauerhaft gilt, steht dort, wo es hingehört:
 
 | Was | Wo es steht |
 | --- | --- |
@@ -21,6 +25,7 @@ hingehört:
 | Alle gemessenen Stände mit Datum | dieselbe Datei, „Gemessene Stände" |
 | Was die Routen tun und warum so | [`bindings_explorer/docs/FEATURES.md`](../../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md) |
 | Die `**Repo:**`-Zeile als Korpus-Element | [`BINDINGS-FORMAT.md`](../../../NOTES/BINDINGS-FORMAT.md) §5 |
+| Der `**Nicht live:**`-Marker | dieselbe Datei, §6 |
 | **Wann ein fremdes Plugin ein Blatt bekommt** | [`Usercmds/Overview.md`](../../../NOTES/ExternPlugins/Bindings/Usercmds/Overview.md) |
 | `<leader>th`, Cross-Scope-Shadowing, freie `t`-Tasten | [`Keymaps/Collisions.md`](../../../NOTES/PersonelPlugins/BINDINGS/Keymaps/Collisions.md) |
 | Der cmdlog-Fund und seine Aufklärung | [`Keymaps/cmdlog.nvim.md`](../../../NOTES/PersonelPlugins/BINDINGS/Keymaps/cmdlog.nvim.md) |
@@ -54,18 +59,24 @@ hat einen Befund weggeworfen**:
 
 ### Die Zahl, die neben jeder dieser Zahlen stehen muss
 
-**1377 dokumentierte Zeilen wurden in diesem Lauf gar nicht geprüft**, weil
-ihr Plugin nicht geladen war (extern 541, personal 836). Der Bericht druckt
-das jetzt selbst, direkt unter der übersprungenen Plugin-Liste — vorher stand
-dort nur die Anzahl *Plugins*, und 17 übersprungene Plugins klingen nach
-weniger als 541 ungeprüften Zeilen.
+**1455 dokumentierte Zeilen wurden in diesem Lauf gar nicht geprüft**, weil
+ihr Plugin nicht geladen war (extern 619, personal 836; der Korpus zählt
+inzwischen 2055 Keymap- und Usercmd-Zeilen). Der Bericht druckt das jetzt
+selbst, direkt unter der übersprungenen Plugin-Liste — vorher stand dort nur
+die Anzahl *Plugins*, und 19 übersprungene Plugins klingen nach weniger als
+619 ungeprüften Zeilen.
+
+Dazu die dritte Zahl, die es seit dem `**Nicht live:**`-Marker gibt: **16
+Zeilen, die ihr eigener Abschnitt von der Live-Prüfung ausnimmt**. Auch die
+steht unter jedem Bericht, damit ein Opt-out nicht unsichtbar wird.
 
 Punkt 3 hat 84 `keymap-not-live` nicht repariert, sondern als das kenntlich
 gemacht, was sie waren: Aussagen über Plugins, die diese Session nie geladen
 hat. Wo sie wirklich hingehören, steht im nächsten Abschnitt.
 
-Dazu unverändert die zwei Autocmds-Zahlen unter jedem Bericht (112
-dokumentierte Zeilen nicht prüfbar, 122 Registrierungen zuzuordnen).
+Dazu die zwei Autocmds-Zahlen unter jedem Bericht (112 dokumentierte Zeilen
+nicht prüfbar, 116 Registrierungen zuzuordnen — die zweite schwankt mit dem
+Lazy-Zustand, siehe MEASURING.md).
 
 ---
 
