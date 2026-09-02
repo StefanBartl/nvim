@@ -213,6 +213,56 @@ function M.command_names(text)
   end
 end
 
+--- What a wildcard may stand for, per kind of name.
+---
+--- Command names are Lua-identifier-shaped, so `[%w_]` is the whole alphabet.
+--- Augroup names are not: this config runs `ra_telemetry_lib.nvim` and
+--- `ra_telemetry_runtime-analysis.nvim`, both named after a plugin, dot and
+--- hyphen included. A shared class would either miss those or let a command
+--- family reach across a `.` it has no business crossing.
+--- Written with DOUBLED percent signs because these go through `gsub`'s
+--- replacement argument, where `%` is an escape: a literal `[%w_]+` there is
+--- "invalid use of '%' in replacement string", and the class has to arrive as
+--- `[%%w_]+` to come out as `[%w_]+`. The original inline version had this
+--- right; hoisting it into a named table lost it, and the damage was silent
+--- in the worst way -- the command families stopped matching and 18 findings
+--- came back that had been correctly suppressed for two days.
+local WILDCARD_CLASS = {
+  command = "[%%w_]+",
+  augroup = "[%%w_%%.%%-]+",
+}
+
+--- One `*`- or `<name>`-bearing token as an anchored Lua pattern.
+---
+--- **Two spellings, and the corpus chose the second one first.** `:*Files`
+--- reads well for commands, where the varying part has no name worth writing.
+--- For augroups the corpus already wrote `ra_telemetry_<namespace>`
+--- (`runtime-analysis.nvim.md`) and `LspSignaturePopup_<winid>`
+--- (`lsp.nvim.md`) long before anything could read them -- a placeholder that
+--- *names* what varies, which is better documentation than a star. Both are
+--- accepted; `<name>` is the one to write for augroups.
+---
+--- At least three literal word characters are required. `<x>` or `*` alone
+--- would claim every name in the corpus at once, which is not documentation.
+---@param token string
+---@param kind "command"|"augroup"
+---@return string|nil  # nil when the token carries no wildcard, or too little else
+function M.wildcard_pattern(token, kind)
+  if not token:find("%*") and not token:find("<.->") then
+    return nil
+  end
+  local literal = token:gsub("<.->", ""):gsub("%*", "")
+  if #literal:gsub("[^%w_]", "") < 3 then
+    return nil
+  end
+  local class = WILDCARD_CLASS[kind] or WILDCARD_CLASS.command
+  local escaped = token:gsub("[%^%$%(%)%%%.%[%]%+%-%?]", "%%%0")
+  -- The escape above turned `<name>` into `<name>` still (angle brackets are
+  -- not pattern syntax), so both placeholder forms are replaced here.
+  escaped = escaped:gsub("<.->", class):gsub("%*", class)
+  return "^" .. escaped .. "$"
+end
+
 --- The command-name FAMILIES a text claims with a `*`, as Lua patterns.
 ---
 --- A generated family has no business being listed one member at a time. The
@@ -245,11 +295,11 @@ function M.command_globs(text)
       return out
     end
     local prev = s > 1 and text:sub(s - 1, s - 1) or ""
-    local literal = glob:gsub("%*", "")
-    if not prev:match("[%w_]") and #literal >= 3 then
-      out[#out + 1] = "^"
-        .. glob:gsub("[%^%$%(%)%%%.%[%]%+%-%?]", "%%%0"):gsub("%*", "[%%w_]+")
-        .. "$"
+    if not prev:match("[%w_]") then
+      local pattern = M.wildcard_pattern(glob, "command")
+      if pattern then
+        out[#out + 1] = pattern
+      end
     end
     init = e + 1
   end

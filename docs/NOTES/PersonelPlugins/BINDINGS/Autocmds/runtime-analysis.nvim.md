@@ -12,11 +12,12 @@ is actually enabled for.
 | --- | --- | --- | --- |
 | `VimLeavePre` | `telemetry/init.lua` | `ra_telemetry_<namespace>`, one per live instance | Flush persisted counters on exit. `stop()` is deliberately not called here — the process is ending, no point restoring wrappers that cannot outlive it. |
 | `VimEnter` | `telemetry/init.lua` | same, per instance | The one place the "data has been sitting on disk a while" reminder is checked outside a periodic flush. |
+| `VimEnter` | `telemetry/lazy.lua` | `runtime_analysis_telemetry_extra` | Nachtraegliche Instrumentierung fuer Plugins, die beim Start schon geladen waren -- das Gegenstueck zur LazyLoad-Zeile darunter, und die einzige der sechs, die dieses Blatt bis 2026-09-02 nicht kannte. Gefunden von der Autocmds-Achse in `:Bindings check`. |
 | `User LazyLoad` | `telemetry/lazy.lua` | `runtime_analysis_telemetry_lazyload` | Auto-instrumentation catch-up: wraps + starts a telemetry instance the moment lazy.nvim finishes loading a plugin listed in `opts.telemetry.plugins` — see `lua/config/telemetry.lua` in this config for the policy. |
 | `UIEnter` (`once = true`) | `telemetry/startup.lua` | `runtime_analysis_startup` | Stops startup-cost timing once the UI is up — only fires at all if `require("runtime-analysis.telemetry.startup").autostart()` is wired into the plugin's own `init` hook (opt-in, see the Usercmds sheet's `:RATelemetry startup` section). |
 | `CmdlineLeave` | `usage.lua` | `runtime_analysis_usage` | Counts a typed command by name, unless the cmdline was `<Esc>`-aborted — only active between `:RA usage start` and `:RA usage stop`. |
 
-All five are scoped to opt-in machinery (telemetry instances, `:RA usage`)
+All six are scoped to opt-in machinery (telemetry instances, `:RA usage`)
 rather than always-on — a config that never enables telemetry or usage
 tracking installs none of them. None touches a buffer/window a keymap could
 collide with, so no collision table is needed the way the Keymaps sheet has

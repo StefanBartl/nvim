@@ -9,7 +9,7 @@
     - [2 — Der Quelltext-Fallback fehlt auf der Usercmd-Achse](#2-der-quelltext-fallback-fehlt-auf-der-usercmd-achse)
     - [3 — Extern-Stämme lassen sich nicht auf lazy-Plugins auflösen](#3-extern-stmme-lassen-sich-nicht-auf-lazy-plugins-auflsen)
     - [4 — Elf Cheatsheet-Zeilen, deren Sheet schon existiert](#4-elf-cheatsheet-zeilen-deren-sheet-schon-existiert)
-    - [5 — Die Scope-Entscheidung, und die Familien-Frage daneben](#5-die-scope-entscheidung-die-seit-drei-blcken-offen-ist-und-die-familien-frage-daneben)
+    - [5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist](#5-die-scope-entscheidung-die-seit-drei-blcken-offen-ist)
   - [Was ausdrücklich *nicht* offen ist](#was-ausdrcklich-nicht-offen-ist)
 
 ---
@@ -33,15 +33,17 @@ hingehört:
 
 | Route | Befunde | davon Autocmds |
 | --- | ---: | --- |
-| `:Bindings check` | **25** | 8 nicht registriert, 16 nicht dokumentiert |
+| `:Bindings check` | **9** | 8 nicht registriert, **0** nicht dokumentiert |
 | `:Bindings check extern` | 158 | 4 nicht registriert |
-| `:Bindings check all` | **183** | 12 / 16 |
+| `:Bindings check all` | **167** | 12 / 0 |
 
-Zwei Schritte haben diese Zahlen bewegt. Die Autocmds-Achse hat sie erst
+Drei Schritte haben diese Zahlen bewegt. Die Autocmds-Achse hat sie erst
 gehoben (1 / 154 / 155 → 56 / 158 / 214), weil sie 241 nie geprüfte Zeilen
-sichtbar machte; das Autocmds-Blatt für nvim-config hat sie wieder gesenkt
-(56 → 25), weil 35 der 47 undokumentierten Registrierungen dieser Config
-gehörten und jetzt eine Zeile haben.
+sichtbar machte. Das Autocmds-Blatt für nvim-config hat sie gesenkt (56 → 25),
+weil 35 der 47 undokumentierten Registrierungen dieser Config gehörten. Die
+Familien-Notation für Augroups hat den Rest geholt (25 → **9**):
+`autocmd-undocumented` steht auf **0**, übrig sind 8 `autocmd-not-live` — alle
+feature-gated oder lazy — und `:LibLogger`.
 
 Dazu zwei Zahlen unter jedem Bericht: **111 dokumentierte Zeilen nicht
 prüfbar**, **120 Registrierungen zuzuordnen** — damit eine kleine Befundzahl
@@ -237,21 +239,7 @@ Plus zwei weitere, sobald Punkt 1 gebaut ist: `:TodoFzfLua`/`:TodoLocList` in
 
 ---
 
-### 5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist, und die Familien-Frage daneben
-
-**Neu dazugekommen (2026-09-02):** dieselbe Frage stellt sich jetzt für
-Augroups. Von den 16 verbliebenen undokumentierten Autocmds sind **15
-runtime-analysis.nvims `ra_telemetry_<plugin>`** — eine Augroup je
-telemetriefähigem Plugin, aus einer Schleife, plus
-`runtime_analysis_telemetry_extra`. Der sechzehnte ist lib.nvims
-`LibNvimUsrCmdsHelptags`.
-
-Für Commands gibt es dafür längst eine Antwort: `records.command_globs`
-erlaubt `:*Files` als Familienanspruch, gebunden an Tabellenzeile **und**
-Eigentümer. Ob dieselbe Notation auf Augroups ausgedehnt wird
-(`ra_telemetry_*` in einer Autocmds-Zeile), ist eine Entwurfsentscheidung und
-keine Fleißarbeit — und sie gehört zu derselben Frage wie die unten: was der
-Korpus überhaupt abdecken soll.
+### 5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist
 
 
 
@@ -297,6 +285,18 @@ Damit es nicht ein drittes Mal untersucht wird:
   Laufzeit gebautes `prefix .. "m"` — der dokumentierte Falschbefund der
   Grep-Achse, nur unter `:Bindings check repo` sichtbar. Kein Handlungsbedarf,
   solange die Achse als Grep gekennzeichnet ist.
+* **Die Familien-Notation gilt auch für Augroups** (`records.wildcard_pattern`).
+  Die Notation musste nicht erfunden werden: der Korpus schrieb
+  `ra_telemetry_<namespace>` und `LspSignaturePopup_<winid>` längst — ein
+  Platzhalter, der benennt, was variiert. Gebunden an Tabellenzeile und
+  Eigentümer wie die Command-Familien, und nur in die
+  Undokumentiert-Richtung. Eigene Zeichenklasse, weil Augroupnamen `.` und
+  `-` enthalten (`ra_telemetry_lib.nvim`) und Commandnamen nicht.
+  `autocmd-undocumented` fiel damit von 16 auf **0**.
+* **Zwei echte Funde nebenbei**, beide von der Achse gefunden und beide
+  nachgetragen: runtime-analysis.nvims `runtime_analysis_telemetry_extra`
+  stand in keinem Blatt (das Sheet kannte nur `…_lazyload`), und lib.nvims
+  `LibNvimUsrCmdsHelptags` ebenso wenig.
 * **Das Autocmds-Blatt für nvim-config existiert** (`Autocmds/nvim-config.md`),
   Punkt 7 dieser Datei. 55 Aufrufstellen: 40 in 26 Augroups, 15 ohne jede
   Augroup. Die undokumentierten Autocmds fielen damit von 47 auf 16, und die

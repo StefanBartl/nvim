@@ -1582,6 +1582,8 @@ function M.check(plugin, opts)
   -- seven differences were ours, documented in the Extern tree, and the
   -- narrower question had made them look like gaps.
   local documented_anywhere_pairs = {}
+  ---@type Bindings.FamilyClaim[]
+  local autocmd_families = {}
   local autocmd_unanchored = 0
 
   for _, rec in ipairs(records.list("Autocmds", corpus_scope)) do
@@ -1589,6 +1591,20 @@ function M.check(plugin, opts)
     if ours_row then
       local group = extract_augroup(rec)
       local events = extract_events(rec)
+      -- A row whose augroup cell carries a placeholder documents a FAMILY:
+      -- `ra_telemetry_<namespace>` is one augroup per telemetry instance,
+      -- built in a loop. `extract_augroup` rejects the token (rightly -- the
+      -- forward direction has no concrete name to look for), so the claim is
+      -- read straight off the cell here, and only the reverse direction uses
+      -- it. Same asymmetry, and the same reason, as the command families.
+      local aug_idx = column_index(rec, AUGROUP_HEADERS)
+      local aug_cell = aug_idx and rec.cells[aug_idx]
+      if aug_cell and aug_cell ~= "" then
+        local pattern = records.wildcard_pattern(first_token(aug_cell), "augroup")
+        if pattern then
+          autocmd_families[#autocmd_families + 1] = { plugin = rec.plugin, pattern = pattern }
+        end
+      end
       if not group or #events == 0 then
         -- Counted, not reported. A row with no augroup column (or no event
         -- Neovim knows) is not a defect in the plugin, it is a row this axis
@@ -1687,6 +1703,18 @@ function M.check(plugin, opts)
       local g = groups[key]
       local owner, rest = owner_of_path(g.src)
       local covered = named_in_prose(owner, g.group)
+      if not covered and owner then
+        for _, claim in ipairs(autocmd_families) do
+          -- Bound to the claiming sheet's plugin, exactly like the command
+          -- families: `ra_telemetry_<namespace>` from
+          -- `runtime-analysis.nvim.md` may cover that plugin's augroups and
+          -- nobody else's.
+          if claim.plugin == owner and g.group:match(claim.pattern) then
+            covered = true
+            break
+          end
+        end
+      end
       if not covered then
         for _, event in ipairs(g.events) do
           if documented_anywhere_pairs[g.group .. "::" .. event] then

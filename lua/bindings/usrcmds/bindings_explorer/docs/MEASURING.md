@@ -247,3 +247,30 @@ ist: **`cmdlog.nvim`s `ctrl-t` ist tot und fällt trotzdem nicht auf.** Das
 Literal steht zufällig in `lua/config/fzf/init.lua` dieser Config, wo es
 `file_tabedit` bindet — der Grep kann die beiden nicht unterscheiden. Ein
 verpasster Fund ist billiger als ein falscher, aber er ist nicht gratis.
+
+### Nach dem nvim-config-Blatt und den Augroup-Familien (2026-09-02)
+
+Dieselben Vorkehrungen. Die Autocmds-Achse hatte die Zahlen erst gehoben,
+weil sie 241 nie geprüfte Zeilen sichtbar machte; zwei Doku-Schritte haben
+sie wieder gesenkt.
+
+| Scope | vor der Achse | mit Achse | + Blatt | + Familien |
+| --- | ---: | ---: | ---: | ---: |
+| `personal` | 1 | 56 | 25 | **9** |
+| `all` | 155 | 214 | 183 | **167** |
+
+`autocmd-undocumented` steht auf **0**. Übrig: 8 `autocmd-not-live` (alle
+feature-gated oder lazy, siehe FEATURES.md) und `:LibLogger`.
+
+**Beim Messen aufgefallen, nicht beim Lesen:** die Zeichenklassen der
+Familien-Notation gehen durch `gsub`s Ersatz-Argument, in dem `%` ein Escape
+ist. Beim Hoisten in eine benannte Tabelle verloren sie ihre doppelten
+Prozentzeichen — kein Fehler, sondern 18 korrekt unterdrückte Befunde, die
+zurückkamen. Wer hier etwas an `records.wildcard_pattern` ändert, misst
+danach beide Kategorien, nicht nur die geänderte.
+
+**Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
+Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —
+wie viele `ra_telemetry_<plugin>`-Instanzen existieren, hängt daran, welche
+Plugins die Session geladen hat. Kein Grund zur Beunruhigung, aber ein Grund,
+`registry` nicht als Konstante zu zitieren.

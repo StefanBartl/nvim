@@ -12,6 +12,7 @@ lib.nvim is a **library** — almost nothing registers eagerly. No
 
 | Module | Trigger | Registers |
 | --- | --- | --- |
+| `lua/lib/nvim_usrcmds/autocmds.lua` | `M.helptags()`, aus dem Bootstrap dieser Config | augroup `LibNvimUsrCmdsHelptags` (`clear=true`); `User` auf `LazyInstall`/`LazyUpdate`/`LazySync` -> `helptags ALL`. Haengt bewusst **nicht** an `LazyDone` (das feuert bei jedem Start und kostet ~229ms, ohne dass sich Hilfedateien geaendert haetten), und die Augroup existiert, weil sie vorher fehlte: jedes `setup()` hing einen weiteren Handler an, drei Laeufe nach zwei Reloads |
 | `lua/lib/nvim/window/close_on_focus_lost.lua` | any float-owning code with a `winid` | augroup `LibNvimWindowFocusClose_<winid>`; `{WinLeave,BufLeave}` (configurable), buffer-local, once → deferred-close the window |
 | `lua/lib/nvim/ui/kit/picker.lua` | every `kit.select`-style picker | `{TextChangedI,TextChanged}` on the prompt buffer → debounced query-change |
 | `lua/lib/nvim/ui/kit/surface.lua` | every kit float (backs select/menu/input/note/toast/confirm) | augroup `lib_ui_kit_surface_<winid>`; `WinClosed` (pattern=winid, once) → fires the surface's `on_close` callbacks |

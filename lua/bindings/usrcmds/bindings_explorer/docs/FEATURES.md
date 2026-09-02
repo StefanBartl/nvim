@@ -543,3 +543,60 @@ Autocmds gehören `nvim-config` selbst, und es gibt **kein**
 runtime-analysis.nvims `ra_telemetry_<plugin>`-Gruppen, also eine generierte
 Familie: derselbe Fall wie pickers.nvims Scope-Commands, und derselbe
 Vorschlag — den Generator dokumentieren, nicht seine Ergebnisse.
+
+### Familien, auch für Augroups (2026-09-02)
+
+Nach dem Blatt für nvim-config blieben 16 undokumentierte Autocmds, davon 15
+generiert: `ra_telemetry_<plugin>`, eine Augroup je telemetriefähigem Plugin,
+aus einer Schleife in runtime-analysis.nvim. Derselbe Fall wie pickers.nvims
+23 Scope-Commands — und dieselbe Antwort: der Korpus dokumentiert den
+Generator, und der Prüfer akzeptiert, was der Generator macht.
+
+**Die Notation stand schon da.** Für Commands schreibt der Korpus `:*Files`.
+Für Augroups schrieb er längst `ra_telemetry_<namespace>`
+(`runtime-analysis.nvim.md`) und `LspSignaturePopup_<winid>`
+(`lsp.nvim.md`) — ein Platzhalter, der *benennt*, was variiert, und damit die
+bessere Dokumentation. `records.wildcard_pattern` versteht beide Formen;
+für Augroups ist `<name>` die zu schreibende.
+
+**Zwei Zeichenklassen, nicht eine.** Commandnamen sind
+Lua-Bezeichner-förmig, `[%w_]` ist ihr ganzes Alphabet. Augroupnamen sind es
+nicht: diese Config betreibt `ra_telemetry_lib.nvim` und
+`ra_telemetry_runtime-analysis.nvim`, beide nach einem Plugin benannt, Punkt
+und Bindestrich inklusive. Eine gemeinsame Klasse würde entweder diese
+verfehlen oder eine Command-Familie über einen `.` greifen lassen, über den
+sie nichts zu suchen hat.
+
+**Gebunden wie die Command-Familien:** an eine Tabellenzeile (nie Fließtext)
+und an den Eigentümer. `ra_telemetry_<namespace>` aus
+`runtime-analysis.nvim.md` deckt die Augroups dieses Plugins ab und die von
+niemandem sonst — geprüft über `command_owner`s Antwort, dieselbe
+Eigentümerspalte wie überall.
+
+**Nur in die Undokumentiert-Richtung.** Eine Familie trägt keinen konkreten
+Namen, gegen den sich Liveness prüfen ließe; `extract_augroup` weist einen
+Platzhalter-Token deshalb weiterhin ab, und die Zeile zählt für die
+Vorwärtsrichtung als „nicht prüfbar". Dieselbe Asymmetrie wie bei
+`records.mentions`, aus demselben Grund.
+
+**Ein Fehler beim Bauen, weil er lehrreich war.** Die Zeichenklassen gehen
+durch `gsub`s *Ersatz*-Argument, in dem `%` ein Escape ist. Als sie aus dem
+Inline-Code in eine benannte Tabelle wanderten, verloren sie ihre doppelten
+Prozentzeichen — und der Schaden war lautlos auf die schlechteste Art: nicht
+ein Fehler, sondern **18 Befunde, die zwei Tage lang korrekt unterdrückt
+waren, kamen zurück**. Gemessen aufgefallen, nicht gelesen.
+
+### Stand nach den Familien
+
+| Scope | vor dem Blatt | nach dem Blatt | nach den Familien |
+| --- | ---: | ---: | ---: |
+| `personal` | 56 | 25 | **9** |
+| `all` | 214 | 183 | **167** |
+
+`autocmd-undocumented` steht damit auf **0**. Übrig bleiben 8
+`autocmd-not-live` (feature-gated oder lazy, siehe oben) und `:LibLogger`.
+
+Zwei echte Funde hat der Weg dorthin noch abgeworfen, beide von der Achse
+gefunden und beide nachgetragen: runtime-analysis.nvims
+`runtime_analysis_telemetry_extra` stand in keinem Blatt (das Sheet kannte nur
+`…_lazyload`), und lib.nvims `LibNvimUsrCmdsHelptags` ebenso wenig.
