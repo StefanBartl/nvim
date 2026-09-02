@@ -47,10 +47,15 @@ gar nicht. Dazu **G**, in der Folgesitzung: das Spec, das die Doku gegen die
 Quelle prüft.
 
 **Die Doku hat jetzt denselben Mechanismus wie der Code.** Seit `4e1760f`
-prüft `TESTS/docs_spec.lua` neun Listen der Dokumente gegen die Quelle, die
+prüft `TESTS/docs_spec.lua` die Listen der Dokumente gegen die Quelle, die
 sie beschreiben — die Klasse, die an einem Tag viermal die Doku und dreimal
 den Code getroffen hat, fällt ab jetzt beim Testlauf auf. Drei Funde beim
-Einbau, alle behoben.
+Einbau, alle behoben; inzwischen elf Prüfungen, weil `204d083` zwei
+Tastentabellen dazugebracht hat, die genau so hätten verrotten können.
+
+**Zoom für Bilder ist gebaut** (`204d083`): `+` und `-`, geliehen nur, solange
+ein Hover mit Bild offen ist. Offen bleiben Mausrad und scharfer PDF-Zoom,
+beide in `docs/ROADMAP.md`. Siehe [F](#f-zoom-im-float--eingegrenzt-2026-09-02-tasten-gebaut-204d083).
 
 **Ein eigener Hover braucht seit `c374d5e` kein Plugin mehr.** `setup` nimmt
 ein Feld `contribute`, und zwar genau die Tabelle, die `register` nimmt — die
@@ -234,10 +239,10 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **204 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, **docs 9**, registry 64, scope 26, switches 30), gemessen 2026-09-02 nach `4e1760f` |
+| Specs hover.nvim | **220 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 11, registry 64, scope 26, switches 30, **zoom 14**), gemessen 2026-09-02 nach `65ba8dd` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, zweimal auf dem Haupt-Checkout gemessen: Pass `post-b` nach `3e12c9f`, Pass `post-c` nach `4e1760f`. Delta beide Male `+0` |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, viermal auf dem Haupt-Checkout gemessen: `post-b` (`3e12c9f`), `post-c` (`4e1760f`), `zoom-pre`, `zoom-post2` (`65ba8dd`). Dazwischen **einmal +2** — siehe unten, der einzige Lauf dieser Sitzung, der etwas gefunden hat |
 | CI | grün auf **ubuntu-latest und windows-latest** (Run `33604859057`) |
 | Helptags | 30 Tags (`hover-contribute` kam mit `c374d5e` dazu) |
 | Doku-Beispiele | 23 ```lua-Blöcke laden, die ausführbaren laufen; 32 dokumentierte `:Hover`-Routen sind alle echt |
@@ -733,7 +738,38 @@ erste Vorschlag ist die Konsequenz aus den vier Zahlen oben: ein Spec, das die
 Schalterliste im Vimdoc und die Routentabellen gegen die Quelle prüft, weil
 diese Klasse im Code dreimal und in der Doku viermal zugeschlagen hat.
 
-### F. Zoom im Float — **eingegrenzt 2026-09-02: Bilder**
+### F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten gebaut (`204d083`)**
+
+> **Die Tastenhälfte steht.** `+` und `-` sind geliehen, solange ein Hover mit
+> Bild offen ist; ein Schritt skaliert die Fläche um 1,25. Offen und in
+> `docs/ROADMAP.md` verblieben sind das **Mausrad** und der **scharfe
+> PDF-Zoom**. Was unten steht, ist die Voranalyse — sie hat gestimmt, mit
+> einer Ausnahme, und für die beiden offenen Hälften gilt sie unverändert.
+>
+> **Zwei Dinge waren beim Bauen anders als hier vermutet.**
+>
+> 1. **Die Leih-Bedingung ist `content.canvas`, nicht `content.image_path`.**
+>    Unten stand `image_path` als „naheliegend". `canvas` ist richtiger: es
+>    ist genau das, was der Zoom *ändert*, und es deckt die rasterisierte
+>    PDF-Seite mit ab, ohne dass ein zweiter Fall nötig wäre.
+> 2. **Die PDF-Kollision, die unten die Reihenfolge begründet, gibt es
+>    nicht.** Sie galt für die *Scroll*-Tasten — Zoom hat eigene, also
+>    kollidiert nichts. PDF-Seiten zoomen seit `204d083` mit, gratis und
+>    unscharf. „Bilder zuerst" war trotzdem die richtige Reihenfolge, nur
+>    nicht aus dem hier genannten Grund.
+>
+> **Und eine Zahl, die vor dem Bauen gemessen wurde und die Bauform bestimmt
+> hat.** 1200×675-Bild, Defaults 80×20, echtes Neovim, 2026-09-02:
+>
+> | Terminal | Schritte hinein | Bildfläche |
+> | --- | --- | --- |
+> | 210×55 | fünf | 71×20 → 181×51 Zellen |
+> | 80×24 | **keiner** | 20 Zeilen sind bereits `lines - 4` |
+>
+> Daraus folgt: **keine Zoom-Grenze im Code.** Jede Zahl wäre auf einem der
+> beiden Terminals falsch. Ein Schritt, der nichts ändert, wird
+> zurückgenommen — dasselbe Idiom, mit dem `scroll` das Ende eines PDFs
+> behandelt —, und der Pegel bleibt genau dort stehen, wo der Schirm aufhört.
 
 Die Idee: mit der Maus in den Hover, Mausrad bzw. `<C-ScrollWheel>` zoomt.
 
@@ -870,6 +906,14 @@ Hälfte, die von allein passiert.
 - **LuaLS messen:** `REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh <pass>
   hover.nvim`, dann `python scripts/luals-scan/compare.py <pass>`. Die nackte
   `lua-language-server --check`-Zahl ist wertlos (`LLS-01`).
+- **Der Scan sieht `TESTS/` mit, und das ist nicht theoretisch.** Am
+  2026-09-02 kam `zoom-post` mit **+2** zurück, beide Befunde im neuen
+  `docs_spec.lua`: ein `local`, das mit `Hover.Config` typisiert war und beim
+  ersten Pfadschritt aufhörte es zu sein, und ein `vim.islist` auf einem Wert
+  aus `pairs(DEFAULTS)`, der auch ein String sein kann. Die Suite war grün,
+  stylua sauber, CI grün — **nur der Scan hat es gesehen** (behoben in
+  `65ba8dd`). Ein Spec ist Code, und nach dem Schreiben eines gehört ein Lauf
+  dazu, nicht nur nach einer Änderung an `lua/`.
 - **Tests:** `LIB_NVIM_DIR=E:/repos/lib.nvim
   PLENARY_DIR=C:/Users/bartl/AppData/Local/nvim-data/lazy/plenary.nvim
   bash scripts/test.sh`

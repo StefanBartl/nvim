@@ -1,8 +1,10 @@
 # hover.nvim — Roadmap (persönlich)
 
 Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
-in der Folgesitzung ist [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f)
-gebaut und die LuaLS-Messung nachgeholt worden.
+in der Folgesitzung sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f)
+und die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-und-2-gebaut-204d083)
+gebaut und die LuaLS-Messung nachgeholt worden. Nächster offener Punkt der
+Reihenfolge: **2.3**.
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -92,9 +94,42 @@ Erstes** — es ist die Voraussetzung dafür, dass alles Folgende dokumentiert
 
 *Tatsächlich geworden: ein Spec-File, acht Extraktoren, neun Prüfungen — die
 Schätzung lag zu niedrig, weil beim Schreiben drei weitere prüfbare Listen
-auffielen. Nächster Punkt der Reihenfolge ist damit 2.2.*
+auffielen. Inzwischen elf: `204d083` brachte zwei Tastentabellen mit, und die
+erste Frage danach war „prüft das jemand?". Genau dafür war der Punkt hier der
+erste.*
 
-### 2.2 Zoom für Bilder — entschieden, nicht gebaut
+### 2.2 Zoom für Bilder — **Schritte 1 und 2 gebaut** (`204d083`)
+
+> **Erledigt am 2026-09-02.** `+` und `-` über eine eigene Leih-Bedingung;
+> `hover.zoom(delta)` ist öffentlich. Offen bleiben **3 (Mausrad)** und **4
+> (scharfes PDF)**, beide jetzt in `hover.nvim/docs/ROADMAP.md` — sie sind
+> Konzepte mit einer offenen Vorfrage, und damit gehören sie dorthin.
+>
+> **Die Messung, die die Bauform entschieden hat** (echtes Neovim,
+> 1200×675-Bild, Defaults 80×20, 2026-09-02):
+>
+> | Terminal | Schritte hinein | Bildfläche |
+> | --- | --- | --- |
+> | 210×55 | fünf | 71×20 → 181×51 Zellen |
+> | 80×24 | **keiner** | 20 Zeilen sind schon `lines - 4` |
+>
+> Daraus: **keine Zoom-Grenze im Code**, weil jede Zahl auf einem der beiden
+> falsch wäre. Ein wirkungsloser Schritt wird zurückgenommen. Die 1,25 pro
+> Schritt kommen aus derselben Messung — bei 1,5 wären es zwei Schritte statt
+> fünf, also ein Schalter statt eines Reglers.
+>
+> **Punkt 2 war wie vermutet die eigentliche Arbeit**, nur mit einer anderen
+> Bedingung als hier angenommen: `content.canvas`, nicht `content.image_path`
+> — das ist, was der Zoom ändert, und es deckt die PDF-Seite mit ab. Der
+> Sabotage-Test bestätigt die Falle: hängt man den Zoom an `content.scroll`,
+> fällt es in beide Richtungen gleichzeitig.
+>
+> **Und ein Nachtrag zur Reihenfolge unten:** die PDF-Kollision, mit der
+> „Bilder zuerst" begründet war, gibt es nicht. Sie galt für die
+> Scroll-Tasten; Zoom hat eigene. PDF-Seiten zoomen seither mit, gratis und
+> unscharf.
+
+#### Die ursprüngliche Reihenfolge, zur Begründung
 
 Der Umfang steht (Auftrag F im Handover): **Bilder und Screenshots**,
 PDF-Seiten optional, Text gar nicht. Die technische Fassung steht dort
@@ -114,6 +149,11 @@ ausführlich und im Repo kurz. Hier nur, was die Reihenfolge bestimmt:
 
 **Aufwand:** 1+2 klein, 3 mittel, 4 klein-aber-eigen. **Empfehlung:** 1 und 2
 zusammen, dann benutzen, bevor 3 kommt.
+
+*1 und 2 sind zusammen gebaut (`204d083`). „Dann benutzen, bevor 3 kommt"
+steht — und die Zeile in `docs/MANUAL-EVIDENCE.md` ist bewusst auf `never`
+datiert: gemessen ist die Geometrie, gesehen hat das Bild in der größeren
+Fläche noch niemand.*
 
 ### 2.3 Eine `:checkhealth`-Zeile für `contribute` — winzig, und die neue Zielgruppe braucht sie
 
