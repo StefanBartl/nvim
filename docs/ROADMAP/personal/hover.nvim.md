@@ -40,10 +40,10 @@ Feature selbst nie erreichbar war (`836a15a`, siehe unten).
 
 **Was als Nächstes ansteht**, steht unter [Aufträge aus der Sitzung vom
 2026-09-02](#aufträge-aus-der-sitzung-vom-2026-09-02) — sechs Punkte, jeder
-schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. Drei
-davon (A, C, D) sind erledigt; F ist entschieden statt gebaut — **Zoom nur für
-Bilder**, PDF-Seiten optional, Text gar nicht. Offen sind **B** (die Doku der
-vier namentlich eingebundenen Plugins) und **E** (diese Roadmap-Datei selbst).
+schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. **Alle
+sechs sind abgeschlossen**: A, B, C, D und E gebaut bzw. geschrieben, F
+entschieden statt gebaut — **Zoom nur für Bilder**, PDF-Seiten optional, Text
+gar nicht.
 
 **Ein eigener Hover braucht seit `c374d5e` kein Plugin mehr.** `setup` nimmt
 ein Feld `contribute`, und zwar genau die Tabelle, die `register` nimmt — die
@@ -227,7 +227,7 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **192 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, registry 64, scope 26, switches 27), gemessen 2026-09-02 nach `c374d5e` |
+| Specs hover.nvim | **195 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, registry 64, scope 26, switches 30), gemessen 2026-09-02 nach `3e12c9f` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
 | LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde** — zuletzt vor `c374d5e` gemessen, seither nicht wieder (der Worktree taugt dafür nicht, siehe unten) |
@@ -273,6 +273,10 @@ gebaut — die Datei führt keine erledigten Punkte.
 - **`contribute` in `setup()`** (`c374d5e`) — ein eigener Hover ohne Plugin
   drumherum: dasselbe Tabellenformat, das `register` nimmt, registriert unter
   dem Namen `"user"`. Die API war immer öffentlich; angeboten wurde sie nie.
+- **Der Hauptschalter schlägt jetzt `force`** (`3e12c9f`) — `mode = "off"` und
+  `vim.g.hover_disable` galten für jede ausdrückliche Route nicht, also auch
+  nicht für die Keymap eines Hosts. Ein Veto, das ein Tastendruck aushebelt,
+  ist keines. Details unter [B](#b-die-docs-der-eingebundenen-plugins-durchgehen--erledigt-2026-09-02).
 
 ### Drei Messungen, die alle der Intuition widersprachen
 
@@ -316,7 +320,7 @@ Namensliste von `hover.set()` im Vimdoc führte sieben von neun Schaltern
 Wirklichkeit lagen. Dieselbe Klasse, eine Stufe schlechter: in Code deckt
 irgendwann eine Spec sie auf, in Doku merkt es niemand. Behoben in `c374d5e`
 und `15837dd`, wo es ging durch Streichen der Zahl — Details unter
-[E](#e-eine-roadmap-datei-unter-docsroadmappersonal).
+[E](#e-eine-roadmap-datei-unter-docsroadmappersonal--erledigt-2026-09-02).
 
 ### Und eine vierte Klasse: eine Funktion, zwei Fragen
 
@@ -422,10 +426,9 @@ Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
 
 ## Aufträge aus der Sitzung vom 2026-09-02
 
-Sechs Punkte. **Drei sind erledigt** (A, C, D), **einer ist entschieden statt
-gebaut** (F — nur Bilder, siehe dort), **zwei sind offen** (B, E). Was hier
-steht, ist jeweils schon **nachgesehen** — die Notiz sagt den Befund, nicht
-nur die Frage.
+Sechs Punkte, **alle abgeschlossen**: A, B, C, D, E erledigt, F entschieden
+statt gebaut (nur Bilder, siehe dort). Was hier steht, ist jeweils schon
+**nachgesehen** — die Notiz sagt den Befund, nicht nur die Frage.
 
 ### A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**
 
@@ -485,7 +488,7 @@ Zu beachten:
 > (schreibt eine **Datei** mit dem Namen des Kommandos und gibt `true`
 > zurück — nicht den Text).
 
-### B. Die Docs der eingebundenen Plugins durchgehen
+### B. Die Docs der eingebundenen Plugins durchgehen — **erledigt 2026-09-02**
 
 **images.nvim, markdown.nvim, pdfport.nvim, gopath.nvim** — jeweils prüfen, ob
 ihre eigene Doku erwähnt, was sie zum Hover beitragen, und ob das noch stimmt.
@@ -500,6 +503,57 @@ wird.
 Die fünf über die Registry angebundenen (migrate, reposcope, documentation,
 spotlight, sandbox) haben jeweils ein eigenes `docs/hover.md` und sind aktuell
 — die sind in dieser Runde entstanden.
+
+**Durchgegangen, und jedes der vier hatte etwas:**
+
+- **pdfport.nvim** (`7445ea5`) — dreimal der falsche Konsument. `render_page()`
+  stand als „used by images.nvim to show PDF pages as images"; images.nvim ruft
+  es **nie**, sein einziger pdfport-Aufruf geht in die Gegenrichtung
+  (`convert.lua` → `create()`, Bild *zu* PDF). Und `create()` stand als „how
+  lib.nvim's hover previews a `.docx`" — mit Link auf lib.nvim, das seit
+  `5450dd4` keinen Hover mehr hat. `docs/FEATURES/PRODUCERS.md` hatte es
+  richtig, woran die README-Fassung auffiel.
+- **gopath.nvim** (`c9faf86`) — **erwähnte den Hover nirgends.** Zwei Repos
+  rufen `resolve_at_cursor` von außen (hover.nvim, images.nvim), und keine
+  Seite sagte das. Das ist die Richtung, die weh tut: ein falsches „✗ no such
+  file" sieht aus wie ein Resolver-Urteil und ist keines, also landen die
+  Bugreports dort. Neu: `docs/FEATURES/INTEGRATIONS.md`, verlinkt aus beiden
+  Indizes, samt der 13,2-ms-Messung als Auftrag (siehe unten).
+- **images.nvim** (`e58cd64`) — nannte die falschen APIs als Zeichenweg
+  (`images.info` + `images.scale.fit_cells` „to draw the picture"; die messen
+  und rechnen, gezeichnet wird mit `images.anchor.draw`, um einen Tick
+  verzögert). Dazu fehlte `gf` in der Tastenliste des Floats — die eine
+  geliehene Taste, die ein Vim-Builtin verdrängt.
+- **markdown.nvim** (`289bbcf`) — `docs/hover.md` war inhaltlich aktuell (es
+  benennt hover.nvim als Framework und führt sogar die Vor-Umzug-Schreibweisen
+  auf). Eine Aussage war falsch geworden, allerdings erst durch `3e12c9f`:
+  „`hover()` ignores the `enabled` flag, so it works as a keymap even with the
+  automatic hover switched off".
+
+**Und der eigentliche Fund war in hover.nvim selbst** — er kam nur zustande,
+weil ich für markdown.nvim nachgesehen habe, ob diese Aussage stimmt:
+
+`show()` übersprang die Modus-Prüfung, sobald `force` gesetzt war. Gemessen
+gegen ein echtes Neovim: `mode = "off"` plus `show({ force = true })` → `true`,
+`vim.g.hover_disable` plus `force` → `true`. Drei Doku-Aussagen sagen das
+Gegenteil, und die dritte ist die schlimme: `vim.g.hover_disable` existiert,
+damit ein Leser einen Hover ablehnen kann, den ein **Host** eingeschaltet hat
+— und jede ausdrückliche Route übergibt `force`, markdown.nvims Keymap
+eingeschlossen. Das Veto wurde also von genau dem Plugin ausgehebelt, gegen
+das es gerichtet ist. Dazu meldete `:Hover why` „mode: off" als Grund, während
+`:Hover show` auf derselben Position ein Float öffnete.
+
+Behoben in `3e12c9f` mit drei Specs (die zwei negativen fallen gegen die alte
+Zeile). `manual` ist unberührt — das ist der Modus, den die alte Formulierung
+eigentlich meinte.
+
+**Zwei weitere Stellen in hover.nvim** (`87a1017`), beim selben Durchgang:
+zwei Augroups hießen noch `MarkdownHoverDismiss` und `MarkdownNvimHoverMedia`,
+mit `desc`-Strings, die markdown.nvim als Eigentümer nannten — sichtbar in
+`:autocmd`. Sie sind auch der Grund, warum `docs/BINDINGS.md` und die
+BINDINGS-Notes „zwei Augroups" führten: eine Suche nach `Hover` in der Quelle
+fand sie nicht. Es sind vier. Beide Tabellen korrigiert (`ee826ea5` in der
+Config).
 
 ### C. Die README von hover.nvim — **erledigt 2026-09-02** (`a57d390`)
 
@@ -598,7 +652,7 @@ daraus *neu* folgt und dokumentiert gehörte: ein Plugin darf dieses Feld nicht
 benutzen, weil alle Nutzer-Beiträge sich den einen Namen `"user"` teilen und
 zwei Aufrufer einander damit still löschen würden.
 
-### E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/`
+### E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/` — **erledigt 2026-09-02**
 
 Eine Analyse zu Optimierung und neuen Features, geschrieben als eigene Datei
 neben dieser hier. **Nicht zu verwechseln** mit `hover.nvim/docs/ROADMAP.md`
@@ -643,6 +697,20 @@ Code**, wo nichts fehlschlägt und keine Spec ihn merken kann. Korrigiert in
 `c374d5e` und `15837dd`, wo möglich durch **Streichen der Zahl** statt
 Hochzählen; die Vimdoc-Zeile nennt jetzt `switches.names()` als Quelle, damit
 der nächste Leser nachsehen kann statt zu glauben.
+
+**Geschrieben:** [hover.nvim-roadmap.md](hover.nvim-roadmap.md). §1 ist die
+Abgrenzung, um die es hier ging, mit einer Regel gegen genau diese Drift:
+*jeder Punkt lebt in genau einer der beiden Dateien* — wird etwas
+veröffentlichungsreif, wandert er ins Repo und hinterlässt hier eine Zeile mit
+Commit, statt kopiert zu werden.
+
+Inhaltlich vier Bauvorschläge in Reihenfolge (Doku-Spec gegen die Quelle,
+Zoom, eine Health-Zeile für `contribute`, ein Memo für Position-Previews —
+letzteres ausdrücklich als **ungemessen** markiert), die offenen Messungen,
+die Aufträge in fremden Repos, und was ich geprüft und verworfen habe. Der
+erste Vorschlag ist die Konsequenz aus den vier Zahlen oben: ein Spec, das die
+Schalterliste im Vimdoc und die Routentabellen gegen die Quelle prüft, weil
+diese Klasse im Code dreimal und in der Doku viermal zugeschlagen hat.
 
 ### F. Zoom im Float — **eingegrenzt 2026-09-02: Bilder**
 
