@@ -159,11 +159,19 @@ davon haben eine dreispaltige Kopfzeile bei nur zwei Zellen:
 * `Usercmds/lib.nvim.md`, Z. 15 — dieselbe Form.
 
 **Folgenlos für jede Achse**: die Zuordnung läuft über den Header-Index auf
-die Command-Spalte, und die ist vorhanden. Es ist eine reine
-Format-Abweichung. Was in die fehlende Spalte gehört, sagt nur die jeweilige
-Quelle — deshalb ist hier nichts geraten und nichts geändert worden; die
-FEATURES.md-Behauptung „in keinem einzigen weicht die Zellenzahl ab" ist
-korrigiert.
+die Command-Spalte, und die war vorhanden. Es war eine reine
+Format-Abweichung.
+
+**Erledigt am 2026-09-02, aus den Quellen statt aus der Beschreibung.** Die
+„Writes?"-Spalte der acht `:DocMap`-Routen ist im Quelltext nachgesehen: nur
+`annotate` schreibt, und auch das erst mit `--write` (in die Quelldatei) oder
+`--sidecar` (`*.annot.lua`) — ohne Flag ist es reine Vorschau. Die anderen
+sieben rufen keine Schreiboperation auf. Für `:Lib hover toggle` ist geprüft,
+dass lib.nvim keinen flachen hover-Command besitzt; die Zelle heißt jetzt
+„none — new surface" wie bei seinen Nachbarzeilen.
+
+Der Korpus hat damit wieder **null** Zeilen, deren Zellenzahl von ihrer
+Kopfzeile abweicht.
 
 ---
 

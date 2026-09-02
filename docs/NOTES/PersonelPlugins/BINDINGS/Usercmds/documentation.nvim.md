@@ -96,14 +96,14 @@ completely; which-key labels are the only mandatory piece on top.
 | `:DocMap serve [stop]` | Local map server on `127.0.0.1`, OS-assigned port. Enables the History tab. | no |
 | `:DocMap helptags` | Regenerate this plugin's own `doc/tags` | writes `doc/tags` |
 | `:DocMap all` | Generate every project in `opts.generate_all.projects` — one real headless subprocess each. Only registered when that option is configured. See "opts.generate_all" below. Shipped 2026-08-14. | **yes**, per project |
-| `:DocMap annotate [--write\|--sidecar]` | Geruest fuer einen `---@module`-Kopf — und, wenn die Datei eine Tabelle zurueckgibt, einen `---@class`-Block mit einem `---@field` je exportiertem Namen — fuer jede Datei, der er fehlt |
-| `:DocMap browse` | Nur-Lese-Ansicht der Karte, in ein Kommando gefaltet |
-| `:DocMap checklist [all]` | Das handgepruefte **Ledger** in die Quickfix-Liste: Eintraege, deren Richtigkeit manuell geprueft wurde, gegen `git log` gekreuzt, um zu markieren, welche seither veraltet sein koennten. `all` zeigt alles statt nur der auffaelligen |
-| `:DocMap consumers [dir]` | **Wer diese Bibliothek tatsaechlich benutzt.** Liest jede `*/docs/map/module_map.json` unterhalb von `dir` (per Default das Elternverzeichnis, wo die Geschwister-Checkouts liegen) |
-| `:DocMap endpoints` | Jede erkannte **call-basierte Routenregistrierung** im Baum in die Quickfix-Liste, nach Pfad sortiert. Sofort, wie `plugins` und `bindings` |
-| `:DocMap mermaid [tree\|deps]` | Modulbaum oder Require-Graph als **Mermaid**-Quelltext in einem Scratch-Buffer |
-| `:DocMap pick` | Fuzzy-Suche ueber jedes Modul und jede Funktion der Karte, landet auf der Quellzeile |
-| `:DocMap untested` | Funktionen, die **diese Maschine wirklich ausgefuehrt hat** und die kein Spec nennt, in die Quickfix-Liste, meistgelaufene zuerst — die eine nuetzliche Zelle aus Coverage × Telemetrie |
+| `:DocMap annotate [--write\|--sidecar]` | Geruest fuer einen `---@module`-Kopf — und, wenn die Datei eine Tabelle zurueckgibt, einen `---@class`-Block mit einem `---@field` je exportiertem Namen — fuer jede Datei, der er fehlt | nur mit `--write` (in die Quelldatei) oder `--sidecar` (`*.annot.lua`); ohne Flag reine Vorschau |
+| `:DocMap browse` | Nur-Lese-Ansicht der Karte, in ein Kommando gefaltet | no |
+| `:DocMap checklist [all]` | Das handgepruefte **Ledger** in die Quickfix-Liste: Eintraege, deren Richtigkeit manuell geprueft wurde, gegen `git log` gekreuzt, um zu markieren, welche seither veraltet sein koennten. `all` zeigt alles statt nur der auffaelligen | no |
+| `:DocMap consumers [dir]` | **Wer diese Bibliothek tatsaechlich benutzt.** Liest jede `*/docs/map/module_map.json` unterhalb von `dir` (per Default das Elternverzeichnis, wo die Geschwister-Checkouts liegen) | no |
+| `:DocMap endpoints` | Jede erkannte **call-basierte Routenregistrierung** im Baum in die Quickfix-Liste, nach Pfad sortiert. Sofort, wie `plugins` und `bindings` | no |
+| `:DocMap mermaid [tree\|deps]` | Modulbaum oder Require-Graph als **Mermaid**-Quelltext in einem Scratch-Buffer | no |
+| `:DocMap pick` | Fuzzy-Suche ueber jedes Modul und jede Funktion der Karte, landet auf der Quellzeile | no |
+| `:DocMap untested` | Funktionen, die **diese Maschine wirklich ausgefuehrt hat** und die kein Spec nennt, in die Quickfix-Liste, meistgelaufene zuerst — die eine nuetzliche Zelle aus Coverage × Telemetrie | no |
 
 **Only a genuinely empty argument regenerates.** An unknown action reports what
 it expected. (Until 2026-07-28 the old if-chain fell through to the default, so

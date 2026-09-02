@@ -118,15 +118,23 @@ Nachgemessen am **2026-09-02**: **2333** Datensätze (Keymaps 1230, Usercmds
 811, Autocmds 292), davon 678 für `Keymaps personal`. Der Korpus ist seither
 also um gut ein Fünftel gewachsen.
 
-**Und die Null stimmt nicht mehr: neun Zeilen weichen ab**, alle im
+**Zwischenzeitlich stimmte die Null nicht:** neun Zeilen wichen ab, alle im
 Personal-Korpus — acht in `Usercmds/documentation.nvim.md` (Z. 99–106) und
-eine in `Usercmds/lib.nvim.md` (Z. 15). Alle neun haben eine dreispaltige
-Kopfzeile und nur zwei Zellen: die dritte Spalte (bei `:DocMap` die
-„schreibt?"-Spalte) fehlt schlicht. Für die Prüfung ist das folgenlos — die
-Achsen greifen über den Header-Index auf die Command-Spalte zu, und die ist
-vorhanden —, aber die Behauptung „keine einzige" darf nicht stehenbleiben.
-Was in die fehlende Spalte gehört, sagt nur die jeweilige Quelle; geraten
-wird hier nichts.
+eine in `Usercmds/lib.nvim.md` (Z. 15). Alle neun hatten eine dreispaltige
+Kopfzeile und nur zwei Zellen; die dritte war beim Anhängen späterer Zeilen
+schlicht vergessen worden. Für die Prüfung folgenlos — die Achsen greifen
+über den Header-Index auf die Command-Spalte zu, und die war vorhanden.
+
+Nachgetragen am 2026-09-02, **aus den Quellen statt aus der Beschreibung**:
+für die acht `:DocMap`-Routen ist die „Writes?"-Spalte im Quelltext
+nachgesehen (nur `annotate` ruft `annotate.apply`, und auch das erst nach
+`--write`/`--sidecar` — ohne Flag ist es reine Vorschau); die anderen sieben
+schreiben nichts. Für `:Lib hover toggle` ist geprüft, dass lib.nvim
+überhaupt keinen flachen hover-Command hat (`usercmd.create` kennt dort nur
+`LibLogger`, `MyCmd`, `TableView`) — also „none — new surface" wie bei seinen
+Nachbarzeilen.
+
+**Wieder null abweichende Zeilen**, nachgemessen über den ganzen Korpus.
 
 ## Drift-Bericht (`:Bindings check`)
 

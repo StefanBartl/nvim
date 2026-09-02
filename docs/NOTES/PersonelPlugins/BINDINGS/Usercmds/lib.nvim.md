@@ -12,7 +12,7 @@ repo, unlike published standalone plugins, opted for alongside not replace).
 | `:Lib helptags` | Regenerate all helptags now | (was autocmd-only before) |
 | `:Lib deps show [plugin]` | Declared external tools for `plugin` (why each matters, present/missing), or every plugin shipping a spec if omitted | none — new surface |
 | `:Lib deps install plugin` | Compose an install command for whatever `plugin` is missing, confirm, hand off to a terminal | none — new surface |
-| `:Lib hover toggle` / `on` / `off` | Den Pfad-/Link-Hover fuer diese Sitzung aus- und wieder einschalten; `on`/`off` sagen es ausdruecklich, statt zu kippen |
+| `:Lib hover toggle` / `on` / `off` | Den Pfad-/Link-Hover fuer diese Sitzung aus- und wieder einschalten; `on`/`off` sagen es ausdruecklich, statt zu kippen | none — new surface |
 | `:Lib hover web toggle` / `on` / `off` | Whether http(s) links hover at all. Off by default — see below | none — new surface |
 | `:Lib hover web fetch toggle` / `on` / `off` | Whether a hovered link is fetched for its status code, `<title>` and description. Implies `web on` | none — new surface |
 | `:Lib hover office toggle` / `on` / `off` | Whether `.docx`/`.xlsx`/`.pptx`/… are rendered through a PDF (pdfport.nvim + LibreOffice) instead of showing a badge | none — new surface |
