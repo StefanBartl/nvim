@@ -58,9 +58,9 @@ nicht gelesen.
 
 ## Bewusst ohne eigenes Blatt
 
-Vier Commands aus drei Plugins. Alle vier sind Werkzeuge, keine
-Arbeitsabläufe: man tippt sie, wenn man etwas untersucht, nicht wenn man
-etwas tut.
+Fünf Commands aus vier Plugins. Alle fünf sind Werkzeuge, keine
+Arbeitsabläufe: man tippt sie, wenn man etwas untersucht oder repariert,
+nicht wenn man etwas tut.
 
 | Command | Plugin | Was es tut | Warum kein Blatt |
 |---|---|---|---|
@@ -68,6 +68,7 @@ etwas tut.
 | `:PlenaryBustedDirectory` | `plenary.nvim` | Dasselbe für ein ganzes Verzeichnis. | dito |
 | `:StartupTime` | `vim-startuptime` | Misst und visualisiert die Startzeit. | Ein Command, ein Zweck, kein Zustand und keine Argumente, die man nachschlagen müsste. Diese Config hat mit `startup.lua` ohnehin eine eigene Startphasen-Messung. |
 | `:NvimWebDeviconsHiTest` | `nvim-web-devicons` | Zeigt alle Icon-Highlights zur Sichtprüfung. | Ein Debug-Command der Icon-Bibliothek. Er wird benutzt, wenn ein Theme kaputt aussieht, und dann sucht man ihn nicht im Cheatsheet. |
+| `:BlinkCmp {status\|build\|build-log}` | `blink.cmp` | `status` ruft `:checkhealth blink.cmp`, `build` baut die Fuzzy-Matcher-Bibliothek neu, `build-log` zeigt deren Build-Log. | Wartung der Completion-Engine, kein Bedienelement. Man tippt es einmal nach einem Update, wenn die Completion stumm bleibt. Die Keymaps, mit denen man blink tatsächlich benutzt, stehen in [Keymaps/Blink.md](../Keymaps/Blink.md). |
 
 Wer eines davon doch regelmäßig benutzt, verschiebt es in ein eigenes Blatt —
 die Regel oben ist der Maßstab, nicht diese Liste.
@@ -123,15 +124,17 @@ undokumentierte Live-Commands. Diese Null ist eine Aussage über die
 *Session*, nicht über den Korpus, und das ist gemessen, nicht vermutet.
 
 Derselbe Lauf, mit den 17 Extern-Plugins per `Lazy! load` geladen — also dem
-Zustand, den ein benutzter Editor nach einer Weile erreicht:
+Zustand, den ein benutzter Editor nach einer Weile erreicht. Gemessen am
+Vormittag des 2026-09-02, **bevor** die Blätter dieses Abschnitts
+geschrieben waren:
 
 | | Standardlauf | alle geladen |
 | --- | ---: | ---: |
-| `usercmd-undocumented` | **0** | **80** |
+| `usercmd-undocumented` | 0 | **80** |
 | `keymap-not-live` | 0 | 16 |
 | übersprungene Stämme (extern) | 17 | 0 |
 
-Die 80, nach Eigentümer:
+Die 80 waren, nach Eigentümer:
 
 | Plugin | n | Anmerkung |
 | --- | ---: | --- |
@@ -145,10 +148,24 @@ Die 80, nach Eigentümer:
 | `unicode.vim`, `diffview.nvim` | je 2 | |
 | `neotest`, `blink.cmp` | je 1 | |
 
-**Das ist der nächste Block Doku-Arbeit, nicht ein Versäumnis dieser Runde.**
-Die Regel oben gilt für ihn unverändert: `vim-fugitive` und der `Dap`-Komplex
-sind Arbeitsabläufe und verdienen Blätter; ob `:DapVirtualTextForceRefresh`
-eines braucht, entscheidet dieselbe Grenze wie bei `:StartupTime`.
+**Erledigt am 2026-09-02**, nach derselben Regel. Sechs neue Blätter —
+[`Fugitive`](./Fugitive.md) (36 Commands), [`DapView`](./DapView.md) (11),
+[`Diffview`](./Diffview.md) (7), [`VisualMulti`](./VisualMulti.md) (7),
+[`Neogit`](./Neogit.md) (4), [`DapVirtualText`](./DapVirtualText.md) (4) —
+und drei erweiterte: [`Dap`](./Dap.md) um nvim-daps eigene fünfzehn,
+[`Neotest`](./Neotest.md) um `:Neotest` und vim-tests sechs,
+[`Unicode`](./Unicode.md) um zwei Aliase. `:BlinkCmp` steht als Werkzeug in
+der Tabelle oben.
+
+`usercmd-undocumented` steht damit auch bei voll geladenen Plugins auf
+**0** — und der Standardlauf bleibt bei 11 Befunden, die neuen Blätter
+erzeugen also keine `not-live`-Zeilen.
+
+**Der Nebenfund dieser Runde:** vier Blätter behaupteten, ihr Plugin bringe
+„keine Usercmds mit (reine API-Lib)" — `Conform`, `Treesitter`, `Dap` und
+`Neotest`. Jedes Mal falsch, und jedes Mal aus demselben Grund: die Aussage
+galt für die Bibliothek und nicht für ihr `plugin/`-Verzeichnis. nvim-dap
+allein hat fünfzehn.
 
 **Zu `vimscript script_id=-8`:** das ist der ausdrückliche Rückfall der
 Eigentümerspalte und bedeutet „Vimscript, Herkunft ungeklärt". Eine negative

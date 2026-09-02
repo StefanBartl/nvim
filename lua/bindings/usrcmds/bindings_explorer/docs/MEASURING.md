@@ -439,15 +439,38 @@ Derselbe Endstand, aber mit allen 17 Extern-Plugins per `Lazy! load` geladen:
 | übersprungene Stämme (extern) | 17 | 0 |
 | `fallback_confirmed` | — | 321 |
 
-Die 80 verteilen sich auf `vim-fugitive` (30), `nvim-dap` (13),
+Die 80 verteilten sich auf `vim-fugitive` (30), `nvim-dap` (13),
 `nvim-dap-view` (11), `vim-visual-multi` (7), `vim-test` (6),
-`nvim-dap-virtual-text` (4) und fünf weitere. Sie sind der nächste Block
-Doku-Arbeit, nicht ein Versehen dieser Runde — die Aufstellung steht in
-[`Usercmds/Overview.md`](../../../../../docs/NOTES/ExternPlugins/Bindings/Usercmds/Overview.md),
-Abschnitt „Was die Null nicht heißt".
+`nvim-dap-virtual-text` (4) und fünf weitere.
 
 **Wer eine Zahl aus diesem Abschnitt zitiert, zitiert beide Spalten.** Genau
 dafür steht Falle 5.
+
+### Und dann waren auch die 80 weg (2026-09-02)
+
+Sechs neue Blätter (`Fugitive` 36, `DapView` 11, `Diffview` 7,
+`VisualMulti` 7, `Neogit` 4, `DapVirtualText` 4), drei erweiterte (`Dap` um
+nvim-daps eigene 15, `Neotest` um `:Neotest` und vim-tests sechs, `Unicode`
+um zwei Aliase) und eine Zeile in `Overview.md` für `:BlinkCmp`.
+
+| | vorher | nachher |
+| --- | ---: | ---: |
+| `usercmd-undocumented` (alle geladen) | 80 | **0** |
+| `usercmd-not-live` (alle geladen) | 0 | **0** |
+| extern gesamt (alle geladen) | 140 | **19** |
+| `all` gesamt (alle geladen) | 151 | **30** |
+| `all` gesamt (Standardlauf) | 11 | **11** |
+
+Die letzte Zeile ist die wichtige Kontrolle: der Standardlauf bleibt bei 11,
+die neuen Blätter erzeugen also **keine** `not-live`-Befunde. Das war nicht
+selbstverständlich — `Usercmds/Noice.md` hatte in Punkt 4 genau das getan.
+Der Unterschied ist die Stamm-Auflösung: jedes neue Blatt trägt einen Namen,
+den `stem_plugin` auf sein Plugin abbildet, und ein nicht geladenes Plugin
+wird übersprungen statt gemeldet.
+
+Was bei geladenen Plugins bleibt: 16 `keymap-not-live` (13 davon
+Notationsdifferenzen) und 3 + 11 `autocmd`-Befunde. Keine Usercmd-Kategorie
+mehr.
 
 **Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
 Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —

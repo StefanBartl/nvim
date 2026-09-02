@@ -2,11 +2,57 @@
 
 **Repo:** `StefanBartl/dap.nvim` — gelesen von `:Bindings check`, weil `Dap` sonst mehrdeutig zwischen `dap.nvim` und `nvim-dap` wäre.
 
-`nvim-dap` selbst bringt keine Usercmds mit (reine API-Lib). Wie bei den
-Keymaps (siehe [Keymaps/Dap.md](../Keymaps/Dap.md)) stammt alles hier von
-`StefanBartl/dap.nvim`, dem Wrapper-Plugin (eigenes Repo, `E:/repos/dap.nvim`
-— kein relativer Link möglich, anderes Laufwerk), das über `mfussenegger/nvim-dap`
-und die UI-Provider (`nvim-dap-view`/`rcarriga/nvim-dap-ui`) sitzt.
+Zwei Sätze: die **[custom]** `:Dap`-Routen des Wrappers
+`StefanBartl/dap.nvim` (eigenes Repo, `E:/repos/dap.nvim` — kein relativer
+Link möglich, anderes Laufwerk), das über `mfussenegger/nvim-dap` und die
+UI-Provider (`nvim-dap-view`/`rcarriga/nvim-dap-ui`) sitzt, und die
+**[default]** Commands von `nvim-dap` selbst.
+
+> **Korrektur, 2026-09-02.** Hier stand: „`nvim-dap` selbst bringt keine
+> Usercmds mit (reine API-Lib)". Das ist falsch — nvim-dap registriert
+> **fünfzehn** Commands in seiner eigenen `plugin/dap.lua`. Gefunden hat es
+> `:Bindings check`, nachdem die Stamm-Auflösung das Blatt überhaupt erst mit
+> einem geladenen Plugin verglich. Es ist dieselbe falsche Behauptung, die
+> auch `Usercmds/Conform.md`, `Usercmds/Treesitter.md` und
+> `Usercmds/Neotest.md` trugen: „reine API-Lib" stimmte für die Bibliothek
+> und nicht für ihr `plugin/`-Verzeichnis.
+
+Die beiden Sätze überschneiden sich inhaltlich fast vollständig — jede
+`:Dap`-Route hat ihr `:Dap…`-Gegenstück. Sie unterscheiden sich darin, wer
+sie anlegt und wann: die `[default]`-Commands existieren, sobald nvim-dap
+geladen ist, die `[custom]`-Routen erst nach `require("wkddap").setup()`.
+
+Die Commands der beiden Nachbarplugins stehen in eigenen Blättern:
+[DapView.md](./DapView.md) (11) und [DapVirtualText.md](./DapVirtualText.md)
+(4).
+
+## [default] nvim-daps eigene Commands
+
+Registriert in `plugin/dap.lua` des Plugins, also sobald lazy.nvim nvim-dap
+lädt — nicht erst durch ein `setup()`.
+
+| Command | Wirkung |
+|---|---|
+| `:DapContinue` | Session starten bzw. fortsetzen (`dap.continue()`). Ohne laufende Session öffnet es die Konfigurationsauswahl. |
+| `:DapNew [config]` | Eine **weitere** Session starten, statt die laufende fortzusetzen. Mit Completion über die Konfigurationsnamen. |
+| `:DapToggleBreakpoint` | Breakpoint in der aktuellen Zeile setzen/entfernen. |
+| `:DapClearBreakpoints` | Alle Breakpoints entfernen. |
+| `:DapStepOver` | Über den Aufruf hinweg. |
+| `:DapStepInto` | In den Aufruf hinein. |
+| `:DapStepOut` | Aus der Funktion heraus. |
+| `:DapPause` | Laufenden Thread anhalten. |
+| `:DapTerminate` | Session beenden **und** den Debuggee mit. |
+| `:DapDisconnect` | Session beenden, den Debuggee **weiterlaufen lassen** (`terminateDebuggee = false`). Der Unterschied zu `:DapTerminate`, und er ist bei angehängten Prozessen der wichtigere. |
+| `:DapRestartFrame` | Den aktuellen Stack-Frame neu starten — wenn der Adapter es unterstützt. |
+| `:DapToggleRepl` | Die REPL öffnen/schließen (`dap.repl.toggle()`). |
+| `:DapEval [ausdruck]` | Ausdruck im aktuellen Frame auswerten, in einem eigenen Buffer. |
+| `:DapSetLogLevel {level}` | Log-Ebene setzen (`TRACE`…`ERROR`). |
+| `:DapShowLog` | Die Logdatei öffnen. Der erste Blick, wenn ein Adapter gar nicht erst startet. |
+
+## Die [custom]-Schicht
+
+Wie bei den Keymaps (siehe [Keymaps/Dap.md](../Keymaps/Dap.md)) stammt alles
+Folgende von `StefanBartl/dap.nvim`.
 
 Quelle im Wrapper: `lua/wkddap/bindings/usercmds/init.lua` (Registrierung)
 und `lua/wkddap/bindings/init.lua` (Orchestrierung), beide in
@@ -16,7 +62,8 @@ die Keymaps bindet (siehe
 [lua/plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua),
 `"StefanBartl/dap.nvim"`-Block).
 
-Alle Einträge sind **[custom]** — es gibt keine nvim-dap-Defaults.
+Alle Einträge dieses Abschnitts sind **[custom]** — die `[default]`-Commands
+stehen oben.
 
 ## Unabhängig von `keymaps.enable`
 

@@ -1,10 +1,54 @@
 # nvim-neotest/neotest — User-Commands
 
-`neotest` selbst bringt keine Usercmds mit (reine API-Lib). Alle folgenden
-Commands sind **[custom]**, größtenteils dünne Wrapper um dieselben
-zentralen Actions wie die Keymaps (siehe
+Die `:Neotest*`-Commands dieser Config sind **[custom]**, größtenteils dünne
+Wrapper um dieselben zentralen Actions wie die Keymaps (siehe
 [Keymaps/Neotest.md](../Keymaps/Neotest.md) und
 [lua/config/neotest/actions/init.lua](../../../../../lua/config/neotest/actions/init.lua)).
+
+Dazu kommen zwei **[default]**-Sätze, die das Blatt bis 2026-09-02 verschwieg:
+neotests eigenes `:Neotest` und die sechs `:Test*`-Commands von `vim-test`,
+das als Dependency mitkommt. Beide unten.
+
+> **Korrektur, 2026-09-02.** Hier stand: „`neotest` selbst bringt keine
+> Usercmds mit (reine API-Lib)". Falsch — `:Neotest` existiert. Dieselbe
+> Behauptung stand auch in `Usercmds/Conform.md`, `Usercmds/Treesitter.md`
+> und `Usercmds/Dap.md`, und war jedes Mal falsch: „reine API-Lib" galt für
+> die Bibliothek und nicht für ihr `plugin/`-Verzeichnis. Gefunden hat es
+> `:Bindings check`, nachdem die Stamm-Auflösung die Blätter überhaupt erst
+> mit geladenen Plugins verglich.
+
+## [default] `:Neotest`
+
+| Command | Wirkung |
+|---|---|
+| `:Neotest {subcommand} [args]` | Neotests eigener Dispatcher über die Lua-API — `:Neotest run`, `:Neotest summary`, `:Neotest output`, `:Neotest stop` und die weiteren Consumer. Die `:Neotest*`-Commands dieser Config unten sind die benannten Abkürzungen dafür. |
+
+## [default] Die `:Test*`-Commands von vim-test
+
+`vim-test/vim-test` steht in
+[lua/config/neotest/init/dependencies.lua](../../../../../lua/config/neotest/init/dependencies.lua)
+als `dependency` — es ist das Backend des Adapters
+`nvim-neotest/neotest-vim-test` (aktiv für `vim`, `lua`, `sh`, `bash`, `zsh`,
+`asm`). Es kommt also nicht als eigenständiges Werkzeug mit, sondern damit
+neotest auch für Sprachen ohne eigenen Adapter etwas anzubieten hat.
+
+Seine sechs Commands funktionieren trotzdem und sind live, sobald neotest
+geladen ist. **Der Weg dieser Config führt aber über neotest**, nicht über
+sie — sie sind hier dokumentiert, weil sie existieren, nicht weil sie
+empfohlen wären.
+
+| Command | Wirkung |
+|---|---|
+| `:TestNearest` | Den Test unter dem Cursor ausführen. |
+| `:TestFile` | Alle Tests der aktuellen Datei. |
+| `:TestSuite` | Die ganze Suite. |
+| `:TestLast` | Den zuletzt ausgeführten Lauf wiederholen. |
+| `:TestVisit` | Zur zuletzt getesteten Datei springen. |
+| `:TestClass` | Die umgebende Test-Klasse — nur für Sprachen, deren vim-test-Runner das Konzept kennt. |
+
+Die `[custom]`-Entsprechungen sind `:NeotestRunNearest`, `:NeotestRunFile`
+und `:NeotestRunAll`; sie gehen über neotests Adapter-Auswahl und liefern
+dessen Ausgabe-Oberfläche, nicht vim-tests Terminal-Strategie.
 
 ## Kern-Commands
 

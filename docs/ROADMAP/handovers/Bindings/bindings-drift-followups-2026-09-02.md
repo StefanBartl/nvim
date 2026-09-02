@@ -4,7 +4,7 @@
 
   - [Aktueller Stand](#aktueller-stand)
   - [Wo weiterarbeiten](#wo-weiterarbeiten)
-  - [Offen: die 80 Commands, die nur ein benutzter Editor zeigt](#offen-die-80-commands-die-nur-ein-benutzter-editor-zeigt)
+  - [Die 80 Commands, die nur ein benutzter Editor zeigt](#die-80-commands-die-nur-ein-benutzter-editor-zeigt)
   - [Was ausdrücklich *nicht* offen ist](#was-ausdrcklich-nicht-offen-ist)
 
 ---
@@ -89,21 +89,23 @@ ein `luafile` läuft vor `VimEnter`, hat also `VeryLazy` nie gefeuert und
 
 ---
 
-## Offen: die 80 Commands, die nur ein benutzter Editor zeigt
+## Die 80 Commands, die nur ein benutzter Editor zeigt
 
-Der einzige offene Punkt, und er ist aus der Arbeit an Punkt 5 entstanden,
-nicht aus dem ursprünglichen Bericht.
+**Erledigt.** Entstanden aus der Arbeit an Punkt 5, nicht aus dem
+ursprünglichen Bericht — und im selben Zug abgearbeitet.
 
 **Die Null oben gilt für eine Session, die 17 Extern-Plugins nie geladen
 hat.** Derselbe Lauf, mit allen per `Lazy! load` geladen — also dem Zustand,
 den ein benutzter Editor nach einer Weile erreicht:
 
-| | Standardlauf | alle geladen |
-| --- | ---: | ---: |
-| `usercmd-undocumented` | **0** | **80** |
-| `keymap-not-live` | 0 | **16** |
-| übersprungene Stämme (extern) | 17 | 0 |
-| `fallback_confirmed` | — | 321 |
+| | Standardlauf | alle geladen, vorher | alle geladen, jetzt |
+| --- | ---: | ---: | ---: |
+| `usercmd-undocumented` | 0 | 80 | **0** |
+| `usercmd-not-live` | 0 | 0 | **0** |
+| `keymap-not-live` | 0 | 16 | 16 |
+| extern gesamt | 4 | 140 | **19** |
+| `all` gesamt | 11 | 151 | **30** |
+| übersprungene Stämme (extern) | 17 | 0 | 0 |
 
 Die 80 nach Eigentümer:
 
@@ -119,10 +121,29 @@ Die 80 nach Eigentümer:
 | `unicode.vim`, `diffview.nvim` | je 2 | |
 | `neotest`, `blink.cmp` | je 1 | |
 
-**Die Regel dafür steht schon** — [`Usercmds/Overview.md`](../../../NOTES/ExternPlugins/Bindings/Usercmds/Overview.md):
-Arbeitsablauf bekommt ein Blatt, Werkzeug bekommt eine Zeile. Angewendet
-hieße das ungefähr: `Usercmds/Fugitive.md` (30) und der `Dap`-Komplex (28)
-sind Blätter, `vim-test` und `nvim-dap-virtual-text` wären zu entscheiden.
+**Angewendet wurde die Regel aus** [`Usercmds/Overview.md`](../../../NOTES/ExternPlugins/Bindings/Usercmds/Overview.md):
+Arbeitsablauf bekommt ein Blatt, Werkzeug bekommt eine Zeile.
+
+Sechs neue Blätter — `Fugitive` (36 Commands), `DapView` (11), `Diffview`
+(7), `VisualMulti` (7), `Neogit` (4), `DapVirtualText` (4) — und drei
+erweiterte: `Dap` um nvim-daps eigene fünfzehn, `Neotest` um `:Neotest` und
+vim-tests sechs, `Unicode` um zwei Aliase. `:BlinkCmp` ist als Werkzeug in
+Overview.md gelandet, vim-tests sechs sind bewusst **im Neotest-Blatt**
+gelandet und nicht in einem eigenen: vim-test kommt als Dependency des
+Adapters `neotest-vim-test` mit, nicht als eigenes Werkzeug dieser Config.
+
+**Die Kontrolle, die zählt:** der Standardlauf bleibt bei 11. Die neuen
+Blätter erzeugen also keine `not-live`-Befunde — anders als
+`Usercmds/Noice.md` in Punkt 4, das genau das getan hatte. Der Unterschied
+ist die Stamm-Auflösung: jedes neue Blatt trägt einen Namen, den
+`stem_plugin` auf sein Plugin abbildet, und ein nicht geladenes Plugin wird
+übersprungen statt gemeldet.
+
+**Der Nebenfund:** vier Blätter behaupteten, ihr Plugin bringe „keine
+Usercmds mit (reine API-Lib)" — `Conform`, `Treesitter`, `Dap` und
+`Neotest`. Jedes Mal falsch, und jedes Mal aus demselben Grund: die Aussage
+galt für die Bibliothek und nicht für ihr `plugin/`-Verzeichnis. nvim-dap
+allein hat fünfzehn Commands.
 
 ### Kleiner Nebenfund: neun Zeilen mit fehlender dritter Spalte
 

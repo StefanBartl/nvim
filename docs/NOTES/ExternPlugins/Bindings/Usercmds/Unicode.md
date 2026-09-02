@@ -29,6 +29,22 @@ selbst **kein** Lazy-Load aus, wenn sie als allererster Aufruf getippt werden:
 | `:UnicodeDownload[!]` | `UnicodeData.txt` (neu) herunterladen. `!` unterdrückt die Rückfrage. |
 | `:DigraphNew {char1}{char2} {pattern}` | Neuen Digraph für ein per `{pattern}` gefundenes Zeichen anlegen. |
 | `:UnicodeCache` | Cache-Datei (`UnicodeData.vim`) manuell neu aus `UnicodeData.txt` erzeugen. |
+| `:SearchUnicode [name\|nr]` | Alias für `:UnicodeSearch`. |
+| `:DownloadUnicode[!]` | Alias für `:UnicodeDownload`. |
 
 **[default]**, aber praktisch nur relevant, falls das Plugin bereits über
 einen der `cmd`-Trigger geladen wurde.
+
+Die zwei Aliase am Ende sind die Altnamen aus früheren Versionen von
+`unicode.vim`; das Plugin registriert beide Schreibweisen nebeneinander. Sie
+stehen hier, weil sie live sind — ein Blatt, das sie verschweigt, macht sie
+zu Befunden, sobald jemand das Plugin lädt.
+
+## Zwei Commands, die der Prüfer nicht finden kann
+
+`:UnicodeDownload` und `:DigraphNew` bleiben auf der Repo-Achse
+(`:Bindings check repo extern`) als `usercmd-not-in-repo` stehen, und das ist
+**kein** Defekt. Sie stehen in `plugin/unicode.vim` als
+`com! -bang UnicodeDownload …`, also **unquoted**, und `repo.mentions` sucht
+nur nach Quoted-Literals. Eine Grenze der Grep-Achse, die man benennt, keine
+Lücke, die man schließt — siehe `bindings_explorer/docs/FEATURES.md`.
