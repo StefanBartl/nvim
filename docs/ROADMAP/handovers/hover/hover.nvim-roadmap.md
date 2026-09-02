@@ -6,7 +6,7 @@
   - [1. Abgrenzung: was in welche der beiden Roadmaps gehört](#1-abgrenzung-was-in-welche-der-beiden-roadmaps-gehrt)
   - [2. Was ich als Nächstes bauen würde, in dieser Reihenfolge](#2-was-ich-als-nchstes-bauen-wrde-in-dieser-reihenfolge)
     - [2.1 Ein Spec, das die Doku gegen die Quelle prüft — **gebaut** (`4e1760f`)](#21-ein-spec-das-die-doku-gegen-die-quelle-prft-gebaut-4e1760f)
-    - [2.2 Zoom für Bilder — **Schritte 1, 2 und die Route gebaut**](#22-zoom-für-bilder--schritte-1-2-und-die-route-gebaut)
+    - [2.2 Zoom für Bilder — **gebaut, bis auf den scharfen PDF-Zoom**](#22-zoom-für-bilder--gebaut-bis-auf-den-scharfen-pdf-zoom)
       - [Die ursprüngliche Reihenfolge, zur Begründung](#die-ursprngliche-reihenfolge-zur-begrndung)
     - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
     - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
@@ -21,7 +21,7 @@
 
 Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
 seither sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
-die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-2-und-die-route-gebaut)
+die Tastenhälfte von [2.2](#22-zoom-für-bilder--gebaut-bis-auf-den-scharfen-pdf-zoom)
 und [2.3](#23-eine-checkhealth-zeile-für-contribute--gebaut-aca73fa) gebaut und
 die LuaLS-Messung nachgeholt worden.
 
@@ -143,11 +143,11 @@ und prompt gedriftet war. Genau dafür war der Punkt hier der erste.*
 
 ---
 
-### 2.2 Zoom für Bilder — **Schritte 1, 2 und die Route gebaut**
+### 2.2 Zoom für Bilder — **gebaut, bis auf den scharfen PDF-Zoom**
 
 > **Erledigt am 2026-09-02.** `+` und `-` über eine eigene Leih-Bedingung;
 > `hover.zoom(delta)` ist öffentlich, und seit `2493e1b` gibt es
-> **`:Hover zoom [in|out]`** dazu. Offen bleiben **3 (Mausrad)** und **4
+> **`:Hover zoom [in|out]`** dazu, und seit `83922f0` das Rad. Offen bleibt **4
 > (scharfes PDF)**, beide jetzt in `hover.nvim/docs/ROADMAP.md` — sie sind
 > Konzepte mit einer offenen Vorfrage, und damit gehören sie dorthin.
 >
@@ -190,7 +190,11 @@ ausführlich und im Repo kurz. Hier nur, was die Reihenfolge bestimmt:
 2. **Eine eigene Leih-Bedingung für Bilder.** `keys.borrow` installiert für ein
    Bild heute *gar nichts*, weil es an `content.scroll` hängt und ein Bild das
    nicht hat. Das ist die eigentliche Arbeit — nicht das Zeichnen.
-3. **Mausrad** als Kür, mit `getmousepos()` in einer globalen Map.
+3. **Mausrad** — gebaut in `83922f0`, und die Vermutung hier war halb falsch:
+   `getmousepos()` wird gebraucht, aber die Map ist **nicht global**, sondern
+   geliehen wie `+` / `-`. Und ihr `winid` ist unbrauchbar — bei einem nicht
+   fokussierbaren Float meldet er das Fenster darunter, also rechnet
+   `hover.float.contains` das Rechteck selbst.
 4. **PDF scharf** nur, wenn es sich ergibt: `render_page` nimmt `opts.dpi`, und
    der Seiten-Cache müsste das DPI in den Schlüssel nehmen (heute Pfad, mtime,
    Seitennummer).
@@ -230,6 +234,9 @@ andere Frage: auf deutscher Tastatur ist Shift+`+` das Zeichen `*`, und ohne
 Kitty-Keyboard-Protokoll kommt nie ein `<S-+>` an. WezTerm kann das Protokoll
 — plausibel, ungeprüft, und der Test kostet eine Minute
 (`:nnoremap <S-+> :echo "kommt an"<CR>`). **Erst messen, dann darauf bauen.**
+
+**Beides ist inzwischen gebaut:** die Route in `2493e1b`, das Rad in
+`83922f0`.
 
 **Das eigentlich Fehlende war kein Akkord, sondern eine Route — gebaut in
 `2493e1b`.** `:Hover zoom [in|out]`, ohne Argument hinein. Damit ist Zoom

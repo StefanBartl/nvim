@@ -35,7 +35,7 @@
     - [C. Die README von hover.nvim — **erledigt 2026-09-02** (`a57d390`)](#c-die-readme-von-hovernvim-erledigt-2026-09-02-a57d390)
     - [D. Eine Beitrags-API für Nutzer — **erledigt 2026-09-02** (`c374d5e`)](#d-eine-beitrags-api-fr-nutzer-erledigt-2026-09-02-c374d5e)
     - [E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/` — **erledigt 2026-09-02**](#e-eine-roadmap-datei-unter-docsroadmappersonal-erledigt-2026-09-02)
-    - [F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten und Route gebaut**](#f-zoom-im-float--eingegrenzt-2026-09-02-tasten-und-route-gebaut)
+    - [F. Zoom im Float — **eingegrenzt 2026-09-02, gebaut bis auf den scharfen PDF-Zoom**](#f-zoom-im-float--eingegrenzt-2026-09-02-gebaut-bis-auf-den-scharfen-pdf-zoom)
     - [G. Ein Spec, das die Doku gegen die Quelle prüft — **erledigt 2026-09-02** (`4e1760f`)](#g-ein-spec-das-die-doku-gegen-die-quelle-prft-erledigt-2026-09-02-4e1760f)
     - [H. Eine `:checkhealth`-Zeile für `contribute` — **erledigt 2026-09-02** (`aca73fa`)](#h-eine-checkhealth-zeile-fr-contribute-erledigt-2026-09-02-aca73fa)
     - [I. Die Messung für 2.5 — gelaufen, und die Antwort ist **nein**](#i-die-messung-fr-25-gelaufen-und-die-antwort-ist-nein)
@@ -113,8 +113,10 @@ lag und prompt gedriftet war.
 **Zoom für Bilder ist gebaut**, in zwei Hälften: die Tasten `+` / `-`
 (`204d083`), geliehen nur solange ein Hover mit Bild offen ist, und
 **`:Hover zoom [in|out]`** (`2493e1b`), damit das Feature auch findet, wer nie
-zufällig ein Bild-Float offen hatte. Offen bleiben Mausrad und scharfer
-PDF-Zoom, beide in `docs/ROADMAP.md`. Siehe [F](#f-zoom-im-float--eingegrenzt-2026-09-02-tasten-und-route-gebaut).
+zufällig ein Bild-Float offen hatte, und **das Rad** (`83922f0`),
+`<M-ScrollWheelUp/Down>` — das zoomt nur, solange der Zeiger über dem Float
+steht, weil ein Rad auf das wirkt, worauf es zeigt. Offen bleibt allein der
+**scharfe PDF-Zoom**, in `docs/ROADMAP.md`. Siehe [F](#f-zoom-im-float--eingegrenzt-2026-09-02-gebaut-bis-auf-den-scharfen-pdf-zoom).
 
 **Ein eigener Hover braucht seit `c374d5e` kein Plugin mehr.** `setup` nimmt
 ein Feld `contribute`, und zwar genau die Tabelle, die `register` nimmt — die
@@ -318,7 +320,7 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **231 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, **docs 13**, **registry 71**, scope 26, switches 30, **zoom 16**), gemessen 2026-09-02 nach `2493e1b` |
+| Specs hover.nvim | **233 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 13, registry 71, scope 26, switches 30, **zoom 18**), gemessen 2026-09-02 nach `83922f0` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
 | LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, zuletzt `post-f` (`e62f5e9`) auf dem Haupt-Checkout; davor `post-b` (`3e12c9f`), `post-c` (`4e1760f`), `zoom-pre`, `zoom-post2` (`65ba8dd`), `post-d` (`aca73fa`). Zwei Läufe fanden etwas: **einmal +2** (siehe unten) und **`post-e` einmal +1 auf unangetastetem Quelltext**, das `post-e2` auf identischem Baum nicht reproduzierte — der Scan flackert, siehe [J / Fund 3](#fund-3-die-luals-messung-flackert) |
@@ -844,7 +846,7 @@ diese Klasse im Code dreimal und in der Doku viermal zugeschlagen hat.
 
 ---
 
-### F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten und Route gebaut**
+### F. Zoom im Float — **eingegrenzt 2026-09-02, gebaut bis auf den scharfen PDF-Zoom**
 
 > **Beide Griffe stehen.** `+` und `-` sind geliehen, solange ein Hover mit
 > Bild offen ist; ein Schritt skaliert die Fläche um 1,25 (`204d083`). Dazu
@@ -865,8 +867,39 @@ diese Klasse im Code dreimal und in der Doku viermal zugeschlagen hat.
 > die Route ein Kommando, das schließt, worauf es wirkt — deshalb steht das
 > als Spec und nicht als Annahme.
 >
-> Offen und in `docs/ROADMAP.md` verblieben sind das **Mausrad** und der
-> **scharfe PDF-Zoom**. Was unten steht, ist die Voranalyse — sie hat gestimmt, mit
+> **Und das Rad** (`83922f0`): `<M-ScrollWheelUp/Down>`, geliehen auf
+> derselben Bedingung wie `+` / `-`, mit einer zusätzlichen Regel — es zoomt
+> nur, solange der **Zeiger über dem Float** steht, Rahmen eingeschlossen.
+>
+> Zwei Messungen haben dessen Bauform bestimmt, beide gegen ein echtes Neovim
+> am 2026-09-02, und die erste hat die Voranalyse unten widerlegt:
+>
+> 1. **`getmousepos()` kann die Frage nicht beantworten.** Unten steht, man
+>    bräuchte `getmousepos()`, um zu erkennen, dass der Zeiger über dem Hover
+>    steht. Das stimmt zur Hälfte: die Funktion wird gebraucht, aber nur für
+>    ihre Koordinaten. Ihr `winid` meldet bei einem `focusable = false`-Float
+>    das Fenster **darunter** — gemessen 1000 für ein Float, das 1001 war.
+>    Das Rechteck rechnet deshalb `hover.float.contains` selbst, gegen
+>    dieselbe `nvim_win_get_position`, die images.nvim zurückliest.
+> 2. **Mauseingaben lassen sich headless nicht treiben.**
+>    `nvim_input_mouse` feuerte **null** Mappings ohne angehängtes UI
+>    (`#nvim_list_uis() == 0`), `feedkeys` mit demselben Termcode eines. Die
+>    Specs treiben also den Akkord und stellen die Zeigerposition; dass ein
+>    echtes Rad ankommt, ist Handprüfung — die sechste Zeile in
+>    `docs/MANUAL-EVIDENCE.md`.
+>
+> **Der Rahmen zählt als „drin", und das ist tragend statt großzügig:** das
+> Float sitzt eine Zeile unter dem Cursor, sein oberer Rahmen also auf der
+> Cursorzeile — und genau dort steht der Zeiger unter `trigger = { "mouse" }`.
+> Ohne den Rahmen hätte das Rad im einzigen Arbeitsablauf nicht funktioniert,
+> der den Zeiger überhaupt dorthin bringt.
+>
+> Offen und in `docs/ROADMAP.md` verblieben ist allein der **scharfe
+> PDF-Zoom**. Der Roadmap-Eintrag zum Rad ist gelöscht (`c11e397`), wie es
+> die Regel jener Datei verlangt; er stellte vorab eine Frage — „ist eine
+> globale Rad-Map überhaupt akzeptabel?" —, deren Antwort lautet: sie musste
+> nie global sein. Der Akkord ist geliehen und wird mit dem Float
+> zurückgegeben. Was unten steht, ist die Voranalyse — sie hat gestimmt, mit
 > einer Ausnahme, und für die beiden offenen Hälften gilt sie unverändert.
 >
 > **Zwei Dinge waren beim Bauen anders als hier vermutet.**

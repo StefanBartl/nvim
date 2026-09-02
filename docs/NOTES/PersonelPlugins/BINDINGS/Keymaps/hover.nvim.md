@@ -33,6 +33,8 @@ combination when no key is bound. **Not set in this config today.**
 | `scroll_keys.up` | `<M-PageUp>`, `<C-Up>` | scrollable only | back |
 | `zoom_keys.larger` | `+` | **hovers with a picture only** | die Bildfläche einen Schritt (×1,25) größer |
 | `zoom_keys.smaller` | `-` | **hovers with a picture only** | einen Schritt kleiner |
+| `zoom_keys.wheel_larger` | `<M-ScrollWheelUp>` | **Bild-Hovers, und nur solange der Zeiger über dem Float steht** (Rahmen zählt mit) | einen Schritt größer |
+| `zoom_keys.wheel_smaller` | `<M-ScrollWheelDown>` | wie oben | einen Schritt kleiner |
 
 ## Collisions to know about
 
@@ -82,7 +84,7 @@ Plugin — hover.nvims Defaults bleiben `+` / `-`.
 | `<C-ScrollWheel>` | **ausgeschlossen** | dieselbe Bedeutung wie oben; in WezTerm zoomt es hier zwar nicht, aber die Erwartung ist gesetzt |
 | `<M-->` | **vergeben** | cascade.nvim, Bullet Points — bleibt, wo es ist |
 | `<M-+>` | frei | aber ohne Partner: `<M-->` ist weg, ein Regler mit nur einer Richtung ist keiner |
-| `<M-ScrollWheelUp/Down>` | **frei, und der Kandidat für Schritt 3** | kollidiert mit nichts, und Schritt 3 braucht ohnehin `getmousepos()` in einer globalen Map |
+| `<M-ScrollWheelUp/Down>` | **vergeben** — hover.nvims Default fürs Rad seit `83922f0` | war der Kandidat und ist es geblieben. Die Vermutung „braucht `getmousepos()` in einer globalen Map" stimmte zur Hälfte: die Funktion wird benutzt, aber nur für ihre Koordinaten — ihr `winid` ist für ein nicht fokussierbares Float unbrauchbar |
 | `<S-+>` / `<S-->` | frei, **aber ungeprüft** | siehe unten |
 | `<C-S-+>` / `<C-S-->` | frei, **aber ungeprüft** | dito |
 
@@ -98,8 +100,9 @@ bevor darauf gebaut wird. Der Test ist eine Minute:
 :nnoremap <S-+> :echo "S-plus kommt an"<CR>
 ```
 
-**Der Usercommand gibt es jetzt:** `:Hover zoom [in|out]`, ohne Argument
-zoomt er hinein. Damit ist Zoom erreichbar, ohne dass eine Taste geliehen sein
+**Beide Griffe ohne Akkord gibt es jetzt:** `:Hover zoom [in|out]` (ohne
+Argument hinein) und das Rad, `<M-ScrollWheelUp/Down>` über dem Float. Der
+`<S-+>`-Test unten ist damit endgültig eine Komfortfrage. Damit ist Zoom erreichbar, ohne dass eine Taste geliehen sein
 muss — und ohne Akkord, was den offenen `<S-+>`-Test oben entschärft: er
 entscheidet nur noch über Komfort, nicht mehr über Erreichbarkeit.
 
@@ -118,6 +121,24 @@ ausschließlich über die geliehenen Tasten.
   wäre irreführend.
 
 ## Changelog
+
+- 2026-09-02: **das Rad ist gebaut** (hover.nvim `83922f0`).
+  `<M-ScrollWheelUp/Down>`, geliehen auf derselben Bedingung wie `+` / `-`,
+  aber mit einer zusätzlichen Regel: es zoomt **nur, solange der Zeiger über
+  dem Float steht**, Rahmen eingeschlossen. Ein Rad zeigt, also wirkt es auf
+  das, worauf es zeigt.
+
+  Zwei Messungen dahinter, beide gegen ein echtes Neovim: `getmousepos()`
+  kann die Frage *nicht* beantworten — bei einem `focusable = false`-Float
+  meldet sein `winid` das Fenster **darunter** (1000 für ein Float 1001), also
+  rechnet `hover.float.contains` das Rechteck selbst. Und `nvim_input_mouse`
+  feuert ohne angehängtes UI **nichts**, `feedkeys` mit demselben Termcode
+  schon — deshalb steht „das Rad kommt im Terminal an" als Handprüfung in
+  `docs/MANUAL-EVIDENCE.md` und nicht als Spec.
+
+  Der Rahmen zählt bewusst als „drin": das Float sitzt eine Zeile unter dem
+  Cursor, sein oberer Rahmen also **auf** der Cursorzeile — und genau dort
+  steht der Zeiger unter `trigger = { "mouse" }`.
 
 - 2026-09-02: **`zoom_keys` fehlten hier ganz** — seit hover.nvim `204d083`
   geliehen (`+` / `-`, nur für Hovers mit Bild), in hover.nvims eigener
