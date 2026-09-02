@@ -10,7 +10,7 @@
     - [3 — Extern-Stämme lassen sich nicht auf lazy-Plugins auflösen](#3-extern-stmme-lassen-sich-nicht-auf-lazy-plugins-auflsen)
     - [4 — Elf Cheatsheet-Zeilen, deren Sheet schon existiert](#4-elf-cheatsheet-zeilen-deren-sheet-schon-existiert)
     - [5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist](#5-die-scope-entscheidung-die-seit-drei-blcken-offen-ist)
-    - [6 — Die Autocmds-Achse wird gar nicht geprüft](#6-die-autocmds-achse-wird-gar-nicht-geprft)
+    - [7 — Die Config hat kein Autocmds-Blatt](#7-die-config-hat-kein-autocmds-blatt)
   - [Was ausdrücklich *nicht* offen ist](#was-ausdrcklich-nicht-offen-ist)
 
 ---
@@ -32,11 +32,16 @@ hingehört:
 
 **Wo der Prüfer heute steht:**
 
-| Route | Befunde |
-| --- | ---: |
-| `:Bindings check` | **1** (`:LibLogger`, bestätigter Nicht-Befund) |
-| `:Bindings check extern` | **154** — die Punkte unten |
-| `:Bindings check all` | 155 |
+| Route | Befunde | davon Autocmds |
+| --- | ---: | --- |
+| `:Bindings check` | **56** | 8 nicht registriert, 47 nicht dokumentiert |
+| `:Bindings check extern` | **158** | 4 nicht registriert |
+| `:Bindings check all` | **214** | 12 / 47 |
+
+Vor der Autocmds-Achse waren es 1 / 154 / 155; die Differenz ist
+ausschließlich sie. Dazu zwei Zahlen unter jedem Bericht: **102 dokumentierte
+Zeilen nicht prüfbar**, **116 Registrierungen zuzuordnen** — damit eine kleine
+Befundzahl nicht mit einer gründlichen Prüfung verwechselt wird.
 
 **Nachgemessen 2026-09-02, später Abend** (headless, UIReady-Phase
 nachgeholt, Haupt-Checkout deckungsgleich mit `origin/main` — also ohne die
@@ -71,9 +76,11 @@ Zahlen unten nicht reproduzierbar.
 
 ## Offene Punkte
 
-Alle sechs sind gemessen, keiner ist gebaut. Die Reihenfolge ist die
+Alle fünf sind gemessen, keiner ist gebaut. Die Reihenfolge ist die
 vorgeschlagene: 1 ist ein Defekt, 2–3 senken die Zahl, 4–5 sind
-Korpus-Entscheidungen, 6 ist eine ganze Achse, die es nicht gibt.
+Korpus-Entscheidungen. Punkt 6 (die Autocmds-Achse) ist **gebaut** und steht
+jetzt unter „Was ausdrücklich *nicht* offen ist"; was er zutage gefördert hat,
+steht als Punkt 7 daneben.
 
 ---
 
@@ -250,46 +257,36 @@ sein soll, ist eine eigene Frage.
 
 ---
 
-### 6 — Die Autocmds-Achse wird gar nicht geprüft
+### 7 — Die Config hat kein Autocmds-Blatt
 
-**Die größte ungeprüfte Fläche des Korpus, und sie steht in keiner Zahl
-oben.** `:Bindings check` vergleicht Keymaps und Usercmds gegen die laufende
-Session. Die dritte Kategorie wird nur *gelesen* — `records.mentions()` holt
-sich Commandnamen auch aus `Autocmds/*.md` —, aber **keine einzige
-Autocmd-Zeile wird je gegen `nvim_get_autocmds` gehalten**. Wer „1 Befund"
-liest, hält den Korpus leicht für geprüft; ein Drittel davon ist es nie
-gewesen.
+**Der strukturelle Fund der neuen Achse.** 35 der 47 undokumentierten
+Autocmds gehören `nvim-config` selbst — registriert in `lua/config/**` und
+`lua/wkdnvchad/**` —, und ein `Autocmds/nvim-config.md` gibt es nicht. Der
+Korpus ist nach Plugins geschnitten, und für die Autocmds der Config hat er
+nie einen Ort gehabt.
 
-| | n |
-| --- | ---: |
-| Autocmds-Zeilen im Korpus | **241** in 33 Dateien |
-| Einträge in lib.nvims Autocmd-Registry (diese Session) | 115 |
-| `nvim_get_autocmds({})` live | 324 |
+Dieselbe Lücke, die die Usercmd-Seite mit `:MyOpt*`/`:WKDOptions*` hatte, mit
+einem Unterschied: dort existierte `Usercmds/nvim-config.md` bereits und es
+fehlten nur die Zeilen. Hier fehlt das Blatt.
 
-**Dass die Fläche driftet, ist keine Vermutung.** Am 2026-09-02 hat lsp.nvim
-`b260fc8` zwei Autocmds auf der Roh-API registriert. Damit waren zwei
-ausdrückliche Aussagen in `Autocmds/lsp.nvim.md` falsch — die Kopfzahl und
-der Satz „kein einziger auf der Roh-API" — und **nichts hat es gemeldet**.
-Gefunden wurde es von Hand, korrigiert in lsp.nvim `89f68fc` und
-nvim-config `b7e3df80`. Beim Nachzählen kam heraus, dass die Seite auch
-vorher schon nicht stimmte: die Kopfzeile sagte 31, der Fließtext zwei Zeilen
-darunter 29, und die lib-/Roh-API-Aufteilung war in beide Richtungen
-unvollständig. Ein Prüfer hätte jeden dieser Punkte gefunden.
+Die übrigen 12 verteilen sich so:
 
-**Warum sie baubar ist, und zwar billiger als die anderen Achsen.**
-`lib.nvim.bindings.autocmd.registered()` liefert pro Eintrag Event, Gruppe,
-`desc` und den Aufrufort — dieselbe Registry-Form, die auf der Usercmd-Seite
-aus „owner not recorded" eine Datei mit Zeilennummer gemacht hat. Die
-Live-Seite (`nvim_get_autocmds`) ist ohnehin da. Es fehlt nur die
-Extraktionsseite: `Autocmds/*.md` schreibt Augroup, Event und Pattern in
-eigene Spalten, also genau die drei Felder, die ein Vergleich braucht.
+| Eigentümer | n | Anmerkung |
+| --- | ---: | --- |
+| `nvim-config` | 35 | kein Blatt — der Punkt oben |
+| runtime-analysis.nvim | 15 | `ra_telemetry_<plugin>`, eine **generierte Familie** |
+| lib.nvim | 1 | `LibNvimUsrCmdsHelptags` |
 
-**Die Falle, die vorher zu klären ist:** der Korpus zählt *Aufrufstellen*
-(`Autocmds/lsp.nvim.md` sagt das ausdrücklich), `nvim_get_autocmds` zählt
-*Event-Registrierungen* — ein Handler auf vier Events erscheint dort viermal.
-Ohne diese Umrechnung meldet die Achse Differenzen, die keine sind. Das ist
-dieselbe Klasse Fehler wie die `script_id` in Punkt 1: eine Zahl, die etwas
-anderes zählt als das, wofür sie gelesen wird.
+Die 15 sind derselbe Fall wie pickers.nvims 23 Scope-Commands: eine Augroup
+pro telemetriefähigem Plugin, aus einer Schleife. Derselbe Vorschlag also —
+den Generator dokumentieren, nicht seine Ergebnisse. Ob die Familien-Notation
+(`records.command_globs`, heute nur für Commands) dafür auf Augroups
+ausgedehnt wird, ist die Entwurfsfrage dahinter.
+
+Und noch eine Zahl, die zu diesem Punkt gehört: **102 dokumentierte Zeilen
+sind nicht prüfbar**, weil ihr Sheet die Augroup in keiner Spalte nennt. Die
+Prosa-Rückfallebene fängt das für die eine Richtung ab; für die andere bleibt
+es eine Format-Entscheidung am Korpus.
 
 ---
 
@@ -309,6 +306,14 @@ Damit es nicht ein drittes Mal untersucht wird:
   Laufzeit gebautes `prefix .. "m"` — der dokumentierte Falschbefund der
   Grep-Achse, nur unter `:Bindings check repo` sichtbar. Kein Handlungsbedarf,
   solange die Achse als Grep gekennzeichnet ist.
+* **Die Autocmds-Achse ist gebaut** (`21ed8082`), Punkt 6 dieser Datei.
+  Beide Richtungen: vorwärts gegen `nvim_get_autocmds`, rückwärts gegen
+  lib.nvims Registry. Die Zählfalle (Aufrufstellen gegen
+  Event-Registrierungen) ist umgangen, indem beide Seiten zu
+  `(Augroup, Event)`-Paaren flachgeklopft werden und nie eine Zahl mit einer
+  anderen verglichen wird. Begründung und Grenzen in
+  [FEATURES.md](../../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md),
+  Abschnitt „Die Autocmds-Achse"; die Messung in MEASURING.md.
 * **Die zwei Autocmds von `b260fc8`** sind nachgetragen (lsp.nvim `89f68fc`,
   nvim-config `b7e3df80`) — die *Seite* stimmt wieder. Was daraus folgt, ist
   Punkt 6: dass sie es nicht von selbst getan hat.
