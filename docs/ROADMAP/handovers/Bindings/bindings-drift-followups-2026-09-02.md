@@ -109,11 +109,14 @@ Live-Namen nichts findet.
 language.nvim, lsp.nvim). Nach der Prüfung sind es zwei — und die beiden
 kollidieren nicht, sie verdecken einander.**
 
+Die Tabelle ist der Stand *vor* der Klärung; die Zeilen tragen nach, wie sie
+ausgegangen sind.
+
 | Anspruch | Befund |
 | --- | --- |
 | **lsp.nvim** — Inlay Hints global umschalten | **Gewinnt live.** `nvim_get_keymap("n")` liefert genau eine Bindung für `<leader>th`, desc „LSP: Toggle inlay hints (global)", aus `lsp.nvim/lua/lsp/bindings/actions.lua:192` |
-| **NvChad** — Theme-Picker | **Echter zweiter Anspruch.** `NvChad/lua/nvchad/mappings.lua:67`, `require("nvchad.themes").open()`. Ob er in dieser Config überhaupt gesetzt wird, ist **nicht geklärt** — `lua/wkdnvchad/init.lua:14` ruft `require("wkdnvchad.mappings").setup({ all = true })`, und was `all = true` einschließt, war der nächste Schritt |
-| **filetree.nvim** — Trash-History | **Kein Konflikt.** `<leader>th` ist dort der Default des Config-Feldes `keymap_history`, registriert aus `attach.lua` mit `scope = "tree"` — buffer-lokal am Baum-Buffer, wie die beiden neo-tree-Keymaps der Config auch |
+| **NvChad** — Theme-Picker | **Kein Anspruch — geklärt, siehe unten.** Die Zeile `NvChad/lua/nvchad/mappings.lua:67` (`require("nvchad.themes").open()`) existiert, aber diese Config lädt das Modul nie: `package.loaded["nvchad.mappings"]` ist nach einem vollen Start `false`. `lua/wkdnvchad/init.lua:14` ruft ein *anderes* Modul (`wkdnvchad.mappings`), dessen `all = true` nur `<Tab>`, `<S-Tab>`, `<leader>bc`, `<leader>tr`, `<leader>tl` und `<leader>tt` setzt |
+| **filetree.nvim** — Trash-History | **Echter zweiter Anspruch, aber buffer-lokal.** `<leader>th` ist der Default des Config-Feldes `keymap_history` (`features/fileops/trash/init.lua:62`). Nachgemessen: die Taste kommt **nicht** über neo-trees `window.mappings` — dort steht sie in keiner Quelle —, sondern über filetrees eigenen tree-attach-Dispatcher, buffer-lokal am Baum-Buffer. Damit ist es Shadowing, keine Kollision |
 | **language.nvim** — Thesaurus | **Kein Anspruch.** `config/DEFAULTS.lua:117` hat `keymap = false` mit dem Kommentar „opt-in"; die Taste wird per Default nicht gebunden. Der Kommentar in `thesaurus/init.lua:145` (`3<leader>th`) beschreibt nur, wie ein Count wirken *würde* |
 
 ### Die offene Frage, beantwortet (2026-09-02, nachmittags)
