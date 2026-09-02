@@ -30,17 +30,17 @@ hingehört:
 
 | Route | Befunde | Aufschlüsselung |
 | --- | ---: | --- |
-| `:Bindings check` | **7** | 7 `autocmd-not-live` |
+| `:Bindings check` | **10** | 10 `autocmd-not-live` |
 | `:Bindings check extern` | **4** | 4 `autocmd-not-live` |
-| `:Bindings check all` | **11** | 11 `autocmd-not-live` |
+| `:Bindings check all` | **14** | 14 `autocmd-not-live` |
 
 Alle drei Usercmd-Kategorien und beide Keymap-Kategorien stehen auf **0**.
 Übrig sind ausschließlich Autocmds, die feature-gated sind oder auf einen
 Trigger warten (`LspFormatOnSave`, `LspNvimSagaWinbarDepth`, `HoverDismiss`,
 `ReloadNvChad`, …).
 
-Von 167 auf 11 in fünf Schritten, und **keiner davon hat einen Befund
-weggeworfen**:
+Von 167 auf 14 in fünf Schritten plus einem Nachtrag, und **keiner davon
+hat einen Befund weggeworfen**:
 
 | Schritt | all | Was er tat |
 | --- | ---: | --- |
@@ -49,7 +49,8 @@ weggeworfen**:
 | Punkt 4 — dreizehn Zeilen + drei Blätter | 168 | −13 undokumentiert, +14 not-live |
 | Punkt 3 — Stamm-Auflösung | 54 | `keymap-not-live` 84 → 0, `usercmd-not-live` 31 → 2 |
 | Punkt 2 — Usercmd-Fallback | 52 | `usercmd-not-live` 2 → 0 |
-| Punkt 5 — Scope-Entscheidung | **11** | `usercmd-undocumented` 41 → 0 |
+| Punkt 5 — Scope-Entscheidung | 11 | `usercmd-undocumented` 41 → 0 |
+| Nachtrag — drei fehlende Autocmds | **14** | `autocmd-undocumented` 3 → 0, dafür +3 `not-live` |
 
 ### Die Zahl, die neben jeder dieser Zahlen stehen muss
 
@@ -104,7 +105,7 @@ den ein benutzter Editor nach einer Weile erreicht:
 | `usercmd-not-live` | 0 | 0 | **0** |
 | `keymap-not-live` | 0 | 16 | 16 |
 | extern gesamt | 4 | 140 | **19** |
-| `all` gesamt | 11 | 151 | **30** |
+| `all` gesamt | 14 | 151 | **27** |
 | übersprungene Stämme (extern) | 17 | 0 | 0 |
 
 Die 80 nach Eigentümer:
@@ -132,7 +133,8 @@ Overview.md gelandet, vim-tests sechs sind bewusst **im Neotest-Blatt**
 gelandet und nicht in einem eigenen: vim-test kommt als Dependency des
 Adapters `neotest-vim-test` mit, nicht als eigenes Werkzeug dieser Config.
 
-**Die Kontrolle, die zählt:** der Standardlauf bleibt bei 11. Die neuen
+**Die Kontrolle, die zählt:** der Standardlauf bleibt bei 11 (die 14 kamen
+erst durch den Autocmd-Nachtrag darunter). Die neuen
 Blätter erzeugen also keine `not-live`-Befunde — anders als
 `Usercmds/Noice.md` in Punkt 4, das genau das getan hatte. Der Unterschied
 ist die Stamm-Auflösung: jedes neue Blatt trägt einen Namen, den

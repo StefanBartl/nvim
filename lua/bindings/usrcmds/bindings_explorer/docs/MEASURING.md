@@ -461,6 +461,9 @@ um zwei Aliase) und eine Zeile in `Overview.md` für `:BlinkCmp`.
 | `all` gesamt (alle geladen) | 151 | **30** |
 | `all` gesamt (Standardlauf) | 11 | **11** |
 
+*(Danach hat ein Autocmd-Nachtrag beide Zahlen noch einmal bewegt — siehe
+den Abschnitt darunter.)*
+
 Die letzte Zeile ist die wichtige Kontrolle: der Standardlauf bleibt bei 11,
 die neuen Blätter erzeugen also **keine** `not-live`-Befunde. Das war nicht
 selbstverständlich — `Usercmds/Noice.md` hatte in Punkt 4 genau das getan.
@@ -471,6 +474,48 @@ wird übersprungen statt gemeldet.
 Was bei geladenen Plugins bleibt: 16 `keymap-not-live` (13 davon
 Notationsdifferenzen) und 3 + 11 `autocmd`-Befunde. Keine Usercmd-Kategorie
 mehr.
+
+### Der Autocmd-Nachtrag, und was er über die Achse sagt (2026-09-02)
+
+Derselbe Lauf mit geladenen Plugins meldete drei `autocmd-undocumented` —
+Augroups, die diese Config über lib.nvim registriert und die in
+`Autocmds/nvim-config.md` fehlten:
+
+| Augroup | Events | Quelle | Warum nie im Standardlauf |
+| --- | --- | --- | --- |
+| `NeotestCore` | `BufEnter`, `BufNewFile` | `lua/config/neotest/core/init.lua` | wird erst registriert, wenn neotest geladen ist |
+| `NeotestCore` | `User` (`NeotestRunComplete`) | dieselbe | dito |
+| `NvChadLspSignature` | `LspAttach` | `lua/nvchad/au.lua` | wird erst registriert, wenn ein LSP-Client anhängt |
+
+Nachgetragen. Das Blatt steht jetzt bei **58** Aufrufstellen (vorher 55),
+davon 43 in 28 Augroups.
+
+**Der Preis, und er ist die interessante Stelle:** die drei Zeilen sind ab
+sofort prüfbar — und melden sich in einer frischen Session als
+`autocmd-not-live`, weil neotest und der LSP dort nicht geladen sind. Der
+Standardlauf steigt damit von 11 auf **14**.
+
+Das ist kein Rückschritt, sondern derselbe Tausch wie überall in diesem
+Block: eine Prosa-Erwähnung wäre still gewesen und hätte eine umbenannte
+Augroup nie auffallen lassen. Drei bekannte Nicht-Befunde derselben Klasse
+wie `LspNvimSagaWinbarDepth` (hängt ebenfalls an `LspAttach`) sind der Preis
+dafür, dass die Zeilen überhaupt geprüft werden.
+
+### Endstand des Blocks (2026-09-02)
+
+| | Standardlauf | alle 17 Extern-Plugins geladen |
+| --- | ---: | ---: |
+| `personal` | 10 | 8 |
+| `extern` | 4 | 19 |
+| **`all`** | **14** | **27** |
+
+Aufschlüsselung `all`, Standardlauf: 14 `autocmd-not-live`, sonst nichts.
+Mit geladenen Plugins: 11 `autocmd-not-live` + 16 `keymap-not-live`.
+
+**Alle drei Usercmd-Kategorien stehen in beiden Spalten auf 0**, ebenso
+`autocmd-undocumented`. Was bleibt, ist zweierlei: Autocmds, deren Feature
+aus oder deren Plugin ungeladen ist, und 16 Keymap-Zeilen, von denen 13
+Notationsdifferenzen sind.
 
 **Und eine Zahl, die schwankt:** `registry` (die zuzuordnenden
 Registrierungen) lag in zwei Läufen bei 120 und 116. Das ist Lazy-Loading —

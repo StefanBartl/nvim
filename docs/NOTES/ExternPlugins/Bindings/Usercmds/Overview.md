@@ -158,7 +158,7 @@ und drei erweiterte: [`Dap`](./Dap.md) um nvim-daps eigene fünfzehn,
 der Tabelle oben.
 
 `usercmd-undocumented` steht damit auch bei voll geladenen Plugins auf
-**0** — und der Standardlauf bleibt bei 11 Befunden, die neuen Blätter
+**0** — und der Standardlauf blieb bei 11 Befunden, die neuen Blätter
 erzeugen also keine `not-live`-Zeilen.
 
 **Der Nebenfund dieser Runde:** vier Blätter behaupteten, ihr Plugin bringe

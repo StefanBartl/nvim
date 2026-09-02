@@ -18,9 +18,24 @@ fehlte das Blatt.
 
 **Gezaehlt werden Aufrufstellen, nicht Event-Registrierungen** — dieselbe
 Regel wie in `lsp.nvim.md`. Ein Handler auf drei Events ist eine Zeile;
-`nvim_get_autocmds` zaehlt ihn dreifach. Stand dieses Blattes: **55
-Aufrufstellen**, davon **40 in 26 Augroups** und **15 ohne jede Augroup**
+`nvim_get_autocmds` zaehlt ihn dreifach. Stand dieses Blattes: **58
+Aufrufstellen**, davon **43 in 28 Augroups** und **15 ohne jede Augroup**
 (siehe "Ohne Augroup" unten).
+
+**Nachtrag 2026-09-02, abends: drei Registrierungen mehr.** `NeotestCore`
+(zwei) und `NvChadLspSignature` (eine) fehlten, und sie fehlten aus einem
+Grund, der das Blatt selbst nicht betrifft: sie werden erst registriert, wenn
+neotest bzw. ein LSP-Client geladen ist. Ein `:Bindings check` in einer
+frisch gestarteten Session sieht sie nie. Gefunden hat sie ein Lauf, der die
+lazy Plugins vorher absichtlich geladen hat — siehe
+`bindings_explorer/docs/MEASURING.md`, Falle 5.
+
+Genau deshalb melden sie sich in einem normalen `:Bindings check` als
+`autocmd-not-live` — dieselbe Klasse wie `LspNvimSagaWinbarDepth`, das
+ebenfalls an `LspAttach` hängt, und `LspFormatOnSave`, das an einem
+Feature-Schalter hängt. Als Prosa statt als Tabellenzeile wären sie still,
+aber auch unprüfbar: eine umbenannte Augroup fiele dann nie auf. Drei
+bekannte Nicht-Befunde sind der Preis dafür, dass die Zeilen geprüft werden.
 
 Alle 55 laufen ueber `lib.nvim.bindings.autocmd.create` — kein einziger auf
 der Roh-API. Die *Augroups* dagegen sind gemischt, wie in lsp.nvim auch.
@@ -62,6 +77,29 @@ Grep nach `general_kitty_spacing` ihn sonst nicht findet.
 | --- | --- | --- | --- |
 | `NoiceBufferMaps` | `FileType` | `noice*` | Buffer-lokale Noice-Keymaps setzen |
 | `CasedeskSlaNotify` | `FocusGained` | — | casedesk: SLA-Uhren erneut pruefen (SLA.md §6C) |
+
+## Neotest — `lua/config/neotest/core/`
+
+| Augroup | Event(s) | Pattern | Action |
+| --- | --- | --- | --- |
+| `NeotestCore` | `BufEnter`, `BufNewFile` | — | An eine Testdatei automatisch anhaengen (`neotest.run.attach`), wenn der Buffername einem der Testdatei-Muster entspricht |
+| `NeotestCore` | `User` | `NeotestRunComplete` | Das Output-Fenster oeffnen, sobald mindestens ein Test fehlgeschlagen ist (`enter = false`) |
+
+Beide haengen an einem Schalter: `auto_attach_on_test_file` bzw.
+`show_output_on_fail` in `config.neotest.core`. Steht einer auf `false`, wird
+der zugehoerige Autocmd gar nicht erst angelegt — die Augroup existiert
+trotzdem (`Autocmd.group("NeotestCore", true)`).
+
+## LSP-Signaturhilfe — `lua/nvchad/au.lua`
+
+| Augroup | Event(s) | Pattern | Action |
+| --- | --- | --- | --- |
+| `NvChadLspSignature` | `LspAttach` | — | Fuer einen neu angehaengten Client `nvchad.lsp.signature` einrichten, aber nur wenn dessen `signatureHelpProvider` Trigger-Zeichen meldet |
+
+Aus derselben lokalen Override-Kopie von `nvchad/au.lua` wie `ReloadNvChad`
+und `:MasonInstallAll` (siehe
+[`ExternPlugins/Bindings/Autocmds/NvChadUI.md`](../../../ExternPlugins/Bindings/Autocmds/NvChadUI.md)).
+Registriert wird nur, wenn `config.lsp.signature` wahr ist.
 
 ## Harpoon — `lua/config/harpoon/`
 
