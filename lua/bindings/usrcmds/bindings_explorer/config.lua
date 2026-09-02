@@ -28,6 +28,16 @@ function M.roots_for(folder)
   return out
 end
 
+--- Wohin `:Bindings report` schreibt, wenn kein `out=` angegeben ist.
+---
+--- Derselbe Ordner, in dem der handgeschriebene Driftreport vom 2026-09-02
+--- liegt — der Bericht gehört zum Aufgabenstand, nicht zur Doku des Features,
+--- und Roadmap-Punkte werden hier abgelegt.
+---@return string
+function M.report_dir()
+  return vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "ROADMAP", "personal", "All")
+end
+
 --- Der Lua-Baum dieser Config selbst. `drift.lua`s Repo-Achse nimmt ihn als
 --- zweite Suchstelle: ein dokumentiertes Binding eines Personal-Plugins wird
 --- oft nicht vom Plugin registriert, sondern hier (lazy `keys`-Spec,

@@ -9,7 +9,7 @@ All plugin user-command cheatsheets in this folder.
 - [MyReposUpdate](./MyReposUpdate.md) — fetch + ff-only pull every git repo in a directory (not just the listed plugins)
 - [WhoLocks](./WhoLocks.md) — diagnose a Windows file lock: live probe, holding processes, neo-tree watchers
 - [Case / Cases / Tricentis (casedesk)](./Case.md) — SAP-Support case scaffolding: new/info/similar/timeline/ki/close/... per case, list/find/grep/stale/... across cases
-- [Bindings (bindings-explorer)](./bindings_explorer.md) — search/list the two BINDINGS trees from inside nvim; `:Bindings` alone is `:Bindings search`
+- [Bindings (bindings-explorer)](./bindings_explorer.md) — search/list the two BINDINGS trees from inside nvim, check them against the live session (`check`), write that check to a file (`report`), or see the numbers at a glance (`status`); `:Bindings` alone is `:Bindings search`
 
 **Per plugin:**
 

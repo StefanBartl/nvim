@@ -323,6 +323,29 @@ local function extract_desc(rec)
   return desc
 end
 
+--- Whether a key cell says "there is no key here" rather than naming one.
+---
+--- Three spellings, all real and all previously reported as documented keys
+--- that are not live:
+---   - a bare dash of any kind (`Keymaps/lib.nvim.md`'s row for the
+---     experimental re-run trigger, whose Option column reads
+---     `setup({ experimental = false })` — the row documents the feature
+---     being OFF),
+---   - `*(unset)*` (`Keymaps/buffer-ctx.md`'s `clear`, which ships unbound),
+---   - `*(your lhs)*` (the same file's row for a key the user supplies).
+---
+--- The `*(…)*` form generalizes: markdown emphasis around a parenthesis is
+--- how this corpus writes a placeholder, and no key notation looks like that.
+---@param cell string
+---@return boolean
+local function is_placeholder_key(cell)
+  local s = vim.trim(cell:gsub("`", ""))
+  if s == "" or s:match("^[%-–—]+$") then
+    return true
+  end
+  return s:match("^%*+%(.*%)%*+$") ~= nil
+end
+
 --- The lhs of a row exactly as the cheatsheet writes it (`<leader>iv`),
 --- before `normalize_lhs` turns it into the raw bytes the live axis needs.
 --- The repo axis wants this form and not that one: a checkout's source
@@ -333,7 +356,7 @@ end
 local function extract_lhs_token(rec)
   local idx = column_index(rec, LHS_HEADERS)
   local cell = idx and rec.cells[idx]
-  if not cell or cell == "" then
+  if not cell or cell == "" or is_placeholder_key(cell) then
     return nil
   end
   return first_token(cell)
@@ -352,7 +375,7 @@ local function extract_usercmd(rec)
   local idx = column_index(rec, USERCMD_HEADERS)
   local cell = idx and rec.cells[idx]
   if cell then
-    local name = cell:match(":(%u[%w_]*)")
+    local name = records.command_names(cell)[1]
     if name then
       return name
     end
@@ -361,7 +384,7 @@ local function extract_usercmd(rec)
   -- still be in one of the other cells (e.g. a table this scraper's
   -- header allow-list doesn't recognize).
   for _, c in ipairs(rec.cells) do
-    local name = c:match(":(%u[%w_]*)")
+    local name = records.command_names(c)[1]
     if name then
       return name
     end
@@ -737,7 +760,12 @@ function M.check(plugin, opts)
   local checkable, needed_modes = {}, {}
   local repo_keymaps = {}
   for _, rec in ipairs(records.list("Keymaps", "personal")) do
-    if (not plugin or rec.plugin == plugin) and is_plugin_loaded(rec.plugin) then
+    -- `rec.meta`: a corpus-level file (`All.md`, `Collisions.md`,
+    -- `Overview.md`) documents nothing of its own, so nothing in it can be
+    -- missing. See `records.lua`'s `META_FILES`. This direction skips them;
+    -- the live-but-undocumented one below still counts them as documentation.
+    local ours = (not plugin or rec.plugin == plugin) and not rec.meta
+    if ours and is_plugin_loaded(rec.plugin) then
       local lhs = extract_lhs(rec)
       if lhs then
         local modes = extract_modes(rec)
@@ -747,7 +775,7 @@ function M.check(plugin, opts)
         checkable[#checkable + 1] =
           { rec = rec, lhs = lhs, modes = modes, desc = extract_desc(rec) }
       end
-    elseif not plugin or rec.plugin == plugin then
+    elseif ours then
       local dir = repo_dirs and repo_dirs[rec.plugin]
       if not dir then
         skipped[rec.plugin] = true
@@ -882,7 +910,9 @@ function M.check(plugin, opts)
   local live_cmds = live_commands()
   local seen_personal = {}
   for _, rec in ipairs(records.list("Usercmds", "personal")) do
-    if (not plugin or rec.plugin == plugin) and is_plugin_loaded(rec.plugin) then
+    -- Same `rec.meta` skip as the keymap direction above.
+    local ours = (not plugin or rec.plugin == plugin) and not rec.meta
+    if ours and is_plugin_loaded(rec.plugin) then
       local name = extract_usercmd(rec)
       if name and not seen_personal[name] then
         seen_personal[name] = true
@@ -896,7 +926,7 @@ function M.check(plugin, opts)
           }
         end
       end
-    elseif not plugin or rec.plugin == plugin then
+    elseif ours then
       local dir = repo_dirs and repo_dirs[rec.plugin]
       if not dir then
         skipped[rec.plugin] = true
@@ -963,7 +993,13 @@ function M.check(plugin, opts)
   -- Usercmds: live but undocumented anywhere (Personal or Extern) — only
   -- meaningful unscoped, see the `plugin` param doc above.
   if not plugin then
-    local documented_anywhere = {}
+    -- Table rows first, then every command name the corpus mentions in prose
+    -- (`records.mentions`). The scraper reads rows, so a command written as a
+    -- bullet or in a sentence used to count as undocumented — 31 of them in
+    -- the 2026-09-02 run, every one of them actually documented. For THIS
+    -- direction the question is only whether the corpus mentions the command
+    -- at all, which a prose mention answers as well as a row does.
+    local documented_anywhere = records.mentions()
     for _, rec in ipairs(records.list("Usercmds")) do
       local name = extract_usercmd(rec)
       if name then

@@ -13,6 +13,8 @@ CONTENTS                                            *bindings_explorer-contents*
         2.3 :Bindings path ................... |bindings_explorer-path|
         2.4 :Bindings check .................. |bindings_explorer-check|
         2.5 :Bindings check repo ............. |bindings_explorer-check-repo|
+        2.6 :Bindings report ................. |bindings_explorer-report|
+        2.7 :Bindings status ................. |bindings_explorer-status|
     3. Architecture .......................... |bindings_explorer-architecture|
 
 ==============================================================================
@@ -171,6 +173,68 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
         :Bindings check images.nvim root=C:/repos
 <
 
+------------------------------------------------------------------------------
+2.6 :BINDINGS REPORT                                   *bindings_explorer-report*
+
+:Bindings report [{plugin}] [repo] [root={dir}] [out={path}]
+    The same run as `:Bindings check`, written to a Markdown file instead of
+    a viewer: a run header (date, Neovim version, scope, duration, resolved
+    and answered checkouts, skipped count, finding count), a table of the
+    findings by kind, and `drift.describe`'s unchanged output as a ```text
+    appendix.
+
+    Why it exists: the 2026-09-02 drift report was assembled by hand out of a
+    headless run - output redirected, header and counts typed in front of it.
+    That hand work is what this route does.
+
+    What it does NOT do is judge the findings. Which of them is a real
+    documentation gap and which a tool defect or an expected effect (a
+    buffer-local UI that is not open, a lazy trigger that never fired) is a
+    reading, and that reading is what a handwritten report is worth writing
+    for. This produces the measured half.
+
+    Without `out=`, the report is written to
+    `docs/ROADMAP/personal/All/BINDINGS-DRIFT-<date>.md`
+    (`config.report_dir()`). `out=` takes a directory (same dated name
+    inside it) or a file name (`.md` appended when the extension is
+    missing). Typed `PATH`, not `FILE`: `FILE` demands a READABLE file, and
+    an output file does not exist yet by definition.
+
+    Examples: >vim
+        :Bindings report
+        :Bindings report repo
+        :Bindings report repo out=C:/tmp
+        :Bindings report images.nvim out=C:/tmp/images.md
+<
+
+------------------------------------------------------------------------------
+2.7 :BINDINGS STATUS                                   *bindings_explorer-status*
+
+:Bindings status
+    One page, after the model of `:Reposcope status`:
+
+    • Corpus - files and table rows per root and category, the total, and
+      how many rows come from a corpus-level file (`All.md`,
+      `Collisions.md`, `Overview.md`) rather than a plugin's sheet.
+    • Live in this session - global keymaps split by mode, buffer-local
+      keymaps across the open buffers, usercmds, autocmds with group count.
+    • Plugins - how many lazy.nvim knows, how many are loaded, and how many
+      checkouts the repo axis resolves (or why none).
+    • The most recently written `BINDINGS-DRIFT-*.md` in the report
+      directory, sorted by name: the name carries the date the report is
+      ABOUT, and a file touched later still describes its own day.
+    • The route list - the `?`-style cheatsheet for a verb tree that has
+      outgrown what completion's `desc` strings show.
+
+    Runs NO drift check. That costs ~650ms across four axes and produces a
+    report, which is what `check` and `report` are for; everything here is
+    either a cheap live API call or one pass over the corpus (~70ms). A
+    dashboard you wait for is a dashboard you open once.
+
+    Examples: >vim
+        :Bindings status
+<
+
 ==============================================================================
 3. ARCHITECTURE                                 *bindings_explorer-architecture*
 
@@ -185,6 +249,8 @@ Module: `lua/bindings/usrcmds/bindings_explorer/`
   • drift.lua    - documented-vs-live comparison (Phase 3)
   • source.lua   - what this config's source registers, from module_map.json
   • repo.lua     - "is this literal in that checkout's source" (repo axis)
+  • report.lua   - the same report as a Markdown file (Phase 4)
+  • status.lua   - the dashboard (Phase 4)
   • init.lua     - composer verb ":Bindings" + all routes
 
 ==============================================================================

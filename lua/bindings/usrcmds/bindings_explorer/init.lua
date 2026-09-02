@@ -32,6 +32,14 @@
 --- Live-Achse deshalb nur als „skipped" durchwinkt, werden im lokalen
 --- Quellbaum des Plugins gesucht. Opt-in, weil sie als einzige Achse von
 --- der Platte liest statt eine laufende Session zu befragen.
+---
+--- Phase 4 (diese Datei + `status.lua`/`report.lua`): `:Bindings status` —
+--- eine Seite Korpus-, Live- und Plugin-Zahlen plus die Routenliste, nach dem
+--- Vorbild von `:Reposcope status`; und `:Bindings report [...]
+--- [out=<pfad>]` — derselbe Drift-Lauf wie `check`, als Markdown-Datei statt
+--- als Viewer. Beide entstanden aus dem Driftreport vom 2026-09-02: der
+--- wurde von Hand aus einem headless-Lauf zusammengesetzt, und `report`
+--- macht genau diesen Teil.
 
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -40,6 +48,7 @@ local live = require("bindings.usrcmds.bindings_explorer.live")
 local ui = require("bindings.usrcmds.bindings_explorer.ui")
 local browse = require("bindings.usrcmds.bindings_explorer.browse")
 local drift = require("bindings.usrcmds.bindings_explorer.drift")
+local status = require("bindings.usrcmds.bindings_explorer.status")
 
 local M = {}
 
@@ -131,6 +140,33 @@ function M.check(plugin, opts)
     title = ("Bindings — check (%d)"):format(#findings),
     lines = drift.describe(findings, skipped, source_reason, repo_info),
   })
+end
+
+--- Denselben Bericht als Markdown-Datei schreiben (`report.lua`).
+---@param plugin string|nil
+---@param opts { repo?: boolean, repo_root?: string, out?: string }|nil `out`
+---darf ein Verzeichnis oder ein Dateiname sein; ohne `out` landet der
+---Bericht als `BINDINGS-DRIFT-<datum>.md` in `config.report_dir()`.
+---@return nil
+function M.report(plugin, opts)
+  opts = opts or {}
+  local path, err, count = require("bindings.usrcmds.bindings_explorer.report").write({
+    plugin = plugin,
+    repo = opts.repo,
+    repo_root = opts.repo_root,
+    out = opts.out,
+  })
+  if not path then
+    notify().error("Bericht nicht geschrieben: " .. (err or "unbekannter Fehler"))
+    return
+  end
+  notify().info(("%d Befunde -> %s"):format(count or 0, path))
+end
+
+--- Dashboard: eine Seite Zahlen plus die Routenliste (`status.lua`).
+---@return nil
+function M.status()
+  status.open()
 end
 
 ---@return nil
@@ -253,6 +289,42 @@ function M.enable()
         desc = "Drift-Bericht mit der Checkout-Achse: dokumentierte Bindings ungeladener Plugins gegen deren lokalen Quellbaum; `root=<dir>` nimmt jedes Lua-Projekt unter einem Sammelverzeichnis statt der Lazy-Spec-Auflösung",
         run = function(ctx)
           M.check(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root })
+        end,
+      },
+      -- `report` spiegelt `check` inklusive der zweiten Route für `repo`,
+      -- aus demselben Grund: ohne literales Kind bände `:Bindings report
+      -- repo` „repo" als Plugin-Namen. `out` ist `PATH`, nicht `FILE` —
+      -- `FILE` verlangt eine lesbare Datei, und eine Ausgabedatei gibt es
+      -- vor dem Lauf per Definition noch nicht.
+      {
+        path = { "report" },
+        args = {
+          { name = "plugin", type = "STRING", optional = true },
+          { name = "axis", type = "STRING", enum = { "repo" }, optional = true },
+        },
+        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        desc = "Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md",
+        run = function(ctx)
+          M.report(
+            ctx.args.plugin,
+            { repo = ctx.args.axis == "repo", repo_root = ctx.kv.root, out = ctx.kv.out }
+          )
+        end,
+      },
+      {
+        path = { "report", "repo" },
+        args = { { name = "plugin", type = "STRING", optional = true } },
+        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        desc = "Drift-Bericht mit der Checkout-Achse, als Markdown-Datei",
+        run = function(ctx)
+          M.report(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root, out = ctx.kv.out })
+        end,
+      },
+      {
+        path = { "status" },
+        desc = "Dashboard: Korpus-, Live- und Plugin-Zahlen plus die Routenliste",
+        run = function()
+          M.status()
         end,
       },
     },

@@ -12,7 +12,8 @@ Module: `lua/bindings/usrcmds/bindings_explorer/` — `init.lua` (Composer-
 Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
 `ui.lua` (Phase 1 Fallback-Suche), `live.lua` (Phase 1 Live-Grep),
 `records.lua` + `browse.lua` (Phase 2 Tabellen-Scraper + Picker),
-`drift.lua` + `source.lua` + `repo.lua` (Phase 3 Drift-Bericht, vier Achsen).
+`drift.lua` + `source.lua` + `repo.lua` (Phase 3 Drift-Bericht, vier Achsen),
+`report.lua` + `status.lua` (Phase 4 Berichtsdatei + Dashboard).
 
 ## Volltextsuche (`:Bindings search`)
 
@@ -259,3 +260,97 @@ verortet.
 :Bindings check repo root=C:/repos
 :Bindings check images.nvim root=C:/repos
 ```
+
+## Bericht als Datei (`:Bindings report`)
+
+`:Bindings report [plugin] [repo] [root=<dir>] [out=<pfad>]`
+
+Derselbe Lauf wie `check`, nur nicht in den Viewer, sondern in eine
+Markdown-Datei. Aufbau: Laufkopf (Datum, Neovim-Version, Umfang,
+Laufzeit, aufgelöste und beantwortete Checkouts, Übersprungene, Befundzahl),
+eine Tabelle der Befunde nach Art, und `drift.describe`s unveränderte Ausgabe
+als ```text-Anhang.
+
+**Warum es das gibt.** Der Driftreport vom 2026-09-02
+(`docs/ROADMAP/personal/All/BINDINGS-DRIFT-2026-09-02.md`) wurde von Hand aus
+einem headless-Lauf zusammengesetzt: `nvim --headless -c "lua ... drift.check"`,
+Ausgabe umgeleitet, Kopf und Zahlen davorgetippt. Genau diese Handarbeit macht
+`report.lua`.
+
+**Was es nicht macht: bewerten.** Welcher Befund eine echte Doku-Lücke ist und
+welcher ein Werkzeugfehler oder ein erwartbarer Effekt (buffer-lokale UI nicht
+offen, lazy nicht ausgelöst), entscheidet die Durchsicht — und diese
+Einschätzung ist der Teil, für den ein handgeschriebener Bericht sich lohnt.
+Erzeugt wird die gemessene Hälfte, damit nur noch die andere zu schreiben ist.
+Der Satz, der das im Bericht sagt, steht in jedem Lauf drin, nicht nur im
+handgeschriebenen.
+
+**Der Anhang ist ein ```text-Block, keine Markdown-Tabellen.**
+`drift.describe` richtet seine Spalten mit `%-22s` aus, und diese Ausrichtung
+ist die einzige Struktur, die der rohe Bericht hat. In Tabellen umgesetzt wäre
+er länger und schlechter lesbar.
+
+**Zielpfad.** Ohne `out=` schreibt der Bericht nach
+`config.report_dir()`/`BINDINGS-DRIFT-<datum>.md`, also in den
+Roadmap-Ordner, in dem der Bericht vom 2026-09-02 schon liegt. `out=` nimmt
+ein Verzeichnis (dann derselbe Datumsname darin) oder einen Dateinamen (dann
+der, mit `.md` ergänzt, falls die Endung fehlt). Typisiert als `PATH`, nicht
+`FILE`: `FILE` verlangt eine *lesbare* Datei, und eine Ausgabedatei gibt es
+vor dem Lauf per Definition noch nicht.
+
+```vim
+:Bindings report
+:Bindings report repo
+:Bindings report repo out=C:/tmp
+:Bindings report images.nvim out=C:/tmp/images.md
+```
+
+## Dashboard (`:Bindings status`)
+
+Eine Seite, nach dem Vorbild von `:Reposcope status`:
+
+- **Korpus** — Dateien und Tabellenzeilen je Wurzel und Kategorie, die Summe,
+  und wie viele Zeilen aus Korpus-Dateien stammen (`All`/`Collisions`/
+  `Overview`, siehe unten) statt aus einem Plugin-Cheatsheet.
+- **Live in dieser Session** — globale Keymaps mit Aufteilung nach Modus,
+  buffer-lokale Keymaps über die offenen Buffer, Usercmds, Autocmds mit
+  Gruppenzahl.
+- **Plugins** — wie viele lazy.nvim kennt, wie viele geladen sind, und wie
+  viele Checkouts die Repo-Achse auflöst (oder warum keine).
+- **Letzter geschriebener Driftbericht** — der jüngste `BINDINGS-DRIFT-*.md`
+  in `config.report_dir()`, nach Namen sortiert: der Name trägt das Datum,
+  über das der Bericht spricht, und eine später angefasste Datei beschreibt
+  immer noch ihren eigenen Tag.
+- **Routen** — die Liste aller Subcommands. Der Verb-Baum ist über das
+  hinausgewachsen, was die `desc`-Strings in der Completion zeigen; das hier
+  ist der `?`-Cheatsheet dazu.
+
+**Läuft keinen Driftcheck.** Der kostet ~650 ms über vier Achsen und erzeugt
+einen Bericht — dafür sind `check` und `report` da. Hier ist alles entweder
+ein billiger Live-API-Aufruf oder ein Durchgang über den Korpus (~70 ms). Ein
+Dashboard, auf das man wartet, öffnet man einmal.
+
+## Was der Scraper nicht mehr falsch liest (2026-09-02)
+
+Der Driftreport vom 2026-09-02 hat aufgeschrieben, welche seiner Befunde
+Werkzeugfehler waren. Vier davon sind behoben; gemessen am selben Lauf: 331
+Befunde vorher, 262 nachher, kein einziger echter darunter.
+
+| Fix | Wo | Weg |
+| --- | --- | ---: |
+| Platzhalter in der Key-Spalte (`—`, `*(unset)*`, `*(your lhs)*`) sind keine Taste | `drift.is_placeholder_key` | 3 |
+| Korpus-Dateien (`All.md`, `Collisions.md`, `Overview.md`) sind keine Cheatsheets | `records.META_FILES` | 17 |
+| `:Name` direkt hinter einem Wortzeichen ist Prosa, kein Command (`path:L1-L2` → `:L1`) | `records.command_names` | 1 |
+| Ein im Fließtext dokumentierter Command gilt als dokumentiert | `records.mentions` | 48 |
+
+**Korpus-Dateien werden markiert, nicht verworfen** (`Bindings.Record.meta`).
+`browse`/`search` wollen ihre Zeilen, und die Gegenrichtung des Driftchecks
+auch: ein in `Overview.md` genannter Command *ist* dokumentiert, er wird dort
+nur nicht registriert. Nur die Richtung „dokumentiert, aber nicht live"
+überspringt sie — `Collisions.md`s ganzer Punkt ist ja, dass seine Tasten
+*doppelt* vergeben sind, was das Gegenteil von fehlend ist.
+
+**Prosa zählt nur in eine Richtung.** Für „live, aber nirgends dokumentiert"
+reicht eine Erwähnung, denn die Frage lautet allein, ob der Korpus den Command
+überhaupt kennt. Für die Gegenrichtung reicht sie nicht: eine Erwähnung trägt
+weder Taste noch Modus noch Fundstelle, gegen die sich etwas prüfen ließe.

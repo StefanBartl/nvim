@@ -22,10 +22,24 @@ local M = {}
 --- the scope label.
 local ROOT_SCOPES = { "Personal", "Extern" }
 
+--- Files in the corpus that are ABOUT the corpus rather than a cheatsheet for
+--- one plugin: `All.md` indexes the folder, `Collisions.md` and `Overview.md`
+--- are cross-plugin analyses. Their tables hold real keys and real command
+--- names, so they parse like any other sheet — but nobody registers them, and
+--- `drift.lua` reported 17 of them as "documented, not live" (`Collisions`'
+--- own point being that those keys are claimed *twice*, which is the opposite
+--- of missing).
+---
+--- Marked rather than dropped: `browse`/`search` want these rows, and so does
+--- drift's other direction — a command named in `Overview.md` IS documented,
+--- it just is not owned there. See `drift.lua`'s use of the flag.
+local META_FILES = { All = true, Collisions = true, Overview = true }
+
 ---@class Bindings.Record
 ---@field scope "Personal"|"Extern"
 ---@field category "Keymaps"|"Usercmds"|"Autocmds"
 ---@field plugin string filename without extension, e.g. "images.nvim" or "Telescope"
+---@field meta boolean true for a corpus-level file (see `META_FILES`), which owns no bindings of its own
 ---@field heading string|nil nearest `##`/`###` heading above the table, nil if the table opens the file with no heading yet
 ---@field columns string[] header-row cells, free-form
 ---@field cells string[] this row's cells, same length as `columns` when the table is well-formed
@@ -99,6 +113,7 @@ local function parse_file(path, scope, category)
   end
 
   local plugin = vim.fn.fnamemodify(path, ":t:r")
+  local meta = META_FILES[plugin] == true
   local records = {}
   local heading, columns, awaiting_separator = nil, nil, false
 
@@ -118,6 +133,7 @@ local function parse_file(path, scope, category)
           scope = scope,
           category = category,
           plugin = plugin,
+          meta = meta,
           heading = heading,
           columns = columns,
           cells = split_cells(line),
@@ -135,15 +151,12 @@ local function parse_file(path, scope, category)
   return records
 end
 
---- Every table row across the BINDINGS corpus, optionally narrowed to one
---- category and/or one scope.
----@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = all three
----@param scope ("personal"|"extern")|nil nil = both
----@return Bindings.Record[]
-function M.list(category, scope)
-  local categories = category and { category } or { "Keymaps", "Usercmds", "Autocmds" }
-  local out = {}
-
+--- Call `fn(path, root_scope, category)` for every `.md` file of the corpus.
+---@param categories string[]
+---@param scope ("personal"|"extern")|nil
+---@param fn fun(path: string, scope: "Personal"|"Extern", category: string): nil
+---@return nil
+local function each_file(categories, scope, fn)
   for idx, root in ipairs(config.roots()) do
     local root_scope = ROOT_SCOPES[idx]
     if not scope or scope:lower() == root_scope:lower() then
@@ -152,14 +165,77 @@ function M.list(category, scope)
         if vim.fn.isdirectory(dir) == 1 then
           for _, f in ipairs(collect_recursive.files(dir)) do
             if f:match("%.md$") then
-              vim.list_extend(out, parse_file(f, root_scope, cat))
+              fn(f, root_scope, cat)
             end
           end
         end
       end
     end
   end
+end
 
+--- Every table row across the BINDINGS corpus, optionally narrowed to one
+--- category and/or one scope.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = all three
+---@param scope ("personal"|"extern")|nil nil = both
+---@return Bindings.Record[]
+function M.list(category, scope)
+  local categories = category and { category } or { "Keymaps", "Usercmds", "Autocmds" }
+  local out = {}
+  each_file(categories, scope, function(path, root_scope, cat)
+    vim.list_extend(out, parse_file(path, root_scope, cat))
+  end)
+  return out
+end
+
+--- The command names written in `text`, in order.
+---
+--- A name only counts when the `:` does NOT follow a word character. Without
+--- that guard `path:L1-L2` — prose in `Usercmds/buffer-ctx.md` explaining the
+--- `location` subcommand's output — reads as a command `:L1`, and `drift.lua`
+--- reported it as documented-but-not-registered. Neovim's own `:` notation
+--- never appears glued to a preceding word, so the rule costs nothing and
+--- removes the whole class.
+---@param text string
+---@return string[]
+function M.command_names(text)
+  local out, init = {}, 1
+  while true do
+    local s, e, name = text:find(":(%u[%w_]*)", init)
+    if not s then
+      return out
+    end
+    local prev = s > 1 and text:sub(s - 1, s - 1) or ""
+    if not prev:match("[%w_]") then
+      out[#out + 1] = name
+    end
+    init = e + 1
+  end
+end
+
+--- Every command name mentioned ANYWHERE in the corpus, tables and prose
+--- alike.
+---
+--- The scraper reads table rows, so a command documented as a bullet or in a
+--- sentence counts as undocumented — 31 of them in the 2026-09-02 drift run
+--- (`:LuaLsReloadLibrary` in `Usercmds/lsp.nvim.md`'s prose, `:AllDrives` and
+--- `:RepoGrep` as a `·`-separated list in `pickers.nvim.md`). For the
+--- live-but-undocumented direction the question is only "does this corpus
+--- mention it at all", and this answers exactly that. The other direction
+--- still needs a row: a mention carries no key, mode or file position to
+--- check anything against.
+---@return table<string, true>
+function M.mentions()
+  local out = {}
+  each_file({ "Keymaps", "Usercmds", "Autocmds" }, nil, function(path)
+    local content = read(path)
+    if not content then
+      return
+    end
+    for _, name in ipairs(M.command_names(content)) do
+      out[name] = true
+    end
+  end)
   return out
 end
 

@@ -19,6 +19,10 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
 | `:Bindings check <plugin> repo` | Dieselbe Achse, Plugin zuerst — identisch zur Zeile darüber |
 | `:Bindings check repo root=<dir>` | Dieselbe Achse, aber jedes Lua-Projekt unter `<dir>` statt der Lazy-Spec-Auflösung; `root=` impliziert `repo` |
 | `:Bindings check <plugin> root=<dir>` | Dieselbe Pfad-Auflösung, auf ein Plugin gescopt; `root=` ist positionsunabhängig |
+| `:Bindings report [plugin]` | Derselbe Bericht als Markdown-Datei nach `docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md` |
+| `:Bindings report repo [plugin]` | Dasselbe mit der Checkout-Achse; `root=<dir>` wie bei `check` |
+| `:Bindings report out=<pfad>` | Zielpfad überschreiben — ein Verzeichnis bekommt den Datumsnamen, ein Dateiname wird genommen wie er ist |
+| `:Bindings status` | Dashboard: Korpus-, Live- und Plugin-Zahlen, letzter Bericht, Routenliste |
 
 `scope` bei `browse` ist `personal`/`extern` (optional, ohne Argument beide).
 
@@ -61,6 +65,9 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
   die aktuelle Doku. Dieses Cheatsheet nachgezogen — fehlte bisher
   komplett, obwohl der Command längst existierte (dasselbe Muster, das
   `:Bindings check` selbst aufdecken soll).
+- 2026-09-02: `:Bindings report` (Bericht als Datei) und `:Bindings status`
+  (Dashboard) ergänzt, dazu vier Fixes am Scraper — siehe den Abschnitt
+  ganz unten.
 
 ## `:Bindings check` — die dritte Achse: Source (2026-08-15)
 
@@ -200,3 +207,55 @@ ungeladen, also der Worst Case, für den die Achse existiert): 940 ms, 30 von
   die Live-Achse strukturell nie finden kann: sobald beide Plugins geladen
   sind, existiert das Command ja — nur eben nicht dort, wo das Cheatsheet
   es verortet.
+
+## `:Bindings report` und `:Bindings status`, plus vier Scraper-Fixes (2026-09-02)
+
+Aus dem Driftreport vom 2026-09-02
+(`docs/ROADMAP/personal/All/BINDINGS-DRIFT-2026-09-02.md`). Der wurde von Hand
+aus einem headless-Lauf zusammengesetzt und hat dabei aufgeschrieben, welche
+seiner 266 Befunde gar keine Befunde waren. Beides ist hier eingebaut.
+
+**`:Bindings report [plugin] [repo] [root=<dir>] [out=<pfad>]`** — derselbe
+Lauf wie `check`, aber als Markdown-Datei statt in den Viewer: Laufkopf
+(Datum, Neovim-Version, Umfang, Laufzeit, aufgelöste Checkouts), eine Tabelle
+der Befunde nach Art, und `drift.describe`s unveränderte Ausgabe als
+```text-Anhang. Ohne `out=` landet er als `BINDINGS-DRIFT-<datum>.md` in
+`docs/ROADMAP/personal/All/` (`config.report_dir()`); `out=` darf ein
+Verzeichnis oder ein Dateiname sein. `out` ist als `PATH` typisiert und nicht
+als `FILE` — `FILE` verlangt eine *lesbare* Datei, und eine Ausgabedatei gibt
+es vor dem Lauf per Definition noch nicht.
+
+Was `report` bewusst **nicht** tut: die Befunde bewerten. Welcher davon eine
+echte Doku-Lücke ist und welcher ein Werkzeugfehler oder ein erwartbarer
+Effekt, bleibt die Durchsicht — und genau diese Einschätzung ist der Teil,
+für den ein handgeschriebener Bericht sich lohnt. Erzeugt wird die gemessene
+Hälfte, damit nur noch die andere zu schreiben ist.
+
+**`:Bindings status`** — eine Seite: Dateien und Tabellenzeilen je Wurzel und
+Kategorie, die Live-Zahlen dieser Session (globale Keymaps nach Modus,
+buffer-lokale, Usercmds, Autocmds mit Gruppenzahl), wie viele Plugins lazy
+kennt und wie viele geladen sind, wie viele Checkouts die Repo-Achse auflöst,
+der zuletzt geschriebene Bericht, und die Routenliste. Läuft **keinen**
+Driftcheck (~70 ms statt ~650 ms) — ein Dashboard, auf das man wartet, öffnet
+man einmal.
+
+**Vier Fixes am Scraper**, gemessen am selben Lauf: 331 Befunde vor, 262 nach
+den Fixes, und keiner der 69 entfernten war ein echter.
+
+| Fix | Wo | Weg |
+| --- | --- | ---: |
+| Platzhalter in der Key-Spalte (`—`, `*(unset)*`, `*(your lhs)*`) zählen nicht als Taste | `drift.is_placeholder_key` | 3 |
+| Korpus-Dateien (`All.md`, `Collisions.md`, `Overview.md`) sind keine Cheatsheets | `records.META_FILES` | 17 |
+| Ein `:Name` direkt hinter einem Wortzeichen ist Prosa, kein Command (`path:L1-L2` → `:L1`) | `records.command_names` | 1 |
+| Ein im Fließtext dokumentierter Command gilt als dokumentiert | `records.mentions` | 48 |
+
+Die Korpus-Dateien werden **markiert, nicht verworfen**: `browse`/`search`
+wollen ihre Zeilen, und die Gegenrichtung des Driftchecks auch — ein in
+`Overview.md` genannter Command *ist* dokumentiert, er wird dort nur nicht
+registriert. Nur die Richtung „dokumentiert, aber nicht live" überspringt sie.
+
+Dasselbe Prinzip bei der Prosa: für „live, aber nirgends dokumentiert" reicht
+eine Erwähnung, denn die Frage lautet nur, ob der Korpus den Command
+überhaupt kennt. Für die Gegenrichtung reicht sie nicht — eine Erwähnung
+trägt weder Taste noch Modus noch Fundstelle, gegen die sich etwas prüfen
+ließe.
