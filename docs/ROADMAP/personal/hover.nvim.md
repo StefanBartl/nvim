@@ -26,10 +26,9 @@
     - [Und eine vierte Klasse: eine Funktion, zwei Fragen](#und-eine-vierte-klasse-eine-funktion-zwei-fragen)
   - [Offene Punkte](#offene-punkte)
     - [1. Demo-GIF — **braucht dich**](#1-demo-gif-braucht-dich)
-    - [2. language.nvim — der zweite Kandidat für `on_request`](#2-languagenvim-der-zweite-kandidat-fr-on_request)
-    - [3. insights.nvim braucht erst einen Index](#3-insightsnvim-braucht-erst-einen-index)
-    - [4. Beobachten, ob `manual` der bessere Default ist](#4-beobachten-ob-manual-der-bessere-default-ist)
-    - [5. Was keine CI prüft](#5-was-keine-ci-prft)
+    - [2. Sechs Aufträge liegen in fremden Repos](#2-sechs-auftrge-liegen-in-fremden-repos)
+    - [3. Beobachten, ob `manual` der bessere Default ist](#3-beobachten-ob-manual-der-bessere-default-ist)
+    - [4. Was keine CI prüft](#4-was-keine-ci-prft)
   - [Aufträge aus der Sitzung vom 2026-09-02](#auftrge-aus-der-sitzung-vom-2026-09-02)
     - [A. Die BINDINGS-Notes für hover.nvim nachziehen — **erledigt 2026-09-02**](#a-die-bindings-notes-fr-hovernvim-nachziehen-erledigt-2026-09-02)
     - [B. Die Docs der eingebundenen Plugins durchgehen — **erledigt 2026-09-02**](#b-die-docs-der-eingebundenen-plugins-durchgehen-erledigt-2026-09-02)
@@ -94,19 +93,22 @@ Feature selbst nie erreichbar war (`836a15a`, siehe unten).
 [Offene Punkte](#offene-punkte).
 
 **Was als Nächstes ansteht**, steht unter [Aufträge aus der Sitzung vom
-2026-09-02](#aufträge-aus-der-sitzung-vom-2026-09-02) — sechs Punkte, jeder
-schon nachgesehen, damit dort der Befund steht und nicht nur die Frage. **Alle
-sechs sind abgeschlossen**: A, B, C, D und E gebaut bzw. geschrieben, F
-entschieden statt gebaut — **Zoom nur für Bilder**, PDF-Seiten optional, Text
-gar nicht. Dazu **G**, in der Folgesitzung: das Spec, das die Doku gegen die
-Quelle prüft.
+2026-09-02](#aufträge-aus-der-sitzung-vom-2026-09-02) — inzwischen **A bis J,
+alle abgeschlossen**. Die sechs der Ursprungssitzung: A, B, C, D und E gebaut
+bzw. geschrieben, F entschieden statt gebaut — **Zoom nur für Bilder**,
+PDF-Seiten optional, Text gar nicht. In den Folgesitzungen dazu: **G** (das
+Spec, das die Doku gegen die Quelle prüft), **H** (`:checkhealth` sagt, wer
+registriert hat), **I** (2.5 gemessen und abgelehnt) und **J** (der
+`on_request`-Pfad gegen eine echte Engine, mit drei Funden).
 
 **Die Doku hat jetzt denselben Mechanismus wie der Code.** Seit `4e1760f`
 prüft `TESTS/docs_spec.lua` die Listen der Dokumente gegen die Quelle, die
 sie beschreiben — die Klasse, die an einem Tag viermal die Doku und dreimal
 den Code getroffen hat, fällt ab jetzt beim Testlauf auf. Drei Funde beim
-Einbau, alle behoben; inzwischen elf Prüfungen, weil `204d083` zwei
-Tastentabellen dazugebracht hat, die genau so hätten verrotten können.
+Einbau, alle behoben; inzwischen **dreizehn** Prüfungen — `204d083` brachte
+zwei Tastentabellen dazu, `b7c4c45` zwei weitere für
+`docs/MANUAL-EVIDENCE.md`, das als einziges Dokument außerhalb der Reichweite
+lag und prompt gedriftet war.
 
 **Zoom für Bilder ist gebaut** (`204d083`): `+` und `-`, geliehen nur, solange
 ein Hover mit Bild offen ist. Offen bleiben Mausrad und scharfer PDF-Zoom,
@@ -270,9 +272,9 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 
 | Repo | Stand | Commit |
 | --- | --- | --- |
-| **hover.nvim** (neu) | `main` bis `745c678`, **drei weitere noch nicht gepusht** | Extraktion, dann ~33 bis `15837dd` |
+| **hover.nvim** (neu) | `main` bis `e62f5e9`, **alles gepusht** | Extraktion, dann ~40 bis `e62f5e9` |
 | **markdown.nvim** | gepusht, `main` | `bd53428`, `634121f`, `c61493f` |
-| **nvim-config** | `main`, **letzter Commit noch nicht gepusht** | `97051225`, `69907c0e`, `af1a8c60`, `7a0027b4`, `4e2cf2c4`, `b98eac26`, `ab92f427` |
+| **nvim-config** | `main`, **alles gepusht** (zuletzt `9eab27f4`) | `97051225`, `69907c0e`, `af1a8c60`, `7a0027b4`, `4e2cf2c4`, `b98eac26`, `ab92f427` |
 | **lib.nvim** | gepusht, `main` | `5450dd4` (Hover gelöscht), `556ee50` (safe_api-Typen) |
 | **images.nvim** | gepusht, `main` | `b61b347` — stale Verweise auf `markdown.hover` |
 | **pdfport.nvim** | gepusht, `main` | `b43fd1c` — dito, plus `docs/install.json` |
@@ -314,10 +316,10 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **220 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, docs 11, registry 64, scope 26, switches 30, **zoom 14**), gemessen 2026-09-02 nach `65ba8dd` |
+| Specs hover.nvim | **229 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, **docs 13**, **registry 71**, scope 26, switches 30, zoom 14), gemessen 2026-09-02 nach `e62f5e9` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, viermal auf dem Haupt-Checkout gemessen: `post-b` (`3e12c9f`), `post-c` (`4e1760f`), `zoom-pre`, `zoom-post2` (`65ba8dd`). Dazwischen **einmal +2** — siehe unten, der einzige Lauf dieser Sitzung, der etwas gefunden hat |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, zuletzt `post-f` (`e62f5e9`) auf dem Haupt-Checkout; davor `post-b` (`3e12c9f`), `post-c` (`4e1760f`), `zoom-pre`, `zoom-post2` (`65ba8dd`), `post-d` (`aca73fa`). Zwei Läufe fanden etwas: **einmal +2** (siehe unten) und **`post-e` einmal +1 auf unangetastetem Quelltext**, das `post-e2` auf identischem Baum nicht reproduzierte — der Scan flackert, siehe [J / Fund 3](#fund-3-die-luals-messung-flackert) |
 | CI | grün auf **ubuntu-latest und windows-latest** (Run `33604859057`) |
 | Helptags | 30 Tags (`hover-contribute` kam mit `c374d5e` dazu) |
 | Doku-Beispiele | 23 ```lua-Blöcke laden, die ausführbaren laufen; 32 dokumentierte `:Hover`-Routen sind alle echt |
@@ -469,32 +471,27 @@ Gefühl — und zu zeigen wäre gerade, wie wenig es beim Lesen stört.
 
 ---
 
-### 2. language.nvim — der zweite Kandidat für `on_request`
+### 2. Sechs Aufträge liegen in fremden Repos
 
-`on_request` ist gebaut und mit sandbox.nvim einmal durch die volle Strecke
-gefahren. Der zweite Wartende ist **language.nvim** (Wort-Nachschlag), und der
-ist nicht dasselbe: bei sandbox entscheidet eine billige Textprüfung *vor*
-jedem Prozessstart, ob überhaupt etwas gefragt wird — `init.lua:42` wird in
-1 ms abgelehnt. Bei einem Wort-Nachschlag ist **jedes Wort ein Wort**; es gibt
-keine solche Vorprüfung, also ist auch unter `force` jede Position ein Treffer.
+Die Liste steht **einmal**, in
+[Roadmap Abschnitt 4](./hover.nvim-roadmap.md#4-aufträge-die-woanders-liegen):
+gopath.nvim, documentation.nvim, sandbox.nvim, language.nvim,
+bindings-explorer.nvim, insights.nvim. Jeder Eintrag dort nennt Adressat,
+Messung und Umgehung. Hier steht nur, was dort nicht hingehört, weil es die
+*Begründung* ist und nicht der Auftrag:
 
-Das ist eher eine Produktfrage als eine technische: soll ein Druck auf
-`:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Wenn ja, ist die
-Integration klein. Wenn nein, braucht es vorher eine Regel dafür, wann ein Wort
-nachschlagenswert ist — und die gehört nach language.nvim, nicht hierher.
-
----
-
-### 3. insights.nvim braucht erst einen Index
-
-Nicht hier zu lösen. `run_reverse` läuft `scan_cwd_async` — einen vollen
-Durchlauf des Arbeitsverzeichnisses — und öffnet einen Scratch-Buffer. Jede
-Abfrage scannt neu, es gibt nichts nachzuschlagen. Der Cache-Index gehört in
-insights.nvim, und danach ist die Integration klein.
+**Warum `on_request` bei language.nvim nicht dasselbe ist wie bei sandbox.**
+Bei sandbox entscheidet eine billige Textprüfung *vor* jedem Prozessstart, ob
+überhaupt gefragt wird — `init.lua:42` wird in unter 1 ms abgelehnt, weil die
+letzte Namenskomponente eine Endung trägt. Bei einem Wort-Nachschlag ist
+**jedes Wort ein Wort**; es gibt keine solche Vorprüfung, also ist auch unter
+`force` jede Position ein Treffer. Der Mechanismus überträgt sich, die
+Sparsamkeit nicht — und deshalb ist das dort eine Produktfrage („soll `:Hover
+show` mitten in Prosa immer ein Wörterbuch aufmachen?") und keine technische.
 
 ---
 
-### 4. Beobachten, ob `manual` der bessere Default ist
+### 3. Beobachten, ob `manual` der bessere Default ist
 
 Die Config läuft auf `auto`. Wenn es weiter nervt, ist der Griff
 `:Hover mode manual` plus ein `keymaps.show`-Key — und wenn *das* sich als das
@@ -507,46 +504,48 @@ haben.
 
 ---
 
-### 5. Was keine CI prüft
+### 4. Was keine CI prüft
 
-`docs/MANUAL-EVIDENCE.md` führt es: gezeichnete Bilder, rasterisierte
-PDF-Seiten, konvertierte Office-Dokumente. Der Office-Pfad ist seit der
-Cache-Änderung (`bba2064`, überlebt jetzt die Sitzung) **nicht** mehr von Hand
-geprüft, und was daran zu bestätigen wäre, steht dort.
+`hover.nvim/docs/MANUAL-EVIDENCE.md` führt es, seit `b7c4c45` **fünf** Zeilen:
+gezeichnetes Bild, gezoomtes Bild, rasterisierte PDF-Seite, konvertiertes
+Office-Dokument, `on_request`-Beitrag. Die Datei deckt damit nicht mehr nur
+ab, was ein Terminal zum **Zeichnen** braucht, sondern auch, was einen
+**Daemon zum Antworten** braucht. Zahlen, Maschine und Wiederholungsanleitung
+stehen dort, nicht mehr hier — das ist die Drift-Regel, und diese Tabelle war
+zwei Sitzungen lang ihre Ausnahme.
 
-Dazu kommt jetzt der **`on_request`-Pfad**: eine CI hat keinen laufenden
-Container-Daemon, also kann keine Maschine bestätigen, dass ein
-nachfrage-only-Beitrag am Ende wirklich eine Antwort auf den Schirm bringt.
-Genau da saß der Fehler aus `836a15a`. Gemessen am **2026-09-02** gegen eine
-laufende Docker-Engine, Tastendruck bis fertiger Float:
+Was davon **offen** ist:
 
-| Referenz | Antwort | Dauer | Engine-Aufrufe |
-| --- | --- | --- | --- |
-| `alpine:edge` | geholt, kein Container | 754 ms | 2 |
-| `lazyvim_starter:latest` | geholt, 1 Container | 560 ms | 2 |
-| `nginx:1.27-alpine` | nicht geholt | 286 ms | 1 |
-| `init.lua:42` | abgelehnt | 1 ms | 0 |
+- **Der Office-Pfad**, seit der Cache-Änderung (`bba2064`, überlebt jetzt die
+  Sitzung) nicht mehr von Hand geprüft. Braucht dich: was zu bestätigen wäre,
+  steht in der Zeile dort.
+- **Das Demo-GIF**, siehe Punkt 1.
 
-Alle vier antworteten auf dem automatischen Trigger mit `false`. Die 286 ms
-sind der Beleg für den zweiten Engine-Aufruf, der nur bei Treffer passiert;
-die 1 ms dafür, dass die Namenskollision abgelehnt wird, **bevor** ein Prozess
-startet. Vorher lief dieselbe Strecke gegen einen gestoppten Daemon und
-erzeugte korrekt Schweigen statt eines selbstbewussten „not pulled“ — der
-Fall, den ein Stub nicht so gut prüft wie die kaputte Wirklichkeit.
+Der `on_request`-Pfad ist **zu** (`b7c4c45`, Einzelheiten unter
+[J](#j-die-on_request-messung-gelaufen-und-sie-hat-drei-dinge-gefunden-b7c4c45-e62f5e9)):
+gemessen gegen Docker Engine 29.5.3, und der Lauf ist mit
+`scripts/onrequest_probe.lua` wiederholbar statt jedes Mal neu gebaut.
 
 ---
 
 ## Aufträge aus der Sitzung vom 2026-09-02
 
-Sechs Punkte, **alle abgeschlossen**: A, B, C, D, E erledigt, F entschieden
-statt gebaut (nur Bilder, siehe dort). Was hier steht, ist jeweils schon
-**nachgesehen** — die Notiz sagt den Befund, nicht nur die Frage.
+Ursprünglich sechs Punkte, **alle abgeschlossen**: A, B, C, D, E erledigt, F
+entschieden statt gebaut (nur Bilder, siehe dort). Was hier steht, ist jeweils
+schon **nachgesehen** — die Notiz sagt den Befund, nicht nur die Frage.
 
-**[G](#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f)
-kam in der Folgesitzung desselben Tages dazu** — nicht aus dieser Liste,
-sondern der erste Punkt der [persönlichen
-Roadmap](hover.nvim-roadmap.md#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
-weil er die Voraussetzung dafür ist, dass alles Obige dokumentiert *bleibt*.
+**G bis J kamen in den Folgesitzungen desselben Tages dazu** — nicht aus
+dieser Liste, sondern aus der [persönlichen
+Roadmap](hover.nvim-roadmap.md), die seit E daneben liegt:
+[G](#g-ein-spec-das-die-doku-gegen-die-quelle-prüft--erledigt-2026-09-02-4e1760f)
+(das Doku-Spec, Voraussetzung dafür, dass alles Obige dokumentiert *bleibt*),
+[H](#h-eine-checkhealth-zeile-für-contribute--erledigt-2026-09-02-aca73fa)
+(`:checkhealth` sagt, wer registriert hat),
+[I](#i-die-messung-für-25--gelaufen-und-die-antwort-ist-nein) (2.5 gemessen
+und abgelehnt) und
+[J](#j-die-on_request-messung-gelaufen-und-sie-hat-drei-dinge-gefunden-b7c4c45-e62f5e9)
+(der `on_request`-Pfad gegen eine echte Engine). **Zehn Buchstaben, keiner
+offen.**
 
 ---
 
