@@ -107,7 +107,9 @@ opt-in).
 | `FileType` | `HoverEnable` | `filetypes` (default `*`) | Attach the path/link hover to this buffer |
 | `CursorHold` | `HoverBuf<n>` | one buffer | Trigger the hover (default trigger) |
 | `CursorMoved` | `HoverBuf<n>` | one buffer | Trigger, under `trigger = { "cursor" }` or `{ "mouse" }` |
-| `BufLeave`, `InsertEnter` | `HoverBuf<n>` | one buffer | Hide the float |
+| `BufLeave`, `InsertEnter` | `HoverBuf<n>` | one buffer | `hide_unless_pinned()` — a pinned float survives both |
+| `CursorMoved`, `CursorMovedI`, `InsertEnter`, `BufLeave`, `WinScrolled` | `HoverDismiss` | global, `once` | Close the float that is open |
+| `VimLeavePre` | `HoverMedia` | — | Delete the PNGs rasterized from PDF pages |
 
 ## [insights.nvim](../../NOTES/PersonelPlugins/BINDINGS/Autocmds/insights.nvim.md)
 

@@ -6,9 +6,11 @@ Source: `lua/hover/bindings/autocmds.lua`
 Docs: `docs/BINDINGS.md`
 
 Installed by `require("hover").enable()` — called from this config's
-`lua/plugins/personal/init.lua` (`lazy = false`, `priority = 900`). Two
-augroups, both cleared and rebuilt on every call, which is what makes
-`enable()` idempotent.
+`lua/plugins/personal/init.lua` (`lazy = false`, `priority = 900`). **Four**
+augroups, and they do not have the same lifetime: the first two are the
+trigger and are cleared and rebuilt on every call, which is what makes
+`enable()` idempotent. The other two belong to a float that happens to be
+open, and to the session.
 
 ## Groups and events
 
@@ -18,6 +20,8 @@ augroups, both cleared and rebuilt on every call, which is what makes
 | `HoverBuf<n>` | `CursorHold` | one buffer | trigger (default trigger) |
 | `HoverBuf<n>` | `CursorMoved` | one buffer | trigger, under `trigger = { "cursor" }` or `{ "mouse" }` |
 | `HoverBuf<n>` | `BufLeave`, `InsertEnter` | one buffer | `hide_unless_pinned()` — **not** `hide()`: leaving the buffer and entering insert are exactly the moments someone pinned a float *for* |
+| `HoverDismiss` | `CursorMoved`, `CursorMovedI`, `InsertEnter`, `BufLeave`, `WinScrolled` | global, `once` | close the open float. Created when one opens, fires once. `CursorMoved` alone is not enough — leaving insert or switching windows must clear it too |
+| `HoverMedia` | `VimLeavePre` | global, once per session | delete the PNGs rasterized from PDF pages |
 
 ## Three reasons a per-buffer group is never created
 
@@ -66,8 +70,22 @@ same events. That module is **deleted** as of 2026-09-01 (lib.nvim
 `5450dd4`), so those group names cannot come back by accident — before that
 they merely had nothing calling `enable()`.
 
+**Two markdown-era names survived both moves.** Until 2026-09-02 the lower
+two groups were called `MarkdownHoverDismiss` and `MarkdownNvimHoverMedia`,
+with `desc` strings naming markdown.nvim as the owner — visible in
+`:autocmd`, and wrong since the code left that plugin. They are also why this
+file said "two augroups": searching the source for `Hover` did not find them.
+Renamed in hover.nvim `87a1017`; nothing referenced the old names.
+
 ## Changelog
 
+- 2026-09-02: **four augroups, not two.** `HoverDismiss` (the open float's
+  own dismissal) and `HoverMedia` (deleting rasterized PDF pages at exit)
+  were missing here entirely — they carried markdown.nvim's name until
+  hover.nvim `87a1017`, so a search for `Hover` in the source did not turn
+  them up. `hover.nvim/docs/BINDINGS.md` had the same gap and the same count;
+  corrected there too, along with a row that said "hide the float" where the
+  code calls `hide_unless_pinned()`.
 - 2026-09-02: the "nothing that could answer" rule had gained a third
   question since this file was written — a registered **position** preview
   with the `positions` switch on also earns a buffer its trigger. The entry
