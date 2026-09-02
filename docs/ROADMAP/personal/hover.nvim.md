@@ -1,7 +1,11 @@
 # hover.nvim — Extraktion aus lib.nvim
 
-Handover-Dokument. Stand: **2026-09-01**, Sessions „lib.nvim hover analysis"
-und „hover.nvim docs + Phase 2".
+Handover-Dokument. Stand: **2026-09-02**. Angelegt in der Session
+„lib.nvim hover analysis"; seither fortgeschrieben.
+
+Die Extraktion, die diesem Dokument den Titel gibt, ist abgeschlossen. Was
+seither dazugekommen ist, steht unter
+[Was seit der Extraktion passiert ist](#was-seit-der-extraktion-passiert-ist).
 
 Repo: <https://github.com/StefanBartl/hover.nvim> · lokal `E:/repos/hover.nvim`
 Branch: **`main`** — kein Feature-Branch, alles ist gepusht.
@@ -10,22 +14,23 @@ Branch: **`main`** — kein Feature-Branch, alles ist gepusht.
 
 ## Kurzfassung: wo wir stehen
 
-**Phase 1 ist fertig und live.** Das Plugin existiert, ist öffentlich, ist in
-die Config eingebunden, markdown.nvim hängt daran, und ein echter Start von
-Neovim mit deiner Config liefert einen funktionierenden Hover. Nichts ist
-halbfertig liegen geblieben.
+**Die Extraktion ist abgeschlossen und aufgeräumt.** Das Plugin ist
+öffentlich, in der Config, CI grün auf Ubuntu *und* Windows.
+`lua/lib/nvim/hover/` ist aus lib.nvim gelöscht (`5450dd4`), samt Specs,
+Routen, Options-Feld und Doku — und damit auch das NUL-Byte in
+`preview/media.lua`.
 
-**Phase 2 ist ebenfalls erledigt.** `lua/lib/nvim/hover/` ist aus lib.nvim
-gelöscht (`5450dd4`), samt Specs, `:Lib hover`-Routen, Options-Feld und
-Doku-Zeilen; `hover = false` ist aus der Config wieder raus. Damit ist auch
-das NUL-Byte in `preview/media.lua` endgültig weg.
+**Beide Gates sind durch.** `RELEASE.md`: 29 von 32 erfüllt, drei begründete
+Ausnahmen, ein offener 🟢-Punkt (Demo-GIF — braucht dich, ich kann nicht
+aufnehmen). `REVIEW.md`: grün, ein behobener Befund (`LUA-61/62`).
 
-**Auch das Scoping ist gebaut** (`b2b4b2c`): `hover.scope` fragt vor dem
-Resolver, ob der Cursor überhaupt an einer Stelle sitzt, an der ein Pfad
-stehen kann. Damit ist die zweite Hälfte des Rauschproblems weg.
+**Das Plugin kann heute deutlich mehr als nach der Extraktion.** Position-
+Previews, `:Hover why`, `:Hover pin`, Zeilen und Ranges (`init.lua:42`,
+`file.lua:10-20`), Git-Objekte, `gf` zum Öffnen, ein Schalter-Chooser über
+lib.nvims UI-Kit. Und vier Nachbarplugins steuern jetzt etwas bei.
 
-**Offen ist nur noch Beobachtung**, kein Bauauftrag: ob `manual` der bessere
-Default wäre. Details unter [Offene Punkte](#offene-punkte).
+**Offen ist wenig, und das Meiste davon bewusst.** Details unter
+[Offene Punkte](#offene-punkte).
 
 ---
 
@@ -123,11 +128,16 @@ Klasse entscheiden zu müssen. `:Hover show`, `keymaps.show` und
 `show({ force = true })` antworten dann weiterhin **voll**, Web-Links
 inklusive.
 
-### 3. Sieben Schalter aus **einer** Tabelle
+### 3. Schalter aus **einer** Tabelle
 
 `lua/hover/switches.lua` speist Routen, Completion, `:Hover status` und
-`:checkhealth` gleichzeitig. Ein achter Schalter ist ein Tabelleneintrag und
-sonst nichts.
+`:checkhealth` gleichzeitig. Damals sieben, heute neun.
+
+**Der Anspruch "ein weiterer Schalter ist ein Tabelleneintrag und sonst
+nichts" stimmte nicht.** Zwei Konsumenten lasen die Tabelle gar nicht, sondern
+fuehrten eigene Listen -- und der achte und der neunte Schalter haben je einen
+davon aufgedeckt. Siehe [Dieselbe Bug-Klasse
+dreimal](#dieselbe-bug-klasse-dreimal). Jetzt stimmt er.
 
 Implikation läuft **nur nach oben**: `fetch` → `web` → `links`. Nach unten
 antwortet die Leseseite (`config.web_enabled()` ist
@@ -160,10 +170,16 @@ die einzige Preview-Klasse, deren Wert *negativ* wird, wenn sie falsch liegt.
 
 | Repo | Stand | Commit |
 | --- | --- | --- |
-| **hover.nvim** (neu) | gepusht, `main` | `feat: hover.nvim -- the path/link preview, extracted from lib.nvim` |
-| **markdown.nvim** | gepusht, `main` | `bd53428` + `634121f` |
-| **nvim-config** | gepusht, `main` | `97051225`, `69907c0e` |
-| **lib.nvim** | gepusht, `main` | `5450dd4` — der Hover ist gelöscht |
+| **hover.nvim** (neu) | gepusht, `main` | Extraktion, dann ~25 weitere bis `5bc630f` |
+| **markdown.nvim** | gepusht, `main` | `bd53428`, `634121f`, `c61493f` |
+| **nvim-config** | gepusht, `main` | `97051225`, `69907c0e`, `af1a8c60`, `7a0027b4`, `4e2cf2c4` |
+| **lib.nvim** | gepusht, `main` | `5450dd4` (Hover gelöscht), `556ee50` (safe_api-Typen) |
+| **images.nvim** | gepusht, `main` | `b61b347` — stale Verweise auf `markdown.hover` |
+| **pdfport.nvim** | gepusht, `main` | `b43fd1c` — dito, plus `docs/install.json` |
+| **migrate.nvim** | gepusht, `main` | `efb1ae4` — Position-Preview |
+| **reposcope.nvim** | gepusht, `main` | `b4d6eff` — `owner/repo`-Source |
+| **documentation.nvim** | gepusht, `main` | `b23ab85` — Modul-Preview |
+| **spotlight.nvim** | gepusht, `main` | `23f3f25` — Token-Zähler |
 
 ### markdown.nvim
 
@@ -193,145 +209,129 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **78 grün**, 0 Fehler (bare_path 32, config 15, registry 19, switches 12) |
-| Specs markdown.nvim | volle Suite grün, `MARKDOWN_TESTS_OK` |
-| `stylua --check` | sauber, beide Repos |
-| `luacheck` | 0 warnings / 0 errors in 27 Dateien |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, zweimal gemessen (`LLS-07`) |
-| Helptags | 29 Tags aus `doc/hover.txt` |
-| Live-Start mit deiner Config | `:Hover` da, mode `auto`, alle Schalter korrekt, rtp → `E:\repos\hover.nvim` |
-| Live-Funktionstest | markdown-Source registriert, Bare Path aufgelöst, Link mit `kind=mdlink` gefunden, **Float öffnet** |
+| Specs hover.nvim | **177 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, registry 49, scope 26, switches 27) |
+| Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
+| `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde** |
+| CI | grün auf **ubuntu-latest und windows-latest** (Run `33604859057`) |
+| Helptags | 29 Tags |
+| Doku-Beispiele | 23 ```lua-Blöcke laden, die ausführbaren laufen; 32 dokumentierte `:Hover`-Routen sind alle echt |
 
-Die erste LuaLS-Rohmessung zeigte 121 Befunde — davon 114 `undefined-field`,
-also der klassische `LLS-01`-Messfehler (CLI ohne injizierte Library). Mit
-`scripts/luals-scan/scan.sh` waren es 7 echte, die alle behoben wurden.
+---
+
+## Was seit der Extraktion passiert ist
+
+Grob chronologisch. Was in `hover.nvim/docs/ROADMAP.md` gelöscht wurde, ist
+gebaut — die Datei führt keine erledigten Punkte.
+
+### Gebaut
+
+- **Positions-Gate** (`b2b4b2c`) — Bare Paths werden in Code nicht mehr
+  gesucht, nur in Kommentaren und Strings. Die Regel ist *umgekehrt* zu dem,
+  was die Roadmap vorschlug, und das ist der Kern: „nur in Kommentaren und
+  Strings erlauben" setzt voraus, dass Prosa-Buffer keinen Parser haben —
+  markdown, gitcommit und rst haben aber einen.
+- **Position-Previews** (`1b4cc8d`) — dritte Beitragsart neben `sources` und
+  `previews`, für Aussagen über einen *Ort* statt über ein Ziel. War der
+  Blocker für vier Plugins.
+- **`init.lua:42` und `file.lua:10-20`** (`75f960e`, `4f83f2f`)
+- **`:Hover why`** (`d07ee32`) — welches der sieben Gatter abgelehnt hat.
+- **`:Hover pin`** (`8d26756`) — ein Float dem Cursor aus der Hand nehmen.
+- **Git-Objekt unter dem Cursor** (`4cad7dc`) — nur auf `:Hover show`.
+- **`gf` öffnet, was der Float zeigt** (`f2e0788`) — geroutet durch open.nvim.
+- **`:Hover status` als Auswahl** (`144c405`) — lib.nvims UI-Kit.
+- **Vier Nachbarplugins verdrahtet** — migrate (veraltete API auf dieser
+  Zeile), reposcope (`owner/repo` → gecachter README), documentation (was ist
+  dieses Modul), spotlight (wie oft kommt dieser Token vor).
+
+### Drei Messungen, die alle der Intuition widersprachen
+
+Das ist das Muster dieser Sitzungen und der Grund, warum in `hover.nvim`
+nichts ohne Zahl optimiert wird:
+
+1. **Ein Bare Path, der nicht existiert, kostete 13,2 ms** — pro Trigger, in
+   genau der Population, die das Plugin einlädt. Die alte Zahl (~3 µs) war
+   über eine Quelldatei genommen, in der fast jede Position Prosa ist. Jetzt
+   58,6 µs (`75f960e`), **225×**. Und die Lösung war *nicht* „billiger
+   Resolver zuerst": gopath beantwortet alles, was es kann, unter 500 µs —
+   teuer sind nur die Fehlschläge.
+2. **Das Treesitter-Gate ist 80× teurer als das Token-Gate davor**, nicht
+   billiger. Es ist nur tragbar, weil das Token-Gate 99,8 % vorher wegwirft.
+   Die Roadmap wollte es umgekehrt anordnen.
+3. **Ein Git-Spawn kostet 41 ms, ein Docker-Spawn 230 ms, Podman 490 ms** —
+   Fehlgriff wie Treffer. Das hat entschieden, dass die Git-Klasse nur auf
+   ausdrückliche Nachfrage antwortet und sandbox.nvim gar nicht geht.
+
+### Dieselbe Bug-Klasse dreimal
+
+**Jede Stelle, die eine Liste von Schaltern von Hand führt, fällt irgendwann
+hinter die Tabelle zurück, ohne dass etwas fehlschlägt.** Dreimal getroffen:
+
+- `usrcmds.route_path` (`ac50599`) — ein neuer Schalter landete auf oberster
+  Ebene statt unter seinem Elternteil.
+- `switches.effective` (`144c405`) — ein neuer Schalter las sich als dauerhaft
+  aus; `:Hover status` und `:checkhealth` logen beide.
+- `preview/office.lua` (`a5531e5`) — das Badge nannte `:Lib hover office on`,
+  einen Befehl, den es nicht mehr gab.
+
+Alle drei sind jetzt abgeleitet statt aufgezählt, und die Specs dagegen sind
+über `switches.names()` geschrieben statt über eine Liste, damit ein zehnter
+Schalter ab seiner Deklaration mitgedeckt ist. **Wenn eine vierte solche
+Stelle auftaucht, ist das der erste Verdacht.**
 
 ---
 
 ## Offene Punkte
 
-### 1. `lua/lib/nvim/hover/` aus lib.nvim löschen — **erledigt** (`5450dd4`)
+Die vier Punkte, die hier standen, sind erledigt; was an ihnen gelernt wurde,
+steht unter [Was seit der Extraktion passiert
+ist](#was-seit-der-extraktion-passiert-ist). Was übrig ist:
 
-15 Dateien, 3 949 LOC, dazu 6 Specs. Was tatsächlich mit dranhing, und zwei
-Abweichungen von der obigen Planung:
+### 1. Demo-GIF — **braucht dich**
 
-- [x] `lua/lib/nvim/hover/` gelöscht — 15 Dateien, nicht 18
-- [x] `nvim_usrcmds/usrcmds.lua` — der `hover.routes()`-Block samt Kommentar
-- [x] `nvim_usrcmds/init.lua` — `hover = true`, und das Feld aus `@types`
-- [x] `TESTS/hover_*_spec.lua` (6 Dateien)
-- [x] **`TESTS/run.lua`** — stand nicht auf der Liste und war der Punkt, an
-      dem es zuerst geknallt hat: der Runner führt eine explizite Dateiliste,
-      keinen Glob. Die sechs Einträge stehen zu lassen macht aus der ganzen
-      Suite einen `dofile`-Fehler auf einem fehlenden Pfad, nicht sechs
-      übersprungene Specs
-- [x] `README.md` — die drei `:Lib hover`-Zeilen
-- [x] `docs/BINDINGS.md` — fünf Routen-Zeilen, das Setup-Beispiel, und der
-      Absatz „warum Command und nicht Keymap", dessen Schluss-Link ins
-      gelöschte Verzeichnis zeigte. Der Absatz ist geblieben und
-      verallgemeinert: die Begründung gilt dem Namespace, nicht dem Hover
-- [x] `docs/BINDINGS/Usercmds.md` — **regeneriert** über
-      `composer.document()`, nicht von Hand editiert (die Datei sagt selbst,
-      dass sie generiert ist)
-- [x] `lib.nvim.image_preview` ist geblieben
-- [x] Config: `hover = false` raus
+`REL-09`, der letzte offene Punkt des Release-Gates und der einzige, den ich
+nicht erledigen kann: ich kann keine Bildschirmaufnahme machen. Die README
+trägt ein ASCII-Modell des Floats, das die Idee erklärt, aber nicht das
+Gefühl — und zu zeigen wäre gerade, wie wenig es beim Lesen stört.
 
-**`docs/modules.md` stand auf der Liste, hatte aber gar keinen Eintrag** — die
-drei Treffer dort sind alle `ui.hover_select`, ein anderes Modul.
+### 2. Eine registrierte Quelle, die nur auf Nachfrage antwortet
 
-`docs/map/` ist seit `052001b` nicht mehr getrackt, also nichts zu tun; die
-lokalen Artefakte sind ohnehin vom 15. Aug und damit schon vorher veraltet.
+**Der eine echte Framework-Mangel**, und zwei Dinge warten darauf. Ein
+registrierter Beitrag wird bei jedem Trigger gefragt; es gibt keine Möglichkeit
+zu sagen „frag mich nur, wenn der Leser gefragt hat". `hover.bare_git` bekommt
+das, weil es eingebaut ist und `show()` es unter `force` ruft.
 
-Gates danach: `LIB_TESTS_OK`, stylua sauber, luacheck 0 Fehler (die eine
-verbliebene Warnung sitzt in `bindings/autocmd/docs.lua` und ist älter).
+Wartend: **sandbox.nvim** (Container-Engine, 230–490 ms gemessen) und
+**language.nvim** (Wort-Nachschlag — jedes Wort ist ein Wort).
 
-### 2. Bare Paths scopen — **erledigt** (`b2b4b2c`)
+Zu klären: woran das Flag hängt. Tabellenform
+(`{ fn = …, on_request = true }`, rückwärtskompatibel, liest sich schlechter)
+oder eine vierte Beitragsart (ehrlicher, ein Begriff mehr).
 
-Neues Modul `hover.scope`, neuer Schalter `:Hover paths code` (Default off).
-Zwei Dinge daran sind anders gelaufen als die Roadmap es beschrieb, und beide
-sind der Grund, warum das Ergebnis trägt:
+### 3. insights.nvim braucht erst einen Index
 
-**Die Roadmap-Regel war falsch.** „Nur in Kommentaren und Strings erlauben"
-setzt voraus, dass Prosa-Buffer keinen Parser haben — markdown, gitcommit und
-rst haben aber einen. Nach dieser Regel hätte ein Pfad in einem ganz normalen
-Markdown-Absatz aufgehört zu hovern, also genau der Fall, für den es das
-Feature gibt. Gefragt wird jetzt umgekehrt: ist die Position *positiv als Code
-identifizierbar*? Nur dann wird abgelehnt. Drei von fünf Ausgängen sind
-erlaubend (kein Parser, keine Captures, unbekannte Capture-Familie) — das ist
-`ERR-20` auf ein Gate angewandt.
+Nicht hier zu lösen. `run_reverse` läuft `scan_cwd_async` — einen vollen
+Durchlauf des Arbeitsverzeichnisses — und öffnet einen Scratch-Buffer. Jede
+Abfrage scannt neu, es gibt nichts nachzuschlagen. Der Cache-Index gehört in
+insights.nvim, und danach ist die Integration klein.
 
-**Die Messung ergab das Gegenteil der Intuition.** Auf einem 728-Zeilen-
-Lua-Buffer: Token-Gate 1,1 µs Median, dieses Gate 90,2 µs warm und 318,3 µs
-direkt nach einer Änderung — rund achtzigmal teurer, weil Antworten Parsen
-heißt. Die Roadmap wollte es *vor* dem `<cfile>`-Gate; dort hätte es jeden
-CursorHold 90 µs gekostet. Dahinter läuft es auf der einen von 531 Positionen,
-die das Token-Gate überlebt, also ~0,2 µs amortisiert.
+### 4. Beobachten, ob `manual` der bessere Default ist
 
-**Eine Falle, die still in die falsche Richtung kippt:**
-`vim.treesitter.get_captures_at_pos` **parst nicht**. Auf einem ungeparsten
-Baum antwortet es `{}` statt zu scheitern, und `{}` ist von „hier ist reiner
-Text" nicht zu unterscheiden — das Gate hätte alles durchgelassen und dabei
-funktionsfähig ausgesehen. Interaktiv verdeckt der Highlighter das, headless
-nicht. Der erste Entwurf hatte genau diesen Bug; die Real-Buffer-Specs fangen
-ihn.
-
-18 Specs, Suite 98 grün, stylua sauber, luacheck 0/0, LuaLS **0 Befunde**.
-
-**`scripts/luals-scan/` liegt in der Config, nicht im Plugin-Repo** —
-`C:/Users/bartl/AppData/Local/nvim/scripts/luals-scan/`. Der Aufruf, der
-funktioniert:
-
-```
-cd C:/Users/bartl/AppData/Local/nvim/scripts/luals-scan
-REPOS_DIR=E:/repos bash scan.sh <pass> hover.nvim
-python compare.py <pass>
-```
-
-Eine Falle dabei, die 101 Phantom-Befunde erzeugt: **nicht den Worktree
-scannen.** `scan.sh` nimmt `$REPOS_DIR/<name>` als Workspace, die injizierte
-Library kommt aber vom Haupt-Checkout — dieselben `Hover.*`-Klassen also
-zweimal, Ergebnis 97× `duplicate-doc-field` und 4× `duplicate-doc-alias`, alle
-unecht. Erst den Haupt-Checkout auf den Stand ziehen, dann den scannen.
-
-### 2b. Gefundener Bug: `:Hover code` statt `:Hover paths code` (`ac50599`)
-
-Aufgetaucht beim Nachtragen der Bindings-Cheatsheets, und nur deshalb: die
-Tabelle gegen die *echten* registrierten Routen zu prüfen statt sie aus der
-Doku abzuschreiben.
-
-`usrcmds.route_path` war der einzige Konsument von `hover.switches`, der
-`hover.switches` nicht las — eine handgeschriebene `if name == "web" …
-elseif`-Kette. Ein neuer Schalter ohne passenden Zweig fällt darin auf die
-oberste Ebene durch. Nichts schlug fehl: die Route existierte, completete und
-funktionierte, sie stand nur am falschen Platz, und jedes Dokument dazu nannte
-einen Befehl, den es nicht gab.
-
-Jetzt aus `implies` abgeleitet — was für jeden vorher existierenden Schalter
-denselben Pfad ergibt und nicht mehr zurückfallen kann. Zwei Specs dafür,
-beide **gegen den Bug geprüft**, nicht nur gegen den Fix: mit
-wiedereingebautem Fehler fallen sie um.
-
-Lehre fürs nächste Mal: „eine Tabelle speist alles" gilt nur für die
-Konsumenten, die die Tabelle wirklich lesen. Der Anspruch stand im
-Modulkopf von `switches.lua` und war für genau einen Konsumenten falsch.
-
-### 3. Beobachten, ob `manual` der bessere Default ist
-
-Die Config läuft heute auf `auto`. Wenn es weiter nervt, ist der Griff
+Die Config läuft auf `auto`. Wenn es weiter nervt, ist der Griff
 `:Hover mode manual` plus ein `keymaps.show`-Key — und wenn *das* sich als das
 Richtige erweist, gehört es in die Spec statt in eine Sitzung.
 
-### 4. `REL-19`: POSIX — erledigt
+Inzwischen gibt es zwei Werkzeuge, die diese Frage schärfer stellen als vorher:
+`:Hover why` sagt, warum ein Float *nicht* aufging, und das Positions-Gate hat
+die Hälfte des Rauschens ohnehin entfernt. Die Frage könnte sich erledigt
+haben.
 
-CI ist auf Ubuntu grün (Run `33550871954`): Specs, stylua und luacheck alle
-drei. Der erste Lauf scheiterte an etwas anderem — `scripts/test.sh` war aus
-einem Windows-Checkout heraus als `100644` committet, also „Permission
-denied" statt Testlauf. `git update-index --chmod=+x` ist von dieser Seite der
-einzige Weg; **daran denken bei jedem neuen `scripts/*.sh` in diesem
-Ökosystem.**
+### 5. Was keine CI prüft
 
-Was damit *nicht* geprüft ist: die Teile, die ein Terminal brauchen — das
-Zeichnen von Bildern, die PDF-Rasterisierung, die LibreOffice-Konvertierung.
-Die laufen in keiner CI und sind weiterhin nur auf dieser Maschine belegt.
+`docs/MANUAL-EVIDENCE.md` führt es: gezeichnete Bilder, rasterisierte
+PDF-Seiten, konvertierte Office-Dokumente. Der Office-Pfad ist seit der
+Cache-Änderung (`bba2064`, überlebt jetzt die Sitzung) **nicht** mehr von Hand
+geprüft, und was daran zu bestätigen wäre, steht dort.
 
 ---
 
@@ -339,7 +339,8 @@ Die laufen in keiner CI und sind weiterhin nur auf dieser Maschine belegt.
 
 - **Regelwerk:** `WKDBooks/Development/wkdbook-Lua/Checklists/`, für dieses
   Repo `gates/NEW_PROJECT.md` (einmal durch, `NEW-01`…`NEW-46`),
-  `regeln/LUA_NVIM.md` beim Schreiben. `gates/RELEASE.md` steht noch aus.
+  `regeln/LUA_NVIM.md` beim Schreiben. **`gates/RELEASE.md` und
+  `gates/REVIEW.md` sind beide durch** — 29/32 bzw. grün.
 - **Commits ohne KI-Co-Author** — steht so in `NEW_PROJECT.md` und ist hier so
   gehalten.
 - **Keine Lizenzdatei** (`NEW-06`, `REL-28`) — bewusst keine angelegt, auch
@@ -357,3 +358,15 @@ Die laufen in keiner CI und sind weiterhin nur auf dieser Maschine belegt.
 - **Git-Bash-Falle:** headless nvim mit einem `/tmp/...`-Pfad **hängt still**,
   statt zu scheitern. Windows-Pfade verwenden. (Steht auch in
   `scripts/luals-scan/scan.sh`.)
+- **luals-scan liegt in der Config**, nicht im Plugin-Repo:
+  `nvim/scripts/luals-scan/`. Und: **nicht den Worktree scannen** — die
+  injizierte Library kommt vom Haupt-Checkout, dieselben `Hover.*`-Klassen
+  also zweimal, Ergebnis ~100 unechte `duplicate-doc-field`. Erst den
+  Haupt-Checkout nachziehen, dann den scannen.
+- **Ein voller Config-Start headless hängt still.** Auch mit Windows-Pfaden.
+  Isoliert prüfen (`-u NONE` plus `set rtp+=`) oder interaktiv.
+- **Vor dem Bauen messen.** Drei Messungen in diesem Repo haben der Intuition
+  widersprochen, die sie prüfen sollten; zweimal war die naheliegende Lösung
+  die falsche. Die Zahlen stehen in den Modulköpfen von `hover.scope` und
+  `hover.bare_path`, nicht in Commit-Messages, damit sie beim Ändern des
+  Codes gelesen werden.
