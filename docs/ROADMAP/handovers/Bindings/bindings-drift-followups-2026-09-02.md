@@ -222,3 +222,47 @@ Aus dem Driftreport, unverändert und bewusst nicht angefasst:
   bietet „Open it and re-run" an.
 * **7 `keymap-not-in-repo`** — debugging.nvims zur Laufzeit gebautes
   `prefix .. "m"`, der dokumentierte Falschbefund der Grep-Achse.
+
+### Nachtrag 2026-09-02: die Zahlen oben waren zu hoch, und warum
+
+Die 137 (und die 207/262 weiter oben) stammen aus headless-Messläufen — und
+**in einem solchen Lauf ist die Messung selbst falsch.** Diese Config
+registriert ihre eigenen Commands und Keymaps in
+`startup.on("UIReady", …)`, und `UIReady` ist VimEnter plus `vim.schedule`.
+Ein `nvim --headless -c "luafile …"` führt sein Skript *vor* VimEnter aus:
+`bindings.usrcmds` und `bindings.mappings` werden nie geladen, und alles, was
+sie gebunden hätten, meldet der Check als dokumentiert-und-nicht-registriert.
+
+Derselbe Lauf, einmal ohne und einmal mit geladener Phase:
+
+| | Phase ausstehend | Phase gelaufen |
+| --- | ---: | ---: |
+| Befunde gesamt | 200 | **111** |
+| `keymap-not-live` | 137 | **52** |
+| `usercmd-not-live` | 9 | **1** |
+| `usercmd-undocumented` | 54 | 58 |
+
+Interaktiv sieht man das nie — wer `:Bindings check` im Editor aufruft, hat
+die Phase längst hinter sich. Deshalb ist es unbemerkt in jeden headless
+geschriebenen Bericht gewandert, aus dem danach zitiert wurde, diesen
+eingeschlossen.
+
+`:Bindings check` und `:Bindings report` sagen es seither selbst: `describe`
+setzt die Warnung ganz nach oben, `report.render` in den Lauf-Kopf und als
+Blockquote über die Zahlen, die sie entwertet. Beide fragen
+`startup.pending()`.
+
+**Stand danach (111), nach Handlungsbedarf sortiert:**
+
+* **4 eigene undokumentierte Commands** — `:ContextOpen`,
+  `:ToggleInlineDiff`, `:LibAutocmdDocsCheck`, `:LibUsercmdDocsCheck`.
+  Nachgetragen, damit 111 → 107.
+* **54 undokumentierte Live-Commands, alle fremd** — die Eigentümerspalte
+  weist das jetzt nach, statt es zu vermuten: git-conflict (9), noice (4),
+  treesitter (3), Mason, Vimscript-Plugins, Neovims eigene. Unverändert eine
+  Scope-Entscheidung: soll `ExternPlugins/Bindings` sie abdecken?
+* **52 `keymap-not-live`** — reposcope (21), pickers (17), cmdlog (9),
+  insights (3), lib (2). Alle buffer-lokal in einer UI, die nicht offen ist.
+  Korrekt gemeldet; kleiner zu kriegen nur durch Messen mit offenen UIs.
+* **7 `keymap-not-in-repo`** — unverändert debugging.nvims berechnetes
+  `prefix .. "m"`.
