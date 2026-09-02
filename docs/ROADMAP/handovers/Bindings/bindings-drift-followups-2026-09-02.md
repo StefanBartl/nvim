@@ -1,5 +1,22 @@
 # Handover — BINDINGS-Drift, was noch offen ist
 
+## Table of content
+
+  - [Aktueller Stand](#aktueller-stand)
+  - [Wo weiterarbeiten](#wo-weiterarbeiten)
+  - [Offene Punkte](#offene-punkte)
+    - [1 — Die Eigentümerspalte druckt eine Zahl, die zwischen zwei Läufen wechselt](#1-die-eigentmerspalte-druckt-eine-zahl-die-zwischen-zwei-lufen-wechselt)
+    - [2 — Der Quelltext-Fallback fehlt auf der Usercmd-Achse](#2-der-quelltext-fallback-fehlt-auf-der-usercmd-achse)
+    - [3 — Extern-Stämme lassen sich nicht auf lazy-Plugins auflösen](#3-extern-stmme-lassen-sich-nicht-auf-lazy-plugins-auflsen)
+    - [4 — Elf Cheatsheet-Zeilen, deren Sheet schon existiert](#4-elf-cheatsheet-zeilen-deren-sheet-schon-existiert)
+    - [5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist](#5-die-scope-entscheidung-die-seit-drei-blcken-offen-ist)
+    - [6 — Die Autocmds-Achse wird gar nicht geprüft](#6-die-autocmds-achse-wird-gar-nicht-geprft)
+  - [Was ausdrücklich *nicht* offen ist](#was-ausdrcklich-nicht-offen-ist)
+
+---
+
+## Aktueller Stand
+
 Stand 2026-09-02, abends. Die Blöcke 1–3 dieser Datei sind erledigt und
 ersatzlos entfernt; was von ihnen dauerhaft gilt, steht jetzt dort, wo es
 hingehört:
@@ -21,14 +38,30 @@ hingehört:
 | `:Bindings check extern` | **154** — die Punkte unten |
 | `:Bindings check all` | 155 |
 
+**Nachgemessen 2026-09-02, später Abend** (headless, UIReady-Phase
+nachgeholt, Haupt-Checkout deckungsgleich mit `origin/main` — also ohne die
+Worktree-Vorkehrungen aus Fallen 2 und 3): **1 / 154 / 155, unverändert**.
+Aufschlüsselung extern: `keymap-not-live` 84, `usercmd-not-live` 16,
+`usercmd-undocumented` 54. Die Zahlen oben gelten also weiter, und keiner der
+Commits seit ihrer Aufnahme hat sie bewegt.
+
+---
+
 ## Wo weiterarbeiten
 
-| | |
-| --- | --- |
-| Repo | nvim-config (`C:/Users/bartl/AppData/Local/nvim`) |
-| Branch | `claude/bindings-drift-followups-7946d4`, deckungsgleich mit `origin/main` |
-| Worktree | `.claude/worktrees/plugin-roadmap-review-3cb74b` |
-| Stand | alles committet und gepusht, Haupt-Checkout nachgezogen |
+|          |                                                                            |
+| -------- | -------------------------------------------------------------------------- |
+|   Repo   |             nvim-config (`C:/Users/bartl/AppData/Local/nvim`)              |
+|  Branch  |         `main` — dort steht alles, siehe die Anmerkung darunter           |
+| Worktree |                        keiner mehr nötig, siehe unten                      |
+|  Stand   |          alles committet und gepusht, Haupt-Checkout nachgezogen           |
+
+An diesem Block haben zwei Sessions parallel gearbeitet, aus zwei Worktrees
+(`plugin-roadmap-review-3cb74b` auf `claude/bindings-drift-followups-7946d4`
+und `plugin-roadmap-review-277621` auf `claude/nvim-config-tasks-56c97f`).
+Beide haben nach `origin/main` gepusht, beide sind damit deckungsgleich, und
+`main` ist die einzige Quelle, die man dazu noch braucht — die zwei Branches
+stehen hier nur, damit ein Blick in `git log` sie einordnen kann.
 
 Vor jeder Messung: [MEASURING.md](../../../../lua/bindings/usrcmds/bindings_explorer/docs/MEASURING.md),
 Abschnitt „Die fünf Fallen". Headless ohne diese drei Vorkehrungen sind die
@@ -36,13 +69,15 @@ Zahlen unten nicht reproduzierbar.
 
 ---
 
-# Offene Punkte
+## Offene Punkte
 
-Alle fünf sind gemessen, keiner ist gebaut. Die Reihenfolge ist die
+Alle sechs sind gemessen, keiner ist gebaut. Die Reihenfolge ist die
 vorgeschlagene: 1 ist ein Defekt, 2–3 senken die Zahl, 4–5 sind
-Korpus-Entscheidungen.
+Korpus-Entscheidungen, 6 ist eine ganze Achse, die es nicht gibt.
 
-## 1 — Die Eigentümerspalte druckt eine Zahl, die zwischen zwei Läufen wechselt
+---
+
+### 1 — Die Eigentümerspalte druckt eine Zahl, die zwischen zwei Läufen wechselt
 
 **Ein Defekt, kein Ausbau.** `command_owner` fällt für Vimscript-Commands auf
 `("vimscript script_id=%d"):format(def.script_id)` zurück
@@ -79,7 +114,9 @@ wieder. Und zwei der elf bekämen damit ein Cheatsheet-Ziel, das es gibt:
 `:TodoFzfLua`/`:TodoLocList` gehören zu `todo-comments.nvim`, und
 `TodoComments` ist einer der 24 Stämme des Extern-Korpus.
 
-## 2 — Der Quelltext-Fallback fehlt auf der Usercmd-Achse
+---
+
+### 2 — Der Quelltext-Fallback fehlt auf der Usercmd-Achse
 
 Der Fallback (siehe FEATURES.md) läuft nur auf der Keymap-Achse. Auf der
 Usercmd-Achse wäre er dieselbe Frage an dieselbe Quelle — **case-sensitiv**,
@@ -116,7 +153,9 @@ dieser Config findet alle 13.
 sind für `repo.mentions` strukturell unsichtbar. Das ist keine Lücke, die man
 schließt, sondern eine, die man benennt.
 
-## 3 — Extern-Stämme lassen sich nicht auf lazy-Plugins auflösen
+---
+
+### 3 — Extern-Stämme lassen sich nicht auf lazy-Plugins auflösen
 
 **Die strukturelle Ursache hinter 84 der 154 Befunde.** Kein einziger
 Cheatsheet-Stamm des Extern-Korpus trifft einen lazy-Plugin-Namen:
@@ -163,7 +202,9 @@ ungeprüft. Alternativ eine kleine explizite Zuordnung im Korpus selbst, etwa
 eine Kopfzeile im Cheatsheet, die das Repo nennt. Das hätte den Vorteil, dass
 es nicht rät.
 
-## 4 — Elf Cheatsheet-Zeilen, deren Sheet schon existiert
+---
+
+### 4 — Elf Cheatsheet-Zeilen, deren Sheet schon existiert
 
 Die billigsten Zeilen im ganzen Bericht: das Sheet gibt es, nur die Zeile
 fehlt. Reine Doku-Arbeit, keine Codeänderung.
@@ -179,7 +220,9 @@ fehlt. Reine Doku-Arbeit, keine Codeänderung.
 Plus zwei weitere, sobald Punkt 1 gebaut ist: `:TodoFzfLua`/`:TodoLocList` in
 `Usercmds/TodoComments.md`.
 
-## 5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist
+---
+
+### 5 — Die Scope-Entscheidung, die seit drei Blöcken offen ist
 
 **Soll `ExternPlugins/Bindings` fremde Commands ohne Cheatsheet überhaupt
 abdecken?** Die Frage ist nie beantwortet worden, und sie ist die einzige, die
@@ -207,7 +250,50 @@ sein soll, ist eine eigene Frage.
 
 ---
 
-# Was ausdrücklich *nicht* offen ist
+### 6 — Die Autocmds-Achse wird gar nicht geprüft
+
+**Die größte ungeprüfte Fläche des Korpus, und sie steht in keiner Zahl
+oben.** `:Bindings check` vergleicht Keymaps und Usercmds gegen die laufende
+Session. Die dritte Kategorie wird nur *gelesen* — `records.mentions()` holt
+sich Commandnamen auch aus `Autocmds/*.md` —, aber **keine einzige
+Autocmd-Zeile wird je gegen `nvim_get_autocmds` gehalten**. Wer „1 Befund"
+liest, hält den Korpus leicht für geprüft; ein Drittel davon ist es nie
+gewesen.
+
+| | n |
+| --- | ---: |
+| Autocmds-Zeilen im Korpus | **241** in 33 Dateien |
+| Einträge in lib.nvims Autocmd-Registry (diese Session) | 115 |
+| `nvim_get_autocmds({})` live | 324 |
+
+**Dass die Fläche driftet, ist keine Vermutung.** Am 2026-09-02 hat lsp.nvim
+`b260fc8` zwei Autocmds auf der Roh-API registriert. Damit waren zwei
+ausdrückliche Aussagen in `Autocmds/lsp.nvim.md` falsch — die Kopfzahl und
+der Satz „kein einziger auf der Roh-API" — und **nichts hat es gemeldet**.
+Gefunden wurde es von Hand, korrigiert in lsp.nvim `89f68fc` und
+nvim-config `b7e3df80`. Beim Nachzählen kam heraus, dass die Seite auch
+vorher schon nicht stimmte: die Kopfzeile sagte 31, der Fließtext zwei Zeilen
+darunter 29, und die lib-/Roh-API-Aufteilung war in beide Richtungen
+unvollständig. Ein Prüfer hätte jeden dieser Punkte gefunden.
+
+**Warum sie baubar ist, und zwar billiger als die anderen Achsen.**
+`lib.nvim.bindings.autocmd.registered()` liefert pro Eintrag Event, Gruppe,
+`desc` und den Aufrufort — dieselbe Registry-Form, die auf der Usercmd-Seite
+aus „owner not recorded" eine Datei mit Zeilennummer gemacht hat. Die
+Live-Seite (`nvim_get_autocmds`) ist ohnehin da. Es fehlt nur die
+Extraktionsseite: `Autocmds/*.md` schreibt Augroup, Event und Pattern in
+eigene Spalten, also genau die drei Felder, die ein Vergleich braucht.
+
+**Die Falle, die vorher zu klären ist:** der Korpus zählt *Aufrufstellen*
+(`Autocmds/lsp.nvim.md` sagt das ausdrücklich), `nvim_get_autocmds` zählt
+*Event-Registrierungen* — ein Handler auf vier Events erscheint dort viermal.
+Ohne diese Umrechnung meldet die Achse Differenzen, die keine sind. Das ist
+dieselbe Klasse Fehler wie die `script_id` in Punkt 1: eine Zahl, die etwas
+anderes zählt als das, wofür sie gelesen wird.
+
+---
+
+## Was ausdrücklich *nicht* offen ist
 
 Damit es nicht ein drittes Mal untersucht wird:
 
@@ -223,7 +309,13 @@ Damit es nicht ein drittes Mal untersucht wird:
   Laufzeit gebautes `prefix .. "m"` — der dokumentierte Falschbefund der
   Grep-Achse, nur unter `:Bindings check repo` sichtbar. Kein Handlungsbedarf,
   solange die Achse als Grep gekennzeichnet ist.
+* **Die zwei Autocmds von `b260fc8`** sind nachgetragen (lsp.nvim `89f68fc`,
+  nvim-config `b7e3df80`) — die *Seite* stimmt wieder. Was daraus folgt, ist
+  Punkt 6: dass sie es nicht von selbst getan hat.
 * **cmdlog.nvims `ctrl-f`/`ctrl-t`** sind erledigt: der Code hat sie seit dem
   Merge `ed60f8f` nicht mehr, die Doku ist in beiden Repos nachgezogen. Die
   Entscheidung war „Doku auf die Realität ziehen", nicht „Feature
   wiederherstellen".
+
+---
+
