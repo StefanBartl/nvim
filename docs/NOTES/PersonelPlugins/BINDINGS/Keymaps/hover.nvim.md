@@ -98,9 +98,15 @@ bevor darauf gebaut wird. Der Test ist eine Minute:
 :nnoremap <S-+> :echo "S-plus kommt an"<CR>
 ```
 
-**Und ein Usercommand fehlt ganz.** Es gibt `hover.zoom(delta)` öffentlich,
-aber keine `:Hover`-Route dafür — anders als bei `scroll`. Für einen Zoom, der
-ohne Tastenleihe erreichbar ist, ist das der eigentliche Griff.
+**Der Usercommand gibt es jetzt:** `:Hover zoom [in|out]`, ohne Argument
+zoomt er hinein. Damit ist Zoom erreichbar, ohne dass eine Taste geliehen sein
+muss — und ohne Akkord, was den offenen `<S-+>`-Test oben entschärft: er
+entscheidet nur noch über Komfort, nicht mehr über Erreichbarkeit.
+
+**Nebenbei korrigiert:** hier stand, es gebe eine `:Hover`-Route für `scroll`
+und keine für Zoom. Eine für `scroll` gibt es **nicht** — nachgezählt gegen
+`usrcmds.routes()`: sechzehn Routen, `scroll` ist keine davon. Gescrollt wird
+ausschließlich über die geliehenen Tasten.
 
 ## Notes
 

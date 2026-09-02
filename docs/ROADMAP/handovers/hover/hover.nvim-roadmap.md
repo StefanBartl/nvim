@@ -6,7 +6,7 @@
   - [1. Abgrenzung: was in welche der beiden Roadmaps gehört](#1-abgrenzung-was-in-welche-der-beiden-roadmaps-gehrt)
   - [2. Was ich als Nächstes bauen würde, in dieser Reihenfolge](#2-was-ich-als-nchstes-bauen-wrde-in-dieser-reihenfolge)
     - [2.1 Ein Spec, das die Doku gegen die Quelle prüft — **gebaut** (`4e1760f`)](#21-ein-spec-das-die-doku-gegen-die-quelle-prft-gebaut-4e1760f)
-    - [2.2 Zoom für Bilder — **Schritte 1 und 2 gebaut** (`204d083`)](#22-zoom-fr-bilder-schritte-1-und-2-gebaut-204d083)
+    - [2.2 Zoom für Bilder — **Schritte 1, 2 und die Route gebaut**](#22-zoom-für-bilder--schritte-1-2-und-die-route-gebaut)
       - [Die ursprüngliche Reihenfolge, zur Begründung](#die-ursprngliche-reihenfolge-zur-begrndung)
     - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
     - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
@@ -21,7 +21,7 @@
 
 Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
 seither sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
-die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-und-2-gebaut-204d083)
+die Tastenhälfte von [2.2](#22-zoom-für-bilder--schritte-1-2-und-die-route-gebaut)
 und [2.3](#23-eine-checkhealth-zeile-für-contribute--gebaut-aca73fa) gebaut und
 die LuaLS-Messung nachgeholt worden.
 
@@ -143,10 +143,11 @@ und prompt gedriftet war. Genau dafür war der Punkt hier der erste.*
 
 ---
 
-### 2.2 Zoom für Bilder — **Schritte 1 und 2 gebaut** (`204d083`)
+### 2.2 Zoom für Bilder — **Schritte 1, 2 und die Route gebaut**
 
 > **Erledigt am 2026-09-02.** `+` und `-` über eine eigene Leih-Bedingung;
-> `hover.zoom(delta)` ist öffentlich. Offen bleiben **3 (Mausrad)** und **4
+> `hover.zoom(delta)` ist öffentlich, und seit `2493e1b` gibt es
+> **`:Hover zoom [in|out]`** dazu. Offen bleiben **3 (Mausrad)** und **4
 > (scharfes PDF)**, beide jetzt in `hover.nvim/docs/ROADMAP.md` — sie sind
 > Konzepte mit einer offenen Vorfrage, und damit gehören sie dorthin.
 >
@@ -230,13 +231,22 @@ Kitty-Keyboard-Protokoll kommt nie ein `<S-+>` an. WezTerm kann das Protokoll
 — plausibel, ungeprüft, und der Test kostet eine Minute
 (`:nnoremap <S-+> :echo "kommt an"<CR>`). **Erst messen, dann darauf bauen.**
 
-**Und das eigentlich Fehlende ist kein Akkord, sondern eine Route.**
-`hover.zoom(delta)` ist öffentlich, aber es gibt **keine `:Hover`-Route**
-dafür — anders als bei `scroll`. Damit ist Zoom heute *nur* über die geliehene
-Taste erreichbar, also nur, solange ein Float mit Bild offen ist und nur mit
-`+`/`-`. Ein `:Hover zoom in|out` wäre der kleinere Bau als das Mausrad und
-löst das Akkord-Problem ganz, weil es keinen braucht. **Empfehlung: die Route
-vor dem Mausrad**, und `<M-ScrollWheelUp/Down>` danach.
+**Das eigentlich Fehlende war kein Akkord, sondern eine Route — gebaut in
+`2493e1b`.** `:Hover zoom [in|out]`, ohne Argument hinein. Damit ist Zoom
+erreichbar, ohne dass eine Taste geliehen sein muss, und der `<S-+>`-Test oben
+entscheidet nur noch über Komfort statt über Erreichbarkeit. Als Nächstes das
+Mausrad (`<M-ScrollWheelUp/Down>`).
+
+**Eine Behauptung von hier war falsch und ist korrigiert:** „anders als bei
+`scroll`". Eine `:Hover scroll`-Route gibt es **nicht** — nachgezählt gegen
+`usrcmds.routes()`: sechzehn Routen, `scroll` ist keine davon. Gescrollt wird
+ausschließlich über die geliehenen Tasten, genau wie gezoomt wurde.
+
+**Was beim Bauen zu prüfen war und nicht offensichtlich ist:** ob das Float
+die Kommandozeile überlebt. Seine Auflösung hängt an `CursorMoved`,
+`InsertEnter`, `BufLeave` und `WinScrolled` — ein getipptes `:` löst keines
+davon aus. Wäre es anders, wäre die Route ein Kommando, das schließt, worauf
+es wirkt. Steht als Spec da, nicht als Annahme.
 
 ---
 

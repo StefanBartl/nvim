@@ -23,6 +23,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover status` | — | mode + all nine switches, as a selectable list |
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
+| `:Hover zoom [direction]` | `in\|out` | make the picture in the open hover bigger or smaller. Omitted: **in**. Drawn hovers only |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
@@ -102,6 +103,22 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   because "no float appeared" is the plugin's most common failure mode and
   was, until then, indistinguishable from "the plugin is broken".
 
+- **`:Hover zoom` exists because the keys are a *borrow*.** `+` and `-` are
+  bound only while a hover with a picture is on screen, so someone who has
+  never had one open has no way to find the feature — and `:Hover` completion
+  is where the rest of this plugin is found. The route is also the only way in
+  that needs no chord, which matters for the reserved combinations listed in
+  the keymaps file.
+
+  It works at all because **entering the command line moves no cursor**: the
+  float's dismissal hangs on `CursorMoved`, `InsertEnter`, `BufLeave` and
+  `WinScrolled`, and typing `:` fires none of them. That is pinned by a spec
+  rather than assumed — if it were false the route would be a command that
+  closes the thing it acts on.
+
+  Omitting the direction zooms **in**, not "toggle" like the switches: a step
+  has no reverse reading, and `out` undoes a wrong guess in one keypress.
+
 - **`:Hover pin` has no `unpin`.** A pinned float is dismissed the same way
   any float is; a second verb for the reverse would have to be typed *into*
   a window that is deliberately not focused.
@@ -122,6 +139,12 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-02: **`:Hover zoom [in|out]` added** (hover.nvim `2493e1b`). Sixteen
+  routes now. Zoom itself shipped with `204d083` as borrowed keys only; this
+  is the reachable-without-a-float-open half. Also corrected in the keymaps
+  file: that one said a route existed for `scroll` and not for zoom — there is
+  **no** `:Hover scroll` either, and there never was.
 
 - 2026-09-02: three routes were missing here entirely — `:Hover why`,
   `:Hover pin` and `:Hover positions`. The file documented 7 of 15

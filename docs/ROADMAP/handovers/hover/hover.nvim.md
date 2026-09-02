@@ -35,7 +35,7 @@
     - [C. Die README von hover.nvim — **erledigt 2026-09-02** (`a57d390`)](#c-die-readme-von-hovernvim-erledigt-2026-09-02-a57d390)
     - [D. Eine Beitrags-API für Nutzer — **erledigt 2026-09-02** (`c374d5e`)](#d-eine-beitrags-api-fr-nutzer-erledigt-2026-09-02-c374d5e)
     - [E. Eine Roadmap-Datei unter `docs/ROADMAP/personal/` — **erledigt 2026-09-02**](#e-eine-roadmap-datei-unter-docsroadmappersonal-erledigt-2026-09-02)
-    - [F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten gebaut (`204d083`)**](#f-zoom-im-float-eingegrenzt-2026-09-02-tasten-gebaut-204d083)
+    - [F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten und Route gebaut**](#f-zoom-im-float--eingegrenzt-2026-09-02-tasten-und-route-gebaut)
     - [G. Ein Spec, das die Doku gegen die Quelle prüft — **erledigt 2026-09-02** (`4e1760f`)](#g-ein-spec-das-die-doku-gegen-die-quelle-prft-erledigt-2026-09-02-4e1760f)
     - [H. Eine `:checkhealth`-Zeile für `contribute` — **erledigt 2026-09-02** (`aca73fa`)](#h-eine-checkhealth-zeile-fr-contribute-erledigt-2026-09-02-aca73fa)
     - [I. Die Messung für 2.5 — gelaufen, und die Antwort ist **nein**](#i-die-messung-fr-25-gelaufen-und-die-antwort-ist-nein)
@@ -110,9 +110,11 @@ zwei Tastentabellen dazu, `b7c4c45` zwei weitere für
 `docs/MANUAL-EVIDENCE.md`, das als einziges Dokument außerhalb der Reichweite
 lag und prompt gedriftet war.
 
-**Zoom für Bilder ist gebaut** (`204d083`): `+` und `-`, geliehen nur, solange
-ein Hover mit Bild offen ist. Offen bleiben Mausrad und scharfer PDF-Zoom,
-beide in `docs/ROADMAP.md`. Siehe [F](#f-zoom-im-float--eingegrenzt-2026-09-02-tasten-gebaut-204d083).
+**Zoom für Bilder ist gebaut**, in zwei Hälften: die Tasten `+` / `-`
+(`204d083`), geliehen nur solange ein Hover mit Bild offen ist, und
+**`:Hover zoom [in|out]`** (`2493e1b`), damit das Feature auch findet, wer nie
+zufällig ein Bild-Float offen hatte. Offen bleiben Mausrad und scharfer
+PDF-Zoom, beide in `docs/ROADMAP.md`. Siehe [F](#f-zoom-im-float--eingegrenzt-2026-09-02-tasten-und-route-gebaut).
 
 **Ein eigener Hover braucht seit `c374d5e` kein Plugin mehr.** `setup` nimmt
 ein Feld `contribute`, und zwar genau die Tabelle, die `register` nimmt — die
@@ -316,7 +318,7 @@ Aufgelöst wird das Plugin über `lua/plugins/personal/source.lua:92`
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs hover.nvim | **229 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, **docs 13**, **registry 71**, scope 26, switches 30, zoom 14), gemessen 2026-09-02 nach `e62f5e9` |
+| Specs hover.nvim | **231 grün**, 0 Fehler (bare_git 10, bare_path 48, config 17, **docs 13**, **registry 71**, scope 26, switches 30, **zoom 16**), gemessen 2026-09-02 nach `2493e1b` |
 | Specs der Nachbarn | migrate, reposcope, documentation, spotlight — alle vier grün |
 | `stylua --check` / `luacheck` | sauber in jedem berührten Repo |
 | LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, zuletzt `post-f` (`e62f5e9`) auf dem Haupt-Checkout; davor `post-b` (`3e12c9f`), `post-c` (`4e1760f`), `zoom-pre`, `zoom-post2` (`65ba8dd`), `post-d` (`aca73fa`). Zwei Läufe fanden etwas: **einmal +2** (siehe unten) und **`post-e` einmal +1 auf unangetastetem Quelltext**, das `post-e2` auf identischem Baum nicht reproduzierte — der Scan flackert, siehe [J / Fund 3](#fund-3-die-luals-messung-flackert) |
@@ -842,12 +844,29 @@ diese Klasse im Code dreimal und in der Doku viermal zugeschlagen hat.
 
 ---
 
-### F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten gebaut (`204d083`)**
+### F. Zoom im Float — **eingegrenzt 2026-09-02, Tasten und Route gebaut**
 
-> **Die Tastenhälfte steht.** `+` und `-` sind geliehen, solange ein Hover mit
-> Bild offen ist; ein Schritt skaliert die Fläche um 1,25. Offen und in
-> `docs/ROADMAP.md` verblieben sind das **Mausrad** und der **scharfe
-> PDF-Zoom**. Was unten steht, ist die Voranalyse — sie hat gestimmt, mit
+> **Beide Griffe stehen.** `+` und `-` sind geliehen, solange ein Hover mit
+> Bild offen ist; ein Schritt skaliert die Fläche um 1,25 (`204d083`). Dazu
+> **`:Hover zoom [in|out]`** (`2493e1b`) — ohne Argument hinein.
+>
+> **Warum die Route trotz der Tasten.** Die Tasten sind eine *Leihe*: gebunden
+> nur, solange ein gezeichneter Hover offen ist. Wer nie einen offen hatte,
+> kann das Feature also gar nicht finden, und `:Hover`-Completion ist der Ort,
+> an dem in diesem Plugin alles andere gefunden wird. Die Route ist außerdem
+> der Griff, der **keinen Akkord** braucht — womit der offene `<S-+>`-Test in
+> den Keymap-Notes nur noch über Komfort entscheidet, nicht über
+> Erreichbarkeit.
+>
+> Dass sie überhaupt funktioniert, hängt an einem Detail, das ich geprüft
+> statt angenommen habe: **das Float überlebt die Kommandozeile.** Seine
+> Auflösung hängt an `CursorMoved`, `InsertEnter`, `BufLeave` und
+> `WinScrolled`; ein getipptes `:` löst keines davon aus. Wäre es anders, wäre
+> die Route ein Kommando, das schließt, worauf es wirkt — deshalb steht das
+> als Spec und nicht als Annahme.
+>
+> Offen und in `docs/ROADMAP.md` verblieben sind das **Mausrad** und der
+> **scharfe PDF-Zoom**. Was unten steht, ist die Voranalyse — sie hat gestimmt, mit
 > einer Ausnahme, und für die beiden offenen Hälften gilt sie unverändert.
 >
 > **Zwei Dinge waren beim Bauen anders als hier vermutet.**
