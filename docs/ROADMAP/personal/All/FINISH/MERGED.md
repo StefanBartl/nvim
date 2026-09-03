@@ -2,11 +2,23 @@
 
 Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` - außer spezifisch es Plugin ist in der Task angegeben.
 
+- never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
+- antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
+- Die Installations-Specs meiner Pluigns findest du in: C:/Users/bartl/AppData/Local/nvim/lua/plugins/personal/init.lua
+- Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
+- Docs / README.md des Plugins updaten sofern es Sinn macht
+- Wenn ein binding updatent wird, dann gggf. auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updaten
+- Keine Co-Authorenschaft von Claude in den Commits
+- Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
+- Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
+
 ---
 
 ## Liste A — Braucht dich
 
 ### Live-Testing (braucht laufende, interaktive nvim-Session)
+
+- [ ] E:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
 - [ ] CDX: jedes Keymap/Usrcmd/Autocmd in echter nvim-Instanz durchtesten, ob Fehler geworfen werden. (Claude kann einen Testrunner vorbereiten, das Beobachten in Echtzeit ist deine Domäne — außer wir bauen dafür einen headless-Test.)
   - [ ] Gleich mitchecken, o die usrmd optionen wirklich gut bennant sind. Zb `:LspDoctor deep` wurde gennant für eine aktion, die ausgegebn hat, welcher formatter gerade aktiv ist.... daher wurde es umbenannt auf `LspDoctor fmt_check`
 - [ ] `:Recommender perf` durch alle Module laufen lassen und Ergebnisse sichten. (Ausführen + Sichten = du; die daraus resultierenden Fixes = delegierbar, siehe Liste B.)
@@ -54,6 +66,18 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ## Liste B - Claude Tasks
 
+### MISC
+
+- [ ] Videos transkripten:
+  - [ ] Übersetzung / Zusammenfassung erstellen
+  - [ ] Images text extrahieren;
+  - [ ] usw...
+  - [ ] ALles was damit zusammenhängt bzw sinnvoll ist als Features da anzubieten: Konzept machen -> eventuell bestehende plugin api's nutzen und zusammenführen;
+  - [ ] Feature: Dashboard mit allen Mediendateien die gefunden wurden in path/cwd/cfile/ usw..und dann selection, welche aktion man darauf ausführen will;
+  - [ ] Möglicherweiße könnte es auch in `language.nvim` passen -> Text aus Medien extrahieren -> Sprache | Wäre das sinnvoll oder ein zu weiter stretch?
+
+### My `.nvim`-Plugins
+
 - [ ] Nach den Änderungen der letzen Wochen müssen wiederhholt werden:
   - [ ] Tools für nachstehende aufgaben wurden gebaut, aber wieder entfernt als die task fertig  war. aber wir haben eine nptes dile angefertigt, um wenmigsens wissen zu konservieren bez  der tools: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md
   - [ ] `lib.nvim` module verwendet wo sinnvoll und möglich in den neuen Source Code?
@@ -63,28 +87,20 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
   - [ ] Keymaps müssen auch als usrcmds existieren: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\keymap-command-parity.md
   - [ ] alle fetures in denen es sinn macht sollen konfigureirbar sein durch den user, notes: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\nicht-konfigurierbare-features.md
 
-- [ ] `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
-  - [ ] docmap-desktop app icon desktop
+- [ ] `docmap-desktop`
+  - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
+    - [ ] docmap-desktop app icon desktop
 
-- [ ] deps installer: ewigenes Plugin vl mit lazy installer neuscheriben kombineinre, sodas bei plugin isntall ghleic cli tools checked werdebn?
-  - [ ] - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
-  - [ ] Wenn cli toios in einen meuiner plugins verwendet wird, wie wird es dem use snagezegit wenn es fehlt?
+- [ ] `lib.nvim`
+    - [ ] deps installer:
+      - [ ] eigenes Plugin vl mit lazy installer neuschreiben, in welcher zusätzlich zum nvim plugin isntall auch gleich die cli tool deps mit bearbeitete werden, sodass effektiv bei der plugin installierung / ersten initialiserung gleich cli tools checked werden?
+      - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
+      - [ ] Wenn cli toios in einen meuiner plugins verwendet wird, wie wird es dem use snagezegit wenn es fehlt?
 
-- [ ] Videos transkripten; Überstzung / Zusammenfassung erstellen; Images text extrahieren; usw... ALles was damit zusmmenhängt bzw sinnvoll ist als Features da anzubieten: Konzept machen -> eventuell bestehende plugin api's nutzen und zusammenführen; Dashboard mit allen Mediendateien die gefunden wurden in path/cwd/cfile/ usw..und dann selection, welche aktion man darauf ausführen will;
+- [ ] `gopath.nvim`
 
-- [ ] E:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
-- [ ] gopath.nvim: broken loinks öffnen trotzdem einen buffer
-
-
-- [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
-     [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
-  -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.
-    Zusatz Feature: Alle im `h deprecated` implementieren
-    - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
-    - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
-    - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
-
-- [ ] Github Stats auswerten / backupen / Stats zusammenziehen
+- [ ] `github_stats.nvim`
+  - [ ] auswerten / backupen / Stats zusammenziehen
 
 ---
 

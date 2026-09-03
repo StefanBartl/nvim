@@ -15,6 +15,7 @@ CONTENTS                                            *bindings_explorer-contents*
         2.5 :Bindings check repo ............. |bindings_explorer-check-repo|
         2.6 :Bindings report ................. |bindings_explorer-report|
         2.7 :Bindings status ................. |bindings_explorer-status|
+        2.8 Plugin scope ..................... |bindings_explorer-plugin-scope|
     3. Architecture .......................... |bindings_explorer-architecture|
 
 ==============================================================================
@@ -36,36 +37,51 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
 ------------------------------------------------------------------------------
 2.1 :BINDINGS SEARCH                                    *bindings_explorer-search*
 
-:Bindings search [{query}]
-:Bindings search keymaps|usercmds|autocmds [{query}]
+:Bindings search [{plugin}] [{query}]
+:Bindings search keymaps|usercmds|autocmds [{plugin}] [{query}]
+:Bindings search ... plugin={plugin} [{query}]
     Full-text search across both BINDINGS trees, or one category. Opens a
     live-grep picker via pickers.nvim's engine layer when one is available
     (telescope/fzf-lua/snacks); falls back to a prompt + static list
     (`kit.input` + `kit.select`) otherwise.
 
+    {plugin} narrows the search to one plugin's cheatsheets — see
+    |bindings_explorer-plugin-scope| for how a token is recognised as a
+    plugin rather than a query, and why order does not matter.
+
     Examples: >vim
         :Bindings search <leader>iv
         :Bindings search keymaps redact
         :Bindings search autocmds BufEnter
+        :Bindings search keymaps hover.nvim
+        :Bindings search keymaps hover.nvim zoom
+        :Bindings search keymaps plugin=documentat
 <
 
 ------------------------------------------------------------------------------
 2.2 :BINDINGS BROWSE                                    *bindings_explorer-browse*
 
-:Bindings browse [{scope}]
-:Bindings browse keymaps|usercmds|autocmds [{scope}]
-    ({scope} is "personal" or "extern")
+:Bindings browse [{plugin}] [{scope}]
+:Bindings browse keymaps|usercmds|autocmds [{plugin}] [{scope}]
+    ({scope} is "personal" or "extern"; {plugin} is a cheatsheet stem, and
+    the two may be given in either order)
 
     Picker over parsed table ROWS instead of raw text lines. Every `|…|…|`
     line found under the nearest heading becomes a record (scope, category,
     plugin, heading, columns, cells, file, line) — see `records.lua`.
     Selecting a row jumps to its source line.
 
+    Unlike `search`, this slot has no query to be confused with, so a
+    prefix resolves here too (`:Bindings browse usercmds documentat`), and
+    a token that is neither a scope nor a stem is reported as an error.
+
     Examples: >vim
         :Bindings browse
         :Bindings browse keymaps
         :Bindings browse keymaps personal
         :Bindings browse usercmds extern
+        :Bindings browse keymaps hover.nvim
+        :Bindings browse keymaps personal hover.nvim
 <
 
 ------------------------------------------------------------------------------
@@ -110,9 +126,14 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
     • A row naming no augroup, or no event Neovim knows, is not checkable.
       Those are counted and reported under the findings, never guessed at.
 
+    {plugin} is the cheatsheet stem and no longer has to be typed exactly
+    (|bindings_explorer-plugin-scope|); since this axis filters on
+    `rec.plugin == plugin`, it must resolve to exactly one stem.
+
     Examples: >vim
         :Bindings check
         :Bindings check images.nvim
+        :Bindings check images
 <
 
 ------------------------------------------------------------------------------
@@ -246,6 +267,41 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
         :Bindings status
 <
 
+------------------------------------------------------------------------------
+2.8 PLUGIN SCOPE                                 *bindings_explorer-plugin-scope*
+
+{plugin} is a CHEATSHEET STEM: the filename without `.md`, i.e. `hover.nvim`,
+`Gitsigns`, `nvim-config` — the same value `records.lua` carries as its
+`plugin` field. `search`, `browse`, `check` and `report` all accept one.
+<Tab> in such a slot offers the stems of the category already typed.
+
+A token is matched against the stems in this order:
+
+    1. the stem itself, case ignored (`HOVER.NVIM`);
+    2. the same name without the `.nvim`/`nvim-` decoration and without
+       separators — `hover` -> `hover.nvim`, `neotree` -> `NeoTree`. This is
+       the normalization `drift.lua` already used to map stems onto
+       lazy.nvim names; it lives in `plugin_scope.normalize` and is shared,
+       so `:Bindings search dap` and `:Bindings check dap` cannot disagree;
+    3. ONLY in the `plugin={prefix}` form: prefix matching
+       (`plugin=documentat` -> `documentation.nvim`). A prefix naming more
+       than one stem is an error listing them, never a guess.
+
+One token may name several sheets, and that is not an error: `dap` is
+`Keymaps/dap.nvim.md` (personal) and `Keymaps/Dap.md` (extern) — one plugin,
+documented from both sides, and a search over both is what was asked for.
+Only `check`/`report` need exactly one stem (they filter on
+`rec.plugin == plugin`); there an exactly typed name beats its normalized
+twin, and a genuinely ambiguous token is reported rather than narrowed.
+
+Why prefixes do not apply to `search`: its first positional carries a scope OR
+a query — `:Bindings search keymaps redact` was a text search before scopes
+existed and still is. So only a token that NAMES a sheet counts as a scope.
+Position does not matter (`hover.nvim zoom` and `zoom hover.nvim` are the same
+request), and two tokens of which neither names a sheet are a typo, not a
+two-word query — one pattern is searched for, never two. To search for a
+plugin NAME as text, type it into the picker instead of the command line.
+
 ==============================================================================
 3. ARCHITECTURE                                 *bindings_explorer-architecture*
 
@@ -255,6 +311,7 @@ Module: `lua/bindings/usrcmds/bindings_explorer/`
   • search.lua   - static substring search (Phase 1 fallback)
   • live.lua     - live-grep via pickers.nvim's engine layer (Phase 1)
   • ui.lua       - kit.select wiring for search.lua's hits
+  • plugin_scope.lua - cheatsheet stem -> files, for every {plugin} slot
   • records.lua  - tolerant table-row scraper (Phase 2)
   • browse.lua   - kit.select wiring for records.lua's rows
   • drift.lua    - documented-vs-live comparison (Phase 3)

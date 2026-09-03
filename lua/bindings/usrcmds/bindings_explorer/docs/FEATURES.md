@@ -11,6 +11,7 @@ Roadmap gelöscht (Feature ist längst umgesetzt, Phase 1–3 alle fertig).
 Module: `lua/bindings/usrcmds/bindings_explorer/` — `init.lua` (Composer-
 Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
 `ui.lua` (Phase 1 Fallback-Suche), `live.lua` (Phase 1 Live-Grep),
+`plugin_scope.lua` (Cheatsheet-Stamm → Dateien, für jeden `[plugin]`-Slot),
 `records.lua` + `browse.lua` (Phase 2 Tabellen-Scraper + Picker),
 `drift.lua` + `source.lua` + `repo.lua` (Phase 3 Drift-Bericht, vier Achsen),
 `report.lua` + `status.lua` (Phase 4 Berichtsdatei + Dashboard).
@@ -23,7 +24,7 @@ dieser Datei nachprüfen will, liest zuerst dort die Vorkehrungen.
 
 ## Volltextsuche (`:Bindings search`)
 
-`:Bindings search [keymaps|usercmds|autocmds] [query]`
+`:Bindings search [keymaps|usercmds|autocmds] [plugin] [query]`
 
 Durchsucht beide BINDINGS-Bäume (oder nur eine der drei Unterkategorien)
 Zeile für Zeile nach `query`, case-insensitiv. Zwei Backends, automatisch
@@ -44,7 +45,60 @@ Beispiele:
 :Bindings search keymaps redact
 :Bindings search usercmds
 :Bindings search autocmds BufEnter
+:Bindings search keymaps hover.nvim         " nur hover.nvims Keymaps-Sheet
+:Bindings search keymaps hover.nvim zoom    " dort nach "zoom"
 ```
+
+Der Plugin-Scope gilt für `search`, `browse`, `check` und `report` — siehe
+[Plugin-Scope](#plugin-scope-hovernvim-statt-166-dateien) weiter unten.
+
+## Plugin-Scope (`hover.nvim` statt 166 Dateien)
+
+`[plugin]` ist ein **Cheatsheet-Stamm**: der Dateiname ohne `.md`, also
+`hover.nvim`, `Gitsigns`, `nvim-config` — dasselbe Feld, das `records.lua` als
+`plugin` führt. Aufgelöst wird in `plugin_scope.lua`, und der Scope ersetzt für
+`search` die Wurzeln durch die Dateien des Plugins, statt zusätzlich zu
+filtern: beide Backends nehmen an derselben Stelle Dateien wie Verzeichnisse
+(ripgrep ohnehin, `search.lua` seit demselben Commit), also ist die gescopte
+Suche dieselbe Suche über weniger Pfade.
+
+**Wie ein Token zum Stamm findet**, in dieser Reihenfolge:
+
+1. der Stamm selbst, Groß-/Kleinschreibung egal (`HOVER.NVIM`);
+2. derselbe Name ohne die `.nvim`/`nvim-`-Dekoration und ohne Trenner —
+   `hover` → `hover.nvim`, `neotree` → `NeoTree`. Das ist dieselbe
+   Normalisierung, mit der `drift.lua` Cheatsheet-Stämme auf lazy.nvim-Namen
+   abbildet; sie wohnt seit dem Plugin-Scope in `plugin_scope.normalize` und
+   wird von dort mitbenutzt, damit `:Bindings search dap` und
+   `:Bindings check dap` nicht verschieden auflösen können;
+3. **nur** in der Form `plugin=<präfix>`: Präfix-Auflösung
+   (`plugin=documentat` → `documentation.nvim`). Trifft ein Präfix mehrere
+   Stämme, ist das ein Fehler mit Kandidatenliste, keine Auswahl auf Verdacht.
+
+Ein Token darf mehrere Sheets benennen, und das ist kein Fehler: `dap` ist
+`Keymaps/dap.nvim.md` (personal) und `Keymaps/Dap.md` (extern) — ein Plugin,
+von zwei Seiten dokumentiert, und eine Suche über beide ist das Gewünschte.
+Nur `check`/`report` brauchen genau einen Stamm (sie filtern über
+`rec.plugin == plugin`); dort gewinnt der exakt getippte Name gegen seinen
+normalisierten Zwilling, und bleibt es mehrdeutig, sagen sie das, statt einen
+zu wählen.
+
+**Warum die Präfixe bei `search` nicht gelten.** Der erste Positionswert trägt
+dort Scope ODER Query — `:Bindings search keymaps redact` war eine Textsuche,
+bevor es Scopes gab, und ist es geblieben. Als Scope zählt deshalb nur ein
+Token, das ein Sheet *benennt*; ein Präfix wie `doc` ist ein Wort, das man auch
+sucht. Die Stellung entscheidet nicht mit: `hover.nvim zoom` und
+`zoom hover.nvim` heißen beide „zoom, im Scope hover.nvim". Zwei Tokens, von
+denen keines ein Sheet benennt, sind ein Tippfehler und werden gemeldet —
+gesucht wird mit einem Muster, nicht mit zweien. Wer einen Plugin-Namen als
+**Text** sucht, tippt ihn in den Picker statt in die Kommandozeile.
+
+`<Tab>` bietet in jedem Plugin-Slot die Stämme der bereits getippten Kategorie
+an (`:Bindings search keymaps <Tab>` → die Keymaps-Sheets), bei `browse`
+zusätzlich `personal`/`extern`. Der eigene Argumenttyp dahinter heißt
+`BINDINGS_PLUGIN` und wird in `M.enable()` registriert; die Korpusliste dahinter
+wird fünf Sekunden lang zwischengespeichert, weil Completion pro Tastendruck
+fragt und der Korpus sich beim Editieren trotzdem ändern darf.
 
 ## Wurzelpfade kopieren (`:Bindings path`)
 
@@ -64,7 +118,7 @@ tatsächlichen Pfaden statt dessen einzelnem, nie existierenden
 
 ## Tabellenzeilen-Picker (`:Bindings browse`)
 
-`:Bindings browse [keymaps|usercmds|autocmds] [personal|extern]`
+`:Bindings browse [keymaps|usercmds|autocmds] [plugin] [personal|extern]`
 
 Statt Volltext über rohe Zeilen durchsucht `browse` **geparste
 Tabellenzeilen**: `records.lua` liest jede Cheatsheet-Datei, findet jede
@@ -107,7 +161,15 @@ Beispiele:
 :Bindings browse keymaps
 :Bindings browse keymaps personal
 :Bindings browse usercmds extern
+:Bindings browse keymaps hover.nvim
+:Bindings browse keymaps hover.nvim personal   " Reihenfolge egal
 ```
+
+Der Plugin-Scope verhält sich hier freier als bei `search`: es gibt keine
+Query, mit der ein Token verwechselt werden könnte, also löst dieser Slot auch
+Präfixe auf (`:Bindings browse usercmds documentat`), und ein Token, das weder
+`personal`/`extern` noch ein Stamm ist, wird als Fehler gemeldet statt still
+anders gedeutet.
 
 Gegen den echten Bestand verifiziert. Am 2026-08-30 lieferte
 `records.list()` 1940 Datensätze über den ganzen Korpus, davon 561 für
@@ -139,6 +201,11 @@ Nachbarzeilen.
 ## Drift-Bericht (`:Bindings check`)
 
 `:Bindings check [plugin]`
+
+`[plugin]` ist derselbe Cheatsheet-Stamm wie überall sonst und muss seit dem
+Plugin-Scope nicht mehr exakt getippt sein (`:Bindings check hover`); weil
+diese Achse über `rec.plugin == plugin` filtert, muss er sich allerdings auf
+**einen** Stamm auflösen — siehe [Plugin-Scope](#plugin-scope-hovernvim-statt-166-dateien).
 
 Read-only, kein Autofix (gleiche Haltung wie casedesks `:Cases doctor`) —
 vergleicht dokumentierte Personal-Bindings gegen das, was gerade tatsächlich

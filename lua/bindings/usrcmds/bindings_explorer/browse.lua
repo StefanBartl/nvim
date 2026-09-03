@@ -38,16 +38,20 @@ local function format_record(rec)
 end
 
 ---@param recs Bindings.Record[]
+---@param label string|nil Plugin-Scope, für Titel und Leermeldung
 ---@return nil
-local function pick(recs)
+local function pick(recs, label)
   if #recs == 0 then
-    notify().warn("Keine Tabellenzeilen gefunden")
+    notify().warn(
+      label and ("Keine Tabellenzeilen für %s gefunden"):format(label)
+        or "Keine Tabellenzeilen gefunden"
+    )
     return
   end
 
   require("lib.nvim.ui.kit.select").open({
     items = recs,
-    title = ("%d Zeilen"):format(#recs),
+    title = label and ("%d Zeilen — %s"):format(#recs, label) or ("%d Zeilen"):format(#recs),
     format_item = format_record,
     on_select = function(rec)
       vim.cmd("edit " .. vim.fn.fnameescape(rec.file))
@@ -57,12 +61,35 @@ local function pick(recs)
   })
 end
 
---- Every table row, optionally narrowed to a category and/or scope.
+--- Every table row, optionally narrowed to a category, a scope and/or a
+--- plugin.
+---
+--- The plugin narrowing is a filter on `rec.plugin` rather than a second
+--- corpus walk: `records.list` reads the same files either way, and the stems
+--- come pre-resolved from `plugin.resolve` (so `dap` here means both
+--- `dap.nvim` and `Dap`, exactly as it does for `:Bindings search`).
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@param scope ("personal"|"extern")|nil
+---@param match Bindings.PluginMatch|nil nil = every plugin
 ---@return nil
-function M.open(category, scope)
-  pick(records.list(category, scope))
+function M.open(category, scope, match)
+  local recs = records.list(category, scope)
+  if not match then
+    pick(recs)
+    return
+  end
+
+  local wanted = {}
+  for _, stem in ipairs(match.stems) do
+    wanted[stem] = true
+  end
+  local scoped = {}
+  for _, rec in ipairs(recs) do
+    if wanted[rec.plugin] then
+      scoped[#scoped + 1] = rec
+    end
+  end
+  pick(scoped, match.label)
 end
 
 return M

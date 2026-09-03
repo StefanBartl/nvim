@@ -211,6 +211,7 @@
 local records = require("bindings.usrcmds.bindings_explorer.records")
 local config = require("bindings.usrcmds.bindings_explorer.config")
 local repo = require("bindings.usrcmds.bindings_explorer.repo")
+local plugin_scope = require("bindings.usrcmds.bindings_explorer.plugin_scope")
 
 local M = {}
 
@@ -638,18 +639,17 @@ local function subroute_exists(name, words)
 end
 
 --- A plugin name reduced to what a cheatsheet stem and a repository name
---- have in common: case, the `nvim`/`vim` affixes everyone spells
---- differently, and the separators.
+--- have in common — see `plugin_scope.normalize`, which owns the rule now.
 ---
---- Deliberately not a similarity score. Every transformation here removes
---- something both sides agree is decoration; nothing here shortens one name
---- towards another.
+--- It lives there because `:Bindings search dap` resolves a typed token
+--- against the same stems by the same rule; two copies would let
+--- `search`/`browse` and this file disagree about what `dap` means, and the
+--- disagreement would show up as a report that is scoped differently than the
+--- search that led to it.
 ---@param s string
 ---@return string
 local function normalize_plugin_name(s)
-  s = s:lower()
-  s = s:gsub("%.nvim$", ""):gsub("^nvim%-", ""):gsub("^vim%-", ""):gsub("%-vim$", ""):gsub("%.vim$", "")
-  return (s:gsub("[%-_%.]", ""))
+  return plugin_scope.normalize(s)
 end
 
 ---@type table<string, string>|nil  normalized name -> the one plugin with it

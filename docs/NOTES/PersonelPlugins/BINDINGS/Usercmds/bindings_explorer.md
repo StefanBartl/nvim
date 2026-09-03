@@ -9,10 +9,12 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
 | Command | Effect |
 | --- | --- |
 | `:Bindings` | Wie `:Bindings search` |
-| `:Bindings search [query]` | Live-Grep über beide BINDINGS-Bäume (Picker-Engine via `pickers.nvim`, sonst Prompt+Liste) |
-| `:Bindings search keymaps\|usercmds\|autocmds [query]` | Dieselbe Suche, auf eine Unterkategorie gescopt |
-| `:Bindings browse [scope]` | Picker über geparste Tabellenzeilen (alle drei Kategorien) statt Volltext |
-| `:Bindings browse keymaps\|usercmds\|autocmds [scope]` | Dieselbe Tabellenzeilen-Suche, auf eine Kategorie gescopt |
+| `:Bindings search [plugin] [query]` | Live-Grep über beide BINDINGS-Bäume (Picker-Engine via `pickers.nvim`, sonst Prompt+Liste) |
+| `:Bindings search keymaps\|usercmds\|autocmds [plugin] [query]` | Dieselbe Suche, auf eine Unterkategorie gescopt |
+| `:Bindings search keymaps hover.nvim` | Nur hover.nvims Keymaps-Sheet — Plugin-Scope statt Query |
+| `:Bindings search keymaps plugin=<stamm> [query]` | Derselbe Scope ausgeschrieben; löst auch Präfixe auf (`plugin=documentat`) |
+| `:Bindings browse [plugin] [scope]` | Picker über geparste Tabellenzeilen (alle drei Kategorien) statt Volltext |
+| `:Bindings browse keymaps\|usercmds\|autocmds [plugin] [scope]` | Dieselbe Tabellenzeilen-Suche, auf eine Kategorie gescopt |
 | `:Bindings path [personal\|extern]` | BINDINGS-Wurzel(n) in die Zwischenablage kopieren |
 | `:Bindings check [plugin]` | Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only) |
 | `:Bindings check extern [plugin]` | Derselbe Bericht über den Extern-Korpus: `ExternPlugins/Bindings` gegen live, plus die fremden Commands ohne Cheatsheet |
@@ -27,8 +29,26 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
 | `:Bindings status` | Dashboard: Korpus-, Live- und Plugin-Zahlen, letzter Bericht, Routenliste |
 
 `scope` bei `browse` ist `personal`/`extern` (optional, ohne Argument beide).
+`plugin` ist ein Cheatsheet-Stamm — der Dateiname ohne `.md`, also `hover.nvim`,
+`Gitsigns`, `nvim-config`. `<Tab>` listet die Stämme der bereits getippten
+Kategorie.
 
 ## Notes
+
+- **Plugin-Scope (2026-09-03)**: `search`, `browse`, `check` und `report`
+  nehmen den Stamm auch verkürzt (`hover` → `hover.nvim`, `neotree` →
+  `NeoTree`) — dieselbe Normalisierung, mit der `check` Cheatsheet-Stämme auf
+  lazy.nvim-Namen abbildet (`plugin_scope.normalize`, von `drift.lua`
+  mitbenutzt). Bei `search` teilt sich der Scope den Platz mit der Query,
+  deshalb gilt dort **nur** der ausgeschriebene oder normalisierte Stamm als
+  Scope: `:Bindings search keymaps redact` ist weiterhin eine Textsuche.
+  Präfixe (`documentat`) löst nur die Form `plugin=documentat` auf, und ein
+  Präfix, das mehrere Stämme trifft, wird als mehrdeutig gemeldet statt auf
+  einen davon geraten. `:Bindings search keymaps hover.nvim zoom` und
+  `:Bindings search keymaps zoom hover.nvim` sind dasselbe — es zählt, welches
+  Token ein Sheet benennt, nicht die Stellung. Ein Token, das ein Sheet
+  benennt, wird als Scope gelesen; wer den Namen als **Text** sucht, tippt ihn
+  in den Picker statt in die Kommandozeile.
 
 - **Dokumentierte Unterrouten werden seit 2026-09-03 mitgeprüft**, und vorher
   gar nicht. `nvim_get_commands` kennt nur oberste Namen; ein Plugin auf
@@ -163,6 +183,11 @@ die Form eines Bugs, nicht die einer Verbesserung.
 - 2026-09-02 (3): Quelltext-Fallback im Default — eine dokumentierte Taste,
   die nicht live ist, wird im Quelltext gesucht, bevor sie ein Befund wird.
   `keymap-not-live` 52 → 1. Siehe den Abschnitt darüber.
+- 2026-09-03: **Plugin-Scope** für `search` und `browse`
+  (`:Bindings search keymaps hover.nvim`), neues Modul `plugin_scope.lua`.
+  `check`/`report` hatten das Argument schon, nehmen es jetzt aber auch
+  verkürzt. `<Tab>` schlägt in jedem dieser Slots die Cheatsheet-Stämme der
+  getippten Kategorie vor. Siehe die Notes oben.
 
 ## `:Bindings check` — die dritte Achse: Source (2026-08-15)
 

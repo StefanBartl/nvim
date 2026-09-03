@@ -169,8 +169,14 @@ local function last_report()
 end
 
 local ROUTES = {
-  { ":Bindings search [keymaps|usercmds|autocmds] [query]", "Live-Grep über den Korpus" },
-  { ":Bindings browse [keymaps|usercmds|autocmds] [scope]", "Picker über die Tabellenzeilen" },
+  {
+    ":Bindings search [keymaps|usercmds|autocmds] [plugin] [query]",
+    "Live-Grep über den Korpus",
+  },
+  {
+    ":Bindings browse [keymaps|usercmds|autocmds] [plugin] [scope]",
+    "Picker über die Tabellenzeilen",
+  },
   { ":Bindings check [plugin] [repo] [root=<dir>]", "Driftbericht im Viewer" },
   { ":Bindings report [plugin] [repo] [root=<dir>] [out=<pfad>]", "derselbe Bericht als Datei" },
   { ":Bindings path [personal|extern]", "Wurzel(n) in die Zwischenablage" },
@@ -242,8 +248,13 @@ function M.lines()
   out[#out + 1] = "Routen"
   out[#out + 1] = ""
   for _, r in ipairs(ROUTES) do
-    out[#out + 1] = ("  %-60s %s"):format(r[1], r[2])
+    out[#out + 1] = ("  %-64s %s"):format(r[1], r[2])
   end
+
+  out[#out + 1] = ""
+  out[#out + 1] = "  [plugin] ist ein Cheatsheet-Stamm (hover.nvim, Gitsigns, dap) — bei `search`"
+  out[#out + 1] = "  aber nur, wenn das Token wirklich ein Sheet benennt; sonst ist es die"
+  out[#out + 1] = "  Query. `plugin=<stamm>` erzwingt den Scope und löst auch Präfixe auf."
 
   return out
 end
