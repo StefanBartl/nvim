@@ -919,7 +919,17 @@ plugins.add({
     "StefanBartl/recommender.nvim",
     ft = { "lua" },
     cmd = { "Recommender" },
-    opts = {},
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- `cwd`/`path` scope (the one `:Recommender perf cwd` over this whole
+      -- config actually uses) runs the directory walk + file reads
+      -- asynchronously since 2026-09-03; reports into the shared
+      -- lib.nvim.progress registry, rendered by the statusline's
+      -- "plugin_progress" module -- same convention as sandbox.nvim,
+      -- documentation.nvim, replacer.nvim, insights.nvim, reposcope.nvim,
+      -- github_stats.nvim, pdfport.nvim above.
+      progress_style = "statusline",
+    },
   },
 
   {
