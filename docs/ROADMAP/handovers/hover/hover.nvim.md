@@ -40,15 +40,15 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `e5aef5c`:**
+**Gemessen nach `1badc86`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **258 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, registry 71, resize 19, scope 26, switches 30, **zoom 24**) |
+| Specs | **261 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, **registry 74**, resize 19, scope 26, switches 30, zoom 24) |
 | `stylua --check` / `luacheck` | sauber (30 Dateien) |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `zoom-post2`. Der Weg dorthin: `zoom-post` (nach `9fba190`, nie gelaufen) meldete **+16**, `zoom-fix` und `zoom-post2` je 0 |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `next-post2`. Der Weg dorthin: `next-post` (nach `ac0a372`) meldete **4**, alle aus dieser einen Änderung — `1badc86` behebt sie, `next-post2` ist 0 |
 | CI | grün auf beiden Runnern |
-| Helptags | 35 |
+| Helptags | 36 |
 
 **Die 0 pending sind neu und die Zahl, auf die zu achten ist.** Sie stand
 vorher nicht in dieser Tabelle, und genau deshalb konnte ein Spec monatelang
@@ -58,7 +58,8 @@ vorher nicht in dieser Tabelle, und genau deshalb konnte ein Spec monatelang
 Bilder und PDF-Seiten gezeichnet, Office-Dokumente über LibreOffice (opt-in),
 URLs mit optionalem Abruf, Bare Paths mit Zeilen und Ranges
 (`init.lua:42`, `file.lua:10-20`), Git-Objekte auf Nachfrage,
-Position-Previews fremder Plugins, `:Hover why`, `:Hover pin`, Resize für
+Position-Previews fremder Plugins — **mehrere für dieselbe Stelle, zum
+Durchblättern** (`<M-n>`, `:Hover next`) —, `:Hover why`, `:Hover pin`, Resize für
 **jeden** Hover (`+`/`-` über Bildern, Rad und `:Hover resize` überall),
 **echter Zoom** für Bilder (`<M-z>` / `<M-Z>` / `<M-R>`, `:Hover zoom`,
 `h/j/k/l` zum Schwenken), ein
@@ -70,9 +71,9 @@ Einzelheiten im Repo: [README](https://github.com/StefanBartl/hover.nvim),
 
 ## Wer beiträgt
 
-**Sechs über die Registry** (das Plugin nennt keinen davon beim Namen):
+**Sieben über die Registry** (das Plugin nennt keinen davon beim Namen):
 markdown.nvim, migrate.nvim, reposcope.nvim, documentation.nvim,
-spotlight.nvim, sandbox.nvim.
+spotlight.nvim, sandbox.nvim, insights.nvim.
 
 **Vier namentlich als weiche Abhängigkeit** (hover `pcall`t sie selbst):
 gopath.nvim, open.nvim, images.nvim, pdfport.nvim.
@@ -344,6 +345,26 @@ reset -> ganzes Bild;  pan ohne Zoom -> false
 
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
+
+- `1badc86` — **der erste LuaLS-Lauf über `ac0a372` fand vier Befunde**, alle
+  aus dieser einen Änderung. `_open.col` und `_open.position_nth` sind das,
+  womit das Blättern dieselbe Stelle erneut fragt, und beide standen nicht in
+  `Hover.Open` — drei Befunde für zwei Felder. Der vierte war der Spec-Helfer,
+  der `nvim_win_get_buf(float.win())` ohne die Hausform ruft. Wert dieser
+  Zeile: die Tabelle oben sagte **0 Befunde**, und das galt für den Stand
+  davor. Ein Scan pro Codeänderung, nicht pro Woche.
+- `913f2db` — insights.nvim ist verdrahtet, also ist sein Roadmap-Eintrag im
+  Repo **gelöscht** statt abgehakt (die Regel dieser Datei). Der Zähler
+  („fünf der Kandidaten sind gebaut") ist dabei ganz verschwunden statt
+  hochgezählt: er war zweimal falsch, und eine Liste daneben hat ihn ohnehin.
+  Auf insights' Seite `3e83705` — ein Position-Beitrag, der aus dem
+  gemerkten Scan antwortet und **nie** einen startet: 28 µs oder Schweigen.
+- `ac0a372` — **mehrere Plugins dürfen für dieselbe Stelle antworten**, und
+  jetzt sind alle lesbar: `<M-n>` / `:Hover next` blättert weiter und hinter
+  der letzten wieder nach vorn. Vorher gab `position_at` die *erste* Antwort
+  zurück, und wer zweiter registriert war, war unsichtbar — entschieden von
+  der Ladereihenfolge. Gezählt wird nichts im Voraus: wer antworten *würde*,
+  wüsste man nur, indem man jeden Beitrag bei jedem Hover aufruft.
 
 - `e5aef5c` — die Zoom-Zeile in `MANUAL-EVIDENCE.md` nannte nur die Route.
   Gedrückt wird `<M-z>`, und die erste Art, wie das scheitert, ist genau die,

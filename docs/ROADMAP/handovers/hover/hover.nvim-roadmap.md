@@ -631,8 +631,9 @@ dann entscheiden.
   Namenskomponente eine Endung trägt. Bei einem Wort-Nachschlag ist **jedes
   Wort ein Wort**; es gibt keine solche Vorprüfung, also ist auch unter `force`
   jede Position ein Treffer.
-- **insights.nvim** — **der Blocker ist weg** (insights.nvim `00ed488`), die
-  Verdrahtung braucht aber eine Entscheidung von dir.
+- ~~**insights.nvim**~~ — **erledigt am 2026-09-03** (insights.nvim `00ed488`
+  und `3e83705`, hover.nvim `ac0a372`). Es waren zwei Blocker, ein gemessener
+  und ein entworfener, und beide sind weg.
 
   Gemessen am 2026-09-03, warum es überhaupt einer war: ein voller Scan kostet
   **631 ms** (hover.nvim), 715 ms (insights.nvim), **1,9 s**
@@ -671,8 +672,22 @@ dann entscheiden.
   stehen, und wer es will, blättert hin. Die Frage bleibt deine, ihr Einsatz
   ist deutlich kleiner.
 
-  **Offen bleibt nur noch die Verdrahtung selbst**: insights.nvim registriert
-  bisher keinen Position-Beitrag. Der Weg dorthin ist jetzt frei.
+  **Die Verdrahtung steht** (insights.nvim `3e83705`): ein Position-Beitrag
+  für den dotted name unter dem Cursor, `hover = true` per Default, `soft` in
+  jede Richtung — ohne hover.nvim wird nichts registriert, mit einem älteren
+  hover.nvim ohne Position-Art wird die Registrierung *abgelehnt* statt
+  angenommen und nie gefragt.
+
+  Zwei Eigenschaften tragen ihn, und „findet es die Importe" ist keine davon.
+  **Ein kalter Index sagt nichts und startet nichts** — deshalb meldet
+  `:checkhealth insights` den kalten Zustand, denn von außen sieht „still"
+  genauso aus wie „kaputt". Und **ein Modul, das niemand importiert, ist
+  Schweigen, keine Null**: jeder dotted name in Prosa sieht aus wie ein Modul,
+  also *ist* die Importzahl das Tor. Beides sabotage-getestet.
+
+  Ende-zu-Ende geprüft gegen echtes hover.nvim: kalter Index → gar kein Float;
+  nach einem `scan_cwd()` → „7 file(s) import this, 18 occurrence(s)" samt
+  Dateiliste.
 
 ---
 

@@ -1,224 +1,279 @@
-# Handover — Drift-Folgearbeiten 2026-09-02
+# Handover — BINDINGS-Drift, abgeschlossen
 
-Fortsetzung von [TASKS-2026-09-02.md](../personal/All/FINISH/ERLEDIGT/TASKS-2026-09-02.md), dessen
-sieben Punkte alle zu sind. Hier stehen die vier Nacharbeiten, die der
-Driftreport übrig gelassen hatte. **Alle vier sind zu** — Punkt 4 seit dem
-Nachtrag am Ende dieser Datei, und er endete ohne Umzug: den vermuteten
-Konflikt gibt es nicht.
+## Table of content
+
+  - [Aktueller Stand](#aktueller-stand)
+  - [Wo weiterarbeiten](#wo-weiterarbeiten)
+  - [Die 80 Commands, die nur ein benutzter Editor zeigt](#die-80-commands-die-nur-ein-benutzter-editor-zeigt)
+  - [Was ausdrücklich *nicht* offen ist](#was-ausdrcklich-nicht-offen-ist)
+
+---
+
+## Aktueller Stand
+
+Stand 2026-09-02, nachts. **Alle fünf Punkte dieser Datei sind zu** — vier
+gebaut, einer entschieden — und die drei Blöcke, die aus ihrer Bearbeitung
+entstanden sind (die 80 Commands, drei fehlende Autocmds, die 16
+Keymap-Zeilen) ebenfalls. **Diese Datei hat nichts Offenes mehr**; sie kann
+ins ERLEDIGT-Archiv, sobald jemand die Bilanz gelesen hat.
+
+Was von ihr dauerhaft gilt, steht dort, wo es hingehört:
+
+| Was | Wo es steht |
+| --- | --- |
+| Wie man misst, und die sechs Fallen dabei | [`bindings_explorer/docs/MEASURING.md`](../../../../lua/bindings/usrcmds/bindings_explorer/docs/MEASURING.md) |
+| Alle gemessenen Stände mit Datum | dieselbe Datei, „Gemessene Stände" |
+| Was die Routen tun und warum so | [`bindings_explorer/docs/FEATURES.md`](../../../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md) |
+| Die `**Repo:**`-Zeile als Korpus-Element | [`BINDINGS-FORMAT.md`](../../../NOTES/BINDINGS-FORMAT.md) §5 |
+| Der `**Nicht live:**`-Marker | dieselbe Datei, §6 |
+| **Wann ein fremdes Plugin ein Blatt bekommt** | [`Usercmds/Overview.md`](../../../NOTES/ExternPlugins/Bindings/Usercmds/Overview.md) |
+| `<leader>th`, Cross-Scope-Shadowing, freie `t`-Tasten | [`Keymaps/Collisions.md`](../../../NOTES/PersonelPlugins/BINDINGS/Keymaps/Collisions.md) |
+| Der cmdlog-Fund und seine Aufklärung | [`Keymaps/cmdlog.nvim.md`](../../../NOTES/PersonelPlugins/BINDINGS/Keymaps/cmdlog.nvim.md) |
+| Der Wortlaut der erledigten Blöcke 1–2 | [ERLEDIGT-Archiv](../../personal/All/FINISH/ERLEDIGT/Bindings/bindings-drift-followups-2026-09-02.md) |
+
+**Wo der Prüfer heute steht:**
+
+| Route | Befunde | Aufschlüsselung |
+| --- | ---: | --- |
+| `:Bindings check` | **10** | 10 `autocmd-not-live` |
+| `:Bindings check extern` | **4** | 4 `autocmd-not-live` |
+| `:Bindings check all` | **14** | 14 `autocmd-not-live` |
+
+Alle drei Usercmd-Kategorien und beide Keymap-Kategorien stehen auf **0**.
+Übrig sind ausschließlich Autocmds, die feature-gated sind oder auf einen
+Trigger warten (`LspFormatOnSave`, `LspNvimSagaWinbarDepth`, `HoverDismiss`,
+`ReloadNvChad`, …).
+
+Von 167 auf 14 in fünf Schritten plus einem Nachtrag, und **keiner davon
+hat einen Befund weggeworfen**:
+
+| Schritt | all | Was er tat |
+| --- | ---: | --- |
+| Ausgangsstand | 167 | |
+| Punkt 1 — `getscriptinfo` | 167 | elf sitzungsabhängige sids durch Namen ersetzt |
+| Punkt 4 — dreizehn Zeilen + drei Blätter | 168 | −13 undokumentiert, +14 not-live |
+| Punkt 3 — Stamm-Auflösung | 54 | `keymap-not-live` 84 → 0, `usercmd-not-live` 31 → 2 |
+| Punkt 2 — Usercmd-Fallback | 52 | `usercmd-not-live` 2 → 0 |
+| Punkt 5 — Scope-Entscheidung | 11 | `usercmd-undocumented` 41 → 0 |
+| Nachtrag — drei fehlende Autocmds | **14** | `autocmd-undocumented` 3 → 0, dafür +3 `not-live` |
+
+### Die Zahl, die neben jeder dieser Zahlen stehen muss
+
+**1455 dokumentierte Zeilen wurden in diesem Lauf gar nicht geprüft**, weil
+ihr Plugin nicht geladen war (extern 619, personal 836; der Korpus zählt
+inzwischen 2055 Keymap- und Usercmd-Zeilen). Der Bericht druckt das jetzt
+selbst, direkt unter der übersprungenen Plugin-Liste — vorher stand dort nur
+die Anzahl *Plugins*, und 19 übersprungene Plugins klingen nach weniger als
+619 ungeprüften Zeilen.
+
+Dazu die dritte Zahl, die es seit dem `**Nicht live:**`-Marker gibt: **16
+Zeilen, die ihr eigener Abschnitt von der Live-Prüfung ausnimmt**. Auch die
+steht unter jedem Bericht, damit ein Opt-out nicht unsichtbar wird.
+
+Punkt 3 hat 84 `keymap-not-live` nicht repariert, sondern als das kenntlich
+gemacht, was sie waren: Aussagen über Plugins, die diese Session nie geladen
+hat. Wo sie wirklich hingehören, steht im nächsten Abschnitt.
+
+Dazu die zwei Autocmds-Zahlen unter jedem Bericht (112 dokumentierte Zeilen
+nicht prüfbar, 116 Registrierungen zuzuordnen — die zweite schwankt mit dem
+Lazy-Zustand, siehe MEASURING.md).
+
+---
 
 ## Wo weiterarbeiten
 
-| | |
-| --- | --- |
-| Repo | nvim-config (`C:/Users/bartl/AppData/Local/nvim`) |
-| Branch | `claude/nvim-config-tasks-56c97f` |
-| Worktree | `C:/Users/bartl/AppData/Local/nvim/.claude/worktrees/plugin-roadmap-review-277621` |
-| Stand | alles committet und nach `origin/main` gepusht |
-| lib.nvim | `E:/repos/lib.nvim`, `main`, sauber — `bfa09e5` gehört zu diesem Block |
+|          |                                                                            |
+| -------- | -------------------------------------------------------------------------- |
+|   Repo   |             nvim-config (`C:/Users/bartl/AppData/Local/nvim`)              |
+|  Branch  |         `main` — dort steht alles, siehe die Anmerkung darunter           |
+| Worktree |                        keiner mehr nötig                                   |
+|  Stand   |          alles committet und gepusht, Haupt-Checkout nachgezogen           |
 
-Der Branch ist mit `origin/main` deckungsgleich; es geht auch direkt auf `main`
-weiter, der Worktree ist nur der Arbeitsplatz gewesen.
+An diesem Block haben mehrere Sessions aus eigenen Worktrees gearbeitet und
+alle nach `origin/main` gepusht. `main` ist die einzige Quelle, die man dazu
+noch braucht.
 
-**Wichtig für jede Messung:** der Korpus (`docs/NOTES/**`) wird über
-`vim.fn.stdpath("config")` gelesen, also aus dem **Haupt-Checkout**, nicht aus
-dem Worktree. Solange die Doku-Änderungen nur im Worktree liegen, misst ein
-`:Bindings check` den alten Stand. Das Mess-Skript unten hat dafür einen
-Schalter. Nach einem `git pull` im Haupt-Checkout erübrigt sich das.
-
----
-
-## Status
-
-| # | Punkt | Status |
-| --- | --- | --- |
-| 1 | Die filetype-gebundenen lsp.nvim-Commands nachtragen | ✅ |
-| 2 | pickers.nvim: den Generator dokumentieren, `check` Familien beibringen | ✅ |
-| 3 | Ein Ort für die Commands der Config selbst (`:MyOpt*`, `:WKDOptions*`) | ✅ |
-| 4 | `<leader>th` ist mehrfach beansprucht | ✅ — **die Annahme war falsch**, siehe unten |
-
-Wirkung der drei fertigen Punkte, gemessen am selben Lauf:
-
-| | vorher | nachher |
-| --- | ---: | ---: |
-| Befunde gesamt | 262 | **207** |
-| `usercmd-undocumented` | 109 | **54** |
-| `usercmd-not-live` | 9 | 9 |
-| `keymap-not-live` | 137 | 137 |
+Vor jeder Messung: [MEASURING.md](../../../../lua/bindings/usrcmds/bindings_explorer/docs/MEASURING.md),
+Abschnitt „Die sechs Fallen". Headless ohne diese Vorkehrungen sind die
+Zahlen oben nicht reproduzierbar — und seit Punkt 3 gehört **Falle 5** dazu:
+ein `luafile` läuft vor `VimEnter`, hat also `VeryLazy` nie gefeuert und
+überspringt mehr als ein echter Editor.
 
 ---
 
-## 1 — Die filetype-gebundenen lsp.nvim-Commands ✅
+## Die 80 Commands, die nur ein benutzter Editor zeigt
 
-`Usercmds/lsp.nvim.md` erklärte in „Zwei Ausnahmen, die keine Aliase sind"
-seit jeher, *warum* `:TypeDef*`, `:Astro*` & Co. eigene Namen behalten — die
-Liste stand nur nirgends. Neuer Abschnitt „Die filetype-gebundenen Commands"
-mit 22 Zeilen, nach Modul gruppiert: Astro (9), TypeScript-Typen (5),
-eslint/prettier (4), lua_ls (3), Markdown-Wörter (3), Completion (1).
+**Erledigt.** Entstanden aus der Arbeit an Punkt 5, nicht aus dem
+ursprünglichen Bericht — und im selben Zug abgearbeitet.
 
-Die Beschreibungen sind aus den `desc`-Feldern der jeweiligen
-`usercmd.create`-Aufrufe in lsp.nvim gezogen, nicht erfunden.
+**Die Null oben gilt für eine Session, die 17 Extern-Plugins nie geladen
+hat.** Derselbe Lauf, mit allen per `Lazy! load` geladen — also dem Zustand,
+den ein benutzter Editor nach einer Weile erreicht:
 
-## 2 — pickers.nvim: der Generator statt seiner 23 Ergebnisse ✅
+| | Standardlauf | alle geladen, vorher | alle geladen, jetzt |
+| --- | ---: | ---: | ---: |
+| `usercmd-undocumented` | 0 | 80 | **0** |
+| `usercmd-not-live` | 0 | 0 | **0** |
+| `keymap-not-live` | 0 | 16 | **10** |
+| extern gesamt | 4 | 140 | **13** |
+| `all` gesamt | 14 | 151 | **21** |
+| übersprungene Stämme (extern) | 17 | 0 | 0 |
 
-Zwei Hälften.
+Die 80 nach Eigentümer:
 
-**Doku:** `Usercmds/pickers.nvim.md` bekommt eine Tabellenzeile
-`:*Files` / `:*Grep` / `:*Smart` plus einen Abschnitt, der den Generator
-(`bindings/collections.lua`) beschreibt. Bewusst *keine* Liste der 23 Namen —
-die entstehen aus einer Schleife über die Collection-Liste der Config, und
-eine handgeschriebene Kopie davon wäre genau der Fehler, den dieses Repo
-sonst überall benennt.
+| Plugin | n | Lage |
+| --- | ---: | --- |
+| `vim-fugitive` | 30 | `:G` `:Git` `:GDelete` `:GMove` `:GRename` `:Gdiffsplit` … — hat ein Keymaps-Blatt, aber keines für Commands |
+| `nvim-dap` | 13 | `Usercmds/Dap.md` dokumentiert den eigenen Wrapper `dap.nvim`, nicht nvim-daps eigene |
+| `nvim-dap-view` | 11 | `:DapView*` — dieselbe Lücke |
+| `vim-visual-multi` | 7 | Keymaps-Blatt vorhanden, Commands nicht |
+| `vim-test` | 6 | im Korpus bisher gar nicht |
+| `nvim-dap-virtual-text` | 4 | `:DapVirtualText*` |
+| `neogit` | 3 | |
+| `unicode.vim`, `diffview.nvim` | je 2 | |
+| `neotest`, `blink.cmp` | je 1 | |
 
-**Code:** `records.command_globs()` liest `*`-Familien, `records.family_claims()`
-sammelt sie, und `drift.lua` akzeptiert ein Live-Command als abgedeckt, wenn
-eine Familie passt.
+**Angewendet wurde die Regel aus** [`Usercmds/Overview.md`](../../../NOTES/ExternPlugins/Bindings/Usercmds/Overview.md):
+Arbeitsablauf bekommt ein Blatt, Werkzeug bekommt eine Zeile.
 
-Zwei Einschränkungen, beide durch Messen gefunden und nicht vorher gedacht:
+Sechs neue Blätter — `Fugitive` (36 Commands), `DapView` (11), `Diffview`
+(7), `VisualMulti` (7), `Neogit` (4), `DapVirtualText` (4) — und drei
+erweiterte: `Dap` um nvim-daps eigene fünfzehn, `Neotest` um `:Neotest` und
+vim-tests sechs, `Unicode` um zwei Aliase. `:BlinkCmp` ist als Werkzeug in
+Overview.md gelandet, vim-tests sechs sind bewusst **im Neotest-Blatt**
+gelandet und nicht in einem eigenen: vim-test kommt als Dependency des
+Adapters `neotest-vim-test` mit, nicht als eigenes Werkzeug dieser Config.
 
-* **Nur Tabellenzeilen, nie Fließtext.** Die lose erste Fassung las auch
-  Prosa und ließ damit 18 Familien los, darunter `^Lsp[%w_]+$`, `^Diff[%w_]+$`
-  und `^Copy[%w_]+$`. Der Korpus schreibt `:Lsp*` in Sätzen als Typografie,
-  nicht als Anspruch auf jeden passenden Namen.
-* **Eine Familie deckt nur Commands ihres eigenen Plugins.** Sonst schluckte
-  `:*Files` aus `pickers.nvim.md` auch diffview.nvims `:DiffviewFocusFiles`
-  und `:DiffviewToggleFiles`. Der Abgleich läuft über `command_owner` — also
-  über genau die Eigentümerspalte, die vorher in diesem Block entstanden ist.
+**Die Kontrolle, die zählt:** der Standardlauf bleibt bei 11 (die 14 kamen
+erst durch den Autocmd-Nachtrag darunter). Die neuen
+Blätter erzeugen also keine `not-live`-Befunde — anders als
+`Usercmds/Noice.md` in Punkt 4, das genau das getan hatte. Der Unterschied
+ist die Stamm-Auflösung: jedes neue Blatt trägt einen Namen, den
+`stem_plugin` auf sein Plugin abbildet, und ein nicht geladenes Plugin wird
+übersprungen statt gemeldet.
 
-Nebenbei entfernt: ein selbstverschuldeter Falschbefund. Die Tabellenzeile,
-die den `path:L1-L2`-Fix beschreibt, enthielt selbst ein `` `:Name` `` und
-wurde prompt als dokumentiertes, nicht registriertes Command gemeldet.
+**Der Nebenfund:** vier Blätter behaupteten, ihr Plugin bringe „keine
+Usercmds mit (reine API-Lib)" — `Conform`, `Treesitter`, `Dap` und
+`Neotest`. Jedes Mal falsch, und jedes Mal aus demselben Grund: die Aussage
+galt für die Bibliothek und nicht für ihr `plugin/`-Verzeichnis. nvim-dap
+allein hat fünfzehn Commands.
 
-## 3 — Ein Ort für die Commands der Config selbst ✅
+### Kleiner Nebenfund: neun Zeilen mit fehlender dritter Spalte
 
-Der Driftreport folgerte, der nach Plugins geschnittene Korpus habe für
-`:MyOpt*`/`:WKDOptions*` keinen Platz. **Das war ein Trugschluss:**
-`Usercmds/nvim-config.md` ist genau dieser Ort und nennt
-`wkdoptions/commands/register.lua` seit jeher als Quelle — die sieben Zeilen
-fehlten schlicht. Nachgetragen im Abschnitt „Options", mit der Erklärung,
-warum die Namen so unzusammenhängend aussehen: ein generischer Registrar mit
-Default-Namen (`WKDOptSet`, `WKDHighlightSet`), den beide Aufrufer
-überschreiben (`MyOpt*` bzw. `WKDOptionsHL*`). Keiner der Default-Namen
-existiert in einer laufenden Session, weshalb ein Grep im Registrar nach den
-Live-Namen nichts findet.
+Beim Nachzählen des Korpus aufgefallen, nicht beim Prüfen. `records.list()`
+liefert heute **2333** Datensätze (2026-08-30 waren es 1940), und **neun**
+davon haben eine dreispaltige Kopfzeile bei nur zwei Zellen:
 
----
+* `Usercmds/documentation.nvim.md`, Z. 99–106 — acht `:DocMap`-Zeilen, denen
+  die „schreibt?"-Spalte fehlt (`:DocMap serve` und `:DocMap helptags` direkt
+  darüber haben sie).
+* `Usercmds/lib.nvim.md`, Z. 15 — dieselbe Form.
 
-## 4 — `<leader>th` ✅ ein globaler Anspruch, kein Konflikt
+**Folgenlos für jede Achse**: die Zuordnung läuft über den Header-Index auf
+die Command-Spalte, und die war vorhanden. Es war eine reine
+Format-Abweichung.
 
-**Der Auftrag lautete ursprünglich: vierfach vergeben (NvChad, filetree.nvim,
-language.nvim, lsp.nvim). Nach der Prüfung sind es zwei — und die beiden
-kollidieren nicht, sie verdecken einander.**
+**Erledigt am 2026-09-02, aus den Quellen statt aus der Beschreibung.** Die
+„Writes?"-Spalte der acht `:DocMap`-Routen ist im Quelltext nachgesehen: nur
+`annotate` schreibt, und auch das erst mit `--write` (in die Quelldatei) oder
+`--sidecar` (`*.annot.lua`) — ohne Flag ist es reine Vorschau. Die anderen
+sieben rufen keine Schreiboperation auf. Für `:Lib hover toggle` ist geprüft,
+dass lib.nvim keinen flachen hover-Command besitzt; die Zelle heißt jetzt
+„none — new surface" wie bei seinen Nachbarzeilen.
 
-Die Tabelle ist der Stand *vor* der Klärung; die Zeilen tragen nach, wie sie
-ausgegangen sind.
-
-| Anspruch | Befund |
-| --- | --- |
-| **lsp.nvim** — Inlay Hints global umschalten | **Gewinnt live.** `nvim_get_keymap("n")` liefert genau eine Bindung für `<leader>th`, desc „LSP: Toggle inlay hints (global)", aus `lsp.nvim/lua/lsp/bindings/actions.lua:192` |
-| **NvChad** — Theme-Picker | **Kein Anspruch — geklärt, siehe unten.** Die Zeile `NvChad/lua/nvchad/mappings.lua:67` (`require("nvchad.themes").open()`) existiert, aber diese Config lädt das Modul nie: `package.loaded["nvchad.mappings"]` ist nach einem vollen Start `false`. `lua/wkdnvchad/init.lua:14` ruft ein *anderes* Modul (`wkdnvchad.mappings`), dessen `all = true` nur `<Tab>`, `<S-Tab>`, `<leader>bc`, `<leader>tr`, `<leader>tl` und `<leader>tt` setzt |
-| **filetree.nvim** — Trash-History | **Echter zweiter Anspruch, aber buffer-lokal.** `<leader>th` ist der Default des Config-Feldes `keymap_history` (`features/fileops/trash/init.lua:62`). Nachgemessen: die Taste kommt **nicht** über neo-trees `window.mappings` — dort steht sie in keiner Quelle —, sondern über filetrees eigenen tree-attach-Dispatcher, buffer-lokal am Baum-Buffer. Damit ist es Shadowing, keine Kollision |
-| **language.nvim** — Thesaurus | **Kein Anspruch.** `config/DEFAULTS.lua:117` hat `keymap = false` mit dem Kommentar „opt-in"; die Taste wird per Default nicht gebunden. Der Kommentar in `thesaurus/init.lua:145` (`3<leader>th`) beschreibt nur, wie ein Count wirken *würde* |
-
-### Die offene Frage, beantwortet (2026-09-02, nachmittags)
-
-**Nein.** `wkdnvchad.mappings.setup({ all = true })` setzt NvChads
-`<leader>th` nicht. Es ist ein anderes Modul und bindet ausschließlich
-`<Tab>`, `<S-Tab>`, `<leader>bc`, `<leader>tr`, `<leader>tl` und `<leader>tt`
-(`lua/wkdnvchad/mappings/init.lua`). NvChads eigenes `lua/nvchad/mappings.lua`,
-in dem der Theme-Picker steht, wird von dieser Config **nirgends** `require`d —
-nach einem vollen Start ist `package.loaded["nvchad.mappings"]` `false`. Der
-einzige weitere Treffer im Repo ist eine Legacy-Notiz unter
-`docs/NOTES/ExternPlugins/Legacy-Notes-Import/`.
-
-Damit endet der Auftrag, ohne dass etwas umzieht. Gemessen headless gegen den
-echten Config-Start:
-
-```
-global n-mode hits: 1
-  lhs=" th"  desc=LSP: Toggle inlay hints (global)
-    src=E:/repos/lsp.nvim/lua/lsp/bindings/actions.lua:192
-package.loaded['nvchad.mappings'] = false
-```
-
-Und im geöffneten Baum (`:Neotree show filesystem`, dann
-`nvim_buf_get_keymap`): ebenfalls genau ein Treffer,
-`filetree: show trash history`.
-
-**Was es stattdessen ist: Cross-Scope-Shadowing** — die Kategorie, die
-`Keymaps/Collisions.md` schon für `<leader>ps`, `gP` und `+`/`-` führt. Dort
-steht `<leader>th` jetzt als vierte Zeile, mit beiden widerlegten Ansprüchen
-daneben, damit diese Untersuchung kein drittes Mal gemacht wird.
-`Keymaps/lsp.nvim.md` und `Keymaps/filetree.nvim.md` verweisen darauf.
-
-**Ein Unterschied zu den drei bestehenden Zeilen, der benannt gehört:** deren
-Begründung — „im Baum gibt es keine Datei, auf die die globale Taste wirken
-könnte, also geht nichts verloren" — trägt hier nicht. lsp.nvims Toggle ist
-*global*, keine Aktion auf dem Knoten unter dem Cursor. Im Baum ist er also
-wirklich unerreichbar, nicht bloß gegenstandslos. Ausweg: Baum verlassen, oder
-`<leader>tH` fürs aktuelle Filetype.
-
-**Zwei Sackgassen, die eine Neuauflage sich sparen kann.** Beide sahen nach
-einem Fund aus und waren keiner:
-
-* filetrees `attach.lua` schreibt seine Keymaps mit `w.mappings[k] = v`
-  bedingungslos in neo-trees `window.mappings` — es sah so aus, als
-  überschriebe das die `noop`s der Config. Gemessen: tut es nicht.
-  `<leader>th` steht in *keiner* `window.mappings`; filetree bindet die Taste
-  über seinen tree-attach-Dispatcher buffer-lokal.
-* neo-trees `normalize_map_key("<leader>th")` liefert `"<leader>th"` zurück,
-  unverändert. Es gibt also keine zweite Schreibweise (`" th"`), unter der ein
-  Eintrag „versteckt" läge.
-
-**Nebenbefund, der nirgends stand:** die Config schaltet `<leader>th` in
-neo-trees beiden read-only-Quellen bewusst ab —
-`config/neotree/keymaps/diagnostics.lua:78` und `document_symbols.lua:75`
-mappen sie auf `noop`, zusammen mit den übrigen dateiverändernden Tasten. In
-einer Diagnoseliste gibt es nichts zu löschen. Steht jetzt in
-`Collisions.md`.
-
-**Freie `t`-Tasten** (aus Punkt 1 des Hauptblocks, damals gegen nvim-config,
-NvChad-Defaults und alle Repos unter `E:\repos` geprüft): `ta td ti tj tk tm
-tu ty tz` — `tb` ist seither an lsp.nvims Lightbulb vergeben. Ein Gegencheck
-gegen die laufende Session bestätigt sie: global belegt sind unter `<leader>t`
-nur `tB tH tb tft th tl tq tr tt`.
-
-Falls je etwas umziehen sollte, gehören mit: das Cheatsheet des betroffenen
-Repos, die `Keymaps/*.md` in der Config, und `Keymaps/Collisions.md`.
+Der Korpus hat damit wieder **null** Zeilen, deren Zellenzahl von ihrer
+Kopfzeile abweicht.
 
 ---
 
-## Werkzeuge, die beim Weitermachen helfen
+### Die 16 Keymap-Zeilen, einzeln nachgesehen — null echte Kandidaten
 
-**Driftlauf gegen den Worktree-Korpus** (misst Code *und* Doku dieses
-Branches, ohne den Haupt-Checkout anzufassen):
+Hier stand „höchstens vier echte Kandidaten". Einzeln angesehen sind es
+**null**; die Überschrift der jeweiligen Tabelle sagt es meist selbst.
 
-```
-DRIFT_WORKTREE_CORPUS=1 DRIFT_OUT=<datei> nvim --headless -c "luafile <scratch>/drift_run.lua" -c "qa!"
-```
+| Klasse | n | Was getan wurde |
+| --- | ---: | --- |
+| Abgeschalteter Plugin-Default (`VM_default_mappings = 0`) | 3 | `**Nicht live:**`-Marker |
+| Taste einer fremden Oberfläche (LazyGit-TUI) | 1 | `**Nicht live:**`-Marker |
+| Verweistabelle auf andere Blätter | 1 | `**Nicht live:**`-Marker |
+| Keine Taste, sondern Vim-Doku-Notation | 1 | Notation korrigiert |
+| Buffer-lokal, UI nicht offen | 10 | nichts — korrekt gemeldet |
 
-Das Skript liegt im Scratchpad dieser Session und ist damit weg. Es tut drei
-Dinge, die eine Neuauflage wieder brauchen wird:
+`keymap-not-live` steht damit bei geladenen Plugins auf **10**, und die zehn
+sind ausschließlich die dokumentierte Nicht-Befund-Klasse 1: sieben Tasten im
+Telescope-Picker, `zo` im Trouble-Fenster, zwei im VM-Modus. Sie wären live,
+sobald das jeweilige Fenster offen ist.
 
-1. Die `bindings_explorer`-Module über `package.preload` aus dem Worktree
-   laden. **Ein `rtp`-Prepend reicht nicht** — `vim.loader` cacht die
-   Zuordnung Modulname → Datei auf der Platte, und auch `vim.loader.reset()`
-   holt danach weiter die Kopie des Haupt-Checkouts.
-2. `config.roots()` auf die Doku-Bäume des Worktrees umbiegen.
-3. `drift.check(nil, { repo = true })` laufen lassen und nach `kind` zählen.
+**Der `**Nicht live:**`-Marker ist neu** und in
+[`BINDINGS-FORMAT.md`](../../../NOTES/BINDINGS-FORMAT.md) §6 beschrieben: eine
+Zeile unter der Überschrift nimmt die Tabellen eines Abschnitts von der
+Live-Prüfung aus. Drei Sorten Tabelle brauchen ihn — abgeschaltete Defaults,
+Tasten einer fremden Oberfläche, Verweistabellen. Nur die Live-Richtung ehrt
+ihn; die Zeilen bleiben in `browse` und zählen als Dokumentation, und der
+Bericht druckt die Zahl der markierten Zeilen (aktuell 16).
 
-Ab jetzt geht auch einfach `:Bindings report repo` — die Route schreibt
-denselben Bericht als Markdown und ist in diesem Block entstanden.
+**Der eine echte Fehler:** `Keymaps/Fugitive.md` schrieb die Vim-Doku-Notation
+für „optionales Register, dann `y<C-G>`" als wäre sie eine Taste. Live
+nachgesehen heißt die Map schlicht `y<C-G>`. Korrigiert.
 
-## Was danach immer noch offen ist
+---
 
-Aus dem Driftreport, unverändert und bewusst nicht angefasst:
+## Was ausdrücklich *nicht* offen ist
 
-* **54 undokumentierte Live-Commands** bleiben, davon der große Rest
-  Fremdinfrastruktur (`:Gitsigns`, `:Mason*`, `:Noice*`, Vimscript-Plugins),
-  die dieser Korpus nie abgedeckt hat. Eine Scope-Entscheidung, keine
-  Fleißarbeit.
-* **137 `keymap-not-live`** — fast alle buffer-lokale Tasten einer UI, die in
-  einer headless-Session nicht offen ist. Der Bericht sagt das selbst und
-  bietet „Open it and re-run" an.
-* **7 `keymap-not-in-repo`** — debugging.nvims zur Laufzeit gebautes
-  `prefix .. "m"`, der dokumentierte Falschbefund der Grep-Achse.
+Damit es nicht ein weiteres Mal untersucht wird:
+
+* **Die Options-Pfade in `Keymaps/insights.nvim.md`** (`def_cfg.keymaps.jump`
+  & Co. in der Key-Spalte) sind **kein** Format-Defekt. `first_token` liest die
+  Form `` `pfad` (`taste`) `` richtig und nimmt die Klammer-Gruppe; die Zeilen
+  werden geprüft und sind bestätigt.
+* **`<leader>th`** ist kein Konflikt, sondern Cross-Scope-Shadowing, und steht
+  vollständig in `Keymaps/Collisions.md`.
+* **git-conflicts Default-Keymaps** (`co` `ct` `cb` `c0` `]x` `[x`) sind
+  **buffer-lokal und werden erst gesetzt, wenn der Buffer einen Konflikt
+  enthält**. `]x`/`[x` erscheinen auch bei Diffview — auch dort buffer-lokal,
+  in dessen eigenen Fenstern. Die beiden treffen sich nicht.
+* **Die 7 `keymap-not-in-repo`** von `debugging.nvim` sind dessen zur Laufzeit
+  gebautes `prefix .. "m"` — der dokumentierte Falschbefund der Grep-Achse.
+  **Dieselbe Klasse, neu belegt:** noice generiert seine 17 Einzelcommands aus
+  den Keys seiner Command-Tabelle (`"Noice" .. key`), im Quelltext steht
+  `stats` und nie `NoiceStats` — 13 `usercmd-not-in-repo` unter
+  `check repo extern`, alle unecht.
+* **`:UnicodeDownload`/`:DigraphNew` bleiben unauffindbar**, und das ist keine
+  Lücke, die man schließt. Sie stehen als `com! -bang UnicodeDownload …`,
+  also **unquoted**, und `repo.mentions` matcht nur Quoted-Literals.
+* **`vimscript script_id=-8`** ist kein Defekt, sondern der ausdrückliche
+  Rückfall der Eigentümerspalte: eine negative `script_id` gehört keinem
+  gesourceten Skript, `getscriptinfo` kann sie nicht auflösen, und dann ist
+  ein erkennbares Nicht-Ergebnis besser als ein geratener Name.
+  `nvim-dap-virtual-text`s vier Commands sind der erste echte Beleg dafür,
+  dass dieser Zweig gebraucht wird.
+* **`nvim-tree.lua` bleibt installiert.** Diese Config benutzt neo-tree, und
+  kein Spec unter `lua/` deklariert nvim-tree — `filetree.nvim` unterstützt es
+  aber als Adapter-Alternative, und es lädt nur auf Command. Entschieden am
+  2026-09-02.
+* **Die Familien-Notation gilt auch für Augroups** (`records.wildcard_pattern`),
+  gebunden an Tabellenzeile und Eigentümer, nur in die
+  Undokumentiert-Richtung. `autocmd-undocumented` fiel damit von 16 auf **0**.
+* **Das Autocmds-Blatt für nvim-config existiert** (`Autocmds/nvim-config.md`).
+  55 Aufrufstellen: 40 in 26 Augroups, 15 ohne jede Augroup.
+* **Die Autocmds-Achse ist gebaut** (`21ed8082`). Beide Richtungen, die
+  Zählfalle über `(Augroup, Event)`-Paare umgangen.
+* **`:NoiceError` gibt es nicht** und gab es nie: noice baut seine
+  Einzelcommands aus den Keys seiner Command-Tabelle, und der Key heißt
+  `errors`. Der Stub lud noice, tat sonst nichts, und beim zweiten Aufruf kam
+  E492. Korrigiert in `lua/plugins/ui.lua`.
+* **conform.nvim und nvim-treesitter haben sehr wohl eigene Usercmds.** Beide
+  Blätter behaupteten das Gegenteil; der Prüfer hat es gefunden.
+* **cmdlog.nvims `ctrl-f`/`ctrl-t`** sind erledigt: der Code hat sie seit dem
+  Merge `ed60f8f` nicht mehr, die Doku ist in beiden Repos nachgezogen.
+* **Der Teilstring-Resolver ist geprüft und verworfen.** „Längster passender
+  Teilstring" liegt über dem echten Korpus zweimal still daneben
+  (`Telescope` → `telescope-file-browser.nvim`, `NeoTree` →
+  `neo-tree-tests-source.nvim`). Die drei Schritte in `stem_plugin` lösen 21
+  der 24 Stämme auf, die drei übrigen tragen ihre `**Repo:**`-Zeile.
+* **`:LibLogger` ist kein Befund mehr**, und die frühere Behauptung, das
+  Literal stehe in lib.nvim nirgends, war falsch gemessen — es steht in
+  `lua/lib/nvim/logger/command.lua:42`. Die Korrektur steht als Blockquote in
+  MEASURING.md.
+
+---
