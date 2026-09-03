@@ -23,8 +23,8 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:50       |    97% / 20%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     01:00       |    95% / 19%     |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     17:10       |    86% / 30%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     14:00       |    95% / 29%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     11:10       |   100% / 47%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     02:00       |    94% / 47%     |
 
@@ -46,6 +46,7 @@ Keine Co-Author nennung von claude in den git commits.^
 
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
+    hover.nvim kann verwenbdet werden
 - [ ] TAKT -> aai impllementierung von anfang an mitbauen
 
 ---

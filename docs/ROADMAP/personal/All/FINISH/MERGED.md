@@ -60,6 +60,12 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Liste B - Claude Tasks
 
+- [ ] deo isntaller: ewigenes Plugin vl mit lazy installer neuscheriben kombineinre, sodas bei plugin isntall ghleic cli tools checked werdebn?
+- [ ] Wenn cli toios in einen meuiner plugins verwendet wird, wie wird es dem use snagezegit wenn es fehlt?
+
+- [ ] mdview.nvim
+  - [ ] Momentan wird wenn ich in nvim MDView satart ausführe im broswe das doc geöäffnet, wenn ich in nvim zu einen anderen buffer wechsle, dann wehcselt im browser auch das doc. das sollte man schnel über ein usrcmd umstellen knnen, dass das doc, das gerade in nvim offen ist "popinned" bnleibt in mdview browser, bzw unpinned.
+
 - [ ] runtime-analysis.nvim: 7 Tage reminder:
   - [ ] Wenn mehrere reminder ausgegeben werden, dann soll das in einer message, nicht in XY einzelmesages ausgegeben werden;
   - [ ] Dasboard übersicht, welche reopos gerade in welchen MOdus aufzeichnen
