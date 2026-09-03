@@ -1,0 +1,86 @@
+{
+  "tools": [
+    {
+      "bin": "tesseract",
+      "required": false,
+      "why": "Enables `:Case ocr` — reading the text out of a case's screenshots into searchable sidecar files. Runs through images.nvim's OCR module, so both have to be present. Language data beyond English is a separate package per language (tesseract-ocr-deu and friends). On Windows the UB-Mannheim installer does not add itself to PATH; images.nvim probes the usual install directory anyway, or set its `ocr.bin`.",
+      "pkg": {
+        "apt": "tesseract-ocr",
+        "dnf": "tesseract",
+        "pacman": "tesseract",
+        "zypper": "tesseract-ocr",
+        "apk": "tesseract-ocr",
+        "brew": "tesseract",
+        "winget": "UB-Mannheim.TesseractOCR",
+        "scoop": "tesseract",
+        "choco": "tesseract"
+      }
+    },
+    {
+      "bin": "pandoc",
+      "required": false,
+      "why": "Converts a case bundle to standalone HTML on the way to `:Case export`'s PDF, which a headless Chrome/Edge then prints. Without it the export reports the missing tool and stops — there is no second conversion path.",
+      "pkg": {
+        "apt": "pandoc",
+        "dnf": "pandoc",
+        "pacman": "pandoc",
+        "zypper": "pandoc",
+        "apk": "pandoc",
+        "brew": "pandoc",
+        "winget": "JohnMacFarlane.Pandoc",
+        "scoop": "pandoc",
+        "choco": "pandoc"
+      }
+    },
+    {
+      "bin": "nvr",
+      "required": false,
+      "why": "Lets lazygit open a file in *this* Neovim instance instead of starting a nested one — without it, editing a file from inside the lazygit terminal traps you in an editor inside an editor.",
+      "pkg": {
+        "apt": "neovim-remote",
+        "dnf": "neovim-remote",
+        "pacman": "neovim-remote",
+        "brew": "neovim-remote",
+        "scoop": "neovim-remote"
+      }
+    },
+    {
+      "bin": "bat",
+      "required": false,
+      "why": "Syntax-highlights the file preview in the harpoon fzf menu. Purely cosmetic: without it the preview falls back to plain `cat`-style output.",
+      "pkg": {
+        "apt": "bat",
+        "dnf": "bat",
+        "pacman": "bat",
+        "zypper": "bat",
+        "apk": "bat",
+        "brew": "bat",
+        "winget": "sharkdp.bat",
+        "scoop": "bat",
+        "choco": "bat"
+      }
+    },
+    {
+      "bin": "win32yank",
+      "required": false,
+      "why": "Bridges the Neovim clipboard to the Windows clipboard from inside WSL. Only relevant there; a native Windows or Linux session uses its own provider and never looks for this.",
+      "pkg": {
+        "scoop": "win32yank",
+        "choco": "win32yank"
+      }
+    },
+    {
+      "bin": "wl-copy",
+      "bin_alternatives": ["wl-paste"],
+      "why": "Provides the clipboard under Wayland (both halves ship in one package, wl-clipboard). Without it, yanking to `+`/`*` silently does nothing on a Wayland session. Irrelevant on X11, Windows and macOS.",
+      "pkg": {
+        "apt": "wl-clipboard",
+        "dnf": "wl-clipboard",
+        "pacman": "wl-clipboard",
+        "zypper": "wl-clipboard",
+        "apk": "wl-clipboard",
+        "brew": "wl-clipboard"
+      }
+    }
+  ]
+}

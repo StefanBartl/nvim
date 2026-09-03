@@ -105,7 +105,15 @@ end
 ---@param on_done fun(result: Lib.Case.ExportResult)
 function M.export(entry, m, on_done)
   if vim.fn.executable("pandoc") ~= 1 then
-    on_done({ ok = false, err = "pandoc not found on PATH (just installed? restart nvim)" })
+    -- The reason and the install command come out of docs/install.json
+    -- rather than being restated here -- `lines` (not `check`) because this
+    -- error travels back through `on_done`, and a notification alongside it
+    -- would say the same thing twice. Falls back to the bare sentence when
+    -- lib.nvim.deps is unavailable.
+    local ok_rt, rt = pcall(require, "lib.nvim.deps.require_tool")
+    local err = ok_rt and table.concat(rt.lines("nvim", "pandoc"), " ")
+      or "pandoc not found on PATH"
+    on_done({ ok = false, err = err .. " (just installed? restart nvim)" })
     return
   end
   local browser = find_browser()

@@ -200,7 +200,15 @@ function M.run(entry, opts, on_done)
     return on_done(result)
   end
   if not images.available() then
-    result.errors[#result.errors + 1] = "tesseract not found — see :checkhealth images"
+    -- Reported out of *images.nvim's* spec, since tesseract is its declared
+    -- tool and this only borrows it: one `why`, one set of package names,
+    -- maintained in one place. Better than the old pointer at
+    -- `:checkhealth images`, which sent the reader to another plugin's
+    -- health check to find out what a case desk command needed.
+    local ok_rt, rt = pcall(require, "lib.nvim.deps.require_tool")
+    result.errors[#result.errors + 1] = ok_rt
+        and table.concat(rt.lines("images.nvim", "tesseract"), " ")
+      or "tesseract not found — see :checkhealth images"
     return on_done(result)
   end
 
