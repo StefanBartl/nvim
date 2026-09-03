@@ -28,180 +28,264 @@ fünf Funde geworden.
 
 ## Was offen ist — die Übersicht
 
-Sieben Punkte. **Sechs brauchen dich**, einer nicht.
+Vier Punkte. Stand 2026-09-03, nach einer Runde Handprüfung.
 
 | # | Punkt | Wer | Was genau fehlt |
 | --- | --- | --- | --- |
-| [1](#1-demo-gif) | **Demo-GIF** | du | `REL-09`, der letzte offene 🟢 des Release-Gates. Aufnehmen kann ich nicht. |
-| [2](#2-resize-von-hand-die-texthälfte) | **Resize von Hand: Texthälfte** | du | `:Hover resize` über einer *Textdatei*: kommen mehr **Zeilen** an, oder wächst nur der Rahmen? |
-| [3](#3-zoom-von-hand-bild-und-pdf-seite) | **Zoom von Hand** | du | Ob der Ausschnitt **gezeichnet** ankommt. Seit 2026-09-03 in zwei Formen: Bild (Crop) und PDF-Seite (Neu-Rasterung). |
-| [4](#4-office-kehrwoche) | **Office-Kehrwoche** | du | Eine Datei im Cache zurückdatieren, ein Office-Dokument hovern (`office.cache_days`, Default 7). |
-| [5](#5-die-lua-modulwurzel-kollidiert) | **Lua-Modulwurzel** | du | Umbenennen oder lassen. Heute klein, wächst mit jedem Konsumenten. |
-| [6](#6-ist-manual-der-bessere-default) | **`manual` als Default?** | du | Produktfrage: soll der Hover von sich aus aufgehen. |
-| [7](#7-languagenvim) | **language.nvim** | du | Die Produktfrage *vor* der Integration. Seit `ac0a372` deutlich billiger zu beantworten. |
-| [8](#8-was-ich-ohne-dich-tun-würde) | *(ohne dich)* | ich | `hover.scope` nach lib.nvim, wenn ein zweiter Konsument auftaucht. Sonst: nichts Dringendes. |
+| [1](#1-zoom-von-hand-und-die-tasten-die-nicht-ankommen) | **Zoom von Hand** | du + ich | Der Zoom arbeitet, das Schwenken fühlt sich richtig an — aber `<M-z>` kommt in deinem Terminal **nicht an**. Eine Diagnose und danach vielleicht andere Default-Tasten. |
+| [2](#2-office-kehrwoche) | **Office-Kehrwoche** | du | Eine Datei im Cache zurückdatieren, ein Office-Dokument hovern. Befehle stehen unten fertig. |
+| [3](#3-ein-auto-modus-pro-zieltyp) | **Auto-Modus pro Zieltyp** | Entscheidung du, Bau ich | Dein Entwurf vom 2026-09-03: von selbst nur Bilder/PDFs, alles andere dazuschaltbar. Einschätzung und ein konkreter Vorschlag unten. |
+| [4](#4-languagenvim-ein-wörterbuch-im-hover) | **language.nvim** | du | Ob ein Wörterbuch im Hover überhaupt gewollt ist. Unten neu erklärt, weil die alte Formulierung nicht verständlich war. |
 
-**Der scharfe PDF-Zoom ist seit 2026-09-03 gebaut** und aus dieser Liste
-verschwunden — siehe [Chronik](#was-zuletzt-passiert-ist). Er war der letzte
-Punkt, der weder Hand noch Entscheidung brauchte.
+**Erledigt seit der letzten Fassung, mit Datum:**
+
+- **Scharfer PDF-Zoom** — gebaut am 2026-09-03 (`7fdfc09`). Er war der letzte
+  Punkt, der weder Hand noch Entscheidung brauchte.
+- **Resize von Hand, Texthälfte** — bestätigt am 2026-09-03: es kommen **mehr
+  Zeilen** an, nicht nur ein größerer Rahmen. Damit ist die Evidenzzeile
+  vollständig (Bildhälfte 2026-09-02).
+
+  **Und meine Anweisung dazu war falsch.** Ich hatte „`+` zweimal drücken"
+  geschrieben. Über einem *Text*-Hover ist `+` gar nicht geborgt — dort ist es
+  die Motion, die es immer war, also springt der Cursor eine Zeile weiter und
+  nimmt dabei den Hover mit. Genau deshalb gibt es die Route `:Hover resize`,
+  und genau das stand in `MANUAL-EVIDENCE.md` schon richtig. Ich habe aus dem
+  Handover heraus etwas anderes behauptet als das Dokument, das dafür da ist.
+- **Lua-Modulwurzel** — entschieden am 2026-09-03: **der Name bleibt.** Keine
+  Umbenennung, keine Referenz im README. Stattdessen `docs/NAME-COLLISION.md`
+  (`e228dfb`): vier Sätze, englisch, die sagen, dass bei zwei Plugins mit der
+  Modulwurzel `lua/hover/` die Ladereihenfolge entscheidet, welches erreichbar
+  ist. Nichts zeigt darauf, weil die Notiz nur den interessiert, der schon
+  beide installiert hat und sich wundert.
+- **Demo-GIF** — von der Liste genommen. Kommt am Schluss für alle `.nvim`-
+  Plugins in einem Aufwasch.
 
 ---
 
 ## Die offenen Punkte, einzeln
 
-### 1. Demo-GIF
+### 1. Zoom von Hand, und die Tasten, die nicht ankommen
 
-**Was fehlt.** `REL-09` aus dem Release-Gate, und der einzige 🟢, der noch
-offen ist. Die README trägt eine ASCII-Nachbildung des Floats: sie erklärt die
-Idee, aber nicht das Gefühl — und das Zeigenswerte ist, *wie wenig* der Hover
-das Lesen unterbricht. Ein Standbild kann das nicht.
+**Was bestätigt ist (2026-09-03).** Das Schwenken mit `h/j/k/l` „fühlt sich
+perfekt an" — deine Worte, und das war die Hälfte, die keine Spec beantworten
+kann. Der Zoom selbst arbeitet also: `:Hover zoom` schneidet, `h/j/k/l`
+bewegen.
 
-**Deine Aufgabe.** Aufnehmen. Ein paar Sekunden reichen: Cursor über einen
-Pfad, Float geht auf, weiterlesen, Float geht zu. Am besten mit einer der
-Klassen, die man nicht erwartet — Bild oder PDF-Seite.
+**Was nicht funktioniert.** `<M-z>` tut gar nichts, und stattdessen geht
+**which-key** auf und schlägt weitere Tasten vor.
 
-**Was ich übernehme.** Alles um die Aufnahme herum: Einbau in die README an
-der richtigen Stelle, Alt-Text, Größe, und das Abhaken von `REL-09` im Gate.
-Ich kann dir auch ein Skript schreiben, das eine Beispiel-Sitzung immer gleich
-aufsetzt, damit die Aufnahme nicht von der zufälligen Buffer-Lage abhängt.
+**Das ist ein Befund, kein Rätsel — aber die Ursache steht noch nicht fest.**
+Wenn `<M-z>` bei Neovim ankäme und nichts daran gebunden wäre, passierte
+schlicht nichts. Dass which-key aufgeht, heißt: Neovim hat etwas anderes
+bekommen. Die wahrscheinliche Form ist `<Esc>` gefolgt von `z`, also der
+Terminal-Weg für Alt-Akkorde, und `z` ist ein which-key-Präfix (Folds). Genau
+diese Verwechslung beschreibt `MANUAL-EVIDENCE.md` als die erste Art, wie das
+scheitert — sie sieht aus wie ein Plugin-Fehler und ist keiner.
 
-### 2. Resize von Hand: die Texthälfte
+**Deine Aufgabe: ein Tastendruck.**
 
-**Was fehlt.** `:Hover resize` über einer *Textdatei*. Die Frage ist genau
-die, für die das Feature umbenannt wurde: kommen **mehr Zeilen** an, oder
-wächst nur der Rahmen um denselben Text?
+```vim
+:nnoremap <M-z> <Cmd>echo "M-z kommt an"<CR>
+```
 
-**Warum keine Spec das beantwortet.** Eine Geometrie-Zusicherung liest die
-Fenstergröße zurück — sie sagt, dass der Rahmen die richtige Größe hat, nicht
-dass mehr Inhalt darin steht. Genau bei dieser Hälfte sagt sie am wenigsten.
+Dann `<M-z>` drücken:
 
-**Stand.** Die **Bildhälfte ist gesehen** (2026-09-02, `1234bb2`): das Bild
-folgt der Fläche, statt dass der Rahmen um ein stehendes Bild wächst.
+- **„M-z kommt an" erscheint** → das Terminal sendet den Akkord. Dann lag es
+  daran, dass kein *zoombarer* Hover offen war: über einer Textdatei werden
+  die Zoom-Tasten nicht geborgt (nur über Bild und PDF-Seite). Der Screenshot,
+  den du geschickt hast, zeigt einen Hover auf `ROADMAP.md` — das wäre die
+  Erklärung, und dann ist nichts kaputt.
+- **which-key geht wieder auf** → das Terminal sendet den Akkord nicht, und
+  keine Konfiguration in diesem Plugin kann daran etwas ändern.
 
-**Deine Aufgabe.** Eine lange Textdatei hovern, `+` zweimal drücken, hinsehen,
-ob unten Zeilen dazugekommen sind.
+**Was ich übernehme, wenn es der zweite Fall ist.** Andere Default-Tasten,
+oder deine eigenen. Der Punkt bei diesen Tasten ist, dass sie **nur geliehen**
+sind, solange ein zoombarer Hover offen steht — also ist fast alles frei, was
+im Normal-Modus teuer wäre. Sofort und ohne Codeänderung:
 
-**Was ich übernehme.** Die Zeile in `docs/MANUAL-EVIDENCE.md` mit Datum und
-Terminalgröße füllen — die Datei hat eigene Regeln über ihre Zeilen, und ein
-Spec prüft sie.
+```lua
+require("hover").setup({
+  zoom_keys = { into = ">", out = "<", reset = "=" },
+})
+```
 
-### 3. Zoom von Hand: Bild und PDF-Seite
+`>` und `<` sind im Normal-Modus Operatoren, die auf eine Motion warten; als
+geliehene Einzeltasten über einem Float sind sie frei und tragen die
+Bedeutung schon im Zeichen. Wenn sich das bewährt, würde ich es zum Default
+machen — die Alt-Akkorde waren die Wahl unter der Annahme, dass sie überall
+ankommen, und diese Annahme ist auf deiner Maschine gerade widerlegt worden.
 
-**Was fehlt.** Ob der vergrößerte Ausschnitt **gezeichnet** im Terminal
-ankommt — und ob `h/j/k/l` sich beim Schwenken richtig anfühlen. Das Zweite
-ist keine Frage, die man einer Spec stellen kann.
+**Was danach noch offen bleibt.** Das eigentliche Hinsehen: ob der
+vergrößerte Ausschnitt **gezeichnet** ankommt, für ein Bild und für eine
+PDF-Seite — und bei einer **gescannten** PDF ausdrücklich *ohne* schärfer zu
+werden, weil dort nichts mehr zu holen ist. Die Zahlen dazu liefert
+`scripts/pdfzoom_probe.lua`; hinsehen kann sie nicht.
 
-Seit 2026-09-03 sind es **zwei** Handprüfungen, weil es zwei Mechanismen sind:
+### 2. Office-Kehrwoche
 
-- **Bild** (`<M-z>`): ein Ausschnitt wird mit ImageMagick geschnitten, ~258 ms
-  je Schritt.
-- **PDF-Seite** (`<M-z>`): die Seite wird bei höherem DPI **neu gerastert**,
-  und nur das sichtbare Fenster, 207–752 ms je Schritt. Zusätzlich lohnt eine
-  **gescannte** PDF: dort gibt es kein Mehr an Detail zu holen, das Bild
-  darf also größer werden, ohne schärfer zu werden.
+**Was fehlt.** Der altersbasierte Sweep des Office-Caches
+(`office.cache_days`, Default 7). Alles andere am Office-Pfad ist zweimal
+durchgespielt.
 
-**Die erste Art, wie das scheitert, ist kein Fehler im Plugin.** `<M-z>` ist
-ein Alt-Akkord, und ein Terminal, das ihn nicht sendet, sieht exakt so aus wie
-ein Bild, das sich nicht zoomen lässt. `:nnoremap <M-z> :echo "da"<CR>` klärt
-das in einem Tastendruck. Steht auch in `MANUAL-EVIDENCE.md`.
+**Wie der Sweep funktioniert**, damit die Prüfung nicht am falschen Ende
+sucht: er läuft **einmal pro Sitzung**, und zwar erst, wenn in dieser Sitzung
+zum ersten Mal wirklich **konvertiert** wird. Ein Dokument, dessen PDF schon
+im Cache liegt, löst ihn *nicht* aus. Deshalb braucht die Prüfung zwei
+verschiedene Dokumente oder einen Neustart mit einem noch nicht konvertierten.
 
-**Deine Aufgabe.** Hovern, zweimal `<M-z>`, hinsehen, schwenken.
+**Deine Aufgabe, Schritt für Schritt.**
 
-**Was ich übernehme (und schon getan habe).** Die Arithmetik ist spec-geprüft,
-und der ganze Pfad ist außerhalb der Suite gegen ein echtes Dokument gelaufen:
-`scripts/pdfzoom_probe.lua` druckt je Stufe Zeit, Pixelgröße, Hash und **zwei**
-Schärfezahlen. Der Lauf vom 2026-09-03 steht in `MANUAL-EVIDENCE.md`. Was die
-Sonde nicht kann, ist hinsehen.
+1. Ein Office-Dokument hovern, mit eingeschalteter Konvertierung — das legt
+   die erste PDF im Cache an:
 
-### 4. Office-Kehrwoche
+   ```vim
+   :Hover office on
+   ```
 
-**Was fehlt.** Der altersbasierte Sweep des Office-Caches (`office.cache_days`,
-Default 7). Eine Datei im Cache zurückdatieren, irgendein Office-Dokument
-hovern, und sehen, dass die alte Konvertierung verschwindet.
+   Dann den Cursor auf einen Pfad wie `./Bewerbung_Stefan_Bartl_3S.docx`
+   stellen und warten, bis die Seite kommt.
 
-**Stand.** Der Rest des Office-Pfads ist **zweimal** durchgespielt
-(2026-09-02): Konvertierung, Badge, und der Cache, der die Sitzung überlebt —
-Neustart, kein zweiter LibreOffice-Start.
+2. Nachsehen, was da liegt, und es um 30 Tage zurückdatieren (PowerShell):
 
-**Deine Aufgabe.** Zurückdatieren und hovern. Zwei Befehle.
+   ```powershell
+   $dir = "$env:LOCALAPPDATA\Temp\nvim\hover.nvim\office"
+   Get-ChildItem $dir -Filter *.pdf | ForEach-Object { $_.LastWriteTime = (Get-Date).AddDays(-30); $_ }
+   ```
 
-**Was ich übernehme.** Ich kann dir den Zurückdatier-Befehl für genau deinen
-Cache-Pfad fertig hinschreiben, samt der Datei, die man dafür nimmt.
+   Das druckt die Dateien mit ihrem neuen Datum — merk dir einen Namen.
 
-### 5. Die Lua-Modulwurzel kollidiert
+3. Neovim **neu starten** (der Sweep ist pro Sitzung gemerkt), dann ein
+   **anderes** Office-Dokument hovern, wieder mit `:Hover office on`.
 
-**Der Defekt.** `lewis6991/hover.nvim` existiert und ist verbreitet. Die
-**Repo**-Namen kollidieren nicht, die **Modulwurzel schon**: beide liefern
-`lua/hover/`, und wer beide installiert, bekommt still das, was früher auf der
-`runtimepath` liegt. Für ein öffentliches Plugin ist das ein echter Defekt,
-kein Schönheitsfehler.
+4. Nachsehen, ob die zurückdatierte Datei weg ist:
 
-Im Repo steht davon **nichts** — der Einspruch stand einmal in README und
-Vimdoc und ist auf deine Anweisung dort entfernt. Er lebt hier weiter, damit
-er nicht verlorengeht.
+   ```powershell
+   Get-ChildItem "$env:LOCALAPPDATA\Temp\nvim\hover.nvim\office" -Filter *.pdf | Select-Object Name, LastWriteTime
+   ```
 
-**Was ein Umbenennen kostet**, heute: Verzeichnis `lua/hover/` → `lua/<neu>/`,
-ein `sed` über die Require-Pfade, der `Hover.`-Typnamensraum, `:Hover` →
-`:<Neu>`, `vim.g.hover_disable`, die drei Highlight-Gruppen, markdown.nvims
-fünf Require-Zeilen, die Config-Spec. Kandidaten waren `pathhover.nvim` und
-`hoverport.nvim` (Anschluss an `pdfport`).
+   Erwartung: die alte ist fort, die neue liegt da. Bleibt die alte liegen,
+   ist der Sweep nicht gelaufen — dann ist die interessante Frage, ob in
+   Schritt 3 überhaupt konvertiert wurde (eine PDF aus dem Cache konvertiert
+   nicht).
 
-**Meine Einschätzung:** entscheiden, solange es **sieben** Konsumenten sind.
-Jeder weitere Registry-Beitragende macht es teurer, die Kosten sind einmalig,
-und der Defekt bleibt.
+**Was ich übernehme.** Die Evidenzzeile füllen, und falls die alte Datei
+liegen bleibt, die Fehlersuche — der Sweep ist zehn Zeilen, und
+`office.cache_days = 0` schaltet ihn ganz ab, was ein guter Gegentest ist.
 
-**Deine Aufgabe.** Die Entscheidung, und der Name.
+### 3. Ein Auto-Modus pro Zieltyp
 
-**Was ich übernehme.** Die Umbenennung selbst — sie ist mechanisch, und die
-Doku-Spec sagt mir, welches Dokument ich vergessen habe. Ich würde sie in
-einem Commit machen, mit einem Lauf der Suite und einem LuaLS-Scan davor und
-danach.
+**Dein Entwurf (2026-09-03).** Von selbst hovern sollen nur **Bilder und
+PDFs**. Textdateien hinter Markdown-Links und Pfade im Fließtext sollen
+einzeln dazuschaltbar sein; „alles an" und „alles aus" soll es weiter geben;
+und in der User-Config soll man den Default setzen können.
 
-### 6. Ist `manual` der bessere Default?
+**Meine Einschätzung: ja, und aus einem Grund, der stärker ist als Geschmack.**
+Ein Bild oder eine PDF-Seite ist das Einzige, was der Hover zeigt und was man
+sonst *gar nicht* sieht, ohne die Datei zu öffnen. Die ersten Zeilen einer
+Textdatei sind eine Abkürzung, kein neuer Anblick. Der Nutzen pro Unterbrechung
+ist damit über die Zieltypen sehr ungleich verteilt, und das ist genau die
+Achse, an der ein automatischer Trigger geschnitten gehört.
 
-**Die Frage.** Die Config läuft auf `auto` — der Hover geht von selbst auf.
-Der Griff wäre `:Hover mode manual` plus ein `keymaps.show`-Key. Wenn *das*
-sich als das Richtige erweist, gehört es in die Config-Spec statt in eine
-Sitzung.
+**Was es heute schon gibt — und warum das nicht dasselbe ist.** Die Schalter
+sind nach **Fundort** organisiert: `links.enabled` (Markdown-Links),
+`paths.enabled` (Pfade im Fließtext), `positions`, `office`, `git`. Dein
+Wunsch ist nach **Zieltyp** — und ein Markdown-Link kann auf ein Bild *oder*
+auf eine Textdatei zeigen. Die beiden Achsen kreuzen sich also; mit den
+heutigen Schaltern ist „nur Bilder, egal wie gefunden" nicht ausdrückbar.
 
-**Zwei Dinge haben die Frage inzwischen verschoben.** `:Hover why` sagt, warum
-ein Float **nicht** aufging, und das Positions-Gate hat die Hälfte des
-Rauschens ohnehin entfernt. Gut möglich, dass die Frage sich erledigt hat.
+**Mein Vorschlag, konkret.** Eine neue Option neben `mode`, kein neuer Modus:
 
-**Deine Aufgabe.** Das ist eine Beobachtung über Wochen, keine Messung über
-Minuten: eine Weile auf `manual` arbeiten und merken, ob dir etwas fehlt.
+```lua
+require("hover").setup({
+  mode = "auto",              -- bleibt der Hauptschalter: auto | manual | off
+  auto = { "image", "pdf" },  -- was im auto-Modus von selbst aufgehen darf
+})
+```
 
-**Was ich übernehme.** Den Umbau in die Config, wenn die Antwort steht — und
-vorher, falls du willst, eine Sitzung lang mitzählen, wie oft ein Float
-aufgeht, ohne gelesen zu werden. Das wäre eine Messung statt eines Gefühls,
-aber sie kostet dich einen Tag mit einem Zähler im Hintergrund.
+- `auto = true` — alles, das heutige Verhalten und der Default, bis du etwas
+  anderes sagst.
+- `auto = false` — nichts von selbst; identisch zu `mode = "manual"`.
+- `auto = { … }` — eine Liste von Zieltypen (`image`, `pdf`, `office`, `file`,
+  `directory`, `url`, `git`, `position`).
 
-### 7. language.nvim
+Dazu eine Route zum Umschalten während der Sitzung, in der Form, die es schon
+gibt (`:Hover links web on`):
 
-**Die Produktfrage vor der Integration.** Soll ein Druck auf `:Hover show`
-mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
-(`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
-ein Wort nachschlagenswert ist — und die gehört nach language.nvim, nicht
-hierher.
+```
+:Hover auto image on
+:Hover auto file off
+```
 
-**Warum das nicht „klein" ist.** Der Mechanismus überträgt sich, die
-Sparsamkeit nicht. Bei sandbox.nvim entscheidet eine billige Textprüfung *vor*
-jedem Prozessstart, ob überhaupt gefragt wird: `init.lua:42` fällt in unter
-1 ms durch, weil die letzte Namenskomponente eine Endung trägt. Bei einem
-Wort-Nachschlag ist **jedes Wort ein Wort**; es gibt keine solche Vorprüfung,
-also ist auch unter `force` jede Position ein Treffer.
+**Zwei Dinge, die ich dabei ehrlich sagen muss.**
 
-**Seit `ac0a372` ist der Einsatz kleiner.** Vorher gewann der erste
-registrierte Beitrag, und ein Wörterbuch hätte unter `:Hover show` jeden
-anderen Position-Beitrag verdeckt. Jetzt wird geblättert (`<M-n>`), es darf
-hinten stehen und verdeckt nichts.
+1. **Es gibt dann zwei Wege, etwas nicht zu sehen** — `paths.enabled = false`
+   und `auto` ohne `file`. Sie bedeuten Verschiedenes, und das gehört
+   dokumentiert: `paths.enabled = false` heißt, ein Pfad im Fließtext ist
+   *gar kein Ziel* — auch `:Hover show` findet dort nichts. Das `auto`-Gate
+   heißt nur, dass der Trigger nicht von selbst fragt; auf `:Hover show`
+   bekommst du die Vorschau trotzdem. Das ist eine echte Unterscheidung, keine
+   Dopplung — aber eine, die man erklären muss.
+2. **Gespart wird das Float, nicht die Arbeit davor.** Um zu wissen, dass
+   etwas ein Bild ist, muss der Pfad aufgelöst werden — die Treesitter-Prüfung
+   und ein `fs_stat` laufen also weiter. Beides ist gemessen billig (die
+   Zahlen stehen im Modulkopf von `hover.bare_path`), aber wer sich davon eine
+   *Beschleunigung* verspricht, bekommt eine Beruhigung.
 
-**Deine Aufgabe.** Die Frage: willst du das Wörterbuch im Hover haben.
+**Deine Aufgabe.** Sagen, ob der Vorschlag so passt — insbesondere, ob `auto`
+als Liste von Zieltypen die richtige Form ist, und ob der Default zunächst
+`true` bleiben soll (alles wie bisher) oder gleich auf `{ "image", "pdf" }`
+gehen soll.
 
-**Was ich übernehme.** Die Verdrahtung, sobald die Antwort ja ist — sie ist
-dieselbe Form wie insights.nvim und sandbox.nvim, und beide sind vorgemacht.
+**Was ich übernehme.** Den Bau: Option, Normalisierung der Legacy-Formen,
+Route mit Completion, `:checkhealth`-Zeile, Specs, und die Doku in README,
+Vimdoc und BINDINGS — die Doku-Spec sagt mir dabei, was ich vergessen habe.
 
-### 8. Was ich ohne dich tun würde
+### 4. language.nvim: ein Wörterbuch im Hover
+
+**Erst, was das überhaupt heißt** — die alte Formulierung war unverständlich,
+und das war mein Fehler.
+
+language.nvim ist ein Plugin für *natürliche Sprache*: es kann zu einem Wort
+die Rechtschreibung, die Grammatik, eine Übersetzung oder Synonyme zeigen.
+
+hover.nvim kann fremde Plugins nach der Stelle fragen, an der der Cursor steht
+(„position preview" — documentation.nvim und insights.nvim machen das schon).
+Wenn language.nvim sich so anmeldet, dann heißt das: **du stehst mit dem
+Cursor auf irgendeinem Wort in einem Fließtext, und es geht ein Float auf, das
+dir dieses Wort erklärt.** Nicht auf einem Pfad, nicht auf einem Link — auf
+einem gewöhnlichen Wort in einem gewöhnlichen Satz.
+
+**Warum das eine Frage ist und keine Aufgabe.** Bei allem anderen, was dieser
+Hover zeigt, gibt es eine billige Prüfung, ob überhaupt etwas da ist: ein Pfad
+muss auf eine existierende Datei zeigen, eine URL muss eine URL sein, ein
+Container-Image muss wie eines aussehen. Deshalb bleibt der Hover in Prosa
+still. **Bei einem Wörterbuch ist jedes Wort ein Treffer** — es gibt keine
+Prüfung „lohnt sich hier ein Wörterbuch?", die nicht das Wörterbuch selbst
+wäre. Also gibt es nur zwei Zustände: bei *jedem* Wort geht etwas auf, oder es
+geht nur auf Nachfrage auf — und dann bei jedem Wort, das du fragst.
+
+**Was sich seit `ac0a372` verbessert hat.** Vorher gewann der erste
+registrierte Beitrag, und ein Wörterbuch hätte damit unter `:Hover show` alles
+andere verdeckt. Heute wird geblättert (`<M-n>`), es darf hinten stehen und
+verdeckt nichts mehr. Der Einsatz der Entscheidung ist also deutlich kleiner
+geworden.
+
+**Deine Aufgabe: drei Fragen.**
+
+1. Willst du auf ein Wort zeigen und eine Erklärung bekommen — in Prosa, in
+   Markdown, in Kommentaren?
+2. Wenn ja: nur auf ausdrückliche Nachfrage (`:Hover show`), oder auch von
+   selbst? (Meine Empfehlung: nur auf Nachfrage, und zwar bevor es überhaupt
+   gebaut wird.)
+3. Und wenn Punkt [3](#3-ein-auto-modus-pro-zieltyp) kommt: soll ein
+   Wörterbuch dort ein eigener Zieltyp sein, den man einzeln zuschaltet?
+
+**Was ich übernehme.** Die Verdrahtung, sobald die Antwort ja ist. Sie ist
+dieselbe Form wie insights.nvim und sandbox.nvim, beide sind vorgemacht, und
+die Regel dafür — wann ein Wort nachschlagenswert ist — gehört nach
+language.nvim, nicht hierher.
+
+### Was ich ohne dich tun würde
 
 Wenig, und nichts Dringendes.
 
@@ -475,6 +559,10 @@ Damit es nicht als gute Idee wiederkommt.
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `e228dfb` — `docs/NAME-COLLISION.md`: vier Sätze zur Modulwurzel, und die
+  Resize-Evidenzzeile ist vollständig. Die Zeile sagt jetzt auch, warum `+`
+  nicht der Weg ist, sie zu prüfen — über einem Text-Hover ist `+` die Motion,
+  die es immer war, und sie nimmt den Hover mit.
 - `7fdfc09` — **der scharfe PDF-Zoom, und die Messung hat das Feature
   freigegeben.** Eine Seite wurde bisher nur skaliert; jetzt wird sie bei
   höherem DPI **neu gerastert** — und zwar nur das sichtbare Fenster. Der
