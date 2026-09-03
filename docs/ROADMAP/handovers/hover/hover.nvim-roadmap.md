@@ -648,22 +648,31 @@ dann entscheiden.
   Antwort zurück, nicht alle — der zweite Beitrag wäre also unsichtbar, sobald
   eine Map existiert. Kein seltener Fall: es ist derselbe Token.
 
-  Drei Wege, und ich habe eine Meinung:
+  **Gelöst am 2026-09-03** (hover.nvim `ac0a372`), und zwar durch
+  **Durchblättern statt Verschmelzen**: `<M-n>` und `:Hover next` gehen zur
+  nächsten Antwort und blättern hinter der letzten wieder nach vorn.
 
-  1. **Positions dürfen sich stapeln** — `position_at` sammelt statt
-     abzubrechen, und das Float zeigt beide Absätze mit ihren Plugin-Titeln.
-     Ändert das Framework, löst die Klasse für alle künftigen Beitragenden,
-     und die Reihenfolge wird von „wer gewinnt" zu „wer steht oben".
-     **Meine Empfehlung**, weil die Kollision sonst bei jedem dritten
-     Positions-Plugin wiederkommt.
-  2. **insights antwortet über eine andere Stelle** — nicht über den dotted
-     name in einem `require`, sondern über den *Kopf der Datei, in der man
-     steht* („wer importiert mich?"). Andere Frage, anderer Ort, keine
-     Kollision — aber es ist auch nicht mehr ganz die Frage aus dem
-     Roadmap-Eintrag.
-  3. **Gar nicht verdrahten.** `reverse_lookup` ist auch ohne Hover ein
-     Gewinn: `:Insights imports reverse` antwortet jetzt sofort statt nach
-     einer Sekunde, solange nichts geschrieben wurde.
+  Verschmelzen war der andere Weg und ist schlechter, als es aussieht:
+  `Hover.Content` ist auf *eine* Antwort zugeschnitten — zwei hießen zwei
+  Titel für einen Rahmen, zwei Filetypes für ein Highlight, zwei
+  `scroll`-Zustände für ein Tastenpaar, und ein Bild lässt sich mit Text gar
+  nicht verschmelzen. Blättern lässt jede Antwort ganz.
+
+  Gezählt wird **nichts im Voraus** — es gibt bewusst keinen „2 von 3"-Zähler,
+  weil herauszufinden, wer antworten *würde*, jeden Beitrag bei jedem Hover
+  aufrufen hieße. Die Taste hängt an der Zahl der *Registrierungen*, das
+  Blättern ist das Fragen. Und weil es mit `force` fragt, ist ein
+  `on_request`-Beitrag auf diesem Weg erreichbar.
+
+  **Was für language.nvim daran hängt:** ein Wörterbuch hat auf *jeder*
+  Position etwas zu sagen. Bei „der Erste gewinnt" hätte es unter
+  `:Hover show` jeden anderen Position-Beitrag verdeckt — deshalb war die
+  Produktfrage dort so unangenehm. Jetzt kann es hinten in der Reihenfolge
+  stehen, und wer es will, blättert hin. Die Frage bleibt deine, ihr Einsatz
+  ist deutlich kleiner.
+
+  **Offen bleibt nur noch die Verdrahtung selbst**: insights.nvim registriert
+  bisher keinen Position-Beitrag. Der Weg dorthin ist jetzt frei.
 
 ---
 
