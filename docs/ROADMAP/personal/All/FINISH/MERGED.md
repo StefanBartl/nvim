@@ -34,20 +34,56 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ### Docs, Comments,...
 
+
+- [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
+
 - [ ] Eventuell selbst alle repos - jede file - durchgehen und bei auffälligen (Zu langer/unnötiger Kommnentar, Code strange, Docs fehlen/anders struktuiren, usw) einen Tag setzen, zb.: `--- CDX:` oder selbst gleich fixen
+
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
-  - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
+
+- [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
+
 - [ ] Alle docs/ Files in jedem .nvim repo müssen nochmal überprüft werden, auf aktualitöt & korrektheit - Doppelungen entfernen, stimmt alles was behauptet wird, Referenzen updaten, usw...  docs/README Themenaufteilung / docs Struktur überelgen - einheitiche struktur finden für alle repos; Deutsche docs nur, wenn eine englische Hauptversions der file besteht und explizit eine deutsche version von mir verlangt wird. Weiteres auf das überprüftr werden soll gleich am anfang mit ausfschreiben, man könte für diesen duirchgang eien art docs checklist machen.
   - [ ] Generell soll das Prinzip herrschen: `Nicht "so viel wie möglich" in die docs, sondern nur das, was für User und Devs auch tatsächlich interessant sein kann. Der Rest nach WKDBooks/Deveolpment/wkdbook-myplugins/ - da können auch reine informations docs ausgelagert werden, die entwedet "zu tief" gehen für normale repo docs oder weder für devs noch für user einen naheliegenden Mehrwert haben. wkdbook-myplugins ist kein "Downgrade", sondern meine interne Notizensammlung`
   - [ ] Das gleiche mit den Kommentaren im Source code.
   - [ ] C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS muss durch gecheckt werden. Dies soll ja CHeatsheet für bindings sein, in manchen files stehen aber mehr infos drinnen, teilweiese sogar roadmap/handover notes usw... Wenn die infos dort drinnen wichtig sind, dann gehören sie ind die docs des repos nicht zu mienen bindings doc
-  - [ ] In jedem PLugin, wenn eine api angeboten wird, dann einen /docs/Usecases/** (oder so ähnlich) dazu erstellen
-  - [ ] Folder wir worekflow/usecases könnten eine Overview.md oder so ähnlich haben, die auf alle usecases files vewreist und diese kurz beschreibt., so soll bessere übersicht herrschenn und die README.-md kann auf diese übersicsfiles vewreiesen, anstsatt beispiehaft auf irgendeine file des folders
-  - [ ] Die README.md ist wichtig: es ist dass, was die devs/users als erstes sehen und wo wisie priomär iohre informationen beziehen bevor sie sich entscheiden ob die da splugin installieren. daher sollte dort auch ein guters Konzept ver folgt werden:
-    - [ ] Alle sollen "Alpha stagge" disclaimer haen, breaking changes müssen erwartet werden
-    - [ ] Einmleitend hinweiße auf 2-3 repos aus emeiner plugin sammlung
-    - [ ] ASCII-Art Block + passende Badges
-    - [ ] Hinweis auf workflow/usecase/api usw... files in der docs um zu zeigen: Wenn du m öchtest, die docs isnf gut ausgebaut, hier kannst du infos bekommen
-    - [ ] ....
+      - [ ] In jedem PLugin, wenn eine api angeboten wird, dann einen /docs/Usecases/** (oder so ähnlich) dazu erstellen
+      - [ ] Folder wir worekflow/usecases könnten eine Overview.md oder so ähnlich haben, die auf alle usecases files vewreist und diese kurz beschreibt., so soll bessere übersicht herrschenn und die README.-md kann auf diese übersicsfiles vewreiesen, anstsatt beispiehaft auf irgendeine file des folders
+      - [ ] Die README.md ist wichtig: es ist dass, was die devs/users als erstes sehen und wo wisie priomär iohre informationen beziehen bevor sie sich entscheiden ob die da splugin installieren. daher sollte dort auch ein guters Konzept ver folgt werden:
+        - [ ] Alle sollen "Alpha stagge" disclaimer haen, breaking changes müssen erwartet werden
+        - [ ] Einmleitend hinweiße auf 2-3 repos aus emeiner plugin sammlung
+        - [ ] ASCII-Art Block + passende Badges
+        - [ ] Hinweis auf workflow/usecase/api usw... files in der docs um zu zeigen: Wenn du m öchtest, die docs isnf gut ausgebaut, hier kannst du infos bekommen
+        - [ ] ....
 
 ---
+
+## Liste B - Claude Tasks
+
+- [ ] runtime-analysis.nvim: 7 Tage reminder:
+  - [ ] Wenn mehrere reminder ausgegeben werden, dann soll das in einer message, nicht in XY einzelmesages ausgegeben werden;
+  - [ ] Dasboard übersicht, welche reopos gerade in welchen MOdus aufzeichnen
+  - [ ] Dashboard, welc he Daten beretois gesammelt wurde; Übersicht mit alle repos, wenn möglivch/sonnvoll dann mit enter ene detailansicht zeigen, also welche dwaten genau, wo, usw...
+
+- [ ] Videos transkripten; Überstzung / Zusammenfassung erstellen; Images text extrahieren; usw... ALles was damit zusmmenhängt bzw sinnvoll ist als Features da anzubieten: Konzept machen -> eventuell bestehende plugin api's nutzen und zusammenführen; Dashboard mit allen Mediendateien die gefunden wurden in path/cwd/cfile/ usw..und dann selection, welche aktion man darauf ausführen will;
+
+- [ ] E:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
+- [ ] gopath.nvim: broken loinks öffnen trotzdem einen buffer
+
+- [ ] docmap-desktop app icon desktop
+
+- [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
+     [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
+  -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.
+    Zusatz Feature: Alle im `h deprecated` implementieren
+    - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
+    - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
+    - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
+
+- [ ] recommender.nvim
+  - [ ] `:Recommender perf` asynchron machen und mit statusline progress
+
+- [ ] Github Stats auswerten / backupen / Stats zusammenziehen
+
+---
+

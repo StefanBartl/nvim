@@ -57,28 +57,9 @@ Keine Co-Author nennung von claude in den git commits.^
 ## Misc
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
-
-- [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
-
-- [ ] docmap-desktop app icon desktop
-
 - [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab/Cases;
 
-- [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
-     [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
-  -> das zeigt gut an, was in `migrate.nvim` implementiert werden soll.
-    Zusatz Feature: Alle im `h deprecated` implementieren
-    - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
-    - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
-    - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
-
-- [ ] recommender.nvim
-  - [ ] `:Recommender perf` asynchron machen und mit statusline progress
-
-- [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
-
 - [ ] Anticheat knacken
-- [ ] Github Stats auswerten / backupen
 
 ---
 

@@ -88,7 +88,7 @@ Sitzung neu verhandelt werden.
   "verkabeln" beschreiben die Arbeit, nicht die Folge; die Folge ist das, was
   die Entscheidung traegt.
 - **Gebautes wird von Hand nachgeprueft.** Wie, steht in
-  [`PLUGIN_ROADMAPS_TESTPLAN.md`](./PLUGIN_ROADMAPS_TESTPLAN.md) — ein
+  [`PLUGIN_ROADMAPS_TESTPLAN.md`](../../PLUGIN_ROADMAPS_TESTPLAN.md) — ein
   Checklistenpunkt je Roadmap-ID, nach Plugin sortiert, samt dem, was
   ausdruecklich *nicht* von Hand pruefbar ist und was dort stattdessen gilt.
   Ein Punkt, der die Pruefung nicht besteht, kommt als Befund hierher zurueck,
