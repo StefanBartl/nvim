@@ -28,13 +28,14 @@ fünf Funde geworden.
 
 ## Was offen ist — die Übersicht
 
-Drei Punkte, und zwei davon sind Fragen an dich, keine Arbeit.
-Stand 2026-09-03 nach zwei Runden Handprüfung.
+Die beiden Punkte, die Fragen an dich waren, sind beantwortet und gebaut.
+Was offen bleibt, sind zwei Handprüfungen — beides eine Minute.
+Stand 2026-09-03 nach drei Runden.
 
 | # | Punkt | Wer | Was genau fehlt |
 | --- | --- | --- | --- |
-| [1](#1-die-zoom-tasten-kommen-nicht-an) | **Zoom-Tasten** | du (ein Test), dann ich | `<M-z>` kommt in deinem Terminal nachweislich nicht an. `>` und `=` gehen, `<` bricht an which-key. Ich brauche eine Antwort, welche Taste „heraus" wird, dann ändere ich den Default. |
-| [2](#2-language-nvim-übersetzung-ja-wörterbuch-nein) | **language.nvim** | du | Die Antwort auf deine Frage steht unten: es gibt **keine Definitionen**, nur Synonyme und Übersetzung, beide über das Netz. Damit ist die Frage eine andere geworden. |
+| [1](#1-kommt-die-übersetzung-überhaupt-an) | **HTTP 429 hinter der Übersetzung** | du (ein Test) | Der keylose Google-Endpunkt hat bei **jeder** Messung 429 geantwortet. Ob das an dieser Maschine liegt oder an der Leitung, entscheidet ein `:Translate DE cword`. |
+| [2](#2-kommt-m-n-an) | **`<M-n>`** | du (ein Test) | Derselbe Akkord-Typ wie `<M-z>`, das nachweislich nicht ankommt. Ungeprüft. |
 | [3](#3-was-ich-ohne-dich-tun-würde) | *(ohne dich)* | ich | Nichts Dringendes. |
 
 **Erledigt am 2026-09-03**, in der Reihenfolge, in der es passiert ist:
@@ -53,12 +54,19 @@ Stand 2026-09-03 nach zwei Runden Handprüfung.
   je Sitzung und nur bei einer echten Konvertierung läuft.
 - **Bild-Zoom von Hand** — bestätigt: der Ausschnitt kommt gezeichnet an, und
   `h/j/k/l` fühlt sich richtig an. Getrieben mit `>` / `=`, weil die
-  Alt-Akkorde nicht ankommen (Punkt 1).
+  Alt-Akkorde nicht ankommen — genau der Befund, aus dem `21c4932` wurde.
 - **Lua-Modulwurzel** — entschieden: der Name bleibt. `docs/NAME-COLLISION.md`
   (`e228dfb`), vier Sätze, keine README-Referenz.
 - **Demo-GIF** — von der Liste; kommt am Schluss für alle Plugins zusammen.
 - **Auto-Modus pro Zieltyp** — gebaut (`e8cde0e`, `f265f19`). Ausführlich
   unter [Was jetzt von selbst aufgeht](#was-jetzt-von-selbst-aufgeht).
+- **Zoom-Tasten** — gebaut (`21c4932`). Default ist `>` hinein, `|` heraus,
+  `=` zurück. Deine Wahl, und sie hält der Nachmessung stand; `-` als
+  Alternative hätte **nie** funktioniert. Ausführlich unter
+  [Was der Zoom jetzt bekommt](#was-der-zoom-jetzt-bekommt).
+- **language.nvim** — gebaut (`b592b9f` dort, `150be49` hier). `:Translate DE
+  cword` und `:Hover show` über einem Wort. Ausführlich unter
+  [Was language.nvim jetzt beiträgt](#was-language-nvim-jetzt-beiträgt).
 
 ---
 
@@ -130,86 +138,163 @@ dokumentiert", streng für „nennt ein Dokument etwas, das es nicht gibt".
 
 ---
 
+## Was der Zoom jetzt bekommt
+
+**Default seit `21c4932`: `>` hinein, `|` heraus, `=` zurück.** Deine Wahl,
+und die Nachmessung hat sie bestätigt statt nur zugelassen.
+
+**Warum die Alt-Akkorde weg sind.** Sie standen auf einem Satz: ein Akkord
+verdrängt nichts. Das stimmt — und ist genau so viel wert, wie das Terminal
+bereit ist, den Akkord zu senden. Hier sendet es keinen. Eine Taste, die nichts
+verdrängt **und nichts tut**, ist keine billige Taste, sondern eine abwesende.
+Wo die Akkorde ankommen, sind sie weiter richtig, und sie sind ein `zoom_keys`
+entfernt.
+
+**Was ich vor der Änderung gemessen habe, statt es zu vermuten:**
+
+| Kandidat | Befund |
+| --- | --- |
+| `\|`, `_`, `>`, `=` | which-keys `Util.norm` gibt sie **unverändert** zurück |
+| `<` | wird zu **`<lt>`** normalisiert, während die Zuordnung `<` bleibt — daher „Recursion detected“. Kein Zufall einer Config: jeder mit which-key träfe das |
+| `-` | **kann gar nicht funktionieren**, so naheliegend es neben `_` aussieht |
+
+**Der `-`-Befund ist der, den ich dir schulde**, weil er deinen Alternativ-
+vorschlag betrifft. `resize_keys.smaller` hält `-`; `borrow()` nimmt die
+Resize-Tasten **vor** den Zoom-Tasten; eine doppelt gelistete Taste wird einmal
+genommen. Und jedes Hover, für das überhaupt eine Zoom-Taste gebunden wird,
+hat ein Bild — die Überschneidung ist also **total**, nicht gelegentlich. `-`
+hätte bei jedem Druck resized und nie gezoomt. Das Bild wächst, die Taste sieht
+also funktionierend aus, und nur der Ausschnitt ist falsch: die Sorte Fehler,
+die am schwersten zuzuordnen ist. Deshalb ist der Befund jetzt zweimal
+festgenagelt — als Spec (`TESTS/zoom_spec.lua`, sabotiert: ohne die
+Doppelvergabe-Sperre fällt genau diese eine Zusicherung) und als Warnung in
+`:checkhealth hover`.
+
+**Warum die drei nicht auf einem Argument stehen.** `>` und `=` sind
+**Operatoren**: über einem Float bewegen sie keinen Cursor und schließen von
+selbst nicht ab, die Leihe kostet also nichts. `|` ist eine **Motion**, und das
+ist das Argument *dafür*, sie zu nehmen: ungebunden springt sie auf Spalte 1,
+das Dismiss hängt an `CursorMoved`, der Druck nähme also das Bild weg. Dasselbe
+Argument, das `h/j/k/l` machen.
+
+**Für diese Config heisst das:** der `zoom_keys`-Workaround im Plugin-Spec ist
+weg (`5522fe3f`), `require("hover").enable()` steht wieder ohne Optionen da.
+
+---
+
+## Was language.nvim jetzt beiträgt
+
+**Zwei Hälften einer Lücke** (language.nvim `b592b9f`). `:Translate` nahm immer
+einen *Scope* — Buffer, sichtbarer Bereich, Selection, Verzeichnis — und ein
+einzelnes Wort ist keiner davon. Die kleinste nützliche Übersetzung war die
+eine Form, die das Plugin nicht konnte.
+
+```
+:Translate DE cword     das Wort unter dem Cursor, Sprache getippt, ins Popup
+:Hover show             dasselbe Wort, Sprache aus der Config, ins Hover-Float
+```
+
+| | Wer nennt die Sprache | Wo landet die Antwort |
+| --- | --- | --- |
+| `:Translate DE cword` | du, pro Aufruf | das bestehende Popup |
+| `:Hover show` | `translate.default_target`, sonst `EN` | ein hover.nvim-Float, blätterbar neben documentation.nvim & Co. |
+
+**Drei Entscheidungen darin, die keine Details sind.**
+
+1. **`on_request`.** Jede Antwort ist eine Anfrage von dieser Maschine an einen
+   Übersetzungsdienst, die das Wort unter dem Cursor mitnimmt. Auf dem
+   *automatischen* Trigger — der nach jedem Tastendruck plus Ruhe feuert —
+   würde Lesen zu einem Strom von Preisgaben, Wort für Wort. Dieselbe Klasse
+   wie `links.fetch`, dieselbe Antwort: nur auf ausdrückliche Frage.
+   `:checkhealth language` **meldet** das Flag, statt es anzunehmen — ein
+   älteres hover.nvim ignoriert ein unbekanntes `on_request`, und das ist der
+   eine Fehler hier, den man von außen nicht sähe.
+2. **Es blockiert, gemessen statt gehofft.** `position_at` ist synchron: ein
+   Beitrag gibt seinen Inhalt zurück oder antwortet nicht. Fünf Wörter, je
+   zwei Läufe: **448–929 ms** — dieselbe Größenordnung wie sandbox.nvims
+   Container-Abfragen. Gedeckelt bei 2 s statt bei `translate.timeout_ms`
+   (8 s): das Budget gehört einem Kommando, das im Hintergrund läuft, dieses
+   hält den Editor.
+3. **`EN` als Rückfall, `DE` in deiner Config.** Im Plugin bleibt `EN`, weil
+   die meisten Leser in ihre eigene Sprache übersetzen und die selten Deutsch
+   ist. Der Rückfall sitzt im Hover statt in `DEFAULTS`, weil `nil` dort schon
+   etwas heißt: *fragen*, was die Motion-Maps tun. Ein Hover hat keinen Ort
+   zum Fragen.
+
+**Achtung, eine Verhaltensänderung in deiner Config:** `default_target = "DE"`
+gilt auch für `<leader>lt`. Diese Maps **fragen jetzt nicht mehr** nach der
+Sprache, sondern übersetzen direkt nach Deutsch. Für einen einzelnen Lauf in
+eine andere Sprache: `translate.keymaps.to.<LANG>` oder `:Translate <lang>`.
+
+**Und der Vorbehalt steht in [Punkt 1](#1-kommt-die-übersetzung-überhaupt-an):**
+der keylose Endpunkt hat bei jeder Messung 429 geantwortet.
+
+**Zwei Funde beim Bauen**, beide aus den Klassen, die dieses Projekt kennt:
+
+- **`cword` musste in den *geteilten* Scope-Satz**, sonst liest
+  `:Translate DE cword` das `cword` als *zweiten Sprachcode* und übersetzt den
+  ganzen Buffer. Der Preis ist, dass `:Spellcheck` es namentlich ablehnen muss
+  — und das normalisiert einen Scope an **zwei** Stellen (`run` und
+  `open_panel`). In nur eine geschrieben hätte die andere weiter den ganzen
+  Buffer geprüft.
+- **Der LuaLS-Scan fand +18 `need-check-nil` nach grüner Suite:** eine Prüfung
+  auf `scope.region` verengt nichts für ein *späteres Lesen desselben Feldes*.
+  Erst binden, dann prüfen. Danach 0, `+0`.
+
+---
+
 ## Die offenen Punkte, einzeln
 
-### 1. Die Zoom-Tasten kommen nicht an
+### 1. Kommt die Übersetzung überhaupt an?
 
-**Der Befund, gemessen statt vermutet.** `:nnoremap <M-z> <Cmd>echo "…"<CR>`
-und dann `<M-z>` drücken: **es kommt gar nichts.** Also sendet das Terminal
-den Akkord nicht — was ankommt, ist `<Esc>` gefolgt von `z`, und `z` ist ein
-which-key-Präfix (Folds). Deshalb ging which-key auf.
+**Das ist der einzige echte Vorbehalt am neuen Feature, und er ist gemessen.**
+Der keylose Google-Endpunkt (`translate_a/single?client=gtx`), den
+language.nvims Default-Engine benutzt, hat am 2026-09-03 bei **jeder** Anfrage
+von dieser Maschine **HTTP 429** geantwortet — Googles Seite „your computer or
+network may be sending automated queries“, mit und ohne Browser-User-Agent.
+`api.datamuse.com` hat in derselben Minute mit 200 geantwortet, das Netz ist
+also in Ordnung.
 
-**Was funktioniert.** Mit
-`zoom_keys = { into = ">", out = "<", reset = "=" }`:
-
-| Taste | Ergebnis |
-| --- | --- |
-| `>` | funktioniert |
-| `=` | funktioniert |
-| `<` | **which-key: „Recursion detected"** |
-
-`<` ist das Zeichen, mit dem Vims Tastennotation *anfängt* (`<C-x>`, `<M-z>`).
-Ein Plugin, das Mappings parst — und which-key tut das — kommt damit
-durcheinander. Es ist also kein zufälliger Konflikt, sondern einer, den
-jeder mit which-key hätte.
-
-**Was ich brauche: eine Antwort, welche Taste „heraus" wird.** Kandidaten, die
-weder Präfix noch Notationszeichen sind und über einem Hover ohnehin nichts
-tun:
-
-| Vorschlag | Warum |
-| --- | --- |
-| `_` | sieht aus wie ein Minus, ist eine harmlose Motion, kein Präfix |
-| `,` | wiederholt sonst `f`/`t` rückwärts — über einem Float bedeutungslos |
-| `<M-Z>` behalten | falls du irgendwann ein Terminal benutzt, das Alt sendet |
-
-Sag eine, und ich mache `>` / `<gewählt>` / `=` zum Default, ziehe README,
-Vimdoc und BINDINGS mit und schreibe die Begründung dazu — dass Alt-Akkorde
-nur dort richtig sind, wo das Terminal sie sendet, und dass das eine Annahme
-war, bis diese Messung sie widerlegt hat.
-
-**Bis dahin steht es in deiner Config**, und in
-`docs/MANUAL-EVIDENCE.md` steht der Befund mit Datum.
-
-### 2. language.nvim: Übersetzung ja, Wörterbuch nein
-
-**Deine Frage war die richtige, und die Antwort ändert den Punkt.** Woher
-bekommt language.nvim, was ein Wort bedeutet? **Gar nicht.** Es hat drei
-Quellen, und keine davon ist ein Wörterbuch:
-
-| Was | Woher | Netz? |
-| --- | --- | --- |
-| Synonyme | Datamuse-API (`rel_syn`), frei, ohne Schlüssel, über `curl` | **ja** |
-| Übersetzung | Google-Engine, ohne Schlüssel, über `curl` | **ja** |
-| Rechtschreibung | Neovims eigenes `spell` | nein |
-| Grammatik | ein LSP (ltex o. ä.) | je nach Server |
-
-Eine **Definition** — „was bedeutet dieses Wort" — liefert es nicht.
-
-**Damit ist die alte Frage vom Tisch.** „Soll bei jedem Wort ein Wörterbuch
-aufgehen" stellt sich nicht, weil es kein Wörterbuch gibt. Übrig bleibt genau
-das, was du selbst vorgeschlagen hast:
+**Was ich nicht weiß:** ob das an deiner Leitung liegt oder an dem Weg, den
+meine Werkzeuge nach draußen nehmen. Das entscheidet ein Test:
 
 ```
-:Hover language [en|de|fr|…]    das Wort unter dem Cursor, übersetzt
+:Translate DE cword     über einem englischen Wort
 ```
 
-**Was daran zu entscheiden ist**, und es ist kurz:
+| Was kommt | Bedeutet |
+| --- | --- |
+| die deutsche Übersetzung | alles gut, der 429 war mein Weg nach draußen |
+| „das Ende antwortete mit einer Seite, keiner Übersetzung (Rate-Limit oder Sperre)“ | der Endpunkt sperrt auch dich |
 
-1. **Jeder Aufruf ist eine Netzanfrage** an Google bzw. Datamuse. Das ist
-   dieselbe Klasse wie `links.fetch`, das hier aus genau diesem Grund
-   standardmäßig aus ist. Als *Route* (ausdrücklich getippt) ist das
-   unproblematisch — als automatischer Trigger wäre es die Sorte
-   Preisgabe, die dieses Plugin sonst vermeidet. Meine Empfehlung: nur
-   als Route, nie automatisch.
-2. **Zielsprache:** aus dem Argument, mit einem Default aus language.nvims
-   eigener Konfiguration.
-3. Und die Frage, ob es überhaupt in *diesen* Hover gehört oder ein eigenes
-   Kommando in language.nvim bleibt. Der Hover bringt den Rahmen, das
-   Blättern (`<M-n>`) und das Zumachen mit; language.nvim bringt die Antwort.
+Im zweiten Fall ist das Feature nicht kaputt, sondern die Engine. Ausweg ohne
+jede Codeänderung: `translate.engine = "deepl"` mit einem Schlüssel (oder
+`$DEEPL_API_KEY`), `"shell"` über `trans`, oder ein eigenes `custom`-Kommando.
+Der Hover fragt, was die Provider-Kette auflöst — nicht Google.
 
-Sag ja, und ich verdrahte es — die Form ist dieselbe wie bei insights.nvim
-und sandbox.nvim, beide sind vorgemacht.
+Dass der Float die Ursache **benennt** statt „invalid translation response“ zu
+sagen, ist genau wegen dieser Messung eingebaut: `vim.json.decode` auf einer
+HTML-Seite sagt dasselbe wie ein echter Parse-Fehler, und das sind zwei
+verschiedene Probleme mit zwei verschiedenen Lösungen.
+
+### 2. Kommt `<M-n>` an?
+
+**Eine Minute, und aus dem Zoom-Befund folgt der Verdacht.** `<M-z>` erreicht
+dieses Terminal nicht — das ist gemessen. `<M-n>` ist derselbe Akkord-Typ und
+ist hover.nvims Default, um zwischen mehreren Antworten zu **derselben Stelle**
+zu blättern (`position_keys.next`). Genau die braucht man ab jetzt öfter:
+über einem dotted name antworten schon documentation.nvim und insights.nvim,
+und über einem gewöhnlichen Wort kommt jetzt language.nvim dazu.
+
+```
+:nnoremap <M-n> :echo "kommt an"<CR>
+```
+
+Kommt nichts, sag Bescheid — dann sucht das denselben Weg wie der Zoom: eine
+blanke Taste, die weder Präfix noch Notationszeichen ist. Ich habe den Default
+**nicht** eigenmächtig geändert: `<M-n>` wird für *Position*-Hovers geliehen,
+und dort verengt nichts am Inhalt die Leihe — eine blanke Taste kostet dort
+mehr als beim Zoom. `:Hover next` ist der Weg ohne jede Taste.
 
 ### 3. Was ich ohne dich tun würde
 
@@ -240,13 +325,13 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `67127be`:**
+**Gemessen nach `150be49`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **277 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, **registry 74**, resize 19, scope 26, **switches 41**, zoom 29) |
+| Specs | **279 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, **registry 74**, resize 19, scope 26, **switches 42**, zoom 30) |
 | `stylua --check` / `luacheck` | sauber (35 Dateien) |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `autohover-fix2`, `+0` gegen `pdfzoom-post` |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `zoomkeys-post`, `+0` gegen `autohover-fix2`. language.nvim eigener Pass `lang-hover2`, **0**, `+0` gegen `lg_c` |
 | CI | grün auf beiden Runnern |
 | Helptags | 36 |
 
@@ -261,7 +346,7 @@ URLs mit optionalem Abruf, Bare Paths mit Zeilen und Ranges
 Position-Previews fremder Plugins — **mehrere für dieselbe Stelle, zum
 Durchblättern** (`<M-n>`, `:Hover next`) —, `:Hover why`, `:Hover pin`, Resize
 für **jeden** Hover (`+`/`-` über Bildern, Rad und `:Hover resize` überall),
-**echter Zoom** für Bilder *und* PDF-Seiten (`<M-z>` / `<M-Z>` / `<M-R>`,
+**echter Zoom** für Bilder *und* PDF-Seiten (`>` / `|` / `=`,
 `:Hover zoom`, `h/j/k/l` zum Schwenken), ein Schalter-Chooser über lib.nvims
 UI-Kit — und seit `c374d5e` ein eigener Hover **ohne Plugin drumherum**
 (`setup({ contribute })`).
@@ -271,9 +356,14 @@ Einzelheiten im Repo: [README](https://github.com/StefanBartl/hover.nvim),
 
 ## Wer beiträgt
 
-**Sieben über die Registry** (das Plugin nennt keinen davon beim Namen):
+**Acht über die Registry** (das Plugin nennt keinen davon beim Namen):
 markdown.nvim, migrate.nvim, reposcope.nvim, documentation.nvim,
-spotlight.nvim, sandbox.nvim, insights.nvim.
+spotlight.nvim, sandbox.nvim, insights.nvim, **language.nvim** (seit
+`b592b9f` / `150be49`).
+
+**Zwei davon sind `on_request`**, und es sind genau die teuren: sandbox.nvim
+(eine Container-Engine wecken) und language.nvim (eine Netzanfrage). Ohne das
+Flag hätte keines von beiden ehrlich gebaut werden können.
 
 **Vier namentlich als weiche Abhängigkeit** (hover `pcall`t sie selbst):
 gopath.nvim, open.nvim, images.nvim, pdfport.nvim.
@@ -481,6 +571,21 @@ Damit es nicht als gute Idee wiederkommt.
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `b592b9f` (language.nvim), `150be49` — **das Wort unter dem Cursor,
+  übersetzt.** `:Translate DE cword` und ein `on_request`-Position-Beitrag für
+  `:Hover show`. In hover.nvim selbst änderte sich **nichts** außer der
+  Integrations-Doku — was der Punkt der Registry-Form ist. Dabei zwei Zähler-
+  Drifts gefallen: „Four of those six are position previews“ stand neben einer
+  Tabelle mit sieben Zeilen und fünf Previews, und die README nannte sechs
+  Beitragende ohne insights.nvim. Ein Zähler neben der Liste, die er zählt, ist
+  eine zweite Quelle.
+- `21c4932` — **der Zoom bekommt Tasten, die ankommen.** `>` / `|` / `=` statt
+  `<M-z>` / `<M-Z>` / `<M-R>`. Dazu ein Health-Check für die Überschneidung
+  mit `resize_keys` und ein Fund im Doku-Spec: ein `|` in einer Tabellenzelle
+  muss `\|` geschrieben werden, und `tabulated_keys` teilte die Zeile genau
+  dort — der Default las sich als leere Liste, und der Spec nannte ein
+  richtiges Dokument falsch. Die schlimmste Lage, in der eine Doku-Prüfung
+  sein kann.
 - `67127be` — drei Evidenzzeilen geprüft (Resize-Text, Office-Kehrwoche,
   Bild-Zoom), und der Befund darunter: **`<M-z>` erreicht Neovim auf dieser
   Maschine nicht**. Auf `:echo` gemappt druckt es nichts, also sendet das

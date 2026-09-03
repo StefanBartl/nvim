@@ -928,6 +928,13 @@ plugins.add({
     dependencies = {
       "StefanBartl/lib.nvim",
       "folke/trouble.nvim", -- optional: nicer list; pcall-guarded in the plugin
+      -- Fuer das Feature erforderlich, fuer das Plugin nicht: language.nvim
+      -- registriert seit `b592b9f` einen on_request-Position-Beitrag bei
+      -- hover.nvim, damit `:Hover show` ueber einem Wort dessen Uebersetzung
+      -- zeigt. Es `pcall`t hover.nvim selbst und laeuft ohne es klaglos
+      -- weiter; hier steht es trotzdem, weil es die Ladereihenfolge festlegt
+      -- statt sie von hover.nvims `lazy = false` zu borgen.
+      "StefanBartl/hover.nvim",
     },
     config = function()
       require("language").setup({
@@ -953,6 +960,20 @@ plugins.add({
         -- itself is already all tab-navigation here.
         translate = {
           keymaps = { operator = "<leader>lt", visual = "<leader>lt" },
+          -- Zielsprache fuer alles, was nicht ausdruecklich eine nennt.
+          --
+          -- **Das aendert `<leader>lt` mit.** Ohne diesen Wert fragen die
+          -- Motion- und Visual-Maps nach der Sprache; mit ihm uebersetzen sie
+          -- ohne Rueckfrage nach Deutsch. Das ist der Zweck, aber es ist eine
+          -- Verhaltensaenderung und keine reine Ergaenzung -- fuer einen
+          -- einzelnen Lauf in eine andere Sprache gibt es
+          -- `translate.keymaps.to.<LANG>` und `:Translate <lang>`.
+          --
+          -- Gebraucht wird er vom Hover: `:Hover show` ueber einem Wort hat
+          -- keinen Ort, an dem es fragen koennte, und faellt sonst auf den
+          -- Plugin-Default `EN` zurueck (englisch, weil die meisten Leser in
+          -- ihre eigene Sprache uebersetzen und das nicht Deutsch ist).
+          default_target = "DE",
         },
       })
     end,

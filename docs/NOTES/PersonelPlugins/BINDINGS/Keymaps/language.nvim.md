@@ -13,6 +13,7 @@ a non-empty string.
 | --- | --- | --- | --- |
 | `spell.keymaps.panel` (`<leader>ss`) | n | Toggle spell session (current buffer) | "[language] Toggle spell session (current buffer)" |
 | `translate.keymaps.operator` (default **off**) | n | Translate motion (operator-pending: `<lhs>{motion}`) | "[language] Translate motion" |
+| — | — | **Achtung, geändert am 2026-09-03:** in dieser Config steht jetzt `translate.default_target = "DE"`. Damit **fragen `<leader>lt` und die Visual-Variante nicht mehr nach der Sprache**, sondern übersetzen direkt nach Deutsch. Für einen einzelnen Lauf in eine andere Sprache: `translate.keymaps.to.<LANG>` oder `:Translate <lang>`. Gesetzt wurde er für den Hover, der keinen Ort zum Fragen hat | — |
 | `translate.keymaps.visual` (default **off**) | x | Translate selection | "[language] Translate selection" |
 | `translate.keymaps.to.<LANG>` (default **off**) | n, x | Translate motion/selection into that language for one run | "[language] Translate motion to {LANG}" / "[language] Translate selection to {LANG}" |
 | `thesaurus.keymap` (default **off**, even though `thesaurus.enable=true`) | n | Synonyms for word under cursor | "[language] Synonyms for word under cursor" |

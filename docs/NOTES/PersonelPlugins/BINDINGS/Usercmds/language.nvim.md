@@ -10,7 +10,7 @@ Docs: `docs/BINDINGS.md`, `doc/language.txt`
 | Command | Effect |
 | --- | --- |
 | `:Spellcheck [lang] [buffer\|visible\|cwd\|path=<p>\|clear\|refresh]` | Spell/grammar review |
-| `:[range]Translate <lang> [--nocode\|--output=<m>\|--files=<m>] [scope]` | Translate (popup by default); `!` opens the interactive window |
+| `:[range]Translate <lang> [--nocode\|--output=<m>\|--files=<m>] [cword\|selection\|buffer\|cwd\|path=<p>]` | Translate (popup by default); `!` opens the interactive window. **`cword` seit language.nvim `b592b9f`:** nur das Wort unter dem Cursor, als Zeichenbereich statt als Zeilenbereich |
 | `:[range]TranslateReplace <lang> [--nocode] [scope]` | Translate and replace in place |
 
 ## Notes

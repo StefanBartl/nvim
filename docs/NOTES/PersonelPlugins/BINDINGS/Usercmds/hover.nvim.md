@@ -19,7 +19,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 
 | Command | Args | Notes |
 | --- | --- | --- |
-| `:Hover show` | — | one hover, here, now; ignores every volume switch |
+| `:Hover show` | — | one hover, here, now; ignores every volume switch. Seit language.nvim `b592b9f` **auch eine Übersetzung** des Worts unter dem Cursor — nur hier, nie auf dem automatischen Trigger, weil jede Antwort eine Netzanfrage mit genau diesem Wort ist. Mehrere Antworten zu einer Stelle: `<M-n>` blättert |
 | `:Hover status` | — | mode + all nine switches, as a selectable list |
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover next` | — | step to the next plugin with something to say about this place; wraps past the last |
