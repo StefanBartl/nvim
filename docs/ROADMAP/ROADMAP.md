@@ -5,7 +5,6 @@
   - [cdx](#cdx)
   - [Lists](#lists)
   - [TOP intereessant gerade](#top-intereessant-gerade)
-  - [hover.nvim](#hovernvim)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
@@ -28,17 +27,21 @@
 | **work** |   20. Sept    |   Sa., 06:00    |     11:10       |   100% / 47%     |
 | **free** | 21. Juli 2027 |   So., 09:00    |     20:50       |    --% / 47%     |
 
-never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
-antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-Keine Co-Author nennung von claude in den git commits.^
+- never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
+- antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
+- Die Installations-Specs meiner Pluigns findest du in: C:/Users/bartl/AppData/Local/nvim/lua/plugins/personal/init.lua
+- Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
+- Docs / README.md updaten sofern es Sinn macht
+- Wenn ein binding updatent wird, dann gggf. auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updaten
+- Keine Co-Authorenschaft von Claude in den Commits
+- Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
+- Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
 
 ---
 
 ## Lists
 
 - [ ] C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/MERGED.md
-
-- [ ] `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
 
 ---
 
@@ -51,11 +54,8 @@ Keine Co-Author nennung von claude in den git commits.^
 
 ---
 
-## hover.nvim
-
 ## Misc
 
-- [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
 - [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab/Cases;
 
 - [ ] Anticheat knacken

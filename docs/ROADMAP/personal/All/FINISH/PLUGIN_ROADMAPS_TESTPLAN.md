@@ -25,6 +25,9 @@ stillschweigend abgehakt.
 ## Table of content
 
   - [Vorbereitung](#vorbereitung)
+  - [`hover.nvim`](#hovernvim)
+    - [1. Kommt die Übersetzung überhaupt an?](#1-kommt-die-bersetzung-berhaupt-an)
+    - [2. Kommt `<M-n>` an?](#2-kommt-m-n-an)
   - [`lsp.nvim`](#lspnvim)
     - [QW3 · Inlay-Hints-Toggle](#qw3-inlay-hints-toggle)
     - [QW7 · „installed vs. attached" im Healthcheck](#qw7-installed-vs-attached-im-healthcheck)
@@ -78,6 +81,63 @@ Einmalig, bevor irgendetwas davon Sinn ergibt.
       ein Kommando daran scheitert.
 - [ ] Externe Abhängigkeiten, nur für die Punkte, die sie brauchen:
       **tesseract** (M11 OCR), **ImageMagick** (M13 scale/optimise/convert).
+
+---
+
+## `hover.nvim`
+
+### 1. Kommt die Übersetzung überhaupt an?
+
+**Das ist der einzige echte Vorbehalt am neuen Feature, und er ist gemessen.**
+Der keylose Google-Endpunkt (`translate_a/single?client=gtx`), den
+language.nvims Default-Engine benutzt, hat am 2026-09-03 bei **jeder** Anfrage
+von dieser Maschine **HTTP 429** geantwortet — Googles Seite „your computer or
+network may be sending automated queries“, mit und ohne Browser-User-Agent.
+`api.datamuse.com` hat in derselben Minute mit 200 geantwortet, das Netz ist
+also in Ordnung.
+
+**Was ich nicht weiß:** ob das an deiner Leitung liegt oder an dem Weg, den
+meine Werkzeuge nach draußen nehmen. Das entscheidet ein Test:
+
+```
+:Translate DE cword     über einem englischen Wort
+```
+
+|                                     Was kommt                                      |                   Bedeutet                   |
+| ---------------------------------------------------------------------------------- | -------------------------------------------- |
+|                              die deutsche Übersetzung                              | alles gut, der 429 war mein Weg nach draußen |
+| „das Ende antwortete mit einer Seite, keiner Übersetzung (Rate-Limit oder Sperre)“ |        der Endpunkt sperrt auch dich         |
+
+Im zweiten Fall ist das Feature nicht kaputt, sondern die Engine. Ausweg ohne
+jede Codeänderung: `translate.engine = "deepl"` mit einem Schlüssel (oder
+`$DEEPL_API_KEY`), `"shell"` über `trans`, oder ein eigenes `custom`-Kommando.
+Der Hover fragt, was die Provider-Kette auflöst — nicht Google.
+
+Dass der Float die Ursache **benennt** statt „invalid translation response“ zu
+sagen, ist genau wegen dieser Messung eingebaut: `vim.json.decode` auf einer
+HTML-Seite sagt dasselbe wie ein echter Parse-Fehler, und das sind zwei
+verschiedene Probleme mit zwei verschiedenen Lösungen.
+
+---
+
+### 2. Kommt `<M-n>` an?
+
+**Eine Minute, und aus dem Zoom-Befund folgt der Verdacht.** `<M-z>` erreicht
+dieses Terminal nicht — das ist gemessen. `<M-n>` ist derselbe Akkord-Typ und
+ist hover.nvims Default, um zwischen mehreren Antworten zu **derselben Stelle**
+zu blättern (`position_keys.next`). Genau die braucht man ab jetzt öfter:
+über einem dotted name antworten schon documentation.nvim und insights.nvim,
+und über einem gewöhnlichen Wort kommt jetzt language.nvim dazu.
+
+```
+:nnoremap <M-n> :echo "kommt an"<CR>
+```
+
+Kommt nichts, sag Bescheid — dann sucht das denselben Weg wie der Zoom: eine
+blanke Taste, die weder Präfix noch Notationszeichen ist. Ich habe den Default
+**nicht** eigenmächtig geändert: `<M-n>` wird für *Position*-Hovers geliehen,
+und dort verengt nichts am Inhalt die Leihe — eine blanke Taste kostet dort
+mehr als beim Zoom. `:Hover next` ist der Weg ohne jede Taste.
 
 ---
 
@@ -259,8 +319,6 @@ end)
 
 ## `images.nvim` (+ casedesk)
 
----
-
 ### M11 · OCR
 
 - [ ] `:Image ocr` auf einem Bild mit Text → der Text landet in einem
@@ -301,8 +359,6 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 ---
 
 ## `documentation.nvim` / `runtime-analysis.nvim`
-
----
 
 ### M17/M8 · `:DocMap impact` nach Runtime-Reichweite
 
@@ -376,8 +432,6 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
 ## `color_my_ascii.nvim`
 
----
-
 ### Öffentliche Highlight-API (aus L4)
 
 - [ ] `:lua =vim.tbl_keys(require("color_my_ascii").highlight)` → `runs_for_block`
@@ -392,8 +446,6 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 ---
 
 ## `gopath.nvim` / `pickers.nvim` / `lib.nvim`
-
----
 
 ### M9 · Frecency für Alternate-Vorschläge
 
@@ -416,8 +468,6 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 ---
 
 ## nvim-config
-
----
 
 ### M5 · Sprung zur umschließenden Struktur
 

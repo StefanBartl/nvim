@@ -1,12 +1,6 @@
 # Merged Roadmap — CDX.md + CHECKLIST.md + FINISH_ME.md + Meins.md
-Zusammengeführt und dedupliziert aus den vier Ursprungslisten. Zwei Listen:
 
-- **A — Braucht dich**: Claude Code kann höchstens zuarbeiten/vorschlagen, Entscheidung oder Durchführung liegt bei dir.
-- **B — An Claude Code delegierbar**: kannst du als Auftrag geben, wenig bis nichts von dir nötig.
-
-Innerhalb jedes Themenblocks sortiert nach vermutlichem Aufwand/Nutzen-Verhältnis (günstige Quick-Wins zuerst).
-
-Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
+Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` - außer spezifisch es Plugin ist in der Task angegeben.
 
 ---
 
@@ -60,16 +54,27 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Liste B - Claude Tasks
 
+- [ ] Nach den Änderungen der letzen Wochen müssen wiederhholt werden:
+  - [ ] Tools für nachstehende aufgaben wurden gebaut, aber wieder entfernt als die task fertig  war. aber wir haben eine nptes dile angefertigt, um wenmigsens wissen zu konservieren bez  der tools: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md
+  - [ ] `lib.nvim` module verwendet wo sinnvoll und möglich in den neuen Source Code?
+    - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\Handover_ERLEDIGT\HANDOVER_dedup.md als note
+  - [ ] [Diagnostcs files](C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\DIAGNOSTICS) Nochmals anwenden aber miz dem, was gelernt wurde aus den letzen Durchläufen
+  - [ ] [Magic numbers](C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/ERLEDIGT/Handover_ERLEDIGT/zahlen-ohne-namen.md) neu durchchecken
+  - [ ] Keymaps müssen auch als usrcmds existieren: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\keymap-command-parity.md
+  - [ ] alle fetures in denen es sinn macht sollen konfigureirbar sein durch den user, notes: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\nicht-konfigurierbare-features.md
 
-- [ ] deo isntaller: ewigenes Plugin vl mit lazy installer neuscheriben kombineinre, sodas bei plugin isntall ghleic cli tools checked werdebn?
-- [ ] Wenn cli toios in einen meuiner plugins verwendet wird, wie wird es dem use snagezegit wenn es fehlt?
+- [ ] `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
+  - [ ] docmap-desktop app icon desktop
+
+- [ ] deps installer: ewigenes Plugin vl mit lazy installer neuscheriben kombineinre, sodas bei plugin isntall ghleic cli tools checked werdebn?
+  - [ ] - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
+  - [ ] Wenn cli toios in einen meuiner plugins verwendet wird, wie wird es dem use snagezegit wenn es fehlt?
 
 - [ ] Videos transkripten; Überstzung / Zusammenfassung erstellen; Images text extrahieren; usw... ALles was damit zusmmenhängt bzw sinnvoll ist als Features da anzubieten: Konzept machen -> eventuell bestehende plugin api's nutzen und zusammenführen; Dashboard mit allen Mediendateien die gefunden wurden in path/cwd/cfile/ usw..und dann selection, welche aktion man darauf ausführen will;
 
 - [ ] E:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
 - [ ] gopath.nvim: broken loinks öffnen trotzdem einen buffer
 
-- [ ] docmap-desktop app icon desktop
 
 - [ ] In C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/personal/All/Diagnostics.md:
      [`deprecated` (23) -- veraltete Neovim-APIs](#deprecated-23-veraltete-neovim-apis)
