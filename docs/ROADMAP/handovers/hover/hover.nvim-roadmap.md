@@ -631,8 +631,39 @@ dann entscheiden.
   Namenskomponente eine Endung trägt. Bei einem Wort-Nachschlag ist **jedes
   Wort ein Wort**; es gibt keine solche Vorprüfung, also ist auch unter `force`
   jede Position ein Treffer.
-- **insights.nvim** — braucht einen Cache-Index, bevor „wer importiert dieses
-  Modul" eine Hover-Frage sein kann. Jede Abfrage scannt heute neu.
+- **insights.nvim** — **der Blocker ist weg** (insights.nvim `00ed488`), die
+  Verdrahtung braucht aber eine Entscheidung von dir.
+
+  Gemessen am 2026-09-03, warum es überhaupt einer war: ein voller Scan kostet
+  **631 ms** (hover.nvim), 715 ms (insights.nvim), **1,9 s**
+  (documentation.nvim). Jetzt hinterlässt jeder Scan sein Ergebnis, und
+  `insights.imports.reverse_lookup(modul)` liest es — **28 µs** statt 622 ms
+  auf demselben Baum. Ein kalter Index antwortet `nil` und scannt **nie**
+  (sabotage-getestet); Veralterung wird gemeldet statt geraten.
+
+  **Was jetzt zu entscheiden ist — und es ist ein echter Entwurfspunkt.** Ein
+  Position-Preview von insights würde für einen dotted name antworten („wer
+  importiert `hover.registry`?"). Genau dafür ist documentation.nvim schon
+  registriert („was *ist* `hover.registry`?"). `position_at` gibt die **erste**
+  Antwort zurück, nicht alle — der zweite Beitrag wäre also unsichtbar, sobald
+  eine Map existiert. Kein seltener Fall: es ist derselbe Token.
+
+  Drei Wege, und ich habe eine Meinung:
+
+  1. **Positions dürfen sich stapeln** — `position_at` sammelt statt
+     abzubrechen, und das Float zeigt beide Absätze mit ihren Plugin-Titeln.
+     Ändert das Framework, löst die Klasse für alle künftigen Beitragenden,
+     und die Reihenfolge wird von „wer gewinnt" zu „wer steht oben".
+     **Meine Empfehlung**, weil die Kollision sonst bei jedem dritten
+     Positions-Plugin wiederkommt.
+  2. **insights antwortet über eine andere Stelle** — nicht über den dotted
+     name in einem `require`, sondern über den *Kopf der Datei, in der man
+     steht* („wer importiert mich?"). Andere Frage, anderer Ort, keine
+     Kollision — aber es ist auch nicht mehr ganz die Frage aus dem
+     Roadmap-Eintrag.
+  3. **Gar nicht verdrahten.** `reverse_lookup` ist auch ohne Hover ein
+     Gewinn: `:Insights imports reverse` antwortet jetzt sofort statt nach
+     einer Sekunde, solange nichts geschrieben wurde.
 
 ---
 
