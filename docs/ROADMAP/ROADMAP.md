@@ -53,8 +53,6 @@ Keine Co-Author nennung von claude in den git commits.^
 
 ## hover.nvim
 
----
-
 ## Misc
 
 - [ ] tesseract gehört installiert, also eine notiz in nvim install doc hinzufügem. und: cli tool installer ?
