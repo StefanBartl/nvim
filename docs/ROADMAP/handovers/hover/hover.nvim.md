@@ -66,7 +66,7 @@ Stand 2026-09-03 nach drei Runden.
   [Was der Zoom jetzt bekommt](#was-der-zoom-jetzt-bekommt).
 - **language.nvim** — gebaut (`b592b9f` dort, `150be49` hier). `:Translate DE
   cword` und `:Hover show` über einem Wort. Ausführlich unter
-  [Was language.nvim jetzt beiträgt](#was-language-nvim-jetzt-beiträgt).
+  [Was language.nvim jetzt beiträgt](#was-languagenvim-jetzt-beiträgt).
 
 ---
 
@@ -97,13 +97,22 @@ aus wie ein kaputtes Plugin.
 **Drei Dinge, die du wissen musst.**
 
 1. **Position-Previews sind mit aus.** documentation.nvim („was ist dieses
-   Modul"), insights.nvim („wer importiert es") antworten jetzt nur noch auf
-   `:Hover show`. Das ist der einzige Default hier, der ein echter Kompromiss
+   Modul"), insights.nvim („wer importiert es"), seit `b592b9f` auch
+   language.nvim („was heißt dieses Wort") antworten jetzt nur noch auf
+   `:Hover show`. Das war der einzige Default hier, der ein echter Kompromiss
    ist statt einer offensichtlichen Wahl — niemand registriert einen
    Position-Beitrag versehentlich, `position = true` wäre also vertretbar
    gewesen. Er ist aus, damit „installieren, und Bilder gehen auf" auch auf
-   einer Maschine mit sieben Beiträgern stimmt. Zurück mit
+   einer Maschine mit acht Beiträgern stimmt. Zurück mit
    `:Hover auto position`, dauerhaft in `auto_hover`.
+
+   **Der Kompromiss ist seit language.nvim keiner mehr.** Zwei der acht
+   Beiträge sind `on_request` und damit von diesem Schalter ohnehin
+   unberührt — aber sie zeigen, was ein Position-Beitrag kosten *kann*: eine
+   Container-Engine wecken, eine Netzanfrage stellen. `position = true` hieße,
+   das für jeden künftigen Beitrag im Voraus zu erlauben. (Die Zahl stand hier
+   als „sieben" neben einer Liste, die sie nicht zählt — dieselbe Drift, die
+   in `docs/INTEGRATIONS.md` am selben Tag zweimal gefallen ist.)
 2. **Es spart das Float, nicht die Arbeit davor.** Um zu wissen, dass etwas
    ein Bild ist, muss der Pfad aufgelöst werden. Du bekommst Ruhe, nicht
    Tempo.
@@ -438,7 +447,8 @@ gefangen.
   `cast-local-type` auf Quelltext, den der Commit nicht angefasst hatte, und
   ein zweiter Lauf auf identischem Baum null. Ein einzelner `+1` ist keine
   Regression — erst wiederholen, dann suchen. Ein Lauf kostet etwa eine
-  Minute je Workspace. Letzter Pass: `pdfzoom-post`.
+  Minute je Workspace. Letzte Passes: hover.nvim `zoomkeys-post`,
+  language.nvim `lang-hover2` (eigener Workspace, eigene Basislinie `lg_c`).
 - **Die Doku ist spec-geprüft.** `TESTS/docs_spec.lua` liest README, Vimdoc
   und `docs/**/*.md` gegen die Quelle: Schalternamen, alle `:Hover`-Routen in
   beide Richtungen, Zieltypen, Augroups und Highlight-Gruppen, die
@@ -448,6 +458,14 @@ gefangen.
   „sieben Dinge, die keine CI prüfen kann", während die achte gerade
   dazugekommen war. Verlassen kann man sich darauf für alles außer den
   Integrations-Tabellen, die fremde Plugins beschreiben.
+- **Ein Doku-Spec kann auch andersherum falsch liegen, und das ist die
+  schlimmere Richtung.** Am 2026-09-03 wurde `|` eine Zoom-Taste. In einer
+  Markdown-Tabellenzelle muss das `\|` heißen, auch innerhalb von Backticks
+  — und `tabulated_keys` teilte die Zeile genau an diesem Escape, las den
+  Default als **leere Liste** und nannte ein *richtiges* Dokument falsch. Ein
+  Spec, der die Quelle beschuldigt, kostet mehr als gar keiner: man sucht am
+  falschen Ende. Escape jetzt vor der Zellensuche versteckt und danach
+  zurückgesetzt.
 
 ### Fallen, die hier zugeschlagen haben
 
@@ -514,6 +532,26 @@ gefangen.
 - **Mauseingaben lassen sich headless nicht treiben.** `nvim_input_mouse`
   feuert ohne angehängtes UI **null** Mappings; `feedkeys` mit demselben
   Termcode feuert eines. Was ein echtes Rad angeht, ist deshalb Handprüfung.
+- **Erst binden, dann prüfen.** Eine Prüfung auf ein *Feld* verengt für
+  LuaLS nichts für ein späteres Lesen desselben Feldes: `if not scope.region
+  then return end` gefolgt von `local r = scope.region` sind vier ungeprüfte
+  `nil`. Am 2026-09-03 in language.nvim **+18 `need-check-nil` nach grüner
+  Suite** — vier in der Quelle, vierzehn im Spec, wo eine Laufzeit-Assertion
+  (`H.ok(x)`) dem Analysator nichts sagt. In der Quelle binden, im Spec
+  `---@cast x -nil` hinter die Assertion.
+- **Eine Zusicherung an zwei Einstiegspunkten gehört in einen Helfer.**
+  `language.spell` normalisiert einen Scope in `run` **und** in `open_panel`.
+  Die Ablehnung des neuen `cword`-Scopes nur in `run` geschrieben hätte
+  `open_panel` weiter den ganzen Buffer prüfen lassen — eine falsche Antwort
+  in der Form einer richtigen. Gefunden, weil ein `replace` mit `assert`
+  meldete, dass die Stelle **zweimal** vorkommt: der Assert war der Fund, nicht
+  die Absicherung.
+- **Ein geteiltes Vokabular hat einen Preis, und der ist eine Ablehnung.**
+  `cword` musste in language.nvims *gemeinsamen* Scope-Wortsatz, weil
+  `:Translate DE cword` es sonst als **zweiten Sprachcode** liest und den
+  ganzen Buffer übersetzt. Dieselbe Klasse wie `nginx:1.27` gegen
+  `init.lua:42` in sandbox.nvim: wenn zwei Bedeutungen dieselbe Form haben,
+  entscheidet nicht die Form, sondern wer zuerst gefragt wird.
 - **luals-scan liegt in der Config**, nicht im Plugin-Repo:
   `nvim/scripts/luals-scan/`.
 
