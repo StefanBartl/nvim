@@ -45,7 +45,6 @@ lib.nvim
 lsp.nvim
 markdown.nvim
 mdview.nvim
-migrate.nvim
 open.nvim
 pdfport.nvim
 pickers.nvim
