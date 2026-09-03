@@ -69,11 +69,13 @@ nachgemessen, `docs/FEATURES/ZOOM.md` samt `RESIZE.md` und `docs/ROADMAP.md`
 `scripts/minimal_init.lua`, die drei Defekte statt eines fand (`ade6c1f`).
 Was sie zutage gefördert haben, steht im [Handover](hover.nvim.md).
 
-**Kurzfristig offen ist stattdessen eine Fehlersuche, die woanders liegt:**
-documentation.nvims `map`-Gate ist in CI rot, seit `66c429f` (2026-08-31), und
-das Neugenerieren der Map hat es **nicht** behoben — siehe
-[Abschnitt 4](#4-auftrge-die-woanders-liegen). Es ist der einzige offene Punkt,
-der weder eine Hand noch eine Produktentscheidung braucht.
+**Die Fehlersuche, die dabei aufkam, ist auch zu:** documentation.nvims
+`map`-Gate war in CI rot, seit `66c429f` (2026-08-31), und das Neugenerieren
+der Map hat es nicht behoben — weil der Unterschied nie im Baum lag, sondern
+neben ihm. `c26da89`, Begründung in [Abschnitt 4](#4-auftrge-die-woanders-liegen).
+
+**Damit braucht jeder verbliebene offene Punkt entweder deine Hand oder deine
+Entscheidung** — die Liste steht im [Handover](hover.nvim.md).
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -624,47 +626,68 @@ dann entscheiden.
   Aufrufe von `config.file.load` zählte und die nur passieren, wo eine
   `.docmap.json` existiert. Es hätte also jede Ebene gefragt werden können und
   der Zähler wäre null geblieben. Gezählt wird jetzt die Probe selbst.
-- **documentation.nvim — das `map`-Gate ist in CI rot, und Neugenerieren hilft
-  nicht.** Offen, und die einzige Fehlersuche, die gerade läuft.
+- ~~**documentation.nvim — das `map`-Gate ist in CI rot, und Neugenerieren hilft
+  nicht**~~ — **erledigt am 2026-09-03** (documentation.nvim `c26da89`).
+  Erste grüne CI dort seit dem 30. August, alle fünf Jobs.
 
-  Gefunden am 2026-09-03, nachdem zwei Hover-Commits (`bdfbc9f`, `53d600d`)
-  dort hineingelaufen waren, ohne dass jemand die CI angesehen hat. Rot ist sie
-  seit `66c429f` (2026-08-31) und immer derselbe Job: `scripts/ci.sh map`
-  meldet `docs/map/index.html` **und** `docs/map/module_map.json` als stale.
-  (Die Commit-Message von `693829c` nennt `b632673` als ersten roten Lauf — es
-  ist einer früher.)
+  Gefunden, nachdem zwei Hover-Commits (`bdfbc9f`, `53d600d`) dort
+  hineingelaufen waren, ohne dass jemand die CI angesehen hat. Rot seit
+  `66c429f` (2026-08-31), immer derselbe Job: `scripts/ci.sh map` meldete
+  `docs/map/index.html` **und** `docs/map/module_map.json` als stale, lokal war
+  derselbe Check grün, und `693829c` hat die Map neu erzeugt und committet —
+  ohne Wirkung.
 
-  **Lokal ist derselbe Check grün.** Mit `693829c` ist die Map neu erzeugt und
-  committet worden, und CI meldet sie unverändert stale. Das Artefakt hängt
-  also an der Maschine, die es erzeugt, nicht am Baum — solange das gilt, ist
-  das Gate nicht durch Neugenerieren zu schließen, sondern nur durch die
-  Ursache.
+  **Die Ursache war keine der vier Vermutungen**, und die Reihenfolge ist der
+  Punkt: Zeilenenden (null `\r`, `.gitattributes` erzwingt LF), `meta.branch`
+  (eine Konstante, `scan.lua:791`), die Reihenfolge des Verzeichnislaufs
+  (`scan.lua:262` sortiert) und der eingebackene Startup-Flamegraph (wird in
+  `cli.lua` auf beiden Seiten herausgerechnet und erklärt die JSON ohnehin
+  nicht) — alle vier widerlegt, und keine war es.
 
-  Vier Ursachen sind ausgeschlossen:
+  **Es war das, was neben dem Baum liegt.** `core/external_repos.lua` prüft die
+  *Form* jedes externen Links gegen den Checkout, den `.docmap.json` unter
+  `../lib.nvim` nennt: `a.b` liegt entweder flach als `a/b.lua` oder als
+  `a/b/init.lua`, und geraten wird eine funktionierende URL auf einen 404. Auf
+  einem Runner liegt dort nichts, also fallen **20 von 23** Links auf die
+  flache Form zurück. Das Artefakt trug damit Wissen, das nicht aus dem Baum
+  stammt — und `--check` vergleicht Bytes.
 
-  | Verdacht | Warum nicht |
-  | --- | --- |
-  | Zeilenenden | null `\r`-Bytes in beiden Artefakten, `.gitattributes` erzwingt `* text=auto eol=lf` |
-  | `meta.branch` | sieht maschinenabhängig aus, ist eine Konstante: `scan.lua:791` schreibt `opts.branch or "main"` |
-  | Reihenfolge des Verzeichnislaufs | `scan.lua:262` sortiert, und dass `vim.fs.dir` nichts garantiert, steht dort schon als Kommentar |
-  | der eingebackene Startup-Flamegraph | der bekannte maschinenabhängige Teil, wird aber in `cli.lua:205` auf beiden Seiten aus `index.html` herausgerechnet — und erklärt die JSON ohnehin nicht |
+  Gemessen statt argumentiert, mit einer Sonde, die denselben Baum zweimal
+  scannt: mit und ohne Nachbar-Checkout **exakt 100 Bytes Unterschied**, alle
+  `/init.lua` gegen `.lua` in `tag_links`, und der Lauf *mit* ist byteweise das
+  Committete. Vorher geprüft, dass alle 21 lib.nvim-Pfade auch in dessen
+  `origin/main` so liegen — sonst hätte die CI weiter abgewichen, nur
+  andersherum.
 
-  Übrig als Verdacht: die IR selbst hängt an der Umgebung. Zwei Kandidaten —
-  der gebündelte tree-sitter-Lua-Parser (`core/functions.lua` zieht
-  Funktionen, Kommentare und Komplexität über `vim.treesitter`; hier NVIM
-  0.12.2 gegen CIs `stable`), oder etwas, das die **Nachbar-Checkouts** sieht:
-  hier liegen 33 `.nvim`-Repos neben dem Baum, in CI liegt nur
-  `.deps/lib.nvim`, und rot wurde es genau mit dem Commit, der
-  Geschwister-Referenzen eingeführt hat. Der zweite Kandidat erklärt aber
-  direkt nur die HTML-Hälfte — Findings werden gerendert, die JSON ist
-  `to_json(ir)` und trägt keine.
+  Behoben in drei Teilen, in der Reihenfolge ihrer Wichtigkeit:
 
-  **Der nächste Schritt ist nicht, weiter zu raten.** Der Job muss sagen,
-  *was* sich unterscheidet: die in CI erzeugten `index.html` und
-  `module_map.json` als Artefakt hochladen (oder die erste abweichende Stelle
-  drucken) und gegen die committete Fassung halten. Von Windows aus ist jede
-  weitere Hypothese billiger zu widerlegen als zu prüfen, und drei sind es
-  schon gewesen.
+  1. **Der Job legt den Checkout hin, wo die Deklaration ihn nennt** — ein
+     Symlink von `.deps/lib.nvim` nach `../lib.nvim`, weil `actions/checkout`
+     keinen Pfad außerhalb des Workspace annimmt und die Kopie für `require`
+     ohnehin schon da ist. Der Preis steht im Workflow: eine Umstrukturierung
+     in lib.nvim kann diesen Job rot machen, ohne dass hier etwas committet
+     wurde — und das ist das ehrliche Signal, denn ab dem Moment sind die
+     Links tot.
+  2. **„Stale" nennt jetzt die Stelle.** Erstes abweichendes Byte, beide
+     Größen, und ein Fenster aus beiden Seiten. Dass es das nicht tat, *ist*
+     der Grund für die fünf Tage: auf der Maschine, die den Check ausführen
+     konnte, war er grün.
+  3. **`local_path` wird gegen `opts.root` aufgelöst** statt gegen das
+     Arbeitsverzeichnis. So dokumentiert war es immer; getestet nie, weil jeder
+     Aufrufer aus der Repo-Wurzel läuft. `check.lua` machte es für dasselbe
+     Feld längst richtig.
+
+  Zwei Zusicherungen dazu in `external_repos_spec`: ein deklarierter Checkout,
+  der auf dieser Maschine nicht liegt, fällt auf die flache Form zurück (die
+  Falle selbst, festgenagelt), und ein relativer `local_path` löst gegen
+  `opts.root` auf — sabotage-geprüft, unter dem alten Verhalten der einzige
+  Fehlschlag der Suite.
+
+  **Die Regel, die bleibt:** ein byteweise verglichenes Artefakt darf nicht
+  davon abhängen, was zufällig neben dem Baum liegt. Wer es doch tut, muss
+  jeder Maschine, die `--check` fährt, dasselbe danebenlegen — oder auf die
+  Prüfung verzichten. Steht im Kopf von `core/external_repos.lua` und am Feld
+  `local_path` in `@types`.
 - **language.nvim** — die Produktfrage *vor* der Integration: soll ein Druck auf
   `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
   (`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
