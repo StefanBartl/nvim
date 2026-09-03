@@ -62,6 +62,8 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
         - [ ] Hinweis auf workflow/usecase/api usw... files in der docs um zu zeigen: Wenn du m öchtest, die docs isnf gut ausgebaut, hier kannst du infos bekommen
         - [ ] ....
 
+- [ ] plugins/personal/ -> kommentare und docs prüfen
+
 ---
 
 ## Liste B - Claude Tasks

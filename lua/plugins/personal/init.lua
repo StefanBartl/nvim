@@ -730,7 +730,6 @@ plugins.add({
           "StefanBartl/lsp.nvim",
           "StefanBartl/markdown.nvim",
           "StefanBartl/mdview.nvim",
-          "StefanBartl/migrate.nvim",
           "StefanBartl/cmdlog.nvim",
           "StefanBartl/sandbox.nvim",
           "StefanBartl/open.nvim",
@@ -838,18 +837,6 @@ plugins.add({
       ollama_model = "qwen2.5-coder:7b",
       debug = false,
     },
-  },
-
-  {
-    -- Finds/rewrites deprecated Neovim API calls (vim.highlight.* ->
-    -- vim.hl.*, vim.lsp.buf_get_clients() -> vim.lsp.get_clients(), ...) in
-    -- the current line, a range, the whole buffer, or cwd, with a Telescope
-    -- picker+preview past single-line scope. Useful directly on this
-    -- config's own Lua as it moves across Neovim versions.
-    "StefanBartl/migrate.nvim",
-    dependencies = { "StefanBartl/lib.nvim" },
-    cmd = { "MigrateOpt", "MigrateNotify", "MigrateHl", "MigrateLsp" },
-    opts = {}, -- opt + notify + hl + lsp all enabled by default
   },
 
   {

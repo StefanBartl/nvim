@@ -9,7 +9,6 @@ for _, dir in ipairs({
   "E:/repos/hover.nvim",
   "E:/repos/lib.nvim",
   "E:/repos/spotlight.nvim",
-  "E:/repos/migrate.nvim",
   "E:/repos/documentation.nvim",
 }) do
   vim.opt.rtp:append(dir)

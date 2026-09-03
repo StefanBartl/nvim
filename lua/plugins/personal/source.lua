@@ -124,7 +124,6 @@ plugins.modes({
   ["diff.nvim"] = "dir",
   ["language.nvim"] = "dir", -- Basename des Specs "StefanBartl/language.nvim"
   ["cmdlog.nvim"] = "dir",
-  ["migrate.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
   ["learn-cli.nvim"] = "disabled", -- gebraucht weder lokal noch remote
