@@ -11,7 +11,8 @@ repo, unlike published standalone plugins, opted for alongside not replace).
 | `:Lib ps-profile` | Open the active PowerShell profile | `:PowershellProfile` (still works, Windows only) |
 | `:Lib helptags` | Regenerate all helptags now | (was autocmd-only before) |
 | `:Lib deps show [plugin]` | Declared external tools for `plugin` (why each matters, present/missing), or every plugin shipping a spec if omitted | none — new surface |
-| `:Lib deps install plugin` | Compose an install command for whatever `plugin` is missing, confirm, hand off to a terminal | none — new surface |
+| `:Lib deps status` | Every declared tool across **every** plugin at once, merged — the view for a freshly rolled-out config, and the one that also reaches lazy-loaded plugins | none — new surface |
+| `:Lib deps install [plugin]` | Compose an install command for whatever `plugin` is missing, confirm, hand off to a terminal. Without an argument: everything missing, across all plugins | none — new surface |
 | `:Lib hover toggle` / `on` / `off` | Den Pfad-/Link-Hover fuer diese Sitzung aus- und wieder einschalten; `on`/`off` sagen es ausdruecklich, statt zu kippen | none — new surface |
 | `:Lib hover web toggle` / `on` / `off` | Whether http(s) links hover at all. Off by default — see below | none — new surface |
 | `:Lib hover web fetch toggle` / `on` / `off` | Whether a hovered link is fetched for its status code, `<title>` and description. Implies `web on` | none — new surface |
@@ -96,6 +97,65 @@ brew on macOS), asks for confirmation, then **types** the command into a
 terminal split without submitting it — the sudo/UAC prompt, if any, is
 answered at that real terminal, not by a backgrounded job.
 
+### `:Lib deps status` — all plugins at once (2026-09-03)
+
+`show <plugin>` is the right question once you already suspect a plugin, and
+the wrong one after rolling this config onto a new machine — there the
+question is "what is missing **here**", and answering it meant running `show`
+once per plugin and holding the results in your head.
+
+```
+:Lib deps status
+```
+
+Same popup, same `i` / `I` install keys, same live output — the merge just
+hands `deps.view` one combined tool list instead of one plugin's. A tool
+several plugins want appears **once**, with all of them named:
+
+```
+[missing] pandoc
+    Converts a case bundle to standalone HTML on the way to :Case export's PDF…
+    see: wanted by nvim, pdfport.nvim
+    scoop install pandoc
+```
+
+Measured on this config on 2026-09-03: **16 plugins with a spec, 27 distinct
+tools.** `curl` is wanted by five of them, `rg` by six.
+
+It also side-steps the lazy-loading problem below without touching any of
+lazy.nvim's internals: the first-run popup rides on a plugin's `setup()`, so
+a lazy-loaded plugin shows it whenever it first happens to load — possibly
+weeks after installation. `spec.find` reads lazy's registry anyway, so this
+report sees all 76 pending plugins without waiting for any of them.
+
+`:Lib deps install` without a plugin argument does the same across
+everything, through the same confirmation and the same terminal handoff.
+
+**This config is in that list, under the name `nvim`.** It declares the six
+tools it reaches for itself (`docs/install.json`) — `:Case ocr` needs
+tesseract, `:Case export` needs pandoc — so `:Lib deps show nvim` works like
+any plugin's. The prose half is [`docs/installation.md`](../../../../installation.md).
+
+### `require_tool` — the moment a command actually fails
+
+Everything above is read *before* anything breaks, which is to say: usually
+not at all. `lib.nvim.deps.require_tool` is the same question asked at the
+moment a command fails, so the failure message carries the spec's own `why`
+and the install command for this host instead of a bare "X not found":
+
+```lua
+local curl = require("lib.nvim.deps").require_tool("language.nvim", "curl")
+if not curl then return end
+```
+
+It returns the **name to spawn**, not a boolean — a tool with
+`bin_alternatives` is `gs` here and `gswin64c` there, and the caller still
+has to know which. `require_tool.lines(plugin, bin)` is the same wording
+*without* notifying, for the call sites that hand their error upwards
+through a callback or an `errors` list — where a notification beside it
+would say the same thing twice. Both are used that way in
+`lua/bindings/usrcmds/case/{export,ocr}.lua`.
+
 ### One tool, several spellings — `bin_alternatives` (2026-08-30)
 
 A tool entry may declare `bin_alternatives`: other executable names the
@@ -137,8 +197,14 @@ building it — 120 plugins configured, 44 loaded at startup, 76 pending —
 plugins that are installed but not yet loaded.
 
 Full design, the format spec, and the package-manager list:
-`lua/lib/nvim/deps/README.md` and `docs/ROADMAP/dependency-installer.md` in
-the lib.nvim repo, `:help lib.nvim-deps`.
+`lua/lib/nvim/deps/README.md` in the lib.nvim repo, and `:help lib.nvim-deps`.
+
+The pointer here used to read `docs/ROADMAP/dependency-installer.md` **in the
+lib.nvim repo**, which stopped being true on 2026-08-29: `ce7db7c` moved every
+roadmap document out of that repository. It now lives in this config as
+[`ROADMAP/personal/All/FINISH/lib.nvim.deps.md`](../../../../ROADMAP/personal/All/FINISH/lib.nvim.deps.md)
+— written against the eight submodules of the time, so `status` and
+`require_tool` are not in it.
 
 ## Module control commands (separate from the `:Lib` verb)
 
