@@ -28,275 +28,197 @@ fünf Funde geworden.
 
 ## Was offen ist — die Übersicht
 
-Vier Punkte. Stand 2026-09-03, nach einer Runde Handprüfung.
+Drei Punkte, und zwei davon sind Fragen an dich, keine Arbeit.
+Stand 2026-09-03 nach zwei Runden Handprüfung.
 
 | # | Punkt | Wer | Was genau fehlt |
 | --- | --- | --- | --- |
-| [1](#1-zoom-von-hand-und-die-tasten-die-nicht-ankommen) | **Zoom von Hand** | du + ich | Der Zoom arbeitet, das Schwenken fühlt sich richtig an — aber `<M-z>` kommt in deinem Terminal **nicht an**. Eine Diagnose und danach vielleicht andere Default-Tasten. |
-| [2](#2-office-kehrwoche) | **Office-Kehrwoche** | du | Eine Datei im Cache zurückdatieren, ein Office-Dokument hovern. Befehle stehen unten fertig. |
-| [3](#3-ein-auto-modus-pro-zieltyp) | **Auto-Modus pro Zieltyp** | Entscheidung du, Bau ich | Dein Entwurf vom 2026-09-03: von selbst nur Bilder/PDFs, alles andere dazuschaltbar. Einschätzung und ein konkreter Vorschlag unten. |
-| [4](#4-languagenvim-ein-wörterbuch-im-hover) | **language.nvim** | du | Ob ein Wörterbuch im Hover überhaupt gewollt ist. Unten neu erklärt, weil die alte Formulierung nicht verständlich war. |
+| [1](#1-die-zoom-tasten-kommen-nicht-an) | **Zoom-Tasten** | du (ein Test), dann ich | `<M-z>` kommt in deinem Terminal nachweislich nicht an. `>` und `=` gehen, `<` bricht an which-key. Ich brauche eine Antwort, welche Taste „heraus" wird, dann ändere ich den Default. |
+| [2](#2-language-nvim-übersetzung-ja-wörterbuch-nein) | **language.nvim** | du | Die Antwort auf deine Frage steht unten: es gibt **keine Definitionen**, nur Synonyme und Übersetzung, beide über das Netz. Damit ist die Frage eine andere geworden. |
+| [3](#3-was-ich-ohne-dich-tun-würde) | *(ohne dich)* | ich | Nichts Dringendes. |
 
-**Erledigt seit der letzten Fassung, mit Datum:**
+**Erledigt am 2026-09-03**, in der Reihenfolge, in der es passiert ist:
 
-- **Scharfer PDF-Zoom** — gebaut am 2026-09-03 (`7fdfc09`). Er war der letzte
-  Punkt, der weder Hand noch Entscheidung brauchte.
-- **Resize von Hand, Texthälfte** — bestätigt am 2026-09-03: es kommen **mehr
-  Zeilen** an, nicht nur ein größerer Rahmen. Damit ist die Evidenzzeile
-  vollständig (Bildhälfte 2026-09-02).
+- **Scharfer PDF-Zoom** — gebaut (`7fdfc09`). Die Messung hat den Punkt
+  freigegeben, der als „3,3 s je Schritt" eine Entscheidung war: das war die
+  Zeit für eine *ganze* Seite, das sichtbare Fenster kostet 118–140 ms auf
+  jeder Stufe.
+- **Resize von Hand, Texthälfte** — bestätigt: es kommen mehr **Zeilen** an.
+  **Meine Anweisung war falsch** (`+` ist über einem Text-Hover nicht
+  geborgt, sondern die Motion, die den Hover mitnimmt); `:Hover resize` ist
+  der Weg, und `MANUAL-EVIDENCE.md` stand schon richtig da.
+- **Office-Kehrwoche** — bestätigt: eine um 30 Tage zurückdatierte PDF war
+  nach dem nächsten Lauf weg, die neue lag da. Wichtig für die
+  Wiederholung: es muss ein **anderes** Dokument sein, weil der Sweep einmal
+  je Sitzung und nur bei einer echten Konvertierung läuft.
+- **Bild-Zoom von Hand** — bestätigt: der Ausschnitt kommt gezeichnet an, und
+  `h/j/k/l` fühlt sich richtig an. Getrieben mit `>` / `=`, weil die
+  Alt-Akkorde nicht ankommen (Punkt 1).
+- **Lua-Modulwurzel** — entschieden: der Name bleibt. `docs/NAME-COLLISION.md`
+  (`e228dfb`), vier Sätze, keine README-Referenz.
+- **Demo-GIF** — von der Liste; kommt am Schluss für alle Plugins zusammen.
+- **Auto-Modus pro Zieltyp** — gebaut (`e8cde0e`, `f265f19`). Ausführlich
+  unter [Was jetzt von selbst aufgeht](#was-jetzt-von-selbst-aufgeht).
 
-  **Und meine Anweisung dazu war falsch.** Ich hatte „`+` zweimal drücken"
-  geschrieben. Über einem *Text*-Hover ist `+` gar nicht geborgt — dort ist es
-  die Motion, die es immer war, also springt der Cursor eine Zeile weiter und
-  nimmt dabei den Hover mit. Genau deshalb gibt es die Route `:Hover resize`,
-  und genau das stand in `MANUAL-EVIDENCE.md` schon richtig. Ich habe aus dem
-  Handover heraus etwas anderes behauptet als das Dokument, das dafür da ist.
-- **Lua-Modulwurzel** — entschieden am 2026-09-03: **der Name bleibt.** Keine
-  Umbenennung, keine Referenz im README. Stattdessen `docs/NAME-COLLISION.md`
-  (`e228dfb`): vier Sätze, englisch, die sagen, dass bei zwei Plugins mit der
-  Modulwurzel `lua/hover/` die Ladereihenfolge entscheidet, welches erreichbar
-  ist. Nichts zeigt darauf, weil die Notiz nur den interessiert, der schon
-  beide installiert hat und sich wundert.
-- **Demo-GIF** — von der Liste genommen. Kommt am Schluss für alle `.nvim`-
-  Plugins in einem Aufwasch.
+---
+
+## Was jetzt von selbst aufgeht
+
+**Default seit `e8cde0e`: nur Bilder und PDF-Seiten.** Alles andere wartet
+darauf, gefragt zu werden.
+
+```lua
+require("hover").setup({
+  auto_hover = { "image", "pdf" },   -- der Default
+  -- auto_hover = true,              -- alles, wie vorher
+  -- auto_hover = false,             -- nichts; wirkt wie mode = "manual"
+})
+```
+
+Drei Schreibweisen, eine Bedeutung. Eine **Liste** ist eine geschlossene Menge
+und ersetzt den Default. Eine **Tabelle** ist additiv (`{ file = true }` heißt
+„und Textdateien auch") — so mergen alle anderen Optionen hier, und so
+schreibt der Laufzeit-Schalter zurück. `true`/`false` sind die beiden Enden.
+
+Zur Laufzeit: `:Hover auto` listet, was aufgeht und was wartet;
+`:Hover auto image` schaltet einen Typ um; `:Hover auto all|none` beides auf
+einmal. `:checkhealth hover` sagt es auch — weil ein schmaler Default sich wie
+ein Defekt anfühlt: eine Textdatei hovern und nichts bekommen sieht genauso
+aus wie ein kaputtes Plugin.
+
+**Drei Dinge, die du wissen musst.**
+
+1. **Position-Previews sind mit aus.** documentation.nvim („was ist dieses
+   Modul"), insights.nvim („wer importiert es") antworten jetzt nur noch auf
+   `:Hover show`. Das ist der einzige Default hier, der ein echter Kompromiss
+   ist statt einer offensichtlichen Wahl — niemand registriert einen
+   Position-Beitrag versehentlich, `position = true` wäre also vertretbar
+   gewesen. Er ist aus, damit „installieren, und Bilder gehen auf" auch auf
+   einer Maschine mit sieben Beiträgern stimmt. Zurück mit
+   `:Hover auto position`, dauerhaft in `auto_hover`.
+2. **Es spart das Float, nicht die Arbeit davor.** Um zu wissen, dass etwas
+   ein Bild ist, muss der Pfad aufgelöst werden. Du bekommst Ruhe, nicht
+   Tempo.
+3. **Es sperrt den Trigger, nicht das Plugin.** `:Hover show` antwortet für
+   jeden Typ. Genau das ist der Unterschied zu `paths.enabled`: das sagt „ist
+   gar kein Ziel", `auto_hover` sagt „nicht ungefragt".
+
+**Zu deinen Umbenennungsfragen, mit Begründung — ich habe zwei von drei
+umgesetzt und einer widersprochen.**
+
+- **`auto` → `auto_hover`:** übernommen. `auto_open_hover` wäre genauer und
+  ist zu lang für etwas, das man in jede Config schreibt.
+- **`mode` → „Startmodus":** **nicht** umgesetzt, und das ist der einzige
+  Punkt, an dem ich dir widerspreche. `mode` ist nicht der Start-, sondern der
+  *aktuelle* Zustand — `:Hover mode manual` schaltet ihn mitten in der
+  Sitzung. Ein Name mit „start" darin wäre genau in dem Moment falsch, in dem
+  man ihn benutzt.
+- **Braucht man `manual` noch?** Du hast dich nicht verzettelt, die Frage ist
+  richtig — und die Antwort ist ja, aber aus einem anderen Grund als vorher.
+  `manual` ist jetzt die *temporäre* Form von `auto_hover = false`: ein
+  Schalter für jetzt gegen eine Einstellung für immer. „Ich lese gerade ein
+  Dokument voller Links, Ruhe bitte" ist ein Handgriff; `auto_hover` leeren
+  und später wiederherstellen ist keiner. Und `off` bleibt `off` statt
+  `no_hover`: kürzer, und es steht schon in jeder Doku.
+
+Was dabei nebenbei herauskam: die Argumentwerte aller Routen liegen im
+Doku-Spec in **einem** Topf, und die neuen Typnamen (`missing`, `office`,
+`file`, `image`) sind gleichzeitig Routenwörter. `:Hover paths missing` wurde
+dadurch zu `paths` gekürzt, und drei Dokumente meldeten eine echte Route als
+undokumentiert. Der Spec liest jetzt beide Lesarten — großzügig für „ist das
+dokumentiert", streng für „nennt ein Dokument etwas, das es nicht gibt".
 
 ---
 
 ## Die offenen Punkte, einzeln
 
-### 1. Zoom von Hand, und die Tasten, die nicht ankommen
+### 1. Die Zoom-Tasten kommen nicht an
 
-**Was bestätigt ist (2026-09-03).** Das Schwenken mit `h/j/k/l` „fühlt sich
-perfekt an" — deine Worte, und das war die Hälfte, die keine Spec beantworten
-kann. Der Zoom selbst arbeitet also: `:Hover zoom` schneidet, `h/j/k/l`
-bewegen.
+**Der Befund, gemessen statt vermutet.** `:nnoremap <M-z> <Cmd>echo "…"<CR>`
+und dann `<M-z>` drücken: **es kommt gar nichts.** Also sendet das Terminal
+den Akkord nicht — was ankommt, ist `<Esc>` gefolgt von `z`, und `z` ist ein
+which-key-Präfix (Folds). Deshalb ging which-key auf.
 
-**Was nicht funktioniert.** `<M-z>` tut gar nichts, und stattdessen geht
-**which-key** auf und schlägt weitere Tasten vor.
+**Was funktioniert.** Mit
+`zoom_keys = { into = ">", out = "<", reset = "=" }`:
 
-**Das ist ein Befund, kein Rätsel — aber die Ursache steht noch nicht fest.**
-Wenn `<M-z>` bei Neovim ankäme und nichts daran gebunden wäre, passierte
-schlicht nichts. Dass which-key aufgeht, heißt: Neovim hat etwas anderes
-bekommen. Die wahrscheinliche Form ist `<Esc>` gefolgt von `z`, also der
-Terminal-Weg für Alt-Akkorde, und `z` ist ein which-key-Präfix (Folds). Genau
-diese Verwechslung beschreibt `MANUAL-EVIDENCE.md` als die erste Art, wie das
-scheitert — sie sieht aus wie ein Plugin-Fehler und ist keiner.
+| Taste | Ergebnis |
+| --- | --- |
+| `>` | funktioniert |
+| `=` | funktioniert |
+| `<` | **which-key: „Recursion detected"** |
 
-**Deine Aufgabe: ein Tastendruck.**
+`<` ist das Zeichen, mit dem Vims Tastennotation *anfängt* (`<C-x>`, `<M-z>`).
+Ein Plugin, das Mappings parst — und which-key tut das — kommt damit
+durcheinander. Es ist also kein zufälliger Konflikt, sondern einer, den
+jeder mit which-key hätte.
 
-```vim
-:nnoremap <M-z> <Cmd>echo "M-z kommt an"<CR>
-```
+**Was ich brauche: eine Antwort, welche Taste „heraus" wird.** Kandidaten, die
+weder Präfix noch Notationszeichen sind und über einem Hover ohnehin nichts
+tun:
 
-Dann `<M-z>` drücken:
+| Vorschlag | Warum |
+| --- | --- |
+| `_` | sieht aus wie ein Minus, ist eine harmlose Motion, kein Präfix |
+| `,` | wiederholt sonst `f`/`t` rückwärts — über einem Float bedeutungslos |
+| `<M-Z>` behalten | falls du irgendwann ein Terminal benutzt, das Alt sendet |
 
-- **„M-z kommt an" erscheint** → das Terminal sendet den Akkord. Dann lag es
-  daran, dass kein *zoombarer* Hover offen war: über einer Textdatei werden
-  die Zoom-Tasten nicht geborgt (nur über Bild und PDF-Seite). Der Screenshot,
-  den du geschickt hast, zeigt einen Hover auf `ROADMAP.md` — das wäre die
-  Erklärung, und dann ist nichts kaputt.
-- **which-key geht wieder auf** → das Terminal sendet den Akkord nicht, und
-  keine Konfiguration in diesem Plugin kann daran etwas ändern.
+Sag eine, und ich mache `>` / `<gewählt>` / `=` zum Default, ziehe README,
+Vimdoc und BINDINGS mit und schreibe die Begründung dazu — dass Alt-Akkorde
+nur dort richtig sind, wo das Terminal sie sendet, und dass das eine Annahme
+war, bis diese Messung sie widerlegt hat.
 
-**Was ich übernehme, wenn es der zweite Fall ist.** Andere Default-Tasten,
-oder deine eigenen. Der Punkt bei diesen Tasten ist, dass sie **nur geliehen**
-sind, solange ein zoombarer Hover offen steht — also ist fast alles frei, was
-im Normal-Modus teuer wäre. Sofort und ohne Codeänderung:
+**Bis dahin steht es in deiner Config**, und in
+`docs/MANUAL-EVIDENCE.md` steht der Befund mit Datum.
 
-```lua
-require("hover").setup({
-  zoom_keys = { into = ">", out = "<", reset = "=" },
-})
-```
+### 2. language.nvim: Übersetzung ja, Wörterbuch nein
 
-`>` und `<` sind im Normal-Modus Operatoren, die auf eine Motion warten; als
-geliehene Einzeltasten über einem Float sind sie frei und tragen die
-Bedeutung schon im Zeichen. Wenn sich das bewährt, würde ich es zum Default
-machen — die Alt-Akkorde waren die Wahl unter der Annahme, dass sie überall
-ankommen, und diese Annahme ist auf deiner Maschine gerade widerlegt worden.
+**Deine Frage war die richtige, und die Antwort ändert den Punkt.** Woher
+bekommt language.nvim, was ein Wort bedeutet? **Gar nicht.** Es hat drei
+Quellen, und keine davon ist ein Wörterbuch:
 
-**Was danach noch offen bleibt.** Das eigentliche Hinsehen: ob der
-vergrößerte Ausschnitt **gezeichnet** ankommt, für ein Bild und für eine
-PDF-Seite — und bei einer **gescannten** PDF ausdrücklich *ohne* schärfer zu
-werden, weil dort nichts mehr zu holen ist. Die Zahlen dazu liefert
-`scripts/pdfzoom_probe.lua`; hinsehen kann sie nicht.
+| Was | Woher | Netz? |
+| --- | --- | --- |
+| Synonyme | Datamuse-API (`rel_syn`), frei, ohne Schlüssel, über `curl` | **ja** |
+| Übersetzung | Google-Engine, ohne Schlüssel, über `curl` | **ja** |
+| Rechtschreibung | Neovims eigenes `spell` | nein |
+| Grammatik | ein LSP (ltex o. ä.) | je nach Server |
 
-### 2. Office-Kehrwoche
+Eine **Definition** — „was bedeutet dieses Wort" — liefert es nicht.
 
-**Was fehlt.** Der altersbasierte Sweep des Office-Caches
-(`office.cache_days`, Default 7). Alles andere am Office-Pfad ist zweimal
-durchgespielt.
-
-**Wie der Sweep funktioniert**, damit die Prüfung nicht am falschen Ende
-sucht: er läuft **einmal pro Sitzung**, und zwar erst, wenn in dieser Sitzung
-zum ersten Mal wirklich **konvertiert** wird. Ein Dokument, dessen PDF schon
-im Cache liegt, löst ihn *nicht* aus. Deshalb braucht die Prüfung zwei
-verschiedene Dokumente oder einen Neustart mit einem noch nicht konvertierten.
-
-**Deine Aufgabe, Schritt für Schritt.**
-
-1. Ein Office-Dokument hovern, mit eingeschalteter Konvertierung — das legt
-   die erste PDF im Cache an:
-
-   ```vim
-   :Hover office on
-   ```
-
-   Dann den Cursor auf einen Pfad wie `./Bewerbung_Stefan_Bartl_3S.docx`
-   stellen und warten, bis die Seite kommt.
-
-2. Nachsehen, was da liegt, und es um 30 Tage zurückdatieren (PowerShell):
-
-   ```powershell
-   $dir = "$env:LOCALAPPDATA\Temp\nvim\hover.nvim\office"
-   Get-ChildItem $dir -Filter *.pdf | ForEach-Object { $_.LastWriteTime = (Get-Date).AddDays(-30); $_ }
-   ```
-
-   Das druckt die Dateien mit ihrem neuen Datum — merk dir einen Namen.
-
-3. Neovim **neu starten** (der Sweep ist pro Sitzung gemerkt), dann ein
-   **anderes** Office-Dokument hovern, wieder mit `:Hover office on`.
-
-4. Nachsehen, ob die zurückdatierte Datei weg ist:
-
-   ```powershell
-   Get-ChildItem "$env:LOCALAPPDATA\Temp\nvim\hover.nvim\office" -Filter *.pdf | Select-Object Name, LastWriteTime
-   ```
-
-   Erwartung: die alte ist fort, die neue liegt da. Bleibt die alte liegen,
-   ist der Sweep nicht gelaufen — dann ist die interessante Frage, ob in
-   Schritt 3 überhaupt konvertiert wurde (eine PDF aus dem Cache konvertiert
-   nicht).
-
-**Was ich übernehme.** Die Evidenzzeile füllen, und falls die alte Datei
-liegen bleibt, die Fehlersuche — der Sweep ist zehn Zeilen, und
-`office.cache_days = 0` schaltet ihn ganz ab, was ein guter Gegentest ist.
-
-### 3. Ein Auto-Modus pro Zieltyp
-
-**Dein Entwurf (2026-09-03).** Von selbst hovern sollen nur **Bilder und
-PDFs**. Textdateien hinter Markdown-Links und Pfade im Fließtext sollen
-einzeln dazuschaltbar sein; „alles an" und „alles aus" soll es weiter geben;
-und in der User-Config soll man den Default setzen können.
-
-**Meine Einschätzung: ja, und aus einem Grund, der stärker ist als Geschmack.**
-Ein Bild oder eine PDF-Seite ist das Einzige, was der Hover zeigt und was man
-sonst *gar nicht* sieht, ohne die Datei zu öffnen. Die ersten Zeilen einer
-Textdatei sind eine Abkürzung, kein neuer Anblick. Der Nutzen pro Unterbrechung
-ist damit über die Zieltypen sehr ungleich verteilt, und das ist genau die
-Achse, an der ein automatischer Trigger geschnitten gehört.
-
-**Was es heute schon gibt — und warum das nicht dasselbe ist.** Die Schalter
-sind nach **Fundort** organisiert: `links.enabled` (Markdown-Links),
-`paths.enabled` (Pfade im Fließtext), `positions`, `office`, `git`. Dein
-Wunsch ist nach **Zieltyp** — und ein Markdown-Link kann auf ein Bild *oder*
-auf eine Textdatei zeigen. Die beiden Achsen kreuzen sich also; mit den
-heutigen Schaltern ist „nur Bilder, egal wie gefunden" nicht ausdrückbar.
-
-**Mein Vorschlag, konkret.** Eine neue Option neben `mode`, kein neuer Modus:
-
-```lua
-require("hover").setup({
-  mode = "auto",              -- bleibt der Hauptschalter: auto | manual | off
-  auto = { "image", "pdf" },  -- was im auto-Modus von selbst aufgehen darf
-})
-```
-
-- `auto = true` — alles, das heutige Verhalten und der Default, bis du etwas
-  anderes sagst.
-- `auto = false` — nichts von selbst; identisch zu `mode = "manual"`.
-- `auto = { … }` — eine Liste von Zieltypen (`image`, `pdf`, `office`, `file`,
-  `directory`, `url`, `git`, `position`).
-
-Dazu eine Route zum Umschalten während der Sitzung, in der Form, die es schon
-gibt (`:Hover links web on`):
+**Damit ist die alte Frage vom Tisch.** „Soll bei jedem Wort ein Wörterbuch
+aufgehen" stellt sich nicht, weil es kein Wörterbuch gibt. Übrig bleibt genau
+das, was du selbst vorgeschlagen hast:
 
 ```
-:Hover auto image on
-:Hover auto file off
+:Hover language [en|de|fr|…]    das Wort unter dem Cursor, übersetzt
 ```
 
-**Zwei Dinge, die ich dabei ehrlich sagen muss.**
+**Was daran zu entscheiden ist**, und es ist kurz:
 
-1. **Es gibt dann zwei Wege, etwas nicht zu sehen** — `paths.enabled = false`
-   und `auto` ohne `file`. Sie bedeuten Verschiedenes, und das gehört
-   dokumentiert: `paths.enabled = false` heißt, ein Pfad im Fließtext ist
-   *gar kein Ziel* — auch `:Hover show` findet dort nichts. Das `auto`-Gate
-   heißt nur, dass der Trigger nicht von selbst fragt; auf `:Hover show`
-   bekommst du die Vorschau trotzdem. Das ist eine echte Unterscheidung, keine
-   Dopplung — aber eine, die man erklären muss.
-2. **Gespart wird das Float, nicht die Arbeit davor.** Um zu wissen, dass
-   etwas ein Bild ist, muss der Pfad aufgelöst werden — die Treesitter-Prüfung
-   und ein `fs_stat` laufen also weiter. Beides ist gemessen billig (die
-   Zahlen stehen im Modulkopf von `hover.bare_path`), aber wer sich davon eine
-   *Beschleunigung* verspricht, bekommt eine Beruhigung.
+1. **Jeder Aufruf ist eine Netzanfrage** an Google bzw. Datamuse. Das ist
+   dieselbe Klasse wie `links.fetch`, das hier aus genau diesem Grund
+   standardmäßig aus ist. Als *Route* (ausdrücklich getippt) ist das
+   unproblematisch — als automatischer Trigger wäre es die Sorte
+   Preisgabe, die dieses Plugin sonst vermeidet. Meine Empfehlung: nur
+   als Route, nie automatisch.
+2. **Zielsprache:** aus dem Argument, mit einem Default aus language.nvims
+   eigener Konfiguration.
+3. Und die Frage, ob es überhaupt in *diesen* Hover gehört oder ein eigenes
+   Kommando in language.nvim bleibt. Der Hover bringt den Rahmen, das
+   Blättern (`<M-n>`) und das Zumachen mit; language.nvim bringt die Antwort.
 
-**Deine Aufgabe.** Sagen, ob der Vorschlag so passt — insbesondere, ob `auto`
-als Liste von Zieltypen die richtige Form ist, und ob der Default zunächst
-`true` bleiben soll (alles wie bisher) oder gleich auf `{ "image", "pdf" }`
-gehen soll.
+Sag ja, und ich verdrahte es — die Form ist dieselbe wie bei insights.nvim
+und sandbox.nvim, beide sind vorgemacht.
 
-**Was ich übernehme.** Den Bau: Option, Normalisierung der Legacy-Formen,
-Route mit Completion, `:checkhealth`-Zeile, Specs, und die Doku in README,
-Vimdoc und BINDINGS — die Doku-Spec sagt mir dabei, was ich vergessen habe.
+### 3. Was ich ohne dich tun würde
 
-### 4. language.nvim: ein Wörterbuch im Hover
-
-**Erst, was das überhaupt heißt** — die alte Formulierung war unverständlich,
-und das war mein Fehler.
-
-language.nvim ist ein Plugin für *natürliche Sprache*: es kann zu einem Wort
-die Rechtschreibung, die Grammatik, eine Übersetzung oder Synonyme zeigen.
-
-hover.nvim kann fremde Plugins nach der Stelle fragen, an der der Cursor steht
-(„position preview" — documentation.nvim und insights.nvim machen das schon).
-Wenn language.nvim sich so anmeldet, dann heißt das: **du stehst mit dem
-Cursor auf irgendeinem Wort in einem Fließtext, und es geht ein Float auf, das
-dir dieses Wort erklärt.** Nicht auf einem Pfad, nicht auf einem Link — auf
-einem gewöhnlichen Wort in einem gewöhnlichen Satz.
-
-**Warum das eine Frage ist und keine Aufgabe.** Bei allem anderen, was dieser
-Hover zeigt, gibt es eine billige Prüfung, ob überhaupt etwas da ist: ein Pfad
-muss auf eine existierende Datei zeigen, eine URL muss eine URL sein, ein
-Container-Image muss wie eines aussehen. Deshalb bleibt der Hover in Prosa
-still. **Bei einem Wörterbuch ist jedes Wort ein Treffer** — es gibt keine
-Prüfung „lohnt sich hier ein Wörterbuch?", die nicht das Wörterbuch selbst
-wäre. Also gibt es nur zwei Zustände: bei *jedem* Wort geht etwas auf, oder es
-geht nur auf Nachfrage auf — und dann bei jedem Wort, das du fragst.
-
-**Was sich seit `ac0a372` verbessert hat.** Vorher gewann der erste
-registrierte Beitrag, und ein Wörterbuch hätte damit unter `:Hover show` alles
-andere verdeckt. Heute wird geblättert (`<M-n>`), es darf hinten stehen und
-verdeckt nichts mehr. Der Einsatz der Entscheidung ist also deutlich kleiner
-geworden.
-
-**Deine Aufgabe: drei Fragen.**
-
-1. Willst du auf ein Wort zeigen und eine Erklärung bekommen — in Prosa, in
-   Markdown, in Kommentaren?
-2. Wenn ja: nur auf ausdrückliche Nachfrage (`:Hover show`), oder auch von
-   selbst? (Meine Empfehlung: nur auf Nachfrage, und zwar bevor es überhaupt
-   gebaut wird.)
-3. Und wenn Punkt [3](#3-ein-auto-modus-pro-zieltyp) kommt: soll ein
-   Wörterbuch dort ein eigener Zieltyp sein, den man einzeln zuschaltet?
-
-**Was ich übernehme.** Die Verdrahtung, sobald die Antwort ja ist. Sie ist
-dieselbe Form wie insights.nvim und sandbox.nvim, beide sind vorgemacht, und
-die Regel dafür — wann ein Wort nachschlagenswert ist — gehört nach
-language.nvim, nicht hierher.
-
-### Was ich ohne dich tun würde
-
-Wenig, und nichts Dringendes.
-
-- **`hover.scope` als lib.nvim-Helfer** (`REL-31` fragt danach). „Ist der
-  Cursor in ausführbarem Code?" ist generisch — aber es hat *einen*
-  Implementierer, und die Regel, die den Hover aus lib.nvim herausgeschickt
-  hat, schneidet in beide Richtungen: ein Helfer mit einem Konsumenten ist ein
-  Helfer, den ein Konsument geformt hat. Wieder aufgreifen, wenn etwas
-  Zweites dieselbe Frage stellt; `open.nvim` wäre der natürliche zweite.
-- **Turnusmäßig:** nach jeder Code-Änderung ein LuaLS-Scan (die Regel unten),
-  und ein Blick auf die CI der Repos, in die ich committe.
+- **`hover.scope` als lib.nvim-Helfer** (`REL-31`). Ein Helfer mit einem
+  Konsumenten ist ein Helfer, den ein Konsument geformt hat — wieder
+  aufgreifen, wenn etwas Zweites dieselbe Frage stellt. `open.nvim` wäre der
+  natürliche zweite.
+- **Turnusmäßig:** nach jeder Code-Änderung ein LuaLS-Scan, und ein Blick auf
+  die CI der Repos, in die ich committe.
 
 ---
 
@@ -318,13 +240,13 @@ Routen mitbringt. Der Präzedenzfall war zweimal gelaufen (`lib.nvim.docmap` →
 documentation.nvim, `lib.nvim.telemetry` → runtime-analysis.nvim). Kosten des
 Umzugs: neun Module generischer Infrastruktur mit null lib.nvim-Kopplung.
 
-**Gemessen nach `7fdfc09`:**
+**Gemessen nach `67127be`:**
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| Specs | **266 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, **registry 74**, resize 19, scope 26, switches 30, **zoom 29**) |
-| `stylua --check` / `luacheck` | sauber (34 Dateien) |
-| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `pdfzoom-post`, `+0` gegen `next-post2` |
+| Specs | **277 grün**, 0 Fehler, **0 pending** (mit `IMAGES_NVIM_DIR`; ohne sie überspringt der Crop-Check) (bare_git 10, bare_path 48, config 17, docs 13, **registry 74**, resize 19, scope 26, **switches 41**, zoom 29) |
+| `stylua --check` / `luacheck` | sauber (35 Dateien) |
+| LuaLS (`scan.sh`, echte injizierte Library) | **0 Befunde**, Pass `autohover-fix2`, `+0` gegen `pdfzoom-post` |
 | CI | grün auf beiden Runnern |
 | Helptags | 36 |
 
@@ -559,6 +481,22 @@ Damit es nicht als gute Idee wiederkommt.
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `67127be` — drei Evidenzzeilen geprüft (Resize-Text, Office-Kehrwoche,
+  Bild-Zoom), und der Befund darunter: **`<M-z>` erreicht Neovim auf dieser
+  Maschine nicht**. Auf `:echo` gemappt druckt es nichts, also sendet das
+  Terminal den Akkord nicht; was ankommt, ist `<Esc>`+`z`, und which-key geht
+  auf dem Präfix auf. Mit `>` und `=` läuft der Zoom, `<` bringt which-key zu
+  „Recursion detected" — seine Antwort darauf, dass ein Plugin genau das
+  Zeichen bindet, mit dem Vims Tastennotation anfängt.
+- `e8cde0e`, `f265f19` — **`auto_hover`: nur Bilder und PDF-Seiten gehen von
+  selbst auf.** Die dritte Achse, quer zu den bestehenden Schaltern: die sind
+  danach organisiert, *wo* ein Ziel gefunden wurde, diese danach, *was* es
+  ist. Ein Markdown-Link kann auf ein Bild oder eine Textdatei zeigen, also
+  war „nur Bilder, egal wie geschrieben" vorher nicht sagbar. Dazu ein Fund
+  im Doku-Spec (Argumentwerte aller Routen in einem Topf, und die neuen
+  Typnamen sind gleichzeitig Routenwörter) und einer vom LuaLS-Scan
+  (`health.info` nimmt keine Advice-Liste und verschluckt sie still — dieselbe
+  Klasse wie documentation.nvim `9f128bb`).
 - `e228dfb` — `docs/NAME-COLLISION.md`: vier Sätze zur Modulwurzel, und die
   Resize-Evidenzzeile ist vollständig. Die Zeile sagt jetzt auch, warum `+`
   nicht der Weg ist, sie zu prüfen — über einem Text-Hover ist `+` die Motion,
