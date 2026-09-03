@@ -1,6 +1,6 @@
 # hover.nvim — Handover
 
-Stand: **2026-09-02**. Diese Datei ist der **aktuelle Stand**: was das Plugin
+Stand: **2026-09-03**. Diese Datei ist der **aktuelle Stand**: was das Plugin
 ist, wo es steht, und was man wissen muss, um daran weiterzuarbeiten.
 
 Repo: <https://github.com/StefanBartl/hover.nvim> · lokal `E:/repos/hover.nvim`
@@ -100,6 +100,17 @@ Wenig, und das meiste bewusst. Ausführlich steht es **einmal**, in der
 | **`manual` als Default?** | §6.2 | Produktfrage: soll der Hover von sich aus aufgehen. |
 | **language.nvim** | §4 | Die Produktfrage *vor* der Integration: soll `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Seit `ac0a372` **deutlich billiger zu beantworten** — es darf hinten in der Reihenfolge stehen und verdeckt keinen anderen Beitrag mehr. |
 
+**Offen und ohne dich: eine Fehlersuche, die noch läuft.**
+documentation.nvims `map`-Gate ist in CI rot — seit `66c429f` (2026-08-31),
+lange vor den beiden Hover-Commits, die dort hineingelaufen sind, ohne dass
+jemand hingesehen hat. `scripts/ci.sh map` meldet `docs/map/index.html` **und**
+`docs/map/module_map.json` als stale; lokal ist derselbe Check nach dem
+Neugenerieren grün, und mit `693829c` ist die neu erzeugte Map committet —
+CI meldet sie unverändert stale. Das Artefakt hängt also an der Maschine, die
+es erzeugt. Vier Ursachen sind ausgeschlossen, der nächste Schritt ist,
+den Job sagen zu lassen, *was* sich unterscheidet, statt weiter zu raten:
+[Roadmap §4](hover.nvim-roadmap.md#4-auftrge-die-woanders-liegen).
+
 **Ohne dich, wenn Zeit ist:** §2 sagt, was ich als Nächstes bauen würde und in
 welcher Reihenfolge. §5 hält fest, was geprüft und *nicht* aufgenommen wurde,
 damit es nicht als gute Idee wiederkommt.
@@ -118,6 +129,19 @@ mehr, und niemand merkt es einer Zahl an.
   `regeln/LUA_NVIM.md` beim Schreiben.
 - **Commits ohne KI-Co-Author** — steht so in `NEW_PROJECT.md` und ist hier so
   gehalten.
+- **In dieser Config nur benannte Pfade stagen**, nie `git add -A`. Am
+  2026-09-03 hat ein `git add -A` hier drei fremde, schon liegende Änderungen
+  in einen Hover-Commit gezogen und mitgepusht: die Quota-Tabelle in
+  `docs/ROADMAP/ROADMAP.md` und eine Bindings-Konsolidierung (zwei Dateien
+  gelöscht, eine mit 447 Zeilen neu). Nichts ging verloren, aber die
+  Commit-Message beschrieb nichts davon. Der Haupt-Checkout ist ein **lebender
+  Arbeitsbaum** — hier wird von Hand editiert und andere Sitzungen lassen
+  Unfertiges liegen. Die Plugin-Repos sind Worktrees je Sitzung und haben das
+  Problem nicht.
+- **Nach einem Commit in ein fremdes Repo dessen CI ansehen** (`gh run list`).
+  Am 2026-09-03 sind zwei Commits in ein documentation.nvim gelaufen, dessen
+  `map`-Gate seit dem 31. August rot war. Die dortige Suite war grün, die
+  eigene Prüfung war grün — und keins von beidem ist das Gate.
 - **Keine Lizenzdatei** (`NEW-06`, `REL-28`) — bewusst keine angelegt, auch
   wenn pdfport/gopath welche haben.
 - **stylua-Stil:** `collapse_simple_statement = "Never"`, wie lib.nvim. Nicht
@@ -362,6 +386,19 @@ reset -> ganzes Bild;  pan ohne Zoom -> false
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- `a93dcc3` (insights.nvim) und `693829c` (documentation.nvim) — **die beiden
+  Gegenseiten von `ac0a372` sind jetzt dokumentiert.** insights' Verdrahtung
+  war von nirgends erreichbar: die Capability-Tabelle der README kannte sie
+  nicht (es ist die einzige Fähigkeit ohne Kommando), `configuration.md` nennt
+  sich „full `setup()` reference" und führte `hover` nicht, und `BINDINGS.md`
+  verspricht jeden Autocmd — der `BufWritePost` des Index stand nicht darin.
+  documentation.nvims Seite sagte nirgends, dass für denselben dotted name
+  jetzt ein **zweites** Plugin antwortet; wer zwei Antworten bekam, konnte
+  nicht wissen, dass die zweite kein Fehler ist.
+
+  Dabei ist dort die generierte Map neu erzeugt worden, weil sie stale war —
+  und dabei kam heraus, dass das `map`-Gate in CI seit `66c429f` rot ist.
+  **Das Neuerzeugen hat es nicht behoben**, siehe oben unter „Was offen ist".
 - `1badc86` — **der erste LuaLS-Lauf über `ac0a372` fand vier Befunde**, alle
   aus dieser einen Änderung. `_open.col` und `_open.position_nth` sind das,
   womit das Blättern dieselbe Stelle erneut fragt, und beide standen nicht in

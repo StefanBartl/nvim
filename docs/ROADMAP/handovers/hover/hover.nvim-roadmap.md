@@ -23,7 +23,7 @@
 
 ## Intro
 
-Stand: **2026-09-02**. Angelegt als Auftrag E aus der Sitzung vom selben Tag;
+Stand: **2026-09-03**. Angelegt als Auftrag E aus der Sitzung vom 2026-09-02;
 seither sind [2.1](#21-ein-spec-das-die-doku-gegen-die-quelle-prüft--gebaut-4e1760f),
 die Tastenhälfte von [2.2](#22-resize--gebaut-und-unterwegs-umbenannt)
 und [2.3](#23-eine-checkhealth-zeile-für-contribute--gebaut-aca73fa) gebaut und
@@ -63,12 +63,17 @@ nur bleiben soll, was noch offen ist. Was als Nächstes zu bauen wäre, steht
 in [Abschnitt 4](#4-auftrge-die-woanders-liegen) — zwei der Aufträge dort
 sind gemessen, klein, und ihr Nutzen entsteht hier.
 
-**Kurzfristig offen sind vier Kleinigkeiten aus der Zoom-Sitzung**, und die
-stehen im [Handover](hover.nvim.md#direkt-offen-nach-9fba190), nicht hier:
-LuaLS nachmessen, `docs/FEATURES/ZOOM.md` schreiben (und `RESIZE.md` plus
-`docs/ROADMAP.md` dabei mitziehen), eine Evidenzzeile, und eine echte kleine
-Fehlersuche — `scripts/minimal_init.lua` lädt images.nvim nicht in die Spec,
-weshalb der Ausschnitt selbst ungedeckt ist.
+**Die vier Kleinigkeiten aus der Zoom-Sitzung sind erledigt** — LuaLS
+nachgemessen, `docs/FEATURES/ZOOM.md` samt `RESIZE.md` und `docs/ROADMAP.md`
+(`a18880a`), die Evidenzzeile (`e5aef5c`), und die Fehlersuche um
+`scripts/minimal_init.lua`, die drei Defekte statt eines fand (`ade6c1f`).
+Was sie zutage gefördert haben, steht im [Handover](hover.nvim.md).
+
+**Kurzfristig offen ist stattdessen eine Fehlersuche, die woanders liegt:**
+documentation.nvims `map`-Gate ist in CI rot, seit `66c429f` (2026-08-31), und
+das Neugenerieren der Map hat es **nicht** behoben — siehe
+[Abschnitt 4](#4-auftrge-die-woanders-liegen). Es ist der einzige offene Punkt,
+der weder eine Hand noch eine Produktentscheidung braucht.
 
 Drei Dokumente, drei Adressaten — das ist der Grund, warum es diese Datei
 überhaupt gibt:
@@ -619,6 +624,47 @@ dann entscheiden.
   Aufrufe von `config.file.load` zählte und die nur passieren, wo eine
   `.docmap.json` existiert. Es hätte also jede Ebene gefragt werden können und
   der Zähler wäre null geblieben. Gezählt wird jetzt die Probe selbst.
+- **documentation.nvim — das `map`-Gate ist in CI rot, und Neugenerieren hilft
+  nicht.** Offen, und die einzige Fehlersuche, die gerade läuft.
+
+  Gefunden am 2026-09-03, nachdem zwei Hover-Commits (`bdfbc9f`, `53d600d`)
+  dort hineingelaufen waren, ohne dass jemand die CI angesehen hat. Rot ist sie
+  seit `66c429f` (2026-08-31) und immer derselbe Job: `scripts/ci.sh map`
+  meldet `docs/map/index.html` **und** `docs/map/module_map.json` als stale.
+  (Die Commit-Message von `693829c` nennt `b632673` als ersten roten Lauf — es
+  ist einer früher.)
+
+  **Lokal ist derselbe Check grün.** Mit `693829c` ist die Map neu erzeugt und
+  committet worden, und CI meldet sie unverändert stale. Das Artefakt hängt
+  also an der Maschine, die es erzeugt, nicht am Baum — solange das gilt, ist
+  das Gate nicht durch Neugenerieren zu schließen, sondern nur durch die
+  Ursache.
+
+  Vier Ursachen sind ausgeschlossen:
+
+  | Verdacht | Warum nicht |
+  | --- | --- |
+  | Zeilenenden | null `\r`-Bytes in beiden Artefakten, `.gitattributes` erzwingt `* text=auto eol=lf` |
+  | `meta.branch` | sieht maschinenabhängig aus, ist eine Konstante: `scan.lua:791` schreibt `opts.branch or "main"` |
+  | Reihenfolge des Verzeichnislaufs | `scan.lua:262` sortiert, und dass `vim.fs.dir` nichts garantiert, steht dort schon als Kommentar |
+  | der eingebackene Startup-Flamegraph | der bekannte maschinenabhängige Teil, wird aber in `cli.lua:205` auf beiden Seiten aus `index.html` herausgerechnet — und erklärt die JSON ohnehin nicht |
+
+  Übrig als Verdacht: die IR selbst hängt an der Umgebung. Zwei Kandidaten —
+  der gebündelte tree-sitter-Lua-Parser (`core/functions.lua` zieht
+  Funktionen, Kommentare und Komplexität über `vim.treesitter`; hier NVIM
+  0.12.2 gegen CIs `stable`), oder etwas, das die **Nachbar-Checkouts** sieht:
+  hier liegen 33 `.nvim`-Repos neben dem Baum, in CI liegt nur
+  `.deps/lib.nvim`, und rot wurde es genau mit dem Commit, der
+  Geschwister-Referenzen eingeführt hat. Der zweite Kandidat erklärt aber
+  direkt nur die HTML-Hälfte — Findings werden gerendert, die JSON ist
+  `to_json(ir)` und trägt keine.
+
+  **Der nächste Schritt ist nicht, weiter zu raten.** Der Job muss sagen,
+  *was* sich unterscheidet: die in CI erzeugten `index.html` und
+  `module_map.json` als Artefakt hochladen (oder die erste abweichende Stelle
+  drucken) und gegen die committete Fassung halten. Von Windows aus ist jede
+  weitere Hypothese billiger zu widerlegen als zu prüfen, und drei sind es
+  schon gewesen.
 - **language.nvim** — die Produktfrage *vor* der Integration: soll ein Druck auf
   `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
   (`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
@@ -688,6 +734,15 @@ dann entscheiden.
   Ende-zu-Ende geprüft gegen echtes hover.nvim: kalter Index → gar kein Float;
   nach einem `scan_cwd()` → „7 file(s) import this, 18 occurrence(s)" samt
   Dateiliste.
+
+  **Und dokumentiert** (insights.nvim `a93dcc3`, documentation.nvim `693829c`).
+  Die Verdrahtung war von nirgends erreichbar: die Capability-Tabelle der
+  README kannte sie nicht — es ist die einzige Fähigkeit ohne Kommando —,
+  `configuration.md` nennt sich „full `setup()` reference" und führte `hover`
+  nicht, und `BINDINGS.md` verspricht jeden Autocmd, aber der `BufWritePost`
+  des Index stand nicht darin. Auf documentation.nvims Seite fehlte, dass für
+  denselben dotted name überhaupt ein zweites Plugin antwortet: wer zwei
+  Antworten bekommt, konnte nicht wissen, dass die zweite kein Fehler ist.
 
 ---
 
