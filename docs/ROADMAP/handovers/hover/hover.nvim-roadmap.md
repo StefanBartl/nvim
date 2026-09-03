@@ -526,12 +526,28 @@ dann entscheiden.
 
 ## 4. Aufträge, die woanders liegen
 
-- **bindings-explorer.nvim** — `:Bindings check` deckt die BINDINGS-Tabellen von
-  Composer-Plugins **nicht** ab, sieht aber so aus, als täte es das. Verglichen
-  wird gegen `nvim_get_commands()`; dort steht nur `Hover`, und alle fünfzehn
-  Routenzeilen fallen darauf zusammen. Betrifft jedes Plugin auf
-  `usercmd.composer`. Gemessen am 2026-09-02: eine Zeile gelöscht, beide Läufe
-  melden „keine Drift". In der Sache dasselbe wie 2.1, eine Ebene höher.
+- ~~**bindings-explorer.nvim**~~ — **erledigt am 2026-09-03**
+  (nvim-config `861371cf`). `:Bindings check` deckte die BINDINGS-Tabellen von
+  Composer-Plugins **nicht** ab und sah aus, als täte es das: verglichen wurde
+  gegen `nvim_get_commands()`, dort steht nur `Hover`, und alle Routenzeilen
+  fielen darauf zusammen. Beide Richtungen bestanden trivial. Betraf jedes
+  Plugin auf `usercmd.composer`, also etwa die halbe Sammlung.
+
+  Der Befund ist vor dem Bauen reproduziert worden — eine in der Cheatsheet
+  **erfundene** Route erzeugte kein einziges Finding — und danach die
+  Gegenprobe: erfundene Route auf erster Ebene gemeldet, auf zweiter Ebene
+  gemeldet, echte dreistufige Route (`:Hover links web fetch`) still.
+
+  Geprüft wird über die **Completion des Kommandos**, Ebene für Ebene, statt
+  über die Registry des Composers — so ist jedes Kommando prüfbar, das seine
+  Argumente vervollständigt, und eines ohne Completion wird *übersprungen*
+  statt geraten. Neue Finding-Art `usercmd-subroute-not-live` mit eigener
+  Sektion im Bericht.
+
+  **Ein Fehlalarm auf dem Weg**, und er steht im Code: `:Hover nav
+  {direction}` wurde gemeldet, weil zunächst nur `[` als Platzhalter
+  geschnitten wurde. Der Korpus benutzt alle drei Formen — 33 `[path]`,
+  13 `{name}`, 12 `<name>` —, also enden jetzt alle drei die Route.
 - ~~**gopath.nvim**~~ — **erledigt am 2026-09-03** (`a7529d1`), siehe 2.4. Nicht
   das, was dort vorhergesagt war: entfernt wurde ein 200-ms-LSP-Timeout, den
   von hier aus niemand sehen konnte, und das Gate bleibt.
