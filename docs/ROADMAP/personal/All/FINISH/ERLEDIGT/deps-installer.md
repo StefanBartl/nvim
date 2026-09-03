@@ -3,6 +3,23 @@
 > Analyse der drei Roadmap-Punkte unter `lib.nvim / deps installer`.
 > Quelltext-Stand geprüft am 2026-09-03 gegen `E:\repos\lib.nvim` und alle
 > `E:\repos\*.nvim`.
+>
+> **Erledigt am 2026-09-03.** Alle vier Bausteine aus Abschnitt 3 sind
+> gebaut, getestet (`LIB_TESTS_OK`), dokumentiert und über neun Repos
+> committet und gepusht — siehe Abschnitt 7. Zwei der offenen Punkte haben
+> sich beim Bauen aufgelöst:
+>
+> - **B3s technisches Fragezeichen** — `spec.find` findet die Config ohne
+>   Sonderfall, unter dem Namen `nvim`. Kein Code-Eingriff nötig.
+> - **B2s Architekturfrage** (generalisieren vs. duplizieren) — keine von
+>   beiden: der Merge erzeugt genau die Datenform, die `view.show` schon
+>   nimmt, also wird der bestehende Renderer samt `i`/`I`-Keymaps und
+>   Live-Streaming unverändert wiederverwendet.
+>
+> Dazugekommen ist `require_tool.lines()`: die interessantesten
+> Fehlermomente melden gar nicht, sondern reichen ihren Fehler nach oben
+> durch (Callback, `result.errors`) — dort wäre eine Notification eine
+> Doppelmeldung.
 
 ---
 
@@ -231,7 +248,102 @@ installieren wollen, sind schlimmer als eines, das es nicht tut.
 
 ---
 
-## 4. Reihenfolge
+## 4. Aufwand je Baustein
+
+**Einheit:** „Sitzung" = eine zusammenhängende Arbeitseinheit mit mir, inkl.
+Tests und Doku. Keine Personenstunden — die Zahl sagt, wie oft du dich
+hinsetzen musst, nicht wie lange du tippst.
+
+**Kalibrierung** (gemessen, nicht geschätzt): Das gesamte `deps`-System sind
+**1813 LOC Modulcode + 1004 LOC Tests**. Verhältnis Test:Code ≈ 0,55:1 — das
+ist der Maßstab, an dem die Positionen unten hängen. Referenz-Einzelmodule:
+`health` 122, `first_run` 160, `install` 187, `pm` 206, `spec` 373, `view` 384.
+
+| Baustein | Neuer Code | Tests | Sitzungen | Risiko |
+|---|---|---|---|---|
+| **B1** `require_tool` | ~120–160 | ~80–120 | **1** | gering |
+| **B2** `:Lib deps status` | ~230–330 | ~150 | **2–3** | mittel |
+| **B3** Config-Spec + Doku | ~80 JSON + ~150 MD | — | **1–2** | eine offene Frage |
+| **B4** fünf Specs | ~25 JSON je Plugin | — | **0,5–1 je Plugin** | gering |
+
+### B1 — die klarste Position
+
+Alle Zutaten existieren (`spec`, `detect`, `pm`, `install`); neu ist nur das
+Zusammenführen plus Meldungsformat und Session-Dedup. Vergleichsgröße ist
+`health.lua` mit 122 LOC.
+
+**Der Kern ist ohne eine einzige geänderte Call-Site fertig und nutzbar.**
+Die Umstellung der Aufrufer ist danach 1–3 Zeilen pro Stelle und beliebig
+verteilbar — quer über alle Plugins sind es realistisch **~15–20 echte
+Fehlermoment-Stellen**, nicht die 65 Executable-Prüfungen, die eine naive
+Zählung liefert (siehe unten).
+
+Offen sind zwei *Design*-Entscheidungen, keine technischen Hürden: wie fein
+dedupliziert wird (pro Tool? pro Plugin+Tool? pro Session?) und was passiert,
+wenn das Plugin gar keinen Spec hat.
+
+### B2 — die größte Position
+
+Der Grund liegt in `view.lua`: es ist plugin-zentriert gebaut
+(`render(plugin_name, result, opts, ui)`) und lässt sich für eine
+Multi-Plugin-Ansicht nicht direkt wiederverwenden. Daraus folgt die
+Hauptfrage, und sie ist eine Architektur-, keine Fleißfrage:
+
+- **generalisieren** — sauberer, berührt aber 384 LOC getesteten Code
+- **daneben bauen** — risikoärmer, erzeugt aber Duplikation bei Keymaps und
+  Inline-Install
+
+Hinzu kommt Zusammenführungslogik, die es bisher nirgends gibt: ein Tool, das
+mehrere Plugins wollen (`curl`: diff + language), darf nicht doppelt
+erscheinen, muss aber beide Herkünfte zeigen.
+
+### B3 — überwiegend Schreibarbeit, mit einer offenen Frage
+
+Die Config benutzt mehr CLI-Tools als der Roadmap-Punkt vermuten lässt.
+Gemessen: **pandoc, bat, win32yank, wl-copy / wl-paste, nvr, zsh** — plus
+tesseract, das nur deshalb nicht in dieser Liste auftaucht, weil casedesk es
+über `images.nvim` aufruft. Realistisch 5–8 Spec-Einträge.
+
+Die eigentliche Arbeit ist nicht das Tippen, sondern pro Tool ein ehrliches
+`why` und eine **`pkg`-Map über neun Package-Manager** zu verifizieren.
+
+**Offene technische Frage — vor dem Start zu klären:** ob `spec.find` die
+Config überhaupt findet und unter welchem Namen sie dann in `:Lib deps show`
+auftaucht. Die Config liegt auf `runtimepath`, ist aber kein Plugin mit
+Repo-Namen. Falls das nicht aufgeht, braucht `spec.find` einen Sonderfall —
+dann verschiebt sich B3 von „Schreibarbeit" zu „Schreibarbeit plus kleiner
+Code-Eingriff".
+
+### B4 — beliebig stückelbar
+
+Pro Plugin: `docs/install.json` (Referenzgrößen im Bestand: 20 Zeilen bei
+`language`/`mdview`/`replacer`, 33 bei `filetree`), eine Zeile `show_once`,
+eine Zeile `report_for`, ein README-Absatz. Das Muster liegt zehnmal vor.
+Auch hier dominiert die `pkg`-Map-Recherche den Aufwand, nicht der Code.
+
+**Zwei Nachträge nebenbei entdeckt** (Vergleich „gemeldet" gegen
+„deklariert"): `insights.nvim` meldet fehlendes `fd`, hat es aber nicht im
+Spec; `language.nvim` dasselbe mit `node`. Zwei Kleinstergänzungen, je ein
+Eintrag.
+
+*(`fzf-lua` taucht in mehreren dieser Meldungen ebenfalls auf, gehört aber
+**nicht** in einen Spec — es ist ein Neovim-Plugin, kein CLI-Tool. Das CLI
+`fzf` ist bei `pickers.nvim` korrekt deklariert.)*
+
+### Warum die naive Zählung dreimal zu hoch liegt
+
+Die zehn Spec-Plugins enthalten **65 Executable-Prüfungen** außerhalb ihrer
+`health.lua`. Das ist *nicht* der B1-Umfang, denn die große Mehrheit sind
+**Fallback-Auswahlen**, keine Fehlermomente — `filetree.nvim` fragt
+nacheinander `trash` / `gio` / `trash-put`, um zu entscheiden *welches* Tool
+es benutzt; `mdview.nvim` prüft `curl`, um zwischen zwei Wegen zu wählen. Dort
+fehlt nichts, dort wird gewählt, und `require_tool` hat da nichts zu suchen.
+
+Nur wo tatsächlich abgebrochen und gemeldet wird, ist B1 die Antwort.
+
+---
+
+## 5. Reihenfolge
 
 1. **B1** (`require_tool`) — größter Nutzen, kleinster Eingriff, macht jeden
    späteren Spec sofort wertvoller.
@@ -241,7 +353,7 @@ installieren wollen, sind schlimmer als eines, das es nicht tut.
 
 ---
 
-## 5. Was bewusst nicht gemacht wird
+## 6. Was bewusst nicht gemacht wird
 
 - **Kein neues Plugin.** `lib.nvim.deps` ist der richtige Ort: es ist die
   Ebene, auf der alle Plugins ohnehin schon aufsetzen. Ein separates Plugin
@@ -256,3 +368,67 @@ installieren wollen, sind schlimmer als eines, das es nicht tut.
 - **Kein Spec für `git`, `pwsh`, `wsl`.** Wer diese nicht hat, hat kein
   fehlendes optionales Tool, sondern ein anderes Betriebssystem.
 - **Keine Mason-Konkurrenz.** Siehe B4.
+
+---
+
+## 7. Auslieferung (2026-09-03)
+
+Neun Repos, je ein Commit, alle auf `main` gepusht.
+
+| Repo | Commit | Baustein |
+|---|---|---|
+| `lib.nvim` | `b8c75ea` | **B1 + B2** — `deps.require_tool`, `deps.status`, `:Lib deps status`, `:Lib deps install` ohne Argument |
+| `nvim` (Config) | siehe unten | **B3** — `docs/install.json`, `docs/installation.md`, `require_tool` in casedesk |
+| `diff.nvim` | `5111a9d` | **B4** — curl, inkl. `require_tool.lines` im URL-Fetcher |
+| `markdown.nvim` | `b5561c9` | **B4** — rg |
+| `documentation.nvim` | `289802e` | **B4** — lua-language-server |
+| `hover.nvim` | `0e63b0d` | **B4** — soffice, pdftoppm |
+| `open.nvim` | `d992f91` | **B4** — wslview |
+| `language.nvim` | `2552468` | Nachtrag — node, `require_tool` im Thesaurus, README-Korrektur |
+| `insights.nvim` | `8fd7e14` | Nachtrag — siehe „fd" unten |
+
+### Verifiziert, nicht behauptet
+
+- `nvim --headless -u NONE -l TESTS/run.lua` in `lib.nvim` → `LIB_TESTS_OK`,
+  inklusive der neuen Abschnitte für `status` und `require_tool`.
+- `spec.find("nvim")` findet `C:\Users\bartl\AppData\Local\nvim\docs\install.json`
+  — **B3s offene technische Frage ist damit beantwortet**, ohne Sonderfall.
+- `status.collect()` über alle Repos: **16 Plugins mit Spec, 27 verschiedene
+  Tools, 0 Lesefehler.** Der Merge über mehrere Deklaranten stimmt
+  (`curl` → 5 Plugins, `rg` → 6, `tesseract` → images + pdfport + Config).
+
+### Drei Abweichungen von der Planung
+
+**1. `fd` bei `insights.nvim` bekommt *keinen* Spec-Eintrag.**
+Abschnitt 4 hatte „eine Kleinstergänzung, ein Eintrag" angenommen. Der
+Quelltext sagt etwas anderes: `fd` wird nirgends aufgerufen, und der
+Health-Check gab das selbst zu („optional; not used currently"). Ein
+Spec-Eintrag bräuchte ein `why` — es gibt keins, das wahr wäre. Also die
+tote Prüfung entfernt statt eine tote Deklaration angelegt.
+
+**2. `language.nvim`: die README behauptete mehr, als der Spec hält.**
+Sie nannte `trans` und die Spell-/Grammar-CLIs als „deklariert" — deklariert
+sind aber nur `curl` und (neu) `node`. Korrigiert. `trans`, `cspell`,
+`codespell`, `typos` bleiben bewusst außen vor: zwei davon leben in npm bzw.
+cargo, und der Spec spricht nur die neun OS-Package-Manager. **Offener
+Punkt**, kein erledigter.
+
+**3. Die Tool-Tabelle in `docs/installation.md` war unvollständig.**
+Gegen die echten `status.collect()`-Daten korrigiert und um den Hinweis
+ergänzt, dass `:Lib deps status` die maßgebliche, lebende Fassung ist.
+
+### Was offen bleibt
+
+- **Die vier Provider-CLIs von `language.nvim`** (siehe Abweichung 2). Die
+  Frage dahinter ist größer als ein Spec-Eintrag: soll `deps.pm` npm / pip /
+  cargo lernen? Solange nicht, ist „nicht deklariert" die ehrlichere Antwort
+  als eine `pkg`-Map mit zwei Einträgen.
+- **`docs/installation.md` hat keinen eingehenden Link.** Die Config hat
+  keine `README.md` und keinen Doku-Index — der konventionelle Pfad ist die
+  einzige Fundstelle. Genau der Befundtyp „verwaistes Dokument" aus dem
+  `LAST_CDX_TASKS`-Handover (Ü3); dort gehört er auch hin, nicht hierher.
+- **Die Umstellung weiterer Call-Sites auf `require_tool`** ist bewusst
+  nicht flächendeckend gemacht. Umgestellt sind die vier echten
+  Fehlermomente (`diff` URL-Fetch, `language` Thesaurus, casedesk `export`
+  und `ocr`). Der Rest der 65 Executable-Prüfungen sind Fallback-Auswahlen,
+  wo nichts fehlt, sondern gewählt wird — siehe Abschnitt 4, letzter Absatz.
