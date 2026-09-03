@@ -83,15 +83,31 @@ Alle sind optional, keiner erforderlich.
 
 ## Was offen ist
 
-Wenig, und das meiste bewusst. Es steht **einmal**, in der
-[Roadmap](hover.nvim-roadmap.md):
+Wenig, und das meiste bewusst. Ausführlich steht es **einmal**, in der
+[Roadmap](hover.nvim-roadmap.md) — hier vollständig, damit niemand sie dafür
+öffnen muss.
 
-- **§2** — was ich als Nächstes bauen würde, in Reihenfolge.
-- **§3** — offene Messungen. Zwei davon brauchen dich: das **Demo-GIF**
-  (`REL-09`) und der **Office-Pfad von Hand**.
-- **§4** — fünf Aufträge, die in fremden Repos liegen.
-- **§6** — offene Entscheidungen: die kollidierende Lua-Modulwurzel, und ob
-  `manual` der bessere Default wäre.
+**Braucht dich: eine Hand oder eine Entscheidung.**
+
+| Punkt | Roadmap | Was genau fehlt |
+| --- | --- | --- |
+| **Demo-GIF** | §3 | `REL-09`, der letzte offene 🟢 des Release-Gates. Aufnehmen kann ich nicht. |
+| **Resize von Hand, Texthälfte** | §3 | `:Hover resize` über einer *Textdatei*: kommen **mehr Zeilen** an, oder wächst nur der Rahmen? Genau die Unterscheidung, für die umbenannt wurde. Die Bildhälfte ist gesehen. |
+| **Zoom von Hand** | §3 | Ob der Ausschnitt **gezeichnet** ankommt statt als skaliertes Ganzes — und ob `h/j/k/l` sich beim Schwenken richtig anfühlen. Gedrückt wird `<M-z>`; ein Alt-Akkord, den das Terminal nicht sendet, sieht aus wie ein Bild, das sich nicht zoomen lässt. |
+| **Office-Kehrwoche** | §3 | Eine Datei im Cache zurückdatieren, irgendein Office-Dokument hovern (`office.cache_days`, Default 7). Der Rest des Office-Pfads ist zweimal durchgespielt. |
+| **Scharfer PDF-Zoom** | §2.6 | Die einzige Hälfte des Zooms, die fehlt, und der einzige Rest im Repo-`ROADMAP.md`. Neu-Rastern bei höherem DPI kostet **3,3 s** — die Zahl ist der Grund, warum es eine Entscheidung ist und kein Ticket. |
+| **Lua-Modulwurzel** | §6.1 | Umbenennen oder lassen. Heute klein, wächst mit jedem Konsumenten. |
+| **`manual` als Default?** | §6.2 | Produktfrage: soll der Hover von sich aus aufgehen. |
+| **language.nvim** | §4 | Die Produktfrage *vor* der Integration: soll `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Seit `ac0a372` **deutlich billiger zu beantworten** — es darf hinten in der Reihenfolge stehen und verdeckt keinen anderen Beitrag mehr. |
+
+**Ohne dich, wenn Zeit ist:** §2 sagt, was ich als Nächstes bauen würde und in
+welcher Reihenfolge. §5 hält fest, was geprüft und *nicht* aufgenommen wurde,
+damit es nicht als gute Idee wiederkommt.
+
+§4 ist bis auf language.nvim leer — bindings-explorer, gopath, sandbox, beide
+documentation-Punkte und insights sind erledigt. In diesem Absatz steht
+absichtlich **keine Zahl** mehr: die vorige („fünf Aufträge") stimmte nicht
+mehr, und niemand merkt es einer Zahl an.
 
 ---
 
