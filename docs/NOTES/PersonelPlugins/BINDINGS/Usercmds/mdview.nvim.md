@@ -8,8 +8,8 @@ period). This was the **first** composer migration — the pilot for the whole
 Source: `lua/mdview/bindings/usrcmds/init.lua` + one action module per
 subcommand (`start/`, `stop.lua`, `open.lua`, `toggle.lua`,
 `standalone.lua`, `show_weblogs.lua`, `preview_tab.lua`, `diagnose.lua`,
-`theme.lua`, `log.lua`, `file_log.lua`, `cursor.lua`, `sync.lua`, `zoom.lua`,
-`reveal.lua`, `blanklines.lua`, `overlay.lua`, `breadcrumbs.lua`)
+`theme.lua`, `log.lua`, `file_log.lua`, `cursor.lua`, `sync.lua`, `pin.lua`,
+`zoom.lua`, `reveal.lua`, `blanklines.lua`, `overlay.lua`, `breadcrumbs.lua`)
 Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 `README.md`, `doc/mdview.txt`
 
@@ -32,6 +32,7 @@ Docs: `docs/BINDINGS.md`, `docs/commands.md`, `docs/standalone.md`,
 | `:MDView cursor [line\|caret\|section\|off\|toggle]` | Cursor marker mode in the preview; `toggle` flips section on/off specifically |
 | `:MDView selection [on\|off\|toggle]` | Mirror the visual selection (`v`/`V`/`CTRL-V`) into the preview as a highlight (`browser.selection_sync`, **default off** — toggled on while presenting). On prepares the tab at once (one re-render for the source-position spans) and draws a selection that is already active; off clears a drawn highlight and drops the spans again |
 | `:MDView sync [action]` | Pause/resume nvim→browser scroll sync (paused ⇒ "⏸ paused" pill in the tab) |
+| `:MDView pin [on\|off\|toggle\|status]` | **Added 2026-09-03.** Hold the preview on the document it is showing instead of letting the tab follow the active buffer. Nvim-side only (no relay push), and *session state, not config* — `:MDView stop` / a fresh `start` clear it. `off` also catches the tab up with the buffer you are in |
 | `:MDView zoom [+\|-\|reset\|<factor>]` | Preview font-size zoom. An out-of-range number is clamped **and reported** since 2026-08-24 |
 | `:MDView reveal [action]` | Reveal/hide ```private blocks |
 | `:MDView blanklines [on\|off\|toggle]` | Toggle rendering ≥2 consecutive blank lines as vertical space (`browser.preserve_blank_lines`); re-renders the tab live |
@@ -131,6 +132,23 @@ uses its `spawn`/`resolve_target`. Rationale preserved in
 
 ## Notes
 
+- **`:MDView pin` (2026-09-03)** — the answer to "the browser jumps to
+  whatever buffer I switch to". Under `browser.behavior = "reuse"` (default)
+  the one tab follows the active buffer; that is right while writing and wrong
+  while reading, since opening a second file to check something takes the
+  document off the screen. `mdview.core.pin` holds a normalized path (not a
+  bufnr — a reload gives the document a new life, the room key is the path
+  anyway) and every outgoing channel asks `pin.blocks(bufnr)` before sending:
+  `live_push`, `scroll_sync`, `selection_sync`, plus `buffer_switch`'s whole
+  `BufEnter` handler. Deliberately asymmetric: the **pinned** document's own
+  edits/scrolling/selections still go through, and the gate is the *room the
+  traffic targets*, so under `new_tab`/`manual` (where every doc has its own
+  room) a pin blocks nothing — otherwise it would be a global mute. `off`
+  calls `buffer_switch.resync()` so the tab lands on the current buffer instead
+  of sitting on the released document until the next switch. `:MDView open` is
+  the one thing that *moves* a live pin rather than being blocked by it (it
+  re-points the tab on purpose). 15 specs in `TESTS/nvim/pin_spec.lua`, three
+  of them driving the real `BufEnter` autocmd.
 - `start [file] [cwd=...]` and `toggle` use `ctx.rest` (composer's "leftover
   tokens" escape hatch) rather than a fixed positional schema, since `cwd=`
   can appear before or after the file arg — this is the pattern for any route

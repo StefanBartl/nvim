@@ -60,16 +60,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
 
 ## Liste B - Claude Tasks
 
+
 - [ ] deo isntaller: ewigenes Plugin vl mit lazy installer neuscheriben kombineinre, sodas bei plugin isntall ghleic cli tools checked werdebn?
 - [ ] Wenn cli toios in einen meuiner plugins verwendet wird, wie wird es dem use snagezegit wenn es fehlt?
-
-- [ ] mdview.nvim
-  - [ ] Momentan wird wenn ich in nvim MDView satart ausführe im broswe das doc geöäffnet, wenn ich in nvim zu einen anderen buffer wechsle, dann wehcselt im browser auch das doc. das sollte man schnel über ein usrcmd umstellen knnen, dass das doc, das gerade in nvim offen ist "popinned" bnleibt in mdview browser, bzw unpinned.
-
-- [ ] runtime-analysis.nvim: 7 Tage reminder:
-  - [ ] Wenn mehrere reminder ausgegeben werden, dann soll das in einer message, nicht in XY einzelmesages ausgegeben werden;
-  - [ ] Dasboard übersicht, welche reopos gerade in welchen MOdus aufzeichnen
-  - [ ] Dashboard, welc he Daten beretois gesammelt wurde; Übersicht mit alle repos, wenn möglivch/sonnvoll dann mit enter ene detailansicht zeigen, also welche dwaten genau, wo, usw...
 
 - [ ] Videos transkripten; Überstzung / Zusammenfassung erstellen; Images text extrahieren; usw... ALles was damit zusmmenhängt bzw sinnvoll ist als Features da anzubieten: Konzept machen -> eventuell bestehende plugin api's nutzen und zusammenführen; Dashboard mit allen Mediendateien die gefunden wurden in path/cwd/cfile/ usw..und dann selection, welche aktion man darauf ausführen will;
 
@@ -85,9 +78,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua`.
     - scope `path/cwd` -> damit könnte man dann ein gesamtes repo automatisch ent-deprecaten
     - cool wäre dann eine  Art picker mit den Treffern und im Preview window wird angezeigt, wie es updatet werden soll, dann lann man treffer für treffer entschiedne ob das eh passt. ein `m` - mark feautre wie in `filetree.nvim` wäre ideal um mehrere zu markieren die updatet werden sollen
     - ein test-sheet mit absichtlichen Fehlern, um z utesten und zu belegen, dass dass Plugin funktioniert.
-
-- [ ] recommender.nvim
-  - [ ] `:Recommender perf` asynchron machen und mit statusline progress
 
 - [ ] Github Stats auswerten / backupen / Stats zusammenziehen
 

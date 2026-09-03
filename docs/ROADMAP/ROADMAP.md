@@ -24,9 +24,9 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     17:10       |    86% / 30%     |
-| **dev**  |    03. Sep    |   Sa., 22:00    |     14:00       |    95% / 29%     |
+| **dev**  |    03. Sep    |   Sa., 22:00    |     14:00       |    91% / 38%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     11:10       |   100% / 47%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     02:00       |    94% / 47%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     20:50       |    --% / 47%     |
 
 never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
 antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
