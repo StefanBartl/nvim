@@ -609,6 +609,26 @@ Damit es nicht als gute Idee wiederkommt.
 Umgekehrt chronologisch, nur was den Stand ändert. Die Begründungen stehen in
 den Commits und unter `docs/FEATURES/`.
 
+- **Rahmen-Presets** — `border` kannte immer schon jeden `nvim_open_win`-Wert;
+  was fehlte, waren Namen für das, was Neovim *nicht* hat, und ein Weg, sie zu
+  sehen. Dazugekommen sind `heavy` (dicker — das, wonach gefragt wurde),
+  `ascii` (für Schrift/Terminal ohne Box-Zeichen; auf dieser Maschine keine
+  Theorie), `dashed` und `block`. Neovims eigene sechs werden **durchgereicht
+  statt kopiert** — eine Kopie dessen, was die API schon beantwortet, ist die
+  Form, die hier fünfmal veraltet ist. `:Hover border <stil>` ändert den
+  **offenen** Float, nicht den nächsten: ein Aussehen probiert man, und eine
+  Einstellung, die erst später wirkt, kann man nicht probieren. Der Ring bleibt
+  eine Zelle breit, also bewegt sich keine Geometrie und ein gezeichnetes Bild
+  bleibt unberührt.
+
+  Zwei LuaLS-Funde in den Specs auf dem Weg, beide dieselbe Form
+  (`param-type-mismatch` auf `string|string[]`) — und der erste Fix ging am
+  zweiten vorbei, weil der Scan *eine* Stelle meldet und ich sie als „die, die
+  ich gerade angefasst habe" gelesen habe. `assert.equals("table", type(x))`
+  ist außerdem kein Narrowing: luassert ist eine Bibliothek, LuaLS weiß nicht,
+  dass sie den Lauf beendet. `if type(x) ~= "table" then error(...) end` ist
+  die Hausform.
+
 - `b592b9f` (language.nvim), `150be49` — **das Wort unter dem Cursor,
   übersetzt.** `:Translate DE cword` und ein `on_request`-Position-Beitrag für
   `:Hover show`. In hover.nvim selbst änderte sich **nichts** außer der
