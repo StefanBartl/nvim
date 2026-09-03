@@ -545,14 +545,35 @@ dann entscheiden.
   über einen Verzeichnisaufstieg ist ein Flackern auf einem langsamen Runner),
   sabotage-getestet: ohne Cache 13 Stats beim zweiten Ask.
 
-- **documentation.nvim — `out_dir` wird im Hover ignoriert.** Beim Messen
-  aufgefallen und **nicht** mitgefixt, weil es eine Verhaltensänderung ist:
-  `find_map` verdrahtet `docs/map/module_map.json` fest, während `out_dir`
-  überall sonst konfigurierbar ist (`config/DEFAULTS.lua:27`, Default
-  `docs/map`). Wer ihn umstellt, bekommt **gar keinen** Modul-Hover — und zwar
-  still, was die schlechteste Form ist. Dieselbe Klasse wie überall hier: eine
-  handgeschriebene zweite Kopie von etwas, das die Konfiguration schon weiß.
-  Der Fix ist klein; der Cache-Schlüssel müsste den `out_dir` mittragen.
+- ~~**documentation.nvim — `out_dir` wird im Hover ignoriert**~~ — **erledigt
+  am 2026-09-03** (documentation.nvim `53d600d`). `find_map` verdrahtete
+  `docs/map/module_map.json` fest, während `out_dir` überall sonst
+  konfigurierbar ist; wer ihn umstellte, bekam **gar keinen** Modul-Hover, und
+  zwar still. Gelesen werden jetzt beide Stellen, die einen nennen können: ein
+  vom Editor installiertes Projekt trägt seine gebaute `cfg`, und ein
+  Repository sagt es in `.docmap.json`. `config.file.load` wird
+  wiederverwendet statt das JSON erneut zu parsen — eine zweite Kopie eines
+  Parsers wäre dieselbe Klasse eine Ebene tiefer.
+
+  **Der Entwurf hat unterwegs gedreht, und die Messung hat ihn gedreht.** Erst
+  fragte ich auf *jeder* Ebene, wo sie ihre Map hält — und der kalte Aufstieg
+  ging von **112 µs auf 763 µs**, weil `registry.get` eine Wurzel über
+  `uv.fs_realpath` normalisiert, also einen Dateisystem-Aufruf je Ebene, auf
+  Windows einen langsamen. Jetzt zwei Durchgänge: der Default zuerst (das
+  beantwortet jedes Projekt, das nichts verschoben hat, zum alten Preis), das
+  Gesagte nur, wenn der ganze erste Aufstieg leer ausging.
+
+  Innerhalb des zweiten Durchgangs **ersetzt** ein gesagter `out_dir` den
+  Default, statt daneben probiert zu werden: ein Projekt, das seine Map
+  verschoben hat, hat oft noch die alte `docs/map` liegen, und daraus zu
+  antworten wäre eine Vorschau aus einer Datei, die das Projekt nicht mehr
+  schreibt.
+
+  Zwei Specs, beide sabotage-getestet — und die zweite Sabotage hat sich
+  bezahlt gemacht: sie meldete zunächst **nichts**, weil meine Zusicherung
+  Aufrufe von `config.file.load` zählte und die nur passieren, wo eine
+  `.docmap.json` existiert. Es hätte also jede Ebene gefragt werden können und
+  der Zähler wäre null geblieben. Gezählt wird jetzt die Probe selbst.
 - **language.nvim** — die Produktfrage *vor* der Integration: soll ein Druck auf
   `:Hover show` mitten in Prosa immer ein Wörterbuch aufmachen? Der Mechanismus
   (`on_request`) existiert seit `731bbe2`; was fehlt, ist eine Regel dafür, wann
