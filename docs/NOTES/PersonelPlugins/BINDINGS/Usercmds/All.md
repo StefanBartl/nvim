@@ -33,7 +33,6 @@ All plugin user-command cheatsheets in this folder.
 - [lsp.nvim](./lsp.nvim.md)
 - [markdown.nvim](./markdown.nvim.md)
 - [mdview.nvim](./mdview.nvim.md)
-- [migrate.nvim](./migrate.nvim.md)
 - [cmdlog.nvim](./cmdlog.nvim.md)
 - [sandbox.nvim](./sandbox.nvim.md)
 - [open.nvim](./open.nvim.md)
