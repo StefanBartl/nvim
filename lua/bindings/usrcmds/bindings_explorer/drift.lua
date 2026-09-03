@@ -107,6 +107,21 @@
 --- with no cheatsheet at all will still show up; no ignore-list is
 --- maintained for those.
 ---
+--- **And a third usercmd direction, for routes.** `nvim_get_commands`
+--- answers about *top-level* names only. A plugin built on `usercmd.composer`
+--- registers exactly one — `Hover` — and every documented route collapses
+--- onto it: sixteen rows, one name, and the name exists. Both directions
+--- above then pass trivially, so those tables were **not checked at all**
+--- while looking as though they were. Measured twice, 2026-09-02 and
+--- 2026-09-03: a route invented in the cheatsheet produced no finding.
+---
+--- `subroute_exists` closes that by asking the command line's own
+--- completion, level by level. Not composer-specific on purpose: any command
+--- that completes its arguments is checkable this way, and one that does not
+--- is skipped rather than guessed at — see that function for why `nil` is a
+--- real answer there. This affects every plugin here built on the composer,
+--- which is about half of them.
+---
 --- **The repo axis (opt-in, `opts.repo`).** Point 4 above is honest but
 --- empty: a skipped plugin is not a checked plugin, and in a normal session
 --- most personal plugins are skipped, so most of the corpus is judged by
@@ -534,6 +549,92 @@ local function extract_usercmd(rec)
     end
   end
   return nil
+end
+
+--- The route words a documented notation carries *after* the command name.
+---
+--- `:Hover paths code [on|off|toggle]` is three things in one cell: a command,
+--- a route, and a completion hint. Only the middle part is checkable, so the
+--- notation is cut at the first placeholder and the command name is dropped --
+--- what is left is `{ "paths", "code" }`.
+---
+--- All three placeholder shapes the corpus actually uses end the route:
+--- `[optional]`, `{required}` and `<angled>`. Counted 2026-09-03 over the
+--- Usercmds tables -- 33 `[path]`, 13 `{name}`, 12 `<name>` and so on -- and
+--- the second shape is not hypothetical: `:Hover nav {direction}` was the
+--- first false positive this check produced, because only `[` was cut.
+---
+--- Empty for a plain command, which is the overwhelming majority and costs
+--- nothing: the caller skips the probe entirely.
+---@param rec table
+---@return string[]
+local function subroute_words(rec)
+  local idx = column_index(rec, USERCMD_HEADERS)
+  local cell = idx and rec.cells[idx]
+  if not cell then
+    return {}
+  end
+
+  -- The notation as written, from the colon to whatever ends it. Backticks
+  -- are the cheatsheet's own markup and a table cell may hold prose after the
+  -- span, so the span is what is read rather than the cell.
+  local span = cell:match("`:([^`]+)`") or cell:match(":(%u[%w_ ]*)")
+  if not span then
+    return {}
+  end
+  span = span:gsub("[%[{<].*$", "")
+
+  local out = {}
+  for word in span:gmatch("%S+") do
+    out[#out + 1] = word
+  end
+  table.remove(out, 1) -- the command name itself
+  return out
+end
+
+--- Whether `name` really offers the route `words` names, asked through the
+--- command line's own completion.
+---
+--- **Why this exists.** The live axis compares against `nvim_get_commands`,
+--- which lists *top-level* commands only. A plugin built on `usercmd.composer`
+--- registers exactly one -- `Hover` -- and every documented route collapses
+--- onto it: sixteen rows, one name, and the name exists. Both directions then
+--- pass trivially, and the check looks like it covers those tables while
+--- covering none of them. Measured 2026-09-02 and again 2026-09-03: a route
+--- invented in the cheatsheet produced no finding at all.
+---
+--- `getcompletion` is used rather than the composer's own registry because it
+--- is not composer-specific: any command that completes its arguments is
+--- checkable this way, and one that does not is *skipped* rather than
+--- guessed at.
+---
+--- **`nil` is a real answer here.** No completion at a level means this
+--- command does not describe itself, not that the route is absent -- and
+--- reporting the difference would turn every argument-taking command in the
+--- corpus into a finding. Only `false` is a claim.
+---@param name string
+---@param words string[]
+---@return boolean|nil ok
+local function subroute_exists(name, words)
+  local prefix = name
+  for _, want in ipairs(words) do
+    local ok, items = pcall(vim.fn.getcompletion, prefix .. " ", "cmdline")
+    if not ok or type(items) ~= "table" or #items == 0 then
+      return nil
+    end
+    local found = false
+    for _, item in ipairs(items) do
+      if item == want then
+        found = true
+        break
+      end
+    end
+    if not found then
+      return false
+    end
+    prefix = prefix .. " " .. want
+  end
+  return true
 end
 
 --- A plugin name reduced to what a cheatsheet stem and a repository name
@@ -1225,7 +1326,7 @@ local function is_live(live_maps, modes, lhs, doc_desc)
 end
 
 ---@class Bindings.DriftFinding
----@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-undocumented"|"keymap-undocumented"|"usercmd-undocumented-source"|"keymap-not-in-repo"|"usercmd-not-in-repo"|"autocmd-not-live"|"autocmd-undocumented"
+---@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-subroute-not-live"|"usercmd-undocumented"|"keymap-undocumented"|"usercmd-undocumented-source"|"keymap-not-in-repo"|"usercmd-not-in-repo"|"autocmd-not-live"|"autocmd-undocumented"
 ---@field plugin string|nil
 ---@field heading string|nil  # the record's table heading, keymap axis only
 ---@field group string|nil    # plugin + heading, the verdict's grouping key
@@ -1677,11 +1778,35 @@ function M.check(plugin, opts)
   -- Usercmds: documented (Personal) but not live.
   local live_cmds = live_commands()
   local seen_personal = {}
+  local seen_subroute = {}
   for _, rec in ipairs(records.list("Usercmds", corpus_scope)) do
     -- Same `rec.meta` skip as the keymap direction above.
     local ours = (not plugin or rec.plugin == plugin) and not rec.meta
     if ours and is_plugin_loaded(rec.plugin) then
       local name = extract_usercmd(rec)
+
+      -- Per *row* rather than per command name, unlike the check below: the
+      -- whole point is that many rows share one name. Guarded by its own seen
+      -- table so a route documented twice is reported once.
+      if name and live_cmds[name] then
+        local words = subroute_words(rec)
+        if #words > 0 then
+          local notation = ":" .. name .. " " .. table.concat(words, " ")
+          if not seen_subroute[notation] then
+            seen_subroute[notation] = true
+            if subroute_exists(name, words) == false then
+              findings[#findings + 1] = {
+                kind = "usercmd-subroute-not-live",
+                plugin = rec.plugin,
+                notation = notation,
+                file = rec.file,
+                line = rec.line,
+              }
+            end
+          end
+        end
+      end
+
       if name and not seen_personal[name] then
         seen_personal[name] = true
         if not live_cmds[name] then
@@ -2254,8 +2379,10 @@ end
 local function render(f)
   if f.kind == "keymap-not-live" then
     return ("  %-22s %-20s %s:%d"):format(f.plugin, readable(f.notation), f.file, f.line)
-  elseif f.kind == "usercmd-not-live" then
-    return ("  %-22s %-20s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
+  elseif f.kind == "usercmd-not-live" or f.kind == "usercmd-subroute-not-live" then
+    -- A route notation is longer than a command name, so it gets the width
+    -- the augroup kinds already take rather than being cut at 20.
+    return ("  %-22s %-30s %s:%d"):format(f.plugin, f.notation, f.file, f.line)
   elseif f.kind == "keymap-not-in-repo" or f.kind == "usercmd-not-in-repo" then
     -- No `readable()` here, unlike the not-live kinds: a repo finding's
     -- notation is the cheatsheet's own `<leader>iv` text, never the raw
@@ -2317,6 +2444,11 @@ local SECTIONS = {
     kinds = { ["usercmd-not-live"] = true },
     title = "Usercmds — documented, not registered",
     note = "highest-signal axis; a documented-lazy command may need its feature exercised first",
+  },
+  {
+    kinds = { ["usercmd-subroute-not-live"] = true },
+    title = "Usercmds — documented route the command does not offer",
+    note = "asked through the command's own completion; one that does not complete is skipped, not guessed at",
   },
   {
     kinds = { ["keymap-not-live"] = true },

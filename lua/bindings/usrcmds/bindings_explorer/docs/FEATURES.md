@@ -212,6 +212,32 @@ Beispiele:
 :Bindings check images.nvim
 ```
 
+### Unterrouten: was `nvim_get_commands` nicht beantworten kann
+
+`nvim_get_commands` kennt nur **oberste** Kommandonamen. Ein Plugin auf
+`usercmd.composer` registriert genau eines — `Hover` — und jede dokumentierte
+Route fällt darauf zusammen: sechzehn Zeilen, ein Name, und den Namen gibt es.
+Beide Richtungen oben bestehen dann **trivial**, und die Prüfung sah aus, als
+decke sie diese Tabellen ab, während sie keine davon abdeckte. Zweimal
+gemessen, am 2026-09-02 und am 2026-09-03: eine in der Cheatsheet erfundene
+Route erzeugte kein einziges Finding.
+
+Geprüft wird jetzt über die **Completion des Kommandos**, Ebene für Ebene:
+steht `:Hover paths code` in einer Tabelle, muss `paths` unter
+`getcompletion("Hover ")` auftauchen und `code` unter
+`getcompletion("Hover paths ")`. Bewusst nicht über die Registry des Composers,
+denn so ist jedes Kommando prüfbar, das seine Argumente vervollständigt.
+
+**Ein Kommando ohne Completion wird übersprungen, nicht geraten.** Keine
+Completion heißt „dieses Kommando beschreibt sich nicht", nicht „die Route gibt
+es nicht" — der Unterschied zu melden würde jedes argumentnehmende Kommando im
+Korpus zu einem Finding machen.
+
+Platzhalter enden die Route: `[optional]`, `{required}` und `<angled>`, alle
+drei, weil alle drei im Korpus vorkommen. Die zweite Form ist nicht theoretisch
+— `:Hover nav {direction}` war der erste Fehlalarm dieser Achse, weil zunächst
+nur `[` geschnitten wurde.
+
 ### Die vierte Achse: der lokale Checkout (`:Bindings check repo`)
 
 `:Bindings check repo [plugin]` — oder, mit dem Plugin zuerst,

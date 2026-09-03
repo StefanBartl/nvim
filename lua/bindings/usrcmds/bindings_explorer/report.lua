@@ -34,6 +34,7 @@ local M = {}
 --- whatever is most likely worth acting on comes first.
 local KIND_ORDER = {
   "usercmd-not-live",
+  "usercmd-subroute-not-live",
   "keymap-not-live",
   "keymap-not-in-repo",
   "usercmd-not-in-repo",
@@ -44,6 +45,7 @@ local KIND_ORDER = {
 
 local KIND_NOTE = {
   ["usercmd-not-live"] = "dokumentiert, in dieser Session nicht registriert",
+  ["usercmd-subroute-not-live"] = "dokumentierte Unterroute, die das Kommando nicht anbietet",
   ["keymap-not-live"] = "dokumentiert, in dieser Session nicht gebunden",
   ["keymap-not-in-repo"] = "dokumentiert, im Checkout des Plugins nicht gefunden (Grep-Achse)",
   ["usercmd-not-in-repo"] = "dokumentiert, im Checkout des Plugins nicht gefunden (Grep-Achse)",

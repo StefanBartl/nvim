@@ -30,6 +30,18 @@ Docs: `lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md`, `:help bindings
 
 ## Notes
 
+- **Dokumentierte Unterrouten werden seit 2026-09-03 mitgeprüft**, und vorher
+  gar nicht. `nvim_get_commands` kennt nur oberste Namen; ein Plugin auf
+  `usercmd.composer` registriert genau eines, und alle Routenzeilen fallen
+  darauf zusammen. Sechzehn Zeilen, ein Name, den es gibt — beide Richtungen
+  bestanden trivial, und der Check sah aus, als decke er diese Tabellen ab.
+  Gemessen: eine erfundene Route erzeugte kein Finding.
+
+  Geprüft wird über die **Completion des Kommandos**, Ebene für Ebene. Ein
+  Kommando ohne Completion wird übersprungen statt geraten. Neue Finding-Art:
+  `usercmd-subroute-not-live`.
+
+
 - **Kein `## which-key`**: `bindings_explorer` registriert keine Keymaps —
   bewusst usercommand-only, wie `:Case`/`:Image` auch für ihre
   Argument-tragenden Subcommands entscheiden. Es gibt daher auch keine
