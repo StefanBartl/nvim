@@ -22,6 +22,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover show` | — | one hover, here, now; ignores every volume switch |
 | `:Hover status` | — | mode + all nine switches, as a selectable list |
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
+| `:Hover next` | — | step to the next plugin with something to say about this place; wraps past the last |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
 | `:Hover resize [direction]` | `bigger\|smaller` | make the hover on screen bigger or smaller. Omitted: **bigger**. **Any** hover — a picture is drawn larger, a text preview shows more lines |
 | `:Hover zoom [direction]` | `in\|out\|reset` | magnify a *detail* of the picture on screen. Omitted: **in**. Pictures only — not PDF pages. A step costs ~258 ms — zu langsam zum Gedrueckthalten, weshalb die Tasten dafuer Alt-Akkorde sind (`<M-z>`/`<M-Z>`/`<M-R>`) und keine blanken |
@@ -145,6 +146,14 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-03: **`:Hover next` added** (hover.nvim `ac0a372`), the
+  borrow-free half of `<M-n>`. Seventeen routes now. It steps between the
+  plugins that answer for one *place* — until then the first registered one
+  won and the rest were invisible, which plugin load order decided. Stepped
+  rather than merged: `Hover.Content` is shaped for one answer, so two would
+  mean two titles for one border and two filetypes for one highlight, and a
+  picture cannot be merged with text at all.
 
 - 2026-09-02 (4): **`:Hover pan` heißt `:Hover nav`** (hover.nvim `efafb82`).
   Weiter achtzehn Routen. Umbenannt statt aliasiert: `pan` ist das präzisere

@@ -49,6 +49,7 @@ Kombination. **Hier nicht gesetzt.**
 | `<M-z>` | n | einen Schritt in das Bild hinein | `zoom_keys.into` | Hovers, deren Bild **zoombar** ist |
 | `<M-Z>` | n | einen Schritt heraus | `zoom_keys.out` | wie oben |
 | `<M-R>` | n | zurück zum ganzen Bild | `zoom_keys.reset` | wie oben |
+| `<M-n>` | n | zum nächsten Plugin, das zu dieser Stelle etwas zu sagen hat | `position_keys.next` | **nur Position-Hovers**, und nur wenn mehr als ein Beitrag registriert ist |
 | `h` | n | vergrößerten Ausschnitt nach links bewegen | `nav_keys.left` | nur solange **gezoomt** |
 | `l` | n | nach rechts | `nav_keys.right` | nur solange gezoomt |
 | `k` | n | nach oben | `nav_keys.up` | nur solange gezoomt |
@@ -91,6 +92,7 @@ Aussage über **diese** Config, nicht über das Plugin.
 | `<M-->` | **vergeben** an cascade.nvim (Bullet Points) |
 | `<M-+>` | frei, aber ohne Partner — ein Regler mit einer Richtung ist keiner |
 | `<M-ScrollWheelUp/Down>` | **vergeben** — hover.nvims Default fürs Rad |
+| `<M-n>` | **vergeben** — hover.nvims Default fürs Durchblättern der Position-Antworten seit `ac0a372`. Vorher gegen diese Cheatsheets *und* den Config-Quelltext geprüft: in beiden ungenutzt |
 | `<M-z>` / `<M-Z>` / `<M-R>` | **vergeben** — hover.nvims Zoom seit `efafb82`. Vor der Vergabe gegen diese Config geprüft: frei. `<M-r>` klein gehört NeoTree und bleibt unberührt |
 | `<S-+>` / `<C-S-+>` und Gegenstücke | frei, **aber ungeprüft** — siehe Notes |
 
@@ -117,6 +119,19 @@ Aussage über **diese** Config, nicht über das Plugin.
   `h/j/k/l`.
 
 ## Changelog
+
+- 2026-09-03: **`<M-n>` blättert zwischen Position-Antworten** (hover.nvim
+  `ac0a372`). Mehrere Plugins können zu *einer* Stelle etwas sagen, und auf
+  einem dotted name tun es regelmäßig zwei: documentation.nvim sagt, was das
+  Modul ist, insights.nvim, wer es importiert. Bisher gewann der zuerst
+  registrierte und der Rest war unsichtbar — entschieden von der
+  Ladereihenfolge, also von niemandem.
+
+  Geliehen wird die Taste nur für einen **Position**-Hover und nur, wenn
+  überhaupt mehr als ein Beitrag registriert ist. Gezählt werden dabei
+  *Registrierungen*, nicht Antworten: herauszufinden, wer antworten *würde*,
+  hieße jeden Beitrag bei jedem Hover aufzurufen — genau die Kosten, gegen
+  die `on_request` gebaut wurde. Deshalb gibt es auch keinen „2 von 3"-Zähler.
 
 - 2026-09-02 (5): **Zoom-Tasten und `pan` heißt `nav`** (hover.nvim
   `efafb82`). `<M-z>` / `<M-Z>` / `<M-R>` sind neu und geliehen, sobald das
