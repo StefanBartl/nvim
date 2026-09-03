@@ -9,7 +9,7 @@
     - [2.2 Resize — **gebaut, und unterwegs umbenannt**](#22-resize--gebaut-und-unterwegs-umbenannt)
       - [Die ursprüngliche Reihenfolge, zur Begründung](#die-ursprngliche-reihenfolge-zur-begrndung)
     - [2.3 Eine `:checkhealth`-Zeile für `contribute` — **gebaut** (`aca73fa`)](#23-eine-checkhealth-zeile-fr-contribute-gebaut-aca73fa)
-    - [2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier](#24-gopath-ein-billiger-frh-ausstieg-fremdes-repo-grter-hebel-hier)
+    - [2.4 gopath: ein billiger Früh-Ausstieg — **gebaut, und die Annahme war falsch**](#24-gopath-ein-billiger-früh-ausstieg--gebaut-und-die-annahme-war-falsch)
     - [2.5 Ein Memo für Position-Previews — **gemessen, und die Antwort ist nein**](#25-ein-memo-fr-position-previews-gemessen-und-die-antwort-ist-nein)
     - [2.6 Echter Zoom — **gebaut, außer der PDF-Hälfte**](#26-echter-zoom--gebaut-ausser-der-pdf-hlfte-9fba190)
   - [3. Messungen, die offen sind](#3-messungen-die-offen-sind)
@@ -35,7 +35,7 @@ ist gemessen und **abgelehnt**, mitsamt einem Auftrag, der dabei herausfiel und
 in [Abschnitt 4](#4-aufträge-die-woanders-liegen) steht.
 
 **Damit ist Abschnitt 2 leer.** Was offen bleibt, wartet auf etwas, das nicht
-hier liegt: [2.4](#24-gopath-ein-billiger-früh-ausstieg--fremdes-repo-größter-hebel-hier)
+hier liegt: [2.4](#24-gopath-ein-billiger-früh-ausstieg--gebaut-und-die-annahme-war-falsch)
 auf gopath.nvim, ein neuer Auftrag auf documentation.nvim. Der zweite neue,
 **sandbox.nvim, ist noch am selben Tag erledigt worden** (`deb45bc`).
 
@@ -410,7 +410,7 @@ Vermutung darüber, was jemand fragen wird.
 
 ---
 
-### 2.4 gopath: ein billiger Früh-Ausstieg — fremdes Repo, größter Hebel hier
+### 2.4 gopath: ein billiger Früh-Ausstieg — **gebaut, und die Annahme war falsch**
 
 Der Befund ist gemessen und steht seit `c9faf86` in gopaths eigener Doku: ein
 **fehlschlagendes** `resolve_at_cursor` kostet **13,2 ms**, ein erfolgreiches
@@ -422,13 +422,40 @@ gopath lösen könnte (`...` / `…`, oder gar kein Slash). **Das kostet echte T
 Positives:** ein relativer Pfad, der irgendwo sonst im Projekt liegt, hovert
 automatisch nicht mehr — nur noch auf `:Hover show`.
 
-Bekommt gopath einen billigen „dieser Token kann nicht auflösen"-Ausstieg,
-**fällt `gopath_can_help` ersatzlos weg**, und diese True Positives kommen
-zurück. Es ist der einzige Punkt der Liste, dessen Nutzen hier entsteht und
-dessen Arbeit woanders liegt.
-
-**Adressat:** gopath.nvim. **Empfehlung:** dort einplanen, hier nichts tun —
-die Gate-Zeile ist richtig, solange die Messung gilt.
+> **Erledigt am 2026-09-03** (gopath.nvim `a7529d1`) — und die Erwartung
+> darüber, *was* dabei herauskommt, war falsch. Der Satz, der hier stand,
+> lautete: bekommt gopath einen billigen Ausstieg, fällt `gopath_can_help`
+> ersatzlos weg. **Er fällt nicht weg**, und der Grund ist die Messung.
+>
+> **Die 13,2 ms sahen eine Kostenart, wo zwei waren.** Von gopaths Seite
+> nachgemessen, Cursor auf Prosa, Buffer *ohne* Sprachserver:
+>
+> | Token | vorher | nachher |
+> | --- | --- | --- |
+> | ein bloßes Wort | 216 ms | **129 µs** |
+> | ein langes Wort ohne Trenner | 216 ms | 91 µs |
+> | ein dotted name | 216 ms | 520 µs |
+> | `read/write/execute` | 231 ms | 11,5 ms |
+> | ein existierender relativer Pfad | 1,6 ms | 1,6 ms |
+>
+> Die größere Kostenart war **kein Auflösen**, sondern ein Timeout:
+> `vim.lsp.buf_request_sync` kehrt nicht früh zurück, wenn am Buffer kein
+> Client hängt — es wartet die vollen 200 ms ab und antwortet dann
+> `nil, "timeout"`. Von hier aus war das **unsichtbar**, weil die
+> Ursprungsmessung in einem Buffer *mit* Server lief; deshalb ließen sich die
+> 13,2 ms auch nicht reproduzieren. gopaths Provider fragt jetzt vor dem
+> Senden, ob überhaupt jemand zuhört.
+>
+> Übrig bleibt die **Tail-Search**, ~11,5 ms für einen Token mit Trennern —
+> echte Auflösungsarbeit, unverändert. Und genau deshalb bleibt das Gate:
+> nach dem Fix kostet ein Token ohne Trenner ~100 µs und einer mit Trennern
+> weiter ~11,5 ms, was exakt die Form ist, die `gopath_can_help` ohnehin hat.
+> Es lehnt die Slash-Token ab und fragt für den Rest.
+>
+> **Was sich ohne eine Zeile hier geändert hat:** ein Hover in einer `.txt`,
+> einem `gitcommit` oder irgendeinem Buffer ohne Sprachserver ist 200 ms
+> billiger. Das ist der eigentliche Gewinn — nur nicht der, der hier
+> vorhergesagt war.
 
 ---
 
@@ -505,7 +532,9 @@ dann entscheiden.
   Routenzeilen fallen darauf zusammen. Betrifft jedes Plugin auf
   `usercmd.composer`. Gemessen am 2026-09-02: eine Zeile gelöscht, beide Läufe
   melden „keine Drift". In der Sache dasselbe wie 2.1, eine Ebene höher.
-- **gopath.nvim** — siehe 2.4.
+- ~~**gopath.nvim**~~ — **erledigt am 2026-09-03** (`a7529d1`), siehe 2.4. Nicht
+  das, was dort vorhergesagt war: entfernt wurde ein 200-ms-LSP-Timeout, den
+  von hier aus niemand sehen konnte, und das Gate bleibt.
 - ~~**sandbox.nvim**~~ — **erledigt am 2026-09-02** (sandbox.nvim `deb45bc`).
   `engine_utils.get_engine()` wählte nach reiner PATH-Anwesenheit und fragte
   nie, ob die Engine antworten kann; hier gewann podman mit gestoppter VM,
