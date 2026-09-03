@@ -15,7 +15,10 @@ eigene Zuordnung halten.
 Eine konfigurierte Liste **ersetzt** die Vorgabe, sie erweitert sie nicht; eine
 leere Liste bindet gar nichts. **In dieser Config ist nichts davon
 überschrieben** — `require("hover").enable()` ohne Optionen, alles unten sind
-Plugin-Defaults.
+Plugin-Defaults. Zwischen dem 2026-09-03 und hover.nvim `21c4932` stimmte
+dieser Satz nicht: dort stand ein `zoom_keys`-Workaround im Plugin-Spec, und
+diese Zeile hat ihn nicht erwähnt. Er ist weg, weil der Default jetzt dasselbe
+sagt.
 
 ## Owned — bei setup gebunden, bleibt
 
@@ -46,9 +49,9 @@ Kombination. **Hier nicht gesetzt.**
 | `<M-PageUp>`, `<C-Up>` | n | zurück | `scroll_keys.up` | nur scrollbar |
 | `+` | n | Float einen Schritt (×1,25) größer | `resize_keys.larger` | nur Hovers **mit Bild** |
 | `-` | n | einen Schritt kleiner | `resize_keys.smaller` | nur Hovers **mit Bild** |
-| `<M-z>` | n | einen Schritt in das Bild hinein | `zoom_keys.into` | Hovers, deren Bild **zoombar** ist |
-| `<M-Z>` | n | einen Schritt heraus | `zoom_keys.out` | wie oben |
-| `<M-R>` | n | zurück zum ganzen Bild | `zoom_keys.reset` | wie oben |
+| `>` | n | einen Schritt in das Bild hinein | `zoom_keys.into` | Hovers, deren Bild **zoombar** ist |
+| `\|` | n | einen Schritt heraus | `zoom_keys.out` | wie oben |
+| `=` | n | zurück zum ganzen Bild | `zoom_keys.reset` | wie oben |
 | `<M-n>` | n | zum nächsten Plugin, das zu dieser Stelle etwas zu sagen hat | `position_keys.next` | **nur Position-Hovers**, und nur wenn mehr als ein Beitrag registriert ist |
 | `h` | n | vergrößerten Ausschnitt nach links bewegen | `nav_keys.left` | nur solange **gezoomt** |
 | `l` | n | nach rechts | `nav_keys.right` | nur solange gezoomt |
@@ -68,7 +71,8 @@ die Bedeutung, die immer gilt.
 | `gf` | verdrängt das Vim-Builtin; gewollt, weil das Float die Datei bereits aufgelöst hat, auch truncated und mit `:line:col` |
 | `<C-Down>` / `<C-Up>` | bewusst statt `<M-Down>`/`<M-Up>` (verbreitetes „move line") |
 | `h` `j` `k` `l` | **nur während gezoomt** keine Cursorbewegung. Ohne diese Leihe würde `h` über einem vergrößerten Bild den Cursor bewegen und damit das Float wegnehmen |
-| `<M-z>` `<M-Z>` `<M-R>` | nichts — Alt-Akkorde, die hier nichts verdrängen. `<M-r>` (klein) gehört NeoTree; das ist ein anderer Akkord |
+| `>` `=` | nichts während eines Floats — beides sind **Operatoren**, sie bewegen keinen Cursor und schließen von selbst nicht ab. Danach wieder Einrücken und Ausrichten wie immer |
+| `\|` | die Spaltenbewegung, und genau deshalb ist sie geliehen: ungebunden spränge der Cursor auf Spalte 1 und nähme das Float mit (Dismiss hängt an `CursorMoved`) |
 
 **Warum `+`/`-` nur bei Bildern, das Rad aber überall:** das ist eine
 Entscheidung über den *Preis* einer Taste, keine über die Fähigkeit — begründet
@@ -76,11 +80,16 @@ in `hover.nvim/docs/FEATURES/RESIZE.md`. Praktisch heißt es: auf einem
 Text-Hover sind `+` und `-` frei und behalten ihre Zeilenbewegung; der
 Tastaturweg dorthin ist `:Hover resize`.
 
-**Und warum der Zoom Alt-Akkorde bekommt und keine blanken Tasten:** derselbe
-Preis-Gedanke, andere Antwort. Ein Zoom-Schritt kostet ~258 ms, taugt also
-nicht zum Gedrückthalten — deshalb gab es lange gar keine Taste. Der Einwand
-galt aber `+`/`-`, echten Motions. `<M-z>` verdrängt nichts, also trägt der
-Handel hier. Begründung in `hover.nvim/docs/FEATURES/ZOOM.md`.
+**Und warum der Zoom seit dem 2026-09-03 blanke Tasten hat statt Alt-Akkorde:**
+weil ein Akkord, den dieses Terminal nicht sendet, nichts verdrängt **und
+nichts tut** — das ist keine billige Taste, sondern eine abwesende. Gemessen:
+`:nnoremap <M-z> <Cmd>echo "da"<CR>` druckt auf keinen Druck, an kommt `<Esc>`
+gefolgt von `z`, und `z` ist ein which-key-Präfix. `<` schied aus (which-key
+normalisiert es zu `<lt>`, während die Zuordnung `<` bleibt → „Recursion
+detected"), `-` ebenfalls: das hält `resize_keys.smaller`, Resize wird zuerst
+gebunden, und jedes Hover mit Zoom-Taste hat ein Bild — es würde also
+**immer** resizen. `:checkhealth hover` meldet diese Überschneidung.
+Begründung in `hover.nvim/docs/FEATURES/ZOOM.md`.
 
 ## Reservierte Akkorde in dieser Config
 
@@ -92,8 +101,9 @@ Aussage über **diese** Config, nicht über das Plugin.
 | `<M-->` | **vergeben** an cascade.nvim (Bullet Points) |
 | `<M-+>` | frei, aber ohne Partner — ein Regler mit einer Richtung ist keiner |
 | `<M-ScrollWheelUp/Down>` | **vergeben** — hover.nvims Default fürs Rad |
-| `<M-n>` | **vergeben** — hover.nvims Default fürs Durchblättern der Position-Antworten seit `ac0a372`. Vorher gegen diese Cheatsheets *und* den Config-Quelltext geprüft: in beiden ungenutzt |
-| `<M-z>` / `<M-Z>` / `<M-R>` | **vergeben** — hover.nvims Zoom seit `efafb82`. Vor der Vergabe gegen diese Config geprüft: frei. `<M-r>` klein gehört NeoTree und bleibt unberührt |
+| `<M-n>` | **vergeben** — hover.nvims Default fürs Durchblättern der Position-Antworten seit `ac0a372`. **Ungeprüft, ob er hier ankommt**, und nach dem Zoom-Befund unwahrscheinlich: derselbe Akkord-Typ wie `<M-z>`. Test ist eine Minute — `:nnoremap <M-n> :echo "kommt an"<CR>`. Ohne Taste bleibt `:Hover next` |
+| `<M-z>` / `<M-Z>` / `<M-R>` | **wieder frei** seit hover.nvim `21c4932` — und zwar frei im Sinne von *unerreichbar*: dieses Terminal sendet keinen Tastatur-Alt-Akkord. `<M-r>` klein gehört NeoTree und bleibt unberührt |
+| `>` / `\|` / `=` | **vergeben** — hover.nvims Zoom seit `21c4932`, geliehen nur solange ein zoombares Float steht |
 | `<S-+>` / `<C-S-+>` und Gegenstücke | frei, **aber ungeprüft** — siehe Notes |
 
 ## Notes
@@ -119,6 +129,25 @@ Aussage über **diese** Config, nicht über das Plugin.
   `h/j/k/l`.
 
 ## Changelog
+
+- 2026-09-03 (2): **der Zoom hat blanke Tasten statt Alt-Akkorde** (hover.nvim
+  `21c4932`). `>` hinein, `|` heraus, `=` zurück. Der Grund ist eine Messung
+  und keine Geschmacksfrage: `<M-z>` erreicht dieses Terminal nicht — auf
+  `:echo` gemappt druckt es nichts, an kommt `<Esc>`+`z`, und which-key geht
+  auf dem Fold-Präfix auf. Ein Akkord, der nichts verdrängt und nichts tut,
+  ist keine billige Taste.
+
+  Zwei Kandidaten sind ausgeschieden, beide nachgemessen statt vermutet:
+  **`<`**, weil which-key es zu `<lt>` normalisiert, während die Zuordnung `<`
+  bleibt — daher „Recursion detected"; `|`, `_`, `>` und `=` normalisieren auf
+  sich selbst. Und **`-`**, so naheliegend es neben einem `_` aussieht: das
+  hält `resize_keys.smaller`, Resize wird vor Zoom gebunden, eine doppelt
+  gelistete Taste wird einmal genommen — und jedes Hover, für das eine
+  Zoom-Taste gebunden wird, hat ein Bild. Es würde bei **jedem** Druck
+  resizen. `:checkhealth hover` meldet die Überschneidung jetzt.
+
+  Nebenwirkung für diese Config: der `zoom_keys`-Workaround im Plugin-Spec ist
+  weg, `require("hover").enable()` steht wieder ohne Optionen da.
 
 - 2026-09-03: **`<M-n>` blättert zwischen Position-Antworten** (hover.nvim
   `ac0a372`). Mehrere Plugins können zu *einer* Stelle etwas sagen, und auf

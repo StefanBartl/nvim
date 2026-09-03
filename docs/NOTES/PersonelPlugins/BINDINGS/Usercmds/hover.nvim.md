@@ -25,7 +25,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover next` | — | step to the next plugin with something to say about this place; wraps past the last |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
 | `:Hover resize [direction]` | `bigger\|smaller` | make the hover on screen bigger or smaller. Omitted: **bigger**. **Any** hover — a picture is drawn larger, a text preview shows more lines |
-| `:Hover zoom [direction]` | `in\|out\|reset` | magnify a *detail* of the picture on screen. Omitted: **in**. Pictures only — not PDF pages. A step costs ~258 ms — zu langsam zum Gedrueckthalten, weshalb die Tasten dafuer Alt-Akkorde sind (`<M-z>`/`<M-Z>`/`<M-R>`) und keine blanken |
+| `:Hover zoom [direction]` | `in\|out\|reset` | magnify a *detail* of the picture on screen. Omitted: **in**. Bilder **und** PDF-Seiten seit hover.nvim `7fdfc09` — eine Seite wird dabei bei hoeherem DPI neu gerastert statt beschnitten. Ein Schritt kostet ~258 ms (Bild) bzw. 207–752 ms (Seite), also zu langsam zum Gedrueckthalten. Tasten seit `21c4932`: `>` / `\|` / `=`, blank statt Alt-Akkord, weil dieses Terminal keinen sendet |
 | `:Hover nav {direction}` | `left\|right\|up\|down` | move the magnified view. Required argument. The keyboard counterpart to the borrowed `h/j/k/l`, which only exist while zoomed and are therefore undiscoverable |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |

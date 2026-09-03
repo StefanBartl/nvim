@@ -68,6 +68,12 @@ plugins.add({
     -- alle Previews bleiben, nur nichts oeffnet mehr von selbst. `:Hover show`
     -- oder `keymaps.show` beantworten dann weiterhin alles, Web-Links
     -- inklusive. `:Hover status` zeigt, was gerade an ist.
+    --
+    -- Wieder ohne Optionen seit hover.nvim `21c4932`: die Zoom-Tasten sind dort
+    -- `>` hinein, `|` heraus, `=` zurueck, und damit genau das, was hier
+    -- voruebergehend als `zoom_keys` ueberschrieben war. Die frueheren
+    -- Alt-Akkorde (`<M-z>`/`<M-Z>`/`<M-R>`) erreichen dieses Terminal nicht --
+    -- gemessen, siehe hover.nvim `docs/MANUAL-EVIDENCE.md`.
     "StefanBartl/hover.nvim",
     lazy = false,
     priority = 900,
