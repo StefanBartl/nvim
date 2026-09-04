@@ -35,6 +35,8 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
 | `:Hover links web [state]` | `on\|off\|toggle` | http(s) links. Implies `links on` |
 | `:Hover links web fetch [state]` | `on\|off\|toggle` | status code + title + — bei `text/html` — **was die Seite sagt**, seit hover.nvim `9070b5e`. Implies `links web on`. Kein eigener Schalter für den Seitentext: der Body wird ohnehin geladen, kostet also keine zweite Anfrage und keine zweite Disclosure. Zugeschnitten auf den Platz, den das Float hat — deshalb lohnt `F` über einem Link |
+| `:Hover links web shot [state]` | `on\|off\|toggle` | die Seite von einem Headless-Chromium rendern lassen und als **Bild** ins Float zeichnen, seit hover.nvim `4e2ebeb`. Implies `links web on` und ausdrücklich **nicht** `fetch`: ein Fetch ist ein `curl`-GET mit 2-MB-Deckel, ein Render **führt die Seite aus** — ihr JavaScript läuft, und jede Subresource, die sie nennt, wird von ihrem Host geholt. Wer `fetch` für einen Statuscode angeschaltet hat, darf davon keinen Browser bekommen |
+| `:Hover links web shot eager [state]` | `on\|off\|toggle` | dasselbe für den **automatischen Trigger** statt nur für `:Hover show`. Eigener Schalter, weil `auto_hover.url` es nicht sagen kann: Textvorschau und Screenshot sind derselbe Zieltyp. Gemessen 2026-09-04 auf diesem Rechner: **710/715/735 ms** allein für den Browserstart (`about:blank`, ohne Netz), eine echte Doku-Seite 3,9–19,6 s. Eine Seite mit fünfzig Links ist fünfzig davon |
 | `:Hover paths [state]` | `on\|off\|toggle` | bare paths in prose |
 | `:Hover paths missing [state]` | `on\|off\|toggle` | mark a path that resolves to nothing |
 | `:Hover paths code [state]` | `on\|off\|toggle` | hover a path inside executable code, not just comments and strings. **Default off.** Implies `paths on` |
@@ -149,6 +151,37 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-04 (4): **`:Hover links web shot` rendert die Seite** (hover.nvim
+  `4e2ebeb`). Damit **vierundzwanzig** Routen. Ein Headless-Chromium legt die
+  Seite auf 1280x900 aus, schiesst ein PNG, und ab da ist es ein Bild wie
+  jedes andere — dieselbe Canvas-Groesse, dasselbe Zeichnen, derselbe
+  `>`-Crop, dasselbe `h/j/k/l`.
+
+  **Die Kategoriegrenze ist der ganze Entwurf**, und sie laeuft nicht zwischen
+  „leise" und „laut": ein Fetch ist ein `curl`-GET, ein Render fuehrt die
+  Seite aus. Deshalb impliziert `shot` **`web`** und niemals `fetch`.
+
+  Zwei Sicherungen, die hier stehen sollen, weil sie beim naechsten Lesen
+  nicht offensichtlich sind. Erstens **`--user-data-dir` auf ein
+  Wegwerf-Verzeichnis**: ohne das kann ein Headless-Chrome das *echte* Profil
+  oeffnen — die eigenen Cookies gingen an den gehoverten Host, und was man
+  eingeloggt sieht, waere im Bild. Zweitens **kein `--no-sandbox`**: die
+  Seite ist per Konstruktion nicht vertrauenswuerdig, und die Sandbox ist
+  genau das, was zwischen ihr und dem Rechner steht.
+
+  Auf diesem Rechner relevant: **Chrome ist installiert und auf keinem PATH**
+  (`C:\Program Files\Google\Chrome\Application\chrome.exe`, gemessen). Der
+  Previewer sucht die ueblichen Installationsorte selbst und findet ihn;
+  `:checkhealth hover` nennt die Binary, die er starten wuerde, und sagt
+  dazu, dass die `chrome NOT found`-Zeile aus dem deps-Abschnitt darunter
+  erwartet ist. `links.shot.command` benennt eine direkt.
+
+  Default-Capture ist 900 px hoch und nicht die ganze Seite: ein Bild wird
+  ins Float einpasst, also entscheidet der Einpassfaktor. 1280x900 passt in
+  ein Zen-Float mit ~1,0 (16-px-Text bleibt 16 px), 1280x4000 ist auf 0,24
+  hoehenbegrenzt (dieselben 16 px werden 4 px). Wer die ganze Seite will,
+  stellt `height` hoch und liest mit `>` — der Zoom schneidet.
 
 - 2026-09-04 (3): **`:Hover zen`, und die zweite Achse sagt endlich etwas**
   (hover.nvim `c20191e`). Damit sind es **zweiundzwanzig** Routen — die Zahl

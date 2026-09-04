@@ -148,9 +148,9 @@ Aussage über **diese** Config, nicht über das Plugin.
   `:checkhealth hover` sagt es, weil beides identisch aussieht.
 - **Gescrollt wird ausschließlich über die geliehenen Tasten** — eine
   `:Hover`-Route für `scroll` gibt es nicht (nachgezählt gegen
-  `usrcmds.routes()` am 2026-09-04: **zweiundzwanzig** Routen, `scroll` ist
+  `usrcmds.routes()` am 2026-09-04: **vierundzwanzig** Routen, `scroll` ist
   keine). Die Zahl stand hier auf achtzehn und war seit `auto`, `border`,
-  `status`-als-Board und `zen` falsch.
+  `status`-als-Board, `zen` und den beiden `shot`-Schaltern falsch.
 - Warum welche Taste an welcher Bedingung hängt, steht im Repo und nicht hier:
   `docs/FEATURES/RESIZE.md` für `+`/`-`/Rad, `docs/FEATURES/ZOOM.md` für
   `h/j/k/l`, `docs/FEATURES/ZEN.md` für `F`.
