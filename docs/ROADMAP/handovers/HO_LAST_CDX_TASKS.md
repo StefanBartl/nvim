@@ -3,8 +3,8 @@
 Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
-**Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 ist 31/31,
-**`DOC-05` ist 32/32**, keine toten Links, keine toten Anker, keine verwaisten
+**Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 und `DOC-05`
+sind **32/32**, keine toten Links, keine toten Anker, keine verwaisten
 `docs/`-Dateien. Offen sind nur noch die vollen Durchgänge der Wellen 4–10.**
 
 ---
@@ -16,6 +16,13 @@ Zwischenstände pro Repo, Einzelfallentscheidungen mit Begründung,
 
 **Nicht hierher:** der Standard selbst (in `LAST_CDX_TASKS.md`), der
 Abschlussbericht (nach `ERLEDIGT/`).
+
+> **31 oder 32?** Beides, und beides richtig. Die Bestandsaufnahme zählte am
+> 2026-09-03 **31** Repos; `casedesk.nvim` hat seinen ersten Commit am
+> **2026-09-04** und ist damit das **32.** — mitten im Durchgang entstanden.
+> Ältere Abschnitte hier rechnen deshalb mit 31, neuere mit 32; wo eine Zahl
+> von diesem Tag an gilt, steht 32. Siehe
+> [Ü34](#ü34--die-sammlung-ist-während-des-durchgangs-um-ein-repo-gewachsen).
 
 ---
 
@@ -70,8 +77,15 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | open.nvim | Waisen | `CHEATSHEET.md` im Root, ohne Eingang. Gegen `docs/` gehalten: **Scope-Tokens stehen nur dort** — also behalten, nach `docs/cheatsheet.md` verschoben, Index angelegt | `e80eb6a` |
 | documentation.nvim | Nachtrag | `docs/hover.md` fehlte im sonst vollständigen Index | `9a06d0d` |
 | **15 Repos** | `DOC-05` | **Die Index-Tranche**, je ein Commit: `diff` `f3ecd94`, `cascade` `8775304` (dazu die fehlende `FEATURES/README.md`), `insights` `cef44ab`, `images` `f1c51e8` (vier Seiten fett statt verlinkt, Ü29), `markdown` `941262d`, `pdfport` `c4e9991`, `pickers` `aea6900`, `recommender` `4e2381b`, `sessions` `ff2b207`, `spotlight` `86bed5c`, `sandbox` `4e93d65`, `runtime-analysis` `c7fe7b7`, `buffer-ctx` `10dca6f`, `dap` `234ab43`, `casedesk` `865a749` | siehe links |
+| casedesk.nvim | **keine** | Nie in einer Welle, weil es beim Aufstellen der Wellen nicht existierte — erster Commit 2026-09-04. Siehe [Ü34](#ü34--die-sammlung-ist-während-des-durchgangs-um-ein-repo-gewachsen) | — |
 
-**E1 ist bei 31/31** — siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr), das die letzte offene Zeile aufgelöst hat, ohne dass sie eine war. Der deps-Durchgang aus
+**E1 ist bei 32/32** — 31 aus der Bestandsaufnahme über
+[Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr),
+das die letzte offene Zeile auflöste, ohne dass sie eine war, plus
+`casedesk.nvim`, das am 2026-09-04 dazukam und die Zeile wortgleich mitbringt
+(nachgeprüft, nicht angenommen — siehe
+[Ü34](#ü34--die-sammlung-ist-während-des-durchgangs-um-ein-repo-gewachsen)).
+Der deps-Durchgang aus
 [Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt-️) hat
 am 2026-09-04 committet und damit alle sechs blockierten Repos freigegeben.
 Fünf davon haben die Zeile nachgetragen bekommen (`diff.nvim`,
@@ -561,6 +575,10 @@ was bleibt, sind die 21 Repos der Wellen 4–10.
 
 ### Ü26 — `WORKFLOW.md` ist in 16 Repos verwaist, und das ist ein Befund
 
+> **Erledigt am 2026-09-04.** Alle sechzehn sind erreichbar, weil jedes Repo
+> seinen Index bekommen hat. Der Abschnitt bleibt stehen, weil die *Diagnose*
+> das Wertvolle daran ist und für die nächste Sammlung wieder gilt.
+
 Über alle 32 Repos gemessen: `docs/WORKFLOW.md` ist eine **Pflichtdatei**
 nach §3, und in 16 Repos zeigt nichts darauf. Der Zufall daran ist keiner:
 
@@ -753,6 +771,31 @@ Repo-Wurzel; `--all` zeigt den Rest. **Der sechste Werkzeugfehler dieser
 Serie, und der erste, der etwas *versteckt* hat statt zu viel zu melden** —
 die anderen fünf waren Falschbefunde, also laut. Dieser war leise.
 
+### Ü34 — Die Sammlung ist während des Durchgangs um ein Repo gewachsen
+
+Die Bestandsaufnahme zählt durchgehend **31**. Gemessen am 2026-09-04 sind es
+**32**: `casedesk.nvim` hat seinen ersten Commit vom selben Tag.
+
+Das ist harmlos und trotzdem eine Falle, weil es jede Prozentzahl dieses
+Dokuments verschiebt und nirgends stand. Konkret:
+
+- **`casedesk.nvim` hat nie eine Welle gesehen.** Es taucht in keiner
+  E1-, E4- oder Wellen-Zeile auf — nicht, weil es übersprungen wurde, sondern
+  weil es beim Aufstellen der Wellen noch nicht existierte.
+- Beim Nachprüfen ist es trotzdem **weitgehend konform** angelegt worden:
+  Alpha-Disclaimer auf Zeile 1, `BINDINGS.md`, `WORKFLOW.md`,
+  `installation.md`, `configuration.md`, generierte `commands.md`. Der Index
+  fehlte, wie überall (`865a749`), und zwei echte Befunde stehen offen:
+  `FEATURES.md` als Datei statt Ordner, und **acht von vierzehn Seiten
+  deutsch** — mit einer `FEATURES.md`, die sich weiterhin für die einzige
+  deutsche hält und zwei Absätze später fünf weitere aufzählt.
+
+> **Lehre, und es ist die Umkehrung von [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr):**
+> dort war die *Antwort* auf eine richtige Frage abgelaufen, hier ist die
+> *Grundgesamtheit* gewachsen. Ein Durchgang über „alle Repos" braucht ein
+> Datum an der Zahl. `ls -d E:/repos/*.nvim | wc -l` vor jeder Welle, wie
+> `git status` vor jeder Repo-Auswahl.
+
 ---
 
 ## Abweichungen vom Standard
@@ -943,6 +986,25 @@ betroffenen Repos:
 | `github_stats` | `DASHBOARD.md`, `TROUBLESHOOTING.md`, `FEATURES.md` dito |
 | `casedesk` | **acht von vierzehn Seiten deutsch** (`DOC-20`). `FEATURES.md` sagt weiterhin „Deutsch, als einzige Datei hier" und nennt zwei Absätze später fünf weitere. Der Index markiert sie jetzt mit **[de]**; ob übersetzt wird, ist eine Autorenentscheidung — das Fachgebiet ist auch außerhalb deutsch dokumentiert |
 | `open` | `docs/commands.md` hat 213 Zeilen über zwei Kommandofamilien und erwähnt die Scope-Tokens nicht; die stehen allein im Cheatsheet |
+
+### Eine falsche Zahl in einer Commit-Message
+
+`markdown.nvim` `941262d` schließt mit „29 files, 0 dead links, 0 dead
+anchors, 0 orphans". Die letzte Zahl ist **1**, nicht 0:
+`TESTS/fence_scope.md` ist eine Fixture und meldet sich als Waise. Kein
+Befund an der Sache, aber die Message behauptet eine Messung, die so nicht
+stimmt.
+
+Nicht per Force-Push korrigiert — die History für einen Wortlaut
+umzuschreiben ist teurer als der Fehler. Steht deshalb hier, wo der nächste
+Leser die Zahl gegenprüft.
+
+> Die Zeile stammt aus einer Vorlage, die in dieser Tranche fünfzehnmal
+> geschrieben wurde. **Eine wiederholte Formulierung ist genau die Stelle, an
+> der eine Zahl mitläuft, ohne noch einmal gemessen worden zu sein** — das
+> ist dieselbe Mechanik, die [Ü1](#ü1--der-alpha-disclaimer-war-nie-das-problem)
+> und [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr)
+> beschreiben, hier in meinem eigenen Text.
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
 
