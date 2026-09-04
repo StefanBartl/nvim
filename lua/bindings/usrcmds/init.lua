@@ -4,7 +4,13 @@
 local usercmd = require("lib.nvim.bindings.usercmd")
 local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
-require("bindings.usrcmds.case").enable()
+-- casedesk is a plugin now (StefanBartl/casedesk.nvim, spec in
+-- plugins/personal/init.lua, local checkout under $REPOS_DIR). The tree under
+-- usrcmds/case/ is frozen and kept only as a fallback: uncomment the line
+-- below and comment out the spec entry to go back. Exactly one of the two may
+-- ever be active -- both would register :Case twice, and which code ran would
+-- be anyone's guess. See docs/ROADMAP/casedesk/PLUGIN.md section 3.8.
+-- require("bindings.usrcmds.case").enable()
 require("bindings.usrcmds.bindings_explorer").enable()
 require("bindings.usrcmds.context_open").enable()
 require("bindings.usrcmds.telemetry_nvim_config").enable()

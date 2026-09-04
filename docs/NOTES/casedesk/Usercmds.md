@@ -10,7 +10,9 @@ route. `[case]`/`[nr]` everywhere below is the same optional `CASE` arg
 type, `<Tab>`-completed from the on-disk registry; typing the full SNOW
 ticket id works too, it's normalized down to the short number.
 
-Source: `lua/bindings/usrcmds/case/init.lua` (routes), `ui.lua` (handlers).
+Source: `casedesk.nvim`, `lua/casedesk/bindings/usrcmds.lua` (routes) and
+`lua/casedesk/ui.lua` (handlers) — the plugin, not this config; the copy
+under `lua/bindings/usrcmds/case/` is frozen (`PLUGIN.md`).
 Concept: [`docs/ROADMAP/casedesk/CONCEPT.md`](../../ROADMAP/casedesk/CONCEPT.md).
 Feature history: [`docs/ROADMAP/casedesk/ROADMAP.md`](../../ROADMAP/casedesk/ROADMAP.md).
 Use cases / daily workflow: [`Workflow.md`](./Workflow.md).
