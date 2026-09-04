@@ -118,10 +118,13 @@ weiterhin beide Bäume, in jedem Scope.
   Quelldateien, 28 MiB, die danach sofort wieder freigegeben werden). Das
   soll kein stiller Kostenfaktor eines Kommandos sein, das man für den
   üblichen Bericht tippt.
-- **`:Bindings path` ergänzt, ersetzt nicht** das ältere `:BindingsPath`
-  (`lua/bindings/usrcmds/init.lua`) — letzteres bleibt unverändert
-  bestehen, zeigt aber weiterhin auf den nie existierenden Pfad
-  `docs/NOTES/BINDINGS` statt der beiden echten Wurzeln.
+- **`:Bindings path` hat `:BindingsPath` ersetzt** (2026-09-04). Das ältere
+  Kommando in `lua/bindings/usrcmds/init.lua` zeigte auf den nie
+  existierenden Pfad `docs/NOTES/BINDINGS` statt auf die beiden echten
+  Wurzeln und trug seit dem ersten Tag ein `TEMP`. Es ist entfernt;
+  `<leader>BI` läuft jetzt auf `:Bindings path`, weil die Telemetrie die
+  Taste als häufig gedrückt ausweist — die Taste bleibt, nur ihr Ziel
+  stimmt jetzt.
 
 ## Der Quelltext-Fallback (2026-09-02)
 

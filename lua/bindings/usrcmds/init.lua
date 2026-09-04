@@ -43,17 +43,15 @@ end, {
   desc = "Kopiert absoluten Pfad, Zeile und Spalte in die Zwischenablage",
 })
 
---TEMP: nur temporär (wahrscheinlich
-local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")
-usercmd.create("BindingsPath", function()
-  -- Kopiert den Pfad in das System-Register (+)
-  vim.fn.setreg("+", bindings_path)
-  notify.info("Bindings-Pfad in Zwischenablage kopiert!")
-end, {
-  desc = "Kopiert den spezifischen Bindings-Pfad in die Zwischenablage",
-})
-
--- 2. Keymap <leader>BI erstellen
+-- `:BindingsPath` used to live here. It copied
+-- `<stdpath('config')>/docs/NOTES/BINDINGS` -- a directory that has never
+-- existed. The corpus has two roots, `docs/NOTES/PersonelPlugins/BINDINGS`
+-- and `docs/NOTES/ExternPlugins/Bindings`, and `:Bindings path
+-- [personal|extern]` copies them, knows both, and is where the explorer's
+-- own module doc has pointed all along. The command carried a `TEMP` marker
+-- from the day it was written; telemetry says the keymap below is pressed
+-- often, so the key stays and only its target is corrected.
+--
 -- lib.nvim.bindings.keymap directly, like everywhere else. There used to be a
 -- `vim.g.__map_helper` handle to reach for here; it is gone, and it never
 -- worked -- `vim.g` strips a table's metatable on the way through, so the
@@ -62,9 +60,9 @@ end, {
 require("lib.nvim.bindings.keymap")(
   "n",
   "<leader>BI",
-  "<cmd>BindingsPath<CR>",
+  "<cmd>Bindings path<CR>",
   nil,
-  "Bindings-Pfad kopieren"
+  "BINDINGS-Wurzeln in die Zwischenablage kopieren"
 )
 
 --FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
