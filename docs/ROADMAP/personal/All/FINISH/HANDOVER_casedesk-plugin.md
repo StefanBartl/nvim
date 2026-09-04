@@ -1,6 +1,7 @@
 # Handover — casedesk als eigenes Plugin (`casedesk.nvim`)
 
-**Stand: 2026-09-04, Phase 0 abgeschlossen. Als Nächstes: Phase 1.**
+**Stand: 2026-09-04, Phase 0 und Phase 1 abgeschlossen. Als Nächstes:
+Phase 2 (`config.setup(opts)` plus Bereichs-Datenmodell).**
 
 Auftrag: `lua/bindings/usrcmds/case/` aus der nvim-Config nach
 `StefanBartl/casedesk.nvim` auslagern (privat), dabei naheliegende Features
@@ -74,17 +75,42 @@ Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
 - **Nullmessung: 0 Befunde** (NEW-44), dreimal gemessen, `worse: nothing`
   über alle Läufe.
 
+## Phase 1 im Einzelnen — was steht
+
+Commits `b91ac49` (Umzug), `160f7ed` (Lint + ein echter Bug), `9f8...`
+(busted-Globals).
+
+- 39 Module, 11.295 Zeilen umgezogen. Namespace-Rewrite
+  `bindings.usrcmds.case` → `casedesk` und `bindings/usrcmds/case` →
+  `casedesk` über `.lua` **und** `.md` in einem Durchgang — deckt
+  requires, `---@module`-Annotationen und Pfade in Doc-Kommentaren
+  zugleich. 0 Reste.
+- Zwei Dateien wechseln die Rolle, nicht nur den Ort:
+  `case/init.lua` → `bindings/usrcmds.lua` (es **ist** der Kommandobaum;
+  `M.enable` → `M.setup`), `case/config.lua` → `config/DEFAULTS.lua`
+  (es **ist** die Defaults-Tabelle). Das Gerüst-`init.lua` bleibt der
+  `setup()`-Einstieg und treibt beide.
+- `bindings/autocmds.lua` bleibt bewusst leer: den einen Autocmd
+  (`FocusGained` für die SLA-Uhr) erzeugt `sla/notify.lua` neben dem
+  Zustand, der entscheidet, ob er feuert. Die Datei sagt das jetzt,
+  statt ein TODO zu tragen.
+- `docs/FEATURES.md` mitgezogen, relative Links repariert.
+- Verifiziert: alle 45 Module laden headless, Smoke-Suite grün, stylua
+  und luacheck sauber.
+- **Die Config-Kopie ist unangetastet und weiterhin die aktive.**
+
 ## Als Nächstes
 
-- [ ] **Phase 1 — Code umziehen.** 39 Module aus
-      `nvim/lua/bindings/usrcmds/case/` nach
-      `casedesk.nvim/lua/casedesk/`, Namespace-Rewrite
-      `bindings.usrcmds.case` → `casedesk` und `bindings/usrcmds/case` →
-      `casedesk` über `.lua` **und** `.md` (deckt requires,
-      `---@module`-Annotationen und Pfade in Doc-Kommentaren zugleich).
-      `config.lua` → `config/DEFAULTS.lua`, inhaltlich unverändert.
-      Relative Doc-Links in `docs/FEATURES.md` reparieren.
-- [ ] Phase 2 — `config.setup(opts)` **plus** Bereichs-Datenmodell (§3.6).
+- [ ] **Phase 2 — `config.setup(opts)`.** `config/init.lua` reicht die
+      Defaults derzeit nur durch (`TODO(phase 2)` steht drin). Zu bauen:
+      Deep-Merge plus `rebuild_derived()` für `root`, `cases_root`,
+      `workflow_templates_dir`, `sla_doc_path` — **nur** für Schlüssel,
+      die der User nicht explizit gesetzt hat. Dazu `@types/init.lua`
+      (`Casedesk.Config` mit allen 30 Feldern) und `health.lua`.
+- [ ] **Phase 2 mit: Bereichs-Datenmodell** (PLUGIN.md §3.6/§7.6
+      Schritt 1) — `config.areas`, `state_dir(area, state)`,
+      `RegistryEntry.area`. Macht die drei unsichtbaren Cases sichtbar,
+      ohne dass sich ein Kommando ändert.
 - [ ] Phase 3 — Umschalten, Config-Kopie einfrieren (nicht löschen!).
 
 ---
@@ -122,6 +148,25 @@ sich dort wieder etwas geändert hat.**
 Integrationskandidaten** — Ersteres für hervorgehobene Fakten in
 Activity Streams (die Extraktion existiert bereits), Letzteres als das
 fehlende Werkzeug für die Anonymisierung vor KI-Übergaben. PLUGIN.md §8.1.
+
+**6. Ein echter Bug, den luacheck beim Umzug gefunden hat** (Phase 1):
+`similar.lua` deklariert `MIN_SHARED_TERMS = 2` mit einem Kommentar, der
+ein am echten Bestand beobachtetes Problem beschreibt — und hat die
+Konstante **nie angewendet**. Die Bedingung war ein blankes `dot > 0`,
+das genau den Ein-Term-Treffer zulässt, den der Kommentar ausschließen
+will. `:Case similar` hat also die ganze Zeit dünne Summaries mit einem
+geteilten Allerweltswort nahe 1.0 gerankt. Gefixt in `160f7ed`.
+Bemerkenswert ist, warum es nicht auffiel: ohne Tests scheitert ein
+Ähnlichkeitsranker mit plausiblen, aber falschen Treffern nicht sichtbar.
+
+**7. Der reguläre LuaLS-Scan ist bis Phase 7 unbrauchbar.** Er meldet
+nach dem Umzug 231 Befunde, davon 230 in einer Regel — alle
+`duplicate-doc-field` gegen die eingefrorene Zwillingskopie in der
+Config, die der Scan als injizierte Library mitliest (`LLS-03`/`LLS-04`).
+Eine Kontrollmessung ohne die Config in `workspace.library` ergibt **0**.
+Weg und Beleg:
+`wkdbook-myplugins/casedesk.nvim/Messungen/luals-phase1-messartefakt-2026-09-04.md`.
+Bis Phase 7 ist die Kontrollmessung die gültige Zahl.
 
 ---
 
