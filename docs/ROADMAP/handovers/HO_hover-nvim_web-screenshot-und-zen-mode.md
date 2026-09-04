@@ -1,12 +1,12 @@
 # Handover — hover.nvim: Website-Screenshot-Preview & Zen-Mode
 
 **Repo:** `E:\repos\hover.nvim` (branch `main`, Remote `StefanBartl/hover.nvim`)
-**Datum:** 2026-09-04, Stand fortgeschrieben am 2026-09-04 (3)
-**Status:** **alles aus diesem Handover ist gebaut** — der `auto_hover`-Bugfix
-(`c20191e`), Zen (`c20191e`), der Seitentext (`9070b5e`), der Body-Cache
-(`6ebd232`) und der Screenshot (`4e2ebeb`). Offen bleibt nur die eine Variante
-aus Abschnitt 4, die dort ausdrücklich als lohnend markiert ist: Links, die
-schon jetzt auf ein PDF zeigen.
+**Datum:** 2026-09-04, Stand fortgeschrieben am 2026-09-04 (4)
+**Status:** **alles aus diesem Handover ist gebaut, einschließlich Abschnitt 6**
+— der `auto_hover`-Bugfix (`c20191e`), Zen (`c20191e`), der Seitentext
+(`9070b5e`), der Body-Cache (`6ebd232`), der Screenshot (`4e2ebeb`) und die
+PDF-Links (`dbc2b87`). **Nichts ist mehr offen.** Was bleibt, ist eine
+Handprüfung: die PDF-Link-Zeile in `MANUAL-EVIDENCE.md` steht auf *never*.
 
 ---
 
@@ -354,11 +354,10 @@ Am 2026-09-04 durchgesprochen und verworfen. Begründung, damit sie nicht wieder
   **schlechter lesbar als der Textauszug** — bei einem LibreOffice-Start pro Link.
 - Ein Cache löst nur den zweiten Aufruf. Ein Hover hat aber genau einen ersten.
 
-**Die eine Variante davon, die sich lohnt** und noch offen ist: Links, die *schon jetzt*
-auf ein PDF zeigen (`content-type: application/pdf`). Da fällt jede Konversion weg — die
-Bytes gehen direkt in die vorhandene pdfport/pdftoppm-Pipeline. Heute zeigt so ein Link
-nur `HTTP 200 OK / application/pdf · 2.3 MB`. Billig, ehrlich, sofort nützlich. Eigener
-kleiner Task, unabhängig von allem oben.
+**Die eine Variante davon, die sich lohnt** — Links, die *schon jetzt* auf ein PDF zeigen
+(`content-type: application/pdf`) — ist mit `dbc2b87` gebaut. Die Einschätzung „billig,
+ehrlich, sofort nützlich" hat gehalten; die *Begründung* dafür in Abschnitt 6 war an zwei
+Stellen falsch. Siehe dort.
 
 ---
 
@@ -372,29 +371,90 @@ kleiner Task, unabhängig von allem oben.
 3. ~~**Screenshot-Preview bauen**~~ — gebaut, `4e2ebeb`. `:Hover links web shot` und
    `:Hover links web shot eager`, `docs/FEATURES/SHOT.md`, 20 Specs. Der Body-Cache aus
    dem Nachtrag zu Abschnitt 2 ist mit `6ebd232` erledigt.
-4. Nicht anfangen mit HTML→PDF (Abschnitt 4).
+4. ~~**PDF-Links bauen**~~ — gebaut, `dbc2b87`. `:Hover links web fetch pdf`,
+   `docs/FEATURES/WEBPDF.md`, 12 Specs. Die beiden Fehleinschätzungen in
+   Abschnitt 6 stehen dort korrigiert.
+5. Nicht anfangen mit HTML→PDF (Abschnitt 4).
 
-## 6. Was jetzt noch offen ist
+## 6. PDF-Links — gebaut (`dbc2b87`), und zwei Vorhersagen, die falsch waren
 
-**Die eine Variante aus Abschnitt 4, die dort als lohnend markiert ist:** Links, die
-*schon jetzt* auf ein PDF zeigen (`content-type: application/pdf`). Da fällt jede
-Konversion weg — die Bytes gehen direkt in die vorhandene pdfport/pdftoppm-Pipeline.
-Heute zeigt so ein Link `HTTP 200 OK / application/pdf · 2.3 MB` und sonst nichts.
+`:Hover links web fetch pdf`. Ein Link, dessen Server `application/pdf`
+antwortet, wird nicht mehr als Größe angezeigt, sondern als seine erste Seite —
+mit denselben Blättertasten, demselben scharfen Zoom, derselben Pipeline wie ein
+lokales PDF. Ausführlich in `hover.nvim/docs/FEATURES/WEBPDF.md`, 12 Specs in
+`TESTS/webpdf_spec.lua`, 380 grün.
 
-Der Zuschnitt ist seit dem Screenshot günstiger geworden, und das ist der Grund, es hier
-zu notieren statt es neu zu erarbeiten:
+**Der Zuschnitt hat gehalten. Zwei der vier Punkte darunter nicht** — und die
+sind der eigentliche Ertrag dieses Abschnitts, weil beide plausibel klangen.
 
-- Der **Body-Cache** in `preview/url.lua` (`6ebd232`) hält die letzte Antwort samt Body
-  schon — bei `application/pdf` sind das die PDF-Bytes, die also bereits da sind, ohne
-  eine zweite Anfrage.
-- `preview/shot.lua` zeigt das **Muster**: Bytes auf Platte legen, ein synthetisches
-  Target bauen, und ab da ist es `preview.media`'s Sache. Für ein PDF ist das
-  `media.pdf` statt `media.canvas_for`, sonst identisch — inklusive Paging und
-  DPI-Zoom.
-- **Achtung beim Fetch:** `--max-filesize 2000000` deckelt bei 2 MB, und PDFs sind
-  regelmäßig größer. Der Deckel ist für HTML richtig gewählt und müsste für diesen Fall
-  eine eigene Zahl bekommen — sonst ist das Ergebnis ein abgeschnittenes PDF, das
-  `pdftoppm` nicht öffnet, und der Fehler sähe aus wie ein kaputter Renderer.
-- Es braucht **keinen neuen Schalter**: `fetch` ist schon an, wenn es einen Content-Type
-  gibt, und die Bytes sind bezahlt. Genau das Argument, mit dem der Seitentext auch
-  keinen bekommen hat.
+### Falsch 1: „die Bytes sind schon da"
+
+Der Body-Cache (`6ebd232`) hält die letzte Antwort samt Body, also — so der
+Schluss — bei `application/pdf` bereits die PDF-Bytes, ohne zweite Anfrage.
+
+**Er hält sie, aber nicht unversehrt.** `lib.nvim.net.curl` ruft
+`vim.system(..., { text = true })`, und diese Option **ersetzt `\r\n` durch `\n` in
+der Ausgabe**. Für HTML unsichtbar. Für ein PDF tödlich: jedes
+`0D 0A`-Bytepaar im Binärstrom wird stillschweigend umgeschrieben, und was
+ankommt, ist eine Datei, die `pdftoppm` nicht öffnet. Der Fehler hätte
+ausgesehen wie ein kaputter Renderer, nicht wie ein zerstörter Download.
+
+Also **zweite Anfrage**, mit `curl -o` direkt in die Cache-Datei — die Bytes
+kommen nie durch Lua. Das ist auch der Grund, warum das Feature einen Schalter
+bekommen hat statt keinen: es kostet einen eigenen Round-Trip.
+
+### Falsch 2: „es braucht keinen neuen Schalter"
+
+Die Begründung war die des Seitentexts: `fetch` ist schon an, die Bytes sind
+bezahlt. Der zweite Halbsatz stimmt nach Falsch 1 nicht mehr — und damit auch
+der Schluss nicht. `pdf` ist ein eigener Schalter, `implies = "fetch"`.
+
+Diese Implikation ist die **einzige im Repo, die ein Mechanismus statt einer
+Politik ist**. Alle anderen wägen Kosten ab; diese stellt eine Abhängigkeit
+fest: der **Content-Type des Servers** identifiziert den Link, und nur ein
+Fetch erzeugt überhaupt einen. Nie die Endung im Pfad — ein `.pdf` im Pfad ist
+das Wort des Autors, und ein `.pdf`, das auf eine HTML-Fehlerseite 404t, ist
+häufig genug, um zu zählen.
+
+### Richtig 1: die 2-MB-Deckelung war die Falle, als die sie notiert war
+
+Und die zweite Anfrage ist genau das, was sie **beantwortbar** macht. Ein Fetch
+deckelt bei 2 MB — richtig für eine Seite, viel zu klein für ein Dokument. Der
+Content-Type ist aber erst bekannt, wenn die erste Antwort da ist, also kann
+*eine* Anfrage nicht beide Zahlen tragen. Zwei können es.
+`links.pdf.max_bytes` (25 MB) ist die zweite, und ein Dokument darüber wird
+**abgelehnt statt abgeschnitten**, unter Nennung beider Zahlen: ein halbes PDF
+ist kein kleineres PDF, es ist eine Datei, die nicht aufgeht.
+
+### Richtig 2: `preview/shot.lua` war das Muster
+
+Bytes auf Platte, synthetisches Target, ab da `preview.media`. Für ein PDF
+`media.pdf` statt `canvas_for` — sonst identisch, inklusive Paging und
+DPI-Zoom. Genau so gebaut.
+
+**Ein Feld war trotzdem nötig**, und das war im Handover nicht vorhergesehen:
+`scroll` und `zoom` leiteten „ist das geblättert" aus
+`target.type == "pdf" or "office"` ab. Das war ein Stellvertreter für die
+richtige Frage und hörte in dem Moment auf, ein genauer zu sein, als ein *Link*
+mit einem PDF antworten konnte. `present` merkt sich jetzt `_open.paged` aus
+dem Inhalt selbst — nur eine geblätterte Preview deklariert `scroll.page`.
+
+### Was der Sabotage-Durchgang gefunden hat
+
+Die Vollständigkeitsprüfung (`%PDF-` am Anfang, `%%EOF` am Ende) lief **nur
+nach einem Download**. Die Datei, gegen die sie schützt, schreibt aber eine
+*frühere* Session: curls Teilausgabe liegt bei einem Abbruch — Neovim
+abgeschossen, Rechner im Standby, Netz weg — genau auf dem Cache-Pfad, und
+nichts sonst sieht sie je wieder an. Ungeprüft wäre sie `cache_days` lang als
+Datei ausgeliefert worden, die der Rasterizer nicht öffnet. Ein auf Platte
+gefundener Kandidat wird jetzt an beiden Enden gelesen, bevor er übernommen
+wird, und bei Misserfolg gelöscht.
+
+Gefunden, weil die Hausregel „jede neue Spec sabotieren" beim Schreiben der
+Sabotage die Frage aufwarf, wo die Prüfung eigentlich *nicht* läuft.
+
+### Was offen bleibt
+
+Nichts am Code. Die Zeile in `MANUAL-EVIDENCE.md` steht auf *never*: gegen
+einen echten Server, der `application/pdf` antwortet, ist nichts davon gesehen
+worden. Was dort zu prüfen ist, steht in der Zeile.
