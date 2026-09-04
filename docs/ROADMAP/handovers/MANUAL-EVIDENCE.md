@@ -29,60 +29,66 @@ point at GitHub for the same reason.
 | On | The machine, terminal and Neovim it was seen on. Everything here is terminal-dependent, so "it worked" without that is not a claim. |
 | How | Enough to repeat it. If a row cannot be repeated from what it says, it is not evidence. |
 
-## Before any row is worth reading: which version was running
+## Before any row is worth reading: which code was actually loaded
 
-**A row collected against a stale checkout is worse than no row**, because it
-reads as a statement about the plugin and is a statement about a copy of it.
-This is not hypothetical — it happened on 2026-09-04 and cost most of a test
-pass.
+**A row collected against code the session never loaded is worse than no row**,
+because it reads as a statement about the plugin and is a statement about a
+snapshot of it. This happened on 2026-09-04 and cost most of a test pass —
+twice, because the first diagnosis was also wrong.
 
-lazy.nvim clones `StefanBartl/hover.nvim` from GitHub into
-`~/AppData/Local/nvim-data/lazy/hover.nvim`, and nothing updates that clone
-because the repository at `E:\repos\hover.nvim` moved on. On 2026-09-04 the
-clone stood at `b2b4b2c` (2026-09-01) — **54 commits behind** — so `F` did
-nothing, `:Hover links web shot` did not exist, and `:Hover auto` did not
-either. None of that was a defect in any of those features; none of them was
-installed.
+### How this config loads hover.nvim
 
-Run this **before** collecting anything:
+`lua/plugins/personal/source.lua` sets `OVERRIDE = "dir"`, so every personal
+repo is loaded **locally**: lazy gets `spec.dir = E:epos\<name>` and the
+plugin runs straight out of the working checkout.
 
-```bash
-cd ~/AppData/Local/nvim-data/lazy/hover.nvim && git log --oneline -1 && git status -sb | head -1
+Two consequences, and the second is the one that bites:
+
+- **The lazy clone under `~/AppData/Local/nvim-data/lazy/hover.nvim` is not
+  loaded.** It is a leftover from an earlier `"remote"` phase and can sit
+  dozens of commits behind for ever without meaning anything. On 2026-09-04 it
+  stood at `b2b4b2c`, 54 behind — and that fact explained nothing at all, which
+  did not stop it from looking like the answer for an hour. **Do not diagnose
+  from it.** `:Lazy update` is not the fix and has nothing to fix.
+- **A running session holds the code from the moment it started.** Lua modules
+  are cached in `package.loaded`; editing or pulling the checkout changes
+  nothing until the next start. So a feature committed *during* a session is
+  absent from that session, and looks exactly like a broken feature.
+
+That second one is what actually happened: zen (`c20191e`) and the page
+screenshot (`4e2ebeb`) were written while the session under test was already
+running. `F` did nothing and `:Hover links web shot` did not exist because that
+Neovim had never seen either. A restart made both work.
+
+### The check to run first
+
+From inside the session you are about to collect evidence in:
+
+```vim
+:lua print(vim.api.nvim_get_runtime_file("lua/hover/init.lua", false)[1])
 ```
 
-`## main...origin/main` with nothing after it means the clone is current.
-`[behind N]` means every row you are about to write is about version
-`b2b4b2c`-or-whatever, not about `main`. `:Lazy update hover.nvim` fixes it.
+That names the directory that is actually loaded. Then, in that directory:
 
-Cheaper still, from inside Neovim — these three only exist on a current
-checkout, and each answers for a different one of the recent features:
+```bash
+git log --oneline -1
+```
 
-| Type this | Missing means |
+and ask the only question that matters: **was this session started after that
+commit?** If in any doubt, restart Neovim before writing a row. A restart costs
+seconds; a row that cannot be placed on a version costs the next reader an
+afternoon.
+
+Cheaper still, from inside Neovim — each of these exists only from one commit
+on, so a missing one dates the loaded code:
+
+| Type this | Missing means the loaded code is |
 | --- | --- |
+| `:Hover resize` | older than `8ec5b40` — no resize, no `+`/`-`, no wheel |
+| `:Hover zoom` | older than `9fba190` — no magnification, no `h`/`j`/`k`/`l` |
+| `:Hover auto` | older than `e8cde0e` — no `auto_hover` axis at all |
 | `:Hover zen` | older than `c20191e` — no zen |
 | `:Hover links web shot` | older than `4e2ebeb` — no page screenshots |
-| `:Hover auto` | older than `e8cde0e` — no `auto_hover` axis at all |
-| `:Hover resize` | older than `8ec5b40` — no resize, no `+`/`-`, no wheel |
-| `:Hover zoom` | older than `9fba190` — no magnification and no `h`/`j`/`k`/`l` |
-
-### The contradiction this left open, and why four rows above say so
-
-On 2026-09-04 the clone was `b2b4b2c`, which has **only** `scroll_keys` and
-`dismiss_keys`, and **only** the routes `mode`, `show`, `status`, `toggle`
-alongside the switches. No `M.resize`, no `M.zoom`, no `M.nav`, no wheel.
-
-And yet the same session reported the resize keys, the PDF zoom, the picture
-zoom with panning, and the mouse wheel all working. **Both of those cannot be
-true**, and it is not resolvable after the fact: only one hover.nvim exists on
-this machine (checked — no second `lazy` tree, no `dir =` override in the
-spec), so either those observations came from a different session or machine,
-or the clone was not what was loaded.
-
-Four rows above are therefore marked *version unconfirmed* rather than dated.
-That is deliberately the annoying answer: an evidence file that records a claim
-it cannot place on a version is a file that will mislead somebody later, and
-the cheapest fix is the check at the top of this section, run **before** the
-next pass rather than after it.
 
 ## What no CI covers
 
@@ -99,7 +105,7 @@ next pass rather than after it.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — seen again, both halves, keys **and** `:Hover resize`. Previously 2026-09-03 (the text half) and 2026-09-02 (the picture half): more lines arrive, not a larger frame around the same ones. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
+| **Checked** | 2026-09-04 — seen again, both halves, keys **and** `:Hover resize`. Previously 2026-09-03 (the text half) and 2026-09-02 (the picture half): more lines arrive, not a larger frame around the same ones. |
 | **On** | Windows 11, Neovim 0.12.2, images.nvim present |
 | **How** | Hover an image, then press `+` a few times and `-` back. The float grows and shrinks with it, and the picture fills it edge to edge at every size. Then hover a *text* file and run `:Hover resize` a few times: the float grows and more lines appear in it. **`+` and `-` are deliberately not bound over a text hover** — there they are the motions they always were, and pressing one moves the cursor a line, which takes the float away. That is not a failure of the resize; it is the reason the route exists. |
 | **Watch for** | The **frame** growing while the picture inside it does not — that is the one failure a spec cannot see. `TESTS/resize_spec.lua` pins the geometry all the way to `nvim_win_get_config`, but the cell area is only a *request* to the terminal, and whether the drawing actually followed it is visible and nothing else. Also: letterboxing that drifts as the box grows (the picture no longer centred, or gaining a margin on one side only), which would mean the inset is being added at the wrong end of the scaling. |
@@ -131,7 +137,7 @@ frame is the right size, not that a picture arrived in it.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — **the sharpness claim, by eye.** `>` narrowed the view and the result was genuinely *sharper*, not merely larger, which is the whole feature; `h`/`j`/`k`/`l` moved the view and `=` returned to the whole page. The scanned-PDF half of the row below — magnifies without sharpening — was not separately exercised. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
+| **Checked** | 2026-09-04 — **the sharpness claim, by eye.** `>` narrowed the view and the result was genuinely *sharper*, not merely larger, which is the whole feature; `h`/`j`/`k`/`l` moved the view and `=` returned to the whole page. The scanned-PDF half of the row below — magnifies without sharpening — was not separately exercised. |
 | **On** | Windows 11, WezTerm, Neovim 0.12.2, pdfport.nvim + `pdftoppm` on PATH |
 | **How** | Hover a PDF with real text on the page, then press `>` two or three times. Each step shows a **smaller part of the page, larger and genuinely sharper** — letterforms that were grey mush at level 0 should have clean edges at level 2. Then `h` `j` `k` `l` to move around, `=` back to the whole page. Repeat on a **scanned** PDF, where there is no more detail to find: it should still magnify, just without getting sharper, because the page is an image inside the document and the re-render can only interpolate it. |
 | **Watch for** | Each step taking noticeably *longer* than the one before — that means the crop window is not reaching pdftoppm and the whole page is being rendered at the higher DPI, which is exactly what an older pdfport does silently. Also: a magnified page that is blurry in the way a scaled bitmap is blurry, which is the same symptom from the other side. And the page number in the border changing, or the view jumping back to page 1, when the zoom re-renders. |
@@ -153,7 +159,7 @@ person rather than as a number — is what this row is for.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — seen again in full: `>` / `|` / `=`, `h`/`j`/`k`/`l`, and all three of `:Hover zoom in|out|reset`. Also confirmed that moving the cursor off closes the float, which is the half that proves the keys are a borrow and not a permanent mapping. Previously 2026-09-03. Driven with `>` / `=` rather than the Alt chords, which never arrived — which is why those are the default since that day: see below. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
+| **Checked** | 2026-09-04 — seen again in full: `>` / `|` / `=`, `h`/`j`/`k`/`l`, and all three of `:Hover zoom in|out|reset`. Also confirmed that moving the cursor off closes the float, which is the half that proves the keys are a borrow and not a permanent mapping. Previously 2026-09-03. Driven with `>` / `=` rather than the Alt chords, which never arrived — which is why those are the default since that day: see below. |
 | **On** | Windows 11, Neovim 0.12.2, images.nvim + ImageMagick present, which-key installed |
 | **How** | Hover an image, then press `>` two or three times. Each step takes about a quarter of a second and shows a **smaller part of the picture, larger** — not the same picture bigger. Then `h` `j` `k` `l` to move around in it; `\|` steps back, `=` returns to the whole picture. `:Hover zoom [in\|out\|reset]` does the same three from the command line. Finally press `h` with the hover **not** zoomed: the float should go away, because there the key is the cursor motion it always was. |
 | **Watch for** | `>` doing nothing at all, which has two causes that look identical: the picture is not zoomable (no ImageMagick, or no images.nvim) — the float says so — or a key list configured back to Alt chords the terminal does not send, which `:nnoremap <M-z> :echo "da"<CR>` settles in one press. Then: the **whole picture getting larger** instead of a detail — that is resize's answer arriving where zoom's was asked for, and it looks almost right. Also: panning that jumps to a corner rather than moving a quarter of a view (a pixel centre instead of a fractional one would do that), and a centre that survives `reset` and makes the next zoom start somewhere nobody chose. |
@@ -211,7 +217,7 @@ left for this row is the part after the file exists: whether it is *drawn*.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — **both directions.** `<M-ScrollWheelUp>` and `<M-ScrollWheelDown>` over the float, growing and shrinking it. The pointer-elsewhere half of the row was not separately exercised. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
+| **Checked** | 2026-09-04 — **both directions.** `<M-ScrollWheelUp>` and `<M-ScrollWheelDown>` over the float, growing and shrinking it. The pointer-elsewhere half of the row was not separately exercised. |
 | **On** | Windows 11, WezTerm, Neovim 0.12.2, images.nvim present |
 | **How** | Hover an image. With the pointer **on** the float, `<M-ScrollWheelUp>` a few times: it grows. Move the pointer well off the float and press it again: nothing happens. `<M-ScrollWheelDown>` on the float shrinks it back. |
 | **Watch for** | Nothing happening *anywhere*, which is the interesting failure and has two causes that look identical: `'mouse'` not covering the mode (`:checkhealth hover` warns about exactly this), or the terminal not sending Alt+wheel as a distinct chord. `<M-ScrollWheelUp>` mapped to `:echo` tells the two apart in one press. Also worth watching: a step landing while the pointer is *beside* the float rather than on it — the gate is a rectangle test, and a wrong one would show up as a float that resizes from anywhere. |
@@ -232,8 +238,8 @@ usable, so `hover.float.contains` does the rectangle test itself.
 
 | | |
 | --- | --- |
-| **Checked** | — **still never.** *Attempted* 2026-09-04 and the attempt says nothing about the feature: `F` did nothing, because the installed clone was 54 commits behind and had no zen in it. See the version section above — that is what it exists for. `TESTS/zen_spec.lua` pins the geometry, the budget and the pin coupling all the way to `nvim_win_get_config`; what it cannot reach is whether the *drawing* followed, which is the same gap the resize row above exists for. |
-| **On** | — not yet seen. Needs `:Lazy update hover.nvim` first, then a terminal that can draw and images.nvim for the picture half. |
+| **Checked** | 2026-09-04 — **reported working after a restart.** The first attempt the same day found `F` doing nothing, and that was the session rather than the feature: zen was committed while that Neovim was already running, so it had never loaded the code (see the section at the top). Restarted, it works. What the reporter confirmed is the gesture — `F` opens and closes it; the individual claims in **How** below, in particular *more lines* on a text hover and the 📌 surviving a re-render, were not picked apart one by one. |
+| **On** | Windows 11, WezTerm, Neovim 0.12.2, images.nvim present, hover.nvim loaded from `E:\repos\hover.nvim` |
 | **How** | Hover a picture and press `F`. The float takes almost the whole editor, centred, and the picture fills it. `F` again returns it to where it was. Then hover a *text* file and press `F`: the float should show roughly fifty lines rather than twenty — **more lines**, not a larger frame around the same twenty. `-` inside zen shrinks it without leaving zen; `+` does nothing, because zen is already at the terminal's ceiling. |
 | **Watch for** | The **frame** filling the screen while the picture inside it stays the size it was — the same failure the resize row watches for, and the one a spec structurally cannot see, since the cell area is only a request to the terminal. Also the 📌 marker: zen pins by default, and the marker is re-applied after every re-render because `float.open` replaces the window. A zen float with no 📌 in its border means that re-application was lost again. |
 
@@ -250,8 +256,8 @@ usable, so `hover.float.contains` does the rectangle test itself.
 
 | | |
 | --- | --- |
-| **Checked** | — **still never.** *Attempted* 2026-09-04: `:Hover links web shot` did not exist, and neither did `:Hover links web shot eager` or `:Hover auto url` — the installed clone was 54 commits behind. That is a statement about the clone, not about the feature. Written down when the feature was built (2026-09-04) and not seen end to end. The browser start and one render against a `file://` page were measured (710–735 ms and 768 ms respectively, see [FEATURES/SHOT.md](https://github.com/StefanBartl/hover.nvim/blob/main/docs/FEATURES/SHOT.md)); a page fetched over the network and drawn into a float has not been looked at. |
-| **On** | — not yet seen. Needs `:Lazy update hover.nvim` first, then a terminal that can draw, images.nvim, a Chromium-based browser, and a network. The browser itself is present and found: `C:\Program Files\Google\Chrome\Application\chrome.exe`, confirmed 2026-09-04 through `hover.preview.shot.browser()`, and it is on no PATH. |
+| **Checked** | 2026-09-04 — **reported working after a restart.** The first attempt the same day found no `shot` route at all, which was the session and not the feature: the switch was committed while that Neovim was already running. Restarted, it works. Confirmed as a gesture; the three things the **Watch for** row calls out — the throwaway profile, one browser at a time while scrolling, and the fit factor — were not individually verified, and the first of those is worth a deliberate look. The browser start and one render against a `file://` page were measured (710–735 ms and 768 ms respectively, see [SHOT.md](https://github.com/StefanBartl/hover.nvim/blob/main/docs/FEATURES/SHOT.md)). |
+| **On** | Windows 11, WezTerm, Neovim 0.12.2, images.nvim present, Chrome at `C:\Program Files\Google\Chrome\Application\chrome.exe` — installed, and on no PATH |
 | **How** | `:Hover links web shot`, then `:Hover show` with the cursor on an `https://` link. A picture of the page appears in the float. Then `F` for the full-screen reading, `>` to magnify a detail, `h`/`j`/`k`/`l` to move it. For the trigger half: `:Hover links web shot eager` and `:Hover auto url`, then rest the cursor on a link and wait — nothing should start for the first second of stillness. |
 | **Watch for** | Three things, in order of how badly they would fail. **The reader's own Chrome profile being used** — the picture would show them logged in, and their cookies would have gone to that host; the throwaway `--user-data-dir` is what prevents it and it is the one flag worth verifying by eye. **A browser per link while scrolling**, which would mean the start delay or the one-at-a-time kill is not working; the cheapest check is watching the process list while running the cursor down a page of links. And **an unreadable picture**, which is the fit factor rather than a bug — 1280×900 into a zen float is about 1.0, and a taller capture is meant to be read with the zoom. |
 
@@ -359,16 +365,28 @@ because it reads as a check that happened. When one of the ten paths above
 changes, either check it again and move the date, or set the date back to
 *never* and say why.
 
-**And a row is only about the version that was running.** Check that first —
-the section at the top says how, and 2026-09-04 is why it is there. Two rows
-below now read "*attempted*, and the attempt says nothing", which is the honest
-shape for a session spent against a checkout that was 54 commits behind.
+**And a row is only about the code that was loaded.** Check that first — the
+section at the top says how, and 2026-09-04 is why it is there. Two features
+read as broken that day for no better reason than having been written while the
+session under test was already running.
 
-Two of them stand at *never* right now — the full-screen hover and the
-rendered page, both built on 2026-09-04. They are written down before they
-were seen on purpose: a row that exists and says "not yet" is the gap being
-legible, which is what this file is for. A feature shipped with no row at all
-is the gap being invisible.
+The same day also produced the other half of that lesson, and it is worth
+keeping because it was *my* mistake rather than the plugin's: the first
+diagnosis blamed the lazy clone for being 54 commits behind. It is behind, it
+is irrelevant, and it is never loaded — this config sets `OVERRIDE = "dir"` and
+runs these plugins out of `E:epos`. A plausible cause that explains the
+symptom is not the same thing as the cause, and the check that would have
+settled it in one line is the `nvim_get_runtime_file` call at the top.
+
+Both rows written down at *never* on 2026-09-04 — the full-screen hover and
+the rendered page — were seen the same day, once the session had been
+restarted. They were written before they were seen on purpose: a row that
+exists and says "not yet" is the gap being legible, which is what this file is
+for. A feature shipped with no row at all is the gap being invisible.
+
+What is still genuinely unseen is narrower and named in those two rows: the
+throwaway browser profile, verified by eye rather than by reading the flag
+list, and one browser at a time while scrolling a page of links.
 
 ---
 
