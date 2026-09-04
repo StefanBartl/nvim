@@ -92,7 +92,7 @@ erreichbar. Keine Kollision mit irgendetwas in dieser Config: der Buffer ist
 | `<Esc>` | was sonst darauf liegt, ist geliehen — und wird zurückgegeben |
 | `gf` | verdrängt das Vim-Builtin; gewollt, weil das Float die Datei bereits aufgelöst hat, auch truncated und mit `:line:col` |
 | `F` | die Rückwärts-Zeichensuche, und genau deshalb ist sie billig: `F` allein wartet auf ein zweites Zeichen und schließt von sich aus nichts ab — es wird also keine fertige Operation verdrängt. `Fx` geht währenddessen nicht; danach wieder wie immer |
-| `<C-Down>` / `<C-Up>` | bewusst statt `<M-Down>`/`<M-Up>` (verbreitetes „move line") |
+| `<C-Down>` / `<C-Up>` | bewusst statt `<M-Down>`/`<M-Up>` (verbreitetes „move line"). **Und das ist das Paar für Tastaturen ohne PageUp/PageDown** — siehe die Notiz unten |
 | `h` `j` `k` `l` | **nur während gezoomt** keine Cursorbewegung. Ohne diese Leihe würde `h` über einem vergrößerten Bild den Cursor bewegen und damit das Float wegnehmen |
 | `>` `=` | nichts während eines Floats — beides sind **Operatoren**, sie bewegen keinen Cursor und schließen von selbst nicht ab. Danach wieder Einrücken und Ausrichten wie immer |
 | `\|` | die Spaltenbewegung, und genau deshalb ist sie geliehen: ungebunden spränge der Cursor auf Spalte 1 und nähme das Float mit (Dismiss hängt an `CursorMoved`) |
@@ -133,6 +133,16 @@ Aussage über **diese** Config, nicht über das Plugin.
 
 ## Notes
 
+- **Laptop ohne PageUp/PageDown: es ist schon gelöst, und zwar per Default.**
+  `scroll_keys` hat **zwei** Paare, nicht eins — `<M-PageDown>`/`<M-PageUp>`
+  *und* `<C-Down>`/`<C-Up>` —, genau aus diesem Grund: eine Taste, die es auf
+  der Tastatur nicht gibt, kann man nicht drücken, und nichts zur Laufzeit
+  kann wissen, ob *diese* Tastatur sie hat. Die Pfeile hat jede.
+
+  Also: **`<C-Down>` / `<C-Up>` blättert PDF-Seiten und scrollt Dateien**, ohne
+  dass hier irgendetwas konfiguriert werden muss. Nachgeprüft am 2026-09-04
+  gegen `DEFAULTS.scroll_keys`.
+
 - **Kein which-key** — geprüft und verneint: `lua/hover/` hat kein
   `which_key`-Modul und keinen `which_key`-Config-Key. Es gäbe auch nichts zu
   gruppieren: der einzige besessene Key ist `keymaps.show` (per Default
@@ -156,6 +166,24 @@ Aussage über **diese** Config, nicht über das Plugin.
   `h/j/k/l`, `docs/FEATURES/ZEN.md` für `F`.
 
 ## Changelog
+
+- 2026-09-04 (3): **Nichts an den Bindungen geändert — aber ein Befund, der
+  jede Bindungsprüfung hier betrifft.** Beim Durchtesten am 2026-09-04 tat `F`
+  nichts, `:Hover links web shot` existierte nicht, `:Hover auto` auch nicht.
+  Grund war keine Bindung: die von lazy.nvim geklonte Kopie unter
+  `~/AppData/Local/nvim-data/lazy/hover.nvim` stand auf `b2b4b2c` (2026-09-01)
+  und war **54 Commits hinter** `origin/main` — das Repo unter
+  `E:\repos\hover.nvim` ist weitergelaufen, der Klon nicht.
+
+  **Vor jeder Tastenprüfung an diesem Plugin also erst die Version:**
+
+  ```bash
+  cd ~/AppData/Local/nvim-data/lazy/hover.nvim && git status -sb | head -1
+  ```
+
+  `[behind N]` heißt, dass jede Aussage darunter über den Klon gilt und nicht
+  über `main`. `:Lazy update hover.nvim` behebt es. Ausführlich in
+  `docs/ROADMAP/handovers/MANUAL-EVIDENCE.md`.
 
 - 2026-09-04 (2): **`F` legt das Float auf den ganzen Editor** (hover.nvim
   `c20191e`). Geliehen bei jedem Hover mit Ziel — die **weiteste** Bedingung
