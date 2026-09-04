@@ -413,6 +413,7 @@ Handover-Datei knapp darauf verweisen kann („`DOC-07` bei mdview offen").
 | `DOC-12` | Code-Beispiele im README syntaktisch gültig und lauffähig? |
 | `DOC-13` | Genannte Abhängigkeiten stimmen mit der Install-Spec? |
 | `DOC-14` | Keine Verweise auf entfernte Dinge (z. B. `migrate.nvim`, gelöschte Module)? |
+| `DOC-28` | Zusagen über die Umgebung gegen den Code geprüft? Drei Greps pro Repo: **Neovim-Version** (Badge und Prosa gegen `vim.uv`/`vim.system`/`vim.hl` im Quellbaum), **Pfade** (`stdpath("…")` in der Doku gegen `stdpath("…")` im Code), **Status** (Badge `status-…` gegen den Alpha-Disclaimer in Zeile 1). |
 
 ### C — Relevanz (P1)
 
