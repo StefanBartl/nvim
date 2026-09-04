@@ -16,7 +16,7 @@ cdx
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     04:00       |    95% / 49%     |
 | **work** |   20. Sept    |   Sa., 06:00    |     11:10       |   100% / 47%     |
-| **free** | 21. Juli 2027 |   So., 09:00    |     20:50       |    --% / 47%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     08:00       |    --% / 67%     |
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     |
 
 - never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each

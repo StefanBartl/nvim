@@ -47,10 +47,23 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | debugging.nvim | 2 (vorgezogen) | FEATURES-Doppelung aufgelöst, docs/README.md + FEATURES/README.md, `which_key`-Leichen | `7b828ae`, `0d42445` |
 | fileops.nvim | Nachtrag | `map/`-Link entfernt (404 auf GitHub) | `b2c18d1` |
 | lib.nvim | Nachtrag | dito | `2b7f744` |
+| gopath.nvim | Nachtrag | `LICENSE`-Link aus `Developer-Notes/` zeigte neben sich statt ins Root | `cbdd322` |
+| insights.nvim | Nachtrag | README verwies auf ein nie geschriebenes `docs/features.md` | `62928cb` |
+| pickers.nvim | Nachtrag | `DOC-14`: which-key-Abschnitt beschrieb ein gelöschtes Modul | `95866f6` |
+| github_stats.nvim | Nachtrag | 7× `configurations/`, 1× `usercommands.md` (Case) | `acb9857` |
+| reposcope.nvim | 2 | FEATURES-Doppelung, 6 Case-Renames, `docs/README.md`, `health.md`, README 93 → 138, 3 tote Anker, DOC-11 (5 Keys) | `b35b795` |
+| *(5 Repos)* | E1 (Nachtrag) | `diff`, `documentation`, `language`, `markdown`, `open` — nach Ü9-Freigabe | `a2a5ee5`…`a269b2b` |
 
-**E1 ist damit bei 22/31.** Offen bleiben neun: die drei aus Welle 1 (erledigen
-es im eigenen Durchgang) und sechs mit fremder uncommitteter README-Arbeit —
-siehe [Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt).
+**E1 ist damit bei 30/31.** Der deps-Durchgang aus
+[Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt) hat
+am 2026-09-04 committet und damit alle sechs blockierten Repos freigegeben.
+Fünf davon haben die Zeile nachgetragen bekommen (`diff.nvim`,
+`documentation.nvim`, `language.nvim`, `markdown.nvim`, `open.nvim`); offen ist
+nur noch `hover.nvim`, das E1 in seinem eigenen Durchgang erledigt.
+
+> Die Schranke aus Ü9 ist damit gefallen, die **Regel** dahinter nicht:
+> `git status` bleibt der erste Blick vor der Repo-Auswahl, nicht der letzte
+> vor dem Commit.
 
 **Offen bei bereits angefassten Repos:**
 `color_my_ascii.nvim` hat noch **8 tote Links** aus einem alten Doku-Layout
@@ -309,6 +322,11 @@ Letzteres ist handgepflegtes Vimdoc, kein Generat — und fällt aus
 - **Anker.** Die README-ToC von `lsp.nvim` enthielt `[Roadmap](#roadmap)` ohne
   zugehörige Überschrift. 0 dead, 0 case — und trotzdem tot. Nach jedem
   README-Umbau die ToC gegen `grep '^## '` gegenprüfen.
+  **Zwei Sonderfälle, in `reposcope.nvim` beide aufgetreten:** eine *nummerierte*
+  Überschrift `## 1. Keymaps` erzeugt `#1-keymaps`, nicht `#keymaps` — und ein
+  Anker auf eine **fett gesetzte Zeile** statt eine Überschrift zeigt ins Leere,
+  weil eine fette Zeile keinen Anker hat. Der Fix für den zweiten Fall ist,
+  die fette Zeile zu einer echten `###` zu machen, nicht den Link zu löschen.
 - **HTML.** `<img src="./ressources/…">` in `mdview.nvim`s Test-Fixture zeigte
   seit je ins Leere — das Fixture für das Local-Images-Feature testete also
   nichts. `LINK_RE` sieht nur `](…)`.
@@ -334,6 +352,67 @@ ganzen Durchgangs.
 > Doppelt gepflegte Referenzdokumente also erst **gegeneinander diffen**, dann
 > über das Zusammenlegen entscheiden.
 
+### Ü21 — Die vier „Restmeldungen“ waren vier verschiedene Fehlerklassen
+
+Die Liste sah nach Aufräumarbeit aus: neun tote Links über vier Repos, alle
+klein. Tatsächlich war kein einziger ein Tippfehler, und keine zwei hatten
+dieselbe Ursache:
+
+| Repo | Link | Ursache |
+|---|---|---|
+| gopath.nvim | `[LICENSE](LICENSE)` aus `docs/Developer-Notes/` | Pfad gedacht wie im Repo-Root, geschrieben zwei Ebenen tiefer |
+| insights.nvim | `docs/features.md` | **Nie geschrieben.** Das README versprach eine Adresse, die niemand angelegt hat |
+| pickers.nvim | `bindings/whichkey.lua` | Modul **bewusst** gelöscht (`9b3247d`) |
+| github_stats.nvim | `configuration/` (7×), `USERCOMMANDS.md` (1×) | Ordner heißt `configurations/`; Windows verdeckt beides |
+
+Der `pickers.nvim`-Fall ist der teuerste und der einzige, den ein Linkchecker
+nur zufällig findet. Der tote Link war das Symptom; der Befund war ein
+**Abschnitt, der ein entferntes Feature weiterhin als vorhanden beschreibt**
+(`DOC-14`). `whichkey.lua` wurde entfernt, weil which-key die Mappings ohnehin
+selbst liest und jedes aus dessen eigenem `desc` beschriftet — das Modul gab
+einer Zeichenkette einen zweiten Ort zum Auseinanderdriften. Der Abschnitt ist
+deshalb **umgeschrieben**, nicht umgebogen.
+
+> **Lehre:** Einen toten Link nie nur umbiegen. Erst fragen, **warum** das Ziel
+> weg ist. In einem von vier Fällen war die Antwort „weil das beschriebene
+> Feature weg ist“ — dann ist Umbiegen die falsche Reparatur, und der
+> Linkchecker hat einen `DOC-14`-Befund gefunden, nach dem er gar nicht sucht.
+
+Nebenbei bestätigt: [Ü10](#ü10--docsmap-ist-in-29-von-31-repos-gar-nicht-im-repo-️)s
+korrigierte Zahl stimmt. Über alle 31 Repos mit `git ls-files docs/map`
+gemessen, trackt sie **genau zwei**: `documentation.nvim` und
+`runtime-analysis.nvim`, je drei Dateien.
+
+### Ü22 — Was die Doku über die *Umgebung* behauptet, prüft niemand ⚠️
+
+`DOC-11` fragt nach Config-Keys, und dafür gibt es mit `@types`/`DEFAULTS` eine
+Gegenprobe. Für drei andere Sorten von Behauptungen gibt es keine — und in
+`reposcope.nvim` war jede einzelne davon falsch:
+
+| Behauptung | Wirklichkeit |
+|---|---|
+| README + Badge: **Neovim 0.9+** | `vim.uv` ungeguarded an **sechs** Stellen → braucht 0.10+ |
+| Doku: Cache liegt unter `stdpath("data")/reposcope` | `config/init.lua:29` schreibt nach `stdpath("cache")/reposcope`. Der genannte Ordner war **nie** belegt |
+| Badge: `beta` | Disclaimer und Commit `8dc533c` sagen `alpha` |
+
+Keine dieser drei hätte ein Test gefangen: die CI testet nur `stable`, prüft die
+0.9-Zusage also nie; ein Pfad in Prosa hat ohnehin keinen Test; und ein Badge ist
+ein Bild.
+
+> **Lehre — `DOC-28`:** `DOC-11` endet nicht bei Config-Keys. Version, Pfade und
+> Badges sind genauso Behauptungen über die Wirklichkeit, nur ohne Gegenprobe.
+> Pro Repo drei Greps: die Versionszusage gegen `vim.uv`/neuere APIs, jeden
+> `stdpath`-Pfad der Doku gegen den Code, und das Status-Badge gegen Zeile 1.
+
+**Der Versionsfall ist nicht abgeschlossen.** Der Agent hat die *Doku an den
+Code* angeglichen (0.10+), weil eine Doku-Session keinen Code ändert — richtig
+entschieden, aber die Frage bleibt offen: `readme_cache.lua`, `wget.lua`,
+`repos.lua`, `repo_status.lua` und `repo_updater.lua` schreiben bereits
+`(vim.uv or vim.loop)`. Die Inkonsistenz sitzt also **im Code, nicht in der
+Absicht** — jemand wollte 0.9 unterstützen und hat es an sechs Stellen
+vergessen. Entweder sechs Zeilen nachziehen oder die 0.9-Absicht bewusst
+aufgeben. → Entscheidung des Autors.
+
 ---
 
 ## Abweichungen vom Standard
@@ -350,6 +429,9 @@ ganzen Durchgangs.
 | lsp.nvim | Kein `api.md`, kein `USECASES/` | Drei öffentliche Funktionen, jede ein Einzelaufruf → E5-Bedingung 2 nicht erfüllt. Eine Signaturseite für drei Signaturen ist eine Datei mehr, kein Wissen mehr. |
 | debugging.nvim | Status-Badge bleibt `active development` (blau) | `bae4dec` hat das Badge-Set repoübergreifend vereinheitlicht. Eines davon zu ändern wäre eine Abweichung, keine Angleichung. |
 | debugging.nvim | Eine Code-Änderung im Doku-Durchgang (`DEFAULTS.lua`) | `capture_timeout_ms` war dokumentiert, getypt und wirksam, fehlte aber in der Datei, die sich selbst „single source of truth“ nennt. Alternative wäre gewesen, korrekte Doku zu löschen. |
+| reposcope.nvim | `DEVELOPMENT.md` → `troubleshooting.md`, nicht `development.md` | Der Inhalt war Symptome plus Dateipfade — also genau der Standard-Slot. Ein drittes, im Standard nicht vorgesehenes Dokument zu erfinden wäre schlechter gewesen. |
+| reposcope.nvim | `docs/health.md` angelegt, obwohl [BEDINGT] | Es *gibt* einen checkhealth-Provider, und „was bedeutet diese WARN-Zeile“ hatte keine Adresse. |
+| reposcope.nvim | Datierte Messwerte in `configuration.md` und `FEATURES/UI.md` bleiben | Ein datierter Messwert ist **Evidenz**, kein Changelog. `DOC-17` trifft „now/used to“-Formulierungen, nicht Messungen mit Stichtag. |
 | alle | `docs/map/` nicht verlinkt und nicht als Pflicht geführt | Siehe [Ü10](#ü10--docsmap-ist-in-29-von-31-repos-gar-nicht-im-repo-️). |
 
 ---
@@ -437,25 +519,20 @@ Links als `dead-readme-link` flaggt. Überschneidung ist gewollt: `docs_linkchec
 läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 `:DocMap` ist das Werkzeug in der Sitzung.
 
-### Offene Befundliste (Stand 2026-09-04, nach dem Werkzeug-Fix)
+### Offene Befundliste (Stand 2026-09-04, nach dem Link-Durchgang)
 
 | Repo | dead | case | ignored |
 |---|---|---|---|
 | color_my_ascii.nvim | 8 | 0 | 0 |
-| github_stats.nvim | 6 | **1** | 0 |
-| gopath.nvim | 1 | 0 | 0 |
-| insights.nvim | 1 | 0 | 0 |
-| pickers.nvim | 1 | 0 | 0 |
 
-Die übrigen 26 Repos sind link-sauber. Erledigt seit der letzten Zählung:
-`mdview.nvim` (2), `documentation.nvim` (4), `fileops.nvim` und `lib.nvim`
-(je 1 `IGNORED`).
+**30 von 31 Repos sind link-sauber.** Am 2026-09-04 erledigt und gepusht:
+`gopath.nvim`, `insights.nvim`, `pickers.nvim` (je 1 `dead`) und
+`github_stats.nvim` (6 `dead` + 1 `CASE`) — je ein Commit. Was dabei
+herauskam, steht in [Ü21](#ü21--die-vier-restmeldungen-waren-vier-verschiedene-fehlerklassen).
 
-Die 8 in `color_my_ascii.nvim` stammen aus einem alten Doku-Layout und sind im
-Repo selbst als „Known issue“ dokumentiert — sie gehören in dessen vollen
-Durchgang (Welle 3). `gopath.nvim`s Restmeldung ist ein `LICENSE`-Verweis aus
-`docs/Developer-Notes/`, der ins Repo-Root zeigen müsste. `insights.nvim`
-verweist im README auf ein `docs/features.md`, das es nicht gibt.
+Die verbleibenden 8 in `color_my_ascii.nvim` stammen aus einem alten
+Doku-Layout, sind im Repo selbst als „Known issue“ dokumentiert und gehören in
+dessen vollen Durchgang (Welle 3).
 
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
