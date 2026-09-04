@@ -254,7 +254,9 @@ als die anfängliche Compliance-Zählung (§0 oben) nahelegte:
   erklärenden Satz statt einer bedeutungslosen Zeilen-Markierung.
 
 **Zwei Funde außerhalb des Formats, nicht behoben (nicht Teil dieser
-Aufgabe)**: `Usercmds/Case.md` und `Usercmds/lib.nvim.md`/`MyPlugins.md`
+Aufgabe)**: `Usercmds/Case.md` (seit 2026-09-04 `Usercmds/casedesk.nvim.md`,
+umbenannt weil casedesk jetzt ein eigenes Repo ist und `:Bindings drift` den
+Stamm gegen den Checkout-Namen paart) und `Usercmds/lib.nvim.md`/`MyPlugins.md`
 sind bewusste dünne Verweis-Dateien (casedesk/lib.nvim haben ihre
 Command-Referenz woanders) — kein Fehler. `Usercmds/dap.nvimMERGE.md` war
 dagegen ein echtes Merge-Artefakt: eine ältere Fassung von `dap.nvim.md`,
