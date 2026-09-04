@@ -57,6 +57,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | reposcope.nvim | 2 | 6 Case-Renames, FEATURES.md aufgelöst, docs/README.md + health.md, README 93 → 138 | `b35b795` |
 | *(10 Repos)* | Anker-Lauf | 54 tote Anker in `fileops`, `github_stats`, `gopath`, `lib`, `lsp`, `markdown`, `open`, `pickers`, `runtime-analysis`, `sessions` | `a1d6050`…`d5f97b7` |
 | gopath.nvim | 3 | 3 Case-Renames + 14 Dateien nachgezogen, docs/README.md vervollständigt, `WORKFLOW.md` entwaist, `DOC-28` | `4c1f17c` |
+| gopath.nvim | Nachtrag | ToC-Eintrag, den der eigene Überschriften-Rename gebrochen hatte | `91098bb` |
 | *(9 Repos)* | E1-Nachtrag | `status-beta`-Badge gegen den Alpha-Disclaimer — `cmdlog`, `github_stats`, `gopath`, `insights`, `language`, `markdown`, `pickers`, `sandbox`, dazu `reposcope`s Farbe | `1fc0255`…`52da414` |
 | documentation.nvim | 3 | README 844 → 260, 5 Seiten neu, 13 Case-Renames + 61 Dateien nachgezogen, Map regeneriert, 8 tote Anker | `5d74e96` |
 | color_my_ascii.nvim | 3 | docs/README.md, 5 Planungsdateien ausgelagert, Fixture nach `TESTS/`, 8 tote Links + 10 tote Anker, `DOC-28` | `bfb74da` |
@@ -523,6 +524,16 @@ und bleiben. Die Datei ist eine Fixture für die Link-Behandlung des Plugins
 und enthält absichtlich krumme Formen: ein `id="#fig-nvimlogo"` mit `#` *im*
 Attribut, ein doppelter Anker `./linkfile.md#Codetesting#fig-nvimlogo`. Sie zu
 „reparieren" hieße, das Testmaterial wegzuwerfen.
+
+**Ein Nachtrag am selben Tag, und er gehört hierher, weil er peinlich ist:**
+der Welle-3-Durchgang von `gopath.nvim` hat in `docs/cache.md` eine Überschrift
+umbenannt („Design notes & future ideas" → „Design notes", weil `DOC-16` in
+einer Doku keine Ideenliste will) und damit den ToC-Eintrag derselben Datei
+zerschossen. Der Commit, der tote Anker reparierte, hat einen erzeugt.
+
+> **Regel:** Der Linkcheck läuft nach **jeder** Bearbeitung, nicht einmal pro
+> Repo am Ende. Eine Überschrift umzubenennen ist genau die Operation, die
+> diese Klasse erzeugt — und sie ist in einem Doku-Durchgang häufig.
 
 > **Lehre:** Ein Werkzeug, das eine neue Befundklasse einführt, hat immer auch
 > eine Fixture-Frage. `DEAD`/`CASE`/`IGNORED` hatten sie nicht, weil eine
