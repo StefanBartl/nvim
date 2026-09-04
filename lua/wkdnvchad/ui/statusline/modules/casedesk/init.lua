@@ -53,7 +53,7 @@ end
 --- on for a 6-week Korrekturmaßnahme budget is just noise, and stops being
 --- looked at within a week (same reasoning SLA.md §6C gives for capping
 --- active notifications to one per threshold).
----@param entry Lib.Case.RegistryEntry
+---@param entry Casedesk.RegistryEntry
 ---@return string
 local function sla_badge(entry)
   local ok_sla, sla = pcall(require, "casedesk.sla")
@@ -94,7 +94,7 @@ local function sla_badge(entry)
   return " %#DiagnosticError#" .. marker .. " " .. sla.format_duration(worst.remaining) .. " "
 end
 
----@param entry Lib.Case.RegistryEntry
+---@param entry Casedesk.RegistryEntry
 ---@return string
 local function compute(entry)
   -- Plain require, unlike the guarded ones above: `compute` only runs once
