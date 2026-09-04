@@ -3,8 +3,8 @@
 Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
-**Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 flächendeckend,
-24 Repos gepusht.**
+**Angelegt 2026-09-03. Stand 2026-09-04: P0–P3.5 erledigt, P4 läuft — E1 ist
+31/31, Wellen 1 und 2 sind durch, 30 von 31 Repos sind link-sauber.**
 
 ---
 
@@ -27,7 +27,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | P2 — README-Konzept | ✅ | 2026-09-03 | `MyNotes\docs\README-KONZEPT.md` |
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
-| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-03 | E1 flächendeckend erledigt; Welle 1 in Arbeit |
+| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 31/31; Wellen 1 und 2 durch (`hover`, `mdview`, `lsp`, `debugging`, `replacer`, `reposcope`); Welle 3 offen |
 | P5 — Wiederholungsläufe | ⬜ offen | — | 8.1/8.3/8.5 vorziehbar |
 | P6 — BINDINGS-Sanierung | ⬜ offen | — | braucht P4 |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
@@ -47,10 +47,20 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | debugging.nvim | 2 (vorgezogen) | FEATURES-Doppelung aufgelöst, docs/README.md + FEATURES/README.md, `which_key`-Leichen | `7b828ae`, `0d42445` |
 | fileops.nvim | Nachtrag | `map/`-Link entfernt (404 auf GitHub) | `b2c18d1` |
 | lib.nvim | Nachtrag | dito | `2b7f744` |
+| gopath.nvim | Nachtrag | `LICENSE`-Verweis aus `docs/Developer-Notes/` ins Root gebogen | `cbdd322` |
+| insights.nvim | Nachtrag | README versprach ein `docs/features.md`, das nie geschrieben wurde | `62928cb` |
+| pickers.nvim | Nachtrag | which-key-Abschnitt beschrieb ein bewusst gelöschtes Modul — umgeschrieben, nicht umgebogen | `95866f6` |
+| github_stats.nvim | Nachtrag | 7× `configuration/` statt `configurations/`, 1× `USERCOMMANDS.md` statt `usercommands.md` | `acb9857` |
+| *(5 Repos)* | E1 | `diff`, `documentation`, `language`, `markdown`, `open` — nach dem deps-Durchgang nachgezogen | `a2a5ee5`…`a269b2b` |
+| replacer.nvim | 2 | drei FEATURES-Fassungen auf eine, vier Pflichtseiten neu, README 689 → 125, 6 Falschbehauptungen | `8c3fb0e` |
+| reposcope.nvim | 2 | 6 Case-Renames, FEATURES.md aufgelöst, docs/README.md + health.md, README 93 → 138 | `b35b795` |
+| hover.nvim | 1 | README 1144 → 188, 7 Seiten neu, `INTEGRATIONS.md` → `integrations.md`, ROADMAP ausgelagert, LICENSE, E1 | `40153a7` |
 
-**E1 ist damit bei 22/31.** Offen bleiben neun: die drei aus Welle 1 (erledigen
-es im eigenen Durchgang) und sechs mit fremder uncommitteter README-Arbeit —
-siehe [Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt).
+**E1 ist erledigt: 31/31.** Der Weg dahin ging über drei Etappen — 20 Repos im
+Flächenlauf, fünf nach dem Ende des parallelen deps-Durchgangs
+([Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt)),
+und die restlichen sechs jeweils im eigenen vollen Durchgang. `hover.nvim` war
+das letzte; sein Disclaimer sitzt im selben Commit wie sein Doku-Durchgang.
 
 **Offen bei bereits angefassten Repos:**
 `color_my_ascii.nvim` hat noch **8 tote Links** aus einem alten Doku-Layout
@@ -336,6 +346,76 @@ ganzen Durchgangs.
 
 ---
 
+### Ü21 — Vier tote Links, vier verschiedene Fehlerklassen
+
+Die Restliste aus der offenen Befundtabelle sah nach Aufräumarbeit aus. Kein
+einziger der vier war ein Tippfehler:
+
+| Repo | Klasse |
+|---|---|
+| `gopath.nvim` | **Falsche Ebene.** `[LICENSE](LICENSE)` aus `docs/Developer-Notes/` — der Link stimmte, sein Bezugspunkt nicht. |
+| `insights.nvim` | **Versprochen, nie geschrieben.** Das README verwies auf ein `docs/features.md`, das es nie gab. |
+| `pickers.nvim` | **`DOC-14`.** Der Link zeigte auf ein Modul, das in `9b3247d` bewusst gelöscht wurde. |
+| `github_stats.nvim` | **`DOC-02`.** Sieben Verweise auf `configuration/` statt `configurations/`, einer auf `USERCOMMANDS.md` statt `usercommands.md` — lokal grün, auf GitHub 404. |
+
+Der teuerste war `pickers.nvim`, und dort war der tote Link nur das Symptom.
+`bindings/whichkey.lua` ist gelöscht worden, weil which-key die Mappings
+ohnehin selbst liest — der Abschnitt, der das Modul beschrieb, war damit
+inhaltlich falsch, nicht nur falsch verlinkt. Umgebogen hätte ihn stehen
+lassen.
+
+> **Regel:** Einen toten Link nie nur reparieren. Erst fragen, *warum* das Ziel
+> weg ist. Ist es gelöscht worden, ist der Befund `DOC-14` und der Link die
+> kleinere Hälfte davon.
+
+### Ü22 — Zusagen über die Umgebung hatten keine Gegenprobe → `DOC-28`
+
+In `reposcope.nvim` waren **alle drei** falsch, und keine davon fällt in
+irgendein Werkzeug dieses Durchgangs:
+
+| Zusage | Doku sagte | Code sagte |
+|---|---|---|
+| Neovim-Version | `0.9+` | `vim.uv` und `vim.system` ungeguardet → `0.10+` |
+| Cache-Pfad | `stdpath("data")` | `stdpath("cache")` — der genannte Ordner war nie belegt |
+| Reifegrad | Badge `beta` | Disclaimer Zeile 1 `Alpha stage` |
+
+Der Linkchecker sieht das nicht (die Pfade sind keine Links), die Test-Suites
+sehen es nicht (sie laufen auf *einer* Version), und die CI sieht es nicht: sie
+testet `stable`, also genau die Version, die die Doku *nicht* zusagt. Daraus
+ist `DOC-28` geworden — drei Greps pro Repo, in [§4 B](../personal/All/FINISH/LAST_CDX_TASKS.md#b--korrektheit).
+
+**Flächenbefund aus dem Status-Grep:** neun Repos tragen ein `status-beta`-Badge
+und in Zeile 1 den Alpha-Disclaimer — `cmdlog`, `color_my_ascii`,
+`github_stats`, `gopath`, `insights`, `language`, `markdown`, `pickers`,
+`sandbox`. E1 hat die Prosa vereinheitlicht und das Badge nicht angefasst.
+`status-active development` (14 Repos) ist **kein** Widerspruch — das ist die
+Aktivitäts-, nicht die Reifegradachse (siehe die `debugging.nvim`-Abweichung).
+Offen als eigener Flächenlauf.
+
+### Ü23 — `reposcope.nvim` kann `0.9` nicht unterstützen, und der Grund liegt nicht in reposcope
+
+Auf die Frage aus Ü22 lautete die erste Antwort „die sechs ungeguardeten
+`vim.uv`-Stellen nachziehen, `0.9` bleibt zugesagt". Die Gegenprobe vor dem
+Zurückdrehen der Doku hat das gekippt:
+
+- `vim.system()` steht an fünf weiteren Stellen (`repo_actions.lua:29`,
+  `repo_status.lua:129/160/222/227`), jedes Mal asynchron mit Callback — kein
+  Einzeiler und keine `or`-Zeile.
+- `lib.nvim` selbst deklariert `0.10+` und benutzt `vim.uv.hrtime()`
+  ungeguardet (`time/diff/init.lua:71,97`, `buf_win_tab/capture/init.lua:8`).
+  `reposcope` hat ~40 Top-Level-`require`s darauf.
+
+**Entschieden (Autor, 2026-09-04): `0.10+` bleibt, die Doku stimmt.** Der Boden
+liegt in `lib.nvim`, und solange der dort liegt, ist eine `0.9`-Zusage in einem
+abhängigen Plugin nicht einlösbar — egal, was das Plugin selbst tut.
+
+> **Lehre:** Bei einer Versionszusage nicht nur den eigenen Quellbaum greppen,
+> sondern die Zusage der Basisbibliothek dazu. Die fünf Dateien in `reposcope`,
+> die brav `(vim.uv or vim.loop)` schreiben, belegen die Absicht — sie hätte
+> nie eingelöst werden können.
+
+---
+
 ## Abweichungen vom Standard
 
 | Repo | Abweichung | Begründung |
@@ -442,20 +522,15 @@ läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 | Repo | dead | case | ignored |
 |---|---|---|---|
 | color_my_ascii.nvim | 8 | 0 | 0 |
-| github_stats.nvim | 6 | **1** | 0 |
-| gopath.nvim | 1 | 0 | 0 |
-| insights.nvim | 1 | 0 | 0 |
-| pickers.nvim | 1 | 0 | 0 |
 
-Die übrigen 26 Repos sind link-sauber. Erledigt seit der letzten Zählung:
-`mdview.nvim` (2), `documentation.nvim` (4), `fileops.nvim` und `lib.nvim`
-(je 1 `IGNORED`).
+**Stand 2026-09-04, nach Ü21:** 30 von 31 Repos sind link-sauber.
+`github_stats.nvim`, `gopath.nvim`, `insights.nvim` und `pickers.nvim` sind
+abgeräumt (`acb9857`, `cbdd322`, `62928cb`, `95866f6` — siehe Ledger).
 
-Die 8 in `color_my_ascii.nvim` stammen aus einem alten Doku-Layout und sind im
-Repo selbst als „Known issue“ dokumentiert — sie gehören in dessen vollen
-Durchgang (Welle 3). `gopath.nvim`s Restmeldung ist ein `LICENSE`-Verweis aus
-`docs/Developer-Notes/`, der ins Repo-Root zeigen müsste. `insights.nvim`
-verweist im README auf ein `docs/features.md`, das es nicht gibt.
+Die 8 in `color_my_ascii.nvim` stammen aus einem alten Doku-Layout
+(`./language-detection.md`, `../groups/operators.md` u. a.) und sind im Repo
+selbst als „Known issue“ dokumentiert — sie gehören in dessen vollen Durchgang
+(Welle 3), nicht in einen Nachtrag.
 
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
