@@ -542,6 +542,60 @@ zerschossen. Der Commit, der tote Anker reparierte, hat einen erzeugt.
 
 ---
 
+### Ü27 — Der `Co-Authored-By: Claude`-Trailer stand in zehn Commits, und zwei davon waren Geschwister ⚠️
+
+Die Commits dieses Durchgangs tragen einen `Co-Authored-By: Claude …`-Trailer.
+Gefunden am 2026-09-04, in **zehn Commits über neun Repos** — die Config mit
+zweien, jedes Plugin-Repo mit einem. Ihn zu entfernen heißt, die Commits neu zu
+bauen, und daran hingen drei Befunde, die eine naive Lösung still falsch machen:
+
+**1. Es sind mehr Branches als Repos.** Betroffen waren nicht neun Refs,
+sondern vierzehn: die Config allein hatte **fünf** Branches auf den Commits,
+weil `.claude/worktrees/` pro Session einen Branch anlegt und zwei davon exakt
+auf `main` standen. Ohne sie wäre der Trailer beim nächsten Merge dieser
+Branches zurückgekommen.
+
+**2. `6eeddd575` und `6fa6d4e90` sind keine Vorfahren voneinander, sondern
+Geschwister** unter `8910c7ed3` — das Amend des parallelen Durchgangs aus
+[Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt),
+hier zum zweiten Mal sichtbar. Ein Rewrite pro Branch hätte `8910c7ed3` fünfmal
+getrennt neu gebaut, mit fünf verschiedenen SHAs für ein und denselben Commit:
+`main` und die beiden gleichstehenden Worktree-Branches wären danach
+inhaltsgleich, aber divergent gewesen.
+
+> Ein History-Rewrite gehört **pro Repository** gemacht, mit *einer* geteilten
+> Alt→Neu-Abbildung für alle Branches — nicht pro Branch.
+
+**3. `rebase` und `filter-branch` scheiden aus.** Beide fassen den Working Tree
+an und verweigern oder zerstören bei uncommitteter Arbeit — und die Config hat
+neun aktive Worktrees. `git commit-tree` + `git update-ref` fassen keinen
+Working Tree an; damit ist der Rewrite auch in einem schmutzigen Repo
+unbedenklich.
+
+Werkzeug dazu: [`:StripCoauthor`](#stripcoauthor-neu).
+
+Was das nicht heilt: die alten Commits bleiben auf der Forge über ihre SHA
+erreichbar, bis diese sie einsammelt.
+
+---
+
+### Ü28 — Dieselbe Datei, fünf Commits auseinander ⚠️
+
+Der Eintrag oben war zuerst als `Ü21` geschrieben — gegen einen Stand dieser
+Datei, der beim Schreiben schon fünf Commits alt war. Auf `origin/main` gab es
+`Ü21` bis `Ü26` längst, mit anderem Inhalt. Ein Push hätte zwei verschiedene
+`Ü21` erzeugt oder den Anker-Sweep aus Ü24–Ü26 überschrieben.
+
+Das ist Ü9 zum dritten Mal, an einer neuen Stelle: nicht das Repo ist besetzt,
+sondern **die Handover-Datei selbst**. Sie ist der Ort, an dem alle parallelen
+Durchgänge gleichzeitig schreiben.
+
+> Vor einer Ergänzung an dieser Datei erst `git fetch` und den Branch
+> nachziehen, **dann** die nächste freie `Ü`-Nummer aus der aktuellen Fassung
+> nehmen — nicht aus der im Editor offenen.
+
+---
+
 ## Abweichungen vom Standard
 
 | Repo | Abweichung | Begründung |
@@ -639,6 +693,36 @@ Bereits gefunden: `github_stats.nvim/docs/configurations/USER-DEFINED-DATE-PRESE
 
 **Vorgänger:** Ein bash-Skript gleichen Zwecks ist gelöscht — zu langsam
 (> 2 min statt < 1 s), case-blind, und ohne Code-Block-Filter (siehe Ü7).
+
+### `:StripCoauthor` (neu)
+
+```
+:StripCoauthor scan    [dir] [--only=<repo>]   nur Bericht, ändert nichts
+:StripCoauthor rewrite [dir] [--only=<repo>]   lokal umschreiben, nie Push
+:StripCoauthor push    [dir] [--only=<repo>]   Force-Push, fragt vorher
+```
+
+Entfernt den `Co-Authored-By: Claude`-Trailer aus den Commits, die ihn tragen
+(siehe [Ü27](#ü27--der-co-authored-by-claude-trailer-stand-in-zehn-commits-und-zwei-davon-waren-geschwister)).
+Liegt in `lua/bindings/usrcmds/strip_coauthor/`.
+
+Die Repo-Menge kommt aus `plugins.personal.list` plus `stdpath("config")`,
+gefiltert auf das, was wirklich ausgecheckt ist — ein neues Plugin im Spec ist
+damit ohne Nacharbeit abgedeckt. Commits, betroffene Branches und die
+Rewrite-Grenze werden zur Laufzeit gesucht; auf einem sauberen Repo tut das
+Kommando nichts.
+
+Die drei Schritte sind getrennt, damit ein Force-Push nicht die Folge eines
+Tastendrucks ist. `push` hängt dabei *nicht* am `rewrite` derselben Session: es
+sucht Branches, deren lokale History sauber ist, während `origin/<branch>` den
+Trailer noch trägt. Das funktioniert nach einem Neustart und ist selbstprüfend
+— ein Branch taucht nur auf, wenn die lokale Seite wirklich schon sauber ist.
+Ein `fetch` läuft bewusst nicht vorher, denn `origin/<branch>` ist genau der
+Wert, gegen den `--force-with-lease` prüft.
+
+Vor jedem Ref-Move wird geprüft: Tree identisch, Commit-Anzahl gleich,
+Subject/Autor/Committer/beide Daten unverändert, Trailer weg. Schlägt eine
+Prüfung fehl, wird gar kein Ref bewegt.
 
 ### Bestandsprüfer: `:DocMap` kann das teilweise auch
 
