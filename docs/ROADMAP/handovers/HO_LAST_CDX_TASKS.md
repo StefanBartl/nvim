@@ -4,9 +4,8 @@ Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
 **Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 ist 31/31,
-Wellen 1–3 vollständig, **keine toten Links, keine toten Anker und keine
-verwaisten `docs/`-Dateien mehr** in der Sammlung. Offen: zwölf Repos ohne
-`docs/README.md`.**
+**`DOC-05` ist 32/32**, keine toten Links, keine toten Anker, keine verwaisten
+`docs/`-Dateien. Offen sind nur noch die vollen Durchgänge der Wellen 4–10.**
 
 ---
 
@@ -29,7 +28,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | P2 — README-Konzept | ✅ | 2026-09-03 | `MyNotes\docs\README-KONZEPT.md` |
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
-| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 **31/31**; **Wellen 1–3 vollständig** — 11 Repos, vier davon still erledigt (siehe Ü25). Offen: Wellen 4–10, 21 Repos |
+| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 **31/31**, `DOC-05` **32/32**, `DOC-06` in `docs/` **0**. Wellen 1–3 vollständig; für die übrigen 21 Repos ist der Index vorgezogen, der volle Durchgang offen |
 | P5 — Wiederholungsläufe | ⬜ offen | — | 8.1/8.3/8.5 vorziehbar |
 | P6 — BINDINGS-Sanierung | ⬜ offen | — | braucht P4 |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
@@ -70,6 +69,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | github_stats.nvim | Waisen | `NOTES/BACKGROUND_FETCHING.md` (171 Z.) unerreichbar; `devs/BUGS.md` gelöscht — leerer Tracker, dessen einziger Eintrag erledigt und anderswo dokumentiert war | `9948c58` |
 | open.nvim | Waisen | `CHEATSHEET.md` im Root, ohne Eingang. Gegen `docs/` gehalten: **Scope-Tokens stehen nur dort** — also behalten, nach `docs/cheatsheet.md` verschoben, Index angelegt | `e80eb6a` |
 | documentation.nvim | Nachtrag | `docs/hover.md` fehlte im sonst vollständigen Index | `9a06d0d` |
+| **15 Repos** | `DOC-05` | **Die Index-Tranche**, je ein Commit: `diff` `f3ecd94`, `cascade` `8775304` (dazu die fehlende `FEATURES/README.md`), `insights` `cef44ab`, `images` `f1c51e8` (vier Seiten fett statt verlinkt, Ü29), `markdown` `941262d`, `pdfport` `c4e9991`, `pickers` `aea6900`, `recommender` `4e2381b`, `sessions` `ff2b207`, `spotlight` `86bed5c`, `sandbox` `4e93d65`, `runtime-analysis` `c7fe7b7`, `buffer-ctx` `10dca6f`, `dap` `234ab43`, `casedesk` `865a749` | siehe links |
 
 **E1 ist bei 31/31** — siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr), das die letzte offene Zeile aufgelöst hat, ohne dass sie eine war. Der deps-Durchgang aus
 [Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt-️) hat
@@ -706,6 +706,53 @@ zwei Stunden alt war. Behoben mit `--cached --others --exclude-standard`.
 > **Ein Prüfer, dem man glaubt, ohne ihn einmal widerlegt zu haben, ist keine
 > Messung.**
 
+### Ü32 — Was auf ein Dokument zeigt, entscheidet was es ist. Nicht sein Name.
+
+Zwei Dateien in `runtime-analysis.nvim` sahen aus wie klare `DOC-16`-Fälle
+und waren beim Öffnen das Gegenteil:
+
+| Datei | Zeilen | Was der Name sagt | Was darauf zeigt |
+|---|---|---|---|
+| `docs/FEATURE_LOG.md` | 1836 | ein Changelog | **drei Feature-Seiten zitieren es paragraphenweise** (§3.6, §5.4, §3.7) als das Entscheidungsprotokoll hinter dem, was sie beschreiben |
+| `docs/IDEAS.md` | 886 | ein Backlog | zweimal aus `COMMANDS.md` zitiert; sagt in Zeile 2 selbst, es sei „a reasoning document, not a queue", der Plan liege woanders |
+
+Dasselbe in `casedesk.nvim`: `ROADMAP.md` wird aus `CONCEPT.md` und
+`EXTRACTION.md` abschnittsweise zitiert, `REQUESTS.md` ist bewusst
+unredigiert, damit unterscheidbar bleibt, was gewünscht war und was gebaut
+wurde. Beide bleiben.
+
+**2700 Zeilen tragende Doku hätte ich auf zwei Dateinamen hin ausgelagert.**
+Der Schritt, der es verhindert hat, ist derselbe, den [Ü14](#ü14--die-features-doppelung-ist-nicht-symmetrisch)
+schon vorschreibt und der dort anders begründet wird: **erst `grep` nach
+eingehenden Verweisen, dann entscheiden.** Ü14 nennt den Link-Zähler ein Maß
+für Auffindbarkeit und nicht für Richtigkeit — das gilt, aber die Umkehrung
+gilt auch: was *paragraphenweise* zitiert wird, ist per Konstruktion die
+Autorität, egal wie die Datei heißt.
+
+> **Regel:** vor jedem Auslagern ein `grep -rn "<dateiname>" --include=*.md`.
+> Wer zitiert wird, bleibt.
+
+### Ü33 — Der Prüfer hielt jede `README.md` für erreichbar
+
+`DOC-06` fragt, ob irgendeine Datei den Namen der geprüften nennt. Für
+`FEATURES/README.md` und `TESTS/README.md` heißt das: **jede Doku-Seite
+enthält irgendwo die Zeichenkette „README.md"**, also galten sie alle als
+verlinkt. Aufgefallen, als eine gerade erledigte Waise plötzlich
+verschwand, ohne dass sie verlinkt worden wäre.
+
+Behoben: bei einer `README.md` muss der Ordner mitstehen
+(`FEATURES/README.md`), was auch die einzige Form ist, in der so eine Datei
+je verlinkt wird. Die schärfere Regel hat sofort **zwei echte Waisen**
+gefunden, die die lockere versteckt hatte — `runtime-analysis` und `sandbox`
+hatten je eine `FEATURES/README.md`, auf die nichts zeigte.
+
+Der Preis: 122 statt 33 Meldungen, fast alle Modul-`README.md` unter `lua/`
+(von [Ü6](#ü6--mehr-doku-ebenen-können-richtig-sein-libnvim) gesegnet) und
+Fixtures. Deshalb prüft `DOC-06` jetzt nur noch `docs/**` und die
+Repo-Wurzel; `--all` zeigt den Rest. **Der sechste Werkzeugfehler dieser
+Serie, und der erste, der etwas *versteckt* hat statt zu viel zu melden** —
+die anderen fünf waren Falschbefunde, also laut. Dieser war leise.
+
 ---
 
 ## Abweichungen vom Standard
@@ -859,27 +906,43 @@ Früher am 2026-09-04 erledigt: `gopath.nvim`, `insights.nvim`, `pickers.nvim`
 vier verbleibenden Meldungen liegen in `mdview.nvim/TESTS/testfile.md`, einer
 Fixture mit absichtlich kaputten Links.
 
-**Verwaiste Dokumente (`DOC-06`): von 48 auf 33**, und die Sorten sind jetzt
-sauber getrennt:
+**Verwaiste Dokumente (`DOC-06`) in `docs/`: null.** Von 48 gemeldeten waren
+14 echte Dokumente plus 16 `WORKFLOW.md`; beide Gruppen sind abgearbeitet.
+Was der Prüfer noch meldet, ist keine Doku: Modul-`README.md` unter `lua/`
+(von [Ü6](#ü6--mehr-doku-ebenen-können-richtig-sein-libnvim) gesegnet),
+Fixtures unter `TESTS/`, und Templates, die der Plugin in fremde Bäume
+schreibt ([Ü30](#ü30--ein-toter-link-kann-am-richtigen-ziel-hängen)). Seit
+[Ü33](#ü33--der-prüfer-hielt-jede-readmemd-für-erreichbar) prüft `DOC-06`
+deshalb nur noch `docs/**` und die Repo-Wurzel.
 
-| Was | Zahl | Stand |
-|---|---|---|
-| **Echte Waisen in `docs/`** | ~~14~~ **0** | Alle abgearbeitet, acht Repos, je ein Commit — siehe Ledger. Der Fund dahinter steht in [Ü29](#ü29--ein-dateiname-im-fließtext-ist-kein-link-und-beides-sieht-gleich-aus) |
-| `docs/WORKFLOW.md` | ~~16~~ **12** | Vier gelöst, weil ihr Repo einen Index bekam. Die restlichen zwölf brauchen dasselbe — siehe [Ü26](#ü26--workflowmd-ist-in-16-repos-verwaist-und-das-ist-ein-befund) |
-| Modul-Docs unter `lua/` | ~12 | Von [Ü6](#ü6--mehr-doku-ebenen-können-richtig-sein-libnvim) gesegnet. **Kein Befund** |
-| Fixtures und Templates | ~9 | Testdaten und Dateien, die der Plugin in fremde Bäume schreibt. **Kein Befund** — siehe [Ü30](#ü30--ein-toter-link-kann-am-richtigen-ziel-hängen) |
+**`docs/README.md` gibt es jetzt in 32 von 32 Repos** — bei der
+Bestandsaufnahme waren es 2, vor dieser Tranche 17. Damit ist der Baustein
+vollständig, den §3.1 „die größte echte Neuerung dieses Standards" nennt, und
+[Ü26](#ü26--workflowmd-ist-in-16-repos-verwaist-und-das-ist-ein-befund)s
+Befund ist strukturell erledigt: die verwaiste `WORKFLOW.md` gab es nur, wo
+der Wegweiser fehlte.
 
-> Der Prüfer kennt den Unterschied zwischen diesen Sorten nicht und soll ihn
-> nicht kennen. Er meldet „niemand nennt diese Datei"; welche Sorte das ist,
-> entscheidet der Durchgang.
+> Jeder dieser Indexe ist aus dem Lesen der eigenen Seiten geschrieben, nicht
+> aus einer Vorlage — er soll ja gerade *sagen*, welche Frage jede Seite
+> beantwortet. Wo eine Pflichtseite noch fehlt (`cascade` und `spotlight`
+> haben Installation und Konfiguration im README), steht das **im Index
+> selbst** unter „Not here yet", damit die Lücke lesbar bleibt statt still zu
+> sein.
 
-**Die zwölf offenen `WORKFLOW.md` sind zugleich die Repo-Liste für die
-nächste Tranche**, denn der Fix ist derselbe wie das, was ihnen fehlt:
-`cascade`, `diff`, `images`, `insights`, `markdown`, `pdfport`, `pickers`,
-`recommender`, `runtime-analysis`, `sandbox`, `sessions`, `spotlight`. Ein
-`docs/README.md` pro Repo, aus dem Lesen der eigenen Seiten geschrieben —
-eine Vorlage wäre wertlos, weil der Index gerade *sagen* soll, welche Frage
-jede Seite beantwortet.
+### Was die Index-Tranche für die vollen Durchgänge notiert hat
+
+Beim Lesen von fünfzehn `docs/`-Ordnern fällt auf, was der volle Durchgang
+jeweils vorfinden wird. Jeder Punkt steht auch in der Commit-Message des
+betroffenen Repos:
+
+| Repo | Vorgefunden |
+|---|---|
+| `cascade` 584, `spotlight` 652, `images` 546, `runtime-analysis` 627, `sandbox` 345, `cmdlog` 391 | README weit über dem E2-Korridor, weil Installation, Konfiguration und Architektur noch dort stehen statt auf eigenen Seiten |
+| `emojis`, `github_stats`, `diff`, `recommender`, `sessions`, `spotlight` | `FEATURES.md` als **Datei**, wo §3.1 einen Ordner will (`DOC-03`). Bei `diff` ausdrücklich begründet — „a small, single-purpose plugin" —, bei den anderen nicht |
+| `pickers` | **jede** Seite in Großschreibung (`INSTALLATION.md`, `COMMANDS.md`, `CONFIGURATION.md`), wo die Mehrheit klein schreibt. Case-Rename braucht den Zwischennamen (`DOC-02`) |
+| `github_stats` | `DASHBOARD.md`, `TROUBLESHOOTING.md`, `FEATURES.md` dito |
+| `casedesk` | **acht von vierzehn Seiten deutsch** (`DOC-20`). `FEATURES.md` sagt weiterhin „Deutsch, als einzige Datei hier" und nennt zwei Absätze später fünf weitere. Der Index markiert sie jetzt mit **[de]**; ob übersetzt wird, ist eine Autorenentscheidung — das Fachgebiet ist auch außerhalb deutsch dokumentiert |
+| `open` | `docs/commands.md` hat 213 Zeilen über zwei Kommandofamilien und erwähnt die Scope-Tokens nicht; die stehen allein im Cheatsheet |
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
 
