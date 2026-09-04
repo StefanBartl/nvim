@@ -99,6 +99,20 @@ local function sheets()
     return cache_entries
   end
 
+  local plugin_sheets = config.plugin_sheets() or {}
+
+  -- Dieselbe Vorrang-Regel wie in `records.lua`s `each_file`: wo ein Plugin
+  -- seine eigene `docs/BINDINGS.md` mitbringt, ist das alte Cheatsheet die
+  -- Abschrift und wird übergangen. Ohne das stünde jeder Stamm zweimal in
+  -- der Completion und `resolve` bekäme zwei Dateien für einen Namen.
+  local superseded = {}
+  for _, sheet in ipairs(plugin_sheets) do
+    superseded[sheet.plugin] = true
+    -- `buffer-ctx.md` heißt als einziges Cheatsheet nicht wie sein Plugin
+    -- (`buffer-ctx.nvim`) -- siehe die gleichlautende Stelle in `records.lua`.
+    superseded[(sheet.plugin:gsub("%.nvim$", ""))] = true
+  end
+
   local out = {}
   for idx, root in ipairs(config.roots()) do
     local scope = ROOT_SCOPES[idx]
@@ -106,9 +120,10 @@ local function sheets()
       local dir = vim.fs.joinpath(root, category)
       if vim.fn.isdirectory(dir) == 1 then
         for _, f in ipairs(collect_recursive.files(dir)) do
-          if f:match("%.md$") then
+          local stem = vim.fn.fnamemodify(f, ":t:r")
+          if f:match("%.md$") and not superseded[stem] then
             out[#out + 1] = {
-              stem = vim.fn.fnamemodify(f, ":t:r"),
+              stem = stem,
               file = f,
               category = category,
               scope = scope,
@@ -116,6 +131,30 @@ local function sheets()
           end
         end
       end
+    end
+  end
+
+  -- Ein Personal-Plugin bringt seine drei Kategorien in **einer** Datei mit
+  -- (`docs/BINDINGS.md`), der Cheatsheet-Korpus in dreien. Damit
+  -- `:Bindings browse keymaps hover.nvim` weiter auflöst, steht das Repo-Sheet
+  -- unter allen drei Kategorien -- mit demselben Pfad.
+  --
+  -- Die Folge, ausgesprochen statt versteckt: `browse` ist davon unberührt,
+  -- weil es über `records.lua` geht und dort jede Zeile ihre eigene, aus dem
+  -- Abschnitt abgeleitete Kategorie trägt. `search` greppt dagegen Dateien,
+  -- und eine kategoriegescopte Suche auf einem Repo-Sheet durchsucht die
+  -- ganze Datei -- ein Treffer aus dem Usercmds-Abschnitt kann bei
+  -- `search keymaps <plugin>` also mitkommen. Das ist eine Ungenauigkeit im
+  -- Volltext, kein falscher Befund: die Zeile steht wirklich in der Doku
+  -- dieses Plugins.
+  for _, sheet in ipairs(config.plugin_sheets() or {}) do
+    for _, category in ipairs(M.CATEGORIES) do
+      out[#out + 1] = {
+        stem = sheet.plugin,
+        file = sheet.file,
+        category = category,
+        scope = "Personal",
+      }
     end
   end
 
