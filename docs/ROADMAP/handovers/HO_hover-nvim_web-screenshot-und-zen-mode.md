@@ -1,9 +1,12 @@
 # Handover — hover.nvim: Website-Screenshot-Preview & Zen-Mode
 
 **Repo:** `E:\repos\hover.nvim` (branch `main`, Remote `StefanBartl/hover.nvim`)
-**Datum:** 2026-09-04, Stand fortgeschrieben am 2026-09-04 (2)
-**Status:** **Zen ist gebaut**, ebenso der `auto_hover`-Bugfix und der Seitentext.
-Offen ist nur noch der **Screenshot** (Abschnitt 3).
+**Datum:** 2026-09-04, Stand fortgeschrieben am 2026-09-04 (3)
+**Status:** **alles aus diesem Handover ist gebaut** — der `auto_hover`-Bugfix
+(`c20191e`), Zen (`c20191e`), der Seitentext (`9070b5e`), der Body-Cache
+(`6ebd232`) und der Screenshot (`4e2ebeb`). Offen bleibt nur die eine Variante
+aus Abschnitt 4, die dort ausdrücklich als lohnend markiert ist: Links, die
+schon jetzt auf ein PDF zeigen.
 
 ---
 
@@ -170,6 +173,57 @@ tut `M.resize` schon — nur mit einem Faktor statt mit einem Ziel.
 
 ---
 
+## 3. Feature A — **gebaut** (`4e2ebeb`)
+
+Ausführlich in `hover.nvim/docs/FEATURES/SHOT.md`, Specs in `TESTS/shot_spec.lua` (20).
+Der Entwurf unten steht unverändert; was davon abweicht, steht hier.
+
+**Zwei Messwerte haben den Entwurf geändert, und beide waren im Handover anders.**
+
+| | Handover | hier gemessen (2026-09-04, drei Läufe) |
+| --- | --- | --- |
+| Browserstart allein | 356 ms | **710 / 715 / 735 ms** |
+| Chrome-Pfad | Chrome *und* Edge | nur Chrome, Edge nicht am genannten Ort |
+
+Der Handover-Rechner war offenbar ein anderer — was zum falschen Repo-Pfad passt. Der
+doppelte Startpreis stützt den Trigger-Schutz zusätzlich.
+
+- **Config-Shape** wie entworfen, plus zwei Felder: `delay_ms` (die eigene Debounce, die
+  der Entwurf verlangt, aber nicht benannt hat) und `command` (Browser direkt benennen).
+- **`enabled` heißt `enabled`, `auto` heißt `eager`.** Route: `:Hover links web shot` und
+  `:Hover links web shot eager`. `auto` als Switch-Name ging nicht — ein Switch, der
+  etwas impliziert, darf nach `TESTS/switches_spec.lua` nicht auch als Top-Level-Route
+  existieren, und `:Hover auto` existiert.
+- **`height = 900`, nicht 4000.** Der Entwurf wollte eine Vollseite, damit `nav` sie
+  abfährt. Gegenrechnung: ein Bild wird *eingepasst*, nicht beschnitten — 1280×900 passt
+  in ein Zen-Float mit ~1,0 (16-px-Text bleibt 16 px), 1280×4000 ist auf 0,24
+  höhenbegrenzt (4 px). Wer die Vollseite will, stellt `height` hoch und liest mit `>`.
+- **Zoom war nicht geschenkt.** `can_magnify` und `zoomable` hingen an `target.path`, das
+  ein URL-Target nicht hat. Sie fragen jetzt `shot.cached` — nur Cache, nie ein Browser,
+  weil „ist das zoombar" keine Zwanzig-Sekunden-Antwort haben darf.
+- **Offene Frage 1 (ersetzt oder beide) — ersetzt, beide über den Schalter.** `shot on`
+  → Bild, `shot off` → Text. Das Float ist ein Canvas, also ohne Statuszeile.
+- **Offene Frage 2 (Browsersuche) — PATH zuerst, dann die üblichen Installationsorte**,
+  Reihenfolge chrome → chromium → brave → msedge, und über `links.shot.command`
+  überschreibbar.
+- **Offene Frage 3 (`--virtual-time-budget` vs. CDP) — Budget.** Gemessen: die Probe-Seite
+  rendert in 768 ms bei Budget 5000, das Budget ist also keine Wartezeit. CDP wäre ein
+  Socket und deutlich mehr Code für eine Vorschau.
+- **Offene Frage 4 (ohne images.nvim) — verweigert und sagt warum**, und zwar *vor* dem
+  Browserstart: ein Render in eine Datei, die niemand sehen kann, sind zwanzig Sekunden
+  für nichts.
+
+**Zwei Sicherungen, die im Entwurf nicht standen und nicht optional sind:**
+
+1. **`--user-data-dir` auf ein Wegwerf-Verzeichnis.** Ohne das kann ein Headless-Chrome
+   das *echte* Profil öffnen — die Cookies des Lesers gingen an den gehoverten Host, und
+   was er eingeloggt sieht, wäre im Bild. Das ist der Unterschied zwischen „diese Seite
+   rendern" und „diese Seite als ich rendern".
+2. **Kein `--no-sandbox`.** Das übliche Mittel gegen einen Browser, der im Container nicht
+   startet, und hier genau falsch: die Seite ist per Konstruktion nicht vertrauenswürdig.
+
+### Der ursprüngliche Entwurf (zur Nachvollziehbarkeit)
+
 ## 3. Feature A: Website-Screenshot als Preview
 
 ### Was
@@ -315,15 +369,32 @@ kleiner Task, unabhängig von allem oben.
    diesem Checkout nicht. Neu geschrieben, `c20191e` und `9070b5e`.
 2. ~~**Zen-Mode bauen**~~ — gebaut, `c20191e`. `:Hover zen` / `F`,
    `docs/FEATURES/ZEN.md`, 19 Specs.
-3. **Screenshot-Preview bauen** (Abschnitt 3) — **das ist die verbleibende Arbeit.**
-   Auto-Trigger ist gewünscht und muss abschaltbar sein (`links.shot.auto`); die
-   Disclosure gehört in die Ansage. Zwei Dinge, die seit dem ersten Entwurf dazugekommen
-   sind und den Zuschnitt ändern:
-   - **Zen ist da**, also ist die Lesbarkeitsfrage aus Abschnitt 1 beantwortet. Ein
-     Screenshot soll die Boxgröße lesen, die `opts` trägt — im Zen ist das der ganze
-     Bildschirm.
-   - **`links.shot.auto` bekommt `auto_type = "url"`** in `switches.lua`, sonst läuft der
-     Schalter in genau dasselbe stille Gate wie `:Hover links web on` (Abschnitt 0a).
-   - Der Body-Cache aus dem Nachtrag zu Abschnitt 2 wäre hier ohnehin fällig: ein
-     Screenshot pro `F`-Druck ist 4–20 s.
+3. ~~**Screenshot-Preview bauen**~~ — gebaut, `4e2ebeb`. `:Hover links web shot` und
+   `:Hover links web shot eager`, `docs/FEATURES/SHOT.md`, 20 Specs. Der Body-Cache aus
+   dem Nachtrag zu Abschnitt 2 ist mit `6ebd232` erledigt.
 4. Nicht anfangen mit HTML→PDF (Abschnitt 4).
+
+## 6. Was jetzt noch offen ist
+
+**Die eine Variante aus Abschnitt 4, die dort als lohnend markiert ist:** Links, die
+*schon jetzt* auf ein PDF zeigen (`content-type: application/pdf`). Da fällt jede
+Konversion weg — die Bytes gehen direkt in die vorhandene pdfport/pdftoppm-Pipeline.
+Heute zeigt so ein Link `HTTP 200 OK / application/pdf · 2.3 MB` und sonst nichts.
+
+Der Zuschnitt ist seit dem Screenshot günstiger geworden, und das ist der Grund, es hier
+zu notieren statt es neu zu erarbeiten:
+
+- Der **Body-Cache** in `preview/url.lua` (`6ebd232`) hält die letzte Antwort samt Body
+  schon — bei `application/pdf` sind das die PDF-Bytes, die also bereits da sind, ohne
+  eine zweite Anfrage.
+- `preview/shot.lua` zeigt das **Muster**: Bytes auf Platte legen, ein synthetisches
+  Target bauen, und ab da ist es `preview.media`'s Sache. Für ein PDF ist das
+  `media.pdf` statt `media.canvas_for`, sonst identisch — inklusive Paging und
+  DPI-Zoom.
+- **Achtung beim Fetch:** `--max-filesize 2000000` deckelt bei 2 MB, und PDFs sind
+  regelmäßig größer. Der Deckel ist für HTML richtig gewählt und müsste für diesen Fall
+  eine eigene Zahl bekommen — sonst ist das Ergebnis ein abgeschnittenes PDF, das
+  `pdftoppm` nicht öffnet, und der Fehler sähe aus wie ein kaputter Renderer.
+- Es braucht **keinen neuen Schalter**: `fetch` ist schon an, wenn es einen Content-Type
+  gibt, und die Bytes sind bezahlt. Genau das Argument, mit dem der Seitentext auch
+  keinen bekommen hat.

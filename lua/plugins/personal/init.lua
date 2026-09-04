@@ -72,6 +72,21 @@ plugins.add({
     -- die Meldung nennt das zweite Gate jetzt beim Namen, `:Hover why` auch.
     -- Dasselbe gilt fuer `missing`, `office` und `positions`.
     --
+    -- Und seit `4e2ebeb` kann ein Link auch als BILD DER SEITE kommen:
+    -- `:Hover links web shot` laesst ein Headless-Chromium rendern, danach
+    -- ist es ein Bild wie jedes andere (Zoom, Nav, Zen). Das ist eine andere
+    -- Kategorie als `fetch` und impliziert es deshalb nicht -- ein Fetch ist
+    -- ein curl-GET, ein Render FUEHRT die Seite aus. Zweiter Schalter
+    -- `:Hover links web shot eager` fuer den automatischen Trigger, aus
+    -- gemessenem Grund: 710-735 ms allein fuer den Browserstart auf diesem
+    -- Rechner, 3,9-19,6 s fuer eine echte Seite. Der Browser bekommt ein
+    -- Wegwerf-Profil, sonst gingen die eigenen Cookies an den gehoverten
+    -- Host. Chrome liegt hier unter "C:/Program Files/Google/Chrome/..." und
+    -- ist auf KEINEM PATH -- hover.nvim sucht die ueblichen Orte selbst,
+    -- `:checkhealth hover` nennt die gefundene Binary. Deshalb meldet der
+    -- deps-Abschnitt dort `chrome NOT found`, obwohl es laeuft; das ist
+    -- erwartet und steht so in hover.nvim/docs/health.md.
+    --
     -- Zen (`F` am offenen Float, oder `:Hover zen`) legt es auf den ganzen
     -- Editor -- und zwar so, dass die VORSCHAU neu gegen die Bildschirmgroesse
     -- gebaut wird statt nur das Fenster zu wachsen; ein Text-Hover zeigt dann
