@@ -168,21 +168,26 @@ Aussage über **diese** Config, nicht über das Plugin.
 ## Changelog
 
 - 2026-09-04 (3): **Nichts an den Bindungen geändert — aber ein Befund, der
-  jede Bindungsprüfung hier betrifft.** Beim Durchtesten am 2026-09-04 tat `F`
-  nichts, `:Hover links web shot` existierte nicht, `:Hover auto` auch nicht.
-  Grund war keine Bindung: die von lazy.nvim geklonte Kopie unter
-  `~/AppData/Local/nvim-data/lazy/hover.nvim` stand auf `b2b4b2c` (2026-09-01)
-  und war **54 Commits hinter** `origin/main` — das Repo unter
-  `E:\repos\hover.nvim` ist weitergelaufen, der Klon nicht.
+  jede Tastenprüfung an diesem Plugin betrifft.** Beim Durchtesten tat `F`
+  nichts und `:Hover links web shot` existierte nicht. Beides war **keine**
+  Bindung und auch kein veraltetes Plugin: diese Config lädt die eigenen Repos
+  über `OVERRIDE = "dir"` **lokal** aus `E:epos\<name>`, und eine laufende
+  Neovim-Session hält den Code vom **Start** — Lua-Module liegen in
+  `package.loaded`. Beide Features waren während genau dieser Session
+  entstanden, also hatte dieses Neovim sie nie geladen. Neustart, und beides
+  läuft.
 
-  **Vor jeder Tastenprüfung an diesem Plugin also erst die Version:**
+  **Vor jeder Tastenprüfung hier also: was ist tatsächlich geladen, und ist
+  diese Session neuer als der Commit?**
 
-  ```bash
-  cd ~/AppData/Local/nvim-data/lazy/hover.nvim && git status -sb | head -1
+  ```vim
+  :lua print(vim.api.nvim_get_runtime_file("lua/hover/init.lua", false)[1])
   ```
 
-  `[behind N]` heißt, dass jede Aussage darunter über den Klon gilt und nicht
-  über `main`. `:Lazy update hover.nvim` behebt es. Ausführlich in
+  Im Zweifel neu starten. Der Klon unter `~/AppData/Local/nvim-data/lazy/`
+  ist dabei **irrelevant** — er wird bei `dir`-Modus nie geladen und darf
+  beliebig weit zurückliegen; ihn zu aktualisieren behebt nichts. (Er sah am
+  2026-09-04 wie die Erklärung aus und war es nicht.) Ausführlich in
   `docs/ROADMAP/handovers/MANUAL-EVIDENCE.md`.
 
 - 2026-09-04 (2): **`F` legt das Float auf den ganzen Editor** (hover.nvim
