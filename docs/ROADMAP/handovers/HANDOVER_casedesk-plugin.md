@@ -1,7 +1,8 @@
 # Handover — casedesk als eigenes Plugin (`casedesk.nvim`)
 
-**Stand: 2026-09-04, Phasen 0-2 abgeschlossen. Als Nächstes: Phase 3
-(Umschalten auf das Plugin, Config-Kopie einfrieren).**
+**Stand: 2026-09-04, Phasen 0-3 abgeschlossen. Das Plugin ist seit
+Phase 3 die aktive Quelle; ab jetzt wird nur noch im Plugin-Repo
+geändert. Als Nächstes: Phase 4 (Doku).**
 
 Auftrag: `lua/bindings/usrcmds/case/` aus der nvim-Config nach
 `StefanBartl/casedesk.nvim` auslagern (privat), dabei naheliegende Features
@@ -21,7 +22,7 @@ Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
 | --- | --- |
 | Zielrepo (GitHub, privat) | <https://github.com/StefanBartl/casedesk.nvim> |
 | Checkout | `$REPOS_DIR/casedesk.nvim` |
-| Quelle (noch aktiv!) | `nvim/lua/bindings/usrcmds/case/` |
+| Alte Kopie (eingefroren, inaktiv) | `nvim/lua/bindings/usrcmds/case/` |
 | Plan | `nvim/docs/ROADMAP/casedesk/PLUGIN.md` |
 | Konzept-Docs | `nvim/docs/ROADMAP/casedesk/` |
 | Bindings-Docs | `nvim/docs/NOTES/casedesk/` |
@@ -149,9 +150,65 @@ drückt.
 (`Casedesk.Config` erbte die optionalen Felder statt eigene Pflichtfelder
 zu haben). Nach der Trennung: **0**.
 
+## Phase 3 im Einzelnen — was steht
+
+Commit `00a45b77` in der **nvim-Config** (im Plugin-Repo hat sich für
+diese Phase nichts geändert). **Ab hier ist das Plugin die aktive
+Quelle.**
+
+- `lua/bindings/usrcmds/init.lua:7` auskommentiert, mit dem
+  Rückfall-Text aus §3.8 daneben: Zeile einkommentieren, Spec
+  auskommentieren, und die alte Kopie ist wieder da. **Nie beide** — das
+  registrierte `:Case` zweimal.
+- Spec in `plugins/personal/init.lua` (Ende von Abschnitt 3),
+  `["casedesk.nvim"] = "dir"` in `source.lua`. `lazy = false` mit
+  Begründung im Kommentar: `setup()` startet neben dem Kommandobaum den
+  SLA-Wächter (Timer + `FocusGained`). Ein `cmd = "Case"`-Trigger gäbe
+  die Kommandos zurück, aber die Fristwarnung erst nach dem ersten
+  `:Case` der Sitzung — verkehrt herum für ein Feature, dessen ganzer
+  Zweck die vergessene Uhr ist.
+- `mappings/custom.lua` (`<leader>cs`) und die fünf Stellen im
+  Statusline-Segment auf `casedesk.*`. Der `config`-Zugriff dort ist
+  jetzt ein `pcall` wie sein `sla`-Nachbar (§3.4); der `meta`-Require in
+  `compute` bleibt hart, mit Begründung: dorthin kommt man nur nach
+  einem erfolgreichen `resolve.sync`, der casedesk bereits bewiesen hat.
+- `case/README.md` trägt oben den Einfrier-Hinweis.
+
+**Verifiziert, nicht behauptet:**
+
+- `nvim` startet fehlerfrei (0 Fehlerzeilen in `:messages`, ~0,8-1,9 s).
+- `:Case`, `:Cases`, `:Tricentis` sind da; `nvim_get_runtime_file` löst
+  `lua/casedesk/*` auf **genau einen** Pfad auf
+  (`C:epos\casedesk.nvim`) — keine Verdeckung durch die alte Kopie.
+- `package.loaded["bindings.usrcmds.case"] == nil` nach dem Start.
+- Das Statusline-Segment liefert in einem Case-Buffer sein Label
+  (`1135620 BARMER · 1 reply`), außerhalb den leeren String.
+- luacheck über die fünf geänderten Dateien: keine neue Warnung (die
+  fünf gemeldeten Langzeilen standen vorher schon da, an Stellen, die
+  diese Phase nicht anfasst).
+
+**Der Prüfpunkt, mit Zahl:** `:Cases doctor` meldet **21 Funde statt 20**
+— die 20 der Baseline **zeichengleich und in derselben Reihenfolge**,
+dazu `996010 summary-markdown` aus `SAP_Support/Cases/T2/`. Genau die
+vorhergesagte Verbesserung, keine Regression.
+
+**Nebenbefund:** die Registry sieht jetzt **31 Cases (28 SAP, 3 CS)** —
+in `Cases/CS/Open/` liegen **drei**, nicht zwei wie in der
+Bestandsaufnahme geschätzt. Und alle drei sind **sauber**: Notes.md,
+Summary.md, Replies/, Research/, assets/ — deshalb bringen sie keinen
+einzigen Fund mit. Der Zuwachs von 20 auf 21 ist also vollständig der
+T2-Case.
+
+**Doku nebenbei korrigiert:** `docs/NOTES/casedesk/Autocmds.md` sagte
+„None. Confirmed by a repo-wide grep …". Der Grep war echt, lief aber
+**vor** dem SLA-Notifier — seither installiert casedesk sehr wohl einen
+`FocusGained`-Autocmd (`CasedeskSlaNotify`). Die Seite behauptete ein
+Negativum und veraltete, ohne dass irgendetwas fehlschlug. Steht jetzt
+richtig drin, samt dieser Notiz.
+
 ## Als Nächstes
 
-- [ ] **Phase 3 — Umschalten.** In der nvim-Config:
+- [x] ~~**Phase 3 — Umschalten.** In der nvim-Config:
       `lua/bindings/usrcmds/init.lua:7` auskommentieren (mit
       Rückfall-Kommentar), `mappings/custom.lua:28` und die vier requires
       in `wkdnvchad/ui/statusline/modules/casedesk/init.lua` auf
@@ -160,11 +217,18 @@ zu haben). Nach der Trennung: **0**.
       Kopie eingefroren ist. **Nicht löschen.**
       Prüfpunkt: `:Cases doctor` muss dieselben 20 Funde liefern wie die
       Baseline — plus jetzt möglicherweise neue aus CS und T2, die vorher
-      unsichtbar waren; das ist erwartete Verbesserung, keine Regression.
+      unsichtbar waren; das ist erwartete Verbesserung, keine Regression.~~
+      **Erledigt, `00a45b77`.**
 - [ ] Phase 4 — Doku (Konzept-Docs mitziehen, `BINDINGS.md`,
       `configuration.md` aus `@types` füllen, vimdoc).
 - [ ] Danach: `:Case new` fragt den Bereich (§7.6 Schritt 3),
       `:Cases area`-Filter, `area` in `.case.json` samt doctor-Nachtrag.
+- [ ] **Aufgeschoben, bewusst:** im Plugin heißen 53 Typen weiterhin
+      `Lib.Case.*` (259 Fundstellen) — ein Rest aus der Zeit in der
+      Config, den der Namespace-Rewrite in Phase 1 nicht mitnahm. Die
+      Umbenennung nach `Casedesk.*` ist rein mechanisch, gehört aber in
+      einen eigenen Commit und nicht in den Umschalt-Commit, an dem der
+      Rückfallweg hängt.
 
 ---
 
