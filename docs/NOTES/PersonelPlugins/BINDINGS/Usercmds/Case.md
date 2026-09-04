@@ -1,10 +1,14 @@
 # `:Case` / `:Cases` / `:Tricentis` — SAP-Support case scaffolding (casedesk)
 
-Not a plugin's own command — casedesk lives in this config itself
-(`lua/bindings/usrcmds/case/`), scaffolding and querying SAP-Support cases
-for the Tricentis/Tosca support workflow. Listed here for the
-config-internal index only; the full command reference, concept, and
-day-to-day workflow already have their own doc set — not duplicated here:
+casedesk moved out of this config on 2026-09-04 and is now the
+[`casedesk.nvim`](https://github.com/StefanBartl/casedesk.nvim) plugin
+(`lua/casedesk/`), scaffolding and querying SAP-Support cases for the
+Tricentis/Tosca support workflow. The old tree under
+`lua/bindings/usrcmds/case/` is still on disk but frozen and not loaded —
+see `docs/ROADMAP/casedesk/PLUGIN.md`. Listed here because the commands are
+part of the day-to-day binding surface either way; the full command
+reference, concept, and workflow have their own doc set — not duplicated
+here:
 
 - [Usercmds.md](../../../casedesk/Usercmds.md) — full command tables for `:Case`, `:Cases`, `:Tricentis`
 - [Workflow.md](../../../casedesk/Workflow.md) — day-to-day use cases, worked examples

@@ -775,6 +775,33 @@ plugins.add({
     end,
   },
 
+  {
+    -- casedesk: the `:Case` / `:Cases` / `:Tricentis` command tree for
+    -- SAP-Support case work, extracted from this config's former
+    -- lua/bindings/usrcmds/case/** (docs/ROADMAP/casedesk/PLUGIN.md). That
+    -- copy is still on disk but FROZEN -- bindings/usrcmds/init.lua no longer
+    -- calls its enable(). Exactly one of the two may be active; both would
+    -- register :Case twice.
+    --
+    -- Eager on purpose. setup() registers the command tree AND starts the SLA
+    -- watcher (sla/notify.lua: a background timer plus a FocusGained hook that
+    -- re-checks P1/P2 deadlines). A `cmd = "Case"` trigger would hand back the
+    -- commands but stay silent about deadlines until the first :Case of the
+    -- session -- the wrong way round for a feature whose entire point is
+    -- telling you about a clock you forgot. The statusline segment
+    -- (wkdnvchad/ui/statusline/modules/casedesk) reads casedesk.resolve on
+    -- redraw and wants it loaded too.
+    --
+    -- `opts = {}` and not a single override: every path already derives from
+    -- $REPOS_DIR inside config/DEFAULTS.lua, so this machine has nothing to
+    -- correct. Overrides belong here the day a machine disagrees about where
+    -- WKDBook-Tricentis lives -- see the plugin's docs/configuration.md.
+    "StefanBartl/casedesk.nvim",
+    lazy = false,
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {},
+  },
+
   -- ==========================================================================
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
   -- ==========================================================================

@@ -8,7 +8,7 @@ soon as it closes.
 
 ## `<leader>cs` — case-aware session save (global)
 
-Source: `lua/bindings/mappings/custom.lua` (not `lua/bindings/usrcmds/case/`
+Source: `lua/bindings/mappings/custom.lua` (this config, not the plugin
 — it's casedesk-aware but lives with the config's other `<leader>c*`
 utility keymaps rather than in casedesk's own module tree; kept out of
 `sessions.nvim`'s own `keymaps` block so that one stays generic). Concept:
@@ -28,7 +28,7 @@ moment it's created, not only after the first manual `<leader>cs`.
 
 ### `:Cases list` — the mark view
 
-Source: `lua/bindings/usrcmds/case/ui.lua`, `M.list_all()`, backed by
+Source: `casedesk.nvim`, `lua/casedesk/ui.lua`, `M.list_all()`, backed by
 `marks.lua` (a flat, session-global set of case numbers — not buffer-local,
 survives this view closing). ROADMAP.md's "marking system wie in
 filetree.nvim": mark cases here, run `:Cases close` whenever afterward.
@@ -45,7 +45,7 @@ up itself.
 
 ### `:Case info [nr]` — the infocard
 
-Source: `lua/bindings/usrcmds/case/ui.lua`, `M.info()`.
+Source: `casedesk.nvim`, `lua/casedesk/ui.lua`, `M.info()`.
 
 | lhs | mode | action |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ Source: `lua/bindings/usrcmds/case/ui.lua`, `M.info()`.
 
 ### `:Case reply check` — the reply-gate report
 
-Source: `lua/bindings/usrcmds/case/ui.lua`, `M.reply_check()`. Both keys
+Source: `casedesk.nvim`, `lua/casedesk/ui.lua`, `M.reply_check()`. Both keys
 are conditional — set up only when the report has something for them to
 act on.
 

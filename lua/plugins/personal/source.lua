@@ -126,6 +126,7 @@ plugins.modes({
   ["cmdlog.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
+  ["casedesk.nvim"] = "dir",
   ["learn-cli.nvim"] = "disabled", -- gebraucht weder lokal noch remote
 
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)

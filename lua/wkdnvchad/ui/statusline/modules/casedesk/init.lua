@@ -5,7 +5,7 @@
 --- focused buffer isn't inside a known case (ROADMAP.md v7's
 --- "Statusline-Badge").
 ---
---- `bindings.usrcmds.case.resolve.sync` is the same buffer -> case lookup
+--- `casedesk.resolve.sync` is the same buffer -> case lookup
 --- `:Case`'s routes use (registry membership, not a marker file), just
 --- called for its synchronous half only — no kit.select fallback, a
 --- statusline redraw can't prompt.
@@ -56,7 +56,7 @@ end
 ---@param entry Lib.Case.RegistryEntry
 ---@return string
 local function sla_badge(entry)
-  local ok_sla, sla = pcall(require, "bindings.usrcmds.case.sla")
+  local ok_sla, sla = pcall(require, "casedesk.sla")
   if not ok_sla then
     return ""
   end
@@ -65,7 +65,13 @@ local function sla_badge(entry)
     return ""
   end
 
-  local config = require("bindings.usrcmds.case.config")
+  -- pcall like the `sla` require above: this segment is part of the
+  -- statusline framework, which lives in the configuration and has to keep
+  -- drawing on a machine that has no casedesk checkout at all.
+  local ok_config, config = pcall(require, "casedesk.config")
+  if not ok_config then
+    return ""
+  end
   local active = false
   for _, p in ipairs(config.sla_active_priorities) do
     if p == status.digit then
@@ -91,7 +97,10 @@ end
 ---@param entry Lib.Case.RegistryEntry
 ---@return string
 local function compute(entry)
-  local meta = require("bindings.usrcmds.case.meta")
+  -- Plain require, unlike the guarded ones above: `compute` only runs once
+  -- `resolve.sync` has returned an entry, which already proves casedesk is on
+  -- the runtimepath.
+  local meta = require("casedesk.meta")
   local m = meta.read(entry.dir)
 
   local label = (m and m.company) and (entry.short .. " " .. m.company) or entry.short
@@ -112,7 +121,7 @@ return function()
   cached_bufname = bufname
   cached_bucket = bucket
 
-  local ok_resolve, resolve = pcall(require, "bindings.usrcmds.case.resolve")
+  local ok_resolve, resolve = pcall(require, "casedesk.resolve")
   if not ok_resolve then
     cached_text = ""
     return cached_text
