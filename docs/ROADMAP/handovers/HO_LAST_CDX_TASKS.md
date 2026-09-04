@@ -54,6 +54,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | *(5 Repos)* | E1 | `diff`, `documentation`, `language`, `markdown`, `open` — nach dem deps-Durchgang nachgezogen | `a2a5ee5`…`a269b2b` |
 | replacer.nvim | 2 | drei FEATURES-Fassungen auf eine, vier Pflichtseiten neu, README 689 → 125, 6 Falschbehauptungen | `8c3fb0e` |
 | reposcope.nvim | 2 | 6 Case-Renames, FEATURES.md aufgelöst, docs/README.md + health.md, README 93 → 138 | `b35b795` |
+| color_my_ascii.nvim | 3 | docs/README.md, 5 Planungsdateien ausgelagert, Fixture nach `TESTS/`, 8 tote Links + 10 tote Anker, `DOC-28` | `bfb74da` |
 | hover.nvim | 1 | README 1144 → 188, 7 Seiten neu, `INTEGRATIONS.md` → `integrations.md`, ROADMAP ausgelagert, LICENSE, E1 | `40153a7` |
 
 **E1 ist erledigt: 31/31.** Der Weg dahin ging über drei Etappen — 20 Repos im
@@ -416,6 +417,40 @@ abhängigen Plugin nicht einlösbar — egal, was das Plugin selbst tut.
 
 ---
 
+### Ü24 — Der dritte Befundtyp: 75 tote **Anker** in 14 Repos
+
+[Ü18](#ü18--zwei-blinde-flecken-die-das-werkzeug-nicht-schließen-wird) hat den
+Anker als blinden Fleck benannt und ihn der Handarbeit überlassen („nach jedem
+README-Umbau die ToC gegen `grep '^## '` gegenprüfen"). Das hat nicht
+funktioniert: gemessen am 2026-09-04, **nachdem** sechs Repos den vollen
+Durchgang hinter sich hatten, standen über alle 31 Repos **75 tote Anker** —
+darunter in `lib.nvim` (14) und `fileops.nvim` (3), den beiden
+Referenz-Implementierungen.
+
+`docs_linkcheck.py` kennt die Klasse jetzt als `ANCHOR`. Sie ist die einzige
+der vier, die **ohne fremdes Zutun** entsteht: ein Inhaltsverzeichnis hat
+keinen Konsumenten, also merkt niemand, wenn eine Überschrift umbenannt wird.
+Verteilung: `runtime-analysis` 15, `lib` 14, `github_stats` 12,
+`color_my_ascii` 10 (erledigt), `documentation` 8, `fileops`/`lsp`/`mdview` je
+3, `gopath`/`pickers` je 2, `markdown`/`open`/`sessions` je 1.
+
+**Zwei Parser-Fehler, die dabei zuerst gefunden werden mussten** — und beide
+sind dieselbe Klasse wie [Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen),
+also der Grund, warum das Werkzeug vor dem Flächeneinsatz geeicht gehört:
+
+1. **Fences als Umschalter.** Ein ` ````lua `-Block, dessen Inhalt ` ``` `
+   enthält, kippt einen Toggle mitten im Block wieder auf — ab da verschwindet
+   jede Überschrift der Datei. In `color_my_ascii/docs/configuration.md` waren
+   das zehn gemeldete Anker, die alle existierten.
+2. **Prosa, die einen Fence nennt.** Eine Zeile, die mit Backticks *beginnt*
+   und im Rest noch Backticks trägt, ist laut CommonMark kein Fence-Opener.
+   Der naive Parser hielt sie für einen und drehte den Rest des Dokuments um.
+
+Beides ist in `strip_code()` mitkorrigiert, das denselben Parser benutzt — die
+`DEAD`-Zahlen davor waren also ebenfalls nicht ganz zuverlässig.
+
+---
+
 ## Abweichungen vom Standard
 
 | Repo | Abweichung | Begründung |
@@ -468,7 +503,7 @@ python scripts/docs_linkcheck.py E:/repos/<repo>          # eines
 python scripts/docs_linkcheck.py E:/repos/*.nvim          # alle
 ```
 
-Meldet drei Befundklassen. Exit 1 bei Befunden, Laufzeit über alle 31 Repos
+Meldet vier Befundklassen. Exit 1 bei Befunden, Laufzeit über alle 31 Repos
 **< 1 s**:
 
 | Klasse | Bedeutung |
@@ -476,6 +511,7 @@ Meldet drei Befundklassen. Exit 1 bei Befunden, Laufzeit über alle 31 Repos
 | `DEAD` | Ziel existiert nicht |
 | `CASE` | Ziel existiert, Schreibweise weicht ab — lokal grün, auf GitHub 404 |
 | `IGNORED` | Ziel existiert und ist **gitignoriert** — lokal grün, auf GitHub 404 |
+| `ANCHOR` | Datei existiert, die `#überschrift` darin nicht — auch bei `](#…)` in derselben Datei, also im eigenen Inhaltsverzeichnis |
 
 `IGNORED` kam am 2026-09-03 dazu (siehe Ü10). Es ist dieselbe Fehlerklasse wie
 `CASE`, eine Ebene tiefer: dort log Windows über die Schreibweise, hier log die
@@ -497,10 +533,8 @@ deshalb gegen die echten Verzeichniseinträge. **Pflichtlauf nach jedem Rename**
 Bereits gefunden: `github_stats.nvim/docs/configurations/USER-DEFINED-DATE-PRESETS.md`
 → `../USERCOMMANDS.md`, auf der Platte `usercommands.md`.
 
-**Grenzen** (alle drei in der Praxis aufgetreten, siehe Ü18):
+**Grenzen** (der dritte Punkt aus Ü18 ist seit 2026-09-04 keine mehr — siehe [Ü24](#ü24--der-dritte-befundtyp-75-tote-anker-in-14-repos)):
 
-- **Kein `#anchor`.** Ein Verweis auf eine umbenannte Überschrift fällt durch —
-  `lsp.nvim`s README-ToC hatte `[Roadmap](#roadmap)` ohne die Überschrift.
 - **Kein HTML.** `<img src="…">` wird nicht gesehen; `mdview.nvim`s
   Bild-Fixture zeigte deshalb seit je ins Leere.
 - **Nur Markdown.** Handgepflegtes Vimdoc unter `doc/*.txt` fällt heraus, und
@@ -519,18 +553,25 @@ läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 
 ### Offene Befundliste (Stand 2026-09-04, nach dem Werkzeug-Fix)
 
-| Repo | dead | case | ignored |
-|---|---|---|---|
-| color_my_ascii.nvim | 8 | 0 | 0 |
+**`DEAD`, `CASE`, `IGNORED`: 0 über alle 31 Repos.** Die Restliste ist
+abgeräumt (siehe [Ü21](#ü21--vier-tote-links-vier-verschiedene-fehlerklassen)),
+`color_my_ascii.nvim`s acht „Known issue"-Links mit dem Welle-3-Durchgang.
 
-**Stand 2026-09-04, nach Ü21:** 30 von 31 Repos sind link-sauber.
-`github_stats.nvim`, `gopath.nvim`, `insights.nvim` und `pickers.nvim` sind
-abgeräumt (`acb9857`, `cbdd322`, `62928cb`, `95866f6` — siehe Ledger).
+**`ANCHOR`: 65 in 13 Repos** (Stand nach `color_my_ascii.nvim`, siehe
+[Ü24](#ü24--der-dritte-befundtyp-75-tote-anker-in-14-repos)):
 
-Die 8 in `color_my_ascii.nvim` stammen aus einem alten Doku-Layout
-(`./language-detection.md`, `../groups/operators.md` u. a.) und sind im Repo
-selbst als „Known issue“ dokumentiert — sie gehören in dessen vollen Durchgang
-(Welle 3), nicht in einen Nachtrag.
+| Repo | Anker | | Repo | Anker |
+|---|---|---|---|---|
+| runtime-analysis.nvim | 15 | | mdview.nvim | 3 |
+| lib.nvim | 14 | | gopath.nvim | 2 |
+| github_stats.nvim | 12 | | pickers.nvim | 2 |
+| documentation.nvim | 8 | | markdown.nvim | 1 |
+| fileops.nvim | 3 | | open.nvim | 1 |
+| lsp.nvim | 3 | | sessions.nvim | 1 |
+
+Jedes dieser Repos bekommt sie in seinem eigenen Durchgang; `lib.nvim`,
+`fileops.nvim`, `lsp.nvim` und `mdview.nvim` sind schon durch und brauchen
+einen Nachtrag.
 
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
