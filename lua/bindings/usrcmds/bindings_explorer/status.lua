@@ -33,14 +33,15 @@ local MODES = { "n", "i", "v", "x", "s", "o", "t", "c" }
 ---@param root string
 ---@param category string
 ---@return integer
-local function md_count(root, category)
+---@param skip table<string, boolean>|nil Dateistämme, die nicht mitzählen
+local function md_count(root, category, skip)
   local dir = vim.fs.joinpath(root, category)
   if vim.fn.isdirectory(dir) ~= 1 then
     return 0
   end
   local n = 0
   for _, f in ipairs(collect_recursive.files(dir)) do
-    if f:match("%.md$") then
+    if f:match("%.md$") and not (skip and skip[vim.fn.fnamemodify(f, ":t:r")]) then
       n = n + 1
     end
   end
@@ -53,9 +54,25 @@ end
 --- number of documented bindings.
 ---@return table
 local function corpus()
+  -- Seit 2026-09-04 hat der Korpus drei Herkünfte, nicht zwei: die beiden
+  -- Cheatsheet-Wurzeln und die `docs/BINDINGS.md` der Personal-Plugins
+  -- selbst. Nach `rec.scope` zu zählen reichte, solange „Personal" genau
+  -- eine Wurzel meinte -- ein Repo-Sheet trägt denselben Scope und wäre
+  -- stillschweigend zum Cheatsheet-Block addiert worden. Dann stünde in der
+  -- Ausgabe eine Zeilenzahl neben einer Dateizahl, die sie nicht erzeugt
+  -- hat. Deshalb entscheidet hier der Pfad, nicht das Feld.
+  local sheets = config.plugin_sheets() or {}
+  local is_plugin_sheet, superseded = {}, {}
+  for _, sheet in ipairs(sheets) do
+    is_plugin_sheet[vim.fs.normalize(sheet.file)] = true
+    superseded[sheet.plugin] = true
+    superseded[(sheet.plugin:gsub("%.nvim$", ""))] = true
+  end
+
   local rows, meta_rows, files_with_rows = {}, 0, {}
   for _, rec in ipairs(records.list()) do
-    local key = rec.scope .. "/" .. rec.category
+    local origin = is_plugin_sheet[vim.fs.normalize(rec.file)] and "Plugin" or rec.scope
+    local key = origin .. "/" .. rec.category
     rows[key] = (rows[key] or 0) + 1
     files_with_rows[rec.file] = true
     if rec.meta then
@@ -70,11 +87,32 @@ local function corpus()
     for _, cat in ipairs(CATEGORIES) do
       cats[#cats + 1] = {
         name = cat,
-        files = md_count(root, cat),
+        -- Nur die Personal-Wurzel hat abgelöste Sheets; die Extern-Wurzel
+        -- dokumentiert fremde Plugins, die keine eigene `docs/BINDINGS.md`
+        -- mitbringen.
+        files = md_count(root, cat, idx == 1 and superseded or nil),
         rows = rows[scope .. "/" .. cat] or 0,
       }
     end
     scopes[#scopes + 1] = { name = scope, root = root, categories = cats }
+  end
+
+  if #sheets > 0 then
+    local cats = {}
+    for _, cat in ipairs(CATEGORIES) do
+      cats[#cats + 1] = {
+        name = cat,
+        -- Dieselbe Datei trägt alle drei Kategorien, deshalb steht die
+        -- Sheet-Zahl in jeder Zeile -- sie zu dritteln wäre erfunden.
+        files = #sheets,
+        rows = rows["Plugin/" .. cat] or 0,
+      }
+    end
+    scopes[#scopes + 1] = {
+      name = "Plugin-Docs",
+      root = ("%d× docs/BINDINGS.md aus dem jeweiligen Plugin"):format(#sheets),
+      categories = cats,
+    }
   end
 
   local total_rows = 0
@@ -193,7 +231,9 @@ function M.lines()
 
   local out = { "Korpus", "" }
   for _, scope in ipairs(c.scopes) do
-    out[#out + 1] = ("  %-10s %s"):format(scope.name, scope.root)
+    -- 11 statt 10: "Plugin-Docs" ist der laengste der drei Herkunftsnamen und
+    -- schoebe die Spalte sonst als einziger um ein Zeichen weiter.
+    out[#out + 1] = ("  %-11s %s"):format(scope.name, scope.root)
     for _, cat in ipairs(scope.categories) do
       out[#out + 1] = ("    %-10s %3d Dateien   %4d Tabellenzeilen"):format(
         cat.name,

@@ -61,6 +61,50 @@ local META_FILES = { All = true, Collisions = true, Overview = true }
 --- live-but-undocumented direction -- the same split `META_FILES` makes.
 local NOT_LIVE_MARKER = "^%*%*Nicht live:%*%*"
 
+--- Welche Kategorie ein `##`-Abschnitt einer Repo-`docs/BINDINGS.md` trägt.
+---
+--- Der Cheatsheet-Korpus ist **art-zuerst** — die Kategorie steht im
+--- Ordnernamen (`Keymaps/`, `Usercmds/`, `Autocmds/`). Die Repos sind
+--- **plugin-zuerst**: eine Datei je Plugin, die Kategorie ist eine
+--- Überschrift darin. Diese Funktion überbrückt genau diesen Bruch.
+---
+--- Abgeleitet, nicht erfunden: gemessen über die `docs/BINDINGS.md` aller 32
+--- Repos am 2026-09-04. Die Schreibweisen gehen weit auseinander —
+--- `## Keymaps` (20×), `## Autocommands` (19×), `## User commands` (15×),
+--- `## User Commands` (11×), `## Autocmds` (10×), dazu `## Preset Keymaps`,
+--- `## Picker keymaps`, `## Usrcmds`, `## 1. Keymaps (\`keymaps\`)` und die
+--- zehn `## \`:Sandbox <ding> <subcommand>\``-Überschriften von
+--- sandbox.nvim. Eine Liste exakter Titel wäre am Tag ihrer Niederschrift
+--- veraltet gewesen; Teilstring-Regeln halten.
+---
+--- **Reihenfolge ist die ganze Logik.** „Autocommands" enthält „command",
+--- also muss `autocmd` zuerst greifen, sonst landet jeder Autocmd-Abschnitt
+--- bei den Usercmds.
+---
+--- Was auf nichts passt, liefert `nil` und **fällt heraus** — das ist
+--- Absicht, keine Lücke. `## Highlight groups`, `## Global variables`,
+--- `## Table of content`, `## Right-click context menu` und
+--- `## Context Menu (optional)` stehen in diesen Dateien und dokumentieren
+--- keine Bindings, die eine laufende Session kennt. Sie mitzunehmen hieße,
+--- `drift.lua` Menüeinträge und Highlight-Gruppen als „dokumentiert, aber
+--- nicht live" melden zu lassen — genau die Klasse Falschbefunde, gegen die
+--- `META_FILES` und `NOT_LIVE_MARKER` bereits gebaut wurden.
+---@param heading string
+---@return ("Keymaps"|"Usercmds"|"Autocmds")|nil
+local function category_from_heading(heading)
+  local h = heading:lower()
+  if h:find("autocmd", 1, true) or h:find("autocommand", 1, true) then
+    return "Autocmds"
+  end
+  if h:find("command", 1, true) or h:find("usrcmd", 1, true) or h:find("usercmd", 1, true) then
+    return "Usercmds"
+  end
+  if h:find("key", 1, true) then
+    return "Keymaps"
+  end
+  return nil
+end
+
 ---@class Bindings.Record
 ---@field scope "Personal"|"Extern"
 ---@field category "Keymaps"|"Usercmds"|"Autocmds"
@@ -131,18 +175,23 @@ end
 
 ---@param path string
 ---@param scope "Personal"|"Extern"
----@param category "Keymaps"|"Usercmds"|"Autocmds"
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil `nil` = aus den `##`-Überschriften ableiten (Repo-Sheet, siehe `category_from_heading`)
+---@param plugin_override string|nil Plugin-Name, wenn er nicht der Dateistamm ist — eine Repo-`docs/BINDINGS.md` heißt in jedem Repo gleich
 ---@return Bindings.Record[]
-local function parse_file(path, scope, category)
+local function parse_file(path, scope, category, plugin_override)
   local content = read(path)
   if not content then
     return {}
   end
 
-  local plugin = vim.fn.fnamemodify(path, ":t:r")
+  local plugin = plugin_override or vim.fn.fnamemodify(path, ":t:r")
   local meta = META_FILES[plugin] == true
   local records = {}
   local heading, columns, awaiting_separator = nil, nil, false
+  -- Bei einem Repo-Sheet wandert die Kategorie mit dem Abschnitt. Bis zur
+  -- ersten passenden `##`-Überschrift gibt es keine, und Zeilen davor
+  -- (Titeltabelle, Inhaltsverzeichnis) gehören auch zu keiner.
+  local section_category = category
   -- Scoped to the section, not to the file: a sheet can hold one unverifiable
   -- table next to five ordinary ones, and `Keymaps/VisualMulti.md` does.
   local not_live = false
@@ -153,6 +202,13 @@ local function parse_file(path, scope, category)
     if h then
       heading, columns, awaiting_separator = vim.trim(h), nil, false
       not_live = false
+      -- Nur die `##`-Ebene setzt die Kategorie; ein `###` darunter verfeinert
+      -- die Überschrift, bleibt aber im Abschnitt. hover.nvim schreibt
+      -- `## Keymaps` und darunter `### Owned` / `### Borrowed` — beide sind
+      -- Keymaps, und eine Ebene tiefer stünde kein Kategoriewort mehr.
+      if category == nil and line:match("^##%s") then
+        section_category = category_from_heading(heading)
+      end
     elseif line:match(NOT_LIVE_MARKER) then
       -- Ends a running table exactly like any other prose line would, so the
       -- marker behaves as text that happens to carry a flag rather than as a
@@ -166,18 +222,24 @@ local function parse_file(path, scope, category)
         awaiting_separator = false
       else
         awaiting_separator = false
-        records[#records + 1] = {
-          scope = scope,
-          category = category,
-          plugin = plugin,
-          meta = meta,
-          not_live = not_live,
-          heading = heading,
-          columns = columns,
-          cells = split_cells(line),
-          file = path,
-          line = lnum,
-        }
+        -- Kein `section_category` heißt: dieser Abschnitt dokumentiert keine
+        -- der drei Bindungsarten (Highlight-Gruppen, globale Variablen, das
+        -- Inhaltsverzeichnis). Die Zeile ist eine echte Tabellenzeile, aber
+        -- kein Binding — siehe `category_from_heading`.
+        if section_category then
+          records[#records + 1] = {
+            scope = scope,
+            category = section_category,
+            plugin = plugin,
+            meta = meta,
+            not_live = not_live,
+            heading = heading,
+            columns = columns,
+            cells = split_cells(line),
+            file = path,
+            line = lnum,
+          }
+        end
       end
     else
       -- Blank line or prose ends the current table; the next `|…|` line
@@ -189,12 +251,50 @@ local function parse_file(path, scope, category)
   return records
 end
 
---- Call `fn(path, root_scope, category)` for every `.md` file of the corpus.
+--- Call `fn(path, root_scope, category, plugin)` for every file of the corpus.
+---
+--- Two shapes arrive here, and the difference is the `category` argument:
+---
+--- * **Cheatsheet** — `<root>/<Kategorie>/<plugin>.md`. Die Kategorie steht
+---   im Ordnernamen und wird durchgereicht; `plugin` ist `nil`, der
+---   Dateistamm genügt.
+--- * **Repo-Sheet** — die `docs/BINDINGS.md` eines Personal-Plugins, eine
+---   Datei für alle drei Arten. `category` ist `nil`, damit `parse_file` sie
+---   je Abschnitt ableitet, und `plugin` kommt mit, weil jede dieser Dateien
+---   gleich heißt.
+---
+--- Ein `categories`-Filter kann ein Repo-Sheet nicht *vorab* ausschließen —
+--- welche Arten darin stehen, weiß man erst nach dem Parsen. Deshalb wird es
+--- immer gelesen und erst hinterher gefiltert; siehe `M.list`.
 ---@param categories string[]
 ---@param scope ("personal"|"extern")|nil
----@param fn fun(path: string, scope: "Personal"|"Extern", category: string): nil
+---@param fn fun(path: string, scope: "Personal"|"Extern", category: string|nil, plugin: string|nil): nil
 ---@return nil
 local function each_file(categories, scope, fn)
+  local sheets = (not scope or scope:lower() == "personal") and config.plugin_sheets() or nil
+
+  -- Solange die alten Cheatsheets noch liegen, beschreiben zwei Dateien
+  -- dasselbe Plugin. Beide zu lesen hieße, jedes Binding doppelt zu zählen —
+  -- in `:Bindings status`, im Driftbericht, als zwei identische Zeilen im
+  -- Picker. Das Repo-Sheet gewinnt, weil es die Quelle ist und das
+  -- Cheatsheet die Abschrift.
+  --
+  -- Das ist der Übergangszustand bis `BND-04` (Cheatsheet gegen Repo-Doku
+  -- diffen, Einzigartiges nachtragen, dann löschen). Wo das Cheatsheet noch
+  -- etwas weiß, das die Repo-Doku nicht sagt, wird es hier **still
+  -- übergangen** — sichtbar wird das im Driftbericht als „live, aber nicht
+  -- dokumentiert", und genau dort gehört es hin.
+  local superseded = {}
+  for _, sheet in ipairs(sheets or {}) do
+    superseded[sheet.plugin] = true
+    -- Ein einziges Cheatsheet weicht vom Plugin-Namen ab: `buffer-ctx.md`
+    -- statt `buffer-ctx.nvim.md` (geprüft 2026-09-04 über alle drei
+    -- Kategorieordner -- es ist der einzige Fall). Ohne diese Zeile bliebe
+    -- genau dieses Plugin doppelt geführt, unter zwei Namen, und wäre damit
+    -- der eine Fall, den die Umstellung nicht erwischt.
+    superseded[(sheet.plugin:gsub("%.nvim$", ""))] = true
+  end
+
   for idx, root in ipairs(config.roots()) do
     local root_scope = ROOT_SCOPES[idx]
     if not scope or scope:lower() == root_scope:lower() then
@@ -202,13 +302,19 @@ local function each_file(categories, scope, fn)
         local dir = vim.fs.joinpath(root, cat)
         if vim.fn.isdirectory(dir) == 1 then
           for _, f in ipairs(collect_recursive.files(dir)) do
-            if f:match("%.md$") then
-              fn(f, root_scope, cat)
+            if f:match("%.md$") and not superseded[vim.fn.fnamemodify(f, ":t:r")] then
+              fn(f, root_scope, cat, nil)
             end
           end
         end
       end
     end
+  end
+
+  -- Personal-Plugins bringen ihre eigene Doku mit; der Extern-Scope kennt
+  -- diese Wurzel nicht.
+  for _, sheet in ipairs(sheets or {}) do
+    fn(sheet.file, "Personal", nil, sheet.plugin)
   end
 end
 
@@ -220,8 +326,16 @@ end
 function M.list(category, scope)
   local categories = category and { category } or { "Keymaps", "Usercmds", "Autocmds" }
   local out = {}
-  each_file(categories, scope, function(path, root_scope, cat)
-    vim.list_extend(out, parse_file(path, root_scope, cat))
+  each_file(categories, scope, function(path, root_scope, cat, plugin)
+    local records = parse_file(path, root_scope, cat, plugin)
+    if cat == nil and category then
+      -- Repo-Sheet: der Ordnerfilter konnte nicht greifen, weil die Kategorie
+      -- erst beim Parsen entsteht. Jetzt schon.
+      records = vim.tbl_filter(function(r)
+        return r.category == category
+      end, records)
+    end
+    vim.list_extend(out, records)
   end)
   return out
 end

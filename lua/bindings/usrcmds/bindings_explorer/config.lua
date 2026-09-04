@@ -15,6 +15,92 @@ function M.roots()
   }
 end
 
+---@class Bindings.PluginSheet
+---@field plugin string Plugin-Name, zugleich `records.lua`s `plugin`-Feld, z.B. "hover.nvim".
+---@field file string Absoluter Pfad auf dessen `docs/BINDINGS.md`.
+
+--- Wo die `docs/BINDINGS.md` eines Personal-Plugins liegt — Checkout zuerst.
+---
+--- Der lokale Checkout gewinnt, weil an ihm gearbeitet wird: wer ein Binding
+--- gerade dokumentiert hat, will es sofort in `:Bindings` sehen, nicht erst
+--- nach dem nächsten `:Lazy update`. Fehlt er (Remote-Modus, anderer
+--- Rechner), tut es das installierte Plugin genauso — es ist derselbe
+--- Commit, nur älter.
+---@param name string
+---@return string|nil
+local function plugin_sheet_path(name)
+  local candidates = {}
+
+  local ok, personal_utils = pcall(require, "plugins.personal.utils")
+  if ok then
+    local dev = personal_utils.local_dev(name)
+    if dev then
+      candidates[#candidates + 1] = vim.fs.joinpath(dev, "docs", "BINDINGS.md")
+    end
+  end
+
+  candidates[#candidates + 1] =
+    vim.fs.joinpath(vim.fn.stdpath("data"), "lazy", name, "docs", "BINDINGS.md")
+
+  for _, path in ipairs(candidates) do
+    if vim.fn.filereadable(path) == 1 then
+      return path
+    end
+  end
+  return nil
+end
+
+--- Die zweite Korpus-Wurzel: die `docs/BINDINGS.md` jedes Personal-Plugins.
+---
+--- **Warum der Korpus nicht mehr aus Kopien besteht.** Bis 2026-09-04 lag
+--- unter `PersonelPlugins/BINDINGS/` je Plugin ein handgepflegtes Cheatsheet
+--- — 107 Dateien, 12.566 Zeilen, zweite Fassung dessen, was inzwischen in
+--- jedem der 32 Repos als `docs/BINDINGS.md` steht. Eine Kopie kann driften,
+--- und Drift zu finden ist ausgerechnet die Aufgabe von `:Bindings check`.
+--- Also liest der Explorer jetzt die Quelle statt einer Abschrift.
+---
+--- Das war die naheliegende Alternative *nicht*: das Cheatsheet durch einen
+--- Link auf die Repo-Doku zu ersetzen. `search` braucht Volltext, `browse`
+--- geparste Zeilen, `check`/`report` die dokumentierte Vergleichsseite —
+--- alle vier lesen Text, und ein Link ist keiner. Die Doppelung verschwindet
+--- dadurch, dass die Wahrheit gelesen wird, nicht dadurch, dass auf sie
+--- gezeigt wird.
+---
+--- `ExternPlugins/Bindings/` bleibt unberührt: fremde Plugins liefern keine
+--- `docs/BINDINGS.md` nach diesem Standard, ihre Cheatsheets sind Originale.
+---
+--- `nil` + Grund statt einer leeren Liste, wenn die Plugin-Liste selbst nicht
+--- lesbar war — dieselbe Haltung wie `M.repo_dirs` und `source.lua`:
+--- „nichts gefunden" und „konnte nicht nachsehen" sind verschiedene
+--- Aussagen. Ein Plugin *ohne* lesbare `docs/BINDINGS.md` ist dagegen kein
+--- Fehler, sondern schlicht kein Sheet — es fällt still heraus.
+---@return Bindings.PluginSheet[]|nil
+---@return string|nil reason
+function M.plugin_sheets()
+  local ok, list = pcall(require, "plugins.personal.list")
+  if not ok then
+    return nil, "plugins.personal.list not loadable: " .. tostring(list)
+  end
+
+  local entries, err = list.read()
+  if not entries then
+    return nil, err or "plugins.personal.list.read() returned nothing"
+  end
+
+  local out = {}
+  for _, entry in ipairs(entries) do
+    local file = plugin_sheet_path(entry.name)
+    if file then
+      out[#out + 1] = { plugin = entry.name, file = file }
+    end
+  end
+
+  table.sort(out, function(a, b)
+    return a.plugin < b.plugin
+  end)
+  return out, nil
+end
+
 --- Beide Wurzeln, aber nur die `folder`-Unterkategorie (`"Keymaps"`|
 --- `"Usercmds"`|`"Autocmds"`) — beide Bäume verwenden dieselben drei
 --- Ordnernamen, siehe `M.roots()`.

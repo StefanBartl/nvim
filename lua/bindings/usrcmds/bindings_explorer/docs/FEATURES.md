@@ -1,8 +1,30 @@
 # bindings-explorer — Features
 
-`:Bindings` — Picker über die eigenen BINDINGS-Cheatsheets
-(`docs/NOTES/PersonelPlugins/BINDINGS/` + `docs/NOTES/ExternPlugins/Bindings/`,
-160 Dateien, drei Kategorien: Keymaps/Usercmds/Autocmds).
+`:Bindings` — Picker über den BINDINGS-Korpus, drei Kategorien
+(Keymaps/Usercmds/Autocmds) aus **drei** Herkünften:
+
+| Herkunft | Was |
+|---|---|
+| `docs/NOTES/ExternPlugins/Bindings/` | Cheatsheets fremder Plugins — die gibt es nur hier |
+| `docs/NOTES/PersonelPlugins/BINDINGS/` | was diese Config selbst bindet (`nvim-config`, `bindings_explorer`, `MyPlugins`, …) |
+| `<plugin>/docs/BINDINGS.md` | die Doku jedes Personal-Plugins, **direkt aus dem Plugin gelesen** |
+
+Die dritte Herkunft kam am 2026-09-04 dazu (`BND-01`). Bis dahin lag unter
+`PersonelPlugins/BINDINGS/` je Plugin ein handgepflegtes Cheatsheet — eine
+zweite Fassung dessen, was jedes Repo als `docs/BINDINGS.md` mitbringt. Eine
+Kopie kann driften, und Drift zu finden ist die Aufgabe von
+`:Bindings check`; also liest der Explorer jetzt die Quelle. Wo beides
+vorliegt, **gewinnt das Repo-Sheet** und das Cheatsheet wird übergangen —
+Übergangszustand, bis `BND-04` die abgelösten Sheets gediffed und gelöscht
+hat.
+
+Der Bruch, den das überbrücken muss: der Cheatsheet-Korpus ist
+**art-zuerst** (die Kategorie ist der Ordnername), die Repos sind
+**plugin-zuerst** (eine Datei, die Kategorie ist eine `##`-Überschrift
+darin). `records.lua`s `category_from_heading` leitet sie aus der
+Überschrift ab — tolerant, weil die Schreibweisen über 32 Repos weit
+auseinandergehen, und mit `autocmd` vor `command`, weil „Autocommands"
+sonst bei den Usercmds landet.
 Vimdoc: `:help bindings_explorer` (siehe [`doc/bindings_explorer.txt`](../doc/bindings_explorer.txt)).
 Diese Datei ist die aktuelle Doku — der ursprüngliche Konzept-Entwurf unter
 `docs/ROADMAP/personal/bindings-explorer.nvim.md` wurde beim Aufräumen der
