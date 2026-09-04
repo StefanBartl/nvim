@@ -4,8 +4,8 @@ Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
 **Angelegt 2026-09-03. Stand 2026-09-04: P0–P3.5 erledigt, P4 läuft — E1 ist
-31/31, Wellen 1 und 2 sind durch, von Welle 3 noch `gopath.nvim` offen, alle
-31 Repos sind link-sauber. Offen als Flächenlauf: 57 tote Anker in 11 Repos.**
+31/31, Badges 31/31, Wellen 1–3 sind durch, und alle vier Link-Befundklassen
+sind über alle 31 Repos leer.**
 
 ---
 
@@ -28,7 +28,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | P2 — README-Konzept | ✅ | 2026-09-03 | `MyNotes\docs\README-KONZEPT.md` |
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
-| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 31/31, Badges 31/31; Wellen 1 und 2 durch, Welle 3 zu zwei Dritteln (`color_my_ascii`, `documentation`); offen aus Welle 3: `gopath.nvim` |
+| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 31/31, Badges 31/31; Wellen 1–3 durch; Anker-Flächenlauf erledigt; ab Welle 4 alphabetisch |
 | P5 — Wiederholungsläufe | ⬜ offen | — | 8.1/8.3/8.5 vorziehbar |
 | P6 — BINDINGS-Sanierung | ⬜ offen | — | braucht P4 |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
@@ -55,6 +55,8 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | *(5 Repos)* | E1 | `diff`, `documentation`, `language`, `markdown`, `open` — nach dem deps-Durchgang nachgezogen | `a2a5ee5`…`a269b2b` |
 | replacer.nvim | 2 | drei FEATURES-Fassungen auf eine, vier Pflichtseiten neu, README 689 → 125, 6 Falschbehauptungen | `8c3fb0e` |
 | reposcope.nvim | 2 | 6 Case-Renames, FEATURES.md aufgelöst, docs/README.md + health.md, README 93 → 138 | `b35b795` |
+| *(10 Repos)* | Anker-Lauf | 54 tote Anker in `fileops`, `github_stats`, `gopath`, `lib`, `lsp`, `markdown`, `open`, `pickers`, `runtime-analysis`, `sessions` | `a1d6050`…`d5f97b7` |
+| gopath.nvim | 3 | 3 Case-Renames + 14 Dateien nachgezogen, docs/README.md vervollständigt, `WORKFLOW.md` entwaist, `DOC-28` | `4c1f17c` |
 | *(9 Repos)* | E1-Nachtrag | `status-beta`-Badge gegen den Alpha-Disclaimer — `cmdlog`, `github_stats`, `gopath`, `insights`, `language`, `markdown`, `pickers`, `sandbox`, dazu `reposcope`s Farbe | `1fc0255`…`52da414` |
 | documentation.nvim | 3 | README 844 → 260, 5 Seiten neu, 13 Case-Renames + 61 Dateien nachgezogen, Map regeneriert, 8 tote Anker | `5d74e96` |
 | color_my_ascii.nvim | 3 | docs/README.md, 5 Planungsdateien ausgelagert, Fixture nach `TESTS/`, 8 tote Links + 10 tote Anker, `DOC-28` | `bfb74da` |
@@ -483,6 +485,52 @@ der Badge-Lauf.
 
 ---
 
+### Ü26 — Der Anker-Flächenlauf: 57 → 3, und die drei sind kein Befund
+
+Ablauf, in der Reihenfolge, in der er sich gerechnet hat:
+
+| Schritt | Erledigt |
+|---|---|
+| `docs_anchorfix.py`, Textabgleich | 21 |
+| dasselbe Werkzeug, um Datei-übergreifende Links und den „Bindestrich-Lauf"-Abgleich erweitert | 4 |
+| Handarbeit, 10 Repos | 29 |
+| **Rest** | **3** |
+
+Die 29 von Hand teilen sich in zwei Klassen, und nur die erste ist der
+Slug-Bug aus [Ü25](#ü25--fast-jeder-tote-anker-ist-derselbe-tippfehler-und-zwar-keiner):
+
+- **Der Anker war richtig, die Hyphen-Zahl falsch.** `github_stats`
+  Changelog (`## [1.0.0] - 2025-12-20` → `#100---2025-12-20`, achtmal),
+  `lib.nvim`s Signatur-Überschriften (`as_set() -> table<string, boolean>` →
+  drei Bindestriche), `pickers`, `markdown`, `fileops`.
+- **Das Ziel war weg oder umbenannt.** Fünf Links zeigten in
+  README-Abschnitte, die dieser Durchgang selbst nach `docs/` verschoben hat
+  (`fileops`, `open`, `gopath` ×2, `github_stats` ×3) — die Kehrseite des
+  Kürzens, und [Ü19](#ü19--beim-kürzen-brechen-zirkelverweise) einen Schritt
+  weiter: nicht nur Zirkelverweise brechen, sondern **Anker in die gekürzte
+  Datei hinein**. `lsp.nvim`s ToC nannte eine Sektion, die es nicht mehr gibt
+  — dort war die Reparatur, den Eintrag zu löschen.
+
+**Der wertvollste Fund war kein Link.** `runtime-analysis.nvim/docs/IDEAS.md`
+hatte 15, davon sechs, weil die Überschriften inzwischen
+~~durchgestrichen~~ und „built 2026-08-20" bzw. „decided" markiert waren. Das
+Inhaltsverzeichnis beschrieb alle sechs weiter als offene Vorschläge. Wer sich
+daraus das Nächste aussucht, las eine Liste, die sechs Punkte hinterher war —
+der tote Anker war nur die Spur davon.
+
+**Die drei Übriggebliebenen** stehen alle in `mdview.nvim/TESTS/testfile.md`
+und bleiben. Die Datei ist eine Fixture für die Link-Behandlung des Plugins
+und enthält absichtlich krumme Formen: ein `id="#fig-nvimlogo"` mit `#` *im*
+Attribut, ein doppelter Anker `./linkfile.md#Codetesting#fig-nvimlogo`. Sie zu
+„reparieren" hieße, das Testmaterial wegzuwerfen.
+
+> **Lehre:** Ein Werkzeug, das eine neue Befundklasse einführt, hat immer auch
+> eine Fixture-Frage. `DEAD`/`CASE`/`IGNORED` hatten sie nicht, weil eine
+> Fixture selten einen Link auf eine nicht existierende *Datei* trägt —
+> kaputte *Anker* sind dagegen genau das, was so eine Datei testet.
+
+---
+
 ## Abweichungen vom Standard
 
 | Repo | Abweichung | Begründung |
@@ -497,6 +545,8 @@ der Badge-Lauf.
 | lsp.nvim | Kein `api.md`, kein `USECASES/` | Drei öffentliche Funktionen, jede ein Einzelaufruf → E5-Bedingung 2 nicht erfüllt. Eine Signaturseite für drei Signaturen ist eine Datei mehr, kein Wissen mehr. |
 | debugging.nvim | Status-Badge bleibt `active development` (blau) | `bae4dec` hat das Badge-Set repoübergreifend vereinheitlicht. Eines davon zu ändern wäre eine Abweichung, keine Angleichung. |
 | debugging.nvim | Eine Code-Änderung im Doku-Durchgang (`DEFAULTS.lua`) | `capture_timeout_ms` war dokumentiert, getypt und wirksam, fehlte aber in der Datei, die sich selbst „single source of truth“ nennt. Alternative wäre gewesen, korrekte Doku zu löschen. |
+| gopath.nvim | Kein `docs/commands.md` | `BINDINGS.md` führt den ganzen `:Gopath`-Baum: acht Unterbefehle mit Argumenten und je einer Zeile Wirkung, dazu neun Aliase. Eine zweite Seite wäre eine Kopie, und [Ü20](#ü20--doppelt-gepflegte-referenzen-sind-ein-fundbüro-kein-befund) sagt, was mit zwei handgepflegten Kopien passiert. |
+| gopath.nvim | Kein `docs/health.md`, kein `api.md` | `troubleshooting.md` deckt `:checkhealth gopath` mit ab; die öffentliche API ist `setup()` und `resolve()`, plus `resolve_at_cursor()` — Letzteres dokumentiert `FEATURES/INTEGRATIONS.md` dort, wo es gebraucht wird. E5-Bedingung 2 nicht erfüllt. |
 | documentation.nvim | `FEATURE_LOG.md` bleibt in `docs/` | Anders als `color_my_ascii.nvim`s gleichnamige Datei: 86 Einträge, aus vier Dokumenten als *das* Entscheidungsprotokoll zitiert, und sie beantwortet „warum ist das so“ — eine Leserfrage. Die andere nannte sich selbst persönlich und verfolgte Commits. Gleicher Dateiname, zwei verschiedene Befunde. |
 | documentation.nvim | `DEVELOPMENT.md` und `SECURITY.md` bleiben groß | Meta-Dokumente nach der Namensregel — `SECURITY.md` ist zusätzlich eine GitHub-Konvention. Die 13 umbenannten sind Themendokumente. |
 | documentation.nvim | README 260 statt ≤ 250 Zeilen | Zehn Zeilen über dem Richtwert, dafür ohne einen zweiten Ort für Installation, Optionen oder den Tab-Rundgang. Kürzen ginge nur noch, indem etwas Einmaliges verschwindet. |
@@ -592,22 +642,13 @@ läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 abgeräumt (siehe [Ü21](#ü21--vier-tote-links-vier-verschiedene-fehlerklassen)),
 `color_my_ascii.nvim`s acht „Known issue"-Links mit dem Welle-3-Durchgang.
 
-**`ANCHOR`: 57 in 11 Repos** (Stand nach `documentation.nvim`, siehe
-[Ü24](#ü24--der-dritte-befundtyp-75-tote-anker-in-14-repos) und
-[Ü25](#ü25--fast-jeder-tote-anker-ist-derselbe-tippfehler-und-zwar-keiner)):
+**`ANCHOR`: 3, und die drei sind kein Befund** — siehe
+[Ü26](#ü26--der-anker-flächenlauf-57--3-und-die-drei-sind-kein-befund). Sie
+stehen in `mdview.nvim/TESTS/testfile.md`, einer Fixture, deren Zweck krumme
+Linkformen sind.
 
-| Repo | Anker | | Repo | Anker |
-|---|---|---|---|---|
-| runtime-analysis.nvim | 15 | | pickers.nvim | 2 |
-| lib.nvim | 14 | | markdown.nvim | 1 |
-| github_stats.nvim | 12 | | open.nvim | 1 |
-| fileops.nvim | 3 | | sessions.nvim | 1 |
-| lsp.nvim | 3 | | | |
-| mdview.nvim | 3 | | | |
-| gopath.nvim | 2 | | | |
-
-`lib.nvim`, `fileops.nvim`, `lsp.nvim` und `mdview.nvim` sind schon durch und
-brauchen einen Nachtrag; der Rest bekommt sie im eigenen Durchgang.
+Damit sind **alle vier Befundklassen über alle 31 Repos leer**, bis auf diese
+eine Fixture.
 
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
