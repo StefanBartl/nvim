@@ -1,8 +1,8 @@
 # Handover — casedesk als eigenes Plugin (`casedesk.nvim`)
 
-**Stand: 2026-09-04, Phasen 0-3 abgeschlossen. Das Plugin ist seit
-Phase 3 die aktive Quelle; ab jetzt wird nur noch im Plugin-Repo
-geändert. Als Nächstes: Phase 4 (Doku).**
+**Stand: 2026-09-04, Phasen 0-3 abgeschlossen, dazu der Typ-Rename. Das
+Plugin ist seit Phase 3 die aktive Quelle; ab jetzt wird nur noch im
+Plugin-Repo geändert. Als Nächstes: Phase 4 (Doku).**
 
 Auftrag: `lua/bindings/usrcmds/case/` aus der nvim-Config nach
 `StefanBartl/casedesk.nvim` auslagern (privat), dabei naheliegende Features
@@ -206,6 +206,47 @@ T2-Case.
 Negativum und veraltete, ohne dass irgendetwas fehlschlug. Steht jetzt
 richtig drin, samt dieser Notiz.
 
+## Typ-Rename `Lib.Case.*` → `Casedesk.*` — und was er nebenbei repariert
+
+Commits `d8be673` (Plugin, 261 Fundstellen in 35 Dateien, 53 Typnamen)
+und `e8121dfb` (Config, zwei Annotationen im Statusline-Segment).
+
+**Eine Kollision musste aufgelöst statt ersetzt werden.**
+`Casedesk.SlaWindow` gab es bereits — als Union
+`Lib.Case.SlaWindow|"24x7"`. Ein blindes `sed` hätte daraus
+`---@alias Casedesk.SlaWindow Casedesk.SlaWindow` gemacht, einen Alias
+auf sich selbst. Die Tabellenhälfte heißt jetzt
+`Casedesk.BusinessHours` (das ist, was sie beschreibt: `from`/`to`/
+`days`), der Alias behält die Union, und die Stellen, die die Union
+ausgeschrieben hatten, benutzen jetzt den Alias, statt ihn zu
+wiederholen. Die `---@cast`-Verengungen zeigen weiterhin auf die
+Tabelle, nicht auf die Union — das war der Punkt, an dem ein
+Suchen-und-Ersetzen still falsch geworden wäre.
+
+**Der eigentliche Gewinn stand nicht im Plan.** Das Messartefakt aus
+Phase 1 — der reguläre LuaLS-Scan meldete 231 `duplicate-doc-field`/
+`-alias` gegen die eingefrorene Zwillingskopie, die er als injizierte
+Library mitliest — **ist weg.** Die Kollision waren die **Namen**, nicht
+die Dateien: das Plugin deklariert jetzt `Casedesk.*`, die eingefrorene
+Kopie weiter `Lib.Case.*`, und damit sieht der Scan jede Klasse wieder
+nur einmal. Mit **einer** Konfiguration vorher und nachher gemessen:
+
+| Lauf | Befunde |
+| --- | --- |
+| vorher, Config in `workspace.library` | **232** |
+| vorher, Kontroll-Config ohne sie | 1 |
+| nachher, Config in `workspace.library` | **1** |
+| nachher, Kontroll-Config ohne sie | 1 |
+
+Der eine Rest ist `assert.are_not` in einem Spec — luassert deklariert
+diesen Alias in seinen eigenen Typen nicht. Kein Befund an diesem Code.
+
+**Folge für die Arbeitsweise:** „Befund 7" weiter unten sagte, der
+reguläre Scan sei bis Phase 7 unbrauchbar. Das gilt **nicht mehr** — die
+Kontroll-Config wird nicht länger gebraucht, der normale Scan ist wieder
+die gültige Zahl, drei Phasen früher als geplant. Befund 7 ist unten
+entsprechend korrigiert.
+
 ## Als Nächstes
 
 - [x] ~~**Phase 3 — Umschalten.** In der nvim-Config:
@@ -223,12 +264,9 @@ richtig drin, samt dieser Notiz.
       `configuration.md` aus `@types` füllen, vimdoc).
 - [ ] Danach: `:Case new` fragt den Bereich (§7.6 Schritt 3),
       `:Cases area`-Filter, `area` in `.case.json` samt doctor-Nachtrag.
-- [ ] **Aufgeschoben, bewusst:** im Plugin heißen 53 Typen weiterhin
-      `Lib.Case.*` (259 Fundstellen) — ein Rest aus der Zeit in der
-      Config, den der Namespace-Rewrite in Phase 1 nicht mitnahm. Die
-      Umbenennung nach `Casedesk.*` ist rein mechanisch, gehört aber in
-      einen eigenen Commit und nicht in den Umschalt-Commit, an dem der
-      Rückfallweg hängt.
+- [x] ~~**Aufgeschoben:** im Plugin heißen 53 Typen weiterhin
+      `Lib.Case.*`.~~ **Erledigt, `d8be673` (Plugin) und `e8121dfb`
+      (Config).** Siehe unten.
 
 ---
 
@@ -276,14 +314,21 @@ geteilten Allerweltswort nahe 1.0 gerankt. Gefixt in `160f7ed`.
 Bemerkenswert ist, warum es nicht auffiel: ohne Tests scheitert ein
 Ähnlichkeitsranker mit plausiblen, aber falschen Treffern nicht sichtbar.
 
-**7. Der reguläre LuaLS-Scan ist bis Phase 7 unbrauchbar.** Er meldet
+**7. Der reguläre LuaLS-Scan war unbrauchbar — seit dem Typ-Rename ist
+er es nicht mehr.** *(Ursprünglicher Befund, mit Nachtrag am Ende.)*
+Er meldet
 nach dem Umzug 231 Befunde, davon 230 in einer Regel — alle
 `duplicate-doc-field` gegen die eingefrorene Zwillingskopie in der
 Config, die der Scan als injizierte Library mitliest (`LLS-03`/`LLS-04`).
 Eine Kontrollmessung ohne die Config in `workspace.library` ergibt **0**.
 Weg und Beleg:
 `wkdbook-myplugins/casedesk.nvim/Messungen/luals-phase1-messartefakt-2026-09-04.md`.
-Bis Phase 7 ist die Kontrollmessung die gültige Zahl.
+**Nachtrag, 2026-09-04:** erledigt durch den Typ-Rename (`d8be673`),
+nicht erst durch Phase 7. Die Doppelung entstand aus gleichen
+**Klassennamen**, nicht aus gleichen Dateien — das Plugin deklariert
+jetzt `Casedesk.*`, die eingefrorene Kopie weiter `Lib.Case.*`. Der
+reguläre Scan fällt damit von 232 auf 1, gleichauf mit der
+Kontrollmessung. Ab hier gilt wieder die normale Zahl.
 
 ---
 
