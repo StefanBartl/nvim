@@ -62,6 +62,27 @@ checkout, and each answers for a different one of the recent features:
 | `:Hover zen` | older than `c20191e` — no zen |
 | `:Hover links web shot` | older than `4e2ebeb` — no page screenshots |
 | `:Hover auto` | older than `e8cde0e` — no `auto_hover` axis at all |
+| `:Hover resize` | older than `8ec5b40` — no resize, no `+`/`-`, no wheel |
+| `:Hover zoom` | older than `9fba190` — no magnification and no `h`/`j`/`k`/`l` |
+
+### The contradiction this left open, and why four rows above say so
+
+On 2026-09-04 the clone was `b2b4b2c`, which has **only** `scroll_keys` and
+`dismiss_keys`, and **only** the routes `mode`, `show`, `status`, `toggle`
+alongside the switches. No `M.resize`, no `M.zoom`, no `M.nav`, no wheel.
+
+And yet the same session reported the resize keys, the PDF zoom, the picture
+zoom with panning, and the mouse wheel all working. **Both of those cannot be
+true**, and it is not resolvable after the fact: only one hover.nvim exists on
+this machine (checked — no second `lazy` tree, no `dir =` override in the
+spec), so either those observations came from a different session or machine,
+or the clone was not what was loaded.
+
+Four rows above are therefore marked *version unconfirmed* rather than dated.
+That is deliberately the annoying answer: an evidence file that records a claim
+it cannot place on a version is a file that will mislead somebody later, and
+the cheapest fix is the check at the top of this section, run **before** the
+next pass rather than after it.
 
 ## What no CI covers
 
@@ -78,7 +99,7 @@ checkout, and each answers for a different one of the recent features:
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — seen again, both halves, keys **and** `:Hover resize`. Previously 2026-09-03 (the text half) and 2026-09-02 (the picture half): more lines arrive, not a larger frame around the same ones. |
+| **Checked** | 2026-09-04 — seen again, both halves, keys **and** `:Hover resize`. Previously 2026-09-03 (the text half) and 2026-09-02 (the picture half): more lines arrive, not a larger frame around the same ones. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
 | **On** | Windows 11, Neovim 0.12.2, images.nvim present |
 | **How** | Hover an image, then press `+` a few times and `-` back. The float grows and shrinks with it, and the picture fills it edge to edge at every size. Then hover a *text* file and run `:Hover resize` a few times: the float grows and more lines appear in it. **`+` and `-` are deliberately not bound over a text hover** — there they are the motions they always were, and pressing one moves the cursor a line, which takes the float away. That is not a failure of the resize; it is the reason the route exists. |
 | **Watch for** | The **frame** growing while the picture inside it does not — that is the one failure a spec cannot see. `TESTS/resize_spec.lua` pins the geometry all the way to `nvim_win_get_config`, but the cell area is only a *request* to the terminal, and whether the drawing actually followed it is visible and nothing else. Also: letterboxing that drifts as the box grows (the picture no longer centred, or gaining a margin on one side only), which would mean the inset is being added at the wrong end of the scaling. |
@@ -110,7 +131,7 @@ frame is the right size, not that a picture arrived in it.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — **the sharpness claim, by eye.** `>` narrowed the view and the result was genuinely *sharper*, not merely larger, which is the whole feature; `h`/`j`/`k`/`l` moved the view and `=` returned to the whole page. The scanned-PDF half of the row below — magnifies without sharpening — was not separately exercised. |
+| **Checked** | 2026-09-04 — **the sharpness claim, by eye.** `>` narrowed the view and the result was genuinely *sharper*, not merely larger, which is the whole feature; `h`/`j`/`k`/`l` moved the view and `=` returned to the whole page. The scanned-PDF half of the row below — magnifies without sharpening — was not separately exercised. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
 | **On** | Windows 11, WezTerm, Neovim 0.12.2, pdfport.nvim + `pdftoppm` on PATH |
 | **How** | Hover a PDF with real text on the page, then press `>` two or three times. Each step shows a **smaller part of the page, larger and genuinely sharper** — letterforms that were grey mush at level 0 should have clean edges at level 2. Then `h` `j` `k` `l` to move around, `=` back to the whole page. Repeat on a **scanned** PDF, where there is no more detail to find: it should still magnify, just without getting sharper, because the page is an image inside the document and the re-render can only interpolate it. |
 | **Watch for** | Each step taking noticeably *longer* than the one before — that means the crop window is not reaching pdftoppm and the whole page is being rendered at the higher DPI, which is exactly what an older pdfport does silently. Also: a magnified page that is blurry in the way a scaled bitmap is blurry, which is the same symptom from the other side. And the page number in the border changing, or the view jumping back to page 1, when the zoom re-renders. |
@@ -132,7 +153,7 @@ person rather than as a number — is what this row is for.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — seen again in full: `>` / `|` / `=`, `h`/`j`/`k`/`l`, and all three of `:Hover zoom in|out|reset`. Also confirmed that moving the cursor off closes the float, which is the half that proves the keys are a borrow and not a permanent mapping. Previously 2026-09-03. Driven with `>` / `=` rather than the Alt chords, which never arrived — which is why those are the default since that day: see below. |
+| **Checked** | 2026-09-04 — seen again in full: `>` / `|` / `=`, `h`/`j`/`k`/`l`, and all three of `:Hover zoom in|out|reset`. Also confirmed that moving the cursor off closes the float, which is the half that proves the keys are a borrow and not a permanent mapping. Previously 2026-09-03. Driven with `>` / `=` rather than the Alt chords, which never arrived — which is why those are the default since that day: see below. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
 | **On** | Windows 11, Neovim 0.12.2, images.nvim + ImageMagick present, which-key installed |
 | **How** | Hover an image, then press `>` two or three times. Each step takes about a quarter of a second and shows a **smaller part of the picture, larger** — not the same picture bigger. Then `h` `j` `k` `l` to move around in it; `\|` steps back, `=` returns to the whole picture. `:Hover zoom [in\|out\|reset]` does the same three from the command line. Finally press `h` with the hover **not** zoomed: the float should go away, because there the key is the cursor motion it always was. |
 | **Watch for** | `>` doing nothing at all, which has two causes that look identical: the picture is not zoomable (no ImageMagick, or no images.nvim) — the float says so — or a key list configured back to Alt chords the terminal does not send, which `:nnoremap <M-z> :echo "da"<CR>` settles in one press. Then: the **whole picture getting larger** instead of a detail — that is resize's answer arriving where zoom's was asked for, and it looks almost right. Also: panning that jumps to a corner rather than moving a quarter of a view (a pixel centre instead of a fractional one would do that), and a centre that survives `reset` and makes the next zoom start somewhere nobody chose. |
@@ -190,7 +211,7 @@ left for this row is the part after the file exists: whether it is *drawn*.
 
 | | |
 | --- | --- |
-| **Checked** | 2026-09-04 — **both directions.** `<M-ScrollWheelUp>` and `<M-ScrollWheelDown>` over the float, growing and shrinking it. The pointer-elsewhere half of the row was not separately exercised. |
+| **Checked** | 2026-09-04 — **both directions.** `<M-ScrollWheelUp>` and `<M-ScrollWheelDown>` over the float, growing and shrinking it. The pointer-elsewhere half of the row was not separately exercised. **Version unconfirmed** — see the contradiction in the version section: the clone found on this machine on 2026-09-04 has none of this in it, so this stands as *reported* rather than as evidence. |
 | **On** | Windows 11, WezTerm, Neovim 0.12.2, images.nvim present |
 | **How** | Hover an image. With the pointer **on** the float, `<M-ScrollWheelUp>` a few times: it grows. Move the pointer well off the float and press it again: nothing happens. `<M-ScrollWheelDown>` on the float shrinks it back. |
 | **Watch for** | Nothing happening *anywhere*, which is the interesting failure and has two causes that look identical: `'mouse'` not covering the mode (`:checkhealth hover` warns about exactly this), or the terminal not sending Alt+wheel as a distinct chord. `<M-ScrollWheelUp>` mapped to `:echo` tells the two apart in one press. Also worth watching: a step landing while the pointer is *beside* the float rather than on it — the gate is a rectangle test, and a wrong one would show up as a float that resizes from anywhere. |
