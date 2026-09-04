@@ -1,150 +1,23 @@
-# casedesk — Roadmap
+# ROADMAP.md — umgezogen
 
-## Praxis-Feedback
+Dieses Dokument liegt seit 2026-09-04 (Phase 4 der Auslagerung) im
+Plugin-Repo, neben dem Code, den es beschreibt:
 
-- Nach anlegen des cases und aufrufen der ai in casedesk, soll diese nicht nur vorschläge / solutions formulieren, sondern diese acuh mit Referenzen zu echten docs / tricentis docs belegen. https://docs.tricentis.com/tosca-2026.1/en-us/content/resources/webhelp/cover_web.htm (korrekte Version wählen für case!)
-- Es solte eine option geben, Case ki logs oder so ähnlich, mitdenn man die logdatein im assets ordner auswhlen kann (selectionlist mit tab oder pickers.nvim) und dan wird eine analyse der logdateien erstellt in /Research abgelegt
+- lokal: `$REPOS_DIR/casedesk.nvim/docs/REQUESTS.md`
+- remote: <https://github.com/StefanBartl/casedesk.nvim/blob/main/docs/REQUESTS.md>
 
-- KB-Artikel: Als Standard such tool verwenden wir `https://tricentis.atlassian.net/issues?wildcardFlag=true&filter=40563` - das ist eineJira jql search; Es wäre natürkcih super, wenn beim case new auch zumindest eine liste mit passenden jql such strings mit ausgegeben wird für research, idealrweiße würde aber dieses auch mit ai automatisch durcucht werden können
-
-## new
-
-### Solution(s)
-
-hierzu äwre ein temlate gut, dass ich dann von einer ai ausfpllen lassen kann, wenn der case solved ist. kannst du das erstellen, mit keywords ausfüllen us.w... so das süäter die solutions files von einer ai zw ohne ai nur mit der heuritsik durcsucht werden können.
-:Case solution bzw solve sold ann das gleich auch höandlen zum eingeben der solution
-dazu braucht es ein workflow udn ein konzept. das ollte an auch in C:\users\StefanBartl\AppData\Local\nvim\docs\NOTES\casedesk  stehen...
-
----
-
-### update der \nvim\docs
-
-alle neune commands usw..
-use cases ersellen, so dass ich suchen kann " ich will eine xy im case" -> dann so
-
----
-
-### ai implemeniterung
-
-endlich die ai implementierung angehen. claude code wäre ideal ich hbe einen pro account, aber ich weioß nicht, ob es damit überhauüt geht. gemini nehmen ich bisher üner die web ui das funkt auch ganz gut inhaltlich
+**Und umbenannt.** Im Plugin-Repo gibt es bereits eine `ROADMAP.md` —
+die kuratierte, nach vorn gerichtete. Diese hier ist die unredigierte
+Wunschliste, aus der casedesk gewachsen ist, und die der Quelltext an ~30
+Stellen als „ROADMAP.md v4/v6/v7" zitiert. Zwei Dateien gleichen Namens,
+von denen der Code die eine meint und ein Leser die andere aufschlägt,
+waren die Verwechslung, die der neue Name beendet.
 
 
-## Offen
+**Grund** ([PLUGIN.md §3.2](./PLUGIN.md)): ein Konzept, das den Code
+beschreibt, gehört neben den Code. Sonst driften beide — und die
+Doc-Verweise *im* Lua-Code zeigen auf einen Pfad, den ein fremder Checkout
+gar nicht hat.
 
-Sortiert nach geschätztem Aufwand, billigste/kleinste zuerst.
-
-- [ ] **KI-Checklisten im Copy-Paste-Roundtrip** — zwei zusätzliche
-      Abschnitte in `templates/KiPrompt.md`s Antwortformat ("Was haben wir
-      dem Kunden vorgeschlagen?" / "Was hat er zurückgemeldet, und wie?"),
-      plus die passende Ablage in `:Case ki import` (`ki.lua`s `DIGIT_KEY`
-      um zwei Einträge erweitern, Ablageort vermutlich `Notes.md` — analog
-      zum bestehenden "Internal Notes"-Abschnitt). Anders als die
-      KI-Anbindung unten hängt das an NICHTS Neuem: der bestehende
-      Copy-Paste-KI-Workflow (`:Case ki` / `:Case ki import`) trägt das
-      schon, kein `ai.nvim` nötig. Zurückgestellt, weil im Wunschzettel
-      selbst nur ein vages "wäre nice", kein ausgearbeitetes Format — erst
-      konkretisieren (welche Headline, welcher Ablageort, wie oft
-      aktualisiert über die Laufzeit eines Cases) bevor implementiert wird.
-
-- [ ] **Danach entscheiden: reicht `:Case similar`s TF-IDF, oder braucht es
-      KI?** Trade-off + Messwerte: CONCEPT.md §8e. Erst im Alltag benutzen
-      (v. a. beim Anlegen eines neuen Cases: hilft der Vorschlag beim
-      Brainstorming der Lösung?), dann bewerten. Zwei billigere
-      Stellschrauben vor einem KI-Schritt: bessere Summaries schreiben,
-      `Research/` mit einbeziehen.
-
-- [ ] **`:Tricentis pto` — Abwesenheits-Checklisten** — Konzept steht:
-      [PTO.md](PTO.md). Abwesenheitsart auswählen, Zeitraum eingeben,
-      fertig ausgefüllte Checkliste + Textbausteine (Out-of-office,
-      Manager-Mail) als Scratch-Buffer. Checklisten und Templates als
-      Markdown im Arbeits-Repo (`Workflow/PTO/<art>.md`), nicht in Lua —
-      eine neue Art ist eine neue Datei. Pflicht- und optionale Punkte
-      strukturell getrennt (`- [!]` vs. `- [ ]`), weil „Mail an den
-      Manager" und „Slack wäre nett" im Fließtext gleich aussehen.
-      Aufwand klein bis mittel, fast alle Bausteine existieren.
-      Der Punkt, der den Aufwand trägt, ist Paket 3: welche offenen Cases
-      reißen eine Frist, während man weg ist — das kann keine Notiz
-      wissen, `:Cases sla` schon.
-
-- [ ] **KI-Anbindung** — hängt an einem eigenen `ai.nvim`-Plugin (noch
-      nicht gebaut; Config-Grundlage existiert bereits:
-      `lua/config/ai/`, `lua/plugins/ai/`, Zugang zu Gemini/ChatGPT/Claude
-      Pro). Artefakt-Extraktion ist als Fundament dafür bereits komplett
-      fertig (alle 5 Pakete, s. [EXTRACTION.md](EXTRACTION.md)) —
-      `:Case ki`s Prompt bekommt schon einen `{facts}`-Faktenblock
-      (Priorität, SAP Component, Versionen, SLA-Status, Doku-Link-
-      Versionsabgleich) und `:Case ki import` prüft Antworten schon gegen
-      diese Fakten. Sobald `ai.nvim` steht, weitere Features darauf
-      aufbauen:
-      - **Doku-Referenzen sammeln**: zu jedem Case passende
-        Tricentis-Doku-Links automatisch finden, mit Zitat des genauen
-        Abschnitts/Wortlauts (für interne Notizen), unter einer Headline
-        "Links" gesammelt. Der Faktenblock aggregiert bereits die im Case
-        zitierten Links nach Version (`extract/doclinks.lua`s
-        `all_links`) — was noch fehlt, ist die Zitat-mit-Kontext-Sammlung
-        pro einzelnem Link, ein eigenständig größeres Stück (Textauszüge
-        um jeden Fund extrahieren). Erst darüber hinaus neue Quellen zu
-        finden, ist die eigentliche KI-Aufgabe.
-      - **Standardwerke per Websuche**: zu technischen Themen des Cases
-        (z. B. Zertifikate bei Tosca Server) Referenzen zu bekannter
-        Fachliteratur vorschlagen — primär Englisch, gerne auch Deutsch —
-        unter einer eigenen Headline "Learning Referenzen".
-        `$REPOS_DIR/Literatur` als zuerst durchssuchende Literaturliste implemeniteren, aber als user condif in der spec, also man soll das als user angebn könenn lksiten die man dursucht dafür. zusatz: weventuell kann man nauch eine literaliuste mit kurzen beschreibungen und keywords anlegen, die dann verewndet werden können, dazu bräuchte es einen parserer/buw attaher der infos zum auswerten für die ki bzw köbnbte mnan auch prüfen, ob wen man keywords verewndet auch ohne ki nur mit heuristik sinnvollerer matrchingfs schaffen lkönnte1
-      - **WKDBook-Tricentis/Notes als Wissensspeicher**: die eigenen
-        Onboarding-Notizen (Tricentis-Academy-Kurse "Level-Up",
-        Tricentis-Confluence, offizielle Tosca-Doku) haben hohen
-        semantischen Wert — nur Referenzen aus der offiziellen Tosca-Doku
-        und Gleichwertigem zählen als Quelle für Case-Lösungen.
-
-- [ ] **KI-Ausbau von `ki.lua` steht an — Use Case "Anhänge vor KI-Übergabe
-      schwärzen" dabei mitdenken.** Heute baut `ki.lua` nur Prompts aus
-      Zwischenablage-Text und verschickt keine Dateien (CONCEPT.md §8i);
-      sobald der KI-Ausbau tatsächlich beginnt und Anhänge aus
-      `Ressources/` (Screenshots, Logs mit Kundendaten) mit in eine Analyse
-      sollen, braucht es **vorher** eine Möglichkeit, Kundendaten in diesen
-      Anhängen unkenntlich zu machen — nicht optional, echtes
-      Datenschutz-Erfordernis, kein Nice-to-have. **Werkzeug ist bereits
-      fertig** (nicht casedesk-Code): `:Image redact` in `images.nvim`
-      (separates Repo, `$REPOS_DIR/images.nvim`, dokumentiert in dessen
-      `docs/FEATURES/CAPTURE.md`) — Boxen markieren, schwärzen, Original
-      bleibt. Der casedesk-seitige Teil kommt erst mit dem KI-Ausbau selbst:
-      eine Gate-Regel in `ki.lua`, die einen Anhang ohne geschwärzte
-      `*.redacted.*`-Version nicht an eine KI weitergibt.
-
-## Erledigt
-
-Chronologisch, neueste zuerst. Details und Erkenntnisse: [HANDOVER.md](HANDOVER.md).
-
-- [x] **Zweite Activity-Stream-Quelle: SAP Resolve** (2026-08-21) —
-      Konzept, Analyse und alle drei Pakete:
-      [EXTRACTION.md §13](EXTRACTION.md#13-zweite-quelle-sap-resolve-gebaut-pakete-6a-6c).
-      Neu: `stream_format.lua` (Format-Erkennung an der ersten
-      nicht-leeren Zeile plus die geteilte Kopfzeilen-Zerlegung). Beide
-      Parser dispatchen darüber, ohne Format-Flag für den Nutzer:
-      `sla/stream.lua` leitet `customer`/`states` ab (in SNOWs eigenem
-      Vokabular, deshalb kam `sla/init.lua` ohne jede Änderung aus),
-      `extract/stream.lua` `attachments`/`completeness`/
-      `last_reply_sent_at`. Die einzige verbliebene echte Lücke —
-      Priorität, die im Export schlicht nicht vorkommt — schließt `:Case
-      activity` per Rückfrage, eng begrenzt auf genau diesen Fall.
-
-- [x] **`:Case insert` kann Assets** (2026-08-19) — zwei neue Felder in
-      `ui.INSERT_FIELDS`: `asset` (Markdown-Link relativ zum Puffer, in dem
-      geschrieben wird) und `asset-path` (absoluter Pfad für Teams/Explorer/
-      Shell). Beide öffnen einen zweiten Picker über `assets/` — dieselbe
-      Dateiliste wie `:Case attachments`. Außerhalb des Case-Ordners fällt
-      `asset` auf den absoluten Pfad zurück.
-
-- [x] **CLI-Befehls-Index** (2026-08-19) — `:Tricentis commands [topic]`
-      und `:Tricentis cheatsheet [topic]`: jeder Shell-Codeblock aus jeder
-      `.md` des Arbeits-Repos als durchsuchbarer Index bzw. als gruppierter
-      Puffer. Neu: `commands.lua`; dazu `config.command_topics`,
-      `ui.commands`/`ui.cheatsheet`, zwei Routen in `init.lua`.
-      Dokumentiert in `docs/NOTES/casedesk/Usercmds.md` und
-      `case/docs/FEATURES.md`.
-- [x] **`:Tricentis links` lesbar gemacht** (2026-08-19) — `links.dedupe`
-      (810 → 600 Zeilen, `×N` statt Wiederholungen), Anzeige-URL ohne
-      Schema/Query, Mittel-Kürzung statt Rechts-Kürzung, Filter für
-      Platzhalter-URLs aus Fließtext. Dabei gefunden: `strdisplaywidth`
-      rechnet `'showbreak'` mit und taugt nicht zur Spaltenausrichtung —
-      `strwidth` verwenden.
+Hier steht bewusst kein Inhalt mehr. Eine zweite Kopie wäre genau die
+Doppelung, die der Umzug beseitigt.

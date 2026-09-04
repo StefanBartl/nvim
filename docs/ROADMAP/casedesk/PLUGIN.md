@@ -306,20 +306,35 @@ in `config.lua`, `init.lua`, `sla/clock.lua`, `sla/init.lua`).
 
 ### 3.3 Und `docs/NOTES/casedesk/`?
 
-Anders gelagert: `Usercmds.md`, `Keymaps.md`, `Autocmds.md` sind Teil des
-**Bindings-Doku-Korpus der Config**, den `:Bindings check` gegen die
-Plugin-Checkouts prüft. Das ist deren Zweck, nicht Plugin-Doku.
+**Die Annahme in diesem Abschnitt war falsch, nachgeprüft in Phase 4.**
 
-**Empfehlung: bleiben, wo sie sind.** `Workflow.md` (die Worked Examples)
-ist der Grenzfall — es ist inhaltlich Plugin-Doku. Vorschlag: mitnehmen
-nach `docs/WORKFLOW.md` im Repo, so wie `open.nvim` es hält, und in
-`docs/NOTES/casedesk/` einen Zeiger hinterlassen.
+Der ursprüngliche Text sagte, `Usercmds.md`, `Keymaps.md` und `Autocmds.md`
+seien Teil des Bindings-Korpus, den `:Bindings` prüft, und müssten deshalb
+bleiben. `bindings_explorer/config.lua:M.roots()` liest aber ausschließlich
 
-Nebenbefund beim Sichten: es gibt **zwei** Command-Dokus —
-`docs/NOTES/casedesk/Usercmds.md` (33 KB) und
-`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/Case.md`. Welche davon
-`:Bindings` als Quelle nimmt, ist vor Phase 4 zu klären; eine der beiden
-sollte danach ein Zeiger auf die andere sein.
+- `docs/NOTES/PersonelPlugins/BINDINGS/{Keymaps,Usercmds,Autocmds}/`
+- `docs/NOTES/ExternPlugins/Bindings/{…}/`
+
+`docs/NOTES/casedesk/` kommt dort **nicht** vor. Der Ordner war nie Korpus,
+sondern ein eigenständiger Cheatsheet-Satz — und damit inhaltlich
+Plugin-Doku, genau wie `Workflow.md`, das hier schon als Grenzfall geführt
+wurde.
+
+**Also, umgesetzt in Phase 4:** alle vier wandern ins Repo —
+`Usercmds.md` → `CHEATSHEET.md`, `Workflow.md` → `docs/WORKFLOW.md`,
+`Keymaps.md` und `Autocmds.md` in die entsprechenden Abschnitte von
+`docs/BINDINGS.md`. In der Config bleiben Zeiger.
+
+Der Nebenbefund („zwei Command-Dokus, welche nimmt `:Bindings`?") ist damit
+auch beantwortet: `:Bindings` nimmt die unter `PersonelPlugins/BINDINGS/`.
+Die Datei hieß dort `Usercmds/Case.md` und heißt seit Phase 4
+`Usercmds/casedesk.nvim.md` — `:Bindings drift` paart ein Cheatsheet über
+seinen Dateistamm mit dem Checkout, und `Case` passte zu keinem Repo.
+
+Dazu kommt eine dritte, die es beim Schreiben des Plans noch nicht gab:
+`casedesk.nvim/docs/commands.md`, **generiert** aus dem Routen-Baum über
+`lib.nvim.bindings.usercmd.composer.document()`. Sie ist ab jetzt die
+Referenz, die nicht driften kann; die handgeschriebenen sagen, *warum*.
 
 ### 3.4 Bleibt das Statusline-Modul in der Config?
 
