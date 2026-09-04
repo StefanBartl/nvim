@@ -3,7 +3,7 @@
 Source: `E:/repos/hover.nvim/lua/hover/bindings/keymaps.lua`,
 `lua/hover/config/DEFAULTS.lua`
 Docs: `hover.nvim/docs/BINDINGS.md`, `docs/FEATURES/RESIZE.md`,
-`docs/FEATURES/ZOOM.md`
+`docs/FEATURES/ZOOM.md`, `docs/FEATURES/ZEN.md`
 
 **Fast alles hier ist geliehen, nicht besessen.** Die Tasten unten werden
 global gebunden, solange *ein* Float auf dem Schirm ist, und in dem Moment
@@ -45,6 +45,7 @@ Kombination. **Hier nicht gesetzt.**
 
 | Key | Mode | Effect | Option/Source | Bedingung |
 | --- | --- | --- | --- | --- |
+| `F` | n | Float auf (fast) den ganzen Editor, und zurück; pinnt dabei | `zen_keys.toggle` | jedes Hover **mit Ziel** (Position-Hovers nicht) |
 | `<M-PageDown>`, `<C-Down>` | n | nächster Bildschirm / nächste PDF-Seite | `scroll_keys.down` | nur scrollbar |
 | `<M-PageUp>`, `<C-Up>` | n | zurück | `scroll_keys.up` | nur scrollbar |
 | `+` | n | Float einen Schritt (×1,25) größer | `resize_keys.larger` | nur Hovers **mit Bild** |
@@ -90,6 +91,7 @@ erreichbar. Keine Kollision mit irgendetwas in dieser Config: der Buffer ist
 | `q` | zeichnet kein Makro auf, solange ein Float offen ist |
 | `<Esc>` | was sonst darauf liegt, ist geliehen — und wird zurückgegeben |
 | `gf` | verdrängt das Vim-Builtin; gewollt, weil das Float die Datei bereits aufgelöst hat, auch truncated und mit `:line:col` |
+| `F` | die Rückwärts-Zeichensuche, und genau deshalb ist sie billig: `F` allein wartet auf ein zweites Zeichen und schließt von sich aus nichts ab — es wird also keine fertige Operation verdrängt. `Fx` geht währenddessen nicht; danach wieder wie immer |
 | `<C-Down>` / `<C-Up>` | bewusst statt `<M-Down>`/`<M-Up>` (verbreitetes „move line") |
 | `h` `j` `k` `l` | **nur während gezoomt** keine Cursorbewegung. Ohne diese Leihe würde `h` über einem vergrößerten Bild den Cursor bewegen und damit das Float wegnehmen |
 | `>` `=` | nichts während eines Floats — beides sind **Operatoren**, sie bewegen keinen Cursor und schließen von selbst nicht ab. Danach wieder Einrücken und Ausrichten wie immer |
@@ -125,6 +127,8 @@ Aussage über **diese** Config, nicht über das Plugin.
 | `<M-n>` | **vergeben** — hover.nvims Default fürs Durchblättern der Position-Antworten seit `ac0a372`. **Ungeprüft, ob er hier ankommt**, und nach dem Zoom-Befund unwahrscheinlich: derselbe Akkord-Typ wie `<M-z>`. Test ist eine Minute — `:nnoremap <M-n> :echo "kommt an"<CR>`. Ohne Taste bleibt `:Hover next` |
 | `<M-z>` / `<M-Z>` / `<M-R>` | **wieder frei** seit hover.nvim `21c4932` — und zwar frei im Sinne von *unerreichbar*: dieses Terminal sendet keinen Tastatur-Alt-Akkord. `<M-r>` klein gehört NeoTree und bleibt unberührt |
 | `>` / `\|` / `=` | **vergeben** — hover.nvims Zoom seit `21c4932`, geliehen nur solange ein zoombares Float steht |
+| `F` | **vergeben** — hover.nvims Zen seit `c20191e`, geliehen bei jedem Hover mit Ziel. Kein Akkord, und das ist nach dem Zoom-Befund keine Vorliebe mehr, sondern die Bedingung: dieses Terminal sendet keinen Tastatur-Alt-Akkord |
+| `z` | **ausgeschlossen** und war nie ein Kandidat — Präfix (`zz`, `zt`, `zb`, Folds, which-key). Eine geliehene Präfixtaste meldet sich nicht wie eine verdrängte, sie hängt und wartet auf ein Zeichen, das jetzt etwas anderes bedeutet |
 | `<S-+>` / `<C-S-+>` und Gegenstücke | frei, **aber ungeprüft** — siehe Notes |
 
 ## Notes
@@ -144,12 +148,46 @@ Aussage über **diese** Config, nicht über das Plugin.
   `:checkhealth hover` sagt es, weil beides identisch aussieht.
 - **Gescrollt wird ausschließlich über die geliehenen Tasten** — eine
   `:Hover`-Route für `scroll` gibt es nicht (nachgezählt gegen
-  `usrcmds.routes()`: achtzehn Routen, `scroll` ist keine).
+  `usrcmds.routes()` am 2026-09-04: **zweiundzwanzig** Routen, `scroll` ist
+  keine). Die Zahl stand hier auf achtzehn und war seit `auto`, `border`,
+  `status`-als-Board und `zen` falsch.
 - Warum welche Taste an welcher Bedingung hängt, steht im Repo und nicht hier:
   `docs/FEATURES/RESIZE.md` für `+`/`-`/Rad, `docs/FEATURES/ZOOM.md` für
-  `h/j/k/l`.
+  `h/j/k/l`, `docs/FEATURES/ZEN.md` für `F`.
 
 ## Changelog
+
+- 2026-09-04 (2): **`F` legt das Float auf den ganzen Editor** (hover.nvim
+  `c20191e`). Geliehen bei jedem Hover mit Ziel — die **weiteste** Bedingung
+  in diesem Plugin, und zwar aus demselben Argument, mit dem die engsten
+  begründet sind: es zählt, was eine Taste kostet, solange sie geliehen ist.
+  `F` ist die Rückwärts-Zeichensuche, wartet allein gedrückt auf ein zweites
+  Zeichen und schließt nichts ab — derselbe Handel wie `>` und `=`. Und
+  anders als bei `+` ist der Gewinn gerade bei einem **Text**-Hover am
+  größten: zwanzig Zeilen werden ~fünfzig.
+
+  `z` war die naheliegende Merkhilfe und schied aus, ohne je Kandidat gewesen
+  zu sein: es ist ein Präfix. Eine geliehene Präfixtaste verdrängt nicht, sie
+  **verschluckt** — `zz`, `zt`, `zb`, jedes Fold-Kommando, und sie meldet sich
+  dabei nicht.
+
+  Zen ist dabei **nicht** „Fenster größer". Jede Vorschau rendert gegen ein
+  Budget (`max_lines`/`max_width` entscheiden, wie viele Zeilen gelesen, mit
+  welchem DPI eine Seite gerastert, wie groß ein Bild gezeichnet wird), also
+  wird das Budget zum Bildschirm und die Vorschau neu gebaut. Ein bloß größer
+  geöffnetes Float zeigte dieselben zwanzig Zeilen mit viel Rand.
+
+  **Es pinnt per Default**, und das folgt aus einem Mechanismus, nicht aus
+  Geschmack: das Float ist `focusable = false`, der Dismiss hängt an
+  `CursorMoved` — ungepinnt schlösse ein bildschirmfüllendes Float beim ersten
+  `j`. `zen = { pin = false }` gibt das transiente Verhalten zurück; hier ist
+  nichts gesetzt, also Default. Beim Verlassen wird nur ein Pin gelöst, den
+  Zen selbst genommen hat.
+
+  Nebenbefund aus demselben Commit: der 📌-Marker im Rahmen ging bei **jedem**
+  Re-Render verloren (Titel lebt am Fenster, `float.open` schließt und öffnet
+  es neu) — seit es Pinnen gibt. Fiel nicht auf, solange Pinnen eine seltene
+  Geste war.
 
 - 2026-09-04: **das `:Hover status`-Board hat eigene Tasten** (hover.nvim,
   dieser Commit) — die ersten *besessenen* Tasten dieses Plugins ueberhaupt,

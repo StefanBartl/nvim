@@ -24,14 +24,17 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover next` | — | step to the next plugin with something to say about this place; wraps past the last |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
-| `:Hover resize [direction]` | `bigger\|smaller` | make the hover on screen bigger or smaller. Omitted: **bigger**. **Any** hover — a picture is drawn larger, a text preview shows more lines |
+| `:Hover auto [type]` | `<type>\|all\|none` | welche Ziel**typen** von selbst öffnen. Omitted: listet, was öffnet und was auf eine Anfrage wartet. Die **zweite Achse** neben den Switches, und die, an der `:Hover links web on` bis `c20191e` still gescheitert ist |
+| `:Hover border [style]` | `rounded\|single\|double\|heavy\|ascii\|dashed\|block\|solid\|shadow\|none` | Rahmenstil, wirkt auf das Float, das **schon offen ist** — ein Stil soll probiert und nicht entschieden werden. Omitted: meldet den aktuellen und listet den Rest |
+| `:Hover zen [state]` | `on\|off\|toggle` | Float auf (fast) den ganzen Editor, und zurück. **Kein größeres Fenster**: das Budget der Vorschau wird der Bildschirm und die Vorschau neu gebaut, sonst zeigte es dieselben zwanzig Zeilen mit viel Rand. Pinnt per Default — ungepinnt schlösse es beim ersten `j`. Taste `F`, geliehen bei jedem Hover mit Ziel |
+| `:Hover resize [direction]` | `bigger\|smaller` | make the hover on screen bigger or smaller. Omitted: **bigger**. **Any** hover — a picture is drawn larger, a text preview shows more lines. Gilt auch **innerhalb** von Zen: `+` ist dort schon an der Decke und wird zurückgenommen, `-` verkleinert, ohne Zen zu beenden |
 | `:Hover zoom [direction]` | `in\|out\|reset` | magnify a *detail* of the picture on screen. Omitted: **in**. Bilder **und** PDF-Seiten seit hover.nvim `7fdfc09` — eine Seite wird dabei bei hoeherem DPI neu gerastert statt beschnitten. Ein Schritt kostet ~258 ms (Bild) bzw. 207–752 ms (Seite), also zu langsam zum Gedrueckthalten. Tasten seit `21c4932`: `>` / `\|` / `=`, blank statt Alt-Akkord, weil dieses Terminal keinen sendet |
 | `:Hover nav {direction}` | `left\|right\|up\|down` | move the magnified view. Required argument. The keyboard counterpart to the borrowed `h/j/k/l`, which only exist while zoomed and are therefore undiscoverable |
 | `:Hover mode [state]` | `auto\|manual\|off` | omitted: reports the current mode |
 | `:Hover toggle` | — | off if on, back to `auto` if off |
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
 | `:Hover links web [state]` | `on\|off\|toggle` | http(s) links. Implies `links on` |
-| `:Hover links web fetch [state]` | `on\|off\|toggle` | status code + title. Implies `links web on` |
+| `:Hover links web fetch [state]` | `on\|off\|toggle` | status code + title + — bei `text/html` — **was die Seite sagt**, seit hover.nvim `9070b5e`. Implies `links web on`. Kein eigener Schalter für den Seitentext: der Body wird ohnehin geladen, kostet also keine zweite Anfrage und keine zweite Disclosure. Zugeschnitten auf den Platz, den das Float hat — deshalb lohnt `F` über einem Link |
 | `:Hover paths [state]` | `on\|off\|toggle` | bare paths in prose |
 | `:Hover paths missing [state]` | `on\|off\|toggle` | mark a path that resolves to nothing |
 | `:Hover paths code [state]` | `on\|off\|toggle` | hover a path inside executable code, not just comments and strings. **Default off.** Implies `paths on` |
@@ -146,6 +149,46 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-04 (3): **`:Hover zen`, und die zweite Achse sagt endlich etwas**
+  (hover.nvim `c20191e`). Damit sind es **zweiundzwanzig** Routen — die Zahl
+  stand in der Keymaps-Datei noch auf achtzehn und war seit `auto`, `border`
+  und dem Board falsch. `:Hover auto` und `:Hover border` fehlten in dieser
+  Tabelle **ganz** und sind jetzt drin.
+
+  Der eigentliche Fund ist aber der Schalter, nicht die Route. `:Hover links
+  web on` meldete „web links hover" — und nichts hoverte, weil
+  `auto_hover.url` auf `false` steht. Beide Aussagen waren wahr: Web-Links
+  hovern, und der Trigger öffnet sie nicht. Genau deshalb las es sich als
+  kaputtes Feature, und genau deshalb ist die **Ansage** die Stelle zum
+  Reparieren — man schaut in dem Moment auf genau eine Zeile, und es war die
+  falsche.
+
+  Ein Switch darf jetzt den `auto_hover`-Namen nennen, den er produziert
+  (`web`/`fetch` → `url`, `missing`, `office`, `positions` → `position`), und
+  `switches.on_report` hängt „…aber `url` öffnet noch nicht von selbst:
+  `:Hover auto url`" an. **Nicht** in `implies` gefaltet: Implikation läuft
+  zwischen Switches, die „darf das überhaupt hovern" beantworten;
+  `auto_hover` beantwortet „darf es *ungefragt* öffnen", und ein Switch, der
+  das still umlegt, kippt eine stehende Präferenz.
+
+  `:Hover why` kannte das Gate ebenfalls nicht — das eine Kommando, das
+  „warum passiert nichts" beantworten soll, antwortete „this should hover. If
+  it does not, that is a bug worth reporting." Nennt es jetzt. `:checkhealth`
+  bekommt dafür einen dritten Zustand (`on, url on request`), und die
+  Nachrichten-Fallback-Form von `:Hover status` trägt den `auto`-Abschnitt,
+  den das Board seit dem Vortag zeichnet.
+
+  Praktisch heißt das hier: **`:Hover links web on` allein reicht nicht**, es
+  gehört `:Hover auto url` dazu — oder `:Hover show` auf dem Link.
+
+- 2026-09-04 (2): **Seitentext im Fetch-Preview** (hover.nvim `9070b5e`).
+  `links.fetch` las den Body für `<title>` und `<meta description>`, zeigte
+  zwei Zeilen daraus und warf den Rest weg. Jetzt wird er zu Prosa:
+  `<main>`/`<article>` bevorzugt, `nav`/`header`/`footer`/`script`/`style`
+  samt Inhalt raus, Listen behalten ihren Punkt, Block-Elemente ihren
+  Umbruch, Entities werden aufgelöst, umgebrochen wird auf die Boxbreite.
+  Kein dritter Schalter — der Body ist schon da.
 
 - 2026-09-04: **`:Hover status` ist ein Board** (hover.nvim, dieser Commit).
   Anlass war eine konkrete Verwechslung an diesem Rechner: `:Hover status`

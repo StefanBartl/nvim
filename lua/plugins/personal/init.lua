@@ -59,10 +59,27 @@ plugins.add({
     -- eine harte Dependency ist.
     --
     -- Was NICHT default an ist und warum: Web-Links (`:Hover links web on`,
-    -- dazu `:Hover links web fetch on` fuer Statuscode/Titel -- letzteres ist
-    -- eine Disclosure, jeder gestreifte Link wird eine Anfrage an seinen Host)
-    -- und Office-Dokumente (`:Hover office on`, konvertiert ueber pdfport nach
-    -- PDF -- kostet einen LibreOffice-Start pro Dokument).
+    -- dazu `:Hover links web fetch on` fuer Statuscode/Titel/Seitentext --
+    -- letzteres ist eine Disclosure, jeder gestreifte Link wird eine Anfrage
+    -- an seinen Host) und Office-Dokumente (`:Hover office on`, konvertiert
+    -- ueber pdfport nach PDF -- kostet einen LibreOffice-Start pro Dokument).
+    --
+    -- ZWEI ACHSEN, und das ist der Stolperstein: `:Hover links web on` sagt,
+    -- dass ein Link hovern DARF; `:Hover auto url` sagt, dass der Trigger ihn
+    -- ungefragt oeffnet. Nur das erste getippt heisst: `:Hover show` auf dem
+    -- Link antwortet, Draufstehen tut nichts. Das las sich als kaputter
+    -- Schalter, bis hover.nvim `c20191e` es in die Ansage geschrieben hat --
+    -- die Meldung nennt das zweite Gate jetzt beim Namen, `:Hover why` auch.
+    -- Dasselbe gilt fuer `missing`, `office` und `positions`.
+    --
+    -- Zen (`F` am offenen Float, oder `:Hover zen`) legt es auf den ganzen
+    -- Editor -- und zwar so, dass die VORSCHAU neu gegen die Bildschirmgroesse
+    -- gebaut wird statt nur das Fenster zu wachsen; ein Text-Hover zeigt dann
+    -- ~fuenfzig statt zwanzig Zeilen, ein gefetchter Link entsprechend mehr
+    -- Seitentext. Pinnt dabei per Default, weil ein bildschirmfuellendes Float
+    -- sonst beim ersten `j` zuginge (`focusable = false`, Dismiss an
+    -- CursorMoved). Hier nichts gesetzt: `zen = { pin = false }` waere der
+    -- Schalter dagegen.
     --
     -- Wenn der Hover beim Lesen stoert, ist `:Hover mode manual` der Schalter:
     -- alle Previews bleiben, nur nichts oeffnet mehr von selbst. `:Hover show`
