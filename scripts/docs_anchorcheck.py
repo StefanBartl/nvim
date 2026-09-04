@@ -11,8 +11,11 @@ Two findings it reports, both seen in practice:
 
   ANCHOR    a ](#heading) or ](other.md#heading) with no such heading. The
             file exists, so the link checker calls it green.
-  DOC-06    a tracked markdown file no other tracked file mentions by name.
-            Good documentation nobody can reach.
+  DOC-06    a markdown file under docs/ (or at the root) that no other file
+            mentions by name. Good documentation nobody can reach. Module
+            READMEs beside their own source and fixtures under TESTS/ are
+            skipped -- the first are blessed by the standard, the second
+            are test data -- unless --all is passed.
 
 WHAT IT CANNOT SEE, and this is the sharper half: an anchor that resolves to
 the WRONG section. gopath.nvim's developer notes linked [Architecture]
@@ -146,7 +149,7 @@ def tracked_markdown(repo: str) -> list[str]:
     return files
 
 
-def check(repo: str) -> int:
+def check(repo: str, report_all: bool = False) -> int:
     name = os.path.basename(repo.rstrip("/\\"))
     files = tracked_markdown(repo)
     bodies: dict[str, str] = {}
@@ -164,8 +167,23 @@ def check(repo: str) -> int:
     for rel in files:
         if rel == "README.md":
             continue
+        # DOC-06 is about the documentation tree. A module README beside its
+        # own source is blessed by the standard's own notes (a library needs
+        # more levels than a feature plugin), and a fixture under TESTS/ is
+        # test data. Reporting those buries the six that matter under a
+        # hundred that do not -- so they are only reported with --all.
+        if not report_all and not (rel.startswith("docs/") or "/" not in rel):
+            continue
+        # A bare basename is too loose for the names that repeat. Every docs
+        # page contains the string "README.md" somewhere, so matching on that
+        # alone declares every FEATURES/README.md and TESTS/README.md reachable
+        # whether or not anything points at it. For those, the parent folder
+        # has to be there too -- which is also how such a file is really
+        # linked: `FEATURES/README.md`, never `README.md`.
         base = os.path.basename(rel)
-        if not any(base in bodies[o] for o in files if o != rel):
+        parent = os.path.basename(os.path.dirname(rel))
+        needle = f"{parent}/{base}" if (base.lower() == "readme.md" and parent) else base
+        if not any(needle in bodies[o] for o in files if o != rel):
             findings.append(("DOC-06 orphan", rel, ""))
 
     for rel in files:
@@ -193,10 +211,12 @@ def check(repo: str) -> int:
 
 
 def main() -> int:
-    if len(sys.argv) < 2:
+    args = [a for a in sys.argv[1:] if a != "--all"]
+    report_all = "--all" in sys.argv[1:]
+    if not args:
         print(__doc__.strip().splitlines()[2].strip(), file=sys.stderr)
         return 2
-    total = sum(check(r) for r in sys.argv[1:])
+    total = sum(check(r, report_all) for r in args)
     print(f"===== TOTAL: {total} findings =====")
     return 1 if total else 0
 
