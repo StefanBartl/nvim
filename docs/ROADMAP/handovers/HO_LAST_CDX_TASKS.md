@@ -4,7 +4,9 @@ Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
 **Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 ist 31/31,
-Wellen 1–3 vollständig (11 Repos), alle toten Anker der Sammlung behoben.**
+Wellen 1–3 vollständig, **keine toten Links, keine toten Anker und keine
+verwaisten `docs/`-Dateien mehr** in der Sammlung. Offen: zwölf Repos ohne
+`docs/README.md`.**
 
 ---
 
@@ -60,6 +62,14 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | documentation.nvim | 3 | dito. README auf eine Bildschirmseite, Themenseiten kleingeschrieben, vier fehlende ergänzt. Offen: `docs/hover.md` ist verwaist | `5d74e96` |
 | lsp.nvim | Nachtrag | vier ToC-Anker in `markdown_words/README.md`, alle tot aus demselben Emoji-Grund | `2a59f91` |
 | fileops.nvim | Nachtrag | `commands.md#file-delete` → `#file-delete-`; die Klammern der Signatur lassen ihr Leerzeichen zurück | `373026b` |
+| sandbox.nvim | Waisen | `.luarc.json.lua_ls_cli.md` gelöscht — JSON mit `.md`-Endung, deshalb las jedes Doku-Werkzeug es als Dokument | `7fda8ab` |
+| language.nvim | Waisen | **5 Waisen.** `FEATURES/README.md` nannte vier Seiten **fett** und verlinkte nur die fünfte; 444 Zeilen Konzept nach `NOTES/` ausgelagert; `docs/README.md` angelegt | `32f2531` |
+| cmdlog.nvim | Waisen | **4 Waisen**, darunter `FEATURES/README.md` selbst. Das README verwies **nirgends** nach `docs/`. Index angelegt, fünf Feature-Seiten von Backticks auf Links | `e1e0f96` |
+| emojis.nvim | Waisen | `FEATURES.md` (233 Z.) und `WORKFLOW.md` in keiner Liste des READMEs. Index angelegt. **Offen: `DOC-03`** — FEATURES ist Datei, kein Ordner | `629d091` |
+| filetree.nvim | Waisen | `BINDINGS.md` ist der *Einstieg* in `BINDINGS/` — und alles verlinkte an ihm vorbei direkt in die Unterseiten | `108fadc` |
+| github_stats.nvim | Waisen | `NOTES/BACKGROUND_FETCHING.md` (171 Z.) unerreichbar; `devs/BUGS.md` gelöscht — leerer Tracker, dessen einziger Eintrag erledigt und anderswo dokumentiert war | `9948c58` |
+| open.nvim | Waisen | `CHEATSHEET.md` im Root, ohne Eingang. Gegen `docs/` gehalten: **Scope-Tokens stehen nur dort** — also behalten, nach `docs/cheatsheet.md` verschoben, Index angelegt | `e80eb6a` |
+| documentation.nvim | Nachtrag | `docs/hover.md` fehlte im sonst vollständigen Index | `9a06d0d` |
 
 **E1 ist bei 31/31** — siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr), das die letzte offene Zeile aufgelöst hat, ohne dass sie eine war. Der deps-Durchgang aus
 [Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt-️) hat
@@ -637,6 +647,65 @@ also kein Befund.
 > produziert und keinen einzigen echten verdeckt — die Richtung ist gnädig,
 > die Kosten sind es nicht.
 
+### Ü29 — Ein Dateiname im Fließtext ist kein Link, und beides sieht gleich aus
+
+Beim Abarbeiten der Waisen zweimal dieselbe Form gefunden, in Repos, die
+nichts miteinander zu tun haben:
+
+- `language.nvim/docs/FEATURES/README.md` nannte **SPELL**, **TRANSLATE**,
+  **THESAURUS**, **CORE** — fett gesetzt — und verlinkte allein `HOVER.md`.
+- `cmdlog.nvim/docs/FEATURES/README.md` nannte `COMPOSER.md`, `HISTORY.md`,
+  `FAVORITES.md`, `PICKER.md`, `SAFETY.md` — in Backticks — und verlinkte
+  keine davon.
+
+Eine Overview, deren ganze Aufgabe es ist, **jede Datei ihres Ordners mit
+einem Satz zu nennen** (§3.1), tut das also und bleibt trotzdem eine
+Sackgasse. Für einen Leser ist der Unterschied zwischen fett und verlinkt der
+ganze Unterschied.
+
+> **Das ist ein blinder Fleck des Prüfers, und ein prinzipieller.** `DOC-06`
+> fragt „nennt irgendeine Datei diese hier", nicht „verlinkt sie sie".
+> `cmdlog`s fünf Seiten galten als erreichbar, weil ihr *Name* im Text stand.
+> Die Prüfung auf echte Links zu verschärfen würde jede Prosa-Erwähnung zum
+> Befund machen — die Zahl der Falschbefunde tauscht die Seite. **Deshalb
+> bleibt es beim Lesen:** jede `FEATURES/README.md` einmal öffnen und schauen,
+> ob die Namen anklickbar sind.
+
+### Ü30 — Ein toter Link kann am richtigen Ziel hängen
+
+Der einzige `dead` der ganzen Sammlung stand in
+`casedesk.nvim/lua/casedesk/templates/Research.md`:
+`[→ Reply draft](../Replies/00_PSO.md)`. Kein Befund — `Replies/` wird im
+**erzeugten Fallbaum** angelegt (`config/DEFAULTS.lua:554`), und das Template
+wird dorthin kopiert. Der Link ist an seinem Wohnort tot und an seinem
+Zielort richtig.
+
+Dieselbe Sorte: `filetree.nvim/lua/filetree/assets/templates/*.md`, zwei
+Dateien, die der Plugin in fremde Bäume schreibt und die deshalb niemand im
+Repo verlinkt.
+
+> **Regel:** vor jedem Link-Befund unter `lua/**/templates/` oder `assets/`
+> erst fragen, **wo die Datei am Ende liegt**. Das ist [Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen)s
+> Lehre in einer Form, die kein Filter erwischt: der Link ist echt, die
+> Auflösung findet nur woanders statt.
+
+### Ü31 — Ü11, noch einmal, im neuen Werkzeug
+
+`docs_anchorcheck.py` las seine Quellen mit `git ls-files`. Eine gerade
+geschriebene `docs/README.md` ist nicht getrackt, also zählte sie **nicht als
+eingehender Link** — nach dem Anlegen des Index meldete der Prüfer dieselben
+Waisen weiter, und der Fix sah aus, als hätte er nicht gewirkt.
+
+Exakt [Ü11](#ü11--der-linkchecker-meldete-grün-für-dateien-die-er-nie-gelesen-hat),
+den `docs_linkcheck.py` schon hinter sich hat, in einem Werkzeug, das
+zwei Stunden alt war. Behoben mit `--cached --others --exclude-standard`.
+
+> Drei Werkzeugfehler in [Ü28](#ü28--der-prüfer-hatte-drei-fehler-und-jeder-erzeugte-eine-welle-falschbefunde),
+> ein vierter beim Prüfen dieser Datei, ein fünfter hier. Alle fünf hat
+> dasselbe gefunden: eine Zahl, die nicht zu dem passte, was danebenstand.
+> **Ein Prüfer, dem man glaubt, ohne ihn einmal widerlegt zu haben, ist keine
+> Messung.**
+
 ---
 
 ## Abweichungen vom Standard
@@ -774,11 +843,10 @@ läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 
 ### Offene Befundliste (Stand 2026-09-04, nach dem Anker-Durchgang)
 
-**Tote Links: einer in der ganzen Sammlung.**
-
-| Repo | Befund |
-|---|---|
-| casedesk.nvim | `lua/casedesk/templates/Research.md` → `../Replies/00_PSO.md` — in einem Template unter `lua/`, also [Ü13](#ü13--der-doku-bestand-endet-nicht-bei-docs)-Gebiet |
+**Tote Links: keiner.** Der eine gemeldete ist geprüft und **kein Befund** —
+`casedesk.nvim/lua/casedesk/templates/Research.md` zeigt auf `../Replies/`,
+das im erzeugten Fallbaum existiert, nicht im Repo. Siehe
+[Ü30](#ü30--ein-toter-link-kann-am-richtigen-ziel-hängen).
 
 Die 8 in `color_my_ascii.nvim` sind **weg**, mit dessen vollem Durchgang
 (`bfb74da`, siehe [Ü25](#ü25--vier-weitere-repos-waren-fertig-ohne-dass-es-hier-stand)).
@@ -791,18 +859,27 @@ Früher am 2026-09-04 erledigt: `gopath.nvim`, `insights.nvim`, `pickers.nvim`
 vier verbleibenden Meldungen liegen in `mdview.nvim/TESTS/testfile.md`, einer
 Fixture mit absichtlich kaputten Links.
 
-**Verwaiste Dokumente (`DOC-06`): 48**, und sie sind kein Sammelsurium:
+**Verwaiste Dokumente (`DOC-06`): von 48 auf 33**, und die Sorten sind jetzt
+sauber getrennt:
 
-| Was | Zahl | Einordnung |
+| Was | Zahl | Stand |
 |---|---|---|
-| `docs/WORKFLOW.md` | **16** | Pflichtdatei ohne eingehenden Link — siehe [Ü26](#ü26--workflowmd-ist-in-16-repos-verwaist-und-das-ist-ein-befund). Löst sich mit `docs/README.md` |
-| Modul-`README.md` unter `lua/` | ~12 | Von [Ü6](#ü6--mehr-doku-ebenen-können-richtig-sein-libnvim) ausdrücklich gesegnet. **Kein Befund**, solange der Modulbaum sie trägt |
-| Fixtures unter `TESTS/` | ~6 | Testdaten, keine Doku. Kein Befund |
-| Echte Waisen in `docs/` | ~14 | Der Rest, pro Repo zu prüfen — z. B. `documentation.nvim/docs/hover.md`, `language.nvim/docs/FEATURES/*.md` (vier Stück, die die eigene `FEATURES/README.md` nicht nennt), `cmdlog.nvim/docs/FEATURES/README.md` |
+| **Echte Waisen in `docs/`** | ~~14~~ **0** | Alle abgearbeitet, acht Repos, je ein Commit — siehe Ledger. Der Fund dahinter steht in [Ü29](#ü29--ein-dateiname-im-fließtext-ist-kein-link-und-beides-sieht-gleich-aus) |
+| `docs/WORKFLOW.md` | ~~16~~ **12** | Vier gelöst, weil ihr Repo einen Index bekam. Die restlichen zwölf brauchen dasselbe — siehe [Ü26](#ü26--workflowmd-ist-in-16-repos-verwaist-und-das-ist-ein-befund) |
+| Modul-Docs unter `lua/` | ~12 | Von [Ü6](#ü6--mehr-doku-ebenen-können-richtig-sein-libnvim) gesegnet. **Kein Befund** |
+| Fixtures und Templates | ~9 | Testdaten und Dateien, die der Plugin in fremde Bäume schreibt. **Kein Befund** — siehe [Ü30](#ü30--ein-toter-link-kann-am-richtigen-ziel-hängen) |
 
-> Der Prüfer kennt den Unterschied zwischen diesen vier Sorten nicht und soll
-> ihn nicht kennen. Er meldet „niemand nennt diese Datei"; welche Sorte das ist,
+> Der Prüfer kennt den Unterschied zwischen diesen Sorten nicht und soll ihn
+> nicht kennen. Er meldet „niemand nennt diese Datei"; welche Sorte das ist,
 > entscheidet der Durchgang.
+
+**Die zwölf offenen `WORKFLOW.md` sind zugleich die Repo-Liste für die
+nächste Tranche**, denn der Fix ist derselbe wie das, was ihnen fehlt:
+`cascade`, `diff`, `images`, `insights`, `markdown`, `pdfport`, `pickers`,
+`recommender`, `runtime-analysis`, `sandbox`, `sessions`, `spotlight`. Ein
+`docs/README.md` pro Repo, aus dem Lesen der eigenen Seiten geschrieben —
+eine Vorlage wäre wertlos, weil der Index gerade *sagen* soll, welche Frage
+jede Seite beantwortet.
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
 

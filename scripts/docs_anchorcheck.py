@@ -44,9 +44,11 @@ getting each wrong produced a wave of false findings while this was written:
     two headings of color_my_ascii.nvim as code and reported three live
     anchors as dead.
 
-Sources are the files git tracks. Inline code and fenced blocks are stripped
-before links are collected, because documentation about dead anchors quotes
-dead anchors -- the same lesson docs_linkcheck.py learned for file links.
+Sources are the files git tracks plus the ones it does not ignore yet, so a
+docs/README.md written a minute ago is checked and counts as an incoming link.
+Inline code and fenced blocks are stripped before links are collected, because
+documentation about dead anchors quotes dead anchors -- the same lesson
+docs_linkcheck.py learned for file links.
 
 Exit code 1 when anything is reported.
 """
@@ -122,12 +124,26 @@ def strip_inline_code(text: str) -> str:
 
 
 def tracked_markdown(repo: str) -> list[str]:
+    """Files git tracks, plus the ones it does not ignore yet.
+
+    `--others --exclude-standard` is the half that matters and the one
+    docs_linkcheck.py had to learn too: a `docs/README.md` written a minute ago
+    is not tracked, so a plain `ls-files` neither checks it nor counts it as an
+    incoming link. Every document the new index rescues then still reports as
+    an orphan, and the fix looks like it did not work.
+    """
     out = subprocess.run(
-        ["git", "-C", repo, "ls-files", "*.md"],
+        ["git", "-C", repo, "ls-files", "--cached", "--others",
+         "--exclude-standard", "*.md"],
         capture_output=True,
         text=True,
     ).stdout.split()
-    return [p for p in out if os.path.isfile(os.path.join(repo, p))]
+    seen, files = set(), []
+    for p in out:
+        if p not in seen and os.path.isfile(os.path.join(repo, p)):
+            seen.add(p)
+            files.append(p)
+    return files
 
 
 def check(repo: str) -> int:
