@@ -1009,6 +1009,51 @@ Sortiert nach Aufwand, billigstes zuerst.
 
 ### 9.2 Mittel
 
+- **Completion sortiert nach Benutzung, nicht nach Ziffernfolge.**
+  *(Wunsch, 2026-09-04.)* `:Case close <Tab>` bietet heute jede Nummer in
+  `table.sort`-Reihenfolge an — eine Ordnung, die mit der Arbeit nichts zu
+  tun hat. Wer gerade an einem Case sitzt, tippt dessen Nummer trotzdem
+  aus dem Kopf, weil sie irgendwo in der Mitte einer Liste von dreißig
+  steht. Ziel: **zuletzt benutzte und zuletzt veränderte Cases zuerst.**
+
+  Der Eingriffspunkt ist genau eine Funktion — `registry.complete()`,
+  deren letzte Zeile heute `table.sort(out)` ist. Alles andere bleibt.
+
+  Vier mögliche Signale, keines davon allein ausreichend:
+
+  | Signal | Woher | Stärke | Schwäche |
+  | --- | --- | --- | --- |
+  | Ordner-`mtime` | ein `fs_stat` je Case | kostenlos, überlebt Neustarts, zählt auch Änderungen, die nicht über `:Case` liefen | ein Sync-Werkzeug, das Dateien anfasst, sieht aus wie Arbeit; reines Lesen zählt gar nicht |
+  | Benutzungsjournal | casedesk schreibt bei jedem aufgelösten Case eine Zeile | erfasst auch reines Lesen, kann nach Verb gewichten (`close` wiegt mehr als `info`) | neuer Zustand, muss beschnitten werden, auf einer frischen Maschine leer |
+  | Aktueller Buffer | `resolve.sync(nil)` — gibt es schon | trivial und exakt | betrifft genau einen Case |
+  | `git log --since` im Arbeitsrepo | Cases sind Ordner in einem Git-Repo | kein neuer Zustand, maschinenübergreifend | zählt nur, was committet ist |
+
+  **Empfehlung: `mtime` als Basis, der Case des aktuellen Buffers als
+  Fixstern obendrauf, Journal erst dann, wenn sich die Ordnung falsch
+  anfühlt.** Damit braucht die erste Fassung **keinen neuen Zustand**: der
+  Registry-Scan geht ohnehin über jeden Case-Ordner, ein `fs_stat` mehr
+  pro Eintrag, Sortierschlüssel `mtime` absteigend.
+
+  **Zwei Regeln, die dabei nicht verhandelbar sind:**
+
+  1. **Sortieren, nie filtern.** Eine Completion, die Kandidaten
+     *weglässt*, weil sie „alt" sind, ist schlimmer als eine, die falsch
+     sortiert: der gesuchte Case ist dann gar nicht mehr erreichbar, und
+     zwar ohne sichtbaren Hinweis darauf. Die 24-Stunden-Grenze aus dem
+     Wunsch ist ein **Ranking**-Schwellwert, kein Sichtbarkeitsschwellwert.
+  2. **Kein `stat`-Sturm pro Tastendruck.** `complete()` läuft bei jedem
+     `<Tab>`. Die Zeitstempel gehören deshalb in den bestehenden
+     Registry-Cache (`registry.list()`, geleert von
+     `registry.invalidate()`), nicht in `complete()` selbst.
+
+  Bewusst offen: ob die Ordnung **stabil** sein soll. Eine Liste, die sich
+  zwischen zwei `<Tab>`s umsortiert, weil inzwischen eine Minute vergangen
+  ist, bedient sich unangenehm. Die ruhigere Variante wäre ein grobes
+  Zeitfenster als Sortierklasse (heute / diese Woche / älter) und
+  innerhalb der Klasse weiter alphabetisch — was den Wunsch („die letzten
+  24 Stunden zuerst") ohnehin wörtlicher trifft als eine
+  sekundengenaue Reihung.
+
 - **`:Case close` fragt nach der Solution.** Nach dem Schließen anbieten,
   gleich eine `Solution.md` anzulegen und zu öffnen — plus die Option
   „Kunde hat nicht mehr geantwortet", die genau festhält, dass es keine
