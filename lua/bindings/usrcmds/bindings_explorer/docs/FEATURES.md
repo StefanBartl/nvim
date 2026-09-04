@@ -105,10 +105,12 @@ fragt und der Korpus sich beim Editieren trotzdem ändern darf.
 `:Bindings path [personal|extern]`
 
 Kopiert die BINDINGS-Wurzel(n) in die Zwischenablage — ohne Argument beide,
-newline-getrennt. Löst denselben Zweck wie das ältere, separate
-`:BindingsPath` (`lua/bindings/usrcmds/init.lua`), aber mit den zwei
-tatsächlichen Pfaden statt dessen einzelnem, nie existierenden
-`docs/NOTES/BINDINGS`.
+newline-getrennt.
+
+Bis 2026-09-04 stand daneben ein älteres, separates `:BindingsPath`
+(`lua/bindings/usrcmds/init.lua`), das einen einzelnen, nie existierenden
+`docs/NOTES/BINDINGS` kopierte. Es ist entfernt, und `<leader>BI` läuft
+jetzt hierher.
 
 ```vim
 :Bindings path

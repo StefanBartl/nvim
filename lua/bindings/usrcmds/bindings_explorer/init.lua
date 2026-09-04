@@ -13,10 +13,10 @@
 --- `:Bindings search keymaps|usercmds|autocmds [query]` scopen dieselbe
 --- Suche auf eine der drei Unterkategorien statt aller drei.
 --- `:Bindings path [personal|extern]` kopiert die BINDINGS-Wurzel(n) in die
---- Zwischenablage — derselbe Zweck wie das bestehende `:BindingsPath`
---- (`lua/bindings/usrcmds/init.lua`), hier aber mit den tatsächlichen zwei
---- Wurzeln statt dessen einzelnem, nicht existierenden `docs/NOTES/
---- BINDINGS`-Pfad.
+--- Zwischenablage. Es hat am 2026-09-04 das ältere `:BindingsPath`
+--- (`lua/bindings/usrcmds/init.lua`) abgelöst, das einen einzelnen, nie
+--- existierenden `docs/NOTES/BINDINGS`-Pfad kopierte; `<leader>BI` läuft
+--- seither hierher.
 ---
 --- Phase 2 (diese Datei + `records.lua`/`browse.lua`): `:Bindings browse
 --- [keymaps|usercmds|autocmds] [personal|extern]` — Picker über geparste

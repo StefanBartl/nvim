@@ -33,15 +33,17 @@ bottom and rotate variants are keymap-only.
 | Command | Range | Effect |
 | --- | --- | --- |
 | `:CopyLocation` | — | Copy `<absolute path>:<line>:<column>` of the cursor to the `+` register. Warns instead of copying when the buffer has no file on disk. Column is reported 1-based |
-| `:BindingsPath` | — | Copy `<stdpath('config')>/docs/NOTES/BINDINGS` to the `+` register. Also on `<leader>BI`. Marked `TEMP` in the source |
+| `:Bindings path` | — | Copy the BINDINGS root(s) to the `+` register — both, newline-separated, unless `personal`/`extern` narrows it. Also on `<leader>BI`. Replaced `:BindingsPath` on 2026-09-04 |
 | `:CwdHere` | — | `:lcd` to the directory of the current buffer's file. Window-local, not global. Known gap: an open `neo-tree`/`nvim-tree`/`netrw` does not pick the new cwd up until it is reloaded |
 | `:PowershellProfile` | — | Resolve `$PROFILE` through `powershell -NoProfile` and `:edit` it. Errors out when `powershell` is not executable |
 | `:ContextOpen` / `:ContextOpen list` | — | Open whatever is under the cursor, through one verb instead of five plugin-specific keys: gopath, markdown, images, pdfport and open.nvim are tried in turn. `list` shows every openable target in the buffer and jumps to the one you pick |
 
-`:BindingsPath` points at `docs/NOTES/BINDINGS`, which is not where this
-corpus lives — the two trees are `docs/NOTES/PersonelPlugins/BINDINGS` and
-`docs/NOTES/ExternPlugins/Bindings`. Recorded as observed, not corrected
-here.
+`:BindingsPath` used to sit here and copied `docs/NOTES/BINDINGS`, a
+directory that never existed — the two trees are
+`docs/NOTES/PersonelPlugins/BINDINGS` and `docs/NOTES/ExternPlugins/Bindings`.
+It was removed on 2026-09-04; `<leader>BI` now runs `:Bindings path`, which
+knows both roots. The full route reference is in
+[`bindings_explorer.md`](bindings_explorer.md).
 
 ## Startup instrumentation
 
