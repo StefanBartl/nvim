@@ -1,8 +1,9 @@
 # Handover — casedesk als eigenes Plugin (`casedesk.nvim`)
 
-**Stand: 2026-09-04, Phasen 0-3 abgeschlossen, dazu der Typ-Rename. Das
+**Stand: 2026-09-04, Phasen 0-4 abgeschlossen, dazu der Typ-Rename. Das
 Plugin ist seit Phase 3 die aktive Quelle; ab jetzt wird nur noch im
-Plugin-Repo geändert. Als Nächstes: Phase 4 (Doku).**
+Plugin-Repo geändert. Als Nächstes: Phase 5 (Tests) oder Phase 6
+(Rollout) — Phase 7 (Löschen der Kopie) bewusst später.**
 
 Auftrag: `lua/bindings/usrcmds/case/` aus der nvim-Config nach
 `StefanBartl/casedesk.nvim` auslagern (privat), dabei naheliegende Features
@@ -24,8 +25,8 @@ Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
 | Checkout | `$REPOS_DIR/casedesk.nvim` |
 | Alte Kopie (eingefroren, inaktiv) | `nvim/lua/bindings/usrcmds/case/` |
 | Plan | `nvim/docs/ROADMAP/casedesk/PLUGIN.md` |
-| Konzept-Docs | `nvim/docs/ROADMAP/casedesk/` |
-| Bindings-Docs | `nvim/docs/NOTES/casedesk/` |
+| Konzept-Docs | **`casedesk.nvim/docs/`** (seit Phase 4; in der Config nur noch Zeiger) |
+| Bindings-Korpus der Config | `nvim/docs/NOTES/PersonelPlugins/BINDINGS/` — was `:Bindings` liest |
 | Verbindliche Regeln | `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists` |
 | Notizen/Messungen | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/` |
 | Echte Case-Daten | `$REPOS_DIR/WKDBook-Tricentis/Cases/{SAP_Support,CS,Solutions}` |
@@ -247,6 +248,75 @@ Kontroll-Config wird nicht länger gebraucht, der normale Scan ist wieder
 die gültige Zahl, drei Phasen früher als geplant. Befund 7 ist unten
 entsprechend korrigiert.
 
+## Phase 4 im Einzelnen — was steht
+
+Commits `ba5bc21` (Plugin) und `9fc01127` (Config).
+
+**Die Konzept-Docs sind umgezogen** — `CONCEPT.md`, `SLA.md`,
+`EXTRACTION.md`, `SESSIONS.md`, `PTO.md`, `HANDOVER.md`, dazu
+`Workflow.md` → `docs/WORKFLOW.md` und die Wunschliste →
+`docs/REQUESTS.md`. In der Config stehen Zeiger. Das war kein Aufräumen um
+seiner selbst willen: **158 Doc-Verweise im Quelltext des Plugins** zeigten
+auf `docs/ROADMAP/casedesk/…`, also auf Pfade, die ein fremder Checkout
+gar nicht hat. Jetzt lösen alle auf.
+
+**Die Wunschliste heißt jetzt `REQUESTS.md`**, nicht `ROADMAP.md`. Im
+Plugin gab es bereits eine `docs/ROADMAP.md` (die kuratierte), und der
+Quelltext zitiert die andere ~30-mal als „ROADMAP.md v4/v6/v7". Zwei
+Dateien gleichen Namens, von denen der Code die eine meint und ein Leser
+die andere aufschlägt, war die Verwechslung, die der neue Name beendet.
+
+**`MIGRATION.md` gibt es nicht.** Sechsmal aus dem Quelltext zitiert,
+zweimal aus `CONCEPT.md`, teils mit Abschnittsnummern — und in **keinem**
+Repo auffindbar (repo-weit gesucht). Die Verweise zeigen jetzt auf
+`CONCEPT.md` §3 und §10, wo die Begründungen tatsächlich stehen, und
+`CONCEPT.md` sagt einmal, dass die Datei weg ist, statt so zu tun als
+nicht.
+
+**`docs/commands.md` ist generiert**, über
+`lib.nvim.bindings.usercmd.composer.document()` — aus demselben
+Routen-Baum, den Dispatch und `<Tab>`-Completion benutzen. Damit kann die
+Referenz nicht veralten. `scripts/gen_docs.sh` schreibt sie,
+`--check` vergleicht, und ein vierter CI-Job schlägt fehl, wenn die
+committete Fassung alt ist. Die handgeschriebene `CHEATSHEET.md` daneben
+sagt *warum*; die generierte sagt *was*.
+
+**Neu geschrieben:** `docs/configuration.md` (jede Option mit Typ und
+echtem Default, aus `DEFAULTS.lua` **ausgelesen** statt abgetippt),
+`docs/BINDINGS.md`, `docs/installation.md`, `docs/install.json`,
+`doc/casedesk.txt` (zehn Abschnitte mit Tags), README-Doku-Tabelle.
+
+### Zwei Defekte, beim Schreiben der Doku gefunden
+
+1. **`health.lua` prüfte nie, was `:Cases export` wirklich braucht.**
+   `pandoc` und ein Chromium fehlten in der Liste — man hätte
+   `:checkhealth casedesk` grün bekommen und `:Cases export` wäre trotzdem
+   gescheitert. Jetzt beides drin, und der Browser über
+   `export.find_browser()` statt über eine zweite Kopie der
+   Installationspfad-Liste: ein reiner `PATH`-Test meldet auf Windows
+   einen Fehlalarm, weil niemand einen Browser bewusst in den `PATH` legt.
+2. **Zwei Listen derselben Werkzeuge.** `health.lua` hatte seine eigene,
+   `docs/install.json` (neu) hätte die zweite werden sollen. Stattdessen
+   liest `health.lua` jetzt `install.json` über `lib.nvim.deps` — was
+   `:Lib deps status` installiert und was `:checkhealth` meldet, ist ab
+   jetzt **eine** Liste.
+
+### Eine Annahme des Plans ist gefallen
+
+PLUGIN.md §3.3 sagte, `docs/NOTES/casedesk/` sei Teil des Bindings-Korpus,
+den `:Bindings` prüft, und müsse deshalb in der Config bleiben.
+Nachgeprüft statt geglaubt: `bindings_explorer/config.lua`s `M.roots()`
+liest ausschließlich `PersonelPlugins/BINDINGS/` und
+`ExternPlugins/Bindings/`. Der Ordner kam dort nie vor — er war ein
+eigenständiger Cheatsheet-Satz, also Plugin-Doku. §3.3 ist mit dem Beleg
+korrigiert, und `Usercmds/Case.md` heißt jetzt
+`Usercmds/casedesk.nvim.md`, weil `:Bindings drift` über den Dateistamm
+mit dem Checkout paart und `Case` zu keinem Repo passte.
+
+**Gates:** stylua sauber, luacheck 0/0 über 45 Dateien, 32 Specs grün,
+`gen_docs.sh --check` grün, LuaLS 1 Befund (`assert.are_not` — eine
+Typlücke in luassert, kein Befund an diesem Code).
+
 ## Als Nächstes
 
 - [x] ~~**Phase 3 — Umschalten.** In der nvim-Config:
@@ -260,8 +330,13 @@ entsprechend korrigiert.
       Baseline — plus jetzt möglicherweise neue aus CS und T2, die vorher
       unsichtbar waren; das ist erwartete Verbesserung, keine Regression.~~
       **Erledigt, `00a45b77`.**
-- [ ] Phase 4 — Doku (Konzept-Docs mitziehen, `BINDINGS.md`,
-      `configuration.md` aus `@types` füllen, vimdoc).
+- [x] ~~Phase 4 — Doku.~~ **Erledigt, `ba5bc21` / `9fc01127`.**
+- [ ] Phase 5 — Tests und CI (heute 32 Specs für 11.295 Zeilen; die
+      Infrastruktur steht seit Phase 0).
+- [ ] Phase 6 — Spec und Rollout (der Spec-Eintrag ist in Phase 3
+      vorgezogen worden, es bleibt der Rest).
+- [ ] Phase 7 — die eingefrorene Kopie löschen. **Erst wenn das Plugin im
+      Alltag getragen hat.**
 - [ ] Danach: `:Case new` fragt den Bereich (§7.6 Schritt 3),
       `:Cases area`-Filter, `area` in `.case.json` samt doctor-Nachtrag.
 - [x] ~~**Aufgeschoben:** im Plugin heißen 53 Typen weiterhin
