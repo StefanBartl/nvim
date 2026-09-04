@@ -413,6 +413,7 @@ Handover-Datei knapp darauf verweisen kann („`DOC-07` bei mdview offen").
 | `DOC-12` | Code-Beispiele im README syntaktisch gültig und lauffähig? |
 | `DOC-13` | Genannte Abhängigkeiten stimmen mit der Install-Spec? |
 | `DOC-14` | Keine Verweise auf entfernte Dinge (z. B. `migrate.nvim`, gelöschte Module)? |
+| `DOC-28` | Stimmen die Zusagen über die **Umgebung**? Versionsangabe gegen die benutzten APIs (`vim.uv` → 0.10+), jeder `stdpath`-Pfad der Doku gegen den Code, Status-Badge gegen Zeile 1. Nachgetragen 2026-09-04 nach [Ü22]. |
 
 ### C — Relevanz (P1)
 

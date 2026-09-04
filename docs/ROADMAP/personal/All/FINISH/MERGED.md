@@ -76,9 +76,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 ### MISC
 
 ### My `.nvim`-Plugins
-
+ die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen
 - [ ] `sessions.nvim`
-  - [ ] Wen ih mit `leader tl/tr` die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen
+   die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen- [ ] Wen ih mit `leader tl/tr` die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen
 
 - [ ] `docmap-desktop`
   - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
