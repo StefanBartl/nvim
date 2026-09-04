@@ -20,7 +20,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | Command | Args | Notes |
 | --- | --- | --- |
 | `:Hover show` | — | one hover, here, now; ignores every volume switch. Seit language.nvim `b592b9f` **auch eine Übersetzung** des Worts unter dem Cursor — nur hier, nie auf dem automatischen Trigger, weil jede Antwort eine Netzanfrage mit genau diesem Wort ist. Mehrere Antworten zu einer Stelle: `<M-n>` blättert |
-| `:Hover status` | — | mode + alle neun Switches + `auto_hover`, als **Board**: `<CR>` schaltet die Zeile unterm Cursor, `+`/`-` explizit, `y` yankt das Kommando der Zeile, `?` listet die Tasten. Jede Zeile traegt ihr `:Hover ...` — genau deshalb, siehe Changelog 2026-09-04 |
+| `:Hover status` | — | mode + alle zwölf Switches + `auto_hover`, als **Board**: `<CR>` schaltet die Zeile unterm Cursor, `+`/`-` explizit, `y` yankt das Kommando der Zeile, `?` listet die Tasten. Jede Zeile traegt ihr `:Hover ...` — genau deshalb, siehe Changelog 2026-09-04 |
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover next` | — | step to the next plugin with something to say about this place; wraps past the last |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
@@ -35,6 +35,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | `:Hover links [state]` | `on\|off\|toggle` | whether link syntax hovers at all |
 | `:Hover links web [state]` | `on\|off\|toggle` | http(s) links. Implies `links on` |
 | `:Hover links web fetch [state]` | `on\|off\|toggle` | status code + title + — bei `text/html` — **was die Seite sagt**, seit hover.nvim `9070b5e`. Implies `links web on`. Kein eigener Schalter für den Seitentext: der Body wird ohnehin geladen, kostet also keine zweite Anfrage und keine zweite Disclosure. Zugeschnitten auf den Platz, den das Float hat — deshalb lohnt `F` über einem Link |
+| `:Hover links web fetch pdf [state]` | `on\|off\|toggle` | ein Link, dessen Server `application/pdf` antwortet, wird heruntergeladen und als **erste Seite** gezeigt, seit hover.nvim `dbc2b87` — dieselben Blättertasten, derselbe scharfe Zoom, dieselbe pdfport/`pdftoppm`-Pipeline wie ein lokales PDF, denn die Bytes *sind* schon ein PDF. Implies `links web fetch on`, und das ist die **einzige Implikation im Repo, die ein Mechanismus statt einer Politik ist**: der Content-Type des Servers identifiziert den Link, und nur ein Fetch erzeugt einen — nie die Endung im Pfad, denn ein `.pdf`, das auf eine HTML-Fehlerseite 404t, ist häufig. **Kostet eine zweite Anfrage**, und genau die macht den Deckel erst beantwortbar: `links.pdf.max_bytes` (25 MB) statt der 2 MB des Fetch, die für eine Seite richtig und für ein Dokument viel zu klein sind |
 | `:Hover links web shot [state]` | `on\|off\|toggle` | die Seite von einem Headless-Chromium rendern lassen und als **Bild** ins Float zeichnen, seit hover.nvim `4e2ebeb`. Implies `links web on` und ausdrücklich **nicht** `fetch`: ein Fetch ist ein `curl`-GET mit 2-MB-Deckel, ein Render **führt die Seite aus** — ihr JavaScript läuft, und jede Subresource, die sie nennt, wird von ihrem Host geholt. Wer `fetch` für einen Statuscode angeschaltet hat, darf davon keinen Browser bekommen |
 | `:Hover links web shot eager [state]` | `on\|off\|toggle` | dasselbe für den **automatischen Trigger** statt nur für `:Hover show`. Eigener Schalter, weil `auto_hover.url` es nicht sagen kann: Textvorschau und Screenshot sind derselbe Zieltyp. Gemessen 2026-09-04 auf diesem Rechner: **710/715/735 ms** allein für den Browserstart (`about:blank`, ohne Netz), eine echte Doku-Seite 3,9–19,6 s. Eine Seite mit fünfzig Links ist fünfzig davon |
 | `:Hover paths [state]` | `on\|off\|toggle` | bare paths in prose |
@@ -51,9 +52,10 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
 
 - **Routes are generated, not written.** `switch_route(name)` builds one route
   per entry in `hover.switches`; the same table feeds `:Hover status` and the
-  `:checkhealth hover` section. A tenth switch is one table entry and nothing
-  else, and dispatch/completion/docs cannot drift apart. `paths code` was the
-  eighth and cost exactly that — one entry plus one name in `ORDER`.
+  `:checkhealth hover` section. A thirteenth switch is one table entry and
+  nothing else, and dispatch/completion/docs cannot drift apart. `paths code`
+  was the eighth and cost exactly that — one entry plus one name in `ORDER`,
+  and `pdf` as the twelfth cost the same again.
 
   **This has been the repository's recurring bug, three times.** Every place
   that kept its own list of switches by hand eventually fell behind the table
@@ -74,7 +76,7 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   The reason: the checker compares documented commands against
   `nvim_get_commands({})`, which lists **top-level Vim commands only**. This
   plugin registers exactly one, `Hover`; every route above is a composer
-  sub-route and is invisible there. All fifteen rows collapse onto the same
+  sub-route and is invisible there. All twenty-five rows collapse onto the same
   live name, it exists, and both directions pass trivially.
 
   So the authority for this table is **`composer.document("Hover")`**, which
@@ -151,6 +153,29 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-04 (5): **`:Hover links web fetch pdf` zeigt einen PDF-Link als
+  Seite** (hover.nvim `dbc2b87`). Damit **fuenfundzwanzig** Routen und zwoelf
+  Switches. Nichts wird konvertiert — die Bytes am anderen Ende sind bereits
+  ein PDF und gehen in dieselbe pdfport/`pdftoppm`-Pipeline wie ein lokales.
+
+  **Zwei Vorhersagen aus dem Handover waren falsch, und beide klangen gut.**
+  Erstens „die Bytes sind schon da": der Body-Cache haelt sie, aber
+  `lib.nvim.net.curl` laeuft mit `vim.system(..., { text = true })`, und das
+  ersetzt CRLF durch LF. Fuer HTML unsichtbar, fuer ein PDF toedlich — was
+  ankaeme, oeffnet `pdftoppm` nicht, und der Fehler saehe aus wie ein kaputter
+  Renderer. Also `curl -o` an Lua vorbei. Zweitens „es braucht keinen
+  Schalter": folgte aus dem ersten und faellt mit ihm.
+
+  Die zweite Anfrage ist zugleich das, was den **Groessendeckel** erst
+  beantwortbar macht: der Content-Type ist erst nach der ersten Antwort
+  bekannt, also kann *eine* Anfrage nicht die 2 MB fuer eine Seite und die
+  25 MB fuer ein Dokument zugleich tragen.
+
+  Blaettern und Zoomen brauchten **ein Feld und sonst nichts**: `scroll` und
+  `zoom` leiteten „ist das geblaettert" aus `target.type == "pdf"` ab, was ein
+  Stellvertreter war und aufhoerte, ein genauer zu sein, sobald ein *Link* mit
+  einem PDF antworten kann. `present` merkt sich das jetzt aus dem Inhalt.
 
 - 2026-09-04 (4): **`:Hover links web shot` rendert die Seite** (hover.nvim
   `4e2ebeb`). Damit **vierundzwanzig** Routen. Ein Headless-Chromium legt die

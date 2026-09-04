@@ -11,6 +11,7 @@ Eine Analyse zu Missverständnissen rund um Bash-Heredocs, deren tatsächlichen 
     - [Verhalten im Vergleich (gemessene Werte)](#verhalten-im-vergleich-gemessene-werte)
     - [Weitere Fallstricke](#weitere-fallstricke)
   - [Die eigentliche Lehre](#die-eigentliche-lehre)
+    - [Nachtrag 2026-09-04: der Schaden ist nicht immer ein Abbruch](#nachtrag-2026-09-04-der-schaden-ist-nicht-immer-ein-abbruch)
 
 ---
 
@@ -42,7 +43,13 @@ cat <<'EOF' # Quoted    -> Alles wird exakt literal übernommen
 
 ### Verhalten im Vergleich (gemessene Werte)
 
-| Body-Inhalt | Unquoted (`<<EOF`) (`<<'EOF'`) :--- HALLO)`Quoted`$(echo `$5` `$HOME` `/c/Users/Username` `HALLO` `\$5` |> **Faustregel:** Text, der exakt unverändert bleiben soll (Skripte, Konfigurationen, Code, Commit-Messages), gehört **immer** in `<<'EOF'`. Nur wenn bewusst Variablen ersetzt werden sollen, bleibt der Delimiter unquoted.
+| Body-Inhalt | Unquoted (`<<EOF`) | Quoted (`<<'EOF'`) |
+| :--- | :--- | :--- |
+| `$(echo HALLO)` | `HALLO` | `$(echo HALLO)` |
+| `$HOME` | `/c/Users/Username` | `$HOME` |
+| `\$5` | `$5` | `\$5` |
+
+> **Faustregel:** Text, der exakt unverändert bleiben soll (Skripte, Konfigurationen, Code, Commit-Messages), gehört **immer** in `<<'EOF'`. Nur wenn bewusst Variablen ersetzt werden sollen, bleibt der Delimiter unquoted.
 
 ---
 
@@ -63,6 +70,27 @@ Dabei muss jede Zeile mehrere Quoting-Ebenen passieren (z. B. *Tool $\rightarrow
 
 1. **Für kurze Blöcke (5–30 Zeilen):** Heredocs direkt in Skriptdateien auf der Festplatte nutzen.
 2. **Für große Dateien/Literale:** Besser auf dedizierte Datei-Schreibwerkzeuge, den Editor oder ein kurzes Skript (z. B. Python/Node.js) ausweichen, das die Datei ohne Shell-Parsing direkt auf das Dateisystem schreibt.
+
+### Nachtrag 2026-09-04: der Schaden ist nicht immer ein Abbruch
+
+Zweimal in einer Sitzung getroffen, beim Schreiben von Lua über ein
+Python-Heredoc: **Escape-Sequenzen kommen als das an, was sie bezeichnen.** Ein
+`\n`, das im Ziel-Literal als *zwei Zeichen* stehen bleiben soll, wurde
+unterwegs zu einem echten Zeilenumbruch. Das Kommando lief durch, exit 0, keine
+Fehlermeldung — und die geschriebene Datei war ein Syntaxfehler, weil Lua in
+einem `"…"`-Literal keinen echten Umbruch erlaubt.
+
+Das ist die unangenehmere Hälfte der Lehre oben: die Fehldiagnose
+(`unexpected EOF`) ist wenigstens laut. Ein verlorenes Escape ist still, und
+gefunden wird es erst vom Parser der Zielsprache — oder gar nicht, wenn das
+Ziel Markdown ist. **Genau so ist die Tabelle in [Verhalten im
+Vergleich](#verhalten-im-vergleich-gemessene-werte) in dieser Datei zerlaufen**:
+sie stand am 2026-09-04 vollständig auf *einer* Zeile, samt der angeklebten
+Faustregel darunter, und ist aus den Fragmenten wiederhergestellt worden.
+
+> **Konsequenz:** Sobald ein Literal Escape-Sequenzen enthält, die im Ziel
+> überleben müssen, geht es nicht durch die Shell. Dann Datei-Schreibwerkzeug,
+> oder das Escape im Skript aus `chr(92)` zusammensetzen statt es hinzuschreiben.
 
 ---
 
