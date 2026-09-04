@@ -1,7 +1,7 @@
 # Handover — casedesk als eigenes Plugin (`casedesk.nvim`)
 
-**Stand: 2026-09-04, Phase 0 und Phase 1 abgeschlossen. Als Nächstes:
-Phase 2 (`config.setup(opts)` plus Bereichs-Datenmodell).**
+**Stand: 2026-09-04, Phasen 0-2 abgeschlossen. Als Nächstes: Phase 3
+(Umschalten auf das Plugin, Config-Kopie einfrieren).**
 
 Auftrag: `lua/bindings/usrcmds/case/` aus der nvim-Config nach
 `StefanBartl/casedesk.nvim` auslagern (privat), dabei naheliegende Features
@@ -99,19 +99,72 @@ Commits `b91ac49` (Umzug), `160f7ed` (Lint + ein echter Bug), `9f8...`
   und luacheck sauber.
 - **Die Config-Kopie ist unangetastet und weiterhin die aktive.**
 
+## Phase 2 im Einzelnen — was steht
+
+Commit `57f5d66`.
+
+- **`config.setup(opts)`** — Deep-Merge, danach `rebuild_derived()` für
+  `root`, `cases_root`, `workflow_templates_dir`, `sla_doc_path`, aber
+  **nur** für Schlüssel, die der User nicht selbst gesetzt hat.
+  Listen-Optionen ersetzen, namensgeschlüsselte Tabellen mergen.
+- **Bereiche** — `config.areas` mit SAP und CS, `config.area(name)`,
+  `config.state_dir(state, area)` (zweites Argument optional, damit die
+  vier Altaufrufer korrekt bleiben, nicht bloß kompilieren).
+  `DERIVED_AREA_DIRS` sorgt dafür, dass auch CS `repo_root` folgt.
+- **`T2` ist jetzt ein SAP-State** — der Case dort ist zum ersten Mal
+  auffindbar.
+- **`registry`** scannt alle Bereiche, jeder Eintrag trägt `area`.
+  Mehrdeutige Nummern: `find` meldet die Mehrdeutigkeit statt zu raten,
+  `exists` sagt „gibt es nicht", der CASE-Argumenttyp nennt im Fehler die
+  Bereiche, Completion bietet solche Nummern nur als `AREA/number`.
+- **`:Case close`** bietet die Schnittmenge der States aller markierten
+  Cases — ein CS-Case kann nicht nach `T2`.
+- **`@types/init.lua`** — `Casedesk.Config.Opts` (alles optional, was
+  `setup` nimmt) getrennt von `Casedesk.Config` (alles vorhanden, was die
+  Module lesen), plus `Casedesk.Area` und `Casedesk.SlaLevel.Opts`.
+- **`health.lua`** — `:checkhealth casedesk` prüft lib.nvim, jede
+  Bereichs-Wurzel, die Reply-Block-Bibliothek, das SLA-Dokument und die
+  drei optionalen Binaries.
+- **28 neue Zusicherungen** (`config_spec`, `registry_spec`), Letztere
+  gegen einen echten temporären Baum mit absichtlich doppelter Nummer.
+  Gesamt 32 Specs, alle grün.
+
+**Zwei echte Defekte kamen dabei ans Licht, beide selbst gebaut:**
+
+1. `ui.lua` übergab `apply` an `pick_asset_value`, nachdem die lokale
+   Funktion dieses Namens einen Commit zuvor zu `emit` umbenannt worden
+   war — das Argument war damit still das gleichnamige **Modul**. Ein
+   Callback, der eine Tabelle ist, wäre erst zur Aufrufzeit gescheitert,
+   in einem Zweig, den nur `:Case insert asset` erreicht. Genau der
+   „Fix, der eine Warnung nur verschiebt" aus `LLS-08` — gefunden von
+   der Messung, die dem Fix folgte.
+2. `:Case new` baute einen Registry-Eintrag ohne `area`.
+
+**Und zwei, die die Tests beim Schreiben fanden:** die CS-Area folgte
+`repo_root` nicht, und `split()` wies das `"CS/"` zurück, das die
+Completion genau dann bekommt, wenn jemand den Bereich tippt und Tab
+drückt.
+
+**Messung:** 29 Befunde, davon 27 aus einem einzigen Typfehler
+(`Casedesk.Config` erbte die optionalen Felder statt eigene Pflichtfelder
+zu haben). Nach der Trennung: **0**.
+
 ## Als Nächstes
 
-- [ ] **Phase 2 — `config.setup(opts)`.** `config/init.lua` reicht die
-      Defaults derzeit nur durch (`TODO(phase 2)` steht drin). Zu bauen:
-      Deep-Merge plus `rebuild_derived()` für `root`, `cases_root`,
-      `workflow_templates_dir`, `sla_doc_path` — **nur** für Schlüssel,
-      die der User nicht explizit gesetzt hat. Dazu `@types/init.lua`
-      (`Casedesk.Config` mit allen 30 Feldern) und `health.lua`.
-- [ ] **Phase 2 mit: Bereichs-Datenmodell** (PLUGIN.md §3.6/§7.6
-      Schritt 1) — `config.areas`, `state_dir(area, state)`,
-      `RegistryEntry.area`. Macht die drei unsichtbaren Cases sichtbar,
-      ohne dass sich ein Kommando ändert.
-- [ ] Phase 3 — Umschalten, Config-Kopie einfrieren (nicht löschen!).
+- [ ] **Phase 3 — Umschalten.** In der nvim-Config:
+      `lua/bindings/usrcmds/init.lua:7` auskommentieren (mit
+      Rückfall-Kommentar), `mappings/custom.lua:28` und die vier requires
+      in `wkdnvchad/ui/statusline/modules/casedesk/init.lua` auf
+      `casedesk.*` umstellen, Spec-Eintrag in `plugins/personal/init.lua`
+      **und** `source.lua` anlegen, Hinweis in `case/README.md`, dass die
+      Kopie eingefroren ist. **Nicht löschen.**
+      Prüfpunkt: `:Cases doctor` muss dieselben 20 Funde liefern wie die
+      Baseline — plus jetzt möglicherweise neue aus CS und T2, die vorher
+      unsichtbar waren; das ist erwartete Verbesserung, keine Regression.
+- [ ] Phase 4 — Doku (Konzept-Docs mitziehen, `BINDINGS.md`,
+      `configuration.md` aus `@types` füllen, vimdoc).
+- [ ] Danach: `:Case new` fragt den Bereich (§7.6 Schritt 3),
+      `:Cases area`-Filter, `area` in `.case.json` samt doctor-Nachtrag.
 
 ---
 
