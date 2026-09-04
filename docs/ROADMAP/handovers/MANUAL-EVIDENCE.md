@@ -89,6 +89,7 @@ on, so a missing one dates the loaded code:
 | `:Hover auto` | older than `e8cde0e` — no `auto_hover` axis at all |
 | `:Hover zen` | older than `c20191e` — no zen |
 | `:Hover links web shot` | older than `4e2ebeb` — no page screenshots |
+| `:Hover links web fetch pdf` | older than `dbc2b87` — a PDF link shows its size only |
 
 ## What no CI covers
 
@@ -261,6 +262,15 @@ usable, so `hover.float.contains` does the rectangle test itself.
 | **How** | `:Hover links web shot`, then `:Hover show` with the cursor on an `https://` link. A picture of the page appears in the float. Then `F` for the full-screen reading, `>` to magnify a detail, `h`/`j`/`k`/`l` to move it. For the trigger half: `:Hover links web shot eager` and `:Hover auto url`, then rest the cursor on a link and wait — nothing should start for the first second of stillness. |
 | **Watch for** | Three things, in order of how badly they would fail. **The reader's own Chrome profile being used** — the picture would show them logged in, and their cookies would have gone to that host; the throwaway `--user-data-dir` is what prevents it and it is the one flag worth verifying by eye. **A browser per link while scrolling**, which would mean the start delay or the one-at-a-time kill is not working; the cheapest check is watching the process list while running the cursor down a page of links. And **an unreadable picture**, which is the fit factor rather than a bug — 1280×900 into a zen float is about 1.0, and a taller capture is meant to be read with the zoom. |
 
+### A link that answers with a PDF
+
+| | |
+| --- | --- |
+| **Checked** | *never* — written down on 2026-09-04, the day it was built (`dbc2b87`), and not yet seen. The parts that are checked automatically are the four decisions around the download: what counts as a PDF, the refusal above the cap, a truncated file being discarded, and the switch implying `fetch`. What no spec can reach is the whole of what this row is for: a real server answering `application/pdf`, and a page drawn from it. |
+| **On** | — |
+| **How** | `:Hover links web fetch pdf` (it turns `links web fetch` on with it), then `:Hover show` with the cursor on a link that really serves a PDF — an arXiv `/pdf/` URL or a datasheet, not a `.pdf` in a path that redirects. The first page appears in the float. Then `<M-PageDown>` to page, `>` to magnify, `F` for the full-screen reading: all three should behave exactly as they do on a local `.pdf`, because past the download it *is* the local path. |
+| **Watch for** | **A page that never arrives after "downloading the document…"** — the honest failure would name a reason instead. **`pdftoppm` erroring on a file that downloaded fine**, which would mean the bytes were mangled in transit rather than the renderer being broken; that is the `text = true` failure the second request exists to avoid, and seeing it would mean the second request is not being made. And **paging or zooming falling back to line-scrolling**, which would mean `_open.paged` was not recorded — the symptom is `<M-PageDown>` moving by lines on a web PDF while it turns pages on a local one. |
+
 ### An office document converted
 
 | | |
@@ -361,7 +371,7 @@ Windows, per push.
 ## Keeping this honest
 
 A row whose date is older than the code it describes is worse than no row,
-because it reads as a check that happened. When one of the ten paths above
+because it reads as a check that happened. When one of the eleven paths above
 changes, either check it again and move the date, or set the date back to
 *never* and say why.
 
@@ -387,6 +397,11 @@ for. A feature shipped with no row at all is the gap being invisible.
 What is still genuinely unseen is narrower and named in those two rows: the
 throwaway browser profile, verified by eye rather than by reading the flag
 list, and one browser at a time while scrolling a page of links.
+
+**A third row stands at *never* since 2026-09-04**, for the same reason and by
+the same rule: a link that answers with a PDF (`dbc2b87`), built after that
+day's test pass had ended. Nothing about it has been seen against a real
+server.
 
 ---
 
