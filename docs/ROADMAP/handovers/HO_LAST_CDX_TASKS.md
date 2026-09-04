@@ -3,8 +3,8 @@
 Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
-**Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 flächendeckend,
-24 Repos gepusht.**
+**Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 ist 31/31,
+Welle 1 vollständig, 25 Repos gepusht.**
 
 ---
 
@@ -27,7 +27,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | P2 — README-Konzept | ✅ | 2026-09-03 | `MyNotes\docs\README-KONZEPT.md` |
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
-| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-03 | E1 flächendeckend erledigt; Welle 1 in Arbeit |
+| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 **31/31**; **Welle 1 vollständig** (`mdview`, `lsp`, `hover`); Wellen 2–3 angearbeitet |
 | P5 — Wiederholungsläufe | ⬜ offen | — | 8.1/8.3/8.5 vorziehbar |
 | P6 — BINDINGS-Sanierung | ⬜ offen | — | braucht P4 |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
@@ -53,13 +53,15 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | github_stats.nvim | Nachtrag | 7× `configurations/`, 1× `usercommands.md` (Case) | `acb9857` |
 | reposcope.nvim | 2 | FEATURES-Doppelung, 6 Case-Renames, `docs/README.md`, `health.md`, README 93 → 138, 3 tote Anker, DOC-11 (5 Keys) | `b35b795` |
 | *(5 Repos)* | E1 (Nachtrag) | `diff`, `documentation`, `language`, `markdown`, `open` — nach Ü9-Freigabe | `a2a5ee5`…`a269b2b` |
+| hover.nvim | 1 | Voller Durchgang. **Ein** inhaltlicher Befund: `FEATURES/README.md` beschrieb das Quiet-Modell als zwei Achsen, wo die Seite drei hat. Struktur war bereits vollständig; E1 war es auch | `1588f2c` |
 
-**E1 ist damit bei 30/31.** Der deps-Durchgang aus
+**E1 ist bei 31/31** — siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr), das die letzte offene Zeile aufgelöst hat, ohne dass sie eine war. Der deps-Durchgang aus
 [Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt) hat
 am 2026-09-04 committet und damit alle sechs blockierten Repos freigegeben.
 Fünf davon haben die Zeile nachgetragen bekommen (`diff.nvim`,
 `documentation.nvim`, `language.nvim`, `markdown.nvim`, `open.nvim`); offen ist
-nur noch `hover.nvim`, das E1 in seinem eigenen Durchgang erledigt.
+nur noch `hover.nvim` — und das war es bereits, ohne dass die Ledger-Zeile es
+wusste. Siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr).
 
 > Die Schranke aus Ü9 ist damit gefallen, die **Regel** dahinter nicht:
 > `git status` bleibt der erste Blick vor der Repo-Auswahl, nicht der letzte
@@ -239,7 +241,7 @@ Nach dem Anlegen von `docs/README.md` meldete er in `debugging.nvim`
 unverändert „13 files, 0 dead" — grün, und wertlos.
 
 Beide Fehlerklassen sind jetzt im Werkzeug behoben (siehe
-[Werkzeug-Notizen](#scriptsdocs_linkcheckpy)). Die alte Handregel
+[Werkzeug-Notizen](#scriptsdocs_linkcheckpy-neu)). Die alte Handregel
 „**erst `git add`, dann prüfen**" ist damit nicht mehr nötig, schadet aber
 nicht.
 
@@ -413,6 +415,105 @@ Absicht** — jemand wollte 0.9 unterstützen und hat es an sechs Stellen
 vergessen. Entweder sechs Zeilen nachziehen oder die 0.9-Absicht bewusst
 aufgeben. → Entscheidung des Autors.
 
+### Ü23 — Drei Behauptungen des Standards über `hover.nvim` waren am Tag der Welle nicht mehr wahr
+
+`hover.nvim` ist im Standard das Paradebeispiel des Ausreißers: §5.2 nennt es
+mit **1123 Zeilen** README als Ursache von Befund G, §5.3 mit **13** genannten
+Geschwister-Plugins, und die Ledger-Zeile führte es als das letzte Repo mit
+offenem E1. Gemessen am 2026-09-04, vor der Arbeit:
+
+| Behauptung | Bestandsaufnahme (2026-09-03) | Gemessen (2026-09-04) |
+|---|---|---|
+| README-Länge | 1123 Zeilen | **191** — mitten im E2-Korridor |
+| Genannte Geschwister | 13 | **3**, plus `lib.nvim` im Dependency-Absatz |
+| E1 offen | ja | **nein** — die Zeile stand wortgleich da |
+
+Alle drei gehen auf **einen** Commit zurück: `40153a7` („a README that fits on
+one screen"), am 2026-09-04 im Repo selbst entstanden, ohne Bezug auf diesen
+Durchgang. Er hat 1124 auf 188 Zeilen gekürzt, die Geschwisterliste auf drei
+zusammengestrichen — und dabei E1s Wortlaut mitgenommen: davor las Zeile 1
+`> **Active development.**`, danach `> **Alpha stage — active development.**`,
+buchstabengleich mit den anderen 30.
+
+**E1 ist damit 31/31, und die offene Ledger-Zeile war ein Buchhaltungsartefakt.**
+Was E1 *änderte*, war der Wortlaut, nicht die Position — und der Wortlaut war
+da.
+
+**Das ist Ü1/Ü7/Ü10 zum vierten Mal, in einer neuen Variante.** Die ersten drei
+Male war die Frage falsch gestellt (nach dem Wort statt der Sache, ohne
+Code-Block-Filter, gegen die Platte statt gegen Git). Hier war die Frage
+richtig gestellt und die **Antwort abgelaufen**: eine Bestandsaufnahme ist eine
+Messung mit Datum, und zwischen ihr und der Welle liegt in einem aktiven Repo
+ein Tag Arbeit.
+
+> **Regel:** Am Anfang der eigenen Welle neu messen, nicht die Zahl aus der
+> Bestandsaufnahme übernehmen. Es kostet ein `wc -l README.md` und einen Grep,
+> und es hätte hier einen ganzen geplanten Umbau eingespart.
+
+**Was der Durchgang tatsächlich gefunden hat: genau einen inhaltlichen
+Befund** — `docs/FEATURES/README.md` beschrieb das Quiet-Modell als **zwei**
+Achsen, während `QUIET.md` eine Überschrift „The third axis, added when the
+first two could not express it" trägt und das README-Einzeiler bereits „three
+axes" sagte. Gefunden mit [Ü20](#ü20--doppelt-gepflegte-referenzen-sind-ein-fundbüro-kein-befund)s
+Methode: jeder Index ist für sich plausibel, erst das Paar ist widersprüchlich.
+
+**Nebenbefund, für den Autor und nicht für dieses Repo:** die Position des
+Disclaimers ist repoübergreifend uneinheitlich. 29 Repos haben ihn auf Zeile 1
+(über dem Titel), drei nicht — `hover.nvim` (32), `replacer.nvim` (21),
+`reposcope.nvim` (24) —, und `mdview.nvim` hat ihn **zweimal**. Zeile 1 ist die
+Mehrheitspraxis (P4), Position 4 ist das, was §5.1 vorschreibt. Beide Regeln
+gelten, und sie widersprechen sich. → Entscheidung des Autors; bis dahin folgt
+`hover.nvim` §5.1.
+
+**Und ein Muster, das andere Repos übernehmen könnten:** die B-Sektion der
+Checkliste ist in `hover.nvim` nicht einmalig geprüft, sondern **in der eigenen
+Suite verdrahtet**. `TESTS/docs_spec.lua` lässt CI rot werden, wenn eine Route
+undokumentiert ist (`DOC-08`), ein Augroup fehlt (`DOC-09`), eine geliehene
+Taste in keiner Tabelle steht (`DOC-10`), ein Config-Key in
+`docs/configuration.md` nicht in `DEFAULTS` existiert (`DOC-11`) oder
+`doc/hover.txt` die Schalter in anderer Reihenfolge listet als
+`hover.set()` (`DOC-14`). Das ist der einzige Weg, auf dem diese Befunde nicht
+wiederkommen — ein Durchgang prüft einmal, eine Spec bei jedem Commit.
+
+### Ü24 — Zwei blinde Flecken aus Ü18 sind mit je 15 Zeilen prüfbar
+
+`docs_linkcheck.py` sieht keine Anker. Für `hover.nvim` wurden beide fehlenden
+Prüfungen ad hoc nachgezogen und liefen sauber (0 Befunde bei 21 Dateien):
+
+- **Datei-interne Anker** — jeden `](#…)` gegen die Überschriften der eigenen
+  Datei, slugifiziert.
+- **Datei-übergreifende Anker** — jeden `](andere.md#…)` gegen die
+  Überschriften *jener* Datei. Das ist der Fall, den Ü18 an `lsp.nvim`s ToC
+  nur zur Hälfte beschreibt, und der mit `docs/README.md` als Wegweiser
+  häufiger wird.
+
+Beides gehört in `docs_linkcheck.py`, nicht in 31 Einzelläufe. **Nicht gebaut**
+— das Werkzeug ist gemeinsames Gut, und eine Änderung daran ist ein eigener
+Auftrag, kein Nebenprodukt eines Repo-Durchgangs.
+
+**Drei Fallen stecken in der Slug-Regel, und die ersten beiden haben in dieser
+Prüfung zugeschlagen** — wer sie ins Werkzeug einbaut, spart sie sich:
+
+1. **Leerzeichen werden nicht kollabiert.** GitHub ersetzt *jedes* durch einen
+   Bindestrich. `## Ü9 — Ein zweiter` wird `ü9--ein-zweiter`, mit zwei
+   Bindestrichen, weil der Gedankenstrich zwischen zwei Leerzeichen wegfällt.
+   Ein `\s+` statt `\s` meldet jeden solchen Anker als tot — die erste Fassung
+   dieser Prüfung meldete so 14 Befunde, von denen keiner einer war.
+2. **Inline-Code enthält Beispiel-Anker.** Ü18 selbst zitiert
+   `` `[Roadmap](#roadmap)` `` als Beispiel eines toten Ankers. Ohne
+   Code-Filter zählt der Prüfer das als Befund — [Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen)
+   noch einmal, eine Ebene tiefer.
+3. **Emoji in Überschriften sind ungeklärt.** `### Ü9 … besetzt ⚠️` und
+   `### Ü10 … im Repo ⚠️` erzeugen einen Slug, dessen Ende von GitHubs
+   Emoji-Behandlung abhängt, und die ist nicht nachgebaut. Die Links auf beide
+   sind hier **ungeprüft** stehen geblieben statt auf Verdacht umgeschrieben.
+   Wer den Prüfer baut, klärt diesen Fall an einer gerenderten Seite, nicht am
+   Regex.
+
+Ein Befund war echt und ist behoben: der Verweis auf die Werkzeug-Notizen zeigte
+auf `#scriptsdocs_linkcheckpy`, während die Überschrift `(neu)` trägt und damit
+auf `-neu` endet.
+
 ---
 
 ## Abweichungen vom Standard
@@ -432,6 +533,9 @@ aufgeben. → Entscheidung des Autors.
 | reposcope.nvim | `DEVELOPMENT.md` → `troubleshooting.md`, nicht `development.md` | Der Inhalt war Symptome plus Dateipfade — also genau der Standard-Slot. Ein drittes, im Standard nicht vorgesehenes Dokument zu erfinden wäre schlechter gewesen. |
 | reposcope.nvim | `docs/health.md` angelegt, obwohl [BEDINGT] | Es *gibt* einen checkhealth-Provider, und „was bedeutet diese WARN-Zeile“ hatte keine Adresse. |
 | reposcope.nvim | Datierte Messwerte in `configuration.md` und `FEATURES/UI.md` bleiben | Ein datierter Messwert ist **Evidenz**, kein Changelog. `DOC-17` trifft „now/used to“-Formulierungen, nicht Messungen mit Stichtag. |
+| hover.nvim | Alpha-Disclaimer auf Position 4 statt Zeile 1 | §5.1 schreibt genau diese Reihenfolge vor (ASCII → Badges → Ein-Satz → Disclaimer), und `40153a7` folgt ihr. Die Mehrheitspraxis (P4) ist Zeile 1. Beides sind Regeln dieses Durchgangs — siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr). |
+| hover.nvim | Kein `USECASES/`, obwohl E5s beide Bedingungen erfüllt sind | Es *gibt* eine API und eine mehrschrittige Aufgabe (eine Contribution registrieren). Sie hat aber schon zwei Adressen und ein lauffähiges Beispiel: `api.md` trägt die Signaturen und den Vertrag, `FEATURES/CONTRIBUTIONS.md` das Warum, `scripts/onrequest_probe.lua` den Durchlauf. Eine dritte Adresse für denselben Weg wäre `DOC-18`, keine Ebene. |
+| hover.nvim | Kein `troubleshooting.md` [BEDINGT] | Das Symptom-Material hat zwei Adressen, die *verschiedene* Fragen beantworten: `WORKFLOW.md` „When nothing hovers, ask before you guess" nennt die Werkzeuge und ihre Reihenfolge (`:Hover why` vor `:checkhealth`), `integrations.md` „Reading a symptom back to its owner" liest jedes Symptom auf das Plugin zurück, dem es gehört. Beide sind in `docs/README.md` **nach Symptom** benannt. Der `reposcope`-Präzedenzfall legte eine Datei an, weil es *keine* Adresse gab; hier gäbe es eine dritte. |
 | alle | `docs/map/` nicht verlinkt und nicht als Pflicht geführt | Siehe [Ü10](#ü10--docsmap-ist-in-29-von-31-repos-gar-nicht-im-repo-️). |
 
 ---
