@@ -62,6 +62,27 @@ Reihenfolge beim Binden: Dismiss vor Open vor Scroll vor Resize vor Zoom vor
 Nav — eine Taste, die in zwei Listen steht, wird einmal genommen, und zwar für
 die Bedeutung, die immer gilt.
 
+## Owned — buffer-lokal, nur im `:Hover status`-Board
+
+Weder geliehen noch global: diese Tasten leben auf dem Scratch-Buffer des
+Boards und verschwinden mit dem Fenster. Nicht konfigurierbar — ausserhalb
+dieses Fensters kann sie nichts erreichen, also gibt es nichts einzustellen.
+
+| Key | Mode | Effect |
+| --- | --- | --- |
+| `<CR>`, `<Space>`, `<2-LeftMouse>` | n | Zeile unterm Cursor umschalten; auf der Mode-Zeile `auto` → `manual` → `off` |
+| `+` | n | Zeile an — auf der Mode-Zeile `auto` |
+| `-` | n | Zeile aus — auf der Mode-Zeile `off` |
+| `<Tab>` / `<S-Tab>` | n | naechste / vorige schaltbare Zeile, Ueberschriften und Leerzeilen uebersprungen |
+| `y` | n | das `:Hover ...` dieser Zeile yanken |
+| `r` | n | Konfiguration neu lesen und zeichnen |
+| `?` | n | Cheatsheet, aus derselben Tabelle erzeugt wie die Bindungen |
+| `q`, `<Esc>` | n | Board zu |
+
+Die Winbar zeigt, was hineinpasst, und pinnt `? Keys` — darueber ist der Rest
+erreichbar. Keine Kollision mit irgendetwas in dieser Config: der Buffer ist
+`nofile`/`wipe` und existiert nur, solange das Board offen ist.
+
 ## Kollisionen — was man wissen muss
 
 | Taste | Was währenddessen nicht geht |
@@ -129,6 +150,14 @@ Aussage über **diese** Config, nicht über das Plugin.
   `h/j/k/l`.
 
 ## Changelog
+
+- 2026-09-04: **das `:Hover status`-Board hat eigene Tasten** (hover.nvim,
+  dieser Commit) — die ersten *besessenen* Tasten dieses Plugins ueberhaupt,
+  und sie widersprechen der Regel darueber nicht: sie sind buffer-lokal auf
+  einem Scratch-Buffer, der mit dem Fenster verschwindet, und verdraengen
+  daher nichts. Der Grund fuer das Board steht in der Usercmds-Datei; kurz:
+  `:Hover links on` schaltet nicht `web links`, weil das `:Hover links web on`
+  heisst, und das Board zeigt zu jeder Zeile das Kommando, das sie schaltet.
 
 - 2026-09-03 (2): **der Zoom hat blanke Tasten statt Alt-Akkorde** (hover.nvim
   `21c4932`). `>` hinein, `|` heraus, `=` zurück. Der Grund ist eine Messung

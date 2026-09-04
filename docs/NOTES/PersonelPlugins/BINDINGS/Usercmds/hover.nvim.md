@@ -20,7 +20,7 @@ Docs: `docs/BINDINGS.md`, `doc/hover.txt`, `README.md`
 | Command | Args | Notes |
 | --- | --- | --- |
 | `:Hover show` | — | one hover, here, now; ignores every volume switch. Seit language.nvim `b592b9f` **auch eine Übersetzung** des Worts unter dem Cursor — nur hier, nie auf dem automatischen Trigger, weil jede Antwort eine Netzanfrage mit genau diesem Wort ist. Mehrere Antworten zu einer Stelle: `<M-n>` blättert |
-| `:Hover status` | — | mode + all nine switches, as a selectable list |
+| `:Hover status` | — | mode + alle neun Switches + `auto_hover`, als **Board**: `<CR>` schaltet die Zeile unterm Cursor, `+`/`-` explizit, `y` yankt das Kommando der Zeile, `?` listet die Tasten. Jede Zeile traegt ihr `:Hover ...` — genau deshalb, siehe Changelog 2026-09-04 |
 | `:Hover why` | — | why nothing hovered here — names which gate declined |
 | `:Hover next` | — | step to the next plugin with something to say about this place; wraps past the last |
 | `:Hover pin` | — | keep this float on screen while the cursor moves away |
@@ -146,6 +146,41 @@ Every `state` argument is an `enum`, so it completes. **Omitting it toggles** �
   `:Hover show` ignores it entirely.
 
 ## Changelog
+
+- 2026-09-04: **`:Hover status` ist ein Board** (hover.nvim, dieser Commit).
+  Anlass war eine konkrete Verwechslung an diesem Rechner: `:Hover status`
+  sagte `link targets on` / `web links off`, darauf `:Hover links on` getippt
+  — und `web links` blieb off. Nichts war kaputt. `web` ist ein **eigener**
+  Switch und haengt im Kommandobaum unter `links`, das Kommando heisst
+  `:Hover links web on`. Label und Route waren zwei verschiedene Strings, und
+  nur einer davon stand auf dem Schirm.
+
+  Deshalb traegt jetzt **jede Zeile ihr Kommando**, und die Einrueckung *ist*
+  die Implikationskette. Die Route kommt aus `switches.route()`, das aus
+  `usrcmds` dorthin gewandert ist — zwei Leser, eine Ableitung, sonst waere es
+  der `route_path`-Bug eine Datei weiter.
+
+  Drei Glyphen statt zwei: `●` on, `○` off, `◐` *hier gesetzt, oben
+  abgeschaltet*. Das ist der Zustand, den eine flache on/off-Liste strukturell
+  nicht sagen kann — `web = true` bei `links = false` las sich als schlichtes
+  `off`, und das Wiedereinschalten von `links` sah dann aus, als schalte es
+  etwas ein, das niemand wollte.
+
+  Tasten (buffer-lokal, verschwinden mit dem Fenster, nicht konfigurierbar):
+  `<CR>`/`<Space>`/`<2-LeftMouse>` toggle, `+` on, `-` off, `<Tab>`/`<S-Tab>`
+  zur naechsten/vorigen schaltbaren Zeile, `y` yank, `r` neu lesen, `?`
+  Cheatsheet, `q`/`<Esc>` zu. Winbar-Legende und `?`-Panel werden aus
+  **derselben** Tabelle erzeugt, aus der die Tasten gebunden werden — Vorlage
+  war reposcope.nvims `status_view`, gleiche Form fuer dasselbe Problem.
+
+  Ebenfalls neu auf dem Board: `auto_hover` als dritter Abschnitt. `mode`,
+  Switches und „was oeffnet von selbst" sind drei verschiedene Gruende, aus
+  denen nichts hovert, und sie sahen von aussen identisch aus.
+  `hover.status()` gibt jetzt `{ mode, switches, auto }` zurueck, jeder Switch
+  mit `enabled` (Kette eingerechnet), `flag` (eigener Wert) und `route`.
+
+  Ohne lib.nvims UI-Kit faellt es auf die Nachricht zurueck — die traegt seit
+  demselben Commit ebenfalls die Routen statt nur der Labels.
 
 - 2026-09-03: **`:Hover next` added** (hover.nvim `ac0a372`), the
   borrow-free half of `<M-n>`. Seventeen routes now. It steps between the
