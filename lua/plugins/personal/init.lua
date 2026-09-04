@@ -105,7 +105,8 @@ plugins.add({
     -- `>` hinein, `|` heraus, `=` zurueck, und damit genau das, was hier
     -- voruebergehend als `zoom_keys` ueberschrieben war. Die frueheren
     -- Alt-Akkorde (`<M-z>`/`<M-Z>`/`<M-R>`) erreichen dieses Terminal nicht --
-    -- gemessen, siehe hover.nvim `docs/MANUAL-EVIDENCE.md`.
+    -- gemessen, siehe `docs/ROADMAP/handovers/MANUAL-EVIDENCE.md` in dieser
+    -- Config (seit 2026-09-04 hier statt im oeffentlichen Plugin-Repo).
     "StefanBartl/hover.nvim",
     lazy = false,
     priority = 900,
