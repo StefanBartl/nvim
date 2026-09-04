@@ -4,7 +4,7 @@ Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
 **Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 ist 31/31,
-Welle 1 vollständig, 25 Repos gepusht.**
+Wellen 1–3 vollständig (11 Repos), alle toten Anker der Sammlung behoben.**
 
 ---
 
@@ -27,7 +27,7 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | P2 — README-Konzept | ✅ | 2026-09-03 | `MyNotes\docs\README-KONZEPT.md` |
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
-| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 **31/31**; **Welle 1 vollständig** (`mdview`, `lsp`, `hover`); Wellen 2–3 angearbeitet |
+| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 **31/31**; **Wellen 1–3 vollständig** — 11 Repos, vier davon still erledigt (siehe Ü25). Offen: Wellen 4–10, 21 Repos |
 | P5 — Wiederholungsläufe | ⬜ offen | — | 8.1/8.3/8.5 vorziehbar |
 | P6 — BINDINGS-Sanierung | ⬜ offen | — | braucht P4 |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
@@ -54,9 +54,15 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | reposcope.nvim | 2 | FEATURES-Doppelung, 6 Case-Renames, `docs/README.md`, `health.md`, README 93 → 138, 3 tote Anker, DOC-11 (5 Keys) | `b35b795` |
 | *(5 Repos)* | E1 (Nachtrag) | `diff`, `documentation`, `language`, `markdown`, `open` — nach Ü9-Freigabe | `a2a5ee5`…`a269b2b` |
 | hover.nvim | 1 | Voller Durchgang. **Ein** inhaltlicher Befund: `FEATURES/README.md` beschrieb das Quiet-Modell als zwei Achsen, wo die Seite drei hat. Struktur war bereits vollständig; E1 war es auch | `1588f2c` |
+| replacer.nvim | 2 | **Im Repo selbst gelaufen, hier nicht eingetragen** (Ü25). FEATURES-Katalog zusammengeführt, `docs/README.md`, README 689 → 125. Nachgeprüft 2026-09-04: 0 Befunde | `8c3fb0e` |
+| color_my_ascii.nvim | 3 | dito. Wegweiser, Fixture zu den Specs, Planungsmaterial raus, README → 120. **Die 8 „Known issue"-Links sind weg**; nachgeprüft: 0 tote Links, 0 tote Anker | `bfb74da` |
+| gopath.nvim | 3 | dito (`4c1f17c`). Danach **19 Emoji-Überschriften** korrigiert, deren Anker niemand treffen konnte — zwei davon lösten auf den *falschen* Abschnitt auf. Siehe Ü27 | `4c1f17c`, `502272d` |
+| documentation.nvim | 3 | dito. README auf eine Bildschirmseite, Themenseiten kleingeschrieben, vier fehlende ergänzt. Offen: `docs/hover.md` ist verwaist | `5d74e96` |
+| lsp.nvim | Nachtrag | vier ToC-Anker in `markdown_words/README.md`, alle tot aus demselben Emoji-Grund | `2a59f91` |
+| fileops.nvim | Nachtrag | `commands.md#file-delete` → `#file-delete-`; die Klammern der Signatur lassen ihr Leerzeichen zurück | `373026b` |
 
 **E1 ist bei 31/31** — siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr), das die letzte offene Zeile aufgelöst hat, ohne dass sie eine war. Der deps-Durchgang aus
-[Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt) hat
+[Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt-️) hat
 am 2026-09-04 committet und damit alle sechs blockierten Repos freigegeben.
 Fünf davon haben die Zeile nachgetragen bekommen (`diff.nvim`,
 `documentation.nvim`, `language.nvim`, `markdown.nvim`, `open.nvim`); offen ist
@@ -67,11 +73,11 @@ wusste. Siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-ware
 > `git status` bleibt der erste Blick vor der Repo-Auswahl, nicht der letzte
 > vor dem Commit.
 
-**Offen bei bereits angefassten Repos:**
-`color_my_ascii.nvim` hat noch **8 tote Links** aus einem alten Doku-Layout
-(`./language-detection.md`, `../groups/operators.md` u. a.). Sie sind im Repo
-selbst als „Known issue" dokumentiert. Bewusst liegen gelassen — gehören in
-den vollen Durchgang (Welle 3), nicht in einen Sprach-Cleanup.
+**~~Offen bei bereits angefassten Repos:~~ erledigt.** `color_my_ascii.nvim`
+hatte **8 tote Links** aus einem alten Doku-Layout, im Repo selbst als „Known
+issue" dokumentiert und bewusst dem vollen Durchgang überlassen. Der ist
+gelaufen (`bfb74da`), und sie sind weg — nachgemessen 2026-09-04: 0 tote
+Links, 0 tote Anker. Siehe [Ü25](#ü25--vier-weitere-repos-waren-fertig-ohne-dass-es-hier-stand).
 
 ---
 
@@ -487,9 +493,13 @@ Prüfungen ad hoc nachgezogen und liefen sauber (0 Befunde bei 21 Dateien):
   nur zur Hälfte beschreibt, und der mit `docs/README.md` als Wegweiser
   häufiger wird.
 
-Beides gehört in `docs_linkcheck.py`, nicht in 31 Einzelläufe. **Nicht gebaut**
-— das Werkzeug ist gemeinsames Gut, und eine Änderung daran ist ein eigener
-Auftrag, kein Nebenprodukt eines Repo-Durchgangs.
+Beides gehört ins Werkzeug, nicht in 31 Einzelläufe. **Am 2026-09-04 gebaut**,
+als `scripts/docs_anchorcheck.py` — als *Nachbar* von `docs_linkcheck.py` statt
+als Änderung daran, weil das bewährte Skript nicht für eine Erweiterung
+angefasst werden muss. Es hat auf Anhieb 21 tote Anker in drei Repos gefunden
+(siehe [Ü27](#ü27--emoji-im-titel-der-anker-behält-das-leerzeichen-gemessen)),
+und drei eigene Fehler produziert, bevor es das konnte
+([Ü28](#ü28--der-prüfer-hatte-drei-fehler-und-jeder-erzeugte-eine-welle-falschbefunde)).
 
 **Drei Fallen stecken in der Slug-Regel, und die ersten beiden haben in dieser
 Prüfung zugeschlagen** — wer sie ins Werkzeug einbaut, spart sie sich:
@@ -513,6 +523,119 @@ Prüfung zugeschlagen** — wer sie ins Werkzeug einbaut, spart sie sich:
 Ein Befund war echt und ist behoben: der Verweis auf die Werkzeug-Notizen zeigte
 auf `#scriptsdocs_linkcheckpy`, während die Überschrift `(neu)` trägt und damit
 auf `-neu` endet.
+
+### Ü25 — Vier weitere Repos waren fertig, ohne dass es hier stand
+
+[Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr)
+war kein Einzelfall. Vor der Auswahl von Welle 2/3 einmal alle 32 Repos gegen
+den Standard gemessen statt gegen dieses Ledger:
+
+| Behauptung | Bestandsaufnahme | Gemessen 2026-09-04 |
+|---|---|---|
+| `docs/README.md` vorhanden | „2 von 31" | **11 von 32** |
+| `replacer.nvim` README | 689 Zeilen, drei FEATURES-Fassungen (Ü14) | **125**, ein Ordner, ein Katalog |
+| `color_my_ascii.nvim` | 8 tote Links, „Known issue" | **0** |
+| Welle 2/3 offen | `replacer`, `color_my_ascii`, `gopath`, `documentation` | alle vier **gelaufen** |
+
+Die vier Durchgänge stehen als Commits in den Repos selbst, alle vom
+2026-09-04 und alle in der Form dieses Projekts: `8c3fb0e`, `bfb74da`,
+`4c1f17c`, `5d74e96`. Sie sind hier nur nie eingetragen worden.
+
+**Die elf Repos mit `docs/README.md` sind exakt die elf mit Durchgang** —
+Pilot, Referenz und die Wellen 1–3. Damit ist P4 zu einem Drittel fertig, und
+was bleibt, sind die 21 Repos der Wellen 4–10.
+
+> **Regel, verschärft:** die Repos sind kein stehendes Ziel. Vor jeder Welle
+> einmal breit messen — das kostet einen Durchlauf über 32 Verzeichnisse und
+> hätte hier vier geplante Durchgänge eingespart, von denen keiner nötig war.
+
+### Ü26 — `WORKFLOW.md` ist in 16 Repos verwaist, und das ist ein Befund
+
+Über alle 32 Repos gemessen: `docs/WORKFLOW.md` ist eine **Pflichtdatei**
+nach §3, und in 16 Repos zeigt nichts darauf. Der Zufall daran ist keiner:
+
+> Es sind **genau** die Repos ohne `docs/README.md` — und **kein einziges**
+> der elf mit Index hat das Problem.
+
+Das ist [Ü15](#ü15--doc-04-und-doc-06-sind-derselbe-befund-von-zwei-seiten)
+eine Ebene höher. Dort war es der Sammelordner ohne Overview, hier ist es das
+`docs/`-Verzeichnis ohne Wegweiser: eine Pflichtdatei, die von keiner Seite aus
+erreichbar ist, weil es die Seite nicht gibt, von der aus man sie erreichen
+würde. `WORKFLOW.md` trifft es zuerst, weil es die einzige Pflichtdatei ist,
+auf die ein README typischerweise *nicht* von sich aus verweist —
+`installation.md`, `configuration.md` und `commands.md` sind im README
+ohnehin verlinkt.
+
+**Damit ist der Satz des Standards belegt**, `docs/README.md` sei „die größte
+echte Neuerung dieses Standards": es ist nicht eine Datei mehr, es ist die
+Datei, die den Rest überhaupt auffindbar macht. Wer in Welle 4–10 nur eine
+Sache pro Repo tun kann, tut diese.
+
+### Ü27 — Emoji im Titel: der Anker behält das Leerzeichen. Gemessen.
+
+[Ü24](#ü24--zwei-blinde-flecken-aus-ü18-sind-mit-je-15-zeilen-prüfbar)s dritte
+Falle ist geklärt, und zwar so, wie sie es verlangt hat — an einer gerenderten
+Seite, nicht am Regex. GitHub liefert für `## 🧩 Provider System`:
+
+```
+id="user-content--provider-system"     href="#-provider-system"
+```
+
+Das Emoji fällt als Interpunktion weg, **sein Leerzeichen nicht** — es wird
+zum führenden Bindestrich. Dasselbe am anderen Ende: `` ## `:File[!] delete [%]` ``
+ist `#file-delete-`, mit hinterem Bindestrich, gemessen an fileops' gerenderter
+`commands.md` neben `#file-move--dest` für den Nachbarn, der auf ein Argument
+endet.
+
+Jede von Hand oder von einem Generator geschriebene ToC schreibt die
+naheliegende Form. **21 tote Anker in drei Repos**, alle aus diesem einen
+Grund: gopath 17, lsp 4 — dazu fileops' einer aus der Interpunktion.
+
+**Zwei davon waren schlimmer als tot.** In gopaths Developer-Notes lösten
+`#architecture` und `#resolution-flow` sauber auf — nur auf ein `#### Architecture`
+weiter unten unter *Configuration*. Ein Link, der still am falschen Abschnitt
+landet, ist für jeden Prüfer grün und für den Leser falsch. **Das findet kein
+Werkzeug**, nur Lesen.
+
+Repariert wurde am **Ziel**, nicht am Link: das Emoji fliegt aus der
+Überschrift, damit der Anker der ist, den jede ToC ohnehin schreibt — dieselbe
+Entscheidung wie in [Ü18](#ü18--zwei-blinde-flecken-die-das-werkzeug-nicht-schließen-wird)s
+Fall der fetten Zeile. Nur bei fileops andersherum: dort sind die drei
+Kommando-Überschriften eine konsistente Signaturform, und eine davon für einen
+Link zu verbiegen tauscht einen kaputten Link gegen eine inkonsistente
+Referenzseite.
+
+Nicht angefasst: vier weitere Dateien in `lsp.nvim` mit Emoji-Überschriften,
+auf die **nichts** zeigt. Da ist kein Defekt, nur ein Stil — die Falle liegt
+dort latent, jede später geschriebene ToC ist bei Geburt tot.
+
+### Ü28 — Der Prüfer hatte drei Fehler, und jeder erzeugte eine Welle Falschbefunde
+
+[Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen) zum dritten Mal, in
+einem Werkzeug, das ich selbst geschrieben habe, um Ü7s Lehre umzusetzen. Der
+Reihe nach gefunden — jeder Fehler dadurch, dass ein Befund gegen die
+Wirklichkeit geprüft wurde statt geglaubt:
+
+1. **`\s+` statt `\s`.** GitHub kollabiert Leerzeichenfolgen nicht. 14 gemeldete
+   Anker in dieser Datei, keiner davon tot.
+2. **Keine Duplikat-Suffixe.** Drei `## Added` in einem Changelog sind
+   `#added`, `#added-1`, `#added-2`. Ohne die Regel ist jede Wiederholung tot.
+3. **`` ```.*?``` `` als Fence-Erkennung.** Eine Prosa-Zeile, die einen Fence
+   **zitiert** — ```` ```` ```ascii-mylang ```` ```` — öffnet damit einen, und
+   alles bis zum nächsten Fence gilt als Code. In `color_my_ascii.nvim` hat das
+   zwei Überschriften verschluckt und **36 Befunde** erzeugt, von denen genau
+   null einer war. CommonMark verbietet einen Backtick im Info-String eines
+   Backtick-Fences; genau diese Regel fehlte.
+
+Nach allen dreien: **0 tote Anker** in der ganzen Sammlung, bis auf vier in
+`mdview.nvim/TESTS/testfile.md` — eine Fixture mit absichtlich kaputten Links,
+also kein Befund.
+
+> **Lehre:** ein Befundzähler ist erst dann ein Werkzeug, wenn seine Zahl
+> einmal gegen die Wirklichkeit gehalten wurde. Bis dahin ist er eine Meinung
+> mit Nachkommastellen. Die drei Fehler oben haben zusammen 53 Falschbefunde
+> produziert und keinen einzigen echten verdeckt — die Richtung ist gnädig,
+> die Kosten sind es nicht.
 
 ---
 
@@ -616,6 +739,32 @@ Bereits gefunden: `github_stats.nvim/docs/configurations/USER-DEFINED-DATE-PRESE
 **Vorgänger:** Ein bash-Skript gleichen Zwecks ist gelöscht — zu langsam
 (> 2 min statt < 1 s), case-blind, und ohne Code-Block-Filter (siehe Ü7).
 
+### `scripts/docs_anchorcheck.py` (neu, 2026-09-04)
+
+```bash
+python scripts/docs_anchorcheck.py E:/repos/<repo>          # eines
+python scripts/docs_anchorcheck.py E:/repos/*.nvim          # alle
+```
+
+Der Nachbar von `docs_linkcheck.py`, dessen eigener Kopf die Lücke benennt:
+Anker werden dort abgeschnitten, „so a wrong #heading is NOT caught". Hier
+werden sie geprüft, dazu `DOC-06`:
+
+| Klasse | Bedeutung |
+|---|---|
+| `ANCHOR dead` | `](#ueberschrift)` ohne diese Überschrift — die Datei existiert, der Linkchecker meldet grün |
+| `ANCHOR dead cross-file` | dasselbe über Dateigrenzen, `](andere.md#ueberschrift)` |
+| `DOC-06 orphan` | eine getrackte Markdown-Datei, die keine andere beim Namen nennt |
+
+**Was es nicht sieht, und das ist die schärfere Hälfte:** einen Anker, der auf
+den **falschen** Abschnitt auflöst. Genau das stand in gopaths Developer-Notes
+und ist hier grün. Nur Lesen findet das.
+
+Die vier Slug-Regeln stehen im Kopf des Skripts, jede mit dem Falschbefund
+daneben, den ihr Fehlen erzeugt hat — siehe
+[Ü28](#ü28--der-prüfer-hatte-drei-fehler-und-jeder-erzeugte-eine-welle-falschbefunde).
+Zwei davon sind an gerenderten GitHub-Seiten gemessen, nicht hergeleitet.
+
 ### Bestandsprüfer: `:DocMap` kann das teilweise auch
 
 `color_my_ascii.nvim/docs/guides/README.md` verweist auf `:DocMap`, das tote
@@ -623,24 +772,44 @@ Links als `dead-readme-link` flaggt. Überschneidung ist gewollt: `docs_linkchec
 läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 `:DocMap` ist das Werkzeug in der Sitzung.
 
-### Offene Befundliste (Stand 2026-09-04, nach dem Link-Durchgang)
+### Offene Befundliste (Stand 2026-09-04, nach dem Anker-Durchgang)
 
-| Repo | dead | case | ignored |
-|---|---|---|---|
-| color_my_ascii.nvim | 8 | 0 | 0 |
+**Tote Links: einer in der ganzen Sammlung.**
 
-**30 von 31 Repos sind link-sauber.** Am 2026-09-04 erledigt und gepusht:
-`gopath.nvim`, `insights.nvim`, `pickers.nvim` (je 1 `dead`) und
-`github_stats.nvim` (6 `dead` + 1 `CASE`) — je ein Commit. Was dabei
-herauskam, steht in [Ü21](#ü21--die-vier-restmeldungen-waren-vier-verschiedene-fehlerklassen).
+| Repo | Befund |
+|---|---|
+| casedesk.nvim | `lua/casedesk/templates/Research.md` → `../Replies/00_PSO.md` — in einem Template unter `lua/`, also [Ü13](#ü13--der-doku-bestand-endet-nicht-bei-docs)-Gebiet |
 
-Die verbleibenden 8 in `color_my_ascii.nvim` stammen aus einem alten
-Doku-Layout, sind im Repo selbst als „Known issue“ dokumentiert und gehören in
-dessen vollen Durchgang (Welle 3).
+Die 8 in `color_my_ascii.nvim` sind **weg**, mit dessen vollem Durchgang
+(`bfb74da`, siehe [Ü25](#ü25--vier-weitere-repos-waren-fertig-ohne-dass-es-hier-stand)).
+Früher am 2026-09-04 erledigt: `gopath.nvim`, `insights.nvim`, `pickers.nvim`
+(je 1 `dead`) und `github_stats.nvim` (6 `dead` + 1 `CASE`) — siehe
+[Ü21](#ü21--die-vier-restmeldungen-waren-vier-verschiedene-fehlerklassen).
 
+**Tote Anker: keiner.** 21 in drei Repos gefunden und behoben
+([Ü27](#ü27--emoji-im-titel-der-anker-behält-das-leerzeichen-gemessen)); die
+vier verbleibenden Meldungen liegen in `mdview.nvim/TESTS/testfile.md`, einer
+Fixture mit absichtlich kaputten Links.
+
+**Verwaiste Dokumente (`DOC-06`): 48**, und sie sind kein Sammelsurium:
+
+| Was | Zahl | Einordnung |
+|---|---|---|
+| `docs/WORKFLOW.md` | **16** | Pflichtdatei ohne eingehenden Link — siehe [Ü26](#ü26--workflowmd-ist-in-16-repos-verwaist-und-das-ist-ein-befund). Löst sich mit `docs/README.md` |
+| Modul-`README.md` unter `lua/` | ~12 | Von [Ü6](#ü6--mehr-doku-ebenen-können-richtig-sein-libnvim) ausdrücklich gesegnet. **Kein Befund**, solange der Modulbaum sie trägt |
+| Fixtures unter `TESTS/` | ~6 | Testdaten, keine Doku. Kein Befund |
+| Echte Waisen in `docs/` | ~14 | Der Rest, pro Repo zu prüfen — z. B. `documentation.nvim/docs/hover.md`, `language.nvim/docs/FEATURES/*.md` (vier Stück, die die eigene `FEATURES/README.md` nicht nennt), `cmdlog.nvim/docs/FEATURES/README.md` |
+
+> Der Prüfer kennt den Unterschied zwischen diesen vier Sorten nicht und soll
+> ihn nicht kennen. Er meldet „niemand nennt diese Datei"; welche Sorte das ist,
+> entscheidet der Durchgang.
 
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
 
 Stehen in `LAST_CDX_TASKS.md` §8. Hier nur Neues.
 
-*(bisher nichts)*
+- **Ein Anker, der auf den falschen Abschnitt auflöst**, ist für jedes Werkzeug
+  grün. In `gopath.nvim` sind zwei ToC-Einträge auf ein gleichnamiges
+  `####` weiter unten gefallen, weil die gemeinte Überschrift ein Emoji trug
+  und damit einen anderen Anker hatte. Gefunden beim Lesen, nicht beim Prüfen —
+  siehe [Ü27](#ü27--emoji-im-titel-der-anker-behält-das-leerzeichen-gemessen).
