@@ -41,6 +41,27 @@
 
 ---
 
+## Checkhealth-Konventionen
+
+Umsetzung von [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](personal/All/FINISH/checkhealt_conventions.md),
+validiert am 2026-09-06 gegen den aktuellen Stand. Zwei Korrekturen gegenüber
+der Original-Analyse (2026-08-31): `neotree-fs-refactor.nvim` liegt inzwischen
+unter `ARCHIV_NICHT_BEARBEITEN/` und wird nicht angefasst; der Zielort für die
+neue Regel ist `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` + `gates/REVIEW.md`,
+nicht das nie existente `MATERIALS/CHECKLIST.md`. Handover-Stand läuft in
+[`docs/ROADMAP/handovers/checkhealth-conventions.md`](handovers/checkhealth-conventions.md).
+
+- [ ] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten (dap, debugging, documentation, filetree).
+- [ ] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.
+- [ ] Eine-von-N auflösen: `filetree.nvim:70`, `pickers.nvim:39,45,51` → `info`. Das `error` im "keine davon"-Fall behalten.
+- [ ] Gegenrichtung, `warn` → `error` wo der Text schon "will fail" sagt: `cascade.nvim:39`, `fileops.nvim:39`, `buffer-ctx.nvim:20`, `sessions.nvim:32`.
+- [ ] `setup()`-Zeilen auf `info` oder Ladezustand prüfen: `sessions.nvim:147,152,157`, `open.nvim:158,185`, `buffer-ctx.nvim:90,96,121,165`. `filetree.nvim:88` ist bereits das Vorbild.
+- [ ] ADVICE nachziehen, opportunistisch (nur 15 % der 260 warn/error-Aufrufe haben einen Block) — kein Vollaudit in dieser Runde.
+- [ ] Kosmetik zuletzt: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in dieser Config.
+- [ ] Regel in `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` (neue Regel-ID) + Schnell-Check-Eintrag in `gates/REVIEW.md`.
+
+---
+
 ## Misc
 
 - [ ] start vim optimieren
