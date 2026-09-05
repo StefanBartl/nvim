@@ -254,21 +254,21 @@ end
 --- wie Verzeichnisse (`live.lua` reicht sie an ripgrep durch, `search.lua`
 --- liest sie direkt), also ist die gescopte Suche dieselbe Suche über weniger
 --- Pfade.
----@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = beide vollen Bäume
+---
+--- **Ohne Plugin-Scope geht die Dateiliste durch `plugin_scope.all_files`,
+--- nicht durch `config.roots()`.** Die zwei physischen Bäume allein sind seit
+--- `BND-04` nicht mehr der ganze Korpus — jedes Personal-Plugin bringt seine
+--- drei Kategorien jetzt aus seiner eigenen `docs/BINDINGS.md` mit, und
+--- `config.roots()` sieht die nicht. Ein Plugin-Scope ist davon unberührt,
+--- weil `plugin_scope.resolve` dieselbe dritte Quelle bereits seit jeher liest.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = der ganze Korpus
 ---@param sel Bindings.Selection|nil
 ---@return nil
 function M.search(category, sel)
   sel = sel or {}
   local label = sel.plugin and sel.plugin.label or nil
 
-  local roots
-  if sel.plugin then
-    roots = sel.plugin.files
-  elseif category then
-    roots = config.roots_for(category)
-  else
-    roots = config.roots()
-  end
+  local roots = sel.plugin and sel.plugin.files or plugin_scope.all_files(category)
 
   local prompt
   if category and label then

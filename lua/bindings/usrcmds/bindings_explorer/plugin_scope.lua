@@ -397,6 +397,36 @@ function M.argtype()
   }
 end
 
+--- Every file the corpus can search, across all three sources (the two
+--- physical trees plus each plugin's own `docs/BINDINGS.md`), deduplicated by
+--- path.
+---
+--- Built for `search.lua`/`live.lua`'s **unscoped** searches. A plugin scope
+--- already goes through `M.resolve` -> `Bindings.PluginMatch.files`, which has
+--- read `plugin_sheets()` since the day this module was written; `init.lua`'s
+--- `M.search` fell back to `config.roots()`/`config.roots_for(category)`
+--- directly whenever no plugin was named, which are the two physical trees
+--- only. `BND-04` then deleted the personal half of those trees plugin by
+--- plugin (each sheet superseded by the plugin's own `docs/BINDINGS.md`, see
+--- `sheets()` above), so a bare `:Bindings search <query>` or
+--- `:Bindings search keymaps <query>` stopped finding anything in any of the
+--- 31 personal plugins' own docs -- silently, because grep-over-nothing looks
+--- exactly like grep-over-everything-with-no-hits. This function is `sheets()`
+--- reduced to just the paths, so both call sites read the same corpus
+--- `M.resolve` already does.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = all three
+---@return string[]
+function M.all_files(category)
+  local seen, out = {}, {}
+  for _, sheet in ipairs(pool({ category = category })) do
+    if not seen[sheet.file] then
+      seen[sheet.file] = true
+      out[#out + 1] = sheet.file
+    end
+  end
+  return out
+end
+
 --- Drop the corpus listing. For tests and for a caller that just wrote a
 --- sheet and wants the next completion to see it.
 ---@return nil
