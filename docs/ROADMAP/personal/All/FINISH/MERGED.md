@@ -39,12 +39,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 - [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md
 
-
-[ ] in den plugins docs immer
-    - [ ] $REPOS_DIR schreiben anstelle von C:\repos oder $REPOS_DIR\
-    - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
-    - [ ] Wobei aebri n den plugins, anders als der nvim-config, die frage istz, warum sollte dort ein Pfad auf    c:\repos oder e:\repos sinn machen - andere user haben wvielleicht garn keine $REPOS_DIR env var. daher  muss das geklärt wreen. ioch weiß zumindest von einen vorkomen, wo woir in der implementiert haebn, dass nach $REPOS_DOIR akiv gersucht wird, das haben wir dann abe in der readme.md auchangtegeben und müsste ein ausnahemfall sien. daher -> teilvon docs clearing, sich die vokrommen näöher anzuaschauen, es knnte aien anzeigersein für fehlannehmen/zeiger dass diese infos zu nmotizen gehölren, nicht in das polguins erpo docs, usw... siehst du da sähnlich?
-
 ---
 
 ### Git & Repo-Hygiene
