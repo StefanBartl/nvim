@@ -13,9 +13,31 @@
 
 ## Intro
 
-**Stand: 2026-09-06. Schritte 1-5, 7, 8 fertig. Schritt 6 (ADVICE) für die
-neun bereits angefassten Repos nachgezogen; die übrigen ~20 Repos im
-Plugin-Bestand sind für den ADVICE-Teil noch nicht durchgesehen.**
+**Stand: 2026-09-06. Schritte 1-5, 7, 8 fertig. Schritt 6 (ADVICE) läuft
+gerade über den kompletten Plugin-Bestand (User-Entscheidung: alle ~20
+weiteren Repos, nicht nur die neun aus Schritt 1-5).**
+
+## ADVICE-Vollaudit, Fortschritt
+
+Repo für Repo, direkt in der Hauptkonversation (kein Agent-Einsatz).
+Fertig: casedesk.nvim `b1a55ec`, cmdlog.nvim `a0fb129`, color_my_ascii.nvim
+`47592ec`, dap.nvim `dd3ddc0`, debugging.nvim `57e98c9`, diff.nvim `33ceed5`,
+documentation.nvim (bereits vorbildlich, keine Änderung nötig), emojis.nvim
+`83e5b09`, github_stats.nvim `6f37933`.
+
+Noch offen: gopath, hover, images, insights, language, lsp, markdown,
+mdview, recommender, replacer, reposcope, runtime-analysis, sandbox,
+spotlight.
+
+**Nebenfund während des Audits — eigene Background-Task angelegt
+(`task_c18f86fd`):** `lib.nvim`s geteilter `check_require()`-Helfer
+(`lua/lib/nvim/health/init.lua:33`) kann strukturell nie `error` melden,
+nur `warn` oder `info` — `debugging.nvim:28` meldet damit seine harte
+`lib.nvim.bindings.usercmd.composer`-Abhängigkeit nur als `warn`, obwohl
+jedes andere Plugin in diesem Durchgang dieselbe Abhängigkeit als `error`
+meldet. Nicht selbst gefixt, weil das eine Signaturänderung am geteilten
+Helfer bräuchte (betrifft dap.nvim und debugging.nvim). Wird gerade
+zusätzlich direkt bearbeitet (User-Anweisung).
 
 Quelle der Analyse: [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](../personal/All/FINISH/checkhealt_conventions.md)
 (2026-08-31). Regel in einem Satz: *Muss der Nutzer etwas tun? Nein → niemals
