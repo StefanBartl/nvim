@@ -3,14 +3,11 @@
 ## Table of content
 
   - [cdx](#cdx)
+  - [do](#do)
   - [TOP interessant gerade](#top-interessant-gerade)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
-
----
-
-leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfLua live_grep
 
 ---
 
@@ -19,9 +16,9 @@ leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfL
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     12:50       |   100% / 39%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     11:10       |   100% / 47%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     08:00       |    89% / 83%     |
-| **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     |
+| **work** |   20. Sept    |   Sa., 06:00    |     19:30       |    68% / 11%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     21:40       |    00% / 83%     | X
+| **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -32,6 +29,13 @@ leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfL
 - Keine Co-Authorenschaft von Claude in den Commits
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 - Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
+
+---
+
+## do
+
+- [ ] leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfLua live_grep
+- [ ] start vim optimieren
 
 ---
 
