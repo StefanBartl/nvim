@@ -90,7 +90,6 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | color_my_ascii.nvim | E4 | 5 de-Dateien (inkl. `guides/de/`) | `892a388`, `c1b1e8c` |
 | fileops.nvim | Pilot | FEATURES-Split, docs/README.md, keymaps-Doppelung, stale which_key-Verweis, README | `da20a87` |
 | lib.nvim | Referenz | docs/README.md (Ebenen-Index), 9 tote Links, README | `1dae2fc` |
-
 | *(20 Repos)* | E1 | Alpha-Disclaimer, Zeile 1 — ein Commit je Repo | `a3d4bdd`…`90b9730` |
 | mdview.nvim | 1 | docs/README.md, FEATURES/FEATURES.md → MACHINERY.md, 6 Dateien ausgelagert, 2 tote Links, DOC-08/11-Korrekturen | `575cc0b` |
 | lsp.nvim | 1 | FEATURES.md → FEATURES/ (9 Seiten), docs/README.md, README 390 → 157, 5 Dateien ausgelagert | `d38ec6e` |
@@ -134,6 +133,9 @@ Fünf davon haben die Zeile nachgetragen bekommen (`diff.nvim`,
 `documentation.nvim`, `language.nvim`, `markdown.nvim`, `open.nvim`); offen ist
 nur noch `hover.nvim` — und das war es bereits, ohne dass die Ledger-Zeile es
 wusste. Siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr).
+
+| Repo | Welle | Was gemacht | Commit |
+|---|---|---|---|
 | spotlight.nvim | 4 | README **664 → 147**, sieben Doku-Seiten aus README-Material, `FEATURES.md` → Ordner | `e9153c7` |
 | runtime-analysis.nvim | 4 | README **633 → 164**, `COMMANDS.md` → `commands.md` (31 eingehende Verweise), vier neue Seiten | `208dd23` |
 | cascade.nvim | 4 | README **595 → 130**, sechs neue Seiten, `commands.md` war Pflicht und fehlte | `08bfe19` |
