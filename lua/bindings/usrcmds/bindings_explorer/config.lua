@@ -95,6 +95,16 @@ function M.plugin_sheets()
     end
   end
 
+  -- This config itself is the one entry with no plugin repo to read a
+  -- `docs/BINDINGS.md` from -- `BND-05` gave it one at the repo root instead,
+  -- same file every other personal plugin keeps at the same relative path.
+  -- Named "nvim-config" for continuity with the retired
+  -- `PersonelPlugins/BINDINGS/*/nvim-config.md` sheets it replaces.
+  local own = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "BINDINGS.md")
+  if vim.fn.filereadable(own) == 1 then
+    out[#out + 1] = { plugin = "nvim-config", file = own }
+  end
+
   table.sort(out, function(a, b)
     return a.plugin < b.plugin
   end)
