@@ -43,4 +43,15 @@ ist. Kein Agent-Einsatz nötig, direkt in der Hauptkonversation, Repo für Repo.
 
 ## Was noch offen ist
 
-Alles ab Schritt 1 — Umsetzung hat noch nicht begonnen.
+- [x] Schritt 1 — lib.nvim `41297a1` (ein Amend nötig: Backticks in der ersten `-m`-Message wurden von Bash als Command-Substitution gelesen und haben sie zerschossen)
+- [x] Schritt 2 — pdfport.nvim `6ab9667`
+- [x] Schritt 3 — filetree.nvim `259d4e5`, pickers.nvim `1770d50`
+- [x] Schritt 4 — cascade.nvim `681cccf`, fileops.nvim `820dfc2`, buffer-ctx.nvim `e533b99`, sessions.nvim `2edffa7` (warn → error, libuv/lib.nvim-Fälle)
+- [x] Schritt 5 — sessions.nvim `0181dce`, open.nvim `4a7c44d`, buffer-ctx.nvim `a84532c` (setup()-Zeilen → info; jeweils auch die im Original nicht zitierten, aber identischen Nachbarstellen im selben Muster mitgefixt)
+- [ ] Schritt 6 — ADVICE-Nachzug (bewusst opportunistisch, kein Vollaudit — offen gelassen)
+- [x] Schritt 7 — `ℹ️ INFO`-Tag in filetree.nvim `78198b1` + pickers.nvim `f2e433e` (die beiden bereits auf `info` umgestellten Statuslisten), `after/syntax/checkhealth.vim` in nvim-config (per `synID()` gegen einen synthetischen Buffer verifiziert: `DiagnosticInfo` greift). pdfport.nvim bewusst ausgelassen — dessen übrige Backend-`warn`s sind nicht validiert als Eine-von-N, das wäre Schritt 6.
+- [ ] Schritt 8 — Regel in wkdbook-Lua/Checklists
+
+Nebenfund: `sessions.nvim`s Remote-URL zeigt noch auf `stefanbartl` (klein)
+statt `StefanBartl` -- GitHub leitet um, aber `git remote set-url origin`
+waere Hausputz.
