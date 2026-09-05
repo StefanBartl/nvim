@@ -51,14 +51,17 @@ neue Regel ist `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` + `gates/REVIEW.md`,
 nicht das nie existente `MATERIALS/CHECKLIST.md`. Handover-Stand läuft in
 [`docs/ROADMAP/handovers/checkhealth-conventions.md`](handovers/checkhealth-conventions.md).
 
-- [ ] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten (dap, debugging, documentation, filetree).
-- [ ] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.
-- [ ] Eine-von-N auflösen: `filetree.nvim:70`, `pickers.nvim:39,45,51` → `info`. Das `error` im "keine davon"-Fall behalten.
-- [ ] Gegenrichtung, `warn` → `error` wo der Text schon "will fail" sagt: `cascade.nvim:39`, `fileops.nvim:39`, `buffer-ctx.nvim:20`, `sessions.nvim:32`.
-- [ ] `setup()`-Zeilen auf `info` oder Ladezustand prüfen: `sessions.nvim:147,152,157`, `open.nvim:158,185`, `buffer-ctx.nvim:90,96,121,165`. `filetree.nvim:88` ist bereits das Vorbild.
-- [ ] ADVICE nachziehen, opportunistisch (nur 15 % der 260 warn/error-Aufrufe haben einen Block) — kein Vollaudit in dieser Runde.
-- [ ] Kosmetik zuletzt: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in dieser Config.
-- [ ] Regel in `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` (neue Regel-ID) + Schnell-Check-Eintrag in `gates/REVIEW.md`.
+- [x] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten (dap, debugging, documentation, filetree).
+- [x] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.
+- [x] Eine-von-N auflösen: `filetree.nvim:70`, `pickers.nvim:39,45,51` → `info`. Das `error` im "keine davon"-Fall behalten.
+- [x] Gegenrichtung, `warn` → `error` wo der Text schon "will fail" sagt: `cascade.nvim:39`, `fileops.nvim:39`, `buffer-ctx.nvim:20`, `sessions.nvim:32`.
+- [x] `setup()`-Zeilen auf `info` oder Ladezustand prüfen: `sessions.nvim:147,152,157`, `open.nvim:158,185`, `buffer-ctx.nvim:90,96,121,165`. `filetree.nvim:88` ist bereits das Vorbild.
+- [ ] ADVICE nachziehen, opportunistisch (nur 15 % der 260 warn/error-Aufrufe haben einen Block) — bewusst offen gelassen, kein Vollaudit.
+- [x] Kosmetik zuletzt: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in dieser Config.
+- [x] Regel in `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` (`UI-57`..`UI-61`) + Schnell-Check-Eintrag in `gates/REVIEW.md`.
+
+Alles bis auf den ADVICE-Vollaudit erledigt, alle betroffenen Repos gepusht.
+Handover-Datei hat die Commit-Hashes.
 
 ---
 
