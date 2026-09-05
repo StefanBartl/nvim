@@ -80,7 +80,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
 | P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
-| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **21/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
+| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **22/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -206,10 +206,11 @@ offenen Repos.
 | markdown.nvim | Keymaps/Usercmds: 0 Befunde. Autocmds: Sheet nannte `docs/BINDINGS.lua`/`.md` selbst „stale/incomplete" mit 5 konkreten Löchern — alle gegen Source verifiziert und bestätigt (`MarkdownNvimScopeFoldCache`, `MarkdownNvimTableMode_<bufnr>`, refs-live-Adhoc-Autocmd, `MarkdownNvimPreviewRefresh`, `MarkdownNvimHL`/`MarkdownNvimFencedFix` faelschlich zusammengelegt), in `docs/BINDINGS.md` nachgetragen. Eine Sheet-Behauptung war selbst veraltet (Blockquote-Highlighting laeuft jetzt ueber einen Decoration Provider, nicht mehr FileType/BufEnter) | markdown.nvim `0ec5c2a`, nvim-config `25cc90f30` |
 | mdview.nvim | 0 Befunde — alle drei Sheets bestätigen `docs/BINDINGS.md` als „the best-maintained of all audited repos"; Stichproben (`:MDView pin`, `blanklines`, `sync_checkboxes`, `sync_fields`, `port=`) bestätigen | — |
 | open.nvim | 0 Befunde — alle drei Sheets aktuell, inklusive aller zehn ehemaligen Roadmap-Features (`custom_handlers`, `terminal`-Handler, `git`-Scope-Token, `picker`, `filemanager.reveal`, `debug`, `:Open viewer`/`:UrlView`/`:MDLinksView`) | — |
+| pdfport.nvim | 0 Befunde — alle drei Sheets aktuell, inklusive create/merge/producers, `pages=`-kv-Args und `install.json`-Deps-Spec | — |
 
-**21/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
-Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 9 Repos):
-pdfport, pickers, recommender, replacer,
+**22/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
+Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 8 Repos):
+pickers, recommender, replacer,
 reposcope, runtime-analysis, sandbox, sessions,
 spotlight.nvim.
 
