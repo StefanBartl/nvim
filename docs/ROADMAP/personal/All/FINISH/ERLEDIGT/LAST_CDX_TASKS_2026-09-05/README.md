@@ -97,8 +97,8 @@ außerhalb eines einzelnen Wiederholungslauf-Termins. Empfehlung des Piloten:
 wellenweise nach Regel-Familie (`SEC-*` zuerst), nicht repoweise.
 
 **Zwischenstand 2026-09-05 (Abend):** die `SEC-*`-Welle (24 Regeln) ist auf
-Autorenwunsch gestartet und läuft über **25 von 32 Repos** (alphabetisch;
-Runden 1–7 zu 3 parallelen Agenten, danach ein Repo pro Durchgang). **16
+Autorenwunsch gestartet und läuft über **26 von 32 Repos** (alphabetisch;
+Runden 1–7 zu 3 parallelen Agenten, danach ein Repo pro Durchgang). **17
 Repos hatten mindestens einen echten Fund**, alle behoben, committet und auf
 `main` gepusht — darunter zwei reale Schwachstellen statt Kosmetik: ein
 GitHub-Token, das über einen Shell-String im Prozess-Argv sichtbar war
@@ -107,7 +107,7 @@ Clipboard-Zielpfad unter Linux (`images.nvim`). Details je Repo:
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
 Runde 8 (`mdview`/`open`/`pdfport` parallel) riss am Sitzungslimit ab, bevor
 etwas geschrieben wurde — kein Verlust, aber Anlass für die Umstellung auf
-ein Repo pro Durchgang. Offen bleiben die restlichen 6 Repos für `SEC-*`
+ein Repo pro Durchgang. Offen bleiben die restlichen 5 Repos für `SEC-*`
 sowie die übrigen sieben Regel-Familien für alle 32. Laut Standard
 **blockiert das nichts** — es ist der bewusst letzte Punkt der gesamten
 Liste, keine vergessene Aufgabe.
