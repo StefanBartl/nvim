@@ -268,6 +268,18 @@ sessions.nvim's own comment says the label is written so it "doesn't clobber
 unrelated `<leader>s…` mappings" — worth keeping in mind if the other two ever
 get tightened the same way.
 
+## Commented-out slots that would collide if activated
+
+`plugins/snacks.lua` carries a near-complete alphabet of commented-out
+`snacks.picker.*` bindings under `<leader>s`. Not a live conflict — nothing
+here fires today — but three land exactly on spotlight.nvim's letters:
+`<leader>sk` (`snacks.picker.keymaps()`), `<leader>sq`
+(`snacks.picker.qflist()`), `<leader>sC` (`snacks.picker.commands()`).
+Uncommenting any of them later silently shadows the matching spotlight.nvim
+action (last `vim.keymap.set` wins) — pick different letters for those three
+if that block is ever finished, rather than reworking spotlight's scheme
+again.
+
 ## What is not a problem
 
 Recorded so the next audit does not re-derive it:
