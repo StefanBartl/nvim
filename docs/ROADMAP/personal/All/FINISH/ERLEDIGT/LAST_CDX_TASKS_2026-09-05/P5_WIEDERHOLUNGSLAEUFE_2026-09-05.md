@@ -5,9 +5,9 @@ Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
 jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben/acht
 übrigen Regel-Familien, ~250 Punkte, Handprüfung) ist **angelaufen** — die
-`SEC-*`-Welle (24 Regeln) läuft über 18 von 32 Repos, siehe der Abschnitt
+`SEC-*`-Welle (24 Regeln) läuft über 20 von 32 Repos, siehe der Abschnitt
 „8.2b — SEC-* Welle" am Ende. Die übrigen sieben Familien und die
-verbleibenden 14 Repos sind weiterhin offen.
+verbleibenden 11 Repos sind weiterhin offen.
 
 Alle vier Werkzeuge liefen **nicht** über die Usercmds aus dem Standard
 (`:LibDuplicateScan`, `:LibBindingsAudit`, `:LibBindingsAuditGaps`) — diese
@@ -322,11 +322,14 @@ existiert), verifizierte gegen den **aktuellen** Quelltext (nicht gegen den
 08-08-Belege-Snapshot), behob echte Ein-Zeiler-Funde selbst und committete
 pro Repo einzeln (`fix(sec): …`).
 
-**Nach 6 Runden (18 von 32 Repos) auf Wunsch des Autors unterbrochen.**
-Alle Fixes sind committet **und gepusht** auf `main` der jeweiligen
+**Runden 1–6 (18 Repos) liefen zu 3 parallelen Agenten; Runde 7 (`lib.nvim`,
+`lsp.nvim`, `markdown.nvim`) ebenso und noch fertig geworden — Runde 8
+(`mdview.nvim`/`open.nvim`/`pdfport.nvim`) scheiterte am Sitzungslimit, bevor
+etwas geschrieben wurde. Ab da: ein Repo pro Durchgang, siehe „Was bleibt"
+unten.** Alle Fixes sind committet **und gepusht** auf `main` der jeweiligen
 Repos.
 
-### Ergebnis je Repo (Runden 1–6)
+### Ergebnis je Repo (Runden 1–7)
 
 | Repo | Befunde | Commit |
 |---|---|---|
@@ -348,8 +351,11 @@ Repos.
 | images.nvim | **1, gravierend** — SEC-01/03: die Linux-Clipboard-Paste (`wl-paste`/`xclip`) baute einen Shell-String mit dem aufgelösten Zielpfad in einfachen Anführungszeichen; `:Image replace` kann diesen Pfad aus einem Markdown-Link/der Cursorposition ableiten — ein Pfad mit `'` oder Shell-Metazeichen hätte die Quotierung gebrochen. Echte Command-Injection-Fläche, nicht nur theoretisch | `89a6b6f` |
 | insights.nvim | 1 — SEC-02, `conflicts/init.lua` und `symbols/rg_index.lua` setzten bei sequentiellen `git`/`rg`-Aufrufen kein explizites `cwd` | `5fe0733` |
 | language.nvim | 1 — SEC-01/03: `add_to_dict` spleißte das von `cspell`/`codespell`/`typos` gemeldete Wort in einen `:spellgood!`-Vimscript-String; das Wort kann aus fremden gescannten Dateien stammen, nicht nur aus Nutzereingabe | `7792e60806f` |
+| lib.nvim | 2 — SEC-02, `cross.uv.spawn_shell_command` hatte kein `cwd` (Geschwister `spawn_command` schon); dazu ein Docstring-Hinweis, dass beide Shell-String-Spawner nicht für ungeprüfte Eingaben gedacht sind (SEC-01/03, additiv, keine Verhaltensänderung). SEC-21, `curl.download`/`download_blocking` ließen bei einem fehlgeschlagenen Transfer die abgeschnittene Zieldatei liegen statt sie zu entfernen | `fbfa956`, `60b75a7` |
+| lsp.nvim | 1 — SEC-02, `prettier_format` spawnte ohne `cwd` (Geschwister `eslint_fix` löste die Projekt-Root schon auf und übergab sie) — erbte damit stillschweigend das globale Editor-cwd statt des Puffer-Projekts | `2a71561` |
+| markdown.nvim | 0 | — |
 
-**11 von 18 geprüften Repos hatten mindestens einen echten Fund**, alle
+**13 von 20 geprüften Repos hatten mindestens einen echten Fund**, alle
 behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
 reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
 (`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
@@ -361,12 +367,17 @@ der beauftragten Agenten — hier nur die Verdichtung.
 
 ### Was bleibt
 
-**14 Repos noch nicht geprüft:** `lib.nvim`, `lsp.nvim`, `markdown.nvim`,
-`mdview.nvim`, `open.nvim`, `pdfport.nvim`, `pickers.nvim`,
-`recommender.nvim`, `replacer.nvim`, `reposcope.nvim`,
+**Ab jetzt ein Repo pro Durchgang, nicht mehr parallel** — Autorenentscheidung
+2026-09-05 (Abend): mehrere gleichzeitige Agenten kosten zu viele Token und
+lassen sich zwischendurch nicht von Hand nachhalten. Runde 8 (`mdview.nvim`,
+`open.nvim`, `pdfport.nvim` gleichzeitig) ist am Sitzungslimit gescheitert,
+**bevor** irgendein Agent etwas geschrieben hat — alle drei Repos standen
+danach mit sauberem Working Tree da, nichts zu retten, nichts verloren.
+
+**11 Repos noch nicht geprüft:** `mdview.nvim`, `open.nvim`, `pdfport.nvim`,
+`pickers.nvim`, `recommender.nvim`, `replacer.nvim`, `reposcope.nvim`,
 `runtime-analysis.nvim`, `sandbox.nvim`, `sessions.nvim`, `spotlight.nvim` —
-geplant als Runden 7–11, gleiches Schema (3 parallele Agenten, alphabetisch,
-voller SEC-*-Katalog pro Repo).
+weiter alphabetisch, ein Repo je Durchgang, voller SEC-*-Katalog pro Repo.
 
 **Danach:** die übrigen sieben Regel-Familien (`PRIN-`/`LUA-`/`ERR-`/`UI-`/
 `TS-`/`DEP-`/`PERF-`) über alle 32 Repos — `SEC-*` war nur die erste von acht
