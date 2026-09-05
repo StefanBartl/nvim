@@ -80,7 +80,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
 | P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
-| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **16/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
+| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **17/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -201,10 +201,11 @@ offenen Repos.
 | images.nvim | Keymaps/Usercmds: 0 Befunde — beide Sheets vollständig (und ausführlicher) in `commands.md`/`BINDINGS.md`/`architecture.md` abgedeckt. Autocmds: **1 echter Fund** — `images.hover_float`s `WinClosed`-Cleanup-Autocmd fehlte in `docs/BINDINGS.md`s Tabelle ganz (existiert im Source neben zen/redact/ascii) | images.nvim `f4186c2`, nvim-config `354ae393a` |
 | insights.nvim | 0 Befunde — alle drei Sheets aktuell; das eine frühere Doku-Loch (BINDINGS.md fehlten `conflicts`/`unimported`/`devserver`, falsche „Autocmds: None"-Behauptung) war bereits aus einer früheren Sitzung korrigiert | — |
 | language.nvim | 0 Befunde — alle drei Sheets aktuell. Translate-Fenster-Tasten und cspell-Sidecar-Shutdown bewusst außerhalb von `BINDINGS.md` (stehen in `FEATURES/TRANSLATE.md`/`WORKFLOW.md`); die undokumentierte `-nocode`-Alias ist eine bewusste interne Eigenheit, kein Loch | — |
+| lib.nvim | 0 Befunde — alles bereits in Modul-READMEs (`lastcmd`, `keymap.modifier`, `deps`, `composer`), runtime-analysis.nvims Docs oder `lua/config/telemetry.lua`s Doc-Comment vorhanden. Der `:Lib hover`-Abschnitt im Usercmds-Sheet beschreibt ein zwischenzeitlich entferntes Feature (lib.nvim `f547c44`) — nichts zu migrieren | — |
 
-**16/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
-Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 14 Repos):
-lib, lsp, markdown, mdview, open, pdfport, pickers, recommender, replacer,
+**17/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
+Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 13 Repos):
+lsp, markdown, mdview, open, pdfport, pickers, recommender, replacer,
 reposcope, runtime-analysis, sandbox, sessions,
 spotlight.nvim.
 
