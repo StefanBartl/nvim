@@ -11,11 +11,11 @@
 ### Plugin-Analyse & Cheatsheet-Generierung
 
 * [ ] Plugin komplett durchgehen und folgende Dokumente befüllen:
-  * [ ] **Keymaps:** Alle Keymaps als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Keymaps.md` schreiben.
+  * [ ] **Keymaps:** Alle Keymaps als Cheatsheet nach `vim.fn.stdpath('config') .. /docs/NOTES/PersonelPlugins/BINDINGS/Keymaps.md` schreiben.
     * [ ] Prüfen, dass es absolut keine Dopplungen bei den `lhs` der Keymaps mit anderen meiner personal Plugins gibt.
-* [ ] **User Commands:** Alle Usrcmds als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Usermcds.md` schreiben.
-* [ ] **Autocommands:** Alle Autocomands als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/BINDINGS/Autocmds.md` schreiben.
-* [ ] **Sonstiges:** Sonstige Events, Actions und Features als Cheatsheet nach `C:/Users/bartl/AppData/Local/nvim/docs/NOTES/PersonelPlugins/Misc.md` schreiben.
+* [ ] **User Commands:** Alle Usrcmds als Cheatsheet nach `vim.fn.stdpath('config') .. /docs/NOTES/PersonelPlugins/BINDINGS/Usermcds.md` schreiben.
+* [ ] **Autocommands:** Alle Autocomands als Cheatsheet nach `vim.fn.stdpath('config') .. /docs/NOTES/PersonelPlugins/BINDINGS/Autocmds.md` schreiben.
+* [ ] **Sonstiges:** Sonstige Events, Actions und Features als Cheatsheet nach `vim.fn.stdpath('config') .. /docs/NOTES/PersonelPlugins/Misc.md` schreiben.
 
 - C:\Users\StefanBartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS - hier alle Folder mit dem Plugin befüllen
 
