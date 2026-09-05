@@ -1,7 +1,7 @@
 # Handover — LAST_CDX_TASKS
 
 Begleitdatei zur Umsetzung von
-[`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
+[`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](LAST_CDX_TASKS.md).
 
 **Angelegt 2026-09-03. Stand 2026-09-05: P0–P4 erledigt — alle 32 Repos mit
 vollem Durchgang, E1 und `DOC-05` **32/32**, keine toten Links, keine toten
@@ -63,7 +63,7 @@ Zwei lose Fäden aus den letzten Minuten vor dem Abbruch:
 
 **P4 ist am 2026-09-05 abgeschlossen — alle 32 Repos durch.** Offen bleiben
 nur noch `BND-04`, `BND-05`, `BND-07`
-([§6.4](../../personal/All/FINISH/LAST_CDX_TASKS.md#64-was-dafür-zu-tun-ist)
+([§6.4](LAST_CDX_TASKS.md#64-was-dafür-zu-tun-ist)
 in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 (Abschlussbericht) — siehe Fortschritt-Tabelle unten.
 
