@@ -1,8 +1,9 @@
 # Merged Roadmap — CDX.md + CHECKLIST.md + FINISH_ME.md + Meins.md
 
+Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` - außer spezifisch es Plugin ist in der Task angegeben.
+
 ## Table of content
 
-  - [Notes](#notes)
   - [Liste A — Braucht dich](#liste-a-braucht-dich)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
@@ -11,21 +12,6 @@
   - [Liste B - Claude Tasks](#liste-b-claude-tasks)
     - [MISC](#misc)
     - [My `.nvim`-Plugins](#my-nvim-plugins)
-
----
-
-## Notes
-
-Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` - außer spezifisch es Plugin ist in der Task angegeben.
-
-- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
-- antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
-- Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
-- Docs / README.md des Plugins updaten sofern es Sinn macht
-- Keine Co-Authorenschaft von Claude in den Commits
-- Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
-- Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
 
 ---
 
@@ -48,6 +34,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 - [ ] claude: "Eine Sache habe ich ins Handover als Arbeitsregel geschrieben, weil sie mir zweimal passiert ist: stylua lua nie über die nvim-Config laufen lassen — sie ist nicht stylua-formatiert, ein Lauf formatiert 141 Dateien nebenbei um." - sollten sie aber schoin sein, also dem nachgehen
 - [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\checkhealt_conventions.md
+- [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md weiter machen
 
 ---
 
@@ -73,6 +60,8 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
   - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
   - [ ] Wobei aebri n den plugins, anders als der nvim-config, die frage istz, warum sollte dort ein Pfad auf c:\repos oder e:\repos sinn machen - andere user haben wvielleicht garn keine $REPOS_DIR env var. daher muss das geklärt wreen. ioch weiß zumindest von einen vorkomen, wo woir in der implementiert haebn, dass nach $REPOS_DOIR akiv gersucht wird, das haben wir dann abe in der readme.md auchangtegeben und müsste ein ausnahemfall sien. daher -> teilvon docs clearing, sich die vokrommen näöher anzuaschauen, es knnte aien anzeigersein für fehlannehmen/zeiger dass diese infos zu nmotizen gehölren, nicht in das polguins erpo docs, usw... siehst du da sähnlich?
 
+- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT - Alles files durchgehen, ob etwas nach $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins, $REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists oder woanders (zb.: bei den Tools wie C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md)
+
 ---
 
 ## Liste B - Claude Tasks
@@ -80,9 +69,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 ### MISC
 
 ### My `.nvim`-Plugins
- die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen
-- [ ] `sessions.nvim`
-   die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen- [ ] Wen ih mit `leader tl/tr` die tableiste neu anordne, dann session speichere und neue lade, dann ist die neue Reihenfolge nicht geseicert/elaaden, sondern la würde die neurodnung mit leader tl/tr gar nicht                     gesdhehen geeesen
 
 - [ ] `docmap-desktop`
   - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
