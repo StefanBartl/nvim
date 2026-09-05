@@ -80,7 +80,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
 | P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
-| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **24/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
+| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **25/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -209,10 +209,10 @@ offenen Repos.
 | pdfport.nvim | 0 Befunde — alle drei Sheets aktuell, inklusive create/merge/producers, `pages=`-kv-Args und `install.json`-Deps-Spec | — |
 | pickers.nvim | 0 Befunde — Autocmds-Sheets eigener `selected_index`-Abschnitt war selbst veraltet (Modul zu `result_count` umgebaut, pollt statt Autocmds), `BINDINGS.md` spiegelt bereits den aktuellen Stand | — |
 | recommender.nvim | 0 Befunde — inklusive `perf`-Analyzer und dem 5-fachen Scope-Positional (`buffer`/`path`/`cwd`/`cfile`/`line`) | — |
+| replacer.nvim | 0 Befunde — Autocmds korrekt „None"; Usercmds-Inhalt (`:ReplaceUndo`/`Batch`/`FNames`, `--changed`s `optional_value`, `--type=`/`--changed=`-Completion) über mehrere FEATURES-Seiten abgedeckt | — |
 
-**24/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
-Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 6 Repos):
-replacer,
+**25/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
+Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 5 Repos):
 reposcope, runtime-analysis, sandbox, sessions,
 spotlight.nvim.
 
