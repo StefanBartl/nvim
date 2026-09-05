@@ -21,20 +21,25 @@ CONTENTS                                            *bindings_explorer-contents*
 ==============================================================================
 1. INTRODUCTION                                 *bindings_explorer-introduction*
 
-`:Bindings` searches and browses three sources (Keymaps/Usercmds/Autocmds,
-one file per plugin): the hand-written cheatsheets under
+`:Bindings` searches and browses two sources (Keymaps/Usercmds/Autocmds, one
+file per plugin): the hand-written cheatsheets under
 `docs/NOTES/ExternPlugins/Bindings/` (foreign plugins, documented here
-because there is nowhere else to), the same under
-`docs/NOTES/PersonelPlugins/BINDINGS/` for what this config itself binds
-(`nvim-config`, `bindings_explorer`, …), and — since 2026-09-04 (`BND-01`)
-— each personal plugin's own `docs/BINDINGS.md`, read directly from
-`stdpath("data")/lazy/<plugin>/docs/BINDINGS.md`. The third source replaced
-what used to be a hand-maintained *copy* of each plugin's cheatsheet in
-`PersonelPlugins/BINDINGS/`: a copy can drift, and where both still exist
-for the same plugin, the plugin's own file wins. Unlike a live keymap
-picker (Telescope's own, snacks.picker's equivalent), all three carry
-rationale, cross-references, changelog entries and `[default]`/`[custom]`
-markers that pure `vim.keymap.set` introspection can never show.
+because there is nowhere else to), and — since 2026-09-04 (`BND-01`) — each
+personal plugin's own `docs/BINDINGS.md`, read directly from
+`stdpath("data")/lazy/<plugin>/docs/BINDINGS.md`. This config itself is one
+more entry in that second source (`config.plugin_sheets()`'s `"nvim-config"`
+row, `BND-05`), pointed at this repo's own root `docs/BINDINGS.md` instead
+of an installed plugin's, since there is no separate repo to install it
+into.
+
+The second source replaced what used to be a hand-maintained *copy* of each
+plugin's cheatsheet under `docs/NOTES/PersonelPlugins/BINDINGS/` — a copy can
+drift, and `BND-04`/`BND-05` retired that whole tree once every plugin
+(personal or this config) had its own `docs/BINDINGS.md` to read instead.
+Unlike a live keymap picker (Telescope's own, snacks.picker's equivalent),
+both sources carry rationale, cross-references, changelog entries and
+`[default]`/`[custom]` markers that pure `vim.keymap.set` introspection can
+never show.
 
 Full feature list with examples: `docs/FEATURES.md` next to this file.
 
