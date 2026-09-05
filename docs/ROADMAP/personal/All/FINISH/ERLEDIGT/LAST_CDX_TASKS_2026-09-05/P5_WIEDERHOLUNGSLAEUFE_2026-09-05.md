@@ -5,7 +5,7 @@ Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
 jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben/acht
 übrigen Regel-Familien, ~250 Punkte, Handprüfung) ist **angelaufen** — die
-`SEC-*`-Welle (24 Regeln) läuft über 20 von 32 Repos, siehe der Abschnitt
+`SEC-*`-Welle (24 Regeln) läuft über 21 von 32 Repos, siehe der Abschnitt
 „8.2b — SEC-* Welle" am Ende. Die übrigen sieben Familien und die
 verbleibenden 11 Repos sind weiterhin offen.
 
@@ -147,7 +147,7 @@ Größenordnungs-Begründung wie bei 8.3.
 ## 8.2 — Diagnostics erneut anwenden — **bewusst nur angerissen**
 
 **Umfang laut Standard:** 34 `LLS`-Regeln + 11 `NEW`-Gate-Punkte aus
-`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`, dazu (über die
+`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\`, dazu (über die
 `LLS`-Teilmenge hinaus) weitere sieben Regel-Präfixe
 (`PRIN-`, `LUA-`, `ERR-`, `SEC-`, `UI-`, `TS-`, `DEP-`, `PERF-`) — macht
 insgesamt weit mehr als 43 Einzelregeln über 32 Repos.
@@ -305,7 +305,7 @@ vorgemerkt, nicht in diesem Durchgang behoben — außerhalb des Umfangs von
 ## Rohdaten dieses Laufs
 
 Liegen unter
-`E:\repos\WKDBooks\Development\wkdbook-myplugins\_P5-Rohdaten-2026-09-05\`
+`$REPOS_DIR\WKDBooks\Development\wkdbook-myplugins\_P5-Rohdaten-2026-09-05\`
 (`8_3_magic_numbers.txt`, `8_5_hardcoded_constants.txt`,
 `8_4_bindings_audit.txt`, `8_4_gaps.txt`) — nicht committet, wie der Rest
 von `wkdbook-myplugins` in diesem Durchgang.
@@ -354,8 +354,9 @@ Repos.
 | lib.nvim | 2 — SEC-02, `cross.uv.spawn_shell_command` hatte kein `cwd` (Geschwister `spawn_command` schon); dazu ein Docstring-Hinweis, dass beide Shell-String-Spawner nicht für ungeprüfte Eingaben gedacht sind (SEC-01/03, additiv, keine Verhaltensänderung). SEC-21, `curl.download`/`download_blocking` ließen bei einem fehlgeschlagenen Transfer die abgeschnittene Zieldatei liegen statt sie zu entfernen | `fbfa956`, `60b75a7` |
 | lsp.nvim | 1 — SEC-02, `prettier_format` spawnte ohne `cwd` (Geschwister `eslint_fix` löste die Projekt-Root schon auf und übergab sie) — erbte damit stillschweigend das globale Editor-cwd statt des Puffer-Projekts | `2a71561` |
 | markdown.nvim | 0 | — |
+| mdview.nvim | 1 — SEC-20/21, `install.lua`s `curl_download()` (Release-Binary + Client-Bundle) hatte weder `--max-time` noch `--max-filesize` (blockiert den Main-Loop, kann Platte füllen), und ließ bei einem Fehlschlag die abgeschnittene Datei liegen — `ensure_asset()`s „existiert schon"-Schnellpfad hätte eine so beschädigte Binary beim nächsten `:MDView start` **ungeprüft als Server-Prozess gestartet**, ohne je die Checksumme zu ziehen | `E:\repos\mdview.nvim` |
 
-**13 von 20 geprüften Repos hatten mindestens einen echten Fund**, alle
+**14 von 21 geprüften Repos hatten mindestens einen echten Fund**, alle
 behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
 reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
 (`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
@@ -374,7 +375,7 @@ lassen sich zwischendurch nicht von Hand nachhalten. Runde 8 (`mdview.nvim`,
 **bevor** irgendein Agent etwas geschrieben hat — alle drei Repos standen
 danach mit sauberem Working Tree da, nichts zu retten, nichts verloren.
 
-**11 Repos noch nicht geprüft:** `mdview.nvim`, `open.nvim`, `pdfport.nvim`,
+**10 Repos noch nicht geprüft:** `open.nvim`, `pdfport.nvim`,
 `pickers.nvim`, `recommender.nvim`, `replacer.nvim`, `reposcope.nvim`,
 `runtime-analysis.nvim`, `sandbox.nvim`, `sessions.nvim`, `spotlight.nvim` —
 weiter alphabetisch, ein Repo je Durchgang, voller SEC-*-Katalog pro Repo.

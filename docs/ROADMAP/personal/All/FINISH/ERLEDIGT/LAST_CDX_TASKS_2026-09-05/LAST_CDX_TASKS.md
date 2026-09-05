@@ -52,7 +52,7 @@ die Handover-Datei.
 
 ## 1. Bestandsaufnahme
 
-Gemessen am 2026-09-03 über alle 31 Repos unter `E:\repos\*.nvim`.
+Gemessen am 2026-09-03 über alle 31 Repos unter `$REPOS_DIR\*.nvim`.
 
 ### 1.1 Größenordnung
 
@@ -454,7 +454,7 @@ Installationsentscheidung ableiten. Es bekommt daher ein eigenes,
 ausformuliertes Konzept.
 
 **Ablageort (explizit verlangt):**
-`E:\repos\WKDBooks\Development\wkdbook-Neovim\MyNotes\docs\README-KONZEPT.md`
+`$REPOS_DIR\WKDBooks\Development\wkdbook-Neovim\MyNotes\docs\README-KONZEPT.md`
 
 > Der Ordner `MyNotes\docs\` existiert bereits und ist **leer** — dieses
 > Konzept ist sein erster Inhalt.
@@ -553,7 +553,7 @@ stdpath("data")/lazy/<plugin>/docs/BINDINGS.md
 
 Das ist maschinenunabhängig — die persönlichen Plugins werden in
 `lua/plugins/personal/init.lua` als `"StefanBartl/<name>"` von GitHub geladen,
-nicht per `dir=`. Kein `E:\repos`-Pfad im Config-Repo.
+nicht per `dir=`. Kein `$REPOS_DIR`-Pfad im Config-Repo.
 
 Danach:
 
@@ -635,7 +635,7 @@ Repo-Durchgang, weil die Dateien ohnehin offen sind.
 | `CMT-08` | Zu tiefe Herleitungen → `wkdbook-myplugins`, im Code bleibt der Verweis |
 
 `CMT-07` überschneidet sich mit den Regeln aus
-`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\` — siehe
+`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\` — siehe
 [§8.2](#82-diagnostics-erneut-anwenden). Nicht doppelt prüfen: Bei
 `CMT-07` nur die Existenz, die inhaltliche Regel-Prüfung macht der
 Diagnostics-Lauf.
@@ -657,7 +657,7 @@ Delta.
 ### 8.1 lib.nvim-Nutzung im neuen Code
 
 Grundlage: `ERLEDIGT/Handover_ERLEDIGT/HANDOVER_dedup.md`.
-Werkzeug: **`:LibDuplicateScan E:\repos`**.
+Werkzeug: **`:LibDuplicateScan $REPOS_DIR`**.
 
 Bewusst nicht angefasste Fälle aus dem letzten Lauf — bei Treffern nicht
 erneut aufrollen: `config.M.get`, `try_require`, `notify.resolve`
@@ -671,7 +671,7 @@ Grundlage: `ERLEDIGT/DIAGNOSTICS/`.
 
 Wichtig: Die Diagnostics-Dateien selbst sind **nur die Quittung**. Der Inhalt —
 34 Regeln (`LLS-01`…`LLS-43`) und 11 Gate-Punkte (`NEW-36`…`NEW-46`) — steht in
-`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`. Der Wiederholungslauf
+`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\`. Der Wiederholungslauf
 prüft gegen **diese Regelsammlung**, nicht gegen die alten Reports.
 
 „Mit dem, was gelernt wurde": Der letzte Durchgang brauchte 14 Runden, bis die
