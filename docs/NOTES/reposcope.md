@@ -116,6 +116,5 @@ update third of the two-machine sync workflow.
 ## See also
 
 - [`lua/bindings/usrcmds/plugin_repos/README.md`](../../lua/bindings/usrcmds/plugin_repos/README.md) — `:MyPlugins` implementation notes, including the two-machine sync case
-- [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md`](PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md) — user-facing `:MyPlugins` cheatsheet
-- [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/reposcope.nvim.md`](PersonelPlugins/BINDINGS/Usercmds/reposcope.nvim.md) — user-facing `:Reposcope` cheatsheet
-- `reposcope.nvim`'s own [`docs/COMMANDS.md`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/COMMANDS.md) and [`docs/FEATURES.md`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/FEATURES.md)
+- [`docs/BINDINGS.md`](../BINDINGS.md#myplugins--config-internal-plugin-repo-management) — user-facing `:MyPlugins` cheatsheet (this config's own, since `BND-05`)
+- `reposcope.nvim`'s own [`docs/COMMANDS.md`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/COMMANDS.md), [`docs/FEATURES.md`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/FEATURES.md) and [`docs/BINDINGS.md`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/BINDINGS.md) (user-facing `:Reposcope` cheatsheet, since `BND-01`)

@@ -13,6 +13,6 @@ Diese Seite behauptete bis 2026-09-04 „None". Der zitierte Grep war echt, lief
 aber vor dem SLA-Notifier — eine Seite, die ein Negativum behauptet, veraltet,
 ohne dass je etwas fehlschlägt.
 
-Für den Bindings-Index dieser Config (den `:Bindings` liest) ist weiterhin
-[`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/casedesk.nvim.md`](../PersonelPlugins/BINDINGS/Usercmds/casedesk.nvim.md)
-zuständig — das ist ein anderer Korpus als dieser Ordner.
+`:Bindings` liest seit `BND-01` casedesk.nvims eigene `docs/BINDINGS.md`
+direkt (`stdpath("data")/lazy/casedesk.nvim/docs/BINDINGS.md`) — der frühere
+Abschrift-Sheet unter `PersonelPlugins/BINDINGS/` ist mit `BND-05` entfernt.

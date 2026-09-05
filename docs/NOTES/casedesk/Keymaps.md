@@ -14,6 +14,6 @@ wird von [`lua/bindings/mappings/custom.lua`](../../../lua/bindings/mappings/cus
 dieser Config registriert, nicht vom Plugin — es verbindet casedesk mit
 `sessions.nvim` und gehört zu keinem von beiden.
 
-Für den Bindings-Index dieser Config (den `:Bindings` liest) ist weiterhin
-[`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/casedesk.nvim.md`](../PersonelPlugins/BINDINGS/Usercmds/casedesk.nvim.md)
-zuständig — das ist ein anderer Korpus als dieser Ordner.
+`:Bindings` liest seit `BND-01` casedesk.nvims eigene `docs/BINDINGS.md`
+direkt (`stdpath("data")/lazy/casedesk.nvim/docs/BINDINGS.md`) — der frühere
+Abschrift-Sheet unter `PersonelPlugins/BINDINGS/` ist mit `BND-05` entfernt.
