@@ -1,7 +1,8 @@
 # Handover — Checkhealth-Konventionen über alle Plugins
 
-**Stand: 2026-09-06, Plan validiert und in [`docs/ROADMAP/ROADMAP.md`](../ROADMAP.md#checkhealth-konventionen)
-eingetragen. Umsetzung noch nicht begonnen.**
+**Stand: 2026-09-06, abgeschlossen bis auf den bewusst offen gelassenen
+ADVICE-Vollaudit (Schritt 6). Neun Plugin-Repos + wkdbook-Lua + nvim-config
+gefixt und auf `main` gepusht.**
 
 Quelle der Analyse: [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](../personal/All/FINISH/checkhealt_conventions.md)
 (2026-08-31). Regel in einem Satz: *Muss der Nutzer etwas tun? Nein → niemals
@@ -50,8 +51,10 @@ ist. Kein Agent-Einsatz nötig, direkt in der Hauptkonversation, Repo für Repo.
 - [x] Schritt 5 — sessions.nvim `0181dce`, open.nvim `4a7c44d`, buffer-ctx.nvim `a84532c` (setup()-Zeilen → info; jeweils auch die im Original nicht zitierten, aber identischen Nachbarstellen im selben Muster mitgefixt)
 - [ ] Schritt 6 — ADVICE-Nachzug (bewusst opportunistisch, kein Vollaudit — offen gelassen)
 - [x] Schritt 7 — `ℹ️ INFO`-Tag in filetree.nvim `78198b1` + pickers.nvim `f2e433e` (die beiden bereits auf `info` umgestellten Statuslisten), `after/syntax/checkhealth.vim` in nvim-config (per `synID()` gegen einen synthetischen Buffer verifiziert: `DiagnosticInfo` greift). pdfport.nvim bewusst ausgelassen — dessen übrige Backend-`warn`s sind nicht validiert als Eine-von-N, das wäre Schritt 6.
-- [ ] Schritt 8 — Regel in wkdbook-Lua/Checklists
+- [x] Schritt 8 — wkdbook-Lua `1d31313`: `UI-57`..`UI-61` in `regeln/LUA_NVIM.md` (neue Sektion "Checkhealth-Konventionen" unter "UI und Bedienbarkeit") + Schnell-Check-Zeile in `gates/REVIEW.md`. Achtung beim nächsten Mal: `UI-50`..`UI-56` und `UI-40`..`UI-44` waren schon vergeben (Buffer/Window-UI bzw. Count-Unterstützung) — vor dem Anlegen neuer IDs immer erst per grep über die *ganze* Datei nach vergebenen `UI-<N>`-Nummern suchen, nicht nur über den Abschnitt, in den man schreibt.
 
-Nebenfund: `sessions.nvim`s Remote-URL zeigt noch auf `stefanbartl` (klein)
-statt `StefanBartl` -- GitHub leitet um, aber `git remote set-url origin`
-waere Hausputz.
+## Nebenfund
+
+`sessions.nvim`s Remote-URL zeigt noch auf `stefanbartl` (klein) statt
+`StefanBartl` -- GitHub leitet um, aber `git remote set-url origin` waere
+Hausputz.
