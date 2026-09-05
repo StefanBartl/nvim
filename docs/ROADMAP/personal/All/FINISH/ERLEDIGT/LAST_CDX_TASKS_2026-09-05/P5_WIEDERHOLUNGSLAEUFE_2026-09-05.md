@@ -363,12 +363,20 @@ Repos.
 | reposcope.nvim | **1 systemisch, mehrere Dateien** — SEC-21, keines der drei Network-Request-Tools (`curl.lua`, `wget.lua`, `gh.lua`) übergab je ein `timeout_ms` an `spawn_capture` (dessen eigene Doku sagt „no timer means no timeout"). **Jede** Repo-Suche, jeder README-Fetch, jeder API-Call über alle drei Provider (GitHub/GitLab/Codeberg) konnte an einer hängenden Verbindung unbegrenzt hängen bleiben, ohne dass das Plugin je aufgibt und einen Fehler meldet — der mit Abstand am breitesten wirkende Fund dieser Welle, auch wenn keine einzelne Schwachstelle so gravierend wie der github_stats-Token-Leak. 20s-Default in allen dreien ergänzt, `result.timed_out` in eine klarere Fehlermeldung durchgereicht. Zusätzlich die Curl/Wget-Zip-Downloads der drei `clone_command.lua` mit `--max-time`/`--timeout=300s` versehen (bewusst **ohne** Byte-Limit — ein Repo-Archiv hat keine sinnvolle universelle Obergrenze; `git clone` selbst bleibt unangetastet, da `run_async_captured` kein Timeout unterstützt und ein großer Klon legitim lange dauern darf). Der Rest des Repos war bereits vorbildlich gehärtet: Credential-Header gehen nie über argv, sondern über eine `curl -K -`-Stdin-Config; die `:messages`-Log-Zeile loggt redaktierte Werte, nicht die echten. 9/9 Tests bestehen unverändert | `E:\repos\reposcope.nvim` |
 | runtime-analysis.nvim | 0 — kein Prozess-Spawn im Repo selbst überhaupt (reines Introspektions-/Telemetrie-Tool, das über `lib.nvim.system.proc_trace` andere Aufrufe *umschließt*, statt selbst welche zu machen). `history.lua`s Cache-Key-Sanitizing (SEC-43, `[^%w%-%._]`-Whitelist + führende Punkte gestrippt) noch exakt wie im Regelkatalog referenziert, gegen aktuellen Quelltext erneut verifiziert | — |
 | sandbox.nvim | 0 — durchgängig argv-basiert über alle Docker/Podman/Nerdctl-Adapter (`run_container` mit `-p`/`-v`/`-e` je als eigenes Argv-Element statt zusammengebautem String, `remove_*`, `follow_logs`, WSL-Distro-Lister — stichprobenartig über alle drei Engines geprüft). `.sandboxrc`s Engine-Whitelist (SEC-41, hartes Enum `docker`/`podman`/`nerdctl`) noch exakt wie referenziert | — |
+| sessions.nvim | 0 — Branch-Name-Auflösung liest `.git/HEAD` direkt statt `git` zu spawnen (schneller **und** ohne jede Prozess-Angriffsfläche); `sanitize()` (SEC-42, ANSI-Strip vor Whitelist) noch exakt wie referenziert; die verbleibenden `git`-Aufrufe (`ls-files`/`update-index`) durchweg argv+`cwd`+`--`-Separator. Keine JSON-Deserialisierung im ganzen Repo — Sessions werden rein über Dateilisting getrackt | — |
+| spotlight.nvim | 0 — kein Prozess-Spawn im ganzen Repo. `core/pattern.lua`s `\V`-Escaping (SEC-30/31) noch exakt wie referenziert. `persist.lua`/`registry.lua`s Snapshot-Restore (SEC-33) ist **vorbildlich**: jedes Feld typgeprüft, längenbegrenzt (`max_text_len`), gededuped, count-capped (`match.max`) — und die Regex wird aus dem rohen `text` **neu gebaut**, nie aus der Datei übernommen, was eine Pattern-Injection über ein präpariertes Snapshot strukturell ausschließt, nicht nur durch Disziplin | — |
 
-**18 von 29 geprüften Repos hatten mindestens einen echten Fund**, alle
+**Damit sind alle 32 Repos durch die `SEC-*`-Welle (24 Regeln, `SEC-01`…`SEC-45`).**
+
+**18 von 32 geprüften Repos hatten mindestens einen echten Fund**, alle
 behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
 reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
 (`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
-(`images.nvim`).
+(`images.nvim`). Der mit Abstand am breitesten wirkende Fund traf aber
+keinen einzelnen Token, sondern eine ganze Klasse von Aufrufen:
+`reposcope.nvim`s drei Network-Request-Tools hatten überhaupt keinen
+Timeout, sodass jede Repo-Suche/README-Fetch/API-Call über alle drei
+Provider unbegrenzt hängen bleiben konnte.
 
 Vollständige Einzel-Reports (welche Regeln geprüft, welche N/A mit
 Begründung, welche bewusst nicht behoben) liegen in den Session-Transkripten
@@ -376,18 +384,25 @@ der beauftragten Agenten — hier nur die Verdichtung.
 
 ### Was bleibt
 
-**Ab jetzt ein Repo pro Durchgang, nicht mehr parallel** — Autorenentscheidung
-2026-09-05 (Abend): mehrere gleichzeitige Agenten kosten zu viele Token und
-lassen sich zwischendurch nicht von Hand nachhalten. Runde 8 (`mdview.nvim`,
-`open.nvim`, `pdfport.nvim` gleichzeitig) ist am Sitzungslimit gescheitert,
-**bevor** irgendein Agent etwas geschrieben hat — alle drei Repos standen
-danach mit sauberem Working Tree da, nichts zu retten, nichts verloren.
+**`SEC-*` ist fertig — nichts mehr offen aus dieser Regel-Familie.** Nach
+Runde 8s Scheitern am Sitzungslimit (`mdview.nvim`/`open.nvim`/`pdfport.nvim`
+gleichzeitig, kein Datenverlust — Autorenentscheidung 2026-09-05 Abend: ab da
+ein Repo pro Durchgang statt 3 parallel, da mehrere gleichzeitige Agenten zu
+viele Token kosten und sich zwischendurch nicht von Hand nachhalten lassen)
+liefen die restlichen 11 Repos (mdview, open, pdfport, pickers, recommender,
+replacer, reposcope, runtime-analysis, sandbox, sessions, spotlight) einzeln
+durch, alphabetisch, je einer pro Durchgang.
 
-**9 Repos noch nicht geprüft:** `pdfport.nvim`,
-`pickers.nvim`, `recommender.nvim`, `replacer.nvim`, `reposcope.nvim`,
-`runtime-analysis.nvim`, `sandbox.nvim`, `sessions.nvim`, `spotlight.nvim` —
-weiter alphabetisch, ein Repo je Durchgang, voller SEC-*-Katalog pro Repo.
+**Endstand: 32/32 Repos geprüft, 18 mit mindestens einem echten Fund**, alle
+behoben, committet und gepusht — inklusive eines Fixes im mitbenutzten
+`lib.nvim` (`win_reveal.ps1`, gefunden über `open.nvim`), da das Repo selbst
+sauber war, aber ein von ihm genutztes Shared-Modul nicht. Zusätzlich ein
+klar außerhalb der SEC-*-Familie liegender Funktionsbug bei `pdfport.nvim`
+gefunden und als eigener Follow-up-Task (`task_3b310657`) vermerkt statt
+mitgefixt.
 
 **Danach:** die übrigen sieben Regel-Familien (`PRIN-`/`LUA-`/`ERR-`/`UI-`/
 `TS-`/`DEP-`/`PERF-`) über alle 32 Repos — `SEC-*` war nur die erste von acht
 Wellen laut Piloten-Empfehlung (Pilot: `buffer-ctx.nvim`, siehe oben).
+Autorenentscheidung, wann das angegangen wird — blockiert laut Standard
+nichts, es bleibt bewusst der letzte Punkt der Gesamtliste.
