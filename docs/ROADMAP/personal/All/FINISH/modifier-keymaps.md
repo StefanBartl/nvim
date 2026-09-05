@@ -37,9 +37,11 @@ kopieren ohnehin schon). Es beschreibt die *Form*, nicht den Anwendungsfall.
 Der Anwendungsfall ist die Verallgemeinerung: **jedes** Mapping in **jedem**
 Plugin.
 
-Verwandt, aber getrennt: [`lib.nvim.lastcmd`](../../NOTES/PersonelPlugins/BINDINGS/Keymaps/lib.nvim.md)
-ist die dritte Taste derselben Familie — Keymaps, die auf *andere* Keymaps
-wirken statt auf den Buffer. Gemeinsamer Name dafür: **Super-Keymaps**.
+Verwandt, aber getrennt: `lib.nvim.lastcmd`
+([`lua/lib/nvim/lastcmd/README.md`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/lastcmd/README.md)
+im Plugin-Repo) ist die dritte Taste derselben Familie — Keymaps, die auf
+*andere* Keymaps wirken statt auf den Buffer. Gemeinsamer Name dafür:
+**Super-Keymaps**.
 
 ---
 

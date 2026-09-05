@@ -10,6 +10,6 @@ steht daneben auch eine **generierte** Fassung, `docs/commands.md`, die aus
 demselben Routen-Baum kommt wie Dispatch und `<Tab>`-Completion und deshalb
 nicht veralten kann.
 
-Für den Bindings-Index dieser Config (den `:Bindings` liest) ist weiterhin
-[`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/casedesk.nvim.md`](../PersonelPlugins/BINDINGS/Usercmds/casedesk.nvim.md)
-zuständig — das ist ein anderer Korpus als dieser Ordner.
+`:Bindings` liest seit `BND-01` casedesk.nvims eigene `docs/BINDINGS.md`
+direkt (`stdpath("data")/lazy/casedesk.nvim/docs/BINDINGS.md`) — der frühere
+Abschrift-Sheet unter `PersonelPlugins/BINDINGS/` ist mit `BND-05` entfernt.

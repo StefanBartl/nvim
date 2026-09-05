@@ -274,7 +274,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 
 ## See also
 
-- [`docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md`](../../../../docs/NOTES/PersonelPlugins/BINDINGS/Usercmds/MyPlugins.md) — the user-facing cheatsheet
+- [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/source.lua`](../../../plugins/personal/source.lua) — the `OVERRIDE` switch and per-repo mode table
 - [`lua/plugins/personal/list.lua`](../../../plugins/personal/list.lua) — where the repo list actually comes from
 - `lib.nvim`'s [`usercmd/composer/README.md`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/bindings/usercmd/composer/README.md) — the composer API itself

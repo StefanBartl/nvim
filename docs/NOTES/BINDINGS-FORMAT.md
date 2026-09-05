@@ -88,8 +88,8 @@ Wirkung irgendwo in der Zeile stehen, nicht eine feste Spaltenzahl.
 wenn der Plugin-Verb keine Range-Unterstützung hat (dann zweispaltig).
 
 **Autocmds** — `| Event(s) | Augroup | Pattern | Action |`, identisch zum
-bereits etablierten Format aus
-[autocmds-by-plugin.md](PersonelPlugins/BINDINGS/autocmds-by-plugin.md).
+Format, das jedes Plugin inzwischen in seiner eigenen `docs/BINDINGS.md`
+führt (z.B. [lsp.nvim](https://github.com/StefanBartl/lsp.nvim/blob/main/docs/autocmds.md)).
 Hier gibt es nichts Neues zu erfinden — nur sicherstellen, dass jede
 einzelne `Autocmds/<plugin>.md` dieselbe Spaltenform benutzt wie die
 Sammel-Datei, die daraus gespeist wird.
