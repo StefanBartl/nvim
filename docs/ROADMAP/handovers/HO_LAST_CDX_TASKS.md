@@ -80,7 +80,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
 | P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
-| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **12/31 fertig, hover.nvim angefangen** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
+| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **14/31 fertig** (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -197,28 +197,12 @@ offenen Repos.
 | filetree.nvim | **Der alte Sheet hatte recht**: `B` (reveal_alt) und `ML`/`MR`/`MM` (markdown_links) waren im Source-Katalog, fehlten aber in `docs/BINDINGS/KEYMAPS.md`. Zusätzlich gefunden: die vier Preview-Scroll-Keys (`<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>`) fehlten in *beidem*, Katalog und Doku. `docs/BINDINGS/AUTOCMDS.md` behauptete `file_watcher`/`watcher_quarantine` feuerten auf `User FileWatcherEvent` — Grep über den ganzen Source fand kein einziges solches Autocmd; dazu fehlten sechs Features komplett (`opened_sync`, `size_info`, `no_name_guard`, `layout_guard`, `auto_resize`, `ignore_list`-Dimming). Alles gegen aktuellen Source verifiziert und korrigiert | `E:\repos\filetree.nvim` (3 Commits) |
 | github_stats.nvim | 0 Befunde — alle drei Sheets bestätigten sich selbst als „verified current and precise"; die als tot markierte `VimResized`-Autocmd in `dashboard/layout.lua` ist es nach wie vor (Modul wird nirgends `require`d) | — |
 | gopath.nvim | 0 Befunde — alle drei Sheets bestätigten sich selbst als „verified current and precise, cleanest of the audited repos"; nachgeprüft, stimmt | — |
+| hover.nvim | Keymaps/Usercmds: 0 Befunde (Config-spezifische Kollisionen aus dem Keymaps-Sheet gehören in `Collisions.md`/`BND-05`, nicht ins Repo; der Composer-Blindspot aus dem Usercmds-Sheet ist bereits in `bindings_explorer/docs/FEATURES.md:306` dokumentiert). Autocmds: **1 echter Fund** — `docs/BINDINGS.md` nannte nur zwei der drei `anything_to_show()`-Bedingungen, die Position-Preview-Bedingung (seit hover.nvim `1b4cc8d`) fehlte | hover.nvim `de4f8ef`, nvim-config `cdf2850bb` |
+| images.nvim | Keymaps/Usercmds: 0 Befunde — beide Sheets vollständig (und ausführlicher) in `commands.md`/`BINDINGS.md`/`architecture.md` abgedeckt. Autocmds: **1 echter Fund** — `images.hover_float`s `WinClosed`-Cleanup-Autocmd fehlte in `docs/BINDINGS.md`s Tabelle ganz (existiert im Source neben zen/redact/ascii) | images.nvim `f4186c2`, nvim-config `354ae393a` |
 
-**⏸ hover.nvim — angefangen, nicht fertig.** Keymaps-Sheet geprüft und
-verifiziert: der Sheet dokumentiert überwiegend **Config-spezifische**
-Tasten-Kollisionen mit anderen Personal-Plugins (`<M-->` bei cascade.nvim,
-Alt-Akkord-Erreichbarkeit in diesem Terminal) — gehört, wenn überhaupt, in
-`Collisions.md` (`BND-05`-Gegenstand), nicht ins hover.nvim-Repo selbst. Die
-plugin-eigenen Fakten (Borrowed-Keys, Bedingungen, `scroll_keys`-Paare,
-`position_keys.next`) sind alle bereits in `hover.nvim/docs/BINDINGS.md`
-verifiziert vorhanden — keine Migration nötig, Sheet noch nicht gelöscht.
-**Usercmds-Sheet (336 Zeilen) ist zur Hälfte gelesen** — bis einschließlich
-der Routen-Tabelle und den ersten Notes (`:Bindings check`-Blindspot bei
-composer-basierten Plugins, Implication-Ketten `fetch`→`web`→`links`).
-Autocmds-Sheet (103 Zeilen) noch nicht angesehen. **Nächster Schritt:**
-Usercmds-Sheet zu Ende lesen, gegen `hover.nvim/docs/commands.md`/
-`doc/hover.txt` verifizieren (insbesondere den composer-Blindspot-Befund —
-das ist ein eigenständiger, plugin-übergreifender Fund wert, ihn zu prüfen
-ob er noch zutrifft), dann Autocmds-Sheet, dann wie gewohnt migrieren/
-löschen/committen.
-
-**12/31 fertig, 1 angefangen (hover.nvim)** (`diff.nvim` hatte nie ein Sheet in diesem
-Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 18 Repos, davon
-`hover` bereits angefangen — siehe oben): hover, images, insights, language,
+**14/31 fertig** (`diff.nvim` hatte nie ein Sheet in diesem
+Korpus — betrifft `BND-04` nicht). Offen (alphabetisch, 16 Repos):
+insights, language,
 lib, lsp, markdown, mdview, open, pdfport, pickers, recommender, replacer,
 reposcope, runtime-analysis, sandbox, sessions,
 spotlight.nvim.
