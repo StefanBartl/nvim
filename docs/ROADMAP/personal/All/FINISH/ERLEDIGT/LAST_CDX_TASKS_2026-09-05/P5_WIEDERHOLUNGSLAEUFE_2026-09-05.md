@@ -5,9 +5,9 @@ Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
 jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben/acht
 übrigen Regel-Familien, ~250 Punkte, Handprüfung) ist **angelaufen** — die
-`SEC-*`-Welle (24 Regeln) läuft über 23 von 32 Repos, siehe der Abschnitt
+`SEC-*`-Welle (24 Regeln) läuft über 24 von 32 Repos, siehe der Abschnitt
 „8.2b — SEC-* Welle" am Ende. Die übrigen sieben Familien und die
-verbleibenden 8 Repos sind weiterhin offen.
+verbleibenden 7 Repos sind weiterhin offen.
 
 Alle vier Werkzeuge liefen **nicht** über die Usercmds aus dem Standard
 (`:LibDuplicateScan`, `:LibBindingsAudit`, `:LibBindingsAuditGaps`) — diese
@@ -357,8 +357,9 @@ Repos.
 | mdview.nvim | 1 — SEC-20/21, `install.lua`s `curl_download()` (Release-Binary + Client-Bundle) hatte weder `--max-time` noch `--max-filesize` (blockiert den Main-Loop, kann Platte füllen), und ließ bei einem Fehlschlag die abgeschnittene Datei liegen — `ensure_asset()`s „existiert schon"-Schnellpfad hätte eine so beschädigte Binary beim nächsten `:MDView start` **ungeprüft als Server-Prozess gestartet**, ohne je die Checksumme zu ziehen | `E:\repos\mdview.nvim` |
 | open.nvim | 0 im Repo selbst — **aber 1 im mitbenutzten `lib.nvim`-Code**: `reveal_in_fm`s `win_reveal.ps1` (geteilt mit filetree.nvim, dort ist es `<leader>fm`) baute das `-ArgumentList` für `explorer.exe` per Hand aus einem manuell gequoteten String. Ein natives Windows-Pfad kann kein `"` enthalten, aber ein per `wslpath -w` übersetzter WSL-Pfad schon — Linux erlaubt es in Dateinamen, und `wslpath` filtert nichts. Ein `"` im Pfad hätte das selbstgebaute Anführungszeichen vorzeitig geschlossen und den Rest des Dateinamens als zusätzliche `explorer.exe`-Argumente einschmuggeln können. Fail-closed statt fragilem Escaping (`explorer.exe`s Quote-Konvention ist nicht robust genug dokumentiert) | `E:\repos\lib.nvim` |
 | pdfport.nvim | 0 — durchweg vorbildlich: alle Backends laufen über den gemeinsamen `spawn_capture`-Wrapper (Argv, Timeout überall gesetzt), `claude.lua`s Anthropic-API-Key geht nie über argv — er landet in einer `chmod 0600`-Temp-Curl-Configdatei (`-K`), genau das SEC-10-Muster, dessen Fehlen bei `github_stats.nvim` der gravierende Fund war. **Kein SEC-Fund, aber ein echter Funktionsbug nebenbei entdeckt** (nicht behoben, da außerhalb der SEC-*-Familie): `platform.open_cmd()` liefert unter Windows das bloße Wort `"start"` — das ist ein cmd.exe-Builtin, keine eigene ausführbare Datei; `jobstart({cmd, path})` spawnt ohne Shell, „funktioniert" auf dieser Maschine nur zufällig durch ein Git-for-Windows-`start`-Shim auf dem PATH. Als Follow-up-Task vorgeschlagen (`task_3b310657`) | — |
+| pickers.nvim | 1 — SEC-03, `engines/fzf.lua`s `live_grep` shellescapte Glob-Excludes und Roots konsequent beim Zusammenbau des `rg_opts`-Shell-Strings, aber `additional_args` wurde roh per `list_extend` angehängt — die eine Lücke in einem sonst durchgängigen Muster. Aktuell nur mit quellcode-fixer Source-Config befüllt (`sources/drives.lua`), also nicht ausnutzbar, aber inkonsistent zum Rest derselben Datei | `E:\repos\pickers.nvim` |
 
-**15 von 23 geprüften Repos hatten mindestens einen echten Fund**, alle
+**16 von 24 geprüften Repos hatten mindestens einen echten Fund**, alle
 behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
 reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
 (`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
