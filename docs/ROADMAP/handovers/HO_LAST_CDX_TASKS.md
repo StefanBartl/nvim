@@ -9,12 +9,11 @@ Anker, keine verwaisten `docs/`-Dateien. P5 (8.1/8.3/8.4/8.5) erledigt; der
 volle 8.2-Regelkatalog jenseits von LuaLS ist bewusst **letzter Punkt dieser
 Liste** (Autorenentscheidung, siehe
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)) —
-blockiert nichts, wird angegangen sobald alles andere fertig ist. P6:
-`BND-01`…`03`, `06`, `07` erledigt; **`BND-04` ist jetzt ebenfalls
-abgeschlossen (31/31 Repos mit Sheet in diesem Korpus, siehe BND-04-Ledger
-unten)**. `BND-05` (`PersonelPlugins/BINDINGS/` entfernen, mit gründlicher
-Verifikation gegen `:Bindings browse`) ist der nächste offene Schritt. P7
-(Abschlussbericht) folgt danach.**
+blockiert nichts, wird angegangen sobald alles andere fertig ist. **P6
+(BINDINGS-Sanierung, §6) ist jetzt vollständig abgeschlossen** —
+`BND-01`…`07` alle erledigt, `PersonelPlugins/BINDINGS/` entfernt, siehe
+BND-04-Ledger und den BND-05-Abschnitt unten. P7 (Abschlussbericht) ist
+der letzte offene Punkt.**
 
 ---
 
@@ -79,7 +78,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
 | P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
-| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07`, **`BND-04` (31/31, abgeschlossen)** erledigt (siehe BND-04-Ledger unten). `BND-05` folgt — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
+| P6 — BINDINGS-Sanierung | ✅ | 2026-09-05 | **Vollständig abgeschlossen** — `BND-01`…`07` alle erledigt (Details: BND-04-Ledger + BND-05-Abschnitt unten). `PersonelPlugins/BINDINGS/` ist entfernt; nvim-config hat jetzt eine eigene Root-`docs/BINDINGS.md`, gelesen über `config.plugin_sheets()`s neuen `"nvim-config"`-Eintrag |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -224,9 +223,85 @@ markdown — sowie zwei Collisions.md-Ergänzungen aus hover und
 spotlight); die übrigen 25 bestätigten sich als bereits aktuell.
 `lsp.nvim` war der größte Einzelfund: eine 33-Autocmds-Inventur, die
 das Repo selbst als „the complete inventory" bezeichnete, aber nirgends
-im Repo stand — jetzt `docs/autocmds.md` dort. **Nächster Schritt:
-`BND-05`** — gründliche Verifikation gegen `:Bindings browse`, dann
-den ganzen `docs/NOTES/PersonelPlugins/BINDINGS/`-Baum entfernen.
+im Repo stand — jetzt `docs/autocmds.md` dort.
+
+### BND-05 — abgeschlossen 2026-09-05
+
+Deutlich mehr als „Ordner löschen". Zwei Weichenstellungen vorab mit dem
+Autor geklärt (siehe unten), dann in dieser Reihenfolge:
+
+1. **Echter Regressionsfund, mitgefixt:** `search.lua`/`live.lua` lasen nur
+   `config.roots()`/`config.roots_for(category)` (die zwei physischen
+   Bäume) für den ungescopten Fall — `plugin_sheets()` (die dritte Quelle
+   aus `BND-01`) erreichte nur den *gescopten* Pfad
+   (`plugin_scope.resolve` → `M.search`s `sel.plugin.files`-Zweig). Da
+   `BND-04` die Personal-Hälfte der physischen Bäume plugin-für-plugin
+   geleert hatte, fand ein blankes `:Bindings search <query>` oder
+   `:Bindings search keymaps <query>` seit da **nichts mehr** in allen 31
+   Personal-Plugins — ununterscheidbar von einer echten Null-Treffer-Suche.
+   Neue `plugin_scope.all_files(category)` (dieselbe gepoolte Sheet-Liste,
+   die `M.resolve` schon baute, auf Pfade reduziert), `M.search` nutzt sie
+   jetzt im ungescopten Fall. Headless verifiziert: ein Begriff, der nur in
+   hover.nvims `docs/BINDINGS.md` steht, kommt jetzt durch (`de4f8ef` als
+   Fundbeleg, Fix in nvim-config `8f9bbb8e9`).
+2. **Cross-Plugin-Analysen gerettet, nicht gelöscht:** `Keymaps/
+   Collisions.md` und `Usercmds/Overview.md` (Namensraum-/Kollisions-
+   Analyse über alle Plugins, inkl. des einzigen echten Fundes im ganzen
+   Korpus — `:Lsp` unterdrückt nvim-lspconfigs eigene Commands über einen
+   `exists(':lsp')`-Check) nach `docs/NOTES/CrossPlugin/` verschoben.
+   Die drei Autocmds-Sammelseiten (`by-event`/`by-filetype`/`by-plugin`):
+   reine Tabellen-Duplikate gelöscht (`by-plugin.md`, `:Bindings browse`
+   deckt das ab), echte Prosa-Einsichten (die eine BufWritePre-
+   Reihenfolge-Abhängigkeit, markdown.nvims Dreifach-Debounce, die
+   Explorer-Singleton-Koordination) nach `docs/NOTES/CrossPlugin/
+   Autocmds-Observations.md` extrahiert — je mit Quelle und betroffenen
+   Plugins, ausdrücklich **noch nicht einsortiert** (später: Plugin-Repo
+   oder WKDBook-Notiz).
+3. **Neue `docs/BINDINGS.md` für nvim-config selbst** (Repo-Root, gleiche
+   Struktur wie jedes Plugin) — konsolidiert aus den drei alten
+   `nvim-config.md`-Sheets plus `MyPlugins`/`MyReposUpdate`/`WhoLocks`/
+   `bindings_explorer`/`DocMapAll`. Wo ein Modul schon ein eigenes, tieferes
+   README hatte (`plugin_repos/README.md`, 280 Zeilen; `bindings_explorer/
+   docs/FEATURES.md`, 929 Zeilen), zeigt die neue Seite nur dorthin statt
+   zu duplizieren — zwei dünne Stub-READMEs (`update_repos`, `who_locks`)
+   wurden dafür erst auf echten Inhalt gebracht.
+4. **`config.plugin_sheets()` um einen `"nvim-config"`-Eintrag erweitert**
+   (nvim-config `397ab2647`) — zeigt auf die neue Root-`docs/BINDINGS.md`
+   statt auf ein `stdpath("data")/lazy/<name>`-Checkout. Jeder Verbraucher
+   von `plugin_sheets()` bekommt das automatisch: `plugin_scope.sheets()`/
+   `resolve()` (also `:Bindings search`/`browse` samt `<Tab>`-Completion)
+   und `records.lua` (`browse`/`check`/`report`). Headless verifiziert:
+   Auflösung, gescopte Suche, `records.list()` (171 Zeilen geparst) und
+   `drift.check("nvim-config")` laufen fehlerfrei.
+5. Hängende Referenzen auf die gelöschten Pfade gefixt (sieben Live-Docs:
+   `BINDINGS-FORMAT.md`, `ExternPlugins/Bindings/Keymaps/Telescope.md`,
+   drei `docs/NOTES/casedesk/*.md`, `docs/NOTES/reposcope.md`,
+   `modifier-keymaps.md`, `plugin_repos/README.md`) sowie
+   `bindings_explorer`s eigene `docs/FEATURES.md`/Vimdoc auf das neue
+   Zwei-Quellen-Modell nachgezogen. Eine bereits vorher kaputte
+   Referenz in einer `ERLEDIGT/`-Archivdatei (falsche `../`-Tiefe, nicht
+   von dieser Sitzung verursacht) bewusst unangetastet gelassen.
+6. **Nebenbefund beim Testen, mitgefixt:** `docs_linkcheck.py`s neuer
+   Mehrsegment-Case-Check crashte auf Windows bei laufwerksübergreifenden
+   absoluten Links (`E:\repos\...` in `docs/ROADMAP/IDEAS/*.md`-Notizen) —
+   `os.path.relpath` wirft dort `ValueError`. Zwei Stellen abgesichert.
+7. Zwei echte Tabellenbrüche gefunden und behoben (`docs_tablecheck.py`,
+   selbst erst in dieser Sitzung committet): ein Absatz mitten in der
+   Repo-Ledger-Tabelle dieser Datei brach sie in zwei nicht mehr als
+   Tabelle gerenderte Teile; ein unescapter `|` in `MANUAL-EVIDENCE.md`
+   ließ GitHub eine Zelle verwerfen.
+
+**Zwei Autorentscheidungen, die den Umfang bestimmt haben:** (a) eigene
+`docs/BINDINGS.md` für nvim-config statt eines abgespeckten
+`PersonelPlugins/BINDINGS`-Rests — konsequent zu Ende gedacht, `§6.3`s
+„entfällt komplett" eingelöst; (b) die Autocmds-Einsichten in eine eigene,
+ausdrücklich unentschiedene Datei statt in `Collisions.md` — es sind keine
+Kollisionen, sondern Timing-/Interaktions-Beobachtungen.
+
+`BND-06`/`BND-07` waren zu Sitzungsbeginn bereits erledigt (siehe
+Repo-Ledger oben). **Damit ist §6 (BINDINGS-Sanierung) vollständig
+abgeschlossen.** Nächster offener Punkt: **P7 (Abschlussbericht)** —
+siehe `LAST_CDX_TASKS.md` §6.4/§9.
 
 ---
 
