@@ -1,6 +1,6 @@
 # P5 — Die fünf Wiederholungsläufe, Stand 2026-09-05
 
-Begleitet [`LAST_CDX_TASKS.md` §8](../personal/All/FINISH/LAST_CDX_TASKS.md#8-die-fünf-wiederholungsläufe).
+Begleitet [`LAST_CDX_TASKS.md` §8](LAST_CDX_TASKS.md#8-die-fünf-wiederholungsläufe).
 Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
 jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben

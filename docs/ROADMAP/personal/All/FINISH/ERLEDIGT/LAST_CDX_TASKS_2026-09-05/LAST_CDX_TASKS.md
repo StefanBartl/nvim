@@ -5,7 +5,7 @@ Aufgabenblock: Doku-Audit über alle Plugin-Repos, Kommentar-Audit im Quelltext,
 BINDINGS-Sanierung, und fünf Wiederholungsläufe früherer Durchgänge.
 
 Begleitende Notizdatei während der Umsetzung:
-[`docs/ROADMAP/handovers/HO_LAST_CDX_TASKS.md`](../../../handovers/HO_LAST_CDX_TASKS.md).
+[`docs/ROADMAP/handovers/HO_LAST_CDX_TASKS.md`](HO_LAST_CDX_TASKS.md).
 Dort landet alles, was die Tasklist selbst unübersichtlich machen würde —
 Zwischenstände, Einzelfallentscheidungen, Überraschungen.
 
@@ -599,7 +599,7 @@ Modulkopf von `bindings_explorer` sagt das ausdrücklich.
 
 → `:BindingsPath` und `<leader>BI` entfernen, `<leader>BI` auf
 `:Bindings path` legen. Dann auch
-[`docs/NOTES/BINDINGS`](../../../NOTES/) in der Keymap-Beschreibung nachziehen.
+[`docs/NOTES/BINDINGS`](../../../../../../NOTES/) in der Keymap-Beschreibung nachziehen.
 
 ### 6.6 Kopplung und Priorität
 
