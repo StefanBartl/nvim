@@ -1,5 +1,20 @@
 # RULES — Stand der Checklists-Anwendung (WKDBooks/Checklists/regeln)
 
+## Table of content
+
+  - [Intro](#intro)
+  - [Überblick: 9 Regel-Familien](#berblick-9-regel-familien)
+  - [✅ LLS-* (34 Regeln) — fertig](#lls-34-regeln-fertig)
+  - [✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig](#sec-23-regeln-sec-01sec-45-fertig)
+  - [🟨 DEP-* (7 Regeln) — läuft](#dep-7-regeln-luft)
+    - [Ergebnis je Repo](#ergebnis-je-repo)
+  - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
+  - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
+
+---
+
+## Intro
+
 Diese Datei trackt **ausschließlich**, welche Regeln aus
 `$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\` (`PRINCIPLES.md`,
 `LUA_NVIM.md`, `PERFORMANCE.md`) gegen welche der 32 Personal-Plugin-Repos
@@ -11,7 +26,7 @@ bei null anzufangen.
 **Quelle der Wahrheit für die Regel-Texte selbst bleibt der Regelkatalog.**
 Diese Datei fasst nur zusammen, was geprüft wurde und was dabei rauskam. Der
 volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
-[`ERLEDIGT/LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](ERLEDIGT/LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md).
+[`ERLEDIGT/LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](./ERLEDIGT/LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md).
 
 ---
 
@@ -152,6 +167,8 @@ auf einmal, kein Agent nötig.
 | `DEP-06` | `vim.tbl_flatten()` | 0 |
 | `DEP-07` | `nvim_buf_get_option()` | 0 (nur eine Prosa-Erwähnung in einer README) |
 
+---
+
 ### Ergebnis je Repo
 
 | Repo | Regel | Status | Commit |
@@ -213,3 +230,6 @@ Einschätzung nach Größe.
   nötig.
 - **Regel-Zählung immer nachprüfen**, bevor eine Familie als „klein" gilt —
   der Katalog mischt Tabellen- und Aufzählungsformat (siehe oben).
+
+---
+

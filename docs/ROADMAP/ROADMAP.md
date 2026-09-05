@@ -3,7 +3,6 @@
 ## Table of content
 
   - [cdx](#cdx)
-  - [do](#do)
   - [TOP interessant gerade](#top-interessant-gerade)
   - [Misc](#misc)
   - [true check](#true-check)
@@ -32,16 +31,6 @@
 
 ---
 
-## do
-
-- [ ] leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfLua live_grep
-
-- [ ] start vim optimieren
-
-- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT - Alles files durchgehen, ob etwas nach $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins, $REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists oder woanders (zb.: bei den Tools wie C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md)
-
----
-
 ## TOP interessant gerade
 
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
@@ -52,6 +41,8 @@
 ---
 
 ## Misc
+
+- [ ] start vim optimieren
 
 - [ ] plugins/personal/ -> kommentare und docs prüfen / alles was in den plugins gecheckt wurde hier auch
 
