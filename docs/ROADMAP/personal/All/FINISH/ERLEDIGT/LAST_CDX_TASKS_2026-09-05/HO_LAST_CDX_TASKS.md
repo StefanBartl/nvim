@@ -8,8 +8,8 @@ vollem Durchgang, E1 und `DOC-05` **32/32**, keine toten Links, keine toten
 Anker, keine verwaisten `docs/`-Dateien. P5: 8.1/8.3/8.4/8.5 **und jetzt auch
 8.2a** erledigt (die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde, siehe
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)).
-**8.2b läuft:** die `SEC-*`-Welle (24 Regeln) ist über **25 von 32 Repos**
-gefahren — **16 echte Funde behoben, committet und gepusht**, darunter zwei
+**8.2b läuft:** die `SEC-*`-Welle (24 Regeln) ist über **26 von 32 Repos**
+gefahren — **17 echte Funde behoben, committet und gepusht**, darunter zwei
 reale Schwachstellen (ein GitHub-Token-Leak über Prozess-Argv in
 `github_stats.nvim`, eine Shell-Injection über den Clipboard-Zielpfad in
 `images.nvim`). Ab Runde 8 (Sitzungslimit riss die parallele Prüfung von
@@ -87,7 +87,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
-| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). **8.2b angelaufen:** `SEC-*`-Welle über 25/32 Repos, 16 echte Funde behoben+gepusht (2 davon reale Schwachstellen: Token-Leak in github_stats.nvim, Shell-Injection in images.nvim); seit Runde 8 (Sitzungslimit, kein Datenverlust) nur noch 1 Repo pro Durchgang — 6 Repos + 7 weitere Regel-Familien offen. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md) |
+| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). **8.2b angelaufen:** `SEC-*`-Welle über 26/32 Repos, 17 echte Funde behoben+gepusht (2 davon reale Schwachstellen: Token-Leak in github_stats.nvim, Shell-Injection in images.nvim); seit Runde 8 (Sitzungslimit, kein Datenverlust) nur noch 1 Repo pro Durchgang — 5 Repos + 7 weitere Regel-Familien offen. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md) |
 | P6 — BINDINGS-Sanierung | ✅ | 2026-09-05 | **Vollständig abgeschlossen** — `BND-01`…`07` alle erledigt (Details: BND-04-Ledger + BND-05-Abschnitt unten). `PersonelPlugins/BINDINGS/` ist entfernt; nvim-config hat jetzt eine eigene Root-`docs/BINDINGS.md`, gelesen über `config.plugin_sheets()`s neuen `"nvim-config"`-Eintrag |
 | P7 — Abschlussbericht | ✅ | 2026-09-05 | `51be729fc` — `README.md` in diesem Ordner **ist** der Bericht; P0–P6 abgeschlossen, 8.2b lief zum Archivierungszeitpunkt bewusst weiter (blockiert laut Standard nichts). Status-Zeile war seit dem Archivierungs-Commit fälschlich noch auf „offen" stehengeblieben — korrigiert |
 
