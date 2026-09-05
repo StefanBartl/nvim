@@ -6,7 +6,7 @@ section lists it explicitly — no telemetry file in either dataset), so
 priority here comes entirely from reading `docs/features.md`,
 `docs/WORKFLOW.md`, and the source, not from usage counts.
 
-Repo: `E:\repos\migrate.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\migrate.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`cmd = { "MigrateOpt", "MigrateNotify", "MigrateHl", "MigrateLsp" }`,
 `dependencies = { "StefanBartl/lib.nvim" }`, `opts = {}` — opt + notify +
 hl + lsp all enabled by this config, nothing overridden from the plugin's
@@ -137,7 +137,7 @@ selection (`<CR>`) — confirm the source file on disk actually changed
   `rg` is missing from `$PATH` (temporarily rename it if you want to prove
   this), unlike `:MigrateOpt cwd`/`:MigrateHl cwd`/`:MigrateLsp cwd`, which
   do depend on `rg` and should show "ripgrep (rg) not found" instead.
-- [ ] Run any `cwd` scan from inside `E:\repos\migrate.nvim` itself — confirm
+- [ ] Run any `cwd` scan from inside `$REPOS_DIR\migrate.nvim` itself — confirm
   the picker never lists a match from `lua/migrate/**` (self-exclusion,
   checked against the plugin's own source root) even though those files
   contain real `vim.notify`/option-API calls.

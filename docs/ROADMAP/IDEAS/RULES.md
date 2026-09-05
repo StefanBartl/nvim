@@ -1,7 +1,7 @@
 # `rules.md`
 
 EIn Plugin, dass die Regelsammlung unter
-`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists` (`regeln/`, `gates/`:
+`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists` (`regeln/`, `gates/`:
 NEW_PROJECT, REVIEW, RELEASE, PERFORMANCE, usw...) gegen ein Plugin prüft.
 
 > Stand 2026-08-18: `nvim/docs/ROADMAP/RULES` ist dort hineingemergt, es gibt nur

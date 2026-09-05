@@ -131,7 +131,7 @@ def real_name_mismatch(root: str, path: str) -> str | None:
         rel = os.path.relpath(path, root)
     except ValueError:
         return None  # different drive on Windows -- an absolute personal-machine
-        # path (some IDEAS/ notes link straight to `E:\repos\...`), not a repo-relative
+        # path (some IDEAS/ notes link straight to `$REPOS_DIR\...`), not a repo-relative
         # link a case mismatch could even apply to
     if rel.startswith(".."):
         return None  # outside the repo; the caller only reports existence there

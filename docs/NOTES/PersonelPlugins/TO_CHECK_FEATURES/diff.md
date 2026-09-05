@@ -6,7 +6,7 @@ where the code gives a concrete reason to suspect something — what to
 watch for specifically. Checkbox syntax (`- [ ]`) is standard Markdown,
 togglable directly in Neovim (e.g. with `cascade.nvim`'s `<leader>tc`).
 
-Repo: `E:\repos\diff.nvim`. Spec: `plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\diff.nvim`. Spec: `plugins/personal/init.lua` —
 `cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" }`, `opts = {}` (all
 three features on by default). Note the config's own spec doesn't list
 `DiffBuffers` in `cmd` even though the plugin registers it — first-loading
@@ -31,7 +31,7 @@ Expect: Neovim version, `git`/`curl` availability (needed for `git:` and
 images.nvim detection. Everything below works from any file-backed buffer;
 the git-revision and directory-diff sections specifically need to be run
 from inside a real git repository with some history — this nvim config repo
-or any of the `E:\repos\*` plugin repos both work.
+or any of the `$REPOS_DIR\*` plugin repos both work.
 
 ---
 

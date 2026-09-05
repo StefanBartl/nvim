@@ -9,7 +9,7 @@ One-time setup, then one section per feature: steps, expected result.
 Checkbox syntax (`- [ ]`) is standard Markdown, togglable directly in
 Neovim with this very plugin's own `<A-c>`/quick-toggle keys.
 
-Repo: `E:\repos\cascade.nvim`. Spec: `plugins/personal/init.lua` — **both**
+Repo: `$REPOS_DIR\cascade.nvim`. Spec: `plugins/personal/init.lua` — **both**
 `ft = { "markdown", "markdown.mdx", "text", "tex", "norg" }` **and**
 `event = "VeryLazy"` are set together (README recommends `VeryLazy` alone
 for the global cycle to reach code buffers; this config layers `ft` on top

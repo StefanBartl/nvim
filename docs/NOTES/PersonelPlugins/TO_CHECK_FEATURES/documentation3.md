@@ -8,7 +8,7 @@ expect.
 looked at by nobody.** That is the whole reason this file exists — the specs
 say the data is right, they cannot say the thing is usable.
 
-Repo: `E:\repos\documentation.nvim`. Open Neovim from inside the repo you
+Repo: `$REPOS_DIR\documentation.nvim`. Open Neovim from inside the repo you
 want mapped; `:DocMap` maps the current working directory.
 
 ## Prerequisites, and which ones actually bite
@@ -19,7 +19,7 @@ want mapped; `:DocMap` maps the current working directory.
 | **A rebuilt standalone engine** — §1 only | `C:\tools\docmap.exe --capabilities` must print a `languages` key. The installed one predates it |
 | Nothing special | everything else |
 
-A useful second target throughout: `E:\repos\documentation.nvim\TESTS\fixtures\polyglot`
+A useful second target throughout: `$REPOS_DIR\documentation.nvim\TESTS\fixtures\polyglot`
 — a checked-in tree with Lua beside JS/TS, two source roots, a file outside
 every root and an extension no backend claims. Built precisely so these
 things can be tried without inventing a tree first.
@@ -72,7 +72,7 @@ naming a `lua/` directory that does not exist.
 **Steps**
 
 ```
-cd E:\repos\documentation.nvim\TESTS\fixtures\polyglot
+cd $REPOS_DIR\documentation.nvim\TESTS\fixtures\polyglot
 nvim
 :DocMap
 :DocMap open
@@ -325,9 +325,9 @@ unnamed one. Paste into a README and confirm GitHub draws it.
 **Steps**
 
 ```
-cd E:\repos\lib.nvim
+cd $REPOS_DIR\lib.nvim
 nvim
-:DocMap consumers E:\repos
+:DocMap consumers $REPOS_DIR
 ```
 
 **Expect**: a markdown buffer reporting roughly **107** modules required by

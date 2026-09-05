@@ -4,7 +4,7 @@ How to manually test every implemented feature of `runtime-analysis.nvim`
 and its `runtime-analysis.telemetry` module. One-time setup, then one
 section per feature: prerequisites, steps, what to expect.
 
-Repo: `E:\repos\runtime-analysis.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\runtime-analysis.nvim`. Spec: `plugins/personal/init.lua`
 (`lazy = false`, depends on `lib.nvim`).
 
 ## Setup
@@ -72,7 +72,7 @@ your Lua repos.
 `:RASend` it.
 
 **Also check the soft-dependency path**: temporarily rename
-`E:\repos\runtime-analysis.nvim` (or otherwise make `require("runtime-analysis")`
+`$REPOS_DIR\runtime-analysis.nvim` (or otherwise make `require("runtime-analysis")`
 fail) and press `gs` again from Endpoints mode — expect a clear
 `notify.warn` ("runtime-analysis.nvim is not installed…"), not an error.
 

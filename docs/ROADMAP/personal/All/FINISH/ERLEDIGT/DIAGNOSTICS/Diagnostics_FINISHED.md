@@ -1021,7 +1021,7 @@ Der letzte Punkt des Roadmap-Punkts: aus
 [dem Abschnitt „Wiederkehrende Muster"](#wiederkehrende-muster-die-ableitung-fuer-rules)
 ableiten, wie kuenftige Repos geschrieben werden, und das Ergebnis in die
 kanonische Regelsammlung schreiben
-(`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists`).
+(`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists`).
 
 **Ergebnis: 34 Regeln (`LLS-01` … `LLS-43`), 11 Gate-Punkte
 (`NEW-36` … `NEW-46`), vier Zeilen in der Review-Checkliste.** Uebergabe-Report

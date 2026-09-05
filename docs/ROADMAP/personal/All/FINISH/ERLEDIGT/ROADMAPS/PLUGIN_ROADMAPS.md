@@ -1,14 +1,14 @@
 # Plugin-Roadmaps — konsolidierter Report
 
 Stand: 2026-08-30 (Erhebung 2026-08-29). Quelle: `docs/ROADMAP.md` bzw. `docs/ROADMAP/` aus allen 31
-`*.nvim`-Repos unter `C:\repos`, plus die drei Dokumente, auf die diese
+`*.nvim`-Repos unter `$REPOS_DIR`, plus die drei Dokumente, auf die diese
 Roadmaps als eigentliche Warteschlange verweisen (`docmap-desktop/docs/PLAN.md`
 sowie die damaligen `images.nvim`-CROSS-PLUGIN- und
 `lib.nvim`-dependency-installer-Notizen).
 
 > **Wo die Quellen jetzt liegen.** Am 2026-08-29 wurden sämtliche
 > `docs/ROADMAP`-Bäume aus den Plugin-Repos herausgelöst und nach
-> `C:\repos\WKDBooks\Development\wkdbook-myplugins\<plugin>\ROADMAP\`
+> `$REPOS_DIR\WKDBooks\Development\wkdbook-myplugins\<plugin>\ROADMAP\`
 > Verweise mehr darauf, weder Links noch Prosa-Zitate. Dateipfade wie
 > `images.nvim/docs/ROADMAP/TERMINALS.md`, die dieser Report weiter unten
 > nennt, meinen also den Stand *vor* dem Umzug; die Datei liegt heute unter

@@ -1,8 +1,8 @@
 # CLI-Tool-Deps: Analyse & Konzept
 
 > Analyse der drei Roadmap-Punkte unter `lib.nvim / deps installer`.
-> Quelltext-Stand geprüft am 2026-09-03 gegen `E:\repos\lib.nvim` und alle
-> `E:\repos\*.nvim`.
+> Quelltext-Stand geprüft am 2026-09-03 gegen `$REPOS_DIR\lib.nvim` und alle
+> `$REPOS_DIR\*.nvim`.
 >
 > **Erledigt am 2026-09-03.** Alle vier Bausteine aus Abschnitt 3 sind
 > gebaut, getestet (`LIB_TESTS_OK`), dokumentiert und über neun Repos
@@ -42,7 +42,7 @@ Roadmap-Punkte vermuten lassen. Sie stehen in Abschnitt 3.
 
 ## 1. Ist-Zustand: was `lib.nvim.deps` bereits kann
 
-Quelle: `E:\repos\lib.nvim\lua\lib\nvim\deps\` (9 Module + README).
+Quelle: `$REPOS_DIR\lib.nvim\lua\lib\nvim\deps\` (9 Module + README).
 
 | Baustein | Leistet |
 |---|---|

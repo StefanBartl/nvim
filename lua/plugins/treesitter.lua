@@ -82,7 +82,7 @@ plugins.add({
       -----------------------------------------------------------------------
       -- Parser install policy for regular (buffer-filetype) parsers.
       -- See docs/NOTES/ExternPlugins/Bindings/Usercmds/Treesitter.md and
-      -- E:\repos\lib.nvim\lua\lib\nvim\treesitter\parser_policy\README.md.
+      -- $REPOS_DIR\lib.nvim\lua\lib\nvim\treesitter\parser_policy\README.md.
       -----------------------------------------------------------------------
       local parser_policy = require("lib.nvim.treesitter.parser_policy")
       parser_policy.setup({ mode = "prompt" })

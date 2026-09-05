@@ -4,7 +4,7 @@ How to manually test every implemented feature of `insights.nvim`.
 One-time setup, then one section per feature: prerequisites, steps, what
 to expect.
 
-Repo: `E:\repos\insights.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\insights.nvim`. Spec: `plugins/personal/init.lua`
 (`lazy = false` — not command-lazy, because the `conflicts`/`unimported`/
 `devserver` autocmds have to be registered by `setup()` before the events
 they listen for can fire; loading on `cmd = "Insights"` would mean they

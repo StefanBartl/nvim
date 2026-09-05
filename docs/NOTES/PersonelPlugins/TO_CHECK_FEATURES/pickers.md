@@ -14,7 +14,7 @@ instrumented calls by design, not because the plugin is lightly used.
 `docs/WORKFLOW.md` is unusually thorough here — its own §8 "Traps worth
 knowing" table is lifted directly into several items below.
 
-Repo: `E:\repos\pickers.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\pickers.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`lazy = false` — required, since setup() derives ~20 keymaps from the
 `collections` table and lazy-loading on `keys` would mean hand-listing
 every lhs a second time, per this config's own spec comment;

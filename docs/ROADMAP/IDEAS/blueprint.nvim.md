@@ -104,7 +104,7 @@ das ist der eigentliche Kostenpunkt, nicht der Code.
 
 **Wichtig — Trennung von Code und Inhalt:** Das Plugin liefert nur die
 Mechanik plus eine kleine Seed-Bibliothek. Die *eigenen* Templates leben im
-`Notes`-Repo (z. B. `C:\repos\Notes\MyNotes\Templates\`) und werden per
+`Notes`-Repo (z. B. `$REPOS_DIR\Notes\MyNotes\Templates\`) und werden per
 `sources` eingebunden. Damit synchronisiert sich die Bibliothek über Git
 zwischen Rechnern, ohne dass das Plugin-Repo mit persönlichem Material
 verschmutzt.
@@ -616,7 +616,7 @@ Komposition · Export/PDF · Kontext-Vorschlag.
   [`Zentrale-Prinzipien.md`](../MATERIALS/Zentrale-Prinzipien.md) ·
   [`Checklist.md`](../MATERIALS/Checklist.md) ·
   [`NEW_PROJECT.md`](../MATERIALS/NEW_Project.md) · `REVIEW.md` · `PERFORMANCE.md`
-  (`C:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`)
+  (`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\`)
 - Eigene Plugins: [`lib.nvim`](https://github.com/StefanBartl/lib.nvim) ·
   [`pickers.nvim`](https://github.com/StefanBartl/pickers.nvim) ·
   [`documentation.nvim`](https://github.com/StefanBartl/documentation.nvim) ·

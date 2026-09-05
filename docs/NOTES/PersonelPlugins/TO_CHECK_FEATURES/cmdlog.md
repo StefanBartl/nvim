@@ -8,7 +8,7 @@ filter). One-time setup, then one section per feature: steps, expected
 result. Checkbox syntax (`- [ ]`) is standard Markdown, togglable with
 `cascade.nvim`'s `<leader>tc` if that's bound.
 
-Repo: `E:\repos\cmdlog.nvim`. Spec: `plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\cmdlog.nvim`. Spec: `plugins/personal/init.lua` —
 `lazy = false`, `opts = {}` (picker defaults to `"telescope"`). This is
 **deliberate, not just "no lazy trigger configured"**: a comment right
 above the spec explains why — `setup()` starts the `CmdlineLeave` tracker

@@ -4,7 +4,7 @@ How to manually test every implemented feature of `mdview.nvim`. One-time
 setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) throughout.
 
-Repo: `E:\repos\mdview.nvim`. Spec: `plugins/personal/init.lua` — `ft =
+Repo: `$REPOS_DIR\mdview.nvim`. Spec: `plugins/personal/init.lua` — `ft =
 { "markdown" }`, `cmd = { "MDView" }`, `build = "npm ci && npm run build:go
 && npm run build"`, `dependencies = { "StefanBartl/lib.nvim" }`. The real
 config passed:

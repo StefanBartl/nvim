@@ -8,7 +8,7 @@ so priority here comes entirely from reading `README.md`, `docs/WORKFLOW.md`
 gotchas already spelled out precisely enough to lift directly into test
 steps below), and the source.
 
-Repo: `E:\repos\pdfport.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\pdfport.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`cmd = "PdfPort"` — fixed 2026-08-28, was `{ "PdfPort", "PdfPortText",
 "PdfPortFloat", "PdfPortSystem", "PdfPortTerminal", "PdfPortHealth" }`, five
 of which named commands the plugin never registers, see §1 below. No

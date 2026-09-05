@@ -4,7 +4,7 @@ How to manually test the desktop app. Same shape as the
 `documentation*.md` files beside this one: one section per feature,
 prerequisites, steps, what to expect.
 
-Repo: `E:\repos\docmap-desktop`. Branch `main`, through `0896ddd`.
+Repo: `$REPOS_DIR\docmap-desktop`. Branch `main`, through `0896ddd`.
 
 **Nothing in here has been seen by a human.** The Rust and JS halves are
 covered by `cargo test` (12) and `node --test` (31), and a window is exactly
@@ -15,7 +15,7 @@ batch.
 ## Setup
 
 ```
-cd E:\repos\docmap-desktop
+cd $REPOS_DIR\docmap-desktop
 npm run tauri dev
 ```
 

@@ -6,7 +6,7 @@ and — where the code gives a concrete reason to suspect something — what to
 watch for specifically. Checkbox syntax (`- [ ]`) is standard Markdown,
 togglable directly in Neovim (e.g. with `cascade.nvim`'s `<leader>tc`).
 
-Repo: `E:\repos\debugging.nvim`. Spec: `plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\debugging.nvim`. Spec: `plugins/personal/init.lua` —
 `event = "VeryLazy"` (commented-out `cmd = "Debug"` above it, so this
 config chose eager-ish loading over command-lazy), `dependencies` on
 `lib.nvim`, `opts = {}` (defaults apply — the spec's own comment notes

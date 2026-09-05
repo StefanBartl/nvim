@@ -11,7 +11,7 @@ of. This checklist is about **that** surface — "does what lib.nvim itself
 puts in front of a user work" — not "does every one of its ~50 helper
 modules work", which is what `TESTS/` (12+ headless suites) already covers.
 
-Repo: `E:\repos\lib.nvim`. Spec: `plugins/personal/init.lua` — `lazy = false`,
+Repo: `$REPOS_DIR\lib.nvim`. Spec: `plugins/personal/init.lua` — `lazy = false`,
 `priority = 1000` (loads before everything else; ~30 other plugin specs
 declare it as `dependencies`). Its own commands are registered eagerly at
 startup, not lazy-loaded on anything:

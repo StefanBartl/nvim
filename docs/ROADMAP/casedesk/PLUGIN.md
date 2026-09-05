@@ -453,7 +453,7 @@ in dem `nvim` startet und `:Case` funktioniert.
 Ziel: `casedesk.nvim` ist ein leeres, aber vollständig eingerichtetes
 personal-Plugin. Abzuhaken ist `gates/NEW_PROJECT.md` §1-§4.
 
-1. Checkout unter `$REPOS_DIR/casedesk.nvim` (NEW-01 sagt `e:\repos` —
+1. Checkout unter `$REPOS_DIR/casedesk.nvim` (NEW-01 sagt `$REPOS_DIR` —
    auf dieser Maschine ist das `C:/repos`, dieselbe Rolle).
    Default-Branch `main` (NEW-02).
 2. `gh repo edit --description … --homepage …` (NEW-04) und

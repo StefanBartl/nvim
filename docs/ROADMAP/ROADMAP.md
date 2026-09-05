@@ -8,6 +8,7 @@
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
+  - [stdpaths](#stdpaths)
 
 ---
 
@@ -15,9 +16,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     12:50       |   100% / 39%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     19:30       |    68% / 11%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     21:40       |    00% / 83%     | X
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:45       |   100% / 49%     | X
+| **work** |   20. Sept    |   Sa., 06:00    |     04:40       |    05% / 11%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     21:40       |    56% / 89%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -34,8 +35,15 @@
 
 ## do
 
+- [ ] asynchron - eigentlich dachte ich, dass wir fast alles synchronen Prozesse, bei denne es sinn macht, schon auf asynchrone umgestelt haben. Folgende sind es aber nicht, obwohl ich nichts weiß was dagegen spricht:
+  - [ ] asynchron machen und `lib.nvim progress` + `statusline`-Module integrieren:
+    - [ ] `replacer.nvim` `:Replace Y X` kann bei  scope `cwd` länger dauern
 - [ ] leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfLua live_grep
 - [ ] start vim optimieren
+- [ ] in nvm-config docs immer
+  - [ ] $REPOS_DIR schreiben anstelle von C:\repos oder $REPOS_DIR\
+  - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
+- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT - Alles files durchgehen, ob etwas nach $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins, $REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists oder woanders (zb.: bei den Tools wie C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md)
 
 ---
 
@@ -107,6 +115,28 @@ sessions.nvim
 spotlight.nvim
 
 und das native: docmap-desktop
+
+---
+
+## stdpaths
+
+```vim
+:lua print(vim.fn.stdpath("config"))
+:lua print(vim.fn.stdpath("data"))
+:lua print(vim.fn.stdpath("state"))
+:lua print(vim.fn.stdpath("cache"))
+:lua print(vim.fn.stdpath("log"))
+:lua print(vim.fn.stdpath("run"))
+```
+
+| Pfad     | Inhalt                                                  |
+| -------- | ------------------------------------------------------- |
+| `config` | `init.lua`, Plugins, Keymaps, eigene Lua-Module         |
+| `data`   | Lazy.nvim-Repositories, Mason-Pakete, Treesitter-Parser |
+| `state`  | Shada, Sessions, Swap-Informationen, Statusdaten        |
+| `cache`  | Parser-Cache, Plugin-Caches, generierte Dateien         |
+| `log`    | `lsp.log`, Plugin-Logs, Debug-Ausgaben                  |
+| `run`    | Sockets, RPC-Pipes, temporäre Runtime-Dateien           |
 
 ---
 

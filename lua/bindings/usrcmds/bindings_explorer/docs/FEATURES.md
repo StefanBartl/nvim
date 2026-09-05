@@ -376,7 +376,7 @@ Abschnitt im Bericht.
   Lazy-Spec abgeleitet, nicht aus einer handgepflegten Liste).
   `config.set_repo_dirs(fn)` ersetzt sie — die Tests hängen daran und laufen
   gegen ein Fixture-Repo im Temp-Verzeichnis statt gegen echte
-  `C:\repos\*`-Checkouts.
+  `$REPOS_DIR\*`-Checkouts.
 - **Oder ein ganzes Sammelverzeichnis: `root=<dir>`.** `:Bindings check repo
   root=C:/repos` löst nicht über den Lazy-Spec auf, sondern nimmt jedes
   Lua-Projekt direkt unter dem Pfad (`config.repo_dirs_under`) — ein

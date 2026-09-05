@@ -35,7 +35,7 @@ gewesen wäre.
 Gebaut mit `lib.nvim.bindings.usercmd.create` im `config`-Block von
 [lua/plugins/treesitter.lua](../../../../../lua/plugins/treesitter.lua),
 Backend `lib.nvim.treesitter.parser_policy` (`lib.nvim`-Repo,
-`E:\repos\lib.nvim\lua\lib\nvim\treesitter\parser_policy\`).
+`$REPOS_DIR\lib.nvim\lua\lib\nvim\treesitter\parser_policy\`).
 
 Hintergrund: siehe [Autocmds/Treesitter.md § Parser-Install-Policy](../Autocmds/Treesitter.md#parser-install-policy-2026-08-01).
 

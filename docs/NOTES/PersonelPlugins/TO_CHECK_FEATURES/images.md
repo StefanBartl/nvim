@@ -3,7 +3,7 @@
 How to manually test every implemented feature of `images.nvim`. One-time
 setup, then one section per feature: prerequisites, steps, what to expect.
 
-Repo: `E:\repos\images.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\images.nvim`. Spec: `plugins/personal/init.lua`
 (`cmd = { "Image" }`, `ft = { "markdown", "vimwiki", "norg", "text" }` — so
 either typing `:Image` or opening a buffer of one of those filetypes loads
 it; the buffer-local keymaps and the double-click only exist after the
@@ -25,7 +25,7 @@ not warn), clipboard tool found (`powershell.exe` on Windows), and the
 each, not required.
 
 Open Neovim from inside a repo with real markdown + images to test against —
-`E:\repos\images.nvim` itself has none checked in, so either this
+`$REPOS_DIR\images.nvim` itself has none checked in, so either this
 nvim-config repo's own `docs/` (if it has image links) or any personal notes
 folder with screenshots works. `:Image testcard`-style generation isn't a
 command; `images/testcard.lua` is only used internally by calibration (§2).
