@@ -50,7 +50,7 @@ der Original-Analyse (2026-08-31): `neotree-fs-refactor.nvim` liegt inzwischen
 unter `ARCHIV_NICHT_BEARBEITEN/` und wird nicht angefasst; der Zielort für die
 neue Regel ist `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` + `gates/REVIEW.md`,
 nicht das nie existente `MATERIALS/CHECKLIST.md`. Handover-Stand läuft in
-[`docs/ROADMAP/handovers/checkhealth-conventions.md`](./handovers/checkhealth-conventions.md).
+[`docs/ROADMAP/handovers/checkhealth-conventions.md`](./personal/All/FINISH/ERLEDIGT/checkhealth-conventions.md).
 
 - [x] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten (dap, debugging, documentation, filetree).
 - [x] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.

@@ -41,7 +41,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ### Git & Repo-Hygiene
 
-- [ ] ci workflows -> ausbauen wenn notig, alle grün "machen"
 - [ ] Git-Release pro Repo, sobald fertig.
 
 ---
@@ -49,8 +48,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 ### Docs, Comments,...
 
 - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
-
-- [ ] Eventuell selbst alle repos - jede file - durchgehen und bei auffälligen (Zu langer/unnötiger Kommnentar, Code strange, Docs fehlen/anders struktuiren, usw) einen Tag setzen, zb.: `--- CDX:` oder selbst gleich fixen
 
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
