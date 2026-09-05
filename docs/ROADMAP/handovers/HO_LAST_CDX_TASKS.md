@@ -10,11 +10,10 @@ volle 8.2-Regelkatalog jenseits von LuaLS ist bewusst **letzter Punkt dieser
 Liste** (Autorenentscheidung, siehe
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)) —
 blockiert nichts, wird angegangen sobald alles andere fertig ist. P6:
-`BND-01`…`03`, `06`, `07` erledigt; `BND-04` (Bindings-Sheets pro Plugin
-gegen die aktuelle Repo-Doku diffen, Einzigartiges migrieren, dann löschen —
-siehe §6.4) läuft aktiv, Fortschritt siehe BND-04-Ledger unten. `BND-05`
-(danach `PersonelPlugins/BINDINGS/` entfernen, mit gründlicher Verifikation
-gegen `:Bindings browse`) folgt, sobald `BND-04` durch ist. P7
+`BND-01`…`03`, `06`, `07` erledigt; **`BND-04` ist jetzt ebenfalls
+abgeschlossen (31/31 Repos mit Sheet in diesem Korpus, siehe BND-04-Ledger
+unten)**. `BND-05` (`PersonelPlugins/BINDINGS/` entfernen, mit gründlicher
+Verifikation gegen `:Bindings browse`) ist der nächste offene Schritt. P7
 (Abschlussbericht) folgt danach.**
 
 ---
