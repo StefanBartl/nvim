@@ -437,7 +437,7 @@ gefangen.
   2026-09-02: `zoom-post` +2, `resize-post` +7).
 
   ```bash
-  cd C:/Users/bartl/AppData/Local/nvim
+  cd vim.fn.stdpath('config') .. 
   REPOS_DIR=E:/repos bash scripts/luals-scan/scan.sh <pass> hover.nvim
   python scripts/luals-scan/compare.py <voriger-pass> <pass>
   ```
@@ -474,7 +474,7 @@ gefangen.
   ```bash
   IMAGES_NVIM_DIR=E:/repos/images.nvim \
   LIB_NVIM_DIR=E:/repos/lib.nvim \
-  PLENARY_DIR=C:/Users/bartl/AppData/Local/nvim-data/lazy/plenary.nvim \
+  PLENARY_DIR=vim.fn.stdpath('config') .. -data/lazy/plenary.nvim \
   bash scripts/test.sh
   ```
 

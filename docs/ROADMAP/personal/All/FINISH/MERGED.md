@@ -18,12 +18,11 @@
 
 Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` - außer spezifisch es Plugin ist in der Task angegeben.
 
-- never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
+- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-- Die Installations-Specs meiner Pluigns findest du in: C:/Users/bartl/AppData/Local/nvim/lua/plugins/personal/init.lua
+- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
 - Docs / README.md des Plugins updaten sofern es Sinn macht
-- Wenn ein binding updatent wird, dann gggf. auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updaten
 - Keine Co-Authorenschaft von Claude in den Commits
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 - Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
@@ -34,7 +33,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ### Live-Testing (braucht laufende, interaktive nvim-Session)
 
-- [ ] E:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
+- [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
 - [ ] CDX: jedes Keymap/Usrcmd/Autocmd in echter nvim-Instanz durchtesten, ob Fehler geworfen werden. (Claude kann einen Testrunner vorbereiten, das Beobachten in Echtzeit ist deine Domäne — außer wir bauen dafür einen headless-Test.)
   - [ ] Gleich mitchecken, o die usrmd optionen wirklich gut bennant sind. Zb `:LspDoctor deep` wurde gennant für eine aktion, die ausgegebn hat, welcher formatter gerade aktiv ist.... daher wurde es umbenannt auf `LspDoctor fmt_check`
 - [ ] `:Recommender perf` durch alle Module laufen lassen und Ergebnisse sichten. (Ausführen + Sichten = du; die daraus resultierenden Fixes = delegierbar, siehe Liste B.)
@@ -68,6 +67,11 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
+
+[ ] in den plugins docs immer
+  - [ ] $REPOS_DIR schreiben anstelle von C:\repos oder $REPOS_DIR\
+  - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
+  - [ ] Wobei aebri n den plugins, anders als der nvim-config, die frage istz, warum sollte dort ein Pfad auf c:\repos oder e:\repos sinn machen - andere user haben wvielleicht garn keine $REPOS_DIR env var. daher muss das geklärt wreen. ioch weiß zumindest von einen vorkomen, wo woir in der implementiert haebn, dass nach $REPOS_DOIR akiv gersucht wird, das haben wir dann abe in der readme.md auchangtegeben und müsste ein ausnahemfall sien. daher -> teilvon docs clearing, sich die vokrommen näöher anzuaschauen, es knnte aien anzeigersein für fehlannehmen/zeiger dass diese infos zu nmotizen gehölren, nicht in das polguins erpo docs, usw... siehst du da sähnlich?
 
 ---
 

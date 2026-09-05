@@ -17,16 +17,15 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:45       |   100% / 49%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     04:40       |    05% / 11%     | X
+| **work** |   20. Sept    |   Sa., 06:00    |     00:40       |    05% / 13%     | X
 | **free** | 21. Juli 2027 |   So., 09:00    |     21:40       |    56% / 89%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-- Die Installations-Specs meiner Pluigns findest du in: C:/Users/bartl/AppData/Local/nvim/lua/plugins/personal/init.lua
+- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
 - Docs / README.md des Plugins updaten sofern es Sinn macht
-- Wenn ein binding updatent wird, dann gggf. auch C:/Users/bartl/AppData/Local/nvim/docs/NOTES/BINDINGS updaten
 - Keine Co-Authorenschaft von Claude in den Commits
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 - Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
@@ -35,14 +34,10 @@
 
 ## do
 
-- [ ] asynchron - eigentlich dachte ich, dass wir fast alles synchronen Prozesse, bei denne es sinn macht, schon auf asynchrone umgestelt haben. Folgende sind es aber nicht, obwohl ich nichts weiß was dagegen spricht:
-  - [ ] asynchron machen und `lib.nvim progress` + `statusline`-Module integrieren:
-    - [ ] `replacer.nvim` `:Replace Y X` kann bei  scope `cwd` länger dauern
 - [ ] leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfLua live_grep
+
 - [ ] start vim optimieren
-- [ ] in nvm-config docs immer
-  - [ ] $REPOS_DIR schreiben anstelle von C:\repos oder $REPOS_DIR\
-  - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
+
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT - Alles files durchgehen, ob etwas nach $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins, $REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists oder woanders (zb.: bei den Tools wie C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md)
 
 ---
@@ -52,18 +47,13 @@
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
 
-hover.nvim kann verwenbdet werden
 - [ ] TAKT -> aai impllementierung von anfang an mitbauen
 
 ---
 
 ## Misc
 
-- [ ] cascade.nvim: `M-RightArrow/LeftArrow` sollte ein renumbering auslösen
-
 - [ ] plugins/personal/ -> kommentare und docs prüfen / alles was in den plugins gecheckt wurde hier auch
-
-- [ ] Casedesk auslagern; WKDBook-Tricentis/EngineLab/Cases;
 
 - [ ] Anticheat knacken
 
@@ -139,4 +129,3 @@ und das native: docmap-desktop
 | `run`    | Sockets, RPC-Pipes, temporäre Runtime-Dateien           |
 
 ---
-

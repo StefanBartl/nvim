@@ -1,13 +1,94 @@
 # Handover — LAST_CDX_TASKS
 
+## Table of content
+
+  - [INTRO](#intro)
+  - [Wofür diese Datei da ist](#wofr-diese-datei-da-ist)
+  - [⚠️ Handover-Punkt — Sitzungslimit 2026-09-05, kurz vor 12:50 (Europe/Berlin)](#handover-punkt-sitzungslimit-2026-09-05-kurz-vor-1250-europeberlin)
+  - [Fortschritt](#fortschritt)
+    - [Repo-Ledger](#repo-ledger)
+    - [BND-04-Ledger](#bnd-04-ledger)
+    - [BND-05 — abgeschlossen 2026-09-05](#bnd-05-abgeschlossen-2026-09-05)
+  - [Entscheidungen (E1–E6)](#entscheidungen-e1e6)
+  - [Überraschungen](#berraschungen)
+    - [Ü1 — Der Alpha-Disclaimer war nie das Problem](#1-der-alpha-disclaimer-war-nie-das-problem)
+    - [Ü2 — BINDINGS: der `roadmap`-Grep überzeichnet](#2-bindings-der-roadmap-grep-berzeichnet)
+    - [Ü3 — Verwaiste Dokumente sind ein eigener Befundtyp](#3-verwaiste-dokumente-sind-ein-eigener-befundtyp)
+    - [Ü4 — `docs/map/module_map.json` ist flächendeckend veraltet](#4-docsmapmodule_mapjson-ist-flchendeckend-veraltet)
+    - [Ü5 — Deutsche Dubletten waren mehr als die fünf gefundenen](#5-deutsche-dubletten-waren-mehr-als-die-fnf-gefundenen)
+    - [Ü6 — Mehr Doku-Ebenen können richtig sein *(lib.nvim)*](#6-mehr-doku-ebenen-knnen-richtig-sein-libnvim)
+    - [Ü7 — Naive Link-Checks bestehen zu 80 % aus Rauschen](#7-naive-link-checks-bestehen-zu-80-aus-rauschen)
+    - [Ü8 — Fremde uncommittete Arbeit in `lib.nvim` ⚠️](#8-fremde-uncommittete-arbeit-in-libnvim)
+    - [Ü9 — Ein zweiter Durchgang läuft parallel und hält sechs Repos besetzt ⚠️](#9-ein-zweiter-durchgang-luft-parallel-und-hlt-sechs-repos-besetzt)
+    - [Ü10 — `docs/map/` ist in 29 von 31 Repos gar nicht im Repo ⚠️](#10-docsmap-ist-in-29-von-31-repos-gar-nicht-im-repo)
+    - [Ü11 — Der Linkchecker meldete Grün für Dateien, die er nie gelesen hat](#11-der-linkchecker-meldete-grn-fr-dateien-die-er-nie-gelesen-hat)
+    - [Ü12 — ASCII-Art ist 31/31, DOC-24 ist erledigt](#12-ascii-art-ist-3131-doc-24-ist-erledigt)
+    - [Ü13 — Der Doku-Bestand endet nicht bei `docs/`](#13-der-doku-bestand-endet-nicht-bei-docs)
+    - [Ü14 — Die FEATURES-Doppelung ist nicht symmetrisch](#14-die-features-doppelung-ist-nicht-symmetrisch)
+    - [Ü15 — `DOC-04` und `DOC-06` sind derselbe Befund von zwei Seiten](#15-doc-04-und-doc-06-sind-derselbe-befund-von-zwei-seiten)
+    - [Ü16 — Wo die private Spec von der README-Spec abweicht, steckt ein Grund dahinter](#16-wo-die-private-spec-von-der-readme-spec-abweicht-steckt-ein-grund-dahinter)
+    - [Ü17 — Gelöschte Module überleben in `doc/*.txt`](#17-gelschte-module-berleben-in-doctxt)
+    - [Ü18 — Zwei blinde Flecken, die das Werkzeug nicht schließen wird](#18-zwei-blinde-flecken-die-das-werkzeug-nicht-schlieen-wird)
+    - [Ü19 — Beim Kürzen brechen Zirkelverweise](#19-beim-krzen-brechen-zirkelverweise)
+    - [Ü20 — Doppelt gepflegte Referenzen sind ein Fundbüro, kein Befund](#20-doppelt-gepflegte-referenzen-sind-ein-fundbro-kein-befund)
+    - [Ü21 — Die vier „Restmeldungen“ waren vier verschiedene Fehlerklassen](#21-die-vier-restmeldungen-waren-vier-verschiedene-fehlerklassen)
+    - [Ü22 — Was die Doku über die *Umgebung* behauptet, prüft niemand ⚠️](#22-was-die-doku-ber-die-umgebung-behauptet-prft-niemand)
+    - [Ü23 — Drei Behauptungen des Standards über `hover.nvim` waren am Tag der Welle nicht mehr wahr](#23-drei-behauptungen-des-standards-ber-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr)
+    - [Ü24 — Zwei blinde Flecken aus Ü18 sind mit je 15 Zeilen prüfbar](#24-zwei-blinde-flecken-aus-18-sind-mit-je-15-zeilen-prfbar)
+    - [Ü25 — Vier weitere Repos waren fertig, ohne dass es hier stand](#25-vier-weitere-repos-waren-fertig-ohne-dass-es-hier-stand)
+    - [Ü26 — `WORKFLOW.md` ist in 16 Repos verwaist, und das ist ein Befund](#26-workflowmd-ist-in-16-repos-verwaist-und-das-ist-ein-befund)
+    - [Ü27 — Emoji im Titel: der Anker behält das Leerzeichen. Gemessen.](#27-emoji-im-titel-der-anker-behlt-das-leerzeichen-gemessen)
+    - [Ü28 — Der Prüfer hatte drei Fehler, und jeder erzeugte eine Welle Falschbefunde](#28-der-prfer-hatte-drei-fehler-und-jeder-erzeugte-eine-welle-falschbefunde)
+    - [Ü29 — Ein Dateiname im Fließtext ist kein Link, und beides sieht gleich aus](#29-ein-dateiname-im-flietext-ist-kein-link-und-beides-sieht-gleich-aus)
+    - [Ü30 — Ein toter Link kann am richtigen Ziel hängen](#30-ein-toter-link-kann-am-richtigen-ziel-hngen)
+    - [Ü31 — Ü11, noch einmal, im neuen Werkzeug](#31-11-noch-einmal-im-neuen-werkzeug)
+    - [Ü32 — Was auf ein Dokument zeigt, entscheidet was es ist. Nicht sein Name.](#32-was-auf-ein-dokument-zeigt-entscheidet-was-es-ist-nicht-sein-name)
+    - [Ü33 — Der Prüfer hielt jede `README.md` für erreichbar](#33-der-prfer-hielt-jede-readmemd-fr-erreichbar)
+    - [Ü34 — Die Sammlung ist während des Durchgangs um ein Repo gewachsen](#34-die-sammlung-ist-whrend-des-durchgangs-um-ein-repo-gewachsen)
+    - [Ü35 — Eine Tabelle kann mitten im Dokument aufhören, eine zu sein](#35-eine-tabelle-kann-mitten-im-dokument-aufhren-eine-zu-sein)
+    - [Ü36 — Ein unescaptes `|` in einer Zelle verwirft Inhalt, und ein Test hielt den Fehler fest](#36-ein-unescaptes-in-einer-zelle-verwirft-inhalt-und-ein-test-hielt-den-fehler-fest)
+    - [Ü37 — „Auf die Wahrheit zeigen" beseitigt keine Doppelung *(BND-01…03)*](#37-auf-die-wahrheit-zeigen-beseitigt-keine-doppelung-bnd-0103)
+    - [Ü38 — `:BindingsPath` kopierte seit jeher einen Ordner, den es nicht gibt](#38-bindingspath-kopierte-seit-jeher-einen-ordner-den-es-nicht-gibt)
+    - [Ü39 — Ein leerer Katalog sieht richtig aus, wenn die Registrierung an ihm vorbeigeht](#39-ein-leerer-katalog-sieht-richtig-aus-wenn-die-registrierung-an-ihm-vorbeigeht)
+    - [Ü40 — Ein Doku-Beispiel kann kaputt sein statt bloß veraltet](#40-ein-doku-beispiel-kann-kaputt-sein-statt-blo-veraltet)
+    - [Ü41 — Der Case-Check sah nur das letzte Pfadsegment ⚠️](#41-der-case-check-sah-nur-das-letzte-pfadsegment)
+    - [Ü42 — Zwei Referenzen, die sich nicht widersprechen, können trotzdem beide falsch sein](#42-zwei-referenzen-die-sich-nicht-widersprechen-knnen-trotzdem-beide-falsch-sein)
+    - [Ü43 — Betonung in Vimdoc ist keine Betonung, sondern eine Tag-Definition ⚠️](#43-betonung-in-vimdoc-ist-keine-betonung-sondern-eine-tag-definition)
+    - [Ü44 — Jede zusätzliche Kopie driftet in ihre *eigene* Richtung](#44-jede-zustzliche-kopie-driftet-in-ihre-eigene-richtung)
+    - [Ü45 — Eine Ordinalzahl in Prosa ist eine Invariante ohne Prüfer](#45-eine-ordinalzahl-in-prosa-ist-eine-invariante-ohne-prfer)
+    - [Ü46 — Ein falsches Beispiel, das Erfolg meldet, ist schlimmer als eines, das wirft ⚠️](#46-ein-falsches-beispiel-das-erfolg-meldet-ist-schlimmer-als-eines-das-wirft)
+    - [Ü47 — Ü42 erwischt auch den, der gerade aufräumt](#47-42-erwischt-auch-den-der-gerade-aufrumt)
+    - [Ü48 — Ein Dateiname kann aus einem *maschinellen* Grund feststehen](#48-ein-dateiname-kann-aus-einem-maschinellen-grund-feststehen)
+    - [Ü49 — `:help <plugin>` führte in 15 Repos nirgendwohin](#49-help-plugin-fhrte-in-15-repos-nirgendwohin)
+    - [Ü50 — Vier gleichlautende Fassungen sind nicht besser als zwei widersprüchliche](#50-vier-gleichlautende-fassungen-sind-nicht-besser-als-zwei-widersprchliche)
+    - [Ü51 — `architecture.md` veraltet lautlos, weil niemand neue Dateien dagegen hält](#51-architecturemd-veraltet-lautlos-weil-niemand-neue-dateien-dagegen-hlt)
+    - [Ü52 — Eine vollständige Reference kann drei ganze Config-Abschnitte auslassen](#52-eine-vollstndige-reference-kann-drei-ganze-config-abschnitte-auslassen)
+    - [Ü53 — Ein Dokument kann seine eigene Kopfzeile widerlegen](#53-ein-dokument-kann-seine-eigene-kopfzeile-widerlegen)
+    - [Ü54 — Ein Feature, das nachträglich in 32 `DEFAULTS.lua` gelandet ist, fehlt in 32 `configuration.md` gleich mit](#54-ein-feature-das-nachtrglich-in-32-defaultslua-gelandet-ist-fehlt-in-32-configurationmd-gleich-mit)
+  - [Abweichungen vom Standard](#abweichungen-vom-standard)
+  - [Verschoben nach wkdbook-myplugins](#verschoben-nach-wkdbook-myplugins)
+  - [Werkzeug-Notizen](#werkzeug-notizen)
+    - [`scripts/docs_linkcheck.py` (neu)](#scriptsdocs_linkcheckpy-neu)
+    - [`scripts/docs_anchorcheck.py` (neu, 2026-09-04)](#scriptsdocs_anchorcheckpy-neu-2026-09-04)
+    - [`scripts/docs_tablecheck.py` (neu, 2026-09-05)](#scriptsdocs_tablecheckpy-neu-2026-09-05)
+    - [Bestandsprüfer: `:DocMap` kann das teilweise auch](#bestandsprfer-docmap-kann-das-teilweise-auch)
+    - [Offene Befundliste (Stand 2026-09-04, nach dem Anker-Durchgang)](#offene-befundliste-stand-2026-09-04-nach-dem-anker-durchgang)
+    - [Was die Index-Tranche für die vollen Durchgänge notiert hat](#was-die-index-tranche-fr-die-vollen-durchgnge-notiert-hat)
+    - [Eine falsche Zahl in einer Commit-Message](#eine-falsche-zahl-in-einer-commit-message)
+    - [Bekannte blinde Flecken der Bestands-Werkzeuge](#bekannte-blinde-flecken-der-bestands-werkzeuge)
+
+---
+
+## INTRO
+
 Begleitdatei zur Umsetzung von
-[`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](LAST_CDX_TASKS.md).
+[`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](./LAST_CDX_TASKS.md).
 
 **Angelegt 2026-09-03. Stand 2026-09-05: P0–P4 erledigt — alle 32 Repos mit
 vollem Durchgang, E1 und `DOC-05` **32/32**, keine toten Links, keine toten
 Anker, keine verwaisten `docs/`-Dateien. P5: 8.1/8.3/8.4/8.5 **und jetzt auch
 8.2a** erledigt (die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde, siehe
-[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)).
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)).
 **8.2b: die `SEC-*`-Welle (24 Regeln) ist fertig — alle 32 Repos geprüft.**
 18 hatten mindestens einen echten Fund, alle behoben, committet und gepusht,
 darunter zwei reale Schwachstellen (ein GitHub-Token-Leak über Prozess-Argv
@@ -17,7 +98,7 @@ in `github_stats.nvim`, eine Shell-Injection über den Clipboard-Zielpfad in
 `mdview`/`open`/`pdfport` ab, bevor etwas geschrieben wurde) lief es
 **Autorenentscheidung folgend nur noch ein Repo pro Durchgang**. Details und
 das vollständige Repo-für-Repo-Ergebnis stehen in
-[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
 Die übrigen sieben Regel-Familien (`PRIN-`/`LUA-`/`ERR-`/`UI-`/`TS-`/`DEP-`/
 `PERF-`) sind noch nicht begonnen — bewusst letzter Punkt der Gesamtliste,
 blockiert laut Standard nichts. **P6 (BINDINGS-Sanierung, §6) ist
@@ -73,7 +154,7 @@ Zwei lose Fäden aus den letzten Minuten vor dem Abbruch:
 
 **P4 ist am 2026-09-05 abgeschlossen — alle 32 Repos durch.** Offen bleiben
 nur noch `BND-04`, `BND-05`, `BND-07`
-([§6.4](LAST_CDX_TASKS.md#64-was-dafür-zu-tun-ist)
+([§6.4](./LAST_CDX_TASKS.md#64-was-dafür-zu-tun-ist)
 in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 (Abschlussbericht) — siehe Fortschritt-Tabelle unten.
 
@@ -89,9 +170,11 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
-| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). **8.2b: die `SEC-*`-Welle ist fertig** — alle 32 Repos geprüft, 18 echte Funde behoben+gepusht (2 davon reale Schwachstellen: Token-Leak in github_stats.nvim, Shell-Injection in images.nvim; dazu ein systemischer Timeout-Fund über alle drei Provider von reposcope.nvim). Die übrigen sieben Regel-Familien von 8.2b sind noch offen — bewusst letzter Punkt der Gesamtliste. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md) |
+| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). **8.2b: die `SEC-*`-Welle ist fertig** — alle 32 Repos geprüft, 18 echte Funde behoben+gepusht (2 davon reale Schwachstellen: Token-Leak in github_stats.nvim, Shell-Injection in images.nvim; dazu ein systemischer Timeout-Fund über alle drei Provider von reposcope.nvim). Die übrigen sieben Regel-Familien von 8.2b sind noch offen — bewusst letzter Punkt der Gesamtliste. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md) |
 | P6 — BINDINGS-Sanierung | ✅ | 2026-09-05 | **Vollständig abgeschlossen** — `BND-01`…`07` alle erledigt (Details: BND-04-Ledger + BND-05-Abschnitt unten). `PersonelPlugins/BINDINGS/` ist entfernt; nvim-config hat jetzt eine eigene Root-`docs/BINDINGS.md`, gelesen über `config.plugin_sheets()`s neuen `"nvim-config"`-Eintrag |
 | P7 — Abschlussbericht | ✅ | 2026-09-05 | `51be729fc` — `README.md` in diesem Ordner **ist** der Bericht; P0–P6 abgeschlossen, 8.2b lief zum Archivierungszeitpunkt bewusst weiter (blockiert laut Standard nichts). Status-Zeile war seit dem Archivierungs-Commit fälschlich noch auf „offen" stehengeblieben — korrigiert |
+
+---
 
 ### Repo-Ledger
 
@@ -193,6 +276,8 @@ issue" dokumentiert und bewusst dem vollen Durchgang überlassen. Der ist
 gelaufen (`bfb74da`), und sie sind weg — nachgemessen 2026-09-04: 0 tote
 Links, 0 tote Anker. Siehe [Ü25](#ü25--vier-weitere-repos-waren-fertig-ohne-dass-es-hier-stand).
 
+---
+
 ### BND-04-Ledger
 
 Pro Plugin: die 1–3 alten Sheets unter `PersonelPlugins/BINDINGS/{Keymaps,
@@ -236,6 +321,8 @@ spotlight); die übrigen 25 bestätigten sich als bereits aktuell.
 `lsp.nvim` war der größte Einzelfund: eine 33-Autocmds-Inventur, die
 das Repo selbst als „the complete inventory" bezeichnete, aber nirgends
 im Repo stand — jetzt `docs/autocmds.md` dort.
+
+---
 
 ### BND-05 — abgeschlossen 2026-09-05
 
@@ -339,16 +426,22 @@ Tatsächlich **31/31**, wortgleich, als Zeile 1. Befund A ist korrigiert.
 
 **Lehre:** Nach der *Sache* suchen, nicht nach dem *Wort*.
 
+---
+
 ### Ü2 — BINDINGS: der `roadmap`-Grep überzeichnet
 
 45 Treffer, aber fast alle **legitime Querverweise**. Belastbar sind
 stattdessen Changelog-Blöcke (20+ Dateien) und Dateilänge (6 über 350 Zeilen).
+
+---
 
 ### Ü3 — Verwaiste Dokumente sind ein eigener Befundtyp
 
 `fileops.nvim/docs/FEATURES.md`: 414 Zeilen, **null eingehende Links**. Gute
 Doku, die niemand findet. `DOC-06` deshalb **früh** prüfen — ein verwaistes
 Dokument ändert den Aufwand für alles andere (verlinken statt umschreiben).
+
+---
 
 ### Ü4 — `docs/map/module_map.json` ist flächendeckend veraltet
 
@@ -357,11 +450,15 @@ Repo nach dem Umbau mit `:DocMap` neu zu erzeugen.
 
 > **Offen:** Sammel-Regenerierung am Ende (P7) statt 31 Einzelläufe?
 
+---
+
 ### Ü5 — Deutsche Dubletten waren mehr als die fünf gefundenen
 
 `color_my_ascii.nvim/docs/guides/de/` mit drei weiteren, alle verwaist. Die
 Bestandsaufnahme suchte nach Datei*namen* mit `-de`/`-DE`; ein Ordner `de/`
 fiel durch. **Bei den restlichen Repos auch Verzeichnisnamen prüfen.**
+
+---
 
 ### Ü6 — Mehr Doku-Ebenen können richtig sein *(lib.nvim)*
 
@@ -385,6 +482,8 @@ Ebenso **kein** Befund: `docs/BINDINGS/Usercmds.md` neben `BINDINGS.md`. Die
 Ordner-Datei ist **generiert** („Do not edit by hand", vom Composer), und
 `BINDINGS.md` verweist korrekt darauf.
 
+---
+
 ### Ü7 — Naive Link-Checks bestehen zu 80 % aus Rauschen
 
 Die gemessene Zahl toter Links über alle Repos wanderte:
@@ -396,11 +495,13 @@ Die gemessene Zahl toter Links über alle Repos wanderte:
 | + nur **git-getrackte** Dateien | **28** |
 
 141 der ursprünglichen 169 waren Artefakte: als Beispiel zitierte Links
-(`` `[report](docs/report.pdf)` ``, `replace_format = "[%s](%s)"`) und
+(`` `[report](./docs/report.pdf)` ``, `replace_format = "[%s](./%s)"`) und
 gitignorierte Bäume (`lib.nvim/.deps/` allein: 84 Treffer).
 
 **Lehre:** Ein Befundzähler, dem man nicht trauen kann, kostet mehr Zeit als
 er spart. Vor dem Flächeneinsatz an einem bekannten Repo eichen.
+
+---
 
 ### Ü8 — Fremde uncommittete Arbeit in `lib.nvim` ⚠️
 
@@ -414,6 +515,8 @@ wurden nur die sechs Doku-Dateien.
 > **Regel für alle weiteren Repos:** Vor jedem Commit `git status` lesen und
 > **selektiv stagen**. Kein `git add -A` — in diesen Repos wird auch außerhalb
 > dieses Durchgangs gearbeitet.
+
+---
 
 ### Ü9 — Ein zweiter Durchgang läuft parallel und hält sechs Repos besetzt ⚠️
 
@@ -440,6 +543,8 @@ und wartet, bis sein Working Tree sauber ist. Nachgerückt ist
 **Regel:** `git status` **vor** der Repo-Auswahl lesen, nicht erst vor dem
 Commit. Ein besetztes Repo kostet einen ganzen Durchgang, wenn man es erst
 nach der Arbeit merkt.
+
+---
 
 ### Ü10 — `docs/map/` ist in 29 von 31 Repos gar nicht im Repo ⚠️
 
@@ -475,6 +580,8 @@ Repos, die ihre Map tatsächlich ausliefern.
 > die Schreibweise, dann log die Platte über die Auslieferbarkeit. Maßgeblich
 > ist, was `git ls-files` sagt — nicht, was der Explorer zeigt.
 
+---
+
 ### Ü11 — Der Linkchecker meldete Grün für Dateien, die er nie gelesen hat
 
 Er liest nur **git-getrackte** Quelldateien (das war Ü7s Fix gegen 141
@@ -487,6 +594,8 @@ Beide Fehlerklassen sind jetzt im Werkzeug behoben (siehe
 „**erst `git add`, dann prüfen**" ist damit nicht mehr nötig, schadet aber
 nicht.
 
+---
+
 ### Ü12 — ASCII-Art ist 31/31, DOC-24 ist erledigt
 
 `mdview.nvim` galt als das eine Repo ohne ASCII-Block. Es hat einen — nur im
@@ -496,6 +605,8 @@ nackten Fence.
 **Das ist Ü1 zum zweiten Mal**, und beide Male hat dieselbe Vorgehensweise den
 Fehler erzeugt: nach der *Schreibweise* gesucht statt nach der *Sache*.
 `DOC-24` braucht in keinem Repo mehr geprüft zu werden.
+
+---
 
 ### Ü13 — Der Doku-Bestand endet nicht bei `docs/`
 
@@ -508,6 +619,8 @@ geschaut hat.
 
 > **Einstieg pro Repo ist ab sofort `git ls-files "*.md"`, nicht
 > `find docs/`.**
+
+---
 
 ### Ü14 — Die FEATURES-Doppelung ist nicht symmetrisch
 
@@ -531,6 +644,8 @@ was stimmt. Das Vorgehen, das funktioniert hat, in dieser Reihenfolge:
 Bei `replacer.nvim` kommt mit `Feature-Matrix.md` eine dritte Fassung dazu —
 dort erst die drei gegeneinander stellen, dann Schritt 1.
 
+---
+
 ### Ü15 — `DOC-04` und `DOC-06` sind derselbe Befund von zwei Seiten
 
 Bei `debugging.nvim` war nicht eine Datei verwaist (Ü3), sondern der **ganze
@@ -542,6 +657,8 @@ unverlinkt.
 offen.** Bei `cascade.nvim` (dem zweiten Repo ohne `FEATURES/README.md`)
 gleich mitprüfen.
 
+---
+
 ### Ü16 — Wo die private Spec von der README-Spec abweicht, steckt ein Grund dahinter
 
 `debugging.nvim`s README empfiehlt `cmd = "Debug"`. In
@@ -552,6 +669,8 @@ View-Keymaps bis zum ersten `:Debug` verzögert.
 **Regel:** Bei jedem Repo die eigene Install-Spec danebenlegen und
 Abweichungen als *Frage* behandeln, nicht als Tippfehler (`DOC-13`).
 
+---
+
 ### Ü17 — Gelöschte Module überleben in `doc/*.txt`
 
 `bindings/which_key.lua` war seit zwei Commits weg und stand noch in
@@ -560,6 +679,8 @@ Letzteres ist handgepflegtes Vimdoc, kein Generat — und fällt aus
 `docs_linkcheck.py` wie aus jedem `--include=*.md`-Grep heraus.
 
 > **Bei `DOC-14` immer auch über `doc/` greppen.**
+
+---
 
 ### Ü18 — Zwei blinde Flecken, die das Werkzeug nicht schließen wird
 
@@ -575,6 +696,8 @@ Letzteres ist handgepflegtes Vimdoc, kein Generat — und fällt aus
   seit je ins Leere — das Fixture für das Local-Images-Feature testete also
   nichts. `LINK_RE` sieht nur `](…)`.
 
+---
+
 ### Ü19 — Beim Kürzen brechen Zirkelverweise
 
 `lsp.nvim/docs/installation.md` sagte „Other managers … are in the README",
@@ -583,6 +706,8 @@ Kürzen also nicht nur prüfen, ob der Inhalt *woanders steht*, sondern auch,
 ob das Ziel nicht zurückzeigt. Bei den verbleibenden Ausreißern
 (`replacer.nvim` 689, `spotlight.nvim` 652, `runtime-analysis.nvim` 627,
 `cascade.nvim` 584, `images.nvim` 546) mit zu erwarten.
+
+---
 
 ### Ü20 — Doppelt gepflegte Referenzen sind ein Fundbüro, kein Befund
 
@@ -596,6 +721,8 @@ ganzen Durchgangs.
 > Doppelt gepflegte Referenzdokumente also erst **gegeneinander diffen**, dann
 > über das Zusammenlegen entscheiden.
 
+---
+
 ### Ü21 — Die vier „Restmeldungen“ waren vier verschiedene Fehlerklassen
 
 Die Liste sah nach Aufräumarbeit aus: neun tote Links über vier Repos, alle
@@ -604,7 +731,7 @@ dieselbe Ursache:
 
 | Repo | Link | Ursache |
 |---|---|---|
-| gopath.nvim | `[LICENSE](LICENSE)` aus `docs/Developer-Notes/` | Pfad gedacht wie im Repo-Root, geschrieben zwei Ebenen tiefer |
+| gopath.nvim | `[LICENSE](./LICENSE)` aus `docs/Developer-Notes/` | Pfad gedacht wie im Repo-Root, geschrieben zwei Ebenen tiefer |
 | insights.nvim | `docs/features.md` | **Nie geschrieben.** Das README versprach eine Adresse, die niemand angelegt hat |
 | pickers.nvim | `bindings/whichkey.lua` | Modul **bewusst** gelöscht (`9b3247d`) |
 | github_stats.nvim | `configuration/` (7×), `USERCOMMANDS.md` (1×) | Ordner heißt `configurations/`; Windows verdeckt beides |
@@ -626,6 +753,8 @@ Nebenbei bestätigt: [Ü10](#ü10--docsmap-ist-in-29-von-31-repos-gar-nicht-im-r
 korrigierte Zahl stimmt. Über alle 31 Repos mit `git ls-files docs/map`
 gemessen, trackt sie **genau zwei**: `documentation.nvim` und
 `runtime-analysis.nvim`, je drei Dateien.
+
+---
 
 ### Ü22 — Was die Doku über die *Umgebung* behauptet, prüft niemand ⚠️
 
@@ -656,6 +785,8 @@ entschieden, aber die Frage bleibt offen: `readme_cache.lua`, `wget.lua`,
 Absicht** — jemand wollte 0.9 unterstützen und hat es an sechs Stellen
 vergessen. Entweder sechs Zeilen nachziehen oder die 0.9-Absicht bewusst
 aufgeben. → Entscheidung des Autors.
+
+---
 
 ### Ü23 — Drei Behauptungen des Standards über `hover.nvim` waren am Tag der Welle nicht mehr wahr
 
@@ -717,6 +848,8 @@ Taste in keiner Tabelle steht (`DOC-10`), ein Config-Key in
 `hover.set()` (`DOC-14`). Das ist der einzige Weg, auf dem diese Befunde nicht
 wiederkommen — ein Durchgang prüft einmal, eine Spec bei jedem Commit.
 
+---
+
 ### Ü24 — Zwei blinde Flecken aus Ü18 sind mit je 15 Zeilen prüfbar
 
 `docs_linkcheck.py` sieht keine Anker. Für `hover.nvim` wurden beide fehlenden
@@ -760,6 +893,8 @@ Ein Befund war echt und ist behoben: der Verweis auf die Werkzeug-Notizen zeigte
 auf `#scriptsdocs_linkcheckpy`, während die Überschrift `(neu)` trägt und damit
 auf `-neu` endet.
 
+---
+
 ### Ü25 — Vier weitere Repos waren fertig, ohne dass es hier stand
 
 [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr)
@@ -784,6 +919,8 @@ was bleibt, sind die 21 Repos der Wellen 4–10.
 > **Regel, verschärft:** die Repos sind kein stehendes Ziel. Vor jeder Welle
 > einmal breit messen — das kostet einen Durchlauf über 32 Verzeichnisse und
 > hätte hier vier geplante Durchgänge eingespart, von denen keiner nötig war.
+
+---
 
 ### Ü26 — `WORKFLOW.md` ist in 16 Repos verwaist, und das ist ein Befund
 
@@ -810,6 +947,8 @@ ohnehin verlinkt.
 echte Neuerung dieses Standards": es ist nicht eine Datei mehr, es ist die
 Datei, die den Rest überhaupt auffindbar macht. Wer in Welle 4–10 nur eine
 Sache pro Repo tun kann, tut diese.
+
+---
 
 ### Ü27 — Emoji im Titel: der Anker behält das Leerzeichen. Gemessen.
 
@@ -849,6 +988,8 @@ Nicht angefasst: vier weitere Dateien in `lsp.nvim` mit Emoji-Überschriften,
 auf die **nichts** zeigt. Da ist kein Defekt, nur ein Stil — die Falle liegt
 dort latent, jede später geschriebene ToC ist bei Geburt tot.
 
+---
+
 ### Ü28 — Der Prüfer hatte drei Fehler, und jeder erzeugte eine Welle Falschbefunde
 
 [Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen) zum dritten Mal, in
@@ -877,6 +1018,8 @@ also kein Befund.
 > produziert und keinen einzigen echten verdeckt — die Richtung ist gnädig,
 > die Kosten sind es nicht.
 
+---
+
 ### Ü29 — Ein Dateiname im Fließtext ist kein Link, und beides sieht gleich aus
 
 Beim Abarbeiten der Waisen zweimal dieselbe Form gefunden, in Repos, die
@@ -901,6 +1044,8 @@ ganze Unterschied.
 > bleibt es beim Lesen:** jede `FEATURES/README.md` einmal öffnen und schauen,
 > ob die Namen anklickbar sind.
 
+---
+
 ### Ü30 — Ein toter Link kann am richtigen Ziel hängen
 
 Der einzige `dead` der ganzen Sammlung stand in
@@ -919,6 +1064,8 @@ Repo verlinkt.
 > Lehre in einer Form, die kein Filter erwischt: der Link ist echt, die
 > Auflösung findet nur woanders statt.
 
+---
+
 ### Ü31 — Ü11, noch einmal, im neuen Werkzeug
 
 `docs_anchorcheck.py` las seine Quellen mit `git ls-files`. Eine gerade
@@ -935,6 +1082,8 @@ zwei Stunden alt war. Behoben mit `--cached --others --exclude-standard`.
 > dasselbe gefunden: eine Zahl, die nicht zu dem passte, was danebenstand.
 > **Ein Prüfer, dem man glaubt, ohne ihn einmal widerlegt zu haben, ist keine
 > Messung.**
+
+---
 
 ### Ü32 — Was auf ein Dokument zeigt, entscheidet was es ist. Nicht sein Name.
 
@@ -962,6 +1111,8 @@ Autorität, egal wie die Datei heißt.
 > **Regel:** vor jedem Auslagern ein `grep -rn "<dateiname>" --include=*.md`.
 > Wer zitiert wird, bleibt.
 
+---
+
 ### Ü33 — Der Prüfer hielt jede `README.md` für erreichbar
 
 `DOC-06` fragt, ob irgendeine Datei den Namen der geprüften nennt. Für
@@ -982,6 +1133,8 @@ Fixtures. Deshalb prüft `DOC-06` jetzt nur noch `docs/**` und die
 Repo-Wurzel; `--all` zeigt den Rest. **Der sechste Werkzeugfehler dieser
 Serie, und der erste, der etwas *versteckt* hat statt zu viel zu melden** —
 die anderen fünf waren Falschbefunde, also laut. Dieser war leise.
+
+---
 
 ### Ü34 — Die Sammlung ist während des Durchgangs um ein Repo gewachsen
 
@@ -1007,6 +1160,8 @@ Dokuments verschiebt und nirgends stand. Konkret:
 > *Grundgesamtheit* gewachsen. Ein Durchgang über „alle Repos" braucht ein
 > Datum an der Zahl. `ls -d E:/repos/*.nvim | wc -l` vor jeder Welle, wie
 > `git status` vor jeder Repo-Auswahl.
+
+---
 
 ### Ü35 — Eine Tabelle kann mitten im Dokument aufhören, eine zu sein
 
@@ -1037,6 +1192,8 @@ die Erklärung direkt darunter, und die Tabelle geht danach weiter.
 **Die Erklärung gehört unter die vollständige Tabelle.**
 
 Dafür gibt es jetzt [`scripts/docs_tablecheck.py`](#scriptsdocs_tablecheckpy-neu-2026-09-05).
+
+---
 
 ### Ü36 — Ein unescaptes `|` in einer Zelle verwirft Inhalt, und ein Test hielt den Fehler fest
 
@@ -1081,6 +1238,8 @@ sie steht in keiner Zelle.
 **Lehre:** Wo ein Generator eine Escaping-Funktion hat, ist die Frage nicht
 *ob* sie existiert, sondern **auf welche Felder sie angewandt wird**. Die
 Antwort steht nicht in ihrem Namen.
+
+---
 
 ### Ü37 — „Auf die Wahrheit zeigen" beseitigt keine Doppelung *(BND-01…03)*
 
@@ -1142,6 +1301,8 @@ deckungsgleich mit dem ungefilterten Lauf, keine doppelten Stämme.
    die sie nicht erzeugt hat. Die Herkunft entscheidet jetzt der Pfad, und
    es gibt einen dritten Block „Plugin-Docs".
 
+---
+
 ### Ü38 — `:BindingsPath` kopierte seit jeher einen Ordner, den es nicht gibt
 
 ```lua
@@ -1165,6 +1326,8 @@ Pfad in die Zwischenablage gelegt.
 > Beobachtung stand in der Doku, war korrekt, und hat nichts bewirkt — weil
 > „notiert" sich wie „erledigt" liest, wenn man die Zeile später wiederfindet.
 
+---
+
 ### Ü39 — Ein leerer Katalog sieht richtig aus, wenn die Registrierung an ihm vorbeigeht
 
 `cmdlog.nvim/docs/BINDINGS.md` behauptete „Autocmds. **None.** cmdlog registers
@@ -1187,6 +1350,8 @@ das `BINDINGS.md` selbst als Laufzeit-Quelle empfiehlt, log damit ebenfalls.
 Gefunden hat es der Diff zweier getrennt gepflegter Seiten — [Ü20](#ü20--doppelt-gepflegte-referenzen-sind-ein-fundbüro-kein-befund)
 zum fünften Mal in Folge der ergiebigste Einzelschritt eines Durchgangs.
 
+---
+
 ### Ü40 — Ein Doku-Beispiel kann kaputt sein statt bloß veraltet
 
 `cmdlog.nvim/docs/ADD_PICKER.md` zeigte
@@ -1202,6 +1367,8 @@ Beispiel und echte Signatur nebeneinanderlegt.
 > Für die verbleibenden Repos: Jedes `ADD_*.md`/`EXTENDING.md`/`api.md`-Beispiel
 > einmal gegen die Signatur halten, die es aufruft. Das ist billiger als es
 > klingt und findet die Fälle, die ein Leser als Erstes ausprobiert.
+
+---
 
 ### Ü41 — Der Case-Check sah nur das letzte Pfadsegment ⚠️
 
@@ -1240,6 +1407,8 @@ gefahren: **genau ein** weiterer Treffer, der eine oben, inzwischen behoben
 > falsche Spalte zeigte. Zweimal derselbe Fehler in zwei Werkzeugen, zwei Tage
 > auseinander.
 
+---
+
 ### Ü42 — Zwei Referenzen, die sich nicht widersprechen, können trotzdem beide falsch sein
 
 `sandbox.nvim` hatte drei Beschreibungen von `:checkhealth sandbox` — README,
@@ -1266,6 +1435,8 @@ in zwei Dateien.** Beim Einfügen eines `hover`-Feldes zwischen
 `completion_cache_ttl_ms` gefallen und in `@types/init.lua` auf `hover` —
 zweimal dieselbe Bearbeitung, zweimal derselbe Schaden, findbar nur beim
 Lesen.
+
+---
 
 ### Ü43 — Betonung in Vimdoc ist keine Betonung, sondern eine Tag-Definition ⚠️
 
@@ -1308,6 +1479,8 @@ festgehalten: `replacer.nvim`s `" *item*  within the selected lines` zeigt die
 Leerraum-Begrenzung nicht. Und `*item*` in Backticks zu setzen wäre die
 Reparatur eines Nicht-Problems gewesen — beinahe passiert.
 
+---
+
 ### Ü44 — Jede zusätzliche Kopie driftet in ihre *eigene* Richtung
 
 `images.nvim` hatte **drei** getrennt gepflegte Kommandokataloge: die
@@ -1328,6 +1501,8 @@ Paardiff findet deshalb höchstens zwei Drittel — belastbar ist nur der
 Abgleich **aller** Fassungen gegen den Quelltext, so wie
 [Ü42](#ü42--zwei-referenzen-die-sich-nicht-widersprechen-können-trotzdem-beide-falsch-sein)
 es für den gemeinsamen Irrtum verlangt.
+
+---
 
 ### Ü45 — Eine Ordinalzahl in Prosa ist eine Invariante ohne Prüfer
 
@@ -1356,6 +1531,8 @@ ist tot.
 > `:Lib deps install` bietet ein Paket an, das nichts freischaltet. Die Datei
 > gehört dem deps-Durchgang (Ü9) und ist unangetastet geblieben — **eine
 > Zeile für jenen Lauf.**
+
+---
 
 ### Ü46 — Ein falsches Beispiel, das Erfolg meldet, ist schlimmer als eines, das wirft ⚠️
 
@@ -1391,6 +1568,8 @@ Completion (Presets an Slots nicht anbieten, an denen sie wirkungslos sind).
 Eine Doku-Session ändert kein Verhalten. Die Doku sagt jetzt an vier Stellen
 ausdrücklich, was gilt. → **Autorenentscheidung.**
 
+---
+
 ### Ü47 — Ü42 erwischt auch den, der gerade aufräumt
 
 Beim Überarbeiten von `cross-platform.md` hat der Durchgang den Satz „curl
@@ -1416,6 +1595,8 @@ außerhalb von `bindings/`, und stand deshalb in **keiner** Bindings-Tabelle.
 Zweimal dasselbe Muster in zwei Repos — die Regel ist also nicht „prüfe den
 Katalog", sondern **`grep` über `nvim_create_autocmd` im ganzen Baum**.
 
+---
+
 ### Ü48 — Ein Dateiname kann aus einem *maschinellen* Grund feststehen
 
 Bei `pickers.nvim` stellte sich die Frage, ob `CHEATSHEET.md` groß bleiben darf,
@@ -1436,6 +1617,8 @@ darf nicht als Präzedenz dienen. Dieselbe Logik hat `sandbox.nvim`
 und `github_stats.nvim` den Ordner `configurations/` im Plural belassen (weil
 [Ü21](#ü21--die-vier-restmeldungen-waren-vier-verschiedene-fehlerklassen) tags
 zuvor genau in die Gegenrichtung repariert hatte).
+
+---
 
 ### Ü49 — `:help <plugin>` führte in 15 Repos nirgendwohin
 
@@ -1463,6 +1646,8 @@ braucht. Genau der Fehler, der gerade in 14 Repos beseitigt wurde. Das
 > sie sind — die Namen sind unterscheidbar genug und ausgeliefert. Für neue
 > gilt die Suffix-Form.
 
+---
+
 ### Ü50 — Vier gleichlautende Fassungen sind nicht besser als zwei widersprüchliche
 
 `pickers.nvim` beschrieb `:checkhealth pickers` in **fünf** Dateien. Keine zwei
@@ -1481,6 +1666,8 @@ Liste waren richtig — die Zahl driftet dort zuerst, wo sie am weitesten von
 dem entfernt steht, was sie zählt. Der Fix war nicht, sie zu korrigieren,
 sondern sie **einmal** hinzuschreiben, direkt über die Matrix, die sie zählt,
 und überall sonst zu verlinken.
+
+---
 
 ### Ü51 — `architecture.md` veraltet lautlos, weil niemand neue Dateien dagegen hält
 
@@ -1504,6 +1691,8 @@ wenig auf.
 > Inhaltsverzeichnis. Kein eigener `DOC-ID`-Kandidat — das ist `DOC-01`
 > (Pflichtdatei vorhanden) zu Ende gedacht: vorhanden heißt hier auch
 > vollständig, nicht nur existent.
+
+---
 
 ### Ü52 — Eine vollständige Reference kann drei ganze Config-Abschnitte auslassen
 
@@ -1557,6 +1746,8 @@ blieb Doku (Floor auf 0.10+, an allen vier Stellen).
 > Tabelle gegen die Kommandoliste. Jede dieser drei Gegenproben ist ein
 > Zweizeiler und keine hätte ein Linkchecker je finden können.
 
+---
+
 ### Ü53 — Ein Dokument kann seine eigene Kopfzeile widerlegen
 
 `casedesk.nvim/docs/REQUESTS.md` erklärt sich selbst: „the unedited request
@@ -1591,6 +1782,8 @@ Sitzung startet") und `docs/PTO.md` (Kopfzeile sagt selbst „Konzept, nichts
 gebaut") waren beide zweifelsfrei `DOC-16` und sind nach
 `wkdbook-myplugins/casedesk.nvim/` verschoben — mit Herkunftsvermerk und
 allen sechs eingehenden Verweisen umgebogen statt tot gelassen.
+
+---
 
 ### Ü54 — Ein Feature, das nachträglich in 32 `DEFAULTS.lua` gelandet ist, fehlt in 32 `configuration.md` gleich mit
 
@@ -1710,7 +1903,7 @@ hatte (Ü11). Es liest jetzt `--cached --others --exclude-standard`: alles, was
 im Repo ist **oder auf dem Weg hinein**, aber nichts Ignoriertes.
 
 **Warum `CASE` der eigentliche Grund ist:** Windows ist case-insensitiv, und
-Pythons `os.path.exists` erbt das. Ein Link `[x](COMMANDS.md)` auf eine Datei
+Pythons `os.path.exists` erbt das. Ein Link `[x](./COMMANDS.md)` auf eine Datei
 `commands.md` ist lokal grün und auf GitHub ein 404. Das Skript vergleicht
 deshalb gegen die echten Verzeichniseinträge. **Pflichtlauf nach jedem Rename**
 (`DOC-02` produziert genau diesen Fehler).
@@ -1732,6 +1925,8 @@ Bereits gefunden: `github_stats.nvim/docs/configurations/USER-DEFINED-DATE-PRESE
 
 **Vorgänger:** Ein bash-Skript gleichen Zwecks ist gelöscht — zu langsam
 (> 2 min statt < 1 s), case-blind, und ohne Code-Block-Filter (siehe Ü7).
+
+---
 
 ### `scripts/docs_anchorcheck.py` (neu, 2026-09-04)
 
@@ -1758,6 +1953,8 @@ Die vier Slug-Regeln stehen im Kopf des Skripts, jede mit dem Falschbefund
 daneben, den ihr Fehlen erzeugt hat — siehe
 [Ü28](#ü28--der-prüfer-hatte-drei-fehler-und-jeder-erzeugte-eine-welle-falschbefunde).
 Zwei davon sind an gerenderten GitHub-Seiten gemessen, nicht hergeleitet.
+
+---
 
 ### `scripts/docs_tablecheck.py` (neu, 2026-09-05)
 
@@ -1800,12 +1997,16 @@ alle 32 Repos, dazu 27 `OVERFLOW` in zwei generierten Dateien. Alle behoben.
 Es bleibt **ein** `SHORT` in `lib.nvim/lua/lib/nvim/buf_win_tab/Command-List.md`
 — eine Zeile ohne die letzte, leere Zelle. Kosmetik, bewusst gelassen.
 
+---
+
 ### Bestandsprüfer: `:DocMap` kann das teilweise auch
 
 `color_my_ascii.nvim/docs/guides/README.md` verweist auf `:DocMap`, das tote
 Links als `dead-readme-link` flaggt. Überschneidung ist gewollt: `docs_linkcheck.py`
 läuft ohne nvim, prüft case-sensitiv und eignet sich für den Flächenlauf;
 `:DocMap` ist das Werkzeug in der Sitzung.
+
+---
 
 ### Offene Befundliste (Stand 2026-09-04, nach dem Anker-Durchgang)
 
@@ -1848,6 +2049,8 @@ der Wegweiser fehlte.
 > selbst** unter „Not here yet", damit die Lücke lesbar bleibt statt still zu
 > sein.
 
+---
+
 ### Was die Index-Tranche für die vollen Durchgänge notiert hat
 
 Beim Lesen von fünfzehn `docs/`-Ordnern fällt auf, was der volle Durchgang
@@ -1862,6 +2065,8 @@ betroffenen Repos:
 | `github_stats` | `DASHBOARD.md`, `TROUBLESHOOTING.md`, `FEATURES.md` dito |
 | `casedesk` | **acht von vierzehn Seiten deutsch** (`DOC-20`). `FEATURES.md` sagt weiterhin „Deutsch, als einzige Datei hier" und nennt zwei Absätze später fünf weitere. Der Index markiert sie jetzt mit **[de]**; ob übersetzt wird, ist eine Autorenentscheidung — das Fachgebiet ist auch außerhalb deutsch dokumentiert |
 | `open` | `docs/commands.md` hat 213 Zeilen über zwei Kommandofamilien und erwähnt die Scope-Tokens nicht; die stehen allein im Cheatsheet |
+
+---
 
 ### Eine falsche Zahl in einer Commit-Message
 
@@ -1882,6 +2087,8 @@ Leser die Zahl gegenprüft.
 > und [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr)
 > beschreiben, hier in meinem eigenen Text.
 
+---
+
 ### Bekannte blinde Flecken der Bestands-Werkzeuge
 
 Stehen in `LAST_CDX_TASKS.md` §8. Hier nur Neues.
@@ -1891,3 +2098,6 @@ Stehen in `LAST_CDX_TASKS.md` §8. Hier nur Neues.
   `####` weiter unten gefallen, weil die gemeinte Überschrift ein Emoji trug
   und damit einen anderen Anker hatte. Gefunden beim Lesen, nicht beim Prüfen —
   siehe [Ü27](#ü27--emoji-im-titel-der-anker-behält-das-leerzeichen-gemessen).
+
+---
+

@@ -1135,7 +1135,7 @@ davon, also 755 Kollisionen.
 
 **Die Ursache.** lsp.nvims `build_library()` nimmt jedes `@types`-Verzeichnis,
 das es findet, in `workspace.library` auf. Fuer ein Plugin ist das der Zweck.
-Fuer die Config zeigen diese Pfade auf `C:/Users/bartl/AppData/Local/nvim/...`
+Fuer die Config zeigen diese Pfade auf `vim.fn.stdpath('config') .. /...`
 -- den **Haupt-Checkout**. Laeuft der Scan aus einem Worktree, ist der
 Workspace ein *anderes* Verzeichnis mit denselben Dateien. Jede Klasse und
 jeder Alias existiert dann zweimal, und LuaLS meldet jede einzelne davon.
