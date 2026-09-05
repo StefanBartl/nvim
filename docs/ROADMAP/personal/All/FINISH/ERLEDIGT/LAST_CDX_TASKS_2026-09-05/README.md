@@ -87,14 +87,26 @@ Doku-Kosmetik allein, sondern was er nebenbei findet. Auswahl, mit Beleg in
 
 ## Was bewusst offen bleibt
 
-**8.2b** — die sieben Regel-Familien jenseits der 34 LuaLS-Regeln
+**8.2b** — die sieben/acht Regel-Familien jenseits der 34 LuaLS-Regeln
 (`PRIN-*`, `LUA-*`, `ERR-*`, `SEC-*`, `UI-*`, `TS-*`, `DEP-*`, `PERF-*`,
 zusammen ~250 Einzelpunkte) sind reine Handprüfung gegen Quelltext. Ein
 Pilot an `buffer-ctx.nvim` (siehe `P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`)
 hat den Aufwand gemessen statt geschätzt: **eine vollständige Prüfung ist
 gegen alle 32 Repos ein mehrtägiges bis mehrwöchiges Vorhaben**, deutlich
 außerhalb eines einzelnen Wiederholungslauf-Termins. Empfehlung des Piloten:
-wellenweise nach Regel-Familie (`SEC-*` zuerst), nicht repoweise. Laut
+wellenweise nach Regel-Familie (`SEC-*` zuerst), nicht repoweise.
+
+**Zwischenstand 2026-09-05 (Abend):** die `SEC-*`-Welle (24 Regeln) ist auf
+Autorenwunsch gestartet und läuft über **18 von 32 Repos** (alphabetisch, in
+Runden zu 3 parallelen Agenten). **11 Repos hatten mindestens einen echten
+Fund**, alle behoben, committet und auf `main` gepusht — darunter zwei
+reale Schwachstellen statt Kosmetik: ein GitHub-Token, das über einen
+Shell-String im Prozess-Argv sichtbar war (`github_stats.nvim`), und eine
+echte Command-Injection über den Clipboard-Zielpfad unter Linux
+(`images.nvim`). Details je Repo:
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
+Nach Runde 6 auf Wunsch unterbrochen — offen bleiben die restlichen 14 Repos
+für `SEC-*` sowie die übrigen sieben Regel-Familien für alle 32. Laut
 Standard **blockiert das nichts** — es ist der bewusst letzte Punkt der
 gesamten Liste, keine vergessene Aufgabe.
 

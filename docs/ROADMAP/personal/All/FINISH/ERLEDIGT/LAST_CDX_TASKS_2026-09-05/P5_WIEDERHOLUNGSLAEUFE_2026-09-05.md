@@ -3,9 +3,11 @@
 Begleitet [`LAST_CDX_TASKS.md` §8](LAST_CDX_TASKS.md#8-die-fünf-wiederholungsläufe).
 Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
-jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben
-übrigen Regel-Familien, ~250 Punkte, Handprüfung) bleibt offen —
-Begründung unten unverändert.
+jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben/acht
+übrigen Regel-Familien, ~250 Punkte, Handprüfung) ist **angelaufen** — die
+`SEC-*`-Welle (24 Regeln) läuft über 18 von 32 Repos, siehe der Abschnitt
+„8.2b — SEC-* Welle" am Ende. Die übrigen sieben Familien und die
+verbleibenden 14 Repos sind weiterhin offen.
 
 Alle vier Werkzeuge liefen **nicht** über die Usercmds aus dem Standard
 (`:LibDuplicateScan`, `:LibBindingsAudit`, `:LibBindingsAuditGaps`) — diese
@@ -307,3 +309,65 @@ Liegen unter
 (`8_3_magic_numbers.txt`, `8_5_hardcoded_constants.txt`,
 `8_4_bindings_audit.txt`, `8_4_gaps.txt`) — nicht committet, wie der Rest
 von `wkdbook-myplugins` in diesem Durchgang.
+
+---
+
+## 8.2b — SEC-* Welle, Zwischenstand 2026-09-05 (Abend)
+
+**Autorenentscheidung:** volle `SEC-*`-Welle (24 Regeln, `SEC-01`…`SEC-45`)
+über alle 32 Repos, alphabetisch in Runden zu 3 (feste Vorgabe: max. 3
+parallele Agenten). Jeder Agent bekam den vollständigen Regelkatalog, prüfte
+Anwendbarkeit pro Regel (kein erzwungener Befund, wo keine Angriffsfläche
+existiert), verifizierte gegen den **aktuellen** Quelltext (nicht gegen den
+08-08-Belege-Snapshot), behob echte Ein-Zeiler-Funde selbst und committete
+pro Repo einzeln (`fix(sec): …`).
+
+**Nach 6 Runden (18 von 32 Repos) auf Wunsch des Autors unterbrochen.**
+Alle Fixes sind committet **und gepusht** auf `main` der jeweiligen
+Repos.
+
+### Ergebnis je Repo (Runden 1–6)
+
+| Repo | Befunde | Commit |
+|---|---|---|
+| buffer-ctx.nvim | 0 | — |
+| cascade.nvim | 0 (praktisch keine SEC-Angriffsfläche — reines lokales Buffer-Editing) | — |
+| casedesk.nvim | 1 — SEC-02, fehlendes `cwd` auf `export.lua`s zwei `vim.system`-Aufrufen | `b932688` |
+| cmdlog.nvim | 0 (bestätigt: die im 08-08-Snapshot offen vermerkte SEC-11/12/13-Lücke ist inzwischen durch `redact_patterns` geschlossen) | — |
+| color_my_ascii.nvim | 1 — SEC-02, `:Fence run`/`format` ohne `cwd` | `5a8e6a0` |
+| dap.nvim | 1 — SEC-02, `zig.lua`s `zig build`-Spawn (ein bereits vorhandener, nie verdrahteter `workspace_root()`-Helper) | `1064d43` |
+| debugging.nvim | 1 — SEC-03, `inline_debug.lua`s Statuszeile spleißte Filetype/Colorscheme ungeschützt in einen Vimscript-`echo`-String (der Kommentar behauptete Escaping, das nie stattfand) | `0606d5074` |
+| diff.nvim | 1 — SEC-21, `http(s)://`-Fetch hatte Timeout, aber kein Byte-Limit | `3a383c3` |
+| documentation.nvim | 1 — SEC-33, `trail_store.lua`s `normalize()` prüfte nur die Top-Level-Form, nicht die Feldtypen persistierter Pins — eine verunstaltete `trails.json` konnte `:DocBrowse` abstürzen lassen | `c38e8003f` |
+| emojis.nvim | 0 | — |
+| fileops.nvim | 0 | — |
+| filetree.nvim | 0 (inkl. verifizierter PowerShell-/AppleScript-Pfad-Escaping gegen adversarielle Eingaben) | — |
+| github_stats.nvim | **2, davon 1 gravierend** — SEC-01/03/10: `:checkhealth`s API-Sync-Test baute einen Shell-String **mit dem GitHub-Token direkt hineininterpoliert**, ausgeführt über `fn.system(string)` — der Token war für die Laufzeit des Aufrufs im Prozess-Argv sichtbar (`ps`/Win32_Process). Zusätzlich SEC-21: `fetch_json` hatte **gar keinen** Timeout (schlimmer als die im 08-08-Snapshot vermerkte Lücke „kein Byte-Limit") | `dc8efa9` |
+| gopath.nvim | 3 — SEC-30 ×2 (`symbol_locator.lua`/`table_locator.lua` bauten Lua-Patterns aus Treesitter-extrahierten Kettengliedern ohne Escaping), SEC-33 ×1 (`truncated/cache.lua`s `load_from_disk()` übernahm persistiertes JSON ungeprüft in den Live-State) | `74ddf7e19d4` |
+| hover.nvim | 0 (Erstdurchlauf — Repo ist neu, kein 08-08-Belege-Snapshot vorhanden; durchgehend defensiv: Argv-only, Netzwerk-Features per Default aus, Timeout+Byte-Limit+Cache-Sweep, typgeprüftes Parsen) | — |
+| images.nvim | **1, gravierend** — SEC-01/03: die Linux-Clipboard-Paste (`wl-paste`/`xclip`) baute einen Shell-String mit dem aufgelösten Zielpfad in einfachen Anführungszeichen; `:Image replace` kann diesen Pfad aus einem Markdown-Link/der Cursorposition ableiten — ein Pfad mit `'` oder Shell-Metazeichen hätte die Quotierung gebrochen. Echte Command-Injection-Fläche, nicht nur theoretisch | `89a6b6f` |
+| insights.nvim | 1 — SEC-02, `conflicts/init.lua` und `symbols/rg_index.lua` setzten bei sequentiellen `git`/`rg`-Aufrufen kein explizites `cwd` | `5fe0733` |
+| language.nvim | 1 — SEC-01/03: `add_to_dict` spleißte das von `cspell`/`codespell`/`typos` gemeldete Wort in einen `:spellgood!`-Vimscript-String; das Wort kann aus fremden gescannten Dateien stammen, nicht nur aus Nutzereingabe | `7792e60806f` |
+
+**11 von 18 geprüften Repos hatten mindestens einen echten Fund**, alle
+behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
+reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
+(`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
+(`images.nvim`).
+
+Vollständige Einzel-Reports (welche Regeln geprüft, welche N/A mit
+Begründung, welche bewusst nicht behoben) liegen in den Session-Transkripten
+der beauftragten Agenten — hier nur die Verdichtung.
+
+### Was bleibt
+
+**14 Repos noch nicht geprüft:** `lib.nvim`, `lsp.nvim`, `markdown.nvim`,
+`mdview.nvim`, `open.nvim`, `pdfport.nvim`, `pickers.nvim`,
+`recommender.nvim`, `replacer.nvim`, `reposcope.nvim`,
+`runtime-analysis.nvim`, `sandbox.nvim`, `sessions.nvim`, `spotlight.nvim` —
+geplant als Runden 7–11, gleiches Schema (3 parallele Agenten, alphabetisch,
+voller SEC-*-Katalog pro Repo).
+
+**Danach:** die übrigen sieben Regel-Familien (`PRIN-`/`LUA-`/`ERR-`/`UI-`/
+`TS-`/`DEP-`/`PERF-`) über alle 32 Repos — `SEC-*` war nur die erste von acht
+Wellen laut Piloten-Empfehlung (Pilot: `buffer-ctx.nvim`, siehe oben).
