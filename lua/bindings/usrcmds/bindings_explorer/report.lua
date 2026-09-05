@@ -286,7 +286,7 @@ function M.render(findings, skipped, source_reason, repo_info, meta)
 end
 
 --- Run, render and write in one go.
----@param opts { plugin?: string, repo?: boolean, repo_root?: string, out?: string }|nil
+---@param opts { plugin?: string, repo?: boolean, repo_root?: string, scope?: "personal"|"extern"|"all", out?: string }|nil
 ---@return string|nil path, string|nil err, integer|nil findings
 function M.write(opts)
   opts = opts or {}

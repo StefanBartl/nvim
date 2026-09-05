@@ -567,7 +567,7 @@ end
 ---
 --- Empty for a plain command, which is the overwhelming majority and costs
 --- nothing: the caller skips the probe entirely.
----@param rec table
+---@param rec Bindings.Record
 ---@return string[]
 local function subroute_words(rec)
   local idx = column_index(rec, USERCMD_HEADERS)
@@ -1445,6 +1445,7 @@ function M.check(plugin, opts)
   if scope ~= "personal" and scope ~= "extern" and scope ~= "all" then
     scope = "personal"
   end
+  ---@cast scope "personal"|"extern"|"all"
   -- Which of the two BINDINGS trees the *documented -> live* axes read.
   -- `nil` is `records.list`'s "both". Without this, `scope = "extern"` was
   -- half an answer: it switched the live->documented direction over to
@@ -1455,9 +1456,13 @@ function M.check(plugin, opts)
   -- the `or` branch and hands back `"all"` -- a value matching neither root,
   -- so `records.list` returned nothing and the documented-side axes silently
   -- reported zero findings. Measured before the fix: 54 instead of 383.
-  local corpus_scope = scope
+  ---@type "extern"|"personal"|nil
+  local corpus_scope
   if scope == "all" then
     corpus_scope = nil
+  else
+    ---@cast scope "personal"|"extern"
+    corpus_scope = scope
   end
 
   local own_set, own_reason = own_plugins()
