@@ -10,16 +10,20 @@
 
 ---
 
+leader fg -   Error  16:14:50 msg_show.emsg E492: Not an editor command: FzfLua live_grep
+
+---
+
 ## cdx
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     15:50       |    93% / 09%     |
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     12:50       |   100% / 39%     | X
 | **work** |   20. Sept    |   Sa., 06:00    |     11:10       |   100% / 47%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     08:00       |    --% / 67%     |
+| **free** | 21. Juli 2027 |   So., 09:00    |     08:00       |    89% / 83%     |
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     |
 
-- never start more than 3 agents simultaneously; if more are needed, run multiple rounds of up to 3 agents each
+- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 - Die Installations-Specs meiner Pluigns findest du in: C:/Users/bartl/AppData/Local/nvim/lua/plugins/personal/init.lua
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
@@ -67,6 +71,7 @@ Hier die Liste meiner Plugins - du findest sie unter `c:\repos` bzw `e:\repos` -
 
 buffer-ctx.nvim
 cascade.nvim
+casedesk.nvim
 cmdlog.nvim
 color_my_ascii.nvim
 dap.nvim

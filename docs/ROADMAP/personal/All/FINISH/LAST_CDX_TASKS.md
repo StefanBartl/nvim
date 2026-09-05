@@ -414,13 +414,15 @@ Handover-Datei knapp darauf verweisen kann („`DOC-07` bei mdview offen").
 | `DOC-13` | Genannte Abhängigkeiten stimmen mit der Install-Spec? |
 | `DOC-14` | Keine Verweise auf entfernte Dinge (z. B. `migrate.nvim`, gelöschte Module)? |
 | `DOC-28` | Stimmen die Zusagen über die **Umgebung**? Versionsangabe gegen die benutzten APIs (`vim.uv` → 0.10+), jeder `stdpath`-Pfad der Doku gegen den Code, Status-Badge gegen Zeile 1. Nachgetragen 2026-09-04 nach [Ü22]. |
+| `DOC-29` | Haelt jede Tabelle als Tabelle? -> `scripts/docs_tablecheck.py`. Ein Prosa-Absatz zwischen zwei Zeilen beendet sie, und ein unescaptes `\|` in einer Zelle verwirft alles dahinter -- beides nur beim **Rendern** sichtbar. Nachgetragen 2026-09-05 nach U35/U36. |
+| `DOC-30` | Laeuft jedes Doku-Beispiel ueberhaupt? Nicht ob es aktuell ist, sondern: den Aufruf gegen die echte Signatur halten. Ein Beispiel kann **kaputt** sein statt veraltet -- `cmdlog.nvim`s `ADD_PICKER.md` rief eine Factory wie ein Modul auf und warf beim ersten Versuch. Nachgetragen 2026-09-05 nach U40. |
 
 ### C — Relevanz (P1)
 
 | ID | Prüfung |
 |---|---|
 | `DOC-15` | Jede Datei besteht den Drei-Fragen-Test aus [§2.1](#21-p1--das-relevanzprinzip)? |
-| `DOC-16` | Kein Roadmap-/Handover-/Planungsmaterial in `docs/`? → auslagern |
+| `DOC-16` | Kein Roadmap-/Handover-/Planungsmaterial in `docs/`? → auslagern. **Praezisiert 2026-09-05:** trifft „was noch kommt“, **nicht** „was nie kommt“. Ein Abschnitt, der aufzaehlt, was das Plugin bewusst *nicht* tut, ist eine Scope-Aussage und beantwortet eine echte User-Frage — er bleibt im Repo. Die *Entscheidung* dahinter (geprueft, verworfen, Grund) gehoert in die private Roadmap, damit sie nicht als offene Aufgabe wiederkommt. Beides ist kein Widerspruch: `spotlight.nvim` hat es so getrennt. |
 | `DOC-17` | Kein Changelog-artiger Verlauf in Referenzdokumenten? |
 | `DOC-18` | Keine inhaltliche Doppelung zwischen zwei Dateien? |
 | `DOC-19` | Kein Inhalt, der dasselbe sagt wie das README? |
@@ -501,34 +503,118 @@ Zielbild: **2–3 inhaltlich verwandte Plugins, einleitend, mit Begründung.**
 
 ## 6. BINDINGS-Sanierung
 
-Betrifft `C:\Users\bartl\AppData\Local\nvim\docs\NOTES\PersonelPlugins\BINDINGS\`
-(111 Dateien) und `docs\NOTES\ExternPlugins\Bindings\`.
+> **Neufassung 2026-09-04, auf Zuruf des Autors:** „PersonelPlugins/BINDINGS
+> sollen auf die Plugin-Docs-Cheatsheets zeigen — keine Doppelung mehr."
+> Die alte Fassung (Absatz für Absatz sortieren und verschieben) steht in der
+> History; sie ist durch P4 überholt. Warum, steht in §6.1.
 
-**Zweck der Sammlung:** Cheatsheet. Eine Frage, eine Antwort — *welche
-Taste/welches Kommando tut was*.
+Betrifft `docs\NOTES\PersonelPlugins\BINDINGS\` (**107 Dateien, 12.566
+Zeilen**, in `Autocmds/` 33, `Keymaps/` 34, `Usercmds/` 40) und
+`docs\NOTES\ExternPlugins\Bindings\`.
 
-**Vorgehen pro Datei:**
+### 6.1 Warum die alte Fassung überholt ist
 
-1. Absatz für Absatz gegen den Zweck prüfen (nicht per Wortsuche —
-   siehe [§1.4](#14-bindings-nvim-config)).
-2. Ist der Absatz **Repo-Wissen**, das User/Devs brauchen → in die Docs des
-   betreffenden Plugins, dann hier entfernen und verlinken.
-3. Ist er **Verlauf** (datierte Changelog-Einträge, 20+ Dateien betroffen) →
-   nach `wkdbook-myplugins/<repo>/` oder löschen.
-4. Ist er **Planung** (Roadmap-Inhalt, nicht Roadmap-*Verweis*) → in die
-   Roadmap des Repos.
-5. Legitime Querverweise **bleiben**.
+Sie wurde geschrieben, als die Repo-Docs die Zielorte für verschobenes Wissen
+noch nicht hatten. Inzwischen hat **jedes der 32 Repos eine
+`docs/BINDINGS.md`** (gemessen 2026-09-04: 32/32), und P4 hat sie
+vereinheitlicht. Damit ist die Sammlung unter `PersonelPlugins/BINDINGS/`
+keine Ergänzung mehr, sondern eine **zweite Fassung derselben Sache** — genau
+das, was `DOC-18` in den Repos verbietet.
 
-**Priorität:** die längsten Dateien zuerst — dort steckt das meiste
-Fremdmaterial. `Usercmds/bindings_explorer.md` (411), `runtime-analysis.nvim.md`
-(393), `lib.nvim.md` (381), `documentation.nvim.md` (372), `images.nvim.md`
-(360), `lsp.nvim.md` (356).
+### 6.2 Der Vorbehalt: „zeigen" darf nicht „verlinken" heißen
 
-**Kopplung:** Diese Sanierung läuft *nach* dem Repo-Durchgang, weil Schritt 2
-Zielorte in den Repo-Docs braucht, die es dann erst gibt.
+Ein Cheatsheet durch einen Link zu ersetzen wäre die naheliegende Lesart und
+**würde `:Bindings` unbrauchbar machen**. Das Kommando ist kein Inhalts-
+verzeichnis, sondern ein Werkzeug über dem Korpus:
 
-**Nebenbefund:** `PersonelPlugins/BINDINGS/rateltemtry.md` — vermutlich
-Tippfehler für „Telemetry". Beim Durchgang klären und umbenennen.
+| Route | Braucht vom Korpus |
+|---|---|
+| `:Bindings search` | Volltext (Live-Grep über `pickers.nvim`s Engine) |
+| `:Bindings browse` | **geparste Tabellenzeilen** (`records.lua`) |
+| `:Bindings check` / `report` | die **dokumentierte Seite** des Drift-Vergleichs gegen `nvim_get_keymap`/`nvim_get_commands` |
+| `:Bindings status` | Korpus-Zahlen |
+
+Alle vier lesen Text. Steht dort nur noch „siehe hover.nvim/docs/BINDINGS.md",
+findet `search` nichts, hat `browse` keine Zeilen, und `check` verliert für 32
+Plugins die Vergleichsseite — ausgerechnet für die, an denen am meisten
+gearbeitet wird.
+
+> **Die Doppelung verschwindet nicht dadurch, dass man auf die Wahrheit
+> zeigt, sondern dadurch, dass man sie liest.**
+
+### 6.3 Das Vorgehen: der Korpus bekommt eine zweite Wurzel
+
+Statt einer Kopie im Config-Repo liest `:Bindings` die `docs/BINDINGS.md` des
+Plugins **direkt aus dem installierten Plugin**:
+
+```
+stdpath("data")/lazy/<plugin>/docs/BINDINGS.md
+```
+
+Das ist maschinenunabhängig — die persönlichen Plugins werden in
+`lua/plugins/personal/init.lua` als `"StefanBartl/<name>"` von GitHub geladen,
+nicht per `dir=`. Kein `E:\repos`-Pfad im Config-Repo.
+
+Danach:
+
+| Wurzel | Danach |
+|---|---|
+| `PersonelPlugins/BINDINGS/` | **entfällt** — der Inhalt lebt im jeweiligen Plugin |
+| `ExternPlugins/Bindings/` | **bleibt wie heute** — fremde Plugins haben keine `docs/BINDINGS.md` nach unserem Standard |
+
+**Nebengewinn:** `:Bindings check` vergleicht die Live-Bindings dann gegen die
+*autoritative* Doku des Plugins statt gegen eine Kopie. Eine Kopie kann
+driften; das ist die Fehlerquelle, die der Drift-Report selbst finden soll.
+
+### 6.4 Was dafür zu tun ist
+
+| ID | Schritt |
+|---|---|
+| `BND-01` | `config.lua`: zweite Korpus-Wurzel auflösen (`stdpath("data")/lazy/<name>/docs/BINDINGS.md`), mit der Plugin-Liste aus der lazy-Spec statt einer gepflegten Namensliste |
+| `BND-02` | `records.lua`: Abschnittsüberschriften normalisieren — der Korpus ist **art-zuerst** (`Autocmds/`, `Keymaps/`, `Usercmds/`), die Repos sind **plugin-zuerst** mit `##`-Abschnitten darin. Gemessene Varianten: `## Keymaps` (20), `## Autocommands` (19), `## User commands` (15), `## User Commands` (11), `## Autocmds` (10) |
+| `BND-03` | `plugin_scope.lua`: Sheet-Stämme kommen jetzt aus der Plugin-Liste, nicht aus Dateinamen |
+| `BND-04` | Pro Plugin: Sheet gegen `docs/BINDINGS.md` **diffen** (Ü20), Einzigartiges ins Repo nachtragen, dann Sheet löschen. Nicht umgekehrt |
+| `BND-05` | `PersonelPlugins/BINDINGS/` entfernen, samt der drei Sammelseiten `autocmds-by-event.md`, `-by-filetype.md`, `-by-plugin.md` — prüfen, ob `:Bindings browse` sie ersetzt |
+| `BND-06` | `:BindingsPath` **löschen** — siehe §6.5 |
+| `BND-07` | `docs/FEATURES.md` des Explorers und `:help bindings_explorer` nachziehen |
+
+**`BND-04` ist die eigentliche Arbeit** und der einzige Schritt, an dem Inhalt
+verlorengehen kann. Die Sheets sind *älter* als die Repo-Docs und enthalten
+teils Dinge, die nie ins Repo gewandert sind. Reihenfolge wie in
+Ü14: erst diffen, dann das Einzigartige nachtragen, erst dann löschen.
+
+### 6.5 Nebenbefund: `:BindingsPath` zeigt seit jeher ins Leere
+
+```lua
+-- lua/bindings/usrcmds/init.lua:47
+local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")
+```
+
+`docs/NOTES/BINDINGS` **existiert nicht** (verifiziert 2026-09-04). Die
+Wurzeln heißen `PersonelPlugins/BINDINGS` und `ExternPlugins/Bindings`. Das
+Kommando kopiert also einen toten Pfad in die Zwischenablage, seine Keymap
+`<leader>BI` ebenso, und es trägt selbst ein `--TEMP:`. `:Bindings path
+[personal|extern]` macht dasselbe richtig und kennt beide Wurzeln — der
+Modulkopf von `bindings_explorer` sagt das ausdrücklich.
+
+→ `:BindingsPath` und `<leader>BI` entfernen, `<leader>BI` auf
+`:Bindings path` legen. Dann auch
+[`docs/NOTES/BINDINGS`](../../../NOTES/) in der Keymap-Beschreibung nachziehen.
+
+### 6.6 Kopplung und Priorität
+
+Die alte Kopplung („läuft nach dem Repo-Durchgang, weil Zielorte fehlen") ist
+**weitgehend aufgelöst**: die Zielorte existieren in 32/32 Repos. Was bleibt,
+ist eine schwächere Abhängigkeit — `BND-04` diffed gegen `docs/BINDINGS.md`,
+und wo P4 die noch nicht angefasst hat, diffed man gegen einen ungeprüften
+Stand.
+
+**Empfehlung:** `BND-01` bis `BND-03` und `BND-06` sind von P4 **unabhängig**
+und können sofort laufen. `BND-04` pro Plugin dann, wenn dessen voller
+Durchgang durch ist — oder gebündelt danach.
+
+**Nebenbefund:** `PersonelPlugins/BINDINGS/rateltemtry.md` — Tippfehler für
+„Telemetry". Klärt sich mit `BND-04`/`BND-05` von selbst.
 
 ---
 

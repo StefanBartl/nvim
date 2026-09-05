@@ -3,9 +3,15 @@
 Begleitdatei zur Umsetzung von
 [`docs/ROADMAP/personal/All/FINISH/LAST_CDX_TASKS.md`](../personal/All/FINISH/LAST_CDX_TASKS.md).
 
-**Angelegt 2026-09-03. Stand: P0–P3.5 erledigt, P4 läuft — E1 und `DOC-05`
-sind **32/32**, keine toten Links, keine toten Anker, keine verwaisten
-`docs/`-Dateien. Offen sind nur noch die vollen Durchgänge der Wellen 4–10.**
+**Angelegt 2026-09-03. Stand 2026-09-05: P0–P4 erledigt — alle 32 Repos mit
+vollem Durchgang, E1 und `DOC-05` **32/32**, keine toten Links, keine toten
+Anker, keine verwaisten `docs/`-Dateien. P5 (8.1/8.3/8.4/8.5) und P6
+(`BND-01`…`03`, `06`, `07`) erledigt. Offen, beides bewusst und mit
+Empfehlung an den Autor übergeben statt stillschweigend liegen gelassen:
+`BND-04`/`05` (Bindings-Sheets pro Plugin diffen und löschen — siehe §6.4)
+und der volle 8.2-Regelkatalog jenseits von LuaLS (siehe
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)).
+P7 (Abschlussbericht) folgt, sobald diese zwei entschieden sind.**
 
 ---
 
@@ -26,6 +32,39 @@ Abschlussbericht (nach `ERLEDIGT/`).
 
 ---
 
+## ⚠️ Handover-Punkt — Sitzungslimit 2026-09-05, kurz vor 12:50 (Europe/Berlin)
+
+Die vorige Sitzung ist mitten in Welle 4 ins Nutzungslimit gelaufen (Reset
+12:50). **Nachgeprüft für diese Übergabe:** Alles bis einschließlich
+`pickers.nvim` (`1023c8b`, `46f9f51`) und `github_stats.nvim` (`b68b0ee`) ist
+committet und gepusht — `git status`/`git log` in allen betroffenen Repos
+zeigt saubere Working Trees, keine verwaiste Arbeit in einem Worktree. Der
+Stand **19/32 mit vollem Durchgang, 13 offen** (Fortschritt-Tabelle unten) ist
+also korrekt und aktuell.
+
+Zwei lose Fäden aus den letzten Minuten vor dem Abbruch:
+
+1. ✅ **Erledigt 2026-09-05** — `markdown.nvim`s vollen Durchgang gefahren
+   (siehe Repo-Ledger und [Ü52](#ü52--eine-vollständige-reference-kann-drei-ganze-config-abschnitte-auslassen)).
+   Die 15 fehlenden Module in `architecture.md` waren nur der Anfang.
+2. **Drei Hintergrund-Agenten** („Docs-Audit sandbox.nvim", „Docs-Audit
+   cmdlog.nvim", „Docs-Audit mdview.nvim") sind laut Log **fertig gelaufen**,
+   ihr Ergebnis wurde aber nie gelesen — das Limit kam direkt danach. Alle
+   drei Repos haben bereits einen vollen Durchgang hinter sich
+   (`sandbox.nvim` `34e47d7`/`a8a5cea`, `cmdlog.nvim` `88100b8`,
+   `mdview.nvim` `575cc0b`); das waren also Nachprüfungen, keine Erstaudits.
+   Keine Artefakte auf der Platte gefunden (Scratchpads der abgebrochenen
+   Sitzung sind leer) — falls diese drei Befunde noch gebraucht werden, neu
+   laufen lassen statt suchen.
+
+**P4 ist am 2026-09-05 abgeschlossen — alle 32 Repos durch.** Offen bleiben
+nur noch `BND-04`, `BND-05`, `BND-07`
+([§6.4](../../personal/All/FINISH/LAST_CDX_TASKS.md#64-was-dafür-zu-tun-ist)
+in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
+(Abschlussbericht) — siehe Fortschritt-Tabelle unten.
+
+---
+
 ## Fortschritt
 
 | Phase | Status | Datum | Notiz |
@@ -35,9 +74,9 @@ Abschlussbericht (nach `ERLEDIGT/`).
 | P2 — README-Konzept | ✅ | 2026-09-03 | `MyNotes\docs\README-KONZEPT.md` |
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
-| P4 — Wellen 1–10 | 🟨 läuft | 2026-09-04 | E1 **31/31**, `DOC-05` **32/32**, `DOC-06` in `docs/` **0**. Wellen 1–3 vollständig; für die übrigen 21 Repos ist der Index vorgezogen, der volle Durchgang offen |
-| P5 — Wiederholungsläufe | ⬜ offen | — | 8.1/8.3/8.5 vorziehbar |
-| P6 — BINDINGS-Sanierung | ⬜ offen | — | braucht P4 |
+| P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
+| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
+| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` (Sheets pro Plugin gegen `docs/BINDINGS.md` diffen, dann löschen) und `BND-05` (`PersonelPlugins/BINDINGS/` entfernen, hängt an `BND-04`) offen — Autorenentscheidung, wann |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -92,6 +131,41 @@ Fünf davon haben die Zeile nachgetragen bekommen (`diff.nvim`,
 `documentation.nvim`, `language.nvim`, `markdown.nvim`, `open.nvim`); offen ist
 nur noch `hover.nvim` — und das war es bereits, ohne dass die Ledger-Zeile es
 wusste. Siehe [Ü23](#ü23--drei-behauptungen-des-standards-über-hovernvim-waren-am-tag-der-welle-nicht-mehr-wahr).
+| spotlight.nvim | 4 | README **664 → 147**, sieben Doku-Seiten aus README-Material, `FEATURES.md` → Ordner | `e9153c7` |
+| runtime-analysis.nvim | 4 | README **633 → 164**, `COMMANDS.md` → `commands.md` (31 eingehende Verweise), vier neue Seiten | `208dd23` |
+| cascade.nvim | 4 | README **595 → 130**, sechs neue Seiten, `commands.md` war Pflicht und fehlte | `08bfe19` |
+| lib.nvim | Ursache | `composer/docgen` escapte die falsche Spalte — siehe [Ü36](#ü36--ein-unescaptes--in-einer-zelle-verwirft-inhalt-und-ein-test-hielt-den-fehler-fest) | `2a0a8d0` |
+| sandbox.nvim | Tabellen | generierte Doku neu erzeugt: 16 Beschreibungen zurück, dazu echter Drift (`workdir=`) | `a8a5cea` |
+| casedesk.nvim | Tabellen | dito, 11 Zeilen; `CHEATSHEET.md` von Hand | `b8a4671` |
+| reposcope.nvim | Tabellen | **11 Prompt-Keys** rendern wieder als Tabelle — überlebt in Welle 2 | `7c63ccd` |
+| github_stats.nvim | Tabellen | 4 Dashboard-Keys, dito | `2e5e929` |
+| emojis.nvim | Tabellen | 2 Keymaps, dito | `bff445a` |
+| pickers.nvim | Tabellen | `[nav\|action]` verwarf die letzte Zelle | `874ecf7` |
+| documentation.nvim | Tabellen | Haddocks `-- \|` verwarf die letzte Zelle | `0d7ce8e` |
+| cmdlog.nvim | 4 | README **404 → 192**, `OPTIONS.md` → `configuration.md` (+ ein `CONTRIBUTING.md`-Anteil), `installation.md` angelegt, drei Case-Renames | `88100b8` |
+| sandbox.nvim | 4 | README **354 → 221**, `configuration.md` + `health.md` angelegt, `ADD_USECASE.md` → `add_usecase.md`, drei falsche checkhealth-Beschreibungen | `34e47d7` |
+| color_my_ascii.nvim | Nachtrag | `features/` statt `FEATURES/` — der eine Fall, den der verschärfte Case-Check fand | `411e429` |
+| images.nvim | 4 | README **551 → 175**, vier neue Seiten; drei Kommandokataloge mit je einem *anderen* Loch | `35e5eb5` |
+| *(14 Repos)* | Vimdoc | Prosa-Betonung `*wort*` definierte Help-Tags — ein Commit je Repo | `c5d2157`…`dd02d22` |
+| github_stats.nvim | 4 | `FEATURES.md` → `FEATURES/` (9 Seiten), 3 Renames mit 21 eingehenden Links, `NOTES/` und `devs/` aufgelöst, ~15 Korrekturen gegen `lua/` | `b68b0ee` |
+| pickers.nvim | 4 | 7 Case-Renames mit ~90 eingehenden Verweisen, vier Kataloge gediffed, `:checkhealth` in fünf Fassungen | `1023c8b` |
+| *(15 Repos)* | Vimdoc | `:help <plugin>.nvim` gab es nicht — ein Commit je Repo | `7b80e7f`…`093c317` |
+| *(nvim-config)* | `BND-06` | `:BindingsPath` kopierte einen Ordner, den es nie gab; `<leader>BI` → `:Bindings path` | `c990516ca` |
+| *(nvim-config)* | `BND-07` | `doc/bindings_explorer.txt` beschrieb noch „the two BINDINGS trees" — die dritte Quelle (`BND-01`, `<plugin>/docs/BINDINGS.md` live gelesen) fehlte im Vimdoc komplett. `docs/FEATURES.md` war bereits aktuell (nennt sogar `BND-04` als offenen Übergang) und brauchte nichts | *(uncommitted, nvim-config)* |
+| *(nvim-config)* | `BND-01`…`03` | Der Korpus liest die `docs/BINDINGS.md` der Plugins, statt sie abzuschreiben | `3a14ffc11` |
+| markdown.nvim | 4 | Case-Rename (fremder, unfertiger Durchgang übernommen), `architecture.md` +15 Module, `BINDINGS.md`/`.lua` +4 Autocmd-Gruppen +2 `links`-Subcommands, `configuration.md` +3 Config-Abschnitte (`hover`/`menu`/`underline_headings`), `FEATURES/LINKS-AND-REFERENCES.md` +`sanitize`, Neovim-Floor 0.9→0.10 (README/Badge/`installation.md`/`health.lua`), 1 echter Bug (`vim.uv` ungeguarded) | `7c2bb39`, `65f47ec`, `b28c086`, `1516aa2` |
+| buffer-ctx.nvim | 4 | `architecture.md` + `health.md` neu angelegt (45 Module / 3-Sektionen-`:checkhealth`, beide fehlten ganz); `FEATURES/MARK.md` drei datierte Abschnittsüberschriften + eine unauflösbare „audit entries"-Referenz entfernt; `commands.md`s `nvim_module`-Alias richtiggestellt; ein Kommentar in `util/clip.lua` zitierte ein nie existiertes `Refactoring..md`. Rest war bereits deckungsgleich mit dem Quelltext (0/0/0 vorher **und** nachher) | `7c3acea` |
+| casedesk.nvim | 4 | `docs/HANDOVER.md` (reiner Sitzungs-Log, private Pfade, Kollegenname) und `docs/PTO.md` (`:Tricentis pto` — „Konzept, nichts gebaut") nach `wkdbook-myplugins/casedesk.nvim/` ausgelagert (`NOTES/` bzw. `ROADMAP/`), alle sechs eingehenden Referenzen umgebogen; `FEATURES.md`s „Deutsch, als einzige Datei hier" korrigiert (Ü34: 8 von 14 sind es); `REQUESTS.md`s Header stimmte nicht mehr mit dessen eigenem Inhalt überein (siehe Ü53) | `9f5ab08` |
+| dap.nvim | 4 | `menu`-Config-Block fehlte in `configuration.md` (Rest bereits deckungsgleich) | `dd329c6` |
+| diff.nvim | 4 | `architecture.md`: `image_compare.lua` fehlte; sonst 0 Befunde (`configuration.md`, `BINDINGS.md`, `api.md` exakt deckungsgleich) | `5b654f7` |
+| emojis.nvim | 4 | 0 Befunde — keine Änderung | — |
+| filetree.nvim | 4 | `deps_popup` fehlte in `configuration.md` (nur in README); kein `architecture.md` — 125 Lua-Dateien mit selbsterklärenden `features/<area>/<name>/`-Pfaden, `FEATURES/` deckt die sieben Bereiche bereits ab | `af59bfc` |
+| insights.nvim | 4 | `docs/health.md` neu (389-Zeilen-`health.lua`, 12 Sektionen, vorher nur eine Zeile in `installation.md`); `architecture.md` +4 Module (`hover.lua`, `imports/index.lua`, `imports/graph.lua`, `symbols/open.lua`); `deps_popup` fehlte in `configuration.md` | `b699449` |
+| language.nvim | 4 | `docs/health.md` neu (277-Zeilen-`health.lua`, 9 Sektionen); `configuration.md`s „Excerpt" ließ `thesaurus` komplett aus (eigene FEATURES-Seite!), dazu `commands`/`which_key`/`deps_popup` ergänzt; kein `architecture.md` — 51 Dateien, `FEATURES/` deckt ab | `90e8506` |
+| open.nvim | 4 | 0 Befunde — keine Änderung | — |
+| pdfport.nvim | 4 | `docs/health.md` neu (405-Zeilen-`health.lua`, 10 Sektionen — Warnung: zwei Sektionen prüfen PATH direkt, zwei die *laufende* Registry, leicht als Widerspruch lesbar); `deps_popup` fehlte in `configuration.md` (DEFAULTS.lua nutzt hier 4-Leerzeichen-Einrückung — Ü-wert, siehe Fließtext) | `081b402` |
+| recommender.nvim | 4 | `float_keymaps` fehlte in `configuration.md` (nur in `BINDINGS.md`); ein Kommentar zitierte ein nie existiertes `UI-KIT-CONCEPT.md` | `4b99453` |
+| sessions.nvim | 4 | 0 Befunde — keine Änderung | — |
 
 > Die Schranke aus Ü9 ist damit gefallen, die **Regel** dahinter nicht:
 > `git status` bleibt der erste Blick vor der Repo-Auswahl, nicht der letzte
@@ -796,6 +870,627 @@ Dokuments verschiebt und nirgends stand. Konkret:
 > Datum an der Zahl. `ls -d E:/repos/*.nvim | wc -l` vor jeder Welle, wie
 > `git status` vor jeder Repo-Auswahl.
 
+### Ü35 — Eine Tabelle kann mitten im Dokument aufhören, eine zu sein
+
+Ein Prosa-Absatz **zwischen zwei Tabellenzeilen** beendet die Tabelle. Alles
+darunter hat keine Kopfzeile mehr und rendert auf GitHub als ein einziger
+Fließtext-Absatz mit Pipes darin. In der Datei sieht alles richtig aus, jeder
+Link löst auf, jeder Anker stimmt — **kein bestehender Prüfer sieht etwas**,
+weil nichts fehlt: die *Form* ist kaputt, nicht der Inhalt.
+
+Zwei Agenten haben das am selben Tag unabhängig voneinander gefunden, in
+verschiedenen Repos, beide beim vollständigen Lesen einer Datei. Danach
+gemessen über alle 32 Repos:
+
+| Repo | Betroffen |
+|---|---|
+| `reposcope.nvim` | **11** Prompt-Keymaps |
+| `spotlight.nvim` | 14 von 22 `:Spotlight`-Routen |
+| `cascade.nvim` | 8 Transpose-Bindings |
+| `github_stats.nvim` | 4 Dashboard-Keys |
+| `emojis.nvim` | 2 Keymaps |
+
+**`reposcope.nvim` und `cascade.nvim` hatten ihren vollen Durchgang bereits
+hinter sich.** Der Befund hat ihn überlebt, weil er nur beim Rendern sichtbar
+wird — auf GitHub, nicht im Editor und nicht im Diff.
+
+Das Muster ist immer dasselbe: jemand erklärt eine Zeile der Tabelle, schreibt
+die Erklärung direkt darunter, und die Tabelle geht danach weiter.
+**Die Erklärung gehört unter die vollständige Tabelle.**
+
+Dafür gibt es jetzt [`scripts/docs_tablecheck.py`](#scriptsdocs_tablecheckpy-neu-2026-09-05).
+
+### Ü36 — Ein unescaptes `|` in einer Zelle verwirft Inhalt, und ein Test hielt den Fehler fest
+
+Ein `|` in einer Tabellenzelle ist für GitHub ein Spaltentrenner — **auch in
+Backticks**. Die Zeile wird gespalten, *bevor* Inline-Code geparst wird, und
+jede Zelle jenseits der Spaltenzahl der Kopfzeile wird **verworfen**. Der Text
+steht in der Datei und erscheint nie auf der Seite.
+
+Betroffen war eine ganze Klasse: Alternativ-Flags wie `[--buffer|-b]`,
+`[--replace|-r]`, `[--engine=<fzf|telescope>]`.
+
+**Die Ursache lag in `lib.nvim`,** in
+`bindings/usercmd/composer/docgen.lua`. Dort gibt es seit jeher eine
+`cell()`-Funktion, die genau dieses Escaping macht — angewandt wurde sie
+**nur auf die Beschreibungsspalte**. Die Invocation-Spalte, in der ein
+Alternativ-Flag als einziges überhaupt vorkommt, blieb roh.
+
+Kosten in den Repos, die den Generator nutzen:
+
+| Repo | Verlorene Zellen |
+|---|---|
+| `sandbox.nvim/docs/GENERATED_COMMANDS.md` | **16** Kommando-Beschreibungen |
+| `casedesk.nvim/docs/commands.md` | **11** |
+
+Dazu vier handgeschriebene Fälle (`lib.nvim/docs/modules.md`,
+`casedesk.nvim/CHEATSHEET.md`, `pickers.nvim/docs/BINDINGS.md`,
+`documentation.nvim/docs/languages.md`).
+
+**Zwei Specs sicherten die kaputte Schreibweise ab.** `composer_spec.lua`
+prüfte auf `[--replace|-r]` und `[--engine=<fzf|telescope>]` — also genau auf
+die unescapte Form. Ein Test, der das Gegenteil des Gewollten festschreibt,
+ist schlimmer als kein Test: er macht die Korrektur zum Regressionsverdacht.
+Beide Erwartungen sind auf `\|` umgestellt und sagen jetzt im Kommentar,
+warum. Die Notenzeile *unter* der Tabelle behält die lesbare Schreibweise —
+sie steht in keiner Zelle.
+
+> **Nebengewinn beim Neuerzeugen:** `sandbox.nvim`s generierte Datei war
+> außerdem **stale** — sie kannte die `workdir=`-Option von
+> `container exec`/`exec-once` nicht. Genau dafür ist eine generierte Datei
+> da; sie war nur seit dem Hinzufügen der Option nicht neu erzeugt worden.
+
+**Lehre:** Wo ein Generator eine Escaping-Funktion hat, ist die Frage nicht
+*ob* sie existiert, sondern **auf welche Felder sie angewandt wird**. Die
+Antwort steht nicht in ihrem Namen.
+
+### Ü37 — „Auf die Wahrheit zeigen" beseitigt keine Doppelung *(BND-01…03)*
+
+Der Auftrag lautete: die Cheatsheets unter `PersonelPlugins/BINDINGS/` sollen
+auf die `docs/BINDINGS.md` der Plugins **zeigen**, keine Doppelung mehr.
+Richtig — aber die naheliegende Umsetzung, das Cheatsheet durch einen Link zu
+ersetzen, hätte `:Bindings` unbrauchbar gemacht:
+
+| Route | Braucht vom Korpus |
+|---|---|
+| `search` | Volltext |
+| `browse` | geparste Tabellenzeilen |
+| `check` / `report` | die **dokumentierte Seite** des Drift-Vergleichs |
+| `status` | Korpus-Zahlen |
+
+Alle vier lesen Text, und ein Link ist keiner. Für 32 Plugins — die, an denen
+am meisten gearbeitet wird — wäre die Vergleichsseite verschwunden.
+
+> **Die Doppelung verschwindet dadurch, dass die Wahrheit gelesen wird, nicht
+> dadurch, dass auf sie gezeigt wird.**
+
+Der Korpus hat deshalb eine dritte Wurzel bekommen:
+`stdpath("data")/lazy/<plugin>/docs/BINDINGS.md`, bzw. den lokalen Checkout,
+wo es einen gibt. Maschinenunabhängig, weil die Personal-Plugins in der Spec
+als `"StefanBartl/<name>"` von GitHub kommen und nicht per `dir=`.
+
+**Der Strukturbruch dabei** war die eigentliche Arbeit: der Cheatsheet-Korpus
+ist *art-zuerst* (die Kategorie ist der Ordnername), die Repos sind
+*plugin-zuerst* (eine Datei, die Kategorie eine `##`-Überschrift darin). Und
+die Überschriften gehen über 32 Repos weit auseinander — gemessen:
+`## Keymaps` 20×, `## Autocommands` 19×, `## User commands` 15×,
+`## User Commands` 11×, `## Autocmds` 10×, dazu `## Usrcmds`,
+`## 1. Keymaps (`keymaps`)` und die zehn
+`## `:Sandbox <ding> <subcommand>`` von sandbox.nvim. Eine Liste exakter
+Titel wäre am Tag ihrer Niederschrift veraltet gewesen; es sind
+Teilstring-Regeln geworden, **mit `autocmd` vor `command`**, weil
+„Autocommands" sonst bei den Usercmds landet.
+
+Was auf keine der drei Arten passt, fällt heraus: `## Highlight groups`,
+`## Global variables`, `## Table of content`. Sie mitzunehmen hieße, dem
+Driftlauf Highlight-Gruppen als „dokumentiert, aber nicht live" zu melden.
+
+Gemessen headless: 32 Sheets aufgelöst, 1392 Personal-Zeilen (Keymaps 607,
+Usercmds 636, Autocmds 149), keine Zeile ohne Kategorie, Kategoriefilter
+deckungsgleich mit dem ungefilterten Lauf, keine doppelten Stämme.
+
+**Zwei Dinge, die beim Bauen dazukamen:**
+
+1. **Vorrang statt Union.** Solange die alten Cheatsheets liegen, beschreiben
+   zwei Dateien dasselbe Plugin. Beide zu lesen hätte jedes Binding doppelt
+   gezählt — im Status, im Driftbericht, als zwei identische Picker-Zeilen.
+   Das Repo-Sheet gewinnt; das Cheatsheet wird übergangen. Dabei fiel auf,
+   dass **genau ein** Cheatsheet nicht wie sein Plugin heißt
+   (`buffer-ctx.md` statt `buffer-ctx.nvim.md`) — ohne Suffix-Toleranz wäre
+   ausgerechnet dieses eine doppelt geblieben.
+2. **`:Bindings status` hätte gelogen.** Es zählte Dateien je Wurzel und
+   Zeilen je `scope` — und ein Repo-Sheet trägt denselben Scope wie ein
+   Personal-Cheatsheet. Die Dateizahl hätte neben einer Zeilenzahl gestanden,
+   die sie nicht erzeugt hat. Die Herkunft entscheidet jetzt der Pfad, und
+   es gibt einen dritten Block „Plugin-Docs".
+
+### Ü38 — `:BindingsPath` kopierte seit jeher einen Ordner, den es nicht gibt
+
+```lua
+local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")
+```
+
+`docs/NOTES/BINDINGS` existiert nicht. Die Wurzeln heißen
+`PersonelPlugins/BINDINGS` und `ExternPlugins/Bindings`. Das Kommando trug ein
+`--TEMP:` aus dem ersten Tag, sein eigenes Cheatsheet hielt den Fehler bereits
+als Beobachtung fest („Recorded as observed, not corrected here"), und der
+Modulkopf von `bindings_explorer` verwies seit dem Bau der `path`-Route
+darauf, dass sie dasselbe richtig macht.
+
+Die Telemetrie weist `<leader>BI` als **häufig gedrückt** aus (25×, 9 %) —
+das Kommando wurde also benutzt, und es hat jedes Mal einen unbrauchbaren
+Pfad in die Zwischenablage gelegt.
+
+`:BindingsPath` ist entfernt, `<leader>BI` läuft auf `:Bindings path`.
+
+> **Lehre:** Ein festgehaltener Befund ist kein behobener Befund. Diese
+> Beobachtung stand in der Doku, war korrekt, und hat nichts bewirkt — weil
+> „notiert" sich wie „erledigt" liest, wenn man die Zeile später wiederfindet.
+
+### Ü39 — Ein leerer Katalog sieht richtig aus, wenn die Registrierung an ihm vorbeigeht
+
+`cmdlog.nvim/docs/BINDINGS.md` behauptete „Autocmds. **None.** cmdlog registers
+no autocmds" — mit einer ausführlichen Begründung, *warum* der Katalog zweimal
+leergeräumt worden war. Die Begründung stimmte. Die Aussage nicht:
+`core/tracker.lua` registriert seit jeher ein `CmdlineLeave` in der Gruppe
+`cmdlog_tracker`, und die Options-Seite drei Verzeichnisebenen weiter
+beschrieb genau diesen Autocmd.
+
+Der blinde Fleck ist strukturell: der Tracker registriert in `core/`, **nicht**
+über `bindings/autocmds.lua`. Er war deshalb nie im Katalog — und das
+Leerräumen für ein anderes Feature sah folgerichtig aus. `require("cmdlog.bindings").catalog()`,
+das `BINDINGS.md` selbst als Laufzeit-Quelle empfiehlt, log damit ebenfalls.
+
+> **Ein Katalog, der nur enthält, was sich bei ihm anmeldet, belegt nichts über
+> das, was sich woanders anmeldet.** „Keine" ist eine Behauptung über den Code,
+> nicht über die Registry — sie ist gegen `nvim_create_autocmd`/`autocmd.create`
+> im ganzen Baum zu prüfen, nicht gegen die Katalogdatei.
+
+Gefunden hat es der Diff zweier getrennt gepflegter Seiten — [Ü20](#ü20--doppelt-gepflegte-referenzen-sind-ein-fundbüro-kein-befund)
+zum fünften Mal in Folge der ergiebigste Einzelschritt eines Durchgangs.
+
+### Ü40 — Ein Doku-Beispiel kann kaputt sein statt bloß veraltet
+
+`cmdlog.nvim/docs/ADD_PICKER.md` zeigte
+`require("cmdlog.ui.mappings").show_history_picker` als Einstieg. Das Modul ist
+seit einem Refactor eine **Factory** — der Ausdruck indiziert einen
+Funktionswert, der nicht existiert, und das Rezept wirft beim ersten Versuch.
+
+Das ist eine eigene Klasse neben „stale": ein veraltetes Beispiel tut das
+Falsche, ein kaputtes tut gar nichts. Beide lesen sich gleich, und **kein
+Prüfer sieht eines von beiden** — `DOC-12` ist nur zu prüfen, indem man
+Beispiel und echte Signatur nebeneinanderlegt.
+
+> Für die verbleibenden Repos: Jedes `ADD_*.md`/`EXTENDING.md`/`api.md`-Beispiel
+> einmal gegen die Signatur halten, die es aufruft. Das ist billiger als es
+> klingt und findet die Fälle, die ein Leser als Erstes ausprobiert.
+
+### Ü41 — Der Case-Check sah nur das letzte Pfadsegment ⚠️
+
+Gefunden beim `sandbox.nvim`-Durchgang, an einem Link auf `./tests/README.md`
+bei einem Verzeichnis, das `TESTS/` heißt. Der Dateiname war korrekt
+geschrieben, das **Verzeichnis** nicht — und `real_name_mismatch()` in
+`docs_linkcheck.py` verglich ausschließlich `os.path.split(path)[1]` gegen die
+echten Verzeichniseinträge. Ergebnis: grün.
+
+Das ist genau die Fehlerklasse, für die der Prüfer gebaut wurde, nur einen
+Pfadabschnitt weiter oben — und damit **Ü7 zum dritten Mal in eigener Sache**:
+nicht zu viele Befunde, sondern eine ganze Klasse, die still durchfällt.
+
+Wie still, zeigt `color_my_ascii.nvim`. Dort steht auf der Platte:
+
+```
+docs/FEATURES/     <- git kennt nur diesen
+docs/features/     <- dieselbe Sache, in Windows' Zweitschreibweise
+```
+
+`docs/WORKFLOW.md:155` verlinkte `features/COLORSCHEMES.md`. Lokal grün, auf
+GitHub 404 — in einem Repo, das seinen vollen Durchgang (`bfb74da`) bereits
+hinter sich hatte, samt Linkcheck.
+
+**Behoben:** `real_name_mismatch()` läuft jetzt über **jedes** Segment des
+relativen Pfades und meldet die korrigierte Schreibweise vollständig, statt
+nur den Dateinamen. Am bekannten Fall geeicht, dann über alle 32 Repos
+gefahren: **genau ein** weiterer Treffer, der eine oben, inzwischen behoben
+(`411e429`).
+
+> **Lehre:** Ein Prüfer, der eine Fehlerklasse kennt, prüft sie deshalb noch
+> nicht überall, wo sie auftreten kann. Die Frage ist nicht „prüft er auf
+> Case?", sondern „**auf welchem Teil der Eingabe** prüft er darauf?" —
+> dieselbe Frage, die bei [Ü36](#ü36--ein-unescaptes--in-einer-zelle-verwirft-inhalt-und-ein-test-hielt-den-fehler-fest)
+> die Escaping-Funktion des Composers entlarvt hat, die es gab und die auf die
+> falsche Spalte zeigte. Zweimal derselbe Fehler in zwei Werkzeugen, zwei Tage
+> auseinander.
+
+### Ü42 — Zwei Referenzen, die sich nicht widersprechen, können trotzdem beide falsch sein
+
+`sandbox.nvim` hatte drei Beschreibungen von `:checkhealth sandbox` — README,
+`FEATURES/ENGINES.md`, Vimdoc. **Alle drei falsch, jede anders:** das README
+nannte 2 von 5 Prüfungen, `ENGINES.md` behauptete eine lib.nvim/telescope-
+Prüfung, die es nie gegeben hat, und das Vimdoc beschrieb den Stand vor einem
+Commit.
+
+Ü20 sagt „doppelt gepflegte Referenzen gegeneinander diffen". Das reicht hier
+nicht: der Diff zweier Dokumente findet nur, worin sie sich *unterscheiden*.
+Wo alle Fassungen aus derselben veralteten Quelle abgeschrieben sind, sind sie
+untereinander konsistent und gemeinsam falsch.
+
+> **Ergänzung zu Ü20:** Der Diff der Dokumente gegeneinander findet
+> Widersprüche. Den *gemeinsamen* Irrtum findet nur der Diff gegen den
+> **Quelltext**. Bei `sandbox.nvim` war das der ergiebigere der beiden Läufe —
+> und dort fielen auch zwei user-sichtbare Strings, die entfernte Kommandos
+> nannten (`WslList…` in `health.lua`, `:Sandbox images pull` in `hover.lua`,
+> beide seit dem Umbau auf `:Sandbox` bzw. `image`).
+
+Nebenbefund derselben Art, und ein hübscher: **derselbe verrutschte Kommentar
+in zwei Dateien.** Beim Einfügen eines `hover`-Feldes zwischen
+`progress_style` und dessen Erklärung ist die Erklärung in `DEFAULTS.lua` auf
+`completion_cache_ttl_ms` gefallen und in `@types/init.lua` auf `hover` —
+zweimal dieselbe Bearbeitung, zweimal derselbe Schaden, findbar nur beim
+Lesen.
+
+### Ü43 — Betonung in Vimdoc ist keine Betonung, sondern eine Tag-Definition ⚠️
+
+In `doc/*.txt` ist `*wort*` kein Kursivsatz, sondern eine **Tag-Definition**.
+`:helptags` indiziert sie, und der Plugin-Manager ruft `:helptags` nach jeder
+Installation auf. Was als Betonung gemeint war, landet also auf jedem
+Rechner in `doc/tags` und verdeckt echte Neovim-Hilfethemen.
+
+Gefunden beim `images.nvim`-Durchgang (`:help no` und `:help file` gehörten
+danach dem Plugin). Über die Sammlung nachgemessen: **47 Vorkommen in 14
+Repos**, darunter
+
+`:help lists` · `:help local` · `:help mode` · `:help after` · `:help order` ·
+`:help and` · `:help not` · `:help same`
+
+— alles echte Vim-Hilfethemen. Behoben: Sternchen weg, Wortlaut unangetastet.
+Die Plugin-Namens-Tags (`*cmdlog*`, `*wkddap*`, `*sandbox*`) bleiben; das ist
+der eine Fall, in dem ein nacktes Wort als Tag richtig ist.
+
+**Die eigentliche Lehre steckt im ersten Anlauf, der falsch war.** Ich hatte
+über die Prosa gegrept — jedes `*wort*`, das Text hinter sich hat, ist
+Betonung — und 44 Stellen umgeschrieben. Dann fiel auf, dass `images.nvim`s
+`doc/tags` das Wort `module` gar nicht enthielt, obwohl `*module*` im Text
+stand. Der Grund: **ein Tag muss beidseitig von Leerraum begrenzt sein.**
+`*module*,` — mit Komma am schließenden Stern — hat `:helptags` nie indiziert.
+Ein Teil meiner Änderungen betraf also Text, der nicht kaputt war.
+
+Zurückgesetzt und neu gemacht, diesmal **gegen `doc/tags` statt gegen ein
+Muster**: die erzeugte Tag-Datei sagt, welche Wörter tatsächlich Tags wurden.
+47 statt 44, 0 verfehlt, und keine Zeile angefasst, die Vim ohnehin ignoriert.
+
+> **Lehre — dieselbe wie [Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen),
+> nur in eigener Sache:** Wenn ein Werkzeug die Antwort bereits erzeugt, ist
+> das Muster über die Eingabe die schlechtere Frage. `doc/tags` *ist* das
+> Ergebnis von `:helptags` — es zu lesen kostet nichts und rät nichts.
+
+Zwei Nebenbefunde derselben Klasse, beide **kein** Befund und deshalb
+festgehalten: `replacer.nvim`s `" *item*  within the selected lines` zeigt die
+*Ausgabe* eines `:Surround`-Beispiels, und `:helptags` indiziert es trotz
+Leerraum-Begrenzung nicht. Und `*item*` in Backticks zu setzen wäre die
+Reparatur eines Nicht-Problems gewesen — beinahe passiert.
+
+### Ü44 — Jede zusätzliche Kopie driftet in ihre *eigene* Richtung
+
+`images.nvim` hatte **drei** getrennt gepflegte Kommandokataloge: die
+README-Tabelle, `docs/BINDINGS.md` und `doc/images.txt`. Jeder hatte ein Loch,
+und **jeder ein anderes**:
+
+| Fassung | Fehlt |
+|---|---|
+| README-Tabelle | `scale`, `optimise`, `convert`, `ocr` |
+| `BINDINGS.md` | `debug` |
+| `doc/images.txt` | `calibrate`, `debug` |
+
+`:Image debug` stand in **keiner** der drei.
+
+Ü17 sagt „`doc/*.txt` driftet mit". Die schärfere Form ist: nicht alle
+Kopien driften in dieselbe Richtung, sondern jede in ihre eigene. Ein
+Paardiff findet deshalb höchstens zwei Drittel — belastbar ist nur der
+Abgleich **aller** Fassungen gegen den Quelltext, so wie
+[Ü42](#ü42--zwei-referenzen-die-sich-nicht-widersprechen-können-trotzdem-beide-falsch-sein)
+es für den gemeinsamen Irrtum verlangt.
+
+### Ü45 — Eine Ordinalzahl in Prosa ist eine Invariante ohne Prüfer
+
+`images.nvim` schrieb über acht Stellen verteilt „die **dritte** deliberate
+exception" bzw. „die vierte" — drei Lua-Dateien, vier Vimdoc-Stellen, das
+README. Seit `scale`/`optimise`/`convert` dazukamen, war die Zahl falsch, und
+dieselbe Datei sagte an anderer Stelle korrekt, dass jene drei ImageMagick
+„without a fallback" brauchen.
+
+> Wer „die dritte Ausnahme" schreibt, gibt eine Konsistenzzusage über den
+> ganzen Baum ab und stellt niemanden ab, der sie prüft. Der Fix ist nicht,
+> die Zahl zu korrigieren, sondern sie zu streichen und **eine** Liste zu
+> benennen, auf die alle Stellen zeigen.
+
+**Verwandter Fall aus demselben Repo:** eine Dependency, die das Plugin nie
+aufruft. `chafa` stand als „the terminal-image fallback renderer" in
+`installation.md`, im README und in `FEATURES/INTEGRATIONS.md` — tatsächlich
+zeichnet `images/ascii.lua` die Blockgrafik selbst über Extmarks, und `chafa`
+kommt im Quellbaum nur in zwei Kommentaren vor, als *Vergleich*. Eine
+Formulierung ist von „wie chafa" zu „braucht chafa" gerutscht. Kein Prüfer
+sieht das: der Werkzeugname existiert, die Prosa ist einwandfrei, kein Link
+ist tot.
+
+> ⚠️ **Offen:** `images.nvim/docs/install.json` deklariert `chafa` weiterhin.
+> `:Lib deps show images.nvim` meldet es damit als fehlend und
+> `:Lib deps install` bietet ein Paket an, das nichts freischaltet. Die Datei
+> gehört dem deps-Durchgang (Ü9) und ist unangetastet geblieben — **eine
+> Zeile für jenen Lauf.**
+
+### Ü46 — Ein falsches Beispiel, das Erfolg meldet, ist schlimmer als eines, das wirft ⚠️
+
+[Ü40](#ü40--ein-doku-beispiel-kann-kaputt-sein-statt-bloß-veraltet) unterschied
+zwei Fälle: ein veraltetes Beispiel tut das Falsche, ein kaputtes tut gar
+nichts. `github_stats.nvim` liefert den dritten und schlechtesten.
+
+Date-Presets werden an **genau einer** Stelle aufgelöst,
+`analytics.parse_time_range`. Die Completion bietet sie in drei Slots an, die
+dort nie ankommen:
+
+| Aufrufer | Löst auf? |
+|---|---|
+| Dashboard-`T`-Prompt | ja, immer |
+| `:GithubStats chart`, Arg 3 | **nur** wenn der Name `last` enthält oder wie `Nd` aussieht |
+| `:GithubStats show` | **nie** — das Argument wird `start_date`, dort greift nur `YYYY-MM-DD` |
+| `:GithubStats diff` | **nie** — `parse_period` nimmt `YYYY-MM`/`YYYY` |
+
+Wo nicht aufgelöst wird, scheitert der Name am Datums-Regex, `parse_date`
+liefert `nil`, die Grenze wird übersprungen — das Ergebnis ist **kein Filter**.
+`:GithubStats show user/repo clones this_month` meldet die volle Historie und
+sieht dabei aus, als hätte es funktioniert. **Vier Dokumente** behaupteten das
+Gegenteil, einschließlich *jedes* Usage-Beispiels im Preset-Guide.
+
+> Kein Prüfer der Welt findet das. Es gibt keinen toten Link, keinen falschen
+> Anker, keine kaputte Tabelle und keine Ausnahme beim Ausführen — nur eine
+> Zahl, die zu groß ist. Gefunden wurde es, weil der Durchgang der Behauptung
+> nicht geglaubt und `show.lua` gelesen hat.
+
+**Nicht behoben, und das ist richtig so:** der Fix gehört in `show.lua`/
+`chart.lua` (das Argument durch `date_presets.resolve` schicken) oder in die
+Completion (Presets an Slots nicht anbieten, an denen sie wirkungslos sind).
+Eine Doku-Session ändert kein Verhalten. Die Doku sagt jetzt an vier Stellen
+ausdrücklich, was gilt. → **Autorenentscheidung.**
+
+### Ü47 — Ü42 erwischt auch den, der gerade aufräumt
+
+Beim Überarbeiten von `cross-platform.md` hat der Durchgang den Satz „curl
+detection via PowerShell's `Get-Command`" zunächst **in die neue Fassung
+übernommen** und erst danach gegen
+`lib.nvim/lua/lib/nvim/cross/executable/init.lua` gehalten: es ist
+`vim.fn.executable()`, memoisiert, ohne jede Plattform-Verzweigung. Beide
+Hälften der alten Tabelle — Windows *und* POSIX — waren falsch.
+
+Ohne den Blick in den Quelltext wäre der Fehler in eine frisch überarbeitete
+Datei **neu hineingeschrieben** worden, mit dem Anschein, geprüft worden zu
+sein.
+
+> **Beim Umschreiben ist jeder übernommene Satz eine neue Behauptung.** Was aus
+> der alten Fassung mitwandert, ist nicht deshalb geprüft, weil die Datei
+> insgesamt bearbeitet wurde. Das ist die praktische Kehrseite von
+> [Ü42](#ü42--zwei-referenzen-die-sich-nicht-widersprechen-können-trotzdem-beide-falsch-sein):
+> dort waren drei Fassungen gemeinsam falsch, hier wäre die vierte dazugekommen.
+
+Nebenbefund, und [Ü39](#ü39--ein-leerer-katalog-sieht-richtig-aus-wenn-die-registrierung-an-ihm-vorbeigeht)
+zum zweiten Mal: `VimResized` ist in `dashboard/layout.lua` registriert, also
+außerhalb von `bindings/`, und stand deshalb in **keiner** Bindings-Tabelle.
+Zweimal dasselbe Muster in zwei Repos — die Regel ist also nicht „prüfe den
+Katalog", sondern **`grep` über `nvim_create_autocmd` im ganzen Baum**.
+
+### Ü48 — Ein Dateiname kann aus einem *maschinellen* Grund feststehen
+
+Bei `pickers.nvim` stellte sich die Frage, ob `CHEATSHEET.md` groß bleiben darf,
+weil `BINDINGS.md` daneben auch groß ist. Die Antwort ist nein, und die
+Begründung ist der eigentliche Ertrag:
+
+> **`BINDINGS.md` ist nicht groß, weil es ein Meta-Dokument wäre, sondern weil
+> `:Bindings` es seit [BND-01](#ü37--auf-die-wahrheit-zeigen-beseitigt-keine-doppelung-bnd-0103)
+> unter genau diesem Pfad in allen 32 Repos liest.** Seine Schreibweise ist ein
+> **Protokoll, keine Gattung** — und ein Protokoll vererbt sich nicht an die
+> Nachbardatei.
+
+Befund B ist eine **Gattungsregel**: Themen-Dokumente klein, Meta-Dokumente
+groß. Ein Name, der aus einem maschinellen Grund feststeht — weil ein Kommando,
+ein Generator oder eine `.gitignore` ihn liest —, fällt nicht unter sie und
+darf nicht als Präzedenz dienen. Dieselbe Logik hat `sandbox.nvim`
+`GENERATED_COMMANDS.md` groß gelassen (der Pfad steht in `GENERATED_DOCS_PATH`)
+und `github_stats.nvim` den Ordner `configurations/` im Plural belassen (weil
+[Ü21](#ü21--die-vier-restmeldungen-waren-vier-verschiedene-fehlerklassen) tags
+zuvor genau in die Gegenrichtung repariert hatte).
+
+### Ü49 — `:help <plugin>` führte in 15 Repos nirgendwohin
+
+Nebenbefund aus `pickers.nvim`: `:help pickers` fand nichts, es gab nur
+`*pickers.txt*`. Über die Sammlung nachgemessen — und die Mehrheit hatte längst
+eine Antwort:
+
+| | Repos |
+|---|---|
+| `:help <name>.nvim` funktioniert | **16** |
+| kein Einstieg außer dem Dateinamen | **16** |
+
+`fileops.txt` zeigt die Form: der Tag steht rechtsbündig auf der Titelzeile.
+Nachgezogen in allen 16 (`markdown.nvim` nachträglich, es lag beim Sweep in
+einem parallelen Durchgang).
+
+**Warum `<name>.nvim` und nicht der nackte Name** — das ist die Stelle, an der
+[Ü43](#ü43--betonung-in-vimdoc-ist-keine-betonung-sondern-eine-tag-definition-️)
+unmittelbar weiterwirkt: `:help lsp`, `:help markdown`, `:help images` und
+`:help language` würden jeweils ein Wort beanspruchen, das Neovims eigene Hilfe
+braucht. Genau der Fehler, der gerade in 14 Repos beseitigt wurde. Das
+`.nvim`-Suffix kann nicht kollidieren.
+
+> Die drei Repos mit nacktem Tag (`cmdlog`, `pickers`, `sandbox`) bleiben, wie
+> sie sind — die Namen sind unterscheidbar genug und ausgeliefert. Für neue
+> gilt die Suffix-Form.
+
+### Ü50 — Vier gleichlautende Fassungen sind nicht besser als zwei widersprüchliche
+
+`pickers.nvim` beschrieb `:checkhealth pickers` in **fünf** Dateien. Keine zwei
+widersprachen sich — alle waren nach demselben Stand geschrieben, und
+`health.lua` hatte seither zwei Abschnitte dazubekommen. `FEATURES/UI.md`
+nannte sogar eine Zahl („five sections"), die den Irrtum konservierte.
+
+Das ist [Ü42](#ü42--zwei-referenzen-die-sich-nicht-widersprechen-können-trotzdem-beide-falsch-sein)
+mit fünf statt drei Kopien, verschränkt mit
+[Ü45](#ü45--eine-ordinalzahl-in-prosa-ist-eine-invariante-ohne-prüfer): **die
+Zahl macht den gemeinsamen Irrtum unsichtbar, weil sie konsistent falsch ist.**
+
+Aus demselben Durchgang, dieselbe Mechanik von der anderen Seite: „~40 native
+pickers" im README bei tatsächlich **52**. Die drei Stellen *näher* an der
+Liste waren richtig — die Zahl driftet dort zuerst, wo sie am weitesten von
+dem entfernt steht, was sie zählt. Der Fix war nicht, sie zu korrigieren,
+sondern sie **einmal** hinzuschreiben, direkt über die Matrix, die sie zählt,
+und überall sonst zu verlinken.
+
+### Ü51 — `architecture.md` veraltet lautlos, weil niemand neue Dateien dagegen hält
+
+Kurzer Vorabblick auf `markdown.nvim` (noch nicht in Welle 4 an der Reihe):
+`git ls-files 'lua/**/*.lua'` gegen `docs/architecture.md` gehalten findet
+**15 Module, die die Seite nicht kennt** — vollständige Liste im
+[Handover-Punkt](#️-handover-punkt--sitzungslimit-2026-09-05-kurz-vor-1250-europeberlin)
+oben. Keins davon ist neu im Sinne von „gestern geschrieben"; sie sind über
+mehrere Feature-Commits entstanden, `architecture.md` aber seit seiner
+Anlage nicht mitgewachsen.
+
+Das ist [Ü13](#ü13--der-doku-bestand-endet-nicht-bei-docs)s Gegenstück:
+dort fehlte der Blick über `docs/` hinaus, hier existiert die Seite, die
+`lua/` beschreiben soll, und hält trotzdem nicht mit ihm Schritt — weil
+nichts sie dazu zwingt. Kein Linkchecker, kein Anchor-, kein Tabellen-Prüfer
+sieht das: die Seite ist in sich vollständig und korrekt, sie zählt nur zu
+wenig auf.
+
+> Für `markdown.nvim`s vollen Durchgang: `architecture.md` gegen
+> `git ls-files 'lua/**/*.lua'` abgleichen, nicht gegen das eigene
+> Inhaltsverzeichnis. Kein eigener `DOC-ID`-Kandidat — das ist `DOC-01`
+> (Pflichtdatei vorhanden) zu Ende gedacht: vorhanden heißt hier auch
+> vollständig, nicht nur existent.
+
+### Ü52 — Eine vollständige Reference kann drei ganze Config-Abschnitte auslassen
+
+`markdown.nvim`s voller Durchgang (2026-09-05) lief an einem Repo, das jeden
+automatisierten Prüfer bereits mit 0 Befunden bestand — `docs_linkcheck.py`,
+`docs_anchorcheck.py`, `docs_tablecheck.py` waren vor **und** nach dem
+Durchgang bei 0/0/0. Trotzdem lagen vier echte Lücken offen, alle vom selben
+Typ wie [Ü39](#ü39--ein-leerer-katalog-sieht-richtig-aus-wenn-die-registrierung-an-ihm-vorbeigeht)/[Ü47](#ü47--ü42-erwischt-auch-den-der-gerade-aufräumt):
+eine als vollständig behauptete Liste, gegen die nie ein Werkzeug gehalten
+wurde, weil kein Prüfer „ist diese Aufzählung vollständig" fragen kann, nur
+„sind die Links darin gültig".
+
+- `docs/configuration.md` heißt „Full reference with defaults" und listet
+  ein komplettes `setup({...})` — dem **drei von neunzehn** Top-Level-Keys aus
+  `DEFAULTS.lua` fehlten: `hover`, `menu`, `underline_headings`. Gefunden mit
+  einem Zweizeiler (`grep` der Top-Level-Keys aus beiden Dateien, `comm -23`),
+  keine Handprüfung.
+- `docs/BINDINGS.md`/`.lua`, deren eigener Kopf sagt „the source of truth is
+  `lua/markdown/bindings/`… A change there must be reflected here", hatten
+  **vier von neun** Autocmd-Gruppen nicht — darunter `MarkdownNvimLinksSanitize`,
+  die **default-on** auf jedem Save Link-Ziele umschreibt. Wer nur die Tabelle
+  liest, hat keine Ahnung, dass das passiert.
+- Dieselben zwei Dateien kannten bei `:Markdown links` nur `show`/`create`,
+  nicht `check`/`sanitize` — die `docs/commands.md` schon vollständig hatte.
+  Zwei Referenzdokumente für dieselbe Sache, eine davon unvollständig, ist
+  [Ü20](#ü20--doppelt-gepflegte-referenzen-sind-ein-fundbüro-kein-befund)
+  in Reinform.
+- `docs/FEATURES/LINKS-AND-REFERENCES.md` hat einen eigenen Abschnitt für
+  jedes `links.*`-Verhalten — außer für `sanitize`, das einzige davon, das
+  ohne Zutun läuft.
+
+**Und ein Ü22-Fall mit Zähnen statt nur einer falschen Zahl:** README/Badge/
+`installation.md`/`health.lua` sagten unisono „Neovim 0.9+". Grep über
+`vim.uv`/`vim.system` fand `commands/markdown_links.lua`s `local uv = vim.uv`
+(ungeguarded, im Gegensatz zu acht Schwesterdateien) — ein **echter Crash**
+auf 0.9 bei `:Markdown links create`, nicht nur eine Doku-Ungenauigkeit — und
+`core/file_refs.lua`s `vim.system(...)`-Aufrufe, unconditional sobald `rg`
+gefunden wird, für die es **keinen** Fallback gibt (anders als
+`util/platform.lua`s eigener `vim.system`-Aufruf, der sauber auf `jobstart`
+zurückfällt). Der Uv-Fall war ein Einzeiler und wurde **im Code** behoben
+(`65f47ec`) — dieselbe Ausnahme wie `debugging.nvim`s `DEFAULTS.lua`-Nachtrag:
+trivial, verhaltensgleich auf 0.10+, stellt nur die überall sonst geltende
+Absicht wieder her. Der `vim.system`-Fall ist echte neue Fallback-Logik und
+blieb Doku (Floor auf 0.10+, an allen vier Stellen).
+
+> **Lehre:** „0 Befunde" aus allen drei Prüfern heißt „keine kaputten Links,
+> Anker, Tabellen" — nicht „nichts fehlt". Eine Reference-Datei, die sich
+> selbst als vollständig bezeichnet, braucht eine Gegenprobe, die *zählt*:
+> Top-Level-Keys beider Seiten grep-en und `comm -23`, Autocmd-Gruppen aus
+> `bindings/autocmds.lua` gegen die Cheatsheet-Tabelle, Dispatcher-`subcommands`-
+> Tabelle gegen die Kommandoliste. Jede dieser drei Gegenproben ist ein
+> Zweizeiler und keine hätte ein Linkchecker je finden können.
+
+### Ü53 — Ein Dokument kann seine eigene Kopfzeile widerlegen
+
+`casedesk.nvim/docs/REQUESTS.md` erklärt sich selbst: „the unedited request
+list… kept verbatim… Entries here are not tracked or ticked off." Die ersten
+zwei Abschnitte (`Praxis-Feedback`, `new`) stimmen damit exakt überein —
+unredigiertes, tippfehlerreiches Deutsch. Die zwei Abschnitte darunter
+(`Offen`, `Erledigt`) sind das Gegenteil: sortiert nach Aufwand, mit
+Checkboxen, Daten, Aufwandsschätzungen — ein zweiter, aktiv gepflegter
+Tracker, der `ROADMAP.md`s Beschreibung fast wörtlich wiederholt („Sortiert
+nach geschätztem Aufwand, billigste/kleinste zuerst" gegen ROADMAP.md
+„roughly by effort, cheapest first").
+
+**Das ist [Ü32](#ü32--was-auf-ein-dokument-zeigt-entscheidet-was-es-ist-nicht-sein-name)
+von der anderen Seite:** dort entschied nicht der Name, sondern was auf ein
+Dokument zeigt; hier widerlegt nicht der Name die Kopfzeile, sondern das,
+was *unter* der Kopfzeile tatsächlich steht. Eine Selbstbeschreibung ist eine
+Behauptung wie jede andere in Ü22/Ü42/Ü46 — sie war beim Schreiben wahr und
+ist es an dieser Stelle nicht mehr, weil der Abschnitt darunter organisch
+über seinen ursprünglichen Zweck hinausgewachsen ist.
+
+**Nicht zusammengeführt.** Welche der beiden Kopien (`REQUESTS.md/Offen`
+oder `ROADMAP.md`) autoritativ ist, ist eine Inhaltsentscheidung — dieselbe
+Grenze wie beim `vim.uv or vim.loop`-Fix in markdown.nvim: trivial und
+verhaltenserhaltend wird im Doku-Durchgang mitgemacht, eine Zusammenführung
+zweier lebendiger Roadmaps nicht. Die Kopfzeile sagt jetzt ausdrücklich, dass
+und warum sie an dieser Stelle nicht mehr stimmt — die nächste Sitzung findet
+den Widerspruch also dokumentiert vor, statt ihn erneut aufzudecken.
+
+Im selben Repo, klarer Fall statt Grenzfall: `docs/HANDOVER.md` (Datum,
+private Pfade, ein Kollegenname, „liest diese Datei zuerst, wer eine neue
+Sitzung startet") und `docs/PTO.md` (Kopfzeile sagt selbst „Konzept, nichts
+gebaut") waren beide zweifelsfrei `DOC-16` und sind nach
+`wkdbook-myplugins/casedesk.nvim/` verschoben — mit Herkunftsvermerk und
+allen sechs eingehenden Verweisen umgebogen statt tot gelassen.
+
+### Ü54 — Ein Feature, das nachträglich in 32 `DEFAULTS.lua` gelandet ist, fehlt in 32 `configuration.md` gleich mit
+
+Die letzten neun Repos der Welle 4 (`dap`, `diff`, `emojis`, `filetree`,
+`insights`, `language`, `open`, `pdfport`, `recommender`) liefen deutlich
+schneller als die vorherigen — kleinere, bereits vorsortierte Lücken statt
+struktureller Umbauten. Eine Lücke kam dabei **vier Mal unabhängig**:
+`deps_popup` (der einmalige „welche CLI-Tools will dieses Plugin"-Popup aus
+`lib.nvim.deps`) steht in `filetree.nvim`, `insights.nvim`, `language.nvim`
+und `pdfport.nvim`s `DEFAULTS.lua`, wird im jeweiligen Root-README einmal
+erwähnt — und fehlt in allen vieren aus `configuration.md`s „vollständiger"
+Optionsliste.
+
+**Das ist kein Zufall, sondern ein Zeitstempel.** Der deps-Durchgang aus
+[Ü9](#ü9--ein-zweiter-durchgang-läuft-parallel-und-hält-sechs-repos-besetzt-️)
+hat `deps_popup` flächendeckend nachgerüstet, nachdem `configuration.md`
+für die meisten Repos schon geschrieben war — eine Option, die *nach* der
+Doku-Referenz dazukam, kann in ihr nicht stehen, ohne dass irgendjemand sie
+nachträgt. Derselbe Mechanismus, den [Ü22](#ü22--was-die-doku-über-die-umgebung-behauptet-prüft-niemand-️)
+für Versionszusagen beschreibt (die Doku war richtig, als sie geschrieben
+wurde, und der Code ist seitdem weitergelaufen), hier auf eine einzelne
+Config-Option angewandt statt auf eine Plattformzusage.
+
+**Praktische Folge für die verbleibenden/zukünftigen Durchgänge:** `grep -rn
+"deps_popup" lua/*/config/DEFAULTS.lua` lohnt sich als Vorab-Check über die
+ganze Sammlung, bevor man Repo für Repo einzeln danach sucht — vier Treffer
+aus neun geprüften Repos ist eine hohe Trefferquote für einen einzigen Grep.
+
+**Zweiter, kleinerer Fund derselben Sitzung:** drei der neun Repos
+(`insights.nvim` 389 Zeilen, `language.nvim` 277 Zeilen, `pdfport.nvim` 405
+Zeilen `health.lua`) hatten überhaupt keine `docs/health.md`, nur einen
+Einzeiler in `installation.md`/`commands.md` — derselbe Befund wie bei
+`buffer-ctx.nvim` weiter oben in dieser Welle, hier aber gehäuft. Eine
+`health.lua` über 200 Zeilen mit mehr als fünf `start()`-Sektionen ist damit
+ein brauchbarer Schwellenwert, ab dem sich eine eigene Seite lohnt — darunter
+(wie bei `sessions.nvim`, 163 Zeilen/4 Sektionen) reicht ein guter Absatz in
+`troubleshooting.md`/`installation.md`.
+
 ---
 
 ## Abweichungen vom Standard
@@ -882,6 +1577,8 @@ Pythons `os.path.exists` erbt das. Ein Link `[x](COMMANDS.md)` auf eine Datei
 deshalb gegen die echten Verzeichniseinträge. **Pflichtlauf nach jedem Rename**
 (`DOC-02` produziert genau diesen Fehler).
 
+**Am 2026-09-05 verschärft:** die Prüfung lief nur über den *Dateinamen*. Sie läuft jetzt über **jedes Segment** des Pfades und meldet die korrigierte Schreibweise vollständig — ein Link auf `features/X.md` bei `FEATURES/` auf der Platte war vorher grün. Siehe Ü41.
+
 Bereits gefunden: `github_stats.nvim/docs/configurations/USER-DEFINED-DATE-PRESETS.md`
 → `../USERCOMMANDS.md`, auf der Platte `usercommands.md`.
 
@@ -923,6 +1620,47 @@ Die vier Slug-Regeln stehen im Kopf des Skripts, jede mit dem Falschbefund
 daneben, den ihr Fehlen erzeugt hat — siehe
 [Ü28](#ü28--der-prüfer-hatte-drei-fehler-und-jeder-erzeugte-eine-welle-falschbefunde).
 Zwei davon sind an gerenderten GitHub-Seiten gemessen, nicht hergeleitet.
+
+### `scripts/docs_tablecheck.py` (neu, 2026-09-05)
+
+```bash
+python scripts/docs_tablecheck.py E:/repos/<repo>     # eines
+python scripts/docs_tablecheck.py E:/repos/*.nvim     # alle
+```
+
+Der dritte Prüfer, entstanden aus [Ü35](#ü35--eine-tabelle-kann-mitten-im-dokument-aufhören-eine-zu-sein)
+und [Ü36](#ü36--ein-unescaptes--in-einer-zelle-verwirft-inhalt-und-ein-test-hielt-den-fehler-fest).
+Beide Fehler sind **strukturell**: der Link löst auf, der Anker stimmt, die
+Datei liest sich richtig — und die gerenderte Seite zeigt etwas anderes.
+
+| Klasse | Bedeutung | Bricht den Lauf |
+|---|---|---|
+| `FRAGMENT` | zwei oder mehr Tabellenzeilen ohne Kopfzeile darüber — sie rendern als Fließtext | ja |
+| `OVERFLOW` | mehr Zellen als die Kopfzeile Spalten hat, praktisch immer ein unescaptes `\|` — der Überschuss wird verworfen | ja |
+| `SHORT` | weniger Zellen als die Kopfzeile — Markdown füllt auf, nichts geht verloren | **nein** |
+
+`SHORT` bricht bewusst nicht ab. Ein Prüfer, der auf Kosmetik rot wird, wird
+nach dem dritten Mal nicht mehr aufgerufen — und die Klasse, die Inhalt
+kostet, verschwindet dann in seinem Rauschen. Das ist [Ü7](#ü7--naive-link-checks-bestehen-zu-80--aus-rauschen)
+mit anderem Vorzeichen: nicht zu viele Befunde, sondern Befunde falschen
+Gewichts.
+
+**Vor dem Flächeneinsatz geeicht** (Ü7): gegen den bekannten Fall aus
+`cascade.nvim` — die Fassung vor der Reparatur meldet die acht Zeilen, die
+Fassung danach meldet nichts.
+
+Fenced Code wird komplett übersprungen; ein `|` in einem Shell-Beispiel oder
+einem ASCII-Diagramm ist keine Tabellenzeile, und das war in der ersten
+Fassung die gesamte Falschbefund-Quote.
+
+**Grenzen:** erkennt eine *unterbrochene* Tabelle, nicht eine *inhaltlich
+falsche*. Und die Kopfzeile selbst wird nicht geprüft — steht dort eine
+Spalte zu wenig, ist jede Datenzeile `OVERFLOW` statt die Kopfzeile falsch.
+
+**Stand nach dem ersten Flächenlauf:** 3 `FRAGMENT` und 2 `OVERFLOW` über
+alle 32 Repos, dazu 27 `OVERFLOW` in zwei generierten Dateien. Alle behoben.
+Es bleibt **ein** `SHORT` in `lib.nvim/lua/lib/nvim/buf_win_tab/Command-List.md`
+— eine Zeile ohne die letzte, leere Zelle. Kosmetik, bewusst gelassen.
 
 ### Bestandsprüfer: `:DocMap` kann das teilweise auch
 

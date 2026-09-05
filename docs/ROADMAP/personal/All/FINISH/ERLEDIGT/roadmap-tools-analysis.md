@@ -32,14 +32,32 @@ native `docmap-desktop`), not just the two named in the original wording.
 
 | Script | Verdict | Home | Status |
 |---|---|---|---|
-| `keymap_command_audit.lua` | **Yes** | lib.nvim, real usercmd | ✅ integrated — `bindings/audit.lua`, `:LibBindingsAudit` |
-| `keymap_command_gaps.py` | **Yes** — folded into the above | lib.nvim, same command | ✅ integrated — `:LibBindingsAuditGaps` |
+| `keymap_command_audit.lua` | **Yes** | lib.nvim, real usercmd | ⚠️ module exists, command doesn't — see Nachtrag |
+| `keymap_command_gaps.py` | **Yes** — folded into the above | lib.nvim, same command | ⚠️ module exists, command doesn't — see Nachtrag |
 | `autocmd_dispatch_bench.lua` | **Yes** | lib.nvim, dev script | ✅ integrated — `scripts/bench_dispatcher.lua` |
-| `duplicate_functions.py` | **Yes** — corrected below | lib.nvim, real usercmd | ✅ integrated — `dev/duplicates.lua`, `:LibDuplicateScan` |
+| `duplicate_functions.py` | **Yes** — corrected below | lib.nvim, real usercmd | ⚠️ module exists, command doesn't — see Nachtrag |
 | `magic_numbers.py` | **Yes** | insights.nvim, new analysis mode | ✅ integrated — `:Insights smells` |
 | `platform_branches.py` | **Dropped** — no repo gets it | none | n/a |
 | `hardcoded_constants.py` | **Yes** | insights.nvim, same command | ✅ integrated — `:Insights smells` |
 | `run_all_tests.sh` | No natural plugin home | stays a personal script | no action needed |
+
+> **Nachtrag 2026-09-05, aus dem P5-Wiederholungslauf
+> ([`docs/ROADMAP/handovers/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](../../../../handovers/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)):**
+> „✅ integrated" war zu optimistisch für die drei lib.nvim-Kommandos. Die
+> Module (`bindings/audit.lua`, `dev/duplicates.lua`) sind real, korrekt und
+> funktionieren beim direkten `require(...)`-Aufruf — aber `M.create_usercmd()`
+> wird **in keiner Config aufgerufen**, weder in `nvim-config` noch sonstwo
+> (`grep -rn "bindings.audit\|dev.duplicates" lua/` über die ganze Config: 0
+> Treffer). `:LibBindingsAudit`, `:LibBindingsAuditGaps` und `:LibDuplicateScan`
+> existieren also **nicht** als tippbare Kommandos — der P5-Lauf musste die
+> zugrundeliegenden Lua-Funktionen (`audit.lines()`, `audit.gap_lines()`,
+> `duplicates.lines()`) direkt aus einem Skript aufrufen, weil die Befehle
+> selbst fehlten. Fehlender Baustein: ein Aufruf von
+> `require("lib.nvim.bindings.audit").create_usercmd()` /
+> `require("lib.nvim.dev.duplicates").create_usercmd()` irgendwo in
+> `nvim-config/lua/plugins/personal/init.lua` (dort, wo `lib.nvim`
+> konfiguriert wird) — genau die Stelle, die die Modul-eigene Doku selbst
+> verlangt: *„Put this call in your own config, not in a library"*.
 
 **Correction (after first pass):** `duplicate_functions.py` was originally
 filed under insights.nvim below, reasoned as "static analysis over a
