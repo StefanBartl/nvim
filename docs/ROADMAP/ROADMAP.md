@@ -1,3 +1,4 @@
+
 # Roadmap
 
 ## Table of content
@@ -16,7 +17,7 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:45       |   100% / 49%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     00:40       |    05% / 13%     | X
+| **work** |   20. Sept    |   Sa., 06:00    |     00:40       |    77% / 18%     | X
 | **free** | 21. Juli 2027 |   So., 09:00    |     21:40       |    56% / 89%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
