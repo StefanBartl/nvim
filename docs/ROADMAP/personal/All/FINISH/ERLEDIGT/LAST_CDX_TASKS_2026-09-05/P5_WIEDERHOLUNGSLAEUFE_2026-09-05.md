@@ -5,9 +5,9 @@ Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
 jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben/acht
 übrigen Regel-Familien, ~250 Punkte, Handprüfung) ist **angelaufen** — die
-`SEC-*`-Welle (24 Regeln) läuft über 26 von 32 Repos, siehe der Abschnitt
+`SEC-*`-Welle (24 Regeln) läuft über 27 von 32 Repos, siehe der Abschnitt
 „8.2b — SEC-* Welle" am Ende. Die übrigen sieben Familien und die
-verbleibenden 5 Repos sind weiterhin offen.
+verbleibenden 4 Repos sind weiterhin offen.
 
 Alle vier Werkzeuge liefen **nicht** über die Usercmds aus dem Standard
 (`:LibDuplicateScan`, `:LibBindingsAudit`, `:LibBindingsAuditGaps`) — diese
@@ -360,8 +360,9 @@ Repos.
 | pickers.nvim | 1 — SEC-03, `engines/fzf.lua`s `live_grep` shellescapte Glob-Excludes und Roots konsequent beim Zusammenbau des `rg_opts`-Shell-Strings, aber `additional_args` wurde roh per `list_extend` angehängt — die eine Lücke in einem sonst durchgängigen Muster. Aktuell nur mit quellcode-fixer Source-Config befüllt (`sources/drives.lua`), also nicht ausnutzbar, aber inkonsistent zum Rest derselben Datei | `E:\repos\pickers.nvim` |
 | recommender.nvim | 0 — kein Prozess-Spawn, kein Netzwerk, keine Config-/Snapshot-Deserialisierung im ganzen Repo; reiner Text-Analyzer über Lua-Quelldateien (`vim.fn.readfile`, nie `load`/`dofile`). Die meisten SEC-Regeln sind hier schlicht nicht anwendbar | — |
 | replacer.nvim | 1 — SEC-33, `checkpoint.lua`s `M.undo()` prüfte das geladene Manifest nur auf `type() == "table"`, nie die einzelnen Feldtypen. `entry.snapshot` ist beim Schreiben immer ein flacher, trennzeichenfreier Name (`sanitize()`); ein manipuliertes oder beschädigtes Manifest hätte hier einen `../`-Traversal unterbringen können, um eine beliebige Datei als vermeintlichen Snapshot zu lesen und ihren Inhalt dann über `write_exact(entry.path, …)` an einen beliebigen Zielpfad zu schreiben — ein Arbitrary-File-Write über ein einziges `:ReplaceUndo`. Die Suche selbst (`rg.lua`) war bereits vorbildlich: `--fixed-strings` als expliziter, nutzergewählter Literal-Modus statt stillschweigender Regex-Interpretation, alle Replace-Schreibvorgänge laufen rein über Neovims eigene Buffer-/Datei-APIs, nie über eine Shell. 155/155 bestehende Tests (inkl. Checkpoint-Rundlauf) bestehen unverändert | `E:\repos\replacer.nvim` |
+| reposcope.nvim | **1 systemisch, mehrere Dateien** — SEC-21, keines der drei Network-Request-Tools (`curl.lua`, `wget.lua`, `gh.lua`) übergab je ein `timeout_ms` an `spawn_capture` (dessen eigene Doku sagt „no timer means no timeout"). **Jede** Repo-Suche, jeder README-Fetch, jeder API-Call über alle drei Provider (GitHub/GitLab/Codeberg) konnte an einer hängenden Verbindung unbegrenzt hängen bleiben, ohne dass das Plugin je aufgibt und einen Fehler meldet — der mit Abstand am breitesten wirkende Fund dieser Welle, auch wenn keine einzelne Schwachstelle so gravierend wie der github_stats-Token-Leak. 20s-Default in allen dreien ergänzt, `result.timed_out` in eine klarere Fehlermeldung durchgereicht. Zusätzlich die Curl/Wget-Zip-Downloads der drei `clone_command.lua` mit `--max-time`/`--timeout=300s` versehen (bewusst **ohne** Byte-Limit — ein Repo-Archiv hat keine sinnvolle universelle Obergrenze; `git clone` selbst bleibt unangetastet, da `run_async_captured` kein Timeout unterstützt und ein großer Klon legitim lange dauern darf). Der Rest des Repos war bereits vorbildlich gehärtet: Credential-Header gehen nie über argv, sondern über eine `curl -K -`-Stdin-Config; die `:messages`-Log-Zeile loggt redaktierte Werte, nicht die echten. 9/9 Tests bestehen unverändert | `E:\repos\reposcope.nvim` |
 
-**17 von 26 geprüften Repos hatten mindestens einen echten Fund**, alle
+**18 von 27 geprüften Repos hatten mindestens einen echten Fund**, alle
 behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
 reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
 (`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
