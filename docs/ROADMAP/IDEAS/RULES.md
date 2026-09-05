@@ -24,3 +24,36 @@ Features:
 
 ---
 
+## Erkenntnisse aus einem echten Testlauf (2026-09-05, P5-Wiederholungsläufe)
+
+Genau das hier skizzierte Szenario — „neues Projekt → Tools XY, Review →
+Tools XY" — wurde händisch durchgespielt, bevor es dieses Plugin gibt: siehe
+[`docs/ROADMAP/handovers/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](../handovers/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md).
+Drei Dinge, die das Konzept schärfen:
+
+1. **Ein Teil der Werkzeuge existiert bereits, ist aber nicht angeschlossen.**
+   `lib.nvim.bindings.audit` (`:LibBindingsAudit[Gaps]`) und
+   `lib.nvim.dev.duplicates` (`:LibDuplicateScan`) sind fertige Module mit
+   eigenem `create_usercmd()` — der aber in keiner Config je aufgerufen wird
+   (siehe Nachtrag in
+   [`roadmap-tools-analysis.md`](../personal/All/FINISH/ERLEDIGT/roadmap-tools-analysis.md)).
+   **Bevor dieses Plugin neue Prüfungen baut, sollte es die vorhandenen
+   zuerst real anschließen** — sonst entsteht ein zweiter, konkurrierender
+   Weg zu denselben Daten.
+2. **Die `LLS-*`-Familie (LuaLS-Diagnosen) braucht dieses Plugin nicht.**
+   Sie wird bereits durch einen eigenen, aktiven Prozess (LuaLS + `luacheck`,
+   siehe die `fix(luals): … zu 0`-Commits quer über die Sammlung) auf 0
+   gehalten. Der Mehrwert dieses Plugins liegt in den **übrigen** ~250
+   Regeln (`PRIN-`/`LUA-`/`ERR-`/`SEC-`/`UI-`/`TS-`/`DEP-`/`PERF-`), die
+   keine mechanische Diagnose hat.
+3. **Ein Repo komplett gegen alle Familien zu prüfen ist keine Kommando-
+   Antwort in Sekunden.** Der Pilot an `buffer-ctx.nvim` (45 Dateien, nur
+   ein Bruchteil der Regeln gezielt geprüft) hat bereits spürbare Zeit
+   gebraucht. Für „neues Projekt"/„Review" realistisch: das Plugin sollte
+   **wellenweise pro Regel-Familie** anbieten (`:Rules check --family=SEC`),
+   nicht zwingend „alles auf einmal" — sonst ist der Dry-Run-Report so lang,
+   dass ihn niemand liest, und die erste Anwendung scheitert an der eigenen
+   Vollständigkeit.
+
+---
+
