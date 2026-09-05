@@ -29,15 +29,15 @@ Noch offen: gopath, hover, images, insights, language, lsp, markdown,
 mdview, recommender, replacer, reposcope, runtime-analysis, sandbox,
 spotlight.
 
-**Nebenfund während des Audits — eigene Background-Task angelegt
-(`task_c18f86fd`):** `lib.nvim`s geteilter `check_require()`-Helfer
-(`lua/lib/nvim/health/init.lua:33`) kann strukturell nie `error` melden,
-nur `warn` oder `info` — `debugging.nvim:28` meldet damit seine harte
-`lib.nvim.bindings.usercmd.composer`-Abhängigkeit nur als `warn`, obwohl
-jedes andere Plugin in diesem Durchgang dieselbe Abhängigkeit als `error`
-meldet. Nicht selbst gefixt, weil das eine Signaturänderung am geteilten
-Helfer bräuchte (betrifft dap.nvim und debugging.nvim). Wird gerade
-zusätzlich direkt bearbeitet (User-Anweisung).
+**Nebenfund während des Audits, direkt erledigt (User-Anweisung):**
+`lib.nvim`s geteilter `check_require()`-Helfer
+(`lua/lib/nvim/health/init.lua:33`) konnte strukturell nie `error` melden,
+nur `warn` oder `info`. Gefixt: `lib.nvim` `6694dcd` (Helfer um `error` +
+`advice`-Parameter erweitert), `debugging.nvim` `6cb3346`
+(`:Debug`-Command-Layer jetzt `error`), `dap.nvim` `22fc5c7` (notify/cross/
+normalize sind laut Code-Lektüre echte Pflichtabhängigkeiten ohne
+Fallback — auch der Fehlerpfad selbst hängt an `lib.nvim.notify` — jetzt
+`error` statt `warn`).
 
 Quelle der Analyse: [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](../personal/All/FINISH/checkhealt_conventions.md)
 (2026-08-31). Regel in einem Satz: *Muss der Nutzer etwas tun? Nein → niemals
