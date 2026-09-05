@@ -96,19 +96,30 @@ gegen alle 32 Repos ein mehrtägiges bis mehrwöchiges Vorhaben**, deutlich
 außerhalb eines einzelnen Wiederholungslauf-Termins. Empfehlung des Piloten:
 wellenweise nach Regel-Familie (`SEC-*` zuerst), nicht repoweise.
 
-**Zwischenstand 2026-09-05 (Abend):** die `SEC-*`-Welle (24 Regeln) ist auf
-Autorenwunsch gestartet und läuft über **29 von 32 Repos** (alphabetisch;
-Runden 1–7 zu 3 parallelen Agenten, danach ein Repo pro Durchgang). **18
-Repos hatten mindestens einen echten Fund**, alle behoben, committet und auf
-`main` gepusht — darunter zwei reale Schwachstellen statt Kosmetik: ein
-GitHub-Token, das über einen Shell-String im Prozess-Argv sichtbar war
-(`github_stats.nvim`), und eine echte Command-Injection über den
-Clipboard-Zielpfad unter Linux (`images.nvim`). Details je Repo:
+**Update 2026-09-05 (Nacht): die `SEC-*`-Welle (24 Regeln, `SEC-01`…`SEC-45`)
+ist fertig — alle 32 Repos geprüft**, auf Autorenwunsch gestartet (alphabetisch;
+Runden 1–7 zu 3 parallelen Agenten, ab Runde 8 ein Repo pro Durchgang, nachdem
+die parallele Prüfung von `mdview`/`open`/`pdfport` am Sitzungslimit
+gescheitert war — kein Verlust, aber Anlass für die Umstellung). **18 Repos
+hatten mindestens einen echten Fund**, alle behoben, committet und auf `main`
+gepusht. Drei sind keine bloße Kosmetik:
+
+- Ein GitHub-Token, das über einen Shell-String im Prozess-Argv sichtbar war (`github_stats.nvim`)
+- Eine echte Command-Injection über den Clipboard-Zielpfad unter Linux (`images.nvim`)
+- Keines der drei Network-Request-Tools von `reposcope.nvim` (`curl`/`wget`/`gh`) hatte je einen Timeout — jede Repo-Suche, jeder README-Fetch, jeder API-Call über alle drei Provider konnte an einer hängenden Verbindung unbegrenzt hängen bleiben
+
+Ein Fund landete sogar außerhalb des geprüften Repos selbst: `open.nvim`s
+Audit deckte eine Lücke im mitbenutzten `lib.nvim`-Code auf (`win_reveal.ps1`
+baute eine `explorer.exe`-Kommandozeile per Hand, ohne einen eingebetteten
+Anführungsstrich abzufangen — fail-closed statt fragilem Escaping behoben).
+Ein Funktionsbug bei `pdfport.nvim` (Windows-`:PdfPort`-Systemöffnen praktisch
+nie funktionsfähig) lag klar außerhalb der SEC-*-Familie und wurde als
+eigener Follow-up-Task vermerkt statt mitgefixt. Vollständiges
+Repo-für-Repo-Ergebnis:
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
-Runde 8 (`mdview`/`open`/`pdfport` parallel) riss am Sitzungslimit ab, bevor
-etwas geschrieben wurde — kein Verlust, aber Anlass für die Umstellung auf
-ein Repo pro Durchgang. Offen bleiben die restlichen 2 Repos für `SEC-*`
-sowie die übrigen sieben Regel-Familien für alle 32. Laut Standard
+
+Offen bleiben die übrigen sieben Regel-Familien (`PRIN-*`/`LUA-*`/`ERR-*`/
+`UI-*`/`TS-*`/`DEP-*`/`PERF-*`) über alle 32 Repos. Laut Standard
 **blockiert das nichts** — es ist der bewusst letzte Punkt der gesamten
 Liste, keine vergessene Aufgabe.
 
