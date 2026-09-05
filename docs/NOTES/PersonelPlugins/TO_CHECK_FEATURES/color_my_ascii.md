@@ -7,7 +7,7 @@ block under the cursor (export, yank, edit-in-split, run, format, align,
 …). One-time setup, then one section per feature: steps, expected result.
 Checkbox syntax (`- [ ]`) is standard Markdown.
 
-Repo: `E:\repos\color_my_ascii.nvim`. Spec: `plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\color_my_ascii.nvim`. Spec: `plugins/personal/init.lua` —
 `ft = "markdown"` (loads only once a Markdown buffer opens), dependency on
 `lib.nvim` (required — `:ColorMyAscii` is built on it). This config sets
 **one** non-default option: `treesitter = { block_detection = false }` —

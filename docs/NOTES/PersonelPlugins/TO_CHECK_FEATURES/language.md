@@ -10,7 +10,7 @@ Priority below follows the README's own ordering (spelling/grammar is
 named first, translate second, thesaurus third) and `docs/WORKFLOW.md`'s
 description of which habit is worth building first.
 
-Repo: `E:\repos\language.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\language.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`event = "VeryLazy"`, `dependencies = { "StefanBartl/lib.nvim",
 "folke/trouble.nvim" }` — trouble.nvim optional, `pcall`-guarded, used for
 a nicer issue list if present). This config's `setup()` sets:

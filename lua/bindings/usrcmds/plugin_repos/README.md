@@ -63,7 +63,7 @@ an existing clone — cloning is purely additive, no confirmation needed.
 
 ```vim
 :MyPlugins clone
-:MyPlugins clone E:\repos
+:MyPlugins clone $REPOS_DIR
 :MyPlugins clone --only=markdown.nvim
 :MyPlugins clone $REPOS_DIR --only=cascade.nvim
 ```

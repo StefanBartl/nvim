@@ -4,7 +4,7 @@ How to manually test every implemented feature of `documentation.nvim`.
 One-time setup, then one section per feature: prerequisites, steps, what to
 expect.
 
-Repo: `E:\repos\documentation.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\documentation.nvim`. Spec: `plugins/personal/init.lua`
 (`cmd = { "DocMap", "DocBrowse" }`, no `root` — commands map the **current
 working directory**, so which repo you `cd`/open Neovim from *is* the test
 target).
@@ -23,7 +23,7 @@ showing the resolved root/source for whatever directory you ran it from
 running it for real).
 
 A good, harmless test target: **documentation.nvim's own repo**
-(`E:\repos\documentation.nvim`) or `E:\repos\lib.nvim` — both are real,
+(`$REPOS_DIR\documentation.nvim`) or `$REPOS_DIR\lib.nvim` — both are real,
 sizeable, annotated Lua trees you already have. Open Neovim from inside
 one of them for everything below unless noted otherwise.
 
@@ -354,7 +354,7 @@ of their repos once you've used the plugin a bit this session.
 **Steps**
 
 1. `cd` into a real plugin repo that has real telemetry data by now, e.g.
-   `E:\repos\markdown.nvim`.
+   `$REPOS_DIR\markdown.nvim`.
 2. `:DocMap` (needs a real generated map first), `:DocBrowse`.
 3. Press `8` (Telemetry mode).
 
@@ -369,7 +369,7 @@ fabricated `✕`. Cross-check a `✕` row against `:DocMap check`'s own
 
 **Also check the soft-dependency path**: `cd` into a repo with **no**
 telemetry data for that namespace (or temporarily rename
-`E:\repos\runtime-analysis.nvim`), `8` again — expect a clear "no data"
+`$REPOS_DIR\runtime-analysis.nvim`), `8` again — expect a clear "no data"
 message, never a graveyard of fabricated `✕` badges.
 
 ---
@@ -410,7 +410,7 @@ both.
 :DocBrowse
 ```
 
-`cd` into `E:\repos\documentation.nvim` first (or `runtime-analysis.nvim`),
+`cd` into `$REPOS_DIR\documentation.nvim` first (or `runtime-analysis.nvim`),
 then press `9` (Loaded mode).
 
 **Expect**: either "no discrepancies" (everything declared is loaded and

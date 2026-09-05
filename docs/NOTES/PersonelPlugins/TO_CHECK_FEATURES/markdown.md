@@ -4,7 +4,7 @@ How to manually test every implemented feature of `markdown.nvim`. One-time
 setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) throughout.
 
-Repo: `E:\repos\markdown.nvim`. Spec: `plugins/personal/init.lua` — `ft =
+Repo: `$REPOS_DIR\markdown.nvim`. Spec: `plugins/personal/init.lua` — `ft =
 { "markdown", "mdx", "md" }`, `opts = {}` (every default below is live
 as-is), `dependencies = { "StefanBartl/color_my_ascii.nvim" }` (soft
 dependency: only guarantees load order in this config, for §2's fenced-scope

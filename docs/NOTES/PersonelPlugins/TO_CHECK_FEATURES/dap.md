@@ -6,7 +6,7 @@ where the code gives a concrete reason to suspect something — what to watch
 for specifically. Checkbox syntax (`- [ ]`) is standard Markdown, togglable
 directly in Neovim (e.g. with `cascade.nvim`'s `<leader>tc`).
 
-Repo: `E:\repos\dap.nvim`. Lua module name is `wkddap`, not `dap` (that name
+Repo: `$REPOS_DIR\dap.nvim`. Lua module name is `wkddap`, not `dap` (that name
 is nvim-dap's own `lua/dap.lua`). Spec: `plugins/personal/init.lua` —
 `cmd = "Dap"` plus a generated `keys` table (so both the first keypress and
 `:Dap` load it), `dependencies` on `lib.nvim`, `nvim-dap`,

@@ -5,7 +5,7 @@ setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) is standard Markdown, togglable directly in Neovim
 (e.g. with `cascade.nvim`'s `<leader>tc`).
 
-Repo: `E:\repos\fileops.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\fileops.nvim`. Spec: `plugins/personal/init.lua`
 (`event = "VeryLazy"`, `opts = { cycle = { open_target = "current" } }` — the
 one non-default: cycling opens the next/prev file **replacing the buffer but
 keeping it listed**, not the plugin's own default of `"replace"`, which is
@@ -302,7 +302,7 @@ exist anywhere to click — that's expected, not a fileops bug.
 
 - [ ] Clean run: every section green given this real environment (lib.nvim
       present, git present, gitsigns present if installed)
-- [ ] Temporarily rename `E:\repos\lib.nvim` out of the runtimepath (or
+- [ ] Temporarily rename `$REPOS_DIR\lib.nvim` out of the runtimepath (or
       simulate via a broken `require`) — confirm the health check reports
       "`lib.nvim` not found" with a useful message rather than `:File`
       simply failing to register with no explanation anywhere

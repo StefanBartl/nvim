@@ -25,7 +25,7 @@
 Roadmap question: *"könnten daraus echte Module für die nvim-config/lib.nvim
 entstehen?"*, later widened to *"oder für eines der Plugins"* — so each of the
 eight scripts here was checked against nvim-config, lib.nvim, and the full
-plugin list under `E:\repos` (`buffer-ctx.nvim` … `spotlight.nvim`, plus the
+plugin list under `$REPOS_DIR` (`buffer-ctx.nvim` … `spotlight.nvim`, plus the
 native `docmap-desktop`), not just the two named in the original wording.
 
 ## Summary
@@ -134,7 +134,7 @@ excluded from the repo set, for the obvious reason.
 
 ### `magic_numbers.py` + `hardcoded_constants.py` → `:Insights smells`
 
-Same shape as each other: walk every `*.nvim` repo under `E:\repos`, regex
+Same shape as each other: walk every `*.nvim` repo under `$REPOS_DIR`, regex
 over `.lua` files, report candidates — but, unlike the four lib.nvim items
 above, they touched no specific plugin's API, they were pure text scans, one
 repo at a time (the `for repo in repos:` loop was just the CLI's own
@@ -175,12 +175,12 @@ substring-list loop instead.
 
 ### `run_all_tests.sh` → stays a personal script
 
-Iterates every `*.nvim` repo under `E:\repos`, finds each one's own test
+Iterates every `*.nvim` repo under `$REPOS_DIR`, finds each one's own test
 runner (`TESTS/run.lua`, `tests/run.lua`, `TESTS/smoke.lua`, or the sole
 `TESTS/*.lua`), and reports pass/fail per repo. This is workspace-wide dev
 tooling for *this machine's* checkout layout — it has nothing to do with any
 one plugin's own functionality, and no published plugin should ship a script
-that assumes `E:\repos` holds thirty sibling checkouts. None of the listed
+that assumes `$REPOS_DIR` holds thirty sibling checkouts. None of the listed
 plugins are "manage my other repos" tools, so there's no candidate to move
 this into. Worth keeping, but as a personal script — if it's going to be
 rerun regularly rather than ad hoc, it belongs in nvim-config's own

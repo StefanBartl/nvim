@@ -67,7 +67,7 @@ matters below.
 
 The complement of the table above for the one prefix that keeps coming up in
 relocation questions. Checked against nvim-config, the NvChad defaults and
-every repo under `E:\repos`, then verified a second time against a running
+every repo under `$REPOS_DIR`, then verified a second time against a running
 session:
 
 ```

@@ -8,7 +8,7 @@ between emoji, and an emoji-checkbox cycle. One-time setup, then one
 section per feature: steps, expected result. Checkbox syntax (`- [ ]`) is
 standard Markdown.
 
-Repo: `E:\repos\emojis.nvim`. Spec: `plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\emojis.nvim`. Spec: `plugins/personal/init.lua` —
 `cmd = "Emojis"` (command-lazy), `opts = {}` with a comment noting
 `default_scope` is already `"%"` (whole buffer) so nothing extra is
 needed there. **No `keymaps` table is set**, so `keymaps.preset` stays at

@@ -13,7 +13,7 @@ need the plugin itself, no engine (§1 engine detection reporting, most of
 one real engine with the daemon actually running (Docker Desktop / Podman
 machine started).
 
-Repo: `E:\repos\sandbox.nvim`. Spec: `lua/plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\sandbox.nvim`. Spec: `lua/plugins/personal/init.lua` —
 `event = "VeryLazy"`, `dependencies = { "StefanBartl/lib.nvim" }`, `opts =
 { progress_style = "statusline" }` (the only override — `image pull`/`push`
 and the devcontainer build report into the shared `lib.nvim.progress`

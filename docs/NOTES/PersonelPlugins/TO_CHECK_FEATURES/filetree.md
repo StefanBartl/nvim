@@ -7,7 +7,7 @@ what this config actually turns on/off and by what telemetry shows is
 genuinely exercised, then covers the rest at a level matched to how much
 each one differs from "it's a toggle, it either works or it doesn't."
 
-Repo: `E:\repos\filetree.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\filetree.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`event = "VeryLazy"` — must load after neo-tree's own `config()` runs;
 `dependencies = { "StefanBartl/lib.nvim", "nvim-neo-tree/neo-tree.nvim" }`).
 This config's `setup()` call is not the plugin's bare defaults — it
@@ -45,7 +45,7 @@ layer), the resolved adapter reported as `neotree`, optional CLI tools
 (`trash-put`/`gio`, `rg`) reported present/missing with a reason each —
 not required. Open Neovim from a real git repo with a few directories deep
 enough to exercise cwd/breadcrumbs meaningfully — this nvim config repo
-itself, or `E:\repos\lib.nvim`, both work.
+itself, or `$REPOS_DIR\lib.nvim`, both work.
 
 ---
 

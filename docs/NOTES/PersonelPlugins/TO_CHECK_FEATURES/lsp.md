@@ -4,7 +4,7 @@ How to manually test every implemented feature of `lsp.nvim`. One-time setup,
 then one section per feature: prerequisites, steps, what to expect. Checkbox
 syntax (`- [ ]`) throughout.
 
-Repo: `E:\repos\lsp.nvim`. Spec: `plugins/personal/init.lua` — `lazy = false`,
+Repo: `$REPOS_DIR\lsp.nvim`. Spec: `plugins/personal/init.lua` — `lazy = false`,
 `priority = 900`, no `opts`/`config` on the spec itself. `require("lsp").setup()`
 is instead called explicitly from this config's own `init.lua`
 (`startup.now("lsp", function() ... end)`), **before** `apply_capabilities()`,

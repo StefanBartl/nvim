@@ -4,7 +4,7 @@ How to manually test every implemented feature of `reposcope.nvim`.
 One-time setup, then one section per feature: prerequisites, steps, what
 to expect. Checkbox syntax (`- [ ]`) throughout.
 
-Repo: `E:\repos\reposcope.nvim`. Spec: `lua/plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\reposcope.nvim`. Spec: `lua/plugins/personal/init.lua` —
 `name = "reposcope"`, `event = "VeryLazy"`, `dependencies = {
 "StefanBartl/lib.nvim" }`, `opts = { progress_style = "statusline" }` (the
 only override — `:Reposcope update`/`status` report into `lib.nvim`'s
@@ -124,12 +124,12 @@ The everyday shape the whole plugin is built around.
 
 **Prerequisites**: a directory with at least 2–3 real git clones — point at
 `clone.std_dir` if it's already populated from §1, or pass an explicit
-directory with real repos (e.g. `E:\repos` itself has plenty).
+directory with real repos (e.g. `$REPOS_DIR` itself has plenty).
 
 **Steps**
 
 ```vim
-:Reposcope status E:\repos
+:Reposcope status $REPOS_DIR
 ```
 
 - [ ] A popup table appears: `REPOSITORY / BRANCH / SYNC / STATE / LAST
@@ -155,7 +155,7 @@ directory with real repos (e.g. `E:\repos` itself has plenty).
       recently fixed (used to tear the whole popup down with no way back).
 - [ ] `r` re-reads just the current row; `R` re-scans the whole directory —
       confirm `R` re-reads the directory you actually passed
-      (`E:\repos` here), not the configured `clone.std_dir` default.
+      (`$REPOS_DIR` here), not the configured `clone.std_dir` default.
 - [ ] `y` yanks the repository's path — paste it somewhere to confirm.
 - [ ] `?` lists every one of these keys — confirm it includes `r`/`R`/`y`,
       which are deliberately left out of the winbar's shortened legend to
@@ -176,7 +176,7 @@ directory with real repos (e.g. `E:\repos` itself has plenty).
 fetching/pulling)
 
 ```vim
-:Reposcope update E:\repos
+:Reposcope update $REPOS_DIR
 ```
 
 - [ ] Runs `git fetch --all --prune` then `git pull --ff-only` per repo,

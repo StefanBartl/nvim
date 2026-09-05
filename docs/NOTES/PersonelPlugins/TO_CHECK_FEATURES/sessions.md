@@ -5,7 +5,7 @@ setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) throughout — togglable directly in Neovim (e.g.
 with `cascade.nvim`'s `<leader>tc`).
 
-Repo: `E:\repos\sessions.nvim`. Spec: `plugins/personal/init.lua`, `lazy =
+Repo: `$REPOS_DIR\sessions.nvim`. Spec: `plugins/personal/init.lua`, `lazy =
 false` — "setup() registers the VimEnter autoload and the VimLeavePre
 autosave. Both are startup/shutdown events, so a lazy trigger would have to
 fire before VimEnter to be of any use." `opts = {}` in this config (autoload

@@ -1,6 +1,6 @@
 # Handover — hover.nvim: Website-Screenshot-Preview & Zen-Mode
 
-**Repo:** `E:\repos\hover.nvim` (branch `main`, Remote `StefanBartl/hover.nvim`)
+**Repo:** `$REPOS_DIR\hover.nvim` (branch `main`, Remote `StefanBartl/hover.nvim`)
 **Datum:** 2026-09-04, Stand fortgeschrieben am 2026-09-04 (4)
 **Status:** **alles aus diesem Handover ist gebaut, einschließlich Abschnitt 6**
 — der `auto_hover`-Bugfix (`c20191e`), Zen (`c20191e`), der Seitentext
@@ -12,8 +12,8 @@ Handprüfung: die PDF-Link-Zeile in `MANUAL-EVIDENCE.md` steht auf *never*.
 
 ## 0. Ausgangslage — erledigt, mit einer Korrektur
 
-**Der Pfad in der ersten Fassung war falsch.** Es gibt kein `C:\repos\hover.nvim`; das
-Repo liegt auf `E:\repos\hover.nvim`, und dort war der Working Tree **sauber**. Die elf
+**Der Pfad in der ersten Fassung war falsch.** Es gibt kein `$REPOS_DIR\hover.nvim`; das
+Repo liegt auf `$REPOS_DIR\hover.nvim`, und dort war der Working Tree **sauber**. Die elf
 uncommitteten Dateien der Session vom 2026-09-04 existierten in diesem Checkout nicht —
 nachgeprüft, nicht vermutet: kein `M.page_text` in `preview/url.lua`, kein `auto_type` in
 `switches.lua`, kein `TESTS/url_spec.lua`. Diese Arbeit war weg und ist neu geschrieben
@@ -364,7 +364,7 @@ Stellen falsch. Siehe dort.
 ## 5. Kurzfassung für den Einstieg
 
 1. ~~`git status` klären~~ — erledigt; der Pfad in der ersten Fassung war falsch, das Repo
-   liegt auf `E:\repos\hover.nvim`, und die dort beschriebene uncommittete Arbeit gab es in
+   liegt auf `$REPOS_DIR\hover.nvim`, und die dort beschriebene uncommittete Arbeit gab es in
    diesem Checkout nicht. Neu geschrieben, `c20191e` und `9070b5e`.
 2. ~~**Zen-Mode bauen**~~ — gebaut, `c20191e`. `:Hover zen` / `F`,
    `docs/FEATURES/ZEN.md`, 19 Specs.

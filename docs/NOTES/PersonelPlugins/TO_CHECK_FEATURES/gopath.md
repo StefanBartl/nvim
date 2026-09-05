@@ -13,7 +13,7 @@ subsystem rebuilding repeatedly in the background — infrastructure, not a
 feature a user chose, so it doesn't reorder priority here, but its sheer
 activity is worth confirming isn't runaway (see §2).
 
-Repo: `E:\repos\gopath.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\gopath.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`event = "VeryLazy"` — required; without a lazy-load trigger the plugin
 never sources and every keymap silently does nothing, which the plugin's
 own docs call out as the most common "it's not working" report).
@@ -34,7 +34,7 @@ mappings = {
 },
 ```
 
-Every doc in `E:\repos\gopath.nvim\docs\` refers to `gP` throughout — in
+Every doc in `$REPOS_DIR\gopath.nvim\docs\` refers to `gP` throughout — in
 this actual session, `gP` does **nothing** and `gF` is the real "resolve
 and open here" key. `gC` (check/create), `<leader>pp` (probe), and `gM`
 (reveal in file manager) are **not** remapped and keep their documented

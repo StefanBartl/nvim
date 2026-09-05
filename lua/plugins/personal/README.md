@@ -100,7 +100,7 @@ u.local_dev("lib.nvim") --> "E:/repos/lib.nvim"   (directory exists)
 ```
 
 `repos_path` is resolved **once, at module load**: `$REPOS_DIR` if it names a
-directory, otherwise the first hit among `E:\repos`, `E:/repos`, `D:\…`,
+directory, otherwise the first hit among `$REPOS_DIR`, `E:/repos`, `D:\…`,
 `C:\…`, `/repos`. A fallback warns; no root at all notifies and switches
 everything to remote.
 

@@ -11,7 +11,7 @@ jede erledigt trask komt nach
 C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\MERGED_FINISHED.md
 
 comitten/oush/pull immer auif main wenne tewas in den repos gefixed wurde.
-die repos indes t du in c:\repos du hast zugriff drauf, es geht um alle plugins die mit .nvim enden + docmap-desktop, das docmap-dsktop aber ein natives, kein nvim plugin ist, lassen sich vielketasks nicht korrekt anwenden. daher nur wenn es ssinn macht dort uch imepmentieren.
+die repos indes t du in $REPOS_DIR du hast zugriff drauf, es geht um alle plugins die mit .nvim enden + docmap-desktop, das docmap-dsktop aber ein natives, kein nvim plugin ist, lassen sich vielketasks nicht korrekt anwenden. daher nur wenn es ssinn macht dort uch imepmentieren.
 
 chat^:
 

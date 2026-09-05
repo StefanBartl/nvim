@@ -5,7 +5,7 @@
 
 I'll start by locating the autocmds in the nvim config, then cross-reference against the plugin list.
 
-This confirms it — `autocmds/general/helpers.lua`'s `no_name_guard_sweep` has no tree-awareness (it can race with neo-tree's own buffer swaps during startup, which is exactly the bug that got it disabled), while [buffer.lua](E:\repos\filetree.nvim\lua\filetree\util\buffer.lua) in filetree.nvim already has a `TREE_FT` table and multi-adapter awareness. Let me check filetree's feature-registration pattern before porting the guard there.
+This confirms it — `autocmds/general/helpers.lua`'s `no_name_guard_sweep` has no tree-awareness (it can race with neo-tree's own buffer swaps during startup, which is exactly the bug that got it disabled), while [buffer.lua]($REPOS_DIR\filetree.nvim\lua\filetree\util\buffer.lua) in filetree.nvim already has a `TREE_FT` table and multi-adapter awareness. Let me check filetree's feature-registration pattern before porting the guard there.
 
 Confirmed: filetree.nvim isn't wired into this config yet (that's the still-open "Liste 1" migration) — the live config uses its own `lua/config/neotree/` block directly. filetree.nvim is still the right place to build this though, since it's the adapter-aware target for that migration. Implementing the guard now.
 
@@ -25,8 +25,8 @@ Now let me get a quick purpose summary for each of the 25 plugins to map autocmd
 
 **1. Implemented the no_name_guard port** into filetree.nvim (it was disabled in the nvim-config because the generic version had no tree-window exclusion and raced with neo-tree's own startup sequence — `state.tree nil` in commands.lua:827):
 
-- [buffer.lua](E:\repos\filetree.nvim\lua\filetree\util\buffer.lua) — added `is_stray_no_name()` and `find_named_buffer()`
-- [features/nav/no_name_guard/init.lua](E:\repos\filetree.nvim\lua\filetree\features\nav\no_name_guard\init.lua) — new feature, follows `layout_guard`'s exact pattern, excludes `adapter.get_winid()` from every sweep so it can never step on the tree window
+- [buffer.lua]($REPOS_DIR\filetree.nvim\lua\filetree\util\buffer.lua) — added `is_stray_no_name()` and `find_named_buffer()`
+- [features/nav/no_name_guard/init.lua]($REPOS_DIR\filetree.nvim\lua\filetree\features\nav\no_name_guard\init.lua) — new feature, follows `layout_guard`'s exact pattern, excludes `adapter.get_winid()` from every sweep so it can never step on the tree window
 - Wired into `features/init.lua`, `config/DEFAULTS.lua`, `@types/config.lua`, `bindings/autocmds.lua`
 - All changed modules `require()`-load cleanly under a real rtp (checked via headless nvim)
 - Updated the disabled entry in [autocmds/init.lua](C:\Users\bartl\AppData\Local\nvim\lua\autocmds\init.lua:26) to point at the new home instead of just saying "TEMP DISABLED"

@@ -9,7 +9,7 @@ One-time setup, then one section per feature: prerequisites, steps, what to
 expect. Checkbox syntax (`- [ ]`) is standard Markdown — togglable directly
 in Neovim with `cascade.nvim`'s `<leader>tc`.
 
-Repo: `E:\repos\buffer-ctx.nvim`. Spec: `plugins/personal/init.lua` — command-
+Repo: `$REPOS_DIR\buffer-ctx.nvim`. Spec: `plugins/personal/init.lua` — command-
 lazy (`cmd = { "Insert", "Copy", "Format", "Mark", "MarkLineToggle",
 "MarkLinesYank", "CopyFilepathAbsolute", "CopyFilepathRelative" }`) plus
 key-lazy (`keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>",

@@ -19,7 +19,7 @@ unlike a merely-documented integration), the viewer commands get real
 depth since they're the largest single feature by doc surface even without
 their own telemetry line.
 
-Repo: `E:\repos\open.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\open.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`cmd = { "Open", "UrlView", "MDLinksView" }` — all three names registered
 because `setup()` itself registers the viewer wrapper commands, so
 lazy-loading on `Open` alone would leave `:UrlView`/`:MDLinksView` undefined

@@ -4,7 +4,7 @@ How to manually test every implemented feature of `learn-cli.nvim`. One-time
 setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) throughout.
 
-Repo: `E:\repos\learn-cli.nvim`. Spec: `plugins/personal/init.lua` (`lazy =
+Repo: `$REPOS_DIR\learn-cli.nvim`. Spec: `plugins/personal/init.lua` (`lazy =
 false`, `config()` calls `require("learn_cli").setup({ exercises_path = ... })`
 — fixed 2026-08-28, was `exercises_dir`, see §1)
 — **but** `plugins/personal/source.lua` lists this repo as `["learn-cli.nvim"]

@@ -4,7 +4,7 @@ How to manually test every implemented feature of `recommender.nvim`.
 One-time setup, then one section per feature: prerequisites, steps, what to
 expect.
 
-Repo: `E:\repos\recommender.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\recommender.nvim`. Spec: `plugins/personal/init.lua`
 (`ft = { "lua" }`, `cmd = { "Recommender" }`, `opts = {}` — lazy-loaded on
 either a Lua buffer or the first `:Recommender` call, whichever comes
 first). Pairs with `replacer.nvim` (both `"dir"` in `source.lua`, so both

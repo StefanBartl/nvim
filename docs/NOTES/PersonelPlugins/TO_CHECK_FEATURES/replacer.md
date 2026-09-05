@@ -4,7 +4,7 @@ How to manually test every implemented feature of `replacer.nvim`.
 One-time setup, then one section per feature: prerequisites, steps, what to
 expect.
 
-Repo: `E:\repos\replacer.nvim`. Spec: `plugins/personal/init.lua`
+Repo: `$REPOS_DIR\replacer.nvim`. Spec: `plugins/personal/init.lua`
 (`cmd = { "Replace", "Replacer", "Surround", "Wrap" }`, deps `fzf-lua` +
 `lib.nvim`, `opts = { engine = "telescope", progress_style = "statusline" }`
 — **note the engine is pinned to Telescope even though `fzf-lua` is also a
@@ -363,7 +363,7 @@ you read live text from your own statusline component).
 **Steps**
 
 Trigger a `cwd`-scope search on a large-ish tree (this repo or
-`E:\repos\lib.nvim` work) — something that takes a couple of seconds.
+`$REPOS_DIR\lib.nvim` work) — something that takes a couple of seconds.
 
 ```lua
 :lua print(vim.inspect(require("lib.nvim.progress.styles.statusline").active()))

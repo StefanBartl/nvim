@@ -8,7 +8,7 @@ opening it. Priority below follows the README's own ordering (dashboard
 is the plugin's flagship, named first) and `docs/WORKFLOW.md`'s explicit
 "do this before trusting any data" sequence, not usage counts.
 
-Repo: `E:\repos\github_stats.nvim`. Spec: `lua/plugins/personal/init.lua`
+Repo: `$REPOS_DIR\github_stats.nvim`. Spec: `lua/plugins/personal/init.lua`
 (`event = "VimEnter"`, `dependencies = { "StefanBartl/lib.nvim" }`). This
 config's `setup()` passes a curated `repos` list (~28 explicit
 `StefanBartl/*` repos, not `watch_users` auto-discovery — deliberately, per

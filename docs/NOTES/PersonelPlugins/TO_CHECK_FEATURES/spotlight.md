@@ -4,7 +4,7 @@ How to manually test every implemented feature of `spotlight.nvim`. One-time
 setup, then one section per feature: prerequisites, steps, what to expect.
 Checkbox syntax (`- [ ]`) throughout.
 
-Repo: `E:\repos\spotlight.nvim`. Spec: `lua/plugins/personal/init.lua` —
+Repo: `$REPOS_DIR\spotlight.nvim`. Spec: `lua/plugins/personal/init.lua` —
 `event = "VeryLazy"`, `dependencies = { "StefanBartl/lib.nvim" }`, `opts = {}`
 (every default below is live as-is on this machine).
 

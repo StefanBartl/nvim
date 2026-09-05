@@ -259,7 +259,7 @@ Wie in [NEW_Project.md](./MATERIALS/NEW_Project.md) festgelegt:
 
 ## 8. Migrationsplan
 
-1. Repo `test.nvim` unter `C:\repos\test.nvim` anlegen (Grundgerüst: README,
+1. Repo `test.nvim` unter `$REPOS_DIR\test.nvim` anlegen (Grundgerüst: README,
    doc, ROADMAP, `:checkhealth`, `.luarc.json`, `stylua.toml` — Vorlage:
    `dap.nvim`).
 2. `lua/config/neotest/**` 1:1 kopieren.
