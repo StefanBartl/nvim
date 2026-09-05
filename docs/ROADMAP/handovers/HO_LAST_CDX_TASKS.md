@@ -5,13 +5,17 @@ Begleitdatei zur Umsetzung von
 
 **Angelegt 2026-09-03. Stand 2026-09-05: P0–P4 erledigt — alle 32 Repos mit
 vollem Durchgang, E1 und `DOC-05` **32/32**, keine toten Links, keine toten
-Anker, keine verwaisten `docs/`-Dateien. P5 (8.1/8.3/8.4/8.5) und P6
-(`BND-01`…`03`, `06`, `07`) erledigt. Offen, beides bewusst und mit
-Empfehlung an den Autor übergeben statt stillschweigend liegen gelassen:
-`BND-04`/`05` (Bindings-Sheets pro Plugin diffen und löschen — siehe §6.4)
-und der volle 8.2-Regelkatalog jenseits von LuaLS (siehe
-[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)).
-P7 (Abschlussbericht) folgt, sobald diese zwei entschieden sind.**
+Anker, keine verwaisten `docs/`-Dateien. P5 (8.1/8.3/8.4/8.5) erledigt; der
+volle 8.2-Regelkatalog jenseits von LuaLS ist bewusst **letzter Punkt dieser
+Liste** (Autorenentscheidung, siehe
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)) —
+blockiert nichts, wird angegangen sobald alles andere fertig ist. P6:
+`BND-01`…`03`, `06`, `07` erledigt; `BND-04` (Bindings-Sheets pro Plugin
+gegen die aktuelle Repo-Doku diffen, Einzigartiges migrieren, dann löschen —
+siehe §6.4) läuft aktiv, Fortschritt siehe BND-04-Ledger unten. `BND-05`
+(danach `PersonelPlugins/BINDINGS/` entfernen, mit gründlicher Verifikation
+gegen `:Bindings browse`) folgt, sobald `BND-04` durch ist. P7
+(Abschlussbericht) folgt danach.**
 
 ---
 
@@ -76,7 +80,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
 | P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
-| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` (Sheets pro Plugin gegen `docs/BINDINGS.md` diffen, dann löschen) und `BND-05` (`PersonelPlugins/BINDINGS/` entfernen, hängt an `BND-04`) offen — Autorenentscheidung, wann |
+| P6 — BINDINGS-Sanierung | 🟨 läuft | 2026-09-05 | §6 neu gefasst; `BND-01`…`03`, `06`, `07` erledigt. `BND-04` läuft: **12/31** Repos durchgegangen (siehe BND-04-Ledger unten; `diff.nvim` hatte nie ein Sheet). `BND-05` folgt danach — gründliche Verifikation gegen `:Bindings browse`, dann `PersonelPlugins/BINDINGS/` entfernen |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 
 ### Repo-Ledger
@@ -176,6 +180,28 @@ hatte **8 tote Links** aus einem alten Doku-Layout, im Repo selbst als „Known
 issue" dokumentiert und bewusst dem vollen Durchgang überlassen. Der ist
 gelaufen (`bfb74da`), und sie sind weg — nachgemessen 2026-09-04: 0 tote
 Links, 0 tote Anker. Siehe [Ü25](#ü25--vier-weitere-repos-waren-fertig-ohne-dass-es-hier-stand).
+
+### BND-04-Ledger
+
+Pro Plugin: die 1–3 alten Sheets unter `PersonelPlugins/BINDINGS/{Keymaps,
+Usercmds,Autocmds}/<plugin>.md` gegen die **aktuelle** Repo-Doku diffen
+(nicht gegen das, was das Sheet behauptet — Ü14-Methodik), Einzigartiges
+migrieren, dann löschen. Reihenfolge: alphabetisch durch die verbleibenden
+offenen Repos.
+
+| Repo | Befund | Commit(s) |
+|---|---|---|
+| documentation.nvim | Digit-Key/Count-Kollision in `:DocBrowse` (Tasten `1`-`6` schlagen einen Count-Präfix tot) fehlte in `configuration.md`; `bindings/autocmds.lua`s Manifest-Rolle fehlte im Modulbaum in `DEVELOPMENT.md`. Der Rest (Root-Resolution, alle `:DocMap`-Unterbefehle, `opts.pdf`/`godbolt`/`mdview`, `bindings.wrappers`) war bereits vollständig dokumentiert | `E:\repos\documentation.nvim` |
+| emojis.nvim | 0 Befunde — alle drei Sheets bestätigten sich selbst als „current and accurate"; nachgeprüft, stimmt | — |
+| fileops.nvim | 0 Befunde — Keymaps/Usercmds/Autocmds vollständig aktuell (Count-Präfix, `git_aware`, `session_compat`, `User FileopsChanged` — alles bereits da) | — |
+| filetree.nvim | **Der alte Sheet hatte recht**: `B` (reveal_alt) und `ML`/`MR`/`MM` (markdown_links) waren im Source-Katalog, fehlten aber in `docs/BINDINGS/KEYMAPS.md`. Zusätzlich gefunden: die vier Preview-Scroll-Keys (`<C-b>`/`<C-f>`/`<PageUp>`/`<PageDown>`) fehlten in *beidem*, Katalog und Doku. `docs/BINDINGS/AUTOCMDS.md` behauptete `file_watcher`/`watcher_quarantine` feuerten auf `User FileWatcherEvent` — Grep über den ganzen Source fand kein einziges solches Autocmd; dazu fehlten sechs Features komplett (`opened_sync`, `size_info`, `no_name_guard`, `layout_guard`, `auto_resize`, `ignore_list`-Dimming). Alles gegen aktuellen Source verifiziert und korrigiert | `E:\repos\filetree.nvim` (3 Commits) |
+| github_stats.nvim | 0 Befunde — alle drei Sheets bestätigten sich selbst als „verified current and precise"; die als tot markierte `VimResized`-Autocmd in `dashboard/layout.lua` ist es nach wie vor (Modul wird nirgends `require`d) | — |
+
+**12/31 durch** (`diff.nvim` hatte nie ein Sheet in diesem Korpus — betrifft
+`BND-04` nicht). Offen (alphabetisch, 19 Repos): gopath, hover, images,
+insights, language, lib, lsp, markdown, mdview, open, pdfport, pickers,
+recommender, replacer, reposcope, runtime-analysis, sandbox, sessions,
+spotlight.nvim.
 
 ---
 
