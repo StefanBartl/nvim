@@ -101,6 +101,14 @@ plugins.add({
     -- oder `keymaps.show` beantworten dann weiterhin alles, Web-Links
     -- inklusive. `:Hover status` zeigt, was gerade an ist.
     --
+    -- `persist = true` seit hover.nvim `5f57764`: was `:Hover status` gerade
+    -- zeigt (mode, auto_hover, jeder Schalter) wird bei `:qa` nach
+    -- stdpath("cache")/lib.nvim/cache/hover/status.json geschrieben und beim
+    -- naechsten `enable()` wieder ueber diese Optionen gelegt -- NACH ihnen,
+    -- also gewinnt ein Toggle aus der letzten Session gegen das, was hier
+    -- steht, bis er wieder umgelegt wird. Layout/Keys (`border`, `_keys`)
+    -- bleiben unberuehrt -- nur die drei Achsen, die `:Hover status` zeigt.
+    --
     -- Wieder ohne Optionen seit hover.nvim `21c4932`: die Zoom-Tasten sind dort
     -- `>` hinein, `|` heraus, `=` zurueck, und damit genau das, was hier
     -- voruebergehend als `zoom_keys` ueberschrieben war. Die frueheren
@@ -112,7 +120,7 @@ plugins.add({
     priority = 900,
     dependencies = { "StefanBartl/lib.nvim" },
     config = function()
-      require("hover").enable()
+      require("hover").enable({ persist = true })
     end,
   },
 
