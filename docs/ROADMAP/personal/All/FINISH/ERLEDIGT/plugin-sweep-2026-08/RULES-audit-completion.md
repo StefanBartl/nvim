@@ -2,7 +2,10 @@
 
 > **Backlog, keine Regel.** Completion-Audit (Ex-Command-/Picker-Input-Completion) aus
 > dem Code-Audit vom 2026-08-08. Die daraus abgeleitete **allgemeine Regel** steht in
-> `Checklists/regeln/LUA_NVIM.md` § Picker- und Kommando-UX (`UI-K*`).
+> `Checklists/regeln/LUA_NVIM.md` § Picker- und Kommando-UX (`UI-20`…`UI-37`,
+> die Completion-Regeln darin sind `UI-22`…`UI-26`). Korrigiert 2026-09-06:
+> das referenzierte Präfix `UI-K*` wurde nie umgesetzt — die Sektion nummeriert
+> flach durch.
 > Hier steht nur die Lückenliste — abarbeiten und streichen.
 >
 > **Status 2026-08-25: geschlossen.** Die Lueckenliste ist leer: nvim-config

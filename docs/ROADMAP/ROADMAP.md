@@ -5,6 +5,7 @@
 
   - [cdx](#cdx)
   - [TOP interessant gerade](#top-interessant-gerade)
+  - [Checkhealth-Konventionen](#checkhealth-konventionen)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
@@ -18,7 +19,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:45       |   100% / 49%     | X
 | **work** |   20. Sept    |   Sa., 06:00    |     00:40       |    77% / 18%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     21:40       |    56% / 89%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     03:50       |    87% / 97%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -43,13 +44,13 @@
 
 ## Checkhealth-Konventionen
 
-Umsetzung von [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](personal/All/FINISH/checkhealt_conventions.md),
+Umsetzung von [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](./personal/All/FINISH/checkhealt_conventions.md),
 validiert am 2026-09-06 gegen den aktuellen Stand. Zwei Korrekturen gegenüber
 der Original-Analyse (2026-08-31): `neotree-fs-refactor.nvim` liegt inzwischen
 unter `ARCHIV_NICHT_BEARBEITEN/` und wird nicht angefasst; der Zielort für die
 neue Regel ist `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` + `gates/REVIEW.md`,
 nicht das nie existente `MATERIALS/CHECKLIST.md`. Handover-Stand läuft in
-[`docs/ROADMAP/handovers/checkhealth-conventions.md`](handovers/checkhealth-conventions.md).
+[`docs/ROADMAP/handovers/checkhealth-conventions.md`](./handovers/checkhealth-conventions.md).
 
 - [x] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten (dap, debugging, documentation, filetree).
 - [x] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.

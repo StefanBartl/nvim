@@ -3,7 +3,10 @@
 > **Backlog, keine Regel.** Count-Support-Audit aus dem Code-Audit vom 2026-08-08:
 > wo Count schon vorbildlich gelöst ist, wo er fehlt und plausibel wäre, und wo sein
 > Fehlen begründet ist. Die daraus abgeleitete **allgemeine Regel** steht in
-> `Checklists/regeln/LUA_NVIM.md` § UI und Bedienbarkeit → Count-Support (`UI-C*`).
+> `Checklists/regeln/LUA_NVIM.md` § Count-Unterstützung (`UI-40`…`UI-44`).
+> Korrigiert 2026-09-06: das referenzierte Präfix `UI-C*` wurde nie
+> umgesetzt — die Sektion nummeriert flach durch, als Fortsetzung des
+> `UI-`-Präfixes aus § Picker- und Kommando-UX.
 > Hier steht nur die Lückenliste — abarbeiten und streichen.
 >
 > **Status 2026-08-24: geschlossen.** „Missing but plausible“ ist leer; es

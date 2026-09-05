@@ -9,7 +9,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
   - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
     - [Git & Repo-Hygiene](#git-repo-hygiene)
     - [Docs, Comments,...](#docs-comments)
-    - [shims](#shims)
   - [Liste B - Claude Tasks](#liste-b-claude-tasks)
     - [MISC](#misc)
     - [My `.nvim`-Plugins](#my-nvim-plugins)
@@ -32,7 +31,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 - [ ] Diagnostics ncohmal drüber laufen lassen, es gab noch das ein oder andere zu implementieren.
 - [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind. Die lib.nvim ist für mich umso mehr wert, umso besser die docs sind. Dabei auch gleich feature ideen einbringenh, sprich bei jedem modul am ende auch checken "fehlt etwass sinnvolles?"
 - [ ] nochmal alle keymaps checken, ob kein keymap doppelt vergeben ist, über alles repos hinweg + nvim-config
-- [ ] claude: "Eine Sache habe ich ins Handover als Arbeitsregel geschrieben, weil sie mir zweimal passiert ist: stylua lua nie über die nvim-Config laufen lassen — sie ist nicht stylua-formatiert, ein Lauf formatiert 141 Dateien nebenbei um." - sollten sie aber schoin sein, also dem nachgehen
 - [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\checkhealt_conventions.md
 - [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md weiter machen
@@ -56,32 +54,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
-
-- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT - Alles files durchgehen, ob etwas nach $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins, $REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists oder woanders (zb.: bei den Tools wie C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md)
-
----
-
-### shims
-
-- [ ] `lib.nvim` — system_opener-Shim entfernen (deprecated seit 2026-09-05)
-  Der Shim `lib.nvim.fs.open.url.system_opener` delegiert nur noch an
-  `lib.nvim.cross.open_default`. Ziel: Consumer migrieren, dann Shim +
-  `@types` + Doku-Einträge löschen (lib.nvim minor/major bump).
-  - [ ] `documentation.nvim`:
-        - `lua/documentation/bindings/usrcmds/open.lua` (2×)
-        - `lua/documentation/editor/browse/init.lua` (1×)
-        - `lua/documentation/editor/health.lua` (Modul-Liste)
-  - [ ] `gopath.nvim`: `lua/gopath/external/helpers/opener.lua` (Soft-Dep-Wrapper mit eigenem Fallback)
-  - [ ] `reposcope.nvim`: `lua/reposcope/utils/os.lua`
-  - [ ] `runtime-analysis.nvim`: `lua/runtime-analysis/telemetry/command.lua` (2×)
-  Ersetzung überall: `require("lib.nvim.fs.open.url.system_opener").open(x)`
-                  →   `require("lib.nvim.cross.open_default")(x)`
-  `is_like`/`is_ike` haben (noch) keinen Ersatz — falls jemand die nutzt,
-  Pattern inline ziehen. Aktuell: 0 externe Nutzer.
-  - [ ] danach in `lib.nvim`: `lua/lib/nvim/fs/open/url/system_opener/` löschen,
-        Referenzen in `docs/modules.md`, `docs/API/filesystem.md`,
-        `docs/FEATURES/FILESYSTEM.md`, `docs/WORKFLOW.md` entfernen
-  - [ ] `grep -rn "system_opener" ~/repos --include=*.lua` → muss leer sein
 
 ---
 
