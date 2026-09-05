@@ -116,19 +116,45 @@ def markdown_files(root: str):
                 yield os.path.join(dirpath, fn)
 
 
-def real_name_mismatch(path: str) -> str | None:
-    """Return the real on-disk name if `path`'s last segment differs in case."""
-    parent, name = os.path.split(path)
+def real_name_mismatch(root: str, path: str) -> str | None:
+    """Return the real on-disk spelling if any segment of `path` differs in case.
+
+    Every segment, not just the last one: a link to `features/COLORSCHEMES.md`
+    under a directory actually named `FEATURES/` has a perfectly-cased file name
+    and a mis-cased parent, and checking only `os.path.split(path)[1]` calls that
+    green. It 404s on GitHub like any other case error -- found in
+    color_my_ascii.nvim and sandbox.nvim, both after their full pass.
+
+    Returns the corrected relative path, so the report names what to write.
+    """
     try:
-        entries = os.listdir(parent or ".")
-    except OSError:
-        return None
-    if name in entries:
-        return None
-    for e in entries:
-        if e.lower() == name.lower():
-            return e
-    return None
+        rel = os.path.relpath(path, root)
+    except ValueError:
+        return None  # different drive on Windows -- an absolute personal-machine
+        # path (some IDEAS/ notes link straight to `E:\repos\...`), not a repo-relative
+        # link a case mismatch could even apply to
+    if rel.startswith(".."):
+        return None  # outside the repo; the caller only reports existence there
+
+    here, fixed, wrong = root, [], False
+    for segment in rel.replace("\\", "/").split("/"):
+        if segment in (".", ""):
+            continue
+        try:
+            entries = os.listdir(here or ".")
+        except OSError:
+            return None
+        if segment in entries:
+            real = segment
+        else:
+            real = next((e for e in entries if e.lower() == segment.lower()), None)
+            if real is None:
+                return None  # DEAD is the caller's business, not ours
+            wrong = True
+        fixed.append(real)
+        here = os.path.join(here, real)
+
+    return "/".join(fixed) if wrong else None
 
 
 def check(root: str) -> tuple[int, int, int, int]:
@@ -159,12 +185,16 @@ def check(root: str) -> tuple[int, int, int, int]:
                 print(f"DEAD  {rel_md}  ->  {target}")
                 dead += 1
                 continue
-            real = real_name_mismatch(resolved)
+            real = real_name_mismatch(root, resolved)
             if real:
-                print(f"CASE  {rel_md}  ->  {target}   (on disk: {real})")
+                print(f"CASE  {rel_md}  ->  {target}   (in the repo: {real})")
                 case += 1
                 continue
-            rel_target = os.path.relpath(resolved, root)
+            try:
+                rel_target = os.path.relpath(resolved, root)
+            except ValueError:
+                continue  # different drive on Windows -- an absolute personal-machine
+                # path, not a repo-relative reference to check for gitignore-hiding
             if not rel_target.startswith(".."):
                 live.append((rel_md, target, rel_target.replace(os.sep, "/")))
 
