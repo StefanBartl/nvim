@@ -99,9 +99,15 @@ in `github_stats.nvim`, eine Shell-Injection über den Clipboard-Zielpfad in
 **Autorenentscheidung folgend nur noch ein Repo pro Durchgang**. Details und
 das vollständige Repo-für-Repo-Ergebnis stehen in
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
-Die übrigen sieben Regel-Familien (`PRIN-`/`LUA-`/`ERR-`/`UI-`/`TS-`/`DEP-`/
-`PERF-`) sind noch nicht begonnen — bewusst letzter Punkt der Gesamtliste,
-blockiert laut Standard nichts. **P6 (BINDINGS-Sanierung, §6) ist
+**Zweite Familie, `DEP-*` (7 Regeln, veraltete Neovim-APIs), läuft:** rein
+mechanisch per Grep über alle 32 Repos gescannt (kein Agent nötig), 4 von 8
+betroffenen Repos gefixt (gopath/markdown/mdview/reposcope.nvim — `vim.loop`
+ohne Fallback), 4 offen (github_stats.nvim dito, debugging/filetree/
+sandbox.nvim je `termopen()`). Details in
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — DEP-* Welle"](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--dep--welle-zwischenstand-2026-09-05-nacht).
+Die übrigen sechs Regel-Familien (`PRIN-`/`LUA-`/`ERR-`/`UI-`/`TS-`/`PERF-`)
+sind noch nicht begonnen — bewusst letzter Punkt der Gesamtliste, blockiert
+laut Standard nichts. **P6 (BINDINGS-Sanierung, §6) ist
 vollständig abgeschlossen** — `BND-01`…`07` alle erledigt,
 `PersonelPlugins/BINDINGS/` entfernt, siehe BND-04-Ledger und den
 BND-05-Abschnitt unten. **P7 (Abschlussbericht) ist erledigt** — `README.md`
@@ -170,7 +176,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
-| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). **8.2b: die `SEC-*`-Welle ist fertig** — alle 32 Repos geprüft, 18 echte Funde behoben+gepusht (2 davon reale Schwachstellen: Token-Leak in github_stats.nvim, Shell-Injection in images.nvim; dazu ein systemischer Timeout-Fund über alle drei Provider von reposcope.nvim). Die übrigen sieben Regel-Familien von 8.2b sind noch offen — bewusst letzter Punkt der Gesamtliste. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md) |
+| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). **8.2b: die `SEC-*`-Welle ist fertig** — alle 32 Repos geprüft, 18 echte Funde behoben+gepusht (2 davon reale Schwachstellen: Token-Leak in github_stats.nvim, Shell-Injection in images.nvim; dazu ein systemischer Timeout-Fund über alle drei Provider von reposcope.nvim). **`DEP-*` (2. Familie) läuft:** 4 von 8 betroffenen Repos gefixt (`vim.loop`-Fallback). Die übrigen sechs Regel-Familien von 8.2b sind noch nicht begonnen — bewusst letzter Punkt der Gesamtliste. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](./P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md) |
 | P6 — BINDINGS-Sanierung | ✅ | 2026-09-05 | **Vollständig abgeschlossen** — `BND-01`…`07` alle erledigt (Details: BND-04-Ledger + BND-05-Abschnitt unten). `PersonelPlugins/BINDINGS/` ist entfernt; nvim-config hat jetzt eine eigene Root-`docs/BINDINGS.md`, gelesen über `config.plugin_sheets()`s neuen `"nvim-config"`-Eintrag |
 | P7 — Abschlussbericht | ✅ | 2026-09-05 | `51be729fc` — `README.md` in diesem Ordner **ist** der Bericht; P0–P6 abgeschlossen, 8.2b lief zum Archivierungszeitpunkt bewusst weiter (blockiert laut Standard nichts). Status-Zeile war seit dem Archivierungs-Commit fälschlich noch auf „offen" stehengeblieben — korrigiert |
 

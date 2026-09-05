@@ -114,14 +114,20 @@ baute eine `explorer.exe`-Kommandozeile per Hand, ohne einen eingebetteten
 Anführungsstrich abzufangen — fail-closed statt fragilem Escaping behoben).
 Ein Funktionsbug bei `pdfport.nvim` (Windows-`:PdfPort`-Systemöffnen praktisch
 nie funktionsfähig) lag klar außerhalb der SEC-*-Familie und wurde als
-eigener Follow-up-Task vermerkt statt mitgefixt. Vollständiges
+eigener Follow-up-Task vermerkt statt mitgefixt — der Autor hat ihn
+inzwischen in einer eigenen Sitzung selbst gefixt. Vollständiges
 Repo-für-Repo-Ergebnis:
 [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — SEC-* Welle"](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--sec--welle-zwischenstand-2026-09-05-abend).
 
-Offen bleiben die übrigen sieben Regel-Familien (`PRIN-*`/`LUA-*`/`ERR-*`/
-`UI-*`/`TS-*`/`DEP-*`/`PERF-*`) über alle 32 Repos. Laut Standard
-**blockiert das nichts** — es ist der bewusst letzte Punkt der gesamten
-Liste, keine vergessene Aufgabe.
+**Zweite Regel-Familie, `DEP-*` (7 Regeln, veraltete Neovim-APIs), läuft:**
+rein mechanisch per Grep über alle 32 Repos auf einmal geprüft, 4 von 8
+betroffenen Repos gefixt. Details:
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md §„8.2b — DEP-* Welle"](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md#82b--dep--welle-zwischenstand-2026-09-05-nacht).
+
+Offen bleiben `DEP-*`s restliche 4 Repos sowie die übrigen sechs
+Regel-Familien (`PRIN-*`/`LUA-*`/`ERR-*`/`UI-*`/`TS-*`/`PERF-*`) über alle
+32 Repos. Laut Standard **blockiert das nichts** — es ist der bewusst
+letzte Punkt der gesamten Liste, keine vergessene Aufgabe.
 
 **Die drei Autocmds-Beobachtungen** in
 `docs/NOTES/CrossPlugin/Autocmds-Observations.md` sind ausdrücklich

@@ -406,3 +406,52 @@ mitgefixt.
 Wellen laut Piloten-Empfehlung (Pilot: `buffer-ctx.nvim`, siehe oben).
 Autorenentscheidung, wann das angegangen wird — blockiert laut Standard
 nichts, es bleibt bewusst der letzte Punkt der Gesamtliste.
+
+`task_3b310657` (der `pdfport.nvim`-Funktionsbug) ist erledigt — der Autor hat
+ihn in einer eigenen Sitzung fixen lassen (`7d5b9ec`, dispatcht jetzt über
+`lib.nvim.cross.open_default`).
+
+---
+
+## 8.2b — DEP-* Welle, Zwischenstand 2026-09-05 (Nacht)
+
+Zweite Regel-Familie nach `SEC-*`. **7 Regeln** (`DEP-01`…`DEP-07`, veraltete
+Neovim-APIs → moderne Ersatz-APIs), rein mechanisch prüfbar: ein Grep pro
+Regel-Pattern über alle 32 Repos auf einmal (kein Agent nötig, kein
+Sitzungslimit-Risiko), danach Fixes einzeln pro betroffenem Repo.
+
+**Korrektur vor Start:** Erste Zählung hielt `ERR-*` für die zweitkleinste
+Familie (7 Regeln) und wollte dort anfangen — falsch gezählt, weil der
+Katalog Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte listet
+und der erste Grep nur Tabellenzeilen fing. `ERR-*` hat tatsächlich 34
+Regeln, genauso groß wie `UI-*`. Echte Zahlen: `PERF-*` 57, `LUA-*` 45,
+`PRIN-*` 37, `UI-*`/`ERR-*`/`LLS-*` je 34, `SEC-*` 23, `DEP-*` 7, `TS-*` 5.
+`DEP-*` (statt `ERR-*`) als tatsächlich kleinste sinnvolle Familie gewählt.
+
+### Scan-Ergebnis über alle 32 Repos
+
+| Regel | Muster | Treffer |
+|---|---|---|
+| `DEP-01` | `vim.loop` ohne Fallback | 5 Repos |
+| `DEP-02` | `termopen()` | 3 Repos (5 Aufrufstellen) |
+| `DEP-03` | `nvim_buf_add_highlight()` | 0 |
+| `DEP-04` | `nvim_err_writeln()`/`nvim_out_write()` | 0 |
+| `DEP-05` | `sign_define()` außerhalb Diagnostics | 0 (alle Treffer sind DAP-/eigene Plugin-Signs oder korrekt Neovim-&lt;0.10-gegated) |
+| `DEP-06` | `vim.tbl_flatten()` | 0 |
+| `DEP-07` | `nvim_buf_get_option()` | 0 (nur eine Prosa-Erwähnung in einer README) |
+
+### Ergebnis je Repo
+
+| Repo | Befund | Commit |
+|---|---|---|
+| gopath.nvim | `DEP-01`, `alternate/helpers/directory.lua`s bloßes `vim.loop` — Floor ist 0.10+, aber Repo-Konvention nutzt trotzdem durchgängig den `vim.uv or vim.loop`-Fallback | `a33f515`, `b53bc0b` (erst `vim.uv` pur, dann auf Repo-Konvention korrigiert) |
+| markdown.nvim | `DEP-01`, drei `handler/*.lua`-Module (`file`, `image`, `init`) | `9fd5d6c` |
+| mdview.nvim | `DEP-01`, vier Module (`adapter/detached.lua`, `adapter/runner.lua`, `adapter/ws_client.lua`, `test/diff_harness.lua`) — Floor hier 0.9+, Fallback also zwingend, nicht nur Konvention | `997fe47` |
+| reposcope.nvim | `DEP-01`, `utils/core.lua` | `fe06de7` |
+| github_stats.nvim | offen | — |
+| debugging.nvim | offen (`DEP-02`, `tools/proc_trace.lua:135`) | — |
+| filetree.nvim | offen (`DEP-02`, `features/system/shell_run/init.lua:76` — Kommentar erwähnt die Deprecation bereits, aber nutzt sie trotzdem) | — |
+| sandbox.nvim | offen (`DEP-02`, 5 Stellen: `docker`/`nerdctl`/`podman`-`exec_in_container.lua`, `wsl/exec_in_distro.lua`, `bindings/usrcmds/container_commands_buffer.lua`) | — |
+
+**4 von 8 betroffenen Repos durch.** Rest folgt, ein Repo pro Durchgang wie
+etabliert.
