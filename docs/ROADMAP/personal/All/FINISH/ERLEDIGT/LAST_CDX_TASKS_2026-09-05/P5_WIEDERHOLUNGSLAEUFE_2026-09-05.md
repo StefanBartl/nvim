@@ -5,9 +5,9 @@ Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
 Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
 jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben/acht
 übrigen Regel-Familien, ~250 Punkte, Handprüfung) ist **angelaufen** — die
-`SEC-*`-Welle (24 Regeln) läuft über 21 von 32 Repos, siehe der Abschnitt
+`SEC-*`-Welle (24 Regeln) läuft über 22 von 32 Repos, siehe der Abschnitt
 „8.2b — SEC-* Welle" am Ende. Die übrigen sieben Familien und die
-verbleibenden 11 Repos sind weiterhin offen.
+verbleibenden 9 Repos sind weiterhin offen.
 
 Alle vier Werkzeuge liefen **nicht** über die Usercmds aus dem Standard
 (`:LibDuplicateScan`, `:LibBindingsAudit`, `:LibBindingsAuditGaps`) — diese
@@ -355,8 +355,9 @@ Repos.
 | lsp.nvim | 1 — SEC-02, `prettier_format` spawnte ohne `cwd` (Geschwister `eslint_fix` löste die Projekt-Root schon auf und übergab sie) — erbte damit stillschweigend das globale Editor-cwd statt des Puffer-Projekts | `2a71561` |
 | markdown.nvim | 0 | — |
 | mdview.nvim | 1 — SEC-20/21, `install.lua`s `curl_download()` (Release-Binary + Client-Bundle) hatte weder `--max-time` noch `--max-filesize` (blockiert den Main-Loop, kann Platte füllen), und ließ bei einem Fehlschlag die abgeschnittene Datei liegen — `ensure_asset()`s „existiert schon"-Schnellpfad hätte eine so beschädigte Binary beim nächsten `:MDView start` **ungeprüft als Server-Prozess gestartet**, ohne je die Checksumme zu ziehen | `E:\repos\mdview.nvim` |
+| open.nvim | 0 im Repo selbst — **aber 1 im mitbenutzten `lib.nvim`-Code**: `reveal_in_fm`s `win_reveal.ps1` (geteilt mit filetree.nvim, dort ist es `<leader>fm`) baute das `-ArgumentList` für `explorer.exe` per Hand aus einem manuell gequoteten String. Ein natives Windows-Pfad kann kein `"` enthalten, aber ein per `wslpath -w` übersetzter WSL-Pfad schon — Linux erlaubt es in Dateinamen, und `wslpath` filtert nichts. Ein `"` im Pfad hätte das selbstgebaute Anführungszeichen vorzeitig geschlossen und den Rest des Dateinamens als zusätzliche `explorer.exe`-Argumente einschmuggeln können. Fail-closed statt fragilem Escaping (`explorer.exe`s Quote-Konvention ist nicht robust genug dokumentiert) | `E:\repos\lib.nvim` |
 
-**14 von 21 geprüften Repos hatten mindestens einen echten Fund**, alle
+**15 von 22 geprüften Repos hatten mindestens einen echten Fund**, alle
 behoben, committet und gepusht. Zwei Funde sind keine Kosmetik, sondern
 reale Schwachstellen: der GitHub-Token-Leak über Prozess-Argv
 (`github_stats.nvim`) und die Shell-Injection über den Clipboard-Zielpfad
@@ -375,7 +376,7 @@ lassen sich zwischendurch nicht von Hand nachhalten. Runde 8 (`mdview.nvim`,
 **bevor** irgendein Agent etwas geschrieben hat — alle drei Repos standen
 danach mit sauberem Working Tree da, nichts zu retten, nichts verloren.
 
-**10 Repos noch nicht geprüft:** `open.nvim`, `pdfport.nvim`,
+**9 Repos noch nicht geprüft:** `pdfport.nvim`,
 `pickers.nvim`, `recommender.nvim`, `replacer.nvim`, `reposcope.nvim`,
 `runtime-analysis.nvim`, `sandbox.nvim`, `sessions.nvim`, `spotlight.nvim` —
 weiter alphabetisch, ein Repo je Durchgang, voller SEC-*-Katalog pro Repo.
