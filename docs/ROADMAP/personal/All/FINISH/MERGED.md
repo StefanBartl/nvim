@@ -9,6 +9,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
   - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
     - [Git & Repo-Hygiene](#git-repo-hygiene)
     - [Docs, Comments,...](#docs-comments)
+    - [shims](#shims)
   - [Liste B - Claude Tasks](#liste-b-claude-tasks)
     - [MISC](#misc)
     - [My `.nvim`-Plugins](#my-nvim-plugins)
@@ -36,12 +37,19 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\checkhealt_conventions.md
 - [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md weiter machen
 
+- [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md
+
+
+[ ] in den plugins docs immer
+    - [ ] $REPOS_DIR schreiben anstelle von C:\repos oder $REPOS_DIR\
+    - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
+    - [ ] Wobei aebri n den plugins, anders als der nvim-config, die frage istz, warum sollte dort ein Pfad auf    c:\repos oder e:\repos sinn machen - andere user haben wvielleicht garn keine $REPOS_DIR env var. daher  muss das geklärt wreen. ioch weiß zumindest von einen vorkomen, wo woir in der implementiert haebn, dass nach $REPOS_DOIR akiv gersucht wird, das haben wir dann abe in der readme.md auchangtegeben und müsste ein ausnahemfall sien. daher -> teilvon docs clearing, sich die vokrommen näöher anzuaschauen, es knnte aien anzeigersein für fehlannehmen/zeiger dass diese infos zu nmotizen gehölren, nicht in das polguins erpo docs, usw... siehst du da sähnlich?
+
 ---
 
 ### Git & Repo-Hygiene
 
 - [ ] ci workflows -> ausbauen wenn notig, alle grün "machen"
-- [ ] Alle Features/Bugfixes committen & pushen (Commit-Message ausgeben, falls Push nicht möglich). — **Zuletzt geprüft 2026-08-26: alle 31 Repos + Config sauber und gepusht; Claude-Branches und `.claude/worktrees/` überall abgeräumt (siehe `Merged_Finished.md`).** Wiederkehrend, bleibt daher stehen. Alle Claude Branches löschen (außer den aktuellen), vorher noch checken, ob comitts enthalten sind ie noch nnicht in mian sind.
 - [ ] Git-Release pro Repo, sobald fertig.
 
 ---
@@ -55,12 +63,31 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
 
-[ ] in den plugins docs immer
-  - [ ] $REPOS_DIR schreiben anstelle von C:\repos oder $REPOS_DIR\
-  - [ ] für angaben innerhalb der nvim-config, immer ~/ oder vim.fn.stdpath("config")
-  - [ ] Wobei aebri n den plugins, anders als der nvim-config, die frage istz, warum sollte dort ein Pfad auf c:\repos oder e:\repos sinn machen - andere user haben wvielleicht garn keine $REPOS_DIR env var. daher muss das geklärt wreen. ioch weiß zumindest von einen vorkomen, wo woir in der implementiert haebn, dass nach $REPOS_DOIR akiv gersucht wird, das haben wir dann abe in der readme.md auchangtegeben und müsste ein ausnahemfall sien. daher -> teilvon docs clearing, sich die vokrommen näöher anzuaschauen, es knnte aien anzeigersein für fehlannehmen/zeiger dass diese infos zu nmotizen gehölren, nicht in das polguins erpo docs, usw... siehst du da sähnlich?
-
 - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT - Alles files durchgehen, ob etwas nach $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins, $REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists oder woanders (zb.: bei den Tools wie C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md)
+
+---
+
+### shims
+
+- [ ] `lib.nvim` — system_opener-Shim entfernen (deprecated seit 2026-09-05)
+  Der Shim `lib.nvim.fs.open.url.system_opener` delegiert nur noch an
+  `lib.nvim.cross.open_default`. Ziel: Consumer migrieren, dann Shim +
+  `@types` + Doku-Einträge löschen (lib.nvim minor/major bump).
+  - [ ] `documentation.nvim`:
+        - `lua/documentation/bindings/usrcmds/open.lua` (2×)
+        - `lua/documentation/editor/browse/init.lua` (1×)
+        - `lua/documentation/editor/health.lua` (Modul-Liste)
+  - [ ] `gopath.nvim`: `lua/gopath/external/helpers/opener.lua` (Soft-Dep-Wrapper mit eigenem Fallback)
+  - [ ] `reposcope.nvim`: `lua/reposcope/utils/os.lua`
+  - [ ] `runtime-analysis.nvim`: `lua/runtime-analysis/telemetry/command.lua` (2×)
+  Ersetzung überall: `require("lib.nvim.fs.open.url.system_opener").open(x)`
+                  →   `require("lib.nvim.cross.open_default")(x)`
+  `is_like`/`is_ike` haben (noch) keinen Ersatz — falls jemand die nutzt,
+  Pattern inline ziehen. Aktuell: 0 externe Nutzer.
+  - [ ] danach in `lib.nvim`: `lua/lib/nvim/fs/open/url/system_opener/` löschen,
+        Referenzen in `docs/modules.md`, `docs/API/filesystem.md`,
+        `docs/FEATURES/FILESYSTEM.md`, `docs/WORKFLOW.md` entfernen
+  - [ ] `grep -rn "system_opener" ~/repos --include=*.lua` → muss leer sein
 
 ---
 

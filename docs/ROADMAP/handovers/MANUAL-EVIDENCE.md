@@ -1,5 +1,34 @@
 # Manual evidence
 
+## Table of content
+
+  - [Intro](#intro)
+  - [How to read a row](#how-to-read-a-row)
+  - [Before any row is worth reading: which code was actually loaded](#before-any-row-is-worth-reading-which-code-was-actually-loaded)
+    - [How this config loads hover.nvim](#how-this-config-loads-hovernvim)
+    - [The check to run first](#the-check-to-run-first)
+  - [What no CI covers](#what-no-ci-covers)
+    - [Images drawn into the float](#images-drawn-into-the-float)
+    - [A hover resized](#a-hover-resized)
+    - [A PDF page zoomed, which is a re-render rather than a crop](#a-pdf-page-zoomed-which-is-a-re-render-rather-than-a-crop)
+    - [A picture zoomed, and panned around in](#a-picture-zoomed-and-panned-around-in)
+    - [The resize wheel, where it points](#the-resize-wheel-where-it-points)
+    - [A hover put full screen](#a-hover-put-full-screen)
+    - [A PDF page rasterized](#a-pdf-page-rasterized)
+    - [A page rendered by a headless browser](#a-page-rendered-by-a-headless-browser)
+    - [A link that answers with a PDF](#a-link-that-answers-with-a-pdf)
+    - [An office document converted](#an-office-document-converted)
+    - [A contribution asked only on request](#a-contribution-asked-only-on-request)
+  - [What is checked automatically, for contrast](#what-is-checked-automatically-for-contrast)
+  - [Keeping this honest](#keeping-this-honest)
+  - [Two findings from 2026-09-04 that are not rows](#two-findings-from-2026-09-04-that-are-not-rows)
+    - [A bare path in prose that does not hover, while the picture beside it does](#a-bare-path-in-prose-that-does-not-hover-while-the-picture-beside-it-does)
+    - [PageUp / PageDown on a keyboard that has neither](#pageup-pagedown-on-a-keyboard-that-has-neither)
+
+---
+
+## Intro
+
 What is checked by hand, because no CI can check it — and **when it was last
 checked**, which is the part that decays.
 
@@ -21,6 +50,8 @@ repository is the wrong home for it. hover.nvim keeps the two probe *scripts*,
 which are repeatable and belong there; links below into the plugin's own docs
 point at GitHub for the same reason.
 
+---
+
 ## How to read a row
 
 | Column | Means |
@@ -29,12 +60,16 @@ point at GitHub for the same reason.
 | On | The machine, terminal and Neovim it was seen on. Everything here is terminal-dependent, so "it worked" without that is not a claim. |
 | How | Enough to repeat it. If a row cannot be repeated from what it says, it is not evidence. |
 
+---
+
 ## Before any row is worth reading: which code was actually loaded
 
 **A row collected against code the session never loaded is worse than no row**,
 because it reads as a statement about the plugin and is a statement about a
 snapshot of it. This happened on 2026-09-04 and cost most of a test pass —
 twice, because the first diagnosis was also wrong.
+
+---
 
 ### How this config loads hover.nvim
 
@@ -59,6 +94,8 @@ That second one is what actually happened: zen (`c20191e`) and the page
 screenshot (`4e2ebeb`) were written while the session under test was already
 running. `F` did nothing and `:Hover links web shot` did not exist because that
 Neovim had never seen either. A restart made both work.
+
+---
 
 ### The check to run first
 
@@ -91,6 +128,8 @@ on, so a missing one dates the loaded code:
 | `:Hover links web shot` | older than `4e2ebeb` — no page screenshots |
 | `:Hover links web fetch pdf` | older than `dbc2b87` — a PDF link shows its size only |
 
+---
+
 ## What no CI covers
 
 ### Images drawn into the float
@@ -101,6 +140,8 @@ on, so a missing one dates the loaded code:
 | **On** | Windows 11, WezTerm, Neovim 0.12.2, images.nvim present |
 | **How** | Rest the cursor on a `./assets/*.png` path. The picture appears inside the float, fitted, not beside it. |
 | **Watch for** | The picture landing beside its own frame — that is the placement bug written up in [architecture.md](https://github.com/StefanBartl/hover.nvim/blob/main/docs/architecture.md#two-things-that-must-not-be-changed-casually), and it only shows with a sidebar open. Reproduce with a real image; a generated test card cannot reveal an aspect-ratio problem. |
+
+---
 
 ### A hover resized
 
@@ -134,6 +175,8 @@ grows through five steps on a 210×55 terminal (71×20 cells of picture up to
 `lines - 4`. Those are float geometries read back from Neovim — they say the
 frame is the right size, not that a picture arrived in it.
 
+---
+
 ### A PDF page zoomed, which is a re-render rather than a crop
 
 | | |
@@ -155,6 +198,8 @@ from the plain render.
 **What that leaves.** The probe proves the file is produced and is sharper.
 Whether it is *drawn* into the float — and whether a page reads as sharp to a
 person rather than as a number — is what this row is for.
+
+---
 
 ### A picture zoomed, and panned around in
 
@@ -214,6 +259,8 @@ fixed, and the spec now writes a real cropped file with ImageMagick and
 compares its pixel size against the rectangle the arithmetic asked for. What is
 left for this row is the part after the file exists: whether it is *drawn*.
 
+---
+
 ### The resize wheel, where it points
 
 | | |
@@ -235,6 +282,8 @@ float is `focusable = false`, and with the pointer squarely inside one, that
 field named the window *underneath* it. Only the screen coordinates are
 usable, so `hover.float.contains` does the rectangle test itself.
 
+---
+
 ### A hover put full screen
 
 | | |
@@ -243,6 +292,8 @@ usable, so `hover.float.contains` does the rectangle test itself.
 | **On** | Windows 11, WezTerm, Neovim 0.12.2, images.nvim present, hover.nvim loaded from `$REPOS_DIR\hover.nvim` |
 | **How** | Hover a picture and press `F`. The float takes almost the whole editor, centred, and the picture fills it. `F` again returns it to where it was. Then hover a *text* file and press `F`: the float should show roughly fifty lines rather than twenty — **more lines**, not a larger frame around the same twenty. `-` inside zen shrinks it without leaving zen; `+` does nothing, because zen is already at the terminal's ceiling. |
 | **Watch for** | The **frame** filling the screen while the picture inside it stays the size it was — the same failure the resize row watches for, and the one a spec structurally cannot see, since the cell area is only a request to the terminal. Also the 📌 marker: zen pins by default, and the marker is re-applied after every re-render because `float.open` replaces the window. A zen float with no 📌 in its border means that re-application was lost again. |
+
+---
 
 ### A PDF page rasterized
 
@@ -253,6 +304,8 @@ usable, so `hover.float.contains` does the rectangle test itself.
 | **How** | Cursor on a `.pdf` path; page 1 appears. `<M-PageDown>` pages forward and stops at the last page. On a keyboard without PageUp/PageDown, `<C-Down>` / `<C-Up>` are the second pair and do the same — see the finding at the end of this file. |
 | **Watch for** | "rendering…" that never resolves, and paging past the end — the page count is never known in advance, so the last page is discovered by asking for one too many. |
 
+---
+
 ### A page rendered by a headless browser
 
 | | |
@@ -262,6 +315,8 @@ usable, so `hover.float.contains` does the rectangle test itself.
 | **How** | `:Hover links web shot`, then `:Hover show` with the cursor on an `https://` link. A picture of the page appears in the float. Then `F` for the full-screen reading, `>` to magnify a detail, `h`/`j`/`k`/`l` to move it. For the trigger half: `:Hover links web shot eager` and `:Hover auto url`, then rest the cursor on a link and wait — nothing should start for the first second of stillness. |
 | **Watch for** | Three things, in order of how badly they would fail. **The reader's own Chrome profile being used** — the picture would show them logged in, and their cookies would have gone to that host; the throwaway `--user-data-dir` is what prevents it and it is the one flag worth verifying by eye. **A browser per link while scrolling**, which would mean the start delay or the one-at-a-time kill is not working; the cheapest check is watching the process list while running the cursor down a page of links. And **an unreadable picture**, which is the fit factor rather than a bug — 1280×900 into a zen float is about 1.0, and a taller capture is meant to be read with the zoom. Since `28dc9e4`, a `>` that cannot produce a crop at all — an unreadable PNG, no `images.convert` — shows the **plain** picture rather than nothing; before that it returned nil two frames past the place that could have explained it. The date above is unmoved on purpose: what was checked is a crop that *works*, and that half is unchanged. |
 
+---
+
 ### A link that answers with a PDF
 
 | | |
@@ -270,6 +325,8 @@ usable, so `hover.float.contains` does the rectangle test itself.
 | **On** | — |
 | **How** | `:Hover links web fetch pdf` (it turns `links web fetch` on with it), then `:Hover show` with the cursor on a link that really serves a PDF — an arXiv `/pdf/` URL or a datasheet, not a `.pdf` in a path that redirects. The first page appears in the float. Then `<M-PageDown>` to page, `>` to magnify, `F` for the full-screen reading: all three should behave exactly as they do on a local `.pdf`, because past the download it *is* the local path. |
 | **Watch for** | **A page that never arrives after "downloading the document…"** — the honest failure would name a reason instead. **`pdftoppm` erroring on a file that downloaded fine**, which would mean the bytes were mangled in transit rather than the renderer being broken; that is the `text = true` failure the second request exists to avoid, and seeing it would mean the second request is not being made. And **paging or zooming falling back to line-scrolling**, which would mean `_open.paged` was not recorded — the symptom is `<M-PageDown>` moving by lines on a web PDF while it turns pages on a local one. |
+
+---
 
 ### An office document converted
 
@@ -314,6 +371,8 @@ session rather than at startup, which is where it is called from.
 once per session. Re-hovering the same document answers out of the cache and
 converts nothing, so nothing would have been swept and the check would have
 read as a failure of the sweep rather than of the method.
+
+---
 
 ### A contribution asked only on request
 
@@ -360,6 +419,8 @@ green in every spec, and silent on the machine, and the only thing that says so
 is a run on a real one. When a container hover answers nothing, **check which
 engine was chosen before suspecting the hover.**
 
+---
+
 ## What is checked automatically, for contrast
 
 Not evidence of the above, and listed only so the boundary is clear: the spec
@@ -367,6 +428,8 @@ suite, `stylua --check`, `luacheck`, and a LuaLS scan with the real injected
 library — the last of those run from
 `nvim/scripts/luals-scan/`, not from this repository. All four on Ubuntu and
 Windows, per push.
+
+---
 
 ## Keeping this honest
 
@@ -411,6 +474,8 @@ Neither is about something CI cannot reach. Both are about a **correct**
 behaviour that reads as a broken one, which is the other thing worth writing
 down.
 
+---
+
 ### A bare path in prose that does not hover, while the picture beside it does
 
 Seen with three lines in one buffer:
@@ -451,6 +516,8 @@ section.
 One thing that *would* have been a defect and is not: the **backslash** path.
 `.\image_hover.txt` resolves.
 
+---
+
 ### PageUp / PageDown on a keyboard that has neither
 
 The scroll keys are two pairs, not one, and this is why:
@@ -463,3 +530,6 @@ So nothing needs adding: **`<C-Down>` and `<C-Up>` page a PDF and scroll a file
 already.** Confirmed present in `DEFAULTS.scroll_keys` on 2026-09-04. Ctrl
 rather than Alt on the arrows, because `<M-Up>`/`<M-Down>` is a widespread
 "move this line" binding.
+
+---
+
