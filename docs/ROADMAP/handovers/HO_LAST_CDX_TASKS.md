@@ -5,15 +5,17 @@ Begleitdatei zur Umsetzung von
 
 **Angelegt 2026-09-03. Stand 2026-09-05: P0–P4 erledigt — alle 32 Repos mit
 vollem Durchgang, E1 und `DOC-05` **32/32**, keine toten Links, keine toten
-Anker, keine verwaisten `docs/`-Dateien. P5 (8.1/8.3/8.4/8.5) erledigt; der
-volle 8.2-Regelkatalog jenseits von LuaLS ist bewusst **letzter Punkt dieser
-Liste** (Autorenentscheidung, siehe
-[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)) —
-blockiert nichts, wird angegangen sobald alles andere fertig ist. **P6
-(BINDINGS-Sanierung, §6) ist jetzt vollständig abgeschlossen** —
-`BND-01`…`07` alle erledigt, `PersonelPlugins/BINDINGS/` entfernt, siehe
-BND-04-Ledger und den BND-05-Abschnitt unten. P7 (Abschlussbericht) ist
-der letzte offene Punkt.**
+Anker, keine verwaisten `docs/`-Dateien. P5: 8.1/8.3/8.4/8.5 **und jetzt auch
+8.2a** erledigt (die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde, siehe
+[P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md)).
+Nur **8.2b** (die 7 übrigen Regel-Familien jenseits von LuaLS, ~250 Punkte,
+Handprüfung) bleibt bewusst **letzter Punkt dieser Liste**
+(Autorenentscheidung) — blockiert laut Standard nichts, wird angegangen
+sobald alles andere fertig ist. **P6 (BINDINGS-Sanierung, §6) ist
+vollständig abgeschlossen** — `BND-01`…`07` alle erledigt,
+`PersonelPlugins/BINDINGS/` entfernt, siehe BND-04-Ledger und den
+BND-05-Abschnitt unten. **P7 (Abschlussbericht) ist der letzte offene
+Punkt** — 8.2b blockiert ihn laut Standard nicht.**
 
 ---
 
@@ -77,7 +79,7 @@ in `LAST_CDX_TASKS.md`) sowie P5 (Wiederholungsläufe, §8) und P7
 | P3 — Pilot `fileops.nvim` | ✅ | 2026-09-03 | `da20a87` |
 | P3.5 — Referenz `lib.nvim` | ✅ | 2026-09-03 | `1dae2fc` |
 | P4 — Wellen 1–10 | ✅ | 2026-09-05 | **32 von 32** Repos vollständig durchgegangen. E1 **31/31**, `DOC-05` **32/32**, tote Links/Anker **0**, Tabellen-Befunde **0** |
-| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; 8.2-Pilot (buffer-ctx.nvim, volle Nicht-LLS-Regelmenge) gefahren, Aufwand hochgerechnet. Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Empfehlung: 8.2 wellenweise pro Regel-Familie, nicht pro Repo — Autorenentscheidung, wann das startet |
+| P5 — Wiederholungsläufe | 🟨 läuft | 2026-09-05 | 8.1/8.3/8.4/8.5 durch; **8.2a jetzt auch durch** — die 12 Repos + lsp.nvim auf 0 LuaLS-Befunde (5 echte Ein-Zeiler-Funde, 7 bereits sauber, lsp.nvim zwischenzeitlich fertig geworden; markdown.nvims 35 gemeldete Befunde als Scan-Tool-Messartefakt verifiziert, kein Code-Fix nötig). Siehe [P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md](P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md). Offen bleibt nur **8.2b** (die 7 übrigen Regel-Familien, ~250 Punkte, Handprüfung, wellenweise empfohlen) — Autorenentscheidung, wann das startet; blockiert laut Standard nichts |
 | P6 — BINDINGS-Sanierung | ✅ | 2026-09-05 | **Vollständig abgeschlossen** — `BND-01`…`07` alle erledigt (Details: BND-04-Ledger + BND-05-Abschnitt unten). `PersonelPlugins/BINDINGS/` ist entfernt; nvim-config hat jetzt eine eigene Root-`docs/BINDINGS.md`, gelesen über `config.plugin_sheets()`s neuen `"nvim-config"`-Eintrag |
 | P7 — Abschlussbericht | ⬜ offen | — | → `ERLEDIGT/` |
 

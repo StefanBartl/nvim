@@ -1,8 +1,11 @@
 # P5 — Die fünf Wiederholungsläufe, Stand 2026-09-05
 
 Begleitet [`LAST_CDX_TASKS.md` §8](../personal/All/FINISH/LAST_CDX_TASKS.md#8-die-fünf-wiederholungsläufe).
-Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist bewusst nur
-angerissen — Begründung in §8.2 unten.
+Vier der fünf Läufe sind durch; der fünfte (8.2, Diagnostics) ist in zwei
+Hälften zerfallen — **8.2a (die 12 Repos + lsp.nvim mechanisch auf 0) ist
+jetzt ebenfalls durch, siehe der neue Abschnitt am Ende.** 8.2b (die sieben
+übrigen Regel-Familien, ~250 Punkte, Handprüfung) bleibt offen —
+Begründung unten unverändert.
 
 Alle vier Werkzeuge liefen **nicht** über die Usercmds aus dem Standard
 (`:LibDuplicateScan`, `:LibBindingsAudit`, `:LibBindingsAuditGaps`) — diese
@@ -240,6 +243,60 @@ erste Durchgang, aber immer noch groß.
 gleichen Wellen-Logik wie P4 aufteilen — z. B. eine Regel-Familie
 (`SEC-*` zuerst, sicherheitsrelevant) über alle 32 Repos, dann die nächste
 Familie, statt ein Repo komplett gegen alle acht Familien auf einmal.
+
+---
+
+## 8.2a — Nachtrag 2026-09-05 (später am Tag): die 12 Repos + lsp.nvim
+
+**Alle 13 sind jetzt bei 0 gemessenen Befunden.** Baseline-Scan über genau
+diese 13 (`scripts/luals-scan/scan.sh before <13 Namen>`):
+
+| Repo | Vorher | Nachher | Was |
+|---|---|---|---|
+| cascade.nvim | 0 | — | bereits sauber |
+| casedesk.nvim | 0 | — | bereits sauber |
+| color_my_ascii.nvim | 0 | — | bereits sauber |
+| github_stats.nvim | 0 | — | bereits sauber |
+| language.nvim | 0 | — | bereits sauber |
+| replacer.nvim | 0 | — | bereits sauber |
+| **lsp.nvim** | 0 | — | **fertig geworden seit diesem Dokument (§8.2 oben notierte noch 172→35, „in Arbeit")** |
+| documentation.nvim | 1 | 0 | `opts.hover` ungenutzt annotiert — Feld fehlte auf `Documentation.Opts`. Ein-Zeiler |
+| hover.nvim | 1 | 0 | `vim.deepcopy(raw.auto_hover)`: das Feld ist `table\|boolean\|string[]`, `true`/`false` sind gültige Werte, `deepcopy` will eine Tabelle. Nur die Tabellenform kopiert |
+| insights.nvim | 2 | 0 | dieselbe Lücke wie documentation.nvim, auf zwei Klassen (`InsightsConfig`/`InsightsOpts`) |
+| pickers.nvim | 1 | 0 | Test prüft *bewusst* die Abwesenheit von `search_dirs` (fzf-lua kennt das Feld nicht) — Unterdrückung mit Begründung, kein Bug |
+| reposcope.nvim | 1 | 0 | `config.get_option("hover")` — `"hover"` fehlte im `ConfigOptionKey`-Enum |
+| **markdown.nvim** | **35** | **35 gemeldet, 0 real** | siehe unten — Messartefakt, nicht behoben, weil nichts zu beheben ist |
+
+Fünf echte Ein-Zeiler-Funde, alle aus derselben Familie: ein Plugin bietet die
+weiche `hover.nvim`-Integration an (`opts.hover ~= false` /
+`cfg.get_option("hover")`), aber das Feld fehlte in der eigenen Typdeklaration
+— nicht überraschend, `hover.nvim` ist als eigenständiges Repo erst seit
+2026-09-01 alt und diese Integration ist frisch. `worse: nothing` in allen
+fünf Nachher-Läufen.
+
+### markdown.nvim — 35 gemeldete Befunde, alle Messartefakt
+
+Alle 35 laufen auf denselben Grund zurück: `lua/markdown/@types/init.lua`
+deklariert drei Aliase auf `Hover.*`-Typen
+(`---@alias Mkdn.HoverConfig Hover.Config` usw.) — die Typen selbst leben seit
+der Extraktion in `hover.nvim`s eigenem `@types`, nicht mehr in markdown.nvim
+oder lib.nvim. Der Scan-Tool-Library-Dump für den markdown.nvim-Workspace
+enthielt `hover.nvim`s `lua/`-Verzeichnis **nicht** (geprüft: 37
+Library-Einträge, keiner davon `hover.nvim`) — exakt der Fall, den `LLS-01`
+beschreibt: „ohne Library-Injektion ist jeder Cross-Repo-Typ undefined".
+
+**Gegenprobe im laufenden Editor** (wie die Methode selbst für einen harten
+Befund verlangt): `lua/markdown/hover/section.lua` in einer echten Session
+geöffnet, auf den LSP-Anlauf gewartet, `vim.diagnostic.get(0)` ausgezählt —
+**0**. Der reale Editor löst `Hover.Config` über `lazydev`s Bedarfs-Injektion
+korrekt auf; nur der Scan-Dump (der `lazydev` laut eigenem README ersetzen
+soll) tut es hier nicht.
+
+**Keine Code-Änderung** — markdown.nvims eigener Code ist korrekt, die 35
+sind ein Loch im Scan-Werkzeug (welche Repos als „transitiv gebraucht" für den
+Library-Dump zählen), nicht im Plugin. Für `scripts/luals-scan` selbst
+vorgemerkt, nicht in diesem Durchgang behoben — außerhalb des Umfangs von
+8.2a, das die **Repos** auf 0 bringen soll, nicht das Messwerkzeug härten.
 
 ---
 
