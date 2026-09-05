@@ -384,7 +384,7 @@ end
 ---@param path string[]
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@param desc string
----@return table
+---@return Lib.UserCmd.Composer.Route
 local function search_route(path, category, desc)
   return {
     path = path,
@@ -412,7 +412,7 @@ end
 ---@param path string[]
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@param desc string
----@return table
+---@return Lib.UserCmd.Composer.Route
 local function browse_route(path, category, desc)
   return {
     path = path,
