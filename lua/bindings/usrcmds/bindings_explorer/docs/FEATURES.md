@@ -1,22 +1,27 @@
 # bindings-explorer — Features
 
 `:Bindings` — Picker über den BINDINGS-Korpus, drei Kategorien
-(Keymaps/Usercmds/Autocmds) aus **drei** Herkünften:
+(Keymaps/Usercmds/Autocmds) aus **zwei** Herkünften:
 
 | Herkunft | Was |
 |---|---|
 | `docs/NOTES/ExternPlugins/Bindings/` | Cheatsheets fremder Plugins — die gibt es nur hier |
-| `docs/NOTES/PersonelPlugins/BINDINGS/` | was diese Config selbst bindet (`nvim-config`, `bindings_explorer`, `MyPlugins`, …) |
-| `<plugin>/docs/BINDINGS.md` | die Doku jedes Personal-Plugins, **direkt aus dem Plugin gelesen** |
+| `<plugin>/docs/BINDINGS.md` | die Doku jedes Personal-Plugins **und dieser Config selbst**, direkt aus der jeweiligen `docs/BINDINGS.md` gelesen |
 
-Die dritte Herkunft kam am 2026-09-04 dazu (`BND-01`). Bis dahin lag unter
+Die zweite Herkunft kam am 2026-09-04 dazu (`BND-01`). Bis dahin lag unter
 `PersonelPlugins/BINDINGS/` je Plugin ein handgepflegtes Cheatsheet — eine
 zweite Fassung dessen, was jedes Repo als `docs/BINDINGS.md` mitbringt. Eine
 Kopie kann driften, und Drift zu finden ist die Aufgabe von
-`:Bindings check`; also liest der Explorer jetzt die Quelle. Wo beides
-vorliegt, **gewinnt das Repo-Sheet** und das Cheatsheet wird übergangen —
-Übergangszustand, bis `BND-04` die abgelösten Sheets gediffed und gelöscht
-hat.
+`:Bindings check`; also liest der Explorer die Quelle. `BND-04` hat danach
+jedes der 31 abgelösten Personal-Sheets gegen die jeweilige `docs/BINDINGS.md`
+gediffed, Einzigartiges nachgetragen und gelöscht; `BND-05` hat die Config
+selbst nachgezogen (`config.plugin_sheets()` trägt seither einen
+`"nvim-config"`-Eintrag, der auf diese Configs eigene, neue
+[`docs/BINDINGS.md`](../../../../../docs/BINDINGS.md) zeigt — derselbe
+Mechanismus, nur ohne Plugin-Repo dahinter) und den ganzen
+`PersonelPlugins/BINDINGS/`-Baum entfernt. Für Fremd-Plugins bleibt
+`ExternPlugins/Bindings/` bestehen — die liefern keine `docs/BINDINGS.md`
+nach diesem Standard.
 
 Der Bruch, den das überbrücken muss: der Cheatsheet-Korpus ist
 **art-zuerst** (die Kategorie ist der Ordnername), die Repos sind
