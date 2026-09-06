@@ -1,5 +1,21 @@
 # Handover — Synchrone Multi-File-Operationen auf async + `lib.nvim.progress`
 
+> **ABGESCHLOSSEN 2026-09-06.** Alle 6 Kandidaten (#1–#6) umgesetzt, committet,
+> gepusht, CI überall grün — siehe [Fortschritt](#fortschritt). #7/#8 waren
+> bewusste Streichungen, keine offenen Punkte.
+>
+> **Lektionen zurückgeschrieben** nach `WKDBooks` (Commit `996d974`):
+> - `wkdbook-Lua/Checklists/regeln/PERFORMANCE.md § Async-Scheduling,
+>   PERF-87`–`PERF-91` — Schwellwert vor Chunking, Chunk-Loop-Form, warum
+>   `vim.schedule` zwischen Chunks Progress erst sichtbar macht, synchrone
+>   Signatur + optionaler `on_done`, Abbruch ohne Transaktion mit Teilstand.
+> - `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md § lib.nvim verwenden, LUA-05` —
+>   Submodul-Präsenz weich prüfen, auch bei harter Kern-Abhängigkeit.
+> - Belege ergänzt in `belege/plugins/{replacer,filetree,documentation,
+>   markdown,insights,lib.nvim}.nvim.md`.
+>
+> Ursprungs-Item [`ASYNC-SYNC.md`](../ASYNC-SYNC.md) ist mit abgehakt.
+
 ## Table of content
 
   - [Ausgangslage](#ausgangslage)
