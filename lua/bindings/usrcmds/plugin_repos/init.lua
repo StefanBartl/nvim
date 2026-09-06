@@ -7,65 +7,17 @@
 --- dashboard|mode|list|picker} [args]` command via `lib.nvim.bindings.usercmd.composer`
 --- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
 ---
---- `:MyPlugins dashboard [dir]` (flat shorthand: `:MyPluginsDashboard`) just
---- opens reposcope.nvim's own `:Reposcope status [dir]` — that dashboard
---- already does the job, so this doesn't keep its own scoped-to-the-list
---- status reader around.
---- `clone`/`remove`/`fetch`/`pull`/`update`/`reclone`/`list` all operate on
---- the repos `plugins.personal` actually declares (see
---- `plugins.personal.list`) against `dir` (or `vim.env.REPOS_DIR` when no
---- argument is given) — never on every directory found by scanning `dir`,
---- unlike `:MyReposUpdate` (or `reposcope.nvim`'s `:Reposcope update`/
---- `status`), which fetch/pull or report on whatever git repos they find
---- regardless of what they are. That distinction matters here specifically
---- because `$REPOS_DIR` is not a plugin-only folder (Notes, WKDBooks, ...
---- live there too) — cloning everything found and removing everything found
---- are not symmetric risks either: an unrelated repo picked up by a
---- directory scan just gets an unwanted `git pull`, but the same repo picked
---- up by a scan-and-delete loses uncommitted work permanently. Sticking to
---- the named list is what makes `:MyPlugins remove`/`reclone` safe to run at
---- all.
+--- Every subcommand except `dashboard` (which just opens reposcope.nvim's
+--- own `:Reposcope status`) operates only on the repos `plugins.personal.list`
+--- names against `dir`/`$REPOS_DIR` — never on whatever a directory scan
+--- turns up, unlike `:MyReposUpdate`, because `$REPOS_DIR` also holds
+--- non-plugin checkouts (Notes, WKDBooks, ...) a scan-and-delete would put
+--- at risk. `remove`/`reclone` only touch repos confirmed clean via `git
+--- status --porcelain --branch`, named in a single confirmation prompt
+--- first; `fetch`/`pull`/`update` are the two-machine `dir`-mode sync tool.
 ---
---- `:MyPlugins clone` never overwrites an existing clone (skips it) — cloning
---- is additive, no confirmation needed. `--only=<name>` narrows any of these
---- subcommands to a single listed plugin (tab-completed from the live list).
----
---- `:MyPlugins remove`/`reclone` check every present repo's `git status
---- --porcelain --branch` first: anything with uncommitted changes or commits
---- ahead of its upstream is reported and left alone, never deleted, no
---- matter what. The remaining clean repos are listed in a single
---- confirmation prompt naming exactly what will be deleted before
---- `vim.fn.delete(path, "rf")` runs on any of them; `reclone` then clones
---- each one fresh afterwards (and clones anything from the list that wasn't
---- present at all — no deletion needed there).
----
---- `:MyPlugins fetch`/`pull`/`update` run `git fetch --all --prune`, `git
---- pull --ff-only`, or both in sequence, on every *present* listed repo —
---- the tool for the two-machine `dir`-mode workflow: after pushing from one
---- machine, `:MyPlugins update` on the other brings its checkouts level
---- without touching the non-plugin repos `$REPOS_DIR` also holds (that's
---- `:MyReposUpdate`'s job, scoped the other way — see its own module).
----
---- `:MyPlugins mode [auto|dir|remote|disabled]` reads (bare) or persistently
---- rewrites (with an argument) the `OVERRIDE` line in
---- `lua/plugins/personal/source.lua` directly — a small, targeted text edit,
---- not a runtime setter, since that file is the actual single source of
---- truth for the setting and `require()` caches it anyway. A restart is
---- needed for a change to take effect (see `mode_cmd` below).
----
---- `:MyPlugins list [dir]` is read-only: renders every listed plugin plus
---- whether it's present in `dir` into a scratch buffer, for a quick overview
---- before clone/remove. Unlike `dashboard` it never talks to git — it is
---- plain, `modifiable` text on purpose, so `:%y`, `:sort` and `/` are the
---- entire interface and it needs no sort/filter commands of its own.
----
---- `:MyPlugins picker [dir]` opens an interactive `Snacks.picker` (see
---- `picker.lua`): `<Tab>` cycles the highlighted plugin through
---- clone/update/pull/fetch/remove/reclone (only the actions that make sense
---- for its current presence), `<CR>` runs every assigned action in one
---- batch — clone/remove/fetch/pull/update via the same functions as their
---- flat subcommands above, so the same safety checks and confirmation
---- prompts apply.
+--- Full per-command docs, the safety-model rationale and the two-machine
+--- workflow: see `README.md` in this directory.
 
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos]")
 local composer = require("lib.nvim.bindings.usercmd.composer")
@@ -900,9 +852,8 @@ end
 -- Command registration
 -- =============================================================================
 
----Register `:MyPlugins {clone|remove|mode|list} [args]` via
----lib.nvim.bindings.usercmd.composer — replaces the former flat `:MyPluginsClone` /
----`:MyPluginsRemove`.
+---Registers `:MyPlugins` (see module header for the full subcommand list)
+---via `lib.nvim.bindings.usercmd.composer`.
 function M.enable()
   -- Directory arg: real directory completion plus `$REPOS_DIR` offered up
   -- front when resolvable, mirroring reposcope.nvim's own
