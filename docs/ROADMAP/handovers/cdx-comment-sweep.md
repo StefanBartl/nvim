@@ -1469,11 +1469,49 @@ Commits: fileops.nvim `f40d17b` (lua/) + `405512c` (docs), gepusht
 (`6ee591b..405512c`), `pull --ff-only` „Already up to date",
 `git log origin/main -1` bestätigt. Ohne Co-Authored-By.
 
+### Häppchen 25 — open.nvim (Plugin-Repo 8/31) — **TEILWEISE, Agent gestoppt**
+
+Der Agent wurde vom User mitten in der Apply-Phase gestoppt (**nachdem** die
+Analyse fertig war, **bevor** er committet und seinen Findings-Bericht
+geschrieben hat). Seine 13 bereits gemachten Datei-Änderungen waren
+kohärent, verifiziert (stylua/luacheck 0/0 auf 35 Dateien, `OPEN_TESTS_OK`)
+und im Sinne des Sweeps — deshalb committet:
+
+- **`git rev-parse --show-toplevel` → Filesystem-Walk:** `context.lua`s
+  `resolve_git_root()` macht seit einer früheren Migration einen reinen
+  `vim.fs.find(".git", upward=true)`-Walk (der Code-Kommentar dort sagt es
+  schon). 6 andere Stellen (Header `context.lua`/`init.lua`, `doc/open.txt`
+  3×, `docs/{FEATURES/CORE,WORKFLOW,cheatsheet,commands}.md`) beschrieben
+  noch den alten Shell-out → angeglichen.
+- **`vim.ui.select` → `lib.nvim.ui.kit.select`:** dieselbe Migrations-Welle
+  wie bei diff/fileops — `@types/init.lua`, `DEFAULTS.lua`, `doc/open.txt` 2×
+  beschrieben noch `vim.ui.select` direkt; kit ehrt einen echten Override
+  weiter, diese Nuance ist drin.
+- `bindings/keymaps.lua` — „they used to be a hardcoded three …"-Historie auf
+  Präsens gekürzt.
+- `handlers/browser.lua` — registrierte Handler-Liste war
+  `browser/chrome/chromium/firefox/edge/safari`, tatsächlich sind auch
+  `brave`/`opera` registriert → ergänzt (Muster „unvollständige Liste").
+- `platform.lua`, `viewer/init.lua` — je ein überlanger Header-Absatz gekürzt.
+
+Commits: open.nvim `c7cc7d4` (lua/) + `5b9e894` (docs), gepusht
+(`1da5c06..5b9e894`). Ohne Co-Authored-By.
+
+**⚠️ Nicht abgeschlossen:** Der Agent hat seinen Findings-Bericht nie
+geschrieben — er hätte vermutlich noch 1–3 `--- CDX:`-Tags gesetzt (jedes
+bisherige Plugin-Repo hatte welche) und evtl. toten Code / Doc-Phrasing in
+weiteren Dateien angefasst. **open.nvim braucht einen kurzen Nach-Check**
+auf `--- CDX:`-würdige Funde + die which-key/machine-readable-Phrasen in
+`docs/keymaps.md`/`README.md`/`FEATURES/*` (BINDINGS.md war 0 Vorkommen).
+
 ### Danach offen
 
-**Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
-im Sweep: **die 31 Plugin-Repos** (Liste unten, ab fileops.nvim), repo-für-repo,
-je 1 Agent — plus der BINDINGS.md-Cleanup oben zu Beginn jedes Repos.
+**Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Sweep
+**pausiert** nach Häppchen 25 (open.nvim teilweise). Verbleibend: der
+open.nvim-Nach-Check, dann **Plugin-Repos 9–31** ab `debugging.nvim`,
+repo-für-repo, je 1 Agent — der BINDINGS.md-Cleanup ist für alle Repos schon
+erledigt (14 Repos, s.o.), aber die which-key/machine-readable-Phrasen in
+`keymaps.md`/`README.md`/`FEATURES/*`/`doc/*.txt` prüft jedes Häppchen mit.
 
 Offene Aufräum-Punkte aus dem Sweep, die bewusst NICHT gefixt wurden (jeweils
 `--- CDX:` im Code + im jeweiligen Häppchen dokumentiert) — eigene
