@@ -22,26 +22,20 @@
 ---     profiling is enabled per plugin by default, which is what turns the
 ---     report into "91 % of these calls pass the same path -> memoize".
 ---
---- COST (measured, 200k calls, this machine)
----   counting only          0.014 us/call
----   counting + arguments   0.619 us/call   (~44x)
----   counting + timing      0.394 us/call
+--- COST. Argument profiling is ~40-60x counting alone but still well under a
+--- microsecond per call (see `runtime-analysis.telemetry`'s own README for the
+--- measured range -- reproducible via its `scripts/bench_overhead.lua`, not
+--- restated here as single decimals). Nothing on a plugin's own surface
+--- (keypresses/autocmds), but a real cost on `lib.tables.core`-style
+--- primitives that run in loops -- why `profile_args` defaults on for
+--- personal plugins but NOT for lib.nvim's aggregate (`lib_profile_args`,
+--- default false).
 ---
---- 0.6 us on a plugin's own surface is nothing -- those functions run on
---- keypresses and autocmds, not in inner loops. That is why `profile_args`
---- defaults to on for personal plugins but NOT for lib.nvim's aggregate
---- (`lib_profile_args`, default false): the aggregate reaches
---- `lib.tables.core`-style primitives that genuinely do run in loops, where
---- 0.6 us per call is a real cost for an answer nobody asked.
----
---- KNOWN BLIND SPOT (verified, not theoretical)
---- A keymap that captured a function reference before the wrap holds the raw
---- function and is invisible. For `ft`-triggered plugins this permanently
---- affects the FIRST buffer of a session: lazy.nvim runs the plugin's FileType
---- handlers -- which bind the keymaps -- BEFORE `User LazyLoad` fires, so even
---- the earliest possible hook is too late for that one buffer. Every buffer
---- after it is instrumented normally. Irrelevant for week-long counting;
---- confusing if you press a key once and expect the counter to move.
+--- KNOWN BLIND SPOT (verified). A keymap bound before the wrap ran closes over
+--- the raw, uninstrumented function. This always costs the FIRST buffer of a
+--- `ft`-gated plugin in a session (lazy.nvim's `FileType` handling runs before
+--- its own `User LazyLoad`) -- mechanism + trigger:
+--- wkdbook-Neovim/MyNotes/lazynvim-FileType-vor-User-LazyLoad-Timing.md.
 ---
 --- Read with `:RATelemetry`, steer with `:RATelemetry disable <namespace>`.
 
@@ -71,7 +65,7 @@ local defaults = {
 ---target -- runtime-analysis.nvim's own generic mechanism for a target no
 ---plugin manager can resolve (no repo, no spec, several unrelated root
 ---prefixes), not anything specific to this config. See that plugin's
----`docs/COMMANDS.md` §"Instrumenting your own Neovim config".
+---`docs/commands.md` §"Instrumenting your own Neovim config".
 ---
 ---Wrapped at VimEnter by the plugin itself (`wrap_at` default): when
 ---`runtime-analysis.setup()` runs it is still inside `lazy.setup()`, and
