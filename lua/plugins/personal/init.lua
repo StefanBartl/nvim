@@ -30,95 +30,38 @@ plugins.add({
     lazy = false,
     priority = 1000,
     config = function()
-      -- TODO: Das muss anders gemacht werden: helptags generell; usrcmds als normales userconfig nicht extra
+      -- TODO: do this differently -- helptags generically, usrcmds as
+      -- normal user config rather than a separate call.
       require("lib.nvim_usrcmds").setup({
         helptags = true,
         cwd_here = true,
         powershell_profile = true,
       })
 
-      -- Der Path/Link-Hover ist seit 2026-09-01 ein eigenes Plugin
-      -- (hover.nvim, siehe unten) -- der `enable()`-Aufruf stand frueher hier.
-
       require("lib.nvim.lastcmd").setup({ experimental = true })
     end,
   },
 
   {
-    -- Path/Link-Hover in JEDEM Filetype. Frueher lib.nvim.hover; ausgezogen
-    -- 2026-09-01, weil es das einzige lib.nvim-Modul war, das Fenster oeffnet,
-    -- Autocmds in jedem Buffer installiert, Keymaps borgt, Usercommands
-    -- mitbringt und vier Geschwister-Plugins namentlich kennt. Die
-    -- Oekosystem-Regel dazu steht in documentation.nvim/docs/ECOSYSTEM.md.
+    -- Path/link hover for every filetype. Formerly lib.nvim.hover; split out
+    -- 2026-09-01 as the only lib.nvim module that opens windows, installs
+    -- autocmds in every buffer, borrows keymaps, ships usercommands and
+    -- knows four sibling plugins by name -- see documentation.nvim/
+    -- docs/ECOSYSTEM.md for the rule behind that split.
     --
-    -- `lazy = false`, weil `enable()` aus etwas heraus laufen muss, das nicht
-    -- lazy ist: markdown.nvim ist ft-lazy auf Markdown, also haette eine
-    -- Session, die nie eine .md oeffnet, gar keinen Hover -- und genau das ist
-    -- der Fall, den das Feature abdecken soll (Pfade in .txt, in
-    -- Code-Kommentaren, in :messages). `priority` unter lib.nvim, weil das
-    -- eine harte Dependency ist.
+    -- `lazy = false` because `enable()` must run from something that isn't
+    -- itself lazy: markdown.nvim is ft-lazy on Markdown, so a session that
+    -- never opens a .md would otherwise get no hover at all -- exactly the
+    -- case this feature is meant to cover (paths in .txt, code comments,
+    -- :messages). `priority` sits below lib.nvim, a hard dependency.
     --
-    -- Was NICHT default an ist und warum: Web-Links (`:Hover links web on`,
-    -- dazu `:Hover links web fetch on` fuer Statuscode/Titel/Seitentext --
-    -- letzteres ist eine Disclosure, jeder gestreifte Link wird eine Anfrage
-    -- an seinen Host) und Office-Dokumente (`:Hover office on`, konvertiert
-    -- ueber pdfport nach PDF -- kostet einen LibreOffice-Start pro Dokument).
-    --
-    -- ZWEI ACHSEN, und das ist der Stolperstein: `:Hover links web on` sagt,
-    -- dass ein Link hovern DARF; `:Hover auto url` sagt, dass der Trigger ihn
-    -- ungefragt oeffnet. Nur das erste getippt heisst: `:Hover show` auf dem
-    -- Link antwortet, Draufstehen tut nichts. Das las sich als kaputter
-    -- Schalter, bis hover.nvim `c20191e` es in die Ansage geschrieben hat --
-    -- die Meldung nennt das zweite Gate jetzt beim Namen, `:Hover why` auch.
-    -- Dasselbe gilt fuer `missing`, `office` und `positions`.
-    --
-    -- Und seit `4e2ebeb` kann ein Link auch als BILD DER SEITE kommen:
-    -- `:Hover links web shot` laesst ein Headless-Chromium rendern, danach
-    -- ist es ein Bild wie jedes andere (Zoom, Nav, Zen). Das ist eine andere
-    -- Kategorie als `fetch` und impliziert es deshalb nicht -- ein Fetch ist
-    -- ein curl-GET, ein Render FUEHRT die Seite aus. Zweiter Schalter
-    -- `:Hover links web shot eager` fuer den automatischen Trigger, aus
-    -- gemessenem Grund: 710-735 ms allein fuer den Browserstart auf diesem
-    -- Rechner, 3,9-19,6 s fuer eine echte Seite. Der Browser bekommt ein
-    -- Wegwerf-Profil, sonst gingen die eigenen Cookies an den gehoverten
-    -- Host. Chrome liegt hier unter "C:/Program Files/Google/Chrome/..." und
-    -- ist auf KEINEM PATH -- hover.nvim sucht die ueblichen Orte selbst,
-    -- `:checkhealth hover` nennt die gefundene Binary. Deshalb meldet der
-    -- deps-Abschnitt dort `chrome NOT found`, obwohl es laeuft; das ist
-    -- erwartet und steht so in hover.nvim/docs/health.md.
-    --
-    -- Zen (`F` am offenen Float, oder `:Hover zen`) legt es auf den ganzen
-    -- Editor -- und zwar so, dass die VORSCHAU neu gegen die Bildschirmgroesse
-    -- gebaut wird statt nur das Fenster zu wachsen; ein Text-Hover zeigt dann
-    -- ~fuenfzig statt zwanzig Zeilen, ein gefetchter Link entsprechend mehr
-    -- Seitentext. Pinnt dabei per Default, weil ein bildschirmfuellendes Float
-    -- sonst beim ersten `j` zuginge (`focusable = false`, Dismiss an
-    -- CursorMoved). Hier nichts gesetzt: `zen = { pin = false }` waere der
-    -- Schalter dagegen.
-    --
-    -- Wenn der Hover beim Lesen stoert, ist `:Hover mode manual` der Schalter:
-    -- alle Previews bleiben, nur nichts oeffnet mehr von selbst. `:Hover show`
-    -- oder `keymaps.show` beantworten dann weiterhin alles, Web-Links
-    -- inklusive. `:Hover status` zeigt, was gerade an ist.
-    --
-    -- `persist` (seit hover.nvim `5f57764`, Default `true` seit `39754eb`,
-    -- deshalb unten kein expliziter Key mehr): was `:Hover status` gerade
-    -- zeigt (mode, auto_hover, jeder Schalter) wird bei `:qa` nach
-    -- stdpath("cache")/lib.nvim/cache/hover/status.json geschrieben und beim
-    -- naechsten `enable()` wieder ueber diese Optionen gelegt -- NACH ihnen,
-    -- also gewinnt ein Toggle aus der letzten Session gegen das, was hier
-    -- steht, bis er wieder umgelegt wird. Layout/Keys (`border`, `_keys`)
-    -- bleiben unberuehrt -- nur die drei Achsen, die `:Hover status` zeigt.
-    -- `persist = false` waere der Schalter dagegen, fuer eine bewusst
-    -- session-only Ausnahme.
-    --
-    -- Wieder ohne Optionen seit hover.nvim `21c4932`: die Zoom-Tasten sind dort
-    -- `>` hinein, `|` heraus, `=` zurueck, und damit genau das, was hier
-    -- voruebergehend als `zoom_keys` ueberschrieben war. Die frueheren
-    -- Alt-Akkorde (`<M-z>`/`<M-Z>`/`<M-R>`) erreichen dieses Terminal nicht --
-    -- gemessen, siehe `hover.nvim/NOTES/MANUAL-EVIDENCE.md` in
-    -- wkdbook-myplugins (seit 2026-09-06 dort statt im oeffentlichen
-    -- Plugin-Repo oder in dieser Config).
+    -- No options set below -- every feature switch (web links + fetch/shot,
+    -- office documents via pdfport, zen, persist, zoom keys, `auto_hover`)
+    -- runs on hover.nvim's own defaults. Full behaviour, the two-axis
+    -- on/auto distinction, and measured costs (browser start, page render,
+    -- LibreOffice conversion) are documented in hover.nvim/docs/
+    -- configuration.md and docs/FEATURES/*.md; `:Hover why`/`:Hover status`
+    -- explain a given switch at runtime.
     "StefanBartl/hover.nvim",
     lazy = false,
     priority = 900,
@@ -271,13 +214,13 @@ plugins.add({
 
   {
     "StefanBartl/images.nvim",
-    -- Ersetzt snacks.image, das hier prinzipiell nicht funktionieren kann:
-    -- es sendet nur Kitty-APC, und das wird aus Neovim heraus in WezTerm nie
-    -- gezeichnet. images.nvim nutzt stattdessen OSC 1337.
+    -- Replaces snacks.image, which cannot work here in principle: it only
+    -- sends Kitty APC, and WezTerm never draws that when Neovim is the
+    -- sender. images.nvim uses OSC 1337 instead.
     --
-    -- Beide Namen nötig: `:Image` deckt den Command ab, die Filetypes sorgen
-    -- dafür, dass <leader>im und der Doppelklick auch ohne vorherigen
-    -- Command-Aufruf in Markdown-Buffern gesetzt sind.
+    -- Both names are needed: `:Image` covers the command, the filetypes
+    -- make sure <leader>im and the double-click are set in Markdown buffers
+    -- even without a prior command call.
     cmd = { "Image" },
     ft = { "markdown", "vimwiki", "norg", "text" },
     dependencies = { "StefanBartl/lib.nvim" },
@@ -316,10 +259,10 @@ plugins.add({
     "StefanBartl/documentation.nvim",
     cmd = { "DocMap", "DocBrowse", "DocMapAll", "DocMapAllFull" },
     dependencies = { "StefanBartl/lib.nvim" },
-    -- Kein `root`: die Commands mappen bewusst das aktuelle Arbeitsverzeichnis,
-    -- weil hier reihenweise Repos nebeneinander liegen und ein fixes Ziel genau
-    -- das Falsche waere. `source` leitet documentation.config aus dem Root ab
-    -- (lua/<name>, wenn lua/ genau einen Kandidaten enthaelt).
+    -- No `root`: the commands deliberately map the current working directory,
+    -- because rows of repos sit side by side here and a fixed target would be
+    -- exactly wrong. `source` derives documentation.config from the root
+    -- (lua/<name>, when lua/ contains exactly one candidate).
     opts = function(_, opts)
       opts.progress_style = "statusline"
       -- `require-not-declared` false positives, confirmed 2026-08-16 by
@@ -947,17 +890,17 @@ plugins.add({
     config = function()
       require("mdview").setup({
         browser = {
-          -- theme = "github", -- P1-6: neues Theme (auch: catppuccin, dark-dimmed, plain, github) -> FUNKTioNNERTT
-          highlighter = "hljs", -- P1-5: shiki-Bug wird untersucht (siehe mdview.nvim-Session-Notizen); hljs bleibt bis dahin Default
-          focus = "nvim", -- P2-9: Fokus bleibt in nvim. Bug (jobstart-Quoting) war in b794c27 bereits gefixt, jetzt aktiviert.
+          -- theme = "github", -- P1-6: new theme (also: catppuccin, dark-dimmed, plain, github) -> works
+          highlighter = "hljs", -- P1-5: shiki bug under investigation (see mdview.nvim session notes); hljs stays default until then
+          focus = "nvim", -- P2-9: focus stays in nvim. Bug (jobstart quoting) was already fixed in b794c27, now enabled.
 
           cursor_marker = "caret",
         },
-        -- Release-Variante (v0.3.0 von GitHub Releases, kein Toolchain nötig).
-        -- Die dev/standalone-Overrides zeigten auf E:/repos (Checkout liegt jetzt
-        -- unter C:/repos) und auf mdview-server.exe - `npm run build:go` erzeugt
-        -- unter Windows aber mdview-server OHNE .exe. Zum Testen eines lokal
-        -- gebauten Relays (siehe docs/development.md) wieder einkommentieren:
+        -- Release build (v0.3.0 from GitHub Releases, no toolchain needed).
+        -- The dev/standalone overrides used to point at E:/repos (checkout now
+        -- lives under C:/repos) and at mdview-server.exe -- `npm run build:go`
+        -- produces mdview-server WITHOUT .exe on Windows. Uncomment to test a
+        -- locally built relay (see docs/development.md):
         -- dev = {
         -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
         -- web_root = vim.env.REPOS_DIR .. "/mdview.nvim/dist/client",
@@ -966,10 +909,10 @@ plugins.add({
         -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
         -- },
         experimental = {
-          line_diff = true, -- P?: nur geänderte Zeilen senden -> FUnktnioert -> postives/negatives abwägen ob default
-          click_navigate = true, -- P0-3: relativer Link öffnet Datei in nvim -> FUNKTIONERT -> als Default setzen
-          reverse_scroll = true, -- P1: im Browser scrollen bewegt nvim-Cursor -> funktioniert fast ideal (siehe feedback punkte)
-          -- webtransport = true,  -- fällt transparent auf WebSocket zurück (kein Backend) --> FUnktinoert -> abwägen ob DEFULT positives/negatives
+          line_diff = true, -- P?: send only changed lines -> works -> weigh pros/cons before making default
+          click_navigate = true, -- P0-3: relative link opens file in nvim -> works -> set as default
+          reverse_scroll = true, -- P1: scrolling in the browser moves the nvim cursor -> works almost perfectly (see feedback points)
+          -- webtransport = true,  -- falls back transparently to WebSocket (no backend) -> works -> weigh pros/cons before default
         },
       })
     end,
@@ -997,12 +940,12 @@ plugins.add({
     dependencies = {
       "StefanBartl/lib.nvim",
       "folke/trouble.nvim", -- optional: nicer list; pcall-guarded in the plugin
-      -- Fuer das Feature erforderlich, fuer das Plugin nicht: language.nvim
-      -- registriert seit `b592b9f` einen on_request-Position-Beitrag bei
-      -- hover.nvim, damit `:Hover show` ueber einem Wort dessen Uebersetzung
-      -- zeigt. Es `pcall`t hover.nvim selbst und laeuft ohne es klaglos
-      -- weiter; hier steht es trotzdem, weil es die Ladereihenfolge festlegt
-      -- statt sie von hover.nvims `lazy = false` zu borgen.
+      -- Required for the feature, not for the plugin: since `b592b9f`,
+      -- language.nvim registers an on_request position contribution with
+      -- hover.nvim, so `:Hover show` over a word also shows its translation.
+      -- It `pcall`s hover.nvim itself and runs fine without it; listed here
+      -- anyway because it fixes the load order rather than borrowing it from
+      -- hover.nvim's `lazy = false`.
       "StefanBartl/hover.nvim",
     },
     config = function()
@@ -1029,19 +972,19 @@ plugins.add({
         -- itself is already all tab-navigation here.
         translate = {
           keymaps = { operator = "<leader>lt", visual = "<leader>lt" },
-          -- Zielsprache fuer alles, was nicht ausdruecklich eine nennt.
+          -- Target language for anything that does not name one explicitly.
           --
-          -- **Das aendert `<leader>lt` mit.** Ohne diesen Wert fragen die
-          -- Motion- und Visual-Maps nach der Sprache; mit ihm uebersetzen sie
-          -- ohne Rueckfrage nach Deutsch. Das ist der Zweck, aber es ist eine
-          -- Verhaltensaenderung und keine reine Ergaenzung -- fuer einen
-          -- einzelnen Lauf in eine andere Sprache gibt es
-          -- `translate.keymaps.to.<LANG>` und `:Translate <lang>`.
+          -- **This also changes `<leader>lt`.** Without this value, the
+          -- motion/visual maps ask for the language; with it, they translate
+          -- straight to German with no prompt. That is the point, but it is
+          -- a behaviour change, not a pure addition -- for a one-off run into
+          -- a different language, use `translate.keymaps.to.<LANG>` or
+          -- `:Translate <lang>`.
           --
-          -- Gebraucht wird er vom Hover: `:Hover show` ueber einem Wort hat
-          -- keinen Ort, an dem es fragen koennte, und faellt sonst auf den
-          -- Plugin-Default `EN` zurueck (englisch, weil die meisten Leser in
-          -- ihre eigene Sprache uebersetzen und das nicht Deutsch ist).
+          -- Needed by hover: `:Hover show` over a word has nowhere to ask,
+          -- and would otherwise fall back to the plugin's `EN` default
+          -- (English, since most readers translate into their own language,
+          -- and that is not German here).
           default_target = "DE",
         },
       })
