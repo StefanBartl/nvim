@@ -788,7 +788,8 @@ dokumentierte Autorenabsicht → getaggt statt gelöscht.
 stylua ok, luacheck 0/0 (15 `.lua`-Dateien geprüft; `@types/*` vom
 luacheck-Glob übersprungen wie in allen vorigen Häppchen).
 
-Commit: nvim-config `PENDING`. Ohne Co-Authored-By. Kein WKDBooks-Umzug
+Commit: nvim-config `ba0231201`. Ohne Co-Authored-By, gepusht +
+`git log origin/main` bestätigt. Kein WKDBooks-Umzug
 (kein ortsunabhängiges Mechanik-Wissen — die langen Header waren
 Bug-/Design-Rationale am richtigen Platz).
 
