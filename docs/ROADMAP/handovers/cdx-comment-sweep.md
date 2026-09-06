@@ -1055,6 +1055,110 @@ Ohne Co-Authored-By.
 all fourteen or none" — `order` listet 13 Aktionen, aber `eval` bindet n+v, was
 14 tatsächliche Mappings ergibt; vertretbar, nicht angefasst.
 
+### Häppchen 21 — cmdlog.nvim (Plugin-Repo 4/31)
+
+**Status: erledigt.** ~3900 Z. Lua (41 Dateien inkl. TESTS), eigenes `main` /
+Remote `StefanBartl/cmdlog.nvim`. Config-Layer über Neovim-`:`-History + Shell-
+History + Favoriten-Pickers (Telescope / fzf-lua). Wie die drei vorigen Plugin-
+Repos schon fast durchgehend auf Sweep-Qualität: durchweg Englisch (**kein
+einziges deutsches Wort** außer einem eigenen `--AUDIT:`-Marker), Header mit
+echter ortsrelevanter Rationale, keine AI-Boilerplate. `lua/cmdlog/health.lua`
+war früher gesweept — nur ein offensichtlicher Leftover angefasst (s.u.).
+Depends on `lib.nvim` (bewusst, kein Fund).
+
+**Muster #1 (which_key-Modul gelöscht, Docs stale) trifft hier NICHT zu** —
+`integrations/which_key.lua` existiert und ist verdrahtet; Docs verweisen
+korrekt darauf.
+
+**Geänderte Dateien (24):** `@types/init.lua`, `bindings/{autocmds,init,keymaps,
+picker_mappings,usrcmds}.lua`, `config/DEFAULTS.lua`, `core/{errors,
+project_history,shell,stats,store,tags}.lua`, `health.lua`,
+`integrations/which_key.lua`, `ui/{fzf-previewer,history_picker,
+history_unique_picker,mappings,picker_utils,preview_policy,risky_test,
+shell_picker,shell_unique_picker}.lua`.
+
+**Bereits sauber, 0 Änderungen:** `init.lua`, `config/init.lua`,
+`bindings/keymaps.lua`-Logik, `core/{extra_files,favorites,history,risky,
+tracker,utils}.lua`, `ui/{all_picker,all_unique_picker,cycle,favorites_picker,
+lua_picker,project_picker,stats_picker,telescope-previewer}.lua`, alle `TESTS/*`.
+
+**Direkte Fixes (Kommentar/Annotation, keine Verhaltensänderung):**
+- `core/shell.lua` — eigener deutscher `--AUDIT: Modularisieren, Annotationen
+  klären` → englischer `--- CDX:`. Zusätzlich: der `M.get_shell_history`-Doc-
+  Block stand ~40 Zeilen vor der Funktion (dazwischen ein `---@alias` + drei
+  Helfer), LuaLS hängte ihn an `Cmdlog.ShellHistoryParser` statt an die
+  Funktion — zurück an die Funktion gezogen, den Alias-Kommentar an Ort
+  belassen und gestrafft.
+- `core/project_history.lua` — toter Doc-Verweis `PERFORMANCE.md ->
+  Cache-Regeln` (Datei existiert im Public-Repo nicht, deutscher Anker,
+  Rest der nvim-config-internen Fassung) entfernt. Zweiter Fund in derselben
+  Datei: `get_git_root`-Docstring sagte „to avoid spawning `git rev-parse`",
+  der Code darunter macht seit einer Migration einen `vim.fs`-Walk und der
+  Inline-Kommentar sagt das auch — Docstring angeglichen (Muster #5).
+- `bindings/usrcmds.lua` — `M.register`-Docstring: „plus **two** routes
+  (`export`/`import`)", registriert werden aber **drei** (`risky test`,
+  `export`, `import`) direkt daneben. Muster #7 (unvollständige Command-Liste),
+  wie Häppchen 7/10/18/20.
+- `ui/mappings.lua` — Docstring-Parenthese zählte 5 von 9 behandelten Mapping-
+  Keys auf → generalisiert („jeder Key aus `config.options.mappings`").
+- `health.lua` (einziger Leftover): die Invalid-picker-Fehlermeldung nannte
+  „expected 'telescope' or 'fzf'", die Prüfung eine Zeile darüber akzeptiert
+  auch `fzf-lua` → ergänzt.
+- Stale „used to / previously"-Historie gekürzt in `bindings/autocmds.lua`
+  (Header „ging zweimal leer … 2026-08-27"), `core/store.lua`,
+  `integrations/which_key.lua`, `ui/risky_test.lua`, `ui/fzf-previewer.lua`,
+  `config/DEFAULTS.lua`.
+- Die „ersetzte eine feste Keymap-Tabelle"-Notiz stand 3× (DEFAULTS.lua,
+  bindings/keymaps.lua, @types) → je auf einen Satz eingedampft (Muster #3).
+- `ui/{history,history_unique,shell,shell_unique}_picker.lua` — der
+  identische 5-Zeilen-Block „delete_entry ist synchron / async-Kontrakt / hat
+  gecrasht" stand 4× (Muster #3), auf 2–3 Zeilen gekürzt; dabei redundante
+  Inline-`require`s auf schon am Modulkopf geladene Module entfernt (kein
+  Verhaltenswechsel, `require` ist gecached — wie Häppchen 2).
+
+**`--- CDX:` gesetzt (Urteilssache, nicht geändert):**
+- `bindings/init.lua` — `catalog()` gibt `keymaps = …keymaps.catalog` zurück
+  (**die Funktion**, nicht die aufgelöste Tabelle); die Geschwister-Einträge
+  sind Daten, und `which_key.lua` ruft `.catalog()` mit Klammern. Wirkt wie
+  ein Bug in der Introspektions-Hilfe.
+- `ui/picker_utils.lua` — `open_picker` verzweigt nur bei `picker == "fzf"`
+  zu fzf-lua; `health.lua` **und** `@types` akzeptieren zusätzlich
+  `"fzf-lua"`, das dann still in den Telescope-Zweig fällt. Drei Stellen,
+  drei verschiedene Wertelisten (analog zu dap.nvims DEFAULTS-Fund, Häppchen 20).
+- `bindings/picker_mappings.lua` — `M.catalog` dokumentiert 4 von 10
+  konfigurierbaren Picker-Keys, während `docs/BINDINGS.md` behauptet die Datei
+  „mirrors" die vollständige Tabelle. Muster #7, aber als Daten-Katalog
+  (fließt in `bindings.catalog()`) — daher getaggt statt selbst vervollständigt
+  (Regel 9, keine Verhaltensänderung).
+- `ui/preview_policy.lua` — `classify()`s `cmd:match("…e%d?dit…")`: das `%d?`
+  matcht nichts Sinnvolles und das Muster akzeptiert nur das ganze Wort
+  `edit`, also klassifizieren `:e file` / `:ed file` nie als „file"; `:split`
+  / `:sp` fehlen ganz (nur `:vsp` / `:vs` sind da).
+- `core/errors.lua` `get_error`, `core/tags.lua` `remove_tag`, `core/stats.lua`
+  `all` — je 0 Aufrufer, nicht dokumentiert (die jeweiligen Geschwister
+  `is_known_bad` / `add_tag`+`get_tags` / `by_frequency`+`describe` werden
+  benutzt). Vestigiale Accessor-Hälften. **Nicht gelöscht** (plausible
+  bewusste API-Fläche, Zweifel → taggen, Regel 5). `tags.filter` ist in
+  `docs/FEATURES/FAVORITES.md` dokumentiert → bleibt unangetastet.
+
+**Kein toter Code gelöscht** (alle Kandidaten getaggt statt gelöscht — s.o.).
+**Kein WKDBooks-Umzug** — kein ortsunabhängiges Neovim-/Lua-Mechanik-Wissen;
+die einzige LuaLS-Notiz (`(fun():T)|nil`-Union-Parsing in `shell.lua`) ist
+kurz und spezifisch für den dortigen `@alias`.
+
+**CI/Gate:** `stylua --check lua TESTS` (v2.5.2) sauber, `luacheck lua` (1.2.0)
+**0/0 über 40 Dateien**, `nvim -l TESTS/smoke_spec.lua` (REPOS_DIR=E:/repos,
+lib.nvim + telescope + plenary als Siblings) **72 passed / 0 failed / 1
+skipped**. CI-Pins lokal exakt gematcht.
+
+Commit: cmdlog.nvim `058f2b2` (`2b8b7be..058f2b2`), gepusht auf `origin/main`,
+`pull --ff-only` „Already up to date", `git log origin/main -1` bestätigt.
+Ohne Co-Authored-By.
+
+**Nebenfund, nicht bearbeitet:** `all_picker.lua` / `all_unique_picker.lua`
+sagen „Supports Telescope and fzf as picker backends" — knapp, nicht falsch
+(fzf-lua-Backend existiert), gelassen.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
