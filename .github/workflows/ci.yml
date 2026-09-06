@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Manual re-run: a swallowed dispatch is never backfilled, so without this
+  # the only way to gate an already-pushed commit is an empty commit on top.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stylua:
+    name: stylua (format check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pinned, not "latest": stylua's formatting rules shift between
+          # releases and silently turn CI red on every push. Bump deliberately,
+          # with `stylua lua init.lua after` run and the diff reviewed.
+          version: v2.5.2
+          # Only this config's own code. The imported third-party patch
+          # snippets under docs/ are notes, not code — several do not parse.
+          args: --check lua init.lua after
+
+  luacheck:
+    name: luacheck (lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Plain Lua 5.4, not LuaJIT: luacheck only needs *an* interpreter to run
+      # on; which dialect it lints for is set by `std = "luajit"` in
+      # .luacheckrc, independent of the host. Pinning a LuaJIT build here buys
+      # nothing and breaks when that exact tarball disappears upstream.
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.4"
+      - uses: leafo/gh-actions-luarocks@v4
+      - run: luarocks install luacheck
+      - run: luacheck lua init.lua after
