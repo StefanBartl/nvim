@@ -22,7 +22,7 @@ local parse = memo.fn(function(wh)
   -- Split by comma, validate each pair
   for item in wh:gmatch("[^,]+") do
     local t = trim(item)
-    -- Strict: only word characters and undrscore on both sides
+    -- Strict: only word characters and underscore on both sides
     local from, to = t:match("^([%w_]+):([%w_]+)$")
     if from and to then
       res[#res + 1] = { from = from, to = to }
@@ -95,29 +95,6 @@ function M.merge(wh, new_pairs)
   for i = 1, #_pairs do
     local p = _pairs[i]
     if not seen[p.from] then
-      out[#out + 1] = p
-    end
-  end
-
-  return M.serialize(out)
-end
-
---- Remove multiple mappings at once
----@nodiscard
----@param wh string|nil
----@param from_keys string[] -- list of 'from' keys to remove
----@return string
-function M.remove_keys(wh, from_keys)
-  local _pairs = parse(wh)
-  local blacklist = {}
-  for i = 1, #from_keys do
-    blacklist[from_keys[i]] = true
-  end
-
-  local out = {}
-  for i = 1, #_pairs do
-    local p = _pairs[i]
-    if not blacklist[p.from] then
       out[#out + 1] = p
     end
   end

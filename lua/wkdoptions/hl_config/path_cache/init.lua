@@ -1,6 +1,3 @@
--- File: lua/wkdoptions/hl_config/path_cache.lua
--- Purpose: buffer-local caching for repo root and relative path; tiny + dependency-free.
-
 ---@module 'wkdoptions.hl_config.path_cache'
 --- Buffer-local cache for repo root and repo-relative path. Reduces repeated
 --- upward searches on every CursorMoved/WinScrolled event when the winbar updates.

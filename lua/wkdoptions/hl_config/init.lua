@@ -1,25 +1,13 @@
 ---@module 'wkdoptions.hl_config'
---- Visual/UX feature orchestrator (refactored for modularity, safety, and performance).
---- This module delegates to specialized feature modules and uses centralized state management.
+--- Visual/UX feature orchestrator. Applies the highlight palette, then delegates
+--- to the feature modules and installs the per-window / colorscheme autocmds.
 ---
---- Architecture:
----   - core/state: centralized state + namespace/augroup registry
----   - core/highlights: safe HL application with error guards
----   - features/*: isolated feature modules (cursorline, flash, mode_tint, etc.)
----   - utils/*: shared utilities (winhighlight, large_file, separator, skip)
----   - breadcrumbs/*: winbar + context logic
----
---- Performance optimizations:
----   - Memoization for fs_stat, separator resolution, winhighlight parsing
----   - Lazy loading of heavy modules (breadcrumbs, cword_occurrences)
----   - Per-window mode cache to avoid redundant updates
----   - Type guards and pcall wrapping on all API calls
----
---- Key principles:
----   - Single Responsibility: each module does one thing
----   - Defensive programming: validate all inputs, guard all API calls
----   - Explicitness: no hidden state, clear data flow
----   - Testability: pure functions where possible, state accessible for inspection
+--- Layout:
+---   - core/state:      feature flags + namespace/augroup registry
+---   - core/highlights: guarded nvim_set_hl application
+---   - features/*:      one module per feature (cursorline, flash, mode_tint, ...)
+---   - utils/*:         winhighlight, large_file, separator, skip
+---   - breadcrumbs/*:   winbar + cursor-context logic
 
 local lazy = require("lib.lua.lazy")
 local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
@@ -35,7 +23,7 @@ local Highlights = lazy.require("wkdoptions.hl_config.core.highlights")
 -- Utils
 local is_ui = lazy.require("wkdoptions.hl_config.utils.skip").std_skip
 
--- Features (all available, loaded on enable)
+-- Features
 local CursorLine = lazy.require("wkdoptions.hl_config.features.cursorline")
 local ModeTint = lazy.require("wkdoptions.hl_config.features.mode_tint")
 local Flash = lazy.require("wkdoptions.hl_config.features.flash")
@@ -48,7 +36,7 @@ local DiffPeek = lazy.require("wkdoptions.hl_config.features.diff_peek")
 -- Breadcrumbs
 local Breadcrumbs = lazy.require("wkdoptions.hl_config.breadcrumbs")
 
--- Special modules (already exist, kept as-is for now)
+-- Path cache + cword occurrences
 local PathCache = lazy.require("wkdoptions.hl_config.path_cache")
 local CwordOcc = lazy.require("wkdoptions.hl_config.cword_occurrences")
 
@@ -83,7 +71,7 @@ local function deactivate_window()
   CursorLine.deactivate()
 end
 
---- Re-apply after config change (called by :MyHlSet)
+--- Re-apply after config change (called by :WKDOptionsHLSet)
 ---@param key string
 ---@return nil
 local function after_set(key)

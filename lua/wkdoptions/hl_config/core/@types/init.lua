@@ -27,16 +27,14 @@
 ---@field is_enabled fun(name: FeatureName): boolean # Check if feature is enabled (fast lookup from cached flags)
 ---@field set_enabled fun(name: FeatureName, enabled: boolean): nil # Set feature enabled state (called by after_set on config changes)
 ---@field get_namespace fun(name: string): integer # Get or create namespace handle (cached, idempotent, prefixed with "myopt_")
----@field get_augroup fun(name: string, clear: boolean|nil): integer # Get or create augroup handle via lib.nvim.bindings.autocmd (cached, idempotent, prefixed with "myopt.", clear defaults to true)
+---@field get_augroup fun(name: string, clear: boolean|nil): integer # Get or create augroup handle via lib.nvim.bindings.autocmd ("myopt" prefix, clear defaults to true)
 ---@field init_from_config fun(cfg: WKDOptions.HL_CFG): nil # Initialize feature flags from config (call once during enable())
----@field reset fun(): nil # Reset all state (useful for tests/reload, clears mode cache + feature flags)
 
 ---@class WKDOptions.HL_CFG.Core.Highlights
 --- Safe highlight group application with error guards and validation.
 ---@field set_hl_safe fun(name: string, spec: table): boolean, string|nil # Apply single highlight group (returns success + error string)
 ---@field apply_all fun(colors: WKDOptions.HighlightColors): table<string, string> # Apply all highlight groups from colors table (returns map of group_name → error_msg for failures)
 ---@field exists fun(name: string): boolean # Check if highlight group exists (follows links, validates name)
----@field get_hl_safe fun(name: string): table # Get effective highlight (resolves links, returns empty table on error, never fails)
 ---@field ensure_hl fun(name: string, fallback: table): nil # Create fallback highlight if group doesn't exist or is empty (idempotent)
 
 ---@class WKDOptions.HL_CFG.Core

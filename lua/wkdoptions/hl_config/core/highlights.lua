@@ -53,18 +53,6 @@ function M.exists(name)
   return ok and type(info) == "table" and next(info) ~= nil
 end
 
---- Get effective highlight (resolves links, returns empty table on error)
----@nodiscard
----@param name string
----@return table
-function M.get_hl_safe(name)
-  local ok, info = pcall(vim.api.nvim_get_hl, 0, { name = name, link = true })
-  if not ok or type(info) ~= "table" then
-    return {}
-  end
-  return info
-end
-
 --- Create a fallback highlight if group doesn't exist or is empty
 ---@param name string
 ---@param fallback table
