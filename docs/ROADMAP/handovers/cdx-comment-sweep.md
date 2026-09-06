@@ -164,36 +164,56 @@ stylua --check + luacheck grün (13 Dateien).
 aber sehr lange Prosa-Blöcke. Eigener Trim-Pass sinnvoll (kein dringender
 Regelverstoß).
 
-### Häppchen 4 (Teil) — `lua/bindings/usrcmds/case/` (39 Dateien, 11.295 Z.)
+### Häppchen 4 — `lua/bindings/usrcmds/case/` (39 Dateien, 11.295 Z.)
 
-**Der Brocken.** casedesk (HandOverCase) ist ein **deutsch-domänen** Support-
-Ticket-Tool: viele Kommentare deutsch, viele Ausgabe-Strings bewusst deutsch,
-plus deutsche Domänen-Daten (SLA-Begriffe, Solution.md-Überschriften-Maps).
+**Der Brocken. Status: erledigt.** casedesk (HandOverCase) ist ein
+**deutsch-domänen** Support-Ticket-Tool: viele Kommentare deutsch, viele
+Ausgabe-Strings bewusst deutsch, plus deutsche Domänen-Daten (SLA-Begriffe,
+Solution.md-Überschriften-Maps).
 
-**Diese Runde erledigt:** `config.lua`, `solution.lua`, `similar.lua`,
-`init.lua` (Teil), `sla/init.lua` — alle deutschen **Code-Kommentare** →
-Englisch. **Behalten:** deutsche String-Literale (User-UI von `:Case`),
-deutsche Daten-Maps (`ALIASES`, `solution_statuses`, Stoppwörter,
-SLA-`label`s), attribuierte deutsche Doc-Zitate.
+**Runde 1** (Commit f579694cc): `config.lua`, `solution.lua`, `similar.lua`,
+`init.lua` (Teil), `sla/init.lua`.
 
-**Noch offen in `case/`** (~175 deutsche Kommentarzeilen gesamt, davon jetzt
-~110 weg):
-- `ui.lua` (3502 Z., 53 deutsche Kommentare) — eigenes Häppchen
-- Rest von `init.lua` (603 Z.), `doctor.lua`, `commands.lua`, `query.lua`,
-  `timeline.lua`, `terminology.lua`, `templates.lua`, `replygate.lua`,
-  `blocks.lua`, `ki.lua`, `migrate.lua`, `ocr.lua`, `export.lua`, `links.lua`,
-  `linkcheck.lua`, `normalize.lua`, `detect.lua`, `meta.lua`, `marks.lua`,
-  `plan.lua`, `blueprint.lua`, `apply.lua`, `render.lua`, `resolve.lua`,
-  `registry.lua`, `stream_format.lua`, `attachments.lua`, `extract/*` (4),
-  `sla/*` (3 restliche)
-- **Empfehlung:** der Rest ist mechanische Übersetzung — idealer Subagent-Job
-  (User-Regel erlaubt 1 Agent). Prompt: „übersetze alle deutschen
-  Code-Kommentare in `lua/bindings/usrcmds/case/` nach Englisch; deutsche
-  String-Literale, Daten-Maps und attribuierte Doc-Zitate bleiben".
+**Runde 2 (rest, dieser Commit):** alle noch deutschen Code-Kommentare in den
+verbleibenden Dateien übersetzt:
+- `ui.lua` — 6 Kommentarblöcke (`:Case solution`/`solutions` Header,
+  `SOLUTION_PREVIEW_LINES`, `cursor_below_heading`, `solution_row`, 2 Inline-
+  Kommentare in `M.solution`, der `do_move` „solution verlorengeht"-Block) +
+  `<paket>` → `<package>` in einem Beispiel-Kommentar.
+- `solution.lua` — 2 Reste (`M.path` Doc, `parse_keywords` Doc).
+- `extract/stream.lua` („Vollständigkeits-Check" → "Completeness check"),
+  `extract/facts.lua` („Richtung 1" → "direction 1"),
+  `extract/supportinfo.lua` („Kopfzeile 4"/„Parser-Falle" → englisch),
+  `extract/doclinks.lua` (englischer Gloss hinter dem Zitat),
+  `commands.lua` („+N Zeilen" → "+N line-count").
+- `doctor.lua`, `init.lua` (Rest), sowie alle übrigen ~24 Dateien
+  (terminology, ki, query, ocr, …) waren bereits vollständig englisch —
+  keine Änderung nötig.
+
+**Kein `--- CDX:` gesetzt, kein toter Code entfernt** — alles war saubere
+Übersetzung oder bewusster Keep.
+
+**Behalten (User-Kalibrierung):**
+- Deutsche String-Literale (User-UI von `:Case`/`:Cases`: `notify`, Header,
+  `:format`-Ausgaben, Picker-Spalten wie `"[wörtlich]"`, `"Schlagworte: …"`).
+- Deutsche Daten-Maps/Werte (`ALIASES`, `solution_statuses`, Stoppwörter,
+  SLA-`label`s `Rückmeldung`/`Korrekturmaßnahme`, Dateiname
+  `SummaryTemplateBefüllt.md`).
+- Attribuierte deutsche Doc-Zitate in englischen Kommentaren (EXTRACTION.md
+  §2/§3/§8/§13 „…", SLA.md §6B/§6C „…", ROADMAP.md „marking system wie in
+  filetree.nvim", „LÖSCHEN"). Bei zweien einen kurzen englischen Gloss ergänzt.
+- **`Paket N`** als Doc-Struktur-Referenz (EXTRACTION.md/SLA.md/SESSIONS.md
+  gliedern die Arbeit in „Pakete", analog zu `§13`) — bewusst **nicht**
+  übersetzt, sonst desynct die Referenz. ~15 Vorkommen.
+- Deutsche Beispiel-Prosa in `links.lua:78` („ändern Sie den Wert von …") —
+  illustriert die Art Fließtext, die der Parser in den (deutschen) Case-Docs
+  antrifft; wie ein attribuiertes Zitat behandelt.
+
+stylua ok, luacheck 0/0 (39 Dateien).
 
 ### Danach offen
 
-`lua/bindings/`: `drift.lua` (Prosa-Trim), `case/ui.lua` + Rest (s.o.),
+`lua/bindings/`: `drift.lua` (Prosa-Trim),
 `usrcmds/` Rest (context_open, plugin_repos, update_repos, who_locks,
 telemetry, autocmd_docs), `usrcmds/init.lua`.
 

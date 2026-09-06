@@ -17,7 +17,8 @@ local M = {}
 --- never a patch digit — confirmed against real links elsewhere in the
 --- bestand), while a Tosca version can be `25.1.7` (2-digit year) OR
 --- `2026.1` (4-digit year, no patch — EXTRACTION.md §2's "Testsuite-
---- Version bricht das X.Y.Z-Schema"). Normalizing both to the doc-link's
+--- Version bricht das X.Y.Z-Schema" / the Testsuite version breaks the
+--- X.Y.Z schema). Normalizing both to the doc-link's
 --- own shape is what makes the comparison meaningful; comparing raw
 --- strings would flag `25.1.7` against `tosca-2025.1` as a false mismatch
 --- on every single case.

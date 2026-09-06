@@ -43,7 +43,7 @@ function M.find(case_dir)
 end
 
 ---@class Lib.Case.SupportInfoHeader
----@field tcsupportinfo_version string|nil  Kopfzeile 4 — NEVER "the" version, see testsuite_version (EXTRACTION.md §2 Parser-Falle: the two can differ, e.g. 26.1.0.3180 vs. 2026.1)
+---@field tcsupportinfo_version string|nil  Header line 4 — NEVER "the" version, see testsuite_version (EXTRACTION.md §2 parser pitfall: the two can differ, e.g. 26.1.0.3180 vs. 2026.1)
 ---@field report_created string|nil  Raw text, deliberately never parsed as a timestamp — two locale formats seen (12h vs. 24h) with no field distinguishing them
 ---@field testsuite_version string|nil  e.g. "25.1.7" or "2026.1" — the stable anchor `detect.tosca_version` already reads
 ---@field entry_assembly string|nil

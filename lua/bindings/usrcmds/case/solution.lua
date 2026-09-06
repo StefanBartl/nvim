@@ -114,8 +114,8 @@ function M.dir(case_dir)
   return case_dir .. "/" .. config.solution_dirname
 end
 
---- Wohin GESCHRIEBEN wird — immer, ausnahmslos. Gelesen wird auch woanders
---- (`M.locate`).
+--- Where it is WRITTEN — always, without exception. It is also read from
+--- elsewhere (`M.locate`).
 ---@param case_dir string
 ---@return string
 function M.path(case_dir)
@@ -207,9 +207,8 @@ local function parse_status(text)
   return nil
 end
 
---- Schlagworte aus ihrem Abschnitt: Kommaliste, Bullet-Liste oder eine
---- Zeile pro Begriff — alle drei kommen in handgeschriebenen Notizen vor,
---- also werden alle drei akzeptiert.
+--- Keywords from their section: comma list, bullet list, or one term per
+--- line — all three occur in hand-written notes, so all three are accepted.
 ---@param text string|nil
 ---@return string[]
 local function parse_keywords(text)

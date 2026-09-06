@@ -46,7 +46,7 @@ local SHELL_LANGUAGES = {
 --- A fenced block that runs on for pages is a script, not a command worth
 --- offering as a one-line cheat-sheet row. Blocks longer than this are
 --- still indexed (they may well be the thing you want) but get their own
---- "… +N Zeilen" marker in the picker rather than pretending to be a
+--- "+N" line-count marker in the picker rather than pretending to be a
 --- one-liner.
 local PREVIEW_LINE_LIMIT = 1
 
