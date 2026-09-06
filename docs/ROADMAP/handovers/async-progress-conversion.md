@@ -110,12 +110,16 @@ mitgeben.
       den Callback. `docs/configuration.md`, `doc/insights.txt`. Neuer
       import_index_spec-Block (120 Entries). **committet + gepusht, CI grün.**
 
+- [x] **#6 filetree.nvim `refs/scan.lua`** — `candidates_walk` (Sync-Fallback
+      ohne `rg`) gechunkt (`WALK_CHUNK_SIZE = 20`), `[filetree.refs]`-Indikator
+      via `filetree.util.progress` (mirroring `refs.apply`s Muster). Cap-Warnung
+      (`"stopped at %d files"`) unverändert. `doc/filetree.txt`,
+      `docs/FEATURES/FILEOPS.md`. Neuer units.lua-Block (25 Fixture-Dateien,
+      rg-Stub erzwingt den Fallback-Pfad). **committet + gepusht, CI grün.**
+
 ## Noch offen
 
-- [ ] **#6 filetree.nvim `refs/scan.lua:151`** — Sync-Fallback-Leseschleife
-      (nur wenn `rg` fehlt), bereits gedeckelt (`"stopped at %d files"`).
-      Gleiches Muster: batchen + `[filetree.refs]`-Indikator, oder klarer als
-      „rg installieren"-Pfad kommunizieren.
+Keine offenen Punkte mehr aus der Kandidaten-Liste.
 
 ## Verworfen / kein Handlungsbedarf
 
