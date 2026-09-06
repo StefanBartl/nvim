@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum + TESTS/ komplett durch (Sub 1–11/13). PAUSIERT — Fortsetzung bei Sub 13 (docs/, letzter Schritt)**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **Status: erledigt. Alle 13 Sub-Häppchen durch (400 Dateien: 283 lua/, 49 TESTS/, 17 doc/, 31 docs/ — die Plan-Schätzung „51 docs/-Dateien" war zu hoch, echte Zählung 31 Dateien/5201 Zeilen).**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -214,7 +214,7 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
     40 hier)
 12. ✅ `doc/` — 17 Vimdoc-Dateien, ~4560 Z. (gegen echte `@types`/Usercmds
     geprüft, wie in den nvim-config/Plugin-Häppchen üblich)
-13. `docs/` — 51 Markdown-Dateien, ~5200 Z.  ← **HIER WEITER**
+13. ✅ `docs/` — tatsächlich 31 Markdown-Dateien (nicht 51), ~5201 Z.
 
 > **Nachtrag 2026-09-06:** derselbe Fehler wie schon bei Plan-Punkt 7 —
 > „TESTS/ + doc/ + docs/" als ein Punkt war eine unvermessene
@@ -225,6 +225,86 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > Plan-Beschreibungen vor dem Bauen an der echten Größe prüfen — hier
 > hätte auch der erste Split-Nachtrag schon `TESTS/`/`doc/`/`docs/`
 > mitzählen sollen, statt sie unangetastet zu lassen.
+
+**Häppchen 34 abgeschlossen:** 13 Sub-Häppchen über alle 400 Dateien von
+lib.nvim (283 `lua/`, 49 `TESTS/`, 17 `doc/`, 31 `docs/`). Grob überschlagen
+(Sub-Write-ups 1–13 durchgezählt) kamen dabei um die 60–70 echte
+Staleness-/Doku-Bugs direkter Fixes zusammen (Modul-Index-Lücken,
+"N dokumentiert/N+1 real"-Fälle, tote Links/Tags, eine erfundene
+replacer.nvim-API, die gleich zweimal auftauchte, ein Mojibake-Fund) plus
+eine niedrige zweistellige Zahl an `CDX:`-Judgment-Calls. lib.nvim ist
+damit Plugin-Repo **17/31** fertig — die übrigen Plugin-Repos aus der
+Gesamtliste (siehe `cdx-comments-docs.md` für den genauen Rest) folgen in
+künftigen Sessions.
+
+**Sub-Häppchen 13 — erledigt** (`docs/` — alle 31 Markdown-Dateien gegen den
+aktuellen Code-Stand geprüft; Commit `19314ec`, gepusht, Re-Fetch bestätigt
+HEAD == origin/main; letzter Schritt von Häppchen 34):
+
+Direkte Fixes (echte Staleness):
+- **Erfundene replacer.nvim-API, zweiter Fund derselben Sorte wie in
+  Sub 12:** `docs/EXAMPLES/composer-basic-verb.lua` und
+  `docs/FEATURES/COMMANDS.md` riefen ebenfalls
+  `require("replacer").replace_prompt()`/`.buffer()`/`.cwd()`/`.surround()`
+  — keine davon existiert in replacer.nvims echter Public API (nur
+  `setup`/`run`). Auf `require("myplugin")`-Platzhalter umgestellt, plus
+  CDX-Verweis auf die bereits in `doc/lib.nvim-composer.txt` (Sub 12)
+  etablierte Erklärung.
+- **`docs/API/filesystem.md` + `docs/FEATURES/FILESYSTEM.md` +
+  `docs/API/README.md`:** `lib.nvim.fs.*` fehlten `globbable` (fixt einen
+  bestätigten Windows-8.3-Kurzname-Bug, `~1` als ungültiger User in
+  `vim.fn.glob`) und `watch` komplett — beides reale, substanzielle Module.
+  Die Modul-Zahl-Angabe „28 Submodule" war falsch (echte Zählung: 26) —
+  korrigiert.
+- **`docs/modules.md`:** `lib.nvim.window`-Zeile fehlten 6 von 15 realen
+  Public-Funktionen (`is_usable_window`/`target_window`/`ensure_bottom`/
+  `make_focusable`/`force_focus`/`focus_and_bottom`) — derselbe Fund wie
+  in Sub 12 für `doc/lib.nvim-window.txt`, hier aber noch nicht
+  nachgezogen. Ergänzt. Außerdem `lib.nvim.ui.list` (Quickfix/Loclist-
+  Helfer, eigenes README, bisher nur in der API-Referenz erwähnt) ergänzt.
+- **`docs/modules.md` + `docs/FEATURES/WINDOW_BUFFER.md`:** beide
+  behaupteten ein `lib.nvim.buffer`-Aggregat-Modul, das es nicht gibt (kein
+  `buffer/init.lua`) — derselbe Phantom-Aggregat-Fund, der auf
+  `Lib.Buffer`/`Lib.Buffer.ALL` in `lua/lib/nvim/buffer/@types/init.lua`
+  bereits in einem früheren `lua/`-Sub-Häppchen als CDX stand. Auf die
+  echte Pro-Leaf-Modul-Form korrigiert, mit Querverweis auf die
+  bestehende CDX-Notiz.
+- **`docs/API/commands-and-infra.md`:** `lib.nvim.bindings.autocmd.
+  dispatcher` (reales Modul mit eigenem README, in FEATURES/EXAMPLES
+  bereits dokumentiert) fehlte komplett in der Funktions-Signatur-
+  Referenz — ergänzt.
+- **`docs/EXAMPLES/README.md`:** 4 von 20 echten Beispiel-Dateien fehlten
+  im Index (`kit-compare.lua`, `kit-form.lua`, `kit-live-input.lua`,
+  `kit-sync.lua`) — ergänzt.
+- **`docs/GUIDE-ui-kit.md`:** Komponenten-Tabelle fehlten 2 von 12 echten
+  Popup-Typen (`form`, `live_input`) — ergänzt. Das passende
+  Quell-Docstring (`lua/lib/nvim/ui/kit/init.lua`s `M.popup()`) hat
+  denselben Fehler, aber das ist `lua/`-Code außerhalb dieses Scopes — als
+  Background-Task geflaggt statt hier mitgefixt.
+- **`docs/guides/subprocess-env.md`:** die "Adoption"-Liste behauptete,
+  6 Plugins müssten noch auf `lib.nvim.cross.run.env` migriert werden;
+  gegen den echten Quellcode jedes Plugins geprüft — 5 von 6
+  (reposcope.nvim, pdfport.nvim, sandbox.nvim, replacer.nvim,
+  pickers.nvim) hatten bereits migriert. Nur github_stats.nvim spawnt
+  tatsächlich noch unangereichert über `vim.system`. Liste korrigiert.
+- **`docs/help.md`:** Mojibake gefixt (doppelt-UTF-8-kodierter Gedankenstrich
+  und Ellipsis, vermutlich aus einem fehlerhaften Copy-Paste) — rendierte
+  als Kauderwelsch-Bytes.
+- Eine fehlende Leerzeile vor einer Überschrift in `docs/FEATURES/README.md`.
+
+`CDX:` gesetzt: keine neuen — die beiden Judgment-Calls in diesem Scope
+(Composer-USAGE-Beispiel, kit.popup-Docstring) waren Verweise auf bereits
+bestehende CDX-Notizen bzw. wurden als Background-Task statt als CDX
+geflaggt.
+
+Nichts nach WKDBooks ausgelagert (alles war lib.nvim-spezifisch oder
+bereits am richtigen Ort).
+
+Verifiziert: `grep -rn "UI-KIT-CONCEPT" docs/` liefert nichts (war schon
+sauber). Alle internen relativen Links in allen 31 Dateien per Skript
+gegen das Dateisystem geprüft — keine toten Links. `TESTS/run.lua` meldet
+weiterhin `LIB_TESTS_OK` (kein `lua/`-Code angefasst). Ohne
+Co-Authored-By.
 
 **Sub-Häppchen 12 — erledigt** (`doc/` — alle 17 Vimdoc-Dateien gegen den
 aktuellen `lua/`-Stand geprüft; Commit `99ea1b8`, gepusht, Re-Fetch
