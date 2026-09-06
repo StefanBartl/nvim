@@ -38,19 +38,6 @@ function M.augroup(name)
   return api.nvim_create_augroup("general_autocmds_" .. name, { clear = true })
 end
 
---- CDX: dead — never called anywhere in the config, and the "markdown"
---- default looks like a copy-paste leftover. lib.nvim's `norm_pattern` is the
---- one actually used (autocmds/text, autocmds/terminals). Delete?
---- Normalize a FileType autocmd pattern field.
---- @param pat any
---- @return string|string[]
-function M.snorm_pattern(pat)
-  if pat == nil then
-    return "markdown"
-  end
-  return pat
-end
-
 --------------------------------------------------------------------------------
 -- no_name_guard
 --------------------------------------------------------------------------------
