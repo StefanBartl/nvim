@@ -10,6 +10,7 @@
   - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-fertig)
     - [Ergebnis je Repo](#ergebnis-je-repo)
   - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
+  - [🔶 ERR-* (34 Regeln) — in Arbeit](#err-34-regeln-in-arbeit)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -40,8 +41,8 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 4/32 Repos gelesen, 2 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
-| `ERR-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
@@ -260,20 +261,88 @@ Einschätzung aus der Aufwandsschätzung oben (ein Sitzung, meist N/A).
 
 ---
 
+## 🔶 ERR-* (34 Regeln) — in Arbeit
+
+**Methode:** anders als `DEP-*`/`TS-*` sind die meisten `ERR-*`-Regeln
+kontextabhängig und brauchen echtes Lesen des Quelltexts — direkt in der
+Unterhaltung statt per Subagent, damit der Fortschritt live nachvollziehbar
+bleibt (siehe `feedback_agent_limits_and_language`-Notiz in Claudes Memory:
+„repo-für-repo, lieber ohne Subagent, wenn es passt"). Genau wie bei `SEC-*`
+zählen nur **echte, demonstrierbare Bugs** (falsches Ergebnis, Datenverlust,
+Absturz) als Fund — reine Layering-Abweichungen (z. B. `notify()` in einem
+„core"-Modul, ohne dass daraus ein falsches Verhalten folgt) werden notiert,
+aber nicht als Bug gegen jedes einzelne Repo gefixt; das wäre ein
+Architektur-Umbau, kein Ein-Zeiler-Fix, und käme einer Design-Entscheidung
+gleich, die nicht mal eben nebenbei getroffen wird.
+
+**Zwei Muster wurden zusätzlich fleet-weit per Grep über alle 32 Repos
+geprüft (nicht nur in den gelesenen 4), weil sie sich mechanisch fassen
+lassen:**
+
+1. **Die `reverse and na > nb or na < nb`-Falle** (der Bug, der in
+   buffer-ctx.nvim gefunden wurde, s.u.) — ein `table.sort`-Comparator-Idiom
+   der Form `cond and A>B or C<D`, bei dem der mittlere Zweig selbst ein
+   Boolean ist und dadurch bei `false` in den `or`-Zweig durchfällt. Regex
+   `\band\b\s+\w[\w.]*(\[\d+\])?\s*[<>=~]=?\s*\w[\w.]*(\[\d+\])?\s+\bor\b\s+\w[\w.]*(\[\d+\])?\s*[<>=~]=?\s*\w[\w.]*(\[\d+\])?`
+   über alle 32 Repos: **nach dem Fix in buffer-ctx.nvim 0 verbleibende
+   Treffer im ganzen Fleet.**
+2. **Das `X.read(...) or {...Stub...}`-vor-`write()`-Muster**, das in
+   casedesk.nvim zum echten Datenverlust-Bug führte (s.u.): Grep
+   `\.read\([^)]*\)\s*or\s*\{` über alle 32 Repos — **Treffer nur in
+   casedesk.nvim** (3 Stellen, siehe unten), sonst nirgends im Fleet.
+
+### Ergebnis je Repo (Stand dieser Sitzung)
+
+| Repo | Befund | Regel(n) | Commit |
+|---|---|---|---|
+| **buffer-ctx.nvim** | **`:Format sort -r`/`-r -n` sortierte falsch** — Comparator `reverse and na > nb or na < nb` fiel bei `na < nb` in den `or`-Zweig und lieferte für praktisch jedes ungleiche Paar `true` zurück (kein gültiges `table.sort`-Kriterium mehr) | **ERR-60** | [`2232614`](https://github.com/StefanBartl/buffer-ctx.nvim/commit/2232614) |
+| **casedesk.nvim** | **`meta.patch()` konnte ein kaputtes `.case.json` durch einen fast leeren Stub ersetzen** — `meta.read()` gab für „fehlt" und „kaputt" identisch `nil` zurück, `patch()` behandelte beides gleich und schrieb bei jedem Einzelfeld-Update (SLA-Priorität, `last_reply_sent`, ...) einen `{case,year,links}`-Stub, der Titel/Firma/Notizen/... unwiderruflich verwarf | **ERR-11** | [`ed1a5f0`](https://github.com/StefanBartl/casedesk.nvim/commit/ed1a5f0) |
+| cascade.nvim | 0 (durchgängig sauber: `table.sort`-Comparatoren explizit if/else, Config-Normalisierung degradiert Einzelwerte statt abzubrechen (ERR-22-Muster), Autor-Kommentar bestätigt „synchronous-only, kein `defer_fn`") | — | — |
+| cmdlog.nvim | 0 echter Bug — `core/store.lua`/`core/favorites.lua` notifizieren direkt aus „core"-Modulen (ERR-04-Layering-Abweichung, aber kein falsches Verhalten), nicht gefixt | (ERR-04, notiert) | — |
+
+### Nebenbefund, nicht gefixt
+
+`casedesk.nvim/lua/casedesk/migrate.lua:124` hat dasselbe
+`meta.read(...) or {}`-Muster wie der gefixte `meta.patch()`-Bug, aber mit
+anderer Absicht: `migrate.run()` soll beim Verschieben eines Falls ohnehin
+immer ein vollständiges, korrigiertes Sidecar schreiben (Kommentar: „Existing
+sidecar fields always win over a fresh guess"), ein kaputtes JSON ist hier
+also eher der Fall, den die Migration reparieren soll, nicht einer, den sie
+verweigern sollte. Nicht angefasst, um keine Design-Entscheidung über die
+Migrations-Semantik nebenbei zu treffen — bei Bedarf gesondert bewerten.
+
+### Noch offen (28/32 Repos ungelesen für ERR-*)
+
+color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim,
+emojis.nvim, fileops.nvim, filetree.nvim, github_stats.nvim, gopath.nvim,
+hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim,
+markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim, pickers.nvim,
+recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim,
+sandbox.nvim, sessions.nvim, spotlight.nvim.
+
+Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
+read-or-stub-vor-write) müssen für diese 28 **nicht wiederholt** werden — die
+liefen bereits über alle 32 Repos. Was für die restlichen 28 noch fehlt, ist
+das kontextabhängige Lesen der übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
+`ERR-10/20-22/30-34/40-44/50-53/61/63-67`).
+
+---
+
 ## ⬜ Noch nicht begonnen
 
 | Familie | Regeln | Worum es geht (Kurzfassung) |
 |---|---|---|
 | `PRIN-*` | 37 | Grundprinzipien (Modularität, API-Design, Namenskonventionen, Dokumentationspflichten auf Prinzip-Ebene) |
-| `ERR-*` | 34 | Fehlerbehandlung: `pcall`-Pflicht an Systemgrenzen, Type Guards, explizite Rückgaben, kein `notify()` in Low-Level-Code, strukturierte Fehlertypen, Rückgabewert-Präzision (`nil` vs. `false` vs. strukturiertes Fehlerobjekt), Fail-Open vs. Fail-Closed |
 | `UI-*` | 34 | UI-Konventionen (Float-Größen, Highlight-Gruppen, Statuszeilen-Verhalten, Tastenkonflikte) |
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `ERR-*`/`UI-*` (je 34,
-mittelgroß) → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte und
-wahrscheinlich aufwendigste, da sie am meisten Kontext pro Fund braucht).
-Keine Autoren-Vorgabe, nur eine Einschätzung nach Größe.
+(`ERR-*` läuft bereits — siehe oben, 🔶 in Arbeit.)
+
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `ERR-*` zu Ende bringen
+→ `UI-*` (34, mittelgroß) → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57,
+größte und wahrscheinlich aufwendigste, da sie am meisten Kontext pro Fund
+braucht). Keine Autoren-Vorgabe, nur eine Einschätzung nach Größe.
 
 ---
 
