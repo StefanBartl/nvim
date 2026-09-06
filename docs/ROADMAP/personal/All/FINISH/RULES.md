@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 11/32 Repos gelesen, 3 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 17/32 Repos gelesen, 6 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -302,13 +302,30 @@ erledigt" gelten, bevor es auch gegen Methodenaufruf-Varianten (`a:foo()`),
 Klammern und Indexzugriffe (`t[i]`) getestet wurde — genau das hat den
 fileops.nvim-Fund beim ersten Durchgang durchrutschen lassen.
 
-### Ergebnis je Repo (Stand dieser Sitzung, 10/32)
+**Ab Repo 11 (github_stats.nvim/gopath.nvim/documentation.nvim): auf
+explizite Nutzer-Anweisung 3 parallele Agenten statt Direktarbeit in der
+Unterhaltung** — ein Agent pro Repo, volle Regel-Familie inkl. Fix-Pflicht,
+Testsuite, `git stash`-Verifikation des Regressionstests und
+Commit+Push, mit derselben Vorgehensweise wie in dieser Datei dokumentiert.
+Zwei weitere, bis dahin unbekannte Bug-Unterarten kamen dabei zum
+Vorschein — s. Tabelle: **curated Listen indexweise statt wholesale
+gemergt** (gopath.nvim, ERR-52 — bislang nur aus dem Regeltext bekannt, nie
+real gefunden) und **ein Config-Accessor gibt die lebende Tabelle per
+Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
+— eine neue Variante der Referenz-Aliasing-Fallen, nicht in ERR-52/53 exakt
+so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
+verändert).
+
+### Ergebnis je Repo (Stand dieser Sitzung, 14/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
 | **buffer-ctx.nvim** | **`:Format sort -r`/`-r -n` sortierte falsch** — Comparator `reverse and na > nb or na < nb` fiel bei `na < nb` in den `or`-Zweig und lieferte für praktisch jedes ungleiche Paar `true` zurück (kein gültiges `table.sort`-Kriterium mehr) | **ERR-60** | [`2232614`](https://github.com/StefanBartl/buffer-ctx.nvim/commit/2232614) |
 | **casedesk.nvim** | **`meta.patch()` konnte ein kaputtes `.case.json` durch einen fast leeren Stub ersetzen** — `meta.read()` gab für „fehlt" und „kaputt" identisch `nil` zurück, `patch()` behandelte beides gleich und schrieb bei jedem Einzelfeld-Update (SLA-Priorität, `last_reply_sent`, ...) einen `{case,year,links}`-Stub, der Titel/Firma/Notizen/... unwiderruflich verwarf | **ERR-11** | [`ed1a5f0`](https://github.com/StefanBartl/casedesk.nvim/commit/ed1a5f0) |
 | **fileops.nvim** | **`case_insensitive`-Cycle-Navigation sortierte an zwei Stellen falsch** (`list_files` + der „current file not in list"-Fallback in `navigate`) — Comparator `ci and (a:lower()<b:lower()) or (a<b)` fiel bei `ci=true` und `a:lower()>=b:lower()` in den case-SENSITIVEN `or`-Zweig zurück; für Groß-/Kleinschreibungs-Paare lieferten beide Vergleichsrichtungen `true` (ungültiger Comparator) | **ERR-60** | [`00ba2fc`](https://github.com/StefanBartl/fileops.nvim/commit/00ba2fc) |
+| **documentation.nvim** | **`trail_store.load()` konnte bei kaputtem `trails.json` alle Pins/gespeicherten Trails aus JEDEM Repo verlieren** — „Datei fehlt" und „Datei korrupt" kollabierten beide auf ein leeres `db = {}`; `flush()` schreibt immer die GANZE Datei (alle Repos in einer Datei), also hätte der nächste Pin (egal in welchem Repo) die kaputte Datei durch eine fast leere ersetzt. Anders gelöst als bei casedesk.nvim (dort: Schreiben verweigern) — hier: Backup nach `trails.json.corrupt` vorm nächsten Überschreiben, weil ein hartes Verweigern *jeden* Pin in *jedem* Repo blockiert hätte, bis jemand manuell eingreift | **ERR-11** | [`2e0b57b`](https://github.com/StefanBartl/documentation.nvim/commit/2e0b57b) |
+| **github_stats.nvim** | **`config.get_repos()` gab die lebende `config.repos`-Tabelle per Referenz zurück**, und `dashboard.render.sort_repos()` sortiert `state.repos` (die exakt diese Tabelle ist) bei JEDEM Rendern in-place — das bloße Öffnen des Dashboards hat die Repo-Reihenfolge der Config für den Rest der Session dauerhaft verändert, inkl. `fetcher.fetch_all`, Export „all", Tab-Completion, `health.lua`, `retention.lua` | **ERR-52/53-Familie** (Referenz-Aliasing) | [`ffadc2d`](https://github.com/StefanBartl/github_stats.nvim/commit/ffadc2d) |
+| **gopath.nvim** | **Config-Merge mergte curated Listen indexweise statt wholesale** — `deep_merge_into` rekursierte in JEDES Tabellenfeld gleich, auch reine Arrays; ein Nutzer-Override `order = {"treesitter"}` (auf einen einzigen Resolver einschränken) ergab real `{"treesitter","treesitter","builtin"}` — `builtin` lief trotz explizitem Ausschluss weiter. Dasselbe für `excluded_dirs` (7 Default-Einträge, 6 blieben trotz Override bestehen) | **ERR-52** (der bislang nur aus dem Regeltext bekannte, nie real gefundene Fall) | [`1e41349`](https://github.com/StefanBartl/gopath.nvim/commit/1e41349) |
 | cascade.nvim | 0 (durchgängig sauber: `table.sort`-Comparatoren explizit if/else, Config-Normalisierung degradiert Einzelwerte statt abzubrechen (ERR-22-Muster), Autor-Kommentar bestätigt „synchronous-only, kein `defer_fn`") | — | — |
 | cmdlog.nvim | 0 echter Bug — `core/store.lua`/`core/favorites.lua` notifizieren direkt aus „core"-Modulen (ERR-04-Layering-Abweichung, aber kein falsches Verhalten), nicht gefixt | (ERR-04, notiert) | — |
 | color_my_ascii.nvim | 0 (Debounce-/Cache-Manager und die async `:Fence format`/`run`-Callbacks vorbildlich per Extmark + `nvim_buf_is_valid` gegen Stale-State abgesichert) | — | — |
@@ -317,6 +334,21 @@ fileops.nvim-Fund beim ersten Durchgang durchrutschen lassen.
 | diff.nvim | 0 (`render.three_way`/`side_by_side`/`inline` validieren `origin_win` am Ausführungszeitpunkt, auch nach verketteten Async-Resolves für Drei-Wege-Diffs) | — | — |
 | emojis.nvim | 0 (Preview-vor-Mutation-Callback in `actions.lua` validiert den Buffer sowohl vorm Löschen des Preview-Highlights als auch in der eigentlichen Mutation erneut) | — | — |
 | filetree.nvim | 0 — **124 Dateien, größtes bisher geprüftes Repo dieser Familie**: Checklist + gezielte Stichproben in den Risikobereichen (Batch-Rename ist best-effort statt fail-fast/ERR-42, `refs/apply.lua` verifiziert jede Zeile gegen den aktuellen Inhalt vorm Schreiben/ERR-30, rekursive Walks delegieren an `lib.nvim.fs.collect_recursive` statt eigener Logik — Symlink-Zyklus-Schutz dort zu prüfen, nicht hier noch mal), kein file-für-file-Read aller 124 Dateien | — | — |
+| hover.nvim | 0 — sehr gründlich geprüft (1971-Zeilen-`init.lua` komplett gelesen): Generation-Counter für Async konsequent über `show`/`scroll`/`resize`/`zoom`/`nav`/`zen`, Dedup nach Key in den Preview-Modulen (Browser/Download/Konvertierung wird nicht doppelt gestartet), Code kommentiert seine eigene Regel-Konformität explizit (`ERR-04`, `ERR-10`, `ERR-20`, `ERR-52`, `ERR-64` u.a. direkt im Quelltext referenziert) | — | — |
+| images.nvim | 0 — ein vermuteter ERR-52-Fund (`extensions`-Liste indexweise gemergt) wurde gebaut, per Repro-Skript gegen echtes Neovim-0.12-Verhalten verifiziert und dann korrekt verworfen: **`vim.tbl_deep_extend` ersetzt nicht-leere Listen bereits komplett, mergt nicht indexweise** — der Fix wäre ein No-Op gewesen. Wichtige Klarstellung für den Rest der Familie (s. Kasten unten) | — | — |
+| **insights.nvim** | **`config.setup()` mergte per `tbl_deep_extend("force", defaults, opts)` ohne vorheriges `vim.deepcopy(defaults)`** — nicht angefasste Unterfelder (z. B. `metrics`, wenn nur `symbols` überschrieben wird) blieben dieselbe Tabellen-Referenz wie in `DEFAULTS`; `expand_paths(current)` mutiert genau solche Unterfelder in-place (`cache.dir`, `output_file`, `outdir`) und hätte damit `DEFAULTS` für den Rest der Session und jeden späteren `setup()`-Aufruf verseucht. Aktuell nur durch Zufall maskiert (`expand_path()` ist bei den aktuellen absoluten `stdpath()`-Defaults ein No-Op), aber jeder künftige relative/`~`-Default oder jeder Caller, der in eine von `config.get()` zurückgegebene Tabelle schreibt, hätte geleakt | **ERR-51/53** | [`22e852e`](https://github.com/StefanBartl/insights.nvim/commit/22e852e) |
+
+**Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
+`vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
+Merge bereits vollständig, statt sie indexweise zu vermischen (verifiziert
+gegen echtes Neovim-0.12-Verhalten, `shared.lua`s `can_merge()` liefert für
+nicht-leere Listen `false`). Das im Regeltext beschriebene Risiko trifft also
+**nur auf eigene, handgeschriebene Merge-Funktionen** zu (wie gopath.nvims
+`deep_merge_into`, der reale Fund dieser Sitzung) — ein Repo, das schlicht
+`vim.tbl_deep_extend("force", defaults, opts)` direkt aufruft, hat dieses
+Problem nicht. Spart Zeit im Rest der Familie: bei reinem
+`vim.tbl_deep_extend`-Gebrauch muss ERR-52 nicht mehr geprüft werden, nur bei
+custom Merge-Code.
 
 ### Nebenbefund, nicht gefixt
 
@@ -329,23 +361,46 @@ also eher der Fall, den die Migration reparieren soll, nicht einer, den sie
 verweigern sollte. Nicht angefasst, um keine Design-Entscheidung über die
 Migrations-Semantik nebenbei zu treffen — bei Bedarf gesondert bewerten.
 
-### Noch offen (21/32 Repos ungelesen für ERR-*)
+`github_stats.nvim` (Agent-Runde 1) hat drei weitere Punkte nur dokumentiert,
+nicht gefixt:
 
-documentation.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim,
-insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim, mdview.nvim,
-open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim,
-reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
-spotlight.nvim.
+- Die Katalog-Belege-Referenz `api.lua:143-229` für ERR-42 ist veraltet —
+  der Code dort ist inzwischen `fetch_all_metrics` (als „kein
+  In-Repo-Caller" markiert, also toter Code) plus reine Pagination. Das
+  echte, aktuelle ERR-42-Beispiel ist `fetcher.lua`s `fetch_all`/`fetch_repo`.
+  Für den nächsten Katalog-Durchlauf vorgemerkt.
+- `fetcher.lua`s `load_last_fetch()` kollabiert „nie gefetcht" und
+  „`last_fetch.json` korrupt" beide auf `nil` → wird als „nie gefetcht"
+  behandelt → Fetch läuft an. Absichtlich nicht gefixt: das ist im Sinne von
+  ERR-21 eher korrektes Fail-Open-Verhalten (lieber fetchen als wegen einer
+  kaputten Sidecar-Datei blockieren), es fehlt nur die einmalige Warnung —
+  geringer Nutzen für das Risiko einer Änderung an einer selten getroffenen
+  Kante.
+- `storage.read_metric_history` verwirft jede einzelne `.json`-Datei, die
+  nicht parst, lautlos. Nicht gefixt: alle drei Aufrufer in `analytics.lua`
+  behandeln einen zweiten Rückgabewert (err) als fatal — ein naiver Fix hätte
+  das aktuelle Fail-Open-Verhalten (partielle Historie trotz einer kaputten
+  Datei) in Fail-Closed verkehrt (komplette Historie verworfen wegen einer
+  Datei). Bräuchte eine koordinierte Vertragsänderung über mehrere
+  Aufrufer hinweg — außerhalb des Umfangs eines Ein-Zeiler-Fixes.
+
+### Noch offen (15/32 Repos ungelesen für ERR-*)
+
+markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim, pickers.nvim,
+recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim,
+sandbox.nvim, sessions.nvim, spotlight.nvim — plus language.nvim, lib.nvim,
+lsp.nvim (Agent-Runde 3, zum Zeitpunkt dieses Updates noch nicht zurück;
+`lib.nvim` mit besonderer Sorgfalt, da geteilte Abhängigkeit fast des
+gesamten Fleets — u. a. `ERR-34`-Symlink-Zyklus-Schutz in
+`fs.collect_recursive`, wohin mehrere Konsumenten wie filetree.nvim
+delegieren).
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
-read-or-stub-vor-write) müssen für diese 21 **nicht wiederholt** werden — die
-liefen bereits über alle 32 Repos (die and/or-Falle sogar zweimal, mit der
-erweiterten Regex). Was für die restlichen 21 noch fehlt, ist das
-kontextabhängige Lesen der übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
-`ERR-10/20-22/30-34/40-44/50-53/61/63-67`). `lib.nvim` verdient dabei
-besondere Aufmerksamkeit für `ERR-34` (Symlink-Zyklus-Schutz in
-`fs.collect_recursive`) — mehrere Konsumenten (filetree.nvim, u. a.)
-delegieren dorthin, ein Fund dort wirkt fleet-weit statt nur lokal.
+read-or-stub-vor-write) müssen für diese Repos **nicht wiederholt** werden —
+die liefen bereits über alle 32 Repos (die and/or-Falle sogar zweimal, mit
+der erweiterten Regex). Was noch fehlt, ist das kontextabhängige Lesen der
+übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
+`ERR-10/20-22/30-34/40-44/50-53/61/63-67`).
 
 ---
 
