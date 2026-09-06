@@ -341,9 +341,42 @@ keine API → gelöscht.
 
 Keine echten Logik-Bugs, kein `X and CONST or CONST`, kein WKDBooks-Fund.
 
-**Verbleibende Plugin-Repos (11/31 offen):** buffer-ctx, cascade,
+### Häppchen 38 — runtime-analysis.nvim (Plugin-Repo 21/31) — **erledigt**
+
+Commit `37e83fd`, gepusht, `pull --ff-only` sauber (Remote hatte nur eine
+generierte `docs/map/`-Regenerierung dazwischen, CI-`[skip ci]`). Ganzes Repo
+(44 Lua + 26 Specs + docs + scripts/probe/ftdetect). stylua ok, luacheck 0/0
+(72 Dateien), `RUNTIME_ANALYSIS_TESTS_OK`. **Sehr sauber** — dichte
+absichtsvolle Prosa-Docs; die Funde waren fast alle Migrationsartefakte
+(`lib.nvim.telemetry` → `runtime-analysis.telemetry`) + Enumerations-Drift.
+
+**Direkte Fixes — stale Pfade nach dem Telemetry-Umzug** (genau die im
+Auftrag genannte Fehlerklasse, hier die echten): 3× `lua/lib/nvim/telemetry/…`
+→ `lua/runtime-analysis/telemetry/…` in `renderers/mdview.lua`,
+`fingerprint.lua`, `telemetry/@types/init.lua`.
+
+**Kommentar widerspricht Code:** `runner.lua`-Header behauptete „blocking,
+not async, for this first version / async not attempted" — `M.run_async`
+existiert längst, `:RA send` nutzt es. Header neu geschrieben.
+
+**Enumerations-/Fakten-Drift:** `telemetry/command.lua` `:RATelemetry`-`desc`
+zählte 20 von 22 Subcommands (`flush`/`flamegraph` fehlten); `doc/runtime-
+analysis.txt` fehlten `:RA inspect` + `:RA startup …` komplett; `DEFAULTS.lua`
+„fourth accepted option" → „fifth"; `bench.lua` verstümmeltes „the own
+measured numbers" → „This repo's own measured numbers"; `doc` „Two features
+today" (stale, Repo hat vier Bereiche); „still-unbuilt `:RAInspect`" →
+`:RA inspect` (gebaut); `FEATURE_LOG.md` §5.2/§5.3 „still unbuilt" über
+inzwischen geshipptes §5.1; `README.md` „five … plus the telemetry table"
+las sich wie sechs. `validate.lua` deutsches Fragment „Config- und
+Merge-Sicherheit" → Englisch.
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.** Das
+`X and CONST or CONST`-Muster ist in `telemetry/init.lua:691` sogar explizit
+als vermiedener Anti-Pattern dokumentiert.
+
+**Verbleibende Plugin-Repos (10/31 offen):** buffer-ctx, cascade,
 color_my_ascii, documentation, lsp, markdown, mdview,
-pickers, reposcope, runtime-analysis, sandbox. (casedesk.nvim existiert
+pickers, reposcope, sandbox. (casedesk.nvim existiert
 als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
 config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
 ist noch offen und in dieser Liste **nicht** enthalten → als weiteres prüfen.)
