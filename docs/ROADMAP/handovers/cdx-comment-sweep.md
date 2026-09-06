@@ -378,13 +378,62 @@ stylua/luacheck: beide grün, 0/0 auf allen 12 Dateien.
 Commit: nvim-config `7c2a847ba`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 10 — `lua/config/neotest/` (21 Dateien, 1836 Zeilen)
+
+**Status: erledigt.**
+
+**Wichtigster Kontext-Fund:** `docs/ROADMAP/IDEAS/test.md` (bereits
+existierend, nicht Teil des Scopes) dokumentiert bereits vollständig ein
+„Adapter-Split-Brain"-Problem: `plugins/neotest.lua`s `opts.adapters` ist
+hartcodiert auf `plenary/vitest/go`, ignoriert `adapters/factory.lua` +
+`init/utils.lua`s `build_adapters()` komplett — Python/Rust/TypeScript sind
+installiert, aber nie aktiv. Da der Plan die Konsolidierung bewusst über
+eine Migration vorsieht (nicht stückweises Wegräumen vorher), habe ich dort
+**nicht gelöscht**, nur mit `--- CDX:` auf den Plan verwiesen. Umgekehrter
+Fall zur „Roadmap veraltet"-Lektion: hier war der Punkt noch **aktuell**.
+Eine Lücke im bestehenden Plan gefunden: `neotest-vim-test` ist als
+Dependency gelistet, hat aber gar keinen Adapter-Builder — im bestehenden
+Doc nicht erwähnt, jetzt ergänzt.
+
+**⚠️ Zwei echte Laufzeitbugs gefunden, nur getaggt (nicht gefixt,
+Logikänderung außerhalb Sweep-Scope):**
+- `whichkey/init.lua:69` — `<leader>ntS` ruft `actions.stop_tests()` auf,
+  aber `actions/init.lua` definiert nur `M.stop()`. Crasht bei Auslösung
+  ("attempt to call a nil value").
+- `debug/init.lua` (`:NeotestDebugRoot`) — liest `ts_config.adapter.root`,
+  aber `adapters/typescript.lua` exportiert nur `M.create()`, kein
+  `.adapter`-Feld. Bedingung ist immer `false`, TS-Root-Detection läuft nie.
+
+**Direkte Fixes (Annotation/Redundanz, keine Logikänderung):**
+- `@types/neotest.lua`: `---@module`-Tippfehler `NeoTest`→`neotest`.
+- `commands/init.lua`: Header listete 10 von 11 Usercommands
+  (`:NeotestClearAll` fehlte) — gleiches Muster wie Häppchen 7.
+- `neotree/init.lua`: doppelter `---@module`-Block zusammengelegt.
+- `docs/COMMANDS.md`: toter TOC-Chat-Artefakt-Rest entfernt, Hinweis
+  ergänzt dass Auto-Discovery aktuell inaktiv ist.
+
+**Übersetzt:** `adapters/typescript.lua`, `autocmds/auto_discovery.lua`,
+`debug/init.lua` (`KORREKTUR:`/`KRITISCH:`-Marker), `init/checks/adapter.lua`,
+`init/icons.lua`, `neotree/init.lua`, `utils/validate_consumer.lua`
+(komplett deutsch, wie zuvor bei bindings_explorer/case).
+
+Kein toter Code direkt gelöscht — alle Kandidaten (`AdapterConfig`/
+`Position`/`Result`/`RunOpts`-Typen, `autocmds/auto_discovery`,
+`init/checks/adapter`) sind Teil des bereits dokumentierten
+Migrationsplans, dafür `--- CDX:` mit Verweis auf `test.md`.
+
+stylua ok, luacheck 0/0 (19/21 — 2 `@types/*`-Dateien vom luacheck-Glob
+übersprungen, wie schon bei harpoon). Kein WKDBooks-Umzug nötig.
+
+Commit: nvim-config `b0b3b8648`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/config/`: `neotest/` (21 Dateien, 1836 Z.), `neotree/` (29 Dateien,
-1923 Z.) — je eigener Häppchen geplant. Danach `lua/plugins/`,
-`lua/startup/`, `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` +
-`lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach
-die 31 Plugin-Repos.
+`lua/config/neotree/` (29 Dateien, 1923 Z.) — letzter der drei großen
+`lua/config/`-Brocken. Danach `lua/plugins/`, `lua/startup/`,
+`lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`,
+`lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
