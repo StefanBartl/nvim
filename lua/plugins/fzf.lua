@@ -14,12 +14,8 @@ return {
     -- `E492: Not an editor command: FzfLua`. `cmd` makes lazy.nvim create the
     -- stub and load the plugin on first `:FzfLua`.
     cmd = "FzfLua",
-    -- opts = function()
-    -- return fzf_config.get()
-    -- end,
+    -- `config` instead of `opts`: this ensures actions are properly registered.
     config = function()
-      -- config function instead of opts
-      -- This ensures actions are properly registered
       require("fzf-lua").setup(fzf_config.get())
     end,
   },

@@ -20,7 +20,7 @@ return {
         variables = {},
       },
       on_colors = function(colors)
-        -- Kräftigere Farben
+        -- Bolder colors
         colors.blue = "#7aa2f7"
         colors.cyan = "#7dcfff"
         colors.green = "#9ece6a"
@@ -32,7 +32,7 @@ return {
         colors.teal = "#1abc9c"
       end,
       on_highlights = function(hl, colors)
-        -- TODO-Comments mit kräftigen Farben
+        -- TODO comments with bold colors
         hl.TodoBgFIX = { bg = colors.red, fg = colors.black, bold = true }
         hl.TodoFgFIX = { fg = colors.red, bold = true }
         hl.TodoSignFIX = { fg = colors.red, bold = true }

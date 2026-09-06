@@ -7,8 +7,8 @@
 local machine = require("machine")
 local plugins = require("plugins.control.mode").new()
 
--- Repos hier zentral deaktivieren (Basename -> "disabled"), statt weiter unten
--- im jeweiligen Spec `enabled = false` zu setzen.
+-- Disable repos centrally here (basename -> "disabled"), instead of setting
+-- `enabled = false` in each individual spec below.
 plugins.modes({
   -- ["mkdir.nvim"] = "disabled",
 })
@@ -28,7 +28,7 @@ plugins.add({
     config = function()
       require("config.harpoon.hardening").setup({
         debounce_ms = 200, -- tweak if remote FS
-        autocmd_events = { "BufLeave", "FocusLost" }, -- extend if nötig: "FocusGained", "WinLeave" etc.
+        autocmd_events = { "BufLeave", "FocusLost" }, -- extend if needed: "FocusGained", "WinLeave" etc.
       })
       local target_specs = {
         { vim.fn.stdpath("config"), "lua", "plugins", "personal", "init.lua" },
