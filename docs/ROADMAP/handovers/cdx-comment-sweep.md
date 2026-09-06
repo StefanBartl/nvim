@@ -440,6 +440,42 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 47 — lsp.nvim (Plugin-Repo 30/31) — **erledigt**
+
+Commit `a041ecc`, gepusht, `pull --ff-only` sauber. Ganzes Repo (176 Lua +
+26 Specs + scripts + docs). stylua ok, luacheck 0/0 (194 Dateien),
+`gen_bindings.lua --check` „current", Smoke `LSP_NVIM_SMOKE_OK`,
+PlenaryBusted `TESTS/lsp` 0 failed/0 errors. **Oberes Ende der Sauberkeit** —
+fast alles Gefundene war Extraktions-Restschutt.
+
+**Direkte Fixes:**
+- **Deutsche Kommentare** in `servers/lua_ls/library_profiles.lua`,
+  `servers/bashls.lua`, `servers/webdev/astro/init.lua`,
+  `servers/webdev/htmx/filter_logs.lua` (ganzer `@module`-Header),
+  `integrations/mason/ensure_install/defaults/lsp.lua` → Englisch.
+- **Falsche `---@module`-Pfade** (Alt-Namespace `config.*` aus der
+  Plugin-Extraktion → `lsp.integrations.*`) in 5 `ensure_install`-Dateien
+  + `inc_rename/setup.lua` (doppelte veraltete Zeile).
+- Eigene `-- FIXED:`-Marker in `astro/init.lua` (2×) entfernt (sagten nur, was
+  der Code daneben tut).
+- **Veraltete Zahlen:** `doc/lsp.nvim.txt` „binds 47 / minimal 31" → 49/33
+  (generierte `BINDINGS.md` + Smoke bestätigen; Vimdoc wird nicht generiert);
+  `config/init.lua` „six-entry default / defaults 2..6" (sind 8) → zähl-neutral;
+  `FEATURES/TOOLS.md` „An nvim-cmp source" → „engine-neutral" (seit 2026-08-23).
+
+**`--- CDX:` gesetzt:**
+- `integrations/mason/ensure_install/init.lua:204` — **echter Logikbug:**
+  `pcall(require, "config.mason.ensure_install")` (self-require) löst in
+  diesem Repo nie auf, Zweig fällt immer auf lokales `gate_by_system_deps`
+  durch. Kommentar „self-require is safe" irreführend.
+- `servers/lua_ls/library_profiles.lua:75` — Scan-Kosten im selben Doc-Block
+  einmal `~157ms`, einmal `197ms`.
+
+**Nicht angefasst:** `servers/webdev/htmx/filter_logs.lua` (ungenutzt, aber
+`htmx/init.lua` dokumentiert explizit Behalten für Roadmap B14);
+`docs/autocmds.md` „33 autocommands" (Verifikationsdatum + Methodik im Doc,
+exakte Nachzählung zu teuer).
+
 ### Häppchen 46 — reposcope.nvim (Plugin-Repo 29/31) — **erledigt**
 
 Commit `c97a460`, gepusht, `pull --ff-only` sauber. Ganzes Repo (113 Lua +
@@ -630,9 +666,10 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Verbleibende Plugin-Repos (3/31 offen):** documentation, lsp, sandbox.
-Plus zwei separate Aufräum-Punkte: der **mdview TypeScript-Client** (eigener
-Sub-Pass) und der vorbestehende casedesk `gen_docs.sh --check`-Fail.
+**Verbleibende Plugin-Repos (1/31 offen):** sandbox (270 Dateien, wird
+geteilt). documentation.nvim (31/31) **läuft gerade**. Plus zwei separate
+Aufräum-Punkte: der **mdview TypeScript-Client** (eigener Sub-Pass) und der
+vorbestehende casedesk `gen_docs.sh --check`-Fail.
 
 > **documentation.nvim** hat einen laufenden Item-für-Item-Roadmap-Workflow
 > (siehe Memory `documentation-nvim-roadmap-workflow`) — beim Sweep die
