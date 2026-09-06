@@ -1970,13 +1970,57 @@ Commit: language.nvim `3626c67`, gepusht (`15f61fb..3626c67`),
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 1. ✅ `lua/lib/lua/` + Top-Level/@types/config/nvim_usrcmds/strategies
-2. `lua/lib/nvim/bindings/` (composer)
+2. ✅ `lua/lib/nvim/bindings/` (composer)
 3. `lua/lib/nvim/cross/`
 4. `lua/lib/nvim/fs/`
 5. `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
 6. `lua/lib/nvim/ui/` (kit, 20 Dateien)
 7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)
 8. `TESTS/` + `doc/` + `docs/`
+
+**Sub-Häppchen 2 — erledigt** (`lua/lib/nvim/bindings/`, Commit `1dd5f36`,
+gepusht, `pull --ff-only` sauber). 28 Dateien, überdurchschnittlich sauber.
+
+- **`@types`-Enumerationen unvollständig** (das Kernmuster hier): `Lib.AutoCmd`
+  fehlten `registered`/`by_event`/`docs`; `Lib.UserCmd.Composer.Handle` fehlten
+  die Fluent-Builder-Methoden `:count`/`:buffer`; `DocsOpts`/argtype-Alias
+  hatten doppelte Beschreibungszeilen. → alle gegen die reale `M`-Tabelle
+  abgeglichen. **Für die restlichen lib.nvim-Sub-Häppchen: jede `Lib.*`-
+  `@class` gegen das Modul-`M` prüfen.**
+- **`====`-Banner-Header** in `autocmd/init.lua`, `keymap/set.lua` → `---@module`;
+  `autocmd/augroup.lua` hat noch einen (trivial, fürs Aufräum-Häppchen).
+- Fehlplatzierte Rationale-Blöcke in `autocmd/init.lua` an die richtige
+  Funktion (`M.group`/`M.get_augroup`) verschoben; doppelter aus `augroup.lua`
+  kopierter Block ersetzt.
+- `autocmd/dispatcher/init.lua` — Inline-Mikrobenchmark-Zahlen (`~30us` etc. +
+  Pfad zum Bench-Skript) → auf die Schlussfolgerung + README-Verweis eingedampft.
+- Toter auskommentierter `---@param`-Block in `keymap/set.lua` gelöscht.
+- Stale Changelog-Notizen in Kommentaren: „`WINDOW` … missing from this list"
+  (steht drin), „pre-Phase-6 behavior" → entfernt.
+- **Struktur:** Inline-`---@class Lib.UserCmd.Composer.Node` aus `tree.lua`
+  nach `composer/@types/` verschoben (Konvention `conventions.md`).
+
+**`--- CDX:` gesetzt:**
+- `keymap/modifier/init.lua` `capture()` — konsultiert nur Tier-1-
+  Deklarationen unter Modus `"n"`, obwohl `M.declare(mode, …)` beliebige Modi
+  annimmt und speichert. Ganzes Feature ist normal-mode-only (`resolve_target`/
+  `setup` hardcoden `"n"`), also matcht `declare("i"/"x", …)` still nie —
+  latenter Bug / toter Parameter.
+
+**Nicht angefasst:** `format.lua` `arg_token` (redundanter `if/else`-Zweig,
+identisches Ergebnis — Code-Logik, kein Kommentar); `docgen.lua` `cell()`
+dupliziert `docs_util.cell` (Konsolidierung = neue Cross-Modul-Abhängigkeit);
+`dispatcher/init.lua` closure-lokale `Registration`-Klasse (Verschieben zu
+riskant für Kommentar-Sweep).
+
+**Für Sub-Häppchen 8:** `doc/lib.nvim-composer.txt` nutzt in USAGE
+`require("replacer").prompt()`, `composer/init.lua`-Doc nutzt
+`.replace_prompt()` — beide fiktiv, aber inkonsistent; angleichen.
+
+Kein Deutsch, kein toter Code, keine Smart Quotes, keine `require`-Pfad-Bugs,
+keine `X and CONST or CONST`-Ternaries in diesem Scope.
+
+stylua ok, luacheck 0/0 (28 Dateien), `LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 **Sub-Häppchen 1 — erledigt** (Commit `524ec4d`, gepusht, `pull --ff-only`
 sauber). Teilbaum war **überdurchschnittlich sauber** — kaum Deutsch, keine
