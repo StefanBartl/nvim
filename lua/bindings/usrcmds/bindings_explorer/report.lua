@@ -20,8 +20,8 @@
 --- the only structure the raw report has. Re-cast as tables it would be
 --- longer and read worse.
 ---
---- Output language is German, like every other user-visible string of
---- `:Bindings`.
+--- User-facing output is German, deliberately and consistently across every
+--- string of `:Bindings` (see the CDX note in init.lua).
 ---
 ---@see bindings.usrcmds.bindings_explorer.drift
 
@@ -86,9 +86,9 @@ local function count_kinds(findings)
   return out
 end
 
---- Wie der Scope im Lauf-Kopf steht. Eigene Funktion, weil der Default
---- ("personal") die interessante Aussage ist und nicht weggelassen gehört:
---- ein Bericht ohne Scope-Zeile liest sich wie einer über alles.
+--- How the scope reads in the run header. Its own function because the
+--- default ("personal") is the interesting statement and should not be
+--- omitted: a report with no scope line reads like one over everything.
 ---@param si Bindings.ScopeInfo|nil
 ---@return string
 local function scope_row(si)

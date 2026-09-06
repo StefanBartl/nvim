@@ -2,10 +2,9 @@
 --- Phase 2 (see this module's own docs/FEATURES.md): tolerant
 --- table-row scraper. Every `|…|…|` line found under the nearest preceding
 --- `##`/`###` heading becomes a flat record — column names and count stay
---- free-form (`docs/NOTES/BINDINGS-FORMAT.md` only mandates a heading right
---- above every table, not a fixed schema across the whole corpus, see that
---- file §1's "jede Tabelle ... bekommt eine eigene Überschrift" rule, added
---- specifically so this scraper wouldn't need one). Files without a table
+--- free-form (`docs/NOTES/BINDINGS-FORMAT.md` §1 only mandates a heading right
+--- above every table, not a fixed schema across the whole corpus — a rule
+--- added specifically so this scraper wouldn't need one). Files without a table
 --- under a heading (prose-only sections, `Telescope.md`-style stretches)
 --- simply contribute no records — no error, just fewer hits, same
 --- graceful-degradation stance as `search.lua`.
@@ -61,34 +60,31 @@ local META_FILES = { All = true, Collisions = true, Overview = true }
 --- live-but-undocumented direction -- the same split `META_FILES` makes.
 local NOT_LIVE_MARKER = "^%*%*Nicht live:%*%*"
 
---- Welche Kategorie ein `##`-Abschnitt einer Repo-`docs/BINDINGS.md` trägt.
+--- Which category a `##` section of a repo `docs/BINDINGS.md` carries.
 ---
---- Der Cheatsheet-Korpus ist **art-zuerst** — die Kategorie steht im
---- Ordnernamen (`Keymaps/`, `Usercmds/`, `Autocmds/`). Die Repos sind
---- **plugin-zuerst**: eine Datei je Plugin, die Kategorie ist eine
---- Überschrift darin. Diese Funktion überbrückt genau diesen Bruch.
+--- The cheatsheet corpus is **kind-first** — the category is the folder name
+--- (`Keymaps/`, `Usercmds/`, `Autocmds/`). The repos are **plugin-first**: one
+--- file per plugin, the category a heading inside it. This function bridges
+--- that break.
 ---
---- Abgeleitet, nicht erfunden: gemessen über die `docs/BINDINGS.md` aller 32
---- Repos am 2026-09-04. Die Schreibweisen gehen weit auseinander —
---- `## Keymaps` (20×), `## Autocommands` (19×), `## User commands` (15×),
---- `## User Commands` (11×), `## Autocmds` (10×), dazu `## Preset Keymaps`,
---- `## Picker keymaps`, `## Usrcmds`, `## 1. Keymaps (\`keymaps\`)` und die
---- zehn `## \`:Sandbox <ding> <subcommand>\``-Überschriften von
---- sandbox.nvim. Eine Liste exakter Titel wäre am Tag ihrer Niederschrift
---- veraltet gewesen; Teilstring-Regeln halten.
+--- Derived, not invented: measured over all 32 repos' `docs/BINDINGS.md` on
+--- 2026-09-04. The spellings vary widely — `## Keymaps` (20×),
+--- `## Autocommands` (19×), `## User commands` (15×), `## User Commands`
+--- (11×), `## Autocmds` (10×), plus `## Preset Keymaps`, `## Picker keymaps`,
+--- `## Usrcmds`, `## 1. Keymaps (\`keymaps\`)` and sandbox.nvim's ten
+--- `## \`:Sandbox <thing> <subcommand>\`` headings. A list of exact titles
+--- would have been stale the day it was written; substring rules hold.
 ---
---- **Reihenfolge ist die ganze Logik.** „Autocommands" enthält „command",
---- also muss `autocmd` zuerst greifen, sonst landet jeder Autocmd-Abschnitt
---- bei den Usercmds.
+--- **Order is the whole logic.** "Autocommands" contains "command", so
+--- `autocmd` must match first or every autocmd section lands under Usercmds.
 ---
---- Was auf nichts passt, liefert `nil` und **fällt heraus** — das ist
---- Absicht, keine Lücke. `## Highlight groups`, `## Global variables`,
---- `## Table of content`, `## Right-click context menu` und
---- `## Context Menu (optional)` stehen in diesen Dateien und dokumentieren
---- keine Bindings, die eine laufende Session kennt. Sie mitzunehmen hieße,
---- `drift.lua` Menüeinträge und Highlight-Gruppen als „dokumentiert, aber
---- nicht live" melden zu lassen — genau die Klasse Falschbefunde, gegen die
---- `META_FILES` und `NOT_LIVE_MARKER` bereits gebaut wurden.
+--- Anything matching nothing returns `nil` and **drops out** — deliberate, not
+--- a gap. `## Highlight groups`, `## Global variables`, `## Table of content`,
+--- `## Right-click context menu` and `## Context Menu (optional)` appear in
+--- these files and document no bindings a running session knows. Taking them
+--- would let `drift.lua` report menu entries and highlight groups as
+--- "documented, not live" — exactly the class of false findings `META_FILES`
+--- and `NOT_LIVE_MARKER` were already built against.
 ---@param heading string
 ---@return ("Keymaps"|"Usercmds"|"Autocmds")|nil
 local function category_from_heading(heading)
@@ -175,8 +171,8 @@ end
 
 ---@param path string
 ---@param scope "Personal"|"Extern"
----@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil `nil` = aus den `##`-Überschriften ableiten (Repo-Sheet, siehe `category_from_heading`)
----@param plugin_override string|nil Plugin-Name, wenn er nicht der Dateistamm ist — eine Repo-`docs/BINDINGS.md` heißt in jedem Repo gleich
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil `nil` = derive from the `##` headings (repo sheet, see `category_from_heading`)
+---@param plugin_override string|nil plugin name when it isn't the file stem — a repo `docs/BINDINGS.md` is named the same in every repo
 ---@return Bindings.Record[]
 local function parse_file(path, scope, category, plugin_override)
   local content = read(path)
@@ -188,9 +184,9 @@ local function parse_file(path, scope, category, plugin_override)
   local meta = META_FILES[plugin] == true
   local records = {}
   local heading, columns, awaiting_separator = nil, nil, false
-  -- Bei einem Repo-Sheet wandert die Kategorie mit dem Abschnitt. Bis zur
-  -- ersten passenden `##`-Überschrift gibt es keine, und Zeilen davor
-  -- (Titeltabelle, Inhaltsverzeichnis) gehören auch zu keiner.
+  -- In a repo sheet the category travels with the section. Before the first
+  -- matching `##` heading there is none, and lines before it (title table,
+  -- table of contents) belong to none either.
   local section_category = category
   -- Scoped to the section, not to the file: a sheet can hold one unverifiable
   -- table next to five ordinary ones, and `Keymaps/VisualMulti.md` does.
@@ -202,10 +198,10 @@ local function parse_file(path, scope, category, plugin_override)
     if h then
       heading, columns, awaiting_separator = vim.trim(h), nil, false
       not_live = false
-      -- Nur die `##`-Ebene setzt die Kategorie; ein `###` darunter verfeinert
-      -- die Überschrift, bleibt aber im Abschnitt. hover.nvim schreibt
-      -- `## Keymaps` und darunter `### Owned` / `### Borrowed` — beide sind
-      -- Keymaps, und eine Ebene tiefer stünde kein Kategoriewort mehr.
+      -- Only the `##` level sets the category; a `###` below refines the
+      -- heading but stays in the section. hover.nvim writes `## Keymaps` with
+      -- `### Owned` / `### Borrowed` under it — both are keymaps, and one level
+      -- deeper there'd be no category word left.
       if category == nil and line:match("^##%s") then
         section_category = category_from_heading(heading)
       end
@@ -222,10 +218,10 @@ local function parse_file(path, scope, category, plugin_override)
         awaiting_separator = false
       else
         awaiting_separator = false
-        -- Kein `section_category` heißt: dieser Abschnitt dokumentiert keine
-        -- der drei Bindungsarten (Highlight-Gruppen, globale Variablen, das
-        -- Inhaltsverzeichnis). Die Zeile ist eine echte Tabellenzeile, aber
-        -- kein Binding — siehe `category_from_heading`.
+        -- No `section_category` means: this section documents none of the
+        -- three binding kinds (highlight groups, global variables, the table
+        -- of contents). The line is a real table row but not a binding — see
+        -- `category_from_heading`.
         if section_category then
           records[#records + 1] = {
             scope = scope,
@@ -255,17 +251,15 @@ end
 ---
 --- Two shapes arrive here, and the difference is the `category` argument:
 ---
---- * **Cheatsheet** — `<root>/<Kategorie>/<plugin>.md`. Die Kategorie steht
----   im Ordnernamen und wird durchgereicht; `plugin` ist `nil`, der
----   Dateistamm genügt.
---- * **Repo-Sheet** — die `docs/BINDINGS.md` eines Personal-Plugins, eine
----   Datei für alle drei Arten. `category` ist `nil`, damit `parse_file` sie
----   je Abschnitt ableitet, und `plugin` kommt mit, weil jede dieser Dateien
----   gleich heißt.
+--- * **Cheatsheet** — `<root>/<category>/<plugin>.md`. The category is the
+---   folder name and is passed through; `plugin` is `nil`, the file stem does.
+--- * **Repo sheet** — a personal plugin's `docs/BINDINGS.md`, one file for all
+---   three kinds. `category` is `nil` so `parse_file` derives it per section,
+---   and `plugin` comes along because every such file is named the same.
 ---
---- Ein `categories`-Filter kann ein Repo-Sheet nicht *vorab* ausschließen —
---- welche Arten darin stehen, weiß man erst nach dem Parsen. Deshalb wird es
---- immer gelesen und erst hinterher gefiltert; siehe `M.list`.
+--- A `categories` filter cannot exclude a repo sheet *up front* — which kinds
+--- are in it is only known after parsing. So it is always read and filtered
+--- afterwards; see `M.list`.
 ---@param categories string[]
 ---@param scope ("personal"|"extern")|nil
 ---@param fn fun(path: string, scope: "Personal"|"Extern", category: string|nil, plugin: string|nil): nil
@@ -273,25 +267,23 @@ end
 local function each_file(categories, scope, fn)
   local sheets = (not scope or scope:lower() == "personal") and config.plugin_sheets() or nil
 
-  -- Solange die alten Cheatsheets noch liegen, beschreiben zwei Dateien
-  -- dasselbe Plugin. Beide zu lesen hieße, jedes Binding doppelt zu zählen —
-  -- in `:Bindings status`, im Driftbericht, als zwei identische Zeilen im
-  -- Picker. Das Repo-Sheet gewinnt, weil es die Quelle ist und das
-  -- Cheatsheet die Abschrift.
+  -- While the old cheatsheets are still around, two files describe the same
+  -- plugin. Reading both would double-count every binding — in
+  -- `:Bindings status`, in the drift report, as two identical picker rows. The
+  -- repo sheet wins: it is the source, the cheatsheet is the copy.
   --
-  -- Das ist der Übergangszustand bis `BND-04` (Cheatsheet gegen Repo-Doku
-  -- diffen, Einzigartiges nachtragen, dann löschen). Wo das Cheatsheet noch
-  -- etwas weiß, das die Repo-Doku nicht sagt, wird es hier **still
-  -- übergangen** — sichtbar wird das im Driftbericht als „live, aber nicht
-  -- dokumentiert", und genau dort gehört es hin.
+  -- Transitional state until `BND-04` (diff cheatsheet against repo doc, carry
+  -- over what's unique, then delete). Where the cheatsheet still knows
+  -- something the repo doc doesn't, it is **silently skipped** here — that
+  -- shows up in the drift report as "live, not documented", which is where it
+  -- belongs.
   local superseded = {}
   for _, sheet in ipairs(sheets or {}) do
     superseded[sheet.plugin] = true
-    -- Ein einziges Cheatsheet weicht vom Plugin-Namen ab: `buffer-ctx.md`
-    -- statt `buffer-ctx.nvim.md` (geprüft 2026-09-04 über alle drei
-    -- Kategorieordner -- es ist der einzige Fall). Ohne diese Zeile bliebe
-    -- genau dieses Plugin doppelt geführt, unter zwei Namen, und wäre damit
-    -- der eine Fall, den die Umstellung nicht erwischt.
+    -- One cheatsheet differs from its plugin name: `buffer-ctx.md` not
+    -- `buffer-ctx.nvim.md` (checked 2026-09-04 across all three category
+    -- folders -- it's the only case). Without this line that one plugin would
+    -- stay double-listed under two names.
     superseded[(sheet.plugin:gsub("%.nvim$", ""))] = true
   end
 
