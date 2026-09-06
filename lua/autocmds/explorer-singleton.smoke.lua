@@ -30,17 +30,9 @@ end
 -- ── stub neo-tree.command ────────────────────────────────────────────────────
 local neotree_win_handle -- winid currently "showing neo-tree", or nil
 local function make_neotree_win()
-  -- Filetype must be set BEFORE the window becomes current: WinEnter fires
-  -- once, at the moment focus moves to the new window, so a real plugin's
-  -- buffer (already carrying its filetype) needs to exist before that, not
-  -- be assigned afterwards. `:split`-family commands additionally clone the
-  -- CURRENTLY FOCUSED window's buffer as an intermediate step before loading
-  -- the target one, firing WinEnter for that transient (wrong) buffer first —
-  -- exactly the class of timing issue the module itself now defers past via
-  -- vim.schedule (see its own doc comment). This stub sidesteps needing that
-  -- by using a plain vsplit + immediate buffer assignment; the module's own
-  -- defer is what makes it robust regardless of exactly how the real
-  -- neo-tree/snacks windows get created.
+  -- Filetype is set before the window becomes current, and this uses a plain
+  -- `sbuffer` rather than fighting the `:split`-family buffer-clone timing.
+  -- Background: wkdbook-Neovim/MyNotes/WinEnter-frisches-Fenster-Timing.md.
   local buf = vim.api.nvim_create_buf(false, true)
   vim.bo[buf].filetype = "neo-tree"
   vim.cmd("vertical sbuffer " .. buf)
@@ -85,12 +77,9 @@ package.loaded["snacks"] = {
     end,
   },
   explorer = function()
-    -- Real snacks registers a picker in its active-set at construction,
-    -- before the window is created/focused -- so `explorer_active` must
-    -- already be true here, not set after. Uses nvim_open_win (a real
-    -- floating window, matching how snacks actually creates its picker UI)
-    -- rather than a `:split`-family command, for the same reason noted in
-    -- make_neotree_win() above.
+    -- Real snacks registers the picker in its active-set at construction,
+    -- before the window exists -- so `explorer_active` is set first, then the
+    -- window via nvim_open_win (matching snacks' real floating picker).
     explorer_active = true
     local buf = vim.api.nvim_create_buf(false, true)
     vim.bo[buf].filetype = "snacks_picker_list"

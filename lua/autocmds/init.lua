@@ -1,12 +1,12 @@
 ---@module 'autocmds'
 --- Initialize module for 'autocmds'
 
---FIX: Modularisere die submodule in eigene module
+--- CDX: split the submodule setup calls below into their own modules
 
--- AUDIT: Wenn keine Probleme, dann dauerhaft implementieren, aber nach wkdoptions/ui oder ähnliches:
+-- CDX: if no issues, move this to wkdoptions/ui or similar for good
 require("autocmds.auto-center-fexplorer").setup()
 
--- AUDIT: not exercised against a live neo-tree + snacks session yet — verify
+-- CDX: not exercised against a live neo-tree + snacks session yet — verify
 -- the open/close/reopen-once cascade (<A-l> vs <leader>.) before trusting it.
 require("autocmds.explorer-singleton").setup()
 
@@ -25,7 +25,11 @@ require("autocmds.general").enable({
     enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
   },
   no_name_guard = {
-    enable = false, -- SUPERSEDED: this generic sweep has no tree-window exclusion, which raced with neo-tree's own startup/open sequence (state.tree nil in commands.lua:827). Re-implemented tree-aware in filetree.nvim (features/nav/no_name_guard, using util/buffer.lua's TREE_FT/adapter.get_winid() exclusion) — enable there once the neo-tree block migrates to filetree.nvim (Liste 1). Keep disabled here.
+    -- SUPERSEDED: this generic sweep has no tree-window exclusion and raced
+    -- with neo-tree's startup (state.tree nil). Re-done tree-aware in
+    -- filetree.nvim's features/nav/no_name_guard — enable it there once the
+    -- neo-tree block migrates (Liste 1). Keep off here.
+    enable = false,
   },
 })
 
