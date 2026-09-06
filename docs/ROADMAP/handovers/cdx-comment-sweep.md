@@ -237,10 +237,43 @@ Englisch, keine Chat-Artefakte).
 Commits: nvim-config `364118c25`, WKDBooks `0ca6a86` (Relocation, s.u.).
 Beide ohne Co-Authored-By, beide gepusht + `pull --ff-only` bestätigt.
 
+### Häppchen 6 — `usrcmds/`-Rest + `telemetry.lua` (6 Ziele, ~1620 Zeilen)
+
+**Status: erledigt.**
+
+- `context_open/`, `who_locks/`, `update_repos/` — keine Änderungen, bereits
+  sauber (Englisch, kein toter Code, keine Widersprüche).
+- `autocmd_docs/` + `usrcmds/init.lua` — deutsche notify/desc-Strings ins
+  Englische übersetzt. **Judgement-Call:** anders als `case`/
+  `bindings_explorer` (bewusst deutsch-domänig) ist beides generisches
+  Dev-Tooling neben rein-englischen Geschwister-Kommandos — als
+  Sprachversehen behandelt, nicht als bewusste Deutsch-UX. `usrcmds/init.lua`
+  zusätzlich: redundante Boilerplate-Zeile raus, eigener `--FIX:`-Marker
+  (Tippfehler „Funktoinert") zu `--- CDX:` vereinheitlicht.
+- **`lua/config/telemetry.lua`** — Handover-Listenfehler korrigiert: liegt
+  unter `lua/config/`, nicht `usrcmds/`.
+  - **Fund:** die Datei zitierte Einzeldezimal-Kostenwerte
+    (0.014/0.619/0.394 µs/call) aus `runtime-analysis.nvim`s eigenem
+    README — das README selbst nennt genau solche Werte „false precision"
+    und verweist auf sein reproduzierbares Bench-Script. Die Config-Datei
+    widersprach also der eigenen zitierten Quelle. Gekürzt zu einem Pointer.
+  - **Fund:** toter Link `docs/COMMANDS.md` → `docs/commands.md` (Datei
+    existiert nur lowercase; auf Windows unsichtbar, bricht auf
+    case-sensitiven Systemen) — gefixt.
+  - Allgemeine lazy.nvim-Mechanik (`FileType` feuert vor `User LazyLoad`)
+    ausgelagert, s. Relocation-Log.
+- Kein toter Code gefunden (anfänglicher Verdacht zu `who_locks`/
+  `update_repos` widerlegt — beide werden direkt aus root-`init.lua`
+  aktiviert, nicht über `usrcmds/init.lua`).
+- stylua ok, luacheck 0/0 (9 Dateien).
+
+Commits: nvim-config `7bff3c7f6`, WKDBooks `09888c3`. Beide ohne
+Co-Authored-By, gepusht + `pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/bindings/`: `usrcmds/` Rest (context_open, plugin_repos, update_repos,
-who_locks, telemetry, autocmd_docs), `usrcmds/init.lua`.
+`lua/bindings/usrcmds/plugin_repos/` (3 Dateien, 1641 Zeilen) — letzter
+Posten in `lua/bindings/`. Danach restliche `lua/`-Bereiche (s. u.).
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
