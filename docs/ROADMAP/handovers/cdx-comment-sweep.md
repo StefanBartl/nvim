@@ -440,6 +440,35 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 48 — documentation.nvim (Plugin-Repo 31/31) — **erledigt**
+
+Commit `689c35d`, gepusht, `pull --ff-only` sauber. Ganzes Repo (138 Lua +
+102 Test-Dateien + docs). stylua ok, luacheck 0/0 (242 Dateien),
+`DOCUMENTATION_TESTS_OK` (JS/TS/TSX/Go-Grammar-Specs skippen mangels
+kompilierter TS-Parser über ihren dokumentierten Skip-Pfad — erwartet).
+**Oberes Ende der Sauberkeit** — dichte, bewusst ausführliche
+Rationale-Kommentare, inhaltlich stimmig. Roadmap-Punkte unangetastet.
+
+**Direkte Fixes — der einzige systematische Fund:** Go wurde am 2026-08-20
+das 5. Call-Edges-Backend und das 9. mit `param_docs = false`. Die
+maßgeblichen Docs hatten die richtigen Zahlen, aber ~7 handgezählte
+Kommentare trugen noch Vor-Go-Werte, teils widersprüchlich
+(`go.lua` „fifth of twenty-three" vs. `ecma.lua` „four backends"). Korrigiert
+in `@types/init.lua`, `core/lang_registry.lua`, `core/lang/{lua,ecma}.lua`,
+`core/doccoverage.lua`, `TESTS/{backend_contract,doccoverage_by_language}_spec.lua`
+(„eighteen"/„nine" statt „nineteen"/„eight"). `core/consumers.lua`-Header-
+Zeile umgebrochen. `docs/map/` via `scripts/gen_map.lua` neu generiert
+(nur die editierten Summary-Zeilen, mitcommittet wie der map-CI-Job es
+ohnehin nachzieht).
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.** Ordinal-bei-
+Einführung-Aussagen („the eighteenth to declare it"), an konkrete
+Profiling-Läufe gebundene Messzahlen („75 spec files") und `docs/ROADMAP*`
+bewusst belassen.
+
+**Damit sind 31/31 Plugin-Repos gesweept** (sandbox.nvim in 2 Sub-Häppchen,
+Sub 1 läuft).
+
 ### Häppchen 47 — lsp.nvim (Plugin-Repo 30/31) — **erledigt**
 
 Commit `a041ecc`, gepusht, `pull --ff-only` sauber. Ganzes Repo (176 Lua +
@@ -666,10 +695,19 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Verbleibende Plugin-Repos (1/31 offen):** sandbox (270 Dateien, wird
-geteilt). documentation.nvim (31/31) **läuft gerade**. Plus zwei separate
-Aufräum-Punkte: der **mdview TypeScript-Client** (eigener Sub-Pass) und der
-vorbestehende casedesk `gen_docs.sh --check`-Fail.
+**Alle 31 Plugin-Repos + nvim-config `lua/`-Baum sind gesweept.** Letzter
+laufender Job: **sandbox.nvim** (Repo 31/31, 270 Dateien) in 2 Sub-Häppchen —
+Sub 1 (core/config/bindings/ui/util/telescope, ~104 Dateien) **läuft**,
+Sub 2 = `adapters/**` (docker/nerdctl/podman/wsl, ~166 Dateien) folgt.
+
+**Danach noch offen (separate Aufräum-Punkte, nicht Teil des Kern-Sweeps):**
+- **mdview TypeScript-Client** (`TESTS/client/`, webview/relay `.ts`) —
+  eigener Sub-Pass, der Lua-Teil ist durch (Häppchen 41).
+- casedesk `gen_docs.sh --check`-Fail (vorbestehend, Generator kürzt in
+  dieser Umgebung den Route-Tree).
+- Die über den Sweep gesammelten `--- CDX:`-Judgment-Calls (Autoren-
+  entscheidungen nötig — quer über die Häppchen im Code als `--- CDX:`
+  markiert und je im Häppchen dokumentiert).
 
 > **documentation.nvim** hat einen laufenden Item-für-Item-Roadmap-Workflow
 > (siehe Memory `documentation-nvim-roadmap-workflow`) — beim Sweep die
