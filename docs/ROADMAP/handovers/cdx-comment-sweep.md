@@ -1964,8 +1964,73 @@ reale Registrierung geprüft — akkurat.
 
 Commit: language.nvim `3626c67`, gepusht (`15f61fb..3626c67`),
 `pull --ff-only` „Already up to date". Ohne Co-Authored-By.
-**Nächstes Plugin-Repo im Sweep: lib.nvim (17/31)** — Achtung, das ist die
-geteilte Basis-Bibliothek, entsprechend groß/heikel.
+
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN, läuft**
+
+lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
+Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
+1. ✅ `lua/lib/lua/` + Top-Level/@types/config/nvim_usrcmds/strategies
+2. `lua/lib/nvim/bindings/` (composer)
+3. `lua/lib/nvim/cross/`
+4. `lua/lib/nvim/fs/`
+5. `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
+6. `lua/lib/nvim/ui/` (kit, 20 Dateien)
+7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)
+8. `TESTS/` + `doc/` + `docs/`
+
+**Sub-Häppchen 1 — erledigt** (Commit `524ec4d`, gepusht, `pull --ff-only`
+sauber). Teilbaum war **überdurchschnittlich sauber** — kaum Deutsch, keine
+Smart Quotes, konsistenter House-Style. Funde konzentriert auf:
+
+**Direkte Fixes:**
+- `lua/lib/lua/time/diff/init.lua` + `@types/init.lua` — **Doc widersprach
+  Code:** Header/USAGE/@types behaupteten `require("lib.lua.time.diff")`
+  liefere eine Instanz (`diff.start()`); das Modul ist eine **Factory**,
+  korrekt ist `require(...)()`. An 4 Stellen gefixt. „Technical Notes"-Wall
+  (Benchmark, Umrechnungstabelle, Limitations-Listen — alles im README
+  dupliziert) getrimmt.
+- `lua/lib/lua/memo/memo.lua` — toter auskommentierter `---@field memoize2`;
+  copy-paste-falscher `memoize2`-Docstring korrigiert; `@types` fehlte das
+  (dokumentierte) `memoize2`-Feld → ergänzt.
+- `lua/lib/lua/lazy/init.lua` — Boilerplate-Header + „Design goals"-Wall auf
+  Param-Liste; `LAZY.require`-USAGE zeigte ein nicht existierendes 2. Argument.
+- `lua/lib/@types/all_functions.lua` — „corrent" → „current" (4×), verirrtes
+  `-` in Feldsignatur, kaputter Satz neu formuliert.
+- `lua/lib/health.lua` — doppelter `PROBE`-Eintrag `"lib.nvim.ui.kit"`; falscher
+  Kommentar „one representative module per namespace" (Liste hat immer mehrere).
+- `lua/lib/lua/json/decode/to_string_array.lua` — veralteter Header (Code
+  existiert nicht) neu geschrieben.
+- `lua/lib/lua/memo/lru.lua` — eine deutsche Zeile → Englisch.
+- `lua/lib/nvim_usrcmds/{@types,actions}.lua` — stale `@see`-Referenz;
+  `-- FIX:` → `--- CDX:`.
+
+**`--- CDX:` gesetzt:**
+- `lua/lib/lua/strings/init.lua` — **echter Logikbug:** `M.normalize_ws =
+  require("lib.lua.strings.links").normalize_ws` → `links` hat keine solche
+  Funktion, Ausdruck ist `nil` und überschreibt das direkt darüber korrekt
+  zugewiesene `core.normalize_ws`. Typ ist deklariert, Laufzeit ≠ Typ.
+- `lua/lib/lua/lazy/init.lua` — `LAZY.typed` byte-gleich zu `LAZY.require`,
+  keine Caller, undokumentiert. Löschkandidat, aber geteilte Dependency → getaggt.
+- `lua/lib/@types/init.lua:7` — `Lib.Modules` ohne `---@type`-Referent,
+  abgedriftet, vermutlich durch `Lib` (in `all_functions.lua`) abgelöst.
+- **3× `vim`-Leck in `lib.lua.*`** (`memo/memo.lua` `vim.inspect`,
+  `json/decode/to_string_array.lua` `vim.split`, `time/diff/init.lua`
+  `vim.uv.hrtime`) — `architecture.md` sagt `lib.lua.*` sei editor-unabhängig;
+  Schwestermodule vermeiden es. Ein Ausgliedern in ein eigenes `lib.lua`-Repo
+  (in `architecture.md` als Ziel) würde daran scheitern.
+
+**Für das Docs-Sub-Häppchen (8) vorgemerkt — dieselben Fehler in READMEs:**
+- `lua/lib/lua/time/diff/README.md` — `require("lib.lua.time.diff")` →
+  `require("lib.lua.time.diff")()`.
+- `lua/lib/lua/lazy/README.md` — „Every call to require(...) creates an
+  independent timer instance" ist ein Textbaustein-Fehler (falsches Modul).
+
+**Bewusst nicht angefasst:** `@types/luassert.lua` (langer, aber konkret-
+technischer Essay), `strategies/{control,telemetry_wrap}.lua` (tragende
+„why this exists"-Docs), `nvim_usrcmds/autocmds.lua` (Rationale eng am Code),
+`lua/diff/myers.lua` (Modulname vs. DP-LCS-Inhalt — selbst dokumentiert).
+
+stylua ok, luacheck 0/0 (349 Dateien), `LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 Offene Aufräum-Punkte aus dem Sweep, die bewusst NICHT gefixt wurden (jeweils
 `--- CDX:` im Code + im jeweiligen Häppchen dokumentiert) — eigene
