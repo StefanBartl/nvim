@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 17/32 Repos gelesen, 6 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 20/32 Repos gelesen, 10 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,7 +316,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 14/32)
+### Ergebnis je Repo (Stand dieser Sitzung, 20/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -337,6 +337,9 @@ verändert).
 | hover.nvim | 0 — sehr gründlich geprüft (1971-Zeilen-`init.lua` komplett gelesen): Generation-Counter für Async konsequent über `show`/`scroll`/`resize`/`zoom`/`nav`/`zen`, Dedup nach Key in den Preview-Modulen (Browser/Download/Konvertierung wird nicht doppelt gestartet), Code kommentiert seine eigene Regel-Konformität explizit (`ERR-04`, `ERR-10`, `ERR-20`, `ERR-52`, `ERR-64` u.a. direkt im Quelltext referenziert) | — | — |
 | images.nvim | 0 — ein vermuteter ERR-52-Fund (`extensions`-Liste indexweise gemergt) wurde gebaut, per Repro-Skript gegen echtes Neovim-0.12-Verhalten verifiziert und dann korrekt verworfen: **`vim.tbl_deep_extend` ersetzt nicht-leere Listen bereits komplett, mergt nicht indexweise** — der Fix wäre ein No-Op gewesen. Wichtige Klarstellung für den Rest der Familie (s. Kasten unten) | — | — |
 | **insights.nvim** | **`config.setup()` mergte per `tbl_deep_extend("force", defaults, opts)` ohne vorheriges `vim.deepcopy(defaults)`** — nicht angefasste Unterfelder (z. B. `metrics`, wenn nur `symbols` überschrieben wird) blieben dieselbe Tabellen-Referenz wie in `DEFAULTS`; `expand_paths(current)` mutiert genau solche Unterfelder in-place (`cache.dir`, `output_file`, `outdir`) und hätte damit `DEFAULTS` für den Rest der Session und jeden späteren `setup()`-Aufruf verseucht. Aktuell nur durch Zufall maskiert (`expand_path()` ist bei den aktuellen absoluten `stdpath()`-Defaults ein No-Op), aber jeder künftige relative/`~`-Default oder jeder Caller, der in eine von `config.get()` zurückgegebene Tabelle schreibt, hätte geleakt | **ERR-51/53** | [`22e852e`](https://github.com/StefanBartl/insights.nvim/commit/22e852e) |
+| **language.nvim** | **`spell/core/actions.lua`s `replace_at()` schrieb eine Ersetzung an eine ungeprüfte Byte-Range** — der Vorschlags-Picker öffnet async, jede Buffer-Änderung in der Zwischenzeit (anderes Fenster, Undo, ein LSP-Fix) lässt `(lnum, col, end_col)` auf inzwischen anderen Text zeigen; `nvim_buf_set_text` überschrieb dann lautlos, was jetzt dort stand, statt des beabsichtigten Worts | **ERR-30** | [`f3ee2d6`](https://github.com/StefanBartl/language.nvim/commit/f3ee2d6) |
+| **lib.nvim** | **`fs.collect_recursive` folgte Symlinks in rekursiven Walks** — `walk`/`walk_async` fielen bei fehlendem/`"link"`-`kind_hint` auf `fs_stat` zurück, das Symlinks auflöst statt sie zu erkennen; ein Symlink-Zyklus (`dir/sub/loop -> dir`) rekursiert ohne echte Abbruchbedingung — reproduziert mit echtem Symlink, 192 Einträge vor Windows' Pfadlängen-Limit. **Fleet-weite Wirkung**: filetree.nvims `util/fs.lua`/`refs/scan.lua` delegieren direkt hierher (verifiziert per Grep über alle Repos) | **ERR-34** | [`37b2af8`](https://github.com/StefanBartl/lib.nvim/commit/37b2af8) |
+| **lsp.nvim** | **„Organize imports on save" (Java, Astro) lief async in `BufWritePre`** — `vim.lsp.buf.code_action({apply=true})` feuert den Request nur und kehrt sofort zurück, `BufWritePre` (und damit das eigentliche Schreiben) ist längst durch, bevor die Server-Antwort samt Edit ankommt; das Feature organisierte Imports faktisch immer einen Save zu spät, gegen den Buffer-Zustand von *nach* dem Schreiben. TypeScript hatte dafür schon eine synchrone Handumbau-Lösung (`lsp.buf_request_sync`) mit warnendem Docstring — Java/Astro hatten sie nie bekommen | **ERR-30/44** | [`847da5b`](https://github.com/StefanBartl/lsp.nvim/commit/847da5b) |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -349,6 +352,15 @@ nicht-leere Listen `false`). Das im Regeltext beschriebene Risiko trifft also
 Problem nicht. Spart Zeit im Rest der Familie: bei reinem
 `vim.tbl_deep_extend`-Gebrauch muss ERR-52 nicht mehr geprüft werden, nur bei
 custom Merge-Code.
+
+**Fleet-Muster, das sich über 3 Agent-Runden bestätigt:** die häufigste
+ERR-*-Bugklasse in diesem Fleet ist nicht ERR-60 (Lua-Ternary-Falle, nur 2
+echte Treffer insgesamt), sondern die **ERR-10/11/51/53-Familie** — ein
+Zustand (Config-Default, Cache, Sidecar-Datei) wird per Referenz statt Kopie
+geteilt oder „fehlt"/„kaputt" nicht unterschieden, und ein *späterer*, davon
+unabhängiger Codepfad mutiert oder überschreibt ihn. 8 von 10 bisherigen
+Funden dieser Sitzung gehören in diese Familie (buffer-ctx.nvim/ERR-60 und
+fileops.nvim/ERR-60 sind die einzigen zwei „klassischen" Lua-Footgun-Funde).
 
 ### Nebenbefund, nicht gefixt
 
@@ -384,16 +396,25 @@ nicht gefixt:
   Datei). Bräuchte eine koordinierte Vertragsänderung über mehrere
   Aufrufer hinweg — außerhalb des Umfangs eines Ein-Zeiler-Fixes.
 
-### Noch offen (15/32 Repos ungelesen für ERR-*)
+`lib.nvim` (Agent-Runde 3) hat einen latenten, nicht gefixten Punkt
+dokumentiert: `lib.lua.config.deep_merge` teilt Tabellen-Referenzen für jeden
+vom Override nicht berührten Unterbaum mit `base` (dokumentiertes
+Verhalten, kein Bug per Vertrag — nur die Eingaben bleiben unangetastet,
+nicht das Ergebnis). Ein Konsument (spotlight.nvim, `normalize_palette`/
+`normalize_cursor_patterns`) schreibt danach in einen unberührten Unterbaum
+zurück, was — nur wenn der ganze `palette`/`cursor`-Zweig in `opts` fehlt —
+in die echte `DEFAULTS`-Tabelle zurückschreibt. Kein demonstrierbarer Bug
+heute (der zurückgeschriebene Wert ist inhaltsgleich mit dem, was schon da
+stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwert
+immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
+mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim, pickers.nvim,
-recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim,
-sandbox.nvim, sessions.nvim, spotlight.nvim — plus language.nvim, lib.nvim,
-lsp.nvim (Agent-Runde 3, zum Zeitpunkt dieses Updates noch nicht zurück;
-`lib.nvim` mit besonderer Sorgfalt, da geteilte Abhängigkeit fast des
-gesamten Fleets — u. a. `ERR-34`-Symlink-Zyklus-Schutz in
-`fs.collect_recursive`, wohin mehrere Konsumenten wie filetree.nvim
-delegieren).
+### Noch offen (12/32 Repos ungelesen für ERR-*)
+
+pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
+runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim — plus
+markdown.nvim, mdview.nvim, open.nvim (Agent-Runde 4, zum Zeitpunkt dieses
+Updates noch nicht zurück).
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
 read-or-stub-vor-write) müssen für diese Repos **nicht wiederholt** werden —
