@@ -405,16 +405,51 @@ existiert nicht); `--@module` → `---@module`, `Pluginside` → `Plugin-side`;
 info/warn/error/debug-Wrappers. `<leader>date`-Kollision (Memory-Hinweis):
 in diesem Repo kein Treffer, es gibt kein `date`-Keymap.
 
-**Verbleibende Plugin-Repos (9/31 offen):** cascade,
+### Häppchen 40 — cascade.nvim (Plugin-Repo 23/31) — **erledigt**
+
+Commit `8ac9d0c`, gepusht, `pull --ff-only` sauber. Ganzes Repo (47 Lua +
+8 Specs + docs). stylua ok, luacheck 0/0 (56 Dateien), `CASCADE_TESTS_OK`.
+(Erster Agent-Anlauf brach am Sitzungslimit ab — noch in der Lese-Phase,
+nichts geschrieben; sauber neu gestartet.) **Überdurchschnittlich sauber** —
+substanzielle ortsspezifische Kommentare, keine Banner, keine Wände.
+
+**Direkte Fixes:**
+- `init.lua` — **zwei ineinandergerutschte Doc-Blöcke** (Tooling-/Merge-
+  Unfall): Kopf von `M.cycle_pick` stand über `M.cycle_group_add`, Schwanz
+  über `M.cycle_pick`. Jeder Block an seine eigene Funktion zurückgesetzt.
+- `cycle/token.lua` — verwürfelter Klammer-Kommentar `("sí", "wahr" is fine
+  but "sí" is not)` neu formuliert (ASCII-Wort erkannt, non-ASCII fällt durch).
+- **Deutsche Platzhalter → Englisch** in Kommentaren, Doku UND Test-Fixtures:
+  `### 2. iwas` → `### 2. two`, `text der nur als 5. beispiel` → englisch, in
+  `sequence/renumber.lua`, `DEFAULTS.lua`, `doc/cascade.txt`,
+  `FEATURES/SEQUENCE.md`, `TESTS/sequence_spec.lua` (Ein-/Ausgabe symmetrisch,
+  Assertions grün). `TESTS/cycle_spec.lua` „wert = wahr" bewusst nicht
+  angefasst (testet echte `de`-Pack-Daten).
+- `docs/health.md` — behauptete `WARNING`, `health.lua` ruft `err()` → `ERROR`;
+  falsche Aussage „keymaps still work" ersetzt (ohne lib.nvim bricht `setup()`
+  ab).
+- `bindings/init.lua` — verwaister which-key-Kommentar im leeren `if`-Zweig.
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.**
+
+**Bewusst nicht angefasst:** `vim.ui.select`-Erwähnungen in 4 Doc-Dateien —
+der Code nutzt `lib.nvim.ui.kit.select({ respect_override = true })`, das
+aber genau über den registrierten `vim.ui.select`-Handler läuft; die
+user-facing Beschreibung stimmt, eine Korrektur würde interne Namen in die
+Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
+— „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
+angegangen wird.)
+
+**Verbleibende Plugin-Repos (8/31 offen):**
 color_my_ascii, documentation, lsp, markdown, mdview,
 pickers, reposcope, sandbox. (casedesk.nvim existiert
 als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
 config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
 ist noch offen und in dieser Liste **nicht** enthalten → als weiteres prüfen.)
-Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hatte für
-Häppchen 36/37 kurz 2 parallele Agents erlaubt, das aber nach pdfport
-wieder auf **1 Agent gleichzeitig** zurückgesetzt — ab Häppchen 38 wieder
-strikt sequenziell.
+Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
+umgeschaltet (2×3 einmalig → 1 → 2 → 1 → 2). Ab Häppchen 41 wieder
+**2 parallele Agents erlaubt** (bis zum nächsten Widerruf). Immer der
+letzten Ansage folgen.
 
 **Sub-Häppchen 13 — erledigt** (`docs/` — alle 31 Markdown-Dateien gegen den
 aktuellen Code-Stand geprüft; Commit `19314ec`, gepusht, Re-Fetch bestätigt
