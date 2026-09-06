@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-07, sechste Aktualisierung)
+## Stand bei Übergabe (2026-09-07, siebte Aktualisierung — ERR-* fertig)
 
 | Familie | Status |
 |---|---|
@@ -16,91 +16,85 @@ Einstiegspunkt für eine neue Session.
 | `SEC-*` (23) | ✅ fertig |
 | `DEP-*` (7) | ✅ fertig |
 | `TS-*` (5) | ✅ fertig |
-| `ERR-*` (34) | 🔶 **in Arbeit** — 28/32 Repos gelesen, 15 echte Bugs gefixt+gepusht |
+| `ERR-*` (34) | ✅ **fertig** — 32/32 Repos, 17 echte Bugs gefixt+gepusht |
 | `PRIN-*` (37) | ⬜ offen |
 | `UI-*` (34) | ⬜ offen |
 | `LUA-*` (45) | ⬜ offen |
 | `PERF-*` (57) | ⬜ offen |
 
-Seit der letzten Übergabe direkt (kein Agent) gelesen: **pdfport.nvim**,
-**pickers.nvim** (70 Dateien), **recommender.nvim** — alle drei 0 Funde.
-Dann zwei weitere echte Bugs derselben Bugklasse (ERR-11, „fehlt" vs.
-„kaputt" kollabiert, dritte/vierte Instanz in dieser Familie): **replacer.nvim**
-(`history.lua` — der nächste `:Replace`-Apply hätte eine kaputte
-`history.json` durch eine Ein-Eintrag-Historie ersetzt) und **reposcope.nvim**
-(`state/favorites_state.lua` — **106 Dateien/12350 LOC, größtes bisher
-geprüftes Repo dieser Familie** — derselbe Fund für favorisierte Repos).
-Beides mit Backup-nach-`.corrupt`-Fix, Regressionstest, stash/reapply-
-Verifikation, gepusht.
+`ERR-*` ist mit dieser Sitzung komplett durch. Seit der letzten Übergabe
+gelesen: pdfport.nvim, pickers.nvim (70 Dateien), recommender.nvim (alle 0
+Funde), replacer.nvim (`history.lua`-Fund), reposcope.nvim (**106
+Dateien/12350 LOC**, `favorites_state.lua`-Fund), runtime-analysis.nvim (0
+Funde, 46 Dateien), sandbox.nvim (**233 Dateien/11773 LOC**,
+`follow_logs.lua`-Fund in allen 3 Container-Engines), sessions.nvim (0
+Funde), spotlight.nvim (Fund an der Wurzel in `lib.nvim` gefixt).
+
+**Wichtigster Einzelfund dieser Runde:** dieselbe Bugklasse — `M.load()`
+kollabiert „Datei fehlt" und „Datei kaputt" auf denselben leeren
+Rückgabewert, ein nachfolgendes `M.add()`/`M.toggle()`/`M.set_exception()`
+schreibt danach die GANZE Datei neu — trat **vier Mal** auf
+(documentation.nvim, replacer.nvim, reposcope.nvim, dann strukturell in
+`lib.nvim.cache.disk`, das `lib.nvim.store.project` und darüber
+spotlight.nvim trägt). Die vierte Instanz wurde **an der Wurzel in
+`lib.nvim` gefixt** (Commit `10acff1`, Backup nach `.corrupt`) statt nur im
+einzelnen Plugin — schützt damit jeden aktuellen und künftigen Konsumenten
+von `lib.nvim.store.project` fleet-weit.
+
+**Kalibrierung, wann diese Musterklasse einen Fix wert ist** (wichtig für
+die restlichen Familien): kuratierte, nicht-regenerierbare Nutzerdaten
+(Favoriten, Historie, Pins, Bookmarks) → fixen. Ein reines Cache-/
+Frecency-/Häufigkeits-Signal, das sich durch weitere Nutzung von selbst neu
+aufbaut → bewusst NICHT fixen (pdfport.nvim `util/cache.lua`, reposcope.nvim
+`state/query_stats.lua`, runtime-analysis.nvim `telemetry/store.lua` +
+`history.lua` — bei letzteren beiden sogar schon im Code selbst als
+bewusst verlusttolerant dokumentiert).
 
 ## Nächster Schritt
 
-`ERR-*` weiterführen mit den verbleibenden **4 Repos**: runtime-analysis.nvim,
-sandbox.nvim, sessions.nvim, spotlight.nvim (alphabetisch, keine feste
-Reihenfolge nötig). Checkliste pro Repo, die sich bewährt hat (Details in
-RULES.md §ERR-*):
+`ERR-*` ist fertig. Laut `RULES.md` §"Vorschlag für die Reihenfolge" als
+nächstes: **`UI-*`** (34 Regeln, UI-Konventionen: Float-Größen,
+Highlight-Gruppen, Statuszeilen-Verhalten, Tastenkonflikte) → `PRIN-*` (37)
+→ `LUA-*` (45) → `PERF-*` (57, größte, da sie am meisten Kontext pro Fund
+braucht). Keine feste Vorgabe, nur eine Einschätzung nach Größe — bei
+Bedarf umsortieren.
 
-- `table.sort`-Comparatoren: die `cond and A>B or C<D`-Falle ist **fleet-weit
-  bereits per Grep ausgeschlossen** (inkl. Methodenaufruf-Varianten wie
-  `a:lower()<b:lower()`) — **nicht erneut grep'en**.
-- `X.read(...) or {...Stub...}` vor einem nachfolgenden `write()` — ebenfalls
-  fleet-weit per Grep ausgeschlossen außer in casedesk.nvim (dort gefixt).
-- Die häufigste reale Bugklasse in diesem Fleet ist **nicht** die
-  and/or-Falle, sondern die **ERR-10/11/51/53-Familie**: geteilter Zustand
-  (Config-Default, Cache, Sidecar-Datei) wird per Referenz statt Kopie
-  geteilt, oder „fehlt"/„kaputt" wird nicht unterschieden und ein *späterer*
-  Codepfad mutiert/überschreibt ihn — bei jedem Repo gezielt danach suchen.
-  **Konkretes Suchmuster, das jetzt schon 3× real getroffen hat**
-  (documentation.nvim, replacer.nvim, reposcope.nvim): eine
-  `M.load()`-Funktion, die bei JSON-Decode-Fehler still auf `{}`/leer
-  zurückfällt, kombiniert mit einer `M.add()`/`M.toggle()`/`M.record()`, die
-  immer die GANZE Datei neu schreibt (`load()` → mutieren → `save()`) —
-  danach ersetzt der nächste Schreibzugriff eine kaputte Datei durch einen
-  Ein-Eintrag-Stub, alle vorherigen Einträge weg. Fix-Muster: Backup nach
-  `<datei>.corrupt` beim Decode-Fehler, bevor `{}` zurückgegeben wird.
-  **Nicht jeder Treffer dieses Musters ist ein Fund** — Abwägung nach
-  Wiederherstellbarkeit: ein reiner Cache/Frecency-Signal (pdfport.nvim
-  `util/cache.lua`, reposcope.nvim `state/query_stats.lua`) baut sich durch
-  weitere Nutzung von selbst neu auf und wurde bewusst NICHT gefixt; kuratierte
-  Nutzerdaten (Favoriten, Historie, Pins) sind nicht wiederherstellbar und
-  wurden gefixt. `state/session_state.lua`-artige Module ohne
-  Load-Modify-Save-Zyklus (jeder Save überschreibt ohnehin absichtlich alles)
-  haben dieses Problem strukturell gar nicht — kurz prüfen, ob überhaupt ein
-  load-then-save-Zyklus vorliegt, bevor man tiefer gräbt.
-- **ERR-52 (curated Listen indexweise gemergt) betrifft nur eigene,
-  handgeschriebene Merge-Funktionen** — reiner `vim.tbl_deep_extend`-Gebrauch
-  ersetzt nicht-leere Listen bereits vollständig, muss nicht mehr geprüft
-  werden (verifiziert gegen echtes Neovim-0.12-Verhalten, siehe
-  images.nvim-Durchgang in RULES.md).
-- `vim.defer_fn`/`vim.schedule`-Callbacks: validieren sie Buffer-/Fenster-
-  Handles beim Ausführen neu (ERR-32/33), nicht nur beim Erfassen? (Genau der
-  Bugtyp, der gerade in mdview.nvim gefunden wurde.)
-- Config-Merge (`tbl_deep_extend`/`deepcopy`) und Einzelwert-Validierung
-  (ERR-22: degradiert ein ungültiger Wert auf Default statt ganz
-  abzubrechen?).
+Für `UI-*` sind noch keine repo-spezifischen Vorarbeiten gemacht — bei
+Sitzungsstart zuerst den Regelkatalog (`LUA_NVIM.md`, `UI-*`-Abschnitt)
+lesen und dieselbe Methodik wie bei `ERR-*` anwenden:
+
+- Direkt in der Unterhaltung lesen (Live-Fortschritt) ist der Normalfall.
+  Bei Bedarf Subagent: **maximal 1 gleichzeitig, mehrere Runden zu je 1**
+  (aktuelle Vorgabe dieser Session).
+- **Mechanisch prüfbare Teilregeln zuerst per Grep über alle 32 Repos** auf
+  einmal scannen (feste API-Namen, Pattern-Matches), bevor ein Repo einzeln
+  angefasst wird.
+- Bei großen Repos (pickers.nvim 70, reposcope.nvim 106, sandbox.nvim 233
+  Dateien): Checkliste + gezielte Stichproben statt Volllesung — bei
+  Repos mit mehreren strukturell identischen Adaptern (sandbox.nvim:
+  docker/nerdctl/podman; reposcope.nvim: github/gitlab/codeberg) lohnt sich
+  ein `diff` zwischen den Kopien, um Drift/vergessene Fixes zu finden (hat
+  in dieser Runde nichts Neues ergeben, aber die Methode selbst hat sich
+  bewährt — z. B. beim gezielten Ausschluss der `needs_api`-Abweichung in
+  reposcope.nvim als bewusste, dokumentierte Entscheidung statt Bug).
 - Nur **echte, demonstrierbare Bugs** fixen (falsches Ergebnis,
-  Datenverlust, Absturz) — reine Layering-Abweichungen (z. B. `notify()` in
-  einem „core"-Modul) notieren, nicht refaktorieren.
+  Datenverlust, Absturz) — reine Layering-/Stilabweichungen notieren, nicht
+  refaktorieren.
 - Bei einem gefixten Bug: Regressionstest so wählen, dass er den Bug auch
-  wirklich fängt (stash/reapply-Verifikation gegen den Pre-Fix-Code, wie in
-  allen bisherigen Funden dieser Familie durchgezogen).
-
-Danach laut `RULES.md` §"Vorschlag für die Reihenfolge": `UI-*` (34,
-mittelgroß) → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte). Keine
-feste Vorgabe, nur eine Einschätzung nach Größe — bei Bedarf umsortieren.
-
-**Methodik/Agenten-Limit für diese Session:** direkt in der Unterhaltung
-lesen (Live-Fortschritt) ist der Normalfall. Falls doch ein Subagent
-gebraucht wird: **maximal 1 Agent gleichzeitig, bei Bedarf mehrere Runden zu
-je 1 Agent** — das ist die aktuelle, verschärfte Vorgabe für diese Session
-(unabhängig davon, dass eine frühere Sitzung auf explizite Anweisung einmal
-3 parallele Agenten für Repo 11–20 genutzt hat, siehe RULES.md §ERR-*).
+  wirklich fängt, stash/reapply-Verifikation gegen den Pre-Fix-Code
+  durchziehen (in jedem Fund dieser Sitzung so gemacht, inkl. dem
+  lib.nvim-Fix).
+- **Vor einem Fix in `lib.nvim` selbst** (shared dependency, siehe
+  Claudes Memory `lib-nvim-dependency`): den vollen `lib.nvim`-Testlauf
+  fahren (`nvim --headless -u NONE -c "set rtp+=." -l TESTS/run.lua`,
+  Erfolg endet mit `LIB_TESTS_OK`), nicht nur den einen betroffenen Spec —
+  ein Fix dort wirkt fleet-weit, ein Regressions-Risiko dort auch.
 
 ## Standing Rules für diese Arbeit
 
 - Antworten deutsch, Code/Kommentare englisch.
-- Docs/README des jeweiligen Plugins mitpflegen, wenn ein echter Fund gefixt
-  wird.
+- Docs/README des jeweiligen Plugins mitpflegen, wenn ein echter Fund
+  gefixt wird.
 - Sofort auf `main` committen/pushen, sobald etwas in einem Repo gefixt
   wurde — nicht sammeln.
 - Kein Claude-Co-Autor in Commit-Messages (weder in diesem Repo (nvim-config)
