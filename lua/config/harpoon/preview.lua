@@ -30,7 +30,9 @@ local STATE = {
 }
 
 local function resolve_layout()
-  -- Try to reuse an existing project helper:
+  -- CDX: config.harpoon.preview_layout does not exist anywhere in this repo
+  -- (flagged by docs/map as an undeclared require) -- this always falls
+  -- through to the fallback layout below. Extension hook, or dead reference?
   local ok, layouts = pcall(require, "config.harpoon.preview_layout")
   if ok and type(layouts.fullscreen_float) == "function" then
     return layouts.fullscreen_float()
