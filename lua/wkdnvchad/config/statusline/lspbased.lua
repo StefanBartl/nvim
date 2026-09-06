@@ -8,7 +8,10 @@ local M = {}
 ---Setup function called after config assembly
 ---@param config table
 function M.setup(config)
-  -- Lazy-load modules to avoid circular dependencies
+  --- CDX: `wkdnvchad.config.chadrc` does not exist (no chadrc.lua under
+  --- wkdnvchad/config/). `register_statusline_modules` lives in
+  --- `wkdnvchad.config.statusline.custom_light`. As-is this variant always
+  --- hits the notify.error path and registers no statusline modules.
   local ok, chadrc_module = pcall(require, "wkdnvchad.config.chadrc")
   if not ok then
     notify.error("[statusline.lspbased] Failed to load chadrc module: " .. tostring(chadrc_module))

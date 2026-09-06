@@ -78,6 +78,9 @@ function M.symbol_context()
     impl_item = true, -- rust
   }
 
+  --- CDX: defined as a module field inside symbol_context(), so every call
+  --- re-assigns M.ts_identifier_of. Should be `local function ts_identifier_of`
+  --- (as in ../../lsp/symbols/treesitter.lua).
   function M.ts_identifier_of(n)
     -- 1) Named field "name"
     local named = n:field("name")

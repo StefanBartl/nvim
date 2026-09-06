@@ -702,11 +702,101 @@ Commits: nvim-config `095769e0e` (breadcrumbs) + der Folge-Commit
 Mechanik-Wissen gefunden — die langen Blöcke waren entweder Bug-Rationale am
 richtigen Platz oder AI-Boilerplate).
 
+### Häppchen 16 — `lua/wkdnvchad/` (41 Dateien, ~4470 Z.)
+
+**Status: erledigt. `lua/wkdnvchad/` damit komplett durch.**
+Statusline-/Tabufline-/Theme-Switcher-Subsystem auf NvChad. Netto:
+16 Dateien geändert, kein toter Code gelöscht (siehe unten warum nicht).
+
+**Übersetzt (Deutsch → Englisch, reine Kommentare):**
+- `ui/statusline/modules/lsp/symbols/treesitter.lua` — ~20 Kommentarzeilen
+  (Guard, Knoten-Typen-Tabelle, 3-stufige `ts_identifier_of`-Heuristik).
+- `ui/statusline/modules/highlighting/@types/init.lua` — alle 4 `@field`-Doc-
+  Blöcke; zusätzlich `highlighting/init.lua`-Header (deutscher 10-Zeilen-Kasten,
+  duplizierte @types + README) → 3-Zeilen-Summary + Pointer auf @types.
+- `ui/statusline/modules/lsp/helpers/paths.lua` — 5 Inline-Kommentare.
+- `ui/statusline/modules/neotest_module/init.lua` — 4 Kommentarzeilen.
+- `config/statusline/custom.lua` (4×, u.a. casedesk-Kurzinfo-Block),
+  `config/statusline/custom_minimal.lua` (2×),
+  `mappings/tabufline/init.lua` (5×: „WICHTIG/KRITISCH"-Marker).
+- `usrcmd/init.lua` — nur Tippfehler „odule" + redundante Import-Zeile raus.
+  **Alle deutschen `notify`/`:UI help`/`desc`-Strings bewusst deutsch gelassen**
+  (Regel 2: erreichen den User) — gilt auch für `usrcmd/themes/init.lua`.
+
+**`--- CDX:` gesetzt (Urteilssache / Bug in passing):**
+- `config/statusline/lspbased.lua:12` — `require("wkdnvchad.config.chadrc")`
+  referenziert ein Modul, das **nicht existiert** (kein `chadrc.lua` unter
+  `wkdnvchad/config/`); `register_statusline_modules` liegt in
+  `config.statusline.custom_light`. Variant „lspbased" läuft dadurch immer in
+  den `notify.error`-Zweig und registriert **null** Statusline-Module.
+- `ui/statusline/modules/neotest_module/init.lua` — **tot + kaputt**: von
+  keiner der 6 Statusline-Varianten required (sagt sein eigenes README), und
+  `neotest.run.get_status()` ist **keine neotest-API** (der `run`-Consumer hat
+  nur run/run_last/stop/attach/adapters/get_last_run) → nil-Call sobald es
+  verdrahtet würde. Nicht gelöscht, weil das README es als bewussten
+  „pending a closer look"-Keep markiert.
+- `ui/statusline/modules/custom/` (init.lua) — der gesamte Subtree (init,
+  breadcrumbs/helpers, breadcrumbs/render) hat **0 Aufrufer** in `lua/` + den
+  Plugin-Repos (deckt sich mit `custom/README.md` „currently unreferenced …
+  pending a closer look"). Zusätzlicher Fund für den Fall der Wiederbelebung:
+  `breadcrumbs/render.lua` ist **intern kaputt** — ruft `M.repo_relative` /
+  `M.symbol_context` / `M.ellipsize_middle` / `M.stl_escape` auf der eigenen
+  Modultabelle auf, `require`t aber nie `breadcrumbs/helpers.lua`, wo die
+  liegen → `render_breadcrumbs()` nil-called. Nicht gelöscht (dokumentierter
+  Keep).
+- `ui/statusline/modules/custom/breadcrumbs/helpers.lua:81` —
+  `function M.ts_identifier_of(n)` ist **innerhalb** `M.symbol_context()`
+  definiert, jeder Aufruf re-assignt das Modulfeld. Sollte `local function`
+  sein (wie in `lsp/symbols/treesitter.lua`).
+- `mappings/tabufline/init.lua` (`close_n_buffers`) — `lib.lua.lazy.require`
+  löst **eager** auf (ruft sofort `.get()`), d.h. `nvchad_tabufline` ist schon
+  beim Modul-`require` geladen und der `if not nvchad_tabufline`-Re-require-
+  Zweig (+ sein „lazy-load only when closing"-Kommentar) ist tot.
+
+**Reine Annotation-/Artefakt-Fixes (keine Laufzeitänderung):**
+- `ui/statusline/cursor_ctl/renderer.lua:37` — zerhackter Tag
+  `--- @ret M.urn string` → `--- @return string`.
+- `ui/statusline/cursor_ctl/progress_calculators.lua:29` — stale Edit-Artefakt
+  („Replace the previous compute_col_pct() with this …") entfernt.
+- `ui/statusline/modules/lsp/symbols/document_symbols.lua` — 2× „(unchanged
+  logic)"-Chat-Artefakt aus Kommentaren raus.
+- `config/init.lua` — Varianten-Kommentarblock listete 4 von 6 Varianten
+  (`custom_light`/`custom_minimal` fehlten) — ergänzt.
+- `usrcmd/init.lua:193` — stale Datei-Ref `README-THEMES.md` in der (deutschen)
+  `:UI help`-Ausgabe → `wkdnvchad/usrcmd/themes/README.md`.
+
+**Kein toter Code gelöscht:** die drei Kandidaten (`modules/custom/`,
+`modules/helpers/path.lua` + `nerd_fonts.lua`, `modules/neotest_module/`) sind
+alle in ihren eigenen READMEs als bewusste „pending a closer look"-Keeps
+dokumentiert (Triage-Notiz vom 2026-08-16). Rule 5 „Zweifel → CDX" +
+dokumentierte Autorenabsicht → getaggt statt gelöscht.
+
+**Nicht angefasst (Nebenfunde):**
+- `lib.lua.lazy.require` ist trotz Namen **nicht lazy** (`LAZY.require` =
+  `LAZY.module(name).get()`, sofortiger `require`). Betrifft viele
+  Datei-Scope-`lazy.require`-Aufrufe in dieser Config, die „break circular
+  dependencies" / „lazy-load heavy modules" kommentieren. lib.nvim-Sache,
+  gehört in den lib-Plugin-Häppchen.
+- `wkdnvchad/config/README.md` (deutsch) listet im Datei-Baum ein
+  `chadrc.lua # Legacy chadrc-Kompatibilität (optional)`, das es unter
+  `wkdnvchad/config/` nicht (mehr) gibt — passt zum lspbased-CDX. Deutscher
+  Design-Doc, nur als Nebenfund notiert.
+- `ui/statusline/modules/lsp/docs/instructions.md` — Titel „Einbindung in
+  chadrc.lua", gleiche Baustelle.
+- `usrcmd/themes/fix.md` — sieht wie eine Scratch-/Notizdatei aus.
+
+stylua ok, luacheck 0/0 (15 `.lua`-Dateien geprüft; `@types/*` vom
+luacheck-Glob übersprungen wie in allen vorigen Häppchen).
+
+Commit: nvim-config `PENDING`. Ohne Co-Authored-By. Kein WKDBooks-Umzug
+(kein ortsunabhängiges Mechanik-Wissen — die langen Header waren
+Bug-/Design-Rationale am richtigen Platz).
+
 ### Danach offen
 
-`lua/wkdnvchad/` (kleine Teile + `ui/` separat), `lua/startup/`,
-`lua/themes/`, `lua/nvchad/`, `lua/@types/`, `after/`, `init.lua`,
-`scripts/`. Danach die 31 Plugin-Repos.
+`lua/startup/` (2 Dateien), `lua/themes/` (1), `lua/nvchad/` (1),
+`lua/@types/` (10), `after/`, root `init.lua`, `scripts/` (5).
+Danach die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
