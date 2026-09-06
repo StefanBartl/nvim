@@ -44,7 +44,7 @@
 
 ## Checkhealth-Konventionen
 
-Umsetzung von [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md`](./personal/All/FINISH/checkhealt_conventions.md),
+Umsetzung von [`docs/ROADMAP/personal/All/FINISH/ERLEDIGT/checkhealt_conventions.md`](./personal/All/FINISH/ERLEDIGT/checkhealt_conventions.md),
 validiert am 2026-09-06 gegen den aktuellen Stand. Zwei Korrekturen gegenüber
 der Original-Analyse (2026-08-31): `neotree-fs-refactor.nvim` liegt inzwischen
 unter `ARCHIV_NICHT_BEARBEITEN/` und wird nicht angefasst; der Zielort für die
@@ -57,7 +57,7 @@ nicht das nie existente `MATERIALS/CHECKLIST.md`. Handover-Stand läuft in
 - [x] Eine-von-N auflösen: `filetree.nvim:70`, `pickers.nvim:39,45,51` → `info`. Das `error` im "keine davon"-Fall behalten.
 - [x] Gegenrichtung, `warn` → `error` wo der Text schon "will fail" sagt: `cascade.nvim:39`, `fileops.nvim:39`, `buffer-ctx.nvim:20`, `sessions.nvim:32`.
 - [x] `setup()`-Zeilen auf `info` oder Ladezustand prüfen: `sessions.nvim:147,152,157`, `open.nvim:158,185`, `buffer-ctx.nvim:90,96,121,165`. `filetree.nvim:88` ist bereits das Vorbild.
-- [ ] ADVICE nachziehen, opportunistisch (nur 15 % der 260 warn/error-Aufrufe haben einen Block) — bewusst offen gelassen, kein Vollaudit.
+- [x] ADVICE nachziehen — Vollaudit über den ganzen Plugin-Bestand (~30 Repos): jede `warn`/`error`, die eine Handlung verlangt, hat jetzt den `{...}`-Block; Fehlklassifizierungen (Eine-von-N, „will fail" als `warn`, Pre-setup-False-Positives) mitgefixt. Details: `handovers/checkhealth-conventions.md`.
 - [x] Kosmetik zuletzt: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in dieser Config.
 - [x] Regel in `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` (`UI-57`..`UI-61`) + Schnell-Check-Eintrag in `gates/REVIEW.md`.
 
