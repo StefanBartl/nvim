@@ -1,212 +1,65 @@
 ---@module 'bindings.usrcmds.bindings_explorer.drift'
---- Phase 3 (see this module's own docs/FEATURES.md, "Drift-Bericht"): drift
---- report between documented bindings (`records.lua`'s parsed rows) and
---- what's actually registered right now (`nvim_get_keymap`/
---- `nvim_get_commands`). Read-only, no autofix — same stance as
---- casedesk's `:Cases doctor` (see its module doc): a cheatsheet's
---- handwritten rationale is worth more than what an autofix could
---- reconstruct, so this only ever reports.
+--- Phase 3 drift report: compares documented bindings (`records.lua`'s
+--- parsed rows) against what's actually registered right now
+--- (`nvim_get_keymap`/`nvim_get_commands`). Read-only, no autofix — same
+--- stance as casedesk's `:Cases doctor`: a cheatsheet's handwritten
+--- rationale is worth more than what an autofix could reconstruct.
 ---
---- Deliberately narrower than the roadmap's original sketch, in four ways:
+--- Full rationale, the false-positive counts that justified each decision,
+--- and the four-axis cost/measurement breakdown: this module's own
+--- `docs/FEATURES.md`, section "Drift-Bericht". What follows here is only
+--- what a reader of the code below needs, not the history behind it.
 ---
---- 0. **All three categories are checked** since 2026-09-02. Keymaps and
----    Usercmds were the original two; `Autocmds/` was read for command names
----    and never compared against anything, so 241 documented rows sat outside
----    every number this module printed. What closed it is described at
----    `live_autocmds` — including why the reverse direction is answerable
----    there when limitation 1 rules it out for keymaps, and how the corpus'
----    call-site counting is reconciled with `nvim_get_autocmds`' per-event
----    counting without the two ever being compared.
---- 1. **Keymaps checked one direction only** (documented-but-not-live).
----    The reverse (live-but-undocumented) would mean diffing against
----    EVERY global keymap — vim's own defaults, matchit, every plugin's
----    own bindings — which floods the report with things this corpus was
----    never meant to document. Not attempted here.
---- 2. **Personal only, not Extern**, for the "documented" side. Extern/
----    documents third-party plugins' own bindings; most of those are
----    never registered by this config's own code, so comparing them
----    against this Neovim's live state would report "missing" for
----    bindings that were never ours to register. Personal/ is exactly the
----    corpus the motivating case (images.nvim.md, see the roadmap's
----    opening paragraph) came from. Usercmds' reverse direction (below)
----    still consults Extern, just not to decide what's "ours to check".
---- 3. **Buffer-local / filetype-scoped keymaps — mitigated, not solved.**
----    `nvim_get_keymap` only sees GLOBAL maps, so a documented `<leader>im`
----    registered per-filetype (`keymaps.filetypes = {"markdown",...}`), or
----    a picker key bound to its own prompt buffer, used to report as
----    "documented-not-live" while being correctly registered. This was the
----    dominant false-positive class by volume: a real report ran to 682
----    findings, unreadable and dominated by in-window keys of plugins whose
----    UI simply wasn't open. Two things address it now, neither of which
----    drops a finding:
----      - `live_keymaps` also reads `nvim_buf_get_keymap` for every loaded
----        buffer, so a UI that IS open is verified properly.
----      - what remains gets a per-table verdict (see `M.check`): a
----        documented table where not one key is live is reported as one
----        "not verifiable from here" line naming the table, instead of N
----        "missing" lines. `M.describe` renders it in its own section,
----        below the findings that are worth acting on.
----    A table needs more than one row for the verdict to apply, so a
----    genuinely one-row scope (github_stats' detail-view float) still
----    reports as a single finding. That is the intended floor: one absent
----    key is no evidence about scope.
+--- Deliberate scope limits:
+--- 1. **Keymaps: one direction only** (documented-but-not-live). The
+---    reverse would diff against every global keymap ever set — vim's own
+---    defaults, matchit, every plugin — pure noise.
+--- 2. **Personal only, not Extern**, for the "documented" side — Extern
+---    documents third-party defaults this config mostly never registers.
+--- 3. **Buffer-local/filetype-scoped keymaps — mitigated, not solved.**
+---    `nvim_get_keymap` only sees GLOBAL maps. `live_keymaps` also reads
+---    `nvim_buf_get_keymap` for every loaded buffer; what's still
+---    unverifiable gets one per-table "not verifiable from here" verdict
+---    (see `M.check`/`is_live`) instead of N false "missing" lines. A table
+---    needs more than one row for the verdict to apply.
+--- 4. **Lazy-loaded plugins are skipped, not reported missing** — checked
+---    against `require("lazy.core.config").plugins[name]._.loaded` via
+---    `records.lua`'s `plugin` field. Skipped plugins are named, not
+---    silently dropped (`M.check`'s second return value).
+--- 5. **A loaded plugin can still register a command only on first API
+---    use**, not at load time (e.g. `lib.nvim`'s `:LibLogger`). A single
+---    `usercmd-not-live` finding for a documented-lazy command is suspect —
+---    re-run after actually exercising that feature.
+--- 6. **Usercmds: both directions**, since `nvim_get_commands({})` never
+---    floods with vim defaults. The live-undocumented direction also
+---    cross-checks Extern to avoid flagging things documented elsewhere;
+---    infra/plugin-manager commands (`:Lazy`, `:Mason`, ...) still show up,
+---    no ignore-list is maintained for those.
 ---
----    Two things had to land together for this to work on the corpus. The
----    docs half: `github_stats.nvim.md` was one unnamed table mixing four
----    scopes, giving the verdict nothing to group on — now split per scope,
----    as BINDINGS-FORMAT.md §1 already required. The code half: splitting
----    it alone changed nothing, because each resulting table still held one
----    key that *looked* live. See `is_live` — matching on lhs alone let an
----    unrelated global map satisfy a documented row, and one such row per
----    table was enough to suppress the verdict for the whole table.
---- 4. **Lazy-loaded plugins are handled, not ignored**: a binding whose
----    owning plugin hasn't loaded yet in the current session (event/cmd/
----    ft-triggered lazy loading) isn't registered yet either — checking
----    it anyway would report it as missing even though nothing is wrong.
----    Empirically, in a freshly started headless session this was NOT a
----    minor edge case: roughly two thirds of plugins with Personal
----    Keymaps entries were still unloaded, and checking them anyway
----    roughly tripled the false "missing" count. `records.lua`'s `plugin`
----    field (the cheatsheet's filename stem) is checked against
----    `require("lazy.core.config").plugins[name]._.loaded` — a plugin
----    name lazy.nvim doesn't know about at all (a core, non-plugin
----    mapping module) is treated as always-loaded, since those load
----    unconditionally at startup. Skipped plugins are reported by name,
----    not silently dropped — see `M.check`'s second return value.
---- 5. **A loaded plugin can still lazily register a command on first API
----    use, not at load time** — a narrower case than point 4, and NOT
----    covered by the `lazy.nvim`-loaded check there. Confirmed against a
----    real example: `Usercmds/lib.nvim.md` documents `:LibLogger` as
----    "Registered when: automatically, on the first `logger.new()`" — in
----    a fresh session where nothing has called `logger.new()` yet, this
----    reports as `usercmd-not-live` even though nothing is broken.
----    Verified headless: the command is genuinely absent from
----    `nvim_get_commands({})` beforehand and appears the instant
----    `logger.new({name=...})` runs. No general fix here — a "Registered
----    when" column, when a cheatsheet documents one at all, is free text,
----    not a machine-checkable condition. Treat any single
----    `usercmd-not-live` finding for a documented-lazy command as
----    suspect; re-run `:Bindings check` after actually exercising that
----    plugin's feature before trusting the finding.
+--- **A third usercmd direction, for routes.** `nvim_get_commands` answers
+--- about top-level names only — a plugin built on `usercmd.composer`
+--- registers exactly one name for every route it has, so both directions
+--- above pass trivially without checking anything. `subroute_exists` closes
+--- that by asking the command line's own completion, level by level; not
+--- composer-specific on purpose. A command with no completion is skipped
+--- rather than guessed at — see that function for why `nil` is a real
+--- answer there.
 ---
---- 6. **Two false-positive classes were removed on 2026-08-30**, both of
----    them silent: a row the scraper could not read yielded no lhs and was
----    dropped from every axis without a word. See `LHS_HEADERS` (the header
----    allow-list was English-only against a bilingual corpus -- 601 rows
----    invisible) and `key_forms` (the live and documented sides encode a
----    modifier chord differently, so every documented Ctrl key read as
----    missing). Measured on this config, both fixes plus the two
----    `nvim-config` cheatsheets they made writable: 150 source-axis findings
----    became 0, and the whole report went from 680 findings to 260.
----
---- Usercmds are checked BOTH directions, since `nvim_get_commands({})`
---- only ever returns user-defined commands (no vim-default flood): the
---- live-undocumented direction is cross-checked against Personal AND
---- Extern documented commands, to avoid flagging things documented
---- elsewhere — but plugin-manager/infra commands (`:Lazy`, `:Mason`, ...)
---- with no cheatsheet at all will still show up; no ignore-list is
---- maintained for those.
----
---- **And a third usercmd direction, for routes.** `nvim_get_commands`
---- answers about *top-level* names only. A plugin built on `usercmd.composer`
---- registers exactly one — `Hover` — and every documented route collapses
---- onto it: sixteen rows, one name, and the name exists. Both directions
---- above then pass trivially, so those tables were **not checked at all**
---- while looking as though they were. Measured twice, 2026-09-02 and
---- 2026-09-03: a route invented in the cheatsheet produced no finding.
----
---- `subroute_exists` closes that by asking the command line's own
---- completion, level by level. Not composer-specific on purpose: any command
---- that completes its arguments is checkable this way, and one that does not
---- is skipped rather than guessed at — see that function for why `nil` is a
---- real answer there. This affects every plugin here built on the composer,
---- which is about half of them.
----
---- **The repo axis (opt-in, `opts.repo`).** Point 4 above is honest but
---- empty: a skipped plugin is not a checked plugin, and in a normal session
---- most personal plugins are skipped, so most of the corpus is judged by
---- nothing at all. The one thing available for those is the plugin's own
---- local checkout, which is on disk whether or not lazy.nvim loaded it —
---- so `opts.repo` searches it for the documented lhs / command name as a
---- quoted string literal (`repo.lua`), and reports what is written down
---- nowhere. Three properties, all deliberate:
----
----   - **Off by default.** The existing axes probe an already-running
----     session and cost nothing worth mentioning; reading ~20 checkouts off
----     disk is not in that class, and should never be a silent cost of a
----     command someone ran to see the usual report.
----   - **A grep, not an API query, and ranked accordingly.** A computed lhs
----     (`prefix .. "v"`, a key read out of a user config) is registered and
----     ungreppable, so the axis produces false findings that the live axis
----     never would. `M.describe` says so on the section itself.
----   - **Three suppressors, so what survives is worth reading**: the
----     literal is absent from the plugin's checkout AND absent from this
----     config's own `lua/` tree (a personal plugin's `<leader>` entry point
----     is very often registered here, in a lazy `keys` spec, not over
----     there) AND not live right now (`is_live`, desc-matched like
----     everywhere else). Only then is it reported.
----
---- A plugin the repo axis actually answered for is no longer counted as
---- "skipped" — it was checked, just by a weaker instrument, and saying
---- otherwise would understate the report in one direction while
---- overstating the axis in the other. One with no resolvable checkout, or
---- whose checkout yielded no readable source, stays skipped.
----
---- **The repo fallback (always on, 2026-09-02).** The axis above answers for
---- plugins that never loaded. The fallback answers a different question, for
---- plugins that DID load: a documented key the live probe cannot find is
---- looked for in the plugin's own source before it becomes a finding. Same
---- primitive, same two trees, opposite default — and the reason for the
---- opposite default is the measurement:
----
---- ```
---- :Bindings check          keymap-not-live   52 -> 1     (51 confirmed by source)
---- :Bindings check extern   keymap-not-live  309 -> 84   (225 confirmed by source)
---- ```
----
---- The one survivor in the default scope is `cmdlog.nvim`'s `ctrl-f`, which
---- is written in fzf-lua notation where the corpus otherwise uses vim's —
---- a real defect, and the only one. **One finding in 52.** A section that is
---- 98% noise is a section nobody reads, and the axis that removes the noise
---- costs a grep.
----
---- The `extern` scope profits from the same fallback for a different reason:
---- a third-party cheatsheet's stem had no local checkout, so the tree that
---- answered there was this config's own `lua/` — which is exactly where
---- those keys are bound, in a lazy `keys` spec. Hence the note in `SECTIONS`
---- says "any source that could be read" rather than naming the plugin's.
---- Since `stem_plugin` resolves the extern stems too, that half now has the
---- plugin's own tree available as well.
----
---- **The fallback runs on the usercmd axis too (2026-09-02).** It always
---- should have — it is the same question about the same two trees — and the
---- asymmetry was an omission, not a decision. One difference, and it is
---- deliberate: the usercmd side is case-SENSITIVE, because folding case
---- makes `:Images` match the word "images" in half of images.nvim's own
---- source, and every command would then count as written down. The opt-in
---- axis below already draws that line, for the same reason.
----
---- What it cannot answer is structural rather than a gap to close:
---- `repo.mentions` matches quoted literals, and a Vimscript
---- `com! -bang UnicodeDownload …` is unquoted. `:UnicodeDownload` and
---- `:DigraphNew` therefore stay reported however loaded their plugin is.
----
---- Why not the obvious alternative — dropping buffer-local keys from the
---- live axis wholesale? Because `keymap-not-live` is not a collision check:
---- it never compares buffer-local against global, it only asks whether a
---- documented key exists. Excusing a whole class from that question means a
---- buffer-local key its plugin has since renamed would never be noticed
---- again. The fallback keeps the question and answers it better.
----
---- Cost, measured on this config: `check` is ~150 ms without the fallback
---- and ~550 ms with it, because a checkout is only indexed once a key of
---- that plugin actually came up missing. Paid deliberately, for a report
---- whose keymap section is worth reading.
----
---- The two are still separate switches. `opts.repo` indexes the checkout of
---- every unloaded plugin, twenty-odd trees whether or not anything is wrong
---- with them; the fallback touches a checkout only after a key came up
---- missing. That is why one is opt-in and the other is not.
+--- **The repo axis (opt-in, `opts.repo`) and the repo fallback (always
+--- on).** Both search a plugin's own local checkout (`repo.lua`) for the
+--- documented lhs/command name as a quoted string literal. The axis
+--- answers for plugins that never loaded (point 4 above is honest but
+--- otherwise leaves them unchecked); the fallback answers for plugins that
+--- DID load but a documented key wasn't found live. Same primitive, same
+--- two trees (the plugin's checkout, this config's own `lua/`), opposite
+--- default: the axis reads ~20 checkouts off disk unconditionally, so it
+--- stays opt-in; the fallback only touches a checkout once a key has
+--- already come up missing, which is cheap and stays on by default. The
+--- usercmd side of both is case-sensitive (folding case would match
+--- `:Images` against the word "images" in half of images.nvim's own
+--- source). What neither can answer: `repo.mentions` matches quoted
+--- literals only, so an unquoted Vimscript `com! -bang Foo ...` stays
+--- reported regardless of load state.
 
 local records = require("bindings.usrcmds.bindings_explorer.records")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -220,28 +73,19 @@ local M = {}
 --- naming turned out to be across the 137-file corpus (checked
 --- empirically before writing this list).
 ---
---- **The corpus is bilingual and this list was not** (fixed 2026-08-30).
---- `ExternPlugins/Bindings/*` is written in German throughout, so its key
---- column is spelled `Taste`, `Mapping`, `Taste(n)` or `Taste (in LazyGit)`,
---- never `lhs`/`key`. A row whose header matches nothing here yields no lhs
---- at all, and both axes then drop it without saying so: the source axis
---- reported `<leader>gb` as undocumented while it sat in `Snacks.md`'s Git
---- table, and the live axis never checked those rows in either direction.
---- 601 rows of the corpus were invisible this way -- counted, not estimated.
+--- The corpus is bilingual and this list has to be too: `ExternPlugins/
+--- Bindings/*` is written in German, so its key column reads `Taste`,
+--- `Mapping`, `Taste(n)` or `Taste (in LazyGit)`, never `lhs`/`key`. A row
+--- whose header matches nothing here yields no lhs, and both axes drop it
+--- silently -- see `docs/FEATURES.md` for the incident that found this.
 ---
---- Four German-corpus headers are deliberately NOT added, because their
---- cells are not keys and admitting them would let unrelated text
---- "document" a binding:
----   - `Eintrag` (`Menu.md`) -- nvzone/menu entry labels ("Format Buffer").
----   - `Tab` (`Search.md`) -- search.nvim tab names ("All Files").
----   - `Modul` (`Snacks.md`) -- module names (`snacks.picker`).
----   - `Vorschlag (README)` (`Gitsigns.md`) -- keys upstream's README
----     *suggests* and this config did not bind. Counting those as
----     documented would suppress a real finding for a key bound elsewhere.
---- `` `lhs` key `` (fileops.nvim.md) and `` `keymaps.<name>` ``
---- (diff.nvim.md) name a config KEY (`delete_force`), not a keystroke, and
---- stay excluded for the same reason -- `normalize_lhs`'s `_`/`.` guard
---- would reject their cells anyway.
+--- Four German-corpus headers are deliberately NOT added -- their cells are
+--- not keys, and admitting them would let unrelated text "document" a
+--- binding: `Eintrag` (`Menu.md`, nvzone/menu labels), `Tab` (`Search.md`,
+--- search.nvim tab names), `Modul` (`Snacks.md`, module names), `Vorschlag
+--- (README)` (`Gitsigns.md`, keys upstream merely suggests). Same reason
+--- `` `lhs` key `` (fileops.nvim.md) and `` `keymaps.<name>` `` (diff.nvim.md)
+--- stay out -- both name a config KEY, not a keystroke.
 local LHS_HEADERS = {
   lhs = true,
   key = true,
@@ -560,10 +404,9 @@ end
 --- what is left is `{ "paths", "code" }`.
 ---
 --- All three placeholder shapes the corpus actually uses end the route:
---- `[optional]`, `{required}` and `<angled>`. Counted 2026-09-03 over the
---- Usercmds tables -- 33 `[path]`, 13 `{name}`, 12 `<name>` and so on -- and
---- the second shape is not hypothetical: `:Hover nav {direction}` was the
---- first false positive this check produced, because only `[` was cut.
+--- `[optional]`, `{required}` and `<angled>`. The second shape is not
+--- hypothetical -- `:Hover nav {direction}` was the first false positive
+--- this check produced, when only `[` was cut.
 ---
 --- Empty for a plain command, which is the overwhelming majority and costs
 --- nothing: the caller skips the probe entirely.
@@ -596,16 +439,13 @@ end
 --- Whether `name` really offers the route `words` names, asked through the
 --- command line's own completion.
 ---
---- **Why this exists.** The live axis compares against `nvim_get_commands`,
---- which lists *top-level* commands only. A plugin built on `usercmd.composer`
---- registers exactly one -- `Hover` -- and every documented route collapses
---- onto it: sixteen rows, one name, and the name exists. Both directions then
---- pass trivially, and the check looks like it covers those tables while
---- covering none of them. Measured 2026-09-02 and again 2026-09-03: a route
---- invented in the cheatsheet produced no finding at all.
+--- Exists because the live axis only sees top-level command names -- a
+--- `usercmd.composer` plugin registers one (`Hover`) for every route it has,
+--- so both directions above pass trivially without checking any route. See
+--- `docs/FEATURES.md`, "Unterrouten", for the incident.
 ---
---- `getcompletion` is used rather than the composer's own registry because it
---- is not composer-specific: any command that completes its arguments is
+--- `getcompletion` rather than the composer's own registry: not
+--- composer-specific, so any command that completes its arguments is
 --- checkable this way, and one that does not is *skipped* rather than
 --- guessed at.
 ---
@@ -698,28 +538,19 @@ end
 
 --- The lazy.nvim plugin a cheatsheet stem names, or `nil`.
 ---
---- **Why this is not just `lazy_config.plugins[stem]`.** It was, and the
---- consequence ran through the whole extern scope: not one of the corpus'
---- 24 extern stems is spelled the way lazy.nvim keys its table.
---- `Diffview` is `diffview.nvim`, `Fugitive` is `vim-fugitive`, `NeoTree`
---- is `neo-tree.nvim`. Every lookup missed, and a missed lookup was read as
---- "not a plugin, so treat it as always loaded" -- which made `skipped` 0 in
---- the extern scope and checked every documented row against a session that
---- may never have loaded its plugin.
+--- Not just `lazy_config.plugins[stem]` -- no extern stem is spelled the way
+--- lazy.nvim keys its table (`Diffview` is `diffview.nvim`, `Fugitive` is
+--- `vim-fugitive`, ...), and a missed lookup used to be read as "not a
+--- plugin, always loaded", which defeated the whole skipped/loaded check for
+--- extern. See `docs/FEATURES.md`, "Wie ein Cheatsheet-Stamm zu seinem
+--- Plugin findet", for the full incident and numbers.
 ---
---- Three steps, in this order, and none of them guesses:
----   1. the sheet's own `**Repo:**` line, which always wins;
----   2. the stem verbatim, for a sheet already named after its repository;
----   3. the unique normalized match (`normalize_plugin_name`).
----
---- **No substring fallback.** The obvious "longest matching substring" is
---- wrong twice over the real corpus, and silently: `Telescope` resolves to
---- `telescope-file-browser.nvim` and `NeoTree` to
---- `neo-tree-tests-source.nvim`. Shortest-match instead only moves which
---- pairs it gets wrong. Measured, the three steps above resolve 21 of the 24
---- stems on their own; the remaining three (`Blink`, `Dap`, `NvChadUI`) name
---- their repository, so the substring guess buys nothing and costs
---- correctness.
+--- Three steps, in this order, none of them a guess: the sheet's own
+--- `**Repo:**` line (always wins), the stem verbatim (for a sheet already
+--- named after its repo), then the unique normalized match
+--- (`normalize_plugin_name`). Deliberately **no substring fallback** --
+--- "longest matching substring" resolves `Telescope` to
+--- `telescope-file-browser.nvim` and is wrong silently, not loudly.
 ---@param stem string
 ---@return string|nil
 local function stem_plugin(stem)
@@ -1030,21 +861,12 @@ end
 --- The file a Vimscript `script_id` came from, or `nil` when Neovim cannot
 --- say.
 ---
---- **Why this exists at all.** `nvim_get_commands` answers "defined in
---- Vimscript" with a number, and the number is *session-local*. Measured
---- across two runs of the same config, nothing changed in between:
----
----     TodoLocList   sid=25 -> sid=12
----     StartupTime   sid=9  -> sid=25
----     DoMatchParen  sid=13 -> sid=16
----
---- Printing it -- which this column did for 11 of its 54 lines -- claimed an
---- origin that identified nothing and read differently on the next
---- invocation. `getscriptinfo` turns the number back into the path, which is
---- exactly the shape `owner_of_path` already places for Lua sources:
---- `sid=19` is `lazy/todo-comments.nvim/plugin/todo.vim`, and
---- `todo-comments.nvim` is a name -- one the extern corpus even has a
---- cheatsheet stem for.
+--- `nvim_get_commands` answers "defined in Vimscript" with a number, and the
+--- number is *session-local* -- it changes between runs of the same config
+--- and identifies nothing on its own. `getscriptinfo` turns it back into the
+--- path, which `owner_of_path` already knows how to place for Lua sources.
+--- See `docs/FEATURES.md`, "Die vierte Quelle druckte eine Zahl, die
+--- zwischen zwei Läufen wechselte", for the incident and numbers.
 ---@param sid integer
 ---@return string|nil
 local function script_path(sid)
@@ -1079,20 +901,12 @@ end
 ---      anything defined in Vimscript, where there is no callback to
 ---      inspect.
 ---
---- **Source 2 is new (2026-09-02) and it is the one that mattered.** Until
---- it existed this function went straight to `debug.getinfo`, which reports
---- the pcall wrapper `usercmd.create` builds -- a closure defined in
---- lib.nvim. Every command created through the helpers therefore came back
---- as the library, and the report filed 88 of them under "owner not
---- recorded", beneath a heading note apologizing for third-party
---- infrastructure the corpus never covered. That note was right about the
---- other 78 and wrong about these: they were almost all ours.
----
---- The registry had the answer the whole time (`Lib.UserCommand.Record.src`,
---- the caller site). What it did not have was the composer's verbs, which
---- were all recorded at `composer/init.lua`'s own `create` call -- fixed on
---- the lib.nvim side by passing `src`, so `:Lsp`, `:Lib`, `:Session` and the
---- other nine name their declaring file too.
+--- Source 2 has to come before 3: `debug.getinfo` on a helper-created
+--- command reports the pcall wrapper `usercmd.create` builds, which lives in
+--- lib.nvim -- so every command made through the helpers used to attribute
+--- to the library itself. See `docs/FEATURES.md`, "Wer hat dieses Command
+--- registriert", for the incident that found this and the fix on the
+--- lib.nvim side (`composer.verb` now passes `src` through to `create`).
 ---@param name string
 ---@param lazy_owners table<string, string>
 ---@param defs table  # `nvim_get_commands({})`, passed in: rebuilding it per
@@ -1105,14 +919,9 @@ local function command_owner(name, lazy_owners, defs, lib_sites)
     return lazy_owners[name] .. " (lazy cmd stub)"
   end
 
-  -- lib.nvim's registry BEFORE `debug.getinfo`, and this order is the whole
-  -- point. `usercmd.create` wraps every callback in a pcall closure defined
-  -- inside lib.nvim, so the live command's function reports lib.nvim as its
-  -- source for every command created through the helpers -- 88 of them in the
-  -- 2026-09-02 report, all lumped under "owner not recorded" beneath a note
-  -- apologizing for third-party infrastructure, when almost every one was
-  -- ours. The registry records the CALL SITE, which is the question being
-  -- asked; `nvim_get_commands` was only ever able to answer "it exists".
+  -- lib.nvim's registry BEFORE `debug.getinfo` -- see the function doc for
+  -- why the order matters. The registry records the CALL SITE; `nvim_get_
+  -- commands` can only ever answer "it exists".
   local recorded = lib_sites[name]
   if recorded then
     local owner, rest = owner_of_path(recorded)
@@ -1159,22 +968,11 @@ end
 
 --- Every byte string that legitimately spells the same keystroke.
 ---
---- The two sides of the live comparison do not agree on how to encode a
---- modifier chord, and both are right:
----   - `nvim_get_keymap` reports `<C-a>` modifier-preserving, as
----     `K_SPECIAL KS_MODIFIER MOD_CTRL 'A'` = `{128,252,4,65}`.
----   - the documented side goes through `nvim_replace_termcodes`, which
----     collapses the same key to the traditional control byte `{1}`.
---- Comparing those raw made EVERY documented Ctrl chord in the corpus report
---- as "documented, not live" -- measured, and the single largest remaining
---- false-positive class after the buffer-local one. `<C-S-k>` disagreed
---- twice over (`{128,252,6,75}` vs `{128,252,2,11}`).
----
---- `keytrans()` renders both spellings as `<C-A>`, which fixes most of it,
---- but not the keys whose control byte has an older name: byte 10 renders as
---- `<NL>` from the collapsed side and `<C-J>` from the modifier-preserving
---- one. Feeding the display form back through `nvim_replace_termcodes` lands
---- both on `{10}`, so the third form closes that gap.
+--- `nvim_get_keymap` and `nvim_replace_termcodes` encode a modifier chord
+--- differently (both correctly) -- comparing them raw fails for every
+--- documented Ctrl chord in the corpus. See `wkdbook-Neovim/MyNotes/
+--- Modifier-Chord-Encoding-nvim_get_keymap-vs-termcodes.md` for the byte
+--- forms and why `keytrans()` alone doesn't close the gap.
 ---
 --- Returned as a LIST of forms rather than one canonical string, and indexed
 --- in addition to the raw key rather than instead of it: nothing that matched
@@ -1259,28 +1057,13 @@ end
 
 --- Whether a documented binding is actually registered.
 ---
---- Matching on lhs alone was wrong in a way that mattered: an unrelated
---- global map satisfies a documented row just by sharing the key. Confirmed
---- across the corpus — github_stats' `<CR>`/`<Esc>` were "live" because
---- this config binds `<CR>` to "Insert blank line" and `<Esc>` to "Clear
---- copilot NES overlays or nohl"; `language.nvim`'s `]s` matched Snacks'
---- "Snacks Scope: Next"; reposcope's `<Esc>` matched the same nohl map
---- twice. Five rows, none of them the binding the cheatsheet describes, and
---- each one was enough to keep its whole table out of the "not verifiable"
---- verdict — which is why `github_stats.nvim.md` kept reporting ~20 keys
---- even after being split into per-scope tables.
----
---- So when BOTH sides name a desc, they must agree. Everything else falls
---- back to lhs-only, which is all the older behaviour ever was:
----   - the row has no `desc` column, or fills it with `none`/`-`
----   - nothing registered under that key carries a desc at all
----
---- Compared exactly (after `strip_quotes`), deliberately. Measured over
---- every currently-live documented row: 8 exact matches, 0 that needed
---- case-insensitive comparison, 0 where the live side had no desc, and 5
---- mismatches — all five genuine. There was nothing for a looser rule to
---- rescue, and a substring or fuzzy compare would only start re-admitting
---- the collisions this exists to catch.
+--- lhs alone is not proof: an unrelated global map satisfies a documented
+--- row just by sharing the key (five confirmed false positives this way,
+--- see `docs/FEATURES.md`, "Ein lhs-Treffer allein war kein Beweis"). So
+--- when BOTH sides name a desc, they must agree exactly (after
+--- `strip_quotes`); everything else falls back to lhs-only, which is all the
+--- older behaviour ever was -- the row has no `desc` column (or fills it
+--- with `none`/`-`), or nothing registered under that key carries one.
 ---@param live_maps table<string, table<string, string[]>>
 ---@param modes string[]
 ---@param lhs string
@@ -1388,27 +1171,17 @@ end
 --- @param opts { repo?: boolean, repo_root?: string, scope?: "personal"|"extern"|"all" }|nil additive; every
 ---   field defaults to off. `repo` enables the checkout axis for plugins
 ---   that never loaded (module doc, "The repo axis") -- NOT the source
----   fallback for the ones that did, which runs in every scope with no
----   option at all (module doc, "The repo fallback"). `repo_root` points
----   the axis at one collection directory holding several Lua projects
----   instead of the
----   default per-plugin resolution, and implies `repo` -- naming a root is
----   already the request, and making the caller pass both would only create
----   a combination (`repo_root` without `repo`) whose sole possible meaning
----   is "ignore what I just said". `scope` decides which side of the
----   own/third-party line the *live, undocumented commands* direction
----   reports; it does not touch the other axes, which only ever read the
----   corpus it reads. `"personal"` (the default) reports only
----   commands this config or one of its own plugins registers -- a
----   third-party command with no cheatsheet is not drift, it is a corpus
----   this config never claimed to cover; the documented-side axes read
----   `PersonelPlugins/BINDINGS`. `"extern"` is the mirror image --
----   third-party commands, checked against `ExternPlugins/Bindings`.
----   `"all"` reads both trees and reports both sides (the behaviour before
----   this option existed).
----   Browsing and searching are unaffected in every scope: `:Bindings
----   search`/`browse` read both trees, because looking for a key means
----   looking for it wherever it comes from.
+---   fallback for the ones that did, which runs unconditionally (module doc,
+---   "The repo fallback"). `repo_root` scans one collection directory of Lua
+---   projects instead of the default per-plugin resolution, and implies
+---   `repo`. `scope` decides which side of the own/third-party line the
+---   *live, undocumented commands* direction reports -- the other axes only
+---   ever read the corpus scope already selects. `"personal"` (default):
+---   commands this config or its own plugins register, against
+---   `PersonelPlugins/BINDINGS`. `"extern"`: the mirror, against
+---   `ExternPlugins/Bindings`. `"all"`: both trees, both sides (pre-option
+---   behaviour). `:Bindings search`/`browse` always read both trees
+---   regardless of scope.
 --- @return Bindings.DriftFinding[]
 --- @return string[] skipped_plugins plugin names excluded because they
 ---   aren't loaded in this session (module doc point 4) AND the repo axis
@@ -1447,15 +1220,11 @@ function M.check(plugin, opts)
   end
   ---@cast scope "personal"|"extern"|"all"
   -- Which of the two BINDINGS trees the *documented -> live* axes read.
-  -- `nil` is `records.list`'s "both". Without this, `scope = "extern"` was
-  -- half an answer: it switched the live->documented direction over to
-  -- third-party commands while the other axes kept checking the personal
-  -- cheatsheets, so "only the external ones" still reported our keymaps.
+  -- `nil` is `records.list`'s "both".
   -- Explicit `if`, not `(scope == "all") and nil or scope`: that idiom
-  -- collapses, because `and nil` makes the whole expression fall through to
-  -- the `or` branch and hands back `"all"` -- a value matching neither root,
-  -- so `records.list` returned nothing and the documented-side axes silently
-  -- reported zero findings. Measured before the fix: 54 instead of 383.
+  -- collapses, because `and nil` falls through to the `or` branch and hands
+  -- back `"all"` -- a value matching neither root, so `records.list` silently
+  -- returned nothing for every documented-side axis.
   ---@type "extern"|"personal"|nil
   local corpus_scope
   if scope == "all" then
@@ -1842,12 +1611,8 @@ function M.check(plugin, opts)
         skipped_rows = skipped_rows + 1
       else
         repo_candidates[rec.plugin] = true
-        -- Repo axis, usercmds. Case-SENSITIVE here, unlike the keymap side:
-        -- a command name is a capitalized identifier, and folding case makes
-        -- `:Images` match the word "images" in half of images.nvim's own
-        -- source — every command would count as found and the axis would
-        -- never report anything. Key notation has the opposite problem
-        -- (`<Leader>` vs `<leader>`), hence the difference.
+        -- Repo axis, usercmds. Case-sensitive, same reason as `cmd_in_source`
+        -- above.
         local name = extract_usercmd(rec)
         if name and not seen_personal[name] then
           seen_personal[name] = true
@@ -1884,16 +1649,11 @@ function M.check(plugin, opts)
     end
   end
 
-  -- Hand the indexed trees back. Measured over the real checkouts, holding
-  -- them costs 28 MiB for the rest of the session, which is not a price a
-  -- report someone ran once should keep charging — and the next run must
-  -- re-read anyway (`repo_scan.reset()` at the top), so nothing is saved by
-  -- keeping them.
-  --
-  -- Unconditional since the fallback exists: `if want_repo` used to be the
-  -- whole truth about who indexed a tree, and is not any more — a default
-  -- run that greps five checkouts would otherwise leave them resident for
-  -- the session while claiming the axis never ran.
+  -- Hand the indexed trees back (see `docs/FEATURES.md` for the cost this
+  -- avoids keeping resident). Unconditional since the fallback exists: a
+  -- default run that greps a handful of checkouts would otherwise leave
+  -- them resident all session while `want_repo == false` claims the axis
+  -- never ran.
   repo_scan.reset()
 
   -- Third axis (source) is resolved BEFORE the live-undocumented direction
@@ -2008,13 +1768,9 @@ function M.check(plugin, opts)
     end
   end
 
-  -- Autocmds, both directions. Added 2026-09-02; until then the third of the
-  -- corpus under `Autocmds/` was read for command names and never checked
-  -- against anything -- 241 documented rows, and a report saying "1 finding"
-  -- while none of them had been looked at. What made it worth building was
-  -- evidence that the surface drifts: lsp.nvim's `b260fc8` registered two
-  -- autocmds on the raw API and falsified two explicit sentences of
-  -- `Autocmds/lsp.nvim.md`, and a person found it, not a checker.
+  -- Autocmds, both directions. See `docs/FEATURES.md`, "Die Autocmds-Achse",
+  -- for why this axis was added (the corpus documented rows here that no
+  -- check ever touched, and one drifted silently).
   local live_pairs, our_autocmds = live_autocmds()
   local documented_pairs = {}
   -- The reverse direction asks "does the corpus document this at all", so it
@@ -2355,23 +2111,17 @@ end
 --- A finding's `notation` back in readable key notation, for display only.
 ---
 --- `keymap-not-live` findings carry the RAW byte string `normalize_lhs`
---- produced (that is the whole point — it is what `.lhsraw` is compared
---- against), and for anything with a modifier that string is neither
---- readable nor valid UTF-8: `<M-->` is stored as
---- `K_SPECIAL KS_MODIFIER 0x08 -`, i.e. the bytes `\128\252\8-`. Rendering
---- that verbatim was a real bug with two effects — the report showed
---- `<80><fc>^H-` instead of `<M-->`, and, worse, the invalid UTF-8 made the
---- whole buffer uncopyable: `win32yank.exe -i` (this config's clipboard
---- provider on Windows, see `options.lua`) panics with "stream did not
---- contain valid UTF-8" and aborts the ENTIRE write, so a single such
---- finding silently broke `y`/`<C-c>` over the report. Verified against
---- both the real report buffer and win32yank standalone (exit 101).
+--- produced (what `.lhsraw` is compared against); for a modifier chord that
+--- string is not valid UTF-8. Rendering it verbatim is not just ugly, it is
+--- a real bug on Windows: `win32yank.exe` (this config's clipboard provider,
+--- see `options.lua`) panics on invalid UTF-8 and aborts its ENTIRE write,
+--- so one such finding silently broke `y`/`<C-c>` over the whole report.
 ---
---- `keytrans()` is the exact inverse of the `nvim_replace_termcodes` call
---- in `normalize_lhs`, and is an identity on plain printable text, so it is
---- safe to apply to the source axis's notations too (those are already
---- written as `<leader>x`, never raw). Guarded with `pcall` regardless —
---- display must never take the report down.
+--- `keytrans()` is the exact inverse of `normalize_lhs`'s
+--- `nvim_replace_termcodes` call, and an identity on plain printable text,
+--- so it is safe to apply to the source axis's notations too (already
+--- written as `<leader>x`, never raw). `pcall`-guarded regardless — display
+--- must never take the report down.
 ---@param notation string
 ---@return string
 local function readable(notation)
@@ -2412,15 +2162,12 @@ end
 
 --- Startup phases of this config that never ran, by label.
 ---
---- The whole point: this config registers its own commands and keymaps in a
---- `startup.on("UIReady", ...)` phase, and "UIReady" is VimEnter plus a
---- `vim.schedule`. A `nvim --headless -c "luafile ..."` run executes its
---- script *before* that, so `bindings.usrcmds` and `bindings.mappings` are
---- never loaded -- and every binding they would have registered is reported
---- as documented-but-not-live. Measured 2026-09-02: 200 findings become 111
---- once the phase is loaded by hand, i.e. **89 of them were the measurement,
---- not the corpus**. Interactive `:Bindings check` never sees this, which is
---- exactly why it went unnoticed until a headless report was believed.
+--- This config registers its own commands and keymaps in a
+--- `startup.on("UIReady", ...)` phase ("UIReady" = VimEnter + a
+--- `vim.schedule`). A `nvim --headless -c "luafile ..."` run executes its
+--- script *before* that fires, so a large chunk of the personal corpus is
+--- reported as documented-but-not-live for a reason that has nothing to do
+--- with drift. Interactive `:Bindings check` never hits this.
 ---
 --- Soft dependency on purpose: `startup` is this config's module, and the
 --- rest of `bindings_explorer` is written to survive a move into its own
@@ -2521,11 +2268,10 @@ local SECTIONS = {
   {
     kinds = { ["usercmd-undocumented"] = true },
     title = "Live commands with no cheatsheet, by origin",
-    -- The note used to read "mostly third-party infra this corpus never
-    -- covered", which was an apology for a column that could not tell the
-    -- difference. It can now (see `command_owner`), and the honest split in
-    -- the run that changed it was 53 ours to 56 theirs -- so the note says
-    -- how to read the column instead of guessing at its contents.
+    -- The note used to apologize for a column that could not tell ours from
+    -- third-party infra. It can now (see `command_owner`), so the note says
+    -- how to read the column instead -- see `docs/FEATURES.md`, "Wer hat
+    -- dieses Command registriert", for the incident and the split.
     note = "an origin with a file:line is ours and wants a cheatsheet row; a bare plugin name is third-party infra this corpus never covered",
     -- Sorted by owner, not by name: this section is read to find out
     -- whether anything in it is *yours*, and clustering a plugin's dozen
