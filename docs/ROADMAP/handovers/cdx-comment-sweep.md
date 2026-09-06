@@ -270,10 +270,38 @@ Beide ohne Co-Authored-By, beide gepusht + `pull --ff-only` bestätigt.
 Commits: nvim-config `7bff3c7f6`, WKDBooks `09888c3`. Beide ohne
 Co-Authored-By, gepusht + `pull --ff-only` bestätigt.
 
+### Häppchen 7 — `usrcmds/plugin_repos/` (3 Dateien, 1641 Zeilen)
+
+**Status: erledigt. `lua/bindings/` damit vollständig durch (87/87 Dateien,
+22.774 Zeilen).**
+
+- Alle 3 Dateien bereits komplett Englisch — keine Übersetzung nötig.
+- `init.lua`: Modul-Header 68→20 Zeilen — duplizierte fast vollständig das
+  bereits existierende, gute `README.md` im selben Ordner (271 Z.). Diesmal
+  kein Umzug nötig, das Wissen lag schon am richtigen Ort, nur der Code
+  kopierte es zusätzlich.
+- **Fund:** `M.enable()`s Docstring zählte nur **4 von 10** registrierten
+  Subcommands auf (`clone|remove|mode|list` — `fetch|pull|update|reclone|
+  dashboard|picker` fehlten), offenbar nie nachgezogen als neue
+  Subcommands dazukamen. Klarer Kommentar-Code-Widerspruch → direkt
+  gefixt (Verweis auf Header statt eigene Dritt-Aufzählung).
+- Kein toter Code, kein `--- CDX:`-Tag nötig.
+- stylua ok, luacheck 0/0.
+
+**Notiert für später, nicht in diesem Häppchen behoben:**
+- `lua/plugins/personal/source.lua` (referenziert `:MyPlugins mode`) ist
+  komplett deutsch kommentiert — Kandidat für den `lua/plugins/`-Häppchen.
+
+Commit: nvim-config `c0fbdc6b7`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/bindings/usrcmds/plugin_repos/` (3 Dateien, 1641 Zeilen) — letzter
-Posten in `lua/bindings/`. Danach restliche `lua/`-Bereiche (s. u.).
+`lua/bindings/` ist fertig. Weiter mit den restlichen `lua/`-Bereichen
+(359 Dateien gesamt laut Bestandsaufnahme): `lua/config/` (~100 Dateien,
+groß: harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`,
+`lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`,
+`lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
