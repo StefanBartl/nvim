@@ -1,11 +1,8 @@
 ---@module 'wkdoptions.hl_config.utils.skip'
---- Build skip matchers and provide a robust UI-like buffer detector.
---- This keeps "filetypes" (exact equality) and "name_patterns" (Lua patterns)
---- separate, because they are semantically different match kinds.
----
--- Example integration:
--- local matchers = M.build_matchers(C.cfg.skip)
--- local function buffer_is_ui_like(bufnr) return M.buffer_is_ui_like(matchers, bufnr) end
+--- Build skip matchers and provide a UI-like buffer detector. "filetypes"
+--- (exact equality) and "name_patterns" (Lua patterns) are kept separate
+--- because they are different match kinds. `M.std_skip` is the ready-made
+--- entry point wired to the global skip config.
 
 local lazy = require("lib.lua.lazy")
 local C = lazy.require("wkdoptions.config")

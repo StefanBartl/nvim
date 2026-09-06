@@ -10,7 +10,10 @@ local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local M = {}
 
--- Keep a typed handle to highlight-namespace config to avoid undefined-field warnings.
+-- Typed handle to highlight config.
+--- CDX: H is resolved once at module load from C.cfg (not C.get_cfg()). If this
+--- module is required before wkdoptions.config.get_cfg() has run, C.cfg is nil,
+--- H freezes to {}, and every CC()/large-file read below silently no-ops.
 ---@type WKDOptions.HL_CFG
 local H = (C and C.cfg and C.cfg.highlight) or {}
 
@@ -318,7 +321,6 @@ local function update_now()
   end
 
   local srow, erow = scan_window()
-  -- Optionally reuse cache here (removed to avoid unused-local warnings).
 
   local case_mode = resolve_case_mode() ---@type CwordCaseMode
   local match_kind = (CC().match_kind == "substring") and "substring" or "exact" ---@type CwordMatchKind

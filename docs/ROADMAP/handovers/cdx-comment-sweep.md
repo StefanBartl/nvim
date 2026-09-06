@@ -600,10 +600,110 @@ stylua ok, luacheck 0/0 (18 Dateien geprüft).
 Commit: nvim-config `152db12c0`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 15 — `lua/wkdoptions/hl_config/` (38 Dateien, ~4940 Z.)
+
+**Status: erledigt. `lua/wkdoptions/` damit komplett durch.**
+`breadcrumbs/@types/init.lua` war schon in `c2e413cb9` gemacht — übersprungen.
+
+**Toter Code gelöscht** (0 Aufrufer im ganzen `lua/` + allen 31 Plugin-Repos):
+- `breadcrumbs/ctx/utils/ts_helpers.lua`: das gesamte „Pre-compiled Pattern
+  System" + „Common Pattern Presets" (`compile_pattern`, `exec_pattern`,
+  `get_preset`, `PRESETS`, `PATTERN_CACHE`) + `clear_caches` — ~150 Z.
+  Nie verdrahtete Perf-Infrastruktur; der Header pries sie als „bytecode
+  cache" an. `Breadcrumbs.TSPattern`-Klasse mit raus.
+- `breadcrumbs/ctx/utils/text_utils.lua`: `split_dotted`, `join_parts`,
+  `build_container`, `extract_js_object_key` (JS-Pendant zu
+  `extract_lua_field_key`, aber nie aufgerufen).
+- `utils/winhighlight.lua`: `remove_keys` (Geschwister zu `set_pair`/`merge`,
+  ungenutzt).
+- `core/highlights.lua`: `get_hl_safe` (einziger ungenutzter Safe-Wrapper).
+- `core/state.lua`: `reset` (Test/Reload-Helfer, kein Aufrufer, kein Testsetup).
+- `breadcrumbs/ctx/init.lua`: `Breadcrumbs.ProviderContext`-Typ (verwaist,
+  nachdem `Breadcrumbs.Provider.extract` von `(ctx)` auf die echte
+  `(node, cfg)`-Signatur korrigiert wurde).
+  Alle zugehörigen `@types`-Felder mitgezogen.
+
+**Echte Annotation-Fixes (reine `@types`):**
+- `breadcrumbs/ctx/@types/providers.lua`: `Breadcrumbs.Provider.extract`
+  deklarierte `fun(ctx: Breadcrumbs.ProviderContext)`, die Provider
+  implementieren aber `extract(node, cfg)` — korrigiert; `name`/`priority`
+  (nie implementiert) entfernt.
+- `features/@types/init.lua` Flash-Klasse: `enable_put` (existiert nicht mehr,
+  die p/P-Mapping-Ära ist vorbei, siehe `flash.lua`-Kommentar) → durch die
+  realen `put_flash_enabled`/`flash_put` ersetzt.
+- `utils/@types/init.lua`: `LargeFile.invalidate` deklariert, `large_file.lua`
+  hat keine solche Funktion → entfernt; `Winhighlight.remove_keys` (s.o.).
+- `core/@types/init.lua`: `State.reset`/`Highlights.get_hl_safe` mitgezogen;
+  augroup-Prefix-Beschreibung `"myopt."` → `"myopt"` (Code nutzt keinen Punkt).
+
+**`--- CDX:` gesetzt (Urteilssache / Bug in passing):**
+- `breadcrumbs/ctx/utils/text_utils.lua` `extract_lua_field_key` — der
+  quoted-key-Zweig `text:match("^%[(['\"])(.-)%1%]%s*=")` hat **zwei**
+  Captures; `return quoted` gibt das Anführungszeichen zurück, nicht den Key.
+  `["foo"] =` löst zu `"`/`'` auf. (Aufgerufen aus `lang/lua.lua`.)
+- `breadcrumbs/ctx/init.lua` `_build_context` — die Pipeline setzt nie
+  `cfg._base_symbol`, das der `container`-Provider (und die
+  `WKDOptionsBreadcrumbsCtx._base_symbol`-Doku) verlangt. Der
+  `container`-Provider liefert im Live-Winbar **immer nil**; nur der
+  `:WKDOptionsHLDebugCtx`-Pfad (`_ctx_with_container`) füttert ihn.
+- `breadcrumbs/ctx/init.lua` `M.invalidate_caches` — plus `base.clear_cache`
+  und `ts_helpers.invalidate_tick`: unverdrahtete Cache-Invalidierungs-API,
+  0 Aufrufer. Aktuell harmlos (self-invalidating), aber die BufEnter-Wiring
+  fehlt, falls das je gebraucht wird. Nicht gelöscht (Kaskade + evtl. gewollt).
+- `cword_occurrences/init.lua:15` — `local H = C.cfg.highlight` wird **einmal
+  beim Modul-Load** aufgelöst (nicht `C.get_cfg()`). Lädt das Modul vor
+  `config.get_cfg()`, friert `H` auf `{}` ein und alle Feature-Config-Reads
+  werden still zu No-ops.
+- `features/mode_tint.lua:17` — `pcall(function() return vim.v.event end)`:
+  überflüssige Zeremonie, Feldzugriff kann nicht werfen.
+
+**Direkte Doc-/Kommentar-Fixes:**
+- `hl_config/init.lua` + `docs/highlights/breadcrumbs_ctx.md` (11×): totes
+  Kommando `:MyHlSet` → `:WKDOptionsHLSet` (der echte Name, überschreibt
+  `WKDHighlightSet` in `hl_config/init.lua`). `:MyOptSet` (options-Seite)
+  ist **echt** und bleibt.
+- `text_utils.lua`: deutsches „wir brauchen nur result" → Englisch.
+- `winhighlight.lua`: Tippfehler „undrscore" → „underscore".
+- `path_cache/init.lua`: stale 2-Zeilen-`-- File:`-Header (falscher Pfad
+  `path_cache.lua` statt `path_cache/init.lua`, dupliziert den `---@module`).
+- Generische AI-Header eingedampft: `hl_config/init.lua` (Key-Principles-Block
+  raus), `hl_config/@types/init.lua` (Architecture/Performance/Safety-Wüste),
+  `ts_helpers.lua`, `skip.lua` (Example-Integration-Block, den `std_skip`
+  wörtlich doppelt), `cword_occurrences/@types` (Verweis auf nicht
+  existierende Datei `@types/cword_occurences.lua`).
+- `breadcrumbs/ctx/init.lua`: „Backward Compatibility Exports / legacy export"
+  → akkurate Beschreibung (es sind die `:WKDOptionsHLDebugCtx`-Provider-Proben).
+
+**`docs/colors.md`** — geprüft gegen `config/data/highlight.lua`: alle Hex-Werte
+und Gruppennamen exakt korrekt, kein Fix nötig (bleibt deutsch).
+
+**Nicht angefasst (Nebenfunde):**
+- `docs/PERFORMANCE.md` — fabrizierte Benchmarks (Apple M1 Pro, erfundene
+  ms-Werte), stale Beispiel-Requires (`lib.memo` statt `lib.lua.memo`,
+  `:WKDHighlightSet` statt `:WKDOptionsHLSet`). Wie in Häppchen 6/8 kalibriert:
+  eigener Aufräum-Punkt, nicht im Sweep umgeschrieben.
+- `breadcrumbs/@types/init.lua` (übersprungen): `WKDOptions.HL_CFG.Breadcrumbs.Ctx`
+  ist dort **zweimal** als `@class` deklariert (einmal Config-Felder, einmal
+  Modul-Struktur). Prior-Agent hat's stehen lassen.
+- `config/init.lua:4` + `config/README.md:4`: stale `:MyHlSet` (außerhalb
+  hl_config-Scope, config/ galt in Häppchen 14 als sauber).
+- `fallback_object_when_empty` (config + beide `@types`): dokumentiertes
+  Config-Feld, das **kein Provider liest** (die „object"-Fallback-Rolle
+  übernimmt `lang_extra`/`use_lang_specific`). Vestigial.
+- `LineNrDim` in `colors` definiert, aber von keinem Feature via winhighlight
+  angewandt (`deactivate()` mappt `CursorLineNr → LineNr`).
+
+stylua ok, luacheck 0/0 (11 `.lua`-Dateien geprüft; die `@types/*` vom
+luacheck-Glob übersprungen wie in allen vorigen Häppchen, stylua deckt sie ab).
+
+Commits: nvim-config `095769e0e` (breadcrumbs) + der Folge-Commit
+(core/features/utils/top-level/docs/handover). Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt. Kein WKDBooks-Umzug (kein ortsunabhängiges
+Mechanik-Wissen gefunden — die langen Blöcke waren entweder Bug-Rationale am
+richtigen Platz oder AI-Boilerplate).
+
 ### Danach offen
 
-`lua/wkdoptions/hl_config/` (38 Dateien, 4948 Z. — größter verbleibender
-Einzelposten, plus die drei deutschen docs/ oben). Danach
 `lua/wkdnvchad/` (kleine Teile + `ui/` separat), `lua/startup/`,
 `lua/themes/`, `lua/nvchad/`, `lua/@types/`, `after/`, `init.lua`,
 `scripts/`. Danach die 31 Plugin-Repos.

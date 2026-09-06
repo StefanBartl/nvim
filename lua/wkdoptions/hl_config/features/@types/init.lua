@@ -21,7 +21,8 @@
 --- Yank and Put flash feedback with safe timer cleanup.
 ---@field flash_changed fun(group: string, ms: integer): nil # Flash region defined by marks '[' and ']' with given HL group for ms duration
 ---@field enable_yank fun(): nil # Install TextYankPost autocmd for yank flash
----@field enable_put fun(): nil # Install safe p/P mappings with put flash
+---@field put_flash_enabled fun(): boolean # Whether the put flash is switched on (asked by the p/P owner)
+---@field flash_put fun(): nil # Flash the region a put just wrote (called by the paste owner, no-op when disabled)
 ---@field enable fun(cfg: WKDOptions.HL_CFG): nil # Enable yank/put flash based on config flags
 
 ---@class WKDOptions.HL_CFG.Features.SigncolTint

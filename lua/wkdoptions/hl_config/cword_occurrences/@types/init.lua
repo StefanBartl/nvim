@@ -1,9 +1,9 @@
 ---@meta
 ---@module 'wkdoptions.hl_config.cword_occurrences.@types'
 ---
---- Type definitions for <cword> occurrences highlighting module.
---- Already extensively documented in wkdoptions/@types/cword_occurences.lua,
---- here we add the public API surface.
+--- Type definitions for the <cword> occurrences highlighting module:
+--- the public API surface plus the feature config shape (CwordOccurrencesCfg,
+--- referenced from wkdoptions/@types/highlight.lua).
 
 ---@class WKDOptions.HL_CFG.CwordOccurrences
 --- Highlight all occurrences of <cword> except the one under cursor.
