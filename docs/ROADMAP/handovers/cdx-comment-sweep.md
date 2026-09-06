@@ -303,15 +303,54 @@ hart required, `health.md` führte es längst als required — §20 widersprach)
 
 Keine echten Logik-Bugs.
 
-**Verbleibende Plugin-Repos (12/31 offen):** buffer-ctx, cascade,
-color_my_ascii, documentation, lsp, markdown, mdview, pdfport (läuft),
+### Häppchen 37 — pdfport.nvim (Plugin-Repo 20/31) — **erledigt**
+
+Commit `86611c9`, gepusht, `pull --ff-only` sauber. Ganzes Repo (50 Lua +
+8 Specs + docs). stylua ok, luacheck 0/0 (61 Dateien), `PDFPORT_TESTS_OK`.
+**Überdurchschnittlich sauber** — der Code (backends/producers/renderers)
+ist fast durchweg tadellos; die Drift saß praktisch komplett in Doc-
+Aufzählungen + zwei stale gewordenen Fakten.
+
+**Direkte Fixes — Enumerations-Drift („N statt N+1"):** `registry.lua`-Doc
+sagte „two registries" (sind drei: backends/producers/renderers); `health.lua`
+`M.check`-Docstring ließ `producers` aus; `bindings/usrcmds.lua`-`@description`
+fehlten `create`/`merge`/`backends`/`producers`; `chromium.lua` Browser-Kette
+4 statt 5 (`chromium-browser` fehlte); `configuration.md` `fallback_chain`-
+Beispiel fehlte `tesseract`; `FEATURES/PRODUCERS.md` „five creation" (sind
+sechs); `TESTS/README.md` 5 von 8 Specs; `docs/BINDINGS.md` fehlte
+`:PdfPort merge`.
+
+**Direkte Fixes — stale Fakten:** base64-Altlast beim claude-Backend
+(encodet seit Neovim 0.10 in-process via `vim.base64`, kein externes Binary
+mehr — `health.lua` sagt das selbst) → korrigiert in `configuration.md`,
+`FEATURES/BACKENDS.md`, `doc/pdfport.txt`. `resolver.lua` „cached in
+platform.lua" → Memoisierung liegt seit Migration in `lib.nvim.core`.
+`PdfPort.Result.format` ist `"plain"|"markdown"` nicht `"text"|…`.
+`commands.md` stale „P0–P3 shipped"-Statuszeile entfernt; Page-Range-Prompt
+ist `lib.nvim.ui.kit.input` nicht `vim.ui.input`. `health.md` Sektions-
+Reihenfolge korrigiert. `util/notify.lua` „at all 28 call sites" → „at every
+call site" (stale-anfällige Zahl).
+
+**Dead code:** `@types/init.lua` `---@alias uv_process_t any` — 0 Verwendungen,
+keine API → gelöscht.
+
+**`--- CDX:` gesetzt:**
+- `backends/ollama.lua:91` — handgerollter `b64_encode`; `backends/claude.lua`
+  nutzt für denselben Zweck inzwischen `vim.base64.encode` (0.10+). Reine
+  Vereinfachungs-Chance, kein Bug.
+
+Keine echten Logik-Bugs, kein `X and CONST or CONST`, kein WKDBooks-Fund.
+
+**Verbleibende Plugin-Repos (11/31 offen):** buffer-ctx, cascade,
+color_my_ascii, documentation, lsp, markdown, mdview,
 pickers, reposcope, runtime-analysis, sandbox. (casedesk.nvim existiert
 als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
 config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
 ist noch offen und in dieser Liste **nicht** enthalten → als weiteres prüfen.)
 Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hatte für
 Häppchen 36/37 kurz 2 parallele Agents erlaubt, das aber nach pdfport
-wieder auf **1 Agent gleichzeitig** zurückgesetzt.
+wieder auf **1 Agent gleichzeitig** zurückgesetzt — ab Häppchen 38 wieder
+strikt sequenziell.
 
 **Sub-Häppchen 13 — erledigt** (`docs/` — alle 31 Markdown-Dateien gegen den
 aktuellen Code-Stand geprüft; Commit `19314ec`, gepusht, Re-Fetch bestätigt
