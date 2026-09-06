@@ -18,7 +18,7 @@ function M.setup(opts)
     return menu_table
   end
 
-  -- Provide a convenient global flag so other modules can detect we installed a custom menu (menu/mapppings)
+  -- Provide a convenient global flag so other modules can detect we installed a custom menu (menu/mappings)
   vim.g._menu_custom_registered = true
 end
 

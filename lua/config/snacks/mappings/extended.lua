@@ -7,7 +7,7 @@ local notify = require("lib.nvim.notify").create("[config.snacks.mappings]")
 
 local M = {}
 
---- Safe dispatcher to call snacks submodules safely.
+--- Safely dispatch a call into a snacks submodule.
 --- @param mod string
 --- @param fn string
 --- @param ... any
