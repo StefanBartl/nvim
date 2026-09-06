@@ -280,13 +280,38 @@ Contributor darauf → gefixt.
 
 Keine neuen Logik-Bugs, kein `X and CONST or CONST`.
 
-**Verbleibende Plugin-Repos (13/31 offen):** buffer-ctx, cascade,
-color_my_ascii, documentation, lsp, markdown, mdview, pdfport, pickers,
-reposcope, runtime-analysis, sandbox, spotlight. (casedesk.nvim existiert
+### Häppchen 36 — spotlight.nvim (Plugin-Repo 19/31) — **erledigt**
+
+Commit `ab59b93`, gepusht, `pull --ff-only` sauber. Ganzes Repo (27 Lua +
+19 Specs + docs). stylua ok, luacheck 0/0 (46 Dateien), Testsuite 472/0.
+**Sehr sauber** — kein Deutsch, keine Marker, keine Tippfehler, kein toter
+Code, Command-/API-Listen stimmen.
+
+**Direkte Fixes — unvollständige „hard requirements"-Listen:** `lib.nvim.ui.list`
+ist eine echte harte Abhängigkeit (`qf.lua` top-level `require`, von `setup()`
+gezogen), fehlte aber in `health.lua` `LIB_MODULES`, `docs/health.md`,
+`doc/spotlight.txt` §20 („two modules" → „four"), `docs/installation.md`.
+Zusätzlich `lib.nvim.bindings.keymap` von der Soft- in die Hard-Liste (wird
+hart required, `health.md` führte es längst als required — §20 widersprach).
+
+**`--- CDX:` gesetzt:**
+- `hover.lua:41` — `local MAX_LINES = 20000`; Kommentar behauptet, das
+  entspreche „the ceiling the spotlight list uses", aber `list.count_max_lines`
+  ist `200000` und `hover.lua` liest die Config nicht. Für Buffer zwischen
+  20k und 200k Zeilen zählt die Liste, während der Hover „too many lines"
+  meldet. Tippfehler (fehlende Null) oder falscher Kommentar — offen.
+
+Keine echten Logik-Bugs.
+
+**Verbleibende Plugin-Repos (12/31 offen):** buffer-ctx, cascade,
+color_my_ascii, documentation, lsp, markdown, mdview, pdfport (läuft),
+pickers, reposcope, runtime-analysis, sandbox. (casedesk.nvim existiert
 als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
 config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
-ist noch offen und in dieser 13er-Liste **nicht** enthalten → als 14. prüfen.)
-Reihenfolge offen; keine Vorgabe.
+ist noch offen und in dieser Liste **nicht** enthalten → als weiteres prüfen.)
+Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hatte für
+Häppchen 36/37 kurz 2 parallele Agents erlaubt, das aber nach pdfport
+wieder auf **1 Agent gleichzeitig** zurückgesetzt.
 
 **Sub-Häppchen 13 — erledigt** (`docs/` — alle 31 Markdown-Dateien gegen den
 aktuellen Code-Stand geprüft; Commit `19314ec`, gepusht, Re-Fetch bestätigt
