@@ -10,7 +10,7 @@
   - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-fertig)
     - [Ergebnis je Repo](#ergebnis-je-repo)
   - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
-  - [🔶 ERR-* (34 Regeln) — in Arbeit](#err-34-regeln-in-arbeit)
+  - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 31/32 Repos gelesen, 16 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -76,13 +76,12 @@ Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — 
 
 | Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
 |---|---|---|---|
-| `ERR-*` | 34 | ~32 | ähnliche Größenordnung wie `SEC-*`, leicht mehr pro Durchgang |
-| `UI-*` | 34 | ~32 | wie `ERR-*` |
-| `PRIN-*` | 37 | ~32 | wie `ERR-*`/`UI-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
+| `UI-*` | 34 | ~32 | ähnliche Größenordnung wie `SEC-*`/`ERR-*`, leicht mehr pro Durchgang |
+| `PRIN-*` | 37 | ~32 | wie `UI-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
 | `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
 | `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
-**Fazit:** Die übrigen fünf Familien brauchen je ~32 echte Repo-Durchgänge, macht zusammen grob **160 Repo-Durchgänge** — bei reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. Realistisch bewegt sich das im Bereich von **mehreren vollen Arbeitstagen bis zu zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird — deckt sich mit der Einschätzung, die schon im Pilot-Abschnitt der Datei steht ("mehrtägig bis mehrwöchig"), mit `PERF-*` als vermutlich größtem Einzelbrocken darin.
+**Fazit:** Die übrigen vier Familien brauchen je ~32 echte Repo-Durchgänge, macht zusammen grob **128 Repo-Durchgänge** — bei reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. `ERR-*` selbst ist inzwischen durch (32/32, 17 echte Bugs, s. u.) und bestätigt die Einordnung: mit `SEC-*` vergleichbarer Aufwand, kein Ausreißer. Realistisch bewegt sich der Rest im Bereich von **mehreren vollen Arbeitstagen bis zu zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird, mit `PERF-*` als vermutlich größtem Einzelbrocken darin.
 
 ---
 
@@ -261,7 +260,7 @@ Einschätzung aus der Aufwandsschätzung oben (ein Sitzung, meist N/A).
 
 ---
 
-## 🔶 ERR-* (34 Regeln) — in Arbeit
+## ✅ ERR-* (34 Regeln) — fertig
 
 **Methode:** anders als `DEP-*`/`TS-*` sind die meisten `ERR-*`-Regeln
 kontextabhängig und brauchen echtes Lesen des Quelltexts — direkt in der
@@ -316,7 +315,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 31/32)
+### Ergebnis je Repo (alle 32/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -351,6 +350,7 @@ verändert).
 | runtime-analysis.nvim | 0 — **46 Dateien/13683 LOC**. `telemetry/store.lua` und `history.lua` haben dieselbe Load/Save-Kollaps-Struktur wie der reposcope.nvim-Fund, aber beide explizit im Code selbst als bewusst verlusttolerant dokumentiert („a report file is a convenience artifact, not data") — kein Bug, dieselbe Kategorie wie query_stats.lua. Token-basierte Request-Supersession/Cancel-Tracking in `bindings/usrcmds.lua` (1041 Zeilen, `:RA send`/`:RA cancel`) korrekt: unterscheidet sauber zwischen „abgebrochen" und „durch neueren Send überholt". `runner.lua`/`parse.lua` fehlerfrei. Durchgängig außergewöhnlich sorgfältig dokumentierter Code (Autor begründet praktisch jede Design-Entscheidung inline) | — | — |
 | **sandbox.nvim** | **`follow_logs()` (docker/nerdctl/podman, `:Sandbox logs -f`) fütterte stdout UND stderr in EINEN geteilten Zeilen-Puffer** — `vim.system` ruft beide Callbacks unabhängig auf, in beliebiger Reihenfolge; eine stdout-Chunk ohne Zeilenumbruch konnte mit einer unabhängig eintreffenden stderr-Chunk zu einer Zeile verschmelzen, die in keinem der beiden echten Streams je existierte (`stdout "foo"` + `stderr "bar\n"` → eine Zeile `"foobar"`). Bug identisch in allen drei Engines (reine Kopien voneinander). **Größtes bisher geprüftes Repo: 233 Dateien/11773 LOC** — Docker/nerdctl/podman-Adapter-Trio (perfekt gespiegelt, keine Drift) und Provider-übergreifende Struktur per Diff-Stichproben geprüft statt Volllesung | **ERR-30-Familie** (unabhängiger Zustand vermischt) | [`73515a8`](https://github.com/StefanBartl/sandbox.nvim/commit/73515a8) |
 | sessions.nvim | 0 — 17 Dateien/2691 LOC. `meta.lua`/`state.lua` schreiben bei jedem Save frische, vollständige Daten (kein Load-Modify-Save-Zyklus), also strukturell immun gegen die ERR-11-Kollaps-Falle, die in dieser Familie schon dreimal real gefunden wurde. `buforder.lua`/`layout.lua`/`portable.lua`/`git.lua` durchgängig sauber (Buffer-Validität konsequent geprüft, Pfad-Escaping in `portable.lua` korrekt) | — | — |
+| **spotlight.nvim** | **`persist.lua`s Load-Modify-Save-Zyklus (persistierte Spotlights + Pro-Datei-Ausnahmen über `lib.nvim.store.project`) hätte bei einer kaputten Cache-Datei denselben Datenverlust erlitten wie bei den drei vorherigen Funden** — statt es nur hier zu flicken, wurde die Ursache **an der Wurzel in `lib.nvim.cache.disk` (`read_entry()`) gefixt**: die vierte Instanz derselben Kollaps-Falle, aber diesmal in gemeinsam genutzter Infrastruktur, die potenziell jeden `lib.nvim.store.project`-Konsumenten im Fleet betrifft (laut Moduldoku selbst u. a. cascade.nvims Anchors). Backup nach `.corrupt`, nicht erneut geschrieben, wenn schon vorhanden. 27 Dateien/5543 LOC im Repo selbst geprüft, sonst 0 weitere Funde (Fenster-/Buffer-Validität in `core/match.lua`/`hover.lua` durchgängig korrekt). Die spekulative `deep_merge`-Referenz-Aliasing-Frage in `config/init.lua`s `normalize_palette`/`normalize_cursor_patterns` ist bereits aus dem `lib.nvim`-Durchgang bekannt und dort als kein heute demonstrierbarer Bug bewertet — nicht erneut aufgerollt | **ERR-11-Familie, an der Wurzel gefixt** | [`10acff1`](https://github.com/StefanBartl/lib.nvim/commit/10acff1) (lib.nvim) |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -420,19 +420,27 @@ stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwer
 immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
 mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-### Noch offen (1/32 Repos ungelesen für ERR-*)
+### Fazit
 
-spotlight.nvim.
+Alle 32 Repos geprüft, **17 echte Bugs gefixt** — 16 direkt in einzelnen
+Plugin-Repos, einer (die vierte Instanz derselben Kollaps-Falle) an der
+Wurzel in `lib.nvim.cache.disk`, weil er dort jeden aktuellen und künftigen
+Konsumenten von `lib.nvim.store.project` fleet-weit schützt statt nur
+spotlight.nvim. Häufigste reale Bugklasse mit Abstand: die
+**ERR-10/11/51/53-Familie** (geteilter/persistenter Zustand per Referenz
+statt Kopie, oder „fehlt"/„kaputt" nicht unterschieden — 4 von 17 Funden
+dieser Familie allein aus dem `load()`-kollabiert-auf-leer-Muster, das sich
+über documentation.nvim, replacer.nvim, reposcope.nvim und zuletzt
+lib.nvim selbst zieht). Die `and/or`-Ternary-Falle (ERR-60) kam nur 2×
+wirklich vor, obwohl sie der Namensgeber der ersten Funde war.
 
 (Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
 oben eingetragen: 3/3 mit echtem Fund. pdfport.nvim direkt gelesen: 0 Funde.)
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
-read-or-stub-vor-write) müssen für diese Repos **nicht wiederholt** werden —
-die liefen bereits über alle 32 Repos (die and/or-Falle sogar zweimal, mit
-der erweiterten Regex). Was noch fehlt, ist das kontextabhängige Lesen der
-übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
-`ERR-10/20-22/30-34/40-44/50-53/61/63-67`).
+read-or-stub-vor-write) liefen über alle 32 Repos (die and/or-Falle sogar
+zweimal, mit der erweiterten Regex) — nicht nochmal nötig, falls der
+Katalog je erneut durchlaufen wird.
 
 ---
 
@@ -445,12 +453,10 @@ der erweiterten Regex). Was noch fehlt, ist das kontextabhängige Lesen der
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-(`ERR-*` läuft bereits — siehe oben, 🔶 in Arbeit.)
-
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `ERR-*` zu Ende bringen
-→ `UI-*` (34, mittelgroß) → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57,
-größte und wahrscheinlich aufwendigste, da sie am meisten Kontext pro Fund
-braucht). Keine Autoren-Vorgabe, nur eine Einschätzung nach Größe.
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `UI-*` (34, mittelgroß)
+→ `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich
+aufwendigste, da sie am meisten Kontext pro Fund braucht). Keine
+Autoren-Vorgabe, nur eine Einschätzung nach Größe.
 
 ---
 
