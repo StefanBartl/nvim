@@ -440,6 +440,36 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 44 — markdown.nvim (Plugin-Repo 27/31) — **erledigt**
+
+Commit `a48fda4`, gepusht, `pull --ff-only` sauber. Ganzes Repo (79 Lua +
+~35 Specs + docs). stylua ok, luacheck `lua` 0/0 (79 Dateien; 6 vorbestehende
+`TESTS/`-Warnungen, CI prüft nur `lua`), `MARKDOWN_TESTS_OK`. **Recht sauber**
+— hochwertige Quell-Header, kein Deutsch, keine Marker. Schwachstelle: Doc-
+Drift bei den Kommando-Inventaren.
+
+**Direkte Fixes — „N statt N+1":** `BINDINGS.md` + `BINDINGS.lua` fehlten
+`:Markdown list` + `:Markdown table import`; `doc/markdown.nvim.txt` fehlte
+`:Markdown export` komplett (Liste + TOC 7.6 + eigener Abschnitt);
+`commands/table.lua`-Header listete 4 von 6 Aktionen (`mode`/`tableize`
+fehlten); `architecture.md`-Baum fehlte `commands/image.lua`;
+`usrcmds.lua:239` „11 subcommands" (Liste daneben hat 14).
+
+**Veraltete Verweise:** `architecture.md` + `FEATURES/INTEGRATIONS.md`
+verwiesen auf gelöschtes `bindings/which_key.lua` (Labels laufen jetzt über
+`lib.nvim.bindings.keymap.which_key`); which-key-Sektion nannte 2 von 3
+`<leader>m*`-Gruppen; `BINDINGS.lua:1`-Header bezeichnete sich als
+`BINDINGS.md`; `architecture.md` nannte `BINDINGS.md` „machine-readable"
+(ist `BINDINGS.lua`).
+
+**Kommentar-Trims:** VCS-Archäologie in `commands/init.lua` („Added on main
+after this branch was cut"), `commands/refs.lua`, `core/link_delete.lua`
+(Meta-Satz „the feature core.file_refs's module doc used to say…").
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.**
+`hl_groups/blockquote.lua` `M.setup_autocmds` ist ein bewusster No-op-Shim
+mit aktivem Aufrufer — belassen.
+
 ### Häppchen 43 — casedesk.nvim (Plugin-Repo 26/31, Standalone) — **erledigt**
 
 Commit `fdaa4d8`, gepusht, `pull --ff-only` sauber. Ganzes Repo (43 Lua +
@@ -545,9 +575,8 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Verbleibende Plugin-Repos (5/31 offen):**
-color_my_ascii, documentation, lsp,
-reposcope, sandbox. markdown.nvim (27/31) **läuft gerade**. Plus:
+**Verbleibende Plugin-Repos (5/31 offen):** color_my_ascii, documentation,
+lsp, reposcope, sandbox. Plus zwei separate Aufräum-Punkte: der
 **mdview TypeScript-Client** (eigener Sub-Pass) und der vorbestehende
 casedesk `gen_docs.sh --check`-Fail.
 Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
