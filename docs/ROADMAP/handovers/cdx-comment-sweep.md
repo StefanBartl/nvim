@@ -187,19 +187,65 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–4/8 erledigt, PAUSIERT**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–5/8 erledigt, PAUSIERT — Fortsetzung bei Sub 6**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
-Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. **Sweep
-pausiert nach Sub 4 (User-Ansage) — Fortsetzung bei Sub 5.** Plan:
+Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 1. ✅ `lua/lib/lua/` + Top-Level/@types/config/nvim_usrcmds/strategies
 2. ✅ `lua/lib/nvim/bindings/` (composer)
 3. ✅ `lua/lib/nvim/cross/`
 4. ✅ `lua/lib/nvim/fs/`
-5. `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`  ← **HIER WEITER**
-6. `lua/lib/nvim/ui/` (kit, 20 Dateien)
+5. ✅ `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
+6. `lua/lib/nvim/ui/` (kit, 20 Dateien)  ← **HIER WEITER**
 7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)
 8. `TESTS/` + `doc/` + `docs/`
+
+**Sub-Häppchen 5 — erledigt** (`lua/lib/nvim/buf_win_tab/` + `window/` +
+`buffer/`, Commit `81a8f81`, gepusht, Re-Fetch bestätigt identisch). 46
+Dateien gelesen (~3955 Zeilen), 9 geändert. `window/` und die
+Leaf-Module unter `buf_win_tab/`/`buffer/` (get_option, move_buffer_to_tab,
+normal_buffer, safe_adjacent_buffer, selection, word_under_cursor,
+context-Module) waren bereits sauber — die Arbeit steckt wie in Sub 3/4 fast
+nur in den alten AI-Boilerplate-`@types`-Headern von `buf_win_tab`.
+
+- **Direkte Fixes:** `buf_win_tab/windows_utils.lua` — kontextloser
+  „---FIX: LSP"-Marker → als `--- CDX:` markiert statt stillschweigend zu
+  löschen (unklar, was er meinte). `buffer/get_alternate.lua` — veralteter
+  deutscher Marker „AUDIT: Implementiere in lib" gelöscht (die Funktion liegt
+  bereits in lib.nvim, der Audit-Auftrag ist erledigt). `buffer/@types/init.lua`
+  — ein `return {}` stand mitten in der Datei (vor den
+  `Lib.Buf.InsertLinesPos*`-Klassen) → ans Dateiende verschoben.
+- **Boilerplate gekürzt:** `buf_win_tab/@types/{init,buffer_utils,tabs_utils,
+  windows_utils}.lua` sowie `buf_win_tab/resize_guarded/@types/init.lua` —
+  „Design principles"/„Performance notes"/„Technical Notes"-Blöcke, die nur
+  die Feld-Docs direkt darüber wiederholten; bei `resize_guarded/@types` zudem
+  ein komplettes „Usage Example", das 1:1 im echten `resize_guarded/init.lua`
+  steht.
+- **Toter Code gelöscht:** `buf_win_tab/@types/resize_guarded.lua` — verwaiste
+  Dublette von `buf_win_tab/resize_guarded/@types/init.lua` aus der Zeit vor
+  dem Umzug von `resize_guarded.lua` in ein eigenes Unterverzeichnis; beide
+  definierten exakt dieselbe `Lib.BufWinTab.ResizeGuarded`-Klasse ohne
+  Unterschied.
+- **`--- CDX:` gesetzt (Judgment Calls):** `buf_win_tab/@types/init.lua`
+  (`Lib.BufWinTab`/`Lib.BufWinTab.All`) und `buffer/@types/init.lua`
+  (`Lib.Buffer`/`Lib.Buffer.ALL`) dokumentieren je ein
+  `require("lib.nvim.buf_win_tab")`/`require("lib.nvim.buffer")`-Aggregat­modul,
+  das es zur Laufzeit gar nicht gibt (kein `buf_win_tab/init.lua`, kein
+  `buffer/init.lua` — beide Verzeichnisse bestehen nur aus Einzelmodulen, die
+  über ihren eigenen Require-Pfad genutzt werden). Gleiches Muster wie der
+  bereits in Sub 4 geflaggte `Lib.Modules`-Fund in `lib/@types/init.lua` —
+  belassen bis ein externer-Consumer-Check klärt, ob das je implementiert war.
+- **Keine echten Bugs, kein `@types`-Drift:** anders als in Sub 3/4 keine
+  Signatur-Abweichung zwischen `@types` und echtem `M`-Table gefunden (u. a.
+  `Lib.Window.Context.Stats`/`Lib.Buffer.Context.Stats` gegen ihre
+  `get_stats()`-Implementierung geprüft — passt exakt).
+- **Nichts für WKDBooks:** keine Design-Rationale oder Mechanik-Tutorials in
+  diesem Batch, die die Auslagerungs-Schwelle gerissen hätten.
+
+stylua ok, luacheck 0/0 (2 nicht-`@types`-Dateien betroffen), volle
+`TESTS/run.lua`-Suite `LIB_TESTS_OK` (inkl. `window_spec.lua`/
+`context_spec.lua`, die Module aus diesem Scope direkt testen). Ohne
+Co-Authored-By.
 
 **Sub-Häppchen 4 — erledigt** (`lua/lib/nvim/fs/`, Commit `95e9be5`,
 gepusht, `pull --ff-only` sauber). Größter Teilbaum (52 Dateien gelesen, 13
