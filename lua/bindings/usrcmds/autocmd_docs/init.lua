@@ -47,12 +47,12 @@ local function report(results, dry_run)
   for _, r in ipairs(results) do
     if r.err then
       failed = failed + 1
-      lines[#lines + 1] = ("  %-24s FEHLER: %s"):format(r.plugin, r.err)
+      lines[#lines + 1] = ("  %-24s ERROR: %s"):format(r.plugin, r.err)
     else
       local warn = ""
       if r.unregistered > 0 then
         incomplete = incomplete + 1
-        warn = (" — unvollständig: %d× nvim_create_autocmd direkt"):format(r.unregistered)
+        warn = (" — incomplete: %d× nvim_create_autocmd called directly"):format(r.unregistered)
       end
       lines[#lines + 1] = ("  %-24s %2d autocmds, %d Datei(en)%s"):format(
         r.plugin,
@@ -66,15 +66,15 @@ local function report(results, dry_run)
   table.sort(lines)
   local head = ("%s%d Repo(s)"):format(dry_run and "[dry-run] " or "", #results)
   if failed > 0 then
-    head = head .. (", %d fehlgeschlagen"):format(failed)
+    head = head .. (", %d failed"):format(failed)
   end
   if incomplete > 0 then
-    head = head .. (", %d unvollständig"):format(incomplete)
+    head = head .. (", %d incomplete"):format(incomplete)
   end
 
   table.insert(lines, 1, head)
   if #results == 0 then
-    lines[#lines + 1] = "  Nichts registriert. Sind die Plugins geladen?"
+    lines[#lines + 1] = "  Nothing registered. Are the plugins loaded?"
   end
 
   if failed > 0 then
@@ -115,7 +115,7 @@ function M.enable()
 
     local base = resolve_base_dir(dir)
     if not base then
-      notify.error("Kein Verzeichnis angegeben und $REPOS_DIR ist nicht gesetzt")
+      notify.error("No directory given and $REPOS_DIR is not set")
       return
     end
 
@@ -137,7 +137,7 @@ function M.enable()
       vim.list_extend(out, vim.fn.getcompletion(arg_lead, "dir"))
       return out
     end,
-    desc = "bindings/autocmd für jedes Repo unter dir/$REPOS_DIR schreiben, das diese Session etwas registriert hat",
+    desc = "Write bindings/autocmd for every repo under dir/$REPOS_DIR that this session registered something for",
   })
 end
 
