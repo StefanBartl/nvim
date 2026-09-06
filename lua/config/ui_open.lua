@@ -1,25 +1,15 @@
 ---@module 'config.ui_open'
---- Neovim core's vim.ui.open() on Windows builds
---- `{ "cmd.exe", "/c", "start", "", <path> }` and hands it to `vim.system()`.
---- `vim.system`/libuv only quotes an argv entry that contains whitespace, so a
---- URL with no spaces but an unescaped `&` (any link with 2+ query params,
---- e.g. "...?id=x&number=y") reaches cmd.exe unquoted. cmd.exe re-tokenizes
---- its own command line and treats the bare `&` as a command separator, so
---- only the part before the first `&` actually gets opened -- silently, no
---- error, just a truncated URL (symptom: page loads but "access denied" /
---- wrong content, works fine when pasted directly into the browser).
---- `explorer.exe <url>` hands the target straight to the registered
---- protocol handler without any shell tokenizing in between, so it is
---- immune to this. See share/nvim/runtime/lua/vim/ui.lua:_get_open_cmd().
+--- Works around a Windows bug: core's vim.ui.open() hands URLs to cmd.exe
+--- unquoted when they contain `&` but no whitespace (e.g. "...?id=x&y=z"),
+--- and cmd.exe silently truncates at the bare `&`. `explorer.exe` isn't
+--- affected (no shell tokenizing). Full mechanic + why this used to replace
+--- _get_open_cmd() wholesale (and no longer does -- filesystem paths keep
+--- core's own launcher):
+--- wkdbook-Neovim/nvim-lua-api/LuaModule-vim.ui.md#windows-bug-in-urls-wird-von-cmdexe-abgeschnitten
 ---
---- Scoped to URLs only: this used to replace `_get_open_cmd()` wholesale,
---- which forced `explorer.exe` for *every* target -- including plain
---- filesystem paths, where the cmd.exe `&` problem does not apply and
---- core's own launcher is the maintained, better-tested route (opening a
---- directory via a detached `explorer.exe` proved unreliable, e.g.
---- filetree.nvim's <leader>fm reporting success while no window appeared).
---- Core's `vim.ui.open(path, { cmd = ... })` option lets us swap the
---- launcher per call instead of globally, so paths keep the default.
+--- Scoped to URLs only: core's `vim.ui.open(path, { cmd = ... })` option lets
+--- us swap the launcher per call instead of globally, so plain paths keep
+--- the default.
 
 local env = require("lib.nvim.system.env")
 
