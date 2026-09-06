@@ -137,11 +137,38 @@ Direkt gefixt:
 
 stylua ok, luacheck 0/0 (mit `.luarc`/`.luacheckrc`).
 
+### Häppchen 3 — `lua/bindings/usrcmds/bindings_explorer/` (13 Dateien, ~6000 Z.)
+
+**Status: erledigt** (bis auf `drift.lua`, s.u.). Der Subtree war
+**durchgängig deutsch kommentiert** — vor allem ein Übersetzungs-Job.
+
+- **Alle Code-Kommentare Deutsch → Englisch** in allen 13 Dateien (config,
+  init, live, ui, search, browse, records, plugin_scope, status, report;
+  source/repo/drift waren schon Englisch). −72 Netto-Zeilen.
+- **User-sichtbare Strings bleiben Deutsch** — `:Bindings` gibt bewusst und
+  durchgängig deutsch aus (siehe status.lua/report.lua). `--- CDX:` in
+  `init.lua`: „behalten oder auf Englisch wie der Rest?"
+- **`--- CDX:` in `config.lua`**: `BND-05` hat `docs/NOTES/PersonelPlugins/
+  BINDINGS/` **gelöscht** (verifiziert: Ordner weg), aber `M.roots()` gibt ihn
+  weiter als `roots()[1]` zurück. Der Korpus-Walk ist durch `isdirectory`-
+  Guards harmlos, aber **`:Bindings path personal` kopiert einen toten Pfad**.
+  Funktionaler Entscheid nötig: `roots()` auf Extern-only kürzen?
+- Stale Refs gefixt: gelöschte `docs/ROADMAP/personal/bindings-explorer.nvim.md`
+  → `docs/FEATURES.md` (init, config, browse); `plugin.lua`/`plugin.resolve`
+  → `plugin_scope` (search, browse).
+- Header von init/live/ui/search moderat gekürzt.
+
+stylua --check + luacheck grün (13 Dateien).
+
+**`drift.lua` (2812 Z.) noch offen** — bereits Englisch, keine Chat-Artefakte,
+aber sehr lange Prosa-Blöcke. Eigener Trim-Pass sinnvoll (kein dringender
+Regelverstoß).
+
 ### Danach offen
 
-`lua/bindings/` Rest-Sub-Häppchen: `usrcmds/bindings_explorer/` (~15 Dateien),
-`usrcmds/case/` (~50 Dateien, HandOverCase — der Brocken), `usrcmds/` Rest
-(context_open, plugin_repos, update_repos, who_locks, telemetry, autocmd_docs),
+`lua/bindings/` Rest-Sub-Häppchen: `drift.lua` (Prosa-Trim), `usrcmds/case/`
+(~50 Dateien, HandOverCase — der Brocken), `usrcmds/` Rest (context_open,
+plugin_repos, update_repos, who_locks, telemetry, autocmd_docs),
 `usrcmds/init.lua`.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:

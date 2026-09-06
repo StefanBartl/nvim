@@ -101,15 +101,15 @@ local function sheets()
 
   local plugin_sheets = config.plugin_sheets() or {}
 
-  -- Dieselbe Vorrang-Regel wie in `records.lua`s `each_file`: wo ein Plugin
-  -- seine eigene `docs/BINDINGS.md` mitbringt, ist das alte Cheatsheet die
-  -- Abschrift und wird übergangen. Ohne das stünde jeder Stamm zweimal in
-  -- der Completion und `resolve` bekäme zwei Dateien für einen Namen.
+  -- Same precedence rule as `records.lua`'s `each_file`: where a plugin ships
+  -- its own `docs/BINDINGS.md`, the old cheatsheet is the copy and is skipped.
+  -- Without this every stem would be in completion twice and `resolve` would
+  -- get two files for one name.
   local superseded = {}
   for _, sheet in ipairs(plugin_sheets) do
     superseded[sheet.plugin] = true
-    -- `buffer-ctx.md` heißt als einziges Cheatsheet nicht wie sein Plugin
-    -- (`buffer-ctx.nvim`) -- siehe die gleichlautende Stelle in `records.lua`.
+    -- `buffer-ctx.md` is the one cheatsheet not named like its plugin
+    -- (`buffer-ctx.nvim`) -- see the matching spot in `records.lua`.
     superseded[(sheet.plugin:gsub("%.nvim$", ""))] = true
   end
 
@@ -134,19 +134,18 @@ local function sheets()
     end
   end
 
-  -- Ein Personal-Plugin bringt seine drei Kategorien in **einer** Datei mit
-  -- (`docs/BINDINGS.md`), der Cheatsheet-Korpus in dreien. Damit
-  -- `:Bindings browse keymaps hover.nvim` weiter auflöst, steht das Repo-Sheet
-  -- unter allen drei Kategorien -- mit demselben Pfad.
+  -- A personal plugin brings its three categories in **one** file
+  -- (`docs/BINDINGS.md`), the cheatsheet corpus in three. So that
+  -- `:Bindings browse keymaps hover.nvim` still resolves, the repo sheet is
+  -- listed under all three categories -- with the same path.
   --
-  -- Die Folge, ausgesprochen statt versteckt: `browse` ist davon unberührt,
-  -- weil es über `records.lua` geht und dort jede Zeile ihre eigene, aus dem
-  -- Abschnitt abgeleitete Kategorie trägt. `search` greppt dagegen Dateien,
-  -- und eine kategoriegescopte Suche auf einem Repo-Sheet durchsucht die
-  -- ganze Datei -- ein Treffer aus dem Usercmds-Abschnitt kann bei
-  -- `search keymaps <plugin>` also mitkommen. Das ist eine Ungenauigkeit im
-  -- Volltext, kein falscher Befund: die Zeile steht wirklich in der Doku
-  -- dieses Plugins.
+  -- The consequence, stated rather than hidden: `browse` is unaffected (it
+  -- goes through `records.lua`, where each row carries its own category
+  -- derived from the section). `search` greps files, and a category-scoped
+  -- search on a repo sheet scans the whole file -- a hit from the Usercmds
+  -- section can come along on `search keymaps <plugin>`. That is imprecision
+  -- in the full text, not a wrong finding: the line really is in this
+  -- plugin's docs.
   for _, sheet in ipairs(config.plugin_sheets() or {}) do
     for _, category in ipairs(M.CATEGORIES) do
       out[#out + 1] = {

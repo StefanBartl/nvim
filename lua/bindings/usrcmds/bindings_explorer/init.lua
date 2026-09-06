@@ -1,58 +1,26 @@
 ---@module 'bindings.usrcmds.bindings_explorer'
---- `:Bindings` — Picker über die BINDINGS-Cheatsheets (docs/NOTES/
---- PersonelPlugins/BINDINGS + docs/NOTES/ExternPlugins/Bindings). Doku:
---- docs/FEATURES.md (dieses Moduls), `:help bindings_explorer`. Der
---- ursprüngliche Konzept-Entwurf unter docs/ROADMAP/personal/
---- bindings-explorer.nvim.md wurde beim Aufräumen der Roadmap gelöscht
---- (Feature ist längst umgesetzt) — docs/FEATURES.md ist die aktuelle
---- Quelle, nicht dieser Pfad.
+--- `:Bindings` — the composer verb + route table over the BINDINGS corpus
+--- (extern cheatsheets under docs/NOTES/ExternPlugins/Bindings + each personal
+--- plugin's / this config's own `docs/BINDINGS.md`). Full feature docs:
+--- `docs/FEATURES.md` in this module, `:help bindings_explorer`.
 ---
---- Phase 1 (diese Datei): `:Bindings search [query]`, Live-Grep-in-Picker
---- über `pickers.nvim`s Engine-Schicht (`live.lua`), mit einer statischen
---- Prompt+Liste-Suche als Fallback ohne Engine (`search.lua`/`ui.lua`).
---- `:Bindings search keymaps|usercmds|autocmds [query]` scopen dieselbe
---- Suche auf eine der drei Unterkategorien statt aller drei.
---- `:Bindings path [personal|extern]` kopiert die BINDINGS-Wurzel(n) in die
---- Zwischenablage. Es hat am 2026-09-04 das ältere `:BindingsPath`
---- (`lua/bindings/usrcmds/init.lua`) abgelöst, das einen einzelnen, nie
---- existierenden `docs/NOTES/BINDINGS`-Pfad kopierte; `<leader>BI` läuft
---- seither hierher.
+--- Routes and the file that implements each:
+---   search  [cat] [plugin] [query]  live-grep picker (live.lua), static
+---                                   prompt+list fallback (search.lua/ui.lua)
+---   browse  [cat] [scope] [plugin]  picker over parsed table rows (records.lua
+---                                   scraper + browse.lua)
+---   check   [plugin] [repo]         drift report vs nvim_get_keymap/_commands
+---                                   (drift.lua; +repo.lua for the checkout axis)
+---   report  [...] [out=<path>]      same drift run, written to Markdown
+---   status                          one-screen corpus/live/plugin dashboard
+---   path    [personal|extern]       copy the corpus root(s) to the clipboard
 ---
---- Phase 2 (diese Datei + `records.lua`/`browse.lua`): `:Bindings browse
---- [keymaps|usercmds|autocmds] [personal|extern]` — Picker über geparste
---- Tabellenzeilen statt Volltext, siehe `records.lua`s Scraper.
+--- A cheatsheet stem may stand in any `[plugin]` slot as a scope (see
+--- `plugin_scope.lua`); `search` only treats a token as a scope when it names
+--- a sheet outright, since that slot also holds the query.
 ---
---- Phase 3 (diese Datei + `drift.lua`): `:Bindings check [plugin]` —
---- Drift-Bericht (dokumentiert-aber-nicht-live / live-aber-undokumentiert)
---- gegen `nvim_get_keymap`/`nvim_get_commands`, siehe `drift.lua`s
---- Moduldoc für den genauen (bewusst eingeschränkten) Scope.
---- `:Bindings check repo [plugin]` bzw. `:Bindings check <plugin> repo`
---- schaltet zusätzlich die Checkout-Achse zu (`repo.lua`): dokumentierte
---- Bindings von Plugins, die diese Session nie geladen hat und die die
---- Live-Achse deshalb nur als „skipped" durchwinkt, werden im lokalen
---- Quellbaum des Plugins gesucht. Opt-in, weil sie als einzige Achse von
---- der Platte liest statt eine laufende Session zu befragen.
----
---- Plugin-Scope (diese Datei + `plugin_scope.lua`): überall dort, wo eine Route
---- über den Korpus geht, darf ein Cheatsheet-Stamm als Scope stehen —
---- `:Bindings search keymaps hover.nvim` durchsucht nur hover.nvims
---- Keymaps-Sheet, `:Bindings browse usercmds gitsigns` nur dessen
---- Tabellenzeilen. Bei `search` teilt sich der Scope den Platz mit der Query
---- (`:Bindings search keymaps redact` war und bleibt eine Textsuche), deshalb
---- zählt dort nur ein Token als Scope, das ein Sheet wirklich benennt; die
---- Präfix-Auflösung (`doc` → `documentation.nvim`) gibt es nur in der
---- ausgeschriebenen Form `plugin=doc`. Die volle Begründung steht in
---- `plugin_scope.lua`s Moduldoc. `check`/`report` hatten ihr Plugin-Argument von
---- Anfang an; neu ist auch dort nur, dass es nicht mehr exakt getippt sein
---- muss.
----
---- Phase 4 (diese Datei + `status.lua`/`report.lua`): `:Bindings status` —
---- eine Seite Korpus-, Live- und Plugin-Zahlen plus die Routenliste, nach dem
---- Vorbild von `:Reposcope status`; und `:Bindings report [...]
---- [out=<pfad>]` — derselbe Drift-Lauf wie `check`, als Markdown-Datei statt
---- als Viewer. Beide entstanden aus dem Driftreport vom 2026-09-02: der
---- wurde von Hand aus einem headless-Lauf zusammengesetzt, und `report`
---- macht genau diesen Teil.
+--- CDX: every user-facing string of `:Bindings` is deliberately German (see
+--- status.lua / report.lua). Keep, or switch to English like the rest?
 
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -64,29 +32,27 @@ local drift = require("bindings.usrcmds.bindings_explorer.drift")
 local status = require("bindings.usrcmds.bindings_explorer.status")
 local plugin_scope = require("bindings.usrcmds.bindings_explorer.plugin_scope")
 
---- Der Argumenttyp der Plugin-Scope-Slots. Eigener Name statt `STRING`, weil
---- `<Tab>` dort die Cheatsheet-Stämme der bereits getippten Kategorie anbieten
---- soll (`plugin_scope.argtype`); das Typregister des Composers ist
---- prozessweit, daher der Präfix — dieselbe Konvention wie `GH_REPO`,
---- `IMAGE_TARGET` und die anderen Plugin-Typen dieser Config.
+--- Argument type of the plugin-scope slots. Own name, not `STRING`, so `<Tab>`
+--- can offer the typed category's cheatsheet stems (`plugin_scope.argtype`);
+--- the composer's type register is process-wide, hence the prefix — same
+--- convention as `GH_REPO`, `IMAGE_TARGET` and this config's other plugin types.
 local PLUGIN_ARG = "BINDINGS_PLUGIN"
 
---- Die zwei Korpus-Hälften, als Positionswert von `browse` erlaubt. Bewusst
---- kein `enum` auf dem Slot: dort steht wahlweise dieser Wert ODER ein
---- Plugin-Stamm, und ein `enum` würde jeden Stamm als Tippfehler abweisen,
---- bevor der Handler ihn überhaupt sieht.
+--- The two corpus halves, allowed as a `browse` positional. Deliberately no
+--- `enum` on the slot: it holds this value OR a plugin stem, and an `enum`
+--- would reject every stem as a typo before the handler sees it.
 local SCOPE_VALUES = { "personal", "extern" }
 
 local M = {}
 
----@return table notify-Handle aus lib.nvim
+---@return table lib.nvim notify handle
 local function notify()
   return require("lib.nvim.notify").create("[bindings]")
 end
 
---- Suche über `roots` ausführen. Versucht zuerst Live-Grep (`live.lua`);
---- nur ohne verfügbare Picker-Engine fällt es auf die statische
---- Prompt+Liste-Suche zurück (mit `kit.input`, wenn `query` fehlt).
+--- Run a search over `roots`. Tries live-grep first (`live.lua`); only with
+--- no picker engine does it fall back to the static prompt+list search (with
+--- `kit.input` when `query` is missing).
 ---@param roots string[]
 ---@param query string|nil
 ---@param prompt string
@@ -113,30 +79,29 @@ local function search_scoped(roots, query, prompt)
 end
 
 ---@class Bindings.Selection
----@field plugin Bindings.PluginMatch|nil aufgelöster Plugin-Scope
----@field query string|nil Suchtext (nur `search`)
----@field scope ("personal"|"extern")|nil Korpus-Hälfte (nur `browse`)
+---@field plugin Bindings.PluginMatch|nil resolved plugin scope
+---@field query string|nil search text (`search` only)
+---@field scope ("personal"|"extern")|nil corpus half (`browse` only)
 
---- Den Plugin-Scope einer `search`-Route aus ihren zwei Positionswerten und
---- dem optionalen `plugin=` lesen.
+--- Read a `search` route's plugin scope from its two positionals + optional
+--- `plugin=`.
 ---
---- Der erste Positionswert trägt Scope ODER Query, deshalb entscheidet nicht
---- die Stellung, sondern ob das Token ein Sheet benennt: `hover.nvim` ist ein
---- Scope, `redact` ist eine Query, und `hover.nvim redact` wie
---- `redact hover.nvim` heißen beide „redact, im Scope hover.nvim". Zwei
---- Tokens, von denen keines ein Sheet benennt, sind dagegen ein Tippfehler und
---- keine zweiwortige Query — gesucht wird mit einem Muster, nicht mit zweien.
----@param ctx table Composer-Ctx
+--- The first positional carries scope OR query, so position doesn't decide it
+--- — whether the token names a sheet does: `hover.nvim` is a scope, `redact`
+--- is a query, and `hover.nvim redact` / `redact hover.nvim` both mean "redact,
+--- scoped to hover.nvim". Two tokens where neither names a sheet is a typo,
+--- not a two-word query — search takes one pattern, not two.
+---@param ctx table composer ctx
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@return Bindings.Selection|nil sel
----@return string|nil err fertige Meldung für `notify`
+---@return string|nil err ready-to-show `notify` message
 local function search_selection(ctx, category)
   local opts = { category = category }
   local a, b = ctx.args.plugin, ctx.args.query
   local explicit = ctx.kv and ctx.kv.plugin or nil
 
-  -- `plugin=` ist die ausgeschriebene Form: sie darf per Präfix auflösen, und
-  -- der Positionswert ist dann eindeutig die Query.
+  -- `plugin=` is the spelled-out form: it may prefix-resolve, and the
+  -- positional is then unambiguously the query.
   if explicit then
     local match, err = plugin_scope.resolve(explicit, { category = category, fuzzy = true })
     if not match then
@@ -166,14 +131,13 @@ local function search_selection(ctx, category)
   return nil, plugin_scope.unknown_message(a, opts)
 end
 
---- Dasselbe für `browse`, wo derselbe Slot Plugin ODER Korpushälfte trägt.
+--- Same for `browse`, where the slot carries plugin OR corpus half.
 ---
---- Hier gibt es keine Query, mit der ein Token verwechselt werden könnte,
---- deshalb löst dieser Slot auch per Präfix auf (`doc` → `documentation.nvim`)
---- und meldet ein unbekanntes Token als Fehler statt es stillschweigend
---- anders zu deuten. Die Reihenfolge ist frei: `keymaps hover.nvim personal`
---- und `keymaps personal hover.nvim` sind dasselbe.
----@param ctx table Composer-Ctx
+--- No query here for a token to be confused with, so this slot also
+--- prefix-resolves (`doc` → `documentation.nvim`) and reports an unknown token
+--- as an error rather than silently reading it another way. Order is free:
+--- `keymaps hover.nvim personal` and `keymaps personal hover.nvim` are the same.
+---@param ctx table composer ctx
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@return Bindings.Selection|nil sel
 ---@return string|nil err
@@ -208,18 +172,17 @@ local function browse_selection(ctx, category)
   return sel
 end
 
---- Ein `check`/`report`-Plugin-Token auf GENAU einen Cheatsheet-Stamm bringen.
+--- Reduce a `check`/`report` plugin token to EXACTLY one cheatsheet stem.
 ---
---- Beide Achsen filtern über `rec.plugin == plugin` (siehe `drift.check`),
---- verarbeiten also genau einen Stamm; ein Token, das zwei Sheets benennt
---- (`dap` → `dap.nvim` und `Dap`), wird deshalb zurückgewiesen statt still auf
---- eines von beiden verengt zu werden. Ein exakt getippter Stamm gewinnt
---- dabei gegen seinen normalisierten Zwilling — sonst wäre `:Bindings check
---- Dap` mehrdeutig, obwohl es eine Datei genau so benennt.
+--- Both axes filter on `rec.plugin == plugin` (see `drift.check`), i.e. one
+--- stem; a token naming two sheets (`dap` → `dap.nvim` and `Dap`) is rejected
+--- rather than silently narrowed to one. An exactly-typed stem wins over its
+--- normalized twin — else `:Bindings check Dap` would be ambiguous even though
+--- a file is named that.
 ---
---- Ein Token, das gar nichts benennt, geht unverändert durch wie vor dem
---- Plugin-Scope, nur mit einer Warnung: der Bericht bleibt leer, und das ist
---- ohne Hinweis nicht von „nichts gefunden" zu unterscheiden.
+--- A token naming nothing passes through unchanged (as before plugin scope),
+--- just with a warning: the report stays empty, and without a hint that is
+--- indistinguishable from "found nothing".
 ---@param token string|nil
 ---@return string|nil stem
 ---@return string|nil err
@@ -246,22 +209,20 @@ local function single_stem(token)
     )
 end
 
---- Suche über den Korpus, optional auf eine Kategorie und/oder ein Plugin
---- gescopt.
+--- Search the corpus, optionally scoped to a category and/or a plugin.
 ---
---- Der Plugin-Scope ersetzt die Wurzeln durch die Dateien des Plugins statt
---- zusätzlich zu filtern — beide Backends nehmen an derselben Stelle Dateien
---- wie Verzeichnisse (`live.lua` reicht sie an ripgrep durch, `search.lua`
---- liest sie direkt), also ist die gescopte Suche dieselbe Suche über weniger
---- Pfade.
+--- The plugin scope replaces the roots with the plugin's files rather than
+--- filtering on top — both backends take files and directories in the same
+--- position (`live.lua` passes them to ripgrep, `search.lua` reads them
+--- directly), so a scoped search is the same search over fewer paths.
 ---
---- **Ohne Plugin-Scope geht die Dateiliste durch `plugin_scope.all_files`,
---- nicht durch `config.roots()`.** Die zwei physischen Bäume allein sind seit
---- `BND-04` nicht mehr der ganze Korpus — jedes Personal-Plugin bringt seine
---- drei Kategorien jetzt aus seiner eigenen `docs/BINDINGS.md` mit, und
---- `config.roots()` sieht die nicht. Ein Plugin-Scope ist davon unberührt,
---- weil `plugin_scope.resolve` dieselbe dritte Quelle bereits seit jeher liest.
----@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = der ganze Korpus
+--- Without a plugin scope the file list goes through `plugin_scope.all_files`,
+--- not `config.roots()`: since `BND-04` the two physical trees alone are no
+--- longer the whole corpus — each personal plugin brings its three categories
+--- from its own `docs/BINDINGS.md`, which `config.roots()` does not see. A
+--- plugin scope is unaffected, because `plugin_scope.resolve` has always read
+--- that third source.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = the whole corpus
 ---@param sel Bindings.Selection|nil
 ---@return nil
 function M.search(category, sel)
@@ -284,8 +245,8 @@ function M.search(category, sel)
   search_scoped(roots, sel.query, prompt)
 end
 
---- BINDINGS-Wurzel(n) in die Zwischenablage kopieren.
----@param scope "personal"|"extern"|nil nil = beide, newline-getrennt
+--- Copy the BINDINGS root(s) to the clipboard.
+---@param scope "personal"|"extern"|nil nil = both, newline-separated
 ---@return nil
 function M.path(scope)
   local roots = config.roots()
@@ -301,8 +262,8 @@ function M.path(scope)
   notify().info("Pfad(e) kopiert: " .. text)
 end
 
---- Picker über geparste Tabellenzeilen (`records.lua`) statt Volltext.
----@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = alle drei
+--- Picker over parsed table rows (`records.lua`) instead of full text.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = all three
 ---@param sel Bindings.Selection|nil
 ---@return nil
 function M.browse(category, sel)
@@ -310,16 +271,16 @@ function M.browse(category, sel)
   browse.open(category, sel.scope, sel.plugin)
 end
 
---- Drift-Bericht (`drift.lua`) in einem read-only Viewer anzeigen.
----@param plugin string|nil Cheatsheet-Stamm; muss seit dem Plugin-Scope nicht
----mehr exakt getippt sein (`hover` → `hover.nvim`, siehe `single_stem`).
+--- Show the drift report (`drift.lua`) in a read-only viewer.
+---@param plugin string|nil cheatsheet stem; since plugin scope it need not be
+---typed exactly (`hover` → `hover.nvim`, see `single_stem`).
 ---@param opts { repo?: boolean, repo_root?: string, scope?: "personal"|"extern"|"all" }|nil
----`repo` schaltet die Checkout-Achse zu (siehe `drift.lua`s Moduldoc, "The
----repo axis") — bewusst opt-in, weil sie als einzige Achse ~20 Repos von der
----Platte liest statt eine laufende Session zu befragen. `repo_root` richtet
----dieselbe Achse auf ein Sammelverzeichnis mit mehreren Lua-Projekten statt
----auf die Lazy-Spec-Auflösung und impliziert `repo`. `scope` trennt eigene
----von fremden Live-Commands, Default `"personal"` — siehe `drift.check`.
+---`repo` adds the checkout axis (see `drift.lua`'s module doc, "The repo
+---axis") — opt-in, since it is the one axis that reads ~20 repos off disk
+---instead of querying a running session. `repo_root` aims that axis at a
+---collection dir of several Lua projects instead of the lazy-spec resolution
+---and implies `repo`. `scope` splits own vs third-party live commands,
+---default `"personal"` — see `drift.check`.
 ---@return nil
 function M.check(plugin, opts)
   local stem, stem_err = single_stem(plugin)
@@ -330,9 +291,9 @@ function M.check(plugin, opts)
 
   local findings, skipped, source_reason, repo_info, scope_info, autocmd_info =
     drift.check(stem, opts)
-  -- Der Scope steht im Titel, nicht nur im Bericht: der Unterschied
-  -- zwischen 53 und 107 Befunden ist sonst nicht erklärbar, ohne bis zur
-  -- Scope-Notiz zu scrollen.
+  -- The scope goes in the title, not just the report: the difference between
+  -- 53 and 107 findings is otherwise unexplained without scrolling to the
+  -- scope note.
   local label = (scope_info and scope_info.scope ~= "personal")
       and (" [" .. scope_info.scope .. "]")
     or ""
@@ -342,12 +303,11 @@ function M.check(plugin, opts)
   })
 end
 
---- Denselben Bericht als Markdown-Datei schreiben (`report.lua`).
+--- Write the same report as a Markdown file (`report.lua`).
 ---@param plugin string|nil
 ---@param opts { repo?: boolean, repo_root?: string, out?: string, scope?: "personal"|"extern"|"all" }|nil
----`out` darf ein Verzeichnis oder ein Dateiname sein; ohne `out` landet der
----Bericht als `BINDINGS-DRIFT-<datum>.md` in `config.report_dir()`. `scope`
----wie bei `M.check`.
+---`out` may be a directory or a filename; without `out` the report lands as
+---`BINDINGS-DRIFT-<date>.md` in `config.report_dir()`. `scope` as in `M.check`.
 ---@return nil
 function M.report(plugin, opts)
   opts = opts or {}
@@ -377,10 +337,10 @@ function M.status()
   status.open()
 end
 
---- Eine `search`-Route. Die vier unterscheiden sich nur in Pfad, Kategorie
---- und Beschreibung — das Argument-Schema (Plugin-Scope, Query, `plugin=`)
---- ist bei allen dasselbe, und eine Kopie davon je Route wäre vier Stellen,
---- an denen ein späterer Slot fehlen kann.
+--- One `search` route. The four differ only in path, category and
+--- description — the argument schema (plugin scope, query, `plugin=`) is the
+--- same for all, and a copy per route would be four places a later slot can
+--- go missing.
 ---@param path string[]
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@param desc string
@@ -405,10 +365,9 @@ local function search_route(path, category, desc)
   }
 end
 
---- Eine `browse`-Route, nach demselben Muster. Beide Positionswerte tragen
---- denselben Typ und dieselben `values`, weil beide wahlweise den
---- Plugin-Scope oder die Korpushälfte aufnehmen — `<Tab>` bietet damit in
---- jeder der zwei Stellungen das an, was dort erlaubt ist.
+--- One `browse` route, same pattern. Both positionals carry the same type and
+--- the same `values`, because both take either the plugin scope or the corpus
+--- half — so `<Tab>` offers what is allowed in each of the two positions.
 ---@param path string[]
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@param desc string
@@ -435,9 +394,9 @@ end
 
 ---@return nil
 function M.enable()
-  -- Vor `composer.verb`, damit die Routen unten den Typ schon referenzieren
-  -- dürfen: `argtypes.get` fällt für einen unbekannten Namen still auf STRING
-  -- zurück, und der Slot hätte dann eine Completion ohne Cheatsheet-Stämme.
+  -- Before `composer.verb`, so the routes below may reference the type:
+  -- `argtypes.get` falls back silently to STRING for an unknown name, and the
+  -- slot would then have completion without cheatsheet stems.
   composer.register_type(PLUGIN_ARG, plugin_scope.argtype())
 
   composer.verb("Bindings", {
@@ -502,12 +461,11 @@ function M.enable()
           { name = "plugin", type = PLUGIN_ARG, optional = true },
           { name = "axis", type = "STRING", enum = { "repo", "extern", "all" }, optional = true },
         },
-        -- `root=` als kv, nicht als dritter Positionswert: ein Pfad und ein
-        -- Plugin-Name sind beide freie Strings, und der Composer bindet
-        -- Positionen der Reihe nach — `:Bindings check C:/repos` würde den
-        -- Pfad still als Plugin-Namen binden. Mit dem Schlüssel davor ist die
-        -- Zuordnung unabhängig von der Stellung, und `<Tab>` nach `root=`
-        -- vervollständigt Verzeichnisse (`type = "DIR"`).
+        -- `root=` as kv, not a third positional: a path and a plugin name are
+        -- both free strings, and the composer binds positionals in order —
+        -- `:Bindings check C:/repos` would silently bind the path as the plugin
+        -- name. With the key in front the mapping is position-independent, and
+        -- `<Tab>` after `root=` completes directories (`type = "DIR"`).
         kv = { { key = "root", type = "DIR" } },
         desc = "Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only)",
         run = function(ctx)
@@ -518,11 +476,11 @@ function M.enable()
           })
         end,
       },
-      -- Dieselbe Achse ohne Plugin-Argument. Nötig als eigene Route, nicht
-      -- als bloßer zweiter Positionswert: `:Bindings check repo` würde sonst
-      -- „repo" als Plugin-Namen binden und stillschweigend einen leeren
-      -- Bericht liefern. Als literales Kind von `check` gewinnt der
-      -- Baum-Walk (siehe composer `tree.walk`), und `<Tab>` schlägt es vor.
+      -- The same axis without a plugin argument. Needed as its own route, not
+      -- a mere second positional: `:Bindings check repo` would otherwise bind
+      -- "repo" as the plugin name and silently return an empty report. As a
+      -- literal child of `check` the tree walk wins (see composer `tree.walk`),
+      -- and `<Tab>` suggests it.
       {
         path = { "check", "repo" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
@@ -532,9 +490,9 @@ function M.enable()
           M.check(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root })
         end,
       },
-      -- `extern`/`all` brauchen dieselbe literale Kind-Route wie `repo`, und
-      -- aus demselben Grund: `:Bindings check extern` bände „extern" sonst
-      -- als Plugin-Namen und lieferte still einen leeren Bericht.
+      -- `extern`/`all` need the same literal child route as `repo`, for the
+      -- same reason: `:Bindings check extern` would otherwise bind "extern" as
+      -- the plugin name and silently return an empty report.
       {
         path = { "check", "extern" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
@@ -553,11 +511,11 @@ function M.enable()
           M.check(ctx.args.plugin, { repo_root = ctx.kv.root, scope = "all" })
         end,
       },
-      -- `report` spiegelt `check` inklusive der zweiten Route für `repo`,
-      -- aus demselben Grund: ohne literales Kind bände `:Bindings report
-      -- repo` „repo" als Plugin-Namen. `out` ist `PATH`, nicht `FILE` —
-      -- `FILE` verlangt eine lesbare Datei, und eine Ausgabedatei gibt es
-      -- vor dem Lauf per Definition noch nicht.
+      -- `report` mirrors `check` including the second route for `repo`, for
+      -- the same reason: without a literal child, `:Bindings report repo` would
+      -- bind "repo" as the plugin name. `out` is `PATH`, not `FILE` — `FILE`
+      -- wants a readable file, and an output file does not exist yet by
+      -- definition before the run.
       {
         path = { "report" },
         args = {

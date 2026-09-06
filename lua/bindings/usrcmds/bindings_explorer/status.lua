@@ -15,8 +15,8 @@
 --- past what a `desc` string shows in completion, and this is the `?`-style
 --- cheatsheet the roadmap point asked for.
 ---
---- Output language is German, like every other user-visible string of
---- `:Bindings`.
+--- User-facing output is German, deliberately and consistently across every
+--- string of `:Bindings` (see the CDX note in init.lua).
 
 local collect_recursive = require("lib.nvim.fs.collect_recursive")
 local config = require("bindings.usrcmds.bindings_explorer.config")
@@ -33,7 +33,7 @@ local MODES = { "n", "i", "v", "x", "s", "o", "t", "c" }
 ---@param root string
 ---@param category string
 ---@return integer
----@param skip table<string, boolean>|nil Dateistämme, die nicht mitzählen
+---@param skip table<string, boolean>|nil file stems that don't count
 local function md_count(root, category, skip)
   local dir = vim.fs.joinpath(root, category)
   if vim.fn.isdirectory(dir) ~= 1 then
@@ -54,13 +54,12 @@ end
 --- number of documented bindings.
 ---@return table
 local function corpus()
-  -- Seit 2026-09-04 hat der Korpus drei Herkünfte, nicht zwei: die beiden
-  -- Cheatsheet-Wurzeln und die `docs/BINDINGS.md` der Personal-Plugins
-  -- selbst. Nach `rec.scope` zu zählen reichte, solange „Personal" genau
-  -- eine Wurzel meinte -- ein Repo-Sheet trägt denselben Scope und wäre
-  -- stillschweigend zum Cheatsheet-Block addiert worden. Dann stünde in der
-  -- Ausgabe eine Zeilenzahl neben einer Dateizahl, die sie nicht erzeugt
-  -- hat. Deshalb entscheidet hier der Pfad, nicht das Feld.
+  -- Since 2026-09-04 the corpus has three origins, not two: the two cheatsheet
+  -- roots and the personal plugins' own `docs/BINDINGS.md`. Counting by
+  -- `rec.scope` worked while "Personal" meant exactly one root -- a repo sheet
+  -- carries the same scope and would be silently added to the cheatsheet
+  -- block, putting a row count next to a file count that didn't produce it.
+  -- So the path decides here, not the field.
   local sheets = config.plugin_sheets() or {}
   local is_plugin_sheet, superseded = {}, {}
   for _, sheet in ipairs(sheets) do
@@ -87,9 +86,8 @@ local function corpus()
     for _, cat in ipairs(CATEGORIES) do
       cats[#cats + 1] = {
         name = cat,
-        -- Nur die Personal-Wurzel hat abgelöste Sheets; die Extern-Wurzel
-        -- dokumentiert fremde Plugins, die keine eigene `docs/BINDINGS.md`
-        -- mitbringen.
+        -- Only the Personal root has superseded sheets; the Extern root
+        -- documents third-party plugins that ship no `docs/BINDINGS.md`.
         files = md_count(root, cat, idx == 1 and superseded or nil),
         rows = rows[scope .. "/" .. cat] or 0,
       }
@@ -102,8 +100,8 @@ local function corpus()
     for _, cat in ipairs(CATEGORIES) do
       cats[#cats + 1] = {
         name = cat,
-        -- Dieselbe Datei trägt alle drei Kategorien, deshalb steht die
-        -- Sheet-Zahl in jeder Zeile -- sie zu dritteln wäre erfunden.
+        -- The same file carries all three categories, so the sheet count is on
+        -- every row -- thirding it would be made up.
         files = #sheets,
         rows = rows["Plugin/" .. cat] or 0,
       }
