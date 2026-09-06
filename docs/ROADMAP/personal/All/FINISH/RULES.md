@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 20/32 Repos gelesen, 10 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 23/32 Repos gelesen, 13 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,7 +316,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 20/32)
+### Ergebnis je Repo (Stand dieser Sitzung, 23/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -340,6 +340,9 @@ verändert).
 | **language.nvim** | **`spell/core/actions.lua`s `replace_at()` schrieb eine Ersetzung an eine ungeprüfte Byte-Range** — der Vorschlags-Picker öffnet async, jede Buffer-Änderung in der Zwischenzeit (anderes Fenster, Undo, ein LSP-Fix) lässt `(lnum, col, end_col)` auf inzwischen anderen Text zeigen; `nvim_buf_set_text` überschrieb dann lautlos, was jetzt dort stand, statt des beabsichtigten Worts | **ERR-30** | [`f3ee2d6`](https://github.com/StefanBartl/language.nvim/commit/f3ee2d6) |
 | **lib.nvim** | **`fs.collect_recursive` folgte Symlinks in rekursiven Walks** — `walk`/`walk_async` fielen bei fehlendem/`"link"`-`kind_hint` auf `fs_stat` zurück, das Symlinks auflöst statt sie zu erkennen; ein Symlink-Zyklus (`dir/sub/loop -> dir`) rekursiert ohne echte Abbruchbedingung — reproduziert mit echtem Symlink, 192 Einträge vor Windows' Pfadlängen-Limit. **Fleet-weite Wirkung**: filetree.nvims `util/fs.lua`/`refs/scan.lua` delegieren direkt hierher (verifiziert per Grep über alle Repos) | **ERR-34** | [`37b2af8`](https://github.com/StefanBartl/lib.nvim/commit/37b2af8) |
 | **lsp.nvim** | **„Organize imports on save" (Java, Astro) lief async in `BufWritePre`** — `vim.lsp.buf.code_action({apply=true})` feuert den Request nur und kehrt sofort zurück, `BufWritePre` (und damit das eigentliche Schreiben) ist längst durch, bevor die Server-Antwort samt Edit ankommt; das Feature organisierte Imports faktisch immer einen Save zu spät, gegen den Buffer-Zustand von *nach* dem Schreiben. TypeScript hatte dafür schon eine synchrone Handumbau-Lösung (`lsp.buf_request_sync`) mit warnendem Docstring — Java/Astro hatten sie nie bekommen | **ERR-30/44** | [`847da5b`](https://github.com/StefanBartl/lsp.nvim/commit/847da5b) |
+| **markdown.nvim** | **`rg_files()` kollabierte jeden `rg`-Exitcode >1 (verschwundene Wurzel, Permission Denied, Prozess killed) auf dieselbe leere Liste wie ein echtes „keine Treffer"** — `find_references`/`find_references_async` meldeten im `core.link_delete`-Bestätigungsdialog „0 andere Links zeigen darauf", obwohl die Suche fehlgeschlagen war, nicht ergebnislos — eine Datei konnte so unter noch bestehenden Links weggelöscht werden, die der Scan nie zu sehen bekam | **ERR-11-Familie** (fehlgeschlagen vs. leer kollabiert) | [`ebbdbf4`](https://github.com/StefanBartl/markdown.nvim/commit/ebbdbf4) |
+| **mdview.nvim** | **`resync()`s async Callback (`browser.behavior = "reuse"`) griff nach `ws_client.wait_ready` (bis 15s, während ein frisch gebauter Relay-Binary vom Virenscanner geprüft wird) mit `nvim_buf_get_lines` auf einen zwischenzeitlich per `:bwipeout` ungültig gewordenen Buffer zu** — warf „Invalid buffer id" statt den veralteten Push still zu überspringen | **ERR-33** | [`2d9abd6`](https://github.com/StefanBartl/mdview.nvim/commit/2d9abd6) |
+| **open.nvim** | **`context.resolve()`s Keyword-Lookup `type(kw)=="function" and kw() or expand_path(tostring(kw))`** — die klassische `and/or`-Falle: liefert die Resolver-Funktion legitim `nil` (z. B. `pwsh_profile`, wenn weder `pwsh` noch `powershell` im PATH steht), fällt der ganze Ausdruck in den `or`-Zweig und `expand_path()`t den **stringifizierten Funktionswert** (`"function: 0x7f..."`) statt des Ergebnisses — `:Open` versuchte danach, einen Fantasie-Pfad zu öffnen | **ERR-60** | [`a51c858`](https://github.com/StefanBartl/open.nvim/commit/a51c858) |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -409,12 +412,13 @@ stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwer
 immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
 mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-### Noch offen (12/32 Repos ungelesen für ERR-*)
+### Noch offen (9/32 Repos ungelesen für ERR-*)
 
 pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
-runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim — plus
-markdown.nvim, mdview.nvim, open.nvim (Agent-Runde 4, zum Zeitpunkt dieses
-Updates noch nicht zurück).
+runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim.
+
+(Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
+oben eingetragen: 3/3 mit echtem Fund.)
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
 read-or-stub-vor-write) müssen für diese Repos **nicht wiederholt** werden —
