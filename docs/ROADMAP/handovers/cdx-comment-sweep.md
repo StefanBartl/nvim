@@ -816,6 +816,81 @@ stylua ok, luacheck 0/0.
 
 Commit: nvim-config `<pending>`. Ohne Co-Authored-By.
 
+### Häppchen 18 — recommender.nvim (Plugin-Repo 1/31)
+
+**Status: erledigt.** Erstes Plugin-Repo. ~3100 Z. Lua, 32 Dateien, eigenes
+`main` / Remote `StefanBartl/recommender.nvim`. Das Repo war bereits fast
+durchgehend auf Sweep-Qualität — durchweg Englisch (kein einziges deutsches
+Wort im ganzen `lua/`-Baum), Header mit echter ortsrelevanter Rationale,
+keine AI-Boilerplate-Blöcke, keine Chat-Artefakte. `health.lua` war schon in
+`e9a9177` gesweept, nicht erneut angefasst.
+
+**Geänderte Dateien (8):** `lua/recommender/@types.lua`,
+`lua/recommender/float/keymaps.lua`, `lua/recommender/float/autocmds.lua`,
+`lua/recommender/project.lua`, `lua/recommender/util/lib.lua`,
+`docs/architecture.md`, `docs/FEATURES.md`, `doc/recommender.txt`.
+
+**Bereits sauber, 0 Änderungen:** `init.lua`, `config/init.lua`,
+`config/DEFAULTS.lua`, `bindings/{init,keymaps,usrcmds,autocmds}.lua`, alle 5
+`analyzers/*.lua`, `blacklist.lua`, `custom_aliases.lua`,
+`float/rendering.lua`, `util/{notify,progress}.lua`, `health.lua`, beide
+`plugin/*.lua`, alle `TESTS/*`.
+
+**`--- CDX:` gesetzt (Urteilssache, nicht gefixt):**
+- `float/keymaps.lua:91` — `state._pending_insert` wird gesetzt (und an 2
+  Stellen auf `nil` geräumt), aber **nirgends im Repo gelesen**. Tote State
+  von einem früheren Insert-Pfad; Replace-Mode-Insertion läuft heute über den
+  `WinClosed`-Hook in `float/autocmds.lua`. Existiert seit dem Initial-Commit
+  ohne je einen Reader gehabt zu haben.
+- `float/autocmds.lua` (`register_replace_finish`) — die „Replace fertig"-
+  Erkennung ist hart auf `filetype == "TelescopePrompt"` verdrahtet.
+  replacer.nvim hat inzwischen **auch ein fzf-Picker-Backend**
+  (`lua/replacer/pickers/fzf.lua`); mit dem feuert der `WinClosed` nie und
+  die Replace-Mode-Insertion tut still nichts. **Nebenfund:** `docs/WORKFLOW.md`
+  §88-89 dokumentiert diese Telescope-only-Limitierung bereits — `docs/commands.md:130`
+  („No polling, no timers, no race conditions") und `docs/FEATURES.md:161` nicht.
+- `@types.lua:42` — `Recommender.Suggestion` ist **nirgends referenziert**;
+  jeder Analyzer und beide `float/`-Module schreiben die Form inline als
+  `{chain:string, count:integer, alias:string}[]`. Entweder verdrahten (die
+  ~8 Inline-Wiederholungen ersetzen) oder löschen — nicht selbst entschieden
+  (Rule 5: „dokumentierter Type-Katalog" + Zweifel → taggen).
+
+**Direkte Fixes (Kommentar/Doc, keine Verhaltensänderung):**
+- `project.lua` — Modul-Header: die Schluss-Absatz-Rekapitulation
+  („Together, `find_files_async` + `read_lines_async` …") wiederholte Absatz
+  1 + 3; in Absatz 5 zusammengezogen (−5 Z.).
+- `util/lib.lua` — `@brief` sagte „bridge to the **optional** `lib.nvim`",
+  während der eigene `@description` erklärt dass `lib.nvim` seit der
+  Composer-Migration **hart** benötigt wird. `@brief` an die Realität
+  angepasst.
+
+**Doc-Staleness gefixt (eigener Commit):** `bindings/which_key.lua` wurde in
+`22d65e1` gelöscht (Gruppen-Label wanderte in die Keymap-Spec von
+`keymaps.lua`) — `docs/architecture.md`, `doc/recommender.txt` und
+`docs/FEATURES.md` listeten die Datei noch. Zusätzlich trug
+`docs/architecture.md` noch das Design-Prinzip „**No hard `lib.nvim`
+dependency**", das `installation.md` und dem Code widerspricht — korrigiert.
+`float/`-Modulbeschreibungen in architecture.md / recommender.txt auf den
+`kit.select`-Picker aktualisiert (die „open/close/highlight; stride"-
+Formulierung war von vor der Migration).
+
+**Kein toter Code gelöscht** (die 3 Kandidaten alle als `--- CDX:` getaggt —
+`_pending_insert`, `Recommender.Suggestion`, plus der latente
+`float/autocmds.lua`-Bug). **Kein WKDBooks-Umzug** — kein ortsunabhängiges
+Neovim-/Lua-Mechanik-Wissen; die langen Header (`project.lua`,
+`bindings/usrcmds.lua`, `analyzers/perf.lua`) sind funktions-/messwert-
+Rationale am richtigen Platz und verweisen bereits auf das plugin-eigene
+`docs/FEATURES.md`.
+
+stylua `--check lua TESTS` ok, luacheck `lua TESTS` 0/0 (30 Dateien, `@types.lua`
+mitgeprüft — luacheck 1.2.0 überspringt es hier **nicht**), `TESTS/run.lua`
+headless grün (`RECOMMENDER_TESTS_OK`). CI-Pins (stylua v2.5.2, luacheck
+1.2.0) lokal exakt gematcht.
+
+Commits: recommender.nvim `6c0180c` (source) + `20d655a` (docs), gepusht auf
+`origin/main` (`8fdbf98..20d655a`), `pull --ff-only` bestätigt „Already up to
+date". Ohne Co-Authored-By.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
