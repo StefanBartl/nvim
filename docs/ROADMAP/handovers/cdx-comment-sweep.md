@@ -556,11 +556,57 @@ künftige Häppchen: Verzeichnis-Glob gab „Permission denied", Datei-Glob
 Commit: nvim-config `bc3376a6e`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 14 — `lua/wkdoptions/` ohne `hl_config/` (26 Dateien)
+
+**Status: erledigt.** Netto: 11 Dateien geändert, 20 Zeilen rein/192 raus,
+2 Dateien komplett gelöscht.
+
+**Zwei tote Module gelöscht (verifiziert: 0 Aufrufer im Repo):**
+- `@types/commands.lua` — 7 Type-Klassen, verwaiste ältere Fassung, ersetzt
+  durch die tatsächlich benutzten Varianten in `commands/@types/init.lua`.
+- `commands/core.lua` (104 Z.) — `register.lua` hat dieselbe Logik lokal
+  dupliziert statt diese Datei zu nutzen. **Bereits in einem als
+  „erledigt" markierten Roadmap-Log** (`Merged_Finished.md:472`) als
+  Redundanz zu lib.nvim identifiziert — nur nie physisch gelöscht.
+
+**Weitere Fixes:** toter auskommentierter Duplikat-Klassenentwurf in
+`@types/highlight.lua` gelöscht; `commands/@types/init.lua`: echter
+Typ-Fix, `WKDOptions.Commands`-Klasse dokumentierte nur 3 von 5 realen
+Funktionen; `set_diff_profile/@types/init.lua`: Tippfehler im
+`---@module`-Pfad (`t@ypes` — `@` mitten im Wort) korrigiert; verwaiste
+`---@description`-Tags (kein echtes LuaLS-Tag) durch normale
+`---`-Kommentare ersetzt. Diverse deutsche Kommentare übersetzt
+(`italic_keywords`, `options_config`, `ui/line_numbers` — inkl. eines
+dramatisierten ASCII-Banners „DIE LÖSUNG: ..." auf einen Ein-Zeiler
+gekürzt).
+
+**`--- CDX:` gesetzt:** `qflist/init.lua` konfiguriert
+`vim.diagnostic.config()`, das direkt danach im selben `M.setup()`-Durchlauf
+von `set_diagnostic_signs()` fast komplett überschrieben wird — bisher
+nirgends dokumentierte Überschneidung (nur die mit `lsp.core.diagnostics`
+war bekannt).
+
+**`config/` (9 Dateien), `init.lua`, `indent_per_ft/`** — 0 Änderungen,
+bereits sauber.
+
+**`doc/`/`docs/` waren entgegen der Bestandsaufnahme nicht leer** — Vimdoc
++ CHEATSHEET.md bereits sauber; `PERFORMANCE.md`/`colors.md`/
+`highlights/breadcrumbs_ctx.md` sind deutsch und gehören inhaltlich zu
+`hl_config/` — bewusst für den nächsten Häppchen aufgehoben, nicht
+angefasst.
+
+stylua ok, luacheck 0/0 (18 Dateien geprüft).
+
+Commit: nvim-config `152db12c0`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/startup/`, `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` +
-`lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach
-die 31 Plugin-Repos.
+`lua/wkdoptions/hl_config/` (38 Dateien, 4948 Z. — größter verbleibender
+Einzelposten, plus die drei deutschen docs/ oben). Danach
+`lua/wkdnvchad/` (kleine Teile + `ui/` separat), `lua/startup/`,
+`lua/themes/`, `lua/nvchad/`, `lua/@types/`, `after/`, `init.lua`,
+`scripts/`. Danach die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
