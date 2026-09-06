@@ -440,6 +440,33 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 45 — color_my_ascii.nvim (Plugin-Repo 28/31) — **erledigt**
+
+Commit `fadef55`, gepusht, `pull --ff-only` sauber. Ganzes Repo (95 Lua +
+docs). stylua ok, luacheck 0/0 (111 Dateien), `COLOR_MY_ASCII_TESTS_OK`.
+**Sehr sauber** — kein Deutsch, kein Mojibake, keine Banner, keine Marker,
+kein toter Code. Nach 27 Häppchen exzellenter Kommentar-Bestand; Funde waren
+durchweg Code↔Doku/Registry-Drift.
+
+**Direkte Fixes — echter verhaltensrelevanter Fund:** `commands/schemes.lua`
+`SCHEME_NAMES` listete nur 5 von 10 Schemes (catppuccin/monokai/onedark/
+solarized/tokyonight fehlten). Alle anderen Quellen sagen 10. Jetzt aus
+`scheme_loader.get_available_schemes()` bezogen → `:ColorMyAscii schemes
+list/switch/pick` bietet jetzt alle 10 (headless verifiziert, nicht
+test-abgedeckt).
+
+**Veraltete Kommentare/Doku:** `bindings/keymaps.lua` verwaiste Doc-Zeile
+aus einem entfernten Soft-Guard-Helper; `health.lua` + `docs/BINDINGS.md`
+behaupteten noch, `lib.nvim.bindings.keymap` sei „soft-guarded … falling
+back to vim.keymap.set" (Fallback existiert nicht mehr); `BINDINGS.md`
+Right-Click-Menü-Abschnitt hatte falsche Ausschlussliste + nicht existierende
+`fence_import`/`fence_lang`-Actions → gegen `integrations/menu.lua` neu;
+`configuration.md` „~30 languages" → „31"; `api.md`/`FEATURES/FENCES.md`
+„31 language tags" schief (`fence_language_map` hat ~50 Tag-Keys) →
+„all 31 built-in languages".
+
+**Kein `--- CDX:`, keine Logik-Bugs.**
+
 ### Häppchen 44 — markdown.nvim (Plugin-Repo 27/31) — **erledigt**
 
 Commit `a48fda4`, gepusht, `pull --ff-only` sauber. Ganzes Repo (79 Lua +
@@ -575,9 +602,9 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Verbleibende Plugin-Repos (5/31 offen):** color_my_ascii, documentation,
-lsp, reposcope, sandbox. Plus zwei separate Aufräum-Punkte: der
-**mdview TypeScript-Client** (eigener Sub-Pass) und der vorbestehende
+**Verbleibende Plugin-Repos (3/31 offen):** documentation, lsp, sandbox.
+reposcope.nvim (29/31) **läuft gerade**. Plus zwei separate Aufräum-Punkte:
+der **mdview TypeScript-Client** (eigener Sub-Pass) und der vorbestehende
 casedesk `gen_docs.sh --check`-Fail.
 Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
 umgeschaltet (2×3 einmalig → 1 → 2 → 1 → 2). Ab Häppchen 41 wieder
