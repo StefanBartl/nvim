@@ -4,6 +4,7 @@
 
   - [Intro](#intro)
   - [Überblick: 9 Regel-Familien](#berblick-9-regel-familien)
+  - [Aufwandsschätzung der verbleibenden Tasks](#aufwandsschtzung-der-verbleibenden-tasks)
   - [✅ LLS-* (34 Regeln) — fertig](#lls-34-regeln-fertig)
   - [✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig](#sec-23-regeln-sec-01sec-45-fertig)
   - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-fertig)
@@ -62,6 +63,27 @@ Einzelregeln gegen alle 32 Repos ist ein **mehrtägiges bis mehrwöchiges
 Vorhaben**. Empfehlung, die sich bislang bewährt hat: eine Regel-Familie nach
 der anderen, komplett über alle 32 Repos, statt ein Repo gegen alle Familien
 auf einmal — kleinste/mechanischste Familien zuerst.
+
+---
+
+## Aufwandsschätzung der verbleibenden Tasks
+
+Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-* — aber ich kann sie an echten Zahlen aus diesem Sweep festmachen statt aus der Luft zu greifen.
+
+**Der eigentliche Kostentreiber ist nicht "Regeln pro Familie", sondern "Repo-Durchgänge".** Beim Lesen eines Repos prüft man ohnehin alle anwendbaren Regeln einer Familie in einem Rutsch — ob eine Familie 23 oder 57 Regeln hat, ändert die Zeit pro Repo-Besuch nur graduell, nicht proportional. Der Referenzwert dafür ist `SEC-*` (23 Regeln, echt kontextabhängig): **32 Repo-Durchgänge, an einem einzigen Tag durchgezogen** — aber mit bis zu 3 parallelen Agenten für die ersten 21 Repos. Das Agenten-Limit ist seitdem auf 1 gleichzeitig verschärft worden, künftige Wellen brauchen also mehr Runden für dieselbe Abdeckung als `SEC-*` gebraucht hat.
+
+| Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
+|---|---|---|---|
+| `TS-*` | 5 | ~5–8 (erst Grep auf eigene Query-Dateien, nur Treffer wirklich lesen) | winzig — <1 Sitzung |
+| `ERR-*` | 34 | ~32 | ähnliche Größenordnung wie `SEC-*`, leicht mehr pro Durchgang |
+| `UI-*` | 34 | ~32 | wie `ERR-*` |
+| `PRIN-*` | 37 | ~32 | wie `ERR-*`/`UI-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
+| `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
+| `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
+
+**Fazit:** `TS-*` ist in einer Sitzung erledigt. Die übrigen fünf Familien brauchen je ~32 echte Repo-Durchgänge, macht zusammen grob **160 Repo-Durchgänge** — bei reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. Realistisch bewegt sich das im Bereich von **mehreren vollen Arbeitstagen bis zu zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird — deckt sich mit der Einschätzung, die schon im Pilot-Abschnitt der Datei steht ("mehrtägig bis mehrwöchig"), mit `PERF-*` als vermutlich größtem Einzelbrocken darin.
+
+Nur eine abgeschlossene Background-Task-Benachrichtigung von vorhin (der `find`-Befehl nach `plenary.nvim`, der damals in den Hintergrund gewandert war) — inzwischen längst durch die schnellere Suche im `lazy`-Verzeichnis überholt. Keine Aktion nötig.
 
 ---
 
