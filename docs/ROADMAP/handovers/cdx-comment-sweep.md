@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–7/9 erledigt, PAUSIERT — Fortsetzung bei Sub 8**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–8/9 erledigt, PAUSIERT — Fortsetzung bei Sub 9**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -199,11 +199,11 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 6. ✅ `lua/lib/nvim/ui/` (kit, 29 Dateien — Plan-Schätzung „20" war veraltet)
 7. ✅ `lua/lib/nvim/{deps,logger,system,health,lua_ls,core}/` (34 Dateien,
    ~4540 Z.)
-8. `lua/lib/nvim/{harvest,progress,markdown,lastcmd,cache,net,neotree,
-   notify}/` (32 Dateien, ~4600 Z.)  ← **HIER WEITER**
+8. ✅ `lua/lib/nvim/{harvest,progress,markdown,lastcmd,cache,net,neotree,
+   notify}/` (32 Dateien, ~4600 Z.)
 9. `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
    async,selection,image_preview,dev,count,require,store,contextmenu,
-   terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)
+   terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)  ← **HIER WEITER**
 10. `TESTS/` + `doc/` + `docs/`
 
 > **Nachtrag 2026-09-06:** der alte Plan-Punkt 7 („Rest, deps/logger/
@@ -214,6 +214,58 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > rutscht auf Punkt 10. Gleiche Lektion wie in
 > `plugin-roadmaps-verify-before-building`: Plan-Beschreibungen vor dem
 > Bauen an der echten Verzeichnisgröße prüfen.
+
+**Sub-Häppchen 8 — erledigt** (`lua/lib/nvim/{harvest,progress,markdown,
+lastcmd,cache,net,neotree,notify}/`, Commit `6aede6d`, gepusht, Re-Fetch
+bestätigt identisch). 32 Dateien gelesen (~4600 Zeilen), 5 geändert. Der
+größte Teil (`harvest/`, `progress/`, `lastcmd/`, `cache/`, `neotree/`) war
+bereits auf demselben hohen Niveau wie `deps/`/`logger/` in Sub 7: keine
+Redundanz, keine Boilerplate-Header, jede Rationale genau an der Stelle
+nützlich, an der sie steht — komplett unangetastet gelassen.
+
+- **Direkte Fixes:**
+  - `markdown/table/init.lua` — der Modul-Header trug eine vierzeilige
+    „who was ahead"-Extraktionshistorie-Tabelle; zwei ihrer vier Zeilen
+    (`parse_row`, `resolve_overrides`) waren wortgleich bereits von den
+    Inline-Doc-Kommentaren an genau diesen Funktionen dupliziert → auf einen
+    Absatz eingedampft, der auf die Funktions-Docs verweist.
+  - `notify/safe/init.lua` — ein `-- FIX: Anschließenden text auf englisch
+    übersetzen`-Marker gefolgt von einem ~35-zeiligen deutschen Blockkommentar
+    entfernt, der nur die fünfzeilige englische Modul-Doku drei Zeilen darüber
+    nochmal übersetzte und jede Funktion (schedule/defer/wrap/create_safe)
+    erneut beschrieb, obwohl jede bereits vollständig eigene `@param`-Doku
+    trägt. Zusätzlich das fehlende `require("lib.nvim.notify.@types")`
+    ergänzt (jedes Schwestermodul in diesem Scope macht das, hier fehlte es).
+- **`@types`-Fixes:**
+  - `net/curl/@types/init.lua` — `Lib.Net.Curl` fehlten `config_quote` und
+    `is_secret_header`, beides öffentliche Funktionen (`M.config_quote`,
+    `M.is_secret_header`) mit eigener Doku in `curl/init.lua`, nie zur
+    Aggregat-Klasse hinzugefügt. Ergänzt.
+  - `notify/@types/init.lua` — `Lib.Notify` trug ein `resolve_log_level`-Feld,
+    das es auf der echten `M`-Tabelle gar nicht gibt: jeder reale Aufrufer
+    (`logger/init.lua`, `strategies/eager.lua`, `strategies/lazy.lua`)
+    requiret `lib.nvim.notify.resolve_log_level` direkt über den eigenen
+    Pfad, nie über das Notify-Aggregat — Phantom-Feld entfernt.
+  - `notify/@types/safe.lua` — wurde von nichts im Repo requiret (ganzes Repo
+    gegrept) und deklarierte, in deutlich AI-Boilerplate-lastigerer Prosa,
+    exakt dieselbe `Lib.Notify.Safe`-Klasse, die `notify/@types/init.lua`
+    bereits trug. Zwei Typen darin waren aber einzigartig und real referenziert
+    (`Lib.Notify.Safe.Notifier`, `Lib.Notify.Safe.ScheduleMode`) → beide,
+    von der Prosa befreit, nach `notify/@types/init.lua` migriert, die jetzt
+    vollständig doppelte Waisen-Datei gelöscht (gleiches Muster wie die
+    verwaiste `@types`-Datei in Sub 5).
+- **Keine echten Bugs gefunden.** Kein toter Laufzeit-Code gefunden — die
+  einzige Löschung war die oben genannte, bereits vollständig duplizierte
+  `@types`-Datei.
+- **Nichts für WKDBooks ausgelagert** — der einzige Kandidat
+  (`markdown/table`s Extraktionshistorie-Tabelle) erwies sich beim genaueren
+  Hinsehen als größtenteils bereits inline dupliziert statt genuin
+  einzigartiger Design-Rationale, deshalb vor Ort eingedampft statt
+  ausgelagert.
+
+stylua ok, luacheck 0/0 (2 nicht-`@types`-Dateien betroffen: `markdown/
+table/init.lua`, `notify/safe/init.lua`), volle `TESTS/run.lua`-Suite
+`LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 **Sub-Häppchen 7 — erledigt** (`lua/lib/nvim/{deps,logger,system,health,
 lua_ls,core}/`, Commit `21c871a`, gepusht, Re-Fetch bestätigt identisch).
