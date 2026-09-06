@@ -210,7 +210,7 @@
 
 local records = require("bindings.usrcmds.bindings_explorer.records")
 local config = require("bindings.usrcmds.bindings_explorer.config")
-local repo = require("bindings.usrcmds.bindings_explorer.repo")
+local repo_scan = require("bindings.usrcmds.bindings_explorer.repo")
 local plugin_scope = require("bindings.usrcmds.bindings_explorer.plugin_scope")
 
 local M = {}
@@ -660,7 +660,7 @@ local stem_plugin_cache = nil
 local repo_hints_cache = nil
 
 --- Drop what one run resolved. Called at the top of `M.check` for the same
---- reason `repo.reset()` is: the corpus and the loaded-plugin set both change
+--- reason `repo_scan.reset()` is: the corpus and the loaded-plugin set both change
 --- between two runs in one session, and a report that answers from the
 --- previous run's cache is a report about the previous run.
 local function reset_plugin_cache()
@@ -1487,10 +1487,10 @@ function M.check(plugin, opts)
   -- further down -- that one would index every checkout in the list.
   ---@type table<string, string>|nil
   local repo_dirs = nil
-  local repo_reason = nil
+  local repo_reason
   local repo_resolved = {}
   local want_repo = opts.repo == true or type(opts.repo_root) == "string"
-  repo.reset()
+  repo_scan.reset()
   reset_plugin_cache()
   do
     local dirs, reason
@@ -1641,11 +1641,11 @@ function M.check(plugin, opts)
       return false, false
     end
     local dir = repo_dirs[entry.rec.plugin]
-    local in_plugin = repo.mentions(dir, entry.token, { ignore_case = true })
+    local in_plugin = repo_scan.mentions(dir, entry.token, { ignore_case = true })
     if in_plugin == true then
       return true, true
     end
-    local in_config = repo.mentions(config_lua, entry.token, { ignore_case = true })
+    local in_config = repo_scan.mentions(config_lua, entry.token, { ignore_case = true })
     if in_config == true then
       return true, true
     end
@@ -1726,12 +1726,12 @@ function M.check(plugin, opts)
   -- verdict is about a buffer-local scope not being open, which is a
   -- statement about the LIVE axis and says nothing about a source tree.
   for _, entry in ipairs(repo_keymaps) do
-    local in_repo = repo.mentions(entry.dir, entry.token, { ignore_case = true })
+    local in_repo = repo_scan.mentions(entry.dir, entry.token, { ignore_case = true })
     if in_repo ~= nil then
       repo_answered[entry.rec.plugin] = true
       if
         not in_repo
-        and repo.mentions(config_lua, entry.token, { ignore_case = true }) ~= true
+        and repo_scan.mentions(config_lua, entry.token, { ignore_case = true }) ~= true
         and not is_live(live_maps, entry.modes, entry.lhs, entry.desc)
       then
         findings[#findings + 1] = {
@@ -1769,11 +1769,11 @@ function M.check(plugin, opts)
     if not repo_dirs then
       return false, false
     end
-    local in_plugin = repo.mentions(repo_dirs[stem], name)
+    local in_plugin = repo_scan.mentions(repo_dirs[stem], name)
     if in_plugin == true then
       return true, true
     end
-    local in_config = repo.mentions(config_lua, name)
+    local in_config = repo_scan.mentions(config_lua, name)
     if in_config == true then
       return true, true
     end
@@ -1851,10 +1851,14 @@ function M.check(plugin, opts)
         local name = extract_usercmd(rec)
         if name and not seen_personal[name] then
           seen_personal[name] = true
-          local in_repo = repo.mentions(dir, name)
+          local in_repo = repo_scan.mentions(dir, name)
           if in_repo ~= nil then
             repo_answered[rec.plugin] = true
-            if not in_repo and repo.mentions(config_lua, name) ~= true and not live_cmds[name] then
+            if
+              not in_repo
+              and repo_scan.mentions(config_lua, name) ~= true
+              and not live_cmds[name]
+            then
               findings[#findings + 1] = {
                 kind = "usercmd-not-in-repo",
                 plugin = rec.plugin,
@@ -1883,14 +1887,14 @@ function M.check(plugin, opts)
   -- Hand the indexed trees back. Measured over the real checkouts, holding
   -- them costs 28 MiB for the rest of the session, which is not a price a
   -- report someone ran once should keep charging — and the next run must
-  -- re-read anyway (`repo.reset()` at the top), so nothing is saved by
+  -- re-read anyway (`repo_scan.reset()` at the top), so nothing is saved by
   -- keeping them.
   --
   -- Unconditional since the fallback exists: `if want_repo` used to be the
   -- whole truth about who indexed a tree, and is not any more — a default
   -- run that greps five checkouts would otherwise leave them resident for
   -- the session while claiming the axis never ran.
-  repo.reset()
+  repo_scan.reset()
 
   -- Third axis (source) is resolved BEFORE the live-undocumented direction
   -- below, which consults it to avoid reporting the same command twice —
@@ -1945,11 +1949,11 @@ function M.check(plugin, opts)
     -- `command_owner` learned to answer at all; see there.
     local family_claims = records.family_claims()
 
-    ---@param owner string  # `command_owner`'s answer
-    ---@param plugin string # the claiming sheet's stem
+    ---@param owner string # `command_owner`'s answer
+    ---@param stem string  # the claiming sheet's stem
     ---@return boolean
-    local function owner_is(owner, plugin)
-      return owner == plugin or owner:sub(1, #plugin + 1) == plugin .. " "
+    local function owner_is(owner, stem)
+      return owner == stem or owner:sub(1, #stem + 1) == stem .. " "
     end
 
     ---@param cmd string
@@ -2773,7 +2777,7 @@ function M.describe(findings, skipped, source_reason, repo_info, scope_info, aut
   end
   if repo_info and (repo_info.declared_not_live or 0) > 0 then
     lines[#lines + 1] = ""
-    lines[#lines + 1] = ("%d documented row%s marked \"Nicht live\" by their own section"):format(
+    lines[#lines + 1] = ('%d documented row%s marked "Nicht live" by their own section'):format(
       repo_info.declared_not_live,
       repo_info.declared_not_live == 1 and "" or "s"
     )

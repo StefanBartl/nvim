@@ -182,7 +182,7 @@ function M.setup()
     -- replay native <RightMouse>
     vim.cmd.exec('"normal! \\<RightMouse>"')
 
-    local winid = 0
+    local winid
     local ok_mouse, m = pcall(vim.fn.getmousepos)
     if ok_mouse and type(m) == "table" and m.winid and m.winid ~= 0 then
       winid = m.winid

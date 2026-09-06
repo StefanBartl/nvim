@@ -2438,7 +2438,7 @@ function M.insert(field_arg, case_arg, range)
     end
     local m = meta.read(entry.dir)
 
-    local function apply(value)
+    local function insert_or_replace(value)
       if range and (range.range or 0) > 0 then
         replace_range_and_copy(range, value)
       else
@@ -2448,7 +2448,7 @@ function M.insert(field_arg, case_arg, range)
 
     local function with_field(key)
       if key == "asset" or key == "asset-path" then
-        pick_asset_value(entry, key, apply)
+        pick_asset_value(entry, key, insert_or_replace)
         return
       end
       local value = insert_value(entry, m, key)
@@ -2459,7 +2459,7 @@ function M.insert(field_arg, case_arg, range)
       if key == "link" and not config.snow_url_format then
         notify.info("config.snow_url_format not set — inserting the ticket id instead of a URL")
       end
-      apply(value)
+      insert_or_replace(value)
     end
 
     if field_arg and field_arg ~= "" then

@@ -355,7 +355,7 @@ function M.rank(short, n)
             contributions[#contributions + 1] = { term = term, product = product }
           end
         end
-        if dot > 0 then
+        if dot > 0 and #contributions >= MIN_SHARED_TERMS then
           table.sort(contributions, function(a, b)
             return a.product > b.product
           end)

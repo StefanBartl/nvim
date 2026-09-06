@@ -78,7 +78,7 @@ local ops = require("bindings.usrcmds.plugin_repos.ops")
 local M = {}
 
 local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
-local system, fnamemodify = vim.system, fn.fnamemodify
+local fnamemodify = fn.fnamemodify
 
 -- git-operation primitives (clone/fetch/pull/update/check_removable/delete)
 -- live in ops.lua, shared with picker.lua. Local aliases keep every call

@@ -36,8 +36,9 @@ end
 ---2) toggle_linehl()
 ---3) preview_hunk_inline() for the hunk under cursor (if available)
 ---@param bufnr integer|nil buffer number, defaults to current buffer
-function M.toggle_inline_diff(bufnr)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
+-- `bufnr` is accepted for call-site symmetry with the other toggles; gitsigns'
+-- toggle/preview APIs all act on the current buffer implicitly, so it is unused.
+function M.toggle_inline_diff(bufnr) -- luacheck: ignore 212
   local gs = require_gs()
   if not gs then
     return

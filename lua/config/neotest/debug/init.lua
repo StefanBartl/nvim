@@ -189,15 +189,11 @@ function M.usercommands()
     }
 
     lines[#lines + 1] = "Vitest config check:"
-    ---@diagnostic disable-next-line: unused-local
-    local has_vitest = false
     for _, config in ipairs(vitest_configs) do
       local path = cwd .. "/" .. config
       local readable = vim.fn.filereadable(path)
       if readable == 1 then
         lines[#lines + 1] = string.format("  ✓ %s (EXISTS)", config)
-        ---@diagnostic disable-next-line: unused-local
-        has_vitest = true
       else
         lines[#lines + 1] = string.format("  ✗ %s (not found)", config)
       end
