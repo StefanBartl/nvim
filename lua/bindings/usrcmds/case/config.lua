@@ -77,32 +77,31 @@ M.meta_filename = ".case.json"
 --- arrived with.
 M.assets_dirname = "assets"
 
---- Wo die Lösung eines Cases steht: `<case>/Solution/Solution.md`
---- (`solution.lua`, `:Case solution`). Keine neue Konvention — `doctor.lua`
---- normalisiert `Solutions/` (Plural) und ein flaches `Solution.md` längst
---- genau dorthin; die Namen stehen hier nur, damit beide Seiten (Prüfung
---- und Erzeugung) auf dieselbe Zeichenkette zeigen. Bewusst KEIN
---- Blueprint-Knoten: die Lösung entsteht, wenn es eine gibt, nicht beim
---- Anlegen des Cases — eine leere Vorlage in jedem frischen Case wäre genau
---- das Rauschen, das die Suche später wertlos macht.
+--- Where a case's solution lives: `<case>/Solution/Solution.md`
+--- (`solution.lua`, `:Case solution`). Not a new convention — `doctor.lua`
+--- has long normalized `Solutions/` (plural) and a flat `Solution.md` to
+--- exactly this; the names are here only so both sides (check and create)
+--- point at the same string. Deliberately NOT a blueprint node: the solution
+--- comes into being when there is one, not when the case is created — an
+--- empty template in every fresh case is exactly the noise that makes the
+--- search worthless later.
 M.solution_dirname = "Solution"
 M.solution_filename = "Solution.md"
 
---- Die Status-Werte, die `## Status` in einer Solution.md annehmen kann —
---- Auswahlliste in `:Case solution` und Anzeige-Label in `:Cases
---- solutions`. Reihenfolge zählt beim Parsen: `solution.lua` nimmt den
---- ERSTEN Eintrag, der als Teilstring in der Statuszeile vorkommt, deshalb
---- steht das spezifischere "Workaround" vor dem allgemeinen "Offen".
+--- The status values `## Status` in a Solution.md can take — the choice list
+--- in `:Case solution` and the display label in `:Cases solutions`. Order
+--- matters when parsing: `solution.lua` takes the FIRST entry that occurs as
+--- a substring of the status line, so the specific "Workaround" comes before
+--- the general "Offen".
 ---@type string[]
 M.solution_statuses = { "Gelöst", "Workaround", "Offen" }
 
---- Zustände, bei deren Erreichen `:Case <verb>` daran erinnert, dass der
---- Case keine dokumentierte Lösung hat. Nur ein Hinweis, nie ein Zwang und
---- nie ein automatisches Anlegen: eine leere Solution.md in jedem
---- abgelegten Case wäre schlimmer als keine — sie würde die Suche mit
---- Treffern ohne Inhalt fluten. `Closed` steht bewusst NICHT drin, ein
---- geschlossener Case ist oft gerade nicht gelöst (Kunde meldet sich nicht,
---- Duplikat, falsche Queue).
+--- States that make `:Case <verb>` remind you the case has no documented
+--- solution. Only a hint, never forced and never auto-created: an empty
+--- Solution.md in every filed case would be worse than none — it would flood
+--- the search with contentless hits. `Closed` is deliberately NOT in here — a
+--- closed case is often precisely not solved (customer went quiet, duplicate,
+--- wrong queue).
 ---@type string[]
 M.solution_reminder_states = { "Solved" }
 
@@ -168,18 +167,19 @@ local BUSINESS_DAY = (M.sla_business_hours.to - M.sla_business_hours.from) * HOU
 
 ---@class Lib.Case.SlaLevel
 ---@field label string
----@field window Lib.Case.SlaWindow|"24x7"        used for Erstreaktion + Rückmeldung
+---@field window Lib.Case.SlaWindow|"24x7"        used for first response + follow-up
 ---@field first_response integer                  seconds
----@field cadence integer[]                        [ohne Produktfehler, mit Produktfehler]; [1] used until that signal exists (SLA.md §9.3)
+---@field cadence integer[]                        [without product defect, with product defect]; [1] used until that signal exists (SLA.md §9.3)
 ---@field fix integer                              seconds
----@field fix_window Lib.Case.SlaWindow|"24x7"     Korrekturmaßnahme has its own unit per level (Std./Arbeitstage/Kalenderwochen) — see below
+---@field fix_window Lib.Case.SlaWindow|"24x7"     corrective action has its own unit per level (hours/business days/calendar weeks) — see below
 
 --- `fix_window` is a judgment call, not a literal reading of the source
 --- table: "Max. 4 Std." (P1) and "6 Kalenderwochen" (P3/P4) are plainly
 --- wall-clock, so `fix_window = "24x7"` even though P3/P4's OWN window is
 --- 10x5. "Max. 3 Arbeitstage" (P2) is the one that reads as business days,
 --- so `fix_window = M.sla_business_hours` even though P2's own window is
---- 24x7. Flagged, not hidden: SLA.md's open questions list this.
+--- 24x7. Flagged, not hidden: SLA.md's open questions list this. (The quoted
+--- strings are the German source SLA table verbatim.)
 ---@type table<string, Lib.Case.SlaLevel>
 M.sla = {
   ["1"] = {
@@ -291,7 +291,7 @@ M.version_components = {
   licensing = { file = "CloudLicensingIntegrationService.dll" },
 }
 
---- The digest's "Ausgewählt" line — libraries known to drift independently
+--- The digest's "Ausgewählt" (selected) line — libraries known to drift independently
 --- of the TBox build number and worth a permanent line even when nothing's
 --- unusual (EXTRACTION.md §2: Tesseract jumped 3.3.0.0 -> 5.2.0 between
 --- 25.1 and 2026.1 while every `Tricentis.Automation.*` engine stayed on
@@ -299,7 +299,7 @@ M.version_components = {
 --- would miss, since these ARE known/expected files).
 M.version_watch = { "Tesseract.dll", "WebDriver.dll" }
 
---- Filename prefixes the digest's "Auffällig" section treats as "a known
+--- Filename prefixes the digest's "Auffällig" (notable) section treats as "a known
 --- dependency, not a support signal" — everything else found directly in
 --- the TBox root gets surfaced (EXTRACTION.md §2's second finding: a
 --- customer-authored `Achmea_Tosca_Custom_Controls.dll` sitting among

@@ -164,12 +164,38 @@ stylua --check + luacheck grün (13 Dateien).
 aber sehr lange Prosa-Blöcke. Eigener Trim-Pass sinnvoll (kein dringender
 Regelverstoß).
 
+### Häppchen 4 (Teil) — `lua/bindings/usrcmds/case/` (39 Dateien, 11.295 Z.)
+
+**Der Brocken.** casedesk (HandOverCase) ist ein **deutsch-domänen** Support-
+Ticket-Tool: viele Kommentare deutsch, viele Ausgabe-Strings bewusst deutsch,
+plus deutsche Domänen-Daten (SLA-Begriffe, Solution.md-Überschriften-Maps).
+
+**Diese Runde erledigt:** `config.lua`, `solution.lua`, `similar.lua`,
+`init.lua` (Teil), `sla/init.lua` — alle deutschen **Code-Kommentare** →
+Englisch. **Behalten:** deutsche String-Literale (User-UI von `:Case`),
+deutsche Daten-Maps (`ALIASES`, `solution_statuses`, Stoppwörter,
+SLA-`label`s), attribuierte deutsche Doc-Zitate.
+
+**Noch offen in `case/`** (~175 deutsche Kommentarzeilen gesamt, davon jetzt
+~110 weg):
+- `ui.lua` (3502 Z., 53 deutsche Kommentare) — eigenes Häppchen
+- Rest von `init.lua` (603 Z.), `doctor.lua`, `commands.lua`, `query.lua`,
+  `timeline.lua`, `terminology.lua`, `templates.lua`, `replygate.lua`,
+  `blocks.lua`, `ki.lua`, `migrate.lua`, `ocr.lua`, `export.lua`, `links.lua`,
+  `linkcheck.lua`, `normalize.lua`, `detect.lua`, `meta.lua`, `marks.lua`,
+  `plan.lua`, `blueprint.lua`, `apply.lua`, `render.lua`, `resolve.lua`,
+  `registry.lua`, `stream_format.lua`, `attachments.lua`, `extract/*` (4),
+  `sla/*` (3 restliche)
+- **Empfehlung:** der Rest ist mechanische Übersetzung — idealer Subagent-Job
+  (User-Regel erlaubt 1 Agent). Prompt: „übersetze alle deutschen
+  Code-Kommentare in `lua/bindings/usrcmds/case/` nach Englisch; deutsche
+  String-Literale, Daten-Maps und attribuierte Doc-Zitate bleiben".
+
 ### Danach offen
 
-`lua/bindings/` Rest-Sub-Häppchen: `drift.lua` (Prosa-Trim), `usrcmds/case/`
-(~50 Dateien, HandOverCase — der Brocken), `usrcmds/` Rest (context_open,
-plugin_repos, update_repos, who_locks, telemetry, autocmd_docs),
-`usrcmds/init.lua`.
+`lua/bindings/`: `drift.lua` (Prosa-Trim), `case/ui.lua` + Rest (s.o.),
+`usrcmds/` Rest (context_open, plugin_repos, update_repos, who_locks,
+telemetry, autocmd_docs), `usrcmds/init.lua`.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
