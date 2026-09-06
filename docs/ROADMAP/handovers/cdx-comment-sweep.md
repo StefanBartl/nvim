@@ -211,11 +211,36 @@ verbleibenden Dateien übersetzt:
 
 stylua ok, luacheck 0/0 (39 Dateien).
 
+### Häppchen 5 — `drift.lua` (Prosa-Trim, 2812 Zeilen)
+
+**Status: erledigt.** Reiner Trim-Pass, keine Übersetzung nötig (war schon
+Englisch, keine Chat-Artefakte).
+
+- **Modul-Header 210 → 46 Zeilen** (von mir direkt, vor dem Agenten-Pass):
+  der Header duplizierte praktisch vollständig, was ausführlicher in
+  `docs/FEATURES.md` (Abschnitt „Drift-Bericht") auf Deutsch steht, nur mit
+  mehr Historie/Datumsangaben/Messwerten. Gekürzt auf das, was ein
+  Code-Leser tatsächlich braucht, plus Pointer auf FEATURES.md.
+- **Rest der Datei** (Agent, 2665 → 2558 Zeilen, −220 netto): der Header
+  hatte recht — der restliche Code war bereits überwiegend knapp und
+  ortsrelevant. Keine Chat-Artefakte, kein Deutsch, keine
+  Kommentar-Code-Widersprüche gefunden, daher **kein** `--- CDX:` gesetzt und
+  **kein** toter Code entfernt (`M.source_check` sieht unbenutzt aus, ist
+  aber explizit als eigenständige Public API dokumentiert — bewusst
+  belassen). Gekürzt wurden gezielt Dopplungen: `stem_plugin`/
+  `subroute_exists`/`script_path`/`command_owner`-Docs (letzterer stand
+  sogar **zweimal fast wortgleich im Code selbst**), die SECTIONS-Tabellen-
+  Notiz, die Autocmds-Achse-Einleitung, der Repo-Scan-Reset-Kommentar — alle
+  dupliziert bereits Abschnitte aus FEATURES.md.
+- stylua ok, luacheck 0/0.
+
+Commits: nvim-config `364118c25`, WKDBooks `0ca6a86` (Relocation, s.u.).
+Beide ohne Co-Authored-By, beide gepusht + `pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/bindings/`: `drift.lua` (Prosa-Trim),
-`usrcmds/` Rest (context_open, plugin_repos, update_repos, who_locks,
-telemetry, autocmd_docs), `usrcmds/init.lua`.
+`lua/bindings/`: `usrcmds/` Rest (context_open, plugin_repos, update_repos,
+who_locks, telemetry, autocmd_docs), `usrcmds/init.lua`.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
