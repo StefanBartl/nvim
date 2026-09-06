@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 23/32 Repos gelesen, 13 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 24/32 Repos gelesen, 13 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,7 +316,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 23/32)
+### Ergebnis je Repo (Stand dieser Sitzung, 24/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -343,6 +343,7 @@ verändert).
 | **markdown.nvim** | **`rg_files()` kollabierte jeden `rg`-Exitcode >1 (verschwundene Wurzel, Permission Denied, Prozess killed) auf dieselbe leere Liste wie ein echtes „keine Treffer"** — `find_references`/`find_references_async` meldeten im `core.link_delete`-Bestätigungsdialog „0 andere Links zeigen darauf", obwohl die Suche fehlgeschlagen war, nicht ergebnislos — eine Datei konnte so unter noch bestehenden Links weggelöscht werden, die der Scan nie zu sehen bekam | **ERR-11-Familie** (fehlgeschlagen vs. leer kollabiert) | [`ebbdbf4`](https://github.com/StefanBartl/markdown.nvim/commit/ebbdbf4) |
 | **mdview.nvim** | **`resync()`s async Callback (`browser.behavior = "reuse"`) griff nach `ws_client.wait_ready` (bis 15s, während ein frisch gebauter Relay-Binary vom Virenscanner geprüft wird) mit `nvim_buf_get_lines` auf einen zwischenzeitlich per `:bwipeout` ungültig gewordenen Buffer zu** — warf „Invalid buffer id" statt den veralteten Push still zu überspringen | **ERR-33** | [`2d9abd6`](https://github.com/StefanBartl/mdview.nvim/commit/2d9abd6) |
 | **open.nvim** | **`context.resolve()`s Keyword-Lookup `type(kw)=="function" and kw() or expand_path(tostring(kw))`** — die klassische `and/or`-Falle: liefert die Resolver-Funktion legitim `nil` (z. B. `pwsh_profile`, wenn weder `pwsh` noch `powershell` im PATH steht), fällt der ganze Ausdruck in den `or`-Zweig und `expand_path()`t den **stringifizierten Funktionswert** (`"function: 0x7f..."`) statt des Ergebnisses — `:Open` versuchte danach, einen Fantasie-Pfad zu öffnen | **ERR-60** | [`a51c858`](https://github.com/StefanBartl/open.nvim/commit/a51c858) |
+| pdfport.nvim | 0 (durchgängig sauber, wie schon bei SEC-*: `core/dispatcher.lua`/`core/composer.lua` wrappen `callback` konsequent für Cleanup auf jedem Exit-Pfad statt nur dem Erfolgspfad, `config.get()` gibt zwar die lebende Tabelle zurück, aber kein Konsument mutiert sie — nur `pdfport.get_config()` als Public API deep-copy't explizit vorm Herausgeben, Registry-Getter (`all_backends`/`all_producers`) liefern immer frische Arrays, kein `table.sort` mit Ternary-Comparator) | — | — |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -412,13 +413,13 @@ stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwer
 immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
 mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-### Noch offen (9/32 Repos ungelesen für ERR-*)
+### Noch offen (8/32 Repos ungelesen für ERR-*)
 
-pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
+pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
 runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim.
 
 (Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
-oben eingetragen: 3/3 mit echtem Fund.)
+oben eingetragen: 3/3 mit echtem Fund. pdfport.nvim direkt gelesen: 0 Funde.)
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
 read-or-stub-vor-write) müssen für diese Repos **nicht wiederholt** werden —
