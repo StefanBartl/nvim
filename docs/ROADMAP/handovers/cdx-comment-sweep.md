@@ -374,7 +374,38 @@ Merge-Sicherheit" → Englisch.
 `X and CONST or CONST`-Muster ist in `telemetry/init.lua:691` sogar explizit
 als vermiedener Anti-Pattern dokumentiert.
 
-**Verbleibende Plugin-Repos (10/31 offen):** buffer-ctx, cascade,
+### Häppchen 39 — buffer-ctx.nvim (Plugin-Repo 22/31) — **erledigt**
+
+Commit `19b50a3`, gepusht, `pull --ff-only` sauber. Ganzes Repo (44 Lua +
+6 Specs + docs). stylua ok, luacheck 0/0 (49 Dateien), `BUFFER_CTX_TESTS_OK`.
+**Überdurchschnittlich sauber** — kein Deutsch, keine Banner, keine
+Boilerplate-Wände. Die Drift saß fast ausschließlich in den knappen
+Aufzählungen, die dem später hinzugefügten `:Mark clear` + den Mark-Kategorien
+nicht nachgezogen wurden.
+
+**Direkte Fixes — „N statt N+1":** `format/init.lua`-Header 5 von 6
+`:Format`-Gruppen (`squeeze` fehlte); `mark/init.lua`-Header nur toggle/yank
+(`clear` fehlte); `health.lua` Format-Ladecheck 6 von 7 Submodulen
+(`blank_lines` fehlte — ohne den Eintrag fällt ein kaputtes `blank_lines`/
+`squeeze` in `:checkhealth` nicht auf); `doc/buffer-ctx.txt` `:Mark clear`
+komplett fehlend (TOC + Abschnitt 7.3 + `mark.categories`/`mark.keymaps.clear`
+im Config-Teil); `commands.md`/`BINDINGS.md` `:Mark`-Tabelle ohne `clear`;
+`FEATURES/CONTEXT.md` Timestamp „eight formats" → real 13;
+`architecture.md` html-Template-Liste unvollständig.
+
+**Weitere Fixes:** `ops/types/init.lua`-Doc behauptete `Boilerplate.Entry`
+liege in `@types` (ist inline in `boilerplate/init.lua`); `FEATURES/MARK.md`
+altes `{ [id] = true }` → `= category` (widersprach der Beschreibung weiter
+oben); stale `bindings/which_key.lua` aus dem Architektur-Baum (Datei
+existiert nicht); `--@module` → `---@module`, `Pluginside` → `Plugin-side`;
+`TESTS/README.md` fehlte `features_spec.lua`.
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.** `util/notify.lua`
+`M.debug` (0 Caller) bewusst belassen — symmetrische 4. Stufe eines
+info/warn/error/debug-Wrappers. `<leader>date`-Kollision (Memory-Hinweis):
+in diesem Repo kein Treffer, es gibt kein `date`-Keymap.
+
+**Verbleibende Plugin-Repos (9/31 offen):** cascade,
 color_my_ascii, documentation, lsp, markdown, mdview,
 pickers, reposcope, sandbox. (casedesk.nvim existiert
 als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
