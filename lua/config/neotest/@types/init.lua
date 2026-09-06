@@ -1,6 +1,14 @@
 ---@meta
 ---@module 'config.neotest.types'
 
+--- CDX: AdapterConfig/Position/Result/RunOpts below are declared but have no
+--- call site anywhere in the repo (only Cfg.Neotest.Action, used by
+--- telescope/init.lua, is live). AdapterConfig's shape matches what
+--- adapters/factory.lua's ADAPTER_BUILDERS should return but never annotates
+--- itself with -- see docs/ROADMAP/IDEAS/test.md §2.1 for the wider adapter
+--- split-brain this belongs to. Judgment call: delete vs. keep as the target
+--- shape for the planned adapter-registry consolidation.
+
 ---@class Cfg.Neotest.AdapterConfig
 ---@field adapter table|nil Neotest adapter instance
 ---@field test_patterns string[] File patterns that identify test files
