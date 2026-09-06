@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-07, fünfte Aktualisierung)
+## Stand bei Übergabe (2026-09-07, sechste Aktualisierung)
 
 | Familie | Status |
 |---|---|
@@ -16,29 +16,29 @@ Einstiegspunkt für eine neue Session.
 | `SEC-*` (23) | ✅ fertig |
 | `DEP-*` (7) | ✅ fertig |
 | `TS-*` (5) | ✅ fertig |
-| `ERR-*` (34) | 🔶 **in Arbeit** — 26/32 Repos gelesen, 13 echte Bugs gefixt+gepusht |
+| `ERR-*` (34) | 🔶 **in Arbeit** — 28/32 Repos gelesen, 15 echte Bugs gefixt+gepusht |
 | `PRIN-*` (37) | ⬜ offen |
 | `UI-*` (34) | ⬜ offen |
 | `LUA-*` (45) | ⬜ offen |
 | `PERF-*` (57) | ⬜ offen |
 
-Diese Session hat zunächst drei Agent-Ergebnisse aus einer vorherigen
-Sitzung nachgetragen, die fertig waren, aber nie in `RULES.md` verbucht
-wurden: **markdown.nvim** (`rg`-Scanfehler wurde als „keine Treffer"
-behandelt, Datei konnte unter bestehenden Links weggelöscht werden),
-**mdview.nvim** (async `resync()`-Callback griff auf ungültigen Buffer nach
-`:bwipeout` zu), **open.nvim** (`and/or`-Falle im Keyword-Resolver:
-`nil`-Rückgabe der Resolver-Funktion wurde zu einem stringifizierten
-Funktionswert als Fantasie-Pfad). Danach direkt (kein Agent) drei weitere
-Repos gelesen: **pdfport.nvim**, **pickers.nvim** (70 Dateien, Checkliste +
-Stichproben), **recommender.nvim** — alle drei 0 Funde, durchgängig sauber.
+Seit der letzten Übergabe direkt (kein Agent) gelesen: **pdfport.nvim**,
+**pickers.nvim** (70 Dateien), **recommender.nvim** — alle drei 0 Funde.
+Dann zwei weitere echte Bugs derselben Bugklasse (ERR-11, „fehlt" vs.
+„kaputt" kollabiert, dritte/vierte Instanz in dieser Familie): **replacer.nvim**
+(`history.lua` — der nächste `:Replace`-Apply hätte eine kaputte
+`history.json` durch eine Ein-Eintrag-Historie ersetzt) und **reposcope.nvim**
+(`state/favorites_state.lua` — **106 Dateien/12350 LOC, größtes bisher
+geprüftes Repo dieser Familie** — derselbe Fund für favorisierte Repos).
+Beides mit Backup-nach-`.corrupt`-Fix, Regressionstest, stash/reapply-
+Verifikation, gepusht.
 
 ## Nächster Schritt
 
-`ERR-*` weiterführen mit den verbleibenden **6 Repos**: replacer.nvim,
-reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
-spotlight.nvim (alphabetisch, keine feste Reihenfolge nötig). Checkliste pro
-Repo, die sich bewährt hat (Details in RULES.md §ERR-*):
+`ERR-*` weiterführen mit den verbleibenden **4 Repos**: runtime-analysis.nvim,
+sandbox.nvim, sessions.nvim, spotlight.nvim (alphabetisch, keine feste
+Reihenfolge nötig). Checkliste pro Repo, die sich bewährt hat (Details in
+RULES.md §ERR-*):
 
 - `table.sort`-Comparatoren: die `cond and A>B or C<D`-Falle ist **fleet-weit
   bereits per Grep ausgeschlossen** (inkl. Methodenaufruf-Varianten wie
@@ -50,6 +50,23 @@ Repo, die sich bewährt hat (Details in RULES.md §ERR-*):
   (Config-Default, Cache, Sidecar-Datei) wird per Referenz statt Kopie
   geteilt, oder „fehlt"/„kaputt" wird nicht unterschieden und ein *späterer*
   Codepfad mutiert/überschreibt ihn — bei jedem Repo gezielt danach suchen.
+  **Konkretes Suchmuster, das jetzt schon 3× real getroffen hat**
+  (documentation.nvim, replacer.nvim, reposcope.nvim): eine
+  `M.load()`-Funktion, die bei JSON-Decode-Fehler still auf `{}`/leer
+  zurückfällt, kombiniert mit einer `M.add()`/`M.toggle()`/`M.record()`, die
+  immer die GANZE Datei neu schreibt (`load()` → mutieren → `save()`) —
+  danach ersetzt der nächste Schreibzugriff eine kaputte Datei durch einen
+  Ein-Eintrag-Stub, alle vorherigen Einträge weg. Fix-Muster: Backup nach
+  `<datei>.corrupt` beim Decode-Fehler, bevor `{}` zurückgegeben wird.
+  **Nicht jeder Treffer dieses Musters ist ein Fund** — Abwägung nach
+  Wiederherstellbarkeit: ein reiner Cache/Frecency-Signal (pdfport.nvim
+  `util/cache.lua`, reposcope.nvim `state/query_stats.lua`) baut sich durch
+  weitere Nutzung von selbst neu auf und wurde bewusst NICHT gefixt; kuratierte
+  Nutzerdaten (Favoriten, Historie, Pins) sind nicht wiederherstellbar und
+  wurden gefixt. `state/session_state.lua`-artige Module ohne
+  Load-Modify-Save-Zyklus (jeder Save überschreibt ohnehin absichtlich alles)
+  haben dieses Problem strukturell gar nicht — kurz prüfen, ob überhaupt ein
+  load-then-save-Zyklus vorliegt, bevor man tiefer gräbt.
 - **ERR-52 (curated Listen indexweise gemergt) betrifft nur eigene,
   handgeschriebene Merge-Funktionen** — reiner `vim.tbl_deep_extend`-Gebrauch
   ersetzt nicht-leere Listen bereits vollständig, muss nicht mehr geprüft
