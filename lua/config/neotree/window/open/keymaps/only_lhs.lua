@@ -6,64 +6,10 @@
 --- This module defines a minimal, explicit set of normal-mode keymaps that
 --- directly call `neo-tree.command.execute()` without any abstraction layer.
 --- The intent is to keep the behavior fully transparent and configurable
---- at the call site.
----
---- ------------------------------------------------------------------------
---- Common execute() options overview
---- ------------------------------------------------------------------------
----
---- toggle : boolean
---- When true, Neo-tree toggles visibility:
---- - if the window is already open at the given position, it will be closed
---- - otherwise, a new Neo-tree window is opened
---- If false or omitted, Neo-tree is always opened.
----
---- position : string
---- Controls where the Neo-tree window is opened.
---- Valid values:
---- "left" -> vertical split on the left side
---- "right" -> vertical split on the right side
---- "current" -> replaces the current window
---- "float" -> floating window
---- The position also implicitly selects the corresponding window layout.
----
---- reveal : boolean
---- When true, Neo-tree attempts to focus and reveal the current buffer's file
---- in the tree.
---- - If the file is inside the current working directory, it is highlighted.
---- - If the file is outside the cwd, Neo-tree may prompt for confirmation
---- unless `reveal_force_cwd` is set.
----
---- reveal_force_cwd : boolean
---- When true and `reveal = true`:
---- - if the file to be revealed is outside the current cwd
---- - Neo-tree automatically changes the cwd to the file's parent directory
---- - no confirmation dialog is shown
---- This option has global side effects and is therefore opt-in.
----
---- dir : string
---- Explicit root directory for the Neo-tree instance.
---- - Overrides the current cwd for this invocation
---- - Prevents cwd changes when revealing files outside the project
---- - If the revealed file is not under this directory, no reveal occurs
----
---- source : string
---- Selects the Neo-tree source to display.
---- Common values:
---- "filesystem" (default)
---- "buffers"
---- "git_status"
---- If omitted, the configured default source is used.
----
---- focus : boolean
---- When true, focus is moved to the Neo-tree window after opening.
---- When false, Neo-tree opens in the background.
---- Defaults depend on Neo-tree internal configuration.
----
---- find_file : boolean
---- Legacy alias for `reveal` in older Neo-tree versions.
---- Prefer `reveal` for clarity and forward compatibility.
----
+--- at the call site. Only `toggle`/`position`/`reveal`/`reveal_force_cwd` are
+--- used below; for the full `execute()` options overview (`dir`, `source`,
+--- `focus`, `find_file`, ...) see wkdbook-Neovim/MyNotes/
+--- neotree-command-execute-options.md.
 
 local map = require("lib.nvim.bindings.keymap")
 

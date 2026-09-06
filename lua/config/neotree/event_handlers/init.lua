@@ -3,14 +3,13 @@
 
 ---@type table[] Cfg.NeoTree.EventHandler[]
 return {
-  -- (cursor-hide entfernt: filetree.nvim's ui/cursor_hide-Feature macht das
-  -- jetzt adapter-agnostisch per winhighlight - in echter interaktiver
-  -- Nutzung bestätigt funktionierend.)
+  -- (cursor-hide removed: filetree.nvim's ui/cursor_hide feature now does this
+  -- adapter-agnostically via winhighlight - confirmed working in real
+  -- interactive use.)
 
-  -- (layout_guard entfernt: filetree.nvim's nav/layout_guard hält per Adapter
-  -- ein Editor-Fenster offen, wenn der Baum das letzte Fenster wäre.)
+  -- (layout_guard removed: filetree.nvim's nav/layout_guard keeps an editor
+  -- window open per adapter whenever the tree would be the last window.)
 
-  -- Bei neuen Preview Window cursor zum Start zurücksetzen
   {
     event = "neo_tree_preview_buffer_enter",
     handler = function(_)

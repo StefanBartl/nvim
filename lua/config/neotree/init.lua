@@ -9,6 +9,9 @@ local defaults = {
   debug = false,
   default_position = "left",
   restore_last_position = false,
+  --- CDX: `window_debug`/`window_open` are accepted here and passed by
+  --- plugins/neotree.lua, but M.setup() below never reads either one --
+  --- dead knobs, or wiring that got dropped. Decision needed.
   window_debug = false,
   window_open = false,
   -- `window/open/keymaps/reveal_current_file.lua` no longer exists in this
