@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 26/32 Repos gelesen, 13 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 27/32 Repos gelesen, 14 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,7 +316,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 26/32)
+### Ergebnis je Repo (Stand dieser Sitzung, 27/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -346,6 +346,7 @@ verändert).
 | pdfport.nvim | 0 (durchgängig sauber, wie schon bei SEC-*: `core/dispatcher.lua`/`core/composer.lua` wrappen `callback` konsequent für Cleanup auf jedem Exit-Pfad statt nur dem Erfolgspfad, `config.get()` gibt zwar die lebende Tabelle zurück, aber kein Konsument mutiert sie — nur `pdfport.get_config()` als Public API deep-copy't explizit vorm Herausgeben, Registry-Getter (`all_backends`/`all_producers`) liefern immer frische Arrays, kein `table.sort` mit Ternary-Comparator) | — | — |
 | pickers.nvim | 0 — **70 Dateien, zweitgrößtes bisher geprüftes Repo dieser Familie**: Checkliste + gezielte Stichproben (`smart/frecency.lua`s Legacy-Store-Migration verweigert Überschreiben eines nicht-leeren Stores, `config/init.lua`s `M.apply()` validiert jedes Feld einzeln mit Warn-und-Behalten statt Absturz/stillem Datenverlust — das ERR-22-Positivbeispiel, `smart/score.lua`s `table.sort`-Comparator ist explizit if/else, alle drei Engine-`extract/*.lua`-Pfad-Extraktoren (fzf/snacks/telescope) behandeln fehlende Felder explizit statt zu raten), kein file-für-file-Read aller 70 Dateien | — | — |
 | recommender.nvim | 0 (durchgängig sauber: `project.lua`s Scan-Generation-Counter für Async-Verzeichnis-Walk/Datei-Reads verhindert exakt die Race, die anderswo in dieser Familie echte Bugs waren; `bindings/usrcmds.lua`/`float/keymaps.lua` validieren Buffer-/Fenster-Handles konsequent neu vorm Zugriff in jedem `vim.schedule`-Callback; `config/init.lua` deep-copy't `DEFAULTS` vorm Mergen statt der insights.nvim-Falle zu wiederholen). Ein bereits im Code selbst per `CDX`-Kommentar markierter toter Zustand (`_pending_insert` in `float/keymaps.lua`) ist ein Cleanup-Hinweis, kein Bug | — | — |
+| **replacer.nvim** | **`history.lua`s `M.load()` kollabierte „keine Datei" und „Datei kaputt" auf dieselbe leere Historie** — `M.add()` schreibt immer die GANZE Datei, also hätte der nächste `:Replace`-Apply die kaputte `history.json` durch eine frische Ein-Eintrag-Historie ersetzt, alle vorherigen Suchen unwiederbringlich verloren. Dieselbe Bugklasse wie zuvor bei documentation.nvim, mit derselben Lösung (Backup nach `.corrupt` vorm nächsten Überschreiben). 40 Dateien/8022 LOC insgesamt — `apply.lua`s gechunkte Async-Apply (neuestes Feature), `checkpoint.lua` (bereits SEC-33-gehärtet) und `batch.lua` gezielt mitgeprüft, sonst Checkliste + Stichproben wie bei den anderen Großrepos dieser Familie | **ERR-11-Familie** | [`66f1c88`](https://github.com/StefanBartl/replacer.nvim/commit/66f1c88) |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -415,10 +416,10 @@ stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwer
 immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
 mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-### Noch offen (6/32 Repos ungelesen für ERR-*)
+### Noch offen (5/32 Repos ungelesen für ERR-*)
 
-replacer.nvim, reposcope.nvim,
-runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim.
+reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
+spotlight.nvim.
 
 (Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
 oben eingetragen: 3/3 mit echtem Fund. pdfport.nvim direkt gelesen: 0 Funde.)
