@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–5/8 erledigt, PAUSIERT — Fortsetzung bei Sub 6**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–6/8 erledigt, PAUSIERT — Fortsetzung bei Sub 7**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -196,9 +196,43 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 3. ✅ `lua/lib/nvim/cross/`
 4. ✅ `lua/lib/nvim/fs/`
 5. ✅ `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
-6. `lua/lib/nvim/ui/` (kit, 20 Dateien)  ← **HIER WEITER**
-7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)
+6. ✅ `lua/lib/nvim/ui/` (kit, 29 Dateien — Plan-Schätzung „20" war veraltet)
+7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)  ← **HIER WEITER**
 8. `TESTS/` + `doc/` + `docs/`
+
+**Sub-Häppchen 6 — erledigt** (`lua/lib/nvim/ui/`, Commit `01ba23a`, gepusht,
+Re-Fetch bestätigt identisch). 29 Dateien gelesen (~4469 Zeilen), 2 geändert
+(nur `@types`-Dateien). Ungewöhnlich sauberer Teilbaum — `ui/kit/` (das
+Floating-Window/UI-Widget-Toolkit: Chooser, Prompts, Confirm, Compare,
+Layout, Theme, …) war praktisch fehlerfrei, keine Boilerplate-Header, keine
+alten Marker, keine falsche Sprache.
+
+- **`@types`-Fix:** `ui/kit/@types/init.lua` — `Lib.UI.Kit.ThemeModule` fehlte
+  das Feld `default` (theme.lua exportiert `M.default()`, den Namen des
+  aktiven Presets); Klasse hatte nur resolve/apply/materialize/border_glyphs/
+  setup/presets dokumentiert. Ergänzt.
+- **`--- CDX:` gesetzt (Judgment Call):** `ui/@types/init.lua` — `Lib.UI`
+  dokumentiert ein `require("lib.nvim.ui")`-Aggregatmodul, das es zur
+  Laufzeit gar nicht gibt (kein `ui/init.lua`; `hl/`, `kit/`, `list/`,
+  `nerd_font/`, `statusline/` sind eigenständige Leaf-Module über ihren
+  eigenen Require-Pfad). Zusätzlich selbst als Phantom unvollständig — die
+  Felder `statusline` und `nerd_font` fehlen ganz. Gleiches wiederkehrende
+  Muster wie in Sub 4 (`lib/@types/init.lua`) und Sub 5
+  (`buf_win_tab`/`buffer` `@types`) — belassen bis ein externer-Consumer-Check
+  klärt, ob je implementiert.
+- **Keine echten Bugs, kein toter Code.** `kit/@types/init.lua`s
+  `Lib.UI.Kit`-Klasse passt sonst exakt zu `kit/init.lua`s echtem `M`-Table.
+- **Nichts für WKDBooks:** Die Modul-Doku in diesem Scope (z. B. `list/init.lua`s
+  Stack/Titel/Fokus/Leerfall-Rationale, `nerd_font/init.lua`s
+  Font-Erkennungs-Begründung, `kit/compare.lua`s SEARCH/MARKED/COMPARE-
+  Zustandsautomat-Doku) hängt jeweils eng am konkreten API-Vertrag, den sie
+  beschreibt — kein generisches Tutorial, kein AI-Boilerplate-Block. Bleibt
+  im Code.
+
+stylua ok, luacheck 0/0 (24 nicht-`@types`-Dateien geprüft, sauber auch über
+den gesamten `ui/`-Scope hinweg), volle `TESTS/run.lua`-Suite `LIB_TESTS_OK`
+(inkl. `ui_kit_spec.lua`/`ui_list_spec.lua`/`statusline_spec.lua`, die Module
+aus diesem Scope direkt testen). Ohne Co-Authored-By.
 
 **Sub-Häppchen 5 — erledigt** (`lua/lib/nvim/buf_win_tab/` + `window/` +
 `buffer/`, Commit `81a8f81`, gepusht, Re-Fetch bestätigt identisch). 46
