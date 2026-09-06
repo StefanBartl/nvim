@@ -440,6 +440,34 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 46 — reposcope.nvim (Plugin-Repo 29/31) — **erledigt**
+
+Commit `c97a460`, gepusht, `pull --ff-only` sauber. Ganzes Repo (113 Lua +
+9 Specs + docs). stylua ok, luacheck 0/0 (115 Dateien), `REPOSCOPE_TESTS_OK`.
+**Überdurchschnittlich sauber** — sehr konsistente `---@module`/`@brief`/
+`@description`-Header, gepflegte Docs mit Code-Pointern. Funde fast alle
+kleine Slips.
+
+**Direkte Fixes:** Smart-Apostrophe in `init.lua`; falscher `@module`-Pfad
+in `@types/classes/configs.lua`; Tastatur-Mash-Trailer (`--NOTE: nuiy`) +
+`linr`→`line` in `@types/classes/ui.lua`; `@types/aliases.lua`
+`ConfigOptionKey`-Enum fehlte der gültige `setup()`-Key `prompt_fields`;
+2 eingebettete deutsche Roadmap-Zitate in `state/{favorites_state,
+query_stats}.lua` → Englisch; diverse Tippfehler (`Repsocope`, `curl'`,
+`Vim Utilties`, `topice`, `API Limits neeeded`, `--@type`→`---@type`);
+`cache/repository_cache.lua`-Header sagte „GitHub", Cache ist providerneutral
+→ „active provider's API".
+
+**Doc-Relokation:** `ui/preview/preview_image.lua` ~55-Zeilen-Rationale-Wand
+(Messstudie, verworfene Social-Preview-Card, „what is not cached"-Philosophie)
+→ Verweis nach `docs/configuration.md` (steht dort schon vollständig);
+codeleser-relevanter Teil (`BADGE_PATTERNS`, relative Pfade) bleibt.
+`TESTS/README.md` Spec-Tabelle 4 von 9 → ergänzt.
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.**
+`utils/spawn_env.lua` `cross.run.env`-Kommentar ist aktuell (Migration lt.
+Memory abgeschlossen).
+
 ### Häppchen 45 — color_my_ascii.nvim (Plugin-Repo 28/31) — **erledigt**
 
 Commit `fadef55`, gepusht, `pull --ff-only` sauber. Ganzes Repo (95 Lua +
@@ -603,9 +631,13 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
 **Verbleibende Plugin-Repos (3/31 offen):** documentation, lsp, sandbox.
-reposcope.nvim (29/31) **läuft gerade**. Plus zwei separate Aufräum-Punkte:
-der **mdview TypeScript-Client** (eigener Sub-Pass) und der vorbestehende
-casedesk `gen_docs.sh --check`-Fail.
+Plus zwei separate Aufräum-Punkte: der **mdview TypeScript-Client** (eigener
+Sub-Pass) und der vorbestehende casedesk `gen_docs.sh --check`-Fail.
+
+> **documentation.nvim** hat einen laufenden Item-für-Item-Roadmap-Workflow
+> (siehe Memory `documentation-nvim-roadmap-workflow`) — beim Sweep die
+> `docs/ROADMAP`-Punkte nicht als erledigt zurückschreiben, sonst desynct der
+> Workflow. Nur klare Code↔Doku-Widersprüche fixen.
 Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
 umgeschaltet (2×3 einmalig → 1 → 2 → 1 → 2). Ab Häppchen 41 wieder
 **2 parallele Agents erlaubt** (bis zum nächsten Widerruf). Immer der
