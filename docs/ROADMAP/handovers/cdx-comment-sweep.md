@@ -1159,6 +1159,91 @@ Ohne Co-Authored-By.
 sagen „Supports Telescope and fzf as picker backends" — knapp, nicht falsch
 (fzf-lua-Backend existiert), gelassen.
 
+### Häppchen 22 — emojis.nvim (Plugin-Repo 5/31)
+
+**Status: erledigt.** ~3625 Z. Lua (`lua/` 24 Dateien + 10 `TESTS/*`), eigenes
+`main` / Remote `StefanBartl/emojis.nvim`. Emoji-Toolkit (clear/replace/wrap,
+Insert-Picker, Frecency-Overlay, Emoji-Checkboxen, async `cwd`-Suche). Wie die
+vier vorigen Plugin-Repos schon fast durchgehend auf Sweep-Qualität: durchweg
+Englisch (ein einziges deutsches Wort, s.u.), Header mit echter
+ortsrelevanter Rationale, keine AI-Boilerplate, keine Chat-Artefakte.
+`lua/emojis/health.lua` war früher gesweept — sauber, nicht angefasst.
+Depends on `lib.nvim` hart (composer für `:Emojis`, `ui.kit` fürs Overlay) —
+bewusst, kein Fund.
+
+**Geänderte Dateien (11):** `lua/emojis/{search,actions,config/DEFAULTS,
+core/patterns,core/checkbox,overlay/init,overlay/frecency}.lua`,
+`docs/{architecture,FEATURES,keymaps}.md`, `doc/emojis.txt`.
+
+**Bereits sauber, 0 Änderungen:** `init.lua`, `commands.lua`, `nav.lua`,
+`picker.lua`, `@types.lua`, `config/init.lua`, `core/{ops,scope,insert}.lua`,
+`bindings/*` (alle 4), `util/{lib,notify}.lua`, `health.lua`, beide
+`plugin/*.lua`, alle `TESTS/*`.
+
+**`--- CDX:` gesetzt (Urteilssache / Bug in passing, nicht gefixt):**
+- `search.lua` `RG_PATTERN` — deckt nur **3 der 4** `core.patterns.RANGES` ab;
+  der Misc-Technical-Block (U+2300-23FF: ⌚ ⏳ ⏰ …) fehlt, obwohl der
+  Tokenizer ihn kennt (`patterns_spec.lua:27` testet `count("⌚") == 1`). Damit
+  überspringt `:Emojis list/count/clear/replace cwd` still genau diese Glyphen,
+  während jede buffer-scoped Aktion sie trifft. Der Modul-Header behauptete
+  „mirrors the byte patterns used by `core.patterns`" — auf „lags by one range"
+  korrigiert. Range ergänzen = Verhaltensänderung, daher nur getaggt.
+  (Muster: Regex-Kommentar ≠ tatsächliches Verhalten.)
+- `config/DEFAULTS.lua` `checkbox.default_set` — in DEFAULTS, `@types` **und**
+  `docs/configuration.md` als „die Zyklus-Menge, die `:Emojis toggle` ohne
+  Argument nutzt" dokumentiert, aber **kein Code-Pfad liest das Feld**:
+  `config.checkbox_sets(nil)` durchsucht immer alle Sets. Entweder verdrahten
+  oder Feld + Doc-Zeilen streichen. (Muster #5, Kommentar widerspricht Code.)
+- `core/patterns.lua` `M.BASE` — Export ohne einen einzigen Leser (Repo, TESTS,
+  alle Nachbar-Plugins), keine dokumentierte API, exponiert die kompilierten
+  Per-Range-Lua-Patterns (Implementierungsdetail). Vestigial neben dem
+  benutzten `M.VS16`. **Nicht gelöscht** (plausible bewusste API-Fläche,
+  Zweifel → taggen, Regel 5).
+
+**Toter Code gelöscht** (0 Aufrufer im Repo + TESTS + allen anderen
+Plugin-Repos; nicht dokumentiert; expliziter Intern-Namespace):
+- `overlay/init.lua` `M.MODES` — Kommentar „Exposed for command completion",
+  aber `commands.lua` nutzt seine eigene lokale `OVERLAY_MODES`-Liste; war die
+  **vierte** Kopie derselben Mode-Liste (dazu `overlay`-lokale `MODES`,
+  `config.VALID_OVERLAY_MODES`, `commands.OVERLAY_MODES`). Nie ein Leser seit
+  dem Initial-Overlay-Commit.
+- `overlay/frecency.lua` `M._invalidate` — `_`-Präfix, Doc „Testing seam",
+  0 Aufrufer; `set_path()` (nilt `_store` mit) und `reset()` sind, was die
+  Tests nutzen.
+
+**Direkte Fixes (Kommentar/Doc, keine Verhaltensänderung):**
+- `actions.lua` `preview_spans` — stale „Previously this blocked the UI thread
+  with `vim.wait` … It now schedules …"-Historie auf eine Präsens-Beschreibung
+  eingedampft; der Inline-Zwilling bei `apply()` mitgestrafft (Muster #3 +
+  „used to / previously"-Historie).
+- `core/checkbox.lua` — deutsches „Hallo" im Header-Beispiel → „Hello" (das
+  einzige deutsche Wort im Repo).
+- **Doc-Staleness (Muster #1, eigener Commit):** `bindings/which_key.lua` wurde
+  in `1d50050` gelöscht (das Gruppenlabel ist jetzt ein Feld der Keymap-Spec,
+  `which_key = { group = "Emojis" }` in `bindings/keymaps.lua`), aber
+  `docs/architecture.md`, `doc/emojis.txt`, `docs/FEATURES.md` (§„Which-key
+  group labeling", inkl. `- **Module:**`) und `docs/keymaps.md` listeten das
+  Modul noch. Alle vier auf `bindings/keymaps.lua` umgebogen. Exakt wie
+  Häppchen 18/20 (recommender: `which_key.lua`, dap: `which_key/init.lua`).
+
+**Keine Annotation-Fixes nötig** (`@types.lua` deckt alle Config-Untertypen
+korrekt ab, Felder stimmen mit `DEFAULTS.lua` überein — inkl. der
+`Picker.Engine`-Alias-Werte, die `picker.lua`/`health.lua` konsistent
+behandeln; der cmdlog-Fund „drei Stellen, drei Wertelisten" trifft hier
+**nicht** zu). **Kein WKDBooks-Umzug** — kein ortsunabhängiges Neovim-/Lua-
+Mechanik-Wissen; die langen Header (`commands.lua` composer-forward,
+`patterns.lua` Grapheme-Regeln, `overlay/init.lua` Grid-vs-kit) sind
+ortsrelevante Design-Rationale und verweisen schon aufs plugin-eigene `docs/`.
+
+**CI/Gate:** `stylua --check lua TESTS` (v2.5.2) sauber, `luacheck lua TESTS`
+(1.2.0) **0/0 über 34 Dateien** (`@types.lua` mitgeprüft), TESTS-Suite headless
+grün (`EMOJIS_TESTS_OK`, lib.nvim als Sibling aus `E:/repos/lib.nvim`).
+CI-Pins lokal exakt gematcht.
+
+Commits: emojis.nvim `45c25e2` (source) + `5c0e330` (docs), gepusht
+(`a93462f..5c0e330`), `pull --ff-only` „Already up to date",
+`git log origin/main -1` bestätigt. Ohne Co-Authored-By.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
