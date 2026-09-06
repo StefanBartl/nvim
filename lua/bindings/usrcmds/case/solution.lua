@@ -1,34 +1,31 @@
 ---@module 'bindings.usrcmds.case.solution'
---- Die Lösung eines Cases als EINE bekannte Datei: `Solution/Solution.md`.
+--- A case's solution as ONE known file: `Solution/Solution.md`.
 ---
---- Warum eine eigene Datei und nicht "steht ja im Summary": `Summary.md` ist
---- das ServiceNow-Dokument (fixe SNOW-Vorlage, kein Markdown, CONCEPT.md
---- §8a), `Notes.md` das Arbeitsprotokoll — beide sind Verlauf, keine
---- Antwort. Was am Ende WIRKLICH geholfen hat, steht dort zwischen drei
---- Fehlversuchen, einem Coach-Hinweis und "Best Regards". Genau dieser eine
---- Absatz ist aber das, was ein halbes Jahr später beim nächsten Case
---- denselben Nachmittag spart. Eine feste Datei an einem festen Ort ist die
---- Voraussetzung dafür, dass man ihn wiederfindet — per Heuristik heute
---- (`M.search`, TF-IDF über genau diese Dateien) und per KI später
---- (ROADMAP.md: nur Referenzen aus der offiziellen Doku und Gleichwertigem
---- zählen als Quelle für Case-Lösungen — die eigenen, verifizierten
---- Lösungen sind die zweite solche Quelle).
+--- Why its own file and not "it's in the Summary": `Summary.md` is the
+--- ServiceNow document (fixed SNOW template, not Markdown, CONCEPT.md §8a),
+--- `Notes.md` the work log — both are history, not an answer. What REALLY
+--- helped ends up there between three failed attempts, a coach hint and "Best
+--- Regards". That one paragraph is what saves the same afternoon on the next
+--- similar case half a year later. A fixed file in a fixed place is the
+--- precondition for finding it again — heuristically today (`M.search`,
+--- TF-IDF over exactly these files) and via AI later (ROADMAP.md: only
+--- references from the official docs and equivalents count as a source for
+--- case solutions — one's own verified solutions are the second such source).
 ---
---- Der Ort ist NICHT neu erfunden: `doctor.lua` erzwingt die Konvention
---- `Solution/` (Ordner, Singular) längst im Bestand und schiebt ein flaches
---- `Solution.md` bzw. ein `Solutions/` dorthin. Dieses Modul schreibt
---- deshalb immer nach `Solution/Solution.md` — liest aber (siehe
---- `M.locate`) auch die Altlagen, damit ein noch nicht normalisierter Case
---- nicht fälschlich als "keine Lösung" gilt.
+--- The location is NOT newly invented: `doctor.lua` already enforces the
+--- `Solution/` convention (folder, singular) across the corpus and moves a
+--- flat `Solution.md` or a `Solutions/` there. So this module always writes
+--- to `Solution/Solution.md` — but also reads the legacy locations (see
+--- `M.locate`) so a not-yet-normalized case doesn't wrongly count as "no
+--- solution".
 ---
---- Die Struktur (## Status / Problem / Ursache / Lösung / Verifikation /
---- Schlagworte / Referenzen, `templates/Solution.md`) ist der eigentliche
---- Mehrwert gegenüber Freitext: sie macht die Suche feldweise gewichtbar
---- (ein Treffer in `## Schlagworte` wiegt mehr als einer irgendwo im
---- Fließtext) und gibt einer späteren KI ein Format, das sie nicht raten
---- muss. Der Parser besteht trotzdem NICHT darauf: eine handgeschriebene
---- Solution.md ohne eine einzige bekannte Überschrift bleibt vollständig
---- durchsuchbar, sie verliert nur die Gewichtung.
+--- The structure (## Status / Problem / Ursache / Lösung / Verifikation /
+--- Schlagworte / Referenzen, `templates/Solution.md`) is the real value over
+--- free text: it makes the search weightable per field (a hit in
+--- `## Schlagworte` weighs more than one somewhere in prose) and gives a
+--- later AI a format it need not guess. The parser still does NOT insist: a
+--- hand-written Solution.md without a single known heading stays fully
+--- searchable, it just loses the weighting.
 
 local config = require("bindings.usrcmds.case.config")
 local registry = require("bindings.usrcmds.case.registry")
@@ -45,12 +42,13 @@ local uv = vim.uv or vim.loop
 
 local M = {}
 
---- Kanonische Abschnitte in Dateireihenfolge — zugleich die
---- Anzeigereihenfolge in `:Case solution`.
+--- Canonical sections in file order — also the display order in
+--- `:Case solution`.
 ---@type string[]
 M.SECTIONS = { "status", "problem", "cause", "solution", "verification", "keywords", "references" }
 
---- Kanonischer Schlüssel -> Überschrift, wie sie in der Datei steht.
+--- Canonical key -> heading as it appears in the file (German — this is the
+--- template's section wording).
 ---@type table<string, string>
 M.LABELS = {
   status = "Status",
@@ -62,11 +60,11 @@ M.LABELS = {
   references = "Referenzen",
 }
 
---- Überschrift (kleingeschrieben) -> kanonischer Schlüssel. Deutsch UND
---- Englisch, weil der Bestand beides mischt: die SNOW-Vorlage schreibt
---- "Solution or workaround", eine handgeschriebene Notiz "Lösung", eine
---- KI-Antwort gern "Root cause". Ein hier fehlendes Alias kostet nur die
---- Feldgewichtung — der Text bleibt über den Volltext auffindbar.
+--- Heading (lower-cased) -> canonical key. German AND English, because the
+--- corpus mixes both: the SNOW template writes "Solution or workaround", a
+--- hand-written note "Lösung", an AI answer often "Root cause". A missing
+--- alias here costs only the field weighting — the text stays findable via
+--- full text.
 ---@type table<string, string>
 local ALIASES = {
   ["status"] = "status",
@@ -99,16 +97,16 @@ local ALIASES = {
 
 ---@class Lib.Case.SolutionDoc
 ---@field entry Lib.Case.RegistryEntry
----@field path string             Wo die Datei tatsächlich liegt (kann eine Altlage sein).
----@field canonical boolean       false, wenn sie noch nicht unter `Solution/Solution.md` liegt.
----@field title string            Case-Titel aus `.case.json` ("" wenn keiner).
----@field status string|nil       Normalisiert auf einen `config.solution_statuses`-Eintrag.
+---@field path string             where the file actually sits (may be a legacy location).
+---@field canonical boolean       false when it is not yet at `Solution/Solution.md`.
+---@field title string            case title from `.case.json` ("" if none).
+---@field status string|nil       normalized to a `config.solution_statuses` entry.
 ---@field keywords string[]
----@field sections table<string, string>  kanonischer Schlüssel -> Abschnittstext
----@field extra table<string, string>     unbekannte Überschrift -> Abschnittstext
----@field text string             Volltext ohne H1 — das Suchsubstrat.
+---@field sections table<string, string>  canonical key -> section text
+---@field extra table<string, string>     unknown heading -> section text
+---@field text string             full text without the H1 — the search substrate.
 
--- ── Pfade ────────────────────────────────────────────────────────────────
+-- ── Paths ────────────────────────────────────────────────────────────────
 
 ---@param case_dir string
 ---@return string
@@ -145,11 +143,10 @@ local function markdown_files(dir)
   return out
 end
 
---- Die Lösungsdatei eines Cases, egal in welcher der historischen Lagen sie
---- steckt. Reihenfolge = "je kanonischer, desto früher"; `:Cases doctor`/
---- `normalize` räumt die hinteren irgendwann auf die vordere um, aber bis
---- dahin soll `:Case solution` sie trotzdem finden, statt "keine Lösung" zu
---- behaupten und daneben eine zweite anzulegen.
+--- A case's solution file, whichever of the historical locations it sits in.
+--- Order = "more canonical, earlier"; `:Cases doctor` / `normalize` eventually
+--- move the later ones onto the first, but until then `:Case solution` should
+--- still find it rather than claim "no solution" and create a second one.
 ---@param case_dir string
 ---@return string|nil path, boolean canonical
 function M.locate(case_dir)
@@ -176,7 +173,7 @@ function M.exists(case_dir)
   return (M.locate(case_dir)) ~= nil
 end
 
--- ── Parsen ───────────────────────────────────────────────────────────────
+-- ── Parsing ──────────────────────────────────────────────────────────────
 
 ---@param heading string
 ---@return string|nil canonical key
@@ -187,12 +184,11 @@ local function canonical_section(heading)
   return ALIASES[h:lower()]
 end
 
---- Erste nicht-leere Zeile des Status-Abschnitts auf einen
---- `config.solution_statuses`-Eintrag abbilden. Teilstring statt Gleichheit:
---- "Gelöst (Workaround beim Kunden aktiv)" soll noch als Status durchgehen
---- statt als "unbekannt" zu verschwinden. Die Reihenfolge in der Config
---- entscheidet bei Mehrdeutigkeit — deshalb steht dort das spezifischere
---- "Workaround" vor dem allgemeinen "Offen".
+--- Map the first non-empty line of the Status section to a
+--- `config.solution_statuses` entry. Substring, not equality: "Gelöst
+--- (Workaround beim Kunden aktiv)" should still pass as a status rather than
+--- vanish as "unknown". Config order decides ambiguity — hence the specific
+--- "Workaround" before the general "Offen".
 ---@param text string|nil
 ---@return string|nil
 local function parse_status(text)
@@ -234,9 +230,9 @@ local function parse_keywords(text)
   return out
 end
 
---- Rohtext -> Abschnitte. Die H1 (`config.headline_format`) fällt raus: sie
---- ist Case-Metadatum, keine Lösung, und würde in der Suche nur den Titel
---- doppelt zählen — den gewichtet `M.search` ohnehin schon separat.
+--- Raw text -> sections. The H1 (`config.headline_format`) drops out: it is
+--- case metadata, not a solution, and would only double-count the title in
+--- the search — which `M.search` already weights separately.
 ---@param text string
 ---@return { sections: table<string, string>, extra: table<string, string>, status: string|nil, keywords: string[], text: string }
 function M.parse(text)
@@ -257,7 +253,7 @@ function M.parse(text)
 
   for _, line in ipairs(vim.split(text, "\n", { plain = true })) do
     if line:match("^#%s") then
-      -- H1 = die vorgeschriebene Case-Headline, kein Inhalt.
+      -- H1 = the mandated case headline, not content.
       flush()
       current_key, current_raw = nil, nil
     else
@@ -284,8 +280,8 @@ function M.parse(text)
   }
 end
 
---- Die Lösung eines Cases, geparst. `nil` (kein Fehler) wenn es keine gibt —
---- der Normalfall für jeden noch laufenden Case.
+--- A case's solution, parsed. `nil` (not an error) when there is none — the
+--- normal state for any still-running case.
 ---@param entry Lib.Case.RegistryEntry
 ---@return Lib.Case.SolutionDoc|nil
 function M.read(entry)
@@ -312,7 +308,7 @@ function M.read(entry)
   }
 end
 
---- Jede Lösung im Bestand, in Registry-Reihenfolge.
+--- Every solution in the corpus, in registry order.
 ---@return Lib.Case.SolutionDoc[]
 function M.corpus()
   local out = {}
@@ -325,12 +321,11 @@ function M.corpus()
   return out
 end
 
--- ── Anlegen ──────────────────────────────────────────────────────────────
+-- ── Creating ─────────────────────────────────────────────────────────────
 
---- Der Inhalt einer frischen Lösung: die vorgeschriebene H1
---- (`config.headline_format` zentral über `render.headline`, genau wie
---- `plan.lua` sie für jede Blueprint-Datei schreibt) plus der Rumpf aus
---- `templates/Solution.md`.
+--- The content of a fresh solution: the mandated H1 (`config.headline_format`
+--- centrally via `render.headline`, exactly as `plan.lua` writes it for every
+--- blueprint file) plus the body from `templates/Solution.md`.
 ---@param entry Lib.Case.RegistryEntry
 ---@return string[]
 function M.template_lines(entry)
@@ -351,10 +346,9 @@ function M.template_lines(entry)
   return lines
 end
 
---- Legt `Solution/Solution.md` an — und nur, wenn es noch gar keine Lösung
---- gibt (auch keine in einer Altlage): eine bestehende Datei wird nie
---- überschrieben, dieselbe Regel wie bei jedem Blueprint-Knoten
---- (`overwrite = false`).
+--- Creates `Solution/Solution.md` — and only when there is no solution at all
+--- yet (not even in a legacy location): an existing file is never overwritten,
+--- the same rule as every blueprint node (`overwrite = false`).
 ---@param entry Lib.Case.RegistryEntry
 ---@return string|nil path, string|nil err
 function M.create(entry)
@@ -374,31 +368,31 @@ function M.create(entry)
   return path, nil
 end
 
--- ── Suche (Heuristik, keine KI) ──────────────────────────────────────────
+-- ── Search (heuristic, not AI) ───────────────────────────────────────────
 
---- Ein Begriff aus `## Schlagworte` zählt so oft extra — dieselbe Mechanik
---- wie `similar.lua`s TITLE_BOOST (Zusatzzählungen in derselben tf-Tabelle,
---- kein zweiter Vektor), und aus demselben Grund: die Schlagworte sind das,
---- was jemand bewusst als "darum ging es hier" hingeschrieben hat, der
---- Fließtext enthält auch Fehlversuche und Zitate.
+--- A term from `## Schlagworte` counts this many times extra — the same
+--- mechanic as `similar.lua`'s TITLE_BOOST (extra counts in the same tf table,
+--- not a second vector), for the same reason: the keywords are what someone
+--- deliberately wrote as "this is what it was about", the prose also contains
+--- failed attempts and quotes.
 local KEYWORD_BOOST = 3
 local TITLE_BOOST = 2
 
---- Kommt die Anfrage als ZUSAMMENHÄNGENDE Zeichenkette vor ("unmapped
---- control"), ist das ein stärkeres Signal als dieselben Wörter verstreut.
---- Multiplikator statt fixem Bonus, damit ein Phrasentreffer in einem sonst
---- schwachen Dokument nicht an einem inhaltlich besseren vorbeizieht.
+--- If the query occurs as a CONTIGUOUS string ("unmapped control"), that is a
+--- stronger signal than the same words scattered. A multiplier, not a fixed
+--- bonus, so a phrase hit in an otherwise weak document doesn't overtake a
+--- substantively better one.
 local PHRASE_BOOST = 1.5
 
 ---@class Lib.Case.SolutionHit
 ---@field doc Lib.Case.SolutionDoc
----@field score number    Nur zum Sortieren vergleichbar, keine Prozentangabe (s. u.).
----@field terms string[]  Tatsächlich getroffene Suchbegriffe, stärkster zuerst.
+---@field score number    comparable for sorting only, not a percentage (see below).
+---@field terms string[]  query terms actually hit, strongest first.
 ---@field matched integer
----@field wanted integer  Auswertbare Begriffe in der Anfrage.
----@field phrase boolean  Anfrage kam wörtlich als Zeichenkette vor.
+---@field wanted integer  evaluable terms in the query.
+---@field phrase boolean  query occurred verbatim as a string.
 
---- Termzählungen eines Dokuments, inklusive Feldgewichtung.
+--- A document's term counts, including field weighting.
 ---@param doc Lib.Case.SolutionDoc
 ---@return table<string, number>
 local function term_counts(doc)
@@ -415,17 +409,17 @@ local function term_counts(doc)
   return tf
 end
 
---- Lösungen zu einer Anfrage, absteigend nach Übereinstimmung.
+--- Solutions for a query, descending by match.
 ---
---- Bewusst KEINE Prozentzahl wie bei `:Case similar`: dort stehen sich zwei
---- Dokumente derselben Art gegenüber (Kosinus zweier Vektoren, 0..1 ist
---- echt), hier eine dreiwortige Anfrage gegen ein Dokument — jede Normierung
---- darauf wäre erfundene Genauigkeit. Stattdessen zeigen `matched`/`wanted`
---- und die Trefferbegriffe, WARUM etwas oben steht; dieselbe Ehrlichkeit,
---- die `:Case similar` mit seiner Termliste verfolgt.
+--- Deliberately NO percentage like `:Case similar`: there two documents of the
+--- same kind face off (cosine of two vectors, 0..1 is real); here a
+--- three-word query against a document — any normalization onto that would be
+--- invented precision. Instead `matched`/`wanted` and the hit terms show WHY
+--- something ranks where it does; the same honesty `:Case similar` pursues
+--- with its term list.
 ---
---- Ohne Anfrage: jede Lösung, in Registry-Reihenfolge und mit `score = 0` —
---- das Filtern übernimmt dann der Picker.
+--- Without a query: every solution, in registry order with `score = 0` — the
+--- picker does the filtering then.
 ---@param query string|nil
 ---@return Lib.Case.SolutionHit[] hits
 ---@return string|nil err
@@ -447,9 +441,9 @@ function M.search(query)
   local q_tokens = similar.tokenize(query)
   local needle = query:lower()
 
-  -- Anfrage ohne auswertbaren Begriff (zu kurz, reines Stoppwort, "1234"):
-  -- reine Teilstringsuche, statt eine leere Liste zu liefern, die aussähe,
-  -- als gäbe es nichts.
+  -- Query with no evaluable term (too short, pure stopword, "1234"): plain
+  -- substring search, rather than an empty list that would look like there's
+  -- nothing.
   if #q_tokens == 0 then
     local hits = {}
     for _, doc in ipairs(docs) do
@@ -477,8 +471,8 @@ function M.search(query)
       local count = tf[term]
       if count and not seen[term] then
         seen[term] = true
-        -- Sublineares tf, idf über genau diesen Korpus: ein Wort, das in
-        -- JEDER Lösung steht ("tosca"), trägt fast nichts bei.
+        -- Sublinear tf, idf over exactly this corpus: a word in EVERY solution
+        -- ("tosca") contributes almost nothing.
         local idf = math.log(#docs / df[term]) + 1
         local w = (1 + math.log(count)) * idf
         score = score + w

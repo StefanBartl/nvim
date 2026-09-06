@@ -216,12 +216,12 @@ end
 --- carries the SNOW problem statement and solution (the most diagnostic
 --- text a case has), `Notes.md` the private working notes (often the only
 --- text at all, on a case whose SNOW summary was never filled in). Reading
---- just one would miss half the bestand — see CONCEPT.md §8a.
+--- just one would miss half the corpus — see CONCEPT.md §8a.
 local SOURCE_FILES = { "Summary.md", "Notes.md" }
 
---- A term that's part of the TITLE gets counted this many times ON TOP OF
---- its natural occurrences in the combined text (ROADMAP.md v9: "gleiche
---- wörter im title zählen ein wenig mehr"). The title is a one-sentence
+--- A term that's part of the TITLE gets counted this many times ON TOP OF its
+--- natural occurrences in the combined text (ROADMAP.md v9: title words should
+--- count a little more). The title is a one-sentence
 --- human summary of what the case IS ("Unmapped Control after Fiori
 --- Update"); the body is a transcript of the whole back-and-forth,
 --- including greetings, SNOW boilerplate, and "Best Regards" — a word the
@@ -384,11 +384,11 @@ function M.rank(short, n)
   return out, nil
 end
 
---- Der Tokenizer, öffentlich — `solution.lua`s Lösungssuche rankt gegen
---- DIESELBEN Vokabularregeln (Stoppwörter beider Sprachen, Umlautfaltung,
---- Markdown-/Box-Zeichen-Filter). Eine zweite Kopie dieser Regeln würde
---- genau dort auseinanderlaufen, wo es weh tut: zwei Suchen über denselben
---- Bestand, die unterschiedliche Wörter für relevant halten.
+--- The tokenizer, public — `solution.lua`'s solution search ranks against the
+--- SAME vocabulary rules (stopwords of both languages, umlaut folding,
+--- markdown/box-char filter). A second copy of these rules would drift
+--- exactly where it hurts: two searches over the same corpus that disagree on
+--- which words are relevant.
 ---@type fun(text: string): string[]
 M.tokenize = tokenize
 
