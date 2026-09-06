@@ -1,5 +1,29 @@
 # Handover — CDX-Kommentar-Sweep über nvim-config + alle Plugins
 
+> **ABGESCHLOSSEN 2026-09-06.** Der gesamte `lua/`-Baum der nvim-config und
+> **alle 31 Plugin-Repos** sind gesweept (49 Häppchen). Alle Commits gepusht,
+> je `pull --ff-only` bestätigt, keine Co-Authored-By-Zeilen.
+>
+> **Lektionen zurückgeschrieben** nach `WKDBooks` (Commit `e411692`):
+> - `wkdbook-Lua/Checklists/kommentare/` — Dossier (Fund-Familien, Bugs,
+>   Prozess-Lektionen) + `MUSTER.md` (Muster → grep → Fix)
+> - `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md § Kommentar-Hygiene` —
+>   `CMT-01` … `CMT-15`
+> - `wkdbook-Lua/Checklists/gates/REVIEW.md § 5` — Prüfpunkte
+> - `wkdbook-myplugins/TEMPLATES/` — `MODULE-HEADER.lua`, `COMMENT-STYLE.md`,
+>   `CDX-COMMENT-SWEEP.md` (wiederholbare Repo-Prozedur)
+>
+> **Separate Folge-Aufgaben, NICHT Teil des Kern-Sweeps** (bewusst offen):
+> 1. **mdview.nvim TypeScript-Client** (`TESTS/client/`, webview/relay `.ts`) —
+>    der Lua-Teil ist durch (Häppchen 41), der TS-Client braucht einen eigenen
+>    Pass in seiner Sprache.
+> 2. **casedesk.nvim `scripts/gen_docs.sh --check`** schlägt vorbestehend fehl
+>    (Generator kürzt in dieser Umgebung den Route-Tree; eingecheckte
+>    `commands.md` ist korrekt) — eigener Aufräum-Punkt.
+> 3. **Die offenen `--- CDX:`-Tags im Code** — je im Häppchen dokumentiert,
+>    warten auf Autorenentscheidung. `grep -rn "--- CDX:"` über alle Repos gibt
+>    die Liste. Sammlung siehe Ende der Fortschritt-Sektion.
+
 ## Table of content
 
   - [Ziel](#ziel)
@@ -461,7 +485,24 @@ health-Sektionen) gegen den Code verifiziert — stimmig.
 `docs/GENERATED_COMMANDS.md` ist generiert (`:Sandbox docs generate`),
 Stichprobe stimmt.
 
-**Sub 2/2 — `adapters/**` (~166 Dateien) — läuft.**
+**Sub 2/2 — `adapters/**` (~166 Dateien) — erledigt.** Commit `d3b709a`,
+gepusht, `pull --ff-only` sauber. stylua ok, luacheck 0/0 (287 Dateien),
+PlenaryBusted 0 failed/0 errors. **Sehr sauber** — docker-Zweig makellos,
+nerdctl treue Kopie, alle Funde im **podman-Zweig** (einzelne Dateien früher/
+per Hand geschrieben, beim Vereinheitlichungsdurchlauf übersehen):
+`{docker,nerdctl,podman}/engine.lua`-Header sagte „container and image
+adapters", merged aber fünf Sub-Aggregatoren; `podman/images_engine.lua`
+zählte 4 von 10 Image-Operationen auf; `podman/containers/{kill,remove,start,
+stop}_container.lua` Modul-Header doppelte wortgleich die Funktionsbeschreibung;
+`podman/containers/{inspect,exec}` fehlende Doc-Zeilen/`@param workdir`.
+Kein `--- CDX:`, kein toter Code, keine Logik-Bugs. **Struktur-Beobachtung
+(nicht gefixt):** `podman/containers/inspect_containers.lua` (Plural) vs.
+`docker/nerdctl/…/inspect_container.lua` (Singular) — Wiring stimmt, Rename
+wäre kein Kommentar-Fix. `inspect_*`-Dateien aller Familien starten mit
+plain `-- Docker Adapter:` statt `---@module` (konsistent innerhalb der
+Gruppe, 12 Zeilen nachrüsten = Scope-Creep).
+
+**Häppchen 49 damit vollständig — und der gesamte CDX-Sweep.**
 
 ### Häppchen 48 — documentation.nvim (Plugin-Repo 31/31) — **erledigt**
 
@@ -718,28 +759,52 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Alle 31 Plugin-Repos + nvim-config `lua/`-Baum sind gesweept.** Letzter
-laufender Job: **sandbox.nvim** (Repo 31/31, 270 Dateien) in 2 Sub-Häppchen —
-Sub 1 (core/config/bindings/ui/util/telescope, ~104 Dateien) **läuft**,
-Sub 2 = `adapters/**` (docker/nerdctl/podman/wsl, ~166 Dateien) folgt.
+## Abschluss
 
-**Danach noch offen (separate Aufräum-Punkte, nicht Teil des Kern-Sweeps):**
-- **mdview TypeScript-Client** (`TESTS/client/`, webview/relay `.ts`) —
-  eigener Sub-Pass, der Lua-Teil ist durch (Häppchen 41).
-- casedesk `gen_docs.sh --check`-Fail (vorbestehend, Generator kürzt in
-  dieser Umgebung den Route-Tree).
-- Die über den Sweep gesammelten `--- CDX:`-Judgment-Calls (Autoren-
-  entscheidungen nötig — quer über die Häppchen im Code als `--- CDX:`
-  markiert und je im Häppchen dokumentiert).
+**Alle 31 Plugin-Repos + nvim-config `lua/`-Baum sind gesweept** (49 Häppchen,
+2026-08 bis 2026-09-06). Die drei separaten Folge-Aufgaben stehen im
+Kopf-Block dieser Datei.
+
+### Offene `--- CDX:`-Tags (Autorenentscheidung nötig)
+
+Vollständige Liste: `grep -rn "--- CDX:"` über alle Repos + die nvim-config.
+Die wichtigsten echten Bugs, die der Sweep im Vorbeigehen aufdeckte:
+
+- **nvim-config** `config/noice/init.lua` — catch-all `msg_show`-Route
+  dead-codet alle nachfolgenden noice-Routes; `config/neotest/whichkey`
+  `<leader>ntS` → nicht existente Funktion (Crash); `config/neotest/debug`
+  TS-Root-Detection läuft nie; `config/harpoon/preview.lua` `require` auf
+  nicht existentes Modul; `wkdoptions/hl_config` `extract_lua_field_key` gibt
+  Quote statt Key + nie gesetztes `cfg._base_symbol` + `cword_occurrences`
+  friert `H` auf `{}` ein; `wkdnvchad` totes lspbased-Statusline-Modul.
+- **language.nvim** `translate/window.lua:124` + `spell/providers/cspell_server.lua:292`
+  — `X and CONST or CONST` (Debounce/Timeout faktisch nicht konfigurierbar).
+- **lib.nvim** `lua/strings/init.lua` `normalize_ws` → `nil`-Clobber;
+  `fs/ignore/list:62` `package%.lock.json` matcht nie `package-lock.json`;
+  `fs/write/async` hängt kein Newline an (sync-`to_file` schon);
+  `keymap/modifier` `capture()` still normal-mode-only; 3× `vim`-Leck in
+  `lib.lua.*`; diverse unreferenzierte `@types`-Scaffolding-Klassen.
+- **pickers.nvim** `sources/system.lua:76` `has_path_token` enger als
+  `build_fd_cmd` → `C:\Users` nicht als Pfad erkannt → Streu-PowerShell-Spawn;
+  `error.lua:42` `safe_call` ohne Aufrufer.
+- **lsp.nvim** `mason/ensure_install/init.lua:204` self-`require`-`pcall` löst
+  nie auf, Kommentar „self-require is safe" irreführend.
+- **spotlight.nvim** `hover.lua:41` `MAX_LINES = 20000` vs. List-Ceiling `200000`.
+- **insights.nvim** `imports/graph.lua` + `scan/rg.lua` — Doc-Referenzen die
+  nicht resolven; **replacer.nvim** `debug.lua` `:ReplaceDebug` vestigial
+  (schreibt auf nicht exponiertes `replacer.options`-Feld);
+  **pdfport.nvim** `backends/ollama.lua:91` handgerollter base64 vs. `vim.base64`.
+- Ältere (Häppchen 8/9/10/12/15/16): siehe `cdx-comments-docs.md`.
+
+### Agent-Limit im Verlauf
+
+Der User hat die Parallelität mehrfach umgeschaltet (1 → einmalig 2×3 → 1 →
+2 → 1 → 2). Standard bleibt **1 Agent**; jede Erhöhung war kurzlebig und
+explizit widerrufen. Siehe Memory `feedback_agent_limits_and_language`.
 
 > **documentation.nvim** hat einen laufenden Item-für-Item-Roadmap-Workflow
-> (siehe Memory `documentation-nvim-roadmap-workflow`) — beim Sweep die
-> `docs/ROADMAP`-Punkte nicht als erledigt zurückschreiben, sonst desynct der
-> Workflow. Nur klare Code↔Doku-Widersprüche fixen.
-Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
-umgeschaltet (2×3 einmalig → 1 → 2 → 1 → 2). Ab Häppchen 41 wieder
-**2 parallele Agents erlaubt** (bis zum nächsten Widerruf). Immer der
-letzten Ansage folgen.
+> (Memory `documentation-nvim-roadmap-workflow`) — die `docs/ROADMAP`-Punkte
+> wurden beim Sweep bewusst nicht als erledigt zurückgeschrieben.
 
 **Sub-Häppchen 13 — erledigt** (`docs/` — alle 31 Markdown-Dateien gegen den
 aktuellen Code-Stand geprüft; Commit `19314ec`, gepusht, Re-Fetch bestätigt
