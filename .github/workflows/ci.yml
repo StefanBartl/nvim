@@ -16,7 +16,7 @@ jobs:
     name: stylua (format check)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: JohnnyMorganz/stylua-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
     name: luacheck (lint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # Plain Lua 5.4, not LuaJIT: luacheck only needs *an* interpreter to run
       # on; which dialect it lints for is set by `std = "luajit"` in
       # .luacheckrc, independent of the host. Pinning a LuaJIT build here buys
@@ -41,5 +41,5 @@ jobs:
         with:
           luaVersion: "5.4"
       - uses: leafo/gh-actions-luarocks@v4
-      - run: luarocks install luacheck
+      - run: luarocks install luacheck 1.2.0
       - run: luacheck lua init.lua after
