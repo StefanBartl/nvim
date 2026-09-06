@@ -1379,6 +1379,96 @@ readable" bzw. „which-key … automatically" auch in `keymaps.md`, `README.md`
 BINDINGS.md oder als akkurate Aussage (`--export` JSON, `BINDINGS.lua`).
 Nicht dringend. `docs/map/*` (DocMap-Artefakte) ignorieren.
 
+### Häppchen 24 — fileops.nvim (Plugin-Repo 7/31)
+
+**Status: erledigt.** ~4940 Z. Lua (17 `lua/`-Dateien + 10 `TESTS/*` +
+`plugin/fileops.lua`), eigenes `main` / Remote `StefanBartl/fileops.nvim`.
+`:File`-Unified-Command über nativ-libuv-I/O (create/rename/move/duplicate/
+copy/delete/touch, Directory-Cycling, bulk rename, `cd`, lock-Diagnose,
+CursorHold-Line-Diff, Conflict-Marker-HL). Wie die sechs vorigen Plugin-Repos
+schon fast durchgehend auf Sweep-Qualität: **durchweg Englisch** (kein einziges
+deutsches Wort in `lua/`/`TESTS/`), Header mit echter ortsrelevanter Rationale,
+keine AI-Boilerplate, keine Chat-Artefakte. `lua/fileops/health.lua` war
+früher in dieser Session gesweept (`35cdd4b`) — nicht erneut angefasst.
+Depends on `lib.nvim` hart (composer für `:File`, `cross.fs.mutate`,
+`buffer.open_background`, `ui.kit`) — bewusst, kein Fund.
+`docs/BINDINGS.md` war schon in `6ee591b` erledigt (which-key-Prosa raus,
+Group-Label-Tabelle bleibt; kein „machine-readable"-Framing im Repo).
+
+**Muster #1 (which_key-Modul gelöscht, Docs stale) trifft ZU:**
+`bindings/which_key.lua` wurde in `5628339` gelöscht (das Gruppenlabel ist
+jetzt das `which_key`-Feld der Keymap-Spec, angewandt von lib.nvims Registry).
+Stale Verweise auf das Modul in `docs/architecture.md` (Datei-Baum),
+`doc/fileops.txt` (Abschnitt 12 Architektur-Liste + „…+ which-key" bei
+`bindings/init.lua`) und `docs/FEATURES/INTEGRATIONS.md`
+(`- **Module:** bindings/which_key.lua (M.setup, M.available)`) — alle auf
+die Keymap-Spec umgebogen. Exakt wie Häppchen 18/20/22.
+
+**Doc-Prosa gestrippt (which-key-Rechtfertigung):**
+- `docs/keymaps.md` §Which-key — „reads as a menu / when absent this is a
+  no-op / v2 (`register`) und v3 (`add`) supported" + der bindings/keymaps.lua-
+  Pointer-Absatz raus, auf zwei Sätze + Verweis auf `BINDINGS.md#which-key-groups`.
+- `docs/FEATURES/INTEGRATIONS.md` §Which-key group labels — dieselbe Prosa raus,
+  konkretes Label-Paar behalten.
+- `doc/fileops.txt` Abschnitt 8 WHICH-KEY — Prosa raus, faktische
+  Kurzfassung; Abschnitt selbst behalten (Renummerierung 2–12 wäre Churn).
+Keine „machine-readable"-Formulierung im Repo (BINDINGS.md hatte die
+„source of truth / update to match"-Fassung, schon in `6ee591b` gefixt).
+
+**Direkte Annotation-Fixes (`@types/init.lua`, reine Doku):**
+- `FileOps.OnHoldConfig.enable` war als `Default: true` dokumentiert, ist aber
+  `false` (opt-in) — `DEFAULTS.lua` (`on_hold.enable = false`), `config/…Config`-
+  Feldzeile und `docs/configuration.md` sagen alle opt-in. Muster #5.
+- `FileOps.CycleState`-`@class` (mit `config`-Feld) gelöscht — **0 Referenzen**
+  im Repo oder den anderen Plugin-Repos, keine dokumentierte API. Rule 5.
+
+**`--- CDX:` gesetzt (1, Urteilssache):**
+- `util/git.lua` — die drei `_async`-Twins (`is_tracked_async`/`mv_async`/
+  `rm_async`) haben **keinen Produktions-Aufrufer**. Der Modul-Header nannte
+  `features/on_hold.lua` als Nutzer, aber on_hold rollt seine eigenen lokalen
+  Async-Helfer (braucht zusätzlich einen `blame`→`show`-Chain + `is-inside-
+  work-tree`-Probe). `git_async_spec.lua` testet die Twins explizit → als
+  bewusste, test-abgedeckte Public API **nicht gelöscht**, nur getaggt
+  (Regel 5). Header-Rationale auf die tatsächliche Lage korrigiert.
+
+**Muster #3 (identischer Rationale-Block über N Geschwister):** der 4-zeilige
+„Cleared through lib rather than nvim_create_augroup …"-Kommentar stand
+**3× wortgleich** (`bindings/autocmds.lua`, `features/on_hold.lua`,
+`features/conflict_marks.lua`) — je auf 2 selbsterklärende Zeilen gekürzt.
+
+**Kein toter Code gelöscht** (der einzige Kandidat getaggt). **Kein
+WKDBooks-Umzug** — kein ortsunabhängiges Neovim-/Lua-Mechanik-Wissen; die
+langen Header (`ops/file.lua` retry/`on_retry`-Hook, `features/on_hold.lua`
+Async-Chain, `integrations/menu.lua` „re-run `:File` statt Optionen neu
+ableiten") sind ortsrelevante Design-Rationale.
+
+**Bereits sauber, 0 Änderungen:** `init.lua`, `config/init.lua`,
+`config/DEFAULTS.lua`, `bindings/init.lua`, `bindings/keymaps.lua`,
+`bindings/usrcmds.lua`, `ops/cycle.lua`, `ops/file.lua`, `ops/bulk.lua`,
+`util/notify.lua`, `integrations/menu.lua`, `plugin/fileops.lua`, alle
+`TESTS/*`, `README.md` (keine which-key-Sektion), `docs/commands.md`,
+`docs/configuration.md`, `docs/api.md`, `docs/autocommands.md`,
+`docs/WORKFLOW.md`, `docs/FEATURES/{AUTOCMDS,BULK,COMMAND,NAVIGATION,
+OPERATIONS,SAFETY,README}.md`.
+
+**Unsicher / nicht angefasst:** `lua/fileops/health.lua:51` prüft
+`vim.ui.select` mit Kommentar „used for confirm_on_modified dialog", der
+Code nutzt `lib.nvim.ui.kit.confirm` (das intern auf `vim.ui.select`
+zurückfallen kann). Analog zum diff.nvim-Fund (Häppchen 23), aber health
+war schon gesweept und die Anweisung sagt „leave it unless obvious
+leftovers" — als Grenzfall gelassen. `README.md:84` sagt „`vim.ui.input`
+prompt" wo es `lib.nvim.ui.kit.input` ist — Prosa-Näherung, `BINDINGS.md`
+nennt den echten Pfad; nicht angefasst (Regel 8).
+
+**CI/Gate:** `stylua --check .` (v2.5.2) sauber, `luacheck lua` (1.2.0)
+**0/0 über 17 Dateien**, `TESTS/run.lua` headless grün (`FILEOPS_TESTS_OK`,
+lib.nvim als Sibling `../lib.nvim`; `explorer_integration_spec` skippt
+mangels neo-tree/nvim-tree-Siblings — wie in CI der eigene Extra-Job).
+
+Commits: fileops.nvim `f40d17b` (lua/) + `405512c` (docs), gepusht
+(`6ee591b..405512c`), `pull --ff-only` „Already up to date",
+`git log origin/main -1` bestätigt. Ohne Co-Authored-By.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
