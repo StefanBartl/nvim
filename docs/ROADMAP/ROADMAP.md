@@ -5,7 +5,6 @@
 
   - [cdx](#cdx)
   - [TOP interessant gerade](#top-interessant-gerade)
-  - [Checkhealth-Konventionen](#checkhealth-konventionen)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
@@ -42,30 +41,6 @@
 
 ---
 
-## Checkhealth-Konventionen
-
-Umsetzung von [`docs/ROADMAP/personal/All/FINISH/ERLEDIGT/checkhealt_conventions.md`](./personal/All/FINISH/ERLEDIGT/checkhealt_conventions.md),
-validiert am 2026-09-06 gegen den aktuellen Stand. Zwei Korrekturen gegenüber
-der Original-Analyse (2026-08-31): `neotree-fs-refactor.nvim` liegt inzwischen
-unter `ARCHIV_NICHT_BEARBEITEN/` und wird nicht angefasst; der Zielort für die
-neue Regel ist `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` + `gates/REVIEW.md`,
-nicht das nie existente `MATERIALS/CHECKLIST.md`. Handover-Stand läuft in
-[`docs/ROADMAP/handovers/checkhealth-conventions.md`](./personal/All/FINISH/ERLEDIGT/checkhealth-conventions.md).
-
-- [x] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten (dap, debugging, documentation, filetree).
-- [x] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.
-- [x] Eine-von-N auflösen: `filetree.nvim:70`, `pickers.nvim:39,45,51` → `info`. Das `error` im "keine davon"-Fall behalten.
-- [x] Gegenrichtung, `warn` → `error` wo der Text schon "will fail" sagt: `cascade.nvim:39`, `fileops.nvim:39`, `buffer-ctx.nvim:20`, `sessions.nvim:32`.
-- [x] `setup()`-Zeilen auf `info` oder Ladezustand prüfen: `sessions.nvim:147,152,157`, `open.nvim:158,185`, `buffer-ctx.nvim:90,96,121,165`. `filetree.nvim:88` ist bereits das Vorbild.
-- [x] ADVICE nachziehen — Vollaudit über den ganzen Plugin-Bestand (~30 Repos): jede `warn`/`error`, die eine Handlung verlangt, hat jetzt den `{...}`-Block; Fehlklassifizierungen (Eine-von-N, „will fail" als `warn`, Pre-setup-False-Positives) mitgefixt. Details: `handovers/checkhealth-conventions.md`.
-- [x] Kosmetik zuletzt: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in dieser Config.
-- [x] Regel in `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` (`UI-57`..`UI-61`) + Schnell-Check-Eintrag in `gates/REVIEW.md`.
-
-Alles bis auf den ADVICE-Vollaudit erledigt, alle betroffenen Repos gepusht.
-Handover-Datei hat die Commit-Hashes.
-
----
-
 ## Misc
 
 - [ ] start vim optimieren
@@ -87,7 +62,8 @@ Handover-Datei hat die Commit-Hashes.
   - [ ] Welche Features werden jeweils bereitgestellt? (Vergleich)
   - [ ] Security Features?
   - [ ] Performance relevante umgesaetzte Ideen / patterns?
-  - [ ]
+  - [ ] ...
+  - [ ] (Verbund: images.nvim, hover.nvim, pdfport.nvim, markdown.nvim, gopath.nvim, lib.nvim, pickers.nvim, filetree.nvim, open.nvim, language.nvim, nvzone/menu (solange nicht eigenes right click ui plugin geschrieben ist)) -> Würde es sinn machen, ein "Bundle-plugin" zusätzlich anzubieten, dass alles diese imßlementiert und man sozusagenm eine "Image-Suite"-Implementieren könnte?
 
 - [ ] Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codequalität ist, inahltlich ist mir alles klar, also was die plugins machen, aber ich will keine schlechte codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gut als auch schlecht), was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand, usw...
   Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass soll es nämlich auch nicht sein, leider ist mir klar das dass ein wenig meine wünsche konterkariert. Ich denke, du must da einen goldenen Zwischenweg finden.
