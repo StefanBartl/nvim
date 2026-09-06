@@ -285,6 +285,19 @@ Begründung):
   Command (z. B. eine "Registered when: ..."-Spalte) ist verdächtig —
   erst das Feature einmal auslösen, dann erneut prüfen.
 
+**Der Korpus ist zweisprachig, die Key-Spalten-Erkennung war es nicht**
+(behoben 2026-08-30). `ExternPlugins/Bindings/*` ist durchgängig deutsch, die
+Key-Spalte heißt dort `Taste`, `Mapping`, `Taste(n)` oder `Taste (in
+LazyGit)` — nie `lhs`/`key`. Eine Zeile, deren Header auf nichts aus der
+(bis dahin rein englischen) Erkennungsliste passte, lieferte gar kein `lhs`,
+und beide Achsen ließen sie stillschweigend fallen: die Quell-Achse meldete
+`<leader>gb` als undokumentiert, obwohl es in `Snacks.md`s Git-Tabelle stand,
+die Live-Achse prüfte solche Zeilen in keiner Richtung. **601 Korpuszeilen
+waren dadurch unsichtbar** — gezählt, nicht geschätzt. Die deutschen Header
+sind seither in `drift.lua`s `LHS_HEADERS` mitgeführt; vier weitere deutsche
+Kandidaten (`Eintrag`, `Tab`, `Modul`, `Vorschlag (README)`) wurden bewusst
+NICHT aufgenommen, weil ihre Zellen keine Tasten sind.
+
 Gegen den echten, voll geladenen Bestand verifiziert (headless, über einen
 `XDG_CONFIG_HOME`-Junction-Trick, der `stdpath("config")` auf diesen
 Branch zeigen lässt, ohne `stdpath("data")`/die echten Plugin-Installationen
@@ -538,6 +551,27 @@ Eine Seite, nach dem Vorbild von `:Reposcope status`:
 einen Bericht — dafür sind `check` und `report` da. Hier ist alles entweder
 ein billiger Live-API-Aufruf oder ein Durchgang über den Korpus (~70 ms). Ein
 Dashboard, auf das man wartet, öffnet man einmal.
+
+## Ein lhs-Treffer allein war kein Beweis (`is_live`)
+
+Nur auf den lhs zu prüfen war falsch, und zwar auf eine Art, die zählte: eine
+völlig unabhängige globale Map erfüllt eine dokumentierte Zeile allein dadurch,
+dass sie zufällig dieselbe Taste trägt. Am Korpus bestätigt: github_stats'
+`<CR>`/`<Esc>` galten als "live", weil dieses Config `<CR>` auf "Insert blank
+line" und `<Esc>` auf "Clear copilot NES overlays or nohl" legt;
+`language.nvim`s `]s` traf Snacks' "Snacks Scope: Next"; reposcopes `<Esc>`
+traf zweimal dieselbe nohl-Map. Fünf Zeilen, keine davon die Bindung, die das
+Cheatsheet meint — und jede einzelne hielt ihre ganze Tabelle aus dem
+"nicht verifizierbar"-Verdikt heraus, weshalb `github_stats.nvim.md` auch nach
+der Aufteilung in Pro-Scope-Tabellen noch ~20 Keys meldete.
+
+**Fix:** wenn BEIDE Seiten einen `desc` nennen, müssen sie exakt übereinstimmen
+(nach `strip_quotes`). Alles andere fällt auf reinen lhs-Vergleich zurück (kein
+`desc`-Feld dokumentiert, oder nichts unter dem Key trägt überhaupt einen
+desc). Gemessen über jede aktuell live-dokumentierte Zeile: 8 exakte Treffer, 0
+die eine case-insensitive Prüfung gebraucht hätten, 0 ohne live-`desc`, 5
+Mismatches — alle fünf echt. Eine lockerere Regel hätte nichts gerettet, aber
+genau die Kollisionen wieder zugelassen, die dieser Vergleich fangen soll.
 
 ## Was der Scraper nicht mehr falsch liest (2026-09-02)
 
