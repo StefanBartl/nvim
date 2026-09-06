@@ -891,6 +891,83 @@ Commits: recommender.nvim `6c0180c` (source) + `20d655a` (docs), gepusht auf
 `origin/main` (`8fdbf98..20d655a`), `pull --ff-only` bestätigt „Already up to
 date". Ohne Co-Authored-By.
 
+### Häppchen 19 — sessions.nvim (Plugin-Repo 2/31)
+
+**Status: erledigt.** ~2000 Z. Lua in `lua/sessions/` (13 Dateien + 4 Bindings-
+Module), eigenes `main` / Remote `StefanBartl/sessions.nvim`. Wie
+recommender.nvim war das Repo schon fast durchgehend auf Sweep-Qualität:
+durchweg Englisch (ein einziges deutsches Fragment, s.u.), Header mit echter
+ortsrelevanter Rationale, keine AI-Boilerplate. `lua/sessions/health.lua`
+war schon in `e3f9592`/`0181dce`/`2edffa7` gesweept — nicht erneut angefasst.
+
+**Remote-URL-Check:** `git remote -v` zeigt bereits `StefanBartl` (groß) —
+kein `set-url` nötig. (Nebenfund: `doc/sessions.txt` Homepage-Zeile +
+README-Specs schreiben `stefanbartl` klein; GitHub ist da case-insensitiv,
+kein Bruch — nicht angefasst.)
+
+**Geänderte Dateien (7):** `init.lua`, `statusline.lua`, `@types/init.lua`,
+`bindings/keymaps/init.lua`, `bindings/autocmds/init.lua`, `core.lua`,
+`git.lua`.
+
+**Bereits sauber, 0 Änderungen:** `buforder.lua`, `layout.lua`, `meta.lua`,
+`portable.lua`, `state.lua`, `picker.lua`, `config/init.lua`,
+`config/DEFAULTS.lua`, `bindings/usercmds/init.lua`, `health.lua`, alle
+`TESTS/*`.
+
+**`--- CDX:` gesetzt (1, Urteilssache):**
+- `bindings/autocmds/init.lua` (`M.enable`, bei den Struktur-Autocmds) — die
+  Dirty-Tracking-Autocmds (`BufAdd`/`BufDelete`/`WinNew`/…) werden **nur
+  innerhalb `if cfg.autosave then`** registriert. Mit `autosave = false`
+  läuft `core.mark_dirty()` nie, also erscheint das Statusline-`dirty_icon`
+  (`sessions.statusline`) nie — obwohl der Modul-Header das Wiring
+  bedingungslos beschreibt und die Statusline-Komponente `dirty_icon`
+  bedingungslos anbietet. Absicht oder Bug offen.
+
+**Direkte Fixes (Kommentar/Doc, keine Verhaltensänderung):**
+- `init.lua` — der `---@brief`-Header trug einen „Full config with all
+  options"-Block, der **unvollständig/veraltet** war (fehlten
+  `sessionoptions`, `relative_paths`, `root_remap`, `autosave_name`,
+  `project_markers`, `restore_buffer_order`, `which_key`; `keymaps` nur mit
+  4 von 11 Namen). Muster #4. `docs/configuration.md` ist die vollständige
+  autoritative Referenz → auf Minimal-Usage + Pointer gekürzt.
+- `statusline.lua` — Header verwies auf `LUA_NVIM.md "Metatables, schwache
+  Tabellen, Memoisierung"` (deutscher Titel, Datei existiert im Public-Repo
+  nicht — Rest einer persönlichen Notiz). Pointer entfernt; das Weak-Key-
+  Schema ist ohnehin inline bei `_merged_cache` erklärt.
+- `@types/init.lua` — die `Sessions.Keymaps`-`@class`-Doku sagte die
+  „delete/rename nicht mappbar"-Begründung **dreimal** (3 Absätze) → auf
+  eine Aussage zusammengezogen. (Dieselbe Rationale steht zusätzlich in
+  `DEFAULTS.lua`, `bindings/keymaps/init.lua` Header **und** dessen
+  `UNMAPPABLE`-Block — s.u.)
+- `bindings/keymaps/init.lua` — Modul-`@description` (12 Z. zur selben
+  delete/rename-Regel) auf 4 Z. gekürzt; die `UNMAPPABLE`-Rationale stand
+  fast wortgleich an der Deklaration (Z. 41-45) **und** an der Benutzungs-
+  stelle (Z. 99-101) — Muster #3, beide gestrafft, Dopplung raus.
+- `bindings/autocmds/init.lua` — `hand_rolled_confirm`-Header: „the roadmap
+  asks for an actual floating prompt" (Dev-Prozess-Sprache) raus, die
+  technische „nicht `vim.ui.select`"-Begründung bleibt.
+- `git.lua` (`M.sanitize`) — shoutende, den Doc-Block dopplende Inline-
+  Kommentare (`WHITELIST:`/`FIRST`) eingedampft; kurioser `@param`-Meta-
+  Kommentar („the first line of the body says so") → `nil or empty -> ""`.
+- `core.lua` — zwei `resolve()`-Aufrufstellen-Kommentare korrigiert: der
+  Load-Pfad-Kommentar sagte „use default_name (\"last\")", der Code
+  bevorzugt aber die gemerkte last-loaded-Session (Muster #5).
+
+**Kein toter Code** — alle Kandidaten sind über die Public API (`init.lua`),
+`:Session`-Subcommands oder die dokumentierte `sessions.statusline.component`-
+API erreichbar; extern (`C:/repos/*.nvim` + `E:/repos/*.nvim`) `require`t
+nichts `sessions.*`-Interna (nur `casedesk.nvim/docs/SESSIONS.md`, reine
+Doku). **Kein WKDBooks-Umzug** — kein ortsunabhängiges Mechanik-Wissen.
+
+**CI/Gate:** `stylua --check lua TESTS` (v2.5.2) ok, `luacheck lua TESTS`
+(1.2.0) 0/0 über **26 Dateien** (`@types/init.lua` mitgeprüft — luacheck
+1.2.0 überspringt es hier nicht), `TESTS/run.lua` headless grün
+(`SESSIONS_TESTS_OK`, lib.nvim als Sibling aus `E:/repos/lib.nvim`).
+
+Commit: sessions.nvim `6c4422f`, gepusht (`160a97a..6c4422f`),
+`pull --ff-only` „Already up to date", `git log origin/main` bestätigt.
+Ohne Co-Authored-By.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
