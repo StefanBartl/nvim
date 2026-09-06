@@ -440,6 +440,29 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 49 — sandbox.nvim (Plugin-Repo 31/31) — **Sub 1/2 erledigt, Sub 2 läuft**
+
+sandbox.nvim: 270 Lua-Dateien (hexagonal, ports/adapters/usecases), 166 davon
+in `adapters/` (docker/nerdctl/podman = 3 near-identische Familien + wsl).
+2 Sub-Häppchen.
+
+**Sub 1/2 — Core (ohne `adapters/`) — erledigt.** Commit `aabc8e5`, gepusht,
+`pull --ff-only` sauber. stylua ok, luacheck 0/0 (287 Dateien, ganzer Baum
+inkl. Adapter — keine Vorbelastung), PlenaryBusted grün. **Sehr sauber** —
+nur Mikro-Fixes: `logger.lua`/`util/run_argv.lua` „matching
+`containers/notify.lua`'s convention" (Pfad existiert nie in diesem Layout)
+→ `sandbox.notify`; `statusline.lua` verstümmeltes „README.md-equivalent
+soft-dependency philosophy"; `DEFAULTS.lua` `sandbox.nvim'` → `'s`;
+`usrcmds/init.lua` hartkodiertes „The 7 *Buffer variants" (sind 8) → Zahl
+raus; `ui/error_view.lua` redundante `--- file:`-Zeile; `docs/BINDINGS.md`
+Wort-Dopplung. Kein `--- CDX:`, kein toter Code, keine Bugs. Alle
+Enumerationen (10 Sub-Namespaces, WSL-Routen, List-View-Keymaps,
+health-Sektionen) gegen den Code verifiziert — stimmig.
+`docs/GENERATED_COMMANDS.md` ist generiert (`:Sandbox docs generate`),
+Stichprobe stimmt.
+
+**Sub 2/2 — `adapters/**` (~166 Dateien) — läuft.**
+
 ### Häppchen 48 — documentation.nvim (Plugin-Repo 31/31) — **erledigt**
 
 Commit `689c35d`, gepusht, `pull --ff-only` sauber. Ganzes Repo (138 Lua +
