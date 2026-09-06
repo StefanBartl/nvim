@@ -1244,6 +1244,86 @@ Commits: emojis.nvim `45c25e2` (source) + `5c0e330` (docs), gepusht
 (`a93462f..5c0e330`), `pull --ff-only` „Already up to date",
 `git log origin/main -1` bestätigt. Ohne Co-Authored-By.
 
+### Häppchen 23 — diff.nvim (Plugin-Repo 6/31)
+
+**Status: erledigt.** ~2400 Z. Lua (`lua/diff/` 24 Dateien + 17 `TESTS/*`),
+eigenes `main` / Remote `StefanBartl/diff.nvim`. Config-Layer über natives
+`vim.diff`/diffmode: `:Diff` mit `source=`/`target=`/`base=` (Datei, Puffer,
+`git:<rev>`, `http(s)://`, Clipboard, Verzeichnis-Baum), Three-Way, Inline/
+Float/Split/Tab-Views, `:DiffOrig`, `:DiffExit`, Statusline-Komponente,
+Bild-Vergleich via images.nvim. Wie die fünf vorigen Plugin-Repos schon fast
+durchgehend auf Sweep-Qualität: **durchweg Englisch** (kein einziges deutsches
+Wort in `lua/`/`TESTS/`), Header mit echter ortsrelevanter Rationale, keine
+AI-Boilerplate. `lua/diff/health.lua` war früher gesweept (advice-args,
+pre-setup-Guard → info) — nur eine offensichtliche Migrations-Leiche
+angefasst (s.u.). Depends on `lib.nvim` hart (notify, validate, ui.kit,
+bindings.composer) — bewusst, kein Fund.
+
+**Muster #1 (which_key-Modul gelöscht, Docs stale) trifft NICHT zu** —
+diff.nvim hatte nie ein which_key-Modul (`bindings/keymaps.lua` sagt explizit
+„no leader-prefixed group to label"); `BINDINGS.md §which-key` /
+`configuration.md` sind konsistent.
+
+**Zwei stale Migrations-Wellen quer durch Code + Docs — direkt gefixt:**
+
+1. **`git:<rev>` ist seit `77fd89a` async** (ein Three-Way löst zwei Seiten
+   auf, `vim.system(...):wait()` blockierte zweimal). `M.resolve` +
+   `core/init.lua` waren korrekt, aber **stale geblieben:**
+   - `core/git.lua` Modul-Header beschrieb noch den synchronen `:wait()`-Pfad
+     (widersprach der eigenen `M.resolve`-Docstring direkt darunter).
+   - Docs: `commands.md`, `docs/FEATURES.md`, `docs/WORKFLOW.md`,
+     `docs/url-sources.md` (die den Kontrast „git resolves synchronously"
+     aktiv zog), `doc/diff.txt` — alle nannten `git show` synchron.
+2. **Der Ziel/Quell-Picker-Fallback wanderte von `vim.ui.select` zu
+   `lib.nvim.ui.kit`** (`78c8830`/`0b3152d`/`1e67629`, kit.confirm-Button-Row
+   für die ≤4-Choice-Picker, kit.select für die Puffer-Liste, `respect_override`
+   ehrt einen echten `vim.ui.select`-Override weiter). Nie nachgezogen in:
+   `core/pickers_bridge.lua`-Header, `config/DEFAULTS.lua` (`use_pickers_nvim`-
+   Kommentar), `health.lua:85` (**user-sichtbarer `:checkhealth`-String** —
+   die eine „offensichtliche Leiche", die health rechtfertigte), `core/init.lua`
+   (`kit_select_select`/`kit_confirm_select`-Docstrings verwiesen auf einen
+   „vim.ui.select fallback", den es nicht mehr gibt, + 2 falsche above/below-
+   Richtungsangaben), `configuration.md`, `docs/FEATURES.md`, `docs/WORKFLOW.md`,
+   `doc/diff.txt` (Schritt 3 + Cancel-Notification-Referenz).
+
+**Weitere direkte Fixes (Kommentar, keine Verhaltensänderung):**
+- `core/url.lua` Header: implizierte, `curl --max-time` werde übergeben (wird
+  es nicht — die argv enthält nur `--max-filesize`); der libuv-Timer ist die
+  einzige Zeitschranke. Umformuliert.
+- `features/image_compare.lua` Header: verwirrende Cross-Plugin-Prosa
+  („`imports.graph.include_external`-style config (`diff.image_compare`) turns
+  this off") → `diff.image_compare = false` turns this off entirely.
+- `bindings/usrcmds.lua` Modul-Header 16 → 11 Z.: Dev-Prozess-Historie
+  („the case that originally motivated Phase 7's kv support"), Wiederholung
+  von „composer" raus; die lokale Rationale (kv-Schema nur für `<Tab>`,
+  `values` statt `enum`) bleibt.
+
+**`--- CDX:` gesetzt (1, Urteilssache):**
+- `core/init.lua` `M.valid_lists()` — **0 Aufrufer** irgendwo (Repo, TESTS,
+  Docs, andere Plugin-Repos); der Docstring sagt „for completion/health",
+  aber `health.lua` und `bindings/usrcmds.lua`s `VALUE_LISTS` re-deklarieren
+  die `VALID_VIEWS`/`VALID_OUTPUTS`-Listen beide selbst. Vestigiale
+  Accessor-Hälfte — nicht gelöscht (plausible bewusste Introspektions-API,
+  Zweifel → taggen, Regel 5).
+
+**Kein toter Code gelöscht** (der einzige Kandidat getaggt). **Keine
+Annotation-Fixes nötig** (`@types.lua` deckt `DiffNvim.Config` + Untertypen
+korrekt ab, Felder ↔ `DEFAULTS.lua` stimmen; `DiffNvim.Opts`-Spiegel komplett;
+keine Methoden-als-Feld-Fehler). **Kein WKDBooks-Umzug** — kein
+ortsunabhängiges Neovim-/Lua-Mechanik-Wissen; die langen Header
+(`core/render.lua` UTF-8-Codepoint-Word-Diff, `core/directory.lua`,
+`features/native_diffthis.lua`) sind ortsrelevante Design-Rationale und
+verweisen schon aufs plugin-eigene `docs/`.
+
+**CI/Gate:** `stylua --check .` (v2.5.2) sauber, `luacheck lua plugin TESTS`
+(1.2.0) **0/0 über 40 Dateien** (`@types.lua` mitgeprüft), Spec-Suite headless
+grün (15/15, `DIFF_NVIM_TESTS_OK`, `LIB_NVIM_PATH=E:/repos/lib.nvim`). CI-Pins
+lokal exakt gematcht.
+
+Commits: diff.nvim `c170513` (source) + `089f945` (docs), gepusht
+(`3435d2e..089f945`), `pull --ff-only` „Already up to date",
+`git log origin/main -1` bestätigt. Ohne Co-Authored-By.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
