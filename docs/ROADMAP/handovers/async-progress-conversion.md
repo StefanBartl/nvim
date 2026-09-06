@@ -108,8 +108,7 @@ mitgeben.
       (b) `build_unused_report(data, filters, on_done?)` — die Re-Read-Schleife
       der „unused"-Heuristik gechunkt (`CHUNK = 100`). `run_unused` threadet
       den Callback. `docs/configuration.md`, `doc/insights.txt`. Neuer
-      import_index_spec-Block (120 Entries). **committet + gepusht**
-      (CI-Lauf lief noch beim Stopp — bitte prüfen).
+      import_index_spec-Block (120 Entries). **committet + gepusht, CI grün.**
 
 ## Noch offen
 
@@ -117,7 +116,6 @@ mitgeben.
       (nur wenn `rg` fehlt), bereits gedeckelt (`"stopped at %d files"`).
       Gleiches Muster: batchen + `[filetree.refs]`-Indikator, oder klarer als
       „rg installieren"-Pfad kommunizieren.
-- [ ] **CI-Lauf von #5 (insights.nvim)** verifizieren.
 
 ## Verworfen / kein Handlungsbedarf
 
