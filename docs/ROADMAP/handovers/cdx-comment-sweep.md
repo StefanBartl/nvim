@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum komplett durch (Sub 1–9/9), TESTS/ komplett durch (Sub 10–11/13). PAUSIERT — Fortsetzung bei Sub 12 (doc/)**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum + TESTS/ komplett durch (Sub 1–11/13). PAUSIERT — Fortsetzung bei Sub 13 (docs/, letzter Schritt)**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -212,9 +212,9 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
     `run.lua`/`harness.lua`; ~5580 Z.) — Plan-Schätzung „41" war knapp
     daneben: `TESTS/` hat tatsächlich 49 Dateien, nicht 50 (9 in Sub 10,
     40 hier)
-12. `doc/` — 17 Vimdoc-Dateien, ~4560 Z. (gegen echte `@types`/Usercmds
-    geprüft, wie in den nvim-config/Plugin-Häppchen üblich)  ← **HIER WEITER**
-13. `docs/` — 51 Markdown-Dateien, ~5200 Z.
+12. ✅ `doc/` — 17 Vimdoc-Dateien, ~4560 Z. (gegen echte `@types`/Usercmds
+    geprüft, wie in den nvim-config/Plugin-Häppchen üblich)
+13. `docs/` — 51 Markdown-Dateien, ~5200 Z.  ← **HIER WEITER**
 
 > **Nachtrag 2026-09-06:** derselbe Fehler wie schon bei Plan-Punkt 7 —
 > „TESTS/ + doc/ + docs/" als ein Punkt war eine unvermessene
@@ -225,6 +225,85 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > Plan-Beschreibungen vor dem Bauen an der echten Größe prüfen — hier
 > hätte auch der erste Split-Nachtrag schon `TESTS/`/`doc/`/`docs/`
 > mitzählen sollen, statt sie unangetastet zu lassen.
+
+**Sub-Häppchen 12 — erledigt** (`doc/` — alle 17 Vimdoc-Dateien gegen den
+aktuellen `lua/`-Stand geprüft; Commit `99ea1b8`, gepusht, Re-Fetch
+bestätigt HEAD == origin/main):
+
+Direkte Fixes (echte Staleness, "N dokumentiert, N+1 real" oder faktisch
+falsch — nach Sweep-Konvention immer direkt gefixt, kein CDX):
+- **`lib.nvim-composer.txt`**: 3 reale Top-Level-Funktionen fehlten
+  komplett in FUNCTIONS (`check_all`/`checkhealth`/`notify_check_all` —
+  5 dokumentiert, 8 real). Größerer Fund: das USAGE-Beispiel rief
+  `require("replacer").prompt()`/`.buffer()`/`.surround()` — keine davon
+  existiert in replacer.nvims echter Public API (nur `setup`/`run`); auf
+  `require("myplugin")` umgestellt, damit das Beispiel keine erfundene
+  API mehr behauptet (der Lead aus dem Handover war noch offen, jetzt
+  verifiziert und gefixt).
+- **`lib.nvim-fs.txt`**: `polymorphic_rootresolver`s `cfg.resolve`
+  (Alternative zu `cfg.markers`, echte Nutzung im Code) fehlte komplett
+  in den Options. Vier ganze Submodule ohne jede Doku ergänzt:
+  `globbable`, `watch`, `chdir`, `dir_guard` — alle real und substanziell.
+  Die im Handover erwähnte "28 Submodule"-Zahl existierte im aktuellen
+  Text gar nicht mehr (schon vorher entfernt) — nichts zu tun.
+- **`lib.nvim-kit.txt`**: `kit.popup`s "Implemented"-Liste und die
+  Alias-Kommentarzeile fehlten `compare` (echter Eintrag in der
+  COMPONENTS-Dispatch-Tabelle); `kit.sync` (reale Funktion) fehlte
+  komplett — beide ergänzt, plus Roadmap-Phasen 12/13. Der im Handover
+  vermutete "Phantom-Aggregat"-Fund bestätigte sich NICHT: `require("lib.
+  nvim.ui.kit")` ist ein echtes, funktionierendes Aggregat-Modul mit
+  allen dokumentierten Methoden — stattdessen fehlte dem Modul komplett
+  sein eigener Bare-Tag `*lib.nvim-kit*` (jeder `|lib.nvim-kit|`-Verweis
+  aus anderen Dateien war dadurch tot); ergänzt.
+- **`lib.nvim-deps.txt`**: `deps.detect` (das PATH-Probe-Modul hinter dem
+  im Text bereits erklärten "gs vs. gswin64c"-Konzept) war komplett
+  undokumentiert; ergänzt, plus die `require("lib.nvim.deps")`-
+  Convenience-Wrapper (`plugins`/`show`/`install_for`).
+- **`lib.nvim-logger.txt`**: `M.setup`/`is_enabled`/`tags`/`loggers`
+  (global) und `inst.is_enabled` (pro Logger) existierten im Code, aber
+  nicht in SWITCHES; ergänzt.
+- **`lib.nvim-window.txt`**: `open_named_scratch` wurde nur beiläufig
+  erwähnt, nie als eigene Funktion dokumentiert; `is_usable_window`/
+  `target_window` (`find_usable.lua`) und `ensure_bottom`/
+  `make_focusable`/`force_focus`/`focus_and_bottom` (`focus_helpers.lua`)
+  fehlten komplett — 7 reale Public-Funktionen ohne jede Doku, jetzt
+  ergänzt.
+- **`lib.nvim.txt`** (Modul-Index): der `lib.nvim.cache`-Eintrag hatte
+  einen fehlplatzierten `|lib.nvim-selection|`-Querverweis (Copy/Reflow-
+  Fehler) — zum richtigen `selection`-Eintrag verschoben. `lib.lua.class`
+  und `lib.lua.context_manager` fehlten in der `lib.lua`-Namespace-
+  Tabelle; `count`/`debounce`/`dotrepeat`/`frecency`/`image_preview`/
+  `json`/`lastcmd`/`net.curl`/`safe_api`/`token`/`async` fehlten in der
+  `lib.nvim`-Tabelle — alles reale Module ohne Eintrag im Übersichts-
+  Index, jetzt ergänzt (`dev` bewusst ausgelassen: internes Wartungs-
+  Tool, keine Consumer-API).
+- Tote `|tag|`-Querverweise gefixt (Ziel existierte nirgends in `doc/`):
+  `|lib.nvim.ui.kit|`, `|lib.nvim.core|`, `|lib.lua.yaml|`,
+  `|lib.nvim.cache.disk|` in `lib.nvim-deps.txt`; `|lib.nvim.normalize|`
+  in `lib.nvim-composer.txt`; `|lib.nvim-notify|` in `lib.nvim-logger.txt`
+  (dort außerdem der fehlende Bare-Tag `*lib.nvim-logger*` ergänzt);
+  `|lib.nvim-cache|` in `lib.nvim-treesitter.txt`; `|lib.nvim-lib.nvim|`
+  (sollte `|lib.nvim-modules|` sein) in `lib.nvim-spawn_env.txt`; zwei
+  kaputte Tags in `lib.nvim-fs.txt` (`|lib.nvim.fs.normkey|` →
+  `|lib.nvim-fs-normkey|`, `|lib.nvim.debounce|` de-linked, kein
+  Doc-File dafür). Per Skript gegen jeden in `doc/*.txt` definierten
+  `*tag*` geprüft — danach keine toten Links mehr in allen 17 Dateien.
+
+`CDX:` gesetzt (Judgment Call, nicht gefixt):
+- `lib.nvim-composer.txt`, direkt nach dem korrigierten USAGE-Beispiel:
+  ob das Beispiel stattdessen 1:1 aus replacer.nvims echter `:Replace`/
+  `:Surround`-Registrierung destilliert werden sollte (dort nur
+  `path = {}`-Root-Routes, weniger illustrativ für Subcommand-Routing)
+  oder wie jetzt gefixt ein `require("myplugin")`-Platzhalter bleibt.
+
+Kein Wissens-Umzug nach WKDBooks nötig diesmal (kein Vimdoc-Text, der
+eher als Markdown-Prosa gehört hätte, oder umgekehrt).
+
+Verifiziert: `TESTS/run.lua` meldet weiterhin `LIB_TESTS_OK` (kein
+`lua/`-Code in diesem Schritt angefasst); `doc/tags` bewusst nicht
+committet (`.gitignore`-Eintrag, nie getrackt — lokale `:helptags`-
+Regenerierung nur zur Verifikation genutzt, nicht Teil des Commits).
+Ohne Co-Authored-By.
 
 **Sub-Häppchen 11 — erledigt** (`TESTS/` Teil 2 — die restlichen 40
 Spec-Dateien: `selection_spec`, `lastcmd_spec`, `keymap_modifier_spec`,
