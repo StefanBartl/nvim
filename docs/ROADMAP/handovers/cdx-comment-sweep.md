@@ -440,6 +440,39 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 42 — pickers.nvim (Plugin-Repo 24/31) — **erledigt**
+
+Commit `ba3102d`, gepusht, `pull --ff-only` sauber. Ganzes Repo (59 Lua +
+1 Spec + docs). stylua ok, luacheck 0/0 (61 Dateien), 358/0 Tests.
+**Sehr sauber** — prosa-lastige `---@description`-Kommentare, aber durchweg
+substanziell. Fast alle Drifts: Aufzählungen, die eine spätere
+`smart`-Action bzw. `get_input_keys()`-Erweiterung nicht nachzogen.
+
+**Direkte Fixes — Engine-Interface-Aufzählungen unvollständig:** alle 3
+Adapter implementieren `smart(opts)` und `actions/smart.lua` dispatcht
+darauf, aber der „Interface contract"-Block nannte es nicht
+(`engines/{init,fzf,snacks}.lua`). `FEATURES/ENGINES.md` nannte ein nicht
+existierendes `pick_grep` (heißt `live_grep`), `smart`/`pick_dir`/`available`
+fehlten. `error.lua` `UnknownActionError` „files|grep" → „files|grep|smart".
+`smart/init.lua` „the same six values" (sind fünf). `README.md`
+FEATURES-Katalog 8 statt 9 (`refine` fehlte). `keymaps.md`/`BINDINGS.md`
+Adapter-Methodensätze: snacks braucht zusätzlich `get_input_keys()`.
+`entry_actions/README.md` snacks-Beispiel verdrahtete nur `win.list.keys` —
+da der Picker im Input-Fenster startet, wären `create_file`/`open_background`
+beim Tippen unerreichbar; `win.input.keys` ergänzt.
+
+**`--- CDX:` gesetzt:**
+- `sources/system.lua:76` (`has_path_token`) — **echter kleiner Logikfehler:**
+  Pfad-Check `^[/]` / `^%a:[/]` enger als der von `build_fd_cmd`
+  (`^[/\\]` / `^%a:[/\\]`). Ein Backslash-Token wie `C:\Users` wird hier nicht
+  als Pfad erkannt → Eingabe löst trotz genanntem Pfad `default_roots` aus,
+  auf Windows ein PowerShell-Spawn.
+- `error.lua:42` (`M.safe_call`) — keine Aufrufer im Repo; als beworbene
+  typed-error-API stehen gelassen statt gelöscht.
+
+Kein Deutsch, keine Marker, keine Smart-Quotes. `builtins.md` „52 registered
+names" nachgezählt — stimmt.
+
 ### Häppchen 41 — mdview.nvim (Plugin-Repo 25/31) — **erledigt (nur Lua-Seite + Docs)**
 
 Commit `5355511`, gepusht, `pull --ff-only` sauber. Scope: `lua/mdview/**`
@@ -474,13 +507,12 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Verbleibende Plugin-Repos (7/31 offen):**
+**Verbleibende Plugin-Repos (6/31 offen):**
 color_my_ascii, documentation, lsp, markdown,
-pickers (läuft), reposcope, sandbox. Plus: **mdview TypeScript-Client**
-(eigener Sub-Pass). (casedesk.nvim existiert
-als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
-config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
-ist noch offen und in dieser Liste **nicht** enthalten → als weiteres prüfen.)
+reposcope, sandbox. Plus: **mdview TypeScript-Client** (eigener Sub-Pass).
+casedesk.nvim (Repo 26/31) **läuft gerade** — das Standalone-Repo; die
+casedesk-Sweep in Häppchen 4 betraf nur die config-eingebettete Variante
+`lua/bindings/usrcmds/case/`.
 Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
 umgeschaltet (2×3 einmalig → 1 → 2 → 1 → 2). Ab Häppchen 41 wieder
 **2 parallele Agents erlaubt** (bis zum nächsten Widerruf). Immer der
