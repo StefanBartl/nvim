@@ -1324,10 +1324,66 @@ Commits: diff.nvim `c170513` (source) + `089f945` (docs), gepusht
 (`3435d2e..089f945`), `pull --ff-only` „Already up to date",
 `git log origin/main -1` bestätigt. Ohne Co-Authored-By.
 
+### Unterbrechung nach Häppchen 23 — neue User-Anweisungen
+
+Der Agent für **Häppchen 24 (fileops.nvim, 7/31)** wurde vom User **gestoppt**,
+bevor er Änderungen gemacht hat — fileops.nvim ist **NICHT** gesweept, steht
+sauber auf `b0b4bda`. Nächstes Plugin-Repo im Sweep bleibt fileops.nvim.
+
+**Neuer Auftrag vor der Fortsetzung des Sweeps** — betrifft **alle Plugin-Repos**
+(`docs/BINDINGS.md` bzw. `BINDINGS.md`):
+
+1. **`## which-key`-Sektion streichen.** Die Rechtfertigungs-Prosa à la „X binds
+   only the exit key … so there is nothing to label with a which-key group …
+   which-key.nvim picks up automatically — no extra wiring required" ist keine
+   Aussage, die in User-Docs gehört. Betroffen (Bestandsaufnahme 2026-09-XX):
+   `diff` (erledigt, Commit s.u.), `fileops`, `filetree`, `gopath`, `markdown`,
+   `pdfport`. Bei `fileops` (2-Zeilen-Group-Label-Tabelle) und `filetree`
+   (neo-tree-`?`-Integrationstext) nur die which-key-Prosa raus, die konkrete
+   Referenz (Tabelle / `?`-Verhalten) bleibt.
+2. **„Machine-readable"-Framing raus.** Keine Formulierungen wie „Machine-readable
+   overview of every keymap …. This file is documentation only and mirrors the
+   source of truth …. Any change there must be reflected here." → schlichte
+   Beschreibung („Every keymap, user command, and autocommand `X` defines. Kept
+   in sync with `lua/<x>/bindings/`."). Betroffen: `buffer-ctx`, `cascade`,
+   `color_my_ascii`, `dap`, `debugging`, `diff` (erledigt), `emojis`, `gopath`,
+   `recommender`. **Ausnahme:** `filetree`/`pickers` — dort meint „machine-
+   readable" eine echte `BINDINGS.lua`-Begleitdatei; wenn die Aussage stimmt,
+   bleibt sie.
+
+**Erledigt (14 Repos, je ein Commit `docs(bindings): …` auf `origin/main`):**
+
+| Repo | Commit | was |
+| --- | --- | --- |
+| diff | `27bbec4` | which-key-Sektion + machine-readable-Framing raus |
+| gopath | `efb56db` | which-key-Sektion + machine-readable (+ stale `which_key.lua`-Ref) |
+| markdown | `c0ed1db` | which-key-Sektion + stale `which_key.lua`-Ref im Intro |
+| pdfport | `97ea25b` | which-key-Sektion raus |
+| fileops | `6ee591b` | which-key-Prosa raus, Group-Label-Tabelle bleibt; „source of truth/update to match"-Framing raus |
+| filetree | `039a58f` | which-key-Absatz raus, neo-tree-`?`-Abschnitt bleibt (echte Integration); `BINDINGS.lua`-Verweis bleibt (akkurat) |
+| buffer-ctx | `426037f` | machine-readable-Framing raus |
+| cascade | `3af27ae` | machine-readable-Framing raus |
+| color_my_ascii | `ec0989f` | machine-readable-Framing raus |
+| dap | `9b60f14` | machine-readable-Framing raus (Source-Bullet-Liste bleibt) |
+| debugging | `c673962` | machine-readable-Framing raus (Source-Bullet-Liste bleibt) |
+| emojis | `cf3c36a` | machine-readable-Framing raus |
+| recommender | `4e99f03` | machine-readable-Framing raus |
+| pickers | `bdc473c` | machine-readable-Framing raus (kein `BINDINGS.lua` da, „kept as data" war falsch) |
+
+Ausnahme bewusst gelassen: `filetree`/`markdown` `docs/BINDINGS.lua` — echte
+maschinenlesbare Begleitdatei, die Bezeichnung stimmt dort.
+
+**Noch offen (marginal, optionaler Folgepass):** in ~12 Repos steht „machine-
+readable" bzw. „which-key … automatically" auch in `keymaps.md`, `README.md`,
+`architecture.md`, `FEATURES/*.md`, `doc/*.txt` — meist als Querverweis auf
+BINDINGS.md oder als akkurate Aussage (`--export` JSON, `BINDINGS.lua`).
+Nicht dringend. `docs/map/*` (DocMap-Artefakte) ignorieren.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
-im Sweep: **die 31 Plugin-Repos** (Liste unten), repo-für-repo, je 1 Agent.
+im Sweep: **die 31 Plugin-Repos** (Liste unten, ab fileops.nvim), repo-für-repo,
+je 1 Agent — plus der BINDINGS.md-Cleanup oben zu Beginn jedes Repos.
 
 Offene Aufräum-Punkte aus dem Sweep, die bewusst NICHT gefixt wurden (jeweils
 `--- CDX:` im Code + im jeweiligen Häppchen dokumentiert) — eigene
