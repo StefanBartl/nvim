@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–6/9 erledigt, PAUSIERT — Fortsetzung bei Sub 7**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–7/9 erledigt, PAUSIERT — Fortsetzung bei Sub 8**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -197,10 +197,10 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 4. ✅ `lua/lib/nvim/fs/`
 5. ✅ `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
 6. ✅ `lua/lib/nvim/ui/` (kit, 29 Dateien — Plan-Schätzung „20" war veraltet)
-7. `lua/lib/nvim/{deps,logger,system,health,lua_ls,core}/` (34 Dateien,
-   ~4540 Z.)  ← **HIER WEITER**
+7. ✅ `lua/lib/nvim/{deps,logger,system,health,lua_ls,core}/` (34 Dateien,
+   ~4540 Z.)
 8. `lua/lib/nvim/{harvest,progress,markdown,lastcmd,cache,net,neotree,
-   notify}/` (32 Dateien, ~4600 Z.)
+   notify}/` (32 Dateien, ~4600 Z.)  ← **HIER WEITER**
 9. `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
    async,selection,image_preview,dev,count,require,store,contextmenu,
    terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)
@@ -214,6 +214,69 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > rutscht auf Punkt 10. Gleiche Lektion wie in
 > `plugin-roadmaps-verify-before-building`: Plan-Beschreibungen vor dem
 > Bauen an der echten Verzeichnisgröße prüfen.
+
+**Sub-Häppchen 7 — erledigt** (`lua/lib/nvim/{deps,logger,system,health,
+lua_ls,core}/`, Commit `21c871a`, gepusht, Re-Fetch bestätigt identisch).
+34 Dateien gelesen (~4540 Zeilen), nur 4 geändert. Größtenteils
+außergewöhnlich sauber — `deps/` (11 Dateien, größter Teilbaum hier),
+`logger/` (8 Dateien) und der Großteil von `system/` (env/info/job/
+proc_trace) waren bereits auf einem Doku-Niveau, das nichts zu tun übrig
+ließ: keine Redundanz, keine Boilerplate-Header, jede Rationale genau an der
+Stelle nützlich, an der sie steht.
+
+- **Direkte Fixes:**
+  - `core/simple_echo.lua` — ein zweivariantiges „USAGE:"-Beispielblock
+    (`require(...)` einmal direkt aufgerufen, einmal in eine Variable
+    gespeichert) wiederholte nur generische require-dann-call-Mechanik ohne
+    modulspezifischen Mehrwert → gestrichen; ein Inline-Kommentar
+    duplizierte zusätzlich wortgleich die „preallocates a single-element
+    chunks array"-Zeile aus dem Header → gelöscht.
+  - `system/rpc_pipe.lua` — ein Emoji-Kommentar (`-- ✅ Default: true`)
+    entfernt (Wert bereits in der `@param`-Doku zwei Zeilen darüber
+    dokumentiert); zwei Kommentare gelöscht, die nur die exakt folgende
+    Bedingung nochmal in Prosa wiederholten; ein reißerischer
+    „CRITICAL:"-Kommentar auf normalen Ton zurückgestuft.
+- **`@types`-Fix:** `deps/status.lua` — `M.collect()`s Rückgabe-Annotation
+  war eine anonyme Inline-Tabelle (`{ tools: ..., sources: ..., plugins:
+  ..., failed: ... }`), obwohl `deps/@types/init.lua` bereits exakt diese
+  Form als `Lib.Deps.Status.Collected`-Klasse deklariert — auf den
+  benannten Typ umgestellt, damit beide Deklarationen nicht länger
+  unabhängig synchron gehalten werden müssen.
+- **`--- CDX:` gesetzt (Judgment Calls):**
+  - `lua_ls/@types/init.lua` — `Lib.LuaLS` dokumentiert ein
+    `require("lib.nvim.lua_ls")`-Aggregatmodul mit den Feldern
+    `get_module_path`/`insert_module_annotation`, das es zur Laufzeit gar
+    nicht gibt (kein `lua_ls/init.lua` — die echten Einstiegspunkte sind
+    `lib.nvim.lua_ls.get_module_path` und
+    `lib.nvim.lua_ls.insert.module_annnotation`, je über eigenen
+    Require-Pfad). Gleiches wiederkehrende Muster wie in Sub 4/5/6 —
+    belassen, nicht gelöscht.
+  - `system/rpc_pipe.lua` — erkennt Windows über
+    `package.config:sub(1, 1) == "\\"` statt wie das Schwestermodul
+    `system/env.lua` `lib.nvim.cross.platform.is_windows` zu nutzen, obwohl
+    `env.lua`s eigener Header genau das als Grund nennt ("so detection
+    logic lives in exactly one place"). Kein Bug, aber eine Inkonsistenz,
+    die es wert ist, dass jemand sie sich nochmal ansieht.
+- **Zusätzlich gelöscht (kein separater `@types`-Bug, sondern verwaiste
+  Typen ohne jeden Verweis):** `lua_ls/@types/init.lua` —
+  `Lib.LuaLS.GetModulePath` und `Lib.LuaLS.InsertModuleAnnotation`, zwei
+  `__call`-Wrapper-Klassen, die nirgendwo im Repo referenziert werden (auch
+  nicht per `---@type` in den Modulen, die sie eigentlich beschreiben
+  sollten) und 1:1 redundant zu den bereits inline auf `Lib.LuaLS`
+  stehenden `fun(...)`-Signaturen waren.
+- **Keine echten Bugs gefunden.** Kein toter Laufzeit-Code gefunden — `deps/`,
+  `logger/`, `system/`, `health/` sind durchweg real referenzierte,
+  aktive Aggregatmodule; das einzige Phantom-Muster in diesem Scope betrifft
+  ausschließlich die oben getaggten `@types`-Klassen.
+- **Nichts für WKDBooks ausgelagert** — kein Header in diesem Scope trug
+  generische Neovim/Lua-Mechanik oder Benchmark-Zahlen schwer genug, um die
+  Auslagerungsschwelle zu reißen.
+
+stylua ok, luacheck 0/0 (3 nicht-`@types`-Dateien betroffen: `core/
+simple_echo.lua`, `deps/status.lua`, `system/rpc_pipe.lua`), volle
+`TESTS/run.lua`-Suite `LIB_TESTS_OK` (inkl. `deps_spec.lua`, `logger_spec.lua`,
+`system_job_spec.lua`, die Module aus diesem Scope direkt testen). Ohne
+Co-Authored-By.
 
 **Sub-Häppchen 6 — erledigt** (`lua/lib/nvim/ui/`, Commit `01ba23a`, gepusht,
 Re-Fetch bestätigt identisch). 29 Dateien gelesen (~4469 Zeilen), 2 geändert
