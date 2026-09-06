@@ -45,13 +45,13 @@
 ---@alias AnyMap table<string, any>
 ---@alias FunMap table<string, fun(...:any):any>
 
--- Generische Funktionstypen
+-- Generic function types
 ---@alias Fn0 fun():any
 ---@alias Fn1 fun(arg1:any):any
 ---@alias Fn2 fun(arg1:any, arg2:any):any
 ---@alias FnN fun(...:any):any
 
--- Weitere nützliche Aliase
+-- More useful aliases
 ---@alias Toggle fun():void
 ---@alias Getter fun():any
 ---@alias Setter fun(value:any):void

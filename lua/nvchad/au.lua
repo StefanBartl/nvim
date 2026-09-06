@@ -60,7 +60,6 @@ autocmd.create("BufWritePost", function(opts)
   local module = string.gsub(fp, "^.*/" .. app_name .. "/lua/", ""):gsub("/", ".")
 
   require("nvchad.utils").reload(module)
-  -- vim.cmd("redraw!")
 end, {
   group = "ReloadNvChad",
   pattern = "*.lua",

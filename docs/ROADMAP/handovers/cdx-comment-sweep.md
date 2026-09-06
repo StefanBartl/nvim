@@ -793,18 +793,45 @@ Commit: nvim-config `ba0231201`. Ohne Co-Authored-By, gepusht +
 (kein ortsunabhängiges Mechanik-Wissen — die langen Header waren
 Bug-/Design-Rationale am richtigen Platz).
 
+### Häppchen 17 — Kleinteile: `startup/`, `themes/`, `nvchad/`, `@types/`, `after/`, root `init.lua`, `scripts/`
+
+**Status: erledigt. Damit ist der gesamte `lua/`-Baum der nvim-config durch.**
+
+Fast alles bereits sauber & englisch. Winzige Änderungen:
+- `init.lua:278` — deutscher Kommentar → Englisch; das eigene `-- TODO: gehört
+  in meine options/` zu `--- CDX: belongs in options/, not here` vereinheitlicht.
+- `lua/@types/aliases.lua` — 2 deutsche Sektionskommentare (`Generische
+  Funktionstypen`, `Weitere nützliche Aliase`) → Englisch.
+- `lua/nvchad/au.lua` — totes `-- vim.cmd("redraw!")` gelöscht.
+
+Geprüft, nichts zu tun:
+- `lua/startup/` (init.lua + report.lua) — vorbildlich kommentiert, echte
+  Design-Rationale am richtigen Platz.
+- `lua/themes/vim_default.lua`, `lua/@types/` (Rest — `archive.lua` ist ein
+  bewusst als „NOT IN USE" markiertes Archiv, `vim_uv.lua` 953-Z.
+  Type-Stub, beide sauber), `scripts/` (Dev-Probe-Tools, knappe engl.
+  Header), `after/` (nur `.scm`/`.vim`, kein `.lua`).
+
+stylua ok, luacheck 0/0.
+
+Commit: nvim-config `<pending>`. Ohne Co-Authored-By.
+
 ### Danach offen
 
-`lua/startup/` (2 Dateien), `lua/themes/` (1), `lua/nvchad/` (1),
-`lua/@types/` (10), `after/`, root `init.lua`, `scripts/` (5).
-Danach die 31 Plugin-Repos.
+**Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
+im Sweep: **die 31 Plugin-Repos** (Liste unten), repo-für-repo, je 1 Agent.
 
-Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
-harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
-`lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`, `lua/@types/`, `after/`,
-`init.lua`, `scripts/`.
-
-Danach die 31 Plugin-Repos (Liste unten), repo-für-repo, je 1 Agent möglich.
+Offene Aufräum-Punkte aus dem Sweep, die bewusst NICHT gefixt wurden (jeweils
+`--- CDX:` im Code + im jeweiligen Häppchen dokumentiert) — eigene
+Autorenentscheidung nötig, siehe Häppchen 8/9/10/12/15/16:
+- `config/noice/init.lua` catch-all-Route dead-codet alle nachfolgenden Routes
+- `config/neotest/whichkey/init.lua:69` `<leader>ntS` → nicht-existente Funktion
+- `config/neotest/debug/init.lua` TS-Root-Detection läuft nie
+- `config/harpoon/preview.lua` `require` auf nicht-existentes Modul
+- `hl_config` 5 Bugs (u.a. `extract_lua_field_key` gibt Quote statt Key)
+- `wkdnvchad` lspbased-Variante (`chadrc`-require kaputt), `neotest_module` tot+kaputt
+- `lua/plugins/workflow.lua` 82-Z. auskommentierter `autolist.nvim`-Block
+- `PERFORMANCE.md` (wkdoptions/docs) fabrizierte Benchmarks
 
 <details><summary>Plugin-Liste</summary>
 
