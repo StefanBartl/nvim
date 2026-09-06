@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–9/9 erledigt — `lua/`-Baum von lib.nvim komplett durch. Fortsetzung bei Häppchen 10 (TESTS/+doc/+docs/), separater Umfang.**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum komplett durch (Sub 1–9/9). SUB-HÄPPCHEN 10–13 (TESTS/doc/docs) offen, PAUSIERT — Fortsetzung bei Sub 10**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -204,16 +204,25 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 9. ✅ `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
    async,selection,image_preview,dev,count,require,store,contextmenu,
    terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)
-10. `TESTS/` + `doc/` + `docs/`  ← **HIER WEITER**
+10. `TESTS/` Teil 1 — die 9 größten Spec-Dateien (`composer_spec`,
+    `deps_spec`, `ui_kit_spec`, `autocmd_dispatcher_spec`,
+    `nvim_helpers_spec`, `keymap_registry_spec`, `lua_helpers_spec`,
+    `curl_spec`, `async_spec`; ~6710 Z.)  ← **HIER WEITER**
+11. `TESTS/` Teil 2 — die restlichen 41 Dateien (kleinere Specs +
+    `run.lua`/`harness.lua`; ~5580 Z.)
+12. `doc/` — 17 Vimdoc-Dateien, ~4560 Z. (gegen echte `@types`/Usercmds
+    geprüft, wie in den nvim-config/Plugin-Häppchen üblich)
+13. `docs/` — 51 Markdown-Dateien, ~5200 Z.
 
-> **Nachtrag 2026-09-06:** der alte Plan-Punkt 7 („Rest, deps/logger/
-> system/harvest/progress/notify/…") war eine grobe Schätzung über 31
-> nie einzeln gezählte Unterordner (~13.500 Z. gesamt) — zu groß für
-> ein Sub-Häppchen. In drei ausbalancierte Blöcke (7/8/9, je ~4300–4600 Z.,
-> passend zur Größe der bisherigen Sub-Häppchen) aufgeteilt, TESTS/doc/docs
-> rutscht auf Punkt 10. Gleiche Lektion wie in
-> `plugin-roadmaps-verify-before-building`: Plan-Beschreibungen vor dem
-> Bauen an der echten Verzeichnisgröße prüfen.
+> **Nachtrag 2026-09-06:** derselbe Fehler wie schon bei Plan-Punkt 7 —
+> „TESTS/ + doc/ + docs/" als ein Punkt war eine unvermessene
+> Sammelschätzung (~22.000 Z. über 118 Dateien, das 5-fache eines
+> normalen Sub-Häppchens). In vier Teile (10–13) aufgeteilt, TESTS/
+> in zwei nach Größe gebildete Hälften, `doc/`/`docs/` je eigener Schritt.
+> Gleiche Lektion wie in `plugin-roadmaps-verify-before-building`:
+> Plan-Beschreibungen vor dem Bauen an der echten Größe prüfen — hier
+> hätte auch der erste Split-Nachtrag schon `TESTS/`/`doc/`/`docs/`
+> mitzählen sollen, statt sie unangetastet zu lassen.
 
 **Sub-Häppchen 9 — erledigt** (`lua/lib/nvim/{normalize,safe_api,treesitter,
 frecency,git,debounce,async,selection,image_preview,dev,count,require,store,
@@ -310,9 +319,11 @@ stylua ok, luacheck 0/0 (8 nicht-`@types`-Dateien betroffen), volle
 `TESTS/run.lua`-Suite `LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 **Damit ist lib.nvims gesamter `lua/`-Quellbaum durchgesweept (Schritte 1–9,
-Sub-Häppchen 1–9/9).** Nur noch `TESTS/` + `doc/` + `docs/` (Schritt 10)
-offen — separater Umfang, andere Art von Inhalt (Test-Code bzw. generierte/
-gepflegte Dokumentation statt Source-Kommentare), eigenständig zu planen.
+Sub-Häppchen 1–9/9).** Nur noch `TESTS/` + `doc/` + `docs/` offen — andere
+Art von Inhalt (Test-Code bzw. generierte/gepflegte Dokumentation statt
+Source-Kommentare). Nachträglich in die Schritte 10–13 aufgeteilt (siehe
+Plan oben und der Nachtrag dort) — die ursprüngliche Schätzung „ein Schritt"
+war mit ~22.000 Z. über 118 Dateien selbst zu grob.
 
 **Sub-Häppchen 8 — erledigt** (`lua/lib/nvim/{harvest,progress,markdown,
 lastcmd,cache,net,neotree,notify}/`, Commit `6aede6d`, gepusht, Re-Fetch
