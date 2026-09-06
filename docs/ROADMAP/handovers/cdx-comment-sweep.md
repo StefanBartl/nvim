@@ -428,10 +428,58 @@ stylua ok, luacheck 0/0 (19/21 — 2 `@types/*`-Dateien vom luacheck-Glob
 Commit: nvim-config `b0b3b8648`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 11 — `lua/config/neotree/` (29 Dateien, 1923 Zeilen)
+
+**Status: erledigt. `lua/config/` damit komplett durch** (Häppchen 6, 8,
+9, 10, 11 zusammen).
+
+**Echte Typ-Fixes (reine Annotation):**
+- `@types/node.lua`: `is_directory`/`get_parent_id` waren als `boolean`-Felder
+  typisiert, sind aber Methoden (belegt durch eigene tote Stub-Funktionen im
+  selben File **und** `@types/README.md`) — auf `fun(self): ...` korrigiert,
+  dabei bisher undokumentierte `is_file`/`get_path`/`get_name` ergänzt.
+- `@types/config.lua`: `Cfg.NeoTree.InitOpts` fehlten `window_debug`/
+  `window_open`, beide real gesetzt in `init.lua`/`plugins/neotree.lua`.
+
+**Toter Code gelöscht** (verifiziert: 0 Aufrufer im ganzen Repo + allen 31
+Plugin-Repos):
+- `utils/init.lua`: `get_current_position()`, `is_neotree_open()`.
+- `@types/utils.lua`: 5 veraltete Type-Klassen für Submodule
+  (buffer/path/platform/tree/selective_callback_guard), die in diesem
+  Ordner gar nicht mehr existieren — `checkhealth/utils.lua`s eigener
+  Kommentar dokumentiert deren Entfernung bereits, die Typen waren nie
+  nachgezogen worden.
+
+**`--- CDX:` gesetzt (Urteilssache):**
+- `@types/config.lua`: `SetupModule.busy_guard` als Methode deklariert, die
+  `M` nie implementiert — Namenskollision mit dem tatsächlichen
+  `InitOpts`-Wert `busy_guard = false`.
+- `init.lua`: `window_debug`/`window_open` werden angenommen, aber
+  `M.setup()` liest keins von beiden je.
+
+**Ausgelagert nach WKDBooks** (Commit `eb4863b`): `window/open/keymaps/
+only_lhs.lua`s ~60-Zeilen `neo-tree.command.execute()`-Optionstutorial
+(Modul nutzt nur 4 von 8 Optionen) → `wkdbook-Neovim/MyNotes/
+neotree-command-execute-options.md` (neu).
+
+**Überraschender Fund, direkt gefixt:** `event_handlers/README.md`
+beschrieb vier Event-Handler, die nirgends mehr im Code existieren (nur
+noch einer übrig, `neo_tree_preview_buffer_enter`) — komplett neu
+geschrieben, jetzt deckungsgleich mit dem Code.
+
+stylua ok, luacheck 0/0 (21/29 — 8 `@types/*`-Dateien vom Glob übersprungen,
+gleiches Muster wie harpoon/neotest).
+
+**Nebenfund, nicht bearbeitet:** `docs/NOTES/ExternPlugins/Bindings/
+Keymaps/NeoTree.md:300` referenziert `config.neotree.keymaps.tests`, das
+es nie gab — außerhalb des Scopes (keine `.lua`-Datei in diesem Ordner).
+
+Commit: nvim-config `0e64b4b4d`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/config/neotree/` (29 Dateien, 1923 Z.) — letzter der drei großen
-`lua/config/`-Brocken. Danach `lua/plugins/`, `lua/startup/`,
+`lua/config/` ist komplett. Weiter mit `lua/plugins/`, `lua/startup/`,
 `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`,
 `lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach die 31 Plugin-Repos.
 
