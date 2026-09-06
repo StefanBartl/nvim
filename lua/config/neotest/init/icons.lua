@@ -1,10 +1,9 @@
 ---@module 'config.neotest.init.icons'
 ---@brief Icon factory for neotest
 ---@description
---- Dieses Modul stellt eine aufrufbare Factory-Funktion bereit, die
---- unterschiedliche Icon-Sets für Neotest zurückliefert.
+--- Callable factory that returns different Neotest icon sets by variant.
 ---
---- Verwendung:
+--- Usage:
 ---   icons = require("config.neotest.init.icons")("devicons")
 ---   icons = require("config.neotest.init.icons")("nerdfonts")
 ---   icons = require("config.neotest.init.icons")("default")
@@ -51,11 +50,10 @@ local ICONS_ALT = {
 }
 
 ----------------------------------------------------------------------
--- Devicons-basierte Variante
+-- Devicons-based variant
 ----------------------------------------------------------------------
 
---- Baut ein Icon-Set unter Verwendung von nvim-web-devicons als Glyph-Quelle.
---- Devicons werden hier ausschließlich als Glyph-Registry genutzt.
+--- Builds an icon set using nvim-web-devicons purely as a glyph registry.
 ---@return table<string, string>
 local function build_devicons()
   local ok, devicons = pcall(require, "nvim-web-devicons")
@@ -77,7 +75,7 @@ end
 -- Factory
 ----------------------------------------------------------------------
 
---- Liefert ein Neotest-Icon-Set basierend auf der gewünschten Variante.
+--- Returns a Neotest icon set for the requested variant.
 ---@param variant NeotestIconVariant|nil
 ---@return table<string, string>
 local function icons_factory(variant)

@@ -6,13 +6,13 @@ local notify = require("lib.nvim.notify").create("[config.neotest.adapters.types
 local M = {}
 
 ----------------------------------------------------------------------
--- CWD Lock (Verhindert Multi-Root-Discovery)
+-- CWD lock (prevents multi-root discovery)
 ----------------------------------------------------------------------
 
 local _locked_cwd = vim.fn.getcwd()
 
 ----------------------------------------------------------------------
--- Root Finding mit CWD-Sperre
+-- Root finding with CWD lock
 ----------------------------------------------------------------------
 
 --- Find project root, but only if within locked CWD
@@ -70,7 +70,7 @@ local function find_root(path)
 end
 
 ----------------------------------------------------------------------
--- Framework Detection mit Safe File Reading
+-- Framework detection with safe file reading
 ----------------------------------------------------------------------
 
 --- Safely read file content

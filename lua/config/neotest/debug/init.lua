@@ -21,13 +21,13 @@ function M.usercommands()
       return
     end
 
-    -- KORREKTUR: adapter_ids() gibt Array zurück, nicht Map
+    -- adapter_ids() returns an array, not a map
     local adapters = neotest.state.adapter_ids() or {}
 
     local lines = { "=== Neotest Adapters ===" }
     lines[#lines + 1] = ""
 
-    -- KRITISCH: Richtige Iteration über Array
+    -- Iterate as an array (not with pairs())
     for i = 1, #adapters do
       lines[#lines + 1] = string.format("[%d] %s", i, adapters[i])
     end
@@ -48,10 +48,10 @@ function M.usercommands()
     local bufnr = vim.api.nvim_get_current_buf()
     local bufname = vim.api.nvim_buf_get_name(bufnr)
 
-    -- KORREKTUR: adapter_ids() gibt Array zurück
+    -- adapter_ids() returns an array
     local adapters = neotest.state.adapter_ids() or {}
 
-    -- Test-Tree für aktuellen Buffer
+    -- Test tree for the current buffer
     local tree_ok, tree = pcall(neotest.state.positions, bufname)
 
     local lines = { "=== Neotest Debug State ===" }
@@ -132,6 +132,11 @@ function M.usercommands()
     end
 
     -- Test root detection
+    --- CDX: adapters/typescript.lua only exports M.create(); it has no
+    --- `.adapter` field, so this condition is always false and NeotestDebugRoot
+    --- never actually resolves a root through the typescript adapter. Real
+    --- behavior bug, not just annotation -- needs an author decision on the
+    --- intended call (presumably ts_config.create().root or similar).
     local ts_config = require("config.neotest.adapters.typescript")
     local root = nil
 

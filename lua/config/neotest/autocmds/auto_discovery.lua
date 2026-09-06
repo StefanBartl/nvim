@@ -2,6 +2,12 @@
 --- Forces neotest to discover tests once on project open (deferred,
 --- `neotest.state.clear` + a discovery pass) instead of waiting for the
 --- first manual test run to trigger it.
+--
+--- CDX: M.attach() is never called -- the require in plugins/neotest.lua is
+--- commented out, and this module is flagged unreferenced-module by
+--- docs/map/overview.md. Whether auto-discovery should be reactivated or
+--- kept deliberately off is an open decision, see
+--- docs/ROADMAP/IDEAS/test.md §2/§10.
 
 local Autocmd = require("lib.nvim.bindings.autocmd")
 
@@ -15,7 +21,7 @@ local function force_initial_discovery()
       return
     end
 
-    -- Trigger discovery ohne Test auszuführen
+    -- Trigger discovery without running a test
     pcall(neotest.state.clear)
 
     vim.defer_fn(function()
@@ -24,10 +30,10 @@ local function force_initial_discovery()
         require("neo-tree.sources.manager").refresh("tests")
       end)
     end, 1000)
-  end, 2000) -- 2s Delay nach Startup
+  end, 2000) -- 2s delay after startup
 end
 
--- Auto-discovery beim VimEnter
+-- Auto-discovery on VimEnter
 ---@return nil
 function M.attach()
   Autocmd.create("VimEnter", force_initial_discovery, {

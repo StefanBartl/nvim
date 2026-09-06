@@ -14,6 +14,12 @@ local CONSUMER = {
   "TimCreasman/neo-tree-tests-source.nvim",
 }
 
+--- CDX: neotest-vim-test is installed here but adapters/factory.lua's
+--- ADAPTER_BUILDERS has no builder for it (only lua/go/python/rust/
+--- typescript) -- it never becomes an active adapter, same class of orphan
+--- as the python/rust/jest entries already documented in
+--- docs/ROADMAP/IDEAS/test.md §2.1 (that doc's plugin list didn't call this
+--- one out by name).
 local ADAPTER = {
   { "nvim-neotest/neotest-plenary", ft = "lua" },
   { "nvim-neotest/neotest-vim-test", ft = { "vim", "lua", "sh", "bash", "zsh", "asm" } },
