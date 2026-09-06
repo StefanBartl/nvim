@@ -11,17 +11,11 @@
 --- own `event = "InsertEnter"`) plus LuaSnip (97ms) and the cmp sources --
 --- roughly 600ms, for an HTTP client nobody had opened a file for.
 ---
---- ## Why not `ft = { "http", "resty" }`
----
---- Because it makes things worse, which is worth writing down. To get a
---- plugin's `ftdetect/` to run before the plugin itself is loaded, lazy.nvim
---- puts `ft` plugins on the runtimepath early and marks them `_.rtp_loaded`.
---- But `loader.get_start_plugins()` selects on
---- `not plugin._.loaded and (plugin._.rtp_loaded or plugin.lazy == false)` --
---- so an `rtp_loaded` plugin is pulled into the startup batch regardless of
---- `lazy = true`. Measured: with `ft`, lazy reported
---- `_.loaded = { start = "start" }` and resty loaded on every start; without
---- it, `_.loaded = nil` and it is not on the runtimepath at all.
+--- `ft = { "http", "resty" }` looks like the fix but makes things worse the
+--- same way -- lazy.nvim puts `ft` plugins on the runtimepath early (so their
+--- own `ftdetect/` can run), which pulls them into the startup batch
+--- regardless of `lazy = true`. See wkdbook-Neovim/MyNotes/
+--- lazynvim-ft-rtp-loaded-defeats-lazy.md for the general mechanic.
 ---
 --- So the filetype trigger is wired here instead. `vim.filetype.add` supplies
 --- what resty's own `ftdetect/resty.lua` would have (`.http` Neovim already
