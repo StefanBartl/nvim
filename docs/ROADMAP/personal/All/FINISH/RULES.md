@@ -9,6 +9,7 @@
   - [✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig](#sec-23-regeln-sec-01sec-45-fertig)
   - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-fertig)
     - [Ergebnis je Repo](#ergebnis-je-repo)
+  - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -38,7 +39,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `LLS-*` | 34 | (LuaLS-Diagnostics, kein Katalog-File — mechanisch per Scan-Tool) | ✅ **fertig** — alle 32 Repos auf 0 |
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
-| `TS-*` | 5 | `LUA_NVIM.md` | ⬜ nicht begonnen |
+| `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `ERR-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -68,22 +69,19 @@ auf einmal — kleinste/mechanischste Familien zuerst.
 
 ## Aufwandsschätzung der verbleibenden Tasks
 
-Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-* — aber ich kann sie an echten Zahlen aus diesem Sweep festmachen statt aus der Luft zu greifen.
+Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — aber ich kann sie an echten Zahlen aus diesem Sweep festmachen statt aus der Luft zu greifen.
 
-**Der eigentliche Kostentreiber ist nicht "Regeln pro Familie", sondern "Repo-Durchgänge".** Beim Lesen eines Repos prüft man ohnehin alle anwendbaren Regeln einer Familie in einem Rutsch — ob eine Familie 23 oder 57 Regeln hat, ändert die Zeit pro Repo-Besuch nur graduell, nicht proportional. Der Referenzwert dafür ist `SEC-*` (23 Regeln, echt kontextabhängig): **32 Repo-Durchgänge, an einem einzigen Tag durchgezogen** — aber mit bis zu 3 parallelen Agenten für die ersten 21 Repos. Das Agenten-Limit ist seitdem auf 1 gleichzeitig verschärft worden, künftige Wellen brauchen also mehr Runden für dieselbe Abdeckung als `SEC-*` gebraucht hat.
+**Der eigentliche Kostentreiber ist nicht "Regeln pro Familie", sondern "Repo-Durchgänge".** Beim Lesen eines Repos prüft man ohnehin alle anwendbaren Regeln einer Familie in einem Rutsch — ob eine Familie 23 oder 57 Regeln hat, ändert die Zeit pro Repo-Besuch nur graduell, nicht proportional. Der Referenzwert dafür ist `SEC-*` (23 Regeln, echt kontextabhängig): **32 Repo-Durchgänge, an einem einzigen Tag durchgezogen** — aber mit bis zu 3 parallelen Agenten für die ersten 21 Repos. Das Agenten-Limit ist seitdem auf 1 gleichzeitig verschärft worden, künftige Wellen brauchen also mehr Runden für dieselbe Abdeckung als `SEC-*` gebraucht hat. `TS-*` (5 Regeln, rein mechanisch) hat den Umkehrschluss bestätigt: 3 Greps über alle 32 Repos auf einmal, keine einzelnen Durchgänge nötig, weil kein Repo überhaupt eigene Query-Dateien mitbringt — <1 Sitzung, wie vorhergesagt.
 
 | Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
 |---|---|---|---|
-| `TS-*` | 5 | ~5–8 (erst Grep auf eigene Query-Dateien, nur Treffer wirklich lesen) | winzig — <1 Sitzung |
 | `ERR-*` | 34 | ~32 | ähnliche Größenordnung wie `SEC-*`, leicht mehr pro Durchgang |
 | `UI-*` | 34 | ~32 | wie `ERR-*` |
 | `PRIN-*` | 37 | ~32 | wie `ERR-*`/`UI-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
 | `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
 | `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
-**Fazit:** `TS-*` ist in einer Sitzung erledigt. Die übrigen fünf Familien brauchen je ~32 echte Repo-Durchgänge, macht zusammen grob **160 Repo-Durchgänge** — bei reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. Realistisch bewegt sich das im Bereich von **mehreren vollen Arbeitstagen bis zu zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird — deckt sich mit der Einschätzung, die schon im Pilot-Abschnitt der Datei steht ("mehrtägig bis mehrwöchig"), mit `PERF-*` als vermutlich größtem Einzelbrocken darin.
-
-Nur eine abgeschlossene Background-Task-Benachrichtigung von vorhin (der `find`-Befehl nach `plenary.nvim`, der damals in den Hintergrund gewandert war) — inzwischen längst durch die schnellere Suche im `lazy`-Verzeichnis überholt. Keine Aktion nötig.
+**Fazit:** Die übrigen fünf Familien brauchen je ~32 echte Repo-Durchgänge, macht zusammen grob **160 Repo-Durchgänge** — bei reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. Realistisch bewegt sich das im Bereich von **mehreren vollen Arbeitstagen bis zu zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird — deckt sich mit der Einschätzung, die schon im Pilot-Abschnitt der Datei steht ("mehrtägig bis mehrwöchig"), mit `PERF-*` als vermutlich größtem Einzelbrocken darin.
 
 ---
 
@@ -225,22 +223,57 @@ stubben.
 
 ---
 
+## ✅ TS-* (5 Regeln) — fertig
+
+**Methode:** rein mechanisch, kein Agent nötig — `TS-01`…`TS-03`/`TS-05`
+setzen eigene Query-Dateien bzw. Query-Strings voraus, `TS-04` einen
+Threadpool-Job, der `vim.treesitter` von außerhalb des Main-Threads aufruft.
+Alle vier Muster lassen sich per Grep über alle 32 Repos auf einmal
+entscheiden:
+
+```bash
+find <32 Repos> -type d -iname queries          # eigene Query-Dateien (.scm)?
+grep -rlE 'query\.parse|#match\?|#any-match\?|#eq\?|#has-parent\?|;; extends|;; inherits' --include='*.lua' <32 Repos>
+grep -rln 'new_work|uv_work' --include='*.lua' <32 Repos>   # TS-04: Treesitter im Threadpool?
+```
+
+**Ergebnis: alle 32 Repos geprüft, 0 Befunde.**
+
+| Regel | Worum es geht | Befund |
+|---|---|---|
+| `TS-01` | Directives vs. Predicates | Kein Repo nutzt Directives (`#set!`/`#offset!`/`#gsub!`/`#trim!`) überhaupt; das einzige Predicate im ganzen Fleet ist ein korrektes `#eq?` (`documentation.nvim/lua/documentation/core/check.lua:768`) |
+| `TS-02` | `#match?` vs. `#any-match?` | Kein Repo nutzt `#match?`/`#any-match?` auf einem quantifizierten Capture — Regel greift nirgends |
+| `TS-03` | `;; extends`/`;; inherits` | **Kein einziges Repo hat eine eigene `queries/`-Datei** (`find -iname queries` über alle 32 Repos: leer) — Regel ist repo-weit gegenstandslos |
+| `TS-04` | Kein `vim.treesitter` außerhalb des Main-Threads | Kein Treffer für `uv.new_work`/`vim.loop.new_work`/Threadpool im ganzen Fleet. Die Repos mit echter TS-lastiger Analyse (`documentation.nvim`, `gopath.nvim`, `insights.nvim`, `recommender.nvim`) parsen synchron auf dem Main-Thread oder lagern auf externe Prozesse aus (`jobstart`) — genau das vom Regel-Text empfohlene Muster |
+| `TS-05` | Captures sind nie vordefiniert | Ohne eigene `queries/highlights.scm` (siehe `TS-03`) kann kein Repo diese Regel überhaupt verletzen |
+
+14 Fundstellen mit `vim.treesitter.query.parse(...)`-Inline-Query-Strings
+existieren (v. a. `documentation.nvim`, plus `gopath.nvim`, `insights.nvim`,
+`recommender.nvim`, `debugging.nvim`) — alle sind reine Lua-Struktur-Parses
+(`(identifier) @id`, `(function_declaration ...) @decl` u. ä.) für
+Code-Analyse, keine Highlight-Queries, und keiner davon verletzt eine der
+fünf Regeln.
+
+**Fazit:** `TS-*` ist eine Familie, die für dieses Fleet strukturell nicht
+greift — kein Repo bringt eigene Treesitter-Query-Dateien mit. Bestätigt die
+Einschätzung aus der Aufwandsschätzung oben (ein Sitzung, meist N/A).
+
+---
+
 ## ⬜ Noch nicht begonnen
 
 | Familie | Regeln | Worum es geht (Kurzfassung) |
 |---|---|---|
-| `TS-*` | 5 | Treesitter-Query-Konventionen (Directives vs. Predicates, `#match?` vs. `#any-match?`, `;; extends`, Main-Thread-Pflicht, keine vordefinierten Captures) — vermutlich bei den meisten der 32 Repos gar nicht anwendbar (nur Repos mit eigenen Query-Dateien) |
 | `PRIN-*` | 37 | Grundprinzipien (Modularität, API-Design, Namenskonventionen, Dokumentationspflichten auf Prinzip-Ebene) |
 | `ERR-*` | 34 | Fehlerbehandlung: `pcall`-Pflicht an Systemgrenzen, Type Guards, explizite Rückgaben, kein `notify()` in Low-Level-Code, strukturierte Fehlertypen, Rückgabewert-Präzision (`nil` vs. `false` vs. strukturiertes Fehlerobjekt), Fail-Open vs. Fail-Closed |
 | `UI-*` | 34 | UI-Konventionen (Float-Größen, Highlight-Gruppen, Statuszeilen-Verhalten, Tastenkonflikte) |
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `TS-*` (5, wahrscheinlich
-meist N/A, schnell durch) → `ERR-*`/`UI-*` (je 34, mittelgroß) → `PRIN-*` (37)
-→ `LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie
-am meisten Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine
-Einschätzung nach Größe.
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `ERR-*`/`UI-*` (je 34,
+mittelgroß) → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte und
+wahrscheinlich aufwendigste, da sie am meisten Kontext pro Fund braucht).
+Keine Autoren-Vorgabe, nur eine Einschätzung nach Größe.
 
 ---
 
