@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 28/32 Repos gelesen, 15 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 29/32 Repos gelesen, 15 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,7 +316,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 28/32)
+### Ergebnis je Repo (Stand dieser Sitzung, 29/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -348,6 +348,7 @@ verändert).
 | recommender.nvim | 0 (durchgängig sauber: `project.lua`s Scan-Generation-Counter für Async-Verzeichnis-Walk/Datei-Reads verhindert exakt die Race, die anderswo in dieser Familie echte Bugs waren; `bindings/usrcmds.lua`/`float/keymaps.lua` validieren Buffer-/Fenster-Handles konsequent neu vorm Zugriff in jedem `vim.schedule`-Callback; `config/init.lua` deep-copy't `DEFAULTS` vorm Mergen statt der insights.nvim-Falle zu wiederholen). Ein bereits im Code selbst per `CDX`-Kommentar markierter toter Zustand (`_pending_insert` in `float/keymaps.lua`) ist ein Cleanup-Hinweis, kein Bug | — | — |
 | **replacer.nvim** | **`history.lua`s `M.load()` kollabierte „keine Datei" und „Datei kaputt" auf dieselbe leere Historie** — `M.add()` schreibt immer die GANZE Datei, also hätte der nächste `:Replace`-Apply die kaputte `history.json` durch eine frische Ein-Eintrag-Historie ersetzt, alle vorherigen Suchen unwiederbringlich verloren. Dieselbe Bugklasse wie zuvor bei documentation.nvim, mit derselben Lösung (Backup nach `.corrupt` vorm nächsten Überschreiben). 40 Dateien/8022 LOC insgesamt — `apply.lua`s gechunkte Async-Apply (neuestes Feature), `checkpoint.lua` (bereits SEC-33-gehärtet) und `batch.lua` gezielt mitgeprüft, sonst Checkliste + Stichproben wie bei den anderen Großrepos dieser Familie | **ERR-11-Familie** | [`66f1c88`](https://github.com/StefanBartl/replacer.nvim/commit/66f1c88) |
 | **reposcope.nvim** | **`state/favorites_state.lua`s `M.load()` kollabierte „keine Datei" und „Datei kaputt" auf dieselbe leere Liste** — `M.toggle()` schreibt immer die GANZE Datei, also hätte der nächste favorisierte/entfavorisierte Eintrag `favorites.json` durch eine Ein-Eintrag-Liste ersetzt, alle vorher gemerkten Repos unwiederbringlich verloren. Dieselbe Bugklasse zum dritten Mal in dieser Familie (documentation.nvim, replacer.nvim), dieselbe Lösung. **Größtes bisher geprüftes Repo: 106 Dateien/12350 LOC** — Provider-Trio (github/gitlab/codeberg) per Diff auf Drift geprüft: einzige Abweichung (`needs_api` nur bei GitHub) ist laut Commit `ae602e8` eine bewusste, dokumentierte Entscheidung, kein Bug. `state/session_state.lua` hat denselben Kollaps, aber ohne Load-Modify-Save-Zyklus (jedes `:Reposcope session save` überschreibt ohnehin absichtlich) — kein Bug. `state/query_stats.lua` hat exakt dieselbe Struktur wie der gefixte Fund, aber als reine Häufigkeits-Statistik niedrigschwellig genug (vergleichbar mit einem Frecency-Cache), um bewusst ungefixt zu bleiben | **ERR-11-Familie** | [`92345e0`](https://github.com/StefanBartl/reposcope.nvim/commit/92345e0) |
+| runtime-analysis.nvim | 0 — **46 Dateien/13683 LOC**. `telemetry/store.lua` und `history.lua` haben dieselbe Load/Save-Kollaps-Struktur wie der reposcope.nvim-Fund, aber beide explizit im Code selbst als bewusst verlusttolerant dokumentiert („a report file is a convenience artifact, not data") — kein Bug, dieselbe Kategorie wie query_stats.lua. Token-basierte Request-Supersession/Cancel-Tracking in `bindings/usrcmds.lua` (1041 Zeilen, `:RA send`/`:RA cancel`) korrekt: unterscheidet sauber zwischen „abgebrochen" und „durch neueren Send überholt". `runner.lua`/`parse.lua` fehlerfrei. Durchgängig außergewöhnlich sorgfältig dokumentierter Code (Autor begründet praktisch jede Design-Entscheidung inline) | — | — |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -417,9 +418,9 @@ stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwer
 immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
 mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-### Noch offen (4/32 Repos ungelesen für ERR-*)
+### Noch offen (3/32 Repos ungelesen für ERR-*)
 
-runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim.
+sandbox.nvim, sessions.nvim, spotlight.nvim.
 
 (Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
 oben eingetragen: 3/3 mit echtem Fund. pdfport.nvim direkt gelesen: 0 Funde.)
