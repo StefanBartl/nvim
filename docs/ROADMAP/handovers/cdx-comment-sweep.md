@@ -233,9 +233,60 @@ Staleness-/Doku-Bugs direkter Fixes zusammen (Modul-Index-Lücken,
 "N dokumentiert/N+1 real"-Fälle, tote Links/Tags, eine erfundene
 replacer.nvim-API, die gleich zweimal auftauchte, ein Mojibake-Fund) plus
 eine niedrige zweistellige Zahl an `CDX:`-Judgment-Calls. lib.nvim ist
-damit Plugin-Repo **17/31** fertig — die übrigen Plugin-Repos aus der
-Gesamtliste (siehe `cdx-comments-docs.md` für den genauen Rest) folgen in
-künftigen Sessions.
+damit Plugin-Repo **17/31** fertig.
+
+### Häppchen 35 — replacer.nvim (Plugin-Repo 18/31) — **erledigt**
+
+Commit `b4fe133`, gepusht, `pull --ff-only` sauber. Ganzes Repo (41 Lua +
+docs + TESTS). stylua ok, luacheck 0/0 (41 Dateien; 1 vorbestehende
+`TESTS/`-Warnung nicht CDX-Scope), Testsuite grün (feature_smoke 160/0,
+surround_smoke 26/0, async_utf8 7/0, refine_wiring 7/0 — via CI-Pfad mit
+lib.nvim + pickers.nvim als Sibling-Checkouts).
+
+**Invented-API-Lead geklärt:** `lua/replacer/init.lua` bestätigt — reale
+Oberfläche ist `setup(opts)` + `run(request)` (+ Legacy-Positionalform
+`run(old,new,scope,all)`), plus `replacer.config.get/resolve` und
+`replacer.hooks.on/clear`. **replacer.nvims eigene Docs (`docs/api.md`,
+README, `FEATURES/*`) sind korrekt** — die erfundenen `replace_prompt()`
+/`.buffer()`/`.cwd()`/`.surround()` standen nur in **anderen** Repos (lib.nvim
+Sub 12/13). `doc/replacer.txt` dokumentierte `run` nur in der Legacy-Form →
+strukturierte Form ergänzt.
+
+**Direkte Fixes:** `types/init.lua` `Replacer`-Klasse hatte Fake-Feld
+`options RP_Config` (init.lua exportiert das nicht) + Legacy-`run`-Signatur →
+korrigiert; ungenutzte `RP_MatchEx`-Klasse gelöscht (Header behauptete
+fälschlich `apply.lua` nutze sie). `command.lua`-Header zählte ~13 von 41
+Flags auf → Verweis auf `BOOL_FLAGS`/`VALUE_FLAGS`. `DEFAULTS.lua` nannte
+nicht existierendes `:Replacer history` → `:ReplaceHistory`. `pickers/fzf.lua`
+Fallback `"r"` widersprach dem eigenen Header/`telescope.lua`/DEFAULTS →
+`"<C-r>"`. Toter auskommentierter `preview_lines`-Back-compat-Wrapper in
+`pickers/common.lua` gelöscht. Deutscher `-- AUDIT: Ausformulieren`-Marker →
+`--- CDX:`. `doc/replacer.txt` stale `:Surround`/`--confirm-per-file`-Claims
+(Vor-`ui.kit`-Migration, von `surround_smoke.lua` widerlegt) entfernt.
+`FEATURES/SEARCH.md` vimgrep-Abschnitt listete die ripgrep-Funktionen →
+korrigiert. `Makefile` `make test`/`make check` liefen `tests/` (lowercase),
+Verzeichnis ist `TESTS/` — bricht case-sensitiv, CONTRIBUTING.md verweist
+Contributor darauf → gefixt.
+
+**`--- CDX:` gesetzt:**
+- `debug.lua:1` + `:66` — `:ReplaceDebug on/off/status` und `M.test()` sind
+  **vestigial**: schreiben/lesen `require("replacer").options.ext_highlight_opts`
+  (Feld nie exponiert), Branches tot, `status` meldet immer `OFF`,
+  `M.test()`s `require("test.utf8_offsets")` löst nie auf. Alle drei
+  User-Docs lassen `test` bewusst weg. `docs/troubleshooting.md` beschreibt
+  ausführlich `:ReplaceDebug`-Output (Hex-Dumps etc.), den der Code nicht
+  emittiert — substanzielle Doc↔Code-Drift, braucht Produktentscheidung,
+  daher nur getaggt, nicht umgeschrieben.
+
+Keine neuen Logik-Bugs, kein `X and CONST or CONST`.
+
+**Verbleibende Plugin-Repos (13/31 offen):** buffer-ctx, cascade,
+color_my_ascii, documentation, lsp, markdown, mdview, pdfport, pickers,
+reposcope, runtime-analysis, sandbox, spotlight. (casedesk.nvim existiert
+als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
+config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
+ist noch offen und in dieser 13er-Liste **nicht** enthalten → als 14. prüfen.)
+Reihenfolge offen; keine Vorgabe.
 
 **Sub-Häppchen 13 — erledigt** (`docs/` — alle 31 Markdown-Dateien gegen den
 aktuellen Code-Stand geprüft; Commit `19314ec`, gepusht, Re-Fetch bestätigt
