@@ -18,7 +18,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:45       |   100% / 49%     | X
 | **work** |   20. Sept    |   Sa., 06:00    |     20:10       |    50% / 42%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     01:10       |    00% / 00%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     22:10       |    87% / 09%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each

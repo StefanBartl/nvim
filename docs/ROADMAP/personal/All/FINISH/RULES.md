@@ -6,7 +6,7 @@
   - [Überblick: 9 Regel-Familien](#berblick-9-regel-familien)
   - [✅ LLS-* (34 Regeln) — fertig](#lls-34-regeln-fertig)
   - [✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig](#sec-23-regeln-sec-01sec-45-fertig)
-  - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-luft)
+  - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-fertig)
     - [Ergebnis je Repo](#ergebnis-je-repo)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
