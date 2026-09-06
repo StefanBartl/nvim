@@ -16,26 +16,29 @@ Einstiegspunkt für eine neue Session.
 | `SEC-*` (23) | ✅ fertig |
 | `DEP-*` (7) | ✅ fertig |
 | `TS-*` (5) | ✅ fertig — 0 Befunde, komplett N/A (kein Repo hat eigene Query-Dateien) |
-| `ERR-*` (34) | 🔶 **in Arbeit** — 10/32 Repos gelesen, 3 echte Bugs gefixt+gepusht, 2 fleet-weite Mechanik-Checks über alle 32 Repos gelaufen |
+| `ERR-*` (34) | 🔶 **in Arbeit** — 11/32 Repos gelesen, 3 echte Bugs gefixt+gepusht, 2 fleet-weite Mechanik-Checks über alle 32 Repos gelaufen |
 | `PRIN-*` (37) | ⬜ offen |
 | `UI-*` (34) | ⬜ offen |
 | `LUA-*` (45) | ⬜ offen |
 | `PERF-*` (57) | ⬜ offen |
 
-Gelesene 10: buffer-ctx.nvim (Bug), cascade.nvim (sauber), casedesk.nvim
+Gelesene 11: buffer-ctx.nvim (Bug), cascade.nvim (sauber), casedesk.nvim
 (Bug), cmdlog.nvim (sauber), color_my_ascii.nvim (sauber), dap.nvim (sauber),
 debugging.nvim (sauber), diff.nvim (sauber), emojis.nvim (sauber),
-fileops.nvim (Bug, 2 Stellen).
+fileops.nvim (Bug, 2 Stellen), filetree.nvim (sauber, 124 Dateien —
+Checklist + Stichproben statt Volllesung, siehe RULES.md).
 
 ## Nächster Schritt
 
-`ERR-*` weiterführen mit **filetree.nvim** (nächstes in der 32-Repo-Liste,
-alphabetisch nach `fileops.nvim`; `documentation.nvim` steht zwar davor,
-ist aber mit ~60 Dateien der größte Brocken der Familie — bei Bedarf
-zurückstellen und zuerst die kleineren abarbeiten). Volle Liste der noch
-ungelesenen 22 Repos steht in `RULES.md` §"ERR-* — in Arbeit" →
-"Noch offen". Checkliste pro Repo, die sich bewährt hat (siehe RULES.md für
-Details):
+`ERR-*` weiterführen mit **github_stats.nvim** (nächstes in der
+32-Repo-Liste, alphabetisch nach `filetree.nvim`; `documentation.nvim` steht
+zwar davor, ist aber mit ~60 Dateien der größte Brocken der Familie — bei
+Bedarf zurückstellen und zuerst die kleineren abarbeiten). Volle Liste der
+noch ungelesenen 21 Repos steht in `RULES.md` §"ERR-* — in Arbeit" →
+"Noch offen". `lib.nvim` verdient dabei besondere Aufmerksamkeit für ERR-34
+(Symlink-Zyklus-Schutz in `fs.collect_recursive`) — mehrere Konsumenten
+delegieren dorthin, ein Fund dort wirkt fleet-weit. Checkliste pro Repo, die
+sich bewährt hat (siehe RULES.md für Details):
 
 - `table.sort`-Comparatoren lesen (die `cond and A>B or C<D`-Falle ist
   fleet-weit bereits per Grep ausgeschlossen, **inklusive
@@ -63,6 +66,13 @@ Details):
   vorsortiert, was den Bug beim lokalen Testen zusätzlich verdeckt haben
   kann — mit dem Bug tatsächlich reproduzieren/verifizieren, nicht nur
   gegen den Fix grün laufen lassen).
+- Bei einem sehr großen Repo (filetree.nvim: 124 Dateien) ist ein
+  file-für-file-Read nicht verhältnismäßig — Checkliste (Grep für
+  `table.sort`-Comparatoren, `defer_fn`/`schedule`, `O_CREAT`/`EEXIST`,
+  Config-Merge) plus gezielte Stichproben in den offensichtlichen
+  Risikobereichen (Batch-Operationen, Datei-Schreibpfade, rekursive Walks)
+  reicht, sofern die Stichproben nichts Auffälliges zeigen. Das ist eine
+  bewusste Abwägung, kein übersprungener Schritt — in RULES.md so vermerkt.
 
 Danach laut `RULES.md` §"Vorschlag für die Reihenfolge": `UI-*` (34,
 mittelgroß) → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte). Keine

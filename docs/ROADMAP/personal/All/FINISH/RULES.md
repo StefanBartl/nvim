@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 10/32 Repos gelesen, 3 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 11/32 Repos gelesen, 3 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,6 +316,7 @@ fileops.nvim-Fund beim ersten Durchgang durchrutschen lassen.
 | debugging.nvim | 0 (defer_fn-Callbacks in `views/display.lua`/`bindings/autocmds.lua` validieren Fenster-Handles durchgängig neu — das im Katalog selbst zitierte ERR-33-Positivbeispiel) | — | — |
 | diff.nvim | 0 (`render.three_way`/`side_by_side`/`inline` validieren `origin_win` am Ausführungszeitpunkt, auch nach verketteten Async-Resolves für Drei-Wege-Diffs) | — | — |
 | emojis.nvim | 0 (Preview-vor-Mutation-Callback in `actions.lua` validiert den Buffer sowohl vorm Löschen des Preview-Highlights als auch in der eigentlichen Mutation erneut) | — | — |
+| filetree.nvim | 0 — **124 Dateien, größtes bisher geprüftes Repo dieser Familie**: Checklist + gezielte Stichproben in den Risikobereichen (Batch-Rename ist best-effort statt fail-fast/ERR-42, `refs/apply.lua` verifiziert jede Zeile gegen den aktuellen Inhalt vorm Schreiben/ERR-30, rekursive Walks delegieren an `lib.nvim.fs.collect_recursive` statt eigener Logik — Symlink-Zyklus-Schutz dort zu prüfen, nicht hier noch mal), kein file-für-file-Read aller 124 Dateien | — | — |
 
 ### Nebenbefund, nicht gefixt
 
@@ -328,20 +329,23 @@ also eher der Fall, den die Migration reparieren soll, nicht einer, den sie
 verweigern sollte. Nicht angefasst, um keine Design-Entscheidung über die
 Migrations-Semantik nebenbei zu treffen — bei Bedarf gesondert bewerten.
 
-### Noch offen (22/32 Repos ungelesen für ERR-*)
+### Noch offen (21/32 Repos ungelesen für ERR-*)
 
-documentation.nvim, filetree.nvim, github_stats.nvim, gopath.nvim,
-hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim,
-markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim, pickers.nvim,
-recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim,
-sandbox.nvim, sessions.nvim, spotlight.nvim.
+documentation.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim,
+insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim, mdview.nvim,
+open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim,
+reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
+spotlight.nvim.
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
-read-or-stub-vor-write) müssen für diese 22 **nicht wiederholt** werden — die
+read-or-stub-vor-write) müssen für diese 21 **nicht wiederholt** werden — die
 liefen bereits über alle 32 Repos (die and/or-Falle sogar zweimal, mit der
-erweiterten Regex). Was für die restlichen 22 noch fehlt, ist das
+erweiterten Regex). Was für die restlichen 21 noch fehlt, ist das
 kontextabhängige Lesen der übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
-`ERR-10/20-22/30-34/40-44/50-53/61/63-67`).
+`ERR-10/20-22/30-34/40-44/50-53/61/63-67`). `lib.nvim` verdient dabei
+besondere Aufmerksamkeit für `ERR-34` (Symlink-Zyklus-Schutz in
+`fs.collect_recursive`) — mehrere Konsumenten (filetree.nvim, u. a.)
+delegieren dorthin, ein Fund dort wirkt fleet-weit statt nur lokal.
 
 ---
 
