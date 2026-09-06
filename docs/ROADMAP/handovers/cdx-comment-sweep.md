@@ -295,13 +295,59 @@ Co-Authored-By, gepusht + `pull --ff-only` bestätigt.
 Commit: nvim-config `c0fbdc6b7`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 8 — `lua/config/` kleine Ordner + `ui_open.lua` (16 Ziele, ~2670 Zeilen)
+
+**Status: erledigt.** `@types`, `lazygit`, `telescope` bereits sauber, keine
+Änderung. Bei allen anderen: deutsche Kommentare übersetzt, eigene
+`FIX:`/`AUDIT:`-Marker zu `--- CDX:` vereinheitlicht, redundante
+Kommentare (dopplen Funktionsnamen) entfernt, überlange Rationale gekürzt.
+
+**⚠️ Echter Funktionsbug gefunden, nicht gefixt (außerhalb Sweep-Scope):**
+`lua/config/noice/init.lua` — eine catch-all-Route
+(`{ filter = { event = "msg_show" }, view = "mini" }`) matcht **jede**
+`msg_show`-Nachricht; `noice.message.router.lua` bricht beim ersten Match
+ab (`opts.stop` default `true`). Damit sind **alle danach folgenden
+Routes tot**: „search hit BOTTOM/TOP"-Verstecken, mehrere
+emsg-Hides (E23/E20/E37/E31/E351/E418), „No signature help", der
+`search_count`-Hide — keines davon feuert je. Mit `--- CDX:` markiert
+(eine Reihenfolge-Änderung wäre eine Logikänderung, nicht Teil dieses
+Sweeps) — **Autorenentscheidung nötig, ob das gefixt werden soll.**
+
+**Weitere Funde:**
+- Alle drei nebeneinanderliegenden KI-Assistent-Configs
+  (`config/ai/anthropic` [Avante], `config/copilot`, `config/gp_config`
+  [gp.nvim]) sind **aktuell verwaist** — die zugehörigen
+  `lua/plugins/ai/{avante,copilot,gp}.lua`-Specs sind komplett
+  auskommentiert. `copilot/nes_guard.lua` war zusätzlich toter Code (0
+  Aufrufer) → gelöscht. `copilot/cmp.lua`s Bridge-Fragment läuft noch,
+  ist aber ein No-op ohne installiertes Copilot-Plugin.
+- `menu/`: ein nutzloser Ternary (`ok_gs and "gitsigns" or "gitsigns"` —
+  beide Branches identisch) → `--- CDX:`.
+
+Ausgelagert nach WKDBooks (Commit `c9fdbe7`):
+- `lua/config/lazy/init.lua` → `wkdbook-Neovim/MyNotes/
+  lazynvim-checker-git-fetch-storm.md` (neu) — Checker-Mechanik,
+  EDR-Fetch-Sturm, Messwerte.
+- `lua/config/snacks/picker/init.lua` → `wkdbook-Lua/LuaLanguageServer/
+  Annotations/inline-table-fun-swallows-fields.md` (neu) — LuaLS-Quirk:
+  inline `fun(): T` in Tabellentyp verschluckt nachfolgende Felder.
+- `lua/config/ui_open.lua` → `wkdbook-Neovim/nvim-lua-api/
+  LuaModule-vim.ui.md` (neue Sektion) — Windows-cmd.exe-`&`-URL-
+  Truncation-Bug.
+
+stylua ok (16 Dateien). luacheck 0/0 auf 15/16 (1 Datei von luachecks
+eigenem `@`-Präfix-Glob übersprungen — vorbestehend, stylua deckt sie ab).
+
+Commit: nvim-config `20204478c`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/bindings/` ist fertig. Weiter mit den restlichen `lua/`-Bereichen
-(359 Dateien gesamt laut Bestandsaufnahme): `lua/config/` (~100 Dateien,
-groß: harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`,
-`lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`,
-`lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach die 31 Plugin-Repos.
+`lua/config/`: `harpoon/` (12 Dateien, 1943 Z.), `neotest/` (21 Dateien,
+1836 Z.), `neotree/` (29 Dateien, 1923 Z.) — je eigener Häppchen geplant.
+Danach `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`, `lua/themes/`,
+`lua/nvchad/` + `lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`,
+`scripts/`. Danach die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
