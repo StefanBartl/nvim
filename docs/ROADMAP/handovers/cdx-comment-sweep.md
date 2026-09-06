@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum komplett durch (Sub 1–9/9). SUB-HÄPPCHEN 10–13 (TESTS/doc/docs) offen, PAUSIERT — Fortsetzung bei Sub 10**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum komplett durch (Sub 1–9/9). SUB-HÄPPCHEN 10/13 (TESTS pt1) erledigt, PAUSIERT — Fortsetzung bei Sub 11**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -204,12 +204,12 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 9. ✅ `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
    async,selection,image_preview,dev,count,require,store,contextmenu,
    terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)
-10. `TESTS/` Teil 1 — die 9 größten Spec-Dateien (`composer_spec`,
+10. ✅ `TESTS/` Teil 1 — die 9 größten Spec-Dateien (`composer_spec`,
     `deps_spec`, `ui_kit_spec`, `autocmd_dispatcher_spec`,
     `nvim_helpers_spec`, `keymap_registry_spec`, `lua_helpers_spec`,
-    `curl_spec`, `async_spec`; ~6710 Z.)  ← **HIER WEITER**
+    `curl_spec`, `async_spec`; ~6710 Z.)
 11. `TESTS/` Teil 2 — die restlichen 41 Dateien (kleinere Specs +
-    `run.lua`/`harness.lua`; ~5580 Z.)
+    `run.lua`/`harness.lua`; ~5580 Z.)  ← **HIER WEITER**
 12. `doc/` — 17 Vimdoc-Dateien, ~4560 Z. (gegen echte `@types`/Usercmds
     geprüft, wie in den nvim-config/Plugin-Häppchen üblich)
 13. `docs/` — 51 Markdown-Dateien, ~5200 Z.
@@ -223,6 +223,50 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > Plan-Beschreibungen vor dem Bauen an der echten Größe prüfen — hier
 > hätte auch der erste Split-Nachtrag schon `TESTS/`/`doc/`/`docs/`
 > mitzählen sollen, statt sie unangetastet zu lassen.
+
+**Sub-Häppchen 10 — erledigt** (`TESTS/` Teil 1 — `composer_spec`,
+`deps_spec`, `ui_kit_spec`, `autocmd_dispatcher_spec`, `nvim_helpers_spec`,
+`keymap_registry_spec`, `lua_helpers_spec`, `curl_spec`, `async_spec`;
+Commit `d044401`, gepusht, Re-Fetch bestätigt identisch). 9 Dateien gelesen
+(~6710 Zeilen), 1 geändert. Andere Art von Durchgang als Sub 1–9: Test-Code
+statt Bibliotheks-Quelltext, also nach den angepassten Sweep-Regeln
+behandelt — Kommentare only, keine Test-Logik/Assertions/Fixtures
+angefasst, ein gefundener echter Test-Bug wäre nur getaggt, nicht gefixt
+worden.
+
+Alle neun Dateien waren bereits auf einem ungewöhnlich hohen Niveau: kein
+Deutsch, keine Ad-hoc-`FIX:`/`AUDIT:`/`SUPERSEDED:`-Marker, keine
+Kopf/Inline-Dopplung, keine KI-Boilerplate-Blöcke à la „Features:"/„Design
+decisions:", und jeder `require(...)`-Pfad in den Kommentaren löst gegen
+den echten, von Sub 1–9 bereits durchgesweepten `lua/`-Baum auf (Stichprobe:
+alle in `deps_spec`/`nvim_helpers_spec` genannten Module verifiziert,
+`docs/INSTALL.md`-Referenz in `deps_spec.lua` gegen `lua/lib/nvim/deps/
+README.md`s eigene Konvention geprüft — korrekt, kein lib.nvim-eigener
+Pfad, sondern die dokumentierte Pro-Plugin-Konvention).
+
+- **Direkte Fixes:**
+  - `TESTS/ui_kit_spec.lua` (zwei Stellen, Z. 538 und 631) — beide
+    verwiesen auf „UI-KIT-CONCEPT.md §13a"/„§13b", ein Roadmap-Konzeptdokument,
+    das in Commit `be9673e` („docs cleaup", 2026-08-14) gelöscht wurde,
+    nachdem das Feature fertig gebaut war. Toten Abschnittsverweis entfernt,
+    die inhaltliche Erklärung daneben unverändert gelassen.
+- **Echte Test-Bugs: keine gefunden.** Keine tote/unerreichbare
+  Test-Logik, keine Assertion, die nie fehlschlagen kann, keine
+  Fixture-Inkonsistenz.
+- **`--- CDX:` gesetzt: keine** — kein Fund erreichte die Schwelle für einen
+  Judgment-Call-Tag; alles war entweder eindeutig richtig oder eindeutig zu
+  fixen (s.o.).
+- **Nichts für WKDBooks ausgelagert** — keine Design-Rationale/Benchmark-
+  Erzählung in diesem Scope war lang oder allgemeingültig genug, um vom
+  eigenen Call-Site sinnvoll getrennt zu werden.
+- Zwei weitere, gleichartige tote `UI-KIT-CONCEPT.md §13b`-Verweise
+  gefunden, aber außerhalb dieses Scopes (in bereits von Sub 6/9
+  durchgesweepten `lua/lib/nvim/ui/kit/@types/init.lua` und
+  `lua/lib/nvim/ui/kit/select.lua`) — als separater Background-Task
+  geflaggt statt hier mitgefixt, da nicht Teil des TESTS/-Auftrags.
+
+stylua ok, luacheck 0/0 (nur die geänderte Datei betroffen), volle
+`TESTS/run.lua`-Suite `LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 **Sub-Häppchen 9 — erledigt** (`lua/lib/nvim/{normalize,safe_api,treesitter,
 frecency,git,debounce,async,selection,image_preview,dev,count,require,store,
