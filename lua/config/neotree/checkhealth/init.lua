@@ -8,8 +8,8 @@ function M.check()
   -- Core modules
   require("config.neotree.checkhealth.core").check()
 
-  -- (Action-Modul-Checks entfernt: filetree.nvim besitzt sämtliche Actions;
-  -- config.neotree hat keine eigenen Action-Module mehr.)
+  -- (Action module checks removed: filetree.nvim owns all actions now;
+  -- config.neotree has no action modules of its own left.)
 
   -- Optional features
   require("config.neotree.checkhealth.features").check()

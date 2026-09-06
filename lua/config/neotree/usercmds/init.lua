@@ -18,8 +18,8 @@ function M.enable()
     require("config.neotree.sources.switcher").debug_sources()
   end, { desc = "[Neo-tree] Debug source detection" })
 
-  -- (pdfport-Usercmds entfernt: filetree.nvim's preview-Feature dispatcht PDFs
-  -- via <Tab>/<CR> im Baum mit demselben pdfport-Backend.)
+  -- (pdfport usercmds removed: filetree.nvim's preview feature dispatches PDFs
+  -- via <Tab>/<CR> in the tree using the same pdfport backend.)
 end
 
 return M

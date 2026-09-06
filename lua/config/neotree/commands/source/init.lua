@@ -8,7 +8,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.next_source(state)
-  -- Speichere die aktuelle Window-ID
+  -- Store the current window ID
   local neotree_winid = vim.api.nvim_get_current_win()
 
   local sources = require("neo-tree").config.sources
@@ -28,11 +28,11 @@ function M.next_source(state)
   require("neo-tree.command").execute({
     action = "show",
     source = next_source,
-    position = "current", -- Wichtig: behalte die aktuelle Position
+    position = "current", -- Important: keep the current position
   })
 
   vim.schedule(function()
-    -- Setze direkt zur gespeicherten Window-ID zurück
+    -- Restore focus to the saved window ID directly
     if vim.api.nvim_win_is_valid(neotree_winid) then
       vim.api.nvim_set_current_win(neotree_winid)
     end
