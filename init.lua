@@ -275,6 +275,6 @@ vim.defer_fn(function()
   end
 end, 0)
 
--- Für einen harten Kontrast: Weißer Hintergrund, schwarzer Text
--- TODO: gehört in meine options/
+-- Hard-contrast Visual selection: white background, black text.
+--- CDX: belongs in options/, not here.
 vim.api.nvim_set_hl(0, "Visual", { bg = "#FFFFFF", fg = "#000000", bold = true })
