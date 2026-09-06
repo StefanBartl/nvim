@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 24/32 Repos gelesen, 13 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 25/32 Repos gelesen, 13 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -316,7 +316,7 @@ Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
 so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
 verändert).
 
-### Ergebnis je Repo (Stand dieser Sitzung, 24/32)
+### Ergebnis je Repo (Stand dieser Sitzung, 25/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
@@ -344,6 +344,7 @@ verändert).
 | **mdview.nvim** | **`resync()`s async Callback (`browser.behavior = "reuse"`) griff nach `ws_client.wait_ready` (bis 15s, während ein frisch gebauter Relay-Binary vom Virenscanner geprüft wird) mit `nvim_buf_get_lines` auf einen zwischenzeitlich per `:bwipeout` ungültig gewordenen Buffer zu** — warf „Invalid buffer id" statt den veralteten Push still zu überspringen | **ERR-33** | [`2d9abd6`](https://github.com/StefanBartl/mdview.nvim/commit/2d9abd6) |
 | **open.nvim** | **`context.resolve()`s Keyword-Lookup `type(kw)=="function" and kw() or expand_path(tostring(kw))`** — die klassische `and/or`-Falle: liefert die Resolver-Funktion legitim `nil` (z. B. `pwsh_profile`, wenn weder `pwsh` noch `powershell` im PATH steht), fällt der ganze Ausdruck in den `or`-Zweig und `expand_path()`t den **stringifizierten Funktionswert** (`"function: 0x7f..."`) statt des Ergebnisses — `:Open` versuchte danach, einen Fantasie-Pfad zu öffnen | **ERR-60** | [`a51c858`](https://github.com/StefanBartl/open.nvim/commit/a51c858) |
 | pdfport.nvim | 0 (durchgängig sauber, wie schon bei SEC-*: `core/dispatcher.lua`/`core/composer.lua` wrappen `callback` konsequent für Cleanup auf jedem Exit-Pfad statt nur dem Erfolgspfad, `config.get()` gibt zwar die lebende Tabelle zurück, aber kein Konsument mutiert sie — nur `pdfport.get_config()` als Public API deep-copy't explizit vorm Herausgeben, Registry-Getter (`all_backends`/`all_producers`) liefern immer frische Arrays, kein `table.sort` mit Ternary-Comparator) | — | — |
+| pickers.nvim | 0 — **70 Dateien, zweitgrößtes bisher geprüftes Repo dieser Familie**: Checkliste + gezielte Stichproben (`smart/frecency.lua`s Legacy-Store-Migration verweigert Überschreiben eines nicht-leeren Stores, `config/init.lua`s `M.apply()` validiert jedes Feld einzeln mit Warn-und-Behalten statt Absturz/stillem Datenverlust — das ERR-22-Positivbeispiel, `smart/score.lua`s `table.sort`-Comparator ist explizit if/else, alle drei Engine-`extract/*.lua`-Pfad-Extraktoren (fzf/snacks/telescope) behandeln fehlende Felder explizit statt zu raten), kein file-für-file-Read aller 70 Dateien | — | — |
 
 **Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
 `vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
@@ -413,9 +414,9 @@ stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwer
 immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
 mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
 
-### Noch offen (8/32 Repos ungelesen für ERR-*)
+### Noch offen (7/32 Repos ungelesen für ERR-*)
 
-pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
+recommender.nvim, replacer.nvim, reposcope.nvim,
 runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim.
 
 (Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
