@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–6/8 erledigt, PAUSIERT — Fortsetzung bei Sub 7**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–6/9 erledigt, PAUSIERT — Fortsetzung bei Sub 7**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -197,8 +197,23 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 4. ✅ `lua/lib/nvim/fs/`
 5. ✅ `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
 6. ✅ `lua/lib/nvim/ui/` (kit, 29 Dateien — Plan-Schätzung „20" war veraltet)
-7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)  ← **HIER WEITER**
-8. `TESTS/` + `doc/` + `docs/`
+7. `lua/lib/nvim/{deps,logger,system,health,lua_ls,core}/` (34 Dateien,
+   ~4540 Z.)  ← **HIER WEITER**
+8. `lua/lib/nvim/{harvest,progress,markdown,lastcmd,cache,net,neotree,
+   notify}/` (32 Dateien, ~4600 Z.)
+9. `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
+   async,selection,image_preview,dev,count,require,store,contextmenu,
+   terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)
+10. `TESTS/` + `doc/` + `docs/`
+
+> **Nachtrag 2026-09-06:** der alte Plan-Punkt 7 („Rest, deps/logger/
+> system/harvest/progress/notify/…") war eine grobe Schätzung über 31
+> nie einzeln gezählte Unterordner (~13.500 Z. gesamt) — zu groß für
+> ein Sub-Häppchen. In drei ausbalancierte Blöcke (7/8/9, je ~4300–4600 Z.,
+> passend zur Größe der bisherigen Sub-Häppchen) aufgeteilt, TESTS/doc/docs
+> rutscht auf Punkt 10. Gleiche Lektion wie in
+> `plugin-roadmaps-verify-before-building`: Plan-Beschreibungen vor dem
+> Bauen an der echten Verzeichnisgröße prüfen.
 
 **Sub-Häppchen 6 — erledigt** (`lua/lib/nvim/ui/`, Commit `01ba23a`, gepusht,
 Re-Fetch bestätigt identisch). 29 Dateien gelesen (~4469 Zeilen), 2 geändert
