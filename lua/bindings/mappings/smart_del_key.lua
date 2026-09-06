@@ -46,6 +46,9 @@ function M.smart_del()
   vim.cmd.normal({ args = { [["_x]] }, bang = true })
 end
 
+--- CDX: `map_cr`/`set_cr` mismatch — init.lua passes `{ set_cr = true }`,
+--- this reads `opts.map_cr`, and the `<CR>` mapping the header describes is
+--- not implemented at all. Drop the dead option or wire up the `<CR>` map.
 --- Public setup.
 --- @param opts? { map_cr?: boolean } map <CR> globally (default: true)
 function M.setup(opts)
