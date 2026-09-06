@@ -15,15 +15,15 @@ local INJECTION_PARSERS = { "luadoc", "vimdoc" }
 
 local plugins = require("plugins.control.mode").new()
 
--- Repos hier zentral deaktivieren (Basename -> "disabled"), statt weiter unten
--- im jeweiligen Spec `enabled = false` zu setzen.
+-- Disable repos centrally here (basename -> "disabled"), instead of setting
+-- `enabled = false` in each individual spec below.
 --
--- `nvim-treesitter-textobjects` ist der Schalter fuer die
--- Struktur-Bewegung `[b`/`]b` (bindings/mappings/treesitter_structure.lua):
--- wird es hier abgeschaltet, bindet das Mapping-Modul die beiden Tasten gar
--- nicht erst, statt sie zu belegen und beim Druecken zu klagen. Die Queries
--- unter `after/queries/*/textobjects.scm` sind dann ebenfalls wirkungslos,
--- aber harmlos -- sie erweitern nur eine Capture, die niemand abfragt.
+-- `nvim-treesitter-textobjects` is the switch for the `[b`/`]b` structure
+-- motion (bindings/mappings/treesitter_structure.lua): disabling it here
+-- means the mapping module never binds those two keys at all, instead of
+-- binding them and erroring on press. The queries under
+-- `after/queries/*/textobjects.scm` become ineffective too, but harmlessly --
+-- they only extend a capture nobody queries.
 plugins.modes({
   -- ["nvim-treesitter-textobjects"] = "disabled",
   -- ["nvim-treesitter-context"] = "disabled",

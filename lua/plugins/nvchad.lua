@@ -1,6 +1,6 @@
 ---@module 'plugins.nvchad'
--- Lazy plugin spec file for your NVDash (or any plugin that should bring menu support).
--- Adapt the plugin name and event as you use lazy.nvim
+--- NvChad's menu plugin (nvzone/menu): pcall-guarded setup of
+--- config.menu(.mappings), with a notify fallback if either is unavailable.
 
 local notify = require("lib.nvim.notify").create("[plugins.nvchad]")
 

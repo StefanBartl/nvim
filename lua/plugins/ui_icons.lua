@@ -4,7 +4,7 @@
 ---@type LazyPluginSpec[]
 
 return {
-  -- Primary: nvim-web-devicons (Standard für NvChad)
+  -- Primary: nvim-web-devicons (NvChad's default)
   {
     "nvim-tree/nvim-web-devicons",
     lazy = true,
@@ -17,24 +17,24 @@ return {
     },
   },
 
-  -- Optional: mini.icons als Fallback/Alternative
+  -- Optional: mini.icons as fallback/alternative
   {
     "echasnovski/mini.icons",
     version = false,
     lazy = true,
-    enabled = false, -- Deaktiviert, da nvim-web-devicons bevorzugt wird
+    enabled = false, -- disabled, nvim-web-devicons is preferred
     config = function()
       require("mini.icons").setup({
-        style = "glyph", -- oder "ascii"
+        style = "glyph", -- or "ascii"
       })
     end,
   },
 
-  -- Optional: mini.nvim Sammlung (wenn andere mini-Module genutzt werden)
+  -- Optional: mini.nvim collection (if other mini modules are used)
   {
     "echasnovski/mini.nvim",
     version = false,
     lazy = true,
-    enabled = false, -- Nur aktivieren wenn explizit benötigt
+    enabled = false, -- only enable if explicitly needed
   },
 }

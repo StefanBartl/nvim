@@ -64,6 +64,10 @@ return {
     end,
   },
 
+  -- CDX: wakatime + the autolist.nvim block further down are commented-out
+  -- specs for plugins marked "deaktiviert" in
+  -- docs/NOTES/ExternPlugins/Bindings/TODO.md -- kept for quick reactivation
+  -- or delete as dead weight, author decision.
   -- {
   --   "wakatime/vim-wakatime",
   --   lazy = false,

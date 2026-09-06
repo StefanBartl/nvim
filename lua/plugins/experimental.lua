@@ -1,5 +1,5 @@
 ---@module 'plugins.experimental'
---- Plugins curently in test phase
+--- Plugins currently in test phase
 
 ---@type LazyPluginSpec[]
 return {
@@ -10,12 +10,12 @@ return {
 
   {
     "dhruvasagar/vim-table-mode",
-    -- Lädt das Plugin nur bei diesen Befehlen oder Dateitypen
+    -- Loads the plugin only for these commands or filetypes
     cmd = { "TableModeToggle", "Tableize" },
     ft = { "markdown", "rst" },
     init = function()
-      -- Hier kannst du Vim-Variablen definieren, BEVOR das Plugin geladen wird.
-      -- Beispiel: Markdown-kompatible Ecken aktivieren (falls nötig)
+      -- Vim globals defined here run BEFORE the plugin loads.
+      -- Markdown-compatible corners:
       vim.g.table_mode_corner = "|"
     end,
   },

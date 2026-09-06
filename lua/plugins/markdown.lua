@@ -1,5 +1,4 @@
 ---@module 'plugins.markdown'
--- markdown.lua
 return {
 
   -- render-markdown.nvim: installed disabled; toggled via `:Markdown render`
@@ -27,7 +26,7 @@ return {
       vim.g.mkdp_combine_preview = 1
       vim.g.mkdp_combine_preview_auto_refresh = 1
 
-      -- Browser-Erkennung direkt in die init verschieben:
+      -- Browser detection:
       local chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
       if vim.g.is_windows then
         vim.g.mkdp_browser = chrome_path
