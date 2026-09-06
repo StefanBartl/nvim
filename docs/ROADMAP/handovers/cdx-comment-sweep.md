@@ -477,9 +477,52 @@ es nie gab — außerhalb des Scopes (keine `.lua`-Datei in diesem Ordner).
 Commit: nvim-config `0e64b4b4d`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 12 — `lua/plugins/` Top-Level + 3 kleine Ordner (22 Dateien)
+
+**Status: erledigt.** `@types`, `colorscheme` (bis auf 2 Übersetzungen),
+`essentials`, `completion`, `editing`, `snacks`, `telescope`, `textobjects`,
+`ui` bereits sauber.
+
+**Echter Bug direkt gefixt (Redundanz, keine Verhaltensänderung):**
+`neotest.lua` rief `config.neotest.highlights.setup()` **zweimal** auf
+(Copy-Paste-Artefakt) — Duplikat entfernt (Funktion ist idempotent).
+
+**Weitere direkte Fixes:**
+- `neotree.lua`: `} or nil` entfernt (Tabelle immer truthy, wirkungslos);
+  toter auskommentierter Mappings-Merge-Versuch entfernt, der
+  `config.neotree.keymaps.tests` referenzierte — bestätigt an zweiter
+  Stelle, dass dieses Modul (Häppchen-11-Nebenfund) nie existierte.
+- `fzf.lua`, `neotest.lua`: toter auskommentierter Code entfernt.
+- `nvchad.lua`: stehengebliebener Tutorial-Platzhaltertext im Header durch
+  akkurate Beschreibung ersetzt.
+- Diverse deutsche Kommentare übersetzt (`colorscheme`, `experimental`,
+  `git`, `markdown`, `misc`, `neotest`, `treesitter`, `ui_icons`).
+
+**`--- CDX:` gesetzt:**
+- `neotest.lua`: `opts.adapters`-Split-Brain (aus Häppchen 10 bekannt) —
+  Pointer auf `docs/ROADMAP/IDEAS/test.md §2.1` ergänzt, **nicht neu
+  bewertet** wie angewiesen.
+- `workflow.lua`: 82-zeiliger auskommentierter `autolist.nvim`-Spec-Block +
+  kleiner `wakatime`-Block — laut `docs/NOTES/ExternPlugins/Bindings/
+  TODO.md` als „deaktiviert" bekannt, aber keine explizite
+  Lösch-/Behalten-Entscheidung dokumentiert. Autorenentscheidung offen.
+
+Ausgelagert nach WKDBooks (Commit `30d2824`): `webdev.lua`s
+„Why not `ft = {...}`"-Abschnitt (lazy.nvim-Mechanik:
+`ft`-Plugins landen trotz `lazy = true` im Start-Batch) →
+`wkdbook-Neovim/MyNotes/lazynvim-ft-rtp-loaded-defeats-lazy.md` (neu).
+
+stylua ok, luacheck 0/0 (21/22 — 2 `@types/*` vom Glob übersprungen).
+
+Commits: nvim-config `aa9b5401b` + `10d9c105d`. Ohne Co-Authored-By,
+gepusht + `pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/config/` ist komplett. Weiter mit `lua/plugins/`, `lua/startup/`,
+`lua/plugins/personal/` (5 Dateien, 1388 Z. — enthält die bereits in
+Häppchen 7 als „komplett deutsch kommentiert" geflaggte `source.lua`),
+`lua/plugins/ai/` (3 Dateien, 154 Z.), `lua/plugins/github-stats/`
+(aktuell leer — prüfen ob Absicht oder Waise). Danach `lua/startup/`,
 `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`,
 `lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach die 31 Plugin-Repos.
 
