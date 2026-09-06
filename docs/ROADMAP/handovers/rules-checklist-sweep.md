@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-06, vierte Aktualisierung)
+## Stand bei Übergabe (2026-09-07, fünfte Aktualisierung)
 
 | Familie | Status |
 |---|---|
@@ -16,29 +16,29 @@ Einstiegspunkt für eine neue Session.
 | `SEC-*` (23) | ✅ fertig |
 | `DEP-*` (7) | ✅ fertig |
 | `TS-*` (5) | ✅ fertig |
-| `ERR-*` (34) | 🔶 **in Arbeit** — 23/32 Repos gelesen, 13 echte Bugs gefixt+gepusht |
+| `ERR-*` (34) | 🔶 **in Arbeit** — 26/32 Repos gelesen, 13 echte Bugs gefixt+gepusht |
 | `PRIN-*` (37) | ⬜ offen |
 | `UI-*` (34) | ⬜ offen |
 | `LUA-*` (45) | ⬜ offen |
 | `PERF-*` (57) | ⬜ offen |
 
-Diese Session hat drei Agent-Ergebnisse aus einer vorherigen Sitzung
-nachgetragen, die fertig waren, aber nie in `RULES.md` verbucht wurden:
-**markdown.nvim** (`rg`-Scanfehler wurde als „keine Treffer" behandelt, Datei
-konnte unter bestehenden Links weggelöscht werden), **mdview.nvim** (async
-`resync()`-Callback griff auf ungültigen Buffer nach `:bwipeout` zu),
-**open.nvim** (`and/or`-Falle im Keyword-Resolver: `nil`-Rückgabe der
-Resolver-Funktion wurde zu einem stringifizierten Funktionswert als
-Fantasie-Pfad). Alle drei bereits committed+gepusht auf ihren jeweiligen
-`main`, jetzt auch in `RULES.md` §ERR-* dokumentiert.
+Diese Session hat zunächst drei Agent-Ergebnisse aus einer vorherigen
+Sitzung nachgetragen, die fertig waren, aber nie in `RULES.md` verbucht
+wurden: **markdown.nvim** (`rg`-Scanfehler wurde als „keine Treffer"
+behandelt, Datei konnte unter bestehenden Links weggelöscht werden),
+**mdview.nvim** (async `resync()`-Callback griff auf ungültigen Buffer nach
+`:bwipeout` zu), **open.nvim** (`and/or`-Falle im Keyword-Resolver:
+`nil`-Rückgabe der Resolver-Funktion wurde zu einem stringifizierten
+Funktionswert als Fantasie-Pfad). Danach direkt (kein Agent) drei weitere
+Repos gelesen: **pdfport.nvim**, **pickers.nvim** (70 Dateien, Checkliste +
+Stichproben), **recommender.nvim** — alle drei 0 Funde, durchgängig sauber.
 
 ## Nächster Schritt
 
-`ERR-*` weiterführen mit den verbleibenden **9 Repos**: pdfport.nvim,
-pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
-runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim
-(alphabetisch, keine feste Reihenfolge nötig). Checkliste pro Repo, die sich
-bewährt hat (Details in RULES.md §ERR-*):
+`ERR-*` weiterführen mit den verbleibenden **6 Repos**: replacer.nvim,
+reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
+spotlight.nvim (alphabetisch, keine feste Reihenfolge nötig). Checkliste pro
+Repo, die sich bewährt hat (Details in RULES.md §ERR-*):
 
 - `table.sort`-Comparatoren: die `cond and A>B or C<D`-Falle ist **fleet-weit
   bereits per Grep ausgeschlossen** (inkl. Methodenaufruf-Varianten wie
