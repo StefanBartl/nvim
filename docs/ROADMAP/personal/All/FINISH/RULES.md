@@ -6,7 +6,7 @@
   - [Überblick: 9 Regel-Familien](#berblick-9-regel-familien)
   - [✅ LLS-* (34 Regeln) — fertig](#lls-34-regeln-fertig)
   - [✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig](#sec-23-regeln-sec-01sec-45-fertig)
-  - [🟨 DEP-* (7 Regeln) — läuft](#dep-7-regeln-luft)
+  - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-luft)
     - [Ergebnis je Repo](#ergebnis-je-repo)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
@@ -36,7 +36,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 |---|---|---|---|
 | `LLS-*` | 34 | (LuaLS-Diagnostics, kein Katalog-File — mechanisch per Scan-Tool) | ✅ **fertig** — alle 32 Repos auf 0 |
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
-| `DEP-*` | 7 | `LUA_NVIM.md` | 🟨 **läuft** — 4/8 betroffene Repos gefixt |
+| `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `ERR-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -152,7 +152,7 @@ mitgefixt, inzwischen vom Autor selbst behoben (`7d5b9ec`,
 
 ---
 
-## 🟨 DEP-* (7 Regeln) — läuft
+## ✅ DEP-* (7 Regeln) — fertig
 
 **Methode:** rein mechanisch — ein Grep pro Regel-Pattern über alle 32 Repos
 auf einmal, kein Agent nötig.
@@ -177,18 +177,29 @@ auf einmal, kein Agent nötig.
 | markdown.nvim | DEP-01 (3 Module) | ✅ gefixt | `9fd5d6c` |
 | mdview.nvim | DEP-01 (4 Module) | ✅ gefixt | `997fe47` |
 | reposcope.nvim | DEP-01 | ✅ gefixt | `fe06de7` |
-| github_stats.nvim | DEP-01 (`config/init.lua`, `storage.lua`) | ⬜ offen | — |
-| debugging.nvim | DEP-02 (`tools/proc_trace.lua:135`) | ⬜ offen | — |
-| filetree.nvim | DEP-02 (`features/system/shell_run/init.lua:76`) | ⬜ offen | — |
-| sandbox.nvim | DEP-02 (5 Stellen: docker/nerdctl/podman `exec_in_container.lua`, `wsl/exec_in_distro.lua`, `bindings/usrcmds/container_commands_buffer.lua`) | ⬜ offen | — |
+| github_stats.nvim | DEP-01 (`config/init.lua`, `storage.lua`) | ✅ gefixt | `7947a2d` |
+| debugging.nvim | DEP-02 (`tools/proc_trace.lua:135`) | ✅ gefixt | `254eca0` |
+| filetree.nvim | DEP-02 (`features/system/shell_run/init.lua:76`) | ✅ bereits korrekt gegatet — Grep-Fehlalarm (String taucht nur in Kommentar/Fallback-Zweig auf) | — |
+| sandbox.nvim | DEP-02 (5 Stellen: docker/nerdctl/podman `exec_in_container.lua`, `wsl/exec_in_distro.lua`, `bindings/usrcmds/container_commands_buffer.lua`) | ✅ gefixt (inkl. Testfix `exec_workdir_spec.lua`, volle Suite grün) | `fd2646c` |
 
-**Fix-Muster:** `vim.loop` → `vim.uv or vim.loop`, passend zur bereits im
-jeweiligen Repo etablierten Konvention (nicht bloßes `vim.uv`, auch wenn der
-Floor 0.10+ ist — Konsistenz mit dem Rest der Datei/des Repos hat Vorrang).
-`mdview.nvim` hat sogar einen echten 0.9+-Floor, dort ist der Fallback nicht
-nur Konvention, sondern zwingend.
+**Fix-Muster DEP-01:** `vim.loop` → `vim.uv or vim.loop`, passend zur bereits
+im jeweiligen Repo etablierten Konvention (nicht bloßes `vim.uv`, auch wenn
+der Floor 0.10+ ist — Konsistenz mit dem Rest der Datei/des Repos hat
+Vorrang). `mdview.nvim` hat sogar einen echten 0.9+-Floor, dort ist der
+Fallback nicht nur Konvention, sondern zwingend.
 
-**4 von 8 betroffenen Repos durch.**
+**Fix-Muster DEP-02:** `vim.fn.has("nvim-0.11") == 1` gate →
+`vim.fn.jobstart(cmd, { term = true })`, sonst `---@diagnostic
+disable-next-line: deprecated` + `vim.fn.termopen(cmd)`. Alle drei
+betroffenen Repos haben einen Floor < 0.11 (debugging.nvim 0.9+,
+filetree.nvim/sandbox.nvim 0.10+), daher ist der Fallback-Zweig zwingend,
+nicht nur Kosmetik. **Falle:** ein Test, der nur `vim.fn.termopen` mockt,
+bricht lautlos, sobald die lokale/CI-nvim-Version ≥0.11 ist und der Code
+in den `jobstart`-Zweig läuft (echter Spawn-Versuch statt Mock) —
+`sandbox.nvim`s `exec_workdir_spec.lua` musste deshalb beide Funktionen
+stubben.
+
+**8 von 8 betroffenen Repos durch — DEP-* komplett fertig.**
 
 ---
 
