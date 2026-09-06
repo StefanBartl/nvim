@@ -17,17 +17,11 @@
 ---@field path_resolver fun(abs_path: string): string|nil # Optional resolver for project-relative path; fallback to ":~:."
 ---@field band_highlight boolean|nil # Wrap with current mode band HL (default: true)
 
----@class WKDOptions.HL_CFG.Breadcrumbs.Orchestrator
---- Orchestrates context building + winbar rendering.
----@field refresh_with_config fun(cfg: WKDOptions.HL_CFG): nil # Refresh winbar using provided config (applies to current window)
----@field refresh fun(): nil # Refresh using global config (wrapper for after_set integration)
----@field enable fun(cfg: WKDOptions.HL_CFG): nil # Install BufEnter/CursorMoved/WinScrolled autocmds
-
 ---@class WKDOptions.HL_CFG.Breadcrumbs.Ctx
 ---
 ---@field lua_table_root lua_table_root_opt
 ---@field prefer_owner_in_literals boolean
---- Prefer showing the literal’s “owner” (the binding that holds the object/table literal)
+--- Prefer showing the literal's "owner" (the binding that holds the object/table literal)
 --- directly before the symbol when the cursor is inside a literal property.
 --- Purpose:
 ---   - When editing keys/methods inside object/table literals, breadcrumbs often only show
@@ -82,7 +76,7 @@
 --- breadcrumbs concise and avoid provider-induced repetition.
 --- Problem addressed:
 ---   - When multiple providers contribute overlapping container info (e.g., TS symbol +
----     language-specific “owner” + heuristic container), the chain can contain duplicates such as
+---     language-specific "owner" + heuristic container), the chain can contain duplicates such as
 ---     `M.M.util.run` or `Class.Class.method`.
 --- Behavior:
 ---   - A single, stable pass removes only *adjacent* duplicates while preserving order:
@@ -100,41 +94,42 @@
 ---   - Recommended default: `true`.
 ---   - If you rely on deliberate duplication for emphasis, set this to `false`.
 ---
---- Bevorzuge LSP-Hinweis (b:lsp_current_function) als ersten Provider.
---- Liefert meist nur die aktuelle Funktion/Methode.
+--- Prefer the LSP hint (b:lsp_current_function) as the first provider.
+--- Usually yields only the current function/method.
 ---@field prefer_lsp_function boolean
 ---
---- Nutze Tree-sitter, um eine Symbolkette zu erzeugen (z. B. Klasse → Methode()).
---- Wenn true, ist dies die wichtigste Quelle für „echte“ Semantik ohne LSP.
+--- Use Tree-sitter to build a symbol chain (e.g., Class -> method()).
+--- When true, this is the primary source for "real" semantics without LSP.
 ---@field use_treesitter_symbol boolean
 ---
---- Versuche zusätzlich, einen Container/Owner zu ermitteln (z. B. M, pkg.mod, Class),
---- und präge ihn in die Symbolkette ein (z. B. Class.method()).
+--- Additionally try to determine a container/owner (e.g., M, pkg.mod, Class)
+--- and prefix it onto the symbol chain (e.g., Class.method()).
 ---@field use_container_chain boolean
 ---
---- Wenn nach allen „Haupt“-Quellen (LSP/Tree-sitter) noch KEIN Kontext gefunden wurde,
---- versuche heuristisch, ein „nützliches“ Objekt/Owner unter dem Cursor zu ermitteln
---- (z. B. linke Seite einer Member-Expression, Table-Name in Lua).
+--- If none of the "main" sources (LSP/Tree-sitter) found any context yet,
+--- heuristically try to find a "useful" object/owner under the cursor
+--- (e.g., left side of a member expression, table name in Lua).
 ---@field fallback_object_when_empty boolean
 ---
---- Falls nach allen obigen Versuchen noch immer nichts vorhanden ist,
---- erlaube als allerletzten Fallback das schlichte Wort unter dem Cursor.
+--- If still nothing was found after all the above, allow the plain word
+--- under the cursor as the last-resort fallback.
 ---@field fallback_word_when_empty boolean
 ---
---- Aktiviere sprachspezifische Provider (Lua/JS/TS/Python/…).
---- Diese liefern u. a. den „Owner“ von Member-Ausdrücken oder die Klasse um eine Methode.
+--- Enable language-specific providers (Lua/JS/TS/Python/...).
+--- These provide, among other things, the "owner" of member expressions or
+--- the class surrounding a method.
 ---@field use_lang_specific boolean
 ---
---- Join-String zwischen Container und Symbol (z. B. ".", "::", " · ").
+--- Join string between container and symbol (e.g., ".", "::", " · ").
 ---@field container_join string
 ---
---- Maximale Anzahl Container-Segmente, die gesammelt werden (Kette bleibt kompakt).
+--- Maximum number of container segments collected (keeps the chain compact).
 ---@field container_max_depth integer
 ---
---- Reihenfolge der Kontext-Provider. Erlaubte Namen:
+--- Order of context providers. Allowed names:
 ---   "lsp_func", "ts_symbol", "container", "lang_extra", "word"
---- Diese Reihenfolge wird nach und nach abgearbeitet, bis ein Kontext gefunden ist;
---- „container“ modifiziert/ergänzt i. d. R. das Symbol aus ts_symbol.
+--- Tried in sequence until context is found; "container" typically
+--- modifies/extends the symbol produced by ts_symbol.
 ---@field providers_order string[]
 
 ---@class ModeChangedEvent
