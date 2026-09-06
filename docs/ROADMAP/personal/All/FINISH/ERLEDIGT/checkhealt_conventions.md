@@ -162,15 +162,17 @@ garantiertes False Positive für jeden, der lazy lädt.
 
 ## Umsetzung
 
-Nach Hebelwirkung sortiert, nicht nach Repo-Reihenfolge.
+**Alles erledigt (2026-09-06). Detail-Log:
+`docs/ROADMAP/handovers/checkhealth-conventions.md`.** Nach Hebelwirkung
+sortiert, nicht nach Repo-Reihenfolge.
 
-- [ ] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`. Wirkt sofort in allen Konsumenten.
-- [ ] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.
-- [ ] Eine-von-N auflösen: `filetree.nvim`, `pickers.nvim`. Das `error` im "keine davon"-Fall behalten.
-- [ ] Gegenrichtung: `warn` → `error` überall, wo der Text schon "will fail" sagt (cascade, fileops, buffer-ctx, sessions).
-- [ ] `setup()`-Zeilen auf `info` oder Ladezustand prüfen (sessions, open, buffer-ctx).
-- [ ] ADVICE nachziehen: jede verbleibende Warnung, die eine Handlung verlangt, bekommt den `{...}`-Block. Eine Warnung ohne Handlungsanweisung ist eine halbe Warnung.
-- [ ] Erst zuletzt kosmetisch: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in der Config.
-- [ ] Regel in `MATERIALS/CHECKLIST.md` aufnehmen, damit sie bei jedem Repo-Durchgang mitläuft.
+- [x] `lib.nvim` `lua/lib/nvim/deps/health.lua:58` — "(optional)" auf `info`.
+- [x] `pdfport.nvim:30` — eigene Kopie desselben Helfers, gleiche Korrektur.
+- [x] Eine-von-N auflösen: `filetree.nvim`, `pickers.nvim`. `error` im "keine davon"-Fall behalten.
+- [x] Gegenrichtung: `warn` → `error` wo der Text schon "will fail" sagt (cascade, fileops, buffer-ctx, sessions).
+- [x] `setup()`-Zeilen auf `info` / Ladezustand (sessions, open, buffer-ctx).
+- [x] ADVICE nachziehen — Vollaudit über den ganzen Bestand (~30 Repos), nicht nur opportunistisch.
+- [x] Kosmetik: `ℹ️ INFO`-Tag in Statuslisten + `after/syntax/checkhealth.vim` in der Config.
+- [x] Regel aufgenommen — `MATERIALS/CHECKLIST.md` existierte nie, stattdessen `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` (`UI-57`..`UI-61`) + `gates/REVIEW.md`.
 
 ---

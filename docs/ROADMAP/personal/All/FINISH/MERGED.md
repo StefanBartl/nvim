@@ -32,7 +32,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 - [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind. Die lib.nvim ist für mich umso mehr wert, umso besser die docs sind. Dabei auch gleich feature ideen einbringenh, sprich bei jedem modul am ende auch checken "fehlt etwass sinnvolles?"
 - [ ] nochmal alle keymaps checken, ob kein keymap doppelt vergeben ist, über alles repos hinweg + nvim-config
 - [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
-- [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\checkhealt_conventions.md
+- [x] checkhealt_conventions.md — alle Umsetzungspunkte erledigt inkl. ADVICE-Vollaudit; verschoben nach `FINISH/ERLEDIGT/checkhealt_conventions.md`
 - [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md weiter machen
 
 - [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md
