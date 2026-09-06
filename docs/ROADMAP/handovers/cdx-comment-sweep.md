@@ -36,10 +36,21 @@ wichtig ist**. Alles andere:
 
 ## Der `--- CDX:`-Tag
 
-Format: `--- CDX: <kurze Beschreibung des Funds>` (englisch), an der auffälligen
-Stelle. Bestehende eigene Marker des Users (`-- FIX:`, `-- AUDIT:`,
-`-- SUPERSEDED:`) bleiben als solche erhalten, werden aber ins Englische
-übersetzt, wenn sie deutsch sind.
+Format: `--- CDX: <kurze Beschreibung des Funds>` (englisch, drei Striche =
+LuaLS-Doc-Kommentar), an der auffälligen Stelle.
+
+**User-Kalibrierung (nach Häppchen 1):**
+- **`--- CDX:` einheitlich** — bestehende eigene Marker (`-- FIX:`, `-- AUDIT:`,
+  `-- SUPERSEDED:`) werden zu `--- CDX:` umbenannt **und** ins Englische
+  übersetzt. Ausnahme: `SUPERSEDED:` bleibt sinnvoll wo es echt „ersetzt durch
+  X" heißt — dann `--- CDX: SUPERSEDED …`.
+- **Trimm-Härte: moderat** — klare Redundanz/Doppelung/Sprachverstöße fixen,
+  überlange Rationale kürzen aber Substanz behalten, USAGE-Blöcke zu
+  Parameter-Listen eindampfen, Zweifelsfälle taggen.
+- **Toter Code: gleich löschen wenn eindeutig** (kein Aufrufer im ganzen Repo,
+  keine externe API). Zweifel → taggen. Im Commit vermerken.
+- **Redundante Kommentarzeilen entfernen** wenn sie nichts über Nachbar-Zeilen
+  (Sektionskopf, `desc`, Funktionsname) hinaus sagen.
 
 ## Wohin welches Wissen
 
@@ -80,9 +91,11 @@ Direkt gefixt:
   (doppelten `desc =`); doppeltes `autocmd_lib`/`Autocmd`-Local zusammengelegt
 - `text/init.lua`: Smart-Quotes → ASCII
 
+Nach Kalibrierung nachgezogen: `general/helpers.lua` `M.snorm_pattern`
+**gelöscht** (toter Code, kein Aufrufer im ganzen Repo, „markdown"-Default =
+Copy-Paste-Rest).
+
 `--- CDX:` gesetzt (Urteilssache, nicht gefixt):
-- `general/helpers.lua:44` `M.snorm_pattern` — toter Code (nirgends aufgerufen,
-  „markdown"-Default sieht nach Copy-Paste aus). Löschen?
 - 4× `defaults.lua` — Felder undokumentiert
 - `init.lua` — Submodul-Setup-Calls in eigene Module; `no_name_guard` nach
   filetree.nvim migrieren (Liste 1)
