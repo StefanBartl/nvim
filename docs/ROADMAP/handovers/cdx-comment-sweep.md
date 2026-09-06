@@ -1965,18 +1965,74 @@ reale Registrierung geprüft — akkurat.
 Commit: language.nvim `3626c67`, gepusht (`15f61fb..3626c67`),
 `pull --ff-only` „Already up to date". Ohne Co-Authored-By.
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN, läuft**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–4/8 erledigt, PAUSIERT**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
-Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
+Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. **Sweep
+pausiert nach Sub 4 (User-Ansage) — Fortsetzung bei Sub 5.** Plan:
 1. ✅ `lua/lib/lua/` + Top-Level/@types/config/nvim_usrcmds/strategies
 2. ✅ `lua/lib/nvim/bindings/` (composer)
 3. ✅ `lua/lib/nvim/cross/`
-4. `lua/lib/nvim/fs/`
-5. `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
+4. ✅ `lua/lib/nvim/fs/`
+5. `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`  ← **HIER WEITER**
 6. `lua/lib/nvim/ui/` (kit, 20 Dateien)
 7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)
 8. `TESTS/` + `doc/` + `docs/`
+
+**Sub-Häppchen 4 — erledigt** (`lua/lib/nvim/fs/`, Commit `95e9be5`,
+gepusht, `pull --ff-only` sauber). Größter Teilbaum (52 Dateien gelesen, 13
+geändert), wieder überdurchschnittlich sauber. Kein toter Code gelöscht.
+
+- **`@types`-Fixes:** „sucess"/„in cade of"-Tippfehler; `write.lua` fehlte
+  `---@meta` (alle Schwester-`@types` haben es); Klasse hieß `Lib.FS.Write`
+  statt `Lib.Fs.Write` (Casing bricht Konvention) → umbenannt + Feldverweis
+  mitgezogen.
+- **Changelog-Narrative in Headern gekürzt** (das Muster hier): `is_subpath`
+  („an earlier version used `package.config`… returned false for every
+  subpath on Windows"), `is_valid_filename` („to close a gap in
+  create_entry…"), `collect_recursive` (`====`-Banner mit
+  „plenary/libuv research this was born from", „used to live here as a
+  private copy"), `watch` (neo-tree-Archäologie). Jeweils die echte
+  Invariante / der Async-Close-Grund behalten.
+- `is_readable_file` — irreführendes `-- Ensure the path is valid` (prüft nur
+  Lesbarkeit) → echter Doc + Hinweis „true auch für Verzeichnis".
+- `path_shorten` — `strlen`-Doc behauptete utf8-Fallback, Rumpf ist `return #s`
+  → auf Bytelänge korrigiert (Breiten-Budget ist byte-basiert).
+
+**`--- CDX:` gesetzt:**
+- **`fs/ignore/list/init.lua:62` — echter Logikbug:** Pattern
+  `package%.lock.json` matcht „package.lock.json", npm's Lockfile heißt aber
+  `package-lock.json` → Regel feuert nie. Gemeint war `package%-lock%.json`.
+- **`fs/write/async/init.lua` — Verhaltens-Bug:** hängt kein abschließendes
+  Newline an, obwohl das synchrone „counterpart" `to_file` (und `append`) es
+  tun; `write/batch` erbt die Lücke. Angesichts der „counterpart"-Formulierung
+  wohl unbeabsichtigt.
+- `fs/@types/{init,query,transform}.lua` — veraltetes Scaffolding
+  (`Lib.Fs`/`Lib.Fs.ALL`/`Lib.Fs.Query`/`Lib.Fs.Transform`): es gibt kein
+  `lib.nvim.fs`-Aggregatmodul, die Gruppierung path/query/transform/write ist
+  fiktiv; `Lib.Fs.ALL.dedup` benennt kein Modul. Echte flache Oberfläche:
+  `all_functions.lua`. Analog `Lib.Cross.ALL` (Sub 3) getaggt statt gelöscht.
+  Die real referenzierten `Lib.Fs.*Opts`/`Lib.Fs.Path`-Klassen bleiben.
+- `fs/polymorphic_rootresolver/@types` — `RootResolverCfg` ohne `Lib.Fs.`-
+  Präfix (bricht Konvention), aber public in `docs/API/filesystem.md` →
+  Rename mit Rippeleffekt, nur markiert.
+
+**Memory-Subtlety geprüft:** `polymorphic_rootresolver` löst Root **pro
+Aufruf** aus `arg` auf, cwd nur als Fallback — kein Kommentar behauptet
+Gegenteiliges, nichts zu flaggen.
+
+**Für Sub-Häppchen 8:** `docs/API/filesystem.md` — `polymorphic_rootresolver`
+erwähnt `cfg.markers` aber nicht `cfg.resolve`; „28 submodules"-Zahl in Z.1
+verifizieren; falls `RootResolverCfg`-Rename je kommt, Z.88 mitziehen.
+
+**Für einen späteren WKDBooks-Pass** (Agent hat nichts committet, nur notiert —
+ortsunabhängige Mechanik, die in Headern anfällt): `vim.fn.*`→`E5560` in
+Fast-Event-Kontexten; Windows-8.3-Kurznamen (`STEFAN~1`) brechen
+`vim.fn.glob`; `io.open` „w"/„r" ist Text-Modus (CRLF-Wandlung) vs. libuv
+`fs_write` byte-exakt; `fs_event` feuert mehrfach pro Save + Handle-Close ist
+async.
+
+stylua ok, luacheck 0/0 (31 Dateien), `LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 **Sub-Häppchen 3 — erledigt** (`lua/lib/nvim/cross/`, Commit `cc21351`,
 gepusht, `pull --ff-only` sauber). 29 Dateien. Bestätigt das Muster: die
