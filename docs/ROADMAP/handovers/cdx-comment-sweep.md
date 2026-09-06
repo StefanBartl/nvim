@@ -1497,21 +1497,416 @@ und im Sinne des Sweeps — deshalb committet:
 Commits: open.nvim `c7cc7d4` (lua/) + `5b9e894` (docs), gepusht
 (`1da5c06..5b9e894`). Ohne Co-Authored-By.
 
-**⚠️ Nicht abgeschlossen:** Der Agent hat seinen Findings-Bericht nie
-geschrieben — er hätte vermutlich noch 1–3 `--- CDX:`-Tags gesetzt (jedes
-bisherige Plugin-Repo hatte welche) und evtl. toten Code / Doc-Phrasing in
-weiteren Dateien angefasst. **open.nvim braucht einen kurzen Nach-Check**
-auf `--- CDX:`-würdige Funde + die which-key/machine-readable-Phrasen in
-`docs/keymaps.md`/`README.md`/`FEATURES/*` (BINDINGS.md war 0 Vorkommen).
+**Nach-Check (selber Häppchen, abgeschlossen):** `lua/open/` (alle 24
+Dateien) komplett sauber — keine Kommentar-Code-Widersprüche, kein toter
+Code, keine `FIX:`/`AUDIT:`/`TODO:`-Marker, kein Deutsch mehr, **kein**
+`--- CDX:`-Tag nötig (alle Funde waren eindeutige, risikolose Doku-Fixes).
+Geänderte Docs: `docs/configuration.md`, `docs/FEATURES/CORE.md`,
+`docs/commands.md`, `doc/open.txt` — fehlender `"image"`-Handler in
+Default-/Enum-Listen ergänzt (7. Built-in-Handler aus `DEFAULTS.lua` fehlte,
+Muster „N statt N+1"), tote Funktionsreferenz `resolve_target` in
+`keymaps.lua`-Doku entfernt, deutsches Doku-Beispiel `[Kontext](#kontext)` →
+`[Context](#context)`, veraltete fest-drei-Keys-Keymaps-Beschreibung in
+`doc/open.txt` auf die seit 2026-08-24 registry-getriebene Logik aktualisiert,
+ARCHITECTURE-Abschnitt (Dateiliste + Intro-Ziele) vervollständigt.
+`stylua --check` + `luacheck` 0/0 (34 Dateien), `TESTS/run.lua` headless
+grün (`OPEN_TESTS_OK`, 6/6 Specs). Commit `1f72f4f`, gepusht
+(`5b9e894..1f72f4f`), `pull --ff-only` „Already up to date" bestätigt. Ohne
+Co-Authored-By. **Häppchen 25 damit vollständig abgeschlossen.**
 
 ### Danach offen
 
-**Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Sweep
-**pausiert** nach Häppchen 25 (open.nvim teilweise). Verbleibend: der
-open.nvim-Nach-Check, dann **Plugin-Repos 9–31** ab `debugging.nvim`,
-repo-für-repo, je 1 Agent — der BINDINGS.md-Cleanup ist für alle Repos schon
-erledigt (14 Repos, s.o.), aber die which-key/machine-readable-Phrasen in
+**Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch, ebenso
+open.nvim (Repo 8/31) komplett.** Sweep läuft aktuell an **Plugin-Repos
+9–31** ab `debugging.nvim`, repo-für-repo (Ausnahme diese Session:
+User hat 2× 3 Agents gleichzeitig erlaubt, danach wieder Pause) — der
+BINDINGS.md-Cleanup ist für alle Repos schon erledigt (14 Repos, s.o.), aber
+die which-key/machine-readable-Phrasen in
 `keymaps.md`/`README.md`/`FEATURES/*`/`doc/*.txt` prüft jedes Häppchen mit.
+
+### Häppchen 26 — debugging.nvim (Plugin-Repo 9/31)
+
+**Status: erledigt.** (Teil der Ausnahme-Session: User erlaubt hier 2×3
+parallele Agents.) 10 geänderte Dateien (9 lua/ps1 + docs), ~30 weitere
+Lua-Dateien + alle docs inspiziert, bereits sauber.
+
+**Direkte Fixes:**
+- `@types/init.lua` — tote `Dbg.Setup`-Typfamilie (+ 7 abhängige Sub-Klassen)
+  gelöscht (`Dbg.Config` ist der real genutzte Schema-Typ), verifiziert per
+  `grep -rn` über `lua/` + `TESTS/`.
+- `scripts/watch-nvim-procs.ps1` — Kommentare Deutsch → Englisch;
+  `Write-Host`-Ausgaben bewusst deutsch belassen (User-Facing-Ausnahme).
+- `TESTS/README.md` — Layout-Tabelle listete nur 4 von 5 Spec-Dateien
+  (`startup_spec.lua`, `handle_args_spec.lua` fehlten) — Muster „N statt
+  N+1", ergänzt.
+- `doc/debugging.txt` — tote Klassenreferenz `Dbg.Autocmds.SourceCache`
+  entfernt; `views.timings`-Beispiel fehlte `capture_timeout_ms` — ergänzt.
+- Redundante Kommentare getrimmt in `markdown/inline_debug.lua`,
+  `views/debug_helper.lua`, `views/capture/init.lua`,
+  `views/capture/clipboard/init.lua`, `nvim_options/indent_helpers.lua`;
+  `bindings/usercmds.lua`-Header moderat gekürzt.
+
+**`--- CDX:` gesetzt:**
+- `markdown/inline_debug.lua:190` — `if considered_relevant or true then`
+  macht die Relevanzprüfung komplett wirkungslos (immer wahr). Absicht oder
+  Rest einer deaktivierten strengeren Filterlogik unklar.
+- `views/debug_helper.lua:14` — Modul hat **0 Aufrufer** im ganzen Repo (nur
+  Selbstreferenz im eigenen Report-Text); wirkt wie das Explorations-Tool,
+  aus dem später `views/capture/init.lua`s Noice-Fallback-Kette entstand.
+
+**Nicht angefasst (selbstdokumentiert als Platzhalter):**
+`autocmds/@types/init.lua` `show_freq` — gesetzt/CLI-akzeptiert, aber
+nirgends ausgewertet; eigener Kommentar sagt bereits „reserved for later".
+
+stylua ok, luacheck 0/0 (41 Dateien), `TESTS/run.lua` headless grün
+(`DEBUGGING_TESTS_OK`, 5/5 Specs).
+
+Commit: debugging.nvim `4cb9594`, gepusht (`c673962..4cb9594`),
+`pull --ff-only` „Already up to date" bestätigt. Ohne Co-Authored-By.
+
+### Häppchen 27 — filetree.nvim (Plugin-Repo 10/31)
+
+**Status: erledigt.** (Teil der Ausnahme-Session: 2×3 parallele Agents.)
+130 Lua-Quelldateien + 6 TESTS-Dateien geprüft, 20 geändert (14 lua/, 6
+TESTS/ + 1 docs). Repo war schon außergewöhnlich sauber — Ertrag liegt hier
+bei echten Bugs, nicht bei Kommentar-Bloat. Damit ist **Liste 1**
+(`pickers.nvim`/`filetree.nvim`, offen seit `NVIM_CFG_CLEANUP`) für
+filetree.nvim inhaltlich abgeschlossen — keine lib.nvim-Überlappung
+gefunden, die nicht schon sauber als soft-dependency-Fallback (`pcall(require,
+"lib.nvim...")`) dokumentiert war.
+
+**Echte Funktionsbugs direkt gefixt:**
+- `features/search/live_search/init.lua` — `commit_to_filter` rief
+  `filter.set(query)` auf; das `filter`-Modul hat kein `.set`, nur
+  `apply`/`enter`/`clear`. Der Guard `if filter.set then` war immer `nil` —
+  **„Enter committet Suche als Filter" hat still nie funktioniert.** Auf
+  `filter.apply` korrigiert.
+- `features/fileops/rename_batch/init.lua` `M.open()` — registrierte ein
+  erstes `BufWriteCmd`/`BufDelete`-Paar, löschte dessen augroup sofort
+  wieder, registrierte ein zweites — reiner Totcode, nie ausgeführt. Auf
+  eine einzige korrekte Registrierung reduziert; totes Buffer-Var
+  `filetree_header_lines` mitentfernt (0 Referenzen verifiziert).
+- `features/nav/cwd_sync/init.lua` — totes Feld
+  `CwdSyncState.user_navigated` (nie gelesen/gesetzt) entfernt.
+- `health.lua` — unerreichbarer `CATEGORY_LABELS.integration`-Eintrag
+  entfernt (keine solche Feature-Kategorie in der Registry).
+
+**Muster „N statt N+k" (4 Stellen, alle ergänzt):** `bindings/keymaps.lua` +
+`commands.lua` + `path_copy/init.lua` + `docs/BINDINGS/USERCOMMANDS.md`
+kannten nur 5 von 8 marks-Keymaps (`gm`/`]M`/`[M` fehlten) und nur 7 von 9
+path_copy-Formaten (`project_root`/`project_relative` mit eigenen Keymaps
+`[R`/`]R` fehlten überall).
+
+**Doc-/Annotation-Fixes:** `adapter/neotree.lua` (`@return nil`-Tag riss
+Docstring-Satz auseinander), `util/markdown_refs.lua` (Docstrings von
+`M.update`/`M.unique_files` vertauscht), `TESTS/units.lua`
+(Report-Abschnittsüberschrift stand über falschem Block), 6× `TESTS/*.lua`
+(Pfad `test/*.lua` → `TESTS/*.lua` in Usage-Kommentaren), `TESTS/smoke.lua`
+(Abschnittsnummerierung sprang 6→9).
+
+**`--- CDX:` gesetzt:**
+- `features/infra/hooks_api/init.lua` — 13 dokumentierte Events, `.emit(`
+  wird aber nirgends im Repo aufgerufen; kein Feature feuert je ein Event.
+- `features/infra/safety/backup.lua` — `copy()` shellt via `xcopy`/`cp -r`,
+  während `copy_move`s eigenes `copy_dir()` via `lib.nvim.cross.fs.mutate`
+  (libuv, kein Shell) kopiert — Inkonsistenz zwischen zwei Modulen.
+- `refs/ui.lua` `M.unique_files` — fast identische Dedup-Logik wie
+  `util/markdown_refs.M.unique_files` über zwei verschiedene Ref-Typen.
+
+**Bewusst unangetastet:** `docs/BINDINGS.md` (korrekt, dynamisch generiert);
+`TESTS/MANUAL.md` (reiner manueller Test-Leitfaden mit veralteten Stellen —
+außerhalb Sweep-Scope, nicht ohne interaktive Nachprüfung überarbeitbar);
+`doc/filetree.txt` nur stichprobenartig geprüft (1020 Z., keine Treffer der
+gesuchten Muster).
+
+Kein Deutsch im Code gefunden, keine `FIX:`/`AUDIT:`/`TODO:`-Marker.
+
+stylua ok, luacheck 0/0 (127 Dateien), alle 5 TESTS-Suiten grün
+(497/497 Checks: smoke 19, units 287, menu 15, cwd_mode 122, refs 54).
+
+Commit: filetree.nvim `1bd87a7`, gepusht, `pull --ff-only` „Already up to
+date" bestätigt. Ohne Co-Authored-By.
+
+### Häppchen 28 — github_stats.nvim (Plugin-Repo 11/31)
+
+**Status: erledigt.** (Teil der Ausnahme-Session, 2. Dreier-Runde.)
+Entgegen der ursprünglichen Einschätzung ("dünnes Daten-Repo") ~8600 Z.
+Lua, 53 Dateien. 13 geändert (1 komplett gelöscht), ~40 clean.
+
+**Direkte Fixes:**
+- `init.lua` — Command-Header fehlte `compact` (10 statt 11 Subcommands),
+  Muster „N statt N+1".
+- `bindings/usrcmds/show.lua` — echter Bug: Fehlerhandler beim
+  Dashboard-Reopen zeigte immer „Failed to reopen dashboard: nil", weil er
+  die äußere (nie gesetzte) `err`-Variable statt des `pcall`-Rückgabewerts
+  referenzierte.
+- `fetcher.lua` — private `fetch_repo()` war 1:1-Duplikat von
+  `M.fetch_repo()`; Duplikat entfernt, `fetch_all` ruft jetzt direkt
+  `M.fetch_repo`.
+- 2 deutsche Kommentare übersetzt (`analytics.lua`, `dashboard/state.lua`
+  „NEU:"-Marker) + zugehörige veraltete „set by layout module"-Kommentare
+  korrigiert.
+
+**Toter Code entfernt (0 Aufrufer in `lua/`+`TESTS`, per grep verifiziert):**
+- **`dashboard/layout.lua` komplett gelöscht** (88 Z.) — nie aufgerufene
+  alte Full-Tab-Dashboard-Architektur, ersetzt durchs Floating-Window in
+  `dashboard/init.lua`. Enthielt selbst einen Bug:
+  `require("github_stats.dashboard.renderer")`, ein **nicht existentes
+  Modul** — dieselbe Bug-Klasse, laut CHANGELOG schon einmal in TESTS
+  gefunden, hier aber übersehen.
+- `storage.lua` — komplettes totes Cluster `read_last_fetch`/
+  `write_last_fetch`/`update_last_fetch`/`should_fetch` (76 Z.): ein
+  **zweites, nie benutztes** Last-Fetch-Tracking mit anderem Dateipfad als
+  das echte in `fetcher.lua`; `should_fetch()` rief zudem
+  `config.get_fetch_interval()` auf — existiert im `config`-Modul gar
+  nicht. Typ `GHStats.LastFetchData` mitentfernt.
+- `visualization.generate_bar_chart`, `dashboard/state.lua`
+  (`get_scroll_offset`/`get_sort_by`/`get_time_range`, alle Aufrufer
+  greifen direkt auf Felder zu), `dashboard/render.lua`
+  `M.calculate_total_lines` (Duplikat der echten privaten Funktion in
+  `state.lua`).
+
+**Doku-Fixes:** `docs/BINDINGS.md` + `docs/FEATURES/DASHBOARD.md` verwiesen
+auf `dashboard/layout.lua` als lebendigen VimResized-Handler — korrigiert,
+mit CDX-Hinweis dass das Dashboard aktuell **keinen** Resize-Re-Render mehr
+hat (Feature-Lücke, außerhalb Sweep-Scope).
+
+**`--- CDX:` gesetzt** (0 interner Aufrufer, aber plausibel Public API):
+`api.lua:127` `fetch_all_metrics`, `api.lua:255` `get_rate_limit`,
+`analytics.lua:622` `rollup_weekly` (explizit in
+`docs/FEATURES/ANALYTICS.md` als Public API gelistet).
+
+**Interessanter Fund:** zwei parallele, sich widersprechende
+Last-Fetch-Tracking-Systeme nebeneinander mit einer kompletten toten
+Dashboard-Architektur — beides Überbleibsel früherer Refactorings.
+
+stylua ok, luacheck 0/0 (53 Dateien), Testsuite (`scripts/test.sh`) 108/108
+Tests grün in 9 Spec-Dateien, inkl. aller geänderten Bereiche.
+
+Commit: github_stats.nvim `aa2c53b`, gepusht, `pull --ff-only` bestätigt
+sauber. Ohne Co-Authored-By.
+
+### Häppchen 29 — hover.nvim (Plugin-Repo 13/31)
+
+**Status: erledigt.** (Teil der Ausnahme-Session, 2. Dreier-Runde.)
+Außergewöhnlich sorgfältig geschriebenes Repo (35 Lua-Dateien + `plugin/`,
+Selbsttests `TESTS/docs_spec.lua`/`switches_spec.lua` gleichen Doku gegen
+Code ab) — entsprechend wenig klassischer Kommentar-Müll. Bestätigt den
+Häppchen-13-Befund (nvim-config): die eigenen FEATURES-Docs
+(ZOOM/ZEN/SHOT/RESIZE/QUIET) sind bereits in gutem Zustand.
+
+**Direkte Fixes (6):**
+- `init.lua:1933` `M.set`-Doku — 7 veraltete Switch-Namen (Stand vor
+  `pdf`/`shot`/`eager`/`code`/`positions`) → Verweis auf
+  `hover.switches.names()`.
+- `bindings/usrcmds.lua:124` — „Nine switches" veraltet, sind heute zwölf.
+- **Interessantester Fund:** `bindings/autocmds.lua:44`
+  `anything_to_show()` — Doku sagte „Two ways to be useful", Code prüft
+  seit Commit `de4f8ef` („third anything_to_show() condition was missing")
+  aber drei (paths/sources/positions). Lehrbeispiel für das
+  Sweep-Kernmuster „N dokumentiert, N+1 im Code" — der Fix-Commit hat die
+  Doku-Zeile direkt darüber nie nachgezogen.
+- `float.lua:89` — „A seventh style" veraltet (heute zehn Border-Styles),
+  auf zählungsunabhängige Formulierung umgestellt.
+- `docs/BINDINGS.md:206` — Switches-Cheatsheet fehlten `links web fetch
+  pdf`/`links web shot`/`links web shot eager` (nachträglich ergänzte
+  Switches nie nachgetragen; Tests decken diese Tabelle bewusst nicht ab).
+- `scope.lua:191-192` — einziger Rest-Deutsch-Text im ganzen Repo (Benchmark-
+  Tabelle) übersetzt.
+
+**`--- CDX:` gesetzt (2):**
+- `config/init.lua:207` `replace_key_lists` — `dismiss_keys`/`open_keys`
+  werden versehentlich vom generischen „Richtungs-Map"-Merge-Pass erfasst
+  (index- statt ersetzungsbasiert); Ergebnis stimmt trotzdem, weil ein
+  zweiter expliziter Flat-List-Pass sie danach überschreibt — toter/
+  verwirrender Zwischenschritt, Umbau riskant.
+- `bindings/keymaps.lua:366` `M.teardown()` — 0 interne Aufrufer, aber
+  explizit als „public API für Teardown-Zyklus" dokumentiert, nicht
+  gelöscht.
+
+**Kein toter Code entfernt** — alle Kandidaten ohne interne Aufrufer
+(`M.teardown`, `bindings`-Aggregator, `M.link_under_cursor`) sind im Code
+selbst explizit als externe/Kompatibilitäts-API dokumentiert.
+
+**Bewusst unangetastet:** die ausführliche Rationale-Prosa in
+`init.lua`/`DEFAULTS.lua`/`float.lua` — Repo-Stil, inhaltlich substanziell,
+teils testverankert (docs_spec.lua).
+
+stylua ok (35 Dateien), luacheck 0/0, volle Plenary-Testsuite grün.
+
+Commit: hover.nvim `e9c9d4f`, gepusht (`87b012f..e9c9d4f`), `pull --ff-only`
+„Already up to date" bestätigt. Ohne Co-Authored-By.
+
+### Häppchen 30 — gopath.nvim (Plugin-Repo 12/31)
+
+**Status: erledigt.** (Teil der Ausnahme-Session, 2. Dreier-Runde — letztes
+Repo dieser 2×3-Ausnahme.) Ergiebigstes Häppchen dieser Runde: 37 Dateien
+geändert, 1 gelöscht, ~76 Lua-Dateien insgesamt inspiziert.
+
+**Echte Bugs gefunden und gefixt:**
+- `resolvers/csharp/using_path.lua` — `CS_ROOT_MARKERS` enthielt Glob-
+  Patterns (`"*.csproj"`, `"*.sln"`), die `vim.fs.find` bei String/Table-
+  `names` laut eigener Neovim-Doku **nicht** unterstützt — griffen nie.
+  Fix: Funktions-Matcher für Extension-Suche.
+- `resolvers/rust/use_path.lua` `crate_src_dir()` — Validierung
+  (`if ... exists then return src end`) hatte keinen Effekt, da **beide**
+  Zweige `src` zurückgaben — auf `return nil` im Negativfall korrigiert.
+- `resolvers/lua/{binding_index,alias_index}.lua` `get_map()` — cachte
+  unter dem **Literal `0`** statt der echten Buffer-Nummer
+  (`nvim_get_current_buf()`); Cache war de facto buffer-übergreifend
+  geteilt statt pro Buffer, obwohl Typ/Kommentar „bufnr -> Cache"
+  versprechen.
+- `resolvers/lua/require_path.lua` — Cursor-Spalte aus
+  `nvim_win_get_cursor` (0-basiert) wurde ohne die repo-übliche `+1`-
+  Konvertierung direkt gegen 1-basierte `find()`-Treffer verglichen —
+  Off-by-one am Anfang der `require()`-Span. Gefixt.
+- `resolvers/lua/alias_index.lua` — dupliziertes, unerreichbares
+  `if id and mod then ... end`-Zweitblock entfernt.
+- `resolvers/lua/value_origin.lua` — Leerzeile zwischen `---@return`-Doc
+  und `function M.resolve()` entfernt (hätte LuaLS-Zuordnung gebrochen).
+
+**Toter Code entfernt (0 Referenzen verifiziert):**
+- **`lua/gopath/truncated/init.lua` komplett gelöscht** — vollständig
+  durch `resolvers/common/tailsearch.lua` ersetzt; `TruncatedResolveOpts`-
+  Typ + Referenzen in `docs/cache.md`, `docs/FEATURES/CACHE.md`,
+  `docs/Developer-Notes/DEV-README.md` korrigiert.
+- `providers/builtin.lua` (auskommentiertes `M.cfile()`), `util/log.lua`
+  (`M.using_lib()`), `util/safe_notify.lua` (3 von 4 Funktionen — nur
+  `safe_notify_defer` hat einen Aufrufer), `util/url.lua` (`M.is_url()`),
+  je ein toter Typ in `resolvers/lua/@types/init.lua` +
+  `util/@types/init.lua`.
+
+**Direkte Fixes:** deutsche Kommentare übersetzt (`open/help.lua`,
+`resolvers/common/help.lua`, `commands.lua`, `table_locator.lua`);
+`alternate/frecency.lua` 27-Z.-Design-Header → 1-Zeiler + Pointer auf
+`docs/FEATURES/NAVIGATION.md`; `providers/lsp.lua` Benchmark-Prosa → Pointer
+auf `docs/resolution.md`; `health.lua` Docstring-Verrutscher (Funktion
+bekam Nachbarn-Beschreibung) korrigiert; falscher Require-Pfad in
+`resolvers/common/extractor/helpers.lua`-Header; veraltete which-key-
+Erwähnung in `init.lua` entfernt (Wiring existiert dort nicht mehr).
+
+**`--- CDX:` gesetzt (2):** `open/help.lua` (unklarer stiller `:help
+vim.api`-Fallback); `util/location.lua` `merge_ranges` (0 Aufrufer im Code,
+aber als „Key Function" in `docs/Developer-Notes/util/location.md`
+dokumentiert).
+
+**Doku-Fixes (Muster „N statt N+1"):** `doc/gopath.txt` — `gC`/Check fehlte
+an 3 Stellen (Keymap-Liste, Config-Defaults, `:GopathCheck`-Alias) +
+`:Gopath check` im Subcommand-Baum; 2 Stellen beschrieben ein längst
+entferntes automatisches Nearest-Folder-Fallback (laut `create.lua`/
+`docs/BINDINGS.md` gibt es nur noch den expliziten „Open in filetree"-
+Button) — korrigiert.
+
+**TESTS/scripts:** `TESTS/05_direct_symbol_jump.lua` — veraltete deutsche
+Debug-Log-Dumps aus einem früheren kaputten Lauf entfernt; `scripts/ci/
+functional_tests.lua` — falsch platzierte Summary-Sektionsüberschrift
+verschoben, doppelte Benchmark-Prosa gekürzt.
+
+stylua ok, luacheck 0/0 (77 Dateien), Headless-Smoke (7/7) + Functional
+Tests (34/34, inkl. aller gefixten Module) grün.
+
+Commit: gopath.nvim `fb2042e`, gepusht, `pull --ff-only` bestätigt sauber.
+Ohne Co-Authored-By.
+
+**Ausnahme-Session (2×3 parallele Agents) hiermit abgeschlossen: Häppchen
+26-30 (debugging, filetree, github_stats, hover, gopath) + open.nvim-
+Nachcheck. Zurück zu 1 Agent gleichzeitig, Pause bis zur nächsten Freigabe.**
+
+### Häppchen 31 — images.nvim (Plugin-Repo 14/31)
+
+**Status: erledigt.** (Erster Häppchen zurück im 1-Agent-Modus nach der
+2×3-Ausnahme; der erste Versuch brach ab, weil der Agent fälschlich
+behauptete, „im Hintergrund weiterzuarbeiten" — als Subagent unmöglich, kein
+Commit erfolgt. Sofort mit expliziter Klarstellung neu gestartet, zweiter
+Versuch erfolgreich.) 62 von ~68 Dateien (36 `lua/`, 26 `TESTS/`, alle
+Docs) bereits sauber — ungewöhnlich gut gepflegtes Repo, entsprechend
+kleiner Ertrag.
+
+**Direkte Fixes:**
+- `init.lua` — Tippfehler „pdfport.s" → „pdfport.nvim's".
+- `cell.lua` — veraltete Aufrufer-Zahl in Doc-Kommentar („all four callers
+  of `fit_cells`" → „all six"), Muster „N statt N+k".
+- `ocr.lua` — `chafa` aus der PATH-Lookup-Liste entfernt; per grep
+  verifiziert, dass es nirgends im Repo tatsächlich aufgerufen wird.
+- `docs/install.json` — **echter Fund:** stale `chafa`-Tool-Eintrag als
+  optionale Dependency (sichtbar via `:Lib deps show images.nvim`) komplett
+  entfernt — `docs/installation.md` und `ascii.lua`s eigene Moduldoku sagen
+  explizit, der ASCII-Fallback shellt **nicht** zu chafa/viu, die werden
+  nur als Technik-Vergleich genannt.
+- `doc/images.txt` — `images.export()`s dokumentierte Return-Semantik
+  korrigiert (behauptete „true bei Erfolg, false bei Fehlschlag", tatsächlich
+  `true` sobald der async Export **startet**, `false` nur wenn gar kein Bild
+  gefunden wurde — deckungsgleich mit `init.lua`s eigenem Doc-Kommentar);
+  deutsches Platzhalter-Beispiel „bild.png" → „photo.png".
+- `TESTS/keymaps_spec.lua` — Referenzen auf ein Phantom-Modul
+  `images.bindings.which_key` entfernt (existiert nicht, Wiring läuft über
+  `lib.nvim.bindings.keymap`).
+- `.gitattributes`, `.github/workflows/ci.yml` — deutsche Kommentare
+  übersetzt.
+
+**Kein `--- CDX:` nötig** — keine echten Zweifelsfälle gefunden, alles war
+klar fixbar oder klar kein Problem. **Kein toter Code** — alle geprüften
+Funktionen/Felder haben lebende Aufrufer.
+
+`docs/BINDINGS.md` gegen `bindings/{keymaps,usrcmds}.lua` geprüft (24
+Routes, 6 Keymap-Aktionen) — bereits akkurat aus früherem Sweep-Durchlauf,
+unangetastet.
+
+stylua ok (v2.5.2), luacheck 0/0 (v1.2.0, 67 Dateien — `luacheck <dir>/`
+gab „Permission denied" beim direkten Verzeichnis-Zugriff in dieser
+Umgebung, Workaround über explizite Dateiliste), `TESTS/run.lua` headless
+grün (`IMAGES_TESTS_OK`, 26/26 Specs).
+
+Commit: images.nvim `7c470a6`, gepusht, `pull --ff-only` bestätigt sauber,
+keine Divergenz. Ohne Co-Authored-By.
+
+### Häppchen 32 — insights.nvim (Plugin-Repo 15/31)
+
+**Status: erledigt.** Der erste Anlauf (Agent) brach am Sitzungslimit ab und
+ließ 13 Dateien **uncommittet** im Checkout liegen — kein Commit, kein Push.
+Diese Sitzung hat die Arbeit verifiziert (alle referenzierten Ziele
+existieren, stylua/luacheck/Specs grün), einen echten Fehler im
+Agenten-Diff korrigiert und dann als **ein** Commit verbucht.
+
+**Echter Bug — vom Agenten halb gefixt, hier fertiggemacht:**
+`symbols/patterns.lua` Java-Method-Pattern. Die Zeichenklasse
+`[A-Za-z_<>[\]+` ließ das `\]` die Klasse über ihr gewolltes Ende hinaus
+offen — matchte nie einen einfachen Rückgabetyp. Agent korrigierte zu
+`[A-Za-z_<>\[\]]+`, **aber** damit steht `\]]` im `[[…]]`-Longstring und
+beendet ihn vorzeitig → stylua-Parsefehler. Fix: Literal auf `[=[…]=]`
+umgestellt, mit Ein-Zeilen-Begründung.
+
+**Doku-Nachzug (Kern des Häppchens):** smells-, imports-, conflicts-,
+unimported-, devserver-Module + `config/@types/` existieren, aber
+README/`doc/insights.txt`/`architecture.md`/`health.md` beschrieben noch die
+Vor-Konsolidierungs-Oberfläche („fünf Tools") und einen 12-Sektionen-
+Healthcheck. Es sind **13**: `health.lua` ruft am Ende die composer-eigene
+`checkhealth("Insights")` auf, die die Routes-Sektion beisteuert. `:Insights
+smells` bekam einen vollständigen `doc/insights.txt`-Abschnitt (4.11).
+`architecture.md` `autocmds.lua` „no-op" → reale Beschreibung. TESTS/README:
+import_index-/hover-/smells-Specs ergänzt.
+
+**Header-Trims (Wissen lag schon am Zielort):** `hover.lua` (~95-Z.-
+Rationale-Block), `imports/index.lua`, `imports/init.lua`, `health.lua`s
+`check_hover` — alle auf Summary + Pointer auf `docs/hover.md` bzw.
+`docs/FEATURES/CODE-INSPECTION.md` gekürzt, wo derselbe Text inkl.
+Scan-Kosten-Messwerte schon steht. `init.lua`: `hover.setup()`-Call aus dem
+deps-popup-Kommentarblock herausgelöst, in den er gerutscht war. `init.lua`
+Modul-Header (veraltete interne Tool-Namen `function_index`/`gather`/…) auf
+knappe Fassade-Beschreibung + Pointer.
+
+**`--- CDX:` gesetzt (Agent):**
+- `imports/graph.lua` — Doc nennt `CROSS-PLUGIN.md`, existiert nicht im Repo.
+- `scan/rg.lua` — Doc nannte `Refactoring..md`, existiert nicht im Repo.
+
+Kein toter Code gelöscht (alle geprüften Funktionen haben lebende Aufrufer).
+
+stylua ok (v2.5.2), luacheck 0/0 (v1.2.0, 57 Dateien via explizite Dateiliste
+— `luacheck <dir>/` gibt „Permission denied" in dieser Umgebung),
+`TESTS/run.lua` headless grün (`INSIGHTS_TESTS_OK`, 7/7 Specs).
+
+Commit: insights.nvim `459a24c`, gepusht, `pull --ff-only` bestätigt sauber.
+Ohne Co-Authored-By. **Nächstes Plugin-Repo im Sweep: language.nvim (16/31).**
 
 Offene Aufräum-Punkte aus dem Sweep, die bewusst NICHT gefixt wurden (jeweils
 `--- CDX:` im Code + im jeweiligen Häppchen dokumentiert) — eigene
