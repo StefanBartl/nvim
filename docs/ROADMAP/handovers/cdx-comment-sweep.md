@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum komplett durch (Sub 1–9/9). SUB-HÄPPCHEN 10/13 (TESTS pt1) erledigt, PAUSIERT — Fortsetzung bei Sub 11**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **`lua/`-Baum komplett durch (Sub 1–9/9), TESTS/ komplett durch (Sub 10–11/13). PAUSIERT — Fortsetzung bei Sub 12 (doc/)**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -208,10 +208,12 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
     `deps_spec`, `ui_kit_spec`, `autocmd_dispatcher_spec`,
     `nvim_helpers_spec`, `keymap_registry_spec`, `lua_helpers_spec`,
     `curl_spec`, `async_spec`; ~6710 Z.)
-11. `TESTS/` Teil 2 — die restlichen 41 Dateien (kleinere Specs +
-    `run.lua`/`harness.lua`; ~5580 Z.)  ← **HIER WEITER**
+11. ✅ `TESTS/` Teil 2 — die restlichen 40 Dateien (kleinere Specs +
+    `run.lua`/`harness.lua`; ~5580 Z.) — Plan-Schätzung „41" war knapp
+    daneben: `TESTS/` hat tatsächlich 49 Dateien, nicht 50 (9 in Sub 10,
+    40 hier)
 12. `doc/` — 17 Vimdoc-Dateien, ~4560 Z. (gegen echte `@types`/Usercmds
-    geprüft, wie in den nvim-config/Plugin-Häppchen üblich)
+    geprüft, wie in den nvim-config/Plugin-Häppchen üblich)  ← **HIER WEITER**
 13. `docs/` — 51 Markdown-Dateien, ~5200 Z.
 
 > **Nachtrag 2026-09-06:** derselbe Fehler wie schon bei Plan-Punkt 7 —
@@ -223,6 +225,63 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > Plan-Beschreibungen vor dem Bauen an der echten Größe prüfen — hier
 > hätte auch der erste Split-Nachtrag schon `TESTS/`/`doc/`/`docs/`
 > mitzählen sollen, statt sie unangetastet zu lassen.
+
+**Sub-Häppchen 11 — erledigt** (`TESTS/` Teil 2 — die restlichen 40
+Spec-Dateien: `selection_spec`, `lastcmd_spec`, `keymap_modifier_spec`,
+`markdown_table_spec`, `cwd_spec`, `autocmd_spec`, `spawn_env_spec`,
+`harvest_spec`, `mutate_spec`, `system_job_spec`, `count_spec`,
+`statusline_spec`, `neotree_watch_spec`, `frecency_spec`, `async_walk_spec`,
+`logger_spec`, `polymorphic_rootresolver_spec`, `cache_spec`,
+`usercmd_registry_spec`, `run.lua`, `keymap_portability_spec`,
+`autocmd_docs_spec`, `normkey_spec`, `lock_spec`, `context_spec`,
+`ui_list_spec`, `contextmenu_spec`, `run_spec`, `git_spec`,
+`is_subpath_spec`, `bindings_audit_spec`, `dev_duplicates_spec`,
+`watch_spec`, `project_store_spec`, `globbable_spec`,
+`telemetry_wrap_spec`, `window_spec`, `run_argv_spec`, `wslpath_spec`,
+`harness.lua`; Commit `ae11d24`, gepusht, Re-Fetch bestätigt identisch).
+**Damit ist `TESTS/` komplett durch (alle 49 Dateien über Sub 10+11).**
+
+Zähl-Diskrepanz zum Plan: der Plan-Punkt 11 schätzte „41 Dateien"
+(ausgehend von „50 Dateien total, 9 in Sub 10 erledigt"). Eigener
+`find TESTS -name "*.lua" | wc -l` ergab 49, nicht 50 — die Sub-10-Liste
+(9 Dateien) stimmte, nur der Gesamt-Schätzwert war einen Tick zu hoch.
+40 Dateien tatsächlich bearbeitet, laut eigener Zählung, nicht laut
+Plan-Text.
+
+40 Dateien gelesen (~5580 Zeilen), 1 geändert. Wie schon Sub 10: andere
+Art von Durchgang als Sub 1–9 (Test-Code statt Bibliotheks-Quelltext),
+angepasste Sweep-Regeln — Kommentare only, keine Test-Logik/Assertions/
+Fixtures angefasst, ein gefundener echter Test-Bug wäre nur getaggt,
+nicht gefixt worden.
+
+Praktisch der gesamte Rest war bereits auf demselben ungewöhnlich hohen
+Niveau wie Sub 10: kein Deutsch, keine Ad-hoc-`FIX:`/`AUDIT:`/
+`SUPERSEDED:`-Marker, keine Kopf/Inline-Dopplung, keine KI-Boilerplate.
+
+- **Direkte Fixes:**
+  - `TESTS/git_spec.lua` (Kopfkommentar) — verwies auf „telemetry_spec.lua"
+    als Fundstelle für den Kontext zum `M.info()`-Feld. Diese Datei wurde
+    in Commit `4330924` („feat(telemetry)!: move to runtime-analysis.nvim")
+    komplett gelöscht, als `lib.nvim.telemetry` nach runtime-analysis.nvim
+    auszog — das „info"-Feld-Konzept, auf das verwiesen wurde, lebt jetzt
+    in `runtime-analysis.telemetry`, laut lib.nvim's eigener
+    `lua/lib/nvim/git/README.md`. Toten Verweis entfernt, das eigentliche
+    Modul benannt, inhaltliche Begründung (warum `M.info` hier eine echte
+    Assertion verdient) unverändert gelassen.
+- **Echte Test-Bugs: keine gefunden.** Keine tote/unerreichbare
+  Test-Logik, keine Assertion, die nie fehlschlagen kann, keine
+  Fixture-Inkonsistenz — trotz gezielter Suche (u.a. `count_spec.lua`'s
+  bewusst nicht zurückgesetztes `unsubscribed`-Flag ist im Kommentar
+  selbst als Absicht erklärt, kein Bug).
+- **`--- CDX:` gesetzt: keine** — kein Fund erreichte die Schwelle für
+  einen Judgment-Call-Tag.
+- **Nichts für WKDBooks ausgelagert** — keine Design-Rationale/Benchmark-
+  Erzählung in diesem Scope war lang oder allgemeingültig genug, um vom
+  eigenen Call-Site sinnvoll getrennt zu werden.
+
+stylua ok, luacheck 0/0 (nur die geänderte Datei betroffen), volle
+`TESTS/run.lua`-Suite `LIB_TESTS_OK` (alle 49 Specs grün). Ohne
+Co-Authored-By.
 
 **Sub-Häppchen 10 — erledigt** (`TESTS/` Teil 1 — `composer_spec`,
 `deps_spec`, `ui_kit_spec`, `autocmd_dispatcher_spec`, `nvim_helpers_spec`,
