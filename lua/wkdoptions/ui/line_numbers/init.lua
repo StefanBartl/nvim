@@ -8,7 +8,7 @@ local ignore_lib = require("lib.nvim.fs.ignore.list")
 local Autocmd = require("lib.nvim.bindings.autocmd")
 local ignore_filetypes = ignore_lib.as_set()
 
--- UI-spezifische Typen ergänzen
+-- Add UI-specific filetypes
 ignore_filetypes["qf"] = true
 ignore_filetypes["help"] = true
 ignore_filetypes["alpha"] = true
@@ -22,7 +22,7 @@ local M = {}
 
 ---Render custom statuscolumn numbers.
 function M.render()
-  -- Sicherheits-Check (falls doch mal ein UI-Buffer durchrutscht)
+  -- Safety check, in case a UI buffer slips through anyway
   local ft = ignore_lib.normalize(vim.bo.filetype)
   if ignore_filetypes[ft] or vim.bo.buftype ~= "" then
     return ""
@@ -53,21 +53,19 @@ function M.render()
   return tostring(math.abs(cursor_line - line_number))
 end
 
--- Global exportieren
 _G.custom_line_numbers = M.render
 
--- =========================================================================
--- DIE LÖSUNG: Dynamische Zuweisung statt globalem Vorschlaghammer
--- =========================================================================
+-- Assigns `statuscolumn` per buffer instead of setting one global default,
+-- since the ignore list only applies to a subset of buffers.
 Autocmd.create({ "BufEnter", "BufWinEnter", "FileType" }, function()
   local ft = ignore_lib.normalize(vim.bo.filetype)
 
-  -- Wenn es ein normaler Datei-Buffer ist (kein Neo-tree, kein Quickfix etc.)
+  -- Regular file buffer (not neo-tree, quickfix, etc.)
   if not ignore_filetypes[ft] and vim.bo.buftype == "" then
     vim.opt_local.statuscolumn = "%=%{%v:lua.custom_line_numbers()%} "
     vim.opt_local.numberwidth = math.max(4, tostring(vim.fn.line("$")):len() + 1)
   else
-    -- Für Neo-tree und Co: Überschreibe es lokal mit "leer" oder dem Standard
+    -- neo-tree & co: blank the statuscolumn locally
     vim.opt_local.statuscolumn = ""
   end
 end)
