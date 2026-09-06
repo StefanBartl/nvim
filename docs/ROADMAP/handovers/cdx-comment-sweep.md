@@ -440,6 +440,44 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
+### Häppchen 43 — casedesk.nvim (Plugin-Repo 26/31, Standalone) — **erledigt**
+
+Commit `fdaa4d8`, gepusht, `pull --ff-only` sauber. Ganzes Repo (43 Lua +
+4 Specs + docs). stylua ok, luacheck 0/0 (49 Dateien), plenary-Suite
+14/14/4 grün (`LIB_NVIM_DIR`/`PLENARY_DIR` gesetzt). **Reiner
+Sprachhygiene-Job** — der Code war strukturell sauber.
+
+**Direkte Fixes — Übersetzung:** `solution.lua` (kompletter Modulkopf +
+alle Code-Kommentare/`@field` — offenbar aus dem Config-Vorfahren übernommen
+und beim Extract nie übersetzt) und der Solution-Bereich von `ui.lua`
+(8 Kommentarblöcke) waren praktisch komplett deutsch. Dazu `DEFAULTS.lua`
+Doc-Blöcke, `similar.lua` Tokenizer-Doc, `bindings/usrcmds.lua`,
+`extract/stream.lua`.
+
+**Direkte Fixes — halbübersetztes „Bestand" → „corpus"** flächig (aus einem
+früheren Sweep-Durchgang): 6 Code-Dateien + `desc`-Strings + englische
+Doc-Bullets in `CHEATSHEET.md`/`commands.md`/`FEATURES.md`/`WORKFLOW.md`
+(inkl. Überschrift). `docs/CONCEPT.md` + deutsche `FEATURES.md`-Abschnitte
+bewusst NICHT angefasst (deutschsprachige Design-Docs).
+
+**Kommentar widersprach Code:** `similar.lua` MIN_SHARED_TERMS-Guard-
+Kommentar erzählte „never actually applied — bare `dot > 0`", der Code
+wendet den Guard inzwischen an. Auf 2 Sätze eingekürzt.
+
+**Doc:** `:Cases solutions`-Argplatzhalter `[begriff]` → `[pattern]` (echter
+Arg-Name); `docs/BINDINGS.md` fehlende Viewer-Tabelle `:Case solution`
+(`e`/`y`) ergänzt.
+
+**Kein `--- CDX:`, kein toter Code, keine Logik-Bugs.** Deutsche Daten/
+Strings/SLA-Labels/attribuierte Doc-Zitate bewusst intakt (wie in Häppchen 4
+kalibriert).
+
+**Nebenbefund (nicht Sweep-Scope):** `scripts/gen_docs.sh --check` schlägt
+**vorbestehend** fehl — der Generator produziert in dieser Umgebung einen
+verkürzten Route-Tree (ganzer `:Tricentis`-Block + `:Cases`-Zeilen fehlen);
+die eingecheckte `commands.md` ist die vollständige, korrekte Datei. Eigener
+Aufräum-Punkt.
+
 ### Häppchen 42 — pickers.nvim (Plugin-Repo 24/31) — **erledigt**
 
 Commit `ba3102d`, gepusht, `pull --ff-only` sauber. Ganzes Repo (59 Lua +
@@ -507,12 +545,11 @@ nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
 
 **Kein `--- CDX:`, keine echten Logik-Bugs.**
 
-**Verbleibende Plugin-Repos (6/31 offen):**
-color_my_ascii, documentation, lsp, markdown,
-reposcope, sandbox. Plus: **mdview TypeScript-Client** (eigener Sub-Pass).
-casedesk.nvim (Repo 26/31) **läuft gerade** — das Standalone-Repo; die
-casedesk-Sweep in Häppchen 4 betraf nur die config-eingebettete Variante
-`lua/bindings/usrcmds/case/`.
+**Verbleibende Plugin-Repos (5/31 offen):**
+color_my_ascii, documentation, lsp,
+reposcope, sandbox. markdown.nvim (27/31) **läuft gerade**. Plus:
+**mdview TypeScript-Client** (eigener Sub-Pass) und der vorbestehende
+casedesk `gen_docs.sh --check`-Fail.
 Reihenfolge offen; keine Vorgabe. Agent-Limit: der User hat das mehrfach
 umgeschaltet (2×3 einmalig → 1 → 2 → 1 → 2). Ab Häppchen 41 wieder
 **2 parallele Agents erlaubt** (bis zum nächsten Widerruf). Immer der
