@@ -1211,15 +1211,15 @@ end
 
 -- ── :Case solution / :Cases solutions ────────────────────────────────────
 
---- Wie viele Zeilen der Lösungsdatei der Viewer zeigt, bevor er auf "e
---- öffnet die Datei" verweist. Eine Lösung SOLL kurz sein; wenn sie es
---- nicht ist, ist der Puffer der richtige Ort dafür, nicht ein Float.
+--- How many lines of the solution file the viewer shows before pointing at
+--- "e opens the file". A solution SHOULD be short; when it isn't, the
+--- buffer is the right place for it, not a float.
 local SOLUTION_PREVIEW_LINES = 60
 
---- Cursor auf die erste Zeile UNTER einer Überschrift setzen — nach dem
---- Anlegen landet man so direkt im leeren `## Problem` statt auf Zeile 1
---- über der Headline.
----@param label string  Plain text, keine Pattern-Sonderzeichen.
+--- Put the cursor on the first line BELOW a heading — right after creation
+--- this lands you straight in the empty `## Problem` instead of on line 1
+--- above the headline.
+---@param label string  Plain text, no pattern metacharacters.
 local function cursor_below_heading(label)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   for i, line in ipairs(lines) do
@@ -1248,15 +1248,15 @@ local function create_solution(entry)
   )
 end
 
---- `:Case solution [nr] [--edit]` — die Lösung des Cases: vorhanden wird sie
---- gezeigt, nicht vorhanden nach Rückfrage angelegt.
+--- `:Case solution [nr] [--edit]` — the case's solution: shown if it exists,
+--- created after a prompt if it doesn't.
 ---
---- Zeigen statt direkt öffnen ist Absicht: im Alltag will man wissen "was
---- war da nochmal die Lösung", nicht in einer Datei landen, in der ein
---- unbedachtes `x` die Antwort beschädigt. `e` (oder gleich `--edit`) führt
---- in den Puffer, `y` legt den reinen Lösungsabschnitt in die
---- Zwischenablage — das ist der Text, der in die Antwort an den Kunden oder
---- ins `Summary.md` wandert.
+--- Showing rather than opening directly is deliberate: day to day you want
+--- to know "what was the solution again", not land in a file where a
+--- careless `x` damages the answer. `e` (or `--edit` straight away) takes
+--- you into the buffer; `y` puts just the solution section on the
+--- clipboard — that's the text that goes into the customer reply or into
+--- `Summary.md`.
 ---@param case_arg string|nil
 ---@param flags { edit: boolean|nil }|nil
 function M.solution(case_arg, flags)
@@ -1294,8 +1294,8 @@ function M.solution(case_arg, flags)
       header[#header + 1] = "Schlagworte: " .. table.concat(doc.keywords, ", ")
     end
     if not doc.canonical then
-      -- Altlage: gelesen wird sie trotzdem, aber `:Cases normalize` räumt
-      -- sie auf die Konvention um (doctor.lua's naming-variant-Regeln).
+      -- Legacy location: it's read anyway, but `:Cases normalize` moves it
+      -- to the convention (doctor.lua's naming-variant rules).
       header[#header + 1] = ("Altlage: %s — :Cases normalize räumt das um"):format(
         doc.path:sub(#entry.dir + 2)
       )
@@ -1325,8 +1325,8 @@ function M.solution(case_arg, flags)
     end, mo)
     map("n", "y", function()
       surf:close()
-      -- Der Abschnitt, nicht die ganze Datei: Status/Problem/Ursache sind
-      -- interne Einordnung, kopiert werden will die Maßnahme selbst.
+      -- The section, not the whole file: Status/Problem/Ursache are
+      -- internal classification, what you want to copy is the fix itself.
       local text = doc.sections.solution
       if not text or text == "" then
         text = doc.text
@@ -1338,10 +1338,10 @@ function M.solution(case_arg, flags)
   end)
 end
 
---- Eine Zeile im Lösungs-Picker. Ohne Suchbegriff sind die Schlagworte die
---- nützlichste rechte Spalte (sie sagen, worum es ging), mit Suchbegriff die
---- Trefferbegriffe (sie sagen, WARUM der Eintrag hier steht — dieselbe
---- Begründung wie bei `:Case similar`).
+--- One row in the solution picker. Without a search term the keywords are
+--- the most useful right-hand column (they say what it was about), with a
+--- search term the matched terms are (they say WHY the entry is here — the
+--- same rationale as `:Case similar`).
 ---@param hit Lib.Case.SolutionHit
 ---@return string
 local function solution_row(hit)
@@ -1365,16 +1365,15 @@ local function solution_row(hit)
   )
 end
 
---- `:Cases solutions [begriff]` — die Wissensbasis über alle Cases hinweg.
+--- `:Cases solutions [term]` — the knowledge base across all cases.
 ---
---- Der Grund, warum `:Case solution` überhaupt ein festes Format schreibt:
---- ohne Suchbegriff eine Liste aller dokumentierten Lösungen, mit Begriff
---- eine gewichtete Rangfolge (`solution.search` — Schlagworte zählen
---- dreifach, Titel doppelt, wörtliche Phrase schlägt verstreute Wörter).
---- Rein lexikalisch, ohne KI, mit derselben bekannten Grenze wie
---- `:Case similar`: dasselbe Problem in völlig anderen Worten trifft nicht.
---- Genau deshalb gibt es `## Schlagworte` — das ist die Stelle, an der man
---- diese Grenze von Hand aufweicht.
+--- The reason `:Case solution` writes a fixed format at all: without a
+--- search term, a list of every documented solution; with one, a weighted
+--- ranking (`solution.search` — keywords count triple, title double, a
+--- literal phrase beats scattered words). Purely lexical, no AI, with the
+--- same known limit as `:Case similar`: the same problem phrased in
+--- completely different words won't match. That's exactly why
+--- `## Schlagworte` exists — it's where you soften that limit by hand.
 ---@param pattern string|nil
 function M.solutions(pattern)
   local solution = require("bindings.usrcmds.case.solution")
@@ -1895,12 +1894,11 @@ local function do_move(entry, state)
   if state ~= config.default_state then
     drop_session_if_left_open(entry)
   end
-  -- Der Moment, in dem eine Lösung verlorengeht: Case ist gelöst, wandert
-  -- weg, und WAS ihn gelöst hat, steht nur zwischen drei Fehlversuchen in
-  -- Notes.md. Nur ein Hinweis (config.solution_reminder_states) — nichts
-  -- wird automatisch angelegt, eine leere Solution.md würde die Suche mit
-  -- inhaltslosen Treffern fluten. `dest`, nicht `entry.dir`: der Ordner ist
-  -- gerade umgezogen.
+  -- The moment a solution gets lost: the case is solved, moves away, and
+  -- WHAT solved it sits only between three failed attempts in Notes.md.
+  -- Just a hint (config.solution_reminder_states) — nothing is created
+  -- automatically, an empty Solution.md would flood the search with
+  -- contentless hits. `dest`, not `entry.dir`: the folder has just moved.
   if vim.tbl_contains(config.solution_reminder_states, state) then
     if not require("bindings.usrcmds.case.solution").exists(dest) then
       notify.warn(
@@ -3343,7 +3341,7 @@ end
 --- One picker row, in fixed columns:
 --- `[topic ] <command>                  ×3  <heading>`
 ---
---- The heading is what turns a bare `adb shell pm clear <paket>` back into
+--- The heading is what turns a bare `adb shell pm clear <package>` back into
 --- something you can pick with confidence, so it earns its column. The
 --- source file does NOT get one: at ~40 characters of repo-relative path it
 --- pushed the command itself off the row, and the notify after selecting
