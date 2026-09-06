@@ -341,13 +341,50 @@ eigenem `@`-Präfix-Glob übersprungen — vorbestehend, stylua deckt sie ab).
 Commit: nvim-config `20204478c`. Ohne Co-Authored-By, gepusht +
 `pull --ff-only` bestätigt.
 
+### Häppchen 9 — `lua/config/harpoon/` (12 Dateien, 1943 Zeilen)
+
+**Status: erledigt.** Ordner war schon fast durchgehend auf Sweep-Qualität
+(9 von 12 Dateien 0 Änderungen) — nur `types/init.lua`, `health.lua`,
+`preview.lua` hatten etwas.
+
+**Echte Typ-Fixes in `types/init.lua`** (reine Annotation, keine
+Laufzeit-Logik-Änderung):
+- `Cfg.Harpoon.HardeningState` deklarierte nur 3 von 5 tatsächlichen Feldern
+  aus `hardening.lua` — fehlten `wrapped_ui`/`augroup`. Genau die Falle, vor
+  der der Nachbar-Kommentar bei `Cfg.Harpoon.List` selbst warnt. Gefixt.
+- `Cfg.Harpoon.Api` gelöscht (toter Typ, nirgends referenziert, zusätzlich
+  schon veraltet — fehlte das `.config`-Feld).
+- Verwaiste `---@type uv uv`-Zeile ohne zugehörige Deklaration gelöscht.
+- `HardeningOpts`-Tuning-Doku (SSD/Netzwerk-Debounce-Werte) ausgelagert nach
+  `docs/NOTES/Harpoon.md` §6 „Tuning" (bereits die autoritative Referenz für
+  dieses Modul — kein WKDBooks-Umzug nötig).
+
+**`--- CDX:` gesetzt (Zweifelsfälle, nicht gefixt):**
+- `preview.lua`s `resolve_layout()`: `require("config.harpoon.preview_layout")`
+  referenziert ein Modul, das **nirgends im Repo existiert** (auch vom
+  eigenen `docs/map`-Tool als `require-not-declared` geflaggt) — fällt
+  immer auf Fallback-Layout zurück. Erweiterungshaken oder toter Verweis,
+  Entscheidung offen.
+- `Cfg.Harpoon.NormKeyOpts` — nirgends per `@param`/`@cast` verdrahtet.
+
+stylua/luacheck: beide grün, 0/0 auf allen 12 Dateien.
+
+**Nebenfunde, nicht bearbeitet (außerhalb Scope, keine `.lua`-Dateien):**
+- `harpoon/docs/GoodToKnow.md` ist massiv veraltet und stellenweise
+  korrupt (Text bricht mitten im Satz ab) — beschreibt eine überholte
+  Modulstruktur. Eigener Aufräum-Punkt wert.
+- `harpoon/docs/ROADMAP.md` (3 Punkte) wirkt größtenteils schon erledigt.
+
+Commit: nvim-config `7c2a847ba`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/config/`: `harpoon/` (12 Dateien, 1943 Z.), `neotest/` (21 Dateien,
-1836 Z.), `neotree/` (29 Dateien, 1923 Z.) — je eigener Häppchen geplant.
-Danach `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`, `lua/themes/`,
-`lua/nvchad/` + `lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`,
-`scripts/`. Danach die 31 Plugin-Repos.
+`lua/config/`: `neotest/` (21 Dateien, 1836 Z.), `neotree/` (29 Dateien,
+1923 Z.) — je eigener Häppchen geplant. Danach `lua/plugins/`,
+`lua/startup/`, `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` +
+`lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach
+die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
