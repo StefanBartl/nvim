@@ -1971,12 +1971,57 @@ lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 1. ✅ `lua/lib/lua/` + Top-Level/@types/config/nvim_usrcmds/strategies
 2. ✅ `lua/lib/nvim/bindings/` (composer)
-3. `lua/lib/nvim/cross/`
+3. ✅ `lua/lib/nvim/cross/`
 4. `lua/lib/nvim/fs/`
 5. `lua/lib/nvim/buf_win_tab/` + `window/` + `buffer/`
 6. `lua/lib/nvim/ui/` (kit, 20 Dateien)
 7. `lua/lib/nvim/` Rest (deps, logger, system, harvest, progress, notify, …)
 8. `TESTS/` + `doc/` + `docs/`
+
+**Sub-Häppchen 3 — erledigt** (`lua/lib/nvim/cross/`, Commit `cc21351`,
+gepusht, `pull --ff-only` sauber). 29 Dateien. Bestätigt das Muster: die
+Arbeit steckt fast nur in `@types` + alten AI-Boilerplate-Headern; der
+Ausführungscode ist praktisch kommentar-rein.
+
+- **`@types/init.lua` — Signaturen wichen vom Code ab:** `Lib.Cross` fehlten
+  `is_windows/is_wsl/is_macos/is_linux/is/executable` komplett, veraltetes
+  `clipboard`-Feld drin (existiert nicht). `Lib.Cross.Uv`: `spawn_command`
+  gibt `{ spawn_project_command = … }` zurück (nicht `fun(argv)`),
+  `spawn_shell_command` nimmt `(cmd, args, opts)`, `wait_until` fehlte der
+  `cb`-Param. Alle korrigiert.
+- `spawn_capture/@types` — `stdin?`-Feld fehlte in der `@class` (war inline da).
+- `uv/spawn_command.lua` — ~30-Zeilen-`Features:`/`Design decisions:`-
+  Boilerplate-Header eingedampft, `SECURITY:`-Block erhalten. `spawn_shell_command`
+  „Usage example" raus.
+- `fs/separators/normalize/init.lua` — falscher Assert-Modul-Tag
+  `[lib.nvim.normalize.os_sep]` → korrekter Pfad.
+- `run/init.lua` — `-- FIX: Optimize, doc`-Marker raus (Modul ist dokumentiert),
+  Header zu echter `---`-Doc.
+- `fs/expand_path` — Header nannte nur `$VAR`, Code macht auch `${VAR}`.
+- `fs/_cwd`, `uv/fs` — plain `--` → `---`; `uv/fs` dokumentiert jetzt, dass es
+  `fs._cwd` bewusst dupliziert.
+
+**`--- CDX:` gesetzt:**
+- `@types/init.lua` `Lib.Cross.ALL` — unreferenziert, listet `run_blocking`
+  **zweimal** (zweiter Eintrag ist eigentlich `run_argv.run_blocking`,
+  Copy-Paste), abgelöst durch `Lib` in `all_functions.lua`.
+- `@types/clipboard.lua` `Lib.Cross.Clipboard` — unreferenziert, es gibt keine
+  `cross.clipboard`-Tabelle (Modul ist `cross.copy_to_clipboard`, nackte Fn).
+- `fs/separators/normalize/init.lua:14` — eigene Windows-Erkennung statt
+  `cross.platform.is_windows`, prüft `os_uname().version` statt `sysname` —
+  inkonsistent mit dem Rest von `cross/`.
+
+Keine echten Logik-Bugs (Spawn/Retry/Timeout-Pfade sind sorgfältig).
+
+**Für Sub-Häppchen 8:**
+- `run/init.lua` `run_detached`-Doc und `reveal_in_fm/init.lua`
+  `spawn_helper`-Doc enthalten denselben ~10-Zeilen-Text zu libuv
+  `DETACHED_PROCESS` / Konsole-vs-GUI (load-bearing Windows-Wissen, aber über
+  2 Dateien dupliziert) → in ein Docs-File auslagern + Pointer.
+- `docs/API/cross-platform.md` unvollständig: `fs.mutate` fehlen `symlink`/
+  `hardlink`; `run.env` fehlt `M.array(vars?)`.
+
+stylua ok, luacheck 0/0 (29 Dateien), `LIB_TESTS_OK`. Ohne Co-Authored-By.
 
 **Sub-Häppchen 2 — erledigt** (`lua/lib/nvim/bindings/`, Commit `1dd5f36`,
 gepusht, `pull --ff-only` sauber). 28 Dateien, überdurchschnittlich sauber.
