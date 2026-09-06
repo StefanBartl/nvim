@@ -23,35 +23,36 @@ local notify = require("lib.nvim.notify").create("[plugins.personal]")
 local control = require("plugins.control.mode")
 
 ---@alias PersonalRepoMode "disabled"|"dir"|"remote"
----  - "disabled" → Repo gar nicht laden (enabled = false)
----  - "dir"      → lokal aus dem repos-Verzeichnis (dir), Fallback remote falls Ordner fehlt
----  - "remote"   → von GitHub (StefanBartl/...)
+---  - "disabled" → don't load the repo at all (enabled = false)
+---  - "dir"      → local, out of the repos directory (dir), falls back to remote if the folder is missing
+---  - "remote"   → from GitHub (StefanBartl/...)
 
--- ── MANUELLER SCHALTER ─────────────────────────────────────────────────────
--- Erzwingt EINE Quelle für ALLE personal-Plugins und übersteuert sowohl die
--- Maschinen-Erkennung als auch die MODE-Tabelle weiter unten - AUSSER für
--- Repos, die dort explizit auf "disabled" stehen: eine Deaktivierung gewinnt
--- immer, unabhängig von diesem Schalter (ein Repo, das man gar nicht braucht,
--- soll weder lokal noch remote geladen werden). Zum Debuggen / Umschalten
--- einfach auf "dir" oder "remote" setzen (oder `:MyPlugins mode <wert>` -
--- schreibt exakt diese Zeile, s. lua/bindings/usrcmds/plugin_repos/init.lua; Neustart
--- nötig, da require() diese Datei cached):
---   "auto"     → nichts erzwingen (Maschinenrolle + MODE entscheiden, s. u.)
---   "dir"      → ALLE lokal
---   "remote"   → ALLE von GitHub
---   "disabled" → ALLE aus
+-- ── MANUAL SWITCH ──────────────────────────────────────────────────────────
+-- Forces ONE source for ALL personal plugins, overriding both machine
+-- detection and the MODE table further down -- EXCEPT for repos explicitly
+-- set to "disabled" there: a disable always wins over this switch (a repo
+-- you don't need at all should load neither locally nor remotely). For
+-- debugging / switching, just set to "dir" or "remote" (or `:MyPlugins mode
+-- <value>` -- writes exactly this line, see
+-- lua/bindings/usrcmds/plugin_repos/init.lua; restart needed since require()
+-- caches this file):
+--   "auto"     → force nothing (machine role + MODE decide, see below)
+--   "dir"      → ALL local
+--   "remote"   → ALL from GitHub
+--   "disabled" → ALL off
 ---@type "auto"|PersonalRepoMode
 local OVERRIDE = "dir"
 
--- Auflösung der effektiven Quelle, wenn OVERRIDE == "auto":
---   * "workstation" (siehe machine.lua) hat nie lokale Checkouts
---     dieser Repos → alles "remote" (der dir-Fallback ginge zwar auch remote,
---     das hier macht es unbedingt und spart 25× isdirectory-Prüfungen).
---   * jede andere Maschine → "auto": pro Repo entscheidet die MODE-Tabelle.
--- Achtung: "remote" auf der workstation heißt, dass lazy alle Repos als echte
--- GitHub-Remotes verwaltet. Der lazy-Update-Checker ist deshalb auf der
--- workstation bewusst deaktiviert (siehe lua/config/lazy/init.lua), sonst
--- fetcht er bei jedem Start ~116 Repos und friert die UI 60-90s ein.
+-- Resolves the effective source when OVERRIDE == "auto":
+--   * "workstation" (see machine.lua) never has local checkouts of these
+--     repos → everything "remote" (the dir fallback would also end up
+--     remote, but this makes it unconditional and skips 25x isdirectory
+--     checks).
+--   * any other machine → "auto": the MODE table decides per repo.
+-- Note: "remote" on the workstation means lazy manages every repo as a real
+-- GitHub remote. The lazy update checker is therefore deliberately disabled
+-- on the workstation (see lua/config/lazy/init.lua) -- otherwise it fetches
+-- ~116 repos on every start and freezes the UI for 60-90s.
 ---@type "auto"|PersonalRepoMode
 local SOURCE
 if OVERRIDE ~= "auto" then
@@ -64,24 +65,21 @@ end
 
 local VALID_MODE = { disabled = true, dir = true, remote = true }
 
---- Personal-Resolver, in den generischen Kern (plugins.control.mode) injiziert.
---- Ein repo-eigenes "disabled" gewinnt immer über OVERRIDE/SOURCE: ein Repo,
---- das man gar nicht braucht, soll weder lokal noch remote laden.
+--- Personal resolver, injected into the generic core (plugins.control.mode).
+--- A repo's own "disabled" always wins over OVERRIDE/SOURCE: a repo you
+--- don't need at all should load neither locally nor remotely.
 ---@param spec LazyPluginSpec
----@param configured string|nil  aus plugins.modes(...) für diesen Basenamen
----@param name string            Repo-Basename
+---@param configured string|nil  from plugins.modes(...) for this basename
+---@param name string            repo basename
 local function resolve(spec, configured, name)
-  -- Präzedenz: repo-eigenes "disabled" > globales OVERRIDE/SOURCE > repo-eigenes dir/remote > Default "dir".
+  -- Precedence: repo's own "disabled" > global OVERRIDE/SOURCE > repo's own dir/remote > default "dir".
   local mode = (configured == "disabled") and "disabled"
     or (SOURCE ~= "auto") and SOURCE
     or (configured or "dir")
 
   if not VALID_MODE[mode] then
     notify.warn(
-      ("[PLUGINS PERSONAL] Ungültiger Modus '%s' für '%s' → 'remote'"):format(
-        tostring(mode),
-        name
-      )
+      ("[PLUGINS PERSONAL] Invalid mode '%s' for '%s' → 'remote'"):format(tostring(mode), name)
     )
     mode = "remote"
   end
@@ -89,14 +87,14 @@ local function resolve(spec, configured, name)
   if mode == "disabled" then
     spec.enabled = false
   elseif mode == "dir" then
-    spec.dir = personal_utils.local_dev(name) -- nil → remote, falls Ordner fehlt
+    spec.dir = personal_utils.local_dev(name) -- nil → remote, if the folder is missing
   end
-  -- "remote": dir bleibt nil → lazy nutzt repo[1]
+  -- "remote": dir stays nil → lazy uses repo[1]
 end
 
 local plugins = control.new({ resolve = resolve })
 
--- Pro Repo (Key = Ordner-/Repo-Basename). Nicht gelistet → "dir".
+-- Per repo (key = folder/repo basename). Not listed → "dir".
 plugins.modes({
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
   ["lib.nvim"] = "dir",
@@ -113,7 +111,7 @@ plugins.modes({
   -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
   ["fileops.nvim"] = "dir",
   ["gopath.nvim"] = "dir",
-  ["replacer.nvim"] = "dir", -- Basename des Specs "StefanBartl/replacer.nvim"
+  ["replacer.nvim"] = "dir", -- basename of spec "StefanBartl/replacer.nvim"
   ["insights.nvim"] = "dir",
   ["filetree.nvim"] = "dir",
   ["reposcope.nvim"] = "dir",
@@ -122,12 +120,12 @@ plugins.modes({
   ["debugging.nvim"] = "dir",
   ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
-  ["language.nvim"] = "dir", -- Basename des Specs "StefanBartl/language.nvim"
+  ["language.nvim"] = "dir", -- basename of spec "StefanBartl/language.nvim"
   ["cmdlog.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
   ["casedesk.nvim"] = "dir",
-  ["learn-cli.nvim"] = "disabled", -- gebraucht weder lokal noch remote
+  ["learn-cli.nvim"] = "disabled", -- needed neither locally nor remotely
 
   -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
   ["cascade.nvim"] = "dir",
