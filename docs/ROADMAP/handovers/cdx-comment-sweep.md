@@ -968,6 +968,93 @@ Commit: sessions.nvim `6c4422f`, gepusht (`160a97a..6c4422f`),
 `pull --ff-only` „Already up to date", `git log origin/main` bestätigt.
 Ohne Co-Authored-By.
 
+### Häppchen 20 — dap.nvim (Plugin-Repo 3/31)
+
+**Status: erledigt.** ~3140 Z. Lua (47 Dateien inkl. TESTS), eigenes `main` /
+Remote `StefanBartl/dap.nvim`. Config-Layer auf mfussenegger/nvim-dap. Wie die
+beiden vorigen Plugin-Repos war es schon fast durchgehend auf Sweep-Qualität:
+durchweg Englisch (kein einziges deutsches Wort), Header mit echter
+ortsrelevanter Rationale, keine AI-Boilerplate. `lua/wkddap/health.lua` war
+schon früher in dieser Session gesweept — nicht erneut angefasst. Depends on
+`lib.nvim` (bewusst, kein Fund).
+
+**Geänderte Dateien (Source, 11):** `config/DEFAULTS.lua`,
+`core/capabilities.lua`, `core/state.lua`, `registry.lua`, `utils/validation.lua`,
+`languages/{assembly,browser,c,csharp,lua,rust,zig}.lua`.
+
+**Bereits sauber, 0 Änderungen:** `init.lua`, `config/init.lua`, `@types/init.lua`,
+`adapters/init.lua`, `configurations/init.lua`, `core/{init,setup,breakpoints}.lua`,
+`bindings/*` (alle 4), `ui/*` (alle 8), `integrations/menu.lua`,
+`utils/{executable,mason,notify,paths}.lua`, `languages/{go,javascript,python}.lua`,
+`plugin/dap.lua`, alle `TESTS/*`.
+
+**Direkte Fixes (Kommentar/Doc, keine Verhaltensänderung):**
+- `config/DEFAULTS.lua` — der „Empty = all available"-Kommentar zählte eine
+  falsche Sprachliste auf: die Aliase `typescript`/`cpp` als wären es
+  Basissprachen, und `bash`/`csharp`/`browser` fehlten ganz. Auf die echte
+  Liste korrigiert + Pointer auf `wkddap.registry` (die autoritative
+  `SUPPORTED_LANGUAGES`).
+- **6× identischer 4-Zeilen-Block** „nvim-dap resolves config functions inside
+  coroutine.wrap() …" in `languages/{assembly,c,csharp,lua,rust,zig}.lua` — die
+  Mechanik ist bereits vollständig in `docs/FEATURES/LANGUAGES.md` beschrieben
+  (Muster #6). Auf einen Ein-Zeilen-Pointer eingedampft. `zig.lua`s zweiter
+  Block („build first") auf das lokal-relevante Invariant (spawn-vor-yield ist
+  sicher) gekürzt.
+- **Doc-Staleness (eigener Commit):** `bindings/which_key/init.lua` wurde in
+  `550a8d7` gelöscht (das Gruppenlabel ist jetzt ein Feld der Keymap-Spec),
+  aber `docs/architecture.md`, `docs/BINDINGS.md` und
+  `docs/FEATURES/CONTROLS.md` verwiesen noch auf das gelöschte Modul (CONTROLS
+  beschrieb sogar dessen `setup`/`available` + „which-key v2/v3 APIs") — alle
+  drei auf `bindings/keymaps/init.lua` umgebogen. Muster #4, exakt wie
+  Häppchen 18 (recommender: `which_key.lua`).
+- „eight languages" → „eleven" in `README.md` + `docs/FEATURES/README.md`
+  (READMEs eigener Intro-Absatz sagt schon „eleven targets").
+- `docs/architecture.md` `languages/`-Liste: `bash`/`browser`/`csharp` ergänzt.
+
+**Toter Code gelöscht** (0 Aufrufer im Repo + TESTS + allen 30 anderen
+Plugin-Repos; nicht in irgendeiner `docs/*`-API-Liste; interner Namespace):
+- `utils/validation.lua` `M.validate_file` (18 Z.). `pick_process` (der einzige
+  echte Nutzer des Moduls, aus `languages/javascript.lua`) bleibt; Modul-Header
+  entsprechend eingedampft.
+
+**`--- CDX:` gesetzt (Urteilssache, nicht gefixt):**
+- `languages/browser.lua` (`load`) — der Kommentar behauptet gegenseitige
+  Sicherheit („whichever loads second must not drop the other's entries"), aber
+  `javascript.lua`s `load()` **assignt** `dap.configurations[ft]` statt zu
+  appenden. Der Vertrag hält nur in der Default-Ladereihenfolge (javascript vor
+  browser in `registry.SUPPORTED_LANGUAGES`); `languages = { "browser",
+  "javascript" }` löscht die Browser-Configs wieder.
+- `core/state.lua` — `set_session_active` hat **keinen** Aufrufer, also ist
+  `session_active` immer `false`; `is_session_active()`/`is_initialized()`
+  werden nie gelesen. Nur `init()` ist verdrahtet. Vestigiale API oder
+  unfertiges Session-Tracking.
+- `core/capabilities.lua` — `detect()` läuft (aus `core/setup.lua`) und füllt
+  `_features`, aber nichts liest es: `has()` hat keine Aufrufer und `health.lua`
+  macht seine eigenen `pcall(require, …)`-Proben. Ergebnis wird berechnet und
+  verworfen.
+- `registry.lua` `registered_languages()` — keine Aufrufer (Repo oder TESTS),
+  nicht in der dokumentierten Registry-API
+  (`docs/FEATURES/LANGUAGES.md`: register/register_all/is_enabled/validate/stats).
+
+**Keine Annotation-Fixes nötig** (`@types/init.lua` deckt `Dap.Config` &
+Untertypen korrekt ab; die Felder stimmen mit `DEFAULTS.lua` überein).
+**Kein WKDBooks-Umzug** — das einzige ortsunabhängige Mechanik-Wissen (die
+coroutine.wrap-Idiom) liegt bereits im plugin-eigenen `docs/FEATURES/LANGUAGES.md`.
+
+**CI/Gate:** `stylua --check lua/ plugin/ TESTS/` (v2.5.2) sauber,
+`luacheck lua plugin TESTS` (1.2.0) **0/0 über 47 Dateien**, plenary-Suite
+headless grün (25/25: configurations 4, registry 6, usercmds 3, program_prompt
+12; lib.nvim als Sibling aus `E:/repos/lib.nvim`). CI-Workflow nutzt Lua 5.1
+für luacheck (Kommentar in `ci.yml`: 1.2.0 lädt unter 5.5 nicht).
+
+Commits: dap.nvim `16a2440` (source) + `4f445c9` (docs), gepusht
+(`66b4a92..4f445c9`), `pull --ff-only` + `git log origin/main` bestätigt.
+Ohne Co-Authored-By.
+
+**Nebenfund, nicht bearbeitet:** `bindings/keymaps/init.lua`s Header sagt „move
+all fourteen or none" — `order` listet 13 Aktionen, aber `eval` bindet n+v, was
+14 tatsächliche Mappings ergibt; vertretbar, nicht angefasst.
+
 ### Danach offen
 
 **Der gesamte `lua/`-Baum + `init.lua` der nvim-config ist durch.** Verbleibend
