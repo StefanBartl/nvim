@@ -222,6 +222,25 @@ catalogue's version would be shadowed exactly in the buffers it is meant for.
 reason. Harmless while both call `vim.lsp.buf.rename`; load-bearing as soon as
 `rename.provider` selects inc-rename.
 
+## Bracket-pair motions (`[x` / `]x`)
+
+Taken, as of Neovim 0.12 + this config's plugins — verified by asking the
+running editor, not by grepping source (an unknown node name does not degrade,
+it fails the whole query; a grep for a mapping misses buffer-local and
+default ones):
+
+| Owner | Pairs |
+| --- | --- |
+| Neovim (`vim/_core/defaults.lua`) | `[a ]a` `[A ]A` `[b ]b` `[B ]B` `[t ]t` `[T ]T` `[L ]L` `[Q ]Q` |
+| lsp.nvim | `[d ]d` `[D ]D` `[l ]l` `[q ]q` `[w ]w` |
+| snacks.nvim (scope motion) | `[s ]s` |
+| this config (`bindings/mappings/treesitter_structure.lua`) | `[u ]u` — climb to head/end of the enclosing structure |
+
+`[u ]u` was `[b ]b` for about an hour on the strength of a grep that found
+nothing — but `[b ]b` is a Neovim 0.12 default (buffer nav), so the grep was
+the wrong instrument. Free letters left in this space are scarce; check here
+before taking a new pair.
+
 ## Prefix waits
 
 A mapping that is also the prefix of a longer one makes Neovim wait

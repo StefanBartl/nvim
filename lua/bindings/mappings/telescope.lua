@@ -25,15 +25,6 @@ function M.setup()
       end,
     })
   end, { desc = "[Telescope] Grep" })
-  -- map("n", "<leader><leader>", "<cmd>Telescope live_grep<CR>", { desc = "[Telescope] Live Grep" })
-  -- map("n", "<leader>fk", "<cmd>Telescope keymaps<CR>", { desc = "[Telescope] Find keymaps" })
-  -- map("n", "<leader>com", "<cmd>Telescope commands<CR>", { desc = "[Telescope] Commands" })
-  -- map("n", "<leader>col", "<cmd>Telescope colorscheme<CR>", { desc = "[Telescope] Colorscheme" })
-  -- map("n", "<leader>ff", "<cmd>Telescope find_files<CR>", { desc = "[Telescope] Find Files" })
-  -- map("n", "<leader>help", "<cmd>Telescope help_tags<CR>", { desc = "[Telescope] Help" })
-  -- map("n", "<leader>cb", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "[Telescope] In Buffer" })
-  -- map("n", "<leader>bu", "<cmd>Telescope buffers<CR>", { desc = "[Telescope] Buffers" })
-  -- map("n", "<leader>old", "<cmd>Telescope oldfiles<CR>", { desc = "[Telescope] Oldfiles" })
 
   map(
     "n",

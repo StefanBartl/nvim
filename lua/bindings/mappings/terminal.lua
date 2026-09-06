@@ -2,10 +2,8 @@
 --- Terminal-mode keymaps: `<Esc>`/`<C-c>` to leave terminal mode, and `<C-h/j/k/l>`
 --- so window navigation keeps working from inside a terminal buffer.
 ---
---- `<C-l>` was mapped twice here, eleven lines apart: once to move to the
---- window on the right, and once to send `clear`/`cls` to the terminal job.
---- The second silently won. Only the window movement is left -- the shell's
---- own `clear` command does that job without spending a key.
+--- `<C-l>` here is window-move-right only. A second `<C-l>` map that sent
+--- `clear`/`cls` to the job was dropped — the shell's own `clear` does that.
 
 local M = {}
 
@@ -26,37 +24,6 @@ function M.setup()
       nt.toggle({ pos = "float", id = "floatTerm" })
     end
   end, { desc = "[Term] Toggle floating" })
-
-  --- Toggle NvChad UI terminal in a vertical split with ~1/3 screen width.
-  --- Works from normal & terminal mode; robustly enforces width after opening.
-  ---@type fun():nil
-  -- local function toggle_vterm_one_third()
-  --   -- Load NvChad term module defensively
-  --   local ok, term = pcall(require, "nvchad.term")
-  --   if not ok then return end
-  --
-  --   -- Desired width in columns (1/3 of total), with a sane minimum
-  --   local cols = math.max(20, math.floor(vim.o.columns / 3))
-  --
-  --   -- Attempt to pass size via function args (supported per maintainer comment).
-  --   -- If your local version ignores this, we still hard-set the width below.
-  --   term.toggle({ pos = "vsp", id = "vtoggleTerm", size = cols })
-  --
-  --   -- Defer to let the window appear, then force exact width as fallback
-  --   vim.schedule(function()
-  --     -- Only act if we’re actually on a terminal buffer now (toggle might have closed it)
-  --     if vim.bo.buftype ~= "terminal" then return end
-  --     local win = vim.api.nvim_get_current_win()
-  --     pcall(vim.api.nvim_win_set_width, win, cols)
-  --   end)
-  -- end
-
-  -- map({ "n", "t" }, "<A-v>", toggle_vterm_one_third,
-  --    { desc = "[Term] Toggle vertical (1/3 width)" })
-  -- map({ "n", "t" }, "<A-h>",
-  --   function()
-  --     local ok, nt = pcall(require, "nvchad.term"); if ok then nt.toggle { pos = "sp", id = "htoggleTerm" } end
-  --   end, { desc = "[Term] Toggle horizontal" })
 end
 
 return M

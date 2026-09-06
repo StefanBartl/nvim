@@ -1,4 +1,6 @@
 ---@module 'bindings.mappings.sourrounding'
+--- CDX: filename is misspelled ("sourrounding" → "surrounding"). Rename the
+--- file + the one `require` in bindings/mappings/init.lua.
 --- Visual-mode mappings to surround the current selection.
 --- This version binds the bracket pairs to single-tap sequences:
 ---   []  -> surround with [ ... ]
@@ -167,24 +169,16 @@ local function define_mappings()
     end, pfx .. "single quotes (')")
   end
 
-  -- Backticks trigger on a *single* tap, unlike the pairs above. A `` double
-  -- tap can't work here: the first ` is already a complete built-in operator
-  -- (goto-mark, waiting for its mark argument), so Neovim only holds the
-  -- mapping open for 'timeoutlen'. Type the two backticks a second apart —
-  -- i.e. at normal speed — and the timeout fires the built-in instead: the
-  -- second ` is eaten as the mark name, `` resolves to "jump to previous
-  -- position", and the selection is left completely untouched. That silent
-  -- no-op is the bug this fixes (and the stray ``` that shows up afterwards
-  -- is nvim-autopairs' markdown fence rule, from retrying in insert mode).
-  -- The cost is `{mark} as a Visual-mode motion, which this map already
-  -- shadowed anyway and which ' covers.
+  -- Single tap, not the `` double tap the bracket pairs use: the first ` is
+  -- already a complete built-in (goto-mark), so at normal typing speed
+  -- 'timeoutlen' fires it before the second ` arrives and the surround
+  -- silently no-ops. Cost: `{mark} as a Visual motion, which ' covers.
   if M.cfg.backticks ~= false then
     xmap(M.cfg.backtick_lhs or "`", function()
       surround_with("`")
     end, pfx .. "backticks (`)")
   end
 
-  -- Updated: use single-tap pairs instead of legacy double-tap triggers
   if M.cfg.parens ~= false then
     xmap("()", function()
       surround_pair("(", ")")

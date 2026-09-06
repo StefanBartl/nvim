@@ -1,15 +1,13 @@
 ---@module 'bindings.mappings.snacks'
 --- Centralized key mappings for folke/snacks.nvim.
---- Active mappings are defined normally, inactive mappings are kept commented
---- at their original logical positions for easy activation later.
----@description
---- NOT currently wired up: bindings.mappings.init.setup() doesn't require
---- this module, so M.setup() below is never called and every mapping in
---- here — "active"-looking or not — is dead. Likely superseded by
---- pickers.nvim's own snacks integration (see config/snacks/picker/init.lua)
---- for the picker-related ones; git.lua/lsp.lua/fzf.lua/telescope.lua may
---- already cover the rest. Before wiring this back in, check for overlap
---- with those instead of assuming it's a simple oversight.
+---
+--- CDX: this whole file is dead — `bindings.mappings.init.setup()` never
+--- requires it, so `M.setup()` is never called and every mapping (active or
+--- commented) is inert. Likely superseded by pickers.nvim's snacks
+--- integration (config/snacks/picker/init.lua) for the pickers, and by
+--- git.lua/fzf.lua/telescope.lua for the rest. Also: `GD` is mapped twice
+--- below (definitions, then declarations — the second wins). Decide: delete
+--- the file, or cherry-pick + wire in after an overlap check.
 
 local M = {}
 

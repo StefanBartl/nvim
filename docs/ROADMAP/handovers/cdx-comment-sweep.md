@@ -106,12 +106,48 @@ Umgezogen: siehe [Relocation-Log](#relocation-log).
 stylua ok. luacheck: nur die 106 vorbestehenden `vim`-global-Warnungen
 (kein `.luacheckrc` in diesem Kontext), 0 errors, nichts von mir verursacht.
 
+### Häppchen 2 — `lua/bindings/mappings/` (23 Dateien, ~2400 Z.)
+
+**Status: erledigt.** `lua/bindings/` gesamt ist riesig (87 Dateien, 22.774 Z.) —
+in Sub-Häppchen. `mappings/` war das erste.
+
+Direkt gefixt:
+- **Toter kommentierter Code gelöscht** (Kalibrierung: „gleich löschen"):
+  `general.lua` (`<C-s>`-Block + 2 Zeilen), `nvchad.lua` (`<leader>ch`),
+  `telescope.lua` (9 Zeilen), `terminal.lua` (~30-Zeilen-Block
+  `toggle_vterm_one_third`), `buf_win_tab.lua` (`<tab>`), `init.lua`
+  (`view_scroll`).
+- Deutsch → Englisch: `editing.lua:298` + `general.lua` (3 Kommentare, 2 `desc`
+  User-sichtbar!).
+- `buffer_jump.lua`: sinnloses `if type(map) ~= "function"` Re-require raus;
+  „matches the tabufline implementation **you quoted**" (Chat-Artefakt) gefixt.
+- `init.lua`: kaputte Doku-Referenz `PersonelPlugins/BINDINGS/Keymaps/
+  Collisions.md` → `docs/NOTES/CrossPlugin/Keymaps-Collisions.md`.
+- Lange Header/Doc-Blöcke moderat gekürzt: `editing.lua` (Header 29→11,
+  3 Doc-Blöcke halbiert), `treesitter_structure.lua` (Header **58→18**),
+  `terminal.lua`, `explorer`-Sachen.
+
+`--- CDX:` gesetzt:
+- `snacks.lua` — ganze Datei tot (nie required); `GD` doppelt gemappt
+- `sourrounding.lua` — Dateiname-Tippfehler (→ `surrounding`)
+- `smart_del_key.lua` — `map_cr`/`set_cr`-Mismatch, `<CR>`-Map nie implementiert
+- `toggle_comment.lua` — Annotation-Branching zwischen 2 Funktionen kopiert
+- `buffer_jump.lua` — 5 Fallback-Strategien + spekulatives `go_to`
+- `general.lua` — `<leader>date` auch in buffer-ctx.nvim
+
+stylua ok, luacheck 0/0 (mit `.luarc`/`.luacheckrc`).
+
 ### Danach offen
 
-nvim-config: `lua/` hat 359 Lua-Dateien. Grobe Bereiche in Reihenfolge-Vorschlag:
-`lua/config/` (~100, groß: harpoon/neotest/neotree-Subsysteme), `lua/bindings/`,
-`lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` +
-`lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`, `scripts/`.
+`lua/bindings/` Rest-Sub-Häppchen: `usrcmds/bindings_explorer/` (~15 Dateien),
+`usrcmds/case/` (~50 Dateien, HandOverCase — der Brocken), `usrcmds/` Rest
+(context_open, plugin_repos, update_repos, who_locks, telemetry, autocmd_docs),
+`usrcmds/init.lua`.
+
+Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
+harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
+`lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`, `lua/@types/`, `after/`,
+`init.lua`, `scripts/`.
 
 Danach die 31 Plugin-Repos (Liste unten), repo-für-repo, je 1 Agent möglich.
 
@@ -137,6 +173,18 @@ Format: `Quelle → Ziel — was`
   den Buffer des Vorgängerfensters; `:split` klont erst den fokussierten
   Buffer". Stand vorher als ~12-Zeilen-Kommentar 2× im Code, jetzt 3-Zeilen-
   Pointer auf die Note. Commit in `StefanBartl/WKDBooks`.
+- `lua/bindings/mappings/editing.lua` (Header + 3 Doc-Blöcke)
+  → `wkdbook-Neovim/MyNotes/Paste-Register-Clipboard-vim.paste.md` (neu) —
+  Register-Clipboard-Umleitung (`getreg` folgt ihr nicht), Bracketed Paste
+  läuft an Register+Keymap vorbei → `vim.paste`-Wrap, `vim.paste`-Phasen
+  −1/1/2/3 + „Chunk-Grenze ≠ Zeilenumbruch". Header 29→11 Z.
+- `lua/bindings/mappings/treesitter_structure.lua` (Header 58→18 Z.)
+  → `wkdbook-Neovim/MyNotes/treesitter-textobjects-block-outer-erweitern.md`
+  (neu) — `@block.outer` pro Sprache via `after/queries/*/textobjects.scm`
+  erweitern, unbekannter Knotenname bricht die ganze Query.
+  → **`docs/NOTES/CrossPlugin/Keymaps-Collisions.md`** neue Sektion
+  „Bracket-pair motions (`[x`/`]x`)" mit dem Owner-Inventar (Neovim/lsp.nvim/
+  snacks/config) + der `[b]`/`]b`-Story.
 
 ---
 

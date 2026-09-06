@@ -9,25 +9,18 @@ function M.setup()
 
   map("n", "<C-a>", "gg<S-v>G", { desc = "[General] Select all" })
 
-  -- map({ "n", "i", "v", "t" }, "<C-s>", function()
-  --   if vim.fn.mode() ~= "n" then
-  --     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-  --   end
-  --   vim.cmd "silent! w!"
-  -- end, { desc = "[General] Save file silently" })
   map({ "n", "v", "t" }, "<C-s>", function()
     local pos = vim.api.nvim_win_get_cursor(0)
     vim.cmd("write")
 
-    -- Verhindert Fehler, falls die Datei nach dem Speichern/Formatieren kürzer ist
+    -- Clamp: the file may be shorter after a save-time formatter ran.
     local last_line = vim.api.nvim_buf_line_count(0)
     if pos[1] > last_line then
       pos[1] = last_line
     end
-    -- vim.api.nvim_win_set_cursor(0, pos)
     pcall(vim.api.nvim_win_set_cursor, 0, pos)
   end, { desc = "[General] Save file" })
-  map("i", "<C-s>", function() --- explicit because of vim.lsp.buf.signature_help()
+  map("i", "<C-s>", function() -- explicit i-mode map so it beats vim.lsp.buf.signature_help()
     local pos = vim.api.nvim_win_get_cursor(0)
     vim.cmd("write")
 
@@ -35,7 +28,6 @@ function M.setup()
     if pos[1] > last_line then
       pos[1] = last_line
     end
-    -- vim.api.nvim_win_set_cursor(0, pos)
     pcall(vim.api.nvim_win_set_cursor, 0, pos)
   end, { desc = "[General] Save file", noremap = true })
 
@@ -49,10 +41,11 @@ function M.setup()
     { desc = "[General] Disable F1", silent = true }
   )
 
-  -- Fügt das aktuelle Datum ein (z. B. 10.07.2026) buffer-ctx.nvim!
+  --- CDX: also provided by buffer-ctx.nvim — keep here or drop for the plugin's?
+  -- Insert today's date (e.g. 10.07.2026).
   map("n", "<leader>date", function()
     vim.api.nvim_put({ tostring(os.date("%d.%m.%Y")) }, "c", false, true)
-  end, { desc = "Datum einfügen" })
+  end, { desc = "[General] Insert date" })
 end
 
 return M
