@@ -440,9 +440,44 @@ Nutzerdoku ziehen. (Vimdoc `doc/cascade.txt:460` ist am explizitesten falsch
 — „calls the plain `vim.ui.select()` API" — Kandidat, falls das doch
 angegangen wird.)
 
-**Verbleibende Plugin-Repos (8/31 offen):**
-color_my_ascii, documentation, lsp, markdown, mdview,
-pickers, reposcope, sandbox. (casedesk.nvim existiert
+### Häppchen 41 — mdview.nvim (Plugin-Repo 25/31) — **erledigt (nur Lua-Seite + Docs)**
+
+Commit `5355511`, gepusht, `pull --ff-only` sauber. Scope: `lua/mdview/**`
+(78 Dateien) + Docs + `TESTS/{lua,nvim}/`. **Der TypeScript-Client
+(`TESTS/client/`, webview/relay `.ts`) ist NICHT gesweept** — eigener Pass
+nötig, Agent hat dort nichts Auffälliges bemerkt. stylua ok, luacheck 0/0
+(97 Dateien), nvim-Harness 103/0 (`TESTS/lua/` busted nicht installiert).
+
+**Direkte Fixes:**
+- **Fleetweiter `:MDViewX` → `:MDView <subcommand>`-Namensdrift** (die flachen
+  Befehle wurden zu einem `:MDView`-Verb vereinheitlicht, ~20 Dateien nicht
+  nachgezogen). Darunter **2 user-facing notify-Strings**, die dem Nutzer
+  nicht existierende Befehle nannten: `init.lua:68` „start one first with
+  :MDViewStart" → `:MDView start`; `diagnostics.lua:120` „check
+  :MDViewShowWebLogs" → `:MDView weblogs`. Historische Referenzen
+  („now-retired flat commands", Bug-Anekdoten) bewusst belassen.
+- `health.lua:200` — Kommentar + 2 Health-Meldungen behaupteten, color_my_ascii
+  highlighte nur den nvim-Buffer „not HTML", die Browser-Preview sei separat.
+  Widerspricht `core/fence_spans.lua` + `companion-plugins.md`: bei
+  `browser.highlighter = "nvim"` liest mdview die Farben zurück und malt die
+  Preview-Codeblöcke. Korrigiert.
+- `adapter/inbound_poll.lua` Header 2 von 4 gepollten Endpoints (`/toggle`,
+  `/field` fehlten). `helper/normalize.lua` Header nannte falsche API-Namen
+  (`normalize_path` vs. real `M.path`). `core/events.lua`/`normalize.lua`
+  deutsches „path ist nil" → „is nil". `adapter/ws_client.lua` deutsches
+  „Modularisieren" + Boilerplate raus. `bindings/usrcmds/init.lua`
+  hartkodiertes „the ten formerly-separate commands" → „the formerly-separate".
+
+**Dead code gelöscht:** `lua/mdview/lps.lua` — verirrter
+`lspconfig.lua_ls.setup(…)`-Snippet auf Modul-Toplevel, Dateiname vertippt
+(`lps`), 0 Aufrufer, keine API.
+
+**Kein `--- CDX:`, keine echten Logik-Bugs.**
+
+**Verbleibende Plugin-Repos (7/31 offen):**
+color_my_ascii, documentation, lsp, markdown,
+pickers (läuft), reposcope, sandbox. Plus: **mdview TypeScript-Client**
+(eigener Sub-Pass). (casedesk.nvim existiert
 als eigenes Repo — die casedesk-Sweep in Häppchen 4 betraf die
 config-eingebettete Variante `lua/bindings/usrcmds/case/`; das Standalone-Repo
 ist noch offen und in dieser Liste **nicht** enthalten → als weiteres prüfen.)
