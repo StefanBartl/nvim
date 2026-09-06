@@ -1,13 +1,13 @@
 ---@module 'autocmds.general.defaults'
 
--- AUDIT: Optionen beschreiben
+--- CDX: config fields undocumented — add a one-line note per field
 
 ---@type AutoCmds.General.Cfg
 local AUTOCMDS_GENERAL_DEFAULTS = {
   group_name = "autocmds_general",
 
   kitty = { -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
-    enable = true, -- Disabled by default; only meaningful inside Kitty
+    enable = true, -- only has an effect inside Kitty
     enter_padding = 0,
     enter_margin = 0,
     leave_padding = 20,

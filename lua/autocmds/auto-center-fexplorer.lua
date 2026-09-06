@@ -1,29 +1,14 @@
 ---@module 'autocmds.auto-center-fexplorer'
--- Automatically centers the cursor in file explorer windows (neo-tree, nvim-tree, netrw).
--- This module provides automatic centering functionality that triggers on cursor movement
--- within file explorer buffers, similar to the `zz` command but automated.
---
---                         USAGE:
--- Default settings:
---   auto_center.setup()
---
--- Custom settings:
---   auto_center.setup({
---     enabled = true,
---     filetypes = { "neo-tree", "NvimTree", "netrw" },
---     delay_ms = 50,            -- Debounce-Verzögerung in Millisekunden
---     mouse_cooldown_ms = 200,  -- Nach Maus-Event: Centering für N ms unterdrücken
---   })
---
---  Control module at runtime:
---   require('auto-center-explorer').enable()  -- Activate
---   require('auto-center-explorer').disable() -- Deactivate
---   require('auto-center-explorer').toggle()  -- Toggle
---
--- Keybinding possibles:
---   vim.keymap.set('n', '<leader>tc', function()
---     require('auto-center-explorer').toggle()
---   end, { desc = 'Toggle auto-center in file explorers' })
+--- Auto-`zz` in file-explorer windows (neo-tree, NvimTree, netrw): keeps the
+--- cursor vertically centered as it moves. Keyboard-only — mouse clicks and
+--- scrolls are suppressed for `mouse_cooldown_ms` after the event.
+---
+--- Setup: require("autocmds.auto-center-fexplorer").setup(opts?)
+---   opts.enabled           boolean   (default true)
+---   opts.filetypes         string[]  (default { "neo-tree", "NvimTree", "netrw" })
+---   opts.delay_ms          number    debounce before centering (default 0)
+---   opts.mouse_cooldown_ms number    suppress after a mouse event (default 200)
+--- Runtime: .enable() / .disable() / .toggle() on the returned module.
 
 local notify = require("lib.nvim.notify").create("[autocmds.auto-center-fexplorer]")
 local Autocmd = require("lib.nvim.bindings.autocmd")
@@ -186,13 +171,11 @@ end
 function M.setup(user_config)
   config = vim.tbl_deep_extend("force", default_config, user_config or {})
 
-  -- Global mouse-event detector via vim.on_key.
-  -- on_key fires synchronously for every key before it is processed, so keep
-  -- this handler minimal: just record the timestamp. keytrans() converts the
-  -- raw terminal bytes to a readable name like "<LeftMouse>" or "<ScrollWheelUp>".
-  -- No need to check which window/buffer — any mouse event anywhere suppresses
-  -- centering for the cooldown period, which is fine (centering only matters
-  -- when keyboard focus is in the explorer).
+  -- Global mouse-event detector. `on_key` fires synchronously before every
+  -- keypress, so keep this callback minimal (just stamp the time). keytrans()
+  -- turns the raw bytes into a name like "<ScrollWheelUp>". Any mouse/scroll
+  -- event anywhere suppresses centering for the cooldown, which is fine:
+  -- centering only matters while the explorer has keyboard focus.
   local ns = vim.api.nvim_create_namespace("AutoCenterExplorerMouse")
   vim.on_key(function(_, typed)
     if not typed or typed == "" then
