@@ -240,18 +240,18 @@ function M.path_relative(mode, path)
 end
 
 ---@nodiscard
----@param _cfg { path_mode?: string, path_home_tilde?: boolean }|nil
+---@param cfg { path_mode?: string, path_home_tilde?: boolean }|nil
 ---@param path_or_buf integer|string
 ---@return string
-function M.display_path(_cfg, path_or_buf)
+function M.display_path(cfg, path_or_buf)
   local config_mod = require("wkdnvchad.ui.statusline.modules.lsp.config")
 
-  if type(_cfg) == "table" then
-    if _cfg.path_mode ~= nil then
-      config_mod.set("path_mode", _cfg.path_mode)
+  if type(cfg) == "table" then
+    if cfg.path_mode ~= nil then
+      config_mod.set("path_mode", cfg.path_mode)
     end
-    if _cfg.path_home_tilde ~= nil then
-      config_mod.set("path_home_tilde", not not _cfg.path_home_tilde)
+    if cfg.path_home_tilde ~= nil then
+      config_mod.set("path_home_tilde", not not cfg.path_home_tilde)
     end
   end
 

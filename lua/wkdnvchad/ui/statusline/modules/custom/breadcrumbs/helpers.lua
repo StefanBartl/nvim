@@ -163,4 +163,4 @@ function M.symbol_context()
   return table.concat(names, " → ")
 end
 
-return {}
+return M

@@ -34,12 +34,12 @@ end, { size = 128 })
 
 --- Serialize pairs back to winhighlight string
 ---@nodiscard
----@param _pairs WKDOptions.HL_CFG_WinhlPair[]
+---@param entries WKDOptions.HL_CFG_WinhlPair[]
 ---@return string
-function M.serialize(_pairs)
+function M.serialize(entries)
   local out = {}
-  for i = 1, #_pairs do
-    local p = _pairs[i]
+  for i = 1, #entries do
+    local p = entries[i]
     -- Re-validate before serializing (defensive)
     if p.from:match("^[%w_]+$") and p.to:match("^[%w_]+$") then
       out[i] = p.from .. ":" .. p.to
