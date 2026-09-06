@@ -187,7 +187,7 @@ jedem Plugin-Repo-Häppchen die which-key/machine-readable-Phrasen in
     stehengebliebene „Phase-N"-Bauzeit-Notizen, die dem fertigen Code
     widersprachen. 2 `--- CDX:` (immer-konstante Debounce-Ternaries).
 
-### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–8/9 erledigt, PAUSIERT — Fortsetzung bei Sub 9**
+### Häppchen 34 — lib.nvim (Plugin-Repo 17/31) — **SUB-HÄPPCHEN 1–9/9 erledigt — `lua/`-Baum von lib.nvim komplett durch. Fortsetzung bei Häppchen 10 (TESTS/+doc/+docs/), separater Umfang.**
 
 lib.nvim ist mit **283 Quell-Dateien** (+ 49 Tests, 51 Docs) das größte Repo.
 Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
@@ -201,10 +201,10 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
    ~4540 Z.)
 8. ✅ `lua/lib/nvim/{harvest,progress,markdown,lastcmd,cache,net,neotree,
    notify}/` (32 Dateien, ~4600 Z.)
-9. `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
+9. ✅ `lua/lib/nvim/{normalize,safe_api,treesitter,frecency,git,debounce,
    async,selection,image_preview,dev,count,require,store,contextmenu,
-   terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)  ← **HIER WEITER**
-10. `TESTS/` + `doc/` + `docs/`
+   terminal,dotrepeat,token,json}/` (18 Dateien-Ordner, ~4350 Z.)
+10. `TESTS/` + `doc/` + `docs/`  ← **HIER WEITER**
 
 > **Nachtrag 2026-09-06:** der alte Plan-Punkt 7 („Rest, deps/logger/
 > system/harvest/progress/notify/…") war eine grobe Schätzung über 31
@@ -214,6 +214,105 @@ Wird wie `lua/bindings/` in Sub-Häppchen abgearbeitet, je 1 Agent. Plan:
 > rutscht auf Punkt 10. Gleiche Lektion wie in
 > `plugin-roadmaps-verify-before-building`: Plan-Beschreibungen vor dem
 > Bauen an der echten Verzeichnisgröße prüfen.
+
+**Sub-Häppchen 9 — erledigt** (`lua/lib/nvim/{normalize,safe_api,treesitter,
+frecency,git,debounce,async,selection,image_preview,dev,count,require,store,
+contextmenu,terminal,dotrepeat,token,json}/` + das lose `lua/lib/nvim/init.lua`,
+Commit `db94330`, gepusht, Re-Fetch bestätigt identisch). 44 Dateien gelesen
+(~4350 Zeilen), 13 geändert. Größter Teil dieses Scopes (`safe_api/`,
+`frecency/`, `git/`, `debounce/`, `async/`, `selection/`, `count/`, `token/`,
+`json/`, `treesitter/guard/`) war bereits auf demselben hohen Niveau wie die
+saubersten Teile aus Sub 7/8: keine Redundanz, keine Boilerplate-Header,
+`@types` deckungsgleich mit der echten `M`-Tabelle — komplett unangetastet
+gelassen.
+
+- **Direkte Fixes:**
+  - `normalize/@types/init.lua` — das echte `normalize/init.lua` gibt
+    `---@type Lib.Normalize` zurück, aber diese Klasse deklarierte nur die
+    Felder `utils`/`validators`, die es auf der echten `M`-Tabelle gar nicht
+    gibt (M ist die flache Vereinigung aller Utils+Validators-Funktionen).
+    Die korrekte Form lag ungenutzt unter einer separaten `Lib.Normalize.All`-
+    Klasse, selbst eine wortgleiche Dopplung der Feld-Docs aus
+    `normalize/@types/{utils,validators}.lua`. Gefixt durch
+    `Lib.Normalize : Lib.Normalize.Utils, Lib.Normalize.Validators`
+    (Mehrfachvererbung, ein an anderer Stelle im Repo bereits etabliertes
+    Muster) statt der ~120-zeiligen doppelten Prosa. Zusätzlich einen
+    generischen „this module defines all type annotations…"-Boilerplate-
+    Header gekürzt.
+  - `safe_api/@types/init.lua` — `is_valid_buffer`/`is_valid_window` waren als
+    `(bufnr: integer)` typisiert, obwohl die echten Funktionen bewusst `any`
+    nehmen — der Inline-Kommentar direkt daneben erklärt, warum ein
+    `nil`-Handle am Call-Site kein Typfehler werden darf. Typen jetzt passend.
+  - `git/@types/init.lua` — `in_git_repo` war mit Pflicht-`git_cmd: string`
+    typisiert, die echte Funktion hat ihn optional. `?` ergänzt.
+  - `treesitter/parser_policy/init.lua` — eine doppelte
+    `---@type Lib.Treesitter.ParserPolicy`-Zeile (zweimal hintereinander vor
+    `return M`) gelöscht.
+  - `require/init.lua` — `M.dir` trug einen ~35-zeiligen AI-Boilerplate-
+    `--[[ ]]`-Block, der die bereits vollständigen `@param`/`@return`-Docs der
+    Funktion nochmal restatete, inklusive einer Behauptung („the function is
+    exported directly, not wrapped in a table"), die dem umgebenden Code
+    widerspricht (`M.dir` ist ein Tabellenfeld). In den Doc-Kommentar über der
+    Funktion eingedampft.
+  - `terminal/@types/init.lua` — `Lib.Terminal` (referenziert vom
+    Top-Level-`Lib`-Facade-Feld `terminals`) und `Lib.Terminal.ALL` (was
+    `terminal/init.lua` tatsächlich zurückgibt) dupliziierten dieselben drei
+    Felder wortgleich, wobei `Lib.Terminal` zusätzlich `is_kitty` fehlte —
+    das Facade-eigene Type wusste also nichts von einer echten, exportierten
+    Funktion. Zu einer `Lib.Terminal`-Klasse mit allen vier Feldern
+    zusammengeführt, `.ALL` gelöscht, Return-Annotation aktualisiert.
+    Zusätzlich einen „succes"-Tippfehler/vagen Feld-Doc sowie eine
+    verwaiste Nicht-Doc-Kommentarzeile (Dopplung des Feld-Docs direkt
+    daneben) gefixt.
+  - `store/project/init.lua` — `---@internal` steckte mitten in einem Satz
+    im Doc-Kommentar von `resolve()` und zerriss ihn in zwei Blöcke. An den
+    Anfang verschoben.
+  - `contextmenu/@types/init.lua` + `contextmenu/init.lua` — es gab gar keine
+    `Lib.ContextMenu`-Modul-Oberflächen-Klasse (nur `.Item`/`.BindOpts`), und
+    `return M` trug keine `---@type`-Annotation — jedes Schwestermodul in
+    diesem Scope hat beides. Fehlende Klasse ergänzt (deckt die vier echten
+    Funktionen exakt ab) plus Return-Annotation.
+  - `dotrepeat/init.lua` — aus demselben Konsistenzgrund die fehlende
+    `---@type Lib.Dotrepeat`-Annotation auf `return M` ergänzt.
+  - `image_preview/init.lua` — dieses Modul ist eine echte repo-übergreifende
+    API (wird von markdown.nvim aufgerufen), trug aber noch Namensreste von
+    vor der Extraktion: einen `Markdown.ImageProvider`-Type-Alias (falscher
+    Namespace, sollte `Lib.*` sein) sowie einen Autocmd-Gruppennamen/-Desc,
+    hartcodiert auf „MarkdownNvimImagePreview"/„[markdown.nvim]". Geprüft,
+    dass markdown.nvim nur `.preview()`/`.available()` aufruft und weder den
+    Alias noch den Gruppennamen direkt referenziert — beide gefahrlos
+    umbenannt zu `Lib.ImagePreview.Provider` bzw.
+    `lib_nvim_image_preview`/„lib.nvim.image_preview: …".
+- **Keine echten Bugs gefunden.**
+- **Kein toter Code gefunden** — keine verwaisten `@types`-Dateien, keine
+  unreferenzierten Funktionen (der nächstliegende Kandidat, `require.lazy`,
+  hat einen echten Aufrufer — siehe Tag unten).
+- **`--- CDX:` gesetzt (Judgment Calls):**
+  - `dev/duplicates.lua` (`M.lines`) — die gerenderte Ausgabe verwendet
+    deutsche Labels („Zeilen", „Plugins", „identische Funktionskoerper…"),
+    während jeder andere nutzer-sichtbare String in lib.nvim englisch ist —
+    ein Rest aus dem im Modul-Header dokumentierten Python-Tool-Ursprung.
+    Als Tag belassen statt direkt übersetzt, weil es angezeigten Ausgabetext
+    ändert, nicht nur eine Annotation.
+  - `require/init.lua` (`M.lazy`) — reimplementiert `lib.lua.lazy`s
+    `LAZY.module(name).get` (Cache-on-first-access-Require) statt darauf zu
+    delegieren — beide müssen jetzt von Hand im Verhalten synchron gehalten
+    werden. Echter Aufrufer: `LIB.require_lazy` in
+    `lib/strategies/{eager,lazy}.lua`.
+- **Nichts für WKDBooks ausgelagert** — kein Header in diesem Scope trug
+  generische Neovim/Lua-Mechanik oder Benchmark-Erzählung schwer genug, um
+  die Auslagerungsschwelle zu reißen; die vorhandene Design-Rationale
+  (frecencys Bucket-Recency-Begründung, asyncs await/run-Protokoll,
+  selections gv-Vermeidungs-Begründung, treesitter/parser_policys
+  Queueing-Begründung) hängt jeweils eng an ihrem eigenen Call-Site.
+
+stylua ok, luacheck 0/0 (8 nicht-`@types`-Dateien betroffen), volle
+`TESTS/run.lua`-Suite `LIB_TESTS_OK`. Ohne Co-Authored-By.
+
+**Damit ist lib.nvims gesamter `lua/`-Quellbaum durchgesweept (Schritte 1–9,
+Sub-Häppchen 1–9/9).** Nur noch `TESTS/` + `doc/` + `docs/` (Schritt 10)
+offen — separater Umfang, andere Art von Inhalt (Test-Code bzw. generierte/
+gepflegte Dokumentation statt Source-Kommentare), eigenständig zu planen.
 
 **Sub-Häppchen 8 — erledigt** (`lua/lib/nvim/{harvest,progress,markdown,
 lastcmd,cache,net,neotree,notify}/`, Commit `6aede6d`, gepusht, Re-Fetch
