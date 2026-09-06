@@ -517,14 +517,50 @@ stylua ok, luacheck 0/0 (21/22 — 2 `@types/*` vom Glob übersprungen).
 Commits: nvim-config `aa9b5401b` + `10d9c105d`. Ohne Co-Authored-By,
 gepusht + `pull --ff-only` bestätigt.
 
+### Häppchen 13 — `lua/plugins/personal/` + `lua/plugins/ai/` (8 Dateien)
+
+**Status: erledigt. `lua/plugins/` damit komplett durch**
+(`github-stats/` ist reine Datenablage von github_stats.nvim, kein Code —
+geprüft, übersprungen).
+
+- **`personal/source.lua`** — bestätigter Häppchen-7-Fund: komplett deutsch,
+  vollständig übersetzt, keine inhaltliche Änderung.
+- **`personal/init.lua`** — **größter Fund:** der `hover.nvim`-Spec-Eintrag
+  trug einen ~95-zeiligen deutschen Prosa-Kommentar (Web-Links, Zen,
+  persist, Zoom-Historie, Messwerte). Geprüft, ob das Wissen schon woanders
+  liegt — **ja**, praktisch wortgleich in hover.nvims eigenem
+  `docs/configuration.md` + `docs/FEATURES/{ZOOM,ZEN,SHOT,RESIZE,QUIET}.md`
+  inkl. derselben Messwerte. Kein Umzug nötig, nur auf ~20 Zeilen
+  (Ladereihenfolge-Begründung + Pointer) gekürzt, Rest gelöscht als reine
+  Duplikation. Diverse weitere Übersetzungen (lib.nvim, images.nvim,
+  documentation.nvim, language.nvim-Blöcke). **Kurioser Nebenfund:**
+  `mdview.nvim`-Block hatte garbled Tippfehler als Status-Marker
+  (`FUNKTioNNERTT`, `FUnktnioert` — offenbar Diktier-/Chat-Artefakte für
+  „funktioniert") → zu sauberem `-> works` übersetzt.
+- **`personal/list.lua`** — überlange Rationale (12→8 Zeilen) gekürzt.
+- **`personal/utils.lua`** — 1 deutsches Doc-Fragment übersetzt.
+- **`personal/export.lua`** — 0 Änderungen, bereits sauber.
+- **`ai/avante.lua`** — echter Fix: Header verwies auf `plugins.ai` (den
+  eigenen Ordner) statt auf das tatsächliche Ziel `config.ai.anthropic` —
+  klassisches Muster #4 (falscher require-Pfad im Doc).
+- **`ai/gp.lua`, `ai/copilot.lua`** — 0 Änderungen. **Bestätigt
+  Häppchen-8-Befund:** alle drei KI-Assistent-Specs sind bewusst/vollständig
+  auskommentiert, nicht versehentlich verwaist — `gp.lua`s Header sagt das
+  explizit.
+
+Kein WKDBooks-Umzug nötig (einziger Kandidat lag schon am Zielort).
+stylua ok (nach Reflow-Format), luacheck 0/0 (8/8 Dateien — Hinweis für
+künftige Häppchen: Verzeichnis-Glob gab „Permission denied", Datei-Glob
+`*.lua` funktionierte).
+
+Commit: nvim-config `bc3376a6e`. Ohne Co-Authored-By, gepusht +
+`pull --ff-only` bestätigt.
+
 ### Danach offen
 
-`lua/plugins/personal/` (5 Dateien, 1388 Z. — enthält die bereits in
-Häppchen 7 als „komplett deutsch kommentiert" geflaggte `source.lua`),
-`lua/plugins/ai/` (3 Dateien, 154 Z.), `lua/plugins/github-stats/`
-(aktuell leer — prüfen ob Absicht oder Waise). Danach `lua/startup/`,
-`lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` + `lua/wkdnvchad/`,
-`lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach die 31 Plugin-Repos.
+`lua/startup/`, `lua/wkdoptions/`, `lua/themes/`, `lua/nvchad/` +
+`lua/wkdnvchad/`, `lua/@types/`, `after/`, `init.lua`, `scripts/`. Danach
+die 31 Plugin-Repos.
 
 Dann restliche `lua/`-Bereiche (359 Dateien gesamt): `lua/config/` (~100, groß:
 harpoon/neotest/neotree), `lua/plugins/`, `lua/startup/`, `lua/wkdoptions/`,
