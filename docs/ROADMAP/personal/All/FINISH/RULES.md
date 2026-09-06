@@ -41,7 +41,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
-| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 4/32 Repos gelesen, 2 echte Bugs gefixt |
+| `ERR-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 10/32 Repos gelesen, 3 echte Bugs gefixt |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
@@ -276,29 +276,46 @@ Architektur-Umbau, kein Ein-Zeiler-Fix, und käme einer Design-Entscheidung
 gleich, die nicht mal eben nebenbei getroffen wird.
 
 **Zwei Muster wurden zusätzlich fleet-weit per Grep über alle 32 Repos
-geprüft (nicht nur in den gelesenen 4), weil sie sich mechanisch fassen
-lassen:**
+geprüft (nicht nur in den einzeln gelesenen Repos), weil sie sich mechanisch
+fassen lassen:**
 
-1. **Die `reverse and na > nb or na < nb`-Falle** (der Bug, der in
-   buffer-ctx.nvim gefunden wurde, s.u.) — ein `table.sort`-Comparator-Idiom
-   der Form `cond and A>B or C<D`, bei dem der mittlere Zweig selbst ein
-   Boolean ist und dadurch bei `false` in den `or`-Zweig durchfällt. Regex
-   `\band\b\s+\w[\w.]*(\[\d+\])?\s*[<>=~]=?\s*\w[\w.]*(\[\d+\])?\s+\bor\b\s+\w[\w.]*(\[\d+\])?\s*[<>=~]=?\s*\w[\w.]*(\[\d+\])?`
-   über alle 32 Repos: **nach dem Fix in buffer-ctx.nvim 0 verbleibende
-   Treffer im ganzen Fleet.**
+1. **Die `cond and A>B or C<D`-Falle** (der Bug-Typ, der in buffer-ctx.nvim
+   und zweimal in fileops.nvim gefunden wurde, s.u.) — ein
+   `table.sort`-Comparator-Idiom, bei dem der mittlere Zweig selbst ein
+   Boolean ist und dadurch bei `false` in den `or`-Zweig durchfällt.
+   **Wichtige Falle beim Grep selbst:** die erste Fassung des Patterns
+   (einfache Bezeichner, keine Methodenaufrufe) übersah fileops.nvims Form
+   `a:lower() < b:lower()`, weil `:`/`()` nicht in der Zeichenklasse waren —
+   erst die erweiterte Fassung fand beide Stellen:
+   `\band\b\s*\(?[\w.:()]+\s*[<>=~]=?\s*[\w.:()]+\)?\s+\bor\b\s*\(?[\w.:()]+\s*[<>=~]=?\s*[\w.:()]+\)?`.
+   Nach beiden Fixes: **0 verbleibende Treffer im ganzen Fleet** (die
+   restlichen 6 Treffer sind reine Boolean-Kombinationen in `if`-Bedingungen,
+   keine Wert-Ternaries, einzeln geprüft und harmlos).
 2. **Das `X.read(...) or {...Stub...}`-vor-`write()`-Muster**, das in
    casedesk.nvim zum echten Datenverlust-Bug führte (s.u.): Grep
    `\.read\([^)]*\)\s*or\s*\{` über alle 32 Repos — **Treffer nur in
    casedesk.nvim** (3 Stellen, siehe unten), sonst nirgends im Fleet.
 
-### Ergebnis je Repo (Stand dieser Sitzung)
+**Lehre für den Rest der Familie:** ein Grep-Pattern für einen Bug-Typ, der
+bei Repo 1 in einfacher Form auftaucht, sollte nicht als „fleet-weit
+erledigt" gelten, bevor es auch gegen Methodenaufruf-Varianten (`a:foo()`),
+Klammern und Indexzugriffe (`t[i]`) getestet wurde — genau das hat den
+fileops.nvim-Fund beim ersten Durchgang durchrutschen lassen.
+
+### Ergebnis je Repo (Stand dieser Sitzung, 10/32)
 
 | Repo | Befund | Regel(n) | Commit |
 |---|---|---|---|
 | **buffer-ctx.nvim** | **`:Format sort -r`/`-r -n` sortierte falsch** — Comparator `reverse and na > nb or na < nb` fiel bei `na < nb` in den `or`-Zweig und lieferte für praktisch jedes ungleiche Paar `true` zurück (kein gültiges `table.sort`-Kriterium mehr) | **ERR-60** | [`2232614`](https://github.com/StefanBartl/buffer-ctx.nvim/commit/2232614) |
 | **casedesk.nvim** | **`meta.patch()` konnte ein kaputtes `.case.json` durch einen fast leeren Stub ersetzen** — `meta.read()` gab für „fehlt" und „kaputt" identisch `nil` zurück, `patch()` behandelte beides gleich und schrieb bei jedem Einzelfeld-Update (SLA-Priorität, `last_reply_sent`, ...) einen `{case,year,links}`-Stub, der Titel/Firma/Notizen/... unwiderruflich verwarf | **ERR-11** | [`ed1a5f0`](https://github.com/StefanBartl/casedesk.nvim/commit/ed1a5f0) |
+| **fileops.nvim** | **`case_insensitive`-Cycle-Navigation sortierte an zwei Stellen falsch** (`list_files` + der „current file not in list"-Fallback in `navigate`) — Comparator `ci and (a:lower()<b:lower()) or (a<b)` fiel bei `ci=true` und `a:lower()>=b:lower()` in den case-SENSITIVEN `or`-Zweig zurück; für Groß-/Kleinschreibungs-Paare lieferten beide Vergleichsrichtungen `true` (ungültiger Comparator) | **ERR-60** | [`00ba2fc`](https://github.com/StefanBartl/fileops.nvim/commit/00ba2fc) |
 | cascade.nvim | 0 (durchgängig sauber: `table.sort`-Comparatoren explizit if/else, Config-Normalisierung degradiert Einzelwerte statt abzubrechen (ERR-22-Muster), Autor-Kommentar bestätigt „synchronous-only, kein `defer_fn`") | — | — |
 | cmdlog.nvim | 0 echter Bug — `core/store.lua`/`core/favorites.lua` notifizieren direkt aus „core"-Modulen (ERR-04-Layering-Abweichung, aber kein falsches Verhalten), nicht gefixt | (ERR-04, notiert) | — |
+| color_my_ascii.nvim | 0 (Debounce-/Cache-Manager und die async `:Fence format`/`run`-Callbacks vorbildlich per Extmark + `nvim_buf_is_valid` gegen Stale-State abgesichert) | — | — |
+| dap.nvim | 0 (Coroutine-Resume-Pfade für Attach-Picker/Zig-Build sauber dokumentiert, `cwd`-Fix aus SEC-* bestätigt noch vorhanden) | — | — |
+| debugging.nvim | 0 (defer_fn-Callbacks in `views/display.lua`/`bindings/autocmds.lua` validieren Fenster-Handles durchgängig neu — das im Katalog selbst zitierte ERR-33-Positivbeispiel) | — | — |
+| diff.nvim | 0 (`render.three_way`/`side_by_side`/`inline` validieren `origin_win` am Ausführungszeitpunkt, auch nach verketteten Async-Resolves für Drei-Wege-Diffs) | — | — |
+| emojis.nvim | 0 (Preview-vor-Mutation-Callback in `actions.lua` validiert den Buffer sowohl vorm Löschen des Preview-Highlights als auch in der eigentlichen Mutation erneut) | — | — |
 
 ### Nebenbefund, nicht gefixt
 
@@ -311,19 +328,19 @@ also eher der Fall, den die Migration reparieren soll, nicht einer, den sie
 verweigern sollte. Nicht angefasst, um keine Design-Entscheidung über die
 Migrations-Semantik nebenbei zu treffen — bei Bedarf gesondert bewerten.
 
-### Noch offen (28/32 Repos ungelesen für ERR-*)
+### Noch offen (22/32 Repos ungelesen für ERR-*)
 
-color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim,
-emojis.nvim, fileops.nvim, filetree.nvim, github_stats.nvim, gopath.nvim,
+documentation.nvim, filetree.nvim, github_stats.nvim, gopath.nvim,
 hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim,
 markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim, pickers.nvim,
 recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim,
 sandbox.nvim, sessions.nvim, spotlight.nvim.
 
 Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
-read-or-stub-vor-write) müssen für diese 28 **nicht wiederholt** werden — die
-liefen bereits über alle 32 Repos. Was für die restlichen 28 noch fehlt, ist
-das kontextabhängige Lesen der übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
+read-or-stub-vor-write) müssen für diese 22 **nicht wiederholt** werden — die
+liefen bereits über alle 32 Repos (die and/or-Falle sogar zweimal, mit der
+erweiterten Regex). Was für die restlichen 22 noch fehlt, ist das
+kontextabhängige Lesen der übrigen ERR-Regeln (`ERR-01`…`ERR-07`,
 `ERR-10/20-22/30-34/40-44/50-53/61/63-67`).
 
 ---
