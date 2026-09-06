@@ -1906,7 +1906,66 @@ stylua ok (v2.5.2), luacheck 0/0 (v1.2.0, 57 Dateien via explizite Dateiliste
 `TESTS/run.lua` headless grün (`INSIGHTS_TESTS_OK`, 7/7 Specs).
 
 Commit: insights.nvim `459a24c`, gepusht, `pull --ff-only` bestätigt sauber.
-Ohne Co-Authored-By. **Nächstes Plugin-Repo im Sweep: language.nvim (16/31).**
+Ohne Co-Authored-By.
+
+### Häppchen 33 — language.nvim (Plugin-Repo 16/31)
+
+**Status: erledigt.** Großes Repo (51 Lua-Dateien: spell / translate /
+thesaurus / hover), aber insgesamt sehr sauber und gut dokumentiert. Der
+Build ist fertig — die auffälligsten Funde waren **stehengebliebene
+Phasen-Notizen aus der Bauzeit**, die dem inzwischen fertigen Code
+widersprachen.
+
+**Direkte Fixes — stale Phasen-Sprache (Kommentar widerspricht Code):**
+- `spell/init.lua:3` — „Phase-2 scope … panel/providers arrive later" →
+  Panel/Provider existieren längst, Header beschreibt jetzt das reale Modul.
+- `spell/ui/list.lua:4` — „Phase-2 output layer … later phase" → Quickfix/
+  Trouble-View + Bezug zum Default-Panel.
+- `spell/providers/lsp.lua:7` — „full code-action application is a follow-up"
+  → ist umgesetzt (`item_menu.lua` via `vim.lsp.buf.code_action`).
+- `spell/providers/native.lua:9` — „Phase-5 additions" → „config-gated
+  refinements".
+- `translate/init.lua:111` — „cwd/path file translation is a later phase" →
+  `run_files` existiert; Kommentar beschreibt jetzt, dass cwd/path
+  `scope_range` nie erreicht.
+
+**Direkte Fixes — fehlplatzierte / falsche Doku:**
+- `config/@types/init.lua:227` — Doc-Block „all opt-in / `to` one key per
+  language" hing an `…CustomProviderCfg` statt an `…TranslateKeymaps` →
+  Klassen umsortiert.
+- `doc/language.txt` — Einrückungserhalt-Absatz stand unter `*:Spellcheck*`
+  → nach `*:TranslateReplace*` verschoben, „Both commands" konkretisiert.
+- `docs/health.md` — behauptete Dump von `spell.providers`; `health.lua`
+  dumpt real `spell.live`/`live_scope` → korrigiert.
+- `TESTS/README.md` — Spec-Tabelle 4 von 5 → `hover_spec.lua` ergänzt
+  (Muster „N statt N+1").
+- `@types/init.lua:24`, `scope/init.lua:5`, `bindings/autocmds/init.lua:4` —
+  „(Zentrale-Prinzipien §1/§3/§4)"-Verweise auf ein externes deutsches
+  Design-Doc entfernt / auf die englische Kernaussage reduziert.
+- `translate/history.lua:17` — `@field time` „stamped by `push`" → `record`.
+
+**`--- CDX:` gesetzt (mögliche Logikfehler, nicht gefixt):**
+- `translate/window.lua:124` — `local delay = cfg().timeout_ms and 300 or 300`
+  ergibt immer 300; der Live-Übersetzungs-Debounce ist faktisch nicht
+  konfigurierbar (verunglücktes „aus Config lesen").
+- `spell/providers/cspell_server.lua:292` — `timer:start(cfg.scan_debounce_ms
+  and 6000 or 6000, …)` — dieselbe immer-konstante Form fürs Sidecar-Timeout.
+
+**Bewusst nicht angefasst:** `translate/init.lua:241`s user-facing
+„not supported yet"-`notify` (für den `M.run`-Lua-Facade-Pfad sachlich
+korrekt); `bindings/usrcmds/init.lua:16` langer `---@description` (echte
+Substanz zum `ctx.raw`-Bypass, kein Boilerplate); der Keymap-Block nach
+`return {}` in `config/@types/init.lua` (LuaLS-harmlos). Kein toter Code,
+kein WKDBooks-Umzug (nichts Ortsunabhängiges gefunden).
+
+stylua ok (v2.5.2), luacheck 0/0 (v1.2.0, 55 Dateien via Dateiliste),
+Testsuite grün (`LANGUAGE_TESTS_OK`, 5/5 Specs). `docs/BINDINGS.md` gegen
+reale Registrierung geprüft — akkurat.
+
+Commit: language.nvim `3626c67`, gepusht (`15f61fb..3626c67`),
+`pull --ff-only` „Already up to date". Ohne Co-Authored-By.
+**Nächstes Plugin-Repo im Sweep: lib.nvim (17/31)** — Achtung, das ist die
+geteilte Basis-Bibliothek, entsprechend groß/heikel.
 
 Offene Aufräum-Punkte aus dem Sweep, die bewusst NICHT gefixt wurden (jeweils
 `--- CDX:` im Code + im jeweiligen Häppchen dokumentiert) — eigene
