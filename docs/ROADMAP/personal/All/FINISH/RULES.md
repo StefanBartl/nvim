@@ -14,7 +14,7 @@
   - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
   - [✅ PRIN-* (37 Regeln) — fertig](#prin-37-regeln-fertig)
   - [✅ LUA-* (45 Regeln) — fertig](#lua-45-regeln-fertig)
-  - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
+  - [🔶 PERF-* (62 Regeln) — in Arbeit](#perf-62-regeln-in-arbeit)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
 ---
@@ -48,7 +48,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
-| `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
+| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 1 Repo gefixt (documentation.nvim, echter PERF-47-Fund), Rest läuft |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
 listet Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte
@@ -61,6 +61,14 @@ for f in $REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/*.md; do
   grep -oE '`[A-Z]+-[0-9]+`' "$f" | tr -d '`' | sort -u
 done | sed -E 's/-[0-9]+$//' | sort | uniq -c | sort -rn
 ```
+
+**Nachtrag `PERF-*` (2026-09-07):** der ursprünglich eingetragene Wert (57)
+war eine frühe Schätzung, nie anhand des tatsächlichen Katalogs korrigiert.
+Ein präziser Grep über `PERFORMANCE.md` findet **62** `PERF-XX`-IDs
+(`PERF-01`…`16`, `20`…`27`, `40`…`53`, `60`…`65`, `70`…`75`, `80`…`91`,
+lückenhaft nummeriert wie schon bei `SEC-*`/`ERR-*`) — anders als beim
+`LUA-67`/`68`-Fund gibt es hier kein Tabellenformat-Artefakt, die 62 sind
+real. Wert oben und in der Aufwandsschätzung korrigiert.
 
 **Gesamtaufwand-Einordnung** (Pilot `buffer-ctx.nvim`, 2026-09-05, siehe
 P5-Doku §8.2 Pilot-Abschnitt): eine vollständige Prüfung aller ~250
@@ -79,7 +87,7 @@ Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — 
 
 | Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
 |---|---|---|---|
-| `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
+| `PERF-*` | 62 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
 **Fazit:** `UI-*`, `PRIN-*` und `LUA-*` sind inzwischen fertig (s. u.) —
 `UI-*` mit 0 Bugs über alle 32 Repos, `PRIN-*` mit nur einem Fund trotz
@@ -949,15 +957,77 @@ verifiziert statt eines Regressionstests.
 
 ---
 
-## ⬜ Noch nicht begonnen
+## 🔶 PERF-* (62 Regeln) — in Arbeit
 
-| Familie | Regeln | Worum es geht (Kurzfassung) |
-|---|---|---|
-| `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
+**Katalog:** `PERFORMANCE.md`, 62 Regeln in sechs Blöcken: `PERF-01`…`16`
+(allgemeine Tabellen-/String-Idiome, u. a. `PERF-07` 🔴 KRITISCH — kein
+`table.remove`/direktes `nil`-Setzen während einer `next()`-Iteration),
+`PERF-20`…`27` (Speicherlayout), `PERF-40`…`53` (Cache-Regeln, eng verwandt
+mit `lib.nvim.cache`), `PERF-60`…`65` (Debouncing), `PERF-70`…`75`
+(begrenzte Nebenläufigkeit/Scans), `PERF-80`…`91` (Async-Scheduling/
+Chunking/Progress). Wie bei `UI-*`/`PRIN-*`/`LUA-*` zitiert der Katalog an
+etlichen Stellen konkrete Dateien/Zeilen aus genau diesem Fleet als
+Positiv-Beispiele ("Erhebung 2026-08-08" oder später) — die Erwartung ist
+also wieder: wenige neue Funde, vieles bereits gelebt.
 
-`PERF-*` ist die letzte verbleibende Familie — vermutlich die aufwendigste,
-da Hotpath-Beurteilung Verständnis von Aufrufhäufigkeit statt reinem
-Pattern-Matching braucht.
+### `PERF-07` (🔴 KRITISCH, `next()`-Löschen) — fleet-weit geprüft, 0 Funde
+
+Fleet-weiter Grep nach dem Antipattern (Tabellen-Mutation während einer
+`pairs`/`next`-Iteration ohne den sicheren "erst sammeln, dann löschen"-
+oder Rückwärts-`ipairs`-Umweg) ergab genau einen Treffer: eine
+Glossar-**Erklärung** des Konzepts in `documentation.nvim` (Prosa-Text, der
+das Antipattern beschreibt, kein tatsächlicher Code). Kein echter Verstoß
+gefunden.
+
+### `PERF-47` (Cache-`clear()` muss in-place mutieren) — 1 echter Fund, gefixt
+
+**Kern der Regel:** ein Cache-Objekt, das anderswo per Referenz gehalten
+wird (`local held = cache.something`), darf sein `clear()`/`reset()` nicht
+per `x = {}` (Neuzuweisung) implementieren — jeder Halter der alten
+Referenz sieht die Leerung dann nie, während neue Einträge unbeobachtet in
+der neuen Tabelle landen. Dieselbe Bug-Klasse wie mehrfach in `ERR-*`
+gefunden (dort: geteilter Zustand allgemein), hier speziell auf
+Cache-Reset zugespitzt.
+
+**Vorgehen:** ein `awk`-Extrakt aller `function M.(clear|reset|clear_all)`-
+Definitionen über alle 32 Repos (28 Fundstellen) wurde einzeln daraufhin
+geprüft, ob die dort neu zugewiesene Tabelle *extern* per Referenz gehalten
+wird (echtes Risiko) oder rein privates Modul-Upvalue ist (sicher, da jeder
+Zugriff über dieselbe Upvalue-Slot läuft). 26 von 28 sind privat/sicher
+(inkl. der eigenen `lib.nvim/buffer/context/init.lua`-Fix aus `LUA-40`).
+Zwei Fälle mit tatsächlich exponierter Tabelle wurden geprüft
+(`mdview.nvim/core/breadcrumbs.lua` `M.entries`/`M.snapshot()`,
+`mdview.nvim/bindings/autocmds/buffer_switch.lua` `M._opened`) — beide
+ungefährlich, weil kein Aufrufer die Tabelle je in einer `local`-Variable
+über die Zeit hält, sondern immer frisch über `M.entries[...]`/
+`M._opened[...]` indiziert.
+
+**Echter Fund:** `documentation.nvim`s
+`lua/documentation/editor/browse/trail.lua` (liegt in `E:\repos\documentation.nvim`,
+außerhalb dieses Repos). `M.list(root)` gibt
+laut eigenem Docstring bewusst die *live* Tabelle zurück, nicht eine Kopie —
+`browse/init.lua` hält sie tatsächlich als `st.pins = trail.list(st.root)`.
+`M.clear(root)` und `M.hydrate(root, list)` verletzten genau diesen
+selbstauferlegten Vertrag: beide machten `pins[root] = {}` bzw.
+`pins[root] = list`, eine Neuzuweisung statt In-Place-Leerung/-Befüllung.
+Aktuell ohne beobachtbares Fehlverhalten (`clear` ist an keinen Befehl
+verdrahtet, `hydrate` läuft vor dem ersten Render), aber ein echter
+Vertragsbruch relativ zur eigenen Dokumentation — gefixt: beide mutieren
+jetzt das von `M.list()` bereits herausgegebene Array in-place.
+Regressionstest `TESTS/browse_trail_spec.lua` ergänzt (hält eine
+`M.list()`-Referenz, prüft dass `clear`/`hydrate` sie weiterhin befüllen
+statt zu ersetzen), vorher gegen den alten Code als fehlschlagend
+verifiziert (`git stash`), volle Suite grün, luacheck/stylua clean.
+Commit `179f16d` auf `documentation.nvim`s `main`, gepusht.
+
+### Noch offen
+
+- `PERF-01`…`06`/`08`…`16` (restliche allgemeine Idiome)
+- `PERF-20`…`27` (Speicherlayout)
+- restliche `PERF-40`…`53` (Cache-Regeln jenseits von `47`)
+- `PERF-60`…`65` (Debouncing)
+- `PERF-70`…`75` (begrenzte Nebenläufigkeit/Scans)
+- `PERF-80`…`91` (Async-Scheduling/Chunking/Progress)
 
 ---
 
