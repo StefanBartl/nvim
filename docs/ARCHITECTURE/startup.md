@@ -46,7 +46,14 @@ Nur wenn eine der beiden Bedingungen zutrifft:
 2. **Erster Frame.** Das Modul beeinflusst, wie der erste Buffer gezeichnet
    wird (Optionen, Highlight-Gruppen) — sonst flackert es sichtbar.
 
-Aktuell: `system`, `options`, `wkdoptions`, `autocmds`, `lsp`.
+Aktuell: `system`, `ui_open`, `my`, `autocmds`, `lsp`.
+
+> `my` war bis 2026-09-07 zwei Phasen: `options` (gegen `lua/options.lua`) und
+> `wkdoptions` (gegen `lua/wkdoptions/**`). Beides liegt jetzt in
+> [`StefanBartl/my.nvim`](https://github.com/StefanBartl/my.nvim), und der
+> Aufruf in `init.lua` benennt die Subsysteme einzeln, statt sich auf die
+> Defaults zu verlassen — der Aufruf ist damit die Dokumentation dessen, was
+> die Phase tut.
 
 ### `startup.on("UIReady", label, fn)` — nach dem ersten Frame
 
@@ -85,14 +92,14 @@ Cmdline-spezifischer Keymaps auf `CmdlineEnter` der nächste sinnvolle Schritt.
 Windows  ·  nvim 0.12.2  ·  7272 ms since start
 
   system               [sync]       1412.6 ms  ██················    78.5 ms
-  options              [sync]       1491.2 ms  ███···············   128.0 ms
-  wkdoptions           [sync]       1619.2 ms  ██················    87.5 ms
-  autocmds             [sync]       1706.7 ms  ··················    15.8 ms
-  lsp                  [sync]       1722.6 ms  ██████████████████   759.8 ms
+  ui_open              [sync]       1491.2 ms  ··················     0.4 ms
+  my                   [sync]       1491.6 ms  ███···············   215.5 ms
+  autocmds             [sync]       1707.1 ms  ··················    15.8 ms
+  lsp                  [sync]       1722.9 ms  ██████████████████   759.8 ms
   usrcmds              [UIReady]    6120.4 ms  ··················     1.0 ms
   mappings             [UIReady]    6121.4 ms  ██················    80.7 ms
 
-  TOTAL                                         1151.3 ms in phase bodies
+  TOTAL                                         1151.0 ms in phase bodies
 ```
 
 Der Balken ist **relativ zur langsamsten Phase**, nicht zu einem festen Budget —

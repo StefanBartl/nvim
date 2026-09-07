@@ -114,14 +114,14 @@ local function resolve_unnamed(regname)
   return regname
 end
 
----Flash the region a put just wrote, via wkdoptions' put-flash. That layer
+---Flash the region a put just wrote, via my.nvim's put-flash. That layer
 ---used to map `p`/`P` itself and lost the key to this module (registered
 ---later, on UIReady); calling it from here gets both on one keypress.
 ---`nvim_put` sets the `[`/`]` marks it reads. Soft: a paste must not fail if
 ---the highlight layer is absent or errors.
 ---@return nil
 local function flash_put()
-  local ok, flash = pcall(require, "wkdoptions.hl_config.features.flash")
+  local ok, flash = pcall(require, "my.hl_config.features.flash")
   if ok and type(flash.flash_put) == "function" then
     pcall(flash.flash_put)
   end

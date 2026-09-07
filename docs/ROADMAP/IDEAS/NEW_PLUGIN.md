@@ -1,5 +1,30 @@
 # `options.nvim` & `nvchad-ui.nvim` — Konzept
 
+> **Status 2026-09-07 — Teil 1 umgesetzt, unter anderen Namen.**
+>
+> Aus `options.nvim` wurde **[`my.nvim`](https://github.com/StefanBartl/my.nvim)**
+> (privat): `lua/wkdoptions/**` und `lua/options.lua` sind dort, aus der Config
+> entfernt, und die Startup-Phasen `options` + `wkdoptions` sind zur einen Phase
+> `my` zusammengefasst. Aus `nvchad-ui.nvim` wird **`ui.nvim`** (öffentlich),
+> mit verschobenem Zweck: nicht „NvChad-UI-Layer", sondern die **Ablöse**
+> davon. Noch nicht implementiert.
+>
+> Plan, Handover und Protokoll:
+> `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/my.nvim/`.
+>
+> Drei Punkte dieses Konzepts sind durch die Umsetzung beantwortet:
+>
+> * **§4.3 / §8 „README-Drift bei lib.nvim-Pfaden"** — es war Doku-Drift. Der
+>   Code benutzte durchgehend die aktuellen Pfade (`lib.lua.lazy`,
+>   `lib.lua.memo`, `lib.nvim.bindings.*`, …); nur die READMEs nannten die
+>   alten Kurznamen.
+> * **§8 „Command-Präfixe"** — auf ein Compound-Kommando `:My` vereinheitlicht
+>   (elf Kommandos, drei Präfixe → eines), nicht auf `:Options`: der Verb-Name
+>   folgt dem Modulnamen.
+> * **§4.3 „7 Dateien referenzieren `nvchad.*`"** — gemessen sind es zwei
+>   Symbole, `nvchad.stl.utils` und `nvconfig`. Die Abkopplungsaufgabe für
+>   `ui.nvim` ist kleiner als hier vermutet.
+
 Auslagerung von `nvim/lua/wkdoptions/**` + `nvim/lua/options.lua` sowie
 `nvim/lua/wkdnvchad/**` + `nvim/lua/chadrc.lua` in eigenständige Plugins,
 analog zu den bereits extrahierten `*.nvim`-Repos (`dap.nvim`, `filetree.nvim`,

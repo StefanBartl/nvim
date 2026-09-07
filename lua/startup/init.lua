@@ -12,7 +12,7 @@
 ---
 --- Usage:
 ---   local startup = require("startup")
----   startup.now("options", function() require("options") end)
+---   startup.now("my", function() require("my").setup() end)
 ---   startup.on("UIReady", "mappings", function() require("bindings.mappings").setup() end)
 ---   :StartupReport   -- themed float, see startup.report
 ---   :StartupCheck    -- policy violations only, exit-code friendly

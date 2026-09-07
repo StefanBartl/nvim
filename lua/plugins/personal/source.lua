@@ -99,6 +99,12 @@ plugins.modes({
   -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
   ["lib.nvim"] = "dir",
   ["lsp.nvim"] = "dir",
+  -- The one PRIVATE repo in this list. "remote" would have lazy clone
+  -- https://github.com/StefanBartl/my.nvim, which fails without credentials --
+  -- and the workstation role resolves everything to "remote" (see SOURCE
+  -- above). It has no local checkouts of these repos either, so there is
+  -- nothing for it to load: "disabled" there, "dir" everywhere else.
+  ["my.nvim"] = machine.is("workstation") and "disabled" or "dir",
   ["sessions.nvim"] = "dir",
   ["pickers.nvim"] = "dir",
   ["buffer-ctx.nvim"] = "dir",

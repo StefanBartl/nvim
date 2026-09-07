@@ -8,6 +8,11 @@ require("autocmds.auto-center-fexplorer").setup()
 -- <leader>.) against a live neo-tree + snacks session before trusting it.
 require("autocmds.explorer-singleton").setup()
 
+-- Formerly in lua/options.lua; stayed here when that file moved into
+-- StefanBartl/my.nvim, because it is a markdown.nvim integration rather than
+-- a generic editor option. See the module header.
+require("autocmds.markdown_folds").setup()
+
 ------------------------------------------------------
 --- General
 ------------------------------------------------------
