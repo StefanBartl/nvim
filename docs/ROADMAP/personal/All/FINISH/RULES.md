@@ -48,7 +48,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
-| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 1 Repo gefixt (documentation.nvim, `PERF-47`), 1 Fund notiert (reposcope.nvim, `PERF-46`, Architekturentscheidung), Rest läuft |
+| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`), 1 Fund notiert (reposcope.nvim `PERF-46`, Architekturentscheidung), Rest läuft |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
 listet Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte
@@ -1074,12 +1074,55 @@ Praktisch mildernd: nur relevant, wenn *derselbe* `owner/repo`-String auf
 zwei verschiedenen Providern tatsächlich existiert und der Nutzer
 zwischen ihnen umschaltet — ein Nischenfall, aber ein echter.
 
+### `PERF-60`…`65` (Debouncing) — fleet-weit geprüft, 1 echter Fund gefixt
+
+Alle `uv.new_timer()`-Fundstellen über die 32 Repos (ohne
+`ARCHIV_NICHT_BEARBEITEN/`, ohne fremde `.claude/worktrees/`-Duplikate,
+ohne Nicht-Plugin-Ordner wie `Kurse/`) einzeln daraufhin geprüft, ob vor
+einer erneuten Timer-Erstellung der alte Handle gestoppt/geschlossen wird
+(`PERF-62`). Die meisten Treffer taten das bereits korrekt — ein erster
+Grep nach `:stop(`/`:close(` (Doppelpunkt-Aufrufsyntax) hatte mehrere
+False-Positives erzeugt, weil einige Repos (`lib.nvim/debounce/*`,
+`spotlight.nvim/util/lib.lua`) stattdessen `pcall(timer.stop, timer)`
+(Punkt-Referenz statt Methodenaufruf) schreiben — zweiter, genauerer Grep
+korrigiert das.
+
+`lib.nvim/cache/memory.lua`'s Debounce-Zentralisierung (`PERF-64`) und
+dessen eigenes `debounce/init.lua` (`M.new`) sind vorbildlich: derselbe
+Timer-Handle wird über Aufrufe hinweg wiederverwendet (`PERF-61`), nur bei
+Bedarf neu gebaut, und `close_timer()` macht `pcall(timer.stop, timer)` +
+`pcall(timer.close, timer)` vor jedem Neubau. `casedesk.nvim`s
+SLA-Notify-Timer (`sla/notify.lua`) macht keinen Stop/Close, ist aber
+korrekt idempotent (`if timer then return end` in `M.setup()`) — kein
+Leck, weil nie ein zweiter Timer für denselben Zweck entsteht.
+
+**Echter Fund:** `gopath.nvim/lua/gopath/truncated/cache.lua`s
+`M.start_periodic_refresh(interval_seconds)`. Der Timer war eine reine
+lokale Variable (`local timer = assert(uv.new_timer())`), nirgends
+gespeichert — und `gopath.setup()` ruft diese Funktion **ungeschützt** bei
+jedem Aufruf auf (kein `if timer then return end` wie bei casedesk, kein
+Stop/Close wie bei lib.nvim). Ein Config-Reload (`:Lazy reload`,
+erneutes `require("gopath").setup()`) erzeugt also bei jedem Aufruf einen
+weiteren, für immer laufenden Hintergrund-Timer — mit jedem Reload einen
+mehr, jeder mit eigenem periodischen Rebuild-Check (und, sobald sein
+Intervall abläuft, einem vollen Dateisystem-Scan). Gefixt: Timer jetzt als
+Modul-Upvalue getrackt, vorheriger Handle wird vor einem Neubau
+gestoppt/geschlossen (gleiches Muster wie `lib.nvim`s Debounce). Kein
+Testframework in diesem Repo — headless von Hand verifiziert: 4 Aufrufe
+von `start_periodic_refresh` hinterließen vorher 4 aktive `uv`-Timer
+(bestätigt per `git stash` gegen den alten Code), danach 1. Commit
+`2dfca71` auf `gopath.nvim`s `main`, gepusht.
+
+**`PERF-63`-Katalogzitat veraltet:** `pickers.nvim`
+`selected_index/init.lua:180-203` — dieselbe bereits unter `PERF-48`
+notierte tote Datei (Feature per `db42bc9` entfernt). Kein neuer Fund,
+nur ein zweites Symptom derselben veralteten Katalog-Referenz.
+
 ### Noch offen
 
 - `PERF-01`…`06`/`08`…`16` (restliche allgemeine Idiome)
 - `PERF-20`…`27` (Speicherlayout)
 - restliche `PERF-40`…`45`/`49`…`53` (Cache-Regeln jenseits von `46`…`48`)
-- `PERF-60`…`65` (Debouncing)
 - `PERF-70`…`75` (begrenzte Nebenläufigkeit/Scans)
 - `PERF-80`…`91` (Async-Scheduling/Chunking/Progress)
 
