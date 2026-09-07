@@ -13,6 +13,7 @@
   - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
   - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
   - [✅ PRIN-* (37 Regeln) — fertig](#prin-37-regeln-fertig)
+  - [🔶 LUA-* (45 Regeln) — in Arbeit](#lua-45-regeln-in-arbeit)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -46,7 +47,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
-| `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
+| `LUA-*` | 45 | `LUA_NVIM.md` | 🔶 **in Arbeit** — Metatables/Weak-Tables (`LUA-40`/`41`) fleet-weit geprüft: 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest der Familie offen |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
@@ -838,17 +839,80 @@ gerade erst exhaustiv durchsucht und gefixt hat.
 
 ---
 
+## 🔶 LUA-* (45 Regeln) — in Arbeit
+
+**Zählung mit Vorsicht genießen (bestätigt):** ein erster Grep über alle
+`` `LUA-XX` ``-Treffer in `LUA_NVIM.md` findet 47, nicht 45 — die Tabelle
+unter „`#`-Prefix bei Kommentaren" ist im Katalog selbst fehlerhaft
+formatiert: `LUA-67`/`LUA-68` sind keine echten Regeln, sondern die
+Tabellen-Header-Zellen „Kontext"/„-------", die versehentlich in die
+ID-Spalte gerutscht sind (`LUA-69`..`71` danach sind wieder echte Regeln).
+47 − 2 = 45, passt zur Zählung hier. Nicht die eigentliche Aufgabe dieser
+Familie, aber genau die Art Zähl-Falle, die schon bei `ERR-*` einmal
+zuschlug — vermerkt, damit niemand das noch einmal falsch zählt.
+
+**Zwei im Katalog selbst bereits vermerkte Lücken, beide schon gelöst**
+(Katalog-Text datiert 2026-09-06, also der Tag vor dieser Prüfung —
+vermutlich nur noch nicht zurückgeschrieben):
+- `LUA-01` fileops.nvim `health.lua:71-75` — der zitierte „harte
+  Abhängigkeit inkonsistent dargestellt"-Fund ist bereits durch Commit
+  `35cdd4b` (2026-09-06, derselbe Tag wie die Checkhealth-Konventionen-
+  Sweep) behoben: `lib.nvim` fehlend meldet `error`, nicht mehr `warn`,
+  README sagt unmissverständlich „Requires... lib.nvim".
+- `LUA-04` pickers.nvim `README.md:66` — der zitierte „env-Default
+  unkommentiert im Quickstart"-Fund ist bereits durch Commits `61a97e2`/
+  `ea1ce1c` (beide 2026-09-06) behoben: der Quickstart-Codeblock kommentiert
+  den `repos_dir`/`$REPOS_DIR`-Default jetzt explizit als optional.
+
+### `LUA-40`/`41` (Metatables/Weak-Tables) — fleet-weit geprüft, 4 Repos gefixt
+
+Fleet-weiter Grep nach `__mode` über alle 32 Repos: 6 Treffer. Jeder
+einzeln auf den tatsächlichen Schlüsseltyp geprüft — `__mode = "k"`
+(schwache Schlüssel) wirkt nur auf **Tabellen/Funktionen/Userdata/Threads**,
+niemals auf Zahlen (Lua-Zahlen sind kein kollektierbarer Typ). Ein
+Cache, der mit einer `bufnr` (einer Zahl) als Schlüssel arbeitet, wird von
+`{__mode = "k"}` **nie** automatisch geleert, egal wie viele Buffer
+geschlossen werden.
+
+| Repo | Datei | Schlüsseltyp | Befund |
+|---|---|---|---|
+| **lib.nvim** | `buffer/context/init.lua` | `bufnr` (Zahl) | **Echter, unbegrenzter Leak** — Moduldoc behauptete explizit „entries for deleted buffers are collected automatically", was nie zutraf. Diese Cache ist geteilte Kern-Infrastruktur (u. a. am `FileType`-Autocmd-Dispatcher verdrahtet) — jeder je gesehene Buffer blieb für die Prozesslaufzeit gecacht. **Gefixt**: `BufDelete`/`BufWipeout`-Autocmd ruft jetzt aktiv `M.invalidate(bufnr)` |
+| **gopath.nvim** | `resolvers/lua/alias_index.lua`, `resolvers/lua/binding_index.lua` | `bufnr` (Zahl) | **Echter, unbegrenzter Leak**, identisches Muster, keine andere Aufräum-Logik vorhanden. **Gefixt**: gleicher `BufDelete`/`BufWipeout`-Autocmd-Fix in beiden Dateien |
+| color_my_ascii.nvim | `cache_manager.lua` | `bufnr` (Zahl) | Irreführende Doku („weak table for automatic memory reclamation"), aber **kein echter Bug** — die Cache hat bereits eine funktionierende, aktive Bereinigung unabhängig von der (wirkungslosen) Metatable: `max_size`-Deckel mit Eviction in `M.set()`, plus ein alle 30s laufender Timer (`M.setup_auto_cleanup()`, aus `init.lua` verdrahtet), der `is_valid_buffer()` real prüft. **Gefixt** (Doku + totes `setmetatable` entfernt, keine Verhaltensänderung) |
+| filetree.nvim | `util/buffer.lua` | `bufnr` (Zahl) | Dieselbe irreführende Doku, aber **kein echter Bug** — ein `BufDelete`-Autocmd (`M.invalidate`) existiert bereits im selben File und räumt aktiv auf. **Gefixt** (Doku + totes `setmetatable` entfernt, keine Verhaltensänderung) |
+| runtime-analysis.nvim | `telemetry/registry.lua` | **Tabelle** (die gewrappte Modul-Tabelle selbst) | Korrekt — genau der Fall, für den `__mode = "k"` gedacht ist. Kein Fund |
+| sessions.nvim | `statusline.lua` | **Tabelle** (die vom Aufrufer übergebene `opts`-Tabelle) | Korrekt — Einträge werden mit der Aufrufer-Tabelle selbst kollektiert. Kein Fund |
+
+Alle vier Fixes einzeln committed/gepusht, mit Regressionstest wo ein
+Testrahmen existierte (lib.nvim: `stash`/`reapply`-verifiziert, volle Suite
+grün) — gopath.nvim hat **kein automatisiertes Testframework** (nur
+manuelle, interaktive Test-Fixtures mit Anleitung), dort headless von Hand
+verifiziert statt eines Regressionstests.
+
+### Noch offen
+
+`LUA-01`..`05` (restliche lib.nvim-Abhängigkeitskonsistenz über den ganzen
+Fleet), `LUA-10`..`16` (Neovim-API-Sicherheit — überschneidet sich stark
+mit bereits abgeschlossenem `ERR-32`/`33`/`34`/`SEC-*`), `LUA-30`..`34`
+(State/Datenmodelle: Getter/Setter, Ringbuffer, Snapshot/Restore,
+Arrays-statt-Records), `LUA-42`..`47` (weitere Metatable-Muster jenseits
+der bereits geprüften `40`/`41`), `LUA-50`..`55` (Code-Stil — teilweise
+schon über `PRIN-35`/`50` fleet-weit bestätigt), `LUA-60`..`71`
+(Annotationen — folgt größtenteils aus der abgeschlossenen `LLS-*`-Familie),
+`LUA-80`..`83` (Config-Defaults: typisierte Keys, Nutzer-Konfigurierbarkeit).
+
+---
+
 ## ⬜ Noch nicht begonnen
 
 | Familie | Regeln | Worum es geht (Kurzfassung) |
 |---|---|---|
-| `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `LUA-*` (45) →
-`PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie am meisten
-Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine Einschätzung
-nach Größe.
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `LUA-*` zu Ende
+bringen → `PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie am
+meisten Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine
+Einschätzung nach Größe.
 
 ---
 
