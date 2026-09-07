@@ -57,6 +57,23 @@ abgeschlossen.** Volles Fazit mit Bilanz über alle 9 Familien:
 (begrenzte Nebenläufigkeit, kanonisch in `gopath.nvim` verifiziert),
 `PERF-80` (18 Timer-Callbacks auf `vim.schedule`-Wrapping geprüft).
 
+**Nachtrag (auf "ziehe perf durch" hin, zweite, tiefere Runde):** alle
+verbleibenden Katalogzitate für `PERF-81`…`86` tatsächlich gelesen statt
+nur übernommen (`github_stats.nvim/background.lua` für 81/82,
+`pickers.nvim/smart/search.lua` für 84, `filetree.nvim`s `cwd_mode` für
+85, `runtime-analysis.nvim/history.lua` für 86) — fünf exakt wie
+beschrieben bestätigt, eines (`PERF-86`) mit seither verbesserter
+Implementierung (der zitierte `MAX_ENTRIES`-Konstante wich einer
+konfigurierbaren Funktion, Verhalten weiterhin korrekt). `PERF-83`
+(Token-Cancel) vollständig gelesen statt nur der zuerst zitierten
+Zeilen — echtes Zähler-Token-Muster bestätigt (`pending_token`,
+`is_current()`), nicht nur ein killbarer Handle. Zusätzlich das komplette
+Cache-Inventar der Fleet gelesen (`hover.nvim`, `insights.nvim`,
+`language.nvim`, `pdfport.nvim`, `reposcope.nvim/repository_cache.lua` —
+neun Cache-Implementierungen über neun Repos einzeln verifiziert für
+`PERF-41`/`42`/`46`/`47`): 0 neue Funde, aber jetzt tatsächlich geprüft
+statt nur durch Katalog-Beispiele plausibel gemacht.
+
 **Katalog-Pflege-Nebenfunde** (nicht selbst korrigiert, Katalog liegt
 außerhalb dieses Repos): zwei tote Zitate auf das per `db42bc9` entfernte
 `pickers.nvim`-Feature `selected_index` (`PERF-48`, `PERF-63`), ein Zitat
