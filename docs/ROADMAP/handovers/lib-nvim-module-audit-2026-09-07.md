@@ -1,13 +1,13 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: 20 kleine/mittlere Module + alle fünf großen Subsysteme + der
-komplette `lib.lua.*`-Namespace durch. Glue-Layer läuft gerade
-(`lib.config`/`strategies.control`/`.telemetry_wrap` erledigt,
-`lib.strategies.{eager,lazy,metatable}` bereits vorher sauber; noch offen:
-`lib.@types.init` (`Lib.Modules`-Altlast, Cross-Check wie bei strings/
-tables), `lib/health.lua`). ⚠️ Session läuft mit sehr wenig Nutzungslimit
-(~6%) — falls hier abgebrochen wird, ist `lib.nvim@e77c981` der letzte
-gepushte Stand.**
+**Status: nahezu fertig. 20 kleine/mittlere Module + alle fünf großen
+Subsysteme + der komplette `lib.lua.*`-Namespace + fast der ganze
+Glue-Layer durch. Ein einziger Punkt offen: der Cross-Check von
+`lib/@types/all_functions.lua`s `Lib`-Klasse (129 Zeilen, ~100+ Felder)
+gegen `eager.lua`/`lazy.lua`/`metatable.lua` — nicht self-flagged als
+kaputt, nur noch nicht mit derselben Methode verifiziert, die bei
+`lib.lua.strings`/`tables` den größten Bug der Session fand. Letzter
+gepushter Stand: `lib.nvim@b67ce2c`.**
 
 > **Nachtrag 2026-09-07 (achte Fortsetzung — Glue-Layer begonnen, wenig
 > Budget übrig).** `lib.config` (setup/get/strategy_module),
@@ -333,28 +333,29 @@ kein eigenes Teilprojekt.
 
 ## Aufwandsschätzung
 
-| Block | Umfang | Geschätzter Aufwand |
-|---|---|---|
-| Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) — hier liegt schon eine bekannte Altlast (`Lib.Modules`) | **~0.5 Session** |
-
-**Das ist der letzte verbleibende Block.** Nach diesem ist das komplette
-`lib.nvim`-Modul-Audit abgeschlossen.
+Nur noch ein Punkt offen: **~15-30 Minuten**, keine ganze Session mehr.
 
 ## Wie weitermachen
 
-1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — Pro-Modul-Log zeigt
-   alle fertigen Module mit ✅ und den jeweiligen Funden (alle 20
-   kleinen/mittleren Module + alle fünf großen Subsysteme + der komplette
-   `lib.lua.*`-Namespace jetzt drin).
-2. Letzter Schritt: der Glue-Layer (`lib/config`, `lib/strategies/*` — die
-   4 Aggregator-Strategien metatable/lazy/eager/control —, `lib/@types/*`
-   inkl. der bekannten `Lib.Modules`-Altlast, die bereits mehrfach als
-   "pending external-consumer check" referenziert wurde). Dabei die
-   Cross-Check-Methode aus der `lib.lua.strings`/`tables`-Runde anwenden
-   (jedes `M.<feld>` gegen die referenzierte `@types`-Klasse, nicht nur
-   "hat @types" prüfen). Damit ist das Audit komplett abgeschlossen —
-   ggf. einen zusammenfassenden Abschluss-Eintrag in dieser Handover-Datei
-   und in `MODULE_AUDIT.md` ergänzen.
+1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen, Abschnitt "Glue layer"
+   im Pro-Modul-Log (ganz unten) — zeigt genau, was schon durch ist und
+   was fehlt.
+2. **Einziger verbleibender Schritt**: Cross-Check von
+   `lua/lib/@types/all_functions.lua`s `Lib`-Klasse gegen die drei
+   Aggregator-Strategien. Methode (dieselbe, die bei `lib.lua.strings`/
+   `tables` den größten Bug der ganzen Session fand):
+   `grep -oE "^LIB\.[a-zA-Z_0-9]+" lua/lib/strategies/eager.lua | sed
+   's/^LIB\.//' | sort -u` gegen die `---@field`-Liste in
+   `all_functions.lua` (per `awk`/`comm`, siehe die `lib.lua.strings`-
+   Fixes im Commit-Verlauf für das genaue Vorgehen). Bei Abweichungen:
+   fixen wie überall sonst in diesem Audit (fehlende Felder ergänzen,
+   veraltete entfernen/korrigieren). Bei `lua/lib/@types/luassert.lua`
+   (85 Zeilen, Test-Framework-Typen) reicht ein kurzer Blick.
+   `lib/@types/init.lua`s `Lib.Modules` bewusst NICHT anfassen — bereits
+   selbst-geflaggte Altlast, "pending external-consumer check".
+3. Danach: Abschluss-Eintrag in dieser Handover-Datei UND in
+   `MODULE_AUDIT.md` ("Audit komplett abgeschlossen") — damit ist das
+   gesamte `lib.nvim`-Modul-Audit fertig.
 3. Fixes direkt im Code, Tracking-Datei nachführen, Commit, sofort auf
    `main` gepusht. Vor dem Push kurz `git log`/`git status` gegenchecken —
    bei der `fs`-Session hat parallel eine andere Session/ein anderer
