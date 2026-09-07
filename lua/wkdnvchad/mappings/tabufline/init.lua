@@ -3,7 +3,12 @@
 
 local notify = require("lib.nvim.notify").create("[wkdnvchad.mappings.tabufline]")
 
-local nvchad_tabufline = require("lib.lua.lazy").require("nvchad.tabufline")
+-- Guarded: nvchad.tabufline is absent on the "normal" NvChad UI. Only
+-- close_n_buffers() needs it; every other function here works off vim.t.bufs.
+local ok_tabufline, nvchad_tabufline = pcall(require, "nvchad.tabufline")
+if not ok_tabufline then
+  nvchad_tabufline = nil
+end
 
 local M = {}
 
@@ -137,17 +142,9 @@ function M.close_n_buffers(n)
     return false
   end
 
-  --- CDX: `lib.lua.lazy.require` resolves eagerly (it calls `.get()`
-  --- immediately), so `nvchad_tabufline` is already loaded at module require
-  --- time and this `if not nvchad_tabufline` re-require branch is dead. Use
-  --- `lazy.module(...).get()` at call sites, or a plain guarded require here.
   if not nvchad_tabufline then
-    local ok, mod = pcall(require, "nvchad.tabufline")
-    if not ok then
-      notify.error("[wkdnvchad.tabufline] Failed to load nvchad.tabufline")
-      return false
-    end
-    nvchad_tabufline = mod
+    notify.error("[wkdnvchad.tabufline] nvchad.tabufline not available")
+    return false
   end
 
   if type(nvchad_tabufline.close_buffer) ~= "function" then
