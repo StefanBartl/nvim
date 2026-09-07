@@ -30,8 +30,8 @@ plugins.add({
     lazy = false,
     priority = 1000,
     config = function()
-      -- CDX: helptags could be generated generically and the usrcmds set up as
-      -- normal user config instead of this dedicated setup() call.
+      -- NOTE: helptags could be generated generically and the usrcmds set up
+      -- as normal user config instead of this dedicated setup() call.
       require("lib.nvim_usrcmds").setup({
         helptags = true,
         cwd_here = true,
