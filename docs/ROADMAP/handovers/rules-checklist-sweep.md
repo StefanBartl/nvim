@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-07, neunte Aktualisierung — UI-* fertig)
+## Stand bei Übergabe (2026-09-07, zehnte Aktualisierung — PRIN-* fertig)
 
 | Familie | Status |
 |---|---|
@@ -17,55 +17,69 @@ Einstiegspunkt für eine neue Session.
 | `DEP-*` (7) | ✅ fertig |
 | `TS-*` (5) | ✅ fertig |
 | `ERR-*` (34) | ✅ fertig — 32/32 Repos, 17 echte Bugs gefixt |
-| `UI-*` (34) | ✅ **fertig** — 32/32 Repos, **0 echte Bugs** |
-| `PRIN-*` (37) | ⬜ offen |
+| `UI-*` (34) | ✅ fertig — 32/32 Repos, 0 echte Bugs |
+| `PRIN-*` (37) | ✅ **fertig** — 32/32 Repos, **1 Fund** (notiert, nicht gefixt) |
 | `LUA-*` (45) | ⬜ offen |
 | `PERF-*` (57) | ⬜ offen |
 
-## UI-* — Abschlussnotiz
+## PRIN-* — Abschlussnotiz
 
-`UI-*` ist die erste Familie, die **ganz ohne Fund** durchläuft (0 Bugs in
-allen 32 Repos gegen alle 34 Regeln — 5 davon, `UI-57`..`61`, waren schon
-vorher durch einen separaten Checkhealth-Audit erledigt). Plausible
-Erklärung: mehrere `UI-*`-Regeln im Katalog zitieren Repos aus genau
-diesem 32er-Bestand als *positive* Referenzbeispiele in ihren eigenen
-Belegen — der Katalog wurde also mindestens teilweise aus der Beobachtung
-dieses Fleets geschrieben. Die einzigen im Katalog als Lücke vermerkten
-Fälle (`UI-21`/`UI-22`) liegen außerhalb der 32 Repos (nvim-config,
-learn-cli.nvim).
+**Andere Methodik als `ERR-*`/`UI-*`, auf explizite Nutzeranfrage**: eine
+volle Architektur-Review über alle 37 Regeln (SRP, reine Funktionen,
+Naming, DI, Fehlerstruktur, Testbarkeit, Doku-Vertrag) statt eines reinen
+Bug-Hunts — der Nutzer wollte das explizit so, nicht nur konkrete
+Bug-Muster.
 
-**Einzige Beobachtung, bewusst nicht gefixt:** `lib.nvim.bindings.keymap.which_key`s
-Gruppen-Label hängt am deklarierten `spec.prefix`, nicht an den nach
-Nutzer-Remapping tatsächlich aufgelösten `lhs`-Werten (`UI-27`). Kein
-demonstrierbarer Bug — which-key zeigt jede Zuordnung ohnehin über ihr
-eigenes `desc` an, ein remapptes Item verliert nur die
-Submenü-Gruppierung, keine Funktion. Fleet-weit über `lib.nvim` geteilt.
+**Ergebnis: nur 1 Fund trotz voller Review.** `casedesk.nvim/lua/casedesk/ui.lua`
+ist 3433 Zeilen lang und bündelt 50 `function M.*`-Handler für völlig
+unabhängige Case-Management-Features (CRUD, OCR, Git-Sync, KI/AI-Abfrage,
+Timeline, SLA-Tracking, Terminologie, Link-Check, Export …) —
+`PRIN-01`/`02`-Kandidat. **Notiert, nicht refaktoriert**: eine Aufteilung
+in Feature-Module wäre eine Architekturentscheidung mit echtem Risiko in
+einem aktiv genutzten 45-Datei-Repo, kein Ein-Zeiler im Rahmen eines
+Findings-Sweeps — falls das je angegangen wird, ist es eine eigene,
+bewusste Aufgabe, keine Nebensache.
 
-**Wichtige Kalibrierung für künftige Familien:** `UI-36` (Quickfix-Export
-für Trefferlisten) fehlt laut Katalog-Beleg fast im ganzen Fleet — das ist
-ein bekannter, dokumentierter Feature-Gap, kein Bug, und wurde bewusst
-nicht nachgerüstet (wäre Feature-Entwicklung über 30 Repos). Dieselbe
-Kalibrierung (Bug vs. Feature-Lücke) lohnt sich als Leitplanke für
-`PRIN-*`/`LUA-*`/`PERF-*`.
+**Warum sonst nichts gefunden wurde** (wichtig für `LUA-*`/`PERF-*` als
+Erwartungshaltung, nicht als Abkürzung):
+1. Der Katalog selbst zitiert schon ~15 der 32 Repos als *positive*
+   Beispiele (Erhebung 2026-08-08) — er wurde mindestens teilweise aus der
+   Beobachtung dieses Fleets geschrieben.
+2. Mehrere PRIN-Regeln (`PRIN-10` kein globaler Zustand, `PRIN-20`/`25`-`27`
+   Fehlerbehandlung, `PRIN-40`-`43` Cache-Hygiene) beschreiben exakt die
+   Bugklassen, die `ERR-*` gerade erst exhaustiv durchsucht und gefixt hat
+   — hier gab es nichts Neues mehr zu finden.
+3. Vier Regeln wurden **fleet-weit mechanisch** statt 32× einzeln geprüft:
+   `PRIN-10` (Grep nach `_G.`/`_G[`, nur 3 begründete Ausnahmen), `PRIN-35`
+   (Naming: 0 camelCase-Ausreißer in allen 32 Repos), `PRIN-50`
+   (Datei-Header: kein Repo unter 95 % Abdeckung), `PRIN-51`/`52`
+   (dokumentierter Vertrag: folgt automatisch aus der bereits
+   abgeschlossenen `LLS-*`-Familie, 0 LuaLS-Diagnostics fleet-weit).
+4. Eine **Größte-Datei-Stichprobe** (SRP-Proxy) fand mehrere auffällig
+   große Dateien (documentation.nvim 10185 Zeilen, hover.nvim 1970,
+   reposcope.nvim 1387, runtime-analysis.nvim 1616) — alle bei genauerem
+   Hinsehen gerechtfertigt (eine kohärente Verantwortung trotz Größe, oder
+   überwiegend eingebettete Template-Daten statt Logik). Nur casedesk.nvim
+   war ein echter Fund.
 
-Volle Details zur Methodik (fleet-weite Mechanik-Checks, Repo-für-Repo-
-Ergebnisse) stehen in `RULES.md` selbst unter „✅ UI-* (34 Regeln) —
-fertig" — nicht hier dupliziert.
+Volle Details (Repo-für-Repo-Tabelle, alle Fleet-Checks) stehen in
+`RULES.md` selbst unter „✅ PRIN-* (37 Regeln) — fertig".
 
 ## Nächster Schritt
 
-Laut `RULES.md` §"Vorschlag für die Reihenfolge": **`PRIN-*`** (37 Regeln,
-Grundprinzipien: Modularität, API-Design, Namenskonventionen,
-Dokumentationspflichten) als Nächstes → `LUA-*` (45) → `PERF-*` (57,
-größte, da sie am meisten Kontext pro Fund braucht — Hotpath-Beurteilung
-statt reinem Pattern-Matching). Keine feste Vorgabe, nur eine
-Einschätzung nach Größe.
+Laut `RULES.md` §"Vorschlag für die Reihenfolge": **`LUA-*`** (45 Regeln,
+allgemeine Lua/Neovim-Idiome jenseits von Deprecations) als Nächstes →
+`PERF-*` (57, größte, da sie Verständnis von Aufrufhäufigkeit statt reinem
+Pattern-Matching braucht). Keine feste Vorgabe, nur eine Einschätzung nach
+Größe.
 
-Für `PRIN-*` sind noch keine repo-spezifischen Vorarbeiten gemacht — bei
-Sitzungsstart zuerst den Regelkatalog (`PRINCIPLES.md`) lesen und prüfen,
-ob (wie bei `UI-*`) Teile davon schon aus Fleet-Beobachtung entstanden
-sind (Belege-Abschnitte mit Repo-Zitaten durchsuchen), bevor blind
-angefangen wird.
+**Wichtig für den Sitzungsstart von `LUA-*`:** zuerst klären, ob dieselbe
+Frage wie bei `PRIN-*` erneut gestellt werden muss (voller Architektur-/
+Stil-Review vs. reiner Bug-Hunt) — `LUA_NVIM.md`s "allgemeine Idiome
+jenseits von Deprecations" klingt nach einer ähnlichen Mischung aus
+konkreten Mustern und Geschmacksfragen wie `PRIN-*`. Den Regelkatalog
+zuerst vollständig lesen (inkl. „Belege"-Abschnitte auf Repo-Zitate
+prüfen), bevor entschieden wird.
 
 ## Standing Rules für diese Arbeit
 
@@ -82,10 +96,14 @@ angefangen wird.
 - **1 Agent gleichzeitig, mehrere Runden zu je 1**, falls ein Subagent
   gebraucht wird — direktes Lesen in der Unterhaltung ist der Normalfall.
 - **Erst grep-/mechanik-basierte Vorprüfung über alle 32 Repos**, bevor ein
-  Repo einzeln gelesen wird — hat sich bei `ERR-*` und `UI-*` beide Male
-  bewährt (spart Zeit, findet trotzdem die konkreten Fälle).
-- **Bug vs. Feature-Lücke unterscheiden**: nur echte, demonstrierbare
-  Defekte fixen (falsches Ergebnis, Datenverlust, Absturz, fehlende
-  Completion für eine geschlossene Menge). Eine im Katalog selbst schon
-  als fleet-weit fehlend dokumentierte Verbesserungsmöglichkeit (wie
-  `UI-36`) nicht einzeln nachrüsten oder pro Repo wiederholt vermerken.
+  Repo einzeln gelesen wird — hat sich bei `ERR-*`, `UI-*` und `PRIN-*`
+  jedes Mal bewährt.
+- **Bug vs. Feature-/Stil-Lücke unterscheiden**: nur echte, demonstrierbare
+  Defekte fixen. Eine reine Architektur-/Stil-Beobachtung (wie
+  casedesk.nvims `ui.lua`) wird dokumentiert, aber nicht automatisch
+  refaktoriert — das wäre eine Design-Entscheidung mit Tragweite, die
+  einzeln abgestimmt gehört.
+- **Bei unklarer Regel-Natur nachfragen**: wenn eine Familie (wie `PRIN-*`)
+  strukturell anders ist als die vorherigen (mehr Geschmacksfragen als
+  Bugs), den Nutzer fragen, wie eng der Scope gefasst werden soll, statt
+  eine Annahme zu treffen — hat sich bei `PRIN-*` bewährt.
