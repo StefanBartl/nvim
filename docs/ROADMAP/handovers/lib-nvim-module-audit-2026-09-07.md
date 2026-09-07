@@ -1,9 +1,43 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
 **Status: 20 kleine/mittlere Module + alle fünf großen Subsysteme (`ui`,
-`fs`, `cross`, `bindings`, `buf_win_tab`, reduzierte Tiefe) durch.
-Verbleibend: der komplette `lib.lua.*`-Namespace und der Glue-Layer.**
+`fs`, `cross`, `bindings`, `buf_win_tab`) + der komplette `lib.lua.*`-
+Namespace (16 Module) durch. Verbleibend: nur noch der Glue-Layer
+(`lib/config`, `lib/strategies/*`, Top-`@types`).**
 
+> **Nachtrag 2026-09-07 (siebte Fortsetzung — `lib.lua.*` durch, größter
+> Einzelfund der ganzen Session).** `lib.lua.*` (16 Module, 90 Dateien,
+> editor-unabhängiges reines Lua) durchgearbeitet — `strings`/`tables`
+> (38 Dateien zusammen) an einen Sub-Agenten delegiert, jeder Fund selbst
+> verifiziert, Rest (14 kleine Module) direkt geprüft.
+>
+> **Der größte Einzelfund der ganzen Session**: `Lib.Strings` und
+> `Lib.Tables` (die beiden Top-Level-Aggregat-Klassen) beschrieben die
+> **falsche** Form — ein echter Bug, keine Lücke. Beide `@types/init.lua`
+> trugen seit jeher zwei Klassen: eine fiktive (auch `Lib.Strings`/
+> `Lib.Tables` genannt), die eine verschachtelte Form beschrieb
+> (`strings.core.trim`), die `init.lua` nie zurückgibt, und eine zweite
+> (`Lib.Strings.ALL`/`Lib.Tables.All`), die korrekt die echte flache Form
+> beschrieb (`strings.trim`) — aber nirgends referenziert wurde. Beide
+> `init.lua`s eigenes `---@type Lib.Strings`/`Lib.Tables` zeigte die ganze
+> Zeit auf die falsche (fiktive) Klasse: LuaLS gab **aktiv falsche**
+> Vervollständigungen für `require("lib.lua.strings")`/`.tables` — nicht
+> nur fehlende. Zusammengeführt. Beim Cross-Check jedes echten `M.<feld>`
+> gegen die (jetzt echte) Klasse kamen noch drei weitere echte Lücken
+> zutage: `strings.width` (das ganze Submodul, nicht nur seine 3
+> geflatteten Funktionen), `strings.strip_ansi`, `tables.with` — alle real
+> und fehlend. `tables.functional`/`.unique_table` sind bewusst nicht in
+> `tables/init.lua` verdrahtet (Namens-/Argumentreihenfolge-Kollision mit
+> den bereits geflatteten Array-Ops), aber nirgends stand das — README
+> ergänzt. `strings.hex_to_string` war real und versprochen, aber nie
+> verdrahtet — nachgezogen (kein Kollisionsrisiko, anders als bei
+> `tables.functional`). Dazu 16 weitere mechanische `---@type`-Lücken
+> (10× strings, 6× tables) plus `time.diff`. `modules.md`s `lib.lua.*`-
+> Tabelle fehlten 7 von 16 Modulen komplett (`config`, `diff`, `dump`,
+> `error`, `numeral`, `uuid`, `yaml`); `docs/API/foundations-lua.md`
+> fehlten `class`/`context_manager`/`config`. Alle gefixt,
+> `lib.nvim@a77df61`.
+>
 > **Nachtrag 2026-09-07 (sechste Fortsetzung — letztes großes Subsystem
 > durch).** `buf_win_tab` (23 Dateien: buffer_utils/windows_utils/
 > tabs_utils + capture/get_option/move_buffer_to_tab/normal_buffer/
@@ -228,46 +262,55 @@ gefunden — jeder Fund war entweder mechanisch (fehlende Typ-Annotation) oder
 
 ## Was noch aussteht
 
-**Alle fünf großen Subsysteme (`ui`, `fs`, `cross`, `bindings`,
-`buf_win_tab`) sind durch** — siehe Nachträge oben für jeweils die
-Funde. Verbleibend nur noch:
+**Alle fünf großen Subsysteme UND der komplette `lib.lua.*`-Namespace
+(16 Module) sind durch** — siehe Nachträge oben für jeweils die Funde.
+Verbleibend nur noch:
 
-- **`lib.lua.*`-Namespace** (Lua-nur, kein Neovim-Bezug): `tables`,
-  `strings`, `functions`, `time`, `json`, `memo`, `lazy`, `class`,
-  `context_manager` — noch **gar nicht** inventarisiert, geschweige denn
-  geprüft. Vermutlich analog zu den 20 kleinen/mittleren `lib.nvim.*`-
-  Modulen aus der ersten Session zu behandeln (volle Tiefe, da klein).
 - **Glue-Layer**: `lib/config`, `lib/strategies/*` (4 Aggregator-Strategien:
   metatable/lazy/eager/control), `lib/@types/*` — inkl. der bereits
-  gefundenen `Lib.Modules`-Altlast, die dort explizit als offen markiert ist.
+  gefundenen `Lib.Modules`-Altlast, die dort explizit als offen markiert
+  ist. Das ist der letzte verbleibende Block des ganzen Audits.
 
-**Über die fünf großen Subsysteme gelernte, wiederkehrende Muster** (für
-`lib.lua.*`/Glue-Layer weiter im Kopf behalten):
-- Bei Subsystemen mit einem **echten** `init.lua`-Aggregator zuerst
-  prüfen, ob dessen `return M` ein `---@type` trägt — bei `cross` war das
-  der größte Einzelfund der ganzen Session (meistgenutzter Require im
-  Subsystem war untypisiert); bei `bindings`/`buf_win_tab` war es bereits
-  sauber. Kein Automatismus, aber immer der erste Check.
+**Über die fünf großen Subsysteme + `lib.lua.*` gelernte, wiederkehrende
+Muster** (für den Glue-Layer weiter im Kopf behalten):
+- Bei Subsystemen/Modulen mit einem **echten** `init.lua`-Aggregator
+  zuerst prüfen, ob dessen `return M` ein `---@type` trägt, UND ob diese
+  Klasse tatsächlich die reale Rückgabeform beschreibt. Bei `cross` fehlte
+  die Annotation ganz (größter Einzelfund unter den fünf Subsystemen); bei
+  `lib.lua.strings`/`tables` war die Annotation vorhanden, zeigte aber auf
+  eine **falsche** Klasse (eine fiktive, nie referenzierte zweite Klasse
+  beschrieb fälschlich eine verschachtelte statt der echten flachen Form)
+  — größter Einzelfund der ganzen Session, weil LuaLS dadurch aktiv
+  falsche statt nur fehlender Typinfo lieferte. Beim Glue-Layer (der
+  bereits bekannte `Lib.Modules`-Altfall) also nicht nur auf Vorhandensein
+  prüfen, sondern jedes `M.<feld>` gegen die Klasse cross-checken
+  (`grep -oE "^M\.[a-zA-Z_0-9]+" <init.lua>` vs. die `@field`-Liste).
 - Inline-`@class`-Definitionen direkt im Modul-Code statt unter `@types/`
   (Convention-Verstoß): `grep -rn "^---@class" <modul-pfad> | grep -v
-  '@types/'` findet sie zuverlässig — tauchte bei `bindings` dreimal auf.
+  '@types/'` findet sie zuverlässig — tauchte bei `bindings` dreimal auf,
+  bei `lib.lua.strings.location` einmal.
 - Ein `docs/API/<thema>.md`-Layer existiert für jedes der fünf Subsysteme
-  (funktionssignatur-genaue Zweitdoku neben den Leaf-READMEs) — von Anfang
-  an mitprüfen, nicht nachträglich entdecken wie bei `fs`. Manchmal schon
-  vollständig korrekt (`buf_win_tab`), manchmal mit echten Lücken
-  (`bindings`: fehlende `registered`/`delete`/`docs`-Einträge).
+  UND für `lib.lua.*` (`foundations-lua.md`) — von Anfang an mitprüfen.
+  Bei `foundations-lua.md` fehlten `class`/`context_manager`/`config`
+  komplett, obwohl 13 von 16 Modulen bereits abgedeckt waren.
 - Ein fertiges, korrekt typisiertes Feature, das schlicht nie ins README
-  geschrieben wurde ("vergessenes Feature") tauchte in JEDEM der fünf
-  Subsysteme mindestens einmal auf (`ui.kit.compare`, `fs.path`,
+  geschrieben wurde ("vergessenes Feature") tauchte in JEDEM Block
+  mindestens einmal auf (`ui.kit.compare`, `fs.path`,
   `cross.run_argv.run_async_captured`, `bindings.audit`s drei Lints,
-  `buf_win_tab.windows_utils.collect_win_report`) — der ergiebigste
-  einzelne Fund-Typ dieses ganzen Audits.
+  `buf_win_tab.windows_utils.collect_win_report`,
+  `strings.hex_to_string`) — der ergiebigste einzelne Fund-Typ dieses
+  ganzen Audits, quer durch alle Blöcke.
 - Nicht jeder fehlende `---@type` ist ein Fund: ein bare `return
   function(...)` mit vollständigen eigenen `---@param`/`---@return` ist
-  bereits selbst-typisiert (LuaLS braucht dafür keine separate Klasse) —
-  auch wenn zufällig eine exakt passende, aber unbenutzte `@types`-Alias
-  danebenliegt (2× bei `buf_win_tab` gesehen). Etabliertes Nicht-Bug-Muster
-  seit `resolve_style.lua`/`is_dir` aus der ersten Session.
+  bereits selbst-typisiert (LuaLS braucht dafür keine separate Klasse).
+  Etabliertes Nicht-Bug-Muster seit `resolve_style.lua`/`is_dir` aus der
+  ersten Session.
+- Ein Modul, das absichtlich NICHT in einen Aggregator verdrahtet ist
+  (Namens-/Signatur-Kollision mit bereits verdrahteten Funktionen), muss
+  das trotzdem irgendwo sagen — sonst sieht es wie eine vergessene Lücke
+  aus. `strings.transform` hatte das schon vorbildlich dokumentiert;
+  `tables.functional`/`.unique_table` (gleiche Kollisionsursache) hatten
+  es nirgends erwähnt.
 
 `buffer` (das in der ersten Fassung dieser Handover-Datei noch als "Sonderfall
 ohne init.lua, zu verifizieren" unter den großen Modulen stand) ist bereits
@@ -278,27 +321,29 @@ kein eigenes Teilprojekt.
 
 | Block | Umfang | Geschätzter Aufwand |
 |---|---|---|
-| `lib.lua.*` (9 Module) | vermutlich klein wie die meisten `lib.nvim`-Module, aber noch ungeprüft | **~1 Session** |
 | Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) — hier liegt schon eine bekannte Altlast (`Lib.Modules`) | **~0.5 Session** |
 
-**Summe: grob 1.5 weitere Arbeits-Sessions.** Alle fünf großen Subsysteme
-sind durch — der dominante Rest-Aufwand aus früheren Fassungen dieser
-Datei ist erledigt.
+**Das ist der letzte verbleibende Block.** Nach diesem ist das komplette
+`lib.nvim`-Modul-Audit abgeschlossen.
 
 ## Wie weitermachen
 
 1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — Pro-Modul-Log zeigt
    alle fertigen Module mit ✅ und den jeweiligen Funden (alle 20
-   kleinen/mittleren Module + alle fünf großen Subsysteme jetzt drin).
-2. Nächster Schritt: `lib.lua.*` (9 Module unter `lua/lib/lua/`, noch nicht
-   inventarisiert — erst die Inventar-Tabelle in `MODULE_AUDIT.md` um
-   diese neun ergänzen, dann volle Tiefe wie in der ersten Session, da
-   vermutlich klein). Danach der Glue-Layer (`lib/config`,
-   `lib/strategies/*`, `lib/@types/*` inkl. der bekannten `Lib.Modules`-
-   Altlast) — damit ist das Audit komplett abgeschlossen.
-3. Jeder Batch: Fixes direkt im Code, Tracking-Datei nachführen, ein Commit
-   pro Batch, sofort auf `main` gepusht. Vor dem Push kurz `git log`/
-   `git status` gegenchecken — bei der `fs`-Session hat parallel eine
-   andere Session/ein anderer Prozess auf demselben Checkout committet
-   und eine unfertige Änderung hinterlassen; nicht automatisch annehmen,
-   dass der Baum so sauber ist wie beim Sessionstart.
+   kleinen/mittleren Module + alle fünf großen Subsysteme + der komplette
+   `lib.lua.*`-Namespace jetzt drin).
+2. Letzter Schritt: der Glue-Layer (`lib/config`, `lib/strategies/*` — die
+   4 Aggregator-Strategien metatable/lazy/eager/control —, `lib/@types/*`
+   inkl. der bekannten `Lib.Modules`-Altlast, die bereits mehrfach als
+   "pending external-consumer check" referenziert wurde). Dabei die
+   Cross-Check-Methode aus der `lib.lua.strings`/`tables`-Runde anwenden
+   (jedes `M.<feld>` gegen die referenzierte `@types`-Klasse, nicht nur
+   "hat @types" prüfen). Damit ist das Audit komplett abgeschlossen —
+   ggf. einen zusammenfassenden Abschluss-Eintrag in dieser Handover-Datei
+   und in `MODULE_AUDIT.md` ergänzen.
+3. Fixes direkt im Code, Tracking-Datei nachführen, Commit, sofort auf
+   `main` gepusht. Vor dem Push kurz `git log`/`git status` gegenchecken —
+   bei der `fs`-Session hat parallel eine andere Session/ein anderer
+   Prozess auf demselben Checkout committet und eine unfertige Änderung
+   hinterlassen; nicht automatisch annehmen, dass der Baum so sauber ist
+   wie beim Sessionstart.
