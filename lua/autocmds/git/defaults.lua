@@ -1,7 +1,5 @@
 ---@module 'autocmds.git.defaults'
 
---- CDX: config fields undocumented — add a one-line note per field
-
 ---@type AutoCmds.Git.Cfg
 local AUTOCMDS_GIT_DEFAULTS = {
   commit_ft = {

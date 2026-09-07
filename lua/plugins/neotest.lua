@@ -15,11 +15,10 @@ return {
 
       -- CRITICAL: Use wrapped consumer to prevent initialization race
       local opts = {
-        -- CDX: hardcoded to plenary/vitest/go, ignores
-        -- config.neotest.adapters.factory entirely -- python/rust/typescript
-        -- adapters are installed (init/dependencies.lua) but never activated.
-        -- Documented split-brain, consolidation planned as a migration --
-        -- see docs/ROADMAP/IDEAS/test.md §2.1.
+        -- CDX: parked -- hardcoded to plenary/vitest/go, bypasses
+        -- config.neotest.adapters.factory (python/rust/typescript installed
+        -- but never activated). Adapter split-brain:
+        -- docs/ROADMAP/CDX/config-cdx-triage.md §3, docs/ROADMAP/IDEAS/test.md §2.1.
         adapters = {
           require("neotest-plenary"),
           require("neotest-vitest"),
@@ -98,8 +97,8 @@ return {
       require("config.neotest.utils.validate_consumer").setup_command()
       -- require("config.neotest.autocmds.auto_discovery").attach()
 
-      -- CDX: check how many adapters were actually wired up -- part of the
-      -- factory.lua consolidation, see docs/ROADMAP/IDEAS/test.md §2.1.
+      -- CDX: parked -- adapter-count check, part of the factory.lua
+      -- consolidation (docs/ROADMAP/CDX/config-cdx-triage.md §3).
       --require("config.neotest.init.checks.adapter")(opts.adapters, neotree_consumer)
 
       -- Core config (optional)

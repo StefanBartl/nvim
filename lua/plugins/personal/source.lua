@@ -46,8 +46,8 @@ local OVERRIDE = "dir"
 -- Resolves the effective source when OVERRIDE == "auto":
 --   * "workstation" (see machine.lua) never has local checkouts of these
 --     repos → everything "remote" (the dir fallback would also end up
---     remote, but this makes it unconditional and skips 25x isdirectory
---     checks).
+--     remote, but this makes it unconditional and skips one isdirectory
+--     check per repo).
 --   * any other machine → "auto": the MODE table decides per repo.
 -- Note: "remote" on the workstation means lazy manages every repo as a real
 -- GitHub remote. The lazy update checker is therefore deliberately disabled

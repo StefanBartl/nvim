@@ -1,23 +1,25 @@
 ---@module 'bindings.usrcmds.bindings_explorer.browse'
---- `:Bindings browse` — picker over `records.lua`'s parsed table rows instead
---- of `search.lua`'s raw text lines (see docs/FEATURES.md). Reuses
---- `lib.nvim.ui.kit.select` like `ui.lua`'s fallback does — a fixed row count
---- per query, no incremental live-filter engine needed.
+--- `:Bindings browse` — a grouped, read-only view of `records.lua`'s parsed
+--- table rows (see docs/FEATURES.md). Not a fuzzy picker: the corpus rows are
+--- short and structured, so this lays them out like the source cheatsheet —
+--- one section per source table, an aligned column block under each — and
+--- `<CR>` jumps to the row in its file.
 ---
---- Rendering (`render`): the picker float does not wrap, so a row has to fit
---- one line. Instead of `[Scope/Plugin] Heading — Col: val  Col: val …`
---- repeated verbatim on every row (unreadable past the second column), the
---- rows are laid out as an aligned table:
----   * the `[Scope/Plugin]` prefix is dropped when every row shares one plugin
----     (the title already names it), shown as a short stem otherwise;
----   * the heading collapses to a short tag (`key`/`cmd`/`au`, or the heading
----     itself when it carries more than the category — sandbox.nvim's
----     `:Sandbox <thing> <sub>` sections);
----   * cell values are stripped of Markdown, `*None* (`nil`)`-style blanks
----     become `—`, and each column is padded to the widest value in its group
----     (`plugin` + heading), so the columns line up;
----   * the whole line is capped to the editor width with an ellipsis.
---- `<CR>` still jumps to the row in its source file.
+--- Why not `kit.select`: that chooser is j/k navigation with no section
+--- headers, no column header, and no unselectable lines — a browse of "every
+--- binding pickers.nvim registers" wants all three.
+---
+--- Layout (`layout`):
+---   * one **section** per source table (`plugin` + heading), titled with the
+---     heading, set in `Title`;
+---   * a **column-name row** under the title (bold) plus a rule line, and the
+---     same names mirrored into the window's `winbar` so they stay visible
+---     once the section scrolls past the top;
+---   * cells stripped of Markdown/entities, `*None* (`nil`)`-style blanks
+---     folded to `—` (dimmed), each column padded to the widest value (or
+---     name) so the columns line up; a prose column is left unpadded and
+---     dimmed;
+---   * the first column (the key / command name / event) is accented.
 ---
 --- User-facing strings here are German, deliberately (see status.lua).
 
@@ -30,52 +32,39 @@ local function notify()
   return require("lib.nvim.notify").create("[bindings]")
 end
 
---- Short per-category tag; the full heading wins when it says more than the
---- category already does (sandbox.nvim's per-subcommand sections).
-local CATEGORY_TAG = { Keymaps = "key", Usercmds = "cmd", Autocmds = "au" }
-
---- Headings that only restate their category — no point showing them over the
---- tag. Matched after stripping a leading `N.` and a trailing `(`slug`)`.
-local GENERIC_HEADING = {
-  ["keymaps"] = true,
-  ["key maps"] = true,
-  ["preset keymaps"] = true,
-  ["picker keymaps"] = true,
-  ["in-picker keys"] = true,
-  ["user commands"] = true,
-  ["user command"] = true,
-  ["usercmds"] = true,
-  ["usrcmds"] = true,
-  ["collection-generated commands"] = true,
-  ["autocommands"] = true,
-  ["autocommand"] = true,
-  ["autocmds"] = true,
+--- Section title when a heading only restates its category.
+local CATEGORY_LABEL = {
+  Keymaps = "Keymaps",
+  Usercmds = "User Commands",
+  Autocmds = "Autocommands",
 }
 
---- HTML entities and stray TeX a few corpus cells carry.
+--- HTML entities and stray TeX a few corpus cells carry. Ordered: the
+--- `$…$`-wrapped forms are resolved before the bare command they contain.
 local LITERAL = {
-  ["&middot;"] = "·",
-  ["&nbsp;"] = " ",
-  ["&amp;"] = "&",
-  ["&lt;"] = "<",
-  ["&gt;"] = ">",
-  ["&quot;"] = '"',
-  ["&#39;"] = "'",
-  ["&rarr;"] = "→",
-  ["&#8594;"] = "→",
-  ["&harr;"] = "↔",
-  ["$\\rightarrow$"] = "→",
-  ["$\\to$"] = "→",
-  ["\\rightarrow"] = "→",
+  { "$\\rightarrow$", "→" },
+  { "$\\to$", "→" },
+  { "\\rightarrow", "→" },
+  { "$→$", "→" },
+  { "&middot;", "·" },
+  { "&nbsp;", " " },
+  { "&rarr;", "→" },
+  { "&#8594;", "→" },
+  { "&harr;", "↔" },
+  { "&lt;", "<" },
+  { "&gt;", ">" },
+  { "&quot;", '"' },
+  { "&#39;", "'" },
+  { "&amp;", "&" },
 }
 
---- Hard per-column cap (a description column gets more room), the tag-column
---- cap (per-category tags are 2-3 chars; sandbox.nvim's headings ride here
---- too), and the overall line cap so the non-wrapping float never clips a row
---- mid-word.
+--- Hard per-column cap (a prose column gets more room); the overall line cap
+--- keeps the non-wrapping float from clipping a row mid-word.
 local CELL_CAP = 40
-local DESC_CAP = 56
-local TAG_CAP = 14
+local DESC_CAP = 60
+
+--- Namespace for the layout's highlight extmarks.
+local NS = vim.api.nvim_create_namespace("bindings_explorer_browse")
 
 ---@param s string
 ---@param n integer
@@ -103,8 +92,8 @@ end
 ---@param s string
 ---@return string
 local function plain(s)
-  for from, to in pairs(LITERAL) do
-    s = s:gsub(vim.pesc(from), to)
+  for _, sub in ipairs(LITERAL) do
+    s = s:gsub(vim.pesc(sub[1]), sub[2])
   end
   s = (s:gsub("`", ""):gsub("%*+", ""):gsub("<br%s*/?>", " "))
   s = vim.trim((s:gsub("%s+", " ")))
@@ -123,124 +112,244 @@ local function plain(s)
   return s
 end
 
---- A short tag for one row: the heading when it distils to something brief and
---- more specific than the category (`### Owned`, or sandbox.nvim's
---- `## `:Sandbox image <subcommand>`` → `image`), otherwise `key`/`cmd`/`au`.
----@param rec Bindings.Record
+--- A column header for display: no Markdown, and without the trailing
+--- `(config-field-name)` the cheatsheets append (`Default Key (`default`)` →
+--- `Default Key`). Kept whole if stripping would empty it.
+---@param col string
 ---@return string
-local function group_tag(rec)
-  local h = rec.heading
-  if h then
-    local s = plain(vim.trim((h:gsub("^%s*%d+%.%s*", ""):gsub("%s*%b()%s*$", ""))))
-    s = s:gsub("%s*<[^>]*>%s*$", ""):gsub("%s*%[[^%]]*%]%s*$", "") -- trailing <ph>/[ph]
-    s = vim.trim((s:gsub("^:%a[%w_]*%s+", ""))) -- leading command word (`:Sandbox `)
-    if
-      s ~= ""
-      and s ~= "—"
-      and vim.fn.strdisplaywidth(s) <= TAG_CAP
-      and not GENERIC_HEADING[s:lower()]
-    then
-      return s
-    end
-  end
-  return CATEGORY_TAG[rec.category] or "?"
+local function column_name(col)
+  local s = plain(col)
+  local bare = vim.trim((s:gsub("%s*%b()%s*$", "")))
+  return bare ~= "" and bare or s
 end
 
+--- A prose / free-text column — never a column to line others up against.
 ---@param col string|nil
 ---@return boolean
 local function is_desc_col(col)
   local c = (col or ""):lower()
-  return c:find("desc", 1, true) ~= nil
-    or c:find("beschreib", 1, true) ~= nil
-    or c:find("erklär", 1, true) ~= nil
-    or c:find("erläut", 1, true) ~= nil
-    or c:find("zweck", 1, true) ~= nil
-    or c:find("wirkung", 1, true) ~= nil
-    or c:find("bedeutung", 1, true) ~= nil
-    or c:find("note", 1, true) ~= nil
-    or c:find("hinweis", 1, true) ~= nil
-    or c:find("kommentar", 1, true) ~= nil
+  for _, needle in ipairs({
+    "desc",
+    "beschreib",
+    "erklär",
+    "erläut",
+    "zweck",
+    "wirkung",
+    "bedeutung",
+    "note",
+    "hinweis",
+    "kommentar",
+  }) do
+    if c:find(needle, 1, true) then
+      return true
+    end
+  end
+  return false
 end
 
---- Build one aligned display line per record, in `recs` order.
+--- Section title for one record: its heading, stripped of a leading `N.` and a
+--- trailing `(`slug`)`, or the plain category name when the heading adds
+--- nothing.
+---@param rec Bindings.Record
+---@return string
+local function section_label(rec)
+  local h = rec.heading
+  if h and h ~= "" then
+    local s = plain(vim.trim((h:gsub("^%s*%d+%.%s*", ""):gsub("%s*%b()%s*$", ""))))
+    local generic = CATEGORY_LABEL[rec.category] or ""
+    if s ~= "" and s ~= "—" and s:lower() ~= generic:lower() then
+      return trunc(s, 56)
+    end
+  end
+  return CATEGORY_LABEL[rec.category] or rec.category
+end
+
+---@class Bindings.Browse.Section
+---@field key string  internal: `plugin \0 heading`, the run boundary
+---@field plugin string
+---@field label string
+---@field columns string[]
+---@field recs Bindings.Record[]
+
+--- Split records into contiguous runs of one source table (`plugin` +
+--- heading). `records.list` returns them file- and heading-ordered, so a run
+--- is exactly one `|…|` table in one cheatsheet.
 ---@param recs Bindings.Record[]
----@return string[]
-local function render(recs)
-  local seen, plugin_count = {}, 0
+---@return Bindings.Browse.Section[]
+local function sections_of(recs)
+  local out = {}
+  for _, r in ipairs(recs) do
+    local key = r.plugin .. "\0" .. (r.heading or r.category)
+    local cur = out[#out]
+    if not cur or cur.key ~= key then
+      cur = {
+        key = key,
+        plugin = r.plugin,
+        label = section_label(r),
+        columns = r.columns,
+        recs = {},
+      }
+      out[#out + 1] = cur
+    end
+    cur.recs[#cur.recs + 1] = r
+  end
+  return out
+end
+
+---@class Bindings.Browse.Layout
+---@field lines string[]
+---@field rec_at table<integer, Bindings.Record>  1-based line -> record (data rows only)
+---@field winbar_at table<integer, string>        1-based line -> that section's column header
+---@field hl { line: integer, col_start: integer, col_end: integer, group: string }[]  0-based rows
+---@field first_row integer|nil                   1-based line of the first data row
+
+--- Render the sections to buffer lines plus a highlight plan.
+---@param sections Bindings.Browse.Section[]
+---@param show_plugin boolean
+---@return Bindings.Browse.Layout
+local function layout(sections, show_plugin)
+  local line_cap = math.min(((vim.o.columns or 0) > 0 and vim.o.columns or 120) - 8, 200)
+  local lines, rec_at, winbar_at, hl = {}, {}, {}, {}
+  local first_row
+
+  --- Append one line; return its 1-based and 0-based index.
+  ---@param text string
+  ---@return integer, integer
+  local function push(text)
+    lines[#lines + 1] = text
+    return #lines, #lines - 1
+  end
+  local function span(row0, cs, ce, group)
+    if ce > cs then
+      hl[#hl + 1] = { line = row0, col_start = cs, col_end = ce, group = group }
+    end
+  end
+
+  for si, sec in ipairs(sections) do
+    local ncol = #sec.columns
+    local names, is_desc, width = {}, {}, {}
+    for ci = 1, ncol do
+      names[ci] = column_name(sec.columns[ci])
+      is_desc[ci] = is_desc_col(sec.columns[ci])
+      if not is_desc[ci] then
+        width[ci] = vim.fn.strdisplaywidth(names[ci])
+      end
+    end
+
+    local rows = {}
+    for _, r in ipairs(sec.recs) do
+      local cells = {}
+      for ci = 1, ncol do
+        cells[ci] = trunc(plain(r.cells[ci] or ""), is_desc[ci] and DESC_CAP or CELL_CAP)
+        if not is_desc[ci] then
+          width[ci] = math.max(width[ci] or 0, vim.fn.strdisplaywidth(cells[ci]))
+        end
+      end
+      rows[#rows + 1] = { rec = r, cells = cells }
+    end
+
+    -- Widest non-empty column across the section; everything past it is empty.
+    local last = 0
+    for _, row in ipairs(rows) do
+      for ci = ncol, last + 1, -1 do
+        if row.cells[ci] ~= "" then
+          last = ci
+          break
+        end
+      end
+    end
+    if last == 0 then
+      last = ncol
+    end
+
+    --- Assemble one row; `get(ci)` returns column ci's value. Returns the line
+    --- text and, per column, the byte range its *value* occupies.
+    ---@param get fun(ci: integer): string
+    ---@return string, table<integer, {from: integer, to: integer}>
+    local function assemble(get)
+      local segs, ranges, col = {}, {}, 0
+      for ci = 1, last do
+        if ci > 1 then
+          col = col + 2 -- "  " separator
+        end
+        local v = get(ci)
+        ranges[ci] = { from = col, to = col + #v }
+        local seg = (ci == last or is_desc[ci]) and v or pad(v, width[ci] or 0)
+        segs[#segs + 1] = seg
+        col = col + #seg
+      end
+      return trunc(table.concat(segs, "  "), line_cap), ranges
+    end
+
+    if si > 1 then
+      push("")
+    end
+
+    local title = "▌ " .. (show_plugin and (sec.plugin .. "  —  ") or "") .. sec.label
+    local _, title0 = push(title)
+    span(title0, 0, #title, "Title")
+
+    local header = (assemble(function(ci)
+      return names[ci]
+    end))
+    local h1, h0 = push(header)
+    span(h0, 0, #header, "Special")
+    local rule = string.rep("─", math.min(vim.fn.strdisplaywidth(header), line_cap))
+    local r1, r0 = push(rule)
+    span(r0, 0, #rule, "NonText")
+    winbar_at[title0 + 1] = header
+    winbar_at[h1] = header
+    winbar_at[r1] = header
+
+    for _, row in ipairs(rows) do
+      local text, ranges = assemble(function(ci)
+        return row.cells[ci]
+      end)
+      local line1, line0 = push(text)
+      rec_at[line1] = row.rec
+      winbar_at[line1] = header
+      first_row = first_row or line1
+      for ci, rg in pairs(ranges) do
+        local ce = math.min(rg.to, #text)
+        if row.cells[ci] == "—" then
+          span(line0, rg.from, ce, "Comment")
+        elseif is_desc[ci] then
+          span(line0, rg.from, ce, "Comment")
+        elseif ci == 1 then
+          span(line0, rg.from, ce, "Identifier")
+        end
+      end
+    end
+  end
+
+  return { lines = lines, rec_at = rec_at, winbar_at = winbar_at, hl = hl, first_row = first_row }
+end
+
+---@param recs Bindings.Record[]
+---@return integer
+local function distinct_plugins(recs)
+  local seen, n = {}, 0
   for _, r in ipairs(recs) do
     if not seen[r.plugin] then
       seen[r.plugin] = true
-      plugin_count = plugin_count + 1
+      n = n + 1
     end
   end
-  local show_plugin = plugin_count > 1
+  return n
+end
 
-  local plugin_w = 0
-  if show_plugin then
-    for p in pairs(seen) do
-      plugin_w = math.max(plugin_w, vim.fn.strdisplaywidth(p))
-    end
-    plugin_w = math.min(plugin_w, 22)
-  end
-
-  -- Pass 1: plain cells, per-group column widths, tag width. A "group" is one
-  -- source table (plugin + heading), which is where a column layout is shared.
-  local prepared, group_w, tag_w = {}, {}, 0
-  for i, r in ipairs(recs) do
-    local group = r.plugin .. "\0" .. (r.heading or r.category)
-    local tag = group_tag(r)
-    tag_w = math.max(tag_w, vim.fn.strdisplaywidth(tag))
-    group_w[group] = group_w[group] or {}
-    local cells, is_desc = {}, {}
-    for ci = 1, #r.columns do
-      is_desc[ci] = is_desc_col(r.columns[ci])
-      local v = trunc(plain(r.cells[ci] or ""), is_desc[ci] and DESC_CAP or CELL_CAP)
-      cells[ci] = v
-      -- A prose column is never a column to line others up against — leave it
-      -- out of the width tally so one long sentence can't push every row over.
-      if not is_desc[ci] then
-        group_w[group][ci] = math.max(group_w[group][ci] or 0, vim.fn.strdisplaywidth(v))
-      end
-    end
-    prepared[i] = { tag = tag, cells = cells, is_desc = is_desc, group = group }
-  end
-  tag_w = math.min(tag_w, TAG_CAP)
-
-  -- Pass 2: assemble. Trailing empty columns are dropped; the last column and
-  -- any prose column are not padded; the whole line is capped to editor width.
-  local line_cap = math.min(((vim.o.columns or 0) > 0 and vim.o.columns or 120) - 8, 170)
-  local out = {}
-  for i, r in ipairs(recs) do
-    local p = prepared[i]
-    local segs = {}
-    if show_plugin then
-      segs[#segs + 1] = pad(trunc(r.plugin, plugin_w), plugin_w)
-    end
-    segs[#segs + 1] = pad(p.tag, tag_w)
-
-    local last = 0
-    for ci = 1, #p.cells do
-      if p.cells[ci] ~= "" then
-        last = ci
-      end
-    end
-    for ci = 1, last do
-      if ci == last or p.is_desc[ci] then
-        segs[#segs + 1] = p.cells[ci]
-      else
-        segs[#segs + 1] = pad(p.cells[ci], group_w[p.group][ci] or 0)
-      end
-    end
-
-    out[i] = trunc(table.concat(segs, "  "), line_cap)
-  end
-  return out
+--- Test seam: the buffer lines for a set of records (same pattern as
+--- `records.lua`'s exposed helpers).
+---@param recs Bindings.Record[]
+---@return string[]
+function M._preview(recs)
+  return layout(sections_of(recs), distinct_plugins(recs) > 1).lines
 end
 
 ---@param recs Bindings.Record[]
 ---@param label string|nil plugin scope, for the title and the empty message
 ---@return nil
-local function pick(recs, label)
+local function open_view(recs, label)
   if #recs == 0 then
     notify().warn(
       label and ("Keine Tabellenzeilen für %s gefunden"):format(label)
@@ -249,29 +358,71 @@ local function pick(recs, label)
     return
   end
 
-  local display = render(recs)
-  local by_rec = {}
-  for i, rec in ipairs(recs) do
-    by_rec[rec] = display[i]
+  local view = layout(sections_of(recs), distinct_plugins(recs) > 1)
+  local title = label and ("Bindings — %s (%d Zeilen)"):format(label, #recs)
+    or ("Bindings — %d Zeilen"):format(#recs)
+
+  local surf = require("lib.nvim.ui.kit.surface").open({
+    lines = view.lines,
+    title = title,
+    relative = "editor",
+    enter = true,
+    modifiable = false,
+    nice_quit = true,
+    filetype = "bindings-browse",
+    wo = { cursorline = true, wrap = false },
+  })
+  if not surf then
+    return
   end
 
-  require("lib.nvim.ui.kit.select").open({
-    items = recs,
-    title = label and ("%d Zeilen — %s"):format(#recs, label) or ("%d Zeilen"):format(#recs),
-    format_item = function(rec)
-      return by_rec[rec] or ""
-    end,
-    on_select = function(rec)
-      vim.cmd("edit " .. vim.fn.fnameescape(rec.file))
-      vim.api.nvim_win_set_cursor(0, { rec.line, 0 })
-      vim.cmd("normal! zz")
-    end,
-  })
-end
+  for _, h in ipairs(view.hl) do
+    pcall(vim.api.nvim_buf_set_extmark, surf.bufnr, NS, h.line, h.col_start, {
+      end_col = h.col_end,
+      hl_group = h.group,
+    })
+  end
 
---- Test seam: the row renderer, exercised directly against synthetic records
---- (same pattern as `records.lua`'s exposed helpers).
-M._render = render
+  --- Keep the current section's column names in the winbar. On a blank
+  --- separator line, carry the section above it.
+  local function sync_winbar()
+    if not surf:is_valid() then
+      return
+    end
+    local ln = vim.api.nvim_win_get_cursor(surf.winid)[1]
+    local header = view.winbar_at[ln]
+    while not header and ln > 1 do
+      ln = ln - 1
+      header = view.winbar_at[ln]
+    end
+    pcall(vim.api.nvim_set_option_value, "winbar", " " .. (header or ""), { win = surf.winid })
+  end
+
+  local group = vim.api.nvim_create_augroup("bindings_browse_" .. surf.winid, { clear = true })
+  vim.api.nvim_create_autocmd({ "CursorMoved", "WinScrolled" }, {
+    group = group,
+    buffer = surf.bufnr,
+    callback = sync_winbar,
+    desc = "bindings browse: section-aware winbar",
+  })
+
+  vim.keymap.set("n", "<CR>", function()
+    local ln = vim.api.nvim_win_get_cursor(surf.winid)[1]
+    local rec = view.rec_at[ln]
+    if not rec then
+      return
+    end
+    surf:close()
+    vim.cmd("edit " .. vim.fn.fnameescape(rec.file))
+    vim.api.nvim_win_set_cursor(0, { rec.line, 0 })
+    vim.cmd("normal! zz")
+  end, { buffer = surf.bufnr, nowait = true, desc = "bindings browse: jump to source" })
+
+  if view.first_row then
+    pcall(vim.api.nvim_win_set_cursor, surf.winid, { view.first_row, 0 })
+  end
+  sync_winbar()
+end
 
 --- Every table row, optionally narrowed to a category, a scope and/or a
 --- plugin.
@@ -287,7 +438,7 @@ M._render = render
 function M.open(category, scope, match)
   local recs = records.list(category, scope)
   if not match then
-    pick(recs)
+    open_view(recs)
     return
   end
 
@@ -301,7 +452,7 @@ function M.open(category, scope, match)
       scoped[#scoped + 1] = rec
     end
   end
-  pick(scoped, match.label)
+  open_view(scoped, match.label)
 end
 
 return M

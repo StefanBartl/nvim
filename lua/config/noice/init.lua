@@ -138,14 +138,6 @@ M.routes = {
     },
     view = "mini",
   },
-  --- CDX: this catch-all matches every `event = "msg_show"` message and
-  --- noice's router stops at the first match (opts.stop defaults to true,
-  --- see noice.message.router.update()) -- so every route below that also
-  --- targets `msg_show` (or has no `event` filter at all) is unreachable:
-  --- the "hide search hit BOTTOM/TOP", the E23/E20/E37/E31/E351/E418 emsg
-  --- hides, "No signature help", "Error detected while processing
-  --- BufReadPost", and the search_count hide never actually fire.
-  { filter = { event = "msg_show" }, view = "mini" },
 
   -- Hide noisy search boundary messages.
   { filter = { event = "msg_show", find = "search hit BOTTOM" }, opts = { skip = true } },
@@ -156,7 +148,6 @@ M.routes = {
   { filter = { event = "msg_show", kind = "emsg", find = "E20" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E37" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E31" }, opts = { skip = true } },
-  { filter = { event = "msg_show", kind = "emsg", find = "E37" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E351" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E418" }, opts = { skip = true } },
 
@@ -185,6 +176,12 @@ M.routes = {
     },
     opts = { skip = true },
   },
+
+  -- Catch-all: anything else on `msg_show` goes to the compact view. MUST stay
+  -- last -- noice's router stops at the first match (opts.stop defaults true),
+  -- so an earlier `{ event = "msg_show" }` route would shadow every skip rule
+  -- above it.
+  { filter = { event = "msg_show" }, view = "mini" },
 }
 
 return M

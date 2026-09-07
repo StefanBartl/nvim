@@ -335,8 +335,7 @@ return function(opts)
     table.insert(composed, {
       name = "  Git Actions",
       hl = "ExGreen",
-      --- CDX: both ternary branches return the same value -- dead condition
-      items = ok_gs and "gitsigns" or "gitsigns",
+      items = "gitsigns",
     })
   end
 

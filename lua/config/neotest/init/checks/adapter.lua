@@ -2,10 +2,9 @@
 --- Post-setup adapter check: logs how many adapters neotest initialized with
 --- and, when a neo-tree tests-source consumer is present, wires it up too.
 --
---- CDX: never required -- the call site in plugins/neotest.lua is commented
---- out (twice, once dead after the returned spec table), and this module is
---- flagged unreferenced-module by docs/map/overview.md. Same open decision as
---- autocmds/auto_discovery.lua, see docs/ROADMAP/IDEAS/test.md §2.
+--- CDX: parked -- never required (call site in plugins/neotest.lua commented
+--- out). Same reactivate-or-retire decision as autocmds/auto_discovery.lua:
+--- docs/ROADMAP/CDX/config-cdx-triage.md §3, docs/ROADMAP/IDEAS/test.md §2.
 
 local notify = require("lib.nvim.notify").create("[plugins.neotest]")
 

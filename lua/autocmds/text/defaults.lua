@@ -1,7 +1,5 @@
 ---@module 'autocmds.text.defaults'
 
---- CDX: config fields undocumented — add a one-line note per field
-
 ---@type AutoCmds.Text.Cfg
 local AUTOCMDS_TEXT_DEFAULTS = {
   trim_trailing = {

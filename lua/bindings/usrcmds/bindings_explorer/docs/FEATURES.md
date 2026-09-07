@@ -39,7 +39,7 @@ Module: `lua/bindings/usrcmds/bindings_explorer/` — `init.lua` (Composer-
 Verb + Routen), `config.lua` (die zwei BINDINGS-Wurzeln), `search.lua` +
 `ui.lua` (Phase 1 Fallback-Suche), `live.lua` (Phase 1 Live-Grep),
 `plugin_scope.lua` (Cheatsheet-Stamm → Dateien, für jeden `[plugin]`-Slot),
-`records.lua` + `browse.lua` (Phase 2 Tabellen-Scraper + Picker),
+`records.lua` + `browse.lua` (Phase 2 Tabellen-Scraper + gruppierte Ansicht),
 `drift.lua` + `source.lua` + `repo.lua` (Phase 3 Drift-Bericht, vier Achsen),
 `report.lua` + `status.lua` (Phase 4 Berichtsdatei + Dashboard).
 
@@ -145,7 +145,7 @@ jetzt hierher.
 :Bindings path extern
 ```
 
-## Tabellenzeilen-Picker (`:Bindings browse`)
+## Tabellenzeilen-Ansicht (`:Bindings browse`)
 
 `:Bindings browse [keymaps|usercmds|autocmds] [plugin] [personal|extern]`
 
@@ -179,21 +179,27 @@ Zeilen des Korpus mehr Zellen, als ihre Kopfzeile Spalten hat, und verschob
 damit jede Spaltenzuordnung dahinter. Sichtbar wurde es erst über den
 Drift-Bericht, der das Bruchstück `` `]\ `` als dokumentierten lhs meldete.
 
-`browse.lua`s Picker (`kit.select`, wie Phase 1s Fallback) legt die Zeilen als
-**ausgerichtete Tabelle** an, weil der Float nicht umbricht und eine Zeile
-sonst nach der zweiten Spalte abschneidet (`browse.lua`s `render`):
+`browse.lua` ist **kein** Fuzzy-Picker (`kit.select` kann keine Abschnitts-
+noch Spaltenüberschrift und keine nicht-wählbaren Zeilen). Es ist eine
+read-only-Float über `kit.surface`, die die Zeilen wie das Quell-Cheatsheet
+anordnet (`browse.lua`s `layout`):
 
-- der `[Scope/Plugin]`-Präfix entfällt, wenn alle Zeilen dasselbe Plugin
-  betreffen (der Titel nennt es schon), sonst als kurzer Stamm davor;
-- die Überschrift wird zu einem kurzen Tag (`key`/`cmd`/`au` — oder die
-  Überschrift selbst, wenn sie mehr sagt als die Kategorie, etwa
-  sandbox.nvims `:Sandbox image <sub>` → `image`);
-- Zellwerte werden von Markdown/Entities befreit, `*None* (`nil`)`-Leerwerte
-  zu `—`, und jede Spalte auf die breiteste Zelle ihrer Gruppe (Plugin +
-  Überschrift) gepolstert — so stehen die Spalten untereinander;
-- die ganze Zeile wird auf die Editorbreite gekürzt (`…`).
+- **ein Abschnitt pro Quelltabelle** (`plugin` + Überschrift), Titel in
+  `Title`, mit `▌`-Marker;
+- darunter eine **Spaltennamen-Zeile** (in `Special`) plus eine
+  `─`-Trennlinie; dieselben Namen wandern in die `winbar` des Fensters und
+  bleiben so sichtbar, sobald der Abschnitt oben rausscrollt;
+- Zellwerte von Markdown/Entities befreit, `*None* (`nil`)`-Leerwerte zu `—`
+  (gedimmt), jede Spalte auf die breiteste Zelle (oder den Spaltennamen)
+  gepolstert — so stehen die Spalten untereinander; eine Prosaspalte bleibt
+  ungepolstert und gedimmt;
+- die erste Spalte (Taste / Command-Name / Event) ist akzentuiert
+  (`Identifier`);
+- jede Zeile auf die Editorbreite gekürzt (`…`).
 
-`<CR>` springt weiterhin an die Fundstelle in der Quelldatei.
+`<CR>` springt an die Fundstelle in der Quelldatei, `q`/`<Esc>` schließt.
+`browse.lua`s `M._preview(recs)` gibt die Puffer-Zeilen ohne Float zurück —
+damit ist das Layout headless gegen den echten Korpus prüfbar.
 
 Beispiele:
 

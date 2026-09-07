@@ -76,7 +76,8 @@ local function build_keyword_list(keywords)
   local words = {}
 
   for k, v in pairs(keywords) do
-    --- CDX: removed vim.pesc -- keywords should not be escaped for Vim regex
+    -- Keywords go into a Vim regex alternation as-is (no vim.pesc): they are
+    -- plain identifiers, and escaping would break the `\|`-joined pattern.
     words[#words + 1] = k
 
     if type(v.alt) == "table" then

@@ -23,7 +23,7 @@ function M.get()
     -- fzf command-line options
     fzf_opts = fzf_opts.get(),
 
-    --- CDX: picker-specific configs -- unclear which part "does not work"
+    -- Per-picker config
     grep = grep_cfg.get(fzf_actions),
     files = files_cfg.get(),
 

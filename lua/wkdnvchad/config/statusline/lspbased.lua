@@ -8,19 +8,17 @@ local M = {}
 ---Setup function called after config assembly
 ---@param config table
 function M.setup(config)
-  --- CDX: `wkdnvchad.config.chadrc` does not exist (no chadrc.lua under
-  --- wkdnvchad/config/). `register_statusline_modules` lives in
-  --- `wkdnvchad.config.statusline.custom_light`. As-is this variant always
-  --- hits the notify.error path and registers no statusline modules.
-  local ok, chadrc_module = pcall(require, "wkdnvchad.config.chadrc")
+  -- The LSP-aware module set (breadcrumbs, diagnostics, lsp, cursor, progress)
+  -- is defined once in custom_light and shared with this variant.
+  local ok, cl = pcall(require, "wkdnvchad.config.statusline.custom_light")
   if not ok then
-    notify.error("[statusline.lspbased] Failed to load chadrc module: " .. tostring(chadrc_module))
+    notify.error("[statusline.lspbased] Failed to load custom_light: " .. tostring(cl))
     return
   end
 
   -- Register statusline modules
   if config.ui and config.ui.statusline then
-    chadrc_module.register_statusline_modules(config.ui.statusline)
+    cl.register_statusline_modules(config.ui.statusline)
   end
 end
 

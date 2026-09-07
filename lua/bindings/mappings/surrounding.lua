@@ -1,14 +1,8 @@
----@module 'bindings.mappings.sourrounding'
---- CDX: filename is misspelled ("sourrounding" → "surrounding"). Rename the
---- file + the one `require` in bindings/mappings/init.lua.
---- Visual-mode mappings to surround the current selection.
---- This version binds the bracket pairs to single-tap sequences:
----   []  -> surround with [ ... ]
----   ()  -> surround with ( ... )
----   {}  -> surround with { ... }
----   `   -> surround with ` ... `   (one tap, see `define_mappings`)
---- The legacy double-tap triggers [[, ((, {{ are no longer used to avoid conflicts
---- (e.g., markdown section jumps on [[).
+---@module 'bindings.mappings.surrounding'
+--- Visual-mode mappings to surround the current selection. Bracket pairs are
+--- single-tap sequences (`[]`, `()`, `{}`), backtick is one tap; see
+--- `define_mappings`. Double-tap triggers ([[, ((, {{) are avoided so they do
+--- not clash with e.g. markdown section jumps on `[[`.
 
 ---@class SurroundConfig
 ---@field single_quote  boolean|nil  -- enable '' for quotes

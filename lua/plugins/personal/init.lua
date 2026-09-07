@@ -30,8 +30,8 @@ plugins.add({
     lazy = false,
     priority = 1000,
     config = function()
-      -- TODO: do this differently -- helptags generically, usrcmds as
-      -- normal user config rather than a separate call.
+      -- NOTE: helptags could be generated generically and the usrcmds set up
+      -- as normal user config instead of this dedicated setup() call.
       require("lib.nvim_usrcmds").setup({
         helptags = true,
         cwd_here = true,
@@ -888,19 +888,19 @@ plugins.add({
     ft = { "markdown" },
     cmd = { "MDView" },
     config = function()
+      -- Non-default choices only; the feedback log behind each (which
+      -- experimental flags earned "make this the default") lives in
+      -- mdview.nvim's own ROADMAP, not here.
       require("mdview").setup({
         browser = {
-          -- theme = "github", -- P1-6: new theme (also: catppuccin, dark-dimmed, plain, github) -> works
-          highlighter = "hljs", -- P1-5: shiki bug under investigation (see mdview.nvim session notes); hljs stays default until then
-          focus = "nvim", -- P2-9: focus stays in nvim. Bug (jobstart quoting) was already fixed in b794c27, now enabled.
-
+          -- shiki mis-highlights some fences; hljs until that is fixed upstream.
+          highlighter = "hljs",
+          focus = "nvim",
           cursor_marker = "caret",
         },
-        -- Release build (v0.3.0 from GitHub Releases, no toolchain needed).
-        -- The dev/standalone overrides used to point at E:/repos (checkout now
-        -- lives under C:/repos) and at mdview-server.exe -- `npm run build:go`
-        -- produces mdview-server WITHOUT .exe on Windows. Uncomment to test a
-        -- locally built relay (see docs/development.md):
+        -- Release build (from GitHub Releases, no toolchain needed). To test a
+        -- locally built relay, uncomment and see mdview.nvim/docs/development.md
+        -- (`npm run build:go` produces `mdview-server` without .exe on Windows):
         -- dev = {
         -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
         -- web_root = vim.env.REPOS_DIR .. "/mdview.nvim/dist/client",
@@ -909,10 +909,9 @@ plugins.add({
         -- binary_path = vim.env.REPOS_DIR .. "/mdview.nvim/native/server/mdview-server",
         -- },
         experimental = {
-          line_diff = true, -- P?: send only changed lines -> works -> weigh pros/cons before making default
-          click_navigate = true, -- P0-3: relative link opens file in nvim -> works -> set as default
-          reverse_scroll = true, -- P1: scrolling in the browser moves the nvim cursor -> works almost perfectly (see feedback points)
-          -- webtransport = true,  -- falls back transparently to WebSocket (no backend) -> works -> weigh pros/cons before default
+          line_diff = true, -- send only changed lines to the browser
+          click_navigate = true, -- relative link opens the file in nvim
+          reverse_scroll = true, -- browser scroll moves the nvim cursor
         },
       })
     end,
