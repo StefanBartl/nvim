@@ -1,5 +1,22 @@
 # Modifier-Keymaps — Konzept
 
+## Table of content
+
+  - [Intro](#intro)
+  - [1. Was gebaut werden soll](#1-was-gebaut-werden-soll)
+  - [2. Der harte Teil: Keymaps haben kein Ergebnis](#2-der-harte-teil-keymaps-haben-kein-ergebnis)
+  - [3. Mechanik — verifiziert, nicht vermutet](#3-mechanik-verifiziert-nicht-vermutet)
+    - [Die vier Tiers](#die-vier-tiers)
+  - [4. Entschieden: `\\` statt `?` — `?` schattet die Rückwärtssuche](#4-entschieden-statt-schattet-die-rckwrtssuche)
+  - [5. Zusatzfeature aus der Notiz: Ziel-Prompt](#5-zusatzfeature-aus-der-notiz-ziel-prompt)
+  - [6. Abgrenzung](#6-abgrenzung)
+  - [7. Was bei der Umsetzung anders kam](#7-was-bei-der-umsetzung-anders-kam)
+  - [8. Offene Punkte](#8-offene-punkte)
+
+---
+
+## Intro
+
 Stand: 2026-08-29. Status: **umgesetzt** in
 `lib.nvim/lua/lib/nvim/bindings/keymap/modifier/` — ausdrücklich **nicht** in
 filetree.nvim. Aktivierung:
@@ -91,6 +108,8 @@ Sonderfall.
 Ist das Mapping aufgelöst, liefert `map.callback` die Lua-Funktion — direkt
 aufrufbar, Rückgabewert erfassbar.
 
+---
+
 ### Die vier Tiers
 
 Am 2026-08-29 mit einem Prototyp gegen drei realistische Mapping-Formen
@@ -181,6 +200,8 @@ Kein neuer UI-Code nötig.
   wiederholt den zuletzt gelaufenen Befehl, `modifier` greift das *Ergebnis*
   des nächsten Befehls ab.
 
+---
+
 ## 7. Was bei der Umsetzung anders kam
 
 Entschieden und gebaut am 2026-08-29:
@@ -211,6 +232,8 @@ das unbenannte Register, geprüft wird `+`; damit kann nur der Modifier den Wert
 dorthin gebracht haben. Gegenprobe: mit deaktiviertem Tier 3 schlägt der Spec
 präzise fehl.
 
+---
+
 ## 8. Offene Punkte
 
 - Visual-Mode: soll `\` dort dieselbe Bedeutung haben? (Selektion als
@@ -221,3 +244,6 @@ präzise fehl.
   sichtbar zu machen, damit `:Bindings browse` zeigt, welche Actions ein
   deklariertes Ergebnis haben.
 - Tier 3 bei Mappings, die *mehrere* Register anfassen — welches gewinnt?
+
+---
+

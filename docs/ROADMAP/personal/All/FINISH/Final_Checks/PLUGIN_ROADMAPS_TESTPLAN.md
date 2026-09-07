@@ -1,29 +1,8 @@
 # Plugin-Roadmaps — Testplan für das Gebaute
 
-Dritte Datei neben [`PLUGIN_ROADMAPS.md`](./PLUGIN_ROADMAPS.md) (offene Arbeit)
-und [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) (was gebaut
-wurde und warum so). **Diese hier beantwortet die dritte Frage: wie prüfe ich
-von Hand nach, dass es tut, was dort steht.**
-
-Jeder Punkt trägt seine Roadmap-ID, damit die drei Dateien sich gegenseitig
-auflösen lassen. Reihenfolge ist nach Plugin, nicht nach ID — beim Testen sitzt
-man in einem Repo und nicht in einer Chronologie.
-
-> **Nicht zu verwechseln mit
-> [`docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES/`](../../../NOTES/PersonelPlugins/TO_CHECK_FEATURES/).**
-> Die dortigen Dateien testen ein Plugin **vollständig**, Feature für Feature.
-> Diese hier testet nur, **was über diese Roadmap dazugekommen ist** — deutlich
-> kürzer, und der richtige Einstieg nach einer Bauphase. Wo eine Feature-Datei
-> denselben Punkt ausführlicher behandelt, steht der Verweis dabei.
-
-**Checkbox-Konvention**: `- [ ]` offen, `- [x]` geprüft. Ein Punkt, der nicht
-tut was hier steht, gehört als Befund zurück in `PLUGIN_ROADMAPS.md` — nicht
-stillschweigend abgehakt.
-
----
-
 ## Table of content
 
+  - [Intro](#intro)
   - [Vorbereitung](#vorbereitung)
   - [`hover.nvim`](#hovernvim)
     - [1. Kommt die Übersetzung überhaupt an?](#1-kommt-die-bersetzung-berhaupt-an)
@@ -64,6 +43,30 @@ stillschweigend abgehakt.
     - [A · Source-Achse von `:Bindings check`](#a-source-achse-von-bindings-check)
   - [Nicht von Hand prüfbar — und was stattdessen gilt](#nicht-von-hand-prfbar-und-was-stattdessen-gilt)
   - [Wenn etwas nicht stimmt](#wenn-etwas-nicht-stimmt)
+
+---
+
+## Intro
+
+Dritte Datei neben [`PLUGIN_ROADMAPS.md`](./PLUGIN_ROADMAPS.md) (offene Arbeit)
+und [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) (was gebaut
+wurde und warum so). **Diese hier beantwortet die dritte Frage: wie prüfe ich
+von Hand nach, dass es tut, was dort steht.**
+
+Jeder Punkt trägt seine Roadmap-ID, damit die drei Dateien sich gegenseitig
+auflösen lassen. Reihenfolge ist nach Plugin, nicht nach ID — beim Testen sitzt
+man in einem Repo und nicht in einer Chronologie.
+
+> **Nicht zu verwechseln mit
+> [`docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES/`](../../../NOTES/PersonelPlugins/TO_CHECK_FEATURES/).**
+> Die dortigen Dateien testen ein Plugin **vollständig**, Feature für Feature.
+> Diese hier testet nur, **was über diese Roadmap dazugekommen ist** — deutlich
+> kürzer, und der richtige Einstieg nach einer Bauphase. Wo eine Feature-Datei
+> denselben Punkt ausführlicher behandelt, steht der Verweis dabei.
+
+**Checkbox-Konvention**: `- [ ]` offen, `- [x]` geprüft. Ein Punkt, der nicht
+tut was hier steht, gehört als Befund zurück in `PLUGIN_ROADMAPS.md` — nicht
+stillschweigend abgehakt.
 
 ---
 

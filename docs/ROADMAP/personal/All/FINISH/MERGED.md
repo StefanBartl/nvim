@@ -29,6 +29,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 #### Live-Testing (braucht laufende, interaktive nvim-Session)
 
 - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
+  - [ ] aktualisieren /
 
 ---
 
