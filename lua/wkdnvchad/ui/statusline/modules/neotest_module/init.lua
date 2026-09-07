@@ -2,11 +2,11 @@
 --- Statusline segment: neotest's own running/passed/failed counts, colored
 --- per status, empty when nothing has run yet.
 
---- CDX: dead + broken. Unreferenced by all 6 statusline variants (its own
---- README says so), and `neotest.run.get_status()` is not a neotest API (the
---- run consumer exposes run/run_last/stop/attach/adapters/get_last_run only) --
---- it would nil-call the moment it were wired in. Decide: point it at the real
---- API and add it to a variant, or retire the module.
+--- CDX: unused -- revival target. Unreferenced by all statusline variants
+--- (its own README says so). Before wiring it in: `neotest.run.get_status()`
+--- (used below) is not a neotest API -- the run consumer exposes
+--- run/run_last/stop/attach/adapters/get_last_run only, so it would nil-call.
+--- See docs/ROADMAP/CDX/config-cdx-triage.md §2.
 
 return function()
   local ok, neotest = pcall(require, "neotest")
