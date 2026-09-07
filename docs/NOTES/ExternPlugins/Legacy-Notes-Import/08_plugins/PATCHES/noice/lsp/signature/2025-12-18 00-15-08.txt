@@ -1,1 +1,0 @@
-vim.fn.stdpath('config') .. -data\lazy\noice.nvim\lua\noice\lsp\signature.lua

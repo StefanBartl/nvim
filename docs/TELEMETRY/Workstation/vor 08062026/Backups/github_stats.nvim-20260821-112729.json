@@ -1,1 +1,0 @@
-{"backed_up_at":1787304449,"data":{"days":{"2026-08-02":{"config.get":2},"2026-08-03":{"config.get":1},"2026-08-04":{"config.get":2}},"functions":{"config.get":{"args":{"distinct":1,"n":1,"other":0,"values":{"()":5}},"calls":5}},"info":[],"modules":[],"reminded":[],"sessions":5,"started_at":1785688467,"version":1},"namespace":"github_stats.nvim"}
