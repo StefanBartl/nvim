@@ -21,7 +21,7 @@
 --- longer and read worse.
 ---
 --- User-facing output is German, deliberately and consistently across every
---- string of `:Bindings` (see the CDX note in init.lua).
+--- string of `:Bindings` (see the note in init.lua).
 ---
 ---@see bindings.usrcmds.bindings_explorer.drift
 
