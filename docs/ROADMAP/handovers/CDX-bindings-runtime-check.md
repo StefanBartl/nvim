@@ -1,0 +1,309 @@
+# CDX: Keymap/Usercmd/Autocmd — Laufzeit-Test, Duplikat-Check, Namensqualität
+
+Handover vom 2026-09-07. Ausgangspunkt war dieser CDX-Punkt aus dem Chat:
+
+```
+- [ ] CDX: jedes Keymap/Usrcmd/Autocmd in echter nvim-Instanz durchtesten, ob
+      Fehler geworfen werden. (Claude kann einen Testrunner vorbereiten, das
+      Beobachten in Echtzeit ist deine Domäne — außer wir bauen dafür einen
+      headless-Test.)
+  - [ ] nochmal alle keymaps checken, ob kein keymap doppelt vergeben ist,
+        über alle repos hinweg + nvim-config
+  - [ ] gleich mitchecken, ob die usrcmd-Optionen wirklich gut benannt sind.
+        Zb `:LspDoctor deep` wurde genannt für eine Aktion, die ausgegeben
+        hat, welcher Formatter gerade aktiv ist... daher wurde es umbenannt
+        auf `LspDoctor fmt_check`.
+```
+
+Dieses Dokument ist der Plan dazu, kein fertiges Tool. Bevor irgendwas gebaut
+wird: der größte Teil der Bestandsaufnahme lag schon da, nur verstreut und
+teils zwei Wochen alt. Das hier bündelt, was existiert, was davon jetzt eine
+echte, wiederholbare Prüfung werden kann, und was zwangsläufig eine
+Vor-Ort-Sitzung mit dir bleibt.
+
+---
+
+## Table of content
+
+  - [Bestandsaufnahme](#bestandsaufnahme)
+    - [Duplikat-Check (Punkt 2)](#duplikat-check-punkt-2)
+    - [Namensqualität (Punkt 3)](#namensqualität-punkt-3)
+    - [Laufzeit-Fehlertest (Punkt 1)](#laufzeit-fehlertest-punkt-1)
+  - [Was daraus folgt](#was-daraus-folgt)
+  - [Plan, in Phasen](#plan-in-phasen)
+    - [Phase 1 — Duplikat-Checks live schalten (klein, sofort machbar)](#phase-1--duplikat-checks-live-schalten-klein-sofort-machbar)
+    - [Phase 2 — Refresh der beiden Cross-Plugin-Dateien](#phase-2--refresh-der-beiden-cross-plugin-dateien)
+    - [Phase 3 — Namensqualität: Report statt Urteil](#phase-3--namensqualität-report-statt-urteil)
+    - [Phase 4 — Laufzeit-Testrunner, zweistufig](#phase-4--laufzeit-testrunner-zweistufig)
+  - [Risiken / offene Fragen](#risiken--offene-fragen)
+  - [Wie das Ergebnis dokumentiert wird](#wie-das-ergebnis-dokumentiert-wird)
+  - [Nächster konkreter Schritt](#nächster-konkreter-schritt)
+
+---
+
+## Bestandsaufnahme
+
+### Duplikat-Check (Punkt 2)
+
+**Für Keymaps existiert das schon zweimal — einmal als Analyse, einmal als
+API, aber die beiden sind nicht verbunden.**
+
+- [`docs/NOTES/CrossPlugin/Keymaps-Collisions.md`](../../NOTES/CrossPlugin/Keymaps-Collisions.md)
+  ist genau diese Prüfung, von Hand gemacht: **„Exact duplicates: None between
+  plugins"**, plus zwei tatsächlich gefundene und seither behobene
+  Config-vs-Plugin-Kollisionen (`<leader>cp`, `<leader>cs` gegen cascade.nvim,
+  gelöst 2026-08-30). Datiert 2026-08-25, letzte Ergänzung 2026-09-02
+  (filetree-Fix für `<leader>th`).
+- `lib.nvim` (`E:/repos/lib.nvim/lua/lib/nvim/bindings/keymap/init.lua`,
+  Funktion in `registry.lua:420`) hat eine echte `keymap.conflicts()`-Funktion, die
+  genau das automatisch beantwortet — inklusive der Lehre, die im README
+  dokumentiert ist: sie sieht sowohl `keymap.register()`-Actions **als auch**
+  blanke `keymap.set()`-Aufrufe (davor waren `set()`-Keymaps für `conflicts()`
+  unsichtbar — 59 registrierte Actions gegen 305 echte Keymaps, „over eighty
+  percent blind"). Buffer-Scope ist Teil der Identität, ein buffer-lokaler Key
+  gilt nicht als Kollision mit einem globalen — deckt sich mit der
+  „scope decides everything"-Prämisse der Analyse-Datei.
+- **Es gibt keinen Usercmd dafür.** `grep -rn "keymap.conflicts" lua/` über
+  die ganze Config: 0 Treffer. Die Funktion existiert, wird aber nirgendwo
+  aufgerufen — derselbe Bug-Typ wie beim letzten Sweep
+  (`docs/ROADMAP/personal/All/FINISH/ERLEDIGT/roadmap-tools-analysis.md`,
+  Nachtrag 2026-09-05): Modul echt, Kommando fehlt.
+
+**Für Usercmds ist die gleiche Prüfung schon fertig**, siehe
+[`docs/NOTES/CrossPlugin/Usercmds-Overview.md`](../../NOTES/CrossPlugin/Usercmds-Overview.md):
+**148 Kommandonamen über 31 Plugins, alle 148 verschieden.** Plus eine Liste
+generischer, noch nicht kollidierender Namen (`:Format`, `:Open`, `:Image`
+…) und ein real gefundener und dokumentierter Fall (`:Lsp` unterdrückt
+nvim-lspconfigs eigene Registrierung über eine Namens-Prüfung — kein Bug,
+aber load-bearing).
+
+**Für Autocmds gibt es keinen Kollisions-Check**, nur
+[`docs/NOTES/CrossPlugin/Autocmds-Observations.md`](../../NOTES/CrossPlugin/Autocmds-Observations.md)
+— explizit **„untriaged"** Fließtext-Beobachtungen (Event-Reihenfolge bei
+`BufWritePre`, mehrfache `ColorScheme`-Handler etc.), keine automatisierte
+Prüfung. Autocmd-Kollisionen sind ohnehin ein anderes Tier als Keymaps: zwei
+Handler auf demselben Event feuern **beide**, es überschreibt sich nichts —
+„Kollision" heißt hier höchstens „unerwartete Reihenfolge", nicht „einer
+verschwindet".
+
+### Namensqualität (Punkt 3)
+
+Nichts prüft das automatisiert, und nichts sollte das vollautomatisiert
+entscheiden — „ist `:LspDoctor deep` ein guter Name für einen
+Formatter-Check" ist eine Bedeutungsfrage, kein Pattern-Match. Was es
+gibt:
+
+- `Usercmds-Overview.md`s Abschnitt „Names generic enough to be worth
+  watching" ist verwandt, prüft aber **Kollisionsrisiko** (ist der Name so
+  generisch, dass ein Drittanbieter-Plugin ihn auch will), nicht
+  **Bedeutungstreue** (sagt der Name, was das Kommando tut).
+- `:LibUsercmdDocs` (lib.nvim, gewired über
+  `lua/bindings/usrcmds/autocmd_docs/init.lua`) generiert eine vollständige
+  Liste aller Usercmds mit Beschreibung — die Rohliste, auf der eine
+  Namens-Durchsicht aufbauen würde, existiert also schon als Kommando.
+- `:Bindings browse usercmds` (bindings_explorer) ist dieselbe Liste als
+  Picker, scopbar auf ein Plugin.
+
+### Laufzeit-Fehlertest (Punkt 1)
+
+**Das ist der einzige der drei Punkte, für den es noch kein Fundament gibt.**
+Alles oben ist *statische* Registry-Introspektion — was ist registriert, mit
+welchem `lhs`/Namen, unter welchem Scope. Nichts davon **ruft** eine Aktion
+auf und schaut, ob sie wirft. Auch `:Bindings check` (Drift-Report) und
+`:LibBindingsAudit` (Actions-vs-Routes) lesen nur Metadaten, nie den Callback
+selbst aus.
+
+Was an Infrastruktur dafür nutzbar ist:
+
+- `keymap.registered()` / `usercmd.registered()` / `autocmd.registered()`
+  geben die vollständigen Listen zurück — der Ausgangspunkt für „jede
+  Aktion einmal anfassen".
+- `run_all_tests.sh` (siehe `roadmap-tools-analysis.md`, Abschnitt „No
+  natural plugin home") iteriert bereits alle `*.nvim`-Repos unter
+  `$REPOS_DIR` und ruft deren eigene Testrunner auf — das ist aber
+  Unit-/Plugin-eigene Tests, nicht "jede Keymap-Aktion im laufenden Setup
+  auslösen".
+- Kein bestehendes Werkzeug feuert Keys per `feedkeys()`, ruft Usercmds mit
+  synthetischen Argumenten auf oder triggert Autocmd-Events künstlich.
+
+---
+
+## Was daraus folgt
+
+Punkt 2 und die Kollisions-Hälfte von Punkt 3 sind **kein neues Tool**,
+sondern zwei fehlende Zeilen: `keymap.conflicts()` und ein
+Usercmd-Namens-Scan brauchen dieselbe Behandlung wie `bindings.audit`
+in `roadmap-tools-analysis.md` — Modul ist echt, es fehlt nur der
+`create_usercmd()`-Aufruf in `lua/plugins/personal/init.lua`. Danach ist
+der Duplikat-Check jederzeit mit einem Tastendruck wiederholbar, statt
+alle paar Wochen von Hand neu gelesen zu werden (die beiden
+Cross-Plugin-Dateien sind vom 2026-08-25 — seither: der komplette
+CDX-Comment-Sweep, der luals-Diagnostics-Sweep, mehrere neue Keymaps/Befehle.
+Ein Refresh ist überfällig, unabhängig von diesem Punkt hier).
+
+Punkt 3 (Bedeutungstreue der Namen) bleibt **Lesearbeit für dich** — das
+Werkzeug kann bestenfalls die Liste sauber aufbereiten (gruppiert, mit
+Beschreibung, evtl. mit einer Low-Confidence-Markierung für vage
+Adjektiv-Subcommands wie `deep`/`full`/`check`/`info` ohne erklärenden
+Zusatz), nicht das Urteil fällen.
+
+Punkt 1 ist die einzige echte Neubau-Arbeit, und er zerfällt sauber in zwei
+Hälften mit unterschiedlichem Risiko:
+
+- **Sicher automatisierbar:** prüfen, ob der Callback hinter einer
+  Keymap/einem Usercmd/einem Autocmd überhaupt eine aufrufbare Lua-Funktion
+  ist (kein `nil`, kein fehlgeschlagener `require`). Das fängt die häufigste
+  reale Fehlerklasse — Tippfehler in einem Modulpfad, ein Feld, das beim
+  Refactor verschwunden ist — **ohne** die Aktion tatsächlich auszuführen.
+  Läuft headless, ohne Beobachtung nötig.
+- **Nicht sicher automatisierbar:** die Aktion wirklich auslösen. Viele
+  Kommandos/Keymaps sind destruktiv, öffnen einen Picker, der auf Input
+  wartet, oder verändern Editor-/Dateisystemzustand (`:File`-Operationen,
+  `:Image scale`, alles unter `:Case`, Session-Speichern, `:Gopath`-Sprünge).
+  Ein Skript, das diese blind durchklickt, ist selbst das Risiko, das der
+  Check eigentlich finden soll. Das ist exakt der Grund, warum du im
+  CDX-Punkt selbst schon zwischen „Testrunner vorbereiten" (mein Teil) und
+  „Beobachten in Echtzeit" (dein Teil) unterschieden hast — die Trennung ist
+  richtig, nicht nur eine Formalität.
+
+---
+
+## Plan, in Phasen
+
+### Phase 1 — Duplikat-Checks live schalten (klein, sofort machbar)
+
+1. `require("lib.nvim.bindings.keymap").conflicts()` einen Usercmd geben.
+   Entweder als eigener Aufruf `M.create_usercmd()`-artig direkt in
+   `lua/plugins/personal/init.lua` (dort, wo `lib.nvim` konfiguriert wird —
+   dieselbe Stelle, die für `bindings.audit` und `dev.duplicates` schon
+   fehlt), oder als neue Route unter dem bestehenden `:Bindings`-Composer
+   (`bindings_explorer/init.lua`), näher an `check`/`report`, da dort schon
+   die Infrastruktur für Ausgabe (`kit.viewer`) und Markdown-Report
+   (`report.lua`) steht. Letzteres ist konsistenter mit dem Rest der Datei,
+   Ersteres ist der Weg, den `roadmap-tools-analysis.md` für die
+   Schwestermodule vorgesehen hat — beide sind vertretbar, deine
+   Entscheidung beim Umsetzen.
+2. Denselben Riegel für `usercmd.registered()` bauen: Namen sammeln, auf
+   Duplikate prüfen (bei 31 Repos + Config eigentlich nur eine
+   Häufigkeitstabelle über `name`), plus optional die Präfix-Ambiguitäts-
+   Prüfung aus `Usercmds-Overview.md` (`vim.fn.exists(':' .. prefix) == 2`
+   probieren) automatisieren. Existiert als Konzept noch nirgends als
+   Funktion — wäre der eigentliche neue Code in dieser Phase.
+3. **Vollständigkeits-Falle:** beide Checks sehen nur, was **aktuell
+   geladen** ist. lazy.nvim verzögert die meisten der 31 Plugins bis zu
+   einem Event/Kommando/Filetype. Vor dem Check entweder alles laden
+   (`:Lazy load` ohne Argument lädt nicht alles — eher jedes Plugin einzeln
+   mit `require("lazy").load({ plugins = {...} })` durchgehen, oder die
+   Lazy-Spec kurzzeitig mit `lazy = false` überschreiben) oder — wie
+   `bindings_explorer`'s `check repo`-Achse es für unentdeckte Kommandos
+   schon tut — zusätzlich eine Source-Achse lesen statt nur die Registry.
+   Ohne das meldet der Check nach einem frischen Start fälschlich „keine
+   Duplikate", nur weil die Hälfte der Plugins noch gar nicht da ist.
+
+### Phase 2 — Refresh der beiden Cross-Plugin-Dateien
+
+Mit den Kommandos aus Phase 1 einmal laufen lassen und
+`Keymaps-Collisions.md` + `Usercmds-Overview.md` gegen den aktuellen Stand
+abgleichen (Diff zur Handanalyse vom 2026-08-25). Abweichungen sind
+entweder neue echte Befunde (zurück in die jeweilige Datei) oder ein Zeichen,
+dass der automatisierte Check etwas anders zählt als die Handanalyse
+(Scope-Behandlung prüfen — das war schon einmal die Fehlerquelle, siehe
+„A · Source-Achse von `:Bindings check`" in `PLUGIN_ROADMAPS_TESTPLAN.md`:
+eine „wesentlich größere Zahl" an Befunden macht eher das Werkzeug
+verdächtig als die Config).
+
+### Phase 3 — Namensqualität: Report statt Urteil
+
+Eine Liste `Plugin | Kommando | Route | Beschreibung` aus `:LibUsercmdDocs`
++ `composer.registry()`'s Routen ableiten (im Wesentlichen das, was
+`bindings.audit.command_routes()` schon sammelt, nur ohne den
+Keymap-Abgleich). Optional eine Low-Confidence-Markierung für Routen, deren
+letztes Pfad-Segment ein einzelnes vages Wort ohne Objekt ist (`deep`,
+`full`, `check`, `info`, `debug` — genau die Kategorie, aus der
+`LspDoctor deep` kam). Ergebnis ist eine Markdown-Tabelle zum Durchlesen,
+kein Auto-Fix — Umbenennen bleibt eine bewusste Entscheidung pro Fund, wie
+beim `fmt_check`-Beispiel.
+
+### Phase 4 — Laufzeit-Testrunner, zweistufig
+
+**Tier 1 — headless, automatisch, ohne Beobachtung:**
+Ein Skript (`nvim --headless -l ...` oder ein `:LibXyzProbe`-Kommando), das
+für jeden Eintrag aus `keymap.registered()` / `usercmd.registered()` /
+`autocmd.registered()` prüft, ob der hinterlegte Callback ein aufrufbares
+Lua-Objekt ist (`type(cb) == "function"`) und — wo möglich, ohne
+Seiteneffekt — probeweise mit `pcall` gegen die reine Existenz/Signatur
+prüft, statt es auszuführen (z. B. `debug.getinfo` auf die Funktion, prüfen,
+dass sie nicht `nil` durch einen kaputten `require` ist). Fängt die
+Tippfehler-/Refactor-Klasse von Fehlern, die die Config beim Start ohnehin
+schon zeigen würde, sobald der jeweilige Pfad einmal geladen wird — der
+Wert liegt darin, das für **jeden** Pfad auf einmal zu erzwingen, statt
+zufällig beim Benutzen drüberzustolpern.
+
+**Tier 2 — interaktiv, mit dir am Gerät:**
+Ein Fortschritts-Kommando (`:LibBindingsWalk` o. ä.), das die volle Liste
+aus Tier 1 als Warteschlange hält, minus allem, was Tier 1 schon als
+sicher `nil`/kaputt gemeldet hat (das ist bereits ein Befund, kein
+Testfall mehr). Für den Rest: einen Eintrag zeigen (Plugin, Name, Art,
+kurze Beschreibung), du löst ihn manuell aus (Taste drücken /
+`:Kommando` tippen), bestätigst mit `<CR>` „ok" oder trägst einen
+Kurzbefund ein, weiter zum nächsten. Fortschritt in einer Datei
+(`docs/ROADMAP/…/BINDINGS-WALK-PROGRESS.md` o. ä.) persistieren, damit
+das über mehrere Sitzungen läuft — bei 150 Usercmds + hunderten Keymaps
+ist das nicht an einem Abend durch. Destruktive/UI-blockierende Einträge
+(alles unter „UI"-Scope aus `Keymaps-Collisions.md`s eigener
+Scope-Tabelle, alles, was einen Picker öffnet oder eine Datei schreibt)
+brauchen ohnehin dich vor Ort — das deckt sich mit der Scope-Einteilung,
+die die Analyse-Datei bereits eingeführt hat, und lässt sich als Filter
+wiederverwenden statt neu zu erfinden.
+
+---
+
+## Risiken / offene Fragen
+
+- **Lazy-Loading-Vollständigkeit** (siehe Phase 1, Punkt 3) ist der Punkt,
+  an dem ein „sieht sauber aus"-Ergebnis am ehesten falsch-negativ ist.
+  Jeder der drei Checks muss vor der Auswertung explizit sagen, wie viele
+  Plugins tatsächlich geladen waren — sonst ist ein Rückgang der
+  Fund-Zahl gegenüber `Keymaps-Collisions.md` nicht von echtem Fortschritt
+  zu unterscheiden.
+- **Destruktive Aktionen in Tier 2** — die Warteschlange sollte den Scope
+  aus `Keymaps-Collisions.md` (global/filetype/tree/UI) und, wo bekannt,
+  eine grobe Risikoeinstufung mitführen, damit du nicht bei jedem Eintrag
+  neu einschätzen musst, ob ein Auslösen etwas verändert.
+  „`:Image scale`" schreibt eine Datei, "`:Lsp status`" nicht — das sollte
+  vorher feststehen, nicht während der Sitzung.
+- **`conflicts()`s Buffer-Scope-Prämisse** — sie behandelt buffer-lokale
+  Bindings grundsätzlich als nicht-kollidierend mit globalen. Das ist laut
+  README bewusst so (siehe Bestandsaufnahme), deckt sich aber nicht
+  vollständig mit `Keymaps-Collisions.md`s „Cross-scope shadowing"-
+  Abschnitt, der genau solche Fälle als **berichtenswert** einstuft (auch
+  wenn sie kein Bug sind — `<leader>th` etwa). Der automatisierte Check
+  wird also grundsätzlich weniger Fälle zeigen als die Handanalyse; das ist
+  kein Fehler des Tools, nur ein anderer Anspruch. In der Doku des neuen
+  Kommandos festhalten, damit ein „nur noch 40 statt 60 Funde" nicht als
+  Verbesserung missverstanden wird, obwohl nur die schwächere Prüfung läuft.
+
+---
+
+## Wie das Ergebnis dokumentiert wird
+
+Falls aus Phase 1/3/4 echter Code wird (neue Usercmds, ein Testrunner-Modul),
+gilt dieselbe Behandlung wie in
+[`roadmap-tools-analysis.md`](../personal/All/FINISH/ERLEDIGT/roadmap-tools-analysis.md):
+eine Tabelle **Vorschlag → Verdikt → Zuhause (welches Repo) → Status**, und
+„Status" heißt **verifiziert wired**, nicht nur „Modul existiert" — genau der
+Fehler, den die Nachträge dieser Datei zweimal korrigieren mussten
+(`create_usercmd()` real, aber nirgends aufgerufen). Ein `grep` nach dem
+neuen Kommandonamen über die ganze Config, das mindestens einen Treffer
+außerhalb der Definition selbst zeigt, ist die Mindestprüfung, bevor „Status:
+✅" irgendwo steht.
+
+## Nächster konkreter Schritt
+
+Phase 1 ist der kleinste, risikoärmste Einstieg und liefert sofort etwas
+Nutzbares (ein wiederholbarer Duplikat-Check, den es heute nicht gibt,
+obwohl das Modul dafür schon existiert). Vorschlag: dort anfangen, Ergebnis
+in Phase 2 gegen die bestehenden Cross-Plugin-Dateien spiegeln, und erst
+danach — mit frischen, verifizierten Zahlen — entscheiden, ob Phase 4
+(der eigentliche Laufzeit-Testrunner) als eigenes Roadmap-Item aufgesetzt
+wird.
