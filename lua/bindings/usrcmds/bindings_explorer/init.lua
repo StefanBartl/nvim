@@ -7,8 +7,8 @@
 --- Routes and the file that implements each:
 ---   search  [cat] [plugin] [query]  live-grep picker (live.lua), static
 ---                                   prompt+list fallback (search.lua/ui.lua)
----   browse  [cat] [scope] [plugin]  picker over parsed table rows (records.lua
----                                   scraper + browse.lua)
+---   browse  [cat] [scope] [plugin]  grouped read-only view of parsed table
+---                                   rows (records.lua scraper + browse.lua)
 ---   check   [plugin] [repo]         drift report vs nvim_get_keymap/_commands
 ---                                   (drift.lua; +repo.lua for the checkout axis)
 ---   report  [...] [out=<path>]      same drift run, written to Markdown
@@ -272,7 +272,8 @@ function M.path(scope)
   notify().info("Pfad(e) kopiert: " .. text)
 end
 
---- Picker over parsed table rows (`records.lua`) instead of full text.
+--- Grouped read-only view of parsed table rows (`records.lua`) instead of
+--- full text.
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = all three
 ---@param sel Bindings.Selection|nil
 ---@return nil
@@ -495,22 +496,22 @@ function M.enable()
       browse_route(
         { "browse" },
         nil,
-        "Picker über alle Tabellenzeilen (Keymaps+Usercmds+Autocmds); `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
+        "Gruppierte Ansicht aller Tabellenzeilen (Keymaps+Usercmds+Autocmds); `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
       ),
       browse_route(
         { "browse", "keymaps" },
         "Keymaps",
-        "Picker über Keymaps-Tabellenzeilen; `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
+        "Gruppierte Ansicht der Keymaps-Tabellenzeilen; `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
       ),
       browse_route(
         { "browse", "usercmds" },
         "Usercmds",
-        "Picker über Usercmds-Tabellenzeilen; `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
+        "Gruppierte Ansicht der Usercmds-Tabellenzeilen; `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
       ),
       browse_route(
         { "browse", "autocmds" },
         "Autocmds",
-        "Picker über Autocmds-Tabellenzeilen; `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
+        "Gruppierte Ansicht der Autocmds-Tabellenzeilen; `personal`/`extern` oder ein Cheatsheet-Stamm scopen"
       ),
       {
         path = { "check" },
