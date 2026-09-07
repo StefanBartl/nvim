@@ -24,6 +24,20 @@ Subsysteme, reduzierte Tiefe) durch. Verbleibend: `bindings`/`cross`/
 > `lua/lib/@types/init.lua` lag uncommittet im Baum) — bewusst nicht
 > angefasst/committet, gehört nicht zu diesem Audit.
 >
+> **Nachtrag 2026-09-07 (dritte Fortsetzung).** `bb063e5` war dieser
+> Chat/dieses Fenster — der Regressions-Fix aus der `ui`-Runde vorhin,
+> von CI selbst gefangen (siehe Chat-Verlauf). Für `fs` selbst kein
+> weiterer Handlungsbedarf mehr: eigene Verifikation (unabhängig, gleiche
+> Methode) kommt zu denselben Ergebnissen wie oben — die 25 übrigen
+> Leaf-Module sind sauber, das Bare-Function-Return-Muster ohne
+> `---@type` ist bei allen korrekt (jeweils eigene `---@param`/`---@return`
+> direkt an der Funktion, kein Bug). Die oben erwähnte liegengebliebene
+> `lua/lib/@types/init.lua`-Änderung war tatsächlich in sich
+> widersprüchlich (Kommentar sagte "narrowed to `table`", das Feld blieb
+> aber `Lib.Nvim`) — fertiggestellt, `lib.nvim@e5aa97c`. Kein Teil des
+> großen Subsystem-Sweeps, nur ein Fundstück, das sonst für die spätere
+> Glue-Layer-Runde verwirrend im Baum gelegen hätte.
+>
 > **Nachtrag 2026-09-07 (Fortsetzung).** `ui` (29 Dateien: kit/list/
 > statusline/hl/nerd_font) durchgearbeitet, reduzierte Tiefe wie unten unter
 > "Zwei Stellschrauben" vorgeschlagen — Top-Level-README/`@types`/
