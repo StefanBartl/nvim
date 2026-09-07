@@ -10,4 +10,4 @@ Der Rest dieses Ordners bleibt hier: `Usercmds.md`, `Keymaps.md` und
 `Autocmds.md` sind Teil des Bindings-Doku-Korpus **dieser Config**, den
 `:Bindings check` gegen die Plugin-Checkouts prüft — das ist ihr Zweck,
 nicht Plugin-Doku. `Workflow.md` war der Grenzfall und inhaltlich immer
-Plugin-Doku ([PLUGIN.md §3.3](../../ROADMAP/casedesk/PLUGIN.md)).
+Plugin-Doku (PLUGIN.md §3.3, `WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/PLUGIN.md`).

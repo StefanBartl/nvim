@@ -10,7 +10,10 @@ Auftrag: `lua/bindings/usrcmds/case/` aus der nvim-Config nach
 ergänzen und passende Schwesterplugins einbinden.
 
 **Der Plan ist die Quelle, nicht diese Datei:**
-[`docs/ROADMAP/casedesk/PLUGIN.md`](../../casedesk/PLUGIN.md) — Ausgangslage
+`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/PLUGIN.md`
+(bis 2026-09-07 unsortiert in `casedesk/` — mit dem Rest der Konzept-Docs
+2026-09-04 wholesale hierher kopiert, aber nie in die
+`ROADMAP/`/`NOTES/`-Struktur dieses Ordners eingeordnet) — Ausgangslage
 mit Messwerten, Zielstruktur, sieben Phasen, Entscheidungen mit Begründung,
 Bereichs-Konzept (§7), Schwesterplugins (§8), Feature-Backlog (§9).
 Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
@@ -24,7 +27,7 @@ Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
 | Zielrepo (GitHub, privat) | <https://github.com/StefanBartl/casedesk.nvim> |
 | Checkout | `$REPOS_DIR/casedesk.nvim` |
 | Alte Kopie (eingefroren, inaktiv) | `nvim/lua/bindings/usrcmds/case/` |
-| Plan | `nvim/docs/ROADMAP/casedesk/PLUGIN.md` |
+| Plan | `WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/PLUGIN.md` |
 | Konzept-Docs | **`casedesk.nvim/docs/`** (seit Phase 4; in der Config nur noch Zeiger) |
 | Bindings-Korpus der Config | `nvim/docs/NOTES/PersonelPlugins/BINDINGS/` — was `:Bindings` liest |
 | Verbindliche Regeln | `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists` |
