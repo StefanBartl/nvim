@@ -14,8 +14,6 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ## Liste A - Claude Tasks
 
-- [ ] casedesk.nvim
-
 - [ ] `docmap-desktop`
   - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
 
