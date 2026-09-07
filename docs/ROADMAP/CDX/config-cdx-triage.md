@@ -2,116 +2,88 @@
 
 Aufräum-Durchgang nach dem CDX-Kommentar-Sweep vom 2026-09-06. Der `lua/`-Baum
 ist mechanisch sauber (kein `vim.loop`, kein Ternary-Kollaps, keine veralteten
-APIs, praktisch keine deutschen Kommentare). Offen sind nur die **`--- CDX:`-Tags**
-selbst — bewusste Autorenentscheidungen, die im Sweep gesetzt, aber nie
-aufgelöst wurden.
+APIs, praktisch keine deutschen Kommentare). Offen waren nur die
+**`--- CDX:`-Tags** selbst — bewusste Autorenentscheidungen, im Sweep gesetzt,
+nie aufgelöst.
 
-Herkunft der Regeln: `E:/repos/WKDBooks/…/wkbook-Lua/Checklists/regeln/LUA_NVIM.md
+Regeln: `E:/repos/WKDBooks/…/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md
 § Kommentar-Hygiene` (`CMT-01`…`CMT-15`).
 
-Legende: **FIX** = direkt umgesetzt (kein Verhaltensänderung / strikt besser) ·
-**FRAGE** = Autorenentscheidung nötig · **PARK** = bewusst offen, Tag bleibt.
+**Stand 2026-09-07:** dieser Durchgang abgeschlossen. Alle Entscheidungen mit
+dem User geklärt und umgesetzt (Commits `docs(neotest)` … `refactor(config)`).
+Was noch als `--- CDX:`-Tag im Code steht, ist **bewusst geparkt** — siehe
+Gruppe 3 und die „behalten"-Zeilen unten.
 
 ---
 
-## Gruppe 1 — direkt umgesetzt (kein Verhaltensrisiko)
+## Gruppe 1 — umgesetzt (kein Verhaltensrisiko)
 
 | Ort | Fund | Aktion |
 | --- | ---- | ------ |
-| `config/menu/custom_menu/init.lua:339` | `ok_gs and "gitsigns" or "gitsigns"` — beide Zweige gleich, `ok_gs` ist im `if` oben schon `true` | → `items = "gitsigns"` |
-| `autocmds/{general,git,terminals,text}/defaults.lua:3` | „config fields undocumented" | Ein-Zeilen-`#`-Notiz pro Feld ergänzt |
-| `bindings/mappings/smart_del_key.lua:49` | `opts.map_cr` wird gesetzt aber nie gelesen; kein `<CR>`-Map existiert; `Features:`-Boilerplate-Header (`CMT-07`) | totes `map_cr` raus, `@param` korrigiert, Header auf `@brief` gekürzt |
-| `config/todo_comments/init.lua:79` | `--- CDX:` beschreibt eine **erledigte** Änderung (`vim.pesc` entfernt) | auf normalen Kommentar zurückgestuft (`CMT-11`) |
-| `wkdoptions/hl_config/features/mode_tint.lua:17` | `pcall(function() return vim.v.event end)` — `vim.v.event` kann nicht werfen | → `local event_tbl = vim.v.event` |
-| `autocmds/init.lua:4,6,9` | drei Prozess-Notizen (Refactor-Wunsch, „move to wkdoptions/ui", „not exercised yet") | auf knappe `-- TODO`/`-- NOTE` gekürzt, `CDX:`-Präfix raus |
-| `plugins/personal/init.lua:33` | `-- TODO:`-Marker (`CMT-06`: eigene Marker → `--- CDX:` oder Notiz) | zu neutraler Notiz umformuliert |
-| `config/harpoon/types/init.lua:54` | `Cfg.Harpoon.NormKeyOpts` nie an `@param`/`@cast` gebunden (externe `normkey`-Option) | als lokale Doku behalten, Tag → normaler Kommentar |
+| `config/menu/custom_menu/init.lua` | `ok_gs and "gitsigns" or "gitsigns"` | → `items = "gitsigns"` ✅ |
+| `autocmds/{general,git,terminals,text}/defaults.lua` | „config fields undocumented" | Tags raus — `@field`-Docs stehen vollständig in den jeweiligen `@types/` ✅ |
+| `bindings/mappings/smart_del_key.lua` | totes `opts.map_cr`, `Features:`-Boilerplate | `map_cr` raus, Header gekürzt, Caller nachgezogen ✅ |
+| `config/todo_comments/init.lua` | erledigter „removed vim.pesc"-Tag | → normaler Erklärkommentar ✅ |
+| `wkdoptions/hl_config/features/mode_tint.lua` | `pcall`-um-`vim.v.event` | → direkter Read ✅ |
+| `autocmds/init.lua` | 3 Prozess-Notizen | gekürzt, `CDX:`-Präfix raus ✅ |
+| `plugins/personal/init.lua` | `-- TODO:`-Marker; `mdview`-Block „P1-5/P2-9 → works" | Marker → Notiz; P-Nummern raus, aktueller Zustand ✅ |
+| `plugins/personal/source.lua` | „skips 25× isdirectory" | → „one per repo" (`CMT-10`) ✅ |
+| `config/harpoon/types/init.lua` | `NormKeyOpts`-Tag | → normaler lokaler Doc-Kommentar ✅ |
 
----
+## Gruppe 2 — totes Statusline-Gerüst in `wkdnvchad/`
 
-## Gruppe 2 — FRAGE: totes Statusline-Gerüst in `wkdnvchad/`
+**Entscheidung:** alle behalten, den einen echten Bug fixen.
 
-Alle drei sind **von keinem der 6 Statusline-Varianten** referenziert; die
-`README.md` von `wkdnvchad/ui/statusline/modules/` sagt das selbst
-(„currently unreferenced … pending a closer look").
+| Modul | Aktion |
+| ----- | ------ |
+| `wkdnvchad/ui/statusline/modules/custom/` | behalten, Tags → „unused — revival target" (Verweis hierher). `render.lua`-Bruch dokumentiert für den Fall der Reaktivierung ✅ |
+| `wkdnvchad/ui/statusline/modules/neotest_module/` | behalten, Tag → „revival target"; `neotest.run.get_status()`-Warnung im Tag ✅ |
+| `wkdnvchad/config/statusline/lspbased.lua` | **Bug gefixt:** requirte nicht-existentes `wkdnvchad.config.chadrc` → jetzt `wkdnvchad.config.statusline.custom_light` (dort lebt `register_statusline_modules`) ✅ |
+| `wkdnvchad/mappings/tabufline/init.lua` | `lib.lua.lazy.require` resolved eager → toter Re-Require-Zweig entfernt, Modul-Require als `pcall`-Guard ✅ |
 
-| Modul | Zustand |
-| ----- | ------- |
-| `wkdnvchad/ui/statusline/modules/custom/` (`init.lua`, `breadcrumbs/helpers.lua`, `breadcrumbs/render.lua`) | 0 Requires. `render.lua` ist zusätzlich kaputt (ruft `M.repo_relative`/`M.symbol_context`/… ohne `breadcrumbs/helpers.lua` zu requiren → nil-call) |
-| `wkdnvchad/ui/statusline/modules/neotest_module/` | 0 Requires. `neotest.run.get_status()` ist **keine** neotest-API → würde beim Verdrahten sofort nil-callen |
-| `wkdnvchad/config/statusline/lspbased.lua` | Variante „lspbased" lädt `wkdnvchad.config.chadrc` — **existiert nicht**. Registriert nie Statusline-Module, trifft immer den `notify.error`-Pfad. Aktive Variante ist „normal", daher latent |
+## Gruppe 3 — neotest Adapter-Split-Brain — **GEPARKT**
 
-**Optionen:** (a) alle drei löschen · (b) alle behalten (Tags → `CDX: unused —
-revival target`) · (c) `custom/` + `neotest_module/` löschen, `lspbased.lua`
-reparieren (`require` auf `wkdnvchad.config.statusline.custom_light` zeigen).
+**Entscheidung:** geparkt lassen (test.nvim-Extraktion), 7 wortreiche Tags zu je
+einem Ein-Zeiler gekürzt, der hierher + auf `docs/ROADMAP/IDEAS/test.md §2.1`
+zeigt.
 
----
+Offen (als `CDX: parked` im Code): `adapters/factory.lua`, `init/utils.lua`,
+`init/dependencies.lua`, `autocmds/auto_discovery.lua`, `init/checks/adapter.lua`,
+`@types/init.lua`, `debug/init.lua`, `plugins/neotest.lua` (2×).
 
-## Gruppe 3 — PARK/FRAGE: neotest Adapter-Split-Brain
+**Ein echter Bug im Cluster war ein Ein-Wort-Fix und ist erledigt:**
+`config/neotest/whichkey` `<leader>ntS` rief `actions.stop_tests()` (existiert
+nicht) → `actions.stop()` ✅
 
-7 Tags, alle zeigen auf **`docs/ROADMAP/IDEAS/test.md §2.1`** und die geplante
-`test.nvim`-Extraktion. `plugins/neotest.lua` hardcodet `opts.adapters` auf
-plenary/vitest/go; die ganze Registry-Maschinerie darunter ist tot.
+## Gruppe 4 — echte Verhaltens-Bugs — umgesetzt
 
-| Ort | tote Einheit |
-| --- | ------------ |
-| `config/neotest/adapters/factory.lua:4` | `M.get_all()` — 0 Aufrufer |
-| `config/neotest/init/utils.lua:6` | `M.build_adapters()` — 0 Aufrufer |
-| `config/neotest/init/dependencies.lua:17` | `neotest-vim-test` installiert, kein Builder in `ADAPTER_BUILDERS` |
-| `config/neotest/autocmds/auto_discovery.lua:6` | `M.attach()` — require auskommentiert |
-| `config/neotest/init/checks/adapter.lua:5` | nie required — Call-Site auskommentiert |
-| `config/neotest/@types/init.lua:4` | `AdapterConfig`/`Position`/`Result`/`RunOpts` — keine Call-Site |
-| `config/neotest/debug/init.lua:135` | `ts_config.adapter` existiert nicht → `NeotestDebugRoot` löst nie einen TS-Root auf |
-| `config/neotest/whichkey/init.lua:66` | `actions.stop_tests` existiert nicht (`actions/init.lua` hat es nicht) — **live**, `whichkey.setup()` läuft aus `plugins/neotest.lua:96` |
-| `plugins/neotest.lua:18,101` | „hardcoded, ignoriert factory"; „check how many adapters wired up" |
+| Ort | Fund | Aktion |
+| --- | ---- | ------ |
+| `config/noice/init.lua` | Catch-all-Route `{ event = "msg_show" }` vor allen `skip`-Routen; Router stoppt beim ersten Match | Catch-all ans **Ende** verschoben, doppelte E37-Zeile weg ✅ |
+| `config/neotree/init.lua` + `plugins/neotree.lua` + `@types/config.lua` | `window_debug`/`window_open`/`busy_guard` akzeptiert + übergeben, aber `M.setup()` liest keins; `busy_guard` zusätzlich als nie implementierte Methode typisiert | überall entfernt ✅ |
+| `config/harpoon/preview.lua` | `pcall(require, "config.harpoon.preview_layout")` — Modul existiert nicht | toter `require` raus, Fallback direkt; Boilerplate-Header gekürzt ✅ |
+| `wkdoptions/hl_config/breadcrumbs/ctx/utils/text_utils.lua` | quoted-key-Match hat 2 Captures, `local quoted` fing nur den Quote-Char → quoted Table-Keys lieferten `"`/`'` | zweiter Capture ✅ |
+| `wkdoptions/hl_config/cword_occurrences/init.lua` | `H` zur Modul-Ladezeit aus `C.cfg` gefroren (nicht `get_cfg()`) → vor `get_cfg()` alle Reads no-op | lazy `HL()`-Accessor ✅ |
+| `bindings/mappings/buffer_jump.lua` | spekulativer `tabufline.go_to`-Zweig | entfernt ✅ |
+| `breadcrumbs/ctx` `_base_symbol` + `invalidate_caches`; `autocmds/git` enable | keine echten Laufzeit-Bugs / Fix wäre größer | Tags → knappe Notizen, bewusst offen ✅ |
 
-**Optionen:** (a) totes Gerüst **jetzt** löschen (factory, build_adapters,
-auto_discovery, checks/adapter, orphan-@types, vim-test-Dep) und die 2 echten
-Bugs — `whichkey stop_tests`, `debug ts_config.adapter` — fixen · (b) geparkt
-lassen, die 7 Tags zu **einem** Pointer auf `test.md §2.1` zusammenfassen ·
-(c) Registry jetzt richtig verdrahten.
+## Gruppe 5 — Stil / Aufräumer — umgesetzt
 
----
+| Ort | Aktion |
+| --- | ------ |
+| `bindings/mappings/snacks.lua` | **gelöscht** (272 Z., `M.setup()` nie aufgerufen; `config/snacks/mappings/` deckt dieselben lhs ab, ist verdrahtet) ✅ |
+| `bindings/mappings/toggle_comment.lua` | `transform_line()` + Helfer extrahiert, ~40 Z. Duplikat weg, Verhalten identisch ✅ |
+| `plugins/workflow.lua` | auskommentierte wakatime- (8 Z.) + autolist.nvim-Blöcke (84 Z.) gelöscht (autolist → cascade.nvim) ✅ |
+| `bindings/mappings/sourrounding.lua` | → `surrounding.lua` (`git mv`), `@module` + `require` nachgezogen ✅ |
+| `wkdoptions/qflist/` | **gelöscht** — `vim.diagnostic.config()` war voll redundant zu `set_diagnostic_signs()` zwei Zeilen später; `docs/BINDINGS.md` nachgezogen ✅ |
+| `bindings_explorer/config.lua` `roots()` | Tag → Notiz (Personal-Slot leer, aber wegen Index-Kontrakt in `plugin_scope`/`records`/`status` bewusst behalten) ✅ |
+| `bindings_explorer/init.lua` deutsche UX | Tag → Notiz, bleibt deutsch ✅ |
+| `config/fzf/init.lua` „unclear which part does not work" | Tag raus (kein Fund) ✅ |
+| `bindings/usrcmds` `:CwdHere`, `bindings/mappings/general` `<leader>date` | Tags → Notizen, beide bleiben ✅ |
 
-## Gruppe 4 — FRAGE: echte Verhaltens-Bugs, klein
+## Ortsunabhängiges Wissen → WKDBooks
 
-| Ort | Fund | Vorschlag |
-| --- | ---- | --------- |
-| `config/noice/init.lua:148` | Catch-all-Route `{ event = "msg_show" }` steht **vor** allen `skip=true`-Routen; noice stoppt beim ersten Match → „search hit BOTTOM/TOP", E23/E20/E37/E31/E351/E418, „No signature help" u.a. werden **nie versteckt** | Catch-all ans **Ende** der Routen-Liste verschieben |
-| `config/neotree/init.lua:12` | `window_debug`/`window_open` werden akzeptiert + von `plugins/neotree.lua` übergeben, aber `M.setup()` liest keins → tote Knöpfe | löschen (Config + `plugins/neotree.lua` + `@types/config.lua`) |
-| `config/neotree/@types/config.lua:21` | deklarierte Methode, die `M` nie implementiert | Feld löschen |
-| `config/harpoon/preview.lua:33` | `config.harpoon.preview_layout` existiert nirgends | Zweig entfernen bzw. echten Config-Key einsetzen |
-| `wkdoptions/hl_config/breadcrumbs/ctx/utils/text_utils.lua:184` | `text:match("^%[(['\"])(.-)%1%]%s*=")` liefert 2 Captures, `local quoted` fängt nur den **Quote-Char**; quoted Table-Keys lösen zu `"`/`'` auf | `local q, key = …; if key then return key end` |
-| `wkdoptions/hl_config/breadcrumbs/ctx/init.lua:156,197` | `cfg._base_symbol` wird nie gesetzt (Container-Provider); eine Fn ohne Aufrufer (`invalidate_tick` & Ziele) | `_base_symbol`-Pfad prüfen/entfernen; tote Fn löschen |
-| `wkdoptions/hl_config/cword_occurrences/init.lua:14` | `H` wird zur Modul-Ladezeit aus `C.cfg` gefroren (nicht `C.get_cfg()`); vor `get_cfg()` → `H = {}`, alle Reads no-op | `H` in `get_cfg()`-Getter umbauen |
-| `bindings/mappings/buffer_jump.lua:140` | `tabufline.go_to` — spekulativ, kein bekannter Build hat es | Zweig löschen |
-| `autocmds/git/init.lua:38` | `true`/`false`/`nil`-Zweige nötig, weil Submodule „missing required field" melden | Config-Shape aufräumen (größer) |
-
----
-
-## Gruppe 5 — FRAGE: Stil / kleine Aufräumer
-
-| Ort | Fund | Vorschlag |
-| --- | ---- | --------- |
-| `bindings/usrcmds/bindings_explorer/init.lua:32` | jeder User-String von `:Bindings` ist **bewusst deutsch** | behalten (deutsche UX ist Absicht, `CMT-06`) — Tag entfernen |
-| `bindings/usrcmds/bindings_explorer/config.lua:7` | `roots()[1]` zeigt auf gelöschten `docs/NOTES/PersonelPlugins/BINDINGS/`; `:Bindings path personal` kopiert toten Pfad | `roots()` auf Extern-only kürzen |
-| `bindings/mappings/sourrounding.lua:2` | Dateiname falsch geschrieben („sourrounding" → „surrounding") | umbenennen + den einen `require` in `mappings/init.lua` |
-| `bindings/mappings/snacks.lua:4` | ganze Datei tot — `mappings.init.setup()` requiret sie nie; `GD` doppelt gemappt | löschen (pickers.nvim + git/fzf/telescope decken es ab) |
-| `bindings/mappings/general.lua:44` | `<leader>date` auch in buffer-ctx.nvim | hier droppen, Plugin gewinnt |
-| `bindings/mappings/toggle_comment.lua:5` | Annotation-vs-Regular-Branch zwischen 2 Fns copy-paste | eine Zeilen-Transform extrahieren |
-| `bindings/usrcmds/init.lua:68` | `:CwdHere` triggert keinen Tree-Reload | Tree-Refresh anhängen |
-| `config/fzf/init.lua:26` | „unclear which part does not work" | Tag entfernen (kein Fund) oder konkretisieren |
-| `wkdnvchad/mappings/tabufline/init.lua:140` | `lib.lua.lazy.require` resolved eager → `if not nvchad_tabufline`-Zweig tot | toten Zweig löschen |
-| `plugins/workflow.lua:67` | auskommentierte wakatime/autolist-Specs | löschen oder als bewussten „deaktiviert"-Block markieren |
-| `bindings/mappings/buffer_jump.lua:6` | 5 Fallback-Strategien + spekulatives API-Probing | auf `vim.t.bufs` reduzieren, wenn tabufline harte Dep ist |
-
----
-
-## Ortsunabhängiges Wissen → `wkdbook-myplugins/nvim-config/`
-
-Kandidaten aus dem Sweep (noch nicht verschoben):
-- `plugins/personal/init.lua` `mdview`-Block: die „P0-3/P1-5/P2-9"-Roadmap-
-  Punkt-Notizen — gehören in `mdview.nvim`s eigene Session-Notes, im Config
-  bleibt der aktuelle Zustand ohne P-Nummern.
-- `plugins/personal/source.lua:50` „skips 25× isdirectory checks" — zählende
-  Zahl (`CMT-10`), entfernen.
+- `plugins/personal/init.lua` `mdview`-Block: „P0-3/P1-5/P2-9 → works"-
+  Roadmap-Punkt-Notizen — im Config auf den aktuellen Zustand reduziert, das
+  Feedback-Log bleibt in `mdview.nvim`s eigener ROADMAP. ✅
+- `plugins/personal/source.lua` zählende Zahl entfernt. ✅
