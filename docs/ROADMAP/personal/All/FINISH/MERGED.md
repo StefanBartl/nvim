@@ -16,7 +16,11 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
-- [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
+- [ ] Merged_Finished.md in die Rules einbauen: Das sind alles Dinge, die wir gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen wenn spie passen. hier sind einige stellen, die passen könnten:
+  - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md`
+  - `$REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists/`
+  - `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
+   -`$REPOS_DIR/WKDBooks/Development/wkdbook-Neovim/`
 
 - [ ] casedesk.nvim
 
