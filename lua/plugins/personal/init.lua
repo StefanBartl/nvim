@@ -89,6 +89,29 @@ plugins.add({
   },
 
   {
+    -- This config's former lua/wkdoptions/** plus lua/options.lua: the
+    -- declarative option set, the highlight features, the editor-option
+    -- toggles, italic keywords and per-filetype indentation. Module root is
+    -- `my`, so a local lua/wkdoptions/ would not shadow it -- but the old
+    -- callers were repointed in the same commit that deleted it, so there is
+    -- nothing left to shadow either.
+    --
+    -- PRIVATE repo, unlike every other entry here. See source.lua's mode entry
+    -- for what that means on a machine that resolves to "remote".
+    --
+    -- No `opts`/`config` on purpose, for the same reason as lsp.nvim above:
+    -- init.lua calls setup() inside startup.now("my", ...) because the
+    -- highlight groups must land before the first paint and
+    -- vim.diagnostic.config() before the first LSP attach. A lazy opts block
+    -- would hand that ordering to the plugin manager. `lazy = false` only
+    -- guarantees the module is on the runtimepath by then.
+    "StefanBartl/my.nvim",
+    lazy = false,
+    priority = 900,
+    dependencies = { "StefanBartl/lib.nvim" },
+  },
+
+  {
     -- Eager: setup() registers the VimEnter autoload and the VimLeavePre
     -- autosave. Both are startup/shutdown events, so a lazy trigger would have
     -- to fire before VimEnter to be of any use -- which is what `lazy = false`

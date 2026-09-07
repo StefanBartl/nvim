@@ -88,7 +88,7 @@ local SELF_PREFIXES = {
   "machine",
   "nvchad",
   "wkdnvchad",
-  "wkdoptions",
+  "my",
 }
 
 ---`true` / `false` / a list of plugin names -> does it apply?

@@ -139,22 +139,29 @@ startup.now("system", function()
   })
 end)
 
--- Sync: options shape how the first buffer is rendered.
-startup.now("options", function()
-  require("options")
-end)
-
 -- Sync: cheap monkeypatch, no reason to defer it. Fixes vim.ui.open() on
 -- Windows truncating URLs at the first unescaped `&` (see config/ui_open.lua).
 startup.now("ui_open", function()
   require("config.ui_open").setup()
 end)
 
--- Sync: sets highlight groups and vim.diagnostic.config. Highlights must land
--- before the first paint to avoid a visible flash; the diagnostic config must
--- precede the first LSP attach.
-startup.now("wkdoptions", function()
-  require("wkdoptions").setup({ highlights = true, options = true, italic_keywords = true })
+-- Sync, and it has to be: `declarative` shapes how the first buffer renders,
+-- the highlight groups must land before the first paint to avoid a visible
+-- flash, and vim.diagnostic.config() must precede the first LSP attach.
+--
+-- One phase where there used to be two ("options" against lua/options.lua and
+-- "wkdoptions" against lua/wkdoptions/**). Both now live in
+-- StefanBartl/my.nvim, and `declarative` is the switch for the former --
+-- which is why setup() names it explicitly rather than relying on the
+-- default: this call is the documentation of what the phase does.
+startup.now("my", function()
+  require("my").setup({
+    declarative = true,
+    highlights = true,
+    options = true,
+    italic_keywords = true,
+    indent_per_ft = true,
+  })
 end)
 
 -- Sync: THIS IS THE ONE THAT WAS BROKEN. autocmds/general registers a VimEnter
@@ -275,6 +282,7 @@ vim.defer_fn(function()
   end
 end, 0)
 
--- Hard-contrast Visual selection: white background, black text.
---- CDX: belongs in options/, not here.
-vim.api.nvim_set_hl(0, "Visual", { bg = "#FFFFFF", fg = "#000000", bold = true })
+-- The hard-contrast Visual highlight that used to sit here moved into
+-- my.nvim's bindings/autocmds.lua -- its own comment already said it belonged
+-- in options/. It is on a ColorScheme hook there, so unlike this line it
+-- survives a `:UI theme` switch.

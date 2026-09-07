@@ -282,8 +282,7 @@ Sources: `lua/bindings/usrcmds/init.lua`,
 `lua/bindings/mappings/window_orientation.lua`,
 `lua/bindings/usrcmds/autocmd_docs/init.lua`,
 `lua/bindings/usrcmds/telemetry_nvim_config/init.lua`,
-`lua/startup/init.lua`, `lua/wkdoptions/commands/register.lua`, plus one
-module per standalone command below. All of these go through
+`lua/startup/init.lua`, plus one module per standalone command below. All of these go through
 `lib.nvim.bindings.usercmd`'s `create`.
 
 ### Editor and window layout
@@ -325,41 +324,11 @@ pointers below in this file.)
 
 ### Options
 
-| Command | Range | Effect |
-| --- | --- | --- |
-| `:WKDDiffProfile {profile}` | — | Set `diffopt` from a named profile — `minimal`, `context`, `review` or `strict` (`wkdoptions/set_diff_profile/profiles.lua`). `nargs = 1` with completion over the four names |
-| `:MyOptSet[!] {keypath} [value]` | — | Set one options-config key. `<Tab>` completes the key paths. With `!` and no value it toggles the key instead |
-| `:MyOptShow [keypath]` | — | Print one key's value; without an argument, the whole options table |
-| `:MyOptList` | — | List every options-config key path |
-| `:WKDOptionsHLSet[!] {keypath} [value]` | — | The same three, for the highlight config. `!` without a value toggles |
-| `:WKDOptionsHLShow [keypath]` | — | One highlight key, or the whole table |
-| `:WKDOptionsHLList` | — | Every highlight-config key path |
-| `:WKDOptionsHLDebugCtx` | — | Dump what the breadcrumb context resolver currently produces: LSP function, treesitter symbol, language extra, word fallback, and the separator it would use |
-
-**Two subsystems, one registrar, and that is why the names look unrelated.**
-`wkdoptions/commands/register.lua` defines all seven generically, with
-default names `WKDOptSet`/`WKDHighlightSet`/… — and both callers override
-them: `options_config/init.lua` asks for `MyOpt*`, `hl_config/init.lua` for
-`WKDOptionsHL*`. Neither default name exists in a running session, so
-grepping the registrar for the live names finds nothing.
-
-**`:WKDDiffProfile` was registered late.** `wkdoptions/commands/register.lua`
-had always defined it, but only from `M.register_all()` — and nothing called
-`register_all()`; the other three registrars are each reached directly from
-their own subsystem's `init.lua`. `wkdoptions/init.lua`'s `setup()` now calls
-`register_diff_profile()` alongside the other standalone features
-(`indent_per_ft`), since a diff profile is neither a highlight nor an option.
-Found by `:Bindings check` reporting it on both axes at once: present in the
-source map, absent from `nvim_get_commands`.
-
-This config's default `diffopt` is byte-for-byte the `review` profile, so
-`:WKDDiffProfile review` on a fresh session changes nothing visible — that is
-the profile already being active, not a no-op. An unknown profile name
-surfaces as a Vim error when driven from `vim.cmd` (how `nvim_exec2` reports
-an error-level message); typed interactively it is just the notification.
-One rough edge: the handler has a branch that lists the profiles when called
-with no argument, but `nargs = 1` means Neovim rejects the bare call with
-E471 first, so that branch is unreachable.
+Everything that used to live in `lua/wkdoptions/**` and `lua/options.lua` is
+now [my.nvim](https://github.com/StefanBartl/my.nvim). Its bindings are in
+the plugin's own [`docs/BINDINGS.md`](https://github.com/StefanBartl/my.nvim/blob/main/docs/BINDINGS.md),
+which `:Bindings` reads directly out of the installed plugin directory — a
+second copy here is exactly the duplication `BND-01`…`03` removed.
 
 ### Aliases for plugin commands
 
@@ -507,8 +476,7 @@ silently suppressing nvim-lspconfig's own commands via an upstream
 ## Autocommands
 
 Sources: `lua/autocmds/**`, `lua/bindings/**`, `lua/config/harpoon/**`,
-`lua/options.lua`, `lua/plugins/**`, `lua/startup/init.lua`,
-`lua/wkdnvchad/ui/**`, `lua/wkdoptions/**`.
+`lua/plugins/**`, `lua/startup/init.lua`, `lua/wkdnvchad/ui/**`.
 
 **Counted are call sites, not event registrations** — the same rule
 [`lsp.nvim` uses for its own autocmds](https://github.com/StefanBartl/lsp.nvim/blob/main/docs/autocmds.md):
@@ -603,11 +571,11 @@ From the same local override copy of `nvchad/au.lua` as `ReloadNvChad` and
 described as Harpoon-UI behavior; here as this config's registration of it.
 Both are correct — the registration lives here.
 
-### Options and plugin specs — `lua/options.lua`, `lua/plugins/`
+### Autocmd modules and plugin specs — `lua/autocmds/`, `lua/plugins/`
 
 | Augroup | Event(s) | Pattern | Action |
 | --- | --- | --- | --- |
-| `MarkdownLocalFolds` | `FileType` | `markdown` | Lightweight markdown folding, markdown buffers only |
+| `MarkdownLocalFolds` | `FileType` | `markdown` | Lightweight markdown folding, markdown buffers only (`lua/autocmds/markdown_folds.lua` — came out of `lua/options.lua` when that moved to my.nvim, and stayed here because it is a markdown.nvim integration rather than a generic option) |
 | `WebdevRestyLoader` | `FileType` | `http`, `resty` | Lazy-load `resty.nvim` on its own filetypes (`once`) |
 
 ### Statusline — `lua/wkdnvchad/`
@@ -616,71 +584,35 @@ Both are correct — the registration lives here.
 | --- | --- | --- | --- |
 | `WkdNvChadCwdModeBadgeHl` | `ColorScheme` | — | Rebuild the cwd-mode badge's highlights for the new palette |
 
-### Highlights — `lua/wkdoptions/hl_config/`
+### Highlights and options — moved out
 
-The largest block on this page: this config's own highlight subsystem,
-eleven augroups. Names are split between `myopt.X` (dot) and `myopt_X`
-(underscore) — historical, no difference in meaning.
-
-| Augroup | Event(s) | Pattern | Action |
-| --- | --- | --- | --- |
-| `myopt.CWord` | `CursorMoved` | — | Underline the word under the cursor (window-local) |
-| `myopt.CWord` | `InsertEnter`, `BufLeave`, `WinLeave` | — | Clear the underline again |
-| `myopt_CwordOccur` | `CursorMoved` | — | Update cursor-word occurrences on movement |
-| `myopt_CwordOccur` | `CursorMovedI` | — | Same, in insert mode |
-| `myopt_CwordOccur` | `BufEnter`, `BufWinEnter`, `WinScrolled` | — | Update on view/window changes |
-| `myopt_CwordOccur` | `TextChanged`, `TextChangedI` | — | Update on edits |
-| `myopt_CwordOccur` | `BufLeave`, `WinLeave` | — | Clear on leaving |
-| `myopt_CwordOccur` | `InsertEnter` | — | Clear on insert, if configured that way |
-| `myopt.Flash` | `TextYankPost` | — | Briefly flash the yanked region |
-| `myopt.ModeTint` | `ModeChanged` | — | Tint `CursorLine` by mode |
-| `myopt.ModeTint` | `BufWinEnter` | — | Re-apply the tint on window entry |
-| `myopt.ModeTint` | `WinClosed` | — | Clean up the mode-color cache |
-| `myopt.SigncolTint` | `DiagnosticChanged`, `BufEnter` | — | Tint `SignColumn` by the worst diagnostic present |
-| `myopt.TermPalette` | `TermOpen` | — | Apply the terminal-specific palette |
-| `myopt.ColorPersist` | `ColorScheme` | — | Re-apply highlights after a theme change |
-| `myopt.PerWindow` | `WinEnter`, `BufWinEnter` | — | Activate highlights in the active window |
-| `myopt.PerWindow` | `WinLeave` | — | Dim them in the inactive window |
-| `myopt.PerWindow` | `BufReadPost`, `TextChanged`, `TextChangedI` | — | Re-check the column highlight on size changes |
-| `myopt_PathCache` | `BufEnter`, `BufFilePost` | — | Warm the per-buffer repo-path cache |
-| `myopt_PathCache` | `DirChanged` | — | Refresh the cache on `:cd`/`:tcd` |
-
-**Six call sites for `myopt_CwordOccur`** are not an oversight: each toggles
-a different trigger, and three of them *clear* rather than set. Folded into
-one handler, the "update" vs. "clear" distinction would only be visible in
-the body.
-
-### Options — `lua/wkdoptions/options_config/`
-
-| Augroup | Event(s) | Pattern | Action |
-| --- | --- | --- | --- |
-| `myopt_Options` | `ColorScheme` | — | Keep base options and `guicursor` stable across theme changes |
+Everything that used to live in `lua/wkdoptions/**` and `lua/options.lua` is
+now [my.nvim](https://github.com/StefanBartl/my.nvim). Its bindings are in
+the plugin's own [`docs/BINDINGS.md`](https://github.com/StefanBartl/my.nvim/blob/main/docs/BINDINGS.md),
+which `:Bindings` reads directly out of the installed plugin directory — a
+second copy here is exactly the duplication `BND-01`…`03` removed.
 
 ### Without an augroup
 
-Fifteen call sites register with **no** group. Listed in full here because
+Ten call sites register with **no** group (fifteen until the five that came
+from `lua/wkdoptions/**` and `lua/options.lua` left with my.nvim). Listed in
+full here because
 `:Bindings check`'s autocmd axis structurally cannot see them — it needs an
 augroup to connect a documented row to a live registration, and counts these
 only as "not checkable".
 
 | Augroup | Event(s) | Pattern | Source | Action |
 | --- | --- | --- | --- | --- |
-| **none** | `OptionSet` | `diff` | `lua/options.lua:180` | Reset `wrap`/`cursorbind` on entering diff mode |
 | **none** | `FileType` | — | `lua/plugins/treesitter.lua:121` | Enable Treesitter highlighting, respecting the parser policy |
 | **none** | `FileType` | — | `lua/plugins/treesitter.lua:144` | Set Treesitter folding |
 | **none** | `FileType` | — | `lua/plugins/treesitter.lua:154` | Set Treesitter `indentexpr` (experimental) |
 | **none** | `VimEnter` | — | `lua/startup/init.lua:105` | Catch up one pending `UIReady` phase (`once`, one per phase) |
-| **none** | `FileType` | `*` | `lua/wkdoptions/indent_per_ft/init.lua:23` | Per-filetype indentation |
-| **none** | `ColorScheme` | `*` | `lua/wkdoptions/init.lua:39` | Re-apply highlight config after a theme change |
-| **none** | `FileType` | per language | `lua/wkdoptions/italic_keywords/init.lua:21` | Italicize keywords — one call site per language |
-| **none** | `BufEnter`, `BufWinEnter`, `FileType` | — | `lua/wkdoptions/ui/line_numbers/init.lua:62` | Per-buffer line-number mode |
 
-**Two rows are generators, not single cases.** `italic_keywords` iterates
-`M.languages` and registers one call site per enabled language — currently
-six (`typescript`, `go`, `rust`, `cpp`, `asm`, `lua`). `startup/init.lua:105`
-registers one per pending `UIReady` phase — currently two (`usrcmds`,
-`mappings`). Both numbers grow with configuration, not with code, which is
-why the generator is listed here rather than the expanded list.
+**One row is a generator, not a single case.** `startup/init.lua:105`
+registers one call site per pending `UIReady` phase — currently two
+(`usrcmds`, `mappings`). That number grows with configuration, not with code,
+which is why the generator is listed rather than the expanded list. (The
+second generator, `italic_keywords`, left with my.nvim.)
 
 **Why this is not just cosmetic.** lsp.nvim's own autocmds page logged two
 groupless autocmds as a real bug on 2026-08-25, with a measured consequence:
