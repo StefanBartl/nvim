@@ -1,10 +1,19 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: alle "kleinen/mittleren" `lib.nvim.*`-Module durch (20 von ~37).
-Verbleibend: die fünf großen Subsysteme (bindings/cross/fs/ui/buf_win_tab),
-der komplette `lib.lua.*`-Namespace und der Glue-Layer — noch nicht
-angefasst. Bewusst hier pausiert (Nutzer-Ansage: "beim nächsten fertigen
-Repo/Modul stop und Handover aktualisieren").**
+**Status: 20 kleine/mittlere Module + `ui` (erstes der fünf großen
+Subsysteme, reduzierte Tiefe) durch. Verbleibend: `bindings`/`cross`/`fs`/
+`buf_win_tab`, der komplette `lib.lua.*`-Namespace und der Glue-Layer.**
+
+> **Nachtrag 2026-09-07 (Fortsetzung).** `ui` (29 Dateien: kit/list/
+> statusline/hl/nerd_font) durchgearbeitet, reduzierte Tiefe wie unten unter
+> "Zwei Stellschrauben" vorgeschlagen — Top-Level-README/`@types`/
+> `modules.md`-Wiring pro Leaf geprüft, volle Funktions-für-Funktion-
+> README-Diffs nur wo etwas auffiel (nicht für alle 20 `kit`-Dateien
+> einzeln). Zwei echte Funde: `nerd_font` komplett undokumentiert
+> (dieselbe "vergessenes Submodul"-Form wie `image_preview`/
+> `notify.resolve_log_level`), `kit.compare` (eine ganze fertige Feature —
+> Zwei-Items-vergleichen-Flow) hatte null README-Abdeckung. Beide gefixt,
+> `lib.nvim@9143f01`. Details im Pro-Modul-Log der Tracking-Datei.
 
 Auslöser (Chat, Repo `lib.nvim` in einem Worktree, nicht nvim-config selbst):
 
