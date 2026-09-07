@@ -1,9 +1,28 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: 20 kleine/mittlere Module + `ui` + `fs` (zwei der fünf großen
-Subsysteme, reduzierte Tiefe) durch. Verbleibend: `bindings`/`cross`/
+**Status: 20 kleine/mittlere Module + `ui` + `fs` + `cross` (drei der fünf
+großen Subsysteme, reduzierte Tiefe) durch. Verbleibend: `bindings`/
 `buf_win_tab`, der komplette `lib.lua.*`-Namespace und der Glue-Layer.**
 
+> **Nachtrag 2026-09-07 (vierte Fortsetzung).** `cross` (~28 Leaf-Module,
+> 42 Dateien) durchgearbeitet, gleiche reduzierte Tiefe. Größter Fund im
+> ganzen Audit bisher: `cross/init.lua` — der Root-Aggregator, der
+> meistgenutzte Require im ganzen Subsystem — hatte trotz vollständig
+> korrekter `Lib.Cross`-Klasse kein `---@type`. Anders als `fs`/`ui`
+> (reine Leaf-Namespaces ohne echten Aggregator) hat `cross` einen
+> waschechten, funktionierenden `init.lua`-Aggregator — das macht diesen
+> Fix den bisher wirkungsvollsten der ganzen Session. Weitere Funde:
+> `cross.executable` hatte gar keine Modul-Oberflächen-Klasse (gleiches
+> Muster wie `fs.path`) und `clear(name?)` war nirgends dokumentiert;
+> `run_argv.run_async_captured` (eine fertige, gegen UI-Freezes gebaute
+> Async-Funktion) fehlte in README und API-Referenz; `fs.mutate`/`run.env`
+> hatten das übliche fehlende `---@type`, dazu fehlten `symlink`/
+> `hardlink` bzw. `array()` in `docs/API/cross-platform.md`;
+> `uv.spawn_capture`s `opts.stdin` (Credential-Handoff ohne argv-Leck) war
+> ebenfalls nirgends dokumentiert. `modules.md`s `lib.nvim.cross`-Zeile
+> verlinkte fälschlich auf `fs/separators/README.md` statt die eigene
+> Root-README. Alle gefixt, `lib.nvim@0d21f7d`.
+>
 > **Nachtrag 2026-09-07 (zweite Fortsetzung).** `fs` (29 Leaf-Submodule,
 > 52 Dateien) durchgearbeitet, gleiche reduzierte Tiefe wie bei `ui`.
 > Dabei entdeckt: `docs/API/*.md` ist eine ganze zweite, detailliertere
@@ -165,16 +184,20 @@ gefunden — jeder Fund war entweder mechanisch (fehlende Typ-Annotation) oder
 
 ## Was noch aussteht
 
-- **Drei der fünf großen Subsysteme** (`ui` und `fs` sind durch — siehe
-  Nachträge oben; je eigene READMEs/@types pro Untermodul laut
-  `modules.md`): `bindings` (34 Lua-Dateien), `cross` (42),
-  `buf_win_tab` (23). Diese sind de facto eigene Teilprojekte.
-  **Neu gelernt bei `fs`**: für jedes der fünf großen Subsysteme existiert
-  auch ein `docs/API/<thema>.md` — eine zweite, funktionssignatur-genaue
-  Doku-Ebene neben den einzelnen Leaf-READMEs. Die sollte bei `bindings`/
-  `cross`/`buf_win_tab` von Anfang an mitgeprüft werden (Vollständigkeit,
-  Submodul-Zahl in der Kopfzeile aktuell, "(see README)"-Marker korrekt),
-  nicht erst nachträglich entdeckt werden wie bei `fs`.
+- **Zwei der fünf großen Subsysteme** (`ui`, `fs` und `cross` sind durch —
+  siehe Nachträge oben; je eigene READMEs/@types pro Untermodul laut
+  `modules.md`): `bindings` (34 Lua-Dateien), `buf_win_tab` (23). Diese
+  sind de facto eigene Teilprojekte.
+  **Aus `fs`/`cross` gelernt**: für jedes der fünf großen Subsysteme
+  existiert auch ein `docs/API/<thema>.md` — eine zweite, funktions-
+  signatur-genaue Doku-Ebene neben den einzelnen Leaf-READMEs. Für
+  `bindings`/`buf_win_tab` ist das `docs/API/commands-and-infra.md` bzw.
+  `docs/API/ui-windows-buffers.md` — von Anfang an mitprüfen
+  (Vollständigkeit, "(see README)"-Marker korrekt). Ebenfalls gelernt: bei
+  Subsystemen mit einem **echten** `init.lua`-Aggregator (wie `cross`,
+  vermutlich auch `bindings`) zuerst prüfen, ob dessen `return M` ein
+  `---@type` trägt — bei `cross` war genau das der größte Einzelfund der
+  ganzen Session (der meistgenutzte Require im Subsystem war untypisiert).
 - **`lib.lua.*`-Namespace** (Lua-nur, kein Neovim-Bezug): `tables`,
   `strings`, `functions`, `time`, `json`, `memo`, `lazy`, `class`,
   `context_manager` — noch **gar nicht** inventarisiert, geschweige denn
@@ -198,7 +221,7 @@ tatsächliche Fixes.
 
 | Block | Umfang | Geschätzter Aufwand |
 |---|---|---|
-| `bindings`, `cross`, `buf_win_tab` (`ui`+`fs` bereits durch) | je 23-42 Dateien, viele Unter-READMEs/@types pro Leaf-Modul | **je eine halbe bis ganze eigene Session — macht zusammen 2-3 Sessions** |
+| `bindings`, `buf_win_tab` (`ui`+`fs`+`cross` bereits durch) | 23-34 Dateien, viele Unter-READMEs/@types pro Leaf-Modul | **je eine halbe bis ganze eigene Session — macht zusammen 1-2 Sessions** |
 | `lib.lua.*` (9 Module) | vermutlich klein wie die meisten `lib.nvim`-Module, aber noch ungeprüft | **~1 Session** |
 | Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) — hier liegt schon eine bekannte Altlast (`Lib.Modules`) | **~0.5 Session** |
 
@@ -217,15 +240,16 @@ Zwei Stellschrauben, falls das zu lang ist:
 ## Wie weitermachen
 
 1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — Pro-Modul-Log zeigt
-   alle fertigen Module mit ✅ und den jeweiligen Funden (`ui` und `fs`
-   jetzt beide drin).
-2. Nächster Schritt: `cross` (42 Dateien) oder `bindings` (34 Dateien) mit
-   derselben reduzierten Tiefe wie `ui`/`fs` — laut
-   [[lib-nvim-dependency]] wird `cross` von anderen Plugins aktiv genutzt,
-   also vermutlich zuerst. Dabei gleich `docs/API/cross-platform.md` bzw.
-   `docs/API/commands-and-infra.md` mitprüfen (siehe Nachtrag oben). Danach
-   `buf_win_tab`, dann `lib.lua.*` (9 Module, noch nicht inventarisiert),
-   zuletzt der Glue-Layer.
+   alle fertigen Module mit ✅ und den jeweiligen Funden (`ui`, `fs` und
+   `cross` jetzt alle drin).
+2. Nächster Schritt: `bindings` (34 Dateien) mit derselben reduzierten
+   Tiefe wie `ui`/`fs`/`cross` — hat laut `modules.md` einen echten
+   `init.lua`-Aggregator (`composer`-Subsystem, "die meistgenutzte
+   Komponente der Library — 30+ konsumierende Plugins"), also zuerst
+   dessen `return M`/`---@type` checken (siehe Lehre oben). Dabei gleich
+   `docs/API/commands-and-infra.md` mitprüfen. Danach `buf_win_tab`, dann
+   `lib.lua.*` (9 Module, noch nicht inventarisiert), zuletzt der
+   Glue-Layer.
 3. Jeder Batch: Fixes direkt im Code, Tracking-Datei nachführen, ein Commit
    pro Batch, sofort auf `main` gepusht. Vor dem Push kurz `git log`/
    `git status` gegenchecken — bei der `fs`-Session hat parallel eine
