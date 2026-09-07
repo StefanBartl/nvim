@@ -12,7 +12,7 @@
   - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
   - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
   - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
-  - [🔶 PRIN-* (37 Regeln) — in Arbeit](#prin-37-regeln-in-arbeit)
+  - [✅ PRIN-* (37 Regeln) — fertig](#prin-37-regeln-fertig)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -44,7 +44,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
 | `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
-| `PRIN-*` | 37 | `PRINCIPLES.md` | 🔶 **in Arbeit** — auf Nutzerwunsch volle Architektur-Review (nicht nur Bug-Hunt wie `ERR-*`/`UI-*`), 32 Repos offen |
+| `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
@@ -78,22 +78,21 @@ Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — 
 
 | Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
 |---|---|---|---|
-| `PRIN-*` | 37 | ~32 | ähnliche Größenordnung wie `SEC-*`/`ERR-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
 | `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
 | `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
-**Fazit:** `UI-*` ist inzwischen fertig (s. u., 0 Bugs über alle 32 Repos —
-der erste Durchlauf ganz ohne Fund, vermutlich weil der Katalog teilweise
-aus diesem Fleet selbst entstand);
-die übrigen drei Familien brauchen je ~32 echte Repo-Durchgänge, macht
-zusammen grob **96 Repo-Durchgänge** — bei reduzierter Parallelität eher
-mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. `ERR-*` selbst ist
-inzwischen durch (32/32, 17 echte Bugs, s. u.) und bestätigt die
-Einordnung: mit `SEC-*` vergleichbarer Aufwand, kein Ausreißer. Realistisch
-bewegt sich der Rest im Bereich von **mehreren vollen Arbeitstagen bis zu
-zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für
-Familie durchgezogen wird, mit `PERF-*` als vermutlich größtem
-Einzelbrocken darin.
+**Fazit:** `UI-*` und `PRIN-*` sind inzwischen fertig (s. u.) — `UI-*` mit
+0 Bugs über alle 32 Repos, `PRIN-*` mit nur einem Fund trotz voller
+Architektur-Review, beide vermutlich, weil der Katalog teilweise aus
+diesem Fleet selbst entstand. Die übrigen zwei Familien brauchen je ~32
+echte Repo-Durchgänge, macht zusammen grob **64 Repo-Durchgänge** — bei
+reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*`
+gebraucht hat. `ERR-*` selbst ist inzwischen durch (32/32, 17 echte Bugs,
+s. u.) und bestätigt die Einordnung: mit `SEC-*` vergleichbarer Aufwand,
+kein Ausreißer. Realistisch bewegt sich der Rest im Bereich von
+**mehreren vollen Arbeitstagen bis zu ein, zwei Wochen verteilter
+Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird, mit
+`PERF-*` als vermutlich größtem Einzelbrocken darin.
 
 ---
 
@@ -712,7 +711,7 @@ hatte:
 
 ---
 
-## 🔶 PRIN-* (37 Regeln) — in Arbeit
+## ✅ PRIN-* (37 Regeln) — fertig
 
 **Andere Natur als `ERR-*`/`UI-*`.** Der Katalog (`PRINCIPLES.md`) ist
 sprachneutral und beschreibt überwiegend Architektur-/Code-Qualität
@@ -770,6 +769,9 @@ Positiv-Beispiele.
 | cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim | 0 Funde je — keine Größen-Ausreißer (größte Datei je Repo 250–653 Zeilen, eine kohärente Verantwortung), identisches Config-Modul-Muster, gute `@param`/`@return`-Dichte (~1.5–2 Annotationszeilen pro `function M.*`) | — |
 | diff.nvim, documentation.nvim, emojis.nvim, fileops.nvim, filetree.nvim | 0 Funde je — alle fünf bereits im Katalog selbst als Positiv-Beleg zitiert (Pure Core: diff/emojis/fileops; Feature-Module: filetree/diff; SSOT: filetree/documentation) und während `ERR-*` schon ausführlich gelesen (filetree.nvim: 124 Dateien, Checkliste + Stichproben). Dokumentations-Dichte konsistent gut (documentation.nvim: 356 öffentliche Funktionen/777 Annotationszeilen, filetree.nvim: 577/774) | — |
 | github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim | 0 Funde je — keine Größen-Ausreißer, gute Doku-Dichte (~1.8–2 Annotationszeilen/Funktion durchgängig). Alle sechs bereits während `ERR-*` intensiv gelesen (github_stats/gopath/insights/language hatten dort echte ERR-Bugs, seither gefixt; hover.nvim komplett gelesen, 0 Funde; images.nvim ein untersuchter, korrekt verworfener Verdachtsfall) — keine neuen Architektur-Funde | — |
+| lib.nvim, lsp.nvim, markdown.nvim, mdview.nvim, open.nvim | 0 Funde je — konsistente Doku-Dichte (lib.nvim: 727 Funktionen/1506 Annotationszeilen, ~2.07/Funktion — passend zu seiner Rolle als geteilte, gründlich dokumentierte Basis-Infrastruktur, die während `ERR-*`/`UI-*` mehrfach tief geprüft wurde: `cache.disk`, `progress`, `window/tag`, `ui/kit/surface`/`chooser`, `bindings/keymap`). Keine neuen Größen- oder Architektur-Ausreißer bei den übrigen vier | — |
+| pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim | 0 neue Funde je — alle fünf bereits während `ERR-*`/`UI-*` sehr ausführlich gelesen (pdfport/pickers/recommender: 0 Bugs beide Male; replacer/reposcope: je ein `ERR-11`-Fund dort gefixt, `reposcope`s `ui_state`-Modul zusätzlich für `UI-51`/`54` geprüft). Konsistente Doku-Dichte, keine Größen-Ausreißer | — |
+| runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim | 0 Funde je — `sandbox.nvim/bindings/usrcmds/init.lua` (939 Zeilen aus der Größen-Stichprobe) sah zunächst wie ein SRP-Kandidat aus, importiert aber nur aus 10 separaten Pro-Ressourcentyp-Modulen (`container_commands.lua`, `image_commands.lua`, …) und montiert lediglich den `:Sandbox`-Routenbaum — exakt das „Ein Dispatch-Nadelöhr"-Muster aus dem Katalog selbst, kein Fund. runtime-analysis.nvim/sessions.nvim/spotlight.nvim bereits während `ERR-*`/`UI-*` intensiv gelesen, keine neuen Architektur-Auffälligkeiten | — |
 | casedesk.nvim | **`ui.lua` ist 3433 Zeilen lang und bündelt 50 `function M.*`-Handler für völlig unabhängige Features** (Case-CRUD, OCR-Trigger, Git-Sync, KI/AI-Abfrage, Timeline-Rendering, SLA-Tracking, Terminologie-Lookup, Link-Check, Export, …) — jede dieser Funktionen hat ihren eigenen, unabhängigen Änderungsgrund (`PRIN-01`/`PRIN-02`-Kandidat). **Notiert, nicht refaktoriert**: eine Aufteilung in Feature-Module (analog zu buffer-ctx.nvims `ops/*`-Muster) wäre eine Architekturentscheidung mit echtem Risiko in einem aktiv genutzten 45-Datei-Repo, kein Ein-Zeiler im Rahmen eines Findings-Sweeps | `PRIN-01`/`02` (notiert, nicht gefixt) |
 
 **Fleet-weite Mechanik-Checks:**
@@ -811,6 +813,29 @@ Positiv-Beispiele.
   `runtime-analysis.nvim/telemetry/init.lua` (1616 Zeilen, eine
   Telemetrie-Domäne). Der einzige echte Fund war casedesk.nvim (s. o.).
 
+### Fazit
+
+Alle 32 Repos gegen alle 37 Regeln geprüft (volle Architektur-Review, wie
+angefragt) — **1 Fund** (casedesk.nvim `ui.lua`, `PRIN-01`/`02`, notiert
+statt refaktoriert). Vier der sonst am ehesten fund-trächtigen Regeln
+(`PRIN-10` kein globaler Zustand, `PRIN-35` Naming, `PRIN-50` Datei-Header,
+`PRIN-51`/`52` dokumentierter Vertrag) ließen sich fleet-weit mechanisch
+oder über die bereits abgeschlossene `LLS-*`-Familie nachweisen, statt
+32× einzeln nachgelesen zu werden. Die übrigen, stärker
+kontextabhängigen Regeln (Kopplung/Kohäsion, reine Funktionen, DI-Stil,
+Fehlerstruktur, Testbarkeit) wurden repo-für-repo anhand von
+Datei-/Funktionsstruktur, bereits vorhandenem Wissen aus `ERR-*`/`UI-*`
+und gezielten Stichproben bewertet — ohne jede einzelne Datei erneut
+volltändig zu lesen, wo Struktur und Namensgebung die Verantwortung schon
+eindeutig zeigten.
+
+**Warum so wenig Funde:** dieselbe Erklärung wie bei `UI-*` — der Katalog
+selbst wurde mindestens teilweise aus der Beobachtung dieses Fleets
+geschrieben (Erhebung 2026-08-08 zitiert bereits ~15 der 32 Repos als
+Positiv-Beispiele in den eigenen Belegen), und mehrere PRIN-Regeln
+(`PRIN-10`/`20`/`25`-`27`/`40`-`43`) beschreiben Bugklassen, die `ERR-*`
+gerade erst exhaustiv durchsucht und gefixt hat.
+
 ---
 
 ## ⬜ Noch nicht begonnen
@@ -820,11 +845,10 @@ Positiv-Beispiele.
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `PRIN-*` zu Ende
-bringen → `LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich
-aufwendigste, da sie
-am meisten Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine
-Einschätzung nach Größe.
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `LUA-*` (45) →
+`PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie am meisten
+Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine Einschätzung
+nach Größe.
 
 ---
 
