@@ -1,9 +1,29 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: 20 kleine/mittlere Module + `ui` (erstes der fünf großen
-Subsysteme, reduzierte Tiefe) durch. Verbleibend: `bindings`/`cross`/`fs`/
+**Status: 20 kleine/mittlere Module + `ui` + `fs` (zwei der fünf großen
+Subsysteme, reduzierte Tiefe) durch. Verbleibend: `bindings`/`cross`/
 `buf_win_tab`, der komplette `lib.lua.*`-Namespace und der Glue-Layer.**
 
+> **Nachtrag 2026-09-07 (zweite Fortsetzung).** `fs` (29 Leaf-Submodule,
+> 52 Dateien) durchgearbeitet, gleiche reduzierte Tiefe wie bei `ui`.
+> Dabei entdeckt: `docs/API/*.md` ist eine ganze zweite, detailliertere
+> Doku-Ebene (ein File pro großem Subsystem), die die bisherige Methode
+> nicht auf dem Schirm hatte — `modules.md`s Zeile pro Modul ist bewusst
+> nur ein Einzeiler, der dorthin verweist (steht explizit so in
+> `docs/API/README.md`). Echte Funde: `fs.path` und `fs.ignore.list`
+> hatten beide gar keine Modul-Oberflächen-Klasse (dasselbe Muster wie
+> `harvest`); `fs.relpath`/`fs.path_shorten` hatten reale READMEs, waren
+> aber in `modules.md` unverlinkt und `filesystem.md` sagte fälschlich
+> "(no README)" für `relpath`; `fs.polymorphic_rootresolver` hatte drei
+> Doku-Drifts (undokumentiertes `cfg.resolve`-Feld, falscher Modul-Pfad +
+> falsches Call-Pattern im Setup-Beispiel, irreführendes Flow-Diagram).
+> Alle gefixt, `lib.nvim@88432e1`. Nebenbef: eine andere Session/ein
+> anderer Prozess hat parallel auf demselben `lib.nvim`-Checkout
+> gearbeitet (ein fremder Commit `bb063e5` lag zwischen Sessionstart und
+> meinem Push; eine unfertige, in sich widersprüchliche Änderung in
+> `lua/lib/@types/init.lua` lag uncommittet im Baum) — bewusst nicht
+> angefasst/committet, gehört nicht zu diesem Audit.
+>
 > **Nachtrag 2026-09-07 (Fortsetzung).** `ui` (29 Dateien: kit/list/
 > statusline/hl/nerd_font) durchgearbeitet, reduzierte Tiefe wie unten unter
 > "Zwei Stellschrauben" vorgeschlagen — Top-Level-README/`@types`/
@@ -131,10 +151,16 @@ gefunden — jeder Fund war entweder mechanisch (fehlende Typ-Annotation) oder
 
 ## Was noch aussteht
 
-- **Die fünf großen Subsysteme** (eigene Unter-Ökosysteme mit vielen
-  Leaf-Modulen, je eigene READMEs/@types pro Untermodul laut `modules.md`):
-  `bindings` (34 Lua-Dateien), `cross` (42), `fs` (52), `ui` (29),
-  `buf_win_tab` (23). Diese fünf sind de facto eigene Teilprojekte.
+- **Drei der fünf großen Subsysteme** (`ui` und `fs` sind durch — siehe
+  Nachträge oben; je eigene READMEs/@types pro Untermodul laut
+  `modules.md`): `bindings` (34 Lua-Dateien), `cross` (42),
+  `buf_win_tab` (23). Diese sind de facto eigene Teilprojekte.
+  **Neu gelernt bei `fs`**: für jedes der fünf großen Subsysteme existiert
+  auch ein `docs/API/<thema>.md` — eine zweite, funktionssignatur-genaue
+  Doku-Ebene neben den einzelnen Leaf-READMEs. Die sollte bei `bindings`/
+  `cross`/`buf_win_tab` von Anfang an mitgeprüft werden (Vollständigkeit,
+  Submodul-Zahl in der Kopfzeile aktuell, "(see README)"-Marker korrekt),
+  nicht erst nachträglich entdeckt werden wie bei `fs`.
 - **`lib.lua.*`-Namespace** (Lua-nur, kein Neovim-Bezug): `tables`,
   `strings`, `functions`, `time`, `json`, `memo`, `lazy`, `class`,
   `context_manager` — noch **gar nicht** inventarisiert, geschweige denn
@@ -158,7 +184,7 @@ tatsächliche Fixes.
 
 | Block | Umfang | Geschätzter Aufwand |
 |---|---|---|
-| `bindings`, `cross`, `fs`, `ui`, `buf_win_tab` | je 20-52 Dateien, viele Unter-READMEs/@types pro Leaf-Modul | **je eine halbe bis ganze eigene Session — macht zusammen 3-5 Sessions** |
+| `bindings`, `cross`, `buf_win_tab` (`ui`+`fs` bereits durch) | je 23-42 Dateien, viele Unter-READMEs/@types pro Leaf-Modul | **je eine halbe bis ganze eigene Session — macht zusammen 2-3 Sessions** |
 | `lib.lua.*` (9 Module) | vermutlich klein wie die meisten `lib.nvim`-Module, aber noch ungeprüft | **~1 Session** |
 | Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) — hier liegt schon eine bekannte Altlast (`Lib.Modules`) | **~0.5 Session** |
 
@@ -177,11 +203,18 @@ Zwei Stellschrauben, falls das zu lang ist:
 ## Wie weitermachen
 
 1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — Pro-Modul-Log zeigt
-   alle 20 fertigen Module mit ✅ und den jeweiligen Funden.
-2. Nächster Schritt: Entscheidung zu den fünf großen Subsystemen
-   (`bindings`, `cross`, `fs`, `ui`, `buf_win_tab`) — volle Tiefe (jedes
-   Leaf-Modul einzeln wie bisher) vs. reduzierte Tiefe (nur Top-Level-README
-   + Stichproben). Danach `lib.lua.*` (9 Module, noch nicht inventarisiert)
-   und zuletzt der Glue-Layer.
+   alle fertigen Module mit ✅ und den jeweiligen Funden (`ui` und `fs`
+   jetzt beide drin).
+2. Nächster Schritt: `cross` (42 Dateien) oder `bindings` (34 Dateien) mit
+   derselben reduzierten Tiefe wie `ui`/`fs` — laut
+   [[lib-nvim-dependency]] wird `cross` von anderen Plugins aktiv genutzt,
+   also vermutlich zuerst. Dabei gleich `docs/API/cross-platform.md` bzw.
+   `docs/API/commands-and-infra.md` mitprüfen (siehe Nachtrag oben). Danach
+   `buf_win_tab`, dann `lib.lua.*` (9 Module, noch nicht inventarisiert),
+   zuletzt der Glue-Layer.
 3. Jeder Batch: Fixes direkt im Code, Tracking-Datei nachführen, ein Commit
-   pro Batch, sofort auf `main` gepusht.
+   pro Batch, sofort auf `main` gepusht. Vor dem Push kurz `git log`/
+   `git status` gegenchecken — bei der `fs`-Session hat parallel eine
+   andere Session/ein anderer Prozess auf demselben Checkout committet
+   und eine unfertige Änderung hinterlassen; nicht automatisch annehmen,
+   dass der Baum so sauber ist wie beim Sessionstart.
