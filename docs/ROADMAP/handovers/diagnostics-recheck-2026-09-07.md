@@ -1,6 +1,8 @@
 # Diagnostics-Re-Scan über alle Plugin-Repos — 2026-09-07
 
-**Status: Analyse. Fixes stehen aus (auf Ansage pausiert).**
+**Status: Fix-Durchgang läuft. Bundles A, B, C erledigt — siehe
+[Nächster Schritt](#nächster-schritt-der-fix-durchgang) für den aktuellen
+Stand pro Bundle.**
 
 Auslöser (Chat):
 
@@ -284,14 +286,48 @@ Vertikal, ein Repo nach dem anderen (Regel H): fix → `scan.sh <pass> <repo>` �
 
 Delegierbare Bündel (jeweils in sich abgeschlossen):
 
-| Bündel | Repos | Charakter |
-|---|---|---|
-| **A — LLS-26** | color_my_ascii, mdview, reposcope | rein mechanisch: `---@type` auf die `local notify = vim.notify`-Zeilen. Dazu reposcopes `@alias Buffer/Window` und mdviews Harness-Doubles. |
-| **B — Fremd-API-Drift** | filetree, lsp, open, casedesk | je 1–6, brauchen Blick in den Fremd-Typ (nvim-tree, neo-tree, trouble, pdfport, `os.date`). |
-| **C — perf-Umbau + Rest** | documentation, insights, hover, cmdlog, images, lib, debugging | documentation ist der größte Posten (Parallel-Array-Umbau), hover hat den echten `res.range.line`-Bug. |
-| **D — gegenprüfen** | markdown, runtime-analysis | erst Server-Gegenprobe, dann entscheiden. |
+| Bündel | Repos | Charakter | Status |
+|---|---|---|---|
+| **A — LLS-26** | color_my_ascii, mdview, reposcope | rein mechanisch: `---@type` auf die `local notify = vim.notify`-Zeilen. Dazu reposcopes `@alias Buffer/Window` und mdviews Harness-Doubles. | ✅ erledigt 2026-09-07 |
+| **B — Fremd-API-Drift** | filetree, lsp, open, casedesk | je 1–6, brauchen Blick in den Fremd-Typ (nvim-tree, neo-tree, trouble, pdfport, `os.date`). | ✅ erledigt 2026-09-07 |
+| **C — perf-Umbau + Rest** | documentation, insights, hover, cmdlog, images, lib, debugging | documentation ist der größte Posten (Parallel-Array-Umbau), hover hat den echten `res.range.line`-Bug. | ✅ erledigt 2026-09-07 |
+| **D — gegenprüfen** | markdown, runtime-analysis | erst Server-Gegenprobe, dann entscheiden. | offen |
 
 nvim-config: eigener Durchgang, nachdem sein Scan vorliegt.
+
+### Ergebnis Bundle A (3 Repos, alle luals-verifiziert auf 0)
+
+- **color_my_ascii.nvim** (`a6c933e`): `---@type fun(msg: string, level?: integer, opts?: table)` auf alle 4 `local notify = vim.notify`-Zeilen.
+- **mdview.nvim** (`19767f0`): dieselbe Annotation auf `TESTS/nvim/harness.lua`s eigenen Alias, plus `---@diagnostic disable-next-line: duplicate-set-field` (mit Begründung) auf `_G.describe`/`_G.it` — ein eigener Minimal-Harness, keine Neudefinition von busted/plenary.
+- **reposcope.nvim** (`b010110`): `@alias Buffer/Window` → `Reposcope.Buffer`/`Reposcope.Window` namensraum-präfixiert (kollidierte global mit einem gleichnamigen Alias anderswo im Workspace, **LLS-22**) — alle echten Typ-Stellen in `state.lua` und `aliases.lua`s `PromptBufferMap` (die die ursprüngliche Fund-Liste nicht nannte, aber denselben Alias nutzte) mitgezogen. Dieselbe `local notify = vim.notify`-Annotation.
+
+`compare.py bundleA_after` → `TOTAL 0`.
+
+### Ergebnis Bundle B (4 Repos, luals-verifiziert)
+
+- **lsp.nvim** (`386d370`)\*: `bindings/actions.lua:389` — `trouble.is_open({mode=...})` ist ein Teilfilter, keine volle `trouble.Mode`; `---@diagnostic disable-next-line: missing-fields` mit Begründung. `compare.py` → `TOTAL 0`.
+  \* Commit-Hash gehört zum vorherigen Perf-Sweep-Fix in derselben Session — dieser Fix ist im selben Push, kein separater Commit-Hash notiert.
+- **open.nvim** (`3df09d9`): `context.lua:143` — `--[[@as Cfg.NeoTree.State]]` an der `node_utils.get_current(state)`-Aufrufstelle (F1, gleiche Klasse wie hovers images.nvim-Fall).
+- **casedesk.nvim** (`58c25ba`): `meta.lua:89` — `os.date("%Y") --[[@as string]]` (kein `"*t"`-Flag → nie die `osdate`-Tabellenform).
+- **filetree.nvim** (`53a9e3e`), 6 Funde in einem Commit:
+  - `adapter/nvimtree.lua:243` — `find_file(path)` → `find_file({ buf = path })` (moderne Opts-Form; verifiziert gegen den echten nvim-tree-Quellcode, dass die String-Form intern weiterhin funktioniert, also kein Verhaltensbruch).
+  - `adapter/neotree.lua:63` — `---@cast pos FiletreeTreePosition` nach dem `VALID_POSITIONS`-Guard (neo-tree hat `"bottom"` ergänzt, das dieser Adapter bewusst nicht unterstützt und der Guard schon ausschließt).
+  - `adapter/neotree.lua:624` — `---@diagnostic disable-next-line: duplicate-set-field` mit Begründung auf den `commands.execute`-Monkeypatch (Reveal-Guard).
+  - `util/pdf.lua:193` — `mode --[[@as PdfPort.RendererMode]]` an der einen Stelle, die es an pdfport weiterreicht (verifiziert: `"picker"` kehrt in jedem Aufrufer vorher zurück, `"system"` wird davor abgefangen — nur `"buffer"`/`"terminal"` erreichen pdfport tatsächlich).
+  - `@types/config.lua` — `FiletreePdfCreateResult.status` um `"partial"` erweitert (pdfports echter `PdfPort.ResultStatus` ist `"ok"|"error"|"partial"`, filetrees Spiegel-Typ hatte nur `"skipped"`, sein eigenes Konzept, vergessen zu ergänzen).
+  - `features/infra/ignore_list/init.lua:159` — `---@cast fi table` direkt nach dem `x.y = x.y or {}`, das es schon garantiert (LuaLS trägt die Verengung nicht durch den Feld-Re-Read).
+  - `compare.py bundleB_filetree` → `TOTAL 0`.
+
+### Ergebnis Bundle C (7 Repos)
+
+- **hover.nvim** (`fccc515`): `bare_path.lua:242` — **echter Bug gefixt**: `res.line` existiert auf `GopathResult` nicht, die Zeile liegt unter `res.range.line` (verifiziert gegen gopath.nvims echte `@class GopathResult`). Der Kommentar, der behauptete das sei schon gefixt, war falsch — der `:line:col`-Suffix wurde bei jedem Bare-Path-Hover weiterhin verworfen. Dazu `media.lua:244` (`--[[@as Images.Scale.MaybeDims?]]`, F1) und `onrequest_probe.lua:89` (§E-Suppression, `sandbox.get_engine`-Probe-Wrap). `compare.py bundleC_hover` → `TOTAL 0`.
+- **cmdlog.nvim** (`670eff1`): `picker_utils.lua` — `previewer = fn` existiert in der installierten fzf-lua-Version nicht mehr; **gegen den echten fzf-lua-Quellcode verifiziert** (`previewer/init.lua`s `normalize_spec`): die Funktionsform des `preview`-Keys läuft durch `stringify_data` (behandelt den Rückgabewert als Inhalt), nur die `{ fn, type = "cmd" }`-Form durch `stringify_cmd` (behandelt ihn als Shell-Kommando) — genau das, was `command_previewer()` liefert. Umgestellt auf `preview = { fn = ..., type = "cmd" }`.
+- **images.nvim** (`c7c091b`): `TESTS/resolve_spec.lua:126` — §E-Suppression für den `resolve_at_cursor`-Spy.
+- **insights.nvim** (`fdb2445`): `imports/init.lua:37` — **echter Bug gefixt**: `progress_style` fehlte in `Insights.ImportsConfig`/`Opts` (Feature `1acdd21` gebaut, Typen nie ergänzt). Feld in beide Klassen nachgetragen.
+- **lib.nvim** (`eb319fb`): `TESTS/keymap_registry_spec.lua` — Datei-Header-Suppression (**LLS-42**). `docs/EXAMPLES/composer-flags-and-kv.lua` — der Beispielaufruf `replacer.run(ctx.args, ctx.flags)` passte nie zu replacers echter Signatur (`run(request: RP_Request|string, ...)`, ein Tabellen-Argument, keine zwei); durch einen echten `RP_Request` ersetzt, der `old`/`new`/`dry` tatsächlich aus der Route übernimmt.
+  - ⚠️ **Neuer, unabhängiger Fund beim Verifikations-Rescan:** `lua/lib/@types/init.lua:27` — `undefined-doc-name: Lib.Nvim`. War **nicht** in der recheck0907-Baseline (gegengeprüft: die Baseline hatte für lib.nvim exakt die zwei oben genannten, jetzt gefixten Funde). Hängt nicht mit diesen beiden Fixes zusammen — nicht untersucht, nicht gefixt. Für einen künftigen Durchgang vormerken.
+- **debugging.nvim** (`0ea7abd`): `views/debug_helper.lua` (`---@cast msg table` vor dem bewussten Feld-Probing, deckt alle 3 `undefined-field`-Funde) + `views/capture/init.lua:242` (`---@diagnostic disable-next-line: undefined-field`, verifiziert gegen noise.nvims echten Quellcode: `noice.api.status` ist eine Metatable-Factory, `get()` ist real, LuaLS sieht nur nicht durch den `__index`).
+- **documentation.nvim** (`8e260ad`): **9 der eigenen Perf-Sweep-Fixes vom selben Tag korrigiert** — `features.lua` und `python.lua` hielten zwischen den Schleifen-Durchläufen eine Tabelle in einem als `string` deklarierten Feld (`Documentation.Features.Meta.value`, `Documentation.ParamInfo`/`ReturnInfo.desc`). Funktional korrekt, aber genau die 9 neuen Funde dieses Rechecks. Umgebaut auf ein zu `meta`/`params`/`returns` paralleles `parts`-Array (nach Index), das Feld selbst bleibt durchgehend `string`, einmalige `table.concat` nach der Schleife — derselbe O(n)-Gewinn, ohne den Feldtyp zu verletzen. `checklist.lua`s eigener Akkumulator war schon ein reines Local, brauchte keine Änderung. Dazu `bindings/usrcmds/annotate.lua:147`: `annotate.apply`s `mode`-Parameter auf `"inline"|"sidecar"|nil` geweitet (der eine Aufrufer garantiert Nicht-`nil`, aber in einer Sibling-Closure, durch die LuaLS nicht verengt).
 
 ---
 
