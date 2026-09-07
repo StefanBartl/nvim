@@ -507,9 +507,44 @@ weniger neue Funde als `ERR-*`, weil ein Großteil schon während der
 Katalog-Erstellung mitgeprüft wurde — aber das ist eine Erwartung, keine
 Abkürzung; jedes Repo bekommt trotzdem einen echten Durchgang.
 
-### Noch offen (32/32 Repos ungelesen für UI-*, 29 Regeln)
+### Kalibrierung: Bug vs. Feature-Lücke
 
-Alle 32 Repos alphabetisch: buffer-ctx.nvim, cascade.nvim, casedesk.nvim,
+Einige `UI-*`-Regeln beschreiben ein wünschenswertes Feature, das im Katalog
+selbst schon als fleet-weit **fehlend** dokumentiert ist, nicht einen
+Bug in einem einzelnen Repo:
+
+- **`UI-36` (Quickfix-Export für Trefferlisten)**: laut Katalog-Beleg hat
+  **nur replacer.nvim** das überhaupt (`export.lua`) — jedes andere Repo mit
+  einer eigenen Trefferliste (casedesk.nvim `:Case grep`/`:Case linkcheck`,
+  u. v. a.) "verletzt" die Regel per Definition. Das händisch in jedem
+  betroffenen Repo nachzurüsten wäre eine Feature-Entwicklung über den ganzen
+  Fleet, kein Bugfix — **bewusst nicht pro Repo einzeln fixen oder erneut
+  vermerken**, hier einmalig festgehalten statt N-mal wiederholt.
+- Ähnlich potenziell: `UI-28` (Visual-Multiselect als Count-Alternative),
+  `UI-33` (Graceful-Degradation-Fallback) — auch das sind Empfehlungen für
+  eine bessere UX, keine Korrektheitsfehler; nur fixen, wenn ein Repo aktiv
+  etwas *Falsches* tut (z. B. hart abstürzt statt zu degradieren), nicht nur
+  "könnte eleganter sein".
+
+**Fixt werden nur echte, demonstrierbare Defekte**, genau wie bei `ERR-*`:
+fehlende Completion für eine geschlossene Wertemenge (`UI-22` sagt selbst
+"echter Mangel, keine Designentscheidung"), ein Notify-Level, das dem
+eigenen Text widerspricht (`UI-01`..`04`), ein konkreter Fensterhandling-Bug
+(`UI-31` nennt eine veraltete Registry explizit "eine konkrete,
+wiederkehrende Bugquelle", `UI-50`..`UI-56`). Eine reine
+Verbesserungsmöglichkeit ohne falsches Verhalten wird notiert, nicht
+gefixt.
+
+### Ergebnis je Repo (Stand dieser Sitzung, 3/32)
+
+| Repo | Befund | Regel(n) |
+|---|---|---|
+| buffer-ctx.nvim | 0 (vorbildlich: `:Insert`/`:Copy`-Kompositum über `lib.nvim`-Composer, jede geschlossene Wertemenge hat Completion, drei Subcommands sogar live berechnet (`boilerplate`/`snippet`/`env`); keine Cheatsheet-Duplikate, keine destruktiven Bulk-Aktionen, keine Floats/Progress/externen Prozesse außer `git` mit knapper Einzeilen-Fehlermeldung) | — |
+| cascade.nvim | 0 (`:Cascade`-Kompositum mit vollständiger `enum`-Completion; keine Floats/Progress/externe Prozesse — reines Text-Transform-Plugin). Beobachtung, nicht gefixt: `lib.nvim.bindings.keymap.which_key`s Gruppen-Label hängt am deklarierten `spec.prefix`, nicht an den tatsächlich aufgelösten `lhs`-Werten nach Nutzer-Remapping (`UI-27`) — aber which-key zeigt jede Zuordnung ohnehin über ihr eigenes `desc` an (siehe Moduldoku), ein remapptes Item verliert nur die Submenü-Gruppierung, keine Funktion oder Beschreibung; kosmetisch, kein demonstrierbarer Bug, fleet-weit über `lib.nvim` geteilt, nicht einzeln gefixt | `UI-27` (notiert, nicht gefixt) |
+| casedesk.nvim | 0 echte Bugs — Command-Layer vorbildlich (custom `"CASE"`-Completion-Typ live aus der Registry, typisierte Lösch-Bestätigung statt bloßem y/n). `:Case grep`/`:Case linkcheck` fallen unter den bekannten `UI-36`-Fleet-Gap (s. o.), nicht einzeln gezählt | — |
+
+### Noch offen (29/32 Repos ungelesen für UI-*, 29 Regeln)
+
 cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim,
 documentation.nvim, emojis.nvim, fileops.nvim, filetree.nvim,
 github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim,
