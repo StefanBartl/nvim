@@ -6,3 +6,4 @@ lua/sessions/storage/last.vim
 pack/github/start/copilot.vim
 lazy-lock.json
 noice.log
+__pycache__/

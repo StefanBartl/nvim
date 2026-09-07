@@ -14,6 +14,7 @@ require("bindings.usrcmds.bindings_explorer").enable()
 require("bindings.usrcmds.context_open").enable()
 require("bindings.usrcmds.telemetry_nvim_config").enable()
 require("bindings.usrcmds.autocmd_docs").enable()
+require("bindings.usrcmds.strip_coauthor").enable()
 require("bindings.usrcmds.bindings_audit").enable()
 
 usercmd.create("CopyLocation", function()

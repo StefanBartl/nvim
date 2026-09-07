@@ -19,8 +19,12 @@ Sources are the files git tracks plus the ones it does not ignore yet, so a
 docs/README.md written a minute ago is checked rather than silently passed.
 
 Links quoted as examples — inside a fenced code block or inline backticks —
-are not links, and are skipped. Anchors are stripped before the check, so a
-wrong #heading is NOT caught; only missing files are.
+are not links, and are skipped.
+
+A link can name a file that exists and a heading in it that does not. That is
+ANCHOR, and it is the failure a table of contents produces on its own: nothing
+consumes it, so a renamed heading leaves it behind. Anchors are matched the way
+GitHub builds them, including the -1/-2 suffix on repeated headings.
 """
 
 from __future__ import annotations
@@ -34,20 +38,63 @@ SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__"}
 SKIP_PATHS = (os.path.join("docs", "map"),)
 
 LINK_RE = re.compile(r"\]\(([^)]+)\)")
-FENCE_RE = re.compile(r"^\s*(```|~~~)")
+FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
+HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)")
+
+
+def uncoded(text: str):
+    """Yield (lineno, line) for the lines that are not inside a code fence.
+
+    The fence state is length-aware rather than a toggle, and that is not
+    pedantry: a ````lua block whose body contains ``` flips a toggle back open
+    halfway through, and every heading after it vanishes from the file. A line
+    whose info string carries a backtick is not an opener at all (CommonMark
+    forbids it) -- prose that names a fence inline reads as one otherwise, and
+    inverted the rest of a real document here on 2026-09-04.
+    """
+    fence = 0
+    for n, line in enumerate(text.splitlines(), 1):
+        m = FENCE_RE.match(line)
+        if m:
+            width, rest = len(m.group(1)), line[m.end():]
+            if fence:
+                if width >= fence and not rest.strip():
+                    fence = 0
+                continue
+            if "`" not in rest:
+                fence = width
+                continue
+        if not fence:
+            yield n, line
 
 
 def strip_code(text: str) -> str:
     """Blank out fenced blocks and inline code so quoted links are not links."""
-    out, in_fence = [], False
-    for line in text.splitlines():
-        if FENCE_RE.match(line):
-            in_fence = not in_fence
-            out.append("")
-            continue
-        out.append("" if in_fence else INLINE_CODE_RE.sub("", line))
+    out = [""] * len(text.splitlines())
+    for n, line in uncoded(text):
+        out[n - 1] = INLINE_CODE_RE.sub("", line)
     return "\n".join(out)
+
+
+def slugs(text: str) -> set[str]:
+    """The anchors GitHub generates for this document's headings.
+
+    Lowercase, punctuation dropped, spaces to hyphens -- and a heading that
+    repeats gets -1, -2, which is why the occurrences are counted rather than
+    collected in a set.
+    """
+    out, seen = set(), {}
+    for _, line in uncoded(text):
+        m = HEADING_RE.match(line)
+        if not m:
+            continue
+        title = re.sub(r"[`*]", "", m.group(2).strip().rstrip("#").strip())
+        slug = re.sub(r"[^\w\s-]", "", title).strip().lower().replace(" ", "-")
+        n = seen.get(slug, 0)
+        seen[slug] = n + 1
+        out.add(slug if n == 0 else f"{slug}-{n}")
+    return out
 
 
 def git(root: str, *args: str, stdin: str | None = None) -> list[str] | None:
@@ -157,9 +204,20 @@ def real_name_mismatch(root: str, path: str) -> str | None:
     return "/".join(fixed) if wrong else None
 
 
-def check(root: str) -> tuple[int, int, int, int]:
-    dead = case = files = 0
+def anchors_of(path: str, cache: dict) -> set[str]:
+    """The heading anchors of `path`, read once per run."""
+    if path not in cache:
+        try:
+            cache[path] = slugs(open(path, encoding="utf-8", errors="replace").read())
+        except OSError:
+            cache[path] = set()
+    return cache[path]
+
+
+def check(root: str) -> tuple[int, int, int, int, int]:
+    dead = case = anchor = files = 0
     live: list[tuple[str, str, str]] = []  # (source, target as written, rel path)
+    heads: dict[str, set[str]] = {}
 
     for md in sorted(markdown_files(root)):
         files += 1
@@ -175,20 +233,30 @@ def check(root: str) -> tuple[int, int, int, int]:
             if not target or target in seen:
                 continue
             seen.add(target)
-            if target.startswith(("http://", "https://", "mailto:", "#")):
+            if target.startswith(("http://", "https://", "mailto:")):
                 continue
-            path = target.split("#", 1)[0].split('"', 1)[0].strip()
+            path, _, frag = target.partition("#")
+            path = path.split('"', 1)[0].strip()
+            frag = frag.split('"', 1)[0].strip()
+            # A bare "#heading" points into the document it is written in --
+            # which is where a table of contents lives, and where a renamed
+            # heading is least likely to be noticed.
+            resolved = md if not path else os.path.normpath(os.path.join(base, path))
+            if path:
+                if not os.path.exists(resolved):
+                    print(f"DEAD  {rel_md}  ->  {target}")
+                    dead += 1
+                    continue
+                real = real_name_mismatch(root, resolved)
+                if real:
+                    print(f"CASE  {rel_md}  ->  {target}   (on disk: {real})")
+                    case += 1
+                    continue
+            if frag and resolved.lower().endswith((".md", ".markdown")):
+                if frag.lower() not in anchors_of(resolved, heads):
+                    print(f"ANCHOR  {rel_md}  ->  {target}   (no such heading)")
+                    anchor += 1
             if not path:
-                continue
-            resolved = os.path.normpath(os.path.join(base, path))
-            if not os.path.exists(resolved):
-                print(f"DEAD  {rel_md}  ->  {target}")
-                dead += 1
-                continue
-            real = real_name_mismatch(root, resolved)
-            if real:
-                print(f"CASE  {rel_md}  ->  {target}   (in the repo: {real})")
-                case += 1
                 continue
             try:
                 rel_target = os.path.relpath(resolved, root)
@@ -204,7 +272,7 @@ def check(root: str) -> tuple[int, int, int, int]:
         if rel_target in hidden:
             print(f"IGNORED  {rel_md}  ->  {target}   (gitignored: 404 on the remote)")
             gone += 1
-    return dead, case, gone, files
+    return dead, case, gone, anchor, files
 
 
 def main() -> int:
@@ -212,19 +280,21 @@ def main() -> int:
     if not roots:
         print(__doc__)
         return 2
-    grand_dead = grand_case = grand_gone = 0
+    grand_dead = grand_case = grand_gone = grand_anchor = 0
     for root in roots:
         if len(roots) > 1:
             print(f"##### {os.path.basename(os.path.normpath(root))}")
-        d, c, g, f = check(root)
+        d, c, g, a, f = check(root)
         grand_dead += d
         grand_case += c
         grand_gone += g
-        print(f"--- {f} files, {d} dead, {c} case-mismatch, {g} gitignored ---")
+        grand_anchor += a
+        print(f"--- {f} files, {d} dead, {c} case-mismatch, {g} gitignored, "
+              f"{a} dead anchors ---")
     if len(roots) > 1:
         print(f"===== TOTAL: {grand_dead} dead, {grand_case} case-mismatch, "
-              f"{grand_gone} gitignored =====")
-    return 1 if (grand_dead or grand_case or grand_gone) else 0
+              f"{grand_gone} gitignored, {grand_anchor} dead anchors =====")
+    return 1 if (grand_dead or grand_case or grand_gone or grand_anchor) else 0
 
 
 if __name__ == "__main__":
