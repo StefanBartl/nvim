@@ -1,5 +1,10 @@
 # RULES — Stand der Checklists-Anwendung (WKDBooks/Checklists/regeln)
 
+> **Erledigt (2026-09-07).** Alle 9 Regel-Familien (281 Regeln, 32 Repos)
+> durch — siehe [Fazit](#fazit-alle-9-regel-familien-durchlaufen). Funde
+> ins `WKDBooks`-Regelwerk zurückgeschrieben (Commit `9c71449`). Nach
+> `ERLEDIGT/` verschoben, kein aktiver Tracking-Zustand mehr.
+
 ## Table of content
 
   - [Intro](#intro)
@@ -33,7 +38,7 @@ bei null anzufangen.
 **Quelle der Wahrheit für die Regel-Texte selbst bleibt der Regelkatalog.**
 Diese Datei fasst nur zusammen, was geprüft wurde und was dabei rauskam. Der
 volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
-[`ERLEDIGT/LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](./ERLEDIGT/LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md).
+[`LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](./LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md).
 
 ---
 
@@ -492,8 +497,8 @@ Bedienbarkeit" + der separate "Buffer/Window-UI"-Block direkt davor):
 Datei.** Ein separater Vollaudit über alle 35 `health.lua`-Module ist
 bereits am 2026-08-31 gelaufen und am 2026-09-06 nochmal gegen den
 aktuellen Code validiert — Quelle:
-[`ERLEDIGT/checkhealt_conventions.md`](./ERLEDIGT/checkhealt_conventions.md),
-Detail-Log: [`handovers/checkhealth-conventions.md`](../../../handovers/checkhealth-conventions.md).
+[`checkhealt_conventions.md`](./checkhealt_conventions.md),
+Detail-Log: [`handovers/checkhealth-conventions.md`](../../../../handovers/checkhealth-conventions.md).
 Kurzfassung: vier systematische Fehlklassen gefunden (Eine-von-N als
 Warnung, Text-Level-Widerspruch bei "(optional)", Warnungen die eigentlich
 Fehler sind ("will fail" im Text, nur `warn` im Level), `setup()`-Hinweise
