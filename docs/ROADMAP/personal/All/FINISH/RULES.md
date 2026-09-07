@@ -48,7 +48,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
-| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 1 Repo gefixt (documentation.nvim, echter PERF-47-Fund), Rest läuft |
+| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 1 Repo gefixt (documentation.nvim, `PERF-47`), 1 Fund notiert (reposcope.nvim, `PERF-46`, Architekturentscheidung), Rest läuft |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
 listet Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte
@@ -1020,11 +1020,65 @@ statt zu ersetzen), vorher gegen den alten Code als fehlschlagend
 verifiziert (`git stash`), volle Suite grün, luacheck/stylua clean.
 Commit `179f16d` auf `documentation.nvim`s `main`, gepusht.
 
+### `PERF-48` (Weak-Keyed-Caches bei Objekt-Lifetime) — bestätigt korrekt, 2 Katalog-Zitate veraltet
+
+`lib.nvim/cache/memory.lua` (`caches = setmetatable({}, {__mode = "k"})`,
+zweifach: äußere Tabelle keyed by Namespace-Name, innere Tabelle keyed by
+Aufrufer-`key`) verifiziert als **echtes** Positiv-Beispiel — anders als der
+`LUA-40`/`41`-Fund: Strings sind (anders als Zahlen) ein kollektierbarer
+Typ, und alle echten Aufrufer (`lib.nvim/fs/scan_cached`,
+`debugging.nvim/autocmds/sources.lua`) verwenden tatsächlich String-Keys
+(Pfade), nie eine nackte `bufnr`. Kein Fund.
+
+Zwei der drei Katalog-Zitate für `PERF-48` sind veraltet, keine neuen Funde:
+- `color_my_ascii.nvim` `cache_manager.lua:17` — genau die Stelle, die
+  bereits unter `LUA-40`/`41` in dieser Sweep-Serie gefixt wurde (die
+  Weak-Table war dort auf `bufnr`, also strukturell nie korrekt — nicht
+  identisch mit dem `PERF-48`-Muster, der Katalog zitiert hier
+  fälschlicherweise ein Negativ- als Positiv-Beispiel).
+- `pickers.nvim` `selected_index/cache.lua` — Datei existiert nicht mehr;
+  das ganze `selected_index`-Feature wurde per `db42bc9` entfernt ("remove
+  selected_index overlay -- never worked reliably"). Zitat zeigt auf toten
+  Code.
+
+### `PERF-46` (Cache-Key muss jeden ergebnisrelevanten Parameter enthalten) — 1 echter Fund, notiert statt gefixt
+
+**Fund:** `reposcope.nvim/lua/reposcope/cache/readme_cache.lua`. Der
+gesamte Cache (RAM, Datei unter `owner__repo.md`, und die
+Freshness-Metadata) ist ausschließlich über `owner .. "/" .. repo_name`
+geschlüsselt (`_get_key`, `_get_file_path`) — der aktive **Provider**
+(GitHub/GitLab/Codeberg, umschaltbar über `config.options.provider`,
+persistiert in `state/session_state.lua`) ist kein Teil des Keys. Alle drei
+`providers/{github,gitlab,codeberg}/readme/readme_manager.lua` rufen
+`set_ram(owner, repo_name, content)`/`set_file(...)`/`set_updated_at(...)`
+identisch auf, ohne Provider-Tag. Ergebnis: sucht man `owner/repo` auf
+GitHub, schaltet dann auf GitLab um und sucht denselben `owner/repo`-String
+erneut, liefert der Cache (RAM **und** die Datei auf Platte) den
+GitHub-Inhalt zurück statt den tatsächlichen GitLab-Inhalt zu holen — ein
+still falsches Ergebnis, exakt das Szenario, vor dem `PERF-46` warnt.
+
+**Warum notiert statt gefixt:** kein kleiner Cache-Key-Patch. Mindestens 10
+Call-Sites betroffen (3 Provider-`readme_manager.lua` als Schreiber; dazu
+`favorites_state.lua`, `readme_editor.lua`, `readme_viewer.lua`,
+`preview_image.lua`, `preview_manager.lua`, `start_view_controller.lua` als
+Leser). Schwerer wiegt: das **Datenmodell selbst** trägt aktuell nirgends
+einen `provider`-Field — weder am `Favorite`-Eintrag noch am
+"selected repo"-Objekt, das die Lese-Callsites durchreichen. Ein korrekter
+Fix müsste also erst das Datenmodell um `provider` erweitern und das dann
+durch UI-/State-/Cache-Schicht durchziehen — eine echte
+Architekturentscheidung mit UI-Layer-Berührung (Favoriten-Anzeige,
+Editor/Viewer), kein kontrollierter Ein-Datei-Fix wie `LUA-40` oder
+`PERF-47`. Selbes Kalibrierungs-Prinzip wie beim `PRIN-01`-Fund in
+casedesk.nvim: real, aber bewusst nicht im Rahmen dieses Sweeps angefasst.
+Praktisch mildernd: nur relevant, wenn *derselbe* `owner/repo`-String auf
+zwei verschiedenen Providern tatsächlich existiert und der Nutzer
+zwischen ihnen umschaltet — ein Nischenfall, aber ein echter.
+
 ### Noch offen
 
 - `PERF-01`…`06`/`08`…`16` (restliche allgemeine Idiome)
 - `PERF-20`…`27` (Speicherlayout)
-- restliche `PERF-40`…`53` (Cache-Regeln jenseits von `47`)
+- restliche `PERF-40`…`45`/`49`…`53` (Cache-Regeln jenseits von `46`…`48`)
 - `PERF-60`…`65` (Debouncing)
 - `PERF-70`…`75` (begrenzte Nebenläufigkeit/Scans)
 - `PERF-80`…`91` (Async-Scheduling/Chunking/Progress)
