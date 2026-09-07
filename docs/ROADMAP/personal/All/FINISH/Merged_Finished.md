@@ -1694,7 +1694,7 @@ nvim-Config.
       `markdown.util.path`s vier Resolver und `images.resolve.to_path`. Mit
       echtem Payload nachgestellt —
 
-          ![x](`mkdir -p /tmp/pwned; echo a.png#`)
+          ![x](./`mkdir -p /tmp/pwned; echo a.png#`)
 
       — und das Verzeichnis entstand. Das `#` am Ende ist der Trick: `is_image`
       matcht in seiner zweiten Alternative eine Endung *irgendwo* vor `?`/`#`,

@@ -116,7 +116,7 @@ for how to actually populate them.
   each row naming its single most complex function.
 - `plugins`: on documentation.nvim/lib.nvim's own repo this will likely be
   **empty** (no lazy.nvim specs there) — test this one for real from
-  `C:\Users\bartl\AppData\Local\nvim` instead (`:DocMap plugins` there
+  `vim.fn.stdpath('config') .. ` instead (`:DocMap plugins` there
   should list every plugin from `plugins/personal/init.lua`, with its
   trigger and source file).
 

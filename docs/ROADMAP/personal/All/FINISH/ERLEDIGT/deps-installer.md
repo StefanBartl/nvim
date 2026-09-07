@@ -391,7 +391,7 @@ Neun Repos, je ein Commit, alle auf `main` gepusht.
 
 - `nvim --headless -u NONE -l TESTS/run.lua` in `lib.nvim` → `LIB_TESTS_OK`,
   inklusive der neuen Abschnitte für `status` und `require_tool`.
-- `spec.find("nvim")` findet `C:\Users\bartl\AppData\Local\nvim\docs\install.json`
+- `spec.find("nvim")` findet `vim.fn.stdpath('config') .. \docs\install.json`
   — **B3s offene technische Frage ist damit beantwortet**, ohne Sonderfall.
 - `status.collect()` über alle Repos: **16 Plugins mit Spec, 27 verschiedene
   Tools, 0 Lesefehler.** Der Merge über mehrere Deklaranten stimmt

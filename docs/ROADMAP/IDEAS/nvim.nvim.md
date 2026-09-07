@@ -29,7 +29,7 @@ Now let me get a quick purpose summary for each of the 25 plugins to map autocmd
 - [features/nav/no_name_guard/init.lua]($REPOS_DIR\filetree.nvim\lua\filetree\features\nav\no_name_guard\init.lua) — new feature, follows `layout_guard`'s exact pattern, excludes `adapter.get_winid()` from every sweep so it can never step on the tree window
 - Wired into `features/init.lua`, `config/DEFAULTS.lua`, `@types/config.lua`, `bindings/autocmds.lua`
 - All changed modules `require()`-load cleanly under a real rtp (checked via headless nvim)
-- Updated the disabled entry in [autocmds/init.lua](C:\Users\bartl\AppData\Local\nvim\lua\autocmds\init.lua:26) to point at the new home instead of just saying "TEMP DISABLED"
+- Updated the disabled entry in [autocmds/init.lua](vim.fn.stdpath('config') .. \lua\autocmds\init.lua:26) to point at the new home instead of just saying "TEMP DISABLED"
 
 It stays off in the nvim-config itself until "Liste 1" (the neo-tree→filetree.nvim migration, still open per your `NVIM_CFG_CLEANUP` roadmap) actually lands — right now `lua/config/neotree/` still owns neo-tree directly, so filetree.nvim isn't wired in yet.
 
