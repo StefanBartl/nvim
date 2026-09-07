@@ -763,7 +763,16 @@ Positiv-Beispiele.
 
 ### Ergebnis je Repo
 
-*(wird während der Session befüllt)*
+| Repo | Befund |
+|---|---|
+| buffer-ctx.nvim | 0 Funde — vorbildlich über alle Dimensionen: jede `format/*`/`ops/*`-Datei hat exakt eine benannte Verantwortung (`PRIN-01`), jede Datei hat einen `---@module`-Header + Zweckbeschreibung (`PRIN-50`, 100 % Abdeckung), Querverweise statt Wiederholung durchgängig per `---@see` (`PRIN-53`), `config/init.lua`s Zustand ist modul-intern mit `get()`/`setup()`-Zugriff (`PRIN-10`), kein einziger camelCase-Ausreißer in einer sonst durchgehenden snake_case-Basis (`PRIN-35`) |
+| cascade.nvim | 0 Funde — `core/context.lua`s `CascadeContext` ist ein Lehrbuch-Beispiel für `PRIN-12` (Kontext einmal erhoben statt verstreuter `nvim_*`-Abfragen) UND Pure-Core/Impure-Shell zugleich, im eigenen Moduldoc explizit begründet; `cycle/word_cycle.lua`s einzige zwei `vim.api`-Aufrufe sitzen exakt am Mutationspunkt (`nvim_buf_set_text`), die Zyklus-Berechnung davor ist reine Lua-Logik. 100 % `@module`-Header, keine camelCase-Ausreißer |
+
+**Fleet-weiter Mechanik-Check:** `PRIN-50` (Datei-Header mit Zweck) über
+alle 32 Repos per Skript geprüft (Anteil Dateien mit `---`-Kopfkommentar
+in den ersten 3 Zeilen) — **kein Repo unter 95 % Abdeckung**. Diese Regel
+gilt fleet-weit als erfüllt und wird nicht mehr pro Repo einzeln
+gegengeprüft.
 
 ---
 
