@@ -459,6 +459,14 @@ er committet wurde.
 **Übrig aus dem Original-Ticket, bewusst nicht automatisiert:** das
 tatsächliche Auslösen jeder Aktion (Punkt 1 im Original-Ticket) — dafür ist
 jetzt [`BINDINGS-RUNTIME-CHECKLIST.md`](../personal/All/BINDINGS-RUNTIME-CHECKLIST.md)
-da (per `:BindingsRuntimeChecklist` erzeugen, existiert noch nicht bis du
-es einmal aufrufst). Das Abarbeiten ist wie im Original-Ticket
-festgehalten: deine Domäne.
+da. Das Abarbeiten ist wie im Original-Ticket festgehalten: deine Domäne.
+
+> **Nachtrag 2026-09-07 — erste echte Generierung.** Gegen deine volle
+> Session: **1303 Einträge** (331 Keymaps, 870 Usercmd-Routen, 102 im
+> „Handle with care"-Abschnitt). Die Risiko-Heuristik hat genau die
+> Beispiele erkannt, die Phase 4 überhaupt erst motiviert hatten
+> (`:Sandbox wsl shutdown-all`, `:Case delete`, `:File delete`,
+> `:MyPlugins remove`, …) — Design bestätigt. Nebenbefund, nicht Teil
+> dieses Ranges: 261 Einträge ohne Beschreibung (`(no description)`),
+> größtenteils `Debug`/`Filetree`-Subrouten — eine Doku-Lücke, keine
+> Fehlfunktion. Committet als `nvim-config@f3b1ba281`.
