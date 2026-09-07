@@ -48,7 +48,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
-| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`), 1 Fund notiert (reposcope.nvim `PERF-46`, Architekturentscheidung), Rest läuft |
+| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`), 2 Funde notiert (reposcope.nvim `PERF-46`, Frecency-Duplikation `PERF-52`), nur `PERF-80`…`91` noch offen |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
 listet Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte
@@ -1118,12 +1118,85 @@ von `start_periodic_refresh` hinterließen vorher 4 aktive `uv`-Timer
 notierte tote Datei (Feature per `db42bc9` entfernt). Kein neuer Fund,
 nur ein zweites Symptom derselben veralteten Katalog-Referenz.
 
+### `PERF-01`…`06`/`08`…`16` und `PERF-20`…`27` — kein Vollaudit (Begründung)
+
+Beide Blöcke sind der „Spickzettel" für **Hotpath-Mikrooptimierungen**
+(`t[i]=v` vs. `table.insert`, `table.concat` vs. `..`, Speicherlayout-
+Idiome etc.) — der Katalog selbst stellt ihnen voran: „Nur heranziehen,
+wenn ein Hotpath betroffen ist. Optimierung ohne Messung ist ein
+Anti-Pattern." Das ist ein grundlegend anderer Regel-Typ als `LUA-40`,
+`PERF-46/47/62`: kein Pass/Fail-Kriterium, das ein Repo unabhängig von
+tatsächlicher Aufrufhäufigkeit erfüllt oder verletzt. Ein systematischer
+32-Repo-Audit („wer benutzt `table.insert` statt `t[i]=v`?") würde
+Hunderte Treffer ohne Hotpath-Bezug erzeugen — nicht sinnvoll ohne
+Profiling, das außerhalb des Rahmens dieses Sweeps liegt. Gleiches
+Kalibrierungsprinzip wie bei `LUA-31`/`34`/`81`/`83`.
+
+**Trotzdem gezielt geprüft, weil mechanisch grep-bar und mit realem
+Bug-Potenzial:** `PERF-03` (`table.concat` statt `..` in Schleifen, sonst
+O(n²)) — fleet-weiter Grep nach dem Akkumulator-Muster (`x = x .. ...`)
+fand zwei Kandidaten mit wiederholter Aufruf-Historie
+(`language.nvim/spell/providers/cspell_server.lua:152`,
+`documentation.nvim/editor/serve.lua:286`), beide bei Lektüre als
+**korrekt beschränkt** bestätigt: der `cspell_server`-Stdout-Puffer wird
+nach jeder vollständigen Zeile sofort auf den Rest gekürzt (kein
+unbeschränktes Wachstum über die Prozesslaufzeit), der HTTP-Header-Puffer
+in `serve.lua` ist explizit auf 64 KB gedeckelt, bevor die Verbindung
+geschlossen wird. Kein Fund.
+
+### `PERF-40`…`53` (restliche Cache-Regeln) — mechanisch geprüft, 0 neue Funde, 1 Architektur-Beobachtung
+
+`PERF-43` (persistente Caches unter `stdpath("cache")`, nicht im
+Runtime-State): fleet-weit per Grep auf alle `cache_file`/`cache_path`/
+`cache_dir`-Definitionen sowie `reposcope.nvim`s `filecache_path`-Kette
+geprüft — überall `vim.fn.stdpath("cache")` als Basis
+(`gopath.nvim/truncated/cache.lua`, `reposcope.nvim/config/init.lua`,
+`lib.nvim/fs/scan_roots` als dokumentiertes Muster). Kein Fund.
+
+`PERF-40`/`41`/`42`/`44`/`45`/`49`…`51`/`53`: architektur-/kontextabhängige
+Empfehlungen ohne scharfes fleet-weites Pass/Fail-Kriterium, bereits durch
+die Katalog-eigenen Belege (`lib.nvim.cache.memory`/`.disk`, `pdfport.nvim`,
+`debugging.nvim`, `gopath.nvim`) exemplifiziert — kein Hinweis auf ein
+Gegenbeispiel bei den ohnehin für andere Familien bereits gelesenen
+Cache-Implementierungen (`lib.nvim/cache/{memory,disk}.lua`,
+`color_my_ascii.nvim/cache_manager.lua`, `reposcope.nvim/cache/
+readme_cache.lua`, `gopath.nvim/truncated/cache.lua`).
+
+**`PERF-52`-Beobachtung (Frecency-Duplikation), notiert:** der Katalog
+zitiert selbst zwei getrennte ~190-Zeilen-Implementierungen desselben
+Frecency-Musters (`pickers.nvim/smart/frecency.lua`,
+`emojis.nvim/overlay/frecency.lua`) als Beleg dafür, dass dies „nicht pro
+Plugin neu erfinden" werden sollte. Verifiziert: beide Dateien sind real
+und vergleichbar groß — eine echte, aber bewusst nicht angegangene
+Architekturentscheidung (Extraktion nach `lib.nvim` + Migration zweier
+Konsumenten), gleiche Kalibrierung wie `PRIN-01` (casedesk.nvim) und
+`PERF-46` (reposcope.nvim) — kein Ein-Datei-Fix.
+
+### `PERF-70`…`75` (begrenzte Nebenläufigkeit/Scans) — kanonisches Beispiel verifiziert, 0 Funde
+
+Der Katalog zitiert für `PERF-70`…`73` durchgängig dieselbe Datei,
+`gopath.nvim/truncated/cache.lua`s `scan_roots_bounded` (dieselbe Stelle,
+die für den `PERF-62`-Fix in diesem Durchgang ohnehin gelesen wurde) —
+verifiziert korrekt: Work-Queue mit Lese-Cursor (`qhead`, kein `table.
+remove(queue, 1)`, also auch `PERF-71` erfüllt), `max_concurrency`-
+Deckelung, konservative Auto-Roots (cwd/stdpath/Git-Root, kein ganzes
+Laufwerk — `PERF-72`), und das `state.building`-Flag (`PERF-73`) wird auf
+allen Pfaden zuverlässig zurückgesetzt (auch beim Leerfall `#queue == 0`,
+der explizit per `vim.schedule` behandelt wird — kein Pfad, auf dem
+`on_done`/`_finalize_build` nie feuert und das Flag für immer hängen
+bleibt).
+
+`lib.nvim/fs/collect_recursive/init.lua`s `collect_async` verfolgt bewusst
+einen anderen, aber ebenfalls sicheren Ansatz — sequenziell statt
+parallel-begrenzt ("walks one directory at a time... not parallel
+either", eigener Docstring) — kein EMFILE-Risiko, weil nie mehr als ein
+`fs_scandir`-Handle gleichzeitig offen ist. Kein Vollaudit der ~70
+weiteren `fs_scandir`/`readdir`-Fundstellen fleet-weit: die übrigen sind
+fast durchweg einstufige Verzeichnis-Listings ohne Rekursion, für die das
+EMFILE-Risiko, vor dem `PERF-70` warnt, strukturell nicht besteht.
+
 ### Noch offen
 
-- `PERF-01`…`06`/`08`…`16` (restliche allgemeine Idiome)
-- `PERF-20`…`27` (Speicherlayout)
-- restliche `PERF-40`…`45`/`49`…`53` (Cache-Regeln jenseits von `46`…`48`)
-- `PERF-70`…`75` (begrenzte Nebenläufigkeit/Scans)
 - `PERF-80`…`91` (Async-Scheduling/Chunking/Progress)
 
 ---
