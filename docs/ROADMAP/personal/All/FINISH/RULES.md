@@ -560,7 +560,7 @@ gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
   sandbox.nvim's `image tag <source> <target>`, wo `target` echt freier
   Text ist (neuer Repository:Tag-Name, keine geschlossene Menge) — kein Fund.
 
-### Ergebnis je Repo (Stand dieser Sitzung, 19/32 vollständig gelesen)
+### Ergebnis je Repo (Stand dieser Sitzung, 21/32 vollständig gelesen)
 
 | Repo | Befund | Regel(n) |
 |---|---|---|
@@ -582,7 +582,9 @@ gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
 | images.nvim | 0 — `scale` nutzt bewusst `values` (Soft-Hint: feste Vorschläge + freie Eingabe erlaubt) statt striktem `enum`, exakt `UI-25`-konform | — |
 | insights.nvim | 0 — `INSIGHTS_DIR_SOFT`/`INSIGHTS_SYMBOLS_TOKEN`-Custom-Typen, Soft-Hint-Pfad-Completion konsequent verwendet | — |
 | language.nvim | 0 — Übersetzungsmodi (`output`/`files`) durchgängig `enum` | — |
-| lib.nvim | 0 — geteilte UI-Infrastruktur (`progress/init.lua`: ein einziger `done`-Guard deckt `finish`/`cancel`/`request_cancel`, exaktes `UI-35`-Muster; `window/tag.lua`: der `relative=="win"`-Filter ist ein bewusster Schutz vor entarteten Nested-Floats, nicht zufällig — durch unabhängige Duplikation in debugging.nvim bestätigt) | — |
+| lib.nvim | 0 — geteilte UI-Infrastruktur (`progress/init.lua`: ein einziger `done`-Guard deckt `finish`/`cancel`/`request_cancel`, exaktes `UI-35`-Muster; `window/tag.lua`: der `relative=="win"`-Filter ist ein bewusster Schutz vor entarteten Nested-Floats, nicht zufällig — durch unabhängige Duplikation in debugging.nvim bestätigt; `ui/kit/surface.lua`: `_closed`-Guard + `WinClosed`-Autocmd mit `once=true` garantiert Cleanup genau einmal unabhängig vom Schließweg; `ui/kit/chooser.lua`: bewusstes Single-Instance-Modell, `M.open()` schließt den Vorgänger zuerst) | — |
+| pickers.nvim | 0 — vollständig für `UI-50`..`56` geprüft: eigene UI (`action_picker`/`dir_nav_picker`/`scope_picker`) delegiert komplett an `lib.nvim.ui.kit`, keine eigene Fensterverwaltung; `result_count/init.lua`s Polling-Loop revalidiert den Buffer-Handle bei jedem Tick (`UI-53`). Frühere Falschmeldung korrigiert: `command/composer.lua`s `find_all_arg()` hat `values=` sehr wohl (nur auf der nächsten Zeile, vom Einzeilen-Grep übersehen) | — |
+| spotlight.nvim | 0 — vollständig für `UI-50`..`56` geprüft: kein einziges eigenes `nvim_open_win`/`make_scratch` im ganzen Repo, `ui/list.lua` nutzt bewusst `kit.select`s Rich-Items statt Eigenbau-Float (im Moduldoc begründet). Kein `warn`/`error`-Notify-Aufruf außerhalb von `health.lua` (separat auditiert) — `UI-01`..`04` strukturell kaum anwendbar | — |
 
 ### Zusätzliche Stichproben zu UI-50..56 (Fenster-/Buffer-UI)
 
@@ -601,11 +603,41 @@ gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
   Wiederherstellung beim Schließen). Vollständige Restore-Pfad-Verifikation
   (tatsächlich jeder Schließen-Pfad ruft das korrekt auf) steht noch aus.
 
-### Batch-Check (13 Repos, nur Completion-Lücken geprüft — nicht der volle Regelsatz)
+### UI-50..56 gezielt: pickers.nvim, spotlight.nvim, und die geteilte `lib.nvim.ui.kit`-Basis
+
+Beide Repos wurden auf Nutzerwunsch als erstes vollständig für
+`UI-50`..`56` geprüft, weil sie namentlich als "noch komplett offen"
+galten:
+
+- **pickers.nvim**: die eigene UI-Fläche (`ui/action_picker.lua`,
+  `ui/dir_nav_picker.lua`, `ui/scope_picker.lua`) hat **keinerlei eigene
+  Fenster-/Buffer-Verwaltung** — jede delegiert vollständig an
+  `lib.nvim.ui.kit.select`/`vim.ui.select`. `result_count/init.lua`s
+  Polling-Loop validiert den Buffer-Handle bei jedem Tick neu und bricht
+  sauber ab, sobald der Ergebnis-Buffer weg ist (`UI-53`-Muster). `UI-50`..
+  `56` strukturell kaum anwendbar — nichts Eigenes zu verwalten.
+- **spotlight.nvim**: dieselbe Delegation. `ui/list.lua` nutzt bewusst
+  `lib.nvim.ui.kit.select`s Rich-Items statt eigenem Float-Rendering
+  (im Moduldoc explizit begründet). Kein einziges eigenes
+  `nvim_open_win`/`make_scratch` im ganzen Repo.
+- **`lib.nvim.ui.kit` selbst** (die eigentliche Implementierung, auf die
+  beide delegieren) wurde daher stattdessen geprüft: `surface.lua`
+  (Basis-Float-Handle) hat einen `_closed`-Guard für `fire_close()`,
+  registriert einen `WinClosed`-Autocmd mit `once = true`, damit Cleanup
+  garantiert genau einmal läuft — egal auf welchem Weg das Fenster
+  geschlossen wird (`UI-52`/`53`/`54`-Muster korrekt). `chooser.lua`
+  (Listen-Picker hinter `kit.select`) hält bewusst **eine einzige globale
+  Instanz** (`M.open()` ruft `M.close()` zuerst) statt mehrerer
+  gleichzeitiger Chooser — ein einfacheres, aber gültiges Modell für
+  `UI-54`, kein "wer verdrängt wen"-Restore nötig, weil ein transienter
+  Chooser (anders als z. B. ein Explorer-Sidebar) nichts Wiederherstellbares
+  hinterlässt. Kein Fund in beiden Ziel-Repos oder der gemeinsamen Basis.
+
+### Batch-Check (11 Repos, nur Completion-Lücken geprüft — nicht der volle Regelsatz)
 
 Für lsp.nvim, markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim,
-pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim,
-runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim wurden
+recommender.nvim, replacer.nvim, reposcope.nvim,
+runtime-analysis.nvim, sandbox.nvim, sessions.nvim wurden
 alle `type = "STRING"`-Argumente ohne `enum`/`values` durchgesehen — jeder
 Treffer ist plausibel echter Freitext (Suchmuster, Datei-Globs, neue
 Namen, Shell-Kommandos, Präfixe), keiner sieht nach einer geschlossenen
