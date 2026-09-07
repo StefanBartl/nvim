@@ -584,6 +584,23 @@ gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
 | language.nvim | 0 — Übersetzungsmodi (`output`/`files`) durchgängig `enum` | — |
 | lib.nvim | 0 — geteilte UI-Infrastruktur (`progress/init.lua`: ein einziger `done`-Guard deckt `finish`/`cancel`/`request_cancel`, exaktes `UI-35`-Muster; `window/tag.lua`: der `relative=="win"`-Filter ist ein bewusster Schutz vor entarteten Nested-Floats, nicht zufällig — durch unabhängige Duplikation in debugging.nvim bestätigt) | — |
 
+### Zusätzliche Stichproben zu UI-50..56 (Fenster-/Buffer-UI)
+
+- **pdfport.nvim**: `renderers/float.lua` ist ein zustandsloser Einweg-Float
+  (delegiert komplett an `lib.nvim.window.make_scratch`) — kein eigener
+  Zustand, der veralten könnte, `UI-50`..`56` strukturell kaum anwendbar.
+- **sandbox.nvim**: kein eigenes `ui_state`-Modul, aber `list_view.lua`
+  nutzt `lib.nvim.window.open_named_scratch` (namensbasiert dedupliziert)
+  statt einer Custom-Registry — erreicht denselben Zentralisierungs-Zweck
+  wie `UI-51` auf anderem Weg (eine benannte Scratch-Buffer-Suche ist
+  ebenso einzige Quelle der Wahrheit wie ein `ui_state`-Getter). Keine
+  Verletzung, andere aber gültige Umsetzung.
+- **reposcope.nvim**: hat ein explizites `state/ui/ui_state.lua` mit
+  `capture_invocation_state()`/`reset()` — genau das in `UI-51`/`UI-54`
+  beschriebene Muster (Fenster/Cursor vor dem Öffnen merken, für die
+  Wiederherstellung beim Schließen). Vollständige Restore-Pfad-Verifikation
+  (tatsächlich jeder Schließen-Pfad ruft das korrekt auf) steht noch aus.
+
 ### Batch-Check (13 Repos, nur Completion-Lücken geprüft — nicht der volle Regelsatz)
 
 Für lsp.nvim, markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim,
