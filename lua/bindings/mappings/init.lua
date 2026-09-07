@@ -12,8 +12,9 @@ function M.setup()
   -- NOTE on load order: the mappings phase runs at UIReady, AFTER a plugin
   -- that sets its keys at VeryLazy. A key mapped here silently wins over a
   -- plugin's — the plugin's key is simply gone, nothing said. Check
-  -- docs/NOTES/CrossPlugin/Keymaps-Collisions.md whenever a plugin key "does
-  -- nothing", and before adding a key here a plugin might already own.
+  -- Keymaps-Collisions.md (WKDBooks wkdbook-myplugins/ALL/) whenever a
+  -- plugin key "does nothing", and before adding a key here a plugin might
+  -- already own.
 
   require("bindings.mappings.buf_win_tab").setup()
   require("bindings.mappings.buffer_jump").setup()

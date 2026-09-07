@@ -347,16 +347,17 @@ function M.status()
   status.open()
 end
 
---- `lib.nvim.bindings.audit` in one of its four shapes — the live-registry
+--- `lib.nvim.bindings.audit` in one of its six shapes — the live-registry
 --- half of "bindings tooling", as opposed to `check`/`report` above, which
---- compare the registry against the BINDINGS docs corpus. These three
---- (`audit`/`gaps`/`keys`/`prefixes`) touch no docs at all: same function
---- `lib.nvim`'s own `:LibBindingsAudit*` commands call, exposed here too so
---- `:Bindings <Tab>` finds them without needing the flat name — same
---- verb-plus-alias shape as `:AllDrives` → `:Pickers drives files`
---- (`Usercmds-Overview.md`, "Shape: verb vs. flat"). See
---- `docs/ROADMAP/handovers/CDX-bindings-runtime-check.md` for why these
---- exist as a separate lib.nvim module rather than inside `drift.lua`.
+--- compare the registry against the BINDINGS docs corpus. These six touch
+--- no docs at all: same functions `lib.nvim`'s own `:LibBindingsAudit*`
+--- commands call, exposed here too so `:Bindings <Tab>` finds them without
+--- needing the flat name — same verb-plus-alias shape as `:AllDrives` →
+--- `:Pickers drives files` (`Usercmds-Overview.md`, "Shape: verb vs. flat"
+--- — moved 2026-09-07 to WKDBooks' `wkdbook-myplugins/ALL/`). See
+--- `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/CDX-bindings-runtime-check.md`
+--- for why these exist as a separate lib.nvim module rather than inside
+--- `drift.lua`.
 ---@param kind "actions"|"gaps"|"keys"|"prefixes"|"naming"|"checklist"
 ---@param root string|nil  ignored for `"prefixes"` — a whole-namespace question, not a per-repo one
 ---@return nil

@@ -268,8 +268,11 @@ prefixes therefore comes from whichever plugin registered it, not from here.
   is deliberate: normal-mode window jump (`buf_win_tab.lua`), terminal-mode
   window jump (`terminal.lua`), insert-mode cursor move (`nvchad.lua`).
 
-See [`docs/NOTES/CrossPlugin/Keymaps-Collisions.md`](NOTES/CrossPlugin/Keymaps-Collisions.md)
-for how these interact with every personal plugin's own keymaps.
+See `Keymaps-Collisions.md` in WKDBooks' `wkdbook-myplugins/ALL/` (moved
+there 2026-09-07 from this repo's `docs/NOTES/CrossPlugin/` — no single
+plugin repo owns a cross-plugin finding, and this ecosystem's durable
+non-code knowledge belongs in WKDBooks) for how these interact with every
+personal plugin's own keymaps.
 
 ---
 
@@ -306,10 +309,12 @@ bottom and rotate variants are keymap-only.
 
 `:BindingsPath` used to sit here and copied `docs/NOTES/BINDINGS`, a
 directory that never existed — the two trees were
-`docs/NOTES/PersonelPlugins/BINDINGS` (now this file plus
-[`docs/NOTES/CrossPlugin/`](NOTES/CrossPlugin/), see `BND-05`) and
+`docs/NOTES/PersonelPlugins/BINDINGS` (now this file, see `BND-05`) and
 `docs/NOTES/ExternPlugins/Bindings`. Removed 2026-09-04; `<leader>BI` now
-runs `:Bindings path`, which knows both roots.
+runs `:Bindings path`, which knows both roots. (The cross-plugin analyses
+that used to sit alongside this file under `docs/NOTES/CrossPlugin/` moved
+to WKDBooks' `wkdbook-myplugins/ALL/` on 2026-09-07 — see the two `See ...`
+pointers below in this file.)
 
 ### Startup instrumentation
 
@@ -490,10 +495,11 @@ resolved local directory; a remote-mode entry with no local checkout is
 filtered out rather than passed through with a directory a caller would have
 to remember to check for `nil`.
 
-See [`docs/NOTES/CrossPlugin/Usercmds-Overview.md`](NOTES/CrossPlugin/Usercmds-Overview.md)
-for how these command names interact with every personal plugin's own
-commands — including the one real cross-plugin interaction found so far
-(`:Lsp` silently suppressing nvim-lspconfig's own commands via an upstream
+See `Usercmds-Overview.md` in WKDBooks' `wkdbook-myplugins/ALL/` (moved
+there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for how
+these command names interact with every personal plugin's own commands —
+including the one real cross-plugin interaction found so far (`:Lsp`
+silently suppressing nvim-lspconfig's own commands via an upstream
 `exists(':lsp')` check).
 
 ---
@@ -533,8 +539,10 @@ a renamed augroup would still be caught.
 Read the `WkdExplorerSingleton` pair together: `WinEnter` displaces,
 `WinClosed` restores. "Once, then forget" is why it is two call sites rather
 than one handler on both events — the second holds state the first sets.
-See [`docs/NOTES/CrossPlugin/Autocmds-Observations.md`](NOTES/CrossPlugin/Autocmds-Observations.md#winenterwinclosed-the-explorer-singleton-is-this-configs-own-code)
-for why this exists (neo-tree and snacks.picker's `explorer` source have no
+See "WinEnter/WinClosed: the explorer singleton is this config's own code"
+in `Autocmds-Observations.md`, WKDBooks' `wkdbook-myplugins/ALL/` (moved
+there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for why
+this exists (neo-tree and snacks.picker's `explorer` source have no
 awareness of each other).
 
 ### Terminal, Git, Text — `lua/autocmds/`
@@ -691,5 +699,6 @@ registrar can run a second time.
   cosmetic, but it splits every grep in two.
 - **The doubled Kitty-augroup prefix** (see above).
 
-See [`docs/NOTES/CrossPlugin/Autocmds-Observations.md`](NOTES/CrossPlugin/Autocmds-Observations.md)
-for how these interact with every personal plugin's own autocmds.
+See `Autocmds-Observations.md` in WKDBooks' `wkdbook-myplugins/ALL/` (moved
+there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for how
+these interact with every personal plugin's own autocmds.

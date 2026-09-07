@@ -16,8 +16,8 @@
 --- this file existed — see
 --- `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/roadmap-tools-analysis.md`
 --- (Nachtrag 2026-09-05) for `bindings.audit`'s history of exactly that gap,
---- and `docs/ROADMAP/handovers/CDX-bindings-runtime-check.md` for why
---- `bindings.keymap.conflicts()` had the same problem.
+--- and `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/CDX-bindings-runtime-check.md`
+--- for why `bindings.keymap.conflicts()` had the same problem.
 ---
 --- **What these can and cannot see**, same caveat as autocmd_docs: a
 --- lazy-loaded plugin that has not fired its trigger yet has registered
