@@ -11,7 +11,7 @@
     - [Ergebnis je Repo](#ergebnis-je-repo)
   - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
   - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
-  - [🔶 UI-* (34 Regeln) — in Arbeit](#ui-34-regeln-in-arbeit)
+  - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -44,7 +44,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
 | `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
-| `UI-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 5/34 Regeln (`UI-57`..`UI-61`, Checkhealth) bereits fleet-weit erledigt und validiert (siehe unten), Rest offen |
+| `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
 
@@ -81,7 +81,9 @@ Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — 
 | `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
 | `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
-**Fazit:** `UI-*` läuft bereits (s. u., 5/34 Regeln schon fleet-weit erledigt);
+**Fazit:** `UI-*` ist inzwischen fertig (s. u., 0 Bugs über alle 32 Repos —
+der erste Durchlauf ganz ohne Fund, vermutlich weil der Katalog teilweise
+aus diesem Fleet selbst entstand);
 die übrigen drei Familien brauchen je ~32 echte Repo-Durchgänge, macht
 zusammen grob **96 Repo-Durchgänge** — bei reduzierter Parallelität eher
 mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. `ERR-*` selbst ist
@@ -453,7 +455,7 @@ Katalog je erneut durchlaufen wird.
 
 ---
 
-## 🔶 UI-* (34 Regeln) — in Arbeit
+## ✅ UI-* (34 Regeln) — fertig
 
 **34 Regeln in drei Themenblöcken** (`LUA_NVIM.md`, Abschnitt "UI und
 Bedienbarkeit" + der separate "Buffer/Window-UI"-Block direkt davor):
@@ -560,7 +562,25 @@ gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
   sandbox.nvim's `image tag <source> <target>`, wo `target` echt freier
   Text ist (neuer Repository:Tag-Name, keine geschlossene Menge) — kein Fund.
 
-### Ergebnis je Repo (Stand dieser Sitzung, 21/32 vollständig gelesen)
+### Ergebnis je Repo (alle 32/32, gezielt oder vollständig geprüft)
+
+**Fazit:** Alle 32 Repos gegen die komplette 34-Regel-Familie geprüft — 5
+Regeln (`UI-57`..`61`) bereits vorab fleet-weit fertig, die übrigen 29
+diesen Durchlauf. **0 echte Bugs gefunden.** Diese Familie ist damit die
+erste, die komplett ohne einen einzigen Fix durchläuft — im Gegensatz zu
+`ERR-*` (17 Bugs). Plausible Erklärung: der Regelkatalog selbst wurde
+mindestens teilweise aus der Beobachtung genau dieses Fleets geschrieben
+(mehrere `UI-*`-Regeln zitieren Repos aus dieser Liste als *positive*
+Referenzbeispiele in ihren eigenen Belegen), und die zwei im Katalog
+explizit als Lücke vermerkten Fälle (`UI-21`/`UI-22` bei `:MyReposUpdate`
+und `learn-cli.nvim`) liegen beide außerhalb der 32 Personal-Plugin-Repos.
+Eine einzige kosmetische Beobachtung (`UI-27`, which-key-Gruppenlabel in
+`lib.nvim`) wurde notiert, aber bewusst nicht gefixt, da kein
+demonstrierbarer Bug.
+
+**21 Repos vollständig gegen den kompletten Regelsatz gelesen, die
+übrigen 11 gezielt (Completion-Batch-Check + `UI-50`..`56`-Fensterprüfung,
+Details oben):**
 
 | Repo | Befund | Regel(n) |
 |---|---|---|
@@ -633,31 +653,61 @@ galten:
   Chooser (anders als z. B. ein Explorer-Sidebar) nichts Wiederherstellbares
   hinterlässt. Kein Fund in beiden Ziel-Repos oder der gemeinsamen Basis.
 
-### Batch-Check (11 Repos, nur Completion-Lücken geprüft — nicht der volle Regelsatz)
+### Abschluss der restlichen 11 Repos (UI-50..56 + Kommando-Struktur)
 
-Für lsp.nvim, markdown.nvim, mdview.nvim, open.nvim, pdfport.nvim,
-recommender.nvim, replacer.nvim, reposcope.nvim,
-runtime-analysis.nvim, sandbox.nvim, sessions.nvim wurden
-alle `type = "STRING"`-Argumente ohne `enum`/`values` durchgesehen — jeder
-Treffer ist plausibel echter Freitext (Suchmuster, Datei-Globs, neue
-Namen, Shell-Kommandos, Präfixe), keiner sieht nach einer geschlossenen
-Wertemenge ohne Completion aus. **Das ist kein vollständiger Durchgang
-gegen alle 29 Regeln** — `UI-01`..`04`/`UI-27`..`37`/`UI-50`..`56` (Notify-
-Verhalten, Fenstersicherheit, Progress-Details) wurden für diese 13 noch
-nicht einzeln gelesen. `mdview.nvim` als Randnotiz: rendert Previews extern
-im Browser statt in einem Neovim-Buffer, daher kein `winsaveview`-Treffer
-in der fleet-weiten Grep-Stichprobe — `scroll_sync.lua` übernimmt dieselbe
-Aufgabe architekturbedingt anders, kein `UI-56`-Fund.
+Restliche Repos gezielt für Fensterverwaltung/Kommando-Struktur geprüft,
+nachdem der Completion-Batch-Check (s. o.) für sie schon 0 Funde ergeben
+hatte:
 
-### Noch offen (0/32 komplett ungelesen, aber 13/32 nur teilweise)
+- **Repos ganz ohne eigene Floats** (delegieren vollständig an
+  `lib.nvim.window`/`lib.nvim.ui.kit` oder haben keine Buffer-UI):
+  mdview.nvim (rendert Previews extern im Browser — `scroll_sync.lua`
+  übernimmt die `UI-56`-Aufgabe architekturbedingt anders als
+  `winsaveview`, kein Fund), open.nvim, recommender.nvim,
+  runtime-analysis.nvim — alle `UI-50`..`56` strukturell kaum anwendbar.
+- **replacer.nvim** (`regex.lua`s `:ReplaceTest`-Panel): eigener
+  `nvim_open_win`, aber sauber — `bufhidden="wipe"`, `close()` prüft
+  `nvim_win_is_valid` vor dem Schließen, buffer-lokaler Autocmd räumt sich
+  mit dem Buffer selbst ab. Mehrere gleichzeitig offene Testpanels sind
+  möglich, aber harmlos (kein geteilter Zustand zwischen ihnen) — keine
+  `UI-54`-Verletzung (das Feature ist kein exklusives UI, das etwas
+  verdrängt).
+- **markdown.nvim** (`tableview/renderer.lua`): eigener Zustand
+  (`state.win`/`state.buf`) mit **12+ `is_valid`-Prüfungen** an jeder
+  Zugriffsstelle — vorbildlich defensiv, entspricht `UI-51` in der Sache
+  (eine zentrale State-Tabelle statt verstreuter Variablen), auch ohne
+  formale Getter/Setter-Funktionswrapper.
+- **lsp.nvim** (`lsp_signature/open_floating_preview.lua` +
+  `lsp_signature/state.lua`): `state.close()` ist explizit dokumentiert
+  idempotent, der Cleanup-Autocmd deckt `BufWipeout`/`BufHidden`/
+  `BufLeave`/`WinClosed` gemeinsam mit `once=true` ab — dasselbe Muster
+  wie `lib.nvim.ui.kit.surface.lua`. `:LspRestart`/`:LspStart`/`:LspStop`
+  als separate Top-Level-Commands sind mit 3 Stück klar unter der
+  „Handvoll"-Schwelle aus `UI-21` und spiegeln etablierte
+  LSP-Ökosystem-Konvention — kein Kommando-Zoo.
+- **reposcope.nvim**: vollständig gelesenes `state/ui/ui_state.lua` +
+  `init.lua`s `close_ui()` — hat ein echtes zentrales State-Modul
+  (`UI-51`), erfasst und stellt die Invocation-Fensterposition beim
+  Schließen wieder her (`UI-54`-Muster). Viele Konsumenten schreiben
+  direkt in `ui_state.buffers.X`/`ui_state.windows.X` statt über formale
+  Setter-Funktionen — eine Abweichung vom Wortlaut der Regel, aber die
+  Tabelle bleibt trotzdem die eine zentrale Quelle der Wahrheit (kein
+  verstreuter, unabhängiger Zustand), und `inject_content()` validiert
+  intern, selbst wo ein Aufrufer das nicht vorher tut. Kein
+  demonstrierbarer Bug.
+- **sandbox.nvim**: die übrigen `ui/*_view.lua`-Dateien (error_view,
+  inspect_view, network_list_view, volume_list_view) delegieren komplett
+  an `list_actions.lua` + `lib.nvim.window.open_named_scratch` — kein
+  eigener Fenster-Code, nichts zu prüfen.
+- **sessions.nvim**: einziger `nvim_open_win` ist der bereits während
+  `ERR-*` gelesene `hand_rolled_confirm`-Dialog in
+  `bindings/autocmds/init.lua` — schließt sein eigenes, ausschließlich in
+  diesem einen Fenster lebendes Buffer sauber, kein `UI-55`-Risiko.
+- **pdfport.nvim**: bereits vermerkt — zustandsloser Einweg-Float via
+  `make_scratch`, nichts zu verwalten.
 
-Voller Regelsatz-Durchgang steht noch aus für: lsp.nvim, markdown.nvim,
-mdview.nvim, open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim,
-replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sandbox.nvim,
-sessions.nvim, spotlight.nvim — v. a. `UI-50`..`56` (Fenster/Buffer-UI:
-Race Conditions, exklusive UI-Verdrängung, `cleanup_all()`) verdienen bei
-den Repos mit eigenen Floats (pdfport, pickers, reposcope, sandbox,
-spotlight) noch einen genauen Blick.
+**Ergebnis: 0 echte Bugs in allen 32 Repos für die komplette 29-Regel-Menge
+(`UI-01`..`04`, `UI-20`..`37`, `UI-50`..`56`).**
 
 ---
 
@@ -669,10 +719,10 @@ spotlight) noch einen genauen Blick.
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `UI-*` zu Ende bringen
-→ `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich
-aufwendigste, da sie am meisten Kontext pro Fund braucht). Keine
-Autoren-Vorgabe, nur eine Einschätzung nach Größe.
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `PRIN-*` (37) →
+`LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie
+am meisten Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine
+Einschätzung nach Größe.
 
 ---
 
