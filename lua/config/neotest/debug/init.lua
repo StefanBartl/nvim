@@ -132,11 +132,10 @@ function M.usercommands()
     end
 
     -- Test root detection
-    --- CDX: adapters/typescript.lua only exports M.create(); it has no
-    --- `.adapter` field, so this condition is always false and NeotestDebugRoot
-    --- never actually resolves a root through the typescript adapter. Real
-    --- behavior bug, not just annotation -- needs an author decision on the
-    --- intended call (presumably ts_config.create().root or similar).
+    --- CDX: parked bug -- adapters/typescript.lua exports only M.create(), has
+    --- no `.adapter` field, so this branch is always false and NeotestDebugRoot
+    --- never resolves a TS root. Fix belongs to the adapter-registry rework:
+    --- docs/ROADMAP/CDX/config-cdx-triage.md §3, docs/ROADMAP/IDEAS/test.md §2.1.
     local ts_config = require("config.neotest.adapters.typescript")
     local root = nil
 
