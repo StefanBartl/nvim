@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-07, zehnte Aktualisierung — PRIN-* fertig)
+## Stand bei Übergabe (2026-09-07, elfte Aktualisierung — LUA-* läuft)
 
 | Familie | Status |
 |---|---|
@@ -18,68 +18,87 @@ Einstiegspunkt für eine neue Session.
 | `TS-*` (5) | ✅ fertig |
 | `ERR-*` (34) | ✅ fertig — 32/32 Repos, 17 echte Bugs gefixt |
 | `UI-*` (34) | ✅ fertig — 32/32 Repos, 0 echte Bugs |
-| `PRIN-*` (37) | ✅ **fertig** — 32/32 Repos, **1 Fund** (notiert, nicht gefixt) |
-| `LUA-*` (45) | ⬜ offen |
+| `PRIN-*` (37) | ✅ fertig — 32/32 Repos, 1 Fund (notiert, nicht gefixt) |
+| `LUA-*` (45) | 🔶 **in Arbeit** — `LUA-40`/`41` fleet-weit fertig (4 Repos gefixt), Rest offen |
 | `PERF-*` (57) | ⬜ offen |
 
-## PRIN-* — Abschlussnotiz
+## LUA-* — Stand im Detail
 
-**Andere Methodik als `ERR-*`/`UI-*`, auf explizite Nutzeranfrage**: eine
-volle Architektur-Review über alle 37 Regeln (SRP, reine Funktionen,
-Naming, DI, Fehlerstruktur, Testbarkeit, Doku-Vertrag) statt eines reinen
-Bug-Hunts — der Nutzer wollte das explizit so, nicht nur konkrete
-Bug-Muster.
+**Zählung:** 45 Regeln, aber der Katalog selbst hat einen
+Formatierungsfehler — `LUA-67`/`LUA-68` in der „`#`-Prefix bei
+Kommentaren"-Tabelle sind keine echten Regeln, sondern versehentlich in
+die ID-Spalte gerutschte Tabellen-Header-Zellen. Ein blinder Grep findet
+47 `LUA-XX`-IDs; die echten 45 ergeben sich erst nach Abzug dieser zwei.
 
-**Ergebnis: nur 1 Fund trotz voller Review.** `casedesk.nvim/lua/casedesk/ui.lua`
-ist 3433 Zeilen lang und bündelt 50 `function M.*`-Handler für völlig
-unabhängige Case-Management-Features (CRUD, OCR, Git-Sync, KI/AI-Abfrage,
-Timeline, SLA-Tracking, Terminologie, Link-Check, Export …) —
-`PRIN-01`/`02`-Kandidat. **Notiert, nicht refaktoriert**: eine Aufteilung
-in Feature-Module wäre eine Architekturentscheidung mit echtem Risiko in
-einem aktiv genutzten 45-Datei-Repo, kein Ein-Zeiler im Rahmen eines
-Findings-Sweeps — falls das je angegangen wird, ist es eine eigene,
-bewusste Aufgabe, keine Nebensache.
+**Zwei im Katalog vermerkte Lücken waren beide schon gelöst** (Katalog
+datiert 2026-09-06, nur nicht zurückgeschrieben): `LUA-01` fileops.nvim
+(behoben durch `35cdd4b`), `LUA-04` pickers.nvim (behoben durch
+`61a97e2`/`ea1ce1c`). Beide verifiziert, nicht erneut angefasst.
 
-**Warum sonst nichts gefunden wurde** (wichtig für `LUA-*`/`PERF-*` als
-Erwartungshaltung, nicht als Abkürzung):
-1. Der Katalog selbst zitiert schon ~15 der 32 Repos als *positive*
-   Beispiele (Erhebung 2026-08-08) — er wurde mindestens teilweise aus der
-   Beobachtung dieses Fleets geschrieben.
-2. Mehrere PRIN-Regeln (`PRIN-10` kein globaler Zustand, `PRIN-20`/`25`-`27`
-   Fehlerbehandlung, `PRIN-40`-`43` Cache-Hygiene) beschreiben exakt die
-   Bugklassen, die `ERR-*` gerade erst exhaustiv durchsucht und gefixt hat
-   — hier gab es nichts Neues mehr zu finden.
-3. Vier Regeln wurden **fleet-weit mechanisch** statt 32× einzeln geprüft:
-   `PRIN-10` (Grep nach `_G.`/`_G[`, nur 3 begründete Ausnahmen), `PRIN-35`
-   (Naming: 0 camelCase-Ausreißer in allen 32 Repos), `PRIN-50`
-   (Datei-Header: kein Repo unter 95 % Abdeckung), `PRIN-51`/`52`
-   (dokumentierter Vertrag: folgt automatisch aus der bereits
-   abgeschlossenen `LLS-*`-Familie, 0 LuaLS-Diagnostics fleet-weit).
-4. Eine **Größte-Datei-Stichprobe** (SRP-Proxy) fand mehrere auffällig
-   große Dateien (documentation.nvim 10185 Zeilen, hover.nvim 1970,
-   reposcope.nvim 1387, runtime-analysis.nvim 1616) — alle bei genauerem
-   Hinsehen gerechtfertigt (eine kohärente Verantwortung trotz Größe, oder
-   überwiegend eingebettete Template-Daten statt Logik). Nur casedesk.nvim
-   war ein echter Fund.
+**`LUA-40`/`41` (Metatables/Weak-Tables) fleet-weit fertig, 4 Repos
+gefixt** — der bisher wichtigste Einzelfund dieser Familie:
 
-Volle Details (Repo-für-Repo-Tabelle, alle Fleet-Checks) stehen in
-`RULES.md` selbst unter „✅ PRIN-* (37 Regeln) — fertig".
+Grep nach `__mode` über alle 32 Repos findet 6 Treffer. `__mode = "k"`
+(schwache Schlüssel) wirkt **nur** auf Tabellen/Funktionen/Userdata/
+Threads, nie auf Zahlen — ein Cache, der mit einer `bufnr` (einer Zahl)
+als Schlüssel arbeitet, wird davon **nie** automatisch geleert, egal wie
+viele Buffer geschlossen werden.
+
+- **lib.nvim** `buffer/context/init.lua` — **echter, unbegrenzter Leak**
+  in geteilter Kern-Infrastruktur (am `FileType`-Autocmd-Dispatcher
+  verdrahtet). Moduldoc behauptete fälschlich automatisches GC. Gefixt:
+  `BufDelete`/`BufWipeout`-Autocmd ruft jetzt aktiv `invalidate()`.
+  Commit `8b176be`, Regressionstest in `TESTS/context_spec.lua`
+  (stash/reapply-verifiziert, `LIB_TESTS_OK`).
+- **gopath.nvim** `alias_index.lua` + `binding_index.lua` — identischer
+  echter Leak, gleicher Fix. Commit `bd10baf`. Kein Testframework in
+  diesem Repo (nur manuelle Fixtures) — headless von Hand verifiziert.
+- **color_my_ascii.nvim** `cache_manager.lua` — irreführende Doku, aber
+  **kein echter Bug**: Cache hat bereits `max_size`-Deckel + einen
+  30s-Timer, der real aufräumt, unabhängig von der wirkungslosen
+  Metatable. Doku korrigiert, totes `setmetatable` entfernt, keine
+  Verhaltensänderung. Commit `6577e66`.
+- **filetree.nvim** `util/buffer.lua` — dieselbe irreführende Doku, aber
+  ein `BufDelete`-Autocmd existierte schon im selben File und räumt
+  bereits aktiv auf. Gleicher folgenloser Doku-Fix. Commit `0c92620`.
+- **runtime-analysis.nvim**/**sessions.nvim** — beide korrekt (Schlüssel
+  ist eine echte Tabelle, kein bufnr) — kein Fund.
 
 ## Nächster Schritt
 
-Laut `RULES.md` §"Vorschlag für die Reihenfolge": **`LUA-*`** (45 Regeln,
-allgemeine Lua/Neovim-Idiome jenseits von Deprecations) als Nächstes →
-`PERF-*` (57, größte, da sie Verständnis von Aufrufhäufigkeit statt reinem
-Pattern-Matching braucht). Keine feste Vorgabe, nur eine Einschätzung nach
-Größe.
+`LUA-*` weiterführen. Noch offen (siehe RULES.md für den vollen Text):
 
-**Wichtig für den Sitzungsstart von `LUA-*`:** zuerst klären, ob dieselbe
-Frage wie bei `PRIN-*` erneut gestellt werden muss (voller Architektur-/
-Stil-Review vs. reiner Bug-Hunt) — `LUA_NVIM.md`s "allgemeine Idiome
-jenseits von Deprecations" klingt nach einer ähnlichen Mischung aus
-konkreten Mustern und Geschmacksfragen wie `PRIN-*`. Den Regelkatalog
-zuerst vollständig lesen (inkl. „Belege"-Abschnitte auf Repo-Zitate
-prüfen), bevor entschieden wird.
+- `LUA-01`..`05` — restliche lib.nvim-Abhängigkeitskonsistenz fleet-weit
+  (nur die 2 Katalog-Lücken wurden bisher verifiziert, kein systematischer
+  Durchgang über alle 32 Repos).
+- `LUA-10`..`16` — Neovim-API-Sicherheit. **Vermutlich wenig Neues**:
+  überschneidet sich stark mit dem bereits abgeschlossenen
+  `ERR-32`/`33`/`34` (Handle-Validierung in Deferred Calls) und `SEC-*`.
+  Kurzer Abgleich reicht wahrscheinlich, kein Vollaudit nötig.
+- `LUA-30`..`34` — State/Datenmodelle: Getter/Setter statt Direktzugriff,
+  Ringbuffer/FIFO mit Limit, Snapshot/Restore, Arrays statt Records.
+  **Echtes Neuland**, noch nicht geprüft.
+- `LUA-42`..`47` — weitere Metatable-Muster jenseits der bereits
+  geprüften `40`/`41` (Shared Metatables mit Memoization, Defaultwerte
+  über Metatable, `rawget` für „implementiert selbst?"). Ebenfalls
+  Neuland, aber vermutlich seltener genutzt als `40`/`41` — lohnt sich
+  trotzdem als fleet-weiter Grep-Durchgang (`__index`, `rawget`).
+- `LUA-50`..`55` — Code-Stil. Größtenteils schon über die
+  fleet-weiten `PRIN-35`/`50`-Checks abgedeckt (Naming, Header) — nur
+  `LUA-54` (keine Emojis/fette Überschriften in Markdown-Docs) und
+  `LUA-55` (paralleles statt XOR-Tauschen) sind noch nicht geprüft.
+- `LUA-60`..`71` — Annotationen. Folgt größtenteils automatisch aus der
+  abgeschlossenen `LLS-*`-Familie (0 LuaLS-Diagnostics fleet-weit
+  impliziert korrekte `@param`/`@return`/`@type`) — wahrscheinlich nur
+  eine kurze Bestätigung nötig, kein Vollaudit.
+- `LUA-80`..`83` — Config-Defaults: typisierte Keys, möglichst viel
+  user-seitig einstellbar. Neuland, noch nicht geprüft.
+
+**Effiziente Reihenfolge-Empfehlung:** `LUA-30`..`34` und `LUA-42`..`47`
+und `LUA-80`..`83` sind das eigentliche Neuland und verdienen die meiste
+Aufmerksamkeit; `LUA-10`..`16`/`50`..`55`/`60`..`71` sind wahrscheinlich
+schnelle Bestätigungen dank Überschneidung mit bereits abgeschlossenen
+Familien.
 
 ## Standing Rules für diese Arbeit
 
@@ -96,14 +115,14 @@ prüfen), bevor entschieden wird.
 - **1 Agent gleichzeitig, mehrere Runden zu je 1**, falls ein Subagent
   gebraucht wird — direktes Lesen in der Unterhaltung ist der Normalfall.
 - **Erst grep-/mechanik-basierte Vorprüfung über alle 32 Repos**, bevor ein
-  Repo einzeln gelesen wird — hat sich bei `ERR-*`, `UI-*` und `PRIN-*`
-  jedes Mal bewährt.
-- **Bug vs. Feature-/Stil-Lücke unterscheiden**: nur echte, demonstrierbare
-  Defekte fixen. Eine reine Architektur-/Stil-Beobachtung (wie
-  casedesk.nvims `ui.lua`) wird dokumentiert, aber nicht automatisch
-  refaktoriert — das wäre eine Design-Entscheidung mit Tragweite, die
-  einzeln abgestimmt gehört.
-- **Bei unklarer Regel-Natur nachfragen**: wenn eine Familie (wie `PRIN-*`)
-  strukturell anders ist als die vorherigen (mehr Geschmacksfragen als
-  Bugs), den Nutzer fragen, wie eng der Scope gefasst werden soll, statt
-  eine Annahme zu treffen — hat sich bei `PRIN-*` bewährt.
+  Repo einzeln gelesen wird — hat bei jeder bisherigen Familie funktioniert,
+  zuletzt beim `__mode`-Grep für `LUA-40`/`41`.
+- **Nicht jedes Repo hat ein automatisiertes Testframework** — gopath.nvim
+  hat nur manuelle, interaktive Test-Fixtures. Bei fehlendem Framework:
+  headless von Hand verifizieren statt eines Regressionstests, im Commit
+  transparent machen.
+- **Ein Fund ohne Verhaltensänderung ist trotzdem einen Fix wert**, wenn
+  die Dokumentation eine falsche Garantie behauptet (wie bei
+  color_my_ascii.nvim/filetree.nvim) — auch wenn kein echter Bug vorliegt,
+  irreführende Kommentare/Docstrings über Speicher-Sicherheit sind ein
+  Wartungsrisiko für die Zukunft.
