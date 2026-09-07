@@ -1146,7 +1146,7 @@ unbeschränktes Wachstum über die Prozesslaufzeit), der HTTP-Header-Puffer
 in `serve.lua` ist explizit auf 64 KB gedeckelt, bevor die Verbindung
 geschlossen wird. Kein Fund.
 
-### `PERF-40`…`53` (restliche Cache-Regeln) — mechanisch geprüft, 0 neue Funde, 1 Architektur-Beobachtung
+### `PERF-40`…`53` (restliche Cache-Regeln) — vollständiges Cache-Inventar gelesen, 0 neue Funde, 1 Architektur-Beobachtung
 
 `PERF-43` (persistente Caches unter `stdpath("cache")`, nicht im
 Runtime-State): fleet-weit per Grep auf alle `cache_file`/`cache_path`/
@@ -1155,14 +1155,40 @@ geprüft — überall `vim.fn.stdpath("cache")` als Basis
 (`gopath.nvim/truncated/cache.lua`, `reposcope.nvim/config/init.lua`,
 `lib.nvim/fs/scan_roots` als dokumentiertes Muster). Kein Fund.
 
-`PERF-40`/`41`/`42`/`44`/`45`/`49`…`51`/`53`: architektur-/kontextabhängige
-Empfehlungen ohne scharfes fleet-weites Pass/Fail-Kriterium, bereits durch
-die Katalog-eigenen Belege (`lib.nvim.cache.memory`/`.disk`, `pdfport.nvim`,
-`debugging.nvim`, `gopath.nvim`) exemplifiziert — kein Hinweis auf ein
-Gegenbeispiel bei den ohnehin für andere Familien bereits gelesenen
-Cache-Implementierungen (`lib.nvim/cache/{memory,disk}.lua`,
-`color_my_ascii.nvim/cache_manager.lua`, `reposcope.nvim/cache/
-readme_cache.lua`, `gopath.nvim/truncated/cache.lua`).
+**`PERF-41`/`42` (Regenerierbar/Invalidierbar) — vollständiges Cache-Inventar
+gelesen, nicht nur die Katalog-Belege.** Jede Datei mit "cache" im Namen
+fleet-weit gefunden (`find ... -iname "*cache*.lua"`) und einzeln
+gegengelesen, über die für `PERF-46`/`47`/`48` ohnehin gelesenen Dateien
+hinaus:
+- `hover.nvim/cache.lua`: `M.reset()` setzt `_store = nil` (Neuzuweisung,
+  aber sicher — `_store` ist privat, nie extern gehalten; jeder Zugriff
+  geht über `store()`, das lazy neu aufbaut). Zusätzlich ein durchdachtes
+  `M.on_reset(drop)`-Registry-Muster, das Kopplung vermeidet, die sonst
+  genau das `PERF-47`-Risiko wäre.
+- `insights.nvim/scan/cache.lua`: reiner Datei-Cache ohne geteilten
+  In-Memory-State (jeder Aufruf liest/schreibt frisch von Platte) —
+  Mehrfach-Signal-Invalidierung (Version + CWD + TTL + Datei-mtime pro
+  Eintrag), exemplarisch für `PERF-44`.
+- `language.nvim/spell/core/cache.lua`: `bufnr`-keyed, **nicht**
+  weak-keyed (korrekt, siehe `LUA-40`-Lektion) — aktive Bereinigung über
+  `BufDelete`-Autocmd zu `language.spell.on_buf_delete` → `cache.
+  invalidate(bufnr)` verifiziert, tatsächlich verdrahtet (nicht nur
+  dokumentiert).
+- `pdfport.nvim/util/cache.lua`: Cache-Key enthält Pfad + Backend-ID +
+  Seitenbereich-Variante — vollständig (`PERF-46`), mtime-Invalidierung
+  (`PERF-45`), delegiert Speicherung an `lib.nvim.cache.disk`.
+- `reposcope.nvim/cache/repository_cache.lua`: `M.set()` weist
+  `M.repositories.items`/`.list` neu zu (nicht in-place) — geprüft, ob das
+  ein `PERF-47`-Risiko ist: `M.get()` gibt immer die äußere `M.repositories`-
+  Tabelle zurück (deren Identität nie wechselt), `M.get_list()` gibt zwar
+  die innere `list`-Tabelle direkt zurück, aber ihr einziger Aufrufer
+  (`ui/list/init.lua`) liest sie einmalig bei der Initialisierung und hält
+  sie nie über einen späteren `M.set()`-Aufruf hinweg — kein Fund.
+
+Kein Gegenbeispiel in neun einzeln gelesenen Cache-Implementierungen quer
+über neun Repos. `PERF-40`/`44`/`45`/`49`…`51`/`53`: architektur-/
+kontextabhängige Empfehlungen ohne scharfes fleet-weites Pass/Fail-
+Kriterium, durch dieselben gelesenen Implementierungen exemplifiziert.
 
 **`PERF-52`-Beobachtung (Frecency-Duplikation), notiert:** der Katalog
 zitiert selbst zwei getrennte ~190-Zeilen-Implementierungen desselben
@@ -1220,32 +1246,55 @@ Nummer noch einmal katalogisiert (Debouncing-Timer vs. Hintergrund-Timer
 allgemein). Kein zusätzlicher Fund über den bereits gefixten hinaus.
 
 **`PERF-83`** (Token-basiertes Cancel bei nicht abbrechbaren Async-Ops):
-Katalogzitat (`runtime-analysis.nvim/bindings/usrcmds.lua:246-260`)
-gelesen — echte `pending_handle:request_cancel()`-Infrastruktur vorhanden.
-Kein fleet-weiter Vollaudit auf fehlende Stale-Callback-Guards bei jeder
-Async-Operation — dafür müsste die Callback-Kette jedes einzelnen
-Netzwerk-/Prozess-Aufrufs fleet-weit nachvollzogen werden, was den Rahmen
-dieses Durchgangs sprengen würde. Stichprobe an bereits aus anderen
-Familien bekannter Stelle (`reposcope.nvim`s `readme_manager.lua`
-`_show_unavailable`, dieser Sweep, `PERF-46`-Abschnitt) zeigt dasselbe
-Muster korrekt implementiert ("nur painten, wenn die Auswahl noch
-aktuell ist").
+`runtime-analysis.nvim/bindings/usrcmds.lua:210-227` vollständig gelesen
+(nicht nur die zuerst zitierten Zeilen 246-260) — echtes Token-Muster
+bestätigt: `pending_token` wird pro neuem Request hochgezählt,
+`is_current(my_token) = in_flight and my_token == pending_token` verwirft
+die Callbacks veralteter Requests still, exakt wie die Regel es verlangt
+(nicht nur ein killbarer Handle wie zunächst vermutet). Zusätzlich
+bestätigt an `reposcope.nvim`s `readme_manager.lua` `_show_unavailable`
+(`PERF-46`-Abschnitt dieser Datei) — dasselbe Muster, andere
+Implementierung ("nur painten, wenn die Auswahl noch aktuell ist"). Kein
+fleet-weiter Vollaudit auf fehlende Stale-Callback-Guards bei *jeder*
+Async-Operation — das würde die Callback-Kette jedes einzelnen Netzwerk-/
+Prozess-Aufrufs fleet-weit nachvollziehen müssen.
 
-**`PERF-87`…`91`** (Schwellwert-Chunking + Progress-Handle): Katalogzitat
-`replacer.nvim/apply.lua` gelesen — `APPLY_CHUNK_SIZE = 10` (deckt sich
-exakt mit der Katalog-Vorgabe „8–10 bei bufload/writefile"),
-`lib.nvim.progress` als Soft-Dependency korrekt eingebunden
-(`pcall(require, "lib.nvim.progress")`, No-op wenn abwesend). Bestätigt
-konsistent mit der bereits abgeschlossenen separaten UI-Decoupling-Arbeit
-an anderer Stelle (fileops/pdfport/lsp-capabilities, 2026-07-21) — beide
-Male dasselbe `lib.nvim.progress`, keine Doppelimplementierung.
+**`PERF-84`** (bewusster synchroner Trade-off): `pickers.nvim/smart/
+search.lua` vollständig gelesen — `timeout = opts.timeout or 3000`
+bestätigt exakt die zitierten 3000ms, Docstring bestätigt die bewusste
+Design-Entscheidung wortgleich ("a short blocking `vim.system():wait()`
+keeps the shared core trivially portable"). Korrekt.
 
-**`PERF-81`/`84`/`85`/`86`**: kontextabhängige Einzelfall-Empfehlungen
-(Poll-Intervall-Deckelung, bewusster synchroner Trade-off, Redraw-Diffing,
-Count-Cap-Historie) mit je einem passenden Katalog-Beleg
-(`github_stats.nvim`, `pickers.nvim`, `filetree.nvim`, `runtime-
-analysis.nvim`) — kein fleet-weiter Vollaudit, gleiche Kalibrierung wie
-bei den übrigen Ermessens-Regeln dieser Familie.
+**`PERF-85`** (Redraw-Storms vermeiden): `filetree.nvim/features/nav/
+cwd_mode/init.lua`s `M.refresh_indicator()` gelesen — diffed `text`/`hl`
+gegen `_last_text`/`_last_hl`, `announce_change()` (das Event +
+`redrawstatus`) läuft nur bei echter Änderung. Korrekt.
+
+**`PERF-86`** (History-Cap als Count-Cap): `runtime-analysis.nvim/
+history.lua` gelesen — **Katalogzitat leicht veraltet, Verhalten aber
+weiterhin korrekt:** der zitierte `MAX_ENTRIES = 200`-Konstante gibt es
+nicht mehr; sie wurde durch eine Funktion `max_entries()` ersetzt, die
+`setup({ history_max_entries = N })` respektiert (siehe Datei-Kommentar
+„A function rather than the old `M.MAX_ENTRIES` constant"). Der
+eigentliche Cap wird in `M.record` weiterhin per `vim.list_slice`
+durchgesetzt, sobald `#entries > cap` — eine Verbesserung gegenüber dem
+zitierten Snapshot (konfigurierbar statt hartkodiert), keine Regression.
+
+**`PERF-87`…`91`** (Schwellwert-Chunking + Progress-Handle): `replacer.nvim/
+apply.lua` gelesen — `APPLY_CHUNK_SIZE = 10` (deckt sich exakt mit der
+Katalog-Vorgabe „8–10 bei bufload/writefile"), `lib.nvim.progress` als
+Soft-Dependency korrekt eingebunden (`pcall(require, "lib.nvim.progress")`,
+No-op wenn abwesend). Bestätigt konsistent mit der bereits abgeschlossenen
+separaten UI-Decoupling-Arbeit an anderer Stelle (fileops/pdfport/
+lsp-capabilities, 2026-07-21) — beide Male dasselbe `lib.nvim.progress`,
+keine Doppelimplementierung.
+
+Alle sechs Katalogzitate für `PERF-81`…`86` in diesem Durchgang tatsächlich
+gelesen (nicht nur aus dem Katalogtext übernommen) — fünf exakt wie
+beschrieben, eines (`PERF-86`) mit seither verbesserter, aber weiterhin
+korrekter Implementierung. Kein fleet-weiter Vollaudit über die 32 Repos
+hinaus, da es sich um kontextabhängige Einzelfall-Empfehlungen ohne
+scharfes Pass/Fail-Kriterium handelt.
 
 ---
 
