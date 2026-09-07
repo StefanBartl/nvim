@@ -129,8 +129,10 @@ function M.setup(opts)
   -- `nvim_get_commands`.
   require("wkdoptions.commands").register_diff_profile()
 
-  require("wkdoptions.qflist")
   normalize_inactice_win_hl()
+  -- Sole owner of the vim.diagnostic.config() surface (virtual_text, signs,
+  -- underline, severity_sort). `lsp.core.diagnostics` also touches it -- keep
+  -- the two in sync.
   set_diagnostic_signs()
   require("wkdoptions.indent_per_ft")
 end
