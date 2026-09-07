@@ -494,6 +494,20 @@ plugins.add({
       -- lets neo-tree root/reveal, instead of the two fighting each other.
       require("filetree").setup({
         adapter = "neotree",
+        -- Reference engine: also rewrite bare filesystem paths written as
+        -- running text (`see ../Test/Tester.md` in a note) or in code
+        -- comments, not just paths inside link/require/import syntax. Opt-in
+        -- and namespaced under `experimental` on purpose — it is a new
+        -- provider whose config shape may still move, and future
+        -- in-development refs features land under the same key. `comments`
+        -- defaults to true (scan comment lines in .lua/.py/.ts/… too); set
+        -- it false to restrict to prose/text files. A token is only ever
+        -- rewritten when it resolves to exactly the file that moved.
+        refs = {
+          experimental = {
+            plaintext = { enabled = true },
+          },
+        },
         features = {
           cwd_sync = { enabled = true, reveal = false },
           -- The mode badge (PROJECT/LOCK/…) is shown in wkdnvchad's own
