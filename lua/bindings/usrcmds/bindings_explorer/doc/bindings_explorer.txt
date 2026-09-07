@@ -78,10 +78,13 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
     ({scope} is "personal" or "extern"; {plugin} is a cheatsheet stem, and
     the two may be given in either order)
 
-    Picker over parsed table ROWS instead of raw text lines. Every `|…|…|`
-    line found under the nearest heading becomes a record (scope, category,
-    plugin, heading, columns, cells, file, line) — see `records.lua`.
-    Selecting a row jumps to its source line.
+    Grouped read-only view of parsed table ROWS instead of raw text lines.
+    Every `|…|…|` line found under the nearest heading becomes a record
+    (scope, category, plugin, heading, columns, cells, file, line) — see
+    `records.lua`. The rows are laid out one section per source table, an
+    aligned column block under each; the column names track the current
+    section in the window's `winbar`. `<CR>` jumps to a row's source line,
+    `q`/`<Esc>` closes.
 
     Unlike `search`, this slot has no query to be confused with, so a
     prefix resolves here too (`:Bindings browse usercmds documentat`), and
