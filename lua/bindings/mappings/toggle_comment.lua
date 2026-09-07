@@ -1,10 +1,6 @@
 ---@module 'bindings.mappings.toggle_comment'
 --- Comment toggling with EmmyLua-annotation awareness (`---@...` toggles to
 --- `-- ---@...`), in normal and visual mode.
----
---- CDX: the annotation-vs-regular branching is copy-pasted between
---- `toggle_comment_with_annotations` (one line) and `toggle_comment_visual`
---- (a selection). Extract one line-transform and map it over both.
 
 local M = {}
 
@@ -29,55 +25,55 @@ local function is_commented(line, comment_str)
   return line:match(pattern) ~= nil
 end
 
---- Toggle comment for a regular line
+--- Is this line an EmmyLua annotation (`---@...`), commented or not?
 ---@param line string
----@param comment_str string
----@return string
-local function toggle_regular_comment(line, comment_str)
-  if is_commented(line, comment_str) then
-    -- Remove comment
-    local pattern = "^(%s*)" .. vim.pesc(comment_str) .. "%s+"
-    return (line:gsub(pattern, "%1"))
-  else
-    -- Add comment (preserve leading whitespace)
-    if line:match("^%s*$") then
-      -- Empty line: leave unchanged
-      return line
-    end
-    return (line:gsub("^(%s*)", "%1" .. comment_str .. " "))
-  end
+---@return boolean
+local function is_annotation(line)
+  return line:match("^%s*%-%-%-") ~= nil or line:match("^%s*%-%-%s+%-%-%-") ~= nil
 end
 
---- Toggle comment for a single line with annotation support
----
---- Detects whether the current line is an EmmyLua annotation or regular code.
---- For annotations: toggles between "---@..." and "-- ---@..."
---- For regular code: toggles regular Lua comments
+--- Comment or uncomment one line, annotation-aware. Empty lines pass through.
+---@param line string
+---@param comment_str string
+---@param uncomment boolean  true = strip a comment leader, false = add one
+---@return string
+local function transform_line(line, comment_str, uncomment)
+  if line:match("^%s*$") then
+    return line
+  end
+  if is_annotation(line) then
+    if uncomment then
+      -- "-- ---@module" -> "---@module"
+      return (line:gsub("^(%s*)%-%-%s+(%-%-%-)", "%1%2"))
+    end
+    -- "---@module" -> "-- ---@module"
+    return (line:gsub("^(%s*)(%-%-%-)", "%1-- %2"))
+  end
+  if uncomment then
+    return (line:gsub("^(%s*)" .. vim.pesc(comment_str) .. "%s+", "%1"))
+  end
+  return (line:gsub("^(%s*)", "%1" .. comment_str .. " "))
+end
+
+--- Is this line currently commented (annotation or regular)?
+---@param line string
+---@param comment_str string
+---@return boolean
+local function line_is_commented(line, comment_str)
+  if is_annotation(line) then
+    return line:match("^%s*%-%-%s+%-%-%-") ~= nil
+  end
+  return is_commented(line, comment_str)
+end
+
+--- Toggle the comment state of the current line (annotation-aware).
 ---@return nil
 local function toggle_comment_with_annotations()
   local line = vim.api.nvim_get_current_line()
   local row = vim.api.nvim_win_get_cursor(0)[1]
-
-  -- Check if line is an annotation (starts with --- or -- ---)
-  local is_annotation = line:match("^%s*%-%-%-") or line:match("^%s*%-%-%s+%-%-%-")
-
-  if is_annotation then
-    -- Toggle annotation comment
-    local new_line
-    if line:match("^%s*%-%-%s+%-%-%-") then
-      -- Currently commented: "-- ---@module" -> "---@module"
-      new_line = line:gsub("^(%s*)%-%-%s+(%-%-%-)", "%1%2")
-    else
-      -- Currently uncommented: "---@module" -> "-- ---@module"
-      new_line = line:gsub("^(%s*)(%-%-%-)", "%1-- %2")
-    end
-    vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
-  else
-    -- Regular code: toggle regular comment
-    local comment_str = get_comment_string()
-    local new_line = toggle_regular_comment(line, comment_str)
-    vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
-  end
+  local comment_str = get_comment_string()
+  local new_line = transform_line(line, comment_str, line_is_commented(line, comment_str))
+  vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
 end
 
 --- Toggle comments for a visual selection
@@ -106,58 +102,19 @@ local function toggle_comment_visual()
   local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
   local comment_str = get_comment_string()
 
-  -- Determine if we should comment or uncomment
-  -- Check if ALL non-empty lines are commented
+  -- Uncomment only if every non-empty line is already commented; otherwise
+  -- comment the whole block.
   local all_commented = true
   for _, line in ipairs(lines) do
-    if not line:match("^%s*$") then -- Ignore empty lines
-      local is_annotation = line:match("^%s*%-%-%-") or line:match("^%s*%-%-%s+%-%-%-")
-      if is_annotation then
-        -- For annotations: check if commented (starts with "-- ---")
-        if not line:match("^%s*%-%-%s+%-%-%-") then
-          all_commented = false
-          break
-        end
-      else
-        -- For regular code: check if commented
-        if not is_commented(line, comment_str) then
-          all_commented = false
-          break
-        end
-      end
+    if not line:match("^%s*$") and not line_is_commented(line, comment_str) then
+      all_commented = false
+      break
     end
   end
 
-  -- Toggle all lines based on detected state
   local new_lines = {}
   for i, line in ipairs(lines) do
-    if line:match("^%s*$") then
-      -- Empty line: leave unchanged
-      new_lines[i] = line
-    else
-      local is_annotation = line:match("^%s*%-%-%-") or line:match("^%s*%-%-%s+%-%-%-")
-
-      if is_annotation then
-        -- Handle annotation
-        if all_commented then
-          -- Uncomment: "-- ---@..." -> "---@..."
-          new_lines[i] = line:gsub("^(%s*)%-%-%s+(%-%-%-)", "%1%2")
-        else
-          -- Comment: "---@..." -> "-- ---@..."
-          new_lines[i] = line:gsub("^(%s*)(%-%-%-)", "%1-- %2")
-        end
-      else
-        -- Handle regular code
-        if all_commented then
-          -- Uncomment
-          local pattern = "^(%s*)" .. vim.pesc(comment_str) .. "%s+"
-          new_lines[i] = line:gsub(pattern, "%1")
-        else
-          -- Comment
-          new_lines[i] = line:gsub("^(%s*)", "%1" .. comment_str .. " ")
-        end
-      end
-    end
+    new_lines[i] = transform_line(line, comment_str, all_commented)
   end
 
   -- Apply changes

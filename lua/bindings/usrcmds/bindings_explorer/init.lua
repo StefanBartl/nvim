@@ -29,8 +29,9 @@
 --- `plugin_scope.lua`); `search` only treats a token as a scope when it names
 --- a sheet outright, since that slot also holds the query.
 ---
---- CDX: every user-facing string of `:Bindings` is deliberately German (see
---- status.lua / report.lua). Keep, or switch to English like the rest?
+--- Note: every user-facing string of `:Bindings` is deliberately German (see
+--- status.lua / report.lua) -- this is a personal command, the German UX
+--- stays.
 
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local config = require("bindings.usrcmds.bindings_explorer.config")
