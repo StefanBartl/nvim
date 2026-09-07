@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-07, elfte Aktualisierung — LUA-* läuft)
+## Stand bei Übergabe (2026-09-07, zwölfte Aktualisierung — nur noch PERF-* offen)
 
 | Familie | Status |
 |---|---|
@@ -19,86 +19,65 @@ Einstiegspunkt für eine neue Session.
 | `ERR-*` (34) | ✅ fertig — 32/32 Repos, 17 echte Bugs gefixt |
 | `UI-*` (34) | ✅ fertig — 32/32 Repos, 0 echte Bugs |
 | `PRIN-*` (37) | ✅ fertig — 32/32 Repos, 1 Fund (notiert, nicht gefixt) |
-| `LUA-*` (45) | 🔶 **in Arbeit** — `LUA-40`/`41` fleet-weit fertig (4 Repos gefixt), Rest offen |
-| `PERF-*` (57) | ⬜ offen |
+| `LUA-*` (45) | ✅ **fertig** — 32/32 Repos, 4 Repos gefixt |
+| `PERF-*` (57) | ⬜ **einzige verbleibende Familie** |
 
-## LUA-* — Stand im Detail
+**8 von 9 Familien sind jetzt fertig.** Nur `PERF-*` (57 Regeln,
+Performance-Patterns) steht noch aus — die im Voraus als vermutlich
+aufwendigste eingeschätzte Familie, da Hotpath-Beurteilung Verständnis von
+Aufrufhäufigkeit statt reinem Pattern-Matching braucht.
 
-**Zählung:** 45 Regeln, aber der Katalog selbst hat einen
-Formatierungsfehler — `LUA-67`/`LUA-68` in der „`#`-Prefix bei
-Kommentaren"-Tabelle sind keine echten Regeln, sondern versehentlich in
-die ID-Spalte gerutschte Tabellen-Header-Zellen. Ein blinder Grep findet
-47 `LUA-XX`-IDs; die echten 45 ergeben sich erst nach Abzug dieser zwei.
+## LUA-* — Abschlussnotiz
 
-**Zwei im Katalog vermerkte Lücken waren beide schon gelöst** (Katalog
-datiert 2026-09-06, nur nicht zurückgeschrieben): `LUA-01` fileops.nvim
-(behoben durch `35cdd4b`), `LUA-04` pickers.nvim (behoben durch
-`61a97e2`/`ea1ce1c`). Beide verifiziert, nicht erneut angefasst.
+**Wichtigster Fund: `LUA-40`/`41` (Metatables/Weak-Tables), fleet-weit
+geprüft, 4 Repos gefixt.** `__mode = "k"` (schwache Schlüssel) wirkt in Lua
+**nur** auf Tabellen/Funktionen/Userdata/Threads, niemals auf Zahlen. Zwei
+Caches (lib.nvim `buffer/context/init.lua`, gopath.nvim `alias_index.lua`
++ `binding_index.lua`) waren mit `bufnr` (einer Zahl) als Schlüssel gebaut
+und behaupteten in ihrer eigenen Dokumentation, tote Einträge würden
+automatisch garbage-collected — das stimmte strukturell nie, beide Caches
+wuchsen unbegrenzt über die gesamte Session. Beide gefixt: ein aktiver
+`BufDelete`/`BufWipeout`-Autocmd übernimmt jetzt die echte Bereinigung.
+lib.nvim mit vollem Regressionstest (`8b176be`, stash/reapply-verifiziert);
+gopath.nvim hat kein Testframework, headless von Hand verifiziert
+(`bd10baf`). Zwei weitere Repos (color_my_ascii.nvim `6577e66`,
+filetree.nvim `0c92620`) hatten dieselbe irreführende Doku, aber bereits
+funktionierende aktive Cleanup-Pfade — nur Doku korrigiert, keine
+Verhaltensänderung.
 
-**`LUA-40`/`41` (Metatables/Weak-Tables) fleet-weit fertig, 4 Repos
-gefixt** — der bisher wichtigste Einzelfund dieser Familie:
+**Alle übrigen Regeln** entweder fleet-weit mechanisch bestätigt
+(`LUA-04` Env-Var-Zugriff, `LUA-42`..`47` weitere Metatable-Muster,
+`LUA-50`/`52`/`54`/`55` Naming/Kommentare/Emojis/Swap, `LUA-80`
+Config-Dateistruktur) oder durch bereits abgeschlossene Arbeit abgedeckt
+(`LUA-53` durch den CDX-Kommentar-Sweep vom 2026-09-06, `LUA-60`..`71`
+durch die `LLS-*`-Familie, `LUA-10`..`16` durch `ERR-32`/`33`/`34`,
+`LUA-30`/`33` durch `PRIN-10`/`13`). Ein kleiner Rest
+(`LUA-01`..`03`/`05`, `31`/`34`, `81`/`83`) wurde bewusst nicht einzeln
+nachgejagt — Begründung je Regel steht in `RULES.md` unter „Nicht einzeln
+nachgejagt".
 
-Grep nach `__mode` über alle 32 Repos findet 6 Treffer. `__mode = "k"`
-(schwache Schlüssel) wirkt **nur** auf Tabellen/Funktionen/Userdata/
-Threads, nie auf Zahlen — ein Cache, der mit einer `bufnr` (einer Zahl)
-als Schlüssel arbeitet, wird davon **nie** automatisch geleert, egal wie
-viele Buffer geschlossen werden.
+Zwei im Katalog selbst vermerkte Lücken (`LUA-01` fileops.nvim, `LUA-04`
+pickers.nvim) waren beide schon am 2026-09-06 gefixt, nur der Katalog-Text
+noch nicht aktualisiert — verifiziert, nicht erneut angefasst.
 
-- **lib.nvim** `buffer/context/init.lua` — **echter, unbegrenzter Leak**
-  in geteilter Kern-Infrastruktur (am `FileType`-Autocmd-Dispatcher
-  verdrahtet). Moduldoc behauptete fälschlich automatisches GC. Gefixt:
-  `BufDelete`/`BufWipeout`-Autocmd ruft jetzt aktiv `invalidate()`.
-  Commit `8b176be`, Regressionstest in `TESTS/context_spec.lua`
-  (stash/reapply-verifiziert, `LIB_TESTS_OK`).
-- **gopath.nvim** `alias_index.lua` + `binding_index.lua` — identischer
-  echter Leak, gleicher Fix. Commit `bd10baf`. Kein Testframework in
-  diesem Repo (nur manuelle Fixtures) — headless von Hand verifiziert.
-- **color_my_ascii.nvim** `cache_manager.lua` — irreführende Doku, aber
-  **kein echter Bug**: Cache hat bereits `max_size`-Deckel + einen
-  30s-Timer, der real aufräumt, unabhängig von der wirkungslosen
-  Metatable. Doku korrigiert, totes `setmetatable` entfernt, keine
-  Verhaltensänderung. Commit `6577e66`.
-- **filetree.nvim** `util/buffer.lua` — dieselbe irreführende Doku, aber
-  ein `BufDelete`-Autocmd existierte schon im selben File und räumt
-  bereits aktiv auf. Gleicher folgenloser Doku-Fix. Commit `0c92620`.
-- **runtime-analysis.nvim**/**sessions.nvim** — beide korrekt (Schlüssel
-  ist eine echte Tabelle, kein bufnr) — kein Fund.
+## Nächster Schritt: PERF-*
 
-## Nächster Schritt
+Neue Session sollte zuerst `PERFORMANCE.md` lesen (noch nicht geöffnet in
+dieser Sweep-Serie) und prüfen, ob — wie bei `UI-*`/`PRIN-*` — Teile davon
+schon aus Beobachtung dieses Fleets entstanden sind (Belege-Abschnitte mit
+Repo-Zitaten). Gegeben, wie das bei jeder bisherigen Familie ausging (0 bis
+sehr wenige Funde, meist schon dokumentiert), ist die Erwartung ähnlich —
+aber das ist eine Erwartung, keine Abkürzung: jede Regel verdient einen
+echten Blick.
 
-`LUA-*` weiterführen. Noch offen (siehe RULES.md für den vollen Text):
-
-- `LUA-01`..`05` — restliche lib.nvim-Abhängigkeitskonsistenz fleet-weit
-  (nur die 2 Katalog-Lücken wurden bisher verifiziert, kein systematischer
-  Durchgang über alle 32 Repos).
-- `LUA-10`..`16` — Neovim-API-Sicherheit. **Vermutlich wenig Neues**:
-  überschneidet sich stark mit dem bereits abgeschlossenen
-  `ERR-32`/`33`/`34` (Handle-Validierung in Deferred Calls) und `SEC-*`.
-  Kurzer Abgleich reicht wahrscheinlich, kein Vollaudit nötig.
-- `LUA-30`..`34` — State/Datenmodelle: Getter/Setter statt Direktzugriff,
-  Ringbuffer/FIFO mit Limit, Snapshot/Restore, Arrays statt Records.
-  **Echtes Neuland**, noch nicht geprüft.
-- `LUA-42`..`47` — weitere Metatable-Muster jenseits der bereits
-  geprüften `40`/`41` (Shared Metatables mit Memoization, Defaultwerte
-  über Metatable, `rawget` für „implementiert selbst?"). Ebenfalls
-  Neuland, aber vermutlich seltener genutzt als `40`/`41` — lohnt sich
-  trotzdem als fleet-weiter Grep-Durchgang (`__index`, `rawget`).
-- `LUA-50`..`55` — Code-Stil. Größtenteils schon über die
-  fleet-weiten `PRIN-35`/`50`-Checks abgedeckt (Naming, Header) — nur
-  `LUA-54` (keine Emojis/fette Überschriften in Markdown-Docs) und
-  `LUA-55` (paralleles statt XOR-Tauschen) sind noch nicht geprüft.
-- `LUA-60`..`71` — Annotationen. Folgt größtenteils automatisch aus der
-  abgeschlossenen `LLS-*`-Familie (0 LuaLS-Diagnostics fleet-weit
-  impliziert korrekte `@param`/`@return`/`@type`) — wahrscheinlich nur
-  eine kurze Bestätigung nötig, kein Vollaudit.
-- `LUA-80`..`83` — Config-Defaults: typisierte Keys, möglichst viel
-  user-seitig einstellbar. Neuland, noch nicht geprüft.
-
-**Effiziente Reihenfolge-Empfehlung:** `LUA-30`..`34` und `LUA-42`..`47`
-und `LUA-80`..`83` sind das eigentliche Neuland und verdienen die meiste
-Aufmerksamkeit; `LUA-10`..`16`/`50`..`55`/`60`..`71` sind wahrscheinlich
-schnelle Bestätigungen dank Überschneidung mit bereits abgeschlossenen
-Familien.
+Da `PERF-*` explizit als „größte und teuerste" Familie eingeschätzt wurde
+(Hotpath-Beurteilung statt reinem Pattern-Matching), lohnt sich hier
+besonders, zuerst die mechanisch prüfbaren Teilregeln zu identifizieren
+(z. B. `pcall`-Vermeidung im Hotpath, `vim.fn.*`-Aufrufhäufigkeit,
+Debounce-Nutzung, Cache-Trefferquoten) und die genuinen
+Hotpath-Ermessensfragen (die tatsächlich Kontext über Aufrufhäufigkeit
+brauchen) gezielt auf die UI-lastigen/oft aufgerufenen Repos zu
+konzentrieren (Statusline-Komponenten, Autocmd-Handler, Picker-Rendering).
 
 ## Standing Rules für diese Arbeit
 
@@ -115,14 +94,17 @@ Familien.
 - **1 Agent gleichzeitig, mehrere Runden zu je 1**, falls ein Subagent
   gebraucht wird — direktes Lesen in der Unterhaltung ist der Normalfall.
 - **Erst grep-/mechanik-basierte Vorprüfung über alle 32 Repos**, bevor ein
-  Repo einzeln gelesen wird — hat bei jeder bisherigen Familie funktioniert,
-  zuletzt beim `__mode`-Grep für `LUA-40`/`41`.
+  Repo einzeln gelesen wird — hat bei jeder bisherigen Familie funktioniert.
+- **Grep-Reichweite genau kalibrieren**: ein zu weiter Grep (z. B. jedes
+  `vim.env.*` statt spezifisch `vim.env.REPOS_DIR`) erzeugt Rauschen, das
+  mehr Zeit zum Aussortieren kostet als ein präziserer zweiter Versuch
+  gebraucht hätte — lieber die Regel genau lesen, bevor das Suchmuster
+  gebaut wird.
 - **Nicht jedes Repo hat ein automatisiertes Testframework** — gopath.nvim
   hat nur manuelle, interaktive Test-Fixtures. Bei fehlendem Framework:
   headless von Hand verifizieren statt eines Regressionstests, im Commit
   transparent machen.
 - **Ein Fund ohne Verhaltensänderung ist trotzdem einen Fix wert**, wenn
-  die Dokumentation eine falsche Garantie behauptet (wie bei
-  color_my_ascii.nvim/filetree.nvim) — auch wenn kein echter Bug vorliegt,
-  irreführende Kommentare/Docstrings über Speicher-Sicherheit sind ein
-  Wartungsrisiko für die Zukunft.
+  die Dokumentation eine falsche Garantie behauptet — irreführende
+  Kommentare/Docstrings über Speicher-Sicherheit sind ein Wartungsrisiko
+  für die Zukunft, auch wenn heute kein echter Bug vorliegt.
