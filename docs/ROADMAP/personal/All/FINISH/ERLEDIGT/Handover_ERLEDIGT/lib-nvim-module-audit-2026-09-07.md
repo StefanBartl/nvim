@@ -7,6 +7,20 @@ offenen Punkts (der `all_functions.lua`-Cross-Check). Letzter gepushter
 Stand: `lib.nvim@ca2660c`. Die vollständige Abschluss-Zusammenfassung
 steht am Ende von `E:/repos/lib.nvim/docs/MODULE_AUDIT.md`.**
 
+> **Lektionen zurückgeschrieben** nach `WKDBooks` (Commit `32d1093`):
+> - `wkdbook-Lua/Checklists/regeln/LUA_NVIM.md` — `LLS-45` (`---@type ClassX`
+>   auf `return M` wird nicht gegen die echte Form geprüft; falsche Klasse =
+>   aktiv falsche Completions, kein Befund) + `LLS-46` (Phantom-`@field`;
+>   Namens-Drift zwischen Backends *einer* Oberfläche).
+> - `wkdbook-Lua/Checklists/luals/DIAGNOSEN.md` — neuer Abschnitt „Wenn
+>   *keine* Meldung kommt" (Scan-Tool-Blindfleck).
+> - `wkdbook-Lua/Checklists/luals/README.md § 8` + `gates/REVIEW.md § 5`.
+> - `wkdbook-myplugins/ALL/Module-Audit-Findings.md` — die wiederkehrenden
+>   Fund-Typen nach Ergiebigkeit, als Checkliste für den nächsten
+>   docs/`@types`-Durchgang an *irgendeinem* Plugin.
+> - `wkdbook-Neovim/.../96_lua-in-nvim/Packages-und-Modules/Aggregator-Module-Strategien.md`
+>   — das metatable/lazy/eager-Muster + der `---@type`-Blindfleck.
+
 > **Nachtrag 2026-09-07 (neunte Fortsetzung — LETZTER PUNKT, Audit
 > abgeschlossen).** Der Cross-Check von `all_functions.lua`s `Lib`-Klasse
 > gegen die drei Strategien (`metatable`/`eager`/`lazy`) — mit exakt der
