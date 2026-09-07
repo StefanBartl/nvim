@@ -170,7 +170,61 @@ Hälften mit unterschiedlichem Risiko:
 
 ## Plan, in Phasen
 
-### Phase 1 — Duplikat-Checks live schalten (klein, sofort machbar)
+### Phase 1 — Duplikat-Checks live schalten (klein, sofort machbar) — ✅ erledigt 2026-09-07
+
+Umgesetzt, verifiziert, gepusht (`lib.nvim@6ff0a61`, `nvim-config@5fe06d86d`):
+
+- **`:LibKeymapConflicts`** — neu in `lib.nvim`, `keymap.create_usercmd()`
+  (`bindings/keymap/init.lua`). Zeigt `conflicts()` über `kit.viewer`, mit
+  einer Coverage-Zeile, wenn lazy.nvim-Plugins noch nicht alle geladen sind
+  (`x/y lazy-loaded plugins loaded right now`).
+- **`:LibBindingsAuditPrefixes`** — neu in `lib.nvim`, `audit.lua`, vierte
+  Route neben `LibBindingsAudit[Keys|Gaps]`. Prüft `<Tab>`-/Abkürzungs-
+  Ambiguität über `vim.api.nvim_get_commands({builtin=false})` — **kein**
+  Namens-Duplikat-Scan, weil `nvim_create_user_command` ein zweites Mal
+  registrieren desselben Namens ohnehin verweigert (echte Duplikate können
+  im laufenden Zustand gar nicht existieren). Das ist im Docstring
+  festgehalten, damit das nicht mit Punkt 2 des Original-Tickets verwechselt
+  wird — jener war für Keymaps gemeint, `:LibKeymapConflicts` deckt ihn ab.
+- Beide gewired über ein neues nvim-config-Submodul
+  `lua/bindings/usrcmds/bindings_audit/init.lua`, registriert in
+  `lua/bindings/usrcmds/init.lua` neben `autocmd_docs` — derselbe Ort, an
+  dem `LibUsercmdDocs`/`LibAutocmdDocs` schon gewired sind.
+
+**Verifiziert:** `stylua --check` + `luacheck` sauber in beiden Repos.
+Beide Funktionen isoliert headless getestet (`nvim --headless --clean
+--cmd "set rtp+=E:/repos/lib.nvim"`, lib.nvim ohne die volle Config
+geladen) — `keymap.conflicts()` fand einen synthetischen `<leader>zz`-
+Konflikt zwischen zwei registrierten Actions korrekt, `prefix_ambiguities()`
+fand `:Lsp`/`:LspDoctor` und `:File`/`:Filetree` korrekt (dieselben Fälle,
+die `Usercmds-Overview.md` von Hand notiert hatte), beide Kommandos liefen
+ohne Fehler.
+
+**Offener Nebenbefund, kein Blocker:** ein End-to-End-Test gegen die volle
+Config (`nvim --headless -u init.lua`) zeigt **kein einziges** Usercmd aus
+`bindings.usrcmds` — auch nicht die längst existierenden wie `:CopyLocation`
+oder `:LibUsercmdDocs`. Ursache: `require("bindings.usrcmds")` hängt am
+custom `"UIReady"`-Startup-Phase (`lua/startup/init.lua`), der laut eigenem
+Kommentar erst feuert, wenn „VimEnter has fired and the paint that follows
+it" tatsächlich stattfindet — das passiert unter reinem `--headless` (kein
+UI-Client, auch nicht nach manuellem `doautocmd UIEnter`) nie. Das ist also
+eine **generelle Lücke für Phase 4** (der eigentliche Laufzeit-Testrunner
+braucht einen Weg, `UIReady` in einer headless-Session zu erzwingen, oder
+läuft testweise mit `--embed` gegen einen echten UI-Client), keine, die
+Phase 1 betrifft — die beiden neuen Kommandos sind über den isolierten Weg
+bewiesen korrekt.
+
+**Noch nicht gemacht, absichtlich:** der Usercmd-Namens-Präfix-Scan wurde
+nicht gegen die echte Config laufen gelassen (s.o., `UIReady` blockiert
+das headless). Phase 2 (Refresh von `Keymaps-Collisions.md` /
+`Usercmds-Overview.md` gegen die neuen Live-Kommandos) ist damit der
+nächste sinnvolle Schritt, aber **muss in einer echten UI-Session laufen**,
+nicht headless — `:LibKeymapConflicts` und `:LibBindingsAuditPrefixes`
+einfach in deiner normalen nvim-Instanz aufrufen.
+
+---
+
+#### Ursprünglicher Plan (Referenz)
 
 1. `require("lib.nvim.bindings.keymap").conflicts()` einen Usercmd geben.
    Entweder als eigener Aufruf `M.create_usercmd()`-artig direkt in
