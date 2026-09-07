@@ -8,7 +8,7 @@ gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst ist die
 laufende Quelle der Wahrheit für den Stand — diese Datei ist nur der
 Einstiegspunkt für eine neue Session.
 
-## Stand bei Übergabe (2026-09-07, zwölfte Aktualisierung — nur noch PERF-* offen)
+## Stand bei Übergabe (2026-09-07, dreizehnte Aktualisierung — PERF-* läuft)
 
 | Familie | Status |
 |---|---|
@@ -20,14 +20,55 @@ Einstiegspunkt für eine neue Session.
 | `UI-*` (34) | ✅ fertig — 32/32 Repos, 0 echte Bugs |
 | `PRIN-*` (37) | ✅ fertig — 32/32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `LUA-*` (45) | ✅ **fertig** — 32/32 Repos, 4 Repos gefixt |
-| `PERF-*` (57) | ⬜ **einzige verbleibende Familie** |
+| `PERF-*` (62, korrigiert von 57) | 🔶 **läuft** — 1 Repo gefixt (documentation.nvim), Rest offen |
 
-**8 von 9 Familien sind jetzt fertig.** Nur `PERF-*` (57 Regeln,
-Performance-Patterns) steht noch aus — die im Voraus als vermutlich
-aufwendigste eingeschätzte Familie, da Hotpath-Beurteilung Verständnis von
-Aufrufhäufigkeit statt reinem Pattern-Matching braucht.
+**8 von 9 Familien fertig, `PERF-*` (die letzte) läuft.** Regelzahl von 57
+auf **62** korrigiert (`RULES.md` hatte nur eine frühe Schätzung stehen, nie
+mit dem tatsächlichen Katalog abgeglichen — kein Tabellenformat-Artefakt wie
+bei `LUA-67`/`68`, die 62 sind real: `PERF-01`…`16`, `20`…`27`, `40`…`53`,
+`60`…`65`, `70`…`75`, `80`…`91`).
 
-## LUA-* — Abschlussnotiz
+## PERF-* — bisheriger Fortschritt
+
+**`PERF-07`** (🔴 KRITISCH, `next()`-Löschen während Iteration): fleet-weit
+geprüft, **0 echte Verstöße** — der einzige Treffer war eine Glossar-Prosa-
+Erklärung in `documentation.nvim`, kein Code.
+
+**`PERF-47`** (Cache-`clear()`/`reset()` muss in-place mutieren, nicht per
+`x = {}` neu zuweisen — sonst sieht jeder externe Halter der alten Referenz
+die Leerung nie): 28 `clear`/`reset`/`clear_all`-Fundstellen fleet-weit per
+`awk` extrahiert und einzeln geprüft, ob die neu zugewiesene Tabelle extern
+per Referenz gehalten wird. 26/28 sind private Modul-Upvalues (sicher). Zwei
+mit exponierter Tabelle (`mdview.nvim` `core/breadcrumbs.lua` `M.entries`,
+`bindings/autocmds/buffer_switch.lua` `M._opened`) geprüft — ungefährlich,
+kein Aufrufer hält je eine `local`-Referenz über die Zeit.
+
+**Ein echter Fund:** `documentation.nvim`s
+`lua/documentation/editor/browse/trail.lua`. `M.list(root)` gibt laut
+eigenem Docstring bewusst die *live* Tabelle zurück (gehalten als
+`st.pins = trail.list(st.root)` in `browse/init.lua`), aber `M.clear()` und
+`M.hydrate()` machten `pins[root] = {}`/`pins[root] = list` — eine
+Neuzuweisung, die den eigenen Vertrag brach. Aktuell latent (kein Aufrufer
+hält aktuell über einen `clear`/`hydrate`-Aufruf hinweg eine stale
+Referenz), aber ein echter Doku-Vertragsbruch, gefixt: beide mutieren jetzt
+in-place. Regressionstest `TESTS/browse_trail_spec.lua` ergänzt, vorher
+gegen den alten Code als fehlschlagend verifiziert (stash/reapply), volle
+Suite grün, luacheck/stylua clean. Commit `179f16d` auf `documentation.nvim`
+`main`, gepusht.
+
+## Nächster Schritt: PERF-* fortsetzen
+
+Noch offen: `PERF-01`…`06`/`08`…`16` (restliche allgemeine Idiome),
+`PERF-20`…`27` (Speicherlayout), restliche `PERF-40`…`53` (Cache-Regeln
+jenseits von `47`), `PERF-60`…`65` (Debouncing), `PERF-70`…`75` (begrenzte
+Nebenläufigkeit/Scans), `PERF-80`…`91` (Async-Scheduling/Chunking/
+Progress). Letztere drei Blöcke sind die Ermessens-lastigsten (Hotpath-
+Beurteilung statt reinem Pattern-Matching) — lohnt sich, die
+UI-lastigen/oft aufgerufenen Repos gezielt anzusehen (Statusline-
+Komponenten, Autocmd-Handler, Picker-Rendering), statt alle 32 gleich
+gründlich.
+
+## LUA-* — Abschlussnotiz (letzte fertige Familie vor PERF-*)
 
 **Wichtigster Fund: `LUA-40`/`41` (Metatables/Weak-Tables), fleet-weit
 geprüft, 4 Repos gefixt.** `__mode = "k"` (schwache Schlüssel) wirkt in Lua
@@ -45,47 +86,16 @@ filetree.nvim `0c92620`) hatten dieselbe irreführende Doku, aber bereits
 funktionierende aktive Cleanup-Pfade — nur Doku korrigiert, keine
 Verhaltensänderung.
 
-**Alle übrigen Regeln** entweder fleet-weit mechanisch bestätigt
-(`LUA-04` Env-Var-Zugriff, `LUA-42`..`47` weitere Metatable-Muster,
-`LUA-50`/`52`/`54`/`55` Naming/Kommentare/Emojis/Swap, `LUA-80`
-Config-Dateistruktur) oder durch bereits abgeschlossene Arbeit abgedeckt
-(`LUA-53` durch den CDX-Kommentar-Sweep vom 2026-09-06, `LUA-60`..`71`
-durch die `LLS-*`-Familie, `LUA-10`..`16` durch `ERR-32`/`33`/`34`,
-`LUA-30`/`33` durch `PRIN-10`/`13`). Ein kleiner Rest
-(`LUA-01`..`03`/`05`, `31`/`34`, `81`/`83`) wurde bewusst nicht einzeln
-nachgejagt — Begründung je Regel steht in `RULES.md` unter „Nicht einzeln
-nachgejagt".
-
-Zwei im Katalog selbst vermerkte Lücken (`LUA-01` fileops.nvim, `LUA-04`
-pickers.nvim) waren beide schon am 2026-09-06 gefixt, nur der Katalog-Text
-noch nicht aktualisiert — verifiziert, nicht erneut angefasst.
-
-## Nächster Schritt: PERF-*
-
-Neue Session sollte zuerst `PERFORMANCE.md` lesen (noch nicht geöffnet in
-dieser Sweep-Serie) und prüfen, ob — wie bei `UI-*`/`PRIN-*` — Teile davon
-schon aus Beobachtung dieses Fleets entstanden sind (Belege-Abschnitte mit
-Repo-Zitaten). Gegeben, wie das bei jeder bisherigen Familie ausging (0 bis
-sehr wenige Funde, meist schon dokumentiert), ist die Erwartung ähnlich —
-aber das ist eine Erwartung, keine Abkürzung: jede Regel verdient einen
-echten Blick.
-
-Da `PERF-*` explizit als „größte und teuerste" Familie eingeschätzt wurde
-(Hotpath-Beurteilung statt reinem Pattern-Matching), lohnt sich hier
-besonders, zuerst die mechanisch prüfbaren Teilregeln zu identifizieren
-(z. B. `pcall`-Vermeidung im Hotpath, `vim.fn.*`-Aufrufhäufigkeit,
-Debounce-Nutzung, Cache-Trefferquoten) und die genuinen
-Hotpath-Ermessensfragen (die tatsächlich Kontext über Aufrufhäufigkeit
-brauchen) gezielt auf die UI-lastigen/oft aufgerufenen Repos zu
-konzentrieren (Statusline-Komponenten, Autocmd-Handler, Picker-Rendering).
-
 ## Standing Rules für diese Arbeit
 
 - Antworten deutsch, Code/Kommentare englisch.
 - Docs/README des jeweiligen Plugins mitpflegen, wenn ein echter Fund
   gefixt wird.
 - Sofort auf `main` committen/pushen, sobald etwas in einem Repo gefixt
-  wurde — nicht sammeln.
+  wurde — nicht sammeln. **Vor dem Push immer `git fetch` + `git log
+  HEAD..origin/main` prüfen** — CI-Bots (z. B. `docs(map): regenerate
+  module map [skip ci]`) pushen zwischendurch auf dieselben Repos; ein
+  simpler `git rebase origin/main` reicht dafür, kein Grund zum Stutzen.
 - Kein Claude-Co-Autor in Commit-Messages (weder in diesem Repo (nvim-config)
   noch in den einzelnen Plugin-Repos) — siehe Claudes Memory
   `no-coauthor-commits`.
@@ -108,3 +118,11 @@ konzentrieren (Statusline-Komponenten, Autocmd-Handler, Picker-Rendering).
   die Dokumentation eine falsche Garantie behauptet — irreführende
   Kommentare/Docstrings über Speicher-Sicherheit sind ein Wartungsrisiko
   für die Zukunft, auch wenn heute kein echter Bug vorliegt.
+- **Bei "Tabelle wird neu zugewiesen statt in-place gemutiert" (PERF-47-
+  Muster) zählt nur, ob die Tabelle extern per Referenz gehalten wird** —
+  ein privates Modul-Upvalue ist immer sicher (alle Zugriffe teilen sich
+  denselben Upvalue-Slot), ein exponiertes `M.feld` ist nur riskant, wenn
+  irgendein Aufrufer es tatsächlich in eine `local`-Variable kopiert statt
+  bei jedem Zugriff frisch über `M.feld[...]` zu indizieren. Immer den
+  Docstring der Getter-Funktion lesen — der verrät oft explizit, ob "live
+  reference" ein bewusster Vertrag ist (wie bei `trail.lua`s `M.list`).
