@@ -4,6 +4,15 @@ Aus `MERGED.md` herausgenommene Tasks, sobald sie abgeschlossen sind.
 Neueste zuerst. Gilt fuer alle `*.nvim`-Repos unter `C:/repos` plus diese
 nvim-Config.
 
+> **2026-09-07:** Die verallgemeinerbaren Lektionen aus diesem Log sind in die
+> Regelsammlung eingearbeitet
+> (`$REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists/`): neuer Abschnitt
+> *Cross-Plattform-Fallstricke* (`XP-01`…`XP-07`) und *Fremd-Plugins,
+> Lazy-Loading, Autocmd-Lebenszyklus* (`LUA-90`…`LUA-96`) in `regeln/LUA_NVIM.md`,
+> dazu `LUA-17`/`LUA-84`…`LUA-87`, `SEC-34`/`35`/`46`/`47`/`50`/`51`, `UI-38`/`62`,
+> `CMT-16`, `PERF-92`/`93`, Prinzipien-Blöcke in `PRINCIPLES.md`, `NEW-47`…`NEW-50`
+> und Review-Zeilen. Dieses Log bleibt als Herleitung/Beleg-Quelle bestehen.
+
 ---
 
 ## 2026-08-29
