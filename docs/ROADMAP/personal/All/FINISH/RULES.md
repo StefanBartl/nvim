@@ -535,23 +535,61 @@ wiederkehrende Bugquelle", `UI-50`..`UI-56`). Eine reine
 Verbesserungsmöglichkeit ohne falsches Verhalten wird notiert, nicht
 gefixt.
 
-### Ergebnis je Repo (Stand dieser Sitzung, 3/32)
+### Fleet-weite mechanische Checks (alle 32 Repos, 0 Funde)
+
+Drei der 29 Regeln lassen sich ganz oder teilweise per Grep über den
+gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
+(„konkrete, wiederkehrende Bugquelle", nicht nur Stilfrage):
+
+- **`UI-31`** (modul-globale Fenster-/Log-Registry statt `vim.w[win].custom_tag`):
+  Grep nach `local _<active|open|scratch|log|tagged>_win(s|dows)? = {...}`-Mustern
+  über alle 32 Repos — **keine Treffer**, die dem beschriebenen Anti-Pattern
+  entsprechen (die zwei/drei zufälligen Namenstreffer waren Einzel-Handle-
+  Variablen oder reine `nvim_open_win`-Aliase, keine Tag-Registry).
+- **`UI-55`** (Buffer mit sichtbaren Fenstern löschen, ohne vorher
+  umzuleiten): alle `nvim_buf_delete(...)`-Aufrufstellen fleet-weit
+  gesammelt (5 Repos: lib.nvim, sandbox.nvim, github_stats.nvim,
+  reposcope.nvim, sessions.nvim) und einzeln geprüft — jede löscht einen
+  Buffer, der ausschließlich in seinem eigenen frisch erzeugten Fenster
+  existiert (eigenes Dashboard/eigene Confirm-Popup/eigener Viewer), nie
+  einen potenziell anderswo sichtbaren Buffer. Kein Fund.
+- **`UI-22`**-Stichprobe: Grep nach verdächtigen Argumentnamen (`mode`,
+  `scope`, `format`, `level`, `kind`, `target`, `scheme`, `engine`, `style`,
+  `action`, `type`) mit `type = "STRING"` ohne `enum`/`values` in der Nähe —
+  einzige Treffer waren Doku-Beispiele in `lib.nvim`s README und
+  sandbox.nvim's `image tag <source> <target>`, wo `target` echt freier
+  Text ist (neuer Repository:Tag-Name, keine geschlossene Menge) — kein Fund.
+
+### Ergebnis je Repo (Stand dieser Sitzung, 12/32 vollständig gelesen)
 
 | Repo | Befund | Regel(n) |
 |---|---|---|
 | buffer-ctx.nvim | 0 (vorbildlich: `:Insert`/`:Copy`-Kompositum über `lib.nvim`-Composer, jede geschlossene Wertemenge hat Completion, drei Subcommands sogar live berechnet (`boilerplate`/`snippet`/`env`); keine Cheatsheet-Duplikate, keine destruktiven Bulk-Aktionen, keine Floats/Progress/externen Prozesse außer `git` mit knapper Einzeilen-Fehlermeldung) | — |
 | cascade.nvim | 0 (`:Cascade`-Kompositum mit vollständiger `enum`-Completion; keine Floats/Progress/externe Prozesse — reines Text-Transform-Plugin). Beobachtung, nicht gefixt: `lib.nvim.bindings.keymap.which_key`s Gruppen-Label hängt am deklarierten `spec.prefix`, nicht an den tatsächlich aufgelösten `lhs`-Werten nach Nutzer-Remapping (`UI-27`) — aber which-key zeigt jede Zuordnung ohnehin über ihr eigenes `desc` an (siehe Moduldoku), ein remapptes Item verliert nur die Submenü-Gruppierung, keine Funktion oder Beschreibung; kosmetisch, kein demonstrierbarer Bug, fleet-weit über `lib.nvim` geteilt, nicht einzeln gefixt | `UI-27` (notiert, nicht gefixt) |
 | casedesk.nvim | 0 echte Bugs — Command-Layer vorbildlich (custom `"CASE"`-Completion-Typ live aus der Registry, typisierte Lösch-Bestätigung statt bloßem y/n). `:Case grep`/`:Case linkcheck` fallen unter den bekannten `UI-36`-Fleet-Gap (s. o.), nicht einzeln gezählt | — |
+| cmdlog.nvim | 0 (UI komplett an telescope/fzf-lua delegiert, kein Eigenbau-Fenster; Batch-Löschen bestätigt schon korrekt einmal für die ganze Auswahl statt pro Item, mit Kurzschluss bei genau einem Ziel) | — |
+| color_my_ascii.nvim | 0 (`schemes switch`s `values = schemes.get_scheme_names()` sieht wie eine bei `setup()` eingefrorene Liste aus, ist aber unproblematisch: Schemes sind nach `setup()` nicht mehr laufzeit-veränderbar, kein `add_scheme`/`register_scheme` gefunden — kein `UI-23`-Fund) | — |
+| dap.nvim | 0 (Freitext-Argumente wie `conditional-breakpoint`/`log-point`/`eval` korrekt ohne Completion — `UI-26`-Ausnahme greift) | — |
+| debugging.nvim | 0 — vorbildlich: eigener `DBG_AUTOCMD_EXPR`-Completion-Typ live neu berechnet, `HANDLE_ARG`-Tabelle mappt Aktionen auf `WINDOW`/`BUFFER`/`PATH`-Completion-Typen statt generischem `STRING` | — |
+| diff.nvim | 0 — Katalog selbst nennt dieses Repo als Referenzbeispiel für `UI-24` (`KvSpec.values` weich vs. `KvSpec.enum` streng), bestätigt | — |
+| documentation.nvim | 0 — `bindings/usrcmds/init.lua`s Completion läuft über `complete = function(lead, line)`, live berechnet, kein eingefrorener Snapshot | — |
+| emojis.nvim | 0 — `mode`/`set`/`scope`-Argumente durchgängig mit `values =` aus live abgefragten Quellen (`config.checkbox_set_names()`) | — |
+| fileops.nvim | 0 — `cd`/`cycle`/`path`-Subcommands durchgängig mit `enum`, zusätzlich eigene `complete_from_bufdir`-Funktion für pfadartige Argumente | — |
+| filetree.nvim | 0 — `cwd mode`/`cwd scope` mit vollständigem `enum`, `find <dir>` mit `type = "DIR"` (Pfad-Completion) | — |
 
-### Noch offen (29/32 Repos ungelesen für UI-*, 29 Regeln)
+### Noch offen (20/32 Repos ungelesen für UI-*, 29 Regeln)
 
-cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim,
-documentation.nvim, emojis.nvim, fileops.nvim, filetree.nvim,
 github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim,
 language.nvim, lib.nvim, lsp.nvim, markdown.nvim, mdview.nvim, open.nvim,
 pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim,
 reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
 spotlight.nvim.
+
+**Hinweis zur Aussagekraft:** Die fleet-weiten mechanischen Checks (oben)
+decken alle 32 Repos für `UI-22`/`UI-31`/`UI-55` ab. Die 12 oben gelisteten
+Repos wurden zusätzlich vollständig gegen den kompletten Regelsatz
+gelesen. Für die verbleibenden 20 steht der volle Lesedurchgang noch aus —
+das ist der eigentliche Rest dieser Familie.
 
 ---
 
