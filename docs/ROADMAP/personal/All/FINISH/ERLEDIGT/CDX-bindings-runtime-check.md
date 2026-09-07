@@ -477,7 +477,7 @@ er committet wurde.
 
 **Übrig aus dem Original-Ticket, bewusst nicht automatisiert:** das
 tatsächliche Auslösen jeder Aktion (Punkt 1 im Original-Ticket) — dafür ist
-jetzt [`BINDINGS-RUNTIME-CHECKLIST.md`](../BINDINGS-RUNTIME-CHECKLIST.md)
+jetzt [`BINDINGS-RUNTIME-CHECKLIST.md`](../Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md)
 da. Das Abarbeiten ist wie im Original-Ticket festgehalten: deine Domäne.
 
 > **Nachtrag 2026-09-07 — erste echte Generierung.** Gegen deine volle

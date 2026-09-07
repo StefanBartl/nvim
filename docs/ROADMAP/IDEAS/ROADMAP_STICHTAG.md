@@ -22,6 +22,8 @@
 
 - [ ] handle guard wegen "nur auf einer seite aufmachen" -> wenn ich filetree links offen habe `M-l`, dann auf einen Buffer in der tableitse mit der mausklicke, öffnet sich der filetree sofort rechts neu; Genau das sollte ja nicht  passieren, vor allem nicht wenn default open für filetree auf links gesetzt iost (was normalerweoiße bei mir gesetzt sein sollte -> checken!)
 
+- [ ] update von referenzen (`x`, `p`, `m`, ...): in freitext pfaden wie ../Test/Tester.md wir d momentan nicht updatet. eventuell mit `gopath.nvim` zusammenarbeiten?
+
 ---
 
 ### `pickers.nvim`
