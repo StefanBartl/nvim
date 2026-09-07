@@ -13,9 +13,6 @@
 
 ## `nvim-config`
 
-
----
-
 ## `myplugins`
 
 ### `filetree.nvim`
@@ -30,47 +27,6 @@
 
 - [ ] in picker wie :RepoFiles oder leader ff - eigentlich generell für pickers.nvim - Cheatheet `?` aber rein nur mit ? geht das nicht, das wprde nur ? in die prompt einfügen, daher vl `C-?` wenn das geht. das solte dann auch in der picker ui stehen
   - [ ] ![screesnhot pciker ui](./assets/ROADMAP-1788781968.png) man sieht in dem screenshot, dass in der titellsete CWD > f h stzehet, awarum? was bedeutet das?
-
----
-
-## Plugin-Liste
-
-Hier die Liste meiner Plugins - du findest sie unter `$REPOS_DIR\repos` - und du hast Zugriff darauf:
-
-buffer-ctx.nvim
-cascade.nvim
-casedesk.nvim
-cmdlog.nvim
-color_my_ascii.nvim
-dap.nvim
-debugging.nvim
-diff.nvim
-documentation.nvim
-emojis.nvim
-fileops.nvim
-filetree.nvim
-github_stats.nvim
-gopath.nvim
-hover.nvim
-images.nvim
-insights.nvim
-language.nvim
-lib.nvim
-lsp.nvim
-markdown.nvim
-mdview.nvim
-open.nvim
-pdfport.nvim
-pickers.nvim
-recommender.nvim
-replacer.nvim
-reposcope.nvim
-runtime-analysis.nvim
-sandbox.nvim
-sessions.nvim
-spotlight.nvim
-
-und das native: docmap-desktop
 
 ---
 

@@ -4,23 +4,30 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ## Table of content
 
-  - [Liste A — Braucht dich](#liste-a-braucht-dich)
+  - [Liste A - Claude Tasks](#liste-a-claude-tasks)
+  - [Liste B — Braucht dich](#liste-b-braucht-dich)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
-  - [Liste B - Claude Tasks](#liste-b-claude-tasks)
 
 ---
 
-## Liste A — Braucht dich
+## Liste A - Claude Tasks
+
+- [ ] casedesk.nvim
+
+- [ ] `docmap-desktop`
+  - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
+
+---
+
+## Liste B — Braucht dich
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
     - [ ] ...
-
-- [ ] casedesk.nvim
 
 ---
 
@@ -42,13 +49,4 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ---
 
-## Liste B - Claude Tasks
-
-- [ ] `docmap-desktop`
-  - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
-
-- [ ] `github_stats.nvim`
-  - [ ] auswerten / backupen / Stats zusammenziehen
-
----
 
