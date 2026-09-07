@@ -179,9 +179,21 @@ Zeilen des Korpus mehr Zellen, als ihre Kopfzeile Spalten hat, und verschob
 damit jede Spaltenzuordnung dahinter. Sichtbar wurde es erst über den
 Drift-Bericht, der das Bruchstück `` `]\ `` als dokumentierten lhs meldete.
 
-`browse.lua`s Picker (`kit.select`, wie Phase 1s Fallback) zeigt jede Zeile
-als `[Scope/Plugin] Heading — Spalte1: Wert1  Spalte2: Wert2  ...`; `<CR>`
-springt an die Fundstelle in der Quelldatei.
+`browse.lua`s Picker (`kit.select`, wie Phase 1s Fallback) legt die Zeilen als
+**ausgerichtete Tabelle** an, weil der Float nicht umbricht und eine Zeile
+sonst nach der zweiten Spalte abschneidet (`browse.lua`s `render`):
+
+- der `[Scope/Plugin]`-Präfix entfällt, wenn alle Zeilen dasselbe Plugin
+  betreffen (der Titel nennt es schon), sonst als kurzer Stamm davor;
+- die Überschrift wird zu einem kurzen Tag (`key`/`cmd`/`au` — oder die
+  Überschrift selbst, wenn sie mehr sagt als die Kategorie, etwa
+  sandbox.nvims `:Sandbox image <sub>` → `image`);
+- Zellwerte werden von Markdown/Entities befreit, `*None* (`nil`)`-Leerwerte
+  zu `—`, und jede Spalte auf die breiteste Zelle ihrer Gruppe (Plugin +
+  Überschrift) gepolstert — so stehen die Spalten untereinander;
+- die ganze Zeile wird auf die Editorbreite gekürzt (`…`).
+
+`<CR>` springt weiterhin an die Fundstelle in der Quelldatei.
 
 Beispiele:
 
