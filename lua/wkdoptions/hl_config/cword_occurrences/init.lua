@@ -10,12 +10,13 @@ local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
 
 local M = {}
 
--- Typed handle to highlight config.
---- CDX: H is resolved once at module load from C.cfg (not C.get_cfg()). If this
---- module is required before wkdoptions.config.get_cfg() has run, C.cfg is nil,
---- H freezes to {}, and every CC()/large-file read below silently no-ops.
----@type WKDOptions.HL_CFG
-local H = (C and C.cfg and C.cfg.highlight) or {}
+--- Effective highlight config, resolved lazily on every read so it does not
+--- matter whether this module first runs before or after
+--- wkdoptions.config.get_cfg().
+---@return WKDOptions.HL_CFG
+local function HL()
+  return (C.get_cfg and C.get_cfg().highlight) or {}
+end
 
 -- Dedicated namespace and autocmd group
 local NS = vim.api.nvim_create_namespace("myopt_CwordOccur")
@@ -33,7 +34,7 @@ local debounced = nil
 --- Shorthand to access effective feature config.
 ---@return CwordOccurrencesCfg
 local function CC()
-  return H.cword_occurrences or {} ---@type CwordOccurrencesCfg
+  return HL().cword_occurrences or {} ---@type CwordOccurrencesCfg
 end
 
 --- Resolve the effective case mode with backward compatibility to `smart_case`.
@@ -66,7 +67,7 @@ local function is_large_file_guard()
   end
   local kb = math.floor((st.size or 0) / 1024)
   local local_lim = CC().large_file_kb
-  local global_lim = H.large_file_kb or 5000
+  local global_lim = HL().large_file_kb or 5000
   local lim = type(local_lim) == "number" and local_lim or global_lim
   return kb > lim
 end

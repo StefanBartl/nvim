@@ -1,18 +1,9 @@
 ---@module 'config.harpoon.preview'
---- Memory-safe preview with a single reusable scratch buffer/window.
---- Preview-open Harpoon entries in a full-screen floating window.
---- - Entry point: `:Harpoon preview <n>`, mapped to Alt+1..Alt+9 in
----   bindings.mappings.harpoon
---- - Opens a read-only, non-modifiable preview that fills the editor
---- - Cursor jumps to the last known position (shada '" mark), fallback to Harpoon context
---- - Scrollable like a normal buffer; press 'q' to close the preview
---- - Does not disturb the current window layout (uses a floating window)
----
---- Notes:
---- - This creates a scratch "nofile" buffer showing the file's content.
---- - We detect & set 'filetype' for highlighting.
---- - We do not change buffer-local options of the real file buffer.
---- - If your terminal does not send <M-1>.. <M-9>, consider mapping alternate keys.
+--- Preview a Harpoon entry in a read-only floating window backed by one
+--- reusable scratch buffer. Entry point `:Harpoon preview <n>` (mapped to
+--- <M-1>..<M-9> in bindings.mappings.harpoon). Cursor restores from the shada
+--- `'"` mark, falling back to the Harpoon context; `q` closes it. Large files
+--- are capped (see MAX_BYTES / MAX_LINES).
 
 local notify = require("lib.nvim.notify").create("[config.harpoon.preview]")
 local window = require("lib.nvim.window")
@@ -30,14 +21,6 @@ local STATE = {
 }
 
 local function resolve_layout()
-  -- CDX: config.harpoon.preview_layout does not exist anywhere in this repo
-  -- (flagged by docs/map as an undeclared require) -- this always falls
-  -- through to the fallback layout below. Extension hook, or dead reference?
-  local ok, layouts = pcall(require, "config.harpoon.preview_layout")
-  if ok and type(layouts.fullscreen_float) == "function" then
-    return layouts.fullscreen_float()
-  end
-
   local w = math.floor(vim.o.columns * 0.7)
   local h = math.floor(vim.o.lines * 0.7)
   return {
