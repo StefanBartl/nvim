@@ -20,7 +20,7 @@ Einstiegspunkt für eine neue Session.
 | `UI-*` (34) | ✅ fertig — 32/32 Repos, 0 echte Bugs |
 | `PRIN-*` (37) | ✅ fertig — 32/32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `LUA-*` (45) | ✅ **fertig** — 32/32 Repos, 4 Repos gefixt |
-| `PERF-*` (62, korrigiert von 57) | 🔶 **läuft** — 1 Repo gefixt (documentation.nvim), Rest offen |
+| `PERF-*` (62, korrigiert von 57) | 🔶 **läuft** — 1 Repo gefixt (documentation.nvim, `PERF-47`), 1 Fund notiert (reposcope.nvim, `PERF-46`), Rest offen |
 
 **8 von 9 Familien fertig, `PERF-*` (die letzte) läuft.** Regelzahl von 57
 auf **62** korrigiert (`RULES.md` hatte nur eine frühe Schätzung stehen, nie
@@ -55,6 +55,25 @@ in-place. Regressionstest `TESTS/browse_trail_spec.lua` ergänzt, vorher
 gegen den alten Code als fehlschlagend verifiziert (stash/reapply), volle
 Suite grün, luacheck/stylua clean. Commit `179f16d` auf `documentation.nvim`
 `main`, gepusht.
+
+**`PERF-48`** (Weak-Keyed-Caches bei Objekt-Lifetime): `lib.nvim/cache/memory.lua`
+verifiziert als echtes Positiv-Beispiel (String-Keys sind kollektierbar,
+anders als `bufnr`). Zwei der drei Katalog-Zitate sind veraltet: 
+`color_my_ascii.nvim` zeigt auf die bereits unter `LUA-40` gefixte Stelle,
+`pickers.nvim`s `selected_index/cache.lua` existiert nicht mehr (Feature
+per `db42bc9` entfernt). Keine neuen Funde.
+
+**`PERF-46`** (Cache-Key muss jeden ergebnisrelevanten Parameter
+enthalten): echter Fund in `reposcope.nvim/lua/reposcope/cache/readme_cache.lua`
+— Cache-Key ist nur `owner/repo_name`, **ohne** den aktiven Provider
+(GitHub/GitLab/Codeberg, umschaltbar). Umschalten des Providers und
+erneutes Suchen desselben `owner/repo`-Strings liefert den falschen
+(alten Provider) Cache-Inhalt zurück, RAM und Datei-Cache. **Notiert, nicht
+gefixt** — mindestens 10 Call-Sites betroffen, und das Datenmodell selbst
+(`Favorite`, "selected repo") trägt aktuell nirgends ein `provider`-Feld,
+müsste also erst ergänzt werden. Echte Architekturentscheidung mit
+UI-Berührung, kein Ein-Datei-Fix — selbes Kalibrierungsprinzip wie beim
+`PRIN-01`-Fund in casedesk.nvim. Details in `RULES.md`.
 
 ## Nächster Schritt: PERF-* fortsetzen
 
