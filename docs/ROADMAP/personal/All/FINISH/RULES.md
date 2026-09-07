@@ -777,6 +777,16 @@ Positiv-Beispiele.
   `function M.foo`/`function M:foo`-Funktionsnamen auf camelCase-Ausreißer
   in einer sonst durchgehenden snake_case-Basis geprüft — **0 Treffer in
   allen 32 Repos**. Gilt fleet-weit als erfüllt.
+- `PRIN-10` (kein globaler Zustand) über alle 32 Repos: Grep nach `_G.`/`_G[`
+  — nur 3 Treffer (debugging.nvim, documentation.nvim,
+  runtime-analysis.nvim), alle drei begründete Ausnahmen statt
+  Plugin-eigenem Zustand: ein Debug-Tool, das absichtlich beliebige
+  Globals inspiziert (`vardump`), Lua-CLI-Standard `_G.arg`, und eine
+  reversible `require`-Instrumentierung für Telemetrie (`_G.require`
+  temporär ersetzt, explizit wieder zurückgesetzt). Das Config-Modul-Muster
+  (`local _active = nil` + `get()`/`setup()`) ist zudem in jedem
+  stichprobenartig geprüften Repo identisch — eine etablierte,
+  durchgehaltene Fleet-Konvention. Gilt fleet-weit als erfüllt.
 - **Größte-Datei-Stichprobe** (SRP-Proxy) über alle 32 Repos: die jeweils
   größte Lua-Datei pro Repo identifiziert und für Ausreißer geprüft.
   Auffällig groß, aber **kein Fund** nach genauerem Hinsehen:
