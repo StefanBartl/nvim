@@ -27,26 +27,26 @@ Wenn kein Symbol ermittelbar ist, greifen abgestufte Fallbacks (Objekt/Owner unt
 Aktivierung
 
 ```
-:MyHlSet enable_breadcrumbs true
+:WKDOptionsHLSet enable_breadcrumbs true
 ```
 
 Nerd-Font-Separator bevorzugen
 
 ```
-:MyHlSet breadcrumbs_separator ""
-:MyHlSet breadcrumbs_nerd_hex f0058
+:WKDOptionsHLSet breadcrumbs_separator ""
+:WKDOptionsHLSet breadcrumbs_nerd_hex f0058
 ```
 
 Kontext-Provider feinsteuern
 
 ```
-:MyHlSet breadcrumbs_ctx.use_treesitter_symbol true
-:MyHlSet breadcrumbs_ctx.use_container_chain true
-:MyHlSet breadcrumbs_ctx.fallback_object_when_empty true
-:MyHlSet breadcrumbs_ctx.fallback_word_when_empty true
-:MyHlSet breadcrumbs_ctx.providers_order '["ts_symbol","container","lsp_func","lang_extra","word"]'
-:MyHlSet breadcrumbs_ctx.container_join "."
-:MyHlSet breadcrumbs_ctx.container_max_depth 2
+:WKDOptionsHLSet breadcrumbs_ctx.use_treesitter_symbol true
+:WKDOptionsHLSet breadcrumbs_ctx.use_container_chain true
+:WKDOptionsHLSet breadcrumbs_ctx.fallback_object_when_empty true
+:WKDOptionsHLSet breadcrumbs_ctx.fallback_word_when_empty true
+:WKDOptionsHLSet breadcrumbs_ctx.providers_order '["ts_symbol","container","lsp_func","lang_extra","word"]'
+:WKDOptionsHLSet breadcrumbs_ctx.container_join "."
+:WKDOptionsHLSet breadcrumbs_ctx.container_max_depth 2
 ```
 
 Hinweise
@@ -168,12 +168,12 @@ Neue Sprachen lassen sich modular ergänzen:
 
 1. In der Container-Ermittlung einen neuen Filetype-Zweig anlegen und geeignete Tree-sitter-Knotentypen auswerten (z. B. Klasse/Modul/Member-Owner).
 2. Optional in `lang_extra` weitere Fallback-Heuristiken ergänzen (z. B. linke Seite einer Member-Expression, Namespaces, Module).
-3. Die `providers_order` kann jederzeit angepasst werden (auch live per `:MyHlSet`).
+3. Die `providers_order` kann jederzeit angepasst werden (auch live per `:WKDOptionsHLSet`).
 
 Beispiel für Live-Änderung der Reihenfolge:
 
 ```
-:MyHlSet breadcrumbs_ctx.providers_order '["ts_symbol","container","lsp_func","lang_extra","word"]'
+:WKDOptionsHLSet breadcrumbs_ctx.providers_order '["ts_symbol","container","lsp_func","lang_extra","word"]'
 ```
 
 ---
@@ -192,7 +192,7 @@ Beispiel für Live-Änderung der Reihenfolge:
 ## Praxis-Tipps
 
 * Sofortige Vorschau der Änderungen:
-  `:MyHlSet …` verwenden; ein `:luafile %` ist nicht nötig.
+  `:WKDOptionsHLSet …` verwenden; ein `:luafile %` ist nicht nötig.
 * Für minimalistische Setups die Provider-Reihenfolge verkürzen, z. B.:
   `["ts_symbol","container"]` oder `["lsp_func","word"]`.
 * In großen Projekten `container_max_depth` auf `1` setzen, um Ketten kurz zu halten.

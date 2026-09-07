@@ -14,10 +14,9 @@ local api = vim.api
 --------------------------------------------------------------------------------
 
 local lazy = require("lib.lua.lazy")
-local autocmd_lib = lazy.require("lib.nvim.bindings.autocmd")
-local norm_events = autocmd_lib.norm_events
-local is_kitty = lazy.require("lib.nvim.terminal").is_kitty
 local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
+local norm_events = Autocmd.norm_events
+local is_kitty = lazy.require("lib.nvim.terminal").is_kitty
 
 --- Clear and return a feature's augroup.
 ---
@@ -48,7 +47,6 @@ function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})
 
   -- 1) Terminal window numbers off -------------------------------------------
-  -- Description: On terminal open (or configured events), disable absolute/relative numbers locally.
   if cfg.numbers.enable then
     Autocmd.create(norm_events(cfg.numbers.events, { "TermOpen" }), function(ev)
       -- Use local options to avoid bleeding into non-terminal windows.
@@ -63,7 +61,6 @@ function M.enable(cfg)
   end
 
   -- 2) Kitty padding/margin tweaks -------------------------------------------
-  -- Description: In Kitty terminals, set compact padding/margin on VimEnter and restore on VimLeavePre.
   if cfg.kitty.enable and is_kitty() then
     local function kitty_cmd(padding, margin)
       return string.format(":silent !kitty @ set-spacing padding=%d margin=%d", padding, margin)
@@ -87,7 +84,6 @@ function M.enable(cfg)
   end
 
   -- 3) Auto Insert in terminals ----------------------------------------------
-  -- Description: Automatically switch to Insert mode on terminal open (and optionally on enter).
   if cfg.auto_insert.enable then
     Autocmd.create(norm_events(cfg.auto_insert.events, { "TermOpen" }), function(args)
       local buf = args.buf

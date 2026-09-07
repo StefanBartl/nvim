@@ -35,7 +35,7 @@ function M.enable(cfg)
     return
   end
   if cfg == true then
-    cfg = {} -- FIX: 'Missing required field' der submodule, eventuell hier besser struktuireren, damit diese branches so nicht notwednig sind
+    cfg = {} --- CDX: restructure so these true/false/nil branches are not needed (submodules currently report 'missing required field')
   end
   ---@type AutoCmds.Git.Cfg
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(Defaults), cfg or {})

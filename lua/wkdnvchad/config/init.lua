@@ -10,10 +10,12 @@ local M = {}
 -- STATUSLINE VARIANT SELECTION
 -- ============================================================================
 -- Change this to switch between statusline variants:
--- "normal"   -> Default NvChad statusline (no customization)
--- "base"     -> Minimal custom statusline (cursor + cwd + progress)
--- "lspbased" -> LSP-aware breadcrumbs + enhanced modules
--- "custom"   -> Your legacy custom breadcrumbs implementation
+-- "normal"         -> Default NvChad statusline (no customization)
+-- "base"           -> Minimal custom statusline (cursor + cwd + progress)
+-- "lspbased"       -> LSP-aware breadcrumbs + enhanced modules
+-- "custom"         -> Legacy custom breadcrumbs implementation
+-- "custom_light"   -> "custom" with a merge-based setup() path
+-- "custom_minimal" -> "custom" built on NvChad's gen_block pattern
 -- ============================================================================
 
 ---@type "normal"|"base"|"lspbased"|"custom"|"custom_light"|"custom_minimal"

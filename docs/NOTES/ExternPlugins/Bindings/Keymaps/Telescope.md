@@ -30,8 +30,8 @@ geöffnet wurde. Das passiert **nicht** in den hier gelisteten Dateien, sondern
 in `pickers.nvim`s eigenem `lua/pickers/keys/adapters/telescope.lua`
 (`M.patch()`, per `vim.schedule`), konfiguriert über `pickers.setup({ keys =
 {...} })` in [lua/plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua).
-Siehe auch die ausführliche Doku dort:
-[pickers.nvim — Keymaps Cheatsheet](../../../PersonelPlugins/BINDINGS/Keymaps/pickers.nvim.md)
+Siehe auch die ausführliche Doku dort: pickers.nvim's eigene
+[docs/BINDINGS.md](https://github.com/StefanBartl/pickers.nvim/blob/main/docs/BINDINGS.md)
 (§4 "Unified `keys`-Namespace"). Dieses Dokument fasst nur zusammen, **wie sich
 das auf Telescope-Picker konkret auswirkt** — für alle anderen `pickers.nvim`-
 Details siehe dort.

@@ -1,32 +1,15 @@
 ---@module 'bindings.mappings.editing'
 --- `p`/`P`/visual-`p` strip leading/trailing blank lines and edge whitespace
---- from whatever they paste (see `trim_edges` below) — copying a snippet out
---- of a browser routinely drags along blank lines/indentation from the page
---- around the real content, and with 'clipboard' = unnamedplus (options.lua)
---- that lands straight in the unnamed register `p`/`P` read from. Deliberately
---- unconditional, no config flag: it is one keymap tweak among several
---- already in this file (the visual-`p`/`<C-A-S-p>` mappings below predate
---- it), not a toggleable subsystem like `autocmds.text`.
+--- from what they paste, and squeeze interior blank runs of `BLANK_RUN_LIMIT`+
+--- down to one (a browser/chat-UI copy drags the page around it along).
+--- `]p`/`[p`/`gp`/`gP` stay vanilla as the untrimmed escape hatch.
 ---
---- The outermost lines are trimmed entirely; interior blank *runs* of
---- `BLANK_RUN_LIMIT` or more are additionally squeezed down to a single
---- blank line (see `squeeze_blank_runs`) — copying a bullet list out of a
---- rich-text editor (e.g. a chat UI) routinely serializes each `<li>` as its
---- own block, which round-trips through HTML-to-plaintext as 2-3 blank
---- lines between bullets instead of none. Runs of 1-2 blank lines are left
---- untouched so conventional double-blank-line spacing (Python/Go top-level
---- defs) survives a paste. `]p`/`[p`/`gp`/`gP` are deliberately left vanilla
---- as an untrimmed escape hatch for the rare paste where the blank lines
---- were actually meaningful.
+--- `install_paste_trim()` applies the same to terminal paste (Ctrl+V &c.),
+--- which never touches a register or a keymap — it goes straight to
+--- `vim.paste()`, the only interception point that covers every mode.
 ---
---- `install_paste_trim()` extends the same trimming to terminal paste
---- (Ctrl+V / Ctrl+Shift+V / middle-click). That route never touches a register
---- and never runs a keymap: the terminal wraps the clipboard in bracketed-paste
---- escape sequences and Neovim hands the raw chunks to `vim.paste()`. So the
---- `p`/`P` mappings above cannot see it, which is why the exact same browser
---- copy arrived clean via `p` but kept its leading blank lines via Ctrl+V.
---- Wrapping `vim.paste` is the only interception point that covers it, and it
---- covers every mode at once (Normal, Insert, cmdline, terminal).
+--- Why the register/clipboard/`vim.paste`-phase details are the way they are:
+--- wkdbook-Neovim/MyNotes/Paste-Register-Clipboard-vim.paste.md
 
 local M = {}
 
@@ -37,10 +20,9 @@ local function is_blank(line)
   return line:match("^%s*$") ~= nil
 end
 
----Consecutive interior blank lines at/above this count get squeezed to one
----(see `squeeze_blank_runs`). 3 is deliberately above the conventional
----2-blank-line spacing some code styles use between top-level definitions
----(Python, Go), so pasting such code leaves it untouched.
+---Interior blank runs of this length or more get squeezed to one (see
+---`squeeze_blank_runs`). 3 keeps the 2-blank-line spacing Python/Go use
+---between top-level defs untouched.
 local BLANK_RUN_LIMIT = 3
 
 ---Collapse every run of `BLANK_RUN_LIMIT`+ consecutive blank lines in
@@ -114,12 +96,9 @@ local function trim_edges(lines)
   return trimmed
 end
 
----Resolve the unnamed register `"` to whatever `'clipboard'` actually backs
----it. Native `p`/`y` redirect through the clipboard provider when
----'clipboard' contains "unnamed"/"unnamedplus"; `vim.fn.getreg()` does not
----do this redirection itself and returns Neovim's internal (stale) register
----content instead of the live system clipboard, so callers going through
----`getreg()` — like `put_trimmed` below — must resolve it manually.
+---Resolve the unnamed register `"` to the `+`/`*` that `'clipboard'` backs it
+---with — `vim.fn.getreg()` does not follow that redirection itself (see the
+---note linked in the module doc).
 ---@param regname string
 ---@return string
 local function resolve_unnamed(regname)
@@ -135,21 +114,11 @@ local function resolve_unnamed(regname)
   return regname
 end
 
----Flash the region a put just wrote, if wkdoptions' put flash is enabled.
----
----That feature used to own `p`/`P` itself (`wkdoptions.hl_config.features
----.flash`), which put it in a fight with this module over the same two keys —
----and it lost, because these mappings are registered on `UIReady` and
----therefore later. So the flash was switched on in the config and did nothing
----at all.
----
----The two were never in conflict about behaviour, only about the key: one
----decides *what* is pasted, the other adds feedback afterwards. Calling it
----from here gets both on one keypress. `nvim_put` sets the `[`/`]` marks the
----flash reads, so no replay of the native `p` is needed.
----
----Soft: wkdoptions is part of this config, but a paste must not fail because
----its highlight layer is absent or errored.
+---Flash the region a put just wrote, via wkdoptions' put-flash. That layer
+---used to map `p`/`P` itself and lost the key to this module (registered
+---later, on UIReady); calling it from here gets both on one keypress.
+---`nvim_put` sets the `[`/`]` marks it reads. Soft: a paste must not fail if
+---the highlight layer is absent or errors.
 ---@return nil
 local function flash_put()
   local ok, flash = pcall(require, "wkdoptions.hl_config.features.flash")
@@ -172,34 +141,18 @@ local function put_trimmed(regname, after)
   flash_put()
 end
 
----Wrap `vim.paste` so bracketed-paste input gets the same edge trimming and
----interior blank-run squeezing (see `squeeze_blank_runs`) as `p`/`P` (see
----module doc for why this cannot be a keymap).
+---Wrap `vim.paste` so bracketed-paste gets the same trimming/squeezing as
+---`p`/`P` (module doc says why this can't be a keymap).
 ---
----`vim.paste` may be called in one shot (`phase == -1`) or streamed across
----several chunks (`1` start, `2` middle, `3` end), so the two edges are handled
----separately: leading blank lines are dropped until the first line with real
----content has been seen — which can take more than one chunk if the paste
----starts with a long blank run — and trailing blank lines only at the final
----chunk. Every chunk (including middle ones) is run through
----`squeeze_blank_runs` before being forwarded, and a chunk that empties out
----completely is forwarded as an empty list rather than as `{ "" }`, which would
----insert a blank line the original text did not have.
+---Streamed pastes arrive in chunks (`phase` 1/2/3) that concatenate *directly*
+---— a chunk boundary is not a line break — so leading trim only left-strips
+---inside the still-blank leading run, and trailing trim runs only at `-1`/`3`.
+---A chunk that empties out is forwarded as `{}`, not `{ "" }`. Accepted gap: a
+---blank run split across a chunk boundary can escape squeezing; irrelevant for
+---the one-shot (`phase == -1`) browser copies this exists for.
+---See wkdbook-Neovim/MyNotes/Paste-Register-Clipboard-vim.paste.md.
 ---
----Note that chunks concatenate *directly* — a chunk boundary is not a line
----break, the last entry of one chunk and the first of the next are two halves
----of the same line — which is why lines are only ever dropped or left-stripped
----while still inside the leading blank run, where both halves are blank anyway.
----The one accepted gap: if a paste ends with a blank run long enough to start
----in an earlier chunk, only the part in the final chunk is removed, since the
----rest is already in the buffer by then — and the same applies to
----`squeeze_blank_runs`, which only sees one chunk's lines at a time, so a
----blank run split across a chunk boundary can escape squeezing. Streaming
----only kicks in for very large pastes, and the browser copies this exists
----for are one-shot (`phase == -1`).
----
----Idempotent: `M.setup()` may run more than once, and wrapping the wrapper
----would trim already-trimmed chunks (harmless) while growing the call chain.
+---Idempotent: `M.setup()` may run more than once.
 ---@return nil
 local function install_paste_trim()
   if vim.g.__paste_trim_installed then
@@ -295,7 +248,7 @@ function M.setup()
   map("i", "<C-A-S-p>", "<C-r><C-o>+", {
     noremap = true,
     silent = true,
-    desc = "Aus System-Zwischenablage im Insert-Modus einfügen",
+    desc = "[Text] Paste from system clipboard (insert mode, literal)",
   })
 end
 

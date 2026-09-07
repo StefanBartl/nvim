@@ -1,20 +1,21 @@
 ---@module 'bindings.usrcmds.bindings_explorer.ui'
---- Picker-Verdrahtung für `:Bindings search` — `lib.nvim.ui.kit.select`,
---- nicht `pickers.nvim`: dessen `sources/*` sind Dateisystem-Source-Objekte
---- (cwd/folder/repos/drives), kein trivialer "Picker über diese Liste"-
---- Einstieg — siehe dieses Moduls docs/FEATURES.md für die Begründung.
---- `kit.select` ist derselbe Fallback, den images.nvim und
---- casedesk in genau dieser Lage auch nehmen.
+--- Picker wiring for `:Bindings search` — `lib.nvim.ui.kit.select`, not
+--- `pickers.nvim` (its `sources/*` are filesystem source objects, no trivial
+--- "picker over this list" entry point; see docs/FEATURES.md). Same fallback
+--- images.nvim and casedesk take in this situation.
+---
+--- Note: user-facing strings here are German, deliberately — every string of
+--- `:Bindings` is (see status.lua).
 
 local M = {}
 
----@return table notify-Handle aus lib.nvim
+---@return table lib.nvim notify handle
 local function notify()
   return require("lib.nvim.notify").create("[bindings]")
 end
 
---- Absoluten Pfad relativ zu `stdpath("config")` anzeigen — sonst wäre jede
---- Zeile im Picker mit dem immer gleichen langen Präfix überladen.
+--- Show an absolute path relative to `stdpath("config")`, so every picker row
+--- isn't padded with the same long prefix.
 ---@param path string
 ---@return string
 local function display_path(path)
@@ -25,8 +26,7 @@ local function display_path(path)
   return path
 end
 
---- Suchergebnisse als Picker anzeigen; `<CR>` öffnet die Datei an der
---- Fundstelle.
+--- Show search results as a picker; `<CR>` opens the file at the hit.
 ---@param hits Bindings.Hit[]
 ---@return nil
 function M.pick(hits)

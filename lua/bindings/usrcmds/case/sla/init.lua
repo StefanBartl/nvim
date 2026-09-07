@@ -1,7 +1,9 @@
 ---@module 'bindings.usrcmds.case.sla'
 --- Public API for casedesk's SLA layer (docs/ROADMAP/casedesk/SLA.md):
---- given a case, which of the three SAP-SLA clocks (Erstreaktion, laufende
---- Rückmeldung, Korrekturmaßnahme) apply and how much of each is left.
+--- given a case, which of the three SAP-SLA clocks (first response, ongoing
+--- follow-up, corrective action) apply and how much of each is left. (The
+--- German terms Erstreaktion / Rückmeldung / Korrekturmaßnahme are the
+--- source SLA's; kept in user-facing labels below.)
 ---
 --- Two "ticket opened" anchors are surfaced side by side rather than one
 --- being picked as THE answer (SLA.md §9.1): whether the Erstreaktion clock
@@ -104,7 +106,7 @@ end
 --- Info" (EXTRACTION.md §5, decided 2026-08-10): unlike the cadence
 --- clock above (which RESETS to a fresh full budget once the customer
 --- replies — a periodic "give an update" obligation, so a reset is the
---- right model), the fix/Korrekturmaßnahme clock is a single cumulative
+--- right model), the fix (corrective-action) clock is a single cumulative
 --- deadline, where resetting on every customer reply would effectively
 --- give it unlimited budget across a multi-round exchange. A true
 --- pause — extend the deadline by exactly how long the customer sat on

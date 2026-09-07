@@ -10,7 +10,6 @@
     - [Wartung & Diagnose](#wartung-diagnose)
   - [3. Autocommands (Detailliert)](#3-autocommands-detailliert)
     - [Initial Test Discovery](#initial-test-discovery)
-    - [Was ich jetzt für dich tun kann:](#was-ich-jetzt-fr-dich-tun-kann)
 
 ---
 
@@ -68,6 +67,9 @@ Diese Befehle bilden das Rückgrat deiner Konfiguration und können direkt über
 ## 3. Autocommands (Detailliert)
 
 ### Initial Test Discovery
+
+> **Hinweis:** aktuell inaktiv — der Aufruf in `plugins/neotest.lua` ist
+> auskommentiert, s. `docs/ROADMAP/IDEAS/test.md` §2/§10.
 
 * **Trigger:** `VimEnter` (Sobald Neovim geladen ist).
 * **Logik:** 1.  Verzögerung von **2000ms**, um den Startvorgang nicht zu verlangsamen.

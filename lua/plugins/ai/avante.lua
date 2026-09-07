@@ -1,7 +1,7 @@
 ---@module 'plugins.ai.avante'
 ---
 --- Lazy.nvim specification for Avante.
---- The complete provider configuration is located in plugins.ai.
+--- The complete provider configuration is located in config.ai.anthropic.
 
 ---@type LazyPluginSpec[]
 return {

@@ -63,6 +63,6 @@ bench("migrate.nvim alone", { "migrate.hover" })
 bench("documentation.nvim alone", { "documentation.hover" })
 bench("all three", { "spotlight.hover", "migrate.hover", "documentation.hover" })
 
-local fd = io.open(vim.env.PROBE_OUT, "w")
+local fd = assert(io.open(vim.env.PROBE_OUT, "w"))
 fd:write(table.concat(out, "\n") .. "\n")
 fd:close()

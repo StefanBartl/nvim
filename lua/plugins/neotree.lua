@@ -278,16 +278,11 @@ return {
             mappings = DIAGNOSTICS,
             position = require("config.neotree").get_default_position(),
           },
-        } or nil,
+        },
 
         tests = {
           follow_cursor = true,
           window = {
-            -- mappings = vim.tbl_extend(
-            -- "force",
-            -- require("config.neotree.keymaps.tests"),
-            -- NEOTEST.keymaps()
-            -- ),
             mappings = NEOTEST.keymaps(),
             position = require("config.neotree").get_default_position(),
           },

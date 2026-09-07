@@ -1,6 +1,5 @@
----@module 'plugins.ai.anthropic.@types'
+---@module 'config.ai.anthropic.@types'
 
--- NEU: Typ für die API-spezifischen Parameter
 ---@class AvanteRequestBody
 ---@field temperature number
 ---@field max_tokens integer
@@ -9,7 +8,7 @@
 ---@field endpoint string
 ---@field model string
 ---@field timeout integer
----@field extra_request_body AvanteRequestBody -- HIER HINZUGESFÜGT
+---@field extra_request_body AvanteRequestBody
 
 ---@class AvanteBehaviourConfig
 ---@field auto_suggestions boolean

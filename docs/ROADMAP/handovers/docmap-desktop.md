@@ -4,14 +4,14 @@ Letzte Messages:
 
 
 nachoflgendser chatverlauf sind die letzten messages eines chats mit diesen account aber auf einen adneren gerät. es ist dabei geganen um das abarbeiten duieser liste:
-C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\MERGED.md
+vim.fn.stdpath('config') .. \docs\ROADMAP\personal\All\FINISH\MERGED.md
 
 ich hoffe, du kannst dhier gleich nahtlos anshcließ0en und wietermachen.
 jede erledigt trask komt nach
-C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH\MERGED_FINISHED.md
+vim.fn.stdpath('config') .. \docs\ROADMAP\personal\All\FINISH\MERGED_FINISHED.md
 
 comitten/oush/pull immer auif main wenne tewas in den repos gefixed wurde.
-die repos indes t du in c:\repos du hast zugriff drauf, es geht um alle plugins die mit .nvim enden + docmap-desktop, das docmap-dsktop aber ein natives, kein nvim plugin ist, lassen sich vielketasks nicht korrekt anwenden. daher nur wenn es ssinn macht dort uch imepmentieren.
+die repos indes t du in $REPOS_DIR du hast zugriff drauf, es geht um alle plugins die mit .nvim enden + docmap-desktop, das docmap-dsktop aber ein natives, kein nvim plugin ist, lassen sich vielketasks nicht korrekt anwenden. daher nur wenn es ssinn macht dort uch imepmentieren.
 
 chat^:
 

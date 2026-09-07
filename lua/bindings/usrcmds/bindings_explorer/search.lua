@@ -1,9 +1,8 @@
 ---@module 'bindings.usrcmds.bindings_explorer.search'
---- Statische Volltextsuche über die BINDINGS-Wurzeln — der Fallback, wenn
---- keine Live-Grep-Picker-Engine verfügbar ist (siehe `live.lua`, die
---- eigentlich bevorzugte Suche). Liest Dateien direkt und matched in
---- reinem Lua, wie casedesks `case.query.M.grep` — kein ripgrep-Aufruf,
---- keine externe Abhängigkeit nur für diesen Fallback.
+--- Static full-text search over the BINDINGS roots — the fallback when no
+--- live-grep picker engine is available (see `live.lua`, the preferred path).
+--- Reads files directly and matches in pure Lua, like casedesk's
+--- `case.query.M.grep` — no ripgrep call, no extra dependency for a fallback.
 
 local collect_recursive = require("lib.nvim.fs.collect_recursive")
 local read = require("lib.nvim.fs.read")
@@ -12,10 +11,10 @@ local config = require("bindings.usrcmds.bindings_explorer.config")
 local M = {}
 
 ---@class Bindings.Hit
----@field root string BINDINGS-Wurzel, unter der die Datei liegt
----@field path string absoluter Pfad
----@field line integer 1-basierte Zeilennummer
----@field text string getrimmter Zeileninhalt
+---@field root string BINDINGS root the file sits under
+---@field path string absolute path
+---@field line integer 1-based line number
+---@field text string trimmed line content
 
 ---@param value string
 ---@param pattern string
@@ -24,11 +23,11 @@ local function matches(value, pattern)
   return value:lower():find(pattern:lower(), 1, true) ~= nil
 end
 
---- Eine Datei Zeile für Zeile gegen `pattern` halten.
----@param root string Wurzel, unter der die Datei liegt (siehe `Bindings.Hit`)
+--- Hold one file against `pattern`, line by line.
+---@param root string root the file sits under (see `Bindings.Hit`)
 ---@param path string
 ---@param pattern string
----@param hits Bindings.Hit[] wird in-place gefüllt
+---@param hits Bindings.Hit[] filled in place
 ---@return nil
 local function scan_file(root, path, pattern, hits)
   local content = read(path)
@@ -44,18 +43,17 @@ local function scan_file(root, path, pattern, hits)
   end
 end
 
---- Jede `.md`-Datei unter `roots` nach `pattern` durchsuchen
---- (case-insensitiver Substring, wie `case.query.M.grep`s Default).
+--- Search every `.md` file under `roots` for `pattern` (case-insensitive
+--- substring, like `case.query.M.grep`'s default).
 ---
---- Ein Eintrag in `roots` darf auch eine einzelne Datei sein: der
---- Plugin-Scope (`:Bindings search keymaps hover.nvim`, siehe `plugin.lua`)
---- löst sich zu Cheatsheet-Pfaden auf, und die gehen hier durch dieselbe
---- Liste wie ein Verzeichnis — genau wie bei `live.lua`, wo ripgrep Dateien
---- und Verzeichnisse ebenfalls in derselben Position nimmt. Der `root` eines
---- solchen Treffers ist das Verzeichnis der Datei; das Feld beschreibt, wo
---- die Datei liegt, und nicht, was der Aufrufer übergeben hat.
+--- A `roots` entry may also be a single file: the plugin scope
+--- (`:Bindings search keymaps hover.nvim`, see `plugin_scope.lua`) resolves to
+--- cheatsheet paths, which go through the same list as a directory here — just
+--- like `live.lua`, where ripgrep takes files and directories in the same
+--- position. The `root` of such a hit is the file's directory: the field says
+--- where the file sits, not what the caller passed.
 ---@param pattern string
----@param roots string[]|nil nil = beide vollen BINDINGS-Wurzeln
+---@param roots string[]|nil nil = both full BINDINGS roots
 ---@return Bindings.Hit[]
 function M.search(pattern, roots)
   local hits = {}

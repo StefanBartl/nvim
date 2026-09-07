@@ -289,7 +289,7 @@ festgelegt:
 
 ## 6. Migrationsplan
 
-1. Repos `options.nvim` und `nvchad-ui.nvim` unter `C:\repos\` anlegen
+1. Repos `options.nvim` und `nvchad-ui.nvim` unter `$REPOS_DIR\` anlegen
    (Grundgerüst: README, doc, ROADMAP, `:checkhealth`, `.luarc.json`,
    `stylua.toml` — Vorlage: `dap.nvim`, das dieselbe Struktur bereits hat).
 2. `lua/wkdoptions/**` → `options.nvim/lua/options/**`,

@@ -45,5 +45,7 @@
 ---@field register_highlight_commands fun(spec: WKDOptions.Commands.HL_Spec): nil
 ---@field register_options_commands fun(spec: WKDOptions.Commands.Opt_Spec): nil
 ---@field register_highlight_debug_command fun(opts: WKDOptions.Commands.Debug_Opts|nil): nil
+---@field register_diff_profile fun(): nil
+---@field register_all fun(): nil
 
 return {}

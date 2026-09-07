@@ -38,16 +38,6 @@ function M.augroup(name)
   return api.nvim_create_augroup("general_autocmds_" .. name, { clear = true })
 end
 
---- Normalize a FileType autocmd pattern field.
---- @param pat any
---- @return string|string[]
-function M.snorm_pattern(pat)
-  if pat == nil then
-    return "markdown"
-  end
-  return pat
-end
-
 --------------------------------------------------------------------------------
 -- no_name_guard
 --------------------------------------------------------------------------------

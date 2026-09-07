@@ -84,7 +84,7 @@ Lazy-Zustand, siehe MEASURING.md).
 
 |          |                                                                            |
 | -------- | -------------------------------------------------------------------------- |
-|   Repo   |             nvim-config (`C:/Users/bartl/AppData/Local/nvim`)              |
+|   Repo   |             nvim-config (`vim.fn.stdpath('config') .. `)              |
 |  Branch  |         `main` — dort steht alles, siehe die Anmerkung darunter           |
 | Worktree |                        keiner mehr nötig                                   |
 |  Stand   |          alles committet und gepusht, Haupt-Checkout nachgezogen           |

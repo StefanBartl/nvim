@@ -25,7 +25,7 @@ function M.setup()
       notify.warn("sessions.nvim not available")
       return
     end
-    local ok_resolve, resolve = pcall(require, "bindings.usrcmds.case.resolve")
+    local ok_resolve, resolve = pcall(require, "casedesk.resolve")
     local entry = ok_resolve and resolve.sync(nil) or nil
     sessions.save(entry and entry.short or nil)
   end, { desc = "[casedesk] Save session (case-aware)" })

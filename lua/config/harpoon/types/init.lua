@@ -19,12 +19,10 @@
 ---@field context Cfg.Harpoon.Context|nil
 
 --- A hand-written stand-in for harpoon's own `HarpoonList`, so this config
---- type-checks whether or not the plugin is on the runtimepath.
----
---- It listed three members while the code here calls seven, which is where the
---- `remove_at` / `prepend` / `_length` findings came from: a stand-in that
---- omits what its callers use reports the caller as wrong, not itself as
---- incomplete. The list below is what `lua/config/harpoon/` actually touches.
+--- type-checks whether or not the plugin is on the runtimepath. Keep it in
+--- sync with what `lua/config/harpoon/` actually calls -- a stand-in that
+--- omits a member the callers use reports the CALLER as wrong, not itself
+--- as incomplete.
 ---@class Cfg.Harpoon.List
 ---@field items (Cfg.Harpoon.Item|Cfg.Harpoon.ItemLegacy|string)[]  -- allow union
 ---@field _length integer  -- harpoon's own count; `#items` disagrees with it after a remove_at, which only nils the slot
@@ -35,45 +33,27 @@
 ---@field remove_at fun(self: Cfg.Harpoon.List, index: integer): Cfg.Harpoon.List
 ---@field save fun(self: Cfg.Harpoon.List)
 
----@class Cfg.Harpoon.Api
----@field list fun(self: Cfg.Harpoon.Api): Cfg.Harpoon.List
----@field save fun(self: Cfg.Harpoon.Api)
----@field setup fun(self: Cfg.Harpoon.Api, opts: table)
-
 ---@class Cfg.Harpoon.PersistPathsOpts
 ---@field target_specs string[][]|nil  -- list of path segments per target; first segment can be a variable like "$REPOS_DIR" or "$HOME"
 
----@type uv uv
-
 ---@class Cfg.Harpoon.HardeningState
+---@field wrapped_ui boolean             -- has ui.toggle_quick_menu been wrapped already
 ---@field handle Lib.Debounce.Handle|nil -- reusable lib.nvim.debounce handle
 ---@field debounce_ms integer            -- current debounce interval (ms)
 ---@field pending boolean                -- whether there is pending work
+---@field augroup integer|nil            -- HarpoonHardening augroup id
 
 ---@class Cfg.Harpoon.HardeningOpts
----@field debounce_ms integer|nil        -- default: 200
----    Coalesce multiple "save" triggers into a single write. Prevents IO bursts
----    when you quickly switch buffers, toggle the quick menu, or alt-tab a lot.
----  Good defaults:
----    150–300 on local SSDs; 300–600 on network/remote filesystems (SMB/NFS/SSHFS).
----  Tips:
----    - If you still see frequent writes, increase by +100ms steps.
----    - If the last change occasionally isn't persisted when you quit very fast,
----      keep debounce_ms moderate (<= 400) — final flush on VimLeavePre is handled.
----
+---@field debounce_ms integer|nil        -- default: 200; coalesces bursty save
+---    triggers into a single write. Tuning guidance (SSD vs. network filesystems,
+---    when to raise it): docs/NOTES/Harpoon.md §6.
 ---@field autocmd_events string[]|nil    -- default: { "BufLeave", "FocusLost" }
----    Which editor events should trigger a debounced save.
----  Typical choices:
----    { "BufLeave", "FocusLost" }              -- fast and quiet; great default
----  When to extend:
----    - Add "WinLeave"     : if you hop between windows constantly (splits/tabs)
----    - Add "FocusGained"  : if you want a save even when returning to Neovim
----    - Add "BufHidden"    : for setups that hide buffers instead of unloading
----    - Add "CmdlineLeave" : if your workflow edits harpoon from custom commands
----  Notes:
----    - More events = more chances to save, but also more timer restarts.
----    - You don't need a quit event; a non-debounced final flush runs on VimLeavePre.
+---    Which editor events trigger a debounced save. Extending this list (e.g.
+---    "WinLeave", "FocusGained"): docs/NOTES/Harpoon.md §6.
 
+--- CDX: never wired to a @param/@cast anywhere in this repo (normkey is an
+--- external lib.nvim function); kept as local doc for its `realpath` option.
+--- Wire it up or drop it?
 ---@class Cfg.Harpoon.NormKeyOpts
 ---@field realpath boolean|nil  -- default true (use fs_realpath if available)
 

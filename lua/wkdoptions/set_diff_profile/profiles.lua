@@ -1,6 +1,5 @@
 ---@module 'wkdoptions.set_diff_profile.profiles'
----@description
--- This module defines different diff profiles for Neovim.
+--- Defines the available diff profiles for Neovim.
 
 ---@type table<DiffProfile, string[]>
 local diff_profiles = {

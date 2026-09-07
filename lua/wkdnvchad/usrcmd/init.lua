@@ -6,7 +6,6 @@ local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 
--- Import theme management odule
 local theme = require("wkdnvchad.usrcmd.themes")
 
 -----------------------------------------------------------------------
@@ -190,7 +189,7 @@ local function ui_help(args)
 │                                                      │
 ╰──────────────────────────────────────────────────────╯
 
-Siehe auch: README-THEMES.md für technische Details
+Siehe auch: wkdnvchad/usrcmd/themes/README.md für technische Details
 ]]
   notify.info(help_text)
 end

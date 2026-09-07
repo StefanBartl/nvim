@@ -7,7 +7,6 @@
 local lazy = require("lib.lua.lazy")
 local memo = lazy.require("lib.lua.memo")
 local trim = lazy.require("lib.lua.strings.core").trim
-local split = lazy.require("lib.lua.strings.core").split
 
 local M = {}
 
@@ -121,37 +120,6 @@ M.extract_identifier = memo.fn(function(text, lang)
 end, { weak = "kv", size = 128 })
 
 -----------------------------------------------------------
--- Path Manipulation
------------------------------------------------------------
-
---- Split dotted path into segments
---- "a.b.c" → {"a", "b", "c"}
----@nodiscard
----@param path string
----@return string[]
-function M.split_dotted(path)
-  if type(path) ~= "string" or path == "" then
-    return {}
-  end
-
-  return split(path, ".")
-end
-
---- Join segments with separator
----@nodiscard
----@param parts string[]
----@param sep string
----@return string
-function M.join_parts(parts, sep)
-  if type(parts) ~= "table" or #parts == 0 then
-    return ""
-  end
-
-  sep = sep or "."
-  return table.concat(parts, sep)
-end
-
------------------------------------------------------------
 -- Pattern Escaping
 -----------------------------------------------------------
 
@@ -188,8 +156,7 @@ function M.unquote(s)
     return ""
   end
 
-  -- Remove surrounding quotes (single or double)
-  -- gsub returns (result, count), wir brauchen nur result
+  -- Remove surrounding quotes (single or double); drop gsub's count return
   local result = s:gsub("^[\"']", ""):gsub("[\"']$", "")
   return result
 end
@@ -212,6 +179,8 @@ M.extract_lua_field_key = memo.fn(function(text)
   end
 
   -- Quoted key: ["key"] =
+  --- CDX: this match has two captures (quote char, key); `return quoted` hands
+  --- back the quote char, not the key. Quoted table keys resolve to `"` / `'`.
   local quoted = text:match("^%[(['\"])(.-)%1%]%s*=")
   if quoted then
     return quoted
@@ -219,61 +188,5 @@ M.extract_lua_field_key = memo.fn(function(text)
 
   return nil
 end, { weak = "kv", size = 64 })
-
---- Extract key from JS/TS object literal
---- "key: value" → "key"
---- "'key': value" → "key"
----@nodiscard
-M.extract_js_object_key = memo.fn(function(text)
-  if type(text) ~= "string" or text == "" then
-    return nil
-  end
-
-  text = trim(text)
-
-  -- Plain identifier: key:
-  local plain = text:match("^([%w_$]+)%s*:")
-  if plain then
-    return plain
-  end
-
-  -- Quoted key: "key": or 'key':
-  local quoted = text:match("^['\"]([^'\"]+)['\"]%s*:")
-  if quoted then
-    return quoted
-  end
-
-  return nil
-end, { weak = "kv", size = 64 })
-
------------------------------------------------------------
--- Container Path Building
------------------------------------------------------------
-
---- Build container path from segments
---- Removes last segment (current field) if specified
----@nodiscard
----@param segments string[]
----@param drop_last boolean
----@param join_char string
----@return string|nil
-function M.build_container(segments, drop_last, join_char)
-  if type(segments) ~= "table" or #segments == 0 then
-    return nil
-  end
-
-  join_char = join_char or "."
-
-  local parts = {}
-  local limit = drop_last and (#segments - 1) or #segments
-
-  for i = 1, limit do
-    if segments[i] and segments[i] ~= "" then
-      parts[#parts + 1] = segments[i]
-    end
-  end
-
-  return #parts > 0 and table.concat(parts, join_char) or nil
-end
 
 return M

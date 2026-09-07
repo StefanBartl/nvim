@@ -138,7 +138,13 @@ M.routes = {
     },
     view = "mini",
   },
-  -- or
+  --- CDX: this catch-all matches every `event = "msg_show"` message and
+  --- noice's router stops at the first match (opts.stop defaults to true,
+  --- see noice.message.router.update()) -- so every route below that also
+  --- targets `msg_show` (or has no `event` filter at all) is unreachable:
+  --- the "hide search hit BOTTOM/TOP", the E23/E20/E37/E31/E351/E418 emsg
+  --- hides, "No signature help", "Error detected while processing
+  --- BufReadPost", and the search_count hide never actually fire.
   { filter = { event = "msg_show" }, view = "mini" },
 
   -- Hide noisy search boundary messages.
@@ -170,7 +176,7 @@ M.routes = {
   -- Hide the transient "n/total" search counter in cmdline area.
   { filter = { event = "msg_show", kind = "search_count" }, opts = { skip = true } },
 
-  -- Filter für "Buffer is not modifiable" Warnungen
+  -- Filter for "Buffer is not modifiable" warnings
   {
     filter = {
       event = "notify",

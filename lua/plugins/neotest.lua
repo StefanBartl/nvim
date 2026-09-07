@@ -1,7 +1,6 @@
 ---@module 'plugins.neotest'
----@brief Neotest: Testrunner-Framework für Neovim mit Neo-tree-Integration
+---@brief Neotest: test runner framework for Neovim with Neo-tree integration
 
--- local notify = require("lib.nvim.notify").create("[plugins.neotest]")
 local neotest_init_utils = require("config.neotest.init.utils")
 
 return {
@@ -16,6 +15,11 @@ return {
 
       -- CRITICAL: Use wrapped consumer to prevent initialization race
       local opts = {
+        -- CDX: hardcoded to plenary/vitest/go, ignores
+        -- config.neotest.adapters.factory entirely -- python/rust/typescript
+        -- adapters are installed (init/dependencies.lua) but never activated.
+        -- Documented split-brain, consolidation planned as a migration --
+        -- see docs/ROADMAP/IDEAS/test.md §2.1.
         adapters = {
           require("neotest-plenary"),
           require("neotest-vitest"),
@@ -93,9 +97,9 @@ return {
       require("config.neotest.debug").setup_all()
       require("config.neotest.utils.validate_consumer").setup_command()
       -- require("config.neotest.autocmds.auto_discovery").attach()
-      require("config.neotest.highlights").setup()
 
-      -- check wieviele adapter erfolgreich implementiert wurden
+      -- CDX: check how many adapters were actually wired up -- part of the
+      -- factory.lua consolidation, see docs/ROADMAP/IDEAS/test.md §2.1.
       --require("config.neotest.init.checks.adapter")(opts.adapters, neotree_consumer)
 
       -- Core config (optional)
@@ -103,20 +107,6 @@ return {
       if ok_core and type(core.setup) == "function" then
         core.setup()
       end
-
-      -- Verify consumer initialization
-      -- vim.defer_fn(function()
-      -- local ok_validate = pcall(require("config.neotest.utils.validate_consumer").check_consumer)
-      -- if ok_validate then
-      -- notify.info("Neo-tree consumer verified")
-      -- else
-      -- notify.warn("Neo-tree consumer validation failed")
-      -- end
-      -- end, 1000)
     end,
   },
 }
--- check wieviele adapter erfolgreich implementiert wurden
---require("config.neotest.init.checks.adapter")(opts.adapters, neotree_consumer)
--- require("config.neotest.autocmds.auto_discovery").attach()
--- require("config.neotest.utils.validate_consumer").setup_command()

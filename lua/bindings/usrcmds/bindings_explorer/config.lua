@@ -1,11 +1,17 @@
 ---@module 'bindings.usrcmds.bindings_explorer.config'
---- Wo die BINDINGS-Cheatsheets liegen — und, für `drift.lua`s Repo-Achse,
---- wo die lokalen Plugin-Checkouts liegen. Konzept: docs/ROADMAP/personal/
---- bindings-explorer.nvim.md.
+--- Where the BINDINGS corpus lives, and — for `drift.lua`'s repo axis — where
+--- the local plugin checkouts are. Feature docs: docs/FEATURES.md.
 
 local M = {}
 
---- Beide BINDINGS-Wurzeln, absolut.
+--- CDX: `BND-05` (see docs/FEATURES.md) removed the
+--- `docs/NOTES/PersonelPlugins/BINDINGS/` tree; the corpus now reads each
+--- plugin's own `docs/BINDINGS.md` via `M.plugin_sheets()`. `roots()[1]` still
+--- points at that missing dir — the `isdirectory` guards make the corpus walk
+--- harmless, but `:Bindings path personal` copies a dead path. Prune roots()
+--- to Extern-only?
+
+--- Both BINDINGS roots, absolute.
 ---@return string[]
 function M.roots()
   local cfg = vim.fn.stdpath("config")
@@ -15,9 +21,97 @@ function M.roots()
   }
 end
 
---- Beide Wurzeln, aber nur die `folder`-Unterkategorie (`"Keymaps"`|
---- `"Usercmds"`|`"Autocmds"`) — beide Bäume verwenden dieselben drei
---- Ordnernamen, siehe `M.roots()`.
+---@class Bindings.PluginSheet
+---@field plugin string plugin name, also `records.lua`'s `plugin` field, e.g. "hover.nvim".
+---@field file string absolute path to its `docs/BINDINGS.md`.
+
+--- Where a personal plugin's `docs/BINDINGS.md` sits — local checkout first,
+--- because that's what gets worked on: someone who just documented a binding
+--- wants it in `:Bindings` now, not after the next `:Lazy update`. Missing
+--- (remote mode, another machine) → the installed plugin does just as well,
+--- same commit, only older.
+---@param name string
+---@return string|nil
+local function plugin_sheet_path(name)
+  local candidates = {}
+
+  local ok, personal_utils = pcall(require, "plugins.personal.utils")
+  if ok then
+    local dev = personal_utils.local_dev(name)
+    if dev then
+      candidates[#candidates + 1] = vim.fs.joinpath(dev, "docs", "BINDINGS.md")
+    end
+  end
+
+  candidates[#candidates + 1] =
+    vim.fs.joinpath(vim.fn.stdpath("data"), "lazy", name, "docs", "BINDINGS.md")
+
+  for _, path in ipairs(candidates) do
+    if vim.fn.filereadable(path) == 1 then
+      return path
+    end
+  end
+  return nil
+end
+
+--- The second corpus root: every personal plugin's `docs/BINDINGS.md`.
+---
+--- Why the corpus is no longer copies: until 2026-09-04 `PersonelPlugins/
+--- BINDINGS/` held a hand-kept cheatsheet per plugin (107 files, 12,566 lines)
+--- — a second copy of what each of the 32 repos already ships as
+--- `docs/BINDINGS.md`. A copy can drift, and finding drift is exactly what
+--- `:Bindings check` is for, so the explorer reads the source now.
+---
+--- Replacing the cheatsheet with a *link* to the repo doc was not an option:
+--- `search` needs full text, `browse` parsed rows, `check`/`report` the
+--- documented comparison page — all four read text, and a link is not text.
+---
+--- `ExternPlugins/Bindings/` is untouched: third-party plugins don't ship a
+--- `docs/BINDINGS.md` to this standard, so their cheatsheets are originals.
+---
+--- `nil` + reason rather than an empty list when the plugin list itself was
+--- unreadable — same stance as `M.repo_dirs` and `source.lua`: "found
+--- nothing" and "couldn't look" are different claims. A plugin *without* a
+--- readable `docs/BINDINGS.md` is not an error, just not a sheet.
+---@return Bindings.PluginSheet[]|nil
+---@return string|nil reason
+function M.plugin_sheets()
+  local ok, list = pcall(require, "plugins.personal.list")
+  if not ok then
+    return nil, "plugins.personal.list not loadable: " .. tostring(list)
+  end
+
+  local entries, err = list.read()
+  if not entries then
+    return nil, err or "plugins.personal.list.read() returned nothing"
+  end
+
+  local out = {}
+  for _, entry in ipairs(entries) do
+    local file = plugin_sheet_path(entry.name)
+    if file then
+      out[#out + 1] = { plugin = entry.name, file = file }
+    end
+  end
+
+  -- This config itself is the one entry with no plugin repo to read a
+  -- `docs/BINDINGS.md` from -- `BND-05` gave it one at the repo root instead,
+  -- same file every other personal plugin keeps at the same relative path.
+  -- Named "nvim-config" for continuity with the retired
+  -- `PersonelPlugins/BINDINGS/*/nvim-config.md` sheets it replaces.
+  local own = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "BINDINGS.md")
+  if vim.fn.filereadable(own) == 1 then
+    out[#out + 1] = { plugin = "nvim-config", file = own }
+  end
+
+  table.sort(out, function(a, b)
+    return a.plugin < b.plugin
+  end)
+  return out, nil
+end
+
+--- Both roots, but only the `folder` sub-category (`"Keymaps"`/`"Usercmds"`/
+--- `"Autocmds"`) — both trees use the same three folder names.
 ---@param folder "Keymaps"|"Usercmds"|"Autocmds"
 ---@return string[]
 function M.roots_for(folder)
@@ -28,43 +122,37 @@ function M.roots_for(folder)
   return out
 end
 
---- Wohin `:Bindings report` schreibt, wenn kein `out=` angegeben ist.
----
---- Derselbe Ordner, in dem der handgeschriebene Driftreport vom 2026-09-02
---- liegt — der Bericht gehört zum Aufgabenstand, nicht zur Doku des Features,
---- und Roadmap-Punkte werden hier abgelegt.
+--- Where `:Bindings report` writes when no `out=` is given: the same folder
+--- as the hand-written 2026-09-02 drift report — the report belongs to the
+--- task state, not the feature docs.
 ---@return string
 function M.report_dir()
   return vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "ROADMAP", "personal", "All")
 end
 
---- Der Lua-Baum dieser Config selbst. `drift.lua`s Repo-Achse nimmt ihn als
---- zweite Suchstelle: ein dokumentiertes Binding eines Personal-Plugins wird
---- oft nicht vom Plugin registriert, sondern hier (lazy `keys`-Spec,
---- `bindings/mappings/*`) — ohne diese Stelle wäre genau das ein
---- systematischer Falschbefund der Achse.
+--- This config's own Lua tree. `drift.lua`'s repo axis uses it as a second
+--- search location: a documented binding of a personal plugin is often
+--- registered not by the plugin but here (lazy `keys` spec,
+--- `bindings/mappings/*`) — without this, that would be a systematic false
+--- finding of the axis.
 ---@return string
 function M.config_lua_root()
   return vim.fs.joinpath(vim.fn.stdpath("config"), "lua")
 end
 
 ---@class Bindings.RepoDir
----@field name string Cheatsheet-Stamm, also `records.lua`s `plugin`-Feld, z.B. "images.nvim".
----@field dir string Absoluter Pfad des lokalen Checkouts.
+---@field name string cheatsheet stem, also `records.lua`'s `plugin` field, e.g. "images.nvim".
+---@field dir string absolute path of the local checkout.
 
 ---@alias Bindings.RepoResolver fun(): Bindings.RepoDir[]|nil, string|nil
 
---- Default-Auflösung: `plugins.personal.export` liefert bereits genau
---- `{ name, repo, dir }` je aktiviertem Personal-Plugin mit lokalem
---- Checkout, abgeleitet aus dem echten Lazy-Spec statt aus einer
---- handgepflegten Liste (siehe `plugins/personal/list.lua`s Moduldoc dazu,
---- warum die Markdown-Liste als Quelle aufgegeben wurde).
+--- Default resolution: `plugins.personal.export` already yields exactly
+--- `{ name, repo, dir }` per enabled personal plugin with a local checkout,
+--- derived from the real lazy spec, not a hand-kept list.
 ---
---- `nil` + Grund statt einer leeren Liste, wenn die Auflösung selbst nicht
---- möglich war — dieselbe Haltung wie `source.lua`: „nichts gefunden" und
---- „konnte nicht nachsehen" sind verschiedene Aussagen, und ein Report, dem
---- still eine Achse fehlt, liest sich sonst wie einer, in dem sie nichts
---- gefunden hat.
+--- `nil` + reason rather than an empty list when resolution itself failed —
+--- same stance as `source.lua`: a report silently missing an axis otherwise
+--- reads like one where the axis found nothing.
 ---@type Bindings.RepoResolver
 local function default_repo_dirs()
   local ok, export = pcall(require, "plugins.personal.export")
@@ -90,35 +178,34 @@ end
 ---@type Bindings.RepoResolver|nil
 local repo_resolver = nil
 
---- Die Auflösung austauschen (Tests gegen ein Fixture-Repo; ein künftiger
---- Umzug dieses Moduls in ein eigenes Repo, wo `plugins.personal` nicht
---- existiert). `nil` stellt die Default-Auflösung wieder her.
+--- Swap the resolution (tests against a fixture repo; a future move of this
+--- module into its own repo where `plugins.personal` doesn't exist). `nil`
+--- restores the default.
 ---@param fn Bindings.RepoResolver|nil
 ---@return nil
 function M.set_repo_dirs(fn)
   repo_resolver = fn
 end
 
---- Jedes Plugin mit lokalem Checkout, das `drift.lua`s Repo-Achse
---- durchsuchen kann.
+--- Every plugin with a local checkout that `drift.lua`'s repo axis can scan.
 ---@return Bindings.RepoDir[]|nil
----@return string|nil reason Warum die Achse nicht befragt werden konnte.
+---@return string|nil reason why the axis couldn't be queried.
 function M.repo_dirs()
   return (repo_resolver or default_repo_dirs)()
 end
 
---- Verzeichnisnamen, die unter einer Sammelwurzel nie ein Projekt sind.
---- Kein Vollständigkeitsanspruch: die Lua-Prüfung unten sortiert das meiste
---- schon aus, das hier spart nur das Scandir bei den häufigen Fällen.
+--- Directory names that under a collection root are never a project. Not
+--- exhaustive: the Lua check below sorts out most of it, this just skips the
+--- scandir for the common cases.
 local SKIP_DIRS = { [".git"] = true, node_modules = true, target = true }
 
---- Ob `dir` wie ein Lua-Projekt aussieht: ein `lua/`-Unterverzeichnis oder
---- mindestens eine `.lua`-Datei obenauf.
+--- Whether `dir` looks like a Lua project: a `lua/` subdir or at least one
+--- top-level `.lua` file.
 ---
---- Bewusst nicht `.git` als Kriterium — die Repo-Achse liest Quelltext, nicht
---- Git-Historie, und ein Checkout ohne eigenes `.git` (Submodul, entpacktes
---- Release, Worktree-Kopie) ist genauso greppbar. Umgekehrt wäre ein
---- Git-Repo ohne eine Zeile Lua für diese Achse wertlos.
+--- Deliberately not `.git` — the repo axis reads source, not git history, and
+--- a checkout without its own `.git` (submodule, unpacked release, worktree
+--- copy) is just as greppable. Conversely a git repo without a line of Lua is
+--- worthless to this axis.
 ---@param dir string
 ---@return boolean
 local function looks_like_lua_project(dir)
@@ -133,34 +220,30 @@ local function looks_like_lua_project(dir)
   return false
 end
 
---- Jedes Lua-Projekt direkt unter `root`, als `Bindings.RepoDir`-Liste.
+--- Every Lua project directly under `root`, as a `Bindings.RepoDir` list.
 ---
---- Für den Fall, dass die Checkouts nicht über den Lazy-Spec auffindbar sind,
---- sondern schlicht nebeneinander in einem Sammelverzeichnis liegen
---- (`C:/repos`) — dann ist der Pfad die Auflösung, und die Achse deckt jedes
---- Projekt darunter ab statt nur die als Plugin aktivierten. Der
---- Verzeichnisname IST der `name`, weil `records.lua`s `plugin`-Feld der
---- Cheatsheet-Dateistamm ist und dieser Korpus die Cheatsheets nach den
---- Repos benennt; ein Verzeichnis ohne gleichnamiges Cheatsheet fällt in
---- `drift.lua`s Bericht als undokumentiert auf, statt still zu verschwinden.
+--- For when the checkouts are not lazy-spec-resolvable but simply sit side by
+--- side in a collection dir (`C:/repos`) — then the path IS the resolution,
+--- and the axis covers every project under it, not just the plugin-enabled
+--- ones. The directory name IS the `name`, because `records.lua`'s `plugin`
+--- field is the cheatsheet stem and this corpus names sheets after repos; a
+--- dir with no matching sheet shows up in the drift report as undocumented
+--- rather than vanishing silently.
 ---
---- Nur eine Ebene tief. Ein rekursiver Abstieg fände in jedem Checkout dessen
---- eigene Unterverzeichnisse mit `lua/` wieder und meldete `lua`, `tests`,
---- `spec` als eigene „Repos".
+--- One level deep only. A recursive descent would re-find each checkout's own
+--- `lua/`/`tests/`/`spec/` subdirs and report them as "repos".
 ---
---- `nil` + Grund statt einer leeren Liste, wenn nicht nachgesehen werden
---- konnte — dieselbe Unterscheidung wie `default_repo_dirs` und `repo.lua`s
---- `M.mentions`: „nichts gefunden" und „konnte nicht nachsehen" sind
---- verschiedene Aussagen.
----@param root string Sammelverzeichnis, absolut oder `~`/`$VAR`-expandiert.
+--- `nil` + reason rather than an empty list when it couldn't look — same
+--- distinction as `default_repo_dirs` and `repo.lua`'s `M.mentions`.
+---@param root string collection dir, absolute or `~`/`$VAR`-expanded.
 ---@return Bindings.RepoDir[]|nil
 ---@return string|nil reason
 function M.repo_dirs_under(root)
   if type(root) ~= "string" or root == "" then
     return nil, "no repo root given"
   end
-  -- `:p` hängt einen Trenner an, `normalize` macht aus Windows-Backslashes
-  -- Slashes -- danach reicht ein Muster ohne Escape-Sonderfall.
+  -- `:p` appends a separator, `normalize` turns Windows backslashes into
+  -- slashes -- after that a pattern needs no escape special-casing.
   local abs = vim.fs.normalize(vim.fn.fnamemodify(vim.fn.expand(root), ":p")):gsub("/$", "")
   if vim.fn.isdirectory(abs) ~= 1 then
     return nil, ("repo root is not a directory: %s"):format(abs)

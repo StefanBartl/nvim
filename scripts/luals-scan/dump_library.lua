@@ -31,6 +31,31 @@ if not ok or type(build) ~= "function" then
   return
 end
 
+-- build_library reads the CURRENT runtimepath, but this headless nvim never
+-- fires the events/commands/filetypes that would make lazy.nvim load an
+-- event- or cmd- or ft-triggered plugin -- so that plugin's directory is
+-- absent from 'runtimepath' and, with it, its types. A workspace whose
+-- annotations depend on such a plugin (e.g. markdown.nvim's Hover.* living in
+-- hover.nvim) then sees them reported as undefined-doc-name/undefined-field,
+-- purely because the dump ran before anything triggered the dependency.
+--
+-- Force every installed plugin's root onto 'runtimepath' up front so
+-- build_library sees the full, load-state-independent set. This only adds
+-- directories -- it does not require() or otherwise execute plugin code, so
+-- it carries none of the side effects (autocmds, keymaps, startup errors)
+-- that loading each plugin for real would risk in a headless dump.
+local ok_lazy, lazy = pcall(require, "lazy")
+if ok_lazy then
+  local ok_plugins, plugins = pcall(lazy.plugins)
+  if ok_plugins and type(plugins) == "table" then
+    for _, plugin in ipairs(plugins) do
+      if type(plugin.dir) == "string" and vim.fn.isdirectory(plugin.dir) == 1 then
+        vim.opt.rtp:append(plugin.dir)
+      end
+    end
+  end
+end
+
 -- Root-independent, so it is dumped once into _meta.json rather than per
 -- workspace. It matters as much as the library does: a stale git worktree
 -- under `.claude/` holding an older copy of a plugin makes every `@class` in

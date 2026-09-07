@@ -144,7 +144,7 @@ keine Performance-Kosten.
 
 ### Anbindung an `learn-cli.nvim`
 
-`learn-cli.nvim` (siehe `E:\repos\learn-cli.nvim`, noch unfertig) ist
+`learn-cli.nvim` (siehe `$REPOS_DIR\learn-cli.nvim`, noch unfertig) ist
 bereits ein eigenständiges Lernplattform-Plugin mit Exercises, Cycles,
 Scoring, Spaced Repetition und Terminal-Integration
 (`docs/padagogical-concept.md`, `README.md` dort). Statt eine zweite,

@@ -3,16 +3,14 @@
 
 local M = {}
 
--- Hilfsfunktion: aktuellen Buffer setzen ohne 'zz'
 ---@param bufnr integer
 local function set_buf_no_center(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_set_current_buf(bufnr)
-    -- kein 'zz', also keine Zentrierung
+    -- No 'zz', hence no centering.
   end
 end
 
--- Index des aktuellen Buffers
 ---@param bufnr integer
 local function buf_index(bufnr)
   for i, b in ipairs(vim.t.bufs or {}) do
@@ -27,7 +25,6 @@ local function cur_buf()
   return vim.api.nvim_get_current_buf()
 end
 
--- Nächster Buffer
 M.next = function()
   local bufs = vim.t.bufs
   local curbufIndex = buf_index(cur_buf())
@@ -40,7 +37,6 @@ M.next = function()
   set_buf_no_center((curbufIndex == #bufs and bufs[1]) or bufs[curbufIndex + 1])
 end
 
--- Vorheriger Buffer
 M.prev = function()
   local bufs = vim.t.bufs
   local curbufIndex = buf_index(cur_buf())

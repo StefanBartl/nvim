@@ -16,9 +16,6 @@ function M.setup()
   --  Buffers
   -- ---------------------------------------------------------------------------
   map("n", "<leader>bn", "<cmd>enew<CR>", { desc = "[Buffers] New" })
-  -- map("n", "<tab>", function()
-  --   require("config.tabufline").next()
-  -- end, { desc = "[Buffers] Next" })
 
   map("n", "<leader>bx", function()
     local current = vim.api.nvim_get_current_buf()

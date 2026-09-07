@@ -21,7 +21,7 @@ local function set_buf_no_center(bufnr)
   return false
 end
 
--- Index des aktuellen Buffers
+-- Index of the current buffer within the tab's buffer list
 ---@param bufnr integer
 ---@param bufs integer[]
 ---@return integer|nil
@@ -47,7 +47,7 @@ end
 
 ---@return boolean
 function M.next()
-  -- WICHTIG: vim.t.bufs wird JEDES MAL frisch gelesen
+  -- IMPORTANT: read vim.t.bufs fresh on every call
   local bufs = vim.t.bufs
   if not bufs or #bufs == 0 then
     return false
@@ -69,7 +69,7 @@ end
 
 ---@return boolean
 function M.prev()
-  -- WICHTIG: vim.t.bufs wird JEDES MAL frisch gelesen
+  -- IMPORTANT: read vim.t.bufs fresh on every call
   local bufs = vim.t.bufs
   if not bufs or #bufs == 0 then
     return false
@@ -103,7 +103,7 @@ function M.move_next_n(n)
       break
     end
 
-    -- KRITISCH: Kurze Pause, damit NvChad vim.t.bufs aktualisieren kann
+    -- Force a redraw so NvChad refreshes vim.t.bufs before the next step
     vim.cmd("redraw")
   end
   return success
@@ -123,7 +123,7 @@ function M.move_prev_n(n)
       break
     end
 
-    -- KRITISCH: Kurze Pause, damit NvChad vim.t.bufs aktualisieren kann
+    -- Force a redraw so NvChad refreshes vim.t.bufs before the next step
     vim.cmd("redraw")
   end
   return success
@@ -137,7 +137,10 @@ function M.close_n_buffers(n)
     return false
   end
 
-  -- Lazy-load nvchad.tabufline only when closing buffers
+  --- CDX: `lib.lua.lazy.require` resolves eagerly (it calls `.get()`
+  --- immediately), so `nvchad_tabufline` is already loaded at module require
+  --- time and this `if not nvchad_tabufline` re-require branch is dead. Use
+  --- `lazy.module(...).get()` at call sites, or a plain guarded require here.
   if not nvchad_tabufline then
     local ok, mod = pcall(require, "nvchad.tabufline")
     if not ok then
@@ -160,7 +163,7 @@ function M.close_n_buffers(n)
       break
     end
 
-    -- Auch hier: Pause für NvChad's Buffer-Update
+    -- Same here: redraw so NvChad refreshes its buffer list
     vim.cmd("redraw")
   end
   return success

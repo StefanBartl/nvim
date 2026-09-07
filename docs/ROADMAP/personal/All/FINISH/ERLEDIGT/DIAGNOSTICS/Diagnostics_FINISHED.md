@@ -1021,7 +1021,7 @@ Der letzte Punkt des Roadmap-Punkts: aus
 [dem Abschnitt „Wiederkehrende Muster"](#wiederkehrende-muster-die-ableitung-fuer-rules)
 ableiten, wie kuenftige Repos geschrieben werden, und das Ergebnis in die
 kanonische Regelsammlung schreiben
-(`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists`).
+(`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists`).
 
 **Ergebnis: 34 Regeln (`LLS-01` … `LLS-43`), 11 Gate-Punkte
 (`NEW-36` … `NEW-46`), vier Zeilen in der Review-Checkliste.** Uebergabe-Report
@@ -1135,7 +1135,7 @@ davon, also 755 Kollisionen.
 
 **Die Ursache.** lsp.nvims `build_library()` nimmt jedes `@types`-Verzeichnis,
 das es findet, in `workspace.library` auf. Fuer ein Plugin ist das der Zweck.
-Fuer die Config zeigen diese Pfade auf `C:/Users/bartl/AppData/Local/nvim/...`
+Fuer die Config zeigen diese Pfade auf `vim.fn.stdpath('config') .. /...`
 -- den **Haupt-Checkout**. Laeuft der Scan aus einem Worktree, ist der
 Workspace ein *anderes* Verzeichnis mit denselben Dateien. Jede Klasse und
 jeder Alias existiert dann zweimal, und LuaLS meldet jede einzelne davon.

@@ -26,7 +26,6 @@ function M.compute_row_pct()
   return pct
 end
 
--- Replace the previous compute_col_pct() with this virtcol-based version.
 --- Compute column percentage using visual screen columns (virtcol).
 --- This reflects what the user sees (tabs, wide chars) and avoids encoding APIs.
 --- @return integer|nil

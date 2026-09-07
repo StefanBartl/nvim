@@ -1,34 +1,34 @@
 ---@module 'config.neotest.utils.validate_consumer'
----@brief Validiert die korrekte Initialisierung des Neo-tree Tests Consumers
+---@brief Validates correct initialization of the Neo-tree tests consumer
 
 local notify = require("lib.nvim.notify").create("[neotest.validate]")
 local usercmd = require("lib.nvim.bindings.usercmd")
 
 local M = {}
 
---- Prüft ob Neo-tree Tests Source korrekt geladen ist
+--- Checks whether the Neo-tree tests source is loaded correctly
 ---@return boolean success
 ---@return string|nil error_msg
 function M.check_consumer()
-  -- 1. Prüfe ob neotest.consumers.neotree existiert
+  -- 1. Check that neotest.consumers.neotree exists
   local consumer_ok, consumer = pcall(require, "neotest.consumers.neotree")
   if not consumer_ok then
     return false, "Consumer module not found: neotest.consumers.neotree"
   end
 
-  -- 2. Prüfe Typ
+  -- 2. Check its type
   if type(consumer) ~= "function" then
     return false,
       string.format("Consumer has unexpected type: %s (expected: function)", type(consumer))
   end
 
-  -- 3. Prüfe ob Neotest setup ausgeführt wurde
+  -- 3. Check that Neotest setup has run
   local neotest_ok, neotest = pcall(require, "neotest")
   if not neotest_ok then
     return false, "Neotest not loaded"
   end
 
-  -- 4. Prüfe ob Consumer registriert ist
+  -- 4. Check that the consumer is registered
   if not neotest.config or not neotest.config.consumers then
     return false, "Neotest consumers not configured"
   end
@@ -37,7 +37,7 @@ function M.check_consumer()
     return false, "Neo-tree consumer not registered in neotest.config.consumers"
   end
 
-  -- 5. CRITICAL: Prüfe ob Consumer initialisiert wurde (nicht mehr nur Factory)
+  -- 5. CRITICAL: check that the consumer was initialized (not still the factory)
   local consumer_instance = neotest.config.consumers.neotree
   if type(consumer_instance) == "function" then
     return false, "Consumer is still a factory function (not initialized)"
@@ -51,7 +51,7 @@ function M.check_consumer()
       )
   end
 
-  -- 6. Prüfe ob Neo-tree Source existiert
+  -- 6. Check that the Neo-tree source exists
   local neotree_ok, neotree_sources = pcall(require, "neo-tree.sources.manager")
   if neotree_ok then
     local sources = neotree_sources.get_source_names()
@@ -71,12 +71,12 @@ function M.check_consumer()
   return true, nil
 end
 
---- Führt vollständige Diagnose durch und gibt Bericht aus
+--- Runs the full diagnostic and prints a report
 function M.diagnose()
   local lines = { "=== Neo-tree Tests Consumer Diagnostics ===" }
   lines[#lines + 1] = ""
 
-  -- Schritt 1: Consumer-Modul
+  -- Step 1: consumer module
   local consumer_ok, consumer = pcall(require, "neotest.consumers.neotree")
   lines[#lines + 1] =
     string.format("1. Consumer Module: %s", consumer_ok and "✓ LOADED" or "✗ NOT FOUND")
@@ -85,7 +85,7 @@ function M.diagnose()
   end
   lines[#lines + 1] = ""
 
-  -- Schritt 2: Neotest Config
+  -- Step 2: Neotest config
   local neotest_ok, neotest = pcall(require, "neotest")
   lines[#lines + 1] =
     string.format("2. Neotest: %s", neotest_ok and "✓ LOADED" or "✗ NOT FOUND")
@@ -114,7 +114,7 @@ function M.diagnose()
   end
   lines[#lines + 1] = ""
 
-  -- Gesamtergebnis
+  -- Overall result
   local success, error_msg = M.check_consumer()
   if success then
     lines[#lines + 1] = "✓ ALL CHECKS PASSED"
@@ -134,7 +134,7 @@ function M.diagnose()
   return success
 end
 
---- Registriert Diagnose-Command
+--- Registers the diagnostic command
 function M.setup_command()
   usercmd.create("NeotestValidateConsumer", function()
     M.diagnose()

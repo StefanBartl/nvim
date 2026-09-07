@@ -1,0 +1,1369 @@
+# RULES — Stand der Checklists-Anwendung (WKDBooks/Checklists/regeln)
+
+> **Erledigt (2026-09-07).** Alle 9 Regel-Familien (281 Regeln, 32 Repos)
+> durch — siehe [Fazit](#fazit-alle-9-regel-familien-durchlaufen). Funde
+> ins `WKDBooks`-Regelwerk zurückgeschrieben (Commit `9c71449`). Nach
+> `ERLEDIGT/` verschoben, kein aktiver Tracking-Zustand mehr.
+
+## Table of content
+
+  - [Intro](#intro)
+  - [Überblick: 9 Regel-Familien](#berblick-9-regel-familien)
+  - [Aufwandsschätzung der verbleibenden Tasks](#aufwandsschtzung-der-verbleibenden-tasks)
+  - [✅ LLS-* (34 Regeln) — fertig](#lls-34-regeln-fertig)
+  - [✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig](#sec-23-regeln-sec-01sec-45-fertig)
+  - [✅ DEP-* (7 Regeln) — fertig](#dep-7-regeln-fertig)
+    - [Ergebnis je Repo](#ergebnis-je-repo)
+  - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
+  - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
+  - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
+  - [✅ PRIN-* (37 Regeln) — fertig](#prin-37-regeln-fertig)
+  - [✅ LUA-* (45 Regeln) — fertig](#lua-45-regeln-fertig)
+  - [✅ PERF-* (62 Regeln) — fertig](#perf-62-regeln-in-arbeit)
+  - [Fazit: alle 9 Regel-Familien durchlaufen](#fazit-alle-9-regel-familien-durchlaufen)
+  - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
+
+---
+
+## Intro
+
+Diese Datei trackt **ausschließlich**, welche Regeln aus
+`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\` (`PRINCIPLES.md`,
+`LUA_NVIM.md`, `PERFORMANCE.md`) gegen welche der 32 Personal-Plugin-Repos
+bereits angewendet wurden — nicht die allgemeine Doku-Standardisierung
+(dafür: `LAST_CDX_TASKS_2026-09-05/`). Zweck: in ein paar Wochen, wenn die
+Checklists erneut vollständig durchlaufen werden, hier ansetzen können statt
+bei null anzufangen.
+
+**Quelle der Wahrheit für die Regel-Texte selbst bleibt der Regelkatalog.**
+Diese Datei fasst nur zusammen, was geprüft wurde und was dabei rauskam. Der
+volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
+[`LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md`](./LAST_CDX_TASKS_2026-09-05/P5_WIEDERHOLUNGSLAEUFE_2026-09-05.md).
+
+---
+
+## Überblick: 9 Regel-Familien
+
+| Familie | Regeln | Datei | Status |
+|---|---|---|---|
+| `LLS-*` | 34 | (LuaLS-Diagnostics, kein Katalog-File — mechanisch per Scan-Tool) | ✅ **fertig** — alle 32 Repos auf 0 |
+| `SEC-*` | 23 (`SEC-01`…`SEC-45`, lückenhaft nummeriert) | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft |
+| `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
+| `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
+| `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
+| `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
+| `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
+| `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
+| `PERF-*` | 62 | `PERFORMANCE.md` | ✅ **fertig** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`/`82`), 2 Funde notiert (reposcope.nvim `PERF-46`, Frecency-Duplikation `PERF-52`) |
+
+**Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
+listet Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte
+(`- \`ERR-10\` …`) in nachfolgenden Unterabschnitten. Ein erster Grep-Versuch
+fing nur Tabellenzeilen und hielt `ERR-*` fälschlich für 7 Regeln (statt 34) —
+korrigiert per:
+
+```bash
+for f in $REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/*.md; do
+  grep -oE '`[A-Z]+-[0-9]+`' "$f" | tr -d '`' | sort -u
+done | sed -E 's/-[0-9]+$//' | sort | uniq -c | sort -rn
+```
+
+**Nachtrag `PERF-*` (2026-09-07):** der ursprünglich eingetragene Wert (57)
+war eine frühe Schätzung, nie anhand des tatsächlichen Katalogs korrigiert.
+Ein präziser Grep über `PERFORMANCE.md` findet **62** `PERF-XX`-IDs
+(`PERF-01`…`16`, `20`…`27`, `40`…`53`, `60`…`65`, `70`…`75`, `80`…`91`,
+lückenhaft nummeriert wie schon bei `SEC-*`/`ERR-*`) — anders als beim
+`LUA-67`/`68`-Fund gibt es hier kein Tabellenformat-Artefakt, die 62 sind
+real. Wert oben und in der Aufwandsschätzung korrigiert.
+
+**Gesamtaufwand-Einordnung** (Pilot `buffer-ctx.nvim`, 2026-09-05, siehe
+P5-Doku §8.2 Pilot-Abschnitt): eine vollständige Prüfung aller ~250
+Einzelregeln gegen alle 32 Repos ist ein **mehrtägiges bis mehrwöchiges
+Vorhaben**. Empfehlung, die sich bislang bewährt hat: eine Regel-Familie nach
+der anderen, komplett über alle 32 Repos, statt ein Repo gegen alle Familien
+auf einmal — kleinste/mechanischste Familien zuerst.
+
+---
+
+## Aufwandsschätzung — historisch (alle Familien inzwischen fertig)
+
+Diese Sektion war während des laufenden Sweeps die Schätzung für die
+jeweils verbleibenden Familien. Mit `PERF-*` fertig gibt es nichts mehr
+zu schätzen — Zahlen unten als Aufzeichnung stehen gelassen, aktueller
+Stand siehe [Fazit](#fazit-alle-9-regel-familien-durchlaufen) am Ende der
+Datei.
+
+**Der eigentliche Kostentreiber war nicht "Regeln pro Familie", sondern
+"Repo-Durchgänge".** Referenzwert `SEC-*` (23 Regeln, echt
+kontextabhängig): 32 Repo-Durchgänge, an einem Tag durchgezogen (mit bis
+zu 3 parallelen Agenten für die ersten 21 Repos — das Agenten-Limit wurde
+seitdem auf 1 gleichzeitig verschärft). `TS-*` (5 Regeln, rein
+mechanisch) bestätigte den Umkehrschluss: 3 Greps über alle 32 Repos auf
+einmal, <1 Sitzung. `PERF-*` (62 Regeln, vorab als „größte und teuerste"
+eingeschätzt, weil Hotpath-Beurteilung Verständnis von Aufrufhäufigkeit
+statt reinem Pattern-Matching braucht) hat sich am Ende nicht als
+Ausreißer erwiesen: die meisten Teilblöcke (`PERF-01`…`27` Mikrooptimierung,
+diverse Cache-/Async-Architekturregeln) hatten kein scharfes
+Pass/Fail-Kriterium und ließen sich per Spot-Check statt Vollaudit
+abschließen — mechanisch prüfbare Teilregeln (`PERF-07`, `43`, `62`,
+`80`) blieben günstig, wie bei jeder vorherigen Familie.
+
+---
+
+## ✅ LLS-* (34 Regeln) — fertig
+
+**Methode:** `scripts/luals-scan/scan.sh` — mechanischer Vorher/Nachher-Scan,
+kein Katalog-Text nötig (die Regeln *sind* LuaLS-Diagnostics).
+
+**Ergebnis:** Alle 32 Repos bei 0 Befunden.
+
+- **20 von 32 Repos** waren beim Start bereits durch einen unabhängigen
+  `fix(luals)`-Durchgang auf 0 (per `git log --grep "fix(luals)"` verifiziert,
+  nicht nur behauptet).
+- **12 Repos + lsp.nvim** (13 insgesamt) wurden am 2026-09-05 gezielt
+  nachgezogen:
+
+| Repo | Vorher | Befund |
+|---|---|---|
+| cascade.nvim | 0 | bereits sauber |
+| casedesk.nvim | 0 | bereits sauber |
+| color_my_ascii.nvim | 0 | bereits sauber |
+| github_stats.nvim | 0 | bereits sauber |
+| language.nvim | 0 | bereits sauber |
+| replacer.nvim | 0 | bereits sauber |
+| lsp.nvim | 0 | zwischenzeitlich unabhängig fertig geworden |
+| documentation.nvim | 1 | `opts.hover` fehlte auf `Documentation.Opts` |
+| hover.nvim | 1 | `vim.deepcopy` auf einem Feld, das auch `boolean` sein darf |
+| insights.nvim | 2 | dieselbe Lücke wie documentation.nvim, zwei Klassen |
+| pickers.nvim | 1 | bewusste Unterdrückung (Test prüft Abwesenheit von `search_dirs`), kein Bug |
+| reposcope.nvim | 1 | `"hover"` fehlte im `ConfigOptionKey`-Enum |
+| markdown.nvim | 35 gemeldet | **Messartefakt** — Scan-Tool injiziert `hover.nvim`s Library nicht; im echten Editor 0 Diagnostics. Für `scripts/luals-scan` vorgemerkt, nicht im Plugin behoben |
+
+Fünf echte Ein-Zeiler-Funde, alle aus derselben Ursache: die neue,
+optionale `hover.nvim`-Integration fehlte in der jeweiligen Typdeklaration.
+
+---
+
+## ✅ SEC-* (23 Regeln, `SEC-01`…`SEC-45`) — fertig
+
+**Methode:** Runden 1–7 zu 3 parallelen Agenten (je einer pro Repo, vollen
+Katalog geprüft, echte Ein-Zeiler-Funde selbst behoben); ab Runde 8
+(Sitzungslimit) ein Repo pro Durchgang, ohne Agent.
+
+**Ergebnis: alle 32 Repos geprüft, 18 mit mindestens einem echten Fund.**
+
+| Repo | Befund | Regel(n) |
+|---|---|---|
+| buffer-ctx.nvim | 0 | — |
+| cascade.nvim | 0 (keine SEC-Angriffsfläche) | — |
+| casedesk.nvim | fehlendes `cwd` auf zwei `vim.system`-Aufrufen | SEC-02 |
+| cmdlog.nvim | 0 (Lücke bereits durch `redact_patterns` geschlossen) | — |
+| color_my_ascii.nvim | `:Fence run`/`format` ohne `cwd` | SEC-02 |
+| dap.nvim | `zig build`-Spawn ohne `cwd` | SEC-02 |
+| debugging.nvim | Statuszeile spleißte Filetype/Colorscheme ungeschützt in Vimscript-`echo` | SEC-03 |
+| diff.nvim | HTTP-Fetch hatte Timeout, aber kein Byte-Limit | SEC-21 |
+| documentation.nvim | Manifest-Restore prüfte nur Top-Level-Form, nicht Feldtypen | SEC-33 |
+| emojis.nvim | 0 | — |
+| fileops.nvim | 0 | — |
+| filetree.nvim | 0 (inkl. PowerShell-/AppleScript-Escaping verifiziert) | — |
+| **github_stats.nvim** | **GitHub-Token im Shell-String, sichtbar im Prozess-Argv**; `fetch_json` ganz ohne Timeout | **SEC-01/03/10**, SEC-21 |
+| gopath.nvim | Lua-Patterns aus Treesitter-Text ungeschützt (×2); persistiertes JSON ungeprüft übernommen | SEC-30 ×2, SEC-33 |
+| hover.nvim | 0 (Erstdurchlauf, durchgehend defensiv gebaut) | — |
+| **images.nvim** | **Linux-Clipboard-Paste baute Shell-String mit Zielpfad in einfachen Anführungszeichen — echte Command-Injection-Fläche** | **SEC-01/03** |
+| insights.nvim | sequentielle `git`/`rg`-Aufrufe ohne `cwd` | SEC-02 |
+| language.nvim | gemeldetes Wort ungeschützt in `:spellgood!`-String gespleißt | SEC-01/03 |
+| lib.nvim | `spawn_shell_command` ohne `cwd`; `curl.download` löschte abgeschnittene Datei bei Fehlschlag nicht | SEC-02, SEC-21 |
+| lsp.nvim | `prettier_format` spawnte ohne `cwd` | SEC-02 |
+| markdown.nvim | 0 | — |
+| mdview.nvim | Release-Downloads ohne Timeout/Byte-Limit; kaputte Binary hätte Checksum-Prüfung umgangen | SEC-20/21 |
+| open.nvim | 0 im Repo — **aber Fund im mitbenutzten `lib.nvim`** (`win_reveal.ps1`, `"` in WSL-Pfad hätte `explorer.exe`-Argumente einschmuggeln können) | SEC-01/03 |
+| pdfport.nvim | 0 (durchweg vorbildlich — API-Key nie über argv) | — |
+| pickers.nvim | `additional_args` nicht shellescaped (eine Lücke in sonst durchgängigem Muster) | SEC-03 |
+| recommender.nvim | 0 (kein Prozess-Spawn im ganzen Repo) | — |
+| replacer.nvim | Checkpoint-Manifest ungeprüft → Arbitrary-File-Write via `:ReplaceUndo` möglich | SEC-33 |
+| **reposcope.nvim** | **Keines der drei Network-Tools (curl/wget/gh) hatte je einen Timeout — breitester Einzelfund der Welle** | **SEC-21, systemisch** |
+| runtime-analysis.nvim | 0 (kein Prozess-Spawn im Repo selbst) | — |
+| sandbox.nvim | 0 (durchgängig argv-basiert über alle drei Engines) | — |
+| sessions.nvim | 0 (liest `.git/HEAD` direkt statt zu spawnen) | — |
+| spotlight.nvim | 0 (Snapshot-Restore vorbildlich: Regex immer aus rohem Text neu gebaut) | — |
+
+**Fett = reale Schwachstellen, nicht nur Kosmetik** (3 von 18 Funden).
+
+**Nebenbefund außerhalb der Familie:** `pdfport.nvim`s `platform.open_cmd()`
+lieferte unter Windows das bloße Wort `"start"` (cmd.exe-Builtin, keine
+Datei) — ein echter Funktionsbug, als Follow-up-Task ausgelagert statt
+mitgefixt, inzwischen vom Autor selbst behoben (`7d5b9ec`,
+`lib.nvim.cross.open_default`).
+
+---
+
+## ✅ DEP-* (7 Regeln) — fertig
+
+**Methode:** rein mechanisch — ein Grep pro Regel-Pattern über alle 32 Repos
+auf einmal, kein Agent nötig.
+
+| Regel | Muster | Treffer |
+|---|---|---|
+| `DEP-01` | `vim.loop` (ohne `vim.uv or`-Fallback) | 5 Repos |
+| `DEP-02` | `termopen()` | 3 Repos (5 Aufrufstellen) |
+| `DEP-03` | `nvim_buf_add_highlight()` | 0 |
+| `DEP-04` | `nvim_err_writeln()` / `nvim_out_write()` | 0 |
+| `DEP-05` | `sign_define()` außerhalb Diagnostics | 0 (Treffer sind DAP-/eigene Plugin-Signs oder korrekt `<0.10`-gegated) |
+| `DEP-06` | `vim.tbl_flatten()` | 0 |
+| `DEP-07` | `nvim_buf_get_option()` | 0 (nur eine Prosa-Erwähnung in einer README) |
+
+---
+
+### Ergebnis je Repo
+
+| Repo | Regel | Status | Commit |
+|---|---|---|---|
+| gopath.nvim | DEP-01 | ✅ gefixt | `a33f515`, `b53bc0b` |
+| markdown.nvim | DEP-01 (3 Module) | ✅ gefixt | `9fd5d6c` |
+| mdview.nvim | DEP-01 (4 Module) | ✅ gefixt | `997fe47` |
+| reposcope.nvim | DEP-01 | ✅ gefixt | `fe06de7` |
+| github_stats.nvim | DEP-01 (`config/init.lua`, `storage.lua`) | ✅ gefixt | `7947a2d` |
+| debugging.nvim | DEP-02 (`tools/proc_trace.lua:135`) | ✅ gefixt | `254eca0` |
+| filetree.nvim | DEP-02 (`features/system/shell_run/init.lua:76`) | ✅ bereits korrekt gegatet — Grep-Fehlalarm (String taucht nur in Kommentar/Fallback-Zweig auf) | — |
+| sandbox.nvim | DEP-02 (5 Stellen: docker/nerdctl/podman `exec_in_container.lua`, `wsl/exec_in_distro.lua`, `bindings/usrcmds/container_commands_buffer.lua`) | ✅ gefixt (inkl. Testfix `exec_workdir_spec.lua`, volle Suite grün) | `fd2646c` |
+
+**Fix-Muster DEP-01:** `vim.loop` → `vim.uv or vim.loop`, passend zur bereits
+im jeweiligen Repo etablierten Konvention (nicht bloßes `vim.uv`, auch wenn
+der Floor 0.10+ ist — Konsistenz mit dem Rest der Datei/des Repos hat
+Vorrang). `mdview.nvim` hat sogar einen echten 0.9+-Floor, dort ist der
+Fallback nicht nur Konvention, sondern zwingend.
+
+**Fix-Muster DEP-02:** `vim.fn.has("nvim-0.11") == 1` gate →
+`vim.fn.jobstart(cmd, { term = true })`, sonst `---@diagnostic
+disable-next-line: deprecated` + `vim.fn.termopen(cmd)`. Alle drei
+betroffenen Repos haben einen Floor < 0.11 (debugging.nvim 0.9+,
+filetree.nvim/sandbox.nvim 0.10+), daher ist der Fallback-Zweig zwingend,
+nicht nur Kosmetik. **Falle:** ein Test, der nur `vim.fn.termopen` mockt,
+bricht lautlos, sobald die lokale/CI-nvim-Version ≥0.11 ist und der Code
+in den `jobstart`-Zweig läuft (echter Spawn-Versuch statt Mock) —
+`sandbox.nvim`s `exec_workdir_spec.lua` musste deshalb beide Funktionen
+stubben.
+
+**8 von 8 betroffenen Repos durch — DEP-* komplett fertig.**
+
+---
+
+## ✅ TS-* (5 Regeln) — fertig
+
+**Methode:** rein mechanisch, kein Agent nötig — `TS-01`…`TS-03`/`TS-05`
+setzen eigene Query-Dateien bzw. Query-Strings voraus, `TS-04` einen
+Threadpool-Job, der `vim.treesitter` von außerhalb des Main-Threads aufruft.
+Alle vier Muster lassen sich per Grep über alle 32 Repos auf einmal
+entscheiden:
+
+```bash
+find <32 Repos> -type d -iname queries          # eigene Query-Dateien (.scm)?
+grep -rlE 'query\.parse|#match\?|#any-match\?|#eq\?|#has-parent\?|;; extends|;; inherits' --include='*.lua' <32 Repos>
+grep -rln 'new_work|uv_work' --include='*.lua' <32 Repos>   # TS-04: Treesitter im Threadpool?
+```
+
+**Ergebnis: alle 32 Repos geprüft, 0 Befunde.**
+
+| Regel | Worum es geht | Befund |
+|---|---|---|
+| `TS-01` | Directives vs. Predicates | Kein Repo nutzt Directives (`#set!`/`#offset!`/`#gsub!`/`#trim!`) überhaupt; das einzige Predicate im ganzen Fleet ist ein korrektes `#eq?` (`documentation.nvim/lua/documentation/core/check.lua:768`) |
+| `TS-02` | `#match?` vs. `#any-match?` | Kein Repo nutzt `#match?`/`#any-match?` auf einem quantifizierten Capture — Regel greift nirgends |
+| `TS-03` | `;; extends`/`;; inherits` | **Kein einziges Repo hat eine eigene `queries/`-Datei** (`find -iname queries` über alle 32 Repos: leer) — Regel ist repo-weit gegenstandslos |
+| `TS-04` | Kein `vim.treesitter` außerhalb des Main-Threads | Kein Treffer für `uv.new_work`/`vim.loop.new_work`/Threadpool im ganzen Fleet. Die Repos mit echter TS-lastiger Analyse (`documentation.nvim`, `gopath.nvim`, `insights.nvim`, `recommender.nvim`) parsen synchron auf dem Main-Thread oder lagern auf externe Prozesse aus (`jobstart`) — genau das vom Regel-Text empfohlene Muster |
+| `TS-05` | Captures sind nie vordefiniert | Ohne eigene `queries/highlights.scm` (siehe `TS-03`) kann kein Repo diese Regel überhaupt verletzen |
+
+14 Fundstellen mit `vim.treesitter.query.parse(...)`-Inline-Query-Strings
+existieren (v. a. `documentation.nvim`, plus `gopath.nvim`, `insights.nvim`,
+`recommender.nvim`, `debugging.nvim`) — alle sind reine Lua-Struktur-Parses
+(`(identifier) @id`, `(function_declaration ...) @decl` u. ä.) für
+Code-Analyse, keine Highlight-Queries, und keiner davon verletzt eine der
+fünf Regeln.
+
+**Fazit:** `TS-*` ist eine Familie, die für dieses Fleet strukturell nicht
+greift — kein Repo bringt eigene Treesitter-Query-Dateien mit. Bestätigt die
+Einschätzung aus der Aufwandsschätzung oben (ein Sitzung, meist N/A).
+
+---
+
+## ✅ ERR-* (34 Regeln) — fertig
+
+**Methode:** anders als `DEP-*`/`TS-*` sind die meisten `ERR-*`-Regeln
+kontextabhängig und brauchen echtes Lesen des Quelltexts — direkt in der
+Unterhaltung statt per Subagent, damit der Fortschritt live nachvollziehbar
+bleibt (siehe `feedback_agent_limits_and_language`-Notiz in Claudes Memory:
+„repo-für-repo, lieber ohne Subagent, wenn es passt"). Genau wie bei `SEC-*`
+zählen nur **echte, demonstrierbare Bugs** (falsches Ergebnis, Datenverlust,
+Absturz) als Fund — reine Layering-Abweichungen (z. B. `notify()` in einem
+„core"-Modul, ohne dass daraus ein falsches Verhalten folgt) werden notiert,
+aber nicht als Bug gegen jedes einzelne Repo gefixt; das wäre ein
+Architektur-Umbau, kein Ein-Zeiler-Fix, und käme einer Design-Entscheidung
+gleich, die nicht mal eben nebenbei getroffen wird.
+
+**Zwei Muster wurden zusätzlich fleet-weit per Grep über alle 32 Repos
+geprüft (nicht nur in den einzeln gelesenen Repos), weil sie sich mechanisch
+fassen lassen:**
+
+1. **Die `cond and A>B or C<D`-Falle** (der Bug-Typ, der in buffer-ctx.nvim
+   und zweimal in fileops.nvim gefunden wurde, s.u.) — ein
+   `table.sort`-Comparator-Idiom, bei dem der mittlere Zweig selbst ein
+   Boolean ist und dadurch bei `false` in den `or`-Zweig durchfällt.
+   **Wichtige Falle beim Grep selbst:** die erste Fassung des Patterns
+   (einfache Bezeichner, keine Methodenaufrufe) übersah fileops.nvims Form
+   `a:lower() < b:lower()`, weil `:`/`()` nicht in der Zeichenklasse waren —
+   erst die erweiterte Fassung fand beide Stellen:
+   `\band\b\s*\(?[\w.:()]+\s*[<>=~]=?\s*[\w.:()]+\)?\s+\bor\b\s*\(?[\w.:()]+\s*[<>=~]=?\s*[\w.:()]+\)?`.
+   Nach beiden Fixes: **0 verbleibende Treffer im ganzen Fleet** (die
+   restlichen 6 Treffer sind reine Boolean-Kombinationen in `if`-Bedingungen,
+   keine Wert-Ternaries, einzeln geprüft und harmlos).
+2. **Das `X.read(...) or {...Stub...}`-vor-`write()`-Muster**, das in
+   casedesk.nvim zum echten Datenverlust-Bug führte (s.u.): Grep
+   `\.read\([^)]*\)\s*or\s*\{` über alle 32 Repos — **Treffer nur in
+   casedesk.nvim** (3 Stellen, siehe unten), sonst nirgends im Fleet.
+
+**Lehre für den Rest der Familie:** ein Grep-Pattern für einen Bug-Typ, der
+bei Repo 1 in einfacher Form auftaucht, sollte nicht als „fleet-weit
+erledigt" gelten, bevor es auch gegen Methodenaufruf-Varianten (`a:foo()`),
+Klammern und Indexzugriffe (`t[i]`) getestet wurde — genau das hat den
+fileops.nvim-Fund beim ersten Durchgang durchrutschen lassen.
+
+**Ab Repo 11 (github_stats.nvim/gopath.nvim/documentation.nvim): auf
+explizite Nutzer-Anweisung 3 parallele Agenten statt Direktarbeit in der
+Unterhaltung** — ein Agent pro Repo, volle Regel-Familie inkl. Fix-Pflicht,
+Testsuite, `git stash`-Verifikation des Regressionstests und
+Commit+Push, mit derselben Vorgehensweise wie in dieser Datei dokumentiert.
+Zwei weitere, bis dahin unbekannte Bug-Unterarten kamen dabei zum
+Vorschein — s. Tabelle: **curated Listen indexweise statt wholesale
+gemergt** (gopath.nvim, ERR-52 — bislang nur aus dem Regeltext bekannt, nie
+real gefunden) und **ein Config-Accessor gibt die lebende Tabelle per
+Referenz zurück, ein Caller sortiert sie danach in-place** (github_stats.nvim
+— eine neue Variante der Referenz-Aliasing-Fallen, nicht in ERR-52/53 exakt
+so benannt, aber dieselbe Familie: geteilter Zustand, der sich unbemerkt
+verändert).
+
+### Ergebnis je Repo (alle 32/32)
+
+| Repo | Befund | Regel(n) | Commit |
+|---|---|---|---|
+| **buffer-ctx.nvim** | **`:Format sort -r`/`-r -n` sortierte falsch** — Comparator `reverse and na > nb or na < nb` fiel bei `na < nb` in den `or`-Zweig und lieferte für praktisch jedes ungleiche Paar `true` zurück (kein gültiges `table.sort`-Kriterium mehr) | **ERR-60** | [`2232614`](https://github.com/StefanBartl/buffer-ctx.nvim/commit/2232614) |
+| **casedesk.nvim** | **`meta.patch()` konnte ein kaputtes `.case.json` durch einen fast leeren Stub ersetzen** — `meta.read()` gab für „fehlt" und „kaputt" identisch `nil` zurück, `patch()` behandelte beides gleich und schrieb bei jedem Einzelfeld-Update (SLA-Priorität, `last_reply_sent`, ...) einen `{case,year,links}`-Stub, der Titel/Firma/Notizen/... unwiderruflich verwarf | **ERR-11** | [`ed1a5f0`](https://github.com/StefanBartl/casedesk.nvim/commit/ed1a5f0) |
+| **fileops.nvim** | **`case_insensitive`-Cycle-Navigation sortierte an zwei Stellen falsch** (`list_files` + der „current file not in list"-Fallback in `navigate`) — Comparator `ci and (a:lower()<b:lower()) or (a<b)` fiel bei `ci=true` und `a:lower()>=b:lower()` in den case-SENSITIVEN `or`-Zweig zurück; für Groß-/Kleinschreibungs-Paare lieferten beide Vergleichsrichtungen `true` (ungültiger Comparator) | **ERR-60** | [`00ba2fc`](https://github.com/StefanBartl/fileops.nvim/commit/00ba2fc) |
+| **documentation.nvim** | **`trail_store.load()` konnte bei kaputtem `trails.json` alle Pins/gespeicherten Trails aus JEDEM Repo verlieren** — „Datei fehlt" und „Datei korrupt" kollabierten beide auf ein leeres `db = {}`; `flush()` schreibt immer die GANZE Datei (alle Repos in einer Datei), also hätte der nächste Pin (egal in welchem Repo) die kaputte Datei durch eine fast leere ersetzt. Anders gelöst als bei casedesk.nvim (dort: Schreiben verweigern) — hier: Backup nach `trails.json.corrupt` vorm nächsten Überschreiben, weil ein hartes Verweigern *jeden* Pin in *jedem* Repo blockiert hätte, bis jemand manuell eingreift | **ERR-11** | [`2e0b57b`](https://github.com/StefanBartl/documentation.nvim/commit/2e0b57b) |
+| **github_stats.nvim** | **`config.get_repos()` gab die lebende `config.repos`-Tabelle per Referenz zurück**, und `dashboard.render.sort_repos()` sortiert `state.repos` (die exakt diese Tabelle ist) bei JEDEM Rendern in-place — das bloße Öffnen des Dashboards hat die Repo-Reihenfolge der Config für den Rest der Session dauerhaft verändert, inkl. `fetcher.fetch_all`, Export „all", Tab-Completion, `health.lua`, `retention.lua` | **ERR-52/53-Familie** (Referenz-Aliasing) | [`ffadc2d`](https://github.com/StefanBartl/github_stats.nvim/commit/ffadc2d) |
+| **gopath.nvim** | **Config-Merge mergte curated Listen indexweise statt wholesale** — `deep_merge_into` rekursierte in JEDES Tabellenfeld gleich, auch reine Arrays; ein Nutzer-Override `order = {"treesitter"}` (auf einen einzigen Resolver einschränken) ergab real `{"treesitter","treesitter","builtin"}` — `builtin` lief trotz explizitem Ausschluss weiter. Dasselbe für `excluded_dirs` (7 Default-Einträge, 6 blieben trotz Override bestehen) | **ERR-52** (der bislang nur aus dem Regeltext bekannte, nie real gefundene Fall) | [`1e41349`](https://github.com/StefanBartl/gopath.nvim/commit/1e41349) |
+| cascade.nvim | 0 (durchgängig sauber: `table.sort`-Comparatoren explizit if/else, Config-Normalisierung degradiert Einzelwerte statt abzubrechen (ERR-22-Muster), Autor-Kommentar bestätigt „synchronous-only, kein `defer_fn`") | — | — |
+| cmdlog.nvim | 0 echter Bug — `core/store.lua`/`core/favorites.lua` notifizieren direkt aus „core"-Modulen (ERR-04-Layering-Abweichung, aber kein falsches Verhalten), nicht gefixt | (ERR-04, notiert) | — |
+| color_my_ascii.nvim | 0 (Debounce-/Cache-Manager und die async `:Fence format`/`run`-Callbacks vorbildlich per Extmark + `nvim_buf_is_valid` gegen Stale-State abgesichert) | — | — |
+| dap.nvim | 0 (Coroutine-Resume-Pfade für Attach-Picker/Zig-Build sauber dokumentiert, `cwd`-Fix aus SEC-* bestätigt noch vorhanden) | — | — |
+| debugging.nvim | 0 (defer_fn-Callbacks in `views/display.lua`/`bindings/autocmds.lua` validieren Fenster-Handles durchgängig neu — das im Katalog selbst zitierte ERR-33-Positivbeispiel) | — | — |
+| diff.nvim | 0 (`render.three_way`/`side_by_side`/`inline` validieren `origin_win` am Ausführungszeitpunkt, auch nach verketteten Async-Resolves für Drei-Wege-Diffs) | — | — |
+| emojis.nvim | 0 (Preview-vor-Mutation-Callback in `actions.lua` validiert den Buffer sowohl vorm Löschen des Preview-Highlights als auch in der eigentlichen Mutation erneut) | — | — |
+| filetree.nvim | 0 — **124 Dateien, größtes bisher geprüftes Repo dieser Familie**: Checklist + gezielte Stichproben in den Risikobereichen (Batch-Rename ist best-effort statt fail-fast/ERR-42, `refs/apply.lua` verifiziert jede Zeile gegen den aktuellen Inhalt vorm Schreiben/ERR-30, rekursive Walks delegieren an `lib.nvim.fs.collect_recursive` statt eigener Logik — Symlink-Zyklus-Schutz dort zu prüfen, nicht hier noch mal), kein file-für-file-Read aller 124 Dateien | — | — |
+| hover.nvim | 0 — sehr gründlich geprüft (1971-Zeilen-`init.lua` komplett gelesen): Generation-Counter für Async konsequent über `show`/`scroll`/`resize`/`zoom`/`nav`/`zen`, Dedup nach Key in den Preview-Modulen (Browser/Download/Konvertierung wird nicht doppelt gestartet), Code kommentiert seine eigene Regel-Konformität explizit (`ERR-04`, `ERR-10`, `ERR-20`, `ERR-52`, `ERR-64` u.a. direkt im Quelltext referenziert) | — | — |
+| images.nvim | 0 — ein vermuteter ERR-52-Fund (`extensions`-Liste indexweise gemergt) wurde gebaut, per Repro-Skript gegen echtes Neovim-0.12-Verhalten verifiziert und dann korrekt verworfen: **`vim.tbl_deep_extend` ersetzt nicht-leere Listen bereits komplett, mergt nicht indexweise** — der Fix wäre ein No-Op gewesen. Wichtige Klarstellung für den Rest der Familie (s. Kasten unten) | — | — |
+| **insights.nvim** | **`config.setup()` mergte per `tbl_deep_extend("force", defaults, opts)` ohne vorheriges `vim.deepcopy(defaults)`** — nicht angefasste Unterfelder (z. B. `metrics`, wenn nur `symbols` überschrieben wird) blieben dieselbe Tabellen-Referenz wie in `DEFAULTS`; `expand_paths(current)` mutiert genau solche Unterfelder in-place (`cache.dir`, `output_file`, `outdir`) und hätte damit `DEFAULTS` für den Rest der Session und jeden späteren `setup()`-Aufruf verseucht. Aktuell nur durch Zufall maskiert (`expand_path()` ist bei den aktuellen absoluten `stdpath()`-Defaults ein No-Op), aber jeder künftige relative/`~`-Default oder jeder Caller, der in eine von `config.get()` zurückgegebene Tabelle schreibt, hätte geleakt | **ERR-51/53** | [`22e852e`](https://github.com/StefanBartl/insights.nvim/commit/22e852e) |
+| **language.nvim** | **`spell/core/actions.lua`s `replace_at()` schrieb eine Ersetzung an eine ungeprüfte Byte-Range** — der Vorschlags-Picker öffnet async, jede Buffer-Änderung in der Zwischenzeit (anderes Fenster, Undo, ein LSP-Fix) lässt `(lnum, col, end_col)` auf inzwischen anderen Text zeigen; `nvim_buf_set_text` überschrieb dann lautlos, was jetzt dort stand, statt des beabsichtigten Worts | **ERR-30** | [`f3ee2d6`](https://github.com/StefanBartl/language.nvim/commit/f3ee2d6) |
+| **lib.nvim** | **`fs.collect_recursive` folgte Symlinks in rekursiven Walks** — `walk`/`walk_async` fielen bei fehlendem/`"link"`-`kind_hint` auf `fs_stat` zurück, das Symlinks auflöst statt sie zu erkennen; ein Symlink-Zyklus (`dir/sub/loop -> dir`) rekursiert ohne echte Abbruchbedingung — reproduziert mit echtem Symlink, 192 Einträge vor Windows' Pfadlängen-Limit. **Fleet-weite Wirkung**: filetree.nvims `util/fs.lua`/`refs/scan.lua` delegieren direkt hierher (verifiziert per Grep über alle Repos) | **ERR-34** | [`37b2af8`](https://github.com/StefanBartl/lib.nvim/commit/37b2af8) |
+| **lsp.nvim** | **„Organize imports on save" (Java, Astro) lief async in `BufWritePre`** — `vim.lsp.buf.code_action({apply=true})` feuert den Request nur und kehrt sofort zurück, `BufWritePre` (und damit das eigentliche Schreiben) ist längst durch, bevor die Server-Antwort samt Edit ankommt; das Feature organisierte Imports faktisch immer einen Save zu spät, gegen den Buffer-Zustand von *nach* dem Schreiben. TypeScript hatte dafür schon eine synchrone Handumbau-Lösung (`lsp.buf_request_sync`) mit warnendem Docstring — Java/Astro hatten sie nie bekommen | **ERR-30/44** | [`847da5b`](https://github.com/StefanBartl/lsp.nvim/commit/847da5b) |
+| **markdown.nvim** | **`rg_files()` kollabierte jeden `rg`-Exitcode >1 (verschwundene Wurzel, Permission Denied, Prozess killed) auf dieselbe leere Liste wie ein echtes „keine Treffer"** — `find_references`/`find_references_async` meldeten im `core.link_delete`-Bestätigungsdialog „0 andere Links zeigen darauf", obwohl die Suche fehlgeschlagen war, nicht ergebnislos — eine Datei konnte so unter noch bestehenden Links weggelöscht werden, die der Scan nie zu sehen bekam | **ERR-11-Familie** (fehlgeschlagen vs. leer kollabiert) | [`ebbdbf4`](https://github.com/StefanBartl/markdown.nvim/commit/ebbdbf4) |
+| **mdview.nvim** | **`resync()`s async Callback (`browser.behavior = "reuse"`) griff nach `ws_client.wait_ready` (bis 15s, während ein frisch gebauter Relay-Binary vom Virenscanner geprüft wird) mit `nvim_buf_get_lines` auf einen zwischenzeitlich per `:bwipeout` ungültig gewordenen Buffer zu** — warf „Invalid buffer id" statt den veralteten Push still zu überspringen | **ERR-33** | [`2d9abd6`](https://github.com/StefanBartl/mdview.nvim/commit/2d9abd6) |
+| **open.nvim** | **`context.resolve()`s Keyword-Lookup `type(kw)=="function" and kw() or expand_path(tostring(kw))`** — die klassische `and/or`-Falle: liefert die Resolver-Funktion legitim `nil` (z. B. `pwsh_profile`, wenn weder `pwsh` noch `powershell` im PATH steht), fällt der ganze Ausdruck in den `or`-Zweig und `expand_path()`t den **stringifizierten Funktionswert** (`"function: 0x7f..."`) statt des Ergebnisses — `:Open` versuchte danach, einen Fantasie-Pfad zu öffnen | **ERR-60** | [`a51c858`](https://github.com/StefanBartl/open.nvim/commit/a51c858) |
+| pdfport.nvim | 0 (durchgängig sauber, wie schon bei SEC-*: `core/dispatcher.lua`/`core/composer.lua` wrappen `callback` konsequent für Cleanup auf jedem Exit-Pfad statt nur dem Erfolgspfad, `config.get()` gibt zwar die lebende Tabelle zurück, aber kein Konsument mutiert sie — nur `pdfport.get_config()` als Public API deep-copy't explizit vorm Herausgeben, Registry-Getter (`all_backends`/`all_producers`) liefern immer frische Arrays, kein `table.sort` mit Ternary-Comparator) | — | — |
+| pickers.nvim | 0 — **70 Dateien, zweitgrößtes bisher geprüftes Repo dieser Familie**: Checkliste + gezielte Stichproben (`smart/frecency.lua`s Legacy-Store-Migration verweigert Überschreiben eines nicht-leeren Stores, `config/init.lua`s `M.apply()` validiert jedes Feld einzeln mit Warn-und-Behalten statt Absturz/stillem Datenverlust — das ERR-22-Positivbeispiel, `smart/score.lua`s `table.sort`-Comparator ist explizit if/else, alle drei Engine-`extract/*.lua`-Pfad-Extraktoren (fzf/snacks/telescope) behandeln fehlende Felder explizit statt zu raten), kein file-für-file-Read aller 70 Dateien | — | — |
+| recommender.nvim | 0 (durchgängig sauber: `project.lua`s Scan-Generation-Counter für Async-Verzeichnis-Walk/Datei-Reads verhindert exakt die Race, die anderswo in dieser Familie echte Bugs waren; `bindings/usrcmds.lua`/`float/keymaps.lua` validieren Buffer-/Fenster-Handles konsequent neu vorm Zugriff in jedem `vim.schedule`-Callback; `config/init.lua` deep-copy't `DEFAULTS` vorm Mergen statt der insights.nvim-Falle zu wiederholen). Ein bereits im Code selbst per `CDX`-Kommentar markierter toter Zustand (`_pending_insert` in `float/keymaps.lua`) ist ein Cleanup-Hinweis, kein Bug | — | — |
+| **replacer.nvim** | **`history.lua`s `M.load()` kollabierte „keine Datei" und „Datei kaputt" auf dieselbe leere Historie** — `M.add()` schreibt immer die GANZE Datei, also hätte der nächste `:Replace`-Apply die kaputte `history.json` durch eine frische Ein-Eintrag-Historie ersetzt, alle vorherigen Suchen unwiederbringlich verloren. Dieselbe Bugklasse wie zuvor bei documentation.nvim, mit derselben Lösung (Backup nach `.corrupt` vorm nächsten Überschreiben). 40 Dateien/8022 LOC insgesamt — `apply.lua`s gechunkte Async-Apply (neuestes Feature), `checkpoint.lua` (bereits SEC-33-gehärtet) und `batch.lua` gezielt mitgeprüft, sonst Checkliste + Stichproben wie bei den anderen Großrepos dieser Familie | **ERR-11-Familie** | [`66f1c88`](https://github.com/StefanBartl/replacer.nvim/commit/66f1c88) |
+| **reposcope.nvim** | **`state/favorites_state.lua`s `M.load()` kollabierte „keine Datei" und „Datei kaputt" auf dieselbe leere Liste** — `M.toggle()` schreibt immer die GANZE Datei, also hätte der nächste favorisierte/entfavorisierte Eintrag `favorites.json` durch eine Ein-Eintrag-Liste ersetzt, alle vorher gemerkten Repos unwiederbringlich verloren. Dieselbe Bugklasse zum dritten Mal in dieser Familie (documentation.nvim, replacer.nvim), dieselbe Lösung. **Größtes bisher geprüftes Repo: 106 Dateien/12350 LOC** — Provider-Trio (github/gitlab/codeberg) per Diff auf Drift geprüft: einzige Abweichung (`needs_api` nur bei GitHub) ist laut Commit `ae602e8` eine bewusste, dokumentierte Entscheidung, kein Bug. `state/session_state.lua` hat denselben Kollaps, aber ohne Load-Modify-Save-Zyklus (jedes `:Reposcope session save` überschreibt ohnehin absichtlich) — kein Bug. `state/query_stats.lua` hat exakt dieselbe Struktur wie der gefixte Fund, aber als reine Häufigkeits-Statistik niedrigschwellig genug (vergleichbar mit einem Frecency-Cache), um bewusst ungefixt zu bleiben | **ERR-11-Familie** | [`92345e0`](https://github.com/StefanBartl/reposcope.nvim/commit/92345e0) |
+| runtime-analysis.nvim | 0 — **46 Dateien/13683 LOC**. `telemetry/store.lua` und `history.lua` haben dieselbe Load/Save-Kollaps-Struktur wie der reposcope.nvim-Fund, aber beide explizit im Code selbst als bewusst verlusttolerant dokumentiert („a report file is a convenience artifact, not data") — kein Bug, dieselbe Kategorie wie query_stats.lua. Token-basierte Request-Supersession/Cancel-Tracking in `bindings/usrcmds.lua` (1041 Zeilen, `:RA send`/`:RA cancel`) korrekt: unterscheidet sauber zwischen „abgebrochen" und „durch neueren Send überholt". `runner.lua`/`parse.lua` fehlerfrei. Durchgängig außergewöhnlich sorgfältig dokumentierter Code (Autor begründet praktisch jede Design-Entscheidung inline) | — | — |
+| **sandbox.nvim** | **`follow_logs()` (docker/nerdctl/podman, `:Sandbox logs -f`) fütterte stdout UND stderr in EINEN geteilten Zeilen-Puffer** — `vim.system` ruft beide Callbacks unabhängig auf, in beliebiger Reihenfolge; eine stdout-Chunk ohne Zeilenumbruch konnte mit einer unabhängig eintreffenden stderr-Chunk zu einer Zeile verschmelzen, die in keinem der beiden echten Streams je existierte (`stdout "foo"` + `stderr "bar\n"` → eine Zeile `"foobar"`). Bug identisch in allen drei Engines (reine Kopien voneinander). **Größtes bisher geprüftes Repo: 233 Dateien/11773 LOC** — Docker/nerdctl/podman-Adapter-Trio (perfekt gespiegelt, keine Drift) und Provider-übergreifende Struktur per Diff-Stichproben geprüft statt Volllesung | **ERR-30-Familie** (unabhängiger Zustand vermischt) | [`73515a8`](https://github.com/StefanBartl/sandbox.nvim/commit/73515a8) |
+| sessions.nvim | 0 — 17 Dateien/2691 LOC. `meta.lua`/`state.lua` schreiben bei jedem Save frische, vollständige Daten (kein Load-Modify-Save-Zyklus), also strukturell immun gegen die ERR-11-Kollaps-Falle, die in dieser Familie schon dreimal real gefunden wurde. `buforder.lua`/`layout.lua`/`portable.lua`/`git.lua` durchgängig sauber (Buffer-Validität konsequent geprüft, Pfad-Escaping in `portable.lua` korrekt) | — | — |
+| **spotlight.nvim** | **`persist.lua`s Load-Modify-Save-Zyklus (persistierte Spotlights + Pro-Datei-Ausnahmen über `lib.nvim.store.project`) hätte bei einer kaputten Cache-Datei denselben Datenverlust erlitten wie bei den drei vorherigen Funden** — statt es nur hier zu flicken, wurde die Ursache **an der Wurzel in `lib.nvim.cache.disk` (`read_entry()`) gefixt**: die vierte Instanz derselben Kollaps-Falle, aber diesmal in gemeinsam genutzter Infrastruktur, die potenziell jeden `lib.nvim.store.project`-Konsumenten im Fleet betrifft (laut Moduldoku selbst u. a. cascade.nvims Anchors). Backup nach `.corrupt`, nicht erneut geschrieben, wenn schon vorhanden. 27 Dateien/5543 LOC im Repo selbst geprüft, sonst 0 weitere Funde (Fenster-/Buffer-Validität in `core/match.lua`/`hover.lua` durchgängig korrekt). Die spekulative `deep_merge`-Referenz-Aliasing-Frage in `config/init.lua`s `normalize_palette`/`normalize_cursor_patterns` ist bereits aus dem `lib.nvim`-Durchgang bekannt und dort als kein heute demonstrierbarer Bug bewertet — nicht erneut aufgerollt | **ERR-11-Familie, an der Wurzel gefixt** | [`10acff1`](https://github.com/StefanBartl/lib.nvim/commit/10acff1) (lib.nvim) |
+
+**Wichtige Klarstellung zu ERR-52 (aus dem images.nvim-Durchgang):**
+`vim.tbl_deep_extend` selbst ersetzt eine nicht-leere Listen-Tabelle beim
+Merge bereits vollständig, statt sie indexweise zu vermischen (verifiziert
+gegen echtes Neovim-0.12-Verhalten, `shared.lua`s `can_merge()` liefert für
+nicht-leere Listen `false`). Das im Regeltext beschriebene Risiko trifft also
+**nur auf eigene, handgeschriebene Merge-Funktionen** zu (wie gopath.nvims
+`deep_merge_into`, der reale Fund dieser Sitzung) — ein Repo, das schlicht
+`vim.tbl_deep_extend("force", defaults, opts)` direkt aufruft, hat dieses
+Problem nicht. Spart Zeit im Rest der Familie: bei reinem
+`vim.tbl_deep_extend`-Gebrauch muss ERR-52 nicht mehr geprüft werden, nur bei
+custom Merge-Code.
+
+**Fleet-Muster, das sich über 3 Agent-Runden bestätigt:** die häufigste
+ERR-*-Bugklasse in diesem Fleet ist nicht ERR-60 (Lua-Ternary-Falle, nur 2
+echte Treffer insgesamt), sondern die **ERR-10/11/51/53-Familie** — ein
+Zustand (Config-Default, Cache, Sidecar-Datei) wird per Referenz statt Kopie
+geteilt oder „fehlt"/„kaputt" nicht unterschieden, und ein *späterer*, davon
+unabhängiger Codepfad mutiert oder überschreibt ihn. 8 von 10 bisherigen
+Funden dieser Sitzung gehören in diese Familie (buffer-ctx.nvim/ERR-60 und
+fileops.nvim/ERR-60 sind die einzigen zwei „klassischen" Lua-Footgun-Funde).
+
+### Nebenbefund, nicht gefixt
+
+`casedesk.nvim/lua/casedesk/migrate.lua:124` hat dasselbe
+`meta.read(...) or {}`-Muster wie der gefixte `meta.patch()`-Bug, aber mit
+anderer Absicht: `migrate.run()` soll beim Verschieben eines Falls ohnehin
+immer ein vollständiges, korrigiertes Sidecar schreiben (Kommentar: „Existing
+sidecar fields always win over a fresh guess"), ein kaputtes JSON ist hier
+also eher der Fall, den die Migration reparieren soll, nicht einer, den sie
+verweigern sollte. Nicht angefasst, um keine Design-Entscheidung über die
+Migrations-Semantik nebenbei zu treffen — bei Bedarf gesondert bewerten.
+
+`github_stats.nvim` (Agent-Runde 1) hat drei weitere Punkte nur dokumentiert,
+nicht gefixt:
+
+- Die Katalog-Belege-Referenz `api.lua:143-229` für ERR-42 ist veraltet —
+  der Code dort ist inzwischen `fetch_all_metrics` (als „kein
+  In-Repo-Caller" markiert, also toter Code) plus reine Pagination. Das
+  echte, aktuelle ERR-42-Beispiel ist `fetcher.lua`s `fetch_all`/`fetch_repo`.
+  Für den nächsten Katalog-Durchlauf vorgemerkt.
+- `fetcher.lua`s `load_last_fetch()` kollabiert „nie gefetcht" und
+  „`last_fetch.json` korrupt" beide auf `nil` → wird als „nie gefetcht"
+  behandelt → Fetch läuft an. Absichtlich nicht gefixt: das ist im Sinne von
+  ERR-21 eher korrektes Fail-Open-Verhalten (lieber fetchen als wegen einer
+  kaputten Sidecar-Datei blockieren), es fehlt nur die einmalige Warnung —
+  geringer Nutzen für das Risiko einer Änderung an einer selten getroffenen
+  Kante.
+- `storage.read_metric_history` verwirft jede einzelne `.json`-Datei, die
+  nicht parst, lautlos. Nicht gefixt: alle drei Aufrufer in `analytics.lua`
+  behandeln einen zweiten Rückgabewert (err) als fatal — ein naiver Fix hätte
+  das aktuelle Fail-Open-Verhalten (partielle Historie trotz einer kaputten
+  Datei) in Fail-Closed verkehrt (komplette Historie verworfen wegen einer
+  Datei). Bräuchte eine koordinierte Vertragsänderung über mehrere
+  Aufrufer hinweg — außerhalb des Umfangs eines Ein-Zeiler-Fixes.
+
+`lib.nvim` (Agent-Runde 3) hat einen latenten, nicht gefixten Punkt
+dokumentiert: `lib.lua.config.deep_merge` teilt Tabellen-Referenzen für jeden
+vom Override nicht berührten Unterbaum mit `base` (dokumentiertes
+Verhalten, kein Bug per Vertrag — nur die Eingaben bleiben unangetastet,
+nicht das Ergebnis). Ein Konsument (spotlight.nvim, `normalize_palette`/
+`normalize_cursor_patterns`) schreibt danach in einen unberührten Unterbaum
+zurück, was — nur wenn der ganze `palette`/`cursor`-Zweig in `opts` fehlt —
+in die echte `DEFAULTS`-Tabelle zurückschreibt. Kein demonstrierbarer Bug
+heute (der zurückgeschriebene Wert ist inhaltsgleich mit dem, was schon da
+stand), daher nicht gefixt — ein echter Fix würde jeden unberührten Blattwert
+immer tief kopieren, eine größere, im Docstring bewusst vermiedene Änderung
+mit Auswirkung auf cascade.nvim, spotlight.nvim, filetree.nvim, mdview.nvim.
+
+### Fazit
+
+Alle 32 Repos geprüft, **17 echte Bugs gefixt** — 16 direkt in einzelnen
+Plugin-Repos, einer (die vierte Instanz derselben Kollaps-Falle) an der
+Wurzel in `lib.nvim.cache.disk`, weil er dort jeden aktuellen und künftigen
+Konsumenten von `lib.nvim.store.project` fleet-weit schützt statt nur
+spotlight.nvim. Häufigste reale Bugklasse mit Abstand: die
+**ERR-10/11/51/53-Familie** (geteilter/persistenter Zustand per Referenz
+statt Kopie, oder „fehlt"/„kaputt" nicht unterschieden — 4 von 17 Funden
+dieser Familie allein aus dem `load()`-kollabiert-auf-leer-Muster, das sich
+über documentation.nvim, replacer.nvim, reposcope.nvim und zuletzt
+lib.nvim selbst zieht). Die `and/or`-Ternary-Falle (ERR-60) kam nur 2×
+wirklich vor, obwohl sie der Namensgeber der ersten Funde war.
+
+(Agent-Runde 4 — markdown.nvim, mdview.nvim, open.nvim — ist zurück und
+oben eingetragen: 3/3 mit echtem Fund. pdfport.nvim direkt gelesen: 0 Funde.)
+
+Die beiden fleet-weiten Mechanik-Checks oben (and/or-Ternary-Falle,
+read-or-stub-vor-write) liefen über alle 32 Repos (die and/or-Falle sogar
+zweimal, mit der erweiterten Regex) — nicht nochmal nötig, falls der
+Katalog je erneut durchlaufen wird.
+
+---
+
+## ✅ UI-* (34 Regeln) — fertig
+
+**34 Regeln in drei Themenblöcken** (`LUA_NVIM.md`, Abschnitt "UI und
+Bedienbarkeit" + der separate "Buffer/Window-UI"-Block direkt davor):
+
+- **Notifications** (`UI-01`..`UI-04`): Bulk-Bestätigung einmal statt pro
+  Item, Truncation explizit melden, Backend-Fallback warnt, Friendly-Error-
+  Mapping statt rohem Stderr-Dump.
+- **Picker- und Kommando-UX** (`UI-20`..`UI-37`, 18 Regeln): Cheatsheet aus
+  derselben Tabelle wie die Bindings, Compound-Command statt Kommando-Zoo,
+  Completion-Pflicht/Live-Berechnung/Pfad-Completion/Soft-Hints,
+  which-key-Label dynamisch, Visual-Multiselect, schlanke Statusline,
+  Single-Line-Prompt-Buffer, Tagged-Window-Wiederfinden, TUI-Cursor-Lock,
+  Graceful Degradation, Progress-Truncation/-Finalisierung,
+  Quickfix-Export, Parser-Wiederverwendung bei Layer-Migration.
+- **Buffer/Window-UI** (`UI-50`..`UI-56`, 7 Regeln): einheitliche
+  UI-Methodennamen, zentraler `ui_state`, `cleanup_all()`, Race Conditions,
+  konkurrierende exklusive UIs, sichtbare Fenster vor Buffer-Löschung
+  umleiten, Scroll-Sprünge in Previews vermeiden.
+- **Checkhealth-Konventionen** (`UI-57`..`UI-61`, 5 Regeln): `warn`/`error`-
+  Level-Disziplin, Text-Level-Widerspruchsfreiheit, Eine-von-N-Alternativen
+  als `info`, Lazy-Load-Normalzustand als `info`, `INFO`-Tag nur in
+  Statuslisten.
+
+**`UI-57`..`UI-61` sind bereits fertig, fleet-weit, unabhängig von dieser
+Datei.** Ein separater Vollaudit über alle 35 `health.lua`-Module ist
+bereits am 2026-08-31 gelaufen und am 2026-09-06 nochmal gegen den
+aktuellen Code validiert — Quelle:
+[`checkhealt_conventions.md`](./checkhealt_conventions.md),
+Detail-Log: [`handovers/checkhealth-conventions.md`](../../../../handovers/checkhealth-conventions.md).
+Kurzfassung: vier systematische Fehlklassen gefunden (Eine-von-N als
+Warnung, Text-Level-Widerspruch bei "(optional)", Warnungen die eigentlich
+Fehler sind ("will fail" im Text, nur `warn` im Level), `setup()`-Hinweise
+unter Lazy-Loading als `warn` statt `info`) und über den kompletten
+~30-Repo-Bestand gefixt, inklusive eines Nebenfunds in `lib.nvim`s
+geteiltem `check_require()`-Helfer (konnte strukturell nie `error` melden).
+**Nicht erneut auditieren** — bei einer künftigen Katalog-Runde nur gegen
+neue Health-Module aus danach entstandenen Plugins prüfen.
+
+Damit bleiben für diesen Durchlauf **29 Regeln** (`UI-01`..`04`, `UI-20`..`37`,
+`UI-50`..`56`) über alle 32 Repos.
+
+**Vorüberlegung zur Methodik:** Mehrere `UI-*`-Belege im Katalog verweisen
+bereits auf konkrete Fundstellen in genau diesen 32 Repos als *positive*
+Beispiele (z. B. `UI-01`→sandbox.nvim, `UI-30`→reposcope.nvim,
+`UI-35`→pdfport.nvim) — der Katalog selbst wurde also mindestens teilweise
+schon aus einer Begehung dieses Fleets heraus geschrieben. Die einzigen im
+Katalog explizit als **Lücke** vermerkten Fälle (`UI-21`/`UI-22` bei
+`:MyReposUpdate` im nvim-config und bei `learn-cli.nvim`) liegen **außerhalb**
+der 32 Personal-Plugin-Repos. Erwartung: diese Familie liefert vermutlich
+weniger neue Funde als `ERR-*`, weil ein Großteil schon während der
+Katalog-Erstellung mitgeprüft wurde — aber das ist eine Erwartung, keine
+Abkürzung; jedes Repo bekommt trotzdem einen echten Durchgang.
+
+### Kalibrierung: Bug vs. Feature-Lücke
+
+Einige `UI-*`-Regeln beschreiben ein wünschenswertes Feature, das im Katalog
+selbst schon als fleet-weit **fehlend** dokumentiert ist, nicht einen
+Bug in einem einzelnen Repo:
+
+- **`UI-36` (Quickfix-Export für Trefferlisten)**: laut Katalog-Beleg hat
+  **nur replacer.nvim** das überhaupt (`export.lua`) — jedes andere Repo mit
+  einer eigenen Trefferliste (casedesk.nvim `:Case grep`/`:Case linkcheck`,
+  u. v. a.) "verletzt" die Regel per Definition. Das händisch in jedem
+  betroffenen Repo nachzurüsten wäre eine Feature-Entwicklung über den ganzen
+  Fleet, kein Bugfix — **bewusst nicht pro Repo einzeln fixen oder erneut
+  vermerken**, hier einmalig festgehalten statt N-mal wiederholt.
+- Ähnlich potenziell: `UI-28` (Visual-Multiselect als Count-Alternative),
+  `UI-33` (Graceful-Degradation-Fallback) — auch das sind Empfehlungen für
+  eine bessere UX, keine Korrektheitsfehler; nur fixen, wenn ein Repo aktiv
+  etwas *Falsches* tut (z. B. hart abstürzt statt zu degradieren), nicht nur
+  "könnte eleganter sein".
+
+**Fixt werden nur echte, demonstrierbare Defekte**, genau wie bei `ERR-*`:
+fehlende Completion für eine geschlossene Wertemenge (`UI-22` sagt selbst
+"echter Mangel, keine Designentscheidung"), ein Notify-Level, das dem
+eigenen Text widerspricht (`UI-01`..`04`), ein konkreter Fensterhandling-Bug
+(`UI-31` nennt eine veraltete Registry explizit "eine konkrete,
+wiederkehrende Bugquelle", `UI-50`..`UI-56`). Eine reine
+Verbesserungsmöglichkeit ohne falsches Verhalten wird notiert, nicht
+gefixt.
+
+### Fleet-weite mechanische Checks (alle 32 Repos, 0 Funde)
+
+Drei der 29 Regeln lassen sich ganz oder teilweise per Grep über den
+gesamten Bestand entscheiden, weil sie ein festes Code-Muster beschreiben
+(„konkrete, wiederkehrende Bugquelle", nicht nur Stilfrage):
+
+- **`UI-31`** (modul-globale Fenster-/Log-Registry statt `vim.w[win].custom_tag`):
+  Grep nach `local _<active|open|scratch|log|tagged>_win(s|dows)? = {...}`-Mustern
+  über alle 32 Repos — **keine Treffer**, die dem beschriebenen Anti-Pattern
+  entsprechen (die zwei/drei zufälligen Namenstreffer waren Einzel-Handle-
+  Variablen oder reine `nvim_open_win`-Aliase, keine Tag-Registry).
+- **`UI-55`** (Buffer mit sichtbaren Fenstern löschen, ohne vorher
+  umzuleiten): alle `nvim_buf_delete(...)`-Aufrufstellen fleet-weit
+  gesammelt (5 Repos: lib.nvim, sandbox.nvim, github_stats.nvim,
+  reposcope.nvim, sessions.nvim) und einzeln geprüft — jede löscht einen
+  Buffer, der ausschließlich in seinem eigenen frisch erzeugten Fenster
+  existiert (eigenes Dashboard/eigene Confirm-Popup/eigener Viewer), nie
+  einen potenziell anderswo sichtbaren Buffer. Kein Fund.
+- **`UI-22`**-Stichprobe: Grep nach verdächtigen Argumentnamen (`mode`,
+  `scope`, `format`, `level`, `kind`, `target`, `scheme`, `engine`, `style`,
+  `action`, `type`) mit `type = "STRING"` ohne `enum`/`values` in der Nähe —
+  einzige Treffer waren Doku-Beispiele in `lib.nvim`s README und
+  sandbox.nvim's `image tag <source> <target>`, wo `target` echt freier
+  Text ist (neuer Repository:Tag-Name, keine geschlossene Menge) — kein Fund.
+
+### Ergebnis je Repo (alle 32/32, gezielt oder vollständig geprüft)
+
+**Fazit:** Alle 32 Repos gegen die komplette 34-Regel-Familie geprüft — 5
+Regeln (`UI-57`..`61`) bereits vorab fleet-weit fertig, die übrigen 29
+diesen Durchlauf. **0 echte Bugs gefunden.** Diese Familie ist damit die
+erste, die komplett ohne einen einzigen Fix durchläuft — im Gegensatz zu
+`ERR-*` (17 Bugs). Plausible Erklärung: der Regelkatalog selbst wurde
+mindestens teilweise aus der Beobachtung genau dieses Fleets geschrieben
+(mehrere `UI-*`-Regeln zitieren Repos aus dieser Liste als *positive*
+Referenzbeispiele in ihren eigenen Belegen), und die zwei im Katalog
+explizit als Lücke vermerkten Fälle (`UI-21`/`UI-22` bei `:MyReposUpdate`
+und `learn-cli.nvim`) liegen beide außerhalb der 32 Personal-Plugin-Repos.
+Eine einzige kosmetische Beobachtung (`UI-27`, which-key-Gruppenlabel in
+`lib.nvim`) wurde notiert, aber bewusst nicht gefixt, da kein
+demonstrierbarer Bug.
+
+**21 Repos vollständig gegen den kompletten Regelsatz gelesen, die
+übrigen 11 gezielt (Completion-Batch-Check + `UI-50`..`56`-Fensterprüfung,
+Details oben):**
+
+| Repo | Befund | Regel(n) |
+|---|---|---|
+| buffer-ctx.nvim | 0 (vorbildlich: `:Insert`/`:Copy`-Kompositum über `lib.nvim`-Composer, jede geschlossene Wertemenge hat Completion, drei Subcommands sogar live berechnet (`boilerplate`/`snippet`/`env`); keine Cheatsheet-Duplikate, keine destruktiven Bulk-Aktionen, keine Floats/Progress/externen Prozesse außer `git` mit knapper Einzeilen-Fehlermeldung) | — |
+| cascade.nvim | 0 (`:Cascade`-Kompositum mit vollständiger `enum`-Completion; keine Floats/Progress/externe Prozesse — reines Text-Transform-Plugin). Beobachtung, nicht gefixt: `lib.nvim.bindings.keymap.which_key`s Gruppen-Label hängt am deklarierten `spec.prefix`, nicht an den tatsächlich aufgelösten `lhs`-Werten nach Nutzer-Remapping (`UI-27`) — aber which-key zeigt jede Zuordnung ohnehin über ihr eigenes `desc` an (siehe Moduldoku), ein remapptes Item verliert nur die Submenü-Gruppierung, keine Funktion oder Beschreibung; kosmetisch, kein demonstrierbarer Bug, fleet-weit über `lib.nvim` geteilt, nicht einzeln gefixt | `UI-27` (notiert, nicht gefixt) |
+| casedesk.nvim | 0 echte Bugs — Command-Layer vorbildlich (custom `"CASE"`-Completion-Typ live aus der Registry, typisierte Lösch-Bestätigung statt bloßem y/n). `:Case grep`/`:Case linkcheck` fallen unter den bekannten `UI-36`-Fleet-Gap (s. o.), nicht einzeln gezählt | — |
+| cmdlog.nvim | 0 (UI komplett an telescope/fzf-lua delegiert, kein Eigenbau-Fenster; Batch-Löschen bestätigt schon korrekt einmal für die ganze Auswahl statt pro Item, mit Kurzschluss bei genau einem Ziel) | — |
+| color_my_ascii.nvim | 0 (`schemes switch`s `values = schemes.get_scheme_names()` sieht wie eine bei `setup()` eingefrorene Liste aus, ist aber unproblematisch: Schemes sind nach `setup()` nicht mehr laufzeit-veränderbar, kein `add_scheme`/`register_scheme` gefunden — kein `UI-23`-Fund) | — |
+| dap.nvim | 0 (Freitext-Argumente wie `conditional-breakpoint`/`log-point`/`eval` korrekt ohne Completion — `UI-26`-Ausnahme greift) | — |
+| debugging.nvim | 0 — vorbildlich: eigener `DBG_AUTOCMD_EXPR`-Completion-Typ live neu berechnet, `HANDLE_ARG`-Tabelle mappt Aktionen auf `WINDOW`/`BUFFER`/`PATH`-Completion-Typen statt generischem `STRING`. Dupliziert unabhängig denselben Degenerate-Float-Schutz (`relative=="win"`, Größe ≤1) wie `lib.nvim.window.tag.find` — bestätigt, dass dieser Filter dort bewusst ist, kein Zufallstreffer | — |
+| diff.nvim | 0 — Katalog selbst nennt dieses Repo als Referenzbeispiel für `UI-24` (`KvSpec.values` weich vs. `KvSpec.enum` streng), bestätigt | — |
+| documentation.nvim | 0 — `bindings/usrcmds/init.lua`s Completion läuft über `complete = function(lead, line)`, live berechnet, kein eingefrorener Snapshot | — |
+| emojis.nvim | 0 — `mode`/`set`/`scope`-Argumente durchgängig mit `values =` aus live abgefragten Quellen (`config.checkbox_set_names()`) | — |
+| fileops.nvim | 0 — `cd`/`cycle`/`path`-Subcommands durchgängig mit `enum`, zusätzlich eigene `complete_from_bufdir`-Funktion für pfadartige Argumente | — |
+| filetree.nvim | 0 — `cwd mode`/`cwd scope` mit vollständigem `enum`, `find <dir>` mit `type = "DIR"` (Pfad-Completion) | — |
+| github_stats.nvim | 0 — `metric`/`mode`-Argumente durchgängig `enum`, `GH_REPO`-Custom-Typ live aus konfigurierten Repos | — |
+| gopath.nvim | 0 — `open`/`probe`-Modi mit `enum`, Cache-Subcommands ohne Enum-Bedarf (parameterlos) | — |
+| hover.nvim | 0 — sehr umfangreicher Router (`show`/`zoom`/`nav`/`mode`/`auto`/`border`/`zen`/`resize` etc.), durchgängig `enum`, `border`-Liste sogar live aus `hover.float.border_names()` | — |
+| images.nvim | 0 — `scale` nutzt bewusst `values` (Soft-Hint: feste Vorschläge + freie Eingabe erlaubt) statt striktem `enum`, exakt `UI-25`-konform | — |
+| insights.nvim | 0 — `INSIGHTS_DIR_SOFT`/`INSIGHTS_SYMBOLS_TOKEN`-Custom-Typen, Soft-Hint-Pfad-Completion konsequent verwendet | — |
+| language.nvim | 0 — Übersetzungsmodi (`output`/`files`) durchgängig `enum` | — |
+| lib.nvim | 0 — geteilte UI-Infrastruktur (`progress/init.lua`: ein einziger `done`-Guard deckt `finish`/`cancel`/`request_cancel`, exaktes `UI-35`-Muster; `window/tag.lua`: der `relative=="win"`-Filter ist ein bewusster Schutz vor entarteten Nested-Floats, nicht zufällig — durch unabhängige Duplikation in debugging.nvim bestätigt; `ui/kit/surface.lua`: `_closed`-Guard + `WinClosed`-Autocmd mit `once=true` garantiert Cleanup genau einmal unabhängig vom Schließweg; `ui/kit/chooser.lua`: bewusstes Single-Instance-Modell, `M.open()` schließt den Vorgänger zuerst) | — |
+| pickers.nvim | 0 — vollständig für `UI-50`..`56` geprüft: eigene UI (`action_picker`/`dir_nav_picker`/`scope_picker`) delegiert komplett an `lib.nvim.ui.kit`, keine eigene Fensterverwaltung; `result_count/init.lua`s Polling-Loop revalidiert den Buffer-Handle bei jedem Tick (`UI-53`). Frühere Falschmeldung korrigiert: `command/composer.lua`s `find_all_arg()` hat `values=` sehr wohl (nur auf der nächsten Zeile, vom Einzeilen-Grep übersehen) | — |
+| spotlight.nvim | 0 — vollständig für `UI-50`..`56` geprüft: kein einziges eigenes `nvim_open_win`/`make_scratch` im ganzen Repo, `ui/list.lua` nutzt bewusst `kit.select`s Rich-Items statt Eigenbau-Float (im Moduldoc begründet). Kein `warn`/`error`-Notify-Aufruf außerhalb von `health.lua` (separat auditiert) — `UI-01`..`04` strukturell kaum anwendbar | — |
+
+### Zusätzliche Stichproben zu UI-50..56 (Fenster-/Buffer-UI)
+
+- **pdfport.nvim**: `renderers/float.lua` ist ein zustandsloser Einweg-Float
+  (delegiert komplett an `lib.nvim.window.make_scratch`) — kein eigener
+  Zustand, der veralten könnte, `UI-50`..`56` strukturell kaum anwendbar.
+- **sandbox.nvim**: kein eigenes `ui_state`-Modul, aber `list_view.lua`
+  nutzt `lib.nvim.window.open_named_scratch` (namensbasiert dedupliziert)
+  statt einer Custom-Registry — erreicht denselben Zentralisierungs-Zweck
+  wie `UI-51` auf anderem Weg (eine benannte Scratch-Buffer-Suche ist
+  ebenso einzige Quelle der Wahrheit wie ein `ui_state`-Getter). Keine
+  Verletzung, andere aber gültige Umsetzung.
+- **reposcope.nvim**: hat ein explizites `state/ui/ui_state.lua` mit
+  `capture_invocation_state()`/`reset()` — genau das in `UI-51`/`UI-54`
+  beschriebene Muster (Fenster/Cursor vor dem Öffnen merken, für die
+  Wiederherstellung beim Schließen). Vollständige Restore-Pfad-Verifikation
+  (tatsächlich jeder Schließen-Pfad ruft das korrekt auf) steht noch aus.
+
+### UI-50..56 gezielt: pickers.nvim, spotlight.nvim, und die geteilte `lib.nvim.ui.kit`-Basis
+
+Beide Repos wurden auf Nutzerwunsch als erstes vollständig für
+`UI-50`..`56` geprüft, weil sie namentlich als "noch komplett offen"
+galten:
+
+- **pickers.nvim**: die eigene UI-Fläche (`ui/action_picker.lua`,
+  `ui/dir_nav_picker.lua`, `ui/scope_picker.lua`) hat **keinerlei eigene
+  Fenster-/Buffer-Verwaltung** — jede delegiert vollständig an
+  `lib.nvim.ui.kit.select`/`vim.ui.select`. `result_count/init.lua`s
+  Polling-Loop validiert den Buffer-Handle bei jedem Tick neu und bricht
+  sauber ab, sobald der Ergebnis-Buffer weg ist (`UI-53`-Muster). `UI-50`..
+  `56` strukturell kaum anwendbar — nichts Eigenes zu verwalten.
+- **spotlight.nvim**: dieselbe Delegation. `ui/list.lua` nutzt bewusst
+  `lib.nvim.ui.kit.select`s Rich-Items statt eigenem Float-Rendering
+  (im Moduldoc explizit begründet). Kein einziges eigenes
+  `nvim_open_win`/`make_scratch` im ganzen Repo.
+- **`lib.nvim.ui.kit` selbst** (die eigentliche Implementierung, auf die
+  beide delegieren) wurde daher stattdessen geprüft: `surface.lua`
+  (Basis-Float-Handle) hat einen `_closed`-Guard für `fire_close()`,
+  registriert einen `WinClosed`-Autocmd mit `once = true`, damit Cleanup
+  garantiert genau einmal läuft — egal auf welchem Weg das Fenster
+  geschlossen wird (`UI-52`/`53`/`54`-Muster korrekt). `chooser.lua`
+  (Listen-Picker hinter `kit.select`) hält bewusst **eine einzige globale
+  Instanz** (`M.open()` ruft `M.close()` zuerst) statt mehrerer
+  gleichzeitiger Chooser — ein einfacheres, aber gültiges Modell für
+  `UI-54`, kein "wer verdrängt wen"-Restore nötig, weil ein transienter
+  Chooser (anders als z. B. ein Explorer-Sidebar) nichts Wiederherstellbares
+  hinterlässt. Kein Fund in beiden Ziel-Repos oder der gemeinsamen Basis.
+
+### Abschluss der restlichen 11 Repos (UI-50..56 + Kommando-Struktur)
+
+Restliche Repos gezielt für Fensterverwaltung/Kommando-Struktur geprüft,
+nachdem der Completion-Batch-Check (s. o.) für sie schon 0 Funde ergeben
+hatte:
+
+- **Repos ganz ohne eigene Floats** (delegieren vollständig an
+  `lib.nvim.window`/`lib.nvim.ui.kit` oder haben keine Buffer-UI):
+  mdview.nvim (rendert Previews extern im Browser — `scroll_sync.lua`
+  übernimmt die `UI-56`-Aufgabe architekturbedingt anders als
+  `winsaveview`, kein Fund), open.nvim, recommender.nvim,
+  runtime-analysis.nvim — alle `UI-50`..`56` strukturell kaum anwendbar.
+- **replacer.nvim** (`regex.lua`s `:ReplaceTest`-Panel): eigener
+  `nvim_open_win`, aber sauber — `bufhidden="wipe"`, `close()` prüft
+  `nvim_win_is_valid` vor dem Schließen, buffer-lokaler Autocmd räumt sich
+  mit dem Buffer selbst ab. Mehrere gleichzeitig offene Testpanels sind
+  möglich, aber harmlos (kein geteilter Zustand zwischen ihnen) — keine
+  `UI-54`-Verletzung (das Feature ist kein exklusives UI, das etwas
+  verdrängt).
+- **markdown.nvim** (`tableview/renderer.lua`): eigener Zustand
+  (`state.win`/`state.buf`) mit **12+ `is_valid`-Prüfungen** an jeder
+  Zugriffsstelle — vorbildlich defensiv, entspricht `UI-51` in der Sache
+  (eine zentrale State-Tabelle statt verstreuter Variablen), auch ohne
+  formale Getter/Setter-Funktionswrapper.
+- **lsp.nvim** (`lsp_signature/open_floating_preview.lua` +
+  `lsp_signature/state.lua`): `state.close()` ist explizit dokumentiert
+  idempotent, der Cleanup-Autocmd deckt `BufWipeout`/`BufHidden`/
+  `BufLeave`/`WinClosed` gemeinsam mit `once=true` ab — dasselbe Muster
+  wie `lib.nvim.ui.kit.surface.lua`. `:LspRestart`/`:LspStart`/`:LspStop`
+  als separate Top-Level-Commands sind mit 3 Stück klar unter der
+  „Handvoll"-Schwelle aus `UI-21` und spiegeln etablierte
+  LSP-Ökosystem-Konvention — kein Kommando-Zoo.
+- **reposcope.nvim**: vollständig gelesenes `state/ui/ui_state.lua` +
+  `init.lua`s `close_ui()` — hat ein echtes zentrales State-Modul
+  (`UI-51`), erfasst und stellt die Invocation-Fensterposition beim
+  Schließen wieder her (`UI-54`-Muster). Viele Konsumenten schreiben
+  direkt in `ui_state.buffers.X`/`ui_state.windows.X` statt über formale
+  Setter-Funktionen — eine Abweichung vom Wortlaut der Regel, aber die
+  Tabelle bleibt trotzdem die eine zentrale Quelle der Wahrheit (kein
+  verstreuter, unabhängiger Zustand), und `inject_content()` validiert
+  intern, selbst wo ein Aufrufer das nicht vorher tut. Kein
+  demonstrierbarer Bug.
+- **sandbox.nvim**: die übrigen `ui/*_view.lua`-Dateien (error_view,
+  inspect_view, network_list_view, volume_list_view) delegieren komplett
+  an `list_actions.lua` + `lib.nvim.window.open_named_scratch` — kein
+  eigener Fenster-Code, nichts zu prüfen.
+- **sessions.nvim**: einziger `nvim_open_win` ist der bereits während
+  `ERR-*` gelesene `hand_rolled_confirm`-Dialog in
+  `bindings/autocmds/init.lua` — schließt sein eigenes, ausschließlich in
+  diesem einen Fenster lebendes Buffer sauber, kein `UI-55`-Risiko.
+- **pdfport.nvim**: bereits vermerkt — zustandsloser Einweg-Float via
+  `make_scratch`, nichts zu verwalten.
+
+**Ergebnis: 0 echte Bugs in allen 32 Repos für die komplette 29-Regel-Menge
+(`UI-01`..`04`, `UI-20`..`37`, `UI-50`..`56`).**
+
+---
+
+## ✅ PRIN-* (37 Regeln) — fertig
+
+**Andere Natur als `ERR-*`/`UI-*`.** Der Katalog (`PRINCIPLES.md`) ist
+sprachneutral und beschreibt überwiegend Architektur-/Code-Qualität
+(SRP, reine Funktionen, Naming-Konsistenz, Dependency Injection,
+Dokumentationsvertrag) statt konkreter, binär entscheidbarer
+Fehlerzustände. Mehrere Regeln überschneiden sich inhaltlich mit bereits
+abgeschlossener `ERR-*`-Arbeit:
+
+- `PRIN-10` (kein globaler Zustand, nur über Getter/Setter) und `PRIN-26`
+  („kein Wert" ≠ „falscher Wert", explizit auf `LUA_NVIM.md`s
+  Fehlerbehandlungs-Abschnitt verweisend) sind im Kern dieselbe Bugklasse,
+  die bei `ERR-*` schon 4× real gefunden und gefixt wurde
+  (documentation.nvim, replacer.nvim, reposcope.nvim, `lib.nvim` an der
+  Wurzel).
+- `PRIN-20`/`PRIN-25`/`PRIN-27`/`PRIN-40`..`43` (stille Fehler,
+  Eingabevalidierung, Fail-Open, Cache-Hygiene) wurden während `ERR-*`
+  ebenfalls schon wiederholt einzeln bewertet (z. B. pdfports/
+  github_stats' bewusstes Fail-Open, diverse Cache-Module).
+
+**Katalog-Beleg-Herkunft:** wie bei `UI-*` zitiert der Katalog selbst schon
+viele Repos aus diesem 32er-Bestand als *positive* Beispiele (Erhebung
+2026-08-08: Pure Core — emojis/diff/fileops/replacer/insights; Registry —
+documentation/dap/pickers; Hexagonal — sandbox; Feature-Module — filetree/
+diff/recommender/fileops; Dispatch-Nadelöhr — pickers/debugging; SSOT —
+filetree/pickers/markdown/language/insights; Keymaps-als-Daten — markdown/
+gopath/color_my_ascii; Soft Dependencies — emojis/buffer-ctx/cascade/diff).
+**Auf Nutzerwunsch trotzdem volle Architektur-Review** über alle 37 Regeln
+und 32 Repos, nicht nur ein Abgleich gegen die schon dokumentierten
+Positiv-Beispiele.
+
+**Methodik/Kalibrierung für diese Familie:**
+- Pro Repo: Modul-/Dateistruktur auf SRP-Kohärenz sichten (nicht jede
+  Datei einzeln volllesen, wo die Verantwortung schon am Namen/Ordner
+  erkennbar ist), Stichproben repräsentativer Module für Funktionsgröße,
+  Naming-Konsistenz, Header-Kommentare (`PRIN-50`) und Dependency-Stil
+  (`PRIN-11`) lesen.
+- **Echte, demonstrierbare Bugs** (z. B. `PRIN-28`: Zustand vor einem
+  Fehler mutiert und nicht zurückgerollt, obwohl das Aufrufer-Vertrag
+  voraussetzt) werden gefixt wie bei `ERR-*`.
+- **Reine Architektur-/Stil-Beobachtungen** (SRP-Kandidat, inkonsistentes
+  Naming, fehlender Header) werden dokumentiert, aber **nicht automatisch
+  refaktoriert** — das wäre eine Design-Entscheidung mit Tragweite über den
+  ganzen Fleet, die einzeln abgestimmt gehört, nicht nebenbei in einem
+  Findings-Sweep.
+- Bereits durch `ERR-*` abgedeckte Bugklassen (s. o.) werden nicht
+  nochmal einzeln gejagt, nur kurz auf Konsistenz mit den dort gefundenen
+  Mustern gegengeprüft.
+
+### Ergebnis je Repo
+
+| Repo | Befund |
+|---|---|
+| buffer-ctx.nvim | 0 Funde — vorbildlich über alle Dimensionen: jede `format/*`/`ops/*`-Datei hat exakt eine benannte Verantwortung (`PRIN-01`), jede Datei hat einen `---@module`-Header + Zweckbeschreibung (`PRIN-50`, 100 % Abdeckung), Querverweise statt Wiederholung durchgängig per `---@see` (`PRIN-53`), `config/init.lua`s Zustand ist modul-intern mit `get()`/`setup()`-Zugriff (`PRIN-10`), kein einziger camelCase-Ausreißer in einer sonst durchgehenden snake_case-Basis (`PRIN-35`) |
+| cascade.nvim | 0 Funde — `core/context.lua`s `CascadeContext` ist ein Lehrbuch-Beispiel für `PRIN-12` (Kontext einmal erhoben statt verstreuter `nvim_*`-Abfragen) UND Pure-Core/Impure-Shell zugleich, im eigenen Moduldoc explizit begründet; `cycle/word_cycle.lua`s einzige zwei `vim.api`-Aufrufe sitzen exakt am Mutationspunkt (`nvim_buf_set_text`), die Zyklus-Berechnung davor ist reine Lua-Logik. 100 % `@module`-Header, keine camelCase-Ausreißer |
+| cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim | 0 Funde je — keine Größen-Ausreißer (größte Datei je Repo 250–653 Zeilen, eine kohärente Verantwortung), identisches Config-Modul-Muster, gute `@param`/`@return`-Dichte (~1.5–2 Annotationszeilen pro `function M.*`) | — |
+| diff.nvim, documentation.nvim, emojis.nvim, fileops.nvim, filetree.nvim | 0 Funde je — alle fünf bereits im Katalog selbst als Positiv-Beleg zitiert (Pure Core: diff/emojis/fileops; Feature-Module: filetree/diff; SSOT: filetree/documentation) und während `ERR-*` schon ausführlich gelesen (filetree.nvim: 124 Dateien, Checkliste + Stichproben). Dokumentations-Dichte konsistent gut (documentation.nvim: 356 öffentliche Funktionen/777 Annotationszeilen, filetree.nvim: 577/774) | — |
+| github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim | 0 Funde je — keine Größen-Ausreißer, gute Doku-Dichte (~1.8–2 Annotationszeilen/Funktion durchgängig). Alle sechs bereits während `ERR-*` intensiv gelesen (github_stats/gopath/insights/language hatten dort echte ERR-Bugs, seither gefixt; hover.nvim komplett gelesen, 0 Funde; images.nvim ein untersuchter, korrekt verworfener Verdachtsfall) — keine neuen Architektur-Funde | — |
+| lib.nvim, lsp.nvim, markdown.nvim, mdview.nvim, open.nvim | 0 Funde je — konsistente Doku-Dichte (lib.nvim: 727 Funktionen/1506 Annotationszeilen, ~2.07/Funktion — passend zu seiner Rolle als geteilte, gründlich dokumentierte Basis-Infrastruktur, die während `ERR-*`/`UI-*` mehrfach tief geprüft wurde: `cache.disk`, `progress`, `window/tag`, `ui/kit/surface`/`chooser`, `bindings/keymap`). Keine neuen Größen- oder Architektur-Ausreißer bei den übrigen vier | — |
+| pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim | 0 neue Funde je — alle fünf bereits während `ERR-*`/`UI-*` sehr ausführlich gelesen (pdfport/pickers/recommender: 0 Bugs beide Male; replacer/reposcope: je ein `ERR-11`-Fund dort gefixt, `reposcope`s `ui_state`-Modul zusätzlich für `UI-51`/`54` geprüft). Konsistente Doku-Dichte, keine Größen-Ausreißer | — |
+| runtime-analysis.nvim, sandbox.nvim, sessions.nvim, spotlight.nvim | 0 Funde je — `sandbox.nvim/bindings/usrcmds/init.lua` (939 Zeilen aus der Größen-Stichprobe) sah zunächst wie ein SRP-Kandidat aus, importiert aber nur aus 10 separaten Pro-Ressourcentyp-Modulen (`container_commands.lua`, `image_commands.lua`, …) und montiert lediglich den `:Sandbox`-Routenbaum — exakt das „Ein Dispatch-Nadelöhr"-Muster aus dem Katalog selbst, kein Fund. runtime-analysis.nvim/sessions.nvim/spotlight.nvim bereits während `ERR-*`/`UI-*` intensiv gelesen, keine neuen Architektur-Auffälligkeiten | — |
+| casedesk.nvim | **`ui.lua` ist 3433 Zeilen lang und bündelt 50 `function M.*`-Handler für völlig unabhängige Features** (Case-CRUD, OCR-Trigger, Git-Sync, KI/AI-Abfrage, Timeline-Rendering, SLA-Tracking, Terminologie-Lookup, Link-Check, Export, …) — jede dieser Funktionen hat ihren eigenen, unabhängigen Änderungsgrund (`PRIN-01`/`PRIN-02`-Kandidat). **Notiert, nicht refaktoriert**: eine Aufteilung in Feature-Module (analog zu buffer-ctx.nvims `ops/*`-Muster) wäre eine Architekturentscheidung mit echtem Risiko in einem aktiv genutzten 45-Datei-Repo, kein Ein-Zeiler im Rahmen eines Findings-Sweeps | `PRIN-01`/`02` (notiert, nicht gefixt) |
+
+**Fleet-weite Mechanik-Checks:**
+- `PRIN-50` (Datei-Header mit Zweck) über alle 32 Repos per Skript geprüft
+  (Anteil Dateien mit `---`-Kopfkommentar in den ersten 3 Zeilen) — **kein
+  Repo unter 95 % Abdeckung**. Gilt fleet-weit als erfüllt.
+- `PRIN-35` (konsistentes Naming) über alle 32 Repos: jeden
+  `function M.foo`/`function M:foo`-Funktionsnamen auf camelCase-Ausreißer
+  in einer sonst durchgehenden snake_case-Basis geprüft — **0 Treffer in
+  allen 32 Repos**. Gilt fleet-weit als erfüllt.
+- `PRIN-10` (kein globaler Zustand) über alle 32 Repos: Grep nach `_G.`/`_G[`
+  — nur 3 Treffer (debugging.nvim, documentation.nvim,
+  runtime-analysis.nvim), alle drei begründete Ausnahmen statt
+  Plugin-eigenem Zustand: ein Debug-Tool, das absichtlich beliebige
+  Globals inspiziert (`vardump`), Lua-CLI-Standard `_G.arg`, und eine
+  reversible `require`-Instrumentierung für Telemetrie (`_G.require`
+  temporär ersetzt, explizit wieder zurückgesetzt). Das Config-Modul-Muster
+  (`local _active = nil` + `get()`/`setup()`) ist zudem in jedem
+  stichprobenartig geprüften Repo identisch — eine etablierte,
+  durchgehaltene Fleet-Konvention. Gilt fleet-weit als erfüllt.
+- `PRIN-51`/`52` (dokumentierter Funktionsvertrag, explizite Typen): keine
+  eigene Stichprobe nötig — folgt praktisch automatisch aus der bereits
+  abgeschlossenen `LLS-*`-Familie (34/34 Regeln, alle 32 Repos bei 0
+  LuaLS-Diagnostics). LuaLS kann das nur melden, wenn `@param`/`@return`/
+  `@type`-Annotationen über öffentliche APIs hinweg korrekt und vollständig
+  sind — 0 Diagnostics bei aktiviertem LuaLS ist strukturell dieselbe
+  Aussage wie „Verträge sind dokumentiert". Gilt fleet-weit als per
+  `LLS-*` bereits nachgewiesen.
+- **Größte-Datei-Stichprobe** (SRP-Proxy) über alle 32 Repos: die jeweils
+  größte Lua-Datei pro Repo identifiziert und für Ausreißer geprüft.
+  Auffällig groß, aber **kein Fund** nach genauerem Hinsehen:
+  `documentation.nvim/core/render/html.lua` (10185 Zeilen — fast
+  vollständig eingebettetes CSS/JS als String-Literale für eine
+  selbst-enthaltene HTML-Ausgabe, im Moduldoc explizit begründet, eine
+  einzige kohärente Verantwortung), `hover.nvim/init.lua` (1970 Zeilen,
+  während `ERR-*` schon komplett gelesen — ein Feature mit vielen Facetten,
+  nicht mehrere unabhängige), `reposcope.nvim/ui/actions/status_view.lua`
+  (1387 Zeilen, 6 Ausgabe-Backends für **ein** Feature),
+  `runtime-analysis.nvim/telemetry/init.lua` (1616 Zeilen, eine
+  Telemetrie-Domäne). Der einzige echte Fund war casedesk.nvim (s. o.).
+
+### Fazit
+
+Alle 32 Repos gegen alle 37 Regeln geprüft (volle Architektur-Review, wie
+angefragt) — **1 Fund** (casedesk.nvim `ui.lua`, `PRIN-01`/`02`, notiert
+statt refaktoriert). Vier der sonst am ehesten fund-trächtigen Regeln
+(`PRIN-10` kein globaler Zustand, `PRIN-35` Naming, `PRIN-50` Datei-Header,
+`PRIN-51`/`52` dokumentierter Vertrag) ließen sich fleet-weit mechanisch
+oder über die bereits abgeschlossene `LLS-*`-Familie nachweisen, statt
+32× einzeln nachgelesen zu werden. Die übrigen, stärker
+kontextabhängigen Regeln (Kopplung/Kohäsion, reine Funktionen, DI-Stil,
+Fehlerstruktur, Testbarkeit) wurden repo-für-repo anhand von
+Datei-/Funktionsstruktur, bereits vorhandenem Wissen aus `ERR-*`/`UI-*`
+und gezielten Stichproben bewertet — ohne jede einzelne Datei erneut
+volltändig zu lesen, wo Struktur und Namensgebung die Verantwortung schon
+eindeutig zeigten.
+
+**Warum so wenig Funde:** dieselbe Erklärung wie bei `UI-*` — der Katalog
+selbst wurde mindestens teilweise aus der Beobachtung dieses Fleets
+geschrieben (Erhebung 2026-08-08 zitiert bereits ~15 der 32 Repos als
+Positiv-Beispiele in den eigenen Belegen), und mehrere PRIN-Regeln
+(`PRIN-10`/`20`/`25`-`27`/`40`-`43`) beschreiben Bugklassen, die `ERR-*`
+gerade erst exhaustiv durchsucht und gefixt hat.
+
+---
+
+## ✅ LUA-* (45 Regeln) — fertig
+
+**Zählung mit Vorsicht genießen (bestätigt):** ein erster Grep über alle
+`` `LUA-XX` ``-Treffer in `LUA_NVIM.md` findet 47, nicht 45 — die Tabelle
+unter „`#`-Prefix bei Kommentaren" ist im Katalog selbst fehlerhaft
+formatiert: `LUA-67`/`LUA-68` sind keine echten Regeln, sondern die
+Tabellen-Header-Zellen „Kontext"/„-------", die versehentlich in die
+ID-Spalte gerutscht sind (`LUA-69`..`71` danach sind wieder echte Regeln).
+47 − 2 = 45, passt zur Zählung hier. Nicht die eigentliche Aufgabe dieser
+Familie, aber genau die Art Zähl-Falle, die schon bei `ERR-*` einmal
+zuschlug — vermerkt, damit niemand das noch einmal falsch zählt.
+
+**Zwei im Katalog selbst bereits vermerkte Lücken, beide schon gelöst**
+(Katalog-Text datiert 2026-09-06, also der Tag vor dieser Prüfung —
+vermutlich nur noch nicht zurückgeschrieben):
+- `LUA-01` fileops.nvim `health.lua:71-75` — der zitierte „harte
+  Abhängigkeit inkonsistent dargestellt"-Fund ist bereits durch Commit
+  `35cdd4b` (2026-09-06, derselbe Tag wie die Checkhealth-Konventionen-
+  Sweep) behoben: `lib.nvim` fehlend meldet `error`, nicht mehr `warn`,
+  README sagt unmissverständlich „Requires... lib.nvim".
+- `LUA-04` pickers.nvim `README.md:66` — der zitierte „env-Default
+  unkommentiert im Quickstart"-Fund ist bereits durch Commits `61a97e2`/
+  `ea1ce1c` (beide 2026-09-06) behoben: der Quickstart-Codeblock kommentiert
+  den `repos_dir`/`$REPOS_DIR`-Default jetzt explizit als optional.
+
+### `LUA-40`/`41` (Metatables/Weak-Tables) — fleet-weit geprüft, 4 Repos gefixt
+
+Fleet-weiter Grep nach `__mode` über alle 32 Repos: 6 Treffer. Jeder
+einzeln auf den tatsächlichen Schlüsseltyp geprüft — `__mode = "k"`
+(schwache Schlüssel) wirkt nur auf **Tabellen/Funktionen/Userdata/Threads**,
+niemals auf Zahlen (Lua-Zahlen sind kein kollektierbarer Typ). Ein
+Cache, der mit einer `bufnr` (einer Zahl) als Schlüssel arbeitet, wird von
+`{__mode = "k"}` **nie** automatisch geleert, egal wie viele Buffer
+geschlossen werden.
+
+| Repo | Datei | Schlüsseltyp | Befund |
+|---|---|---|---|
+| **lib.nvim** | `buffer/context/init.lua` | `bufnr` (Zahl) | **Echter, unbegrenzter Leak** — Moduldoc behauptete explizit „entries for deleted buffers are collected automatically", was nie zutraf. Diese Cache ist geteilte Kern-Infrastruktur (u. a. am `FileType`-Autocmd-Dispatcher verdrahtet) — jeder je gesehene Buffer blieb für die Prozesslaufzeit gecacht. **Gefixt**: `BufDelete`/`BufWipeout`-Autocmd ruft jetzt aktiv `M.invalidate(bufnr)` |
+| **gopath.nvim** | `resolvers/lua/alias_index.lua`, `resolvers/lua/binding_index.lua` | `bufnr` (Zahl) | **Echter, unbegrenzter Leak**, identisches Muster, keine andere Aufräum-Logik vorhanden. **Gefixt**: gleicher `BufDelete`/`BufWipeout`-Autocmd-Fix in beiden Dateien |
+| color_my_ascii.nvim | `cache_manager.lua` | `bufnr` (Zahl) | Irreführende Doku („weak table for automatic memory reclamation"), aber **kein echter Bug** — die Cache hat bereits eine funktionierende, aktive Bereinigung unabhängig von der (wirkungslosen) Metatable: `max_size`-Deckel mit Eviction in `M.set()`, plus ein alle 30s laufender Timer (`M.setup_auto_cleanup()`, aus `init.lua` verdrahtet), der `is_valid_buffer()` real prüft. **Gefixt** (Doku + totes `setmetatable` entfernt, keine Verhaltensänderung) |
+| filetree.nvim | `util/buffer.lua` | `bufnr` (Zahl) | Dieselbe irreführende Doku, aber **kein echter Bug** — ein `BufDelete`-Autocmd (`M.invalidate`) existiert bereits im selben File und räumt aktiv auf. **Gefixt** (Doku + totes `setmetatable` entfernt, keine Verhaltensänderung) |
+| runtime-analysis.nvim | `telemetry/registry.lua` | **Tabelle** (die gewrappte Modul-Tabelle selbst) | Korrekt — genau der Fall, für den `__mode = "k"` gedacht ist. Kein Fund |
+| sessions.nvim | `statusline.lua` | **Tabelle** (die vom Aufrufer übergebene `opts`-Tabelle) | Korrekt — Einträge werden mit der Aufrufer-Tabelle selbst kollektiert. Kein Fund |
+
+Alle vier Fixes einzeln committed/gepusht, mit Regressionstest wo ein
+Testrahmen existierte (lib.nvim: `stash`/`reapply`-verifiziert, volle Suite
+grün) — gopath.nvim hat **kein automatisiertes Testframework** (nur
+manuelle, interaktive Test-Fixtures mit Anleitung), dort headless von Hand
+verifiziert statt eines Regressionstests.
+
+### Weitere fleet-weite Checks (alle 32 Repos, 0 neue Funde)
+
+- **`LUA-04`** (Env-Defaults nur über `lib.nvim.system.env()`): Grep nach
+  `vim.env.REPOS_DIR` direkt — jeder Treffer, der tatsächlich etwas liest
+  (nicht nur in Kommentaren erwähnt), geht korrekt über
+  `require("lib.nvim.system.env").get().repo_base` (casedesk.nvim,
+  pickers.nvim — mit explizitem Kommentar „not a direct vim.env.REPOS_DIR
+  read", reposcope.nvim). Ein erster, viel zu weiter Grep nach jedem
+  `vim.env.*`-Zugriff hatte ~20 Repos gemeldet — fast alle davon fragen
+  aber völlig andere, plugin-eigene Variablen ab (`$DEEPL_API_KEY`,
+  `$JAVA_HOME`, `$WSLENV`, …), was **außerhalb** des Regel-Geltungsbereichs
+  liegt (die Regel gilt nur für den einen geteilten `$REPOS_DIR`/
+  `repo_base`-Konventions-Default, nicht für jede Env-Var überhaupt).
+- **`LUA-42`..`47`** (weitere Metatable-Muster): `rawget()`-Nutzung
+  fleet-weit gefunden in lib.nvim (2×), lsp.nvim, runtime-analysis.nvim —
+  alle korrekte, absichtliche `__index`-Boundary-Checks (z. B.
+  `rawget(container, field)`, um die tatsächlich selbst implementierte
+  Funktion von einer geerbten zu unterscheiden — exakt `LUA-47`s eigenes
+  Beispiel). Die ~18 Repos mit einem `M.register(name, backend)`-Registry-
+  Muster sind flache Tabellen-Lookups ohne `__index`-Vererbungskette —
+  `LUA-47` ist dort strukturell gar nicht anwendbar.
+- **`LUA-50`/`52`** (private Helfer, Naming): bereits fleet-weit über
+  `PRIN-05`/`35` bestätigt.
+- **`LUA-53`** (englische Kommentare): bereits durch den CDX-Kommentar-
+  Sweep vom 2026-09-06 über Config + alle 31 Plugin-Repos abgedeckt (49
+  Häppchen, siehe Claudes Memory `cdx-comment-sweep-done`) — nicht erneut
+  geprüft.
+- **`LUA-54`/`55`** (keine Emojis/fette Überschriften in Markdown-Docs,
+  paralleles statt XOR-Tauschen): beides 0 Treffer fleet-weit (Emoji-Grep
+  über jede `README.md`, XOR-Swap-Grep über jede `.lua`-Datei).
+- **`LUA-60`..`71`** (Annotationen): folgt aus der abgeschlossenen
+  `LLS-*`-Familie (0 LuaLS-Diagnostics fleet-weit setzt korrekte
+  `@param`/`@return`/`@type` voraus) — nicht erneut einzeln geprüft.
+- **`LUA-80`** (explizite `config/init.lua` + `config/DEFAULTS.lua`):
+  alle 32 Repos haben beide Dateien. Fleet-weite Konvention, kein Fund.
+
+### Nicht einzeln nachgejagt (Begründung)
+
+- **`LUA-01`..`03`/`05`** (lib.nvim-Abhängigkeitskonsistenz jenseits der
+  zwei bereits verifizierten Katalog-Lücken): kein systematischer
+  Vollaudit — die durchgängige `dependencies = { "StefanBartl/lib.nvim" }`-
+  Deklaration plus harte `require`-Nutzung ohne Fallback ist in jedem
+  bisher gelesenen Repo (aus `ERR-*`/`UI-*`/`PRIN-*`) die Norm, keine
+  Gegenbeispiele aufgefallen.
+- **`LUA-10`..`16`** (Neovim-API-Sicherheit): deckt sich inhaltlich mit
+  `ERR-32`/`33`/`34` (Handle-Validierung in Deferred Calls, Symlink-
+  Zyklen) — dort bereits exhaustiv über alle 32 Repos geprüft, mit den
+  dort dokumentierten Funden. Keine gesonderte Wiederholung.
+- **`LUA-30`/`31`/`33`/`34`** (Getter/Setter allgemein, Metatable-
+  Methoden, Snapshot/Restore, Arrays-statt-Records): `LUA-30` deckt sich
+  mit dem bereits fleet-weit bestätigten Config-Zugriffsmuster
+  (`PRIN-10`); `LUA-33` mit `PRIN-13`. `LUA-31`/`34` sind Ermessens-
+  empfehlungen ohne scharfes Pass/Fail-Kriterium (Metatables „wenn
+  sinnvoll", Arrays „bei großen Mengen") — ohne konkreten Kandidaten mit
+  nachweisbarem Speicherproblem kein Fund zu erwarten, nicht weiter
+  verfolgt.
+- **`LUA-81`/`83`** (möglichst viel user-konfigurierbar, regelmäßig neue
+  Optionen ergänzen): laufende Praxis, kein Zeitpunkt-Check — keine
+  Pass/Fail-Bewertung sinnvoll.
+
+---
+
+## ✅ PERF-* (62 Regeln) — fertig
+
+**Katalog:** `PERFORMANCE.md`, 62 Regeln in sechs Blöcken: `PERF-01`…`16`
+(allgemeine Tabellen-/String-Idiome, u. a. `PERF-07` 🔴 KRITISCH — kein
+`table.remove`/direktes `nil`-Setzen während einer `next()`-Iteration),
+`PERF-20`…`27` (Speicherlayout), `PERF-40`…`53` (Cache-Regeln, eng verwandt
+mit `lib.nvim.cache`), `PERF-60`…`65` (Debouncing), `PERF-70`…`75`
+(begrenzte Nebenläufigkeit/Scans), `PERF-80`…`91` (Async-Scheduling/
+Chunking/Progress). Wie bei `UI-*`/`PRIN-*`/`LUA-*` zitiert der Katalog an
+etlichen Stellen konkrete Dateien/Zeilen aus genau diesem Fleet als
+Positiv-Beispiele ("Erhebung 2026-08-08" oder später) — die Erwartung ist
+also wieder: wenige neue Funde, vieles bereits gelebt.
+
+### `PERF-07` (🔴 KRITISCH, `next()`-Löschen) — fleet-weit geprüft, 0 Funde
+
+Fleet-weiter Grep nach dem Antipattern (Tabellen-Mutation während einer
+`pairs`/`next`-Iteration ohne den sicheren "erst sammeln, dann löschen"-
+oder Rückwärts-`ipairs`-Umweg) ergab genau einen Treffer: eine
+Glossar-**Erklärung** des Konzepts in `documentation.nvim` (Prosa-Text, der
+das Antipattern beschreibt, kein tatsächlicher Code). Kein echter Verstoß
+gefunden.
+
+### `PERF-47` (Cache-`clear()` muss in-place mutieren) — 1 echter Fund, gefixt
+
+**Kern der Regel:** ein Cache-Objekt, das anderswo per Referenz gehalten
+wird (`local held = cache.something`), darf sein `clear()`/`reset()` nicht
+per `x = {}` (Neuzuweisung) implementieren — jeder Halter der alten
+Referenz sieht die Leerung dann nie, während neue Einträge unbeobachtet in
+der neuen Tabelle landen. Dieselbe Bug-Klasse wie mehrfach in `ERR-*`
+gefunden (dort: geteilter Zustand allgemein), hier speziell auf
+Cache-Reset zugespitzt.
+
+**Vorgehen:** ein `awk`-Extrakt aller `function M.(clear|reset|clear_all)`-
+Definitionen über alle 32 Repos (28 Fundstellen) wurde einzeln daraufhin
+geprüft, ob die dort neu zugewiesene Tabelle *extern* per Referenz gehalten
+wird (echtes Risiko) oder rein privates Modul-Upvalue ist (sicher, da jeder
+Zugriff über dieselbe Upvalue-Slot läuft). 26 von 28 sind privat/sicher
+(inkl. der eigenen `lib.nvim/buffer/context/init.lua`-Fix aus `LUA-40`).
+Zwei Fälle mit tatsächlich exponierter Tabelle wurden geprüft
+(`mdview.nvim/core/breadcrumbs.lua` `M.entries`/`M.snapshot()`,
+`mdview.nvim/bindings/autocmds/buffer_switch.lua` `M._opened`) — beide
+ungefährlich, weil kein Aufrufer die Tabelle je in einer `local`-Variable
+über die Zeit hält, sondern immer frisch über `M.entries[...]`/
+`M._opened[...]` indiziert.
+
+**Echter Fund:** `documentation.nvim`s
+`lua/documentation/editor/browse/trail.lua` (liegt in `$REPOS_DIR\documentation.nvim`,
+außerhalb dieses Repos). `M.list(root)` gibt
+laut eigenem Docstring bewusst die *live* Tabelle zurück, nicht eine Kopie —
+`browse/init.lua` hält sie tatsächlich als `st.pins = trail.list(st.root)`.
+`M.clear(root)` und `M.hydrate(root, list)` verletzten genau diesen
+selbstauferlegten Vertrag: beide machten `pins[root] = {}` bzw.
+`pins[root] = list`, eine Neuzuweisung statt In-Place-Leerung/-Befüllung.
+Aktuell ohne beobachtbares Fehlverhalten (`clear` ist an keinen Befehl
+verdrahtet, `hydrate` läuft vor dem ersten Render), aber ein echter
+Vertragsbruch relativ zur eigenen Dokumentation — gefixt: beide mutieren
+jetzt das von `M.list()` bereits herausgegebene Array in-place.
+Regressionstest `TESTS/browse_trail_spec.lua` ergänzt (hält eine
+`M.list()`-Referenz, prüft dass `clear`/`hydrate` sie weiterhin befüllen
+statt zu ersetzen), vorher gegen den alten Code als fehlschlagend
+verifiziert (`git stash`), volle Suite grün, luacheck/stylua clean.
+Commit `179f16d` auf `documentation.nvim`s `main`, gepusht.
+
+### `PERF-48` (Weak-Keyed-Caches bei Objekt-Lifetime) — bestätigt korrekt, 2 Katalog-Zitate veraltet
+
+`lib.nvim/cache/memory.lua` (`caches = setmetatable({}, {__mode = "k"})`,
+zweifach: äußere Tabelle keyed by Namespace-Name, innere Tabelle keyed by
+Aufrufer-`key`) verifiziert als **echtes** Positiv-Beispiel — anders als der
+`LUA-40`/`41`-Fund: Strings sind (anders als Zahlen) ein kollektierbarer
+Typ, und alle echten Aufrufer (`lib.nvim/fs/scan_cached`,
+`debugging.nvim/autocmds/sources.lua`) verwenden tatsächlich String-Keys
+(Pfade), nie eine nackte `bufnr`. Kein Fund.
+
+Zwei der drei Katalog-Zitate für `PERF-48` sind veraltet, keine neuen Funde:
+- `color_my_ascii.nvim` `cache_manager.lua:17` — genau die Stelle, die
+  bereits unter `LUA-40`/`41` in dieser Sweep-Serie gefixt wurde (die
+  Weak-Table war dort auf `bufnr`, also strukturell nie korrekt — nicht
+  identisch mit dem `PERF-48`-Muster, der Katalog zitiert hier
+  fälschlicherweise ein Negativ- als Positiv-Beispiel).
+- `pickers.nvim` `selected_index/cache.lua` — Datei existiert nicht mehr;
+  das ganze `selected_index`-Feature wurde per `db42bc9` entfernt ("remove
+  selected_index overlay -- never worked reliably"). Zitat zeigt auf toten
+  Code.
+
+### `PERF-46` (Cache-Key muss jeden ergebnisrelevanten Parameter enthalten) — 1 echter Fund, notiert statt gefixt
+
+**Fund:** `reposcope.nvim/lua/reposcope/cache/readme_cache.lua`. Der
+gesamte Cache (RAM, Datei unter `owner__repo.md`, und die
+Freshness-Metadata) ist ausschließlich über `owner .. "/" .. repo_name`
+geschlüsselt (`_get_key`, `_get_file_path`) — der aktive **Provider**
+(GitHub/GitLab/Codeberg, umschaltbar über `config.options.provider`,
+persistiert in `state/session_state.lua`) ist kein Teil des Keys. Alle drei
+`providers/{github,gitlab,codeberg}/readme/readme_manager.lua` rufen
+`set_ram(owner, repo_name, content)`/`set_file(...)`/`set_updated_at(...)`
+identisch auf, ohne Provider-Tag. Ergebnis: sucht man `owner/repo` auf
+GitHub, schaltet dann auf GitLab um und sucht denselben `owner/repo`-String
+erneut, liefert der Cache (RAM **und** die Datei auf Platte) den
+GitHub-Inhalt zurück statt den tatsächlichen GitLab-Inhalt zu holen — ein
+still falsches Ergebnis, exakt das Szenario, vor dem `PERF-46` warnt.
+
+**Warum notiert statt gefixt:** kein kleiner Cache-Key-Patch. Mindestens 10
+Call-Sites betroffen (3 Provider-`readme_manager.lua` als Schreiber; dazu
+`favorites_state.lua`, `readme_editor.lua`, `readme_viewer.lua`,
+`preview_image.lua`, `preview_manager.lua`, `start_view_controller.lua` als
+Leser). Schwerer wiegt: das **Datenmodell selbst** trägt aktuell nirgends
+einen `provider`-Field — weder am `Favorite`-Eintrag noch am
+"selected repo"-Objekt, das die Lese-Callsites durchreichen. Ein korrekter
+Fix müsste also erst das Datenmodell um `provider` erweitern und das dann
+durch UI-/State-/Cache-Schicht durchziehen — eine echte
+Architekturentscheidung mit UI-Layer-Berührung (Favoriten-Anzeige,
+Editor/Viewer), kein kontrollierter Ein-Datei-Fix wie `LUA-40` oder
+`PERF-47`. Selbes Kalibrierungs-Prinzip wie beim `PRIN-01`-Fund in
+casedesk.nvim: real, aber bewusst nicht im Rahmen dieses Sweeps angefasst.
+Praktisch mildernd: nur relevant, wenn *derselbe* `owner/repo`-String auf
+zwei verschiedenen Providern tatsächlich existiert und der Nutzer
+zwischen ihnen umschaltet — ein Nischenfall, aber ein echter.
+
+### `PERF-60`…`65` (Debouncing) — fleet-weit geprüft, 1 echter Fund gefixt
+
+Alle `uv.new_timer()`-Fundstellen über die 32 Repos (ohne
+`ARCHIV_NICHT_BEARBEITEN/`, ohne fremde `.claude/worktrees/`-Duplikate,
+ohne Nicht-Plugin-Ordner wie `Kurse/`) einzeln daraufhin geprüft, ob vor
+einer erneuten Timer-Erstellung der alte Handle gestoppt/geschlossen wird
+(`PERF-62`). Die meisten Treffer taten das bereits korrekt — ein erster
+Grep nach `:stop(`/`:close(` (Doppelpunkt-Aufrufsyntax) hatte mehrere
+False-Positives erzeugt, weil einige Repos (`lib.nvim/debounce/*`,
+`spotlight.nvim/util/lib.lua`) stattdessen `pcall(timer.stop, timer)`
+(Punkt-Referenz statt Methodenaufruf) schreiben — zweiter, genauerer Grep
+korrigiert das.
+
+`lib.nvim/cache/memory.lua`'s Debounce-Zentralisierung (`PERF-64`) und
+dessen eigenes `debounce/init.lua` (`M.new`) sind vorbildlich: derselbe
+Timer-Handle wird über Aufrufe hinweg wiederverwendet (`PERF-61`), nur bei
+Bedarf neu gebaut, und `close_timer()` macht `pcall(timer.stop, timer)` +
+`pcall(timer.close, timer)` vor jedem Neubau. `casedesk.nvim`s
+SLA-Notify-Timer (`sla/notify.lua`) macht keinen Stop/Close, ist aber
+korrekt idempotent (`if timer then return end` in `M.setup()`) — kein
+Leck, weil nie ein zweiter Timer für denselben Zweck entsteht.
+
+**Echter Fund:** `gopath.nvim/lua/gopath/truncated/cache.lua`s
+`M.start_periodic_refresh(interval_seconds)`. Der Timer war eine reine
+lokale Variable (`local timer = assert(uv.new_timer())`), nirgends
+gespeichert — und `gopath.setup()` ruft diese Funktion **ungeschützt** bei
+jedem Aufruf auf (kein `if timer then return end` wie bei casedesk, kein
+Stop/Close wie bei lib.nvim). Ein Config-Reload (`:Lazy reload`,
+erneutes `require("gopath").setup()`) erzeugt also bei jedem Aufruf einen
+weiteren, für immer laufenden Hintergrund-Timer — mit jedem Reload einen
+mehr, jeder mit eigenem periodischen Rebuild-Check (und, sobald sein
+Intervall abläuft, einem vollen Dateisystem-Scan). Gefixt: Timer jetzt als
+Modul-Upvalue getrackt, vorheriger Handle wird vor einem Neubau
+gestoppt/geschlossen (gleiches Muster wie `lib.nvim`s Debounce). Kein
+Testframework in diesem Repo — headless von Hand verifiziert: 4 Aufrufe
+von `start_periodic_refresh` hinterließen vorher 4 aktive `uv`-Timer
+(bestätigt per `git stash` gegen den alten Code), danach 1. Commit
+`2dfca71` auf `gopath.nvim`s `main`, gepusht.
+
+**`PERF-63`-Katalogzitat veraltet:** `pickers.nvim`
+`selected_index/init.lua:180-203` — dieselbe bereits unter `PERF-48`
+notierte tote Datei (Feature per `db42bc9` entfernt). Kein neuer Fund,
+nur ein zweites Symptom derselben veralteten Katalog-Referenz.
+
+### `PERF-01`…`06`/`08`…`16` und `PERF-20`…`27` — kein Vollaudit (Begründung)
+
+Beide Blöcke sind der „Spickzettel" für **Hotpath-Mikrooptimierungen**
+(`t[i]=v` vs. `table.insert`, `table.concat` vs. `..`, Speicherlayout-
+Idiome etc.) — der Katalog selbst stellt ihnen voran: „Nur heranziehen,
+wenn ein Hotpath betroffen ist. Optimierung ohne Messung ist ein
+Anti-Pattern." Das ist ein grundlegend anderer Regel-Typ als `LUA-40`,
+`PERF-46/47/62`: kein Pass/Fail-Kriterium, das ein Repo unabhängig von
+tatsächlicher Aufrufhäufigkeit erfüllt oder verletzt. Ein systematischer
+32-Repo-Audit („wer benutzt `table.insert` statt `t[i]=v`?") würde
+Hunderte Treffer ohne Hotpath-Bezug erzeugen — nicht sinnvoll ohne
+Profiling, das außerhalb des Rahmens dieses Sweeps liegt. Gleiches
+Kalibrierungsprinzip wie bei `LUA-31`/`34`/`81`/`83`.
+
+**Trotzdem gezielt geprüft, weil mechanisch grep-bar und mit realem
+Bug-Potenzial:** `PERF-03` (`table.concat` statt `..` in Schleifen, sonst
+O(n²)) — fleet-weiter Grep nach dem Akkumulator-Muster (`x = x .. ...`)
+fand zwei Kandidaten mit wiederholter Aufruf-Historie
+(`language.nvim/spell/providers/cspell_server.lua:152`,
+`documentation.nvim/editor/serve.lua:286`), beide bei Lektüre als
+**korrekt beschränkt** bestätigt: der `cspell_server`-Stdout-Puffer wird
+nach jeder vollständigen Zeile sofort auf den Rest gekürzt (kein
+unbeschränktes Wachstum über die Prozesslaufzeit), der HTTP-Header-Puffer
+in `serve.lua` ist explizit auf 64 KB gedeckelt, bevor die Verbindung
+geschlossen wird. Kein Fund.
+
+### `PERF-40`…`53` (restliche Cache-Regeln) — vollständiges Cache-Inventar gelesen, 0 neue Funde, 1 Architektur-Beobachtung
+
+`PERF-43` (persistente Caches unter `stdpath("cache")`, nicht im
+Runtime-State): fleet-weit per Grep auf alle `cache_file`/`cache_path`/
+`cache_dir`-Definitionen sowie `reposcope.nvim`s `filecache_path`-Kette
+geprüft — überall `vim.fn.stdpath("cache")` als Basis
+(`gopath.nvim/truncated/cache.lua`, `reposcope.nvim/config/init.lua`,
+`lib.nvim/fs/scan_roots` als dokumentiertes Muster). Kein Fund.
+
+**`PERF-41`/`42` (Regenerierbar/Invalidierbar) — vollständiges Cache-Inventar
+gelesen, nicht nur die Katalog-Belege.** Jede Datei mit "cache" im Namen
+fleet-weit gefunden (`find ... -iname "*cache*.lua"`) und einzeln
+gegengelesen, über die für `PERF-46`/`47`/`48` ohnehin gelesenen Dateien
+hinaus:
+- `hover.nvim/cache.lua`: `M.reset()` setzt `_store = nil` (Neuzuweisung,
+  aber sicher — `_store` ist privat, nie extern gehalten; jeder Zugriff
+  geht über `store()`, das lazy neu aufbaut). Zusätzlich ein durchdachtes
+  `M.on_reset(drop)`-Registry-Muster, das Kopplung vermeidet, die sonst
+  genau das `PERF-47`-Risiko wäre.
+- `insights.nvim/scan/cache.lua`: reiner Datei-Cache ohne geteilten
+  In-Memory-State (jeder Aufruf liest/schreibt frisch von Platte) —
+  Mehrfach-Signal-Invalidierung (Version + CWD + TTL + Datei-mtime pro
+  Eintrag), exemplarisch für `PERF-44`.
+- `language.nvim/spell/core/cache.lua`: `bufnr`-keyed, **nicht**
+  weak-keyed (korrekt, siehe `LUA-40`-Lektion) — aktive Bereinigung über
+  `BufDelete`-Autocmd zu `language.spell.on_buf_delete` → `cache.
+  invalidate(bufnr)` verifiziert, tatsächlich verdrahtet (nicht nur
+  dokumentiert).
+- `pdfport.nvim/util/cache.lua`: Cache-Key enthält Pfad + Backend-ID +
+  Seitenbereich-Variante — vollständig (`PERF-46`), mtime-Invalidierung
+  (`PERF-45`), delegiert Speicherung an `lib.nvim.cache.disk`.
+- `reposcope.nvim/cache/repository_cache.lua`: `M.set()` weist
+  `M.repositories.items`/`.list` neu zu (nicht in-place) — geprüft, ob das
+  ein `PERF-47`-Risiko ist: `M.get()` gibt immer die äußere `M.repositories`-
+  Tabelle zurück (deren Identität nie wechselt), `M.get_list()` gibt zwar
+  die innere `list`-Tabelle direkt zurück, aber ihr einziger Aufrufer
+  (`ui/list/init.lua`) liest sie einmalig bei der Initialisierung und hält
+  sie nie über einen späteren `M.set()`-Aufruf hinweg — kein Fund.
+
+Kein Gegenbeispiel in neun einzeln gelesenen Cache-Implementierungen quer
+über neun Repos. `PERF-40`/`44`/`45`/`49`…`51`/`53`: architektur-/
+kontextabhängige Empfehlungen ohne scharfes fleet-weites Pass/Fail-
+Kriterium, durch dieselben gelesenen Implementierungen exemplifiziert.
+
+**`PERF-52`-Beobachtung (Frecency-Duplikation), notiert:** der Katalog
+zitiert selbst zwei getrennte ~190-Zeilen-Implementierungen desselben
+Frecency-Musters (`pickers.nvim/smart/frecency.lua`,
+`emojis.nvim/overlay/frecency.lua`) als Beleg dafür, dass dies „nicht pro
+Plugin neu erfinden" werden sollte. Verifiziert: beide Dateien sind real
+und vergleichbar groß — eine echte, aber bewusst nicht angegangene
+Architekturentscheidung (Extraktion nach `lib.nvim` + Migration zweier
+Konsumenten), gleiche Kalibrierung wie `PRIN-01` (casedesk.nvim) und
+`PERF-46` (reposcope.nvim) — kein Ein-Datei-Fix.
+
+### `PERF-70`…`75` (begrenzte Nebenläufigkeit/Scans) — kanonisches Beispiel verifiziert, 0 Funde
+
+Der Katalog zitiert für `PERF-70`…`73` durchgängig dieselbe Datei,
+`gopath.nvim/truncated/cache.lua`s `scan_roots_bounded` (dieselbe Stelle,
+die für den `PERF-62`-Fix in diesem Durchgang ohnehin gelesen wurde) —
+verifiziert korrekt: Work-Queue mit Lese-Cursor (`qhead`, kein `table.
+remove(queue, 1)`, also auch `PERF-71` erfüllt), `max_concurrency`-
+Deckelung, konservative Auto-Roots (cwd/stdpath/Git-Root, kein ganzes
+Laufwerk — `PERF-72`), und das `state.building`-Flag (`PERF-73`) wird auf
+allen Pfaden zuverlässig zurückgesetzt (auch beim Leerfall `#queue == 0`,
+der explizit per `vim.schedule` behandelt wird — kein Pfad, auf dem
+`on_done`/`_finalize_build` nie feuert und das Flag für immer hängen
+bleibt).
+
+`lib.nvim/fs/collect_recursive/init.lua`s `collect_async` verfolgt bewusst
+einen anderen, aber ebenfalls sicheren Ansatz — sequenziell statt
+parallel-begrenzt ("walks one directory at a time... not parallel
+either", eigener Docstring) — kein EMFILE-Risiko, weil nie mehr als ein
+`fs_scandir`-Handle gleichzeitig offen ist. Kein Vollaudit der ~70
+weiteren `fs_scandir`/`readdir`-Fundstellen fleet-weit: die übrigen sind
+fast durchweg einstufige Verzeichnis-Listings ohne Rekursion, für die das
+EMFILE-Risiko, vor dem `PERF-70` warnt, strukturell nicht besteht.
+
+### `PERF-80`…`91` (Async-Scheduling/Chunking/Progress) — geprüft, 1 Fund bereits gefixt (Querverweis), Rest bestätigt
+
+**`PERF-80`** (`vim.schedule` vor jedem `vim.api.*`-Zugriff im Fast-Event-
+Context): 18 `uv.new_timer()`-Fundstellen fleet-weit einzeln geprüft, ob
+der tatsächliche Timer-Callback `vim.schedule`/`vim.schedule_wrap` um
+jeden `vim.api.*`/`vim.fn.*`-Zugriff legt. Alle 18 korrekt — zwei sahen
+bei einem ersten, zu kurzen Kontextfenster (35 Zeilen nach `new_timer()`)
+wie Negativfunde aus, bei vollständiger Lektüre aber beide unauffällig:
+`lib.nvim/buf_win_tab/capture/init.lua`s `poll()` wird erst 57 Zeilen
+später per `timer:start(0, interval, vim.schedule_wrap(poll))` verdrahtet
+(außerhalb des ersten Lesefensters); `runtime-analysis.nvim/startup/
+init.lua`s Stall-Detector-Timer braucht gar kein `vim.schedule`, weil sein
+Callback nur `uv.hrtime()` und reine Lua-Tabellen anfasst, nie `vim.api`.
+Kein Fund.
+
+**`PERF-82`** (idempotenter Timer-Start mit explizitem Stop-Gegenstück) —
+**Querverweis, kein neuer Fund:** der bereits unter `PERF-60`…`65` gefixte
+`gopath.nvim`-Bug (`start_periodic_refresh` ohne Idempotenz-Guard, Commit
+`2dfca71`) ist wortwörtlich dieselbe Regel, hier unter einer zweiten
+Nummer noch einmal katalogisiert (Debouncing-Timer vs. Hintergrund-Timer
+allgemein). Kein zusätzlicher Fund über den bereits gefixten hinaus.
+
+**`PERF-83`** (Token-basiertes Cancel bei nicht abbrechbaren Async-Ops):
+`runtime-analysis.nvim/bindings/usrcmds.lua:210-227` vollständig gelesen
+(nicht nur die zuerst zitierten Zeilen 246-260) — echtes Token-Muster
+bestätigt: `pending_token` wird pro neuem Request hochgezählt,
+`is_current(my_token) = in_flight and my_token == pending_token` verwirft
+die Callbacks veralteter Requests still, exakt wie die Regel es verlangt
+(nicht nur ein killbarer Handle wie zunächst vermutet). Zusätzlich
+bestätigt an `reposcope.nvim`s `readme_manager.lua` `_show_unavailable`
+(`PERF-46`-Abschnitt dieser Datei) — dasselbe Muster, andere
+Implementierung ("nur painten, wenn die Auswahl noch aktuell ist"). Kein
+fleet-weiter Vollaudit auf fehlende Stale-Callback-Guards bei *jeder*
+Async-Operation — das würde die Callback-Kette jedes einzelnen Netzwerk-/
+Prozess-Aufrufs fleet-weit nachvollziehen müssen.
+
+**`PERF-84`** (bewusster synchroner Trade-off): `pickers.nvim/smart/
+search.lua` vollständig gelesen — `timeout = opts.timeout or 3000`
+bestätigt exakt die zitierten 3000ms, Docstring bestätigt die bewusste
+Design-Entscheidung wortgleich ("a short blocking `vim.system():wait()`
+keeps the shared core trivially portable"). Korrekt.
+
+**`PERF-85`** (Redraw-Storms vermeiden): `filetree.nvim/features/nav/
+cwd_mode/init.lua`s `M.refresh_indicator()` gelesen — diffed `text`/`hl`
+gegen `_last_text`/`_last_hl`, `announce_change()` (das Event +
+`redrawstatus`) läuft nur bei echter Änderung. Korrekt.
+
+**`PERF-86`** (History-Cap als Count-Cap): `runtime-analysis.nvim/
+history.lua` gelesen — **Katalogzitat leicht veraltet, Verhalten aber
+weiterhin korrekt:** der zitierte `MAX_ENTRIES = 200`-Konstante gibt es
+nicht mehr; sie wurde durch eine Funktion `max_entries()` ersetzt, die
+`setup({ history_max_entries = N })` respektiert (siehe Datei-Kommentar
+„A function rather than the old `M.MAX_ENTRIES` constant"). Der
+eigentliche Cap wird in `M.record` weiterhin per `vim.list_slice`
+durchgesetzt, sobald `#entries > cap` — eine Verbesserung gegenüber dem
+zitierten Snapshot (konfigurierbar statt hartkodiert), keine Regression.
+
+**`PERF-87`…`91`** (Schwellwert-Chunking + Progress-Handle): `replacer.nvim/
+apply.lua` gelesen — `APPLY_CHUNK_SIZE = 10` (deckt sich exakt mit der
+Katalog-Vorgabe „8–10 bei bufload/writefile"), `lib.nvim.progress` als
+Soft-Dependency korrekt eingebunden (`pcall(require, "lib.nvim.progress")`,
+No-op wenn abwesend). Bestätigt konsistent mit der bereits abgeschlossenen
+separaten UI-Decoupling-Arbeit an anderer Stelle (fileops/pdfport/
+lsp-capabilities, 2026-07-21) — beide Male dasselbe `lib.nvim.progress`,
+keine Doppelimplementierung.
+
+Alle sechs Katalogzitate für `PERF-81`…`86` in diesem Durchgang tatsächlich
+gelesen (nicht nur aus dem Katalogtext übernommen) — fünf exakt wie
+beschrieben, eines (`PERF-86`) mit seither verbesserter, aber weiterhin
+korrekter Implementierung. Kein fleet-weiter Vollaudit über die 32 Repos
+hinaus, da es sich um kontextabhängige Einzelfall-Empfehlungen ohne
+scharfes Pass/Fail-Kriterium handelt.
+
+---
+
+## Fazit: alle 9 Regel-Familien durchlaufen
+
+Mit `PERF-*` ist die letzte der 9 Familien fertig — insgesamt **281
+Einzelregeln** (34+23+7+5+34+34+37+45+62, Zählung mit den in dieser Datei
+dokumentierten Korrekturen) gegen alle 32 Personal-Plugin-Repos geprüft.
+
+**Bilanz über die gesamte Sweep-Serie:**
+- `ERR-*` war die fundreichste Familie: 17 echte Bugs, 32/32 Repos.
+- `LUA-*`: 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks, 2
+  Doku-Korrekturen ohne Verhaltensänderung).
+- `PERF-*`: 2 echte Bugs gefixt (documentation.nvim, gopath.nvim), 2
+  Architektur-Funde notiert statt gefixt (reposcope.nvim Cache-Key,
+  Frecency-Duplikation).
+- `UI-*`, `PRIN-*`: 0 bzw. 1 Fund trotz voller Architektur-Review —
+  bestätigt die wiederkehrende Beobachtung, dass mehrere dieser Kataloge
+  teilweise aus Beobachtung genau dieses Fleets selbst entstanden
+  ("Erhebung 2026-08-08" oder später in vielen Belege-Zitaten).
+- `LLS-*`, `SEC-*`, `DEP-*`, `TS-*`: bereits in früheren Durchgängen
+  vollständig abgeschlossen (s. o.).
+
+**Wiederkehrendes Muster, das sich über alle Familien bestätigt hat:**
+die meisten echten Bugs saßen in **Cache-/State-Lifecycle-Code** —
+falsche Weak-Table-Annahmen (`LUA-40`/`41`), Referenz- statt
+In-Place-Mutation bei `clear()`/`reset()` (`PERF-47`, dieselbe Bug-Klasse
+schon mehrfach unter `ERR-*` gefunden), und ungeschützte
+Wiederholungsaufrufe bei Hintergrund-Timern (`PERF-62`/`82`). Reine
+Stil-/Idiom-Regeln ohne scharfes Pass/Fail-Kriterium (viele `LUA-3x`/`8x`,
+die gesamten `PERF-01`…`27` Mikrooptimierungs-Blöcke) wurden bewusst ohne
+Vollaudit belassen — der Katalog selbst verlangt für diese Messung vor
+Optimierung, nicht Grep-Jagd.
+
+**Katalog-Pflege als Nebenprodukt:** mehrere veraltete Katalog-Zitate
+aufgefallen und dokumentiert (nicht selbst korrigiert, da
+`WKDBooks/.../regeln/` außerhalb dieses Repos liegt) — u. a. zwei tote
+Referenzen auf das per `db42bc9` entfernte `pickers.nvim`
+`selected_index`-Feature (`PERF-48`, `PERF-63`), ein Zitat auf eine
+bereits unter `LUA-40` gefixte Stelle (`PERF-48`, color_my_ascii.nvim),
+und eine frühere, nie korrigierte Regelzahl-Schätzung (`PERF-*`: 57 statt
+62).
+
+---
+
+## Methodik-Hinweise für den nächsten Durchlauf
+
+- **Mechanisch prüfbare Regeln** (feste API-Namen, Deprecations, Pattern-Matches
+  wie `DEP-*`) lassen sich per Grep über alle 32 Repos auf einmal scannen,
+  bevor überhaupt ein Repo einzeln angefasst wird — spart Zeit gegenüber
+  „ein Agent/eine Session pro Repo gegen den vollen Katalog".
+- **Kontextabhängige Regeln** (wie die meisten `SEC-*`, `ERR-*`, `PRIN-*`)
+  brauchen echtes Lesen des Quelltexts, keine Abkürzung.
+- **Immer gegen den aktuellen Quelltext verifizieren, nicht gegen einen alten
+  Belege-Snapshot** — mehrere SEC-Funde waren nur noch teilweise oder gar
+  nicht mehr aktuell (z. B. `cmdlog.nvim`s SEC-11/12/13, längst durch
+  `redact_patterns` geschlossen).
+- **1 Agent/Repo pro Durchgang, nicht mehrere parallel** — mehrere
+  gleichzeitige Agenten kosten zu viele Token und sind zwischendurch nicht
+  von Hand nachhaltbar (siehe `feedback_agent_limits_and_language`-Notiz in
+  Claudes Memory). Bei rein mechanischen Scans (Grep) ist gar kein Agent
+  nötig.
+- **Regel-Zählung immer nachprüfen**, bevor eine Familie als „klein" gilt —
+  der Katalog mischt Tabellen- und Aufzählungsformat (siehe oben).
+
+---
+

@@ -1,30 +1,18 @@
 ---@module 'config.search'
---- Centralized configuration for search.nvim.
----
---- This module encapsulates all setup logic for the search plugin,
---- including Telescope integration and tab/collection definitions.
----
---- Responsibilities:
---- - Safe requiring of dependencies
---- - search.nvim setup
---- - Telescope builtin wiring
----
---- This module performs no side effects on load.
---- Configuration is applied explicitly via `setup()`.
+--- Centralized configuration for search.nvim: Telescope integration and
+--- tab/collection definitions. No side effects on load -- applied via
+--- setup(), called from the plugin spec.
 
 local M = {}
 
 --- Initialize and configure search.nvim.
---- This function is intended to be called from the plugin spec.
 --- @return boolean success Indicates whether setup completed successfully
 function M.setup()
-  -- Safely require search.nvim
   local ok_search, search = pcall(require, "search")
   if not ok_search then
     return false
   end
 
-  -- Safely require telescope builtins
   local ok_builtin, builtin = pcall(require, "telescope.builtin")
   if not ok_builtin then
     return false

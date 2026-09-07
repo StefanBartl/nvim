@@ -1,16 +1,16 @@
 ---@module 'bindings.usrcmds.bindings_explorer.browse'
---- `:Bindings browse` — picker over `records.lua`'s parsed table rows
---- instead of `search.lua`'s raw text lines (docs/ROADMAP/personal/
---- bindings-explorer.nvim.md §3, Phase 2). Reuses `lib.nvim.ui.kit.select`
---- like `ui.lua`'s Phase-1 fallback does — a fixed row count per query,
---- no incremental live-filter engine needed the way `live.lua`'s
---- text-grep does.
+--- `:Bindings browse` — picker over `records.lua`'s parsed table rows instead
+--- of `search.lua`'s raw text lines (see docs/FEATURES.md). Reuses
+--- `lib.nvim.ui.kit.select` like `ui.lua`'s fallback does — a fixed row count
+--- per query, no incremental live-filter engine needed.
+---
+--- User-facing strings here are German, deliberately (see status.lua).
 
 local records = require("bindings.usrcmds.bindings_explorer.records")
 
 local M = {}
 
----@return table notify-Handle aus lib.nvim
+---@return table lib.nvim notify handle
 local function notify()
   return require("lib.nvim.notify").create("[bindings]")
 end
@@ -38,7 +38,7 @@ local function format_record(rec)
 end
 
 ---@param recs Bindings.Record[]
----@param label string|nil Plugin-Scope, für Titel und Leermeldung
+---@param label string|nil plugin scope, for the title and the empty message
 ---@return nil
 local function pick(recs, label)
   if #recs == 0 then
@@ -66,7 +66,7 @@ end
 ---
 --- The plugin narrowing is a filter on `rec.plugin` rather than a second
 --- corpus walk: `records.list` reads the same files either way, and the stems
---- come pre-resolved from `plugin.resolve` (so `dap` here means both
+--- come pre-resolved from `plugin_scope.resolve` (so `dap` here means both
 --- `dap.nvim` and `Dap`, exactly as it does for `:Bindings search`).
 ---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil
 ---@param scope ("personal"|"extern")|nil

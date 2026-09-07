@@ -60,7 +60,7 @@
   - [ ] Badges & ASCII implementieren
   - [ ] Sollte auf englisch sein! (auch die `/doc/**` vimdoc file)
   - [ ] Zu Beginn, nach der ascii art, ein kurzer `>` absatz mit eienen link zu einen der anderen Plugins, vielleicht jenes, welches am besten dieses ergänzt.
-- [ ] Auf implementierte Features checken die für `e:\repos\filetree.nvim` (Neotree, NvimTree, Netrw, ...) interessant sind:
+- [ ] Auf implementierte Features checken die für `$REPOS_DIR\filetree.nvim` (Neotree, NvimTree, Netrw, ...) interessant sind:
   - [ ] Eine Featurlist daraus erstellen indem enthalten ist: Welches Feature; Origin (Datei, Zeile); Wo es thematisch angelegt ist; Infos/Was sonst noch Sinn macht
   - [ ] `/docs/ROADMAP/NEOTREE_FEATURES.md` anlegen: Dort kommt eine Übersicht/Auflistung aller dieser Features hin
   - [ ] Nur zur Info: Die Features werden später dann alle später in `filetree.nvim` eingebaut und zwar **Cross-Platform** & **Filetree-Manager agnostisch**
@@ -163,7 +163,7 @@
   - [ ] Korrekte, passende Keywords für Repo eingeben: `gh repo edit --add-topic "neovim,lua,plugin"`
   - [ ] usw.
 - [x] Branch auf `main` umstellen wenn noch nicht geschehen — alle 54 Repos
-      unter `E:\repos` liegen auf `main` (Ausnahme `Notes`, dort `master`).
+      unter `$REPOS_DIR` liegen auf `main` (Ausnahme `Notes`, dort `master`).
 - [ ] Alle features/bugfixes committen und pushen (wenn nicht möglich: commit message ausgeben)
 
 ---

@@ -314,7 +314,7 @@ function M.symbol_context_lsp()
   local path_syms
 
   if hierarchical then
-    -- Hierarchical processing (unchanged logic)
+    -- Hierarchical processing
     local function locate_in_hierarchical(list, l, c)
       local best_path = {}
       local function walk(nodes, path)
@@ -350,7 +350,7 @@ function M.symbol_context_lsp()
 
     path_syms = locate_in_hierarchical(items, l0, c0)
   else
-    -- Flat processing (unchanged logic)
+    -- Flat processing
     local function locate_in_flat(infos, l, c)
       local best, best_span
       for _, si in ipairs(infos) do

@@ -39,7 +39,7 @@ Dinge bauen lassen, die **kein generisches Test-Framework kann** (§9).
 
 ## 1. Ist-Zustand
 
-Scan über `E:\repos\*.nvim\` (2026-08-17):
+Scan über `$REPOS_DIR\*.nvim\` (2026-08-17):
 
 | Kennzahl | Wert |
 |---|---|
@@ -226,7 +226,7 @@ damit überwiegend Subprozess + Feldmapping — `lib.nvim.system.job` +
 
 Nutzen über die eigene Plugin-Welt hinaus: `portfolio-next-ts`,
 `template_bun_nest_next`, `docmap-desktop`, `loomAI` sind
-Nicht-Lua-Projekte im selben `E:\repos`. Ein Runner, der alle abdeckt,
+Nicht-Lua-Projekte im selben `$REPOS_DIR`. Ein Runner, der alle abdeckt,
 macht Cache (§9), Affected-Selection (§9) und Dashboard (K7)
 **sprachübergreifend** — und *das* kann neotest nicht, weil es pro Adapter
 isoliert bleibt und kein gemeinsames IR mit Cache/Graph darunter hat.

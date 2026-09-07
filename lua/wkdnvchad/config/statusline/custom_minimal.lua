@@ -9,7 +9,7 @@ local lsp_module = lazy.require("wkdnvchad.ui.statusline.modules.lsp")
 local cursor_module = lazy.require("wkdnvchad.ui.statusline.cursor_ctl")
 
 -- ============================================================================
--- Gen Block Helper (wie in minimal.lua)
+-- Gen block helper (mirrors NvChad's own nvchad/stl/minimal.lua)
 -- ============================================================================
 
 local function get_gen_block()
@@ -91,7 +91,7 @@ return {
           return "%#St_gitIcons#" .. utils.git()
         end,
 
-        --- Breadcrumbs (inline ohne gen_block)
+        --- Breadcrumbs (inline, without gen_block)
         breadcrumbs = function()
           local band = hl_module.mode_band_group()
           local content = lsp_module.render_breadcrumbs_inherit_lspfirst(band)

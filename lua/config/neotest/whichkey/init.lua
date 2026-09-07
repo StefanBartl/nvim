@@ -63,6 +63,10 @@ function M.setup()
       desc = "Toggle output panel",
     },
 
+    -- CDX: actions.stop_tests does not exist (actions/init.lua defines
+    -- M.stop()) -- this errors ("attempt to call a nil value") whenever
+    -- <leader>ntS is triggered through which-key. Real behavior bug, not
+    -- fixed here per sweep scope.
     {
       "<leader>ntS",
       function()

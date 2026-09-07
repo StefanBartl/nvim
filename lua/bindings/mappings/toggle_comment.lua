@@ -1,6 +1,10 @@
 ---@module 'bindings.mappings.toggle_comment'
---- Provides comment toggling functionality with support for EmmyLua annotations.
---- Handles both regular comments and annotation comments (---@...) in normal and visual mode.
+--- Comment toggling with EmmyLua-annotation awareness (`---@...` toggles to
+--- `-- ---@...`), in normal and visual mode.
+---
+--- CDX: the annotation-vs-regular branching is copy-pasted between
+--- `toggle_comment_with_annotations` (one line) and `toggle_comment_visual`
+--- (a selection). Extract one line-transform and map it over both.
 
 local M = {}
 

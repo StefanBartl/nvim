@@ -1,14 +1,7 @@
 ---@module 'wkdnvchad.ui.statusline.modules.highlighting'
--- =========================================================
--- Statusline Highlighting Utilities
---
--- Dieses Modul kapselt Hilfsfunktionen zum Arbeiten mit
--- Neovim-Statusline-Highlight-Sequenzen (%#Group#, %*).
--- Es ermöglicht das Entfernen bestehender Highlights,
--- das Öffnen und Wrappen von Highlight-Gruppen sowie
--- die Ermittlung der aktuellen Mode-Band-Gruppe
--- (z. B. Normal-, Insert-, Visual-Mode).
--- =========================================================
+--- Helpers for Neovim statusline highlight sequences (%#Group#, %*): strip,
+--- open, wrap, and resolve the current mode-band group. Per-function docs
+--- are in @types/init.lua.
 
 local Autocmd = require("lib.nvim.bindings.autocmd")
 

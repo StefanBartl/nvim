@@ -1,19 +1,18 @@
-# casedesk — Autocmds Cheatsheet
+# casedesk — Autocmds — umgezogen
 
-None. Confirmed by a repo-wide grep across `lua/bindings/usrcmds/case/*.lua`
-for `autocmd`/`augroup`/`nvim_create_autocmd` — zero matches.
+Liegt seit 2026-09-04 im Plugin-Repo:
 
-casedesk is purely command- and callback-driven: every `:Case`/`:Cases`
-route (see [`Usercmds.md`](./Usercmds.md)) runs synchronously or through a
-`kit.*` component's own callback (`on_submit`/`on_select`/`on_answer`), and
-the one async path (`:Cases linkcheck`, via `lib.nvim.net.curl`) resolves
-through a plain Lua callback, not an event. There's no "when a case buffer
-opens" or "on save" hook anywhere in the module — `:Case sync`/`:Case add`
-are the explicit, user-triggered equivalent of what an autocmd would
-otherwise paper over automatically, matching the rest of the module's
-"nothing happens without a command" design.
+- lokal: `$REPOS_DIR/casedesk.nvim/docs/BINDINGS.md`
+- remote: <https://github.com/StefanBartl/casedesk.nvim/blob/main/docs/BINDINGS.md>
 
-If that ever changes (e.g. a future `BufWritePost` hook to auto-detect a new
-link and offer to add it to `.case.json`), this file is where it'd be
-documented — same convention as every other module in
-`docs/NOTES/PersonelPlugins/BINDINGS/Autocmds/`.
+casedesk hat genau einen Autocmd (`FocusGained`, Gruppe `CasedeskSlaNotify`,
+aus `sla/notify.lua`). Er steht jetzt im `Autocommands`-Abschnitt von
+`docs/BINDINGS.md` im Plugin-Repo.
+
+Diese Seite behauptete bis 2026-09-04 „None". Der zitierte Grep war echt, lief
+aber vor dem SLA-Notifier — eine Seite, die ein Negativum behauptet, veraltet,
+ohne dass je etwas fehlschlägt.
+
+`:Bindings` liest seit `BND-01` casedesk.nvims eigene `docs/BINDINGS.md`
+direkt (`stdpath("data")/lazy/casedesk.nvim/docs/BINDINGS.md`) — der frühere
+Abschrift-Sheet unter `PersonelPlugins/BINDINGS/` ist mit `BND-05` entfernt.

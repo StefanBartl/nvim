@@ -12,30 +12,18 @@
 --- explorer (closing neo-tree first); closing the explorer reopens neo-tree;
 --- closing THAT neo-tree leaves both closed.
 ---
---- Known imprecision: the "did the user just open the EXPLORER specifically"
---- check is `Snacks.picker.get({source="explorer"})` returning anything for
---- the current tab, not "is the window I just entered specifically that
---- picker" — snacks' `snacks_picker_list` filetype is shared by every snacks
---- picker (files, grep, buffers, …), so entering some OTHER snacks picker
---- while an explorer instance happens to already be open in a background
---- window would also (harmlessly) close neo-tree. Narrow scenario, cheaply
---- recoverable (press `<A-l>` again) — not worth the extra internal-API
---- surface it'd take to disambiguate precisely.
+--- Known imprecision: the "is the explorer open" check is
+--- `Snacks.picker.get({source="explorer"})`, not "is the window I just
+--- entered that picker" — the `snacks_picker_list` filetype is shared by
+--- every snacks picker, so entering another one while an explorer instance
+--- sits in a background window also (harmlessly) closes neo-tree. Recoverable
+--- with `<A-l>`; not worth the internal-API surface to disambiguate.
 ---
---- The WinEnter handler defers a tick before reading current win/buf, rather
---- than trusting the event itself: a newly created window (a floating picker
---- in particular) can still briefly report the PREVIOUS window's buffer at
---- the exact instant WinEnter fires, before Neovim has settled which buffer
---- belongs to it — confirmed by this module's own smoke test failing without
---- the defer, then passing with it.
+--- Single-tab only: `_displaced` is one global, not per-tab.
 ---
---- Verified against a scripted simulation (real windows/buffers, stubbed
---- neo-tree.command/snacks — see the smoke test alongside this file), NOT
---- against a live neo-tree + snacks session. Confirm the open/close/reopen
---- cascade actually feels right in real use before trusting it day to day.
----
---- Single-tab only: `_displaced` is one global, not per-tab. Multiple tabs
---- each running this dance independently isn't handled.
+--- Verified against the smoke test alongside this file (stubbed
+--- neo-tree/snacks), NOT a live session — confirm the cascade feels right in
+--- real use before trusting it.
 
 local M = {}
 
@@ -116,13 +104,10 @@ function M.setup(opts)
   local group = vim.api.nvim_create_augroup("WkdExplorerSingleton", { clear = true })
 
   autocmd.create("WinEnter", function()
-    -- Deferred one tick, re-reading current win/buf at execution time
-    -- rather than trusting the event args: a newly created window (a
-    -- floating picker in particular) can still briefly report the
-    -- PREVIOUS window's buffer at the exact instant WinEnter fires,
-    -- before Neovim has fully settled which buffer belongs to it. Acting
-    -- on that transient state was observed to misfire — see the module's
-    -- own smoke test for the concrete repro this fixed.
+    -- Deferred a tick and re-reads win/buf at execution time, not from the
+    -- event args: at the instant WinEnter fires a fresh window (a floating
+    -- picker especially) can still report the PREVIOUS window's buffer.
+    -- Acting on that transient state misfired — see the smoke test for the repro.
     vim.schedule(function()
       pcall(function()
         local win = vim.api.nvim_get_current_win()

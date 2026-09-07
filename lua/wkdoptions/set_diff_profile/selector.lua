@@ -1,6 +1,5 @@
 ---@module 'wkdoptions.set_diff_profile.selector'
--- @description
--- This module provides functionality to set different diff profiles in Neovim.
+--- Sets the active diff profile in Neovim.
 
 local lazy = require("lib.lua.lazy")
 local diff_profiles = lazy.require("wkdoptions.set_diff_profile.profiles")

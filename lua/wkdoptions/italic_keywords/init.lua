@@ -5,7 +5,6 @@ local Autocmd = require("lib.nvim.bindings.autocmd")
 
 local M = {}
 
--- Sprachen-spezifische Keyword-Definitionen
 M.languages = {
   lua = { enabled = true, keywords = { "return", "in", "for", "while", "if", "then", "else" } },
   typescript = { enabled = true, keywords = { "return", "in", "const", "let", "async", "await" } },
@@ -19,14 +18,13 @@ function M.setup()
   for lang, config in pairs(M.languages) do
     if config.enabled then
       Autocmd.create("FileType", function()
-        -- Doppelte Backslashes für Vim-Regex!
+        -- Vim regex needs doubled backslashes.
         local pattern = "\\<\\(" .. table.concat(config.keywords, "\\|") .. "\\)\\>"
         vim.fn.matchadd("ItalicKeywords_" .. lang, pattern)
       end, {
         pattern = lang,
       })
 
-      -- Highlight-Gruppe pro Sprache
       vim.api.nvim_set_hl(0, "ItalicKeywords_" .. lang, { italic = true })
     end
   end

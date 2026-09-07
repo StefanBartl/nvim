@@ -8,7 +8,6 @@
 --- - Delete File
 --- - Unicode Table (floating window)
 
--- Default toggles for top-level entries
 local notify = require("lib.nvim.notify").create("[config.menu.custom_menu]")
 local kit = require("lib.nvim.ui.kit")
 
@@ -28,7 +27,6 @@ local defaults = {
   enable_unicode_table = true,
 }
 
--- Merge helper
 ---@param dst table
 ---@param src table|nil
 local function merge_table(dst, src)
@@ -84,7 +82,6 @@ local function open_unicode_table()
         -- Customize window if needed
         local win = vim.fn.bufwinid(buf)
         if win ~= -1 then
-          -- Could set additional window options here
           vim.api.nvim_win_set_config(win, {
             border = "rounded",
             title = " Unicode Table ",
@@ -338,6 +335,7 @@ return function(opts)
     table.insert(composed, {
       name = "  Git Actions",
       hl = "ExGreen",
+      --- CDX: both ternary branches return the same value -- dead condition
       items = ok_gs and "gitsigns" or "gitsigns",
     })
   end

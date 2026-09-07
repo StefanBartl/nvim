@@ -283,7 +283,7 @@ function M.stammdaten(text)
   return out
 end
 
---- Vollständigkeits-Check (EXTRACTION.md §4, free with the header):
+--- Completeness check (EXTRACTION.md §4, free with the header):
 --- `<N>` / `<N> total activities.` at the top of the file must equal the
 --- number of `Comment`/`Field changes`/`Work notes` type-label blocks —
 --- a mismatch means the SNOW view wasn't fully expanded before copying

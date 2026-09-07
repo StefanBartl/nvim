@@ -49,7 +49,7 @@ PERSONAL_UTILS.repos_path = local_repos_path or ""
 --- Returns nil (→ remote) when no local repos root exists OR when the
 --- concrete plugin folder is not present locally, so a repo flagged "dir"
 --- but not cloned simply falls back to its remote spec instead of erroring.
----@param plugin_name string Der Name des Ordners im Repos-Verzeichnis
+---@param plugin_name string Folder name inside the repos directory
 ---@return string|nil
 function PERSONAL_UTILS.local_dev(plugin_name)
   if using_remote_fallback or not local_repos_path then

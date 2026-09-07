@@ -9,7 +9,7 @@ Der Inhalt selbst steht **nicht** hier. Er steht in der kanonischen
 Regelsammlung, weil er dort gebraucht wird — beim Schreiben von Code in
 irgendeinem Repo, nicht beim Planen in dieser Roadmap:
 
-> `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\`
+> `$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\`
 
 Diese Datei ist die Quittung dafür und altert; die Regeln dort tun es nicht.
 
