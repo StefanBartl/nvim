@@ -53,6 +53,26 @@ flag them:
   the composer, not registrations. A naive `grep nvim_create_user_command`
   reports them; reading the line does not.
 
+> **Nachtrag 2026-09-07.** lib.nvim's own command count is now **5**, not 3:
+> `:LibKeymapConflicts` and `:LibBindingsAuditPrefixes` were newly wired (see
+> [`docs/ROADMAP/handovers/CDX-bindings-runtime-check.md`](../../ROADMAP/handovers/CDX-bindings-runtime-check.md)),
+> both real names, neither colliding with anything in the 148 above — so the
+> total is 150, still all distinct. `:LibBindingsAuditPrefixes` also
+> automates the *next* section: it reads
+> `vim.api.nvim_get_commands({builtin=false})` and reports every
+> strict-prefix pair live, the same question this section answered by hand.
+> A live re-run (74/115 lazy-loaded plugins loaded) reproduced both cases
+> below unchanged (`:File`/`:Filetree`, `:Lib`/`:LibBindingsAudit` and
+> siblings) plus Neovim's own `:Inspect`/`:InspectTree` pair, which this
+> section never listed because it only ever scoped to the 31 plugins. Real
+> name *duplicates* were not re-checked this way and cannot be, live: two
+> plugins registering the same name is not an observable end-state —
+> `nvim_create_user_command` raises on the second registration, so whichever
+> plugin loads second simply never finishes its `setup()`, which shows up as
+> that plugin half-broken, not as two commands sharing a name. The **148,
+> all distinct** result below stands on the hand analysis, not on the new
+> live tool.
+
 ## Prefix ambiguity
 
 Vim resolves an exact command name before any longer one, so every name below

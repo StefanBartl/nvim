@@ -91,6 +91,37 @@ mappings across twelve plugins, and the per-plugin prefixes (`cn`, `e`, `n`/`p`,
 `g`, `f`/`p`, `x`/`ls`, `d`/`f`/`g`/`l`, `lr`, `r`, `s`) were evidently chosen
 against each other rather than in isolation.
 
+> **Nachtrag 2026-09-07 — re-checked live, via `:LibKeymapConflicts`
+> (`lib.nvim.bindings.keymap.conflicts()`, newly wired — see
+> [`docs/ROADMAP/handovers/CDX-bindings-runtime-check.md`](../../ROADMAP/handovers/CDX-bindings-runtime-check.md)),
+> not by re-reading every `keymaps.lua` by hand.** First real-world run, at
+> 74/115 lazy-loaded plugins loaded (the command's own coverage note), found
+> exactly one thing: `<leader>fm` "claimed by more than one registration" —
+> both claimants the *same* `E:/repos/lsp.nvim/lua/lsp/languages/documentation/markdown.lua:56`.
+>
+> Not a cross-plugin fight over a key. It was a tooling gap in
+> `lib.nvim.bindings.keymap.records`: a plain `keymap.set()` call's direct
+> record was never deduplicated, so a `FileType` autocmd re-firing for an
+> already-typed buffer (Neovim does this even when the value does not change
+> — the case here) registered the *same* buffer-local binding twice, and
+> `conflicts()` reported the call site as conflicting with itself. Fixed at
+> the source (`records.add()` now replaces a same-buffer+lhs+mode record
+> instead of accumulating one, mirroring how `bindings.usercmd`'s own records
+> already worked) — `lib.nvim@d1f2a4b`. Verified after the fix: the same
+> triple-fire no longer reports anything, and a real two-buffer /
+> two-registered-action conflict still does.
+>
+> With that fixed, the live check found **zero** cross-plugin duplicates —
+> agrees with the hand analysis above, on the ~64% of plugins that happened
+> to be loaded at check time. Not full coverage (see the tool's own note),
+> so this confirms rather than supersedes the manual result; re-run after
+> `:Lazy load`-ing everything for a complete pass. The same run also
+> exercised `:LibBindingsAudit`/`Gaps`/`Keys` end to end for the first time
+> ever (355 keymap actions, 954 command routes, 6 gaps, 31 keys without a
+> portable `lhs`) — those had been real, unwired code since
+> `roadmap-tools-analysis.md`'s Nachtrag; now confirmed to actually run
+> without error against the live config, not just in isolation.
+
 ## Config vs. plugin (resolved 2026-08-30)
 
 The section above compares plugins with each other. This config's own 40 keys
