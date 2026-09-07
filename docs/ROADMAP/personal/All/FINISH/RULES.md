@@ -767,6 +767,7 @@ Positiv-Beispiele.
 |---|---|
 | buffer-ctx.nvim | 0 Funde — vorbildlich über alle Dimensionen: jede `format/*`/`ops/*`-Datei hat exakt eine benannte Verantwortung (`PRIN-01`), jede Datei hat einen `---@module`-Header + Zweckbeschreibung (`PRIN-50`, 100 % Abdeckung), Querverweise statt Wiederholung durchgängig per `---@see` (`PRIN-53`), `config/init.lua`s Zustand ist modul-intern mit `get()`/`setup()`-Zugriff (`PRIN-10`), kein einziger camelCase-Ausreißer in einer sonst durchgehenden snake_case-Basis (`PRIN-35`) |
 | cascade.nvim | 0 Funde — `core/context.lua`s `CascadeContext` ist ein Lehrbuch-Beispiel für `PRIN-12` (Kontext einmal erhoben statt verstreuter `nvim_*`-Abfragen) UND Pure-Core/Impure-Shell zugleich, im eigenen Moduldoc explizit begründet; `cycle/word_cycle.lua`s einzige zwei `vim.api`-Aufrufe sitzen exakt am Mutationspunkt (`nvim_buf_set_text`), die Zyklus-Berechnung davor ist reine Lua-Logik. 100 % `@module`-Header, keine camelCase-Ausreißer |
+| cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim | 0 Funde je — keine Größen-Ausreißer (größte Datei je Repo 250–653 Zeilen, eine kohärente Verantwortung), identisches Config-Modul-Muster, gute `@param`/`@return`-Dichte (~1.5–2 Annotationszeilen pro `function M.*`) | — |
 | casedesk.nvim | **`ui.lua` ist 3433 Zeilen lang und bündelt 50 `function M.*`-Handler für völlig unabhängige Features** (Case-CRUD, OCR-Trigger, Git-Sync, KI/AI-Abfrage, Timeline-Rendering, SLA-Tracking, Terminologie-Lookup, Link-Check, Export, …) — jede dieser Funktionen hat ihren eigenen, unabhängigen Änderungsgrund (`PRIN-01`/`PRIN-02`-Kandidat). **Notiert, nicht refaktoriert**: eine Aufteilung in Feature-Module (analog zu buffer-ctx.nvims `ops/*`-Muster) wäre eine Architekturentscheidung mit echtem Risiko in einem aktiv genutzten 45-Datei-Repo, kein Ein-Zeiler im Rahmen eines Findings-Sweeps | `PRIN-01`/`02` (notiert, nicht gefixt) |
 
 **Fleet-weite Mechanik-Checks:**
@@ -787,6 +788,14 @@ Positiv-Beispiele.
   (`local _active = nil` + `get()`/`setup()`) ist zudem in jedem
   stichprobenartig geprüften Repo identisch — eine etablierte,
   durchgehaltene Fleet-Konvention. Gilt fleet-weit als erfüllt.
+- `PRIN-51`/`52` (dokumentierter Funktionsvertrag, explizite Typen): keine
+  eigene Stichprobe nötig — folgt praktisch automatisch aus der bereits
+  abgeschlossenen `LLS-*`-Familie (34/34 Regeln, alle 32 Repos bei 0
+  LuaLS-Diagnostics). LuaLS kann das nur melden, wenn `@param`/`@return`/
+  `@type`-Annotationen über öffentliche APIs hinweg korrekt und vollständig
+  sind — 0 Diagnostics bei aktiviertem LuaLS ist strukturell dieselbe
+  Aussage wie „Verträge sind dokumentiert". Gilt fleet-weit als per
+  `LLS-*` bereits nachgewiesen.
 - **Größte-Datei-Stichprobe** (SRP-Proxy) über alle 32 Repos: die jeweils
   größte Lua-Datei pro Repo identifiziert und für Ausreißer geprüft.
   Auffällig groß, aber **kein Fund** nach genauerem Hinsehen:
