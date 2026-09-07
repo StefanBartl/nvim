@@ -1010,7 +1010,7 @@ ungefährlich, weil kein Aufrufer die Tabelle je in einer `local`-Variable
 `M._opened[...]` indiziert.
 
 **Echter Fund:** `documentation.nvim`s
-`lua/documentation/editor/browse/trail.lua` (liegt in `E:\repos\documentation.nvim`,
+`lua/documentation/editor/browse/trail.lua` (liegt in `$REPOS_DIR\documentation.nvim`,
 außerhalb dieses Repos). `M.list(root)` gibt
 laut eigenem Docstring bewusst die *live* Tabelle zurück, nicht eine Kopie —
 `browse/init.lua` hält sie tatsächlich als `st.pins = trail.list(st.root)`.

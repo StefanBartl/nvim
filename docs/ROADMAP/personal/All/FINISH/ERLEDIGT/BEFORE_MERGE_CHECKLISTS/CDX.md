@@ -1,6 +1,6 @@
 # Auf alle Plugins anwenden
 
-Note: Wenn ich anschließend "Alle Plugins" oder "Jedes Plugin" oä. verwende, meine ich alle meine custom personal nvim plugins, die liste findest du hier: C:\Users\bartl\AppData\Local\nvim\lua\plugins\personal\source.lua
+Note: Wenn ich anschließend "Alle Plugins" oder "Jedes Plugin" oä. verwende, meine ich alle meine custom personal nvim plugins, die liste findest du hier: vim.fn.stdpath('config') .. \lua\plugins\personal\source.lua
 
 - [ ] BINDINGS
   - [ ] autocmds durchgehen ob man was optimeren kann

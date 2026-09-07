@@ -71,7 +71,7 @@ Quelle der Analyse: [`docs/ROADMAP/personal/All/FINISH/checkhealt_conventions.md
 Alle Fundstellen gegen aktuellen Code geprüft. Zwei Korrekturen gegenüber der
 Original-Analyse:
 
-- **`neotree-fs-refactor.nvim` ist archiviert** (`E:\repos\ARCHIV_NICHT_BEARBEITEN\neotree-fs-refactor.nvim`)
+- **`neotree-fs-refactor.nvim` ist archiviert** (`$REPOS_DIR\ARCHIV_NICHT_BEARBEITEN\neotree-fs-refactor.nvim`)
   — die beiden dort zitierten Zeilen (`:30`, `:55`) fallen aus dem Plan.
 - **`MATERIALS/CHECKLIST.md` existiert nicht.** Zielort für die neue Regel ist
   `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`

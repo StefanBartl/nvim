@@ -1,8 +1,11 @@
 # Roadmap
 
+---
+
 ## Table of content
 
   - [cdx](#cdx)
+    - [Nützlicches bewahren](#ntzlicches-bewahren)
   - [TOP interessant gerade](#top-interessant-gerade)
   - [Misc](#misc)
   - [true check](#true-check)
@@ -15,9 +18,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     23:45       |   100% / 49%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     20:10       |    50% / 42%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     22:10       |    87% / 09%     | X
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     02:40       |   100% / 78%     | X
+| **work** |   20. Sept    |   Sa., 06:00    |     17:20       |    00% / 54%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     14:50       |    63% / 27%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -27,7 +30,14 @@
 - Docs / README.md des Plugins updaten sofern es Sinn macht
 - Keine Co-Authorenschaft von Claude in den Commits
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
-- Beachte ein "Lesson learned": [Heredoc for ai - lesson learned - in nvim config](./docs/ROADMAP/CDX/Heredoc.md)
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit)
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
+
+---
+
+### Nützlicches bewahren
+
+Die files in ___ ghören die nicht nach $REPOS_DIR\WKDBooks\Development\wkdbook-myplugins oder was wir daraus lernen und künftig besesr machen / checken sollen, nach $REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists oder wie bei anderen tools etwas nach vim.fn.stdpath('config') .. \docs\ROADMAP\personal\All\FINISH\ERLEDIGT\roadmap-tools-analysis.md damit nicht mehrmals das gleich tools erstellt wreerden muss dazu (nurt wenn ein custom tool angewendet wurde)
 
 ---
 
@@ -38,12 +48,14 @@
 
 - [ ] TAKT -> aai impllementierung von anfang an mitbauen
 
+- [ ] docmap-desktop - aber für tosca
+
 ---
 
 ## Misc
 
 - [ ] start vim optimieren
-
+    - [ ] C:\Users\bartl\AppData\Local\nvim\after
 - [ ] plugins/personal/ -> kommentare und docs prüfen / alles was in den plugins gecheckt wurde hier auch
 
 - [ ] Anticheat knacken
@@ -112,6 +124,8 @@ und das native: docmap-desktop
 ---
 
 ## stdpaths
+
+:Replacer "vim.fn.stdpath('config') .. " "vim.fn.stdpath('config') .. " cwd
 
 ```vim
 :lua print(vim.fn.stdpath("config"))
