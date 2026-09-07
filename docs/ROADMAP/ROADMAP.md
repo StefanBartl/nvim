@@ -1,14 +1,11 @@
 # Roadmap
 
----
-
 ## Table of content
 
   - [cdx](#cdx)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
-  - [stdpaths](#stdpaths)
 
 ---
 
@@ -35,8 +32,7 @@
 
 ## Misc
 
-
-- [ ] start vim optimieren
+- [ ] start nvim optimieren
     - [ ] C:\Users\bartl\AppData\Local\nvim\after
 
 - [ ] Anticheat knacken
@@ -104,26 +100,3 @@ und das native: docmap-desktop
 
 ---
 
-## stdpaths
-
-:Replacer "vim.fn.stdpath('config') .. " "vim.fn.stdpath('config') .. " cwd
-
-```vim
-:lua print(vim.fn.stdpath("config"))
-:lua print(vim.fn.stdpath("data"))
-:lua print(vim.fn.stdpath("state"))
-:lua print(vim.fn.stdpath("cache"))
-:lua print(vim.fn.stdpath("log"))
-:lua print(vim.fn.stdpath("run"))
-```
-
-| Pfad     | Inhalt                                                  |
-| -------- | ------------------------------------------------------- |
-| `config` | `init.lua`, Plugins, Keymaps, eigene Lua-Module         |
-| `data`   | Lazy.nvim-Repositories, Mason-Pakete, Treesitter-Parser |
-| `state`  | Shada, Sessions, Swap-Informationen, Statusdaten        |
-| `cache`  | Parser-Cache, Plugin-Caches, generierte Dateien         |
-| `log`    | `lsp.log`, Plugin-Logs, Debug-Ausgaben                  |
-| `run`    | Sockets, RPC-Pipes, temporäre Runtime-Dateien           |
-
----
