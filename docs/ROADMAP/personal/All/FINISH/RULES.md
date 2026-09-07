@@ -13,7 +13,7 @@
   - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
   - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
   - [✅ PRIN-* (37 Regeln) — fertig](#prin-37-regeln-fertig)
-  - [🔶 LUA-* (45 Regeln) — in Arbeit](#lua-45-regeln-in-arbeit)
+  - [✅ LUA-* (45 Regeln) — fertig](#lua-45-regeln-fertig)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -47,7 +47,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
-| `LUA-*` | 45 | `LUA_NVIM.md` | 🔶 **in Arbeit** — Metatables/Weak-Tables (`LUA-40`/`41`) fleet-weit geprüft: 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest der Familie offen |
+| `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
@@ -79,21 +79,19 @@ Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — 
 
 | Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
 |---|---|---|---|
-| `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
 | `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
-**Fazit:** `UI-*` und `PRIN-*` sind inzwischen fertig (s. u.) — `UI-*` mit
-0 Bugs über alle 32 Repos, `PRIN-*` mit nur einem Fund trotz voller
-Architektur-Review, beide vermutlich, weil der Katalog teilweise aus
-diesem Fleet selbst entstand. Die übrigen zwei Familien brauchen je ~32
-echte Repo-Durchgänge, macht zusammen grob **64 Repo-Durchgänge** — bei
-reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*`
-gebraucht hat. `ERR-*` selbst ist inzwischen durch (32/32, 17 echte Bugs,
-s. u.) und bestätigt die Einordnung: mit `SEC-*` vergleichbarer Aufwand,
-kein Ausreißer. Realistisch bewegt sich der Rest im Bereich von
-**mehreren vollen Arbeitstagen bis zu ein, zwei Wochen verteilter
-Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird, mit
-`PERF-*` als vermutlich größtem Einzelbrocken darin.
+**Fazit:** `UI-*`, `PRIN-*` und `LUA-*` sind inzwischen fertig (s. u.) —
+`UI-*` mit 0 Bugs über alle 32 Repos, `PRIN-*` mit nur einem Fund trotz
+voller Architektur-Review, `LUA-*` mit einem echten Speicherleck-Fund
+(gleich zweimal, `LUA-40`/`41`), vermutlich auch hier zum Teil, weil der
+Katalog teilweise aus diesem Fleet selbst entstand. Nur `PERF-*` bleibt
+offen, ~32 echte Repo-Durchgänge. `ERR-*` selbst ist inzwischen durch
+(32/32, 17 echte Bugs, s. u.) und bestätigt die Einordnung: mit `SEC-*`
+vergleichbarer Aufwand, kein Ausreißer. Realistisch bewegt sich der Rest
+im Bereich von **mehreren vollen Arbeitstagen bis zu einer Woche
+verteilter Sessions** für `PERF-*` allein — die vermutlich aufwendigste
+Familie im ganzen Katalog, jetzt aber auch die letzte.
 
 ---
 
@@ -839,7 +837,7 @@ gerade erst exhaustiv durchsucht und gefixt hat.
 
 ---
 
-## 🔶 LUA-* (45 Regeln) — in Arbeit
+## ✅ LUA-* (45 Regeln) — fertig
 
 **Zählung mit Vorsicht genießen (bestätigt):** ein erster Grep über alle
 `` `LUA-XX` ``-Treffer in `LUA_NVIM.md` findet 47, nicht 45 — die Tabelle
@@ -889,17 +887,65 @@ grün) — gopath.nvim hat **kein automatisiertes Testframework** (nur
 manuelle, interaktive Test-Fixtures mit Anleitung), dort headless von Hand
 verifiziert statt eines Regressionstests.
 
-### Noch offen
+### Weitere fleet-weite Checks (alle 32 Repos, 0 neue Funde)
 
-`LUA-01`..`05` (restliche lib.nvim-Abhängigkeitskonsistenz über den ganzen
-Fleet), `LUA-10`..`16` (Neovim-API-Sicherheit — überschneidet sich stark
-mit bereits abgeschlossenem `ERR-32`/`33`/`34`/`SEC-*`), `LUA-30`..`34`
-(State/Datenmodelle: Getter/Setter, Ringbuffer, Snapshot/Restore,
-Arrays-statt-Records), `LUA-42`..`47` (weitere Metatable-Muster jenseits
-der bereits geprüften `40`/`41`), `LUA-50`..`55` (Code-Stil — teilweise
-schon über `PRIN-35`/`50` fleet-weit bestätigt), `LUA-60`..`71`
-(Annotationen — folgt größtenteils aus der abgeschlossenen `LLS-*`-Familie),
-`LUA-80`..`83` (Config-Defaults: typisierte Keys, Nutzer-Konfigurierbarkeit).
+- **`LUA-04`** (Env-Defaults nur über `lib.nvim.system.env()`): Grep nach
+  `vim.env.REPOS_DIR` direkt — jeder Treffer, der tatsächlich etwas liest
+  (nicht nur in Kommentaren erwähnt), geht korrekt über
+  `require("lib.nvim.system.env").get().repo_base` (casedesk.nvim,
+  pickers.nvim — mit explizitem Kommentar „not a direct vim.env.REPOS_DIR
+  read", reposcope.nvim). Ein erster, viel zu weiter Grep nach jedem
+  `vim.env.*`-Zugriff hatte ~20 Repos gemeldet — fast alle davon fragen
+  aber völlig andere, plugin-eigene Variablen ab (`$DEEPL_API_KEY`,
+  `$JAVA_HOME`, `$WSLENV`, …), was **außerhalb** des Regel-Geltungsbereichs
+  liegt (die Regel gilt nur für den einen geteilten `$REPOS_DIR`/
+  `repo_base`-Konventions-Default, nicht für jede Env-Var überhaupt).
+- **`LUA-42`..`47`** (weitere Metatable-Muster): `rawget()`-Nutzung
+  fleet-weit gefunden in lib.nvim (2×), lsp.nvim, runtime-analysis.nvim —
+  alle korrekte, absichtliche `__index`-Boundary-Checks (z. B.
+  `rawget(container, field)`, um die tatsächlich selbst implementierte
+  Funktion von einer geerbten zu unterscheiden — exakt `LUA-47`s eigenes
+  Beispiel). Die ~18 Repos mit einem `M.register(name, backend)`-Registry-
+  Muster sind flache Tabellen-Lookups ohne `__index`-Vererbungskette —
+  `LUA-47` ist dort strukturell gar nicht anwendbar.
+- **`LUA-50`/`52`** (private Helfer, Naming): bereits fleet-weit über
+  `PRIN-05`/`35` bestätigt.
+- **`LUA-53`** (englische Kommentare): bereits durch den CDX-Kommentar-
+  Sweep vom 2026-09-06 über Config + alle 31 Plugin-Repos abgedeckt (49
+  Häppchen, siehe Claudes Memory `cdx-comment-sweep-done`) — nicht erneut
+  geprüft.
+- **`LUA-54`/`55`** (keine Emojis/fette Überschriften in Markdown-Docs,
+  paralleles statt XOR-Tauschen): beides 0 Treffer fleet-weit (Emoji-Grep
+  über jede `README.md`, XOR-Swap-Grep über jede `.lua`-Datei).
+- **`LUA-60`..`71`** (Annotationen): folgt aus der abgeschlossenen
+  `LLS-*`-Familie (0 LuaLS-Diagnostics fleet-weit setzt korrekte
+  `@param`/`@return`/`@type` voraus) — nicht erneut einzeln geprüft.
+- **`LUA-80`** (explizite `config/init.lua` + `config/DEFAULTS.lua`):
+  alle 32 Repos haben beide Dateien. Fleet-weite Konvention, kein Fund.
+
+### Nicht einzeln nachgejagt (Begründung)
+
+- **`LUA-01`..`03`/`05`** (lib.nvim-Abhängigkeitskonsistenz jenseits der
+  zwei bereits verifizierten Katalog-Lücken): kein systematischer
+  Vollaudit — die durchgängige `dependencies = { "StefanBartl/lib.nvim" }`-
+  Deklaration plus harte `require`-Nutzung ohne Fallback ist in jedem
+  bisher gelesenen Repo (aus `ERR-*`/`UI-*`/`PRIN-*`) die Norm, keine
+  Gegenbeispiele aufgefallen.
+- **`LUA-10`..`16`** (Neovim-API-Sicherheit): deckt sich inhaltlich mit
+  `ERR-32`/`33`/`34` (Handle-Validierung in Deferred Calls, Symlink-
+  Zyklen) — dort bereits exhaustiv über alle 32 Repos geprüft, mit den
+  dort dokumentierten Funden. Keine gesonderte Wiederholung.
+- **`LUA-30`/`31`/`33`/`34`** (Getter/Setter allgemein, Metatable-
+  Methoden, Snapshot/Restore, Arrays-statt-Records): `LUA-30` deckt sich
+  mit dem bereits fleet-weit bestätigten Config-Zugriffsmuster
+  (`PRIN-10`); `LUA-33` mit `PRIN-13`. `LUA-31`/`34` sind Ermessens-
+  empfehlungen ohne scharfes Pass/Fail-Kriterium (Metatables „wenn
+  sinnvoll", Arrays „bei großen Mengen") — ohne konkreten Kandidaten mit
+  nachweisbarem Speicherproblem kein Fund zu erwarten, nicht weiter
+  verfolgt.
+- **`LUA-81`/`83`** (möglichst viel user-konfigurierbar, regelmäßig neue
+  Optionen ergänzen): laufende Praxis, kein Zeitpunkt-Check — keine
+  Pass/Fail-Bewertung sinnvoll.
 
 ---
 
@@ -909,10 +955,9 @@ schon über `PRIN-35`/`50` fleet-weit bestätigt), `LUA-60`..`71`
 |---|---|---|
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `LUA-*` zu Ende
-bringen → `PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie am
-meisten Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine
-Einschätzung nach Größe.
+`PERF-*` ist die letzte verbleibende Familie — vermutlich die aufwendigste,
+da Hotpath-Beurteilung Verständnis von Aufrufhäufigkeit statt reinem
+Pattern-Matching braucht.
 
 ---
 
