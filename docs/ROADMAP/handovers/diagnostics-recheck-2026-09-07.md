@@ -1,8 +1,11 @@
 # Diagnostics-Re-Scan über alle Plugin-Repos — 2026-09-07
 
-**Status: Fix-Durchgang läuft. Bundles A, B, C erledigt — siehe
-[Nächster Schritt](#nächster-schritt-der-fix-durchgang) für den aktuellen
-Stand pro Bundle.**
+**Status: Fix-Durchgang abgeschlossen.** Bundles A, B, C gefixt; Bundle D
+gegengeprüft und ohne Fix geschlossen — siehe
+[Nächster Schritt](#nächster-schritt-der-fix-durchgang) für den vollen Stand.
+`sandbox.nvim`/`sessions.nvim`/`spotlight.nvim`/nvim-config standen beim
+Redaktionsschluss noch aus (siehe [Pro Repo](#pro-repo)) und sind nicht Teil
+dieses Durchgangs gewesen.
 
 Auslöser (Chat):
 
@@ -291,7 +294,7 @@ Delegierbare Bündel (jeweils in sich abgeschlossen):
 | **A — LLS-26** | color_my_ascii, mdview, reposcope | rein mechanisch: `---@type` auf die `local notify = vim.notify`-Zeilen. Dazu reposcopes `@alias Buffer/Window` und mdviews Harness-Doubles. | ✅ erledigt 2026-09-07 |
 | **B — Fremd-API-Drift** | filetree, lsp, open, casedesk | je 1–6, brauchen Blick in den Fremd-Typ (nvim-tree, neo-tree, trouble, pdfport, `os.date`). | ✅ erledigt 2026-09-07 |
 | **C — perf-Umbau + Rest** | documentation, insights, hover, cmdlog, images, lib, debugging | documentation ist der größte Posten (Parallel-Array-Umbau), hover hat den echten `res.range.line`-Bug. | ✅ erledigt 2026-09-07 |
-| **D — gegenprüfen** | markdown, runtime-analysis | erst Server-Gegenprobe, dann entscheiden. | offen |
+| **D — gegenprüfen** | markdown, runtime-analysis | erst Server-Gegenprobe, dann entscheiden. | ✅ gegengeprüft 2026-09-07, **kein Fix nötig** |
 
 nvim-config: eigener Durchgang, nachdem sein Scan vorliegt.
 
@@ -328,6 +331,26 @@ nvim-config: eigener Durchgang, nachdem sein Scan vorliegt.
   - ⚠️ **Neuer, unabhängiger Fund beim Verifikations-Rescan:** `lua/lib/@types/init.lua:27` — `undefined-doc-name: Lib.Nvim`. War **nicht** in der recheck0907-Baseline (gegengeprüft: die Baseline hatte für lib.nvim exakt die zwei oben genannten, jetzt gefixten Funde). Hängt nicht mit diesen beiden Fixes zusammen — nicht untersucht, nicht gefixt. Für einen künftigen Durchgang vormerken.
 - **debugging.nvim** (`0ea7abd`): `views/debug_helper.lua` (`---@cast msg table` vor dem bewussten Feld-Probing, deckt alle 3 `undefined-field`-Funde) + `views/capture/init.lua:242` (`---@diagnostic disable-next-line: undefined-field`, verifiziert gegen noise.nvims echten Quellcode: `noice.api.status` ist eine Metatable-Factory, `get()` ist real, LuaLS sieht nur nicht durch den `__index`).
 - **documentation.nvim** (`8e260ad`): **9 der eigenen Perf-Sweep-Fixes vom selben Tag korrigiert** — `features.lua` und `python.lua` hielten zwischen den Schleifen-Durchläufen eine Tabelle in einem als `string` deklarierten Feld (`Documentation.Features.Meta.value`, `Documentation.ParamInfo`/`ReturnInfo.desc`). Funktional korrekt, aber genau die 9 neuen Funde dieses Rechecks. Umgebaut auf ein zu `meta`/`params`/`returns` paralleles `parts`-Array (nach Index), das Feld selbst bleibt durchgehend `string`, einmalige `table.concat` nach der Schleife — derselbe O(n)-Gewinn, ohne den Feldtyp zu verletzen. `checklist.lua`s eigener Akkumulator war schon ein reines Local, brauchte keine Änderung. Dazu `bindings/usrcmds/annotate.lua:147`: `annotate.apply`s `mode`-Parameter auf `"inline"|"sidecar"|nil` geweitet (der eine Aufrufer garantiert Nicht-`nil`, aber in einer Sibling-Closure, durch die LuaLS nicht verengt).
+
+### Ergebnis Bundle D — gegengeprüft, kein Fix
+
+Beide Funde gegen den **echten laufenden** `lua_ls` verifiziert (nicht das
+`scripts/luals-scan`-Tool): Datei headless mit der realen Config geöffnet,
+`:LspStart`, auf `LspAttach` gewartet, dann `vim.diagnostic.get(0)` nach 3s
+Wartezeit gelesen.
+
+- `markdown.nvim/lua/markdown/commands/image.lua:15` — **0 Diagnosen** auf dem echten Server.
+- `runtime-analysis.nvim/lua/runtime-analysis/telemetry/command.lua:1251` — **0 Diagnosen** auf dem echten Server.
+
+Beide bestätigen exakt die Vermutung von oben: eine Messgrundlagenfrage im
+`scripts/luals-scan`-Tool selbst (vermutlich injiziert es beim `require("images")`-
+Auflösen ein anderes/kein `workspace.library` als die echte interaktive
+lspconfig, die alle Sibling-`*.nvim`-Repos kennt — `scripts/luals-scan/*.lua`
+hat keine images.nvim-Sonderbehandlung). **Keine Code-Änderung** in
+markdown.nvim oder runtime-analysis.nvim. Folgeaufgabe (nicht Teil dieses
+Durchgangs): `scripts/luals-scan`s Library-Injection für `require("images")`
+prüfen — dieselbe Fundklasse wie der frühere `require("harness")`-Fall aus
+dem spotlight-Durchgang.
 
 ---
 
