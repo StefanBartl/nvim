@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.case.extract.facts'
---- EXTRACTION.md §7 Richtung 1: the "Ermittelte Fakten" block — everything
+--- EXTRACTION.md §7 direction 1: the "Ermittelte Fakten" block — everything
 --- an LLM reliably gets wrong (version numbers, dates, priorities) is
 --- exactly what's deterministically parsable here, so it goes into the
 --- prompt as a fact block instead of being left for the model to guess or

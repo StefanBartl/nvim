@@ -18,11 +18,9 @@
 local M = {}
 
 --- The three accessors pickers.nvim's snacks adapter exposes, and the shape
---- both functions below hand back.
----
---- A named class rather than the inline table type these carried: inside a
---- table type a `fun(): T` swallows everything after its return type, so only
---- `get_keys` survived and the other two read as undefined at every call site.
+--- both functions below hand back. A named class, not an inline table type --
+--- see wkdbook-Lua/LuaLanguageServer/Annotations/inline-table-fun-swallows-fields.md
+--- for why an inline `fun(): T` field swallowed the two after it.
 ---@class Cfg.Snacks.EntryActions
 ---@field get_keys       fun(): table
 ---@field get_input_keys fun(): table

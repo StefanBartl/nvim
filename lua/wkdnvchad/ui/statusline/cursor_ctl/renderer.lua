@@ -34,7 +34,7 @@ end
 --- Build a compact progress token like "  37%▅ " (escaped for statusline).
 --- @param pct integer|nil
 --- @param prefix string  -- e.g. "R" or "C" or ""
---- @ret M.urn string
+--- @return string
 function M.pct_token(pct, prefix)
   if not pct then
     return esc_percent("  --%  ")

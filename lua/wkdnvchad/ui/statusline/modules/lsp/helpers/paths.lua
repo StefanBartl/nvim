@@ -5,12 +5,12 @@ local M = {}
 
 local api, fn, fs, uv = vim.api, vim.fn, vim.fs, vim.uv or vim.loop
 
--- Cache mit Buffer-Tick-Awareness
+-- Cache with buffer-tick awareness
 local path_cache = require("lib.lua.memo.lru").new(128)
 local Autocmd = require("lib.nvim.bindings.autocmd")
 local tick_cache = {} -- bufnr -> { tick, abs_path }
 
---- Get current buffer tick (für Cache-Invalidierung)
+--- Get current buffer tick (for cache invalidation)
 ---@param bufnr integer
 ---@return integer
 local function get_tick(bufnr)
@@ -39,7 +39,7 @@ end
 ---@param path_or_buf integer|string
 ---@return string
 function M.path_absolute(path_or_buf)
-  -- Fast path für Buffer mit Tick-Check
+  -- Fast path for buffers, with tick check
   if type(path_or_buf) == "number" then
     local bufnr = path_or_buf
 
@@ -103,7 +103,7 @@ end
 ---@param path string
 ---@return string|nil
 local function find_git_root(path)
-  -- Cache-Key basiert auf Verzeichnis (nicht Datei)
+  -- Cache key is per-directory, not per-file
   local dir = fn.fnamemodify(path, ":h")
   local cache_key = "git:" .. dir
   local cached = path_cache:get(cache_key)
@@ -122,7 +122,7 @@ local function find_git_root(path)
   end
 
   if not froot or froot == "" then
-    path_cache:put(cache_key, false) -- Explizites nil cachen
+    path_cache:put(cache_key, false) -- cache the explicit "no root" result
     return nil
   end
 
@@ -240,18 +240,18 @@ function M.path_relative(mode, path)
 end
 
 ---@nodiscard
----@param _cfg { path_mode?: string, path_home_tilde?: boolean }|nil
+---@param cfg { path_mode?: string, path_home_tilde?: boolean }|nil
 ---@param path_or_buf integer|string
 ---@return string
-function M.display_path(_cfg, path_or_buf)
+function M.display_path(cfg, path_or_buf)
   local config_mod = require("wkdnvchad.ui.statusline.modules.lsp.config")
 
-  if type(_cfg) == "table" then
-    if _cfg.path_mode ~= nil then
-      config_mod.set("path_mode", _cfg.path_mode)
+  if type(cfg) == "table" then
+    if cfg.path_mode ~= nil then
+      config_mod.set("path_mode", cfg.path_mode)
     end
-    if _cfg.path_home_tilde ~= nil then
-      config_mod.set("path_home_tilde", not not _cfg.path_home_tilde)
+    if cfg.path_home_tilde ~= nil then
+      config_mod.set("path_home_tilde", not not cfg.path_home_tilde)
     end
   end
 

@@ -99,6 +99,20 @@ local function sheets()
     return cache_entries
   end
 
+  local plugin_sheets = config.plugin_sheets() or {}
+
+  -- Same precedence rule as `records.lua`'s `each_file`: where a plugin ships
+  -- its own `docs/BINDINGS.md`, the old cheatsheet is the copy and is skipped.
+  -- Without this every stem would be in completion twice and `resolve` would
+  -- get two files for one name.
+  local superseded = {}
+  for _, sheet in ipairs(plugin_sheets) do
+    superseded[sheet.plugin] = true
+    -- `buffer-ctx.md` is the one cheatsheet not named like its plugin
+    -- (`buffer-ctx.nvim`) -- see the matching spot in `records.lua`.
+    superseded[(sheet.plugin:gsub("%.nvim$", ""))] = true
+  end
+
   local out = {}
   for idx, root in ipairs(config.roots()) do
     local scope = ROOT_SCOPES[idx]
@@ -106,9 +120,10 @@ local function sheets()
       local dir = vim.fs.joinpath(root, category)
       if vim.fn.isdirectory(dir) == 1 then
         for _, f in ipairs(collect_recursive.files(dir)) do
-          if f:match("%.md$") then
+          local stem = vim.fn.fnamemodify(f, ":t:r")
+          if f:match("%.md$") and not superseded[stem] then
             out[#out + 1] = {
-              stem = vim.fn.fnamemodify(f, ":t:r"),
+              stem = stem,
               file = f,
               category = category,
               scope = scope,
@@ -116,6 +131,29 @@ local function sheets()
           end
         end
       end
+    end
+  end
+
+  -- A personal plugin brings its three categories in **one** file
+  -- (`docs/BINDINGS.md`), the cheatsheet corpus in three. So that
+  -- `:Bindings browse keymaps hover.nvim` still resolves, the repo sheet is
+  -- listed under all three categories -- with the same path.
+  --
+  -- The consequence, stated rather than hidden: `browse` is unaffected (it
+  -- goes through `records.lua`, where each row carries its own category
+  -- derived from the section). `search` greps files, and a category-scoped
+  -- search on a repo sheet scans the whole file -- a hit from the Usercmds
+  -- section can come along on `search keymaps <plugin>`. That is imprecision
+  -- in the full text, not a wrong finding: the line really is in this
+  -- plugin's docs.
+  for _, sheet in ipairs(config.plugin_sheets() or {}) do
+    for _, category in ipairs(M.CATEGORIES) do
+      out[#out + 1] = {
+        stem = sheet.plugin,
+        file = sheet.file,
+        category = category,
+        scope = "Personal",
+      }
     end
   end
 
@@ -356,6 +394,36 @@ function M.argtype()
       return out
     end,
   }
+end
+
+--- Every file the corpus can search, across all three sources (the two
+--- physical trees plus each plugin's own `docs/BINDINGS.md`), deduplicated by
+--- path.
+---
+--- Built for `search.lua`/`live.lua`'s **unscoped** searches. A plugin scope
+--- already goes through `M.resolve` -> `Bindings.PluginMatch.files`, which has
+--- read `plugin_sheets()` since the day this module was written; `init.lua`'s
+--- `M.search` fell back to `config.roots()`/`config.roots_for(category)`
+--- directly whenever no plugin was named, which are the two physical trees
+--- only. `BND-04` then deleted the personal half of those trees plugin by
+--- plugin (each sheet superseded by the plugin's own `docs/BINDINGS.md`, see
+--- `sheets()` above), so a bare `:Bindings search <query>` or
+--- `:Bindings search keymaps <query>` stopped finding anything in any of the
+--- 31 personal plugins' own docs -- silently, because grep-over-nothing looks
+--- exactly like grep-over-everything-with-no-hits. This function is `sheets()`
+--- reduced to just the paths, so both call sites read the same corpus
+--- `M.resolve` already does.
+---@param category ("Keymaps"|"Usercmds"|"Autocmds")|nil nil = all three
+---@return string[]
+function M.all_files(category)
+  local seen, out = {}, {}
+  for _, sheet in ipairs(pool({ category = category })) do
+    if not seen[sheet.file] then
+      seen[sheet.file] = true
+      out[#out + 1] = sheet.file
+    end
+  end
+  return out
 end
 
 --- Drop the corpus listing. For tests and for a caller that just wrote a

@@ -195,6 +195,21 @@ Setup in `misc.lua`: `debounce_ms = 200`, `autocmd_events = { "BufLeave", "Focus
   Diese Hardening-Schicht ist ein zusätzliches Sicherheitsnetz, kein
   Ersatz dafür.
 
+### Tuning (aus `Cfg.Harpoon.HardeningOpts`, `types/init.lua`)
+
+- **`debounce_ms`** (Default 200): gute Werte sind 150–300 ms auf lokalen
+  SSDs, 300–600 ms auf Netzwerk-/Remote-Dateisystemen (SMB/NFS/SSHFS). Wenn
+  trotzdem noch häufige Writes auffallen, in 100-ms-Schritten erhöhen. Bei
+  sehr schnellem Beenden wird die letzte Änderung sonst gelegentlich nicht
+  mehr persistiert — dafür sorgt der nicht gedebouncte Flush auf
+  `VimLeavePre` (siehe oben); `debounce_ms` trotzdem moderat (≤ 400) halten.
+- **`autocmd_events`** (Default `{ "BufLeave", "FocusLost" }`): zum Erweitern
+  `"WinLeave"` (bei viel Fenster-/Tab-Wechsel), `"FocusGained"` (Save auch
+  beim Zurückkehren zu Neovim), `"BufHidden"` (für Setups, die Buffer
+  verstecken statt entladen), `"CmdlineLeave"` (falls eigene Commands
+  Harpoon editieren). Mehr Events = mehr Save-Gelegenheiten, aber auch mehr
+  Timer-Neustarts; ein Quit-Event ist nicht nötig (s. o.).
+
 ---
 
 ## 7. Sanitize & Dedup (`config.harpoon.utils.sanitize`)

@@ -1,6 +1,6 @@
 ---@module 'autocmds.git.defaults'
 
--- AUDIT: Optionen beschreiben
+--- CDX: config fields undocumented — add a one-line note per field
 
 ---@type AutoCmds.Git.Cfg
 local AUTOCMDS_GIT_DEFAULTS = {

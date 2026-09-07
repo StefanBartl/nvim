@@ -1,9 +1,10 @@
 ---@module 'bindings.mappings.buffer_jump'
---- Numeric buffer jump that leverages nvchad.tabufline's goto_buf when available.
---- The module resolves a sensible buffer order (prefer vim.t.bufs), then jumps
---- to the selected buffer. If nvchad.tabufline.goto_buf is present it will be
---- used to perform the switch (this respects tabline-specific winfixbuf logic).
---- Otherwise a safe fallback to `nvim_set_current_buf` is used.
+--- Numeric buffer jump (`<leader>1`..`<leader>0`). Resolves a buffer order
+--- (prefer `vim.t.bufs`), then switches via `nvchad.tabufline.goto_buf` if
+--- present (respects tabline winfixbuf logic), else `nvim_set_current_buf`.
+---
+--- CDX: five fallback strategies for the buffer list + speculative API
+--- probing. If tabufline is a hard dep here, `vim.t.bufs` alone would do.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.buffer_jump]")
 
@@ -124,10 +125,9 @@ local function switch_to_buffer(bufnr)
     return
   end
 
-  -- Try to require nvchad.tabufline and call its goto_buf (name used in tabufline source)
   local ok, tabufline = pcall(require, "nvchad.tabufline")
   if ok and type(tabufline) == "table" then
-    -- prefer `goto_buf` if present (matches the tabufline implementation you quoted)
+    -- `goto_buf` is the name tabufline's own implementation uses
     if type(tabufline.goto_buf) == "function" then
       local succ, err = pcall(tabufline.goto_buf, bufnr)
       if succ then
@@ -137,7 +137,7 @@ local function switch_to_buffer(bufnr)
       end
     end
 
-    -- Some builds may expose a differently named function; try common variants defensively
+    --- CDX: `go_to` is speculative — no known tabufline build exposes it. Drop?
     if type(tabufline.go_to) == "function" then
       local succ, err = pcall(tabufline.go_to, bufnr)
       if succ then
@@ -192,9 +192,6 @@ end
 
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
-  if type(map) ~= "function" then
-    map = require("lib.nvim.bindings.keymap")
-  end
 
   for i = 1, 9 do
     local lhs = "<leader>" .. tostring(i)

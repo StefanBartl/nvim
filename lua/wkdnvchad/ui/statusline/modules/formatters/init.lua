@@ -111,8 +111,6 @@ function M.ellipsize_path_components(path, max)
   elseif lib_strings.starts_with(rest, "/") then
     prefix = "/"
     rest = rest:sub(2)
-  else
-    prefix = ""
   end
 
   -- Split into components using lib.strings

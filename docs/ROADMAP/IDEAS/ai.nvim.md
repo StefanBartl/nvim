@@ -12,7 +12,7 @@ derselben Sitzung gefixt (`pdfport.nvim@d92436f`):
 
 - **B1**: Handgebautes JSON-Escaping (`prompt:gsub('"', '\\"')`) escapt
   Anführungszeichen, aber keine Backslashes — jeder Windows-Pfad oder Regex
-  im Prompt (`C:\repos\foo`, `\d+`) erzeugte ungültiges JSON, das die API
+  im Prompt (`$REPOS_DIR\foo`, `\d+`) erzeugte ungültiges JSON, das die API
   ablehnte. In **beiden** Backends identisch kopiert.
 - **B2**: Der Anthropic-API-Key stand als `-H "x-api-key: ..."` im curl-argv
   — für die Lebensdauer des Requests in der Prozesstabelle sichtbar

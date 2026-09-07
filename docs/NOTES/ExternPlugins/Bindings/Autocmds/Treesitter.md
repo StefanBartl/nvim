@@ -10,7 +10,7 @@ Aufgabe der Config (siehe Plugin-README, Abschnitt "Quickstart").
 Alle drei Autocmds sind ungruppierte `FileType`-Autocmds (`lib.nvim.bindings.autocmd`,
 kein eigener Augroup) und teilen sich dieselbe Guard-Bedingung
 `guards.is_enabled(args.buf)` aus `lib.nvim.treesitter.guard`
-(`lua/lib/nvim/treesitter/guard/init.lua` im `lib.nvim`-Repo, `E:\repos\lib.nvim`)
+(`lua/lib/nvim/treesitter/guard/init.lua` im `lib.nvim`-Repo, `$REPOS_DIR\lib.nvim`)
 — ist der Buffer/Filetype über den Guard ausgeschlossen, greift keiner der drei.
 
 | Event | Quelle | Zweck |
@@ -41,7 +41,7 @@ Zwei unabhängige Mechanismen in `plugins/treesitter.lua`:
    normale Filetype-Parser (rust, go, …). Drei Modi, per `:TSParserPolicy`
    umschaltbar — s. [Usercmds/Treesitter.md](../Usercmds/Treesitter.md).
    Modul-Doku: `lua/lib/nvim/treesitter/parser_policy/README.md` im
-   `lib.nvim`-Repo (`E:\repos\lib.nvim`), Vimdoc `:h lib.nvim-treesitter-parser_policy`.
+   `lib.nvim`-Repo (`$REPOS_DIR\lib.nvim`), Vimdoc `:h lib.nvim-treesitter-parser_policy`.
 
 ## `lua/lsp/core/treesitter.lua` existiert nicht mehr
 

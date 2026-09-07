@@ -1,26 +1,22 @@
 ---@module 'bindings.usrcmds.bindings_explorer.live'
---- Live-Grep-in-Picker über `pickers.nvim`s **Engine**-Schicht
---- (`pickers.engines`, `M.live_grep(opts)`), nicht die `sources/*`-Schicht.
---- `sources/*` ist an konkrete Dateisystem-Quellen gebunden (cwd/folder/
---- repos/drives) und hat keinen generischen "Picker über diese
---- Verzeichnisliste"-Einstieg — genau die Einschränkung, die casedesks
---- eigene Prüfung von `pickers.nvim` schon für `actions/files.lua` notierte
---- (siehe dieses Moduls docs/FEATURES.md). Die
---- Engine-Schicht darunter ist dagegen bewusst generisch: `live_grep(opts)`
---- nimmt `opts.roots` als beliebige Verzeichnisliste, einheitlich über
---- telescope/fzf-lua/snacks hinweg — genau der fehlende Baustein.
+--- Live-grep-in-picker over `pickers.nvim`'s **engine** layer
+--- (`pickers.engines`, `M.live_grep(opts)`), not the `sources/*` layer:
+--- `sources/*` is tied to filesystem source objects (cwd/folder/repos/drives)
+--- with no generic "picker over this directory list" entry point. The engine
+--- layer below it is deliberately generic — `live_grep(opts)` takes
+--- `opts.roots` as an arbitrary directory list, uniform across
+--- telescope/fzf-lua/snacks.
 ---
---- Kein harter Fallback hier: wenn keine Engine (oder kein `ripgrep`)
---- verfügbar ist, meldet `M.open` das über den Rückgabewert, und der
---- Aufrufer (`init.lua`) wechselt auf die statische Phase-1-Suche
---- (`search.lua` + `ui.lua`s `kit.select`).
+--- No hard fallback here: with no engine (or no `ripgrep`), `M.open` reports
+--- it via its return value and the caller (`init.lua`) switches to the static
+--- search (`search.lua` + `ui.lua`'s `kit.select`).
 
 local M = {}
 
---- Live-Grep über `roots` öffnen.
+--- Open live-grep over `roots`.
 ---@param roots string[]
 ---@param opts { query: string|nil, prompt: string|nil }|nil
----@return boolean ok true, wenn eine Picker-Engine übernommen hat
+---@return boolean ok true when a picker engine took over
 function M.open(roots, opts)
   opts = opts or {}
 

@@ -160,7 +160,7 @@ language, markdown, mdview, pickers, sandbox, spotlight, reposcope
 
 #### Offen / Blocker
 
-- `learn-cli.nvim` liegt nicht unter `C:\repos\*.nvim`. Tasks in allen drei
+- `learn-cli.nvim` liegt nicht unter `$REPOS_DIR\*.nvim`. Tasks in allen drei
   Dateien vorhanden. Klaeren: existiert das Plugin, anderer Pfad, oder
   Eintraege streichen?
 

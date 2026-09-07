@@ -21,7 +21,6 @@ function M.setup()
     end
   end, { desc = "Clear copilot NES overlays or nohl" })
   map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
-  -- map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "[General] NvCheatsheet" })
   map("n", "<leader>nvt", function()
     require("nvchad.themes").open({
       icon = "", -- optional

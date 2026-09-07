@@ -13,7 +13,7 @@
     - [Implementierung](#implementierung-1)
     - [nvim-Config](#nvim-config-1)
   - [Task C — `custom.open` → Neues Plugin `open.nvim`](#task-c-customopen-neues-plugin-opennvim)
-    - [Neue Repo-Struktur (`E:\repos\open.nvim`)](#neue-repo-struktur-ereposopennvim)
+    - [Neue Repo-Struktur (`$REPOS_DIR\open.nvim`)](#neue-repo-struktur-ereposopennvim)
     - [Implementierung](#implementierung-2)
     - [nvim-Config](#nvim-config-2)
   - [Task D — `custom.format` (non-markdown) → `buffer-ctx.nvim`](#task-d-customformat-non-markdown-buffer-ctxnvim)
@@ -127,7 +127,7 @@ archive = {
 
 ## Task C — `custom.open` → Neues Plugin `open.nvim`
 
-### Neue Repo-Struktur (`E:\repos\open.nvim`)
+### Neue Repo-Struktur (`$REPOS_DIR\open.nvim`)
 ```
 plugin/open.lua           -- Load-Guard (vim.g.loaded_open_nvim)
 lua/open_nvim/

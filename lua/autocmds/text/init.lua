@@ -1,8 +1,8 @@
 ---@module 'autocmds.text'
---- Text-focused autocommands with feature flags and detailed options.
---- Provides safe trimming helpers (trailing whitespace, blank-line cleanup with cursor preservation)
---- and a “last cursor position” restore on file reopen. Each feature has its own augroup and can be
---- toggled independently via `require('autocmds.text').enable(cfg)`.
+--- Text-focused autocommands with feature flags. Safe trimming (trailing
+--- whitespace, blank-line cleanup with cursor preservation) and a "last cursor
+--- position" restore on reopen. Each feature has its own augroup and toggles
+--- independently via `require('autocmds.text').enable(cfg)`.
 
 local M = {}
 local api, cmd, bo = vim.api, vim.cmd, vim.bo
@@ -15,9 +15,8 @@ local tbl_contains = vim.tbl_contains
 local lazy = require("lib.lua.lazy")
 local augroup_lib = lazy.require("lib.nvim.bindings.autocmd.augroup")
 local augroup = augroup_lib.create.clear
-local autocmd_lib = lazy.require("lib.nvim.bindings.autocmd")
-local norm_pattern = autocmd_lib.norm_pattern
 local Autocmd = lazy.require("lib.nvim.bindings.autocmd")
+local norm_pattern = Autocmd.norm_pattern
 
 --- Check whether the current buffer should be processed given the config gates.
 ---@param buf integer
@@ -68,7 +67,6 @@ function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})
 
   -- 1) Trim trailing whitespace on save --------------------------------------
-  -- Description: On BufWritePre, remove trailing spaces at EOL in eligible buffers.
   if cfg.trim_trailing.enable then
     Autocmd.create("BufWritePre", function(ev)
       local buf = ev.buf
@@ -96,7 +94,6 @@ function M.enable(cfg)
   end
 
   -- 2) Trim whitespace-only lines (blank lines) while preserving cursor ------
-  -- Description: On BufWritePre, collapse whitespace on fully empty lines; optionally preserve cursor.
   if cfg.trim_blank.enable then
     Autocmd.create("BufWritePre", function(ev)
       local buf = ev.buf
@@ -132,7 +129,6 @@ function M.enable(cfg)
   end
 
   -- 3) Restore last cursor position on reopen --------------------------------
-  -- Description: On BufReadPost, jump to the last known cursor position, respecting exclusions.
   if cfg.last_loc.enable then
     Autocmd.create("BufReadPost", function(ev)
       local buf = ev.buf

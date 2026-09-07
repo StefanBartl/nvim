@@ -21,7 +21,7 @@ return {
   base46 = require("wkdnvchad.config.base46"),
   ui = {
     statusline = {
-      theme = "minimal", -- oder "vscode_colored"
+      theme = "minimal", -- or "vscode_colored"
       separator_style = "round", -- "arrow", "round", "block", "default"
 
       order = {
@@ -48,8 +48,8 @@ return {
           return plugin_summary()
         end,
 
-        -- Case-Kurzinfo (Nr · Company · N Replies), leer außerhalb eines
-        -- Case-Ordners — s. lua/bindings/usrcmds/case/, ROADMAP.md v7.
+        -- Case short-info (number · company · N replies), empty outside a
+        -- case folder — see lua/bindings/usrcmds/case/, ROADMAP.md v7.
         casedesk = function()
           return casedesk()
         end,
@@ -65,7 +65,7 @@ return {
           })
         end,
 
-        --- Mode (NvChad default überschreiben mit Separatoren)
+        --- Mode (overrides the NvChad default, adds separators)
         --- @return string
         mode = function()
           local ok_utils, utils = pcall(require, "nvchad.stl.utils")
@@ -167,7 +167,7 @@ return {
           local content = table.concat(pieces, "")
           local sep = get_separators()
 
-          -- Cursor wie im default theme: linker + rechter Separator
+          -- Cursor as in the default theme: left + right separator
           return "%#St_pos_sep#" .. sep.left .. "%#St_pos_icon# %#St_pos_text# " .. content .. " "
         end,
       },

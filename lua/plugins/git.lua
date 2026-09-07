@@ -21,14 +21,14 @@ return {
       { "<leader>lg", "<cmd>LazyGit<cr>", desc = "[LazyGit] Open UI" },
     },
     config = function()
-      -- Setzt den Editor-Befehl explizit für die Sub-Prozesse von Neovim
-      vim.g.lazygit_use_neovim_remote = 1 -- Nutzt das interne nvim-remote Feature falls verfügbar
+      -- Explicitly sets the editor command for Neovim's sub-processes
+      vim.g.lazygit_use_neovim_remote = 1 -- uses the internal nvim-remote feature if available
 
       require("config.lazygit").setup()
     end,
   },
 
-  -- -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
+  -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
   {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },

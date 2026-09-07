@@ -13,6 +13,7 @@
 --  :NeotestOutputPanelToggle
 --  :NeotestStop
 --  :NeotestWatchToggle
+--  :NeotestClearAll
 ]]
 --
 

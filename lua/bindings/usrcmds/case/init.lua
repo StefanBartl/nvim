@@ -351,12 +351,12 @@ function M.enable()
       end,
     },
     {
-      -- Bewusst KEIN generierter file-verb über einen Blueprint-Knoten mit
-      -- `key = "solution"`: der würde bei fehlender Datei nur "does not
-      -- exist yet — run :Case sync" sagen. Genau der Fall ist hier aber der
-      -- interessante ("es gibt noch keine Lösung — willst du eine
-      -- schreiben?"), und die Datei soll erst entstehen, wenn es etwas zu
-      -- schreiben gibt, nicht schon bei `:Case new`.
+      -- Deliberately NOT a generated file-verb over a blueprint node with
+      -- `key = "solution"`: that would only say "does not exist yet — run
+      -- :Case sync" for a missing file. Here that case is the interesting one
+      -- ("there's no solution yet — want to write one?"), and the file should
+      -- only come into being when there's something to write, not at
+      -- `:Case new`.
       path = { "solution" },
       args = { { name = "case", type = "CASE", optional = true } },
       flags = { { name = "edit", short = "e", bool = true } },

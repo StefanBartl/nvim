@@ -1,7 +1,7 @@
 # Neotree-Source-Report — Auswertung aller `NEOTREE_FEATURES.md`
 
 **Stand:** 2026-08-28
-**Quelle:** die 9 Dateien `docs/ROADMAP/NEOTREE_FEATURES.md` aus `C:\repos\*.nvim`.
+**Quelle:** die 9 Dateien `docs/ROADMAP/NEOTREE_FEATURES.md` aus `$REPOS_DIR\*.nvim`.
 Diese Dateien wurden nach Erstellung dieses Reports **ersatzlos aus den Plugin-Repos
 entfernt**; dieser Report ist ab jetzt die einzige Überlieferung ihres Inhalts.
 
@@ -365,7 +365,7 @@ Stattdessen zwei benachbarte, sinnvolle Dinge, von denen keines eine Source ist:
   case-insensitiver Vergleich unter Windows, und definierte Antworten für
   Dateien außerhalb des Projekts sowie Buffer ohne Datei. Das Original nennt
   das „die Bug-Fabrik jedes Filetree-Plugins, das Zustand persistiert":
-  `C:\Repos\x` und `c:\repos\x` sind dasselbe Verzeichnis und ergeben zwei
+  `$REPOS_DIR\x` und `$REPOS_DIR\x` sind dasselbe Verzeichnis und ergeben zwei
   verschiedene Keys, und ein Key mit eingebettetem absolutem Pfad bricht in dem
   Moment, in dem der Checkout umzieht. Rund 25 Zeilen für beides. Zu ergänzen:
   ein `dir_key()`-Geschwister (ein Baum persistiert *Verzeichnisse*, und ein

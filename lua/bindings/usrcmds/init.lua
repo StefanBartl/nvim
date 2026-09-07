@@ -1,54 +1,57 @@
 ---@module 'bindings.usrcmds'
--- Initialize module for 'bindings.usrcmds'
 
 local usercmd = require("lib.nvim.bindings.usercmd")
 local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
-require("bindings.usrcmds.case").enable()
+-- casedesk is a plugin now (StefanBartl/casedesk.nvim, spec in
+-- plugins/personal/init.lua, local checkout under $REPOS_DIR). The tree under
+-- usrcmds/case/ is frozen and kept only as a fallback: uncomment the line
+-- below and comment out the spec entry to go back. Exactly one of the two may
+-- ever be active -- both would register :Case twice, and which code ran would
+-- be anyone's guess. See docs/ROADMAP/casedesk/PLUGIN.md section 3.8.
+-- require("bindings.usrcmds.case").enable()
 require("bindings.usrcmds.bindings_explorer").enable()
 require("bindings.usrcmds.context_open").enable()
 require("bindings.usrcmds.telemetry_nvim_config").enable()
 require("bindings.usrcmds.autocmd_docs").enable()
 require("bindings.usrcmds.strip_coauthor").enable()
+require("bindings.usrcmds.bindings_audit").enable()
 
 usercmd.create("CopyLocation", function()
-  -- Absoluter Pfad der aktuellen Datei
+  -- Absolute path of the current file
   local path = vim.fn.expand("%:p")
 
-  -- Falls der Buffer noch nicht auf der Festplatte gespeichert ist
+  -- The buffer has no file on disk yet
   if path == "" then
-    notify.warn("Keine Datei geladen / kein Pfad vorhanden")
+    notify.warn("No file loaded / no path available")
     return
   end
 
-  -- Cursorposition holen (Zeile ist 1-basiert, Spalte ist 0-basiert)
+  -- Cursor position (line is 1-based, column is 0-based)
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line = cursor[1]
-  local col = cursor[2] + 1 -- 1-basiert machen
+  local col = cursor[2] + 1 -- make 1-based
 
-  -- Text formatieren (Pfad:Zeile:Spalte)
+  -- Format as path:line:col
   local result = string.format("%s:%d:%d", path, line, col)
 
-  -- In das "+ Register (System-Zwischenablage) kopieren
+  -- Copy into the "+ register (system clipboard)
   vim.fn.setreg("+", result)
 
-  -- Rückmeldung anzeigen
-  notify.info("Kopiert: " .. result)
+  notify.info("Copied: " .. result)
 end, {
-  desc = "Kopiert absoluten Pfad, Zeile und Spalte in die Zwischenablage",
+  desc = "Copy the absolute path, line and column to the clipboard",
 })
 
---TEMP: nur temporär (wahrscheinlich
-local bindings_path = vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "BINDINGS")
-usercmd.create("BindingsPath", function()
-  -- Kopiert den Pfad in das System-Register (+)
-  vim.fn.setreg("+", bindings_path)
-  notify.info("Bindings-Pfad in Zwischenablage kopiert!")
-end, {
-  desc = "Kopiert den spezifischen Bindings-Pfad in die Zwischenablage",
-})
-
--- 2. Keymap <leader>BI erstellen
+-- `:BindingsPath` used to live here. It copied
+-- `<stdpath('config')>/docs/NOTES/BINDINGS` -- a directory that has never
+-- existed. The corpus has two roots, `docs/NOTES/PersonelPlugins/BINDINGS`
+-- and `docs/NOTES/ExternPlugins/Bindings`, and `:Bindings path
+-- [personal|extern]` copies them, knows both, and is where the explorer's
+-- own module doc has pointed all along. The command carried a `TEMP` marker
+-- from the day it was written; telemetry says the keymap below is pressed
+-- often, so the key stays and only its target is corrected.
+--
 -- lib.nvim.bindings.keymap directly, like everywhere else. There used to be a
 -- `vim.g.__map_helper` handle to reach for here; it is gone, and it never
 -- worked -- `vim.g` strips a table's metatable on the way through, so the
@@ -57,12 +60,13 @@ end, {
 require("lib.nvim.bindings.keymap")(
   "n",
   "<leader>BI",
-  "<cmd>BindingsPath<CR>",
+  "<cmd>Bindings path<CR>",
   nil,
-  "Bindings-Pfad kopieren"
+  "Copy BINDINGS roots to the clipboard"
 )
 
---FIX: Funktoinert, aber einen neotree/nvimtree/netrw reload muss ausgelöst werden damit dieser aktualisert das neue cwd in ihm.
+--- CDX: works, but a neo-tree/nvim-tree/netrw reload needs to be triggered
+--- for it to pick up the new cwd.
 usercmd.create("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)
   if bufname ~= "" then
@@ -73,7 +77,7 @@ end, { force = true })
 
 usercmd.create("PowershellProfile", function()
   if vim.fn.executable("powershell") ~= 1 then
-    notify.error("Fehler: powershell ist auf diesem System nicht verfügbar.")
+    notify.error("Error: powershell is not available on this system.")
     return
   end
   -- argv array instead of io.popen with an embedded shell string
@@ -86,5 +90,5 @@ usercmd.create("PowershellProfile", function()
     vim.cmd("edit " .. vim.fn.fnameescape(profile_path))
     return
   end
-  notify.error("Fehler: Der PowerShell Profil-Pfad konnte nicht ermittelt werden.")
-end, { desc = "Öffnet das aktuelle PowerShell-Profil", force = true })
+  notify.error("Error: could not determine the PowerShell profile path.")
+end, { desc = "Open the current PowerShell profile", force = true })

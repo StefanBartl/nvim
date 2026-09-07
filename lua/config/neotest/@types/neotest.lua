@@ -1,4 +1,4 @@
----@module 'config.NeoTest.@types.neotest'
+---@module 'config.neotest.@types.neotest'
 
 local M = {}
 

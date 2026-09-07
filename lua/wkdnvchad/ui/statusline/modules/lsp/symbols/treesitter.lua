@@ -6,28 +6,28 @@
 local M = {}
 
 --------------------------------------------------------------------------------
--- Treesitter context (robuster Fallback)
+-- Treesitter context (robust fallback)
 --------------------------------------------------------------------------------
 
 ---@nodiscard
 ---@return string|nil
 function M.symbol_context_ts()
-  -- Guard: Treesitter & ts_utils müssen verfügbar sein
+  -- Guard: Treesitter & ts_utils must be available
   local ok_ts = pcall(require, "vim.treesitter")
   local ok_utils, tsu = pcall(require, "nvim-treesitter.ts_utils")
   if not ok_ts or not ok_utils or not tsu then
     return nil
   end
 
-  -- Cursor-Knoten holen
+  -- Node at cursor
   local node = tsu.get_node_at_cursor()
   if not node then
     return nil
   end
 
-  -- Knoten-Typen, die man als "semantische Anker" behalten möchte (breiter gefasst)
+  -- Node types to keep as "semantic anchors" (broadly scoped)
   local keep = {
-    -- Funktionen/Methoden/Klassen/Namespaces (bisher)
+    -- Functions/methods/classes/namespaces
     function_declaration = true,
     function_definition = true,
     method_declaration = true,
@@ -40,14 +40,14 @@ function M.symbol_context_ts()
     namespace_definition = true,
     impl_item = true,
 
-    -- Neu: häufige Container/Member/Calls in diversen Grammatiken
-    variable_declaration = true, -- JS/TS/C-ähnlich
+    -- Common containers/members/calls across grammars
+    variable_declaration = true, -- JS/TS/C-like
     lexical_declaration = true, -- JS/TS (let/const)
     local_declaration = true, -- Lua (local ...)
-    variable_declarator = true, -- JS/TS/C-ähnlich
+    variable_declarator = true, -- JS/TS/C-like
     init_declarator = true, -- C/C++
-    assignment_statement = true, -- Lua/C-ähnlich
-    declaration = true, -- generisch
+    assignment_statement = true, -- Lua/C-like
+    declaration = true, -- generic
 
     member_expression = true, -- JS/TS
     field_expression = true, -- Lua (a.b)
@@ -59,17 +59,17 @@ function M.symbol_context_ts()
     field_declaration = true, -- C/C++/Rust
     property_signature = true, -- TS interface
 
-    call_expression = true, -- viele Sprachen
+    call_expression = true, -- many languages
     function_call = true, -- Lua
   }
 
   --- Extract a useful identifier from a node:
-  --- 1) Feld "name", 2) flache Suche nach Identifier-Knoten,
-  --- 3) Zeilenbasierte Heuristik (inkl. Member-Ketten a.b.c[:method]())
+  --- 1) "name" field, 2) shallow search for identifier nodes,
+  --- 3) line-based heuristic (incl. member chains a.b.c[:method]())
   ---@param n TSNode
   ---@return string|nil
   local function ts_identifier_of(n)
-    -- 1) Direktes, benanntes Feld
+    -- 1) Direct named field
     local named = n:field("name")
     if named and named[1] then
       local t = vim.treesitter.get_node_text(named[1], 0)
@@ -78,7 +78,7 @@ function M.symbol_context_ts()
       end
     end
 
-    -- 2) Flache Suche nach gängigen Identifier-Knotentypen
+    -- 2) Shallow search for common identifier node types
     local want = {
       "identifier",
       "property_identifier",
@@ -120,19 +120,19 @@ function M.symbol_context_ts()
       return t2
     end
 
-    -- 3) Zeilen-/Text-Heuristik (Member-Ketten und Call-Signaturen)
+    -- 3) Line/text heuristic (member chains and call signatures)
     local raw = vim.treesitter.get_node_text(n, 0) or ""
-    -- Whitespace entfernen, auf die letzte Kette nahe Cursor zielen
+    -- Strip whitespace, aim at the last chain near the cursor
     local s = raw:gsub("%s+", "")
-    -- Kandidaten: foo.bar.baz  |  obj:method  |  foo["bar"].baz
+    -- Candidates: foo.bar.baz  |  obj:method  |  foo["bar"].baz
     local chain = s:match("([%w_%.:]+)%s*$") or s:match("([%w_]+%b[][%w_%.%[%]]*)%s*$")
     if chain and #chain > 0 then
-      -- Klammern am Ende entfernen, damit "method()" → "method" (später optional "()" anfügen)
+      -- Drop trailing parens so "method()" -> "method" ("()" re-appended later)
       chain = chain:gsub("%(%s*%)$", "")
       return chain
     end
 
-    -- Generische Fallbacks
+    -- Generic fallbacks
     local guess = raw:match("^%w+%s+([%w_]+)%s*%(")
       or raw:match("^%w+%s+([%w_]+)%s*[={:]")
       or raw:match("^([%w_%.:]+)%s*%(")
@@ -140,7 +140,7 @@ function M.symbol_context_ts()
     return guess
   end
 
-  -- Namen sammeln (von außen nach innen prependen)
+  -- Collect names (prepend outer-to-inner)
   ---@type string[]
   local names = {}
   local u = node
@@ -150,11 +150,11 @@ function M.symbol_context_ts()
     if keep[t] then
       local ident = ts_identifier_of(u)
 
-      -- Bei Member-Ausdrücken lieber nur den rechten Teil der Kette zeigen (z. B. "enable_line")
-      -- Optional: gesamten Pfad zeigen, wenn gewünscht:
+      -- For member expressions, prefer just the right end of the chain (e.g. "enable_line").
+      -- Optional: show the whole path instead:
       -- ident = ident and ident:gsub("^.+[%.:]", "") or ident
       if ident and #ident > 0 then
-        -- Funktions-/Methoden-Knoten optisch als Aufruf darstellen
+        -- Render function/method/call nodes visually as a call
         if t:find("function") or t:find("method") or t:find("call") then
           if not ident:find("%)$") then
             ident = ident .. "()"

@@ -1,8 +1,8 @@
 ---@module 'config.neotest.neotree'
 --- Neo-tree integration for Neotest actions.
-
+--
 --[[
- Einbindung in Neo-tree
+ Wiring into Neo-tree:
  local neotest_neotree = require("config.neotest.neotree")
 
  require("neo-tree").setup({
@@ -14,18 +14,16 @@
    commands = neotest_neotree.commands(),
  })
 
-ACHTUNG: Merge mit Neotree filesysten mappings und commands notwendig!
+ NOTE: must be merged with Neo-tree's own filesystem mappings/commands,
+ not passed as-is (this only returns the tests-source additions).
 ]]
 --
----@module 'config.neotest.neotree'
---- Neo-tree integration for Neotest actions.
 
 local actions = require("config.neotest.actions")
 
 local M = {}
 
---- Neo-tree command definitions
---- Diese werden in opts.commands registriert
+--- Neo-tree command definitions, registered into opts.commands
 ---@return table<string, function>
 function M.commands()
   return {
@@ -53,8 +51,7 @@ function M.commands()
   }
 end
 
---- Neo-tree window mappings
---- Diese werden in source.window.mappings verwendet
+--- Neo-tree window mappings, used in source.window.mappings
 ---@return table<string, string>
 function M.keymaps()
   return {

@@ -1,8 +1,35 @@
 # bindings-explorer — Features
 
-`:Bindings` — Picker über die eigenen BINDINGS-Cheatsheets
-(`docs/NOTES/PersonelPlugins/BINDINGS/` + `docs/NOTES/ExternPlugins/Bindings/`,
-160 Dateien, drei Kategorien: Keymaps/Usercmds/Autocmds).
+`:Bindings` — Picker über den BINDINGS-Korpus, drei Kategorien
+(Keymaps/Usercmds/Autocmds) aus **zwei** Herkünften:
+
+| Herkunft | Was |
+|---|---|
+| `docs/NOTES/ExternPlugins/Bindings/` | Cheatsheets fremder Plugins — die gibt es nur hier |
+| `<plugin>/docs/BINDINGS.md` | die Doku jedes Personal-Plugins **und dieser Config selbst**, direkt aus der jeweiligen `docs/BINDINGS.md` gelesen |
+
+Die zweite Herkunft kam am 2026-09-04 dazu (`BND-01`). Bis dahin lag unter
+`PersonelPlugins/BINDINGS/` je Plugin ein handgepflegtes Cheatsheet — eine
+zweite Fassung dessen, was jedes Repo als `docs/BINDINGS.md` mitbringt. Eine
+Kopie kann driften, und Drift zu finden ist die Aufgabe von
+`:Bindings check`; also liest der Explorer die Quelle. `BND-04` hat danach
+jedes der 31 abgelösten Personal-Sheets gegen die jeweilige `docs/BINDINGS.md`
+gediffed, Einzigartiges nachgetragen und gelöscht; `BND-05` hat die Config
+selbst nachgezogen (`config.plugin_sheets()` trägt seither einen
+`"nvim-config"`-Eintrag, der auf diese Configs eigene, neue
+[`docs/BINDINGS.md`](../../../../../docs/BINDINGS.md) zeigt — derselbe
+Mechanismus, nur ohne Plugin-Repo dahinter) und den ganzen
+`PersonelPlugins/BINDINGS/`-Baum entfernt. Für Fremd-Plugins bleibt
+`ExternPlugins/Bindings/` bestehen — die liefern keine `docs/BINDINGS.md`
+nach diesem Standard.
+
+Der Bruch, den das überbrücken muss: der Cheatsheet-Korpus ist
+**art-zuerst** (die Kategorie ist der Ordnername), die Repos sind
+**plugin-zuerst** (eine Datei, die Kategorie ist eine `##`-Überschrift
+darin). `records.lua`s `category_from_heading` leitet sie aus der
+Überschrift ab — tolerant, weil die Schreibweisen über 32 Repos weit
+auseinandergehen, und mit `autocmd` vor `command`, weil „Autocommands"
+sonst bei den Usercmds landet.
 Vimdoc: `:help bindings_explorer` (siehe [`doc/bindings_explorer.txt`](../doc/bindings_explorer.txt)).
 Diese Datei ist die aktuelle Doku — der ursprüngliche Konzept-Entwurf unter
 `docs/ROADMAP/personal/bindings-explorer.nvim.md` wurde beim Aufräumen der
@@ -105,10 +132,12 @@ fragt und der Korpus sich beim Editieren trotzdem ändern darf.
 `:Bindings path [personal|extern]`
 
 Kopiert die BINDINGS-Wurzel(n) in die Zwischenablage — ohne Argument beide,
-newline-getrennt. Löst denselben Zweck wie das ältere, separate
-`:BindingsPath` (`lua/bindings/usrcmds/init.lua`), aber mit den zwei
-tatsächlichen Pfaden statt dessen einzelnem, nie existierenden
-`docs/NOTES/BINDINGS`.
+newline-getrennt.
+
+Bis 2026-09-04 stand daneben ein älteres, separates `:BindingsPath`
+(`lua/bindings/usrcmds/init.lua`), das einen einzelnen, nie existierenden
+`docs/NOTES/BINDINGS` kopierte. Es ist entfernt, und `<leader>BI` läuft
+jetzt hierher.
 
 ```vim
 :Bindings path
@@ -256,6 +285,19 @@ Begründung):
   Command (z. B. eine "Registered when: ..."-Spalte) ist verdächtig —
   erst das Feature einmal auslösen, dann erneut prüfen.
 
+**Der Korpus ist zweisprachig, die Key-Spalten-Erkennung war es nicht**
+(behoben 2026-08-30). `ExternPlugins/Bindings/*` ist durchgängig deutsch, die
+Key-Spalte heißt dort `Taste`, `Mapping`, `Taste(n)` oder `Taste (in
+LazyGit)` — nie `lhs`/`key`. Eine Zeile, deren Header auf nichts aus der
+(bis dahin rein englischen) Erkennungsliste passte, lieferte gar kein `lhs`,
+und beide Achsen ließen sie stillschweigend fallen: die Quell-Achse meldete
+`<leader>gb` als undokumentiert, obwohl es in `Snacks.md`s Git-Tabelle stand,
+die Live-Achse prüfte solche Zeilen in keiner Richtung. **601 Korpuszeilen
+waren dadurch unsichtbar** — gezählt, nicht geschätzt. Die deutschen Header
+sind seither in `drift.lua`s `LHS_HEADERS` mitgeführt; vier weitere deutsche
+Kandidaten (`Eintrag`, `Tab`, `Modul`, `Vorschlag (README)`) wurden bewusst
+NICHT aufgenommen, weil ihre Zellen keine Tasten sind.
+
 Gegen den echten, voll geladenen Bestand verifiziert (headless, über einen
 `XDG_CONFIG_HOME`-Junction-Trick, der `stdpath("config")` auf diesen
 Branch zeigen lässt, ohne `stdpath("data")`/die echten Plugin-Installationen
@@ -347,7 +389,7 @@ Abschnitt im Bericht.
   Lazy-Spec abgeleitet, nicht aus einer handgepflegten Liste).
   `config.set_repo_dirs(fn)` ersetzt sie — die Tests hängen daran und laufen
   gegen ein Fixture-Repo im Temp-Verzeichnis statt gegen echte
-  `C:\repos\*`-Checkouts.
+  `$REPOS_DIR\*`-Checkouts.
 - **Oder ein ganzes Sammelverzeichnis: `root=<dir>`.** `:Bindings check repo
   root=C:/repos` löst nicht über den Lazy-Spec auf, sondern nimmt jedes
   Lua-Projekt direkt unter dem Pfad (`config.repo_dirs_under`) — ein
@@ -509,6 +551,27 @@ Eine Seite, nach dem Vorbild von `:Reposcope status`:
 einen Bericht — dafür sind `check` und `report` da. Hier ist alles entweder
 ein billiger Live-API-Aufruf oder ein Durchgang über den Korpus (~70 ms). Ein
 Dashboard, auf das man wartet, öffnet man einmal.
+
+## Ein lhs-Treffer allein war kein Beweis (`is_live`)
+
+Nur auf den lhs zu prüfen war falsch, und zwar auf eine Art, die zählte: eine
+völlig unabhängige globale Map erfüllt eine dokumentierte Zeile allein dadurch,
+dass sie zufällig dieselbe Taste trägt. Am Korpus bestätigt: github_stats'
+`<CR>`/`<Esc>` galten als "live", weil dieses Config `<CR>` auf "Insert blank
+line" und `<Esc>` auf "Clear copilot NES overlays or nohl" legt;
+`language.nvim`s `]s` traf Snacks' "Snacks Scope: Next"; reposcopes `<Esc>`
+traf zweimal dieselbe nohl-Map. Fünf Zeilen, keine davon die Bindung, die das
+Cheatsheet meint — und jede einzelne hielt ihre ganze Tabelle aus dem
+"nicht verifizierbar"-Verdikt heraus, weshalb `github_stats.nvim.md` auch nach
+der Aufteilung in Pro-Scope-Tabellen noch ~20 Keys meldete.
+
+**Fix:** wenn BEIDE Seiten einen `desc` nennen, müssen sie exakt übereinstimmen
+(nach `strip_quotes`). Alles andere fällt auf reinen lhs-Vergleich zurück (kein
+`desc`-Feld dokumentiert, oder nichts unter dem Key trägt überhaupt einen
+desc). Gemessen über jede aktuell live-dokumentierte Zeile: 8 exakte Treffer, 0
+die eine case-insensitive Prüfung gebraucht hätten, 0 ohne live-`desc`, 5
+Mismatches — alle fünf echt. Eine lockerere Regel hätte nichts gerettet, aber
+genau die Kollisionen wieder zugelassen, die dieser Vergleich fangen soll.
 
 ## Was der Scraper nicht mehr falsch liest (2026-09-02)
 

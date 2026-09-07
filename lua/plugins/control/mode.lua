@@ -67,18 +67,15 @@ function M.new(opts)
     --- but the spec file itself is evaluated more than once per session:
     --- lazy's `{ import = "plugins" }` loads it through lazy's own importer,
     --- while a later `require("plugins.personal")` from ordinary Lua code is a
-    --- separate cache key and re-runs the file. Each evaluation called `add()`
-    --- again on the SAME accumulated list, so `specs` grew by one full set
-    --- every time -- measured at 84 entries for 28 plugins (3x).
+    --- separate cache key and re-runs the file. Each evaluation used to call
+    --- `add()` again on the SAME accumulated list, so `specs` grew by one full
+    --- set every time -- measured at 84 entries for 28 plugins (3x). Visible
+    --- symptoms: the statusline's own/external badge counted 81 personal
+    --- plugins instead of 27, `:MyPluginsClone` iterated (and
+    --- progress-reported) every repo three times, `:MyPluginsRemove` listed
+    --- each candidate three times in its confirmation.
     ---
-    --- That was visible in three places: the statusline's own/external badge
-    --- counted 81 personal plugins instead of 27, `:MyPluginsClone` iterated
-    --- (and progress-reported) every repo three times, and
-    --- `:MyPluginsRemove` listed each candidate three times in its
-    --- confirmation. lazy itself was unaffected -- it merges same-name specs
-    --- into one plugin -- but it was doing three times the merging.
-    ---
-    --- Re-registering replaces in place rather than being ignored, so a
+    --- Re-registering now replaces in place rather than being ignored, so a
     --- genuine second registration with changed content still wins while a
     --- re-evaluation of identical content is a true no-op. A spec with no
     --- `[1]` repo string (a bare `dir = ...` entry) has no identity to dedupe

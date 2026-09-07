@@ -1,6 +1,6 @@
 ---@module 'autocmds.terminals.defaults'
 
--- AUDIT: Optionen beschreiben
+--- CDX: config fields undocumented — add a one-line note per field
 
 ---@type AutoCmds.Term.Cfg
 local AUTOCMDS_TERMINALS_DEFAULTS = {

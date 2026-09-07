@@ -91,12 +91,4 @@ function M.init_from_config(cfg)
   }
 end
 
---- Reset all state (useful for tests/reload)
----@return nil
-function M.reset()
-  mode_by_win = {}
-  features = {}
-  -- namespaces/augroups persist across reloads
-end
-
 return M

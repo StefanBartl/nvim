@@ -50,10 +50,11 @@ local function get_provider(name)
 end
 
 -----------------------------------------------------------
--- Backward Compatibility Exports (delegate to providers)
+-- Per-provider probes (consumed by :WKDOptionsHLDebugCtx)
+-- Each runs a single provider in isolation so the debug command can show what
+-- every stage would return; the live winbar uses M._build_context instead.
 -----------------------------------------------------------
 
---- LSP function name (legacy export)
 ---@nodiscard
 ---@return string|nil
 function M._ctx_lsp_func()
@@ -66,7 +67,7 @@ function M._ctx_lsp_func()
   return prov.extract(nil, cfg)
 end
 
---- TreeSitter symbol (legacy export)
+--- Tree-sitter symbol probe.
 ---@nodiscard
 ---@return string|nil
 function M._ctx_ts_symbol()
@@ -80,7 +81,7 @@ function M._ctx_ts_symbol()
   return prov.extract(node, cfg)
 end
 
---- Container chain (legacy export)
+--- Container-chain probe: prepend owner/class to the given base symbol.
 ---@nodiscard
 ---@param base_symbol string|nil
 ---@return string|nil
@@ -97,7 +98,7 @@ function M._ctx_with_container(base_symbol)
   return prov.extract(node, cfg)
 end
 
---- Language-specific extras (legacy export)
+--- Language-specific owner/extra probe.
 ---@nodiscard
 ---@return string|nil
 function M._ctx_lang_extra()
@@ -111,7 +112,7 @@ function M._ctx_lang_extra()
   return prov.extract(node, cfg)
 end
 
---- Word fallback (legacy export)
+--- <cword> fallback probe.
 ---@nodiscard
 ---@return string|nil
 function M._ctx_word_fallback()
@@ -124,7 +125,7 @@ function M._ctx_word_fallback()
   return prov.extract(nil, cfg)
 end
 
---- Base token (legacy export)
+--- Base-token probe (final fallback).
 ---@nodiscard
 ---@return string|nil
 function M._ctx_base_token()
@@ -151,6 +152,11 @@ function M._build_context()
   -- Default provider order
   local order = cfg.providers_order
     or { "lsp_func", "ts_symbol", "container", "lang_extra", "word" }
+
+  -- CDX: the "container" provider needs cfg._base_symbol (see WKDOptionsBreadcrumbsCtx),
+  -- but nothing sets it here before the chain runs, so container.extract() always
+  -- returns nil in the live pipeline. Only the :WKDOptionsHLDebugCtx path
+  -- (M._ctx_with_container) feeds it a base symbol.
 
   -- Execute provider chain
   for _, name in ipairs(order) do
@@ -188,6 +194,10 @@ end
 -----------------------------------------------------------
 
 --- Invalidate all caches (call on BufEnter/config change)
+--- CDX: no caller anywhere -- this and its targets (ts_helpers.invalidate_tick,
+--- base.clear_cache) form an unwired cache-invalidation API. node_at_cursor
+--- self-invalidates on cursor move and the lang cache is filetype-keyed, so
+--- nothing currently goes stale; if that changes, the BufEnter wiring is missing.
 ---@return nil
 function M.invalidate_caches()
   ts_helpers.invalidate_tick()

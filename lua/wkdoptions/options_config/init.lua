@@ -110,8 +110,8 @@ local function enable()
   C.on_after_set("highlight", after_set)
 
   require("wkdoptions.commands").register_options_commands({
-    after_set = after_set, -- bestehende Re-Apply-Funktion
-    show_table = ocfg, -- Live-Options-Konfiguration (C.cfg.options)
+    after_set = after_set, -- existing re-apply function
+    show_table = ocfg, -- live options config (C.cfg.options)
     names = { set = "MyOptSet", show = "MyOptShow", list = "MyOptList" }, -- optional
   })
 end

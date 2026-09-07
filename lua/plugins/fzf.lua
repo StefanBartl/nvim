@@ -7,13 +7,15 @@ local fzf_config = require("config.fzf")
 return {
   {
     "ibhagwan/fzf-lua",
-    lazy = true,
-    -- opts = function()
-    -- return fzf_config.get()
-    -- end,
+    -- `lazy = true` with no handler meant lazy.nvim never registered a stub
+    -- `:FzfLua` command. The `<leader>f*` keymaps in bindings/mappings/fzf.lua
+    -- are plain `:FzfLua <sub><CR>` and are set at UIReady, so pressing e.g.
+    -- `<leader>fg` before anything else pulled fzf-lua in raised
+    -- `E492: Not an editor command: FzfLua`. `cmd` makes lazy.nvim create the
+    -- stub and load the plugin on first `:FzfLua`.
+    cmd = "FzfLua",
+    -- `config` instead of `opts`: this ensures actions are properly registered.
     config = function()
-      -- config function instead of opts
-      -- This ensures actions are properly registered
       require("fzf-lua").setup(fzf_config.get())
     end,
   },
