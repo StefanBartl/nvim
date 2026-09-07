@@ -1,12 +1,7 @@
 ---@module 'bindings.mappings.smart_del_key'
---- Small local helpers to improve Normal-mode ergonomics.
---- Features:
----   - Smart <Del>:
----       * If the current line is blank: delete exactly this line (no register pollution)
----       * Else: delete the character under cursor (black-hole register)
---- Implementation notes:
----   - Avoid leading spaces in :normal commands (they act like "move right")
----   - Prefer API calls for line insertion/deletion to be 100% precise and side-effect free
+--- Normal-mode <Del>: on a blank line delete the whole line, otherwise delete
+--- the character under the cursor -- both via the black-hole register / buffer
+--- API so registers and cursor position are untouched.
 
 ---@class SmartEdit
 local M = {}
@@ -46,19 +41,9 @@ function M.smart_del()
   vim.cmd.normal({ args = { [["_x]] }, bang = true })
 end
 
---- CDX: `map_cr`/`set_cr` mismatch — init.lua passes `{ set_cr = true }`,
---- this reads `opts.map_cr`, and the `<CR>` mapping the header describes is
---- not implemented at all. Drop the dead option or wire up the `<CR>` map.
---- Public setup.
---- @param opts? { map_cr?: boolean } map <CR> globally (default: true)
-function M.setup(opts)
-  opts = opts or {}
-  if opts.map_cr == nil then
-    opts.map_cr = true
-  end
+--- Bind the global normal-mode <Del> mapping.
+function M.setup()
   local map = require("lib.nvim.bindings.keymap")
-
-  -- Normal-mode <Del>: smart delete (global)
   map("n", "<Del>", M.smart_del, { desc = "Smart delete (<Del>)" })
 end
 
