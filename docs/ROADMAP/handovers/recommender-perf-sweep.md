@@ -61,25 +61,69 @@ Kontext (z.B. `lib.lua.strings.core` verarbeitet kurze Wortlisten → O(n²)
 tut in der Praxis kaum weh; `markdown.nvim`s Table-Wrap oder `mdview`s
 Log-Adapter laufen potenziell über viel mehr Zeilen).
 
-- [ ] [buffer-ctx.nvim/lua/buffer_ctx/format/text_width.lua:29](E:/repos/buffer-ctx.nvim/lua/buffer_ctx/format/text_width.lua)
-- [ ] [casedesk.nvim/lua/casedesk/registry.lua:60](E:/repos/casedesk.nvim/lua/casedesk/registry.lua)
-- [ ] [documentation.nvim/lua/documentation/core/checklist.lua:233](E:/repos/documentation.nvim/lua/documentation/core/checklist.lua)
-- [ ] [documentation.nvim/lua/documentation/core/features.lua:162](E:/repos/documentation.nvim/lua/documentation/core/features.lua)
-- [ ] [documentation.nvim/lua/documentation/core/lang/python.lua:754](E:/repos/documentation.nvim/lua/documentation/core/lang/python.lua) (2 Treffer in der Datei)
-- [ ] [emojis.nvim/lua/emojis/overlay/init.lua:137](E:/repos/emojis.nvim/lua/emojis/overlay/init.lua)
-- [ ] [gopath.nvim/lua/gopath/resolvers/common/extractor/find.lua:97](E:/repos/gopath.nvim/lua/gopath/resolvers/common/extractor/find.lua)
-- [ ] [insights.nvim/lua/insights/fileinfo/init.lua:37](E:/repos/insights.nvim/lua/insights/fileinfo/init.lua)
-- [ ] [insights.nvim/lua/insights/imports/langs/python.lua:54](E:/repos/insights.nvim/lua/insights/imports/langs/python.lua)
-- [ ] [lib.nvim/lua/lib/lua/strings/core.lua:176](E:/repos/lib.nvim/lua/lib/lua/strings/core.lua) (`to_camel_case`-artige Wort-Join-Schleife, kleines n)
-- [ ] [lib.nvim/lua/lib/nvim/bindings/keymap/modifier/init.lua:110](E:/repos/lib.nvim/lua/lib/nvim/bindings/keymap/modifier/init.lua)
-- [ ] [lib.nvim/lua/lib/nvim/fs/mkdirp/init.lua:79](E:/repos/lib.nvim/lua/lib/nvim/fs/mkdirp/init.lua)
-- [ ] [lsp.nvim/lua/lsp/tools/deprecated_help/lsp/lua_ls/publish_diagnostics.lua:34](E:/repos/lsp.nvim/lua/lsp/tools/deprecated_help/lsp/lua_ls/publish_diagnostics.lua)
-- [ ] [markdown.nvim/lua/markdown/core/table_wrap.lua:203,526,532,541](E:/repos/markdown.nvim/lua/markdown/core/table_wrap.lua) (4 Treffer in einer Datei — vermutlich der lohnendste Einzel-Fix in dieser Liste)
-- [ ] [mdview.nvim/lua/mdview/adapter/log.lua:210,214](E:/repos/mdview.nvim/lua/mdview/adapter/log.lua)
+- [x] [buffer-ctx.nvim/lua/buffer_ctx/format/text_width.lua:29](E:/repos/buffer-ctx.nvim/lua/buffer_ctx/format/text_width.lua) — **gefixt** (`98a9f70`)
+- [x] [casedesk.nvim/lua/casedesk/registry.lua:60](E:/repos/casedesk.nvim/lua/casedesk/registry.lua) — **False Positive, übersprungen** (siehe unten)
+- [x] [documentation.nvim/lua/documentation/core/checklist.lua:233](E:/repos/documentation.nvim/lua/documentation/core/checklist.lua) — **gefixt** (`85b1902`)
+- [x] [documentation.nvim/lua/documentation/core/features.lua:162](E:/repos/documentation.nvim/lua/documentation/core/features.lua) — **gefixt** (`85b1902`)
+- [x] [documentation.nvim/lua/documentation/core/lang/python.lua:345,382](E:/repos/documentation.nvim/lua/documentation/core/lang/python.lua) — **gefixt** (`85b1902`; echte Zeilen waren 345/382, nicht 754 — die ursprüngliche Zeilenangabe im Sweep war ein grep-Artefakt ohne Backreference-Prüfung)
+- [x] [emojis.nvim/lua/emojis/overlay/init.lua:137](E:/repos/emojis.nvim/lua/emojis/overlay/init.lua) — **gefixt** (`83d876b`)
+- [x] [gopath.nvim/lua/gopath/resolvers/common/extractor/find.lua:97](E:/repos/gopath.nvim/lua/gopath/resolvers/common/extractor/find.lua) — **False Positive, übersprungen** (siehe unten)
+- [x] [insights.nvim/lua/insights/fileinfo/init.lua:37](E:/repos/insights.nvim/lua/insights/fileinfo/init.lua) — **gefixt** (`41215fc`)
+- [x] [insights.nvim/lua/insights/imports/langs/python.lua:54](E:/repos/insights.nvim/lua/insights/imports/langs/python.lua) — **gefixt** (`41215fc`)
+- [x] [lib.nvim/lua/lib/lua/strings/core.lua:176](E:/repos/lib.nvim/lua/lib/lua/strings/core.lua) — **gefixt** (`9338109`)
+- [x] [lib.nvim/lua/lib/nvim/bindings/keymap/modifier/init.lua:110](E:/repos/lib.nvim/lua/lib/nvim/bindings/keymap/modifier/init.lua) — **kein Nutzen, übersprungen** (siehe unten)
+- [x] [lib.nvim/lua/lib/nvim/fs/mkdirp/init.lua:79](E:/repos/lib.nvim/lua/lib/nvim/fs/mkdirp/init.lua) — **kein Nutzen, übersprungen** (siehe unten)
+- [x] [lsp.nvim/lua/lsp/tools/deprecated_help/lsp/lua_ls/publish_diagnostics.lua:34](E:/repos/lsp.nvim/lua/lsp/tools/deprecated_help/lsp/lua_ls/publish_diagnostics.lua) — **False Positive, übersprungen** (siehe unten)
+- [x] [markdown.nvim/lua/markdown/core/table_wrap.lua:203,526,532,541](E:/repos/markdown.nvim/lua/markdown/core/table_wrap.lua) — **gefixt** (`9b9494d`)
+- [x] [mdview.nvim/lua/mdview/adapter/log.lua:210,214](E:/repos/mdview.nvim/lua/mdview/adapter/log.lua) — **kein Nutzen, übersprungen** (siehe unten)
 
 Zusätzlich 3 Treffer in TESTS-Dateien (`color_my_ascii.nvim` ×2,
 `hover.nvim` ×1) — Test-Fixtures, keine Produktionslast, daher bewusst
 nicht in der Liste oben.
+
+### Ergebnis: 9 gefixt, 6 bewusst übersprungen
+
+Beim Durcharbeiten stellte sich heraus, dass ein Drittel der Liste keinen
+echten Fix verdient — der Analyzer hat hier entweder einen Fehlalarm oder
+das Fixen brächte keinen Performance-Gewinn:
+
+**Analyzer-Fehlalarm (3× — der Analyzer selbst hat hier eine Lücke):**
+
+- `casedesk.nvim/registry.lua:60` und `gopath.nvim/find.lua:97`: Beides ist
+  ein Tabellenfeld in einem **mehrzeiligen** Tabellen-Konstruktor
+  (`{ short = short,\n  dir = dir .. "/" .. short,\n  ... }`), kein
+  Self-Reassignment. Der Analyzer verankert die Prüfung korrekt für
+  einzeilige Literale (genau dieser Fall ist im Test-Suite abgedeckt:
+  `entries[#entries+1] = { short = short, dir = dir .. "/" .. short }`),
+  aber sobald jedes Feld auf seiner eigenen Zeile steht, sieht die
+  Zeilen-für-Zeilen-Prüfung nur noch `dir = dir .. "/" .. short,` und
+  hält das für eine Variablen-Neuzuweisung.
+- `lsp.nvim/publish_diagnostics.lua:34`: `d.message = d.message ..
+  opts.diagnostic_hint` steht in `for _, d in ipairs(result.diagnostics)
+  do`, aber `d` ist bei jeder Iteration ein *anderes* Diagnostic-Objekt —
+  das ist ein einmaliger Append pro Element, keine Akkumulation über
+  Iterationen hinweg. Die `declared_in_loop`-Prüfung im Analyzer erkennt
+  nur `local`-Deklarationen, nicht for-in-Iterator-Variablen.
+
+  → Beide Lücken sind eine Idee für ein Analyzer-Update in
+  recommender.nvim selbst, aber out of scope für diesen Sweep.
+
+**Kein echter Performance-Gewinn (3×):**
+
+- `lib.nvim/keymap/modifier/init.lua:110` (`seq`) und
+  `lib.nvim/fs/mkdirp/init.lua:79` / `mdview.nvim/adapter/log.lua:210,214`
+  (`current`/`cur`): der akkumulierte String wird in **jeder Iteration**
+  live gebraucht (`vim.fn.maparg(seq, ...)` bzw. `fs_mkdir(cur, ...)` /
+  `fs_stat(cur)`) — nicht erst am Ende. Eine Umstellung auf
+  `table.concat` müsste in jeder Iteration erneut aufgerufen werden, um
+  denselben String zu bekommen, und wäre dadurch nicht schneller als das
+  Original. `seq` ist zusätzlich durch `MAX_SEQ = 8` hart begrenzt.
+
+Die 9 tatsächlichen Fixes ersetzen jeweils `x = x .. y` durch eine
+`parts`-Tabelle + einmaliges `table.concat` am Ende — Verhalten
+unverändert, per Testsuite (oder manueller Stichprobe, wo keine
+dedizierte Testabdeckung existiert) verifiziert. Alle 9 Commits sind
+bereits auf `main` in ihrem jeweiligen Repo.
 
 ## Sekundäre Hotspots (`table.insert`/`string.format`, nur bei auffälliger Dichte)
 
@@ -109,4 +153,8 @@ ist:
 - [x] Sweep durchgeführt (2026-09-07), Rohdaten unter
       [`recommender-perf-report.txt`](./recommender-perf-report.txt)
 - [x] Ergebnisse gesichtet, Liste B kuratiert
-- [ ] Liste B abgearbeitet (delegierbar)
+- [x] Liste B abgearbeitet (2026-09-07): 9 Fixes committet + gepusht auf
+      main (buffer-ctx.nvim, documentation.nvim, emojis.nvim,
+      insights.nvim, lib.nvim, markdown.nvim), 6 Fundstellen bewusst
+      übersprungen (3 Analyzer-Fehlalarme, 3 ohne echten Gewinn) — Details
+      im Abschnitt "Ergebnis: 9 gefixt, 6 bewusst übersprungen" oben.
