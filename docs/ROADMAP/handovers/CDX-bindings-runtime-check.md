@@ -321,17 +321,26 @@ dass der automatisierte Check etwas anders zählt als die Handanalyse
 eine „wesentlich größere Zahl" an Befunden macht eher das Werkzeug
 verdächtig als die Config).
 
-### Phase 3 — Namensqualität: Report statt Urteil
+### Phase 3 — Namensqualität: Report statt Urteil — ✅ erledigt 2026-09-07
 
-Eine Liste `Plugin | Kommando | Route | Beschreibung` aus `:LibUsercmdDocs`
-+ `composer.registry()`'s Routen ableiten (im Wesentlichen das, was
-`bindings.audit.command_routes()` schon sammelt, nur ohne den
-Keymap-Abgleich). Optional eine Low-Confidence-Markierung für Routen, deren
-letztes Pfad-Segment ein einzelnes vages Wort ohne Objekt ist (`deep`,
-`full`, `check`, `info`, `debug` — genau die Kategorie, aus der
-`LspDoctor deep` kam). Ergebnis ist eine Markdown-Tabelle zum Durchlesen,
-kein Auto-Fix — Umbenennen bleibt eine bewusste Entscheidung pro Fund, wie
-beim `fmt_check`-Beispiel.
+Umgesetzt als fünfte `audit`-Variante statt einer eigenen Markdown-Tabelle:
+`audit.naming_candidates()`/`naming_candidate_lines()` (`lib.nvim@8dfcbec`),
+gewired als `:LibBindingsAuditNaming` und `:Bindings audit naming`
+(`nvim-config@1c2af3e95`). Nutzt dieselbe Routenliste, die
+`command_routes()` schon sammelt — kein neuer Datenweg.
+
+Flag-Regel: letztes Pfad-Segment ist eins von `deep/full/check/info/debug/
+all/basic/extra/advanced/misc`. Bewusst nur eine Kandidatenliste, kein
+Urteil — im Docstring und in der Ausgabe selbst festgehalten ("a flag here
+is a candidate, not a verdict"). Mit einer synthetischen `LspDoctor deep`-
+Route verifiziert: wird erkannt, `probe` (dieselbe Verb-Familie) und eine
+Plain-Kommando-Route nicht — keine falschen Positiven im Test.
+
+**Nicht geprüft:** ob das echte, aktuelle `LspDoctor` in dieser Config
+(nach der `fmt_check`-Umbenennung) noch etwas zum Flaggen hat — das
+Kommando lief nicht gegen deine echte Session. `:LibBindingsAuditNaming`
+oder `:Bindings audit naming` einmal bei dir aufrufen zeigt den echten
+Stand.
 
 ### Phase 4 — Laufzeit-Testrunner, zweistufig
 
