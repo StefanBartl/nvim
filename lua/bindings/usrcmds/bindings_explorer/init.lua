@@ -14,10 +14,13 @@
 ---   report  [...] [out=<path>]      same drift run, written to Markdown
 ---   status                          one-screen corpus/live/plugin dashboard
 ---   path    [personal|extern]       copy the corpus root(s) to the clipboard
----   audit   [gaps|keys|prefixes|naming] [root]  live-registry audits, no docs
----                                   corpus involved -- thin wrappers over
----                                   lib.nvim.bindings.audit, same functions
----                                   `:LibBindingsAudit*` calls (M.audit)
+---   audit   [gaps|keys|prefixes|naming|checklist] [root]  live-registry
+---                                   audits, no docs corpus involved -- thin
+---                                   wrappers over lib.nvim.bindings.audit,
+---                                   same functions `:LibBindingsAudit*`
+---                                   calls (M.audit). `checklist` is
+---                                   view-only; `:BindingsRuntimeChecklist`
+---                                   (bindings_audit/init.lua) writes it
 ---   conflicts                      lhs values claimed by more than one
 ---                                   registration (lib.nvim.bindings.keymap
 ---                                   .conflicts(), same as :LibKeymapConflicts)
@@ -354,7 +357,7 @@ end
 --- (`Usercmds-Overview.md`, "Shape: verb vs. flat"). See
 --- `docs/ROADMAP/handovers/CDX-bindings-runtime-check.md` for why these
 --- exist as a separate lib.nvim module rather than inside `drift.lua`.
----@param kind "actions"|"gaps"|"keys"|"prefixes"|"naming"
+---@param kind "actions"|"gaps"|"keys"|"prefixes"|"naming"|"checklist"
 ---@param root string|nil  ignored for `"prefixes"` — a whole-namespace question, not a per-repo one
 ---@return nil
 function M.audit(kind, root)
@@ -368,6 +371,12 @@ function M.audit(kind, root)
     lines, title = audit.prefix_ambiguity_lines(), "Bindings — audit prefixes"
   elseif kind == "naming" then
     lines, title = audit.naming_candidate_lines(root), "Bindings — audit naming"
+  elseif kind == "checklist" then
+    -- View-only, like every other audit kind. `:BindingsRuntimeChecklist`
+    -- (bindings_audit/init.lua) is the one that writes this to a file worth
+    -- checking boxes off in over time -- kept separate so this route never
+    -- surprises anyone with a write.
+    lines, title = audit.checklist_lines(root), "Bindings — audit checklist"
   else
     lines, title = audit.lines(root), "Bindings — audit"
   end
@@ -654,6 +663,14 @@ function M.enable()
         desc = "Routes whose last path segment is a bare vague word (deep/full/check/...) -- candidates for a naming review, not a verdict",
         run = function(ctx)
           M.audit("naming", ctx.args.root)
+        end,
+      },
+      {
+        path = { "audit", "checklist" },
+        args = { { name = "root", type = "DIR", optional = true } },
+        desc = "Markdown checklist over every keymap action and command route, for a manual runtime pass (view only -- :BindingsRuntimeChecklist writes it to a file)",
+        run = function(ctx)
+          M.audit("checklist", ctx.args.root)
         end,
       },
       {
