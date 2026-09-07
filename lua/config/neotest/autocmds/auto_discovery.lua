@@ -3,10 +3,8 @@
 --- `neotest.state.clear` + a discovery pass) instead of waiting for the
 --- first manual test run to trigger it.
 --
---- CDX: M.attach() is never called -- the require in plugins/neotest.lua is
---- commented out, and this module is flagged unreferenced-module by
---- docs/map/overview.md. Whether auto-discovery should be reactivated or
---- kept deliberately off is an open decision, see
+--- CDX: parked -- M.attach() is never called (require in plugins/neotest.lua
+--- commented out). Reactivate-or-retire decision: docs/ROADMAP/CDX/config-cdx-triage.md §3,
 --- docs/ROADMAP/IDEAS/test.md §2/§10.
 
 local Autocmd = require("lib.nvim.bindings.autocmd")

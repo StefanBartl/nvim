@@ -1,10 +1,9 @@
 ---@module 'config.neotest.adapters.factory'
 ---@brief Adapter factory with strict singleton enforcement
 
---- CDX: M.get_all() is never called -- plugins/neotest.lua hardcodes
---- opts.adapters to plenary/vitest/go directly instead of using this
---- registry, so python/rust/typescript never actually get activated despite
---- being installed. Documented split-brain, see docs/ROADMAP/IDEAS/test.md §2.1.
+--- CDX: parked dead code -- the adapter registry is unused (plugins/neotest.lua
+--- hardcodes plenary/vitest/go). Full analysis + resolution plan:
+--- docs/ROADMAP/CDX/config-cdx-triage.md §3, docs/ROADMAP/IDEAS/test.md §2.1.
 
 local M = {}
 
