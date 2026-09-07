@@ -1,13 +1,46 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: nahezu fertig. 20 kleine/mittlere Module + alle fünf großen
-Subsysteme + der komplette `lib.lua.*`-Namespace + fast der ganze
-Glue-Layer durch. Ein einziger Punkt offen: der Cross-Check von
-`lib/@types/all_functions.lua`s `Lib`-Klasse (129 Zeilen, ~100+ Felder)
-gegen `eager.lua`/`lazy.lua`/`metatable.lua` — nicht self-flagged als
-kaputt, nur noch nicht mit derselben Methode verifiziert, die bei
-`lib.lua.strings`/`tables` den größten Bug der Session fand. Letzter
-gepushter Stand: `lib.nvim@b67ce2c`.**
+**Status: ABGESCHLOSSEN. Das gesamte `lib.nvim`-Modul-Audit ist fertig —
+20 kleine/mittlere Module, alle fünf großen Subsysteme, der komplette
+`lib.lua.*`-Namespace und der komplette Glue-Layer inkl. des letzten
+offenen Punkts (der `all_functions.lua`-Cross-Check). Letzter gepushter
+Stand: `lib.nvim@ca2660c`. Die vollständige Abschluss-Zusammenfassung
+steht am Ende von `E:/repos/lib.nvim/docs/MODULE_AUDIT.md`.**
+
+> **Nachtrag 2026-09-07 (neunte Fortsetzung — LETZTER PUNKT, Audit
+> abgeschlossen).** Der Cross-Check von `all_functions.lua`s `Lib`-Klasse
+> gegen die drei Strategien (`metatable`/`eager`/`lazy`) — mit exakt der
+> Methode, die bei `lib.lua.strings`/`tables` den größten Bug fand: jedes
+> `---@field` gegen das, was die Strategien real zuweisen, jede Abweichung
+> in den Quelltext verfolgt. **Sechs echte Funde, alle gefixt**
+> (`lib.nvim@ca2660c`), verifiziert per `TESTS/run.lua` (grün) +
+> Drei-Strategien-Runtime-Smoke-Test:
+> 1. **`Lib.set`** war als Highlight-Setter `fun(group, opts, ns)` typisiert
+>    — alle drei Strategien exportieren aber `lib.lua.tables.set` (die
+>    generische `Set<T>`-Datenstruktur). Gleiche „aktiv falsche Completions"-
+>    Bug-Klasse wie `Lib.Strings`. → `Lib.Tables.Set`, hoch in den
+>    Namespace-Block.
+> 2. **`Lib.safe`** war `Lib.Notify.Safe` — Strategien exportieren
+>    `lib.lua.tables.safe` (defensive Table-Mutatoren). → `Lib.Tables.Safe`.
+>    `notify.safe`/`hl.set` bleiben über `lib.notify`/`lib.hl` erreichbar.
+> 3. **`globbable`** war ein Phantom-Feld: auf der Klasse seit `9265c34`,
+>    aber in **keiner** Strategie verdrahtet — `lib.globbable(...)` warf
+>    unter der Default-Strategie „unknown key". In alle drei verdrahtet.
+> 4. **`count_lines`** fehlte in der `lazy`-Strategie (auf der Klasse, in
+>    metatable + eager vorhanden). Ergänzt.
+> 5. **`json_decode_to_string_array`** fehlte in `eager` + `lazy` (auf der
+>    Basis-Klasse, in metatable vorhanden). In beiden ergänzt.
+> 6. **`eager.lua`** nannte den Key `autogroup`/`autogroup_create_clear` —
+>    überall sonst (+ `Lib.Strategy.Lazy`) heißt er `augroup`/…. In
+>    `eager.lua` umbenannt.
+>
+> `lazy`s Extra-Keys decken sich jetzt exakt mit `Lib.Strategy.Lazy`.
+> `eager`s Extras (`augroup*`, rohes `json`-Handle) sind als bewusst in
+> einem Header-Kommentar in `eager.lua` dokumentiert. `configuration.md`s
+> „All strategies expose the same surface" entschärft (widersprach der
+> `Lib.Strategy.Lazy`-Klasse). `luassert.lua` gesichtet — vorbildlich
+> selbst-dokumentiert, nichts zu fixen. `Lib.Modules` bewusst nicht
+> angefasst (self-flagged). **Damit ist das komplette Audit durch.**
 
 > **Nachtrag 2026-09-07 (achte Fortsetzung — Glue-Layer begonnen, wenig
 > Budget übrig).** `lib.config` (setup/get/strategy_module),
@@ -276,17 +309,16 @@ gefunden — jeder Fund war entweder mechanisch (fehlende Typ-Annotation) oder
 
 ## Was noch aussteht
 
-**Alle fünf großen Subsysteme UND der komplette `lib.lua.*`-Namespace
-(16 Module) sind durch** — siehe Nachträge oben für jeweils die Funde.
-Verbleibend nur noch:
+**Nichts. Das Audit ist vollständig abgeschlossen** — alle fünf großen
+Subsysteme, der komplette `lib.lua.*`-Namespace UND der komplette
+Glue-Layer (`lib/config`, alle vier Strategien, `lib/@types/*` inkl. des
+`all_functions.lua`-Cross-Checks). `Lib.Modules` bleibt als einziger Punkt
+bewusst unangetastet — self-flagged als „pending external-consumer check",
+das ist keine offene Audit-Aufgabe, sondern eine bewusste Design-/
+Breaking-Change-Entscheidung für den Repo-Eigentümer.
 
-- **Glue-Layer**: `lib/config`, `lib/strategies/*` (4 Aggregator-Strategien:
-  metatable/lazy/eager/control), `lib/@types/*` — inkl. der bereits
-  gefundenen `Lib.Modules`-Altlast, die dort explizit als offen markiert
-  ist. Das ist der letzte verbleibende Block des ganzen Audits.
-
-**Über die fünf großen Subsysteme + `lib.lua.*` gelernte, wiederkehrende
-Muster** (für den Glue-Layer weiter im Kopf behalten):
+**Über den ganzen Audit gelernte, wiederkehrende Muster** (falls später
+ein ähnlicher Sweep über ein anderes Plugin ansteht):
 - Bei Subsystemen/Modulen mit einem **echten** `init.lua`-Aggregator
   zuerst prüfen, ob dessen `return M` ein `---@type` trägt, UND ob diese
   Klasse tatsächlich die reale Rückgabeform beschreibt. Bei `cross` fehlte
@@ -333,32 +365,19 @@ kein eigenes Teilprojekt.
 
 ## Aufwandsschätzung
 
-Nur noch ein Punkt offen: **~15-30 Minuten**, keine ganze Session mehr.
+Erledigt. Keine offene Arbeit mehr an diesem Audit.
 
-## Wie weitermachen
+## Ergebnis
 
-1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen, Abschnitt "Glue layer"
-   im Pro-Modul-Log (ganz unten) — zeigt genau, was schon durch ist und
-   was fehlt.
-2. **Einziger verbleibender Schritt**: Cross-Check von
-   `lua/lib/@types/all_functions.lua`s `Lib`-Klasse gegen die drei
-   Aggregator-Strategien. Methode (dieselbe, die bei `lib.lua.strings`/
-   `tables` den größten Bug der ganzen Session fand):
-   `grep -oE "^LIB\.[a-zA-Z_0-9]+" lua/lib/strategies/eager.lua | sed
-   's/^LIB\.//' | sort -u` gegen die `---@field`-Liste in
-   `all_functions.lua` (per `awk`/`comm`, siehe die `lib.lua.strings`-
-   Fixes im Commit-Verlauf für das genaue Vorgehen). Bei Abweichungen:
-   fixen wie überall sonst in diesem Audit (fehlende Felder ergänzen,
-   veraltete entfernen/korrigieren). Bei `lua/lib/@types/luassert.lua`
-   (85 Zeilen, Test-Framework-Typen) reicht ein kurzer Blick.
-   `lib/@types/init.lua`s `Lib.Modules` bewusst NICHT anfassen — bereits
-   selbst-geflaggte Altlast, "pending external-consumer check".
-3. Danach: Abschluss-Eintrag in dieser Handover-Datei UND in
-   `MODULE_AUDIT.md` ("Audit komplett abgeschlossen") — damit ist das
-   gesamte `lib.nvim`-Modul-Audit fertig.
-3. Fixes direkt im Code, Tracking-Datei nachführen, Commit, sofort auf
-   `main` gepusht. Vor dem Push kurz `git log`/`git status` gegenchecken —
-   bei der `fs`-Session hat parallel eine andere Session/ein anderer
-   Prozess auf demselben Checkout committet und eine unfertige Änderung
-   hinterlassen; nicht automatisch annehmen, dass der Baum so sauber ist
-   wie beim Sessionstart.
+Das gesamte `lib.nvim`-Modul-Audit ist abgeschlossen. Die vollständige
+Abschluss-Zusammenfassung (alle wiederkehrenden Fund-Typen, alle bewusst
+nicht angefassten Punkte) steht am Ende von
+`E:/repos/lib.nvim/docs/MODULE_AUDIT.md` unter „Audit complete —
+2026-09-07". Letzter gepushter Stand: `lib.nvim@ca2660c`.
+
+Falls doch noch einmal etwas nachzuziehen ist: `Lib.Modules` /
+`Lib.Fs` / `Lib.Cross.ALL` / `Lib.BufWinTab` (fiktive Aggregator-Klassen,
+alle self-flagged) und der `module_annnotation`-Tippfehler im
+Verzeichnisnamen sind bewusst offen gelassene Breaking-Change-
+Entscheidungen — kein Audit-Nachholbedarf, sondern Sache des Repo-
+Eigentümers.
