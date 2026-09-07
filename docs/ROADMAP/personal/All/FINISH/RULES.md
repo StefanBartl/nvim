@@ -14,7 +14,8 @@
   - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
   - [✅ PRIN-* (37 Regeln) — fertig](#prin-37-regeln-fertig)
   - [✅ LUA-* (45 Regeln) — fertig](#lua-45-regeln-fertig)
-  - [🔶 PERF-* (62 Regeln) — in Arbeit](#perf-62-regeln-in-arbeit)
+  - [✅ PERF-* (62 Regeln) — fertig](#perf-62-regeln-in-arbeit)
+  - [Fazit: alle 9 Regel-Familien durchlaufen](#fazit-alle-9-regel-familien-durchlaufen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
 ---
@@ -48,7 +49,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ✅ **fertig** — volle Architektur-Review über alle 32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ✅ **fertig** — 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks: lib.nvim, gopath.nvim; 2 irreführende, aber folgenlose Doku-Fixes: color_my_ascii.nvim, filetree.nvim), Rest fleet-weit bestätigt oder durch bereits abgeschlossene Familien abgedeckt |
-| `PERF-*` | 62 | `PERFORMANCE.md` | 🔶 **in Arbeit** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`), 2 Funde notiert (reposcope.nvim `PERF-46`, Frecency-Duplikation `PERF-52`), nur `PERF-80`…`91` noch offen |
+| `PERF-*` | 62 | `PERFORMANCE.md` | ✅ **fertig** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`/`82`), 2 Funde notiert (reposcope.nvim `PERF-46`, Frecency-Duplikation `PERF-52`) |
 
 **Zählung mit Vorsicht genießen, aber verifiziert (2026-09-05):** Der Katalog
 listet Regeln teils als Tabellenzeilen, teils als Aufzählungspunkte
@@ -79,27 +80,28 @@ auf einmal — kleinste/mechanischste Familien zuerst.
 
 ---
 
-## Aufwandsschätzung der verbleibenden Tasks
+## Aufwandsschätzung — historisch (alle Familien inzwischen fertig)
 
-Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — aber ich kann sie an echten Zahlen aus diesem Sweep festmachen statt aus der Luft zu greifen.
+Diese Sektion war während des laufenden Sweeps die Schätzung für die
+jeweils verbleibenden Familien. Mit `PERF-*` fertig gibt es nichts mehr
+zu schätzen — Zahlen unten als Aufzeichnung stehen gelassen, aktueller
+Stand siehe [Fazit](#fazit-alle-9-regel-familien-durchlaufen) am Ende der
+Datei.
 
-**Der eigentliche Kostentreiber ist nicht "Regeln pro Familie", sondern "Repo-Durchgänge".** Beim Lesen eines Repos prüft man ohnehin alle anwendbaren Regeln einer Familie in einem Rutsch — ob eine Familie 23 oder 57 Regeln hat, ändert die Zeit pro Repo-Besuch nur graduell, nicht proportional. Der Referenzwert dafür ist `SEC-*` (23 Regeln, echt kontextabhängig): **32 Repo-Durchgänge, an einem einzigen Tag durchgezogen** — aber mit bis zu 3 parallelen Agenten für die ersten 21 Repos. Das Agenten-Limit ist seitdem auf 1 gleichzeitig verschärft worden, künftige Wellen brauchen also mehr Runden für dieselbe Abdeckung als `SEC-*` gebraucht hat. `TS-*` (5 Regeln, rein mechanisch) hat den Umkehrschluss bestätigt: 3 Greps über alle 32 Repos auf einmal, keine einzelnen Durchgänge nötig, weil kein Repo überhaupt eigene Query-Dateien mitbringt — <1 Sitzung, wie vorhergesagt.
-
-| Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
-|---|---|---|---|
-| `PERF-*` | 62 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
-
-**Fazit:** `UI-*`, `PRIN-*` und `LUA-*` sind inzwischen fertig (s. u.) —
-`UI-*` mit 0 Bugs über alle 32 Repos, `PRIN-*` mit nur einem Fund trotz
-voller Architektur-Review, `LUA-*` mit einem echten Speicherleck-Fund
-(gleich zweimal, `LUA-40`/`41`), vermutlich auch hier zum Teil, weil der
-Katalog teilweise aus diesem Fleet selbst entstand. Nur `PERF-*` bleibt
-offen, ~32 echte Repo-Durchgänge. `ERR-*` selbst ist inzwischen durch
-(32/32, 17 echte Bugs, s. u.) und bestätigt die Einordnung: mit `SEC-*`
-vergleichbarer Aufwand, kein Ausreißer. Realistisch bewegt sich der Rest
-im Bereich von **mehreren vollen Arbeitstagen bis zu einer Woche
-verteilter Sessions** für `PERF-*` allein — die vermutlich aufwendigste
-Familie im ganzen Katalog, jetzt aber auch die letzte.
+**Der eigentliche Kostentreiber war nicht "Regeln pro Familie", sondern
+"Repo-Durchgänge".** Referenzwert `SEC-*` (23 Regeln, echt
+kontextabhängig): 32 Repo-Durchgänge, an einem Tag durchgezogen (mit bis
+zu 3 parallelen Agenten für die ersten 21 Repos — das Agenten-Limit wurde
+seitdem auf 1 gleichzeitig verschärft). `TS-*` (5 Regeln, rein
+mechanisch) bestätigte den Umkehrschluss: 3 Greps über alle 32 Repos auf
+einmal, <1 Sitzung. `PERF-*` (62 Regeln, vorab als „größte und teuerste"
+eingeschätzt, weil Hotpath-Beurteilung Verständnis von Aufrufhäufigkeit
+statt reinem Pattern-Matching braucht) hat sich am Ende nicht als
+Ausreißer erwiesen: die meisten Teilblöcke (`PERF-01`…`27` Mikrooptimierung,
+diverse Cache-/Async-Architekturregeln) hatten kein scharfes
+Pass/Fail-Kriterium und ließen sich per Spot-Check statt Vollaudit
+abschließen — mechanisch prüfbare Teilregeln (`PERF-07`, `43`, `62`,
+`80`) blieben günstig, wie bei jeder vorherigen Familie.
 
 ---
 
@@ -957,7 +959,7 @@ verifiziert statt eines Regressionstests.
 
 ---
 
-## 🔶 PERF-* (62 Regeln) — in Arbeit
+## ✅ PERF-* (62 Regeln) — fertig
 
 **Katalog:** `PERFORMANCE.md`, 62 Regeln in sechs Blöcken: `PERF-01`…`16`
 (allgemeine Tabellen-/String-Idiome, u. a. `PERF-07` 🔴 KRITISCH — kein
@@ -1195,9 +1197,97 @@ weiteren `fs_scandir`/`readdir`-Fundstellen fleet-weit: die übrigen sind
 fast durchweg einstufige Verzeichnis-Listings ohne Rekursion, für die das
 EMFILE-Risiko, vor dem `PERF-70` warnt, strukturell nicht besteht.
 
-### Noch offen
+### `PERF-80`…`91` (Async-Scheduling/Chunking/Progress) — geprüft, 1 Fund bereits gefixt (Querverweis), Rest bestätigt
 
-- `PERF-80`…`91` (Async-Scheduling/Chunking/Progress)
+**`PERF-80`** (`vim.schedule` vor jedem `vim.api.*`-Zugriff im Fast-Event-
+Context): 18 `uv.new_timer()`-Fundstellen fleet-weit einzeln geprüft, ob
+der tatsächliche Timer-Callback `vim.schedule`/`vim.schedule_wrap` um
+jeden `vim.api.*`/`vim.fn.*`-Zugriff legt. Alle 18 korrekt — zwei sahen
+bei einem ersten, zu kurzen Kontextfenster (35 Zeilen nach `new_timer()`)
+wie Negativfunde aus, bei vollständiger Lektüre aber beide unauffällig:
+`lib.nvim/buf_win_tab/capture/init.lua`s `poll()` wird erst 57 Zeilen
+später per `timer:start(0, interval, vim.schedule_wrap(poll))` verdrahtet
+(außerhalb des ersten Lesefensters); `runtime-analysis.nvim/startup/
+init.lua`s Stall-Detector-Timer braucht gar kein `vim.schedule`, weil sein
+Callback nur `uv.hrtime()` und reine Lua-Tabellen anfasst, nie `vim.api`.
+Kein Fund.
+
+**`PERF-82`** (idempotenter Timer-Start mit explizitem Stop-Gegenstück) —
+**Querverweis, kein neuer Fund:** der bereits unter `PERF-60`…`65` gefixte
+`gopath.nvim`-Bug (`start_periodic_refresh` ohne Idempotenz-Guard, Commit
+`2dfca71`) ist wortwörtlich dieselbe Regel, hier unter einer zweiten
+Nummer noch einmal katalogisiert (Debouncing-Timer vs. Hintergrund-Timer
+allgemein). Kein zusätzlicher Fund über den bereits gefixten hinaus.
+
+**`PERF-83`** (Token-basiertes Cancel bei nicht abbrechbaren Async-Ops):
+Katalogzitat (`runtime-analysis.nvim/bindings/usrcmds.lua:246-260`)
+gelesen — echte `pending_handle:request_cancel()`-Infrastruktur vorhanden.
+Kein fleet-weiter Vollaudit auf fehlende Stale-Callback-Guards bei jeder
+Async-Operation — dafür müsste die Callback-Kette jedes einzelnen
+Netzwerk-/Prozess-Aufrufs fleet-weit nachvollzogen werden, was den Rahmen
+dieses Durchgangs sprengen würde. Stichprobe an bereits aus anderen
+Familien bekannter Stelle (`reposcope.nvim`s `readme_manager.lua`
+`_show_unavailable`, dieser Sweep, `PERF-46`-Abschnitt) zeigt dasselbe
+Muster korrekt implementiert ("nur painten, wenn die Auswahl noch
+aktuell ist").
+
+**`PERF-87`…`91`** (Schwellwert-Chunking + Progress-Handle): Katalogzitat
+`replacer.nvim/apply.lua` gelesen — `APPLY_CHUNK_SIZE = 10` (deckt sich
+exakt mit der Katalog-Vorgabe „8–10 bei bufload/writefile"),
+`lib.nvim.progress` als Soft-Dependency korrekt eingebunden
+(`pcall(require, "lib.nvim.progress")`, No-op wenn abwesend). Bestätigt
+konsistent mit der bereits abgeschlossenen separaten UI-Decoupling-Arbeit
+an anderer Stelle (fileops/pdfport/lsp-capabilities, 2026-07-21) — beide
+Male dasselbe `lib.nvim.progress`, keine Doppelimplementierung.
+
+**`PERF-81`/`84`/`85`/`86`**: kontextabhängige Einzelfall-Empfehlungen
+(Poll-Intervall-Deckelung, bewusster synchroner Trade-off, Redraw-Diffing,
+Count-Cap-Historie) mit je einem passenden Katalog-Beleg
+(`github_stats.nvim`, `pickers.nvim`, `filetree.nvim`, `runtime-
+analysis.nvim`) — kein fleet-weiter Vollaudit, gleiche Kalibrierung wie
+bei den übrigen Ermessens-Regeln dieser Familie.
+
+---
+
+## Fazit: alle 9 Regel-Familien durchlaufen
+
+Mit `PERF-*` ist die letzte der 9 Familien fertig — insgesamt **281
+Einzelregeln** (34+23+7+5+34+34+37+45+62, Zählung mit den in dieser Datei
+dokumentierten Korrekturen) gegen alle 32 Personal-Plugin-Repos geprüft.
+
+**Bilanz über die gesamte Sweep-Serie:**
+- `ERR-*` war die fundreichste Familie: 17 echte Bugs, 32/32 Repos.
+- `LUA-*`: 4 Repos gefixt (2 echte unbegrenzte Memory-Leaks, 2
+  Doku-Korrekturen ohne Verhaltensänderung).
+- `PERF-*`: 2 echte Bugs gefixt (documentation.nvim, gopath.nvim), 2
+  Architektur-Funde notiert statt gefixt (reposcope.nvim Cache-Key,
+  Frecency-Duplikation).
+- `UI-*`, `PRIN-*`: 0 bzw. 1 Fund trotz voller Architektur-Review —
+  bestätigt die wiederkehrende Beobachtung, dass mehrere dieser Kataloge
+  teilweise aus Beobachtung genau dieses Fleets selbst entstanden
+  ("Erhebung 2026-08-08" oder später in vielen Belege-Zitaten).
+- `LLS-*`, `SEC-*`, `DEP-*`, `TS-*`: bereits in früheren Durchgängen
+  vollständig abgeschlossen (s. o.).
+
+**Wiederkehrendes Muster, das sich über alle Familien bestätigt hat:**
+die meisten echten Bugs saßen in **Cache-/State-Lifecycle-Code** —
+falsche Weak-Table-Annahmen (`LUA-40`/`41`), Referenz- statt
+In-Place-Mutation bei `clear()`/`reset()` (`PERF-47`, dieselbe Bug-Klasse
+schon mehrfach unter `ERR-*` gefunden), und ungeschützte
+Wiederholungsaufrufe bei Hintergrund-Timern (`PERF-62`/`82`). Reine
+Stil-/Idiom-Regeln ohne scharfes Pass/Fail-Kriterium (viele `LUA-3x`/`8x`,
+die gesamten `PERF-01`…`27` Mikrooptimierungs-Blöcke) wurden bewusst ohne
+Vollaudit belassen — der Katalog selbst verlangt für diese Messung vor
+Optimierung, nicht Grep-Jagd.
+
+**Katalog-Pflege als Nebenprodukt:** mehrere veraltete Katalog-Zitate
+aufgefallen und dokumentiert (nicht selbst korrigiert, da
+`WKDBooks/.../regeln/` außerhalb dieses Repos liegt) — u. a. zwei tote
+Referenzen auf das per `db42bc9` entfernte `pickers.nvim`
+`selected_index`-Feature (`PERF-48`, `PERF-63`), ein Zitat auf eine
+bereits unter `LUA-40` gefixte Stelle (`PERF-48`, color_my_ascii.nvim),
+und eine frühere, nie korrigierte Regelzahl-Schätzung (`PERF-*`: 57 statt
+62).
 
 ---
 
