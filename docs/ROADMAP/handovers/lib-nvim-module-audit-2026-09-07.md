@@ -1,9 +1,33 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: 20 kleine/mittlere Module + `ui` + `fs` + `cross` + `bindings`
-(vier der fünf großen Subsysteme, reduzierte Tiefe) durch. Verbleibend:
-`buf_win_tab`, der komplette `lib.lua.*`-Namespace und der Glue-Layer.**
+**Status: 20 kleine/mittlere Module + alle fünf großen Subsysteme (`ui`,
+`fs`, `cross`, `bindings`, `buf_win_tab`, reduzierte Tiefe) durch.
+Verbleibend: der komplette `lib.lua.*`-Namespace und der Glue-Layer.**
 
+> **Nachtrag 2026-09-07 (sechste Fortsetzung — letztes großes Subsystem
+> durch).** `buf_win_tab` (23 Dateien: buffer_utils/windows_utils/
+> tabs_utils + capture/get_option/move_buffer_to_tab/normal_buffer/
+> resize_guarded/safe_adjacent_buffer/selection/word_under_cursor)
+> durchgearbeitet — bei weitem das kleinste und sauberste der fünf großen
+> Subsysteme. `docs/API/ui-windows-buffers.md` war bereits vollständig
+> korrekt (gute Bestätigung der `fs`/`cross`/`bindings`-Lehre, dass dieser
+> Doku-Layer mitgeprüft werden muss — hier gab's nichts zu fixen). Echte
+> Funde: `windows_utils.collect_win_report()` fehlte in `Command-List.md`
+> (dem README-Ersatz für die drei losen Top-Level-Dateien) obwohl in
+> `@types` und der API-Referenz bereits korrekt erfasst; `modules.md`s
+> `buf_win_tab`-Zeile hatte überhaupt keine Links; `resize_guarded/README.md`
+> nannte einen veralteten, falschen Dateipfad. Zwei niedrig-priorisierte
+> Funde (unbenutzte, aber exakt passende `@types`-Aliase neben bereits
+> selbst-typisierten `return function(...)`) bewusst NICHT gefixt — LuaLS
+> typisiert in beiden Fällen bereits identisch, reine Kosmetik ohne
+> funktionalen Nutzen, dasselbe Nicht-Bug-Muster wie `resolve_style.lua`
+> aus einer früheren Runde. Alle gefixt, `lib.nvim@5b96ce5`.
+>
+> **Damit sind alle fünf großen Subsysteme durch.** Verbleibend:
+> `lib.lua.*` (9 Module, noch nicht inventarisiert) und der Glue-Layer
+> (`lib/config`, `lib/strategies/*`, Top-`@types`) — geschätzt noch
+> ~1.5 Sessions.
+>
 > **Nachtrag 2026-09-07 (fünfte Fortsetzung).** `bindings` (34 Dateien:
 > keymap/autocmd/usercmd + composer/dispatcher/modifier/portability/audit)
 > durchgearbeitet. Alle Aggregator-`return`s hatten bereits korrektes
@@ -204,33 +228,46 @@ gefunden — jeder Fund war entweder mechanisch (fehlende Typ-Annotation) oder
 
 ## Was noch aussteht
 
-- **Ein einziges großes Subsystem übrig**: `buf_win_tab` (23 Lua-Dateien;
-  `ui`, `fs`, `cross` und `bindings` sind durch — siehe Nachträge oben; je
-  eigene READMEs/@types pro Untermodul laut `modules.md`). De facto ein
-  eigenes Teilprojekt, aber deutlich kleiner als die anderen vier.
-  **Aus `fs`/`cross`/`bindings` gelernt**: für jedes der fünf großen
-  Subsysteme existiert auch ein `docs/API/<thema>.md` — eine zweite,
-  funktionssignatur-genaue Doku-Ebene neben den einzelnen Leaf-READMEs. Für
-  `buf_win_tab` ist das `docs/API/ui-windows-buffers.md` — von Anfang an
-  mitprüfen (Vollständigkeit, "(see README)"-Marker korrekt, jede
-  Aggregator-Funktion tatsächlich gelistet — bei `bindings` fehlten dort
-  gleich `registered`/`delete`/`docs` in zwei Abschnitten). Ebenfalls
-  gelernt: bei Subsystemen mit einem **echten** `init.lua`-Aggregator
-  zuerst prüfen, ob dessen `return M` ein `---@type` trägt — bei `cross`
-  war genau das der größte Einzelfund der Session, bei `bindings` war es
-  bereits sauber (also kein Automatismus, aber immer der erste Check).
-  Und: Inline-`@class`-Definitionen direkt im Modul-Code statt unter
-  `@types/` (Convention-Verstoß) tauchten bei `bindings` gleich dreimal auf
-  (`keymap.portability`, `autocmd.docs`, `bindings.audit`) — ein Muster,
-  das sich lohnt, gezielt zu grep'en (`grep -rn "^---@class" <modul>/*.lua`
-  außerhalb von `@types/`).
+**Alle fünf großen Subsysteme (`ui`, `fs`, `cross`, `bindings`,
+`buf_win_tab`) sind durch** — siehe Nachträge oben für jeweils die
+Funde. Verbleibend nur noch:
+
 - **`lib.lua.*`-Namespace** (Lua-nur, kein Neovim-Bezug): `tables`,
   `strings`, `functions`, `time`, `json`, `memo`, `lazy`, `class`,
   `context_manager` — noch **gar nicht** inventarisiert, geschweige denn
-  geprüft.
+  geprüft. Vermutlich analog zu den 20 kleinen/mittleren `lib.nvim.*`-
+  Modulen aus der ersten Session zu behandeln (volle Tiefe, da klein).
 - **Glue-Layer**: `lib/config`, `lib/strategies/*` (4 Aggregator-Strategien:
   metatable/lazy/eager/control), `lib/@types/*` — inkl. der bereits
   gefundenen `Lib.Modules`-Altlast, die dort explizit als offen markiert ist.
+
+**Über die fünf großen Subsysteme gelernte, wiederkehrende Muster** (für
+`lib.lua.*`/Glue-Layer weiter im Kopf behalten):
+- Bei Subsystemen mit einem **echten** `init.lua`-Aggregator zuerst
+  prüfen, ob dessen `return M` ein `---@type` trägt — bei `cross` war das
+  der größte Einzelfund der ganzen Session (meistgenutzter Require im
+  Subsystem war untypisiert); bei `bindings`/`buf_win_tab` war es bereits
+  sauber. Kein Automatismus, aber immer der erste Check.
+- Inline-`@class`-Definitionen direkt im Modul-Code statt unter `@types/`
+  (Convention-Verstoß): `grep -rn "^---@class" <modul-pfad> | grep -v
+  '@types/'` findet sie zuverlässig — tauchte bei `bindings` dreimal auf.
+- Ein `docs/API/<thema>.md`-Layer existiert für jedes der fünf Subsysteme
+  (funktionssignatur-genaue Zweitdoku neben den Leaf-READMEs) — von Anfang
+  an mitprüfen, nicht nachträglich entdecken wie bei `fs`. Manchmal schon
+  vollständig korrekt (`buf_win_tab`), manchmal mit echten Lücken
+  (`bindings`: fehlende `registered`/`delete`/`docs`-Einträge).
+- Ein fertiges, korrekt typisiertes Feature, das schlicht nie ins README
+  geschrieben wurde ("vergessenes Feature") tauchte in JEDEM der fünf
+  Subsysteme mindestens einmal auf (`ui.kit.compare`, `fs.path`,
+  `cross.run_argv.run_async_captured`, `bindings.audit`s drei Lints,
+  `buf_win_tab.windows_utils.collect_win_report`) — der ergiebigste
+  einzelne Fund-Typ dieses ganzen Audits.
+- Nicht jeder fehlende `---@type` ist ein Fund: ein bare `return
+  function(...)` mit vollständigen eigenen `---@param`/`---@return` ist
+  bereits selbst-typisiert (LuaLS braucht dafür keine separate Klasse) —
+  auch wenn zufällig eine exakt passende, aber unbenutzte `@types`-Alias
+  danebenliegt (2× bei `buf_win_tab` gesehen). Etabliertes Nicht-Bug-Muster
+  seit `resolve_style.lua`/`is_dir` aus der ersten Session.
 
 `buffer` (das in der ersten Fassung dieser Handover-Datei noch als "Sonderfall
 ohne init.lua, zu verifizieren" unter den großen Modulen stand) ist bereits
@@ -239,38 +276,26 @@ kein eigenes Teilprojekt.
 
 ## Aufwandsschätzung
 
-Aktualisiert nach jetzt 20 durchgearbeiteten kleinen/mittleren Modulen in
-einer Session (inkl. aller Fixes, 6 Commits, Push): das Tempo war höher als
-ursprünglich angenommen, weil die allermeisten Module bereits sauber waren
-und nur kurze Bestätigungs-Checks brauchten — nur ~6 von 20 brauchten
-tatsächliche Fixes.
-
 | Block | Umfang | Geschätzter Aufwand |
 |---|---|---|
-| `buf_win_tab` (`ui`+`fs`+`cross`+`bindings` bereits durch) | 23 Dateien, viele Unter-READMEs/@types pro Leaf-Modul | **eine halbe bis ganze Session** |
 | `lib.lua.*` (9 Module) | vermutlich klein wie die meisten `lib.nvim`-Module, aber noch ungeprüft | **~1 Session** |
 | Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) — hier liegt schon eine bekannte Altlast (`Lib.Modules`) | **~0.5 Session** |
 
-**Summe: grob 2-2.5 weitere Arbeits-Sessions.** Vier der fünf großen
-Subsysteme sind durch; `buf_win_tab` ist der letzte davon und deutlich
-kleiner als `bindings`/`cross`/`fs` waren.
-
-Die "Tiefe reduzieren"-Stellschraube aus früheren Fassungen dieser Datei ist
-bereits gängige Praxis (seit `ui`); für das letzte große Subsystem lohnt
-sich weiteres Kürzen kaum noch.
+**Summe: grob 1.5 weitere Arbeits-Sessions.** Alle fünf großen Subsysteme
+sind durch — der dominante Rest-Aufwand aus früheren Fassungen dieser
+Datei ist erledigt.
 
 ## Wie weitermachen
 
 1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — Pro-Modul-Log zeigt
-   alle fertigen Module mit ✅ und den jeweiligen Funden (`ui`, `fs`,
-   `cross` und `bindings` jetzt alle drin).
-2. Nächster Schritt: `buf_win_tab` (23 Dateien, letztes der fünf großen
-   Subsysteme) mit derselben reduzierten Tiefe — zuerst prüfen, ob es einen
-   echten `init.lua`-Aggregator hat (falls ja: dessen `return M`/`---@type`
-   zuerst), dann `grep -rn "^---@class" buf_win_tab/**/*.lua` außerhalb von
-   `@types/`-Ordnern für inline-Typ-Verstöße (Muster aus `bindings`), dabei
-   gleich `docs/API/ui-windows-buffers.md` mitprüfen. Danach `lib.lua.*`
-   (9 Module, noch nicht inventarisiert), zuletzt der Glue-Layer.
+   alle fertigen Module mit ✅ und den jeweiligen Funden (alle 20
+   kleinen/mittleren Module + alle fünf großen Subsysteme jetzt drin).
+2. Nächster Schritt: `lib.lua.*` (9 Module unter `lua/lib/lua/`, noch nicht
+   inventarisiert — erst die Inventar-Tabelle in `MODULE_AUDIT.md` um
+   diese neun ergänzen, dann volle Tiefe wie in der ersten Session, da
+   vermutlich klein). Danach der Glue-Layer (`lib/config`,
+   `lib/strategies/*`, `lib/@types/*` inkl. der bekannten `Lib.Modules`-
+   Altlast) — damit ist das Audit komplett abgeschlossen.
 3. Jeder Batch: Fixes direkt im Code, Tracking-Datei nachführen, ein Commit
    pro Batch, sofort auf `main` gepusht. Vor dem Push kurz `git log`/
    `git status` gegenchecken — bei der `fs`-Session hat parallel eine
