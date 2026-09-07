@@ -12,6 +12,7 @@
   - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
   - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
   - [✅ UI-* (34 Regeln) — fertig](#ui-34-regeln-fertig)
+  - [🔶 PRIN-* (37 Regeln) — in Arbeit](#prin-37-regeln-in-arbeit)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -43,7 +44,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `DEP-*` | 7 | `LUA_NVIM.md` | ✅ **fertig** — alle betroffenen Repos gefixt |
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
 | `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
-| `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
+| `PRIN-*` | 37 | `PRINCIPLES.md` | 🔶 **in Arbeit** — auf Nutzerwunsch volle Architektur-Review (nicht nur Bug-Hunt wie `ERR-*`/`UI-*`), 32 Repos offen |
 | `UI-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 echte Bugs (1 kosmetische Beobachtung notiert, nicht gefixt) |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
@@ -711,16 +712,71 @@ hatte:
 
 ---
 
+## 🔶 PRIN-* (37 Regeln) — in Arbeit
+
+**Andere Natur als `ERR-*`/`UI-*`.** Der Katalog (`PRINCIPLES.md`) ist
+sprachneutral und beschreibt überwiegend Architektur-/Code-Qualität
+(SRP, reine Funktionen, Naming-Konsistenz, Dependency Injection,
+Dokumentationsvertrag) statt konkreter, binär entscheidbarer
+Fehlerzustände. Mehrere Regeln überschneiden sich inhaltlich mit bereits
+abgeschlossener `ERR-*`-Arbeit:
+
+- `PRIN-10` (kein globaler Zustand, nur über Getter/Setter) und `PRIN-26`
+  („kein Wert" ≠ „falscher Wert", explizit auf `LUA_NVIM.md`s
+  Fehlerbehandlungs-Abschnitt verweisend) sind im Kern dieselbe Bugklasse,
+  die bei `ERR-*` schon 4× real gefunden und gefixt wurde
+  (documentation.nvim, replacer.nvim, reposcope.nvim, `lib.nvim` an der
+  Wurzel).
+- `PRIN-20`/`PRIN-25`/`PRIN-27`/`PRIN-40`..`43` (stille Fehler,
+  Eingabevalidierung, Fail-Open, Cache-Hygiene) wurden während `ERR-*`
+  ebenfalls schon wiederholt einzeln bewertet (z. B. pdfports/
+  github_stats' bewusstes Fail-Open, diverse Cache-Module).
+
+**Katalog-Beleg-Herkunft:** wie bei `UI-*` zitiert der Katalog selbst schon
+viele Repos aus diesem 32er-Bestand als *positive* Beispiele (Erhebung
+2026-08-08: Pure Core — emojis/diff/fileops/replacer/insights; Registry —
+documentation/dap/pickers; Hexagonal — sandbox; Feature-Module — filetree/
+diff/recommender/fileops; Dispatch-Nadelöhr — pickers/debugging; SSOT —
+filetree/pickers/markdown/language/insights; Keymaps-als-Daten — markdown/
+gopath/color_my_ascii; Soft Dependencies — emojis/buffer-ctx/cascade/diff).
+**Auf Nutzerwunsch trotzdem volle Architektur-Review** über alle 37 Regeln
+und 32 Repos, nicht nur ein Abgleich gegen die schon dokumentierten
+Positiv-Beispiele.
+
+**Methodik/Kalibrierung für diese Familie:**
+- Pro Repo: Modul-/Dateistruktur auf SRP-Kohärenz sichten (nicht jede
+  Datei einzeln volllesen, wo die Verantwortung schon am Namen/Ordner
+  erkennbar ist), Stichproben repräsentativer Module für Funktionsgröße,
+  Naming-Konsistenz, Header-Kommentare (`PRIN-50`) und Dependency-Stil
+  (`PRIN-11`) lesen.
+- **Echte, demonstrierbare Bugs** (z. B. `PRIN-28`: Zustand vor einem
+  Fehler mutiert und nicht zurückgerollt, obwohl das Aufrufer-Vertrag
+  voraussetzt) werden gefixt wie bei `ERR-*`.
+- **Reine Architektur-/Stil-Beobachtungen** (SRP-Kandidat, inkonsistentes
+  Naming, fehlender Header) werden dokumentiert, aber **nicht automatisch
+  refaktoriert** — das wäre eine Design-Entscheidung mit Tragweite über den
+  ganzen Fleet, die einzeln abgestimmt gehört, nicht nebenbei in einem
+  Findings-Sweep.
+- Bereits durch `ERR-*` abgedeckte Bugklassen (s. o.) werden nicht
+  nochmal einzeln gejagt, nur kurz auf Konsistenz mit den dort gefundenen
+  Mustern gegengeprüft.
+
+### Ergebnis je Repo
+
+*(wird während der Session befüllt)*
+
+---
+
 ## ⬜ Noch nicht begonnen
 
 | Familie | Regeln | Worum es geht (Kurzfassung) |
 |---|---|---|
-| `PRIN-*` | 37 | Grundprinzipien (Modularität, API-Design, Namenskonventionen, Dokumentationspflichten auf Prinzip-Ebene) |
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `PRIN-*` (37) →
-`LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich aufwendigste, da sie
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `PRIN-*` zu Ende
+bringen → `LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich
+aufwendigste, da sie
 am meisten Kontext pro Fund braucht). Keine Autoren-Vorgabe, nur eine
 Einschätzung nach Größe.
 
