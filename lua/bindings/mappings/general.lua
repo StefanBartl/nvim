@@ -41,8 +41,8 @@ function M.setup()
     { desc = "[General] Disable F1", silent = true }
   )
 
-  --- CDX: also provided by buffer-ctx.nvim — keep here or drop for the plugin's?
-  -- Insert today's date (e.g. 10.07.2026).
+  -- Insert today's date as dd.mm.yyyy. buffer-ctx.nvim's :Insert can also
+  -- place timestamps, but this is the one-key shortcut for the common case.
   map("n", "<leader>date", function()
     vim.api.nvim_put({ tostring(os.date("%d.%m.%Y")) }, "c", false, true)
   end, { desc = "[General] Insert date" })

@@ -4,14 +4,13 @@
 
 local M = {}
 
---- CDX: `BND-05` (see docs/FEATURES.md) removed the
---- `docs/NOTES/PersonelPlugins/BINDINGS/` tree; the corpus now reads each
---- plugin's own `docs/BINDINGS.md` via `M.plugin_sheets()`. `roots()[1]` still
---- points at that missing dir — the `isdirectory` guards make the corpus walk
---- harmless, but `:Bindings path personal` copies a dead path. Prune roots()
---- to Extern-only?
-
---- Both BINDINGS roots, absolute.
+--- Both BINDINGS roots, absolute, always Personal then Extern -- several
+--- modules key off that index order (plugin_scope.lua, records.lua,
+--- status.lua). Since `BND-05` (see docs/FEATURES.md) the Personal slot points
+--- at a dir that no longer exists: personal bindings now come from each
+--- plugin's own `docs/BINDINGS.md` via `M.plugin_sheets()`. The slot is kept
+--- (empty, guarded by `isdirectory`) so the index contract holds; only
+--- `:Bindings path personal` still surfaces the stale path.
 ---@return string[]
 function M.roots()
   local cfg = vim.fn.stdpath("config")
