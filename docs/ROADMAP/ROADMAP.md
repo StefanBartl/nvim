@@ -1,14 +1,11 @@
 # Roadmap
 
----
-
 ## Table of content
 
   - [cdx](#cdx)
   - [Misc](#misc)
   - [true check](#true-check)
   - [Plugin-Liste](#plugin-liste)
-  - [stdpaths](#stdpaths)
 
 ---
 
@@ -17,7 +14,7 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    20% / 80%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     17:20       |    27% / 58%     | X
+| **work** |   20. Sept    |   Sa., 06:00    |     22:20       |    23% / 63%     | X
 | **free** | 21. Juli 2027 |   So., 09:00    |     19:50       |    97% / 40%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
@@ -35,8 +32,7 @@
 
 ## Misc
 
-
-- [ ] start vim optimieren
+- [ ] start nvim optimieren
     - [ ] C:\Users\bartl\AppData\Local\nvim\after
 
 - [ ] Anticheat knacken
@@ -104,26 +100,3 @@ und das native: docmap-desktop
 
 ---
 
-## stdpaths
-
-:Replacer "vim.fn.stdpath('config') .. " "vim.fn.stdpath('config') .. " cwd
-
-```vim
-:lua print(vim.fn.stdpath("config"))
-:lua print(vim.fn.stdpath("data"))
-:lua print(vim.fn.stdpath("state"))
-:lua print(vim.fn.stdpath("cache"))
-:lua print(vim.fn.stdpath("log"))
-:lua print(vim.fn.stdpath("run"))
-```
-
-| Pfad     | Inhalt                                                  |
-| -------- | ------------------------------------------------------- |
-| `config` | `init.lua`, Plugins, Keymaps, eigene Lua-Module         |
-| `data`   | Lazy.nvim-Repositories, Mason-Pakete, Treesitter-Parser |
-| `state`  | Shada, Sessions, Swap-Informationen, Statusdaten        |
-| `cache`  | Parser-Cache, Plugin-Caches, generierte Dateien         |
-| `log`    | `lsp.log`, Plugin-Logs, Debug-Ausgaben                  |
-| `run`    | Sockets, RPC-Pipes, temporäre Runtime-Dateien           |
-
----
