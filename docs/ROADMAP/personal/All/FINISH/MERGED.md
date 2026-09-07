@@ -21,6 +21,7 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
 - [ ] CDX: jedes Keymap/Usrcmd/Autocmd in echter nvim-Instanz durchtesten, ob Fehler geworfen werden. (Claude kann einen Testrunner vorbereiten, das Beobachten in Echtzeit ist deine Domäne — außer wir bauen dafür einen headless-Test.)
+  - [ ] nochmal alle keymaps checken, ob kein keymap doppelt vergeben ist, über alles repos hinweg + nvim-config
   - [ ] Gleich mitchecken, o die usrmd optionen wirklich gut bennant sind. Zb `:LspDoctor deep` wurde gennant für eine aktion, die ausgegebn hat, welcher formatter gerade aktiv ist.... daher wurde es umbenannt auf `LspDoctor fmt_check`
 - [ ] `:Recommender perf` durch alle Module laufen lassen und Ergebnisse sichten. (Ausführen + Sichten = du; die daraus resultierenden Fixes = delegierbar, siehe Liste B.)
 
@@ -30,12 +31,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 - [ ] Diagnostics ncohmal drüber laufen lassen, es gab noch das ein oder andere zu implementieren.
 - [ ] lib.nvim - alle module durcgehen und checken, ob docs, @types, als auch aggregatoren noch korrekt sind. Die lib.nvim ist für mich umso mehr wert, umso besser die docs sind. Dabei auch gleich feature ideen einbringenh, sprich bei jedem modul am ende auch checken "fehlt etwass sinnvolles?"
-- [ ] nochmal alle keymaps checken, ob kein keymap doppelt vergeben ist, über alles repos hinweg + nvim-config
 - [ ] Merged_Finished.md in die Rules einbauen: Dsa sind alles Dinge, die wr gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen
 - [x] checkhealt_conventions.md — alle Umsetzungspunkte erledigt inkl. ADVICE-Vollaudit; verschoben nach `FINISH/ERLEDIGT/checkhealt_conventions.md`
-- [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md weiter machen
-
-- [ ] C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/RULES.md
+- [x] RULES.md — alle 9 Regel-Familien (281 Regeln, 32 Repos) durch, Funde ins `WKDBooks`-Regelwerk zurückgeschrieben; verschoben nach `FINISH/ERLEDIGT/RULES.md`
 
 ---
 

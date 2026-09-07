@@ -1,12 +1,13 @@
 # Handover — RULES.md Checklist-Familien-Sweep
 
-Fortlaufende Arbeit an
-[`docs/ROADMAP/personal/All/FINISH/RULES.md`](../personal/All/FINISH/RULES.md):
-die 9 Regel-Familien aus `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/`
+> **Erledigt (2026-09-07).** Beide Dateien nach `ERLEDIGT/` verschoben,
+> kein aktiver Tracking-Zustand mehr.
+
+Arbeit an [`RULES.md`](../RULES.md): die 9 Regel-Familien aus
+`$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/`
 (`PRINCIPLES.md`, `LUA_NVIM.md`, `PERFORMANCE.md`) wurden Familie für
 Familie gegen alle 32 Personal-Plugin-Repos geprüft. `RULES.md` selbst
-bleibt die Quelle der Wahrheit; diese Datei ist der Einstiegspunkt für
-eine neue Session.
+bleibt die Quelle der Wahrheit für den Stand.
 
 ## Stand: alle 9 Familien fertig (2026-09-07)
 
@@ -24,7 +25,7 @@ eine neue Session.
 
 **Der komplette Sweep (281 Einzelregeln, alle 32 Repos) ist damit
 abgeschlossen.** Volles Fazit mit Bilanz über alle 9 Familien:
-[`RULES.md` → „Fazit: alle 9 Regel-Familien durchlaufen"](../personal/All/FINISH/RULES.md#fazit-alle-9-regel-familien-durchlaufen).
+[`RULES.md` → „Fazit: alle 9 Regel-Familien durchlaufen"](../RULES.md#fazit-alle-9-regel-familien-durchlaufen).
 
 ## PERF-* — Abschlussnotiz (letzte Familie)
 
@@ -80,6 +81,39 @@ außerhalb dieses Repos): zwei tote Zitate auf das per `db42bc9` entfernte
 auf eine bereits unter `LUA-40` gefixte Stelle (`color_my_ascii.nvim`,
 `PERF-48`), und die Regelzahl selbst (57 → 62, nie korrigierte frühe
 Schätzung).
+
+## Funde ins Regelwerk zurückgeschrieben (2026-09-07)
+
+Nach Abschluss der Sweep-Serie: `WKDBooks`s eigener Regelkatalog
+(`Development/wkdbook-Lua/Checklists/regeln/{LUA_NVIM,PERFORMANCE,
+PRINCIPLES}.md`) auf Basis dieser Datei und `RULES.md` korrigiert/ergänzt,
+Commit `9c71449` auf `WKDBooks`s `main`, gepusht:
+
+- **Formatierungsbug gefixt:** `LUA-67`/`LUA-68` waren Tabellen-Header-
+  Zellen ("Kontext"/"-------"), die versehentlich in die Regel-ID-Spalte
+  gerutscht waren — keine echten Regeln. Tabellenkopf wiederhergestellt.
+- **Veraltete Zitate aktualisiert:** `LUA-01`/`LUA-04` (bereits gefixte
+  Gegenbeispiele), `ERR-42` (github_stats.nvim zeigte auf toten Code),
+  `SEC-21` (github_stats.nvim's Lücke ist seit `dc8efa9` geschlossen),
+  `PERF-48`/`63` (zwei tote Zitate auf das entfernte `pickers.nvim`-Feature
+  `selected_index`), `PERF-86` (Konstante wurde zur Funktion).
+- **Falsche Annahme korrigiert:** `ERR-52`s eigener Text beschrieb
+  `vim.tbl_deep_extend` als Listen-indexweise-mergend — gegen echtes
+  Neovim-0.12-Verhalten verifiziert falsch für nicht-leere Listen (die
+  Funktion ersetzt sie komplett); das Risiko betrifft nur eigenen,
+  handgeschriebenen Merge-Code.
+- **Zwei neue Regeln ergänzt** für real gefundene, wiederholte
+  Bugklassen ohne bisherige explizite Regel: `LUA-48` (schwache Schlüssel
+  wirken nur auf kollektierbare Typen, nie auf Zahlen — die Wurzelursache
+  hinter den echten Leaks in lib.nvim/gopath.nvim), `ERR-54` (ein Getter,
+  der geteilten Zustand per Referenz zurückgibt, macht jeden Aufrufer zu
+  einem potenziellen Mutator — github_stats.nvims Dashboard-Sortier-Bug).
+- **Neue Gegenbeispiel-Funde als Belege ergänzt:** `PERF-46`/`47`/`62`/`82`
+  (diese Sweep-Serie), `ERR-52` (gopath.nvim, der erste reale Fund des bis
+  dahin nur theoretischen Falls), `ERR-60` (3 neue and/or-Ternary-Funde +
+  die Grep-Muster-Lektion zu Methodenaufrufen), `PRIN-01`/`02`
+  (casedesk.nvim), `UI-27` (lib.nvim, kosmetisch), `DEP-01`/`02` (Belege +
+  eine Test-Mocking-Falle).
 
 ## Größte Lektionen aus der gesamten Sweep-Serie
 
