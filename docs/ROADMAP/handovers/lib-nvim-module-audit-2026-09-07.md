@@ -1,7 +1,10 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: läuft, ca. 1/3 der kleinen/mittleren Module durch, die vier großen
-Subsysteme (bindings/cross/fs/ui) und `lib.lua.*` noch nicht angefasst.**
+**Status: alle "kleinen/mittleren" `lib.nvim.*`-Module durch (20 von ~37).
+Verbleibend: die fünf großen Subsysteme (bindings/cross/fs/ui/buf_win_tab),
+der komplette `lib.lua.*`-Namespace und der Glue-Layer — noch nicht
+angefasst. Bewusst hier pausiert (Nutzer-Ansage: "beim nächsten fertigen
+Repo/Modul stop und Handover aktualisieren").**
 
 Auslöser (Chat, Repo `lib.nvim` in einem Worktree, nicht nvim-config selbst):
 
@@ -51,10 +54,17 @@ gepusht (kein Co-Author), in Batches von ca. 4-6 Modulen.
 
 ## Bisheriger Fortschritt
 
-**13 von ~37 Top-Level-Modulen unter `lib.nvim.*` durch** (alles kleine bis
-mittlere, 2-8 Dateien): `core`, `async`, `contextmenu`, `count`, `debounce`,
+**20 von ~37 Top-Level-Modulen unter `lib.nvim.*` durch**, alle "klein bis
+mittel" (2-15 Dateien): `core`, `async`, `contextmenu`, `count`, `debounce`,
 `dotrepeat`, `git`, `json`, `lastcmd`, `notify`, `require`, `safe_api`,
-`selection`. Ein Commit gepusht (`cc08fad`) mit 4 echten Fixes.
+`selection`, `store`, `terminal`, `token`, `health`, `harvest`, `cache`,
+`deps`, `logger`, `progress`, `window`, `normalize`, `system`, `dev`,
+`image_preview`, `lua_ls`, `markdown`, `neotree`, `net`, `treesitter`,
+`buffer` (das sind schon mehr als 20 Namen, weil manche als "ein Modul" in
+der ursprünglichen Zählung liefen, aber mehrere Unterdateien mitbrachten —
+die Inventar-Tabelle in `MODULE_AUDIT.md` ist die genaue Quelle).
+
+Sechs Commits gepusht (`cc08fad` … `8f46452`), insgesamt ~15 echte Fixes.
 
 `lib.nvim_usrcmds` (eigener Namespace neben `lib.nvim`, nicht in dessen
 Baum) stichprobenartig geprüft — sauber dokumentiert (README, root-README,
@@ -64,52 +74,58 @@ andere Plugins).
 
 ## Bisherige Funde
 
-Details im Pro-Modul-Log der Tracking-Datei. Kurzfassung, alles bereits
-gefixt und gepusht:
+Details im Pro-Modul-Log der Tracking-Datei. Die wiederkehrenden Muster:
 
-- **`lib/nvim/init.lua`**: Docstring behauptete einen Shortcut
-  (`Nvim.map == require("lib.nvim.bindings.keymap")`), der auf diesem
-  Aggregator technisch gar nicht existiert (der ist 1:1, keine
-  Kurznamen-Flatten-Logik — die gibt's nur auf dem *anderen*, obersten
-  `require("lib")`-Aggregator). Doc korrigiert.
-- **`core`**: `@types`-Datei hatte falschen `@module`-Pfad und eine
-  Klasse namens `Lib.Nvim` statt `Lib.Nvim.Core` (Namenskollisionsrisiko
-  mit dem echten Top-Namespace-Typ). Umbenannt — dabei eine bereits
-  bekannte, im Code selbst als "stale, pending check" markierte Altlast in
-  `lua/lib/@types/init.lua` (`Lib.Modules`-Klasse) sichtbar gemacht, aber
-  bewusst nicht angefasst (schon dokumentiert, außerhalb des Scopes).
-- **`debounce`**: `init.lua` und `buffer/init.lua` gaben `M` ohne
-  `---@type`-Annotation zurück (jedes Schwestermodul tut das) — LuaLS bekam
-  keine Typisierung für `require(...)`. Modul-Oberflächen-Klassen fehlten
-  komplett, nachgebaut.
-- **`git`**: gleicher Bug wie debounce (fehlende `---@type Lib.Git`), obwohl
-  der Typ selbst schon korrekt und vollständig war.
-- **`notify`**: `resolve_log_level` existierte als echtes, aktiv genutztes
-  Submodul (`lib.nvim.logger` hängt dran), war aber nirgends aggregiert,
-  nirgends dokumentiert und ohne eigene Typannotation — obwohl
-  `modules.md`s Einzeiler für `notify` genau das schon verspricht
-  ("notify wrapper + log-level resolution"). Alle vier Lücken geschlossen.
+**Mechanisch, über viele Module verteilt** (je ~5-6× gefunden, immer
+gefixt): `return M` ohne `---@type`-Annotation trotz vorhandener/fehlender
+Modul-Oberflächen-Klasse (`debounce`, `git`, `window.tag`, `neotree.node`,
+`neotree.watch`, `net.curl`, `dev.duplicates`) — LuaLS gab für
+`require(...)` dieser Module schlicht keine Typisierung.
 
-Muster bisher: die meisten Module sind **sehr sauber** (README/@types/Code
-decken sich exakt); die Bugs, die auftauchen, sind mechanisch (fehlende
-`---@type` auf `return M`) oder "vergessenes Submodul beim Aggregieren" —
-kein einziger Fall von grob falscher/veralteter Dokumentation bisher.
+**"Vergessenes Submodul beim Aggregieren"** (echtes, fertiges, aktiv
+genutztes Submodul existiert, ist aber nirgends verdrahtet/dokumentiert):
+- `notify.resolve_log_level` — von `lib.nvim.logger` aktiv genutzt, aber
+  nicht auf `notify`s `M` gehängt, nicht im README, nicht typisiert.
+- `window.find_by_filetype` — komplett generisch nutzbar, aber nicht
+  aggregiert, nicht in `@types`, nicht in der Modulstruktur des READMEs.
+- **`image_preview` — der größte Einzelfund**: komplettes, fertiges
+  3-Provider-Modul (images.nvim/snacks/image.nvim) mit **null** der drei
+  Pflicht-Doku-Ebenen (kein README, kein `@types`, kein Eintrag in
+  `modules.md`), obwohl es schon einen Einzeiler im `doc/lib.nvim.txt`-Hub
+  hatte — also bekannt, aber nie fertiggestellt. Komplett nachgezogen.
+- `harvest`: keines der 4 Files (`init`/`scope`/`render`/`sink`) hatte auch
+  nur eine Modul-Oberflächen-Klasse — nur die Daten-Shape-Typen existierten.
+  LuaLS gab vorher **null** Signatur-Hilfe für jeden `harvest.*`-Aufruf.
+
+**Ein echter Tippfehler-Bug**: `lua_ls.insert.module_annnotation` (das
+Verzeichnis trägt selbst einen Tippfehler, dreifaches n) — dessen eigenes
+README hatte in **allen vier** Code-Beispielen den falsch geschriebenen,
+nicht existierenden Pfad (`module_annotation`, doppeltes n). Copy-paste des
+READMEs hätte einen `require`-Fehler geworfen. Auch zwei `notify.warn`-Präfixe
+im Modul selbst und der Link-Text in `modules.md` trugen den falschen Namen.
+Gefixt auf den echten (tippfehlerhaften) Pfad; das Verzeichnis selbst nicht
+umbenannt (wäre ein Breaking Change für jeden externen Konsumenten, der schon
+den Tippfehler-Pfad nutzt — das ist eine Entscheidung für dich, nicht für
+einen Audit-Sweep).
+
+**README-Lücken bei bereits korrekt typisierten Funktionen** (mehrfach):
+`logger` (`count`/`counters`/`add_sink`/`loggers()` fehlten komplett in der
+Prosa), `window` (vier bereits aggregierte Funktionen fehlten in der
+Funktions-Prosa), `neotree.watch` (`installed()`/`clear()`), `net.curl`
+(`is_secret_header`/`config_quote` nur implizit erwähnt).
+
+Insgesamt: die meisten Module sind **sehr sauber** — README/@types/Code
+decken sich exakt, teils vorbildlich (z. B. `normalize`, `cache`, `deps`,
+`store`). Kein einziger Fall von grob falscher/veralteter Fach-Dokumentation
+gefunden — jeder Fund war entweder mechanisch (fehlende Typ-Annotation) oder
+"etwas Fertiges wurde nie zu Ende verdrahtet".
 
 ## Was noch aussteht
 
-Unter `lib.nvim.*`, noch offen (aus der Inventar-Tabelle in
-`MODULE_AUDIT.md`):
-
-- **Klein/mittel** (ähnliches Tempo wie bisher erwartbar): `store`,
-  `terminal`, `token`, `health`, `harvest`, `cache`, `deps`, `logger`,
-  `progress`, `window`, `normalize`, `system`, `dev`, `image_preview`,
-  `lua_ls`, `markdown`, `neotree`, `net`, `treesitter` — ca. 19 Module.
-- **Groß, eigene Unter-Ökosysteme mit vielen Leaf-Modulen** (je eigene
-  READMEs/@types pro Untermodul, laut `modules.md` teils ein Dutzend+):
+- **Die fünf großen Subsysteme** (eigene Unter-Ökosysteme mit vielen
+  Leaf-Modulen, je eigene READMEs/@types pro Untermodul laut `modules.md`):
   `bindings` (34 Lua-Dateien), `cross` (42), `fs` (52), `ui` (29),
-  `buf_win_tab` (23), `buffer` (7, aber Sonderfall ohne `init.lua` laut
-  `modules.md:34` — verifizieren, dass das noch stimmt). Diese fünf sind
-  de facto eigene Teilprojekte.
+  `buf_win_tab` (23). Diese fünf sind de facto eigene Teilprojekte.
 - **`lib.lua.*`-Namespace** (Lua-nur, kein Neovim-Bezug): `tables`,
   `strings`, `functions`, `time`, `json`, `memo`, `lazy`, `class`,
   `context_manager` — noch **gar nicht** inventarisiert, geschweige denn
@@ -118,22 +134,28 @@ Unter `lib.nvim.*`, noch offen (aus der Inventar-Tabelle in
   metatable/lazy/eager/control), `lib/@types/*` — inkl. der bereits
   gefundenen `Lib.Modules`-Altlast, die dort explizit als offen markiert ist.
 
+`buffer` (das in der ersten Fassung dieser Handover-Datei noch als "Sonderfall
+ohne init.lua, zu verifizieren" unter den großen Modulen stand) ist bereits
+durch — tatsächlich ein kleines, sauberes Leaf-only-Namespace wie dokumentiert,
+kein eigenes Teilprojekt.
+
 ## Aufwandsschätzung
 
-Ehrlich eingeordnet, basierend auf dem bisherigen Tempo (13 kleine Module
-inkl. Fixes, Commit, Push in einer Session):
+Aktualisiert nach jetzt 20 durchgearbeiteten kleinen/mittleren Modulen in
+einer Session (inkl. aller Fixes, 6 Commits, Push): das Tempo war höher als
+ursprünglich angenommen, weil die allermeisten Module bereits sauber waren
+und nur kurze Bestätigungs-Checks brauchten — nur ~6 von 20 brauchten
+tatsächliche Fixes.
 
 | Block | Umfang | Geschätzter Aufwand |
 |---|---|---|
-| Restliche kleine/mittlere `lib.nvim.*`-Module (~19) | 2-15 Dateien je Modul | **1-2 weitere Sessions** |
-| `bindings`, `cross`, `fs`, `ui`, `buf_win_tab` | je 20-52 Dateien, viele Unter-READMEs/@types | **je eine halbe bis ganze eigene Session — macht zusammen 3-5 Sessions** |
+| `bindings`, `cross`, `fs`, `ui`, `buf_win_tab` | je 20-52 Dateien, viele Unter-READMEs/@types pro Leaf-Modul | **je eine halbe bis ganze eigene Session — macht zusammen 3-5 Sessions** |
 | `lib.lua.*` (9 Module) | vermutlich klein wie die meisten `lib.nvim`-Module, aber noch ungeprüft | **~1 Session** |
-| Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) | **~0.5 Session** |
+| Glue-Layer (`config`, `strategies`, Top-`@types`) | klein an Dateizahl, aber hoher Prüfaufwand (Aggregator-Logik, Verweise) — hier liegt schon eine bekannte Altlast (`Lib.Modules`) | **~0.5 Session** |
 
-**Summe: grob 6-9 weitere Arbeits-Sessions** bei der aktuellen Prüftiefe
-(Code + README + @types zeilenweise gegenlesen, Aggregator-Wiring prüfen,
-Feature-Idee je Modul). Das ist der ehrliche Rahmen für "wirklich jedes
-Modul gründlich" — nicht Tage, aber auch nicht "heute Nachmittag fertig".
+**Summe: grob 4.5-6.5 weitere Arbeits-Sessions.** Die fünf großen Subsysteme
+sind jetzt der klar dominante Rest-Aufwand — jedes davon ist im Umfang
+vergleichbar mit allen 20 bisher geprüften Modulen zusammen.
 
 Zwei Stellschrauben, falls das zu lang ist:
 - **Tiefe reduzieren** für die fünf großen Subsysteme (nur Top-Level-README
@@ -145,10 +167,12 @@ Zwei Stellschrauben, falls das zu lang ist:
 
 ## Wie weitermachen
 
-1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — die Inventar-Tabelle
-   zeigt, welche Module noch kein ✅ im Pro-Modul-Log haben.
-2. Nächster Batch: die restlichen kleinen Module (`store` bis `treesitter`
-   aus der Liste oben), dann Entscheidung zu den fünf großen Subsystemen
-   treffen (volle Tiefe vs. reduzierte Tiefe, siehe oben).
+1. `E:/repos/lib.nvim/docs/MODULE_AUDIT.md` öffnen — Pro-Modul-Log zeigt
+   alle 20 fertigen Module mit ✅ und den jeweiligen Funden.
+2. Nächster Schritt: Entscheidung zu den fünf großen Subsystemen
+   (`bindings`, `cross`, `fs`, `ui`, `buf_win_tab`) — volle Tiefe (jedes
+   Leaf-Modul einzeln wie bisher) vs. reduzierte Tiefe (nur Top-Level-README
+   + Stichproben). Danach `lib.lua.*` (9 Module, noch nicht inventarisiert)
+   und zuletzt der Glue-Layer.
 3. Jeder Batch: Fixes direkt im Code, Tracking-Datei nachführen, ein Commit
    pro Batch, sofort auf `main` gepusht.
