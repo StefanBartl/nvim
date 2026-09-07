@@ -20,7 +20,7 @@ Einstiegspunkt für eine neue Session.
 | `UI-*` (34) | ✅ fertig — 32/32 Repos, 0 echte Bugs |
 | `PRIN-*` (37) | ✅ fertig — 32/32 Repos, 1 Fund (notiert, nicht gefixt) |
 | `LUA-*` (45) | ✅ **fertig** — 32/32 Repos, 4 Repos gefixt |
-| `PERF-*` (62, korrigiert von 57) | 🔶 **läuft** — 1 Repo gefixt (documentation.nvim, `PERF-47`), 1 Fund notiert (reposcope.nvim, `PERF-46`), Rest offen |
+| `PERF-*` (62, korrigiert von 57) | 🔶 **läuft** — 2 Repos gefixt (documentation.nvim `PERF-47`, gopath.nvim `PERF-62`), 1 Fund notiert (reposcope.nvim `PERF-46`), Rest offen |
 
 **8 von 9 Familien fertig, `PERF-*` (die letzte) läuft.** Regelzahl von 57
 auf **62** korrigiert (`RULES.md` hatte nur eine frühe Schätzung stehen, nie
@@ -75,13 +75,28 @@ müsste also erst ergänzt werden. Echte Architekturentscheidung mit
 UI-Berührung, kein Ein-Datei-Fix — selbes Kalibrierungsprinzip wie beim
 `PRIN-01`-Fund in casedesk.nvim. Details in `RULES.md`.
 
+**`PERF-60`…`65`** (Debouncing): fleet-weit geprüft. `lib.nvim/debounce/init.lua`
+und `cache/memory.lua` vorbildlich (Handle-Wiederverwendung, korrektes
+Stop+Close vor Neubau — ein erster Grep nach `:stop(`/`:close(` gab hier
+falsche Nullfunde, weil einige Repos `pcall(timer.stop, timer)`
+(Punkt-Referenz) statt `timer:stop()` (Doppelpunkt) schreiben, zweiter Grep
+korrigiert). **Echter Fund:** `gopath.nvim/lua/gopath/truncated/cache.lua`s
+`start_periodic_refresh()` — Timer war eine reine lokale Variable, nie
+gespeichert, und `gopath.setup()` ruft die Funktion ungeschützt bei jedem
+Aufruf auf. Ein Config-Reload erzeugte also bei jedem Aufruf einen
+weiteren, nie stoppbaren Hintergrund-Timer. Gefixt: Timer als
+Modul-Upvalue getrackt, vorheriger Handle wird vor Neubau gestoppt.
+Headless verifiziert (4 Aufrufe: vorher 4 aktive Timer, nachher 1), kein
+Testframework in diesem Repo. Commit `2dfca71` auf `gopath.nvim`s `main`,
+gepusht.
+
 ## Nächster Schritt: PERF-* fortsetzen
 
 Noch offen: `PERF-01`…`06`/`08`…`16` (restliche allgemeine Idiome),
-`PERF-20`…`27` (Speicherlayout), restliche `PERF-40`…`53` (Cache-Regeln
-jenseits von `47`), `PERF-60`…`65` (Debouncing), `PERF-70`…`75` (begrenzte
+`PERF-20`…`27` (Speicherlayout), restliche `PERF-40`…`45`/`49`…`53`
+(Cache-Regeln jenseits von `46`…`48`), `PERF-70`…`75` (begrenzte
 Nebenläufigkeit/Scans), `PERF-80`…`91` (Async-Scheduling/Chunking/
-Progress). Letztere drei Blöcke sind die Ermessens-lastigsten (Hotpath-
+Progress). Letztere zwei Blöcke sind die Ermessens-lastigsten (Hotpath-
 Beurteilung statt reinem Pattern-Matching) — lohnt sich, die
 UI-lastigen/oft aufgerufenen Repos gezielt anzusehen (Statusline-
 Komponenten, Autocmd-Handler, Picker-Rendering), statt alle 32 gleich
