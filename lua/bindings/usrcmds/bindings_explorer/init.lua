@@ -14,8 +14,8 @@
 ---   report  [...] [out=<path>]      same drift run, written to Markdown
 ---   status                          one-screen corpus/live/plugin dashboard
 ---   path    [personal|extern]       copy the corpus root(s) to the clipboard
----   audit   [gaps|keys|prefixes] [root]  live-registry audits, no docs corpus
----                                   involved -- thin wrappers over
+---   audit   [gaps|keys|prefixes|naming] [root]  live-registry audits, no docs
+---                                   corpus involved -- thin wrappers over
 ---                                   lib.nvim.bindings.audit, same functions
 ---                                   `:LibBindingsAudit*` calls (M.audit)
 ---   conflicts                      lhs values claimed by more than one
@@ -354,7 +354,7 @@ end
 --- (`Usercmds-Overview.md`, "Shape: verb vs. flat"). See
 --- `docs/ROADMAP/handovers/CDX-bindings-runtime-check.md` for why these
 --- exist as a separate lib.nvim module rather than inside `drift.lua`.
----@param kind "actions"|"gaps"|"keys"|"prefixes"
+---@param kind "actions"|"gaps"|"keys"|"prefixes"|"naming"
 ---@param root string|nil  ignored for `"prefixes"` — a whole-namespace question, not a per-repo one
 ---@return nil
 function M.audit(kind, root)
@@ -366,6 +366,8 @@ function M.audit(kind, root)
     lines, title = audit.key_risk_lines(root), "Bindings — audit keys"
   elseif kind == "prefixes" then
     lines, title = audit.prefix_ambiguity_lines(), "Bindings — audit prefixes"
+  elseif kind == "naming" then
+    lines, title = audit.naming_candidate_lines(root), "Bindings — audit naming"
   else
     lines, title = audit.lines(root), "Bindings — audit"
   end
@@ -644,6 +646,14 @@ function M.enable()
         desc = "Command names that are a strict prefix of another live command (<Tab>/abbreviation collisions)",
         run = function()
           M.audit("prefixes")
+        end,
+      },
+      {
+        path = { "audit", "naming" },
+        args = { { name = "root", type = "DIR", optional = true } },
+        desc = "Routes whose last path segment is a bare vague word (deep/full/check/...) -- candidates for a naming review, not a verdict",
+        run = function(ctx)
+          M.audit("naming", ctx.args.root)
         end,
       },
       {
