@@ -347,8 +347,8 @@ grepping the registrar for the live names finds nothing.
 had always defined it, but only from `M.register_all()` — and nothing called
 `register_all()`; the other three registrars are each reached directly from
 their own subsystem's `init.lua`. `wkdoptions/init.lua`'s `setup()` now calls
-`register_diff_profile()` alongside the other standalone features (`qflist`,
-`indent_per_ft`), since a diff profile is neither a highlight nor an option.
+`register_diff_profile()` alongside the other standalone features
+(`indent_per_ft`), since a diff profile is neither a highlight nor an option.
 Found by `:Bindings check` reporting it on both axes at once: present in the
 source map, absent from `nvim_get_commands`.
 

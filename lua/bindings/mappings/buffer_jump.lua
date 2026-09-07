@@ -1,10 +1,8 @@
 ---@module 'bindings.mappings.buffer_jump'
 --- Numeric buffer jump (`<leader>1`..`<leader>0`). Resolves a buffer order
---- (prefer `vim.t.bufs`), then switches via `nvchad.tabufline.goto_buf` if
---- present (respects tabline winfixbuf logic), else `nvim_set_current_buf`.
----
---- CDX: five fallback strategies for the buffer list + speculative API
---- probing. If tabufline is a hard dep here, `vim.t.bufs` alone would do.
+--- (prefer `vim.t.bufs`, then several fallbacks for a stripped-down NvChad UI),
+--- then switches via `nvchad.tabufline.goto_buf` if present (respects tabline
+--- winfixbuf logic), else `nvim_set_current_buf`.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.buffer_jump]")
 
@@ -134,16 +132,6 @@ local function switch_to_buffer(bufnr)
         return
       else
         notify.warn(string.format("nvchad.tabufline.goto_buf failed: %s", tostring(err)))
-      end
-    end
-
-    --- CDX: `go_to` is speculative — no known tabufline build exposes it. Drop?
-    if type(tabufline.go_to) == "function" then
-      local succ, err = pcall(tabufline.go_to, bufnr)
-      if succ then
-        return
-      else
-        notify.warn(string.format("nvchad.tabufline.go_to failed: %s", tostring(err)))
       end
     end
   end

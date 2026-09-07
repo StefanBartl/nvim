@@ -16,7 +16,7 @@
 --- cheatsheet the roadmap point asked for.
 ---
 --- User-facing output is German, deliberately and consistently across every
---- string of `:Bindings` (see the CDX note in init.lua).
+--- string of `:Bindings` (see the note in init.lua).
 
 local collect_recursive = require("lib.nvim.fs.collect_recursive")
 local config = require("bindings.usrcmds.bindings_explorer.config")

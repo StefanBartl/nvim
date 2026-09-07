@@ -65,8 +65,9 @@ require("lib.nvim.bindings.keymap")(
   "Copy BINDINGS roots to the clipboard"
 )
 
---- CDX: works, but a neo-tree/nvim-tree/netrw reload needs to be triggered
---- for it to pick up the new cwd.
+-- Window-local cwd only. An open file tree does not re-root on this by
+-- itself; filetree.nvim's `cwd_sync` (see plugins/personal/init.lua) is the
+-- automatic path -- this command is the manual one-off.
 usercmd.create("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)
   if bufname ~= "" then

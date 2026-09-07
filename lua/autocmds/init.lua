@@ -1,13 +1,11 @@
 ---@module 'autocmds'
---- Initialize module for 'autocmds'
+--- Wires up every autocmd submodule. General/git/terminals/text below take a
+--- config table; the two explorer helpers self-register on setup().
 
---- CDX: split the submodule setup calls below into their own modules
-
--- CDX: if no issues, move this to wkdoptions/ui or similar for good
 require("autocmds.auto-center-fexplorer").setup()
 
--- CDX: not exercised against a live neo-tree + snacks session yet — verify
--- the open/close/reopen-once cascade (<A-l> vs <leader>.) before trusting it.
+-- NOTE: verify the explorer open/close/reopen-once cascade (<A-l> vs
+-- <leader>.) against a live neo-tree + snacks session before trusting it.
 require("autocmds.explorer-singleton").setup()
 
 ------------------------------------------------------

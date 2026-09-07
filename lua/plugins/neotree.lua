@@ -294,11 +294,8 @@ return {
       require("neo-tree").setup(opts)
       require("config.neotree").setup({
         debug = true,
-        busy_guard = false,
         default_position = "left",
         restore_last_position = false,
-        window_debug = false,
-        window_open = false,
         reveal_current_file = false,
         only_lhs = true,
       })
