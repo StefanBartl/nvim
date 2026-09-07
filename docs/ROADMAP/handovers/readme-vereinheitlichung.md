@@ -12,7 +12,7 @@ fertig, committet und gepusht auf `main`.
 - [Die feste Abschnittsreihenfolge](#die-feste-abschnittsreihenfolge)
 - [Abschlussprüfung](#abschlussprüfung)
 - [Was im zweiten Durchgang gefunden wurde](#was-im-zweiten-durchgang-gefunden-wurde)
-- [Offene Punkte](#offene-punkte)
+- [ASCII-Arts: alle 32 maschinell geprüft](#ascii-arts-alle-32-maschinell-geprüft)
 - [Befunde aus dem ersten Durchgang](#befunde-aus-dem-ersten-durchgang)
 - [Die Prozedur pro Plugin](#die-prozedur-pro-plugin)
 - [Regeln für die Sitzung](#regeln-für-die-sitzung)
@@ -152,26 +152,61 @@ Zusätzliche eigene Funde:
 
 ---
 
-## Offene Punkte
+## ASCII-Arts: alle 32 maschinell geprüft
 
-**Drei ASCII-Arts sind unklar und wurden bewusst NICHT angefasst.** Sie lesen
-sich Glyphe für Glyphe nicht als der Plugin-Name, aber die Beweislage ist
-jeweils ein einzelnes Zeichen bzw. ein Figlet-Smushing-Artefakt — zu wenig, um
-eine Art auf Verdacht neu zu setzen. Bitte einmal selbst ansehen:
+**Keine offenen Punkte mehr.** Die drei zunächst nur verdächtigen Arts sind
+mit `pyfiglet` eindeutig geworden und korrigiert.
 
-| Repo | Lesung | Konkreter Zweifel |
-| --- | --- | --- |
-| `lsp.nvim` | „lspavim" statt „lsp.nvim" | 4. Glyphe: Zeile 2 zeigt `____ _` (Slant-`a`); ein `n` hätte dort nur `____`, Zeile 4 zeigt `/ /_/ /` statt `/ / / /`. Es gibt kein `(_)` in der untersten Zeile, also keinen Punkt |
-| `pdfport.nvim` | endet auf `…a` + `w` statt `.` + `n` + `v` | die Art enthält `\ V  V /` — in der Standard-Schrift ein `w`, und „pdfport.nvim" hat kein `w` |
-| `spotlight.nvim` | „spotliaht" statt „spotlight" | 7. Glyphe zeigt `\__,_/` (Slant-`a`); ein `g` wäre `\__, /` **mit** einer `/____/`-Unterlänge in der nächsten Zeile — dort steht aber ab Spalte 14 der Tagline-Text „many tokens, many colors, one log" |
+**Die Methode**, und das ist die eigentliche Lehre aus diesem Durchgang: eine
+dünne Figlet-Art ist von Hand nicht zuverlässig zu prüfen — die Glyphen greifen
+durch Smushing ineinander, und ein falscher Buchstabe unterscheidet sich oft in
+genau einem Zeichen. Stattdessen rendern und zeilenweise diffen:
 
-Der Verdacht bei `spotlight` hat unabhängig davon einen realen Kern: der
-Tagline steht auf der Unterlängen-Zeile. Bei `p` (Spalte 5–7) geht das gerade
-noch gut, bei einem `g` an Spalte 27 nicht.
+```bash
+pip install pyfiglet
+python -c "import pyfiglet; print(pyfiglet.figlet_format('name.nvim', font='slant'))"
+```
 
-Wenn du eine davon neu setzen willst: ANSI-Shadow-Blockschrift ist der sichere
-Weg — die Buchstaben lassen sich aus `fileops`/`sessions`/`pickers`/`cmdlog`
-kopieren und spaltenweise nachzählen. Das steht so auch in `CHECKLIST.md`.
+Ist der Font unbekannt, über `pyfiglet.FigletFont.getFonts()` alle durchgehen
+und den nehmen, der die meisten Zeilen exakt trifft. In der Sammlung real
+vorkommende Fonts: `slant`, `standard`, `ogre`, `small`, `smslant`, `big`,
+`banner3`, `ansi_shadow`.
+
+### Ergebnis über alle 32
+
+| Kategorie | Repos |
+| --- | --- |
+| exakt per figlet verifiziert (21) | `buffer-ctx` `cmdlog` `dap` `diff` `emojis` `fileops` `filetree` `github_stats` `hover` `images` `insights` `language` `lib` `lsp` `markdown` `mdview` `open` `pdfport` `pickers` `sandbox` `sessions` `spotlight` |
+| korrekt, aber von Hand um ein Leerzeichen je Glyphe verbreitert (4) | `gopath` `recommender` `casedesk` `reposcope` |
+| korrekt, mit großem Anfangsbuchstaben (1) | `debugging` (= `Debugging.nvim`, smslant) |
+| Box-Banner mit Klartext, kein figlet (2) | `color_my_ascii` `runtime-analysis` |
+| **war kaputt, korrigiert (3)** | `lsp` `pdfport` `spotlight` |
+| **war kaputt, korrigiert (1. Durchgang)** | `fileops` („CILEOPS"), `open` („openbuim") |
+
+### Was die drei genau hatten
+
+- **`lsp.nvim`** schrieb **„lspovim"**. Zeilen 1–4 stimmten zeichenweise mit
+  `figlet("lspovim", slant)` überein, Zeile 5 wich in genau einer Glyphe ab
+  (`\__,_/` statt `\____/`) — also ein beschädigtes „lspovim", keine Schreibung
+  des Plugin-Namens. Ersetzt durch `figlet("lsp.nvim", slant)`. Der Punkt
+  rendert dort als `.___(_)`, verschmolzen mit der Unterseite des `p`; genau
+  das fehlte.
+- **`pdfport.nvim`** schrieb **„plfpotawim"**: `l` statt `d`, kein `r`, und ein
+  `w` (`\ V  V /` ist in der Standard-Schrift ein `w`) wo `.nv` hingehört.
+  Ersetzt durch `figlet("pdfport.nvim", standard)`.
+- **`spotlight.nvim`** schrieb **„spotliaht"** — und hier lag ein Fehler
+  zugrunde, der sich wiederholen kann: der Tagline „many tokens, many colors,
+  one log" stand auf der **Unterlängen-Zeile**. Die `/____/`-Unterlänge des `g`
+  war damit überschrieben, und die Lücke in `\__, /` war zu `\__,_/`
+  geschlossen worden — exakt ein Slant-`a`. Beides aus einem echten
+  Figlet-Render wiederhergestellt; der Tagline steht jetzt auf einer eigenen
+  Zeile, die Unterlängen-Zeile trägt das rechtsbündige `.nvim`.
+
+  Merksatz: **unter die Art gehört nichts, solange dort Unterlängen stehen**
+  (`g` `j` `p` `q` `y`). Bei `spotlight` hatte das `p` nur überlebt, weil seine
+  Unterlänge in Spalte 5 sitzt und der Tagline erst in Spalte 14 begann.
+
+Beides ist in `CHECKLIST.md` nachgetragen.
 
 ---
 
