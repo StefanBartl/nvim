@@ -1,10 +1,24 @@
 # lib.nvim Modul-Audit (docs / @types / Aggregatoren / Feature-Ideen) — 2026-09-07
 
-**Status: 20 kleine/mittlere Module + alle fünf großen Subsysteme (`ui`,
-`fs`, `cross`, `bindings`, `buf_win_tab`) + der komplette `lib.lua.*`-
-Namespace (16 Module) durch. Verbleibend: nur noch der Glue-Layer
-(`lib/config`, `lib/strategies/*`, Top-`@types`).**
+**Status: 20 kleine/mittlere Module + alle fünf großen Subsysteme + der
+komplette `lib.lua.*`-Namespace durch. Glue-Layer läuft gerade
+(`lib.config`/`strategies.control`/`.telemetry_wrap` erledigt,
+`lib.strategies.{eager,lazy,metatable}` bereits vorher sauber; noch offen:
+`lib.@types.init` (`Lib.Modules`-Altlast, Cross-Check wie bei strings/
+tables), `lib/health.lua`). ⚠️ Session läuft mit sehr wenig Nutzungslimit
+(~6%) — falls hier abgebrochen wird, ist `lib.nvim@e77c981` der letzte
+gepushte Stand.**
 
+> **Nachtrag 2026-09-07 (achte Fortsetzung — Glue-Layer begonnen, wenig
+> Budget übrig).** `lib.config` (setup/get/strategy_module),
+> `lib.strategies.control` (register/active/keys/reset_cache) und
+> `.telemetry_wrap` (setup/teardown) hatten alle drei keine Modul-
+> Oberflächenklasse trotz vollständiger, realer Funktionen — gleiches
+> mechanisches Muster wie im ganzen restlichen Audit. Ergänzt und
+> verdrahtet, `lib.nvim@e77c981`. `lib.strategies.{eager,lazy,metatable}`
+> (die drei echten Aggregator-Strategien) hatten bereits korrektes
+> `---@type Lib`/`Lib.Strategy.Lazy`.
+>
 > **Nachtrag 2026-09-07 (siebte Fortsetzung — `lib.lua.*` durch, größter
 > Einzelfund der ganzen Session).** `lib.lua.*` (16 Module, 90 Dateien,
 > editor-unabhängiges reines Lua) durchgearbeitet — `strings`/`tables`
