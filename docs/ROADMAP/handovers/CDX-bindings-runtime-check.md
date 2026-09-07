@@ -254,7 +254,49 @@ einfach in deiner normalen nvim-Instanz aufrufen.
    Ohne das meldet der Check nach einem frischen Start fälschlich „keine
    Duplikate", nur weil die Hälfte der Plugins noch gar nicht da ist.
 
-### Phase 2 — Refresh der beiden Cross-Plugin-Dateien
+### Phase 2 — Refresh der beiden Cross-Plugin-Dateien — ✅ erledigt 2026-09-07
+
+Du hast `:LibKeymapConflicts` und `:LibBindingsAudit[Gaps|Keys]` in deiner
+echten Session laufen lassen (74/115 lazy-Plugins geladen) und mir die
+Ausgabe geschickt — das war der eigentliche Phase-2-Schritt, live gegen den
+tatsächlichen Zustand statt headless.
+
+**Echter Fund dabei, sofort behoben:** `:LibKeymapConflicts` meldete
+`<leader>fm` als „claimed by more than one registration" — beide Claimants
+dieselbe Zeile, `lsp.nvim/lua/lsp/languages/documentation/markdown.lua:56`.
+Kein Zwei-Plugin-Konflikt, sondern eine echte Lücke in
+`lib.nvim.bindings.keymap.records`: ein `FileType`-Autocmd, der für einen
+schon getypten Buffer erneut feuert (Neovim tut das auch bei
+No-Op-Zuweisung desselben Filetyps), registrierte denselben
+Buffer-lokalen `<leader>fm` zweimal, und die Direct-Record-Liste
+deduplizierte nie — anders als `bindings.usercmd`s eigene Records, die das
+schon konnten. Gefixt: `records.add()` ersetzt jetzt einen
+Buffer+lhs+mode-identischen Eintrag statt ihn anzuhängen
+(`lib.nvim@d1f2a4b`). Verifiziert per Skript: dreifaches Feuern derselben
+Stelle bleibt jetzt sauber, ein echter Zwei-Buffer- bzw.
+Zwei-Actions-Konflikt wird weiterhin erkannt.
+
+Damit fand der Live-Check **null** echte Cross-Plugin-Duplikate — deckt
+sich mit der Handanalyse, allerdings nur auf den zum Checkzeitpunkt
+geladenen ~64 % der Plugins (die Lazy-Coverage-Falle aus dem Plan war also
+real, nicht nur Theorie). `Keymaps-Collisions.md` und `Usercmds-Overview.md`
+tragen je einen Nachtrag mit den Details, dem Fix-Verweis und der
+Klarstellung, dass echte Usercmd-Namens-*Duplikate* live prinzipiell nicht
+beobachtbar sind (der Verlierer meldet keinen Fehler als „Duplikat", sein
+`setup()` bricht einfach ab — `Usercmds-Overview.md`s 148-Namen-Ergebnis
+bleibt auf der Handanalyse stehen, nicht auf einem Live-Recheck).
+
+Nebenbefund: `:LibBindingsAudit`/`Gaps`/`Keys` liefen dabei zum ersten Mal
+überhaupt gegen die echte Config (355 Keymap-Actions, 954 Command-Routes,
+6 Gaps, 31 nicht-portable Keys) — vorher nur isoliert getestet in Phase 1.
+
+**Nicht gemacht:** volle Neubewertung aller 355/954 Einträge gegen die
+beiden Dateien Zeile für Zeile — das war nie der Plan (die Dateien sind
+Prosa-Analyse, kein 1:1-Abgleich mit der Rohliste). Die 6 `Gaps`- und
+31 `Keys`-Funde aus dem Nebenbefund sind nicht triagiert; das wäre ein
+eigener, kleiner Punkt, falls gewünscht.
+
+### Phase 2 — ursprünglicher Plan (Referenz)
 
 Mit den Kommandos aus Phase 1 einmal laufen lassen und
 `Keymaps-Collisions.md` + `Usercmds-Overview.md` gegen den aktuellen Stand
