@@ -254,6 +254,19 @@ einfach in deiner normalen nvim-Instanz aufrufen.
    Ohne das meldet der Check nach einem frischen Start fälschlich „keine
    Duplikate", nur weil die Hälfte der Plugins noch gar nicht da ist.
 
+### Zwischenschritt — `:Bindings audit`/`conflicts` als Alias — ✅ erledigt 2026-09-07
+
+Auf Nachfrage geprüft, ob `:LibKeymapConflicts`/`:LibBindingsAudit*` und das
+bestehende `:Bindings`-Kommando (bindings_explorer) sich überschneiden.
+Ergebnis: keine Logik-Überschneidung — `:Bindings check/report` vergleicht
+Doku-Corpus gegen Live-Registry, die neuen Kommandos vergleichen die
+Live-Registry gegen sich selbst, ohne Doku. Trotzdem als dünne Routen unter
+`:Bindings audit[/gaps/keys/prefixes]` und `:Bindings conflicts` verdrahtet
+(`nvim-config@30e54d0f1`) — dieselben lib.nvim-Funktionen, keine Kopie,
+selbes Verb-plus-Alias-Muster wie `:AllDrives` → `:Pickers drives files`.
+Headless verifiziert: alle fünf Routen registrieren und laufen fehlerfrei,
+auch mit optionalem `[root]`-Pfad-Argument.
+
 ### Phase 2 — Refresh der beiden Cross-Plugin-Dateien — ✅ erledigt 2026-09-07
 
 Du hast `:LibKeymapConflicts` und `:LibBindingsAudit[Gaps|Keys]` in deiner
