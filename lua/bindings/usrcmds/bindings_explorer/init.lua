@@ -14,6 +14,13 @@
 ---   report  [...] [out=<path>]      same drift run, written to Markdown
 ---   status                          one-screen corpus/live/plugin dashboard
 ---   path    [personal|extern]       copy the corpus root(s) to the clipboard
+---   audit   [gaps|keys|prefixes] [root]  live-registry audits, no docs corpus
+---                                   involved -- thin wrappers over
+---                                   lib.nvim.bindings.audit, same functions
+---                                   `:LibBindingsAudit*` calls (M.audit)
+---   conflicts                      lhs values claimed by more than one
+---                                   registration (lib.nvim.bindings.keymap
+---                                   .conflicts(), same as :LibKeymapConflicts)
 ---
 --- A cheatsheet stem may stand in any `[plugin]` slot as a scope (see
 --- `plugin_scope.lua`); `search` only treats a token as a scope when it names
@@ -337,6 +344,44 @@ function M.status()
   status.open()
 end
 
+--- `lib.nvim.bindings.audit` in one of its four shapes — the live-registry
+--- half of "bindings tooling", as opposed to `check`/`report` above, which
+--- compare the registry against the BINDINGS docs corpus. These three
+--- (`audit`/`gaps`/`keys`/`prefixes`) touch no docs at all: same function
+--- `lib.nvim`'s own `:LibBindingsAudit*` commands call, exposed here too so
+--- `:Bindings <Tab>` finds them without needing the flat name — same
+--- verb-plus-alias shape as `:AllDrives` → `:Pickers drives files`
+--- (`Usercmds-Overview.md`, "Shape: verb vs. flat"). See
+--- `docs/ROADMAP/handovers/CDX-bindings-runtime-check.md` for why these
+--- exist as a separate lib.nvim module rather than inside `drift.lua`.
+---@param kind "actions"|"gaps"|"keys"|"prefixes"
+---@param root string|nil  ignored for `"prefixes"` — a whole-namespace question, not a per-repo one
+---@return nil
+function M.audit(kind, root)
+  local audit = require("lib.nvim.bindings.audit")
+  local lines, title
+  if kind == "gaps" then
+    lines, title = audit.gap_lines(root), "Bindings — audit gaps"
+  elseif kind == "keys" then
+    lines, title = audit.key_risk_lines(root), "Bindings — audit keys"
+  elseif kind == "prefixes" then
+    lines, title = audit.prefix_ambiguity_lines(), "Bindings — audit prefixes"
+  else
+    lines, title = audit.lines(root), "Bindings — audit"
+  end
+  require("lib.nvim.ui.kit.viewer").open({ title = title, lines = lines })
+end
+
+--- `lhs` values claimed by more than one registration
+--- (`lib.nvim.bindings.keymap.conflicts()`), same reasoning as `M.audit`.
+---@return nil
+function M.conflicts()
+  require("lib.nvim.ui.kit.viewer").open({
+    title = "Bindings — conflicts",
+    lines = require("lib.nvim.bindings.keymap").conflict_lines(),
+  })
+end
+
 --- One `search` route. The four differ only in path, category and
 --- description — the argument schema (plugin scope, query, `plugin=`) is the
 --- same for all, and a copy per route would be four places a later slot can
@@ -566,6 +611,46 @@ function M.enable()
         desc = "Dashboard: Korpus-, Live- und Plugin-Zahlen plus die Routenliste",
         run = function()
           M.status()
+        end,
+      },
+      -- Live-registry audits (no docs corpus involved) -- see M.audit's doc
+      -- comment for why these live in lib.nvim rather than in drift.lua.
+      {
+        path = { "audit" },
+        args = { { name = "root", type = "DIR", optional = true } },
+        desc = "Keymap actions vs. command routes, registered in this session (optional: scope to a repo path)",
+        run = function(ctx)
+          M.audit("actions", ctx.args.root)
+        end,
+      },
+      {
+        path = { "audit", "gaps" },
+        args = { { name = "root", type = "DIR", optional = true } },
+        desc = "Keymap actions with no obvious command counterpart (optional: scope to a repo path)",
+        run = function(ctx)
+          M.audit("gaps", ctx.args.root)
+        end,
+      },
+      {
+        path = { "audit", "keys" },
+        args = { { name = "root", type = "DIR", optional = true } },
+        desc = "Actions whose every key needs an extended terminal encoding (optional: scope to a repo path)",
+        run = function(ctx)
+          M.audit("keys", ctx.args.root)
+        end,
+      },
+      {
+        path = { "audit", "prefixes" },
+        desc = "Command names that are a strict prefix of another live command (<Tab>/abbreviation collisions)",
+        run = function()
+          M.audit("prefixes")
+        end,
+      },
+      {
+        path = { "conflicts" },
+        desc = "lhs values claimed by more than one plugin/registration in this session",
+        run = function()
+          M.conflicts()
         end,
       },
     },
