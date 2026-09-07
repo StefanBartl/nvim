@@ -767,12 +767,28 @@ Positiv-Beispiele.
 |---|---|
 | buffer-ctx.nvim | 0 Funde — vorbildlich über alle Dimensionen: jede `format/*`/`ops/*`-Datei hat exakt eine benannte Verantwortung (`PRIN-01`), jede Datei hat einen `---@module`-Header + Zweckbeschreibung (`PRIN-50`, 100 % Abdeckung), Querverweise statt Wiederholung durchgängig per `---@see` (`PRIN-53`), `config/init.lua`s Zustand ist modul-intern mit `get()`/`setup()`-Zugriff (`PRIN-10`), kein einziger camelCase-Ausreißer in einer sonst durchgehenden snake_case-Basis (`PRIN-35`) |
 | cascade.nvim | 0 Funde — `core/context.lua`s `CascadeContext` ist ein Lehrbuch-Beispiel für `PRIN-12` (Kontext einmal erhoben statt verstreuter `nvim_*`-Abfragen) UND Pure-Core/Impure-Shell zugleich, im eigenen Moduldoc explizit begründet; `cycle/word_cycle.lua`s einzige zwei `vim.api`-Aufrufe sitzen exakt am Mutationspunkt (`nvim_buf_set_text`), die Zyklus-Berechnung davor ist reine Lua-Logik. 100 % `@module`-Header, keine camelCase-Ausreißer |
+| casedesk.nvim | **`ui.lua` ist 3433 Zeilen lang und bündelt 50 `function M.*`-Handler für völlig unabhängige Features** (Case-CRUD, OCR-Trigger, Git-Sync, KI/AI-Abfrage, Timeline-Rendering, SLA-Tracking, Terminologie-Lookup, Link-Check, Export, …) — jede dieser Funktionen hat ihren eigenen, unabhängigen Änderungsgrund (`PRIN-01`/`PRIN-02`-Kandidat). **Notiert, nicht refaktoriert**: eine Aufteilung in Feature-Module (analog zu buffer-ctx.nvims `ops/*`-Muster) wäre eine Architekturentscheidung mit echtem Risiko in einem aktiv genutzten 45-Datei-Repo, kein Ein-Zeiler im Rahmen eines Findings-Sweeps | `PRIN-01`/`02` (notiert, nicht gefixt) |
 
-**Fleet-weiter Mechanik-Check:** `PRIN-50` (Datei-Header mit Zweck) über
-alle 32 Repos per Skript geprüft (Anteil Dateien mit `---`-Kopfkommentar
-in den ersten 3 Zeilen) — **kein Repo unter 95 % Abdeckung**. Diese Regel
-gilt fleet-weit als erfüllt und wird nicht mehr pro Repo einzeln
-gegengeprüft.
+**Fleet-weite Mechanik-Checks:**
+- `PRIN-50` (Datei-Header mit Zweck) über alle 32 Repos per Skript geprüft
+  (Anteil Dateien mit `---`-Kopfkommentar in den ersten 3 Zeilen) — **kein
+  Repo unter 95 % Abdeckung**. Gilt fleet-weit als erfüllt.
+- `PRIN-35` (konsistentes Naming) über alle 32 Repos: jeden
+  `function M.foo`/`function M:foo`-Funktionsnamen auf camelCase-Ausreißer
+  in einer sonst durchgehenden snake_case-Basis geprüft — **0 Treffer in
+  allen 32 Repos**. Gilt fleet-weit als erfüllt.
+- **Größte-Datei-Stichprobe** (SRP-Proxy) über alle 32 Repos: die jeweils
+  größte Lua-Datei pro Repo identifiziert und für Ausreißer geprüft.
+  Auffällig groß, aber **kein Fund** nach genauerem Hinsehen:
+  `documentation.nvim/core/render/html.lua` (10185 Zeilen — fast
+  vollständig eingebettetes CSS/JS als String-Literale für eine
+  selbst-enthaltene HTML-Ausgabe, im Moduldoc explizit begründet, eine
+  einzige kohärente Verantwortung), `hover.nvim/init.lua` (1970 Zeilen,
+  während `ERR-*` schon komplett gelesen — ein Feature mit vielen Facetten,
+  nicht mehrere unabhängige), `reposcope.nvim/ui/actions/status_view.lua`
+  (1387 Zeilen, 6 Ausgabe-Backends für **ein** Feature),
+  `runtime-analysis.nvim/telemetry/init.lua` (1616 Zeilen, eine
+  Telemetrie-Domäne). Der einzige echte Fund war casedesk.nvim (s. o.).
 
 ---
 
