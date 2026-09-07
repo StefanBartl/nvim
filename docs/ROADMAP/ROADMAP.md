@@ -18,7 +18,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    20% / 80%     | X
 | **work** |   20. Sept    |   Sa., 06:00    |     17:20       |    27% / 58%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     14:50       |    50% / 35%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     19:50       |    97% / 40%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -35,11 +35,9 @@
 
 ## Misc
 
-![:Bindings browser pickers.nvim](./assets/ROADMAP-1788781690.png)![](./assets/ROADMAP-1788781694.png) - so formatiert ist das de factop nciht zu verwenden. wrsch auch bei den anderen usrcm options. das mus besser werden, übersichtlicher
 
 - [ ] start vim optimieren
     - [ ] C:\Users\bartl\AppData\Local\nvim\after
-- [ ] plugins/personal/ bzw überhaupt in der gesatmen nvim-config -> kommentare und docs prüfen / alles was in den plugins gecheckt wurde hier auch
 
 - [ ] Anticheat knacken
 

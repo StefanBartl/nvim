@@ -16,11 +16,9 @@ Gilt für "alle Plugins" = alle Einträge in `lua/plugins/personal/source.lua` -
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
-- [ ] Merged_Finished.md in die Rules einbauen: Das sind alles Dinge, die wir gefixed haben, daher am besten in Regeln / Checklisten mitaufnehmen wenn spie passen. hier sind einige stellen, die passen könnten:
-  - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md`
-  - `$REPOS_DIR/WKDBooks/Development/wkdbook-lua/Checklists/`
-  - `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
-   -`$REPOS_DIR/WKDBooks/Development/wkdbook-Neovim/`
+- [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
+  - [ ] reale Beispiele: (bitte fixen):
+    - [ ] ...
 
 - [ ] casedesk.nvim
 
