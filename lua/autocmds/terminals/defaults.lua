@@ -1,7 +1,5 @@
 ---@module 'autocmds.terminals.defaults'
 
---- CDX: config fields undocumented — add a one-line note per field
-
 ---@type AutoCmds.Term.Cfg
 local AUTOCMDS_TERMINALS_DEFAULTS = {
   numbers = {

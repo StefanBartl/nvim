@@ -1,7 +1,5 @@
 ---@module 'autocmds.general.defaults'
 
---- CDX: config fields undocumented — add a one-line note per field
-
 ---@type AutoCmds.General.Cfg
 local AUTOCMDS_GENERAL_DEFAULTS = {
   group_name = "autocmds_general",

@@ -14,13 +14,9 @@ local M = {}
 ---@param ev table|nil -- ModeChanged event
 ---@return string -- normalized mode char
 local function resolve_mode(ev)
-  -- CDX: reading vim.v.event cannot throw; the pcall + closure wrapper here is
-  -- dead ceremony -- `local event_tbl = vim.v.event` would do.
-  local ok, event_tbl = pcall(function()
-    return vim.v.event
-  end)
+  local event_tbl = vim.v.event
 
-  if ok and type(event_tbl) == "table" then
+  if type(event_tbl) == "table" then
     local nm = rawget(event_tbl, "new_mode")
     if type(nm) == "string" and #nm > 0 then
       return nm:sub(1, 1)

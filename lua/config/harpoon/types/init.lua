@@ -51,9 +51,8 @@
 ---    Which editor events trigger a debounced save. Extending this list (e.g.
 ---    "WinLeave", "FocusGained"): docs/NOTES/Harpoon.md §6.
 
---- CDX: never wired to a @param/@cast anywhere in this repo (normkey is an
---- external lib.nvim function); kept as local doc for its `realpath` option.
---- Wire it up or drop it?
+-- Local doc for the options accepted by lib.nvim's `normkey` (an external
+-- function), not wired to a @param/@cast here.
 ---@class Cfg.Harpoon.NormKeyOpts
 ---@field realpath boolean|nil  -- default true (use fs_realpath if available)
 
