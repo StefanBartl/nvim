@@ -342,37 +342,58 @@ Kommando lief nicht gegen deine echte Session. `:LibBindingsAuditNaming`
 oder `:Bindings audit naming` einmal bei dir aufrufen zeigt den echten
 Stand.
 
-### Phase 4 — Laufzeit-Testrunner, zweistufig
+### Phase 4 — Laufzeit-Testrunner, zweistufig — ✅ erledigt 2026-09-07
 
-**Tier 1 — headless, automatisch, ohne Beobachtung:**
-Ein Skript (`nvim --headless -l ...` oder ein `:LibXyzProbe`-Kommando), das
-für jeden Eintrag aus `keymap.registered()` / `usercmd.registered()` /
-`autocmd.registered()` prüft, ob der hinterlegte Callback ein aufrufbares
-Lua-Objekt ist (`type(cb) == "function"`) und — wo möglich, ohne
-Seiteneffekt — probeweise mit `pcall` gegen die reine Existenz/Signatur
-prüft, statt es auszuführen (z. B. `debug.getinfo` auf die Funktion, prüfen,
-dass sie nicht `nil` durch einen kaputten `require` ist). Fängt die
-Tippfehler-/Refactor-Klasse von Fehlern, die die Config beim Start ohnehin
-schon zeigen würde, sobald der jeweilige Pfad einmal geladen wird — der
-Wert liegt darin, das für **jeden** Pfad auf einmal zu erzwingen, statt
-zufällig beim Benutzen drüberzustolpern.
+**Der ursprüngliche Tier-1-Plan (auto-invoke „sicher aussehender" Aktionen)
+wurde verworfen, bevor Code dafür entstand.** Grund: `:LibBindingsAudit`s
+eigener erster echter Lauf (Phase 2) zeigte 954 Command-Routes aus dieser
+Config, darunter `:Sandbox wsl shutdown-all`, `:Cases delete`,
+`:File delete`, `:MyPlugins remove`. Keine Keyword-Heuristik ist
+zuverlässig genug, um automatisch zu entscheiden, welche von ~1300
+Einträgen gefahrlos unbeaufsichtigt ausgelöst werden dürfen — ein
+Fehlklassifizierter reicht für echten Schaden. Auto-Invoke bleibt deshalb
+bewusst ungebaut.
 
-**Tier 2 — interaktiv, mit dir am Gerät:**
-Ein Fortschritts-Kommando (`:LibBindingsWalk` o. ä.), das die volle Liste
-aus Tier 1 als Warteschlange hält, minus allem, was Tier 1 schon als
-sicher `nil`/kaputt gemeldet hat (das ist bereits ein Befund, kein
-Testfall mehr). Für den Rest: einen Eintrag zeigen (Plugin, Name, Art,
-kurze Beschreibung), du löst ihn manuell aus (Taste drücken /
-`:Kommando` tippen), bestätigst mit `<CR>` „ok" oder trägst einen
-Kurzbefund ein, weiter zum nächsten. Fortschritt in einer Datei
-(`docs/ROADMAP/…/BINDINGS-WALK-PROGRESS.md` o. ä.) persistieren, damit
-das über mehrere Sitzungen läuft — bei 150 Usercmds + hunderten Keymaps
-ist das nicht an einem Abend durch. Destruktive/UI-blockierende Einträge
-(alles unter „UI"-Scope aus `Keymaps-Collisions.md`s eigener
-Scope-Tabelle, alles, was einen Picker öffnet oder eine Datei schreibt)
-brauchen ohnehin dich vor Ort — das deckt sich mit der Scope-Einteilung,
-die die Analyse-Datei bereits eingeführt hat, und lässt sich als Filter
-wiederverwenden statt neu zu erfinden.
+**Umgesetzt stattdessen: ein Markdown-Checklisten-Generator**, der
+`bindings.audit.keymap_actions()`/`command_routes()` (schon vorhanden,
+keine neue Datenquelle) in eine Checkbox-Liste im exakt selben Format wie
+[`PLUGIN_ROADMAPS_TESTPLAN.md`](../personal/All/FINISH/PLUGIN_ROADMAPS_TESTPLAN.md)
+umwandelt — dieses Repo hatte die Konvention für „von Hand durcharbeiten,
+Fortschritt im Dateizustand halten" schon, keine neue Erfindung nötig:
+
+- `audit.checklist_lines(root)` (`lib.nvim@4c2fe98`) — invoke **nie**,
+  gruppiert Keymaps nach Surface und Usercmds nach Verb, sortiert
+  Kandidaten mit verdächtigem Wort in Beschreibung/Route (`delete`,
+  `remove`, `kill`, `shutdown`, `wipe`, `force`, …) in einen eigenen
+  „⚠ Handle with care"-Abschnitt — Hinweis für dich beim manuellen
+  Durcharbeiten, keine Ausführungs-Gate.
+- `:LibBindingsAuditChecklist` / `:Bindings audit checklist` — Vorschau
+  (`kit.viewer`, nichts wird geschrieben).
+- `:BindingsRuntimeChecklist[!]` (`nvim-config@23e71e5ac`) — schreibt nach
+  `docs/ROADMAP/personal/All/BINDINGS-RUNTIME-CHECKLIST.md`. Verweigert
+  Überschreiben ohne `!`, weil die Datei über mehrere Sitzungen hinweg von
+  Hand abgehakt werden soll — eine stille Neugenerierung würde bereits
+  gesetzte `[x]` zurücksetzen. Verifiziert (gegen ein per
+  `package.loaded`-Override umgeleitetes Scratch-Verzeichnis, damit der
+  Test nichts im echten Repo hinterlässt): erstes Schreiben ok, zweites
+  ohne `!` verweigert + Warnung, mit `!` überschreibt.
+
+**Tier 2 (interaktiv, mit dir am Gerät) ist damit dieselbe Datei, nicht ein
+separates Kommando.** Eine eigene Stepper-UI (Warteschlange, `<CR>` für
+„ok", Fortschritt in einem eigenen State-Format) wurde erwogen und
+verworfen — sie hätte nur nachgebaut, was ein Markdown-Checkbox-File mit
+`git diff`-Historie schon kann, plus neuen UI-Code ohne echten
+Mehrwert gegenüber der etablierten `PLUGIN_ROADMAPS_TESTPLAN.md`-Arbeitsweise.
+Destruktive/UI-öffnende Einträge landen im „Handle with care"-Abschnitt
+statt automatisch angefasst zu werden — die Scope-Unterscheidung aus
+`Keymaps-Collisions.md` (global/filetype/tree/UI) ist bewusst **nicht**
+mit eingeflossen, weil `keymap_actions()` die Buffer-Scope-Information gar
+nicht mehr trägt (nur `keymap.registered()` roh hat sie) — eine bekannte,
+akzeptierte Vereinfachung, keine Untersuchung wert für den Nutzen, den sie
+gebracht hätte.
+
+**Nächster Schritt bei dir:** `:BindingsRuntimeChecklist` einmal aufrufen
+und die Datei nach und nach abarbeiten, wie bei den `PLUGIN_ROADMAPS_TESTPLAN.md`-Punkten.
 
 ---
 
@@ -416,12 +437,28 @@ neuen Kommandonamen über die ganze Config, das mindestens einen Treffer
 außerhalb der Definition selbst zeigt, ist die Mindestprüfung, bevor „Status:
 ✅" irgendwo steht.
 
-## Nächster konkreter Schritt
+## Status: alle vier Phasen erledigt (2026-09-07)
 
-Phase 1 ist der kleinste, risikoärmste Einstieg und liefert sofort etwas
-Nutzbares (ein wiederholbarer Duplikat-Check, den es heute nicht gibt,
-obwohl das Modul dafür schon existiert). Vorschlag: dort anfangen, Ergebnis
-in Phase 2 gegen die bestehenden Cross-Plugin-Dateien spiegeln, und erst
-danach — mit frischen, verifizierten Zahlen — entscheiden, ob Phase 4
-(der eigentliche Laufzeit-Testrunner) als eigenes Roadmap-Item aufgesetzt
-wird.
+Alles auf `main`, beide Repos (`lib.nvim`, `nvim-config`), jeder Schritt
+formatiert (`stylua`), gelinted (`luacheck`) und headless verifiziert, bevor
+er committet wurde.
+
+**Neue Kommandos, im Überblick:**
+
+| Kommando | `:Bindings`-Alias | Was |
+|---|---|---|
+| `:LibKeymapConflicts` | `:Bindings conflicts` | `lhs` mehrfach vergeben |
+| `:LibBindingsAudit` | `:Bindings audit` | Keymap-Actions vs. Command-Routes |
+| `:LibBindingsAuditGaps` | `:Bindings audit gaps` | Actions ohne Kommando-Pendant |
+| `:LibBindingsAuditKeys` | `:Bindings audit keys` | nicht-portable Tasten |
+| `:LibBindingsAuditPrefixes` | `:Bindings audit prefixes` | `<Tab>`-Präfix-Ambiguität |
+| `:LibBindingsAuditNaming` | `:Bindings audit naming` | vage Subcommand-Namen (Kandidaten) |
+| `:LibBindingsAuditChecklist` | `:Bindings audit checklist` | Checkliste, nur Vorschau |
+| — | `:BindingsRuntimeChecklist[!]` | Checkliste, schreibt nach Datei |
+
+**Übrig aus dem Original-Ticket, bewusst nicht automatisiert:** das
+tatsächliche Auslösen jeder Aktion (Punkt 1 im Original-Ticket) — dafür ist
+jetzt [`BINDINGS-RUNTIME-CHECKLIST.md`](../personal/All/BINDINGS-RUNTIME-CHECKLIST.md)
+da (per `:BindingsRuntimeChecklist` erzeugen, existiert noch nicht bis du
+es einmal aufrufst). Das Abarbeiten ist wie im Original-Ticket
+festgehalten: deine Domäne.
