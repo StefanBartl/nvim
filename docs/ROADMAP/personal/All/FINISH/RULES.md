@@ -11,6 +11,7 @@
     - [Ergebnis je Repo](#ergebnis-je-repo)
   - [✅ TS-* (5 Regeln) — fertig](#ts-5-regeln-fertig)
   - [✅ ERR-* (34 Regeln) — fertig](#err-34-regeln-fertig)
+  - [🔶 UI-* (34 Regeln) — in Arbeit](#ui-34-regeln-in-arbeit)
   - [⬜ Noch nicht begonnen](#noch-nicht-begonnen)
   - [Methodik-Hinweise für den nächsten Durchlauf](#methodik-hinweise-fr-den-nchsten-durchlauf)
 
@@ -43,7 +44,7 @@ volle Wortlaut jedes Funds (inkl. Begründung, warum ein Rule N/A ist) steht in
 | `TS-*` | 5 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 0 Befunde |
 | `ERR-*` | 34 | `LUA_NVIM.md` | ✅ **fertig** — alle 32 Repos geprüft, 17 echte Bugs gefixt (1 davon an der Wurzel in `lib.nvim`) |
 | `PRIN-*` | 37 | `PRINCIPLES.md` | ⬜ nicht begonnen |
-| `UI-*` | 34 | `LUA_NVIM.md` | ⬜ nicht begonnen |
+| `UI-*` | 34 | `LUA_NVIM.md` | 🔶 **in Arbeit** — 5/34 Regeln (`UI-57`..`UI-61`, Checkhealth) bereits fleet-weit erledigt und validiert (siehe unten), Rest offen |
 | `LUA-*` | 45 | `LUA_NVIM.md` | ⬜ nicht begonnen |
 | `PERF-*` | 57 | `PERFORMANCE.md` | ⬜ nicht begonnen |
 
@@ -76,12 +77,20 @@ Kurz vorab: das ist eine Schätzung, keine Messung wie bei DEP-*/SEC-*/TS-* — 
 
 | Familie | Regeln | Repo-Durchgänge nötig | Einschätzung relativ zu `SEC-*` |
 |---|---|---|---|
-| `UI-*` | 34 | ~32 | ähnliche Größenordnung wie `SEC-*`/`ERR-*`, leicht mehr pro Durchgang |
-| `PRIN-*` | 37 | ~32 | wie `UI-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
+| `PRIN-*` | 37 | ~32 | ähnliche Größenordnung wie `SEC-*`/`ERR-*`, aber unschärfere Regeln → mehr Ermessensfälle, potenziell mehr Rückfragen an dich statt reinem Abhaken |
 | `LUA-*` | 45 | ~32 | viele Treffer sind vermutlich Stilfragen statt Bugs → mehr Bewertungsaufwand pro Fund |
 | `PERF-*` | 57 | ~32 | **größte und teuerste** — Hotpath-Beurteilung braucht Verständnis von Aufrufhäufigkeit, nicht nur Pattern-Matching; wahrscheinlich allein so aufwendig wie zwei der mittleren Familien zusammen |
 
-**Fazit:** Die übrigen vier Familien brauchen je ~32 echte Repo-Durchgänge, macht zusammen grob **128 Repo-Durchgänge** — bei reduzierter Parallelität eher mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. `ERR-*` selbst ist inzwischen durch (32/32, 17 echte Bugs, s. u.) und bestätigt die Einordnung: mit `SEC-*` vergleichbarer Aufwand, kein Ausreißer. Realistisch bewegt sich der Rest im Bereich von **mehreren vollen Arbeitstagen bis zu zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für Familie durchgezogen wird, mit `PERF-*` als vermutlich größtem Einzelbrocken darin.
+**Fazit:** `UI-*` läuft bereits (s. u., 5/34 Regeln schon fleet-weit erledigt);
+die übrigen drei Familien brauchen je ~32 echte Repo-Durchgänge, macht
+zusammen grob **96 Repo-Durchgänge** — bei reduzierter Parallelität eher
+mehr Sitzungen als die eine, die `SEC-*` gebraucht hat. `ERR-*` selbst ist
+inzwischen durch (32/32, 17 echte Bugs, s. u.) und bestätigt die
+Einordnung: mit `SEC-*` vergleichbarer Aufwand, kein Ausreißer. Realistisch
+bewegt sich der Rest im Bereich von **mehreren vollen Arbeitstagen bis zu
+zwei, drei Wochen verteilter Sessions**, wenn's wie bisher Familie für
+Familie durchgezogen wird, mit `PERF-*` als vermutlich größtem
+Einzelbrocken darin.
 
 ---
 
@@ -444,16 +453,82 @@ Katalog je erneut durchlaufen wird.
 
 ---
 
+## 🔶 UI-* (34 Regeln) — in Arbeit
+
+**34 Regeln in drei Themenblöcken** (`LUA_NVIM.md`, Abschnitt "UI und
+Bedienbarkeit" + der separate "Buffer/Window-UI"-Block direkt davor):
+
+- **Notifications** (`UI-01`..`UI-04`): Bulk-Bestätigung einmal statt pro
+  Item, Truncation explizit melden, Backend-Fallback warnt, Friendly-Error-
+  Mapping statt rohem Stderr-Dump.
+- **Picker- und Kommando-UX** (`UI-20`..`UI-37`, 18 Regeln): Cheatsheet aus
+  derselben Tabelle wie die Bindings, Compound-Command statt Kommando-Zoo,
+  Completion-Pflicht/Live-Berechnung/Pfad-Completion/Soft-Hints,
+  which-key-Label dynamisch, Visual-Multiselect, schlanke Statusline,
+  Single-Line-Prompt-Buffer, Tagged-Window-Wiederfinden, TUI-Cursor-Lock,
+  Graceful Degradation, Progress-Truncation/-Finalisierung,
+  Quickfix-Export, Parser-Wiederverwendung bei Layer-Migration.
+- **Buffer/Window-UI** (`UI-50`..`UI-56`, 7 Regeln): einheitliche
+  UI-Methodennamen, zentraler `ui_state`, `cleanup_all()`, Race Conditions,
+  konkurrierende exklusive UIs, sichtbare Fenster vor Buffer-Löschung
+  umleiten, Scroll-Sprünge in Previews vermeiden.
+- **Checkhealth-Konventionen** (`UI-57`..`UI-61`, 5 Regeln): `warn`/`error`-
+  Level-Disziplin, Text-Level-Widerspruchsfreiheit, Eine-von-N-Alternativen
+  als `info`, Lazy-Load-Normalzustand als `info`, `INFO`-Tag nur in
+  Statuslisten.
+
+**`UI-57`..`UI-61` sind bereits fertig, fleet-weit, unabhängig von dieser
+Datei.** Ein separater Vollaudit über alle 35 `health.lua`-Module ist
+bereits am 2026-08-31 gelaufen und am 2026-09-06 nochmal gegen den
+aktuellen Code validiert — Quelle:
+[`ERLEDIGT/checkhealt_conventions.md`](./ERLEDIGT/checkhealt_conventions.md),
+Detail-Log: [`handovers/checkhealth-conventions.md`](../../../handovers/checkhealth-conventions.md).
+Kurzfassung: vier systematische Fehlklassen gefunden (Eine-von-N als
+Warnung, Text-Level-Widerspruch bei "(optional)", Warnungen die eigentlich
+Fehler sind ("will fail" im Text, nur `warn` im Level), `setup()`-Hinweise
+unter Lazy-Loading als `warn` statt `info`) und über den kompletten
+~30-Repo-Bestand gefixt, inklusive eines Nebenfunds in `lib.nvim`s
+geteiltem `check_require()`-Helfer (konnte strukturell nie `error` melden).
+**Nicht erneut auditieren** — bei einer künftigen Katalog-Runde nur gegen
+neue Health-Module aus danach entstandenen Plugins prüfen.
+
+Damit bleiben für diesen Durchlauf **29 Regeln** (`UI-01`..`04`, `UI-20`..`37`,
+`UI-50`..`56`) über alle 32 Repos.
+
+**Vorüberlegung zur Methodik:** Mehrere `UI-*`-Belege im Katalog verweisen
+bereits auf konkrete Fundstellen in genau diesen 32 Repos als *positive*
+Beispiele (z. B. `UI-01`→sandbox.nvim, `UI-30`→reposcope.nvim,
+`UI-35`→pdfport.nvim) — der Katalog selbst wurde also mindestens teilweise
+schon aus einer Begehung dieses Fleets heraus geschrieben. Die einzigen im
+Katalog explizit als **Lücke** vermerkten Fälle (`UI-21`/`UI-22` bei
+`:MyReposUpdate` im nvim-config und bei `learn-cli.nvim`) liegen **außerhalb**
+der 32 Personal-Plugin-Repos. Erwartung: diese Familie liefert vermutlich
+weniger neue Funde als `ERR-*`, weil ein Großteil schon während der
+Katalog-Erstellung mitgeprüft wurde — aber das ist eine Erwartung, keine
+Abkürzung; jedes Repo bekommt trotzdem einen echten Durchgang.
+
+### Noch offen (32/32 Repos ungelesen für UI-*, 29 Regeln)
+
+Alle 32 Repos alphabetisch: buffer-ctx.nvim, cascade.nvim, casedesk.nvim,
+cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim,
+documentation.nvim, emojis.nvim, fileops.nvim, filetree.nvim,
+github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim,
+language.nvim, lib.nvim, lsp.nvim, markdown.nvim, mdview.nvim, open.nvim,
+pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim,
+reposcope.nvim, runtime-analysis.nvim, sandbox.nvim, sessions.nvim,
+spotlight.nvim.
+
+---
+
 ## ⬜ Noch nicht begonnen
 
 | Familie | Regeln | Worum es geht (Kurzfassung) |
 |---|---|---|
 | `PRIN-*` | 37 | Grundprinzipien (Modularität, API-Design, Namenskonventionen, Dokumentationspflichten auf Prinzip-Ebene) |
-| `UI-*` | 34 | UI-Konventionen (Float-Größen, Highlight-Gruppen, Statuszeilen-Verhalten, Tastenkonflikte) |
 | `LUA-*` | 45 | Allgemeine Lua/Neovim-Idiome jenseits von Deprecations |
 | `PERF-*` | 57 | Performance-Patterns (Hotpath-Vermeidung von `pcall`, Debouncing, `vim.wait`-Nutzung, Caching) — größte Familie |
 
-**Vorschlag für die Reihenfolge, wenn's weitergeht:** `UI-*` (34, mittelgroß)
+**Vorschlag für die Reihenfolge, wenn's weitergeht:** `UI-*` zu Ende bringen
 → `PRIN-*` (37) → `LUA-*` (45) → `PERF-*` (57, größte und wahrscheinlich
 aufwendigste, da sie am meisten Kontext pro Fund braucht). Keine
 Autoren-Vorgabe, nur eine Einschätzung nach Größe.
