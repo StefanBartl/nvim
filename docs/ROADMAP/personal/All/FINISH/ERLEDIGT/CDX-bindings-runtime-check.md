@@ -27,17 +27,20 @@ Vor-Ort-Sitzung mit dir bleibt.
 
   - [Bestandsaufnahme](#bestandsaufnahme)
     - [Duplikat-Check (Punkt 2)](#duplikat-check-punkt-2)
-    - [Namensqualität (Punkt 3)](#namensqualität-punkt-3)
+    - [Namensqualität (Punkt 3)](#namensqualitt-punkt-3)
     - [Laufzeit-Fehlertest (Punkt 1)](#laufzeit-fehlertest-punkt-1)
   - [Was daraus folgt](#was-daraus-folgt)
   - [Plan, in Phasen](#plan-in-phasen)
-    - [Phase 1 — Duplikat-Checks live schalten (klein, sofort machbar)](#phase-1--duplikat-checks-live-schalten-klein-sofort-machbar)
-    - [Phase 2 — Refresh der beiden Cross-Plugin-Dateien](#phase-2--refresh-der-beiden-cross-plugin-dateien)
-    - [Phase 3 — Namensqualität: Report statt Urteil](#phase-3--namensqualität-report-statt-urteil)
-    - [Phase 4 — Laufzeit-Testrunner, zweistufig](#phase-4--laufzeit-testrunner-zweistufig)
-  - [Risiken / offene Fragen](#risiken--offene-fragen)
+    - [Phase 1 — Duplikat-Checks live schalten (klein, sofort machbar) — ✅ erledigt 2026-09-07](#phase-1-duplikat-checks-live-schalten-klein-sofort-machbar-erledigt-2026-09-07)
+      - [Ursprünglicher Plan (Referenz)](#ursprnglicher-plan-referenz)
+    - [Zwischenschritt — `:Bindings audit`/`conflicts` als Alias — ✅ erledigt 2026-09-07](#zwischenschritt-bindings-auditconflicts-als-alias-erledigt-2026-09-07)
+    - [Phase 2 — Refresh der beiden Cross-Plugin-Dateien — ✅ erledigt 2026-09-07](#phase-2-refresh-der-beiden-cross-plugin-dateien-erledigt-2026-09-07)
+    - [Phase 2 — ursprünglicher Plan (Referenz)](#phase-2-ursprnglicher-plan-referenz)
+    - [Phase 3 — Namensqualität: Report statt Urteil — ✅ erledigt 2026-09-07](#phase-3-namensqualitt-report-statt-urteil-erledigt-2026-09-07)
+    - [Phase 4 — Laufzeit-Testrunner, zweistufig — ✅ erledigt 2026-09-07](#phase-4-laufzeit-testrunner-zweistufig-erledigt-2026-09-07)
+  - [Risiken / offene Fragen](#risiken-offene-fragen)
   - [Wie das Ergebnis dokumentiert wird](#wie-das-ergebnis-dokumentiert-wird)
-  - [Nächster konkreter Schritt](#nächster-konkreter-schritt)
+  - [Status: alle vier Phasen erledigt (2026-09-07)](#status-alle-vier-phasen-erledigt-2026-09-07)
 
 ---
 
@@ -86,6 +89,8 @@ Handler auf demselben Event feuern **beide**, es überschreibt sich nichts —
 „Kollision" heißt hier höchstens „unerwartete Reihenfolge", nicht „einer
 verschwindet".
 
+---
+
 ### Namensqualität (Punkt 3)
 
 Nichts prüft das automatisiert, und nichts sollte das vollautomatisiert
@@ -103,6 +108,8 @@ gibt:
   Namens-Durchsicht aufbauen würde, existiert also schon als Kommando.
 - `:Bindings browse usercmds` (bindings_explorer) ist dieselbe Liste als
   Picker, scopbar auf ein Plugin.
+
+---
 
 ### Laufzeit-Fehlertest (Punkt 1)
 
@@ -254,6 +261,8 @@ einfach in deiner normalen nvim-Instanz aufrufen.
    Ohne das meldet der Check nach einem frischen Start fälschlich „keine
    Duplikate", nur weil die Hälfte der Plugins noch gar nicht da ist.
 
+---
+
 ### Zwischenschritt — `:Bindings audit`/`conflicts` als Alias — ✅ erledigt 2026-09-07
 
 Auf Nachfrage geprüft, ob `:LibKeymapConflicts`/`:LibBindingsAudit*` und das
@@ -266,6 +275,8 @@ Live-Registry gegen sich selbst, ohne Doku. Trotzdem als dünne Routen unter
 selbes Verb-plus-Alias-Muster wie `:AllDrives` → `:Pickers drives files`.
 Headless verifiziert: alle fünf Routen registrieren und laufen fehlerfrei,
 auch mit optionalem `[root]`-Pfad-Argument.
+
+---
 
 ### Phase 2 — Refresh der beiden Cross-Plugin-Dateien — ✅ erledigt 2026-09-07
 
@@ -309,6 +320,8 @@ Prosa-Analyse, kein 1:1-Abgleich mit der Rohliste). Die 6 `Gaps`- und
 31 `Keys`-Funde aus dem Nebenbefund sind nicht triagiert; das wäre ein
 eigener, kleiner Punkt, falls gewünscht.
 
+---
+
 ### Phase 2 — ursprünglicher Plan (Referenz)
 
 Mit den Kommandos aus Phase 1 einmal laufen lassen und
@@ -320,6 +333,8 @@ dass der automatisierte Check etwas anders zählt als die Handanalyse
 „A · Source-Achse von `:Bindings check`" in `PLUGIN_ROADMAPS_TESTPLAN.md`:
 eine „wesentlich größere Zahl" an Befunden macht eher das Werkzeug
 verdächtig als die Config).
+
+---
 
 ### Phase 3 — Namensqualität: Report statt Urteil — ✅ erledigt 2026-09-07
 
@@ -341,6 +356,8 @@ Plain-Kommando-Route nicht — keine falschen Positiven im Test.
 Kommando lief nicht gegen deine echte Session. `:LibBindingsAuditNaming`
 oder `:Bindings audit naming` einmal bei dir aufrufen zeigt den echten
 Stand.
+
+---
 
 ### Phase 4 — Laufzeit-Testrunner, zweistufig — ✅ erledigt 2026-09-07
 
@@ -437,6 +454,8 @@ neuen Kommandonamen über die ganze Config, das mindestens einen Treffer
 außerhalb der Definition selbst zeigt, ist die Mindestprüfung, bevor „Status:
 ✅" irgendwo steht.
 
+---
+
 ## Status: alle vier Phasen erledigt (2026-09-07)
 
 Alles auf `main`, beide Repos (`lib.nvim`, `nvim-config`), jeder Schritt
@@ -458,7 +477,7 @@ er committet wurde.
 
 **Übrig aus dem Original-Ticket, bewusst nicht automatisiert:** das
 tatsächliche Auslösen jeder Aktion (Punkt 1 im Original-Ticket) — dafür ist
-jetzt [`BINDINGS-RUNTIME-CHECKLIST.md`](../personal/All/BINDINGS-RUNTIME-CHECKLIST.md)
+jetzt [`BINDINGS-RUNTIME-CHECKLIST.md`](../BINDINGS-RUNTIME-CHECKLIST.md)
 da. Das Abarbeiten ist wie im Original-Ticket festgehalten: deine Domäne.
 
 > **Nachtrag 2026-09-07 — erste echte Generierung.** Gegen deine volle
@@ -470,3 +489,6 @@ da. Das Abarbeiten ist wie im Original-Ticket festgehalten: deine Domäne.
 > dieses Ranges: 261 Einträge ohne Beschreibung (`(no description)`),
 > größtenteils `Debug`/`Filetree`-Subrouten — eine Doku-Lücke, keine
 > Fehlfunktion. Committet als `nvim-config@f3b1ba281`.
+
+---
+
