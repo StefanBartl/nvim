@@ -179,11 +179,9 @@ M.extract_lua_field_key = memo.fn(function(text)
   end
 
   -- Quoted key: ["key"] =
-  --- CDX: this match has two captures (quote char, key); `return quoted` hands
-  --- back the quote char, not the key. Quoted table keys resolve to `"` / `'`.
-  local quoted = text:match("^%[(['\"])(.-)%1%]%s*=")
-  if quoted then
-    return quoted
+  local _, quoted_key = text:match("^%[(['\"])(.-)%1%]%s*=")
+  if quoted_key then
+    return quoted_key
   end
 
   return nil

@@ -34,8 +34,9 @@ function M.enable(cfg)
   if not cfg or cfg == false then
     return
   end
+  -- `git.enable(true)` is the "all features on defaults" shorthand.
   if cfg == true then
-    cfg = {} --- CDX: restructure so these true/false/nil branches are not needed (submodules currently report 'missing required field')
+    cfg = {}
   end
   ---@type AutoCmds.Git.Cfg
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(Defaults), cfg or {})

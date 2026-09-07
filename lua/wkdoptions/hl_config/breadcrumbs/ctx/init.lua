@@ -153,10 +153,10 @@ function M._build_context()
   local order = cfg.providers_order
     or { "lsp_func", "ts_symbol", "container", "lang_extra", "word" }
 
-  -- CDX: the "container" provider needs cfg._base_symbol (see WKDOptionsBreadcrumbsCtx),
-  -- but nothing sets it here before the chain runs, so container.extract() always
-  -- returns nil in the live pipeline. Only the :WKDOptionsHLDebugCtx path
-  -- (M._ctx_with_container) feeds it a base symbol.
+  -- CDX (parked, see docs/ROADMAP/CDX/config-cdx-triage.md §4): the "container"
+  -- provider needs cfg._base_symbol, which nothing sets before the chain runs,
+  -- so container.extract() is a no-op in the live pipeline -- only the
+  -- :WKDOptionsHLDebugCtx path (M._ctx_with_container) feeds it a base symbol.
 
   -- Execute provider chain
   for _, name in ipairs(order) do
@@ -193,11 +193,9 @@ end
 -- Cache Invalidation
 -----------------------------------------------------------
 
---- Invalidate all caches (call on BufEnter/config change)
---- CDX: no caller anywhere -- this and its targets (ts_helpers.invalidate_tick,
---- base.clear_cache) form an unwired cache-invalidation API. node_at_cursor
---- self-invalidates on cursor move and the lang cache is filetype-keyed, so
---- nothing currently goes stale; if that changes, the BufEnter wiring is missing.
+--- Invalidate all caches. Currently unwired: node_at_cursor self-invalidates
+--- on cursor move and the lang cache is filetype-keyed, so nothing goes stale.
+--- Kept as the hook to call from a BufEnter autocmd if that ever changes.
 ---@return nil
 function M.invalidate_caches()
   ts_helpers.invalidate_tick()
