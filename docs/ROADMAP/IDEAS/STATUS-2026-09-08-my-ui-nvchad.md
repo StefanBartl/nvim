@@ -92,9 +92,17 @@ das Menü-Setup sitzt in einer eigenen `UIReady`-Phase in `init.lua`.
 Annahme, `volt`/`minty` hingen daran, war falsch: NvChad deklariert alle
 drei, und nichts im Plugin-Baum ruft noch `require("menu")`.
 
-Handover (Details, Funde, offene Punkte) liegt in WKDBooks unter
-`wkdbook-myplugins/lib.nvim/handovers/ERLEDIGT/menu-kit-renderer.md`.
-Commits `lib.nvim@8023d5b`/`3fe3d00`, `nvim@49c270930`/`3de0ee968`.
+Die Optik ist seit `lib.nvim@66a0f00` an nvzone/menu angeglichen: Pad-Spalte
+an jeder Kante, eingerückte Trenner, versteckter Cursor, Einfachklick wählt,
+Klick daneben schließt. Zwei Punkte der Analyse waren keine Lücken — die
+Auswahl-Zeile war nie zu kurz, und die „unsichtbaren Icons" waren schlicht
+nie gesetzt.
+
+Handovers (Details, Funde, offene Punkte) liegen in WKDBooks unter
+`wkdbook-myplugins/lib.nvim/handovers/ERLEDIGT/` —
+`menu-kit-renderer.md` (Renderer-Swap) und `menu-visual-polish.md` (Optik).
+Commits `lib.nvim@8023d5b`/`3fe3d00`/`66a0f00`,
+`nvim@49c270930`/`3de0ee968`.
 
 ### 3. `neotest`-Config nicht extrahiert
 `lua/config/neotest/**` lebt weiterhin im Host (verifiziert). In
