@@ -53,13 +53,14 @@ Spotlight, Color My ASCII, LSP. The list is `CONTRIBUTORS` in
 ## Navigating the menu
 
 `j`/`k`/arrows move (frame lines and section titles are stepped over), `<CR>`
-picks, `<Esc>`/`q` closes. An entry marked `▶` in the right-hand column opens
-a nested list **in place**; `<BS>`, or the `◂ Back` row at the top of a nested
-level, goes back up. That drill-down is the kit renderer's shape — nvzone/menu
+picks, `<Esc>`/`q` closes. An entry marked `→` opens a nested list **in
+place**; `<BS>`, or the `◂ Back` row at the top of a nested level, goes back
+up. That marker sits just past the longest label rather than at the right
+edge — the keymap-hint column keeps the edge. That drill-down is the kit renderer's shape — nvzone/menu
 opened nested entries in a second window beside the parent.
 
-Every row is a set of aligned columns: icon, label, keymap hint, fly-out
-marker. The icon is a field on the entry, never part of its label — see
+Every row is a set of aligned columns: icon, label, fly-out marker, keymap
+hint. The icon is a field on the entry, never part of its label — see
 [`config/menu/icons.lua`](../icons.lua) and the note in
 [`custom_menu/README.md`](../custom_menu/README.md).
 
