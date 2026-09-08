@@ -100,11 +100,15 @@ billiger als eine Kopplung:
 local function note(msg) health.info("ℹ️ INFO " .. msg) end
 ```
 
-Farbe dazu **einmal in der eigenen Config**, nicht in 30 Plugins — ein `after/syntax`
-aus einem Plugin heraus verändert jeden fremden checkhealth-Buffer mit:
+Farbe dazu **einmal**, nicht in 30 Plugins. Ursprünglich lag die eine Kopie in der
+eigenen Config; seit 2026-09-09 liegt sie stattdessen in `lib.nvim`
+(`after/syntax/checkhealth.vim`, siehe dessen `docs/health.md`) — jedes Plugin,
+das den Tag schreibt (filetree.nvim, pickers.nvim, ...), hat `lib.nvim` ohnehin
+als harte Dependency, also greift die Datei für jeden Nutzer automatisch, nicht
+nur für die eigene Config:
 
 ```vim
-" ~/.config/nvim/after/syntax/checkhealth.vim
+" lib.nvim/after/syntax/checkhealth.vim
 syn keyword DiagnosticInfo INFO
 ```
 
