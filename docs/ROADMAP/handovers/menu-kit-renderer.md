@@ -3,7 +3,8 @@
 Stand 2026-09-08. Erledigt. Diese Datei hält fest, was ein Nachfolger wissen
 muss, bevor er am Menü oder an `nvzone/menu` weiterarbeitet.
 
-Commits: `lib.nvim@8023d5b`, `nvim@49c270930`.
+Commits: `lib.nvim@8023d5b`, `nvim@49c270930` (Migration) und
+`nvim@3de0ee968` (nvzone/menu deinstalliert).
 WKDBooks: `ALL/replaceable-dependencies.md` (nvzone/menu-Abschnitt).
 
 ---
@@ -35,10 +36,10 @@ In `lib.nvim` dafür entstanden:
    Single-Instance; daher kommen sein Theming und sein Fenster-Lebenszyklus.
    `<BS>` geht zurück. Wer die nvzone-Optik zurückwill, schaltet
    `renderer = "nvzone"` — nicht: baut ein zweites Chooser-Fenster.
-2. **`nvzone/menu` ist weiterhin installiert.** `lua/plugins/nvchad.lua` ist
-   auf eine reine Spec ohne `config`-Hook geschrumpft und hält das Plugin nur
-   noch, weil `volt` und `minty` (Color-Picker im Menü) daran hängen. Die
-   Deinstallation ist NvChad-Abkopplung, keine Menü-Arbeit.
+2. **`nvzone/menu` ist deinstalliert.** `lua/plugins/nvchad.lua` besteht nur
+   noch aus `enabled = false` dafür. `renderer = "nvzone"` fällt seither mit
+   einem Notify auf den Kit zurück; wer die alte Darstellung zurückwill,
+   braucht beides — die Spec wieder an und den Renderer umgestellt.
 3. **Der allgemeine Abschnitt wird bei jedem Öffnen neu gebaut.**
    `config.menu.custom_menu` ist eine *Funktion*, kein Table. „Copy
    Marked/Selected", „Delete Marked/Selected" und „Delete File" lesen die
@@ -60,9 +61,23 @@ In `lib.nvim` dafür entstanden:
   Die Korrektur steht offen in der README, weil die Behauptung als Argument
   gedient hatte.
 
-## Offen
+## Ein Fehler in der ersten Fassung dieses Handovers
 
-- `volt`/`minty` ablösen, dann `nvzone/menu` entfernen.
+Er behauptete, `volt` und `minty` hingen an der Menü-Spec und blockierten
+die Deinstallation. Falsch: **NvChad** deklariert alle drei nvzone-Plugins
+in `nvchad/plugins/init.lua` (importiert in `init.lua`), `volt` ist das,
+womit `nvchad/ui`s Theme-Picker zeichnet, und `minty` hängt dort mit
+`cmd = { "Huefy", "Shades" }`. Die Menü-Spec hielt nie etwas fest. Ein
+`grep` nach `require("menu")` über den ganzen Plugin-Baum — NvChad und
+nvchad/ui eingeschlossen — war leer, also konnte das Plugin sofort raus.
+
+Dieselbe Klasse Fehler wie die „not a fit"-Behauptung unten: eine
+Abhängigkeit *vermutet* statt nachgesehen.
+
+## Offen
+- **Color Picker ohne `minty`.** Der einzige Eintrag des allgemeinen
+  Abschnitts, der an NvChads Bundle hängt — zu klären bei der
+  NvChad-Abkopplung, nicht hier.
 - Der alte ROADMAP-Punkt „manchmal bleibt ein leeres Contextmenu-Fenster
   offen" betraf nvzone's Fenster-Lebenszyklus. Der Chooser schließt sich
   selbst (`WinClosed`). In `lua/config/menu/docs/ROADMAP.md` als geschlossen
