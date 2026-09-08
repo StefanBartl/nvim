@@ -8,6 +8,7 @@
 
 local map = require("lib.nvim.bindings.keymap")
 local contextmenu = require("lib.nvim.contextmenu")
+local icons = require("config.menu.icons")
 
 local M = {}
 
@@ -31,14 +32,28 @@ end
 --- trigger, no renderer dependency) and relies on THIS dispatcher to
 --- compose it. Every contributor lands as its OWN top-level fly-out entry
 --- (`submenu()`) — no shared "MyPlugins" wrapper — so ordering here is
---- just menu-display order, not nesting.
+--- just menu-display order, not nesting. They share one "Integrations"
+--- heading, which is presentation only: still one entry per plugin, still no
+--- nesting under a common parent.
 --- `applies(buf)` is a cheap pre-check (usually filetype) that skips the
 --- plugin's `require()` entirely when it obviously doesn't qualify, before
 --- paying for the plugin's own (possibly pricier) internal gating.
----@type { module: string, applies: fun(buf: integer): boolean }[]
+---
+--- `icon` is a **fallback**, not an assignment: a contributor that names its
+--- own `icon` keeps it. It exists because none of them do yet -- every one
+--- ships a default label of the shape `"  Open"`, two spaces standing in for
+--- a glyph that was never added, which is exactly why these entries used to
+--- sit indented and icon-less beside the general sections. The renderer trims
+--- the label; this fills the column the trim leaves empty.
+--- The parentheses around `applies` are load-bearing: without them LuaLS
+--- reads `fun(buf: integer): boolean, icon: string` as a function returning
+--- *two* values, and then flags every `return true` in the list below as
+--- missing one.
+---@type { module: string, applies: (fun(buf: integer): boolean), icon: string }[]
 local CONTRIBUTORS = {
   {
     module = "markdown.integrations.menu",
+    icon = icons.markdown,
     applies = function(buf)
       return is_markdown(vim.bo[buf].ft)
     end,
@@ -48,6 +63,7 @@ local CONTRIBUTORS = {
   -- here is just "always try it".
   {
     module = "open.integrations.menu",
+    icon = icons.open,
     applies = function()
       return true
     end,
@@ -56,6 +72,7 @@ local CONTRIBUTORS = {
   -- items() itself returns empty when nvim-dap isn't installed.
   {
     module = "wkddap.integrations.menu",
+    icon = icons.dap,
     applies = function()
       return true
     end,
@@ -65,6 +82,7 @@ local CONTRIBUTORS = {
   -- there is nothing cheaper to pre-check here than "always try it".
   {
     module = "cascade.integrations.menu",
+    icon = icons.cascade,
     applies = function()
       return true
     end,
@@ -73,6 +91,7 @@ local CONTRIBUTORS = {
   -- per entry on the buffer actually having a name.
   {
     module = "fileops.integrations.menu",
+    icon = icons.fileops,
     applies = function()
       return true
     end,
@@ -82,6 +101,7 @@ local CONTRIBUTORS = {
   -- reasoning as cascade.nvim above — nothing cheaper to pre-check here.
   {
     module = "images.integrations.menu",
+    icon = icons.images,
     applies = function()
       return true
     end,
@@ -89,6 +109,7 @@ local CONTRIBUTORS = {
   -- spotlight.nvim: also global — works the same in any buffer/filetype.
   {
     module = "spotlight.integrations.menu",
+    icon = icons.spotlight,
     applies = function()
       return true
     end,
@@ -97,6 +118,7 @@ local CONTRIBUTORS = {
   -- (plus fence-under-cursor for the :Fence group) internally.
   {
     module = "color_my_ascii.integrations.menu",
+    icon = icons.color_my_ascii,
     applies = function(buf)
       return vim.bo[buf].ft == "markdown"
     end,
@@ -110,6 +132,7 @@ local CONTRIBUTORS = {
   -- rather than backfilled.
   {
     module = "lsp.integrations.menu",
+    icon = icons.lsp,
     applies = function()
       return true
     end,
@@ -135,6 +158,10 @@ local function contributed_submenus(buf)
       if ok and type(mod.submenu) == "function" then
         local sub = mod.submenu()
         if sub then
+          -- Only where the plugin named none of its own: the icon column
+          -- belongs to whoever owns the entry, and this is the host filling
+          -- in for contributors that have not adopted it yet.
+          sub.icon = sub.icon or c.icon or icons.plugin
           out[#out + 1] = sub
         end
       end
@@ -153,15 +180,28 @@ end
 ---@param buf integer
 ---@return Lib.ContextMenu.Item[]
 local function menu_source(buf)
-  local composed = contributed_submenus(buf)
+  local subs = contributed_submenus(buf)
+
+  -- One named section holding every plugin fly-out. The heading is what turns
+  -- a run of rows into a section the eye takes in at once: the kit renderer
+  -- draws a named group as a titled frame. Placed by hand rather than through
+  -- `contextmenu.group`, whose varargs exist to survive nil gaps that a list
+  -- built by `contributed_submenus` cannot have -- and reaching them would
+  -- need `unpack`, which is spelled differently in every Lua this has to run
+  -- on. The emptiness check is the part that matters: an "Integrations" frame
+  -- with nothing in it must not be a state that can occur.
+  local composed = {}
+  if #subs > 0 then
+    composed[#composed + 1] = contextmenu.heading("Integrations")
+    vim.list_extend(composed, subs)
+  end
 
   local ok_custom, custom = pcall(require, "config.menu.custom_menu")
   if ok_custom and type(custom) == "function" then
     local items = custom(custom_opts)
     if type(items) == "table" and #items > 0 then
-      if #composed > 0 then
-        composed[#composed + 1] = { name = "separator" }
-      end
+      -- No separator to place any more: every section on both sides of this
+      -- seam names itself, and a heading starts its own group.
       vim.list_extend(composed, items)
     end
   end

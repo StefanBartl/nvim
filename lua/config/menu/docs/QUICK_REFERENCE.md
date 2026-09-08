@@ -12,46 +12,56 @@ tree, because a buffer-local mapping shadows it.
 
 ## Custom Menu (Alt-b / Right-Click)
 
-### 📋 Copy Operations
+The headings below are the menu's own: each is drawn as a titled frame, in
+this order.
+
+### Integrations
+Every applicable plugin fly-out — Markdown, Open, DAP, Cascade, File, Images,
+Spotlight, Color My ASCII, LSP. The list is `CONTRIBUTORS` in
+`config/menu/mappings.lua`, and which of them appear depends on the buffer.
+
+### Code
+| Entry | Shortcut | Description |
+|-------|----------|-------------|
+| **Format Buffer** | `<leader>fm` | Format with conform/LSP |
+| **Code Actions** | `<leader>ca` | Show LSP code actions |
+
+### Clipboard
 | Entry | Shortcut | Description |
 |-------|----------|-------------|
 | **Copy All (Buffer)** | `<C-a>` | Copy entire buffer to clipboard |
 | **Copy Marked/Selected** | `<C-c>` | Copy visual selection or entire buffer |
 | **Paste Content** | `<C-v>` | Paste from system clipboard |
 
-### 🗑️ Delete Operations
+### Delete
 | Entry | Shortcut | Description |
 |-------|----------|-------------|
 | **Delete Marked/Selected** | `dm` | Delete visual selection |
-| **Delete All** | `da` | Clear entire buffer (with confirmation) |
-| **🗑️ Delete File** | `df` | Delete file from disk (with confirmation) |
+| **Delete All (Clear Buffer)** | `da` | Clear entire buffer (with confirmation) |
+| **Delete File** | `df` | Delete file from disk (with confirmation) |
 
-### 🛠️ Tools
+### Tools
 | Entry | Shortcut | Description |
 |-------|----------|-------------|
-| **Format Buffer** | `<leader>fm` | Format with conform/LSP |
-| **Code Actions** | `<leader>ca` | Show LSP code actions |
-| **Unicode Table** | `uni` | Open Unicode table (floating) |
+| **Open in terminal** | - | Open terminal in current directory |
 | **Color Picker** | - | Open color picker (minty.huefy) |
-| **Open Terminal** | - | Open terminal in current directory |
-
-### 🎨 LSP & Git
-| Entry | Shortcut | Description |
-|-------|----------|-------------|
-| **LSP** | - | Fly-out contributed by lsp.nvim (its resolved keymap catalogue) |
-| **Git Actions** | - | Fly-out from `config/menu/git.lua`, gated on gitsigns.nvim |
-
-Plugin fly-outs (Open, DAP, File, Spotlight, LSP, markdown, …) come from the
-`CONTRIBUTORS` list in `config/menu/mappings.lua`, not from this table.
+| **Unicode Table** | `uni` | Open Unicode table (floating) |
+| **Git Actions** | - | Fly-out from `config/menu/git.lua` (Hunks / Blame / Diff), gated on gitsigns.nvim |
 
 ---
 
 ## Navigating the menu
 
-`j`/`k`/arrows move (separators are stepped over), `<CR>` picks, `<Esc>`/`q`
-closes. A `▸` entry opens a nested list **in place**; `<BS>` goes back up.
-That drill-down is the kit renderer's shape — nvzone/menu opened nested
-entries in a second window beside the parent.
+`j`/`k`/arrows move (frame lines and section titles are stepped over), `<CR>`
+picks, `<Esc>`/`q` closes. An entry marked `▶` in the right-hand column opens
+a nested list **in place**; `<BS>`, or the `◂ Back` row at the top of a nested
+level, goes back up. That drill-down is the kit renderer's shape — nvzone/menu
+opened nested entries in a second window beside the parent.
+
+Every row is a set of aligned columns: icon, label, keymap hint, fly-out
+marker. The icon is a field on the entry, never part of its label — see
+[`config/menu/icons.lua`](../icons.lua) and the note in
+[`custom_menu/README.md`](../custom_menu/README.md).
 
 ---
 
