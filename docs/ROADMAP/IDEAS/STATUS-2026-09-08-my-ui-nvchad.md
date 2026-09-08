@@ -88,9 +88,13 @@ volles Menü bei `package.loaded["menu"] == nil`.
 `lua/plugins/nvchad.lua` ist auf eine Spec ohne `config`-Hook geschrumpft,
 das Menü-Setup sitzt in einer eigenen `UIReady`-Phase in `init.lua`.
 
-Details, Funde und offene Punkte:
-[handovers/menu-kit-renderer.md](../handovers/menu-kit-renderer.md).
-Commits `lib.nvim@8023d5b`, `nvim@49c270930`.
+`nvzone/menu` ist seit `nvim@3de0ee968` auch **deinstalliert** — die
+Annahme, `volt`/`minty` hingen daran, war falsch: NvChad deklariert alle
+drei, und nichts im Plugin-Baum ruft noch `require("menu")`.
+
+Handover (Details, Funde, offene Punkte) liegt in WKDBooks unter
+`wkdbook-myplugins/lib.nvim/handovers/ERLEDIGT/menu-kit-renderer.md`.
+Commits `lib.nvim@8023d5b`/`3fe3d00`, `nvim@49c270930`/`3de0ee968`.
 
 ### 3. `neotest`-Config nicht extrahiert
 `lua/config/neotest/**` lebt weiterhin im Host (verifiziert). In
