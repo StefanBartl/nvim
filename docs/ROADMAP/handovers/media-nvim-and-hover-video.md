@@ -192,13 +192,22 @@ Im Worktree `nvim/.claude/worktrees/hover-nvim-video-playback-6215f6`, auf
 
 ## Was bewusst nicht gebaut wurde
 
-**Block-Grafik-Playback.** Frames mit 8–12 fps extrahieren, jedes in farbige
-Blockgrafik wandeln, Buffer-Zeilen auf einem Timer tauschen. Das ist *Text* —
-kollidiert mit keinem Grafikprotokoll, überlebt jeden Redraw, spielt wirklich.
-`images.ascii` hat die Einzelbild-Hälfte schon. Der Preis: ein ImageMagick-
-Pixel-Read pro Frame, der in *einen* Aufruf gebatcht werden müsste. Prototyp-
-Material, kein Default-Feature. Steht mit den Zahlen in
-`media.nvim/docs/ROADMAP.md`.
+**Block-Grafik-Playback — inzwischen begonnen, siehe
+[video-hover-playback.md](./video-hover-playback.md).** Der hier vermutete
+Preis („ein ImageMagick-Pixel-Read pro Frame, der in *einen* Aufruf gebatcht
+werden müsste") war richtig und ist bezahlt: `images.blocks` sampelt beliebig
+viele Bilder in einem Prozess (186 ms statt 1593 ms für 24 Frames, gemessen
+2026-09-08) und malt einen Frame in 6,3 ms — 7 % eines 12-fps-Budgets.
+
+Der eigentliche Blocker lag woanders und war hier nicht vermutet: Neovim
+stoppt bei **19 602 Highlight-Gruppen** und gibt keine wieder frei, während
+ein Truecolour-Zellraster eine Gruppe pro Farbe erzeugt (2 880 Zellen je
+80x36-Frame). `images.ascii` trug diesen Fehler latent seit seiner ersten
+Fassung. Quantisierung ist deshalb kein Qualitätsregler, sondern das, was das
+Verfahren überhaupt beschränkt. Erledigt in `images.nvim@cd2f9e4`.
+
+Offen bleiben `media.frames()` und die Transportsteuerung im Hover
+(Play/Pause — ausdrücklich **kein** Autoplay).
 
 **Ein `BufReadCmd` für Mediendateien.** `*.mp4` global zu beanspruchen kämpft
 gegen netrw, oil und jeden Dateibaum mit eigener Meinung, und macht aus einem
