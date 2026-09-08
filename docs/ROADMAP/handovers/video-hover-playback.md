@@ -240,7 +240,34 @@ fester Pool von Gruppen, pro Frame per `nvim_set_hl` neu definiert — kostet
   `vim.system` ohne Warten — die Windows-Fallstricke stehen dort auskommentiert),
   und `media.frames`' `cancel()` zeigt die Abbruchform.
 
-  **Das offene Problem ist die Uhr.** Das Bild läuft auf einem Lua-Timer, der
+  **Es braucht kein eigenes Binary — und die Uhr muss nicht selbst gebaut
+  werden.** Die Frage kam auf, ob ein Rust/C/Go-Prozess oder FFI hier die
+  gemeinsame Zeitbasis liefern müsste. Antwort: nein, und zwar aus einem
+  Grund, der die ganze Aufgabe kleiner macht — **es gibt bereits einen
+  Prozess mit einer perfekten Uhr, nämlich den Audio-Player.** Eine
+  Soundkarte spielt Samples in genau einem Tempo ab; das ist die
+  verlässlichste Zeitquelle im ganzen System, verlässlicher als jeder Timer
+  in Neovim.
+
+  Die Umkehrung ist also der Entwurf: **nicht das Bild führt und der Ton
+  folgt, sondern der Ton führt und das Bild folgt.** `mpv --no-video
+  --input-ipc-server=<pipe>` beantwortet `time-pos` über einen Socket; der
+  Zeichentimer fragt beim Aufwachen die Position ab und malt den Frame, der
+  dazu gehört, statt hochzuzählen. Dann kann das Bild ruckeln, ohne dass es
+  je *auseinanderläuft* — genau das, was ein Videoplayer macht.
+  (`ffplay` kann das nicht: es meldet seine Position nicht. mpv ist hier das
+  richtige Werkzeug, und `media.play` kennt es ohnehin schon als
+  `player`-Option.)
+
+  FFI in den Neovim-Prozess wäre der falsche Weg: LuaJIT kann es, aber
+  dekodieren im Editor-Prozess blockiert die Ereignisschleife — dieselbe
+  Falle, aus der `media.nvim` mit `vim.system` heraus gebaut ist. Ein
+  eigenes Binary lohnt erst, wenn man Dekodieren *und* Zeichnen selbst
+  machen will; dann ist man aber bei „ein Videoplayer, der ins Terminal
+  malt", und das ist `mpv --vo=tct` oder `chafa`, kein Plugin.
+
+  **Das verbleibende Problem ist damit nicht mehr die Drift, sondern der
+  Start:** Das Bild läuft auf einem Lua-Timer, der
   Ton in einem fremden Prozess; ohne gemeinsame Zeitbasis driften die zwei,
   und die Drift wächst mit jedem Frame, den der Timer wegen einer Redraw-Pause
   zu spät zeichnet. Zwei Auswege, beide zu prüfen: (a) die Bildrate an die
@@ -257,6 +284,15 @@ fester Pool von Gruppen, pro Frame per `nvim_set_hl` neu definiert — kostet
   Seit `hover.nvim@e4e8bf4` geht ein Medium zuerst durch `media.play`, damit
   der in media.nvim konfigurierte `player` (z. B. mpv mit eigenen Flags)
   gewinnt — die generischen Opener können davon nichts wissen.
+- **`jobstart(..., { detach = true })` in gopath.nvim.** Beim Prüfen von
+  „`gF` sagt *Opening externally* und es passiert nichts" gefunden:
+  `gopath/external/helpers/opener.lua` startet den Fallback-Opener so, und
+  meldet Erfolg, sobald `job_id > 0` ist. Auf Windows läuft ein
+  *Konsolen*-Programm mit `detach` gar nicht erst an (libuv gibt dem Kind
+  keine Standard-Handles) — die Job-ID ist trotzdem gültig, also sieht es
+  wie Erfolg aus. `media/core/play.lua` hat genau das auskommentiert und
+  benutzt deshalb `vim.system(argv, {})`. Eigener kleiner Fix in
+  gopath.nvim; hier nur notiert, weil es beim Video auffiel.
 - **Broken-Link-Benachrichtigung.** Wunsch aus der Rückmeldung: wenn ein Link
   ins Leere zeigt, standardmäßig eine Notify statt nur des Markers. Der
   Schalter `paths missing` ist heute schon an, aber er *markiert* nur.
