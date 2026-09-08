@@ -28,8 +28,10 @@ switch. Nothing in this directory calls a renderer itself.
   third-party dependency, kit theming, and nested entries **drill down** in
   place with `<BS>` to go back.
 - `renderer = "nvzone"` — nvzone/menu, the previous implementation, with
-  side-by-side fly-outs. Still installed (`lua/plugins/nvchad.lua`) as the
-  carrier for `volt`/`minty`, so this remains a one-word switch back.
+  side-by-side fly-outs. **Not installed any more**
+  (`lua/plugins/nvchad.lua` disables NvChad's spec for it), so this setting
+  now falls back to the kit with one notify; putting it back means
+  re-enabling that spec too.
 
 Nothing registers itself under nvzone/menu's `menus.*` namespace any more,
 and the Git section is this config's own item list (`git.lua`) rather than
