@@ -167,6 +167,24 @@ local function contributed_submenus(buf)
       end
     end
   end
+
+  -- filetree.nvim: not a Pattern-B contributor via CONTRIBUTORS/submenu() --
+  -- its own <RightMouse> buffer-local mapping already shadows this
+  -- dispatcher inside the tree buffer itself (see the RightMouse handler
+  -- below), and a whole items() fly-out here would show 18 tree-node actions
+  -- (rename/trash/copy/...) that have nothing to act on from a normal
+  -- buffer. The one thing worth offering from ANY buffer is a single row:
+  -- open the tree (revealing this buffer's file), or close it if it's
+  -- already open — spliced in flat rather than wrapped as its own fly-out.
+  local ok_ft, ft_menu = pcall(require, "filetree.integrations.menu")
+  if ok_ft and type(ft_menu.window_entry) == "function" then
+    local item = ft_menu.window_entry(buf)
+    if item then
+      item.icon = item.icon or icons.plugin
+      out[#out + 1] = item
+    end
+  end
+
   return out
 end
 
@@ -219,9 +237,12 @@ function M.setup()
   end, { desc = "Open the context menu at the cursor" })
 
   -- RightMouse: the buffer under the pointer decides what the menu holds.
-  -- Neo-tree is NOT handled here — filetree.nvim's own context_menu feature
-  -- binds a buffer-local <RightMouse> on the tree buffer itself, and a
-  -- buffer-local mapping always shadows this global one.
+  -- filetree.nvim's full tree-action menu is NOT handled here — its own
+  -- context_menu feature binds a buffer-local <RightMouse> on the tree
+  -- buffer itself, and a buffer-local mapping always shadows this global
+  -- one, so this handler never actually fires with the tree buffer under
+  -- the pointer. It still contributes one row from any OTHER buffer (open
+  -- the tree) via contributed_submenus()'s filetree bridge, above.
   map({ "n", "v" }, "<RightMouse>", function()
     -- Replay the native click so the cursor lands where the user pointed,
     -- and the menu is built for that buffer rather than the previous one.
