@@ -71,10 +71,11 @@ womit `nvchad/ui`s Theme-Picker zeichnet, und `minty` hängt dort mit
 `grep` nach `require("menu")` über den ganzen Plugin-Baum — NvChad und
 nvchad/ui eingeschlossen — war leer, also konnte das Plugin sofort raus.
 
-Dieselbe Klasse Fehler wie die „not a fit"-Behauptung unten: eine
+Dieselbe Klasse Fehler wie die „not a fit"-Behauptung darüber: eine
 Abhängigkeit *vermutet* statt nachgesehen.
 
 ## Offen
+
 - **Color Picker ohne `minty`.** Der einzige Eintrag des allgemeinen
   Abschnitts, der an NvChads Bundle hängt — zu klären bei der
   NvChad-Abkopplung, nicht hier.
