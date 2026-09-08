@@ -1,8 +1,8 @@
 # Video im Hover abspielen — mit Transportsteuerung
 
-**Stand 2026-09-08.** Schritt 1 von 3 ist gebaut und gepusht
-(`images.nvim@cd2f9e4`), Schritt 2 und 3 sind geplant und gemessen, aber
-nicht gebaut. Beteiligt: `media.nvim`, `images.nvim`, `hover.nvim`.
+**Stand 2026-09-08. Alle drei Schritte gebaut, gepusht und gegen eine echte
+Datei verifiziert** — `images.nvim@cd2f9e4`, `media.nvim@25222b4`,
+`hover.nvim@200ddff`. ffmpeg 9.0.1 ist inzwischen installiert.
 
 Anforderung, wie gestellt: ein Hover über einem Videopfad soll das Video
 abspielen können — **nicht automatisch**. Es braucht Play/Pause und die
@@ -157,23 +157,48 @@ Badge (heute schon); kein ImageMagick → Standbild statt Playback; Terminal
 ohne OSC 1337 → Blockgrafik ist ohnehin der Weg; `inline_images = false` →
 Badge.
 
-## 7. Was hier gerade blockiert
+## 7. Wie es sich bedient
 
-**`ffmpeg` ist auf dieser Maschine nicht installiert** (`ffprobe` ebenso
-wenig; `magick` ist da) — geprüft über die `PATH`-Sicht von Neovim selbst.
-Das heißt: `media.nvim` kann hier nichts rendern, auch der bestehende
-Standbild-Hover nicht, und Schritt 2 lässt sich zwar bauen, aber nicht
-verifizieren. Schritt 1 war ohne ffmpeg vollständig testbar (ImageMagick
-genügt), Schritt 2 ist es nicht.
+Hover über einen Videopfad → Standbild wie bisher. `<Space>` → der Run wird
+dekodiert und läuft. Nochmal `<Space>` → Pause. `]` / `[` → ein Frame vor
+oder zurück, pausiert. `q`/`<Esc>`/Cursorbewegung → Float weg, Timer aus.
 
-Vor Schritt 2 also: ffmpeg installieren (`winget install Gyan.FFmpeg` oder
-`scoop install ffmpeg`), oder bewusst entscheiden, dass der Code ungetestet
-geschrieben und später verifiziert wird.
+Gemessen am echten Clip (640x360, 80x36 Zellen): 325 ms von der Taste bis
+zum ersten Frame, danach 4,6 ms pro Frame. Die Leiste unter dem Bild zeigt
+`▶ 0:01 / 0:12` plus Fortschrittsbalken, in der Zeitachse der *Quelle*.
 
-## 8. Reihenfolge
+## 8. Der frühere Blocker — erledigt
 
-1. ~~`images.blocks`~~ — erledigt.
-2. `media.frames()` + Abbruch-Handle. **Braucht ffmpeg zum Verifizieren.**
-3. `hover`: Transportzustand, Tasten, Leiste, Timer.
-4. Erst danach die Feinheiten: rollendes Fenster, Prefetch, Auflösung an die
-   Float-Größe koppeln, `levels` je nach Material.
+ffmpeg fehlte und ist installiert (`winget install Gyan.FFmpeg`, Version
+9.0.1). **Achtung, eine Stolperstelle:** winget legt die Aliase im
+User-`PATH` an, den eine bereits laufende Shell nicht mehr sieht — und die
+`WinGet\Links`-Aliase für ffmpeg fehlten hier auch nach dem Neustart.
+Wenn `ffmpeg` nicht gefunden wird, liegt die Binärdatei unter
+`%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_*fmpeg-9.0.1-full_buildin`;
+entweder diesen Ordner in den `PATH` oder in `media.setup{ bin = { ffmpeg
+= "…" } }` eintragen. `:checkhealth media` sagt, welche der beiden Binaries
+fehlt.
+
+## 9. Was gebaut wurde
+
+1. **`images.blocks`** (`images.nvim@cd2f9e4`) — Sampling in einem Prozess,
+   Malen nur über Highlights, Farbdeckel gegen `E849`.
+2. **`media.frames()`** (`media.nvim@25222b4`) — ein ffmpeg-Lauf pro Run,
+   abbrechbar, gecacht. 24 Stills in 168 ms, 3 ms beim Cache-Treffer,
+   Teilergebnis am Dateiende, `cancel()` verhindert den Callback.
+3. **`hover.preview.playback` + `transport_keys`** (`hover.nvim@200ddff`) —
+   Zustand, Timer, Steuerleiste, Tasten. Startet **pausiert**.
+
+## 10. Offen — die Feinheiten
+
+- **Rollendes Fenster.** Ein Run ist zwei Sekunden. Danach hält es an; für
+  längeres Abspielen muss Run *n+1* dekodiert werden, während *n* läuft.
+  Das ist der nächste sinnvolle Schritt und der einzige, der noch fehlt,
+  damit „abspielen" wirklich abspielen heißt.
+- **Auflösung an die Float-Größe koppeln**, statt an `max_width` minus
+  Rand — heute wird der Run mit einer festen Pixelbreite dekodiert und erst
+  beim Sampeln an die Zellen angepasst.
+- **`levels` je nach Material.** 16 Stufen sind für Video reichlich; ein
+  Standbild könnte mehr vertragen, solange der Deckel gilt.
+- **Ton.** Gibt es nicht und wird es hier nicht geben — `media.play`
+  übergibt an einen echten Player, und das bleibt die ehrliche Antwort.
