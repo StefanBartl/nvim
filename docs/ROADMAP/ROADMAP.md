@@ -44,14 +44,11 @@
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
 
-- [ ] after/syntax/checkhealth.vim hat ein echtes Plugin-Argument. Den ℹ️ INFO-Tag schreiben filetree.nvim und pickers.nvim in ihren health.lua. Wer die Plugins ohne diese Config nutzt, sieht ein ungehighlightetes INFO. Heimat wäre lib.nvim. Sag Bescheid, dann verschiebe ich es — ich habe es nicht eigenmächtig getan, weil es eine Architektur- und keine Performance-Entscheidung ist.
-
 - [ ] pickers.nvim's plugin/pickers.lua materialisiert beim Start die volle Default-Config. Nach dem lib.nvim-Fix kostet das nur noch ~3 ms statt 19 — das Muster bleibt aber diskutabel, falls du dort mal aufräumen willst.
 
 - [ ] `fileops.nvim` bzw `buffer-ctx.nvim`: Buffer offen, dann filetree geöffnet (neotre üpber filetree.nvim) und dort dann :File delete asgefphrt, aber weil ich im filetree war, hat er das nicht ausgeführt:     Error  17:16:37 notify.error [fileops] file does not exist or is not readable: E:\repos\WKDBooks\neo-tree filesystem [1]
   jetzte wäe es natürlich suoper , wenn man sich das :File auf die node unter dem cursotr bezeiht, wenn man solche naktioenn aufpühjrt. das könnte man als experitnal feature opt-in machen, dass man be cfiletreees autoamtische node erknennunfg  ghat. oder spricht etwas absolut und total dageen?
-
-- [ ] filetree.nvim: `m` sollte auch bei den pgfad copy mappinmgfs funklniteren, also 3 nodes markieren und dann `]f` kopiert von a llen dreio nodes den pgfad in die zwishcnebalge, `ML` kopierte markdwn links mit den pfaden der markierten ndoes... usw....
+  → Analysiert (2026-09-09): eher nicht in fileops.nvim (bricht dessen tree-agnostisches Design, kehrt die Abhängigkeitsrichtung zu filetree.nvim um); filetree.nvim löst das schon über `d`/trash (inkl. Marks). Wartet auf Entscheidung: nur Fehlermeldung schärfen, oder Pfad-Override in fileops.nvim + Tree-Erkennung in filetree.nvim.
 
 ---
 
