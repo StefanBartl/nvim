@@ -69,18 +69,28 @@ Ausbaustufen-Reihenfolge:
   `nvzone/menu`, `nvzone/volt`, `nvzone/minty` sind weiterhin über
   `lua/plugins/nvchad.lua` gespeckt (verifiziert).
 - **Stufe 2** (D6 Terminal, D10 LSP-Beiwerk → `lsp.nvim`, D9 Colorify,
-  D7 Menü → `ui.kit.menu`, D8 Minty) — nicht begonnen.
+  D8 Minty) — nicht begonnen. **D7 Menü → `ui.kit.menu` ist erledigt**
+  (2026-09-08, s. u.).
 - **Stufe 3** (`ui.nvim`: D3 Statusline, D4 Tabline aus den 4.460 LOC
   `wkdnvchad/`-Statusline-Modulen) — nicht begonnen; das ist das
   eigentliche "Projekt" laut Empfehlung in `my.nvim.md` Teil 6.
 - **Stufe 4** (eigene Theme-Engine) — bewusst nicht empfohlen, bleibt aus.
 
-### 2. Allgemeines (Nicht-Tree) Rechtsklick-Menü
-`lua/config/menu/**` (601 LOC: `custom_menu/`, `mappings.lua`, `init.lua`)
-lebt weiterhin in der persönlichen Config (verifiziert), nicht in einem
-Plugin. `lib.nvim.ui.kit.menu` existiert seit `nvim.nvim.md`s letztem Stand
-und ist getestet — die Migration ist technisch möglich, aber nicht
-angegangen, weil sie an der offenen "Kommt das UI-Plugin?"-Frage hängt.
+### 2. Allgemeines (Nicht-Tree) Rechtsklick-Menü — **erledigt 2026-09-08**
+`lua/config/menu/**` lebt weiterhin in der persönlichen Config (kein eigenes
+Plugin — das hing an der offenen „Kommt das UI-Plugin?"-Frage und hängt
+weiter daran), **rendert aber nicht mehr über `nvzone/menu`**: die Öffnung
+läuft durch `lib.nvim.contextmenu.open` mit `renderer = "kit"`, gezeichnet
+von `lib.nvim.ui.kit.menu`. Headless gegen die echte Config verifiziert —
+volles Menü bei `package.loaded["menu"] == nil`.
+
+`nvzone/menu` ist nur noch installiert, weil `volt`/`minty` daran hängen;
+`lua/plugins/nvchad.lua` ist auf eine Spec ohne `config`-Hook geschrumpft,
+das Menü-Setup sitzt in einer eigenen `UIReady`-Phase in `init.lua`.
+
+Details, Funde und offene Punkte:
+[handovers/menu-kit-renderer.md](../handovers/menu-kit-renderer.md).
+Commits `lib.nvim@8023d5b`, `nvim@49c270930`.
 
 ### 3. `neotest`-Config nicht extrahiert
 `lua/config/neotest/**` lebt weiterhin im Host (verifiziert). In
