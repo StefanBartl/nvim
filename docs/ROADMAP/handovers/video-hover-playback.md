@@ -189,7 +189,38 @@ fehlt.
 3. **`hover.preview.playback` + `transport_keys`** (`hover.nvim@200ddff`) —
    Zustand, Timer, Steuerleiste, Tasten. Startet **pausiert**.
 
-## 10. Offen — die Feinheiten
+## 10. Runde 2 — Rückmeldung aus dem echten Betrieb (2026-09-08)
+
+Zwei echte Fehler und eine Qualitätsschwäche, alle drei behoben.
+
+**Die Transporttasten waren der Leader und zwei Präfixe.** `<Space>` ist
+`mapleader`; sie zu borgen verdrängt nicht eine Motion, sondern *jedes*
+Leader-Mapping — und gegen which-key wird der Trigger auf derselben Taste
+erneut betreten, worauf das Plugin „Recursion detected" meldet und der
+Leader kaputt bleibt. `]` und `[` sind Präfixe, genau wie das `z`, das
+`zen_keys` aus demselben Grund ablehnt: `]d`, `[q` und jede andere
+Klammer-Motion existieren nicht mehr, solange ein Float oben ist, und ein
+kaputtes Präfix meldet sich nicht. Beides stand als Regel schon in
+`config/DEFAULTS.lua`, zwei Einträge über den neuen Tasten.
+
+Jetzt: **`<CR>`** (Play/Pause), **`.`** und **`,`** (Frame vor/zurück —
+mpvs eigene Tasten). `hover.nvim@8ccdd23`.
+
+**Verpixelt, und vertikal gestaucht.** Beides kam daher, dass eine Zelle
+*ein* Pixel trug. `▀` trägt im oberen Halbblock die Vordergrund- und im
+unteren die Hintergrundfarbe: eine Textzeile zeigt **zwei** Pixelzeilen.
+Gleiche Zellenzahl, doppelte vertikale Auflösung — und nebenbei das richtige
+Seitenverhältnis, denn zwei gestapelte Pixel in einer Zelle sind quadratisch,
+eines ist es nicht. `images.scale.fit_cells` korrigiert für die Zellform und
+halbierte damit jedes Video in der Höhe; `blocks.fit_cells` ist der passende
+Fit. `images.nvim@beb4051`.
+
+Gemessen, bevor es gebaut wurde: 24 Frames Vollrauschen bei 60x24 Zellen
+kosten **811 Highlight-Gruppen und 5,4 ms pro Frame**. Die Alternative — ein
+fester Pool von Gruppen, pro Frame per `nvim_set_hl` neu definiert — kostet
+**134 ms pro Frame** und ist verworfen.
+
+## 11. Offen — die Feinheiten
 
 - **Rollendes Fenster.** Ein Run ist zwei Sekunden. Danach hält es an; für
   längeres Abspielen muss Run *n+1* dekodiert werden, während *n* läuft.
@@ -200,5 +231,19 @@ fehlt.
   beim Sampeln an die Zellen angepasst.
 - **`levels` je nach Material.** 16 Stufen sind für Video reichlich; ein
   Standbild könnte mehr vertragen, solange der Deckel gilt.
-- **Ton.** Gibt es nicht und wird es hier nicht geben — `media.play`
-  übergibt an einen echten Player, und das bleibt die ehrliche Antwort.
+- **Ton.** Nicht gebaut, und die ehrliche Einordnung ist: Neovim hat keine
+  Audioausgabe, also müsste ein zweiter Prozess (`ffplay -nodisp -ss …`)
+  parallel laufen. Das ist machbar, aber die Synchronisation zwischen einem
+  Lua-Timer und einem fremden Prozess ohne gemeinsame Uhr driftet — und ein
+  Ton, der nicht zum Bild passt, ist schlechter als keiner. Wenn Ton wichtig
+  ist, ist `media.play` (Systemplayer, Bild und Ton synchron) die bessere
+  Antwort auf dieselbe Frage.
+- **Broken-Link-Benachrichtigung.** Wunsch aus der Rückmeldung: wenn ein Link
+  ins Leere zeigt, standardmäßig eine Notify statt nur des Markers. Der
+  Schalter `paths missing` ist heute schon an, aber er *markiert* nur.
+  Eigener, kleiner Punkt — gehört zu `hover.nvim`s Link-Auflösung, nicht zum
+  Video.
+- **Float-Größe beim Start.** Die Playback-Ansicht nutzt die konfigurierte
+  Hover-Box; ein größeres Fenster wäre für Video sinnvoll. `+`/`-` skalieren
+  bereits, ein eigener Default für die Playback-Ansicht wäre der nächste
+  Schritt.
