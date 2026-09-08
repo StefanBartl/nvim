@@ -231,13 +231,32 @@ fester Pool von Gruppen, pro Frame per `nvim_set_hl` neu definiert — kostet
   beim Sampeln an die Zellen angepasst.
 - **`levels` je nach Material.** 16 Stufen sind für Video reichlich; ein
   Standbild könnte mehr vertragen, solange der Deckel gilt.
-- **Ton.** Nicht gebaut, und die ehrliche Einordnung ist: Neovim hat keine
-  Audioausgabe, also müsste ein zweiter Prozess (`ffplay -nodisp -ss …`)
-  parallel laufen. Das ist machbar, aber die Synchronisation zwischen einem
-  Lua-Timer und einem fremden Prozess ohne gemeinsame Uhr driftet — und ein
-  Ton, der nicht zum Bild passt, ist schlechter als keiner. Wenn Ton wichtig
-  ist, ist `media.play` (Systemplayer, Bild und Ton synchron) die bessere
-  Antwort auf dieselbe Frage.
+- **Ton — als Aufgabe notiert, ausdrücklich gewünscht.** Stumm starten bleibt
+  richtig; abspielbar *mit* Ton wäre das Ziel.
+
+  Der Weg wäre `ffplay -nodisp -autoexit -ss <from> <datei>` als zweiter
+  Prozess, gestartet und gestoppt vom selben Transport wie das Bild.
+  `media.core.play` hat die Prozess-Mechanik dafür bereits (kein `detach`,
+  `vim.system` ohne Warten — die Windows-Fallstricke stehen dort auskommentiert),
+  und `media.frames`' `cancel()` zeigt die Abbruchform.
+
+  **Das offene Problem ist die Uhr.** Das Bild läuft auf einem Lua-Timer, der
+  Ton in einem fremden Prozess; ohne gemeinsame Zeitbasis driften die zwei,
+  und die Drift wächst mit jedem Frame, den der Timer wegen einer Redraw-Pause
+  zu spät zeichnet. Zwei Auswege, beide zu prüfen: (a) die Bildrate an die
+  vergangene *Wanduhr*-Zeit koppeln statt an die Tickzahl — Frames überspringen
+  statt hinterherzuhinken; (b) den Ton bei jedem Pause/Resume neu bei
+  `-ss <aktueller Offset>` starten, damit die Drift höchstens so lange lebt wie
+  ein Abspielabschnitt. Vermutlich braucht es beides.
+
+  Zweitens: `ffplay` gehört nicht zu jedem ffmpeg-Paket (bei Gyan ist es dabei,
+  bei einigen minimalen Builds nicht) — also eine eigene Verfügbarkeitsprüfung
+  und stummes Abspielen als Rückfall, nie ein Fehler.
+- **Datei in der System-App öffnen — erledigt, war schon da.** `open_keys`
+  (`gf`) im Hover öffnet das Ziel seit jeher über open.nvim bzw. `vim.ui.open`.
+  Seit `hover.nvim@e4e8bf4` geht ein Medium zuerst durch `media.play`, damit
+  der in media.nvim konfigurierte `player` (z. B. mpv mit eigenen Flags)
+  gewinnt — die generischen Opener können davon nichts wissen.
 - **Broken-Link-Benachrichtigung.** Wunsch aus der Rückmeldung: wenn ein Link
   ins Leere zeigt, standardmäßig eine Notify statt nur des Markers. Der
   Schalter `paths missing` ist heute schon an, aber er *markiert* nur.
