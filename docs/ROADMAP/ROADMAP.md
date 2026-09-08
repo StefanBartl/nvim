@@ -2,7 +2,7 @@
 
 ## Table of content
 
-  - [cdx](#cdx)
+  - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
     - [Notes](#notes)
   - [Tasks](#tasks)
@@ -10,18 +10,18 @@
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
   - [Misc](#misc)
-  - [true check](#true-check)
+  - [True check](#true-check)
   - [Plugin-Liste](#plugin-liste)
 
 ---
 
-## cdx
+## Cdx
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:10       |    69% / 87%     | X
-| **work** |   20. Sept    |   Sa., 06:00    |     22:20       |    87% / 70%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     12:50       |    56% / 53%     | X
+| **work** |   20. Sept    |   Sa., 06:00    |     16:10       |    98% / 90%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     12:50       |    59% / 55%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -44,17 +44,14 @@
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
 
-- [ ] filetree.nvim wennich `]f` verwende -> docs/ROADMAP/ROADMAP.md dabei kannich den so aber nicht in einen markdown link oder ähnliches einstzen, dafüpr müsste es einen , punkt haben, also ./docs/ROADMAP/ROADMAP.md das problem daran ist aber , wenn ich nun in docs/ROADMAP/Teest.md bi, dann in filetre eben `]f` ausfphre und ./docs/ROADMAP/ROADMAP.md einsetze, dann stimmt das nicht. Ihc müsste ja ./ROADMAP.md erthalten. daher bräuchte es einen kexmasp, mit dem ich relativ zum offenen bffer den pfad bekomme. außerdem möchte ch nuncohj gerne einen haben, bei absoluten pfade ausgibt, aber statt ./ zu Beginn "checkt", wenn das "root" eigentlich $REPOS_DIR die ist, undd ann auch $REPOS_DIR/ satatt ./ oder C:/ oder E:/  verwendet
-
-- hover.nvim videos abspielen möglich? C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\IDEAS\media.nvim
-
 ---
 
 ### Notes
 
 Handover files dazu gibt es hier:
   E:/repos/WKDBooks/Development/wkdbook-myplugins/my.nvim/HANDOVER.md
-  E:\repos\WKDBooks\Development\wkdbook-myplugins\ui.nvim\NOTES.md
+ E:\repos\WKDBooks\Development\wkdbook-myplugins\ui.nvim\NOTES.md
+C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\handovers\menu-visual-polish.md
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -92,6 +89,7 @@ Handover files dazu gibt es hier:
 - [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
   - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
   - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
+    - [ ] diese logo soll dann auch in ui.nvim menu angezeigt werden
   - [ ] docmap-desktop app icon desktop
 
 ---
@@ -99,15 +97,18 @@ Handover files dazu gibt es hier:
 ## Misc
 
 - [ ] start nvim optimieren
-    - [ ] C:\Users\bartl\AppData\Local\nvim\after
-
+    - [ ] C:\Users\bartl\AppData\Local\nvim\after - nötig? gehört das nicht n einplugin?
+    - [ ] C:\Users\bartl\AppData\Local\nvim\docs\NOTES\ARCHITECTURE\startup.md -> hier stehen regeln drinnen für s startup
+    - [ ] C:\Users\bartl\AppData\Local\nvim\init.lua -> wichtige file dafür
 - [ ] Anticheat knacken
+
+- [ ] alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
 
 ---
 
-## true check
+## True check
 
-- [ ] 3rd/image.nvim vs. snacks.nvim image vs meine .nvim image related plugins (Verbund: images.nvim, hover.nvim, pdfport.nvim, markdown.nvim, gopath.nvim, lib.nvim, pickers.nvim, filetree.nvim, open.nvim, language.nvim, nvzone/menu (solange nicht eigenes right click ui plugin geschrieben ist))
+- [ ] 3rd/image.nvim vs. snacks.nvim image vs meine .nvim image related plugins (Verbund: images.nvim, hover.nvim, pdfport.nvim, markdown.nvim, gopath.nvim, lib.nvim, pickers.nvim, filetree.nvim, open.nvim, media.nvim; language.nvim, nvzone/menu (solange nicht eigenes right click ui plugin geschrieben ist))
   - [ ] Wie ist die image implemntierung in diesen verschiedenen Projekten bereitgestellt?
     - [ ] Architektur
     - [ ] Welche CLI-Tools werden genutzt? Wie werden sie implemenitert?
@@ -119,7 +120,7 @@ Handover files dazu gibt es hier:
   - [ ] ...
   - [ ] (Verbund: images.nvim, hover.nvim, pdfport.nvim, markdown.nvim, gopath.nvim, lib.nvim, pickers.nvim, filetree.nvim, open.nvim, language.nvim, nvzone/menu (solange nicht eigenes right click ui plugin geschrieben ist)) -> Würde es sinn machen, ein "Bundle-plugin" zusätzlich anzubieten, dass alles diese imßlementiert und man sozusagenm eine "Image-Suite"-Implementieren könnte?
 
-- [ ] Ein Freund von mir, mitdem ich gemiensam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codequalität ist, inahltlich ist mir alles klar, also was die plugins machen, aber ich will keine schlechte codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gut als auch schlecht), was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand, usw...
+- [ ] Ein Freund von mir, mitdem ich gemeinsam nvim gelernt habe, hat ~ 30 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codequalität ist, inahltlich ist mir alles klar, also was die plugins machen, aber ich will keine schlechte codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gut als auch schlecht), was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand, usw...
   Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass soll es nämlich auch nicht sein, leider ist mir klar das dass ein wenig meine wünsche konterkariert. Ich denke, du must da einen goldenen Zwischenweg finden.
   Wenn dir Logikfehler, offensichtliche Bugs oder docs Probleme auffallen in einen Plugin, dann notiere diese gleich.
 
