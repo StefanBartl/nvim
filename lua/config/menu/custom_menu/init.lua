@@ -249,18 +249,18 @@ return function(opts)
     out,
     contextmenu.entry(opts.enable_delete_marked, "Delete Marked/Selected", delete_marked, "dm"),
     contextmenu.entry(opts.enable_delete_all, "Delete All (Clear Buffer)", delete_all, "da"),
-    contextmenu.entry(opts.enable_delete_file, "🗑️  Delete File", delete_file, "df")
+    contextmenu.entry(opts.enable_delete_file, "  Delete File", delete_file, "df")
   )
 
   contextmenu.group(
     out,
     colored(
-      contextmenu.entry(opts.enable_open_terminal, "  Open in terminal", open_terminal),
+      contextmenu.entry(opts.enable_open_terminal, "  Open in terminal", open_terminal),
       "ExRed"
     ),
-    contextmenu.entry(opts.enable_color_picker, "  Color Picker", open_color_picker),
+    contextmenu.entry(opts.enable_color_picker, "󰏘  Color Picker", open_color_picker),
     colored(
-      contextmenu.entry(opts.enable_unicode_table, "  Unicode Table", open_unicode_table, "uni"),
+      contextmenu.entry(opts.enable_unicode_table, "  Unicode Table", open_unicode_table, "uni"),
       "ExCyan"
     )
   )
@@ -270,7 +270,7 @@ return function(opts)
   -- uninstalled, which was the whole point of the renderer swap.
   if opts.enable_git_section then
     local git = require("config.menu.git").items()
-    contextmenu.group(out, colored(contextmenu.submenu("  Git Actions", git), "ExGreen"))
+    contextmenu.group(out, colored(contextmenu.submenu("󰊢  Git Actions", git), "ExGreen"))
   end
 
   return out

@@ -14,6 +14,16 @@ is gated where it is written and the separators fall out of the grouping.
 Which component draws the result is `config.menu`'s decision — see the
 [README there](../README.md).
 
+## Icons
+
+The last group and the Git fly-out carry Nerd Font glyphs; the rest of the
+list is deliberately plain. Until 2026-09-08 those four labels started with
+**two literal spaces and no glyph at all** -- they had never carried one,
+going back to the file's first commit -- which looked exactly like a font
+that was failing to render them. The trash can moved from the emoji to the
+Nerd Font glyph at the same time: an emoji is two columns wide, and the menu
+aligns its `rtxt` column by display width.
+
 ## Two things that used to be here and aren't
 
 - **nvzone/menu's `menus.default`** was loaded, appended to a local table,
