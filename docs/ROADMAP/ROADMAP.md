@@ -21,7 +21,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:10       |    69% / 87%     | X
 | **work** |   20. Sept    |   Sa., 06:00    |     16:10       |    98% / 90%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     12:50       |    59% / 55%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     17:50       |    82% / 65%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -96,10 +96,7 @@ C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\handovers\menu-visual-polish.md
 
 ## Misc
 
-- [ ] start nvim optimieren
-    - [ ] C:\Users\bartl\AppData\Local\nvim\after - nötig? gehört das nicht n einplugin?
-    - [ ] C:\Users\bartl\AppData\Local\nvim\docs\NOTES\ARCHITECTURE\startup.md -> hier stehen regeln drinnen für s startup
-    - [ ] C:\Users\bartl\AppData\Local\nvim\init.lua -> wichtige file dafür
+
 - [ ] Anticheat knacken
 
 - [ ] alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
@@ -151,6 +148,7 @@ language.nvim
 lib.nvim
 lsp.nvim
 markdown.nvim
+media.nvim
 mdview.nvim
 open.nvim
 pdfport.nvim
@@ -162,6 +160,7 @@ runtime-analysis.nvim
 sandbox.nvim
 sessions.nvim
 spotlight.nvim
+ui.nvim
 
 und das native: docmap-desktop
 
