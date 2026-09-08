@@ -1,10 +1,20 @@
 ---@module 'config.menu.mappings'
--- Sets keymaps for <A-b> and RightMouse. Replaces mappings/contextmenu.lua usage.
+--- Binds `<A-b>` and `<RightMouse>` to the composed context menu.
+---
+--- Rendering goes through `lib.nvim.contextmenu.open`, never through
+--- `require("menu")` directly: which component actually draws (nvzone/menu
+--- or `lib.nvim.ui.kit.menu`) is a `contextmenu.setup{ renderer = … }`
+--- decision made once in `config.menu`, and nothing here needs to know.
 
-local notify = require("lib.nvim.notify").create("[config.menu.mappings]")
 local map = require("lib.nvim.bindings.keymap")
+local contextmenu = require("lib.nvim.contextmenu")
 
 local M = {}
+
+--- Options handed to `config.menu.custom_menu`, captured by `config.menu`'s
+--- setup so the general section can be rebuilt per buffer.
+---@type table
+local custom_opts = {}
 
 --- Markdown filetype test (markdown / md / mdx / markdown.*).
 ---@param ft string|nil
@@ -18,7 +28,7 @@ end
 
 --- Pattern-B plugins (see lib.nvim.contextmenu / RightClick_Contextmenu.md):
 --- each ships only `<plugin>.integrations.menu` (`items`/`submenu`, no
---- trigger, no nvzone/menu dependency) and relies on THIS dispatcher to
+--- trigger, no renderer dependency) and relies on THIS dispatcher to
 --- compose it. Every contributor lands as its OWN top-level fly-out entry
 --- (`submenu()`) — no shared "MyPlugins" wrapper — so ordering here is
 --- just menu-display order, not nesting.
@@ -108,6 +118,12 @@ local CONTRIBUTORS = {
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
 
+--- Record the options the general section is built with.
+---@param opts table|nil
+function M.set_custom_opts(opts)
+  custom_opts = opts or {}
+end
+
 --- Collect one fly-out `submenu()` entry per applicable contributor.
 ---@param buf integer
 ---@return table[]
@@ -127,59 +143,48 @@ local function contributed_submenus(buf)
   return out
 end
 
---- Build a composed menu source for `buf`: one fly-out entry per applicable
---- Pattern-B plugin (see CONTRIBUTORS), followed by the general custom menu.
---- Returns nil when nothing contributes for this buffer.
+--- Build the menu for `buf`: one fly-out entry per applicable Pattern-B
+--- plugin (see CONTRIBUTORS), then the general section beneath a divider.
+---
+--- The general section is rebuilt per call rather than registered once:
+--- several of its entries (copy/delete "marked", "delete file") depend on
+--- the live selection and buffer, which a table built at setup time cannot
+--- see.
 ---@param buf integer
----@return table|nil  an nvzone/menu entry table, or nil
-local function plugin_menu_source(buf)
-  local subs = contributed_submenus(buf)
-  if #subs == 0 then
-    return nil
-  end
+---@return Lib.ContextMenu.Item[]
+local function menu_source(buf)
+  local composed = contributed_submenus(buf)
 
-  local composed = {}
-  vim.list_extend(composed, subs)
-
-  -- Append the general custom menu (format/copy/delete/… ) beneath a divider.
-  local ok_custom, custom = pcall(require, "menus.custom")
-  if ok_custom and type(custom) == "table" and #custom > 0 then
-    table.insert(composed, { name = "separator" })
-    vim.list_extend(composed, custom)
+  local ok_custom, custom = pcall(require, "config.menu.custom_menu")
+  if ok_custom and type(custom) == "function" then
+    local items = custom(custom_opts)
+    if type(items) == "table" and #items > 0 then
+      if #composed > 0 then
+        composed[#composed + 1] = { name = "separator" }
+      end
+      vim.list_extend(composed, items)
+    end
   end
 
   return composed
 end
 
 function M.setup()
-  -- Alt-b opens top-level custom menu if present, otherwise default.
-  -- Applicable plugins (CONTRIBUTORS) get their entries composed on top.
+  -- Alt-b: the same menu, anchored at the cursor instead of the pointer.
   map("n", "<A-b>", function()
-    local ok_menu, menu = pcall(require, "menu")
-    if not ok_menu then
-      notify.warn("menu module not found")
-      return
+    local items = menu_source(vim.api.nvim_get_current_buf())
+    if #items > 0 then
+      contextmenu.open(items, { mouse = false })
     end
-    local plugins_menu = plugin_menu_source(vim.api.nvim_get_current_buf())
-    if plugins_menu then
-      menu.open(plugins_menu)
-    elseif vim.g._menu_custom_registered then
-      menu.open("custom")
-    else
-      menu.open("default")
-    end
-  end, {})
+  end, { desc = "Open the context menu at the cursor" })
 
-  -- RightMouse: markdown-aware, detects NvimTree. Neo-tree is NOT handled
-  -- here — filetree.nvim's own context_menu feature binds a buffer-local
-  -- <RightMouse> on the tree buffer itself (shadows this global one there).
+  -- RightMouse: the buffer under the pointer decides what the menu holds.
+  -- Neo-tree is NOT handled here — filetree.nvim's own context_menu feature
+  -- binds a buffer-local <RightMouse> on the tree buffer itself, and a
+  -- buffer-local mapping always shadows this global one.
   map({ "n", "v" }, "<RightMouse>", function()
-    local ok_utils, utils = pcall(require, "menu.utils")
-    if ok_utils then
-      pcall(utils.delete_old_menus)
-    end
-
-    -- replay native <RightMouse>
+    -- Replay the native click so the cursor lands where the user pointed,
+    -- and the menu is built for that buffer rather than the previous one.
     vim.cmd.exec('"normal! \\<RightMouse>"')
 
     local winid
@@ -194,39 +199,12 @@ function M.setup()
     if not ok_buf or not buf then
       buf = vim.api.nvim_get_current_buf()
     end
-    local ft = vim.bo[buf].ft or ""
 
-    local ok_menu, menu = pcall(require, "menu")
-    if not ok_menu then
-      return
+    local items = menu_source(buf)
+    if #items > 0 then
+      contextmenu.open(items, { mouse = true })
     end
-
-    -- Applicable plugins (CONTRIBUTORS): each contributes its own top-level
-    -- fly-out entry, composed with the general custom menu. Checked before
-    -- the ft routing below so it wins whenever at least one plugin applies,
-    -- without needing a dedicated named menu per plugin.
-    local plugins_menu = plugin_menu_source(buf)
-    if plugins_menu then
-      menu.open(plugins_menu, { mouse = true })
-      return
-    end
-
-    -- Neo-tree: filetree.nvim's own context_menu feature binds a buffer-local
-    -- <RightMouse> directly on the tree buffer (using this same
-    -- filetree.integrations.menu.items() source) — a buffer-local mapping
-    -- always shadows this global one, so this handler's body never actually
-    -- runs for ft == "neo-tree"/"neo_tree" and no special case is needed here
-    -- anymore. See filetree.nvim's docs/menu.md.
-
-    local options = "default"
-    if ft == "NvimTree" or ft:match("^NvimTree") then
-      options = "nvimtree"
-    elseif vim.g._menu_custom_registered then
-      options = "custom"
-    end
-
-    menu.open(options, { mouse = true })
-  end, {})
+  end, { desc = "Open the context menu at the pointer" })
 end
 
 return M
