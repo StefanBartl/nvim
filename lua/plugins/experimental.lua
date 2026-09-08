@@ -5,7 +5,10 @@
 return {
   {
     "dstein64/vim-startuptime",
-    lazy = false,
+    -- A startup profiler that loaded itself at startup. Its `plugin/
+    -- startuptime.vim` defines exactly one command, so that command is the
+    -- trigger -- and the profiler stops being part of what it measures.
+    cmd = "StartupTime",
   },
 
   {
