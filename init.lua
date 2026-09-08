@@ -13,6 +13,14 @@ end
 vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46/"
 vim.g.mapleader = " "
 
+-- Nerd Font availability is *declared*, never detected: Neovim cannot see the
+-- terminal's font, and `strdisplaywidth` answers from Unicode tables rather
+-- than from the glyph. `lib.nvim.ui.nerd_font` reads this global and hands
+-- back the caller's ASCII fallback when it is off -- which, unset, it is by
+-- default. This terminal runs a patched font, so say so once, here, before
+-- any plugin spec or startup phase asks.
+vim.g.have_nerd_font = true
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
   local repo = "https://github.com/folke/lazy.nvim.git"

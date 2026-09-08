@@ -12,6 +12,7 @@
 local notify = require("lib.nvim.notify").create("[config.menu.custom_menu]")
 local contextmenu = require("lib.nvim.contextmenu")
 local kit = require("lib.nvim.ui.kit")
+local icons = require("config.menu.icons")
 
 local defaults = {
   enable_format = true,
@@ -225,53 +226,118 @@ return function(opts)
 
   local out = {}
 
+  -- Each group names itself. The title is a `heading(...)` marker passed as
+  -- the group's first argument rather than a parameter of its own, so gating
+  -- reaches it: a section whose every entry is switched off in `opts` takes
+  -- its title down with it instead of leaving a heading over nothing.
+  --
+  -- No glyph is baked into a label any more. `icon` is a field, and the kit
+  -- renderer measures it into a column of its own -- which is what keeps
+  -- these entries aligned with the plugin fly-outs above them, whether or not
+  -- a given entry has a glyph.
   contextmenu.group(
     out,
-    contextmenu.entry(opts.enable_format, "Format Buffer", format_buffer, "<leader>fm"),
+    contextmenu.heading("Code"),
+    contextmenu.entry(opts.enable_format, "Format Buffer", format_buffer, "<leader>fm", {
+      icon = icons.format,
+    }),
     contextmenu.entry(
       opts.enable_code_actions,
       "Code Actions",
       vim.lsp.buf.code_action,
-      "<leader>ca"
+      "<leader>ca",
+      { icon = icons.code_action }
     )
   )
 
   contextmenu.group(
     out,
+    contextmenu.heading("Clipboard"),
     contextmenu.entry(opts.enable_copy_all, "Copy All (Buffer)", function()
       vim.cmd("%y+")
-    end, "<C-a>"),
-    contextmenu.entry(opts.enable_copy_marked, "Copy Marked/Selected", copy_marked, "<C-c>"),
-    contextmenu.entry(opts.enable_paste, "Paste Content", paste_clipboard, "<C-v>")
-  )
-
-  contextmenu.group(
-    out,
-    contextmenu.entry(opts.enable_delete_marked, "Delete Marked/Selected", delete_marked, "dm"),
-    contextmenu.entry(opts.enable_delete_all, "Delete All (Clear Buffer)", delete_all, "da"),
-    contextmenu.entry(opts.enable_delete_file, "  Delete File", delete_file, "df")
-  )
-
-  contextmenu.group(
-    out,
-    colored(
-      contextmenu.entry(opts.enable_open_terminal, "  Open in terminal", open_terminal),
-      "ExRed"
+    end, "<C-a>", { icon = icons.copy_all }),
+    contextmenu.entry(
+      opts.enable_copy_marked,
+      "Copy Marked/Selected",
+      copy_marked,
+      "<C-c>",
+      { icon = icons.copy_marked }
     ),
-    contextmenu.entry(opts.enable_color_picker, "󰏘  Color Picker", open_color_picker),
-    colored(
-      contextmenu.entry(opts.enable_unicode_table, "  Unicode Table", open_unicode_table, "uni"),
-      "ExCyan"
+    contextmenu.entry(
+      opts.enable_paste,
+      "Paste Content",
+      paste_clipboard,
+      "<C-v>",
+      { icon = icons.paste }
     )
   )
 
-  -- Git: our own item list (config.menu.git), not nvzone/menu's
+  contextmenu.group(
+    out,
+    contextmenu.heading("Delete"),
+    contextmenu.entry(
+      opts.enable_delete_marked,
+      "Delete Marked/Selected",
+      delete_marked,
+      "dm",
+      { icon = icons.delete_marked }
+    ),
+    contextmenu.entry(
+      opts.enable_delete_all,
+      "Delete All (Clear Buffer)",
+      delete_all,
+      "da",
+      { icon = icons.delete_all }
+    ),
+    -- The only entry that destroys something outside the buffer, and the only
+    -- icon coloured against its section rather than with it.
+    contextmenu.entry(opts.enable_delete_file, "Delete File", delete_file, "df", {
+      icon = icons.delete_file,
+      icon_hl = "DiagnosticError",
+    })
+  )
+
+  -- Git sits in this group rather than in one of its own: a named section
+  -- holding a single entry is a frame around one row, which reads as a fault
+  -- rather than as structure.
+  --
+  -- Its item list is ours (config.menu.git), not nvzone/menu's
   -- `menus.gitsigns` -- the section has to survive nvzone/menu being
   -- uninstalled, which was the whole point of the renderer swap.
-  if opts.enable_git_section then
-    local git = require("config.menu.git").items()
-    contextmenu.group(out, colored(contextmenu.submenu("󰊢  Git Actions", git), "ExGreen"))
-  end
+  local git = opts.enable_git_section and require("config.menu.git").items() or {}
+
+  contextmenu.group(
+    out,
+    contextmenu.heading("Tools"),
+    colored(
+      contextmenu.entry(
+        opts.enable_open_terminal,
+        "Open in terminal",
+        open_terminal,
+        nil,
+        { icon = icons.terminal }
+      ),
+      "ExRed"
+    ),
+    contextmenu.entry(
+      opts.enable_color_picker,
+      "Color Picker",
+      open_color_picker,
+      nil,
+      { icon = icons.color_picker }
+    ),
+    colored(
+      contextmenu.entry(
+        opts.enable_unicode_table,
+        "Unicode Table",
+        open_unicode_table,
+        "uni",
+        { icon = icons.unicode_table }
+      ),
+      "ExCyan"
+    ),
+    colored(contextmenu.submenu("Git Actions", git, { icon = icons.git }), "ExGreen")
+  )
 
   return out
 end

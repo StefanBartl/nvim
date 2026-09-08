@@ -13,6 +13,14 @@
 --- section disappears rather than offering commands that would error.
 
 local contextmenu = require("lib.nvim.contextmenu")
+local icons = require("config.menu.icons")
+
+--- `table.unpack` does not exist in this Neovim: it ships LuaJIT without the
+--- 5.2 compatibility layer, so the name is Lua 5.1's global `unpack`. Every
+--- entry below went through `table.unpack` and therefore errored the moment
+--- it was picked -- silently, because the failure was inside the callback the
+--- menu runs, not on the path that builds it.
+local unpack_args = table.unpack or unpack
 
 local M = {}
 
@@ -37,7 +45,7 @@ local function gs(name, ...)
         .warn(("gitsigns.%s is not available"):format(name))
       return
     end
-    gitsigns[name](table.unpack(args))
+    gitsigns[name](unpack_args(args))
   end
 end
 
@@ -50,31 +58,66 @@ function M.items()
     return out
   end
 
+  -- Named sections here too: the Git fly-out is long enough that "which of
+  -- these act on a hunk" is a question the frame can answer for free.
   contextmenu.group(
     out,
-    contextmenu.entry(true, "Stage Hunk", gs("stage_hunk"), "sh"),
-    contextmenu.entry(true, "Reset Hunk", gs("reset_hunk"), "rh"),
-    contextmenu.entry(true, "Stage Buffer", gs("stage_buffer"), "sb"),
-    contextmenu.entry(true, "Reset Buffer", gs("reset_buffer"), "rb"),
-    contextmenu.entry(true, "Preview Hunk", gs("preview_hunk"), "hp")
+    contextmenu.heading("Hunks"),
+    contextmenu.entry(true, "Stage Hunk", gs("stage_hunk"), "sh", { icon = icons.git_stage }),
+    contextmenu.entry(true, "Reset Hunk", gs("reset_hunk"), "rh", { icon = icons.git_reset }),
+    contextmenu.entry(
+      true,
+      "Stage Buffer",
+      gs("stage_buffer"),
+      "sb",
+      { icon = icons.git_stage_buffer }
+    ),
+    contextmenu.entry(
+      true,
+      "Reset Buffer",
+      gs("reset_buffer"),
+      "rb",
+      { icon = icons.git_reset_buffer }
+    ),
+    contextmenu.entry(true, "Preview Hunk", gs("preview_hunk"), "hp", { icon = icons.git_preview })
   )
 
   contextmenu.group(
     out,
+    contextmenu.heading("Blame"),
     contextmenu.entry(true, "Blame Line", function()
       local ok, gitsigns = pcall(require, "gitsigns")
       if ok then
         gitsigns.blame_line({ full = true })
       end
-    end, "b"),
-    contextmenu.entry(true, "Toggle Current Line Blame", gs("toggle_current_line_blame"), "tb")
+    end, "b", { icon = icons.git_blame }),
+    contextmenu.entry(
+      true,
+      "Toggle Current Line Blame",
+      gs("toggle_current_line_blame"),
+      "tb",
+      { icon = icons.git_toggle }
+    )
   )
 
   contextmenu.group(
     out,
-    contextmenu.entry(true, "Diff This", gs("diffthis"), "dt"),
-    contextmenu.entry(true, "Diff Last Commit", gs("diffthis", "~"), "dc"),
-    contextmenu.entry(true, "Toggle Deleted", gs("toggle_deleted"), "td")
+    contextmenu.heading("Diff"),
+    contextmenu.entry(true, "Diff This", gs("diffthis"), "dt", { icon = icons.git_diff }),
+    contextmenu.entry(
+      true,
+      "Diff Last Commit",
+      gs("diffthis", "~"),
+      "dc",
+      { icon = icons.git_history }
+    ),
+    contextmenu.entry(
+      true,
+      "Toggle Deleted",
+      gs("toggle_deleted"),
+      "td",
+      { icon = icons.git_toggle }
+    )
   )
 
   return out
