@@ -264,6 +264,22 @@ startup.on("UIReady", "mappings", function()
   require("bindings.mappings").setup()
 end)
 
+-- UIReady: the context menu is two keymaps plus the item builders behind
+-- them, so it belongs with the other keymaps rather than on the synchronous
+-- path. It used to be set up from nvzone/menu's lazy `config` hook, which
+-- tied a config feature to a plugin it no longer needs: rendering goes
+-- through lib.nvim.contextmenu now, and `renderer = "nvzone"` is all it
+-- takes to put the old drawing back.
+startup.on("UIReady", "menu", function()
+  require("config.menu").setup({
+    renderer = "kit",
+    enable_format = true,
+    enable_code_actions = true,
+    enable_git_section = true,
+    enable_paste = true,
+  })
+end)
+
 -- No startup phase wires this config's own telemetry up: runtime-analysis
 -- .nvim does it itself, from `opts.telemetry.extra` (see config/telemetry
 -- .lua), wrapping at VimEnter for exactly the reason a phase here would have

@@ -1,25 +1,28 @@
 ---@module 'config.menu'
--- Orchestrates submodules and exposes a setup() that controls which top-level menu entries are enabled.
+--- Entry point for the general (non-tree) right-click menu: picks the
+--- renderer, hands the general section its options, and binds the triggers.
+---
+--- The menu no longer registers itself under nvzone/menu's `menus.*`
+--- namespace and no longer opens through `require("menu")`. Both went
+--- through `lib.nvim.contextmenu`, which since gained a renderer switch —
+--- so the menu is drawn by `lib.nvim.ui.kit.menu` and keeps working with
+--- nvzone/menu uninstalled. `renderer = "nvzone"` here restores the old
+--- rendering unchanged.
 
-local custom_menu = require("config.menu.custom_menu")
+local contextmenu = require("lib.nvim.contextmenu")
 
 local M = {}
 
--- Setup: registers the built menu under 'menus.custom' so menu.open("custom") works.
----@param opts table|nil
+--- Set up the context menu.
+---@param opts table|nil  # `config.menu.custom_menu` options, plus `renderer`
 function M.setup(opts)
   opts = opts or {}
-  local menu_table = custom_menu(opts)
 
-  -- Register so require("menus.custom_menu") returns the table; menu.open normally does require("menus.<name>")
-  package.loaded["menus.custom"] = menu_table
-  -- Also set to preload for compatibility
-  package.preload["menus.custom"] = function()
-    return menu_table
-  end
+  contextmenu.setup({ renderer = opts.renderer or "kit" })
 
-  -- Provide a convenient global flag so other modules can detect we installed a custom menu (menu/mappings)
-  vim.g._menu_custom_registered = true
+  local mappings = require("config.menu.mappings")
+  mappings.set_custom_opts(opts)
+  mappings.setup()
 end
 
 return M

@@ -1,56 +1,12 @@
-# Quick Reference: Updated Menu System
+# Quick Reference: the context menu
 
-## Neo-tree Context Menu (Right-Click in Neo-tree)
+## Neo-tree right-click — moved out
 
-### 🗂️ Navigation & View
-| Key | Action | Description |
-|-----|--------|-------------|
-| `<CR>` | Open/Expand | Open file or expand directory |
-| `+` | Navigate In | Set directory as root |
-| `-` | Navigate Up | Go to parent directory |
-| `w` | Resize | Cycle window size (small/normal/large) |
-| `<Tab>` | Preview | Toggle preview window |
-
-### 📋 Copy Operations
-| Key | Action | Description |
-|-----|--------|-------------|
-| `c` | Copy | Copy marked/current to clipboard |
-| `x` | Cut | Cut marked/current to clipboard |
-| `p` | Paste | Paste from clipboard |
-| `[a]` | Copy Path | Copy absolute path |
-| `]a]` | Copy Dir | Copy base directory path |
-| `[f]` | Copy Files | Copy file list (absolute) |
-| `]f]` | Copy Files (Rel) | Copy file list (relative) |
-
-### ✓ Marking
-| Key | Action | Description |
-|-----|--------|-------------|
-| `m` | Mark | Toggle mark on file |
-| `]m` | Mark All | Mark all in directory |
-| `[m` | Unmark All | Unmark all in directory |
-| `<C-m>` | Clear Marks | Clear all marks |
-
-### 🗑️ Delete & Trash
-| Key | Action | Description |
-|-----|--------|-------------|
-| `d` | Delete | Send to trash |
-| `U` | Undo | Undo last trash |
-
-### 🔍 Search & Filter
-| Key | Action | Description |
-|-----|--------|-------------|
-| `f` | Filter | Filter on submit |
-| `F` | Fuzzy | Fuzzy finder |
-| `gr` | Grep | Live grep (auto-detect) |
-| `tf` | Telescope Find | Find files via telescope |
-| `tg` | Telescope Grep | Live grep via telescope |
-
-### ℹ️ Info & System
-| Key | Action | Description |
-|-----|--------|-------------|
-| `I` | Info | Show file/directory info |
-| `<leader>fm` | File Manager | Open in system file manager |
-| `<leader>sm` | System App | Open with system application |
+The tree's context menu is filetree.nvim's now (`context_menu` feature, a
+buffer-local `<RightMouse>` on the tree buffer). Its entries and keys are
+documented there, not here — the table that used to sit in this spot was a
+copy that drifted. This config's global right-click never fires inside the
+tree, because a buffer-local mapping shadows it.
 
 ---
 
@@ -82,8 +38,20 @@
 ### 🎨 LSP & Git
 | Entry | Shortcut | Description |
 |-------|----------|-------------|
-| **Lsp Actions** | - | Nested LSP menu |
-| **Git Actions** | - | Nested Git (gitsigns) menu |
+| **LSP** | - | Fly-out contributed by lsp.nvim (its resolved keymap catalogue) |
+| **Git Actions** | - | Fly-out from `config/menu/git.lua`, gated on gitsigns.nvim |
+
+Plugin fly-outs (Open, DAP, File, Spotlight, LSP, markdown, …) come from the
+`CONTRIBUTORS` list in `config/menu/mappings.lua`, not from this table.
+
+---
+
+## Navigating the menu
+
+`j`/`k`/arrows move (separators are stepped over), `<CR>` picks, `<Esc>`/`q`
+closes. A `▸` entry opens a nested list **in place**; `<BS>` goes back up.
+That drill-down is the kit renderer's shape — nvzone/menu opened nested
+entries in a second window beside the parent.
 
 ---
 
@@ -105,7 +73,7 @@
 
 ## Configuration Toggle
 
-Enable/Disable features in `init.lua`:
+Enable/Disable features in `init.lua` (the `UIReady` menu phase):
 
 ```lua
 require("config.menu").setup({
@@ -125,8 +93,11 @@ require("config.menu").setup({
   enable_open_terminal = true,
 
   -- Sections
-  enable_lsp_section = true,
   enable_git_section = true,
+
+  -- Who draws the menu: "kit" (lib.nvim.ui.kit.menu, the default here),
+  -- "nvzone" (nvzone/menu), or "auto".
+  renderer = "kit",
 })
 ```
 
@@ -173,28 +144,13 @@ V (Visual Line) → Select → <C-c>
 <Alt-b> → Delete File → Confirm
 ```
 
-### 4. Mark & Copy Multiple Files (Neo-tree)
-```
-m (mark file 1)
-j (move down)
-m (mark file 2)
-...
-c (copy all marked)
-```
-
-### 5. Search in Directory
-```
-gr (in Neo-tree on folder)
-→ Opens live grep in that directory
-```
-
 ---
 
 ## Keyboard Shortcuts Summary
 
 ### Global
 - `<Alt-b>`: Open custom menu
-- `<RightMouse>`: Context menu (Neo-tree aware)
+- `<RightMouse>`: Context menu at the pointer (inside the tree, filetree.nvim's own menu shadows it)
 
 ### Copy/Paste
 - `<C-a>`: Copy all
@@ -220,15 +176,6 @@ Menu's "Copy Marked/Selected" automatically detects:
 
 ### 2. Safe Delete File
 Always shows confirmation with filename before deleting.
-
-### 3. Neo-tree Path Operations
-Use bracket prefixes for absolute/relative:
-- `[` = Absolute
-- `]` = Relative
-
-Example:
-- `[f]` = Absolute file list
-- `]f]` = Relative file list
 
 ---
 

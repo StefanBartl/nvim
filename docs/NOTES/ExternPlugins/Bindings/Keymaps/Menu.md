@@ -1,14 +1,16 @@
-# nvzone/menu — Keymaps
+# Kontextmenü — Keymaps
 
-`nvzone/menu` ist eine "Baue dein eigenes Menü"-Bibliothek ohne eigene
-Default-Keymaps. Das eigentliche Menü-System (Öffnen/Navigieren/Schließen,
-Untermenüs via `items = "<name>"`) ist reines Library-Verhalten von
-[nvzone/menu](https://github.com/nvzone/menu) selbst — hier dokumentiert wird
-ausschließlich, **wie diese Config** das Menü aufhängt und befüllt.
+> **Nicht mehr nvzone/menu.** Diese Datei liegt weiterhin unter
+> `ExternPlugins/`, weil `nvzone/menu` noch installiert ist — gerendert wird
+> das Menü seit 2026-09-08 aber von `lib.nvim.ui.kit.menu` über
+> `lib.nvim.contextmenu`. Was hier steht, ist das Menü **dieser Config**;
+> zum Renderer-Wechsel siehe [lua/config/menu/README.md](../../../../../lua/config/menu/README.md).
 
-Plugin-Spec: [lua/plugins/nvchad.lua](../../../../../lua/plugins/nvchad.lua)
-(`event = "VeryLazy"`, ruft `config.menu.init.setup()` und danach
-`config.menu.mappings.setup()`).
+Aufgesetzt wird es aus der `UIReady`-Startup-Phase `menu` in
+[init.lua](../../../../../init.lua) — nicht mehr aus dem lazy-`config`-Hook
+von `nvzone/menu`. Die Spec in
+[lua/plugins/nvchad.lua](../../../../../lua/plugins/nvchad.lua) hält das
+Plugin nur noch als Träger für `volt`/`minty` installiert.
 
 ---
 
@@ -16,74 +18,88 @@ Plugin-Spec: [lua/plugins/nvchad.lua](../../../../../lua/plugins/nvchad.lua)
 
 Registriert in
 [lua/config/menu/mappings.lua](../../../../../lua/config/menu/mappings.lua)
-(`M.setup()`).
+(`M.setup()`), beide über `lib.nvim.bindings.keymap`.
 
 | Mapping | Modus | Aktion | Herkunft |
 |---|---|---|---|
-| `<A-b>` | `n` | Öffnet das Top-Level-Menü. Markdown-Buffer bekommen zusätzlich die Einträge von `markdown.nvim` (Fold-on-Heading, TOC, Refs) vorangestellt, danach das custom Menü. Sonst: `custom`-Menü falls registriert (`vim.g._menu_custom_registered`), sonst `menu.open("default")`. | [custom] |
-| `<RightMouse>` | `n`, `v` | Kontextabhängiges Menü an Mausposition. Repliziert zuerst das native `<RightMouse>` (Cursor/Fenster setzen), dann Routing nach Filetype: Markdown → wie `<A-b>`; `neo-tree`/`neo_tree` → `filetree.nvim`-Menü (falls vorhanden) sonst Legacy-Neo-tree-Menü (siehe unten); `NvimTree*` → `"nvimtree"`; sonst `custom` oder `"default"`. | [custom] |
+| `<A-b>` | `n` | Öffnet dasselbe Menü am **Cursor** (`mouse = false`). | [custom] |
+| `<RightMouse>` | `n`, `v` | Repliziert zuerst das native `<RightMouse>` (Cursor/Fenster setzen), baut dann das Menü für den Buffer **unter dem Zeiger** und öffnet es dort (`mouse = true`). | [custom] |
 
-Beide Maps nutzen `vim.g.__map_helper` (Fallback auf lokales `map`), nicht
-`lib.nvim.bindings.keymap` direkt.
+Kein Filetype-Routing mehr auf `neo-tree`/`NvimTree` und keine benannten
+Menüs (`"custom"`, `"default"`, `"nvimtree"`): beide Maps bauen dieselbe
+Item-Liste, die sich über ihre Contributor-Gates selbst auf den Buffer
+zuschneidet. In neo-tree greift ohnehin filetree.nvims eigene buffer-lokale
+`<RightMouse>`-Bindung — siehe [NeoTree.md](NeoTree.md).
 
 ---
 
-## Aufbau des `custom`-Menüs
+## Navigation im Menü
 
-[lua/config/menu/init.lua](../../../../../lua/config/menu/init.lua) registriert
-das von
+Bewusst als Liste, nicht als Tabelle: das sind buffer-lokale Bindings des
+Chooser-Fensters, keine Bindings dieser Config — eine Spalte `Taste` würde
+sie dem Bindings-Explorer als dokumentierte Config-Keymaps unterschieben
+(siehe `bindings_explorer/drift.lua`).
+
+- `j`/`k`, Pfeile — Eintrag wechseln; Trenner werden übersprungen
+- `<CR>` — Eintrag auslösen; auf einem `▸`-Eintrag: eine Ebene hinein
+- `<BS>` — eine Ebene zurück
+- `<Esc>`, `q` — schließen
+
+Untermenüs klappen **in place** auf (Drill-down), nicht als zweites Fenster
+neben dem Elternmenü — das ist der eine sichtbare Unterschied zu nvzone/menu.
+Das Verhalten ist [default] des `lib.nvim.ui.kit.chooser`, nicht hier gebaut.
+
+---
+
+## Inhalt
+
+Das Menü hat zwei Teile, in dieser Reihenfolge:
+
+**1. Ein Fly-out je zutreffendem Plugin.** `CONTRIBUTORS` in `mappings.lua`
+listet die "Pattern-B"-Plugins — solche, die nur
+`<plugin>.integrations.menu` mitbringen und keinen eigenen Trigger.
+Aktuell: `markdown`, `open`, `wkddap`, `cascade`, `fileops`, `images`,
+`spotlight`, `color_my_ascii`, `lsp`. Die Einträge selbst sind [custom] des
+jeweiligen Plugins, nicht dieser Config.
+
+**2. Der allgemeine Abschnitt**, unter einem Trenner — gebaut von
 [lua/config/menu/custom_menu/init.lua](../../../../../lua/config/menu/custom_menu/init.lua)
-gebaute Table unter `package.loaded["menus.custom"]`, damit `menu.open("custom")`
-es findet (nvzone/menu requirt intern `menus.<name>`).
+bei **jedem Öffnen** neu, weil mehrere Einträge von der aktuellen
+Visual-Selection und dem Buffernamen abhängen. Toggles per `opts.enable_*`,
+Default `true`, gesetzt in der `menu`-Phase in `init.lua`.
 
-Einträge im `custom`-Menü (`config.menu.custom_menu`, Toggles per `opts.enable_*`,
-alle Default `true` — gesetzt aus [lua/plugins/nvchad.lua](../../../../../lua/plugins/nvchad.lua)):
-
-| Eintrag | Aktion | rtxt (Hinweis-Label) |
+| Eintrag | Aktion | rtxt |
 |---|---|---|
 | Format Buffer | `conform.format({ lsp_fallback = true })`, sonst `vim.lsp.buf.format` | `<leader>fm` |
 | Code Actions | `vim.lsp.buf.code_action` | `<leader>ca` |
-| 󰅩 Lsp Actions | Untermenü `items = "lsp"` (`menus.lsp`) | — |
 | Copy All (Buffer) | `%y+` | `<C-a>` |
 | Copy Marked/Selected | Visual-Selection `gvy` yanken, sonst ganzen Buffer | `<C-c>` |
 | Paste Content | Systemregister `+` einfügen | `<C-v>` |
 | Delete Marked/Selected | Visual-Selection löschen (`gvd`) | `dm` |
-| Delete All (Clear Buffer) | `%d` nach Bestätigungs-Dialog (`lib.nvim.ui.kit.confirm`) | `da` |
+| Delete All (Clear Buffer) | `%d` nach Bestätigung (`lib.nvim.ui.kit.confirm`) | `da` |
 | 🗑️ Delete File | Datei von Disk löschen (Bestätigung) + `bdelete!` | `df` |
-| 🖥️ Open in terminal | `nvchad.term.new` (Split, cd in Buffer-Verzeichnis) falls Base46 aktiv, sonst `:enew` + Terminal-Job | — |
+| 🖥️ Open in terminal | `nvchad.term.new` (Split, cd ins Buffer-Verzeichnis) falls Base46 aktiv, sonst `:enew` + Terminal-Job | — |
 | 🎨 Color Picker | `minty.huefy.open()` | — |
 | 🔣 Unicode Table | `:UnicodeTable` (Floating Window, `unicode.vim`) | `uni` |
-| 󰊢 Git Actions | Untermenü `items = "gitsigns"` (`menus.gitsigns`), nur wenn `enable_git_section` | — |
+| 󰊢 Git Actions ▸ | Untermenü aus [lua/config/menu/git.lua](../../../../../lua/config/menu/git.lua), nur wenn gitsigns.nvim da ist | — |
 
-Vorangestellt wird immer der Original-Inhalt von `menus.default` (nvzone-Default-
-Menü, unverändert übernommen).
+Weggefallen gegenüber dem alten Stand:
 
----
-
-## Neo-tree-Kontextmenü (Legacy-Fallback)
-
-[lua/config/menu/neotree/init.lua](../../../../../lua/config/menu/neotree/init.lua)
-baut ein gemergtes Neo-tree-Menü: Original `menus.neo-tree` (nvzone-Default) +
-alle `enabled = true`-Einträge aus
-[lua/config/menu/neotree/entries.lua](../../../../../lua/config/menu/neotree/entries.lua),
-für die `config.neotree.keymaps().window()` tatsächlich einen Handler liefert.
-Dieser Pfad wird von `config.menu.mappings` nur noch als **Fallback** benutzt,
-wenn `filetree.integrations.menu` nicht verfügbar ist (`filetree.nvim`
-übernimmt inzwischen die eigentlichen Neo-tree-Menüeinträge — siehe
-[NeoTree.md](NeoTree.md)).
-
-Die Entries in `entries.lua` sind reine **Labels/Icons für Keymaps, die in
-Neo-tree selbst existieren** (z. B. `q`, `<CR>`, `a`, `d`, `r`, `gr`, …) — siehe
-[NeoTree.md](NeoTree.md) für die eigentlichen Bindings. Als Menü-Einträge sind
-sie [custom] (diese Config kuratiert Auswahl/Label/Icon), die zugrunde liegenden
-Tasten selbst sind Neo-tree-Bindings, nicht Menu-Bindings.
+- **`menus.default`** wurde vorangestellt — tatsächlich aber in eine lokale
+  Tabelle gehängt, die nie zurückgegeben wurde. Toter Code, und inhaltlich
+  eine Dopplung der Hälfte der Einträge darunter.
+- **„Lsp Actions" (`items = "lsp"`)** kommt jetzt als Contributor von
+  `lsp.nvim` aus dessen aufgelöstem Keymap-Katalog.
+- **`menus.gitsigns`** war eine Datendatei von nvzone/menu; die Git-Sektion
+  ist jetzt `config/menu/git.lua`.
+- **Das Legacy-Neo-tree-Menü** (`lua/config/menu/neotree/`) ist gelöscht;
+  filetree.nvim macht das.
 
 ---
 
 ## Fazit Default vs. Custom
 
-- Öffnen/Navigieren/Schließen des Menüs (Pfeiltasten, `<CR>`, `<Esc>` im Menü-
-  Fenster selbst): **[default]** — reines `nvzone/menu`-Bibliotheksverhalten,
-  hier nicht erneut dokumentiert.
-- `<A-b>`, `<RightMouse>` sowie sämtliche Menü-Einträge (Inhalt, Reihenfolge,
-  Icons, Aktionen): **[custom]** — vollständig von dieser Config gebaut.
+- Öffnen/Navigieren/Schließen im Menü-Fenster: **[default]** —
+  `lib.nvim.ui.kit.chooser`.
+- `<A-b>`, `<RightMouse>`, Zusammenstellung und Inhalt der Einträge:
+  **[custom]** — vollständig von dieser Config gebaut.
