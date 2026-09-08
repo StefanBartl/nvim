@@ -892,6 +892,35 @@ plugins.add({
   },
 
   {
+    "StefanBartl/media.nvim",
+    -- `VeryLazy` rather than `cmd = "Media"`: the four `<leader>M` keys have to
+    -- exist before one is pressed, and a cmd trigger cannot bind them. The
+    -- plugin file itself registers nothing at startup, so the cost is one
+    -- require.
+    --
+    -- hover.nvim consumes this by name (`pcall(require, "media")`) for its
+    -- video previews; it is listed as a dependency there rather than here, and
+    -- neither plugin needs the other to load first.
+    event = "VeryLazy",
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- Everything below is the shipped default, written out because this is
+      -- where a change is made. `:checkhealth media` says whether ffmpeg was
+      -- found -- on this machine it is NOT installed yet:
+      --   winget install Gyan.FFmpeg   (then restart the terminal for PATH)
+      frame = { at = "10%", width = 800 },
+      sheet = { rows = 3, cols = 4, width = 1200 },
+      -- nil hands a file to the system's default handler. Set to "mpv" (or
+      -- { "mpv", "--loop-file=no" }) to override. On Windows the player's
+      -- window opens *behind* the terminal either way -- Windows grants focus
+      -- only to the process owning the foreground window, which inside a
+      -- terminal is the terminal host, not nvim.exe.
+      player = nil,
+      keymaps = { preset = true },
+    },
+  },
+
+  {
     "StefanBartl/markdown.nvim",
     ft = { "markdown", "mdx", "md" },
     -- Soft dependency: markdown.nvim's fenced_scope feature consumes
