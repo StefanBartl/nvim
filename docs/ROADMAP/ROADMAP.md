@@ -1,15 +1,5 @@
 # Roadmap
 
-ui.kit nvim, lib, ui
-Jetzt das Handover-File für den ui.nvim-Schritt 3 anlegen, im Stil der bestehenden.
-Auf `main`, sauber. Ich committe und pushe.
-Erledigt und gepusht.
-- [PLAN-ui-kit-migration.md](https://github.com/StefanBartl/WKDBooks/blob/main/Development/wkdbook-myplugins/ui.nvim/PLAN-ui-kit-migration.md) aktualisiert: Schritt 3 als erledigt markiert, plus die Erkenntnis, dass der Render-Entrypoint-Fund den Kit-Umzug **nicht** blockiert (Kit/contextmenu berühren NvChad im Code nirgends – nachgegrept).
-- Neues Handover: [nvchad-decoupling-step3.md](https://github.com/StefanBartl/WKDBooks/blob/main/Development/wkdbook-myplugins/ui.nvim/handovers/ERLEDIGT/nvchad-decoupling-step3.md).
-Nebenbei eine interessante Randnotiz für die Kit-Frage: die alte Vorbedingung "Schritt 3 **plus** Palettenfrage" war vermutlich zu vorsichtig – die Palette betrifft nur die `St_*`-Statusline-Highlights, der Kit borgt seine Rahmenfarbe schon jetzt vom aktiven Colorscheme statt von `base46`. Ob das reicht, um die Palettenfrage als Kit-Vorbedingung ganz zu streichen, hab ich offen gelassen statt eigenmächtig zu entscheiden.
-
-Damit steht noch deine Entscheidung aus: **Schritt 4 (Render-Entrypoint) jetzt umsetzen, oder hier pausieren?**
-
 ## Table of content
 
   - [Cdx](#cdx)
