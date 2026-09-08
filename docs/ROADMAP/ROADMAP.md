@@ -3,8 +3,9 @@
 ## Table of content
 
   - [cdx](#cdx)
-  - [Liste A - Claude Tasks](#liste-a-claude-tasks)
-  - [Liste B — Braucht dich](#liste-b-braucht-dich)
+  - [Claude Tasks](#claude-tasks)
+    - [Notes](#notes)
+  - [Tasks](#tasks)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
@@ -18,9 +19,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 27. Sep   |   Fr., 11:00    |     18:10       |    20% / 80%     | X
+| **main** |   ~ 27. Sep   |   Fr., 11:00    |     00:10       |    69% / 87%     | X
 | **work** |   20. Sept    |   Sa., 06:00    |     22:20       |    87% / 70%     | X
-| **free** | 21. Juli 2027 |   So., 09:00    |     19:50       |    97% / 40%     | X
+| **free** | 21. Juli 2027 |   So., 09:00    |     12:50       |    56% / 53%     | X
 | **dev**  |    03. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -35,14 +36,39 @@
 
 ---
 
-## Liste A - Claude Tasks
+## Claude Tasks
 
 - [ ] `docmap-desktop`
   - [ ]  `docmap-desktop/docs/PLAN.md` — 17 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
 
+- [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
+  - [ ] RULES
+
+- [ ] filetree.nvim wennich `]f` verwende -> docs/ROADMAP/ROADMAP.md dabei kannich den so aber nicht in einen markdown link oder ähnliches einstzen, dafüpr müsste es einen , punkt haben, also ./docs/ROADMAP/ROADMAP.md das problem daran ist aber , wenn ich nun in docs/ROADMAP/Teest.md bi, dann in filetre eben `]f` ausfphre und ./docs/ROADMAP/ROADMAP.md einsetze, dann stimmt das nicht. Ihc müsste ja ./ROADMAP.md erthalten. daher bräuchte es einen kexmasp, mit dem ich relativ zum offenen bffer den pfad bekomme. außerdem möchte ch nuncohj gerne einen haben, bei absoluten pfade ausgibt, aber statt ./ zu Beginn "checkt", wenn das "root" eigentlich $REPOS_DIR die ist, undd ann auch $REPOS_DIR/ satatt ./ oder C:/ oder E:/  verwendet
+
+- hover.nvim videos abspielen möglich? C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\IDEAS\media.nvim
+
 ---
 
-## Liste B — Braucht dich
+### Notes
+
+Handover files dazu gibt es hier:
+  E:/repos/WKDBooks/Development/wkdbook-myplugins/my.nvim/HANDOVER.md
+  E:\repos\WKDBooks\Development\wkdbook-myplugins\ui.nvim\NOTES.md
+
+- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
+- antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
+- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
+- Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
+- Docs / README.md des Plugins updaten sofern es Sinn macht
+- Keine Co-Authorenschaft von Claude in den Commits
+- Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit)
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
+
+---
+
+## Tasks
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
