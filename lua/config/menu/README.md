@@ -58,12 +58,12 @@ titled frame:
 
 ```
  ╭─ Integrations ──────────────────────────────╮
- │  Markdown                                ▶ │
- │  Open                                    ▶ │
+ │  Markdown                   →              │
+ │  Open                       →              │
  ╰─────────────────────────────────────────────╯
  ╭─ Clipboard ─────────────────────────────────╮
- │  Copy All (Buffer)                <C-a>    │
- │ 󰆏 Copy Marked/Selected             <C-c>    │
+ │  Copy All (Buffer)                   <C-a> │
+ │ 󰆏 Copy Marked/Selected                <C-c> │
  ╰─────────────────────────────────────────────╯
 ```
 
@@ -76,8 +76,12 @@ Three things that are deliberate:
   shipping `"  Open"`, two spaces where a glyph was meant to go.
 - **The section title is a `heading(...)` marker**, so gating reaches it: a
   section whose every entry is switched off drops its title with it.
-- **The fly-out marker `▶` has a column of its own**, right-aligned and in
-  the theme accent. It is the one mark that says "this goes deeper".
+- **The fly-out marker `→` has a column of its own**, in the theme accent.
+  The column follows the *label*, not the row: pushed to the right edge the
+  arrow sits far from the text it belongs to and starts reading as part of
+  the frame, so it is parked just past the longest label — about two thirds
+  of the way across — and the keymap hints keep the right edge, where a key
+  is looked for.
 
 `contextmenu.open`'s `group_style` picks the drawing: `"box"` (the default),
 `"header"` (a titled rule, no frame) or `"plain"` (the old divider look).
