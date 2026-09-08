@@ -1,16 +1,19 @@
 # Kontextmenü — Keymaps
 
-> **Nicht mehr nvzone/menu.** Diese Datei liegt weiterhin unter
-> `ExternPlugins/`, weil `nvzone/menu` noch installiert ist — gerendert wird
-> das Menü seit 2026-09-08 aber von `lib.nvim.ui.kit.menu` über
-> `lib.nvim.contextmenu`. Was hier steht, ist das Menü **dieser Config**;
-> zum Renderer-Wechsel siehe [lua/config/menu/README.md](../../../../../lua/config/menu/README.md).
+> **Nicht mehr nvzone/menu.** Das Menü wird seit 2026-09-08 von
+> `lib.nvim.ui.kit.menu` über `lib.nvim.contextmenu` gezeichnet, und
+> `nvzone/menu` ist seither **deinstalliert**
+> (`lua/plugins/nvchad.lua` schaltet NvChads Spec dafür ab). Die Datei liegt
+> nur noch aus Link-Stabilität unter `ExternPlugins/`. Zum Renderer-Wechsel
+> siehe [lua/config/menu/README.md](../../../../../lua/config/menu/README.md).
 
 Aufgesetzt wird es aus der `UIReady`-Startup-Phase `menu` in
 [init.lua](../../../../../init.lua) — nicht mehr aus dem lazy-`config`-Hook
-von `nvzone/menu`. Die Spec in
-[lua/plugins/nvchad.lua](../../../../../lua/plugins/nvchad.lua) hält das
-Plugin nur noch als Träger für `volt`/`minty` installiert.
+von `nvzone/menu`.
+[lua/plugins/nvchad.lua](../../../../../lua/plugins/nvchad.lua) besteht nur
+noch aus dem `enabled = false` dafür. `volt` (Theme-Picker von `nvchad/ui`)
+und `minty` (Color Picker) hingen nie an dieser Spec, sondern an NvChads
+eigener Liste, und bleiben installiert.
 
 ---
 
