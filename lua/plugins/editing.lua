@@ -58,7 +58,19 @@ return {
 
   {
     "andymass/vim-matchup",
-    lazy = false, -- or ft = { "lua", "vim", "c", "cpp", "python", "typescript", "javascript", "html", "tex" },
+    -- Extends `%` and highlights the matching word *inside a buffer*, so a
+    -- buffer is the earliest thing it can act on -- `lazy = false` bought
+    -- 15.6 ms of startup for a plugin with nothing to match yet. The `ft`
+    -- list this line used to suggest is worse than the event: it would have
+    -- to enumerate every language, and lazy.nvim puts `ft` plugins on the
+    -- runtimepath early anyway (see plugins/webdev.lua's header).
+    --
+    -- Nothing here depends on nvim-treesitter's setup order: matchup ships
+    -- its own `treesitter-matchup` module and this config never enables
+    -- nvim-treesitter's `matchup` module, so there is no load-order coupling
+    -- to lose. `init` still runs at startup, so the `matchup_*` globals below
+    -- are set before the plugin body reads them.
+    event = { "BufReadPost", "BufNewFile" },
     init = function()
       -- Disable parenthesis highlight only
       vim.g.matchup_matchparen_enabled = 1 -- no MatchParen highlight

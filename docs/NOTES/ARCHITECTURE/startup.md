@@ -46,7 +46,11 @@ Nur wenn eine der beiden Bedingungen zutrifft:
 2. **Erster Frame.** Das Modul beeinflusst, wie der erste Buffer gezeichnet
    wird (Optionen, Highlight-Gruppen) — sonst flackert es sichtbar.
 
-Aktuell: `system`, `options`, `wkdoptions`, `autocmds`, `lsp`.
+Aktuell: `system`, `ui_open`, `my`, `autocmds`, `lsp`.
+
+(`options` und `wkdoptions` sind zu `my` zusammengefallen, als beide nach
+StefanBartl/my.nvim gewandert sind — `init.lua` benennt die Schalter dort
+explizit, damit der Aufruf dokumentiert, was die Phase tut.)
 
 ### `startup.on("UIReady", label, fn)` — nach dem ersten Frame
 
@@ -54,7 +58,7 @@ Für alles, was der Nutzer erst *nach* dem Start auslösen kann: Keymaps,
 User-Commands. Vor dem ersten Frame kann niemand tippen, also gehört nichts
 davon auf den synchronen Pfad.
 
-Aktuell: `usrcmds`, `mappings`.
+Aktuell: `usrcmds`, `mappings`, `menu`.
 
 `UIReady` ist `VimEnter` + `vim.schedule` — VimEnter ist gefeuert, aber der
 folgende Paint wird nicht blockiert.
@@ -82,18 +86,22 @@ Cmdline-spezifischer Keymaps auf `CmdlineEnter` der nächste sinnvolle Schritt.
 `<Esc>` schließbar, scrollbar):
 
 ```
-Windows  ·  nvim 0.12.2  ·  7272 ms since start
+Windows  ·  nvim 0.12.2  ·  1620 ms since start
 
-  system               [sync]       1412.6 ms  ██················    78.5 ms
-  options              [sync]       1491.2 ms  ███···············   128.0 ms
-  wkdoptions           [sync]       1619.2 ms  ██················    87.5 ms
-  autocmds             [sync]       1706.7 ms  ··················    15.8 ms
-  lsp                  [sync]       1722.6 ms  ██████████████████   759.8 ms
-  usrcmds              [UIReady]    6120.4 ms  ··················     1.0 ms
-  mappings             [UIReady]    6121.4 ms  ██················    80.7 ms
+  system               [sync]        235.9 ms  ··················     0.8 ms
+  ui_open              [sync]        236.6 ms  ··················     0.5 ms
+  my                   [sync]        237.1 ms  ████████··········    50.4 ms
+  autocmds             [sync]        287.5 ms  ··················     4.4 ms
+  lsp                  [sync]        292.0 ms  ███████████·······    64.3 ms
+  usrcmds              [UIReady]    1401.4 ms  █████·············    29.4 ms
+  mappings             [UIReady]    1430.8 ms  ██████████████████   103.3 ms
+  menu                 [UIReady]    1534.1 ms  █·················     6.2 ms
 
-  TOTAL                                         1151.3 ms in phase bodies
+  TOTAL                                         259.2 ms in phase bodies
 ```
+
+(Headless-Lauf mit geöffneter Datei, warmer Cache — die absoluten Zahlen sind
+maschinen- und laufabhängig, die Verhältnisse sind der Punkt.)
 
 Der Balken ist **relativ zur langsamsten Phase**, nicht zu einem festen Budget —
 er beantwortet „was dominiert", nicht „ist das zu langsam". Auch die
@@ -131,11 +139,97 @@ Standardgruppen linken und so dem Colorscheme folgen), `lib.nvim.bindings.usercm
 `lib.nvim.cross.platform`, weshalb WSL korrekt als WSL und nicht als Linux
 erscheint.
 
-## Offen: die Gesamtdauer
+## Die Gesamtdauer: was vor der ersten Phase liegt
 
-Diese Umstellung ordnet die Phasen korrekt an, sie macht den Start nicht
-schneller. Die Bodies summieren sich auf ~0,9 s, der Start dauert mehrere
-Sekunden — der Rest liegt vor der ersten Phase, in `lazy.setup()` und dem
-Spec-Import. Das ist eine eigene Aufgabe; `:StartupReport` grenzt sie nur ein.
-Messwerte schwanken zwischen Runs stark (kalter vs. warmer Cache), deshalb sind
-Vergleiche nur *innerhalb* eines Runs aussagekräftig.
+Die Phasen-Policy oben ordnet an, was *nach* `lazy.setup()` passiert. Der
+größere Teil des Starts liegt davor, und `:StartupReport` sieht ihn
+konstruktionsbedingt nicht — er endet, wo die erste Phase beginnt.
+
+Gemessen (2026-09-08, `nvim --headless --startuptime`, Windows, warmer Cache;
+Methode: `require` von außen per `--cmd` gewrappt, Selbstzeit pro Modul, Schnitt
+bei der ersten Phasenmarke):
+
+```
+vor der ersten Phase   449 Module    ~205 ms Selbstzeit
+davon Config-Module     59 Module     ~23 ms
+```
+
+Das sind drei verschiedene Dinge, und nur die letzten beiden gehören dieser
+Config:
+
+1. **NvChads eigener Spec-Import.** `nvchad.icons.devicons` allein 24 ms,
+   ausgelöst aus `nvchad/plugins/init.lua` beim Auswerten der Spec-Werte. Nicht
+   unser Hebel, solange NvChad die Basis ist.
+2. **Plugins, die eager laden.** Siehe die Regel unten.
+3. **Arbeit in Spec-Dateien.** `require` in einer `opts`-*Tabelle* läuft während
+   des Spec-Imports — vor dem ersten Frame und unabhängig davon, ob das Plugin
+   je lädt. Hinter `opts = function() ... end` läuft es, wenn das Plugin lädt.
+
+### Der teuerste Einzelfund war kein Plugin
+
+`lib.nvim.system.env.get()` berechnete `is_pwsh` über
+`vim.fn.executable("pwsh")`. Das durchsucht `PATH` unter Anwendung von
+`PATHEXT` und kostet auf dieser Windows-Maschine **11–15 ms pro Aufruf** —
+ohne Vim-seitigen Cache, der zweite Aufruf kostet dasselbe wie der erste.
+Bezahlt wurde das bei jedem Start (`init.lua` publiziert die Globals) und
+noch einmal von jedem Plugin, das den Snapshot aus seiner eigenen
+`plugin/`-Datei liest — bei pickers.nvim mit 17 ms der größte Posten der
+gesamten Spec-Import-Phase.
+
+Gelesen hat `is_pwsh` niemand: kein Plugin der Flotte, diese Config auch nicht.
+Das Feld wird in lib.nvim jetzt erst beim ersten Zugriff aufgelöst; `get()`
+fällt von ~12–17 ms auf 0,09 ms.
+
+Die Lehre ist allgemeiner als der Fund: ein *Feld* sieht billig aus, eine
+`PATH`-Suche ist es nicht. Was in einem Snapshot steht, den halbe Flotte beim
+Start liest, muss so billig sein wie ein Tabellenzugriff — sonst gehört es
+hinter eine Funktion.
+
+### Regel: auch `lazy = false` braucht eine Begründung
+
+Die ursprüngliche Policy regelte die Config-Phasen und ließ die Plugin-Trigger
+offen. Das war die Lücke: 29 der 116 Plugins luden beim Start, mehrere davon
+ohne jeden Grund.
+
+Ein Plugin darf `lazy = false` nur führen, wenn es **vor dem ersten Frame etwas
+tun muss** — Farbschema, Statusline, etwas, das Kommandos registriert, die
+sonst niemand auslösen kann. Alles, was auf einen *Buffer* wirkt, hat in
+`event = { "BufReadPost", "BufNewFile" }` seinen richtigen Trigger: früher als
+ein Buffer kann es ohnehin nichts tun, und bei `nvim datei.lua` feuert das
+Event noch während des Starts — es geht also nichts verloren, was im ersten
+Frame sichtbar gewesen wäre. Bei `nvim` ohne Argument spart es alles.
+
+Umgestellt (2026-09-08): `todo-comments.nvim` (37 ms, zog plenary und
+nvim-web-devicons mit), `vim-matchup` (15,6 ms), `git-conflict.nvim` (5,7 ms)
+auf `BufReadPost`/`BufNewFile`; `vim-startuptime` auf `cmd = "StartupTime"` —
+ein Startup-Profiler, der sich selbst mitmaß. Der Start-Batch fiel damit von 29
+auf 16 Plugins.
+
+Was bewusst eager bleibt: die eigenen Plugins, die User-Commands registrieren
+(`plugins/personal/init.lua` begründet jedes einzeln an der Spec), NvChad,
+snacks, tokyonight, treesitter. Der teuerste Eintrag ist jetzt
+`runtime-analysis.nvim` mit ~45 ms — das ist der Preis der Telemetrie, siehe
+`lua/config/telemetry.lua`, und eine bewusste Entscheidung, keine Panne.
+
+### Messen, nicht raten
+
+Absolute Zahlen schwanken zwischen kaltem und warmem Cache um Faktor 2–3;
+Vergleiche sind nur *innerhalb* einer Messreihe aussagekräftig. Wer eine
+Vermutung hat, misst sie:
+
+```bash
+nvim --headless --startuptime /tmp/st.txt +qa && sort -rnk2 /tmp/st.txt | head -20
+```
+
+Für die Frage „wer lädt das eigentlich" reicht `--startuptime` nicht — dort
+fehlt der Aufrufer. `require` von außen wrappen (`nvim --cmd "luafile
+tracker.lua"`, läuft vor `init.lua`) und im Wrapper `debug.traceback()`
+mitschreiben: das nennt Modul, Selbstzeit und Verursacher in einem.
+
+### `after/` ist hier kein Thema
+
+`after/queries/**` und `after/syntax/checkhealth.vim` tauchen im gesamten
+Startup-Trace nicht auf. Neovim liest `after/queries/` erst, wenn ein
+Textobject benutzt wird, und `after/syntax/checkhealth.vim` erst bei
+`:checkhealth`. Kosten am Start: null. Ob die Dateien dort *richtig* liegen,
+ist eine Architekturfrage — keine Startup-Frage.

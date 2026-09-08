@@ -8,16 +8,28 @@ return {
 
   {
     "folke/todo-comments.nvim",
-    lazy = false,
+    -- The plugin highlights comments inside a buffer, so a buffer existing is
+    -- the earliest moment it has anything to do. `lazy = false` cost 37 ms of
+    -- startup (plus pulling plenary and nvim-web-devicons in with it) to be
+    -- ready for a buffer that, on `nvim` with no file argument, never comes.
+    -- On `nvim file.lua` BufReadPost fires during startup anyway, so nothing
+    -- is deferred that would have been visible in the first paint.
+    event = { "BufReadPost", "BufNewFile" },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-tree/nvim-web-devicons",
     },
-    opts = {
-      signs = true,
-      keywords = require("config.todo_comments.keywords"),
-      colors = require("config.todo_comments.colors.strong"),
-    },
+    -- A function, not a table: a table literal's `require` calls run during
+    -- lazy's spec-import phase -- before the first paint, and regardless of
+    -- whether the plugin ever loads. Behind a function they run when the
+    -- plugin does.
+    opts = function()
+      return {
+        signs = true,
+        keywords = require("config.todo_comments.keywords"),
+        colors = require("config.todo_comments.colors.strong"),
+      }
+    end,
     keys = {
       {
         "<leader>ST",

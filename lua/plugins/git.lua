@@ -90,6 +90,10 @@ return {
     "akinsho/git-conflict.nvim",
     version = "*",
     config = true,
-    lazy = false,
+    -- Conflict markers live in a buffer's text, so there is nothing to detect
+    -- before one is read. BufReadPost is also early enough for the first
+    -- buffer: the plugin's own scan hangs off BufEnter, which fires *after*
+    -- BufReadPost, so the file opened on the command line is still seen.
+    event = { "BufReadPost", "BufNewFile" },
   },
 }
