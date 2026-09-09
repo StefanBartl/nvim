@@ -47,6 +47,8 @@ docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 p
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
 
+- [ ] pickers.nvim's plugin/pickers.lua materialisiert beim Start die volle Default-Config. Nach dem lib.nvim-Fix kostet das nur noch ~3 ms statt 19 — das Muster bleibt aber diskutabel, falls du dort mal aufräumen willst.
+
 ---
 
 ## Tasks
