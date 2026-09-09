@@ -32,7 +32,18 @@ Kein Filetype-Routing mehr auf `neo-tree`/`NvimTree` und keine benannten
 Menüs (`"custom"`, `"default"`, `"nvimtree"`): beide Maps bauen dieselbe
 Item-Liste, die sich über ihre Contributor-Gates selbst auf den Buffer
 zuschneidet. In neo-tree greift ohnehin filetree.nvims eigene buffer-lokale
-`<RightMouse>`-Bindung — siehe [NeoTree.md](NeoTree.md).
+`<RightMouse>`-Bindung — siehe [NeoTree.md](NeoTree.md) — daher landet
+`<RightMouse>` dort nie bei diesem Dispatcher. `<A-b>` ist nicht
+buffer-lokal geshadowed, erreicht diesen Dispatcher also auch mit dem
+Cursor im Tree-Fenster.
+
+Seit 2026-09-09 (`contributed_submenus()` in `mappings.lua`) hängt hinter
+den Fly-outs zusätzlich eine flache Zeile von filetree.nvim
+(`filetree.integrations.menu.window_entry()`): "Open filetree" in jedem
+normalen Buffer (revealt dessen Datei im Tree), "Close filetree" wenn der
+Tree gerade offen ist — inkl. mit Cursor im Tree-Fenster selbst über
+`<A-b>`. Kein eigener Fly-out, weil die übrigen 18 Tree-Node-Aktionen
+(rename/trash/copy/…) außerhalb des Trees nichts zum Wirken haben.
 
 ---
 
