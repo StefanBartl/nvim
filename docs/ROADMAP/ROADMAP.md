@@ -1,11 +1,13 @@
 # Roadmap
 
+docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 plugins, die darsatellen können und auch die verbiundungen zu einander, zumindest inlua, das wäre extrem spanndedn, das darzustellen, wenn ncht anders möglich, in einer spehziellen ansicht -ganz ´losgelöst vom Default
+
 ## Table of content
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
-    - [Notes](#notes)
   - [Tasks](#tasks)
+    - [media.nvim](#medianvim)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
@@ -20,8 +22,8 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     xx:xx       |    xx% / xx%     | X
-| **work** |   21. Sept    |   Sa., 06:00    |     23:10       |    34% / 94%     | X
-| **free** | 22. Juli 2027 |   So., 09:00    |     17:50       |    82% / 65%     | X
+| **work** |   21. Sept    |   Sa., 06:00    |     xx:xx^      |    xx% / xx%     | X
+| **free** | 22. Juli 2027 |   So., 09:00    |     23:50       |    97% / 78%     | X
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 2 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -33,6 +35,7 @@
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit)
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
+- cdode der imßlementiert wurde muss luacheck / stylua grün sein
 
 ---
 
@@ -44,36 +47,23 @@
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
 
-- [ ] after/syntax/checkhealth.vim hat ein echtes Plugin-Argument. Den ℹ️ INFO-Tag schreiben filetree.nvim und pickers.nvim in ihren health.lua. Wer die Plugins ohne diese Config nutzt, sieht ein ungehighlightetes INFO. Heimat wäre lib.nvim. Sag Bescheid, dann verschiebe ich es — ich habe es nicht eigenmächtig getan, weil es eine Architektur- und keine Performance-Entscheidung ist.
-
-- [ ] pickers.nvim's plugin/pickers.lua materialisiert beim Start die volle Default-Config. Nach dem lib.nvim-Fix kostet das nur noch ~3 ms statt 19 — das Muster bleibt aber diskutabel, falls du dort mal aufräumen willst.
-
-- [ ] `fileops.nvim` bzw `buffer-ctx.nvim`: Buffer offen, dann filetree geöffnet (neotre üpber filetree.nvim) und dort dann :File delete asgefphrt, aber weil ich im filetree war, hat er das nicht ausgeführt:     Error  17:16:37 notify.error [fileops] file does not exist or is not readable: E:\repos\WKDBooks\neo-tree filesystem [1]
-  jetzte wäe es natürlich suoper , wenn man sich das :File auf die node unter dem cursotr bezeiht, wenn man solche naktioenn aufpühjrt. das könnte man als experitnal feature opt-in machen, dass man be cfiletreees autoamtische node erknennunfg  ghat. oder spricht etwas absolut und total dageen?
-
-- [ ] filetree.nvim: `m` sollte auch bei den pgfad copy mappinmgfs funklniteren, also 3 nodes markieren und dann `]f` kopiert von a llen dreio nodes den pgfad in die zwishcnebalge, `ML` kopierte markdwn links mit den pfaden der markierten ndoes... usw....
-
----
-
-### Notes
-
-Handover files dazu gibt es hier:
-  E:/repos/WKDBooks/Development/wkdbook-myplugins/my.nvim/HANDOVER.md
- E:\repos\WKDBooks\Development\wkdbook-myplugins\ui.nvim\NOTES.md
-
-- never start more than 2 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
-- antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
-- Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
-- Docs / README.md des Plugins updaten sofern es Sinn macht
-- Keine Co-Authorenschaft von Claude in den Commits
-- Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
-- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit)
-- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
-
 ---
 
 ## Tasks
+
+### media.nvim
+
+```markdown
+Was jetzt läuft: <CR> auf einem Video-Hover versucht in dieser Reihenfolge:
+
+mpv-Fenster (wie bisher, Standard).
+Ohne mpv: Standard-App deiner Maschine — dieselbe Funktion, die auch gf schon nutzt (media.play()). Echtes Bild+Ton, nichts extra zu installieren. Kann nur nicht gestoppt werden (kein Prozess-Handle) — <CR> legt den Hover nur aufs Standbild zurück, der Player läuft weiter bis du ihn selbst schließt.
+Fällt beides aus, die stumme Blockgrafik (wie schon vorher).
+
+Bonus-Experiment (video.system_player_align = true, Default aus): versucht, das neue Player-Fenster zu zentrieren — auf Windows (PowerShell/Win32), macOS (AppleScript) und Linux (xdotool/wmctrl), nicht nur Windows. Echt getestet auf deinem Rechner: Übergabe klappt, das Skript läuft nachweislich durch — bewegt aber nichts, weil deine Windows-Standard-App für Video eine UWP-App ("Filme & TV") ist,
+```
+
+---
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
@@ -99,6 +89,7 @@ Handover files dazu gibt es hier:
   - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
     - [ ] diese logo soll dann auch in ui.nvim menu angezeigt werden
   - [ ] docmap-desktop app icon desktop
+- [ ] feaure highlichts auf der root readme
 
 ---
 
