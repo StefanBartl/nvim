@@ -7,7 +7,8 @@ docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 p
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
   - [Tasks](#tasks)
-    - [media.nvim](#medianvim)
+    - [filetree.nvim](#filetreenvim)
+    - [media.nvim feedback](#medianvim-feedback)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
@@ -22,7 +23,7 @@ docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 p
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     xx:xx       |    xx% / xx%     | X
-| **work** |   21. Sept    |   Sa., 06:00    |     xx:xx^      |    xx% / xx%     | X
+| **work** |   21. Sept    |   Sa., 06:00    |     xx:xx       |    xx% / xx%     | X
 | **free** | 22. Juli 2027 |   So., 09:00    |     23:50       |    97% / 78%     | X
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
@@ -53,17 +54,18 @@ docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 p
 
 ## Tasks
 
-### media.nvim
+### filetree.nvim
 
-```markdown
-Was jetzt läuft: <CR> auf einem Video-Hover versucht in dieser Reihenfolge:
+- [ ] filetree features/keymaps/usrcmsd/auocmds usw. durhczugehen und eine liste zu erstellen -> was funktinert bereits wo, was wo nochj nicht und was kann wo ncht funltieren. Erstmalö wäre es angberacht, cen report nach wkdbooks/development/wkdbook-myplugins/wkdbook-filetree.nvim zu schreiben.
 
-mpv-Fenster (wie bisher, Standard).
-Ohne mpv: Standard-App deiner Maschine — dieselbe Funktion, die auch gf schon nutzt (media.play()). Echtes Bild+Ton, nichts extra zu installieren. Kann nur nicht gestoppt werden (kein Prozess-Handle) — <CR> legt den Hover nur aufs Standbild zurück, der Player läuft weiter bis du ihn selbst schließt.
-Fällt beides aus, die stumme Blockgrafik (wie schon vorher).
+---
 
-Bonus-Experiment (video.system_player_align = true, Default aus): versucht, das neue Player-Fenster zu zentrieren — auf Windows (PowerShell/Win32), macOS (AppleScript) und Linux (xdotool/wmctrl), nicht nur Windows. Echt getestet auf deinem Rechner: Übergabe klappt, das Skript läuft nachweislich durch — bewegt aber nichts, weil deine Windows-Standard-App für Video eine UWP-App ("Filme & TV") ist,
-```
+### media.nvim feedback
+
+Feedback:
+use_mpv = false: funktinert
+          system_player_align = true, sollte innerhalb des video keys unter experimental stehen, damit das ganz ilar ist
+mit use_mpv = false und system_player_align = true -> dioe system video app (bei mir vlc) öffnet, im vollbildmoduds, anstatt sich über das hover (mit padding so das man den hover rahmen noch sieht) zu legen -> genau das gleiche verhalten wie "ssystem_playesr_alig = false. wen das nicht geht, weil vlx keine win32 app ist, wäre eine diee, noch eine layer einzuuziehen, und zwar bevopr man auf die system app geht, checken, ob eine win32 vifeo player existiert und diese ndann nehmen (opt-out auch experimnetal und wirkt nur wenn system_player_alig true ist, ansonsten nicht)
 
 ---
 

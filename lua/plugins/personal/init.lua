@@ -67,6 +67,198 @@ plugins.add({
     priority = 900,
     dependencies = { "StefanBartl/lib.nvim" },
     config = function()
+      -- Every option hover.nvim has, current value active and everything
+      -- else commented out with its own default -- see docs/configuration.md
+      -- and docs/FEATURES/*.md for the full reasoning behind each one.
+      require("hover").setup({
+        -- "auto": the trigger opens a float by itself, for the types listed
+        -- in auto_hover below. "manual" keeps every preview but the trigger;
+        -- "off" (or vim.g.hover_disable) stops everything.
+        -- mode = "auto",
+
+        -- Which target *types* the automatic trigger opens for -- gates the
+        -- trigger only, `:Hover show` always answers for every type. Default
+        -- shown in full because a partial table merges additively.
+        -- auto_hover = {
+        --   image = true, pdf = true,
+        --   anchor = false, directory = false, file = false, git = false,
+        --   markdown = false, missing = false, office = false, url = false,
+        --   video = false, position = false,
+        -- },
+
+        -- Write mode/auto_hover/every switch back to disk on exit, so a
+        -- runtime `:Hover links web on` survives past this session.
+        -- persist = true,
+
+        -- "CursorHold" (follows 'updatetime'), "cursor" (CursorMoved + this
+        -- plugin's own debounce), "mouse" (needs 'mousemoveevent' too).
+        -- trigger = { "CursorHold" },
+
+        -- Debounce before the float opens, in ms.
+        -- delay_ms = 250,
+
+        -- How long an async preview may take before a "rendering..."
+        -- placeholder is allowed to interrupt.
+        -- placeholder_grace_ms = 250,
+
+        -- Preview line cap / float height.
+        -- max_lines = 20,
+        -- Float width cap, in columns.
+        -- max_width = 80,
+
+        -- Float border style: none/single/double/rounded/solid/shadow, or
+        -- this plugin's own heavy/ascii/dashed/block, or an 8-char list.
+        -- border = "rounded",
+
+        -- Draw pictures and rasterized PDF pages when a provider can;
+        -- degrades to format/dimensions/size as text otherwise.
+        -- inline_images = true,
+
+        -- Buffers the hover attaches to (any non-empty 'buftype' is excluded
+        -- regardless -- pickers, trees, terminals, dashboards).
+        -- filetypes = "*",
+
+        -- Targets written with link syntax (markdown.nvim contributes the
+        -- source).
+        -- links = {
+        --   enabled = true,   -- follow [text](./doc.md)-style links at all
+        --   web = false,      -- preview what a URL *is* (host/path/query)
+        --   fetch = false,    -- also fetch the URL's response for that preview
+        --   timeout_ms = 2000,
+        --   pdf = {           -- a link answering application/pdf, as its first page
+        --     enabled = false,
+        --     max_bytes = 25000000,
+        --     timeout_ms = 30000,
+        --     cache_days = 7,
+        --   },
+        --   shot = {          -- a link rendered by a headless browser (JS runs!)
+        --     enabled = false,
+        --     eager = false,  -- let the *automatic* trigger render one too
+        --     timeout_ms = 20000,
+        --     width = 1280,
+        --     height = 900,
+        --     cache_days = 7,
+        --     delay_ms = 1000,
+        --     command = nil,  -- nil finds a browser on PATH/usual install dirs
+        --   },
+        -- },
+
+        -- Targets with no link syntax: a path in prose, a comment, :messages.
+        -- paths = {
+        --   enabled = true,  -- bare paths are targets at all
+        --   missing = true,  -- mark a bare path that resolves to nothing
+        --   code = false,    -- also look for paths inside executable code,
+        --                    -- not just comments/strings (Treesitter-gated)
+        --   scope = { prose = {}, code = {} }, -- extra capture families to trust
+        -- },
+
+        -- Whether a registered *position* preview (a plugin describing where
+        -- the cursor is, not what it points at) may open a float at all.
+        -- positions = true,
+
+        -- Office documents (.docx/.xlsx/.pptx/.odt and legacy binary forms).
+        -- office = {
+        --   convert = false,   -- render page 1 via LibreOffice (seconds, per doc)
+        --   timeout_ms = 60000,
+        --   cache_days = 7,
+        -- },
+
+        -- Video: the still, the paging-key scrub, and what `<CR>` does.
+        video = {
+          -- Where the first still comes from: seconds, "10%" of the running
+          -- time, or an ffmpeg timestamp.
+          -- at = "10%",
+          -- How far one paging-key press moves. Same shapes as `at`.
+          -- step = "10%",
+          -- Still's render width in pixels; nil lets media.nvim choose.
+          -- width = nil,
+
+          -- What `<CR>` does: "window" (default) opens a real mpv window, or
+          -- without mpv the system's own player; "inline" paints block
+          -- graphics into the float instead of either.
+          -- playback = "window",
+
+          -- Whether "window" may reach for mpv at all. false = "I have mpv,
+          -- do not use it" -- skips straight to the system-player fallback
+          -- (real video+sound, just not mpv) and silences inline's optional
+          -- sound too. Different from playback = "inline", which also gives
+          -- up that fallback entirely for silent block graphics.
+          -- Confirmed working 2026-09-09.
+          use_mpv = false,
+
+          -- ---------------------------------------------------------------
+          -- EXPERIMENTAL (system-player window positioning) -- both of the
+          -- two settings below only do anything when there is no mpv window
+          -- (no mpv, or use_mpv = false above), and the second only matters
+          -- at all when the first is true. Neither is load-bearing for
+          -- ordinary playback; both are "best effort, may silently do
+          -- nothing" by design -- see docs/FEATURES/VIDEO.md.
+          -- ---------------------------------------------------------------
+
+          -- Best-effort centre whatever window the system-player fallback
+          -- opens, on the monitor the terminal is on right now. Off by
+          -- default -- whether it does anything depends on what is
+          -- registered on this machine (a UWP handler on Windows
+          -- historically ignores it; macOS needs Accessibility permission;
+          -- Linux needs xdotool/wmctrl and no Wayland in the way). Never
+          -- reports failure either way.
+          system_player_align = true,
+
+          -- Only consulted when system_player_align (above) is true. A
+          -- fullscreen window defeats alignment before it starts -- reported
+          -- 2026-09-09: VLC (this machine's system handler) opens in its
+          -- remembered fullscreen state, same visible result as
+          -- system_player_align = false. With this true (the default), the
+          -- fallback tries a known, scriptable player by name first (`vlc
+          -- --no-fullscreen`, today) before the system's own handler, so
+          -- there is a non-fullscreen window for alignment to actually act
+          -- on. Set false to always go through the system handler even with
+          -- alignment on.
+          system_player_prefer_classic = true,
+
+          -- Whether an *inline* played run may start audio via mpv, when the
+          -- file has a track. A "window" playback always has its player's
+          -- own sound and ignores this.
+          -- sound = true,
+
+          -- Where *playing* starts (not where the still is taken from).
+          -- Same three shapes as `at`; a scrubbed still (page 2+) is honoured
+          -- regardless and starts there instead.
+          -- play_at = 0,
+          -- How much larger the playing canvas is than the still's budget,
+          -- capped to the editor's own rows/columns. 1 = the still's size.
+          -- play_scale = 2.5,
+          -- Stills per second in a played (inline) run.
+          -- fps = 12,
+          -- Stills one decoded (inline) window holds -- two seconds at fps=12.
+          -- run = 24,
+          -- Pixel width of a run's stills before sampling; nil sizes it from
+          -- the canvas.
+          -- run_width = nil,
+        },
+
+        -- The float on (almost) the whole editor and back -- `:Hover zen`, `F`.
+        -- zen = {
+        --   pin = true, -- pin the float so the next keystroke does not close it
+        -- },
+
+        -- Keys borrowed globally while a hover is on screen, handed back on close.
+        -- scroll_keys = { down = { "<M-PageDown>", "<C-Down>" }, up = { "<M-PageUp>", "<C-Up>" } },
+        -- resize_keys = {
+        --   larger = { "+" }, smaller = { "-" },
+        --   wheel_larger = { "<M-ScrollWheelUp>" }, wheel_smaller = { "<M-ScrollWheelDown>" },
+        -- },
+        -- dismiss_keys = { "q", "<Esc>" },
+        -- open_keys = { "gf" }, -- open what the float shows, externally
+        -- nav_keys = { left = { "h" }, right = { "l" }, up = { "k" }, down = { "j" } }, -- pan while zoomed
+        -- position_keys = { next = { "<M-n>" } }, -- step to the next position-preview contributor
+        -- zoom_keys = { into = { ">" }, out = { "|" }, reset = { "=" } },
+        -- zen_keys = { toggle = { "F" } },
+        -- transport_keys = { toggle = { "<CR>" }, forward = { "." }, back = { "," } }, -- video play/pause, frame step
+
+        -- Keymaps this plugin sets in the user's own namespace.
+        -- keymaps = { show = false },
+      })
       require("hover").enable()
     end,
   },
@@ -904,19 +1096,91 @@ plugins.add({
     event = "VeryLazy",
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {
-      -- Everything below is the shipped default, written out because this is
-      -- where a change is made. `:checkhealth media` says whether ffmpeg was
-      -- found -- on this machine it is NOT installed yet:
+      -- Every option media.nvim has, current value active and everything
+      -- else commented out with its own default -- see docs/configuration.md
+      -- for the full reasoning behind each one.
+
+      -- Explicit binary paths, for when one is installed but not on PATH
+      -- (the Windows winget/scoop shim-dir case). `core.bin` probes the
+      -- usual locations itself; this is the escape hatch for what it misses.
+      -- `:checkhealth media` says whether ffmpeg was found -- on this
+      -- machine it is NOT installed yet:
       --   winget install Gyan.FFmpeg   (then restart the terminal for PATH)
+      -- bin = { ffmpeg = nil, ffprobe = nil, mpv = nil },
+
+      -- Hard ceiling on one ffmpeg/ffprobe run, in ms -- the backstop for a
+      -- stalled network mount or a truncated download that would otherwise
+      -- hang forever.
+      -- timeout_ms = 15000,
+
+      -- The poster frame (`media.frame` / `:Media frame`).
       frame = { at = "10%", width = 800 },
+      -- frame = {
+      --   at = "10%",   -- seconds, "10%" of duration, or an ffmpeg timestamp
+      --   width = 800,  -- pixel width the still is scaled to
+      -- },
+
+      -- A run of stills at a fixed rate (`media.frames`) -- what hover.nvim's
+      -- *inline* transport draws as moving picture.
+      -- frames = {
+      --   from = nil,     -- nil starts at the beginning
+      --   fps = 12,       -- stills per second of source sampled
+      --   count = 24,     -- stills per run -- two seconds at fps=12
+      --   width = 320,    -- pixel width before sampling down to cells
+      -- },
+
+      -- The contact sheet (`media.sheet` / `:Media sheet`): one picture of
+      -- the whole file.
       sheet = { rows = 3, cols = 4, width = 1200 },
-      -- nil hands a file to the system's default handler. Set to "mpv" (or
-      -- { "mpv", "--loop-file=no" }) to override. On Windows the player's
-      -- window opens *behind* the terminal either way -- Windows grants focus
-      -- only to the process owning the foreground window, which inside a
-      -- terminal is the terminal host, not nvim.exe.
+      -- sheet = {
+      --   rows = 3, cols = 4,
+      --   width = 1200,     -- of the finished sheet, not one tile
+      --   margin = 4,       -- gap between tiles, in pixels
+      --   timeout_ms = 120000, -- a sheet is a full pass over the file, not a seek
+      -- },
+
+      -- Where rendered stills live, on disk, outliving the session (keyed by
+      -- the source file's mtime, so a kept file is safe to serve forever).
+      -- cache = {
+      --   enabled = true,
+      --   dir = nil, -- nil means stdpath("cache") .. "/media.nvim"
+      -- },
+
+      -- What `media.play` / `:Media play` launches -- also what hover.nvim's
+      -- system-player fallback tier uses when there is no mpv (or
+      -- `video.use_mpv = false`). nil hands the file to the system's default
+      -- handler, which on Windows opens *behind* the terminal either way --
+      -- Windows only grants foreground to the process owning it, which
+      -- inside a terminal is the terminal host, not nvim.exe. Set to "mpv"
+      -- (or { "mpv", "--loop-file=no" }) to override.
       player = nil,
+
+      -- The windowed mpv player (`media.play_window` / `:Media window` /
+      -- hover.nvim's `<CR>`). Always mpv, unlike `player` above -- a
+      -- controllable window needs the same binary every time.
+      -- window = {
+      --   autofit = "80%x80%", -- mpv's --autofit-larger; "" leaves size to mpv
+      --   ontop = true,        -- stay above the terminal regardless of focus
+      --   args = {},           -- extra mpv flags, appended before the file
+      -- },
+      --
+      -- NOTE: no static `window.args = { "--screen=1" }` here on purpose.
+      -- hover.nvim's `<CR>` now detects which monitor the terminal is on and
+      -- passes a per-call `screen` to `play_window` itself (2026-09-09) --
+      -- a static `--screen=1` in `args` would be appended *after* that and
+      -- win, silently overriding the dynamic detection and pinning the
+      -- window back to one monitor regardless of where nvim actually is.
+      -- Only add this back if the dynamic detection is ever turned off.
+
       keymaps = { preset = true },
+      -- keymaps = {
+      --   preset = true,       -- false binds nothing at all
+      --   probe = "<leader>Mp",
+      --   frame = "<leader>Mf",
+      --   sheet = "<leader>Ms",
+      --   play = "<leader>Mo",
+      --   which_key = true,
+      -- },
     },
   },
 
