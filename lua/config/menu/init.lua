@@ -9,12 +9,16 @@
 --- nvzone/menu uninstalled. `renderer = "nvzone"` here restores the old
 --- rendering unchanged.
 ---
---- Also opts out of Neovim's own built-in right-click PopUp menu by default
---- (`native_popup = false` sets `'mousemodel' = "extend"`): that menu pops up
---- natively wherever a click lands on no active `<RightMouse>` mapping at
---- all — a blank filetree line past the last node, say — which otherwise
---- looks indistinguishable from this menu occasionally showing something
---- else. Pass `native_popup = true` here to restore vanilla Neovim behaviour.
+--- `lib.nvim.contextmenu.setup()` itself now opts out of Neovim's own
+--- built-in right-click PopUp menu by default (sets `'mousemodel' =
+--- "extend"`): that menu pops up natively wherever a click lands on no
+--- active `<RightMouse>` mapping at all — a blank filetree line past the
+--- last node, say — which otherwise looks indistinguishable from this menu
+--- occasionally showing something else. `native_popup` is passed straight
+--- through here, unforced, so the default lives in one place
+--- (`lib.nvim.contextmenu`, soon `ui.nvim`) rather than being re-decided by
+--- every host that wires the menu up; pass `native_popup = true` to restore
+--- vanilla Neovim behaviour.
 
 local contextmenu = require("lib.nvim.contextmenu")
 
@@ -27,7 +31,7 @@ function M.setup(opts)
 
   contextmenu.setup({
     renderer = opts.renderer or "kit",
-    native_popup = opts.native_popup == true,
+    native_popup = opts.native_popup,
   })
 
   local mappings = require("config.menu.mappings")

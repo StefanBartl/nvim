@@ -9,12 +9,13 @@ require("config.menu").setup({ renderer = "kit", enable_git_section = true })
 
 Set up from init.lua's `UIReady` startup phase.
 
-Also sets `'mousemodel' = "extend"` by default (`native_popup = false`,
-forwarded to `lib.nvim.contextmenu`), turning off Neovim's own built-in
-right-click PopUp menu — which otherwise pops up natively on any click a
-mapping doesn't cover (a blank filetree line past the last node, insert
-mode, …) and reads, from the user's chair, as "a different menu sometimes
-appears". Pass `native_popup = true` to restore vanilla Neovim behaviour.
+`lib.nvim.contextmenu` itself sets `'mousemodel' = "extend"` by default,
+turning off Neovim's own built-in right-click PopUp menu — which otherwise
+pops up natively on any click a mapping doesn't cover (a blank filetree line
+past the last node, insert mode, …) and reads, from the user's chair, as "a
+different menu sometimes appears". `native_popup` passes straight through
+this `setup()` unforced; pass `native_popup = true` to restore vanilla
+Neovim behaviour.
 
 ## Layout
 

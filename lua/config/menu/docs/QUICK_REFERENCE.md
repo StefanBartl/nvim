@@ -115,8 +115,8 @@ require("config.menu").setup({
 
   -- Neovim's own built-in right-click PopUp menu (Cut/Copy/Paste/Select
   -- All/Inspect/Go to definition/...), shown natively wherever a click hits
-  -- no active <RightMouse> mapping at all. Off by default; true restores it.
-  native_popup = false,
+  -- no active <RightMouse> mapping at all. Off by default (lib.nvim.contextmenu's
+  -- own default — not set here); pass native_popup = true to restore it.
 })
 ```
 

@@ -278,11 +278,11 @@ end)
 -- tied a config feature to a plugin it no longer needs: rendering goes
 -- through lib.nvim.contextmenu now, and `renderer = "nvzone"` is all it
 -- takes to put the old drawing back.
--- `native_popup` defaults to false here (see config/menu/init.lua): Neovim's
--- own built-in PopUp menu is off, everywhere, since it is what used to show
--- up as "a different right-click menu" on any click a mapping doesn't cover
--- (a blank filetree line past the last node, say). Pass `native_popup = true`
--- to bring vanilla Neovim's fallback back.
+-- Neovim's own built-in PopUp menu is off by default (lib.nvim.contextmenu's
+-- own default, not something set here), since it is what used to show up as
+-- "a different right-click menu" on any click a mapping doesn't cover (a
+-- blank filetree line past the last node, say). Pass `native_popup = true`
+-- below to bring vanilla Neovim's fallback back.
 startup.on("UIReady", "menu", function()
   require("config.menu").setup({
     renderer = "kit",
