@@ -33,6 +33,7 @@ local M = {
   -- General section ---------------------------------------------------------
   format = g("F0AD", "~"), -- wrench
   code_action = g("F0EB", "*"), -- lightbulb
+  inspect = g("F0349", "?"), -- magnify
   copy_all = g("F0C5", "c"), -- files
   copy_marked = g("F018F", "c"), -- content-copy
   paste = g("F0192", "v"), -- content-paste

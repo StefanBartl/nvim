@@ -9,6 +9,13 @@ require("config.menu").setup({ renderer = "kit", enable_git_section = true })
 
 Set up from init.lua's `UIReady` startup phase.
 
+Also sets `'mousemodel' = "extend"` by default (`native_popup = false`,
+forwarded to `lib.nvim.contextmenu`), turning off Neovim's own built-in
+right-click PopUp menu — which otherwise pops up natively on any click a
+mapping doesn't cover (a blank filetree line past the last node, insert
+mode, …) and reads, from the user's chair, as "a different menu sometimes
+appears". Pass `native_popup = true` to restore vanilla Neovim behaviour.
+
 ## Layout
 
 | File | Role |
@@ -47,9 +54,9 @@ nvzone/menu's `menus.gitsigns`.
    pre-check that skips the `require()` entirely when the buffer obviously
    doesn't qualify. The shared heading is presentation only — still one entry
    per plugin, still no nesting under a common parent.
-2. **The general sections** — `Code`, `Clipboard`, `Delete`, `Tools` —
-   rebuilt on every open, because several entries depend on the live visual
-   selection and buffer.
+2. **The general sections** — `Code` (Format, Code Actions, Inspect),
+   `Clipboard`, `Delete`, `Tools` — rebuilt on every open, because several
+   entries depend on the live visual selection and buffer.
 
 ## How it looks
 

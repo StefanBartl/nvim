@@ -103,12 +103,20 @@ require("config.menu").setup({
   enable_color_picker = true,
   enable_open_terminal = true,
 
+  -- Code
+  enable_inspect = true, -- ":Inspect" — highlight/treesitter info at the cursor
+
   -- Sections
   enable_git_section = true,
 
   -- Who draws the menu: "kit" (lib.nvim.ui.kit.menu, the default here),
   -- "nvzone" (nvzone/menu), or "auto".
   renderer = "kit",
+
+  -- Neovim's own built-in right-click PopUp menu (Cut/Copy/Paste/Select
+  -- All/Inspect/Go to definition/...), shown natively wherever a click hits
+  -- no active <RightMouse> mapping at all. Off by default; true restores it.
+  native_popup = false,
 })
 ```
 
