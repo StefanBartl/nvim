@@ -21,11 +21,12 @@
 
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.picker]")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
+local confirm = require("bindings.usrcmds.plugin_repos.confirm")
 local plugin_list = require("plugins.personal.list")
 
 local M = {}
 
-local loop, fn = vim.uv or vim.loop, vim.fn
+local loop = vim.uv or vim.loop
 
 -- Cycle order per presence state. "none" (nil in `pending`) is always the
 -- implicit first/last step, i.e. cycling past the last entry clears it.
@@ -227,8 +228,7 @@ local function run_batch(removal, direct_clone, fetch_items, pull_items, update_
       base_dir,
       table.concat(names, "\n")
     )
-    local choice = fn.confirm(msg, "&Yes, delete\n&No", 2)
-    if choice ~= 1 then
+    if not confirm.yesno(msg, "delete") then
       notify.info("Deletion cancelled — remove/reclone skipped for this batch.")
       after_removal({})
       return

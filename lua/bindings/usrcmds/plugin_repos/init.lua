@@ -26,6 +26,7 @@ local expand_path = require("lib.nvim.cross.fs.expand_path")
 local open_named_scratch = require("lib.nvim.window.open_named_scratch")
 local plugin_list = require("plugins.personal.list")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
+local confirm = require("bindings.usrcmds.plugin_repos.confirm")
 
 local M = {}
 
@@ -267,8 +268,7 @@ finish_check = function(safe, unsafe, base_dir)
     base_dir,
     table.concat(safe, "\n")
   )
-  local choice = fn.confirm(msg, "&Yes, delete\n&No", 2)
-  if choice ~= 1 then
+  if not confirm.yesno(msg, "delete") then
     notify.info("Cancelled — nothing deleted.")
     return
   end
@@ -601,8 +601,7 @@ finish_reclone = function(safe, unsafe, missing, base_dir, dry_run)
       base_dir,
       table.concat(names, "\n")
     )
-    local choice = fn.confirm(msg, "&Yes, reclone\n&No", 2)
-    if choice ~= 1 then
+    if not confirm.yesno(msg, "reclone") then
       notify.info(
         #missing > 0 and "Reclone of the clean set cancelled — cloning only the missing ones."
           or "Cancelled — nothing recloned."
