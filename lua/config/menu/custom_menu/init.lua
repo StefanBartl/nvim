@@ -27,6 +27,7 @@ local defaults = {
   enable_open_terminal = true,
   enable_color_picker = true,
   enable_unicode_table = true,
+  enable_inspect = true,
 }
 
 ---@param dst table
@@ -89,6 +90,12 @@ local function open_unicode_table()
       end
     end
   end)
+end
+
+---Show the treesitter/syntax highlight groups under the cursor (`:h :Inspect`).
+---@return nil
+local function inspect_here()
+  pcall(vim.cmd, "Inspect")
 end
 
 ---Format the buffer through conform.nvim, or the LSP when it isn't installed.
@@ -247,7 +254,10 @@ return function(opts)
       vim.lsp.buf.code_action,
       "<leader>ca",
       { icon = icons.code_action }
-    )
+    ),
+    contextmenu.entry(opts.enable_inspect, "Inspect", inspect_here, nil, {
+      icon = icons.inspect,
+    })
   )
 
   contextmenu.group(
