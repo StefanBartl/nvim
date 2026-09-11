@@ -187,34 +187,49 @@ plugins.add({
           use_mpv = false,
 
           -- ---------------------------------------------------------------
-          -- EXPERIMENTAL (system-player window positioning) -- both of the
-          -- two settings below only do anything when there is no mpv window
-          -- (no mpv, or use_mpv = false above), and the second only matters
-          -- at all when the first is true. Neither is load-bearing for
-          -- ordinary playback; both are "best effort, may silently do
-          -- nothing" by design -- see docs/FEATURES/VIDEO.md.
+          -- EXPERIMENTAL (system-player window positioning) -- nested under
+          -- its own key so it reads as clearly separate from ordinary
+          -- playback settings above. None of these three only do anything
+          -- when there is no mpv window (no mpv, or use_mpv = false above),
+          -- and the second and third only matter at all when the first is
+          -- true. Nothing here is load-bearing for ordinary playback; all
+          -- three are "best effort, may silently do nothing" by design --
+          -- see docs/FEATURES/VIDEO.md.
           -- ---------------------------------------------------------------
+          experimental = {
+            -- Best-effort centre whatever window the system-player fallback
+            -- opens, on the monitor the terminal is on right now. Off by
+            -- default -- whether it does anything depends on what is
+            -- registered on this machine (a UWP handler on Windows
+            -- historically ignores it; macOS needs Accessibility permission;
+            -- Linux needs xdotool/wmctrl and no Wayland in the way). Never
+            -- reports failure either way.
+            system_player_align = true,
 
-          -- Best-effort centre whatever window the system-player fallback
-          -- opens, on the monitor the terminal is on right now. Off by
-          -- default -- whether it does anything depends on what is
-          -- registered on this machine (a UWP handler on Windows
-          -- historically ignores it; macOS needs Accessibility permission;
-          -- Linux needs xdotool/wmctrl and no Wayland in the way). Never
-          -- reports failure either way.
-          system_player_align = true,
+            -- Only consulted when system_player_align (above) is true. A
+            -- fullscreen window defeats alignment before it starts --
+            -- reported 2026-09-09: VLC (this machine's system handler) opens
+            -- in its remembered fullscreen state, same visible result as
+            -- system_player_align = false. With this true (the default), the
+            -- fallback tries a known, scriptable player by name first (`vlc
+            -- --no-fullscreen`, today) before the system's own handler, so
+            -- there is a non-fullscreen window for alignment to actually act
+            -- on. Set false to always go through the system handler even
+            -- with alignment on.
+            system_player_prefer_classic = true,
 
-          -- Only consulted when system_player_align (above) is true. A
-          -- fullscreen window defeats alignment before it starts -- reported
-          -- 2026-09-09: VLC (this machine's system handler) opens in its
-          -- remembered fullscreen state, same visible result as
-          -- system_player_align = false. With this true (the default), the
-          -- fallback tries a known, scriptable player by name first (`vlc
-          -- --no-fullscreen`, today) before the system's own handler, so
-          -- there is a non-fullscreen window for alignment to actually act
-          -- on. Set false to always go through the system handler even with
-          -- alignment on.
-          system_player_prefer_classic = true,
+            -- Only consulted when system_player_align (above) is true, same
+            -- as system_player_prefer_classic. `vlc` alone missed on PATH on
+            -- this machine -- reported 2026-09-12: the Windows VLC installer
+            -- does not extend PATH, so the known-player search above found
+            -- nothing and fell all the way through to the system handler's
+            -- remembered fullscreen state, same as if alignment were off
+            -- entirely. With this true (the default), a name that misses on
+            -- PATH is tried again against the install locations Windows
+            -- actually puts it in (Program Files / Program Files (x86)).
+            -- Set false to search PATH only.
+            system_player_search_installs = true,
+          },
 
           -- Whether an *inline* played run may start audio via mpv, when the
           -- file has a track. A "window" playback always has its player's
