@@ -1,57 +1,66 @@
 # media.nvim handover
 
+## Stand 2026-09-12
 
-## zuerste checken
+Alle drei offenen Punkte aus der vorigen Runde sind erledigt, committet und
+gepusht (hover.nvim `69ede1f`, nvim-config `e62ceb2f`):
 
+- **Config-Struktur** — genau wie im Feedback gewünscht: `system_player_align`
+  und `system_player_prefer_classic` stehen jetzt nicht mehr flach in `video`,
+  sondern unter `video.experimental` (echter Config-Key, nicht nur ein
+  Kommentarblock). hover.nvim selbst wurde entsprechend umgebaut (DEFAULTS,
+  Types, `config.preview_opts()`).
 
-**Punkt 3** — genau dein Vorschlag umgesetzt: neue Einstellung `video.system_player_prefer_classic` (Default `true`, wirkt nur wenn `system_player_align = true`). Bevor `preview.external` die System-Standard-App nimmt, probiert es jetzt eine kurze Liste bekannter, skriptbarer Player durch — aktuell nur `vlc --no-fullscreen`. Findet es VLC im PATH, startet es das direkt (kein Vollbild), sonst wie bisher der Systemstandard. Zusätzlich, unabhängig davon: das Ausrichtungs-Skript stellt ein maximiertes Fenster jetzt vor dem Verschieben zurück (`ShowWindow(SW_RESTORE)`) — vorher war das ein stiller Nichts-Tuer gegen ein maximiertes Fenster.
+- **Neuer Bug, gemeldet während der Umstrukturierung:** mit
+  `use_mpv = false` und `system_player_align = true` öffnete sich VLC trotzdem
+  im Vollbildmodus — exakt das gleiche Verhalten wie `system_player_align =
+  false`. Ursache: die Known-Player-Suche prüfte `vlc` nur über PATH
+  (`vim.fn.executable("vlc")`), der Windows-VLC-Installer erweitert PATH aber
+  nicht. Damit fiel die Suche immer durch und landete beim System-Handler mit
+  seinem gemerkten Vollbild-Zustand.
 
-**Ehrliche Einschränkung:** Ich habe kein VLC auf dieser Maschine, konnte den eigentlichen Fix also nicht Ende-zu-Ende nachstellen — nur die Entscheidungslogik ist getestet (14 neue Tests, alle grün), nicht der echte VLC-Start. Bitte bei dir nochmal testen: mit `system_player_align=true` und `system_player_prefer_classic=true` (Default) sollte jetzt entweder VLC nicht-fullscreen + zentriert erscheinen, oder — falls `vlc` nicht im PATH ist — der bisherige Vollbild-Fallback.
+  Fix: neue Einstellung `video.experimental.system_player_search_installs`
+  (Default `true`, wirkt nur wenn `system_player_align = true`, analog zu
+  `system_player_prefer_classic`). Wenn ein bekannter Player über PATH nicht
+  gefunden wird, probiert `preview.external` jetzt zusätzlich die bekannten
+  Windows-Installationspfade (`%ProgramFiles%\VideoLAN\VLC\vlc.exe` und das
+  `(x86)`-Pendant) — genau das Muster, das `preview.shot` für die
+  Browser-Suche schon verwendet.
 
+Aktuelle Config (`lua/plugins/personal/init.lua`):
 
-
-
----
-
-## Letzte message von claude
-
-```markdown
-Drei Punkte, der Reihe nach. Erst schaue ich mir dein aktuelles Config-Layout an für Punkt 2.
-
-Verstanden — drei Dinge: 1) Config-Struktur klarer machen (mach ich als letztes zusammen mit Punkt 3), 2) das eigentliche Problem: VLC startet im Vollbildmodus, Neupositionierung greift dann nicht. Ich baue die vorgeschlagene Zusatzschicht (bekannten Win32-Player direkt starten, ohne Vollbild) plus einen Fix im bestehenden Ausrichtungs-Skript (maximiertes/Vollbild-Fenster erst zurücksetzen, bevor verschoben wird).
-
-Jetzt umbauen — bekannter Player zuerst (wenn Alignment gewünscht), sonst wie bisher:
-
-Jetzt `M.open` selbst umbauen:
-
-Jetzt `@types/init.lua` und `config/init.lua`:
-
-Jetzt `config/init.lua`:
-
-Jetzt align_win.lua fixen — Fenster vor dem Verschieben aus Maximiert/Fullscreen-Zustand zurückholen:
-
-Jetzt Docs aktualisieren, dann deine Config sauber umstrukturieren (Punkt 2).
-
-Jetzt deine Config aktualisieren — Punkt 2 (klare Gruppierung) und die neue Einstellung.
-
-Jetzt committen und pushen.
-
-Jetzt noch das WKDBooks-Handover aktualisieren.
-
-Alle drei Repos sauber, gepusht. Zusammenfassung:
-
-**Punkt 1** — `use_mpv = false` bestätigt funktionierend, nichts zu tun.
-
-**Punkt 2** — Config umstrukturiert: `system_player_align` und die neue Einstellung stehen jetzt unter einem deutlich abgesetzten `-- EXPERIMENTAL --`-Block im `video`-Key, mit Kommentar, dass beide erst greifen, wenn kein mpv-Fenster läuft.
-
-**Punkt 3** — genau dein Vorschlag umgesetzt: neue Einstellung `video.system_player_prefer_classic` (Default `true`, wirkt nur wenn `system_player_align = true`). Bevor `preview.external` die System-Standard-App nimmt, probiert es jetzt eine kurze Liste bekannter, skriptbarer Player durch — aktuell nur `vlc --no-fullscreen`. Findet es VLC im PATH, startet es das direkt (kein Vollbild), sonst wie bisher der Systemstandard. Zusätzlich, unabhängig davon: das Ausrichtungs-Skript stellt ein maximiertes Fenster jetzt vor dem Verschieben zurück (`ShowWindow(SW_RESTORE)`) — vorher war das ein stiller Nichts-Tuer gegen ein maximiertes Fenster.
-
-**Ehrliche Einschränkung:** Ich habe kein VLC auf dieser Maschine, konnte den eigentlichen Fix also nicht Ende-zu-Ende nachstellen — nur die Entscheidungslogik ist getestet (14 neue Tests, alle grün), nicht der echte VLC-Start. Bitte bei dir nochmal testen: mit `system_player_align=true` und `system_player_prefer_classic=true` (Default) sollte jetzt entweder VLC nicht-fullscreen + zentriert erscheinen, oder — falls `vlc` nicht im PATH ist — der bisherige Vollbild-Fallback.
-
-Alle Tests grün, Lint sauber, Config syntaktisch geprüft.
+```lua
+video = {
+  use_mpv = false,
+  experimental = {
+    system_player_align = true,
+    system_player_prefer_classic = true,
+    system_player_search_installs = true,
+  },
+},
 ```
 
-## Mein feedback
+**Bitte nochmal testen:** Mit dieser Config sollte VLC jetzt (a) über den
+Installationspfad gefunden werden, falls es nicht auf PATH liegt, (b) mit
+`--no-fullscreen` starten und (c) zentriert erscheinen. 16 Tests in
+`TESTS/external_spec.lua` sind grün (inkl. 2 neue für den Installationspfad-
+Fund), Rest der Suite unverändert grün bis auf zwei vorbestehende,
+umgebungsbedingte Fehlschläge in `zoom_spec.lua` (ImageMagick-Blob-Problem,
+nichts mit dieser Änderung zu tun). Lint (luacheck + stylua) sauber in allen
+drei Repos.
+
+## Verlauf (vorige Runden, zur Referenz)
+
+Drei Punkte waren offen: 1) Config-Struktur klarer machen, 2) das eigentliche
+Problem — VLC startet im Vollbildmodus, Neupositionierung greift dann nicht,
+3) `system_player_prefer_classic` als Fix dafür (bekannten, skriptbaren
+Player zuerst versuchen, ohne Vollbild-Flag).
+
+Zusätzlich wurde `align_win.lua` gefixt: ein maximiertes Fenster wird jetzt
+vor dem Verschieben zurückgesetzt (`ShowWindow(SW_RESTORE)`) — vorher ein
+stiller Nichts-Tuer gegen ein maximiertes Fenster.
+
+Feedback zur Config-Struktur (umgesetzt, siehe oben):
 
 ```
 nicht so;
