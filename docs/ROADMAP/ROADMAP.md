@@ -49,6 +49,12 @@
 
 - [ ] pickers.nvim's plugin/pickers.lua materialisiert beim Start die volle Default-Config. Nach dem lib.nvim-Fix kostet das nur noch ~3 ms statt 19 — das Muster bleibt aber diskutabel, falls du dort mal aufräumen willst.
 
+- [ ] `:MyPlugins *` sollten dan auch `CR` als "ja" akzeptieren, nicht nur `y`; `Return/Back` also das ober der Enter Taste, als `No`
+
+- [ ] Muss nict beid jeden start ausgegeeben werden:
+    [lsp.servers.csharp] C#: omnisharp not found in PATH or Mason
+    [lsp.servers.csharp] C#: Omnisharp not found; skipping LSP
+
 ---
 
 ## Tasks
