@@ -1,7 +1,5 @@
 # Roadmap
 
-docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 plugins, die darsatellen können und auch die verbiundungen zu einander, zumindest inlua, das wäre extrem spanndedn, das darzustellen, wenn ncht anders möglich, in einer spehziellen ansicht -ganz ´losgelöst vom Default
-
 ## Table of content
 
   - [Cdx](#cdx)
@@ -44,6 +42,7 @@ docmap-desktop: Neuies feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 p
 
 - [ ] `docmap-desktop`
   - [ ]  `docmap-desktop/docs/PLAN.md` — 18 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
+  - [ ] Neues feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 plugins, die darsatellen können und auch die verbiundungen zu einander, zumindest inlua, das wäre extrem spanndedn, das darzustellen, wenn ncht anders möglich, in einer spehziellen ansicht -ganz ´losgelöst vom Default
 
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
