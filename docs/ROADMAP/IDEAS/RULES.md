@@ -1,7 +1,10 @@
 # `rules.nvim`
 
-**Konzept festgelegt:** 2026-09-12 · **Status:** Repo angelegt (`stefanbartl/rules.nvim`,
-`main`, MIT), Implementierung folgt in einer eigenen Session.
+**Konzept festgelegt:** 2026-09-12 · **Status:** v1-Engine implementiert und
+verdrahtet (`:Rules check --family=<PREFIX>`, alle vier Check-Typen,
+`DEP-*`-Pilot in `Checklists/regeln/LUA_NVIM.md` migriert, in `personal/init.lua`
+konfiguriert, gegen echte Daten getestet). Offen: die drei Gates und
+`--format=json`.
 
 Ein Plugin, das eine Regelsammlung (wie `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/`)
 gegen ein konkretes Repo prüft — Dry-Run, Report, Quickfix. Das Plugin selbst ist
@@ -95,9 +98,9 @@ fest getackter Fenced Block **pro Regel**, direkt in der Markdown-Datei:
 ### `DEP-01` — `vim.loop` ohne Fallback
 
 ```rule
-id = "DEP-01"
-severity = "recommended"
-check = { type = "grep", pattern = "vim%.loop%.", unless = "vim%.uv or vim%.loop" }
+id = "DEP-01",
+severity = "recommended",
+check = { type = "grep", pattern = "vim%.loop%.", unless = "vim%.uv or vim%.loop" },
 ```
 
 Seit Neovim 0.10 heißt die Uv-API `vim.uv`. Repos mit Floor < 0.10 brauchen
@@ -241,10 +244,20 @@ Intern (nicht im öffentlichen Repo):
 
 - [x] Konzept abgestimmt und hier dokumentiert
 - [x] Repo `stefanbartl/rules.nvim` angelegt, Minimalgerüst gepusht
-- [x] `wkdbook-myplugins/rules.nvim/{ROADMAP,NOTES}` angelegt
-- [ ] Implementierung: Engine, `DEP-*`-Pilot, Gates/Report/Quickfix, `:checkhealth`
-      — eigene Session, nach `Checklists/gates/NEW_PROJECT.md`
-- [ ] Command in `personal/init.lua` verdrahten und in frischer Session testen
+- [x] `wkdbook-myplugins/rules.nvim/{ROADMAP,NOTES,handovers}` angelegt
+- [x] Engine implementiert: Loader (Fenced-`rule`-Block-Parser, ID-Kollisionsprüfung),
+      alle vier Check-Typen (`grep` inkl. `patterns`-Any-of, `file_exists`/`file_absent`,
+      `json_key_absent`, `lua_predicate`), Runner, Report (Quickfix + lesbarer Buffer),
+      `:checkhealth rules` — 31 Tests grün, `luacheck`/`stylua` grün
+- [x] `DEP-*` (7 Regeln) in `Checklists/regeln/LUA_NVIM.md` ins Fenced-Block-Format migriert
+- [x] Command in `personal/init.lua` verdrahtet (`rulesets` zeigt auf `Checklists/`)
+      und in einer frischen headless Session gegen echte Daten getestet
+      (`:Rules check --family=DEP` findet reale Treffer in `nvim-config` und im
+      eigenen `rules.nvim`-Quellcode, `DEP-05` erscheint korrekt als Worklist statt
+      als vorgetäuschtes ✅/❌)
+- [ ] Gates (`new_project`/`review`/`release`) — zurückgestellt, bis eine zweite
+      Regel-Familie sie sinnvoll ausübt (siehe `docs/ROADMAP.md` im Plugin-Repo)
+- [ ] `--format=json` für Headless/CI
 
 ## Literatur und Referenzen
 
