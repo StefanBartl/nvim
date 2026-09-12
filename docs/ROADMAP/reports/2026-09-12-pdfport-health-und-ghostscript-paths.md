@@ -1,5 +1,29 @@
 # pdfport.nvim health.lua: unvollständige Migration & Ghostscript ohne `paths`
 
+## ANALYSSE DES REPORTS
+
+### Punkt 1: 13 Tools in `pdfport.nvim/health.lua` migrieren (+ images/mdview/migrate.nvim)
+
+**Kosten:** ~1 Sitzung geschätzt (Report), aber mechanisch mit Sorgfaltsbedarf, weil sich die `h_info`/`h_warn`-Texte durch den generischen Reporter ändern — d.h. echter Testlauf nötig, nicht nur Diff lesen. Für alle 4 Plugins zusammen eher 2–4 Sitzungen, nicht eine.
+
+**Nutzen:** Kein einziger bekannter oder gemessener Bug. Alle 13 Tools (pdftotext, tesseract, pandoc, magick, qpdf, pdftk, …) werden via scoop/choco/pip/cargo installiert, die PATH selbst erweitern — genau die Fälle, für die `check_exe` (reines PATH) korrekt funktioniert. Der einzige indirekte Nutzen: Single-Source-of-Truth-Konsistenz mit `docs/install.json`, und ein geschlossenes Drift-Risiko (falls später mal jemand einem dieser Tools ein `paths`-Fallback in `install.json` spendiert, ohne dass `health.lua` es automatisch mitbekäme — analog zum Chromium-Bug, aber spekulativ, kein akuter Fall).
+
+**Einschätzung:** Kosten/Nutzen-Faktor schlecht — reale Entwicklungszeit gegen null User-Nutzen heute. Ich würde das **nicht** als eigene Sweep-Sitzung ansetzen. Sinnvoller: opportunistisch mitziehen, wenn man `health.lua` eines dieser Plugins ohnehin aus anderem Grund anfasst — nicht proaktiv jetzt.
+
+### Punkt 2: Ghostscript `paths`/Wildcard-Problem
+
+**Kosten:** Kein triviales Ein-Zeiler-Fix. `candidate_paths()` müsste Wildcard-Erkennung bekommen (`vim.fn.glob(..., true)` statt `vim.fn.expand()`), **plus** eine Versions-Auswahllogik bei mehreren Treffern — und lexikographisches Sortieren ist bei Ghostscript-Versionsnummern (`gs10.9.0` vs. `gs9.56.1`) nachweislich falsch, bräuchte also echten Semver-Vergleich. Das ist ein Core-Library-Change mit Edge-Cases, eher "klein bis mittel" plus Testaufwand als reines "klein".
+
+**Nutzen:** `gs` ist laut `install.json`s eigenem `why`-Text explizit der am wenigsten kritische der drei Producer (`pdfport.merge()` Fallback #3, "last resort"). Kein gemessener Fall, dass das je gebraucht wurde.
+
+**Einschätzung:** Kosten/Nutzen-Faktor ebenfalls schlecht — Fix für ein rein hypothetisches Problem an einem Low-Priority-Producer. Report-Empfehlung (Option 3: nichts tun, bis ein zweiter Fall mit demselben Muster auftaucht) ist genau richtig — dann lohnt sich die generische Lösung in `lib.nvim.deps`, weil sie mehreren Plugins nutzt statt nur `gs`.
+
+### Fazit
+
+Beide Punkte: **nicht aktiv angehen.** Punkt 1 nur opportunistisch mitnehmen, wenn eine der vier `health.lua`-Dateien ohnehin aus anderem Grund geändert wird. Punkt 2 erst, wenn ein zweiter Fall mit versioniertem Windows-Installpfad auftaucht — der Report dokumentiert das sauber genug, um es einfach liegen zu lassen.
+
+## Intro
+
 **Datum:** 2026-09-12
 **Auslöser:** Nachfrage im Chat zur Chrome/soffice-`paths`-Session (siehe
 `project_lib_nvim_deps_paths` im Claude-Memory) — zwei Punkte, die dabei
