@@ -684,6 +684,19 @@ plugins.add({
     },
   },
 
+  {
+    "StefanBartl/rules.nvim",
+    cmd = { "Rules" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- Whole Checklists tree, not just regeln/: the loader only picks up
+      -- fenced ```rule blocks, so files still in the legacy table format are
+      -- silently skipped rather than needing a narrower path per migrated
+      -- family. Today that's just DEP-* in regeln/LUA_NVIM.md.
+      rulesets = { vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-Lua/Checklists" },
+    },
+  },
+
   -- {
   --   "StefanBartl/neotree-fs-refactor",
   --   lazy = false,
