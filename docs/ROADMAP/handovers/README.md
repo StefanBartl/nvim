@@ -16,6 +16,7 @@ Hier bleiben nur Handovers, deren Gegenstand diese Config selbst ist.
 | War hier | Liegt jetzt |
 | --- | --- |
 | `media-nvim-and-hover-video.md`, `video-hover-playback.md`, `open-externally-and-sound.md` | `wkdbook-myplugins/media.nvim/NOTES/HANDOVER.md` — zu einem Dokument zusammengeführt (2026-09-08) |
+| `media.nvim.md` | `wkdbook-myplugins/media.nvim/NOTES/HANDOVER.md` — war nach dem Zusammenführen oben erneut hier angelegt worden, jetzt eingearbeitet (2026-09-12) |
 
 Die Roadmap von `media.nvim` ist bei derselben Gelegenheit aus dem Repo nach
 `wkdbook-myplugins/media.nvim/ROADMAP/ROADMAP.md` gezogen — bewusste Abweichung
