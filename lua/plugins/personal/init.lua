@@ -319,6 +319,25 @@ plugins.add({
   },
 
   {
+    -- This config's former lua/wkdnvchad/** statusline/tabline/theme code,
+    -- extracted, then rebuilt standalone -- as of its own roadmap step 6 it
+    -- needs neither NvChad nor base46 any more for statusline, tabline or
+    -- theme (see the plugin's own README). `config/ui_statusline.lua` wires
+    -- this host's own statusline into it at UIReady; NvChad/wkdnvchad/
+    -- chadrc.lua are untouched otherwise -- fully replacing them is roadmap
+    -- step 7 in ui.nvim's own ROADMAP.md, a separate, larger step.
+    --
+    -- No `opts`/`config` on purpose, same reason as my.nvim/lsp.nvim above:
+    -- the actual setup() calls happen from a startup phase (UIReady, since
+    -- they must run after NvChad's own chadrc-driven statusline has already
+    -- set vim.o.statusline once, to win by running last), not a lazy hook.
+    "StefanBartl/ui.nvim",
+    lazy = false,
+    priority = 900,
+    dependencies = { "StefanBartl/lib.nvim" },
+  },
+
+  {
     -- Eager: setup() registers the VimEnter autoload and the VimLeavePre
     -- autosave. Both are startup/shutdown events, so a lazy trigger would have
     -- to fire before VimEnter to be of any use -- which is what `lazy = false`
