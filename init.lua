@@ -293,6 +293,16 @@ startup.on("UIReady", "menu", function()
   })
 end)
 
+-- UIReady, deliberately last among these: everything else, including
+-- NvChad's own chadrc-driven statusline, has already booted by the time this
+-- runs, so ui.nvim's own render entrypoint wins vim.o.statusline without
+-- this config touching chadrc.lua or NvChad at all. See
+-- lua/config/ui_statusline/init.lua's own doc comment for what this is (and
+-- is not -- not roadmap step 7).
+startup.on("UIReady", "ui_statusline", function()
+  require("config.ui_statusline").setup()
+end)
+
 -- No startup phase wires this config's own telemetry up: runtime-analysis
 -- .nvim does it itself, from `opts.telemetry.extra` (see config/telemetry
 -- .lua), wrapping at VimEnter for exactly the reason a phase here would have
