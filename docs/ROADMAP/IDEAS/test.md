@@ -27,6 +27,7 @@ Auslagerungs-Thema bestehende Inkonsistenzen im heutigen Code aufgedeckt
 - [8. Migrationsplan](#8-migrationsplan)
 - [9. Brainstorm: fehlende / neue Features](#9-brainstorm-fehlende--neue-features)
 - [10. Offene Fragen / Risiken](#10-offene-fragen--risiken)
+- [11. Randnotiz: `plenary.nvim` ist nicht vollständig durch `lib.nvim` ersetzt](#11-randnotiz-plenarynvim-ist-nicht-vollständig-durch-libnvim-ersetzt)
 
 ---
 
@@ -352,3 +353,43 @@ Wie in [NEW_Project.md](./MATERIALS/NEW_Project.md) festgelegt:
   weil X" dokumentiert, analog zur Sorgfalt bei den anderen Startup-Phasen
   in `init.lua` (s. [NEW_PLUGIN.md §8](./NEW_PLUGIN.md#8-offene-fragen--risiken)
   zur Startup-Reihenfolge-Disziplin).
+
+---
+
+## 11. Randnotiz: `plenary.nvim` ist nicht vollständig durch `lib.nvim` ersetzt
+
+Nicht Teil der `neotest`-Auslagerung oben, sondern eine separate, beim
+Aufräumen der Startup-Notifies in `lsp.nvim`/`dap.nvim` (2026-09-12)
+aufgekommene Erkenntnis, die hier festgehalten wird, weil sie die nächste
+Diskussion "können wir `plenary.nvim` als Dependency ganz loswerden, jetzt wo
+`lib.nvim` das doch eh reimplementiert hat" vorwegnimmt.
+
+**Die Annahme stimmt nur zur Hälfte.**
+
+- **Tatsächlich absorbiert:** `lib.nvim` hat plenarys *Runtime-Utilities*
+  (Path, Job, async/fs-Traversal, Git-Helper) durch eigene Implementierungen
+  auf Basis nativer Neovim-APIs ersetzt — Beleg:
+  `lib.nvim.system.job`s eigener Docstring nennt sich wörtlich einen "thin
+  `vim.system` wrapper restoring plenary.job-like ergonomics"
+  (`lib.nvim/docs/API/commands-and-infra.md`). Deshalb: **0 Treffer** für
+  `require("plenary...")` im gesamten Produktivcode von `lsp.nvim` und
+  `dap.nvim` — dort wird plenary schon lange nicht mehr direkt benutzt.
+- **Nicht absorbiert:** Plenarys Busted-artiges Test-Framework
+  (`describe`/`it`/`assert.*` in `plenary/busted.lua`) plus der headless
+  Test-Runner (`plenary/test_harness.lua`, angesprochen über
+  `:PlenaryBustedFile`/`:PlenaryBustedDirectory`) hat in `lib.nvim` **keine
+  Entsprechung** — kein `describe`/`it` irgendwo im `lib.nvim`-Baum. Und
+  `lib.nvim` hat selbst ein `TESTS/`-Verzeichnis, das für seine eigene
+  Suite denselben Mechanismus braucht (`PLENARY_PATH` +
+  `runtime plugin/plenary.vim`) wie `lsp.nvim`s und `dap.nvim`s
+  `TESTS/minimal_init.lua` / `tests/minimal_init.lua`.
+
+**Konsequenz:** `plenary.nvim` ist über die ganze `*.nvim`-Flotte hinweg zu
+einer reinen **Dev/Test-only-Dependency** (Test-Runner) geschrumpft, keine
+Runtime-Dependency mehr. Kein Handlungsbedarf jetzt — aber falls irgendwann
+vorgeschlagen wird, plenary komplett rauszuwerfen: das würde jede
+`PlenaryBustedDirectory`-Testsuite in der Flotte brechen, solange `lib.nvim`
+nicht zusätzlich ein eigenes, minimales `describe/it/assert`-Framework +
+Headless-Runner bereitstellt. Kein aktuell geplantes Feature, nur als
+Beobachtung festgehalten, damit die Antwort beim nächsten Aufkommen dieser
+Frage nicht neu recherchiert werden muss.
