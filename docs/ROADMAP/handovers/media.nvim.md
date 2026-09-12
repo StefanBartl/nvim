@@ -1,5 +1,31 @@
 # media.nvim handover
 
+## Offene Tests (musst du selbst machen)
+
+Diese Liste ist die Übersicht: alles, was hier steht, konnte ich nicht
+End-to-End auf dieser Maschine nachstellen (fehlende Software, fehlendes
+Gerät o.ä.) und braucht deine Bestätigung. Erledigte Punkte bleiben
+durchgestrichen stehen, damit die Historie nachvollziehbar bleibt — neue
+Punkte kommen oben dazu.
+
+- [ ] **VLC, `system_player_align` + `system_player_search_installs`**
+  (Stand 2026-09-12): Mit
+  ```lua
+  video = {
+    use_mpv = false,
+    experimental = {
+      system_player_align = true,
+      system_player_prefer_classic = true,
+      system_player_search_installs = true,
+    },
+  },
+  ```
+  sollte VLC jetzt (a) auch gefunden werden, wenn es nicht auf PATH liegt
+  (Suche über `%ProgramFiles%\VideoLAN\VLC\vlc.exe` / `(x86)`-Pendant),
+  (b) mit `--no-fullscreen` starten und (c) zentriert erscheinen. Liegt dein
+  VLC an einem dritten Pfad, kurz Bescheid geben — dann wird die Pfadliste
+  erweitert.
+
 ## Stand 2026-09-12
 
 Alle drei offenen Punkte aus der vorigen Runde sind erledigt, committet und
