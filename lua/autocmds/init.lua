@@ -17,15 +17,14 @@ require("autocmds.markdown_folds").setup()
 --- General
 ------------------------------------------------------
 
+-- Kitty padding (autocmds.terminals, below) and last_loc (autocmds.text,
+-- below) used to be configurable here too -- both were exact duplicates of
+-- those modules' own features (kitty was actively double-firing on every
+-- VimEnter/VimLeavePre; last_loc was disabled here and never actually ran).
+-- Removed 2026-09-12, one owner each now.
 require("autocmds.general").enable({
-  kitty = {
-    enable = true, -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
-  },
   cursorline = {
     enable = false, -- Toggles the local 'cursorline' option on focus/normal events and hides it on insert/leave events.
-  },
-  last_loc = {
-    enable = false, -- On BufReadPost, jumps back to the last cursor position unless the filetype is excluded.
   },
   no_name_guard = {
     -- SUPERSEDED: this generic sweep has no tree-window exclusion and raced

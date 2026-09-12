@@ -4,13 +4,9 @@
 local AUTOCMDS_GENERAL_DEFAULTS = {
   group_name = "autocmds_general",
 
-  kitty = { -- Sets Kitty padding/margin to compact values on VimEnter and restores them on VimLeavePre.
-    enable = true, -- only has an effect inside Kitty
-    enter_padding = 0,
-    enter_margin = 0,
-    leave_padding = 20,
-    leave_margin = 10,
-  },
+  -- Kitty padding/margin used to be configured here too -- removed
+  -- 2026-09-12, autocmds.terminals is the one owner now (see its own
+  -- defaults.lua).
 
   cursorline = {
     enable = true,
@@ -18,11 +14,9 @@ local AUTOCMDS_GENERAL_DEFAULTS = {
     hide_events = { "InsertEnter", "WinLeave" },
   },
 
-  last_loc = {
-    enable = true,
-    exclude = { "gitcommit", "commit", "gitrebase" },
-    mark = '"',
-  },
+  -- Jump-to-last-location used to be configured here too -- removed
+  -- 2026-09-12, autocmds.text is the one owner now (see its own
+  -- defaults.lua).
 
   no_name_guard = {
     enable = true,

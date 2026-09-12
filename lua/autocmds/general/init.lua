@@ -4,7 +4,6 @@
 --- Guards are included to avoid side effects in unsupported contexts.
 local M = {}
 
-local api = vim.api
 local helpers = require("autocmds.general.helpers")
 local DEFAULTS = require("autocmds.general.defaults").get_defaults()
 local Autocmd = require("lib.nvim.bindings.autocmd")
@@ -18,24 +17,15 @@ local Autocmd = require("lib.nvim.bindings.autocmd")
 function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})
 
-  -- 1) Kitty spacing tweaks on enter/leave (VimEnter, VimLeavePre)
-  if cfg.kitty.enable then
-    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_kitty_spacing")
-    Autocmd.create("VimEnter", function()
-      helpers.kitty_set_spacing(cfg.kitty.enter_padding, cfg.kitty.enter_margin)
-    end, {
-      group = grp,
-      desc = "Kitty: reduce spacing for the current window on VimEnter",
-    })
-    Autocmd.create("VimLeavePre", function()
-      helpers.kitty_set_spacing(cfg.kitty.leave_padding, cfg.kitty.leave_margin)
-    end, {
-      group = grp,
-      desc = "Kitty: restore spacing for the current window on VimLeavePre",
-    })
-  end
+  -- Kitty spacing tweaks used to live here too (VimEnter/VimLeavePre),
+  -- duplicating autocmds.terminals' own kitty feature -- same events, same
+  -- `:silent !kitty @ set-spacing ...` mechanism, both enabled at once in
+  -- autocmds/init.lua, so the command ran twice on every startup/exit.
+  -- Removed 2026-09-12; autocmds.terminals is the one owner now (it already
+  -- used lib.nvim.terminal.is_kitty, the shared detector, rather than this
+  -- module's own hand-rolled one).
 
-  -- 2) Cursorline only in the active window
+  -- 1) Cursorline only in the active window
   if cfg.cursorline.enable then
     local grp_show = helpers.augroup((cfg.group_name or "autocmds_general") .. "_cursorline_show")
     Autocmd.create(cfg.cursorline.show_events, function(event)
@@ -57,35 +47,16 @@ function M.enable(cfg)
     })
   end
 
-  -- 3) Jump to last location when reopening a file (BufReadPost)
-  if cfg.last_loc.enable then
-    local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_last_loc")
-    Autocmd.create("BufReadPost", function(event)
-      local buf = event.buf
-      -- Skip specific filetypes (commit messages, rebase plans, etc.)
-      if vim.tbl_contains(cfg.last_loc.exclude, vim.bo[buf].filetype) then
-        return
-      end
-      -- Guard against running twice per buffer
-      if vim.b[buf].__custom_last_loc_done then
-        return
-      end
-      vim.b[buf].__custom_last_loc_done = true
+  -- Jump-to-last-location used to live here too (BufReadPost), duplicating
+  -- autocmds.text's own last_loc feature. Never actually double-fired --
+  -- this one was disabled in autocmds/init.lua's config, text's was the one
+  -- enabled -- but two implementations for a feature only one of them ran
+  -- is exactly the kind of drift worth removing rather than leaving as dead
+  -- weight. Removed 2026-09-12; autocmds.text is the one owner now (native
+  -- autocmd `pattern` filtering instead of a runtime `vim.tbl_contains`
+  -- check, plus `min_line`).
 
-      -- Retrieve the last-position mark (default: `"`).
-      local mark = api.nvim_buf_get_mark(buf, cfg.last_loc.mark)
-      local lcount = api.nvim_buf_line_count(buf)
-      if mark[1] > 0 and mark[1] <= lcount then
-        -- pcall to avoid throwing if the window is in a nonstandard state.
-        pcall(api.nvim_win_set_cursor, 0, mark)
-      end
-    end, {
-      group = grp,
-      desc = "Jump to the last cursor position on file open",
-    })
-  end
-
-  -- 4) Redirect spurious [No Name] buffers left behind by a close, to a real
+  -- 2) Redirect spurious [No Name] buffers left behind by a close, to a real
   --    buffer if one exists (BufDelete/BufWipeout, WinClosed)
   if cfg.no_name_guard.enable then
     local grp = helpers.augroup((cfg.group_name or "autocmds_general") .. "_no_name_guard")
