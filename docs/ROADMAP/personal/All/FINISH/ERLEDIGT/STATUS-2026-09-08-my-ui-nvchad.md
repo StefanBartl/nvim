@@ -178,7 +178,17 @@ Aktueller, vollständiger Stand: `ui.nvim`s eigenes README + ROADMAP
 Kopfzeile angekündigt. Was von hier aus noch offen bleibt, unabhängig von
 der `ui.nvim`/`my.nvim`-Frage:
 
-- Schritt 7 (Host-Wiring: `chadrc.lua` ersetzen, `NvChad/NvChad` als
-  Hard-Dependency entfernen) — bewusst noch nicht angefasst.
+- Schritt 7 (vollständiges Host-Wiring: `chadrc.lua`/`NvChad/NvChad` als
+  Hard-Dependency entfernen) — bewusst noch nicht angefasst. Die Statusline
+  läuft seit 2026-09-12 (`nvim-config@ed22f592`) aber schon **additiv** über
+  `ui.nvim` (`lua/config/ui_statusline/`, `startup.on("UIReady", …)`), ohne
+  `chadrc.lua`/NvChad anzufassen — kein Schritt 7, aber ein Schritt Richtung
+  dorthin.
 - `neotest`-Config nicht extrahiert (Abschnitt "Nicht umgesetzt" Punkt 3).
-- Zwei Duplizierungsfunde (Kitty-Padding, `last_loc`) — Abschnitt 5.
+- ~~Zwei Duplizierungsfunde (Kitty-Padding, `last_loc`)~~ — **erledigt
+  2026-09-12** (`nvim-config`, selbiger Tag wie oben). Kitty-Padding lief in
+  `general` UND `terminals` gleichzeitig (beide aktiv, Befehl lief doppelt
+  auf jedem Start/Exit) — `general`s Kopie entfernt, `terminals` bleibt
+  Eigentümer. `last_loc` war in `general` (deaktiviert) und `text` (aktiv)
+  doppelt implementiert — `general`s tote Kopie entfernt, `text` bleibt
+  Eigentümer.
