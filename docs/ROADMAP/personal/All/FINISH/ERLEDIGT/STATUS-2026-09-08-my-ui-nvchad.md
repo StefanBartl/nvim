@@ -110,8 +110,10 @@ Commits `lib.nvim@8023d5b`/`3fe3d00`/`66a0f00`,
 kein Repo dafür angelegt.
 
 ### 4. Offene Grundsatzfragen (aus `my.nvim.md` Teil 7 und `NEW_PLUGIN.md` §8)
-- **Endzustand**: Stufe 1 (nur Kontrolle) vs. Stufe 3 (eigene UI-Schale) vs.
-  Stufe 4 — unentschieden.
+- ~~**Endzustand**~~ — **faktisch beantwortet.** Stufe 1 (nur Kontrolle) vs.
+  Stufe 3 (eigene UI-Schale) vs. Stufe 4 — nie formal entschieden, aber durch
+  die tatsächliche Arbeit beantwortet: `ui.nvim` baut durchgehend Stufe 3
+  (eigene Statusline/Tabline/Theme-Schale, nicht nur Kontrollfunktionen).
 - **Namen**: `ui.nvim` scheint laut `NEW_PLUGIN.md`-Kopfnotiz bereits
   gesetzt (öffentlich, ersetzt den Arbeitstitel `nvchad-ui.nvim`); `my.nvim`
   ist real. Innerhalb `NEW_PLUGIN.md` selbst sind die Commands nachträglich
@@ -120,17 +122,26 @@ kein Repo dafür angelegt.
   „lib.nvim als **harte** Abhängigkeit" für das künftige `ui.nvim`/`options`-
   Umfeld ist ebenfalls bereits als Antwort im Dokument vermerkt (Inline-
   Antwort zu §8, README-Drift-Punkt).
-- **`wkdnvchad/` → Repo**: nicht entschieden, ob zuerst der Statusline-
-  Rahmen gebaut und dann portiert wird, oder umgekehrt (Empfehlung in
-  `my.nvim.md`: Rahmen zuerst).
-- **Statusline-Variante**: `wkdnvchad/config/init.lua` steht auf `"normal"`;
-  welche der sechs Varianten (`normal`/`base`/`lspbased`/`custom`/
-  `custom_light`/`custom_minimal`) das Ziel für `ui.nvim` ist, ist nicht
-  festgelegt.
+- ~~**`wkdnvchad/` → Repo**~~ — **faktisch beantwortet.** Rahmen zuerst, wie
+  empfohlen: der Umzug am 2026-09-08 war ein reiner Prefix-Rename, danach
+  schrittweise umgebaut (Schritte 3-6, alle in `ui.nvim`s ROADMAP/README
+  protokolliert).
+- ~~**Statusline-Variante**~~ — **teilweise überholt, teilweise offen.** Die
+  Varianten-Frage selbst ist entschieden: von sechs auf vier generische
+  Presets konsolidiert (`default`/`minimal`/`lsp`/`blocks`, 2026-09-12) plus
+  ein Registry-Mechanismus, über den ein Host eine eigene, plugin-spezifische
+  Variante unter eigenem Namen registrieren kann (`:UI variant`). Welches
+  Preset **für den Host** (diese Config) das Ziel ist, sobald Schritt 7
+  kommt, ist weiterhin offen — reine Geschmacksfrage, siehe
+  `ui.nvim/docs/configuration.md`.
 - **Dashboard ja/nein**: weiterhin bewusst keins.
-- **base46 als Fremdplugin akzeptieren**: `my.nvim.md` empfiehlt es
-  ausdrücklich (D5, Stufe 0) — keine Gegenentscheidung dokumentiert, aber
-  auch keine explizite Bestätigung durch dich.
+- ~~**base46 als Fremdplugin akzeptieren**~~ — **veraltet, anders entschieden
+  (2026-09-12).** `my.nvim.md` empfahl es ausdrücklich (D5, Stufe 0); Schritt
+  6 der `ui.nvim`-Entkopplung hat sich fürs Gegenteil entschieden: base46
+  ist komplett raus, `ui.theme.palette` leitet Akzentfarben stattdessen aus
+  den Highlight-Gruppen des aktiven Colorschemes ab. Details in
+  `ui.nvim`s README (Schritt-6-Eintrag) und
+  `wkdbook-myplugins/ui.nvim/handovers/`.
 
 ### 5. `nvim.nvim.md`s Autocmd→Plugin-Mapping
 Rein analytisch, keine offenen Handlungspunkte außer den zwei notierten
@@ -142,9 +153,32 @@ unabhängig von der Plugin-Frage.
 
 ## Kurzfassung für die Wiederaufnahme
 
-Wenn `ui.nvim` (oder die NvChad-Ablöse allgemein) je weiterverfolgt wird,
-ist `my.nvim.md` der aktuelle, vollständige Plan dafür — nichts davon ist
-durch die Zeit überholt (gegen den Live-Stand am 2026-09-08 verifiziert).
-Einstieg laut eigener Empfehlung: D2 (`nvconfig`-Shim, XS) + D1
-(Plugin-Bundle selbst deklarieren, S) — zusammen ein Nachmittag, danach ist
-`NvChad/NvChad` als Hard-Dependency raus und der Rest einzeln entscheidbar.
+**Überholt (2026-09-12) — tatsächlich lief es anders.** Die hier empfohlene
+Reihenfolge (D2 `nvconfig`-Shim + D1 Plugin-Bundle) wurde nicht der
+Einstieg. Stattdessen lief `ui.nvim`s eigene Roadmap durch: Schritte 3-5
+(NvChad-Symbole ersetzen, eigener Render-Entrypoint, `nvchad.tabufline`
+ersetzen, alle 2026-09-08), Schritt 6 (base46 → `ui.theme.palette`,
+2026-09-12), plus am selben Tag ein Bug-Sweep, die
+Statusline-Preset-Konsolidierung (sechs → vier generische Presets) und die
+Winbar-Entscheidung (`ui.nvim` besitzt den `vim.wo.winbar`-Write, `my.nvim`
+steuert bei — dasselbe Muster wie bei `vim.diagnostic.config`). `ui.nvim`
+braucht inzwischen weder NvChad noch base46 für Statusline, Tabline oder
+Theme. Einziges verbliebenes großes Stück: **Schritt 7, Host-Wiring** —
+`NvChad/NvChad` ist in dieser Config weiterhin eine harte Abhängigkeit,
+`lua/wkdnvchad/**`/`lua/chadrc.lua` unangetastet.
+
+Aktueller, vollständiger Stand: `ui.nvim`s eigenes README + ROADMAP
+(`wkdbook-myplugins/ui.nvim/`), `my.nvim`s HANDOVER + ROADMAP
+(`wkdbook-myplugins/my.nvim/`) — nicht mehr dieses Dokument oder
+`my.nvim.md`.
+
+---
+
+**Diese Datei wird hiermit nach `FINISH/ERLEDIGT` verschoben**, wie in der
+Kopfzeile angekündigt. Was von hier aus noch offen bleibt, unabhängig von
+der `ui.nvim`/`my.nvim`-Frage:
+
+- Schritt 7 (Host-Wiring: `chadrc.lua` ersetzen, `NvChad/NvChad` als
+  Hard-Dependency entfernen) — bewusst noch nicht angefasst.
+- `neotest`-Config nicht extrahiert (Abschnitt "Nicht umgesetzt" Punkt 3).
+- Zwei Duplizierungsfunde (Kitty-Padding, `last_loc`) — Abschnitt 5.
