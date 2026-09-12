@@ -737,6 +737,13 @@ plugins.add({
           experimental = {
             plaintext = { enabled = true },
           },
+          -- Cascade-delete-assets: when a file is deleted, also detect
+          -- outgoing links it holds to asset files (screenshots etc.) under
+          -- assets/ and offer to delete those too, once nothing else still
+          -- references them. Opt-in upstream (default off); enabled here
+          -- since this is the feature under active development/testing —
+          -- see wkdbook-myplugins/filetree.nvim/ROADMAP/IDEAS/Cascade_Delete_Assets.md.
+          outgoing_assets = { enabled = true },
         },
         features = {
           cwd_sync = { enabled = true, reveal = false },
