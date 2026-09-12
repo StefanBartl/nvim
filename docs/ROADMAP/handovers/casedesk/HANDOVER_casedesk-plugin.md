@@ -49,7 +49,7 @@ Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
       Parallelbetrieb statt Löschen (§3.8), Schwesterplugins (§8),
       Feature-Backlog (§9).
 - [x] **`wkdbook-casedesk` angelegt** — `wkdbook-myplugins/casedesk.nvim/`
-      mit `README.md`, `ROADMAP/`, `Messungen/`. Committet und gepusht.
+      mit `../README-New/README.md`, `ROADMAP/`, `Messungen/`. Committet und gepusht.
 - [x] **`:Cases doctor`-Baseline aufgenommen** (2026-09-04, **vor**
       Phase 1) — 20 Funde, gesichert unter
       `wkdbook-myplugins/casedesk.nvim/Messungen/doctor-baseline-2026-09-04.md`
@@ -68,7 +68,7 @@ Diese Datei sagt nur: **wo stehen wir gerade, was kommt als Nächstes.**
   `gen_map --check` in CI (NEW-20), `scripts/gen_map.lua` übernommen und
   auf casedesk angepasst (inklusive zweier Layer-Regeln: `extract/*` und
   `config` dürfen nicht auf `ui` zugreifen).
-- `README.md` englisch mit ASCII-Art, Badges, Schwesterplugin-Absatz
+- `../README-New/README.md` englisch mit ASCII-Art, Badges, Schwesterplugin-Absatz
   (NEW-11/12). `doc/casedesk.txt`, `docs/{ROADMAP,BINDINGS,installation,
   configuration}.md` als Gerüste; `docs/ROADMAP.md` ist bereits echt und
   trägt den Feature-Backlog.
