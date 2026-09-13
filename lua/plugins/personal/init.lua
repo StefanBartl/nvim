@@ -711,10 +711,11 @@ plugins.add({
       -- Whole Checklists tree, not just regeln/: the loader only picks up
       -- fenced ```rule blocks, so files still in the legacy table format are
       -- silently skipped rather than needing a narrower path per migrated
-      -- family. Migrated: DEP-*/TS-*/SEC-*/CMT-*/ERR-*/UI-*/LUA-* in
-      -- regeln/LUA_NVIM.md, PRIN-*/PERF-* in their own regeln/*.md, plus
-      -- NEW-*/REL-* pilot subsets in gates/{NEW_PROJECT,RELEASE}.md. Still
-      -- table-format: the rest of NEW-*/REL-*, XP-*, LLS-*.
+      -- family. All fourteen families are migrated (421 rules total):
+      -- DEP-*/TS-*/SEC-*/CMT-*/ERR-*/UI-*/LUA-*/XP-*/LLS-* in
+      -- regeln/LUA_NVIM.md, PRIN-*/PERF-* in their own regeln/*.md,
+      -- NEW-*/REL-* (full 50/34, not just a pilot subset) in
+      -- gates/{NEW_PROJECT,RELEASE}.md.
       rulesets = { vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-Lua/Checklists" },
       -- Gate-to-family mapping is config, not a rules.nvim opinion -- see
       -- docs/BINDINGS.md in the plugin repo. `review` mirrors exactly the
