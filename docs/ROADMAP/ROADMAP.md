@@ -19,7 +19,7 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:00       |    04% / 23%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:00       |    60% / 48%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     23:40       |    24% / 19%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     23:50       |    97% / 78%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
@@ -31,11 +31,12 @@
 - Docs / README.md des Plugins updaten sofern es Sinn macht
 - Keine Co-Authorenschaft von Claude in den Commits
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
-- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit)
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit) und `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
 - code der implementiert wurde muss luacheck / stylua grün sein
 
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
+`$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
 
 ---
