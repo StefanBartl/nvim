@@ -202,14 +202,6 @@ local function open_terminal()
   local dir = vim.fn.fnamemodify(bufname ~= "" and bufname or vim.uv.cwd() or "./", ":h")
   local thecmd = "cd " .. dir
 
-  if vim.g.base46_cache then
-    local ok_term, nvterm = pcall(require, "nvchad.term")
-    if ok_term and nvterm and nvterm.new then
-      nvterm.new({ cmd = thecmd, pos = "sp" })
-      return
-    end
-  end
-
   vim.cmd("enew")
   vim.fn.jobstart({ vim.o.shell, vim.o.shellcmdflag, thecmd .. " ; " .. vim.o.shell }, {
     term = true,
