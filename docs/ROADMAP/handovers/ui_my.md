@@ -77,17 +77,57 @@ Nicht selbstständig wiederhergestellt, da unklar ist, ob das absichtlich
 raus ist oder nur beim Force-Push mitgerissen wurde — beim Nutzer
 nachgefragt.
 
+**2026-09-14, direkt danach: Statusline-Vordergrund vereinheitlicht + vier
+der elf Module (`ui.nvim@63bd747`…`240e890`).**
+
+**Live-Feedback zwischendurch:** "Statusline-Schrift ist nicht durchgehend —
+sollte alles weiß sein, außer der Mode-Chip." `St_gitIcons`/`St_LspMsg`/
+`St_Lsp`/`St_cwd_icon`/`St_cwd_text`/`St_LspProgress` lasen eine gedimmte,
+`"Comment"`-abgeleitete Farbe, während `St_file`/`St_pos_icon`/`St_pos_text`
+die normale Vordergrundfarbe lasen — ohne inhaltlichen Grund unterschiedlich.
+Vereinheitlicht; Mode-Chip und der `blocks`-Preset-Cursor-Chip unverändert
+(sitzen auf einem gefüllten Akzent-Hintergrund, nicht der schlichten
+Statusline-Fläche); Diagnostics-Farben (Error/Warning/Hint/Info) bewusst
+nicht angefasst, die sind bedeutungstragend.
+
+Der Reihe nach umgesetzt, wie unten gelistet:
+1. `diagnostics_sparkline` — 20-Glyph-Dichte-Zeile, `cursor_ctl.renderer
+   .pct_bar` dafür öffentlich gemacht statt dupliziert.
+2. `macro_counter` — Live-Tastendruckzähler während Makro-Aufnahme, über
+   `vim.on_key()` geklammert von `RecordingEnter`/`RecordingLeave`.
+3. `time_in_buffer` — "12m" seit dem ersten `BufEnter` dieser Session,
+   bewusst ohne die `sessions.nvim`-Cross-Session-Erweiterung.
+4. `github_stats_badge` — "👁 42 diese Woche" fürs aktuelle Repo, nur
+   sichtbar innerhalb eines getrackten Repos.
+
+Zwei echte Bugs beim Bauen gefunden: `macro_counter`s erster Entwurf nutzte
+`string.format`, dessen literales `%` aus `%#Group#` Lua selbst als
+ungültige Format-Direktive las (auf Konkatenation umgestellt);
+`github_stats_badge`s erster `owner/repo`-Regex schloss Punkte aus dem
+Repo-Namen aus und kürzte deshalb jedes `*.nvim`-Repo dieses Ökosystems
+("ui.nvim" → "ui") — vom eigenen Test gefunden.
+
+**Ein Idee-Punkt hält der Realität nicht stand, noch nicht umgesetzt:**
+"Recommender-Badge" beschreibt `recommender.nvim` als Perf-/Security-Scanner
+mit einem `:RecommenderCheck`-Befehl — beides existiert im tatsächlichen
+Repo nicht. `recommender.nvim` findet stattdessen wiederholte Dotted-Chains,
+die sich als Alias lohnen würden (siehe dessen README). **Frage an den
+Nutzer:** Idee auf die reale Funktion anpassen (Badge zeigt: "N
+Alias-Vorschläge für diese Datei offen"), oder ganz streichen?
+
+20 neue Tests seit der letzten Runde. Volle Suite grün (235 Tests),
+`luacheck`/`stylua` clean. Details: `$REPOS_DIR/WKDBooks/Development/
+wkdbook-myplugins/ui.nvim/NOTES.md`s achtzehnte Runde.
+
 ---
 
 ## Offene Tasks
 
-Aus der Statusline-Ideen-Auswahl, nach dem Klick-Layer (s.o.) noch offen,
-jeweils als eigener Umsetzungsschritt (nicht in dieser Session begonnen):
-- Diagnostics-Sparkline
-- Makro-Tastendruck-Zähler
-- Zeit in dieser Datei (seit `BufEnter`)
-- Recommender-Badge
-- GitHub-Stats-Ticker
+Aus der Statusline-Ideen-Auswahl noch offen, jeweils als eigener
+Umsetzungsschritt:
+- Recommender-Badge — **blockiert auf die Nutzerantwort oben** (Idee passt
+  nicht zur realen Plugin-Funktion)
+- GitHub-Stats-Ticker — ~~erledigt~~ siehe oben (`github_stats_badge`)
 - Runtime-Analysis-Ampel
 - Casedesk-SLA-Countdown
 - Filetree-Verlaufspunkte
