@@ -128,24 +128,44 @@ Umsetzung:
   `doc/pickers.txt` in `pickers.nvim` mitpflegen (dort stehen `:RepoFiles`/`:WkdBookFiles`
   bereits dokumentiert — `:PluginsBookFiles`/`:PluginsBookGrep` dort ergänzen).
 
-### 4. Noch nicht begonnen
+### 4. Umsetzung (erledigt, 2026-09-14)
 
-Nichts ist implementiert — dies ist reine Konzept-/Analysephase. Kein Code wurde in
-`nvim-config` oder `pickers.nvim` geändert.
+Implementiert in beiden Repos, siehe Details unten. Eine Planänderung gegenüber
+Abschnitt 3 war nötig:
+
+**`only_git = true` funktioniert nicht** — die Unterordner in `wkdbook-myplugins`
+(`cascade.nvim/`, `ui.nvim/`, ...) sind reine Doku-Ordner (nur `ROADMAP/` drin),
+**kein** `.git`. Die echten Repo-Klone liegen direkt unter `REPOS_DIR`. Mit
+`only_git = true` blieben 0 Einträge übrig (per Headless-Smoke-Test verifiziert).
+Fix: neues generisches Collection-Feld `exclude` (`string[]`, exakte Basenamen)
+in `pickers.nvim` ergänzt — filtert `ALL`, `TEMPLATES`, `TOOLS`, `_Telemetry`
+per Namen statt per `.git`-Test. Betrifft `pickers/sources/collection.lua`,
+`pickers/config/init.lua`, `pickers/sources/@types/init.lua`,
+`docs/collections.md`.
+
+Leader-Kürzel: `<leader>pbf/pbg/pbs` (Präfix `pb` war frei, kollidiert nicht
+mit dem bestehenden `<leader>p*`-Fileops/Gopath/Insights/Profiler-Cluster).
+
+Verifiziert per Headless-`nvim --headless -u NONE`-Smoke-Test: `list_names`/
+`resolve`/`complete` gegen den echten `wkdbook-myplugins`-Pfad, sowie voller
+`require("pickers").setup(...)` mit Prüfung von `:PluginsBookFiles`-Registrierung
+(nargs `?` + Completion, überschreibt die generische Collection-Variante),
+`:PluginsBookSmart` (bleibt generisch) und den drei Keymaps.
 
 ---
 
-## Offene Tasks
+## Tasks
 
-- [ ] Leader-Kürzel für `plugins_book`-Collection festlegen
-- [ ] Collection-Eintrag in `lua/plugins/personal/init.lua` einfügen
-- [ ] `pickers.nvim`: Source-Layer für `wkdbook-myplugins` (resolve/complete/list_names)
-- [ ] `pickers.nvim`: `:PluginsBookFiles [plugin]` / `:PluginsBookGrep [plugin]` mit
-      Tab-Completion registrieren, generische Collection-Files/Grep-Variante dafür
-      aussparen (Reihenfolge beachten)
-- [ ] `pickers.nvim`-Docs aktualisieren (`docs/BINDINGS.md`, `docs/cheatsheet.md`,
-      `docs/commands.md`, `doc/pickers.txt`)
-- [ ] luacheck/stylua in beiden Repos grün, dann commit/push auf main (kein Co-Author)
+- [x] Leader-Kürzel für `plugins_book`-Collection festlegen (`pbf`/`pbg`/`pbs`)
+- [x] Collection-Eintrag in `lua/plugins/personal/init.lua` einfügen
+- [x] `pickers.nvim`: Source-Layer für `wkdbook-myplugins`
+      (`lua/pickers/sources/plugins_book.lua`: resolve/complete/list_names)
+- [x] `pickers.nvim`: `:PluginsBookFiles [plugin]` / `:PluginsBookGrep [plugin]` mit
+      Tab-Completion registriert, generische Collection-Files/Grep-Variante dafür
+      ausgespart (usrcmds.register() läuft vor der Collections-Loop)
+- [x] `pickers.nvim`-Docs aktualisiert (`docs/BINDINGS.md`, `docs/cheatsheet.md`,
+      `docs/commands.md`, `doc/pickers.txt`, `docs/collections.md`)
+- [x] luacheck/stylua in beiden Repos grün, commit/push auf main
 - [ ] Optional, falls gewünscht: `---`-Fix für `personal_names`-Provider in
       `lsp.nvim` (`min_keyword_length` oder `enabled()`-Guard) — war nur Diagnose,
       kein bestätigter Auftrag
