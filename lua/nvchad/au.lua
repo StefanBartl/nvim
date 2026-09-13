@@ -28,23 +28,14 @@ if config.nvdash.load_on_startup then
   end
 end
 
-if config.lsp.signature then
-  autocmd.create("LspAttach", function(args)
-    vim.schedule(function()
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-
-      if client then
-        local signatureProvider = client.server_capabilities.signatureHelpProvider
-        if signatureProvider and signatureProvider.triggerCharacters then
-          require("nvchad.lsp.signature").setup(client, args.buf)
-        end
-      end
-    end)
-  end, {
-    group = "NvChadLspSignature",
-    desc = "NvChad: attach the signature-help handler to a new LSP client",
-  })
-end
+-- `nvchad.lsp.signature` used to attach here on `LspAttach`, gated by
+-- nvconfig's own `config.lsp.signature` -- an automatic popup on the LSP's
+-- own trigger characters. `lsp.nvim` already ships its own signature/hover
+-- tool (lua/lsp/tools/lsp_signature/, `tools.lsp_signature.enable = true`
+-- by default, which this host never overrides) -- a persistent floating
+-- popup toggled manually on <C-b> in insert and normal mode, not an
+-- automatic one, so this is a real UX change: signature help is now
+-- summoned, not popped up while typing.
 
 -- reload the plugin! (lazy match: no startup-time glob/realpath scan)
 local config_lua_dir = vim.fs.normalize(vim.fn.stdpath("config") .. "/lua") .. "/"
