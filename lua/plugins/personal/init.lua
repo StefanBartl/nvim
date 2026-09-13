@@ -323,14 +323,16 @@ plugins.add({
     -- extracted, then rebuilt standalone -- as of its own roadmap step 6 it
     -- needs neither NvChad nor base46 any more for statusline, tabline or
     -- theme (see the plugin's own README). `config/ui_statusline.lua` wires
-    -- this host's own statusline into it at UIReady; NvChad/wkdnvchad/
-    -- chadrc.lua are untouched otherwise -- fully replacing them is roadmap
-    -- step 7 in ui.nvim's own ROADMAP.md, a separate, larger step.
+    -- this host's own statusline into it at UIReady. `chadrc.lua` and
+    -- `lua/wkdnvchad/` are gone (step 7, first round); NvChad's plugin
+    -- itself, its tabufline and a few of its core features (nvdash, LSP
+    -- signature, colorify) are not yet replaced -- see ui.nvim's own
+    -- ROADMAP.md open decision #3 and NOTES.md for what step 7 still needs.
     --
     -- No `opts`/`config` on purpose, same reason as my.nvim/lsp.nvim above:
     -- the actual setup() calls happen from a startup phase (UIReady, since
-    -- they must run after NvChad's own chadrc-driven statusline has already
-    -- set vim.o.statusline once, to win by running last), not a lazy hook.
+    -- they must run after NvChad's own statusline has already set
+    -- vim.o.statusline once, to win by running last), not a lazy hook.
     "StefanBartl/ui.nvim",
     lazy = false,
     priority = 900,
@@ -792,8 +794,9 @@ plugins.add({
         },
         features = {
           cwd_sync = { enabled = true, reveal = false },
-          -- The mode badge (PROJECT/LOCK/…) is shown in wkdnvchad's own
-          -- statusline instead (modules/filetree_cwd_mode) via cwd_mode's
+          -- The mode badge (PROJECT/LOCK/…) is shown in this host's own
+          -- ui.nvim statusline instead (config/ui_statusline/variant.lua,
+          -- filetree_cwd_mode module) via cwd_mode's
           -- external-statusline API (badge()/component()). indicator.enabled
           -- must stay false here, or the mode shows twice: once in the
           -- shared statusline, once as a float in the tree window (with
@@ -1073,8 +1076,8 @@ plugins.add({
     -- commands but stay silent about deadlines until the first :Case of the
     -- session -- the wrong way round for a feature whose entire point is
     -- telling you about a clock you forgot. The statusline segment
-    -- (wkdnvchad/ui/statusline/modules/casedesk) reads casedesk.resolve on
-    -- redraw and wants it loaded too.
+    -- (config/ui_statusline/variant.lua, ui.nvim's casedesk module) reads
+    -- casedesk.resolve on redraw and wants it loaded too.
     --
     -- `opts = {}` and not a single override: every path already derives from
     -- $REPOS_DIR inside config/DEFAULTS.lua, so this machine has nothing to

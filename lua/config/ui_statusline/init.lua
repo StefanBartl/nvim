@@ -1,9 +1,18 @@
 ---@module 'config.ui_statusline'
---- Wires this host's own statusline into ui.nvim, additively: NvChad/
---- wkdnvchad keep booting exactly as before, and this simply takes over
---- `vim.o.statusline` afterward -- at UIReady, once everything else
---- (including NvChad's own chadrc-driven statusline) has already finished
---- loading, so it wins without touching `chadrc.lua` or NvChad at all.
+--- Wires this host's own statusline into ui.nvim, additively: NvChad keeps
+--- booting exactly as before, and this simply takes over `vim.o.statusline`
+--- afterward -- at UIReady, once everything else (including NvChad's own,
+--- now chadrc-less-default statusline) has already finished loading, so it
+--- wins without touching NvChad itself.
+---
+--- `chadrc.lua` and `lua/wkdnvchad/` (the pre-extraction original this
+--- plugin's code was ported from) are gone as of roadmap step 7's first
+--- round -- NvChad now runs on its own built-in defaults, which is
+--- irrelevant since this phase overwrites its statusline output anyway.
+--- NvChad's plugin itself, its tabufline (buffer/tab bar) and a few other
+--- core features (nvdash, LSP signature popup, colorify) are still in use
+--- and not yet replaced -- see ui.nvim's own NOTES.md "Offene Punkte" and
+--- ROADMAP.md open decision #3 for what is left of step 7.
 ---
 --- Registered under the name "personal" so `:UI variant`/`:UI variants`
 --- (ui.nvim's own runtime switcher) see it next to ui.nvim's four shipped,
@@ -13,12 +22,8 @@
 --- `:UI` command family (theme, transparency, variant switching).
 --- `keymaps` is deliberately left off -- ui.nvim's own buffer/tab keymaps
 --- (`<Tab>`/`<S-Tab>`, `<leader>tr`/`<leader>tl`) would double-bind
---- whatever wkdnvchad/NvChad's own tabufline already owns, the exact
---- last-writer-wins problem this repo has been resolving elsewhere.
----
---- This is deliberately NOT roadmap step 7 (removing NvChad/wkdnvchad
---- entirely) -- see ui.nvim's own ROADMAP.md, open decision #3. It only
---- makes this one statusline the one actually drawn.
+--- whatever NvChad's own tabufline already owns, the exact last-writer-wins
+--- problem this repo has been resolving elsewhere.
 
 local M = {}
 
