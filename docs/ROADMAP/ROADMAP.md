@@ -19,9 +19,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:00       |    60% / 48%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     23:40       |    24% / 19%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     14:00       |    88% / 09%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     22:00       |    20% / 50%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     17:50       |    92% / 29%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     20:10       |    83% / 17%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
