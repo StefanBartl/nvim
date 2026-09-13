@@ -340,18 +340,20 @@ plugins.add({
     -- rather than lazy's own `opts`, since `opts` alone (even with no
     -- `config` function) makes lazy auto-run `require("ui").setup(opts)`
     -- immediately, at plugin-load time, well before UIReady. Passed through
-    -- to `ui.setup({ keymaps = ... })` unchanged -- `true`/`{all=true}` for
-    -- every shipped default, `false` to bind none of them, or a
-    -- `Ui.Keymaps.Modules` table (`{buffers=.., tabs=.., keys={next="<C-Right>",
-    -- close=false, ...}}`, see ui.nvim's docs/BINDINGS.md) to pick and
-    -- remap individual actions. Left as `{all=true}` here: this host has no
-    -- reason yet to deviate from ui.nvim's own shipped `<Tab>`/`<S-Tab>`/
-    -- `<leader>bc`/`<leader>tr`/`<leader>tl`/`<leader>tt`.
+    -- to `ui.setup({ keymaps = ... })` unchanged: `true` (or this field left
+    -- out entirely) binds every shipped default with no opt-in needed --
+    -- same "on unless you say otherwise" shape my.nvim's own `setup(opts)`
+    -- uses -- `false` binds none of them, or a table
+    -- (`{ next = "<C-Right>", close = false }`, see ui.nvim's
+    -- docs/BINDINGS.md) remaps or drops individual actions, leaving the
+    -- rest at their default. Set to `true` explicitly here anyway, so this
+    -- line is the one place documenting that ui.nvim's keymaps are wanted
+    -- at all -- not because the value itself differs from leaving it out.
     "StefanBartl/ui.nvim",
     lazy = false,
     priority = 900,
     dependencies = { "StefanBartl/lib.nvim" },
-    keymaps = { all = true },
+    keymaps = true,
   },
 
   {

@@ -47,8 +47,9 @@
 --- those would run `require("ui").setup(opts)` at plugin-load time, before
 --- this host's own UIReady convention says keymaps may register (see
 --- `bindings.mappings`'s identical reasoning in `init.lua`). Falls back to
---- `{ all = true }` -- every ui.nvim keymap at its shipped default -- if the
---- spec does not set the field at all.
+--- `true` -- every ui.nvim keymap at its shipped default, no per-action
+--- opt-in needed (see `ui.bindings.keymaps`'s own doc comment,
+--- `ui.nvim@<pending>`) -- if the spec does not set the field at all.
 ---
 --- `ui.bindings.keymaps.tabufline.state.setup()` is still called directly,
 --- unconditionally, regardless of `opts.keymaps`: the tabline renderer needs
@@ -68,7 +69,7 @@ function M.setup()
     -- and/or idiom breaks the moment the spec's own value IS `false` (which
     -- means something here -- "off entirely") since `X and false or Y`
     -- always evaluates to `Y`, silently discarding the `false`.
-    local keymaps_opts = { all = true }
+    local keymaps_opts = true
     if spec and spec.keymaps ~= nil then
       keymaps_opts = spec.keymaps
     end
