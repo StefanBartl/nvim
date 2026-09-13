@@ -22,13 +22,14 @@
 return {
   -- nvim-cmp is not installed right now: `vim.g.lsp_nvim.pack.completion`
   -- defaults to "blink" and this config never sets it, so lsp.nvim's cmp spec
-  -- resolves `enabled = false` and NvChad's (`nvchad.plugins`, which does ship
-  -- one) is disabled along with it. The keymap below is here anyway, so that
-  -- flipping that one option moves the accept/dismiss keys with it instead of
-  -- silently leaving half of them behind. It is the only part of this file
-  -- that has never been exercised -- there is no cmp on disk to run it
-  -- against, so it is deliberately built out of cmp's own documented mapping
-  -- helpers rather than hand-rolled closures.
+  -- resolves `enabled = false` (NvChad used to ship a second nvim-cmp entry
+  -- of its own here too, disabled the same way; gone entirely along with
+  -- NvChad itself as of roadmap step 7). The keymap below is here anyway, so
+  -- that flipping that one option moves the accept/dismiss keys with it
+  -- instead of silently leaving half of them behind. It is the only part of
+  -- this file that has never been exercised -- there is no cmp on disk to
+  -- run it against, so it is deliberately built out of cmp's own documented
+  -- mapping helpers rather than hand-rolled closures.
   {
     "hrsh7th/nvim-cmp",
     opts = function(_, opts)

@@ -325,14 +325,17 @@ plugins.add({
     -- theme (see the plugin's own README). `config/ui_statusline.lua` wires
     -- this host's own statusline into it at UIReady. `chadrc.lua` and
     -- `lua/wkdnvchad/` are gone (step 7, first round); NvChad's plugin
-    -- itself, its tabufline and a few of its core features (nvdash, LSP
-    -- signature, colorify) are not yet replaced -- see ui.nvim's own
-    -- ROADMAP.md open decision #3 and NOTES.md for what step 7 still needs.
+    -- itself, its tabufline and its remaining core features (nvdash, LSP
+    -- signature, colorify, the theme/colour pickers) are gone too as of step
+    -- 7's later rounds -- see ui.nvim's own NOTES.md.
     --
     -- No `opts`/`config` on purpose, same reason as my.nvim/lsp.nvim above:
-    -- the actual setup() calls happen from a startup phase (UIReady, since
-    -- they must run after NvChad's own statusline has already set
-    -- vim.o.statusline once, to win by running last), not a lazy hook.
+    -- the actual setup() calls happen from a startup phase (UIReady) rather
+    -- than a lazy hook. UIReady used to matter for winning a race against
+    -- NvChad's own statusline setter (running last so this one stuck); that
+    -- competing setter is gone now, so the phase just runs once with nothing
+    -- left to race -- the ordering guarantee still holds, it just no longer
+    -- has to.
     --
     -- `keymaps` below IS read, though -- by config/ui_statusline/init.lua, at
     -- that same UIReady phase, via `require("lazy.core.config")
@@ -534,21 +537,20 @@ plugins.add({
     opts = function(_, opts)
       opts.progress_style = "statusline"
       -- `require-not-declared` false positives, confirmed 2026-08-16 by
-      -- tracing every hit back to the actual require site (not fixed here,
-      -- not fixable in the checker without a real capability it doesn't
-      -- have): the checker treats "own[first segment]" as sufficient proof a
-      -- require belongs to this tree, which is right except for two cases.
-      -- (1) `nvchad.*` (stl.utils, tabufline, themes, term, utils, nvdash,
-      -- mason, colorify, lsp.signature, winmes, configs.lspconfig, ...)
-      -- resolves to the real NvChad plugins' (`NvChad`/`ui`) own
-      -- `lua/nvchad/*` tree, which happens to share this repo's own
-      -- `lua/nvchad/` top segment -- 24 of the 31 remaining
-      -- `require-not-declared` hits. (2) `config.harpoon.api.lua`'s
+      -- tracing every hit back to the actual require site. One of the two
+      -- known causes is gone now: `nvchad.*` (stl.utils, tabufline, themes,
+      -- term, utils, nvdash, mason, colorify, lsp.signature, winmes,
+      -- configs.lspconfig, ...) used to resolve to the real NvChad plugins'
+      -- own `lua/nvchad/*` tree, which happened to share this repo's own
+      -- (now-deleted) `lua/nvchad/` top segment -- 24 of the 31 hits at the
+      -- time. NvChad itself is gone as of roadmap step 7 and so is
+      -- `lua/nvchad/`, so `:DocMap check` should no longer list any of
+      -- those 24. What remains: `config.harpoon.api.lua`'s
       -- `require("config.harpoon.ui.menu_" .. kind)` is a dynamic require;
       -- the checker only ever sees the pre-concatenation literal
       -- `"config.harpoon.ui.menu_"`, never the resolved `menu_telescope`/
-      -- `menu_fzf` it actually loads. `:DocMap check` will keep listing
-      -- these 25 as warnings -- known, not drift.
+      -- `menu_fzf` it actually loads -- one warning, not fixable in the
+      -- checker without a real capability it doesn't have.
       -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
       -- module/function in the generated page, real luac -l -l -p bytecode
       -- disassembly, not a workaround for Lua. Off by default upstream;
