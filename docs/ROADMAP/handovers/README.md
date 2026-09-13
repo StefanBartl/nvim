@@ -17,6 +17,7 @@ Hier bleiben nur Handovers, deren Gegenstand diese Config selbst ist.
 | --- | --- |
 | `media-nvim-and-hover-video.md`, `video-hover-playback.md`, `open-externally-and-sound.md` | `wkdbook-myplugins/media.nvim/NOTES/HANDOVER.md` — zu einem Dokument zusammengeführt (2026-09-08) |
 | `media.nvim.md` | `wkdbook-myplugins/media.nvim/NOTES/HANDOVER.md` — war nach dem Zusammenführen oben erneut hier angelegt worden, jetzt eingearbeitet (2026-09-12) |
+| `lsp-headless-root-detection-single-file-mode.md` | `wkdbook-myplugins/lsp.nvim/NOTES/HANDOVER-headless-root-detection.md` — Ursache gefunden und behoben, Notiz zog mit der Lösung um statt offen zu bleiben (2026-09-13) |
 
 Die Roadmap von `media.nvim` ist bei derselben Gelegenheit aus dem Repo nach
 `wkdbook-myplugins/media.nvim/ROADMAP/ROADMAP.md` gezogen — bewusste Abweichung
