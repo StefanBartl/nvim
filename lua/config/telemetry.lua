@@ -86,7 +86,6 @@ local SELF_PREFIXES = {
   "startup",
   "themes",
   "machine",
-  "nvchad",
   "my",
 }
 

@@ -17,23 +17,11 @@ local picker_config = require("config.snacks.picker")
 ---@type table
 return {
 
-  -- No startup dashboard at all: snacks' dashboard stays off (see @description)
-  -- and nvchad's nvdash is disabled here so it doesn't take over the empty
-  -- startup buffer instead.
-  {
-    "nvchad/ui",
-    optional = true,
-    ---@param _ any
-    ---@param opts table
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.nvdash = opts.nvdash or {}
-      opts.nvdash.load_on_startup = false
-      opts.nvdash.enabled = false
-      return opts
-    end,
-  },
-
+  -- No startup dashboard at all: snacks' dashboard stays off (see @description).
+  -- Used to also disable NvChad's own nvdash here (an `optional = true`
+  -- fragment merged into "nvchad/ui"'s opts, back when that plugin was
+  -- installed) -- NvChad is gone now (ui.nvim roadmap step 7), and with it
+  -- nvdash, so there is nothing left to disable.
   {
     "folke/snacks.nvim",
     lazy = false,
