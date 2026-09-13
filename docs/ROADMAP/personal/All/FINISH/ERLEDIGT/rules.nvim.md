@@ -1,5 +1,26 @@
 # `rules.nvim`
 
+> **Nachtrag 2026-09-13 — verschoben nach `FINISH/ERLEDIGT`.** Dieses
+> Konzept spiegelt den Stand vom 12.09. (v1-Engine, nur `DEP-*` als Pilot,
+> Gates und `--format=json` offen). Tatsächlicher Endstand, weit über das
+> hier Skizzierte hinaus: alle **421 Regeln aus 14 Families** migriert
+> (nicht nur `DEP-*`), alle drei Gates (`new_project`/`release`/`review`)
+> produktiv, `--format=json` längst da, `:Rules check`/`gate`/`show`/
+> `stats` als tatsächliche Befehlsfläche (nicht die hier unten
+> skizzierten `:Rules new-project`/`review`/`release` als eigene
+> Subcommands — ein einziges `:Rules gate <name>` deckt das ab), dazu ein
+> voller Dogfooding-Durchgang der eigenen 421 Regeln gegen den eigenen
+> Code (9 echte Bugfixes, 91 Tests). Laufende Wahrheit steht seitdem in
+> [`wkdbook-myplugins/rules.nvim/ROADMAP/ROADMAP.md`](B:/repos/WKDBooks/Development/wkdbook-myplugins/rules.nvim/ROADMAP/ROADMAP.md),
+> nicht mehr hier. Ein Widerspruch nebenbei korrigiert, den derselbe Bug
+> auch in `ROADMAP.md`/`BACKLOG.md` hatte: „Bewusste Nicht-Ziele" unten
+> nennt `LLS-*` noch als „explizit ausgeschlossen" — das wurde seitdem als
+> eigene Family migriert (37 Regeln, ein manueller Ursachen-Katalog, kein
+> Nachbau von LuaLS' Diagnose-Engine).
+>
+> Rest der Datei unverändert als historischer Konzept-Stand belassen,
+> nicht nachträglich korrigiert.
+
 **Konzept festgelegt:** 2026-09-12 · **Status:** v1-Engine implementiert und
 verdrahtet (`:Rules check --family=<PREFIX>`, alle vier Check-Typen,
 `DEP-*`-Pilot in `Checklists/regeln/LUA_NVIM.md` migriert, in `personal/init.lua`
@@ -255,9 +276,8 @@ Intern (nicht im öffentlichen Repo):
       (`:Rules check --family=DEP` findet reale Treffer in `nvim-config` und im
       eigenen `rules.nvim`-Quellcode, `DEP-05` erscheint korrekt als Worklist statt
       als vorgetäuschtes ✅/❌)
-- [ ] Gates (`new_project`/`review`/`release`) — zurückgestellt, bis eine zweite
-      Regel-Familie sie sinnvoll ausübt (siehe `docs/ROADMAP.md` im Plugin-Repo)
-- [ ] `--format=json` für Headless/CI
+- [x] Gates (`new_project`/`review`/`release`) — alle drei produktiv, siehe Nachtrag oben
+- [x] `--format=json` für Headless/CI — längst da, siehe Nachtrag oben
 
 ## Literatur und Referenzen
 
