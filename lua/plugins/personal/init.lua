@@ -430,6 +430,21 @@ plugins.add({
             dir = repos .. "/WKDBooks/Development/wkdbook-Neovim",
             keys = { files = "<leader>wvf", grep = "<leader>wvg" },
           },
+          {
+            -- prefix = "" lists all immediate subdirs (cascade.nvim, ui.nvim, ...).
+            -- These are doc folders mirroring each plugin's name, not the
+            -- actual git clones (those live directly under REPOS_DIR), so
+            -- only_git can't filter them -- exclude hides the bookkeeping
+            -- siblings (ALL/, TEMPLATES/, TOOLS/, _Telemetry/) by name instead.
+            -- :PluginsBookFiles/:PluginsBookGrep (pickers.nvim usrcmds) override
+            -- the generic Files/Grep compat commands with an [plugin]-arg +
+            -- tab-completion variant; :PluginsBookSmart stays generic.
+            name = "plugins_book",
+            dir = repos .. "/WKDBooks/Development/wkdbook-myplugins",
+            prefix = "",
+            exclude = { "ALL", "TEMPLATES", "TOOLS", "_Telemetry" },
+            keys = { files = "<leader>pbf", grep = "<leader>pbg", smart = "<leader>pbs" },
+          },
         },
 
         keymaps = {
