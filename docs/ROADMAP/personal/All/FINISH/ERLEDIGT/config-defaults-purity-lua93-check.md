@@ -7,7 +7,7 @@ offener Punkt geprüft und mit negativem (= beruhigendem) Ergebnis geschlossen.
 
 ## Methode
 
-Anders als beim vorherigen Report (`pdfport-health-checkhealth-dedup.md`)
+Anders als beim vorherigen Report (`../personal/All/FINISH/ERLEDIGT/pdfport-health-checkhealth-dedup.md`)
 enthielt dieser fast nur "erledigt"-Behauptungen. Statt sie zu übernehmen,
 wurden sie gegen den aktuellen Quelltext verifiziert:
 
