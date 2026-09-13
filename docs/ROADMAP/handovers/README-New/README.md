@@ -1,10 +1,20 @@
 Migration läuft weiter, ein Repo nach dem anderen. Zusammenfassung:
 
-## Fertig (23 von 34)
-cascade.nvim, fileops.nvim, mdview.nvim, sandbox.nvim, buffer-ctx.nvim, casedesk.nvim, cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim, emojis.nvim, filetree.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim — alle README+docs auf Fassung 3 umgebaut, ASCII-Art per pyfiglet verifiziert, committed & gepusht.
+## Fertig (26 von 34)
+cascade.nvim, fileops.nvim, mdview.nvim, sandbox.nvim, buffer-ctx.nvim, casedesk.nvim, cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim, emojis.nvim, filetree.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim, media.nvim, open.nvim, pdfport.nvim — alle README+docs auf Fassung 3 umgebaut, ASCII-Art per pyfiglet verifiziert, committed & gepusht.
 
-## Noch offen (11 von 34)
-media.nvim, open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sessions.nvim, spotlight.nvim, ui.nvim
+## Noch offen (8 von 34)
+pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sessions.nvim, spotlight.nvim, ui.nvim
+
+## media.nvim: Sonderfall dünnere docs/
+media.nvim hatte (noch) kein FEATURES/ und keine der reifen Strukturen der
+letzten Repos — README-"What it does"/"What it does not do" wurde zu
+`docs/scope.md` (Präzedenzfall: images.nvim hat das schon so gelöst),
+README-"For plugin authors" (Lua-API) zu `docs/api.md` (Präzedenzfall:
+hover.nvim, buffer-ctx.nvim). Beim Push gab es dort einen echten Merge-Konflikt,
+weil parallel woanders (gleicher Account) zwei kleine Commits reingingen —
+per rebase aufgelöst, Fassung-3-Version hat gewonnen (die alten Commits waren
+nur Detail-Trimming derselben Absätze, die ich sowieso komplett ersetzt habe).
 
 `ui.nvim` bleibt der Sonderfall mit der Diary-Prosa, die noch bereinigt werden muss.
 
