@@ -17,6 +17,19 @@ require("bindings.usrcmds.autocmd_docs").enable()
 require("bindings.usrcmds.strip_coauthor").enable()
 require("bindings.usrcmds.bindings_audit").enable()
 
+-- Was `require("nvchad.mason").install_all()` in lua/nvchad/au.lua, NvChad's
+-- own wrapper around a flat nvconfig.mason.pkgs list. lsp.nvim already ships
+-- the same idea with more range -- LSP servers, DAP adapters, linters and
+-- formatters, not just LSP servers -- as an ensure-install orchestrator over
+-- mason-registry directly (lua/lsp/integrations/mason/ensure_install). No
+-- args: `cfg.lsp/dap/linters/formatters` all default to true, i.e. "install
+-- everything configured", matching :MasonInstallAll's own "all" in the name.
+usercmd.create("MasonInstallAll", function()
+  require("lsp.integrations.mason.ensure_install").enable()
+end, {
+  desc = "Install every configured Mason package (LSP servers, DAP adapters, linters, formatters)",
+})
+
 usercmd.create("CopyLocation", function()
   -- Absolute path of the current file
   local path = vim.fn.expand("%:p")
