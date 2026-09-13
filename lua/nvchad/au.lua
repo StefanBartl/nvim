@@ -70,9 +70,12 @@ require("lib.nvim.bindings.usercmd").create("MasonInstallAll", function()
   require("nvchad.mason").install_all()
 end, { desc = "NvChad: install every configured Mason package" })
 
-if config.colorify.enabled then
-  require("nvchad.colorify").run()
-end
+-- `nvchad.colorify` used to run here, gated by nvconfig's own
+-- `config.colorify.enabled`. Replaced by plugins/ui.lua's own
+-- catgoose/nvim-colorizer.lua entry (nvim-highlight-colors as its opt-in
+-- alternative), which never depended on NvChad in the first place -- only
+-- on being declared somewhere. Running both would double-highlight every
+-- match, so this call is gone rather than merely disabled.
 
 local dir = vim.fn.stdpath("data") .. "/nvnotify1"
 

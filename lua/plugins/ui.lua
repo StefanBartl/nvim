@@ -85,4 +85,26 @@ return {
     cmd = { "Huefy", "Shades" },
     dependencies = { "nvzone/volt" },
   },
+
+  -- Replaces `nvchad.colorify` (lua/nvchad/au.lua, now guarded off below it
+  -- -- see that file) -- inline highlighting for hex codes, CSS colour
+  -- functions and named colours. Standalone: colorify only ever ran because
+  -- an nvconfig default said so, not because of any NvChad-specific code.
+  {
+    "catgoose/nvim-colorizer.lua",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {},
+  },
+
+  -- Opt-in alternative to the entry above: richer per-match rendering
+  -- (background/foreground/virtual text, chosen per filetype) plus its own
+  -- toggle commands, at the cost of a second, heavier colorizer. Flip
+  -- `enabled` on ONE of these two, never both -- running both double-
+  -- highlights every match.
+  {
+    "brenoprata10/nvim-highlight-colors",
+    enabled = false,
+    cmd = { "HighlightColorsToggle", "HighlightColorsOn", "HighlightColorsOff" },
+    opts = {},
+  },
 }
