@@ -333,10 +333,25 @@ plugins.add({
     -- the actual setup() calls happen from a startup phase (UIReady, since
     -- they must run after NvChad's own statusline has already set
     -- vim.o.statusline once, to win by running last), not a lazy hook.
+    --
+    -- `keymaps` below IS read, though -- by config/ui_statusline/init.lua, at
+    -- that same UIReady phase, via `require("lazy.core.config")
+    -- .plugins["ui.nvim"].keymaps` -- a plain custom field on this spec
+    -- rather than lazy's own `opts`, since `opts` alone (even with no
+    -- `config` function) makes lazy auto-run `require("ui").setup(opts)`
+    -- immediately, at plugin-load time, well before UIReady. Passed through
+    -- to `ui.setup({ keymaps = ... })` unchanged -- `true`/`{all=true}` for
+    -- every shipped default, `false` to bind none of them, or a
+    -- `Ui.Keymaps.Modules` table (`{buffers=.., tabs=.., keys={next="<C-Right>",
+    -- close=false, ...}}`, see ui.nvim's docs/BINDINGS.md) to pick and
+    -- remap individual actions. Left as `{all=true}` here: this host has no
+    -- reason yet to deviate from ui.nvim's own shipped `<Tab>`/`<S-Tab>`/
+    -- `<leader>bc`/`<leader>tr`/`<leader>tl`/`<leader>tt`.
     "StefanBartl/ui.nvim",
     lazy = false,
     priority = 900,
     dependencies = { "StefanBartl/lib.nvim" },
+    keymaps = { all = true },
   },
 
   {

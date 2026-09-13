@@ -26,16 +26,34 @@
 --- (ui.nvim's own runtime switcher) see it next to ui.nvim's four shipped,
 --- generic presets -- see `ui.config.variants`.
 ---
---- `ui.setup({ usrcmds = true })`, not `{ all = true }`: `usrcmds` is the
---- `:UI` command family (theme, transparency, variant switching).
---- `keymaps` is deliberately left off -- ui.nvim's own buffer/tab keymaps
---- (`<Tab>`/`<S-Tab>`, `<leader>tr`/`<leader>tl`) would double-bind
---- whatever NvChad's own tabufline already owns, the exact last-writer-wins
---- problem this repo has been resolving elsewhere.
---- `ui.bindings.keymaps.tabufline.state.setup()` is called directly (not
---- via `ui.setup({ keymaps = true })`, which the paragraph above rules out)
---- because the tabline renderer needs `vim.t.bufs` maintained regardless of
---- whether ui.nvim's own buffer/tab keymaps are bound.
+--- `ui.setup({ usrcmds = true, keymaps = ... })`, not `{ all = true }`:
+--- `usrcmds` is the `:UI` command family (theme, transparency, variant
+--- switching). `keymaps` used to be hard-coded off here on the assumption
+--- that ui.nvim's own buffer/tab keymaps (`<Tab>`/`<S-Tab>`,
+--- `<leader>tr`/`<leader>tl`) would double-bind whatever NvChad's own
+--- tabufline already owns -- checked, and that assumption was wrong: NvChad's
+--- own `<Tab>`/`<S-Tab>` only exist inside completion (`nvchad.blink.config`),
+--- never in normal mode. The real cause of `<Tab>`/`<S-Tab>` going dark after
+--- `lua/wkdnvchad/` was removed (step 7's first round) was simpler and worse:
+--- `lua/wkdnvchad/mappings/init.lua` was the ONLY thing ever binding them in
+--- this host, and deleting `wkdnvchad/` deleted that with it -- ui.nvim's own
+--- equivalent was never turned on to replace it.
+---
+--- `opts.keymaps` now comes from this plugin's own installation spec
+--- (`plugins/personal/init.lua`'s `"StefanBartl/ui.nvim"` entry) rather than
+--- being fixed here, so enabling/disabling it or remapping one action is a
+--- one-line edit in the spec, not a change to this wiring file. A custom
+--- field there (`keymaps = {...}`), not lazy.nvim's own `opts`/`config`:
+--- those would run `require("ui").setup(opts)` at plugin-load time, before
+--- this host's own UIReady convention says keymaps may register (see
+--- `bindings.mappings`'s identical reasoning in `init.lua`). Falls back to
+--- `{ all = true }` -- every ui.nvim keymap at its shipped default -- if the
+--- spec does not set the field at all.
+---
+--- `ui.bindings.keymaps.tabufline.state.setup()` is still called directly,
+--- unconditionally, regardless of `opts.keymaps`: the tabline renderer needs
+--- `vim.t.bufs` maintained even when a host turns ui.nvim's own keymaps off
+--- entirely (`keymaps = false` in the spec).
 
 local M = {}
 
@@ -44,7 +62,18 @@ function M.setup()
   local notify = require("lib.nvim.notify").create("[config.ui_statusline]")
 
   local ok, err = pcall(function()
-    require("ui").setup({ usrcmds = true })
+    local ok_lazy, lazy_config = pcall(require, "lazy.core.config")
+    local spec = ok_lazy and lazy_config.plugins["ui.nvim"]
+    -- Not `(spec and spec.keymaps ~= nil) and spec.keymaps or default`: that
+    -- and/or idiom breaks the moment the spec's own value IS `false` (which
+    -- means something here -- "off entirely") since `X and false or Y`
+    -- always evaluates to `Y`, silently discarding the `false`.
+    local keymaps_opts = { all = true }
+    if spec and spec.keymaps ~= nil then
+      keymaps_opts = spec.keymaps
+    end
+
+    require("ui").setup({ usrcmds = true, keymaps = keymaps_opts })
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))
     local assembled = require("ui.config").setup({ variant = "personal" })
     require("ui.bindings.keymaps.tabufline.state").setup()
