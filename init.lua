@@ -10,7 +10,6 @@ if not loader_ok then
 end
 
 -- Bootstrap lazy.nvim
-vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46/"
 vim.g.mapleader = " "
 
 -- Nerd Font availability is *declared*, never detected: Neovim cannot see the
@@ -71,15 +70,10 @@ package.path = table.concat({
 local lazy_config = require("config.lazy")
 
 require("lazy").setup({
-  {
-    "NvChad/NvChad",
-    lazy = false,
-    branch = "v2.5",
-  },
   -- Pin lib.nvim's `dir` as the very first spec fragment lazy.nvim sees for
-  -- this plugin. Some imported files (e.g. plugins/nvchad.lua) run a
-  -- top-level `require("lib.*")` during the spec-import phase, and others
-  -- reference "StefanBartl/lib.nvim" as a bare dependency string; either one
+  -- this plugin. Some imported files run a top-level `require("lib.*")`
+  -- during the spec-import phase, and others reference
+  -- "StefanBartl/lib.nvim" as a bare dependency string; either one
   -- can register a dir-less fragment (defaulting to lazy's managed dir)
   -- before plugins/personal/init.lua's dir-overriding fragment is merged in,
   -- which trips lazy's "changed dir ... already partially loaded" error.
@@ -92,23 +86,22 @@ require("lazy").setup({
   -- full spec (lazy = false, priority); this pins `dir` early enough and adds
   -- the import that installs the LSP ecosystem.
   { "StefanBartl/lsp.nvim", dir = lsppath, import = "lsp.pack" },
-  { import = "nvchad.plugins" },
-  -- { import = "nvchad.blink.lazyspec" },
   { import = "plugins" },
   { import = "plugins.colorscheme" },
   { import = "plugins.ai" },
 }, lazy_config)
 
--- base46 cache loading removed (nvim-config@<pending>, ui.nvim roadmap step
--- 7): it ran AFTER plugins.colorscheme's tokyonight.nvim had already set the
--- real colorscheme in the same lazy.setup() call above, so it silently
--- overwrote that spec's own on_colors/on_highlights customizations (bolder
--- palette, custom Todo* groups) with NvChad's own cached tokyonight variant
--- every single startup. The real tokyonight.nvim spec is now the only thing
--- that sets syntax highlighting; vim.g.base46_cache (above) stays set only
--- because lua/config/menu/custom_menu/init.lua still probes it as an
--- NvChad-presence check for its nvchad.term/minty integrations, which are
--- unrelated to base46 itself and still work with NvChad installed.
+-- NvChad (`NvChad/NvChad`, branch v2.5, plus the `{ import = "nvchad.plugins"
+-- }` fragment that pulled in its own bundled base46/nvchad-ui/nvzone specs)
+-- is gone as of ui.nvim's roadmap step 7: every feature it still provided
+-- (statusline/tabline/theme -> ui.nvim; signature help -> lsp.nvim's own
+-- tool; colorify -> nvim-colorizer.lua; the theme/colour pickers -> ui.nvim's
+-- :UI picker and a standalone nvzone/minty; Mason and which-key -> their own
+-- specs in plugins/essentials.lua) has a direct, NvChad-independent owner
+-- now. `vim.g.base46_cache` is gone with it -- its only remaining reader
+-- (lua/config/menu/custom_menu/init.lua's terminal fallback) never needed
+-- base46 itself, only NvChad's presence, and degrades to its own plain
+-- terminal path without it.
 
 -- =============================================================================
 -- STARTUP PHASES

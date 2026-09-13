@@ -75,3 +75,16 @@ require("autocmds.text").enable({
     enable = true, -- On BufReadPost, jumps back to the last saved cursor position unless filetype is excluded.
   },
 })
+
+------------------------------------------------------
+--- Dev
+------------------------------------------------------
+
+-- Reload a config module on save, matched lazily per save rather than
+-- pre-globbing every *.lua file under the config root at startup. Used to be
+-- lua/nvchad/au.lua -- a shadow override of NvChad's own file, which existed
+-- only to avoid NvChad's eager, ~600ms-at-startup version of this same
+-- feature. NvChad itself is gone now (see ui.nvim's roadmap, step 7); the
+-- reload logic it wrapped never had anything to do with NvChad and moved to
+-- lib.nvim.dev.reload.
+require("lib.nvim.dev.reload").watch()
