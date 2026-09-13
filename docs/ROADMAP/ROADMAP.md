@@ -20,8 +20,8 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     22:00       |    20% / 50%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     17:50       |    92% / 29%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     20:10       |    83% / 17%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     04:00       |    96% / 38%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     02:00       |    95% / 27%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -51,11 +51,7 @@
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
 
-- [ ] Rules af die neuen plugins anwenden
-
 - [ ] pickers.nvim -> opt-in feature heruitsuche anordng er resultatliste nach bisherigen aufrufszahlen/kontext
-
-- Wenn man drei Bindestriche eingibt, also --- dann schlägt die autocompletion blin trotzdem was vor, was aber gar nicht mitz --- zu tun hat, zb.: --- my.nvim oder ui.nvim - warum ist das so? das ist ja keione autocompletin sondern eher iene rate/suggestion
 
 ---
 
