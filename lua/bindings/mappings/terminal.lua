@@ -19,9 +19,14 @@ function M.setup()
   map("t", "<C-k>", "<C-\\><C-w>k", { desc = "[Terminal] Up" })
 
   map({ "n", "t" }, "<A-h>", function()
-    local ok, nt = pcall(require, "nvchad.term")
-    if ok then
-      nt.toggle({ pos = "float", id = "floatTerm" })
+    -- Was nvchad.term.toggle({ pos = "float", ... }) -- NvChad is gone
+    -- (ui.nvim roadmap step 7), snacks.nvim's own terminal module is this
+    -- host's already-installed equivalent. `pcall(require, "snacks")` rather
+    -- than the bare global, same as autocmds/explorer-singleton.lua's own
+    -- Snacks.picker call sites.
+    local ok, Snacks = pcall(require, "snacks")
+    if ok and Snacks.terminal then
+      Snacks.terminal.toggle(nil, { win = { position = "float" } })
     end
   end, { desc = "[Term] Toggle floating" })
 end

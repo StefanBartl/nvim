@@ -1,8 +1,8 @@
 ---@module 'bindings.mappings.buffer_jump'
 --- Numeric buffer jump (`<leader>1`..`<leader>0`). Resolves a buffer order
---- (prefer `vim.t.bufs`, then several fallbacks for a stripped-down NvChad UI),
---- then switches via `nvchad.tabufline.goto_buf` if present (respects tabline
---- winfixbuf logic), else `nvim_set_current_buf`.
+--- (prefer `vim.t.bufs`, then several fallbacks), then switches via
+--- `ui.bindings.keymaps.tabufline.state.goto_buf` if present (respects
+--- tabline winfixbuf logic), else `nvim_set_current_buf`.
 
 local notify = require("lib.nvim.notify").create("[bindings.mappings.buffer_jump]")
 
@@ -26,7 +26,9 @@ local function unique_ordered(arr)
   return out
 end
 
---- Try to read buffer list from vim.t.bufs (nvchad tabufline storage).
+--- Try to read buffer list from vim.t.bufs (kept current by
+--- ui.bindings.keymaps.tabufline.state's own BufAdd/BufEnter/tabnew/
+--- BufDelete autocmds).
 ---@return number[] buflist
 local function buflist_from_vim_t_bufs()
   local t = vim.t.bufs
@@ -115,7 +117,7 @@ local function robust_tabpage_buflist()
   return {}
 end
 
---- Attempt to use nvchad.tabufline's goto_buf function if available.
+--- Attempt to use ui.nvim's own tabufline state goto_buf if available.
 --- Falls back to nvim_set_current_buf when not present.
 ---@param bufnr number buffer id to switch to
 local function switch_to_buffer(bufnr)
@@ -123,16 +125,13 @@ local function switch_to_buffer(bufnr)
     return
   end
 
-  local ok, tabufline = pcall(require, "nvchad.tabufline")
-  if ok and type(tabufline) == "table" then
-    -- `goto_buf` is the name tabufline's own implementation uses
-    if type(tabufline.goto_buf) == "function" then
-      local succ, err = pcall(tabufline.goto_buf, bufnr)
-      if succ then
-        return
-      else
-        notify.warn(string.format("nvchad.tabufline.goto_buf failed: %s", tostring(err)))
-      end
+  local ok, tabufline_state = pcall(require, "ui.bindings.keymaps.tabufline.state")
+  if ok and type(tabufline_state) == "table" and type(tabufline_state.goto_buf) == "function" then
+    local succ, err = pcall(tabufline_state.goto_buf, bufnr)
+    if succ then
+      return
+    else
+      notify.warn(string.format("ui.nvim tabufline goto_buf failed: %s", tostring(err)))
     end
   end
 
