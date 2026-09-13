@@ -1,12 +1,28 @@
-Handover-Notiz aktualisiert und gepusht. Wie gewünscht: **Stopp der Migration** an dieser Stelle. Zusammenfassung:
+Migration läuft weiter, ein Repo nach dem anderen. Zusammenfassung:
 
-## Fertig (18 von 34)
-cascade.nvim, fileops.nvim, mdview.nvim, sandbox.nvim, buffer-ctx.nvim, casedesk.nvim, cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim, emojis.nvim, filetree.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim — alle README+docs auf Fassung 3 umgebaut, ASCII-Art per pyfiglet verifiziert, committed & gepusht.
+## Fertig (23 von 34)
+cascade.nvim, fileops.nvim, mdview.nvim, sandbox.nvim, buffer-ctx.nvim, casedesk.nvim, cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim, emojis.nvim, filetree.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim — alle README+docs auf Fassung 3 umgebaut, ASCII-Art per pyfiglet verifiziert, committed & gepusht.
 
-## Noch offen (16 von 34)
-insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim, media.nvim, open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sessions.nvim, spotlight.nvim, ui.nvim
+## Noch offen (11 von 34)
+media.nvim, open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sessions.nvim, spotlight.nvim, ui.nvim
 
 `ui.nvim` bleibt der Sonderfall mit der Diary-Prosa, die noch bereinigt werden muss.
+
+## Muster der letzten 5 (insights, language, lib, lsp, markdown)
+Alle fünf hatten schon eine reife docs/-Struktur (FEATURES/-Kataloge etc.) —
+Migration war überall Verschlankung plus 2-4 fehlende Standardseiten:
+- `docs/quickstart.md` und `docs/what-you-get.md` fehlten in allen fünf, neu angelegt.
+- `docs/requirements.md` nur angelegt wo die Requirements-Sektion umfangreich war
+  (insights, language, lsp — je 2 Tabellen + deps-popup-Absatz); wo sie klein war,
+  blieb sie als `## Requirements`-Abschnitt in `docs/installation.md` (lib, markdown) —
+  Präzedenzfall dafür war bereits mdview.nvim.
+- Die README-Tabelle "What it does"/"Area | Does" wanderte jeweils als Intro-Absatz
+  in `docs/FEATURES/README.md` (bzw. `docs/modules.md` bei lib.nvim, da dort kein
+  FEATURES/-Ordner existiert) statt ersatzlos zu verschwinden — war an keiner
+  anderen Stelle in der gleichen Kompaktheit vorhanden.
+- lsp.nvim und markdown.nvim hatten je eine eigene README-"Integrations"-Sektion,
+  die in beiden Fällen bereits vollständiger in `docs/FEATURES/INTEGRATIONS.md`
+  stand — komplett gestrichen, nur noch verlinkt.
 
 ## Nebenbei aufgefallen (nicht Teil dieser Migration, evtl. eigener Task wert)
 - **Wiederkehrendes Muster:** mehrere Plugins hatten README-Behauptungen über `:checkhealth`, die nicht zum tatsächlichen `health.lua`-Code passten (cmdlog, emojis, filetree, github_stats) — Text wurde jeweils unverändert übernommen bzw. die schon korrekte Doku bevorzugt, nichts repariert. Könnte sich lohnen, das systematisch zu prüfen.
