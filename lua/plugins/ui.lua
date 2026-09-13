@@ -86,10 +86,12 @@ return {
     dependencies = { "nvzone/volt" },
   },
 
-  -- Replaces `nvchad.colorify` (lua/nvchad/au.lua, now guarded off below it
-  -- -- see that file) -- inline highlighting for hex codes, CSS colour
-  -- functions and named colours. Standalone: colorify only ever ran because
-  -- an nvconfig default said so, not because of any NvChad-specific code.
+  -- Replaces `nvchad.colorify` -- the `require("nvchad.colorify").run()`
+  -- call that used to live in `lua/nvchad/au.lua` is gone entirely, not
+  -- merely guarded off, see that file's own comment in its place. Inline
+  -- highlighting for hex codes, CSS colour functions and named colours.
+  -- Standalone: colorify only ever ran because an nvconfig default said so,
+  -- not because of any NvChad-specific code.
   {
     "catgoose/nvim-colorizer.lua",
     event = { "BufReadPre", "BufNewFile" },
