@@ -26,7 +26,11 @@ function M.setup()
     -- Snacks.picker call sites.
     local ok, Snacks = pcall(require, "snacks")
     if ok and Snacks.terminal then
-      Snacks.terminal.toggle(nil, { win = { position = "float" } })
+      -- snacks.nvim's own "terminal"/"float" window styles (snacks/
+      -- terminal.lua, snacks/win.lua) set no border at all -- explicit here
+      -- rather than relying on `vim.o.winborder`, so this float looks the
+      -- same regardless of that global option.
+      Snacks.terminal.toggle(nil, { win = { position = "float", border = "rounded" } })
     end
   end, { desc = "[Term] Toggle floating" })
 end
