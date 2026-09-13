@@ -1,5 +1,4 @@
 # ui.nvim / my.nvim
-
 ## Notes
 
 Roadmap und hHandover files findest du hier:
@@ -23,7 +22,7 @@ Roadmap und hHandover files findest du hier:
 
  Durchgehedn lib verwendet wo möglich?
 
-## Checke ab, ob kreuzfeatures zu menen andren plugin smöglich/sinnvoll wüären
+## Checke ab, ob kreuzfeatures zu meinen andren plugin smöglich/sinnvoll wären
 
 #### Plugin-Liste
 
@@ -64,7 +63,7 @@ sessions.nvim
 spotlight.nvim
 ui.nvim
 
-## aabklären ob ncoh offen:
+## abklären ob ncoh offen:
 
 ### neotest-Config nicht extrahiert
 lua/config/neotest/** lebt weiterhin im Host, in nvim.nvim.md als eigenständiges/dap.nvim-Sibling-Kandidat vorgeschlagen. Kein Repo dafür angelegt, unabhängig von ui.nvim/my.nvim.
