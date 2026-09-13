@@ -1,10 +1,28 @@
 Migration läuft weiter, ein Repo nach dem anderen. Zusammenfassung:
 
-## Fertig (26 von 34)
-cascade.nvim, fileops.nvim, mdview.nvim, sandbox.nvim, buffer-ctx.nvim, casedesk.nvim, cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim, emojis.nvim, filetree.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim, media.nvim, open.nvim, pdfport.nvim — alle README+docs auf Fassung 3 umgebaut, ASCII-Art per pyfiglet verifiziert, committed & gepusht.
+## Fertig (33 von 34)
+cascade.nvim, fileops.nvim, mdview.nvim, sandbox.nvim, buffer-ctx.nvim, casedesk.nvim, cmdlog.nvim, color_my_ascii.nvim, dap.nvim, debugging.nvim, diff.nvim, documentation.nvim, emojis.nvim, filetree.nvim, github_stats.nvim, gopath.nvim, hover.nvim, images.nvim, insights.nvim, language.nvim, lib.nvim, lsp.nvim, markdown.nvim, media.nvim, open.nvim, pdfport.nvim, pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sessions.nvim, spotlight.nvim — alle README+docs auf Fassung 3 umgebaut, ASCII-Art per pyfiglet verifiziert, committed & gepusht.
 
-## Noch offen (8 von 34)
-pickers.nvim, recommender.nvim, replacer.nvim, reposcope.nvim, runtime-analysis.nvim, sessions.nvim, spotlight.nvim, ui.nvim
+## Noch offen (1 von 34)
+ui.nvim — der Sonderfall mit der Diary-Prosa, jetzt dran.
+
+## Wiederkehrendes Muster über pickers..spotlight (8 Repos)
+Gleiches Bild wie schon bei insights..markdown: alle acht hatten reife docs/
+(FEATURES/-Kataloge), Migration war überall Verschlankung + fehlende
+Standardseiten. Neue Beobachtungen:
+- media.nvim/reposcope.nvim/runtime-analysis.nvim hatten TEILWEISE schon
+  quickstart.md bzw. installation.md#requirements — nicht blind neu anlegen,
+  erst nachsehen was da ist und nur die Lücke füllen.
+- Einmalige Sonderfälle, die einen eigenen Doku-Platz brauchten statt nur
+  Verschlankung: media.nvim → `docs/scope.md` + `docs/api.md` (kein FEATURES/
+  vorhanden); replacer.nvim → "Where this sits" (Vergleich zu nvim-spectre/
+  grug-far.nvim) in `docs/FEATURES/README.md` gefaltet, kein Präzedenzfall
+  dafür existierte; runtime-analysis.nvim → "The static × runtime join"
+  (Ecosystem-Essay über documentation.nvim/docmap-desktop) ebenfalls in
+  FEATURES/README.md gefaltet.
+- reposcope.nvim hatte ein Demo-Video (GitHub user-attachments Link) als
+  eigene README-Sektion — in docs/quickstart.md verschoben, an den Anfang.
+- Ein echter Merge-Konflikt bei media.nvim (siehe unten), sonst keine.
 
 ## media.nvim: Sonderfall dünnere docs/
 media.nvim hatte (noch) kein FEATURES/ und keine der reifen Strukturen der
