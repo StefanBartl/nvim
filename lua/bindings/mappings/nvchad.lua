@@ -21,13 +21,13 @@ function M.setup()
     end
   end, { desc = "Clear copilot NES overlays or nohl" })
   map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
-  map("n", "<leader>nvt", function()
-    require("nvchad.themes").open({
-      icon = "", -- optional
-      style = "compact", -- optional! compact/flat/bordered
-      border = false,
-    })
-  end, { desc = "[nvchad] Themes switcher" })
+  -- ui.nvim roadmap step 7: NvChad's own visual theme picker
+  -- (nvchad.themes.open()) went with chadrc.lua/wkdnvchad. ui.nvim has no
+  -- picker UI of its own yet, only the `:UI theme {name}`/`:UI toggle`
+  -- commands, so this cycles the configured theme_toggle pair instead of
+  -- opening a picker -- a real UX downgrade, tracked in wkdbook-myplugins
+  -- ui.nvim/NOTES.md pending a picker (or dropping the keymap).
+  map("n", "<leader>nvt", "<cmd>UI toggle<CR>", { desc = "[ui.nvim] Toggle theme" })
 
   -- Format via Conform (fallback handled in LSP attach)
   map({ "n", "x" }, "<leader>fm", function()

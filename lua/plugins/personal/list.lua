@@ -11,9 +11,10 @@
 ---
 --- Lives here rather than under `bindings.usrcmds.plugin_repos` (its original home):
 --- consumers now span both `bindings.usrcmds` (`:MyPlugins clone`/`remove`/`list`)
---- and `wkdnvchad.ui.statusline` (`plugin_summary`'s own/external count
---- badge), neither of which should reach into the other's namespace for
---- shared data that is really just a derived view of `plugins.personal`.
+--- and `config.ui_statusline` (ui.nvim's `plugin_summary` module's own/
+--- external count badge), neither of which should reach into the other's
+--- namespace for shared data that is really just a derived view of
+--- `plugins.personal`.
 
 local M = {}
 

@@ -99,10 +99,16 @@ require("lazy").setup({
   { import = "plugins.ai" },
 }, lazy_config)
 
--- Load base46 cache
-pcall(dofile, vim.g.base46_cache .. "syntax")
-pcall(dofile, vim.g.base46_cache .. "defaults")
-pcall(dofile, vim.g.base46_cache .. "statusline")
+-- base46 cache loading removed (nvim-config@<pending>, ui.nvim roadmap step
+-- 7): it ran AFTER plugins.colorscheme's tokyonight.nvim had already set the
+-- real colorscheme in the same lazy.setup() call above, so it silently
+-- overwrote that spec's own on_colors/on_highlights customizations (bolder
+-- palette, custom Todo* groups) with NvChad's own cached tokyonight variant
+-- every single startup. The real tokyonight.nvim spec is now the only thing
+-- that sets syntax highlighting; vim.g.base46_cache (above) stays set only
+-- because lua/config/menu/custom_menu/init.lua still probes it as an
+-- NvChad-presence check for its nvchad.term/minty integrations, which are
+-- unrelated to base46 itself and still work with NvChad installed.
 
 -- =============================================================================
 -- STARTUP PHASES
