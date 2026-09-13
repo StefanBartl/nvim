@@ -9,6 +9,7 @@
 ## Table of content
 
   - [Regeln für diese Session](#regeln-fr-diese-session)
+  - [Status (Stand: dieser Sitzung, vor Weiterarbeit hier angehalten)](#status-stand-dieser-sitzung-vor-weiterarbeit-hier-angehalten)
   - [Orte](#orte)
   - [Architektur (aus dem Konzept übernommen)](#architektur-aus-dem-konzept-bernommen)
   - [Real geprüfter Ist-Stand der Bausteine (nicht aus dem Konzept übernommen, sondern nachgesehen)](#real-geprfter-ist-stand-der-bausteine-nicht-aus-dem-konzept-bernommen-sondern-nachgesehen)
@@ -39,6 +40,67 @@
 - Code muss luacheck/stylua-grün sein (stylua v2.5.2, luacheck 1.2.0, siehe `ci-fleet-conventions`).
 - Plugin-Installations-Specs: `vim.fn.stdpath('config')/lua/plugins/personal/init.lua`
   (+ Policy in `plugins/personal/source.lua`).
+
+---
+
+## Status (Stand: dieser Sitzung, vor Weiterarbeit hier angehalten)
+
+**Fertig und verifiziert (echte Tests, keine Annahmen):**
+
+- `lib.nvim`: `fetch_stream` + `secret_headers` in `lua/lib/nvim/net/curl/init.lua`
+  gebaut, inkl. `-N`/`--no-buffer`-Fix (curl puffert stdout sonst komplett, bis der
+  Prozess endet — hätte Streaming unbrauchbar gemacht). Tests in `TESTS/curl_spec.lua`
+  (echter `vim.uv`-TCP-Server, kein Mock) — u. a. Zeilen-für-Zeile-Delivery inkl.
+  Leerzeilen, `secret_headers` erreicht die Leitung, `process:kill()` bricht einen
+  laufenden Stream wirklich ab. Komplette Suite grün (`LIB_TESTS_OK`), luacheck/stylua
+  grün. **Committet + gepusht auf `lib.nvim` main** (`5364c02`).
+- `ai.nvim`-Repo angelegt (`github.com/StefanBartl/ai.nvim`, public, lokal
+  `E:\repos\ai.nvim`), Branch `main` — **noch nicht gepusht** (siehe „Nächster Schritt").
+  Vollständiges Scaffold nach `NEW_PROJECT.md`: `.luarc.json`/`.luacheckrc`/
+  `stylua.toml`/`.gitattributes`/`LICENSE`(MIT)/CI-Workflow/`TESTS/`+Runner.
+  Kern-Implementierung (nicht nur Gerüst): `lua/ai/{config,@types,providers/{init,
+  claude,ollama,openai},context/{init,diagnostics},ui/{panel,badge},bindings/{keymaps,
+  usercmds,autocmds,actions},health,init}`, `plugin/ai.lua`.
+  - Provider-Registry (Lazy-Proxy wie `pdfport.nvim/backends`), `claude`/`ollama`/`openai`
+    real implementiert (kein `loomai` — bewusst, siehe unten).
+  - **Echter End-to-End-Test gegen die lebende OpenAI-API** (in dieser Session
+    vorhandener `OPENAI_API_KEY`, ungültiger Testschlüssel reicht für den Zweck):
+    dabei einen **echten Bug gefunden und gefixt** — eine Auth-Fehlerantwort auf
+    einen Streaming-Request kommt NICHT als SSE-Event, sondern als
+    mehrzeiliges, pretty-printed JSON, curl selbst beendet sich trotzdem mit
+    Code 0. Naive `data:`-Zeilenerkennung verschluckte das still (leerer
+    „Erfolg" statt Fehler) — genau die Fehlerklasse, die dieses Projekt beheben
+    soll. Fix in `claude.lua`+`openai.lua`: Nicht-`data:`-Zeilen werden
+    gesammelt und am Streamende als ein JSON-Block geparst. Nach dem Fix mit
+    echtem API-Call verifiziert: `on_error` feuert korrekt, `on_done` nicht mehr
+    fälschlich.
+  - Quick-Actions aus dem Konzept umgesetzt: `<leader>as` (Kontext + Task,
+    gestreamt), `<leader>ae` (Badge/Post-it, kein Panel), `<leader>aa` (Ask).
+  - Streaming-Cancel-Frage aus dem Konzept **verbindlich gelöst**: `ai.ui.panel`
+    hält den `vim.SystemObj`, killt ihn bei explizitem Cancel UND beim Schließen
+    des Panels UND bei `VimLeavePre` (`bindings/autocmds.lua`).
+  - Tests: `TESTS/ai/{config,providers,context}_spec.lua`, 19 Tests, alle grün
+    (echter plenary-Lauf gegen `E:\repos\lib.nvim` + `nvim-data/lazy/plenary.nvim`).
+    luacheck (0/0) und stylua grün.
+  - Docs geschrieben: `README.md` (Fassung-3-Template, ASCII-Art mit pyfiglet
+    gegengeprüft), `docs/{README,requirements,installation,quickstart,
+    configuration,commands,BINDINGS,scope,architecture,health}.md`.
+- Wkdbook: `wkdbook-myplugins/ai.nvim/{ROADMAP/ROADMAP.md,NOTES/loomai-integration.md}`
+  angelegt, committet + gepusht (WKDBooks main, `3da43bf`).
+
+**Noch offen (bewusst hier gestoppt, nicht abgebrochen):**
+
+- [ ] `ai.nvim` initial committen + auf `github.com/StefanBartl/ai.nvim` main pushen
+      (bisher nur lokal, noch kein einziger Commit im Repo).
+- [ ] `doc/ai.txt` (Vimdoc, `NEW-13`) — noch nicht geschrieben.
+- [ ] Phase 8 — Wiring in `nvim-config`: `plugins/personal/source.lua`
+      (`MODE["ai.nvim"] = "dir"`) + `plugins/personal/init.lua` (Lazy-Spec). Vor
+      Vergabe von `<leader>a*` bestehende Belegung gegenprüfen (`LUA-95`) — **noch
+      nicht geprüft**.
+- [ ] `gates/REVIEW.md`-Schnell-Check einmal drüberlaufen lassen, bevor as Wiring
+      erfolgt.
+- Phase 9/10 (loomai-Provider, pdfport.nvim-Migration) bleiben wie geplant
+  zurückgestellt, siehe Wkdbook-ROADMAP.
 
 ---
 
