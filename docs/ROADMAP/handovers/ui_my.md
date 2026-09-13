@@ -43,36 +43,39 @@ durchgegangen, Nutzer hat 16 von ~18 zur Umsetzung ausgewählt — explizit
 die persönliche Config verdrahtet (wie `undo_depth`/`search_count` schon).
 Vereinbarte Reihenfolge: Klick-Layer zuerst, dann alles Klickbare darauf.
 
-**Gerade in Arbeit, NICHT committed/gepusht, Session hier gestoppt:**
-Plan approved (`structured-waddling-newt.md`), Dateien bereits geschrieben,
-aber Tests/Full-Suite-Lauf/Commit noch offen:
-- `lua/ui/statusline/utils/clickable.lua` (neu) — generischer Klick-Layer
-  fürs Statusline-Äquivalent zu `ui.tabline.utils`'
-  `btn`/`register_click_handlers`, `%N@UiSlClick@...%X`-Protokoll, Registry
-  nach Integer-Id, `wrap(segment_fn, handlers)`.
-- `lua/ui/statusline/modules/diagnostics_clickable/init.lua` (neu) —
-  Linksklick → `vim.diagnostic.goto_next()`.
-- `lua/ui/statusline/modules/git_clickable/init.lua` (neu) — Linksklick:
-  dependency-freier Branch-Switcher (`git branch`/`checkout` per
-  `vim.fn.systemlist`/`vim.ui.select`); Rechtsklick: `lib.nvim.contextmenu`
-  mit "Branch wechseln"/"Branch-Name kopieren"/"Details" — deckt zugleich
-  die "Rechtsklick-Segment-Optionen"-Idee als Referenzbeispiel ab.
-- `lua/ui/statusline/modules/variant/init.lua` (neu) — noch nie
-  existierendes Segment, zeigt aktive Statusline-Variante, Linksklick öffnet
-  Quick-Switch-Menü über `ui.config.variants.list()` + `:UI variant`.
-- `lua/ui/statusline/utils/primitives.lua`: Branch-Name in `M.git()` jetzt
-  `%`-escaped (Fund beim Bauen des Klick-Layers: derselbe Bug-Typ wie schon
-  bei `ui.tabline.utils.stl_escape`, aber bislang nirgends für Statusline
-  gefixt).
-- `lua/ui/statusline/catalog.lua`, `docs/modules.md`: 3 neue Katalog-Einträge
-  + neue "Clickable modules"-Doku-Sektion.
-- `TESTS/statusline_clickable_spec.lua` (neu, noch nicht laufen gelassen).
+**Nachgeholt 2026-09-14 (neue Session, Worktree `strange-shamir-7a4175`):**
+der oben geplante Klick-Layer war nie committet — der Arbeitsbaum von
+`busy-bassi-c01118` war beim Wiederaufnehmen bereits recycelt, alle fünf
+geplanten Dateien nicht mehr auf der Platte. Neu gebaut nach genau dieser
+Spezifikation — `clickable.lua`, `diagnostics_clickable`, `git_clickable`,
+`variant`, Katalog + Doku, den `%`-Escape-Fix in `primitives.git()` gleich
+mit —, nicht identisch im Code, gleichwertig im Verhalten, inklusive Tests.
+Gepusht als `ui.nvim@73f36a4` + `ui.nvim@0551cb8`.
 
-**Nächster Schritt bei Wiederaufnahme:** `luacheck`/`stylua` (bereits grün
-laut letztem Check), dann volle Suite (`bash scripts/test.sh`), dann
-manueller Headless-Check, dann commit + Push nach `main` — wie im
-gespeicherten Plan (`structured-waddling-newt.md`) unter "Verification"
-beschrieben.
+Zwei echte Lua/Neovim-Fallstricke beim Testen gefunden: `require()`
+reduziert das Ergebnis eines Moduls immer auf einen Wert, egal wie viele das
+Modul zurückgibt (die Klick-Id kann deshalb nicht über einen zweiten
+`require()`-Rückgabewert an einen Test durchgereicht werden — geparst aus
+dem gerenderten `%id@UiSlClick@...%X`-Text stattdessen); `vim.v.shell_error`
+ist auch über `vim.api.nvim_set_vvar()` schreibgeschützt. Volle Suite grün
+(217 Tests), `luacheck`/`stylua` clean. Details: `$REPOS_DIR/WKDBooks/
+Development/wkdbook-myplugins/ui.nvim/handovers/ERLEDIGT/
+statusline-click-layer.md`.
+
+Bewusst nicht gemacht: keine Live-Verdrahtung in die persönliche Statusline
+(alle drei Module bleiben `used_by = {}`, opt-in, wie `undo_depth`/
+`search_count` vor ihrer eigenen Verdrahtungsrunde) und kein manueller
+Maus-Klick-Test im echten Host (keine GUI in dieser Sandbox) — nur headless
+verifiziert.
+
+**Nebenbei entdeckt:** der `custom_menu`-Roadmap-Eintrag (die deklarative
+Menu-Entry-API-Idee), am 2026-09-08 in dieser Datei dokumentiert und nach
+`nvim-config@main` gepusht, ist im aktuellen `main` nicht mehr vorhanden —
+vermutlich durch einen späteren Force-Push von `main` verloren gegangen
+(erwartetes Risiko, siehe `nvim-config-main-gets-force-pushed`-Memory).
+Nicht selbstständig wiederhergestellt, da unklar ist, ob das absichtlich
+raus ist oder nur beim Force-Push mitgerissen wurde — beim Nutzer
+nachgefragt.
 
 ---
 
