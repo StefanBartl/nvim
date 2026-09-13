@@ -1,10 +1,18 @@
 ---@module 'config.ui_statusline.variant'
 --- This host's own statusline: casedesk short-info, filetree's cwd-mode
---- badge, mode-band-colored LSP breadcrumbs/diagnostics, round separators.
---- Registered under the name "personal" by
---- `config/ui_statusline/init.lua`'s `M.setup()`, so `:UI variant
---- personal`/`:UI variants` see it next to ui.nvim's own four shipped
---- presets.
+--- badge, diagnostics, round separators. Registered under the name
+--- "personal" by `config/ui_statusline/init.lua`'s `M.setup()`, so `:UI
+--- variant personal`/`:UI variants` see it next to ui.nvim's own four
+--- shipped presets.
+---
+--- No breadcrumbs module here (removed 2026-09-13) -- `my.nvim`'s
+--- `hl_config.breadcrumbs` already draws a separate, independent breadcrumb
+--- line into the winbar (`vim.wo.winbar`, via `ui.winbar.set()`) directly
+--- below the tabline. This statusline's own "breadcrumbs" module
+--- (`ui.statusline.modules.lsp.render_breadcrumbs_inherit_lspfirst`) showed
+--- the same kind of path/symbol content a second time, in the middle of the
+--- statusline -- two independent implementations of the same idea, not one
+--- feeding the other. The winbar's own is the one that stays.
 ---
 --- Copied from StefanBartl/ui.nvim's own
 --- `docs/examples/personal-statusline-example.lua` -- that file is the
@@ -16,8 +24,6 @@
 local lazy = require("lib.lua.lazy")
 local render_module = lazy.require("ui.statusline.cursor_ctl.renderer")
 local progr_calc_module = lazy.require("ui.statusline.cursor_ctl.progress_calculators")
-local hl_module = lazy.require("ui.statusline.modules.highlighting")
-local lsp_module = lazy.require("ui.statusline.modules.lsp")
 local cursor_module = lazy.require("ui.statusline.cursor_ctl")
 local get_separators = lazy.require("ui.statusline.utils.get_separators")
 local plugin_progress = lazy.require("ui.statusline.modules.plugin_progress")
@@ -43,8 +49,6 @@ return {
       order = {
         "mode",
         "git",
-        "%=",
-        "breadcrumbs",
         "%=",
         "diagnostics",
         "lsp",
@@ -112,20 +116,6 @@ return {
           end
 
           return " %#St_gitIcons#" .. git_status .. "%#St_gitIcons# " .. " "
-        end,
-
-        --- @return string
-        breadcrumbs = function()
-          local band = hl_module.mode_band_group()
-          local content = lsp_module.render_breadcrumbs_inherit_lspfirst(band)
-
-          if not content or content == "" then
-            return ""
-          end
-
-          local sep = get_separators(SEPARATOR_STYLE)
-
-          return hl_module.hl_open(band) .. content .. "%#" .. band .. "Sep#" .. sep.right .. " "
         end,
 
         --- @return string
