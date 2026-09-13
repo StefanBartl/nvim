@@ -5,7 +5,6 @@
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
   - [Tasks](#tasks)
-    - [filetree.nvim](#filetreenvim)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
@@ -19,7 +18,7 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     22:00       |    20% / 50%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     05:30       |    33% / 52%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     04:00       |    96% / 38%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     02:00       |    95% / 27%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
@@ -56,8 +55,6 @@
 ---
 
 ## Tasks
-
-### filetree.nvim
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 

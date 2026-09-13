@@ -6,6 +6,29 @@
 > *Neuanlage* von `ai.nvim` und bleibt an diesem Ort
 > (`nvim/docs/ROADMAP/handovers/`), nicht im Wkdbook.
 
+## Table of content
+
+  - [Regeln für diese Session](#regeln-fr-diese-session)
+  - [Orte](#orte)
+  - [Architektur (aus dem Konzept übernommen)](#architektur-aus-dem-konzept-bernommen)
+  - [Real geprüfter Ist-Stand der Bausteine (nicht aus dem Konzept übernommen, sondern nachgesehen)](#real-geprfter-ist-stand-der-bausteine-nicht-aus-dem-konzept-bernommen-sondern-nachgesehen)
+  - [loomAI: Entscheidung & Fallback (Kernpunkt der Aufgabenstellung)](#loomai-entscheidung-fallback-kernpunkt-der-aufgabenstellung)
+  - [Phasenplan](#phasenplan)
+    - [Phase 0 — Setup ✅ (diese Sitzung)](#phase-0-setup-diese-sitzung)
+    - [Phase 1 — Transport-Erweiterung in `lib.nvim`](#phase-1-transport-erweiterung-in-libnvim)
+    - [Phase 2 — `ai.nvim` Scaffold (`NEW_PROJECT.md`, `NEW-01`…`NEW-50`)](#phase-2-ainvim-scaffold-new_projectmd-new-01new-50)
+    - [Phase 3 — Provider-Registry (`lua/ai/providers/`)](#phase-3-provider-registry-luaaiproviders)
+    - [Phase 4 — Kontext-Assemblierung (`lua/ai/context/`)](#phase-4-kontext-assemblierung-luaaicontext)
+    - [Phase 5 — UI (`lua/ai/ui/`)](#phase-5-ui-luaaiui)
+    - [Phase 6 — Public API + `:Ai`-Composer](#phase-6-public-api-ai-composer)
+    - [Phase 7 — Quick-Actions ("neue Idee" im Konzept)](#phase-7-quick-actions-neue-idee-im-konzept)
+    - [Phase 8 — Wiring in nvim-config](#phase-8-wiring-in-nvim-config)
+    - [Phase 9 — Follow-up (entkoppelt von v1, NICHT blockierend)](#phase-9-follow-up-entkoppelt-von-v1-nicht-blockierend)
+    - [Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release](#phase-10-gatesreleasemd-vor-einem-ersten-tagrelease)
+  - [Nächste konkrete Schritte (Stand jetzt)](#nchste-konkrete-schritte-stand-jetzt)
+
+---
+
 ## Regeln für diese Session
 
 - Nie mehr als 1 Agent gleichzeitig; bei Bedarf mehrere Runden á 1 Agent, repo-für-repo.
@@ -16,6 +39,8 @@
 - Code muss luacheck/stylua-grün sein (stylua v2.5.2, luacheck 1.2.0, siehe `ci-fleet-conventions`).
 - Plugin-Installations-Specs: `vim.fn.stdpath('config')/lua/plugins/personal/init.lua`
   (+ Policy in `plugins/personal/source.lua`).
+
+---
 
 ## Orte
 
@@ -28,6 +53,8 @@
 | Transport-Erweiterung | `E:\repos\lib.nvim\lua\lib\nvim\net\curl` |
 | loomAI (nativ, Referenz für späteren Provider) | `E:\repos\loomAI` |
 | Regelwerk für neue Projekte | `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
+
+---
 
 ## Architektur (aus dem Konzept übernommen)
 
@@ -48,6 +75,8 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
 `lib.nvim.harvest.scope`, `lib.nvim.progress`, `lib.nvim.ui.kit` (`surface`,
 `popup{type="note"}`), `lib.nvim.usercmd.composer`, `lib.nvim.notify`,
 `lib.nvim.safe_api`.
+
+---
 
 ## Real geprüfter Ist-Stand der Bausteine (nicht aus dem Konzept übernommen, sondern nachgesehen)
 
@@ -73,6 +102,8 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
   im Code — nur in `docs/Guides/ki-agenten-framework-architektur.md` geplant (Wochen 3-4,
   ungeprüft/nicht garantiert). **Kein `/ask`-artiger Endpoint vorhanden.**
 
+---
+
 ## loomAI: Entscheidung & Fallback (Kernpunkt der Aufgabenstellung)
 
 **Gewählt (wie im Konzept): Option 2 — `ai.nvim` jetzt bauen, loomAI später als vierter Provider.**
@@ -95,6 +126,8 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
   gegenchecken, ob sich das geändert hat (Stand hier: 2026-09-14, nichts vorhanden).
 - Dieser Punkt steht auch in `wkdbook-myplugins/ai.nvim/ROADMAP/ROADMAP.md` als offener Posten.
 
+---
+
 ## Phasenplan
 
 ### Phase 0 — Setup ✅ (diese Sitzung)
@@ -105,6 +138,8 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
 - [x] Diese Handover-Datei angelegt.
 - [ ] GH-Repo `stefanbartl/ai.nvim` (public) + lokal `E:\repos\ai.nvim`.
 - [ ] `wkdbook-myplugins/ai.nvim/{ROADMAP/ROADMAP.md, NOTES/}` anlegen.
+
+---
 
 ### Phase 1 — Transport-Erweiterung in `lib.nvim`
 - `fetch_stream(url, opts, handlers)`: `vim.system` mit Zeilen-Callback (wie
@@ -119,6 +154,8 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
 - Tests unter `lib.nvim/TESTS/` (bestehendes Test-Setup nutzen).
 - Commit + Push auf `lib.nvim` main.
 
+---
+
 ### Phase 2 — `ai.nvim` Scaffold (`NEW_PROJECT.md`, `NEW-01`…`NEW-50`)
 Struktur wie `dap.nvim`/`language.nvim`: `lua/ai/{config/{DEFAULTS,init},bindings/{keymaps,usercmds,autocmds},@types,health.lua,providers/,context/,ui/}`,
 `plugin/ai.lua` (Guard), `TESTS/` + `scripts/test.sh`, `doc/ai.txt`, `docs/BINDINGS.md`,
@@ -129,6 +166,8 @@ Vorlage `dap.nvim/.github/workflows/ci.yml`). **Kein `docs/ROADMAP.md` im Repo**
 Modul-Namespace: `require("ai")` (kein Kollisionsrisiko mit installierten Plugins geprüft —
 Konzept selbst legt `require("ai")` in der API-Skizze fest).
 
+---
+
 ### Phase 3 — Provider-Registry (`lua/ai/providers/`)
 Lazy-Proxy-Registry nach `pdfport.nvim/backends/init.lua`-Muster. `Ai.Provider`-Interface
 laut Konzept (`id`, `available()`, `ask(req,cb)`, `stream(req,handlers)`, `capabilities`).
@@ -137,10 +176,14 @@ Eingebaut: `claude` (Anthropic Messages API, SSE), `ollama` (lokal, NDJSON), `op
 eigene/künftige Provider von außen. Secrets nur aus `vim.env.*`, nie gespeichert
 (`:Ai info` zeigt Status, nie den Wert — SEC-Regeln).
 
+---
+
 ### Phase 4 — Kontext-Assemblierung (`lua/ai/context/`)
 Dünner Wrapper um `lib.nvim.harvest.scope` (`buffer`/`selection`→`range`/`cwd`) +
 eigene `diagnostics`-Funktion (`vim.diagnostic.get()` → nummerierte Liste mit Severity,
 NICHT nach `lib.nvim` — zu AI-spezifisch). Baut daraus den Prompt-Kontext-Block.
+
+---
 
 ### Phase 5 — UI (`lua/ai/ui/`)
 `lib.nvim.progress` für "Denkt nach…" (Style konfigurierbar), `lib.nvim.ui.kit.surface`
@@ -149,10 +192,14 @@ für das Antwort-Panel (bleibt offen, `set_lines()` inkrementell bei jedem Strea
 aus dem Konzept — hier verbindlich lösen: `vim.system`-Handle im Stream-Handler halten,
 `:kill()` bei Cancel/Panel-Close).
 
+---
+
 ### Phase 6 — Public API + `:Ai`-Composer
 `require("ai").ask(req, cb)` / `.stream(req, handlers)` (API-Skizze aus Konzept).
 `:Ai ask [prompt?]`, `:Ai stream [prompt?]`, `:Ai provider <name>` (Completion aus
 Registry, live), `:Ai info` — über `lib.nvim.usercmd.composer.verb("Ai", {...})`.
+
+---
 
 ### Phase 7 — Quick-Actions ("neue Idee" im Konzept)
 1. Hotkey/Usercmd: aktuellen Kontext (Buffer/Selection/Diagnostics/Quickfix — je nach
@@ -162,11 +209,15 @@ Registry, live), `:Ai info` — über `lib.nvim.usercmd.composer.verb("Ai", {...
    umrandetes farbiges Badge (kleines "Post-it") oben/unten rechts, das die aktuelle
    Fehlermeldung/den Kontext knapp erklärt — nutzt `kit.popup({type="toast"|"note",...})`.
 
+---
+
 ### Phase 8 — Wiring in nvim-config
 `plugins/personal/source.lua` (`MODE["ai.nvim"] = "dir"`), `plugins/personal/init.lua`
 (Lazy-Spec + `dependencies = {"StefanBartl/lib.nvim"}` + Keymaps für Phase 7).
 Vor Vergabe der Keymap-Präfixe: bestehende `<leader>a*`-Belegung gegenprüfen (Kollision
 mit `LUA-95`-Regel: spät geladene Plugins nicht versehentlich überschreiben).
+
+---
 
 ### Phase 9 — Follow-up (entkoppelt von v1, NICHT blockierend)
 - `pdfport.nvim`s `claude`/`ollama`-Backends auf `ai.nvim` migrieren — behebt B1/B2 dort
@@ -176,6 +227,8 @@ mit `LUA-95`-Regel: spät geladene Plugins nicht versehentlich überschreiben).
   `context.diagnostics` (Rohtext vs. strukturiert) — vorerst strukturiert (Datei:Zeile:
   Severity:Message), da zuverlässiger parsbar; Modell-Registry pro Provider (validierte
   Liste vs. freier String) — vorerst frei, wie im Konzept vorgeschlagen.
+
+---
 
 ### Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release
 
@@ -188,3 +241,6 @@ mit `LUA-95`-Regel: spät geladene Plugins nicht versehentlich überschreiben).
 5. Phase 3-7 (Registry, Kontext, UI, API, Quick-Actions) umsetzen.
 6. Phase 8 (Wiring) umsetzen.
 7. Diese Datei laufend als Statusprotokoll fortschreiben.
+
+---
+
