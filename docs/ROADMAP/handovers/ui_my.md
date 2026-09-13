@@ -1,0 +1,20 @@
+# ui.nvim / my.nvim
+## Notes
+
+Roadmap und hHandover files findest du hier:
+`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ui.nvim`
+`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/my.nvim`
+
+- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
+- antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
+- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
+- Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
+- Docs / ../README-New/README.md des Plugins updaten sofern es Sinn macht
+- Keine Co-Authorenschaft von Claude in den Commits
+- Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit)
+- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
+- code der implementiert wurde muss luacheck / stylua grün sein
+
+---
+
