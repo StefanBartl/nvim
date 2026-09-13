@@ -1,7 +1,7 @@
 # ui.nvim / my.nvim
 ## Notes
 
-Roadmap und hHandover files findest du hier:
+Roadmap und Handover files findest du hier:
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ui.nvim`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/my.nvim`
 
