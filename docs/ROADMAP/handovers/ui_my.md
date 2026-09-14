@@ -8,6 +8,7 @@ Roadmap und Handover files findest du hier:
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 - Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
+- Wenn nötig: Alle meine `.nvim` Plugins findest du unter `$REPOS_DIR\repos`
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
 - Docs / ../README-New/README.md des Plugins updaten sofern es Sinn macht
 - Keine Co-Authorenschaft von Claude in den Commits
