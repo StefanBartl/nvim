@@ -278,8 +278,32 @@ Detail-Abschnitt nötig.
 ---
 
 ### Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release
-Noch nicht begonnen — erst nach Phase 8 (Wiring, damit v1 tatsächlich im Alltag benutzt
-wurde, bevor getaggt wird).
+Absichtlich noch nicht formal abgeschlossen — der Plan verlangt echten Alltagsgebrauch vor
+dem Tag, das lässt sich nicht durch eine einzelne Sitzung ersetzen. Die automatisch prüfbaren
+`REL-*`-Punkte aber bereits vorab durchlaufen (2026-09-14, alles grün, keine Änderung nötig):
+
+- REL-01/05/06/07/16/28 (README/`doc/ai.txt`/`docs/BINDINGS.md`/kein `docs/ROADMAP.md`/
+  `health.lua`/`LICENSE` vorhanden) — alle ✅.
+- REL-13 (kein `dir = vim.env...` im README) — ✅.
+- REL-29 (`git status --porcelain` leer) — ✅.
+- REL-35 (kein `wkdbook`/`WKDBooks`-Verweis im Repo) — ✅.
+- REL-25/26/27 (GitHub-Metadaten: Description, Topics, Default-Branch `main`) — bereits in
+  einer früheren Sitzung gesetzt, per `gh repo view` verifiziert, nichts geändert.
+
+**Noch offen, judgment-basiert (kein automatischer Check möglich):**
+- REL-03 (Table of Content) — README hat nur 2 H2-Sections (`## Documentation`,
+  `## License`); die „Documentation"-Sektion fungiert bereits als Index in `docs/*.md`,
+  eine separate TOC wäre bei der Kürze redundant. `recommended`, nicht kritisch — bewusst
+  so gelassen, nicht vergessen.
+- REL-08 (README-Beispiele laufen tatsächlich) — die Lazy-Spec + `setup()` sind diese
+  Sitzung bereits end-to-end gegen die echte nvim-config verifiziert (Phase 8); die übrigen
+  Codeblöcke in `docs/*.md` sind zum Teil bewusst illustrativ (z. B. `register()`-Beispiel
+  mit `...`-Stub), kein vollständiger Durchlauf jedes einzelnen Snippets.
+- REL-19 (Windows UND POSIX getestet) — CI läuft nur auf `ubuntu-latest`; manuell nur unter
+  Windows getestet. POSIX-Seite bislang nur durch CI abgedeckt, kein echtes manuelles
+  Durchklicken.
+- REL-09/33 (Demo-GIF/Logo) — `nice-to-have`, nicht begonnen.
+- REL-32 (Literatur und Referenzen) — `nice-to-have`, nicht begonnen.
 
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
