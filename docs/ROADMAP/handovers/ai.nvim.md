@@ -28,15 +28,12 @@
     - [Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release](#phase-10-gatesreleasemd-vor-einem-ersten-tagrelease)
   - [Code-Review + Fixes (2026-09-14, nach Phase 8)](#code-review-fixes-2026-09-14-nach-phase-8)
   - [loomai-Provider umgesetzt (2026-09-14, Folgesession)](#loomai-provider-umgesetzt-2026-09-14-folgesession)
+  - [loomAI: ModelRouter für klassische Provider (OpenAI/Anthropic/Open Source) — Scoping (2026-09-14)](#loomai-modelrouter-fr-klassische-provider-openaianthropicopen-source--scoping-2026-09-14)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
 
 ---
 
 ## Feedback
-
-`loomAI` wird gerade gebaut, es sollte aber auch die klassischen ai tools von openai  / anthropic / open spurce uinterstützen können, sofern diese die geforderte features beretistellen.
-
----
 
 ## Regeln für diese Session
 
@@ -474,6 +471,119 @@ auf `origin/main` gepusht. Keine Claude-Co-Autorenschaft in den Commits.
 
 ---
 
+## loomAI: ModelRouter für klassische Provider (OpenAI/Anthropic/Open Source) — Scoping (2026-09-14)
+
+**Reines Scoping, NICHT umgesetzt.** Aufgehängt an der Feedback-Notiz ganz oben
+in dieser Datei: für **`ai.nvim` selbst** ist die Anforderung "klassische Tools
+von OpenAI/Anthropic/Open Source unterstützen" bereits vollständig erledigt
+(Phase 3: `providers/{claude,ollama,openai}.lua`, gebaut, getestet, auch live
+gegen echte APIs — siehe Code-Review-Abschnitt oben). Offen ist das nur noch
+auf der **loomAI-Server-Seite** (Punkt 6 unten) — der Server selbst kann
+aktuell ausschließlich Ollama. Dieser Abschnitt hält den vollständigen
+Rechercheergebnis- und Planungsstand fest, damit bei einer Sitzungsunterbrechung
+(Nutzungslimit) nichts verloren geht.
+
+### Ist-Stand (verifiziert, 2026-09-14, Code direkt gelesen, nicht angenommen)
+
+- `E:\repos\loomAI\src\main.cpp`: `/ask`-Handler (ca. Zeile 161) und
+  `/ask/stream`-Handler (ca. Zeile 198) rufen **hart** `loomai::ollama::ask()`
+  (Zeile 176) bzw. `loomai::ollama::ask_stream()` (Zeile 231) auf — kein
+  Router, kein Auswahlmechanismus, keine anderen Backend-Clients existieren
+  im Code.
+- `src/ollama_client.hpp/.cpp` ist das einzige Backend: direkter REST-Client
+  gegen Ollamas `POST /api/generate`.
+- Der äußere `try/catch` um den gesamten `/ask/stream`-Chunked-Content-Provider-
+  Body in `main.cpp` (aus dem `4e2777c`-Crash-Fix, s.o.) fängt bereits jede
+  Exception ab, unabhängig vom Backend dahinter — bleibt als Sicherheitsnetz
+  bestehen, egal welches Backend künftig darunterhängt.
+- Der HTTP-Vertrag ist bereits stabil und wird von `ai.nvim`s
+  `lua/ai/providers/loomai.lua` konsumiert: Request `{prompt, system, model,
+  timeout_ms}`, Response `{text, provider, stop_reason, usage}`, Fehler
+  `{"error":{"message":...}}`. Jede Änderung hier muss entweder
+  rückwärtskompatibel bleiben oder `ai.nvim` mit angepasst werden.
+
+### Was konkret zu bauen ist
+
+1. **Zwei neue Backend-Clients**, nach dem Muster von `ollama_client.hpp/cpp`:
+   - `src/openai_client.hpp/.cpp` — `POST https://api.openai.com/v1/chat/completions`
+     (Base-URL konfigurierbar, s. Punkt 2), Auth via
+     `Authorization: Bearer $OPENAI_API_KEY`.
+   - `src/anthropic_client.hpp/.cpp` — `POST https://api.anthropic.com/v1/messages`,
+     Auth via `x-api-key: $ANTHROPIC_API_KEY` **plus** `anthropic-version`-Header
+     — anderes Auth-Schema als OpenAI/Ollama, nicht denselben Header-Namen
+     wiederverwenden.
+   - **Gleiche Env-Var-Namen wie in `ai.nvim`s eigenen `providers/claude.lua`/
+     `providers/openai.lua`** verwenden (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`)
+     — Konsistenz zwischen beiden Projekten, kein neues Namensschema erfinden.
+2. **"Open Source"-Tools** heißt in der Praxis meist: selbstgehostete Server,
+   die das OpenAI-Schema sprechen (vLLM, llama.cpp-Server, LM Studio,
+   text-generation-webui). Deckt der `openai_client` mit konfigurierbarer
+   Base-URL (Env-Var, analog zu `LOOMAI_OLLAMA_HOST`) automatisch mit ab —
+   **kein eigener dritter Client**, außer ein konkretes Tool spricht ein
+   eigenes, inkompatibles Schema (dann bei Bedarf einzeln nachziehen, nicht
+   vorab spekulativ bauen — "erst einfach, dann komplex", `PRINCIPLES.md`).
+3. **Bekannter Bug wird hier mit hoher Wahrscheinlichkeit wiederkehren**: das
+   gleiche Problem, das in `ai.nvim`s `claude.lua`/`openai.lua` gefunden und
+   gefixt wurde (Code-Review-Abschnitt oben) — eine Auth-/Validierungs-
+   Fehlerantwort auf einen *Streaming*-Request kommt bei Anthropic/OpenAI
+   NICHT als SSE-Event zurück, sondern als mehrzeiliger, pretty-printed
+   JSON-Body; curl selbst beendet trotzdem mit Exit-Code 0. Beide neuen
+   C++-Clients brauchen die gleiche "nicht-`data:`-Zeilen sammeln, erst am
+   Streamende als ein JSON-Block parsen"-Logik wie `ai.nvim`s
+   `lua/ai/providers/sse.lua` (dort bereits als wiederverwendbarer Helper
+   extrahiert, siehe Code-Review-Abschnitt "Dedupliziert") — in C++ neu zu
+   bauen (keine Lua-Bibliothek wiederverwendbar), aber exakt gleiches Muster.
+4. **Modell→Backend-Routing** — offene Design-Entscheidung, Empfehlung
+   ausgesprochen, aber **noch nicht vom Nutzer final bestätigt**:
+   - **Option (a) — empfohlen**: server-seitig per Modellname-Präfix
+     (`claude-*` → Anthropic, `gpt-*`/`o1-*`/`o3-*` → OpenAI, alles andere →
+     Ollama/lokal). Ändert den bestehenden `/ask`-Vertrag NICHT — kein
+     Anpassungsbedarf in `ai.nvim`s `loomai.lua`.
+   - Option (b): neues optionales `provider`-Feld im Request-Body
+     (`{"provider": "anthropic", ...}`, Default = aktuelles Verhalten/Ollama).
+     Additiv rückwärtskompatibel, aber `ai.nvim`s `loomai.lua` müsste das Feld
+     dann auch aktiv setzen können, sonst bleibt es totes Feature.
+   - **Empfehlung: (a)**, weil es den bereits stabilen, von `ai.nvim`
+     konsumierten Vertrag unangetastet lässt und der "registry entry, not a
+     merge"-Scope-Grenze (`ai.nvim`s `docs/scope.md`) treu bleibt.
+5. **Crash-Schutz konsistent halten**: der äußere `try/catch` in
+   `/ask/stream` fängt zwar bereits alles ab (s. o.), aber jeder neue Client
+   sollte trotzdem selbst defensiv Fehlerfelder stringifizieren
+   (`error_text()`-Helper-Muster aus dem `4e2777c`-Fix wiederverwenden bzw.
+   erweitern), statt sich ausschließlich auf den äußeren Fang zu verlassen —
+   gleiche Sorgfaltspflicht wie beim bereits gefundenen kritischen Bug.
+6. **Testing**: gleiches Muster wie bei `ai.nvim`s eigener Provider-Arbeit —
+   Live-End-to-End gegen die echten APIs, inkl. eines bewusst ungültigen
+   Test-Keys, um den Fehlerpfad auszulösen und die Normalisierung ins
+   bestehende `{"error":{"message":...}}`-Format zu verifizieren (nicht nur
+   Happy-Path).
+7. **Doku-Nachzug danach** (Reihenfolge: erst Code+Tests, dann Doku, wie
+   bisher durchgehend in diesem Projekt gehandhabt):
+   - `loomAI/README.md`: Abschnitt "HTTP-API" (Backend ist dann nicht mehr
+     nur "direkter Ollama-Aufruf"), Abschnitt "Stand / was fehlt" (Punkte
+     "Kein ModelRouter"/"Kein Anthropic-Client" streichen bzw. aktualisieren).
+   - `docs/Guides/ki-agenten-framework-architektur.md`: Phase-1-Checkliste,
+     "Anthropic API Client" von `[ ]` auf `[x]`, "Model Router" ggf. auf
+     `[x]` falls Option (a) als einfache Präfix-Heuristik zählt (Judgment
+     Call bei Umsetzung).
+
+### Offene Fragen für die Fortsetzungs-Session
+
+- Bestätigung der Routing-Option: (a) Modellname-Präfix (empfohlen) vs.
+  (b) explizites `provider`-Feld — siehe Punkt 4 oben.
+- Timeout-/Retry-Verhalten pro Backend identisch zu Ollama übernehmen oder
+  API-spezifisch (Anthropic/OpenAI haben eigene Rate-Limit-Header, die man
+  auswerten könnte) — bisher nicht durchdacht, `nice-to-have`, nicht
+  blockierend für eine erste Version.
+- Ob `capabilities` (analog zu `ai.nvim`s `Ai.Provider.capabilities`) auch
+  serverseitig gebraucht wird, z. B. um `/ask/stream` für ein Backend ohne
+  Streaming-Unterstützung sauber abzulehnen statt zu buffern — aktuell
+  brauchen alle drei angedachten Backends (Ollama, OpenAI, Anthropic)
+  Streaming nativ, also vorerst nicht relevant; nur falls ein zukünftiges
+  Open-Source-Tool kein Streaming kann, müsste das nachgezogen werden.
+
+---
+
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 erledigt, Code-Review durchgelaufen (9/10 Findings gefixt), `lib.nvim`-CI
@@ -481,7 +591,10 @@ komplett grün (inkl. `publish-ci-verified`), `ai.nvim`-CI grün, `doc/ai.txt`
 nachgetragen. `loomai`-Provider gebaut, in `provider_order`, live gegen `:Ai
 ask`/`:Ai stream` verifiziert (siehe [oben](#loomai-provider-umgesetzt-2026-09-14-folgesession)).
 Alle Repos (`ai.nvim`, `lib.nvim`, `loomAI`, `nvim`-Config, `WKDBooks`) committet
-und gepusht, synchron mit `origin/main`. Offen:
+und gepusht, synchron mit `origin/main`. Doku beider Repos (`ai.nvim`, `loomAI`)
+am 2026-09-14 auf Konsistenz mit dem Code geprüft — keine Abweichung gefunden,
+nichts zu fixen (Endpoints, Env-Vars, `provider_order`, `LOOMAI_HOST` überall
+korrekt und aktuell dokumentiert). Offen:
 
 1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`), um v1
    vor einem Tag zu validieren — der einzige noch offene Schritt, der sich nicht
@@ -495,8 +608,12 @@ und gepusht, synchron mit `origin/main`. Offen:
    statt Wiederverwendung (Review-Finding, bewusst nicht gefixt) — braucht ein
    durchdachtes Pooling-Design (z. B. thread-lokale Clients), erst bei spürbarem
    Bedarf angehen.
-6. loomAI hat weiterhin keinen `ModelRouter`/Anthropic-Client — `/ask*` ruft
-   direkt Ollama, `model` unvalidiert durchgereicht (Aufgabe E, Option 1).
+6. loomAI hat weiterhin keinen `ModelRouter`/Anthropic-/OpenAI-Client — `/ask*`
+   ruft direkt Ollama, `model` unvalidiert durchgereicht (Aufgabe E, Option 1).
+   **Vollständiges Scoping dazu jetzt fertig**, siehe
+   [loomAI: ModelRouter für klassische Provider](#loomai-modelrouter-fr-klassische-provider-openaianthropicopen-source--scoping-2026-09-14)
+   oben — nächste Session kann direkt mit der Umsetzung starten (Empfehlung:
+   Routing-Option (a), Modellname-Präfix).
 7. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
