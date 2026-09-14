@@ -1211,10 +1211,10 @@ plugins.add({
     },
   },
 
-  -- Provider-agnostic ask/stream layer (claude/ollama/openai), built on
-  -- lib.nvim.net.curl. `keys`/`cmd` loads it lazily, same reasoning as
-  -- dap.nvim above. `ai_prefix` is shared with opts so the two cannot drift
-  -- apart, mirroring dap_prefix/dap_keys.
+  -- Provider-agnostic ask/stream layer (claude/ollama/openai/gemini/loomai),
+  -- built on lib.nvim.net.curl. `keys`/`cmd` loads it lazily, same reasoning
+  -- as dap.nvim above. `ai_prefix` is shared with opts so the two cannot
+  -- drift apart, mirroring dap_prefix/dap_keys.
   (function()
     -- ai.nvim's own default keymap prefix is "<leader>a", which collides
     -- with config/ai/anthropic's Avante mappings ("<leader>aa/ae/ar/af/as",
@@ -1244,12 +1244,35 @@ plugins.add({
       "StefanBartl/ai.nvim",
       cmd = "Ai",
       keys = ai_keys,
+      -- Inline completion's own keymaps (trigger/accept/dismiss, all insert
+      -- mode) are installed by ai.nvim's own setup() -- `cmd`/`keys` above
+      -- only cover the :Ai command and the <leader>ai* actions, neither of
+      -- which fires from plain typing. Without this, completion's keymaps
+      -- would not exist until :Ai (or a <leader>ai* key) had been used at
+      -- least once in the session. `InsertEnter` loads it the first time
+      -- any buffer goes into insert mode -- effectively "on", same lazy-load
+      -- intent as everything else in this file, not `lazy = false`.
+      event = "InsertEnter",
       -- ui.nvim: ui/panel.lua, ui/badge.lua and bindings/actions.lua all
       -- render exclusively through ui.kit, no fallback. Already loaded
-      -- lazy=false above, listed here for documentation.
+      -- lazy=false above, listed here for documentation. Completion itself
+      -- does NOT need ui.nvim (lua/ai/ui/ghost.lua renders through raw
+      -- extmarks), so this dependency stays scoped to the other features.
       dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
       opts = {
         keymaps = { prefix = ai_prefix },
+        -- Ghost-text completion at the cursor (lua/ai/completion/, see
+        -- docs/configuration.md in the ai.nvim repo). "manual": only the
+        -- trigger keymap (<C-\><C-a> by default) fires a suggestion --
+        -- deliberately not "auto", since that fires an API call on every
+        -- idle pause while typing, not just on deliberate action. Replaces
+        -- the third-party copilot.lua spec (plugins/ai/copilot.lua, removed
+        -- 2026-09-14 -- it was fully commented out/inert anyway) for the
+        -- same inline-suggestion use case.
+        completion = {
+          enable = true,
+          trigger = "manual",
+        },
       },
     }
   end)(),

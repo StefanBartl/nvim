@@ -3,9 +3,9 @@
 --- `jk` to leave insert mode, yank-free `x`/`dw`, plus (moved in from the
 --- retired `bindings.mappings.nvchad` 2026-09-13 -- none of it was actually
 --- NvChad-specific any more once its one real NvChad feature, the theme
---- picker, moved into `ui.nvim` itself as a configurable keymap) copilot-NES
---- clear/`nohl`, copy-whole-file, format-via-conform, which-key, and
---- insert-mode cursor movement.
+--- picker, moved into `ui.nvim` itself as a configurable keymap) `<Esc>`
+--- search-highlight clear, copy-whole-file, format-via-conform, which-key,
+--- and insert-mode cursor movement.
 
 local M = {}
 
@@ -53,16 +53,8 @@ function M.setup()
   end, { desc = "[General] Insert date" })
 
   map("n", "<Esc>", function()
-    local ok, nes = pcall(require, "copilot-lsp.nes")
-    if ok and nes and nes.clear then
-      local cleared = nes.clear()
-      if not cleared then
-        vim.cmd("noh")
-      end
-    else
-      vim.cmd("noh")
-    end
-  end, { desc = "Clear copilot NES overlays or nohl" })
+    vim.cmd("noh")
+  end, { desc = "[General] Clear search highlight" })
   map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
 
   -- Format via Conform (fallback handled in LSP attach)
