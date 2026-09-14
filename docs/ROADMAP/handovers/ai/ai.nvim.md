@@ -34,6 +34,7 @@
     - [Offene Fragen für die Fortsetzungs-Session](#offene-fragen-fr-die-fortsetzungs-session)
   - [Design-Entscheidungen, Gemini, rules.nvim, Live-Testing-Plan (2026-09-14, Folgesession 4)](#design-entscheidungen-gemini-rulesnvim-live-testing-plan-2026-09-14-folgesession-4)
   - [Teil A umgesetzt: loomAI-ModelRouter (2026-09-14, Folgesession 5)](#teil-a-umgesetzt-loomai-modelrouter-2026-09-14-folgesession-5)
+  - [Teil B umgesetzt: loomAI-Dashboard Ask/Chat-Testpanel (2026-09-14, Folgesession 6)](#teil-b-umgesetzt-loomai-dashboard-askchat-testpanel-2026-09-14-folgesession-6)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
 
 ---
@@ -749,6 +750,52 @@ müssen.
 
 ---
 
+## Teil B umgesetzt: loomAI-Dashboard Ask/Chat-Testpanel (2026-09-14, Folgesession 6)
+
+**Alle 5 Punkte aus dem Umsetzungsplan oben erledigt**, direkt im Anschluss
+an Teil A, gegen den jetzt bereits multi-provider-fähigen Server getestet
+(wie empfohlen).
+
+`dashboard/index.html` (weiterhin Vanilla-JS/CSS, ein File, kein Framework)
+bekam eine neue "Ask"-Karte zwischen dem Agenten/System-Grid und dem
+Live-Log: Prompt-Textarea, Modell-Eingabefeld mit `<datalist>`-Vorschlägen
+(je ein Beispielmodell pro Backend), Senden/Stopp-Buttons, Statuszeile,
+Ausgabebereich. Da `EventSource` keinen POST-Body senden kann, läuft das
+Streaming über `fetch('/ask/stream', {method:'POST', ...})` +
+`response.body.getReader()` mit manuellem `data: <json>\n\n`-Zeilen-Parsing
+— dieselbe Zerlegung, die `ai.nvim`s `providers/sse.lua` in Lua macht, hier
+in JS nachgebaut. Stopp bricht den laufenden `fetch` über einen
+`AbortController` ab.
+
+Die veraltete, seit `/ask`/`/ask/stream` real sind irreführende
+"Model: simulation (LLM folgt)"-Badge ist ersetzt durch eine live beim
+Laden per `GET /health` befüllte "Backends"-Zeile (`Ollama ✓ OpenAI ✓
+Anthropic ✗ Gemini ✗` o. ä.) — zeigt den tatsächlichen Konfigurationsstand
+statt eines fest eingetragenen Satzes.
+
+**Live im echten Browser verifiziert** (Claude-Browser-Pane gegen einen
+laufenden Server, nicht nur gelesen/angenommen):
+- Backend-Zeile lädt korrekt (`Ollama ✓  OpenAI ✓  Anthropic ✗  Gemini ✗`,
+  passend zum tatsächlichen Env-Var-Stand dieser Maschine).
+- Happy-Path-Streaming gegen den echten Ollama-Daemon (`llama3:8b`,
+  "Count from 1 to 5") — Ausgabe füllt sich live, Status wechselt
+  "Sende Anfrage..." → "Streaming..." → "Fertig." (grün).
+- Fehlerpfad gegen ein nicht konfiguriertes Backend (`claude-3-5-haiku-...`
+  ohne `ANTHROPIC_API_KEY`) — Statuszeile zeigt korrekt
+  "Fehler: anthropic: ANTHROPIC_API_KEY not set" (rot), Senden-Button wird
+  wieder freigegeben.
+- Stopp-Button bricht einen laufenden Stream tatsächlich ab (getestet mit
+  einem langen Prompt, mitten im Streaming geklickt) — Status "Abgebrochen.",
+  nicht nur eine UI-Attrappe.
+
+Committet (`a48c528`) und direkt auf `origin/main` gepusht, lokaler Checkout
+`E:\repos\loomAI` synchronisiert — gleiches Vorgehen wie bei Teil A.
+
+**Damit sind beide Teile (A: ModelRouter, B: Dashboard-Testpanel) aus dem
+Umsetzungsplan dieser Folgesession-Reihe vollständig erledigt.**
+
+---
+
 ## Teil A umgesetzt: loomAI-ModelRouter (2026-09-14, Folgesession 5)
 
 **Alle 7 Punkte aus dem Umsetzungsplan oben erledigt.** Neue Dateien
@@ -864,10 +911,9 @@ Backends live gegen echte APIs getestet. Alle Repos (`ai.nvim`, `lib.nvim`,
    statt Wiederverwendung (Review-Finding, bewusst nicht gefixt) — braucht ein
    durchdachtes Pooling-Design (z. B. thread-lokale Clients), erst bei spürbarem
    Bedarf angehen.
-6. **loomAI-Dashboard Ask/Chat-Testpanel (Teil B)** — Teil A ist jetzt
-   Voraussetzung erfüllt (multi-provider-fähiger Server steht), nächste
-   Session kann direkt mit Teil B starten (Plan siehe oben, Design-
-   Entscheidung 3).
+6. ~~loomAI-Dashboard Ask/Chat-Testpanel (Teil B)~~ — **erledigt**, siehe
+   [oben](#teil-b-umgesetzt-loomai-dashboard-askchat-testpanel-2026-09-14-folgesession-6).
+   Damit sind Teil A und B des ModelRouter-Umsetzungsplans komplett.
 7. `NEW-08` (rules.nvim-Fund): `ai.nvim`s `bindings/usercmds.lua` heißt anders
    als der Katalog erwartet (`usrcmds.lua`) — reine Namenskonvention,
    Entscheidung beim Nutzer, ob umbenannt wird.
