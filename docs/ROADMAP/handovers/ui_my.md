@@ -260,32 +260,42 @@ umstellen) begonnen — 4 von 30 Repos fertig:**
 
 Reihenfolge wie im Plan (Nutzungstiefe zuerst): `filetree.nvim` (23
 Lua+7 MD, hart), `sandbox.nvim` (13 Lua, hart), `replacer.nvim` (11 Lua+1
-MD, hart), `lsp.nvim` (11 Lua, **weich** — erstes Repo, wo `ui.nvim`
-tatsächlich optional bleibt, nicht Pflicht). Jedes: mechanischer
-Prefix-Rename, verwaiste "update lib.nvim"-Textstellen korrigiert,
-Dependency-Doku (hart vs. weich je nach tatsächlichem Require-Verhalten
-geprüft, nicht angenommen), Test-Infra (rtp-Bootstrap je Repo-Eigenart
-erweitert), volle Suite + `luacheck`/`stylua` grün (bei lsp.nvim zusätzlich
-CI abgewartet, da ein Smoke-Test lokal nicht nachstellbar war), gepusht,
-persönliche Installations-Spec nachgezogen wo nötig, Plan-Doku
-aktualisiert.
+MD, hart), `lsp.nvim` (11 Lua, weich), `language.nvim` (9 Lua+1 MD, weich),
+`dap.nvim` (9 Lua+3 MD, hart — war schon vorher implizit als Pflicht
+dokumentiert). Jedes: mechanischer Prefix-Rename, verwaiste "update
+lib.nvim"-Textstellen korrigiert, Dependency-Doku (hart vs. weich je nach
+tatsächlichem Require-Verhalten geprüft, nicht angenommen), Test-Infra
+(rtp-Bootstrap je Repo-Eigenart erweitert, oder — wenn die Suite `ui.kit`
+komplett stubt wie bei dap.nvim — bewusst NICHT erweitert), volle Suite +
+`luacheck`/`stylua` grün (bei lsp.nvim zusätzlich CI abgewartet, da ein
+Smoke-Test lokal nicht nachstellbar war), gepusht, persönliche
+Installations-Spec nachgezogen wo nötig, Plan-Doku aktualisiert.
 
 **Nebenbei gefunden:** die primäre `ui.nvim`-Checkout unter
 `E:\repos\ui.nvim` hing auf einem alten Commit (vor Schritt 3) — ohne
 `git pull` dort hätte weder die Tests noch dein echtes Neovim-Setup
 `ui.kit`/`ui.contextmenu` gefunden. Gepullt.
 
-**Noch offen: 26 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
-language.nvim (9), dap.nvim (9), diff.nvim (7), dann absteigend
-reposcope/pickers/images/documentation (6), gopath/fileops/emojis/
-buffer-ctx (5), markdown/insights (4), spotlight/pdfport/open/
-color_my_ascii (3), recommender/cmdlog/casedesk (2), sessions/hover/
-github_stats/cascade (1) — die letzte Gruppe sind Ein-Datei-Konsumenten,
-laut Plan bewusst zuletzt.
+**Handwerks-Fallstrick, mehrfach getroffen:** `vim.opt.rtp:prepend()`
+inkl. manuellem `package.path`-Fallback funktioniert auf dieser Maschine
+nur zuverlässig, wenn der Basispfad durchgehend im selben Trennzeichen-Stil
+geschrieben ist (`E:\repos\ui.nvim`, Backslash) — ein Forward-Slash-Pfad
+(`E:/repos/ui.nvim`) plus Luas eigene Punkt-zu-Trennzeichen-Ersetzung für
+`require("ui.kit")` erzeugt einen GEMISCHTEN Pfad (`.../ui\kit.lua`), den
+der Loader nicht findet. Betraf nur eigene Verifikations-Skripte, nicht
+die eigentlichen Testrunner (deren `vim.fn.fnamemodify`-basierte Pfade sind
+schon durchgehend Windows-nativ).
+
+**Noch offen: 24 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
+diff.nvim (7), dann absteigend reposcope/pickers/images/documentation (6),
+gopath/fileops/emojis/buffer-ctx (5), markdown/insights (4), spotlight/
+pdfport/open/color_my_ascii (3), recommender/cmdlog/casedesk (2), sessions/
+hover/github_stats/cascade (1) — die letzte Gruppe sind
+Ein-Datei-Konsumenten, laut Plan bewusst zuletzt.
 
 Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 von 6
-und der `menu`-Toggle sind erledigt, Schritt 5 zu 4/30 (s. o.), noch offen:
-- Schritt 5: die restlichen 26 Konsumenten-Repos
+und der `menu`-Toggle sind erledigt, Schritt 5 zu 6/30 (s. o.), noch offen:
+- Schritt 5: die restlichen 24 Konsumenten-Repos
 - Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen (kein `lib.nvim`-Shim
   gebaut — bewusst übersprungen, direkt mit Schritt 5 weitergemacht)
 
