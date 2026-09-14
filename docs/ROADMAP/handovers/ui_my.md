@@ -286,16 +286,33 @@ der Loader nicht findet. Betraf nur eigene Verifikations-Skripte, nicht
 die eigentlichen Testrunner (deren `vim.fn.fnamemodify`-basierte Pfade sind
 schon durchgehend Windows-nativ).
 
-**Noch offen: 24 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
-diff.nvim (7), dann absteigend reposcope/pickers/images/documentation (6),
-gopath/fileops/emojis/buffer-ctx (5), markdown/insights (4), spotlight/
-pdfport/open/color_my_ascii (3), recommender/cmdlog/casedesk (2), sessions/
-hover/github_stats/cascade (1) — die letzte Gruppe sind
-Ein-Datei-Konsumenten, laut Plan bewusst zuletzt.
+Danach 4 weitere: diff.nvim (7, weich), reposcope.nvim (6, **hart** — noch
+eagerer als filetree/sandbox/replacer: `init.lua`s eigenes
+Modul-Top-Level-`require` zieht `ui.kit` schon vor `setup()` nach),
+pickers.nvim (6, weich, komplett lazy mit `vim.ui.select`-Fallback in 3
+von 5 Stellen), images.nvim (7, gespalten — manche Aufrufe fallen
+zurück, `:Image compare` nicht).
+
+**Wichtiger Fund bei images.nvim, rückwirkend auf alle vorherigen Repos
+angewandt:** der reine `sed` auf den literalen Require-String
+(`lib.nvim.ui.kit` → `ui.kit`) fängt KEINE Prosa-Erwähnungen ("lib.nvim's
+UI kit") und KEINE GitHub-Blob-Links auf den alten Pfad
+(`lib.nvim/blob/.../lua/lib/nvim/ui/kit/...`). Nachträglicher Grep über
+alle 9 bis dahin fertigen Repos gefunden: 2 Stellen in filetree.nvim, 2 in
+sandbox.nvim (Testkommentare mit altem Pfad), 1 in replacer.nvim (toter
+Link) — je in einem eigenen kleinen Nachbesserungs-Commit gefixt und
+gepusht. **Für die restlichen 20 Repos gehört dieser zweite Grep-Durchgang
+jetzt zum Standardvorgehen**, nicht erst am Ende.
+
+**Noch offen: 20 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
+documentation.nvim (6), gopath/fileops/emojis/buffer-ctx (5), markdown/
+insights (4), spotlight/pdfport/open/color_my_ascii (3), recommender/
+cmdlog/casedesk (2), sessions/hover/github_stats/cascade (1) — die letzte
+Gruppe sind Ein-Datei-Konsumenten, laut Plan bewusst zuletzt.
 
 Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 von 6
-und der `menu`-Toggle sind erledigt, Schritt 5 zu 6/30 (s. o.), noch offen:
-- Schritt 5: die restlichen 24 Konsumenten-Repos
+und der `menu`-Toggle sind erledigt, Schritt 5 zu 10/30 (s. o.), noch offen:
+- Schritt 5: die restlichen 20 Konsumenten-Repos
 - Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen (kein `lib.nvim`-Shim
   gebaut — bewusst übersprungen, direkt mit Schritt 5 weitergemacht)
 
