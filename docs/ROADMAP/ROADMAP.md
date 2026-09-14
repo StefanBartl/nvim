@@ -5,6 +5,7 @@
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
   - [Tasks](#tasks)
+    - [TOP interessant gerade](#top-interessant-gerade)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
@@ -18,7 +19,7 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     03:20       |    53% / 76%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     03:20       |    97% / 81%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     00:10       |    97% / 61%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     01:50       |    92% / 66%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
@@ -43,11 +44,6 @@
 
 ## Claude Tasks
 
-
-- [ ] `docmap-desktop`
-  - [ ]  `docmap-desktop/docs/PLAN.md` — 18 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
-  - [ ] Neues feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 plugins, die darsatellen können und auch die verbiundungen zu einander, zumindest inlua, das wäre extrem spanndedn, das darzustellen, wenn ncht anders möglich, in einer spehziellen ansicht -ganz ´losgelöst vom Default
-
 - [ ] ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 
 - ui.nvim + my.nvim +  ai.nvim + media.nvim(glaube ich): runtime-analysis.nvim aufdrehen
@@ -63,6 +59,15 @@
 ---
 
 ## Tasks
+
+### TOP interessant gerade
+
+- [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
+    Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
+
+- [ ] TAKT -> aai impllementierung von anfang an mitbauen
+
+---
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
