@@ -481,7 +481,7 @@ gefixt:**
 
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
 - Kreuzfeature-Check gegen die ~30 Schwesterplugins: Erledigt
-- rules.nvim-Pass über ui.nvim; -> C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\handovers\rules-nvim-on-ui-nvim.md (Für hier Erledigt - eigene Handover-Akte, Report-Teil nach `reports/` verschoben)
+- rules.nvim-Pass über ui.nvim; -> C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/handovers/rules-nvim-on-ui-nvim.md (Für hier Erledigt - eigene Handover-Akte, Report-Teil nach `reports/` verschoben)
 - my.nvim -> nachdem ui.nvim praktisch fertig ist, nochmal analysieren, ob Bugs entstanden sind, ob man wichtige features nicht nutzt, ob performance / securoty fragen auftauchen, Empfehlungen, usw... Erledigt
 
 ---

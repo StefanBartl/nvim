@@ -22,6 +22,7 @@
   - [Runde 3 (2026-09-14): `ui/tabline/` + `ui/bindings/`](#runde-3-2026-09-14-uitabline-uibindings)
   - [Runde 4 (2026-09-14): `ui/config/`, `ui/init.lua`, `ui/health.lua`](#runde-4-2026-09-14-uiconfig-uiinitlua-uihealthlua)
   - [Runde 5 (2026-09-14): `ui/theme/`, `ui/winbar/` — Abschluss](#runde-5-2026-09-14-uitheme-uiwinbar-abschluss)
+  - [Nächste Aufgabe: die volle 277-Regel-Ermessens-Review](#nchste-aufgabe-die-volle-277-regel-ermessens-review)
 
 ---
 
@@ -425,6 +426,8 @@ gepusht (`5a1f510`, `97953f5`, `c2da007`, `8e7c1da`). Die volle
 277-Regel-Ermessens-Review (Teil 1 § 5) bleibt weiterhin offen — dieser
 Durchgang deckte bewusst nur den 10-Punkte-Schnell-Check ab, wie in
 Teil 1 § 4 empfohlen.
+
+---
 
 ## Nächste Aufgabe: die volle 277-Regel-Ermessens-Review
 

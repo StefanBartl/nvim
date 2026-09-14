@@ -13,6 +13,25 @@
 
 ---
 
+## Table of content
+
+  - [Umsetzungsstatus (2026-09-14)](#umsetzungsstatus-2026-09-14)
+  - [Inhaltsverzeichnis](#inhaltsverzeichnis)
+  - [1. Ist-Stand loomAI](#1-ist-stand-loomai)
+  - [2. Der Vertrag, den `ai.nvim` tatsächlich verlangt](#2-der-vertrag-den-ainvim-tatschlich-verlangt)
+  - [Aufgabe A — Health/Availability](#aufgabe-a-healthavailability)
+  - [Aufgabe B — Non-Streaming Ask-Endpoint](#aufgabe-b-non-streaming-ask-endpoint)
+  - [Aufgabe C — Streaming-Endpoint (SSE)](#aufgabe-c-streaming-endpoint-sse)
+  - [Aufgabe D — Fehlerformat](#aufgabe-d-fehlerformat)
+  - [Aufgabe E — Modellauswahl](#aufgabe-e-modellauswahl)
+  - [Aufgabe F — Netzwerk/Auth](#aufgabe-f-netzwerkauth)
+  - [9. Offene Design-Frage: `available()` vs. Netzwerk-Health-Check](#9-offene-design-frage-available-vs-netzwerk-health-check)
+  - [10. Was NICHT gebraucht wird](#10-was-nicht-gebraucht-wird)
+  - [11. Danach: der `loomai`-Provider in `ai.nvim` selbst](#11-danach-der-loomai-provider-in-ainvim-selbst)
+  - [12. Trigger — wann das hier aufgegriffen wird](#12-trigger-wann-das-hier-aufgegriffen-wird)
+
+---
+
 ## Umsetzungsstatus (2026-09-14)
 
 loomAI-seitig sind **Aufgabe A-D umgesetzt** (`E:\repos\loomAI\src\main.cpp`,
@@ -429,3 +448,6 @@ es nicht als "geht schon irgendwie" missverstanden wird.
 Bei jeder Wiederaufnahme dieses Projekts zuerst `E:\repos\loomAI\src\main.cpp` und
 `docs/Guides/ki-agenten-framework-architektur.md` erneut gegenchecken, ob sich das
 geändert hat.
+
+---
+
