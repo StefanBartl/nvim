@@ -1042,7 +1042,10 @@ plugins.add({
   {
     "StefanBartl/github_stats.nvim",
     event = "VimEnter",
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.nvim: init.lua's own require("github_stats.dashboard") pulls in
+    -- ui.contextmenu at module load, before setup() runs. Already loaded
+    -- lazy=false above, listed here for documentation.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     config = function()
       require("github_stats").setup({
         -- Explicit allowlist instead of watch_users auto-discovery: discovery
