@@ -40,6 +40,7 @@
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
   - [loomAI-Doku-Housekeeping (2026-09-14, Folgesession 9)](#loomai-doku-housekeeping-2026-09-14-folgesession-9)
   - [typepilot.nvim: Scoping-Entscheidung (2026-09-14, Folgesession 10)](#typepilotnvim-scoping-entscheidung-2026-09-14-folgesession-10)
+  - [Completion-Capability umgesetzt (2026-09-14, Folgesession 11)](#completion-capability-umgesetzt-2026-09-14-folgesession-11)
 
 ---
 
@@ -1211,6 +1212,84 @@ angepasst:**
 kein aktiver Tracking-Zustand mehr -- die konkreten Tasks oben sind jetzt
 hier die Quelle der Wahrheit für den Fortschritt, sobald diese Capability
 begonnen wird).
+
+---
+
+## Completion-Capability umgesetzt (2026-09-14, Folgesession 11)
+
+Direkter Anschluss an die Scoping-Sitzung oben: Nutzer bat sofort um
+Umsetzung ("ja gerne, starten wir gleich"). Über Claude Codes Plan-Modus
+lief zuerst eine detaillierte Architektur-Planung (mit einer Nutzer-
+Rückfrage: manueller vs. automatischer Trigger -- Antwort: **beide**,
+konfigurierbar, `manual` als Default), dann Freigabe, dann Umsetzung in
+derselben Sitzung.
+
+**Alle 12 Tasks aus dem Scoping-Abschnitt oben erledigt.** Neue Module
+`lua/ai/completion/{init,context,prompt}.lua` + `lua/ai/ui/ghost.lua`
+(Extmark-`virt_text_pos="inline"`-Ghost-Text, Neovim >= 0.10, ohnehin
+bereits Mindestanforderung). Eine Suggestion ist weiterhin exakt ein
+`require("ai").ask()`-Aufruf mit einem Fill-in-the-Middle-Prompt (Cursor-
+Prefix/Suffix) -- keine Änderung an Provider-Schicht oder Registry nötig,
+keine neue `harvest.scope`-Art (die bestehende `"range"`-Art, die
+`ai/context/init.lua` bereits nutzt, reicht). `docs/scope.md` wie geplant
+umformuliert: die Agent/Sandbox-Ausschlussgrenze bleibt unverändert, nur
+die "ein expliziter Editor-Aktion"-Formulierung deckt jetzt explizit auch
+einen automatischen Trigger ab.
+
+**Zwei Trigger-Modi, eine geteilte Pipeline** (`config.completion.trigger`,
+Default `"manual"`): manueller Insert-Mode-Keymap vs. `vim.uv`-Timer-
+basierter Idle-Trigger (bewusst nicht `CursorHoldI`/`updatetime`, das ist
+plugin-übergreifend geteilt/umkämpft). Ein Generation-Counter plus
+Buffer/Cursor/`changedtick`-Check verwirft eine Antwort, die von einem
+neueren Trigger überholt oder durch eine zwischenzeitliche Änderung
+ungültig wurde -- `ask()` (nicht-streamend) bietet kein Cancel-Handle,
+das ist der Ersatz dafür. Der `accept`-Keymap (`<Tab>`) ist ein
+`expr`-Mapping, das bei offenem Completion-Menü-Popup (`pumvisible()`)
+zur Seite tritt und bei fehlender Suggestion auf normales Tab-Verhalten
+zurückfällt -- kann aber nicht wissen, ob ein anderes Plugin dieselbe
+Taste auch beansprucht, wenn kein Popup offen ist (dokumentiert,
+`completion.keymap.accept` ist der Ausweg).
+
+**Echter Bug gefunden + gefixt, beim Live-Testen (nicht beim Schreiben):**
+die Completion-Keymaps wurden mit `user = false` statt `user = nil` an
+`lib.nvim.bindings.keymap`s `register()` übergeben -- laut dessen eigener
+Moduldoku bedeutet `false` dort "alles deaktivieren", nicht "kein
+Override-Table". Alle drei Keys wurden dadurch deklariert, aber nie
+tatsächlich gebunden (`bound = false` in der Registry). Erst durch echtes
+`require('ai').setup()` + Registry-Introspektion headless entdeckt, nicht
+durch bloßes Lesen des Codes. Gefixt, verifiziert (`bound = true`,
+`vim.fn.maparg('<Tab>', 'i')` liefert tatsächlich etwas).
+
+**Live verifiziert, headless gegen eine echte Neovim-Instanz** (nicht nur
+die reinen `prompt.build`/`prompt.parse`-Unit-Tests in
+`TESTS/ai/completion_prompt_spec.lua`): Cursor-Kontext-Extraktion (inkl.
+eines Normal-vs-Insert-Mode-Cursor-Clamping-Sonderfalls, der den ersten
+Testlauf zunächst fälschlich rot zeigte -- ebenfalls ein Testartefakt, kein
+Implementierungsfehler, s. u.), Ghost-Text-Rendering + Extmark-Zählung,
+Accept (Text-Insertion + Cursor-Position) + Dismiss, die komplette
+`trigger()`-Pipeline gegen einen Fake-Provider (inkl. Fence-Stripping),
+der Auto-Trigger-Timer (feuert nach `idle_ms`, nicht früher, wird von
+`InsertLeave` gestoppt), und die tatsächliche Keymap-Bindung nach dem
+Fix oben. `:checkhealth ai` läuft fehlerfrei durch.
+
+**Nebenbefund beim Testen (kein Bug, nur eine Lernerfahrung):** ein erster
+Testlauf zeigte zwei falsche Fehlschläge, weil der Test im Normal-Modus
+lief -- `nvim_win_set_cursor` klemmt dort die Spalte auf den letzten
+gültigen Zeichenindex fest, während Insert-Modus (der einzige reale
+Nutzungskontext für Completion) eine Cursor-Position "einen hinter dem
+letzten Zeichen" erlaubt. Test um `vim.cmd("startinsert")` ergänzt, danach
+grün.
+
+Doku nachgezogen: `docs/scope.md`, `docs/configuration.md`,
+`docs/BINDINGS.md`, `docs/architecture.md`, `docs/requirements.md`,
+`doc/ai.txt` (neue Sektion 7 "Completion", Helptags neu generiert und
+`:help ai-completion`/`:help ai-scope` live gegengeprüft, dass sie
+tatsächlich auflösen).
+
+`luacheck`/`stylua` clean, volle `busted`/`plenary`-Suite 29/29 grün.
+Committet (`34f75cd`), per `git merge --ff-only` direkt auf `main`
+gebracht (kein PR nötig, gleiche Begründung wie bei den vorherigen
+Worktree-Sitzungen dieses Projekts) und auf `origin/main` gepusht.
 
 ---
 
