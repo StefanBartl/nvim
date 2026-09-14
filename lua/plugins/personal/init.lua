@@ -906,7 +906,10 @@ plugins.add({
     "StefanBartl/reposcope.nvim",
     name = "reposcope",
     event = "VeryLazy",
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.kit backs the filter/sort prompts and favorites/help/status views,
+    -- required from init.lua's own top level (moved out of
+    -- lib.nvim.ui.kit in the 2026-09 migration).
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {
       -- `:Reposcope update`/`status` walk a whole directory of clones; both
       -- report into the shared lib.nvim.progress registry.
