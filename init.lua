@@ -88,7 +88,6 @@ require("lazy").setup({
   { "StefanBartl/lsp.nvim", dir = lsppath, import = "lsp.pack" },
   { import = "plugins" },
   { import = "plugins.colorscheme" },
-  { import = "plugins.ai" },
 }, lazy_config)
 
 -- NvChad (`NvChad/NvChad`, branch v2.5, plus the `{ import = "nvchad.plugins"
