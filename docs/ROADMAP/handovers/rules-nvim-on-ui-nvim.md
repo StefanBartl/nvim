@@ -220,5 +220,49 @@ risikoarm — gleich gefixt (luacheck/stylua-grün, Commit direkt auf `main`).
 
 | Bereich | Status |
 | --- | --- |
-| _(wird befüllt)_ | |
+| `lua/ui/kit/` (20 Dateien, geteiltes Toolkit) + `lua/ui/contextmenu/` | ✅ Runde 1 fertig, 3 Fixes committet (`5a1f510`) |
+| `lua/ui/statusline/` (Module, Renderer) | offen |
+| `lua/ui/tabline/`, `lua/ui/bindings/` | offen |
+| `lua/ui/config/`, `lua/ui/highlights/`, `lua/ui/@types/` | offen |
+| Rest (`init.lua`, `health.lua`) | offen |
+
+## Runde 1 (2026-09-14): `ui.kit/` + `contextmenu/`
+
+Per-Ermessen-Review gegen den 10-Punkte-Schnell-Check, ein Subagent
+(`Explore`, medium). `contextmenu/` und die meisten `kit/`-Module sauber
+(durchgängig `pcall`, konsequente `nvim_*_is_valid`-Guards, kein `_G.*`,
+keine Shell-Strings, kein `pcall(f(args))`-Antipattern, `table.concat`
+statt String-Concat in Schleifen).
+
+Drei echte Funde, alle gefixt, luacheck/stylua grün, volle Testsuite grün
+(`scripts/test.sh`), committet + auf `main` gepusht (`5a1f510`):
+
+- **`kit/picker.lua`** (🔴 Kriterium 3, Handle-Validierung in async Callback):
+  `finish_close()` stoppte den Debounce-Timer nicht — schloss der Nutzer den
+  Picker innerhalb der 80ms-Debounce-Zeit (`<CR>`/`<Esc>`), feuerte der
+  Timer trotzdem und rief `on_change("")` auf dem bereits geschlossenen
+  Picker auf. Fix: `stop_timer()`-Helper, in `finish_close()` aufgerufen.
+- **`kit/chooser.lua`** (🟡 Korrektheit, Drill-down-Re-Anchor): `set_items()`
+  berechnete `row`/`col` für den nächsten Menü-Level aus
+  `vim.fn.win_screenpos()` (immer Top-Left), ließ aber den bestehenden
+  `cfg.anchor` (kann laut `@types/init.lua` bei `relative="mouse"` nahe am
+  Bildschirmrand auf `"SW"` auto-geflippt sein) unangetastet — ein
+  bottom-angeflipptes Drill-down-Menü wäre beim nächsten Level um seine
+  eigene Höhe verrutscht. Fix: `cfg.anchor = "NW"` explizit gesetzt.
+- **`kit/surface.lua`** (🟡 Kriterium 6, Cleanup/Resource-Leak): jede
+  `surface.open()` legte eine neue, nach `winid` benannte Augroup an; das
+  `once = true`-Autocmd entfernt sich selbst, die (dann leere) Gruppe blieb
+  aber bestehen — Window-IDs werden in einer Session nie wiederverwendet,
+  also akkumulieren sich beliebig viele leere Augroups. Fix: Gruppe wird in
+  `Surface:fire_close()` per `nvim_del_augroup_by_id` gelöscht.
+
+Nebenbei ein Kommentar-Drift gefixt (`kit/chooser.lua`): Modulkommentar
+sprach von "Four presentation options", tatsächlich sind es fünf
+(`hide_cursor`, `single_click`, `close_on_focus_lost`, `flash_on_select`,
+`hover`).
+
+Nicht angefasst (außerhalb des 10-Punkte-Scopes, vorbestehend, nicht Teil
+dieser Runde): mehrere `need-check-nil`-Diagnosen in `chooser.lua` rund um
+`state.surf` nach `M.is_open()`-Guards — wirkt wie eine
+`lua_ls`-Typnarrowing-Grenze, kein bestätigter Laufzeit-Bug, nicht vertieft.
 
