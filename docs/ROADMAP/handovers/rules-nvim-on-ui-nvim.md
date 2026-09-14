@@ -8,29 +8,20 @@
 
 ## Table of content
 
-- [Teil 1 — erster Lauf, nur Bericht (2026-09-14)](#1-was-rulesnvim-hier-tut)
-- [Manueller Teil — Schnell-Check (2026-09-14 ff.)](#manueller-teil-schnell-check-2026-09-14)
-
-## Regeln für diese Session
-
-- Nie mehr als 1 Agent gleichzeitig; bei Bedarf mehrere Runden á 1 Agent.
-- Antworten Deutsch, Quellcode (inkl. Kommentare) Englisch.
-- Keine Co-Autorenschaft von Claude in Commits.
-- Nach jedem fertigen Schritt: committen/pushen/pullen, main bleibt aktuell.
-- Docs/README aktualisieren, sofern sinnvoll.
-- Code muss luacheck/stylua-grün sein.
-- `TOOL-PLACEMENT.md` / `HEREDOC.md` beachten, falls Nebenbei-Tooling entsteht.
-
-## Orte
-
-| Was | Wo |
-|---|---|
-| Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/rules-nvim-on-ui-nvim.md` |
-| Rohdaten (JSON) des ersten Laufs | `nvim/docs/ROADMAP/reports/rules-nvim-on-ui-nvim.json` |
-| `ui.nvim`-Repo (Arbeits-Worktree) | `E:\repos\ui.nvim\.claude\worktrees\roadmap-regeln-nvim-manual-0f8fb4` |
-| `rules.nvim`-Engine | `E:\repos\rules.nvim` |
-| Regelwerk (Quelle) | `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists` |
-| Schnell-Check (10 Punkte) | `.../Checklists/gates/REVIEW.md` |
+  - [1. Was `rules.nvim` hier tut](#1-was-rulesnvim-hier-tut)
+  - [2. Wie ausgeführt](#2-wie-ausgefhrt)
+  - [3. Ergebnis: 281 Regeln, 4 automatisiert, 277 manuell](#3-ergebnis-281-regeln-4-automatisiert-277-manuell)
+    - [Die vier automatisierten Treffer — alle grün](#die-vier-automatisierten-treffer-alle-grn)
+    - [Die 277 manuellen Einträge — nach Familie und Schweregrad](#die-277-manuellen-eintrge-nach-familie-und-schweregrad)
+  - [4. Einordnung](#4-einordnung)
+  - [5. Nicht Teil dieses Durchgangs](#5-nicht-teil-dieses-durchgangs)
+  - [6. Reproduzieren / weiterarbeiten](#6-reproduzieren-weiterarbeiten)
+  - [Fortschritt](#fortschritt)
+  - [Runde 1 (2026-09-14): `ui.kit/` + `contextmenu/`](#runde-1-2026-09-14-uikit-contextmenu)
+  - [Runde 2 (2026-09-14): `ui/statusline/`](#runde-2-2026-09-14-uistatusline)
+  - [Runde 3 (2026-09-14): `ui/tabline/` + `ui/bindings/`](#runde-3-2026-09-14-uitabline-uibindings)
+  - [Runde 4 (2026-09-14): `ui/config/`, `ui/init.lua`, `ui/health.lua`](#runde-4-2026-09-14-uiconfig-uiinitlua-uihealthlua)
+  - [Runde 5 (2026-09-14): `ui/theme/`, `ui/winbar/` — Abschluss](#runde-5-2026-09-14-uitheme-uiwinbar-abschluss)
 
 ---
 
@@ -41,7 +32,7 @@
 > laufen lassen und das Ergebnis dokumentieren — **keine** Regel wurde in
 > diesem Durchgang bearbeitet, kein Code geändert. Stand 2026-09-14, Commit
 > `339955d` (nach dem Kreuzfeature-Check-Durchgang, siehe
-> [ui-nvim-cross-feature-check.md](ui-nvim-cross-feature-check.md)).
+> [ui-nvim-cross-feature-check.md](./ui-nvim-cross-feature-check.md)).
 
 ---
 
@@ -78,6 +69,8 @@ Lazy-Loading/Autocmd-Lebenszyklus, State, Code-Stil, Annotationen),
 Responsibility, keine globalen States, Testbarkeit, …), `PERF`
 (Performance).
 
+---
+
 ## 2. Wie ausgeführt
 
 Headless, ohne interaktives Neovim, nach dem in
@@ -101,6 +94,8 @@ keine Selbstrekursion durch den `fswalk`-Dateiwalk, der nur `.git`/`.deps`
 Das Regelwerk lädt sauber — `require('rules').stats().total == 421`, keine
 Parse-Fehler/ID-Kollisionen gemeldet.
 
+---
+
 ## 3. Ergebnis: 281 Regeln, 4 automatisiert, 277 manuell
 
 `:Rules gate review` deckt 281 der 421 Regeln ab (`ERR` 35, `LUA` 59, `UI`
@@ -119,6 +114,8 @@ Parse-Fehler/ID-Kollisionen gemeldet.
 Fehler gelaufen (das ist der einzige Fall, der `check_family_json`/
 `run_gate_json` einen Exit-Code `1` geben würde).
 
+---
+
 ### Die vier automatisierten Treffer — alle grün
 
 | ID | Schweregrad | Titel | Ergebnis |
@@ -130,6 +127,8 @@ Fehler gelaufen (das ist der einzige Fall, der `check_family_json`/
 
 Das ist die ganze mechanisch prüfbare Oberfläche des Review-Gates gegen
 diesen Codebestand — kein Fund, keine Handlung nötig.
+
+---
 
 ### Die 277 manuellen Einträge — nach Familie und Schweregrad
 
@@ -150,6 +149,8 @@ als Nächstes vertieft werden soll:
 (`SEC`s 18 "kritisch" zählen die zwei bereits automatisiert bestandenen
 mit — die Tabelle ist die volle Familiengröße, nicht nur die manuellen
 Reste; die vier `pass`-Fälle oben sind in dieser Zählung enthalten.)
+
+---
 
 ## 4. Einordnung
 
@@ -172,6 +173,8 @@ Reste; die vier `pass`-Fälle oben sind in dieser Zählung enthalten.)
   Bestand) — für diesen ersten Blick auf `ui.nvim` als Ganzes war der
   ungescopte Lauf die richtige Wahl.
 
+---
+
 ## 5. Nicht Teil dieses Durchgangs
 
 - Keine der 277 manuellen Regeln wurde gegen `ui.nvim`s Code geprüft — das
@@ -181,6 +184,8 @@ Reste; die vier `pass`-Fälle oben sind in dieser Zählung enthalten.)
 - `:Rules gate review` interaktiv (mit lesbarem Buffer-Report und
   Sprungmarken zu jeder Regelquelle) wurde nicht geöffnet — nur die
   headless/JSON-Variante, passend zu "erstmal nur der Report".
+
+---
 
 ## 6. Reproduzieren / weiterarbeiten
 
@@ -216,6 +221,8 @@ sequenziell, "nie mehr als 1 Agent gleichzeitig"), Funde werden hier
 laufend protokolliert. Bei echten Abweichungen wird — sofern sinnvoll und
 risikoarm — gleich gefixt (luacheck/stylua-grün, Commit direkt auf `main`).
 
+---
+
 ## Fortschritt
 
 | Bereich | Status |
@@ -227,6 +234,8 @@ risikoarm — gleich gefixt (luacheck/stylua-grün, Commit direkt auf `main`).
 | `lua/ui/theme/`, `lua/ui/winbar/` | ✅ Runde 5 fertig, keine Funde |
 
 **Kompletter `lua/ui/`-Baum (93 Lua-Dateien) durch — alle 5 Runden abgeschlossen.**
+
+---
 
 ## Runde 1 (2026-09-14): `ui.kit/` + `contextmenu/`
 
@@ -268,6 +277,8 @@ dieser Runde): mehrere `need-check-nil`-Diagnosen in `chooser.lua` rund um
 `state.surf` nach `M.is_open()`-Guards — wirkt wie eine
 `lua_ls`-Typnarrowing-Grenze, kein bestätigter Laufzeit-Bug, nicht vertieft.
 
+---
+
 ## Runde 2 (2026-09-14): `ui/statusline/`
 
 Alle Dateien unter `lua/ui/statusline/` (Renderer, `catalog.lua`,
@@ -303,6 +314,8 @@ committet + auf `main` gepusht (`97953f5`):
 
 Keine Funde zu globalem State, Shell-String-Interpolation, veralteten APIs
 oder `pcall(f(args))`-Antipattern in diesem Bereich.
+
+---
 
 ## Runde 3 (2026-09-14): `ui/tabline/` + `ui/bindings/`
 
@@ -348,6 +361,8 @@ Keine Funde zu globalem State, Shell-Strings, veralteten APIs oder
 `pcall(f(args))` in diesem Bereich; der restliche Code (Renderer,
 Highlights, Styles, Usercmd-Dispatcher) sauber.
 
+---
+
 ## Runde 4 (2026-09-14): `ui/config/`, `ui/init.lua`, `ui/health.lua`
 
 Der Setup-/Config-Merge-Pfad — läuft einmal pro Session, aber Fehler dort
@@ -390,6 +405,8 @@ Zwei neue Regressionstests in `TESTS/bugfix_regressions_spec.lua` für das
 Referenz-Leck (Identität + In-Place-Mutation gegen `DEFAULTS.tabline`
 geprüft).
 
+---
+
 ## Runde 5 (2026-09-14): `ui/theme/`, `ui/winbar/` — Abschluss
 
 Letzte Runde, keine Funde. `winbar/init.lua` (der im Auftrag vermutete
@@ -408,4 +425,43 @@ gepusht (`5a1f510`, `97953f5`, `c2da007`, `8e7c1da`). Die volle
 277-Regel-Ermessens-Review (Teil 1 § 5) bleibt weiterhin offen — dieser
 Durchgang deckte bewusst nur den 10-Punkte-Schnell-Check ab, wie in
 Teil 1 § 4 empfohlen.
+
+## Nächste Aufgabe: die volle 277-Regel-Ermessens-Review
+
+Der Schnell-Check oben deckt nur die 10 immer wiederkehrenden Kernfragen
+ab. Die vollen 277 manuellen Regeln (Teil 1 § 3) sind feingranularer und
+bisher **nicht** gegen `ui.nvim`s Code geprüft — eigener, deutlich größerer
+Durchgang. Aufteilung nach Familie (🔴/🟡/🟢, Summe):
+
+| Familie | Worum es geht | 🔴 | 🟡 | 🟢 | Summe |
+| --- | --- | --: | --: | --: | --: |
+| `ERR` | Fehlerbehandlung: strukturierte Fehlertypen, "kein Wert" vs. "falscher Wert", Stale-State/TOCTOU, Config-Merge-Reihenfolge, Batch-Best-effort | 16 | 18 | 1 | 35 |
+| `LUA` | lib.nvim-Nutzung statt Eigenbau, Neovim-API-Konventionen, Lazy-Loading/Autocmd-Lebenszyklus, State-Management, Annotationen/Typen | 14 | 24 | 21 | 59 |
+| `UI` | Bedienbarkeit, Buffer-/Window-Management, Handle-Validierung, Cleanup | 4 | 28 | 9 | 41 |
+| `CMT` | Kommentar-Hygiene: Kopf-Tags, `@class`-Drift, Enumerationen aus der Quelle, kein ortsfremdes Wissen | 1 | 12 | 3 | 16 |
+| `SEC` | Sicherheit: Argv statt Shell-String, Secrets, Downloads, Regex-Escaping, Pfad-Sanitizing (2 der 18 🔴 bereits automatisiert grün, siehe Teil 1) | 18 | 9 | 2 | 29 |
+| `PRIN` | Prinzipien: Single Responsibility, keine globalen States, Kopplung/Kohäsion, Testbarkeit | 6 | 20 | 11 | 37 |
+| `PERF` | Performance: Hotpath-Allokation, Micro-Optimierung nur gemessen, Treesitter vs. Regex | 10 | 33 | 21 | 64 |
+| **Summe** | | **69** | **144** | **68** | **281** |
+
+(281 statt 277, weil die Tabelle die volle Familiengröße zählt — die 4
+bereits automatisiert bestandenen Regeln aus Teil 1 sind darin enthalten.)
+
+**Für den nächsten Chat, zum Copy-Paste:**
+
+> Mach weiter mit der vollen 277-Regel-Ermessens-Review von `rules.nvim`
+> gegen `ui.nvim`, siehe
+> `C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\handovers\rules-nvim-on-ui-nvim.md`
+> (Teil 1 = Ausgangsbericht, der Schnell-Check darunter ist bereits
+> erledigt). Gehe familienweise vor (`ERR`, `LUA`, `UI`, `CMT`, `SEC`,
+> `PRIN`, `PERF`), ein Subagent pro Runde (nie mehr als 1 gleichzeitig),
+> gegen die volle Regelliste aus
+> `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\` (bzw.
+> `:Rules show <id>` pro Regel). Rohdaten aller 281 Einträge (`id`,
+> `severity`, `findings`) liegen in
+> `nvim\docs\ROADMAP\reports\rules-nvim-on-ui-nvim.json`. Bei echten
+> Funden: fixen, luacheck/stylua grün, Tests grün, committen + direkt auf
+> `main` pushen, Handover-Datei nach jeder Runde fortschreiben.
+
+---
 
