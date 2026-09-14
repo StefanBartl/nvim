@@ -178,8 +178,11 @@ committet):
   `PLENARY_DIR`=`...\nvim-data\lazy\plenary.nvim`) → 19/19 Tests grün, Secret-Scan über alle
   Dateien negativ.
 
-**Noch offen aus Phase 2:** `doc/ai.txt` (Vimdoc, `NEW-13`) — bisher nicht geschrieben,
-nur `docs/*.md`. Nachholen, bevor Phase 10 (Release-Gate) läuft.
+**`doc/ai.txt` (Vimdoc, `NEW-13`) nachgetragen** (`b2608f0`, 2026-09-14): CONTENTS-Sektionen
+gespiegelt aus `docs/*.md`, Stil wie `pdfport.nvim`/`dap.nvim`. `helptags doc` lokal
+generiert und geprüft (`:help ai`, `:help ai.ask()`, `:help :Ai-stream`, `:help ai-scope`,
+`:help ai-providers` — alle lösen auf). `.gitignore` neu (`doc/tags`, generiert, nicht
+Source). CI grün.
 
 ---
 
@@ -281,15 +284,14 @@ wurde, bevor getaggt wird).
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 sind erledigt: `ai.nvim`/`lib.nvim` committet + gepusht (`5364c02` in
-`lib.nvim`; `b77d014`, `f2ebe38` in `ai.nvim`), CI grün, Wiring in nvim-config committet
-(`e310c4b38`) und gepusht. Offen:
+`lib.nvim`; `b77d014`, `f2ebe38`, `b2608f0` in `ai.nvim`), CI grün, Wiring in nvim-config
+committet (`e310c4b38`, `01b3eb17b`) und gepusht, `doc/ai.txt` nachgetragen. Offen:
 
-1. `doc/ai.txt` (Vimdoc, `NEW-13`) nachholen — bisher nur `docs/*.md`.
-2. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`), um v1 vor einem Tag zu validieren.
-3. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release — inkl. `doc/ai.txt` aus (1).
-4. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration, `loomai`-Provider
+1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`), um v1 vor einem Tag zu validieren.
+2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release.
+3. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration, `loomai`-Provider
    sobald verfügbar (Trigger-Check bei jeder Wiederaufnahme, s.o.).
-5. Diese Datei laufend als Statusprotokoll fortschreiben.
+4. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
 
