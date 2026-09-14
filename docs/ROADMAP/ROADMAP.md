@@ -18,19 +18,19 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     22:20       |    88% / 69%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     03:20       |    53% / 76%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     00:10       |    97% / 61%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     01:50       |    11% / 56%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     01:50       |    92% / 66%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
-- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
 - Docs / README.md des Plugins updaten sofern es Sinn macht
 - Keine Co-Authorenschaft von Claude in den Commits
 - Wenn du mit etwas fertig bist committe / pushe / pulle so dass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 - code der implementiert wurde muss luacheck / stylua grün sein
+- Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Wenn nötig: Alle meine `.nvim` Plugins findest du unter `$REPOS_DIR\repos`
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit) und `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
@@ -43,31 +43,18 @@
 
 ## Claude Tasks
 
-Quickfix als geteilte Ausgabefläche (Audit offen)
-Regel `UI-36` (Checklists/regeln/LUA_NVIM.md): Trefferlisten gehören auch in die
-Quickfix-Liste, nicht nur in die eigene Picker-UI. Bisher hat das nur `replacer.nvim`
-(`export.lua`).
-- [ ] Prüfen, welche Plugins bereits einen Quickfix-Export haben, bevor blind einer
-      ergänzt wird. Kandidaten aus dem Audit: `pickers.nvim` (inkl. Marks-Feature),
-      `documentation.nvim`, `markdown.nvim` (Link-Diagnosen).
-
 
 - [ ] `docmap-desktop`
   - [ ]  `docmap-desktop/docs/PLAN.md` — 18 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
   - [ ] Neues feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 plugins, die darsatellen können und auch die verbiundungen zu einander, zumindest inlua, das wäre extrem spanndedn, das darzustellen, wenn ncht anders möglich, in einer spehziellen ansicht -ganz ´losgelöst vom Default
 
-- [ ] ultracode auf ale plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
-
-- [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
-  - [ ] RULES
-
-- [ ] pickers.nvim -> opt-in feature heruitsuche anordng er resultatliste nach bisherigen aufrufszahlen/kontext
+- [ ] ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 
 - ui.nvim + my.nvim +  ai.nvim + media.nvim(glaube ich): runtime-analysis.nvim aufdrehen
 
 - my.nvim +  ai.nvim + media.nvim(glaube ich): rules.nvim
 
-- offene Taks in den roamdaps nochmal durchegehen: E:/repos/WKDBooks/Development/wkdbook-myplugins/
+- offene Taks in den roamdaps nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
 
 - Live Testing:
   - [loom.ai + ai.nvim](C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports\ai\live-testing-plan.md)

@@ -16,23 +16,25 @@
 
 ---
 
-## Table of Content
+## Table of content
 
-- [Legende](#legende)
-- [Übersicht](#übersicht)
-- [Arbeiotsspeicher.md — Speicher-Viewer](#arbeiotsspeichermd--speicher-viewer)
-- [Better_TODOComments.md — TODO-Kommentar-Ersatz](#better_todocommentsmd--todo-kommentar-ersatz)
-- [IDEAS.md — vier Einzelideen](#ideasmd--vier-einzelideen)
-- [Screenkey.md — Tastenanzeige](#screenkeymd--tastenanzeige)
-- [TMUX_WEZTERM_USW.md — leer](#tmux_wezterm_uswmd--leer)
-- [blueprint.nvim.md — Template-Bibliothek (Meta-Review)](#blueprintnvimmd--template-bibliothek-meta-review)
-- [git_nvim.md — Git-Konsolidierung](#git_nvimmd--git-konsolidierung)
-- [health.md — `:checkhealth`-Erweiterung](#healthmd--checkhealth-erweiterung)
-- [slots.nvim.md — nummerierte Datei-Slots (Meta-Review)](#slotsnvimmd--nummerierte-datei-slots-meta-review)
-- [spec.nvim.md — Test-Runner-Engine (Meta-Review)](#specnvimmd--test-runner-engine-meta-review)
-- [test.md — neotest-Auslagerung (Meta-Review)](#testmd--neotest-auslagerung-meta-review)
-- [typepilot.nvim.md — AI-Provider-Abstraktion (Meta-Review)](#typepilotnvimmd--ai-provider-abstraktion-meta-review)
-- [Priorisierungsvorschlag](#priorisierungsvorschlag)
+  - [Legende](#legende)
+  - [Übersicht](#bersicht)
+  - [Arbeiotsspeicher.md — Speicher-Viewer](#arbeiotsspeichermd-speicher-viewer)
+  - [Better_TODOComments.md — TODO-Kommentar-Ersatz](#better_todocommentsmd-todo-kommentar-ersatz)
+  - [IDEAS.md — vier Einzelideen](#ideasmd-vier-einzelideen)
+    - [#1 Externe Deps durch Eigenimplementierungen ersetzen](#1-externe-deps-durch-eigenimplementierungen-ersetzen)
+    - [#2 Wezterm-Integration (Tabs steuern, Wezterm-Statusline durch nvim ersetzen)](#2-wezterm-integration-tabs-steuern-wezterm-statusline-durch-nvim-ersetzen)
+    - [#3 Screenkey-Integration](#3-screenkey-integration)
+    - [#4 `lazy.nvim` nachbauen ("moderner, performanter, sicherer")](#4-lazynvim-nachbauen-moderner-performanter-sicherer)
+  - [TMUX_WEZTERM_USW.md — leer](#tmux_wezterm_uswmd-leer)
+  - [blueprint.nvim.md — Template-Bibliothek (Meta-Review)](#blueprintnvimmd-template-bibliothek-meta-review)
+  - [git_nvim.md — Git-Konsolidierung](#git_nvimmd-git-konsolidierung)
+  - [health.md — `:checkhealth`-Erweiterung](#healthmd-checkhealth-erweiterung)
+  - [slots.nvim.md — nummerierte Datei-Slots (Meta-Review)](#slotsnvimmd-nummerierte-datei-slots-meta-review)
+  - [spec.nvim.md — Test-Runner-Engine (Meta-Review)](#specnvimmd-test-runner-engine-meta-review)
+  - [test.md — neotest-Auslagerung (Meta-Review)](#testmd-neotest-auslagerung-meta-review)
+  - [Priorisierungsvorschlag](#priorisierungsvorschlag)
 
 ---
 
@@ -144,6 +146,8 @@ Ergebnis dieser Datei nicht bewertbar, welche Deps überhaupt gemeint sind.
 Empfehlung: als eigene, kurze Bestandsaufnahme (Tabelle: Repo → externe Dep →
 bereits ersetzt? → Aufwand) nachziehen, kein Plugin-Vorschlag.
 
+---
+
 ### #2 Wezterm-Integration (Tabs steuern, Wezterm-Statusline durch nvim ersetzen)
 
 **Deckt sich inhaltlich mit der leeren [`TMUX_WEZTERM_USW.md`](#tmux_wezterm_uswmd--leer)** —
@@ -163,10 +167,14 @@ sollte dorthin konsolidiert werden statt an zwei Stellen zu leben.
   Wezterm-Bridge-Adapter ist ein weiterer Renderer/Datenlieferant dort, kein
   neues UI-Subsystem.
 
+---
+
 ### #3 Screenkey-Integration
 
 → siehe eigener Abschnitt [Screenkey.md](#screenkeymd--tastenanzeige), dort
 ausführlich behandelt. Kurzfassung: ja, aber als `ui.nvim`-Feature.
+
+---
 
 ### #4 `lazy.nvim` nachbauen ("moderner, performanter, sicherer")
 
@@ -183,35 +191,6 @@ ausführlich behandelt. Kurzfassung: ja, aber als `ui.nvim`-Feature.
   gehört der als Issue/PR gegen `folke/lazy.nvim` selbst adressiert, nicht als
   Parallelentwicklung. Größtes Aufwand/Nutzen-Missverhältnis aller zwölf
   Dateien.
-
----
-
-## Screenkey.md — Tastenanzeige
-
-**Idee:** Ersatz für das aktuell verwendete Screenkey-artige Tool (aktuell
-angezeigte Tastendrücke, z. B. für Aufnahmen/Demos). Frage der Notiz selbst:
-„nach `ui.nvim` oder als eigenständiges Plugin?"
-
-**Einschätzung:**
-
-- **Nutzen: mittel.** Kein täglicher Bedarf, aber real für Doku-GIFs/README-
-  Aufnahmen — genau das Format, das bereits in anderen Plugin-READMEs benutzt
-  wird (z. B. `cmdlog.nvim`s `docs/assets/Cmdlog-Picker-UI.png`).
-- **Umsetzbarkeit: hoch.** Neovim bietet die nötigen Bausteine bereits nativ:
-  `vim.on_key()` fängt jeden Tastendruck roh ab, `vim.fn.keytrans()` formatiert
-  das Rohbyte-Ergebnis in lesbare Form (`<C-w>`, `<Esc>`, …) — exakt für diesen
-  Zweck gebaut. Ein Floating-Window mit Fade/Expiry-Timer obendrauf ist Restarbeit,
-  kein offenes Problem.
-- **Aufwand: Klein.** Geschätzt 100–150 LOC für ein funktionierendes MVP.
-- **Fit: Feature in `ui.nvim`**, nicht eigenständiges Plugin. `ui.nvim` besitzt
-  mit `ui/kit` bereits die Floating-Surface-Infrastruktur
-  ([`lua/ui/kit`](E:/repos/ui.nvim/lua/ui/kit): `surface.lua`, `layout.lua`,
-  `viewer.lua`, `toast.lua`) und mit `catalog.lua` in `statusline/` bereits
-  das Muster für togglebare, optionale HUD-Elemente — ein
-  `:UiScreenkey`/`:Ui screenkey toggle` fügt sich dort ein, statt Doku,
-  Health-Check, CI und Repo-Grundgerüst für ein Ein-Zweck-Widget zu
-  duplizieren. Beantwortet damit auch direkt die in `IDEAS.md` gestellte
-  Frage „ins `ui.nvim` mitintegrieren?" — mit Ja.
 
 ---
 
@@ -431,46 +410,11 @@ gesamten Liste.**
 
 ---
 
-## typepilot.nvim.md — AI-Provider-Abstraktion (Meta-Review)
-
-Eigene Analyse liegt vor, inkl. Abgrenzung zu `loomAI` (bereits geklärt: kein
-Neovim-Plugin, anderer Scope) und offener Kernfrage, ob eine reine
-Provider-Abstraktion für Copilot-artige Vervollständigung überhaupt gebraucht
-wird, da fertige Plugins für alle genannten Provider existieren.
-
-**Meta-Verdict: Stimme der offenen Einschätzung zu — die Notiz beantwortet
-ihre eigene Kernfrage bewusst noch nicht, zu Recht.**
-
-- **Nutzen: nicht bewertbar, bevor die zweite offene Frage der Notiz selbst
-  geklärt ist** („Braucht es das überhaupt? … lohnt nur, wenn der eigene
-  Workflow etwas verlangt, was [bestehende Plugins] nicht können.") — korrekt,
-  dass hier nicht spekulativ weitergebaut wird.
-- **Der eigentlich wertvolle Teil der Notiz ist bereits sauber extrahiert:**
-  die Datenschutz-Regel „kein zentrales Key-Management, Keys nur aus der
-  Umgebung" plus der konkrete, bereits an anderer Stelle verifizierte Fund,
-  dass `uv.spawn()`/`vim.system()` die Shell-Umgebung **nicht** erben (ein
-  `gh auth login`-Login im Keyring ist für Subprozesse unsichtbar, Keys
-  müssen explizit über `env` durchgereicht werden). Das ist unabhängig vom
-  Plugin-Bau sofort verwertbar für `reposcope.nvim` (`GITHUB_TOKEN`) und
-  `github_stats.nvim` — sollte, wie die Notiz selbst vorschlägt, als
-  Regel in `All/Checklists.md` landen, nicht auf den `typepilot`-Bau warten.
-- **Aufwand, falls doch gebaut:** Mittel (Kern mit zwei Providern) bis Groß
-  (alle drei + UI) — plausibel, da reine Ein-/Ausgabe-Abstraktion ohne
-  Domänenmodell (die Notiz verwirft eine hexagonale Struktur selbst zu Recht
-  als Overkill).
-- **Fit: Klärung vor Bau.** Weder eigenständiges Plugin noch Feature in
-  bestehendem Plugin lässt sich seriös empfehlen, solange die Existenzfrage
-  offen ist.
-
----
-
 ## Priorisierungsvorschlag
 
 Absteigend nach Nutzen/Aufwand-Verhältnis, unter Berücksichtigung der
 Fit-Empfehlungen oben:
 
-1. **Screenkey → `ui.nvim`-Feature** — kleinster Aufwand der ganzen Liste,
-   sofort nutzbar für README-/Doku-Aufnahmen.
 2. **`comments.nvim`** (Better_TODOComments.md) — behebt einen dokumentierten
    Alltags-Bug, klar umrissener Scope.
 3. **`test.nvim`-Auslagerung** — bereits vollständig geplant, deckt zusätzlich
@@ -487,8 +431,7 @@ Fit-Empfehlungen oben:
 8. **Arbeitsspeicher-Viewer → `dap.nvim`-Feature** — Nische, aber sauber
    einordenbar, kein eigenes Konzept nötig.
 9. **`health.md`** — erst klären, was „Info-Tag" meint, dann neu bewerten.
-10. **`typepilot.nvim`** — Existenzfrage vorher klären; Datenschutz-Regel
-    schon jetzt separat in `All/Checklists.md` übernehmen.
-11. **Wezterm-Integration** (`IDEAS.md` #2 + `TMUX_WEZTERM_USW.md`) — erst
     zusammenführen, dann als `ui.nvim`-Tabline-Feature einplanen.
-12. **`lazy.nvim`-Ersatz** (`IDEAS.md` #4) — verwerfen.
+
+---
+
