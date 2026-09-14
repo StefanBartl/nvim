@@ -38,6 +38,7 @@
   - [Gemini-Sicherheits-/Korrektheitsfixes (2026-09-14, Folgesession 7)](#gemini-sicherheits-korrektheitsfixes-2026-09-14-folgesession-7)
   - [loomai-ai-nvim-integration.md verifiziert & archiviert (2026-09-14, Folgesession 8)](#loomai-ai-nvim-integrationmd-verifiziert--archiviert-2026-09-14-folgesession-8)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
+  - [loomAI-Doku-Housekeeping (2026-09-14, Folgesession 9)](#loomai-doku-housekeeping-2026-09-14-folgesession-9)
 
 ---
 
@@ -1046,6 +1047,52 @@ committet und gepusht, synchron mit `origin/main`. Offen:
    `gemini-`) ist hartkodiert, keine Config-Möglichkeit — bislang kein
    Bedarf, siehe README "Stand/was fehlt".
 10. Diese Datei laufend als Statusprotokoll fortschreiben.
+
+---
+
+## loomAI-Doku-Housekeeping (2026-09-14, Folgesession 9)
+
+Drei Nutzer-Anfragen zu loomAIs Doku-Lage, alle umgesetzt und gepusht:
+
+- **`docs/Guides/setup-guide.md` gehört nicht ins öffentliche Repo** —
+  beschreibt eine deutlich größere, nie gebaute Zukunftsvision (Sandbox,
+  Orchestrator, Lua-Agent-Scripting, CUDA/GPU, SQLite-State), nicht den
+  tatsächlichen Stand des Tools. Nach `E:\repos\WKDBooks\Development\
+  wkdbook-loomai\Guides\setup-guide.md` verschoben (loomAI-Commit `a5b707e`,
+  WKDBooks-Commit `606238f`), mit Kontext-Vermerk am Dateikopf. **Zweite,
+  gleichartige Datei im selben Ordner bemerkt, aber nicht angefasst** (nicht
+  angefragt): `docs/Guides/ki-agenten-framework-architektur.md` — gehört
+  wahrscheinlich demselben Muster, gehört also vermutlich ebenfalls nicht
+  ins öffentliche Repo. Bei Gelegenheit gegenchecken.
+- **Cross-Plattform-Prerequisite-Checker** für `setup-guide.md`s
+  Voraussetzungsliste geschrieben: `check_prerequisites.py`
+  (Python-3-Stdlib, keine Abhängigkeiten), liegt neben der Guide-Datei im
+  privaten Repo (da er exakt deren — deutlich größere — Anforderungen
+  prüft, nicht die tatsächlichen Build-Voraussetzungen des echten loomAI).
+  Prüft `git`/`cmake`(>=3.20, >=3.28 empfohlen)/Compiler
+  (clang++>=17 oder g++>=13)/`curl`/`python3`/`podman`(>=4.x) als
+  Pflichtchecks (Exit-Code 1 bei Fehlschlag), `nvidia-smi`/`nvcc` nur
+  informativ (GPU/CUDA optional). Live getestet (nicht nur geschrieben):
+  zwei echte Windows-Quirks beim Testen gefunden und gefixt — `podman.EXE`
+  echot seinen eigenen Dateinamen inkl. `.EXE` in `--version`, und ein
+  neuerer `nvidia-smi`-Treiber (610.x) hat kein `Driver Version:`-Label
+  mehr im Header, nur noch `NVIDIA-SMI <Version>`.
+- **`loomAI/README.md` gesplittet**: bestehender deutscher Inhalt nach
+  `README.de.md`, neue `README.md` als vollständige, eigenständige
+  englische Übersetzung (GitHub-Konvention: `README.md` englisch als
+  Default). Dabei zwei echte Fehler gefunden und gefixt: Intro behauptete
+  `C++23`, tatsächlich baut `CMakeLists.txt` mit `C++17`; ein Verweis auf
+  einen privaten, nicht-öffentlich erreichbaren Report-Pfad
+  (`nvim/docs/ROADMAP/reports/loomai-ai-nvim-integration.md`, ohnehin
+  längst veraltet, s. o. Folgesession 8) wurde durch einen Verweis auf
+  `ai.nvim`s eigenen `loomai.lua`-Modul-Kommentar ersetzt. Außerdem
+  ergänzt (vorher nirgends dokumentiert): Geminis Safety-Block-Erkennung +
+  Modellname-Validierung (s. Folgesession 7), sowie der
+  `svr.listen()`-Rückgabewert-Punkt (Nächste-Schritte-Punkt 8 oben) unter
+  "Stand/was fehlt". Committet `b09c73e`, gepusht.
+
+Alle drei Repos (`loomAI`, `WKDBooks`, `nvim`-Config) synchron mit
+`origin/main`.
 
 ---
 
