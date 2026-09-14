@@ -503,7 +503,7 @@ Nil-Check geladen:
 
 - **Lernmodus.** Täglich ein zufälliges Template als „Karte des Tages" beim
   Start — Spaced Repetition für die eigenen Regeln. Passt konzeptionell zum
-  Lernmodus aus [`polyglot-cmd.nvim`](./polyglot-cmd.nvim.md); ggf. dort
+  Lernmodus aus [`polyglot-cmd.nvim`](../LONG_RUN/polyglot-cmd.nvim.md); ggf. dort
   gemeinsam lösen statt doppelt bauen.
 - **Nutzungsstatistik.** Welche Templates werden nie benutzt → Kandidaten zum
   Löschen. Rein lokal.
@@ -623,7 +623,7 @@ Komposition · Export/PDF · Kontext-Vorschlag.
   [`sandbox.nvim`](https://github.com/StefanBartl/sandbox.nvim) ·
   [`runtime-analysis.nvim`](https://github.com/StefanBartl/runtime-analysis.nvim) ·
   [`recommender.nvim`](https://github.com/StefanBartl/recommender.nvim)
-- Verwandtes eigenes Konzept: [`polyglot-cmd.nvim`](./polyglot-cmd.nvim.md)
+- Verwandtes eigenes Konzept: [`polyglot-cmd.nvim`](../LONG_RUN/polyglot-cmd.nvim.md)
   (Intent-zu-Syntax-Baukasten; gleiche Denkfigur, andere Domäne)
 - Neovim: `:h vim.snippet` · `:h vim.uv` · `:h nvim_buf_set_text` ·
   `:h vim.filetype`

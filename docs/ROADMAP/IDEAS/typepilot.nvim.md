@@ -43,7 +43,7 @@ Overkill, und das ist richtig: es gibt kein Domänenmodell, nur Ein- und Ausgabe
 entsteht, ist zu klären, ob das nicht bereits derselbe Platz ist.
 
 - [x] Geklärt für den Provider-Abstraktions-Teil, siehe
-      [ai.nvim.md](./ai.nvim.md) § "Wichtigster Befund zuerst: loomAI
+      [ai.nvim.md](./E:/repos/WKDBooks/Development/wkdbook-myplugins/ai.nvim/ROADMAP/ai.nvim.md) § "Wichtigster Befund zuerst: loomAI
       existiert bereits" (2026-08-08): `loomAI` ist ein eigenständiges
       C++-Multi-Agenten-Framework (Podman-Sandbox, Model Router, Dashboard),
       kein Neovim-Plugin, und aktuell nur ein simulierter SSE-Server ohne

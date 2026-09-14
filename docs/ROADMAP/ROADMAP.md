@@ -20,7 +20,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     22:20       |    88% / 69%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     00:10       |    97% / 61%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     20:40       |    82% / 54%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     01:50       |    11% / 56%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -55,12 +55,14 @@
 - [ ] pickers.nvim -> opt-in feature heruitsuche anordng er resultatliste nach bisherigen aufrufszahlen/kontext
 
 - ui.nvim + my.nvim +  ai.nvim + media.nvim(glaube ich): runtime-analysis.nvim aufdrehen
--  my.nvim +  ai.nvim + media.nvim(glaube ich): rules.nvim
-ui.nvim: wenn man klöickt auf den tab und es blckt, dann wird das icon ausgenoemn, als o dasd blinkt nicht. wöre es denkbar und umsetzbar, dass im gleichen augenblick das icon "invertiert" angezoigt wird, also farblicvh, damit es auch mitblinkt?
+
+- my.nvim +  ai.nvim + media.nvim(glaube ich): rules.nvim
 
 - offene Taks in den roamdaps nochmal durchegehen: E:/repos/WKDBooks/Development/wkdbook-myplugins/
 
-- ai.nvim, loom.ai & media.nvim - lve testing
+- Live Testing:
+  - [loom.ai + ai.nvim](C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports\ai\live-testing-plan.md)
+  - [media.nvim](C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/media/live-testing-plan.md)
 
 ---
 
