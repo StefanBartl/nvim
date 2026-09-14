@@ -221,7 +221,7 @@ risikoarm — gleich gefixt (luacheck/stylua-grün, Commit direkt auf `main`).
 | Bereich | Status |
 | --- | --- |
 | `lua/ui/kit/` (20 Dateien, geteiltes Toolkit) + `lua/ui/contextmenu/` | ✅ Runde 1 fertig, 3 Fixes committet (`5a1f510`) |
-| `lua/ui/statusline/` (Module, Renderer) | offen |
+| `lua/ui/statusline/` (Module, Renderer) | ✅ Runde 2 fertig, 4 Fixes committet (`97953f5`) |
 | `lua/ui/tabline/`, `lua/ui/bindings/` | offen |
 | `lua/ui/config/`, `lua/ui/highlights/`, `lua/ui/@types/` | offen |
 | Rest (`init.lua`, `health.lua`) | offen |
@@ -265,4 +265,40 @@ Nicht angefasst (außerhalb des 10-Punkte-Scopes, vorbestehend, nicht Teil
 dieser Runde): mehrere `need-check-nil`-Diagnosen in `chooser.lua` rund um
 `state.surf` nach `M.is_open()`-Guards — wirkt wie eine
 `lua_ls`-Typnarrowing-Grenze, kein bestätigter Laufzeit-Bug, nicht vertieft.
+
+## Runde 2 (2026-09-14): `ui/statusline/`
+
+Alle Dateien unter `lua/ui/statusline/` (Renderer, `catalog.lua`,
+`highlights.lua`, `cursor_ctl/`, alle `modules/*`), gleicher Subagent-Ansatz
+(`Explore`, medium). Kernpfad und die Mehrheit der Module sauber
+(durchgängig `pcall`, `type()`-Guards, `nvim_buf_is_valid`-Checks vor
+async-Callbacks, argv-Arrays statt Shell-Strings, saubere
+`BufDelete`/`ColorScheme`-Cache-Invalidierung als etablierte Konvention).
+
+Vier echte Funde, alle gefixt, luacheck/stylua grün, volle Testsuite grün,
+committet + auf `main` gepusht (`97953f5`):
+
+- **`modules/github_stats_badge/init.lua`** + **`modules/casedesk/init.lua`**
+  (🟡 Korrektheit, Konventionsbruch): beide lasen `nvim_buf_get_name(0)`
+  (den *fokussierten* Buffer) statt `primitives.stbufnr()`
+  (`vim.g.statusline_winid`s Buffer — die Konvention, der jedes andere
+  buffer-bezogene Modul in diesem Verzeichnis folgt). Bei einer inaktiven
+  Split-/Preview-Statusline zeigten beide Badges das Repo/den Case des
+  fokussierten statt des tatsächlich gerenderten Fensters. Fix: beide auf
+  `primitives.stbufnr()` umgestellt.
+- **`modules/recommender_badge/init.lua`** (🟡 Kriterium 6, Leck): der
+  per-Buffer-Cache (`cache[buf] = {tick, count}`) hatte — anders als
+  `since_last_save`/`time_in_buffer`/`lsp`s eigene Caches — keinen
+  `BufDelete`/`BufWipeout`-Cleanup und wuchs über die Sessiondauer
+  unbegrenzt. Fix: gleicher Autocmd-Cleanup wie bei den Schwestermodulen.
+- **`modules/runtime_analysis_ampel/init.lua`** (🟡 Kriterium 7,
+  Performance-Hotspot): der Fallback-Zweig für einen Namespace ohne
+  laufende Telemetrie-Instanz (`entries_from_disk`) las bei **jedem**
+  Statusline-Redraw ungecacht von der Platte (`telemetry.load()`) — anders
+  als der In-Memory-Zweig, der laut eigenem Kommentar sicher auf jedem
+  Render laufen darf. Fix: 5s-TTL-Cache pro Namespace, gleiches Muster wie
+  `github_stats_badge`s eigener `STATS_TTL_SECONDS`.
+
+Keine Funde zu globalem State, Shell-String-Interpolation, veralteten APIs
+oder `pcall(f(args))`-Antipattern in diesem Bereich.
 
