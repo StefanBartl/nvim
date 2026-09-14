@@ -23,6 +23,14 @@
   - [Runde 4 (2026-09-14): `ui/config/`, `ui/init.lua`, `ui/health.lua`](#runde-4-2026-09-14-uiconfig-uiinitlua-uihealthlua)
   - [Runde 5 (2026-09-14): `ui/theme/`, `ui/winbar/` — Abschluss](#runde-5-2026-09-14-uitheme-uiwinbar-abschluss)
   - [Nächste Aufgabe: die volle 277-Regel-Ermessens-Review](#nchste-aufgabe-die-volle-277-regel-ermessens-review)
+  - [Teil 2 — volle 277-Regel-Ermessens-Review](#teil-2-volle-277-regel-ermessens-review)
+    - [Fortschritt (Teil 2)](#fortschritt-teil-2)
+    - [Runde 6 (2026-09-14): Familie `ERR` (35 Regeln)](#runde-6-2026-09-14-familie-err-35-regeln)
+    - [Runde 7 (2026-09-14): Familie `LUA` (59 Regeln)](#runde-7-2026-09-14-familie-lua-59-regeln)
+    - [Runde 8 (2026-09-14): Familie `UI` (41 Regeln)](#runde-8-2026-09-14-familie-ui-41-regeln)
+    - [Runde 9 (2026-09-14): Familie `CMT` (16 Regeln)](#runde-9-2026-09-14-familie-cmt-16-regeln)
+    - [Runde 10 (2026-09-14): Familie `SEC` (29 Regeln)](#runde-10-2026-09-14-familie-sec-29-regeln)
+    - [Runde 11 (2026-09-15): Familie `PRIN` (37 Regeln)](#runde-11-2026-09-15-familie-prin-37-regeln)
 
 ---
 
@@ -202,9 +210,9 @@ Lauf interaktiv — Quickfix-Liste plus lesbarer Buffer, mit `:Rules show
 
 Die vollständigen Rohdaten dieses Laufs (alle 281 Einträge, `id`,
 `severity`, `status`, `findings`) liegen als
-[rules-nvim-on-ui-nvim.json](../reports/rules-nvim-on-ui-nvim.json) im
-`reports/`-Ordner (nur die Report-Prosa ist hierher in `handovers/`
-umgezogen, siehe [Manueller Teil](#manueller-teil-schnell-check-2026-09-14)
+[rules-nvim-on-ui-nvim.json](./rules-nvim-on-ui-nvim.json) direkt neben
+dieser Handover-Akte (nur die Report-Prosa ist hierher in `handovers/rules/`
+umgezogen, siehe [Manueller Teil](#manueller-teil-schnell-check-2026-09-14-ff)
 unten).
 
 ---
@@ -450,7 +458,9 @@ Durchgang. Aufteilung nach Familie (🔴/🟡/🟢, Summe):
 (281 statt 277, weil die Tabelle die volle Familiengröße zählt — die 4
 bereits automatisiert bestandenen Regeln aus Teil 1 sind darin enthalten.)
 
-**Für den nächsten Chat, zum Copy-Paste:**
+**Für den nächsten Chat, zum Copy-Paste (Stand vor Runde 6 — inzwischen durch
+[Teil 2](#teil-2-volle-277-regel-ermessens-review) unten überholt, hier nur
+noch als Referenz für den ursprünglichen Auftragstext stehen gelassen):**
 
 > Mach weiter mit der vollen 277-Regel-Ermessens-Review von `rules.nvim`
 > gegen `ui.nvim`, siehe
@@ -465,6 +475,332 @@ bereits automatisiert bestandenen Regeln aus Teil 1 sind darin enthalten.)
 > `nvim\docs\ROADMAP\reports\rules-nvim-on-ui-nvim.json`. Bei echten
 > Funden: fixen, luacheck/stylua grün, Tests grün, committen + direkt auf
 > `main` pushen, Handover-Datei nach jeder Runde fortschreiben.
+
+---
+
+# Teil 2 — volle 277-Regel-Ermessens-Review
+
+Arbeitet die in [Teil 1 § "Nächste Aufgabe"](#nchste-aufgabe-die-volle-277-regel-ermessens-review)
+beschriebene volle Review ab: alle 277 manuellen Regeln (281 mit den 4
+bereits automatisiert bestandenen), familienweise, ein `Explore`-Subagent
+pro Runde (Recherche/Analyse, keine Edit-Tools) — Fixes, luacheck/stylua,
+Tests und Commit macht danach die Hauptsession selbst, exakt wie in Teil 1
+etabliert.
+
+Regeldefinitionen: `ERR`/`LUA`/`UI`/`CMT`/`SEC` stehen alle in
+`E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\LUA_NVIM.md`
+(als `#### \`<ID>\` — <Titel>`-Abschnitte mit `id = "..."`-Codeblock); `PRIN`
+in `PRINCIPLES.md`, `PERF` in `PERFORMANCE.md` desselben Ordners. Die
+vollständige ID-Liste (mit Severity) liegt in
+[rules-nvim-on-ui-nvim.json](./rules-nvim-on-ui-nvim.json) (Pfad korrigiert
+gegenüber dem Copy-Paste-Text oben — die Datei liegt neben dieser
+Handover-Akte in `handovers/rules/`, nicht in `reports/`).
+
+---
+
+## Fortschritt (Teil 2)
+
+| Familie | Regeln | Status |
+| --- | --: | --- |
+| `ERR` | 35 | ✅ Runde 6 fertig, 3 Fixes committet (`27b5391`) |
+| `LUA` | 59 | ✅ Runde 7 fertig, 5 Fixes committet (`f7a73ef`) |
+| `UI` | 41 | ✅ Runde 8 fertig, 2 Fixes committet (`a26c960`) |
+| `CMT` | 16 | ✅ Runde 9 fertig, 3 Fixes committet (`37fedc1`) |
+| `SEC` | 29 | ✅ Runde 10 fertig, 1 Fix committet (`834c343`) |
+| `PRIN` | 37 | ✅ Runde 11 fertig, 2 Fixes committet (`cbfc489`) |
+| `PERF` | 64 | offen |
+
+---
+
+## Runde 6 (2026-09-14): Familie `ERR` (35 Regeln)
+
+Ein `Explore`-Subagent hat alle 35 `ERR`-IDs einzeln gegen `LUA_NVIM.md`
+nachgeschlagen und per Ermessen gegen den `ui.nvim`-Code geprüft (gezielte
+Greps pro Regel-Muster, nicht alle 93 Dateien komplett gelesen). `ERR-30/31/
+34/40/41/21` haben mangels Angriffsfläche (kein Dateisystem-/Prozess-/
+Terminal-Handling im Code) keine Fundstelle — sauber mangels relevantem
+Code, nicht "geprüft und bestanden". `pcall(f(args))`-Antipattern (`ERR-62`),
+Vararg-Verlust (`ERR-63`), Mehrwert-Kappung (`ERR-64`) sauber.
+
+Drei echte Funde, alle gefixt, luacheck/stylua grün, volle Testsuite grün,
+committet + auf `main` gepusht (`27b5391`):
+
+- **`ui/config/init.lua`** (🔴 ERR-51/53/54, Referenz-Leck — Geschwister von
+  Runde 4s `tabline_config`-Fund): `theme_config = require("ui.config.theme")`
+  und der von `variants.resolve()` aufgelöste Statusline-Preset sind beide
+  dasselbe `require()`-gecachte Modul-Tabellenobjekt bei jedem `M.setup()`-
+  Aufruf — exakt dieselbe Bugklasse, die für `tabline_config` in Runde 4
+  bereits präventiv gefixt wurde (mit explizitem Kommentar zu genau diesem
+  Muster), hier aber bei den zwei Geschwister-Pfaden übersehen. Ein aktueller
+  In-Place-Mutator wurde nicht gefunden — das Risiko ist wie beim
+  Ursprungsfund präventiv. Fix: `vim.deepcopy()` für `theme_config` beim
+  `require()` und für das von `load_statusline_config()` zurückgegebene
+  Preset.
+- **`ui/config/init.lua`** (🔴 ERR-50, kein Type-Guard/Validierung):
+  `M.setup(user_opts)` prüfte nie, ob `user_opts` unbekannte Top-Level-Keys
+  enthält — ein Tippfehler (`themes` statt `theme`) ließ den Override
+  stillschweigend verschwinden, ohne jede Fehlermeldung. Fix:
+  `KNOWN_SETUP_KEYS`-Tabelle (`theme`/`tabline`/`variant`), `notify.warn` bei
+  jedem unbekannten Key.
+- **`statusline/modules/lsp/symbols/document_symbols.lua`** (🟡 ERR-32,
+  Stale-State/TOCTOU): `on_result()` stempelte `cache.version` mit dem Tick
+  **zum Antwortzeitpunkt** statt mit dem Tick, für den die Anfrage gestellt
+  wurde. Ein zweiter Edit, während die Anfrage noch läuft (der `cache.
+  pending`-Guard verhindert einen zweiten Request), ließ die verspätete
+  Antwort für den *neuen* Tick als frisch gelten — die Breadcrumb-Position
+  blieb auf dem alten Dokumentstand eingefroren, bis der nächste Edit
+  passiert. Fix: Tick vor `vim.lsp.buf_request` einfangen (`req_tick`), in
+  `on_result` diesen Snapshot statt `current_tick(bufnr)` stempeln.
+
+Ein architektureller Hinweis wurde bewusst **nicht** umgesetzt: `ui.nvim`
+nutzt `lib.nvim`s `safe_api`/`lib.lua.error` (strukturierte Fehlerobjekte)
+nirgends, sondern wiederholt stattdessen konsequent das plugin-eigene
+`pcall` + `notify.warn(tostring(err))`-Muster (~170 Stellen, ERR-05/06). Das
+ist in sich konsistent und deckt sich mit `docs/BINDINGS.md`s eigenem
+"a failure notifies and returns rather than raising"-Muster — wirkt wie
+bewusste Hauskonvention, nicht Versehen; ein Umbau auf strukturierte
+Fehlerobjekte über ~170 Call-Sites wäre ein eigener, großer und riskanter
+Umbau, kein Ein-Runden-Fix. Nicht angefasst.
+
+---
+
+## Runde 7 (2026-09-14): Familie `LUA` (59 Regeln)
+
+Ein `Explore`-Subagent hat alle 58 zu prüfenden `LUA-*`-IDs (LUA-80 übersprungen
+— bereits automatisiert `pass`) einzeln gegen `LUA_NVIM.md` nachgeschlagen
+und geprüft. Viele Regeln ohne Angriffsfläche (keine schwachen Tabellen,
+kein eigenes State-File, kein Fremd-`setup()`-Aufruf) — sauber mangels
+relevantem Code. Autocmd-Lebenszyklus (`LUA-96`), Datei-Tags (`LUA-60`),
+`@types`-Auslagerung (`LUA-63/66`), `lib.nvim`-Abhängigkeit (`LUA-01/04/05/06`)
+durchgängig sauber.
+
+Zwei echte Funde, einer gefixt (5 Dateien), einer bewusst nicht verändert:
+
+- **`statusline/modules/{github_stats_badge,recommender_badge,casedesk,
+  sandbox_ambient,session_status}/init.lua`** (🔴 LUA-92, Lazy-Loading
+  unterlaufen): fünf Badge-Module gateten ihre Soft-Dependency-Präsenzprüfung
+  mit `pcall(require, "<plugin>.<mod>")` **innerhalb der Render-Funktion**,
+  die schon beim allerersten Statusline-Redraw läuft — bevor das jeweilige
+  Fremd-Plugin über seinen eigenen Lazy-Trigger (`cmd`/`event`/`ft`) laden
+  kann. `filetree_cwd_mode/init.lua` hatte exakt denselben Bug bereits
+  einmal gefixt (`package.loaded["filetree"]` statt `require`, mit
+  Kommentar: „a require here PULLS filetree.nvim in before the first
+  paint — measured at ~202ms") — die fünf Module wiederholten das ungefixte
+  Muster. Fix: alle fünf auf `package.loaded[...]` + `type(...) == "table"`-
+  Guard umgestellt, mit Verweis-Kommentar auf `filetree_cwd_mode`. Innere
+  `require`s, die erst laufen *nachdem* die Präsenz bereits über
+  `package.loaded` bestätigt ist (z. B. `recommender.analyzers.<name>`,
+  `casedesk.sla`/`.meta`), unverändert gelassen — das sind keine
+  Erst-Eager-Loads mehr.
+- **`bindings/usrcmds/init.lua:581` — `:Theme`-Alias** (🟡 LUA-95, generischer
+  Usercmd-Name ohne Kollisionsprüfung): geprüft, **bewusst nicht geändert**.
+  `:Theme` ist ein sehr generischer Name, den auch andere Theme-/Colorscheme-
+  Plugins beanspruchen könnten; `lib.nvim.bindings.usercmd.create()` setzt
+  `force = true` als *dokumentierten* Default (idempotente Neuerstellung bei
+  Config-Hot-Reload) und führt bereits eine Provenienz-Registry (`records`)
+  — die von LUA-95 verlangte Transparenz existiert also schon auf
+  `lib.nvim`-Ebene, nur nicht als Kollisions-*Warnung*. `:Theme` ist zudem
+  öffentlich dokumentiertes API (`bindings/usrcmds/README.md:23`) — eine
+  Umbenennung wäre ein Breaking Change für jeden Host, der es bereits nutzt,
+  gegen ein rein spekulatives Kollisionsrisiko. Abgewogen und stehen
+  gelassen.
+
+Alle Fixes: luacheck/stylua grün, volle Testsuite grün, committet + auf
+`main` gepusht (`f7a73ef`).
+
+---
+
+## Runde 8 (2026-09-14): Familie `UI` (41 Regeln)
+
+Ein `Explore`-Subagent hat alle 40 zu prüfenden `UI-*`-IDs (UI-62 übersprungen
+— bereits automatisiert `pass`) geprüft. Viele Regeln ohne Angriffsfläche
+(kein Scan-Cap/Backend-Fallback/CLI-Fehler-Mapping, kein which-key/
+Custom-Dashboard/Quickfix-Producer in diesem Code) — sauber mangels
+relevantem Code. `health.lua` (aus Runde 4), Count-Handling in
+`keymaps/init.lua`, `Surface:close()`/`fire_close()`-Guards durchgängig
+sauber.
+
+Zwei echte Funde gefixt, zwei bewusst nicht verändert (Details unten),
+luacheck/stylua grün, volle Testsuite grün, committet + auf `main` gepusht
+(`a26c960`):
+
+- **`bindings/keymaps/tabufline/{state,init}.lua`** (🔴 UI-01, "einmal
+  bestätigen, nicht einmal pro Item"): `close_all_bufs()` und
+  `close_n_buffers(n>1)` liefen jeweils in einer Schleife über
+  `state.close_buffer()`, das pro modifiziertem Buffer sein eigenes
+  `confirm bd<bufnr>` auslöst — ein `<leader>bq` bei 5 offenen, ungesicherten
+  Buffern zeigte 5 sequenzielle Save-Dialoge. Fix: `close_buffer(bufnr,
+  skip_confirm)` um einen `skip_confirm`-Parameter erweitert (force-closed
+  über `bd!` statt `confirm bd`, wenn gesetzt); ein neuer
+  `needs_close_confirm()`-Helper (exportiert als `M.__needs_close_confirm`)
+  zählt vorab, wie viele Buffer im Batch tatsächlich einen Dialog auslösen
+  würden; bei mindestens einem wird **ein** `vim.fn.confirm()` für den
+  gesamten Batch gezeigt (Ja → alle mit `skip_confirm=true` schließen, Nein
+  → ganzer Batch abgebrochen). `close_n_buffers` approximiert die Menge der
+  betroffenen Buffer konservativ über `vim.t.bufs` (die exakte
+  Traversal-Reihenfolge über wiederholtes `prev()` vorab zu simulieren wäre
+  unverhältnismäßig aufwendig für den Grenzfall eines gelegentlichen
+  Over-Ask).
+- **`statusline/modules/helpers/nerd_fonts.lua`** (🟡 UI-38, unzuverlässige
+  Nerd-Font-Erkennung): toter Code (0 Call-Sites) — `nerdf_sep_or_fallback()`
+  entschied per `vim.fn.strdisplaywidth()`-Heuristik statt über
+  `vim.g.have_nerd_font`, exakt das von der Regel namentlich verworfene
+  Muster ("es gibt keine verlässliche Laufzeit-Erkennung… strdisplaywidth
+  liefert für jeden Codepoint 1, Glyph oder Tofu gleichermaßen"). Da
+  ungenutzt: Datei komplett entfernt statt eine nie aufgerufene Funktion zu
+  reparieren.
+
+Zwei weitere Funde geprüft, bewusst **nicht** verändert:
+
+- **UI-38 (breiter, `statusline/utils/primitives.lua:88-167`):** die
+  produktiv genutzten Git-/LSP-Icons im Default-Theme sind hartkodierte
+  Nerd-Font-Codepoints ganz ohne `vim.g.have_nerd_font`-Gate — anders als
+  der oben entfernte tote Code aber echter, seit Langem genutzter Pfad.
+  Ein Fix bräuchte ein komplettes ASCII-Fallback-Glyphenset über
+  potenziell jedes Icon-nutzende Modul (Statusline **und** Tabline/
+  Devicons/Contextmenu) hinweg — ein eigener Design-/Umbau-Durchgang, kein
+  Ein-Runden-Bugfix; nicht angefasst.
+- **UI-20/UI-21 (`bindings/usrcmds/init.lua`):** Hilfetext, Completion-Liste
+  und Dispatcher-`actions`-Tabelle sind drei unabhängig gepflegte Kopien
+  derselben 13 Subcommands, statt über `lib.nvim.usercmd.composer` (Dispatch
+  + Completion + Doku aus einer Struktur) zu laufen. Ein Umbau auf den
+  Composer wäre eine Neuarchitektur des gesamten `:UI`-Dispatchers mit
+  echtem Regressionsrisiko für ein funktionierendes, gut abgedecktes Modul
+  — kein risikoarmer Ein-Runden-Fix; nicht angefasst.
+- **UI-56 (`kit/preview.lua:170`, schwacher Randfall):** `M.render()`
+  ersetzt bei jedem Tastendruck den kompletten Preview-Buffer-Inhalt ohne
+  `winsaveview()`/Cursor-Erhalt. Geringe Praxisrelevanz (Theme-Gallery-
+  Preview, kein Haupt-Editier-Fenster, selten gescrollt) — nicht angefasst.
+- **UI-95 / `:Theme`-Alias** bereits in Runde 7 unter `LUA-95` bewertet und
+  bewusst stehen gelassen (öffentlich dokumentiertes API, Breaking-Change-
+  Risiko gegen spekulative Kollisionsgefahr).
+
+---
+
+## Runde 9 (2026-09-14): Familie `CMT` (16 Regeln)
+
+Ein `Explore`-Subagent hat alle 16 `CMT-*`-IDs geprüft — alle 51 `---@class`-
+Deklarationen im Baum gegen ihre jeweiligen `M`-Tabellen abgeglichen, jede
+Zahlwort-/Aufzählungs-Stelle in Kommentaren gegen den echten Code geprüft,
+`@module`-Pfade gegen echte `require`-Pfade, AI-Boilerplate/Smart-Quotes/
+verwaiste Kommentare durchsucht. Die drei bereits in früheren Runden
+gefixten Drifts (`chooser.lua` fünf Optionen, `keymaps/init.lua` neun
+Aktionen, `DEFAULTS.lua` drei Gruppen) verifiziert — weiterhin korrekt.
+
+Drei echte Funde, alle gefixt, luacheck/stylua grün, volle Testsuite grün,
+committet + auf `main` gepusht (`37fedc1`):
+
+- **`health.lua` `check_modules()`** (🟡 CMT-01, blinder Fleck in der
+  Submodul-Enumeration): zählte von Hand nur `keymaps` und `usrcmds` auf,
+  `menu` (`ui.contextmenu`) fehlte komplett — obwohl `Ui.Modules` es als
+  dritten `ui.setup()`-Flag dokumentiert, `ui/init.lua` es tatsächlich
+  verdrahtet, und `contextmenu.is_enabled()`s eigener Kommentar wörtlich
+  sagt „For `:checkhealth` and tests" — health.lua ruft diese Funktion aber
+  nirgends auf. Fix: dritten Eintrag ergänzt, der `require("ui.contextmenu")
+  .is_enabled()` liest (kein `package.loaded`-Gate wie bei den anderen
+  beiden, da `menu` ein Opt-**out** ist, das schon per Default an ist, nicht
+  ein Opt-in, das `setup()` erst lädt — `require()` hier hat keinen
+  Nebeneffekt, siehe Kommentar im Fix).
+- **`contextmenu/@types/init.lua`** (🟡 CMT-02, `@class`-Drift): `Ui.
+  ContextMenu` deklarierte nur 8 der 10 tatsächlich exportierten Funktionen
+  — `set_enabled`/`is_enabled` fehlten, obwohl beide öffentliches, in
+  `contextmenu/README.md` dokumentiertes API sind. Fix: beide `---@field`-
+  Zeilen ergänzt.
+- **`bindings/usrcmds/init.lua:577`** (🟢 CMT-05, veralteter Usercmd-`desc`):
+  `:UI`s Beschreibungstext nannte nur die ursprünglichen zwei Subcommands
+  (Theme, Transparenz), obwohl der Dispatcher inzwischen 13 abdeckt. Fix:
+  Text auf `:UI help`-Verweis umgestellt statt alle 13 einzeln aufzuzählen
+  (vermeidet die nächste Drift-Quelle).
+
+Alles andere sauber: die übrigen 48 `@class`/`@field`-Paare, alle
+`@module`-Pfade, `ui.tabline.modules`' "vier Schlüssel", die vier
+Statusline-Presets, `ui.statusline.catalog` gegen das reale `modules/`-
+Verzeichnis, AI-Boilerplate-Header, Smart Quotes/Mojibake, verwaiste
+Kommentare.
+
+---
+
+## Runde 10 (2026-09-14): Familie `SEC` (29 Regeln)
+
+Ein `Explore`-Subagent hat alle 27 zu prüfenden `SEC-*`-IDs geprüft (`SEC-01`/
+`SEC-47` übersprungen — bereits automatisiert `pass`). Bestätigt: `ui.nvim`
+ist reine Statusline/Tabline/Theme-UI ohne Downloadpfad, Secrets-Handling,
+Server-Oberfläche oder persistierte Snapshots — 26 der 27 Regeln sauber
+mangels Angriffsfläche. Die einzigen externen Prozessaufrufe sind reine
+`git`-Argv-Aufrufe (Branch-Namen aus `git branch`-Output selbst — Git
+verbietet Refs, die mit `-` beginnen, kein Argument-Injection-Vektor);
+der einzige dynamische `vim.cmd(...)`-Stringbau (`variant/init.lua:29`)
+speist sich ausschließlich aus einer geschlossenen, nur host-befüllten
+Registry (`ui.config.variants.list()`), nicht aus Nutzer-Freitext.
+
+Ein echter Fund, dokumentiert statt architektonisch verändert, luacheck/
+stylua grün, volle Testsuite grün, committet + auf `main` gepusht
+(`834c343`):
+
+- **`kit/preview.lua`** (🔴 SEC-50, "Preview führt aus statt zu lesen" —
+  plausibel, kein akuter Exploit): `:KitPreview`s Config-Buffer wird bei
+  **jedem** `TextChanged`/`TextChangedI` komplett per `loadstring()` +
+  `pcall()` ausgeführt, ganz ohne Opt-in oder sichtbare Warnung, dass der
+  Bufferinhalt Code ist. Fügt ein Nutzer einen Codeschnipsel aus einer
+  ungeprüften Quelle ein ("füg das hier ein für ein cooles Theme"), läuft
+  er sofort mit vollem `vim.*`/`os.*`-Zugriff — anders als bei bewusster
+  `:lua`-Eingabe im Kommandozeilenmodus passiert das schon beim bloßen
+  Tippen/Einfügen. Bewusst **nicht** architektonisch verändert: die
+  Live-Auswertung ist der eigentliche Zweck dieses Tools (ein REPL-artiger
+  Theme-Playground, kein Preview von tatsächlich fremdem/externem Inhalt —
+  der Nutzer befüllt den Buffer selbst, lokal, nach explizitem `:KitPreview`-
+  Aufruf), ein Wechsel auf einen expliziten Trigger („updates as you type"
+  ist der dokumentierte Kernpunkt) wäre ein Verhaltensumbau, kein Bugfix.
+  Fix: sichtbare Warnzeile im in-Buffer-`REFERENCE`-Block ergänzt ("this
+  buffer's contents are executed as Lua on every edit… never paste in a
+  config snippet from a source you have not read").
+
+---
+
+## Runde 11 (2026-09-15): Familie `PRIN` (37 Regeln)
+
+Ein `Explore`-Subagent hat alle 37 `PRIN`-IDs einzeln gegen `PRINCIPLES.md`
+nachgeschlagen und per Ermessen geprüft (gezielte Greps/Reads, nicht alle
+93 Dateien komplett gelesen). Architektur-Grundprinzipien (Modul-/
+Funktionsverantwortung, Kopplung/Kohäsion, reine Funktionen, private
+Helfer, Registries, Snapshot/Restore, globaler State, Fehlerbehandlungs-
+philosophie, Naming, Caching-Disziplin, Doku-Verträge) sind über die
+weit überwiegende Mehrheit der 37 Regeln sauber — `PRIN-13` (Snapshot/
+Restore) wurde sogar als Positivbeispiel identifiziert
+(`config/init.lua`s `__save_state()`/`__restore_state()`, aus einem
+früheren echten Bugfix entstanden). `PRIN-29` (native Crashes) mangels
+FFI/Nativecode im Baum moot.
+
+Zwei echte Funde, beide gefixt, luacheck/stylua grün, volle Testsuite
+grün, committet + auf `main` gepusht (`cbfc489`):
+
+- **`bindings/usrcmds/init.lua`** (🟡 PRIN-03, Duplizierte Dispatch-/
+  Completion-Tabellen): der `actions`-Table im Dispatcher und die
+  `subcommands`-Liste in `complete()` waren zwei unabhängig gepflegte
+  Literal-Arrays derselben 13 Subcommand-Namen — anders als `variant`/
+  `tabline-style`, die für ihre *zweite* Ebene bereits live aus der
+  jeweiligen Registry (`.list()`) lesen, blieben die 13 Top-Level-Namen
+  zwei disjunkte Kopien. Ein neuer Subcommand in der einen Tabelle ohne
+  die andere hätte entweder Dispatch ohne Completion oder Completion ohne
+  Dispatch (`"Unbekannter Befehl"`) ergeben. Fix: beide Stellen lesen jetzt
+  aus einer einzigen geordneten `SUBCOMMANDS`-Registry (`{name, fn}`-Paare),
+  aus der `actions` (Dispatch-Map) und `subcommand_names` (Completion-Liste)
+  abgeleitet werden — strukturell nicht mehr divergierbar. Bewusst *nicht*
+  der größere `usrcmds.README`/Composer-Umbau aus Runde 8 (UI-20/UI-21) —
+  dieser Fix behebt exakt die PRIN-03-Divergenzgefahr, ohne den
+  Dispatcher-Aufbau neu zu architektieren.
+- **`statusline/modules/lsp/init.lua`** (🟢 PRIN-51, fehlender Doku-Vertrag):
+  `M.mode_band_group()` und `M.render_breadcrumbs_lspfirst()` waren die
+  einzigen zwei von 93 Dateien gefundenen öffentlichen Funktionen ganz ohne
+  `---@return`, während ihre direkten Nachbarn in derselben Datei
+  (`M.hl_open`, `M.render_breadcrumbs_inherit_lspfirst`) bereits annotiert
+  sind. Fix: `---@return string` bei beiden ergänzt.
+
+Alles andere in `PRIN` sauber bzw. mangels Angriffsfläche moot (keine
+`_G.*`-Nutzung, kein verstecktes globales `vim.g.*`-Ownership, Caching
+durchgängig explizit benannt und mit Invalidierungspfad — bereits in
+Runde 2 vertieft geprüft, jede der 93 Dateien mit Kopf-Kommentar,
+`@types`-Auslagerung durchgängig genutzt).
 
 ---
 
