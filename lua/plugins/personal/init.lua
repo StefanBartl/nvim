@@ -1137,7 +1137,10 @@ plugins.add({
     -- WKDBook-Tricentis lives -- see the plugin's docs/configuration.md.
     "StefanBartl/casedesk.nvim",
     lazy = false,
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.nvim: casedesk.ui requires ui.kit at module load -- setup() fails
+    -- without it, no fallback. Already loaded lazy=false above, listed here
+    -- for documentation.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {},
   },
 
