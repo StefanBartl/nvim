@@ -8,24 +8,33 @@
 
 ## Table of content
 
+  - [Feedback](#feedback)
   - [Regeln für diese Session](#regeln-fr-diese-session)
   - [Orte](#orte)
   - [Architektur (aus dem Konzept übernommen)](#architektur-aus-dem-konzept-bernommen)
   - [Real geprüfter Ist-Stand der Bausteine (nicht aus dem Konzept übernommen, sondern nachgesehen)](#real-geprfter-ist-stand-der-bausteine-nicht-aus-dem-konzept-bernommen-sondern-nachgesehen)
   - [loomAI: Entscheidung & Fallback (Kernpunkt der Aufgabenstellung)](#loomai-entscheidung-fallback-kernpunkt-der-aufgabenstellung)
   - [Phasenplan](#phasenplan)
-    - [Phase 0 — Setup ✅ (diese Sitzung)](#phase-0-setup-diese-sitzung)
-    - [Phase 1 — Transport-Erweiterung in `lib.nvim`](#phase-1-transport-erweiterung-in-libnvim)
-    - [Phase 2 — `ai.nvim` Scaffold (`NEW_PROJECT.md`, `NEW-01`…`NEW-50`)](#phase-2-ainvim-scaffold-new_projectmd-new-01new-50)
-    - [Phase 3 — Provider-Registry (`lua/ai/providers/`)](#phase-3-provider-registry-luaaiproviders)
-    - [Phase 4 — Kontext-Assemblierung (`lua/ai/context/`)](#phase-4-kontext-assemblierung-luaaicontext)
-    - [Phase 5 — UI (`lua/ai/ui/`)](#phase-5-ui-luaaiui)
-    - [Phase 6 — Public API + `:Ai`-Composer](#phase-6-public-api-ai-composer)
-    - [Phase 7 — Quick-Actions ("neue Idee" im Konzept)](#phase-7-quick-actions-neue-idee-im-konzept)
-    - [Phase 8 — Wiring in nvim-config](#phase-8-wiring-in-nvim-config)
+    - [Phase 0 — Setup ✅](#phase-0-setup)
+    - [Phase 1 — Transport-Erweiterung in `lib.nvim` ✅](#phase-1-transport-erweiterung-in-libnvim)
+    - [Phase 2 — `ai.nvim` Scaffold ✅](#phase-2-ainvim-scaffold)
+    - [Phase 3 — Provider-Registry (`lua/ai/providers/`) ✅](#phase-3-provider-registry-luaaiproviders)
+    - [Phase 4 — Kontext-Assemblierung (`lua/ai/context/`) ✅](#phase-4-kontext-assemblierung-luaaicontext)
+    - [Phase 5 — UI (`lua/ai/ui/`) ✅](#phase-5-ui-luaaiui)
+    - [Phase 6 — Public API + `:Ai`-Composer ✅](#phase-6-public-api-ai-composer)
+    - [Phase 7 — Quick-Actions ✅](#phase-7-quick-actions)
+    - [Phase 8 — Wiring in nvim-config ✅](#phase-8-wiring-in-nvim-config)
     - [Phase 9 — Follow-up (entkoppelt von v1, NICHT blockierend)](#phase-9-follow-up-entkoppelt-von-v1-nicht-blockierend)
     - [Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release](#phase-10-gatesreleasemd-vor-einem-ersten-tagrelease)
-  - [Nächste konkrete Schritte (Stand jetzt)](#nchste-konkrete-schritte-stand-jetzt)
+  - [Code-Review + Fixes (2026-09-14, nach Phase 8)](#code-review-fixes-2026-09-14-nach-phase-8)
+  - [loomai-Provider umgesetzt (2026-09-14, Folgesession)](#loomai-provider-umgesetzt-2026-09-14-folgesession)
+  - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
+
+---
+
+## Feedback
+
+`loomAI` wird gerade gebaut, es sollte aber auch die klassischen ai tools von openai  / anthropic / open spurce uinterstützen können, sofern diese die geforderte features beretistellen.
 
 ---
 
@@ -101,6 +110,8 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
   echten LLM-Agent ersetzt"). Kein `anthropic_client`, kein `model_router`, kein Ollama-Client
   im Code — nur in `docs/Guides/ki-agenten-framework-architektur.md` geplant (Wochen 3-4,
   ungeprüft/nicht garantiert). **Kein `/ask`-artiger Endpoint vorhanden.**
+  **Update (2026-09-14, Folgesession): überholt — `/health`+`/ask`+`/ask/stream` jetzt
+  vorhanden, siehe [loomai-Provider umgesetzt](#loomai-provider-umgesetzt-2026-09-14-folgesession).**
 
 ---
 
@@ -132,6 +143,13 @@ echter Widerspruch, siehe Abschnitt 9 dort) und einen echten Crash-Pfad, falls
   `E:\repos\loomAI\src\main.cpp` / `docs/Guides/ki-agenten-framework-architektur.md`
   gegenchecken, ob sich das geändert hat (Stand hier: 2026-09-14, nichts vorhanden).
 - Dieser Punkt steht auch in `wkdbook-myplugins/ai.nvim/ROADMAP/ROADMAP.md` als offener Posten.
+
+**Update (2026-09-14, Folgesession): Trigger eingetreten, Entscheidung umgesetzt.**
+loomAI hat jetzt `/ask`+`/ask/stream`, `loomai` ist gebaut **und** (auf Anfrage,
+über die ursprüngliche Entscheidung hier hinausgehend) in `provider_order`
+aufgenommen — die Fallback-Regel "auto durchläuft NIE loomai" gilt damit
+**nicht mehr** in dieser Absolutheit. Details:
+[loomai-Provider umgesetzt](#loomai-provider-umgesetzt-2026-09-14-folgesession).
 
 ---
 
@@ -312,6 +330,8 @@ dem Tag, das lässt sich nicht durch eine einzelne Sitzung ersetzen. Die automat
 - REL-09/33 (Demo-GIF/Logo) — `nice-to-have`, nicht begonnen.
 - REL-32 (Literatur und Referenzen) — `nice-to-have`, nicht begonnen.
 
+---
+
 ## Code-Review + Fixes (2026-09-14, nach Phase 8)
 
 Multi-Winkel-Review (`/code-review high`) über die gesamte `ai.nvim`-Implementierung
@@ -370,21 +390,114 @@ Test-Stand danach: `ai.nvim` 21/21 (2 neue Regressions-Tests für den `resolve()
 
 ---
 
+## loomai-Provider umgesetzt (2026-09-14, Folgesession)
+
+Der in [Phase 9](#phase-9-follow-up-entkoppelt-von-v1-nicht-blockierend) genannte
+Trigger ist eingetreten: loomAI hat jetzt `/ask`+`/ask/stream`. In derselben
+Sitzung beide Seiten umgesetzt, ausgehend vom detaillierten Report
+[reports/loomai-ai-nvim-integration.md](../reports/loomai-ai-nvim-integration.md).
+
+**loomAI-seitig** (`E:\repos\loomAI`, `src/main.cpp`, `src/ollama_client.hpp/.cpp`):
+Aufgabe A-D aus dem Report umgesetzt — `GET /health`, `POST /ask`, `POST
+/ask/stream` (SSE, Backend: direkter Ollama-Aufruf, kein `ModelRouter`, `model`
+frei/unvalidiert wie in Aufgabe E Option 1 empfohlen), einheitliches
+Fehlerformat (Aufgabe D). Server bindet jetzt `127.0.0.1` statt `0.0.0.0`
+(Aufgabe F). Kein CMake-Build existierte vorher (Code war nicht kompilierbar)
+— neu angelegt: `CMakeLists.txt` + vendorte `third_party/httplib.h` +
+`nlohmann/json.hpp`, `README.md` neu. Committet: `91f7b28`.
+
+**`ai.nvim`-seitig**: `lua/ai/providers/loomai.lua` nach dem `ollama.lua`-Muster
+(`ask`/`stream`/`available()`). Design-Entscheidung aus Report-Abschnitt 9
+getroffen: **Option (a)** — `available()` bleibt synchron
+(`vim.fn.executable("curl")`), kein Netzwerk-Call gegen `/health`; ein
+unerreichbares loomAI zeigt sich als normaler `ask`/`stream`-Fehler, exakt wie
+bei `ollama.lua`. In `providers/init.lua`s `BUILTIN` registriert **und** (auf
+Anfrage, Folge-Commit) in `DEFAULTS.lua`s `provider_order` — an letzter
+Stelle, damit es nie einen bereits konfigurierten Cloud-/CLI-Provider
+verschattet. **Konsequenz:** da `available()` keinen Netzwerk-Check macht,
+landet `"auto"` auf einer Maschine ohne `ANTHROPIC_API_KEY`/`OPENAI_API_KEY`/
+laufenden Ollama-Daemon jetzt bei `loomai`, selbst wenn dort kein Server läuft
+— der Fehler zeigt sich dann als normaler Verbindungsfehler statt „kein
+Provider verfügbar", akzeptierter Trade-off, gleiches Verhalten wie
+`ollama.lua` bei installierter, aber nicht laufender Ollama-Binary.
+Committet: `6931f7d` (Provider), `979db80` (provider_order).
+
+**Review (medium-Effort, wegen „max 1 Agent"-Regel selbst statt über
+Subagenten durchgeführt) + 2 Fixes:**
+- 🔴 **Kritisch, gefixt**: `ollama_client.cpp`s Stream-Pfad warf eine
+  ungefangene `nlohmann::json`-Exception, wenn Ollamas `error`-Feld mal kein
+  String ist — der Chunked-Content-Provider-Callback läuft außerhalb von
+  httplibs Routing-try/catch (verifiziert per Code-Lesen: `write_response_
+  with_content` wird erst nach dem try/catch-Block aufgerufen, und
+  `ThreadPool::worker` hat selbst keins), eine Exception dort killt den
+  **kompletten Prozess** (`std::terminate` über den Worker-Thread). Live
+  reproduziert gegen einen Python-Fake-Server mit `{"error":{"code":500}}`
+  statt einem String — Prozess starb, `/health` antwortete danach nicht mehr.
+  Fix: `error_text()`-Helper (stringifiziert statt zu werfen) + try/catch als
+  zweite Verteidigungslinie um den ganzen Stream-Callback in `main.cpp`.
+  Nach dem Fix denselben Angriff erneut gefahren: sauberes SSE-Fehler-Event,
+  Prozess bleibt stabil.
+- 🟡 `loomai.lua` erkannte Fehler nur bei exakt `type(data.error)=="table"` —
+  jede andere Form wäre still als leere Erfolgsantwort durchgerutscht.
+  Erweitert auf jedes nicht-`nil` `error`-Feld.
+- 🟡 Nicht gefixt (bewusst): `ollama_client.cpp` öffnet pro Request eine neue
+  TCP-Verbindung zu Ollama statt sie wiederzuverwenden — bräuchte ein
+  durchdachtes Pooling-Design (z. B. thread-lokale Clients), nicht
+  unangekündigt reingepatcht. Follow-up, siehe unten.
+Committet: `4e2777c` (loomAI), `8d048ec` (ai.nvim).
+
+**Nebenbefund, dritter Bug — nicht in dieser Sitzung gebaut, aber hier
+gefunden und gefixt, weil er `:Ai ask` live blockierte:** `lib.nvim.net.curl`s
+`fetch_json`/`fetch_raw`/`download` riefen ihren Callback direkt aus
+`vim.system`s „fast event context" auf — sobald der Callback UI anfasst (z. B.
+`vim.notify` bei einem Fehler in `actions.ask_prompt`), crasht das mit
+`E5560: nvim_echo must not be called in a fast event context`. `fetch_stream`
+hatte das schon korrekt gelöst (`vim.schedule()`), die drei anderen Tiers nie
+— hätte **jeden** Provider getroffen (nicht nur `loomai`), nur nie zuvor live
+über den echten `:Ai ask`-Pfad durchgetestet. Gefixt nach demselben Muster,
+`curl_spec.lua` weiterhin grün. Committet in `lib.nvim`: `34a4584`. Die
+**installierte** Plugin-Kopie (`nvim-data/lazy/lib.nvim`) war zusätzlich so alt,
+dass ihr `fetch_stream` komplett fehlte — genau die Lücke, die
+`health.lua`s eigener Check dafür vorgesehen hat — beim `git pull --ff-only`
+auf den neuen Stand mitgezogen.
+
+**Live verifiziert** (headless `nvim --headless` gegen die echte nvim-Config,
+echter loomAI+Ollama-Prozess, nicht `--clean`): `:Ai provider loomai` →
+`:Ai info` zeigt `loomai: available`, `provider_order: claude, ollama, openai,
+loomai` → `:Ai ask "Reply with exactly the word: PONG"` öffnet den
+Antwort-Popup mit der echten Ollama-Antwort. `:Ai stream` als Bonus ebenfalls
+verifiziert (Panel füllt sich live, korrekter Endtext) — erst durch den
+`lib.nvim`-Fix oben überhaupt in der installierten Plugin-Kopie nutzbar.
+
+Alle vier Repos (`loomAI`, `ai.nvim`, `lib.nvim`, `nvim`-Config) committet und
+auf `origin/main` gepusht. Keine Claude-Co-Autorenschaft in den Commits.
+
+---
+
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 erledigt, Code-Review durchgelaufen (9/10 Findings gefixt), `lib.nvim`-CI
 komplett grün (inkl. `publish-ci-verified`), `ai.nvim`-CI grün, `doc/ai.txt`
-nachgetragen. Alle Repos (`ai.nvim`, `lib.nvim`, `nvim`-Config, `WKDBooks`) committet
+nachgetragen. `loomai`-Provider gebaut, in `provider_order`, live gegen `:Ai
+ask`/`:Ai stream` verifiziert (siehe [oben](#loomai-provider-umgesetzt-2026-09-14-folgesession)).
+Alle Repos (`ai.nvim`, `lib.nvim`, `loomAI`, `nvim`-Config, `WKDBooks`) committet
 und gepusht, synchron mit `origin/main`. Offen:
 
-1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`), um v1 vor einem Tag zu validieren
-   — der einzige noch offene Schritt, der sich nicht durch eine Sitzung ersetzen lässt.
+1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`), um v1
+   vor einem Tag zu validieren — der einzige noch offene Schritt, der sich nicht
+   durch eine Sitzung ersetzen lässt.
 2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release, danach.
-3. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration, `loomai`-Provider
-   sobald verfügbar (Trigger-Check bei jeder Wiederaufnahme, s.o.).
+3. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration.
+   `loomai`-Provider ist erledigt (s. o.), nicht mehr offen.
 4. `ui/panel.lua`s Voll-Buffer-`set_lines()` pro Stream-Chunk (Review-Finding, bewusst
    nicht gefixt) — nur angehen, falls in der Praxis spürbar.
-5. Diese Datei laufend als Statusprotokoll fortschreiben.
+5. loomAIs `ollama_client.cpp`: neue TCP-Verbindung pro `/ask`/`/ask/stream`-Request
+   statt Wiederverwendung (Review-Finding, bewusst nicht gefixt) — braucht ein
+   durchdachtes Pooling-Design (z. B. thread-lokale Clients), erst bei spürbarem
+   Bedarf angehen.
+6. loomAI hat weiterhin keinen `ModelRouter`/Anthropic-Client — `/ask*` ruft
+   direkt Ollama, `model` unvalidiert durchgereicht (Aufgabe E, Option 1).
+7. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
 
