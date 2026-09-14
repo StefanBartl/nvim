@@ -305,6 +305,53 @@ dem Tag, das lässt sich nicht durch eine einzelne Sitzung ersetzen. Die automat
 - REL-09/33 (Demo-GIF/Logo) — `nice-to-have`, nicht begonnen.
 - REL-32 (Literatur und Referenzen) — `nice-to-have`, nicht begonnen.
 
+## Code-Review + Fixes (2026-09-14, nach Phase 8)
+
+Multi-Winkel-Review (`/code-review high`) über die gesamte `ai.nvim`-Implementierung
++ `lib.nvim`s `net.curl`-Erweiterung, 10 Findings, 9 gefixt:
+
+- **`providers/init.lua`**: `M.resolve()` rief `p.available()` ungeguarded auf — ein
+  Lazy-Proxy mit fehlgeschlagenem `require()` liefert `nil` für jedes Feld, das hätte
+  bei jedem `ask()`/`stream()`-Call crashen können. Guard ergänzt (`b34f5cc`, s.u.).
+- **`lib.nvim` `config_quote()`**: escapte `\n`/`\r`/`\t`/`\v` nicht, obwohl der eigene
+  Docstring eine Ablehnung solcher Werte behauptete — ein API-Key mit trailing Newline
+  (z. B. `export KEY=$(cat key.txt)`) hätte die `-K`-Curl-Config aufgebrochen. Jetzt
+  escaped, matching curl's eigene Unescape-Regeln.
+- **`init.lua`**: `autocmds`-Setup-`pcall` verschluckte Fehler lautlos (anders als die
+  zwei `pcall`s direkt darüber) — der `VimLeavePre`-Handler hätte lautlos fehlen können.
+- **`lib.nvim`**: `secret_headers` dedupliziert jetzt gegen `opts.headers` (gleicher
+  Header-Name hätte sonst doppelt gesendet werden können — einmal sicher, einmal
+  Klartext-argv). `fetch_stream`s Docstring dokumentiert jetzt explizit, dass `on_done`
+  `obj.code` nicht selbst prüft (anders als `fetch_json`/`fetch_raw`).
+- **Dedupliziert**: `ai.providers.sse` (neu) für die SSE-`data:`-Zeilen-Erkennung +
+  Fehlerkörper-Recovery, vorher in `claude.lua`+`openai.lua` fast identisch dupliziert.
+  `ai.providers.util` (neu) für `env_value()`/`curl_exit_error()`, vorher in allen drei
+  Providern dupliziert. `context/init.lua`s dreifach wiederholter
+  `scope.resolve`+Append-Block zu einem `add_scope()`-Helper zusammengefasst.
+- **Nicht gefixt (bewusst)**: `ui/panel.lua`s `M.append` macht pro Stream-Chunk ein
+  volles `set_lines()` statt inkrementell anzuhängen — echter Mechanismus, aber ohne
+  Beleg, dass das bei realistischen Antwortlängen tatsächlich ein Problem ist, und
+  `lib.nvim.ui.kit.surface` hat aktuell keine günstigere Append-API. Follow-up, falls es
+  in der Praxis auffällt.
+- **Nebenbefund**: `lib.nvim/TESTS/curl_spec.lua`s Kill-Prozess-Test war seit dem
+  `fetch_stream`-Commit (`5364c02`) auf CI (Linux) durchgehend rot, lokal (Windows) aber
+  immer grün — Ursache: ein signal-terminierter Prozess muss keinen non-zero `code`
+  melden (Linux: `code=0, signal=15`; Windows: `code=1, signal=15`, verifiziert). Assertion
+  auf `code ~= 0 or signal ~= 0` korrigiert.
+
+Committet + gepusht: `lib.nvim` (`debed20`, `5828428`), `ai.nvim` (`b34f5cc`). Beide
+CIs grün — **außer**: `lib.nvim`s `luacheck`/`stylua`-Jobs sind unabhängig davon
+weiterhin rot (`lua/lib/nvim/telemetry/{init,registry}.lua`, `usercmd/composer/check.lua`
+— alles vorbestehend, nachweislich schon vor dieser Session rot auf jedem der letzten
+5+ Pushes, nicht angefasst, nicht Teil dieses Reviews). Bei Gelegenheit separat
+aufnehmen.
+
+Test-Stand danach: `ai.nvim` 21/21 (2 neue Regressions-Tests für den `resolve()`-Guard),
+`lib.nvim` volle Suite grün (`LIB_TESTS_OK`), inkl. 2 neuer Tests für
+`config_quote`-Newline und `secret_headers`/`opts.headers`-Dedup.
+
+---
+
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 sind erledigt: `ai.nvim`/`lib.nvim` committet + gepusht (`5364c02` in
