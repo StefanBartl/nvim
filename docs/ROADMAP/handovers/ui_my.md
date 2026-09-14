@@ -433,10 +433,42 @@ herausgelöst (zeigte vorher auf den falschen Install-Hinweis). Kein
 Testinfra-Wiring nötig, per Lesen bestätigt. `ui.nvim` in der
 persönlichen Installations-Spec ergänzt (`nvim-config@25e7104a3`).
 
-Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 und
-Schritt 5 sind komplett erledigt (30/30 plus `ai.nvim` als 31.). **Noch
-offen: Schritt 6** (`lib.nvim`-Docs + `ALL/`-Analysen nachziehen — kein
-Shim gebaut, also nichts zu löschen).
+**2026-09-14, dieselbe Session, Schritt 6 abgeschlossen — die komplette
+`ui.kit`/`contextmenu`-Migration ist damit fertig
+(`lib.nvim@63280f1`, `WKDBooks@3323c83`):**
+
+Kein Shim vorhanden (Schritt 4 bewusst ausgelassen), also nichts zu
+löschen — nur `lib.nvim`-Docs und die `ALL/`-Cross-Repo-Analysen
+nachgezogen, mit Migrationshinweisen statt Umschreiben (passend zum
+"historische Aufzeichnung bleibt stehen"-Prinzip, das `UI-KIT-CONCEPT.md`
+schon vorher für sich selbst etabliert hatte):
+- Modul-READMEs (`lua/lib/nvim/ui/kit/`, `lua/lib/nvim/contextmenu/`) +
+  Nutzer-Guides (`GUIDE-ui-kit.md`, `FEATURES/UI_KIT.md`,
+  `EXAMPLES/README.md`) bekamen einen Banner, der auf `ui.nvim` zeigt.
+- `docs/WORKFLOW.md` (die Anleitung für Plugin-Autoren, welches Modul für
+  welchen Job) bekam einen Absatz, der neue Arbeit jetzt explizit an
+  `ui.nvim` verweist — die einzige Änderung, die tatsächlich
+  zukunftsgerichtetes Verhalten korrigiert, nicht nur eine
+  Vergangenheits-Tatsache festhält.
+- **Wichtigster Fund, kein reiner Text-Fund:** `ALL/manual-test-
+  checklists/lib.md` dokumentiert jetzt, dass `:KitPreview` in einer
+  echten laufenden Config seit dieser Migration von `ui.nvim`s Kopie
+  kommt, nicht mehr von `lib.nvim`s — weil kein Konsument mehr
+  `lib.nvim.ui.kit` require't, wird `lib.nvim`s eigenes `:KitPreview` nie
+  mehr registriert; `ui.nvim` registriert denselben Befehlsnamen
+  unabhängig. Ein echt geändertes Laufzeitverhalten, nicht nur Doku-Drift.
+- Weitere Checklisten korrigiert: `insights.md`, `open.md`,
+  `recommender.md`, `runtime-analysis.md`. `learn-cli.md` ebenfalls, aber
+  ausdrücklich als nicht gegen den echten Quellcode verifiziert markiert —
+  `learn-cli.nvim` war zum Zeitpunkt dieser Runde nicht lokal ausgecheckt.
+- `ALL/replaceable-dependencies.md` bekam einen Nachtrags-Absatz beim
+  historischen `nvzone/menu`-Eintrag, Rest unverändert.
+- `ALL/rohdaten/*` bewusst nicht angefasst (datierte Snapshots, keine
+  lebenden Dokumente).
+
+Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — **alle Schritte
+erledigt** (3, 5, 6; Schritt 4 bewusst ausgelassen, kein Shim). Nichts
+mehr offen aus diesem Plan.
 
 **Nebenbei als eigenständige Aufgaben geflaggt (Chips), nicht selbst
 gefixt:**
