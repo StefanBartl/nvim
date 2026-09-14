@@ -76,12 +76,8 @@ return {
     end,
   },
 
-  {
-    "NStefan002/screenkey.nvim",
-    cmd = "Screenkey",
-    lazy = true,
-    version = "*",
-  },
+  -- NStefan002/screenkey.nvim replaced by ui.nvim's own built-in feature
+  -- (see lua/plugins/personal/init.lua's ui.nvim spec). Use :UI screenkey.
 
   -- translate.nvim replaced by the standalone language.nvim plugin
   -- (see lua/plugins/language.lua). Use :Translate.
