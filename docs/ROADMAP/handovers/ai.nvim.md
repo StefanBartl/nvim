@@ -108,6 +108,13 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
 
 **Gewählt (wie im Konzept): Option 2 — `ai.nvim` jetzt bauen, loomAI später als vierter Provider.**
 
+**Detaillierte Aufgabenliste für loomAI selbst (was dort konkret fehlt, Endpoint für
+Endpoint, Feld für Feld):** [reports/loomai-ai-nvim-integration.md](../reports/loomai-ai-nvim-integration.md)
+(2026-09-14). Enthält auch eine bisher unentdeckte Design-Frage (`available()`s
+"muss synchron sein"-Vertrag vs. der hier unten genannte Netzwerk-Health-Check —
+echter Widerspruch, siehe Abschnitt 9 dort) und einen echten Crash-Pfad, falls
+`stream()` fehlt (`ai/init.lua:150`, ungeguarded).
+
 - Der `Ai.Provider`-Vertrag (`id`, `available()`, `ask()`, `stream()`, `capabilities`) ist
   so geschnitten, dass ein `loomai`-Provider **nur** eine neue Registry-Datei ist
   (HTTP gegen `localhost:8080` statt direkt gegen Anthropic/OpenAI/Ollama) — kein Rewrite
