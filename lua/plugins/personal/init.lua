@@ -1244,7 +1244,10 @@ plugins.add({
       "StefanBartl/ai.nvim",
       cmd = "Ai",
       keys = ai_keys,
-      dependencies = { "StefanBartl/lib.nvim" },
+      -- ui.nvim: ui/panel.lua, ui/badge.lua and bindings/actions.lua all
+      -- render exclusively through ui.kit, no fallback. Already loaded
+      -- lazy=false above, listed here for documentation.
+      dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
       opts = {
         keymaps = { prefix = ai_prefix },
       },
