@@ -19,7 +19,7 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     22:20       |    88% / 69%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     16:20       |    94% / 50%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     00:10       |    97% / 61%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     20:40       |    82% / 54%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
@@ -39,22 +39,6 @@
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
 
-**Für den nächsten Chat, zum Copy-Paste:**
-
-> Mach weiter mit der vollen 277-Regel-Ermessens-Review von `rules.nvim`
-> gegen `ui.nvim`, siehe
-> `C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\handovers\rules-nvim-on-ui-nvim.md`
-> (Teil 1 = Ausgangsbericht, der Schnell-Check darunter ist bereits
-> erledigt). Gehe familienweise vor (`ERR`, `LUA`, `UI`, `CMT`, `SEC`,
-> `PRIN`, `PERF`), ein Subagent pro Runde (nie mehr als 1 gleichzeitig),
-> gegen die volle Regelliste aus
-> `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\` (bzw.
-> `:Rules show <id>` pro Regel). Rohdaten aller 281 Einträge (`id`,
-> `severity`, `findings`) liegen in
-> `nvim\docs\ROADMAP\reports\rules-nvim-on-ui-nvim.json`. Bei echten
-> Funden: fixen, luacheck/stylua grün, Tests grün, committen + direkt auf
-> `main` pushen, Handover-Datei nach jeder Runde fortschreiben.
-
 ---
 
 ## Claude Tasks
@@ -63,6 +47,8 @@
   - [ ]  `docmap-desktop/docs/PLAN.md` — 18 offene Punkte für drei Repos: E:/repos/docmap-desktop/docs/PLAN.md
   - [ ] Neues feaure, merhere repos s anne, alos zb $REPOS_DIR mit 32 plugins, die darsatellen können und auch die verbiundungen zu einander, zumindest inlua, das wäre extrem spanndedn, das darzustellen, wenn ncht anders möglich, in einer spehziellen ansicht -ganz ´losgelöst vom Default
 
+- [ ] ultracode auf ale plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
+
 - [ ] E:/repos/casedesk.nvim/docs/HANDOVER.md
   - [ ] RULES
 
@@ -70,8 +56,11 @@
 
 - ui.nvim + my.nvim +  ai.nvim + media.nvim(glaube ich): runtime-analysis.nvim aufdrehen
 -  my.nvim +  ai.nvim + media.nvim(glaube ich): rules.nvim
+ui.nvim: wenn man klöickt auf den tab und es blckt, dann wird das icon ausgenoemn, als o dasd blinkt nicht. wöre es denkbar und umsetzbar, dass im gleichen augenblick das icon "invertiert" angezoigt wird, also farblicvh, damit es auch mitblinkt?
 
 - offene Taks in den roamdaps nochmal durchegehen: E:/repos/WKDBooks/Development/wkdbook-myplugins/
+
+- ai.nvim, loom.ai & media.nvim - lve testing
 
 ---
 
