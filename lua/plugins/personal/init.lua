@@ -658,7 +658,9 @@ plugins.add({
 
   {
     "StefanBartl/spotlight.nvim",
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.nvim: the spotlight list itself is built on ui.kit.select with no
+    -- fallback -- see spotlight.nvim's docs/installation.md.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     event = "VeryLazy",
     opts = {},
   },
