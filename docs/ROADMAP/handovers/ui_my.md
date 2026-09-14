@@ -420,18 +420,23 @@ hart wurde (`recommender.nvim`, `casedesk.nvim`, `github_stats.nvim` —
 `nvim-config@87c3f7392`…`7eed8a95d`). Details je Repo:
 `PLAN-ui-kit-migration.md`.
 
-**Außerhalb des ursprünglichen 30-Repo-Scopes entdeckt, nicht
-angefasst:** `ai.nvim` require't `lib.nvim.ui.kit` an sieben Stellen
-(`bindings/actions.lua`, `ui/badge.lua`, `ui/panel.lua`, `health.lua`,
-…) — existierte am 2026-09-08 (Stand der ursprünglichen Zählung) noch
-nicht oder wurde übersehen. Ein 31. Konsument, der denselben Umzug
-braucht — als eigene Aufgabe geflaggt, nicht Teil dieser Runde.
+**Außerhalb des ursprünglichen 30-Repo-Scopes entdeckt, als eigene Aufgabe
+nachgeholt (`ai.nvim@dab3700`):** `ai.nvim` require'te `lib.nvim.ui.kit`
+an sieben Stellen (`bindings/actions.lua`, `ui/badge.lua`, `ui/panel.lua`,
+`health.lua`, …) — existierte am 2026-09-08 (Stand der ursprünglichen
+Zählung) noch nicht oder wurde übersehen, ein 31. Konsument. Alle
+Requires lazy (Handler-Funktionen), aber ohne Fallback — `ask`/`stream`/
+`explain`/`info` rendern ausschließlich über `kit.popup`/`kit.surface`,
+daher wie `spotlight.nvim` als **required** dokumentiert statt optional.
+`health.lua`s Check aus der `lib.nvim`- in eine eigene `ui.nvim`-Sektion
+herausgelöst (zeigte vorher auf den falschen Install-Hinweis). Kein
+Testinfra-Wiring nötig, per Lesen bestätigt. `ui.nvim` in der
+persönlichen Installations-Spec ergänzt (`nvim-config@25e7104a3`).
 
 Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 und
-Schritt 5 sind komplett erledigt (30/30). **Noch offen: Schritt 6**
-(`lib.nvim`-Docs + `ALL/`-Analysen nachziehen — kein Shim gebaut, also
-nichts zu löschen) sowie die `ai.nvim`-Migration (außerhalb des
-ursprünglichen Scopes).
+Schritt 5 sind komplett erledigt (30/30 plus `ai.nvim` als 31.). **Noch
+offen: Schritt 6** (`lib.nvim`-Docs + `ALL/`-Analysen nachziehen — kein
+Shim gebaut, also nichts zu löschen).
 
 **Nebenbei als eigenständige Aufgaben geflaggt (Chips), nicht selbst
 gefixt:**
@@ -445,6 +450,5 @@ gefixt:**
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
 - rules.nvim-Pass über ui.nvim (nachrangig zu my.nvim)
 - Kreuzfeature-Check gegen die ~30 Schwesterplugins
-- `ai.nvim`s ui.kit-Migration (neu entdeckt, s. o.)
 
 ---
