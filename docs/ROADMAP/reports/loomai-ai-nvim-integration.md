@@ -21,11 +21,19 @@ loomAI-seitig sind **Aufgabe A-D umgesetzt** (`E:\repos\loomAI\src\main.cpp`,
 neu angelegt (gab es vorher nicht). Details, Build- und API-Doku: siehe
 loomAI-`README.md`.
 
-**Noch offen — Abschnitt [9](#9-offene-design-frage-available-vs-netzwerk-health-check):**
-die `available()`-Design-Frage ist nicht entschieden, weil sie
-`ai.nvim`-seitig (`lua/ai/providers/loomai.lua`) liegt, nicht loomAI-seitig —
-dieser Provider selbst existiert noch nicht (siehe [Abschnitt 11](#11-danach-der-loomai-provider-in-ainvim-selbst),
-weiterhin als Folgeschritt offen).
+**Update (2026-09-14, später am selben Tag):** `lua/ai/providers/loomai.lua`
+(Abschnitt 11) ist jetzt ebenfalls gebaut, getestet (luacheck, stylua, die
+plenary-Suite inkl. eines neuen Regressionstests, sowie ein manueller
+Ende-zu-Ende-Smoketest gegen einen laufenden loomAI+Ollama) und gepusht.
+Als `BUILTIN`-Provider registriert, aber bewusst **nicht** in
+`DEFAULTS.lua`s `provider_order` — nur über `provider = "loomai"` erreichbar,
+bis er sich in der Praxis bewährt hat.
+
+Die `available()`-Design-Frage aus [Abschnitt 9](#9-offene-design-frage-available-vs-netzwerk-health-check)
+ist damit entschieden: **Option (a)** — `available()` prüft nur
+`vim.fn.executable("curl") == 1`, kein Netzwerk-Roundtrip gegen `/health`.
+`/health` (Aufgabe A) bleibt loomAI-seitig implementiert, wird aber vom
+Provider nicht genutzt.
 
 ---
 
