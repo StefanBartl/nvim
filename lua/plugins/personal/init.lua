@@ -1187,6 +1187,46 @@ plugins.add({
     },
   },
 
+  -- Provider-agnostic ask/stream layer (claude/ollama/openai), built on
+  -- lib.nvim.net.curl. `keys`/`cmd` loads it lazily, same reasoning as
+  -- dap.nvim above. `ai_prefix` is shared with opts so the two cannot drift
+  -- apart, mirroring dap_prefix/dap_keys.
+  (function()
+    -- ai.nvim's own default keymap prefix is "<leader>a", which collides
+    -- with config/ai/anthropic's Avante mappings ("<leader>aa/ae/ar/af/as",
+    -- an unrelated, pre-existing AI chat plugin). Moved one level to
+    -- "<leader>ai" so both coexist.
+    local ai_prefix = "<leader>ai"
+
+    ---@type table[]
+    local ai_keys = {}
+    for _, m in ipairs({
+      { "a", "Ask (prompt for text)" },
+      { "s", "Quick action: stream context + a typed task" },
+      { "e", "Explain (badge, no panel)" },
+    }) do
+      ai_keys[#ai_keys + 1] = { ai_prefix .. m[1], desc = "[AI] " .. m[2] }
+    end
+    -- Every action also binds in visual mode (selection instead of buffer/cwd).
+    for _, m in ipairs({
+      { "a", "Ask about the selection" },
+      { "s", "Quick action: stream selection + a typed task" },
+      { "e", "Explain selection (badge, no panel)" },
+    }) do
+      ai_keys[#ai_keys + 1] = { ai_prefix .. m[1], mode = "v", desc = "[AI] " .. m[2] }
+    end
+
+    return {
+      "StefanBartl/ai.nvim",
+      cmd = "Ai",
+      keys = ai_keys,
+      dependencies = { "StefanBartl/lib.nvim" },
+      opts = {
+        keymaps = { prefix = ai_prefix },
+      },
+    }
+  end)(),
+
   {
     "StefanBartl/media.nvim",
     -- `VeryLazy` rather than `cmd = "Media"`: the four `<leader>M` keys have to

@@ -123,6 +123,7 @@ plugins.modes({
   ["reposcope.nvim"] = "dir",
 
   -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
+  ["ai.nvim"] = "dir",
   ["debugging.nvim"] = "dir",
   ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
