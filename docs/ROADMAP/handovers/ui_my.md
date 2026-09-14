@@ -107,17 +107,64 @@ ungültige Format-Direktive las (auf Konkatenation umgestellt);
 Repo-Namen aus und kürzte deshalb jedes `*.nvim`-Repo dieses Ökosystems
 ("ui.nvim" → "ui") — vom eigenen Test gefunden.
 
-**Ein Idee-Punkt hält der Realität nicht stand, noch nicht umgesetzt:**
-"Recommender-Badge" beschreibt `recommender.nvim` als Perf-/Security-Scanner
+**Ein Idee-Punkt hielt der Realität nicht stand — geklärt 2026-09-14:**
+"Recommender-Badge" beschrieb `recommender.nvim` als Perf-/Security-Scanner
 mit einem `:RecommenderCheck`-Befehl — beides existiert im tatsächlichen
 Repo nicht. `recommender.nvim` findet stattdessen wiederholte Dotted-Chains,
-die sich als Alias lohnen würden (siehe dessen README). **Frage an den
-Nutzer:** Idee auf die reale Funktion anpassen (Badge zeigt: "N
-Alias-Vorschläge für diese Datei offen"), oder ganz streichen?
+die sich als Alias lohnen würden (siehe dessen README). Nutzer hat sich für
+"Idee anpassen" entschieden — `IDEEN-statusline.md`s Recommender-Badge-Eintrag
+korrigiert (Badge zeigt künftig: "N Alias-Vorschläge für diese Datei offen"),
+noch nicht implementiert.
 
 20 neue Tests seit der letzten Runde. Volle Suite grün (235 Tests),
 `luacheck`/`stylua` clean. Details: `$REPOS_DIR/WKDBooks/Development/
 wkdbook-myplugins/ui.nvim/NOTES.md`s achtzehnte Runde.
+
+**2026-09-14, neue Session (Worktree `ui-nvim-tabline-0ca9d3`):**
+`runtime_analysis_ampel` gebaut — 🟢/🟡/🔴-Ampel für "hat heute irgendeine
+runtime-analysis.nvim-instrumentierte Funktion einen Fehler geworfen oder
+lief auffällig langsam" (Grenzwert: Ø-Aufrufzeit > 50ms). Nutzt nur die
+öffentliche `runtime-analysis.telemetry`-Fassade (`known_namespaces`, `get`,
+`load`), nicht deren interne `.store`/`.report`-Submodule — degradiert
+sauber über Versionswechsel des Fremdplugins hinweg, wie jede andere weiche
+Abhängigkeit hier auch. Rendert leer, wenn `runtime-analysis.nvim` nicht
+installiert ist oder noch nie eine Telemetrie-Instanz gewrappt wurde.
+
+**Ehrlichkeitslimit bewusst dokumentiert:** "gerade" heißt hier "heute
+aktiv (`Data.days[today]`) UND lebenslang mind. 1 Fehler bzw. Ø-Zeit über
+dem Grenzwert" — die Telemetrie zeitstempelt keinen einzelnen Aufruf, nur
+Tages-Buckets, das ist der ehrlichste Näherungswert, den die Daten
+hergeben. Ein Fehler von vor Monaten macht die Ampel nicht rot, wenn die
+Funktion seither nicht mehr aufgerufen wurde.
+
+8 neue Tests (`TESTS/runtime_analysis_ampel_spec.lua`), Katalog- +
+Doku-Eintrag ergänzt (`lua/ui/statusline/catalog.lua`,
+`docs/modules.md`). `luacheck`/`stylua` clean. Nicht in einem Preset
+verdrahtet (`used_by = {}`), wie die anderen Ideen-Module vor ihrer eigenen
+Verdrahtungsrunde. Details: NOTES.md's neunzehnte Runde.
+
+**Nebenbei entdeckt, nicht selbst gefixt:** `TESTS/github_stats_badge_spec.lua`s
+"renders empty when the tracked repo has zero views"-Test ist
+laufreihenfolge-abhängig — der `views_this_week`-Cache in
+`github_stats_badge/init.lua` ist nur nach Slug geschlüsselt (60s TTL), und
+zwei Tests teilen sich denselben Slug `"StefanBartl/ui.nvim"`, wodurch der
+zweite Test den gecachten Wert (42) statt seines eigenen Mocks (0) sieht.
+Auf `main` reproduziert, unabhängig von dieser Session. Als eigenständige
+Aufgabe geflaggt (Chip), nicht hier mit erledigt.
+
+---
+
+**2026-09-14, neue Session (Worktree `nvim-ui-handover-521045`):**
+`recommender_badge` gebaut — "N Alias-Vorschläge für diese Datei offen"
+für den aktuellen Buffer, ohne `:Recommender` tippen oder den Float öffnen
+zu müssen. Ruft direkt den von `recommender.config.get().analyzer`
+gewählten Analyzer mit dessen eigenem `threshold`/`custom_aliases`/
+`blacklist` auf — dieselbe Quelle, die `:Recommender` selbst benutzt, keine
+separate Config. Ergebnis pro Buffer über `nvim_buf_get_changedtick`
+gecacht. 6 neue Tests, Katalog- + Doku-Eintrag ergänzt, `luacheck`/`stylua`
+über das gesamte Projekt (89 Dateien) clean, volle Suite grün. Nicht in
+einem Preset verdrahtet (`used_by = {}`), wie der Rest der Auswahl vor
+ihrer eigenen Verdrahtungsrunde. Gepusht als `ui.nvim@8ba9ab2`.
 
 ---
 
@@ -125,10 +172,9 @@ wkdbook-myplugins/ui.nvim/NOTES.md`s achtzehnte Runde.
 
 Aus der Statusline-Ideen-Auswahl noch offen, jeweils als eigener
 Umsetzungsschritt:
-- Recommender-Badge — **blockiert auf die Nutzerantwort oben** (Idee passt
-  nicht zur realen Plugin-Funktion)
+- Recommender-Badge — ~~erledigt~~ siehe oben (`recommender_badge`)
 - GitHub-Stats-Ticker — ~~erledigt~~ siehe oben (`github_stats_badge`)
-- Runtime-Analysis-Ampel
+- Runtime-Analysis-Ampel — ~~erledigt~~ siehe oben (`runtime_analysis_ampel`)
 - Casedesk-SLA-Countdown
 - Filetree-Verlaufspunkte
 - Idle-Erweiterung (nach N Sekunden Inaktivität)
