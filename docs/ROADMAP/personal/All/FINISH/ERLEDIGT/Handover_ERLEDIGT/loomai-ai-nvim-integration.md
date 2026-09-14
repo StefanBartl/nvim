@@ -1,5 +1,22 @@
 # loomAI → `ai.nvim`-Provider: was loomAI konkret bräuchte
 
+> **Erledigt (2026-09-14).** Alle Aufgaben A-F sind im Code verifiziert
+> umgesetzt (nicht nur laut Doku angenommen — direkt gegengeprüft):
+> `E:\repos\loomAI\src\main.cpp` hat `GET /health`, `POST /ask`, `POST
+> /ask/stream` (SSE mit `data: {...}`/`[DONE]`, Fehler mitten im Stream als
+> reguläres SSE-Event, nicht als roher Verbindungsabbruch), bindet
+> `127.0.0.1` statt `0.0.0.0` (Aufgabe F), `model` bleibt frei/unvalidiert
+> (Aufgabe E, Option 1). `lua/ai/providers/loomai.lua` implementiert
+> `available()`/`ask()`/`stream()`, ist in `providers/init.lua`s `BUILTIN`
+> und `DEFAULTS.lua`s `provider_order` registriert. Die Design-Frage aus
+> Abschnitt 9 ist entschieden (Option a: `available()` bleibt synchron,
+> kein Netzwerk-Roundtrip). Der `stream()`-Crash-Pfad aus Abschnitt 12
+> (falls `loomai.lua` nur `ask()` hätte) ist gegenstandslos, da `stream()`
+> von Anfang an mitgebaut wurde. Details siehe
+> [ai.nvim.md-Handover](../../../../../handovers/ai/ai.nvim.md), Abschnitt
+> "loomai-Provider umgesetzt". Kein aktiver Tracking-Zustand mehr, nach
+> `ERLEDIGT/` verschoben.
+
 > **Zweck dieser Datei:** eine erschöpfende, konkrete Aufgabenliste — nicht "loomAI
 > braucht einen Ask-Endpoint" in einem Satz, sondern jedes Feld, jeder Endpoint, jede
 > Fehlerform, die `ai.nvim`s Provider-Registry tatsächlich voraussetzt, Zeile für Zeile
