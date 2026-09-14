@@ -981,6 +981,9 @@ plugins.add({
       keys = dap_keys,
       dependencies = {
         "StefanBartl/lib.nvim",
+        -- ui.kit backs breakpoint/validation prompts, moved out of
+        -- lib.nvim.ui.kit in the 2026-09 migration.
+        "StefanBartl/ui.nvim",
         "mfussenegger/nvim-dap",
         "rcarriga/nvim-dap-ui",
         "nvim-neotest/nvim-nio",
