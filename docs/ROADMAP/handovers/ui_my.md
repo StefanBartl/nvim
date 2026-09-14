@@ -365,16 +365,73 @@ herausgelöst, statt den falschen Hinweistext ("Update lib.nvim") einfach
 nur umzubenennen — sonst zeigt `:checkhealth` bei fehlendem `ui.nvim`
 weiterhin auf das falsche Repo.
 
-**Noch offen: 11 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
-pdfport/open/color_my_ascii (3 Dateien), recommender/cmdlog/casedesk
-(2), sessions/hover/github_stats/cascade (1) — die letzte Gruppe sind
-Ein-Datei-Konsumenten, laut Plan bewusst zuletzt.
+---
 
-Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 von 6
-und der `menu`-Toggle sind erledigt, Schritt 5 zu 19/30 (s. o.), noch offen:
-- Schritt 5: die restlichen 11 Konsumenten-Repos
-- Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen (kein `lib.nvim`-Shim
-  gebaut — bewusst übersprungen, direkt mit Schritt 5 weitergemacht)
+**2026-09-14, neue Session (Worktree `nvim-ui-handover-521045`), Schritt 5
+zu Ende gebracht — alle 30/30 Konsumenten-Repos umgestellt:**
+
+Reihenfolge fortgesetzt bis zum Ende: `open.nvim` (3, weich —
+`picker.lua`s `ui.kit.select` + `integrations/menu.lua`s
+`ui.contextmenu`, Testinfra brauchte `add_ui_nvim()` + CI-Checkout, da
+`TESTS/features_spec.lua`s Picker-Test echt treibt), `color_my_ascii.nvim`
+(3, weich, alle vier Aufrufe `pcall`'d, kein Testinfra-Wiring —
+`package.loaded`-Stub-Key umbenannt), `recommender.nvim` (2, **hart** —
+`float/rendering.lua`+`keymaps.lua` beide von `bindings/usrcmds.lua` Top-
+Level gezogen, `require("recommender").setup()` schlägt ohne `ui.nvim`
+fehl, `health.lua` bekam eigenen Error-Check), `cmdlog.nvim` (2, weich,
+aber `TESTS/smoke_spec.lua` require't jedes Modul inkl. `core.shell` →
+Testinfra + CI brauchten `ui.nvim` trotzdem), `casedesk.nvim` (2, **hart,
+wie recommender** — `ui.lua` (3745 Zeilen) Top-Level, `setup()` schlägt
+fehl; zusätzlich `scripts/gen_docs.lua` betroffen, da es selbst
+`setup()` aufruft → auch der `docs`-CI-Job brauchte `ui.nvim`),
+`sessions.nvim` (1, weich, `pcall`'d mit vollem Hand-Rolled-Fallback,
+kein Test berührt das Modul), `hover.nvim` (1, weich in der Produktion,
+aber `TESTS/status_view_spec.lua` asserted echtes Öffnen → Testinfra
+brauchte `ui.nvim` trotzdem), `github_stats.nvim` (3, **am härtesten
+von allen** — `init.lua`s eigenes `M.dashboard = require(...)` zieht
+`ui.contextmenu` schon bei bloßem `require("github_stats")`, vor jedem
+`setup()`), `cascade.nvim` (2, weich, Testinfra + CI ebenfalls
+betroffen wegen `cycle_spec.lua`s echtem Pick-Test).
+
+**Wiederkehrendes Muster über die ganze zweite Hälfte:** ob ein Repo
+"hart" oder "weich" ist, sagt nichts darüber, ob die *Testsuite*
+trotzdem `ui.nvim` auf dem rtp braucht — mehrfach (open/cmdlog/hover/
+cascade) war der Code weich (Fallback vorhanden), aber ein Spec trieb
+`ui.kit`/`ui.contextmenu` echt statt zu stubben, was Testinfra + CI so
+oder so einen `ui.nvim`-Checkout abverlangte. Immer separat geprüft,
+nie angenommen.
+
+**Finaler Nachbesserungs-Durchgang** (per breitem Grep über ALLE 30
+Repos, nicht nur die zuletzt migrierten): vier weitere `doc/*.txt`-
+Vimdoc-Dateien trugen noch alte `lib.nvim.ui.kit`/`.contextmenu`-Prosa,
+die der ursprüngliche mechanische Rename übersehen hatte, weil die
+`docs/*.md`-Quellen zwar korrigiert waren, die separat gepflegten
+Vimdoc-Spiegel aber nicht: `filetree.nvim`, `images.nvim` (dabei auch
+eine Dependency-Zeile korrekt in zwei aufgeteilt — `:Image list` bleibt
+`lib.nvim`, nur `kit.compare` wanderte), `language.nvim`, `replacer.nvim`,
+sowie `diff.nvim` (aus der allerersten Migrationsrunde). **Lehre:
+`doc/*.txt` gehört ab jetzt fest in jeden Prosa-/Blob-Link-Grep, nicht
+nur `docs/*.md`.**
+
+**Schritt 5 damit komplett abgeschlossen.** Jede Runde: eigene Tests,
+`luacheck`/`stylua` clean, Doku aktualisiert, direkt nach `main`
+gepusht, persönliche Installations-Spec nachgezogen wo die Abhängigkeit
+hart wurde (`recommender.nvim`, `casedesk.nvim`, `github_stats.nvim` —
+`nvim-config@87c3f7392`…`7eed8a95d`). Details je Repo:
+`PLAN-ui-kit-migration.md`.
+
+**Außerhalb des ursprünglichen 30-Repo-Scopes entdeckt, nicht
+angefasst:** `ai.nvim` require't `lib.nvim.ui.kit` an sieben Stellen
+(`bindings/actions.lua`, `ui/badge.lua`, `ui/panel.lua`, `health.lua`,
+…) — existierte am 2026-09-08 (Stand der ursprünglichen Zählung) noch
+nicht oder wurde übersehen. Ein 31. Konsument, der denselben Umzug
+braucht — als eigene Aufgabe geflaggt, nicht Teil dieser Runde.
+
+Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 und
+Schritt 5 sind komplett erledigt (30/30). **Noch offen: Schritt 6**
+(`lib.nvim`-Docs + `ALL/`-Analysen nachziehen — kein Shim gebaut, also
+nichts zu löschen) sowie die `ai.nvim`-Migration (außerhalb des
+ursprünglichen Scopes).
 
 **Nebenbei als eigenständige Aufgaben geflaggt (Chips), nicht selbst
 gefixt:**
@@ -388,5 +445,6 @@ gefixt:**
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
 - rules.nvim-Pass über ui.nvim (nachrangig zu my.nvim)
 - Kreuzfeature-Check gegen die ~30 Schwesterplugins
+- `ai.nvim`s ui.kit-Migration (neu entdeckt, s. o.)
 
 ---
