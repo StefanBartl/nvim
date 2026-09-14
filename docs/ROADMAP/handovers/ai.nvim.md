@@ -339,12 +339,23 @@ Multi-Winkel-Review (`/code-review high`) über die gesamte `ai.nvim`-Implementi
   melden (Linux: `code=0, signal=15`; Windows: `code=1, signal=15`, verifiziert). Assertion
   auf `code ~= 0 or signal ~= 0` korrigiert.
 
-Committet + gepusht: `lib.nvim` (`debed20`, `5828428`), `ai.nvim` (`b34f5cc`). Beide
-CIs grün — **außer**: `lib.nvim`s `luacheck`/`stylua`-Jobs sind unabhängig davon
-weiterhin rot (`lua/lib/nvim/telemetry/{init,registry}.lua`, `usercmd/composer/check.lua`
-— alles vorbestehend, nachweislich schon vor dieser Session rot auf jedem der letzten
-5+ Pushes, nicht angefasst, nicht Teil dieses Reviews). Bei Gelegenheit separat
-aufnehmen.
+Committet + gepusht: `lib.nvim` (`debed20`, `5828428`), `ai.nvim` (`b34f5cc`).
+
+**Nachtrag (gleicher Tag):** `lib.nvim`s `luacheck`/`stylua`-CI-Jobs waren unabhängig
+von diesem Review auf jedem der letzten 5+ Pushes rot (nachweislich schon vor dieser
+Session, nicht durch `ai.nvim`-Arbeit verursacht) — auf Nachfrage mit erledigt:
+- `luacheck`: `telemetry/init.lua`s `add_target()` shadowte `M.new()`s `opts`-Upvalue
+  — umbenannt zu `wrap_opts` (matcht seinen tatsächlichen Typ/jede andere Referenz).
+- `stylua`: `telemetry/registry.lua` + `usercmd/composer/check.lua` neu formatiert,
+  reine Formatierung, keine Logikänderung (per Diff verifiziert).
+- Lokaler `stylua --check .` über das ganze Repo zeigte danach noch weitere Dateien
+  (z. B. `cross/open_default/init.lua`) als komplett umgeschrieben — verifiziert als
+  reines Windows-Working-Tree-Artefakt (physisches CRLF trotz `eol=lf` in
+  `.gitattributes`, `git ls-files --eol` zeigt `i/lf w/crlf`), kein echtes
+  Formatierungsproblem; ein frischer Linux-Checkout (wie auf CI) reproduziert das
+  nicht. Unangetastet gelassen.
+- Committet + gepusht: `750d5e4`. **`lib.nvim`-CI jetzt komplett grün**, inkl.
+  `publish-ci-verified`-Branch (läuft nur, wenn alle drei Jobs grün sind).
 
 Test-Stand danach: `ai.nvim` 21/21 (2 neue Regressions-Tests für den `resolve()`-Guard),
 `lib.nvim` volle Suite grün (`LIB_TESTS_OK`), inkl. 2 neuer Tests für
@@ -354,15 +365,19 @@ Test-Stand danach: `ai.nvim` 21/21 (2 neue Regressions-Tests für den `resolve()
 
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
-Phasen 0-8 sind erledigt: `ai.nvim`/`lib.nvim` committet + gepusht (`5364c02` in
-`lib.nvim`; `b77d014`, `f2ebe38`, `b2608f0` in `ai.nvim`), CI grün, Wiring in nvim-config
-committet (`e310c4b38`, `01b3eb17b`) und gepusht, `doc/ai.txt` nachgetragen. Offen:
+Phasen 0-8 erledigt, Code-Review durchgelaufen (9/10 Findings gefixt), `lib.nvim`-CI
+komplett grün (inkl. `publish-ci-verified`), `ai.nvim`-CI grün, `doc/ai.txt`
+nachgetragen. Alle Repos (`ai.nvim`, `lib.nvim`, `nvim`-Config, `WKDBooks`) committet
+und gepusht, synchron mit `origin/main`. Offen:
 
-1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`), um v1 vor einem Tag zu validieren.
-2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release.
+1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`), um v1 vor einem Tag zu validieren
+   — der einzige noch offene Schritt, der sich nicht durch eine Sitzung ersetzen lässt.
+2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release, danach.
 3. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration, `loomai`-Provider
    sobald verfügbar (Trigger-Check bei jeder Wiederaufnahme, s.o.).
-4. Diese Datei laufend als Statusprotokoll fortschreiben.
+4. `ui/panel.lua`s Voll-Buffer-`set_lines()` pro Stream-Chunk (Review-Finding, bewusst
+   nicht gefixt) — nur angehen, falls in der Praxis spürbar.
+5. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
 
