@@ -31,6 +31,7 @@
     - [Runde 9 (2026-09-14): Familie `CMT` (16 Regeln)](#runde-9-2026-09-14-familie-cmt-16-regeln)
     - [Runde 10 (2026-09-14): Familie `SEC` (29 Regeln)](#runde-10-2026-09-14-familie-sec-29-regeln)
     - [Runde 11 (2026-09-15): Familie `PRIN` (37 Regeln)](#runde-11-2026-09-15-familie-prin-37-regeln)
+    - [Runde 12 (2026-09-15): Familie `PERF` (64 Regeln) — Abschluss Teil 2](#runde-12-2026-09-15-familie-perf-64-regeln-abschluss-teil-2)
 
 ---
 
@@ -508,7 +509,7 @@ Handover-Akte in `handovers/rules/`, nicht in `reports/`).
 | `CMT` | 16 | ✅ Runde 9 fertig, 3 Fixes committet (`37fedc1`) |
 | `SEC` | 29 | ✅ Runde 10 fertig, 1 Fix committet (`834c343`) |
 | `PRIN` | 37 | ✅ Runde 11 fertig, 2 Fixes committet (`cbfc489`) |
-| `PERF` | 64 | offen |
+| `PERF` | 64 | ✅ Runde 12 fertig, 8 Fixes + 2 Regressionstests committet (`54fa010`) — **Teil 2 komplett** |
 
 ---
 
@@ -801,6 +802,92 @@ Alles andere in `PRIN` sauber bzw. mangels Angriffsfläche moot (keine
 durchgängig explizit benannt und mit Invalidierungspfad — bereits in
 Runde 2 vertieft geprüft, jede der 93 Dateien mit Kopf-Kommentar,
 `@types`-Auslagerung durchgängig genutzt).
+
+---
+
+## Runde 12 (2026-09-15): Familie `PERF` (64 Regeln) — Abschluss Teil 2
+
+Letzte offene Familie, damit ist die volle 277(281)-Regel-Ermessens-Review
+(Teil 2) **komplett**. Ein `Explore`-Subagent hat alle 64 `PERF`-IDs gegen
+`PERFORMANCE.md` geprüft — mit explizitem Fokus auf den heißen Render-Pfad
+(Statusline/Tabline laufen bei jedem Redraw, potenziell mehrfach pro
+Sekunde beim Scrollen/Tippen), statt wie bei einigen `PRIN`-Regeln
+vorschnell auf "keine Angriffsfläche" zu schließen.
+
+Acht echte Funde, alle gefixt (2 neue Regressionstests), luacheck/stylua
+grün, volle Testsuite grün, committet + auf `main` gepusht (`54fa010`):
+
+- **`statusline/utils/idle.lua`** (🔴 PERF-93/85, ungeschützter Redraw auf
+  Hot-Event): der "wieder aktiv"-Autocmd (`CursorMoved`/`CursorMovedI`/
+  `InsertEnter`/`ModeChanged`) schrieb `is_idle_state` und rief
+  `vim.cmd("redrawstatus")` **unbedingt** bei jedem einzelnen dieser
+  Events — nicht nur beim tatsächlichen Idle→Aktiv-Übergang. Jeder
+  einzelne Cursorschritt (gehaltene Bewegungstaste, Scrollen) löste einen
+  vollen synchronen Statusline-Redraw aus, nur um ein unverändertes
+  Boolean erneut zu bestätigen. Fix: beide Handler (auch der
+  `CursorHold`-Idle-Handler symmetrisch) schreiben/redrawen nur noch bei
+  echtem Zustandswechsel. Zwei neue Tests in `TESTS/idle_spec.lua`
+  zählen `redrawstatus`-Aufrufe direkt (0 bei wiederholtem
+  gleich-bleibendem Event, genau 2 bei einem vollen Idle↔Aktiv-Zyklus).
+- **`statusline/cursor_ctl/renderer.lua`** (🟡 PERF-25): `pct_bar()` baute
+  das 8-Glyphen-Array bei jedem Aufruf neu — aufgerufen aus dem
+  `row_progress`-Default-Cursor-Modus in praktisch jedem Preset. Fix: auf
+  Modulkonstante `PCT_BARS` gehoben.
+- **`config/statusline/blocks.lua`** (🟡 PERF-25): `get_gen_block()` gab
+  bei jedem `"mode"`/`"cursor"`-Redraw einen frischen Closure zurück,
+  obwohl er nur von der konstanten `SEPARATOR_STYLE` abhängt. Fix:
+  Closure wird beim ersten Aufruf gebaut und danach gecacht.
+- **`statusline/modules/lsp/init.lua`** (🟡 PERF-25): beide
+  Breadcrumb-Renderer bauten pro Redraw eine sofort aufgerufene IIFE
+  (inkl. 3 redundanter Hex-Decode-Aufrufe) um ein Trennzeichen zu
+  bestimmen, das bis auf den `vim.o.columns`-Breiten-Check konstant ist.
+  Fix: Glyph-Auflösung einmalig beim Modul-Load, nur der Breiten-Check
+  bleibt pro Aufruf.
+- **`statusline/modules/lsp/symbols/treesitter.lua`** (🟡 PERF-25): der
+  Treesitter-Fallback-Pfad (greift, solange noch keine LSP-Doc-Symbols da
+  sind — läuft also mit auf dem heißen Render-Pfad) baute eine
+  35-Einträge-Node-Type-Tabelle, eine 7-Einträge-Identifier-Type-Tabelle
+  und 3 Closures bei jedem Aufruf neu. Fix: alle auf Modulebene gehoben.
+- **`statusline/modules/lsp/symbols/document_symbols.lua`** (🟡 PERF-25):
+  die beiden Outline-Walk-Closures wurden pro Aufruf neu gebaut (fingen
+  ein `keep_kinds`-Local ein, das immer dieselbe Modulkonstante war) und
+  nutzten `vim.deepcopy()` pro getroffenem Vorfahren-Symbol — kopierte
+  damit rekursiv den kompletten `children`-Teilbaum jedes Symbols nur um
+  ein Ahnen-Pfad-Array zu erweitern. Fix: beide Walker auf Modulebene
+  gehoben, `deepcopy` durch eine flache Array-Kopie ersetzt (nur
+  unabhängige Referenzen nötig, keine geklonten Symboldaten).
+
+Bewusst **nicht** verändert:
+
+- **PERF-64 (`kit/picker.lua`, `kit/live_input.lua`, `kit/compare.lua`)**:
+  alle drei rollen denselben Debounce-Timer von Hand statt das
+  vorhandene `lib.nvim.debounce` zu nutzen — jeder für sich korrekt
+  (sauberes `:stop()`+`close()` vor Neuvergabe, `vim.schedule_wrap`),
+  also eine echte, aber rein architektonische Duplikation, kein Bug. Ein
+  Umbau auf eine gemeinsame Abstraktion über 3 Dateien hinweg (eine davon
+  erst in Runde 1 an genau dieser Timer-Stelle gefixt) wäre ein
+  eigenständiger, riskanterer Refactor — nicht in dieser Runde.
+
+Alles andere in `PERF` sauber bzw. mangels Angriffsfläche moot: die
+Hot-Loop-Mikromuster (`t[#t+1]=v`+`table.concat` statt `table.insert`/`..`
+in Statusline-/Tabline-Renderloops, PERF-01–09) waren bereits sauber; kein
+Coroutine-/Weak-Table-/Tabellenpool-Code (PERF-10–16); keine
+Bulk-Datensätze/Numerik-Loops in dieser Größenordnung (PERF-20–27);
+Caching (PERF-40–53) bereits in Runde 2/11 vertieft geprüft; alle
+Timer-Callbacks korrekt `vim.schedule`/`vim.schedule_wrap`-abgesichert für
+Fast-Event-Kontexte (PERF-80, inkl. `winbar/init.lua` erneut bestätigt);
+kein Datei-Scan/Queue-/Chunking-Code in `ui.nvim` (PERF-70–74, 87–91); Caps
+korrekt gesetzt wo nötig (PERF-86, `filetree_cwd_mode`-Historie,
+`screenkey`-Max-Entries); keine Geometrie-Berechnung auf Modulebene
+eingefroren (PERF-92, alle `vim.o.columns`/`vim.o.lines`-Zugriffe laufen
+innerhalb von Open-Time-Funktionen).
+
+**Damit ist die volle 277(281)-Regel-Ermessens-Review (Teil 2, alle 7
+Familien `ERR`/`LUA`/`UI`/`CMT`/`SEC`/`PRIN`/`PERF`) abgeschlossen.**
+Gesamtbilanz Teil 2: 7 Runden, ~24 echte Funde, alle gefixt oder bewusst
+mit Begründung stehen gelassen, luacheck/stylua durchgehend grün, volle
+Testsuite nach jeder Runde grün, jede Runde einzeln committet und direkt
+auf `main` gepusht.
 
 ---
 
