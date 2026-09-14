@@ -532,7 +532,9 @@ plugins.add({
   {
     "StefanBartl/sandbox.nvim",
     event = "VeryLazy",
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.contextmenu/ui.kit (right-click menu, kit.input() prompts) moved
+    -- out of lib.nvim.ui.kit/lib.nvim.contextmenu in the 2026-09 migration.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {
       -- `image pull`/`push` and the devcontainer build report into the shared
       -- lib.nvim.progress registry, rendered by the statusline's
