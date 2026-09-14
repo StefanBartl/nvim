@@ -222,7 +222,7 @@ risikoarm — gleich gefixt (luacheck/stylua-grün, Commit direkt auf `main`).
 | --- | --- |
 | `lua/ui/kit/` (20 Dateien, geteiltes Toolkit) + `lua/ui/contextmenu/` | ✅ Runde 1 fertig, 3 Fixes committet (`5a1f510`) |
 | `lua/ui/statusline/` (Module, Renderer) | ✅ Runde 2 fertig, 4 Fixes committet (`97953f5`) |
-| `lua/ui/tabline/`, `lua/ui/bindings/` | offen |
+| `lua/ui/tabline/`, `lua/ui/bindings/` | ✅ Runde 3 fertig, 4 Fixes + 2 Regressionstests committet (`c2da007`) |
 | `lua/ui/config/`, `lua/ui/highlights/`, `lua/ui/@types/` | offen |
 | Rest (`init.lua`, `health.lua`) | offen |
 
@@ -301,4 +301,48 @@ committet + auf `main` gepusht (`97953f5`):
 
 Keine Funde zu globalem State, Shell-String-Interpolation, veralteten APIs
 oder `pcall(f(args))`-Antipattern in diesem Bereich.
+
+## Runde 3 (2026-09-14): `ui/tabline/` + `ui/bindings/`
+
+Gezielt nach Geschwistern des Bugtyps gesucht, den der letzte Commit
+(`f59e918`) schon einmal gefixt hat (Klick-Handler/Batch-Operation gegen
+einen zwischenzeitlich ungültig gewordenen Buffer/ein falsches Fenster).
+Fündig geworden — vier echte Funde, zwei davon 🔴, alle gefixt, luacheck/
+stylua grün, volle Testsuite grün (inkl. 2 neuer Regressionstests),
+committet + auf `main` gepusht (`c2da007`):
+
+- **`ui/tabline/utils.lua` `M.goto_buf`** (🔴 Kriterium 1+3, echtes Sibling
+  von `f59e918`): rief `state.goto_buf(bufnr)` ohne `pcall` auf — anders
+  als der Schwester-Pfad `close_buffer`, der genau dafür schon gehärtet
+  ist (Kommentar erklärt das explizit). Ein Tabline-Klick auf einen Chip,
+  dessen Buffer zwischen Render und Klick-Verarbeitung bereits geschlossen
+  wurde, warf einen ungefangenen Fehler mitten aus dem Klick-Handler. Fix:
+  `pcall` + `notify.warn`, gleiches Muster wie `close_buffer`.
+- **`tabufline/state.lua` `M.close_buffer`** (🔴 Kriterium 3, Float-Erkennung
+  prüfte das falsche Fenster): die Floating-Window-Erkennung fragte
+  `nvim_win_get_config(0)` — das *aktuelle* Fenster, nicht das Fenster, das
+  `bufnr` tatsächlich zeigt. Bei einem expliziten `bufnr` (`close_all_bufs`,
+  `close_n_buffers`) kann das aktuelle Fenster ein völlig unabhängiges
+  Float sein (LSP-Hover, Theme-Picker) — `vim.cmd("bw")` hätte dann dessen
+  Buffer weggewiped statt den eigentlichen `bufnr`. Fix: `vim.fn.bufwinid
+  (bufnr)` löst das richtige Fenster auf, `nvim_win_close` schließt gezielt
+  dieses Fenster.
+- **`tabufline/state.lua` `M.close_all_bufs`** (🟡 Kriterium 1,
+  Fehlergrenze): die Schleife über alle Buffer hatte keinen
+  Per-Iteration-`pcall` — ein fehlschlagender Buffer brach den ganzen
+  "close all"-Batch ab, der Rest blieb unbemerkt offen. Fix: `pcall` pro
+  Iteration, bewusst ohne `notify` in diesem Low-Level-Modul (Anti-Pattern
+  `ERR-04`) — der Batch-Aufrufer (`ui.tabline.utils`) notifiziert bereits
+  auf Gesamtfehler.
+- **`bindings/keymaps/init.lua`** (🟡 Kriterium 9, Kommentar-Drift): "eight
+  actions" im Kommentar, tatsächlich neun registriert (`theme_picker` kam
+  offenbar nach dem letzten Update dazu). Fix: Zahl korrigiert.
+
+Zwei neue Regressionstests in `TESTS/bugfix_regressions_spec.lua`
+(`goto_buf`- und Float-Fenster-Fix), im etablierten "bug: ..."-Stil dieser
+Datei.
+
+Keine Funde zu globalem State, Shell-Strings, veralteten APIs oder
+`pcall(f(args))` in diesem Bereich; der restliche Code (Renderer,
+Highlights, Styles, Usercmd-Dispatcher) sauber.
 
