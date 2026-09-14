@@ -247,6 +247,23 @@ Ende-zu-Ende gegen ein echtes headless Neovim verifiziert (Default an,
 `luacheck`/`stylua` clean (126 Dateien). `PLAN-ui-kit-migration.md`
 entsprechend fortgeschrieben (§2, §5). Gepusht als `ui.nvim@9acf77d`.
 
+**2026-09-14, parallel dazu (Worktree `nvim-ui-handover-521045`):
+Tabline-Bug behoben — erster Buffer-Chip verlor Icon + Namensanfang.**
+
+Per Screenshot gemeldet. Root Cause messbar gefunden (kein Terminal-Font-
+Raten): `ui.tabline.utils.style_buf()`s Padding konnte bei schmalen
+`bufwidth`-Werten (viele offene Buffer) auf einen Sicherheits-Floor
+zurückfallen, der 1-2 Spalten mehr rendert als angefordert — der
+summierte Overflow über alle Chips ist das, was Neovims eigene Tabline-
+Kürzung dann vom linken Rand abschneidet. Fix: Icon- und Close-Button-
+Breite real gemessen statt angenommen, Name aufs übrige Budget
+zugeschnitten. Headless gegen `nvim_eval_statusline` verifiziert (Sweep +
+Ende-zu-Ende mit 7 Buffern bei mehreren Terminalbreiten) — Tabline trifft
+jetzt exakt `vim.o.columns`, nie mehr darüber. Beim Push mit der obigen
+Session kollidiert (unterschiedliche Dateien, sauber rebased). Volle
+Suite grün, `luacheck`/`stylua` clean. Details: `NOTES.md`. Gepusht als
+`ui.nvim@4bffa02`.
+
 ---
 
 ## Offene Tasks
