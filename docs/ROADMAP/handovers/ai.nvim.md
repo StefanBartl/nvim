@@ -28,7 +28,10 @@
     - [Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release](#phase-10-gatesreleasemd-vor-einem-ersten-tagrelease)
   - [Code-Review + Fixes (2026-09-14, nach Phase 8)](#code-review-fixes-2026-09-14-nach-phase-8)
   - [loomai-Provider umgesetzt (2026-09-14, Folgesession)](#loomai-provider-umgesetzt-2026-09-14-folgesession)
-  - [loomAI: ModelRouter für klassische Provider (OpenAI/Anthropic/Open Source) — Scoping (2026-09-14)](#loomai-modelrouter-fr-klassische-provider-openaianthropicopen-source--scoping-2026-09-14)
+  - [loomAI: ModelRouter für klassische Provider (OpenAI/Anthropic/Open Source) — Scoping (2026-09-14)](#loomai-modelrouter-fr-klassische-provider-openaianthropicopen-source-scoping-2026-09-14)
+    - [Ist-Stand (verifiziert, 2026-09-14, Code direkt gelesen, nicht angenommen)](#ist-stand-verifiziert-2026-09-14-code-direkt-gelesen-nicht-angenommen)
+    - [Was konkret zu bauen ist](#was-konkret-zu-bauen-ist)
+    - [Offene Fragen für die Fortsetzungs-Session](#offene-fragen-fr-die-fortsetzungs-session)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
 
 ---
@@ -59,6 +62,7 @@
 | Transport-Erweiterung | `E:\repos\lib.nvim\lua\lib\nvim\net\curl` |
 | loomAI (nativ, Referenz für späteren Provider) | `E:\repos\loomAI` |
 | Regelwerk für neue Projekte | `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
+| report was loom ai braucht für ai.nvim | C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports\loomai-ai-nvim-integration.md |
 
 ---
 
@@ -483,6 +487,8 @@ aktuell ausschließlich Ollama. Dieser Abschnitt hält den vollständigen
 Rechercheergebnis- und Planungsstand fest, damit bei einer Sitzungsunterbrechung
 (Nutzungslimit) nichts verloren geht.
 
+---
+
 ### Ist-Stand (verifiziert, 2026-09-14, Code direkt gelesen, nicht angenommen)
 
 - `E:\repos\loomAI\src\main.cpp`: `/ask`-Handler (ca. Zeile 161) und
@@ -501,6 +507,8 @@ Rechercheergebnis- und Planungsstand fest, damit bei einer Sitzungsunterbrechung
   timeout_ms}`, Response `{text, provider, stop_reason, usage}`, Fehler
   `{"error":{"message":...}}`. Jede Änderung hier muss entweder
   rückwärtskompatibel bleiben oder `ai.nvim` mit angepasst werden.
+
+---
 
 ### Was konkret zu bauen ist
 
@@ -566,6 +574,8 @@ Rechercheergebnis- und Planungsstand fest, damit bei einer Sitzungsunterbrechung
      "Anthropic API Client" von `[ ]` auf `[x]`, "Model Router" ggf. auf
      `[x]` falls Option (a) als einfache Präfix-Heuristik zählt (Judgment
      Call bei Umsetzung).
+
+---
 
 ### Offene Fragen für die Fortsetzungs-Session
 
