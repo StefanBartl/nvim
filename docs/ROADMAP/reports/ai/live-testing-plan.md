@@ -22,6 +22,7 @@
   - [8. loomAI-Dashboard (Browser)](#8-loomai-dashboard-browser)
   - [9. Cloud-LLM-Breite: was geht heute, was fehlt](#9-cloud-llm-breite-was-geht-heute-was-fehlt)
   - [10. Bekannte, nicht-blockierende Eigenheiten](#10-bekannte-nicht-blockierende-eigenheiten)
+  - [11. Inline Completion (Ghost Text) testen](#11-inline-completion-ghost-text-testen)
   - [Checkliste zum Abhaken](#checkliste-zum-abhaken)
 
 ---
@@ -283,6 +284,70 @@ verwirren lassen:
 
 ---
 
+## 11. Inline Completion (Ghost Text) testen
+
+**Neu (2026-09-14), noch nie live/manuell getestet** — nur headless gegen
+einen Fake-Provider verifiziert (siehe Handover, Folgesession 11). Alles
+unten ist der erste echte Durchlauf gegen einen echten Provider und eine
+echte Tipp-Session, nicht nur simuliert.
+
+Voraussetzung: `plugins/personal/init.lua`s `ai.nvim`-Spec lädt jetzt über
+`event = "InsertEnter"` (nicht mehr nur `cmd`/`keys`) und setzt
+`opts.completion = { enable = true, trigger = "manual" }` — nach dem
+Update einmal Neovim neu starten, damit die neue Lazy-Spec zieht.
+
+1. **Grundfunktion (manueller Trigger):** eine echte Code-Datei öffnen
+   (z. B. eine Lua-Datei mit einer halbfertigen Funktion), Cursor mitten in
+   eine unvollständige Zeile setzen, Insert-Mode, `<C-\><C-a>` drücken.
+   Erwartet: nach kurzer Zeit erscheint gedimmter "Ghost"-Text am Cursor
+   (Comment-Highlight-Farbe).
+2. **Accept:** `<Tab>` drücken → Vorschlag wird als echter Text eingefügt,
+   Ghost-Text verschwindet, Cursor landet am Ende des eingefügten Texts.
+3. **Dismiss:** erneut triggern, dann `<C-]>` → Ghost-Text verschwindet
+   **ohne** Texteinfügung, Buffer unverändert.
+4. **Tippen verwirft eine gezeigte Suggestion:** erneut triggern, dann
+   irgendeinen Buchstaben tippen, bevor `<Tab>`/`<C-]>` gedrückt wird →
+   Ghost-Text muss sofort verschwinden (er passt nicht mehr zum jetzigen
+   Cursor/Text).
+5. **Zusammenspiel mit dem Completion-Menü (nvim-cmp/blink.cmp):** eine
+   Situation herbeiführen, in der das normale Completion-Menü offen ist
+   (z. B. LSP-Vervollständigung antriggern), dann `<Tab>` drücken →
+   erwartet: navigiert im Menü wie gewohnt, greift **nicht** in die
+   Ghost-Text-Logik ein (`pumvisible()`-Guard, s. Handover). Falls stattdessen
+   eine Ghost-Text-Suggestion "gewinnt" oder das Menü sich falsch verhält,
+   ist das ein echter Bug.
+6. **Provider-Wechsel:** `completion.provider` testweise auf `"ollama"`
+   setzen (lokal, kostenlos) und auf `"claude"`/`"openai"`/`"gemini"`
+   (falls Keys gesetzt) — Qualität/Latenz der Vorschläge je Provider/Modell
+   beobachten und notieren. **Wichtig zu wissen:** das ist kein echter
+   Fill-in-the-Middle-Call, sondern ein Chat-Prompt, der FIM simuliert
+   (s. `docs/architecture.md` im ai.nvim-Repo) — Qualität kann je nach
+   Modell schwanken oder Vorschläge können unbrauchbar sein, das ist kein
+   Implementierungsfehler per se, aber notieren, wenn es *durchgehend*
+   schlecht ist (dann ggf. Prompt-Tuning als Follow-up).
+7. **Auto-Modus (bewusst kostenintensiver, ausprobieren, aber wissend):**
+   `opts.completion.trigger = "auto"` testweise setzen (idealerweise mit
+   `completion.provider = "ollama"`, um keine Cloud-Kosten zu riskieren),
+   Neovim neu starten, in eine Datei tippen, kurz pausieren → Vorschlag
+   sollte nach `idle_ms` (Default 500) automatisch erscheinen, ohne
+   `<C-\><C-a>` zu drücken. Danach **zurück auf `"manual"` stellen**, nicht
+   dauerhaft aktiviert lassen, bis das Kostenrisiko bei Cloud-Providern klar
+   ist.
+8. **`:checkhealth ai`:** neue Sektion "completion" prüfen — zeigt
+   `trigger`/`provider` korrekt, warnt (gelb) falls `trigger = "auto"` mit
+   einem Cloud-Provider kombiniert ist.
+9. **Größere/mehrzeilige Vorschläge:** einen Kontext bauen, der eine
+   mehrzeilige Vervollständigung wahrscheinlich macht (z. B. Cursor direkt
+   nach einer Funktionssignatur), triggern → prüfen, ob der Ghost-Text über
+   mehrere Zeilen sauber angezeigt wird (`virt_lines`), nicht nur die erste
+   Zeile.
+10. **Deaktivieren testen:** `opts.completion.enable = false` setzen, neu
+    starten → `<C-\><C-a>`/`<Tab>`/`<C-]>` sollten **keine**
+    Completion-Wirkung mehr haben (Tab macht wieder, was es ohne ai.nvim
+    täte), `:checkhealth ai` zeigt "disabled".
+
+---
+
 ## Checkliste zum Abhaken
 
 - [ ] `ANTHROPIC_API_KEY` gesetzt
@@ -300,3 +365,14 @@ verwirren lassen:
 - [ ] Notiert, welche der "bekannten Eigenheiten" (Abschnitt 10) in der
       Praxis tatsächlich störend auffallen (Grundlage für Priorisierung
       der Follow-up-Tasks)
+- [ ] Completion: manueller Trigger zeigt Ghost-Text ✅
+- [ ] Completion: `<Tab>` akzeptiert korrekt (Text + Cursor-Position) ✅
+- [ ] Completion: `<C-]>` verwirft ohne Texteinfügung ✅
+- [ ] Completion: Tippen verwirft eine gezeigte Suggestion automatisch ✅
+- [ ] Completion: `<Tab>` mit offenem Completion-Menü navigiert das Menü,
+      greift nicht in Ghost-Text ein ✅
+- [ ] Completion: mind. 2 verschiedene Provider ausprobiert, Qualität notiert
+- [ ] Completion: `trigger = "auto"` einmal ausprobiert (idealerweise gegen
+      `ollama`), danach zurück auf `"manual"` gestellt
+- [ ] Completion: `:checkhealth ai` zeigt die neue Sektion korrekt
+- [ ] Completion: `enable = false` deaktiviert die Feature tatsächlich vollständig
