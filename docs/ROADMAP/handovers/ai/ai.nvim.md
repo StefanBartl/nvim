@@ -35,6 +35,8 @@
   - [Design-Entscheidungen, Gemini, rules.nvim, Live-Testing-Plan (2026-09-14, Folgesession 4)](#design-entscheidungen-gemini-rulesnvim-live-testing-plan-2026-09-14-folgesession-4)
   - [Teil A umgesetzt: loomAI-ModelRouter (2026-09-14, Folgesession 5)](#teil-a-umgesetzt-loomai-modelrouter-2026-09-14-folgesession-5)
   - [Teil B umgesetzt: loomAI-Dashboard Ask/Chat-Testpanel (2026-09-14, Folgesession 6)](#teil-b-umgesetzt-loomai-dashboard-askchat-testpanel-2026-09-14-folgesession-6)
+  - [Gemini-Sicherheits-/Korrektheitsfixes (2026-09-14, Folgesession 7)](#gemini-sicherheits-korrektheitsfixes-2026-09-14-folgesession-7)
+  - [loomai-ai-nvim-integration.md verifiziert & archiviert (2026-09-14, Folgesession 8)](#loomai-ai-nvim-integrationmd-verifiziert--archiviert-2026-09-14-folgesession-8)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
 
 ---
@@ -65,7 +67,7 @@
 | Transport-Erweiterung | `E:\repos\lib.nvim\lua\lib\nvim\net\curl` |
 | loomAI (nativ, Referenz für späteren Provider) | `E:\repos\loomAI` |
 | Regelwerk für neue Projekte | `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
-| report was loom ai braucht für ai.nvim | C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/handovers/ai/loomai-ai-nvim-integration.md |
+| report was loom ai braucht für ai.nvim (erledigt, archiviert 2026-09-14) | `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/Handover_ERLEDIGT/loomai-ai-nvim-integration.md` |
 
 ---
 
@@ -124,11 +126,14 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
 **Gewählt (wie im Konzept): Option 2 — `ai.nvim` jetzt bauen, loomAI später als vierter Provider.**
 
 **Detaillierte Aufgabenliste für loomAI selbst (was dort konkret fehlt, Endpoint für
-Endpoint, Feld für Feld):** [reports/loomai-ai-nvim-integration.md](../reports/loomai-ai-nvim-integration.md)
-(2026-09-14). Enthält auch eine bisher unentdeckte Design-Frage (`available()`s
-"muss synchron sein"-Vertrag vs. der hier unten genannte Netzwerk-Health-Check —
-echter Widerspruch, siehe Abschnitt 9 dort) und einen echten Crash-Pfad, falls
-`stream()` fehlt (`ai/init.lua:150`, ungeguarded).
+Endpoint, Feld für Feld):** [loomai-ai-nvim-integration.md](../../personal/All/FINISH/ERLEDIGT/Handover_ERLEDIGT/loomai-ai-nvim-integration.md)
+(2026-09-14, **erledigt und archiviert 2026-09-14** — alle Aufgaben A-F verifiziert
+umgesetzt, s. u. "loomai-Provider umgesetzt"). Enthielt auch eine bisher unentdeckte
+Design-Frage (`available()`s "muss synchron sein"-Vertrag vs. der hier unten genannte
+Netzwerk-Health-Check — echter Widerspruch, siehe Abschnitt 9 dort) und einen echten
+Crash-Pfad, falls `stream()` fehlt (`ai/init.lua:150`, ungeguarded) — beides
+gegenstandslos, da `loomai.lua` von Anfang an sowohl `available()` (Option a) als
+auch `stream()` mitgebaut hat.
 
 - Der `Ai.Provider`-Vertrag (`id`, `available()`, `ask()`, `stream()`, `capabilities`) ist
   so geschnitten, dass ein `loomai`-Provider **nur** eine neue Registry-Datei ist
@@ -399,7 +404,8 @@ Test-Stand danach: `ai.nvim` 21/21 (2 neue Regressions-Tests für den `resolve()
 Der in [Phase 9](#phase-9-follow-up-entkoppelt-von-v1-nicht-blockierend) genannte
 Trigger ist eingetreten: loomAI hat jetzt `/ask`+`/ask/stream`. In derselben
 Sitzung beide Seiten umgesetzt, ausgehend vom detaillierten Report
-[reports/loomai-ai-nvim-integration.md](../reports/loomai-ai-nvim-integration.md).
+[loomai-ai-nvim-integration.md](../../personal/All/FINISH/ERLEDIGT/Handover_ERLEDIGT/loomai-ai-nvim-integration.md)
+(erledigt, archiviert 2026-09-14).
 
 **loomAI-seitig** (`E:\repos\loomAI`, `src/main.cpp`, `src/ollama_client.hpp/.cpp`):
 Aufgabe A-D aus dem Report umgesetzt — `GET /health`, `POST /ask`, `POST
@@ -878,6 +884,113 @@ Lokaler Checkout `E:\repos\loomAI` per `git pull --ff-only` synchronisiert.
 
 ---
 
+## Gemini-Sicherheits-/Korrektheitsfixes (2026-09-14, Folgesession 7)
+
+Nutzer-gemeldete Bugliste gegen `ai.nvim`s `gemini.lua` und loomAIs
+`gemini_client.cpp` (beide implementieren dieselbe API, gleiche Bugklasse
+doppelt) — 6 Punkte, nach Priorität abgearbeitet:
+
+- 🔴 **Correctness, gefixt (beide Dateien)**: Gemini meldet einen
+  Safety-/Policy-Block als normale `200`-Antwort mit `promptFeedback.
+  blockReason` und ganz ohne `candidates` — `ok=true`/`200` mit leerem Text
+  statt eines Fehlers, exakt die "stiller leerer Erfolg statt Fehler"-
+  Bugklasse, die dieses Projekt beheben soll. Neuer
+  `prompt_block_reason()`-Helper (Lua und C++, identische Logik) erkennt das
+  jetzt in `ask`/`stream` (inkl. der Non-SSE-Fehlerkörper-Recovery). Für
+  `gemini.lua`s `M.stream()` zusätzlich ein `failed`-Flag ergänzt, damit
+  `on_done` nach einem mittendrin gemeldeten `on_error` nicht zusätzlich mit
+  einer leeren "Erfolgs"-Antwort feuert.
+- 🔴 **Security, gefixt (beide Dateien)**: `model` landet ungeprüft in der
+  Request-URL (`/v1beta/models/<model>:generateContent`) — anders als
+  Claude/OpenAI, die `model` sicher im JSON-Body verschicken. `cpp-httplib`
+  escaped `\r`/`\n`, aber nicht `/` — ein präpariertes `model` hätte den
+  authentifizierten Request auf einen beliebigen Pfad bei Google umlenken
+  können. Fix: Allowlist-Check (`^[%w%.%-_]+$` bzw. alnum+`.`/`-`/`_` in
+  C++) vor jeder URL-Interpolation, in `ask`/`stream` bzw. `ask`/`ask_stream`.
+- 🟡 **`gemini_client.cpp`, gefixt**: `usage`-Felder wurden ohne den
+  gleichen Schutz wie `error_text()` geparst — ein `null`/nicht-numerischer
+  Wert hätte eine ungefangene `json::type_error` ausgelöst. Neuer
+  `json_long_or()`-Helper, defensiv wie `error_text()`.
+- 🟡 **`gemini_client.cpp`, gefixt**: kein Limit für den internen
+  Zeilen-Puffer beim Streaming — eine Antwort ohne Zeilenumbruch hätte ihn
+  unbegrenzt wachsen lassen. Jetzt bei 1 MiB gedeckelt, bricht mit sauberer
+  Fehlermeldung ab statt endlos zu wachsen.
+- 🟡 **`dashboard/index.html`, gefixt**: `scrollTop`+`textContent+=` bei
+  jedem einzelnen Stream-Token erzwang ein Reflow pro Token (gleiche Klasse
+  wie das bereits zurückgestellte `ui/panel.lua`-Finding, aber hier ein
+  anderes, eigenständig fixbares File). Deltas werden jetzt in
+  `pendingOutput` gesammelt und einmal pro Animation-Frame geflusht
+  (`requestAnimationFrame`), plus ein finaler Flush in `finally`, damit
+  beim Abbruch/Fehler/Ende nichts verloren geht.
+- ⚪ **Bewusst nicht gefixt**: neue TCP+TLS-Verbindung pro Cloud-Request
+  (verschärfte Variante des bereits bekannten, bewusst zurückgestellten
+  Ollama-Poolings-Problems, s. u. "Nächste konkrete Schritte" Punkt 5) —
+  ein echtes Connection-Pooling-Design ist eine größere architektonische
+  Änderung (geteilte Client-Lebensdauer, Thread-Sicherheit), keine
+  Bugkorrektur, nicht unangekündigt reingepatcht.
+
+Verifiziert: `ai.nvim`s volle `busted`/`plenary`-Suite grün, `stylua
+--check` clean; `gemini_client.cpp` einzeln mit `g++ -Wall -Wextra`
+kompiliert (clean, keine Warnungen — kompletter Link braucht OpenSSL, hier
+nicht verfügbar); Dashboard-JS mit `node --check` auf Syntaxfehler geprüft.
+Committet: `ai.nvim` `ef6b11b` (jetzt auf `main`, `origin/main` gepusht),
+loomAI `fd476e8` (Client-Fixes) + `cd9cda5` (Dashboard-Fix), beide direkt
+auf `origin/main`.
+
+---
+
+## loomai-ai-nvim-integration.md verifiziert & archiviert (2026-09-14, Folgesession 8)
+
+Nutzer-Anfrage: prüfen, ob der detaillierte Anforderungsreport
+[loomai-ai-nvim-integration.md](../../personal/All/FINISH/ERLEDIGT/Handover_ERLEDIGT/loomai-ai-nvim-integration.md)
+(Aufgaben A-F) vollständig umgesetzt ist, und falls ja, ihn nach `ERLEDIGT/`
+verschieben.
+
+**Ergebnis: ja, vollständig — jeder Punkt direkt im Code gegengeprüft, nicht
+nur der Doku vertraut:**
+
+- Aufgabe A (Health): `GET /health` existiert (`main.cpp:214`), liefert
+  `{"status":"ready","model_router_ready":true,"backends":{...}}`.
+- Aufgabe B (Non-Streaming Ask): `POST /ask` existiert (`main.cpp:236`),
+  `{prompt,system,model,timeout_ms}` → `{text,provider,stop_reason,usage}`,
+  `400` bei fehlendem `prompt`, `502` bei Backend-Fehler.
+- Aufgabe C (Streaming/SSE): `POST /ask/stream` existiert (`main.cpp:273`),
+  `data: {"delta":...}` pro Chunk, Fehler mitten im Stream als reguläres
+  `data: {"error":...}`-Event statt rohem Verbindungsabbruch, `data:
+  [DONE]`-Sentinel am Ende.
+- Aufgabe D (Fehlerformat): `send_json_error()` liefert konsistent
+  `{"error":{"message":...}}`, nie eine leere `200`.
+- Aufgabe E (Modellauswahl): Option 1 (frei/unvalidiert) umgesetzt — `model`
+  ist ein beliebiger String, kein `/models`-Endpoint gebaut, wie empfohlen.
+- Aufgabe F (Netzwerk/Auth): Server bindet `127.0.0.1` statt `0.0.0.0`
+  (`main.cpp:334`), kein Auth nötig, `LOOMAI_HOST`-Basis-URL konfigurierbar.
+- Abschnitt 9 (Design-Frage `available()`): entschieden, Option (a) —
+  `lua/ai/providers/loomai.lua`s `available()` prüft nur
+  `vim.fn.executable("curl")`, kein Netzwerk-Roundtrip.
+- Abschnitt 11 (`loomai`-Provider in `ai.nvim`): `loomai.lua` implementiert
+  `available()`/`ask()`/`stream()`, registriert in `providers/init.lua`s
+  `BUILTIN` und `DEFAULTS.lua`s `provider_order`.
+- Abschnitt 12 (Crash-Sorge bei fehlendem `stream()`): gegenstandslos, da
+  `stream()` von Anfang an mitgebaut wurde (live verifiziert, s. o.
+  "loomai-Provider umgesetzt").
+
+**Nebenbefund beim Gegenlesen der übrigen offenen Punkte:** `NEW-08`
+(`bindings/usercmds.lua` vs. `usrcmds.lua`, s. u. "Nächste konkrete
+Schritte" Punkt 7) ist ebenfalls bereits erledigt — Commit `2bed0d6`
+(bereits auf `origin/main`) hat umbenannt, `ls lua/ai/bindings/` zeigt
+jetzt `{keymaps,usrcmds,autocmds,actions}.lua`. War der Handover-Datei
+noch nicht bekannt, jetzt oben nachgetragen.
+
+Datei verschoben (`git mv`, Historie erhalten) nach
+`docs/ROADMAP/personal/All/FINISH/ERLEDIGT/Handover_ERLEDIGT/
+loomai-ai-nvim-integration.md`, mit Archivierungs-Vermerk am Dateikopf.
+Alle drei Verweise hier in diesem Handover (Orte-Tabelle, "loomAI:
+Entscheidung & Fallback", "loomai-Provider umgesetzt") auf den neuen Pfad
+aktualisiert. Committet im `nvim`-Config-Repo (`StefanBartl/nvim`) und auf
+`origin/main` gepusht.
+
+---
+
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 erledigt, Code-Review durchgelaufen (9/10 Findings gefixt), `lib.nvim`-CI
@@ -889,9 +1002,14 @@ gefixt, `rules.nvim` gegen `ai.nvim` laufen lassen (siehe [oben](#design-entsche
 **loomAI-ModelRouter (Teil A) fertig und live verifiziert** (siehe
 [oben](#teil-a-umgesetzt-loomai-modelrouter-2026-09-14-folgesession-5)):
 OpenAI/Anthropic/Gemini als Backends, Modellname-Präfix-Routing, alle vier
-Backends live gegen echte APIs getestet. Alle Repos (`ai.nvim`, `lib.nvim`,
-`loomAI`, `nvim`-Config, `WKDBooks`) committet und gepusht, synchron mit
-`origin/main`. Offen:
+Backends live gegen echte APIs getestet. **Gemini-Sicherheits-/
+Korrektheitsfixes** (siehe [oben](#gemini-sicherheits-korrektheitsfixes-2026-09-14-folgesession-7))
+in `ai.nvim`s `gemini.lua` und loomAIs `gemini_client.cpp`+Dashboard erledigt.
+**`loomai-ai-nvim-integration.md`** vollständig verifiziert und nach `ERLEDIGT/`
+archiviert (siehe [oben](#loomai-ai-nvim-integrationmd-verifiziert--archiviert-2026-09-14-folgesession-8)),
+dabei `NEW-08` (Punkt 7 unten) als bereits erledigt entdeckt und nachgetragen.
+Alle Repos (`ai.nvim`, `lib.nvim`, `loomAI`, `nvim`-Config, `WKDBooks`)
+committet und gepusht, synchron mit `origin/main`. Offen:
 
 1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`/
    `gemini`), um v1 vor einem Tag zu validieren — Live-Testing-Plan dafür
@@ -914,9 +1032,12 @@ Backends live gegen echte APIs getestet. Alle Repos (`ai.nvim`, `lib.nvim`,
 6. ~~loomAI-Dashboard Ask/Chat-Testpanel (Teil B)~~ — **erledigt**, siehe
    [oben](#teil-b-umgesetzt-loomai-dashboard-askchat-testpanel-2026-09-14-folgesession-6).
    Damit sind Teil A und B des ModelRouter-Umsetzungsplans komplett.
-7. `NEW-08` (rules.nvim-Fund): `ai.nvim`s `bindings/usercmds.lua` heißt anders
-   als der Katalog erwartet (`usrcmds.lua`) — reine Namenskonvention,
-   Entscheidung beim Nutzer, ob umbenannt wird.
+7. ~~`NEW-08` (rules.nvim-Fund): `ai.nvim`s `bindings/usercmds.lua` heißt anders
+   als der Katalog erwartet (`usrcmds.lua`)~~ — **erledigt** (Commit `2bed0d6
+   refactor(bindings): rename usercmds.lua to usrcmds.lua`, bereits auf
+   `origin/main`, per `ls` gegengeprüft: `lua/ai/bindings/` enthält jetzt
+   `{keymaps,usrcmds,autocmds,actions}.lua`, exakt das vom Katalog erwartete
+   Muster).
 8. loomAIs `main.cpp`: `svr.listen()`-Rückgabewert wird nicht geprüft, ein
    Bind-Fehler (Port belegt) verschwindet still — Nebenbefund aus dem
    ModelRouter-Testing (s. o.), kein akuter Schaden, aber sollte bei
