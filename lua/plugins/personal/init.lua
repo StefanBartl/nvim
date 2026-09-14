@@ -1412,7 +1412,10 @@ plugins.add({
     "StefanBartl/recommender.nvim",
     ft = { "lua" },
     cmd = { "Recommender" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.nvim: bindings/usrcmds.lua requires ui.kit at module load (the
+    -- suggestion float's picker) -- setup() fails without it, no fallback.
+    -- Already loaded lazy=false above, listed here for documentation.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {
       -- `cwd`/`path` scope (the one `:Recommender perf cwd` over this whole
       -- config actually uses) runs the directory walk + file reads
