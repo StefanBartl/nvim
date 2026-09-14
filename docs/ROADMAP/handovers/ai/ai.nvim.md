@@ -39,6 +39,7 @@
   - [loomai-ai-nvim-integration.md verifiziert & archiviert (2026-09-14, Folgesession 8)](#loomai-ai-nvim-integrationmd-verifiziert--archiviert-2026-09-14-folgesession-8)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
   - [loomAI-Doku-Housekeeping (2026-09-14, Folgesession 9)](#loomai-doku-housekeeping-2026-09-14-folgesession-9)
+  - [typepilot.nvim: Scoping-Entscheidung (2026-09-14, Folgesession 10)](#typepilotnvim-scoping-entscheidung-2026-09-14-folgesession-10)
 
 ---
 
@@ -1039,10 +1040,11 @@ committet und gepusht, synchron mit `origin/main`. Offen:
    `origin/main`, per `ls` gegengeprüft: `lua/ai/bindings/` enthält jetzt
    `{keymaps,usrcmds,autocmds,actions}.lua`, exakt das vom Katalog erwartete
    Muster).
-8. loomAIs `main.cpp`: `svr.listen()`-Rückgabewert wird nicht geprüft, ein
-   Bind-Fehler (Port belegt) verschwindet still — Nebenbefund aus dem
-   ModelRouter-Testing (s. o.), kein akuter Schaden, aber sollte bei
-   Gelegenheit einen echten Fehler/Log statt Stille bekommen.
+8. ~~loomAIs `main.cpp`: `svr.listen()`-Rückgabewert wird nicht geprüft, ein
+   Bind-Fehler (Port belegt) verschwindet still~~ — **erledigt** (Commit
+   `e3c025a`: prüft den Rückgabewert jetzt, loggt auf `stderr` und beendet
+   mit Exit-Code 1 statt still durchzulaufen; README-Erwähnung unter
+   "Stand/was fehlt" wieder entfernt, Commit `18c0589`).
 9. Modellname-Präfix-Liste im loomAI-Router (`gpt-`/`o1-`/`o3-`/`claude-`/
    `gemini-`) ist hartkodiert, keine Config-Möglichkeit — bislang kein
    Bedarf, siehe README "Stand/was fehlt".
@@ -1093,6 +1095,122 @@ Drei Nutzer-Anfragen zu loomAIs Doku-Lage, alle umgesetzt und gepusht:
 
 Alle drei Repos (`loomAI`, `WKDBooks`, `nvim`-Config) synchron mit
 `origin/main`.
+
+**Nachtrag, gleicher Themenkomplex, kurz danach:** der oben unter Punkt 8
+("Nächste konkrete Schritte") genannte `svr.listen()`-Fund wurde auf
+Nutzerwunsch gleich mit erledigt -- trivialer 3-Zeilen-Fix (`if
+(!svr.listen(...)) { std::cerr << ...; return 1; }`), Syntax mit
+`g++ -fsyntax-only` geprüft, committet `e3c025a`, README-Erwähnung unter
+"Stand/was fehlt" danach wieder entfernt (war nur solange akkurat, wie der
+Bug bestand), Commit `18c0589`. Beides gepusht.
+
+---
+
+## typepilot.nvim: Scoping-Entscheidung (2026-09-14, Folgesession 10)
+
+Nutzer-Anfrage: Konzept-Datei `nvim/docs/ROADMAP/IDEAS/typepilot.nvim.md`
+(dünne Provider-Abstraktion für Vervollständigung/Copilot-artige
+Vorschläge) analysieren -- eigenes Plugin oder Feature in `ai.nvim`?
+
+**Analyse, zwei getrennte Fragen:**
+1. *Braucht es die Provider-Abstraktion neu?* Nein -- `ai.nvim`s
+   `providers/{claude,openai,ollama,gemini}.lua` lösen exakt das (Setup +
+   Prompt-in/Text-out), plus mehr, was die Notiz noch gar nicht bedacht
+   hatte (sicheres Key-Handling über `secret_headers`, SSE-Streaming,
+   Timeouts, `available()`). Ein Neubau würde diese Infrastruktur
+   duplizieren.
+2. *Wohin gehört Inline-Completion (Vorschläge beim Tippen)?* `ai.nvim`s
+   eigenes `docs/scope.md` grenzt das explizit aus: *"single-turn
+   question/answer and streaming for one plugin call or one editor
+   action"*. Ein Vorschlag beim Tippen braucht Debounce/Idle-Trigger,
+   Cancel-bei-nächstem-Tastendruck, Ghost-Text-Rendering statt
+   Panel/Badge -- ein Merge in `ai.nvim` würde dessen eigene, bewusst enge
+   Scope-Grenze verletzen (dieselbe "registry entry, not a merge"-Logik,
+   mit der auch `loomAI` bewusst außerhalb gehalten wird).
+
+**Erste Empfehlung (von mir, dann per Zwischenruf vom Nutzer korrigiert):**
+ursprünglich hier vorgeschlagen: eigenes Plugin `typepilot.nvim` mit
+`ai.nvim` als harter Abhängigkeit, analog zu `ai.nvim`s eigenem Verhältnis
+zu `lib.nvim`. **Korrektur des Nutzers, noch in derselben Sitzung:** nein
+-- Zielbild ist, `ai.nvim` langfristig zum **einzigen** AI-Plugin
+auszubauen (keine mehreren nebeneinander installierten AI-Plugins), und
+Completion-artige Vorschläge sind Teil dieses Zielbilds, nicht etwas, das
+outgesourct werden soll, nur weil `docs/scope.md` heute so formuliert ist.
+
+**Damit finale Entscheidung: Completion-Vorschläge werden eine neue
+Capability *innerhalb* von `ai.nvim`, kein separates Repo.** Das bedeutet
+konkret:
+
+- `docs/scope.md` muss überarbeitet werden -- die heutige Formulierung
+  ("single-turn question/answer and streaming for one plugin call or one
+  editor action") schließt einen automatischen Trigger beim Tippen
+  wörtlich aus. Die **eigentliche**, weiterhin gültige Grenze aus diesem
+  Dokument ist etwas anderes und bleibt unangetastet: kein autonomer
+  Multi-Step-Agent, keine Sandbox, kein Tool-Use/Function-Calling-Loop
+  (das bleibt bei `loomAI`/dem Agent-Framework-Projekt). Ein
+  Completion-Vorschlag ist technisch weiterhin derselbe Single-Turn-
+  Ask/Stream-Aufruf -- nur eine zusätzliche *Trigger-Quelle*
+  (Idle-beim-Tippen statt expliziter `:Ai`-Befehl) und ein zusätzlicher
+  *Renderer* (Ghost-Text statt Panel/Badge). Die Neuformulierung sollte
+  das explizit so einordnen, nicht die Agent/Sandbox-Grenze aufweichen.
+- Architektonisch reiht sich das sauber neben die bestehenden Bausteine
+  ein, keine Notwendigkeit, Provider-Registry oder Kern-API anzufassen --
+  `require("ai").ask()`/`.stream()` bleiben die einzige Schnittstelle zum
+  LLM, exakt wie bei jeder bestehenden Quick-Action.
+
+**Konkrete Tasks (in `ai.nvim` selbst, neues Feature-Gebiet, noch nicht
+begonnen), aus der Notiz übernommen und an die korrigierte Entscheidung
+angepasst:**
+
+1. `docs/scope.md` überarbeiten wie oben beschrieben, bevor Code entsteht
+   -- Dokument muss die Richtung tragen, nicht ihr widersprechen.
+2. Neues Trigger-Modul (Debounce/Idle beim Tippen, Cancel bei nächstem
+   Tastendruck) -- `stream()` liefert ein `vim.SystemObj`, das dafür
+   gehalten und bei Bedarf `:kill()`t werden muss, gleiches Muster wie
+   `ai.nvim`s eigenes `ui/panel.lua` beim manuellen Cancel schon nutzt.
+3. Neue Kontext-Extraktion (Text vor/nach Cursor) als Ergänzung zu
+   `lua/ai/context/` -- das bestehende Modul kennt bisher nur
+   Buffer/Selection/Diagnostics, keinen cursor-relativen Ausschnitt.
+4. Neuer Renderer für Ghost-Text (`vim.api.nvim_buf_set_extmark` mit
+   virtual text), als Geschwister-Modul zu `ui/panel.lua`/`ui/badge.lua`,
+   nicht als deren Umbau.
+5. Accept/Reject-Keymaps, analog zum bestehenden
+   `bindings/actions.lua`+`bindings/keymaps.lua`-Muster.
+6. `suggest()` selbst braucht keinen Extra-Aufwand für Asynchronität oder
+   Timeout -- `require("ai").ask()`/`.stream()` sind bereits Callback-
+   basiert asynchron, `req.timeout_ms` ist bereits Teil von `Ai.Request`.
+7. `:Ai info`/`health.lua` um Completion-Status erweitern (aktiver
+   Provider, Key vorhanden ja/nein -- nie der Key selbst), statt ein
+   eigenes `:checkhealth typepilot` zu bauen.
+8. Provider-Registrierung von außen ist bereits gelöst
+   (`providers.register()`) -- kein neuer Mechanismus nötig.
+9. Datenschutz-Prinzip aus der Notiz (kein zentrales Key-Storage, Keys aus
+   Env) ist in `ai.nvim`s Providern bereits korrekt umgesetzt
+   (`util.env_value()` liest `vim.env`, kein Keyring-Zugriff) -- gilt
+   automatisch auch für die neue Capability.
+10. **Separat, nicht `ai.nvim`-spezifisch**: die Notiz schlägt vor, das
+    Datenschutz-Prinzip (Punkt 9) als allgemeine Regel in
+    `personal/All/Checklists.md` festzuhalten, gültig für jedes Plugin mit
+    API-Key-Kontakt (`reposcope.nvim`, `github_stats.nvim`, jetzt auch
+    diese Capability) -- **diese Datei existiert noch nicht** (per `find`
+    gegengeprüft), separat anzulegen, nicht Teil dieser Sitzung.
+11. **Vor Implementierungsbeginn**: eigene Scoping-Sitzung für die
+    konkrete Architektur (Modul-Zuschnitt, Debounce-Strategie,
+    Ghost-Text-API-Details), analog zum loomAI-ModelRouter-Scoping oben --
+    diese Sitzung hat nur die Grundsatzfrage geklärt und die Tasks grob
+    skizziert, nicht die Feinarchitektur entschieden.
+12. Offene Vorfrage, weiterhin unbeantwortet: ob es das überhaupt braucht,
+    angesichts fertiger Plugins wie `copilot.lua`, `codeium.vim`,
+    `supermaven-nvim`, `minuet-ai.nvim` (Letzteres macht bereits
+    Multi-Provider-Completion gegen OpenAI/Claude/Gemini/Ollama,
+    inhaltlich nah an der Notiz-Idee -- nicht live verifiziert). Bleibt
+    trotz der jetzt gefallenen Scope-Entscheidung eine offene Frage, ob
+    parallel geprüft werden soll, was diese Plugins bereits abdecken.
+
+`typepilot.nvim.md` nach `ERLEDIGT/` verschoben (Grundsatzfrage geklärt,
+kein aktiver Tracking-Zustand mehr -- die konkreten Tasks oben sind jetzt
+hier die Quelle der Wahrheit für den Fortschritt, sobald diese Capability
+begonnen wird).
 
 ---
 
