@@ -474,13 +474,15 @@ mehr offen aus diesem Plan.
 gefixt:**
 - `emojis.nvim`s `picker.lua`: Moduldoku behauptet einen
   `vim.ui.select`-Fallback, den `select_fallback()` tatsächlich nicht hat
-  (`task_5d14fa46`).
+  (`task_5d14fa46`). -> Erledigt
 - `markdown.nvim`s CI (`tests`-Job): seit mind. 4 Commits rot wegen
   fehlendem `rg` im Runner-Image, unabhängig von dieser Migration
-  (`task_2295ae16`).
+  (`task_2295ae16`). -> Erledigt
 
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
-- rules.nvim-Pass über ui.nvim (nachrangig zu my.nvim)
 - Kreuzfeature-Check gegen die ~30 Schwesterplugins
+- rules.nvim-Pass über ui.nvim;
+- my.nvim -> nachdem ui.nvim praktisch fertig ist, nochmal analysieren, ob Bugs entstanden sind, ob man wichtige features nicht nutzt, ob performance / securoty fragen auftauchen, Empfehlungen, usw...
+  - rules.nvim-Pass über my.nvim;
 
 ---
