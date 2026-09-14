@@ -13,6 +13,22 @@
 
 ---
 
+## Umsetzungsstatus (2026-09-14)
+
+loomAI-seitig sind **Aufgabe A-D umgesetzt** (`E:\repos\loomAI\src\main.cpp`,
+`src/ollama_client.hpp/.cpp`; Backend: direkter Ollama-Aufruf, kein
+`ModelRouter`). CMake-Build + vendorte `third_party`-Header wurden dabei
+neu angelegt (gab es vorher nicht). Details, Build- und API-Doku: siehe
+loomAI-`README.md`.
+
+**Noch offen — Abschnitt [9](#9-offene-design-frage-available-vs-netzwerk-health-check):**
+die `available()`-Design-Frage ist nicht entschieden, weil sie
+`ai.nvim`-seitig (`lua/ai/providers/loomai.lua`) liegt, nicht loomAI-seitig —
+dieser Provider selbst existiert noch nicht (siehe [Abschnitt 11](#11-danach-der-loomai-provider-in-ainvim-selbst),
+weiterhin als Folgeschritt offen).
+
+---
+
 ## Inhaltsverzeichnis
 
 1. [Ist-Stand loomAI](#1-ist-stand-loomai)
