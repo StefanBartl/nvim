@@ -33,6 +33,7 @@
     - [Was konkret zu bauen ist](#was-konkret-zu-bauen-ist)
     - [Offene Fragen für die Fortsetzungs-Session](#offene-fragen-fr-die-fortsetzungs-session)
   - [Design-Entscheidungen, Gemini, rules.nvim, Live-Testing-Plan (2026-09-14, Folgesession 4)](#design-entscheidungen-gemini-rulesnvim-live-testing-plan-2026-09-14-folgesession-4)
+  - [Teil A umgesetzt: loomAI-ModelRouter (2026-09-14, Folgesession 5)](#teil-a-umgesetzt-loomai-modelrouter-2026-09-14-folgesession-5)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
 
 ---
@@ -748,6 +749,88 @@ müssen.
 
 ---
 
+## Teil A umgesetzt: loomAI-ModelRouter (2026-09-14, Folgesession 5)
+
+**Alle 7 Punkte aus dem Umsetzungsplan oben erledigt.** Neue Dateien
+`src/{openai,anthropic,gemini}_client.hpp/.cpp` nach dem
+`ollama_client.hpp/.cpp`-Muster, plus neues `src/model_client.hpp` (geteilte
+`loomai::AskResult`-Struktur + `error_text()`/`sse_data_payload()`/
+`recover_error_body()` — dieselbe Non-SSE-Fehlerkörper-Wiederherstellung wie
+`ai.providers.sse` in Lua, jetzt einmal in C++ statt dreifach kopiert).
+`ollama_client.hpp/.cpp` auf die geteilte Struktur umgestellt
+(`prompt_eval_count`/`eval_count` → `prompt_tokens`/`completion_tokens`,
+reines Umbenennen). `main.cpp`s `/ask`+`/ask/stream` dispatchen jetzt per
+Modellname-Präfix (`route_ask`/`route_ask_stream`): `claude-*`→Anthropic,
+`gpt-*`/`o1-*`/`o3-*`→OpenAI, `gemini-*`→Google, sonst→Ollama. `/health`
+zeigt jetzt zusätzlich `backends: {ollama,openai,anthropic,gemini}` (nur
+Presence, nie der Key-Wert).
+
+**Build-Hürde gelöst:** die drei Cloud-Clients brauchen echtes HTTPS
+(`cpp-httplib` mit `CPPHTTPLIB_OPENSSL_SUPPORT`) — `ollama_client` kam
+bisher ohne aus (nur `http://127.0.0.1`). `CMakeLists.txt` jetzt mit
+`find_package(OpenSSL REQUIRED)` + Link gegen `OpenSSL::SSL`/`OpenSSL::Crypto`.
+Unter Windows/MSYS2 fand das separat installierte CMake das
+mingw64-OpenSSL nicht automatisch — `-DOPENSSL_ROOT_DIR=C:/msys64/mingw64`
+nötig, jetzt in `README.md`s Build-Anleitung dokumentiert.
+
+**Echter Bug gefunden + gefixt, beim Live-Testen (nicht beim Schreiben):**
+alle drei neuen `ask_stream()`-Implementierungen puffern eingehende Bytes
+zeilenweise (Split auf `\n`) — ein finaler Fehlerkörper ohne abschließenden
+Zeilenumbruch blieb dadurch unverarbeitet im internen Buffer stecken,
+`recover_error_body()` sah eine leere `non_data_lines`-Liste und fiel auf
+ein generisches `"HTTP 401: "` zurück statt die echte API-Fehlermeldung zu
+zeigen. Live gegen die echte OpenAI-API reproduziert (abgelaufener Key
+dieser Maschine löste den Fehlerpfad aus), dann gefixt: verbleibender
+Buffer-Inhalt wird beim Stream-Ende zusätzlich in `non_data_lines`
+geflusht, bevor die Recovery versucht wird. `ollama_client.cpp` brauchte
+das nie — ein fehlgeschlagener Ollama-Stream kommt immer als vollständige,
+zeilenumbruch-terminierte NDJSON-Zeile zurück, nie als Body ohne
+abschließende Zeile.
+
+**Live verifiziert, alle vier Backends, echte Netzwerk-Calls (nicht
+angenommen):**
+- **Ollama** (echter Daemon, gepulltes `llama3:8b`): `/ask` und
+  `/ask/stream` Happy-Path — korrekte Antwort, korrektes `usage`
+  (bestätigt den Feld-Rename), Tokens einzeln beim Streaming.
+- **OpenAI**: Fehlerpfad mit dem (abgelaufenen) echten Key dieser Maschine —
+  `/ask` und `/ask/stream` liefern die echte OpenAI-Fehlermeldung, kein
+  Crash, `/health` antwortet danach weiter normal.
+- **Anthropic**: Fehlerpfad mit einem bewusst ungültigen Test-Key (kein
+  echter Key auf dieser Maschine verfügbar) — `/ask` und `/ask/stream`
+  liefern "API key is invalid.", kein Crash.
+- **Gemini**: Fehlerpfad mit einem bewusst ungültigen Test-Key — `/ask` und
+  `/ask/stream` liefern "API key not valid. Please pass a valid API key.",
+  kein Crash.
+- Modellname-Präfix-Routing für alle vier Fälle bestätigt (jede Anfrage kam
+  nachweislich beim richtigen Backend an, erkennbar an der jeweils
+  Backend-spezifischen Fehlermeldung/Antwort).
+
+**Bewusst nicht (über-)behauptet:** das hier ist ein einfacher
+Modellname-Präfix-Router, **nicht** die VRAM-Heuristik/Task-Typ-basierte
+`RoutingPolicy` aus `docs/Guides/ki-agenten-framework-architektur.md`
+Abschnitt 4.2 — Checkliste dort entsprechend ehrlich aktualisiert (siehe
+Commit), nicht als vollständig erledigt markiert.
+
+**Nebenbefund, nicht behoben (kein Teil dieser Aufgabe):** `main.cpp`s
+`svr.listen("127.0.0.1", 8080)` prüft seinen Rückgabewert nicht — ein
+Bind-Fehler (Port bereits belegt) würde derzeit still verschluckt. Beim
+Testen selbst verursacht (zwei über `taskkill` nicht sauber beendete
+Hintergrund-Testinstanzen liefen parallel), kein durch diese Sitzung
+eingeführtes Verhalten, aber real und noch offen — siehe "Nächste
+Schritte" unten.
+
+Doku nachgezogen: `loomAI/README.md` (Build-Anleitung, neue Env-Vars-Tabelle,
+`/health`-Beispiel, neuer "ModelRouter"-Abschnitt, "Stand/was fehlt"
+aktualisiert, dabei auch einen veralteten Report-Pfad korrigiert —
+`reports/loomai-...` → `reports/ai/loomai-...`), `docs/Guides/
+ki-agenten-framework-architektur.md`s Phase-1-Checkliste. Committet
+(`2f1edba`) und **direkt auf `origin/main`** gepusht (kein PR-Workflow
+nötig, eigenes Repo) — die Session lief technisch in einem Git-Worktree
+(Sandbox-Vorgabe), das Ergebnis liegt aber wie gewohnt sofort auf `main`.
+Lokaler Checkout `E:\repos\loomAI` per `git pull --ff-only` synchronisiert.
+
+---
+
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 erledigt, Code-Review durchgelaufen (9/10 Findings gefixt), `lib.nvim`-CI
@@ -756,12 +839,19 @@ nachgetragen. `loomai`-Provider gebaut, in `provider_order`, live gegen `:Ai
 ask`/`:Ai stream` verifiziert (siehe [oben](#loomai-provider-umgesetzt-2026-09-14-folgesession)).
 `gemini`-Provider (ai.nvim-seitig) gebaut und gepusht, `OLLAMA_HOST`-Bug
 gefixt, `rules.nvim` gegen `ai.nvim` laufen lassen (siehe [oben](#design-entscheidungen-gemini-rulesnvim-live-testing-plan-2026-09-14-folgesession-4)).
-Alle Repos (`ai.nvim`, `lib.nvim`, `loomAI`, `nvim`-Config, `WKDBooks`) committet
-und gepusht, synchron mit `origin/main`. Offen:
+**loomAI-ModelRouter (Teil A) fertig und live verifiziert** (siehe
+[oben](#teil-a-umgesetzt-loomai-modelrouter-2026-09-14-folgesession-5)):
+OpenAI/Anthropic/Gemini als Backends, Modellname-Präfix-Routing, alle vier
+Backends live gegen echte APIs getestet. Alle Repos (`ai.nvim`, `lib.nvim`,
+`loomAI`, `nvim`-Config, `WKDBooks`) committet und gepusht, synchron mit
+`origin/main`. Offen:
 
 1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`/
    `gemini`), um v1 vor einem Tag zu validieren — Live-Testing-Plan dafür
-   fertig: [reports/ai/live-testing-plan.md](../../reports/ai/live-testing-plan.md).
+   fertig: [reports/ai/live-testing-plan.md](../../reports/ai/live-testing-plan.md)
+   (Achtung: der Testplan geht noch von "loomAI kann nur Ollama" aus, s.
+   Punkt 6 unten — beim nächsten Durchgang mit den drei neuen Cloud-Backends
+   ergänzen).
 2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release, danach.
    `rules.nvim`s `release`-Gate zeigt keine automatisierten kritischen
    Lücken (s. o.); die `manual`-Posten aus dem `review`-Gate noch nicht
@@ -774,14 +864,21 @@ und gepusht, synchron mit `origin/main`. Offen:
    statt Wiederverwendung (Review-Finding, bewusst nicht gefixt) — braucht ein
    durchdachtes Pooling-Design (z. B. thread-lokale Clients), erst bei spürbarem
    Bedarf angehen.
-6. **loomAI-ModelRouter (OpenAI/Anthropic/Gemini) + Dashboard-Ask-Testpanel**
-   — vollständiger Umsetzungsplan jetzt fertig, siehe unmittelbar oben
-   ("Umsetzungsplan: was noch offen ist", Teile A+B). Nächste Session kann
-   direkt mit Teil A (ModelRouter) starten.
+6. **loomAI-Dashboard Ask/Chat-Testpanel (Teil B)** — Teil A ist jetzt
+   Voraussetzung erfüllt (multi-provider-fähiger Server steht), nächste
+   Session kann direkt mit Teil B starten (Plan siehe oben, Design-
+   Entscheidung 3).
 7. `NEW-08` (rules.nvim-Fund): `ai.nvim`s `bindings/usercmds.lua` heißt anders
    als der Katalog erwartet (`usrcmds.lua`) — reine Namenskonvention,
    Entscheidung beim Nutzer, ob umbenannt wird.
-8. Diese Datei laufend als Statusprotokoll fortschreiben.
+8. loomAIs `main.cpp`: `svr.listen()`-Rückgabewert wird nicht geprüft, ein
+   Bind-Fehler (Port belegt) verschwindet still — Nebenbefund aus dem
+   ModelRouter-Testing (s. o.), kein akuter Schaden, aber sollte bei
+   Gelegenheit einen echten Fehler/Log statt Stille bekommen.
+9. Modellname-Präfix-Liste im loomAI-Router (`gpt-`/`o1-`/`o3-`/`claude-`/
+   `gemini-`) ist hartkodiert, keine Config-Möglichkeit — bislang kein
+   Bedarf, siehe README "Stand/was fehlt".
+10. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
 
