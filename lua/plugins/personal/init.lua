@@ -736,7 +736,9 @@ plugins.add({
     -- autocmds are registered by setup(), so lazy-loading on the command would
     -- mean they never fire. Set their `enable = false` to opt out instead.
     lazy = false,
-    dependencies = { "StefanBartl/lib.nvim" },
+    -- ui.nvim: devserver.prompt (default true) has no fallback if ui.kit is
+    -- missing -- see insights.nvim's docs/installation.md.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {
       -- Building the cwd symbol index runs one rg pass per language pattern;
       -- reports into the shared lib.nvim.progress registry.
