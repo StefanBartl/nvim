@@ -196,6 +196,37 @@ Jede Runde: eigene Tests, `luacheck`/`stylua` clean, Katalog + `docs/
 modules.md` aktualisiert, direkt nach `main` gepusht. Details je Runde:
 `NOTES.md`s 21.–25. Runde.
 
+**2026-09-14, dieselbe Session, Rechtsklick-Menü-Migration begonnen
+(`PLAN-ui-kit-migration.md`, Schritt 3 von 6):**
+
+Vor dem Start drei offene Architekturfragen aus dem Plan vorgelegt, alle
+drei mit der jeweils empfohlenen Option beantwortet:
+- `contextmenu` (Datenbauer) wandert zusammen mit `ui.kit` (Renderer)
+  nach `ui.nvim`, keine Modulgrenze zwischen beiden.
+- `menu = false` heißt künftig "Datenbauer immer da, nur Renderer/Trigger
+  am Schalter" — **entschieden, aber noch nicht verdrahtet.**
+- Umfang dieser Runde: **nur Schritt 3** (kopieren + Prefix-Rename +
+  Tests). Kein Shim in `lib.nvim`, keine der ~30/~11 Konsumenten-Repos
+  umgestellt — das bleibt für spätere Runden.
+
+Mechanischer Prefix-Umzug: `lib.nvim.ui.kit` → `lua/ui/kit/` (21 Dateien),
+`lib.nvim.contextmenu` → `lua/ui/contextmenu/`, `Lib.UI.Kit.*` →
+`Ui.Kit.*`, `Lib.ContextMenu.*` → `Ui.ContextMenu.*` überall. Jeder
+andere `lib.nvim.*`-Require bleibt unangetastet (`lib.nvim` bleibt echte
+Abhängigkeit). `lib.nvim`s eigene Testsuite nutzt einen komplett anderen
+Custom-Harness (`return function(H) ... end`, `H.eq`/`H.ok`) statt
+`describe`/`it`/`assert.*` — statt ~230 Einzel-Assertions über ~1763
+Zeilen von Hand umzuschreiben (Risiko, irgendwo leise die Bedeutung einer
+Prüfung zu verändern), einen kleinen `H.eq`/`H.ok`-Shim über `assert.*`
+gebaut und den originalen Testkörper fast wortwörtlich gewrappt.
+
+Nebenbei drei tote relative Markdown-Links in den mitkopierten READMEs
+gefunden und repariert (neue Verzeichnistiefe zwei Ebenen flacher).
+`docs/scope.md` neue "UI Kit"-Zeile. Volle Suite grün (32 Dateien),
+`luacheck`/`stylua` clean (123 Dateien). `PLAN-ui-kit-migration.md`
+entsprechend fortgeschrieben. Details: `NOTES.md`s 26. Runde. Gepusht als
+`ui.nvim@5fba540`.
+
 ---
 
 ## Offene Tasks
@@ -204,9 +235,17 @@ Statusline-Ideen-Auswahl (`IDEEN-statusline.md`, 16 von ~18 Punkten) ist
 seit 2026-09-14 **komplett abgearbeitet** — nichts mehr offen aus dieser
 Liste.
 
+Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 von 6
+erledigt (s. o.), noch offen:
+- Schritt 4: Kompat-Shim in `lib.nvim`, mit Enddatum
+- Schritt 5: die ~30 (`ui.kit`) bzw. ~11 (`contextmenu`) Konsumenten-Repos
+  einzeln umstellen, in Reihenfolge der Nutzungstiefe (filetree/sandbox/
+  replacer/lsp zuerst)
+- Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen
+- `menu = true/false`-Toggle-Semantik in `ui.config.setup()` verdrahten
+  (Entscheidung steht, Umsetzung nicht)
+
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
-- Rechtsklick-Menü nach ui.nvim migrieren (bewusst ganz zum Schluss, 30
-  Repos hängen dran)
 - rules.nvim-Pass über ui.nvim (nachrangig zu my.nvim)
 - Kreuzfeature-Check gegen die ~30 Schwesterplugins
 
