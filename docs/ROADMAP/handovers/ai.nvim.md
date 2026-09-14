@@ -192,92 +192,107 @@ und geprüft (siehe Recherche unten): `lib.nvim.net.curl` (+ Erweiterung),
 
 ## Phasenplan
 
-### Phase 0 — Setup ✅ (diese Sitzung)
+### Phase 0 — Setup ✅
 - [x] Konzept, `NEW_PROJECT.md`, `PRINCIPLES.md`, `LUA_NVIM.md` (Auszug), `lua-plugin-tools.md`,
       Muster (`pdfport.nvim/backends`, `lib.nvim/net/curl`, `harvest/scope`, `progress`,
       `ui/kit`, `dap.nvim`-Struktur als Scaffold-Vorlage) gelesen.
 - [x] loomAI-Ist-Stand gegengeprüft (siehe oben).
 - [x] Diese Handover-Datei angelegt.
-- [ ] GH-Repo `stefanbartl/ai.nvim` (public) + lokal `E:\repos\ai.nvim`.
-- [ ] `wkdbook-myplugins/ai.nvim/{ROADMAP/ROADMAP.md, NOTES/}` anlegen.
+- [x] GH-Repo `StefanBartl/ai.nvim` (public) + lokal `E:\repos\ai.nvim` — Remote gesetzt,
+      main gepusht (siehe Phase 2).
+- [x] `wkdbook-myplugins/ai.nvim/{ROADMAP/ROADMAP.md, NOTES/}` angelegt.
 
 ---
 
-### Phase 1 — Transport-Erweiterung in `lib.nvim`
-- `fetch_stream(url, opts, handlers)`: `vim.system` mit Zeilen-Callback (wie
-  `lib.nvim.cross.uv.spawn_stream`, nur über HTTP), `handlers = {on_chunk, on_done, on_error}`.
-  Muss SSE (`data: {...}`, Ende bei `data: [DONE]`/Verbindungsende) und NDJSON
-  (eine JSON-Zeile pro Chunk) roh durchreichen — Parsing der Zeilenform ist Sache von
-  `ai.nvim`, nicht von `lib.nvim` (Trennung "Bytes bekommen" vs. "Bytes verstehen").
-- `opts.secret_headers`: intern über `-K`-Curl-Config-Tempdatei (wie
-  `pdfport.nvim/backends/claude.lua`, `fs_chmod(0600)` best-effort), nie im argv.
-  Gilt für `fetch_stream` UND rückwirkend für `fetch_json`/`fetch_raw` (ein Fix, keine
-  Kopie — `LUA-02`).
-- Tests unter `lib.nvim/TESTS/` (bestehendes Test-Setup nutzen).
-- Commit + Push auf `lib.nvim` main.
+### Phase 1 — Transport-Erweiterung in `lib.nvim` ✅
+- `fetch_stream`/`secret_headers` implementiert in `lib.nvim/lua/lib/nvim/net/curl/init.lua`,
+  committet (`5364c02 feat(net.curl): add fetch_stream and secret_headers`) und bereits
+  auf `lib.nvim` `origin/main` gepusht (geprüft 2026-09-14: `main` und `origin/main` deckungsgleich).
+- `secret_headers` gilt für `fetch_stream`, `fetch_json` und `fetch_raw` gemeinsam (ein Fix,
+  keine Kopie, wie gefordert).
 
 ---
 
-### Phase 2 — `ai.nvim` Scaffold (`NEW_PROJECT.md`, `NEW-01`…`NEW-50`)
-Struktur wie `dap.nvim`/`language.nvim`: `lua/ai/{config/{DEFAULTS,init},bindings/{keymaps,usercmds,autocmds},@types,health.lua,providers/,context/,ui/}`,
-`plugin/ai.lua` (Guard), `TESTS/` + `scripts/test.sh`, `doc/ai.txt`, `docs/BINDINGS.md`,
-`README.md` (Fassung-3-Template), `LICENSE` (MIT), `.luarc.json` (ohne `workspace.library`,
-`workspace.ignoreDir`), `.luacheckrc` (busted-`std` für `TESTS/`), `stylua.toml`
-(`line_endings = "Unix"`, passend zu `.gitattributes`), CI (`luacheck`+`stylua`+`plenary`,
-Vorlage `dap.nvim/.github/workflows/ci.yml`). **Kein `docs/ROADMAP.md` im Repo** (`NEW-14`).
-Modul-Namespace: `require("ai")` (kein Kollisionsrisiko mit installierten Plugins geprüft —
-Konzept selbst legt `require("ai")` in der API-Skizze fest).
+### Phase 2 — `ai.nvim` Scaffold ✅
+Struktur wie geplant vollständig vorhanden: `lua/ai/{config/{DEFAULTS,init},bindings/{keymaps,usercmds,autocmds,actions},@types,health.lua,providers/,context/,ui/}`,
+`plugin/ai.lua` (Guard), `TESTS/ai/*_spec.lua` + `scripts/test.sh`, `docs/*.md`,
+`README.md`, `LICENSE` (MIT), `.luarc.json`, `.luacheckrc`, `stylua.toml`, `.gitattributes`,
+CI (`.github/workflows/ci.yml`: luacheck + stylua + plenary gegen `lib.nvim`+`plenary.nvim`-Checkouts).
+Kein `docs/ROADMAP.md` im Repo (`NEW-14` eingehalten, Roadmap lebt in `wkdbook-myplugins`).
+Modul-Namespace `require("ai")` wie geplant.
+
+**2026-09-14 committet & gepusht** (in einer vorherigen Sitzung bereits geschrieben, aber
+nie eingecheckt gewesen — diese Sitzung hat den Ist-Stand geprüft und verifiziert, dann
+committet):
+- `b77d014 feat: initial ai.nvim implementation (Phases 1-7)` — 40 Dateien, kompletter
+  Scaffold + Phasen 3-7 (siehe unten).
+- `f2ebe38 fix: mark scripts/test.sh executable` — CI schlug im ersten Lauf mit Exit 126
+  fehl, weil Windows das x-Bit nicht mitschreibt; `git update-index --chmod=+x` behoben.
+- **CI grün** (luacheck, stylua --check, plenary-Suite) nach dem Fix, verifiziert per
+  `gh run view` gegen `origin/main`.
+- Vor dem Commit verifiziert: `luacheck lua TESTS plugin` → 0 Warnings/Errors (22 Dateien),
+  `stylua --check` → clean, `scripts/test.sh` lokal (mit `LIB_NVIM_DIR`=`E:\repos\lib.nvim`,
+  `PLENARY_DIR`=`...\nvim-data\lazy\plenary.nvim`) → 19/19 Tests grün, Secret-Scan über alle
+  Dateien negativ.
 
 ---
 
-### Phase 3 — Provider-Registry (`lua/ai/providers/`)
-Lazy-Proxy-Registry nach `pdfport.nvim/backends/init.lua`-Muster. `Ai.Provider`-Interface
-laut Konzept (`id`, `available()`, `ask(req,cb)`, `stream(req,handlers)`, `capabilities`).
-Eingebaut: `claude` (Anthropic Messages API, SSE), `ollama` (lokal, NDJSON), `openai`
-(Chat Completions, SSE). `loomai` bewusst NICHT in v1 (s.o.). `M.register(provider)` für
-eigene/künftige Provider von außen. Secrets nur aus `vim.env.*`, nie gespeichert
-(`:Ai info` zeigt Status, nie den Wert — SEC-Regeln).
+### Phase 3 — Provider-Registry (`lua/ai/providers/`) ✅
+Lazy-Proxy-Registry nach `pdfport.nvim/backends/init.lua`-Muster, implementiert und getestet
+(`TESTS/ai/providers_spec.lua`, 10 Tests grün): `claude.lua`, `ollama.lua`, `openai.lua`,
+`init.lua` (Registry + `resolve()` mit fester `auto`-Chain). `loomai` bewusst NICHT enthalten
+(s.o., Trigger-Bedingung unverändert offen).
 
 ---
 
-### Phase 4 — Kontext-Assemblierung (`lua/ai/context/`)
-Dünner Wrapper um `lib.nvim.harvest.scope` (`buffer`/`selection`→`range`/`cwd`) +
-eigene `diagnostics`-Funktion (`vim.diagnostic.get()` → nummerierte Liste mit Severity,
-NICHT nach `lib.nvim` — zu AI-spezifisch). Baut daraus den Prompt-Kontext-Block.
+### Phase 4 — Kontext-Assemblierung (`lua/ai/context/`) ✅
+`context/init.lua` (Wrapper um `lib.nvim.harvest.scope`) + `context/diagnostics.lua`
+(strukturiert: `Datei:Zeile:[Severity]:Message`, sortiert). Getestet
+(`TESTS/ai/context_spec.lua`, 6 Tests grün).
 
 ---
 
-### Phase 5 — UI (`lua/ai/ui/`)
-`lib.nvim.progress` für "Denkt nach…" (Style konfigurierbar), `lib.nvim.ui.kit.surface`
-für das Antwort-Panel (bleibt offen, `set_lines()` inkrementell bei jedem Stream-Chunk).
-`progress.cancel()`/Panel-Schließen MUSS den laufenden curl-Prozess killen (offene Frage
-aus dem Konzept — hier verbindlich lösen: `vim.system`-Handle im Stream-Handler halten,
-`:kill()` bei Cancel/Panel-Close).
+### Phase 5 — UI (`lua/ai/ui/`) ✅
+`ui/panel.lua` (Streaming-Antwort-Panel über `lib.nvim.ui.kit.surface`) und `ui/badge.lua`
+(kurzer Hinweis-Toast, kein Panel). Cancel/Panel-Close killt den laufenden Prozess
+(`vim.SystemObj:kill()` gehalten im Stream-Handler) — verbindlich gelöst wie geplant.
 
 ---
 
-### Phase 6 — Public API + `:Ai`-Composer
-`require("ai").ask(req, cb)` / `.stream(req, handlers)` (API-Skizze aus Konzept).
-`:Ai ask [prompt?]`, `:Ai stream [prompt?]`, `:Ai provider <name>` (Completion aus
-Registry, live), `:Ai info` — über `lib.nvim.usercmd.composer.verb("Ai", {...})`.
+### Phase 6 — Public API + `:Ai`-Composer ✅
+`lua/ai/init.lua`: `require("ai").setup()/.ask(req,cb)/.stream(req,handlers)/.config()`.
+`:Ai ask|stream|provider|info` über `lib.nvim.usercmd.composer` (`bindings/usercmds.lua`).
+`resolve()` löst `req.provider` (oder Default) zu einem konkreten, verfügbaren Provider auf,
+faltet Config-Defaults (Timeout, Provider-spezifisches Modell) und den Kontext-Block ein.
 
 ---
 
-### Phase 7 — Quick-Actions ("neue Idee" im Konzept)
-1. Hotkey/Usercmd: aktuellen Kontext (Buffer/Selection/Diagnostics/Quickfix — je nach
-   Cursor-Kontext, z. B. in der QF-Liste → deren Einträge) sofort in einen Prompt geben,
-   optional Modellwahl, `<CR>` schickt async, Antwort in eigenem Buffer/Panel.
-2. Zweiter Keymap, andere Wirkung: kein Chat-Panel, sondern ein `noice`-artiges,
-   umrandetes farbiges Badge (kleines "Post-it") oben/unten rechts, das die aktuelle
-   Fehlermeldung/den Kontext knapp erklärt — nutzt `kit.popup({type="toast"|"note",...})`.
+### Phase 7 — Quick-Actions ✅
+`bindings/actions.lua` + `bindings/keymaps.lua`, Default-Prefix `<leader>a`:
+1. `ask` (`<leader>aa`, n/v): Prompt-Eingabe, ggf. mit Selection-Kontext.
+2. `quick` (`<leader>as`, n/v): getippte Aufgabe + Kontext sofort streamen (das "neue Idee"
+   Quick-Action aus dem Konzept).
+3. `explain` (`<leader>ae`, n/v): Badge/Toast statt Chat-Panel (zweite Keymap-Variante aus
+   dem Konzept) — **erledigt**, nicht mehr im Backlog (Wkdbook-ROADMAP.md dort veraltet,
+   bei nächster Gelegenheit dort den Backlog-Eintrag streichen).
+
+Jede Action einzeln über `config.keymaps[id]` override-/disable-bar (Keymaps-als-Daten-Konvention).
 
 ---
 
-### Phase 8 — Wiring in nvim-config
-`plugins/personal/source.lua` (`MODE["ai.nvim"] = "dir"`), `plugins/personal/init.lua`
-(Lazy-Spec + `dependencies = {"StefanBartl/lib.nvim"}` + Keymaps für Phase 7).
-Vor Vergabe der Keymap-Präfixe: bestehende `<leader>a*`-Belegung gegenprüfen (Kollision
-mit `LUA-95`-Regel: spät geladene Plugins nicht versehentlich überschreiben).
+### Phase 8 — Wiring in nvim-config ❌ noch offen
+**Kollision geprüft und BESTÄTIGT, vor dem Wiring zu lösen:**
+`nvim/lua/config/ai/anthropic/init.lua` belegt bereits `<leader>aa` (ask), `<leader>ae`
+(edit), `<leader>ar` (refresh), `<leader>af` (focus), `<leader>as` (stop) — ein Ad-hoc-
+Anthropic-Setup von vor `ai.nvim`. `ai.nvim`s Default-Prefix `<leader>a` kollidiert direkt
+auf `aa`/`ae`/`as` (siehe Phase 7). Vor dem Wiring in `plugins/personal/{source,init}.lua`
+entscheiden:
+  - (a) `config/ai/anthropic` ablösen/entfernen, sobald `ai.nvim` produktiv ist (vermutlich
+    genau der Vorgänger, den `ai.nvim` ersetzen soll — gegenchecken, ob das zutrifft), oder
+  - (b) `ai.nvim`s `keymaps.prefix` in der Lazy-Spec auf einen anderen Präfix legen
+    (z. B. `<leader>ai` o.ä.).
+Noch nicht umgesetzt: `plugins/personal/source.lua` (`MODE["ai.nvim"] = "dir"`),
+`plugins/personal/init.lua` (Lazy-Spec + `dependencies = {"StefanBartl/lib.nvim"}`).
 
 ---
 
@@ -293,16 +308,25 @@ mit `LUA-95`-Regel: spät geladene Plugins nicht versehentlich überschreiben).
 ---
 
 ### Phase 10 — `gates/RELEASE.md` vor einem ersten Tag/Release
+Noch nicht begonnen — erst nach Phase 8 (Wiring, damit v1 tatsächlich im Alltag benutzt
+wurde, bevor getaggt wird).
 
-## Nächste konkrete Schritte (Stand jetzt)
+## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
-1. GH-Repo anlegen + klonen.
-2. Wkdbook-Ordner anlegen.
-3. Phase 1 (lib.nvim-Transport) umsetzen.
-4. Phase 2 (Scaffold) umsetzen.
-5. Phase 3-7 (Registry, Kontext, UI, API, Quick-Actions) umsetzen.
-6. Phase 8 (Wiring) umsetzen.
-7. Diese Datei laufend als Statusprotokoll fortschreiben.
+Phasen 0-7 sind erledigt, committet (`b77d014`, `f2ebe38`) und auf `origin/main` gepusht,
+CI grün. Offen:
+
+1. **Phase 8 — Kollisionsentscheidung zuerst**: `config/ai/anthropic` (nvim-config) vs.
+   `ai.nvim`-Default-Prefix `<leader>a` klären (ablösen oder Prefix verschieben, s.o.),
+   dann `plugins/personal/{source,init}.lua` wiring.
+2. Danach `ai.nvim` im Alltag benutzen, um v1 vor einem Tag zu validieren.
+3. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release.
+4. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration, `loomai`-Provider
+   sobald verfügbar (Trigger-Check bei jeder Wiederaufnahme, s.o.).
+5. Kleinigkeit: `wkdbook-myplugins/ai.nvim/ROADMAP/ROADMAP.md` — den Backlog-Eintrag zur
+   zweiten Keymap-Variante ("noice-artiges Badge") streichen, ist mit `explain`
+   (Phase 7) bereits umgesetzt.
+6. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
 
