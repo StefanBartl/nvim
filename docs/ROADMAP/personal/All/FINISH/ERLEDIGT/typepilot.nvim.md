@@ -1,5 +1,17 @@
 # `typepilot.nvim` — Konzept (AI-Provider-Abstraktion)
 
+> **Erledigt (2026-09-14).** Grundsatzfrage geklärt: **kein eigenes Plugin**
+> -- die hier skizzierte Completion-/Vorschlags-Funktionalität wird eine
+> neue Capability *innerhalb* von `ai.nvim` (Nutzer-Entscheidung: `ai.nvim`
+> soll langfristig das einzige AI-Plugin werden, keine mehreren
+> nebeneinander installierten AI-Plugins). Die Provider-Abstraktion, die
+> diese Notiz vorschlägt, existiert bereits vollständig in `ai.nvim`s
+> `providers/{claude,openai,ollama,gemini}.lua`. Konkrete, an die
+> Entscheidung angepasste Tasks stehen im
+> [ai.nvim.md-Handover](../../../../handovers/ai/ai.nvim.md), Abschnitt
+> "typepilot.nvim: Scoping-Entscheidung". Kein aktiver Tracking-Zustand
+> mehr hier, nach `ERLEDIGT/` verschoben.
+
 Angelegt 2026-08-08 aus `E:/repos/Notes/MyPlugin-Notes/nvim-typepilot/typepilot.md`.
 
 ---
