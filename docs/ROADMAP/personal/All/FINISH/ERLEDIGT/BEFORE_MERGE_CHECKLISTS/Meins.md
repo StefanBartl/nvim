@@ -24,7 +24,7 @@
 - [ ] `nvim/lua/autocmds` analysieren:
   - [ ] Refactoring?
     - [ ] `nvim/lua/autocmds` nach `nvim/lua/Bindings`
-  - [ ] Welche automcds gehören in ein projet von  einen in vim.fn.stdpath('config') .. \docs\ROADMAP\IDEAS?
+  - [ ] Welche automcds gehören in ein projet von  einen in vim.fn.stdpath('config') .. /docs/ROADMAP/LONG_RUN/IDEAS?
 - [ ] `lua/config/menu` nach `lua/wkdnvchad`?
 5. `/autcmds`
   1. passt zu `/bindings` ?
