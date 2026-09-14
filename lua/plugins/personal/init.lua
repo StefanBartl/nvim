@@ -719,6 +719,9 @@ plugins.add({
     dependencies = {
       "ibhagwan/fzf-lua",
       "StefanBartl/lib.nvim",
+      -- ui.kit.confirm/select/input (dialogs, root/rename pickers, prompts)
+      -- moved out of lib.nvim.ui.kit in the 2026-09 migration.
+      "StefanBartl/ui.nvim",
       -- "j-hui/fidget.nvim"
     },
     opts = {
