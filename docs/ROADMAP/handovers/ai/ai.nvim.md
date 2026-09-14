@@ -65,7 +65,7 @@
 | Transport-Erweiterung | `E:\repos\lib.nvim\lua\lib\nvim\net\curl` |
 | loomAI (nativ, Referenz für späteren Provider) | `E:\repos\loomAI` |
 | Regelwerk für neue Projekte | `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
-| report was loom ai braucht für ai.nvim | C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/ai/loomai-ai-nvim-integration.md |
+| report was loom ai braucht für ai.nvim | C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/handovers/ai/loomai-ai-nvim-integration.md |
 
 ---
 

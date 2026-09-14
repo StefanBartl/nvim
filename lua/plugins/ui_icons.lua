@@ -18,23 +18,23 @@ return {
   },
 
   -- Optional: mini.icons as fallback/alternative
-  {
-    "echasnovski/mini.icons",
-    version = false,
-    lazy = true,
-    enabled = false, -- disabled, nvim-web-devicons is preferred
-    config = function()
-      require("mini.icons").setup({
-        style = "glyph", -- or "ascii"
-      })
-    end,
-  },
+  -- {
+    -- "echasnovski/mini.icons",
+    -- version = false,
+    -- lazy = true,
+    -- enabled = false, -- disabled, nvim-web-devicons is preferred
+    -- config = function()
+      -- require("mini.icons").setup({
+        -- style = "glyph", -- or "ascii"
+      -- })
+    -- end,
+  -- },
 
   -- Optional: mini.nvim collection (if other mini modules are used)
-  {
-    "echasnovski/mini.nvim",
-    version = false,
-    lazy = true,
-    enabled = false, -- only enable if explicitly needed
-  },
+  -- {
+    -- "echasnovski/mini.nvim",
+    -- version = false,
+    -- lazy = true,
+    -- enabled = false, -- only enable if explicitly needed
+  -- },
 }

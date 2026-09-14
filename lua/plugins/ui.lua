@@ -103,10 +103,10 @@ return {
   -- toggle commands, at the cost of a second, heavier colorizer. Flip
   -- `enabled` on ONE of these two, never both -- running both double-
   -- highlights every match.
-  {
-    "brenoprata10/nvim-highlight-colors",
-    enabled = false,
-    cmd = { "HighlightColorsToggle", "HighlightColorsOn", "HighlightColorsOff" },
-    opts = {},
-  },
+  -- {
+    -- "brenoprata10/nvim-highlight-colors",
+    -- enabled = false,
+    -- cmd = { "HighlightColorsToggle", "HighlightColorsOn", "HighlightColorsOff" },
+    -- opts = {},
+  -- },
 }
