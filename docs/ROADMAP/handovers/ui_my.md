@@ -304,17 +304,55 @@ Link) — je in einem eigenen kleinen Nachbesserungs-Commit gefixt und
 gepusht. **Für die restlichen 20 Repos gehört dieser zweite Grep-Durchgang
 jetzt zum Standardvorgehen**, nicht erst am Ende.
 
-**Noch offen: 20 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
-documentation.nvim (6), gopath/fileops/emojis/buffer-ctx (5), markdown/
-insights (4), spotlight/pdfport/open/color_my_ascii (3), recommender/
-cmdlog/casedesk (2), sessions/hover/github_stats/cascade (1) — die letzte
-Gruppe sind Ein-Datei-Konsumenten, laut Plan bewusst zuletzt.
+**2026-09-14, dieselbe Session, Schritt 5 fortgesetzt bis 19/30:**
+documentation.nvim (9, weich — `editor/browse/init.lua`s eigenes
+Modul-Top-Level-Require zwingt die Testsuite trotzdem zu einem echten
+`ui.nvim`-Checkout in CI; CI-Analyse ergab drei separate Jobs, von denen
+nur `tests` überhaupt betroffen ist), gopath.nvim (5, weich, Healthcheck +
+mehrere Docs schrieben `ui.kit.confirm`/`.select` fälschlich `lib.nvim`
+zu — nicht nur der Require-String war falsch, sondern die Paketzuordnung
+selbst), fileops.nvim (5, weich trotz fehlendem `vim.ui.select`-Fallback
+an den meisten Stellen — Klassifikation läuft nach Lade-Zeitpunkt, nicht
+nach Fallback-Vorhandensein), emojis.nvim (8, weich, aber CI brauchte
+einen echten `ui.nvim`-Checkout: zwei Specs treiben `ui.kit.select`/den
+Overlay tatsächlich, nicht nur gestubbt), runtime-analysis.nvim
+(10, weich, nachgeholt aus der ursprünglichen 6-Datei-Stufe — beim ersten
+Durchgang übersprungen), buffer-ctx.nvim (6, weich), markdown.nvim
+(6, weich — CI dort seit 4 Commits VOR dieser Migration wegen fehlendem
+`rg` im Runner rot, unabhängig verifiziert und als Task geflaggt statt
+selbst gefixt), insights.nvim (8, gemischt — Scratch-Buffer weich,
+Dev-Server-Prompt effektiv hart weil `devserver.prompt` standardmäßig an
+ist und es keinen Fallback gibt → `ui.nvim` in die persönliche Config),
+spotlight.nvim (9, **hart** — `ui.kit.select` IST die Spotlight-Liste,
+`health.lua` markierte das schon vorher `required = true` → ebenfalls
+`ui.nvim` in die persönliche Config).
+
+**Neues wiederkehrendes Muster ab insights.nvim:** wenn `ui.kit` in einer
+`health.lua` bisher unter einer "lib.nvim"-Sektion mitlief, wird das jetzt
+in eine eigene "ui.nvim"-Sektion mit korrektem Install-Hinweis
+herausgelöst, statt den falschen Hinweistext ("Update lib.nvim") einfach
+nur umzubenennen — sonst zeigt `:checkhealth` bei fehlendem `ui.nvim`
+weiterhin auf das falsche Repo.
+
+**Noch offen: 11 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
+pdfport/open/color_my_ascii (3 Dateien), recommender/cmdlog/casedesk
+(2), sessions/hover/github_stats/cascade (1) — die letzte Gruppe sind
+Ein-Datei-Konsumenten, laut Plan bewusst zuletzt.
 
 Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 von 6
-und der `menu`-Toggle sind erledigt, Schritt 5 zu 10/30 (s. o.), noch offen:
-- Schritt 5: die restlichen 20 Konsumenten-Repos
+und der `menu`-Toggle sind erledigt, Schritt 5 zu 19/30 (s. o.), noch offen:
+- Schritt 5: die restlichen 11 Konsumenten-Repos
 - Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen (kein `lib.nvim`-Shim
   gebaut — bewusst übersprungen, direkt mit Schritt 5 weitergemacht)
+
+**Nebenbei als eigenständige Aufgaben geflaggt (Chips), nicht selbst
+gefixt:**
+- `emojis.nvim`s `picker.lua`: Moduldoku behauptet einen
+  `vim.ui.select`-Fallback, den `select_fallback()` tatsächlich nicht hat
+  (`task_5d14fa46`).
+- `markdown.nvim`s CI (`tests`-Job): seit mind. 4 Commits rot wegen
+  fehlendem `rg` im Runner-Image, unabhängig von dieser Migration
+  (`task_2295ae16`).
 
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
 - rules.nvim-Pass über ui.nvim (nachrangig zu my.nvim)
