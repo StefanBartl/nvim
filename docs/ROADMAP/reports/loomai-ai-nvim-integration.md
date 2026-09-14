@@ -25,9 +25,19 @@ loomAI-`README.md`.
 (Abschnitt 11) ist jetzt ebenfalls gebaut, getestet (luacheck, stylua, die
 plenary-Suite inkl. eines neuen Regressionstests, sowie ein manueller
 Ende-zu-Ende-Smoketest gegen einen laufenden loomAI+Ollama) und gepusht.
-Als `BUILTIN`-Provider registriert, aber bewusst **nicht** in
-`DEFAULTS.lua`s `provider_order` — nur über `provider = "loomai"` erreichbar,
-bis er sich in der Praxis bewährt hat.
+Als `BUILTIN`-Provider registriert.
+
+**Update (2026-09-14, dritte Änderung):** Auf Wunsch ist `loomai` jetzt auch
+in `DEFAULTS.lua`s `provider_order` (an letzter Stelle, hinter `claude`,
+`ollama`, `openai` — damit es nie einen bereits konfigurierten Cloud-/CLI-
+Provider verschattet). `provider = "auto"` kann `loomai` damit ohne
+explizite Angabe erreichen. Konsequenz, da `available()` (siehe unten) keinen
+Netzwerk-Check macht: auf einer Maschine ohne `ANTHROPIC_API_KEY`/
+`OPENAI_API_KEY`/laufenden Ollama-Daemon landet "auto" jetzt bei `loomai`,
+selbst wenn dort kein loomAI-Server läuft — der Fehler zeigt sich dann als
+normaler Verbindungsfehler bei `ask()`/`stream()`, nicht mehr als "kein
+Provider verfügbar". Gleiches Verhalten wie bei `ollama.lua`, wenn die
+Ollama-Binary zwar auf PATH ist, der Daemon aber nicht läuft.
 
 Die `available()`-Design-Frage aus [Abschnitt 9](#9-offene-design-frage-available-vs-netzwerk-health-check)
 ist damit entschieden: **Option (a)** — `available()` prüft nur
