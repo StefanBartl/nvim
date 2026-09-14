@@ -227,6 +227,26 @@ gefunden und repariert (neue Verzeichnistiefe zwei Ebenen flacher).
 entsprechend fortgeschrieben. Details: `NOTES.md`s 26. Runde. Gepusht als
 `ui.nvim@5fba540`.
 
+**2026-09-14, neue Session (Worktree `busy-bassi-c01118`, nach Sync auf den
+oben beschriebenen Stand): `menu = true/false`-Toggle verdrahtet.**
+
+War als eigener Punkt in "Offene Tasks" gelistet. `ui.contextmenu` bekam
+einen internen `enabled`-Flag (Default `true` — opt-out, nicht opt-in, da
+Renderer/Trigger schon heute ohne jeden Setup-Aufruf funktionieren) plus
+`set_enabled(bool)`/`is_enabled()`; `M.open()` ist das einzige Gate —
+deckt `bind_buffer` automatisch mit ab, da dessen Trigger auf `open`
+delegiert, `entry`/`group`/`submenu` bleiben komplett unangetastet.
+Erreichbar über `require("ui").setup({ menu = false })`, neben den
+bestehenden `keymaps`/`usrcmds`-Flags (nicht `ui.config.setup()`, wie im
+Plan ursprünglich vermutet — passt besser zu `ui.setup()`s bestehender
+"welche Submodule sind aktiv"-Rolle).
+
+Ende-zu-Ende gegen ein echtes headless Neovim verifiziert (Default an,
+`open()` liefert eine echte Surface; nach `menu = false` liefert `open()`
+`nil`), plus neue Tests in `TESTS/config_spec.lua`. Volle Suite grün,
+`luacheck`/`stylua` clean (126 Dateien). `PLAN-ui-kit-migration.md`
+entsprechend fortgeschrieben (§2, §5). Gepusht als `ui.nvim@9acf77d`.
+
 ---
 
 ## Offene Tasks
@@ -235,15 +255,39 @@ Statusline-Ideen-Auswahl (`IDEEN-statusline.md`, 16 von ~18 Punkten) ist
 seit 2026-09-14 **komplett abgearbeitet** — nichts mehr offen aus dieser
 Liste.
 
+**2026-09-14, Worktree `busy-bassi-c01118`, Schritt 5 (Konsumenten
+umstellen) begonnen — 4 von 30 Repos fertig:**
+
+Reihenfolge wie im Plan (Nutzungstiefe zuerst): `filetree.nvim` (23
+Lua+7 MD, hart), `sandbox.nvim` (13 Lua, hart), `replacer.nvim` (11 Lua+1
+MD, hart), `lsp.nvim` (11 Lua, **weich** — erstes Repo, wo `ui.nvim`
+tatsächlich optional bleibt, nicht Pflicht). Jedes: mechanischer
+Prefix-Rename, verwaiste "update lib.nvim"-Textstellen korrigiert,
+Dependency-Doku (hart vs. weich je nach tatsächlichem Require-Verhalten
+geprüft, nicht angenommen), Test-Infra (rtp-Bootstrap je Repo-Eigenart
+erweitert), volle Suite + `luacheck`/`stylua` grün (bei lsp.nvim zusätzlich
+CI abgewartet, da ein Smoke-Test lokal nicht nachstellbar war), gepusht,
+persönliche Installations-Spec nachgezogen wo nötig, Plan-Doku
+aktualisiert.
+
+**Nebenbei gefunden:** die primäre `ui.nvim`-Checkout unter
+`E:\repos\ui.nvim` hing auf einem alten Commit (vor Schritt 3) — ohne
+`git pull` dort hätte weder die Tests noch dein echtes Neovim-Setup
+`ui.kit`/`ui.contextmenu` gefunden. Gepullt.
+
+**Noch offen: 26 der 30 Konsumenten-Repos**, nächste laut Reihenfolge:
+language.nvim (9), dap.nvim (9), diff.nvim (7), dann absteigend
+reposcope/pickers/images/documentation (6), gopath/fileops/emojis/
+buffer-ctx (5), markdown/insights (4), spotlight/pdfport/open/
+color_my_ascii (3), recommender/cmdlog/casedesk (2), sessions/hover/
+github_stats/cascade (1) — die letzte Gruppe sind Ein-Datei-Konsumenten,
+laut Plan bewusst zuletzt.
+
 Rechtsklick-Menü-Migration (`PLAN-ui-kit-migration.md`) — Schritt 3 von 6
-erledigt (s. o.), noch offen:
-- Schritt 4: Kompat-Shim in `lib.nvim`, mit Enddatum
-- Schritt 5: die ~30 (`ui.kit`) bzw. ~11 (`contextmenu`) Konsumenten-Repos
-  einzeln umstellen, in Reihenfolge der Nutzungstiefe (filetree/sandbox/
-  replacer/lsp zuerst)
-- Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen
-- `menu = true/false`-Toggle-Semantik in `ui.config.setup()` verdrahten
-  (Entscheidung steht, Umsetzung nicht)
+und der `menu`-Toggle sind erledigt, Schritt 5 zu 4/30 (s. o.), noch offen:
+- Schritt 5: die restlichen 26 Konsumenten-Repos
+- Schritt 6: Shim löschen, `lib.nvim`-Docs nachziehen (kein `lib.nvim`-Shim
+  gebaut — bewusst übersprungen, direkt mit Schritt 5 weitergemacht)
 
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
 - rules.nvim-Pass über ui.nvim (nachrangig zu my.nvim)
