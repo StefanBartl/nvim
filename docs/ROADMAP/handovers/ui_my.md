@@ -166,23 +166,43 @@ gecacht. 6 neue Tests, Katalog- + Doku-Eintrag ergänzt, `luacheck`/`stylua`
 einem Preset verdrahtet (`used_by = {}`), wie der Rest der Auswahl vor
 ihrer eigenen Verdrahtungsrunde. Gepusht als `ui.nvim@8ba9ab2`.
 
+**2026-09-14, dieselbe Session, vier weitere Runden — komplette
+Statusline-Ideen-Auswahl abgeschlossen:**
+- **Casedesk-SLA-Countdown**: Badge existierte schon (`casedesk.nvim`s
+  eigenes SLA.md §6C), nur einfarbig — jetzt zweistufig (Gelb solange
+  dringend, Rot sobald überfällig). Idee entsprechend korrigiert. 9 neue
+  Tests (gab vorher gar keine für dieses Modul). `ui.nvim@d37b1f4`.
+- **Filetree-Verlaufspunkte**: `opts.history = true` an
+  `filetree_cwd_mode` — bis zu 3 kleine Punkte (aktuell gefüllt, ältere
+  hohl), geschlüsselt nach Modus UND Root (sonst wäre "zwischen zwei
+  Cases hin- und herspringen" unsichtbar geblieben, da beide denselben
+  Modusnamen tragen können). `ui.nvim@fe5d277`.
+- **Idle-Erweiterung**: neue Primitive `ui.statusline.utils.idle`
+  (`is_idle()`/`wrap()`, auf `CursorHold`/`CursorHoldI`) + erstes Payload
+  `idle_clock` (Uhrzeit, verschwindet beim nächsten Tastendruck).
+  Mini-Git-Log/mehr Breadcrumb-Platz bleiben offen, können dieselbe
+  Primitive ohne eigene Verdrahtung nutzen. `ui.nvim@b5a37ca`.
+- **Seit-letztem-Save-Indikator**: `since_last_save` — Dauer seit
+  ungespeicherter Änderung, eskalierend gedämpft → `DiagnosticWarn` →
+  `DiagnosticError`, Uhr setzt sich beim Speichern zurück.
+  `ui.nvim@91f575c`.
+- **Adaptive Segmentauswahl nach Fensterbreite**: `Ui.Statusline.Config.
+  responsive = true` + generisches `essential`-Tag im Katalog
+  (`mode`/`file`/`diagnostics`/`cursor` sind "das Nötigste", alles andere
+  droppable) statt einer zweiten, parallel gepflegten `order`-Liste — genau
+  nach der unten skizzierten Spezifikation. `ui.nvim@03cfa43`.
+
+Jede Runde: eigene Tests, `luacheck`/`stylua` clean, Katalog + `docs/
+modules.md` aktualisiert, direkt nach `main` gepusht. Details je Runde:
+`NOTES.md`s 21.–25. Runde.
+
 ---
 
 ## Offene Tasks
 
-Aus der Statusline-Ideen-Auswahl noch offen, jeweils als eigener
-Umsetzungsschritt:
-- Recommender-Badge — ~~erledigt~~ siehe oben (`recommender_badge`)
-- GitHub-Stats-Ticker — ~~erledigt~~ siehe oben (`github_stats_badge`)
-- Runtime-Analysis-Ampel — ~~erledigt~~ siehe oben (`runtime_analysis_ampel`)
-- Casedesk-SLA-Countdown
-- Filetree-Verlaufspunkte
-- Idle-Erweiterung (nach N Sekunden Inaktivität)
-- Seit-letztem-Save-Indikator
-- Adaptive Segmentauswahl nach Fensterbreite (Design bereits geklärt:
-  pro-Fenster via `nvim_win_get_width(vim.g.statusline_winid)`, Mechanismus
-  über ein generisches `essential`-Tag im Statusline-Katalog statt
-  parallelen `order_compact`-Listen pro Preset)
+Statusline-Ideen-Auswahl (`IDEEN-statusline.md`, 16 von ~18 Punkten) ist
+seit 2026-09-14 **komplett abgearbeitet** — nichts mehr offen aus dieser
+Liste.
 
 Aus der ursprünglichen Roadmap, noch nicht angegangen:
 - Rechtsklick-Menü nach ui.nvim migrieren (bewusst ganz zum Schluss, 30
