@@ -32,6 +32,7 @@
     - [Ist-Stand (verifiziert, 2026-09-14, Code direkt gelesen, nicht angenommen)](#ist-stand-verifiziert-2026-09-14-code-direkt-gelesen-nicht-angenommen)
     - [Was konkret zu bauen ist](#was-konkret-zu-bauen-ist)
     - [Offene Fragen für die Fortsetzungs-Session](#offene-fragen-fr-die-fortsetzungs-session)
+  - [Design-Entscheidungen, Gemini, rules.nvim, Live-Testing-Plan (2026-09-14, Folgesession 4)](#design-entscheidungen-gemini-rulesnvim-live-testing-plan-2026-09-14-folgesession-4)
   - [Nächste konkrete Schritte (Stand jetzt, 2026-09-14)](#nchste-konkrete-schritte-stand-jetzt-2026-09-14)
 
 ---
@@ -594,22 +595,177 @@ Rechercheergebnis- und Planungsstand fest, damit bei einer Sitzungsunterbrechung
 
 ---
 
+## Design-Entscheidungen, Gemini, rules.nvim, Live-Testing-Plan (2026-09-14, Folgesession 4)
+
+Ausgangspunkt: der Nutzer wollte die meisten Features beider Repos live
+testen. Dafür erst ein [Live-Testing-Plan](../../reports/ai/live-testing-plan.md)
+geschrieben (`nvim/docs/ROADMAP/reports/ai/live-testing-plan.md`), dabei zwei
+echte Befunde gemacht (GPU-Korrektur, ein reproduzierter Bug), dann vier
+offene Design-Entscheidungen dem Nutzer vorgelegt (je mit Empfehlung) und
+umgesetzt.
+
+**Nebenbefund beim Gegenlesen:** zwischen der letzten und dieser Sitzung lief
+bereits `dab3700 refactor(ui): migrate from lib.nvim.ui.kit to ui.nvim` in
+`ai.nvim` — Phase 5 oben (`lib.nvim.ui.kit.surface`) ist dadurch historisch
+überholt, **absichtlich nicht rückwirkend umgeschrieben** (wie der Rest
+dieser Datei: neue Fakten kommen als neuer Abschnitt dazu, alte Einträge
+bleiben Zeitkapsel). Aktueller Stand: `ui.nvim` (`StefanBartl/ui.nvim`), s.
+`docs/requirements.md`/`docs/installation.md` im `ai.nvim`-Repo. War nicht
+Teil dieser Sitzung, nur beim Gegenlesen aufgefallen.
+
+### Design-Entscheidungen (vom Nutzer bestätigt, jeweils die empfohlene Option)
+
+1. **loomAI-ModelRouter-Routing**: Modellname-Präfix (Option a aus dem
+   Scoping-Abschnitt oben), **nicht** ein explizites `provider`-Feld. Ändert
+   den bestehenden `/ask`-Vertrag nicht.
+2. **Gemini-Scope**: **beides** — `ai.nvim` direkt (`providers/gemini.lua`,
+   diese Sitzung erledigt, s. u.) **und** später der loomAI-ModelRouter
+   bekommt einen dritten Cloud-Client dafür (noch offen, s.
+   Umsetzungsplan unten).
+3. **loomAI-Dashboard**: ein minimales Ask/Chat-Testpanel bauen (Eingabefeld
+   + Provider/Modell-Auswahl + Streaming-Ausgabe) — noch offen, s.
+   Umsetzungsplan unten.
+4. **`OLLAMA_HOST`-Bug**: sofort fixen — **erledigt**, s. u.
+
+### `ai.nvim`-seitig erledigt (Commit `0db00bd`, gepusht, CI grün)
+
+- **Echter Bug gefixt**: `lua/ai/providers/ollama.lua`s `host()` las
+  `OLLAMA_HOST` für die Client-Ziel-URL — das ist aber Ollamas **eigene**
+  Variable für die *Server*-Bind-Adresse (typischerweise `0.0.0.0:11434`,
+  kein Schema, kein gültiges Client-Ziel). Auf der Test-Maschine live
+  reproduziert (`OLLAMA_HOST=0.0.0.0:11434` war dort tatsächlich gesetzt,
+  `ollama.lua` hätte daraus `0.0.0.0:11434/api/chat` gebaut). Exakt dieselbe
+  Verwechslung, die `loomai.lua` mit `LOOMAI_HOST` (statt `OLLAMA_HOST`)
+  bereits bewusst vermieden hatte. Umbenannt auf `AI_OLLAMA_HOST`, Doku
+  (`docs/requirements.md`, `doc/ai.txt`) nachgezogen.
+- **Gemini-Provider**: `lua/ai/providers/gemini.lua`, strukturell wie
+  `claude.lua`/`openai.lua` (SSE-Streaming, `ai.providers.sse`s
+  `non_data_lines`/`recover_error_body`-Fehlerbehandlung analog übernommen —
+  **nicht** live gegen die echte Gemini-API verifiziert, da kein
+  `GEMINI_API_KEY` verfügbar war; das muss die nächste Live-Testing-Runde
+  nachholen, s. Testing-Plan). Auth bewusst über den `x-goog-api-key`-Header
+  via `secret_headers`, nicht Gemini's übliches `?key=...`-Query-Param — Letzteres
+  hätte den Key in curl's argv/Prozessliste sichtbar gemacht, exakt die
+  Bugklasse, wegen der es `ai.nvim` überhaupt gibt. In `BUILTIN` und
+  `provider_order` (nach `openai`, vor `loomai`). `@types`, Tests
+  (`config_spec.lua`, `providers_spec.lua`), alle Docs (`architecture.md`,
+  `configuration.md`, `scope.md`, `requirements.md`, `doc/ai.txt`)
+  nachgezogen. luacheck/stylua grün, Plenary-Suite 22/22 grün, CI grün.
+
+### rules.nvim gegen `ai.nvim` laufen lassen (erledigt, kein Auftrag mehr offen)
+
+`rules.nvim` (`E:\repos\rules.nvim`) ist ein generischer Regel-Checker; die
+wkdbook-Gates `NEW_PROJECT.md` (`NEW-*`) und `RELEASE.md` (`REL-*`) sind seit
+2026-09-13 bereits vollständig als `rule`-Blöcke migriert, `REVIEW.md` selbst
+ist nur ein Index, aber die Dateien, auf die es verweist
+(`regeln/LUA_NVIM.md`, `regeln/PRINCIPLES.md`, `regeln/PERFORMANCE.md`) sind
+es ebenfalls (Familien `CMT`/`DEP`/`ERR`/`LLS`/`LUA`/`SEC`/`TS`/`UI`/`XP`,
+`PRIN`, `PERF`). Alle drei Gates headless gegen `E:/repos/ai.nvim` laufen
+lassen (Setup-Snippet unten, wiederverwendbar):
+
+```lua
+require("rules").setup({
+  rulesets = { "E:/repos/WKDBooks/Development/wkdbook-Lua/Checklists" },
+  gates = {
+    new_project = { "NEW" },
+    release = { "REL" },
+    review = { "CMT","DEP","ERR","LLS","LUA","PRIN","PERF","SEC","TS","UI","XP" },
+  },
+})
+require("rules").run_gate("release", "E:/repos/ai.nvim")  -- interaktiv (quickfix+buffer)
+```
+
+**Ergebnis:** kein Gate hat einen automatisch geprüften **kritischen** Fund
+(`exit_code=0` bei allen drei). Ein automatisierter `fail` gefunden:
+**`NEW-08`** ("`/bindings`-Ordner", `recommended`) erwartet
+`lua/*/bindings/{keymaps,usrcmds,autocmds}.lua` — `ai.nvim` hat aber
+`bindings/usercmds.lua` (nicht `usrcmds.lua`) und kein `bindings/autocmds.lua`
+unter genau diesem Glob-Muster geprüft (tatsächlich existiert
+`bindings/autocmds.lua` im Repo — nur der `usrcmds`-vs-`usercmds`-Namensunterschied
+lässt den Check gesamt scheitern, `and`-verknüpft). **Reine
+Namenskonventions-Frage, kein echter Strukturmangel** — `rules.nvim` selbst
+nennt seine eigene Datei `bindings/usrcmds.lua`, `ai.nvim` hat sich für
+`usercmds.lua` entschieden; beides ist lesbar, nur inkonsistent mit dem
+Katalog. **Nicht behoben** (Umbenennen ist eine reine Konvention-vs-Konvention-
+Entscheidung, keine Bugkorrektur) — liegt beim Nutzer, ob `ai.nvim`s Datei an
+den Katalog angepasst wird oder der Katalog an gängige Praxis.
+
+Die `review`-Gate-Familien liefern erwartungsgemäß überwiegend `manual`
+(judgment-basierte Regeln, kein automatischer Check) — mehrere hundert
+Einträge, ein echter Mehrstunden-Task laut `rules.nvim`s eigener Doku, **nicht
+in dieser Sitzung durchgearbeitet**. Empfehlung: `:Rules gate review
+E:/repos/ai.nvim` interaktiv (Buffer-Report) bei Gelegenheit durchgehen,
+nicht als JSON-Dump wie hier.
+
+### Umsetzungsplan: was noch offen ist
+
+**A. loomAI-ModelRouter** (C++, `E:\repos\loomAI`) — vollständig gescoped im
+Abschnitt oben, jetzt mit bestätigter Routing-Option (a) und **erweitert um
+Gemini als dritten Cloud-Client** (Design-Entscheidung 2):
+1. `src/openai_client.hpp/.cpp` (`Authorization: Bearer $OPENAI_API_KEY`).
+2. `src/anthropic_client.hpp/.cpp` (`x-api-key: $ANTHROPIC_API_KEY` +
+   `anthropic-version`-Header).
+3. `src/gemini_client.hpp/.cpp` (`x-goog-api-key: $GEMINI_API_KEY`-Header —
+   **nicht** `?key=...` in der URL, gleiche Argv-Sicherheitsbegründung wie
+   bei `ai.nvim`s `gemini.lua` oben; Response-Schema
+   `candidates[0].content.parts[].text`).
+4. Modellname-Präfix-Router in `main.cpp`s `/ask`/`/ask/stream`-Handlern:
+   `claude-*`→Anthropic, `gpt-*`/`o1-*`/`o3-*`→OpenAI, `gemini-*`→Google,
+   sonst→Ollama (aktuelles Verhalten als Fallback).
+5. Non-SSE-Fehlerkörper-Recovery (wie `ai.providers.sse` in Lua) für alle
+   drei neuen Clients — mit hoher Wahrscheinlichkeit dieselbe Bugklasse wie
+   bei `claude.lua`/`openai.lua`.
+6. `error_text()`-Stringify-Helper (aus dem `4e2777c`-Fix) konsequent auch in
+   den drei neuen Clients, nicht nur im äußeren `try/catch`.
+7. Live-Tests mit echten Keys inkl. Fehlerpfad (ungültiger Key), dann Doku
+   (`README.md`, `docs/Guides/ki-agenten-framework-architektur.md`).
+
+**B. loomAI-Dashboard Ask/Chat-Testpanel** (`dashboard/index.html`) —
+Design-Entscheidung 3:
+1. Neue Karte "Ask" neben "Agenten"/"System": Textarea für den Prompt,
+   Select für Provider (`ollama`/`openai`/`anthropic`/`gemini`, sobald A
+   steht) bzw. Modellname-Freitext, Submit-Button.
+2. `fetch('/ask/stream', {method:'POST', body: JSON.stringify({prompt, model})})`
+   + manuelles SSE-Body-Parsing (kein `EventSource` möglich für POST-Bodies —
+   `EventSource` unterstützt nur GET; stattdessen `fetch` +
+   `response.body.getReader()`, zeilenweise `data:`-Parsing wie in
+   `ai.nvim`s `sse.lua`, nur in JS).
+3. Ausgabe live in ein `<div>` unterhalb des Eingabefelds anhängen, während
+   Tokens eintreffen.
+4. Die veraltete "Model: simulation (LLM folgt)"-Badge im System-Status
+   entfernen/korrigieren (sie bezieht sich auf den separaten
+   Simulations-Agenten, nicht auf `/ask`, s. Testing-Plan Abschnitt 8).
+5. Kein Framework nötig — bestehendes Dashboard ist Vanilla-JS/CSS in einer
+   einzigen `index.html`, gleicher Stil beibehalten.
+
+**Beide (A, B) sind für eine eigene Sitzung vorgesehen** (C++-Build-/Test-
+Zyklen + Browser-Testing lassen sich schlecht in derselben Sitzung mit
+mehreren anderen Aufgaben bündeln, und die "max 1 Agent"-Regel erzwingt
+ohnehin sequenzielles Arbeiten). Reihenfolge-Empfehlung: A vor B, damit das
+Dashboard-Testpanel gegen einen bereits multi-provider-fähigen Server testen
+kann, statt zweimal (einmal nur-Ollama, einmal nach A) angepasst werden zu
+müssen.
+
+---
+
 ## Nächste konkrete Schritte (Stand jetzt, 2026-09-14)
 
 Phasen 0-8 erledigt, Code-Review durchgelaufen (9/10 Findings gefixt), `lib.nvim`-CI
 komplett grün (inkl. `publish-ci-verified`), `ai.nvim`-CI grün, `doc/ai.txt`
 nachgetragen. `loomai`-Provider gebaut, in `provider_order`, live gegen `:Ai
 ask`/`:Ai stream` verifiziert (siehe [oben](#loomai-provider-umgesetzt-2026-09-14-folgesession)).
+`gemini`-Provider (ai.nvim-seitig) gebaut und gepusht, `OLLAMA_HOST`-Bug
+gefixt, `rules.nvim` gegen `ai.nvim` laufen lassen (siehe [oben](#design-entscheidungen-gemini-rulesnvim-live-testing-plan-2026-09-14-folgesession-4)).
 Alle Repos (`ai.nvim`, `lib.nvim`, `loomAI`, `nvim`-Config, `WKDBooks`) committet
-und gepusht, synchron mit `origin/main`. Doku beider Repos (`ai.nvim`, `loomAI`)
-am 2026-09-14 auf Konsistenz mit dem Code geprüft — keine Abweichung gefunden,
-nichts zu fixen (Endpoints, Env-Vars, `provider_order`, `LOOMAI_HOST` überall
-korrekt und aktuell dokumentiert). Offen:
+und gepusht, synchron mit `origin/main`. Offen:
 
-1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`), um v1
-   vor einem Tag zu validieren — der einzige noch offene Schritt, der sich nicht
-   durch eine Sitzung ersetzen lässt.
+1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`/
+   `gemini`), um v1 vor einem Tag zu validieren — Live-Testing-Plan dafür
+   fertig: [reports/ai/live-testing-plan.md](../../reports/ai/live-testing-plan.md).
 2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release, danach.
+   `rules.nvim`s `release`-Gate zeigt keine automatisierten kritischen
+   Lücken (s. o.); die `manual`-Posten aus dem `review`-Gate noch nicht
+   durchgearbeitet.
 3. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration.
    `loomai`-Provider ist erledigt (s. o.), nicht mehr offen.
 4. `ui/panel.lua`s Voll-Buffer-`set_lines()` pro Stream-Chunk (Review-Finding, bewusst
@@ -618,13 +774,14 @@ korrekt und aktuell dokumentiert). Offen:
    statt Wiederverwendung (Review-Finding, bewusst nicht gefixt) — braucht ein
    durchdachtes Pooling-Design (z. B. thread-lokale Clients), erst bei spürbarem
    Bedarf angehen.
-6. loomAI hat weiterhin keinen `ModelRouter`/Anthropic-/OpenAI-Client — `/ask*`
-   ruft direkt Ollama, `model` unvalidiert durchgereicht (Aufgabe E, Option 1).
-   **Vollständiges Scoping dazu jetzt fertig**, siehe
-   [loomAI: ModelRouter für klassische Provider](#loomai-modelrouter-fr-klassische-provider-openaianthropicopen-source--scoping-2026-09-14)
-   oben — nächste Session kann direkt mit der Umsetzung starten (Empfehlung:
-   Routing-Option (a), Modellname-Präfix).
-7. Diese Datei laufend als Statusprotokoll fortschreiben.
+6. **loomAI-ModelRouter (OpenAI/Anthropic/Gemini) + Dashboard-Ask-Testpanel**
+   — vollständiger Umsetzungsplan jetzt fertig, siehe unmittelbar oben
+   ("Umsetzungsplan: was noch offen ist", Teile A+B). Nächste Session kann
+   direkt mit Teil A (ModelRouter) starten.
+7. `NEW-08` (rules.nvim-Fund): `ai.nvim`s `bindings/usercmds.lua` heißt anders
+   als der Katalog erwartet (`usrcmds.lua`) — reine Namenskonvention,
+   Entscheidung beim Nutzer, ob umbenannt wird.
+8. Diese Datei laufend als Statusprotokoll fortschreiben.
 
 ---
 
