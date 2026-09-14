@@ -264,6 +264,19 @@ Session kollidiert (unterschiedliche Dateien, sauber rebased). Volle
 Suite grün, `luacheck`/`stylua` clean. Details: `NOTES.md`. Gepusht als
 `ui.nvim@4bffa02`.
 
+**Nachtrag, nach Neustart per Live-Feedback: Bug bestand weiter, zweite
+Ursache gefunden.** Präzisiert: tritt erst bei dynamischer
+Breitenberechnung auf, verschlimmert sich mit mehr Tabs (erst Icon weg,
+dann auch Text abgeschnitten) — zeigt eine zweite, unabhängige Ursache,
+die reine interne Konsistenz nicht fangen konnte: ein echtes
+Terminal/eine echte Schrift kann ein Nerd-Font-Glyph breiter zeichnen, als
+Neovims eigene Breitentabellen glauben — keine Lua-Messung kann das sehen,
+sie fragt immer nur Neovims eigenes Modell. Fix: `ui.tabline.modules.
+buffers()` reserviert jetzt 2 Spalten Puffer PRO sichtbarem Chip in der
+"passt er noch rein"-Entscheidung (nicht im Rendering selbst) — passt zum
+beobachteten Wachstumsmuster. Drei Tests neu kalibriert. Volle Suite grün.
+Gepusht als `ui.nvim@9e5639f`.
+
 ---
 
 ## Offene Tasks
