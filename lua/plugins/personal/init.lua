@@ -793,6 +793,9 @@ plugins.add({
     event = "VeryLazy", -- must load AFTER the tree plugin's config function runs
     dependencies = {
       "StefanBartl/lib.nvim", -- shared helpers (neo-tree node utils, etc.)
+      -- ui.kit/ui.contextmenu (right-click menu, on by default) -- moved out
+      -- of lib.nvim.ui.kit/lib.nvim.contextmenu in the 2026-09 migration.
+      "StefanBartl/ui.nvim",
       -- only ONE tree plugin is needed:
       "nvim-neo-tree/neo-tree.nvim",
       -- or: "nvim-tree/nvim-tree.lua",
