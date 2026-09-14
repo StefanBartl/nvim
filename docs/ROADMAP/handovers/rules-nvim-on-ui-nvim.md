@@ -223,8 +223,10 @@ risikoarm — gleich gefixt (luacheck/stylua-grün, Commit direkt auf `main`).
 | `lua/ui/kit/` (20 Dateien, geteiltes Toolkit) + `lua/ui/contextmenu/` | ✅ Runde 1 fertig, 3 Fixes committet (`5a1f510`) |
 | `lua/ui/statusline/` (Module, Renderer) | ✅ Runde 2 fertig, 4 Fixes committet (`97953f5`) |
 | `lua/ui/tabline/`, `lua/ui/bindings/` | ✅ Runde 3 fertig, 4 Fixes + 2 Regressionstests committet (`c2da007`) |
-| `lua/ui/config/`, `lua/ui/highlights/`, `lua/ui/@types/` | offen |
-| Rest (`init.lua`, `health.lua`) | offen |
+| `lua/ui/config/`, `lua/ui/init.lua`, `lua/ui/health.lua` | ✅ Runde 4 fertig, 5 Fixes + 2 Regressionstests committet (`8e7c1da`) |
+| `lua/ui/theme/`, `lua/ui/winbar/` | ✅ Runde 5 fertig, keine Funde |
+
+**Kompletter `lua/ui/`-Baum (93 Lua-Dateien) durch — alle 5 Runden abgeschlossen.**
 
 ## Runde 1 (2026-09-14): `ui.kit/` + `contextmenu/`
 
@@ -345,4 +347,65 @@ Datei.
 Keine Funde zu globalem State, Shell-Strings, veralteten APIs oder
 `pcall(f(args))` in diesem Bereich; der restliche Code (Renderer,
 Highlights, Styles, Usercmd-Dispatcher) sauber.
+
+## Runde 4 (2026-09-14): `ui/config/`, `ui/init.lua`, `ui/health.lua`
+
+Der Setup-/Config-Merge-Pfad — läuft einmal pro Session, aber Fehler dort
+betreffen die ganze Session. Fünf echte Funde, zwei davon 🔴, alle gefixt,
+luacheck/stylua grün, volle Testsuite grün (inkl. 2 neuer Regressionstests),
+committet + auf `main` gepusht (`8e7c1da`):
+
+- **`config/init.lua`** (🔴 Kriterium 2, kein Type-Guard): `setup({ theme =
+  ... })`/`setup({ tabline = ... })` mergten einen Nicht-Tabellen-Override
+  direkt in `vim.tbl_deep_extend`, ohne Guard — ein naheliegender Tippfehler
+  (`tabline = false`) ließ `setup()` mit einem ungefangenen Lua-Error
+  abbrechen. Fix: `type(...) == "table"`-Guard mit `notify.warn`-Fallback,
+  analog zu `load_statusline_config`s bestehendem Muster.
+- **`config/init.lua`** (🔴 Kriterium 6, Config-Merge/Referenz-Leck): ohne
+  `tabline`-Override war `config.ui.tabline` **dasselbe Tabellenobjekt**
+  wie `ui.config.DEFAULTS().tabline` — `vim.tbl_deep_extend` kopiert nur
+  Keys, die in mehr als einer Quelle vorkommen, ein Key wie `tabline`
+  (nur in einer Quelle) wird per Referenz übernommen. Exakt dieselbe
+  Bugklasse, die dem Projekt laut `config/statusline/lsp.lua`s eigenem
+  Kommentar schon einmal einen echten Vorfall beschert hat — jede spätere
+  In-Place-Mutation der zurückgegebenen Config hätte den geshippten
+  Default dauerhaft für jeden folgenden `setup()`-Aufruf verseucht. Fix:
+  `vim.deepcopy()` vor dem Merge.
+- **`ui/init.lua`** (🔴 Kriterium 1, kein `pcall` im Entry-Point):
+  `M.setup()` verkabelte `keymaps`/`usrcmds`/`contextmenu` ohne jeden
+  `pcall` — scheiterte eines, liefen die anderen beiden gar nicht erst,
+  ohne Erklärung. Fix: jeder der drei Aufrufe einzeln `pcall`'d + notified.
+- **`health.lua`** (🟡 Zusatzkriterium, `warn` bei erwartetem
+  Lazy-Loading-Zustand): "`:UI is not registered`" nutzte `health.warn()`
+  für den normalen Vor-`setup()`-Zustand — der `usrcmds`-Eintrag direkt
+  daneben nutzt für denselben Fall bereits korrekt `health.info()`. Fix:
+  auf `health.info()` heruntergestuft (mit Hinweistext in der Message
+  selbst, da `vim.health.info()` anders als `.warn()`/`.error()` nur einen
+  Parameter akzeptiert und ein zweites Argument stillschweigend verwirft).
+- **`config/DEFAULTS.lua`** (🟡 Kriterium 9, Kommentar-Drift): "Two groups"
+  im Kommentar, tatsächlich drei (`theme`/`statusline`/`tabline`) plus ein
+  viertes, separat behandeltes `modules`. Fix: Zahl korrigiert.
+
+Zwei neue Regressionstests in `TESTS/bugfix_regressions_spec.lua` für das
+Referenz-Leck (Identität + In-Place-Mutation gegen `DEFAULTS.tabline`
+geprüft).
+
+## Runde 5 (2026-09-14): `ui/theme/`, `ui/winbar/` — Abschluss
+
+Letzte Runde, keine Funde. `winbar/init.lua` (der im Auftrag vermutete
+Kandidat für einen "Fenster inzwischen geschlossen"-Bug) löst das bereits
+korrekt: `vim.schedule` + `nvim_win_is_valid()`-Check unmittelbar vor dem
+`vim.wo[winid].winbar`-Zugriff im Callback. `theme/palette.lua` und
+`theme/transparency.lua` durchgängig `pcall`-abgesichert um
+`nvim_get_hl`/`nvim_set_hl`, kein globaler State, keine veralteten APIs.
+
+**Damit ist der komplette `lua/ui/`-Baum (93 Lua-Dateien, alle 5 Runden)
+durch den 10-Punkte-Schnell-Check aus `gates/REVIEW.md` gelaufen.**
+Gesamtbilanz: 16 echte Funde (5× 🔴, 11× 🟡), alle gefixt, 4 neue
+Regressionstests, luacheck/stylua durchgehend grün, volle Testsuite nach
+jeder Runde grün, jede Runde einzeln committet und direkt auf `main`
+gepusht (`5a1f510`, `97953f5`, `c2da007`, `8e7c1da`). Die volle
+277-Regel-Ermessens-Review (Teil 1 § 5) bleibt weiterhin offen — dieser
+Durchgang deckte bewusst nur den 10-Punkte-Schnell-Check ab, wie in
+Teil 1 § 4 empfohlen.
 
