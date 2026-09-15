@@ -224,15 +224,67 @@ Kurzmeldung nach jeder Phase.
 - Wkdbook-ROADMAP aktualisiert (`WKDBooks` Commit `3a9ca95`): Phase 2/3/4
   als erledigt ersatzlos entfernt, Phase 1 + offene Fragen bleiben.
 
+## Folgesession 2026-09-15: A2 (`:JSON filter`) aus der Cross-Plugin-Analyse umgesetzt
+
+`:JSON`/`:YAML`/`:XML filter` gebaut, genau wie in der Cross-Plugin-Analyse
+(oben verlinkt) skizziert: `lib.lua.tables.path_flatten` (dieselbe Quelle wie
+`lines`/`keys`) liefert `{path, value}`-Items, `{path, line}` je Item geht in
+`pickers.refine.new({fields=...})`, das Ergebnis nach `h:apply()` wird als
+reduzierte `lines`-Zeilenliste zurückgeschrieben. Neues Modul
+`lua/data/filter/init.lua`, neue Facade `data.filter()` in `lua/data/init.lua`,
+neue Route in `bindings/usrcmds.lua` (auf allen drei Verben, ungated -- siehe
+Doku-Begründung in `docs/architecture.md`), neuer Health-Check-Eintrag.
+`pickers.nvim` als optionaler Sibling-Checkout in `scripts/minimal_init.lua`
+ergänzt (`PICKERS_DIR`), 7 neue Tests in `TESTS/filter_spec.lua` (stubbt
+`vim.ui.select`/`vim.ui.input`, skip-by-default ohne echten pickers.nvim-Checkout
+-- selbe Konvention wie die color_my_ascii-Fenced-Scope-Tests). Doku
+durchgezogen: `scope.md`, `commands.md`, `integrations.md`, `requirements.md`,
+`architecture.md`, `BINDINGS.md` (Tabellenzeile von Hand ergänzt --
+`composer.document()` erzeugt ein komplett anderes, nicht zu diesem Repo
+passendes Format, siehe unten), `doc/data.txt`. luacheck/stylua grün, ganze
+Suite grün. `data.nvim` Commit `0b75c28`, direkt auf `main` gepusht (Nutzer
+wollte sofortige Verfügbarkeit).
+
+**Zwei bewusste Abweichungen vom ursprünglichen Wkdbook-Plan** (dort
+gegengeprüft und dokumentiert, `WKDBooks` Commit `46354c2`):
+
+1. Kein `unflatten`/Objekt-Rekonstruktion -- `filter` liefert eine flache
+   `path: value`-Liste, kein wieder zusammengesetztes JSON/YAML-Objekt.
+   Ambig ohne Schema (dieselbe Art Problem wie XML→JSON), und die flache
+   Liste ist ohnehin, was `lines`/`keys` schon zeigen.
+2. `pickers.nvim` ist Hard-Requirement für `filter`, kein
+   `lib.nvim.ui.kit.select`-Fallback -- `pickers.refine` ist bereits ein
+   reines Model+UI-Modul ohne Picker-Engine-Bindung; ein zweites
+   Auswahl-UI nur für den "kein pickers.nvim"-Fall hätte Code für einen
+   Pfad gekostet, den `:checkhealth data` schon klar meldet.
+
+**Ein Infra-Fund unterwegs (nicht gefixt, außerhalb des Auftrags):**
+`scripts/test.sh <einzelne-datei>.lua` (die `PlenaryBustedFile`-Zweig) übergibt
+kein `{minimal_init=...}`, im Gegensatz zum Verzeichnis-Zweig
+(`PlenaryBustedDirectory`). Der von `plenary.job` gespawnte Kindprozess läuft
+dadurch ohne `-u scripts/minimal_init.lua` und fällt still auf die echte,
+lokale Nvim-Config dieser Maschine zurück (lädt `lib.nvim`/`pickers.nvim` aus
+dem echten `lazy`-Verzeichnis statt aus den per `LIB_NVIM_DIR`/`PICKERS_DIR`
+gesetzten Sibling-Checkouts) -- reproduzierbar über `scripts/test.sh
+TESTS/irgendeine_spec.lua` vs. den Directory-Lauf ohne Argument. Betrifft nur
+die Einzeldatei-Bequemlichkeitsform des Skripts, nicht die reguläre
+Test-Ausführung (`scripts/test.sh` ohne Argument lief während dieser Session
+durchgehend korrekt und grün).
+
 ## Offene Punkte / nächste Schritte
 
-1. Phase 1 (Register-Scope + Filter) ist die einzige verbleibende Phase,
-   siehe `wkdbook-myplugins/data.nvim/ROADMAP/ROADMAP.md`. `diff.nvim`s
-   Vorher/Nachher-Integration hängt direkt daran.
-2. Kein CI-Workflow angelegt (kein `NEW-*`-Zwang dafür) — bei Bedarf
+1. Phase 1: nur noch Register-Scope offen (Filter ist jetzt gebaut, siehe
+   oben), siehe `wkdbook-myplugins/data.nvim/ROADMAP/ROADMAP.md`.
+   `diff.nvim`s Vorher/Nachher-Integration für einen `filter`-Lauf ist damit
+   möglich, aber noch nicht gebaut.
+2. `scripts/test.sh`'s Einzeldatei-Zweig fehlt `{minimal_init=...}` (siehe
+   Infra-Fund oben) -- klein, aber ein echter Bug, falls jemand sich auf
+   `scripts/test.sh path/to_spec.lua` als verlässlichen, isolierten Lauf
+   verlässt.
+3. Kein CI-Workflow angelegt (kein `NEW-*`-Zwang dafür) — bei Bedarf
    `ci-fleet-conventions` (stylua v2.5.2, luacheck 1.2.0, `checkout@v5`)
    übernehmen, wenn das Repo eines bekommen soll.
-3. Cross-Plugin-Analyse (2026-09-15, separate Session, kein Code):
+4. Cross-Plugin-Analyse (2026-09-15, separate Session, kein Code):
    [`docs/ROADMAP/reports/data/cross-plugin-feature-analysis.md`](../../reports/data/cross-plugin-feature-analysis.md)
    bestätigt Phase 1 (`:JSON filter` via `pickers.refine` + `path_flatten`
    ist buchstäblich zusammensteckbar) und ergänzt zwei neue Punkte: ein
