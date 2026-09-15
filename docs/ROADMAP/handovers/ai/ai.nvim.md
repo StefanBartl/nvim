@@ -1055,14 +1055,13 @@ committet und gepusht, synchron mit `origin/main`. Offen:
    `gemini-`) ist hartkodiert, keine Config-Möglichkeit — bislang kein
    Bedarf, siehe README "Stand/was fehlt".
 10. Diese Datei laufend als Statusprotokoll fortschreiben.
-11. Drei kleine Backlog-Punkte aus dem manuellen `rules.nvim`-Review
+11. ~~Drei kleine Backlog-Punkte aus dem manuellen `rules.nvim`-Review
     (Folgesession 12, [Details](./rules-nvim-review.md)): Unit-Tests für die
     reinen Provider-Parsing-Funktionen (`claude.lua`/`gemini.lua`/`sse.lua`)
     ergänzen; `ui/panel.lua`s `active_panels`-Liste beim Panel-Schließen
     verkleinern statt nur wachsen zu lassen; `:Ai provider`s direkte
-    Config-Feld-Mutation ggf. durch einen Setter in `ai.config` ersetzen,
-    falls ein zweiter Schreibzugriff von außen dazukommt. Keiner davon
-    dringend.
+    Config-Feld-Mutation ggf. durch einen Setter in `ai.config` ersetzen~~ —
+    **erledigt**, noch in Folgesession 12 (Commit `c8ff0ca`, s. o.).
 
 ---
 
@@ -1329,10 +1328,22 @@ Detailprüfung §1–9 + Anti-Pattern-Check, alle 27 `lua/`-Dateien dafür
 vollständig gelesen (nicht nur gegrept). Ergebnis: sauber bis auf drei
 Kleinigkeiten (zwei 🟢 nice-to-have, ein 🟡 recommended — Testlücke bei den
 reinen Provider-Parsing-Funktionen), keine davon sicherheits- oder
-korrektheitsrelevant, keine gefixt (bewusst, s. Details in der
-Review-Datei). Nichts davon blockiert `gates/RELEASE.md`.
+korrektheitsrelevant. Nichts davon blockierte `gates/RELEASE.md`.
 
-Kein Code in `ai.nvim` geändert diese Sitzung — reine Audit-/Doku-Arbeit.
+**Alle drei noch in derselben Sitzung gefixt** (Nutzer bat direkt darum):
+`ai.config.set_provider(id)` ergänzt, `:Ai provider` geht jetzt darüber
+statt das Config-Feld direkt zu schreiben; `ui/panel.lua`s `active_panels`
+wird beim `cancel()` jetzt wieder verkleinert (`untrack()`, `cancel_all()`
+iteriert dafür über eine Kopie); drei neue Spec-Dateien
+(`sse_spec.lua`, `providers_claude_spec.lua`, `providers_gemini_spec.lua`,
+19 neue Tests, `lib.nvim.net.curl` per `package.loaded` gestubt) schließen
+die Testlücke bei den Provider-Parsing-Funktionen. `luacheck`/`stylua`
+grün, volle `plenary`-Suite grün (48/48). Committet (`c8ff0ca`), per `git
+merge --ff-only` direkt auf `main` gebracht und auf `origin/main`
+gepusht. Details/Status: [`rules-nvim-review.md`](./rules-nvim-review.md)
+(dort jetzt als erledigt markiert, keine offenen Backlog-Punkte aus diesem
+Review mehr).
+
 Committet/gepusht im `nvim`-Config-Repo (`StefanBartl/nvim`, diese Datei +
 `rules-nvim-review.md`).
 
