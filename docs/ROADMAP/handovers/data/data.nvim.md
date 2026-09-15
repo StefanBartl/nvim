@@ -271,6 +271,28 @@ die Einzeldatei-Bequemlichkeitsform des Skripts, nicht die reguläre
 Test-Ausführung (`scripts/test.sh` ohne Argument lief während dieser Session
 durchgehend korrekt und grün).
 
+## Folgesession 2026-09-15: A1 (`:Data` Format-Autodetect) umgesetzt
+
+`:Data pretty/lines/keys/sort/filter` gebaut (`346c19c`), wie in der
+Cross-Plugin-Analyse als "A1" skizziert: neues Modul `lua/data/detect/init.lua`
+(Fenced-Block-Sprache über `color_my_ascii.fences.block_at` ohne `lang`-Filter,
+sonst `vim.bo.filetype`), neue Facade `data.run_auto()`, neuer Verb `:Data` in
+`bindings/usrcmds.lua` (nur die format-agnostischen Actions -- `compact`/
+`ndjson`/`to` bleiben draußen, da wer die braucht das Format ohnehin schon
+kennt). 12 neue Tests in `TESTS/detect_spec.lua`. luacheck/stylua grün, ganze
+Suite grün, direkt auf `main` gepusht.
+
+**Wichtig -- ein dokumentierter Nutzerwunsch wurde damit revidiert:** das
+Konzept in `wkdbook-myplugins/data.nvim/ROADMAP/ROADMAP.md` hatte unter
+"Offene Fragen" festgehalten, dass bewusst nur die drei expliziten Commands
+existieren sollen, kein `:Data`-Autodetect ("Nutzerwunsch, siehe
+Konzept-Datei"). Diese Session hat genau das gebaut, weil der Cross-Plugin-
+Report es als praktisch kostenlos einstufte und der Nutzer es in dieser
+Session explizit angefragt hat -- die frühere Entscheidung wurde also bewusst
+neu getroffen, nicht übersehen. Im Wkdbook-ROADMAP vermerkt (`WKDBooks`
+Commit `29cac38`), damit das nicht wie ein Versehen aussieht, falls das
+Konzept-Dokument später nochmal als Referenz herangezogen wird.
+
 ## Offene Punkte / nächste Schritte
 
 1. Phase 1: nur noch Register-Scope offen (Filter ist jetzt gebaut, siehe
