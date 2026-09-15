@@ -116,16 +116,18 @@ bewusster `x-goog-api-key`-Header statt `?key=...`-Query-Param),
 `health.lua`: `vim.health.info` (nicht `warn`) für "ein Provider von
 fünf nicht verfügbar" — genau die Eine-von-N-Ausnahme aus `UI-57`.
 
-### Detailprüfung — Auffälligkeiten
+### Detailprüfung — Auffälligkeiten (alle drei erledigt, 2026-09-15)
 
-Alle neun Abschnitte durchgegangen; nur folgende drei Punkte sind **nicht**
-glatt `pass`:
+Alle neun Abschnitte durchgegangen; drei Punkte waren **nicht** glatt
+`pass` und sind inzwischen gefixt (Commit `c8ff0ca` in `ai.nvim`, `main`,
+`luacheck`/`stylua` grün, volle `plenary`-Suite grün — 48 Tests über 7
+Spec-Dateien, 19 davon neu):
 
-| # | Regel | Befund | Einschätzung |
-| - | ----- | ------ | ------------- |
-| 1 | `LUA-30` (Zentraler State) | `lua/ai/bindings/usrcmds.lua:49` — `:Ai provider <name>` schreibt mit `require("ai").config().provider = ctx.args.name` direkt auf das von `ai.config.get()` zurückgegebene Live-Objekt, statt über einen Setter in `ai.config` zu gehen. | 🟢 gering: der Wert ist durch den Composer-`enum` bereits auf existierende Provider-IDs beschränkt, kein Validierungsloch. Reine Kapselungsfrage, keine Bugquelle. |
-| 2 | `LUA-30`/`PERF-14` (State-Lebenszyklus) | `lua/ai/ui/panel.lua:20,52` — `active_panels` wächst bei jedem `M.open()` und wird nie verkleinert, auch nicht wenn ein Panel längst geschlossen/`cancel()`t ist. | 🟢 gering: kleine Structs, nur pro `:Ai ask/stream`-Aufruf einer Session — erst in sehr langen Sessions mit vielen Aufrufen überhaupt spürbar. |
-| 3 | `PRIN-31`/`PRIN-32` (Testbarkeit), REVIEW.md §6 | Provider-Antwort-Parsing ist überall als reine Funktion geschnitten (`claude.to_response`, `gemini.candidate_text`/`prompt_block_reason`, `sse.recover_error_body`, analog in `openai`/`ollama`/`loomai`) — aber nur `ai.completion.prompt` (`build`/`parse`) und ein `ai.providers`-Registry-Roundtrip haben tatsächlich Tests unter `TESTS/`. | 🟡 mittel: genau die Art Logik, die laut eigener Architektur-Doku "straightforward to unit test headlessly" ist, bleibt ungetestet — u. a. die Gemini-`promptFeedback.blockReason`-Erkennung und die SSE-Fehlerkörper-Recovery, beides mit dokumentierten Edge-Cases im Code-Kommentar selbst. |
+| # | Regel | Befund | Fix |
+| - | ----- | ------ | --- |
+| 1 | `LUA-30` (Zentraler State) | `lua/ai/bindings/usrcmds.lua:49` — `:Ai provider <name>` schrieb mit `require("ai").config().provider = ctx.args.name` direkt auf das von `ai.config.get()` zurückgegebene Live-Objekt. | ✅ `ai.config.set_provider(id)` ergänzt, `usrcmds.lua` ruft jetzt den Setter statt das Feld direkt zu schreiben. Test in `config_spec.lua`. |
+| 2 | `LUA-30`/`PERF-14` (State-Lebenszyklus) | `lua/ai/ui/panel.lua:20,52` — `active_panels` wuchs bei jedem `M.open()` und wurde nie verkleinert. | ✅ `M.cancel()` entfernt das Panel jetzt aus `active_panels` (`untrack()`, idempotent); `cancel_all()` iteriert dafür über eine Kopie, da `cancel()` die Liste selbst mutiert. |
+| 3 | `PRIN-31`/`PRIN-32` (Testbarkeit), REVIEW.md §6 | Provider-Antwort-Parsing (`claude.to_response`, `gemini.candidate_text`/`prompt_block_reason`, `sse.recover_error_body`) hatte keine Tests. | ✅ Drei neue Spec-Dateien: `sse_spec.lua` (testet die bereits öffentlichen `M.data_payload`/`M.recover_error_body` direkt), `providers_claude_spec.lua`, `providers_gemini_spec.lua` (beide über `M.ask`/`M.stream` mit gestubtem `lib.nvim.net.curl` via `package.loaded`, gleiches Muster wie `providers_spec.lua`s Registry-Reset) — 19 neue Tests, decken Erfolgsfall, API-Fehlerkörper, Geminis `promptFeedback.blockReason`-Sonderfall und die Non-SSE-Fehlerkörper-Recovery ab. |
 
 Bereits bekannte, in `ai.nvim.md` dokumentierte und **bewusst offen
 gelassene** Findings (nicht hier erneut aufgeführt, kein neuer Fund):
@@ -145,16 +147,10 @@ Autocommand statt `:Command` für explizite Nutzeraktionen — keine Treffer.
 
 `ai.nvim` ist zum Stand 2026-09-15 **sauber**: 32/32 automatisierte Checks
 grün über den ganzen Katalog, luacheck/stylua grün, und die manuelle
-Review-Checkliste hat außer den drei oben genannten Kleinigkeiten (zwei
-🟢, ein 🟡 — allesamt keine Sicherheits- oder Korrektheitsfragen) nichts
-gefunden. Keiner der drei Punkte blockiert etwas; alle drei sind
-Backlog-Kandidaten, keine Sofortmaßnahmen.
+Review-Checkliste hat außer den drei oben genannten Kleinigkeiten nichts
+gefunden — und die sind jetzt ebenfalls behoben (s. o.). Keine offenen
+Backlog-Punkte aus diesem Review-Durchlauf mehr.
 
-**Offen für eine Folgesession, falls gewünscht:**
-- `PRIN-31`/`PRIN-32`-Fund (Testlücke) schließen: Unit-Tests für die reinen
-  Provider-Parsing-Funktionen ergänzen (`claude.lua`, `gemini.lua`,
-  `sse.lua` mindestens).
-- `LUA-30`-Fund #1 (Config-Mutation) nur falls ein zweiter Schreibzugriff
-  von außen dazukommt — aktuell einziger Fall, kein Muster.
-- `LUA-30`-Fund #2 (`active_panels`-Wachstum) nur falls in der Praxis
-  spürbar (sehr lange Sessions).
+Nächster sinnvoller Zeitpunkt für einen Re-Run: vor `gates/RELEASE.md`
+(Phase 10, s. `ai.nvim.md`), oder nach dem nächsten größeren Feature-Zuwachs
+— Snippet oben.
