@@ -1021,6 +1021,16 @@ plugins.add({
   },
 
   {
+    -- JSON pretty/compact/lines/keys/sort, range-aware (buffer or visual
+    -- selection). YAML/XML aren't wired in yet -- lib.nvim has no YAML
+    -- encoder or XML module, see the plugin's own docs/scope.md.
+    "StefanBartl/data.nvim",
+    cmd = { "JSON" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {},
+  },
+
+  {
     -- Eager on purpose, and `cmd = { "Cmdlog" }` is gone rather than kept
     -- alongside `lazy = false` (where lazy.nvim ignores it anyway, so it only
     -- read as if this were command-lazy). setup() starts the CmdlineLeave
