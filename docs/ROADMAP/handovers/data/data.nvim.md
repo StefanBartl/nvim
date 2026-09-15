@@ -293,6 +293,52 @@ neu getroffen, nicht übersehen. Im Wkdbook-ROADMAP vermerkt (`WKDBooks`
 Commit `29cac38`), damit das nicht wie ein Versehen aussieht, falls das
 Konzept-Dokument später nochmal als Referenz herangezogen wird.
 
+## Folgesession 2026-09-15: B1, B2, B3, B4 aus der Cross-Plugin-Analyse; A3 zurückgezogen
+
+Weiter durch die priorisierte Tabelle der Cross-Plugin-Analyse, ein Punkt
+nach dem anderen (Nutzerwunsch), mit Rückfrage bei jedem Fund, der die
+ursprüngliche Einschätzung ändert:
+
+- **A3 zurückgezogen** (keine Umsetzung): `documentation.nvim`s Encoder
+  löst kein Problem, das `data.nvim` tatsächlich hat — er sortiert Keys
+  ohnehin schon (macht `lib.lua.json.encode` bereits identisch) und
+  normalisiert nur Zahlenformatierung zwischen LuaJIT/PUC-Lua, aber
+  `data.nvim` läuft immer nur unter Neovims LuaJIT. Nutzer hat auf
+  Rückfrage "ganz überspringen" gewählt.
+- **B1** (`sandbox.nvim@3839513`): `:Sandbox compose services` liest
+  Service-Namen direkt aus der Compose-YAML via `lib.lua.yaml`
+  (`sandbox/util/compose_file.lua`), ganz ohne Engine-Aufruf — ergänzt
+  `compose ps` (fragt die Engine). 5 neue Tests, volle Suite (17 Dateien)
+  grün, `docs/GENERATED_COMMANDS.md` neu generiert, `docs/FEATURES/COMPOSE.md`
+  von Hand ergänzt.
+- **B2** (`lib.nvim@d4fa0f2` + `lsp.nvim@e12936c`): neues
+  `lib.nvim.config.repo_file`-Modul (Read+Decode+Allowlist-Split, keine
+  Pfad-Auflösung, keine Warntext-Formatierung — beides bleibt Sache des
+  Aufrufers), `lsp.nvim/lua/lsp/config/project.lua` darauf migriert,
+  Verhalten 1:1 erhalten (verifiziert gegen die bestehende
+  `config_layers_spec.lua`-Suite, alle 12 "project file"-Fälle + volle
+  27-Datei-Suite grün). **Rückfrage nötig, weil sich der Nutzen halbierte:**
+  `documentation.nvim` kann NICHT migriert werden (Standalone-Binary läuft
+  unter reinem PUC-Lua ohne `lib.nvim`) — Nutzer hat "nur lsp.nvim + neues
+  Modul" gewählt.
+- **B3/B4** (reine Doku-Änderungen, kein Code): `reposcope.nvim@1acea3d`,
+  `github_stats.nvim@149814b`, `runtime-analysis.nvim@a182308` — je ein
+  Hinweis in der Troubleshooting-/Workflow-Doku, dass `:JSON pretty`/
+  `lines`/`filter` (falls `data.nvim` installiert ist) beim Lesen der
+  eigenen JSON-Dateien bzw. REST-Antworten hilft.
+- **Nebenfund, nicht angefasst:** Beim Pull für `runtime-analysis.nvim`
+  lag eine unabhängige, unfertige lokale `docs/map/*`-Regenerierung im Weg,
+  die gegenüber einem frisch vom Server gepullten `docs(map): regenerate
+  module map`-Commit bereits veraltet aussah. Per `git stash push -u`
+  beiseitegelegt (Tag `b4-set-aside-map-files-not-mine`), NICHT verworfen —
+  liegt dort als `stash@{0}`, falls das noch gebraucht wird.
+
+Reihenfolge lief exakt wie in der Tabelle aus dem Report: A2 → A1 → B2 →
+A3 (zurückgezogen) → B1 → B3/B4. Bei jeder Abweichung von der
+ursprünglichen Reporteinschätzung (Standalone-Constraint bei B2, falsche
+Nutzenbehauptung bei A3, revidierter Nutzerwunsch bei A1) wurde zuerst
+gefragt statt einfach weitergemacht.
+
 ## Offene Punkte / nächste Schritte
 
 1. Phase 1: nur noch Register-Scope offen (Filter ist jetzt gebaut, siehe
