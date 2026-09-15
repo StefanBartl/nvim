@@ -232,3 +232,14 @@ Kurzmeldung nach jeder Phase.
 2. Kein CI-Workflow angelegt (kein `NEW-*`-Zwang dafür) — bei Bedarf
    `ci-fleet-conventions` (stylua v2.5.2, luacheck 1.2.0, `checkout@v5`)
    übernehmen, wenn das Repo eines bekommen soll.
+3. Cross-Plugin-Analyse (2026-09-15, separate Session, kein Code):
+   [`docs/ROADMAP/reports/data/cross-plugin-feature-analysis.md`](../../reports/data/cross-plugin-feature-analysis.md)
+   bestätigt Phase 1 (`:JSON filter` via `pickers.refine` + `path_flatten`
+   ist buchstäblich zusammensteckbar) und ergänzt zwei neue Punkte: ein
+   Fence-Format-Autodetect (aus `color_my_ascii.fences.block_at` ohne
+   `lang`-Filter) und einen deterministischen-JSON-Encoding-Kandidaten für
+   `lib.nvim` (aus `documentation.nvim/core/json.lua` — würde `:JSON sort`
+   von einem `:JSON pretty`-Alias zu einem echten Feature machen). Plus vier
+   Reverse-Richtung-Funde (`data.nvim`/`lib.nvim` → `sandbox.nvim`,
+   `documentation.nvim`+`lsp.nvim`, `reposcope.nvim`/`github_stats.nvim`,
+   `runtime-analysis.nvim`).
