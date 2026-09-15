@@ -21,7 +21,16 @@
 > (`documentation/config/file.lua`). Das neue `lib.nvim.config.repo_file`
 > hat heute also nur `lsp.nvim` als Nutzer, ist aber für künftige
 > `lib.nvim`-basierte Plugins fertig. A3/A4/B1/B3/B4 sind weiterhin offen.
-> Details: `nvim/docs/ROADMAP/handovers/data/data.nvim.md`.
+> **A3 zurückgezogen:** bei der Umsetzungsprüfung zeigte sich, dass die
+> Behauptung "würde `:JSON sort` von einem `:JSON pretty`-Alias zu einem
+> echten Feature machen" nicht hält. `documentation.nvim`s Encoder sortiert
+> Keys ohnehin schon (das tut `lib.lua.json.encode` bereits identisch) und
+> normalisiert nur die Zahlenformatierung zwischen LuaJIT und PUC-Lua —
+> `data.nvim` läuft aber immer nur unter Neovims eingebettetem LuaJIT, nie
+> unter PUC-Lua, also entfällt genau der Fall, den die Normalisierung
+> behebt. Eine echte Lösung bräuchte einen ordnungserhaltenden JSON/YAML-
+> Decoder (deutlich größerer Scope als ursprünglich eingeschätzt) — auf
+> Nutzerwunsch nicht verfolgt. Details: `nvim/docs/ROADMAP/handovers/data/data.nvim.md`.
 
 ---
 
