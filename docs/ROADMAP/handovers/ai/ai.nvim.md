@@ -41,6 +41,7 @@
   - [loomAI-Doku-Housekeeping (2026-09-14, Folgesession 9)](#loomai-doku-housekeeping-2026-09-14-folgesession-9)
   - [typepilot.nvim: Scoping-Entscheidung (2026-09-14, Folgesession 10)](#typepilotnvim-scoping-entscheidung-2026-09-14-folgesession-10)
   - [Completion-Capability umgesetzt (2026-09-14, Folgesession 11)](#completion-capability-umgesetzt-2026-09-14-folgesession-11)
+  - [rules.nvim: manueller Review-Teil nachgeholt (2026-09-15, Folgesession 12)](#rulesnvim-manueller-review-teil-nachgeholt-2026-09-15-folgesession-12)
 
 ---
 
@@ -1021,9 +1022,13 @@ committet und gepusht, synchron mit `origin/main`. Offen:
    Punkt 6 unten — beim nächsten Durchgang mit den drei neuen Cloud-Backends
    ergänzen).
 2. Phase 10 (`gates/RELEASE.md`) vor dem ersten Tag/Release, danach.
-   `rules.nvim`s `release`-Gate zeigt keine automatisierten kritischen
+   ~~`rules.nvim`s `release`-Gate zeigt keine automatisierten kritischen
    Lücken (s. o.); die `manual`-Posten aus dem `review`-Gate noch nicht
-   durchgearbeitet.
+   durchgearbeitet.~~ — **erledigt** (Folgesession 12, s. u.): automatischer
+   Teil erneut komplett grün (32/32), manueller Teil über `gates/REVIEW.md`
+   durchgearbeitet, drei kleine Backlog-Punkte gefunden (keiner
+   release-blockierend), Details in
+   [`rules-nvim-review.md`](./rules-nvim-review.md).
 3. Phase 9 (Follow-up, nicht blockierend): `pdfport.nvim`-Migration.
    `loomai`-Provider ist erledigt (s. o.), nicht mehr offen.
 4. `ui/panel.lua`s Voll-Buffer-`set_lines()` pro Stream-Chunk (Review-Finding, bewusst
@@ -1050,6 +1055,14 @@ committet und gepusht, synchron mit `origin/main`. Offen:
    `gemini-`) ist hartkodiert, keine Config-Möglichkeit — bislang kein
    Bedarf, siehe README "Stand/was fehlt".
 10. Diese Datei laufend als Statusprotokoll fortschreiben.
+11. Drei kleine Backlog-Punkte aus dem manuellen `rules.nvim`-Review
+    (Folgesession 12, [Details](./rules-nvim-review.md)): Unit-Tests für die
+    reinen Provider-Parsing-Funktionen (`claude.lua`/`gemini.lua`/`sse.lua`)
+    ergänzen; `ui/panel.lua`s `active_panels`-Liste beim Panel-Schließen
+    verkleinern statt nur wachsen zu lassen; `:Ai provider`s direkte
+    Config-Feld-Mutation ggf. durch einen Setter in `ai.config` ersetzen,
+    falls ein zweiter Schreibzugriff von außen dazukommt. Keiner davon
+    dringend.
 
 ---
 
@@ -1290,6 +1303,38 @@ tatsächlich auflösen).
 Committet (`34f75cd`), per `git merge --ff-only` direkt auf `main`
 gebracht (kein PR nötig, gleiche Begründung wie bei den vorherigen
 Worktree-Sitzungen dieses Projekts) und auf `origin/main` gepusht.
+
+---
+
+## rules.nvim: manueller Review-Teil nachgeholt (2026-09-15, Folgesession 12)
+
+Fortsetzung von [oben](#rulesnvim-gegen-ainvim-laufen-lassen-erledigt-kein-auftrag-mehr-offen):
+dort war 2026-09-14 nur der automatische Teil gelaufen, der manuelle Teil
+(hunderte judgment-Regeln) explizit offengelassen. Beides jetzt nachgeholt,
+Detailergebnis in einer eigenen, lebenden Datei statt hier im Log:
+[`handovers/ai/rules-nvim-review.md`](./rules-nvim-review.md) (wird bei
+jedem künftigen Re-Run vor Ort aktualisiert, nicht append-only).
+
+**Automatischer Teil erneut komplett laufen lassen** (alle 13 Familien
+einzeln, nicht nur das `review`-Gate) — Ergebnis unverändert sauber: 32/32
+automatisierte Checks `pass`, 0 `fail`/`error`, `exit_code=0` überall.
+`NEW-08` (der einzige `fail` im 2026-09-14-Lauf) frisch gegengeprüft: jetzt
+`pass` — die Umbenennung `usercmds.lua` → `usrcmds.lua` (Commit `2bed0d6`)
+hat den Fund tatsächlich behoben, nicht nur laut Commit-Message.
+
+**Manueller Teil:** statt die ~389 `manual`-Regel-IDs einzeln
+durchzuklappern, wurde der dafür vorgesehene kuratierte Einstiegspunkt
+benutzt (`WORKFLOW.md § C`): `gates/REVIEW.md`s Schnell-Check +
+Detailprüfung §1–9 + Anti-Pattern-Check, alle 27 `lua/`-Dateien dafür
+vollständig gelesen (nicht nur gegrept). Ergebnis: sauber bis auf drei
+Kleinigkeiten (zwei 🟢 nice-to-have, ein 🟡 recommended — Testlücke bei den
+reinen Provider-Parsing-Funktionen), keine davon sicherheits- oder
+korrektheitsrelevant, keine gefixt (bewusst, s. Details in der
+Review-Datei). Nichts davon blockiert `gates/RELEASE.md`.
+
+Kein Code in `ai.nvim` geändert diese Sitzung — reine Audit-/Doku-Arbeit.
+Committet/gepusht im `nvim`-Config-Repo (`StefanBartl/nvim`, diese Datei +
+`rules-nvim-review.md`).
 
 ---
 
