@@ -388,7 +388,7 @@ Durchsicht keine Funde.
    `ci-fleet-conventions` (stylua v2.5.2, luacheck 1.2.0, `checkout@v5`)
    übernehmen, wenn das Repo eines bekommen soll.
 4. Cross-Plugin-Analyse (2026-09-15, separate Session, kein Code):
-   [`docs/ROADMAP/reports/data/cross-plugin-feature-analysis.md`](../../reports/data/cross-plugin-feature-analysis.md)
+   [`docs/ROADMAP/reports/data/cross-plugin-feature-analysis.md`](../../personal/All/FINISH/ERLEDIGT/cross-plugin-feature-analysis_data_nvim.md)
    bestätigt Phase 1 (`:JSON filter` via `pickers.refine` + `path_flatten`
    ist buchstäblich zusammensteckbar) und ergänzt zwei neue Punkte: ein
    Fence-Format-Autodetect (aus `color_my_ascii.fences.block_at` ohne
