@@ -11,6 +11,20 @@
 
 ---
 
+> **Status (2026-09-15, Folgesession):** A1, A2 und B2 sind umgesetzt und auf
+> `main` gepusht. A1 (`data.nvim@346c19c`) und A2 (`data.nvim@0b75c28`) wie
+> unten beschrieben. B2 (`lib.nvim@d4fa0f2`, `lsp.nvim@e12936c`) mit einer
+> Korrektur gegenüber der ursprünglichen Einschätzung: `documentation.nvim`
+> konnte **nicht** mitmigriert werden — sein `.docmap.json`-Loader läuft auch
+> im Standalone-Binary unter reinem PUC-Lua ohne `lib.nvim` auf dem Pfad,
+> das steht sogar so im eigenen Code-Kommentar
+> (`documentation/config/file.lua`). Das neue `lib.nvim.config.repo_file`
+> hat heute also nur `lsp.nvim` als Nutzer, ist aber für künftige
+> `lib.nvim`-basierte Plugins fertig. A3/A4/B1/B3/B4 sind weiterhin offen.
+> Details: `nvim/docs/ROADMAP/handovers/data/data.nvim.md`.
+
+---
+
 ## Table of Content
 
 - [0. Methodik](#0-methodik)
