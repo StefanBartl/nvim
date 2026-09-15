@@ -36,9 +36,23 @@
 >   eingebettetem LuaJIT. Eine echte Lösung bräuchte einen
 >   ordnungserhaltenden JSON/YAML-Decoder (deutlich größerer Scope) — auf
 >   Nutzerwunsch nicht verfolgt.
-> - **A4, B3, B4 weiterhin offen.**
+> - **B3/B4** — reine Doku-Querverweise, kein Code: `reposcope.nvim@1acea3d`
+>   und `github_stats.nvim@149814b` (Troubleshooting-Docs, `:JSON pretty`/
+>   `lines` zum Lesen/Validieren ihrer JSON-Dateien) sowie
+>   `runtime-analysis.nvim@a182308` (WORKFLOW.md, `:JSON pretty`/`filter`
+>   für REST-Antwortkörper).
+> - **A4 weiterhin offen** — Register-Scope + `diff.nvim`-Vorher/Nachher für
+>   einen `filter`-Lauf; jetzt durch A2 möglich, aber noch nicht gebaut.
 >
 > Details je Schritt: `nvim/docs/ROADMAP/handovers/data/data.nvim.md`.
+>
+> **Nebenbei gefunden, nicht meins zu entscheiden:** In
+> `runtime-analysis.nvim` lag beim Pull für B4 eine unabhängige,
+> unfertige lokale Regenerierung von `docs/map/*` (Modul-Map) im Weg, die
+> gegenüber einem frisch gepullten `docs(map): regenerate module map`-Commit
+> bereits veraltet aussah. Sicherheitshalber beiseitegelegt, nicht verworfen:
+> `git stash list` in diesem Repo zeigt sie als `stash@{0}` ("On main:
+> b4-set-aside-map-files-not-mine") — bei Bedarf selbst prüfen/anwenden/verwerfen.
 
 ---
 
