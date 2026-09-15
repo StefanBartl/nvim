@@ -1062,6 +1062,13 @@ committet und gepusht, synchron mit `origin/main`. Offen:
     verkleinern statt nur wachsen zu lassen; `:Ai provider`s direkte
     Config-Feld-Mutation ggf. durch einen Setter in `ai.config` ersetzen~~ —
     **erledigt**, noch in Folgesession 12 (Commit `c8ff0ca`, s. o.).
+12. 13 Funde aus dem vollständigen `rules.nvim`-Einzel-Durchgang (noch
+    Folgesession 12, [Details](./rules-nvim-review-full.md) § „Neue
+    Funde"), **noch offen**. Priorisiert die zwei mit größter praktischer
+    Relevanz zuerst angehen: `LUA-16` (`vim.NIL` nach `vim.json.decode()`
+    in allen Providern sanitizen) und `XP-05` (Provider-`available()`-
+    `executable()`-Checks cachen). Der Rest ist empfohlen/nice-to-have und
+    eilt nicht.
 
 ---
 
@@ -1346,6 +1353,22 @@ Review mehr).
 
 Committet/gepusht im `nvim`-Config-Repo (`StefanBartl/nvim`, diese Datei +
 `rules-nvim-review.md`).
+
+**Nachtrag, noch dieselbe Sitzung:** auf expliziten Nutzerwunsch zusätzlich
+alle 389 `manual`-Regel-IDs einzeln durchgegangen (nicht nur die kuratierte
+`REVIEW.md`-Teilmenge), inkl. eines echten `lua-language-server --check`-
+Laufs für die `LLS-*`-Familie (212 Rohtreffer, 209 davon als
+Library-Injektions-Artefakt der ad-hoc-CLI zurückverfolgt statt als Fund
+gemeldet — dabei einen echten 9-Treffer-`need-check-nil`-Cluster in den
+eigenen neuen Testdateien gefunden und noch in derselben Sitzung gefixt,
+Commit `62cf73b`). Ergebnis: **13 weitere, noch offene Funde**, vier mit
+kritischer Katalog-Schwere (am gewichtigsten: `LUA-16` — kein Provider
+sanitized `vim.NIL` nach `vim.json.decode()`; `XP-05` — `executable()`-
+Probes in der Provider-`"auto"`-Resolution sind ungecacht). Vollständige
+Liste mit Einzelbegründung je Regel:
+[`rules-nvim-review-full.md`](./rules-nvim-review-full.md). Diese 13 sind
+**nicht** gefixt — offen für eine Folgesession, priorisiert nach Schwere in
+der verlinkten Datei.
 
 ---
 

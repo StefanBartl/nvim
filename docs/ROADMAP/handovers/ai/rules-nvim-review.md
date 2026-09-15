@@ -83,14 +83,24 @@ das): beide grün, 0 Warnungen/Fehler über alle 31 Lua-Dateien.
 389 der 421 Katalog-Regeln haben keinen automatischen `check` (judgment
 calls) — ein Mehrstunden-Task, jede einzeln gegen den ganzen Code zu
 verifizieren, laut `rules.nvim`s eigener Doku genau der Aufwand, den ein
-Ein-Kommando-Sweep absichtlich nicht anbietet. Statt die 389 IDs einzeln
-abzuklappern, wurde stattdessen der dafür vorgesehene, kuratierte
-Einstiegspunkt benutzt: `WKDBooks/Development/wkdbook-Lua/Checklists/WORKFLOW.md`
-§ C ("Vor jedem Merge") verweist genau hierfür auf `gates/REVIEW.md`
-(Schnell-Check → Detailprüfung §1–9 → Anti-Pattern-Check) — dieselben
-Regel-IDs, aber nach Review-Relevanz gruppiert statt nach Familie. Andere
-Laufwerke (`E:\repos\...`) lassen sich von hier (`C:\...\nvim\...`) aus
-nicht relativ verlinken, daher unten überall Klartext-Pfade statt Links.
+Ein-Kommando-Sweep absichtlich nicht anbietet. Zuerst wurde dafür der
+kuratierte Einstiegspunkt benutzt: `WKDBooks/Development/wkdbook-Lua/
+Checklists/WORKFLOW.md` § C ("Vor jedem Merge") verweist genau hierfür auf
+`gates/REVIEW.md` (Schnell-Check → Detailprüfung §1–9 → Anti-Pattern-
+Check) — dieselben Regel-IDs, aber nach Review-Relevanz gruppiert statt
+nach Familie. Andere Laufwerke (`E:\repos\...`) lassen sich von hier
+(`C:\...\nvim\...`) aus nicht relativ verlinken, daher unten überall
+Klartext-Pfade statt Links.
+
+**Nachtrag (2026-09-15, noch dieselbe Sitzung):** auf expliziten Wunsch
+zusätzlich alle 389 Einzel-IDs durchgegangen, nicht nur die kuratierte
+Teilmenge — Ergebnis in einer eigenen Datei, da zu umfangreich für dieses
+Zusammenfassungsdokument:
+[`rules-nvim-review-full.md`](./rules-nvim-review-full.md) (13 weitere,
+noch offene Funde, davon 4 mit kritischer Katalog-Schwere — am
+gewichtigsten: `LUA-16` fehlende `vim.NIL`-Sanitisierung nach
+`vim.json.decode()` in allen Providern, und `XP-05` ungecachte
+`executable()`-Probes in der `"auto"`-Provider-Resolution).
 
 **Vorgehen:** alle 27 `lua/`-Dateien von `ai.nvim` vollständig gelesen
 (nicht nur gegrept), dazu `docs/*.md`/`doc/ai.txt` auf Drift gegen die
@@ -146,10 +156,15 @@ Autocommand statt `:Command` für explizite Nutzeraktionen — keine Treffer.
 ## 3. Fazit
 
 `ai.nvim` ist zum Stand 2026-09-15 **sauber**: 32/32 automatisierte Checks
-grün über den ganzen Katalog, luacheck/stylua grün, und die manuelle
-Review-Checkliste hat außer den drei oben genannten Kleinigkeiten nichts
-gefunden — und die sind jetzt ebenfalls behoben (s. o.). Keine offenen
-Backlog-Punkte aus diesem Review-Durchlauf mehr.
+grün über den ganzen Katalog, luacheck/stylua grün, und die kuratierte
+`REVIEW.md`-Checkliste hat außer den drei oben genannten Kleinigkeiten
+nichts gefunden — die sind gefixt. Der zusätzliche vollständige
+Einzel-Durchgang aller 389 Regel-IDs
+([`rules-nvim-review-full.md`](./rules-nvim-review-full.md)) fand 13
+weitere, noch offene Punkte — keiner davon ein ausnutzbares Sicherheits-
+leck, aber vier mit kritischer Katalog-Schwere (Details dort, § „Neue
+Funde"). **Diese 13 sind noch nicht gefixt** — Priorisierungsvorschlag
+steht in der verlinkten Datei.
 
 Nächster sinnvoller Zeitpunkt für einen Re-Run: vor `gates/RELEASE.md`
 (Phase 10, s. `ai.nvim.md`), oder nach dem nächsten größeren Feature-Zuwachs
