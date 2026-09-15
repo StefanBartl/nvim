@@ -24,27 +24,45 @@ Repo/Scope, kein Mangel) · 🔶 echter Fund (Backlog)
 
 ---
 
-## Neue Funde (Zusammenfassung)
+## Neue Funde (Zusammenfassung) — 14 von 14 gefixt, Stand 2026-09-15
 
-Die drei Funde aus der kuratierten `REVIEW.md`-Fassung sind bereits gefixt
-(s. `rules-nvim-review.md`). Dieser vollständige Durchgang fand **13
-weitere**, alle noch offen:
+Die drei Funde aus der kuratierten `REVIEW.md`-Fassung waren bereits vorher
+gefixt (s. `rules-nvim-review.md`). Dieser vollständige Durchgang fand 13
+weitere; auf Nutzerwunsch ("fix die vier kritischen zuerst, dann den Rest")
+noch in derselben Sitzung **12 davon gefixt** (Commits `d0c301b` — die vier
+kritischen — und `2efdc19` — der Rest), **1 bewusst zurückgestellt**
+(`ERR-06`/`PRIN-21`, s. u.). In einer Folgesitzung (selber Tag) auf
+Nutzerwunsch zusätzlich `PRIN-34` (Property-Tests, Commit `e65750a`) und
+anschließend, explizit angefragt trotz des dokumentierten Breaking-Change-
+Aufwands, auch `ERR-06`/`PRIN-21` selbst nachgetragen (Commit s.
+Zusammenfassung unten). Damit **14 von 14**:
 
-| # | Regel | Schwere lt. Katalog | Fund |
-| - | ----- | -------------------- | ---- |
-| 1 | `LUA-16` | 🔴 kritisch | Kein `ai.providers.*`-Modul sanitized `vim.NIL` nach `vim.json.decode()` — ein JSON-`null` in einem Antwortfeld (z. B. `delta.text`, `usage`) würde als Neovim-Userdata statt `nil` ankommen und potenziell einen `table.concat`/Indexierungs-Fehler mitten im `on_chunk`-Callback auslösen. Betrifft alle 6 `vim.json.decode`-Aufrufstellen (`claude`/`gemini`/`openai`/`ollama`/`loomai`/`sse`). |
-| 2 | `XP-05` | 🔴 kritisch | `M.available()` jedes Providers ruft `vim.fn.executable(...)` ungecacht auf; läuft bei jeder `"auto"`-Resolution neu. Auf einer Maschine ohne Cloud-Keys **und** ohne `ollama` installiert probiert jedes `:Ai ask`/`:Ai stream` mehrere fehlschlagende `executable()`-Aufrufe (laut Katalog ~44 ms je Fehlschlag, ungecacht) statt einmal zu cachen. |
-| 3 | `ERR-50` | 🔴 kritisch | `ai.config.setup()` validiert `user_opts` nicht vor dem `vim.tbl_deep_extend`-Merge — ein Tippfehler in einer verschachtelten Option verschwindet stillschweigend im Default. |
-| 4 | `ERR-60` | 🔴 kritisch (praktisch inert) | `lua/ai/providers/init.lua:57`s `__index`-Fallback `mod and mod[key] or nil` würde einen echten `false`-Feldwert still zu `nil` machen. Aktuell folgenlos (kein `Ai.Provider`-Feld ist je `false`), aber eine latente Falle. |
-| 5 | `NEW-19`/`NEW-20` | 🟡 empfohlen | `documentation.nvim`/`:DocMap` ist laut Katalog Pflichtwerkzeug für Annotationen — für `ai.nvim` nicht eingerichtet (kein `docs/map/`, kein `scripts/gen_map.lua`). |
-| 6 | `LUA-84` | 🟡 empfohlen | `claude.lua`s `DEFAULT_MAX_TOKENS = 4096` ist ein hartes Literal ohne Config-Key, obwohl es (wie `model`) eine externe API-Grenze beschreibt, die ein Nutzer plausibel überschreiben möchte. |
-| 7 | `PERF-64`/`PERF-62` | 🟡 empfohlen | `ai.completion.init`s Auto-Trigger-Timer ist handgerollt (`vim.uv.new_timer()`) statt `lib.nvim.debounce` zu nutzen; `stop_auto_timer()`s `:close()` ist nicht in `pcall` gewrappt. |
-| 8 | `REL-03`/`NEW-11` | 🟡 empfohlen | `README.md` hat kein echtes Table of Content (nur 2 `##`-Überschriften insgesamt — bei so wenigen zwar von geringem Wert, aber die Regel selbst macht dafür keine Ausnahme). |
-| 9 | `ERR-05`/`PRIN-22` | 🟡 empfohlen | Fünf Stellen nutzen rohes `pcall` statt `lib.nvim.safe_api.safe_call` — durchweg triviale Fälle, aber Abweichung vom Katalog-Standard. |
-| 10 | `ERR-06`/`PRIN-21` | 🟡 empfohlen | Keine strukturierten Fehlertypen (`lib.lua.error`) — Fehler sind durchweg Klartext-Strings. Bewusst einfach gehalten (dokumentiertes `Ai.StreamHandlers.on_error: fun(err: string)`), aber Katalog-Abweichung. |
-| 11 | `ERR-54` | 🟡 empfohlen | `ai.config.get()` gibt `_active` per Referenz zurück, dokumentiert aber nicht, ob das eine Kopie oder eine Live-Referenz ist. |
-| 12 | `UI-61` | 🟢 nice-to-have | `health.lua`s Provider-Statusliste (ein echtes Adapter/Backend-Statusliste-Beispiel) trägt kein `ℹ️ INFO`-Präfix. |
-| 13 | `LUA-54` | 🟢 nice-to-have | `README.md`s `**The Basics**`/`**Configuration**`/`**The Rest**` sind fette Pseudo-Überschriften statt echter `###`-Level-Headings oder Fließtext. |
+| # | Regel | Schwere lt. Katalog | Fund | Status |
+| - | ----- | -------------------- | ---- | ------ |
+| 1 | `LUA-16` | 🔴 kritisch | Kein `ai.providers.*`-Modul sanitized `vim.NIL` nach `vim.json.decode()` — ein JSON-`null` in einem Antwortfeld (z. B. `delta.text`, `usage`) würde als Neovim-Userdata statt `nil` ankommen und potenziell einen `table.concat`/Indexierungs-Fehler mitten im `on_chunk`-Callback auslösen. Betrifft alle 6 `vim.json.decode`-Aufrufstellen (`claude`/`gemini`/`openai`/`ollama`/`loomai`/`sse`). | ✅ `ai.providers.util.denil()` (rekursiv, in-place), an allen 6 Stellen plus allen 5 `ask()`-Callback-Pfaden angewendet. Getestet (`providers_util_spec.lua`). |
+| 2 | `XP-05` | 🔴 kritisch | `M.available()` jedes Providers ruft `vim.fn.executable(...)` ungecacht auf; läuft bei jeder `"auto"`-Resolution neu. Auf einer Maschine ohne Cloud-Keys **und** ohne `ollama` installiert probiert jedes `:Ai ask`/`:Ai stream` mehrere fehlschlagende `executable()`-Aufrufe (laut Katalog ~44 ms je Fehlschlag, ungecacht) statt einmal zu cachen. | ✅ `ai.providers.util.executable()` cacht pro Toolname für die Session-Laufzeit. Getestet (inkl. „cacht auch einen Fehlschlag"). |
+| 3 | `ERR-50` | 🔴 kritisch | `ai.config.setup()` validiert `user_opts` nicht vor dem `vim.tbl_deep_extend`-Merge — ein Tippfehler in einer verschachtelten Option verschwindet stillschweigend im Default. | ✅ `warn_unknown_keys()` läuft vor dem Merge, rekursiv, mit Ausnahme für die zwei offenen Schlüssel (`model`, `provider_order`). Getestet (5 neue Fälle in `config_spec.lua`). |
+| 4 | `ERR-60` | 🔴 kritisch (praktisch inert) | `lua/ai/providers/init.lua:57`s `__index`-Fallback `mod and mod[key] or nil` würde einen echten `false`-Feldwert still zu `nil` machen. Aktuell folgenlos (kein `Ai.Provider`-Feld ist je `false`), aber eine latente Falle. | ✅ Explizites `if not mod then return nil end; return mod[key]` statt der Ternary-Form. |
+| 5 | `NEW-19`/`NEW-20` | 🟡 empfohlen | `documentation.nvim`/`:DocMap` ist laut Katalog Pflichtwerkzeug für Annotationen — für `ai.nvim` nicht eingerichtet (kein `docs/map/`, kein `scripts/gen_map.lua`). | ✅ `.docmap.json` + `scripts/gen_map.lua` (aus `documentation.nvim`s eigenem Skript kopiert/angepasst, s. dessen `docs/reuse.md`) angelegt, beide Modi (Regenerieren, `--check`) tatsächlich laufen lassen und verifiziert grün. `docs/map/` bleibt bewusst `.gitignore`d (nur `documentation.nvim`/`docmap-desktop` selbst committen ihre Map). |
+| 6 | `LUA-84` | 🟡 empfohlen | `claude.lua`s `DEFAULT_MAX_TOKENS = 4096` ist ein hartes Literal ohne Config-Key, obwohl es (wie `model`) eine externe API-Grenze beschreibt, die ein Nutzer plausibel überschreiben möchte. | ✅ `Ai.Request.max_tokens` neu, `req.max_tokens or DEFAULT_MAX_TOKENS` in `claude.lua`. |
+| 7 | `PERF-64`/`PERF-62` | 🟡 empfohlen | `ai.completion.init`s Auto-Trigger-Timer ist handgerollt (`vim.uv.new_timer()`) statt `lib.nvim.debounce` zu nutzen; `stop_auto_timer()`s `:close()` ist nicht in `pcall` gewrappt. | ✅ Auf `lib.nvim.debounce.new()` umgestellt — löst beides automatisch (idempotentes `pcall`-Stop/Close, `vim.schedule`-Wrapping). Neu getestet (`completion_auto_trigger_spec.lua`, echte Autocmd-/Timer-Integration — vorher hatte diese Datei **keine** Testabdeckung). |
+| 8 | `REL-03`/`NEW-11` | 🟡 empfohlen | `README.md` hat kein echtes Table of Content (nur 2 `##`-Überschriften insgesamt — bei so wenigen zwar von geringem Wert, aber die Regel selbst macht dafür keine Ausnahme). | ✅ Echtes ToC ergänzt. |
+| 9 | `ERR-05`/`PRIN-22` | 🟡 empfohlen | Fünf Stellen nutzen rohes `pcall` statt `lib.nvim.safe_api.safe_call` — durchweg triviale Fälle, aber Abweichung vom Katalog-Standard. | ✅ Alle fünf (`init.lua` ×4, `panel.lua` ×1) umgestellt. |
+| 10 | `ERR-06`/`PRIN-21` | 🟡 empfohlen | Keine strukturierten Fehlertypen (`lib.lua.error`) — Fehler sind durchweg Klartext-Strings. Bewusst einfach gehalten (dokumentiertes `Ai.StreamHandlers.on_error: fun(err: string)`), aber Katalog-Abweichung. | ✅ **2026-09-15 nachgetragen, auf explizite Nutzeranfrage trotz des unten dokumentierten Breaking-Change-Aufwands.** Alle 18 `cb(false, "…")`/`handlers.on_error("…")`-Stellen in den 5 Providern plus `ai.providers.resolve()`/`ai/init.lua`s Resolution-Fallback geben jetzt `lib.lua.error.new(kind, message, data)` zurück statt eines Strings. Kind-Taxonomie (dokumentiert in `@types/init.lua` an `Ai.StreamHandlers.on_error`): `missing_api_key`, `invalid_request`, `network_error`, `api_error`, `invalid_response`, `blocked`, `provider_resolution`. `util.curl_exit_error()` baut jetzt direkt einen `network_error`; jeder Provider wrapped zusätzlich `fetch_stream`s eigenes (Klartext-String-)`on_error` in denselben `network_error`. Konsumenten (`bindings/actions.lua`s drei Stellen) auf `.message` umgestellt, mit `---@cast res LibErrorValue` wo LuaLS die `ok`-Diskriminante nicht automatisch nachzieht. Tests: `providers_claude_spec.lua`/`providers_gemini_spec.lua`/`providers_spec.lua`/`providers_util_spec.lua` auf die neue Fehlerform umgestellt (`err.kind`/`err.message` statt `err:find(...)`); volle Suite grün. `README`/`docs/` hatten entgegen der ursprünglichen Einschätzung unten keine Error-Shape-Codebeispiele, mussten also nicht angefasst werden — die Breaking-Change-Fläche war am Ende kleiner als vorab eingeschätzt. |
+| 11 | `ERR-54` | 🟡 empfohlen | `ai.config.get()` gibt `_active` per Referenz zurück, dokumentiert aber nicht, ob das eine Kopie oder eine Live-Referenz ist. | ✅ Doc-Kommentar ergänzt (live Referenz, `set_provider()` ist die eine sanktionierte Mutationsstelle). |
+| 12 | `UI-61` | 🟢 nice-to-have | `health.lua`s Provider-Statusliste (ein echtes Adapter/Backend-Statusliste-Beispiel) trägt kein `ℹ️ INFO`-Präfix. | ✅ Präfix ergänzt. |
+| 13 | `LUA-54` | 🟢 nice-to-have | `README.md`s `**The Basics**`/`**Configuration**`/`**The Rest**` sind fette Pseudo-Überschriften statt echter `###`-Level-Headings oder Fließtext. | ✅ Auf echte `###`-Headings umgestellt. |
+| 14 | `PRIN-34` | 🟢 nice-to-have | Alle Tests waren beispielbasiert, keine Property-/Invarianten-Tests. | ✅ 2026-09-15 nachgetragen (Commit `e65750a`): Property-Tests für `sse.recover_error_body` ("wirft nie, für beliebige Zeilenlisten") und `util.denil` ("keine `vim.NIL` mehr übrig, für beliebig verschachtelten Input") — je 200 Zufalls-Iterationen pro Testlauf. **Fand dabei einen echten Bug:** `denil` gab ein Top-Level-`vim.NIL` (kein verschachteltes Feld) unverändert zurück, weil der `type(value) ~= "table"`-Guard das nicht abfing. Alle 5 echten Provider-Call-Sites guarden vorher selbst mit `type(x) == "table"`, war also in Produktion nie erreichbar — trotzdem mitgefixt, da der Funktionsvertrag selbst ("jedes `vim.NIL` wird zu `nil`") das verlangt. |
+
+**Zu #10 (`ERR-06`/`PRIN-21`):** ursprünglich als eigene Aufgabe zurück-
+gestellt (Design-Entscheidung mit Breaking-Change-Fläche, kein mechanischer
+Fix), auf explizite Nachfrage aber in derselben Sitzung noch nachgeholt.
+Die tatsächliche Fläche war kleiner als hier ursprünglich eingeschätzt:
+weder `README.md` noch `docs/*.md` enthielten ein einziges Codebeispiel,
+das die Fehlerform zeigt (nachträglich per Grep verifiziert) — nur
+`bindings/actions.lua` (3 Stellen) und 4 Testdateien mussten wirklich
+angefasst werden, neben den Providern selbst. `Ai.Response|string` wurde zu
+`Ai.Response|LibErrorValue`.
 
 Zusätzlich zwei bereits **explizit im Code dokumentierte** Abweichungen
 (kein neuer Fund, nur der Vollständigkeit halber hier verzeichnet):
@@ -52,12 +70,21 @@ Zusätzlich zwei bereits **explizit im Code dokumentierte** Abweichungen
 `usrcmds.lua`s eigener Kommentar) und das bereits in `ai.nvim.md` gelistete
 `ui/panel.lua`-Voll-Buffer-`set_lines()`-Perf-Finding.
 
-**Keine** dieser 13 ist sicherheitskritisch im Sinne eines ausnutzbaren
-Lecks (am nächsten dran: `LUA-16`, aber das ist ein Absturz-/Robustheits-
-Risiko, kein Datenleck). Nichts davon wurde in dieser Sitzung gefixt außer
-dem bereits separat committeten `LLS-42`/`NEW-41`-Testheader-Fund (s.
-`ai.nvim`-Commit `62cf73b`) — die 13 oben sind Kandidaten für eine
-Folgesession, priorisiert nach Katalog-Schwere in der Tabelle.
+**Keine** dieser 13 war sicherheitskritisch im Sinne eines ausnutzbaren
+Lecks (am nächsten dran: `LUA-16`, aber das war ein Absturz-/Robustheits-
+Risiko, kein Datenleck). `luacheck`/`stylua` weiterhin grün (inkl.
+`scripts/`), volle `plenary`-Suite grün — 10 Spec-Dateien, davon 2 neu
+(`providers_util_spec.lua`, `completion_auto_trigger_spec.lua`) —, ein
+erneuter `lua-language-server --check`-Lauf nach allen Fixes zeigt 0 echte
+neue Diagnosen (275 roh, 269 weiterhin das bekannte Library-Injektions-
+Artefakt, 4 dasselbe erwartete `TESTS/`-Partial-Table-Muster, 2 dieselbe
+vorbestehende LuaLS-Overload-Grenze wie vorher). Das war der Stand direkt
+nach dieser ersten Sitzung, mit #10 (`ERR-06`/`PRIN-21`) noch offen. In den
+zwei Folgesitzungen (selber Tag) kamen #14 (`PRIN-34`) und schließlich #10
+selbst dazu — `luacheck`/`stylua` weiterhin grün, volle `plenary`-Suite
+weiterhin grün nach jedem Schritt (verifiziert, nicht nur behauptet — s.
+Fund-Tabelle oben für Details je Fund). Damit sind alle 14 Funde dieses
+Durchgangs abgeschlossen.
 
 ---
 
@@ -69,26 +96,26 @@ Folgesession, priorisiert nach Katalog-Schwere in der Tabelle.
 | ERR-02 | ✅ | `type(...)`-Guards durchgehend vor jedem Feldzugriff auf Fremd-JSON. |
 | ERR-03 | ✅ | `ask(cb)` ruft immer `cb(true/false, …)`, `resolve()` gibt `provider, err`. |
 | ERR-04 | ✅ | `notify` nur in `bindings/actions.lua`/`init.lua`/`health.lua` (UI-Schicht) — Provider/Config/Completion/Context notifizieren nie. |
-| ERR-05 | 🔶 | S. Fund #9 — rohes `pcall` statt `lib.nvim.safe_api.safe_call` an 5 Stellen. |
-| ERR-06 | 🔶 | S. Fund #10 — keine strukturierten Fehlertypen, nur Strings. |
+| ERR-05 | ✅ | War Fund #9 — die 5 rohen `pcall`-Stellen gehen jetzt über `lib.nvim.safe_api.safe_call`. **Gefixt.** |
+| ERR-06 | ✅ | War Fund #10 — keine strukturierten Fehlertypen, nur Strings. **Gefixt** — `lib.lua.error`-basierte `LibErrorValue`, s. § „Neue Funde" oben. |
 | ERR-07 | ✅ | `assert(...)` in `ask`/`stream`/`register`. |
 | ERR-10 | ✅ | Keine API in `ai.nvim`, die „kein Argument"/„ungültiges Argument" verwechselbar auf `nil` kollabiert. |
 | ERR-11 | ➖ | `ai.context.add_scope()` schluckt bewusst „nichts gefunden" und „Scope-Resolve fehlgeschlagen" gemeinsam — dokumentiert als Best-effort-Designentscheidung (Kontext ist optional), keine versteckte Fehlerquelle. |
 | ERR-20 | ✅ | Kontext-Assemblierung ist fail-open: ein fehlender Scope überspringt nur seinen Abschnitt, nie den ganzen Block. |
 | ERR-21 | ➖ | Keine Umgebungs-Whitelist/-Erkennung in `ai.nvim`. |
-| ERR-22 | 🔶 | Hängt an Fund #3 (`ERR-50`) — keine Validierung, also auch kein definiertes Degradieren auf Default bei ungültigem Wert (der Wert fließt einfach unvalidiert durch). |
+| ERR-22 | ✅ | Hing an Fund #3 (`ERR-50`) — mit dessen Fix (Unknown-Key-Warnung vor dem Merge) jetzt mitbehoben. |
 | ERR-30/31/34 | ➖ | Kein Scan-vor-Schreiben, keine `O_CREAT\|O_EXCL`-Dateierzeugung, kein rekursiver Walk in `ai.nvim`. |
 | ERR-32 | ✅ | `ai.completion.init`s `generation`-Counter genau dieses Muster. |
 | ERR-33 | ✅ | `completion.trigger()`s `ask`-Callback prüft `nvim_buf_is_valid` + `changedtick` + Cursor-Position erneut. |
 | ERR-40/41 | ➖ | Keine Datei-Handles, keine Windows-Sharing-Violation-Fälle. |
 | ERR-42/43 | ➖ | Keine Batch-Operationen über N Items. |
 | ERR-44 | ✅ | `completion.trigger()`s Generation-Counter ist exakt das Token-Cancel-Muster für die nicht killbare `ask()`. |
-| ERR-50 | 🔶 | S. Fund #3. |
+| ERR-50 | ✅ | War Fund #3. **Gefixt** — `warn_unknown_keys()` vor dem Merge. |
 | ERR-51 | ✅ | `vim.deepcopy(DEFAULTS)` vor jedem Merge. |
 | ERR-52 | ✅ | Kein handgeschriebener Merge, nur `vim.tbl_deep_extend` direkt — die Regel selbst nimmt genau diesen Fall aus. |
 | ERR-53 | ➖ | Kein Submodul hält eine Live-Referenz auf eine Config-Untertabelle. |
-| ERR-54 | 🔶 | S. Fund #11. |
-| ERR-60 | 🔶 | S. Fund #4 (`providers/init.lua:57`); alle anderen `and…or`-Stellen im Repo geprüft (`actions.lua`, `keymaps.lua`, `completion/*.lua`, `context/diagnostics.lua`, alle Provider) — durchweg sicher, weil der `b`-Zweig nachweislich nie falsy ist. |
+| ERR-54 | ✅ | War Fund #11. **Gefixt** — `get()`s Doc-Kommentar sagt jetzt explizit „live reference". |
+| ERR-60 | ✅ | War Fund #4 (`providers/init.lua:57`); alle anderen `and…or`-Stellen im Repo geprüft (`actions.lua`, `keymaps.lua`, `completion/*.lua`, `context/diagnostics.lua`, alle Provider) — durchweg sicher, weil der `b`-Zweig nachweislich nie falsy ist. **Gefixt** — explizites `if`/`return` statt der Ternary-Form. |
 | ERR-61 | ➖ | Kein Patch-/Merge-Code, der `nil` als „Feld löschen" braucht. |
 | ERR-62 | ✅ | Kein `pcall(f(args))`-Fund — nur `pcall(function() … end)`. |
 | ERR-63/64 | ➖ | Kein Vararg-/mehrwertiger-Klammer-Code in `ai.nvim`. |
@@ -242,7 +269,7 @@ Folgesession, priorisiert nach Katalog-Schwere in der Tabelle.
 | PRIN-11 | ✅ | `config`-Objekt wird per Parameter durchgereicht (`M.setup(cfg)`-Muster); interne `require("ai.config").get()`-Zugriffe entsprechen der im Katalog selbst als Standard beschriebenen `config.options.X`-Konvention. |
 | PRIN-12/13 | ➖ | Zu kleiner Scope für ein eigenes Kontext-Objekt bzw. Snapshot/Restore. |
 | PRIN-20 | ✅ | S. `ERR-03`. |
-| PRIN-21 | 🔶 | S. Fund #10 (= `ERR-06`). |
+| PRIN-21 | ✅ | S. Fund #10 (= `ERR-06`). **Gefixt.** |
 | PRIN-22 | 🔶 | S. Fund #9 (= `ERR-05`). |
 | PRIN-23 | ✅ | S. `ERR-04`. |
 | PRIN-24 | ✅ | Fehlerstrings sind an der Funktion selbst dokumentiert (z. B. `"claude: ANTHROPIC_API_KEY not set"` im Doc-Kommentar nachvollziehbar). |
@@ -255,7 +282,7 @@ Folgesession, priorisiert nach Katalog-Schwere in der Tabelle.
 | PRIN-31 | ✅ | **Gefixt diese Sitzung** — Provider-Parsing jetzt testbar/getestet über gestubtes `curl`. |
 | PRIN-32 | ✅ | **Gefixt diese Sitzung** — reine Funktionen (`sse.lua`, `completion/prompt.lua`) jetzt getestet. |
 | PRIN-33 | ➖ | Kein separater Dry-Run-Entry nötig; `TESTS/` übernimmt diese Rolle bereits vollständig. |
-| PRIN-34 | 🔶 | Nice-to-have: alle Tests sind beispielbasiert, keine Property-/Invarianten-Tests (z. B. „`recover_error_body` wirft nie für beliebige Zeilenlisten"). Geringe Priorität. |
+| PRIN-34 | ✅ | War Fund #14. **Gefixt** — Property-Tests für `recover_error_body`/`denil` (s. o.), fand dabei einen echten `denil`-Bug (Top-Level-`vim.NIL`). |
 | PRIN-35 | ✅ | S. `LUA-52`. |
 | PRIN-36 | ➖ | Kein zeitkritischer Async-Debugging-Fall in `ai.nvim`. |
 | PRIN-40-43 | ➖ | `ai.nvim` hat keinerlei Caching — die Regeln greifen nicht, weil es keinen Cache gibt, der falsch gemacht sein könnte. |

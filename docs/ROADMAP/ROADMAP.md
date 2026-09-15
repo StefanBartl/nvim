@@ -4,10 +4,10 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
+    - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Tasks](#tasks)
     - [TOP interessant gerade](#top-interessant-gerade)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
-      - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
   - [Misc](#misc)
   - [True check](#true-check)
@@ -17,10 +17,10 @@
 
 ## Cdx
 
-| Account  |    Sub Bis    | Week Reset Date |  Next 6h Reset  | Actual/Insgesamt |
+| Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     03:20       |    97% / 81%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     00:10       |    97% / 61%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     10:20       |   100% / 76%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     01:50       |    92% / 66%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
@@ -44,15 +44,18 @@
 
 ## Claude Tasks
 
-- [ ] ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
+- ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 
-- ui.nvim + my.nvim +  ai.nvim + media.nvim(glaube ich): runtime-analysis.nvim aufdrehen
+- my.nvim + media.nvim(glaube ich): rules.nvim
 
-- my.nvim +  ai.nvim + media.nvim(glaube ich): rules.nvim
+- offene Taks in den roamdaps aller plugins nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
+  - schreibe den report hjierher: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports
 
-- offene Taks in den roamdaps nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
+---
 
-- Live Testing:
+### Live-Testing (braucht laufende, interaktive nvim-Session)
+
+  - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
   - [loom.ai + ai.nvim](C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports\ai\live-testing-plan.md)
   - [media.nvim](C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/media/live-testing-plan.md)
 
@@ -74,13 +77,6 @@
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
     - [ ] ...
-
----
-
-#### Live-Testing (braucht laufende, interaktive nvim-Session)
-
-- [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
-  - [ ] aktualisieren /
 
 ---
 

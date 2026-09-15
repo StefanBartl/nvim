@@ -26,10 +26,11 @@
 --- microsecond per call (see `runtime-analysis.telemetry`'s own README for the
 --- measured range -- reproducible via its `scripts/bench_overhead.lua`, not
 --- restated here as single decimals). Nothing on a plugin's own surface
---- (keypresses/autocmds), but a real cost on `lib.tables.core`-style
---- primitives that run in loops -- why `profile_args` defaults on for
---- personal plugins but NOT for lib.nvim's aggregate (`lib_profile_args`,
---- default false).
+--- (keypresses/autocmds); a real but still sub-microsecond cost on
+--- `lib.tables.core`-style primitives that run in loops -- accepted here
+--- too (`lib_profile_args`/`lib_timing` both default true) in favour of the
+--- goal above: switch it on once, everything is full from the first load,
+--- nothing to remember to re-run.
 ---
 --- KNOWN BLIND SPOT (verified). A keymap bound before the wrap ran closes over
 --- the raw, uninstrumented function. This always costs the FIRST buffer of a
@@ -48,17 +49,29 @@ local M = {}
 ---@class Config.Telemetry.Opts
 ---@field deep? boolean|string[]          # wrap the whole loaded subtree (default true)
 ---@field profile_args? boolean|string[]  # record argument fingerprints (default true)
----@field timing? boolean|string[]        # record durations (default false)
+---@field timing? boolean|string[]        # record durations (default true)
 ---@field exclude? string[]               # plugins to skip entirely
----@field lib_profile_args? boolean       # arguments for lib.nvim's aggregate (default false)
+---@field lib_profile_args? boolean       # arguments for lib.nvim's aggregate (default true)
+---@field lib_timing? boolean             # durations for lib.nvim's aggregate (default true)
 
+--- `timing`/`lib_profile_args`/`lib_timing` default to full mode (on) rather
+--- than plain counting: this is the actual policy every target should come
+--- up under regardless of WHEN it loads, not something `:RATelemetrySetupAllFull`
+--- has to re-assert per session. That command only ever reaches whatever is
+--- already loaded/running at the moment it runs (see its own doc-comment in
+--- runtime-analysis.nvim's `telemetry/command.lua`) -- a plugin that
+--- lazy-loads afterward is wrapped by the ordinary `User LazyLoad` path
+--- instead, under exactly the policy configured here. Baking "full" in as
+--- the default is what makes every namespace start that way from its very
+--- first load, in every session, with no manual re-run required.
 ---@type Config.Telemetry.Opts
 local defaults = {
   deep = true,
   profile_args = true,
-  timing = false,
+  timing = true,
   exclude = {},
-  lib_profile_args = false,
+  lib_profile_args = true,
+  lib_timing = true,
 }
 
 ---This config's own Lua tree, instrumented as an `opts.telemetry.extra`
@@ -163,7 +176,10 @@ function M.build(opts)
   ---@type table|false
   local lib_nvim = false
   if not vim.tbl_contains(opts.exclude, "lib.nvim") then
-    lib_nvim = { profile_args = opts.lib_profile_args or nil }
+    lib_nvim = {
+      profile_args = opts.lib_profile_args or nil,
+      timing = opts.lib_timing or nil,
+    }
   end
 
   return {
@@ -174,7 +190,7 @@ function M.build(opts)
         namespace = "nvim-config",
         mains = SELF_PREFIXES,
         profile_args = true,
-        timing = false,
+        timing = true,
       },
     },
   }
