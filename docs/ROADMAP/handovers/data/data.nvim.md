@@ -339,6 +339,41 @@ ursprünglichen Reporteinschätzung (Standalone-Constraint bei B2, falsche
 Nutzenbehauptung bei A3, revidierter Nutzerwunsch bei A1) wurde zuerst
 gefragt statt einfach weitergemacht.
 
+## Folgesession 2026-09-15: Selbst-Review aller Commits dieser Session (Bugs/Security/Perf)
+
+Nutzerwunsch: alle in dieser Session gemachten Commits (`data.nvim`,
+`lib.nvim`, `lsp.nvim`, `sandbox.nvim`) nochmal auf Bugs, Security und
+Performance durchsehen. Keine Security- oder relevanten Performance-Funde
+(die eine dokumentierte kleine Ineffizienz — doppeltes `path_flatten` in
+`data.filter` — war schon im Code selbst als bewusste Abwägung vermerkt).
+Drei echte Bugs gefunden und gefixt:
+
+1. **`data.nvim@d5da24b`** — `M.filter` merkte sich `bufnr`/`s0`/`e0` vor
+   dem interaktiven `pickers.refine`-Dialog (kann beliebig lange dauern)
+   und schrieb danach ungeprüft dorthin zurück: ein Edit anderswo im
+   Buffer währenddessen hätte auf falsche Zeilen geschrieben, ein
+   geschlossener Buffer einen rohen Fehler aus einem Async-Callback
+   geworfen. Jetzt per Extmark verankert (folgt der echten Position über
+   Edits hinweg) plus erneuter Validity-/`modifiable`-Check direkt vor dem
+   Schreiben. Zusätzlich: `data.filter.run` rief `path_flatten`/`render`
+   direkt statt wie überall sonst im Plugin über `safe_call` — genau die
+   Fehlerklasse, die `data.nvim` selbst schon einmal gefunden+gefixt hatte
+   (`docs/scope.md`s "roher Vim-Error statt sauberer Notification").
+   4 neue Regressionstests (Buffer-Edit während des Prompts, Buffer
+   geschlossen während des Prompts, `path_flatten`/`render` werfen einen
+   Fehler), volle Suite grün.
+2. **`sandbox.nvim@1648156`** — `compose_file.services` prüfte nicht, ob
+   `services:` eine Map statt einer Liste ist. Bei (ungültiger, aber
+   syntaktisch gültiger) Compose-YAML mit `services:` als Liste hätte
+   `pairs()` Integer-Indizes geliefert, die als `{"1","2"}` fälschlich als
+   Servicenamen zurückkämen — genau das Gegenteil vom versprochenen
+   "klarer Fehler statt falscher Antwort". Jetzt per `vim.islist`
+   abgefangen (dieselbe Prüfung, die `lib.nvim.config.repo_file` schon für
+   den analogen Fall nutzt). 1 neuer Regressionstest.
+
+`lib.nvim.config.repo_file`/`lsp.nvim/config/project.lua` hatten bei der
+Durchsicht keine Funde.
+
 ## Offene Punkte / nächste Schritte
 
 1. Phase 1: nur noch Register-Scope offen (Filter ist jetzt gebaut, siehe
