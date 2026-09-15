@@ -11,26 +11,34 @@
 
 ---
 
-> **Status (2026-09-15, Folgesession):** A1, A2 und B2 sind umgesetzt und auf
-> `main` gepusht. A1 (`data.nvim@346c19c`) und A2 (`data.nvim@0b75c28`) wie
-> unten beschrieben. B2 (`lib.nvim@d4fa0f2`, `lsp.nvim@e12936c`) mit einer
-> Korrektur gegenüber der ursprünglichen Einschätzung: `documentation.nvim`
-> konnte **nicht** mitmigriert werden — sein `.docmap.json`-Loader läuft auch
-> im Standalone-Binary unter reinem PUC-Lua ohne `lib.nvim` auf dem Pfad,
-> das steht sogar so im eigenen Code-Kommentar
-> (`documentation/config/file.lua`). Das neue `lib.nvim.config.repo_file`
-> hat heute also nur `lsp.nvim` als Nutzer, ist aber für künftige
-> `lib.nvim`-basierte Plugins fertig. A3/A4/B1/B3/B4 sind weiterhin offen.
-> **A3 zurückgezogen:** bei der Umsetzungsprüfung zeigte sich, dass die
-> Behauptung "würde `:JSON sort` von einem `:JSON pretty`-Alias zu einem
-> echten Feature machen" nicht hält. `documentation.nvim`s Encoder sortiert
-> Keys ohnehin schon (das tut `lib.lua.json.encode` bereits identisch) und
-> normalisiert nur die Zahlenformatierung zwischen LuaJIT und PUC-Lua —
-> `data.nvim` läuft aber immer nur unter Neovims eingebettetem LuaJIT, nie
-> unter PUC-Lua, also entfällt genau der Fall, den die Normalisierung
-> behebt. Eine echte Lösung bräuchte einen ordnungserhaltenden JSON/YAML-
-> Decoder (deutlich größerer Scope als ursprünglich eingeschätzt) — auf
-> Nutzerwunsch nicht verfolgt. Details: `nvim/docs/ROADMAP/handovers/data/data.nvim.md`.
+> **Status (2026-09-15, Folgesession):** A1, A2, B1 und B2 sind umgesetzt und
+> auf `main` gepusht.
+>
+> - **A1** `data.nvim@346c19c`, **A2** `data.nvim@0b75c28` — wie unten
+>   beschrieben.
+> - **B1** `sandbox.nvim@3839513` — `:Sandbox compose services` liest die
+>   deklarierten Services direkt aus der Compose-YAML (`lib.lua.yaml`,
+>   derselbe Decoder wie `data.nvim`s `:YAML`), ganz ohne Engine-Aufruf.
+> - **B2** `lib.nvim@d4fa0f2` (neues Modul `lib.nvim.config.repo_file`) +
+>   `lsp.nvim@e12936c` (migriert) — mit einer Korrektur gegenüber der
+>   ursprünglichen Einschätzung: `documentation.nvim` konnte **nicht**
+>   mitmigriert werden, sein `.docmap.json`-Loader läuft auch im
+>   Standalone-Binary unter reinem PUC-Lua ohne `lib.nvim` auf dem Pfad
+>   (steht so im eigenen Code-Kommentar). Das Modul hat heute also nur
+>   `lsp.nvim` als Nutzer, ist aber für künftige `lib.nvim`-basierte
+>   Plugins fertig.
+> - **A3 zurückgezogen** — bei der Umsetzungsprüfung zeigte sich, dass die
+>   Behauptung "würde `:JSON sort` von einem `:JSON pretty`-Alias zu einem
+>   echten Feature machen" nicht hält: `documentation.nvim`s Encoder
+>   sortiert Keys ohnehin schon (das tut `lib.lua.json.encode` bereits
+>   identisch) und normalisiert nur die Zahlenformatierung zwischen LuaJIT
+>   und PUC-Lua — `data.nvim` läuft aber immer nur unter Neovims
+>   eingebettetem LuaJIT. Eine echte Lösung bräuchte einen
+>   ordnungserhaltenden JSON/YAML-Decoder (deutlich größerer Scope) — auf
+>   Nutzerwunsch nicht verfolgt.
+> - **A4, B3, B4 weiterhin offen.**
+>
+> Details je Schritt: `nvim/docs/ROADMAP/handovers/data/data.nvim.md`.
 
 ---
 
