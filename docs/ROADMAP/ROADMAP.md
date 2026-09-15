@@ -4,6 +4,7 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
+    - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Tasks](#tasks)
     - [TOP interessant gerade](#top-interessant-gerade)
@@ -19,9 +20,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     03:20       |    97% / 81%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:20       |    30% / 90%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:20       |   100% / 76%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     01:50       |    92% / 66%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     14:00       |    84% / 77%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -44,12 +45,21 @@
 
 ## Claude Tasks
 
-- ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
-
-- my.nvim + media.nvim(glaube ich): rules.nvim
 
 - offene Taks in den roamdaps aller plugins nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
   - schreibe den report hjierher: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports
+
+- casedesk
+  - problems / solutions matrix us den cases erstellen
+  - casedesk file im wkdbook implementieren
+  - keuzfeatures data.nvim
+
+---
+
+### Nice-to-Have wenn Limit über ist
+
+1. rules.nvim: media.nvim, data.nvim
+2. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 
 ---
 
