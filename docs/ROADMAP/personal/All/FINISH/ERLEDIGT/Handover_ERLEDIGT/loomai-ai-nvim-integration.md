@@ -13,7 +13,7 @@
 > kein Netzwerk-Roundtrip). Der `stream()`-Crash-Pfad aus Abschnitt 12
 > (falls `loomai.lua` nur `ask()` hätte) ist gegenstandslos, da `stream()`
 > von Anfang an mitgebaut wurde. Details siehe
-> [ai.nvim.md-Handover](../../../../../handovers/ai/ai.nvim.md), Abschnitt
+> [ai.nvim.md-Handover](../../../../../handovers/ai/ai.nvim_loomai.md), Abschnitt
 > "loomai-Provider umgesetzt". Kein aktiver Tracking-Zustand mehr, nach
 > `ERLEDIGT/` verschoben.
 

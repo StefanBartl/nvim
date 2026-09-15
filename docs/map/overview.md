@@ -459,8 +459,8 @@ flowchart LR
 | warn | `dead-readme-link` | docs/ROADMAP/LONG_RUN/IDEAS/test.md links to './NEW_PLUGIN.md' which does not exist |
 | warn | `dead-readme-link` | docs/ROADMAP/LONG_RUN/IDEAS/test.md links to './lsp.md' which does not exist |
 | warn | `dead-readme-link` | docs/ROADMAP/LONG_RUN/IDEAS/test.md links to './nvim.md' which does not exist |
-| warn | `dead-readme-link` | docs/ROADMAP/ROADMAP.md links to 'C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/media/live-testing-plan.md' which does not exist |
-| warn | `dead-readme-link` | docs/ROADMAP/ROADMAP.md links to 'C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports\ai\live-testing-plan.md' which does not exist |
+| warn | `dead-readme-link` | docs/ROADMAP/ROADMAP.md links to 'C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/Final_Checks/media/live-testing-plan.md' which does not exist |
+| warn | `dead-readme-link` | docs/ROADMAP/ROADMAP.md links to 'C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/Final_Checks/ai/live-testing-plan.md' which does not exist |
 | warn | `dead-readme-link` | docs/ROADMAP/handovers/rules/rules-nvim-on-ui-nvim.md links to './ui-nvim-cross-feature-check.md' which does not exist |
 | warn | `dead-readme-link` | docs/ROADMAP/handovers/rules/rules-nvim-on-ui-nvim.md links to '../reports/rules-nvim-on-ui-nvim.json' which does not exist |
 | warn | `dead-readme-link` | docs/ROADMAP/personal/All/FINISH/ERLEDIGT/BEFORE_MERGE_CHECKLISTS/CHECKLIST.md links to './spec.md' which does not exist |

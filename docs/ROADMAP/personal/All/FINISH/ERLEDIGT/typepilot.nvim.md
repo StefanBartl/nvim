@@ -8,7 +8,7 @@
 > diese Notiz vorschlägt, existiert bereits vollständig in `ai.nvim`s
 > `providers/{claude,openai,ollama,gemini}.lua`. Konkrete, an die
 > Entscheidung angepasste Tasks stehen im
-> [ai.nvim.md-Handover](../../../../handovers/ai/ai.nvim.md), Abschnitt
+> [ai.nvim.md-Handover](../../../../handovers/ai/ai.nvim_loomai.md), Abschnitt
 > "typepilot.nvim: Scoping-Entscheidung". Kein aktiver Tracking-Zustand
 > mehr hier, nach `ERLEDIGT/` verschoben.
 

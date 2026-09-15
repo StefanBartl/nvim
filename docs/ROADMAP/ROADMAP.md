@@ -21,7 +21,7 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:20       |    30% / 90%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     10:20       |   100% / 76%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     22:30       |    85% / 86%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     14:00       |    84% / 77%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
@@ -59,15 +59,21 @@
 ### Nice-to-Have wenn Limit über ist
 
 1. rules.nvim: media.nvim, data.nvim
-2. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
+2. C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/TESTS-Abdeckung.md
+3. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
+4. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
+5. Alle externen plugins auflisten und prüfen, welche davon in meine bestehenden plugins
+voll bze features davon nachgeaut werden sollen/könnten
+6. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
 
 ---
 
 ### Live-Testing (braucht laufende, interaktive nvim-Session)
 
+  - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH
   - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
-  - [loom.ai + ai.nvim](C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports\ai\live-testing-plan.md)
-  - [media.nvim](C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/media/live-testing-plan.md)
+  - [loom.ai + ai.nvim](C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
+  - [media.nvim](C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/Final_Checks/media/live-testing-plan.md)
 
 ---
 
@@ -108,8 +114,6 @@
 
 - [ ] Anticheat knacken
 
-- [ ] alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
-
 ---
 
 ## True check
@@ -126,21 +130,19 @@
   - [ ] ...
   - [ ] (Verbund: images.nvim, hover.nvim, pdfport.nvim, markdown.nvim, gopath.nvim, lib.nvim, pickers.nvim, filetree.nvim, open.nvim, language.nvim, nvzone/menu (solange nicht eigenes right click ui plugin geschrieben ist)) -> Würde es sinn machen, ein "Bundle-plugin" zusätzlich anzubieten, dass alles diese imßlementiert und man sozusagenm eine "Image-Suite"-Implementieren könnte?
 
-- [ ] Ein Freund von mir, mitdem ich gemeinsam nvim gelernt habe, hat ~ 31 nvim (+ ein natives docmap-desktop) plugins geschrieben und mir angeboten, dass ich alle üebrhnehmen kann. ich bin daran interessiert, will aber zuerst wissen, wie die codequalität ist, inahltlich ist mir alles klar, also was die plugins machen, aber ich will keine schlechte codebase übernehmen. kannst du die plugins analysieren und diese einschätzug machen. bitte ehrlich, keine honig ums maul oder so. ich will wissen, was gut ist, was außergewöhnlich ist (gut als auch schlecht), was schlecht ist, wo noch viel arbeit rein gesteckt werden muss, overall zustand, usw...
-  Ich hoffe, du kannst das trotzdem so effizient managen, dass dies keine mega aufgabe wird, dass soll es nämlich auch nicht sein, leider ist mir klar das dass ein wenig meine wünsche konterkariert. Ich denke, du must da einen goldenen Zwischenweg finden.
-  Wenn dir Logikfehler, offensichtliche Bugs oder docs Probleme auffallen in einen Plugin, dann notiere diese gleich.
-
 ---
 
 ## Plugin-Liste
 
 Hier die Liste meiner Plugins - du findest sie unter `$REPOS_DIR\repos` - und du hast Zugriff darauf:
 
+ai.nvim
 buffer-ctx.nvim
 cascade.nvim
 casedesk.nvim
 cmdlog.nvim
 color_my_ascii.nvim
+data.nvim
 dap.nvim
 debugging.nvim
 diff.nvim

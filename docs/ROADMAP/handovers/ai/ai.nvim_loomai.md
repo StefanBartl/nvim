@@ -610,7 +610,7 @@ Rechercheergebnis- und Planungsstand fest, damit bei einer Sitzungsunterbrechung
 ## Design-Entscheidungen, Gemini, rules.nvim, Live-Testing-Plan (2026-09-14, Folgesession 4)
 
 Ausgangspunkt: der Nutzer wollte die meisten Features beider Repos live
-testen. Dafür erst ein [Live-Testing-Plan](../../reports/ai/live-testing-plan.md)
+testen. Dafür erst ein [Live-Testing-Plan](../../personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
 geschrieben (`nvim/docs/ROADMAP/reports/ai/live-testing-plan.md`), dabei zwei
 echte Befunde gemacht (GPU-Korrektur, ein reproduzierter Bug), dann vier
 offene Design-Entscheidungen dem Nutzer vorgelegt (je mit Empfehlung) und
@@ -1017,7 +1017,7 @@ committet und gepusht, synchron mit `origin/main`. Offen:
 
 1. `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, jetzt auch `loomai`/
    `gemini`), um v1 vor einem Tag zu validieren — Live-Testing-Plan dafür
-   fertig: [reports/ai/live-testing-plan.md](../../reports/ai/live-testing-plan.md)
+   fertig: [reports/ai/live-testing-plan.md](../../personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
    (Achtung: der Testplan geht noch von "loomAI kann nur Ollama" aus, s.
    Punkt 6 unten — beim nächsten Durchgang mit den drei neuen Cloud-Backends
    ergänzen).
