@@ -22,7 +22,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:20       |    30% / 90%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     22:30       |    85% / 86%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     14:00       |    84% / 77%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     00:00       |    84% / 77%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -58,7 +58,7 @@
 
 ### Nice-to-Have wenn Limit über ist
 
-1. rules.nvim: media.nvim, data.nvim
+1. rules.nvim: media.nvim
 2. C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/TESTS-Abdeckung.md
 3. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 4. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
