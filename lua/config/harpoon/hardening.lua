@@ -21,6 +21,7 @@ local api = vim.api
 -- Internal state (local to avoid polluting globals)
 local STATE = { ---@type Cfg.Harpoon.HardeningState
   wrapped_ui = false,
+  wrapped_save = false,
   handle = nil,
   pending = false,
   debounce_ms = 200,
@@ -124,6 +125,39 @@ local function _ensure_ui_wrap()
   STATE.wrapped_ui = true
 end
 
+--- Wrap ui.save once, to run the pinned-entry deletion guard right before it
+--- resolves the quick-menu buffer's current lines into the list. This is the
+--- single choke point every close path runs through: 'q'/`<Esc>`/`BufLeave`
+--- call `self:save()` from inside HarpoonUI:toggle_quick_menu's close branch
+--- (when `save_on_toggle` is set, as this config's harpoon:setup() does), and
+--- `:w` (BufWriteCmd) calls `ui:save()` directly. Wrapping toggle_quick_menu
+--- instead would miss the `:w` path entirely, since that path resolves the
+--- buffer via save() before toggle_quick_menu ever runs.
+local function _ensure_save_wrap()
+  if STATE.wrapped_save then
+    return
+  end
+
+  local ui = _try_require_ui()
+  if not ui or type(ui.save) ~= "function" then
+    return
+  end
+
+  local orig_save = ui.save
+  ui.save = function(self, ...)
+    if self and self.bufnr then
+      local ok_lines, lines = pcall(vim.api.nvim_buf_get_lines, self.bufnr, 0, -1, false)
+      if ok_lines then
+        local guarded = require("config.harpoon.pin_guard").confirm_before_close(lines)
+        pcall(vim.api.nvim_buf_set_lines, self.bufnr, 0, -1, false, guarded)
+      end
+    end
+    return orig_save(self, ...)
+  end
+
+  STATE.wrapped_save = true
+end
+
 --- Install idempotent autocmds for saving on user activity.
 ---@param events string[]
 local function _install_autocmds(events)
@@ -166,6 +200,7 @@ function M.setup(opts)
   -- no-ops until harpoon becomes available.
   _ensure_timer(debounce_ms)
   _ensure_ui_wrap()
+  _ensure_save_wrap()
   _install_autocmds(events)
 end
 

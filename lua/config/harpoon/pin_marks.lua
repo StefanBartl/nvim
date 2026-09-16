@@ -60,9 +60,17 @@ function M.setup()
   local grp = Autocmd.group("HarpoonPinMarks", true)
 
   -- The quick-menu buffer is created fresh each open with filetype=harpoon.
+  -- Harpoon sets this filetype BEFORE writing the list content into the
+  -- buffer (harpoon.ui:toggle_quick_menu creates the window/sets filetype,
+  -- then fills it via nvim_buf_set_lines), so marking synchronously here would
+  -- always see an empty buffer. nvim_buf_set_lines does not fire TextChanged
+  -- either, so nothing would re-mark until the user's first real keystroke.
+  -- Defer one tick so the content is already in place.
   Autocmd.create("FileType", function(ev)
     local bufnr = ev.buf
-    mark(bufnr)
+    vim.schedule(function()
+      mark(bufnr)
+    end)
     -- Keep markers aligned with live reordering / deletions inside the menu.
     -- Buffer-local, and auto-cleaned when the scratch buffer is wiped.
     Autocmd.create({ "TextChanged", "TextChangedI" }, function()
