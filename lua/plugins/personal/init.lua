@@ -1021,11 +1021,14 @@ plugins.add({
   },
 
   {
-    -- JSON pretty/compact/lines/keys/sort, range-aware (buffer or visual
-    -- selection). YAML/XML aren't wired in yet -- lib.nvim has no YAML
-    -- encoder or XML module, see the plugin's own docs/scope.md.
+    -- JSON/YAML/XML pretty/compact/lines/keys/sort/filter, range-aware
+    -- (buffer or visual selection), plus :Data for format auto-detection.
+    -- All four commands must be listed here, not just "JSON" -- lazy.nvim
+    -- only loads the plugin (and defines a command) for a verb it was told
+    -- to trigger on, so a trimmed list leaves e.g. :YAML unavailable until
+    -- :JSON has run at least once.
     "StefanBartl/data.nvim",
-    cmd = { "JSON" },
+    cmd = { "JSON", "YAML", "XML", "Data" },
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {},
   },

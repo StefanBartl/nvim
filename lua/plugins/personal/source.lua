@@ -100,11 +100,20 @@ plugins.modes({
   ["lib.nvim"] = "dir",
   ["lsp.nvim"] = "dir",
   -- The one PRIVATE repo in this list. "remote" would have lazy clone
-  -- https://github.com/StefanBartl/my.nvim, which fails without credentials --
-  -- and the workstation role resolves everything to "remote" (see SOURCE
-  -- above). It has no local checkouts of these repos either, so there is
-  -- nothing for it to load: "disabled" there, "dir" everywhere else.
-  ["my.nvim"] = machine.is("workstation") and "disabled" or "dir",
+  -- https://github.com/StefanBartl/my.nvim, which fails without credentials.
+  -- Gated on the *effective* SOURCE, not raw machine role: this used to read
+  -- `machine.is("workstation") and "disabled" or "dir"`, back when the
+  -- workstation role (with OVERRIDE == "auto") always resolved SOURCE to
+  -- "remote" and had no local checkout of this repo to fall back on. Since
+  -- my.nvim's 2026-09 extraction into its own repo, the workstation DOES have
+  -- a local checkout (same as every other repo here) -- so that literal
+  -- reproduced exactly the bug it was meant to prevent: my.nvim silently
+  -- disabled ("module 'my' not found" at startup) whenever OVERRIDE forces
+  -- "dir" (or anything but "remote") on the workstation, ignoring the
+  -- checkout that is right there. Disabling only when SOURCE actually
+  -- resolves to "remote" keeps the original protection without breaking
+  -- every other mode on this machine.
+  ["my.nvim"] = (SOURCE == "remote") and "disabled" or "dir",
   ["sessions.nvim"] = "dir",
   ["pickers.nvim"] = "dir",
   ["buffer-ctx.nvim"] = "dir",
