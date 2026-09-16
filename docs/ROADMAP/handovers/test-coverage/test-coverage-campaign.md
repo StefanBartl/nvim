@@ -1,5 +1,42 @@
 # Test-Coverage-Kampagne über alle nvim-Plugins — Handover
 
+## Table of content
+
+  - [Restliche Plugins (Reihenfolge für die Fortsetzung)](#restliche-plugins-reihenfolge-fr-die-fortsetzung)
+  - [Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)](#regeln-fr-diese-session-aus-claudemd--nutzer-vorgaben)
+  - [Ausgangslage (2026-09-15)](#ausgangslage-2026-09-15)
+  - [Aktueller Stand (2026-09-16, nach zwei Wochenlimit-Unterbrechungen)](#aktueller-stand-2026-09-16-nach-zwei-wochenlimit-unterbrechungen)
+  - [Fortschritt](#fortschritt)
+
+---
+
+## Restliche Plugins (Reihenfolge für die Fortsetzung)
+
+10 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+`ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
+`documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
+laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
+Die verbleibenden 17 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+in dieser Reihenfolge abzuarbeiten:
+
+1. github_stats.nvim
+2. insights.nvim
+3. sessions.nvim
+4. pdfport.nvim
+5. emojis.nvim
+6. fileops.nvim
+7. reposcope.nvim
+8. gopath.nvim
+9. color_my_ascii.nvim
+10. diff.nvim
+11. cascade.nvim
+12. sandbox.nvim
+13. data.nvim
+14. spotlight.nvim
+15. mdview.nvim
+16. filetree.nvim
+17. lsp.nvim
+
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
 - Nie mehr als 1 Agent gleichzeitig; bei Bedarf mehrere Runden á 1 Agent, repo-für-repo.
