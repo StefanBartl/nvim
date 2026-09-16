@@ -86,16 +86,25 @@ keine Claude-Co-Autorenschaft):
 - `debugging.nvim` — `inline_debug.lua`'s fehlender Pfadtrenner gefixt (nutzt jetzt
   `lib.nvim.fs.path.joinpath`, analog zu `views/capture/init.lua`). Commit `8ac567e`.
 
-Alle 9 abgeschlossenen Coverage-Commits sowie die 4 Bugfix-Commits sind per `git
+**Die 2 in Runde 10 (replacer.nvim) gefundenen Bugs sind ebenfalls gefixt**, Commit `7031f73`:
+- `config.get()` gab verschachtelte Config-Tabellen per Referenz statt per Deep-Copy zurück
+  (`vim.tbl_deep_extend("force", {}, state)` kopiert nur Keys, die auf *beiden* Merge-Seiten
+  existieren). Jetzt `vim.deepcopy(state)`.
+- `debug.lua`s `enable()`/`disable()`/`status()` lasen/schrieben ein nirgendwo existierendes
+  Config-Feld (`require("replacer").options.ext_highlight_opts.debug`) — als toten Code
+  entfernt (Nutzerentscheidung: kein neues Config-Feld einführen, siehe Chat). `M.test()`
+  suchte die eigene Testsuite am falschen Runtimepath-Ort (`require("test.utf8_offsets")`
+  statt der echten Datei unter `TESTS/utf8_offsets.lua`) — jetzt per Dateipfad geladen.
+
+Alle 10 abgeschlossenen Coverage-Commits sowie alle 6 Bugfix-Commits sind per `git
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
 **Nächste Schritte:** Runde 11 (github_stats.nvim) starten, danach der Reihe nach die
 restliche 🟠/🟡-Liste unten (→ insights.nvim → sessions.nvim → pdfport.nvim
 → emojis.nvim → fileops.nvim → reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡
-nur bei konkreten Lücken). Alle 4 während der Kampagne gefundenen/gepinnten Bugs sowie der
-zweite buffer-ctx.nvim-Bug (`text_width.lua`) sind inzwischen gefixt — kein offener
-Nebenauftrag mehr aus dieser Kampagne.
+nur bei konkreten Lücken). Kein offener Nebenauftrag mehr aus dieser Kampagne — alle bisher
+gefundenen Bugs (6 insgesamt über 5 Repos) sind gefixt.
 
 ## Fortschritt
 
