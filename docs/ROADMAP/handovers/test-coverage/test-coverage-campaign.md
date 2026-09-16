@@ -67,12 +67,8 @@ absteigend nach Ratio durch die 🔴/🟠 Liste, 🟡/🟢 nur falls noch Lücke
 
 ## Aktueller Stand (2026-09-16, nach zwei Wochenlimit-Unterbrechungen)
 
-9 von ~35 Plugins fertig (pickers, cmdlog, dap, casedesk, buffer-ctx, debugging,
-recommender, language, open). **replacer.nvim (Runde 10) wurde gestartet, aber durch das
-Wochenlimit abgebrochen, bevor der Agent irgendetwas geschrieben/committet hat** — verifiziert
-per `git log`/`git status`/`git worktree list` in `E:\repos\replacer.nvim`: keine neuen
-Commits, keine uncommitteten Änderungen, kein Worktree. Runde 10 muss komplett neu gestartet
-werden, es gibt nichts fortzusetzen.
+10 von ~35 Plugins fertig (pickers, cmdlog, dap, casedesk, buffer-ctx, debugging,
+recommender, language, open, replacer).
 
 **Die 4 während der Kampagne gefundenen/gepinnten Bugs wurden in einer separaten Session
 zwischenzeitlich gefixt** (jeweils eigener Commit, direkt auf `main` des jeweiligen Repos,
@@ -94,8 +90,8 @@ Alle 9 abgeschlossenen Coverage-Commits sowie die 4 Bugfix-Commits sind per `git
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
-**Nächste Schritte:** Runde 10 (replacer.nvim) neu starten, danach der Reihe nach die
-restliche 🟠/🟡-Liste unten (github_stats.nvim → insights.nvim → sessions.nvim → pdfport.nvim
+**Nächste Schritte:** Runde 11 (github_stats.nvim) starten, danach der Reihe nach die
+restliche 🟠/🟡-Liste unten (→ insights.nvim → sessions.nvim → pdfport.nvim
 → emojis.nvim → fileops.nvim → reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡
 nur bei konkreten Lücken). Alle 4 während der Kampagne gefundenen/gepinnten Bugs sowie der
 zweite buffer-ctx.nvim-Bug (`text_width.lua`) sind inzwischen gefixt — kein offener
@@ -386,10 +382,57 @@ Nebenauftrag mehr aus dieser Kampagne.
   (telescope.nvim selbst nicht im CI-Checkout, nur lib.nvim/ui.nvim).
   Commit: `a8dbe1d` (test: cover config, registry, context, keywords, handlers, and
   integrations), direkt auf `main` gepusht.
-- [ ] **replacer.nvim** — Runde 10 gestartet (Namenskonvention geprüft: `TESTS/*.lua` ohne
-  `_spec`-Suffix, nicht wie bei pickers/cmdlog/buffer-ctx/debugging/recommender/language/open),
-  aber der Agent wurde durch das Wochenlimit beendet, bevor er irgendetwas geschrieben oder
-  committet hat. Verifiziert: `E:\repos\replacer.nvim` ist sauber, `HEAD` ist unverändert
-  `ff233cf` (unrelated docs-Commit von 2026-09-14), kein Worktree, keine offenen Änderungen.
-  Muss komplett neu gestartet werden — nichts zum Fortsetzen vorhanden.
+- [x] **replacer.nvim** — fertig (Runde 10, nach dem gescheiterten ersten Versuch komplett neu
+  gestartet — der vorherige Agent wurde vom Wochenlimit beendet, bevor er irgendetwas
+  geschrieben/committet hatte). Anders als bei den meisten anderen Runden nutzt dieses Repo
+  KEINEN `_spec`-Suffix und KEINEN gemeinsamen `run.lua`-Aggregator: `TESTS/*.lua` sind
+  eigenständige Skripte, je einzeln per `nvim --headless -u NONE -c "luafile TESTS/<name>.lua"
+  -c "qa"` ausgeführt (siehe `.github/workflows/ci.yml`), Konvention beibehalten statt auf
+  `_spec`/`run.lua` umgestellt.
+  5 neue Dateien: `config_merge.lua` (config/init.lua + config/DEFAULTS.lua — alle Coercer
+  `as_bool`/`as_pos_int`/`as_engine`/`as_search_engine`/`as_progress_style`/`as_string_list`/
+  `as_keymaps`, verschachtelter fzf/telescope-Deep-Merge, `setup()`/`get()`/`resolve()`'s
+  Merge-Semantik inkl. der Tatsache, dass `setup()` kumulativ ist statt zurückzusetzen),
+  `argtypes_debug_error.lua` (argtypes.lua's zwei Composer-Argument-Typen — zurückgeholt über
+  lib.nvim's eigene Argtype-Registry, da sonst lokal —, debug.lua's `:ReplaceDebug`-Dispatch,
+  error.lua's typisierte Fehler/`safe_call`-Hülle), `health_pickers_tscode.lua` (health.lua
+  gegen ein gestubbtes `vim.health` zur Report-Erfassung unabhängig von zufällig installierten
+  Optional-Tools, die Backend-agnostischen Hälften von `pickers/common.lua`/`pickers/utils.lua`,
+  tscode.lua's echte Tree-sitter-String/Comment-Klassifikation, util/notify.lua-Smoke-Test),
+  `bindings_wiring.lua` (die komplette `bindings/{init,usrcmds,keymaps,autocmds}.lua`-Schicht
+  plus der echte `:ReplaceTest`-Float, den sie antreibt), `init_dispatch.lua`
+  (`replacer/init.lua`'s Orchestrierung: die alte positionale `run()`-Form, der
+  Dry-run/Export-"Plan"-Pfad inkl. `[replacer-plan]`-Diff-Scratch-Buffer, der
+  "kein Picker verfügbar"-Fallback, `request.filter`-Hook, der echte
+  Confirm-vor-ALL-Flow inkl. `confirm_wide_scope` vs. Single-File-Scope, sowie dispatch's
+  eigene `cfg.checkpoint`/`cfg.confirm_per_file`-Verdrahtung — im Gegensatz zu den isolierten
+  Unit-Tests dieser beiden Module in `feature_smoke.lua`, die einen Fake-`apply_func` nutzen).
+  Vorher 8 Dateien (davon 2 — `health_debug.lua`/`utf8_offsets.lua` — nie in CI verdrahtet),
+  danach 13 (8 CI-Schritte in `.github/workflows/ci.yml`, je einer pro neuer Suite ergänzt,
+  matching dem Stil der 4 bestehenden Schritte).
+  **Echter Bug gefunden, gepinnt statt gefixt** (s.u. Fix-Task): `config/init.lua`'s `M.get()`
+  verspricht laut eigenem Docstring "a deep copy, to avoid accidental mutation by callers",
+  ist aber `vim.tbl_deep_extend("force", {}, state)` — dieser Aufruf merged ein verschachteltes
+  Sub-Table nur dann tief, wenn BEIDE Seiten an diesem Schlüssel bereits eine Table haben; ein
+  Schlüssel, der nur auf einer Seite existiert (hier: jeder Schlüssel, da das erste Argument
+  `{}` ist), wird per Referenz übernommen. Jede von `get()` zurückgegebene verschachtelte Table
+  (`keymaps`, `fzf`, `telescope`, `hooks`, `messages`, `file_types`/`globs`/`exclude`) ist somit
+  dasselbe Table-Objekt wie im privaten `state` des Moduls — eine Mutation des scheinbar
+  reinen Snapshots korrumpiert lautlos die persistente Config für den Rest der Session. Gepinnt
+  mit einer Regressions-Assertion in `config_merge.lua`; ein echter Fix (`vim.deepcopy(state)`)
+  ist eine bewusst separate Änderung.
+  Bewusst ausgelassen: `pickers/fzf.lua`/`pickers/telescope.lua`'s `run()`-Funktionen (beide
+  requiren hart ein echtes Picker-Backend — fzf-lua/telescope.nvim —, keines davon ist CI-
+  Sibling-Checkout, nur lib.nvim/ui.nvim/pickers.nvim sind es; die Backend-agnostische Logik,
+  auf die beide aufbauen, `pickers/common.lua`, ist vollständig ohne Backend abgedeckt),
+  `@types`/`types/*.lua` (reine `---@meta`-Annotationen).
+  Testlauf: 8 → 13 Test-Dateien, alle 9 CI-verdrahteten grün (0 FAIL), über 2 Wiederholungsläufe
+  stabil. `find lua plugin -name '*.lua' | xargs luacheck` (genau der CI-Befehl) 0
+  Warnings/Errors über 41 Dateien; `stylua --check lua/` (genau der CI-Befehl) grün. TESTS/ ist
+  in diesem Repo bewusst NICHT Teil des luacheck/stylua-Gates (anders als bei den meisten
+  anderen Runden) — die neuen Dateien wurden trotzdem mit `luacheck`/`stylua` geprüft und sind
+  sauber. `TESTS/README.md` neu angelegt (gab es noch nicht); Top-Level-`README.md` hatte
+  keinen Test-Abschnitt, daher unangetastet gelassen.
+  Commit: `053e1d6` (test: cover config merge, argtypes/debug/error, health/pickers/tscode,
+  bindings, and init dispatch), direkt auf `main` gepusht.
 - [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.
