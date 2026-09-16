@@ -78,9 +78,10 @@ werden, es gibt nichts fortzusetzen.
 zwischenzeitlich gefixt** (jeweils eigener Commit, direkt auf `main` des jeweiligen Repos,
 keine Claude-Co-Autorenschaft):
 - `cmdlog.nvim` — `:history`'s `>`-Marker wird jetzt geparst. Commit `240ca1d`.
-- `buffer-ctx.nvim` — `alpha_marker()`'s Off-by-one gefixt. Commit `79893f9`.
-  **Der zweite in dieser Runde gepinnte Bug (`format/text_width.lua`'s Marker-Duplizierung
-  beim Reflow von Bullet-/Nummer-Zeilen) ist weiterhin offen, nicht gefixt.**
+- `buffer-ctx.nvim` — `alpha_marker()`'s Off-by-one gefixt (Commit `79893f9`) **und** der
+  zweite in dieser Runde gepinnte Bug, `format/text_width.lua`'s Marker-Duplizierung beim
+  Reflow von Bullet-/Nummer-Zeilen, ebenfalls gefixt (Commit `3c99c3c`; dabei ein verwandter
+  Folgefehler in `wrap_words()`'s Separator-Leerzeichen-Logik mitgefixt).
 - `recommender.nvim` — Tree-sitter-Query-Knotennamen aktualisiert (`dot_index_expression`/
   `function_call`). Commit `cc338f6`. Dabei wurde zusätzlich ein zweiter, in der Coverage-Runde
   nicht entdeckter Folgebug gefunden und mitgefixt: `Query:iter_matches` liefert auf aktuellem
@@ -96,8 +97,9 @@ merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncom
 **Nächste Schritte:** Runde 10 (replacer.nvim) neu starten, danach der Reihe nach die
 restliche 🟠/🟡-Liste unten (github_stats.nvim → insights.nvim → sessions.nvim → pdfport.nvim
 → emojis.nvim → fileops.nvim → reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡
-nur bei konkreten Lücken). Offener Nebenauftrag, unabhängig von der Coverage-Kampagne: der
-gepinnte `text_width.lua`-Marker-Duplizierungsbug in buffer-ctx.nvim ist noch nicht gefixt.
+nur bei konkreten Lücken). Alle 4 während der Kampagne gefundenen/gepinnten Bugs sowie der
+zweite buffer-ctx.nvim-Bug (`text_width.lua`) sind inzwischen gefixt — kein offener
+Nebenauftrag mehr aus dieser Kampagne.
 
 ## Fortschritt
 
@@ -251,11 +253,17 @@ gepinnte `text_width.lua`-Marker-Duplizierungsbug in buffer-ctx.nvim ist noch ni
      (`detect_prefixes()` extrahiert ihn, `flush()` strippt aber nur Whitespace vor dem
      Tokenizing, wodurch der Marker zusätzlich als normales Token re-emittiert wird) —
      z.B. `"- one two three"` bei Breite 12 → `"-  - one two"` statt `"- one two"`.
+     **Mittlerweile gefixt** (separate Session, Commit `3c99c3c`): `flush()` strippt jetzt
+     den vollen erkannten Präfix (Indent + Marker) statt nur Whitespace von der ersten Zeile.
+     Dabei zeigte sich ein zweiter, verwandter Fehler: `wrap_words()` fügte vor dem ersten
+     Wort immer ein Trenn-Leerzeichen ein, obwohl der Präfix sein eigenes bereits mitbringt
+     (Ergebnis ohne diesen zweiten Fix: `"-  one two"`, weiterhin doppeltes Leerzeichen) —
+     analog dazu gefixt, wie eine umgebrochene Folgezeile ihr erstes Wort schon ohne
+     zusätzliches Trennzeichen an `cont_prefix` anhängt.
   2. `format/enum_lines.lua`: `alpha`/`ALPHA`-Enum-Stile emittieren pro Label einen
      überflüssigen führenden Buchstaben (Off-by-one in `alpha_marker()`'s Digit-Loop-Exit) —
      3 Tokens ergeben `za.`, `zb.`, `zc.` statt `a.`, `b.`, `c.`.
-     **Mittlerweile gefixt** (separate Session, Commit `79893f9`); Bug 1
-     (`text_width.lua`-Marker-Duplizierung) ist weiterhin offen.
+     **Mittlerweile gefixt** (separate Session, Commit `79893f9`).
   Kein Bug, aber notiert: `util/map.lua`'s lib.nvim-Erkennung (`type(lib_map) == "function"`)
   ist immer `false`, weil `require("lib.nvim.bindings.keymap")` eine über `__call` aufrufbare
   Table zurückgibt statt einer reinen Function — buffer-ctx nutzt lib.nvim's Keymap-Helper
