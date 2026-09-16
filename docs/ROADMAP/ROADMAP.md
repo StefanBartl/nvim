@@ -20,9 +20,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:20       |    30% / 90%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     22:30       |    85% / 86%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     00:00       |    84% / 77%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     21:20       |    30% /100%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     22:30       |   100% /100%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     00:00       |    47% / 92%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
@@ -44,7 +44,10 @@
 ---
 
 ## Claude Tasks
-
+docmap-desktop: docs/AGENT_CHECKLIST_RUNNER.md — dazu PLAN.md's L6-Zeile mit einem Verweis versehen.
+loomAI: docs/Guides/docmap-checklist-agent.md
+Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für den einfachen Fall schon heute (Aufwand dort: 0). Was L6 architektonisch eigentlich braucht — die DecisionQueue, die "Vorschlag, kein Ergebnis" durchsetzt — ist in /decision nur eine Log-Zeile ohne echte Warteschlange; Phase 3/4 aus deinem eigenen Architekturplan sind komplett offen. Empfehlung in beiden Dateien: jetzt gegen /ask bauen (~2,5–3 Sessions auf documentation.nvim/docmap-desktop-Seite, 0 bei loomAI), die Anbindung an eine echte DecisionQueue erst mitnehmen, wenn Phase 3 dort ohnehin angegangen wird.
++ neiue gh feature atag release
 
 - offene Taks in den roamdaps aller plugins nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
   - schreibe den report hjierher: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports
@@ -54,12 +57,12 @@
   - casedesk file im wkdbook implementieren
   - keuzfeatures data.nvim
 
+filetree.nvim: Wenn man eine file löscht und die refrerenzene updatete werden, dann `U` also mit undo die file wieder zurückholt, dann müssten die refs auch wieder hergestellt werden
+
 ---
 
 ### Nice-to-Have wenn Limit über ist
 
-1. rules.nvim: media.nvim
-2. C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/TESTS-Abdeckung.md
 3. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 4. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
 5. Alle externen plugins auflisten und prüfen, welche davon in meine bestehenden plugins
