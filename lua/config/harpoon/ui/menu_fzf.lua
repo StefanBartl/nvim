@@ -95,10 +95,18 @@ function M.open()
       },
     })
   else
-    -- Fallback: Harpoon quick menu
-    local ok_ui, ui = pcall(require, "harpoon.ui")
-    if ok_ui and type(ui.toggle_quick_menu) == "function" then
-      ui.toggle_quick_menu(list)
+    -- Fallback: Harpoon quick menu. Must go through the harpoon singleton's
+    -- `ui` INSTANCE (require("harpoon").ui), not the harpoon.ui MODULE
+    -- (require("harpoon.ui"), the bare class table) -- and as a method call
+    -- (`:`), since toggle_quick_menu reads `self` off the first argument. A
+    -- plain `require("harpoon.ui").toggle_quick_menu(list)` would pass `list`
+    -- as `self` and nil as `list` (opens nothing), and calling it on the
+    -- class table instead of the instance would track win_id/bufnr on a
+    -- second, disconnected "menu" that the default quick menu never sees.
+    -- `harpoon` here is the same singleton already required at the top of
+    -- M.open().
+    if harpoon.ui and type(harpoon.ui.toggle_quick_menu) == "function" then
+      harpoon.ui:toggle_quick_menu(list)
     end
   end
 end

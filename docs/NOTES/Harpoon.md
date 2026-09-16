@@ -153,7 +153,10 @@ Nicht gemappt (selten/zustandsverändernd, nur als Command): `:Harpoon select <n
 **Im Quick-Menu selbst** (Harpoon-Standardverhalten, `filetype=harpoon`):
 normaler Buffer-Editing-Flow — Zeilen umsortieren (verschieben wie normalen
 Text), `dd` zum Löschen einer Zeile, `<CR>` zum Öffnen des Eintrags unter dem
-Cursor, Fenster schließen persistiert automatisch (siehe §6).
+Cursor, Fenster schließen persistiert automatisch (siehe §6). Löschen (oder
+Wegräumen) einer Zeile, deren Pfad ein Default-Pin ist (📌-Marker, siehe §8),
+löst beim Schließen einen Bestätigungs-Prompt aus — siehe §8b
+(`config.harpoon.pin_guard`).
 
 ---
 
@@ -188,6 +191,10 @@ Setup in `misc.lua`: `debounce_ms = 200`, `autocmd_events = { "BufLeave", "Focus
   `debounce_ms`).
 - Save-Trigger: `BufLeave`, `FocusLost` (konfigurierbar), zusätzlich beim
   Schließen des Quick-Menus (`ui.toggle_quick_menu` einmalig gewrappt).
+- Derselbe Wrap ist auch der Einhängepunkt für die Lösch-Bestätigung gepinnter
+  Einträge (`config.harpoon.pin_guard`, siehe §8b) — läuft direkt vor dem
+  eigentlichen Close/Save, sobald der `list`-Parameter `nil` ist (= Schließen,
+  nicht Öffnen).
 - Finaler, **nicht** gedebounceter Flush auf `VimLeavePre`, damit die letzte
   Änderung vor dem Beenden nicht verloren geht.
 - **Hinweis:** Harpoon2 selbst persistiert bereits automatisch bei jeder
@@ -243,13 +250,48 @@ User-Pins) gehört, bekommt einen End-of-Line-Marker:
 
 - Highlight-Gruppe `HarpoonPinMark`, standardmäßig auf
   `DiagnosticVirtualTextWarn` verlinkt (dezent, themeabhängig).
-- Wird bei jedem Öffnen des Menüs (`FileType harpoon`) sowie live bei
+- Wird bei jedem Öffnen des Menüs (`FileType harpoon`, per `vim.schedule`
+  einen Tick verzögert — Harpoon setzt den Filetype, BEVOR es den
+  Listeninhalt in den Buffer schreibt, und `nvim_buf_set_lines` selbst löst
+  kein `TextChanged` aus, das sonst nachmarkieren würde) sowie live bei
   Änderungen im Menü-Buffer (`TextChanged`, `TextChangedI`) neu berechnet —
   Umsortieren/Löschen aktualisiert die Marker sofort.
 - Ad-hoc über `<leader>ha`/`<leader>hA` hinzugefügte Einträge (keine Defaults)
   bleiben unmarkiert.
 - Icon (`ICON`-Konstante oben in der Datei) und Highlight sind einzeilig
   anpassbar.
+
+---
+
+## 8b. Lösch-Bestätigung für gepinnte Einträge (`config.harpoon.pin_guard`)
+
+Datei: [lua/config/harpoon/pin_guard.lua](../../lua/config/harpoon/pin_guard.lua)
+
+Reordern und Löschen im Quick-Menu funktionieren für **alle** Einträge über
+den normalen Buffer-Editing-Flow (siehe §4) — auch für gepinnte. Beim
+**Löschen eines gepinnten Eintrags** fragt `pin_guard` beim Schließen des
+Menüs (eingehängt in `config.harpoon.hardening`s `ui.toggle_quick_menu`-Wrap,
+direkt vor dem eigentlichen Speichern) einmal pro betroffener Zeile nach:
+
+```
+Gepinnter Eintrag wird aus der Liste entfernt:
+<pfad>
+[T]emporär (nur Liste)  [D]auerhaft (auch entpinnen)  [A]bbrechen
+```
+
+- **Temporär**: Zeile bleibt gelöscht, nichts an den Pins geändert — kommt bei
+  `:Harpoon defaults sync` / beim nächsten Erststart wieder (Standardverhalten
+  von vorher, nur jetzt mit Rückfrage statt stillschweigend).
+- **Dauerhaft**: zusätzlich `persist_paths.unpin(pfad)`. Funktioniert nur für
+  **User-Pins** (`:HarpoonPin`, `harpoon_user_pins.json`) — ein `target_specs`-
+  Pin (fest in `misc.lua` kodiert, git-getrackt) kann zur Laufzeit nicht
+  entpinnt werden; in dem Fall bleibt die Zeile zwar aus der aktuellen Liste
+  draußen, aber es gibt eine Warnung, dass er bei `:Harpoon defaults sync`
+  zurückkommt und nur durch Ändern von `misc.lua` dauerhaft verschwindet.
+- **Abbrechen**: die Zeile wird vor dem Speichern wieder ans Ende der Liste
+  angehängt — Ergebnis wie "nie gelöscht", nur die Position kann sich ändern.
+- Nicht-gepinnte Einträge werden nie gefragt — deren Löschen ist unverändert
+  sofort und ohne Rückfrage wirksam.
 
 ---
 
