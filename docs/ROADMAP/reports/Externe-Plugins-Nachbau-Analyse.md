@@ -23,6 +23,7 @@ which own plugin would it land in, and what would it cost?
     - [Markdown](#markdown)
     - [Tooling and infrastructure](#tooling-and-infrastructure)
     - [A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement ✅](#a2-jghausermkdirnvim-fileopsnvim-full-replacement)
+    - [A3 · `dstein64/vim-startuptime` → **runtime-analysis.nvim** · full replacement ✅](#a3-dstein64vim-startuptime-runtime-analysisnvim-full-replacement)
   - [4. Findings worth acting on regardless](#4-findings-worth-acting-on-regardless)
     - [4.1 `snacks.image` is enabled and cannot work here](#41-snacksimage-is-enabled-and-cannot-work-here)
     - [4.2 Keys are bound for five disabled snacks modules](#42-keys-are-bound-for-five-disabled-snacks-modules)
@@ -244,7 +245,7 @@ the pieces that are config code today and should be plugin code:
 | Plugin → feature family | Evidence | Target | Effort |
 |---|---|---|---|
 | `resty.nvim` → **HTTP client on `.http`/`.resty` buffers** | `config` is an elaborate `vim.filetype.add` + autocmd workaround, documented as containing a ~600 ms startup cost | **runtime-analysis.nvim** already has `curl.lua`, `runner.lua`, `parse.lua`, `env.lua`, `graphql.lua`, `multipart.lua`, `assertions.lua`, `history.lua`, `view.lua`, `inspect.lua` — a complete REST client. Missing piece: running the request under the cursor out of an `.http` buffer. Whether `parse.lua` already speaks that syntax is **unverified**. Deleting resty deletes the workaround with it. | **M–L** |
-| `vim-startuptime` → **repeated runs, averaged, sorted, navigable** | `cmd` only | **runtime-analysis.nvim** — `startup/`, `telemetry/`, `bench.lua`, `loaded.lua` exist, and it already claims stall detection during startup. What is missing is the *presentation*, over data it collects. | **M** |
+| `vim-startuptime` → **repeated runs, averaged, sorted, navigable** | `cmd` only | **runtime-analysis.nvim** — **done 2026-09-17**, see A3 below. Uninstalled. The "only the presentation is missing" reading in this row was wrong and is corrected there. | **done** |
 | `todo-comments.nvim` → **keyword scan** | `config/todo_comments/**` — the keyword table and colours are **already yours**; both keymaps call `snacks.picker.todo_comments()` directly, bypassing the plugin | **insights.nvim** — `scan/rg.lua` + `scan/cache.lua` already run project-wide ripgrep scans for conflicts, unused imports, stray dev servers. | **M** |
 | `todo-comments.nvim` → **in-buffer highlight + signs** | `signs = true` | **spotlight.nvim** — "mark any number of tokens at once, in colours you can tell apart, and keep them there through searches" is the same machinery. | **M** |
 | `mkdir.nvim` → **create missing parent dirs on write** | `lazy = true`, no config | **fileops.nvim** — one `BufWritePre` autocmd, in the plugin whose stated job is keeping buffer and disk in agreement. 15–30 lines. | **S** |
@@ -258,6 +259,27 @@ the pieces that are config code today and should be plugin code:
 ---
 
 ### A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement ✅
+
+### A3 · `dstein64/vim-startuptime` → **runtime-analysis.nvim** · full replacement ✅
+
+Shipped 2026-09-17 as `:RA startup profile [runs]`; the plugin is uninstalled.
+
+**The premise this entry was written on did not survive the build, and that is
+the part worth keeping.** It read "that is a view on data the own plugin
+already collects". It is not: `startup/init.lua` collects timer lateness, not
+per-file cost, and never runs twice, while `telemetry/startup.lua` is blind by
+construction to everything already in `package.loaded` when it arms — on a
+real config that is Neovim's own runtime, lazy.nvim itself and every earlier
+plugin. So the measurement half was new work (a sequential subprocess driver,
+a `--startuptime` parser, the statistics); only the presentation was free.
+
+It was worth building anyway for a reason this entry did not name: that
+plugin's own `docs/FEATURES/STARTUP.md` had been telling readers to "compare
+medians of three runs, not single numbers" with no command behind it.
+
+The shipped version reports a **median with its sample spread beside it** and
+`n/N` runs per row, so a noisy row cannot pass for a finding — the thing
+vim-startuptime's single averaged column left out.
 
 ## 4. Findings worth acting on regardless
 
@@ -533,7 +555,7 @@ Grouped by the own plugin that gains, so you can see which repos get busy:
 
 | Own plugin | Feature families it would absorb |
 |---|---|
-| **runtime-analysis.nvim** | resty's `.http` runner · vim-startuptime's averaged report · snacks profiler |
+| **runtime-analysis.nvim** | resty's `.http` runner · ~~vim-startuptime's averaged report~~ (done 2026-09-17, A3) · snacks profiler |
 | **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer) |
 | **diff.nvim** | `:Gdiffsplit` (done) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | todo scan · git-conflict detection + resolution |
