@@ -125,16 +125,11 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | replacer.nvim | `config.get()` gab verschachtelte Tabellen per Referenz statt Deep-Copy zurück (+ toter Debug-Code) | `7031f73` |
 | casedesk.nvim | `doctor.lua`'s `x and nil or y`-Idiom ließ den Ambiguitäts-Guard nie greifen | in `3cc4cd9` |
 | github_stats.nvim | `dashboard/detail.lua` maß die Periode mit `vim.fn.strptime()`, das unter Windows immer `0` liefert → jede Spanne las sich als "(1 days)" | in `1b9b638` |
+| github_stats.nvim | `usrcmds/utils.lua`s `split_lines()` hängte an jedes Ergebnis eine Leerzeile an; `show_float()` ruft es pro Array-Element auf → jeder mehrzeilige Report kam doppelt zeilenumbrochen heraus | `6a85943` |
+| github_stats.nvim | `export.lua`s `write_lines()` pcallte das `writefile`, nicht das vorangehende `mkdir` → ein nicht anlegbares Elternverzeichnis entkam als rohes `E739` | `6a85943` |
 
-### Offen (gepinnt, bewusst nicht gefixt)
-
-Beides sind sichtbare Verhaltensänderungen, daher je mit `BUG:`-Assertion festgenagelt statt
-nebenbei umgebaut — aus Runde 11 (`github_stats.nvim`):
-
-| Datei | Bug |
-|---|---|
-| `bindings/usrcmds/utils.lua` | `split_lines()` hängt pro Aufruf eine Leerzeile an, `show_float()` ruft es pro Array-Element auf → jeder mehrzeilige Report wird doppelt zeilenumbrochen ausgegeben |
-| `export.lua` | `write_lines()` pcallt das `writefile`, nicht das vorangehende `mkdir` → ein nicht anlegbares Elternverzeichnis entkommt als rohes `E739` statt als "Export failed: …" |
+Aktuell sind **keine Bugs offen gepinnt**. Die beiden github_stats-Pins aus Runde 11 sind mit
+`6a85943` gefixt; ihre Assertions sind als Regressionswächter stehen geblieben.
 
 ## Historie: der ursprüngliche 3-Repo-Report
 
