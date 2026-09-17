@@ -15,12 +15,12 @@ the surrounding text is English like every other document here.
   - [Read this before pasting anything](#read-this-before-pasting-anything)
   - [A. High benefit, one session or less](#a-high-benefit-one-session-or-less)
     - [A1 — casedesk: redaction gate before any AI attachment](#a1-casedesk-redaction-gate-before-any-ai-attachment)
-    - [A2 — media: SRT/VTT serialisers](#a2-media-srtvtt-serialisers)
-    - [A3 — media: progress handle during a transcription run](#a3-media-progress-handle-during-a-transcription-run)
+    - ~~[A2 — media: SRT/VTT serialisers](#a2--media-srtvtt-serialisers--done)~~ — done
+    - ~~[A3 — media: progress handle during a transcription run](#a3--media-progress-handle-during-a-transcription-run--done)~~ — done
     - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
     - [A5 — mdview: hand-test `any_file` in real Neovim](#a5-mdview-hand-test-any_file-in-real-neovim)
     - [A6 — my.nvim: the breadcrumb `container` provider is a no-op](#a6-mynvim-the-breadcrumb-container-provider-is-a-no-op)
-    - [A7 — media: prefetch hint for frame stepping](#a7-media-prefetch-hint-for-frame-stepping)
+    - ~~[A7 — media: prefetch hint for frame stepping](#a7--media-prefetch-hint-for-frame-stepping--done)~~ — done
   - [B. A real sitting](#b-a-real-sitting)
     - [B1 — media: the hub dashboard](#b1-media-the-hub-dashboard)
     - [B2 — media: first real whisper.cpp run](#b2-media-first-real-whispercpp-run)
@@ -115,11 +115,15 @@ Ablieferungsnachweis in casedesk.nvim/FEATURES.md eintragen.
 
 ---
 
-### A2 — media: SRT/VTT serialisers
+### ~~A2 — media: SRT/VTT serialisers~~ — DONE
 
 **Source:** `.../media.nvim/ROADMAP/ROADMAP.md`, section "Transcription", item 3.
-**Stand geprüft 2026-09-17:** open — `lua/media/output/` holds only
-`init.lua` and `sidecar.lua`.
+**Built 2026-09-17** (`media.nvim@f6a2ca8`): `output/srt.lua`, `output/vtt.lua`,
+`core.segments.cues`, `:Media transcribe out=srt|vtt`, two new specs. Struck
+from the roadmap, recorded in `media.nvim/FEATURES.md`. A silent fall-through
+was fixed on the way — any mode that was not `sidecar` used to open a buffer,
+so `out=str` honoured a typo after minutes of transcription. The prompt below
+is kept for the record.
 
 ```
 Aufgabe: media.nvim — Segments zu SRT und VTT serialisieren
@@ -164,11 +168,18 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-### A3 — media: progress handle during a transcription run
+### ~~A3 — media: progress handle during a transcription run~~ — DONE
 
 **Source:** same roadmap, "Also not built" paragraph.
-**Stand geprüft 2026-09-17:** open — no `progress` reference in
-`lua/media/core/dispatcher.lua`.
+**Built 2026-09-17** (`media.nvim@feeb08a`): `opts.on_phase` on the dispatcher,
+the `lib.nvim.progress` handle in `bindings/usrcmds.lua`, `progress_style` in
+the config, a health line. The open question was answered as **phase text plus
+an elapsed clock, no percentage** — whisper.cpp reports none of its own and a
+figure from the audio duration would be calibrated to one machine. The larger
+find: `:Media transcribe` was **not cancellable at all** — `transcribe()` has
+returned a cancel handle since it was written and the command dropped it. It
+now has one (`progress_style = "float"`, `<Esc>`). The prompt below is kept for
+the record.
 
 ```
 Aufgabe: media.nvim — lib.nvim.progress-Handle während eines
@@ -345,11 +356,13 @@ Ablieferungsnachweis in my.nvim/FEATURES.md eintragen.
 
 ---
 
-### A7 — media: prefetch hint for frame stepping
+### ~~A7 — media: prefetch hint for frame stepping~~ — DONE
 
 **Source:** `.../media.nvim/ROADMAP/ROADMAP.md`, section "Frame stepping".
-**Stand geprüft 2026-09-17:** listed as open; roughly ten lines by the
-entry's own estimate.
+**Built 2026-09-17** (`media.nvim@c72d8ba`, `hover.nvim@d47107e`): the
+ten-line estimate held — `cache.ensure` already joins an in-flight render, so
+`prefetch` is `frame` with nobody listening. The step cursor stays in
+hover.nvim as the entry demanded. The prompt below is kept for the record.
 
 ```
 Aufgabe: media.nvim — Prefetch-Hinweis beim Frame-Stepping.
