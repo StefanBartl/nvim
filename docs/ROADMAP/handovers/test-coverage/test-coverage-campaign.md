@@ -12,25 +12,24 @@
 
 ## Restliche Plugins (Reihenfolge für die Fortsetzung)
 
-13 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+14 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
 `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
 `documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
 laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
-Drei Runden laufen parallel (pdfport.nvim, emojis.nvim, fileops.nvim). Die danach
-verbleibenden 11 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+Drei Runden laufen parallel (emojis.nvim, fileops.nvim, reposcope.nvim). Die danach
+verbleibenden 10 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
 in dieser Reihenfolge abzuarbeiten:
 
-1. reposcope.nvim
-2. gopath.nvim
-3. color_my_ascii.nvim
-4. diff.nvim
-5. cascade.nvim
-6. sandbox.nvim
-7. data.nvim
-8. spotlight.nvim
-9. mdview.nvim
-10. filetree.nvim
-11. lsp.nvim
+1. gopath.nvim
+2. color_my_ascii.nvim
+3. diff.nvim
+4. cascade.nvim
+5. sandbox.nvim
+6. data.nvim
+7. spotlight.nvim
+8. mdview.nvim
+9. filetree.nvim
+10. lsp.nvim
 
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
@@ -72,7 +71,7 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 | github_stats.nvim | 44 | 9 | ✅ fertig (Runde 11, Commit `1b9b638`; 9 → 22 Spec-Dateien) |
 | insights.nvim | 49 | 9 | ✅ fertig (Runde 12, Commit `1be0f7a`; 7 → 31 Spec-Dateien) |
 | sessions.nvim | 17 | 9 | ✅ fertig (Runde 13, Commit `0034df3`) |
-| pdfport.nvim | 50 | 10 | 🟠 schwach |
+| pdfport.nvim | 50 | 10 | ✅ fertig (Runde 14, Commit `3c9273a`) |
 | emojis.nvim | 23 | 11 | 🟠 schwach |
 | fileops.nvim | 18 | 11 | 🟠 schwach |
 | reposcope.nvim | 113 | 12 | 🟠 schwach (großes Repo) |
@@ -134,10 +133,9 @@ Alle 10 abgeschlossenen Coverage-Commits sowie alle 6 Bugfix-Commits sind per `g
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
-**Nächste Schritte:** die drei laufenden Runden (14 pdfport.nvim, 15 emojis.nvim,
-16 fileops.nvim) einsammeln und hier eintragen, danach der Reihe nach die restliche
-🟠/🟡-Liste oben (→ reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡 nur
-bei konkreten Lücken).
+**Nächste Schritte:** die drei laufenden Runden (15 emojis.nvim, 16 fileops.nvim,
+17 reposcope.nvim) einsammeln und hier eintragen, danach der Reihe nach die restliche
+🟠/🟡-Liste oben (→ gopath.nvim → color_my_ascii.nvim, danach 🟡 nur bei konkreten Lücken).
 
 **Offener Nebenauftrag:** 6 gepinnte, noch ungefixte Bugs aus zwei Runden.
 
@@ -160,6 +158,15 @@ Aus Runde 12 (insights.nvim), offen:
   verschachtelte Table-Felder).
 - `tree/init.lua` escapt die Windows-Exclude-Regexes Lua-Stil (`%`) statt Regex-Stil
   (`\`) → `*/.git/*` matcht nie, der Tree enthält unter Windows das ganze `.git/`.
+
+Aus Runde 14 (pdfport.nvim), offen:
+- `backends/tesseract.lua`s `finish_error()` zählt die gescheiterte Seite mit
+  (`page_idx - 1` statt `- 2`; `backends/ollama.lua` macht es richtig).
+- `bindings/autocmds.lua` ist nicht idempotent, behauptet es aber → zweites `setup()`
+  hinterlässt zwei `BufReadCmd *.pdf`-Autocmds. Kein lib.nvim-Bug, sondern eine falsche
+  Annahme des Aufrufers; Fix wäre `autocmd.group(name, true)` und die id statt des Namens.
+- `integrations/{fzf,telescope}.lua` cachen Fehlschläge → eine einmal gescheiterte
+  Extraktion wird die ganze Session lang wiedergespielt.
 
 Aus Runde 13 (sessions.nvim), offen — beide ein Wechsel von "wirft" zu "meldet":
 - `core.save`/`core.save_tab` kapseln `:mksession` in `pcall`, nicht aber das `ensure_dir()`
@@ -729,4 +736,57 @@ Alle Kampagnen-Bugs aus den Runden 1–11 (9 insgesamt über 7 Repos) sind gefix
   `docs/CONTRIBUTING.md`s Test-Absatz beschrieb noch den alten Umfang — aktualisiert.
   Commit: `0034df3` (test: cover core, git, state, layout, picker, health and the bindings
   layer), direkt auf `main` gepusht.
+- [x] **pdfport.nvim** — fertig (Runde 14). Eigener framework-freier Harness beibehalten.
+  10 → 21 Spec-Dateien, 192 → 1059 Assertion-Aufrufstellen, 21/21 grün über fünf
+  Wiederholungsläufe (Exit 0, `PDFPORT_TESTS_OK`), ausgeführt mit exakt dem CI-Kommando.
+  `stylua --check lua plugin TESTS` grün, `luacheck lua plugin TESTS` 0/0 über 75 Dateien.
+  Kernpunkt der Runde: **kein Producer und kein Extraktions-Tool wird ausgeführt.** Jeder
+  `spawn_capture`/`vim.system`/`uv.spawn`-Pfad ist an einer Naht gekappt, die *vor* dem
+  `require` des Testobjekts in `package.loaded` liegt — dafür kam `H.with_modules` in den
+  Harness, weil die Module ihre Deps beim Laden an Upvalues binden und ein nachträglicher
+  Feld-Patch zu spät käme. Assertiert wird die **argv, die gespawnt worden wäre**, plus pro
+  Producer die vier Callback-Zweige (sauberer Exit / Exit≠0 mit stderr / Timeout / Binary
+  fehlt).
+  Neu: `producer_argv_spec` (alle neun Producer inkl. qpdfs `--`-Terminator, chromiums
+  `file:///`-URL, soffices Scratch-Dir+Rename, Ghostscripts `gs`/`gswin64c`/`gswin32c`-
+  Auflösung, pandocs Engine-Kette), `backend_argv_spec` (pdftotext, pdfplumber/docling inkl.
+  `%q`-Quoting des generierten Python-Scripts, marker, tesseract), `config_util_spec`,
+  `tmpfile_cache_spec`, `dispatcher_spec`, `picker_batch_spec`, `renderers_spec`,
+  `bindings_spec`, `integrations_spec`, `public_api_spec` (inkl. des github_stats.nvim-
+  Vertrags in genau der aufgerufenen Form: `can_create("markdown") == true` als
+  Boolean-Vergleich, `create{...}` → `result.status`/`result.error`), `health_spec`
+  (`:checkhealth` gegen ein wählbares Tool-Set: volle Maschine, nackte Maschine, pandoc
+  ohne Engine, curl-Gate vor den API-Keys).
+  **Drei Bugs gefunden, alle gepinnt statt gefixt:** `backends/tesseract.lua`s
+  `finish_error()` meldet `page_idx - 1`, obwohl `process_next()` den Index bereits
+  weitergezählt hat — ein Fehlschlag auf Seite 1 meldet "1 Seite verarbeitet"; der
+  formgleiche `fail()` in `backends/ollama.lua` rechnet mit `page_idx - 2` richtig, beide
+  stammen erkennbar aus derselben Vorlage. `bindings/autocmds.lua` verspricht in Modul-Doc
+  und Kommentar, die eigene Augroup zu leeren und neu zu bauen, tut es aber nicht, weil
+  `lib.nvim`s `autocmd.create` einen String-`group` über `M.group(name)` **ohne** das
+  `clear`-Argument auflöst — ein zweites `setup()` mit `auto_open_on_read` hinterlässt zwei
+  `BufReadCmd *.pdf`-Autocmds und der Mode-Picker geht doppelt auf. Wichtig für andere
+  Repos: das ist **kein lib.nvim-Bug** — `create()` darf die Gruppe nicht leeren, sonst
+  löschte jedes zweite `create` das erste; falsch ist die Idempotenz-Annahme des Aufrufers.
+  Drittens memoisieren `integrations/fzf.lua` und `integrations/telescope.lua` per Pfad,
+  **bevor** `result.status` geprüft wird — eine einmal gescheiterte Extraktion wird für die
+  ganze Session als Fehlertext wiedergespielt, und fzfs Cache ist modulweit, ein frischer
+  Picker leert ihn also nicht; `util/cache.lua` verweigert genau das ausdrücklich.
+  Zwei Nicht-Bugs notiert: `platform.reset_cache()` leert nur den eigenen `pymod:`-Cache,
+  nicht die Memoisierung in `lib.nvim.core`; `integrations/telescope.lua`s `filetype_hook`
+  schreibt in den Preview-Buffer, bevor es dessen Gültigkeit prüft (fzf guardet davor).
+  Bewusst ausgelassen: `@types/init.lua`, `plugin/pdfport.lua` (Load-Guard), die eigentliche
+  PDF-Produktion/-Extraktion (ohne Tools plus Dokumentenkorpus nicht prüfbar), der
+  erfolgreiche poppler-Lauf in `rasterize.render_page`, die Bildanzeige in
+  `renderers/terminal` (was chafa/kitty/imgcat in ein pty malen, sieht eine Headless-Spec
+  nicht), das Picker-Plumbing von telescope/fzf, der echte HTTP-Request in
+  claude/gemini/ollama (Request-Shape und Antwortverarbeitung sind über ein gefaktes
+  `ai.nvim` abgedeckt), `health.check()` ohne lib.nvim (praktisch unerreichbar, da
+  `bindings/usrcmds.lua` den Composer auf Modulebene requirt).
+  Ehrlich dokumentiert statt versteckt: zwei Subprozess-Reste bleiben — `vim.fn.executable()`-
+  Probes dort, wo das echte `pdfport.platform` läuft, und der Registry-`available()`-Walk,
+  der bei den beiden Python-Backends einmalig `python -c "import ..."` ausführt. Die bisherige
+  README-Behauptung "Nothing here shells out to … Python …" wurde entsprechend korrigiert.
+  Commit: `3c9273a` (test: cover producer/backend argv, dispatcher, renderers, bindings and
+  the public API), direkt auf `main` gepusht.
 - [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.

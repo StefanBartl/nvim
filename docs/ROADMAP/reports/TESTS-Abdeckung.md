@@ -38,7 +38,7 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**13 von 36 Repos abgeschlossen**; Runde 14 (pdfport.nvim), 15 (emojis.nvim) und 16 (fileops.nvim) laufen parallel.
+**14 von 36 Repos abgeschlossen**; Runde 15 (emojis.nvim), 16 (fileops.nvim) und 17 (reposcope.nvim) laufen parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -55,9 +55,10 @@ Regeln, die sich über die Runden eingespielt haben:
 | 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
 | 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
-| 14 | pdfport.nvim | 14 | *läuft* | — |
+| 14 | pdfport.nvim | 14 | `3c9273a` | 11 neue Specs; 192 → 1059 Assertion-Stellen |
 | 15 | emojis.nvim | 15 | *läuft* | — |
 | 16 | fileops.nvim | 16 | *läuft* | — |
+| 17 | reposcope.nvim | 17 | *läuft* | — |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
@@ -65,7 +66,7 @@ Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 Nach den drei laufenden Runden in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
 
-reposcope.nvim → gopath.nvim → color_my_ascii.nvim → diff.nvim → cascade.nvim →
+gopath.nvim → color_my_ascii.nvim → diff.nvim → cascade.nvim →
 sandbox.nvim → data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
 
 Die 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`,
@@ -92,10 +93,10 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | github_stats.nvim | 44 | 9 | ✅ fertig |
 | insights.nvim | 49 | 9 | ✅ fertig |
 | sessions.nvim | 17 | 9 | ✅ fertig |
-| pdfport.nvim | 50 | 10 | 🔄 Runde 14 läuft |
+| pdfport.nvim | 50 | 10 | ✅ fertig |
 | emojis.nvim | 23 | 11 | 🔄 Runde 15 läuft |
 | fileops.nvim | 18 | 11 | 🔄 Runde 16 läuft |
-| reposcope.nvim | 113 | 12 | 🟠 schwach (großes Repo) |
+| reposcope.nvim | 113 | 12 | 🔄 Runde 17 läuft |
 | gopath.nvim | 77 | 16 | 🟠 schwach |
 | color_my_ascii.nvim | 95 | 17 | 🟠 schwach |
 | diff.nvim | 23 | 17 | 🟡 mittel |
@@ -132,10 +133,17 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | github_stats.nvim | `dashboard/detail.lua` maß die Periode mit `vim.fn.strptime()`, das unter Windows immer `0` liefert → jede Spanne las sich als "(1 days)" | in `1b9b638` |
 | github_stats.nvim | `usrcmds/utils.lua`s `split_lines()` hängte an jedes Ergebnis eine Leerzeile an; `show_float()` ruft es pro Array-Element auf → jeder mehrzeilige Report kam doppelt zeilenumbrochen heraus | `6a85943` |
 | github_stats.nvim | `export.lua`s `write_lines()` pcallte das `writefile`, nicht das vorangehende `mkdir` → ein nicht anlegbares Elternverzeichnis entkam als rohes `E739` | `6a85943` |
-
 | github_stats.nvim | `BufWipeout`-Handler löschte den Buffer, der gerade gewiped wird → `E937`, sobald der Buffer beim Wipe noch in seinem Fenster lag (`nvim_buf_delete()` von außen; `:q`/`:bwipeout`/`:bdelete`/`close()` waren immer sauber) | `dfdb1d8` |
 
 ### Offen (gepinnt)
+
+**Runde 14 / pdfport.nvim**
+
+| Datei | Bug |
+|---|---|
+| `backends/tesseract.lua` | `finish_error()` meldet `page_idx - 1`, aber `process_next()` hat den Index schon weitergezählt → ein Fehlschlag auf Seite 1 meldet "1 Seite verarbeitet". Der formgleiche `fail()` in `backends/ollama.lua` rechnet mit `page_idx - 2` richtig — dieselbe Vorlage, nur eine Kopie korrigiert |
+| `bindings/autocmds.lua` | verspricht in Modul-Doc und Kommentar, die eigene Augroup zu leeren und neu zu bauen, tut es aber nicht: `lib.nvim`s `autocmd.create` löst einen String-`group` ohne `clear` auf. Ein zweites `setup()` mit `auto_open_on_read` hinterlässt zwei `BufReadCmd *.pdf`-Autocmds, der Mode-Picker geht doppelt auf |
+| `integrations/{fzf,telescope}.lua` | memoisieren per Pfad, **bevor** `result.status` geprüft wird → eine einmal gescheiterte Extraktion (ollama nicht gestartet, poppler fehlt) wird für die ganze Session als Fehlertext wiedergespielt. `util/cache.lua` verweigert genau das ausdrücklich |
 
 **Runde 13 / sessions.nvim** — beide wären ein Wechsel von "wirft" zu "meldet", daher gepinnt:
 
