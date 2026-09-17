@@ -31,7 +31,7 @@ tabline, theme). Every overlap finding below is measured against that line.
     - [C2 · `winhighlight` merging: my.nvim has the safe one, four others hand-roll](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll)
     - [C3 · `vim.wo.winbar` ownership has one adopter and two non-adopters](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters)
     - [C4 · Soft-require centralization: my.nvim did it, ui.nvim did not](#c4--soft-require-centralization-mynvim-did-it-uinvim-did-not)
-    - [C5 · Nerd-font glyph probing](#c5--nerd-font-glyph-probing)
+    - [C5 · Nerd-font glyph probing — three approaches, and the library one is unused](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused)
     - [C6 · `vim.on_key` capture](#c6--vimon_key-capture)
   - [7. Tier D — defects this check turned up at the seams](#7-tier-d--defects-this-check-turned-up-at-the-seams)
     - [D1 · `move_buffer_to_tab` leaves a ghost chip in the source tab](#d1--move_buffer_to_tab-leaves-a-ghost-chip-in-the-source-tab)
@@ -52,7 +52,7 @@ The unit of analysis is a **feature family**, not a plugin. The pass ran in
 four sweeps over all 38 `*.nvim` repositories under `$REPOS_DIR/repos`
 (`.claude/worktrees/**` and `ARCHIV_NICHT_BEARBEITEN/**` excluded throughout):
 
-1. **A module-path index** of all 2,890 non-worktree Lua modules, searched for
+1. **A module-path index** of all 2,898 non-worktree Lua modules, searched for
    the concept vocabulary of both plugins (`statusline`, `winbar`, `tabline`,
    `breadcrumb`, `cursorline`, `indent`, `theme`, `palette`, `transparen`,
    `highlight`, `colorscheme`, `screenkey`, `keylog`).
@@ -70,6 +70,19 @@ found 15 roadmap points listed as open that were long since built: a feature's
 *description* is not evidence. Where a claim rests on absence (nothing sets
 this variable, no plugin does this), the sweep that produced the absence is
 named so it can be re-run.
+
+Every citation and every count here was **re-verified against the working
+tree after the report was first written** — 63 file:line references, of which
+6 had drifted by a line or two and one (`ctx/init.lua`'s provider chain) was
+wrong outright. That mattered more than usual: two commits landed in
+`my.nvim` while this pass was running — `fdeacd4` (20:19, retires the
+`container` breadcrumb provider) and `c622695` (20:30, gets the Tree-sitter
+node from core after `nvim-treesitter` deleted the `ts_utils` module the
+code required) — and both touch the modules [B1](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead)
+is about. B1 survives both, and `c622695`'s own commit message
+("with `lsp_func` already dead") reaches the same conclusion independently.
+Counts are as of 2026-09-17 and this fleet moves daily; re-run the sweeps in
+section 1 rather than trusting the figures a month from now.
 
 **What this report did NOT check:**
 
@@ -104,10 +117,10 @@ named so it can be re-run.
 
 | | |
 |---|---|
-| Sibling plugins examined | **38** |
-| Non-worktree Lua modules indexed | **2,890** |
+| Plugin repositories examined | **38** (the 36 siblings, plus the two under review) |
+| Non-worktree Lua modules indexed | **2,898** |
 | `ui.nvim` | 93 files, **14,787 LOC** |
-| `my.nvim` | 71 files, **8,402 LOC** |
+| `my.nvim` | 71 files, **8,481 LOC** |
 | Lines found duplicated verbatim-modulo-paths | **~5,100** (Tier A) |
 | Plugins hand-rolling a `ColorScheme` re-registration | **8**, across 21 call sites |
 | Plugins writing `vim.wo.winbar` | **3** producers; **1** uses `ui.winbar` |
@@ -223,9 +236,9 @@ and it sits exactly on the declared scope boundary — breadcrumb *content* is
 | | `my.nvim` | `ui.nvim` |
 |---|---|---|
 | Where | `lua/my/hl_config/breadcrumbs/**` | `lua/ui/statusline/modules/lsp/**` |
-| LOC | 1,034 | 737 |
-| Shape | provider pipeline: `lsp_func → ts_symbol → container → lang_extra → word`, first non-nil wins (`ctx/init.lua:1-10`) | LSP `documentSymbol`, async + debounced + cached, with a treesitter fallback |
-| Treesitter node whitelist | `ctx/providers/ts_symbol.lua:14-26`, 11 types | `symbols/treesitter.lua:15-47`, the same 11 plus ~15 more |
+| LOC | 2,154 (whole subtree); 1,034 in the pipeline files themselves | 1,224 (whole subtree); 737 in the three files below |
+| Shape | provider pipeline: `lsp_func → ts_symbol → lang_extra → word`, first non-nil wins (`ctx/init.lua:10-14`; `container` is a provider but not a link in the chain — it is reachable only from the debug report) | LSP `documentSymbol`, async + debounced + cached, with a treesitter fallback |
+| Treesitter node whitelist | `ctx/providers/ts_symbol.lua:13-25`, 11 types | `symbols/treesitter.lua:15-50`, the same 11 plus 17 more — 28 in total |
 | LSP path | reads `vim.b.lsp_current_function` | `symbols/document_symbols.lua`, 451 lines, full `LspKind` enum, own debounce |
 
 `ui.nvim`'s own module docstring calls its output "LSP-first breadcrumbs …
@@ -262,13 +275,13 @@ never-firing stage in a documented pipeline.
 
 Both plugins map the current Vim mode to a highlight group, independently:
 
-- `ui.nvim/lua/ui/statusline/utils/primitives.lua:33ff` — 30+ raw mode strings
-  into 8 buckets (`Normal`, `NTerminal`, `Visual`, `Insert`, `Terminal`,
+- `ui.nvim/lua/ui/statusline/utils/primitives.lua:33-76` — 37 raw mode strings
+  into 9 buckets (`Normal`, `NTerminal`, `Visual`, `Insert`, `Terminal`,
   `Replace`, …), consumed by
   `modules/highlighting/init.lua:49` as `St_<Name>Mode`.
-- `my.nvim/lua/my/hl_config/features/cursorline.lua:103-119` — 8 keys into 4
+- `my.nvim/lua/my/hl_config/features/cursorline.lua:103-120` — 8 keys into 4
   buckets (`CursorLineN/V/I/R`), reached with a mode string truncated to its
-  first character (`features/mode_tint.lua:21`, `:29`, `:35`).
+  first character (`features/mode_tint.lua:22`, `:30`, `:36`).
 
 They disagree wherever the first character is not the whole story. In
 terminal-normal mode (`nt`) `ui.nvim`'s statusline chip says **NTERMINAL** in
@@ -308,7 +321,7 @@ re-applies on `ColorScheme` **and** on `OptionSet background`, because
 switching background selects its other palette
 (`spotlight.nvim/lua/spotlight/core/palette.lua:10-14`). `my.nvim`'s
 `cword_occurrences` highlight cache (`HLCACHE`,
-`hl_config/cword_occurrences/init.lua:27`) handles neither event by itself.
+`hl_config/cword_occurrences/init.lua:26`) handles neither event by itself.
 And one module handles nothing at all — see [D4](#d4--diagnostic-virtual-text-background-is-restored-by-any-colorscheme).
 
 A `lib.nvim.ui.hl.persist(defs)` that registers the groups, re-applies them on
@@ -392,26 +405,38 @@ description rather than checked, so: `lib.nvim` **does** already have
 function — it returns `(ok, mod)` where `soft_require.try` returns `mod|nil`
 and additionally requires `type(mod) == "table"`. Second, `lib.nvim.require`
 has exactly two consumers fleet-wide (`documentation.nvim` and `lib.nvim`
-itself), against ~1,000 hand-rolled `pcall(require` sites across the fleet —
+itself), against 1,127 hand-rolled `pcall(require` sites across the fleet —
 so this is a fleet-wide habit, not a `ui.nvim` failing, and only the
 `ui.nvim` half of it is in scope here.
 
 **Effort: S** to give `ui.nvim` the same one-module treatment `my.nvim` got.
 The fleet-wide version is a separate, larger question and is not proposed here.
 
-### C5 · Nerd-font glyph probing
+### C5 · Nerd-font glyph probing — three approaches, and the library one is unused
 
 `lib.nvim/lua/lib/nvim/ui/nerd_font/init.lua:49` is `glyph(hex, fallback)` —
-decode a codepoint, check it renders, fall back otherwise. `my.nvim` uses it
-(`hl_config/utils/separator.lua`).
+decode a codepoint, check it renders, fall back otherwise, with
+`available()`, `chars()` and `sep()` beside it. Outside `lib.nvim` it has
+exactly **one** real consumer fleet-wide:
+`filetree.nvim/lua/filetree/integrations/menu.lua:19`.
 
-`ui.nvim/lua/ui/statusline/modules/lsp/init.lua:56-58` does the same thing by
-hand: `hex_to_string(SEP_HEX)` followed by
-`SEP_GLYPH ~= "" and vim.fn.strdisplaywidth(SEP_GLYPH) == 1`. `ui.nvim` knows
-the module — `ui/contextmenu/init.lua` requires it — this one site just
-predates or missed it.
+Neither plugin under review uses it, and they do not agree with each other
+either:
 
-**Effort: S.**
+| | How it decides whether a glyph is usable |
+|---|---|
+| `lib.nvim.ui.nerd_font` | the primitive — 1 external consumer |
+| `my.nvim` | reads `vim.g.have_nerd_font` directly (`hl_config/utils/separator.lua:40`) |
+| `ui.nvim` | decodes and measures by hand: `hex_to_string(SEP_HEX)` then `SEP_GLYPH ~= "" and vim.fn.strdisplaywidth(SEP_GLYPH) == 1` (`modules/lsp/init.lua:56-58`) |
+| `ui.nvim`, again | no check at all — `modules/github_stats_badge/init.lua:105`, see [D5](#d5--github_stats_badge-ships-german-text-and-an-unguarded-emoji) |
+
+The three are not equivalent: `vim.g.have_nerd_font` is a user assertion,
+`strdisplaywidth` is a measurement, and `nerd_font.available()` combines
+both. `ui.nvim` does reference the module — but only inside a docstring
+example (`ui/contextmenu/init.lua:29`), not as a require, which is how this
+was initially mis-read for both plugins.
+
+**Effort: S** per call site.
 
 ### C6 · `vim.on_key` capture
 
@@ -477,7 +502,7 @@ local ignore_filetypes = ignore_lib.as_set()
 `as_set()` returns the **basenames** set
 (`lib.nvim/lua/lib/nvim/fs/ignore/list/init.lua:94-100`): `.git`, `.github`,
 `node_modules`, `.venv`, `__pycache__`, `build`, `dist`, `target`, `bin`,
-`obj`, `.vscode`, `package-lock.json`, `%.pyc`, … — 43 entries, **not one of
+`obj`, `.vscode`, `package-lock.json`, … — 31 entries, **not one of
 which is ever a `&filetype`**.
 
 The whole seeded set is inert. Only the seven hardcoded additions on `:12-18`
@@ -493,7 +518,7 @@ two skip mechanisms and this one uses a third, wrong list.
 Two further side-effects of the same file, noted while reading it:
 `vim.opt.number` / `vim.opt.relativenumber` are set at **module load**
 (`:4-5`), before any config is consulted, and `_G.custom_line_numbers` is a
-bare global (`:55`) because `statuscolumn` needs `v:lua`.
+bare global (`:56`) because `statuscolumn` needs `v:lua`.
 
 **Effort: S.**
 
@@ -550,7 +575,7 @@ Two things, in a repository whose rule is English in source:
    check — while the module three directories over
    (`modules/lsp/init.lua:56-58`) carefully measures its separator glyph
    before using it, and `lib.nvim.ui.nerd_font.glyph()` exists for exactly
-   this (see [C5](#c5--nerd-font-glyph-probing)). This is the same `UI`-family
+   this (see [C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused)). This is the same `UI`-family
    finding the `rules.nvim` pass already fixed once in `my.nvim`.
 
 **Effort: S.**
@@ -680,7 +705,7 @@ exposes everything else).
 
 Two consequences worth a line each. The autocmd sets
 `vim.bo.expandtab = true` unconditionally for every filetype including `go`
-(`:27`), where `gofmt` will convert it straight back to tabs on save. And it
+(`:28`), where `gofmt` will convert it straight back to tabs on save. And it
 runs on `FileType` with `pattern = "*"`, so it overrides whatever an
 `.editorconfig` or a runtime `ftplugin` just set.
 
@@ -707,7 +732,7 @@ Cheapest-with-a-real-symptom first, then the two structural decisions.
 | 6 | [B2](#b2--two-mode-classifiers-that-disagree) mode map | S | The scope boundary's most literal violation |
 | 7 | [C1](#c1--nobody-owns-keep-these-highlight-groups-defined) + [D4](#d4--diagnostic-virtual-text-background-is-restored-by-any-colorscheme) `hl.persist` | M | D4 is its first adopter; 21 sites follow |
 | 8 | [C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) winbar adopters | S ×2 | The mechanism exists; two plugins need to use it |
-| 9 | [C4](#c4--soft-require-centralization-mynvim-did-it-uinvim-did-not) / [C5](#c5--nerd-font-glyph-probing) ui.nvim housekeeping | S | Brings `ui.nvim` level with `my.nvim`'s `rules.nvim` pass |
+| 9 | [C4](#c4--soft-require-centralization-mynvim-did-it-uinvim-did-not) / [C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused) ui.nvim housekeeping | S | Brings `ui.nvim` level with `my.nvim`'s `rules.nvim` pass |
 | 10 | [B1](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead) symbol breadcrumbs | M | Needs the ownership decision first; S for the interim fix |
 | 11 | [C2](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll) winhighlight to lib | M | Lift-and-shift, then four call sites |
 | 12 | [E](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component) statusline components | M ×5 | One sibling at a time; `sandbox.nvim` is the template |
