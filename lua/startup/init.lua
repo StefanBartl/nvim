@@ -24,10 +24,10 @@ M.UI_READY = "UIReady"
 
 ---@class Startup.Mark
 ---@field label string
----@field trigger string      # "sync" or the event name it waited for
----@field at number|nil       # ms since vim.g.start_time, nil while pending
----@field dur number|nil      # ms spent inside the phase body
----@field err string|nil      # error message if the phase body threw
+---@field trigger string       "sync" or the event name it waited for
+---@field at number|nil        ms since vim.g.start_time, nil while pending
+---@field dur number|nil       ms spent inside the phase body
+---@field err string|nil       error message if the phase body threw
 
 ---@type Startup.Mark[]
 M.marks = {}

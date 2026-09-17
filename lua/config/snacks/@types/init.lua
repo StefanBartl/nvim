@@ -2,7 +2,7 @@
 ---@module 'config.snacks.@types'
 
 ---@class Cfg.Snacks.Mappings.Module
----@field keys fun(): (string|function|table)[] # Return keymap table for lazy spec.
+---@field keys fun(): (string|function|table)[]  Return keymap table for lazy spec.
 
 ---@class Cfg.Snacks
 ---@field mappings Cfg.Snacks.Mappings.Module

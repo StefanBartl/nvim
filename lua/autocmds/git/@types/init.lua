@@ -5,7 +5,7 @@
 --- It mirrors the shape expected by `require('autocmds.git').enable(cfg)`.
 
 ---@class AutoCmds.Git
----@field enable fun(cfg: AutoCmds.Git.Cfg|boolean|nil): nil # Enable git-related autocommands per feature.
+---@field enable fun(cfg: AutoCmds.Git.Cfg|boolean|nil): nil  Enable git-related autocommands per feature.
 
 --------------------------------------------------------------------------------
 -- Module: commit_ft

@@ -773,7 +773,7 @@ end
 ---@class Bindings.AutocmdRegistration
 ---@field group string augroup name
 ---@field event string one event; a handler on four events yields four of these
----@field src string  # "file:line" of the registering call
+---@field src string   "file:line" of the registering call
 ---@field desc string|nil
 
 --- Every `(augroup, event)` pair registered right now, plus the same pairs
@@ -1111,16 +1111,16 @@ end
 ---@class Bindings.DriftFinding
 ---@field kind "keymap-not-live"|"usercmd-not-live"|"usercmd-subroute-not-live"|"usercmd-undocumented"|"keymap-undocumented"|"usercmd-undocumented-source"|"keymap-not-in-repo"|"usercmd-not-in-repo"|"autocmd-not-live"|"autocmd-undocumented"
 ---@field plugin string|nil
----@field heading string|nil  # the record's table heading, keymap axis only
----@field group string|nil    # plugin + heading, the verdict's grouping key
+---@field heading string|nil   the record's table heading, keymap axis only
+---@field group string|nil     plugin + heading, the verdict's grouping key
 ---@field notation string
 ---@field file string|nil
 ---@field line integer|nil
----@field unverifiable boolean|nil  # see `M.check`'s per-table verdict
----@field repo_absent boolean|nil   # `keymap-not-live` only: the source
+---@field unverifiable boolean|nil   see `M.check`'s per-table verdict
+---@field repo_absent boolean|nil    `keymap-not-live` only: the source
 ---  fallback looked and did not find the key either, so the finding says
 ---  "written down nowhere" and not just "not registered right now"
----@field owner string|nil    # `usercmd-undocumented` only: who registered it
+---@field owner string|nil     `usercmd-undocumented` only: who registered it
 
 ---@class Bindings.RepoInfo
 ---@field ran boolean whether `opts.repo` asked for the axis at all
@@ -1152,8 +1152,8 @@ end
 ---  of a fact about this session.
 
 ---@class Bindings.AutocmdInfo
----@field registry integer  # `(augroup, event)` pairs lib.nvim's registry could attribute
----@field unanchored integer  # documented Autocmds rows this axis cannot reach
+---@field registry integer   `(augroup, event)` pairs lib.nvim's registry could attribute
+---@field unanchored integer   documented Autocmds rows this axis cannot reach
 
 ---@class Bindings.ScopeInfo
 ---@field scope "personal"|"extern"|"all" what was asked for
