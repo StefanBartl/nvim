@@ -22,7 +22,7 @@ tabline, theme). Every overlap finding below is measured against that line.
   - [2. The numbers](#2-the-numbers)
   - [3. The central observation](#3-the-central-observation)
   - [4. Tier A — the same code exists twice, both copies live](#4-tier-a--the-same-code-exists-twice-both-copies-live)
-    - [A1 · `lib.nvim.ui.kit` ↔ `ui.kit` — 5,100 lines duplicated and diverging](#a1--libnvimuikit--uikit--5100-lines-duplicated-and-diverging)
+    - [A1 · `lib.nvim.ui.kit` ↔ `ui.kit` — duplicated on purpose, diverging by accident — resolved 2026-09-17](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17)
     - [A2 · `lib.nvim.contextmenu` ↔ `ui.contextmenu` — and ui.nvim uses the wrong one](#a2--libnvimcontextmenu--uicontextmenu--and-uinvim-uses-the-wrong-one)
   - [5. Tier B — the same feature built twice, across the ui/my boundary](#5-tier-b--the-same-feature-built-twice-across-the-uimy-boundary)
     - [B1 · Symbol breadcrumbs exist in both plugins; my.nvim's LSP half is dead](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead)
@@ -81,6 +81,42 @@ pushed. What changed, and where:
 | C6 `getcharstr` → `vim.on_key` | debugging.nvim | `42a909a` |
 | B1 symbol context moved | my.nvim `8066777`, ui.nvim `ef78f27` | |
 | E four components moved | recommender `81570db`, github_stats `f01dd85`, runtime-analysis `3c6e6bd`, casedesk `c80dd80`, ui.nvim `9afcc07` | |
+| A1 kit fixes ported + drift guard | lib.nvim `679e64b`/`92eb7d1`, ui.nvim `3c2eac2`/`bfd12e7` | |
+
+**A1 was the last one, and this report had it wrong.** It said lib.nvim's
+copy "was never removed", implying an oversight. `PLAN-ui-kit-migration.md`
+step 6 shows the opposite: *"Keine Löschung nötig … bleibt unangetastet im
+Baum liegen … bekommt nur keine neuen Features mehr."* Keeping both copies
+was decided deliberately, because eleven of lib.nvim's own call sites use
+the kit and lib.nvim cannot require ui.nvim without inverting the fleet's
+dependency direction. That decision stands and was not reopened.
+
+The real defect was the half of the deal nothing enforced. "No new
+features" had become "keeps known bugs": measured across all 21 files the
+copies differed in **53 lines**, of which three were defects fixed only in
+ui.nvim — a `WinClosed` augroup leaked per surface, a picker debounce timer
+that outlived its picker, and a submenu mis-anchored near the bottom of the
+screen — plus a security note saying the theme-preview buffer is executed
+as Lua on every edit. All ported. The remaining differences were cosmetic
+and were aligned too, so the next real one stands out instead of hiding in
+style noise.
+
+`contextmenu` was measured the same way and needs nothing: its 36 differing
+lines are **all additions** (`set_enabled`/`is_enabled`), zero changed —
+precisely what the freeze is supposed to look like.
+
+Nothing compared the copies, which is why it went unnoticed for weeks.
+`ui.nvim/TESTS/kit_drift_spec.lua` does now, in CI, which already checks
+lib.nvim out at `ci-verified`. Two rules, because the two cases differ:
+strict equality for the kit, and for `contextmenu` the weaker "lib.nvim has
+no line ui.nvim has since corrected", which tolerates a deliberate feature
+gap while still catching a one-sided fix. Both were verified to fail, and
+to name the file, when drift is injected.
+
+Byte-identity is not achievable and is not the goal: undoing the rename
+lengthens `ui.kit.sync` to `lib.nvim.ui.kit.sync`, pushing one `error()`
+past the shared 100-column budget so stylua wraps it on one side only. The
+guard compares code, not formatting.
 
 **B1 was left to judgement and decided for `my.nvim`.** Three precedents
 point the same way. The fleet already resolves a shared surface by asking
@@ -148,7 +184,7 @@ by intent. Both sections now say what is actually there.
 out to need no change at all; see that section. `F1` and `F2` are decisions
 about where a feature belongs rather than defects, and are left for their
 owner. Everything at **M**, **L** and **XL** is untouched, including the kit
-deduplication ([A1](#a1--libnvimuikit--uikit--5100-lines-duplicated-and-diverging)),
+deduplication ([A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17)),
 which is the one that needs a decision rather than typing.
 
 ## 1. Method, and what this report is not
@@ -261,11 +297,16 @@ applied evenly.
 
 ## 4. Tier A — the same code exists twice, both copies live
 
-### A1 · `lib.nvim.ui.kit` ↔ `ui.kit` — 5,100 lines duplicated and diverging
+### A1 · `lib.nvim.ui.kit` ↔ `ui.kit` — duplicated on purpose, diverging by accident — resolved 2026-09-17
 
-The 2026-09 migration moved the UI kit from `lib.nvim` into `ui.nvim`. **The
-source copy was never removed.** Both trees exist today with the identical
-21-file layout:
+The 2026-09 migration moved the UI kit from `lib.nvim` into `ui.nvim`.
+
+**This section originally said the source copy "was never removed", as
+though it had been forgotten. That was wrong**, and checking the migration
+plan rather than the tree would have caught it:
+`PLAN-ui-kit-migration.md` step 6 says *"Keine Löschung nötig … bleibt
+unangetastet im Baum liegen … bekommt nur keine neuen Features mehr."*
+Both copies exist by decision. The identical 21-file layout:
 
 | | `lib.nvim/lua/lib/nvim/ui/kit/` | `ui.nvim/lua/ui/kit/` |
 |---|---|---|
@@ -301,8 +342,26 @@ seven consumers actually need a themed float**, and whether the kit belongs in
 seven sites degrading to plain `vim.ui.*`/notify when it is absent (five of
 them already `pcall` it, so they are written for its absence).
 
-**Effort: L.** Not the mechanical part — the decision plus seven call-site
-migrations plus keeping the surface fix.
+**What was actually wrong, and what was done.** Not the duplication — that
+is decided — but the unenforced half of it. "No new features" had become
+"keeps known bugs". Across all 21 files the copies differed in 53 lines:
+three real defects fixed only in `ui.nvim` (the surface augroup leak above,
+a picker debounce timer outliving its picker, a submenu mis-anchored near
+the bottom of the screen), a security note on the theme-preview buffer, and
+the rest cosmetic. All of it is now aligned, so the next genuine difference
+is visible rather than buried in style noise.
+
+`contextmenu` was measured the same way and needed nothing: 36 differing
+lines, **all additions** (`set_enabled`/`is_enabled`), zero changed.
+
+`ui.nvim/TESTS/kit_drift_spec.lua` compares both in CI from now on —
+strict equality for the kit, containment for `contextmenu` — and was
+verified to fail, naming the file, when drift is injected.
+
+**Effort: L as scoped, but the scope was wrong.** The expensive part it
+imagined — deciding which copy survives and migrating seven call sites —
+was already decided in 2026-09 and did not need doing. The part that did
+need doing was an afternoon.
 
 ### A2 · `lib.nvim.contextmenu` ↔ `ui.contextmenu` — and ui.nvim uses the wrong one
 
@@ -909,5 +968,5 @@ Cheapest-with-a-real-symptom first, then the two structural decisions.
 | 10 | [B1](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead) symbol breadcrumbs | M | Needs the ownership decision first; S for the interim fix |
 | 11 | [C2](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll) winhighlight to lib | M | Lift-and-shift, then four call sites |
 | 12 | [E](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component) statusline components | M ×5 | One sibling at a time; `sandbox.nvim` is the template |
-| 13 | [A1](#a1--libnvimuikit--uikit--5100-lines-duplicated-and-diverging) kit deduplication | L | The largest, and the one that needs a decision, not typing |
+| 13 | [A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17) kit deduplication | L | The largest, and the one that needs a decision, not typing |
 | 14 | [F1](#10-findings-inside-mynvims-own-scope-boundary)–F3 scope questions | S–M | Decide; the work is small either way |
