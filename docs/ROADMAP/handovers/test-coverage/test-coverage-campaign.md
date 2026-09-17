@@ -12,32 +12,31 @@
 
 ## Restliche Plugins (Reihenfolge für die Fortsetzung)
 
-12 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+13 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
 `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
 `documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
 laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
-Die verbleibenden 15 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+Drei Runden laufen parallel (pdfport.nvim, emojis.nvim, fileops.nvim). Die danach
+verbleibenden 11 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
 in dieser Reihenfolge abzuarbeiten:
 
-1. sessions.nvim
-2. pdfport.nvim
-3. emojis.nvim
-4. fileops.nvim
-5. reposcope.nvim
-6. gopath.nvim
-7. color_my_ascii.nvim
-8. diff.nvim
-9. cascade.nvim
-10. sandbox.nvim
-11. data.nvim
-12. spotlight.nvim
-13. mdview.nvim
-14. filetree.nvim
-15. lsp.nvim
+1. reposcope.nvim
+2. gopath.nvim
+3. color_my_ascii.nvim
+4. diff.nvim
+5. cascade.nvim
+6. sandbox.nvim
+7. data.nvim
+8. spotlight.nvim
+9. mdview.nvim
+10. filetree.nvim
+11. lsp.nvim
 
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
-- Nie mehr als 1 Agent gleichzeitig; bei Bedarf mehrere Runden á 1 Agent, repo-für-repo.
+- Seit 2026-09-17 bis zu 3 Agents gleichzeitig (vorher 1), je ein Repo pro Agent. Den
+  Handover schreibt ausschließlich die Hauptsession — parallele Agents würden sich hier
+  gegenseitig überschreiben; sie berichten stattdessen zurück.
 - Antworten Deutsch, Quellcode (inkl. Kommentare) Englisch.
 - Keine Co-Autorenschaft von Claude in Commits.
 - Nach jedem fertigen Plugin: committen/pushen direkt auf `main` des jeweiligen Repos, sodass es sofort verfügbar ist.
@@ -72,7 +71,7 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 | replacer.nvim | 40 | 8 | 🔴 kaum getestet |
 | github_stats.nvim | 44 | 9 | ✅ fertig (Runde 11, Commit `1b9b638`; 9 → 22 Spec-Dateien) |
 | insights.nvim | 49 | 9 | ✅ fertig (Runde 12, Commit `1be0f7a`; 7 → 31 Spec-Dateien) |
-| sessions.nvim | 17 | 9 | 🟠 schwach |
+| sessions.nvim | 17 | 9 | ✅ fertig (Runde 13, Commit `0034df3`) |
 | pdfport.nvim | 50 | 10 | 🟠 schwach |
 | emojis.nvim | 23 | 11 | 🟠 schwach |
 | fileops.nvim | 18 | 11 | 🟠 schwach |
@@ -135,17 +134,22 @@ Alle 10 abgeschlossenen Coverage-Commits sowie alle 6 Bugfix-Commits sind per `g
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
-**Nächste Schritte:** Runde 13 (sessions.nvim) starten, danach der Reihe nach die
-restliche 🟠/🟡-Liste unten (→ pdfport.nvim → emojis.nvim → fileops.nvim
-→ reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡 nur bei konkreten Lücken).
+**Nächste Schritte:** die drei laufenden Runden (14 pdfport.nvim, 15 emojis.nvim,
+16 fileops.nvim) einsammeln und hier eintragen, danach der Reihe nach die restliche
+🟠/🟡-Liste oben (→ reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡 nur
+bei konkreten Lücken).
 
-**Offener Nebenauftrag:** inzwischen 6 gepinnte, noch ungefixte Bugs aus zwei Runden.
+**Offener Nebenauftrag:** 6 gepinnte, noch ungefixte Bugs aus zwei Runden.
 
-Aus Runde 11 (github_stats.nvim), unverändert offen:
-- `usrcmds/utils.lua`s `split_lines()`-Trailing-Leerzeile → doppelt gesetzte Floats.
-- `export.lua`s `ensure_parent_dir()` außerhalb des pcall → rohes `E739`.
+Aus Runde 11 (github_stats.nvim): **beide gefixt** (Commit `6a85943`) — `split_lines()`
+nutzt jetzt `vim.split(..., { plain = true })`, und `ensure_parent_dir()` gibt `(ok, err)`
+zurück, sodass ein nicht anlegbares Verzeichnis als "Failed to create directory: ..."
+gemeldet statt als rohes `E739` durchgereicht wird. Ebenfalls in Runde 11 gefunden und
+gefixt (Commit `dfdb1d8`): der `BufWipeout`-Handler des Dashboards löschte den Buffer, der
+gerade gewiped wird — `E937`, sobald der Buffer dabei noch in seinem Fenster lag
+(`nvim_buf_delete()` von außen; `:q`/`:bwipeout`/`:bdelete`/`close()` waren immer sauber).
 
-Aus Runde 12 (insights.nvim), neu:
+Aus Runde 12 (insights.nvim), offen:
 - `symbols/parser.lua` verwirft unter Windows **jeden** rg-Treffer (Laufwerksbuchstabe
   frisst das Dateinamen-Feld) → `:Insights symbols` findet dort gar nichts, lautlos.
   Höchste Priorität von den sechs: das ist ein Komplettausfall eines Hauptfeatures auf
@@ -157,8 +161,15 @@ Aus Runde 12 (insights.nvim), neu:
 - `tree/init.lua` escapt die Windows-Exclude-Regexes Lua-Stil (`%`) statt Regex-Stil
   (`\`) → `*/.git/*` matcht nie, der Tree enthält unter Windows das ganze `.git/`.
 
-Alle früheren Kampagnen-Bugs (7 insgesamt über 6 Repos, inkl. des in Runde 11 direkt
-gefixten `strptime`-Fehlers) sind erledigt.
+Aus Runde 13 (sessions.nvim), offen — beide ein Wechsel von "wirft" zu "meldet":
+- `core.save`/`core.save_tab` kapseln `:mksession` in `pcall`, nicht aber das `ensure_dir()`
+  darüber → ein nicht anlegbarer `cfg.root` entkommt als rohes `E739`, auch aus dem
+  `VimLeavePre`-Autosave heraus. Dieselbe Fehlerklasse wie der export.lua-Fund aus Runde 11.
+- `layout.restore` prüft nur `type(tree) ~= "table"` und lässt `{}`/`[]` durch, worauf
+  `build()` an `attempt to get length of local 'children' (a nil value)` stirbt statt das
+  versprochene "corrupt or missing layout file" zu melden.
+
+Alle Kampagnen-Bugs aus den Runden 1–11 (9 insgesamt über 7 Repos) sind gefixt.
 
 ## Fortschritt
 
@@ -675,4 +686,47 @@ gefixten `strptime`-Fehlers) sind erledigt.
   Commit: `1be0f7a` (test: cover imports, symbols, metrics, the feature modules and the
   wiring), direkt auf `main` gepusht und per `git merge-base --is-ancestor HEAD
   origin/main` verifiziert.
+- [x] **sessions.nvim** — fertig (Runde 13, erste Runde der Drei-Agenten-Phase). Eigener
+  framework-freier Harness (`TESTS/harness.lua` + `TESTS/run.lua` mit expliziter Spec-Liste)
+  beibehalten, keine Migration. 7 → 17 Spec-Dateien, 77 → 487 statische Assertion-Stellen,
+  17/17 grün über 5 Laufe, Exit 0 — auch CI-exakt ohne `LIB_NVIM_PATH` über die
+  Sibling-Auflösung. `luacheck lua TESTS` 0/0 über 36 Dateien, `stylua --check lua TESTS`
+  grün (beide Gates schließen `TESTS/` ein). Kein `lua/`-Quelltext angefasst: reine Test-
+  und Doku-Arbeit.
+  Neu: `git_spec.lua` (`current_branch`/`project_root` inkl. des prozessfreien
+  `.git/HEAD`-Fallbacks gegen handgeschriebene Fixtures — normales `.git`, detached HEAD,
+  Müll-HEAD, Worktree-`.git`-*Datei* mit absolutem und relativem `gitdir:`, Upward-Walk),
+  `state_spec.lua`, `layout_spec.lua`, `core_spec.lua` (save/load/list/delete/rename,
+  Blacklist-Wipe über alle drei Kriterien, beide Namensauflösungs-Regeln, Hooks inkl.
+  werfendem Hook, `relative_paths`, Tab-Sessions, hidden-modified-Buffer, unsourcebare
+  Session-Datei), `picker_spec.lua` (beide Backends über `package.loaded`-Stubs bis zur
+  Rendering-Grenze), `health_spec.lua`, `keymaps_spec.lua`, `usercmds_spec.lua` (jedes
+  `:Session`-Subkommando über echte `:`-Aufrufe inkl. Completion, `toggle-track` in allen
+  fünf Zweigen), `autocmds_spec.lua` (VimEnter/VimLeavePre/Dirty-Events per
+  `nvim_exec_autocmds`; `autoload = "ask"` einmal über ui.kit, einmal über den
+  handgerollten Float mit echten Tastendrücken), `init_spec.lua`; `statusline_spec.lua`
+  erweitert. Der Harness bekam `H.stub()` (Modul ersetzen *oder* per `package.preload`-Fehler
+  als "nicht installiert" erscheinen lassen) und `H.fresh()`; Fixtures hängen jetzt an
+  `TESTS/` statt an `getcwd()`, weil `git_spec` das Arbeitsverzeichnis bewegt.
+  **Zwei Bugs gefunden, beide gepinnt statt gefixt** (je ein Wechsel von "wirft" zu
+  "meldet", also sichtbare Verhaltensänderung): `core.save`/`core.save_tab` kapseln
+  `:mksession` in `pcall`, nicht aber das `ensure_dir()` darüber — ein nicht anlegbarer
+  `cfg.root` entkommt als rohes `E739`, auch aus dem `VimLeavePre`-Autosave heraus;
+  `layout.restore` prüft nur `type(tree) ~= "table"` und lässt `{}`/`[]` durch, worauf
+  `build()` an `attempt to get length of local 'children' (a nil value)` stirbt statt das
+  eine Zeile vorher versprochene "corrupt or missing layout file" zu melden.
+  Zusätzlich als Verhalten gepinnt (kein Defekt): `core.rename` zieht `.state.json` nicht
+  mit, zwischen Umbenennen und nächstem Save fallen `:Session load` und der Autoload auf
+  `default_name` zurück.
+  Bewusst ausgelassen: `@types/init.lua` (reine Annotationen), `config/DEFAULTS.lua`
+  (deklarativ; die OS-abhängigen Blacklist-Pfade sind über `config_spec` abgedeckt), die
+  Rendering-Hälfte beider Picker-Backends (snacks.nvim/telescope.nvim sind weder Dependency
+  noch CI-Checkout), `health.lua`s abschließender `composer.checkhealth("Session")`-Aufruf
+  (berichtet über lib.nvims eigene Registry, die lib.nvim dort testet).
+  `TESTS/README.md` deutlich ausgebaut (Spec-Tabelle inkl. des bisher fehlenden
+  `buforder_spec`, Abschnitt "No network, no subprocesses" mit Nahtstellen-Tabelle,
+  Laufreihenfolge, neue Harness-Helfer, Coverage-Abschnitt, die zwei Pins);
+  `docs/CONTRIBUTING.md`s Test-Absatz beschrieb noch den alten Umfang — aktualisiert.
+  Commit: `0034df3` (test: cover core, git, state, layout, picker, health and the bindings
+  layer), direkt auf `main` gepusht.
 - [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.

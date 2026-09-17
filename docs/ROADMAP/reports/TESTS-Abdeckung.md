@@ -38,7 +38,7 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**12 von 36 Repos abgeschlossen**; Runde 13 (sessions.nvim) und 14 (pdfport.nvim) laufen parallel.
+**13 von 36 Repos abgeschlossen**; Runde 14 (pdfport.nvim), 15 (emojis.nvim) und 16 (fileops.nvim) laufen parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -54,8 +54,10 @@ Regeln, die sich über die Runden eingespielt haben:
 | 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
 | 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
-| 13 | sessions.nvim | 13 | *läuft* | — |
+| 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
 | 14 | pdfport.nvim | 14 | *läuft* | — |
+| 15 | emojis.nvim | 15 | *läuft* | — |
+| 16 | fileops.nvim | 16 | *läuft* | — |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
@@ -63,7 +65,6 @@ Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 Nach den drei laufenden Runden in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
 
-emojis.nvim → fileops.nvim →
 reposcope.nvim → gopath.nvim → color_my_ascii.nvim → diff.nvim → cascade.nvim →
 sandbox.nvim → data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
 
@@ -90,10 +91,10 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | replacer.nvim | 40 | 8 | ✅ fertig |
 | github_stats.nvim | 44 | 9 | ✅ fertig |
 | insights.nvim | 49 | 9 | ✅ fertig |
-| sessions.nvim | 17 | 9 | 🔄 Runde 13 läuft |
+| sessions.nvim | 17 | 9 | ✅ fertig |
 | pdfport.nvim | 50 | 10 | 🔄 Runde 14 läuft |
-| emojis.nvim | 23 | 11 | 🟠 schwach |
-| fileops.nvim | 18 | 11 | 🟠 schwach |
+| emojis.nvim | 23 | 11 | 🔄 Runde 15 läuft |
+| fileops.nvim | 18 | 11 | 🔄 Runde 16 läuft |
 | reposcope.nvim | 113 | 12 | 🟠 schwach (großes Repo) |
 | gopath.nvim | 77 | 16 | 🟠 schwach |
 | color_my_ascii.nvim | 95 | 17 | 🟠 schwach |
@@ -134,7 +135,19 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 
 | github_stats.nvim | `BufWipeout`-Handler löschte den Buffer, der gerade gewiped wird → `E937`, sobald der Buffer beim Wipe noch in seinem Fenster lag (`nvim_buf_delete()` von außen; `:q`/`:bwipeout`/`:bdelete`/`close()` waren immer sauber) | `dfdb1d8` |
 
-### Offen (gepinnt, Runde 12 / insights.nvim)
+### Offen (gepinnt)
+
+**Runde 13 / sessions.nvim** — beide wären ein Wechsel von "wirft" zu "meldet", daher gepinnt:
+
+| Datei | Bug |
+|---|---|
+| `core.lua` | `save()`/`save_tab()` versprechen `(ok, err)` und kapseln `:mksession` in `pcall`, nicht aber das `ensure_dir()` darüber → ein nicht anlegbarer `cfg.root` entkommt als rohes `E739`, auch aus dem `VimLeavePre`-Autosave heraus (dieselbe Fehlerklasse wie der export.lua-Fund aus Runde 11) |
+| `layout.lua` | `restore()` prüft nur `type(tree) ~= "table"`, lässt also `{}`/`[]` durch; `build()` stirbt dann an `attempt to get length of local 'children' (a nil value)` statt das versprochene "corrupt or missing layout file" zu melden |
+
+Zusätzlich als Verhalten gepinnt (kein Defekt): `core.rename` zieht `.state.json` nicht mit — zwischen
+Umbenennen und nächstem Save greifen `:Session load` und der Autoload auf `default_name` zurück.
+
+**Runde 12 / insights.nvim**
 
 | Datei | Bug |
 |---|---|
