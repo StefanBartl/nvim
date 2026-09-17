@@ -42,6 +42,9 @@
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
 
 ---
+cross plattfotrm
+
+---
 
 ## Claude Tasks
 docmap-desktop: docs/AGENT_CHECKLIST_RUNNER.md — dazu PLAN.md's L6-Zeile mit einem Verweis versehen.
@@ -58,6 +61,8 @@ Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für 
   - keuzfeatures data.nvim
 
 filetree.nvim: Wenn man eine file löscht und die refrerenzene updatete werden, dann `U` also mit undo die file wieder zurückholt, dann müssten die refs auch wieder hergestellt werden
+
+- nvim-config: rules.nvim anwenden
 
 ---
 
