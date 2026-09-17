@@ -31,7 +31,7 @@ the surrounding text is English like every other document here.
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
     - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
-    - [B10 — documentation.nvim: the shim that behaves differently](#b10-documentationnvim-the-shim-that-behaves-differently)
+    - ~~B10 — documentation.nvim: the shim that behaves differently~~ — done 2026-09-17, prompt removed (`documentation.nvim@c9e7ce2`; recorded in `wkdbook-myplugins/documentation.nvim/FEATURES.md`)
   - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
@@ -736,47 +736,6 @@ pushen.
 ```
 
 ---
-
-### B10 — documentation.nvim: the shim that behaves differently
-
-```
-Aufgabe: documentation.nvim — den verbliebenen blinden Fleck des
-standalone-Gates schließen.
-
-Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/
-documentation.nvim/ROADMAP/ROADMAP.md, Abschnitt "The one open finding worth
-knowing about", letzter Absatz.
-
-Zwei Hälften sind bereits gefixt (nicht nochmal machen):
-- TESTS/shim_contract_spec.lua fängt seit 2026-08-20, was STATISCH sichtbar
-  ist — jeder vim.*-Pfad und jeder Methodenname, den core/ aufruft, gegen
-  das, was der Shim implementiert.
-- Die Schlusszeile lügt nicht mehr: sie sagt "4 gates passed, 1 skipped:
-  standalone" statt "All 5 gates passed", plus der Satz, der es erklärt: ein
-  übersprungenes Gate hat nichts geprüft. Die Meldung nennt jetzt auch den
-  Interpreter, das fehlende Rock und die Installationszeile.
-
-Was offen bleibt, wörtlich: "a shim function that EXISTS and BEHAVES
-DIFFERENTLY is invisible to a static contract."
-
-Das ist die eigentliche Aufgabe, und sie ist zuerst eine Denkaufgabe:
-Wie prüft man Verhaltensgleichheit zwischen dem Neovim-Original und dem
-PUC-Lua-Shim, ohne den Shim zu einer zweiten Implementierung mit eigenen
-Tests aufzublähen? Bring mir einen Vorschlag mit Aufwand, BEVOR du baust.
-Denkbare Richtungen (nicht als Vorgabe, als Startpunkt): dieselben Eingaben
-durch beide Seiten schicken und die Ausgaben vergleichen; oder die paar
-Funktionen identifizieren, wo Abweichung überhaupt plausibel ist, und nur
-die gegenprüfen.
-
-Kontext, der die Dringlichkeit erklärt: genau hinter diesem Gate sind schon
-drei echte Defekte in ein Release gerutscht, weil "grün" lokal "vier Gates
-und ein Achselzucken" hieß.
-
-Repo: E:/repos/documentation.nvim
-Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
-stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
-fertig: committen und direkt auf main pushen.
-```
 
 ---
 
