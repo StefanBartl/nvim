@@ -335,12 +335,29 @@ Delivered: `container` out of the shipped and fallback `providers_order`, the
 probe on a copy, five assertions in `TESTS/breadcrumbs_ctx_container_spec.lua`
 (two fail against the old code), docs and both `@types` updated.
 
-Two larger defects surfaced underneath and went to my.nvim's roadmap as their
-own parked items: `node_at_cursor` resolves through `nvim-treesitter.ts_utils`,
-which that plugin's `main` branch removed — so **no Tree-sitter node reaches
-any breadcrumb provider in a live session**, only `lsp_func` and `<cword>` do —
-and `lib.nvim`'s `memo.fn` throws on userdata keys, which would break the same
-path the moment the first is fixed. The prompt below is kept for the record.
+Two larger defects surfaced underneath, were parked, and **were then fixed the
+same day** (`my.nvim@c622695`, `lib.nvim@91e7532` and `@34925b4`).
+
+`node_at_cursor` resolved through `nvim-treesitter.ts_utils`, which that
+plugin's `main` branch removed — so **no Tree-sitter node reached any
+breadcrumb provider in a live session**. Together with the dead `lsp_func` the
+cross-feature check found, the winbar had been running on `<cword>` alone, with
+no error anywhere to say so. It uses core's `vim.treesitter.get_node()` now.
+Underneath that, `lib.nvim`'s `memo.fn` threw on userdata keys and would have
+broken the same path the moment the first fix landed; its key builder takes
+every type now, and the node helpers are not memoized at all any more, because
+a cache keyed on a TSNode keys on its *address* — which Tree-sitter recycles
+across a reparse.
+
+`memo.fn` also rejects unknown options instead of ignoring them (`weak` was
+accepted in silence by ten call sites and could never have worked), and that
+check immediately exposed a third defect: `time.diff`'s memoized stats
+calculator misspelled both of its options, so it threw on first call for as
+long as it had existed — uncalled, and therefore unnoticed.
+
+`TESTS/breadcrumbs_ctx_treesitter_spec.lua` (8 assertions against a real parsed
+tree) and `lib.nvim`'s new `TESTS/memo_spec.lua` cover it; recorded in both
+plugins' `FEATURES.md`. The prompt below is kept for the record.
 
 ```
 Aufgabe: my.nvim — den "container"-Breadcrumb-Provider entweder verdrahten
