@@ -11,6 +11,18 @@ what it buys.
 
 ---
 
+## Table of content
+
+  - [1. Method, and what this report is not](#1-method-and-what-this-report-is-not)
+  - [2. The numbers](#2-the-numbers)
+  - [4. Do these first — high benefit, ≤1 session](#4-do-these-first-high-benefit-1-session)
+  - [5. Worth doing, but a real sitting](#5-worth-doing-but-a-real-sitting)
+  - [6. Cheap, low stakes — take them when you are in the file anyway](#6-cheap-low-stakes-take-them-when-you-are-in-the-file-anyway)
+  - [7. Do not do these](#7-do-not-do-these)
+  - [8. What this leaves](#8-what-this-leaves)
+
+---
+
 ## 1. Method, and what this report is not
 
 Every roadmap was read in full. Then — and this is the part that changed the
@@ -32,14 +44,14 @@ as it stands.
 
 ## 2. The numbers
 
-| | Count |
-|---|---|
-| Roadmaps read | **38** |
-| Empty by design — no open work at all | **22** |
-| Roadmaps carrying real open work | **16** |
-| Items listed as open that are **already built** | **15** |
-| Genuinely open items | **≈48** |
-| Of those, high benefit at ≤1 session | **11** |
+|                                                 |  Count  |
+|-------------------------------------------------|---------|
+|                  Roadmaps read                  | **38**  |
+|      Empty by design — no open work at all      | **22**  |
+|        Roadmaps carrying real open work         | **16**  |
+| Items listed as open that are **already built** | **15**  |
+|              Genuinely open items               | **≈48** |
+|      Of those, high benefit at ≤1 session       | **11**  |
 
 Twenty-two of thirty-eight plugins are genuinely finished: `recommender`,
 `dap`, `sessions`, `cmdlog`, `diff`, `fileops`, `pickers`, `buffer-ctx`,
@@ -47,51 +59,6 @@ Twenty-two of thirty-eight plugins are genuinely finished: `recommender`,
 `insights`, `reposcope`, `sandbox`, `replacer`, `spotlight`, `github_stats`,
 `runtime-analysis`, `cascade`. Several say so explicitly and give the date
 they were last checked, which is what made this pass cheap for them.
-
----
-
-## 3. The largest finding: fifteen items are done and still listed
-
-> **Acted on the same day** (`WKDBooks@15e77b3`). Every item in the table
-> below is struck from its roadmap and recorded in a new `FEATURES.md` in
-> that plugin's folder, naming the module that answers it. `lsp.nvim` §14
-> carries five rows now instead of fifteen; `ui.nvim/TASK-screenkey.md` is
-> deleted; `filetree.nvim`'s "Live — open work" table is gone, it had one
-> row and that row was closed. The two stale-but-not-done entries at the
-> end of this section are corrected in place. The table stays here as the
-> evidence for §8's closing argument.
-
-This is not a nitpick about tidiness. These entries are what a reader plans
-against, and four of them are in the *cheapest* tier — exactly the ones most
-likely to be picked up next, and every one of them would have been picked up
-only to find the work already in the tree.
-
-| Listed as open in | Item | Actually in the tree as |
-|---|---|---|
-| `lsp.nvim` §14 | Inlay-hints toggle | `lua/lsp/core/inlay_hints.lua` |
-| `lsp.nvim` §14 | Code-action indicator | `lua/lsp/core/lightbulb.lua` |
-| `lsp.nvim` §14 | Auto-restart with backoff | `lua/lsp/core/supervisor.lua` — and it solves the hard half (crash vs. deliberate stop, via a declared `expect_stop`) |
-| `lsp.nvim` §14 | Per-project override (`.nvim-lsp.json`) | `lua/lsp/config/project.lua`, `DEFAULTS.lua:34` |
-| `lsp.nvim` §14 | Profile presets (`lean`/`default`/`full`) | `DEFAULTS.lua:27` — `preset = "default"` |
-| `lsp.nvim` §14 | Diagnostics debounce on `publishDiagnostics` | `core/handlers.lua` — leading-edge, `debounce_ms` |
-| `lsp.nvim` §14 | Multi-root/monorepo workspace switcher | `lua/lsp/core/workspace_picker.lua` |
-| `lsp.nvim` §14 | Formatter-priority audit ("unclear whether enforced") | Answered: `lspdoctor/@types.lua:13` states it is report-only and says why |
-| `lsp.nvim` LSPDoctor §1 | `installed: N, attached: M` in `:checkhealth` | `health.lua:274` ff., including the heavy-server warning |
-| `ui.nvim` `TASK-screenkey.md` | Screenkey HUD, whole task file with acceptance list | `lua/ui/screenkey/init.lua`, wired in `bindings/usrcmds/init.lua` |
-| `my.nvim` | Highlight profiles (`:My hl profile {name}`) | `bindings/usrcmds/init.lua:327` — with the enum over profile names |
-| `open.nvim` | Windows file-manager window opens without focus | `lib.nvim/cross/reveal_in_fm/win_reveal.ps1` — the `SetForegroundWindow` route this entry proposed as the first candidate |
-| `ai.nvim` | Phase-8 wiring, `<leader>a*` collision to decide | Wired in `lua/plugins/personal/init.lua:1232` ff.; the colliding `lua/config/ai/` no longer exists |
-| `ai.nvim` | `loomai` provider, "once loomAI has an endpoint" | `ai.nvim/lua/ai/providers/loomai.lua`, 159 lines, real `available()` |
-| `filetree.nvim` | `ROADMAP/CWD_MODES.md`, "still open: its Open section" | The file moved to `FINISHED/CWD_MODES.md`; the roadmap's link is dead |
-
-Two more entries are stale rather than done: `lsp.nvim` costs the signature
-module at "~800 LOC", it is **1,322** today; and `mdview.nvim` still calls the
-flag `experimental.any_file`, which moved to the top level on 2026-08-30.
-
-**Cost to fix all of this: well under one session** — confirmed, it took
-about that — and it was the single highest-leverage item in this report. `lsp.nvim`'s §14 table is the worst
-offender — eight of its fifteen rows are stale — and it is 1,368 lines, the
-longest roadmap in the collection.
 
 ---
 
@@ -212,3 +179,6 @@ around external processes, and a hot-path performance defect. `ui.nvim` and
 question is less whether to run it and more whether the fleet-wide sweep
 should be planned as its own campaign rather than as a footnote in each
 roadmap.
+
+---
+
