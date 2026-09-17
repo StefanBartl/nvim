@@ -26,7 +26,7 @@ the surrounding text is English like every other document here.
     - [B2 — media: first real whisper.cpp run](#b2-media-first-real-whispercpp-run)
     - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
     - ~~[B4 — lsp: provoke errors in `:LspDoctor deep`](#b4--lsp-provoke-errors-in-lspdoctor-deep--done)~~ — done
-    - [B5 — `rules.nvim` pass over ui.nvim](#b5-rulesnvim-pass-over-uinvim)
+    - ~~[B5 — `rules.nvim` pass over ui.nvim](#b5--rulesnvim-pass-over-uinvim--done)~~ — done
     - [B6 — data.nvim: phase 1 register scope](#b6-datanvim-phase-1-register-scope)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
@@ -622,11 +622,53 @@ schon, Muster übernehmen).
 
 ---
 
-### B5 — `rules.nvim` pass over ui.nvim
+### ~~B5 — `rules.nvim` pass over ui.nvim~~ — DONE
+
+**Source:** `.../ui.nvim/NOTES.md`, section "Offene Punkte (Backlog)", item 2.
+**Finished 2026-09-17** (`ui.nvim@3028cfd`). Struck from that backlog and
+recorded in `ui.nvim/FEATURES.md`.
 
 **Evidence for the value:** the same pass over `my.nvim` on 2026-09-15 found
 a shell-injection-shaped clipboard call, missing `pcall`s around external
 processes, an unthrottled rebuild on a hot path, and about a dozen more.
+
+Half of it was already done and the task did not know: the `review` gate —
+281 rules across `ERR`/`LUA`/`UI`/`CMT`/`SEC`/`PRIN`/`PERF` — had been worked
+family by family on 2026-09-14/15, ~24 findings, all fixed or waived in
+writing. So the open part was the **140 rules in the six families that gate
+does not reach**: `NEW` (50), `LLS` (37), `REL` (34), `XP` (7), `DEP` (7),
+`TS` (5) — which is precisely where `my.nvim`'s `LLS`, `NEW-45` and `REL`
+findings had come from, so it was not a formality.
+
+`DEP`, `TS` and `XP` came out clean, and so did `LLS-45`/`LLS-46`, the
+aggregate-class parity check that the `lib.nvim` audit was built around:
+`Ui.Kit` (21 fields), `Ui.ContextMenu` (10) and the LSP config module (4)
+each diff empty against their runtime keys in both directions.
+
+The two that matter:
+
+- **There was no installation spec anywhere** (`REL-10`/`11`/`12`) — not the
+  README, not `docs/`, not `doc/ui.txt`. The only one in the repo described
+  the pre-extraction wkdnvchad config. Anyone finding the repo on GitHub had
+  no way to install it. This is the kind of gap a code-focused review never
+  reaches, which is the argument for running the release gate at all.
+- **`:checkhealth ui` was silent about two shipped segments** (`REL-17`) —
+  `gitsigns.nvim` and `casedesk.nvim` are declared `requires` in
+  `ui.statusline.catalog`, and `health.lua`'s list, whose own doc comment
+  claimed to be hand-synced with that exact field, had neither. The same
+  drift ran through `docs/requirements.md`, which named 4 of 10 soft
+  dependencies and then claimed checkhealth reported each one — and listed
+  `neotest` for a segment no line of code has ever referenced.
+
+Also found: a negative cache in `statusline/.../paths.lua` that never hit
+(the no-root result was stored as `false`, the getter tested truthiness — so
+every file outside a git repo re-ran the upward `.git` scan on every redraw,
+on the hot path, with a comment saying the opposite); `NEW-45` again, both
+`.stylua.toml` and `stylua.toml` present with different content; and five
+LuaLS annotation defects, two of which LuaLS itself reports as
+`undefined-doc-param`.
+
+The prompt below is kept for the record.
 
 ```
 Aufgabe: rules.nvim über ui.nvim laufen lassen.
