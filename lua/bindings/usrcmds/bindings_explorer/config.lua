@@ -243,7 +243,12 @@ function M.repo_dirs_under(root)
   end
   -- `:p` appends a separator, `normalize` turns Windows backslashes into
   -- slashes -- after that a pattern needs no escape special-casing.
-  local abs = vim.fs.normalize(vim.fn.fnamemodify(vim.fn.expand(root), ":p")):gsub("/$", "")
+  -- `expand_path` rather than `vim.fn.expand()`: the parameter is documented
+  -- as `~`/`$VAR`-expanded, which is exactly what it does, while
+  -- `vim.fn.expand()` would additionally treat `%`/`#` as Vim specials and a
+  -- backtick span as a shell command substitution.
+  local expand_path = require("lib.nvim.cross.fs.expand_path")
+  local abs = vim.fs.normalize(vim.fn.fnamemodify(expand_path(root), ":p")):gsub("/$", "")
   if vim.fn.isdirectory(abs) ~= 1 then
     return nil, ("repo root is not a directory: %s"):format(abs)
   end

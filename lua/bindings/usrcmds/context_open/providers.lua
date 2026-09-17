@@ -213,7 +213,12 @@ local function pdf_path_under_cursor(signals)
   if not candidate or candidate == "" then
     return nil
   end
-  local abs = vim.fn.fnamemodify(vim.fn.expand(candidate), ":p")
+  -- `expand_path`, not `vim.fn.expand()`: this string is whatever happens to
+  -- sit under the cursor in someone else's buffer. `vim.fn.expand()` is
+  -- filename expansion, so a backtick span in it is a command substitution
+  -- run through 'shell', and `%`/`#`/`<cfile>` are Vim specials that silently
+  -- resolve to other paths. Only `~` and environment variables are wanted.
+  local abs = vim.fn.fnamemodify(require("lib.nvim.cross.fs.expand_path")(candidate), ":p")
   if not abs:lower():match("%.pdf$") then
     return nil
   end

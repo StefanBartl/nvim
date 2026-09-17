@@ -1566,7 +1566,11 @@ function M.copy(src, case_arg)
       if not source or source == "" then
         return
       end
-      source = vim.fn.expand(source)
+      -- `expand_path` rather than `vim.fn.expand()`: a copy source is a path
+      -- the user typed or picked, where `~`/`$VAR` should expand and `%`, `#`
+      -- and a backtick span should not -- the latter is a shell command
+      -- substitution under `vim.fn.expand()`.
+      source = require("lib.nvim.cross.fs.expand_path")(source)
       if not uv.fs_stat(source) then
         notify.error("source does not exist: " .. source)
         return

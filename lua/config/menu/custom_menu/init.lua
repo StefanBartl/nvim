@@ -199,12 +199,32 @@ end
 ---@return nil
 local function open_terminal()
   local bufname = vim.api.nvim_buf_get_name(0)
-  local dir = vim.fn.fnamemodify(bufname ~= "" and bufname or vim.uv.cwd() or "./", ":h")
-  local thecmd = "cd " .. dir
+  local cwd = vim.uv.cwd() or "."
+  -- Only a named buffer has a directory to derive; for an unnamed one the
+  -- answer is the working directory itself, not its parent (`:h` of a
+  -- directory climbs one level, which is never what "open a terminal here"
+  -- means).
+  local dir = bufname ~= "" and vim.fn.fnamemodify(bufname, ":h") or cwd
+  if vim.fn.isdirectory(dir) == 0 then
+    dir = cwd
+  end
 
   vim.cmd("enew")
-  vim.fn.jobstart({ vim.o.shell, vim.o.shellcmdflag, thecmd .. " ; " .. vim.o.shell }, {
+  -- `cwd` rather than a `cd <dir> ; $SHELL` string handed to the shell: the
+  -- directory comes from a buffer name, and a path is allowed to contain
+  -- shell metacharacters. Interpolated, a buffer named `a;rm -rf ~/x` runs
+  -- that command the moment the terminal opens -- the `cd` does not even
+  -- have to succeed for the part after the `;` to execute.
+  --
+  -- `vim.o.shell` is passed as a string, not as a one-element argv list:
+  -- 'shell' may carry its own quoting (on Windows it defaults to
+  -- `"C:\Program Files\Git\bin\bash.exe"`, quotes included), and an argv
+  -- element is a literal filename -- the quotes become part of the name and
+  -- the spawn fails with E475. Only the shell option itself goes into that
+  -- string; nothing derived from the buffer does.
+  vim.fn.jobstart(vim.o.shell, {
     term = true,
+    cwd = dir,
   })
 end
 

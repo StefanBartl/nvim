@@ -64,7 +64,12 @@ local KIND_NOTE = {
 ---@return string absolute path
 function M.resolve_path(out)
   local dir_or_file = (out and out ~= "") and out or config.report_dir()
-  local abs = vim.fs.normalize(vim.fn.fnamemodify(vim.fn.expand(dir_or_file), ":p"))
+  -- `expand_path` rather than `vim.fn.expand()`: `out` is a command argument,
+  -- and only `~`/`$VAR` are meant to expand in it. `vim.fn.expand()` would
+  -- also resolve `%` to the current buffer's name, quietly writing the report
+  -- somewhere the caller never named.
+  local expanded = require("lib.nvim.cross.fs.expand_path")(dir_or_file)
+  local abs = vim.fs.normalize(vim.fn.fnamemodify(expanded, ":p"))
 
   if vim.fn.isdirectory(abs) == 1 then
     abs =
