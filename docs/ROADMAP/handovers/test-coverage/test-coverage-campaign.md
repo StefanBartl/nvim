@@ -12,22 +12,18 @@
 
 ## Restliche Plugins (Reihenfolge für die Fortsetzung)
 
-16 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+20 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
 `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
 `documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
 laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
-Drei Runden laufen parallel (reposcope.nvim, gopath.nvim, color_my_ascii.nvim). Die danach
-verbleibenden 8 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+Zwei Runden laufen parallel (cascade.nvim, sandbox.nvim). Die danach verbleibenden 5 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
 in dieser Reihenfolge abzuarbeiten:
 
-1. diff.nvim
-2. cascade.nvim
-3. sandbox.nvim
-4. data.nvim
-5. spotlight.nvim
-6. mdview.nvim
-7. filetree.nvim
-8. lsp.nvim
+1. data.nvim
+2. spotlight.nvim
+3. mdview.nvim
+4. filetree.nvim
+5. lsp.nvim
 
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
@@ -72,10 +68,10 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 | pdfport.nvim | 50 | 10 | ✅ fertig (Runde 14, Commit `3c9273a`) |
 | emojis.nvim | 23 | 11 | ✅ fertig (Runde 15, Commit `5ea0333`) |
 | fileops.nvim | 18 | 11 | ✅ fertig (Runde 16, Commit `7060232`) |
-| reposcope.nvim | 113 | 12 | 🟠 schwach (großes Repo) |
-| gopath.nvim | 77 | 16 | 🟠 schwach |
-| color_my_ascii.nvim | 95 | 17 | 🟠 schwach |
-| diff.nvim | 23 | 17 | 🟡 mittel |
+| reposcope.nvim | 113 | 12 | ✅ fertig (Runde 17, Commit `98a9a36`) |
+| gopath.nvim | 77 | 16 | ✅ fertig (Runde 18, Commit `394b4b3`) |
+| color_my_ascii.nvim | 95 | 17 | ✅ fertig (Runde 19, Commit `adcb5ef`) |
+| diff.nvim | 23 | 17 | ✅ fertig (Runde 20, Commit `d7aa3a5`) |
 | cascade.nvim | 48 | 18 | 🟡 mittel |
 | sandbox.nvim | 270 | 19 | 🟡 mittel (sehr großes Repo) |
 | data.nvim | 16 | 20 | 🟡 mittel |
@@ -884,4 +880,102 @@ Alle Kampagnen-Bugs aus den Runden 1–11 (9 insgesamt über 7 Repos) sind gefix
   nie; korrigiert samt echtem Aufruf.
   Commit: `7060232` (test: cover the bindings layer, the ops failure paths, and Windows
   path handling), direkt auf `main` gepusht.
-- [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.
+- [x] **reposcope.nvim** — fertig (Runde 17). 10 → 35 Spec-Dateien, 236 → 1910 ausgeführte
+  Assertions, 35/35 grün über 4 Wiederholungsläufe plus einen in Glob- statt Run-Reihenfolge
+  (die Specs sind also voneinander unabhängig). `luacheck lua plugin TESTS` 0/0 über 151
+  Dateien, `stylua --check` grün. Kein `lua/`-Quelltext angefasst.
+  Der Harness bekam `with_stubs(stubs, reload, fn)`: Doubles in `package.loaded`, Subjekt
+  entladen, danach aus einem Volltabellen-Snapshot restaurieren — hier zwingend, weil jedes
+  Modul seine Abhängigkeiten beim Laden an File-Locals bindet.
+  Abgedeckt: die ganze Netzwerkschicht ohne einen einzigen Request (curl/gh/wget gegen ein
+  gestubbtes `spawn_capture`, geprüft wird die argv, das 20s-Timeout, Erfolg/Exit-Code/
+  Timeout/Metrik-Fan-out), alle drei Such- und README-Fetcher über die volle Response-Matrix,
+  die drei README-Manager tabellengetrieben als ein Contract, die Clone-Argv-Builder, der
+  README-Cache (RAM/Disk-Tiering, Pfad-Sanitizer gegen Traversal, Freshness-Sidecar),
+  Session/Query-Stats/Favorites, Config/State/Controller/Metriken/Bindings/Health/Actions und
+  ein echter `open_ui()`/`close_ui()`-Durchlauf.
+  Bemerkenswert: **Fehler werden hier nirgends memoisiert** — das in Runde 14 gefundene
+  "gecachter Fehler vergiftet die Session"-Muster existiert nicht, jeder Fehlerpfad leert den
+  Cache stattdessen; das ist explizit gepinnt.
+  **Sechs Bugs gefunden, alle gepinnt.** Einer davon ist ein Credential-Leak: GitLabs
+  `PRIVATE-TOKEN` stand nicht in `is_secret_header`s Liste, landete also im argv, lesbar für
+  jeden anderen Prozess. **Inzwischen gefixt** — der Filter lebt in `lib.nvim.net.curl`, der
+  Fix wirkt also für alle Dependents (Commit `5c6b1ac`). Offen bleiben: `clone_manager`s
+  `not isdirectory(path)` (0 ist in Lua truthy → Pfad-Guard und `safe_mkdir` beide toter
+  Code, in beide Richtungen), `unset_prompt_keymaps()`s falscher Aufräum-Tag (das Registry
+  wächst pro Open/Close-Zyklus), `vim.json.decode("null")` → truthy `vim.NIL` in zwei von
+  drei Fetchern (der GitLab-Fetcher daneben prüft `type(parsed) ~= "table"` und macht es
+  richtig), `is_valid_path()`s Wurf ohne das laut Doc optionale zweite Argument, und der
+  `Invalid buffer id` beim zweiten Öffnen des README-Viewers.
+  Offen geblieben: direkte Assertions für die fensterbauenden `ui/`-Module (aktuell nur als
+  Smoke über `open_ui`) und `preview_manager`s Scroll-/Inject-Logik.
+  Commit: `98a9a36`.
+- [x] **gopath.nvim** — fertig (Runde 18). Hier war die Ausgangslage anders als überall
+  sonst: `docs/CONTRIBUTING.md` beschrieb eine plenary-Suite, **die es nie gab**. Die echte
+  Konvention sind zwei headless-Runner unter `scripts/ci/` mit eigenem `check()`-Harness;
+  `TESTS/*.lua` sind *manuelle* Anleitungen (Cursor hinstellen, Keymap drücken), die CI nur
+  auf Syntax prüft. Konvention beibehalten und ausgebaut statt migriert: neuer
+  `scripts/ci/harness.lua`, ein Runner, der `scripts/ci/specs/*_spec.lua` automatisch
+  einsammelt (kein Aggregator zu pflegen, `GOPATH_SPEC=<substring>` filtert), und ein
+  CI-Job `unit-tests` formgleich zu den bestehenden.
+  0 → 17 Spec-Dateien, +435 Checks / ~1600 Assertions, 3 Läufe stabil. `luacheck lua plugin`
+  0/0 über 78 Dateien, `stylua --check lua/ plugin/` grün (TESTS und scripts sind hier
+  bewusst nicht Teil der Gates — die neuen Dateien wurden trotzdem geprüft).
+  **Acht Bugs gefunden, alle gepinnt.** Der schönste: `cmd = { "explorer.exe", path:gsub(...) }`
+  — ein unparenthesiertes `gsub` im letzten Slot eines Table-Konstruktors liefert *beide*
+  Rückgabewerte, die Ersetzungsanzahl landet als drittes argv-Element (`explorer.exe C:\a\b 3`);
+  `revealer.lua` schreibt dasselbe `gsub` in einer Konkatenation und ist korrekt. Dazu:
+  `expand_right` nimmt das Terminator-Zeichen mit in den Pfad (unter Windows unauffällig, weil
+  Win32 ein trailing space toleriert — verifiziert), `tailsearch.sanitize`s Drive-Strip läuft
+  vor der Backslash-Normalisierung und schließt Kleinbuchstaben aus, die Vorzeilen-Suche für
+  mehrzeilige `require(...)` ist toter Code, `providers/token.lua` zerstört das `path(line)`-
+  Format seines eigenen Docstrings, `check_under_cursor`s `help`-Zweig ist unerreichbar,
+  `invalidate_caches()` vergisst `_pdir_*`, und `create.lua`s "lib.nvim fehlt"-Fallback requirt
+  ungeschützt genau die fehlende Dependency.
+  `docs/CONTRIBUTING.md` korrigiert, `TESTS/README.md` neu angelegt (Trennung manuelle Guides
+  ↔ automatisierte Suites). Commit: `394b4b3`.
+- [x] **color_my_ascii.nvim** — fertig (Runde 19). Die bestehenden 15 Specs hingen fast alle am
+  `:Fence`-Werkzeugkasten; die Schichten darunter — wo ein Fehler nicht crasht, sondern ein
+  Highlight drei Spalten zu weit links landet — hatten nichts. 15 → 28 Spec-Dateien,
+  324 → 5566 ausgeführte Assertions, 5 Läufe stabil, beide Lint-Gates grün über 127 Dateien.
+  Kernstück `byte_offsets_spec`: Extmark-Positionen in echtem Mehrbyte-Inhalt (Umlaute 2 B,
+  Box-Drawing 3 B, CJK 3 B, Emoji 4 B) gegen handgezählte Byte-Offsets, plus die Assertion,
+  dass kein Extmark mitten in einem Codepoint beginnt. Dazu die Fence-API **als Vertrag**,
+  genau in den Formen, in denen `markdown.nvim` sie aufruft, und der Teardown über jeden
+  Löschweg — **kein E937 hier**, der Handler löscht nichts, er räumt nur auf.
+  Ebenfalls gepinnt und positiv: ein voller Render-Durchlauf ruft `nvim_set_hl` **null Mal**;
+  die Gruppen entstehen ausschließlich beim Config-Bau. Das Repo macht es richtig.
+  **Sechs Defekte gefunden.** Zwei davon **inzwischen gefixt** (Commit `0437fe0`):
+  `ensure-blank-lines` fügte Leerzeilen *in* den Block ein und zerstörte damit die ASCII-Art,
+  die das Plugin hervorheben soll (die Zustandsmaschine kannte kein öffnend/schließend), und
+  der `unique_words`-Lookup war hash-order-abhängig, weil acht Wörter von zwei Sprachen
+  gleichzeitig als unique deklariert sind. Offen: die comment_ascii-Highlights liegen
+  `#prefix + 1` Bytes zu weit links (gestrippter Text als Koordinatensystem für Extmarks in
+  der ungestrippten Zeile), `parser.get_byte_offset` wirft für jede Spalte > 0 (fährt
+  `vim.str_utf_pos` als Iterator, das eine Tabelle liefert), `enable_bracket_highlighting`
+  kann Bracket-Highlighting nicht abschalten, und zwölf Keywords stehen doppelt in ihrer
+  eigenen Sprachdatei. Commit: `adcb5ef`.
+- [x] **diff.nvim** — fertig (Runde 20, Gap-Closing statt From-Scratch). Das ehrliche Audit
+  vorweg: das Repo war wirklich das bestabgedeckte der Warteschlange, aber **schichtweise
+  ungleich** — die reinen Layer und die Render-Erfolgspfade waren gut, die gesamte
+  Verdrahtungsschicht hatte null Assertions (`bindings/*`, `features/origin.lua`, `health.lua`,
+  `core.run_buffers`, `view=float`, `scratch.track/discard/wipe_on_exit`, sämtliche
+  Fehlerarme von `core/render.lua`). 17 → 27 Spec-Dateien, 295 → 694 Assertion-Stellen,
+  5 Läufe stabil, beide Gates grün über 53 Dateien. Kein `lua/`-Quelltext angefasst.
+  **Zwei Windows-Verdachtsfälle wurden empirisch geprüft und sind korrekt** — und genau
+  deshalb gepinnt statt dem Zufall überlassen: `core/git.lua` normalisiert mit
+  `vim.fs.normalize` (faltet Backslashes *und* schreibt den Laufwerksbuchstaben groß), und
+  `has_hidden_segment` funktioniert, weil `vim.fs.dir` auf jeder Plattform
+  Forward-Slash-Relativnamen liefert.
+  **Drei Bugs gefunden, alle gepinnt:** `core/directory.lua`s ungeschütztes `readfile` →
+  rohes `E484` an `directory.run`s eigenem Fehlervertrag vorbei, **und `on_done` feuert nie**,
+  ein API-Aufrufer wartet ewig (derselbe Fehlertyp, den der Nutzer-Commit `df2652f` eine
+  Schicht darüber gerade geschlossen hatte); `scratch.track()` dedupliziert nicht, sodass
+  `status()` `diff:3` melden kann; und `health.lua`s "lib.nvim fehlt"-Zweig ruft danach
+  unbedingt in lib.nvim hinein — dieselbe Familie wie emojis.nvim (Runde 15) und gopath.nvim
+  (Runde 18), inzwischen **drei Repos mit demselben Muster**.
+  Während der Runde landete der Nutzer-Commit `df2652f` auf `origin/main`; der Agent hat
+  rebased und `render_edge_spec` auf den neuen `on_done`-Vertrag umgestellt.
+  Commit: `d7aa3a5` (dessen Text "295 → 681" sagt, die Zählung vor dem Rebase; korrekt sind
+  694 — bewusst nicht force-gepusht).
+- [ ] restliche Plugins — noch nicht begonnen, siehe Tabelle oben.
