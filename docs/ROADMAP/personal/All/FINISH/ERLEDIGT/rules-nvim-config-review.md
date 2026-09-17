@@ -84,8 +84,33 @@ veröffentlichtes Plugin (s. `.rules-waivers.json` unten).
 | 22 | `LUA-71` | 🟢 | 59 `---@field … # …` auf die vom Katalog bevorzugte Form ohne `#` umgestellt, nachdem an einem Fixture geprüft war, dass das `#` bei `fun(...)`-Typen nicht doch als Trenner trägt. | `c70ef9f` |
 
 **Gesamtverifikation:** ein voller `lua-language-server`-Lauf über die Config
-(`scripts/luals-scan`, before/after) geht von **28 Diagnosen auf 0**, in
-keiner Kategorie schlechter.
+(`scripts/luals-scan`, before/after) geht von **28 auf 12 Diagnosen**, in
+keiner Kategorie schlechter. Von den 12 verbleibenden ist keine ein echter
+Codefehler:
+
+| Rest | Anzahl | Warum er stehen bleibt |
+| ---- | ------ | ---------------------- |
+| `duplicate-doc-alias`/`-field` | 5 | Worktree-Artefakt, unten belegt (im Haupt-Checkout 0) |
+| `param-type-mismatch` | 3 | `opts`-Tabellen gegen Fremdplugin-Typen; zwei davon am echten Server 0 |
+| `undefined-field` (`ui_statusline`) | 2 | eigenes Zusatzfeld in einem lazy-Spec, das `LazyPlugin` nicht deklariert |
+| `missing-parameter` | 1 | `navigate(state)` ist korrekt (`path or state.path`); die Annotation des Fremdplugins ist unvollständig |
+| `cast-local-type` | 1 | Wrapper-Rückgabe gegen den Consumer-Typ des Fremdplugins |
+
+> **Korrektur (2026-09-17, gleiche Sitzung):** hier stand zuerst „auf 0". Die
+> Zahl war aus einem noch **laufenden** Scan gelesen — das Ergebnisfile war
+> schlicht noch nicht geschrieben. Also exakt der `LLS-07`-Fehlermodus, der
+> zwei Absätze weiter unten beschrieben ist, einmal selbst begangen. Lehre für
+> den nächsten Durchgang: `compare.py` erst aufrufen, wenn der Scan-Prozess
+> wirklich beendet ist — ein leeres `out/<pass>/` ist von „keine Befunde"
+> nicht zu unterscheiden. Die Zwischenmessung nach Abschluss ergab 14, der
+> endgültige Lauf nach dem Fix unten 12.
+
+Zwei der zunächst 14 waren **neu und selbst verursacht**: der Validator-Fix
+führte `neotest.neotree` ein, ein Feld, das LuaLS nicht kennen kann, weil ein
+Fremdplugin den Consumer erst zur Laufzeit per `__index` nachreicht. Nach
+`LLS-08` (kein Fix, der eine Warnung nur verschiebt) im selben Durchgang mit
+`---@diagnostic disable-next-line` plus Begründung geschlossen statt stehen
+gelassen — am laufenden Server gegengeprüft (Datei: 0 Diagnosen).
 
 ### Was sich als Messfehler herausstellte (und warum das hier steht)
 
