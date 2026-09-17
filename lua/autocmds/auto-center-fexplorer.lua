@@ -155,6 +155,15 @@ end
 function M.setup(user_config)
   config = vim.tbl_deep_extend("force", default_config, user_config or {})
 
+  -- Drop the debounce handle so the next schedule rebuilds it against the
+  -- config that was just installed. It bakes `delay_ms` in at construction,
+  -- so a second `setup()` with a different delay would otherwise keep
+  -- debouncing at the old one.
+  if centering then
+    pcall(centering.cancel_all)
+    centering = nil
+  end
+
   -- Global mouse-event detector. `on_key` fires synchronously before every
   -- keypress, so keep this callback minimal (just stamp the time). keytrans()
   -- turns the raw bytes into a name like "<ScrollWheelUp>". Any mouse/scroll

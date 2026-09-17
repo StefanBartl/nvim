@@ -87,8 +87,13 @@ local function setup_autocommands()
         -- `status_counts` -- there is no `get_results`, so the previous call
         -- threw "attempt to call a nil value" here on every
         -- `NeotestRunComplete`, inside a scheduled callback where nothing
-        -- caught it. `status_counts` answers the only question this handler
-        -- actually asks.
+        -- caught it.
+        --
+        -- `status_counts` is the closest the consumer API gets, but it is
+        -- SUITE state, not this run's: the panel opens whenever anything is
+        -- currently failing, which after a green run over a still-red suite
+        -- is not quite "this run failed". There is no per-run result list on
+        -- the public surface to be more precise with.
         local has_failed = false
         for _, adapter_id in ipairs(neotest.state.adapter_ids() or {}) do
           local counts = neotest.state.status_counts(adapter_id)
