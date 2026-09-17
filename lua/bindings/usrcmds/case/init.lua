@@ -176,6 +176,7 @@ local function grep_route()
   }
 end
 
+---@return nil
 function M.enable()
   register_case_type()
 

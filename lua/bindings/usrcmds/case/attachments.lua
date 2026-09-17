@@ -31,6 +31,7 @@ end
 --- don't carry — see `lib.nvim.system.env`'s `is_pwsh` doc comment for why
 --- the two are tracked separately.
 ---@param on_done fun(paths: string[])
+---@return nil
 function M.pick_from_downloads(on_done)
   if not env.get().is_windows then
     on_done({})

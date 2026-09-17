@@ -121,6 +121,7 @@ end
 --- caller building one combined view never has to juggle partial results.
 ---@param bufnr integer
 ---@param on_done fun(report: Lib.Case.ReplyGateReport)
+---@return nil
 function M.check(bufnr, on_done)
   local lines = buf_lines(bufnr)
 
@@ -140,12 +141,23 @@ function M.check(bufnr, on_done)
 end
 
 --- Remove every emoji from `bufnr` in place. `nil, err` when emojis.nvim
---- isn't installed or its pure ops API is unavailable — never silently
---- does nothing.
+--- isn't installed, its pure ops API is unavailable, or the buffer is gone
+--- — never silently does nothing.
+---
+--- The handle is re-validated here rather than trusted: `M.check`'s caller
+--- captures the current buffer, then waits out a network link check before
+--- it can even offer this action, and the user presses the key some time
+--- after that. A buffer wiped in between makes both `nvim_buf_get_lines`
+--- and `nvim_buf_set_lines` throw `Invalid buffer id` straight out of a
+--- keymap callback; this turns that into the `nil, err` the caller already
+--- knows how to report.
 ---@param bufnr integer
 ---@return integer|nil removed
 ---@return string|nil err
 function M.clear_emojis(bufnr)
+  if type(bufnr) ~= "number" or not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil, "the buffer that was checked no longer exists"
+  end
   local ok_mod, emojis = pcall(require, "emojis")
   if not ok_mod then
     return nil, "emojis.nvim not installed"

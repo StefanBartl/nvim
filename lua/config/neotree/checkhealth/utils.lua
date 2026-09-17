@@ -3,6 +3,7 @@
 
 local M = {}
 
+---@return nil
 function M.check()
   vim.health.start("Utility Modules")
 

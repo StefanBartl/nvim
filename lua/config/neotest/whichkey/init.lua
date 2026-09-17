@@ -3,6 +3,7 @@
 
 local M = {}
 
+---@return nil
 function M.setup()
   local ok, wk = pcall(require, "which-key")
   if not ok then

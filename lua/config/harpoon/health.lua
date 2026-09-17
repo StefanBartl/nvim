@@ -6,6 +6,7 @@ local M = {}
 
 local health = vim.health
 
+---@return nil
 function M.check()
   local ok_hp = pcall(require, "harpoon")
   if not ok_hp then

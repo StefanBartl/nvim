@@ -853,6 +853,7 @@ end
 
 ---Registers `:MyPlugins` (see module header for the full subcommand list)
 ---via `lib.nvim.bindings.usercmd.composer`.
+---@return nil
 function M.enable()
   -- Directory arg: real directory completion plus `$REPOS_DIR` offered up
   -- front when resolvable, mirroring reposcope.nvim's own

@@ -86,6 +86,7 @@ end
 --- request has settled (success, HTTP error, or network failure alike).
 ---@param targets Lib.Case.LinkCheckTarget[]
 ---@param on_done fun(results: Lib.Case.LinkCheckResult[])
+---@return nil
 function M.run(targets, on_done)
   if #targets == 0 then
     on_done({})
@@ -123,6 +124,7 @@ end
 --- Convenience: `M.targets` + `M.run` in one call.
 ---@param only_short string|nil
 ---@param on_done fun(results: Lib.Case.LinkCheckResult[])
+---@return nil
 function M.check(only_short, on_done)
   M.run(M.targets(only_short), on_done)
 end

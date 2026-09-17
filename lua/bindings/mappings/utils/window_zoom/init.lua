@@ -23,6 +23,7 @@ function M.is_zoomed()
   return vim.fn.winwidth(0) == vim.o.columns or vim.fn.winheight(0) == vim.o.lines
 end
 
+---@return nil
 function M.zoom_toggle()
   -- Tab-local storage for the saved layout
   vim.t._zoom_restore = vim.t._zoom_restore or nil

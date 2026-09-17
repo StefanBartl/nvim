@@ -3,6 +3,7 @@
 
 local M = {}
 
+---@return nil
 function M.setup()
   -- Define highlight groups
   vim.api.nvim_set_hl(0, "NeotestPassed", { fg = "#9ece6a", bold = true })

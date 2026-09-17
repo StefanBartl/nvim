@@ -17,6 +17,7 @@ local function get_neotest()
 end
 
 --- Run nearest test
+---@return nil
 function M.run_nearest()
   local neotest = get_neotest()
   if not neotest or not neotest.run or not neotest.run.run then
@@ -26,6 +27,7 @@ function M.run_nearest()
 end
 
 --- Run all tests in current file
+---@return nil
 function M.run_file()
   local neotest = get_neotest()
   if not neotest or not neotest.run or not neotest.run.run then
@@ -35,6 +37,7 @@ function M.run_file()
 end
 
 --- Run all tests in project root
+---@return nil
 function M.run_all()
   local neotest = get_neotest()
   if not neotest or not neotest.run or not neotest.run.run then
@@ -44,6 +47,7 @@ function M.run_all()
 end
 
 --- Debug nearest test using DAP
+---@return nil
 function M.debug_nearest()
   local neotest = get_neotest()
   if not neotest or not neotest.run or not neotest.run.run then
@@ -53,6 +57,7 @@ function M.debug_nearest()
 end
 
 --- Toggle summary window
+---@return nil
 function M.toggle_summary()
   local neotest = get_neotest()
   if not neotest or not neotest.summary then
@@ -62,6 +67,7 @@ function M.toggle_summary()
 end
 
 --- Open output of last test
+---@return nil
 function M.open_output()
   local neotest = get_neotest()
   if not neotest or not neotest.output then
@@ -71,6 +77,7 @@ function M.open_output()
 end
 
 --- Toggle output panel
+---@return nil
 function M.toggle_output_panel()
   local neotest = get_neotest()
   if not neotest or not neotest.output_panel then
@@ -80,6 +87,7 @@ function M.toggle_output_panel()
 end
 
 --- Stop running tests
+---@return nil
 function M.stop()
   local neotest = get_neotest()
   if not neotest or not neotest.run or not neotest.run.stop then
@@ -89,6 +97,7 @@ function M.stop()
 end
 
 --- Toggle watch mode
+---@return nil
 function M.toggle_watch()
   local neotest = get_neotest()
   if not neotest or not neotest.watch then
