@@ -78,6 +78,12 @@ function M.check_consumer()
   -- stays the factory forever. Testing it for "is it a table yet" could
   -- therefore never succeed -- which is exactly what this validator reported.
   -- The initialized instance is served off the `neotest` table's `__index`.
+  --
+  -- Silenced, not left standing: `neotest`'s class only declares the
+  -- consumers it ships, and `neotree` is added by a third-party source at
+  -- runtime, so LuaLS cannot know the field exists. Verified present against
+  -- a running Neovim before relying on it.
+  ---@diagnostic disable-next-line: undefined-field
   local consumer_instance = neotest.neotree
   if consumer_instance == nil then
     return false, "Consumer not initialized (neotest.neotree is nil — has neotest.setup run?)"
@@ -154,6 +160,7 @@ function M.diagnose()
         -- `M.check_consumer`); whether it was initialized is visible on
         -- the instance neotest serves back.
         lines[#lines + 1] = string.format("   Configured as: %s", consumer_type)
+        ---@diagnostic disable-next-line: undefined-field
         local inst = require("neotest").neotree
         lines[#lines + 1] = type(inst) == "table" and "   Status: ✓ INITIALIZED"
           or string.format("   Status: ✗ NOT INITIALIZED (%s)", type(inst))
