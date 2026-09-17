@@ -501,52 +501,31 @@ JSON-Ausgabe anders macht als das Fixture.
 
 ---
 
-### B3 — filetree: `TESTS/refs/` is 52 of 54
+### ~~B3 — filetree: `TESTS/refs/` is 52 of 54~~ — DONE
 
-**Stand geprüft 2026-09-17:** open. Note that a parallel session has just
-finished `get_node_at_line` in this repo — coordinate before starting.
+**Source:** `.../filetree.nvim/ROADMAP/ROADMAP.md`, section "Known issues" —
+its only entry, so the section went with it.
 
-```
-Aufgabe: filetree.nvim — die zwei fehlschlagenden refs-Tests (52 von 54)
-reparieren.
+**Already fixed on 2026-08-27** (`filetree.nvim@41395fc`), three weeks before
+this entry was read. Verified by running the suite at `85b2561`, the last
+commit before the session that picked this up: 96 passed, 0 failed, with both
+`nested/deep/c.lua` checks green by name.
 
-Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/filetree.nvim/
-ROADMAP/ROADMAP.md, Abschnitt "Known issues".
+The entry's premise was the bug. It said the two files hold the byte-identical
+`require("proj.util.shared")`; they do not. The spec expects the
+parenthesis-less `require "proj.util.shared"` in `c.lua` (mirroring how
+`c.tsx` covers the deepest ts import), while the fixture used the
+parenthesised form. So "updated" searched for a string that could never
+appear, and "old reference gone" passed vacuously — two failures, one per
+rename shape. Not the apply layer, and the `to_absolute` lead is gone too
+(`fnamemodify(":p")` collapses the `\.\` segment; the `C:\repos\…` paths in
+the entry predate this machine's `E:\repos` layout).
 
-Der Befund, wörtlich: Ein Rename aktualisiert lua/proj/nested/b.lua, aber
-nicht lua/proj/nested/deep/c.lua eine Ebene tiefer — obwohl beide Dateien
-das byte-identische require("proj.util.shared") enthalten. Der einfache
-Rename und der Verzeichnis-Kaskaden-Fall scheitern jeweils an genau dieser
-einen Datei.
-
-Was es NICHT ist (steht so in der Roadmap, damit es niemand nochmal prüft):
-- keine Regression — identisch vor und nach der Cross-Platform-Runde vom
-  2026-08-25
-- nicht das Scan-Backend — identisch mit ripgrep und mit dem libuv-Fallback,
-  und rg selbst listet nested/deep/c.lua, wenn man es von Hand mit denselben
-  Argumenten aufruft
-- nicht die Kandidatenmenge — die Kandidaten kommen an
-
-Der Defekt sitzt also im Apply-Layer, unterhalb von refs/scan.lua.
-
-Eine konkrete Spur, von der aus zu starten ist: für einen ripgrep-relativen
-Treffer liefert filetree.util.path.to_absolute
-  C:\repos\…\.\lua\proj\nested\deep\c.lua
-— Backslashes beibehalten und ein wörtliches "\.\"-Segment mitten drin. Wenn
-irgendwas weiter unten auf diesem String dedupliziert oder matcht, ist ein
-unnormalisierter Pfad die erste Stelle zum Nachsehen.
-(E:/repos/filetree.nvim/lua/filetree/util/path.lua, 284 Zeilen)
-
-WICHTIG: An diesem Repo hat gerade eine parallele Session gearbeitet
-(get_node_at_line für neo-tree/nvim-tree). Prüfe erst git status und git log,
-und arbeite nicht gegen uncommittete Änderungen.
-
-Repo: E:/repos/filetree.nvim
-Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
-stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
-fertig: committen und direkt auf main pushen. Roadmap-Punkt entfernen und
-Ablieferungsnachweis in filetree.nvim/FEATURES.md eintragen.
-```
+**What did need doing:** a spec/fixture mismatch produced one failure that
+reads like an engine bug plus a passing partner that hid it. `TESTS/refs/run.lua`
+now asserts up front that every fixture really contains what its spec expects
+to be rewritten, so the same drift names its own cause. Recorded in
+`filetree.nvim/FEATURES.md`; refs 148 passed, 0 failed.
 
 ---
 
