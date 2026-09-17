@@ -17,6 +17,7 @@ tabline, theme). Every overlap finding below is measured against that line.
 
 ## Table of content
 
+  - [0. Status — the S-tier is done, 2026-09-17](#0-status--the-s-tier-is-done-2026-09-17)
   - [1. Method, and what this report is not](#1-method-and-what-this-report-is-not)
   - [2. The numbers](#2-the-numbers)
   - [3. The central observation](#3-the-central-observation)
@@ -38,13 +39,60 @@ tabline, theme). Every overlap finding below is measured against that line.
     - [D2 · `my.ui.line_numbers` uses a filesystem ignore list as a filetype list](#d2--myuiline_numbers-uses-a-filesystem-ignore-list-as-a-filetype-list)
     - [D3 · `:checkhealth ui` hard-requires a module ui.nvim no longer uses](#d3--checkhealth-ui-hard-requires-a-module-uinvim-no-longer-uses)
     - [D4 · Diagnostic virtual-text background is restored by any `:colorscheme`](#d4--diagnostic-virtual-text-background-is-restored-by-any-colorscheme)
-    - [D5 · `github_stats_badge` ships German text and an unguarded emoji](#d5--github_stats_badge-ships-german-text-and-an-unguarded-emoji)
+    - [D5 · `github_stats_badge`: German text and an unguarded emoji — widened, 2026-09-17](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17)
   - [8. Tier E — asymmetry in who owns a sibling's statusline component](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component)
   - [9. Checked, and there is no overlap](#9-checked-and-there-is-no-overlap)
   - [10. Findings inside my.nvim's own scope boundary](#10-findings-inside-mynvims-own-scope-boundary)
   - [11. Suggested order](#11-suggested-order)
 
 ---
+
+## 0. Status — the S-tier is done, 2026-09-17
+
+Everything the suggested order below marks **S** has been implemented and
+pushed. What changed, and where:
+
+| Finding | Where | Commit |
+|---|---|---|
+| A2 `git_clickable` on the wrong contextmenu | ui.nvim | `d039075` |
+| C4 `ui.util.soft_require` + health section | ui.nvim | `d039075` |
+| C5 glyph probes unified on `nerd_font.glyph` | ui.nvim | `d039075` |
+| D1 ghost tabline chip after move-to-tab | ui.nvim | `d039075` |
+| D3 stale `lib.nvim.ui.kit.select` health entry | ui.nvim | `d039075` |
+| D4 diagnostic backgrounds restored by `:colorscheme` | ui.nvim | `d039075` |
+| D5 German UI surface + unguarded emoji | ui.nvim | `d039075` |
+| **`nvim-treesitter.ts_utils` rot** (new, see below) | ui.nvim | `d039075` |
+| B2 disagreeing mode classifiers | my.nvim | `8388b57` |
+| D2 filesystem ignore list used as a filetype list | my.nvim | `8388b57` |
+| F3 `indent_per_ft` unconfigurable, forced `expandtab` | my.nvim | `8388b57` |
+| B1 (non-breaking half) dead-provider health probe | my.nvim | `46df434` |
+| C3 winbar ownership | filetree.nvim | `4c8cd88` |
+| E "Around it" cross-references | 5 sibling READMEs | — |
+
+**One finding the fixing pass turned up that this report had missed.**
+`ui.nvim`'s statusline Tree-sitter breadcrumb fallback resolved its node
+through `nvim-treesitter.ts_utils`. nvim-treesitter deleted that module
+upstream, so the `pcall` answered "absent" on every call and all 191 lines
+of `modules/lsp/symbols/treesitter.lua` returned nil forever — the fallback
+for every buffer with no LSP attached had been doing nothing, silently.
+Identical defect, and identical fix, to `my.nvim@c622695` earlier the same
+day; found only because C4's audit made the plugin's soft-dependency probes
+a list you could read. That is now the stated reason the
+`ui.util.soft_require` module and its health section exist.
+
+**Two findings this report got wrong, corrected below.** [C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused)
+claimed `my.nvim` used `lib.nvim.ui.nerd_font`; it does not, and neither did
+`ui.nvim`. [D5](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17)
+called one German string an outlier when the whole `:UI` surface was German
+by intent. Both sections now say what is actually there.
+
+**Not fixed, and why.** `lsp.nvim`'s winbar rewriter — the second half of
+[C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) — turns
+out to need no change at all; see that section. `F1` and `F2` are decisions
+about where a feature belongs rather than defects, and are left for their
+owner. Everything at **M**, **L** and **XL** is untouched, including the kit
+deduplication ([A1](#a1--libnvimuikit--uikit--5100-lines-duplicated-and-diverging)),
+which is the one that needs a decision rather than typing.
 
 ## 1. Method, and what this report is not
 
@@ -378,11 +426,22 @@ Two other plugins write the same surface and do not participate:
   window — the exact collision `ui.winbar` was built to arbitrate, from the
   one direction it was not told about.
 - **`lsp.nvim/lua/lsp/integrations/lspsaga.lua:138-154`** — reads the current
-  `winbar`, splits it on lspsaga's separator and truncates. This one is a
-  rewriter rather than a producer and is guarded by a per-filetype
-  `winbar_max_symbols` table, so it is the milder case; but it will re-cut
-  whatever is there, including a `my.nvim` line whose separator happens to
-  match.
+  `winbar`, splits it on lspsaga's separator and truncates. A rewriter
+  rather than a producer.
+
+  **Re-checked while fixing this, 2026-09-17: it needs no change, and the
+  original wording here was too pessimistic.** It said the rewriter "will
+  re-cut whatever is there, including a `my.nvim` line whose separator
+  happens to match". It cannot: `winbar_shape()` builds the separator as
+  `"%#SagaSep#" .. cfg.separator .. "%*"` (`lspsaga.lua:95`), carrying
+  lspsaga's *own highlight group name*. Nothing else in the fleet emits
+  `%#SagaSep#`, so any other producer's line splits into one part, hits the
+  `#parts <= keep` guard at `:150`, and is returned untouched.
+
+  Routing it through `ui.winbar.set()` would also be wrong on its own terms:
+  it does not own the content, it trims lspsaga's, and `ui.winbar.set()`
+  schedules — deferring an already-scheduled trim by another tick, for no
+  gain. Left alone deliberately.
 
 **Effort: S** per plugin to route through `ui.winbar` (soft-required, exactly
 as `my.nvim` does it) — the module's whole API is one function.
@@ -428,7 +487,7 @@ either:
 | `lib.nvim.ui.nerd_font` | the primitive — 1 external consumer |
 | `my.nvim` | reads `vim.g.have_nerd_font` directly (`hl_config/utils/separator.lua:40`) |
 | `ui.nvim` | decodes and measures by hand: `hex_to_string(SEP_HEX)` then `SEP_GLYPH ~= "" and vim.fn.strdisplaywidth(SEP_GLYPH) == 1` (`modules/lsp/init.lua:56-58`) |
-| `ui.nvim`, again | no check at all — `modules/github_stats_badge/init.lua:105`, see [D5](#d5--github_stats_badge-ships-german-text-and-an-unguarded-emoji) |
+| `ui.nvim`, again | no check at all — `modules/github_stats_badge/init.lua:105`, see [D5](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17) |
 
 The three are not equivalent: `vim.g.have_nerd_font` is a user assertion,
 `strdisplaywidth` is a measurement, and `nerd_font.available()` combines
@@ -559,7 +618,7 @@ consequence attached, and the clearest argument for the primitive.
 
 **Effort: S** standalone, or free as C1's first adopter.
 
-### D5 · `github_stats_badge` ships German text and an unguarded emoji
+### D5 · `github_stats_badge`: German text and an unguarded emoji — widened, 2026-09-17
 
 `ui.nvim/lua/ui/statusline/modules/github_stats_badge/init.lua:105`:
 
@@ -567,18 +626,43 @@ consequence attached, and the clearest argument for the primitive.
 return " \xF0\x9F\x91\x81 " .. count .. " diese Woche "
 ```
 
-Two things, in a repository whose rule is English in source:
+**This section originally claimed `diese Woche` was "the only German
+user-facing string found in either plugin's Lua". That was wrong**, and only
+true of the one file that had been read. A proper sweep of string literals
+across both plugins found **28** German user-facing strings in `ui.nvim`,
+plus the entire `:UI help` panel, which a literal-only sweep misses because
+it is a `[[ ]]` block. `my.nvim` has none.
 
-1. **`diese Woche`** is the only German user-facing string found in either
-   plugin's Lua.
-2. `\xF0\x9F\x91\x81` is U+1F441 (👁), emitted with no width or availability
-   check — while the module three directories over
-   (`modules/lsp/init.lua:56-58`) carefully measures its separator glyph
-   before using it, and `lib.nvim.ui.nerd_font.glyph()` exists for exactly
-   this (see [C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused)). This is the same `UI`-family
-   finding the `rules.nvim` pass already fixed once in `my.nvim`.
+The fleet context, which the original also lacked:
 
-**Effort: S.**
+| Plugin | German strings | Verdict |
+|---|---|---|
+| `ui.nvim` | 28 + the help panel | the whole `:UI` command surface |
+| `casedesk.nvim` | 24 | domain content — German-language support cases |
+| `cascade.nvim` | 3 | an explicit `cycle/packs/de.lua` language pack |
+| `lsp.nvim`, `lib.nvim` | 1 each | incidental |
+
+So `ui.nvim` was the outlier, but not in the way a single stray string
+suggests: it was consistent, which makes it intent rather than an accident.
+Two plugins have German *by design* and neither looks like `ui.nvim` —
+casedesk's is data, cascade's is a named language pack.
+
+**Resolved by the plugin's owner, 2026-09-17: English throughout**,
+consistent with `ui.nvim`'s own README, `docs/` and vimdoc, and with every
+sibling that is not German-by-design.
+
+The second half stands as written, and got wider too. The icon was
+`\xF0\x9F\x91\x81` — U+1F441 (👁) — emitted with no width or availability
+check, and it was not alone: `✨` (U+2728), `🎨` (U+1F3A8) and
+`⌨️` (U+2328 U+FE0F) appeared the same way across the `:UI` output.
+Emoji are commonly East-Asian-Wide, so each rendered two cells and shifted
+every segment after it. All of them now go through
+`lib.nvim.ui.nerd_font.glyph`, which answers both questions — see
+[C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused).
+Same `UI`-family finding the `rules.nvim` pass already fixed once in
+`my.nvim`.
+
+**Effort: S** as scoped; the widened version was closer to **M**.
 
 ---
 
@@ -726,7 +810,7 @@ Cheapest-with-a-real-symptom first, then the two structural decisions.
 |---|---|---|---|
 | 1 | [D3](#d3--checkhealth-ui-hard-requires-a-module-uinvim-no-longer-uses) stale health entry | S | One line, and it blocks A1 |
 | 2 | [A2](#a2--libnvimcontextmenu--uicontextmenu--and-uinvim-uses-the-wrong-one) `git_clickable` require | S | One line; today `menu = false` is not honoured |
-| 3 | [D5](#d5--github_stats_badge-ships-german-text-and-an-unguarded-emoji) German string + emoji | S | One line; already a known rule violation class |
+| 3 | [D5](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17) German string + emoji | S | One line; already a known rule violation class |
 | 4 | [D2](#d2--myuiline_numbers-uses-a-filesystem-ignore-list-as-a-filetype-list) wrong ignore list | S | 43 inert entries; `std_skip` is right there |
 | 5 | [D1](#d1--move_buffer_to_tab-leaves-a-ghost-chip-in-the-source-tab) ghost tabline chip | S | Visible bug, and settles where the helper lives |
 | 6 | [B2](#b2--two-mode-classifiers-that-disagree) mode map | S | The scope boundary's most literal violation |
