@@ -173,7 +173,14 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 
 ### Offen (gepinnt)
 
-Stand: **13 offen** (war 25). In dieser Runde hinzugekommen: keine neuen — nur Fixes.
+Stand: **15 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18) hat bei pickers.nvim,
+cmdlog.nvim und dap.nvim nichts Neues gefunden (alle drei bereits sehr solide); buffer-ctx.nvim
+brachte zwei neue, kleine Bugs.
+
+| Repo | Datei | Bug |
+|---|---|---|
+| buffer-ctx.nvim | `format/column_align.lua` | zielt mit einem Byte-Offset auf eine Display-Spalte → Mehrbyte-Zeichen vor der Selektion verschiebt die Ausrichtung |
+| buffer-ctx.nvim | `mark/init.lua` | Cleanup-Autocmd über String-Augroup ohne `clear = true` → zweites `setup()` verdoppelt ihn (harmlos, da idempotent) |
 
 | Repo | Datei | Bug |
 |---|---|---|
