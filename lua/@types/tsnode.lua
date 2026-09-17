@@ -4,13 +4,13 @@
 ---@alias byte integer # A byte value in range 0..255
 
 ---@class BytePosition
----@field [1] byte  # row (0-based)
----@field [2] byte  # column (byte offset)
+---@field [1] byte   row (0-based)
+---@field [2] byte   column (byte offset)
 
 --- Extended TSNode shape for EmmyLua/LuaLS diagnostics and autocompletion.
 ---@class TSNode
----@field type fun(self: TSNode): string            # Returns the type of the node
----@field parent fun(self: TSNode): TSNode|nil      # Returns the parent node
+---@field type fun(self: TSNode): string             Returns the type of the node
+---@field parent fun(self: TSNode): TSNode|nil       Returns the parent node
 ---@field field fun(self: TSNode, name: string): TSNode|TSNode[]|nil
 --- Retrieves child(ren) under a named field
 ---@field named_child fun(self: TSNode, index: integer): TSNode|nil
@@ -25,8 +25,8 @@
 --- Returns true if the node has a parse error
 ---@field is_missing fun(self: TSNode): boolean
 --- Returns true if the node is missing
----@field start byte[] # {row, column} of start position
----@field end byte[]   # {row, column} of end position
+---@field start byte[]  {row, column} of start position
+---@field end byte[]    {row, column} of end position
 ---@field start_byte integer
 --- Byte index of the start
 ---@field end_byte integer
