@@ -52,8 +52,14 @@ function M.usercommands()
     -- adapter_ids() returns an array
     local adapters = neotest.state.adapter_ids() or {}
 
-    -- Test tree for the current buffer
-    local tree_ok, tree = pcall(neotest.state.positions, bufname)
+    -- Test tree for the current buffer.
+    --
+    -- `positions(adapter_id, { buffer = ... })`. The buffer was previously
+    -- passed as the FIRST argument, i.e. as the adapter id, so the lookup
+    -- matched no adapter and quietly returned nil -- "Found: NO" every time,
+    -- whatever was loaded.
+    local first_adapter = adapters[1]
+    local tree_ok, tree = pcall(neotest.state.positions, first_adapter, { buffer = bufnr })
 
     local lines = { "=== Neotest Debug State ===" }
     lines[#lines + 1] = ""
@@ -79,8 +85,11 @@ function M.usercommands()
     lines[#lines + 1] = "Test Tree:"
     if tree_ok and tree then
       lines[#lines + 1] = "  Found: YES"
-      local name = tree.name or "?"
-      lines[#lines + 1] = string.format("  Root: %s", name)
+      -- `neotest.Tree` carries no `name` field -- it has methods, and the
+      -- position data sits behind `:data()`. Reading `tree.name` gave nil,
+      -- so this line printed "Root: ?" unconditionally.
+      local ok_data, data = pcall(tree.data, tree)
+      lines[#lines + 1] = string.format("  Root: %s", (ok_data and data and data.name) or "?")
     else
       lines[#lines + 1] = "  Found: NO"
     end
@@ -108,8 +117,12 @@ function M.usercommands()
     lines[#lines + 1] = string.format("File: %s", vim.fn.fnamemodify(bufname, ":t"))
     lines[#lines + 1] = string.format("Path: %s", bufname)
 
+    -- `ipairs`, and the VALUE: `adapter_ids()` returns an array, so `pairs`
+    -- handed the numeric index to `id:match(...)` -- "attempt to index a
+    -- number value", thrown out of the command. The block right above this
+    -- one already iterates it as an array; this one did not.
     local has_adapter = false
-    for id, _ in pairs(adapters or {}) do
+    for _, id in ipairs(adapters or {}) do
       if bufname:match(id:match("[^:]+$")) then
         lines[#lines + 1] = string.format("Adapter: %s", id)
         has_adapter = true
@@ -268,18 +281,18 @@ function M.keymaps()
       local adapter_id = (neotest.state.adapter_ids() or {})[1]
       local tree_ok, tree = pcall(neotest.state.positions, adapter_id)
       if adapter_id and tree_ok and tree then
+        -- A `neotest.Tree` node has no `type`/`children` FIELDS -- those are
+        -- `:data().type` and `:children()`. The old hand-rolled recursion
+        -- read both as plain fields, so it found nothing to descend into and
+        -- counted nothing: "0 tests found" regardless of the tree.
+        -- `iter_nodes()` walks the whole tree and is what the type offers.
         local count = 0
-        local function count_tests(node)
-          if node.type == "test" then
+        for _, node in tree:iter_nodes() do
+          local ok_data, data = pcall(node.data, node)
+          if ok_data and data and data.type == "test" then
             count = count + 1
           end
-          if node.children then
-            for _, child in ipairs(node.children) do
-              count_tests(child)
-            end
-          end
         end
-        count_tests(tree)
 
         notify.info(string.format("Discovery complete: %d tests found", count))
       else
