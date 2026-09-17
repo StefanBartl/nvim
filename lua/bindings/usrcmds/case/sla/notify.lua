@@ -129,4 +129,25 @@ function M.setup()
   })
 end
 
+--- Stop the background timer. The explicit counterpart to `M.setup()`'s
+--- idempotent start (PERF-82): without one, the poll ran for the rest of the
+--- session no matter what, and `sla_notifications_enabled` could only ever be
+--- honoured at setup time.
+---
+--- Idempotent and safe on an already-closed handle. The `FocusGained`
+--- autocmd is left in place deliberately — re-checking when you come back to
+--- the editor costs nothing while nothing is polling, and `M.setup()` reuses
+--- the same named augroup, so a later restart does not stack a second one.
+---@return nil
+function M.stop()
+  if not timer then
+    return
+  end
+  if not timer:is_closing() then
+    timer:stop()
+    pcall(timer.close, timer)
+  end
+  timer = nil
+end
+
 return M
