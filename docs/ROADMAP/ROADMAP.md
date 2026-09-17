@@ -4,6 +4,7 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
+    - [casedesk](#casedesk)
     - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Tasks](#tasks)
@@ -47,22 +48,51 @@ cross plattfotrm
 ---
 
 ## Claude Tasks
-docmap-desktop: docs/AGENT_CHECKLIST_RUNNER.md — dazu PLAN.md's L6-Zeile mit einem Verweis versehen.
-loomAI: docs/Guides/docmap-checklist-agent.md
-Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für den einfachen Fall schon heute (Aufwand dort: 0). Was L6 architektonisch eigentlich braucht — die DecisionQueue, die "Vorschlag, kein Ergebnis" durchsetzt — ist in /decision nur eine Log-Zeile ohne echte Warteschlange; Phase 3/4 aus deinem eigenen Architekturplan sind komplett offen. Empfehlung in beiden Dateien: jetzt gegen /ask bauen (~2,5–3 Sessions auf documentation.nvim/docmap-desktop-Seite, 0 bei loomAI), die Anbindung an eine echte DecisionQueue erst mitnehmen, wenn Phase 3 dort ohnehin angegangen wird.
-+ neiue gh feature atag release
+- [ ] docmap-desktop: docs/AGENT_CHECKLIST_RUNNER.md — dazu PLAN.md's L6-Zeile mit einem Verweis versehen.
+  loomAI: docs/Guides/docmap-checklist-agent.md
+  Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für den einfachen Fall schon heute (Aufwand dort: 0). Was L6 architektonisch eigentlich braucht — die DecisionQueue, die "Vorschlag, kein Ergebnis" durchsetzt — ist in /decision nur eine Log-Zeile ohne echte Warteschlange; Phase 3/4 aus deinem eigenen Architekturplan sind komplett offen. Empfehlung in beiden Dateien: jetzt gegen /ask bauen (~2,5–3 Sessions auf documentation.nvim/docmap-desktop-Seite, 0 bei loomAI), die Anbindung an eine echte DecisionQueue erst mitnehmen, wenn Phase 3 dort ohnehin angegangen wird.
+  + neiue gh feature atag release
 
 - offene Taks in den roamdaps aller plugins nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
   - schreibe den report hjierher: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports
 
-- casedesk
-  - problems / solutions matrix us den cases erstellen
-  - casedesk file im wkdbook implementieren
-  - keuzfeatures data.nvim
-
 filetree.nvim: Wenn man eine file löscht und die refrerenzene updatete werden, dann `U` also mit undo die file wieder zurückholt, dann müssten die refs auch wieder hergestellt werden
 
 - nvim-config: rules.nvim anwenden
+
+- [ ] mdview: Auf der workstation funktinrt cursor section nicht, also die sektion wird nicht hl, caret funktionert gut, line auch; standalone gar nichts
+- [ ] fileops: :File rename -> sollte den aktuellen filenamen als wert halten dmit damn den verüändern kann dan im prompt meine ich
+
+---
+
+### casedesk
+
+- problems / solutions matrix us den cases erstellen
+- casedesk file im wkdbook implementieren
+- keuzfeatures data.nvim
+- Research/NN_ActivityStream.md sgleich anlegen und bei :Case new auc gleich abfragen, ob der activiyf stream hineinposten will - dazu braucht es aber mehr als nur einen einzeiler prompt, also zuerst abfragen ob as angehöngt werden soll wenn ja, dann sollte sich ein float window öffnen, in der ich den hineinposten kann, dann specihern und schlie0en -> weiter frage, ob gleich ananomisiert werden soll, wennja, dann geocih de acivity stream ananonmyiseren und so abspeichern (den normalen unter einer level 2 amrkdown headline und darüber der annanomiserungsversuch )
+  - warum dinenen wir die datei Research/NN_ActivityStream.md und nicht Research/ActivityStream.md?
+  - :Case anonymize . (oder case number) ->   Warn  10:17:30 AM notify.warn [usrcmds.case] 1195796: no Activity Stream found under Research/
+- docs/ auf deutsch, alles auf deustch weil sdas nur ein repo fpr mich ist, nicht fpr die öffentlichkeit^
+- JQL.md: kein project key, also  `project = "TOSCA"` oder ähnliches, das bringt bei unserer suche nichts. Beispiele:
+
+  **1. Search for 2026.1 Upgrade & UPN Login / 403 Issues:**
+
+  ```jql
+  text ~ "403 Forbidden" AND text ~ "UPN" AND text ~ "2026.1" ORDER BY created DESC
+  ```
+
+  **2. Search for Active Directory / LDAP Authentication Failures after Upgrade:**
+
+  ```jql
+  component in ("User Administration", "Authentication Service") AND text ~ "Active Directory" AND text ~ "upgrade" ORDER BY updated DESC
+  ```
+
+  **3. Search for `/tua/api/session` or Identity Server Token Errors:**
+
+  ```jql
+  text ~ "tua/api/session" AND (summary ~ "AD" OR summary ~ "LDAP" OR summary ~ "login") ORDER BY created DESC
+  ```
 
 ---
 
