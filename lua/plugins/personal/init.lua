@@ -1111,23 +1111,23 @@ plugins.add({
   },
 
   -- {
-    -- "StefanBartl/learn-cli.nvim",
-    -- lazy = false,
-    -- config = function()
-      -- require("learn_cli").setup({
-        -- -- The plugin's own config key is exercises_path (see
-        -- -- lua/learn_cli/config/init.lua); exercises_dir was silently
-        -- -- ignored and the plugin fell back to its stdpath("config")/exercises
-        -- -- default.
-        -- exercises_path = vim.fs.joinpath(
-          -- vim.fn.stdpath("config"),
-          -- "lua",
-          -- "plugins",
-          -- "learn-cli.nvim",
-          -- "exercises"
-        -- ),
-      -- })
-    -- end,
+  -- "StefanBartl/learn-cli.nvim",
+  -- lazy = false,
+  -- config = function()
+  -- require("learn_cli").setup({
+  -- -- The plugin's own config key is exercises_path (see
+  -- -- lua/learn_cli/config/init.lua); exercises_dir was silently
+  -- -- ignored and the plugin fell back to its stdpath("config")/exercises
+  -- -- default.
+  -- exercises_path = vim.fs.joinpath(
+  -- vim.fn.stdpath("config"),
+  -- "lua",
+  -- "plugins",
+  -- "learn-cli.nvim",
+  -- "exercises"
+  -- ),
+  -- })
+  -- end,
   -- },
 
   {

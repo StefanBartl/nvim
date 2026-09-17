@@ -1,0 +1,14 @@
+{
+  "DEP-01": "Both hits are comment prose quoting Harpoon2's own settings.key() default, which really does call vim.loop.cwd(); rewording would make the comment describe an API that does not exist. Every call site in this repo already uses `vim.uv or vim.loop`, and lua/@types/vim_uv.lua declares the legacy alias on purpose.",
+  "LUA-80": "Plugin-repo shape rule (lua/<plugin>/config/{init,DEFAULTS}.lua). This repo is a Neovim configuration, not a plugin: it has no single lua/<name>/ namespace and no consumer that could pass opts to it.",
+  "NEW-07": "Plugin-repo shape rule (lua/<plugin>/config/DEFAULTS.lua). A configuration has no plugin namespace and no user-supplied opts to default.",
+  "NEW-08": "Plugin-repo shape rule (lua/<plugin>/bindings/{keymaps,usrcmds,autocmds}.lua). This config keeps the same three concerns under lua/bindings/, one level up, because there is no plugin namespace to nest them in.",
+  "NEW-10": "Plugin-repo shape rule (lua/<plugin>/health.lua). `:checkhealth` resolves plugin names, not a configuration; the config's own startup diagnostics live in lua/startup/report.lua.",
+  "NEW-13": "Plugin-repo shape rule (doc/<name>.txt for `:h <name>`). A configuration is not required from a runtimepath entry a user looks up in vimdoc; its documentation is docs/.",
+  "NEW-27": "Same check as LUA-80 (config/init.lua + config/DEFAULTS.lua) and waived for the same reason.",
+  "NEW-45": "Satisfied by the dot-prefixed variant: .stylua.toml is present at the repo root, with line_endings = \"Unix\" matching .gitattributes' eol=lf. stylua and the CI stylua-action both read .stylua.toml; the rule's file_exists check only knows the undotted spelling.",
+  "NEW-49": "This repo has no test suite (no TESTS/, no *_spec.lua), so no busted globals reach luacheck. The busted names are already declared in .luarc.json for the editor-side LuaLS run.",
+  "UI-62": "Plugin-repo shape rule (lua/<modul>/health.lua). Same reason as NEW-10.",
+  "REL-05": "Release gate for a published plugin (doc/<name>.txt). This repo is never released as a plugin.",
+  "REL-16": "Release gate for a published plugin (lua/<name>/health.lua). Same reason as NEW-10."
+}
