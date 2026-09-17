@@ -12,30 +12,29 @@
 
 ## Restliche Plugins (Reihenfolge für die Fortsetzung)
 
-10 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+11 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
 `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
 `documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
 laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
-Die verbleibenden 17 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+Die verbleibenden 16 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
 in dieser Reihenfolge abzuarbeiten:
 
-1. github_stats.nvim
-2. insights.nvim
-3. sessions.nvim
-4. pdfport.nvim
-5. emojis.nvim
-6. fileops.nvim
-7. reposcope.nvim
-8. gopath.nvim
-9. color_my_ascii.nvim
-10. diff.nvim
-11. cascade.nvim
-12. sandbox.nvim
-13. data.nvim
-14. spotlight.nvim
-15. mdview.nvim
-16. filetree.nvim
-17. lsp.nvim
+1. insights.nvim
+2. sessions.nvim
+3. pdfport.nvim
+4. emojis.nvim
+5. fileops.nvim
+6. reposcope.nvim
+7. gopath.nvim
+8. color_my_ascii.nvim
+9. diff.nvim
+10. cascade.nvim
+11. sandbox.nvim
+12. data.nvim
+13. spotlight.nvim
+14. mdview.nvim
+15. filetree.nvim
+16. lsp.nvim
 
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
@@ -72,7 +71,7 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 | language.nvim | 51 | 8 | 🔴 kaum getestet |
 | open.nvim | 26 | 8 | 🔴 kaum getestet |
 | replacer.nvim | 40 | 8 | 🔴 kaum getestet |
-| github_stats.nvim | 44 | 9 | 🟠 schwach |
+| github_stats.nvim | 44 | 9 | ✅ fertig (Runde 11, Commit `1b9b638`; 9 → 22 Spec-Dateien) |
 | insights.nvim | 49 | 9 | 🟠 schwach |
 | sessions.nvim | 17 | 9 | 🟠 schwach |
 | pdfport.nvim | 50 | 10 | 🟠 schwach |
@@ -102,10 +101,10 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 **Reihenfolge:** pickers.nvim → cmdlog.nvim → dap.nvim (aus altem Report übernommen), danach
 absteigend nach Ratio durch die 🔴/🟠 Liste, 🟡/🟢 nur falls noch Lücken bei konkreter Prüfung.
 
-## Aktueller Stand (2026-09-16, nach zwei Wochenlimit-Unterbrechungen)
+## Aktueller Stand (2026-09-17, nach zwei Wochenlimit-Unterbrechungen)
 
-10 von ~35 Plugins fertig (pickers, cmdlog, dap, casedesk, buffer-ctx, debugging,
-recommender, language, open, replacer).
+11 von ~35 Plugins fertig (pickers, cmdlog, dap, casedesk, buffer-ctx, debugging,
+recommender, language, open, replacer, github_stats).
 
 **Die 4 während der Kampagne gefundenen/gepinnten Bugs wurden in einer separaten Session
 zwischenzeitlich gefixt** (jeweils eigener Commit, direkt auf `main` des jeweiligen Repos,
@@ -137,11 +136,16 @@ Alle 10 abgeschlossenen Coverage-Commits sowie alle 6 Bugfix-Commits sind per `g
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
-**Nächste Schritte:** Runde 11 (github_stats.nvim) starten, danach der Reihe nach die
-restliche 🟠/🟡-Liste unten (→ insights.nvim → sessions.nvim → pdfport.nvim
-→ emojis.nvim → fileops.nvim → reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡
-nur bei konkreten Lücken). Kein offener Nebenauftrag mehr aus dieser Kampagne — alle bisher
-gefundenen Bugs (6 insgesamt über 5 Repos) sind gefixt.
+**Nächste Schritte:** Runde 12 (insights.nvim) starten, danach der Reihe nach die
+restliche 🟠/🟡-Liste unten (→ sessions.nvim → pdfport.nvim → emojis.nvim → fileops.nvim
+→ reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡 nur bei konkreten Lücken).
+
+**Offener Nebenauftrag:** die 2 in Runde 11 (github_stats.nvim) gepinnten Bugs sind noch
+nicht gefixt (`usrcmds/utils.lua`s `split_lines()`-Trailing-Leerzeile → doppelt gesetzte
+Floats; `export.lua`s `ensure_parent_dir()` außerhalb des pcall → rohes `E739`). Beide sind
+sichtbare Verhaltensänderungen und daher bewusst als eigene Entscheidung offen gelassen,
+Details im Fortschritts-Eintrag unten. Alle früheren Kampagnen-Bugs (7 insgesamt über 6
+Repos, inkl. des in Runde 11 direkt gefixten `strptime`-Fehlers) sind erledigt.
 
 ## Fortschritt
 
@@ -481,4 +485,78 @@ gefundenen Bugs (6 insgesamt über 5 Repos) sind gefixt.
   keinen Test-Abschnitt, daher unangetastet gelassen.
   Commit: `053e1d6` (test: cover config merge, argtypes/debug/error, health/pickers/tscode,
   bindings, and init dispatch), direkt auf `main` gepusht.
+- [x] **github_stats.nvim** — fertig (Runde 11). Dieses Repo nutzt plenary/busted
+  (`describe`/`it`, `scripts/test.sh` → `PlenaryBustedDirectory TESTS/` mit
+  `scripts/minimal_init.lua`), Konvention beibehalten; Spec-Dateien werden per `_spec.lua`
+  automatisch eingesammelt, es gibt keinen Aggregator, in den man neue Dateien eintragen
+  müsste. Dependencies wie in CI: `lib.nvim`, `ui.nvim` **und** `plenary.nvim` sind harte
+  Abhängigkeiten (`LIB_NVIM_DIR`/`UI_NVIM_DIR`/`PLENARY_DIR`, sonst `.deps/<name>` bzw.
+  Sibling-Checkout) — anders als bei recommender.nvim/language.nvim ist `ui.nvim` hier also
+  verfügbar, `integrations/menu.lua` und `usrcmds/utils.lua`s `ui.kit.note`-Float brauchten
+  daher keine Auslassung.
+  13 neue Spec-Dateien: `api_spec.lua`, `fetcher_spec.lua`, `background_spec.lua` (enthält
+  auch `repo_discovery`), `dashboard_state_spec.lua` (state + movement),
+  `dashboard_actions_spec.lua` (actions + detail), `dashboard_lifecycle_spec.lua`,
+  `diff_spec.lua`, `visualization_spec.lua`, `ui_state_spec.lua`, `analytics_query_spec.lua`,
+  `usrcmds_spec.lua`, `bindings_spec.lua` (keymaps/autocmds/`setup()`/Kontextmenü/utils),
+  `health_spec.lua`. Zusätzlich 4 bestehende Dateien erweitert: `storage_spec.lua`
+  (On-Disk-Layout, Listing, Löschen — vorher nur das Read-Memo), `export_spec.lua`
+  (die CSV/Markdown-Writer selbst, `format_number`, pdfport-Gate, Schreibfehler),
+  `retention_spec.lua` (24h-Rate-Limit von `maybe_run_all`, `format_bytes`),
+  `date_presets_spec.lua` (alle Builtins, `M.list()`, jede Ablehnung von `resolve()`).
+  **Kein einziger Netzwerkzugriff:** jeder Request-Pfad ist an einer Naht gekappt, die *vor*
+  dem `require` des Testobjekts in `package.loaded` ersetzt wird — `lib.nvim.net.curl` in
+  `api_spec`/`health_spec`, `github_stats.api` in fetcher/background/usrcmds,
+  `github_stats.fetcher` überall dort, wo ein Force-Refresh ausgelöst wird. Einziger
+  Subprozess im ganzen Lauf ist `curl --version` aus dem Dependency-Check von `health.lua`.
+  `health_spec.lua` ersetzt zusätzlich `github_stats.config` komplett, weil das echte
+  `check_config()` `config.init()` *ohne Argumente* aufruft und damit im echten
+  `stdpath("config")`-Verzeichnis des Nutzers landen würde.
+  **Ein echter Bug gefunden und direkt gefixt** (eindeutig falsch, in-Repo existiert bereits
+  der korrekte, getestete Helper): `dashboard/detail.lua` maß die angezeigte Periode mit
+  `vim.fn.strptime()`. Die Funktion existiert auf jeder Plattform als Vimscript-Funktion,
+  *funktioniert* aber nur dort, wo die C-Bibliothek `strptime(3)` liefert — Neovim unter
+  Windows gibt für jede Eingabe glatt `0` zurück, beide Datumswerte parsten also auf denselben
+  Zeitpunkt und die Kopfzeile las sich bei jeder Spanne als „(1 days)". Nutzt jetzt
+  `analytics.count_days()` (gleiche inklusive Tageszählung, die der Dashboard-Header schon
+  verwendet); CHANGELOG-Eintrag unter „Unreleased → Fixed" ergänzt.
+  **Zwei weitere echte Bugs gefunden, bewusst nur gepinnt statt gefixt** (beides sichtbare
+  Verhaltensänderungen, je mit `BUG:`-Kommentar an der Assertion):
+  1. `bindings/usrcmds/utils.lua`s `split_lines()` hängt bei *jedem* Aufruf eine leere Zeile
+     an (das Muster `([^\n]*)\n?` matcht am Subject-Ende ein weiteres Mal). `show_float()`
+     ruft es pro Element eines Zeilen-Arrays auf — jeder mehrzeilige Report dieses Plugins
+     (`:GithubStats show`/`summary`/`chart`/`diff`/`paths`/`referrers`, die Detail-Ansicht)
+     wird dadurch doppelt zeilenumbrochen ausgegeben.
+  2. `export.lua`s `write_lines()` pcallt zwar das `writefile`, nicht aber das `mkdir`, das
+     `ensure_parent_dir()` davor macht — ein nicht anlegbares Elternverzeichnis (z.B. weil der
+     Pfad bereits als Datei existiert) entkommt als rohes `E739: Cannot create directory`
+     statt als das „Export failed: …", das `:GithubStats export` verspricht. Genau die
+     Fehlerklasse, gegen die `ensure_parent_dir()` laut eigenem Kommentar eingeführt wurde.
+  **Kein Bug, aber notiert:** die `M.complete()`-Funktionen in `bindings/usrcmds/*.lua` haben
+  keinen Aufrufer mehr — seit der Composer-Migration completet `:GithubStats <sub>` über die
+  registrierten Typen `GH_REPO`/`GH_DATE_OR_PRESET`/`GH_PERIOD` — und ihre Slot-Arithmetik
+  zählt weiterhin von der alten flachen `:GithubStatsShow …`-Kommandozeile. In `usrcmds_spec`
+  in genau dieser Legacy-Form gepinnt, da sie als Public API erreichbar bleiben. Zweite
+  Notiz: `date_presets`' `get_week_start()` beginnt die Woche montags, `analytics.rollup_weekly()`
+  dagegen sonntags — unabhängige Features, aber uneinig darüber, wann eine Woche anfängt.
+  Bewusst ausgelassen: `@types`-Dateien (3× unter `lua/github_stats/@types/` plus
+  `dashboard/@types/init.lua` und `state/@types/init.lua`, reine `---@meta`-Annotationen),
+  `config/DEFAULTS.lua` (deklarative Tabelle ohne Verzweigung; ihre Werte sind indirekt über
+  jeden getesteten Fallback abgedeckt), der echte API-Probe-Request in `health.lua` (dessen
+  Verzweigung 200/401/403/404/sonstige/undekodierbar/leer/curl-Fehler ist über den gestubbten
+  Client vollständig abgedeckt — nur der echte Request fehlt, absichtlich), die
+  `_pdf`-Export-Varianten jenseits des pdfport-Contracts (ein echtes PDF bräuchte pandoc plus
+  TeX-Engine als externe Prozesse), sowie das Rendering von `integrations/menu` (Item-Liste und
+  jeder Callback sind abgedeckt; das Öffnen bräuchte `nvzone/menu`, kein CI-Checkout).
+  Testlauf: 9 → 22 Spec-Dateien, 109 → 482 grüne Assertions, 0 Fails, 0 Errors; über drei
+  Wiederholungsläufe stabil, `scripts/test.sh` beendet mit Exit 0. `luacheck .` 0
+  Warnings/Errors über 67 Dateien und `stylua --check .` (genau die CI-Befehle; `TESTS/` ist
+  hier *Teil* beider Gates, anders als bei replacer.nvim) beide grün.
+  `TESTS/README.md` neu angelegt (gab es noch nicht): Bootstrap/Env-Vars, ein Abschnitt „No
+  network, ever" mit den konkreten Nahtstellen, eine Tabelle Spec → Subject, die bewussten
+  Auslassungen mit Begründung und die zwei gepinnten Bugs. Top-Level-`README.md` hat keinen
+  Test-/Coverage-Abschnitt, daher unangetastet gelassen.
+  Commit: `1b9b638` (test: cover api, fetcher, background, dashboard layers, bindings and
+  health), direkt auf `main` gepusht und per `git merge-base --is-ancestor HEAD origin/main`
+  verifiziert.
 - [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.

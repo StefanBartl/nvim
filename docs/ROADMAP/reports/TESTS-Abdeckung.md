@@ -36,7 +36,7 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**10 von 36 Repos abgeschlossen**, Runde 11 läuft.
+**11 von 36 Repos abgeschlossen**, Runde 12 läuft.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -50,15 +50,16 @@ Regeln, die sich über die Runden eingespielt haben:
 | 8 | language.nvim | 8 | `51dd7d1` | 21 neue Specs; ~6 → 43 von 51 Dateien |
 | 9 | open.nvim | 9 | `a8dbe1d` | 9 neue Specs; ~12 → 24 von 26 Dateien |
 | 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
-| 11 | github_stats.nvim | 11 | *läuft* | — |
+| 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
+| 12 | insights.nvim | 12 | *läuft* | — |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 ## Warteschlange
 
-Nach github_stats.nvim in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
+Nach insights.nvim in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
 
-insights.nvim → sessions.nvim → pdfport.nvim → emojis.nvim → fileops.nvim →
+sessions.nvim → pdfport.nvim → emojis.nvim → fileops.nvim →
 reposcope.nvim → gopath.nvim → color_my_ascii.nvim → diff.nvim → cascade.nvim →
 sandbox.nvim → data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
 
@@ -83,8 +84,8 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | language.nvim | 51 | 8 | ✅ fertig |
 | open.nvim | 26 | 8 | ✅ fertig |
 | replacer.nvim | 40 | 8 | ✅ fertig |
-| github_stats.nvim | 44 | 9 | 🔄 Runde 11 läuft |
-| insights.nvim | 49 | 9 | 🟠 schwach |
+| github_stats.nvim | 44 | 9 | ✅ fertig |
+| insights.nvim | 49 | 9 | 🔄 Runde 12 läuft |
 | sessions.nvim | 17 | 9 | 🟠 schwach |
 | pdfport.nvim | 50 | 10 | 🟠 schwach |
 | emojis.nvim | 23 | 11 | 🟠 schwach |
@@ -112,8 +113,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 
 ## Gefundene Bugs
 
-Sieben echte Bugs sind über die Kampagne aufgefallen; **alle sind gefixt** — sechs davon in
-je eigenem Nachzieh-Commit, der casedesk-Fix direkt in der Coverage-Runde selbst:
+### Gefixt
 
 | Repo | Bug | Fix |
 |---|---|---|
@@ -124,6 +124,17 @@ je eigenem Nachzieh-Commit, der casedesk-Fix direkt in der Coverage-Runde selbst
 | debugging.nvim | `inline_debug.lua` baute den Log-Pfad ohne Trenner zusammen | `8ac567e` |
 | replacer.nvim | `config.get()` gab verschachtelte Tabellen per Referenz statt Deep-Copy zurück (+ toter Debug-Code) | `7031f73` |
 | casedesk.nvim | `doctor.lua`'s `x and nil or y`-Idiom ließ den Ambiguitäts-Guard nie greifen | in `3cc4cd9` |
+| github_stats.nvim | `dashboard/detail.lua` maß die Periode mit `vim.fn.strptime()`, das unter Windows immer `0` liefert → jede Spanne las sich als "(1 days)" | in `1b9b638` |
+
+### Offen (gepinnt, bewusst nicht gefixt)
+
+Beides sind sichtbare Verhaltensänderungen, daher je mit `BUG:`-Assertion festgenagelt statt
+nebenbei umgebaut — aus Runde 11 (`github_stats.nvim`):
+
+| Datei | Bug |
+|---|---|
+| `bindings/usrcmds/utils.lua` | `split_lines()` hängt pro Aufruf eine Leerzeile an, `show_float()` ruft es pro Array-Element auf → jeder mehrzeilige Report wird doppelt zeilenumbrochen ausgegeben |
+| `export.lua` | `write_lines()` pcallt das `writefile`, nicht das vorangehende `mkdir` → ein nicht anlegbares Elternverzeichnis entkommt als rohes `E739` statt als "Export failed: …" |
 
 ## Historie: der ursprüngliche 3-Repo-Report
 
