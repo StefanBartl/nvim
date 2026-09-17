@@ -23,7 +23,7 @@ the surrounding text is English like every other document here.
     - ~~[A7 — media: prefetch hint for frame stepping](#a7--media-prefetch-hint-for-frame-stepping--done)~~ — done
   - [B. A real sitting](#b-a-real-sitting)
     - ~~[B1 — media: the hub dashboard](#b1--media-the-hub-dashboard--done)~~ — done
-    - [B2 — media: first real whisper.cpp run](#b2-media-first-real-whispercpp-run)
+    - ~~[B2 — media: first real whisper.cpp run](#b2--media-first-real-whispercpp-run--done)~~ — done
     - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
     - ~~[B4 — lsp: provoke errors in `:LspDoctor deep`](#b4--lsp-provoke-errors-in-lspdoctor-deep--done)~~ — done
     - ~~B5 — `rules.nvim` pass over ui.nvim~~ — done 2026-09-17, prompt removed (`ui.nvim@3028cfd`; recorded in `wkdbook-myplugins/ui.nvim/FEATURES.md`)
@@ -507,9 +507,27 @@ jeder Etappe committen und direkt auf main pushen.
 
 ---
 
-### B2 — media: first real whisper.cpp run
+### ~~B2 — media: first real whisper.cpp run~~ — DONE
 
-**Blocked:** needs a whisper.cpp binary and a GGML model on the machine.
+~~**Blocked:** needs a whisper.cpp binary and a GGML model on the machine.~~
+**Unblocked and done 2026-09-17** (`media.nvim@a2adf38`), against a real build
+and `ggml-base.en.bin` on `samples/jfk.wav`.
+
+Both questions answered. The **JSON shape was right** — transcribed from
+whisper.cpp's source, never observed, and the real `-oj` output matches
+exactly; the fixture needed no change. **`-np` does not suppress everything**,
+and the sharper finding is that `whisper-cli` **exits 0 on some failures**: a
+file it cannot decode returns code 0, writes no JSON, and reports the reason
+only on stderr. Reading `result.code ~= 0` was never a sufficient test.
+
+And the reason this task existed: **caching a real transcription crashed, and
+always had.** `vim.system`'s `on_exit` is a fast event context, the dispatcher
+computed a cache key there through `vim.fn.sha256`, and every consumer callback
+after it ran in a context the plugin had promised they would not. It survived
+all of phase 0 because the pipeline was verified against a *fake* engine — and
+"which execution context does the callback arrive in" is exactly what a fake
+cannot reproduce. Written up in `media.nvim/FEATURES.md`. The prompt below is
+kept for the record.
 
 ```
 Aufgabe: media.nvim — den Transkriptionspfad zum ersten Mal gegen ein echtes
