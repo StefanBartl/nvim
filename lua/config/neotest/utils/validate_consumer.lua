@@ -72,6 +72,7 @@ function M.check_consumer()
 end
 
 --- Runs the full diagnostic and prints a report
+---@return boolean success  Whether every checked step reported OK.
 function M.diagnose()
   local lines = { "=== Neo-tree Tests Consumer Diagnostics ===" }
   lines[#lines + 1] = ""
@@ -135,6 +136,7 @@ function M.diagnose()
 end
 
 --- Registers the diagnostic command
+---@return nil
 function M.setup_command()
   usercmd.create("NeotestValidateConsumer", function()
     M.diagnose()

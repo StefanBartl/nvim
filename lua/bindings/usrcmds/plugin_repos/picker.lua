@@ -252,6 +252,7 @@ local function run_batch(removal, direct_clone, fetch_items, pull_items, update_
 end
 
 ---@param path string|nil
+---@return nil
 function M.open(path)
   local ok_snacks, Snacks = pcall(require, "snacks")
   if not ok_snacks or not Snacks.picker then

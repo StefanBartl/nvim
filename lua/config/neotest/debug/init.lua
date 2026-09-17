@@ -13,6 +13,7 @@ local usercmd = require("lib.nvim.bindings.usercmd")
 -- User Commands
 ----------------------------------------------------------------------
 
+---@return nil
 function M.usercommands()
   usercmd.create("NeotestDebugAdapters", function()
     local ok, neotest = pcall(require, "neotest")
@@ -242,6 +243,7 @@ end
 -- Keymaps
 ----------------------------------------------------------------------
 
+---@return nil
 function M.keymaps()
   local map = require("lib.nvim.bindings.keymap")
 
@@ -307,6 +309,7 @@ end
 -- Setup
 ----------------------------------------------------------------------
 
+---@return nil
 function M.setup_all()
   M.keymaps()
   M.usercommands()

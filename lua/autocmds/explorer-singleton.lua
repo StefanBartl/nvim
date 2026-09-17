@@ -91,6 +91,7 @@ local function open_snacks_explorer()
 end
 
 ---@param opts { enabled?: boolean }?
+---@return nil
 function M.setup(opts)
   opts = opts or {}
   if opts.enabled == false then

@@ -32,6 +32,7 @@ end
 
 --- Smart delete for <Del> in Normal mode.
 --- If blank line: delete it precisely; otherwise: delete one char via "_x.
+---@return nil
 function M.smart_del()
   if is_blank_line() then
     delete_current_line_api()
@@ -42,6 +43,7 @@ function M.smart_del()
 end
 
 --- Bind the global normal-mode <Del> mapping.
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
   map("n", "<Del>", M.smart_del, { desc = "Smart delete (<Del>)" })

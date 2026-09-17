@@ -17,6 +17,7 @@ local M = {}
 
 --- Register the `:LazygitBadd` / `:LazygitReplace` commands. Idempotent; meant to
 --- be called from the LazyGit plugin `config` hook.
+---@return nil
 function M.setup()
   if vim.fn.executable("nvr") == 0 then
     notify.warn(

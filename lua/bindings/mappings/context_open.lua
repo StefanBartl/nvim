@@ -3,6 +3,7 @@
 
 local M = {}
 
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 

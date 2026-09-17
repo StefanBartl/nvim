@@ -110,6 +110,7 @@ end
 
 --- Setup core neotest configuration and autocommands
 ---@param user_config NeotestCoreConfig|nil User configuration overrides
+---@return nil
 function M.setup(user_config)
   if type(user_config) == "table" then
     config = vim.tbl_deep_extend("force", config, user_config)

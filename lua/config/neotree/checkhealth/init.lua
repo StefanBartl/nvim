@@ -4,6 +4,7 @@
 local M = {}
 
 ---Run all health checks
+---@return nil
 function M.check()
   -- Core modules
   require("config.neotree.checkhealth.core").check()

@@ -113,6 +113,7 @@ local function register_which_key_when_loaded()
   })
 end
 
+---@return nil
 function M.setup()
   local ok_hp, harpoon = pcall(require, "harpoon")
   if not ok_hp or not harpoon then

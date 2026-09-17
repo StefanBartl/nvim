@@ -110,6 +110,7 @@ end
 ---@param path string
 ---@param row integer|nil  -- 1-based
 ---@param col integer|nil  -- 0-based
+---@return nil
 function M.open_preview_for(path, row, col)
   local lines = read_file_lines(path)
   if not lines then
@@ -152,6 +153,7 @@ function M.open_preview_for(path, row, col)
 end
 
 ---@param entry integer|table
+---@return nil
 function M.open_index(entry)
   if type(entry) == "number" then
     -- resolve harpoon item by index and tail-call ourselves

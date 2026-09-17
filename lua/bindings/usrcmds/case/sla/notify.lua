@@ -60,6 +60,7 @@ end
 --- threshold, notifying (at most once per breach) for whichever ones cross
 --- it. Safe to call as often as needed — the `warned` set makes repeat
 --- calls a no-op for anything already flagged.
+---@return nil
 function M.check()
   if not config.sla_notifications_enabled then
     return
@@ -93,6 +94,7 @@ end
 --- call is a no-op rather than leaking a second timer, since `init.lua`'s
 --- `M.enable()` (the only caller) could in principle run more than once in
 --- a session (e.g. a config reload).
+---@return nil
 function M.setup()
   if not config.sla_notifications_enabled then
     return

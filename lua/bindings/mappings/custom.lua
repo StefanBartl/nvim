@@ -6,6 +6,7 @@ local M = {}
 
 local notify = require("lib.nvim.notify").create("[casedesk]")
 
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 

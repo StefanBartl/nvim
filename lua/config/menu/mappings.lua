@@ -143,6 +143,7 @@ local CONTRIBUTORS = {
 
 --- Record the options the general section is built with.
 ---@param opts table|nil
+---@return nil
 function M.set_custom_opts(opts)
   custom_opts = opts or {}
 end
@@ -227,6 +228,7 @@ local function menu_source(buf)
   return composed
 end
 
+---@return nil
 function M.setup()
   -- Alt-b: the same menu, anchored at the cursor instead of the pointer.
   map("n", "<A-b>", function()

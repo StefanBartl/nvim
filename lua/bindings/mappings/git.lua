@@ -38,6 +38,7 @@ end
 ---@param bufnr integer|nil buffer number, defaults to current buffer
 -- `bufnr` is accepted for call-site symmetry with the other toggles; gitsigns'
 -- toggle/preview APIs all act on the current buffer implicitly, so it is unused.
+---@return nil
 function M.toggle_inline_diff(bufnr) -- luacheck: ignore 212
   local gs = require_gs()
   if not gs then
@@ -83,6 +84,7 @@ local function ToggleInlineDiffSetup()
   end, { desc = "Toggle inline diff: invert word_diff & linehl, preview current hunk inline" })
 end
 
+---@return nil
 function M.setup()
   ToggleInlineDiffSetup()
 

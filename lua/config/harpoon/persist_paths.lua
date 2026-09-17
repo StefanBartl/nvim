@@ -642,7 +642,11 @@ function M.setup(opts)
 
   -- Seed the defaults exactly once ever (first use on this machine). Every
   -- later start leaves the bucket exactly as the user last left it -- use
-  -- the two commands below to top up or hard-reset on demand.
+  -- `:Harpoon defaults sync` (add back any missing default, existing
+  -- entries untouched) or `:Harpoon defaults reset` (rebuild from the
+  -- defaults, in that order) to top up or hard-reset on demand. They are
+  -- declared in `config.harpoon.usrcmds`, not below -- see the note at the
+  -- end of this function.
   if claim_first_run() then
     local grp = Autocmd.group("HarpoonPersistPaths", true)
     Autocmd.create("VimEnter", function()

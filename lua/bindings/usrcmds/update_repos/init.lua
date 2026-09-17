@@ -256,6 +256,7 @@ local function complete(arg_lead, cmdline)
 end
 
 ---Register :MyReposUpdate.
+---@return nil
 function M.enable()
   usercmd.create("MyReposUpdate", function(args)
     local path, only_name

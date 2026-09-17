@@ -177,6 +177,7 @@ local function goto_buffer_by_pos(pos)
   switch_to_buffer(target)
 end
 
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 

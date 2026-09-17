@@ -23,6 +23,7 @@ M.keymaps = {
   { "n", "<leader>ntw", actions.toggle_watch, "Toggle watch mode" },
 }
 
+---@return nil
 function M.setup()
   for i = 1, #M.keymaps do
     local km = M.keymaps[i]

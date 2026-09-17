@@ -23,6 +23,7 @@ local M = {}
 
 local create = require("lib.nvim.bindings.usercmd").create
 
+---@return nil
 function M.setup()
   create("NeotestActions", function()
     require("config.neotest.telescope").open()
