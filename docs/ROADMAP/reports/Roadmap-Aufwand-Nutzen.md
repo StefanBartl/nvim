@@ -99,7 +99,7 @@ longest roadmap in the collection.
 
 | # | Plugin | Item | Effort | Why it ranks here |
 |---|---|---|---|---|
-| 1 | `ai.nvim` | Migrate `pdfport.nvim`'s `claude`/`ollama` backends onto `ai.nvim` | 0.5–1 | **Security.** The entry names two real defects in the code being replaced: faulty JSON escaping, and the API key visible in the `curl` argv. Both go away with the move; `ai.nvim` exists precisely because of them |
+| ~~1~~ | `ai.nvim` | ~~Migrate `pdfport.nvim`'s backends onto `ai.nvim`~~ — **withdrawn 2026-09-17, see below** | — | Ranked here on the entry's own security claim. That claim is stale: both defects are already fixed in `pdfport` itself. Re-ranked as consolidation, §5 |
 | 2 | — | ~~Strike the fifteen done items from §3~~ — **done 2026-09-17**, `WKDBooks@15e77b3` | <1 | Every future reading of these files was wrong until this was done |
 | 3 | `casedesk.nvim` | Redaction gate in `ki.lua` — refuse to attach a file without a redacted counterpart | 0.5 | Customer screenshots and logs reaching an AI unredacted. `:Image redact` already does the work; what is missing is the *refusal*. Verified: no `redact` reference in `ki.lua` today |
 | 4 | `filetree.nvim` | Implement `get_node_at_line` for the neo-tree and nvim-tree adapters | 1 | Unlocks **five** silently-disabled features at once: `git_status`, `lsp_diagnostics`, `size_info`, `copy_move`'s clipboard marker, `filter`'s dim fallback. Both adapters already carry the other line-mapping methods. Verified: `@types/adapter.lua:60` still says "Implemented by no backend yet" |
@@ -110,6 +110,31 @@ longest roadmap in the collection.
 | 9 | `media.nvim` | Prefetch hint for frame stepping | 0.25 | "Roughly ten lines", and the playback path already does exactly this one level up |
 | 10 | `my.nvim` | Breadcrumb `container` provider is a no-op | 0.25 | A real defect, not a feature: nothing sets `cfg._base_symbol`, so `container.extract()` never fires outside a debug path. Either wire a source or drop it from `providers_order` |
 | 11 | `lib.nvim` | `deps.health` migration for the two stragglers | 0.5 | Only `open.nvim` and `pdfport.nvim` still hand-roll their executable checks — verified by grep across the fleet. Smaller than the entry implies |
+
+
+> **Correction, 2026-09-17, after the review shipped.** Row 1 above was wrong,
+> and it was wrong in exactly the way §3 warns about — an item costed from its
+> own description instead of from the source. Checked afterwards, while writing
+> the hand-off task:
+>
+> - **JSON escaping** is fixed: both backends build the body with
+>   `vim.json.encode` (`claude.lua:72-82`, `ollama.lua:131-137`), each with a
+>   comment naming the old `gsub('"', '\\"')` and why it broke on any Windows
+>   path in the prompt.
+> - **The API key is out of the argv**: it goes into a `chmod`-protected curl
+>   config file read with `-K` (`claude.lua:158-178`), with the threat model
+>   written out in the comment.
+>
+> The migration is also **larger** than the entry implies. `pdfport` sends
+> multimodal requests — a base64 PDF as a `document` block to Claude,
+> `pdftoppm` PNGs to Ollama — and `Ai.Request` has no notion of an attachment
+> (no `base64`, `image` or `document` anywhere in `ai.nvim/providers/`). So it
+> needs an attachment capability in `ai.nvim` first; it is not a rewiring of
+> call sites. It stays worth doing as **consolidation** — two hand-rolled
+> curl/provider paths beside a plugin built for exactly that — at roughly
+> 2 sessions, not 0.5.
+>
+> The corrected text is in `ai.nvim`'s own roadmap entry and `FEATURES.md`.
 
 ---
 
