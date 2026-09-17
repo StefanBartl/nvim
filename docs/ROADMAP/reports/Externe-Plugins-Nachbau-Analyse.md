@@ -8,6 +8,36 @@ the own plugins that already own that problem domain.
 
 ---
 
+## Table of content
+
+  - [1. Method, and what this report is not](#1-method-and-what-this-report-is-not)
+  - [2. The numbers](#2-the-numbers)
+  - [3. Why the effort numbers are lower than they look](#3-why-the-effort-numbers-are-lower-than-they-look)
+  - [4. Tier A — do these: high value, low effort](#4-tier-a-do-these-high-value-low-effort)
+    - [A1 · `lima1909/resty.nvim` → **runtime-analysis.nvim** · full replacement](#a1-lima1909restynvim-runtime-analysisnvim-full-replacement)
+    - [A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement ✅](#a2-jghausermkdirnvim-fileopsnvim-full-replacement)
+    - [A3 · `dstein64/vim-startuptime` → **runtime-analysis.nvim** · full replacement](#a3-dstein64vim-startuptime-runtime-analysisnvim-full-replacement)
+    - [A4 · `kdheepak/lazygit.nvim` → **lib.nvim** terminal + a command · full replacement](#a4-kdheepaklazygitnvim-libnvim-terminal-a-command-full-replacement)
+    - [A5 · `s1n7ax/nvim-window-picker` → **lib.nvim** `window/` · full replacement](#a5-s1n7axnvim-window-picker-libnvim-window-full-replacement)
+    - [A6 · `chrisbra/unicode.vim` → **emojis.nvim** · full replacement](#a6-chrisbraunicodevim-emojisnvim-full-replacement)
+  - [5. Tier B — worth it, but a real project](#5-tier-b-worth-it-but-a-real-project)
+    - [B1 · `ThePrimeagen/harpoon` → **sessions.nvim** · full replacement](#b1-theprimeagenharpoon-sessionsnvim-full-replacement)
+    - [B2 · `folke/todo-comments.nvim` → **insights.nvim** · full replacement](#b2-folketodo-commentsnvim-insightsnvim-full-replacement)
+    - [B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement](#b3-iamccomarkdown-previewnvim-mdviewnvim-full-replacement)
+    - [B4 · `dhruvasagar/vim-table-mode` → **markdown.nvim** · full replacement](#b4-dhruvasagarvim-table-mode-markdownnvim-full-replacement)
+    - [B5 · `nvim-treesitter/nvim-treesitter-context` → **ui.nvim** `winbar/` · full replacement](#b5-nvim-treesitternvim-treesitter-context-uinvim-winbar-full-replacement)
+  - [6. Tier C — harvest one feature, keep the plugin](#6-tier-c-harvest-one-feature-keep-the-plugin)
+  - [7. Findings worth acting on independently](#7-findings-worth-acting-on-independently)
+    - [7.1 `snacks.image` is enabled and almost certainly dead weight](#71-snacksimage-is-enabled-and-almost-certainly-dead-weight)
+    - [7.2 `render-markdown.nvim` is installed permanently disabled](#72-render-markdownnvim-is-installed-permanently-disabled)
+    - [7.3 `cmdlog.nvim` has a runtime dependency on plenary](#73-cmdlognvim-has-a-runtime-dependency-on-plenary)
+    - [7.4 The `plenary` dependency chain](#74-the-plenary-dependency-chain)
+    - [7.5 `nvzone/menu` is already disabled](#75-nvzonemenu-is-already-disabled)
+  - [8. Keep — rebuilding is not worth it](#8-keep-rebuilding-is-not-worth-it)
+  - [9. Suggested order](#9-suggested-order)
+
+---
+
 ## 1. Method, and what this report is not
 
 What was actually checked:
@@ -74,6 +104,8 @@ covers path, job, async and serialization. See the finding in §7.
 
 Ordered by value per session spent.
 
+---
+
 ### A1 · `lima1909/resty.nvim` → **runtime-analysis.nvim** · full replacement
 
 **Benefit: very high. Effort: 1–2 sessions. Risk: low.**
@@ -84,7 +116,7 @@ Ordered by value per session spent.
 That is a complete REST client. resty is a second one sitting next to it.
 
 The decisive argument is in the config's own comment in
-[webdev.lua](lua/plugins/webdev.lua): resty cost roughly **600 ms of startup**
+[webdev.lua](./lua/plugins/webdev.lua): resty cost roughly **600 ms of startup**
 because loading it drags in telescope, nvim-cmp and LuaSnip through its
 `plugin/` and `after/plugin/` files, defeating their own lazy triggers. The
 current spec is an elaborate `vim.filetype.add` + autocmd workaround built
@@ -99,7 +131,7 @@ look**.
 
 ---
 
-### A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement
+### A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement ✅
 
 **Benefit: moderate. Effort: <1 session. Risk: none.**
 
@@ -110,6 +142,8 @@ has `ops/`, `features/` and does its I/O through libuv directly. This is
 repository.
 
 Lowest-hanging fruit in the entire list.
+
+State: Implementiert in fileops.nvim am 17.02.2026
 
 ---
 
@@ -207,7 +241,7 @@ a quick menu. That is the *small* part of what is running here. And harpoon is
 already has `state.lua`, `git.lua`, `meta.lua`, `buforder.lua`, `picker.lua`
 and `statusline.lua`. Marks that resolve per project root and per git branch are
 a strictly better model than harpoon's, and the machine-dependent
-`target_specs` block in [misc.lua](lua/plugins/misc.lua) (workstation vs.
+`target_specs` block in [misc.lua](./lua/plugins/misc.lua) (workstation vs.
 private) becomes ordinary session metadata instead of a config-level `if`.
 
 Payoff beyond the removal: 1707 lines move out of the config into a tested
@@ -231,7 +265,7 @@ The pieces are already distributed across own code:
   insights already runs project-wide scans for conflicts, unused imports and stray
   dev servers; "lines matching a keyword set" is the same shape.
 - **The picker** already bypasses todo-comments: both keymaps in
-  [workflow.lua](lua/plugins/workflow.lua) call `snacks.picker.todo_comments()`
+  [workflow.lua](./lua/plugins/workflow.lua) call `snacks.picker.todo_comments()`
   directly, and `pickers.nvim` is the engine-agnostic layer for exactly that.
 - **The highlighting** is the only genuinely new part: extmarks on keyword
   matches in visible buffers, plus signs. `spotlight.nvim` already does
@@ -327,9 +361,11 @@ These are not replacements. The external plugin stays; one idea moves in-house.
 
 These came out of the analysis and are not "rebuild" items.
 
+---
+
 ### 7.1 `snacks.image` is enabled and almost certainly dead weight
 
-[snacks.lua:52](lua/plugins/snacks.lua) sets `image = { enabled = true }`, with a
+[snacks.lua:52](./lua/plugins/snacks.lua) sets `image = { enabled = true }`, with a
 comment describing the **Kitty graphics protocol**. Per the established finding
 in this setup, Kitty-APC never renders from inside nvim on this machine — which
 is precisely why `images.nvim` draws through **iTerm2 OSC 1337** instead, and
@@ -339,13 +375,17 @@ So this module is enabled, loads, and renders nothing. Setting it to `false` is
 a one-line change that costs nothing and removes a confusing second image path.
 **Verify once in the actual terminal, then flip it.**
 
+---
+
 ### 7.2 `render-markdown.nvim` is installed permanently disabled
 
-[markdown.lua](lua/plugins/markdown.lua) installs it and immediately calls
+[markdown.lua](./lua/plugins/markdown.lua) installs it and immediately calls
 `setup({ enabled = false })`, with `:Markdown render` as the toggle. So it is
 carried for an on-demand feature. Fine as-is — but note that a *full* rebuild
 into `markdown.nvim` is a large project (concealed rendering of every GFM
 construct) and is **not** recommended. Left out of the tiers deliberately.
+
+---
 
 ### 7.3 `cmdlog.nvim` has a runtime dependency on plenary
 
@@ -361,6 +401,8 @@ migration. It matters because it is the only thing standing between the own
 plugin set and "plenary is a third-party-only dependency" — after which
 plenary's presence is decided entirely by which *external* plugins survive.
 
+---
+
 ### 7.4 The `plenary` dependency chain
 
 `plenary` is pulled in by: harpoon (B1), todo-comments (B2), resty (A1),
@@ -370,9 +412,11 @@ Doing A1 + A4 + B1 + B2 + 7.3 removes five of those nine. It does not remove
 plenary — telescope and neotest keep it — but it does mean plenary is no longer
 in the *startup* path, since harpoon is the only `lazy = false` consumer.
 
+---
+
 ### 7.5 `nvzone/menu` is already disabled
 
-[nvchad.lua:26](lua/plugins/nvchad.lua) has `enabled = false`, and
+[nvchad.lua:26](./lua/plugins/nvchad.lua) has `enabled = false`, and
 `ui.nvim/contextmenu/` exists with its own README. This replacement appears to
 be **already done** — the spec is a leftover. Deleting the file is housekeeping,
 not a project. Worth confirming `:UI` covers the cases you used it for, then
@@ -429,3 +473,6 @@ For completeness, with the reason stated once:
 
 A1–A6 plus 7.5 is **seven repositories removed** for roughly six sessions.
 Adding B1–B4 brings it to eleven, for roughly ten more.
+
+---
+

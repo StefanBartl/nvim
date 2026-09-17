@@ -1,17 +1,15 @@
 ---@module 'plugins.misc'
 --- Small plugins with no group of their own: harpoon (+ its optional fzf/
---- telescope deps), mkdir.nvim, and whatever else lands here rather than
---- earning its own file. `plugins.control.mode` lets a repo be disabled
---- centrally instead of `enabled = false` scattered per-spec.
+--- telescope deps) and whatever else lands here rather than earning its own
+--- file. `plugins.control.mode` lets a repo be disabled centrally instead of
+--- `enabled = false` scattered per-spec.
 
 local machine = require("machine")
 local plugins = require("plugins.control.mode").new()
 
 -- Disable repos centrally here (basename -> "disabled"), instead of setting
 -- `enabled = false` in each individual spec below.
-plugins.modes({
-  -- ["mkdir.nvim"] = "disabled",
-})
+plugins.modes({})
 
 plugins.add({
 
@@ -87,11 +85,6 @@ plugins.add({
       require("config.harpoon.pin_marks").setup()
       require("config.harpoon.usrcmds").setup()
     end,
-  },
-
-  {
-    "jghauser/mkdir.nvim",
-    lazy = true,
   },
 })
 
