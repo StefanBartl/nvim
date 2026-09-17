@@ -27,7 +27,7 @@ the surrounding text is English like every other document here.
     - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
     - ~~[B4 — lsp: provoke errors in `:LspDoctor deep`](#b4--lsp-provoke-errors-in-lspdoctor-deep--done)~~ — done
     - ~~[B5 — `rules.nvim` pass over ui.nvim](#b5--rulesnvim-pass-over-uinvim--done)~~ — done
-    - [B6 — data.nvim: phase 1 register scope](#b6-datanvim-phase-1-register-scope)
+    - ~~B6 — data.nvim: phase 1 register scope~~ — done 2026-09-17, prompt removed (`data.nvim@8513c27`; recorded in `wkdbook-myplugins/data.nvim/FEATURES.md`)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
     - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
@@ -701,42 +701,6 @@ Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
 stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
 fertig: committen und direkt auf main pushen, und den Punkt in ui.nvim/
 NOTES.md abhaken bzw. nach ui.nvim/FEATURES.md überführen.
-```
-
----
-
-### B6 — data.nvim: phase 1 register scope
-
-```
-Aufgabe: data.nvim — Phase 1 fertigstellen (Register-Scope und Ziel-Flags).
-
-Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/data.nvim/
-ROADMAP/ROADMAP.md, Abschnitt "Phase 1 — Register-Scope". Der filter-Teil
-ist erledigt; offen sind laut Punkt:
-
-- --reg=<name>: Inhalt aus einem Register lesen (Default +/") statt aus dem
-  Buffer, Ergebnis in einen neuen Scratch-Split (lib.nvim.window /
-  buf_win_tab) statt in den Buffer zu schreiben.
-- --inplace/--split/--reg=<name> als Ziel-Flags. Der Default hängt vom Scope
-  ab: Buffer/Selektion → inplace, Register → split.
-- Danach ggf. nachziehen: diff.nvim-Vorher/Nachher für einen filter-Lauf,
-  bevor er in-place ersetzt. Hing an filter, das jetzt gebaut ist.
-
-Stand geprüft 2026-09-17: "--reg" kommt im Quelltext nur als Ankündigung vor
-(lua/data/scope/resolve.lua:12 nennt es als Phase 1) — also noch offen.
-Prüfe das nochmal, bevor du anfängst.
-
-Beachte die zwei bewussten Abweichungen, die beim filter-Bau getroffen
-wurden und die auch hier gelten (stehen im Roadmap-Punkt): keine
-Objekt-Rekonstruktion/unflatten, und pickers.nvim ist Hard-Requirement für
-filter statt eines eigenen Fallback-UIs.
-
-Repo: E:/repos/data.nvim
-Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
-stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
-fertig: committen und direkt auf main pushen. Roadmap-Punkt entfernen und
-Ablieferungsnachweis in data.nvim/FEATURES.md eintragen (Muster: die
-FEATURES.md der anderen Plugins im selben Ordner).
 ```
 
 ---
