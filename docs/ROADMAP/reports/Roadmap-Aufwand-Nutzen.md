@@ -52,6 +52,15 @@ they were last checked, which is what made this pass cheap for them.
 
 ## 3. The largest finding: fifteen items are done and still listed
 
+> **Acted on the same day** (`WKDBooks@15e77b3`). Every item in the table
+> below is struck from its roadmap and recorded in a new `FEATURES.md` in
+> that plugin's folder, naming the module that answers it. `lsp.nvim` §14
+> carries five rows now instead of fifteen; `ui.nvim/TASK-screenkey.md` is
+> deleted; `filetree.nvim`'s "Live — open work" table is gone, it had one
+> row and that row was closed. The two stale-but-not-done entries at the
+> end of this section are corrected in place. The table stays here as the
+> evidence for §8's closing argument.
+
 This is not a nitpick about tidiness. These entries are what a reader plans
 against, and four of them are in the *cheapest* tier — exactly the ones most
 likely to be picked up next, and every one of them would have been picked up
@@ -79,8 +88,8 @@ Two more entries are stale rather than done: `lsp.nvim` costs the signature
 module at "~800 LOC", it is **1,322** today; and `mdview.nvim` still calls the
 flag `experimental.any_file`, which moved to the top level on 2026-08-30.
 
-**Cost to fix all of this: well under one session**, and it is the single
-highest-leverage item in this report. `lsp.nvim`'s §14 table is the worst
+**Cost to fix all of this: well under one session** — confirmed, it took
+about that — and it was the single highest-leverage item in this report. `lsp.nvim`'s §14 table is the worst
 offender — eight of its fifteen rows are stale — and it is 1,368 lines, the
 longest roadmap in the collection.
 
@@ -91,7 +100,7 @@ longest roadmap in the collection.
 | # | Plugin | Item | Effort | Why it ranks here |
 |---|---|---|---|---|
 | 1 | `ai.nvim` | Migrate `pdfport.nvim`'s `claude`/`ollama` backends onto `ai.nvim` | 0.5–1 | **Security.** The entry names two real defects in the code being replaced: faulty JSON escaping, and the API key visible in the `curl` argv. Both go away with the move; `ai.nvim` exists precisely because of them |
-| 2 | — | Strike the fifteen done items from §3 | <1 | Every future reading of these files is wrong until this is done |
+| 2 | — | ~~Strike the fifteen done items from §3~~ — **done 2026-09-17**, `WKDBooks@15e77b3` | <1 | Every future reading of these files was wrong until this was done |
 | 3 | `casedesk.nvim` | Redaction gate in `ki.lua` — refuse to attach a file without a redacted counterpart | 0.5 | Customer screenshots and logs reaching an AI unredacted. `:Image redact` already does the work; what is missing is the *refusal*. Verified: no `redact` reference in `ki.lua` today |
 | 4 | `filetree.nvim` | Implement `get_node_at_line` for the neo-tree and nvim-tree adapters | 1 | Unlocks **five** silently-disabled features at once: `git_status`, `lsp_diagnostics`, `size_info`, `copy_move`'s clipboard marker, `filter`'s dim fallback. Both adapters already carry the other line-mapping methods. Verified: `@types/adapter.lua:60` still says "Implemented by no backend yet" |
 | 5 | `media.nvim` | Segments → SRT/VTT serialisers (transcription phase 1) | 0.5 | The data model (`Media.Segment`/`Media.Transcript`) is built and every engine already has to produce it. Only the serialisers are missing — verified: `lua/media/output/` holds `init.lua` and `sidecar.lua`, nothing else |
