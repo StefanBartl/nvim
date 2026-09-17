@@ -36,7 +36,10 @@ end
 
 --- Read file lines efficiently with size/line cap.
 ---@param path string
----@return string[]|nil
+---@return string[]|nil lines
+---@return boolean|nil truncated  True when the line cap actually cut the file
+--- short, so the caller can say so instead of showing a preview that simply
+--- stops. `nil` alongside a `nil` result, and `false` for a file read whole.
 local function read_file_lines(path)
   if type(path) ~= "string" or path == "" then
     return nil
@@ -55,7 +58,13 @@ local function read_file_lines(path)
   -- Large file → head-only via readfile (far fewer temp strings)
   if st.size and st.size > MAX_BYTES then
     local ok, lines = pcall(vim.fn.readfile, path, "", MAX_LINES)
-    return ok and lines or nil
+    if not ok then
+      return nil
+    end
+    -- `readfile` with a max count gives back exactly that many lines when it
+    -- hit the cap, so a short result means the file simply ended first and
+    -- nothing was actually cut.
+    return lines, #lines >= MAX_LINES
   end
 
   -- Small enough → read whole file, then split once
@@ -70,7 +79,7 @@ local function read_file_lines(path)
   end
 
   -- Use regex split to honour CRLF
-  return vim.split(data, "\r?\n", { plain = false })
+  return vim.split(data, "\r?\n", { plain = false }), false
 end
 
 --- Ensure a single reusable scratch buffer and window.
@@ -112,10 +121,23 @@ end
 ---@param col integer|nil  -- 0-based
 ---@return nil
 function M.open_preview_for(path, row, col)
-  local lines = read_file_lines(path)
+  local lines, truncated = read_file_lines(path)
   if not lines then
     notify.warn("[harpoon preview] cannot read file: " .. tostring(path))
     return
+  end
+
+  -- UI-02: a capped preview says so. The marker goes in the buffer rather
+  -- than into a notification because that is where the cut actually is --
+  -- scrolling to a preview that just stops looks exactly like a file that
+  -- just ends, and a toast would nag on every preview of the same big file.
+  if truncated then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] =
+      ("--- preview truncated at %d lines (file is larger than %d KB) ---"):format(
+        MAX_LINES,
+        MAX_BYTES / 1024
+      )
   end
 
   -- Clamp cursor safely

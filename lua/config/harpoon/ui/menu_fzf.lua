@@ -4,7 +4,11 @@
 
 local M = {}
 
+local notify = require("lib.nvim.notify").create("[config.harpoon.menu_fzf]")
 local path_shorten = require("lib.nvim.fs.path_shorten")
+
+---@type boolean  Whether the fzf-lua downgrade has already been announced.
+local _warned_no_fzf = false
 
 ---@return boolean
 local function has_fzf_lua()
@@ -126,8 +130,21 @@ function M.open()
     -- second, disconnected "menu" that the default quick menu never sees.
     -- `harpoon` here is the same singleton already required at the top of
     -- M.open().
+    --
+    -- UI-03: the downgrade is announced rather than silent -- the user asked
+    -- for this menu and gets a visibly different one, which without a word
+    -- reads as a bug in the keymap. Once per session, because the condition
+    -- cannot change until fzf-lua is installed and Neovim restarted.
+    if not _warned_no_fzf then
+      _warned_no_fzf = true
+      notify.warn("fzf-lua not available — falling back to Harpoon's own quick menu")
+    end
     if harpoon.ui and type(harpoon.ui.toggle_quick_menu) == "function" then
       harpoon.ui:toggle_quick_menu(list)
+    else
+      -- Neither backend available: say so instead of returning as if the
+      -- menu had been opened.
+      notify.error("no Harpoon menu available (fzf-lua missing, quick menu unusable)")
     end
   end
 end
