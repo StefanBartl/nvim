@@ -74,7 +74,20 @@ function M.setup()
     require("lib.nvim.ui.kit").input({
       title = "WhichKey: ",
       on_submit = function(query)
-        vim.cmd("WhichKey " .. query)
+        -- The prompt's text goes in as an *argument*, not concatenated into
+        -- an Ex string: in `vim.cmd("WhichKey " .. query)` a `|` in the query
+        -- would start a second Ex command. which-key happens to declare its
+        -- command without `-bar`, which swallows the `|` today -- but that is
+        -- a third-party detail this config does not control, and the argument
+        -- form delivers a byte-identical `cmd.args` either way.
+        --
+        -- `nvim_cmd` rejects an empty argument, so an empty prompt takes the
+        -- same path as `<leader>wK`: show everything.
+        if query == nil or query:match("^%s*$") then
+          vim.cmd.WhichKey()
+        else
+          vim.cmd.WhichKey(query)
+        end
       end,
     })
   end, { desc = "[General] WhichKey query" })
