@@ -47,12 +47,12 @@ local M = {}
 --- (`"StefanBartl/markdown.nvim"`). Both resolve to the same plugin, so a
 --- reasonable guess cannot silently match nothing.
 ---@class Config.Telemetry.Opts
----@field deep? boolean|string[]          # wrap the whole loaded subtree (default true)
----@field profile_args? boolean|string[]  # record argument fingerprints (default true)
----@field timing? boolean|string[]        # record durations (default true)
----@field exclude? string[]               # plugins to skip entirely
----@field lib_profile_args? boolean       # arguments for lib.nvim's aggregate (default true)
----@field lib_timing? boolean             # durations for lib.nvim's aggregate (default true)
+---@field deep? boolean|string[]           wrap the whole loaded subtree (default true)
+---@field profile_args? boolean|string[]   record argument fingerprints (default true)
+---@field timing? boolean|string[]         record durations (default true)
+---@field exclude? string[]                plugins to skip entirely
+---@field lib_profile_args? boolean        arguments for lib.nvim's aggregate (default true)
+---@field lib_timing? boolean              durations for lib.nvim's aggregate (default true)
 
 --- `timing`/`lib_profile_args`/`lib_timing` default to full mode (on) rather
 --- than plain counting: this is the actual policy every target should come

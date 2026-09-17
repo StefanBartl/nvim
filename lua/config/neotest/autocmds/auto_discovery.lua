@@ -39,7 +39,12 @@ end
 -- Auto-discovery on VimEnter
 ---@return nil
 function M.attach()
+  -- LUA-96: named augroup, cleared on registration. `once = true` bounds a
+  -- single autocmd to one firing, but it does not make `M.setup()` idempotent
+  -- -- a second call (a config reload) would register a second one-shot
+  -- handler, and discovery would run twice.
   Autocmd.create("VimEnter", force_initial_discovery, {
+    group = Autocmd.group("NeotestAutoDiscovery", true),
     once = true,
     desc = "[neotest] Initial test discovery",
   })

@@ -57,9 +57,9 @@ local PRUNE_DIRS = { [".git"] = true, ["node_modules"] = true, ["target"] = true
 local MAX_FILE_BYTES = 1024 * 1024
 
 ---@class Bindings.Repo.Tree
----@field text string      # every source file of the tree, concatenated
----@field lower string|nil # lazily built lowercase copy, for ignore_case lookups
----@field files integer    # how many files went in, 0 meaning "cannot answer"
+---@field text string       every source file of the tree, concatenated
+---@field lower string|nil  lazily built lowercase copy, for ignore_case lookups
+---@field files integer     how many files went in, 0 meaning "cannot answer"
 
 ---@type table<string, Bindings.Repo.Tree>
 local cache = {}

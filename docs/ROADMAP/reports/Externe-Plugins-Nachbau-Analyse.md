@@ -129,8 +129,8 @@ in, and the cost. Sorted by plugin.
 | `gitsigns` → **`:ToggleInlineDiff`** (invert `word_diff`+`linehl`, preview hunk inline) | `bindings/mappings/git.lua:17,79` | **diff.nvim** — the *logic* is already yours; only the gitsigns calls underneath would change. Tied to the line above, so it only moves if hunks move. | **M** |
 | `diffview` → **side-by-side diff, file history** | `<leader>dv/dc/dh`; `config = true` | **diff.nvim** already delivers "split, inline, prompt, file, clipboard". File *history* (revision list + per-revision diff) is the missing half. | **L** |
 | `neogit` → **magit-style status buffer** | `<leader>gg`, `kind = "split"` | Keep. A staging UI is a project, not a feature. | **XL** |
-| `git-conflict.nvim` → **conflict detection** | `config = true` | **insights.nvim** — `conflicts/` already exists and already scans for git conflicts. Likely duplicated today. | **S** (verify) |
-| `git-conflict.nvim` → **marker highlight + ours/theirs/both/none + navigation** | defaults | **insights.nvim** (owns detection) with **spotlight.nvim**'s highlight machinery. | **M** |
+| `git-conflict.nvim` → **repo-level unmerged-file report** (`:GitConflictListQf`) | `config = true` | **insights.nvim** — `conflicts/` already asks git for files in the `unmerged` state and puts them in the quickfix list. This one family *is* already covered. | **S** |
+| `git-conflict.nvim` → **buffer-level marker surgery** (9 commands, 6 buffer-local keys) | defaults; full command list in `docs/NOTES/ExternPlugins/Bindings/Usercmds/GitConflict.md` | **Not** covered by insights — that is a repo-level report, this is line-level text work on markers. Pure buffer parsing plus extmarks, no git plumbing. See [git_nvim.md](../LONG_RUN/IDEAS/git_nvim.md). | **M–L** |
 | `lazygit.nvim` → **float terminal running `lazygit`** | `<leader>lg` | **lib.nvim** has `terminal/`, `window/`, `git/`, `cross/`. This is wiring. | **S** |
 | `lazygit.nvim` → **`nvr` callback bridge** (`:LazygitBadd`, `:LazygitReplace` — LazyGit's `O` / `<C-o>` open files in the *parent* nvim) | `config/lazygit/**`, 146 lines | **This is the real content, and it is already yours.** The commands, path resolution and focus-safe replace are written; only `vim.g.lazygit_use_neovim_remote` belongs to the plugin. Home: **open.nvim** (routing a target into the right window) or **lib.nvim**. | **M** |
 
@@ -588,7 +588,7 @@ Adding B1–B4 brings it to eleven, for roughly ten more.
 2. `snacks.image = false` (§4.1), after one terminal check.
 3. Resolve the five dead snacks bindings (§4.2).
 4. Decide `config/gp_config/`'s fate (§4.5).
-5. Confirm git-conflict's detection is duplicated by `insights.nvim/conflicts/`.
+5. Note: git-conflict and `insights.nvim/conflicts/` are **complementary**, not duplicates — repo-level report vs. buffer-level markers. Verified 2026-09-17.
 
 **Cheap removals (S):** mkdir → fileops · window-picker → lib/filetree ·
 lazygit float → lib/open · `:Gbrowse` → open/reposcope.

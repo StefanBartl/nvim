@@ -44,13 +44,13 @@ local function map_path()
 end
 
 ---@class Bindings.SourceEntry
----@field lhs string?        # keymap left-hand side, raw as written in the source
----@field name string?       # user command name
----@field kind string        # "keymap"|"usercmd"|"autocmd"
+---@field lhs string?         keymap left-hand side, raw as written in the source
+---@field name string?        user command name
+---@field kind string         "keymap"|"usercmd"|"autocmd"
 ---@field modes string[]
 ---@field desc string?
----@field module string      # the node's module id, e.g. "bindings.mappings.git"
----@field path string        # the node's source path, for a jump target
+---@field module string       the node's module id, e.g. "bindings.mappings.git"
+---@field path string         the node's source path, for a jump target
 ---@field line integer
 
 ---A JSON `null` decodes to `vim.NIL`, which is userdata -- not Lua `nil`.
