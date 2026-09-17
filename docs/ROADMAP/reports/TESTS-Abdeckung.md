@@ -32,11 +32,13 @@ Regeln, die sich über die Runden eingespielt haben:
   Fix mit Begründung, oder `BUG:`-Assertion als Pin plus separater Fix-Task.
 - Pro Repo: `luacheck`/`stylua` mit exakt den CI-Befehlen grün, Suite real headless gelaufen,
   Commit direkt auf `main` des jeweiligen Repos.
-- Immer nur **ein** Agent gleichzeitig, repo-für-repo.
+- Seit 2026-09-17 bis zu **drei** Agents gleichzeitig (vorher einer), je ein Repo pro Agent. Den
+  gemeinsamen Handover schreibt nur die Hauptsession — parallele Agents würden sich dort
+  gegenseitig überschreiben.
 
 ## Fortschritt
 
-**11 von 36 Repos abgeschlossen**, Runde 12 läuft.
+**12 von 36 Repos abgeschlossen**; Runde 13 (sessions.nvim) und 14 (pdfport.nvim) laufen parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -51,15 +53,17 @@ Regeln, die sich über die Runden eingespielt haben:
 | 9 | open.nvim | 9 | `a8dbe1d` | 9 neue Specs; ~12 → 24 von 26 Dateien |
 | 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
 | 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
-| 12 | insights.nvim | 12 | *läuft* | — |
+| 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
+| 13 | sessions.nvim | 13 | *läuft* | — |
+| 14 | pdfport.nvim | 14 | *läuft* | — |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 ## Warteschlange
 
-Nach insights.nvim in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
+Nach den drei laufenden Runden in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
 
-sessions.nvim → pdfport.nvim → emojis.nvim → fileops.nvim →
+emojis.nvim → fileops.nvim →
 reposcope.nvim → gopath.nvim → color_my_ascii.nvim → diff.nvim → cascade.nvim →
 sandbox.nvim → data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
 
@@ -85,9 +89,9 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | open.nvim | 26 | 8 | ✅ fertig |
 | replacer.nvim | 40 | 8 | ✅ fertig |
 | github_stats.nvim | 44 | 9 | ✅ fertig |
-| insights.nvim | 49 | 9 | 🔄 Runde 12 läuft |
-| sessions.nvim | 17 | 9 | 🟠 schwach |
-| pdfport.nvim | 50 | 10 | 🟠 schwach |
+| insights.nvim | 49 | 9 | ✅ fertig |
+| sessions.nvim | 17 | 9 | 🔄 Runde 13 läuft |
+| pdfport.nvim | 50 | 10 | 🔄 Runde 14 läuft |
 | emojis.nvim | 23 | 11 | 🟠 schwach |
 | fileops.nvim | 18 | 11 | 🟠 schwach |
 | reposcope.nvim | 113 | 12 | 🟠 schwach (großes Repo) |
@@ -128,8 +132,16 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | github_stats.nvim | `usrcmds/utils.lua`s `split_lines()` hängte an jedes Ergebnis eine Leerzeile an; `show_float()` ruft es pro Array-Element auf → jeder mehrzeilige Report kam doppelt zeilenumbrochen heraus | `6a85943` |
 | github_stats.nvim | `export.lua`s `write_lines()` pcallte das `writefile`, nicht das vorangehende `mkdir` → ein nicht anlegbares Elternverzeichnis entkam als rohes `E739` | `6a85943` |
 
-Aktuell sind **keine Bugs offen gepinnt**. Die beiden github_stats-Pins aus Runde 11 sind mit
-`6a85943` gefixt; ihre Assertions sind als Regressionswächter stehen geblieben.
+| github_stats.nvim | `BufWipeout`-Handler löschte den Buffer, der gerade gewiped wird → `E937`, sobald der Buffer beim Wipe noch in seinem Fenster lag (`nvim_buf_delete()` von außen; `:q`/`:bwipeout`/`:bdelete`/`close()` waren immer sauber) | `dfdb1d8` |
+
+### Offen (gepinnt, Runde 12 / insights.nvim)
+
+| Datei | Bug |
+|---|---|
+| `symbols/parser.lua` | `parse_vimgrep_line()` splittet an den ersten drei Doppelpunkten; der Windows-Laufwerksbuchstabe frisst das Dateinamen-Feld, jede rg-Zeile wird still verworfen → **`:Insights symbols` findet unter Windows gar nichts** (verifiziert: rg gibt hier `E:/repos/…` aus) |
+| `symbols/ts_lua.lua` | der `assignment_statement`-Zweig nutzt `field("left")`/`field("right")`, die es in tree-sitter-lua nicht gibt → toter Code; `M.foo = function()` liefert mit `use_treesitter_for_lua` keine Symbole |
+| `symbols/ts_lua_tables.lua` | derselbe Defekt an eigener Stelle: verschachtelte Table-Felder bekommen nie ihr Präfix (`imports/ts_requires.lua` trägt bereits einen `child_of_type`-Helfer, der genau das löst) |
+| `tree/init.lua` | Exclude-Globs werden Lua-Pattern-Stil mit `%` escapt, landen aber als Regex beim externen Tool → `*/.git/*` matcht nie, `:Insights tree`/`count` enthalten unter Windows das ganze `.git/` |
 
 ## Historie: der ursprüngliche 3-Repo-Report
 

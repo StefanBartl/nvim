@@ -12,29 +12,28 @@
 
 ## Restliche Plugins (Reihenfolge für die Fortsetzung)
 
-11 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+12 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
 `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
 `documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
 laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
-Die verbleibenden 16 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+Die verbleibenden 15 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
 in dieser Reihenfolge abzuarbeiten:
 
-1. insights.nvim
-2. sessions.nvim
-3. pdfport.nvim
-4. emojis.nvim
-5. fileops.nvim
-6. reposcope.nvim
-7. gopath.nvim
-8. color_my_ascii.nvim
-9. diff.nvim
-10. cascade.nvim
-11. sandbox.nvim
-12. data.nvim
-13. spotlight.nvim
-14. mdview.nvim
-15. filetree.nvim
-16. lsp.nvim
+1. sessions.nvim
+2. pdfport.nvim
+3. emojis.nvim
+4. fileops.nvim
+5. reposcope.nvim
+6. gopath.nvim
+7. color_my_ascii.nvim
+8. diff.nvim
+9. cascade.nvim
+10. sandbox.nvim
+11. data.nvim
+12. spotlight.nvim
+13. mdview.nvim
+14. filetree.nvim
+15. lsp.nvim
 
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
@@ -72,7 +71,7 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 | open.nvim | 26 | 8 | 🔴 kaum getestet |
 | replacer.nvim | 40 | 8 | 🔴 kaum getestet |
 | github_stats.nvim | 44 | 9 | ✅ fertig (Runde 11, Commit `1b9b638`; 9 → 22 Spec-Dateien) |
-| insights.nvim | 49 | 9 | 🟠 schwach |
+| insights.nvim | 49 | 9 | ✅ fertig (Runde 12, Commit `1be0f7a`; 7 → 31 Spec-Dateien) |
 | sessions.nvim | 17 | 9 | 🟠 schwach |
 | pdfport.nvim | 50 | 10 | 🟠 schwach |
 | emojis.nvim | 23 | 11 | 🟠 schwach |
@@ -103,8 +102,8 @@ absteigend nach Ratio durch die 🔴/🟠 Liste, 🟡/🟢 nur falls noch Lücke
 
 ## Aktueller Stand (2026-09-17, nach zwei Wochenlimit-Unterbrechungen)
 
-11 von ~35 Plugins fertig (pickers, cmdlog, dap, casedesk, buffer-ctx, debugging,
-recommender, language, open, replacer, github_stats).
+12 von ~35 Plugins fertig (pickers, cmdlog, dap, casedesk, buffer-ctx, debugging,
+recommender, language, open, replacer, github_stats, insights).
 
 **Die 4 während der Kampagne gefundenen/gepinnten Bugs wurden in einer separaten Session
 zwischenzeitlich gefixt** (jeweils eigener Commit, direkt auf `main` des jeweiligen Repos,
@@ -136,16 +135,30 @@ Alle 10 abgeschlossenen Coverage-Commits sowie alle 6 Bugfix-Commits sind per `g
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
-**Nächste Schritte:** Runde 12 (insights.nvim) starten, danach der Reihe nach die
-restliche 🟠/🟡-Liste unten (→ sessions.nvim → pdfport.nvim → emojis.nvim → fileops.nvim
+**Nächste Schritte:** Runde 13 (sessions.nvim) starten, danach der Reihe nach die
+restliche 🟠/🟡-Liste unten (→ pdfport.nvim → emojis.nvim → fileops.nvim
 → reposcope.nvim → gopath.nvim → color_my_ascii.nvim, danach 🟡 nur bei konkreten Lücken).
 
-**Offener Nebenauftrag:** die 2 in Runde 11 (github_stats.nvim) gepinnten Bugs sind noch
-nicht gefixt (`usrcmds/utils.lua`s `split_lines()`-Trailing-Leerzeile → doppelt gesetzte
-Floats; `export.lua`s `ensure_parent_dir()` außerhalb des pcall → rohes `E739`). Beide sind
-sichtbare Verhaltensänderungen und daher bewusst als eigene Entscheidung offen gelassen,
-Details im Fortschritts-Eintrag unten. Alle früheren Kampagnen-Bugs (7 insgesamt über 6
-Repos, inkl. des in Runde 11 direkt gefixten `strptime`-Fehlers) sind erledigt.
+**Offener Nebenauftrag:** inzwischen 6 gepinnte, noch ungefixte Bugs aus zwei Runden.
+
+Aus Runde 11 (github_stats.nvim), unverändert offen:
+- `usrcmds/utils.lua`s `split_lines()`-Trailing-Leerzeile → doppelt gesetzte Floats.
+- `export.lua`s `ensure_parent_dir()` außerhalb des pcall → rohes `E739`.
+
+Aus Runde 12 (insights.nvim), neu:
+- `symbols/parser.lua` verwirft unter Windows **jeden** rg-Treffer (Laufwerksbuchstabe
+  frisst das Dateinamen-Feld) → `:Insights symbols` findet dort gar nichts, lautlos.
+  Höchste Priorität von den sechs: das ist ein Komplettausfall eines Hauptfeatures auf
+  der Plattform des Nutzers.
+- `symbols/ts_lua.lua`s `assignment_statement`-Zweig ist toter Code (`field("left")`/
+  `field("right")` gibt es in tree-sitter-lua nicht).
+- `symbols/ts_lua_tables.lua` hat denselben Defekt an eigener Stelle (kein Präfix für
+  verschachtelte Table-Felder).
+- `tree/init.lua` escapt die Windows-Exclude-Regexes Lua-Stil (`%`) statt Regex-Stil
+  (`\`) → `*/.git/*` matcht nie, der Tree enthält unter Windows das ganze `.git/`.
+
+Alle früheren Kampagnen-Bugs (7 insgesamt über 6 Repos, inkl. des in Runde 11 direkt
+gefixten `strptime`-Fehlers) sind erledigt.
 
 ## Fortschritt
 
@@ -559,4 +572,107 @@ Repos, inkl. des in Runde 11 direkt gefixten `strptime`-Fehlers) sind erledigt.
   Commit: `1b9b638` (test: cover api, fetcher, background, dashboard layers, bindings and
   health), direkt auf `main` gepusht und per `git merge-base --is-ancestor HEAD origin/main`
   verifiziert.
+- [x] **insights.nvim** — fertig (Runde 12). Eigener framework-freier Harness
+  (`TESTS/harness.lua`, aggregiert über eine explizite Liste in `TESTS/run.lua`)
+  beibehalten, kein plenary. Anders als bei open.nvim/github_stats.nvim ist hier **nur
+  `lib.nvim` CI-Sibling** — `ui.nvim` wird zwar von zwei Modulen wirklich gebraucht
+  (`ui/scratch.lua` requirt `ui.kit` beim Laden, `devserver` lazy für den Prompt), ist in
+  CI aber nicht ausgecheckt; beide sind daher gegen ein `ui.kit`-Double abgedeckt, das
+  *vor* dem `require` des Testobjekts in `package.loaded` liegt. Die Suite läuft damit
+  identisch mit und ohne installiertes ui.nvim.
+  24 neue Spec-Dateien, 2 bestehende erweitert:
+  **imports** — `imports_langs_contract_spec.lua` (der gemeinsame `ImportLang`-Vertrag
+  einmal tabellengetrieben über alle sechs Scanner: deklarierte Metadaten, Degenerat-
+  Eingaben, Zeilennummern, `is_external`, und dass nur Lua einen Tree-sitter-Pfad
+  beansprucht — plus der Test, dass keine zwei Sprachen dieselbe Dateiendung
+  beanspruchen, was sonst jede Zählung im Report verdoppeln würde),
+  `imports_langs_detail_spec.lua` (nur die echten Abweichungen: Pythons mehrzeilige
+  Klammerform + Kommentar-Stripping, JS' fünf Scan-Pässe inkl. `type`-Keyword und der
+  4a/4b-Dedup, Gos `go.mod`-Lookup, Rusts verschachtelte Brace-Expansion, C's
+  `external`-Entscheidung schon zur Scanzeit) — dasselbe Muster wie bei dap.nvims 11
+  Sprachdateien in Runde 3, statt sechs Beinahe-Kopien;
+  `imports_ts_requires_spec.lua`, `imports_resolve_spec.lua`,
+  `imports_definition_spec.lua`, `imports_graph_spec.lua`, `imports_report_spec.lua`
+  (`insights.imports` end-to-end gegen einen Fixture-Baum: Scan, Filtersprache mit
+  Sprach-IDs/Aliassen/Gruppen/Präfix-Grenzen, alle vier Reports, beide Writer,
+  `run`/`run_reverse`/`run_unused`).
+  **symbols** — `symbols_patterns_parser_spec.lua`, `scan_rg_spec.lua`,
+  `scan_cache_spec.lua`, `symbols_ts_lua_spec.lua`, `symbols_index_spec.lua`,
+  `symbols_open_spec.lua`.
+  **metrics/smells** — `metrics_analyzer_spec.lua`, `metrics_report_spec.lua`,
+  `metrics_init_spec.lua`, `smells_run_spec.lua`.
+  **restliche Features** — `unimported_spec.lua`, `conflicts_spec.lua`,
+  `compress_tree_spec.lua`, `devserver_extra_spec.lua`, `ui_fileinfo_spec.lua`.
+  **Verdrahtung** — `bindings_spec.lua` (Keymaps echt über lib.nvims Registry gebunden,
+  Autocmd-Gruppen, `:Insights`-Completion an jeder Position plus ein Dispatch-Check pro
+  Subkommando und pro Feature-Gate), `health_init_spec.lua` (`:checkhealth insights`
+  gegen aufgezeichnete `vim.health`-Aufrufe, `setup()` end-to-end inkl. des
+  „ohne hover.nvim und ohne lib.nvim.deps"-Pfads, sowie die komplette öffentliche
+  Fassade). Erweitert: `config_spec.lua` (um `expand_paths`, inkl. des Sonderfalls
+  `compress.outdir == ""`), `TESTS/run.lua` (nach Schichten neu sortiert).
+  **Kein einziger Subprozess, kein Netz:** `rg`, `git`, `dot`, `tar`/`zip`/PowerShell und
+  die Kill-Tools sind je an genau einer Naht gekappt, die vor dem `require` ersetzt wird
+  (`insights.scan.rg`, `insights.util.platform`, `lib.nvim.ui.list` +
+  `lib.nvim.cross.executable`, bzw. `vim.system`/`vim.fn.executable` direkt). Einzige
+  bewusste Ausnahme: die beiden devserver-Suiten starten ein echtes
+  `nvim --headless -c qa!`, weil `track()` den Channel zu einer OS-PID auflöst und eine
+  erfundene Channel-Nummer gar nichts aufzeichnet. Tree-sitter wird **nicht** gestubbt,
+  sondern gegen die mitgelieferte Grammatik gefahren.
+  **Vier echte Bugs gefunden, bewusst nur gepinnt statt gefixt** (alle vier sind
+  sichtbare Verhaltensänderungen; je `BUG:`-Kommentar an der Assertion):
+  1. `symbols/parser.lua`s `parse_vimgrep_line` splittet an den ersten drei Doppelpunkten
+     — der Doppelpunkt des Laufwerksbuchstabens frisst das `filename`-Feld. `rg_index.build`
+     übergibt `vim.fn.getcwd()` als Suchwurzel, unter Windows also `E:\repos\…`, wodurch
+     **jede** von rg gedruckte Zeile als unparsebar verworfen wird: `:Insights symbols`
+     findet auf Windows gar nichts, und zwar lautlos (die Fehlerliste wird nur gezählt,
+     nicht angezeigt). Empirisch verifiziert, nicht hergeleitet.
+  2. `symbols/ts_lua.lua`s `assignment_statement`-Zweig ist toter Code: er liest Ziel und
+     Wert über `node:field("left")`/`node:field("right")`, tree-sitter-lua exponiert
+     `variable_list`/`expression_list` aber als *typisierte Kinder*, nicht als benannte
+     Felder. Mit `symbols.use_treesitter_for_lua = true` liefert ein Modul im Stil
+     `M.foo = function() … end` also überhaupt keine Symbole, während dasselbe Modul als
+     `function M.foo() … end` alle liefert.
+  3. `symbols/ts_lua_tables.lua` hat denselben Defekt an eigener Stelle
+     (`par:field("variable_list")[1]` ist immer nil) → ein Feld in
+     `local cfg = { inner = {} }` heißt im Picker `inner` statt `cfg.inner`.
+     Bemerkenswert: `imports/ts_requires.lua` **und** `imports/definition.lua` tragen
+     beide schon einen `child_of_type`-Helfer mit einem Kommentar, der genau das erklärt
+     — das Repo weiß es also, diese zwei Aufrufstellen nicht.
+  4. `tree/init.lua`s Glob→Regex-Übersetzung escapt Metazeichen mit Luas `%` statt mit dem
+     `\`, das die .NET-Regex-Engine hinter `-match` versteht. Aus dem Default `*/.git/*`
+     wird `.*[\/]%.git[\/].*` — ein Muster, das ein literales `%` verlangt und damit nie
+     matcht. Unter Windows enthalten `:Insights tree` und `:Insights count` deshalb das
+     komplette `.git/`. `node_modules` (ohne Metazeichen) übersteht die Übersetzung und
+     funktioniert; der Unix-Zweig reicht die Globs unverändert an `find -not -path` und
+     ist nicht betroffen.
+  **Zwei weitere Eigenheiten als dokumentiertes Verhalten gepinnt, nicht als Bug:**
+  `langs/go.lua` meldet jeden Eintrag eines gruppierten `import ( … )`-Blocks eine Zeile
+  zu früh (`()` im gmatch-Muster erfasst den Matchbeginn, die Rechnung ist aber
+  `e + off - 1`); die Einzeilenform ist korrekt. Und `ui/scratch.lua`s Follow-Key teilt
+  den Doppelpunkt-blinden Fleck aus (1), fällt aber im Imports-Report nicht auf, weil
+  dessen Pfade relativ sind.
+  Bewusst ausgelassen: `ui/fzf.lua`/`ui/telescope.lua` jenseits ihres
+  „Backend fehlt"-Guards (je ein Aufruf in einen Picker, der weder Dependency noch
+  CI-Checkout ist — die Entry-Form, die sie bekommen, ist dort gepinnt, wo sie gebaut
+  wird), `config/@types/init.lua` (reine `---@meta`-Annotationen), `plugin/insights.lua`
+  (dreizeiliger `vim.g.loaded_insights`-Guard ohne Verzweigung), `ts_lua*.scan_cwd`
+  (läuft über jede `.lua`-Datei des cwd und lädt sie in einen Buffer — misst die Maschine,
+  nicht den Scanner; der Per-Buffer-Scan darin ist vollständig abgedeckt, die
+  Walk-und-Ignore-Logik zusätzlich über `metrics.analyzer.list_files`), sowie die echten
+  Spawns selbst (Graphviz, pandoc, git, tar, rg, `kill_tree` gegen einen realen
+  Prozessbaum — jeder Zweig *drumherum* ist abgedeckt).
+  Testlauf: 7 → 31 Spec-Dateien, 112 → 1590 ausgeführte Assertions, 0 Fails, über 3
+  Wiederholungsläufe stabil (Exit 0). `luacheck lua plugin TESTS` 0 Warnings/Errors über
+  83 Dateien und `stylua --check lua plugin TESTS` (genau die CI-Befehle; `TESTS/` ist
+  hier *Teil* beider Gates) beide grün. `TESTS/README.md` neu geschrieben: Bootstrap
+  inkl. der ui.nvim-Erklärung, ein Abschnitt „No subprocesses, no network" mit einer
+  Tabelle Spawn → Naht → Spec, das Spec-Register nach Clustern, die
+  Tree-sitter-Begründung (eine Query mit veralteten Knotennamen scheitert *still*), die
+  vier gepinnten Bugs und die bewussten Auslassungen. Zusätzlich `.gitignore` um
+  `TESTS/.fixture-*/` ergänzt, damit ein abgebrochener Lauf kein Fixture-Verzeichnis
+  versehentlich stagen kann. Top-Level-`README.md` hat keinen Test-/Coverage-Abschnitt,
+  daher unangetastet gelassen.
+  Commit: `1be0f7a` (test: cover imports, symbols, metrics, the feature modules and the
+  wiring), direkt auf `main` gepusht und per `git merge-base --is-ancestor HEAD
+  origin/main` verifiziert.
 - [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.
