@@ -7,6 +7,7 @@
 
 local M = {}
 
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
   map("t", "<Esc>", "<C-\\><C-n>", { desc = "[Terminal] Exit terminal mode" })

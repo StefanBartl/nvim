@@ -8,6 +8,7 @@ local M = {}
 
 --- Register Telescope-related key mappings.
 --- Assumes a global keymap helper is available.
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 

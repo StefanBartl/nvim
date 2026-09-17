@@ -37,6 +37,7 @@ end
 ---@param entry Plugins.Personal.Entry
 ---@param base_dir string
 ---@param on_done fun(status: "cloned"|"exists"|"failed", err: string|nil)
+---@return nil
 function M.clone_one(entry, base_dir, on_done)
   local target = base_dir .. "/" .. entry.name
   if loop.fs_stat(target) then
@@ -63,6 +64,7 @@ end
 ---here since `on_done` short-circuits on `res.code ~= 0` first).
 ---@param path string
 ---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
+---@return nil
 function M.fetch_one(path, on_done)
   system({ "git", "fetch", "--all", "--prune" }, { cwd = path, text = true }, function(res)
     if res.code ~= 0 then
@@ -78,6 +80,7 @@ end
 ---"Updating <old>..<new>" / "Fast-forward" summary otherwise.
 ---@param path string
 ---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
+---@return nil
 function M.pull_one(path, on_done)
   system({ "git", "pull", "--ff-only" }, { cwd = path, text = true }, function(res)
     if res.code ~= 0 then
@@ -94,6 +97,7 @@ end
 ---combined operation.
 ---@param path string
 ---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
+---@return nil
 function M.update_one(path, on_done)
   M.fetch_one(path, function(ok, err)
     if not ok then
@@ -109,6 +113,7 @@ end
 ---commits made since the last push would lose real work).
 ---@param path string
 ---@param on_done fun(safe: boolean, reason: string|nil)
+---@return nil
 function M.check_removable(path, on_done)
   system({ "git", "status", "--porcelain", "--branch" }, { cwd = path, text = true }, function(res)
     if res.code ~= 0 then
@@ -150,6 +155,7 @@ end
 ---@param describe fun(item: T): string
 ---@param on_finish fun(ok_items: T[], failed: {item: T, err: string}[])
 ---@param prog table|nil lib.nvim.progress handle, or nil to skip progress reporting
+---@return nil
 function M.run_sequential(list, worker, describe, on_finish, prog)
   -- No `---@type T[]` here: `@generic T` is scoped to the signature above,
   -- so `T` does not exist in the body. Inference from the two `insert`s is

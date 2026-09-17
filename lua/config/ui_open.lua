@@ -24,6 +24,7 @@ local function is_url(target)
   return target:match("^%a[%w+.-]+:") ~= nil
 end
 
+---@return nil
 function M.setup()
   if not env.get().is_windows then
     return

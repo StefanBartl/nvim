@@ -83,14 +83,16 @@ local function setup_autocommands()
         if not ok then
           return
         end
-        local results = neotest.state.get_results()
-        if not results then
-          return
-        end
-
+        -- `neotest.state` exposes exactly `adapter_ids`, `positions` and
+        -- `status_counts` -- there is no `get_results`, so the previous call
+        -- threw "attempt to call a nil value" here on every
+        -- `NeotestRunComplete`, inside a scheduled callback where nothing
+        -- caught it. `status_counts` answers the only question this handler
+        -- actually asks.
         local has_failed = false
-        for _, result in pairs(results) do
-          if result.status == "failed" then
+        for _, adapter_id in ipairs(neotest.state.adapter_ids() or {}) do
+          local counts = neotest.state.status_counts(adapter_id)
+          if counts and (counts.failed or 0) > 0 then
             has_failed = true
             break
           end
@@ -110,6 +112,7 @@ end
 
 --- Setup core neotest configuration and autocommands
 ---@param user_config NeotestCoreConfig|nil User configuration overrides
+---@return nil
 function M.setup(user_config)
   if type(user_config) == "table" then
     config = vim.tbl_deep_extend("force", config, user_config)

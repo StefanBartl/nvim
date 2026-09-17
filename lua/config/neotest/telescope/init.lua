@@ -24,6 +24,7 @@ local ACTIONS = {
   { name = "Toggle watch mode", desc = "Toggle watch mode", fn = actions.toggle_watch },
 }
 
+---@return nil
 function M.open()
   pickers
     .new({}, {

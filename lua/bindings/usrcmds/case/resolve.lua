@@ -47,6 +47,7 @@ end
 --- cancelled or there was nothing to pick from.
 ---@param explicit string|nil
 ---@param cb fun(entry: Lib.Case.RegistryEntry|nil)
+---@return nil
 function M.pick(explicit, cb)
   local direct = M.sync(explicit)
   if direct then

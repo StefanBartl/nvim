@@ -103,6 +103,7 @@ end
 ---@param entry Lib.Case.RegistryEntry
 ---@param m Lib.Case.Meta|nil
 ---@param on_done fun(result: Lib.Case.ExportResult)
+---@return nil
 function M.export(entry, m, on_done)
   if vim.fn.executable("pandoc") ~= 1 then
     -- The reason and the install command come out of docs/install.json

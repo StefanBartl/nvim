@@ -26,6 +26,7 @@ local M = {}
 
 --- Set up the context menu.
 ---@param opts table|nil  # `config.menu.custom_menu` options, plus `renderer`/`native_popup`
+---@return nil
 function M.setup(opts)
   opts = opts or {}
 

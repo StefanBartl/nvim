@@ -23,6 +23,7 @@ local usercmd = require("lib.nvim.bindings.usercmd")
 local M = {}
 
 ---Register both aliases.
+---@return nil
 function M.enable()
   usercmd.create("RATelemetryNvimConfig", function()
     vim.cmd("RATelemetry setup nvim-config")

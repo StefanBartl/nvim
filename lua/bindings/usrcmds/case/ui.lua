@@ -65,6 +65,7 @@ end
 -- ── :Case new ────────────────────────────────────────────────────────────
 
 ---@param case_arg string|nil
+---@return nil
 function M.new(case_arg)
   local function with_case(short)
     -- The only truly required input: without a plausible number there's no
@@ -131,6 +132,7 @@ end
 ---@param name string|nil
 ---@param snow_link string|nil
 ---@param resolve_link string|nil
+---@return nil
 function M.create(short, title, company, name, snow_link, resolve_link)
   local dir = registry.new_dir(short)
   local year = tostring(os.date("%Y"))
@@ -272,6 +274,7 @@ local function infocard_lines(entry, m)
 end
 
 ---@param case_arg string|nil
+---@return nil
 function M.info(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -307,6 +310,7 @@ end
 
 ---@param entry Lib.Case.RegistryEntry
 ---@param m Lib.Case.Meta|nil
+---@return nil
 function M.edit_info(entry, m)
   m = m or {}
   local guess = detect.guess(entry.dir)
@@ -385,6 +389,7 @@ end
 
 ---@param node Lib.Case.NodeRef
 ---@param case_arg string|nil
+---@return nil
 function M.open_node(node, case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -406,6 +411,7 @@ function M.open_node(node, case_arg)
 end
 
 ---@param case_arg string|nil
+---@return nil
 function M.open_summary(case_arg)
   M.open_node({ key = "summary", path = "Summary.md" }, case_arg)
 end
@@ -413,6 +419,7 @@ end
 -- ── :Case open ───────────────────────────────────────────────────────────
 
 ---@param case_arg string|nil
+---@return nil
 function M.open_dir(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -439,6 +446,7 @@ end
 --- `resolve.pick`, deliberately: the point is checking what's on screen
 --- right now, whatever that is (a reply, but nothing stops it running on
 --- Notes.md too).
+---@return nil
 function M.reply_check()
   local replygate = require("bindings.usrcmds.case.replygate")
   local bufnr = vim.api.nvim_get_current_buf()
@@ -603,6 +611,7 @@ end
 ---@param suffix string|nil  For `name == "reply"`: overrides the "Reply" stem
 ---  (e.g. "AskForPDF" -> "NN_AskForPDF.md"). Ignored otherwise.
 ---@param case_arg string|nil
+---@return nil
 function M.add(name, suffix, case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -711,6 +720,7 @@ end
 --- into a new numbered Research/ file. Clipboard rather than a prompt: the
 --- point is copy-in-SNOW, run-the-command, nothing retyped.
 ---@param case_arg string|nil
+---@return nil
 function M.activity(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -837,6 +847,7 @@ end
 --- whichever AI chat is open. Also saved as a numbered Research/ file — the
 --- same "clipboard in, numbered record out" shape as `M.activity`.
 ---@param case_arg string|nil
+---@return nil
 function M.ki(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -899,6 +910,7 @@ end
 --- `:Case reply check` like any other draft — never auto-sent), the
 --- internal notes appended to Notes.md.
 ---@param case_arg string|nil
+---@return nil
 function M.ki_import(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1064,6 +1076,7 @@ end
 --- `Notes/Links.md`: this reads what's already written everywhere else
 --- instead of asking you to copy it a second time.
 ---@param scope string|nil
+---@return nil
 function M.tricentis_links(scope)
   local links = require("bindings.usrcmds.case.links")
   local hits = links.dedupe(links.find(scope))
@@ -1109,6 +1122,7 @@ end
 --- boilerplate". A case only has to resolve for the token values, and not
 --- resolving one is fine — the block still goes in.
 ---@param name_arg string|nil  Exact block name (as listed); prompts when omitted.
+---@return nil
 function M.template(name_arg)
   local blocks = require("bindings.usrcmds.case.blocks")
   local available = blocks.list()
@@ -1173,6 +1187,7 @@ end
 --- is real or a coincidence of shared jargon.
 ---@param case_arg string|nil
 ---@param n_arg string|nil
+---@return nil
 function M.similar(case_arg, n_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1259,6 +1274,7 @@ end
 --- `Summary.md`.
 ---@param case_arg string|nil
 ---@param flags { edit: boolean|nil }|nil
+---@return nil
 function M.solution(case_arg, flags)
   flags = flags or {}
   resolve.pick(case_arg, function(entry)
@@ -1375,6 +1391,7 @@ end
 --- completely different words won't match. That's exactly why
 --- `## Schlagworte` exists — it's where you soften that limit by hand.
 ---@param pattern string|nil
+---@return nil
 function M.solutions(pattern)
   local solution = require("bindings.usrcmds.case.solution")
   local hits, err = solution.search(pattern)
@@ -1407,6 +1424,7 @@ end
 --- `detect.last_touched`. Each session's span is a LOWER BOUND on time
 --- spent: an mtime marks when a save happened, not when editing began.
 ---@param case_arg string|nil
+---@return nil
 function M.timeline(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1466,6 +1484,7 @@ end
 --- the source SLA agreement instead — no case needed for that one.
 ---@param case_arg string|nil
 ---@param flags { doc: boolean }|nil
+---@return nil
 function M.sla(case_arg, flags)
   if flags and flags.doc then
     edit(config.sla_doc_path)
@@ -1555,6 +1574,7 @@ end
 
 ---@param src string|nil
 ---@param case_arg string|nil
+---@return nil
 function M.copy(src, case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1618,6 +1638,7 @@ end
 --- check` below (EXTRACTION.md §11 Q5 answered "both, not either/or" —
 --- catching this BEFORE sending is the actual point).
 ---@param case_arg string|nil
+---@return nil
 function M.doclinks(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1664,6 +1685,7 @@ end
 ---@param component_arg string|nil
 ---@param case_arg string|nil
 ---@param flags { all: boolean|nil, raw: boolean|nil }|nil
+---@return nil
 function M.versions(component_arg, case_arg, flags)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1807,6 +1829,7 @@ end
 -- ── :Case sync ───────────────────────────────────────────────────────────
 
 ---@param case_arg string|nil
+---@return nil
 function M.sync(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -1945,6 +1968,7 @@ end
 
 ---@param case_arg string|nil
 ---@param state string  One of config.states.
+---@return nil
 function M.move_state(case_arg, state)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -2094,6 +2118,7 @@ end
 --- their own state via M.move_state above), open a destination picker —
 --- any other state, or permanent deletion.
 ---@param case_arg string|nil
+---@return nil
 function M.close(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -2129,6 +2154,7 @@ end
 --- Same irreversible, typed-confirmation gate as `:Case close`'s "Delete
 --- permanently" target — `confirm_and_delete` above, not a new safety check.
 ---@param case_arg string|nil
+---@return nil
 function M.delete(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -2145,6 +2171,7 @@ end
 --- interactive `<Tab>`-multi-select/`<CR>`-confirm picker over open cases
 --- (kit.select's native `multi = true` chooser). Either way, close_many
 --- then asks ONCE where they all go.
+---@return nil
 function M.cases_close()
   local marks = require("bindings.usrcmds.case.marks")
   if marks.count() > 0 then
@@ -2185,6 +2212,7 @@ end
 -- ── :Case snow ───────────────────────────────────────────────────────────
 
 ---@param case_arg string|nil
+---@return nil
 function M.snow(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -2432,6 +2460,7 @@ end
 ---@param field_arg string|nil
 ---@param case_arg string|nil
 ---@param range Lib.UserCmd.Composer.RangeInfo|nil  present + `.range > 0` -> replace the Visual selection instead of inserting at the cursor
+---@return nil
 function M.insert(field_arg, case_arg, range)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -2491,6 +2520,7 @@ end
 --- through a case picker first.
 ---@param pattern string|nil
 ---@param range Lib.UserCmd.Composer.RangeInfo|nil
+---@return nil
 function M.cases_insert(pattern, range)
   local candidates
   if pattern and pattern ~= "" then
@@ -2585,6 +2615,7 @@ end
 ---@param field string
 ---@param pattern string|nil
 ---@param flags { exact: boolean|nil, re: boolean|nil }|nil
+---@return nil
 function M.filter(field, pattern, flags)
   local results = query.by_field(field, pattern, flags)
   local label = ("%s = %s%s"):format(
@@ -2602,6 +2633,7 @@ end
 --- this view closes (marks.lua is a flat set, not buffer-scoped) — mark a
 --- few cases here, close the view, run `:Cases close` whenever, from
 --- anywhere.
+---@return nil
 function M.list_all()
   local groups = query.by_state()
   local marks = require("bindings.usrcmds.case.marks")
@@ -2681,6 +2713,7 @@ end
 --- composer's `kv` grammar.
 ---@param kv table<string, string>
 ---@param flags { exact: boolean|nil, re: boolean|nil }|nil
+---@return nil
 function M.filter_many(kv, flags)
   local parts = {}
   for k, v in pairs(kv) do
@@ -2694,6 +2727,7 @@ end
 
 --- `:Cases recent [n]` — most recently touched cases first.
 ---@param n_arg string|nil
+---@return nil
 function M.recent(n_arg)
   local n = tonumber(n_arg) or 10
   local rows = query.recent(n)
@@ -2725,6 +2759,7 @@ end
 --- (SLA.md §6C, `config.sla_stale_days`) — so the header can't just say
 --- "N+ days" the way it used to when there was one N for everyone.
 ---@param days_arg string|nil
+---@return nil
 function M.stale(days_arg)
   local days = tonumber(days_arg)
   local rows = query.stale(days)
@@ -2761,6 +2796,7 @@ end
 --- Selecting a row opens that case's own `:Case sla` (not the infocard —
 --- this dashboard exists specifically to get to the SLA detail, not the
 --- general one).
+---@return nil
 function M.cases_sla()
   local rows = query.sla_dashboard()
   if #rows == 0 then
@@ -2810,6 +2846,7 @@ local SLA_REPORT_ANCHORS = { "ab Ticket-Eingang", "ab Zuweisung" }
 --- from the ratio entirely and reported separately, since counting an
 --- un-stamped case as a miss would overstate how bad things actually are.
 ---@param year_arg string|nil
+---@return nil
 function M.cases_sla_report(year_arg)
   local rows = query.sla_report(year_arg)
   if #rows == 0 then
@@ -2892,6 +2929,7 @@ end
 --- `:Case` route uses (`resolve.sync`, no UI fallback — a report has
 --- nothing to prompt into if that fails).
 ---@param pattern string|nil
+---@return nil
 function M.company_history(pattern)
   if not pattern or pattern == "" then
     local entry = resolve.sync(nil)
@@ -2956,6 +2994,7 @@ function M.company_history(pattern)
 end
 
 --- `:Cases stats` — counts by state / company / year.
+---@return nil
 function M.stats()
   local s = query.stats()
   local lines = { "By state:" }
@@ -2995,6 +3034,7 @@ local GREP_HIT_CAP = 500
 --- picker — a grep result set is read top-to-bottom, not picked from.
 ---@param pattern string|nil
 ---@param flags { re: boolean|nil }|nil
+---@return nil
 function M.grep(pattern, flags)
   if not pattern or pattern == "" then
     notify.warn("grep: pattern required")
@@ -3027,6 +3067,7 @@ end
 --- requests via lib.nvim.net.curl) — the report only renders once every
 --- request has settled, there's no partial/streaming view.
 ---@param case_arg string|nil
+---@return nil
 function M.linkcheck(case_arg)
   local linkcheck = require("bindings.usrcmds.case.linkcheck")
   local short = (case_arg and case_arg ~= "") and render.to_short(case_arg) or nil
@@ -3073,6 +3114,7 @@ end
 --- screenshot, a replaced attachment). `--force` re-reads everything.
 ---@param case_arg string|nil
 ---@param opts Lib.Case.OcrOpts|nil
+---@return nil
 function M.ocr(case_arg, opts)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -3134,6 +3176,7 @@ end
 --- error, since "pandoc missing" and "no browser found" need different
 --- fixes from the user.
 ---@param case_arg string|nil
+---@return nil
 function M.export(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -3160,6 +3203,7 @@ function M.export(case_arg)
 end
 
 --- `:Cases doctor` — read-only bestand-consistency report (MIGRATION.md §4).
+---@return nil
 function M.doctor()
   local doctor = require("bindings.usrcmds.case.doctor")
   local findings = doctor.check()
@@ -3173,6 +3217,7 @@ end
 --- (ROADMAP.md v6). Only ever acts on findings doctor.lua marked
 --- unambiguous; anything skipped is listed separately so nothing is
 --- silently left out of the report.
+---@return nil
 function M.normalize()
   local normalize = require("bindings.usrcmds.case.normalize")
   local doctor = require("bindings.usrcmds.case.doctor")
@@ -3262,6 +3307,7 @@ end
 --- menu entry uses, reachable directly instead of through the discovery
 --- menu.
 ---@param case_arg string|nil
+---@return nil
 function M.attachments(case_arg)
   resolve.pick(case_arg, function(entry)
     if not entry then
@@ -3318,6 +3364,7 @@ end
 --- Selecting one opens its source file with the cursor on the heading —
 --- the point is reading the full entry in context, not just the preview
 --- line, and jumping straight there beats a second "now open it" step.
+---@return nil
 function M.terminology()
   local terminology = require("bindings.usrcmds.case.terminology")
   local entries = terminology.list()
@@ -3377,6 +3424,7 @@ end
 --- file is still on the row, so opening it stays one `:e` away when the
 --- surrounding note is what you actually wanted.
 ---@param topic string|nil
+---@return nil
 function M.commands(topic)
   local commands = require("bindings.usrcmds.case.commands")
   local hits = commands.dedupe(commands.find(topic))
@@ -3410,6 +3458,7 @@ end
 --- second copy to keep in sync (the exact thing `commands.lua` exists to
 --- avoid).
 ---@param topic string|nil
+---@return nil
 function M.cheatsheet(topic)
   local commands = require("bindings.usrcmds.case.commands")
   local hits = commands.find(topic)
@@ -3455,6 +3504,7 @@ function M.cheatsheet(topic)
 end
 
 --- `:Cases pickers` — the discovery menu itself.
+---@return nil
 function M.pickers()
   kit.menu({
     title = "Cases — pickers",

@@ -60,6 +60,7 @@ end
 --- threshold, notifying (at most once per breach) for whichever ones cross
 --- it. Safe to call as often as needed — the `warned` set makes repeat
 --- calls a no-op for anything already flagged.
+---@return nil
 function M.check()
   if not config.sla_notifications_enabled then
     return
@@ -93,6 +94,7 @@ end
 --- call is a no-op rather than leaking a second timer, since `init.lua`'s
 --- `M.enable()` (the only caller) could in principle run more than once in
 --- a session (e.g. a config reload).
+---@return nil
 function M.setup()
   if not config.sla_notifications_enabled then
     return
@@ -125,6 +127,27 @@ function M.setup()
     group = autocmd.group("CasedeskSlaNotify", true),
     desc = "casedesk: re-check SLA clocks on FocusGained (SLA.md §6C)",
   })
+end
+
+--- Stop the background timer. The explicit counterpart to `M.setup()`'s
+--- idempotent start (PERF-82): without one, the poll ran for the rest of the
+--- session no matter what, and `sla_notifications_enabled` could only ever be
+--- honoured at setup time.
+---
+--- Idempotent and safe on an already-closed handle. The `FocusGained`
+--- autocmd is left in place deliberately — re-checking when you come back to
+--- the editor costs nothing while nothing is polling, and `M.setup()` reuses
+--- the same named augroup, so a later restart does not stack a second one.
+---@return nil
+function M.stop()
+  if not timer then
+    return
+  end
+  if not timer:is_closing() then
+    timer:stop()
+    pcall(timer.close, timer)
+  end
+  timer = nil
 end
 
 return M

@@ -599,21 +599,37 @@ end
 
 ---True the very first time this runs on a machine; false on every later start,
 ---no matter what the user has since done to the PINS_KEY bucket's contents.
+---
+---Claiming and marking are one step, not `fs_stat` followed by a separate
+---create: the marker is written with `O_CREAT|O_EXCL` (luv's `"wx"`), so of
+---any number of Neovims racing for it exactly one gets the file and everyone
+---else gets `EEXIST`. Two instances started together -- two terminals, a
+---session manager restoring a layout -- would otherwise both see "no marker"
+---and both seed the bucket. The old split made that window especially wide,
+---because the check ran at `setup()` but the marker was only written after
+---`VimEnter` plus a `vim.schedule`.
+---
+---The trade-off is deliberate: a crash between claiming and seeding leaves
+---the bucket unseeded, where the old shape would have retried on the next
+---start. That window is one scheduled tick wide, and the `:Harpoon` commands
+---below can top up or hard-reset the bucket on demand -- whereas a
+---double-seed produces duplicate pins with no comparable way back.
 ---@return boolean
-local function is_first_run()
-  return uv.fs_stat(INIT_MARKER) == nil
-end
-
----@return nil
-local function mark_initialized()
+local function claim_first_run()
   local dir = vim.fn.stdpath("state")
   if uv.fs_stat(dir) == nil then
     vim.fn.mkdir(dir, "p")
   end
-  local fd = uv.fs_open(INIT_MARKER, "w", 420) -- 0644
+  local fd, _, errname = uv.fs_open(INIT_MARKER, "wx", 420) -- 0644, O_CREAT|O_EXCL
   if fd then
     uv.fs_close(fd)
+    return true
   end
+  -- `EEXIST` is the expected answer on every later start. Anything else (an
+  -- unwritable state dir, say) must not masquerade as "already seeded", or
+  -- the defaults would never appear on that machine and nothing would say
+  -- why -- so an unexpected error seeds and tries the marker again next time.
+  return errname ~= "EEXIST"
 end
 
 ---@param opts Cfg.Harpoon.PersistPathsOpts|nil
@@ -626,13 +642,16 @@ function M.setup(opts)
 
   -- Seed the defaults exactly once ever (first use on this machine). Every
   -- later start leaves the bucket exactly as the user last left it -- use
-  -- the two commands below to top up or hard-reset on demand.
-  if is_first_run() then
+  -- `:Harpoon defaults sync` (add back any missing default, existing
+  -- entries untouched) or `:Harpoon defaults reset` (rebuild from the
+  -- defaults, in that order) to top up or hard-reset on demand. They are
+  -- declared in `config.harpoon.usrcmds`, not below -- see the note at the
+  -- end of this function.
+  if claim_first_run() then
     local grp = Autocmd.group("HarpoonPersistPaths", true)
     Autocmd.create("VimEnter", function()
       vim.schedule(function()
         M.inject_now()
-        mark_initialized()
       end)
     end, {
       group = grp,

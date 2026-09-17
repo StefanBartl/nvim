@@ -11,35 +11,41 @@ local M = {}
 
 --- Move current window into a vertical layout, left side.
 --- Equivalent to :wincmd H
+---@return nil
 function M.to_vertical_left()
   vim.cmd("wincmd H")
 end
 
 --- Move current window into a vertical layout, right side.
 --- Equivalent to :wincmd L
+---@return nil
 function M.to_vertical_right()
   vim.cmd("wincmd L")
 end
 
 --- Move current window into a horizontal layout (top).
 --- Equivalent to :wincmd K
+---@return nil
 function M.to_horizontal_top()
   vim.cmd("wincmd K")
 end
 
 --- Move current window into a horizontal layout (bottom).
 --- Equivalent to :wincmd J
+---@return nil
 function M.to_horizontal_bottom()
   vim.cmd("wincmd J")
 end
 
 --- Rotate all windows.
 --- Equivalent to :wincmd R
+---@return nil
 function M.rotate()
   vim.cmd("wincmd R")
 end
 
 --- Set up keymaps and user commands.
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 
