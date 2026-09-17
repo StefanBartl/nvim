@@ -283,14 +283,26 @@ hier ansetzen, bevor irgendwas anderes unten getestet wird.
 9. **Fehlerpfad, kein whisper-cli**: `bin["whisper-cli"]` kurz auf einen
    nicht existierenden Pfad setzen → lesbare Fehlermeldung
    ("whisper-cli not found — …"), kein Hänger.
-10. **Cancel** (falls die Aufnahme lang genug ist, um es zu erwischen): mitten
-    im Lauf `:Media health` oder eine andere Aktion auslösen, die eine
-    zweite `:Media transcribe`-Anfrage auf derselben Datei triggert — laut
-    Code-Kommentar in `core/dispatcher.lua` wird das **nicht** dedupliziert
-    (bekannte Phase-0-Einschränkung, kein Bug). Interessanter Test: die
-    Hover/den Buffer schließen, während transkribiert wird — sollte den
-    Prozess nicht zum Absturz bringen, auch wenn nichts ihn tatsächlich
-    abbricht ohne expliziten `cancel()`-Aufruf durch den Aufrufer.
+10. **Dedup** (aktualisiert 2026-09-17 — dieser Punkt stand hier falsch):
+    mitten im Lauf eine zweite `:Media transcribe`-Anfrage auf derselben
+    Datei auslösen. Der Plan sagte, das werde **nicht** dedupliziert; seit
+    dem Review vom 2026-09-14 wird es das sehr wohl (`inflight`/`join` in
+    `core/dispatcher.lua`). Erwartung also umgekehrt: **kein** zweiter
+    `whisper-cli`-Prozess, beide Aufrufer bekommen dasselbe Ergebnis.
+    Gegenprüfen mit dem Task-Manager oder `Get-Process whisper-cli`.
+
+11. **Cancel** (aktualisiert 2026-09-17 — auch dieser Punkt ist überholt):
+    der Plan sagte, nichts breche den Lauf ohne expliziten `cancel()`-Aufruf
+    des Aufrufers ab. Seit `media.nvim@feeb08a` hat `:Media transcribe`
+    einen: mit `progress_style = "float"` das Indikator-Fenster fokussieren
+    und im Normal-Modus `<Esc>` drücken. Erwartung: der Lauf stoppt, ffmpeg
+    eingeschlossen, und es kommt "transcription cancelled". Gegenprüfen,
+    dass wirklich kein `whisper-cli` mehr läuft.
+
+12. **Batch über mehrere Dateien** (neu, `media.nvim@a2ebcb3`): `:Media
+    dashboard`, mit `<Tab>` drei Audiodateien markieren, `<CR>`. Erwartung:
+    **nacheinander**, nicht gleichzeitig — ein Prozess zur Zeit — mit einem
+    Fortschritts-Handle, das `3/3` zählt, und drei `.transcript.md` daneben.
 
 ### 9.5 Was danach zu tun ist
 
