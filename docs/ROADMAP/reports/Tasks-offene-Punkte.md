@@ -19,7 +19,7 @@ the surrounding text is English like every other document here.
     - ~~[A3 — media: progress handle during a transcription run](#a3--media-progress-handle-during-a-transcription-run--done)~~ — done
     - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
     - [A5 — mdview: hand-test `any_file` in real Neovim](#a5-mdview-hand-test-any_file-in-real-neovim)
-    - [A6 — my.nvim: the breadcrumb `container` provider is a no-op](#a6-mynvim-the-breadcrumb-container-provider-is-a-no-op)
+    - ~~[A6 — my.nvim: the breadcrumb `container` provider is a no-op](#a6--mynvim-the-breadcrumb-container-provider-is-a-no-op--done)~~ — done
     - ~~[A7 — media: prefetch hint for frame stepping](#a7--media-prefetch-hint-for-frame-stepping--done)~~ — done
   - [B. A real sitting](#b-a-real-sitting)
     - [B1 — media: the hub dashboard](#b1-media-the-hub-dashboard)
@@ -314,11 +314,34 @@ Roadmap-Punkt streichen und Ablieferungsnachweis in mdview.nvim/FEATURES.md
 
 ---
 
-### A6 — my.nvim: the breadcrumb `container` provider is a no-op
+### ~~A6 — my.nvim: the breadcrumb `container` provider is a no-op~~ — DONE
 
 **Source:** `.../my.nvim/ROADMAP/ROADMAP.md`, section "Parked, no ticket yet".
-**Stand geprüft 2026-09-17:** open — and the source says so itself, at
-`hl_config/breadcrumbs/ctx/init.lua:156` ("CDX (parked)").
+**Resolved 2026-09-17** (`my.nvim@fdeacd4`, `WKDBooks@3627ccd`): route (b),
+retired rather than deferred, because the evidence the entry asked for came
+back against (a).
+
+The no-op was real. Two things the entry did not know: it also *leaked* —
+`_ctx_with_container` wrote `_base_symbol` onto the table `C.get_cfg()` hands
+back, the live config rather than a copy, and never cleared it, so after one
+`:My hl debug` the winbar reported a frozen symbol until restart. And the
+answer to "what does the provider actually produce": measured against a real
+Lua tree at four cursor positions, **its own input, unchanged, all four times**
+— `ts_symbol` already yields the qualified name for Lua (`M.run()`,
+`Klass:method()`), so `container.extract()` hits its own "base already starts
+with the container" guard every time. No case contributes a segment, so (a) had
+nothing to wire up.
+
+Delivered: `container` out of the shipped and fallback `providers_order`, the
+probe on a copy, five assertions in `TESTS/breadcrumbs_ctx_container_spec.lua`
+(two fail against the old code), docs and both `@types` updated.
+
+Two larger defects surfaced underneath and went to my.nvim's roadmap as their
+own parked items: `node_at_cursor` resolves through `nvim-treesitter.ts_utils`,
+which that plugin's `main` branch removed — so **no Tree-sitter node reaches
+any breadcrumb provider in a live session**, only `lsp_func` and `<cword>` do —
+and `lib.nvim`'s `memo.fn` throws on userdata keys, which would break the same
+path the moment the first is fixed. The prompt below is kept for the record.
 
 ```
 Aufgabe: my.nvim — den "container"-Breadcrumb-Provider entweder verdrahten
