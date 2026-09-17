@@ -95,7 +95,14 @@ end
 ---Show the treesitter/syntax highlight groups under the cursor (`:h :Inspect`).
 ---@return nil
 local function inspect_here()
-  pcall(vim.cmd, "Inspect")
+  -- Wrapped rather than `pcall(vim.cmd, "Inspect")`: `vim.cmd` is a callable
+  -- *table*, not a function. It works at runtime, but `pcall`'s first
+  -- parameter is typed as a function, so LuaLS reports a
+  -- `param-type-mismatch` here -- ERR-62 calls out this exact case. A closure
+  -- makes runtime and type checker agree.
+  pcall(function()
+    vim.cmd("Inspect")
+  end)
 end
 
 ---Format the buffer through conform.nvim, or the LSP when it isn't installed.
