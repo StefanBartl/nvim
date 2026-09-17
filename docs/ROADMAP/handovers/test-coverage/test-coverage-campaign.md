@@ -257,6 +257,22 @@ Agenten-Meldungen übernommen).
   generischen Sprach-Contract-Ansatz) ergänzt.
   Commit: `5f2da6e` (test: cover the language-config contract, core, config, utils, bindings,
   adapters, UI wiring), direkt auf `main` gepusht.
+  **Re-Audit (2026-09-18, 100%-Nachziehrunde):** hält fast vollständig — der Tabellen-Ansatz
+  für die 11 Sprachdateien passt weiterhin auf jede der 11 (keine neue Sprache/kein neuer
+  Adapter seit Runde 3), und alle fünf gezielt geprüften Bug-Familien (Windows-Pfade,
+  ungeschützte FS-Aufrufe, Fehler-memoisierende Caches, health.lua-ruft-fehlende-Dependency,
+  Autocmd-Teardown/doppeltes setup()) sind **nicht** vorhanden — jeweils einzeln verifiziert,
+  nicht nur angenommen (z.B. `bindings/autocmds/init.lua` erzeugt seine einzige Augroup
+  bewusst mit `clear=true` und einem erklärenden Kommentar genau gegen Doppel-Registrierung).
+  Vier echte, kleine Lücken per Abgleich aller `M.<name>`-Exporte gegen jede Testreferenz
+  gefunden und geschlossen: `utils/notify.lua` hatte gar keine eigene Spec;
+  `registry.lua`s `enabled_languages()`/`registered_languages()` liefen nur transitiv über
+  den Leerfall von `health.check()` mit; `wkddap.enabled_languages()` hatte dieselbe Lücke wie
+  ihr bereits getesteter Zwilling; `languages/lua.lua`s dokumentierte, aber im Repo nie
+  aufgerufene `M.launch_server()` war komplett ungetestet. Keine neuen Bugs.
+  Testlauf: 199 → 209 grüne Checks, 30 → 31 Spec-Dateien, 0 Fails über zwei Wiederholungsläufe.
+  `luacheck lua plugin TESTS` 0/0 über 74 Dateien, `stylua --check` grün.
+  Commit: `9f207c0` (test: close round-3 re-audit gaps), direkt auf `main` gepusht.
 - [x] **casedesk.nvim** — fertig (Runde 4, nach kurzer Pause durch wöchentliches API-Limit
   neu gestartet). 32 neue `TESTS/*_spec.lua`-Dateien (plenary/busted-Stil, wie im Repo bereits
   Konvention), `TESTS/README.md` neu angelegt. Vorher 5 von 46 Quelldateien mit echten Tests
@@ -323,6 +339,23 @@ Agenten-Meldungen übernommen).
   worauf alle anderen Suiten über cwd-relative Buffer-Namen angewiesen sind).
   Commit: `6290f8b` (test: cover config, bindings, boilerplate, and ops/format edge cases),
   direkt auf `main` gepusht.
+  **Re-Audit (2026-09-18, 100%-Nachziehrunde):** beide früher gefixten Bugs verifiziert intakt
+  (`format/enum_lines.lua`s Off-by-one, Commit `79893f9`; `format/text_width.lua`s
+  Marker-Duplizierung + `wrap_words()`-Folgefehler, Commit `3c99c3c`). Zwei neue Bugs gefunden,
+  beide gepinnt statt gefixt: `format/column_align.lua` berechnet die Zielspalte aus dem
+  **Byte**-Offset, zielt aber auf eine **Display**-Spalte (`strdisplaywidth`) — ein Mehrbyte-
+  Zeichen vor der Selektion lässt das Füllzeichen zu kurz werden und die Ausrichtung eine
+  Spalte zu weit links landen (empirisch mit `"xä5"` verifiziert). Und `mark/init.lua`s
+  `M.setup()` registriert seinen `BufDelete`/`BufWipeout`-Cleanup über eine String-Augroup
+  ohne `clear = true` → ein zweites `setup()` verdoppelt den Autocmd (empirisch verifiziert:
+  2 statt 1 Einträge) — dieselbe Familie wie der bereits gefixte pdfport.nvim-Bug, hier aber
+  harmlos, weil `clear_marks()` idempotent ist. `util/map.lua`s lib.nvim-Erkennungs-Kosmetik
+  (immer `false`, weil `require(...)` eine per `__call` aufrufbare Table statt einer
+  `function` liefert) bleibt unverändert dokumentiert, kein Bug.
+  Testlauf: 356 → 359 Assertion-Stellen, 11/11 Specs grün über 5 Wiederholungsläufe.
+  `luacheck lua TESTS plugin` 0/0 über 59 Dateien, `stylua --check` grün. Kein `lua/`-Quelltext
+  angefasst — nur Test-Dateien und README.
+  Commit: `a11e95c` (test: re-audit round 5 -- confirm both fixes, pin two new bugs).
 - [x] **debugging.nvim** — fertig (Runde 6). Eigener framework-freier Harness beibehalten.
   10 neue Spec-Dateien: `init_spec.lua`, `actions_spec.lua` (module_reload, neotree_safety,
   reports), `autocmds_runtime_spec.lua`, `nvim_options_spec.lua`, `keylogger_spec.lua`,
