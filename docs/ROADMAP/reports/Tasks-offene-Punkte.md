@@ -23,8 +23,12 @@ sessions:
 | `filetree.nvim` `get_node_at_line` | Built for neo-tree and nvim-tree, verified live against a real tree (19 checks). Its `FEATURES.md` entry also corrects the roadmap: **four** features were unlocked, not five — `filter`'s dim fallback never reaches its gate on those two adapters |
 | `casedesk.nvim` anonymisation | `lua/casedesk/anonymize.lua` + `:Case anonymize`, with `TESTS/anonymize_spec.lua` |
 | `casedesk.nvim` tests for the pure functions | The suite went from 5 specs to **40**, including `normalize_spec.lua` — the case-number guard with the real incident behind it |
-| `lib.nvim` `deps.health` migration | Both consumers already use it: `open.nvim/health.lua:216`, `pdfport.nvim/health.lua:435` (`pointer_for`) |
+| `lib.nvim` `deps.health` migration | Both consumers already use it: `open.nvim/health.lua:216`, `pdfport.nvim/health.lua:435` (`pointer_for`). **But only the entry's own wording was done** — five plugins still check binaries by hand (`ai`, `debugging`, `emojis`, `fileops`, `sandbox`) and none of them declares an `install.json`, so `deps.health` does not apply to them yet. Recorded as a separate open question, not migrated |
 | `gopath.nvim` frecency consolidation | `alternate/frecency.lua:43` calls `require("lib.nvim.frecency").store` — the local file is the saturation curve on top, not a second implementation |
+
+All five are now struck from their roadmaps and recorded in each plugin's
+`FEATURES.md` — except `filetree.nvim`, deliberately held back while a parallel
+session still has uncommitted work there.
 
 So this file is a snapshot with a short half-life, and the fleet is worked on
 from several directions at once. **A task that turns out to be done is not a
