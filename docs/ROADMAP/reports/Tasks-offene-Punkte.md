@@ -25,7 +25,7 @@ the surrounding text is English like every other document here.
     - [B1 — media: the hub dashboard](#b1-media-the-hub-dashboard)
     - [B2 — media: first real whisper.cpp run](#b2-media-first-real-whispercpp-run)
     - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
-    - [B4 — lsp: provoke errors in `:LspDoctor deep`](#b4-lsp-provoke-errors-in-lspdoctor-deep)
+    - ~~[B4 — lsp: provoke errors in `:LspDoctor deep`](#b4--lsp-provoke-errors-in-lspdoctor-deep--done)~~ — done
     - [B5 — `rules.nvim` pass over ui.nvim](#b5-rulesnvim-pass-over-uinvim)
     - [B6 — data.nvim: phase 1 register scope](#b6-datanvim-phase-1-register-scope)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
@@ -550,7 +550,36 @@ Ablieferungsnachweis in filetree.nvim/FEATURES.md eintragen.
 
 ---
 
-### B4 — lsp: provoke errors in `:LspDoctor deep`
+### ~~B4 — lsp: provoke errors in `:LspDoctor deep`~~ — DONE
+
+**Source:** `.../lsp.nvim/ROADMAP/ROADMAP.md`, section "From
+`MyPlugin-Notes/LSPDoctor/`", the last open checkbox there.
+**Built 2026-09-17** (`lsp.nvim@60ba2c6`): `TESTS/lsp/probe_live_spec.lua`,
+plus a CI step that installs a server for it. Struck from the roadmap — with
+the whole section, which carried nothing else — and recorded in
+`lsp.nvim/FEATURES.md`.
+
+Half of the task turned out to be already built: `:LspDoctor probe` exists
+(`lspdoctor/probe.lua`, 20 filetype snippets, all syntax errors so they hold in
+an unindexed directory), and `lspdoctor_spec.lua` covered it — against fakes
+that stub `get_clients`, `buf_attach_client`, `get_namespace` and
+`vim.diagnostic.get`, i.e. every link the report exists to verify. So the open
+part was the live gate, and the finding is that the existing spec looked like
+coverage of exactly the thing it could not cover.
+
+The skip trap the prompt warned about is worse than it reads: plenary prints
+`Pending` and still tallies the case under `Success`. So the gate names every
+candidate and what was missing about each, writes that to stderr as well, and
+**fails instead of skipping under `CI`**, where the workflow now installs
+`typescript-language-server`. Candidates were measured, not assumed — lua_ls
+~0.8s, ts_ls ~1.1s, gopls ~15s cold, `jsonls` tried and dropped because it
+publishes nothing unless the client answers `workspace/configuration`. Side
+finding, found by running it: `vim.fn.exepath("typescript-language-server")`
+returns npm's extension-less shim on Windows and spawning it fails with "not
+installed, missing from PATH, or not executable" — about a server that is
+installed and on PATH. Both failure paths were provoked, not reasoned about.
+
+The prompt below is kept for the record.
 
 ```
 Aufgabe: lsp.nvim — Fehler provozieren als Test, in ":LspDoctor deep" bzw.
