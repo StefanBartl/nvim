@@ -69,6 +69,63 @@ pushed. What changed, and where:
 | C3 winbar ownership | filetree.nvim | `4c8cd88` |
 | E "Around it" cross-references | 5 sibling READMEs | — |
 
+**The M tier followed, 2026-09-17.**
+
+| Finding | Where | Commit |
+|---|---|---|
+| C1 `lib.nvim.ui.hl.persist` | lib.nvim | `24b2985` |
+| C2 `lib.nvim.ui.winhighlight` | lib.nvim | `24b2985` |
+| C1 adopted (8 sites) | ui.nvim | `e19a3a5` |
+| C1 + C2 adopted | my.nvim | `9308dca` |
+| C2 adopted | filetree.nvim `fc3cb0b`, hover.nvim `e94261e`, reposcope.nvim `c31f335` | |
+| C6 `getcharstr` → `vim.on_key` | debugging.nvim | `42a909a` |
+| B1 symbol context moved | my.nvim `8066777`, ui.nvim `ef78f27` | |
+| E four components moved | recommender `81570db`, github_stats `f01dd85`, runtime-analysis `3c6e6bd`, casedesk `c80dd80`, ui.nvim `9afcc07` | |
+
+**B1 was left to judgement and decided for `my.nvim`.** Three precedents
+point the same way. The fleet already resolves a shared surface by asking
+*whose concern is this* (`vim.diagnostic.config()` → lsp.nvim owns, my.nvim
+contributes) and *who produces versus who places* (`vim.wo.winbar` →
+my.nvim produces, ui.nvim writes). Symbol context is content, and both
+roadmaps say content is my.nvim's. `lsp.nvim` was checked as a third
+candidate and has no symbol engine at all — only keymaps bound to
+`vim.lsp.buf.document_symbol` — so building one there would have been a
+larger move than the finding scoped. my.nvim also already had the whole
+composition layer (provider ordering, separators, length limits, skip
+rules, a debug command) that ui.nvim lacked. The result is one direction
+of flow on both shared surfaces: my.nvim produces, ui.nvim places.
+
+**Three more corrections, all found by implementing:**
+
+- **C1's numbers were wrong.** "8 plugins, 21 call sites" counted two
+  entries that are not registrations at all: `debugging.nvim`'s
+  `autocmds/sources.lua` and `lib.nvim`'s `autocmd/docs.lua` both merely
+  *list* `"ColorScheme"` as an event name. The real figure is **19 sites in
+  7 plugins**, and that is what the module's own documentation says.
+- **C6's M half was unnecessary and has been dropped.** The finding
+  proposed a `lib.nvim` registry so several consumers could share one
+  `vim.on_key` hook. Neovim's own namespace argument already does exactly
+  that — verified against a live session: two callbacks under different
+  namespaces both fire, and `vim.on_key(nil, ns)` detaches one without
+  disturbing the other. Both `ui.nvim` modules were already using it
+  correctly. Only the S half was real, and `debugging.nvim`'s keylogger is
+  fixed.
+- **E was wrong about `filetree.nvim`.** See that section.
+
+**Two defects surfaced while moving code**, neither of which the report had
+seen:
+
+- `locate_in_hierarchical` recorded the breadcrumb chain **only at a leaf**,
+  so a symbol that matched while none of its children did — the cursor on a
+  `class` or `def` line itself — produced no breadcrumb at all. Found by the
+  first test ever written against that path, which could not have existed
+  before: the provider it belonged to read a buffer variable, so a test
+  would only have asserted that the test set a variable.
+- `my.nvim`'s `winhighlight` validated group names as `^[%w_]+$`, silently
+  dropping every mapping to a Tree-sitter capture (`Normal:@comment` parsed
+  to nothing). Neovim accepts `@`, `.` and `-` — measured against a real
+  window — and the shared version does too.
+
 **One finding the fixing pass turned up that this report had missed.**
 `ui.nvim`'s statusline Tree-sitter breadcrumb fallback resolved its node
 through `nvim-treesitter.ts_utils`. nvim-treesitter deleted that module
@@ -170,7 +227,7 @@ section 1 rather than trusting the figures a month from now.
 | `ui.nvim` | 93 files, **14,787 LOC** |
 | `my.nvim` | 71 files, **8,481 LOC** |
 | Lines found duplicated verbatim-modulo-paths | **~5,100** (Tier A) |
-| Plugins hand-rolling a `ColorScheme` re-registration | **8**, across 21 call sites |
+| Plugins hand-rolling a `ColorScheme` re-registration | **7**, across 19 call sites |
 | Plugins writing `vim.wo.winbar` | **3** producers; **1** uses `ui.winbar` |
 | Siblings wired into `ui.nvim`'s statusline | **7** |
 | …of which ship their own component | **2** |
@@ -354,11 +411,14 @@ other reads it.
 
 ### C1 · Nobody owns "keep these highlight groups defined"
 
-A `:colorscheme` clears user-defined highlight groups. **Eight plugins** each
-hand-roll their own `ColorScheme` autocmd to put theirs back, across 21 call
+A `:colorscheme` clears user-defined highlight groups. **Seven plugins** each
+hand-roll their own `ColorScheme` autocmd to put theirs back, across 19 call
 sites: `ui.nvim` (7), `my.nvim` (3), `filetree.nvim` (2), `markdown.nvim` (2),
-`lib.nvim` (1, in `ui/kit/theme.lua`), `spotlight.nvim`, `debugging.nvim`,
-`reposcope.nvim`.
+`lib.nvim` (1, in `ui/kit/theme.lua`), `spotlight.nvim`, `reposcope.nvim`.
+
+*(Corrected while implementing: the original said 8 plugins and 21 sites. It
+had counted `debugging.nvim`'s `autocmds/sources.lua` and `lib.nvim`'s
+`autocmd/docs.lua`, which merely list `"ColorScheme"` as an event name.)*
 
 `lib.nvim`'s highlight helper offers exactly two functions —
 `lib.nvim/lua/lib/nvim/ui/hl/init.lua:13` `namespace()` and `:23` `set()`.
@@ -713,6 +773,35 @@ and none of them is named in the code.
 
 **Effort: M per sibling** to move its component into it behind a documented
 `statusline.lua`, following `sandbox.nvim`'s file as the template.
+
+### Done for four of the five, 2026-09-17 — and the fifth was a mistake in this finding
+
+`recommender.nvim`, `github_stats.nvim`, `runtime-analysis.nvim` and
+`casedesk.nvim` each ship a `statusline.lua` and a `docs/statusline.md`
+now; the four segments here are ~24 lines apiece. What moved with the code
+mattered more than the code: each carried the sibling's own design rules —
+when an SLA badge appears and when it deliberately does not, what counts
+as a slow function, how a repo slug is resolved — restated in `ui.nvim`
+where no test in the owning repository could hold them.
+
+**`filetree_cwd_mode` is not the same case, and this finding was wrong to
+count it.** The table above grouped it with the other four on line count.
+The call sites say otherwise: it uses
+`filetree.feature("cwd_mode").badge()`, which filetree.nvim **documents as
+its external-statusline API**, next to a `component()` sibling and a
+`User FiletreeCwdModeChanged` autocmd for refresh. It reaches into nothing
+internal.
+
+The other ~200 lines are `ui.nvim`'s own presentation — the bg-filled
+capsule, `ui.theme.palette` accents, `get_separators()`, the `St_*`
+groups — plus the history-dots option, which is a `ui.nvim` idea and not a
+filetree concept. Moving that into filetree.nvim would make it depend on
+this plugin's palette and separator vocabulary and emit ui.nvim-specific
+statusline syntax: coupling in the wrong direction, to satisfy a finding
+that counted lines instead of reading call sites.
+
+So the real split is **six of seven** siblings own their component, and the
+seventh is already correct as it stands.
 
 **A documentation symptom of the same asymmetry.** 22 sibling READMEs carry
 the "Around it" section naming their neighbours. `my.nvim` is named in exactly
