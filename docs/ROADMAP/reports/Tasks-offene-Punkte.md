@@ -22,7 +22,7 @@ the surrounding text is English like every other document here.
     - ~~[A6 — my.nvim: the breadcrumb `container` provider is a no-op](#a6--mynvim-the-breadcrumb-container-provider-is-a-no-op--done)~~ — done
     - ~~[A7 — media: prefetch hint for frame stepping](#a7--media-prefetch-hint-for-frame-stepping--done)~~ — done
   - [B. A real sitting](#b-a-real-sitting)
-    - [B1 — media: the hub dashboard](#b1-media-the-hub-dashboard)
+    - ~~[B1 — media: the hub dashboard](#b1--media-the-hub-dashboard--done)~~ — done
     - [B2 — media: first real whisper.cpp run](#b2-media-first-real-whispercpp-run)
     - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
     - ~~[B4 — lsp: provoke errors in `:LspDoctor deep`](#b4--lsp-provoke-errors-in-lspdoctor-deep--done)~~ — done
@@ -440,10 +440,22 @@ fertig: committen und direkt auf main pushen.
 
 ## B. A real sitting
 
-### B1 — media: the hub dashboard
+### ~~B1 — media: the hub dashboard~~ — DONE
 
 **Source:** `.../media.nvim/ROADMAP/ROADMAP.md`, section "The hub".
-**Effort:** 3–4 sessions. The largest single open block in the collection.
+**Built 2026-09-17** in the four stages this prompt asked for
+(`media.nvim@37db33b`, `@d80026f`, `@8c08f06`, `@a2ebcb3`):
+`hub/{kinds,scan,dashboard,actions}.lua`, `integrations/menu.lua`,
+`docs/install.json`, `:Media dashboard` and `:Media text`. Struck from the
+roadmap, written up in `media.nvim/FEATURES.md`.
+
+The warning in this prompt was right and did not go far enough: `ui.kit` is not
+only a moved require path, it is also **not** the "multi-select + preview"
+picker the roadmap describes — one selection, no preview, no `<Tab>`. The
+dashboard is a scratch float with its own keymaps instead. Two more places the
+section had gone stale, two defects found by running it rather than reading it,
+and four things deliberately not built are all in `FEATURES.md`. The prompt
+below is kept for the record.
 
 ```
 Aufgabe: media.nvim — das Hub-Dashboard bauen (":Media", ":Media text").
