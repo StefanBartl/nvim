@@ -81,6 +81,27 @@ local function exists(path)
   return uv.fs_stat(path) ~= nil
 end
 
+--- The rename target for a finding, or `nil` when the target is already
+--- taken and the finding is therefore report-only (see this module's header).
+---
+--- An explicit `if`, not `exists(to) and nil or to`: that idiom *always*
+--- yields `to`. `and nil` is falsy, so the expression falls through to the
+--- `or` branch whether the condition held or not, and the guard never fired
+--- once. `normalize.lua` acts on every `to ~= nil`, and `mutate.rename_file`
+--- is a plain `uv.fs_rename`, which replaces an existing target silently on
+--- Windows and POSIX alike -- so the dead guard meant `:Case normalize`
+--- could overwrite a real `Notes.md` with a historical alias file.
+--- `bindings_explorer/drift.lua` carries a note about the same idiom biting
+--- there.
+---@param to string
+---@return string|nil
+local function rename_target(to)
+  if exists(to) then
+    return nil
+  end
+  return to
+end
+
 ---@param dir string
 ---@return table<string, string> basename -> absolute path (last one wins on a clash, irrelevant here)
 local function basenames_of(dir)
@@ -205,7 +226,7 @@ local function nn_prefix_findings(e)
           kind = "missing-nn-prefix",
           detail = ("%s/%s -> %s/%s"):format(sub, name, sub, prefixed),
           from = from,
-          to = exists(to) and nil or to,
+          to = rename_target(to),
         }
         next_n = next_n + 1
       end
@@ -233,7 +254,7 @@ function M.check()
           kind = "notes-alias",
           detail = has_notes and (alias .. " (alongside an existing Notes.md)") or alias,
           from = from,
-          to = has_notes and nil or (e.dir .. "/Notes.md"),
+          to = rename_target(e.dir .. "/Notes.md"),
         }
       end
     end
@@ -302,7 +323,7 @@ function M.check()
           kind = "research-as-file",
           detail = "Research.md (Research/ folder is the convention)",
           from = from,
-          to = exists(to) and nil or to,
+          to = rename_target(to),
         }
       end
     end
@@ -320,7 +341,7 @@ function M.check()
           kind = "naming-variant",
           detail = ("%s/ (%s/ is the convention)"):format(dirname, config.assets_dirname),
           from = from,
-          to = exists(to) and nil or to,
+          to = rename_target(to),
         }
       end
     end
@@ -335,7 +356,7 @@ function M.check()
           kind = "naming-variant",
           detail = "Solutions/ (Solution/ singular is the convention)",
           from = from,
-          to = exists(to) and nil or to,
+          to = rename_target(to),
         }
       end
     end
@@ -350,7 +371,7 @@ function M.check()
           kind = "naming-variant",
           detail = "Solution.md (Solution/ folder is the convention)",
           from = from,
-          to = exists(to) and nil or to,
+          to = rename_target(to),
         }
       end
     end
@@ -365,7 +386,7 @@ function M.check()
           kind = "typo",
           detail = ("%s -> %s"):format(typo, fix),
           from = from,
-          to = exists(to) and nil or to,
+          to = rename_target(to),
         }
       end
     end

@@ -260,7 +260,18 @@ function M.parse(text)
       if heading then
         flush()
         current_key = canonical_section(heading)
-        current_raw = current_key and nil or vim.trim(heading)
+        -- An explicit `if`, not `current_key and nil or vim.trim(heading)`:
+        -- `and nil` is falsy, so that idiom falls through to the `or` branch
+        -- either way and always assigns the heading. Harmless as written --
+        -- `flush()` tests `current_key` first and only reaches `current_raw`
+        -- when there is no canonical key -- but it reads as a condition that
+        -- does something, and the same idiom is a live bug elsewhere in this
+        -- tree (see `case/doctor.lua`'s `rename_target`).
+        if current_key then
+          current_raw = nil
+        else
+          current_raw = vim.trim(heading)
+        end
         body_lines[#body_lines + 1] = heading
       else
         body[#body + 1] = line
