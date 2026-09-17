@@ -85,7 +85,7 @@ auskommentiert, oder schlicht ohne `keys`/`vim.keymap.set`/Autocmd/Usercmd):
 `autolist.nvim` (deaktiviert), `nvim-cmp` (nicht installiert; die schlafende
 Keymap dafür steht in [Keymaps/Blink.md](Keymaps/Blink.md)),
 `csharp.nvim` (deaktiviert),
-`markdown-preview.nvim`, `mkdir.nvim`, `resty.nvim`,
+`markdown-preview.nvim`, `resty.nvim`,
 `nvim-tree.lua` (nicht installiert), `nvim-web-devicons`,
 `treesitter-context`, `treesitter-textobjects`, `lspsaga.nvim`, `lensline.nvim`,
 `nvim-notify`, `triptych.nvim` (nicht installiert),

@@ -43,9 +43,6 @@
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
 
 ---
-cross plattfotrm
-
----
 
 ## Claude Tasks
 - [ ] docmap-desktop: docs/AGENT_CHECKLIST_RUNNER.md — dazu PLAN.md's L6-Zeile mit einem Verweis versehen.
@@ -53,15 +50,8 @@ cross plattfotrm
   Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für den einfachen Fall schon heute (Aufwand dort: 0). Was L6 architektonisch eigentlich braucht — die DecisionQueue, die "Vorschlag, kein Ergebnis" durchsetzt — ist in /decision nur eine Log-Zeile ohne echte Warteschlange; Phase 3/4 aus deinem eigenen Architekturplan sind komplett offen. Empfehlung in beiden Dateien: jetzt gegen /ask bauen (~2,5–3 Sessions auf documentation.nvim/docmap-desktop-Seite, 0 bei loomAI), die Anbindung an eine echte DecisionQueue erst mitnehmen, wenn Phase 3 dort ohnehin angegangen wird.
   + neiue gh feature atag release
 
-- offene Taks in den roamdaps aller plugins nochmal durchegehen - Aufwand/Nutzen Analyse: E:/repos/WKDBooks/Development/wkdbook-myplugins/
-  - schreibe den report hjierher: C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\reports
-
-filetree.nvim: Wenn man eine file löscht und die refrerenzene updatete werden, dann `U` also mit undo die file wieder zurückholt, dann müssten die refs auch wieder hergestellt werden
-
-- nvim-config: rules.nvim anwenden
 
 - [ ] mdview: Auf der workstation funktinrt cursor section nicht, also die sektion wird nicht hl, caret funktionert gut, line auch; standalone gar nichts
-- [ ] fileops: :File rename -> sollte den aktuellen filenamen als wert halten dmit damn den verüändern kann dan im prompt meine ich
 
 ---
 
@@ -100,9 +90,7 @@ filetree.nvim: Wenn man eine file löscht und die refrerenzene updatete werden, 
 
 3. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 4. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
-5. Alle externen plugins auflisten und prüfen, welche davon in meine bestehenden plugins
-voll bze features davon nachgeaut werden sollen/könnten
-6. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
+5. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
 
 ---
 
@@ -131,6 +119,8 @@ voll bze features davon nachgeaut werden sollen/könnten
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
     - [ ] ...
+
+- [ ] cross plattform: Alles plugins müssen cross-plattfkorm alle features funktlieren. daeswegen: eine methode finden, bei der man funciton calls usw... erkennnt, die auf das os gehen, und diese dann prüfen ob sie crooss pplatform funktieren. bzw es gibt sicherlich noc eine pbessere methode...^
 
 ---
 
