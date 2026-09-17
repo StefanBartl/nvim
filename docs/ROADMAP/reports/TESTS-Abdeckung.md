@@ -38,7 +38,7 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**16 von 36 Repos abgeschlossen**; Runde 17 (reposcope.nvim), 18 (gopath.nvim) und 19 (color_my_ascii.nvim) laufen parallel.
+**20 von 36 Repos abgeschlossen**; Runde 21 (cascade.nvim) und 22 (sandbox.nvim) laufen parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -58,18 +58,20 @@ Regeln, die sich über die Runden eingespielt haben:
 | 14 | pdfport.nvim | 14 | `3c9273a` | 11 neue Specs; 192 → 1059 Assertion-Stellen |
 | 15 | emojis.nvim | 15 | `5ea0333` | 13 neue Specs; 261 → 773 Assertions |
 | 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
-| 17 | reposcope.nvim | 17 | *läuft* | — |
-| 18 | gopath.nvim | 18 | *läuft* | — |
-| 19 | color_my_ascii.nvim | 19 | *läuft* | — |
+| 17 | reposcope.nvim | 17 | `98a9a36` | 25 neue Specs; 236 → 1910 Assertions |
+| 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
+| 19 | color_my_ascii.nvim | 19 | `adcb5ef` | 13 neue Specs; 324 → 5566 Assertions |
+| 20 | diff.nvim | 20 | `d7aa3a5` | 10 neue Specs; 295 → 694 Assertion-Stellen |
+| 21 | cascade.nvim | 21 | *läuft* | — |
+| 22 | sandbox.nvim | 22 | *läuft* | — |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 ## Warteschlange
 
-Nach den drei laufenden Runden in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
+Nach den laufenden Runden in dieser Reihenfolge (siehe Survey):
 
-diff.nvim → cascade.nvim →
-sandbox.nvim → data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
+data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
 
 Die 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`,
 `markdown.nvim`, `documentation.nvim`, `media.nvim`, `ui.nvim`) bekommen keine volle Runde,
@@ -98,12 +100,12 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | pdfport.nvim | 50 | 10 | ✅ fertig |
 | emojis.nvim | 23 | 11 | ✅ fertig |
 | fileops.nvim | 18 | 11 | ✅ fertig |
-| reposcope.nvim | 113 | 12 | 🔄 Runde 17 läuft |
-| gopath.nvim | 77 | 16 | 🔄 Runde 18 läuft |
-| color_my_ascii.nvim | 95 | 17 | 🔄 Runde 19 läuft |
-| diff.nvim | 23 | 17 | 🟡 mittel |
-| cascade.nvim | 48 | 18 | 🟡 mittel |
-| sandbox.nvim | 270 | 19 | 🟡 mittel (sehr großes Repo) |
+| reposcope.nvim | 113 | 12 | ✅ fertig |
+| gopath.nvim | 77 | 16 | ✅ fertig |
+| color_my_ascii.nvim | 95 | 17 | ✅ fertig |
+| diff.nvim | 23 | 17 | ✅ fertig |
+| cascade.nvim | 48 | 18 | 🔄 Runde 21 läuft |
+| sandbox.nvim | 270 | 19 | 🔄 Runde 22 läuft (sehr großes Repo) |
 | data.nvim | 16 | 20 | 🟡 mittel |
 | spotlight.nvim | 27 | 19 | 🟡 mittel |
 | mdview.nvim | 78 | 24 | 🟡 mittel |
@@ -135,56 +137,62 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | github_stats.nvim | `dashboard/detail.lua` maß die Periode mit `vim.fn.strptime()`, das unter Windows immer `0` liefert → jede Spanne las sich als "(1 days)" | in `1b9b638` |
 | github_stats.nvim | `usrcmds/utils.lua`s `split_lines()` hängte an jedes Ergebnis eine Leerzeile an; `show_float()` ruft es pro Array-Element auf → jeder mehrzeilige Report kam doppelt zeilenumbrochen heraus | `6a85943` |
 | github_stats.nvim | `export.lua`s `write_lines()` pcallte das `writefile`, nicht das vorangehende `mkdir` → ein nicht anlegbares Elternverzeichnis entkam als rohes `E739` | `6a85943` |
+| lib.nvim | `net/curl`s `is_secret_header` kannte GitLabs `PRIVATE-TOKEN` nicht → jeder authentifizierte GitLab-Request schrieb sein Token in die curl-Kommandozeile, lesbar für jeden anderen Prozess | `5c6b1ac` |
+| fileops.nvim | die Delete-Taste rief `delete_fn({})` ohne Optionen → löschte trotz `delete.mode = "trash"` permanent und ohne Undo, und rief `on_before_delete` nie | `e7185fc` |
+| fileops.nvim | `ops/cycle.lua` + `ops/bulk.lua`: `/`-Join vs. `\`-Buffername verglichen nie gleich → Navigation als No-op, Phantom-Buffer nach Rename. Nur der **Vergleich** normalisiert jetzt, nicht die gespeicherten Pfade | `81e15ee` |
+| fileops.nvim | `delete_path` nahm Verzeichnisse an, die `uv.fs_unlink` nie löschen kann → `EPERM`-Retry-Budget verbrannt, danach Virenscanner beschuldigt | `81e15ee` |
+| fileops.nvim | `conflict_marks` leakte pro `:e` drei unlöschbare Matches | `ffc1c9a` |
+| insights.nvim | `symbols/parser.lua` verwarf unter Windows jeden rg-Treffer (Laufwerksbuchstabe im `:`-Split) → `:Insights symbols` fand lautlos nichts; `ui/scratch.lua`s Follow-Key hatte denselben blinden Fleck | `6031069` |
+| emojis.nvim | der Visual-Zweig las die Marken der *vorherigen* Selektion → erste Selektion brach ab, jede weitere schaltete fremde Zeilen um | `7583459` |
+| emojis.nvim | `frecency.save()`s ungeschütztes `mkdir` riss jede Emoji-Einfügung mit | `7583459` |
+| color_my_ascii.nvim | `ensure-blank-lines` fügte Leerzeilen **in** den Block ein und zerstörte die ASCII-Art; zudem nicht idempotent | `0437fe0` |
+| color_my_ascii.nvim | `unique_words`-Lookup war hash-order-abhängig (8 Wörter in zwei Sprachen) → Sprach-Erkennung nicht entschieden | `0437fe0` |
 | github_stats.nvim | `BufWipeout`-Handler löschte den Buffer, der gerade gewiped wird → `E937`, sobald der Buffer beim Wipe noch in seinem Fenster lag (`nvim_buf_delete()` von außen; `:q`/`:bwipeout`/`:bdelete`/`close()` waren immer sauber) | `dfdb1d8` |
 
 ### Offen (gepinnt)
 
-**Runde 16 / fileops.nvim** — fünf Stück, drei davon nur unter Windows sichtbar:
+Stand nach dem Fix-Durchgang: **17 offen** (war 25). Erledigt sind alle fünf aus fileops.nvim,
+zwei von vier aus emojis.nvim, einer aus insights.nvim (plus der mitgefixte Follow-Key), der
+Token-Leak aus reposcope.nvim (in lib.nvim), und zwei der sechs aus color_my_ascii.nvim.
 
-| Datei | Bug |
-|---|---|
-| `bindings/keymaps.lua` | die Delete-Taste ruft `delete_fn({})` ohne Optionen → `<leader>dcf` löscht seit dem Default-Wechsel auf `"trash"` weiterhin **permanent und ohne Undo** und ruft `on_before_delete` nie auf, obwohl der Modul-Header behauptet, `:File delete` zu spiegeln |
-| `ops/cycle.lua` | mit `follow_symlinks = false` joint `list_files` mit `/`, der Buffername nutzt `\`, `canon` normalisiert unter Windows nicht → `index_of` findet die aktuelle Datei nie, `:File next`/`prev` sind ein lautloser No-op |
-| `ops/bulk.lua` | `plan` joint mit `/`, wenn die Wurzel keinen Trenner am Ende hat (genau was `cycle.get_root_dir` liefert) → `nvim_buf_set_name` läuft nie, der Buffer zeigt nach `bulk rename` auf eine tote Datei, das nächste `:w` schreibt den alten Namen zurück |
-| `ops/file.lua` | `delete_path` nimmt Verzeichnisse an, die `uv.fs_unlink` nie löschen kann → Windows-`EPERM` wird als transiente Sharing-Violation missdeutet, ~1,9 s Retry-Budget verbrannt, danach macht die Fehlermeldung einen Virenscanner verantwortlich |
-| `features/conflict_marks.lua` | ein erneutes `:edit` derselben Datei ist ein `BufWinEnter` ohne vorheriges `BufWinLeave` → drei neue Matches je Aufruf, die alten IDs werden überschrieben und damit unlöschbar |
+| Repo | Datei | Bug |
+|---|---|---|
+| insights.nvim | `symbols/ts_lua.lua` | der `assignment_statement`-Zweig nutzt `field("left")`/`field("right")`, die es in tree-sitter-lua nicht gibt → toter Code |
+| insights.nvim | `symbols/ts_lua_tables.lua` | derselbe Defekt: verschachtelte Table-Felder bekommen nie ihr Präfix |
+| insights.nvim | `tree/init.lua` | Exclude-Globs Lua-Stil escapt, landen aber als Regex → `*/.git/*` matcht nie |
+| sessions.nvim | `core.lua` | `save()`s `ensure_dir()` steht außerhalb des pcall → rohes `E739`, auch aus dem `VimLeavePre`-Autosave |
+| sessions.nvim | `layout.lua` | `restore()` lässt `{}`/`[]` durch → `build()` stirbt an einer nil-Kinderliste |
+| emojis.nvim | `search.lua` | gieriger `file:line:`-Split verliert gegen das eigene `:100:`-Shortcode |
+| emojis.nvim | `search.lua` | `RG_PATTERN` deckt Misc Technical (⌚ ⏳ ⏰) nicht ab |
+| pdfport.nvim | `backends/tesseract.lua` | `finish_error()` zählt die gescheiterte Seite mit |
+| pdfport.nvim | `bindings/autocmds.lua` | nicht idempotent trotz gegenteiliger Doku → zweites `setup()` hinterlässt zwei `BufReadCmd`-Autocmds |
+| pdfport.nvim | `integrations/{fzf,telescope}.lua` | cachen Fehlschläge → eine gescheiterte Extraktion wird die ganze Session wiedergespielt |
+| reposcope.nvim | `clone_manager.lua` | `not isdirectory(path)` ist immer `false` (0 ist truthy) → Pfad-Guard und `safe_mkdir` beide toter Code |
+| reposcope.nvim | `bindings/keymaps.lua` | `unset_prompt_keymaps()` räumt per falschem Tag auf → `_registry` wächst pro Open/Close-Zyklus |
+| reposcope.nvim | `repository_fetcher.lua` | `vim.json.decode("null")` liefert truthy `vim.NIL` → wirft statt über `on_failure` zu melden (GitLab-Fetcher macht es richtig) |
+| reposcope.nvim | `utils/protection.lua` | `is_valid_path()` wirft ohne das laut Doc optionale zweite Argument |
+| reposcope.nvim | `ui/actions/readme_viewer.lua` | zweites Öffnen bei offenem Viewer → `Invalid buffer id` |
+| color_my_ascii.nvim | `comment_ascii`-Pfad | Highlights liegen `#prefix + 1` Bytes zu weit links (gestrippter Text als Koordinatensystem für Extmarks in der ungestrippten Zeile) |
+| color_my_ascii.nvim | `parser.get_byte_offset` | fährt `vim.str_utf_pos` als Iterator, das eine Tabelle liefert → wirft für jede Spalte > 0 |
+| color_my_ascii.nvim | `enable_bracket_highlighting` | kann Bracket-Highlighting nicht abschalten, weil `groups/operators.lua` alle sechs Klammern beansprucht |
+| color_my_ascii.nvim | 12 Keywords | stehen doppelt in ihrer eigenen Sprachdatei → doppelt gemalt, doppelt im Tiebreaker |
+| gopath.nvim | `external/helpers/opener.lua` | unparenthesiertes `gsub` im Table-Konstruktor → Ersetzungsanzahl landet als drittes argv-Element |
+| gopath.nvim | `extractor/helpers.lua` | `expand_right` nimmt das Terminator-Zeichen mit in den Pfad |
+| gopath.nvim | `tailsearch.sanitize` | Drive-Strip läuft vor der Backslash-Normalisierung und schließt Kleinbuchstaben aus |
+| gopath.nvim | `resolvers/lua/require_path.lua` | die Vorzeilen-Suche für mehrzeilige `require(...)` ist toter Code |
+| gopath.nvim | `providers/token.lua` | zerstört das `path(line)`-Format, das sein Docstring verspricht |
+| gopath.nvim | `commands.check_under_cursor` | der `help`-Zweig ist unerreichbar |
+| gopath.nvim | `util/path.invalidate_caches()` | leert `_pdir_*` nicht |
+| gopath.nvim | `create.lua` | der "lib.nvim fehlt"-Fallback requirt ungeschützt genau diese Dependency |
+| diff.nvim | `core/directory.lua` | ungeschütztes `readfile` → rohes `E484` an `on_done` vorbei, Aufrufer wartet ewig |
+| diff.nvim | `core/scratch.lua` | `track()` dedupliziert nicht → `status()` kann `diff:3` melden |
+| diff.nvim | `health.lua` | der "lib.nvim fehlt"-Zweig ruft danach unbedingt in lib.nvim hinein |
 
-**Runde 15 / emojis.nvim**
-
-| Datei | Bug |
-|---|---|
-| `init.lua` | der Visual-Zweig liest `'<`/`'>`, die Neovim erst beim *Verlassen* des Bereichs setzt; das Preset bindet `toggle` aber in `mode = { "n", "x" }` → erste Selektion bricht mit "no previous visual selection" ab, danach wird still die **vorherige** Selektion umgeschaltet. Das dokumentierte Feature funktioniert nie korrekt (`:'<,'>Emojis toggle` ist nicht betroffen) |
-| `overlay/frecency.lua` | `save()`s `mkdir` steht außerhalb jedes pcall → ein rohes `E739` fliegt aus **jeder** Emoji-Einfügung, obwohl der Moduldoc genau das ausschließt ("losing a usage histogram must never break emoji insertion") |
-| `search.lua` | greedy `^(.+):%d+:` — das eigene Shortcode-Vokabular liefert das Gegenbeispiel: `notes.md:3:scored 💯 out of :100:` wird zu Datei `notes.md:3:scored 💯 out of ` / Zeile 100; für `clear`/`replace` endet das in `E484` auf einem erfundenen Pfad |
-| `search.lua` | `RG_PATTERN` deckt nur drei der vier `core.patterns.RANGES` ab; Misc Technical (⌚ ⏳ ⏰) fehlt, `cwd`-Aktionen überspringen diese Glyphen still |
-| `health.lua` | meldet einen fehlenden lib.nvim-Composer als Error und ruft danach `composer.checkhealth()` unbedingt auf — auf genau der Maschine, die die Meldung braucht, bricht der Report ab |
-
-**Runde 14 / pdfport.nvim**
-
-| Datei | Bug |
-|---|---|
-| `backends/tesseract.lua` | `finish_error()` meldet `page_idx - 1`, aber `process_next()` hat den Index schon weitergezählt → ein Fehlschlag auf Seite 1 meldet "1 Seite verarbeitet". Der formgleiche `fail()` in `backends/ollama.lua` rechnet mit `page_idx - 2` richtig — dieselbe Vorlage, nur eine Kopie korrigiert |
-| `bindings/autocmds.lua` | verspricht in Modul-Doc und Kommentar, die eigene Augroup zu leeren und neu zu bauen, tut es aber nicht: `lib.nvim`s `autocmd.create` löst einen String-`group` ohne `clear` auf. Ein zweites `setup()` mit `auto_open_on_read` hinterlässt zwei `BufReadCmd *.pdf`-Autocmds, der Mode-Picker geht doppelt auf |
-| `integrations/{fzf,telescope}.lua` | memoisieren per Pfad, **bevor** `result.status` geprüft wird → eine einmal gescheiterte Extraktion (ollama nicht gestartet, poppler fehlt) wird für die ganze Session als Fehlertext wiedergespielt. `util/cache.lua` verweigert genau das ausdrücklich |
-
-**Runde 13 / sessions.nvim** — beide wären ein Wechsel von "wirft" zu "meldet", daher gepinnt:
-
-| Datei | Bug |
-|---|---|
-| `core.lua` | `save()`/`save_tab()` versprechen `(ok, err)` und kapseln `:mksession` in `pcall`, nicht aber das `ensure_dir()` darüber → ein nicht anlegbarer `cfg.root` entkommt als rohes `E739`, auch aus dem `VimLeavePre`-Autosave heraus (dieselbe Fehlerklasse wie der export.lua-Fund aus Runde 11) |
-| `layout.lua` | `restore()` prüft nur `type(tree) ~= "table"`, lässt also `{}`/`[]` durch; `build()` stirbt dann an `attempt to get length of local 'children' (a nil value)` statt das versprochene "corrupt or missing layout file" zu melden |
-
-Zusätzlich als Verhalten gepinnt (kein Defekt): `core.rename` zieht `.state.json` nicht mit — zwischen
-Umbenennen und nächstem Save greifen `:Session load` und der Autoload auf `default_name` zurück.
-
-**Runde 12 / insights.nvim**
-
-| Datei | Bug |
-|---|---|
-| `symbols/parser.lua` | `parse_vimgrep_line()` splittet an den ersten drei Doppelpunkten; der Windows-Laufwerksbuchstabe frisst das Dateinamen-Feld, jede rg-Zeile wird still verworfen → **`:Insights symbols` findet unter Windows gar nichts** (verifiziert: rg gibt hier `E:/repos/…` aus) |
-| `symbols/ts_lua.lua` | der `assignment_statement`-Zweig nutzt `field("left")`/`field("right")`, die es in tree-sitter-lua nicht gibt → toter Code; `M.foo = function()` liefert mit `use_treesitter_for_lua` keine Symbole |
-| `symbols/ts_lua_tables.lua` | derselbe Defekt an eigener Stelle: verschachtelte Table-Felder bekommen nie ihr Präfix (`imports/ts_requires.lua` trägt bereits einen `child_of_type`-Helfer, der genau das löst) |
-| `tree/init.lua` | Exclude-Globs werden Lua-Pattern-Stil mit `%` escapt, landen aber als Regex beim externen Tool → `*/.git/*` matcht nie, `:Insights tree`/`count` enthalten unter Windows das ganze `.git/` |
+**Wiederkehrende Familien** (die Kampagne findet dieselben vier Fehler immer wieder):
+Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren `E739`/`E482` am eigenen
+Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; und — inzwischen in **drei**
+Repos (emojis, diff, gopath) — ein Health-Check, dessen "Dependency fehlt"-Zweig danach
+unbedingt in genau diese Dependency hineinruft.
 
 ## Historie: der ursprüngliche 3-Repo-Report
 
