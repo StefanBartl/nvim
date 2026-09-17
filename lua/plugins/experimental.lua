@@ -4,14 +4,6 @@
 ---@type LazyPluginSpec[]
 return {
   {
-    "dstein64/vim-startuptime",
-    -- A startup profiler that loaded itself at startup. Its `plugin/
-    -- startuptime.vim` defines exactly one command, so that command is the
-    -- trigger -- and the profiler stops being part of what it measures.
-    cmd = "StartupTime",
-  },
-
-  {
     "dhruvasagar/vim-table-mode",
     -- Loads the plugin only for these commands or filetypes
     cmd = { "TableModeToggle", "Tableize" },
