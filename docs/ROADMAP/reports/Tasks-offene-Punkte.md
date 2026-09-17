@@ -1,12 +1,40 @@
 # Hand-off tasks for the open roadmap items
 
 **Date:** 2026-09-17
-**Companion to:** [`Roadmap-Aufwand-Nutzen.md`](Roadmap-Aufwand-Nutzen.md)
+**Companion to:** [`Roadmap-Aufwand-Nutzen.md`](./Roadmap-Aufwand-Nutzen.md)
 **What this is:** one paste-ready prompt per open item, each carrying its own
 paths, quotes and rules so it can be dropped into a fresh chat with no context.
 
 The prompts are **German** because that is the language they get pasted into;
 the surrounding text is English like every other document here.
+
+---
+
+## Table of content
+
+  - [Read this before pasting anything](#read-this-before-pasting-anything)
+  - [A. High benefit, one session or less](#a-high-benefit-one-session-or-less)
+    - [A1 — casedesk: redaction gate before any AI attachment](#a1-casedesk-redaction-gate-before-any-ai-attachment)
+    - [A2 — media: SRT/VTT serialisers](#a2-media-srtvtt-serialisers)
+    - [A3 — media: progress handle during a transcription run](#a3-media-progress-handle-during-a-transcription-run)
+    - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
+    - [A5 — mdview: hand-test `any_file` in real Neovim](#a5-mdview-hand-test-any_file-in-real-neovim)
+    - [A6 — my.nvim: the breadcrumb `container` provider is a no-op](#a6-mynvim-the-breadcrumb-container-provider-is-a-no-op)
+    - [A7 — media: prefetch hint for frame stepping](#a7-media-prefetch-hint-for-frame-stepping)
+  - [B. A real sitting](#b-a-real-sitting)
+    - [B1 — media: the hub dashboard](#b1-media-the-hub-dashboard)
+    - [B2 — media: first real whisper.cpp run](#b2-media-first-real-whispercpp-run)
+    - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
+    - [B4 — lsp: provoke errors in `:LspDoctor deep`](#b4-lsp-provoke-errors-in-lspdoctor-deep)
+    - [B5 — `rules.nvim` pass over ui.nvim](#b5-rulesnvim-pass-over-uinvim)
+    - [B6 — data.nvim: phase 1 register scope](#b6-datanvim-phase-1-register-scope)
+    - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
+    - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
+    - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
+    - [B10 — documentation.nvim: the shim that behaves differently](#b10-documentationnvim-the-shim-that-behaves-differently)
+    - [B11 — ui.nvim + my.nvim: cross-feature check against the sibling plugins](#b11-uinvim-mynvim-cross-feature-check-against-the-sibling-plugins)
+  - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
+  - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
 ---
 
@@ -962,3 +990,6 @@ entfernen und in casedesk.nvim/FEATURES.md eintragen.
   needs a Linux or macOS host this fleet does not have.
 - **The `docmap-desktop` queue** that `documentation.nvim` and
   `runtime-analysis.nvim` both defer to — it lives outside this collection.
+
+---
+

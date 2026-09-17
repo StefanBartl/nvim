@@ -243,7 +243,11 @@ local function open_terminal()
     -- `bwipeout`, not `bdelete`: the latter only unlists the buffer, leaving
     -- the empty one behind for the rest of the session. Verified that this
     -- restores both the buffer count and the window's previous file.
-    pcall(vim.cmd, "bwipeout!")
+    -- Same `vim.cmd`-is-a-callable-table point as `inspect_here` above
+    -- (ERR-62): wrapped, not passed to `pcall` directly.
+    pcall(function()
+      vim.cmd("bwipeout!")
+    end)
     notify.error("could not open a terminal in " .. dir .. ": " .. tostring(job))
   end
 end
