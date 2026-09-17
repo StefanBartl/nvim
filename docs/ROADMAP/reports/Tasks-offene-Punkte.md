@@ -32,7 +32,6 @@ the surrounding text is English like every other document here.
     - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
     - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
     - [B10 — documentation.nvim: the shim that behaves differently](#b10-documentationnvim-the-shim-that-behaves-differently)
-    - [B11 — ui.nvim + my.nvim: cross-feature check against the sibling plugins](#b11-uinvim-mynvim-cross-feature-check-against-the-sibling-plugins)
   - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
@@ -777,51 +776,6 @@ Repo: E:/repos/documentation.nvim
 Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
 stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
 fertig: committen und direkt auf main pushen.
-```
-
----
-
-### B11 — ui.nvim + my.nvim: cross-feature check against the sibling plugins
-
-**Explicitly one pass for both**, per both roadmaps — not two spot-checks.
-
-```
-Aufgabe: Kreuzfeature-Check von ui.nvim und my.nvim gegen die ~30
-Schwesterplugins — ein Durchgang für beide, mit schriftlichem Report.
-
-Roadmap-Punkte (derselbe Punkt, in beiden Dateien):
-- E:/repos/WKDBooks/Development/wkdbook-myplugins/my.nvim/ROADMAP/ROADMAP.md,
-  Abschnitt "Cross-plugin checks", Punkt "Cross-feature check against sibling
-  plugins"
-- E:/repos/WKDBooks/Development/wkdbook-myplugins/ui.nvim/NOTES.md,
-  Abschnitt "Offene Punkte (Backlog)", Punkt 3
-
-Beide sagen ausdrücklich dasselbe: EIN eigener Analyse-Durchgang mit
-schriftlichem Report für beide Plugins zusammen, nicht zwei Stichproben
-unterwegs.
-
-Frage: Gibt es Überlappung oder sinnvoll teilbare Funktionalität zwischen
-ui.nvim/my.nvim und den übrigen Plugins unter E:/repos? Die Arbeitsteilung
-der beiden ist dabei die Leitlinie: my.nvim malt INNERHALB des Fensters
-(Cursorline, Mode-Tinting, Indent-Guides, Breadcrumbs-Inhalt), ui.nvim ist
-der RAHMEN (Statusline, Tabline, Theme). Das steht in beiden Roadmaps als
-Scope-Grenze und ist der Maßstab, an dem ein Overlap-Befund zu messen ist.
-
-Es gibt eine Vorlage für Form und Tiefe, halte dich daran:
-nvim/docs/ROADMAP/reports/Externe-Plugins-Nachbau-Analyse.md — Methode,
-was NICHT geprüft wurde, Zahlen, dann die Befunde mit Aufwand in
-Arbeits-Sessions.
-
-WICHTIG, aus einer teuren Lektion derselben Flotte: Verlass dich nicht auf
-die Beschreibung eines Features, sondern lies den echten Quelltext. Eine
-Analyse vom 2026-09-17 hat 15 Roadmap-Punkte gefunden, die als offen
-gelistet, aber längst gebaut waren. Jeder Overlap-Befund braucht die Datei,
-die ihn belegt.
-
-Report ablegen unter: C:/Users/bartl/AppData/Local/nvim/docs/ROADMAP/reports/
-Regeln: Antworte auf Deutsch, Report auf Englisch (wie die Nachbarreports
-dort). Kein Claude-Co-Author in Commits. Wenn fertig: committen und direkt
-auf main pushen, und den Punkt in BEIDEN Roadmaps abhaken.
 ```
 
 ---
