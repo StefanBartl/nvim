@@ -26,8 +26,8 @@ local M = {}
 local CAPTURES = { "@block.outer" }
 
 ---@class Bindings.TreesitterStructure.Opts
----@field enable? boolean # false binds nothing. Default true.
----@field keys? { up?: string|false, down?: string|false } # false drops one direction.
+---@field enable? boolean  false binds nothing. Default true.
+---@field keys? { up?: string|false, down?: string|false }  false drops one direction.
 
 ---@type { up: string, down: string }
 local DEFAULT_KEYS = { up = "[u", down = "]u" }

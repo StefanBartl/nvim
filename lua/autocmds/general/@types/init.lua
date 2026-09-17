@@ -2,7 +2,7 @@
 ---@module 'autocmds.general.@types'
 
 ---@class AutoCmds.General
----@field enable fun(cfg: AutoCmds.General.Cfg|nil|nil): nil # Enable general autocommands per feature.
+---@field enable fun(cfg: AutoCmds.General.Cfg|nil|nil): nil  Enable general autocommands per feature.
 
 ---@class AutoCmds.General.Cursorline.Cfg
 ---@field enable boolean                             -- Toggle cursorline only for the active window

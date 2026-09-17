@@ -2,7 +2,7 @@
 ---@module 'autocmds.terminals.types'
 
 ---@class AutoCmds.Terminals
----@field enable fun(cfg: AutoCmds.Term.Cfg|nil): nil # Enable terminal-related autocommands per feature.
+---@field enable fun(cfg: AutoCmds.Term.Cfg|nil): nil  Enable terminal-related autocommands per feature.
 
 ---@class AutoCmds.Term.NumbersCfg
 ---@field enable boolean                 -- Disable 'number' and 'relativenumber' in terminal buffers (local options).
