@@ -618,7 +618,14 @@ end
 local function claim_first_run()
   local dir = vim.fn.stdpath("state")
   if uv.fs_stat(dir) == nil then
-    vim.fn.mkdir(dir, "p")
+    -- `vim.fn.mkdir` raises (E739) rather than returning an error. That
+    -- mattered less when this ran inside a post-`VimEnter` `vim.schedule`;
+    -- it runs in `setup()` now, straight from the plugin's `config` hook, so
+    -- an unwritable state dir would abort the rest of that hook and the
+    -- `:Harpoon` commands registered after it would never exist. A failure
+    -- here just means the `fs_open` below fails too, which the non-`EEXIST`
+    -- branch already treats as "not seeded yet".
+    pcall(vim.fn.mkdir, dir, "p")
   end
   local fd, _, errname = uv.fs_open(INIT_MARKER, "wx", 420) -- 0644, O_CREAT|O_EXCL
   if fd then

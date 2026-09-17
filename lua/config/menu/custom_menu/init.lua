@@ -229,10 +229,23 @@ local function open_terminal()
   -- element is a literal filename -- the quotes become part of the name and
   -- the spawn fails with E475. Only the shell option itself goes into that
   -- string; nothing derived from the buffer does.
-  vim.fn.jobstart(vim.o.shell, {
+  --
+  -- Guarded: `jobstart` *raises* on a cwd it cannot use (E475), and the
+  -- `isdirectory` check above cannot close that window -- the directory can
+  -- go away between the two. Without the guard that error escapes a menu
+  -- callback, and the buffer `enew` just made is left behind empty. Every
+  -- other failure in this module reports through `notify`.
+  local ok, job = pcall(vim.fn.jobstart, vim.o.shell, {
     term = true,
     cwd = dir,
   })
+  if not ok or type(job) ~= "number" or job <= 0 then
+    -- `bwipeout`, not `bdelete`: the latter only unlists the buffer, leaving
+    -- the empty one behind for the rest of the session. Verified that this
+    -- restores both the buffer count and the window's previous file.
+    pcall(vim.cmd, "bwipeout!")
+    notify.error("could not open a terminal in " .. dir .. ": " .. tostring(job))
+  end
 end
 
 ---Open minty's colour picker, when minty is installed.

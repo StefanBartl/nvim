@@ -58,8 +58,19 @@ function M.usercommands()
     -- passed as the FIRST argument, i.e. as the adapter id, so the lookup
     -- matched no adapter and quietly returned nil -- "Found: NO" every time,
     -- whatever was loaded.
-    local first_adapter = adapters[1]
-    local tree_ok, tree = pcall(neotest.state.positions, first_adapter, { buffer = bufnr })
+    --
+    -- Every adapter is asked, not just `adapters[1]`: this config registers
+    -- vitest, jest, go, python, rust and plenary, and the buffer belongs to
+    -- whichever one claims it. Stopping at the first would report "Found: NO"
+    -- for every project that is not the first adapter's.
+    local tree, tree_ok = nil, false
+    for _, adapter_id in ipairs(adapters) do
+      local ok_pos, found = pcall(neotest.state.positions, adapter_id, { buffer = bufnr })
+      if ok_pos and found then
+        tree, tree_ok = found, true
+        break
+      end
+    end
 
     local lines = { "=== Neotest Debug State ===" }
     lines[#lines + 1] = ""
@@ -278,14 +289,24 @@ function M.keymaps()
       -- nil, so the counter below always reported "No tests discovered" no
       -- matter what was loaded -- a report shaped by the work it planned
       -- rather than the work it did.
-      local adapter_id = (neotest.state.adapter_ids() or {})[1]
-      local tree_ok, tree = pcall(neotest.state.positions, adapter_id)
-      if adapter_id and tree_ok and tree then
+      --
+      -- Asked across every registered adapter, for the same reason as
+      -- `:NeotestDebugState` above: one project's tests live behind one
+      -- adapter, and this config registers six.
+      local tree = nil
+      for _, adapter_id in ipairs(neotest.state.adapter_ids() or {}) do
+        local ok_pos, found = pcall(neotest.state.positions, adapter_id)
+        if ok_pos and found then
+          tree = found
+          break
+        end
+      end
+      if tree then
         -- A `neotest.Tree` node has no `type`/`children` FIELDS -- those are
         -- `:data().type` and `:children()`. The old hand-rolled recursion
-        -- read both as plain fields, so it found nothing to descend into and
-        -- counted nothing: "0 tests found" regardless of the tree.
-        -- `iter_nodes()` walks the whole tree and is what the type offers.
+        -- read `children` as a field and handed the resulting *method* to
+        -- `ipairs`, which raises -- so this did not report a wrong count, it
+        -- threw inside the `defer_fn`. `iter_nodes()` is what the type offers.
         local count = 0
         for _, node in tree:iter_nodes() do
           local ok_data, data = pcall(node.data, node)
