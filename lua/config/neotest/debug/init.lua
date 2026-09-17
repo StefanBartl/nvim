@@ -173,11 +173,17 @@ function M.usercommands()
     lines[#lines + 1] = string.format("CWD: %s", cwd)
     lines[#lines + 1] = ""
 
-    -- List all files in CWD
+    -- List all files in CWD.
+    --
+    -- `vim.fs.dir`, not `vim.fn.glob(cwd .. "/*")`: glob reads its whole
+    -- argument as a pattern, including the `cwd` part. A checkout under a
+    -- directory containing `[`, `]`, `?` or `{}` matches nothing and glob
+    -- returns an empty list with no error -- verified: a `proj[1]` folder
+    -- holding one file globs to 0 entries while `vim.fs.dir` finds it. A
+    -- debug command whose job is "show me what is here" silently showing
+    -- nothing is the worst possible failure for it.
     lines[#lines + 1] = "Files in CWD root:"
-    local files = vim.fn.glob(cwd .. "/*", false, true)
-    for _, file in ipairs(files) do
-      local name = vim.fn.fnamemodify(file, ":t")
+    for name in vim.fs.dir(cwd) do
       if name:match("^vitest%.config") or name:match("^jest%.config") or name == "package.json" then
         lines[#lines + 1] = string.format("  ✓ %s", name)
       end
