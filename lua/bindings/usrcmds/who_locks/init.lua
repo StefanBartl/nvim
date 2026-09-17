@@ -130,6 +130,7 @@ local function complete(arg_lead)
 end
 
 ---Register :WhoLocks.
+---@return nil
 function M.enable()
   usercmd.create("WhoLocks", function(args)
     local as_json = false

@@ -121,6 +121,7 @@ end
 --- caller building one combined view never has to juggle partial results.
 ---@param bufnr integer
 ---@param on_done fun(report: Lib.Case.ReplyGateReport)
+---@return nil
 function M.check(bufnr, on_done)
   local lines = buf_lines(bufnr)
 

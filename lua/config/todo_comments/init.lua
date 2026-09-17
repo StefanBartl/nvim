@@ -94,6 +94,7 @@ end
 local keyword_or = build_keyword_list(KEYWORDS)
 
 ---@param opts table|nil
+---@return nil
 function M.setup(opts)
   opts = opts or {}
   if not opts.keywords then

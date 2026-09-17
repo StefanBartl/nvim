@@ -168,6 +168,7 @@ end
 
 --- Initializes the auto-center module with optional user configuration.
 ---@param user_config? AutoCenterConfig|table User configuration to merge with defaults
+---@return nil
 function M.setup(user_config)
   config = vim.tbl_deep_extend("force", default_config, user_config or {})
 
@@ -206,14 +207,17 @@ function M.setup(user_config)
   })
 end
 
+---@return nil
 function M.enable()
   config.enabled = true
 end
 
+---@return nil
 function M.disable()
   config.enabled = false
 end
 
+---@return nil
 function M.toggle()
   config.enabled = not config.enabled
   if config.enabled then

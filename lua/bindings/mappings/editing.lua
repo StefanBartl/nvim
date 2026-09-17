@@ -202,6 +202,7 @@ local function install_paste_trim()
   end
 end
 
+---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 

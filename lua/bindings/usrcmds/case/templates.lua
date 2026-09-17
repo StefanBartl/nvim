@@ -41,6 +41,7 @@ local FILES = {
 --- templates/) — for a case-specific override or a new recurring document.
 ---@param tag string
 ---@param filename_or_path string
+---@return nil
 function M.register(tag, filename_or_path)
   FILES[tag] = filename_or_path
 end

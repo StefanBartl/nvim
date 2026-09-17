@@ -67,6 +67,7 @@ end
 --- event that fires during startup (VimEnter, the first BufReadPost).
 ---@param label string
 ---@param fn fun()
+---@return nil
 function M.now(label, fn)
   local mark = { label = label, trigger = "sync" }
   M.marks[#M.marks + 1] = mark
@@ -92,6 +93,7 @@ end
 ---@param event string
 ---@param label string
 ---@param fn fun()
+---@return nil
 function M.on(event, label, fn)
   local mark = { label = label, trigger = event }
   M.marks[#M.marks + 1] = mark
@@ -155,6 +157,7 @@ function M.slowest()
 end
 
 --- Register :StartupReport and :StartupCheck.
+---@return nil
 function M.setup_usercmds()
   local usercmd = require("lib.nvim.bindings.usercmd")
 

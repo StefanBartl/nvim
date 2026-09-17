@@ -56,6 +56,7 @@ local function scan_state(state)
 end
 
 --- Drop the cache — call after any create/move that changes what's on disk.
+---@return nil
 function M.invalidate()
   cache = nil
 end

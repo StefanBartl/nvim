@@ -12,6 +12,7 @@ local M = {}
 local marked = {}
 
 ---@param short string
+---@return nil
 function M.toggle(short)
   marked[short] = not marked[short] or nil
 end
@@ -22,6 +23,7 @@ function M.is_marked(short)
   return marked[short] == true
 end
 
+---@return nil
 function M.clear()
   marked = {}
 end

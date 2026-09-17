@@ -88,6 +88,7 @@ end
 --- fallback buffer it was going to show for the window that just lost its
 --- buffer/closed.
 --- @param exclude table<integer, true>  Buffer numbers ineligible as a replacement.
+---@return nil
 function M.no_name_guard_sweep(exclude)
   vim.schedule(function()
     for _, win in ipairs(api.nvim_list_wins()) do
