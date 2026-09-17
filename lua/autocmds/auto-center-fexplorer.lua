@@ -30,8 +30,15 @@ local default_config = {
 ---@type AutoCenterConfig
 local config = vim.deepcopy(default_config)
 
----@type table<number, uv.uv_timer_t|nil> Timer storage per buffer
-local timers = {}
+--- One debounce timer per buffer (PERF-64: the shared primitive rather than a
+--- hand-rolled `uv.new_timer()` per buffer). `lib.nvim.debounce.buffer` also
+--- wires the `BufDelete`/`BufWipeout` cancellation itself, which is what the
+--- module used to keep its own autocmd for.
+---
+--- Created lazily on first use, because the delay comes from `config`, which
+--- `M.setup()` may still replace.
+---@type table|nil
+local centering = nil
 
 ---@type table<number, boolean> Track which buffers have auto-centering enabled
 local enabled_buffers = {}
@@ -64,32 +71,12 @@ end
 --- Schedules a debounced centering operation for the given buffer.
 ---@param bufnr number Buffer number to schedule centering for
 local function schedule_center(bufnr)
-  if timers[bufnr] then
-    if not timers[bufnr]:is_closing() then
-      timers[bufnr]:stop()
-      timers[bufnr]:close()
-    end
-    timers[bufnr] = nil
+  if not centering then
+    centering = require("lib.nvim.debounce.buffer").new(function(buf)
+      center_cursor(buf)
+    end, { ms = config.delay_ms })
   end
-
-  local timer = vim.uv.new_timer()
-  if not timer then
-    notify.debug("[auto-close-fexplorer] timer is nil")
-    return
-  end
-  timers[bufnr] = timer
-
-  timer:start(
-    config.delay_ms,
-    0,
-    vim.schedule_wrap(function()
-      center_cursor(bufnr)
-      if timer and not timer:is_closing() then
-        timer:close()
-      end
-      timers[bufnr] = nil
-    end)
-  )
+  centering.call(bufnr)
 end
 
 ---@param ft string
@@ -147,13 +134,9 @@ local function setup_buffer(bufnr)
   })
 
   Autocmd.create("BufDelete", function()
-    if timers[bufnr] then
-      if not timers[bufnr]:is_closing() then
-        timers[bufnr]:stop()
-        timers[bufnr]:close()
-      end
-      timers[bufnr] = nil
-    end
+    -- The debounce handle cancels and forgets its own per-buffer timer on
+    -- `BufDelete`/`BufWipeout`, so only this module's own bookkeeping is left
+    -- to clear here.
     enabled_buffers[bufnr] = nil
   end, {
     group = group,
