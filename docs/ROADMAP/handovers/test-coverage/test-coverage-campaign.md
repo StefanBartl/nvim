@@ -12,24 +12,22 @@
 
 ## Restliche Plugins (Reihenfolge für die Fortsetzung)
 
-14 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
+16 von 36 Plugins sind fertig (siehe "Fortschritt" unten). 9 weitere (`images.nvim`,
 `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`, `markdown.nvim`,
 `documentation.nvim`, `media.nvim`, `ui.nvim`) sind laut Survey bereits 🟢/✅ und bekommen
 laut Kampagnenregel keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke.
-Drei Runden laufen parallel (emojis.nvim, fileops.nvim, reposcope.nvim). Die danach
-verbleibenden 10 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
+Drei Runden laufen parallel (reposcope.nvim, gopath.nvim, color_my_ascii.nvim). Die danach
+verbleibenden 8 (🟠 dann 🟡, wie im Survey unten priorisiert) sind die Warteschlange,
 in dieser Reihenfolge abzuarbeiten:
 
-1. gopath.nvim
-2. color_my_ascii.nvim
-3. diff.nvim
-4. cascade.nvim
-5. sandbox.nvim
-6. data.nvim
-7. spotlight.nvim
-8. mdview.nvim
-9. filetree.nvim
-10. lsp.nvim
+1. diff.nvim
+2. cascade.nvim
+3. sandbox.nvim
+4. data.nvim
+5. spotlight.nvim
+6. mdview.nvim
+7. filetree.nvim
+8. lsp.nvim
 
 ## Regeln für diese Session (aus CLAUDE.md / Nutzer-Vorgaben)
 
@@ -72,8 +70,8 @@ Schneller Survey (Lua-Quelldateien in `lua/` vs. Testdateien) über alle 33 Plug
 | insights.nvim | 49 | 9 | ✅ fertig (Runde 12, Commit `1be0f7a`; 7 → 31 Spec-Dateien) |
 | sessions.nvim | 17 | 9 | ✅ fertig (Runde 13, Commit `0034df3`) |
 | pdfport.nvim | 50 | 10 | ✅ fertig (Runde 14, Commit `3c9273a`) |
-| emojis.nvim | 23 | 11 | 🟠 schwach |
-| fileops.nvim | 18 | 11 | 🟠 schwach |
+| emojis.nvim | 23 | 11 | ✅ fertig (Runde 15, Commit `5ea0333`) |
+| fileops.nvim | 18 | 11 | ✅ fertig (Runde 16, Commit `7060232`) |
 | reposcope.nvim | 113 | 12 | 🟠 schwach (großes Repo) |
 | gopath.nvim | 77 | 16 | 🟠 schwach |
 | color_my_ascii.nvim | 95 | 17 | 🟠 schwach |
@@ -133,9 +131,17 @@ Alle 10 abgeschlossenen Coverage-Commits sowie alle 6 Bugfix-Commits sind per `g
 merge-base --is-ancestor` gegen `origin/main` verifiziert; keine Repos mit uncommitteten
 Änderungen gefunden (Stichprobe über alle ~35 Plugin-Repos anhand des jeweils letzten Commits).
 
-**Nächste Schritte:** die drei laufenden Runden (15 emojis.nvim, 16 fileops.nvim,
-17 reposcope.nvim) einsammeln und hier eintragen, danach der Reihe nach die restliche
-🟠/🟡-Liste oben (→ gopath.nvim → color_my_ascii.nvim, danach 🟡 nur bei konkreten Lücken).
+**Nächste Schritte:** die drei laufenden Runden (17 reposcope.nvim, 18 gopath.nvim,
+19 color_my_ascii.nvim) einsammeln und hier eintragen, danach die 🟡-Liste oben — dort nur
+noch bei konkreten Lücken.
+
+**Achtung, wachsender Berg:** die Zahl der gepinnten, ungefixten Bugs steht bei 19 über
+fünf Repos (4 insights, 2 sessions, 3 pdfport, 5 emojis, 5 fileops). Die Kampagne findet
+sie schneller, als sie gefixt werden. Wiederkehrende Familien, nach Häufigkeit:
+Windows-Pfadbehandlung (Trenner-Mismatch, Laufwerksbuchstabe in einem Doppelpunkt-Split,
+`fnamemodify(":p")` normalisiert dort nicht), ungeschützte Dateisystem-Aufrufe, deren
+`E739`/`E482` am eigenen Fehlerpfad vorbeifliegt, gierige `file:line:`-Splits, und Caches,
+die Fehlschläge memoisieren.
 
 **Offener Nebenauftrag:** 6 gepinnte, noch ungefixte Bugs aus zwei Runden.
 
@@ -158,6 +164,17 @@ Aus Runde 12 (insights.nvim), offen:
   verschachtelte Table-Felder).
 - `tree/init.lua` escapt die Windows-Exclude-Regexes Lua-Stil (`%`) statt Regex-Stil
   (`\`) → `*/.git/*` matcht nie, der Tree enthält unter Windows das ganze `.git/`.
+
+Aus Runde 16 (fileops.nvim), offen: `bindings/keymaps.lua`s Delete-Taste ignoriert
+`delete.mode` (löscht weiterhin permanent, ohne Undo) — der gefährlichste offene Punkt;
+dazu drei Windows-only-Defekte (`ops/cycle.lua`-Navigation als No-op, `ops/bulk.lua`s
+Phantom-Buffer nach Rename, `ops/file.lua`s Verzeichnis-Unlink) und der Match-Leak in
+`features/conflict_marks.lua`.
+
+Aus Runde 15 (emojis.nvim), offen: der Visual-Zweig in `init.lua` (schaltet die
+*vorherige* Selektion um), das unbewachte `mkdir` in `overlay/frecency.lua`, der gierige
+`file:line:`-Split in `search.lua`, die fehlende Misc-Technical-Range in `RG_PATTERN`, und
+`health.check()`s unbedingter Composer-Aufruf.
 
 Aus Runde 14 (pdfport.nvim), offen:
 - `backends/tesseract.lua`s `finish_error()` zählt die gescheiterte Seite mit
@@ -789,4 +806,82 @@ Alle Kampagnen-Bugs aus den Runden 1–11 (9 insgesamt über 7 Repos) sind gefix
   README-Behauptung "Nothing here shells out to … Python …" wurde entsprechend korrigiert.
   Commit: `3c9273a` (test: cover producer/backend argv, dispatcher, renderers, bindings and
   the public API), direkt auf `main` gepusht.
+- [x] **emojis.nvim** — fertig (Runde 15). Eigener framework-freier Harness beibehalten,
+  Specs weiter über die explizite Liste in `run.lua`. 9 → 22 Spec-Dateien, 261 → 773
+  Assertions, 0 Fails über drei Wiederholungsläufe (Exit 0, `EMOJIS_TESTS_OK`).
+  `stylua --check lua TESTS` grün, `luacheck lua TESTS` 0/0 über 47 Dateien. Hier sind
+  `lib.nvim` **und** `ui.nvim` CI-Siblings, `ui.kit` ist also echt verfügbar statt gestubbt.
+  13 neue Dateien: `config_merge_spec`, `insert_spec` (byte-genaues Einfügen zwischen
+  Multibyte-Nachbarn), `nav_spec`, `util_lib_spec` (beide Pfade jedes lib.nvim-Accessors),
+  `actions_spec`, `commands_dispatch_spec` (Routing, NO_SCOPE-Bypass, Range-Präzedenz,
+  Completion an jeder Position), `search_run_spec`, `picker_engine_spec` (Engine-Matrix
+  gegen telescope/fzf-lua-Doubles), `frecency_spec`, `overlay_modes_spec` (Grid über die
+  eigenen Keymaps gefahren), `api_spec`, `bindings_spec`, `health_spec`; die vier
+  bestehenden Pure-Layer-Specs um Stray-VS16, dangling ZWJ, Regional-Indicator-Paarung und
+  `encode`-Round-Trips erweitert. Der Harness bekam einen Assertion-Zähler und
+  `H.notices(fn)`, weil mehrere Zweige *nur* melden.
+  **Fünf Bugs gefunden, alle gepinnt:** (1) der Visual-Zweig in `init.lua` liest die
+  Marken, die Neovim erst beim Verlassen des Bereichs setzt, während das Preset `toggle`
+  in `mode = { "n", "x" }` bindet — die erste Selektion bricht mit "no previous visual
+  selection" ab, danach wird still die *vorherige* Selektion umgeschaltet; das
+  dokumentierte Feature funktioniert nie korrekt, die Range-Form des Ex-Kommandos dagegen
+  schon. (2) `overlay/frecency.lua`s `save()` ruft `mkdir` außerhalb jedes pcall → rohes
+  `E739` aus *jeder* Emoji-Einfügung, obwohl der Moduldoc genau das ausschließt (bekannte
+  Familie, vgl. Runde 11/13). (3) `search.lua`s gieriger `file:line:`-Split verliert gegen
+  das eigene Shortcode-Vokabular (`:100:` für das Hundert-Punkte-Emoji) → Müll-Quickfix,
+  für `clear`/`replace` `E484` auf einen erfundenen Pfad; Windows-Laufwerksbuchstaben sind
+  hier zufällig nicht betroffen. (4) `RG_PATTERN` deckt nur drei der vier
+  `core.patterns.RANGES` ab, Misc Technical fehlt — `cwd`-Aktionen überspringen diese
+  Glyphen still. (5) `health.check()` meldet einen fehlenden lib.nvim-Composer als Error
+  und ruft danach `composer.checkhealth()` unbedingt auf.
+  Bewusst ausgelassen: `@types.lua`, `config/DEFAULTS.lua` als Datentabelle (nur Stichprobe
+  der Form: jedes Pick decodiert auf einen passenden `names`-Eintrag, keine
+  Codepoint-Kollisionen), `plugin/*.lua` (Load-Guard bzw. `helptags`-Lauf, unter `-u NONE`
+  ohnehin nicht gesourct), die echten Picker-Backends, der echte `rg`-Prozess, die
+  Float-Geometrie des Overlays (gehört `ui.kit`; die gerenderten Zeilen werden trotzdem
+  echt geprüft).
+  Commit: `5ea0333`, direkt auf `main` gepusht.
+- [x] **fileops.nvim** — fertig (Runde 16). Framework-freier Harness beibehalten
+  (`function(H)`-Specs, Eintrag in `run.lua`). 9 → 19 Spec-Dateien, 199 → 805 Assertions,
+  fünf Läufe hintereinander identisch grün (Exit 0, `FILEOPS_TESTS_OK`).
+  `stylua --check .` grün (TESTS *ist* Teil dieses Gates), `luacheck lua` 0/0 über 18
+  Dateien — TESTS ist hier nicht im luacheck-Gate, wurde aber zusätzlich geprüft (0/0).
+  10 neue Specs: `file_paths_spec` (Leerzeichen, Sonderzeichen, Glob-Klammern,
+  Laufwerksbuchstaben, cwd- vs. Bufferdir-Anker, `ensure_parent`-Fehlerwortlaut),
+  `file_delete_spec` (Trash vs. permanent mit geprüfter argv, Unsaved-Guard,
+  Fensterbuchhaltung nach dem Löschen, `on_before_delete`-Veto, `diagnose_lock`),
+  `cycle_edge_spec`, `bulk_edge_spec`, `usrcmds_dispatch_spec` (jedes Subkommando über das
+  echte Ex-Kommando inkl. Prompts und Completion jedes Slots), `keymaps_spec`,
+  `autocmds_spec` (auto-mkdir inkl. Remote-Skip, conflict_marks, on_hold-Event-Mapping),
+  `init_api_spec`, `notify_spec`, `health_menu_spec`. Alle Fixtures unter
+  `vim.fn.tempname()`, nichts fasst das Repo an. Am Runner: `run.lua` registriert das
+  eigene `lua/` jetzt **absolut** auf `package.path` — vorher konnte ein Spec, das die cwd
+  wechselt, jedes noch nicht aufgelöste `require("fileops.…")` kaputtmachen.
+  **Fünf Bugs gefunden, alle gepinnt.** Der gefährlichste: `bindings/keymaps.lua` ruft
+  `delete_fn({})` ohne Optionen, sodass die Delete-Taste seit dem Default-Wechsel auf
+  `"trash"` weiterhin **permanent und ohne Undo** löscht und `on_before_delete` nie
+  aufruft — obwohl der Modul-Header behauptet, `:File delete` zu spiegeln. Drei weitere
+  sind Windows-only: `ops/cycle.lua` friert mit `follow_symlinks = false` die Navigation
+  ein (Trenner-Mismatch zwischen Join und Buffername, `canon` normalisiert unter Windows
+  nicht → `:File next`/`prev` als lautloser No-op); `ops/bulk.lua` lässt nach
+  `bulk rename` einen Phantom-Buffer zurück (derselbe Mismatch, `nvim_buf_set_name` läuft
+  nie, das nächste `:w` schreibt den alten Namen zurück); `ops/file.lua`s `delete_path`
+  nimmt Verzeichnisse an, die `uv.fs_unlink` nie löschen kann, verbrennt das Retry-Budget
+  an einem `EPERM` und macht danach einen Virenscanner verantwortlich. Fünftens leakt
+  `features/conflict_marks.lua` bei jedem erneuten `:edit` drei Matches, deren IDs
+  überschrieben und damit unlöschbar werden.
+  Zusätzlich zwei Eigenheiten als dokumentiertes Verhalten gepinnt (kein Bug): `:saveas`
+  normalisiert den Buffernamen, das `:file` hinter `rename`/`edit_new` nicht; und ein Plan
+  aus einer Wurzel *mit* Trenner ergibt andere Pfadstrings als dieselbe Wurzel ohne.
+  Bewusst ausgelassen: `@types/init.lua`, `plugin/fileops.lua`, `config/DEFAULTS.lua` als
+  Tabelle, `reload_explorers`/`refresh_explorers` jenseits ihres `package.loaded`-Guards
+  (dafür gibt es den separaten `explorer-integration`-CI-Job), `on_hold`s
+  Preview-Rendering, die Backends von `lib.nvim.fs.trash`/`cross.fs.lock` (fremdes Repo).
+  Zwei Zweige sind nachweislich **unerreichbar** und deshalb dokumentiert statt getestet:
+  der `unknown subcommand`-Zweig in `usrcmds.dispatch` (composer meldet vorher) und
+  `bulk.plan`s "cannot read directory"-Guard.
+  `docs/CONTRIBUTING.md` behauptete, `TESTS/` sei eine plenary/busted-Suite — das war es
+  nie; korrigiert samt echtem Aufruf.
+  Commit: `7060232` (test: cover the bindings layer, the ops failure paths, and Windows
+  path handling), direkt auf `main` gepusht.
 - [ ] restliche 🟠/🟡 Plugins — noch nicht begonnen, siehe Tabelle oben.

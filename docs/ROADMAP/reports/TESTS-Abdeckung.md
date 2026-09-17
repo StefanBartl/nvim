@@ -38,7 +38,7 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**14 von 36 Repos abgeschlossen**; Runde 15 (emojis.nvim), 16 (fileops.nvim) und 17 (reposcope.nvim) laufen parallel.
+**16 von 36 Repos abgeschlossen**; Runde 17 (reposcope.nvim), 18 (gopath.nvim) und 19 (color_my_ascii.nvim) laufen parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -56,9 +56,11 @@ Regeln, die sich über die Runden eingespielt haben:
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
 | 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
 | 14 | pdfport.nvim | 14 | `3c9273a` | 11 neue Specs; 192 → 1059 Assertion-Stellen |
-| 15 | emojis.nvim | 15 | *läuft* | — |
-| 16 | fileops.nvim | 16 | *läuft* | — |
+| 15 | emojis.nvim | 15 | `5ea0333` | 13 neue Specs; 261 → 773 Assertions |
+| 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
 | 17 | reposcope.nvim | 17 | *läuft* | — |
+| 18 | gopath.nvim | 18 | *läuft* | — |
+| 19 | color_my_ascii.nvim | 19 | *läuft* | — |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
@@ -66,7 +68,7 @@ Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 Nach den drei laufenden Runden in dieser Reihenfolge (🟠 vor 🟡, siehe Survey):
 
-gopath.nvim → color_my_ascii.nvim → diff.nvim → cascade.nvim →
+diff.nvim → cascade.nvim →
 sandbox.nvim → data.nvim → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
 
 Die 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`,
@@ -94,11 +96,11 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | insights.nvim | 49 | 9 | ✅ fertig |
 | sessions.nvim | 17 | 9 | ✅ fertig |
 | pdfport.nvim | 50 | 10 | ✅ fertig |
-| emojis.nvim | 23 | 11 | 🔄 Runde 15 läuft |
-| fileops.nvim | 18 | 11 | 🔄 Runde 16 läuft |
+| emojis.nvim | 23 | 11 | ✅ fertig |
+| fileops.nvim | 18 | 11 | ✅ fertig |
 | reposcope.nvim | 113 | 12 | 🔄 Runde 17 läuft |
-| gopath.nvim | 77 | 16 | 🟠 schwach |
-| color_my_ascii.nvim | 95 | 17 | 🟠 schwach |
+| gopath.nvim | 77 | 16 | 🔄 Runde 18 läuft |
+| color_my_ascii.nvim | 95 | 17 | 🔄 Runde 19 läuft |
 | diff.nvim | 23 | 17 | 🟡 mittel |
 | cascade.nvim | 48 | 18 | 🟡 mittel |
 | sandbox.nvim | 270 | 19 | 🟡 mittel (sehr großes Repo) |
@@ -136,6 +138,26 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | github_stats.nvim | `BufWipeout`-Handler löschte den Buffer, der gerade gewiped wird → `E937`, sobald der Buffer beim Wipe noch in seinem Fenster lag (`nvim_buf_delete()` von außen; `:q`/`:bwipeout`/`:bdelete`/`close()` waren immer sauber) | `dfdb1d8` |
 
 ### Offen (gepinnt)
+
+**Runde 16 / fileops.nvim** — fünf Stück, drei davon nur unter Windows sichtbar:
+
+| Datei | Bug |
+|---|---|
+| `bindings/keymaps.lua` | die Delete-Taste ruft `delete_fn({})` ohne Optionen → `<leader>dcf` löscht seit dem Default-Wechsel auf `"trash"` weiterhin **permanent und ohne Undo** und ruft `on_before_delete` nie auf, obwohl der Modul-Header behauptet, `:File delete` zu spiegeln |
+| `ops/cycle.lua` | mit `follow_symlinks = false` joint `list_files` mit `/`, der Buffername nutzt `\`, `canon` normalisiert unter Windows nicht → `index_of` findet die aktuelle Datei nie, `:File next`/`prev` sind ein lautloser No-op |
+| `ops/bulk.lua` | `plan` joint mit `/`, wenn die Wurzel keinen Trenner am Ende hat (genau was `cycle.get_root_dir` liefert) → `nvim_buf_set_name` läuft nie, der Buffer zeigt nach `bulk rename` auf eine tote Datei, das nächste `:w` schreibt den alten Namen zurück |
+| `ops/file.lua` | `delete_path` nimmt Verzeichnisse an, die `uv.fs_unlink` nie löschen kann → Windows-`EPERM` wird als transiente Sharing-Violation missdeutet, ~1,9 s Retry-Budget verbrannt, danach macht die Fehlermeldung einen Virenscanner verantwortlich |
+| `features/conflict_marks.lua` | ein erneutes `:edit` derselben Datei ist ein `BufWinEnter` ohne vorheriges `BufWinLeave` → drei neue Matches je Aufruf, die alten IDs werden überschrieben und damit unlöschbar |
+
+**Runde 15 / emojis.nvim**
+
+| Datei | Bug |
+|---|---|
+| `init.lua` | der Visual-Zweig liest `'<`/`'>`, die Neovim erst beim *Verlassen* des Bereichs setzt; das Preset bindet `toggle` aber in `mode = { "n", "x" }` → erste Selektion bricht mit "no previous visual selection" ab, danach wird still die **vorherige** Selektion umgeschaltet. Das dokumentierte Feature funktioniert nie korrekt (`:'<,'>Emojis toggle` ist nicht betroffen) |
+| `overlay/frecency.lua` | `save()`s `mkdir` steht außerhalb jedes pcall → ein rohes `E739` fliegt aus **jeder** Emoji-Einfügung, obwohl der Moduldoc genau das ausschließt ("losing a usage histogram must never break emoji insertion") |
+| `search.lua` | greedy `^(.+):%d+:` — das eigene Shortcode-Vokabular liefert das Gegenbeispiel: `notes.md:3:scored 💯 out of :100:` wird zu Datei `notes.md:3:scored 💯 out of ` / Zeile 100; für `clear`/`replace` endet das in `E484` auf einem erfundenen Pfad |
+| `search.lua` | `RG_PATTERN` deckt nur drei der vier `core.patterns.RANGES` ab; Misc Technical (⌚ ⏳ ⏰) fehlt, `cwd`-Aktionen überspringen diese Glyphen still |
+| `health.lua` | meldet einen fehlenden lib.nvim-Composer als Error und ruft danach `composer.checkhealth()` unbedingt auf — auf genau der Maschine, die die Meldung braucht, bricht der Report ab |
 
 **Runde 14 / pdfport.nvim**
 
