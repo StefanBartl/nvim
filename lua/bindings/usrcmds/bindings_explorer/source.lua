@@ -53,6 +53,26 @@ end
 ---@field path string        # the node's source path, for a jump target
 ---@field line integer
 
+---A JSON `null` decodes to `vim.NIL`, which is userdata -- not Lua `nil`.
+---That matters twice over here: `vim.NIL` is *truthy*, so an `a or b`
+---fallback silently keeps the `vim.NIL` instead of taking `b`, and
+---concatenating the result throws "attempt to concatenate a userdata value"
+---wherever the report later renders it.
+---
+---Not hypothetical for this artifact: `documentation.nvim` writes
+---`"source": null` and `"module": null` for 192 of the 414 nodes in the
+---current `module_map.json`. None of them happens to carry `bindings` right
+---now, so nothing is firing today -- but the shape the generator produces is
+---exactly the one these fields are read from.
+---@param v any
+---@return any  # `nil` for `vim.NIL`, the value unchanged otherwise
+local function denil(v)
+  if v == vim.NIL then
+    return nil
+  end
+  return v
+end
+
 ---Read every binding documentation.nvim recorded for this config.
 ---
 ---Returns `nil` plus a human-readable reason rather than an empty table for
@@ -88,14 +108,14 @@ function M.load()
       saw_field = true
       for _, b in ipairs(node.bindings) do
         out[#out + 1] = {
-          lhs = b.lhs,
-          name = b.name,
-          kind = b.kind,
-          modes = b.modes or {},
-          desc = b.desc,
-          module = node.module or node.id,
-          path = node.source or node.path,
-          line = b.line or 1,
+          lhs = denil(b.lhs),
+          name = denil(b.name),
+          kind = denil(b.kind),
+          modes = denil(b.modes) or {},
+          desc = denil(b.desc),
+          module = denil(node.module) or denil(node.id),
+          path = denil(node.source) or denil(node.path),
+          line = denil(b.line) or 1,
         }
       end
     end
