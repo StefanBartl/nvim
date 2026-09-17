@@ -11,18 +11,29 @@ und einer Erhebung der tatsächlichen Git-Oberfläche dieser Config.
 
 ## Table of content
 
-- [Problem](#problem)
-- [Idee in einem Satz](#idee-in-einem-satz)
-- [Bestandsaufnahme](#bestandsaufnahme)
-- [Die Feature-Familien in drei Schichten](#die-feature-familien-in-drei-schichten)
-- [Bewertung: nachbauen oder orchestrieren?](#bewertung-nachbauen-oder-orchestrieren)
-- [Empfehlung](#empfehlung)
-- [Architektur](#architektur)
-- [Auswirkung auf die nvim-Config](#auswirkung-auf-die-nvim-config)
-- [Aufwand](#aufwand)
-- [Risiken und Abgrenzung](#risiken-und-abgrenzung)
-- [Offene Fragen](#offene-fragen)
-- [Literatur und Referenzen](#literatur-und-referenzen)
+  - [Problem](#problem)
+  - [Idee in einem Satz](#idee-in-einem-satz)
+  - [Bestandsaufnahme](#bestandsaufnahme)
+    - [Extern installiert (7)](#extern-installiert-7)
+    - [Eigener Bestand, der schon Git kann](#eigener-bestand-der-schon-git-kann)
+  - [Die Feature-Familien in drei Schichten](#die-feature-familien-in-drei-schichten)
+    - [Schicht 1 — schon da oder billig selbst zu bauen](#schicht-1-schon-da-oder-billig-selbst-zu-bauen)
+    - [Schicht 2 — orchestrierbar, Backend bleibt extern](#schicht-2-orchestrierbar-backend-bleibt-extern)
+    - [Schicht 3 — niemals nachbauen](#schicht-3-niemals-nachbauen)
+  - [Bewertung: nachbauen oder orchestrieren?](#bewertung-nachbauen-oder-orchestrieren)
+    - [Variante A — alles selbst nachbauen](#variante-a-alles-selbst-nachbauen)
+    - [Variante B — reine Orchestrierung](#variante-b-reine-orchestrierung)
+    - [Variante C — Hybrid](#variante-c-hybrid)
+  - [Empfehlung](#empfehlung)
+  - [Architektur](#architektur)
+  - [Auswirkung auf die nvim-Config](#auswirkung-auf-die-nvim-config)
+    - [Was verschwindet](#was-verschwindet)
+    - [Plugin-Bilanz](#plugin-bilanz)
+    - [Was sich für die Bedienung ändert](#was-sich-fr-die-bedienung-ndert)
+  - [Aufwand](#aufwand)
+  - [Risiken und Abgrenzung](#risiken-und-abgrenzung)
+  - [Offene Fragen](#offene-fragen)
+  - [Literatur und Referenzen](#literatur-und-referenzen)
 
 ---
 
@@ -51,12 +62,16 @@ man kennen muss, bevor man sie benutzen kann. Für Git ist es hier besonders
 ausgeprägt, weil **vier verschiedene Plugins dieselbe Frage beantworten** („zeig
 mir den Diff") und drei davon nur wegen je ein bis drei Commands installiert sind.
 
+---
+
 ## Idee in einem Satz
 
 **Ein `:Git <scope> <action>`-Kommandobaum mit Provider-Registry, der die
 Familien selbst implementiert, in denen eigener Code schon existiert oder billig
 ist, und die verbleibenden an austauschbare Backends delegiert** — die Form, die
 `filetree.nvim` über neo-tree/nvim-tree/oil/netrw/mini.files bereits hat.
+
+---
 
 ## Bestandsaufnahme
 
@@ -76,6 +91,8 @@ Dazu als Abhängigkeitskette: `plenary.nvim` hängt an lazygit, diffview und
 neogit; `telescope-github.nvim` ist git-benachbart, gehört aber zu
 reposcope/github_stats (siehe die Nachbau-Analyse).
 
+---
+
 ### Eigener Bestand, der schon Git kann
 
 Das ist der entscheidende Teil — es wird **nicht bei null angefangen**:
@@ -91,9 +108,13 @@ Das ist der entscheidende Teil — es wird **nicht bei null angefangen**:
 | `reposcope.nvim` | GitHub/GitLab/Codeberg: Suche, Clone, Bulk-`git status`, Fetch-and-Pull über einen ganzen Ordner |
 | `github_stats.nvim` | Traffic-Historie |
 
+---
+
 ## Die Feature-Familien in drei Schichten
 
 Die Erhebung trennt sauber. Das ist das eigentliche Ergebnis dieser Analyse:
+
+---
 
 ### Schicht 1 — schon da oder billig selbst zu bauen
 
@@ -107,12 +128,16 @@ Die Erhebung trennt sauber. Das ist das eigentliche Ergebnis dieser Analyse:
 | **Branch-Switcher** | `ui.nvim` hat ihn, abhängigkeitsfrei | **S** (herausziehen) |
 | **Repo-Status / ahead-behind / refs** | `lib.nvim/nvim/git` | **—** |
 
+---
+
 ### Schicht 2 — orchestrierbar, Backend bleibt extern
 
 Hunk-Aktionen (stage/reset/preview, Buffer wie Hunk), Blame-Zeile und
 Blame-Toggle, `diffthis` gegen `~`, Side-by-side-Diff, File-History, der
 Staging-Puffer. Diese Familien bekommen einen **Provider-Slot**: `git.nvim`
 definiert die Aktion, ein Adapter führt sie aus.
+
+---
 
 ### Schicht 3 — niemals nachbauen
 
@@ -127,6 +152,8 @@ eine fragt Git nach Dateien im `unmerged`-Zustand (Repo-Ebene), das andere
 zerlegt Marker im Puffer (Zeilen-Ebene). Sie ergänzen sich — und zusammen
 ergeben sie `:GitConflictListQf` plus die acht anderen Commands.
 
+---
+
 ## Bewertung: nachbauen oder orchestrieren?
 
 ### Variante A — alles selbst nachbauen
@@ -136,6 +163,8 @@ schreiben. Das sind nicht sieben Features, das sind zwei eigene Projekte plus
 fünf Features. **Zahlt sich nicht aus**, und es widerspricht dem eigenen Muster:
 `filetree.nvim` baut neo-tree nicht nach, `dap.nvim` baut nvim-dap nicht nach.
 
+---
+
 ### Variante B — reine Orchestrierung
 
 Ein `:Git`-Baum über alle sieben, nichts selbst implementiert. Besser, aber
@@ -143,12 +172,16 @@ lässt Wert liegen: vier der sieben Plugins sind wegen ein bis drei Commands
 installiert, die Schicht 1 ohnehin billig abdeckt. Nach Variante B stünden
 weiterhin sieben Repos im Baum, nur mit einheitlicher Grammatik davor.
 
+---
+
 ### Variante C — Hybrid
 
 Orchestrator **mit eigener Implementierung dort, wo Schicht 1 gilt**. Das ist
 wörtlich `filetree.nvim`s Aufbau: ein `adapter/`-Registry mit
 `register`/`resolve(name|"auto")`/`is_available()`, daneben ein `features/`-Baum,
 dessen Module adapterunabhängig sind.
+
+---
 
 ## Empfehlung
 
@@ -175,6 +208,8 @@ geschlossenen Mengen per `NEW-26`, live wo der Zustand es verlangt):
 `:Git conflict *` ist eigener Code. `:Git hunk *` und `:Git blame *` gehen an
 den Provider. `:Git diff head|last|rev` geht an `diff.nvim`, `:Git browse` an
 `open.nvim`/`reposcope.nvim`, `:Git ui *` an das jeweilige TUI.
+
+---
 
 ## Architektur
 
@@ -218,6 +253,8 @@ Primitive dafür bereits. Damit ist `git.nvim` ohne ein einziges externes
 Git-Plugin benutzbar, und jedes installierte Plugin ist eine Verbesserung statt
 einer Voraussetzung — dieselbe Eigenschaft, die `filetree.nvim` über netrw hat.
 
+---
+
 ## Auswirkung auf die nvim-Config
 
 ### Was verschwindet
@@ -230,6 +267,8 @@ einer Voraussetzung — dieselbe Eigenschaft, die `filetree.nvim` über netrw ha
 | `lua/bindings/mappings/git.lua` | 99 | `bindings/keymaps.lua` |
 | `lua/config/neotree/keymaps/git_status.lua` | 56 | `filetree.nvim` (eigener Posten) |
 | **Summe** | **526** | |
+
+---
 
 ### Plugin-Bilanz
 
@@ -244,6 +283,8 @@ lazygit.nvim** — vier Repos, davon drei, die wegen ein bis drei Commands da
 waren. Ob diffview später in `diff.nvim` aufgeht, ist eine eigene Entscheidung
 und kein Teil dieses Konzepts.
 
+---
+
 ### Was sich für die Bedienung ändert
 
 Die neun `:GitConflict*`-Commands und die sechs buffer-lokalen Tasten
@@ -253,6 +294,8 @@ buffer-lokal und werden ohnehin erst gesetzt, wenn der Puffer einen Konflikt
 enthält. Für die Commands bietet sich eine Übergangszeit mit Aliassen an
 (`:GitConflictChooseOurs` → `:Git conflict ours`), die nach ein paar Wochen
 fällt.
+
+---
 
 ## Aufwand
 
@@ -275,6 +318,8 @@ das Doppelte bis Dreifache, für Funktionalität, die heute schon funktioniert.
 **Erster sinnvoller Schnitt nach Phase 2** (6–9 Sessions): `git-conflict.nvim`
 fliegt raus, der Arbeitsablauf, der hier täglich läuft, gehört dann dir, und das
 Gerüst steht für alles Weitere.
+
+---
 
 ## Risiken und Abgrenzung
 
@@ -305,6 +350,8 @@ Statusline beliefern soll, ist das ein eigener Posten, kein Nebeneffekt.
 Wkdbook irgendwo im Plugin. Die Roadmap gehört nach
 `wkdbook-myplugins/git.nvim/ROADMAP/ROADMAP.md`.
 
+---
+
 ## Offene Fragen
 
 1. **Modulwurzel.** `require("git")` ist ein sehr allgemeiner Name und genau die
@@ -315,13 +362,20 @@ Wkdbook irgendwo im Plugin. Die Roadmap gehört nach
 2. **Gehört `diff`/`history` überhaupt hier hinein**, oder ist `:Git diff` nur
    ein Alias auf `diff.nvim` und File-History wächst dort? Letzteres wäre
    sauberer, macht `git.nvim` aber von `diff.nvim` abhängig.
+   -> diff.nvim als dep ist kein problem,. machen wir das so
 3. **Soll `native.lua` Blame selbst können** (`git blame --porcelain` parsen,
    virtueller Text) oder bleibt Blame delegiert? Blame ist die einzige Familie,
    für die im eigenen Bestand **nichts** existiert — ein Grep über `lib.nvim`,
    `diff.nvim`, `insights.nvim`, `ui.nvim`, `sessions.nvim` findet keinen
    Treffer.
+   Was meisnt du mit native.lua ? generell_> wenn es ein feature ist, das entweder eijfach nachbaubar oder von mehrereh pplugin sverwendet weren würde dann selbstg bauen
 4. **Migrationsfenster für die neun Commands** — Aliasse mit Deprecation-Notice,
    oder harter Schnitt mit einem Eintrag im Extern-Korpus?
+   Harter Schnitt
+
+Zusatz: lib.nvim kann auch erweitert werden wenn nötig; gdas neue git.nvim bzw lib.nvim kann features imlementieren, die dann meine naderen plugins verwnen können
+
+---
 
 ## Literatur und Referenzen
 
@@ -361,3 +415,6 @@ Wkdbook irgendwo im Plugin. Die Roadmap gehört nach
 - `docs/NOTES/ExternPlugins/Bindings/Usercmds/GitConflict.md` — die neun
   Commands und sechs Tasten vollständig
 - `docs/NOTES/ARCHITECTURE/startup.md` — Startup-Kosten der Git-Gruppe
+
+---
+

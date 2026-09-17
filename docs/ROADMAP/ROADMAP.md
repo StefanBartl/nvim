@@ -89,9 +89,9 @@
 
 ### Nice-to-Have wenn Limit über ist
 
-3. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
-4. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
-5. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
+1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
+2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
+3. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
 
 ---
 
