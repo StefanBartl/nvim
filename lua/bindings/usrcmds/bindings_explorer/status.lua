@@ -229,8 +229,8 @@ function M.lines()
 
   local out = { "Korpus", "" }
   for _, scope in ipairs(c.scopes) do
-    -- 11 statt 10: "Plugin-Docs" ist der laengste der drei Herkunftsnamen und
-    -- schoebe die Spalte sonst als einziger um ein Zeichen weiter.
+    -- 11, not 10: "Plugin-Docs" is the longest of the three origin names and
+    -- would otherwise be the only one pushing the column out by a character.
     out[#out + 1] = ("  %-11s %s"):format(scope.name, scope.root)
     for _, cat in ipairs(scope.categories) do
       out[#out + 1] = ("    %-10s %3d Dateien   %4d Tabellenzeilen"):format(

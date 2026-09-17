@@ -254,15 +254,20 @@ function M.keymaps()
       return
     end
 
-    if neotest.state and type(neotest.state.clear) == "function" then
-      pcall(neotest.state.clear)
-    end
+    -- No `neotest.state.clear` exists (the consumer has only `adapter_ids`,
+    -- `positions`, `status_counts`), so the guarded branch that used to sit
+    -- here was permanently dead. Removed rather than kept as decoration.
 
     notify.info("Forcing test discovery...")
 
     vim.defer_fn(function()
-      local tree_ok, tree = pcall(neotest.state.positions)
-      if tree_ok and tree then
+      -- `positions` takes an adapter id. Called with none it quietly returns
+      -- nil, so the counter below always reported "No tests discovered" no
+      -- matter what was loaded -- a report shaped by the work it planned
+      -- rather than the work it did.
+      local adapter_id = (neotest.state.adapter_ids() or {})[1]
+      local tree_ok, tree = pcall(neotest.state.positions, adapter_id)
+      if adapter_id and tree_ok and tree then
         local count = 0
         local function count_tests(node)
           if node.type == "test" then

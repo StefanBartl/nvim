@@ -14,14 +14,19 @@ local M = {}
 --- Force initial test discovery on project open
 local function force_initial_discovery()
   vim.defer_fn(function()
-    local ok, neotest = pcall(require, "neotest")
+    -- Only "is neotest there at all" matters: the work below is neo-tree's
+    -- refresh, which is what actually drives discovery.
+    local ok = pcall(require, "neotest")
     if not ok then
       return
     end
 
-    -- Trigger discovery without running a test
-    pcall(neotest.state.clear)
-
+    -- There is no `neotest.state.clear` -- `neotest.state` exposes exactly
+    -- `adapter_ids`, `positions` and `status_counts`. The call that used to
+    -- stand here was `pcall(neotest.state.clear)`, i.e. `pcall(nil)`: it
+    -- returned false and did nothing, every time, while reading as the step
+    -- that triggers discovery. Discovery is what the neo-tree refresh below
+    -- actually causes, so the dead call is gone rather than replaced.
     vim.defer_fn(function()
       -- Refresh Neo-tree tests source
       pcall(function()

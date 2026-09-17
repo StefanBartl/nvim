@@ -133,11 +133,10 @@ function M.open_preview_for(path, row, col)
   -- just ends, and a toast would nag on every preview of the same big file.
   if truncated then
     lines[#lines + 1] = ""
-    lines[#lines + 1] =
-      ("--- preview truncated at %d lines (file is larger than %d KB) ---"):format(
-        MAX_LINES,
-        MAX_BYTES / 1024
-      )
+    lines[#lines + 1] = ("--- preview truncated at %d lines (file is larger than %d KB) ---"):format(
+      MAX_LINES,
+      MAX_BYTES / 1024
+    )
   end
 
   -- Clamp cursor safely

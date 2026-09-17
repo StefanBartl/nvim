@@ -303,8 +303,8 @@ local function each_file(categories, scope, fn)
     end
   end
 
-  -- Personal-Plugins bringen ihre eigene Doku mit; der Extern-Scope kennt
-  -- diese Wurzel nicht.
+  -- Personal plugins carry their own docs; the extern scope does not know
+  -- this root.
   for _, sheet in ipairs(sheets or {}) do
     fn(sheet.file, "Personal", nil, sheet.plugin)
   end
@@ -321,8 +321,8 @@ function M.list(category, scope)
   each_file(categories, scope, function(path, root_scope, cat, plugin)
     local records = parse_file(path, root_scope, cat, plugin)
     if cat == nil and category then
-      -- Repo-Sheet: der Ordnerfilter konnte nicht greifen, weil die Kategorie
-      -- erst beim Parsen entsteht. Jetzt schon.
+      -- Repo sheet: the folder filter could not apply, because the category
+      -- only comes into existence while parsing. It can apply now.
       records = vim.tbl_filter(function(r)
         return r.category == category
       end, records)

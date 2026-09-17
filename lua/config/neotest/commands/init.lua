@@ -68,7 +68,11 @@ function M.setup()
   create("NeotestClearAll", function()
     local neotest = require("neotest")
     neotest.run.stop()
-    neotest.output.close()
+    -- `output_panel`, not `output`: the `output` consumer only has `open`.
+    -- `close`/`clear`/`toggle` live on `output_panel`, so `output.close()`
+    -- was a nil call and this command errored before ever reaching
+    -- `summary.close()`.
+    neotest.output_panel.close()
     neotest.summary.close()
   end, { desc = "Stop tests and close all windows" })
 end
