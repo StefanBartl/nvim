@@ -115,6 +115,13 @@ plugins.add({
         desc = "Show/set the treesitter parser install policy (off|prompt|auto|reset)",
       })
 
+      -- LUA-96: one named augroup for all three FileType handlers below,
+      -- cleared on (re)registration. Without it they land in the global,
+      -- groupless set, and re-sourcing the config stacks a second copy of
+      -- each -- every `FileType` would then start the parser, set foldexpr
+      -- and set indentexpr twice.
+      local ts_group = Autocmd.group("WkdTreesitterFileType", true)
+
       -----------------------------------------------------------------------
       -- Highlight activation
       -----------------------------------------------------------------------
@@ -136,7 +143,7 @@ plugins.add({
         -- not a silent no-op - expected here whenever parser_policy just
         -- queued a prompt/install instead of installing synchronously.
         pcall(vim.treesitter.start, args.buf)
-      end)
+      end, { group = ts_group, desc = "treesitter: start highlighting for this filetype" })
 
       -----------------------------------------------------------------------
       -- Folding
@@ -146,7 +153,7 @@ plugins.add({
           vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
           vim.wo.foldmethod = "expr"
         end
-      end)
+      end, { group = ts_group, desc = "treesitter: use treesitter folding for this filetype" })
 
       -----------------------------------------------------------------------
       -- Indentation (experimental)
@@ -155,7 +162,10 @@ plugins.add({
         if guards.is_enabled(args.buf) then
           vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end
-      end)
+      end, {
+        group = ts_group,
+        desc = "treesitter: use treesitter indentation for this filetype",
+      })
     end,
   },
 
