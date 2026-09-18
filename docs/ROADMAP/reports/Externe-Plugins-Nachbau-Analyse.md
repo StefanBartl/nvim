@@ -1,6 +1,6 @@
 # External plugins — what they are actually used for, and where each feature belongs
 
-**Date:** 2026-09-17
+**Date:** 2026-09-17 · **status pass:** 2026-09-18
 **Question:** every external plugin is installed for a reason. What is that reason
 *as configured in this repository* — and if that feature family were rewritten,
 which own plugin would it land in, and what would it cost?
@@ -9,11 +9,10 @@ which own plugin would it land in, and what would it cost?
 
 ## Table of content
 
+  - [0. Status, 2026-09-18](#0-status-2026-09-18)
   - [1. Method, and what this report is not](#1-method-and-what-this-report-is-not)
-  - [1. Method](#1-method)
   - [2. The central observation](#2-the-central-observation)
   - [3. Feature-family catalogue](#3-feature-family-catalogue)
-    - [A1 · `lima1909/resty.nvim` → **runtime-analysis.nvim** · full replacement](#a1-lima1909restynvim-runtime-analysisnvim-full-replacement)
     - [Git](#git)
     - [Pickers and navigation](#pickers-and-navigation)
     - [Tree](#tree)
@@ -22,33 +21,102 @@ which own plugin would it land in, and what would it cost?
     - [Editing and text](#editing-and-text)
     - [Markdown](#markdown)
     - [Tooling and infrastructure](#tooling-and-infrastructure)
-    - [A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement ✅](#a2-jghausermkdirnvim-fileopsnvim-full-replacement)
-    - [A3 · `dstein64/vim-startuptime` → **runtime-analysis.nvim** · full replacement ✅](#a3-dstein64vim-startuptime-runtime-analysisnvim-full-replacement)
-  - [4. Findings worth acting on regardless](#4-findings-worth-acting-on-regardless)
-    - [4.1 `snacks.image` is enabled and cannot work here](#41-snacksimage-is-enabled-and-cannot-work-here)
-    - [4.2 Keys are bound for five disabled snacks modules](#42-keys-are-bound-for-five-disabled-snacks-modules)
-    - [4.3 The harpoon rebuild is already 90% written — in the wrong place](#43-the-harpoon-rebuild-is-already-90-written-in-the-wrong-place)
-    - [4.4 `cmdlog.nvim` is the only own runtime consumer of plenary](#44-cmdlognvim-is-the-only-own-runtime-consumer-of-plenary)
-    - [B2 · `folke/todo-comments.nvim` → **insights.nvim** · full replacement](#b2-folketodo-commentsnvim-insightsnvim-full-replacement)
-    - [B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement ✅](#b3-iamccomarkdown-previewnvim-mdviewnvim-full-replacement)
-    - [B4 · `dhruvasagar/vim-table-mode` → **markdown.nvim** · full replacement](#b4-dhruvasagarvim-table-mode-markdownnvim-full-replacement)
-    - [B5 · `nvim-treesitter/nvim-treesitter-context` → **ui.nvim** `winbar/` · full replacement](#b5-nvim-treesitternvim-treesitter-context-uinvim-winbar-full-replacement)
-  - [6. Tier C — harvest one feature, keep the plugin](#6-tier-c-harvest-one-feature-keep-the-plugin)
-  - [7. Findings worth acting on independently](#7-findings-worth-acting-on-independently)
-    - [7.1 `snacks.image` is enabled and almost certainly dead weight](#71-snacksimage-is-enabled-and-almost-certainly-dead-weight)
-    - [7.2 `render-markdown.nvim` is installed permanently disabled](#72-render-markdownnvim-is-installed-permanently-disabled)
-    - [7.3 `cmdlog.nvim` has a runtime dependency on plenary](#73-cmdlognvim-has-a-runtime-dependency-on-plenary)
-    - [7.4 The `plenary` dependency chain](#74-the-plenary-dependency-chain)
-    - [4.5 `lua/config/gp_config/` is orphaned](#45-luaconfiggp_config-is-orphaned)
-    - [4.6 `nvzone/menu` — not a leftover ✅](#46-nvzonemenu-not-a-leftover)
-  - [5. Where this lands](#5-where-this-lands)
-  - [6. Suggested order](#6-suggested-order)
+  - [4. Tier A — full replacement of a small plugin](#4-tier-a--full-replacement-of-a-small-plugin)
+    - [A1 · `lima1909/resty.nvim` → runtime-analysis.nvim](#a1--lima1909restynvim--runtime-analysisnvim)
+    - [A2 · `jghauser/mkdir.nvim` → fileops.nvim ✅](#a2--jghausermkdirnvim--fileopsnvim-)
+    - [A3 · `dstein64/vim-startuptime` → runtime-analysis.nvim ✅](#a3--dstein64vim-startuptime--runtime-analysisnvim-)
+  - [5. Tier B — full replacement that is a real build](#5-tier-b--full-replacement-that-is-a-real-build)
+    - [B2 · `folke/todo-comments.nvim` → insights.nvim](#b2--folketodo-commentsnvim--insightsnvim)
+    - [B3 · `iamcco/markdown-preview.nvim` → mdview.nvim ✅](#b3--iamccomarkdown-previewnvim--mdviewnvim-)
+    - [B4 · `dhruvasagar/vim-table-mode` → markdown.nvim](#b4--dhruvasagarvim-table-mode--markdownnvim)
+    - [B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `winbar/`](#b5--nvim-treesitternvim-treesitter-context--uinvim-winbar)
+  - [6. Tier C — harvest one feature, keep the plugin](#6-tier-c--harvest-one-feature-keep-the-plugin)
+  - [7. Findings worth acting on regardless](#7-findings-worth-acting-on-regardless)
+    - [7.1 `snacks.image` was enabled and could not work here ✅](#71-snacksimage-was-enabled-and-could-not-work-here-)
+    - [7.2 Keys were bound for four disabled snacks modules ✅](#72-keys-were-bound-for-four-disabled-snacks-modules-)
+    - [7.3 `<leader>gd` had two owners ✅](#73-leadergd-had-two-owners-)
+    - [7.4 The harpoon rebuild is already 90% written — in the wrong place](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place)
+    - [7.5 `cmdlog.nvim` and plenary — already resolved when this was written ✅](#75-cmdlognvim-and-plenary--already-resolved-when-this-was-written-)
+    - [7.6 The `plenary` dependency chain](#76-the-plenary-dependency-chain)
+    - [7.7 `render-markdown.nvim` is installed permanently disabled](#77-render-markdownnvim-is-installed-permanently-disabled)
+    - [7.8 `lua/config/gp_config/` was orphaned ✅](#78-luaconfiggp_config-was-orphaned-)
+    - [7.9 `nvzone/menu` — not a leftover ✅](#79-nvzonemenu--not-a-leftover-)
+  - [8. Where this lands](#8-where-this-lands)
+  - [9. Suggested order](#9-suggested-order)
+
+---
+
+## 0. Status, 2026-09-18
+
+**Done, and where.** Everything the suggested order calls free, plus the
+three replacements that turned out to be rewires rather than builds:
+
+| Finding | What changed | Where |
+|---|---|---|
+| A2 mkdir.nvim → fileops.nvim | `auto_mkdir` BufWritePre autocmd, on by default (`fileops.nvim@329a65f`, 2026-07-15); plugin dropped from the spec | nvim `3fe8afd94`, 2026-09-17 |
+| A3 vim-startuptime → runtime-analysis.nvim | `:RA startup profile [runs]`; plugin dropped | nvim `137c5f67f`, 2026-09-17 |
+| B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
+| 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
+| 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
+| 7.3 `<leader>gd` | now diff.nvim's `:Diff target=git:HEAD` (suggested-order item 1); fugitive's `:Gdiffsplit` key removed; snacks' hunk picker moved to `<leader>gD` | nvim, 2026-09-18 |
+| 7.5 cmdlog.nvim plenary | already gone — `cmdlog.nvim@104abc7`, 2026-07-30, seven weeks before this report claimed otherwise | — |
+| 7.8 `config/gp_config/` | removed (`git rm -r`) | nvim, 2026-09-18 |
+| 7.9 `nvzone/menu` | nothing to do; the disabled spec is a documented escape hatch | — |
+
+**Corrections the status pass turned up.** Three findings were wrong or
+incomplete as written, and all three were found by looking at the files
+rather than the description:
+
+- **7.2 said five modules, and named `toggle`.** `extended.lua` bound keys
+  for four — `dim`, `profiler`, `scope`, `scratch`. `toggle` is disabled
+  too but never had a key. Eight keys, not "five keys".
+- **7.3 is a finding this report missed.** The Git table only saw fugitive's
+  `<leader>gd`. `config/snacks/mappings/standard.lua` bound the same lhs to
+  the `git_diff` hunk picker, and both are lazy `keys` specs, so whichever
+  registered last won — silently, since both descriptions say "git diff".
+  The rebind the suggested order asked for would have left two owners; it
+  needed the picker moved as well.
+- **7.5 was wrong when written.** It said `cmdlog.nvim` still required
+  plenary in `core/favorites.lua` and `core/store.lua`. Both files had said
+  "carries no plenary.nvim dependency" in their own docstrings since
+  2026-07-30 (`cmdlog.nvim@104abc7`). The consequence for 7.6 stands
+  anyway: plenary's presence is decided entirely by which external plugins
+  survive.
+
+**This file had been assembled from two drafts** and carried the seams:
+two `## 1.` headings, two `## 6.`, the `snacks.image` finding twice (4.1 and
+7.1), the cmdlog finding as an empty 4.4 stub *and* a filled 7.3, the A1
+heading orphaned above the Git table with its body three paragraphs lower,
+a "State: implemented in fileops.nvim" line under the `snacks.image`
+finding where it clearly meant A2, and a suggested order that referenced
+"A1–A6 plus 7.5" from a numbering that no longer existed. Reassembled
+2026-09-18 into one sequence; the tier letters (A1–A3, B2–B5) are kept as
+they were because other documents cite them, and the "regardless" findings
+are numbered 7.x throughout.
+
+**What remains, and what each one needs.** Nothing left is free. Every
+open item is either a build of one to five sessions or a placement
+decision this report deliberately left open (two candidate homes named,
+neither chosen):
+
+| Item | Effort | Blocked on |
+|---|---|---|
+| A1 resty → runtime-analysis.nvim | M–L | whether `parse.lua` speaks `.http` syntax — **unverified** in the catalogue, still unverified |
+| `:Git blame` (the last fugitive feature) | M | new code; home undecided: diff.nvim or `lib.nvim/nvim/git` |
+| `:Gbrowse` → open.nvim / reposcope.nvim | S–M | placement |
+| lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
+| window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
+| B2 todo-comments → insights + spotlight + pickers | L | three plugins gain a feature each |
+| B4 table-mode → markdown.nvim | M | build |
+| B5 ts-context → ui.nvim `winbar/` | L | build; performance work is the actual scope |
+| 7.4 harpoon → sessions.nvim | L | daily-driver workflow: flag, dual-run, then cut |
+| neo-tree config → filetree.nvim | L | ~1,500 lines |
+| neotest debug tooling → debugging.nvim | M | 309 lines already written |
+| Tier C, all eleven | 1–3 each | each a placement decision plus a build |
 
 ---
 
 ## 1. Method, and what this report is not
-
-## 1. Method
 
 The unit of analysis here is **not the plugin** but the *feature family this
 config actually uses*. That surface was derived from three sources, in order of
@@ -79,6 +147,12 @@ source, it says **"unverified"**. No feature-by-feature diff of the large
 plugins was attempted — that is out of scope and would not survive contact with
 reality anyway.
 
+**What this report did not check**, and what the status pass added to that
+list: it read the spec's `keys` tables per plugin and never cross-checked
+one lhs against another, which is how the `<leader>gd` double binding (7.3)
+and the `<leader>ns` collision (7.2) went unseen. `:LibKeymapConflicts`
+exists for exactly that and was not run.
+
 ---
 
 ## 2. The central observation
@@ -89,7 +163,7 @@ you compare plugins as wholes:
 
 | Plugin | Size of the thing | What this config uses |
 |---|---|---|
-| `vim-fugitive` + `vim-rhubarb` | a full git porcelain | **three commands**: `:Gdiffsplit`, `:Git blame`, `:Gbrowse` |
+| `vim-fugitive` + `vim-rhubarb` | a full git porcelain | **two commands** now: `:Git blame`, `:Gbrowse` (was three; `:Gdiffsplit` retired 2026-09-18) |
 | `vim-visual-multi` | a multi-cursor engine | `VM_default_mappings = 0`, then **one** binding: `<C-n>` Find (Subword) Under |
 | `nvim-treesitter-textobjects` | the whole textobject/move/swap/lsp_interop suite | the `move` module on `@block.outer`, for `[u`/`]u` — and the queries that make it work are **already yours** (`after/queries/*/textobjects.scm`) |
 | `nvim-treesitter-context` | sticky context with fold/scroll integration | `enable = true, max_lines = 3` |
@@ -113,19 +187,15 @@ somebody else's.
 Every external plugin, its used feature families, the own plugin each would land
 in, and the cost. Sorted by plugin.
 
----
-
-### A1 · `lima1909/resty.nvim` → **runtime-analysis.nvim** · full replacement
-
 ### Git
 
 | Plugin → feature family | Evidence | Target | Effort |
 |---|---|---|---|
-| `vim-fugitive` → **`:Gdiffsplit`** (file vs HEAD) | `<leader>gd`, git.lua:77 | **diff.nvim — already implemented.** `core/git.lua` resolves `git:HEAD`, `git:HEAD~1`, `git:<sha>`, `git:<branch>` for the current file, and `git:HEAD` is already in the `:Diff` source/target completion list. | **S** (rebind only) |
-| `vim-fugitive` → **`:Git blame`** | `<leader>gb`, git.lua:79 | **diff.nvim** or **lib.nvim/nvim/git**. Nothing in the own tree does blame — a grep across `lib.nvim`, `diff.nvim`, `insights.nvim`, `ui.nvim`, `sessions.nvim` returns nothing. Genuinely new: `git blame --porcelain`, parse, render per line. | **M** |
-| `vim-rhubarb` → **`:Gbrowse`** (open file/selection at the host) | git.lua:84 | **open.nvim** routes targets to destinations; **reposcope.nvim** already knows GitHub/GitLab/Codeberg. Remote URL → web URL + line anchor. | **S–M** |
+| ~~`vim-fugitive` → **`:Gdiffsplit`** (file vs HEAD)~~ | ~~`<leader>gd`, git.lua:77~~ | **Done 2026-09-18** — `<leader>gd` is diff.nvim's `:Diff target=git:HEAD` (see [7.3](#73-leadergd-had-two-owners-)). `core/git.lua` resolves `git:HEAD`, `git:HEAD~1`, `git:<sha>`, `git:<branch>` for the current file. | **done** |
+| `vim-fugitive` → **`:Git blame`** | `<leader>gb`, git.lua | **diff.nvim** or **lib.nvim/nvim/git**. Nothing in the own tree does blame — a grep across `lib.nvim`, `diff.nvim`, `insights.nvim`, `ui.nvim`, `sessions.nvim` returns nothing. Genuinely new: `git blame --porcelain`, parse, render per line. **The last fugitive feature in use.** | **M** |
+| `vim-rhubarb` → **`:Gbrowse`** (open file/selection at the host) | git.lua | **open.nvim** routes targets to destinations; **reposcope.nvim** already knows GitHub/GitLab/Codeberg. Remote URL → web URL + line anchor. | **S–M** |
 | `gitsigns` → **signcolumn hunks, stage/reset/preview** | `config = true`; actions wired in `config/menu/git.lua` | Keep. Sign management plus incremental diff on every change is the plugin. | **XL** |
-| `gitsigns` → **`:ToggleInlineDiff`** (invert `word_diff`+`linehl`, preview hunk inline) | `bindings/mappings/git.lua:17,79` | **diff.nvim** — the *logic* is already yours; only the gitsigns calls underneath would change. Tied to the line above, so it only moves if hunks move. | **M** |
+| `gitsigns` → **`:ToggleInlineDiff`** (invert `word_diff`+`linehl`, preview hunk inline) | `bindings/mappings/git.lua` | **diff.nvim** — the *logic* is already yours; only the gitsigns calls underneath would change. Tied to the line above, so it only moves if hunks move. | **M** |
 | `diffview` → **side-by-side diff, file history** | `<leader>dv/dc/dh`; `config = true` | **diff.nvim** already delivers "split, inline, prompt, file, clipboard". File *history* (revision list + per-revision diff) is the missing half. | **L** |
 | `neogit` → **magit-style status buffer** | `<leader>gg`, `kind = "split"` | Keep. A staging UI is a project, not a feature. | **XL** |
 | `git-conflict.nvim` → **repo-level unmerged-file report** (`:GitConflictListQf`) | `config = true` | **insights.nvim** — `conflicts/` already asks git for files in the `unmerged` state and puts them in the quickfix list. This one family *is* already covered. | **S** |
@@ -133,18 +203,9 @@ in, and the cost. Sorted by plugin.
 | `lazygit.nvim` → **float terminal running `lazygit`** | `<leader>lg` | **lib.nvim** has `terminal/`, `window/`, `git/`, `cross/`. This is wiring. | **S** |
 | `lazygit.nvim` → **`nvr` callback bridge** (`:LazygitBadd`, `:LazygitReplace` — LazyGit's `O` / `<C-o>` open files in the *parent* nvim) | `config/lazygit/**`, 146 lines | **This is the real content, and it is already yours.** The commands, path resolution and focus-safe replace are written; only `vim.g.lazygit_use_neovim_remote` belongs to the plugin. Home: **open.nvim** (routing a target into the right window) or **lib.nvim**. | **M** |
 
-> **Net:** `<leader>gd` is replaceable today with no new code. `:Gbrowse` and the
-> lazygit float are cheap. That retires **fugitive + rhubarb + lazygit.nvim** —
-> three repos — once blame is built, which is the only genuinely new piece.
-
-The decisive argument is in the config's own comment in
-[webdev.lua](./lua/plugins/webdev.lua): resty cost roughly **600 ms of startup**
-because loading it drags in telescope, nvim-cmp and LuaSnip through its
-`plugin/` and `after/plugin/` files, defeating their own lazy triggers. The
-current spec is an elaborate `vim.filetype.add` + autocmd workaround built
-purely to contain that damage. Deleting resty deletes the workaround too.
-
----
+> **Net:** `:Gbrowse` and the lazygit float are cheap. That retires
+> **fugitive + rhubarb + lazygit.nvim** — three repos — once blame is built,
+> which is the only genuinely new piece. `<leader>gd` is done.
 
 ### Pickers and navigation
 
@@ -154,7 +215,7 @@ purely to contain that damage. Deleting resty deletes the workaround too.
 | `snacks.nvim` → **explorer** | `<leader>F`, the one direct `snacks.explorer()` call | **filetree.nvim** — it is already an adapter over neo-tree/nvim-tree/netrw/oil/mini.files. | **M** |
 | `snacks.nvim` → **quickfile** | `enabled = true` | Render the file before plugins load. **my.nvim** (per-buffer visual layer) or **lib.nvim**. | **S** |
 | `snacks.nvim` → **debug inspector / overlay** | `<leader>ud`, `<leader>uD` | **debugging.nvim** — `:Debug {category} {action}` is exactly this dispatcher. | **M** |
-| `snacks.nvim` → **image** | `enabled = true` | **images.nvim owns this, and the snacks module cannot work here.** See §4.1. | **S** (disable) |
+| ~~`snacks.nvim` → **image**~~ | ~~`enabled = true`~~ | **Disabled 2026-09-18** — images.nvim owns this, and the snacks module could not work here. See [7.1](#71-snacksimage-was-enabled-and-could-not-work-here-). | **done** |
 | `telescope.nvim` → **picker engine** | `cmd = "Telescope"` | Keep. Note `pickers.nvim` already patches telescope's `defaults.history` and preview-scroll/history-nav keys globally. | **XL** |
 | `telescope-file-browser` → **browse + create/rename/delete from a picker** | `config/telescope/init.lua` merges its keymaps | **fileops.nvim** (the operations, already libuv-direct) + **pickers.nvim** (the list). Both halves exist; only the composition is missing. | **M** |
 | `telescope-github` → **issues / PRs / gists as pickers** | `lazy = true` extension; GitHub bindings exist in `snacks/mappings/standard.lua` as `[pickers]` entries | **reposcope.nvim** (already talks to GitHub/GitLab/Codeberg) + **github_stats.nvim**, delivered through **pickers.nvim** so it is not telescope-bound. | **M** |
@@ -162,10 +223,8 @@ purely to contain that damage. Deleting resty deletes the workaround too.
 | `search.nvim` → **tabbed picker groups** | one key, `config/search/init.lua` (86 lines of tab/collection definitions) | **pickers.nvim** — `:Pickers <scope> <action>` is already a grammar over scopes; tabs are a UI on top. The collections are already your data. | **M** |
 | `fzf-lua` → **picker engine** | `config/fzf/**`, already consumes `pickers.entry_actions.adapters.fzf` | Keep. Same relationship as snacks/telescope. | **XL** |
 | `nvim-bqf` → **quickfix preview + auto-resize** | `auto_enable`, `auto_resize_height` — nothing else | **pickers.nvim** — it already has a `refine` filter stack (wired as `<C-f>` in replacer.nvim), and preview is core picker machinery. | **M** |
-| `nvim-window-picker` → **pick a window by letter** | filter rules; single call site `config/neotree/keymaps/filesystem/files.lua:44`, already `pcall`-guarded | **lib.nvim/nvim/window** (the primitive) consumed by **filetree.nvim**. Fallback path already exists, so a partial build degrades safely. | **S** |
-| `harpoon` → **pinned file marks + quick menu** | `config/harpoon/**`, **1,707 lines**, `lazy = false` | **sessions.nvim** — see §4.3. | **L** |
-
----
+| `nvim-window-picker` → **pick a window by letter** | filter rules; single call site `config/neotree/keymaps/filesystem/files.lua:44`, already `pcall`-guarded | **lib.nvim/nvim/window** (the primitive) consumed by **filetree.nvim**. Fallback path already exists, so a partial build degrades safely. *Status pass:* the call site is config code calling neo-tree's `open_with_window_picker`, so the consumer is this config until the neo-tree keymaps move (Tree table below); the primitive itself is a new `lib.nvim` module with tests. | **S** |
+| `harpoon` → **pinned file marks + quick menu** | `config/harpoon/**`, **1,707 lines**, `lazy = false` | **sessions.nvim** — see [7.4](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place). | **L** |
 
 ### Tree
 
@@ -182,8 +241,6 @@ the pieces that are config code today and should be plugin code:
 | `neo-tree-tests-source` / `neo-tree-diagnostics` → **extra sources** | spec `dependencies` | **filetree.nvim** as adapter-level sources | **M** each |
 | `nui.nvim` | dependency of neo-tree and noice | Leaves only when both do. `lib.nvim.ui.kit` is the own equivalent. | — |
 
----
-
 ### Tests
 
 `lua/config/neotest/**` is ~1,500 lines around a runner that should stay.
@@ -194,8 +251,6 @@ the pieces that are config code today and should be plugin code:
 | **Adapter debug tooling** — `:NeotestDebugAdapters`, `State`, `File`, `Root`, `Framework`; "diagnosing why an adapter isn't finding tests in a file" | `debug/init.lua`, **309 lines** | **debugging.nvim.** Its entire thesis is that debugging tools accumulate as scattered one-off commands and belong behind one dispatcher with two-level completion. This is a textbook case, and the code already exists. | **M** |
 | **Adapter registration layer** (factory + a 239-line TypeScript adapter) | `adapters/**` (381 lines) | Structurally identical to **dap.nvim** ("a config layer that registers adapters and launch configurations, so `opts = {}` is a working debugger"). A `tests.nvim` sibling — or a `dap.nvim`-style neotest module — is the same pattern twice. | **L** |
 | **whichkey / telescope / neo-tree integration wrappers** | `whichkey/`, `telescope/`, `neotree/`, `consumers/` (~240 lines) | **pickers.nvim** / **filetree.nvim** — engine-agnostic instead of per-integration. | **M** |
-
----
 
 ### UI
 
@@ -214,8 +269,6 @@ the pieces that are config code today and should be plugin code:
 | `vim-visual-multi` → **`<C-n>` find-under, edit all occurrences** | `VM_default_mappings = 0`; only `Find Under` / `Find Subword Under` bound | The tiny configured surface is misleading: the multi-cursor state machine is the difficulty, not the entry point. **spotlight.nvim** already marks every occurrence of a token and keeps the marks through searches and edits — the *selection* half is solved; simultaneous editing is not. Keep, but note the seam. | **L–XL** |
 | `nvzone/menu` → **right-click menu** | `enabled = false` | **Already done** — `config/menu/**` (855 lines) draws through `lib.nvim.contextmenu` + `lib.nvim.ui.kit`, and `require("menu")` appears nowhere in the tree. The disabled spec is a documented escape hatch (`renderer = "nvzone"`), not a leftover. Leave it. | — |
 
----
-
 ### Editing and text
 
 | Plugin → feature family | Evidence | Target | Effort |
@@ -228,8 +281,6 @@ the pieces that are config code today and should be plugin code:
 | `vim-table-mode` → **realign while typing, `:Tableize`** | `table_mode_corner = "|"`, `cmd` + `ft` gated | **markdown.nvim** — `tableview/` already has `parser.lua`, `renderer.lua`, `views/`. The model exists; the interactive half is missing. | **M** |
 | `unicode.vim` → **`:UnicodeName`, `:UnicodeSearch`, `:UnicodeTable`, `:Digraphs`** | `cmd` list + `uni` key | **emojis.nvim** — it already ships a pure UTF-8 byte tokenizer with no external library, which is the hard half of `:UnicodeName`. The rest is a Unicode name table (a few hundred KB of data) plus digraphs, which Neovim partly exposes via `vim.fn.digraph_get*`. **If only `:UnicodeName` is really used, this drops to S — worth checking your own habit first.** | **M** |
 
----
-
 ### Markdown
 
 | Plugin → feature family | Evidence | Target | Effort |
@@ -237,19 +288,17 @@ the pieces that are config code today and should be plugin code:
 | ~~`markdown-preview.nvim` → **browser preview with scroll sync**~~ | ~~driven by `markdown.nvim`'s `:Markdown preview` through `vim.g.mkdp_*`; `build = "cd app && yarn install"`; hardcoded per-platform Chrome paths~~ | **Done — B3, shipped 2026-09-18.** `markdown.nvim` now drives `:MDView start`/`stop`; markdown-preview.nvim uninstalled. Scroll sync and combine-preview were already covered by mdview's `browser.behavior = "reuse"` and `:MDView sync` — no new feature work, only the rewire. | **done** |
 | `render-markdown.nvim` → **in-buffer concealed rendering** | installed and immediately `setup({ enabled = false })`; toggled by `:Markdown render` | Keep, deliberately. Same shape as the `nvzone/menu` entry: carried for an on-demand feature. A full rebuild into markdown.nvim means concealed rendering of every GFM construct — **not recommended.** | **XL** |
 
----
-
 ### Tooling and infrastructure
 
 | Plugin → feature family | Evidence | Target | Effort |
 |---|---|---|---|
-| `resty.nvim` → **HTTP client on `.http`/`.resty` buffers** | `config` is an elaborate `vim.filetype.add` + autocmd workaround, documented as containing a ~600 ms startup cost | **runtime-analysis.nvim** already has `curl.lua`, `runner.lua`, `parse.lua`, `env.lua`, `graphql.lua`, `multipart.lua`, `assertions.lua`, `history.lua`, `view.lua`, `inspect.lua` — a complete REST client. Missing piece: running the request under the cursor out of an `.http` buffer. Whether `parse.lua` already speaks that syntax is **unverified**. Deleting resty deletes the workaround with it. | **M–L** |
-| `vim-startuptime` → **repeated runs, averaged, sorted, navigable** | `cmd` only | **runtime-analysis.nvim** — **done 2026-09-17**, see A3 below. Uninstalled. The "only the presentation is missing" reading in this row was wrong and is corrected there. | **done** |
+| `resty.nvim` → **HTTP client on `.http`/`.resty` buffers** | `config` is an elaborate `vim.filetype.add` + autocmd workaround, documented as containing a ~600 ms startup cost | **runtime-analysis.nvim** already has `curl.lua`, `runner.lua`, `parse.lua`, `env.lua`, `graphql.lua`, `multipart.lua`, `assertions.lua`, `history.lua`, `view.lua`, `inspect.lua` — a complete REST client. Missing piece: running the request under the cursor out of an `.http` buffer. Whether `parse.lua` already speaks that syntax is **unverified**. Deleting resty deletes the workaround with it. See [A1](#a1--lima1909restynvim--runtime-analysisnvim). | **M–L** |
+| ~~`vim-startuptime` → **repeated runs, averaged, sorted, navigable**~~ | ~~`cmd` only~~ | **Done 2026-09-17** — see [A3](#a3--dstein64vim-startuptime--runtime-analysisnvim-). Uninstalled. The "only the presentation is missing" reading in this row was wrong and is corrected there. | **done** |
 | `todo-comments.nvim` → **keyword scan** | `config/todo_comments/**` — the keyword table and colours are **already yours**; both keymaps call `snacks.picker.todo_comments()` directly, bypassing the plugin | **insights.nvim** — `scan/rg.lua` + `scan/cache.lua` already run project-wide ripgrep scans for conflicts, unused imports, stray dev servers. | **M** |
 | `todo-comments.nvim` → **in-buffer highlight + signs** | `signs = true` | **spotlight.nvim** — "mark any number of tokens at once, in colours you can tell apart, and keep them there through searches" is the same machinery. | **M** |
-| `mkdir.nvim` → **create missing parent dirs on write** | `lazy = true`, no config | **fileops.nvim** — one `BufWritePre` autocmd, in the plugin whose stated job is keeping buffer and disk in agreement. 15–30 lines. | **S** |
+| ~~`mkdir.nvim` → **create missing parent dirs on write**~~ | ~~`lazy = true`, no config~~ | **Done** — fileops.nvim's `auto_mkdir` BufWritePre autocmd, on by default; plugin dropped 2026-09-17. See [A2](#a2--jghausermkdirnvim--fileopsnvim-). | **done** |
 | `mason.nvim` → **installer registry** | `lazy = false`; `lsp.nvim` and `:MasonInstallAll` `require("mason")` directly | Keep. | **XL** |
-| `plenary.nvim` → **shared Lua helpers** | `lazy = false` — unconditionally in the startup path | Not a rebuild target; a *dependency-chain* question. See §4.4. | — |
+| `plenary.nvim` → **shared Lua helpers** | `lazy = false` — unconditionally in the startup path | Not a rebuild target; a *dependency-chain* question. See [7.6](#76-the-plenary-dependency-chain). | — |
 | `nvim-treesitter` | — | Keep, obviously. | — |
 | `blink.cmp` → **completion engine** | active engine (`vim.g.lsp_nvim.pack.completion` defaults to `"blink"`) | Keep. | **XL** |
 | `nvim-cmp` | `lsp.nvim`'s cmp spec resolves `enabled = false`; **not installed** | Nothing to do — the spec fragment exists so flipping one option moves the accept/dismiss keys with it. | — |
@@ -257,11 +306,40 @@ the pieces that are config code today and should be plugin code:
 
 ---
 
-### A2 · `jghauser/mkdir.nvim` → **fileops.nvim** · full replacement ✅
+## 4. Tier A — full replacement of a small plugin
 
-### A3 · `dstein64/vim-startuptime` → **runtime-analysis.nvim** · full replacement ✅
+### A1 · `lima1909/resty.nvim` → runtime-analysis.nvim
 
-Shipped 2026-09-17 as `:RA startup profile [runs]`; the plugin is uninstalled.
+**Open. Effort M–L.**
+
+The decisive argument is in the config's own comment in
+[webdev.lua](../../../lua/plugins/webdev.lua): resty cost roughly **600 ms of
+startup** because loading it drags in telescope, nvim-cmp and LuaSnip through
+its `plugin/` and `after/plugin/` files, defeating their own lazy triggers.
+The current spec is an elaborate `vim.filetype.add` + autocmd workaround
+built purely to contain that damage. Deleting resty deletes the workaround
+too.
+
+runtime-analysis.nvim has the whole client (see the Tooling table). What it
+needs is the *entry point*: run the request under the cursor from an
+`.http`/`.resty` buffer. Whether `parse.lua` already reads that file syntax
+is still **unverified** — that check is the first hour of the build, and it
+decides whether this is M or L.
+
+### A2 · `jghauser/mkdir.nvim` → fileops.nvim ✅
+
+fileops.nvim gained `auto_mkdir` — one `BufWritePre` autocmd that creates
+the parent directory of the file about to be written, on by default
+(`fileops.nvim@329a65f`, 2026-07-15, routed through `lib.nvim.autocmd` in
+`1975fd7`). mkdir.nvim was dropped from the spec on 2026-09-17
+(`3fe8afd94`). *(The earlier draft recorded this as "implemented in
+fileops.nvim on 17.02.2026", under the wrong finding and with the wrong
+date.)*
+
+### A3 · `dstein64/vim-startuptime` → runtime-analysis.nvim ✅
+
+Shipped 2026-09-17 as `:RA startup profile [runs]`; the plugin is uninstalled
+(`137c5f67f`).
 
 **The premise this entry was written on did not survive the build, and that is
 the part worth keeping.** It read "that is a view on data the own plugin
@@ -282,84 +360,11 @@ vim-startuptime's single averaged column left out.
 
 ---
 
-## 4. Findings worth acting on regardless
+## 5. Tier B — full replacement that is a real build
 
-### 4.1 `snacks.image` is enabled and cannot work here
+### B2 · `folke/todo-comments.nvim` → insights.nvim
 
-[snacks.lua:52](./lua/plugins/snacks.lua) sets `image = { enabled = true }`, with a
-comment naming the **Kitty graphics protocol** and WezTerm. Per the established
-finding in this setup, Kitty-APC never renders from inside nvim on this machine
-— which is exactly why `images.nvim` draws through **iTerm2 OSC 1337** and says
-so in its README.
-
-So the module is enabled, loads, and renders nothing, while a second image path
-that does work sits next to it. Flipping it to `false` is one line.
-**Verify once in the actual terminal first.**
-
-State: Implementiert in fileops.nvim am 17.02.2026
-
----
-
-### 4.2 Keys are bound for five disabled snacks modules
-
-`config/snacks/mappings/extended.lua` registers `<leader>u*` bindings for
-`dim`, `profiler`, `scope`, `scratch` and `toggle`. All five are
-`enabled = false` in the spec. The dispatcher is defensive — `safe_call` emits
-`[snacks] missing <mod>.<fn>()` rather than erroring — so the failure mode is a
-warning, not a crash. Still: five keys that cannot work.
-
-Either enable the modules or drop the bindings. Two of them have own-side homes
-if you want the feature rather than the module: **profiler → runtime-analysis.nvim**,
-**scratch → buffer-ctx.nvim or fileops.nvim**.
-
----
-
-### 4.3 The harpoon rebuild is already 90% written — in the wrong place
-
-`lua/config/harpoon/` is **1,707 lines** across nine modules:
-
-| Module | Lines | What it is |
-|---|---|---|
-| `persist_paths.lua` | 647 | pinned target specs, persisted |
-| `usrcmds.lua` | 216 | command surface |
-| `hardening.lua` | 207 | debounced saves, autocmd guards |
-| `api.lua` | 187 | a wrapper API over harpoon2 |
-| `preview.lua` | 181 | entry preview |
-| `ui/menu_fzf.lua`, `ui/menu_telescope.lua` | 193 | two picker front-ends |
-| `pin_marks.lua`, `pin_guard.lua` | 173 | pin semantics harpoon does not have |
-| `utils/sanitize.lua`, `health.lua`, `debug.lua`, `types/` | 237 | the rest |
-
-Harpoon contributes a list of file marks with a persisted JSON store and a quick
-menu. Everything above is yours. It is also `lazy = false`, so harpoon **and**
-plenary are unconditionally in the startup path.
-
-`sessions.nvim` is the right home: it is already branch- and project-aware,
-already has `state.lua`, `git.lua`, `meta.lua`, `buforder.lua`, `picker.lua`
-and `statusline.lua`. Marks that resolve per project root and per git branch are
-a strictly better model than harpoon's, and the machine-dependent
-`target_specs` block in [misc.lua](./lua/plugins/misc.lua) (workstation vs.
-private) becomes ordinary session metadata instead of a config-level `if`.
-**sessions.nvim** is the right home: already branch- and project-aware, with
-`state.lua`, `git.lua`, `meta.lua`, `buforder.lua`, `picker.lua`,
-`statusline.lua`, `portable.lua`. Marks resolving per project root and per git
-branch are a strictly better model than harpoon's flat list — and the
-machine-dependent `target_specs` block in [misc.lua](./lua/plugins/misc.lua)
-(workstation vs. private) becomes ordinary session metadata instead of a
-config-level `if machine.is("workstation")`.
-
-Two front-ends (`menu_fzf`, `menu_telescope`) also collapse into one
-`pickers.nvim` call.
-
-**Risk:** this is a daily-driver workflow. Build behind a flag, dual-run for a
-week, then cut. Not a plugin to do in a hurry.
-
----
-
-### 4.4 `cmdlog.nvim` is the only own runtime consumer of plenary
-
-### B2 · `folke/todo-comments.nvim` → **insights.nvim** · full replacement
-
-**Benefit: high. Effort: 2–3 sessions. Risk: low.**
+**Open. Benefit: high. Effort: 2–3 sessions. Risk: low.**
 
 The pieces are already distributed across own code:
 
@@ -369,7 +374,7 @@ The pieces are already distributed across own code:
   insights already runs project-wide scans for conflicts, unused imports and stray
   dev servers; "lines matching a keyword set" is the same shape.
 - **The picker** already bypasses todo-comments: both keymaps in
-  [workflow.lua](./lua/plugins/workflow.lua) call `snacks.picker.todo_comments()`
+  [workflow.lua](../../../lua/plugins/workflow.lua) call `snacks.picker.todo_comments()`
   directly, and `pickers.nvim` is the engine-agnostic layer for exactly that.
 - **The highlighting** is the only genuinely new part: extmarks on keyword
   matches in visible buffers, plus signs. `spotlight.nvim` already does
@@ -380,14 +385,10 @@ So: scan in `insights.nvim`, highlight through `spotlight.nvim`'s mechanism,
 list through `pickers.nvim`. Three own plugins each gain a feature, and one
 external plugin plus its `plenary` and `devicons` dependencies leave.
 
----
+### B3 · `iamcco/markdown-preview.nvim` → mdview.nvim ✅
 
-### B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement ✅
-
-**Benefit: high. Effort: 2–4 sessions. Risk: medium.**
-
-**Shipped 2026-09-18.** `markdown.nvim`'s `commands/preview.lua` now drives
-`:MDView start`/`:MDView stop` instead of `:MarkdownPreview`/
+**Shipped 2026-09-18** (`83b7a627f`). `markdown.nvim`'s `commands/preview.lua`
+now drives `:MDView start`/`:MDView stop` instead of `:MarkdownPreview`/
 `:MarkdownPreviewStop`; markdown-preview.nvim and its `vim.g.mkdp_*` config
 are gone from `lua/plugins/markdown.lua`. The BufEnter auto-refresh workaround
 `preview.lua` used to carry for markdown-preview went with it — mdview.nvim
@@ -418,11 +419,9 @@ form.
 markdown.nvim's preview toggle from depending on a foreign plugin's globals,
 and fixes `:Markdown mdview` which had not actually worked.
 
----
+### B4 · `dhruvasagar/vim-table-mode` → markdown.nvim
 
-### B4 · `dhruvasagar/vim-table-mode` → **markdown.nvim** · full replacement
-
-**Benefit: moderate. Effort: 2–3 sessions. Risk: low.**
+**Open. Benefit: moderate. Effort: 2–3 sessions. Risk: low.**
 
 `markdown.nvim` already has `tableview/` with `parser.lua`, `renderer.lua` and
 `views/`, and the README names GFM tables as a core feature. So the table
@@ -434,11 +433,9 @@ it is FileType-scoped in a plugin that is already FileType-scoped. The spec is
 `cmd` + `ft` gated, so this is not a startup win — it is a
 "one command grammar instead of two plugins" win.
 
----
+### B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `winbar/`
 
-### B5 · `nvim-treesitter/nvim-treesitter-context` → **ui.nvim** `winbar/` · full replacement
-
-**Benefit: moderate. Effort: 2–3 sessions. Risk: low-medium.**
+**Open. Benefit: moderate. Effort: 2–3 sessions. Risk: low-medium.**
 
 `ui.nvim` already owns the frame: `statusline/`, `tabline/`, `winbar/`,
 `highlights/`, `theme/`. And `lib.nvim` has a `treesitter/` module. Sticky
@@ -450,11 +447,19 @@ performance work — incremental updates, large files, fold interaction, and
 correct behaviour on scroll. `ui.nvim/winbar/` is currently a single `init.lua`,
 so this is a genuine build, not a wiring job. Budget the sessions.
 
+*Status-pass note:* since this was written, `ui.winbar` became the arbiter
+for `vim.wo.winbar` between my.nvim's symbol breadcrumbs and filetree.nvim's
+path trail (see `ui-my-Kreuzfeature-Analyse.md`, C3). A sticky-context line
+would be a third producer on the same surface and has to go through
+`ui.winbar.set()` like the other two — which also means the "one `init.lua`"
+remark is out of date; the module grew.
+
 ---
 
 ## 6. Tier C — harvest one feature, keep the plugin
 
 These are not replacements. The external plugin stays; one idea moves in-house.
+**All eleven are open.**
 
 | External | Feature worth stealing | Own home | Effort |
 |---|---|---|---|
@@ -472,75 +477,157 @@ These are not replacements. The external plugin stays; one idea moves in-house.
 
 ---
 
-## 7. Findings worth acting on independently
+## 7. Findings worth acting on regardless
 
-These came out of the analysis and are not "rebuild" items.
+These came out of the analysis and are not "rebuild" items. *(Numbered 7.x
+throughout since the 2026-09-18 reassembly; the earlier draft had them split
+across 4.x and 7.x with two of them duplicated.)*
 
----
+### 7.1 `snacks.image` was enabled and could not work here ✅
 
-### 7.1 `snacks.image` is enabled and almost certainly dead weight
+[snacks.lua](../../../lua/plugins/snacks.lua) set `image = { enabled = true }`,
+with a comment naming the **Kitty graphics protocol** and WezTerm.
+images.nvim's `docs/scope.md` records the finding this rests on: *"On native
+Windows Neovim in WezTerm, Kitty sequences coming from Neovim are never
+drawn — no error, no configuration that fixes it, nothing on screen. That is
+the whole reason this plugin exists."* — which is why images.nvim draws
+through **iTerm2 OSC 1337** instead.
 
-[snacks.lua:52](./lua/plugins/snacks.lua) sets `image = { enabled = true }`, with a
-comment describing the **Kitty graphics protocol**. Per the established finding
-in this setup, Kitty-APC never renders from inside nvim on this machine — which
-is precisely why `images.nvim` draws through **iTerm2 OSC 1337** instead, and
-says so in its README.
+So the module was enabled, loaded, and rendered nothing, while a second image
+path that does work sat next to it. **Flipped to `false` 2026-09-18**, with
+the reason and the condition for flipping it back in the spec comment. The
+"verify once in the actual terminal first" this entry asked for was not done
+in a live terminal; the documented finding in images.nvim was taken as that
+verification, and a revert is one line if a terminal ever shows otherwise.
 
-So this module is enabled, loads, and renders nothing. Setting it to `false` is
-a one-line change that costs nothing and removes a confusing second image path.
-**Verify once in the actual terminal, then flip it.**
+### 7.2 Keys were bound for four disabled snacks modules ✅
 
----
+`config/snacks/mappings/extended.lua` registered keys for `dim`
+(`<leader>uf`), `profiler` (`<leader>ps`/`pS`/`pr`), `scope` (`]s`/`[s`)
+and `scratch` (`<leader>ns`/`nS`). All four are `enabled = false` in the
+spec. The dispatcher is defensive — `safe_call` emits `[snacks] missing
+<mod>.<fn>()` rather than erroring — so the failure mode was a warning, not a
+crash. Still: eight keys that could not work. *(The earlier draft said "five
+modules" and named `toggle`; it is disabled too but never had a key.)*
 
-### 7.2 `render-markdown.nvim` is installed permanently disabled
+Three of the eight were also collisions the draft had not seen, each a dead
+key contending with a live one for the same lhs: `<leader>ns` was Neo-tree's
+source switcher (`config/neotree/keymaps/global.lua`) as well; `<leader>ps`
+was insights.nvim's symbols picker — a headless start of the real config
+after the removal reports it as "insights: symbols (telescope, cwd
+functions)", which is what the key had been fighting; and `]s` was
+language.nvim's, a clash the bindings explorer's own docs had already
+recorded (`bindings_explorer/docs/FEATURES.md`) without anyone acting on it.
 
-[markdown.lua](./lua/plugins/markdown.lua) installs it and immediately calls
-`setup({ enabled = false })`, with `:Markdown render` as the toggle. So it is
-carried for an on-demand feature. Fine as-is — but note that a *full* rebuild
-into `markdown.nvim` is a large project (concealed rendering of every GFM
-construct) and is **not** recommended. Left out of the tiers deliberately.
+**Removed 2026-09-18**, along with their rows in
+`docs/NOTES/ExternPlugins/Bindings/Keymaps/Snacks.md`. `debug`
+(`<leader>ud`/`uD`) and `quickfile` (`<leader>uq`) stay — those modules are
+on. The file's docstring now says what the rule is: enable the module in
+the spec first, then its keys belong here. The own-side homes the draft
+named still hold if the *feature* is wanted rather than the module:
+**profiler → runtime-analysis.nvim** (`:RA` already exists), **scratch →
+buffer-ctx.nvim or fileops.nvim**.
 
----
+### 7.3 `<leader>gd` had two owners ✅
 
-### 7.3 `cmdlog.nvim` has a runtime dependency on plenary
+Not in the earlier draft. Suggested-order item 1 said "rebind `<leader>gd`
+from `:Gdiffsplit` to `:Diff … git:HEAD` — already works", and it did, but
+the key was bound twice: fugitive's `keys` spec in `plugins/git.lua`
+(`:Gdiffsplit`) and snacks' `keys` spec via
+`config/snacks/mappings/standard.lua` (`builtin("git_diff")`, the hunk
+picker). Both lazy, both described as a git diff; whichever registered last
+won, and nothing said so.
 
-Everywhere else in the own repos, `plenary` appears only in
-`TESTS/minimal_init.lua` (the busted harness — expected and fine). Two files
-break that pattern:
-Across all own repos, `plenary` appears only in `TESTS/minimal_init.lua` — the
-busted harness, expected and fine. Two files break the pattern:
+**Resolved 2026-09-18:** `<leader>gd` is diff.nvim's
+`:Diff target=git:HEAD`, as a lazy `keys` entry on the diff.nvim spec in
+`plugins/personal/init.lua` (not through diff.nvim's own `keymaps.diff_head`
+option — the plugin is command-lazy, and an option-registered shortcut would
+only exist after the first `:Diff`). Fugitive's key is gone; blame is the one
+fugitive key left. The hunk picker moved to `<leader>gD`, following the
+`gS`/`gL` capital-variant pattern the same table already uses. The three
+cheatsheets that documented the old state (`Keymaps/Fugitive.md`,
+`Keymaps/Snacks.md`, `Usercmds/Fugitive.md`) say the new one.
 
-- `cmdlog.nvim/lua/cmdlog/core/favorites.lua`
-- `cmdlog.nvim/lua/cmdlog/core/store.lua`
+### 7.4 The harpoon rebuild is already 90% written — in the wrong place
 
-`lib.nvim` covers path, fs and JSON. It is a small migration, and it matters
-because afterwards plenary's presence is decided *entirely* by which external
-plugins survive.
+**Open. Effort L.**
 
----
+`lua/config/harpoon/` is **1,707 lines** across nine modules:
 
-### 7.4 The `plenary` dependency chain
-The chain: plenary is pulled in by harpoon, todo-comments, resty, lazygit,
-diffview, neogit, telescope, neotest — and cmdlog. Doing the resty, lazygit,
-harpoon, todo-comments and cmdlog items removes five of nine. It does not remove
-plenary (telescope and neotest keep it), but it does take it **out of the
-startup path**, since harpoon is the only `lazy = false` consumer.
+| Module | Lines | What it is |
+|---|---|---|
+| `persist_paths.lua` | 647 | pinned target specs, persisted |
+| `usrcmds.lua` | 216 | command surface |
+| `hardening.lua` | 207 | debounced saves, autocmd guards |
+| `api.lua` | 187 | a wrapper API over harpoon2 |
+| `preview.lua` | 181 | entry preview |
+| `ui/menu_fzf.lua`, `ui/menu_telescope.lua` | 193 | two picker front-ends |
+| `pin_marks.lua`, `pin_guard.lua` | 173 | pin semantics harpoon does not have |
+| `utils/sanitize.lua`, `health.lua`, `debug.lua`, `types/` | 237 | the rest |
 
----
+Harpoon contributes a list of file marks with a persisted JSON store and a quick
+menu. Everything above is yours. It is also `lazy = false`, so harpoon **and**
+plenary are unconditionally in the startup path.
 
-### 4.5 `lua/config/gp_config/` is orphaned ✅
+**sessions.nvim** is the right home: already branch- and project-aware, with
+`state.lua`, `git.lua`, `meta.lua`, `buforder.lua`, `picker.lua`,
+`statusline.lua`, `portable.lua`. Marks resolving per project root and per git
+branch are a strictly better model than harpoon's flat list — and the
+machine-dependent `target_specs` block in [misc.lua](../../../lua/plugins/misc.lua)
+(workstation vs. private) becomes ordinary session metadata instead of a
+config-level `if machine.is("workstation")`.
+
+Two front-ends (`menu_fzf`, `menu_telescope`) also collapse into one
+`pickers.nvim` call.
+
+**Risk:** this is a daily-driver workflow. Build behind a flag, dual-run for a
+week, then cut. Not a plugin to do in a hurry.
+
+### 7.5 `cmdlog.nvim` and plenary — already resolved when this was written ✅
+
+The draft said: across all own repos, `plenary` appears only in
+`TESTS/minimal_init.lua` — the busted harness, expected and fine — and two
+files broke the pattern, `cmdlog.nvim/lua/cmdlog/core/favorites.lua` and
+`core/store.lua`.
+
+**They did not, and had not for seven weeks.** `cmdlog.nvim@104abc7`
+(2026-07-30, "chore: drop the plenary.nvim dependency") moved both onto
+`lib.nvim`'s `fs.write.to_file`, and each file's docstring says so in its
+first lines. The report was written on 2026-09-17 from a stale reading. The
+point it was making survives: plenary's presence in this config is now
+decided *entirely* by which external plugins keep it (7.6).
+
+### 7.6 The `plenary` dependency chain
+
+**Open — it resolves as the items above do, not on its own.**
+
+Plenary is pulled in by harpoon, todo-comments, resty, lazygit, diffview,
+neogit, telescope and neotest. Doing the resty, lazygit, harpoon and
+todo-comments items removes four of eight. It does not remove plenary
+(telescope and neotest keep it), but it does take it **out of the startup
+path**, since harpoon is the only `lazy = false` consumer.
+
+### 7.7 `render-markdown.nvim` is installed permanently disabled
+
+**Deliberately left as is.**
+
+[markdown.lua](../../../lua/plugins/markdown.lua) installs it and immediately
+calls `setup({ enabled = false })`, with `:Markdown render` as the toggle. So
+it is carried for an on-demand feature. Fine as-is — but note that a *full*
+rebuild into `markdown.nvim` is a large project (concealed rendering of every
+GFM construct) and is **not** recommended. Left out of the tiers deliberately.
+
+### 7.8 `lua/config/gp_config/` was orphaned ✅
 
 85 lines configuring `gp.nvim` — API keys for openai/anthropic/ollama, five
-agent definitions. **gp.nvim is not in the plugin set**, and `grep -rn gp_config`
-across `lua/` returns nothing outside the folder itself. `ai.nvim` is the
+agent definitions. **gp.nvim was not in the plugin set**, and `grep -rn gp_config`
+across `lua/` returned nothing outside the folder itself. `ai.nvim` is the
 replacement and is installed.
 
-State: `lua/config/gp_config/` removed 2026-09-18 (`git rm -r`); confirmed
-no remaining references to `gp_config` or `require("gp")` anywhere in `lua/`.
+Removed 2026-09-18 (`git rm -r`); confirmed no remaining references to
+`gp_config` or `require("gp")` anywhere in `lua/`.
 
----
-
-### 4.6 `nvzone/menu` — not a leftover ✅
+### 7.9 `nvzone/menu` — not a leftover ✅
 
 `plugins/nvchad.lua`'s `{ "nvzone/menu", enabled = false }` reads like a stale
 fragment but is not: the file documents it as the switch for restoring
@@ -551,63 +638,62 @@ alone.
 
 ---
 
-## 5. Where this lands
+## 8. Where this lands
 
-Grouped by the own plugin that gains, so you can see which repos get busy:
+Grouped by the own plugin that gains, so you can see which repos get busy.
+Struck entries are done.
 
 | Own plugin | Feature families it would absorb |
 |---|---|
-| **runtime-analysis.nvim** | resty's `.http` runner · ~~vim-startuptime's averaged report~~ (done 2026-09-17, A3) · snacks profiler |
-| **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer) |
-| **diff.nvim** | `:Gdiffsplit` (done) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
+| **runtime-analysis.nvim** | resty's `.http` runner · ~~vim-startuptime's averaged report~~ (A3) · snacks profiler (the *feature*; its keys are gone, 7.2) |
+| **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer, once the keymaps live there) |
+| **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | todo scan · git-conflict detection + resolution |
 | **sessions.nvim** | harpoon marks, pins, persistence, preview |
 | **debugging.nvim** | neotest adapter debug tooling · snacks debug inspector |
 | **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
-| **ui.nvim** | matchup offscreen status · ts-context winbar · which-key popup · minty colour picker · zen mode |
+| **ui.nvim** | matchup offscreen status · ts-context winbar (through `ui.winbar`) · which-key popup · minty colour picker · zen mode |
 | **markdown.nvim** | table-mode realign + `:Tableize` |
-| **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; done 2026-09-18, B3) |
-| **fileops.nvim** | mkdir-on-write · file-browser operations · snacks scratch |
+| **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
+| **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
 | **emojis.nvim** | unicode name/search/table/digraphs |
 | **cascade.nvim** | puppeteer template literals |
 | **spotlight.nvim** | todo highlight machinery · conflict marker highlight |
 | **open.nvim** | `:Gbrowse` · lazygit nvr bridge · (`config/ui_open.lua`'s Windows URL fix) |
 | **my.nvim** | quickfile · colorizer · zen mode |
+| **images.nvim** | ~~the only working image path~~ — it already was; `snacks.image` merely stopped pretending (7.1) |
 
 ---
 
-## 6. Suggested order
+## 9. Suggested order
 
-**Free or nearly free — do these first:**
+**Free or nearly free — all done 2026-09-18:**
 
-A1–A6 plus 7.5 is **seven repositories removed** for roughly six sessions.
-Adding B1–B4 brings it to eleven, for roughly ten more.
+1. ~~Rebind `<leader>gd` from `:Gdiffsplit` to `:Diff … git:HEAD`.~~ Done, and
+   the second owner it had is resolved with it (7.3).
+2. ~~`snacks.image = false`~~ (7.1).
+3. ~~Resolve the dead snacks bindings~~ (7.2) — removed, eight of them.
+4. ~~Decide `config/gp_config/`'s fate~~ (7.8) — folder removed.
+5. Note: git-conflict and `insights.nvim/conflicts/` are **complementary**, not
+   duplicates — repo-level report vs. buffer-level markers. Verified 2026-09-17.
 
----
+**Cheap removals (S), open:** window-picker → lib/filetree · lazygit float →
+lib/open · `:Gbrowse` → open/reposcope. ~~mkdir → fileops~~ (A2). Each of the
+three needs its home chosen first; the report names two for each.
 
-1. Rebind `<leader>gd` from `:Gdiffsplit` to `:Diff … git:HEAD`. Already works.
-2. `snacks.image = false` (§4.1), after one terminal check.
-3. Resolve the five dead snacks bindings (§4.2).
-4. ~~Decide `config/gp_config/`'s fate~~ (§4.5) — done 2026-09-18, folder removed.
-5. Note: git-conflict and `insights.nvim/conflicts/` are **complementary**, not duplicates — repo-level report vs. buffer-level markers. Verified 2026-09-17.
+**Highest value per session (M), open:** resty → runtime-analysis (removes a
+repo, an autocmd workaround and a documented 600 ms startup hazard; A1) ·
+neotest debug tooling → debugging.nvim (309 lines, already written) ·
+puppeteer → cascade · matchup offscreen → ui.nvim · `:Git blame` (the one
+new piece that retires fugitive + rhubarb). ~~startuptime →
+runtime-analysis~~ (A3).
 
-**Cheap removals (S):** mkdir → fileops · window-picker → lib/filetree ·
-lazygit float → lib/open · `:Gbrowse` → open/reposcope.
-
-**Highest value per session (M):** resty → runtime-analysis (removes a repo, an
-autocmd workaround and a documented 600 ms startup hazard) · neotest debug
-tooling → debugging.nvim (309 lines, already written) · puppeteer → cascade ·
-startuptime → runtime-analysis · matchup offscreen → ui.nvim.
-
-**Real projects (L), in order of payoff:** todo-comments → insights + spotlight ·
-~~markdown-preview → mdview (removes the node/yarn build)~~ done 2026-09-18, B3 ·
-harpoon → sessions (1,707 lines out of the config; flag it, dual-run it, then
-cut) · neo-tree config → filetree.nvim (~1,500 lines, same argument).
+**Real projects (L), in order of payoff, open:** todo-comments → insights +
+spotlight (B2) · harpoon → sessions (1,707 lines out of the config; flag it,
+dual-run it, then cut; 7.4) · neo-tree config → filetree.nvim (~1,500 lines,
+same argument) · ts-context → ui.nvim (B5). ~~markdown-preview → mdview~~ (B3).
 
 **Leave alone:** the three picker engines, treesitter, mason, blink, neogit,
 gitsigns' hunk engine, noice, mini.ai/targets, autopairs, ts-autotag, matchup's
 `%`, visual-multi, render-markdown, nvzone/menu, tokyonight.
-
----
-
