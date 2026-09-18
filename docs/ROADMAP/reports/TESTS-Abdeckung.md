@@ -190,17 +190,18 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | mdview.nvim | `health.lua`s `M.check()` degradiert korrekt, ruft am Ende aber ungeschützt erneut in `lib.nvim.bindings.usercmd.composer.checkhealth` hinein → crasht bei altem/unvollständigem lib.nvim, verschluckt jeden vorherigen ok/warn/error | `59c4a6e` |
 | fileops.nvim | `bindings/keymaps.lua`s `delete_fn({})` löschte permanent ohne Undo trotz `"trash"`-Default; drei Windows-Trenner-Mismatches (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer, `ops/file.lua`s Verzeichnis-Unlink-Retry); `conflict_marks.lua`s Match-Leak bei erneutem `:edit` | `e7185fc`, `81e15ee`, `ffc1c9a` |
 | fileops.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `on_hold.lua`s Git-Show-Preview löste den Pfad nie korrekt auf (hat noch nie gerendert) und `truncate()` schnitt Byte- statt zeichengenau | `037d3bb` |
+| github_stats.nvim | `export.lua`s `create_pdf()` verschluckte den Fehler von `ensure_parent_dir()` — derselbe Bug, den ein früherer Fix nur bei `write_lines()` behoben hatte, am analogen zweiten Call-Site übersehen | `680adb8` |
+| debugging.nvim | `health.lua` requirte `lib.nvim.health` auf Modulebene ungeschützt — ein fehlendes lib.nvim hätte das Modul selbst crashen lassen, noch vor dem bereits gefixten Guard am Funktionsende | `50afa0b` |
+| insights.nvim | `M.foo = function()` wurde unter dem bloßen Feldnamen statt der vollen dotted-Name gemeldet; Mehrfachzuweisungen prüften nur den ersten Wert; Windows-Regex-Escape-Menge für `tree/init.lua` deckte `{`/`}`/`\|`/`\` nicht ab; dabei zusätzlich ein Test-Isolations-Leak in `compress_tree_spec.lua` gefunden (`pairs(saved)` überspringt in Lua als `nil` gespeicherte Einträge) | `9c6be5e`, `27744f7` |
+| cascade.nvim | `roman` vor `ascii` (nötig für den Cycle-Ring) ließ `marker.parse` sieben Buchstaben (c/d/i/l/m/v/x) fälschlich als römisch lesen → normale `a) b) c) d)`-Listen korrumpierten ab dem dritten Punkt bei jedem Renumber. Gefixt (auf Nutzerwunsch, vorher gepinnt): `renumber.tree` merkt sich jetzt die pro Einzugsbreite bereits etablierte Marker-Art und reicht sie als Tie-Breaker an `marker.parse` zurück, ohne den globalen Cycle-Ring-Fall zu berühren | `0865850` |
 
 ### Offen (gepinnt)
 
-Stand: **35 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18) läuft repo-für-repo,
-ältestes zuerst; Runden 1-19 und 21-23 sind durch, Runde 20 (diff.nvim) ebenfalls (solide,
-nichts zu tun). Mehrere Runden brachten gar keine neuen Bugs, nur geschlossene Coverage-
-Lücken (dap, cmdlog, debugging, recommender, emojis, sessions, diff, data — die letzten
-beiden komplett ohne Änderung); die übrigen brachten je ein bis drei kleine neue Bugs oder
-bestätigten ihre alten Pins. Die ursprüngliche Warteschlange (Runden 1-27) sowie ihr
-kompletter Re-Audit bis Runde 23 sind damit fertig; weiter geht es bei Runde 24
-(spotlight.nvim).
+Stand: **34 offen**. Der komplette Re-Audit (Runden 1-26, gegen die 100%-Vorgabe vom
+2026-09-18) sowie ein separater Bug/Security/Performance-Review der Kampagne selbst sind
+beide fertig -- siehe Handover für Details. Der einzige zwischenzeitlich gepinnte
+"schwerwiegende" Fund (cascade.nvim, `roman`-vor-`ascii`-Kollision) wurde auf Nutzerwunsch
+noch gefixt statt gepinnt zu bleiben; die Zahl oben zählt ihn deshalb nicht mehr mit.
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -242,7 +243,6 @@ kompletter Re-Audit bis Runde 23 sind damit fertig; weiter geht es bei Runde 24
 | cascade.nvim | `facade`-Kommandos | `cycle_group_add`/`remove` mutieren `config.DEFAULTS` direkt (Deep-Merge kopiert nur die oberste Ebene) |
 | cascade.nvim | `usrcmds.lua` | `:Cascade indent N`/`dedent N` ignorieren `N` (falscher Wert an `run_indent_command` gereicht); `cycle remove` schneidet mehrwortige Werte am ersten Leerzeichen ab |
 | cascade.nvim | `lists/renumber.lua` | `renumber.tree` über eine explizite Range mit mehr als einem Listen-Block (`:Cascade renumber`) setzt den zweiten Block vom `base_start` des ersten fort statt vom eigenen |
-| cascade.nvim | `lists/marker.lua` + `config/DEFAULTS.lua` | **Schwerwiegend**: `roman` vor `ascii` (nötig, damit der Cycle-Ring schließt) lässt `marker.parse` sieben Buchstaben (c/d/i/l/m/v/x, beide Groß-/Kleinschreibungen) fälschlich als römisch lesen → eine ganz normale `a) b) c) d)`-Liste wird ab dem dritten Punkt bei jedem Renumber (Save, `:Cascade renumber`, Move) lautlos zu `iii)`/`iv)` korrumpiert. Kein mechanischer Fix möglich (braucht block-weite Kind-Erkennung), gefunden bei einem Bug/Security-Review dieser Kampagne |
 
 **Wiederkehrende Familien:**
 - Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren `E739`/`E482` am eigenen
