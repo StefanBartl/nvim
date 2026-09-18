@@ -4,7 +4,10 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
+    - [lib.nvim](#libnvim)
+      - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [casedesk](#casedesk)
+      - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
     - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Tasks](#tasks)
@@ -58,6 +61,43 @@
 
 ---
 
+### lib.nvim
+
+#### B7 — lib.nvim: the autocmd dispatcher
+
+```
+Aufgabe: lib.nvim — den autocmd-dispatcher bauen (ein Autocmd, viele
+Handler).
+
+Konzeptdokument: E:/repos/WKDBooks/Development/wkdbook-myplugins/lib.nvim/
+ROADMAP/autocmd-dispatcher.md, verlinkt aus ROADMAP/ROADMAP.md unter "Open
+concepts (not implemented)".
+
+Das Konzept ist bereits gegen die Realität geprüft — 17 echte
+FileType-Registrierungen über die Flotte — und die Empfehlung lautet: bauen,
+generisch über das Event. Zwei Fixes sind beim Lesen des Config-Prototyps
+schon gefunden und stehen im Dokument:
+  1. Sortieren bei der Registrierung, nicht bei jedem Feuern
+  2. eine eigene ID pro Registrierung statt tostring(handler.load) für "once"
+
+Lies das Dokument ganz, bevor du anfängst, und halte dich an seine
+Empfehlung statt neu zu entwerfen.
+
+Danach zu klären und mir zu berichten: wer wird der erste echte Konsument?
+Ein generischer Dispatcher ohne Umstellung eines echten Call-Sites ist
+unbewiesener Code. Die 17 gefundenen Registrierungen sind die Kandidaten —
+schlag mir eine oder zwei vor, an denen sich der Nutzen zeigen lässt.
+
+Repo: E:/repos/lib.nvim
+Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
+stylua grün. Docs/README mitpflegen — lib.nvim-Module haben eine eigene
+README je Modul, das ist Hausstil. Kein Claude-Co-Author in Commits. Wenn
+fertig: committen und direkt auf main pushen, und das Konzeptdokument aus
+der "Open concepts"-Liste in lib.nvim/ROADMAP/ROADMAP.md herausnehmen.
+```
+
+---
+
 ### casedesk
 
 - problems / solutions matrix us den cases erstellen
@@ -86,6 +126,98 @@
   ```jql
   text ~ "tua/api/session" AND (summary ~ "AD" OR summary ~ "LDAP" OR summary ~ "login") ORDER BY created DESC
   ```
+
+---
+
+#### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
+
+**Source:** `.../casedesk.nvim/ROADMAP/ROADMAP.md`, section "Workflow", fourth bullet.
+**Stand geprüft 2026-09-17:** open — `timeline.lua` still derives sessions
+from mtimes (11 `mtime` references).
+
+```
+Aufgabe: casedesk.nvim — entscheiden, was ":Case timeline" mit
+Git-Pull-Sessions macht. Das Feature liefert derzeit messbar falsche Zahlen.
+
+Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
+ROADMAP/ROADMAP.md, Abschnitt "Workflow", Punkt ":Case timeline reports git
+pulls as work sessions". Der Punkt ist gemessen, nicht vermutet: timeline.lua
+rekonstruiert Sessions rein aus Datei-mtimes unter dem Case-Ordner, aber der
+Korpus ist ein mit einer zweiten Maschine synchronisierter git-Working-Tree —
+und git stempelt jede Datei, die es schreibt. Die Timeline zeigt also die
+Pull-Historie:
+
+  case 1135620: 1 session   2026-09-02 20:17 → 2026-09-02 20:17   7 files
+  case 988483:  2 sessions  2026-08-19 14:48 → …  /  2026-09-02 20:17 → …
+
+Das sind exakt die git-reflog-Einträge, und jede Session kollabiert auf Dauer
+null, weil ein Pull alle Dateien in derselben Sekunde schreibt.
+
+Prüfe ZUERST, ob das noch gilt (Stand 2026-09-17: ja, mtime-basiert).
+
+Das ist ausdrücklich eine ENTSCHEIDUNG, kein Bau-Auftrag. Die Roadmap wiegt
+drei Optionen gegeneinander ab, lies sie dort im Original:
+  a) Feature fallenlassen — auf einem synchronisierten Korpus nicht tragfähig
+  b) behalten, aber eine Session, deren Dateien alle dieselbe Sekunde
+     tragen, als "nicht messbar" labeln
+  c) Dauern künftig im Usage-Journal mitschreiben und nur zeigen, was es
+     abdeckt (kann die Vergangenheit nicht rekonstruieren, startet leer)
+
+Bring mir eine Empfehlung mit Begründung, BEVOR du etwas baust.
+
+Mitbetroffen und im selben Zug anzusehen: detect.last_touched ruht auf
+denselben mtimes und verdient denselben Blick.
+
+Repo: E:/repos/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
+Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
+stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
+fertig: committen und direkt auf main pushen.
+```
+
+---### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
+
+**Source:** `.../casedesk.nvim/ROADMAP/ROADMAP.md`, section "Workflow", fourth bullet.
+**Stand geprüft 2026-09-17:** open — `timeline.lua` still derives sessions
+from mtimes (11 `mtime` references).
+
+```
+Aufgabe: casedesk.nvim — entscheiden, was ":Case timeline" mit
+Git-Pull-Sessions macht. Das Feature liefert derzeit messbar falsche Zahlen.
+
+Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
+ROADMAP/ROADMAP.md, Abschnitt "Workflow", Punkt ":Case timeline reports git
+pulls as work sessions". Der Punkt ist gemessen, nicht vermutet: timeline.lua
+rekonstruiert Sessions rein aus Datei-mtimes unter dem Case-Ordner, aber der
+Korpus ist ein mit einer zweiten Maschine synchronisierter git-Working-Tree —
+und git stempelt jede Datei, die es schreibt. Die Timeline zeigt also die
+Pull-Historie:
+
+  case 1135620: 1 session   2026-09-02 20:17 → 2026-09-02 20:17   7 files
+  case 988483:  2 sessions  2026-08-19 14:48 → …  /  2026-09-02 20:17 → …
+
+Das sind exakt die git-reflog-Einträge, und jede Session kollabiert auf Dauer
+null, weil ein Pull alle Dateien in derselben Sekunde schreibt.
+
+Prüfe ZUERST, ob das noch gilt (Stand 2026-09-17: ja, mtime-basiert).
+
+Das ist ausdrücklich eine ENTSCHEIDUNG, kein Bau-Auftrag. Die Roadmap wiegt
+drei Optionen gegeneinander ab, lies sie dort im Original:
+  a) Feature fallenlassen — auf einem synchronisierten Korpus nicht tragfähig
+  b) behalten, aber eine Session, deren Dateien alle dieselbe Sekunde
+     tragen, als "nicht messbar" labeln
+  c) Dauern künftig im Usage-Journal mitschreiben und nur zeigen, was es
+     abdeckt (kann die Vergangenheit nicht rekonstruieren, startet leer)
+
+Bring mir eine Empfehlung mit Begründung, BEVOR du etwas baust.
+
+Mitbetroffen und im selben Zug anzusehen: detect.last_touched ruht auf
+denselben mtimes und verdient denselben Blick.
+
+Repo: E:/repos/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
+Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
+stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
+fertig: committen und direkt auf main pushen.
+```
 
 ---
 
@@ -123,8 +255,6 @@
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
     - [ ] ...
-
-- [ ] cross plattform: Alles plugins müssen cross-plattfkorm alle features funktlieren. daeswegen: eine methode finden, bei der man funciton calls usw... erkennnt, die auf das os gehen, und diese dann prüfen ob sie crooss pplatform funktieren. bzw es gibt sicherlich noc eine pbessere methode...^
 
 ---
 

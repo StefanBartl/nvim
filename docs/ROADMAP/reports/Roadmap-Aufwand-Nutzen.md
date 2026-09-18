@@ -8,7 +8,7 @@ documents they hand their queue to (`ui.nvim/NOTES.md`,
 `lib.nvim/ROADMAP/dependency-installer.md`, `filetree.nvim/ROADMAP/`).
 **Goal:** one ranked view of what is actually left, what each item costs, and
 what it buys.
-**Hand-off prompts:** [`Tasks-offene-Punkte.md`](Tasks-offene-Punkte.md) — one
+**Hand-off prompts:** [`../personal/All/FINISH/ERLEDIGT/Tasks-offene-Punkte.md`](../personal/All/FINISH/ERLEDIGT/Tasks-offene-Punkte.md) — one
 paste-ready task per open item, and a list of what had already been built
 again by the time those were drafted.
 
