@@ -919,6 +919,33 @@ Abschnitt "Offen (gepinnt)".
   `docs/CONTRIBUTING.md`s Test-Absatz beschrieb noch den alten Umfang — aktualisiert.
   Commit: `0034df3` (test: cover core, git, state, layout, picker, health and the bindings
   layer), direkt auf `main` gepusht.
+  **Mittlerweile gefixt** (separate Sitzung, Commit `9005c46`): beide Pins. `ensure_dir()`
+  meldet einen fehlgeschlagenen `mkdir` jetzt statt rohem `E739`, `layout.restore` validiert
+  einen dekodierten Baum jetzt statt `{}`/`[]` durchzulassen.
+  **Re-Audit (Runde 13, 2026-09-18):** beide Fixes bestätigt vorhanden. Alle vier
+  Bug-Familien einzeln geprüft: kein weiteres Byte/Spalten-Problem (keine Text-Positions-
+  Logik im ganzen Plugin); Windows-Drive-Colon in `git.lua`s Worktree-`.git`-Datei-Parser
+  bereits korrekt gegated (`^%a:`-Check vor dem `gitdir:`-Split); `bindings/autocmds/init.lua`
+  korrekt idempotent (`autocmd.group(name, true)`, bereits mit eigenem Doppel-`enable()`-Test
+  belegt). **Ein Bug gefunden und sofort gefixt** (dreizehntes Repo dieser Familie): der
+  abschließende `composer.checkhealth("Session")`-Aufruf lief unbedingt, obwohl der Preflight
+  drei Zeilen darüber (`lib_composer_ok`) schon weiß, ob der `require` scheitern wird -- bei
+  fehlendem lib.nvim crashte `:checkhealth sessions` mit "loop or previous error loading
+  module" statt zur bereits angezeigten Fehlermeldung zu degradieren. Crash vor dem Fix
+  reproduziert, dann mit `if lib_composer_ok then` gegated, Regressionstest in
+  `health_spec.lua` ergänzt. **Eine echte Lücke gefunden und geschlossen**:
+  `portable.lua`s `boundary_replace` hat laut eigenem Docstring zwei echte Verzweigungen
+  (Sibling-Präfix-Grenzcheck, damit `E:/repos/ui.nvim` nicht `E:/repos/ui.nvim-backup`
+  korrumpiert; Mid-Needle-Overlap-Resume nach einem abgelehnten Match) -- keine davon hatte
+  je eine Assertion. Beide Verzweigungen einzeln durch gezieltes Wiedereinführen des jeweiligen
+  Fehlers verifiziert (Test schlägt fehl → Quellcode zurückgesetzt → Test grün), bevor die
+  Specs final standen. Nebenbei ein Test-Tippfehler in `config_spec.lua` gefixt (`"\f.txt"`
+  wurde von Luas eigenem Escaping zu einem Form-Feed-Byte, nicht zum beabsichtigten
+  literalen Backslash -- die Assertion war aus dem falschen Grund grün).
+  Testlauf: 17 Specs, 498 → 504 Assertionen, über zwei von mir persönlich nachgefahrene
+  Wiederholungsläufe stabil. `luacheck lua TESTS` (36 Dateien) und `stylua --check lua TESTS`
+  beide grün.
+  Commit: `12a4fb6`.
 - [x] **pdfport.nvim** — fertig (Runde 14). Eigener framework-freier Harness beibehalten.
   10 → 21 Spec-Dateien, 192 → 1059 Assertion-Aufrufstellen, 21/21 grün über fünf
   Wiederholungsläufe (Exit 0, `PDFPORT_TESTS_OK`), ausgeführt mit exakt dem CI-Kommando.

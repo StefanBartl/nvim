@@ -57,7 +57,7 @@ github_stats) sind durch. Weiter geht es ab Runde 12 (insights.nvim), sechs Agen
 | 10 | replacer.nvim | 10 | `6153561` (Re-Audit) | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien; Re-Audit: 9 → 10 CI-Dateien, 374 → 411 Checks |
 | 11 | github_stats.nvim | 11 | `479fd9c` (Re-Audit) | 13 neue Specs, 4 erweitert; 109 → 482 Assertions; Re-Audit: 492 → 499 Checks |
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
-| 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
+| 13 | sessions.nvim | 13 | `12a4fb6` (Re-Audit) | 10 neue Specs; 77 → 487 Assertion-Stellen; Re-Audit: 498 → 504 Stellen |
 | 14 | pdfport.nvim | 14 | `4bb13eb` (Re-Audit) | 11 neue Specs; 192 → 1059 Assertion-Stellen; Re-Audit: 1048 → 1057 Stellen |
 | 15 | emojis.nvim | 15 | `9de7b6d` (Re-Audit) | 13 neue Specs; 261 → 773 Assertions; Re-Audit: 773 → 775 Checks |
 | 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
@@ -179,6 +179,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | cmdlog.nvim | `health.lua`s letzte Zeile rief unbedingt in `lib.nvim.bindings.usercmd.composer` hinein, bei fehlendem lib.nvim crashte `:checkhealth cmdlog` direkt nach der eigenen Fehlanzeige | `df6f716` |
 | debugging.nvim | `health.lua`s letzter Abschnitt rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als potenziell fehlend meldet | `5bdd781` |
 | open.nvim | `health.lua`s letzte Zeile rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als fehlend meldet | `553a445` |
+| sessions.nvim | `health.lua`s abschließender `composer.checkhealth()`-Aufruf lief unbedingt, obwohl der Preflight drei Zeilen darüber schon weiß, ob der `require` scheitert → crashte mit "loop or previous error loading module" statt zu degradieren | `12a4fb6` |
 
 ### Offen (gepinnt)
 
@@ -234,11 +235,11 @@ damit fertig; weiter geht es bei Runde 12 (insights.nvim).
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 12 Repos, **7 gefixt**
-  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open), **5 offen**:
-  `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s
-  `health.lua`, `casedesk.nvim`s `health.lua`, `language.nvim`s `health.lua` (drei statt
-  einem ungeschützten Aufruf) und `replacer.nvim`s `health.lua` (alle vier in
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 13 Repos, **8 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open, sessions),
+  **5 offen**: `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`, gleiches Muster),
+  `pickers.nvim`s `health.lua`, `casedesk.nvim`s `health.lua`, `language.nvim`s `health.lua`
+  (drei statt einem ungeschützten Aufruf) und `replacer.nvim`s `health.lua` (alle vier in
   Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
