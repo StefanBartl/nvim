@@ -27,7 +27,7 @@ the surrounding text is English like every other document here.
     - [~~B3 — filetree: `TESTS/refs/` is 52 of 54~~ — DONE](#b3-filetree-testsrefs-is-52-of-54-done)
     - [~~B4 — lsp: provoke errors in `:LspDoctor deep`~~ — DONE](#b4-lsp-provoke-errors-in-lspdoctor-deep-done)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
-    - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
+    - [~~B9 — mdview: cooperative tab closing in `default` browser mode~~ — REJECTED](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
   - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
@@ -726,7 +726,28 @@ der "Open concepts"-Liste in lib.nvim/ROADMAP/ROADMAP.md herausnehmen.
 
 ---
 
-### B9 — mdview: cooperative tab closing in `default` browser mode
+### ~~B9 — mdview: cooperative tab closing in `default` browser mode~~ — REJECTED
+
+**Source:** `.../mdview.nvim/ROADMAP/ROADMAP.md`, section "Cooperative tab
+closing in the `default` browser mode".
+**Investigated 2026-09-18, not built.** The question this prompt asked for
+first has a clear answer: a script may only `window.close()` a tab it did not
+open itself (no `window.opener`, always true for mdview's OS-level
+`open_default`) if that tab's session history never left entry 1 (MDN). mdview's
+own `src/client/render/history.ts` calls `history.pushState()` on every
+switch to a different previewed document, which is exactly what happens on
+**every ordinary buffer switch** under `browser.behavior = "reuse"` — the
+default follow mode. So the tab becomes permanently script-unclosable the
+moment a second file is previewed in it, silently (a browser console warning,
+not an error mdview can see) — reliable only for a tab that never switches
+documents (`new_tab`/`manual`, or `reuse` without a switch). That is not the
+primary workflow `browser_autoclose`/`stop_on_browser_exit` exist for. A
+best-effort, no-regression variant (always attempt `window.close()`, harmless
+no-op when refused) was considered and explicitly declined — flaky,
+session-pattern-dependent close behavior wasn't judged worth shipping over
+documenting the limit. Full writeup, including the caveat on why a
+CDP-automated browser test result was not trusted for this verdict, in
+`mdview.nvim/ROADMAP/ROADMAP.md`. The prompt below is kept for the record.
 
 ```
 Aufgabe: mdview.nvim — kooperatives Tab-Schließen im browser.mode="default".
