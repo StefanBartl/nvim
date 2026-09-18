@@ -38,9 +38,12 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett.** Der Re-Audit
-aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-23 sind durch. Weiter geht es ab
-Runde 24 (spotlight.nvim), sechs Agents parallel.
+**27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett, UND ihr
+kompletter Re-Audit gegen die 100%-Vorgabe (Runden 1-26) ist ebenfalls fertig.** Runde 27
+(lsp.nvim) selbst ist erst frisch fertig geworden und braucht deshalb noch keinen separaten
+Re-Audit-Durchgang. Die neun 🟢-Repos (siehe Survey) bekamen laut ursprünglicher Vorgabe
+bewusst keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke — das steht
+als möglicher nächster Schritt noch offen.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -69,7 +72,7 @@ Runde 24 (spotlight.nvim), sechs Agents parallel.
 | 23 | data.nvim | 23 | `a64c208` (Re-Audit: solide, nichts zu tun) | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
 | 24 | spotlight.nvim | 24 | `1928336` (Re-Audit) | 17 → 29 Specs; 472 → 1159 Assertionen; Re-Audit: 1159 → 1166 |
 | 25 | mdview.nvim | 25 | `59c4a6e` (Re-Audit) | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks; Re-Audit: 33 Specs, 247 (nvim) + 19 (busted) |
-| 26 | filetree.nvim | 26 | `811bfed` | 696 → 858 Checks (Gap-Closing, sehr großes Repo) |
+| 26 | filetree.nvim | 26 | `8976113` (Re-Audit/Follow-up) | 696 → 858 Checks (Gap-Closing, sehr großes Repo); Follow-up: 858 → 945 Checks, alle 14 vertagten Dateien geschlossen |
 | 27 | lsp.nvim | 27 | `30e3e6a` | 6 neue Specs; 697 → 729 Checks (2 zusätzlich durch eine parallel arbeitende Peer-Session) |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
