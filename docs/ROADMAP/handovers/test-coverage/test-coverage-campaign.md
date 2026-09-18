@@ -1987,3 +1987,37 @@ kein inhaltlicher Grund.
   `luacheck lua TESTS` (exakter CI-Befehl, 402 Dateien) 0/0, `stylua --check
   .` grün.
   Commit: `f3725e8`.
+- [x] **media.nvim** — echter erster Audit über den framework-freien
+  `TESTS/run.lua`/`TESTS/harness.lua`. Vor dieser Runde bereits 31 Specs,
+  ~3.9k Zeilen Testcode, jedes `lua/media/**`-Modul (39 Dateien) bis auf
+  `health.lua` und `integrations/menu.lua` abgedeckt -- und der Quelltext
+  selbst trägt zahlreiche "found in review, 2026-09-1X"-Kommentare aus der
+  kürzlichen Video-mit-Ton-Neufassung (siehe `[[media-nvim-video-sound]]`).
+  Alle ~8.000 Zeilen `lua/` modulweise gelesen, gezielt gegen alle vier
+  wiederkehrenden Bug-Familien geprüft. **Keine Bugs gefunden** -- die
+  🟢-Einstufung war hier tatsächlich zutreffend, anders als bei einigen der
+  anderen nur-per-Datei-Verhältnis eingeschätzten Repos: (a) `health.lua`
+  guardet jeden Folge-Call sauber, jede weiche Abhängigkeit läuft über
+  `pcall`; (b) beide Augroup-Stellen (`bindings/autocmds.lua`,
+  `core/player.lua`) nutzen `clear = true`, `player.lua` zusätzlich einen
+  `hooked`-Guard -- empirisch bestätigt: 3× `setup()` hinterließ genau 1
+  lebendes Autocmd; (c) `hub/dashboard.lua` nutzt bereits durchgehend
+  `strdisplaywidth`/`strcharpart` mit erklärendem Kommentar; (d) der einzige
+  Pfad-Präfix-Vergleich (`hub/scan.lua`s `M.relative`) baut immer auf
+  derselben Root-Zeichenkette auf, kein Cross-Source-Case-Mismatch möglich.
+  **Eine echte Lücke geschlossen**: `media.health.M.check()` -- die komplette
+  `:checkhealth media`-Implementierung -- wurde nie aufgerufen, nur das
+  Laden des Moduls war getestet. Neue `TESTS/health_spec.lua`, die
+  `health.check()` zweimal im echten CI-Setup aufruft (kein
+  ffmpeg/ffprobe/mpv/whisper-cli, echter `lib.nvim`-Sibling auf dem rtp) --
+  genau die Bedingung, unter der Bug-Familie (a) sichtbar würde, und die
+  einzige Stelle, an der die "degradiert sauber"-Behauptung gelesen, aber nie
+  end-to-end durchexerziert worden war. `integrations/menu.lua` und
+  `bindings/{init,keymaps,usrcmds}.lua` bewusst offen gelassen (dünne
+  Routing-/Formatierungsschicht, deren Entscheidungslogik schon anderswo
+  abgedeckt ist -- Präzedenzfall documentation.nvim `open.lua`/`serve.lua`).
+  Testlauf: 31 → 33 Specs, von mir persönlich zweimal über `nvim --headless
+  -u NONE -c "set rtp+=." -c "set rtp+=../lib.nvim" -c "luafile TESTS/run.lua"
+  -c "qa!"` nachgefahren -- beide Male `MEDIA_TESTS_OK`. `stylua --check lua
+  plugin TESTS` und `luacheck lua plugin TESTS` (75 Dateien) beide grün.
+  Commit: `3778775`.
