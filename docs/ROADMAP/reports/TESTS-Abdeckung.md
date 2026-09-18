@@ -68,7 +68,7 @@ Runde 24 (spotlight.nvim), sechs Agents parallel.
 | 22 | sandbox.nvim | 22 | `d2ea226` (Re-Audit) | 17 → 37 Specs; 136 → 883 Checks; Re-Audit: 883 → 906 Checks |
 | 23 | data.nvim | 23 | `a64c208` (Re-Audit: solide, nichts zu tun) | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
 | 24 | spotlight.nvim | 24 | `1928336` (Re-Audit) | 17 → 29 Specs; 472 → 1159 Assertionen; Re-Audit: 1159 → 1166 |
-| 25 | mdview.nvim | 25 | `166904e` | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks |
+| 25 | mdview.nvim | 25 | `59c4a6e` (Re-Audit) | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks; Re-Audit: 33 Specs, 247 (nvim) + 19 (busted) |
 | 26 | filetree.nvim | 26 | `811bfed` | 696 → 858 Checks (Gap-Closing, sehr großes Repo) |
 | 27 | lsp.nvim | 27 | `30e3e6a` | 6 neue Specs; 697 → 729 Checks (2 zusätzlich durch eine parallel arbeitende Peer-Session) |
 
@@ -184,6 +184,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | insights.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `ui/fzf.lua`s Default-Action und `ts_lua*.lua`s `scan_cwd()`-Ignore-Liste teilten denselben Windows-Laufwerksbuchstaben- bzw. Backslash-Blindpunkt wie die drei oben genannten Bugs, an drei weiteren Stellen | `6bbab32` |
 | data.nvim | `register.write()` behandelte `setreg`s Ausbleiben eines Wurfs als Beweis für einen erfolgreichen Schreibvorgang, aber `setreg("+"/"*", ...)` wirft nie bei fehlendem Clipboard-Provider — tut einfach nichts | `9937f5c` |
 | color_my_ascii.nvim | `health.lua`s `checkhealth` meldete "lib.nvim not found" und requirte dann am Ende ungeschützt erneut genau dasselbe fehlende Modul für die Report-Übergabe → riss direkt nach der Warnung ab | `22b9115` |
+| mdview.nvim | `health.lua`s `M.check()` degradiert korrekt, ruft am Ende aber ungeschützt erneut in `lib.nvim.bindings.usercmd.composer.checkhealth` hinein → crasht bei altem/unvollständigem lib.nvim, verschluckt jeden vorherigen ok/warn/error | `59c4a6e` |
 | fileops.nvim | `bindings/keymaps.lua`s `delete_fn({})` löschte permanent ohne Undo trotz `"trash"`-Default; drei Windows-Trenner-Mismatches (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer, `ops/file.lua`s Verzeichnis-Unlink-Retry); `conflict_marks.lua`s Match-Leak bei erneutem `:edit` | `e7185fc`, `81e15ee`, `ffc1c9a` |
 | fileops.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `on_hold.lua`s Git-Show-Preview löste den Pfad nie korrekt auf (hat noch nie gerendert) und `truncate()` schnitt Byte- statt zeichengenau | `037d3bb` |
 
@@ -244,12 +245,13 @@ kompletter Re-Audit bis Runde 23 sind damit fertig; weiter geht es bei Runde 24
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 16 Repos, **11 gefixt**
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 17 Repos, **12 gefixt**
   (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open, sessions,
-  insights, fileops, color_my_ascii), **5 offen**: `gopath.nvim`s `create.lua`-Fallback
-  (kein `health.lua`, gleiches Muster), `pickers.nvim`s `health.lua`, `casedesk.nvim`s
-  `health.lua`, `language.nvim`s `health.lua` (drei statt einem ungeschützten Aufruf) und
-  `replacer.nvim`s `health.lua` (alle vier in Re-Audit-Runden gefunden).
+  insights, fileops, color_my_ascii, mdview), **5 offen**: `gopath.nvim`s
+  `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s `health.lua`,
+  `casedesk.nvim`s `health.lua`, `language.nvim`s `health.lua` (drei statt einem
+  ungeschützten Aufruf) und `replacer.nvim`s `health.lua` (alle vier in Re-Audit-Runden
+  gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
   `setup()` einen zweiten Autocmd-Handler registriert statt den ersten zu ersetzen.
