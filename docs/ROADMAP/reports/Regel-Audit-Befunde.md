@@ -10,6 +10,65 @@
 `confidence` ist die Einschätzung des prüfenden Agenten: `high` = am Quelltext
 eindeutig, `medium` = Regelanwendung ist Ermessenssache, `low` = Verdacht.
 
+## Bearbeitungsstand
+
+> Seit 2026-09-18 ist diese Datei die laufende **Handover-Akte** für die Umsetzung.
+> Reihenfolge: `lib.nvim` zuerst (Wurzel-Fixes wirken fleet-weit), danach die
+> Reihenfolge des Inhaltsverzeichnisses. Ein Plugin pro Runde, ein Agent, Fixes
+> landen sofort auf `main` des jeweiligen Plugin-Repos.
+
+Konvention je Befund — nach dem **Auswirkung**-Absatz steht eine Zeile:
+
+- `**Status.** ✅ erledigt (\`<sha>\`) — <Anmerkung>` — gefixt und gepusht
+- `**Status.** ☑️ schon behoben — <Nachweis>` — war beim Nachlesen bereits gefixt
+- `**Status.** ⏭️ offen gelassen — <Grund>` — bewusst nicht umgesetzt (Begründung)
+
+Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
+`Stand: n/m` (erledigt + schon behoben / gesamt).
+
+| Plugin | Befunde | ✅/☑️ | ⏭️ | Stand |
+|---|---:|---:|---:|---|
+| lib.nvim | 17 | – | – | offen |
+| dap.nvim | 21 | – | – | offen |
+| mdview.nvim | 18 | – | – | offen |
+| replacer.nvim | 17 | – | – | offen |
+| buffer-ctx.nvim | 16 | – | – | offen |
+| insights.nvim | 16 | – | – | offen |
+| language.nvim | 16 | – | – | offen |
+| debugging.nvim | 15 | – | – | offen |
+| pdfport.nvim | 15 | – | – | offen |
+| reposcope.nvim | 15 | – | – | offen |
+| sandbox.nvim | 15 | – | – | offen |
+| cascade.nvim | 14 | – | – | offen |
+| casedesk.nvim | 14 | – | – | offen |
+| cmdlog.nvim | 14 | – | – | offen |
+| color_my_ascii.nvim | 14 | – | – | offen |
+| media.nvim | 14 | – | – | offen |
+| ai.nvim | 13 | – | – | offen |
+| github_stats.nvim | 13 | – | – | offen |
+| gopath.nvim | 13 | – | – | offen |
+| lsp.nvim | 13 | – | – | offen |
+| open.nvim | 13 | – | – | offen |
+| sessions.nvim | 13 | – | – | offen |
+| ui.nvim | 13 | – | – | offen |
+| filetree.nvim | 12 | – | – | offen |
+| images.nvim | 12 | – | – | offen |
+| pickers.nvim | 12 | – | – | offen |
+| runtime-analysis.nvim | 12 | – | – | offen |
+| diff.nvim | 11 | – | – | offen |
+| documentation.nvim | 11 | – | – | offen |
+| emojis.nvim | 11 | – | – | offen |
+| fileops.nvim | 11 | – | – | offen |
+| hover.nvim | 11 | – | – | offen |
+| markdown.nvim | 11 | – | – | offen |
+| recommender.nvim | 10 | – | – | offen |
+| rules.nvim | 10 | – | – | offen |
+| spotlight.nvim | 9 | – | – | offen |
+| my.nvim | 7 | – | – | offen |
+| data.nvim | 5 | – | – | offen |
+
+---
+
 ## Table of content
 
   - [dap.nvim](#dapnvim) — 21 Befunde
