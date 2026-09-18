@@ -1783,18 +1783,39 @@ Fixes plus Test-Infra-Fixes. Jeder Fund wurde von mir selbst nachverifiziert
    das vor diesem Test noch nicht geladen war, wurde nie zurückgesetzt und
    blieb für den Rest des Prozesses auf dem Fake-Stub hängen. Alle vier
    gefixt, jeweils gegen zurückgesetzten Code verifiziert.
-4. **cascade.nvim** (`3f91d2d`), **gepinnt, nicht gefixt**: die
+4. **cascade.nvim** (ursprünglich gepinnt in `3f91d2d`): die
    Roman-vor-Ascii-Reihenfolge (mein eigener Fix aus `c23ea33`, nötig damit
    der Cycle-Ring schließt) lässt `marker.parse` sieben Buchstaben (c/d/i/l/m/
    v/x) fälschlich als römische Ziffern lesen -- eine ganz normale
    `a) b) c) d)`-Liste wird ab dem dritten Punkt bei jedem Renumber (Save,
    `:Cascade renumber`, Move) lautlos korrumpiert (`c)` → `iii)`). Live über
    die echte `renumber.tree()`-Fassade reproduziert, nicht nur am isolierten
-   Parser. Kein mechanischer Fix: bräuchte block-weite Kind-Konsistenz-
-   Verfolgung in `tree()`, die dann als Tie-Breaker an `marker.parse`
-   zurückgereicht wird -- und ein Zurückdrehen der Reihenfolge würde
-   stattdessen den bereits gepinnten Ring-Schluss-Fall wieder brechen.
-   Ausdrücklich nicht selbst entschieden, sondern gepinnt.
+   Parser. Ursprünglich gepinnt statt gefixt, weil ein echter Fix block-weite
+   Kind-Konsistenz-Verfolgung braucht (kein mechanischer Ein-Zeilen-Fix) und
+   ein Zurückdrehen der Reihenfolge stattdessen den bereits gepinnten
+   Ring-Schluss-Fall gebrochen hätte -- ausdrücklich nicht selbst entschieden.
+   **Auf ausdrücklichen Nutzerwunsch danach doch gefixt** (Commit `0865850`):
+   `marker.parse` bekommt einen neuen optionalen dritten Parameter
+   `prefer_kind`, der vor `types`' eigener Reihenfolge probiert wird und für
+   jeden anderen Aufrufer (Cycle, Facade-Kommandos) unverändert bleibt, da
+   niemand sonst ihn übergibt. `renumber.tree` bekommt eine neue
+   `kind_by_width`-Tabelle (Schwester von `counters`), die sich pro
+   Einzugsbreite merkt, welche Art diese Liste bisher tatsächlich benutzt hat,
+   und reicht sie als `prefer_kind` an jede weitere Zeile derselben Breite
+   zurück -- invalidiert genau wie `counters` bei einem echten Bruch und beim
+   Schließen einer tieferen Ebene. Drei Testfälle in `TESTS/lists_spec.lua`:
+   der Kollisionsfall erwartet jetzt das korrekte Verhalten, ein neuer Fall
+   bestätigt, dass eine echt römische Liste ("i) ii) iii)") ohne vorherigen
+   Ascii-Kontext weiterhin korrekt als römisch startet, und ein dritter
+   bestätigt, dass eine tiefere Ebene beim Schließen ihre Art-Erinnerung
+   korrekt verliert, statt sie an einen späteren, unabhängigen Lauf an
+   derselben Breite weiterzugeben. Gegen zurückgesetzten Code verifiziert
+   (Pin-Test schlägt exakt mit der alten Korruption fehl); der volle
+   Marker-/Renumber-/Cycle-Spec-Teilsatz läuft über mehrere Wiederholungen
+   stabil (der komplette Suite-Lauf traf zwischenzeitlich auf ein
+   unabhängiges, vorbestehendes `E326: Too many swap files`-Problem dieser
+   sehr langen Sitzung -- durch Aufräumen von `nvim-data/swap/` behoben,
+   betraf sieben unzusammenhängende Spec-Dateien, nicht diesen Fix).
 
 **Sonst nichts gefunden**: lib.nvim (bis auf die bereits bekannte, nicht neu
 behobene Vermischung mit einem unabhängigen winhighlight-Commit im selben
