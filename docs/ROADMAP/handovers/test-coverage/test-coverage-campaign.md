@@ -1876,3 +1876,17 @@ kein inhaltlicher Grund.
   persönlich nachgefahrene Wiederholungsläufe stabil. `luacheck lua plugin
   TESTS` (47 Dateien) und `stylua --check` beide grün.
   Commit: `a55a0fd`.
+- [x] **hover.nvim** — echter erster Audit, über `scripts/test.sh`
+  (Plenary/busted). 19 Spec-Dateien / 474 Assertions bereits solide bestätigt.
+  **Sieben echte Lücken geschlossen**: `classify.lua`, `bare_url.lua`,
+  `health.lua`, `preview/binary.lua`, `preview/git.lua`, `preview/office.lua`,
+  `preview/monitor.lua` hatten null direkte Coverage. Keine Bugs gefunden --
+  alle vier wiederkehrenden Bug-Familien geprüft und sauber (Augroups korrekt
+  mit `clear=true`, keine Byte/Spalten-Verwechslung, kein unguardeter
+  Require-Crash in `health.lua`, Windows-Pfadbehandlung bereits robust).
+  Testlauf: 19 → 26 Spec-Dateien, 474 → 572 Assertions, von mir persönlich
+  zweimal nachgefahren (`LIB_NVIM_DIR="../lib.nvim" UI_NVIM_DIR="../ui.nvim"
+  PLENARY_DIR=".../plenary.nvim" bash scripts/test.sh`) -- beide Male
+  572/0/0 über alle 26 "Testing:"-Blöcke. `luacheck lua plugin` (41 Dateien)
+  und `stylua --check .` beide grün.
+  Commit: `53797f4`.
