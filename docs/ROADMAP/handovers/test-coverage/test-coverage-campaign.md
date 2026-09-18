@@ -178,6 +178,29 @@ Agenten-Meldungen übernommen).
   keinen Test-Abschnitt, daher unangetastet gelassen.
   Commit: `fbaed4c` (test: cover actions/dir/grep/smart, bindings layer, and leaf
   source/util gaps), direkt auf `main` gepusht.
+  **Re-Audit (2026-09-18, 100%-Nachziehrunde):** zwei der Runde-1-Auslassungen hielten nicht
+  mehr. `pickers/health.lua` galt als "nichts Prüfbares" — `M.check()` ist aber ein
+  Funktionskörper, dessen Absturz sich per `pcall` sehr wohl nachweisen lässt.
+  `sources/drives.lua` galt als "keine stabile Mock-Fläche ohne `vim.system` zu ersetzen" —
+  `vim.system` ist aber ein globaler Wert, kein `require()`-Upvalue, also direkt
+  monkeypatchbar (dieselbe Technik wie open.nvims `keywords_spec`, Runde 9).
+  **Zwei Bugs gefunden, beide gepinnt statt gefixt:** `health.lua`s letzte Zeile ruft
+  `require("lib.nvim.bindings.usercmd.composer").checkhealth("Pickers")` bedingungslos und
+  außerhalb jedes `pcall` — bei echtem Fehlen crasht `:checkhealth pickers` komplett statt den
+  Report fertigzustellen. **Das sechste Repo mit dem "Dependency fehlt, ruft sie trotzdem
+  auf"-Muster** — und die erste Instanz davon, die noch offen ist (die anderen fünf sind
+  bereits gefixt). Zweitens: `smart/frecency.lua`s `M.patch()` löst die gemeinsame
+  `"pickers.nvim"`-Augroup per Namen ohne `clear=true` auf → ein zweiter `setup()` mit
+  aktivierter Frecency registriert einen zweiten `BufReadPost`/`VimLeavePre`-Handler statt den
+  ersten zu ersetzen (live gegen `nvim_get_autocmds()` verifiziert: 1 → 2).
+  Geprüft und **nicht** als Bug befunden (Sorgfalt gegen Übertreibung): der vermeintliche
+  Drive-Letter-vs-Doppelpunkt-Split in `smart/search.lua`s rg-Parser ist sicher (der `%d+`-
+  Zwang nach dem ersten `:` verhindert, dass `C:` als Trenner gelesen wird); Byte-vs-Zeichen-
+  Spalten werden konsistent durch alle drei Engine-Adapter gereicht; `drives.lua`s
+  Dauer-Cache ist laut eigenem Kommentar bewusst ("drives don't change during a session").
+  Testlauf: 575 → 592 grüne Checks, 0 Fails über mehrere Wiederholungsläufe. Beide Gates grün
+  über 75 Dateien (`.luacheckrc` bekam `vim.system` in die `globals`-Liste).
+  Commit: `b5184a1` (test: re-audit round 2 -- close drives.lua/health.lua gaps, pin two bugs).
 - [x] **cmdlog.nvim** — fertig. `TESTS/smoke_spec.lua` hatte bereits ein paar echte Suiten
   (risky, shell's Custom-Parser-Escape-Hatch, preview_policy), aber der Großteil von `core/*`,
   `config/`, `bindings/*` und die Merge/Dedup-Logik in `ui.all_picker`/`ui.all_unique_picker`
