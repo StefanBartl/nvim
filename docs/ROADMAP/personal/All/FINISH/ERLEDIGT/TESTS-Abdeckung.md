@@ -1,8 +1,9 @@
 # Testabdeckung aller `.nvim`-Plugins — Statusreport
 
-> Stand: 2026-09-17. Dieser Report ist die **Übersicht**; die ausführliche Runden-Doku
-> (was je Repo abgedeckt/ausgelassen wurde, gefundene Bugs, Commit-SHAs) steht im Handover
-> [`../handovers/test-coverage/test-coverage-campaign.md`](../handovers/test-coverage/test-coverage-campaign.md).
+> Stand: 2026-09-18. **Kampagne abgeschlossen** (36/36 Repos) — beide Dateien liegen
+> deshalb im ERLEDIGT-Archiv. Dieser Report ist die **Übersicht**; die ausführliche
+> Runden-Doku (was je Repo abgedeckt/ausgelassen wurde, gefundene Bugs, Commit-SHAs) steht
+> im Handover [`Handover_ERLEDIGT/test-coverage-campaign.md`](Handover_ERLEDIGT/test-coverage-campaign.md).
 
 ## Table of content
 
