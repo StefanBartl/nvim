@@ -1334,6 +1334,26 @@ Abschnitt "Offen (gepinnt)".
   rebased und `render_edge_spec` auf den neuen `on_done`-Vertrag umgestellt.
   Commit: `d7aa3a5` (dessen Text "295 → 681" sagt, die Zählung vor dem Rebase; korrekt sind
   694 — bewusst nicht force-gepusht).
+  **Mittlerweile gefixt** (separate Sitzung, Commit `7f5f2dd`): `health.lua`s Composer-Aufruf
+  ist jetzt `pcall`-gewrappt.
+  **Re-Audit (Runde 20, 2026-09-18):** genuiner Befund von "nichts zu tun" -- beide Pins
+  (`core/directory.lua`s ungeschütztes `readfile`, `core/scratch.lua`s fehlende
+  Deduplizierung) live gegen den aktuellen Code neu verifiziert (durch Zurücksetzen des
+  jeweiligen Stubs bestätigt: beide weiterhin rot ohne Fix). Alle vier Bug-Familien
+  einzeln durchgeprüft, kein einziger neuer Fund: `health.lua`s Fix korrekt und getestet,
+  jeder andere Preflight (`pickers_bridge.lua`, `init.lua`s `ok_deps`, `core/url.lua`s
+  `ok_rt`, `features/image_compare.lua`s `ok_images`) gatet seinen Folgeaufruf schon
+  korrekt; beide Augroups nutzen bereits `clear = true` direkt (mit Kommentar, warum
+  bewusst kein Wrapper); Byte/Codepoint-Mathematik in `render.lua`s Wort-Diff ist
+  durchgehend codepoint-bewusst (inklusive eines schon gepinnten, früher gefixten
+  Off-by-one); keine Colon-Parsing-Stellen im ganzen Repo, `core/git.lua` normalisiert
+  bereits korrekt. Kein Diff seit Runde 20 außer dem einen Fix-Commit. Keine neuen Bugs,
+  keine geschlossenen Lücken -- ehrlich nichts zu tun, wie von diesem Auftrag selbst
+  verlangt statt Busywork zu erfinden.
+  Testlauf: 27/27 Specs weiterhin grün (693/694 Assertion-Aufrufstellen, unverändert, da
+  keine Spec hinzukam/entfiel), von mir persönlich nachgefahren. `luacheck lua plugin
+  TESTS` (53 Dateien) und `stylua --check .` beide grün. Kein neuer Commit -- `HEAD` war
+  schon `origin/main`s Tip.
 - [x] **cascade.nvim** — fertig (Runde 21). Coverage wurde nicht geschätzt, sondern mit
   einer `debug.sethook("l")`-Zeilensonde gemessen — das machte den Audit ehrlich: zwei Module
   (`health.lua`, `integrations/menu.lua`) hatten exakt **null** Abdeckung, weil kein Spec sie

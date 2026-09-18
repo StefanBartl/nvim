@@ -65,7 +65,7 @@ Agents parallel.
 | 17 | reposcope.nvim | 17 | `ab97158` (Re-Audit) | 25 neue Specs; 236 → 1910 Assertions; Re-Audit: 1908 → 1934 Checks |
 | 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
 | 19 | color_my_ascii.nvim | 19 | `adcb5ef` | 13 neue Specs; 324 → 5566 Assertions |
-| 20 | diff.nvim | 20 | `d7aa3a5` | 10 neue Specs; 295 → 694 Assertion-Stellen |
+| 20 | diff.nvim | 20 | `d7aa3a5` (Re-Audit: solide, nichts zu tun) | 10 neue Specs; 295 → 694 Assertion-Stellen |
 | 21 | cascade.nvim | 21 | `77ea4f3` | 10 neue Specs; 462 → 981 Assertion-Stellen |
 | 22 | sandbox.nvim | 22 | `eb2145f` | 17 → 37 Specs; 136 → 883 Checks |
 | 23 | data.nvim | 23 | `a64c208` | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
