@@ -122,8 +122,8 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | mdview.nvim | 78 | 24 | ✅ fertig |
 | filetree.nvim | 129 | 26 | ✅ fertig |
 | lsp.nvim | 176 | 29 | ✅ fertig |
-| images.nvim | 37 | 29 | 🟢 gut |
-| ai.nvim | 25 | 35 | 🟢 gut |
+| images.nvim | 37 | 33 | ✅ fertig (gezielter Check) |
+| ai.nvim | 25 | 18 | ✅ fertig (gezielter Check) |
 | hover.nvim | 40 | 38 | 🟢 gut |
 | runtime-analysis.nvim | 43 | 54 | 🟢 gut |
 | lib.nvim | 497 | 159 | 🟢 gut (Basis-Lib) |
@@ -194,6 +194,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | debugging.nvim | `health.lua` requirte `lib.nvim.health` auf Modulebene ungeschützt — ein fehlendes lib.nvim hätte das Modul selbst crashen lassen, noch vor dem bereits gefixten Guard am Funktionsende | `50afa0b` |
 | insights.nvim | `M.foo = function()` wurde unter dem bloßen Feldnamen statt der vollen dotted-Name gemeldet; Mehrfachzuweisungen prüften nur den ersten Wert; Windows-Regex-Escape-Menge für `tree/init.lua` deckte `{`/`}`/`\|`/`\` nicht ab; dabei zusätzlich ein Test-Isolations-Leak in `compress_tree_spec.lua` gefunden (`pairs(saved)` überspringt in Lua als `nil` gespeicherte Einträge) | `9c6be5e`, `27744f7` |
 | cascade.nvim | `roman` vor `ascii` (nötig für den Cycle-Ring) ließ `marker.parse` sieben Buchstaben (c/d/i/l/m/v/x) fälschlich als römisch lesen → normale `a) b) c) d)`-Listen korrumpierten ab dem dritten Punkt bei jedem Renumber. Gefixt (auf Nutzerwunsch, vorher gepinnt): `renumber.tree` merkt sich jetzt die pro Einzugsbreite bereits etablierte Marker-Art und reicht sie als Tie-Breaker an `marker.parse` zurück, ohne den globalen Cycle-Ring-Fall zu berühren | `0865850` |
+| images.nvim | `compare.lua`s `M.open` rief `require("ui.kit").compare(...)` ungeschützt auf, anders als jeder andere ui.kit-Pfad im Plugin, die alle sauber degradieren → `:Image compare` crashte roh statt wie dokumentiert auf `vim.ui.select` zurückzufallen | `bdc1b11` |
 
 ### Offen (gepinnt)
 
