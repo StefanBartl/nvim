@@ -40,7 +40,6 @@ which own plugin would it land in, and what would it cost?
     - [7.3 `cmdlog.nvim` has a runtime dependency on plenary](#73-cmdlognvim-has-a-runtime-dependency-on-plenary)
     - [7.4 The `plenary` dependency chain](#74-the-plenary-dependency-chain)
     - [4.5 `lua/config/gp_config/` is orphaned](#45-luaconfiggp_config-is-orphaned)
-    - [7.5 `nvzone/menu` is already disabled](#75-nvzonemenu-is-already-disabled)
     - [4.6 `nvzone/menu` — not a leftover](#46-nvzonemenu-not-a-leftover)
   - [5. Where this lands](#5-where-this-lands)
   - [6. Suggested order](#6-suggested-order)
@@ -280,6 +279,8 @@ medians of three runs, not single numbers" with no command behind it.
 The shipped version reports a **median with its sample spread beside it** and
 `n/N` runs per row, so a noisy row cannot pass for a finding — the thing
 vim-startuptime's single averaged column left out.
+
+---
 
 ## 4. Findings worth acting on regardless
 
@@ -522,19 +523,6 @@ startup path**, since harpoon is the only `lazy = false` consumer.
 agent definitions. **gp.nvim is not in the plugin set**, and `grep -rn gp_config`
 across `lua/` returns nothing outside the folder itself. `ai.nvim` is the
 replacement and is installed.
-
----
-
-### 7.5 `nvzone/menu` is already disabled
-
-[nvchad.lua:26](./lua/plugins/nvchad.lua) has `enabled = false`, and
-`ui.nvim/contextmenu/` exists with its own README. This replacement appears to
-be **already done** — the spec is a leftover. Deleting the file is housekeeping,
-not a project. Worth confirming `:UI` covers the cases you used it for, then
-removing.
-Before deleting: the provider/agent table is the only record of that
-configuration, so check whether `ai.nvim`'s own config already carries the
-equivalent — the Ollama Qwen agent pairing in particular.
 
 ---
 
