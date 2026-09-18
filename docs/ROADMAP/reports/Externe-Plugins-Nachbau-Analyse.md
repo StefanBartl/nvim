@@ -40,7 +40,7 @@ which own plugin would it land in, and what would it cost?
     - [7.3 `cmdlog.nvim` has a runtime dependency on plenary](#73-cmdlognvim-has-a-runtime-dependency-on-plenary)
     - [7.4 The `plenary` dependency chain](#74-the-plenary-dependency-chain)
     - [4.5 `lua/config/gp_config/` is orphaned](#45-luaconfiggp_config-is-orphaned)
-    - [4.6 `nvzone/menu` — not a leftover](#46-nvzonemenu-not-a-leftover)
+    - [4.6 `nvzone/menu` — not a leftover ✅](#46-nvzonemenu-not-a-leftover)
   - [5. Where this lands](#5-where-this-lands)
   - [6. Suggested order](#6-suggested-order)
 
@@ -526,7 +526,7 @@ replacement and is installed.
 
 ---
 
-### 4.6 `nvzone/menu` — not a leftover
+### 4.6 `nvzone/menu` — not a leftover ✅
 
 `plugins/nvchad.lua`'s `{ "nvzone/menu", enabled = false }` reads like a stale
 fragment but is not: the file documents it as the switch for restoring

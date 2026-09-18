@@ -38,7 +38,12 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**26 von 36 Repos abgeschlossen** (die urspruengliche Warteschlange). Runde 27 (lsp.nvim, letzter Punkt) und fuenf Re-Audit-Runden der aeltesten fertigen Repos (pickers/cmdlog/dap/casedesk/buffer-ctx) laufen parallel.
+**27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett, UND ihr
+kompletter Re-Audit gegen die 100%-Vorgabe (Runden 1-26) ist ebenfalls fertig.** Runde 27
+(lsp.nvim) selbst ist erst frisch fertig geworden und braucht deshalb noch keinen separaten
+Re-Audit-Durchgang. Die neun 🟢-Repos (siehe Survey) bekamen laut ursprünglicher Vorgabe
+bewusst keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke — das steht
+als möglicher nächster Schritt noch offen.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -47,34 +52,37 @@ Regeln, die sich über die Runden eingespielt haben:
 | 3 | dap.nvim | 3 | `5f2da6e` | 11 Sprach-Tabellen über 2 generische Contract-Specs; 4 → 30 Specs |
 | 4 | casedesk.nvim | 4 | `3cc4cd9` | 32 neue Specs; 40 → 386 Assertions |
 | 5 | buffer-ctx.nvim | 5 | `6290f8b` | 6 neue Specs; 24 → 40 von 46 Dateien abgedeckt |
-| 6 | debugging.nvim | 6 | `7b05563` | 10 neue Specs; ~6 → ~23 von 34 Dateien |
-| 7 | recommender.nvim | 7 | `6e7fb65` | 6 neue Specs; 5 → 11 von 23 Dateien |
-| 8 | language.nvim | 8 | `51dd7d1` | 21 neue Specs; ~6 → 43 von 51 Dateien |
-| 9 | open.nvim | 9 | `a8dbe1d` | 9 neue Specs; ~12 → 24 von 26 Dateien |
-| 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
-| 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
-| 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
-| 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
-| 14 | pdfport.nvim | 14 | `3c9273a` | 11 neue Specs; 192 → 1059 Assertion-Stellen |
-| 15 | emojis.nvim | 15 | `5ea0333` | 13 neue Specs; 261 → 773 Assertions |
-| 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
-| 17 | reposcope.nvim | 17 | `98a9a36` | 25 neue Specs; 236 → 1910 Assertions |
-| 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
-| 19 | color_my_ascii.nvim | 19 | `adcb5ef` | 13 neue Specs; 324 → 5566 Assertions |
-| 20 | diff.nvim | 20 | `d7aa3a5` | 10 neue Specs; 295 → 694 Assertion-Stellen |
-| 21 | cascade.nvim | 21 | `77ea4f3` | 10 neue Specs; 462 → 981 Assertion-Stellen |
-| 22 | sandbox.nvim | 22 | `eb2145f` | 17 → 37 Specs; 136 → 883 Checks |
-| 23 | data.nvim | 23 | `a64c208` | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
-| 24 | spotlight.nvim | 24 | `5931a55` | 17 → 29 Specs; 472 → 1159 Assertionen |
-| 25 | mdview.nvim | 25 | `166904e` | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks |
-| 26 | filetree.nvim | 26 | `811bfed` | 696 → 858 Checks (Gap-Closing, sehr großes Repo) |
-| 27 | lsp.nvim | 27 | *läuft* | — |
+| 6 | debugging.nvim | 6 | `5bdd781` (Re-Audit) | 10 neue Specs; ~6 → ~23 von 34 Dateien; Re-Audit: 15 → 16 Specs |
+| 7 | recommender.nvim | 7 | `bef1939` (Re-Audit) | 6 neue Specs; 5 → 11 von 23 Dateien; Re-Audit: 12 → 15 Specs (ui.kit-Seam entsperrt) |
+| 8 | language.nvim | 8 | `780aea6` (Re-Audit) | 21 neue Specs; ~6 → 43 von 51 Dateien; Re-Audit: 27 → 29 Specs |
+| 9 | open.nvim | 9 | `553a445` (Re-Audit) | 9 neue Specs; ~12 → 24 von 26 Dateien; Re-Audit: 15 → 16 Specs |
+| 10 | replacer.nvim | 10 | `6153561` (Re-Audit) | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien; Re-Audit: 9 → 10 CI-Dateien, 374 → 411 Checks |
+| 11 | github_stats.nvim | 11 | `479fd9c` (Re-Audit) | 13 neue Specs, 4 erweitert; 109 → 482 Assertions; Re-Audit: 492 → 499 Checks |
+| 12 | insights.nvim | 12 | `6bbab32` (Re-Audit) | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions; Re-Audit: 1342 → 1362 Stellen |
+| 13 | sessions.nvim | 13 | `12a4fb6` (Re-Audit) | 10 neue Specs; 77 → 487 Assertion-Stellen; Re-Audit: 498 → 504 Stellen |
+| 14 | pdfport.nvim | 14 | `4bb13eb` (Re-Audit) | 11 neue Specs; 192 → 1059 Assertion-Stellen; Re-Audit: 1048 → 1057 Stellen |
+| 15 | emojis.nvim | 15 | `9de7b6d` (Re-Audit) | 13 neue Specs; 261 → 773 Assertions; Re-Audit: 773 → 775 Checks |
+| 16 | fileops.nvim | 16 | `037d3bb` (Re-Audit) | 10 neue Specs; 199 → 805 Assertions; Re-Audit: 804 → 831 Checks |
+| 17 | reposcope.nvim | 17 | `ab97158` (Re-Audit) | 25 neue Specs; 236 → 1910 Assertions; Re-Audit: 1908 → 1934 Checks |
+| 18 | gopath.nvim | 18 | `945a3fa` (Re-Audit) | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks; Re-Audit: 439 Checks/1610 Assertionen |
+| 19 | color_my_ascii.nvim | 19 | `22b9115` (Re-Audit) | 13 neue Specs; 324 → 5566 Assertions; Re-Audit: 859 → 866 Stellen |
+| 20 | diff.nvim | 20 | `d7aa3a5` (Re-Audit: solide, nichts zu tun) | 10 neue Specs; 295 → 694 Assertion-Stellen |
+| 21 | cascade.nvim | 21 | `0bc75e6` (Re-Audit) | 10 neue Specs; 462 → 981 Assertion-Stellen; Re-Audit: 981 → 995 Stellen |
+| 22 | sandbox.nvim | 22 | `d2ea226` (Re-Audit) | 17 → 37 Specs; 136 → 883 Checks; Re-Audit: 883 → 906 Checks |
+| 23 | data.nvim | 23 | `a64c208` (Re-Audit: solide, nichts zu tun) | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
+| 24 | spotlight.nvim | 24 | `1928336` (Re-Audit) | 17 → 29 Specs; 472 → 1159 Assertionen; Re-Audit: 1159 → 1166 |
+| 25 | mdview.nvim | 25 | `59c4a6e` (Re-Audit) | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks; Re-Audit: 33 Specs, 247 (nvim) + 19 (busted) |
+| 26 | filetree.nvim | 26 | `8976113` (Re-Audit/Follow-up) | 696 → 858 Checks (Gap-Closing, sehr großes Repo); Follow-up: 858 → 945 Checks, alle 14 vertagten Dateien geschlossen |
+| 27 | lsp.nvim | 27 | `30e3e6a` | 6 neue Specs; 697 → 729 Checks (2 zusätzlich durch eine parallel arbeitende Peer-Session) |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 ## Warteschlange
 
-**Ursprüngliche Warteschlange ist mit Runde 27 (lsp.nvim) abgeschlossen.** Ab da beginnt ein Re-Audit aller 27 Runden gegen die 100%-Vorgabe (Nutzer-Entscheidung 2026-09-18): audit-first, gezielt auf die vier wiederkehrenden Bug-Familien plus Byte-Offsets, keine Auffuellung wo schon solide. → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
+**Ursprüngliche Warteschlange ist mit Runde 27 (lsp.nvim) abgeschlossen.** Ab da läuft ein
+Re-Audit aller 27 Runden gegen die 100%-Vorgabe (Nutzer-Entscheidung 2026-09-18): audit-first,
+ältestes Repo zuerst, gezielt auf die wiederkehrenden Bug-Familien plus Byte-Offsets, keine
+Auffüllung wo schon solide. Reihenfolge: 1-5 durch, 6-11 laufen, danach 12 (insights.nvim) usw.
 
 Die 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`,
 `markdown.nvim`, `documentation.nvim`, `media.nvim`, `ui.nvim`) bekommen keine volle Runde,
@@ -113,7 +121,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | spotlight.nvim | 27 | 19 | ✅ fertig |
 | mdview.nvim | 78 | 24 | ✅ fertig |
 | filetree.nvim | 129 | 26 | ✅ fertig |
-| lsp.nvim | 176 | 29 | 🔄 Runde 27 läuft (großes Repo) |
+| lsp.nvim | 176 | 29 | ✅ fertig |
 | images.nvim | 37 | 29 | 🟢 gut |
 | ai.nvim | 25 | 35 | 🟢 gut |
 | hover.nvim | 40 | 38 | 🟢 gut |
@@ -170,10 +178,42 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | cascade.nvim | `lists/move.lua`: `renumber.tree` verankerte den Basiswert an der Zeile, die *nach* dem Move zufällig erste ist → `1. 2. 3. 4.` driftete bei jedem Move um +1 | `c23ea33` |
 | cascade.nvim | `lists.cycle`-Default konnte nicht rundlaufen: `lists.types` kannte nur zwei der vier vom Cycle erzeugten Markerarten → `a)`-Zeile verlor jede Listen-Erkennung | `c23ea33` |
 | filetree.nvim | `health.lua`s "lib.nvim fehlt"-Zweig rief danach unbedingt in lib.nvim hinein | `811bfed` |
+| cmdlog.nvim | `health.lua`s letzte Zeile rief unbedingt in `lib.nvim.bindings.usercmd.composer` hinein, bei fehlendem lib.nvim crashte `:checkhealth cmdlog` direkt nach der eigenen Fehlanzeige | `df6f716` |
+| debugging.nvim | `health.lua`s letzter Abschnitt rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als potenziell fehlend meldet | `5bdd781` |
+| open.nvim | `health.lua`s letzte Zeile rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als fehlend meldet | `553a445` |
+| sessions.nvim | `health.lua`s abschließender `composer.checkhealth()`-Aufruf lief unbedingt, obwohl der Preflight drei Zeilen darüber schon weiß, ob der `require` scheitert → crashte mit "loop or previous error loading module" statt zu degradieren | `12a4fb6` |
+| reposcope.nvim | `repository_fetcher.lua`s `vim.json.decode("null")`-Crash in zwei von drei Fetchern (truthy `vim.NIL` statt Tabellen-Check) | `3c82ff3` |
+| insights.nvim | `symbols/parser.lua`s Doppelpunkt-Scan fraß den Laufwerksbuchstaben, `ts_lua.lua`/`ts_lua_tables.lua`s `field("left")`/`field("right")` existierten nie, `tree/init.lua`s Glob→Regex-Escaping nutzte `%` statt `\` | `6031069`, `dcbe57a` |
+| insights.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `ui/fzf.lua`s Default-Action und `ts_lua*.lua`s `scan_cwd()`-Ignore-Liste teilten denselben Windows-Laufwerksbuchstaben- bzw. Backslash-Blindpunkt wie die drei oben genannten Bugs, an drei weiteren Stellen | `6bbab32` |
+| data.nvim | `register.write()` behandelte `setreg`s Ausbleiben eines Wurfs als Beweis für einen erfolgreichen Schreibvorgang, aber `setreg("+"/"*", ...)` wirft nie bei fehlendem Clipboard-Provider — tut einfach nichts | `9937f5c` |
+| color_my_ascii.nvim | `health.lua`s `checkhealth` meldete "lib.nvim not found" und requirte dann am Ende ungeschützt erneut genau dasselbe fehlende Modul für die Report-Übergabe → riss direkt nach der Warnung ab | `22b9115` |
+| mdview.nvim | `health.lua`s `M.check()` degradiert korrekt, ruft am Ende aber ungeschützt erneut in `lib.nvim.bindings.usercmd.composer.checkhealth` hinein → crasht bei altem/unvollständigem lib.nvim, verschluckt jeden vorherigen ok/warn/error | `59c4a6e` |
+| fileops.nvim | `bindings/keymaps.lua`s `delete_fn({})` löschte permanent ohne Undo trotz `"trash"`-Default; drei Windows-Trenner-Mismatches (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer, `ops/file.lua`s Verzeichnis-Unlink-Retry); `conflict_marks.lua`s Match-Leak bei erneutem `:edit` | `e7185fc`, `81e15ee`, `ffc1c9a` |
+| fileops.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `on_hold.lua`s Git-Show-Preview löste den Pfad nie korrekt auf (hat noch nie gerendert) und `truncate()` schnitt Byte- statt zeichengenau | `037d3bb` |
+| github_stats.nvim | `export.lua`s `create_pdf()` verschluckte den Fehler von `ensure_parent_dir()` — derselbe Bug, den ein früherer Fix nur bei `write_lines()` behoben hatte, am analogen zweiten Call-Site übersehen | `680adb8` |
+| debugging.nvim | `health.lua` requirte `lib.nvim.health` auf Modulebene ungeschützt — ein fehlendes lib.nvim hätte das Modul selbst crashen lassen, noch vor dem bereits gefixten Guard am Funktionsende | `50afa0b` |
+| insights.nvim | `M.foo = function()` wurde unter dem bloßen Feldnamen statt der vollen dotted-Name gemeldet; Mehrfachzuweisungen prüften nur den ersten Wert; Windows-Regex-Escape-Menge für `tree/init.lua` deckte `{`/`}`/`\|`/`\` nicht ab; dabei zusätzlich ein Test-Isolations-Leak in `compress_tree_spec.lua` gefunden (`pairs(saved)` überspringt in Lua als `nil` gespeicherte Einträge) | `9c6be5e`, `27744f7` |
+| cascade.nvim | `roman` vor `ascii` (nötig für den Cycle-Ring) ließ `marker.parse` sieben Buchstaben (c/d/i/l/m/v/x) fälschlich als römisch lesen → normale `a) b) c) d)`-Listen korrumpierten ab dem dritten Punkt bei jedem Renumber. Gefixt (auf Nutzerwunsch, vorher gepinnt): `renumber.tree` merkt sich jetzt die pro Einzugsbreite bereits etablierte Marker-Art und reicht sie als Tie-Breaker an `marker.parse` zurück, ohne den globalen Cycle-Ring-Fall zu berühren | `0865850` |
 
 ### Offen (gepinnt)
 
-Stand: **13 offen** (war 25). In dieser Runde hinzugekommen: keine neuen — nur Fixes.
+Stand: **34 offen**. Der komplette Re-Audit (Runden 1-26, gegen die 100%-Vorgabe vom
+2026-09-18) sowie ein separater Bug/Security/Performance-Review der Kampagne selbst sind
+beide fertig -- siehe Handover für Details. Der einzige zwischenzeitlich gepinnte
+"schwerwiegende" Fund (cascade.nvim, `roman`-vor-`ascii`-Kollision) wurde auf Nutzerwunsch
+noch gefixt statt gepinnt zu bleiben; die Zahl oben zählt ihn deshalb nicht mehr mit.
+
+| Repo | Datei | Bug |
+|---|---|---|
+| buffer-ctx.nvim | `format/column_align.lua` | zielt mit einem Byte-Offset auf eine Display-Spalte → Mehrbyte-Zeichen vor der Selektion verschiebt die Ausrichtung |
+| buffer-ctx.nvim | `mark/init.lua` | Cleanup-Autocmd über String-Augroup ohne `clear = true` → zweites `setup()` verdoppelt ihn (harmlos, da idempotent) |
+| pickers.nvim | `health.lua` | letzte Zeile ruft den Composer bedingungslos außerhalb jedes `pcall` → crasht `:checkhealth pickers` komplett bei fehlendem lib.nvim |
+| pickers.nvim | `smart/frecency.lua` | `M.patch()` löst die Augroup ohne `clear=true` auf → zweites `setup()` mit Frecency verdoppelt den Autocmd |
+| casedesk.nvim | `health.lua` | `check_tools()`s "lib.nvim fehlt"-Zweig ruft danach ungeschützt in `casedesk.export.find_browser()` hinein, das wiederum ungeschützt genau die als fehlend gemeldete Dependency requirt → `:checkhealth casedesk` crasht komplett |
+| open.nvim | `context.lua` | `gather()`s Visual-Signal-Guard (`mode()`-Check + `'<`/`'>`-Marks) kann nie zusammen zutreffen, da die Marks erst beim Verlassen von Visual committet werden → `signals.visual` ist auf dem `:Open`-Pfad immer `nil`, sonst ein Überbleibsel einer fremden Selektion |
+| language.nvim | `health.lua` | `M.check()` ruft nach `check_lib()`s korrekter "Composer fehlt"-Warnung noch dreimal ungeschützt in genau dieses Modul hinein → `:checkhealth language` crasht komplett, jede Sektion danach fällt weg |
+| replacer.nvim | `health.lua` | `M.check()` requirt den Composer für den Preflight erneut ungeschützt, obwohl `check_lib_nvim()` ihn Zeilen darüber schon korrekt als fehlend meldet und degradiert |
+| github_stats.nvim | `dashboard/render.lua` | `fit_width()` polstert/kürzt nach Byte-Länge statt Display-Breite; unsichtbar bei ASCII-Zeiträumen, bricht lautlos bei einem Mehrbyte-`time_range`-Config-Wert |
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -182,7 +222,6 @@ Stand: **13 offen** (war 25). In dieser Runde hinzugekommen: keine neuen — nur
 | pdfport.nvim | `integrations/{fzf,telescope}.lua` | cachen Fehlschläge → eine gescheiterte Extraktion wird die ganze Session wiedergespielt |
 | reposcope.nvim | `clone_manager.lua` | `not isdirectory(path)` ist immer `false` (0 ist truthy) → Pfad-Guard und `safe_mkdir` beide toter Code |
 | reposcope.nvim | `bindings/keymaps.lua` | `unset_prompt_keymaps()` räumt per falschem Tag auf → `_registry` wächst pro Open/Close-Zyklus |
-| reposcope.nvim | `repository_fetcher.lua` | `vim.json.decode("null")` liefert truthy `vim.NIL` → wirft statt über `on_failure` zu melden (GitLab-Fetcher macht es richtig) |
 | reposcope.nvim | `utils/protection.lua` | `is_valid_path()` wirft ohne das laut Doc optionale zweite Argument |
 | reposcope.nvim | `ui/actions/readme_viewer.lua` | zweites Öffnen bei offenem Viewer → `Invalid buffer id` |
 | color_my_ascii.nvim | `comment_ascii`-Pfad | Highlights liegen `#prefix + 1` Bytes zu weit links (gestrippter Text als Koordinatensystem für Extmarks in der ungestrippten Zeile) |
@@ -197,19 +236,33 @@ Stand: **13 offen** (war 25). In dieser Runde hinzugekommen: keine neuen — nur
 | gopath.nvim | `commands.check_under_cursor` | der `help`-Zweig ist unerreichbar |
 | gopath.nvim | `util/path.invalidate_caches()` | leert `_pdir_*` nicht |
 | gopath.nvim | `create.lua` | der "lib.nvim fehlt"-Fallback requirt ungeschützt genau diese Dependency (letzter offener Punkt dieser Familie außerhalb von `health.lua`-Dateien) |
+| gopath.nvim | `resolvers/go/import_path.lua` | `parse_import` ist als einziger von acht Sprach-Resolvern nicht am eigenen Import-Keyword verankert → feuert auf jeden `"..."`-String-Literal mit `/`, der wie ein Package aussieht |
 | diff.nvim | `core/directory.lua` | ungeschütztes `readfile` → rohes `E484` an `on_done` vorbei, Aufrufer wartet ewig |
 | diff.nvim | `core/scratch.lua` | `track()` dedupliziert nicht → `status()` kann `diff:3` melden |
 | cascade.nvim | `bindings/autocmds.lua` | zwei der drei Augroups werden nur geleert, wenn ihr Feature-Gate durchkommt → deaktiviertes Feature hinterlässt lebende Handler bis zum Neustart |
 | cascade.nvim | `facade`-Kommandos | `cycle_group_add`/`remove` mutieren `config.DEFAULTS` direkt (Deep-Merge kopiert nur die oberste Ebene) |
 | cascade.nvim | `usrcmds.lua` | `:Cascade indent N`/`dedent N` ignorieren `N` (falscher Wert an `run_indent_command` gereicht); `cycle remove` schneidet mehrwortige Werte am ersten Leerzeichen ab |
+| cascade.nvim | `lists/renumber.lua` | `renumber.tree` über eine explizite Range mit mehr als einem Listen-Block (`:Cascade renumber`) setzt den zweiten Block vom `base_start` des ersten fort statt vom eigenen |
 
-**Wiederkehrende Familien:** Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren
-`E739`/`E482` am eigenen Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; und —
-inzwischen in **sieben** Repos gefunden, sechs davon gefixt (emojis, diff, gopath, filetree
-gefixt; github_stats/fileops/cascade als Varianten in `create.lua`/direktem `require` bzw.
-Augroup-Gate) — ein Health-Check oder ein ähnlicher "Dependency fehlt"-Zweig, der danach
-unbedingt in genau diese Dependency hineinruft. Nur `gopath.nvim`s `create.lua`-Fallback
-(kein `health.lua`) ist von dieser Familie noch offen.
+**Wiederkehrende Familien:**
+- Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren `E739`/`E482` am eigenen
+  Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
+- **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
+  ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 17 Repos, **12 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open, sessions,
+  insights, fileops, color_my_ascii, mdview), **5 offen**: `gopath.nvim`s
+  `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s `health.lua`,
+  `casedesk.nvim`s `health.lua`, `language.nvim`s `health.lua` (drei statt einem
+  ungeschützten Aufruf) und `replacer.nvim`s `health.lua` (alle vier in Re-Audit-Runden
+  gefunden).
+- **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
+  Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
+  `setup()` einen zweiten Autocmd-Handler registriert statt den ersten zu ersetzen.
+  Gefunden in 4 Repos, **1 gefixt** (pdfport.nvim), **3 offen**: `buffer-ctx.nvim`
+  (`mark/init.lua`, harmlos da idempotent), `pickers.nvim` (`smart/frecency.lua`, nicht
+  harmlos — verdoppelt Buffer-Read-Zählung), `cascade.nvim` (`bindings/autocmds.lua`,
+  Variante: Gate *vor* der Augroup-Auflösung statt fehlendes `clear`).
 
 ## Historie: der ursprüngliche 3-Repo-Report
 
