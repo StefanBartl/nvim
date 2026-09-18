@@ -30,7 +30,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 |---|---:|---:|---:|---|
 | lib.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
 | dap.nvim | 21 | 21 | 0 | fertig (2026-09-18) |
-| mdview.nvim | 18 | – | – | offen |
+| mdview.nvim | 18 | 18 | 0 | fertig (2026-09-18) |
 | replacer.nvim | 17 | – | – | offen |
 | buffer-ctx.nvim | 16 | – | – | offen |
 | insights.nvim | 16 | – | – | offen |
@@ -386,7 +386,7 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 ## mdview.nvim
 
-**18 Befunde** (11 × high, 1 davon in Testcode). Roh gemeldet: 20.
+**18 Befunde** (11 × high, 1 davon in Testcode). Roh gemeldet: 20. — **Stand: 18/18** (⏭️ 0, 2026-09-18)
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -398,6 +398,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** On Neovim 0.9, requiring mdview.helper.gen_token raises "attempt to index field 'uv' (a nil value)" at load time, and because server_args.lua requires it at module level, the whole server_args module fails to load — so :MDView start cannot spawn the relay at all on the version the plugin advertises as its minimum. :checkhealth stays green throughout, since health.lua's own probe only asks has("nvim-0.9"). Scope note: this is the load-time break; log.lua carries the same 0.9 break behind a feature flag.
 
+**Status.** ✅ erledigt (`c1af46f`) — gen_token.lua und adapter/log.lua nutzen jetzt `vim.uv or vim.loop` statt bare `vim.uv`, passend zum dokumentierten Neovim-0.9-Floor.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/mdview/adapter/ws_client.lua:298` · `http_post_nonblocking` · confidence **high**
@@ -407,6 +409,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** ERR-03 requires a real success/failure return, not a silent one. Here a total failure (no sh, relay down, curl missing, nonzero exit) is reported to the caller as exit code 0.
 
 **Auswirkung.** try_send_pending's callback (line 337) tests `if code == 0`, so a total failure of the fallback POST — no sh, curl missing, relay down, any nonzero exit — is reported as success: M._pending[path] is deleted at line 339 and "queued post success" is logged at line 343. The retry/backoff path at lines 346-360 becomes unreachable on this branch, so the buffer content is dropped with no retry and no message; the preview silently freezes at its last state. Reachable only when `fn.executable("curl") ~= 1`, i.e. exactly the machines this fallback exists to serve.
+
+**Status.** ✅ erledigt (`b2773a5`) — Der No-curl-Shell-Fallback (Erfolg trotz Fehlschlag) ist entfernt; `http_post_nonblocking` meldet jetzt einen expliziten `curl not found`-Fehler statt stillschweigend zu scheitern.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -418,6 +422,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** wait_ready reports a dead relay as healthy on the first poll: M._ready is set true at line 140 and cb(true) fires. Because M._ready is session-cached and only cleared by reset_ready() (launcher.start / stop.lua:50), every later wait_ready in that session short-circuits at line 117 without any check at all. Downstream, launcher.M.start's readiness callback proceeds to open the browser tab against a port nothing is listening on, and live_push's per-keystroke wait_ready wrapper (live_push.lua:136-142) waves through every push to the same dead port. The user gets a browser error page and a preview that never renders, with no error from mdview. Same curl-less precondition as the POST case.
 
+**Status.** ✅ erledigt (`b2773a5`) — Gleicher Fix für `http_get`: kein Shell-Fallback mehr, expliziter Fehlerkanal; neue Spec `ws_client_transport_spec.lua`.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/mdview/diagnostics.lua:175` · `M.run` · confidence **high**
@@ -427,6 +433,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** ERR-03: a relevant function must report success/failure instead of failing silently. The sibling exporters in this repo get it right (usrcmds/log.lua:259-266 and usrcmds/breadcrumbs.lua:149-156 both branch on the nil handle and notify an error), so this is the odd one out.
 
 **Auswirkung.** When io.open fails — an unwritable directory, a path under a nonexistent parent, a read-only volume — :MDView diagnose <path> still prints "[mdview] diagnostics written to <path>" (usrcmds/diagnose.lua:13) and then runs `tabnew <path>` (line 16), which opens an empty, nonexistent-file buffer that looks like an empty report. The user believes they have a diagnostics file and hands over a path with nothing behind it — the one hand-off the module exists for. Note the default path branch (lines 170-174) is safe, so this only bites when the user passes an explicit path.
+
+**Status.** ✅ erledigt (`3c8fc61`) — `M.run` meldet einen nicht schreibbaren Report-Pfad statt ihn unkommentiert zurückzugeben.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -438,6 +446,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** "no argument" and "malformed argument" collapse into the same code path, and the malformed one is silently reinterpreted as a different, valid argument. `:MDView start port=808O` starts the relay on the default port with no parse error and no range warning, then treats the literal string "port=808O" as the document to preview: initial_push_async normalizes it, no buffer matches, readfile fails under pcall, and an empty document is pushed into a room named after the typo. The user's actual buffer is never previewed and nothing explains why. `:MDView start cwd=` behaves the same way, and additionally drops the cwd override the user meant to set.
 
+**Status.** ✅ erledigt (`badfd5c`) — `parse_start_args` weist einen fehlerhaften `cwd=`/`port=`-Wert jetzt zurück statt ihn als Dateiname zu übernehmen.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/mdview/adapter/ws_client.lua:42` · `transport` · confidence **high**
@@ -447,6 +457,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** LLS-31's core case: a defensive wrapper around a call that can never succeed keeps the breakage invisible and the function silently does nothing (here: silently ignores the user). The rule's own framing -- 'fail loudly, never silently no-op' -- is exactly what is violated; every other module in this repo reads `require("mdview.config").defaults`.
 
 **Auswirkung.** transport.health_poll_ms, transport.max_retries and transport.base_retry_ms are unreachable: the /health poll interval is permanently 200ms and a failed POST always retries 5 times from a 150ms base, whatever setup() says. transport.health_timeout_ms is dead twice over — both real callers pass an explicit timeout (live_push.lua:141 and launcher.lua:182 hand wait_ready ws_client.WAIT_READY_TIMEOUT = 15000), so `timeout_ms or tcfg.health_timeout_ms` never reaches the config value either. Correction to the auditor: a user on a slow box who raises health_timeout_ms per docs/configuration.md:44 does NOT see "relay did not respond within 10000ms" — they see ws_client.lua:159's "[mdview] server health-check timed out after 15000ms", unchanged by their setting. The user-facing defect is the same (a documented dial that does nothing, silently), the message and number in the finding are not.
+
+**Status.** ✅ erledigt (`2b746c0`) — `transport()` liest jetzt über `config.defaults` statt über das nie existierende `config.get()`/`config.options`; `health_poll_ms`/`max_retries`/`base_retry_ms` sind damit erstmals erreichbar. Zweiter Fund am selben Ort: `health_timeout_ms` war zusätzlich durch einen zweiten hartkodierten `WAIT_READY_TIMEOUT`-Default an den echten Call-Sites unerreichbar — `WAIT_READY_TIMEOUT` ist jetzt selbst `transport()`s Default, Aufrufer übergeben keinen Override mehr.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -458,6 +470,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** transport.inbound_poll_ms is unreachable; the browser→Neovim poll runs at a hardcoded 250ms for the session. Every enabled inbound feature is pinned to it — checkbox write-back, text-field sync, click-to-navigate and reverse scroll (the four endpoints tick() polls at lines 435-450). docs/configuration.md:46 sells this key as "the dial if reverse scroll or click-to-navigate feels laggy"; the dial is disconnected, and lowering it for snappier reverse scroll or raising it to cut curl spawns on battery both do nothing. Unlike the ws_client case there is no second override path, so this key is dead in every code path that reads it.
 
+**Status.** ✅ erledigt (`2b746c0`) — Gleicher Fix für `interval_ms()` in inbound_poll.lua — `transport.inbound_poll_ms` (Checkbox-/Feld-Sync, Click-Navigate, Reverse-Scroll) ist jetzt erreichbar.
+
 ### `SEC-03` — Nutzereingabe nie shell-interpoliert
 
 `lua/mdview/adapter/ws_client.lua:288` · `http_post_nonblocking` · confidence **high**
@@ -467,6 +481,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** SEC-03 forbids putting user-controlled values into a command string at all. Lua's `%q` escapes for Lua, not for sh: inside the resulting double-quoted sh word, `$` and backticks are still expanded, and `%q`'s backslash-newline pairs are read by sh as line continuations, so the heredoc structure the code relies on does not survive either. Every other spawn in this repo correctly uses an argv list.
 
 **Auswirkung.** On a POSIX machine with no curl on PATH, previewing a document containing `$(...)` or a backtick span executes that text as a shell command under the user's account on every push of that buffer — and README-style shell examples are exactly the content that contains it. A line consisting of `BODY` closes the heredoc early and feeds the rest of the document to sh as commands. Note the reachability ceiling the auditor left out: this branch also needs the outer 'shell' to be POSIX, so it is Linux/macOS/Git-Bash-on-Windows without curl, not Windows cmd.exe. It remains a SEC-03 violation regardless of reachability — the rule forbids building the command string at all.
+
+**Status.** ✅ erledigt (`b2773a5`) — Teil desselben No-curl-Fixes wie #2/#3: keine Shell mehr, also auch kein Weg mehr für einen Backtick-Span im Dokumenttext in die Shell.
 
 ### `SEC-21` — Timeout **und** Byte-Limit
 
@@ -478,6 +494,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** A failed extract leaves a directory that the next call accepts as a finished install. The most likely trigger is not a disk-full race but a missing `tar` — docs/installation.md:10 lists tar as a first-run requirement, and without it fn.system returns nonzero and extracted_dir is left EMPTY. From then on, ensure_client_bundle returns it at line 233 and server_args.lua:147/177 hands it to the relay as --web-root; the relay serves nothing, the tab renders blank. :checkhealth does catch this case (health.lua:83-97 reports the incomplete bundle) and tells the user to delete the cache dir, which is the only recovery — but nothing re-downloads on its own, and `:MDView start` itself reports no error at all.
 
+**Status.** ✅ erledigt (`343c2be`) — Ein fehlgeschlagenes `tar -xzf` löscht jetzt das halb befüllte `extracted_dir` per `fn.delete(extracted_dir, "rf")`, statt es als „fertiges Bundle“ für den nächsten Aufruf stehen zu lassen — spiegelt `curl_download`s bestehende Aufräumlogik eine Funktion höher.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/mdview/adapter/detached.lua:101` · `M.resolve_target` · confidence **high**
@@ -487,6 +505,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on user text: a backtick span in the argument is a command substitution through `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. The repo already has the sanctioned helper in use elsewhere -- runner.lua:14 imports `lib.nvim.cross.fs.expand_path` for exactly this job.
 
 **Auswirkung.** `:MDView standalone` passes raw command-line text to Vim's filename expansion, which runs backtick spans through &shell — so a backtick span in the argument executes before anything is validated, and the subsequent "not a readable file" error is the only trace. The quieter failure is the likelier one: `%` resolves to the current buffer and `#` to the alternate file, so `:MDView standalone %` or a mistyped `#` silently previews a different document than the one named, with no message, since the expanded path is readable and the command succeeds. Note this needs the user to type the argument, so it is not remotely triggerable — but the same filename also reaches the Ex-string concatenation in scripts/mdview-bg.sh:81.
+
+**Status.** ✅ erledigt (`13c8425`) — `detached.resolve_target` nutzt jetzt `lib.nvim.cross.fs.expand_path` statt `vim.fn.expand()` auf dem getippten `:MDView standalone <file>`-Argument — kein Backtick-Shell-Run, kein `%`/`#`-Missverständnis mehr.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -498,6 +518,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** A backtick span in the log-path argument runs through &shell at the moment the command is typed. The realistic damage is the specials, not the backticks: `:MDView file-log on %` expands to the current buffer's own path, and `#` to the alternate file's, so mdview then appends relay stdout to a real source file instead of creating a log — silently, because absolute() reports nothing and set_file_log_path accepts whatever it is handed. Both require the user to type the argument themselves; the value never comes from a buffer or a remote source.
 
+**Status.** ✅ erledigt (`13c8425`) — Gleicher Tausch für `file_log.absolute()` (`:MDView file-log on/path <path>`).
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/mdview/adapter/log.lua:177` · `ensure_dir` · confidence **medium**
@@ -507,6 +529,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** Same ERR-02 / stated-0.9-floor break as gen_token.lua, in a second module. Unlike gen_token this one is inside a function rather than at module level, so it only fires when the feature is used.
 
 **Auswirkung.** On Neovim 0.9 the first log line written after `:MDView file-log on` raises "attempt to index field 'uv' (a nil value)" from ensure_dir, called out of the relay's stdout handler. Unlike gen_token this is inside a function, so it costs only the feature, not plugin load: persistent file logging never works and the error surfaces from a libuv callback with no context tying it to the command the user just ran. Everything else in log.lua (the scratch-buffer mirror, the ring) is unaffected.
+
+**Status.** ✅ erledigt (`c1af46f`) — Gleicher Fix wie #1, selbe Datei (adapter/log.lua) — beide Neovim-0.9-Floor-Brüche in einem Commit.
 
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
@@ -518,6 +542,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** No user-visible misbehavior today, and the auditor says so honestly. The only consumer is line 257, `if browser_autostart and browser_adapter and browser_adapter.open then`, a truthiness test where nil and false are indistinguishable — so a user who sets browser_autostart = false still gets no browser, by accident rather than by evaluation. The defect is that the expression cannot be read correctly and breaks the moment the value is returned, logged, compared to `false`, or forwarded anywhere that separates "not set" from "explicitly off"; start/init.lua:198 shows the construct already being copied. Fix is a two-line explicit `if`, not a behavior change.
 
+**Status.** ✅ erledigt (`b6a9521`) — `launcher.lua`s `(cond) and default or opts.browser_autostart`-Ternary ist durch ein explizites if/else ersetzt (falsy-Value-Bruch bei `browser_autostart = false`); der degenerierte Zwilling in `start/init.lua` (beide Zweige identisch) ist auf einen reinen Feld-Read vereinfacht.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/mdview/bindings/usrcmds/breadcrumbs.lua:24` · `show_in_scratch` · confidence **medium**
@@ -527,6 +553,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** LLS-31: the pcall is what keeps the failure invisible, and the function then silently does less than it claims. The repo has already diagnosed and fixed this exact collision once -- usrcmds/log.lua:212-215 documents it ('nvim_buf_set_name throws E95 on a name collision, which happens whenever the previous log window is still open') and reuses the existing buffer instead -- but the sibling command still carries the bug.
 
 **Auswirkung.** `:MDView breadcrumbs` with an earlier breadcrumbs split still open creates a second scratch split that silently ends up unnamed: the content is correct (set at line 18, before modifiable=false), but the buffer carries no mdview:// name, so nothing can find or reuse it and every further invocation adds another split. The pcall is what keeps this invisible — without it the E95 would surface the collision. Scope correction: show_in_scratch never reuses a buffer under any circumstances, so the split accumulation is present by construction; what the swallowed error costs specifically is the buffer's identity, which is also the thing that would let a fix reuse it the way usrcmds/log.lua does.
+
+**Status.** ✅ erledigt (`adbc556`) — `show_in_scratch` in breadcrumbs.lua spiegelt jetzt usrcmds/log.lua's bestehenden Fix für dieselbe E95-Kollision: Buffer per Name suchen und wiederverwenden statt den Fehler in einem bare `pcall` zu verschlucken und unbenannt weiterzumachen. Neuer Test für die Wiederverwendung.
 
 ### `PERF-62` — Timer sauber stoppen
 
@@ -538,6 +566,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** The trailing debounce timer is not torn down with the session, and the bare close() departs from the rule's required pcall shape. But the auditor's headline scenario is far narrower than stated and I could not make it routine: arming the trailing timer needs a second TextChanged inside the 150ms window (live_push.lua:155-163), and the timer then fires within that same ≤150ms — so the described cascade requires `:MDView stop` to be issued inside a sub-150ms window, which is not typeable by hand and needs a single-key mapping plus a fast repeat to hit at all. When it does hit, the consequences are as described: the callback calls push_now on the stopped session, stop.lua:50's reset_ready() forces a real /health poll, and wait_ready runs the full 15s at 200ms intervals, echoing "[mdview] waiting for server, attempt N..." every 10 attempts before the red "server health-check timed out after 15000ms". Treat this as a shape/teardown defect to fix, not a bug users are hitting.
 
+**Status.** ✅ erledigt (`3e6ac77`) — `cancel_pending()` schließt den Timer jetzt per `timer:stop()` + `pcall(timer.close)` (statt bare `close()`) und wird jetzt auch aus `bindings/autocmds.teardown()` aufgerufen, sodass der nachlaufende Debounce-Timer die Session nicht überlebt.
+
 ### `SEC-35` — Nutzereingabe nie in einen `-c`-/`:execute`-String
 
 `scripts/mdview-bg.sh:81` · `mdview-bg` · confidence **medium** · _Testcode_
@@ -548,6 +578,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 
 **Auswirkung.** A markdown file whose name contains `|` — legal on Linux and macOS — has everything after the pipe parsed as a separate Ex command by the launcher Neovim, executed under -u scripts/minimal_init.lua with the user's privileges. Realistic route: previewing a file from an untrusted archive or a download whose name the user did not inspect. The same value also reaches vim.fn.expand() in detached.lua:101 once the Ex command runs, so a backtick in the name reaches &shell on the same path. The .ps1 twin has the same defect via PowerShell string interpolation into -c.
 
+**Status.** ✅ erledigt (`d3c7684`) — Beide Skripte (`mdview-bg.sh`, `mdview-bg.ps1`) bauen den `:MDView standalone`-Aufruf nicht mehr per String-Konkatenation in ein `-c`-Ex-Kommando; der Dateiname läuft jetzt über eine Umgebungsvariable, gelesen von einem festen Lua-Snippet über `vim.env` — Vims Ex-Kommando-Parser sieht den Nutzerwert nie.
+
 ### `SEC-46` — Beim String-Literal-Einbetten das Escape-Zeichen **zuerst** escapen
 
 `lua/mdview/adapter/browser/init.lua:99` · `open_default` · confidence **medium**
@@ -557,6 +589,8 @@ Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executa
 **Regelbezug.** SEC-46 names PowerShell explicitly and states its escaping rule -- PowerShell doubles `'` inside a single-quoted string. Nothing here escapes anything, so a quote in the path closes the literal and the remainder is parsed as PowerShell source.
 
 **Auswirkung.** For a Windows account whose name contains an apostrophe (legal in Windows account names, e.g. O'Brien), tempname() yields a %TEMP% path carrying that quote, the single-quoted literal closes early, and the whole .ps1 fails to parse. The user-visible effect: browser.focus = "nvim" silently never restores focus to Neovim — the pcall'd jobstart at 105 succeeds, powershell exits non-zero, and nothing reports it. The tab itself still opens (rundll32, line 117, is independent), so nothing looks broken. One correction: the leftover .ps1 files do NOT accumulate indefinitely — fn.tempname() returns a path inside Neovim's own per-process temp directory, which Neovim removes on exit, so the orphans are session-scoped, not permanent %TEMP% litter.
+
+**Status.** ✅ erledigt (`cdfbb2e`) — Der Temp-Skript-Pfad wird vor dem Einbetten in das PowerShell-Single-Quote-Literal escaped (`'` → `''`), damit ein Apostroph im Windows-Profilpfad (z. B. Kontoname „O'Brien“) das Literal nicht vorzeitig schließt.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -577,6 +611,8 @@ Three things I saw but did not file as findings, because no rule in the 76 cover
 Rules I checked and found genuinely satisfied rather than inapplicable, so they are absent from both lists: LUA-06 (config/DEFAULTS.lua is pure data, no module-level env/FS resolution), ERR-50/ERR-51/ERR-53 (already credited to this plugin in the Belege; the code in front of me still honours them), SEC-20 (install.lua verifies sha256 against checksums.txt and deletes on mismatch), PERF-80 (adapter/log.lua is meticulous about the fast-event context, and both timers use vim.schedule_wrap), LUA-16 (no raw vim.NIL reaches a buffer write), ERR-33/LUA-13 (buffer_switch.resync re-validates its handle; previewable.is is pcall-guarded throughout, which covers the deferred callers).
 
 All line numbers were re-verified against the files after drafting.
+
+**Status.** ✅ erledigt (`f179dbe`) — `vim.fn.glob` läuft jetzt über `lib.nvim.fs.globbable(dir)`, damit ein Metazeichen im aufgelösten Client-Verzeichnis (kurzer 8.3-Windows-Pfad, `install.version`-String) nicht mehr zu einer stillen Leerliste und einer falschen „Bundle unvollständig“-Meldung in `:checkhealth` führt.
 
 ---
 
