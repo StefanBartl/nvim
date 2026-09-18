@@ -1,7 +1,14 @@
 ---@module 'config.snacks.mappings.extended'
---- Keymap definitions for the optional Snacks submodules (debug, dim, profiler,
---- quickfile, scope, scratch).
+--- Keymap definitions for the optional Snacks submodules that are actually
+--- enabled in `plugins/snacks.lua`: debug and quickfile.
 --- Expose keys() which returns the array expected by the plugin spec.
+---
+--- This file used to bind keys for `dim`, `profiler`, `scope` and `scratch`
+--- as well. All four are `enabled = false` in the spec, so every one of
+--- those keys could only ever answer with `safe_call`'s "missing" warning --
+--- and `<leader>ns` (scratch) sat on the same lhs as Neo-tree's source
+--- switcher. Enable a module in the spec first; then its keys belong here.
+--- The profiler's own-side home is runtime-analysis.nvim (`:RA`).
 
 local notify = require("lib.nvim.notify").create("[config.snacks.mappings]")
 
@@ -47,67 +54,11 @@ function M.keys()
     desc = "Snacks Debug: Toggle Overlay",
   }
   maps[3] = {
-    "<leader>uf",
-    function()
-      safe_call("dim", "toggle")
-    end,
-    desc = "Snacks Dim: Toggle Focus Scope",
-  }
-  maps[4] = {
-    "<leader>ps",
-    function()
-      safe_call("profiler", "start")
-    end,
-    desc = "Snacks Profiler: Start",
-  }
-  maps[5] = {
-    "<leader>pS",
-    function()
-      safe_call("profiler", "stop")
-    end,
-    desc = "Snacks Profiler: Stop",
-  }
-  maps[6] = {
-    "<leader>pr",
-    function()
-      safe_call("profiler", "report")
-    end,
-    desc = "Snacks Profiler: Report",
-  }
-  maps[7] = {
     "<leader>uq",
     function()
       safe_call("quickfile", "disable")
     end,
     desc = "Snacks Quickfile: Disable (session)",
-  }
-  maps[8] = {
-    "]s",
-    function()
-      safe_call("scope", "jump_next")
-    end,
-    desc = "Snacks Scope: Next",
-  }
-  maps[9] = {
-    "[s",
-    function()
-      safe_call("scope", "jump_prev")
-    end,
-    desc = "Snacks Scope: Prev",
-  }
-  maps[10] = {
-    "<leader>ns",
-    function()
-      safe_call("scratch", "open")
-    end,
-    desc = "Snacks Scratch: Open",
-  }
-  maps[11] = {
-    "<leader>nS",
-    function()
-      safe_call("scratch", "new")
-    end,
-    desc = "Snacks Scratch: New",
   }
 
   return maps

@@ -153,8 +153,12 @@ function M.keys()
     desc = "[pickers] Git Stash",
   }
 
+  -- `<leader>gD`, not `<leader>gd`: the lowercase key is diff.nvim's
+  -- file-vs-HEAD diff (plugins/personal/init.lua). Both were bound to it
+  -- before -- this picker and fugitive's `:Gdiffsplit` -- and whichever
+  -- registered last won silently.
   maps[#maps + 1] = {
-    "<leader>gd",
+    "<leader>gD",
     builtin("git_diff"),
     mode = "n",
     desc = "[pickers] Git Diff (Hunks)",
