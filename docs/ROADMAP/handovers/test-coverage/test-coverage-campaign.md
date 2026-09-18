@@ -1311,6 +1311,37 @@ Abschnitt "Offen (gepinnt)".
   `vim.str_utf_pos` als Iterator, das eine Tabelle liefert), `enable_bracket_highlighting`
   kann Bracket-Highlighting nicht abschalten, und zwölf Keywords stehen doppelt in ihrer
   eigenen Sprachdatei. Commit: `adcb5ef`.
+  **Re-Audit (Runde 19, 2026-09-18):** alle vier verbleibenden Pins explizit gegen den
+  aktuellen Quellcode nachgeprüft -- alle vier weiterhin offen, korrekt gepinnt, keiner
+  verloren oder stillschweigend geändert. Veraltete Doku gefunden: `TESTS/README.md`s
+  "Pinned bugs and findings" listete die beiden schon per `0437fe0` gefixten Defekte
+  weiterhin als offen -- die README wurde nach dem Fix nie aktualisiert, jetzt korrigiert.
+  **Ein neuer Bug gefunden und sofort gefixt** (das exakte "warnt, crasht dann in dieselbe
+  Dependency"-Muster, das die Kampagne immer wieder findet, hier aber nicht als
+  `health.lua`-Sonderfall, sondern in der Composer-Handoff-Logik): `health.lua`s
+  `checkhealth` meldete "lib.nvim not found" per `health.error`, requirte dann aber am Ende
+  ungeschützt erneut genau dasselbe fehlende Modul, um den Report zu übergeben -- riss den
+  Report direkt nach der erklärenden Warnung ab. Gefixt durch Wiederverwendung der Modul-
+  Referenz aus dem ersten `pcall(require, ...)` und Auslassen der Übergabe, wenn der
+  fehlschlug. Regressionstest über `package.preload`/`package.loaded`-Stub ergänzt.
+  **Zwei echte Lücken gefunden und geschlossen**: `fence_content_highlight`s Default-
+  Shade-Modus (`"auto"`, gewählt wenn `shade` fehlt) entscheidet nach `vim.o.background`
+  zwischen Lighten/Darken -- jeder bisherige Test setzte explizit `shade = "darken"` und
+  überging diesen Zweig komplett; `theme_presets.resolve_auto`s Hellhintergrund-Bailout
+  (liefert nil, fällt auf "subtle" zurück) und seine Längste-Zeichenkette-zuerst-Priorität
+  (`"gruvbox-material"` gewinnt gegen das bloßere `"gruvbox"`, das es als Substring auch
+  enthält) waren nie geprüft. Sonst nichts Neues: kein dritter Byte/Spalten-Fall über die
+  zwei bekannten hinaus gefunden; alle Augroups nutzen `lib.nvim`s idempotenten
+  `augroup.create.clear`-Helfer außer einer Stelle in `commands/fence/open.lua`, die aber
+  per Buffernummer geschlüsselt ist (nie innerhalb einer Session wiederverwendet, also
+  praktisch nicht ausnutzbar); ein möglicher Windows-Case-Mismatch in `export.lua`s
+  `relpath` ist explizit als "best-effort, fällt auf absolut zurück" dokumentiert, kein
+  Crash, nicht pin-würdig.
+  Testlauf: 28 Specs, 859 → 866 Assertion-Aufrufstellen, über zwei von mir persönlich
+  nachgefahrene Wiederholungsläufe stabil. `luacheck` (127 Dateien, per explizitem
+  File-Globbing statt Verzeichnisform -- letztere scheitert unter Windows mit "Permission
+  denied", ein lokales luacheck-Limit, kein echter Fund) und `stylua --check` beide grün.
+  Commit: `22b9115`.
 - [x] **diff.nvim** — fertig (Runde 20, Gap-Closing statt From-Scratch). Das ehrliche Audit
   vorweg: das Repo war wirklich das bestabgedeckte der Warteschlange, aber **schichtweise
   ungleich** — die reinen Layer und die Render-Erfolgspfade waren gut, die gesamte

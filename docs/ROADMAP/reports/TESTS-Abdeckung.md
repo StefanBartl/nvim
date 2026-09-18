@@ -64,7 +64,7 @@ Agents parallel.
 | 16 | fileops.nvim | 16 | `037d3bb` (Re-Audit) | 10 neue Specs; 199 → 805 Assertions; Re-Audit: 804 → 831 Checks |
 | 17 | reposcope.nvim | 17 | `ab97158` (Re-Audit) | 25 neue Specs; 236 → 1910 Assertions; Re-Audit: 1908 → 1934 Checks |
 | 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
-| 19 | color_my_ascii.nvim | 19 | `adcb5ef` | 13 neue Specs; 324 → 5566 Assertions |
+| 19 | color_my_ascii.nvim | 19 | `22b9115` (Re-Audit) | 13 neue Specs; 324 → 5566 Assertions; Re-Audit: 859 → 866 Stellen |
 | 20 | diff.nvim | 20 | `d7aa3a5` (Re-Audit: solide, nichts zu tun) | 10 neue Specs; 295 → 694 Assertion-Stellen |
 | 21 | cascade.nvim | 21 | `77ea4f3` | 10 neue Specs; 462 → 981 Assertion-Stellen |
 | 22 | sandbox.nvim | 22 | `eb2145f` | 17 → 37 Specs; 136 → 883 Checks |
@@ -185,6 +185,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | insights.nvim | `symbols/parser.lua`s Doppelpunkt-Scan fraß den Laufwerksbuchstaben, `ts_lua.lua`/`ts_lua_tables.lua`s `field("left")`/`field("right")` existierten nie, `tree/init.lua`s Glob→Regex-Escaping nutzte `%` statt `\` | `6031069`, `dcbe57a` |
 | insights.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `ui/fzf.lua`s Default-Action und `ts_lua*.lua`s `scan_cwd()`-Ignore-Liste teilten denselben Windows-Laufwerksbuchstaben- bzw. Backslash-Blindpunkt wie die drei oben genannten Bugs, an drei weiteren Stellen | `6bbab32` |
 | data.nvim | `register.write()` behandelte `setreg`s Ausbleiben eines Wurfs als Beweis für einen erfolgreichen Schreibvorgang, aber `setreg("+"/"*", ...)` wirft nie bei fehlendem Clipboard-Provider — tut einfach nichts | `9937f5c` |
+| color_my_ascii.nvim | `health.lua`s `checkhealth` meldete "lib.nvim not found" und requirte dann am Ende ungeschützt erneut genau dasselbe fehlende Modul für die Report-Übergabe → riss direkt nach der Warnung ab | `22b9115` |
 | fileops.nvim | `bindings/keymaps.lua`s `delete_fn({})` löschte permanent ohne Undo trotz `"trash"`-Default; drei Windows-Trenner-Mismatches (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer, `ops/file.lua`s Verzeichnis-Unlink-Retry); `conflict_marks.lua`s Match-Leak bei erneutem `:edit` | `e7185fc`, `81e15ee`, `ffc1c9a` |
 | fileops.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `on_hold.lua`s Git-Show-Preview löste den Pfad nie korrekt auf (hat noch nie gerendert) und `truncate()` schnitt Byte- statt zeichengenau | `037d3bb` |
 
@@ -244,11 +245,11 @@ damit fertig; weiter geht es bei Runde 12 (insights.nvim).
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 15 Repos, **10 gefixt**
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 16 Repos, **11 gefixt**
   (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open, sessions,
-  insights, fileops), **5 offen**: `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`,
-  gleiches Muster), `pickers.nvim`s `health.lua`, `casedesk.nvim`s `health.lua`,
-  `language.nvim`s `health.lua` (drei statt einem ungeschützten Aufruf) und
+  insights, fileops, color_my_ascii), **5 offen**: `gopath.nvim`s `create.lua`-Fallback
+  (kein `health.lua`, gleiches Muster), `pickers.nvim`s `health.lua`, `casedesk.nvim`s
+  `health.lua`, `language.nvim`s `health.lua` (drei statt einem ungeschützten Aufruf) und
   `replacer.nvim`s `health.lua` (alle vier in Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
