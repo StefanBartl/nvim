@@ -1155,6 +1155,36 @@ Abschnitt "Offen (gepinnt)".
   Offen geblieben: direkte Assertions für die fensterbauenden `ui/`-Module (aktuell nur als
   Smoke über `open_ui`) und `preview_manager`s Scroll-/Inject-Logik.
   Commit: `98a9a36`.
+  **Mittlerweile gefixt** (separate Sitzungen dieser Kampagne, nicht das Re-Audit selbst):
+  `vim.json.decode("null")`-Crash über Commit `3c82ff3` (beide betroffenen Fetcher prüfen
+  jetzt `type(parsed) ~= "table"`, analog zum GitLab-Fetcher); ein zweiter,
+  normalize-vor-expand-Aspekt des PRIVATE-TOKEN-Themas über Commit `6d3cc12` (zieht mit
+  `lib.nvim`s eigenem Fix nach).
+  **Re-Audit (Runde 17, 2026-09-18):** alle sechs damals gepinnten Bugs einzeln gegen den
+  aktuellen Quellcode nachgeprüft, nicht angenommen. Ergebnis: `clone_manager.lua`s toter
+  Pfad-Guard, `unset_prompt_keymaps()`s falscher Tag, `is_valid_path()`s Wurf und der
+  README-Viewer-Doppel-Open sind alle vier weiterhin offen und korrekt gepinnt. Die beiden
+  oben genannten (JSON-Null-Crash, Credential-Leak-Nachzügler) waren dagegen bereits real
+  gefixt, aber `TESTS/README.md`s "Findings pinned here"-Liste beschrieb sie noch als offen
+  -- veraltete Doku, jetzt korrigiert und die verbleibenden vier neu durchnummeriert. Die
+  vier wiederkehrenden Bug-Familien einzeln geprüft: `health.lua` degradiert korrekt bei
+  fehlender optionaler Dependency; beide Augroups nutzen `clear = true`; `status_view.lua`
+  behandelt Byte-vs-Display-Zelle durchgehend explizit und sorgfältig; Pfadbehandlung in
+  `repos.lua`/`repo_status.lua`/`repo_actions.lua` läuft über `cwd`-relative
+  `vim.system`-Aufrufe oder bereits normalisierende Helfer -- keine neuen Windows-Bugs.
+  **Eine echte Lücke gefunden und geschlossen**: `ui/config.lua`, das gemeinsame Layout/
+  Theme-Singleton, von dem jedes `*_config`-Modul (background/list/preview/prompt) seine
+  Geometrie ableitet, hatte echte Verzweigungslogik (`update_layout()`s Pin-vs-Derive-
+  Semantik, `update_theme()`s dark/light/custom/invalid-Zweige) und **null** Spec-Coverage
+  -- stand nicht einmal auf der "bewusst ausgelassen"-Liste. Neue `ui_config_spec.lua`
+  (26 Assertionen), isoliert über `with_stubs` neu geladen, damit nichts in das echte,
+  von anderen Modulen bereits referenzierte Singleton durchsickert.
+  Testlauf: 34 → 35 Spec-Dateien, 1908 → 1934 ausgeführte Assertionen (per temporärem
+  Assertion-Zähler gemessen, vor dem Commit wieder entfernt), 0 Fails über zwei von mir
+  persönlich nachgefahrene Wiederholungsläufe. `luacheck lua plugin TESTS` (152 Dateien)
+  und `stylua --check lua plugin TESTS` beide grün. Kein `lua/`-Quelltext angefasst -- reine
+  Test- und Doku-Arbeit.
+  Commit: `ab97158`.
 - [x] **gopath.nvim** — fertig (Runde 18). Hier war die Ausgangslage anders als überall
   sonst: `docs/CONTRIBUTING.md` beschrieb eine plenary-Suite, **die es nie gab**. Die echte
   Konvention sind zwei headless-Runner unter `scripts/ci/` mit eigenem `check()`-Harness;
