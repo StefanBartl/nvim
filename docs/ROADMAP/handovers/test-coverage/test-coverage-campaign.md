@@ -2021,3 +2021,36 @@ kein inhaltlicher Grund.
   -c "qa!"` nachgefahren -- beide Male `MEDIA_TESTS_OK`. `stylua --check lua
   plugin TESTS` und `luacheck lua plugin TESTS` (75 Dateien) beide grün.
   Commit: `3778775`.
+- [x] **runtime-analysis.nvim** — echter erster Audit über `TESTS/run.lua`
+  (28 → 29 Specs). Peer-Session "runtime-analysis.nvim startup profiler"
+  (eigenes Worktree, `fix(startup): three bugs in the profiler`) war sauber
+  abgeschlossen und bereits in `main` gemerged -- kein Konflikt. **Ein echter
+  Bug gefunden und gefixt**: `ui/columns.lua`s `M.elide()` kürzte per
+  Zeichenanzahl (`strcharpart`) statt Display-Breite -- Bug-Familie (c),
+  ironischerweise dieselbe Klasse, wegen der diese Logik erst kürzlich in ein
+  eigenes Modul ausgelagert worden war. `elide("你好世界你好世界", 10)` gab den
+  ganzen 16-Zellen-String plus Ellipse (17 Zellen) unverändert zurück. Gefixt
+  über zeichenweisen Aufbau gegen `strdisplaywidth`. Null Vorab-Coverage für
+  dieses Modul -- neue `TESTS/columns_spec.lua`. **Zwei flaky Assertions in
+  `TESTS/usrcmds_spec.lua` gefunden und gefixt** (beim wiederholten
+  Stabilitäts-Check der Kampagne aufgefallen): (a) eine
+  Positions-Reihenfolge-Annahme zwischen zwei unabhängigen, um eine
+  Testserver-Verbindung wettlaufenden `curl`-Subprozessen (~1-von-3
+  Fehlerrate, über 15 Wiederholungen bestätigt; gefixt auf
+  Mitgliedschafts- statt Reihenfolge-Prüfung, danach 0/20 und 0/8 sauber);
+  (b) ein 500ms-Timeout-Budget für einen echten `curl.exe`-Spawn unter
+  Windows (gemessen 98-317ms typisch, gelegentlich darüber; auf 2000ms
+  erweitert). Geprüft und bereits korrekt: `health.lua`-Guards (alle
+  pcall-geschützt), Augroup-Nutzung (delegiert an das bereits gefixte
+  `lib.nvim.bindings.autocmd.group()`, empirisch über 3 Reload-Zyklen ohne
+  Leck bestätigt), Timing-Einheiten-Arithmetik in `startup/init.lua`/
+  `telemetry/startup.lua`, Windows-Laufwerksbuchstaben-Erkennung in
+  `multipart.lua`. Bewusst offen gelassen: die zwei lazy.nvim-getriebenen
+  Augroups in `telemetry/lazy.lua` (echte lazy.nvim-Installation nötig,
+  gleiche Klasse nicht-testbarer System-Integration wie anderswo in dieser
+  Kampagne).
+  Testlauf: von mir persönlich zweimal über `nvim --headless -u NONE -l
+  TESTS/run.lua` nachgefahren -- beide Male `RUNTIME_ANALYSIS_TESTS_OK`.
+  `luacheck lua TESTS scripts ftdetect` (exakter CI-Befehl, 78 Dateien) und
+  `stylua --check .` beide grün.
+  Commit: `b926560`.
