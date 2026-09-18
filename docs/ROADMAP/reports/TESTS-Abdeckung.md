@@ -38,12 +38,13 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett, UND ihr
-kompletter Re-Audit gegen die 100%-Vorgabe (Runden 1-26) ist ebenfalls fertig.** Runde 27
-(lsp.nvim) selbst ist erst frisch fertig geworden und braucht deshalb noch keinen separaten
-Re-Audit-Durchgang. Die neun 🟢-Repos (siehe Survey) bekamen laut ursprünglicher Vorgabe
-bewusst keine volle Runde, außer eine konkrete Prüfung findet doch eine Lücke — das steht
-als möglicher nächster Schritt noch offen.
+**Alle 36 Repos abgeschlossen.** 27 Repos über die ursprüngliche Warteschlange plus deren
+kompletten Re-Audit gegen die 100%-Vorgabe (Runden 1-26); Runde 27 (lsp.nvim) frisch fertig.
+Die restlichen neun 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`,
+`lib.nvim`, `markdown.nvim`, `documentation.nvim`, `media.nvim`, `ui.nvim`) hatten laut
+ursprünglicher Vorgabe bewusst keine volle Runde bekommen — der vom Nutzer angeforderte
+gezielte Check (ab 2026-09-18) hat sie jetzt alle neun einzeln real auditiert. Details siehe
+Handover, Abschnitt "Gezielter Check der neun 🟢-Repos".
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -79,14 +80,11 @@ Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 ## Warteschlange
 
-**Ursprüngliche Warteschlange ist mit Runde 27 (lsp.nvim) abgeschlossen.** Ab da läuft ein
-Re-Audit aller 27 Runden gegen die 100%-Vorgabe (Nutzer-Entscheidung 2026-09-18): audit-first,
-ältestes Repo zuerst, gezielt auf die wiederkehrenden Bug-Familien plus Byte-Offsets, keine
-Auffüllung wo schon solide. Reihenfolge: 1-5 durch, 6-11 laufen, danach 12 (insights.nvim) usw.
-
-Die 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`,
-`markdown.nvim`, `documentation.nvim`, `media.nvim`, `ui.nvim`) bekommen keine volle Runde,
-außer eine konkrete Prüfung findet doch eine Lücke.
+**Leer — die Kampagne ist abgeschlossen.** Ursprüngliche Warteschlange (Runden 1-27), deren
+kompletter Re-Audit gegen die 100%-Vorgabe (Runden 1-26), und der gezielte Check der neun
+🟢-Repos (ab 2026-09-18) sind alle fertig. Alle 36 Plugin-Repos sind real auditiert; jeder
+gefundene Bug ist entweder gefixt (mit Regressionstest) oder bewusst gepinnt
+(`BUG:`-Assertion + Begründung).
 
 ## Survey aller Repos
 
