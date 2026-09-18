@@ -29,7 +29,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | Plugin | Befunde | ✅/☑️ | ⏭️ | Stand |
 |---|---:|---:|---:|---|
 | lib.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
-| dap.nvim | 21 | – | – | offen |
+| dap.nvim | 21 | 21 | 0 | fertig (2026-09-18) |
 | mdview.nvim | 18 | – | – | offen |
 | replacer.nvim | 17 | – | – | offen |
 | buffer-ctx.nvim | 16 | – | – | offen |
@@ -114,7 +114,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 ## dap.nvim
 
-**21 Befunde** (8 × high). Roh gemeldet: 24.
+**21 Befunde** (8 × high). Roh gemeldet: 24. — **Stand: 21/21** (⏭️ 0, 2026-09-18)
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -126,6 +126,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** Holds only when nvim-dap-ui is actually installed (otherwise installed("dapui") fails and the fallback at 61-66 rescues it). In that case `ui = { provider = "dapui" }` wires the dap-ui panel but sets _active = "dapui", so dispatch() (107-124) finds no entry in the actions tables and <leader>du / :Dap toggle-ui and the eval mapping answer "Toggle UI is not supported by 'dapui'" for the whole session even though the panel is set up. health.lua:56 prints the raw value as info and line 72 reports ok "active panel UI: dapui"; the mismatch warn at 73 cannot fire because preference == active. Same for any other typo'd string.
 
+**Status.** ✅ erledigt (`e05e950`) — `resolve()` prüft den Wert gegen die vier erlaubten (`M.is_preference`), warnt und degradiert auf `dap-view`; health.lua warnt bei unbekanntem Wert und unterdrückt die falsche „fell back“-Meldung dafür.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/wkddap/bindings/init.lua:14` · `M.setup` · confidence **high**
@@ -135,6 +137,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** ERR-22: ein ungültiger Config-Einzelwert soll auf den Default degradieren, nicht die gesamte Plugin-Initialisierung abbrechen. vim.tbl_deep_extend ersetzt bei einem Nicht-Tabellen-Wert die ganze Untertabelle, es gibt keine Validierung davor (config/init.lua:20-27).
 
 **Auswirkung.** require("wkddap").setup({ keymaps = false }) throws "attempt to index a boolean value" out of setup(). which_key = false throws too (it is the pcall's own argument, so the pcall on line 21 does not catch it), and autocmds = false throws at autocmds/init.lua:15. In every case usercmds were already registered on line 12 but keymaps/autocmds are not, M._initialized stays false and vim.g.loaded_wkddap is never set — so :checkhealth reports "plugin not yet initialized" and a second setup() call is not blocked. The user sees a raw Lua traceback that names no config key.
+
+**Status.** ✅ erledigt (`ca7f3cf`) — Auf Config-Ebene gefixt: ein Nicht-Tabellen-Wert für `keymaps`/`ui`/`autocmds`/`which_key`/`menu`/`languages` wird vor dem Merge verworfen (Default bleibt), gemeldet und in `config.issues()` für `:checkhealth` festgehalten.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -146,6 +150,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** log_level is a complete no-op: it is documented in docs/configuration.md and typed in @types/init.lua (`log_level? integer`), accepted by setup(), and has zero effect on nvim-dap's log file, which stays at its own INFO default. Someone setting log_level = vim.log.levels.DEBUG to diagnose an adapter gets no extra log output and no indication why. Side effect: the variable is written into vim.env, so it is inherited by every adapter process spawned afterwards. The correct call is require("dap").set_log_level("DEBUG") — a level NAME, not the vim.log.levels integer, which dap.log.tolevel would pass through unvalidated as a number.
 
+**Status.** ✅ erledigt (`beeaa34`) — `log_level` geht jetzt normalisiert (Integer oder Name) als Level-Name an `dap.set_log_level()`, `OFF` → `ERROR`, ungültige Werte werden gemeldet; das `NVIM_DAP_LOG_LEVEL`-Env-Schreiben ist weg.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/wkddap/adapters/init.lua:14` · `M.register_all` · confidence **high**
@@ -155,6 +161,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** LLS-31: die Rückgabe/der Erfolg wird aus der geplanten statt der tatsächlichen Arbeit gebildet -- register_all gibt unbedingt `true` zurück, obwohl die übergebenen Overrides nie angewendet wurden. Ein stiller No-op mit dokumentiertem Feature-Namen.
 
 **Auswirkung.** setup({ adapters = { go = {...} } }) is discarded without a word. The user keeps the built-in dap.adapters.* and gets no warning, no notify and no :checkhealth entry saying the documented option does nothing — the contrast is sharp against the sibling `configurations` option, which configurations/init.lua:49-63 actually applies.
+
+**Status.** ✅ erledigt (`0f7c4ba`) — `adapters` wird jetzt angewendet: Schlüssel = nvim-dap-Adaptername (`codelldb`, `pwa-node`, …), Tabelle wird per `tbl_deep_extend` über die registrierte Definition gelegt, Funktion/unbekannter Name ersetzt bzw. ergänzt; Docs umgeschrieben (vorher „keyed by language“, nie implementiert). API-Entscheidung des Agenten — Sprach-Keys wären ein Follow-up.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -166,6 +174,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** With a lib.nvim that lacks bindings.keymap, :checkhealth wkddap reports an informational line claiming a fallback is in effect while in fact not a single DAP keymap is installed. The auditor overstated "alles sei in Ordnung" slightly — setup() does emit one notify.warn("Skipped keymaps: …") at startup (bindings/init.lua:23) — but that warning scrolls past once, and the health check, which is where a user goes to diagnose exactly this, actively contradicts it.
 
+**Status.** ✅ erledigt (`6e25d73`) — `lib.nvim.bindings.keymap` (und `lib.nvim.count`, ebenfalls nackt required) sind jetzt `check_require(..., "error")`, die erfundene Fallback-Info ist gestrichen.
+
 ### `LUA-92` — Ein Adapter lädt sein Plugin während `setup()` nicht
 
 `lua/wkddap/core/capabilities.lua:15` · `M.detect` · confidence **high**
@@ -175,6 +185,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** LUA-92 verbietet genau das: `capabilities()` liest `package.loaded[...]`, nie `require` -- unter einem Lazy-Manager IST das require der Ladetrigger. Hier ist es zusätzlich reine Detektion ohne Konsumenten, also Kosten ohne jeden Nutzen.
 
 **Auswirkung.** The marginal cost is nvim-dap-ui: with the default ui.provider = "dap-view", provider.resolve() returns after installed("dap-view") and never touches dapui (ui/provider.lua:57-59), so nothing else in a default setup() would load it — detect() pulls the whole nvim-dap-ui tree into every startup for a result nobody reads. dap-view and nvim-dap-virtual-text are separately required by ui/init.lua:24-35 anyway, so for those two detect() only moves the load earlier rather than causing it; the auditor overstated it by attributing all three to this line. With ui.enable = false and ui.virtual_text = false, however, detect() alone loads all three.
+
+**Status.** ✅ erledigt (`cb638bd`) — `detect()` liest `package.loaded[...]` statt `pcall(require, ...)`; Spec prüft per `package.preload`, dass kein Load ausgelöst wird.
 
 ### `XP-04` — OS-Tatsachen brauchen kein Opt-out, Verhaltensunterschiede einen echten Fallback
 
@@ -186,6 +198,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** On a Windows machine without a `ps` on PATH, choosing the JS/TS "Attach" configuration (javascript.lua:52-58) hangs nvim-dap's config-resolution coroutine permanently and silently: no error notification, no prompt, no session — the resume that would surface the error is discarded inside vim.schedule. This is worse than the zig case (ERR-01 finding), which at least reaches async.run's xpcall and notifies. Note the trigger is `ps` being absent, not Windows per se — a machine with Git-Bash/MSYS `ps.exe` on PATH will spawn something, so the hang is environment-dependent rather than guaranteed.
 
+**Status.** ✅ erledigt (`5f3f359`) — Spawn ist `pcall`-geschützt (Fehler → Warnung + leerer Picker → `resume(co, nil)`, kein Hang mehr), unter Windows wird `tasklist /FO CSV /NH` benutzt und per `parse_process_list()` auf `pid name` umgeschrieben.
+
 ### `XP-05` — Ein fehlschlagendes `executable()`/`exepath()` ist unter Windows teuer und ungecacht
 
 `lua/wkddap/languages/bash.lua:54` · `M.load` · confidence **high**
@@ -195,6 +209,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** XP-05: ein FEHLSCHLAGENDES executable()/exepath() läuft jeden PATH-Eintrag gegen jede PATHEXT-Endung ab (~44 ms gemessen) und wird von vim.fn nicht gecacht. `bashdb` ist auf praktisch keiner Windows-Maschine installiert -- der Kommentar im selben File sagt das selbst -- also ist dieser Miss garantiert, nicht hypothetisch.
 
 **Auswirkung.** Two uncached PATH probes on every require("wkddap").setup() under the default config. The bashdb probe is a guaranteed miss on practically any machine (the file's own comment says so), which is the ~44 ms PATH×PATHEXT walk XP-05 describes; the bash probe may hit cheaply if Git-Bash is on PATH. So realistically ~44 ms of avoidable startup on Windows, not ~88 ms. Functionally pathBashdb still ends up "" on a miss, so the contradicting comment is misleading rather than wrong in outcome.
+
+**Status.** ✅ erledigt (`29d60d3`) — `pathBash`/`pathBashdb` laufen über `executable.path()` (memoisiert), Miss bleibt `""`; der widersprüchliche Kommentar ist korrigiert.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -206,6 +222,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** With zig not resolvable on Neovim's PATH (wrapper script, zvm/asdf shim, remote toolchain), selecting "Launch (build first)" throws out of nvim-dap's config resolution. Traced where it lands: the throw propagates through prepare_config into dap/async.lua's xpcall, so the user gets a vim.notify ERROR with a full Lua traceback instead of the executable prompt, and no session starts. Not a silent hang (unlike the pick_process case) — but a raw traceback where a "zig not found" message belongs. TESTS/wkddap/languages/program_prompt_spec.lua stubs vim.system, so the spec cannot catch it.
 
+**Status.** ✅ erledigt (`b6812db`) — `vim.system({"zig","build"})` per `pcall`; bei ENOENT Warnung „zig build could not start“ und Prompt trotzdem (via `vim.schedule`), Spec mit werfendem `vim.system`-Stub.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/wkddap/languages/rust.lua:43` · `rustc_sysroot / initCommands` · confidence **medium**
@@ -215,6 +233,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** ERR-11: "leer, aber ok" muss von "leer, weil kaputt" unterscheidbar sein. Hier kollabieren beide Ursachen -- und zusätzlich der dritte Fall "gültiger, aber leerer Output" -- auf denselben Wert, den der Aufrufer dann als gültigen Sysroot behandelt.
 
 **Auswirkung.** With rustc unresolvable, every Rust debug start sends LLDB `command script import "/lib/rustlib/etc/lldb_lookup.py"` (rooted at the filesystem root) plus an io.open on "/lib/rustlib/etc/lldb_commands" that silently yields no commands. codelldb answers with an import error at session start whose text never mentions the actual cause. Because the empty result is cached, a rustc that becomes available later in the same session does not repair it. Correct behaviour is to return no initCommands at all on an empty sysroot.
+
+**Status.** ✅ erledigt (`34f9546`) — `rustc_sysroot()` liefert `nil` statt `""`, `initCommands` gibt dann `{}` zurück und warnt einmal; nur erfolgreiche Lookups werden gecacht.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -226,6 +246,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** An unknown or misspelled key is merged into the active config and then never read, with no diagnostic anywhere. Concretely: keymaps = { enabled = false } still installs all default keymaps (bindings/init.lua:14 reads .enable, which stays true from DEFAULTS); ui = { providers = "dap-ui" } still wires dap-view; menu = { enabled = false } still emits menu entries. Nothing warns and :checkhealth wkddap has no configuration-validation section at all, so the user has no way to discover the typo short of reading DEFAULTS.lua.
 
+**Status.** ✅ erledigt (`ca7f3cf`) — `sanitize()` prüft vor dem Merge gegen eine `KNOWN`-Liste (top-level + nested für `ui`/`which_key`/`autocmds`/`menu`), unbekannte Keys werden mit Levenshtein-„did you mean“ verworfen; `keymaps`/`adapters`/`configurations` bleiben offen (Action-Overrides bzw. Namens-Keys).
+
 ### `ERR-53` — In-place-Mutation statt Tabellen-Ersatz bei geteilten Referenzen
 
 `lua/wkddap/languages/javascript.lua:44` · `M.load` · confidence **medium**
@@ -235,6 +257,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** ERR-53 (In-place-Mutation statt Tabellen-Ersatz bei geteilten Referenzen): dap.configurations["javascript"] ist eine von mehreren Sprachmodulen geteilte Tabelle. Wer sie ersetzt statt in-place zu erweitern, verwirft die Beiträge aller Module, die vorher angehängt haben.
 
 **Auswirkung.** languages = { "browser", "javascript" } silently drops the two pwa-chrome entries from dap.configurations.javascript and .typescript — javascript.lua's assignment replaces the table browser.lua appended to. The browser entries survive for javascriptreact, typescriptreact and astro (javascript.lua touches only the first two filetypes), so the user sees "Attach to Chrome" in a .tsx buffer but not in a .ts one, with no message either way. The default order masks it entirely, which is why it has gone unnoticed.
+
+**Status.** ✅ erledigt (`a46fd32`) — `load()` hängt jetzt per `vim.list_extend` an statt zuzuweisen; Spec lädt `browser` vor `javascript` und erwartet 2×pwa-node + 2×pwa-chrome; stale CDX-Kommentar in browser.lua entfernt.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -246,6 +270,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** Latent, not currently triggered: I found no in-repo mutator of the returned table, so nothing breaks today — the auditor's own text concedes this. What is real is the missing contract. Any host composing menu entries, any statusline snippet, or a second plugin calling require("wkddap.config").get() or require("wkddap").get_config() receives the live active config and can mutate it for the rest of the session (including table.sort on a nested list, the github_stats failure mode), and neither the getter nor the annotation warns them off. Fix is one deepcopy or one documented "live reference — do not mutate".
 
+**Status.** ✅ erledigt (`4042989`) — Beide Getter (`config.get()`, `wkddap.get_config()`) dokumentieren die Live-Referenz explizit („read, never mutate“); Kopie wäre falsch, weil `config/init_spec` die `get() == setup()`-Identität pinnt.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/wkddap/languages/python.lua:22` · `M.setup` · confidence **medium**
@@ -255,6 +281,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** LLS-31: setup() gibt `true` zurück, sobald ein Binary gefunden wurde -- die Rückgabe bildet die geplante, nicht die tatsächlich funktionierende Verdrahtung ab. `-m debugpy.adapter` ist ein Python-Flag; an den debugpy-CLI-Wrapper gereicht wird daraus `python -m debugpy -m debugpy.adapter`, und die debugpy-CLI verlangt zwingend --listen oder --connect.
 
 **Auswirkung.** With the Mason install documented in config/init.lua:48, the python adapter process exits immediately with a debugpy CLI usage error, so nvim-dap reports the adapter as crashed/exited on the first Python debug attempt. health.lua:106-108 reports "python: adapter available" because validate_adapter only checks that a binary path resolves. A pip-installed `debugpy` console script on PATH fails the same way. Correct wiring is command = <debugpy-adapter> with no args, or command = <python> with args {"-m","debugpy.adapter"}.
+
+**Status.** ✅ erledigt (`cc38a8c`) — Adapter-Binary ist jetzt `debugpy-adapter` (Mason liefert `mason/bin/debugpy-adapter.cmd` = `python -m debugpy.adapter`), `args = {}`; installation.md nennt den nötigen Launcher. Nebenfund: reines `pip install debugpy` legt gar kein PATH-Binary an, hat also nie über `get_adapter_path` aufgelöst.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -266,6 +294,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** On a non-Mason install (distro package, npm -g, nix) the gate passes, setup() returns true, and dap.adapters["pwa-node"].executable.args points at a dapDebugServer.js under mason/ that does not exist. Every pwa-node session then fails at adapter start with node's "Cannot find module" while health.lua reports "javascript: adapter available". Note the wiring is broken for the same reason even on a Mason install if the package layout changes — nothing verifies the file.
 
+**Status.** ✅ erledigt (`5f94631`) — `executable.command` ist der aufgelöste `js-debug-adapter`-Pfad mit `args = { "${port}" }`, kein hartkodierter Mason-Skriptpfad mehr; WORKFLOW.md-Absatz umgeschrieben.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/wkddap/languages/browser.lua:41` · `M.setup` · confidence **medium**
@@ -275,6 +305,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** Dieselbe LLS-31-Umkehrung wie in javascript.lua -- Erfolg aus dem Gate statt aus dem Ergebnis. Fix gehört an beide Stellen, sonst lebt der Bug in der Kopie weiter.
 
 **Auswirkung.** Identical defect duplicated: without a Mason install of js-debug-adapter, dap.adapters["pwa-chrome"] references a non-existent dapDebugServer.js, so "Attach to Chrome (js-debug)" and "Launch Chrome (js-debug)" fail at adapter-server start while setup() and health.lua both report success. Fixing only javascript.lua leaves this copy broken.
+
+**Status.** ✅ erledigt (`5f94631`) — Dieselbe Verdrahtung wie javascript.lua, Spec prüft für beide `command`/`args`.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -286,6 +318,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** With ui.nvim absent, :checkhealth wkddap says nothing about it at all — the lib.nvim section passes and the user is sent looking elsewhere. Every interactive path then throws "module 'ui.kit' not found" at the moment of use: <leader>dB / <leader>dL breakpoint prompts, the executable/DLL prompts of C/C++, Rust, Zig, Assembly and C#, the Lua host/port prompts and the JS attach process picker. Because those prompts run inside nvim-dap's resolution coroutine, the error arrives via dap/async.lua's xpcall as a traceback notification. requiring wkddap.integrations.menu fails outright at module load (ui.contextmenu on line 19). Adding the same check_require(..., "error") lines for ui.kit/ui.contextmenu is the whole fix.
 
+**Status.** ✅ erledigt (`6e25d73`) — Neuer Abschnitt „dap.nvim: ui.nvim“ mit `check_require("ui.kit")`/`("ui.contextmenu")` auf `error`.
+
 ### `LUA-90` — Ein globales `setup()` hat genau einen Besitzer
 
 `lua/wkddap/ui/virtual_text.lua:16` · `M.setup` · confidence **medium**
@@ -295,6 +329,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** LUA-90: ein Fremd-Plugin mit genau einem globalen setup() gehört dem Spec, der es installiert; ein zweiter Aufruf "kippt die eigene Tabelle zur globalen Konfiguration". Die Asymmetrie zu dap_view/dap_ui zeigt, dass die Durchreichung hier schlicht fehlt, nicht bewusst weggelassen wurde.
 
 **Auswirkung.** Because the pcall(require, …) is itself the lazy load trigger, the host's own spec config/opts runs first and wkddap's table is merged over it immediately after — so a user who sets virt_text_pos = "inline" or commented = false in their own nvim-dap-virtual-text spec has exactly those keys silently reverted to wkddap's values on every setup(). Keys wkddap does not name (display_callback, virt_text_win_col, …) survive. The only escape is ui.virtual_text = false, which disables the feature entirely. Correcting one sub-claim: the plugin builds a NEW table via tbl_deep_extend and config.virtual_text is flat, so the live module table is not retained by reference by the foreign plugin.
+
+**Status.** ✅ erledigt (`d845deb`) — `ui.virtual_text` akzeptiert jetzt `true` (dap.nvim-Defaults), eine Tabelle (roh an `vt.setup()`, wie `dap_view`/`dap_ui`) oder `false` (dokumentiert: eigener Spec besitzt das Setup, das Plugin läuft weiter — „disables the feature entirely“ aus dem Befund stimmte nicht).
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -306,6 +342,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 **Auswirkung.** Weaker than the auditor claims but real. prefetch_sysroot() is called from M.setup() (rust.lua:78), i.e. once at plugin setup, so the cached sysroot is normally the one for Neovim's STARTUP directory, not for the project being debugged — a :cd or :lcd into a second Rust project with a different toolchain (or a rust-toolchain.toml pinning nightly) keeps serving the first answer. The consequence is that LLDB imports lldb_lookup.py from the wrong toolchain; both toolchains ship that file, so the usual outcome is subtly mismatched pretty-printer output rather than a hard error. The per-session, no-invalidation design also means a `rustup update` mid-session is never picked up, and (see the ERR-11 finding) a failed lookup caches "" permanently.
 
+**Status.** ✅ erledigt (`34f9546`) — Cache ist `table<cwd, sysroot>`, beide Spawns bekommen `cwd = paths.workspace_root()`; Spec zeigt: gleiche cwd → 1 Spawn, andere cwd → neuer Spawn, Fehlschlag wird nicht gemerkt.
+
 ### `PRIN-10` — Keine globalen States
 
 `lua/wkddap/languages/csharp.lua:37` · `M.setup` · confidence **medium**
@@ -315,6 +353,8 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 **Regelbezug.** PRIN-10 (Zustand lebt modul-intern, Zugriff nur über Getter/Setter) sinngemäß auf globalen Editor-Zustand angewandt: ein Sprachmodul kippt hier eine sitzungsweite Option, die jedem anderen Plugin gehört. XP-04 rechtfertigt zwar den OS-Zweig ohne Config-Key, nicht aber den unbegrenzten Geltungsbereich -- nötig ist die Einstellung nur für das Argument, das an netcoredbg geht.
 
 **Auswirkung.** Reachable only when netcoredbg actually resolves — setup() returns at line 28-30 otherwise. When it does (default languages = {} enables csharp, and auto_install/Mason make netcoredbg common), a bare require("wkddap").setup() on Windows turns shellslash off session-wide, overriding a user who deliberately set it in their own init.lua. Path completion, :! commands and any other plugin reading &shellslash see backslashes from then on, and the cause is invisible from the outside because it is attached to "C# happens to be in the default language list". Note PRIN-10 is applied here by analogy — the rule as written governs a module's own state, not editor options — but the defect itself (unbounded scope for a side effect needed only for one argument) is real.
+
+**Status.** ✅ erledigt (`bfe537c`) — `vim.opt.shellslash = false` entfernt; `program` und `cwd` gehen durch das neue `paths.native()` (Backslashes nur unter Windows); LANGUAGES.md/CONTRIBUTING.md angepasst. Die Wirkungsbegründung im Befund war falsch: `vim.fs.normalize()` liefert ohnehin Forward-Slashes, das globale `shellslash` hat den DLL-Pfad nie beeinflusst — netcoredbg bekommt erst jetzt wirklich Backslashes (nicht live getestet).
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -339,6 +379,8 @@ Nicht abgedeckt / Einschränkungen:
 - Für ERR-30/ERR-31 gibt es in diesem Plugin keine Oberfläche: es schreibt keine einzige Datei (kein io.open("w"), kein vim.fn.writefile, kein uv.fs_open). Gelesen wird nur rust.lua:121 (io.open(..., "r")).
 
 Explizit gegen die Belege gegengeprüft: LUA-03 nennt dap.nvim mit utils/executable.lua -- diese Datei ist heute ein reiner Re-Export von lib.nvim.cross.executable und sauber; kein Re-Report.
+
+**Status.** ✅ erledigt (`beb1e0e`) — An allen 8 Stellen (c, assembly, csharp, lua×2, rust, zig×2) `local co = assert(coroutine.running(), ...)`; kein Spec, weil plenary jeden `it()`-Block selbst in einer Coroutine ausführt.
 
 ---
 
