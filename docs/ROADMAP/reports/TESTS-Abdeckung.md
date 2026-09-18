@@ -242,6 +242,7 @@ kompletter Re-Audit bis Runde 23 sind damit fertig; weiter geht es bei Runde 24
 | cascade.nvim | `facade`-Kommandos | `cycle_group_add`/`remove` mutieren `config.DEFAULTS` direkt (Deep-Merge kopiert nur die oberste Ebene) |
 | cascade.nvim | `usrcmds.lua` | `:Cascade indent N`/`dedent N` ignorieren `N` (falscher Wert an `run_indent_command` gereicht); `cycle remove` schneidet mehrwortige Werte am ersten Leerzeichen ab |
 | cascade.nvim | `lists/renumber.lua` | `renumber.tree` über eine explizite Range mit mehr als einem Listen-Block (`:Cascade renumber`) setzt den zweiten Block vom `base_start` des ersten fort statt vom eigenen |
+| cascade.nvim | `lists/marker.lua` + `config/DEFAULTS.lua` | **Schwerwiegend**: `roman` vor `ascii` (nötig, damit der Cycle-Ring schließt) lässt `marker.parse` sieben Buchstaben (c/d/i/l/m/v/x, beide Groß-/Kleinschreibungen) fälschlich als römisch lesen → eine ganz normale `a) b) c) d)`-Liste wird ab dem dritten Punkt bei jedem Renumber (Save, `:Cascade renumber`, Move) lautlos zu `iii)`/`iv)` korrumpiert. Kein mechanischer Fix möglich (braucht block-weite Kind-Erkennung), gefunden bei einem Bug/Security-Review dieser Kampagne |
 
 **Wiederkehrende Familien:**
 - Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren `E739`/`E482` am eigenen

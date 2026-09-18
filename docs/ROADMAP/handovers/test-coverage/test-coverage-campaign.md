@@ -1743,3 +1743,61 @@ Abschnitt "Offen (gepinnt)".
   `stylua --check` beide grün.
   Commit: `30e3e6a`.
 - [ ] restliche Plugins — noch nicht begonnen, siehe Tabelle oben.
+
+## Bug/Security/Performance-Review der Kampagne selbst (2026-09-18)
+
+Auf Nutzerwunsch ("checke nochmal das implementierte auf bugs, security oder
+performance optimierungen") ein separater Durchgang, keine neue Runde: sechs
+parallele Review-Agenten haben die tatsächlichen Quellcode-Änderungen dieser
+Kampagne (nicht die Test-Coverage selbst) geprüft — lib.nvim/github_stats.nvim
+(Credential-Fix, split_lines/export, E937), insights.nvim (Windows-Pfad- und
+Tree-sitter-Fixes), fileops.nvim (delete_fn, on_hold.lua), gopath.nvim
+(linepath.lua), cascade.nvim (renumber/cycle) und die übrigen `health.lua`-
+Fixes plus Test-Infra-Fixes. Jeder Fund wurde von mir selbst nachverifiziert
+(nie ungeprüft übernommen).
+
+**Vier neue echte Bugs gefunden, drei gefixt, einer gepinnt:**
+1. **github_stats.nvim** (`680adb8`): `create_pdf()` verschluckte den Fehler
+   von `ensure_parent_dir()` -- derselbe Bug, den mein eigener früherer Fix
+   (`6a85943`) für `write_lines()` behoben hatte, aber am analogen zweiten
+   Call-Site übersehen. Gefixt, Regressionstest verifiziert am zurückgesetzten
+   Code.
+2. **debugging.nvim** (`50afa0b`): `health.lua` requirte `lib.nvim.health` auf
+   Modulebene, komplett ungeschützt -- ein fehlendes/veraltetes lib.nvim hätte
+   `require("debugging.health")` selbst crashen lassen, noch vor jedem
+   `:checkhealth`-Abschnitt. Der bereits gefixte `pcall`-Guard am Funktionsende
+   (`5bdd781`) wäre nie erreicht worden. Fix: Require in `M.check()` verschoben,
+   mit Fallback-Kopie des Helfers (der historisch ohnehin lokal in dieser Datei
+   lag, bevor er nach lib.nvim extrahiert wurde).
+3. **insights.nvim** (`9c6be5e`, `27744f7`): drei Funde in einer Runde --
+   `M.foo = function() end` wurde unter dem bloßen Feldnamen "foo" statt der
+   vollen "M.foo" gemeldet (Kollisionsrisiko zwischen unabhängigen Dateien);
+   Mehrfachzuweisungen (`local a, b = 1, function() end`) prüften nur den
+   ersten Wert, jeder weitere wurde nie inspiziert; die Windows-Regex-Escape-
+   Menge für `tree/init.lua`s Exclude-Globs deckte `{`/`}`/`|`/`\` nicht ab --
+   ein Backslash-geschriebener Exclude ließ `-match` mit "Unrecognized escape
+   sequence" komplett durchfallen. Beim Schreiben des Regressionstests für
+   Letzteres zusätzlich ein unabhängiger Test-Isolations-Bug gefunden:
+   `compress_tree_spec.lua`s Restore-Schleife lief über `pairs(saved)`, aber
+   `saved[name] = nil` erzeugt in Lua keinen Tabellen-Eintrag -- jedes Modul,
+   das vor diesem Test noch nicht geladen war, wurde nie zurückgesetzt und
+   blieb für den Rest des Prozesses auf dem Fake-Stub hängen. Alle vier
+   gefixt, jeweils gegen zurückgesetzten Code verifiziert.
+4. **cascade.nvim** (`3f91d2d`), **gepinnt, nicht gefixt**: die
+   Roman-vor-Ascii-Reihenfolge (mein eigener Fix aus `c23ea33`, nötig damit
+   der Cycle-Ring schließt) lässt `marker.parse` sieben Buchstaben (c/d/i/l/m/
+   v/x) fälschlich als römische Ziffern lesen -- eine ganz normale
+   `a) b) c) d)`-Liste wird ab dem dritten Punkt bei jedem Renumber (Save,
+   `:Cascade renumber`, Move) lautlos korrumpiert (`c)` → `iii)`). Live über
+   die echte `renumber.tree()`-Fassade reproduziert, nicht nur am isolierten
+   Parser. Kein mechanischer Fix: bräuchte block-weite Kind-Konsistenz-
+   Verfolgung in `tree()`, die dann als Tie-Breaker an `marker.parse`
+   zurückgereicht wird -- und ein Zurückdrehen der Reihenfolge würde
+   stattdessen den bereits gepinnten Ring-Schluss-Fall wieder brechen.
+   Ausdrücklich nicht selbst entschieden, sondern gepinnt.
+
+**Sonst nichts gefunden**: lib.nvim (bis auf die bereits bekannte, nicht neu
+behobene Vermischung mit einem unabhängigen winhighlight-Commit im selben
+Push), fileops.nvim und gopath.nvim kamen aus ihren jeweiligen Reviews clean
+heraus -- explizit auf Shell-Injection, Config-Frische, UTF-8-Grenzfälle und
+Performance geprüft, nichts gefunden.
