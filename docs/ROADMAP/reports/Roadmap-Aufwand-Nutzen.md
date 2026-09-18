@@ -47,6 +47,10 @@ as it stands.
 
 ## 2. The numbers
 
+Snapshot at review time (2026-09-17) — kept as written, not adjusted below,
+so the method paragraph above stays checkable against what it actually
+produced:
+
 |                                                 |  Count  |
 |-------------------------------------------------|---------|
 |                  Roadmaps read                  | **38**  |
@@ -63,23 +67,37 @@ Twenty-two of thirty-eight plugins are genuinely finished: `recommender`,
 `runtime-analysis`, `cascade`. Several say so explicitly and give the date
 they were last checked, which is what made this pass cheap for them.
 
+**Since then, 2026-09-18:** every item this report actually ranked in
+§4/§5/§6 — not the full ≈48 the table above counts, which also includes
+items no lower-priority section below ever named individually — is now
+done, was found already built, or was investigated and closed as a
+decision. See
+§8 for what is left and, more importantly, for the two much larger
+fleet-wide findings (the `rules.nvim` audit, the `ui.nvim`/`my.nvim`
+cross-feature check) that this report's own closing section flagged and
+that have since actually run.
+
 ---
 
 ## 4. Do these first — high benefit, ≤1 session
 
+**Status, 2026-09-18: ten of eleven rows are done, already-built, or the
+row's own premise turned out wrong — only row 7 is still genuinely open.**
+Verified against source, not against this table — see each row.
+
 | # | Plugin | Item | Effort | Why it ranks here |
 |---|---|---|---|---|
-| ~~1~~ | `ai.nvim` | ~~Migrate `pdfport.nvim`'s backends onto `ai.nvim`~~ — **withdrawn 2026-09-17, see below** | — | Ranked here on the entry's own security claim. That claim is stale: both defects are already fixed in `pdfport` itself. Re-ranked as consolidation, §5 |
+| ~~1~~ | `ai.nvim` | ~~Migrate `pdfport.nvim`'s backends onto `ai.nvim`~~ — **withdrawn 2026-09-17, re-ranked as consolidation** | — | Ranked here on the entry's own security claim. That claim is stale: both defects are already fixed in `pdfport` itself. Re-ranked as consolidation, §5 — where its own status has since moved too |
 | 2 | — | ~~Strike the fifteen done items from §3~~ — **done 2026-09-17**, `WKDBooks@15e77b3` | <1 | Every future reading of these files was wrong until this was done |
-| 3 | `casedesk.nvim` | Redaction gate in `ki.lua` — refuse to attach a file without a redacted counterpart | 0.5 | Customer screenshots and logs reaching an AI unredacted. `:Image redact` already does the work; what is missing is the *refusal*. Verified: no `redact` reference in `ki.lua` today |
-| 4 | `filetree.nvim` | Implement `get_node_at_line` for the neo-tree and nvim-tree adapters | 1 | Unlocks **five** silently-disabled features at once: `git_status`, `lsp_diagnostics`, `size_info`, `copy_move`'s clipboard marker, `filter`'s dim fallback. Both adapters already carry the other line-mapping methods. Verified: `@types/adapter.lua:60` still says "Implemented by no backend yet" |
-| 5 | `media.nvim` | Segments → SRT/VTT serialisers (transcription phase 1) | 0.5 | The data model (`Media.Segment`/`Media.Transcript`) is built and every engine already has to produce it. Only the serialisers are missing — verified: `lua/media/output/` holds `init.lua` and `sidecar.lua`, nothing else |
-| 6 | `media.nvim` | `lib.nvim.progress` handle during a transcription run | 0.5 | The roadmap calls this non-negotiable in its own design section and then shipped without it. An hour of audio is minutes of work behind a single "transcribing…" |
-| 7 | `casedesk.nvim` | Decide what `:Case timeline` does about git-pull sessions | 0.5 | **It currently reports wrong numbers**, measured, not suspected: every "session" is a `git pull` collapsing to zero duration. Three options are already weighed in the entry; the cheapest (label a one-second session "not measurable") is an afternoon. `detect.last_touched` rests on the same mtimes |
-| 8 | `mdview.nvim` | Hand-test `any_file` in real Neovim | 0.5 | Shipped 2026-08-24, tested through the Lua harness, vitest and a browser check — but never through real Neovim. The test list is already written out in the roadmap |
-| 9 | `media.nvim` | Prefetch hint for frame stepping | 0.25 | "Roughly ten lines", and the playback path already does exactly this one level up |
-| 10 | `my.nvim` | Breadcrumb `container` provider is a no-op | 0.25 | A real defect, not a feature: nothing sets `cfg._base_symbol`, so `container.extract()` never fires outside a debug path. Either wire a source or drop it from `providers_order` |
-| 11 | `lib.nvim` | `deps.health` migration for the two stragglers | 0.5 | Only `open.nvim` and `pdfport.nvim` still hand-roll their executable checks — verified by grep across the fleet. Smaller than the entry implies |
+| ~~3~~ | `casedesk.nvim` | ~~Redaction gate in `ki.lua`~~ — **done 2026-09-18** | 0.5 | `lua/casedesk/redaction.lua` + a rewritten `ui/ki.lua`'s `M.ki`, `TESTS/redaction_spec.lua` (16 cases). The real leak path turned out to be `ocr.render`'s `{screenshots}` block, not a binary attachment — see `casedesk.nvim/FEATURES.md` |
+| ~~4~~ | `filetree.nvim` | ~~Implement `get_node_at_line` for the neo-tree and nvim-tree adapters~~ — **already done by the time this row was drafted** | 1 | Built for both adapters, verified live against a real tree (19 checks). Corrects itself on the way: **four** features were unlocked, not five — `filter`'s dim fallback never reaches its gate on either adapter |
+| ~~5~~ | `media.nvim` | ~~Segments → SRT/VTT serialisers~~ — **done 2026-09-17**, `media.nvim@f6a2ca8` | 0.5 | `output/srt.lua`, `output/vtt.lua`, `:Media transcribe out=srt\|vtt`. A silent fall-through was fixed on the way — any mode that wasn't `sidecar` used to open a buffer regardless of the requested format |
+| ~~6~~ | `media.nvim` | ~~`lib.nvim.progress` handle during a transcription run~~ — **done 2026-09-17**, `media.nvim@feeb08a` | 0.5 | `opts.on_phase` + a `lib.nvim.progress` handle in `bindings/usrcmds.lua`. Larger find on the way: `:Media transcribe` was **not cancellable at all** — a cancel handle existed since it was written and the command dropped it |
+| 7 | `casedesk.nvim` | Decide what `:Case timeline` does about git-pull sessions | 0.5 | **Still open.** It currently reports wrong numbers, measured, not suspected: every "session" is a `git pull` collapsing to zero duration. Three options are already weighed in the entry |
+| ~~8~~ | `mdview.nvim` | ~~Hand-test `any_file` in real Neovim~~ — **done, already built by the time this row was checked** | 0.5 | Verified 2026-09-18: was already tested against the roadmap's own checklist. Struck without further work |
+| ~~9~~ | `media.nvim` | ~~Prefetch hint for frame stepping~~ — **done 2026-09-17**, `media.nvim@c72d8ba` | 0.25 | The ten-line estimate held — `cache.ensure` already joins an in-flight render, so `prefetch` is `frame` with nobody listening |
+| ~~10~~ | `my.nvim` | ~~Breadcrumb `container` provider is a no-op~~ — **done 2026-09-17**, `my.nvim@fdeacd4` | 0.25 | Retired rather than wired: measured against a real Lua tree, the provider's own input unchanged all four times — `ts_symbol` already yields the qualified name, so it never had anything to add. Two bigger defects found underneath (a Tree-sitter node reaching no provider at all, a `memo.fn` crash on userdata keys) were fixed the same day too |
+| ~~11~~ | `lib.nvim` | ~~`deps.health` migration for the two stragglers~~ — **the row's own premise was wrong** | 0.5 | `open.nvim`/`pdfport.nvim` (the row's actual targets) were already migrated — confirmed: `open.nvim/health.lua:216`, `pdfport.nvim/health.lua:435` (`pointer_for`). The real remaining stragglers are five OTHER plugins (`ai`, `debugging`, `emojis`, `fileops`, `sandbox`, confirmed still hand-rolling `vim.fn.executable` 2026-09-18) — and none of them declares an `install.json`, so `deps.health` doesn't apply to them yet. A different, larger task, not this row |
 
 
 > **Correction, 2026-09-17, after the review shipped.** Row 1 above was wrong,
@@ -105,48 +123,94 @@ they were last checked, which is what made this pass cheap for them.
 > 2 sessions, not 0.5.
 >
 > The corrected text is in `ai.nvim`'s own roadmap entry and `FEATURES.md`.
+>
+> **Second correction, 2026-09-18.** The precondition above no longer holds:
+> `ai.nvim` HAS an attachment capability now (`base64`/`image`/`document`
+> block types in `providers/{claude,ollama,openai}.lua`, `providers/transport.lua`).
+> `pdfport.nvim` still carries its own `backends/{claude,gemini,ollama}.lua`
+> unchanged, so the migration itself has not happened — but the thing that
+> was blocking it is gone. Likely smaller than 2 sessions now; re-cost before
+> starting.
 
 ---
 
 ## 5. Worth doing, but a real sitting
 
+**Status, 2026-09-18: eleven of seventeen done outright, two superseded by a
+much larger fleet-wide pass, two reclassified as decisions rather than open
+work, one rejected after investigation, one still genuinely open.**
+
 | Plugin | Item | Effort | Benefit |
 |---|---|---|---|
-| `media.nvim` | The hub — one dashboard across image/pdf/audio/video (`:Media`, `:Media text`) | 3–4 | High. Fully specified down to the module layout, the row format and the scope vocabulary; this is the plugin's reason for its name. Nothing blocks it |
-| `media.nvim` | First real whisper.cpp run: verify the JSON shape and `-np` | 1 | High, **blocked** — needs a binary and a GGML model on the machine. The parser was written from whisper.cpp's source, not from observed output, and only `result.code ~= 0` is read for errors |
-| `casedesk.nvim` | Anonymisation before any AI hand-off (via `replacer.nvim`) | 2 | High. Customer names and contacts in prompts. The values are already structured in `.case.json`; the live preview is the safety step |
-| `casedesk.nvim` | Tests for the pure functions (case-number normalisation first) | 1 | High. There is a real incident behind that guard — an empty case number once wrote a blueprint into the parent folder of every case. Fixtures must be anonymised |
-| `filetree.nvim` | `TESTS/refs/` — 52 of 54, one file skipped on rename | 1–1.5 | High (data correctness). The lead is already narrowed to the apply layer, with a concrete suspect: `to_absolute` returns a path with a literal `\.\` segment and mixed separators |
-| `lsp.nvim` | `:LspDoctor deep` — provoke errors in a scratch buffer, check diagnostics arrive | 1 | High. The only check that verifies the chain end to end rather than querying states; separates "no errors" from "diagnostics never arrive" |
-| `ui.nvim` | Run `rules.nvim` over `ui.nvim` | 1–2 | Medium-high, with evidence: the same pass over `my.nvim` on 2026-09-15 found a shell-injection-shaped clipboard call, missing `pcall`s around external processes, a `PERF` finding on a hot path and about a dozen more. `my.nvim` was the more-exercised of the two |
-| `media.nvim` | Run `rules.nvim` over `media.nvim` | 1–2 | Medium. Its own roadmap puts this last, after transcription and the hub settle — that ordering is right, keep it |
-| `data.nvim` | Phase 1 rest: `--reg=`/`--inplace`/`--split` target flags | 1 | Medium. `filter` landed; this is the remaining half. Verified still open (`scope/resolve.lua:12`) |
-| `lib.nvim` | `autocmd-dispatcher` — one autocmd, many handlers | 1–2 | Medium. Already verified against 17 real `FileType` registrations across the fleet, with two fixes found in the prototype. The recommendation is to ship it |
-| `lib.nvim` | Windows elevation in the dependency installer | 1 | Medium. Thought through, never run on a machine that actually demands elevation |
-| `gopath.nvim` | Consolidate frecency | 1–2 | Medium. There are now **three** implementations: `pickers.nvim/smart`, `lib.nvim/frecency`, and `gopath/alternate/frecency.lua` — which was built locally despite the entry saying it belonged in `lib.nvim` |
-| `my.nvim` | Persisted highlight overrides under `stdpath("data")` | 1 | Medium. `modified(ns)` is exactly the key set such a file needs, so the expensive half already exists |
-| `hover.nvim` | The demo GIF (`REL-09`) | 0.5–1 | Medium. The last 🟢 open in the release gate — **and `ui.nvim`'s screenkey HUD now exists** (§3), which is the tool this recording wants |
-| `mdview.nvim` | Cooperative tab closing in `browser.mode = "default"` | 1–2 | Medium. Makes `browser_autoclose` and `stop_on_browser_exit` stop being silent no-ops there |
-| `documentation.nvim` | A shim function that exists and behaves differently | 1–2 | Medium. The static contract spec cannot see it; the honest gate message is already in |
-| `ui.nvim` / `my.nvim` | Cross-feature check against the ~30 sibling plugins | 2–3 | Medium. Requested in both roadmaps, explicitly as **one** written pass for both, not two spot-checks |
+| ~~`media.nvim`~~ | ~~The hub — one dashboard across image/pdf/audio/video~~ — **done 2026-09-17**, `media.nvim@37db33b`+3 more | 3–4 | `hub/{kinds,scan,dashboard,actions}.lua`, `:Media dashboard`/`:Media text`. Found on the way: `ui.kit`'s picker is not the multi-select+preview one the roadmap described — the dashboard is a scratch float with its own keymaps instead |
+| ~~`media.nvim`~~ | ~~First real whisper.cpp run~~ — **unblocked and done 2026-09-17**, `media.nvim@a2adf38` | 1 | Against a real build + `ggml-base.en.bin`. The JSON shape held; `-np` does not suppress everything, and `whisper-cli` exits 0 on some decode failures. The real find: caching a real transcription crashed — `vim.system`'s `on_exit` fast-event context, verified only once whisper.cpp stopped being a fake |
+| ~~`casedesk.nvim`~~ | ~~Anonymisation before any AI hand-off~~ — **already built by the time this row was drafted** | 2 | `lua/casedesk/anonymize.lua` + `:Case anonymize`, `TESTS/anonymize_spec.lua` |
+| ~~`casedesk.nvim`~~ | ~~Tests for the pure functions~~ — **already built by the time this row was drafted** | 1 | Suite went from 5 specs to 40, including the case-number guard with the real incident behind it |
+| ~~`filetree.nvim`~~ | ~~`TESTS/refs/` — 52 of 54~~ — **already fixed weeks before this row was drafted (2026-08-27)** | 1–1.5 | The entry's own premise was the bug: a spec/fixture string mismatch, not the apply layer the "to_absolute" lead pointed at. `run.lua` now asserts fixtures contain what their spec expects, so the same drift names its own cause |
+| ~~`lsp.nvim`~~ | ~~`:LspDoctor deep` — provoke errors~~ — **done 2026-09-17**, `lsp.nvim@60ba2c6` | 1 | `TESTS/lsp/probe_live_spec.lua` + a CI step installing a real server. Fails instead of skipping under CI — plenary's `Pending` tallies as `Success`, which would have hidden exactly the gap this check exists to catch |
+| ~~`ui.nvim`~~ | ~~Run `rules.nvim` over `ui.nvim`~~ — **superseded, see below** | 1–2 | The per-plugin ask is now covered (and far exceeded) by the fleet-wide audit across all 38 repos, 2026-09-18 — see `Regel-Audit-rules-nvim.md` |
+| ~~`media.nvim`~~ | ~~Run `rules.nvim` over `media.nvim`~~ — **superseded, see below** | 1–2 | Same fleet-wide audit covers it; its own roadmap's "after transcription and the hub settle" ordering turned out moot once the sweep ran over everything at once |
+| ~~`data.nvim`~~ | ~~Phase 1 rest: `--reg=`/`--inplace`/`--split`~~ — **done, verified 2026-09-18** | 1 | All three flags typed and wired (`@types/init.lua`, `bindings/usrcmds.lua`); `scope/resolve.lua`'s own doc comment now explicitly hands the register/output half to `scope.source`/`scope.sink` |
+| `lib.nvim` | `autocmd-dispatcher` — one autocmd, many handlers | 1–2 | Medium. **Still open.** Already verified against 17 real `FileType` registrations across the fleet, with two fixes found in the prototype |
+| ~~`lib.nvim`~~ | ~~Windows elevation in the dependency installer~~ — **not an open item, decided against** | 1 | Documented as a deliberate design choice (`deps/pm/init.lua`, `deps/README.md`): "no elevation logic beyond a `sudo` prefix" — Windows elevation is left to the package manager's own UAC prompt, on purpose, not unfinished |
+| ~~`gopath.nvim`~~ | ~~Consolidate frecency~~ — **already correct, the entry's premise was wrong** | 1–2 | Verified: `gopath/alternate/frecency.lua:43` calls `require("lib.nvim.frecency").store` — the local file is the saturation curve on top of the shared implementation, not a second one |
+| ~~`my.nvim`~~ | ~~Persisted highlight overrides~~ — **done 2026-09-18**, `my.nvim@3f8be49` | 1 | Opt-in `persist_overrides = true`; `lua/my/config/persist.lua`. A follow-up bug/security/performance re-check found and fixed a non-idempotent observer registration and N redundant disk writes on `:My hl reset` — both since fixed |
+| ~~`hover.nvim`~~ | ~~The demo GIF~~ — **done, the screenkey HUD it needed shipped and the GIF followed** | 0.5–1 | Recorded once `ui.nvim`'s screenkey HUD existed |
+| ~~`mdview.nvim`~~ | ~~Cooperative tab closing in `browser.mode = "default"`~~ — **investigated and rejected, 2026-09-18** | 1–2 | `window.close()` only closes a tab the script itself opened — checked against the actual mechanism, not assumed. Recorded as a decision, not left open |
+| ~~`documentation.nvim`~~ | ~~A shim function that behaves differently~~ — **done 2026-09-17**, `documentation.nvim@c9e7ce2` | 1–2 | Fixed the shim so it matches the contract the static spec checks |
+| ~~`ui.nvim` / `my.nvim`~~ | ~~Cross-feature check against the ~30 sibling plugins~~ — **done, in full — Tiers A–F all resolved by 2026-09-18** | 2–3 | `ui-my-Kreuzfeature-Analyse.md`. The S- and M-tier findings shipped 2026-09-17; F1 (diffopt profiles) and F2 (`gh` gitsigns peek) were decided (move to `diff.nvim`) and built 2026-09-18, `diff.nvim@03b6359`/`my.nvim@1c147de` |
+
+**The `rules.nvim` sweep this section pointed at happened, and it is bigger
+than either row above imagined.** `Regel-Audit-rules-nvim.md`
+(2026-09-18) ran the full 421-rule catalogue over all 38 repos: 497
+confirmed rule violations (from 541 raw findings after adversarial
+verification), 52% of them error-handling (`ERR`), plus a fleet-wide
+migration left half-finished (`lib.nvim.cross.fs.expand_path` replacing
+`vim.fn.expand()` on 21 plugins' shell-command paths, `SEC-34`) and six
+concrete defects in `rules.nvim`'s own automatic checks (producing 85%
+false positives — `:Rules check` is not a usable gate until those are
+fixed). **This report implements nothing** — it is the findings, not the
+fix. See that document for the prioritised list; it now supersedes the two
+struck `rules.nvim` rows above and is a body of work in its own right, not
+a "take it when you're in the file anyway" item.
 
 ---
 
 ## 6. Cheap, low stakes — take them when you are in the file anyway
 
-`media.nvim`: resolution tied to the float rather than a fixed pixel width;
-`levels` per material; a larger default float for the playing view.
-`my.nvim`: `guicursor` presets; `:My hl why` for skip-rule tracing; a middle
-tier for large-file behaviour instead of the binary switch.
+**Status, 2026-09-18: most of this list shipped as one bundle (`C.` in
+`Tasks-offene-Punkte.md`, sequential, one repo at a time, 2026-09-18), then
+went through the same bug/security/performance re-check as everything else
+below.**
+
+~~`media.nvim`~~: resolution tied to the float / `levels` per material / a
+larger default float for the playing view — **already done**, all three, in
+`hover.nvim`/`images.nvim`, the same evening the note about them was
+written; the note itself was just never struck.
+~~`my.nvim`~~: `guicursor` presets (`my.nvim@c2f33ef`); `:My hl why` for
+skip-rule tracing (`my.nvim@e253494`, and its own hot-path allocation fixed
+in the re-check, `my.nvim@c17d9d3`) — **done**. A middle tier for
+large-file behaviour instead of the binary switch is **still open** — not
+part of this bundle, not checked here.
 `filetree.nvim`: make the `cwd_mode` badge cheap before the statusline
-framework is ever swapped; fix the dead `CWD_MODES.md` link.
-`lsp.nvim`: hover cache via `lib.lua.memo`; the runtime half of the keymap
-collision check (build-time half is done in `keymaps_spec.lua`).
-`data.nvim`: `diff.nvim` before/after for a `filter` run — now possible,
-since `filter` shipped.
-`ai.nvim`: a validated model registry per provider.
-`casedesk.nvim`: one routing-status field instead of filename *and* `## Status`;
-the eleven sibling-plugin integrations, each small and each soft-dependency only.
+framework is ever swapped — **still open, not part of this bundle**; the
+dead `CWD_MODES.md` link — **still open, confirmed 2026-09-18** (`docs/WORKFLOW.md`
+references it, the file does not exist under `docs/FEATURES/`).
+~~`lsp.nvim`~~: hover cache via `lib.lua.memo` — **already built** (record
+only, nothing to build); the runtime half of the keymap collision check —
+**done**, `lsp.nvim@49b4dfa`, plus a case-sensitivity gap in that same
+check found and fixed in the re-check (`lsp.nvim@056639d`).
+`data.nvim`: `diff.nvim` before/after for a `filter` run — **still open**,
+not part of this bundle.
+`ai.nvim`: a validated model registry per provider — **still open**,
+confirmed no such registry exists in `ai.nvim/lua/ai/providers/`.
+~~`casedesk.nvim`~~: one routing-status field instead of filename *and*
+`## Status` — **done**, `casedesk.nvim@718404f` (`routed_to` sidecar field,
+`:Cases doctor` migration findings for legacy cases; a resulting data-loss
+bug and a pattern-injection bug were both found and fixed in the re-check).
+The eleven sibling-plugin integrations — **partial**: `docs/around-it.md`
+lists four (`spotlight`/`sessions`/`images`/`pdfport`), not eleven; **still
+open** for the rest.
 
 ---
 
@@ -165,23 +229,51 @@ the eleven sibling-plugin integrations, each small and each soft-dependency only
 
 ## 8. What this leaves
 
-Three plugins carry nearly all of the remaining work: **`media.nvim`**
-(transcription phase 1 plus the hub — the largest single block in the
-collection), **`casedesk.nvim`** (privacy and one feature reporting measurably
-wrong numbers), and **`filetree.nvim`** (five features disabled behind one
-unimplemented adapter method, plus a rename bug with a narrowed lead).
+**Rewritten 2026-09-18.** Every plugin-specific item this report originally
+named in §4/§5/§6 has shipped, was already done, or was investigated and
+either rejected (`mdview.nvim` cooperative tab closing) or reclassified as a
+decision rather than work (`lib.nvim` Windows elevation, `gopath.nvim`
+frecency). That closes the entire original scope of this review. What is
+left is:
 
-`lsp.nvim` looks like the fourth only because its roadmap is stale; after §3
-it has four genuinely open items, all of them small or explicitly parked.
+**Six small, genuinely open items**, none of them urgent:
+`casedesk.nvim`'s `:Case timeline` git-pull-session decision (§4 row 7);
+`lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s `cwd_mode` badge
+cost and its dead `CWD_MODES.md` link, `data.nvim`'s `diff.nvim` before/after
+for `filter`, `ai.nvim`'s model registry, and the remaining seven of
+`casedesk.nvim`'s eleven sibling integrations (§6). None of these block
+anything else; take them opportunistically.
 
-The cross-cutting item worth naming separately: **`rules.nvim` has been run
-over exactly one plugin** (`my.nvim`, 2026-09-15) out of a fleet of 38, and
-that single pass turned up a shell-injection-shaped call, missing `pcall`s
-around external processes, and a hot-path performance defect. `ui.nvim` and
-`media.nvim` both list the pass as their own last item. On that evidence the
-question is less whether to run it and more whether the fleet-wide sweep
-should be planned as its own campaign rather than as a footnote in each
-roadmap.
+**The cross-cutting item this report closed out itself: the `ui.nvim`/
+`my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
+surfaces with no owner (`vim.wo.winbar`, `winhighlight`, the highlight-group
+table after `:colorscheme`, `vim.t.bufs`) plus two features that had drifted
+into the wrong plugin entirely (diffopt profiles and a gitsigns keymap,
+both moved from `my.nvim` to `diff.nvim`). All resolved.
+
+**The cross-cutting item this report flagged and got, at ten times the
+scale it asked for: `rules.nvim` has now been run over all 38 plugins**,
+not the one (`my.nvim`, 2026-09-15) this report knew about. `Regel-Audit-
+rules-nvim.md` (2026-09-18) is the result: **497 confirmed rule violations**
+fleet-wide (52% error handling), a security-relevant migration
+(`lib.nvim.cross.fs.expand_path` replacing raw `vim.fn.expand()` on shell-
+command paths) started on 15 of 38 repos and not finished on the other 21,
+and six defects in the automatic checks themselves that make `:Rules check`
+produce 85% false positives as it stands. **This is now the largest body of
+open, verified work in the whole fleet — bigger than anything this report
+originally ranked** — and it implements nothing on its own; every fix is
+still its own task. Read that report next, not this one, for what to do
+next.
+
+**Also worth naming: a fleet-wide bug/security/performance re-check ran
+over this session's own fixes** (`Tasks-offene-Punkte.md`, §C plus the
+cross-feature check's F1/F2) and found nine real, critical bugs in
+`casedesk.nvim`'s `ui.lua` split alone — invisible to a fully green test
+suite, because nothing had driven the interactive callbacks that broke.
+Twenty-two of twenty-four findings fixed same-day; the other two documented
+as a known limitation. The lesson, stated plainly: **a green test suite is
+not evidence an interactive code path works** — only running it, or a test
+that actually drives it, is.
 
 ---
 
