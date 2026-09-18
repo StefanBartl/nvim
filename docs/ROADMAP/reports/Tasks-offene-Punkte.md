@@ -14,7 +14,7 @@ the surrounding text is English like every other document here.
 
   - [Read this before pasting anything](#read-this-before-pasting-anything)
   - [A. High benefit, one session or less](#a-high-benefit-one-session-or-less)
-    - [~~A1 — casedesk: redaction gate before any AI attachment~~ — DONE](#a1--casedesk-redaction-gate-before-any-ai-attachment--done)
+    - [~~A1 — casedesk: redaction gate before any AI attachment~~ — DONE](#a1-casedesk-redaction-gate-before-any-ai-attachment-done)
     - [~~A2 — media: SRT/VTT serialisers~~ — DONE](#a2-media-srtvtt-serialisers-done)
     - [~~A3 — media: progress handle during a transcription run~~ — DONE](#a3-media-progress-handle-during-a-transcription-run-done)
     - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
@@ -27,9 +27,8 @@ the surrounding text is English like every other document here.
     - [~~B3 — filetree: `TESTS/refs/` is 52 of 54~~ — DONE](#b3-filetree-testsrefs-is-52-of-54-done)
     - [~~B4 — lsp: provoke errors in `:LspDoctor deep`~~ — DONE](#b4-lsp-provoke-errors-in-lspdoctor-deep-done)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
-    - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
     - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
-  - [~~C. Cheap, low stakes — collected per plugin~~ — DONE](#c-cheap-low-stakes-collected-per-plugin)
+  - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
 ---
@@ -723,50 +722,6 @@ stylua grün. Docs/README mitpflegen — lib.nvim-Module haben eine eigene
 README je Modul, das ist Hausstil. Kein Claude-Co-Author in Commits. Wenn
 fertig: committen und direkt auf main pushen, und das Konzeptdokument aus
 der "Open concepts"-Liste in lib.nvim/ROADMAP/ROADMAP.md herausnehmen.
-```
-
----
-
-### B8 — hover.nvim: the demo GIF
-
-**Now unblocked:** `ui.nvim` shipped a screenkey HUD
-(`lua/ui/screenkey/init.lua`) — the tool this recording wants.
-
-```
-Aufgabe: hover.nvim — das Demo-GIF aufnehmen (REL-09).
-
-Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/hover.nvim/
-ROADMAP/ROADMAP.md, Abschnitt "Features > A demo GIF". Es ist das letzte
-offene 🟢 im Release-Gate.
-
-Wortlaut dort: Das README trägt ein ASCII-Mockup des Floats, das die IDEE
-erklärt, aber nicht das GEFÜHL — und genau das ist das Zeigenswerte: wie
-wenig der Hover beim Lesen unterbricht. Ein Standbild kann das nicht.
-
-Neu, und der Grund, warum das jetzt dran ist: ui.nvim hat inzwischen ein
-Screenkey-HUD (E:/repos/ui.nvim/lua/ui/screenkey/init.lua, Route in
-bindings/usrcmds). Das ist genau das Werkzeug für so eine Aufnahme —
-eingeblendete Tastendrücke, damit der Betrachter sieht, was ausgelöst hat,
-was er sieht. Es ist per Default aus, muss also bewusst eingeschaltet werden.
-
-Stand geprüft 2026-09-17: E:/repos/hover.nvim/docs/assets/ ist leer.
-
-Zu beachten:
-- Das GIF gehört ins Repo und wird damit dauerhaft mitgeschleppt —
-  Dateigröße im Blick behalten. Andere Plugins der Flotte haben PNGs unter
-  docs/assets/ (z.B. cmdlog.nvim/docs/assets/Cmdlog-Picker-UI.png), das ist
-  das Vorbild für Ort und Benennung.
-- Keine echten Kundendaten, keine privaten Pfade im Bild.
-- Zeig die Sache, um die es geht: den Hover im Lesefluss, nicht eine
-  Feature-Parade.
-
-Repo: E:/repos/hover.nvim
-Regeln: Antworte auf Deutsch. Kein Claude-Co-Author in Commits. README
-mitpflegen (das ASCII-Mockup kann bleiben oder weichen — sag mir, was du
-vorschlägst). Wenn fertig: committen und direkt auf main pushen, den
-Roadmap-Punkt entfernen und den Ablieferungsnachweis in hover.nvim/
-FEATURES.md eintragen (Datei neu anlegen, Muster: die FEATURES.md der
-anderen Plugins im selben Ordner).
 ```
 
 ---
