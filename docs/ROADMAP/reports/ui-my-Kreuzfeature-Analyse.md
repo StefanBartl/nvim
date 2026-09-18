@@ -186,15 +186,48 @@ claimed `my.nvim` used `lib.nvim.ui.nerd_font`; it does not, and neither did
 called one German string an outlier when the whole `:UI` surface was German
 by intent. Both sections now say what is actually there.
 
-**Not fixed, and why.** `lsp.nvim`'s winbar rewriter — the second half of
-[C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) — turns
-out to need no change at all; see that section. `F1` and `F2` were decisions
-about where a feature belongs rather than defects — both decided 2026-09-18
-(move to diff.nvim, see [§10](#10-findings-inside-mynvims-own-scope-boundary))
-and built the same session. Everything at **M**, **L** and **XL** beyond that
-is untouched, including the kit deduplication
-([A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17)),
-which is the one that needs a decision rather than typing.
+**Deliberately not changed.** `lsp.nvim`'s winbar rewriter — the second half
+of [C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) —
+turns out to need no change at all; see that section. `F1` and `F2` were
+decisions about where a feature belongs rather than defects — both decided
+2026-09-18 (move to diff.nvim, see
+[§10](#10-findings-inside-mynvims-own-scope-boundary)) and built the same
+session. *(An earlier version of this paragraph said everything at M, L and
+XL was untouched, including A1. That was written before the M tier and A1
+landed and was never updated; the tables above are the record.)*
+
+**The last two rests, 2026-09-18.** A final pass over the whole report
+against the working tree found exactly two things the status tables above
+did not cover, both S, both done:
+
+| Finding | Where | Commit |
+|---|---|---|
+| C5, the `my.nvim` half: `separator.lua` still hand-rolled the glyph probe | my.nvim | `181685a` |
+| E docs: `filetree.nvim` and `sandbox.nvim` were the two of seven still not naming `ui.nvim` | filetree.nvim `2aada27`, sandbox.nvim `615845b` | |
+
+The C5 status row said "glyph probes unified on `nerd_font.glyph`" and
+listed only `ui.nvim`; `my.nvim`'s own probe in
+`hl_config/utils/separator.lua` — the very row in C5's table — had not
+moved. It goes through `lib.nvim.ui.nerd_font.glyph` now, and porting it
+exposed a cache-key defect the report had not seen: the memoised resolver
+keyed on the hex alone, so a terminal resize kept serving the fallback
+arrow chosen for the old width, and a `vim.g.have_nerd_font` set after the
+first render never took. Width class and font availability are part of the
+key now. Verified headless across six cases (no font narrow/wide, font
+wide, a two-cell glyph refused, explicit separator, no hex); the full
+`my.nvim` suite is green.
+
+The E count was README-only, and that is why it missed the last two: both
+plugins keep their "Around it" section in `docs/around-it.md`, not in the
+README. `filetree.nvim`'s named neither `ui.nvim` (three contact points:
+context menu, `cwd_mode` badge, `ui.winbar`) nor `my.nvim` (the other
+winbar producer), and its "Dependency shape" paragraph disagreed with its
+own `installation.md`, which lists `ui.nvim` as required. `sandbox.nvim`'s
+named `ui.nvim` only as a dependency, not as the consumer of its
+statusline component. Both say so now.
+
+Everything else the suggested order lists is done, deliberately left as
+is, or corrected as wrong — there is no open item left in this report.
 
 ## 1. Method, and what this report is not
 
@@ -613,7 +646,7 @@ either:
 | | How it decides whether a glyph is usable |
 |---|---|
 | `lib.nvim.ui.nerd_font` | the primitive — 1 external consumer |
-| `my.nvim` | reads `vim.g.have_nerd_font` directly (`hl_config/utils/separator.lua:40`) |
+| `my.nvim` | read `vim.g.have_nerd_font` directly and decoded by hand (`hl_config/utils/separator.lua:40`) — **resolved 2026-09-18**, `my.nvim@181685a`: goes through `nerd_font.glyph` now, and the memo key gained the width class and font availability it had been missing |
 | `ui.nvim` | decodes and measures by hand: `hex_to_string(SEP_HEX)` then `SEP_GLYPH ~= "" and vim.fn.strdisplaywidth(SEP_GLYPH) == 1` (`modules/lsp/init.lua:56-58`) |
 | `ui.nvim`, again | no check at all — `modules/github_stats_badge/init.lua:105`, see [D5](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17) |
 
@@ -875,7 +908,10 @@ seventh is already correct as it stands.
 the "Around it" section naming their neighbours. `my.nvim` is named in exactly
 **one** of them (`ui.nvim`'s). `ui.nvim` is named in **three** (`my.nvim`,
 `replacer.nvim`, `reposcope.nvim`) — and not in any of the seven whose data it
-renders. `spotlight.nvim`'s section, for instance, names `buffer-ctx.nvim`,
+renders. *(The count was README-only. `filetree.nvim` and `sandbox.nvim` keep
+the section in `docs/around-it.md` instead, which is why they were the last
+two fixed — 2026-09-18, see [§0](#0-status--the-s-tier-is-done-2026-09-17).
+All seven name `ui.nvim` now; `filetree.nvim` names `my.nvim` too.)* `spotlight.nvim`'s section, for instance, names `buffer-ctx.nvim`,
 `hover.nvim` and `cmdlog.nvim`, but not `my.nvim`, whose `cword_occurrences`
 is its closest neighbour in the whole fleet. **Effort: S** for the seven
 README paragraphs.
@@ -977,20 +1013,22 @@ link between them. **Effort: S.**
 ## 11. Suggested order
 
 Cheapest-with-a-real-symptom first, then the two structural decisions.
+**All fourteen are closed as of 2026-09-18** — the "Why here" column keeps
+the original reasoning, the last column says how each one ended.
 
-| # | Finding | Effort | Why here |
-|---|---|---|---|
-| 1 | [D3](#d3--checkhealth-ui-hard-requires-a-module-uinvim-no-longer-uses) stale health entry | S | One line, and it blocks A1 |
-| 2 | [A2](#a2--libnvimcontextmenu--uicontextmenu--and-uinvim-uses-the-wrong-one) `git_clickable` require | S | One line; today `menu = false` is not honoured |
-| 3 | [D5](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17) German string + emoji | S | One line; already a known rule violation class |
-| 4 | [D2](#d2--myuiline_numbers-uses-a-filesystem-ignore-list-as-a-filetype-list) wrong ignore list | S | 43 inert entries; `std_skip` is right there |
-| 5 | [D1](#d1--move_buffer_to_tab-leaves-a-ghost-chip-in-the-source-tab) ghost tabline chip | S | Visible bug, and settles where the helper lives |
-| 6 | [B2](#b2--two-mode-classifiers-that-disagree) mode map | S | The scope boundary's most literal violation |
-| 7 | [C1](#c1--nobody-owns-keep-these-highlight-groups-defined) + [D4](#d4--diagnostic-virtual-text-background-is-restored-by-any-colorscheme) `hl.persist` | M | D4 is its first adopter; 21 sites follow |
-| 8 | [C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) winbar adopters | S ×2 | The mechanism exists; two plugins need to use it |
-| 9 | [C4](#c4--soft-require-centralization-mynvim-did-it-uinvim-did-not) / [C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused) ui.nvim housekeeping | S | Brings `ui.nvim` level with `my.nvim`'s `rules.nvim` pass |
-| 10 | [B1](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead) symbol breadcrumbs | M | Needs the ownership decision first; S for the interim fix |
-| 11 | [C2](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll) winhighlight to lib | M | Lift-and-shift, then four call sites |
-| 12 | [E](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component) statusline components | M ×5 | One sibling at a time; `sandbox.nvim` is the template |
-| 13 | [A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17) kit deduplication | L | The largest, and the one that needs a decision, not typing |
-| 14 | ~~[F1](#10-findings-inside-mynvims-own-scope-boundary)–F3 scope questions~~ | S–M | Done — all three resolved 2026-09-18 |
+| # | Finding | Effort | Why here | Outcome |
+|---|---|---|---|---|
+| 1 | ~~[D3](#d3--checkhealth-ui-hard-requires-a-module-uinvim-no-longer-uses) stale health entry~~ | S | One line, and it blocks A1 | done, `ui.nvim@d039075` |
+| 2 | ~~[A2](#a2--libnvimcontextmenu--uicontextmenu--and-uinvim-uses-the-wrong-one) `git_clickable` require~~ | S | One line; today `menu = false` is not honoured | done, `ui.nvim@d039075` |
+| 3 | ~~[D5](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17) German string + emoji~~ | S | One line; already a known rule violation class | done, widened to the whole `:UI` surface, `ui.nvim@d039075` |
+| 4 | ~~[D2](#d2--myuiline_numbers-uses-a-filesystem-ignore-list-as-a-filetype-list) wrong ignore list~~ | S | 43 inert entries; `std_skip` is right there | done, `my.nvim@8388b57` |
+| 5 | ~~[D1](#d1--move_buffer_to_tab-leaves-a-ghost-chip-in-the-source-tab) ghost tabline chip~~ | S | Visible bug, and settles where the helper lives | done, `ui.nvim@d039075`; the helper stays in `lib.nvim`, `ui.nvim`'s tabufline state closes the gap on its side |
+| 6 | ~~[B2](#b2--two-mode-classifiers-that-disagree) mode map~~ | S | The scope boundary's most literal violation | done, `my.nvim@8388b57` |
+| 7 | ~~[C1](#c1--nobody-owns-keep-these-highlight-groups-defined) + [D4](#d4--diagnostic-virtual-text-background-is-restored-by-any-colorscheme) `hl.persist`~~ | M | D4 is its first adopter; 21 sites follow | done, `lib.nvim@24b2985`, adopted by `ui.nvim@e19a3a5` and `my.nvim@9308dca` (the site count was corrected to 19 in 7 plugins) |
+| 8 | ~~[C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) winbar adopters~~ | S ×2 | The mechanism exists; two plugins need to use it | `filetree.nvim@4c8cd88`; `lsp.nvim` needs no change, see C3 |
+| 9 | ~~[C4](#c4--soft-require-centralization-mynvim-did-it-uinvim-did-not) / [C5](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused) ui.nvim housekeeping~~ | S | Brings `ui.nvim` level with `my.nvim`'s `rules.nvim` pass | done, `ui.nvim@d039075`; C5's `my.nvim` half followed, `my.nvim@181685a` |
+| 10 | ~~[B1](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead) symbol breadcrumbs~~ | M | Needs the ownership decision first; S for the interim fix | decided for `my.nvim`, `my.nvim@8066777` / `ui.nvim@ef78f27` |
+| 11 | ~~[C2](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll) winhighlight to lib~~ | M | Lift-and-shift, then four call sites | done, `lib.nvim@24b2985` + four adopters |
+| 12 | ~~[E](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component) statusline components~~ | M ×5 | One sibling at a time; `sandbox.nvim` is the template | four moved; `filetree_cwd_mode` was already correct; the docs half closed with `filetree.nvim@2aada27` / `sandbox.nvim@615845b` |
+| 13 | ~~[A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17) kit deduplication~~ | L | The largest, and the one that needs a decision, not typing | the decision had already been made (keep both); the drift was fixed and a CI guard added, `ui.nvim@3c2eac2`/`bfd12e7` |
+| 14 | ~~[F1](#10-findings-inside-mynvims-own-scope-boundary)–F3 scope questions~~ | S–M | Done — all three resolved 2026-09-18 | `diff.nvim@03b6359`, `my.nvim@1c147de`, `my.nvim@8388b57` |
