@@ -30,7 +30,7 @@ which own plugin would it land in, and what would it cost?
     - [4.3 The harpoon rebuild is already 90% written — in the wrong place](#43-the-harpoon-rebuild-is-already-90-written-in-the-wrong-place)
     - [4.4 `cmdlog.nvim` is the only own runtime consumer of plenary](#44-cmdlognvim-is-the-only-own-runtime-consumer-of-plenary)
     - [B2 · `folke/todo-comments.nvim` → **insights.nvim** · full replacement](#b2-folketodo-commentsnvim-insightsnvim-full-replacement)
-    - [B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement](#b3-iamccomarkdown-previewnvim-mdviewnvim-full-replacement)
+    - [B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement ✅](#b3-iamccomarkdown-previewnvim-mdviewnvim-full-replacement)
     - [B4 · `dhruvasagar/vim-table-mode` → **markdown.nvim** · full replacement](#b4-dhruvasagarvim-table-mode-markdownnvim-full-replacement)
     - [B5 · `nvim-treesitter/nvim-treesitter-context` → **ui.nvim** `winbar/` · full replacement](#b5-nvim-treesitternvim-treesitter-context-uinvim-winbar-full-replacement)
   - [6. Tier C — harvest one feature, keep the plugin](#6-tier-c-harvest-one-feature-keep-the-plugin)
@@ -234,7 +234,7 @@ the pieces that are config code today and should be plugin code:
 
 | Plugin → feature family | Evidence | Target | Effort |
 |---|---|---|---|
-| `markdown-preview.nvim` → **browser preview with scroll sync** | driven by `markdown.nvim`'s `:Markdown preview` through `vim.g.mkdp_*`; `build = "cd app && yarn install"`; hardcoded per-platform Chrome paths | **mdview.nvim is this plugin, already written** — browser tab, client-side Rust/WASM rendering, sanitization, no toolchain. Rewiring `markdown.nvim/integrations/` is not the work; **scroll sync and `mkdp_combine_preview` / `combine_preview_auto_refresh` (both in active use) are — unverified whether mdview covers them.** Removes a node/yarn build step. | **L** |
+| ~~`markdown-preview.nvim` → **browser preview with scroll sync**~~ | ~~driven by `markdown.nvim`'s `:Markdown preview` through `vim.g.mkdp_*`; `build = "cd app && yarn install"`; hardcoded per-platform Chrome paths~~ | **Done — B3, shipped 2026-09-18.** `markdown.nvim` now drives `:MDView start`/`stop`; markdown-preview.nvim uninstalled. Scroll sync and combine-preview were already covered by mdview's `browser.behavior = "reuse"` and `:MDView sync` — no new feature work, only the rewire. | **done** |
 | `render-markdown.nvim` → **in-buffer concealed rendering** | installed and immediately `setup({ enabled = false })`; toggled by `:Markdown render` | Keep, deliberately. Same shape as the `nvzone/menu` entry: carried for an on-demand feature. A full rebuild into markdown.nvim means concealed rendering of every GFM construct — **not recommended.** | **XL** |
 
 ---
@@ -382,30 +382,41 @@ external plugin plus its `plenary` and `devicons` dependencies leave.
 
 ---
 
-### B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement
+### B3 · `iamcco/markdown-preview.nvim` → **mdview.nvim** · full replacement ✅
 
 **Benefit: high. Effort: 2–4 sessions. Risk: medium.**
 
-`mdview.nvim` *is* this plugin, already written: browser-based preview, buffer
-text streamed to a tab, rendered client-side by a Rust/WASM module with
-sanitization. markdown-preview is the thing it was built to replace.
+**Shipped 2026-09-18.** `markdown.nvim`'s `commands/preview.lua` now drives
+`:MDView start`/`:MDView stop` instead of `:MarkdownPreview`/
+`:MarkdownPreviewStop`; markdown-preview.nvim and its `vim.g.mkdp_*` config
+are gone from `lua/plugins/markdown.lua`. The BufEnter auto-refresh workaround
+`preview.lua` used to carry for markdown-preview went with it — mdview.nvim
+already follows buffer switches and drives scroll sync itself
+(`browser.behavior`, default `"reuse"`), so nothing had to be rebuilt for
+that.
 
-Two reasons it is still installed:
+**The premise this entry was written on was more pessimistic than the
+codebase.** It read "what needs a closer look: scroll sync, and
+`mkdp_combine_preview`/`combine_preview_auto_refresh` — if mdview lacks those,
+they are the actual work item." mdview.nvim already had both, and had had them
+for a while: `bindings/autocmds/buffer_switch.lua`'s `browser.behavior =
+"reuse"` (the default) pushes the newly-focused buffer into the open tab's
+room on every switch — that *is* combine-preview-with-auto-refresh, just
+inherent to mdview's live-mirror design rather than a manual refresh call —
+and `:MDView sync`/`bindings/autocmds/scroll_sync.lua` already covers scroll
+sync. So there was no genuinely new feature work, only the rewire.
 
-1. `markdown.nvim` owns the toggle (`:Markdown preview`) and drives
-   markdown-preview through `vim.g.mkdp_*`. The integration points at the wrong
-   backend — this is a rewire in `markdown.nvim/integrations/`, not new
-   functionality.
-2. markdown-preview has `build = "cd app && yarn install"` — a **node/yarn
-   toolchain requirement**, with per-platform Chrome path detection hardcoded in
-   the spec. mdview explicitly needs no toolchain to run.
+**Bonus find along the way:** `markdown.nvim`'s *other* mdview integration —
+`:Markdown mdview [path]` (`commands/mdview.lua`) — was silently dead. It
+called `:MDViewStart`, a command that no longer exists; mdview.nvim unified
+its command surface into a single `:MDView <subcommand>` some time back, and
+this call site (plus `health.lua`'s `:MDViewStart` detection check) never
+followed. Fixed as part of this pass — `:MDView start <path>` is the correct
+form.
 
-What genuinely **needs a closer look** before the cut: scroll sync, and
-`mkdp_combine_preview` / `combine_preview_auto_refresh`, which are in active use
-in the current spec. If mdview lacks those, they are the actual work item.
-
-**Payoff:** removes a node build step from the plugin set, and stops
-markdown.nvim's preview toggle from depending on a foreign plugin's globals.
+**Payoff:** removes a node build step from the plugin set, stops
+markdown.nvim's preview toggle from depending on a foreign plugin's globals,
+and fixes `:Markdown mdview` which had not actually worked.
 
 ---
 
@@ -553,7 +564,7 @@ Grouped by the own plugin that gains, so you can see which repos get busy:
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
 | **ui.nvim** | matchup offscreen status · ts-context winbar · which-key popup · minty colour picker · zen mode |
 | **markdown.nvim** | table-mode realign + `:Tableize` |
-| **mdview.nvim** | markdown-preview's scroll sync + combine-preview |
+| **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; done 2026-09-18, B3) |
 | **fileops.nvim** | mkdir-on-write · file-browser operations · snacks scratch |
 | **emojis.nvim** | unicode name/search/table/digraphs |
 | **cascade.nvim** | puppeteer template literals |
@@ -587,9 +598,9 @@ tooling → debugging.nvim (309 lines, already written) · puppeteer → cascade
 startuptime → runtime-analysis · matchup offscreen → ui.nvim.
 
 **Real projects (L), in order of payoff:** todo-comments → insights + spotlight ·
-markdown-preview → mdview (removes the node/yarn build) · harpoon → sessions
-(1,707 lines out of the config; flag it, dual-run it, then cut) ·
-neo-tree config → filetree.nvim (~1,500 lines, same argument).
+~~markdown-preview → mdview (removes the node/yarn build)~~ done 2026-09-18, B3 ·
+harpoon → sessions (1,707 lines out of the config; flag it, dual-run it, then
+cut) · neo-tree config → filetree.nvim (~1,500 lines, same argument).
 
 **Leave alone:** the three picker engines, treesitter, mason, blink, neogit,
 gitsigns' hunk engine, noice, mini.ai/targets, autopairs, ts-autotag, matchup's
