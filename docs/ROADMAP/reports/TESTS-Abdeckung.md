@@ -61,7 +61,7 @@ github_stats) sind durch. Weiter geht es ab Runde 12 (insights.nvim), sechs Agen
 | 14 | pdfport.nvim | 14 | `4bb13eb` (Re-Audit) | 11 neue Specs; 192 → 1059 Assertion-Stellen; Re-Audit: 1048 → 1057 Stellen |
 | 15 | emojis.nvim | 15 | `9de7b6d` (Re-Audit) | 13 neue Specs; 261 → 773 Assertions; Re-Audit: 773 → 775 Checks |
 | 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
-| 17 | reposcope.nvim | 17 | `98a9a36` | 25 neue Specs; 236 → 1910 Assertions |
+| 17 | reposcope.nvim | 17 | `ab97158` (Re-Audit) | 25 neue Specs; 236 → 1910 Assertions; Re-Audit: 1908 → 1934 Checks |
 | 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
 | 19 | color_my_ascii.nvim | 19 | `adcb5ef` | 13 neue Specs; 324 → 5566 Assertions |
 | 20 | diff.nvim | 20 | `d7aa3a5` | 10 neue Specs; 295 → 694 Assertion-Stellen |
@@ -180,13 +180,17 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | debugging.nvim | `health.lua`s letzter Abschnitt rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als potenziell fehlend meldet | `5bdd781` |
 | open.nvim | `health.lua`s letzte Zeile rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als fehlend meldet | `553a445` |
 | sessions.nvim | `health.lua`s abschließender `composer.checkhealth()`-Aufruf lief unbedingt, obwohl der Preflight drei Zeilen darüber schon weiß, ob der `require` scheitert → crashte mit "loop or previous error loading module" statt zu degradieren | `12a4fb6` |
+| reposcope.nvim | `repository_fetcher.lua`s `vim.json.decode("null")`-Crash in zwei von drei Fetchern (truthy `vim.NIL` statt Tabellen-Check) | `3c82ff3` |
 
 ### Offen (gepinnt)
 
-Stand: **34 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim, cmdlog.nvim,
-debugging.nvim und recommender.nvim bereits sehr solide (deren einzige Funde wurden direkt
-gefixt, siehe "Gefixt"-Tabelle); buffer-ctx.nvim, pickers.nvim, casedesk.nvim, open.nvim,
-language.nvim, replacer.nvim und github_stats.nvim brachten je ein bis zwei kleine neue Bugs.
+Stand: **33 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim, cmdlog.nvim,
+debugging.nvim, recommender.nvim, emojis.nvim und sessions.nvim bereits sehr solide (deren
+einzige Funde wurden direkt gefixt, siehe "Gefixt"-Tabelle); buffer-ctx.nvim, pickers.nvim,
+casedesk.nvim, open.nvim, language.nvim, replacer.nvim und github_stats.nvim brachten je ein
+bis zwei kleine neue Bugs. pdfport.nvim und reposcope.nvim bestätigten ihre alten Pins
+(reposcope.nvims `repository_fetcher.lua`-Pin war zwischenzeitlich schon separat gefixt,
+Doku entsprechend korrigiert) und schlossen je eine echte Coverage-Lücke ohne neue Bugs.
 Die ursprüngliche Warteschlange (Runden 1-27) sowie ihr kompletter Re-Audit (Runden 1-11) sind
 damit fertig; weiter geht es bei Runde 12 (insights.nvim).
 
@@ -209,7 +213,6 @@ damit fertig; weiter geht es bei Runde 12 (insights.nvim).
 | pdfport.nvim | `integrations/{fzf,telescope}.lua` | cachen Fehlschläge → eine gescheiterte Extraktion wird die ganze Session wiedergespielt |
 | reposcope.nvim | `clone_manager.lua` | `not isdirectory(path)` ist immer `false` (0 ist truthy) → Pfad-Guard und `safe_mkdir` beide toter Code |
 | reposcope.nvim | `bindings/keymaps.lua` | `unset_prompt_keymaps()` räumt per falschem Tag auf → `_registry` wächst pro Open/Close-Zyklus |
-| reposcope.nvim | `repository_fetcher.lua` | `vim.json.decode("null")` liefert truthy `vim.NIL` → wirft statt über `on_failure` zu melden (GitLab-Fetcher macht es richtig) |
 | reposcope.nvim | `utils/protection.lua` | `is_valid_path()` wirft ohne das laut Doc optionale zweite Argument |
 | reposcope.nvim | `ui/actions/readme_viewer.lua` | zweites Öffnen bei offenem Viewer → `Invalid buffer id` |
 | color_my_ascii.nvim | `comment_ascii`-Pfad | Highlights liegen `#prefix + 1` Bytes zu weit links (gestrippter Text als Koordinatensystem für Extmarks in der ungestrippten Zeile) |
