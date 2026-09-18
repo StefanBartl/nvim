@@ -1943,3 +1943,47 @@ kein inhaltlicher Grund.
   nachgefahren -- beide Male `MARKDOWN_TESTS_OK`. `luacheck lua` (exakter
   CI-Befehl, 81 Dateien) 0/0, `stylua --check .` grün.
   Commit: `9fe8537`.
+- [x] **lib.nvim** — echter erster Audit der Basis-Lib als geteilte
+  Abhängigkeit (vorher nur per Datei-Anzahl-Verhältnis eingeschätzt).
+  Breadth-first, priorisiert nach Credential-Handling, Autocmd/Health-Helpern
+  und Windows-Pfadkorrektheit -- exakt die wiederkehrenden Bug-Familien
+  dieser Kampagne. **Zwei echte Bugs gefunden und gefixt** (beide gegen
+  zurückgesetzten Code reproduziert): (1) `lib.nvim.autocmd.group()`/
+  `get_augroup()` und `lib.nvim.bindings.autocmd.get_augroup()` übersprangen
+  das erneute Clearen eines schon gecachten Augroups bei einem zweiten Aufruf
+  mit `clear=true` -- **das ist die Root Cause von Bug-Familie (b) selbst**,
+  nicht nur eine Fehlnutzung in den abhängigen Repos. Das Zwillingsmodul
+  `lib.nvim.bindings.autocmd.group()` war dafür bereits gefixt, die anderen
+  drei Call-Sites nicht; `lib.nvim.telemetry`s eigener Quelltext trägt sogar
+  einen Kommentar, der genau diesen Fehler als Grund nennt, warum es
+  `autocmd.group()` umgeht -- bekannt, lokal umschifft, nie an der Quelle
+  gefixt. (2) `lib.nvim.fs.relpath` verglich Windows-Laufwerksbuchstaben
+  case-sensitiv (`c:` vs `C:` als "kein gemeinsames Root" gelesen) und fiel
+  auf den absoluten statt den relativen Pfad zurück -- **Bug-Familie (d)**,
+  gefixt über denselben `drive_upper`-Helfer, den `normkey` dafür schon
+  nutzt. **Architektur-Fund geflaggt, bewusst nicht gefixt**:
+  `bindings/init.lua`s Kopfkommentar behauptete fälschlich, `map`/`usercmd`/
+  `autocmd` seien "gone" -- alle drei existieren als volle Parallelbäume und
+  werden von `telemetry` noch direkt requiret; genau diese Duplikation ist,
+  warum der Augroup-Fix zwischen den Kopien divergierte. Kommentar korrigiert,
+  Migrationsentscheidung als Folgeaufgabe an den Maintainer delegiert.
+  **Neue, undokumentierte Credential-Lücke gepinnt** (nicht gefixt -- braucht
+  eine API-Shape-Entscheidung): `curl.lua`s `opts.query` landet direkt im
+  URL-Argv statt über den `-K`-Credential-Pfad wie Header/`bearer_token`/
+  `auth` -- ein Token als `?api_key=...` leakt genau wie der ursprüngliche
+  PRIVATE-TOKEN-Bug. In README + Moduldoku dokumentiert, mit `BUG:`-markierter
+  Regression (`vim.system`-Monkeypatch) gepinnt. Nebenbei geprüft: der
+  versehentlich mitgebundelte `winhighlight`-Change aus dem PRIVATE-TOKEN-Fix
+  (`5c6b1ac`) ist korrekt und war bereits durch echte Assertion-Tests gedeckt
+  -- kein Nachbesserungsbedarf. `lib.health`/`lib.nvim.health`/
+  `lib.nvim.deps.health`/`usercmd.composer.check` gegen Bug-Familie (a)
+  geprüft -- alle korrekt gegen fehlende Abhängigkeiten abgesichert, die
+  Root-Cause für die 17+ Funde dieses Musters in abhängigen Repos liegt nicht
+  in lib.nvim selbst. `TESTS/README.md` gegen die tatsächliche Spec-Liste in
+  `TESTS/run.lua` abgeglichen (rund drei Dutzend Specs hatten gar keine
+  Zeile).
+  Testlauf: 58 → 60 Specs, von mir persönlich zweimal über `nvim --headless
+  -u NONE -l TESTS/run.lua` nachgefahren -- beide Male `LIB_TESTS_OK`.
+  `luacheck lua TESTS` (exakter CI-Befehl, 402 Dateien) 0/0, `stylua --check
+  .` grün.
+  Commit: `f3725e8`.
