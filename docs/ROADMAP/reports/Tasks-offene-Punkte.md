@@ -28,7 +28,7 @@ the surrounding text is English like every other document here.
     - [~~B4 — lsp: provoke errors in `:LspDoctor deep`~~ — DONE](#b4-lsp-provoke-errors-in-lspdoctor-deep-done)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [~~B9 — mdview: cooperative tab closing in `default` browser mode~~ — REJECTED](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
-  - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
+  - [~~C. Cheap, low stakes — collected per plugin~~ — DONE](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
 ---
@@ -818,11 +818,39 @@ sidecar field its form doesn't manage (`outcome`, `routed_to`,
 (F1/F2, `ui-my-Kreuzfeature-Analyse.md`) is covered by the same re-check,
 not tracked here since it never had its own entry in this file.
 
-**Not struck as DONE yet, on purpose:** an independent adversarial
-bug/security/performance pass over every commit in this bundle plus F1/F2
-is running as this line is written — three lenses per commit, findings
-verified by three independent skeptics before being trusted. This entry
-gets its final status (and any follow-up fixes) once that lands.
+**The adversarial re-check landed, 2026-09-18.** 3 lenses (correctness,
+security, performance) × 9 commits (this bundle plus F1/F2), findings
+verified by 3 independent skeptics each before being trusted: 24 confirmed
+findings, 22 fixed same-day, 2 documented as a known limitation rather than
+risked with a guessed fix.
+
+**The headline finding: nine real, critical bugs in casedesk.nvim's `ui.lua`
+split**, invisible to the green test suite because nothing drove the
+interactive `on_select`/keymap callbacks directly. `ui/{cases,infocard,
+similar}.lua` each kept its own `local M = {}` after the split, so an
+internal same-file call like `M.info(...)` — correct when everything shared
+one table in the old `ui.lua` — silently broke: `:Cases <field>`/`recent`/
+`stale`/the SLA dashboard's `on_select`, `:Cases list`'s `c` (close marked),
+`:Case info`'s `s`/`o` keymaps, `:Case similar`'s `on_select`. Every one
+raised "attempt to call a nil value" the moment a user pressed the key.
+Fixed by requiring the actual owning submodule directly (`casedesk.nvim@164f3ec`);
+`TESTS/ui_cross_module_wiring_spec.lua` pins all nine.
+
+Six more real bugs, all fixed: `doctor.lua`'s routing-legacy scan spliced an
+unescaped `routing_targets` value into a Lua pattern (`8cafcf5`);
+`ui/lifecycle.lua` could silently destroy an unanswered prompt when two
+config lists overlap (`a2c577e`); `diff.nvim`'s `setup()` permanently broke
+on an unknown `diffopt_profile` value (`5a3c68d`); the same commit's
+`gitsigns_peek` silently overwrote a pre-existing `gh` mapping (`5a3c68d`);
+`lsp.nvim`'s keymap-collision filter missed the lowercase `"lsp"` claimant
+name direct calls get (`056639d`); `my.nvim`'s `on_after_set` wasn't
+idempotent across repeated `setup()` calls (`70a8beb`). Two performance
+fixes: `:My hl reset` did N blocking disk writes instead of one (`14920f3`),
+and a hot-path allocation in `hl_config.utils.skip` (`c17d9d3`). Not fixed,
+documented instead: `persist.lua`'s write silently loses data across two
+concurrent Neovim instances — a correct fix needs history this session
+doesn't track, and a naive merge would trade the bug for a different one
+(`c033777`).
 
 The prompts below are kept for the record.
 
