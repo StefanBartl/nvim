@@ -972,6 +972,32 @@ Abschnitt "Offen (gepinnt)".
   README-Behauptung "Nothing here shells out to … Python …" wurde entsprechend korrigiert.
   Commit: `3c9273a` (test: cover producer/backend argv, dispatcher, renderers, bindings and
   the public API), direkt auf `main` gepusht.
+  **Re-Audit (Runde 14, 2026-09-18):** alle drei gepinnten Bugs explizit nachgeprüft und
+  bestätigt weiterhin gepinnt, Quellcode unverändert -- keiner still gefixt, keiner
+  veraltet. Die vier Bug-Familien einzeln durchgeprüft: jeder "Dependency fehlt"-Zweig in
+  `health.lua` ist korrekt gegated; der eine ungeschützte Composer-Aufruf am Ende von
+  `check()` ist die dokumentierte, unvermeidbare Ausnahme, da `bindings/usrcmds.lua` den
+  Composer schon beim Modul-Laden requirt -- pdfport kann ohne ihn gar nicht laden. Kein
+  weiteres Augroup mit derselben Ursache wie `autocmds.lua`s bekannter Bug. Keine Byte/
+  Zeichen-Verwechslung (nur Ganzzahl-Mathematik bei Seiten/Crop, kein Substring-Zugriff auf
+  extrahierten Text). Keine Windows-Separator-Bugs (`netrw.lua`/`integrations/init.lua`
+  prüfen beide Trenner korrekt, `oil.lua`s Konkatenation ist richtig und dokumentiert
+  warum, `chromium.lua`s `file://`-URL-Bau behandelt Laufwerksbuchstaben korrekt).
+  **Eine echte Lücke gefunden und geschlossen**: `integrations/telescope.lua`s
+  `M.previewer()` hatte null Coverage -- der Auslassungsgrund ("requirt hart ihr
+  Picker-Plugin") stimmte für das echte `telescope.nvim`, war aber veraltet als Grund, die
+  reine Logik nicht zu testen: `require("telescope.previewers")` passiert innerhalb des
+  Funktionskörpers und lässt sich genauso über `package.loaded` faken wie `neo-tree`/
+  `nvim-tree`/`oil` es an anderer Stelle in dieser Suite schon tun. Neuer Spec-Block deckt
+  Titel, Pfadauflösung (`.path`/`.filename`-Fallback), den Extraktions-Request und --
+  bisher nur als Kommentar behauptet -- Telescopes eigene Kopie von Bug 3 (Cache-vor-
+  Status-Check), jetzt mit echten `BUG:`-Assertionen gepinnt statt nur erwähnt. Dabei eine
+  ungenaue README-Gruppierung korrigiert: `fzf.lua` requirt `fzf-lua` gar nicht hart, seine
+  Coverage war schon vollständig -- nur Telescopes Seite hatte die Lücke.
+  Testlauf: 21 Spec-Dateien, 1048 → 1057 Assertion-Aufrufstellen, über drei
+  Wiederholungsläufe stabil (zwei davon von mir persönlich nachgefahren). `luacheck lua
+  plugin TESTS` (75 Dateien) und `stylua --check lua plugin TESTS` beide grün.
+  Commit: `4bb13eb`.
 - [x] **emojis.nvim** — fertig (Runde 15). Eigener framework-freier Harness beibehalten,
   Specs weiter über die explizite Liste in `run.lua`. 9 → 22 Spec-Dateien, 261 → 773
   Assertions, 0 Fails über drei Wiederholungsläufe (Exit 0, `EMOJIS_TESTS_OK`).
