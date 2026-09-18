@@ -876,6 +876,46 @@ Abschnitt "Offen (gepinnt)".
   Commit: `1be0f7a` (test: cover imports, symbols, metrics, the feature modules and the
   wiring), direkt auf `main` gepusht und per `git merge-base --is-ancestor HEAD
   origin/main` verifiziert.
+  **Mittlerweile gefixt** (separate Sitzungen dieser Kampagne): alle vier Pins. Bug 1 und
+  das gleichgeartete `ui/scratch.lua`-Follow-Key über Commit `6031069` (Doppelpunkt-Scan
+  beginnt jetzt hinter einem `^%a:[/\\]`-Laufwerksbuchstaben-Präfix); Bug 2, 3 und 4 über
+  Commit `dcbe57a` (neuer `child_of_type()`-Helfer in `ts_lua.lua`/`ts_lua_tables.lua`
+  statt der nicht existierenden `field("left")`/`field("right")`; `tree/init.lua`s
+  Glob→Regex-Escaping jetzt `\` statt `%`).
+  **Re-Audit (Runde 12, 2026-09-18):** alle vier Fixes bestätigt vorhanden und mit
+  Regressionstests belegt. Die vier Bug-Familien einzeln geprüft: Augroups bereits
+  idempotent mit eigenem Doppel-Setup-Test; Byte/Zeichen-Position in
+  `imports/definition.lua`, `imports/langs/util.lua` und allen `ts_lua*`/
+  `symbols/parser.lua`-Stellen erneut durchgesehen, weiterhin korrekt. **Drei neue,
+  eigenständige Bugs gefunden und sofort gefixt** (jeweils mit Regressionstest belegt,
+  der gegen den zurückgesetzten Code nachweislich fehlschlägt):
+  1. **Vierzehntes Repo der Health-Familie**: `health.lua`s `M.check()` schließt mit einem
+     ungeschützten `require("lib.nvim.bindings.usercmd.composer").checkhealth(...)` --
+     obwohl `check_lib()` genau diese Dependency Zeilen darüber schon als fehlend meldet.
+     `pcall`-Guard ergänzt, Test in `health_init_spec.lua`.
+  2. **Derselbe Doppelpunkt-Blindpunkt wie Bug 1 aus Runde 12, aber an einer vierten
+     Stelle**: `ui/fzf.lua`s Default-Action parst `path:line` über
+     `sel[1]:match("^([^:]+):(%d+)")` -- genau der Windows-Laufwerksbuchstaben-Blindpunkt,
+     der in `symbols/parser.lua` und `ui/scratch.lua` schon gefixt wurde, hier aber
+     übersehen, weil jede bisherige Spec das gesamte `insights.ui.fzf`-Modul wegstubt statt
+     seinen Körper auszuführen. Neue `TESTS/ui_fzf_spec.lua` treibt das echte Modul zum
+     ersten Mal.
+  3. **Wieder Windows-Pfadtrenner, an drei Stellen gleichzeitig**: `scan_cwd()`s
+     Ignore-Liste (`.git/`, `node_modules/`, …) in `ts_lua.lua`, `ts_lua_tables.lua` und
+     `ts_lua_strings.lua` matcht mit `/`-hartkodierten Lua-Patterns gegen
+     `vim.fn.globpath`s Ausgabe im nativen Trennzeichen (Backslash unter Windows) --
+     schließt unter Windows also lautlos gar nichts aus. `TESTS/README.md` hatte
+     behauptet, das sei "dieselbe Logik" wie `metrics.analyzer.list_files`, das aber schon
+     immer zuerst auf `/` normalisiert -- die Behauptung war veraltet. In allen drei
+     Dateien identisch gefixt, gegen einen echten kleinen Fixture-Baum in
+     `symbols_ts_lua_spec.lua` gepinnt.
+  Nebenbei eine veraltete "Quirk"-Notiz in `TESTS/README.md` entfernt, die behauptete,
+  `ui/scratch.lua`s Follow-Key könne einem absoluten Windows-Pfad weiterhin nicht folgen --
+  kann es seit Bug 1 dieser Runde.
+  Testlauf: 31 → 32 Specs, 1342 → 1362 Assertion-Aufrufstellen, über zwei von mir
+  persönlich nachgefahrene Wiederholungsläufe stabil. `luacheck lua TESTS` (83 Dateien)
+  und `stylua --check lua TESTS` beide grün.
+  Commit: `6bbab32`.
 - [x] **sessions.nvim** — fertig (Runde 13, erste Runde der Drei-Agenten-Phase). Eigener
   framework-freier Harness (`TESTS/harness.lua` + `TESTS/run.lua` mit expliziter Spec-Liste)
   beibehalten, keine Migration. 7 → 17 Spec-Dateien, 77 → 487 statische Assertion-Stellen,
