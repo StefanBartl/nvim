@@ -53,7 +53,7 @@ laufen parallel.
 | 6 | debugging.nvim | 6 | `5bdd781` (Re-Audit) | 10 neue Specs; ~6 → ~23 von 34 Dateien; Re-Audit: 15 → 16 Specs |
 | 7 | recommender.nvim | 7 | `bef1939` (Re-Audit) | 6 neue Specs; 5 → 11 von 23 Dateien; Re-Audit: 12 → 15 Specs (ui.kit-Seam entsperrt) |
 | 8 | language.nvim | 8 | `51dd7d1` | 21 neue Specs; ~6 → 43 von 51 Dateien |
-| 9 | open.nvim | 9 | `a8dbe1d` | 9 neue Specs; ~12 → 24 von 26 Dateien |
+| 9 | open.nvim | 9 | `553a445` (Re-Audit) | 9 neue Specs; ~12 → 24 von 26 Dateien; Re-Audit: 15 → 16 Specs |
 | 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
 | 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
@@ -178,12 +178,14 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | filetree.nvim | `health.lua`s "lib.nvim fehlt"-Zweig rief danach unbedingt in lib.nvim hinein | `811bfed` |
 | cmdlog.nvim | `health.lua`s letzte Zeile rief unbedingt in `lib.nvim.bindings.usercmd.composer` hinein, bei fehlendem lib.nvim crashte `:checkhealth cmdlog` direkt nach der eigenen Fehlanzeige | `df6f716` |
 | debugging.nvim | `health.lua`s letzter Abschnitt rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als potenziell fehlend meldet | `5bdd781` |
+| open.nvim | `health.lua`s letzte Zeile rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als fehlend meldet | `553a445` |
 
 ### Offen (gepinnt)
 
-Stand: **30 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim und cmdlog.nvim
-bereits sehr solide (cmdlog.nvim's einziger Fund wurde direkt gefixt, siehe "Gefixt"-Tabelle);
-buffer-ctx.nvim, pickers.nvim und casedesk.nvim brachten je ein bis zwei kleine neue Bugs.
+Stand: **31 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim, cmdlog.nvim,
+debugging.nvim und recommender.nvim bereits sehr solide (deren einzige Funde wurden direkt
+gefixt, siehe "Gefixt"-Tabelle); buffer-ctx.nvim, pickers.nvim, casedesk.nvim und open.nvim
+brachten je ein bis zwei kleine neue Bugs.
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -192,6 +194,7 @@ buffer-ctx.nvim, pickers.nvim und casedesk.nvim brachten je ein bis zwei kleine 
 | pickers.nvim | `health.lua` | letzte Zeile ruft den Composer bedingungslos außerhalb jedes `pcall` → crasht `:checkhealth pickers` komplett bei fehlendem lib.nvim |
 | pickers.nvim | `smart/frecency.lua` | `M.patch()` löst die Augroup ohne `clear=true` auf → zweites `setup()` mit Frecency verdoppelt den Autocmd |
 | casedesk.nvim | `health.lua` | `check_tools()`s "lib.nvim fehlt"-Zweig ruft danach ungeschützt in `casedesk.export.find_browser()` hinein, das wiederum ungeschützt genau die als fehlend gemeldete Dependency requirt → `:checkhealth casedesk` crasht komplett |
+| open.nvim | `context.lua` | `gather()`s Visual-Signal-Guard (`mode()`-Check + `'<`/`'>`-Marks) kann nie zusammen zutreffen, da die Marks erst beim Verlassen von Visual committet werden → `signals.visual` ist auf dem `:Open`-Pfad immer `nil`, sonst ein Überbleibsel einer fremden Selektion |
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -226,8 +229,8 @@ buffer-ctx.nvim, pickers.nvim und casedesk.nvim brachten je ein bis zwei kleine 
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 9 Repos, **6 gefixt**
-  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging), **3 offen**:
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 10 Repos, **7 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open), **3 offen**:
   `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s
   `health.lua` selbst und `casedesk.nvim`s `health.lua` (beide in Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame

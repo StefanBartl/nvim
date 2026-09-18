@@ -535,6 +535,25 @@ Abschnitt "Offen (gepinnt)".
   (telescope.nvim selbst nicht im CI-Checkout, nur lib.nvim/ui.nvim).
   Commit: `a8dbe1d` (test: cover config, registry, context, keywords, handlers, and
   integrations), direkt auf `main` gepusht.
+  **Re-Audit (Runde 9, 2026-09-18):** kein Code seit Runde 9 geändert, alle Auslassungsgründe
+  einzeln nachgeprüft und bestätigt (telescope.lua bleibt ausgeschlossen -- echte
+  CI-Sibling-Lücke, nicht nur lokal fehlend). **Ein Bug gefunden und gefixt** (achtes Repo
+  dieser Familie, siebter Fix): `health.lua`s letzte Zeile rief den Composer ungeschützt auf,
+  obwohl derselbe Check ihn Zeilen darüber schon als fehlend meldet -- `pcall`-Guard analog
+  zu jedem anderen optionalen Dependency-Check in derselben Datei, gepinnt mit neuer
+  `health_spec.lua`. **Ein zweiter Bug gefunden, gepinnt statt gefixt**: `context.lua`s
+  `gather()` prüft für sein Visual-Signal sowohl `mode() == "v"/"V"/CTRL-V` als auch die
+  `'<`/`'>`-Marks -- die aber von Neovim erst beim VERLASSEN des Visual-Modus committet
+  werden. Beide Bedingungen können nie gleichzeitig zutreffen: auf dem `:Open`-Kommandopfad
+  (der Visual-Modus immer vorher verlässt) ist `signals.visual` deshalb immer `nil`; im
+  einzigen Pfad, auf dem `mode()=="v"` während des Callbacks noch gilt, sind die Marks
+  stattdessen ein Überbleibsel einer früheren, unabhängigen Selektion. Empirisch mit echten
+  Cursor-/Keymap-Tests verifiziert, bevor gepinnt wurde. Der eigentliche Fix (`getpos("v")` +
+  Cursor statt `'<`/`'>`) wäre eine bewusste Verhaltensänderung, kein Nebeneffekt einer
+  Coverage-Runde -- daher `BUG:`-Assertion in `context_spec.lua`, nicht direkt geändert.
+  Testlauf: 15 → 16 Specs, 16/16 grün über zwei von mir persönlich nachgefahrene
+  Wiederholungsläufe. `luacheck lua plugin TESTS` (45 Dateien) und `stylua --check` beide grün.
+  Commit: `553a445`.
 - [x] **replacer.nvim** — fertig (Runde 10, nach dem gescheiterten ersten Versuch komplett neu
   gestartet — der vorherige Agent wurde vom Wochenlimit beendet, bevor er irgendetwas
   geschrieben/committet hatte). Anders als bei den meisten anderen Runden nutzt dieses Repo
