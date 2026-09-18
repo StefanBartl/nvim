@@ -420,6 +420,22 @@ Abschnitt "Offen (gepinnt)".
   `views/capture/init.lua`'s `capture_messages()` meldet `ok=false` auch wenn Content erfasst
   wurde, sofern `save_file`/`clipboard` beide `false` sind; `views/init.lua`'s `setup()`
   akkumuliert Config über mehrere Aufrufe statt zu resetten (anders als `config/init.lua`).
+  **Re-Audit (Runde 6, 2026-09-18):** die vier wiederkehrenden Bug-Familien einzeln
+  durchgeprüft — Augroups schon korrekt mit `clear = true` (Kommentar verweist auf die eigene
+  Fix-Historie dazu), Byte/Spalten-Nutzung an jeder Cursor-Berührungsstelle konsistent,
+  Windows-Pfadverdachtsfälle in `autocmds/sources.lua` und `lib.nvim.fs.collect_recursive`
+  intern konsistent auch bei gemischten Trennzeichen. Keine neuen Dateien seit Runde 6, keine
+  falsch angenommene Sibling-Verfügbarkeit (das Repo referenziert nirgends telescope/fzf-lua/
+  snacks/plenary). **Ein echter Bug gefunden und sofort gefixt** (siebtes Repo dieser Familie,
+  sechster Fix): `health.lua`s letzter Abschnitt rief `require(...).checkhealth("Debug")`
+  ungeschützt auf, obwohl dieselbe Funktion wenige Zeilen darüber genau dieses Modul schon
+  als potenziell fehlend meldet. Trivialer, unzweideutiger Fix (nur der bereits kaputte Pfad
+  ändert sich), daher direkt gefixt statt gepinnt, passend zu diesem Repos eigener
+  Fix-Historie für genau diese Bug-Klasse. Verifiziert in beide Richtungen (Fix zurückgesetzt →
+  Test schlägt fehl; Fix wieder her → grün). Neue `health_spec.lua` pinnt die Regression.
+  Testlauf: 15 → 16 Specs, alle grün über zwei Wiederholungsläufe von mir persönlich
+  nachgefahren. `luacheck lua plugin TESTS` (53 Dateien) und `stylua --check` beide grün.
+  Commit: `5bdd781`.
   Bewusst ausgelassen: 6× `@types/init.lua` (reine Annotationen), `health.lua`
   (deklarativer `:checkhealth`-Reporter), `views/debug_helper.lua` (bestätigt toter Code laut
   eigenem Datei-Header), `views/display.lua`'s Timer/Window-Choreografie-Funktionen,

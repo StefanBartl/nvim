@@ -50,7 +50,7 @@ laufen parallel.
 | 3 | dap.nvim | 3 | `5f2da6e` | 11 Sprach-Tabellen über 2 generische Contract-Specs; 4 → 30 Specs |
 | 4 | casedesk.nvim | 4 | `3cc4cd9` | 32 neue Specs; 40 → 386 Assertions |
 | 5 | buffer-ctx.nvim | 5 | `6290f8b` | 6 neue Specs; 24 → 40 von 46 Dateien abgedeckt |
-| 6 | debugging.nvim | 6 | `7b05563` | 10 neue Specs; ~6 → ~23 von 34 Dateien |
+| 6 | debugging.nvim | 6 | `5bdd781` (Re-Audit) | 10 neue Specs; ~6 → ~23 von 34 Dateien; Re-Audit: 15 → 16 Specs |
 | 7 | recommender.nvim | 7 | `6e7fb65` | 6 neue Specs; 5 → 11 von 23 Dateien |
 | 8 | language.nvim | 8 | `51dd7d1` | 21 neue Specs; ~6 → 43 von 51 Dateien |
 | 9 | open.nvim | 9 | `a8dbe1d` | 9 neue Specs; ~12 → 24 von 26 Dateien |
@@ -177,6 +177,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | cascade.nvim | `lists.cycle`-Default konnte nicht rundlaufen: `lists.types` kannte nur zwei der vier vom Cycle erzeugten Markerarten → `a)`-Zeile verlor jede Listen-Erkennung | `c23ea33` |
 | filetree.nvim | `health.lua`s "lib.nvim fehlt"-Zweig rief danach unbedingt in lib.nvim hinein | `811bfed` |
 | cmdlog.nvim | `health.lua`s letzte Zeile rief unbedingt in `lib.nvim.bindings.usercmd.composer` hinein, bei fehlendem lib.nvim crashte `:checkhealth cmdlog` direkt nach der eigenen Fehlanzeige | `df6f716` |
+| debugging.nvim | `health.lua`s letzter Abschnitt rief den Composer ungeschützt auf, obwohl derselbe Check ihn Zeilen darüber schon als potenziell fehlend meldet | `5bdd781` |
 
 ### Offen (gepinnt)
 
@@ -225,9 +226,9 @@ buffer-ctx.nvim, pickers.nvim und casedesk.nvim brachten je ein bis zwei kleine 
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 8 Repos, **5 gefixt**
-  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog), **3 offen**: `gopath.nvim`s
-  `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 9 Repos, **6 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging), **3 offen**:
+  `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s
   `health.lua` selbst und `casedesk.nvim`s `health.lua` (beide in Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
