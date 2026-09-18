@@ -1890,3 +1890,27 @@ kein inhaltlicher Grund.
   572/0/0 über alle 26 "Testing:"-Blöcke. `luacheck lua plugin` (41 Dateien)
   und `stylua --check .` beide grün.
   Commit: `53797f4`.
+- [x] **documentation.nvim** — echter erster Audit, über `scripts/ci.sh`
+  (eigener Framework-freier `TESTS/harness.lua`/`TESTS/run.lua`, kein
+  Plenary/Busted). 100 bereits reife Specs bestätigt, 4-Job-CI (stylua,
+  luacheck, tests, map) mit einer ungewöhnlich gut dokumentierten
+  Bug-Historie im eigenen Code. **Eine echte Lücke geschlossen**: die
+  `:DocMap`-Kommando-Dispatch-Schicht (`lua/documentation/bindings/usrcmds/*.lua`,
+  ~17 Dateien -- Usage-Fehler, Kollisionserkennung, Sortierung,
+  Buffer-Reuse, Git-Subprozess-Fehler/Timeout/Leerergebnis) hatte trotz
+  gründlich getesteter Kern-Algorithmen eine Ebene darunter (`core/churn.rank`,
+  `core/diff.compare`, `core/deps.path` usw.) null direkte Coverage. Zwei neue
+  Specs nach den Repo-eigenen Konventionen (`usrcmds_readonly_spec.lua` mit
+  literalen `Documentation.IR`-Fixtures, `usrcmds_git_spec.lua` mit echten
+  Wegwerf-`git init`-Fixtures statt gestubbtem `vim.system`) -- pinnt dabei
+  auch eine Buffer-Namenskollisions-Regression in `dot.lua`/`mermaid.lua`, die
+  einmal gefixt, aber nie durch einen Test abgesichert war. Keine Bugs
+  gefunden -- alle vier Bug-Familien geprüft und sauber (health.lua-Degradation
+  korrekt, Augroups mit `clear=true` + Idempotenz-Guard, keine
+  Byte/Spalten-Verwechslung, Windows-Pfadbehandlung hat eigenen
+  Regressionstest).
+  Testlauf: 100 → 102 Specs, von mir persönlich zweimal über `scripts/ci.sh
+  tests` nachgefahren -- beide Male `DOCUMENTATION_TESTS_OK`, alle Specs
+  grün. `scripts/ci.sh luacheck` (254 Dateien) und `stylua --check .` beide
+  grün.
+  Commit: `9ed7c11`.

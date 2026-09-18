@@ -128,7 +128,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | runtime-analysis.nvim | 43 | 54 | 🟢 gut |
 | lib.nvim | 497 | 159 | 🟢 gut (Basis-Lib) |
 | markdown.nvim | 81 | 102 | 🟢 gut |
-| documentation.nvim | 139 | 104 | 🟢 gut |
+| documentation.nvim | 139 | 108 | ✅ fertig (gezielter Check) |
 | media.nvim | 31 | 98 | ✅ fertig (eigene Session) |
 | ui.nvim | 93 | 232 | ✅ sehr gut |
 
