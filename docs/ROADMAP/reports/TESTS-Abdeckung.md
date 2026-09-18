@@ -39,10 +39,8 @@ Regeln, die sich über die Runden eingespielt haben:
 ## Fortschritt
 
 **27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett.** Der Re-Audit
-aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-17 sind durch (pickers/cmdlog/
-dap/casedesk/buffer-ctx/debugging/recommender/language/open/replacer/github_stats/insights/
-sessions/pdfport/emojis/fileops/reposcope). Weiter geht es ab Runde 18 (gopath.nvim), sechs
-Agents parallel.
+aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-23 sind durch. Weiter geht es ab
+Runde 24 (spotlight.nvim), sechs Agents parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -63,11 +61,11 @@ Agents parallel.
 | 15 | emojis.nvim | 15 | `9de7b6d` (Re-Audit) | 13 neue Specs; 261 → 773 Assertions; Re-Audit: 773 → 775 Checks |
 | 16 | fileops.nvim | 16 | `037d3bb` (Re-Audit) | 10 neue Specs; 199 → 805 Assertions; Re-Audit: 804 → 831 Checks |
 | 17 | reposcope.nvim | 17 | `ab97158` (Re-Audit) | 25 neue Specs; 236 → 1910 Assertions; Re-Audit: 1908 → 1934 Checks |
-| 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
+| 18 | gopath.nvim | 18 | `945a3fa` (Re-Audit) | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks; Re-Audit: 439 Checks/1610 Assertionen |
 | 19 | color_my_ascii.nvim | 19 | `22b9115` (Re-Audit) | 13 neue Specs; 324 → 5566 Assertions; Re-Audit: 859 → 866 Stellen |
 | 20 | diff.nvim | 20 | `d7aa3a5` (Re-Audit: solide, nichts zu tun) | 10 neue Specs; 295 → 694 Assertion-Stellen |
-| 21 | cascade.nvim | 21 | `77ea4f3` | 10 neue Specs; 462 → 981 Assertion-Stellen |
-| 22 | sandbox.nvim | 22 | `eb2145f` | 17 → 37 Specs; 136 → 883 Checks |
+| 21 | cascade.nvim | 21 | `0bc75e6` (Re-Audit) | 10 neue Specs; 462 → 981 Assertion-Stellen; Re-Audit: 981 → 995 Stellen |
+| 22 | sandbox.nvim | 22 | `d2ea226` (Re-Audit) | 17 → 37 Specs; 136 → 883 Checks; Re-Audit: 883 → 906 Checks |
 | 23 | data.nvim | 23 | `a64c208` (Re-Audit: solide, nichts zu tun) | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
 | 24 | spotlight.nvim | 24 | `5931a55` | 17 → 29 Specs; 472 → 1159 Assertionen |
 | 25 | mdview.nvim | 25 | `166904e` | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks |
@@ -191,15 +189,14 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 
 ### Offen (gepinnt)
 
-Stand: **33 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim, cmdlog.nvim,
-debugging.nvim, recommender.nvim, emojis.nvim und sessions.nvim bereits sehr solide (deren
-einzige Funde wurden direkt gefixt, siehe "Gefixt"-Tabelle); buffer-ctx.nvim, pickers.nvim,
-casedesk.nvim, open.nvim, language.nvim, replacer.nvim und github_stats.nvim brachten je ein
-bis zwei kleine neue Bugs. pdfport.nvim und reposcope.nvim bestätigten ihre alten Pins
-(reposcope.nvims `repository_fetcher.lua`-Pin war zwischenzeitlich schon separat gefixt,
-Doku entsprechend korrigiert) und schlossen je eine echte Coverage-Lücke ohne neue Bugs.
-Die ursprüngliche Warteschlange (Runden 1-27) sowie ihr kompletter Re-Audit (Runden 1-11) sind
-damit fertig; weiter geht es bei Runde 12 (insights.nvim).
+Stand: **35 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18) läuft repo-für-repo,
+ältestes zuerst; Runden 1-19 und 21-23 sind durch, Runde 20 (diff.nvim) ebenfalls (solide,
+nichts zu tun). Mehrere Runden brachten gar keine neuen Bugs, nur geschlossene Coverage-
+Lücken (dap, cmdlog, debugging, recommender, emojis, sessions, diff, data — die letzten
+beiden komplett ohne Änderung); die übrigen brachten je ein bis drei kleine neue Bugs oder
+bestätigten ihre alten Pins. Die ursprüngliche Warteschlange (Runden 1-27) sowie ihr
+kompletter Re-Audit bis Runde 23 sind damit fertig; weiter geht es bei Runde 24
+(spotlight.nvim).
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -234,11 +231,13 @@ damit fertig; weiter geht es bei Runde 12 (insights.nvim).
 | gopath.nvim | `commands.check_under_cursor` | der `help`-Zweig ist unerreichbar |
 | gopath.nvim | `util/path.invalidate_caches()` | leert `_pdir_*` nicht |
 | gopath.nvim | `create.lua` | der "lib.nvim fehlt"-Fallback requirt ungeschützt genau diese Dependency (letzter offener Punkt dieser Familie außerhalb von `health.lua`-Dateien) |
+| gopath.nvim | `resolvers/go/import_path.lua` | `parse_import` ist als einziger von acht Sprach-Resolvern nicht am eigenen Import-Keyword verankert → feuert auf jeden `"..."`-String-Literal mit `/`, der wie ein Package aussieht |
 | diff.nvim | `core/directory.lua` | ungeschütztes `readfile` → rohes `E484` an `on_done` vorbei, Aufrufer wartet ewig |
 | diff.nvim | `core/scratch.lua` | `track()` dedupliziert nicht → `status()` kann `diff:3` melden |
 | cascade.nvim | `bindings/autocmds.lua` | zwei der drei Augroups werden nur geleert, wenn ihr Feature-Gate durchkommt → deaktiviertes Feature hinterlässt lebende Handler bis zum Neustart |
 | cascade.nvim | `facade`-Kommandos | `cycle_group_add`/`remove` mutieren `config.DEFAULTS` direkt (Deep-Merge kopiert nur die oberste Ebene) |
 | cascade.nvim | `usrcmds.lua` | `:Cascade indent N`/`dedent N` ignorieren `N` (falscher Wert an `run_indent_command` gereicht); `cycle remove` schneidet mehrwortige Werte am ersten Leerzeichen ab |
+| cascade.nvim | `lists/renumber.lua` | `renumber.tree` über eine explizite Range mit mehr als einem Listen-Block (`:Cascade renumber`) setzt den zweiten Block vom `base_start` des ersten fort statt vom eigenen |
 
 **Wiederkehrende Familien:**
 - Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren `E739`/`E482` am eigenen
