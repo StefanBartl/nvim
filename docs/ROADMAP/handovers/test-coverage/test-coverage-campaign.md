@@ -1290,6 +1290,36 @@ Abschnitt "Offen (gepinnt)".
   ungeschützt genau die fehlende Dependency.
   `docs/CONTRIBUTING.md` korrigiert, `TESTS/README.md` neu angelegt (Trennung manuelle Guides
   ↔ automatisierte Suites). Commit: `394b4b3`.
+  **Mittlerweile gefixt** (separate Sitzungen, drei Commits): `health.lua`s Composer-Aufruf
+  jetzt `pcall`-gewrappt (`1cc43e1`); Backslash-geschriebene Pfad-Kandidaten werden vor
+  `fnamemodify`/`fs_stat` jetzt zu `/` normalisiert, betrifft drei Dateien (`20b3132`);
+  `resolve_and_copy` verifiziert jetzt tatsächlich, dass `setreg`/der Schreibvorgang
+  ankam, statt Ausbleiben eines Wurfs als Erfolgsbeweis zu nehmen (`a6c9079`, `0f9eae3`).
+  **Re-Audit (Runde 18, 2026-09-18):** alle acht ursprünglichen Pins einzeln gegen den
+  aktuellen Quellcode nachgeprüft -- alle acht weiterhin offen und korrekt gepinnt, dazu
+  die drei obigen Fixes bestätigt real und mit eigenen Specs belegt. Alle `pcall(require,
+  ...)`-Soft-Dependency-Stellen (30+) auf dieselbe "Dependency fehlt, ruft sie trotzdem
+  auf"-Form durchsucht -- keine zweite Instanz gefunden, jede andere Stelle gated korrekt
+  auf `ok`. Augroups durchgesehen: `bindings/autocmds.lua` passt bereits `clear=true`; zwei
+  ungruppierte Top-Level-Autocmds in `alias_index.lua`/`binding_index.lua` registrieren
+  sich nur einmal pro `require()` (nicht pro `setup()`), ein Duplikat wäre harmlos-idempotent
+  -- kein echter Bug. **Ein Bug gefunden und sofort gefixt** (derselbe Fehlerklasse wie
+  Commit `20b3132`, dort aber übersehen): `resolvers/common/linepath.lua`s drei direkte
+  `fs_stat`-Proben riefen `vim.fs.normalize()` auf rohen, noch nicht Backslash-zu-Slash
+  konvertierten Kandidatentext -- unter Linux/macOS scheiterte ein Backslash-geschriebener
+  Kandidat lautlos an der Auflösung. Trivialer, unzweideutiger Fix, direkt angewendet.
+  **Ein neuer Bug gefunden und gepinnt** (kein mechanischer Fix möglich, braucht eine echte
+  Design-Entscheidung): `resolvers/go/import_path.lua`s `parse_import` ist als einziger von
+  acht Sprach-Resolvern nicht an sein eigenes Import-Keyword verankert -- ein bloßes
+  `line:match('"([^"]+)"')` feuert auf jeden String-Literal mit `/`, der zufällig wie ein
+  Package aussieht, auch wenn es keiner ist. Zwei Coverage-Lücken in `init.lua`s
+  `_setup_cache` geschlossen (`use_cache = false` überspringt den Refresh-Timer korrekt;
+  ein veralteter Cache plant genau einen deferred Rebuild).
+  Testlauf: 435 → 439 Checks, ~1600 → 1610 Assertionen, alle drei echten CI-Runner
+  (`headless_tests.lua` 8/8, `functional_tests.lua` 38/38, `unit_tests.lua` 439/1610) über
+  zwei von mir persönlich nachgefahrene Wiederholungsläufe stabil. `luacheck lua plugin`
+  (78 Dateien) und `stylua --check lua/ plugin/` beide grün.
+  Commit: `945a3fa`.
 - [x] **color_my_ascii.nvim** — fertig (Runde 19). Die bestehenden 15 Specs hingen fast alle am
   `:Fence`-Werkzeugkasten; die Schichten darunter — wo ein Fehler nicht crasht, sondern ein
   Highlight drei Spalten zu weit links landet — hatten nichts. 15 → 28 Spec-Dateien,
@@ -1417,6 +1447,29 @@ Abschnitt "Offen (gepinnt)".
   `docs/CONTRIBUTING.md` behauptete wieder eine plenary-Suite, die es nie gab (dasselbe Muster
   wie gopath.nvim, Runde 18) — korrigiert.
   Coverage-Commit: `77ea4f3`, Bugfix-Commit: `c23ea33`.
+  **Re-Audit (Runde 21, 2026-09-18):** alle drei verbleibenden offenen Punkte einzeln
+  gegen den aktuellen Quellcode bestätigt (Augroup-Gating-Reihenfolge statt fehlendem
+  `clear=true` -- `lib.augroup` selbst cleart immer korrekt, geprüft in dessen eigener
+  Quelle; `config.DEFAULTS`-Mutation; `indent`/`dedent N`/`cycle remove`s Argument-Bugs),
+  dazu die beiden bereits gefixten Bugs (Renumber-Drift, Cycle-Ring) mit ihren
+  Regressionstests bestätigt, die jetzt das KORREKTE Verhalten erwarten statt der alten
+  Buggy-Erwartung. Die vier Bug-Familien einzeln durchgeprüft: `health.lua` ruft nie in
+  die als fehlend gemeldete Dependency hinein (per gefaktem `require`-Fehlschlag echt
+  getestet); Byte-Offsets bleiben durchgehend korrekt; keine Pfadbehandlung im Repo, also
+  strukturell keine Windows-Bugs. **Drei echte Coverage-Lücken gefunden und geschlossen**
+  (per manueller Probe vorab verifiziert, bevor Assertions geschrieben wurden):
+  `marker.advance`s Checkbox-Reset-Zweig, `transform.block_range`s abwärts gerichteter
+  Marker-Scan, `cycle.date.span`s "Cursor vor dem Datum"-Frühausstieg.
+  **Ein neuer Bug gefunden und gepinnt** (nicht gefixt, da eine bewusste Design-Entscheidung
+  nötig wäre): `renumber.tree`, direkt über eine explizite Range aufgerufen, die mehr als
+  einen Listen-Block umfasst (der `:Cascade renumber`/`run_command`-Pfad, anders als `M.all`,
+  das vorher aufteilt), setzt den zweiten Blocks Zähler-Neustart vom `base_start` des
+  ERSTEN Blocks ab statt vom eigenen -- z.B. wird `5. 6.` / Leerzeile / `9. 10.` zu
+  `5. 6.` / Leerzeile / `5. 6.` statt `9. 10.`.
+  Testlauf: weiterhin 17 Spec-Dateien, 981 → 995 Assertion-Aufrufstellen, über zwei von mir
+  persönlich nachgefahrene Wiederholungsläufe stabil. `luacheck lua scripts TESTS`
+  (68 Dateien) und `stylua --check lua scripts TESTS` beide grün.
+  Commit: `0bc75e6`.
 - [x] **sandbox.nvim** — fertig (Runde 22, größtes Repo bisher: 270 Dateien). Nach Risiko
   geschichtet: Spawn-Grenze zuerst (das ist ein Sandbox-Plugin, die argv *ist* der Vertrag),
   dann Use-Case-Schicht, Config/State/API, Wiring, UI zuletzt. 17 → 37 Spec-Dateien,
@@ -1439,6 +1492,33 @@ Abschnitt "Offen (gepinnt)".
   `config.menu.enable` hängt.
   `.luacheckrc` um zwei begründete `unused_args = false`-Ausnahmen erweitert.
   Commit: `eb2145f`.
+  **Re-Audit (Runde 22, 2026-09-18):** kein Diff seit Runde 22, alle drei gepinnten Bugs
+  (WSL-UTF-16LE-Fehlinterpretation, `inspect_view.lua`s toter Fehler-Zweig,
+  `keymaps = false` bindet `<RightMouse>` trotzdem) bestätigt weiterhin offen und korrekt
+  gepinnt. Die vier Bug-Familien einzeln geprüft: `health.lua`s "CLI fehlt"-Zweig fällt
+  korrekt zu `engine_utils.responds()` durch (degradiert zu `false`, kein Crash, schon
+  gepinnt); die eine Augroup-Nutzung ist buffer-gescoped mit `once = true`, kein
+  `setup()`-weites Doppel-Registrierungsrisiko; keine Byte/Spalten-Verwechslung
+  (`hover.lua`s `image_at` indiziert direkt am übergebenen Byte-Offset); keine
+  Colon/Laufwerksbuchstaben-Bugs (der eine echte Colon-Split, `repo:tag` vs.
+  `registry:port`, ist bereits mit einem Windows-realistischen Fall getestet).
+  **Eine echte Lücke gefunden und geschlossen**: die vier Telescope-Front-End-Dateien
+  (`telescope/{picker,containers,images,wsl}.lua` + die Extension) hatten null Coverage.
+  Runde 22s Grund ("telescope.nvim ist keine Dependency oder CI-Sibling") stimmt zwar --
+  telescope.nvim ist inzwischen sogar ein echter Sibling-Checkout unter `nvim-data/lazy`,
+  aber weiterhin kein CI-Checkout --, verwechselte aber "kann nicht getestet werden" mit
+  "braucht das echte Paket": die Wiring-Logik (Entry-Formatierung, Ref-Berechnung,
+  Tasten-zu-Kommando-Mapping) lässt sich über `package.loaded`-Doubles für
+  `telescope.pickers`/`finders`/`config`/`actions`/`actions.state` prüfen -- dieselbe
+  Technik, die diese Suite für `ui.kit`-Prompts längst nutzt. Neue
+  `telescope_spec.lua` (23 Checks).
+  Testlauf: 883 → 906 Checks, 37 → 38 Spec-Dateien, über zwei von mir persönlich
+  nachgefahrene Wiederholungsläufe stabil (mein erster Lauf hing zunächst mit
+  "module not found"-Fehlern, weil ich `LIB_NVIM_PATH`/`UI_NVIM_PATH` relativ statt absolut
+  gesetzt hatte -- einige Specs wechseln das Arbeitsverzeichnis, ein relativer rtp-Eintrag
+  löst sich danach gegen das neue cwd auf; mit absoluten Pfaden lief alles grün, kein
+  echter Bug). `luacheck lua TESTS` (310 Dateien) und `stylua --check .` beide grün.
+  Commit: `d2ea226`.
 - [x] **data.nvim** — fertig (Runde 23). Audit bestätigte die Datei-Ratio: die Happy Paths
   aller vier Verben (JSON/YAML/XML/CSV o.ä.) waren echt getestet, die *Fehlerhälfte* jedes
   Moduls fehlte komplett (`scope/source.lua`/`util/safe_call.lua` ganz ohne eigene Spec,
