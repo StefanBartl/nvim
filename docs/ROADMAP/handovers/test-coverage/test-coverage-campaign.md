@@ -477,6 +477,19 @@ Abschnitt "Offen (gepinnt)".
   (deklarativer Reporter), `bindings/autocmds.lua` (bewusst leerer Stub), `@types.lua`
   (reine Annotationen).
   Commit: `6e7fb65`, direkt auf `main` gepusht.
+  **Re-Audit (Runde 7, 2026-09-18):** genau der Verbesserungsvorschlag aus Runde 7 wurde jetzt
+  umgesetzt -- statt eines Lazy-Requires wurde `package.loaded["ui.kit"] = {}` vor dem ersten
+  `require` gestubbt, die reine Logik aus `bindings/usrcmds.lua`, `float/rendering.lua` und
+  `float/keymaps.lua` über `M._internal` exponiert (gleiche Konvention wie `treesitter.lua`
+  seit Runde 7) und drei neue Specs geschrieben. CI braucht weiterhin keinen echten
+  ui.nvim-Checkout. Alle anderen Auslassungsgründe (Bug-Familien a-d, Sibling-Verfügbarkeit,
+  Dokumentationslücke bei `statusline_spec.lua` im README behoben) einzeln nachgeprüft, keine
+  neuen Bugs gefunden -- nur ein Test-Artefakt (`resolve_cfile`s `findfile()`-Zweig liefert
+  unter Windows native Backslash-Pfade, im Test durch Normalisierung vor dem Vergleich
+  behoben, keine Quelländerung). 12 → 15 Specs, alle grün über von mir persönlich
+  nachgefahrene Wiederholungsläufe. `luacheck lua TESTS` (41 Dateien) und `stylua --check`
+  beide grün.
+  Commit: `bef1939`.
 - [x] **language.nvim** — fertig (Runde 8, nach kurzer Unterbrechung durch API-Sessionlimit
   in zwei Etappen gelandet: erster Agent schrieb 21 neue Spec-Dateien, wurde beim
   Lint-Cleanup unterbrochen; zweiter Agent hat übernommen statt neu zu starten). Eigener
