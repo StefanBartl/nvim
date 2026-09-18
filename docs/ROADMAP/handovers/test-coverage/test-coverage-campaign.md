@@ -1007,6 +1007,28 @@ Abschnitt "Offen (gepinnt)".
   Float-Geometrie des Overlays (gehört `ui.kit`; die gerenderten Zeilen werden trotzdem
   echt geprüft).
   Commit: `5ea0333`, direkt auf `main` gepusht.
+  **Mittlerweile gefixt** (separate Sitzungen dieser Kampagne): Bug (1) und (2) über
+  Commit `7583459` (`checkbox_target()`s Visual-Zweig liest jetzt `vim.fn.getpos("v")` +
+  Cursor statt der erst beim Verlassen von Visual committeten `'<`/`'>`-Marken;
+  `frecency.lua`s `mkdir` jetzt pcall-gewrappt); Bug (5) über Commit `dd6a0fb` (der
+  Composer-Aufruf jetzt `pcall(require, ...)`-gewrappt) -- dieses Repo war damit die
+  ERSTE Instanz der "Health ruft ihre fehlende Dependency trotzdem" Familie, die die
+  Kampagne seitdem in elf weiteren Repos wiedergefunden hat. Bug (3) und (4) (Shortcode-vs-
+  Quickfix-Parser, `RG_PATTERN`-Lücke) sind weiterhin offen/gepinnt.
+  **Re-Audit (Runde 15, 2026-09-18):** ein sehr solider Fund -- die drei Fix-Commits waren
+  bereits alle mit Regressionstests belegt, kein Diff seit Runde 15 außer genau diesen
+  dreien. Die vier Bug-Familien einzeln durchgeprüft: kein weiterer Preflight mit derselben
+  Form wie der gefixte; keine Augroups überhaupt (`bindings/autocmds.lua` ist ein bewusster
+  Leer-Stub); Byte/Spalten-Nutzung durchgehend konsistent geprüft; keine Windows-Pfad-
+  Vergleiche im ganzen Repo (der einzige Colon-Parsing-Bug in `search.lua` ist der bereits
+  bekannte, weiterhin gepinnte). **Eine echte, kleine Lücke gefunden und geschlossen**:
+  `health.lua`s Neovim-Versions-Gate erreichte nie seinen `warn`-Zweig, da die Suite auf
+  aktuellem Neovim läuft -- `vim.fn.has` per Hand gestubbt (dieselbe Technik wie beim
+  ripgrep-present/absent-Paar), um ihn zu erreichen. Keine neuen Bugs.
+  Testlauf: 22 Specs, 773 → 775 Checks, stabil über zwei von mir persönlich nachgefahrene
+  Wiederholungsläufe. `luacheck lua TESTS` (47 Dateien) und `stylua --check lua TESTS`
+  beide grün.
+  Commit: `9de7b6d`.
 - [x] **fileops.nvim** — fertig (Runde 16). Framework-freier Harness beibehalten
   (`function(H)`-Specs, Eintrag in `run.lua`). 9 → 19 Spec-Dateien, 199 → 805 Assertions,
   fünf Läufe hintereinander identisch grün (Exit 0, `FILEOPS_TESTS_OK`).

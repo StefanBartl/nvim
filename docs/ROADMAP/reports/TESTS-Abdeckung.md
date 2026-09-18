@@ -59,7 +59,7 @@ github_stats) sind durch. Weiter geht es ab Runde 12 (insights.nvim), sechs Agen
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
 | 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
 | 14 | pdfport.nvim | 14 | `3c9273a` | 11 neue Specs; 192 → 1059 Assertion-Stellen |
-| 15 | emojis.nvim | 15 | `5ea0333` | 13 neue Specs; 261 → 773 Assertions |
+| 15 | emojis.nvim | 15 | `9de7b6d` (Re-Audit) | 13 neue Specs; 261 → 773 Assertions; Re-Audit: 773 → 775 Checks |
 | 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
 | 17 | reposcope.nvim | 17 | `98a9a36` | 25 neue Specs; 236 → 1910 Assertions |
 | 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
