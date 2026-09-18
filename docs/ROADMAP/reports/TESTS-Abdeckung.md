@@ -68,7 +68,7 @@ Agents parallel.
 | 20 | diff.nvim | 20 | `d7aa3a5` (Re-Audit: solide, nichts zu tun) | 10 neue Specs; 295 → 694 Assertion-Stellen |
 | 21 | cascade.nvim | 21 | `77ea4f3` | 10 neue Specs; 462 → 981 Assertion-Stellen |
 | 22 | sandbox.nvim | 22 | `eb2145f` | 17 → 37 Specs; 136 → 883 Checks |
-| 23 | data.nvim | 23 | `a64c208` | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
+| 23 | data.nvim | 23 | `a64c208` (Re-Audit: solide, nichts zu tun) | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
 | 24 | spotlight.nvim | 24 | `5931a55` | 17 → 29 Specs; 472 → 1159 Assertionen |
 | 25 | mdview.nvim | 25 | `166904e` | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks |
 | 26 | filetree.nvim | 26 | `811bfed` | 696 → 858 Checks (Gap-Closing, sehr großes Repo) |
@@ -184,6 +184,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | reposcope.nvim | `repository_fetcher.lua`s `vim.json.decode("null")`-Crash in zwei von drei Fetchern (truthy `vim.NIL` statt Tabellen-Check) | `3c82ff3` |
 | insights.nvim | `symbols/parser.lua`s Doppelpunkt-Scan fraß den Laufwerksbuchstaben, `ts_lua.lua`/`ts_lua_tables.lua`s `field("left")`/`field("right")` existierten nie, `tree/init.lua`s Glob→Regex-Escaping nutzte `%` statt `\` | `6031069`, `dcbe57a` |
 | insights.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `ui/fzf.lua`s Default-Action und `ts_lua*.lua`s `scan_cwd()`-Ignore-Liste teilten denselben Windows-Laufwerksbuchstaben- bzw. Backslash-Blindpunkt wie die drei oben genannten Bugs, an drei weiteren Stellen | `6bbab32` |
+| data.nvim | `register.write()` behandelte `setreg`s Ausbleiben eines Wurfs als Beweis für einen erfolgreichen Schreibvorgang, aber `setreg("+"/"*", ...)` wirft nie bei fehlendem Clipboard-Provider — tut einfach nichts | `9937f5c` |
 | fileops.nvim | `bindings/keymaps.lua`s `delete_fn({})` löschte permanent ohne Undo trotz `"trash"`-Default; drei Windows-Trenner-Mismatches (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer, `ops/file.lua`s Verzeichnis-Unlink-Retry); `conflict_marks.lua`s Match-Leak bei erneutem `:edit` | `e7185fc`, `81e15ee`, `ffc1c9a` |
 | fileops.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `on_hold.lua`s Git-Show-Preview löste den Pfad nie korrekt auf (hat noch nie gerendert) und `truncate()` schnitt Byte- statt zeichengenau | `037d3bb` |
 
