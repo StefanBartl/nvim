@@ -83,6 +83,13 @@ pushed. What changed, and where:
 | E four components moved | recommender `81570db`, github_stats `f01dd85`, runtime-analysis `3c6e6bd`, casedesk `c80dd80`, ui.nvim `9afcc07` | |
 | A1 kit fixes ported + drift guard | lib.nvim `679e64b`/`92eb7d1`, ui.nvim `3c2eac2`/`bfd12e7` | |
 
+**F1 and F2, decided and built, 2026-09-18.**
+
+| Finding | Where | Commit |
+|---|---|---|
+| F1 diffopt profiles moved to their consumer | diff.nvim `03b6359`, my.nvim `1c147de` | |
+| F2 `gh` gitsigns hunk peek moved to diff.nvim | diff.nvim `03b6359`, my.nvim `1c147de` | |
+
 **A1 was the last one, and this report had it wrong.** It said lib.nvim's
 copy "was never removed", implying an oversight. `PLAN-ui-kit-migration.md`
 step 6 shows the opposite: *"Keine Löschung nötig … bleibt unangetastet im
@@ -181,10 +188,12 @@ by intent. Both sections now say what is actually there.
 
 **Not fixed, and why.** `lsp.nvim`'s winbar rewriter — the second half of
 [C3](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters) — turns
-out to need no change at all; see that section. `F1` and `F2` are decisions
-about where a feature belongs rather than defects, and are left for their
-owner. Everything at **M**, **L** and **XL** is untouched, including the kit
-deduplication ([A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17)),
+out to need no change at all; see that section. `F1` and `F2` were decisions
+about where a feature belongs rather than defects — both decided 2026-09-18
+(move to diff.nvim, see [§10](#10-findings-inside-mynvims-own-scope-boundary))
+and built the same session. Everything at **M**, **L** and **XL** beyond that
+is untouched, including the kit deduplication
+([A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17)),
 which is the one that needs a decision rather than typing.
 
 ## 1. Method, and what this report is not
@@ -899,32 +908,47 @@ Not sibling overlap; surfaced by the same pass and recorded here because they
 are the same kind of question — does this feature live in the right plugin?
 
 **F1 · `my.set_diff_profile` owns `diffopt`, and `diff.nvim` has no diffopt
-handling at all.** `my.nvim/lua/my/set_diff_profile/profiles.lua` defines five
-profiles (`minimal`, `context`, `review`, …) of `diffopt` flag sets —
+handling at all — resolved 2026-09-18.** `my.nvim/lua/my/set_diff_profile/
+profiles.lua` defined four profiles (`minimal`, `context`, `review`,
+`strict`) of `diffopt` flag sets —
 `algorithm:histogram`/`patience`, `linematch:60`, `indent-heuristic`, `iwhite`
-— and `selector.lua:16` writes `vim.o.diffopt`. `<leader>` cycling and
-"which profile does the current `diffopt` match" live in
+— and `selector.lua:16` wrote `vim.o.diffopt`. `<leader>` cycling and
+"which profile does the current `diffopt` match" lived in
 `bindings/keymaps.lua:32-59`.
 
-A grep for `diffopt` across all 23 of `diff.nvim`'s modules returns **zero**
+A grep for `diffopt` across all 23 of `diff.nvim`'s modules returned **zero**
 hits. `diff.nvim` renders splits, resolves `git:HEAD`, does directory and
-image compare — and has no opinion about the algorithm Neovim uses to compute
-the diff it is showing.
+image compare — and had no opinion about the algorithm Neovim uses to compute
+the diff it is showing. It turned out to have more of a stake than that:
+`view=vsplit`/`split`/`tab` (the default view) all call `diffmode.set()` —
+`diff.nvim` is the plugin that actually puts a window into native diffmode,
+which is what makes `diffopt` matter in the first place.
 
-This one is genuinely arguable against the scope line: `diffopt` changes what
-is painted *inside* the window, which is `my.nvim`'s mandate. But it is the
-quality knob for the feature `diff.nvim` exists to provide, and `diff.nvim`'s
-own splits would immediately benefit. **Effort: S–M**, and the decision is
-worth more than the work.
+**Decided: move to diff.nvim.** `diff.nvim@03b6359` gained
+`features/diffopt_profile/` (the same four profiles, `names()`/`get()`/
+`set()`/`current()`/`cycle()`) and `:DiffProfile {name}`, gated by
+`features.diffopt_profile` (default on) and applying nothing at `setup()`
+unless `diff.diffopt_profile` is explicitly set — so an existing
+diff.nvim-only install sees no behaviour change. `my.nvim@1c147de` replaced
+the owned module with `my.diff_profile`, a thin soft-require delegate:
+`<leader>od` and `:My diff` still work exactly as before, now calling into
+diff.nvim, and notify instead of erroring when it is absent.
 
-**F2 · `my.hl_config.features.diff_peek` is a gitsigns hunk-preview keymap.**
-`features/diff_peek.lua` clears and re-binds `gh` to
-`gitsigns.preview_hunk` behind a soft-require. It is a git operation wearing a
-highlight-feature's clothes, and it sits next to
+**F2 · `my.hl_config.features.diff_peek` is a gitsigns hunk-preview keymap —
+resolved 2026-09-18.** `features/diff_peek.lua` cleared and re-bound `gh` to
+`gitsigns.preview_hunk` behind a soft-require. It was a git operation wearing a
+highlight-feature's clothes, and it sat next to
 [Externe-Plugins-Nachbau-Analyse.md](./Externe-Plugins-Nachbau-Analyse.md)'s
 own `gitsigns → :ToggleInlineDiff → diff.nvim` entry — the same gitsigns
-surface, assigned there to `diff.nvim`. Worth deciding once, for both.
-**Effort: S.**
+surface, assigned there to `diff.nvim`.
+
+**Decided: move to diff.nvim, together with F1.** `diff.nvim@03b6359` gained
+`features/gitsigns_peek.lua`, gated by `features.gitsigns_peek` (default on,
+setup-time only like `diff_origin`/`diff_exit` — no runtime toggle). Removed
+from `my.nvim@1c147de` entirely, along with every state/health/type reference
+to it (`enable_diff_peek`, `hl_config.core.state`, `:checkhealth my`'s "Diff
+peek" section) — unlike F1 there was nothing left in my.nvim to delegate
+from, since the feature had no highlight content of its own.
 
 **F3 · `my.indent_per_ft` is a hardcoded table with a config flag that only
 turns it on.** `my.nvim/lua/my/indent_per_ft/init.lua` is 31 lines: a
@@ -969,4 +993,4 @@ Cheapest-with-a-real-symptom first, then the two structural decisions.
 | 11 | [C2](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll) winhighlight to lib | M | Lift-and-shift, then four call sites |
 | 12 | [E](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component) statusline components | M ×5 | One sibling at a time; `sandbox.nvim` is the template |
 | 13 | [A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17) kit deduplication | L | The largest, and the one that needs a decision, not typing |
-| 14 | [F1](#10-findings-inside-mynvims-own-scope-boundary)–F3 scope questions | S–M | Decide; the work is small either way |
+| 14 | ~~[F1](#10-findings-inside-mynvims-own-scope-boundary)–F3 scope questions~~ | S–M | Done — all three resolved 2026-09-18 |
