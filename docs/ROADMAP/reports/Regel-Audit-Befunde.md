@@ -31,7 +31,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | lib.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
 | dap.nvim | 21 | 21 | 0 | fertig (2026-09-18) |
 | mdview.nvim | 18 | 18 | 0 | fertig (2026-09-18) |
-| replacer.nvim | 17 | – | – | offen |
+| replacer.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
 | buffer-ctx.nvim | 16 | – | – | offen |
 | insights.nvim | 16 | – | – | offen |
 | language.nvim | 16 | – | – | offen |
@@ -856,7 +856,7 @@ Two things I looked at and deliberately did NOT report:
 
 ## replacer.nvim
 
-**17 Befunde** (8 × high). Roh gemeldet: 18.
+**17 Befunde** (8 × high). Roh gemeldet: 18. — **Stand: 17/17** (⏭️ 0, 2026-09-18)
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -868,6 +868,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** On Neovim 0.9-0.11 — every version `:checkhealth replacer` blesses — `:Replace old new --dry` throws at init.lua:147 ('attempt to index a nil value (field text)' on 0.9, 'attempt to call a nil value (field diff)' on 0.10/0.11), and `:Replace old new --export=out.patch` throws through the unguarded export.write_export at init.lua:137. Only .json exports survive. CI does exercise this (TESTS/feature_smoke.lua:1371 calls export.build_patch), so the failure is invisible only because `version: stable` in .github/workflows/ci.yml now resolves to 0.12 — the guard is missing, not the coverage.
 
+**Status.** ✅ erledigt (`23ea472`) — `vim.text.diff` existiert erst ab Neovim 0.11; Fallback auf `vim.diff` (dieselbe Funktion unter altem Namen, vorhanden auf 0.9/0.10).
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/replacer/presets.lua:26` · `M.load / M.save` · confidence **high**
@@ -877,6 +879,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** ERR-11 requires "empty but ok" and "empty because broken" to be distinguishable; this is the exact load-modify-save collapse the rule's Belege calls the most common real bug class of the 32-repo sweep. The sibling file history.lua was fixed for this (it backs the raw bytes up to `.corrupt` before returning `{}` -- history.lua:50-55); presets.lua was never given the same treatment.
 
 **Auswirkung.** If presets.json becomes undecodable (truncated write, hand-edit, partial disk write), the next `:ReplaceSavePreset name old new` calls M.load() -> `{}`, inserts the one new entry, and rewrites the whole file. Every other saved preset is gone permanently: no warning, no `.corrupt` backup (unlike history.json), no trace. `:ReplacePreset <old name>` afterwards reports only 'no such preset'. M.delete (79-86) has the same shape and would also flatten the file to one entry's removal against an empty base.
+
+**Status.** ✅ erledigt (`9720bc1`) — Dekodier-Fehler sichert die Rohbytes jetzt nach `.corrupt`, statt beim nächsten Save/Delete alle Presets stillschweigend zu verlieren (Fix analog `history.lua`).
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -888,6 +892,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** When `git diff --name-only` / `git diff --staged` / `git ls-files --others` fails (git not on PATH, locked or corrupt index, permission error on the repo), that kind contributes zero paths and nothing is reported. If all requested kinds fail, init.lua:424 prints '--changed: no changed files match the current scope' and returns — the user reads that as 'nothing changed', while the replace they asked for silently never ran. A partial failure (one of three kinds erroring) is worse: the run proceeds over an incomplete file list that looks authoritative.
 
+**Status.** ✅ erledigt (`b417aad`) — `ok` aus `git_lines` wurde bisher verworfen; `M.list` meldet fehlgeschlagene Kinds jetzt über einen dritten `on_done`-Parameter, `--changed` warnt entsprechend.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/replacer/rg.lua:533` · `list_files / scan_file` · confidence **high**
@@ -897,6 +903,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** ERR-11: a result that can legitimately be empty must report "empty because nothing matched" differently from "empty because the scan failed". The native backend has no way to say the second thing.
 
 **Auswirkung.** With the vimgrep backend (automatic whenever rg is not on PATH — health.lua:99 warns but permits it), any file the scanner cannot open is skipped with no record, and an unreadable root directory yields zero matches for that whole root. The mechanism is slightly different from the auditor's description: unreadable SUBdirectories are swallowed inside vim.fs.dir's own iteration and never reach this pcall at all, which makes the gap wider, not narrower. The user sees the ordinary 'no matches found' (init.lua:371) or a partial list that looks complete, and applies a project-wide rename believing it covered everything reachable.
+
+**Status.** ✅ erledigt (`9ce4607`) — Unlesbare Root-Verzeichnisse/Dateien im vimgrep-Backend lösen jetzt `notify.warn` aus statt leise übersprungen zu werden. Bewusst über den bestehenden `notify`-Kanal statt über den überall fatalen `err`-Kanal — der wörtliche Befund-Vorschlag hätte einen guten Teilerfolg abgebrochen.
 
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
@@ -908,6 +916,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** `:ReplaceFNames foo bar` in a directory that already contains bar.lua destroys the existing bar.lua with no error: ok_rename is true, `renamed` increments, and the notification at fnames.lua:279-288 reports 'renamed N entries'. Nothing is written to `errors`, so nothing is shown. Confined to file-over-file (a dir-over-non-empty-dir rename fails with ENOTEMPTY). The same primitive is reused by `--also-rename-file` through rename_assist.lua:33 (`fnames.apply({ m })`), whose confirm prompt at rename_assist.lua:48-53 shows only 'Also rename foo.lua -> bar.lua?' and never mentions that bar.lua exists.
 
+**Status.** ✅ erledigt (`e63e118`) — `M.apply` prüft das Rename-Ziel per `fs_stat` unmittelbar vor `fs_rename` und überspringt bei Kollision mit Fehlermeldung, statt blind zu überschreiben.
+
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
 `lua/replacer/health.lua:226` · `check_config` · confidence **high**
@@ -917,6 +927,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** ERR-60 verbatim: `a and b or c` yields `c` as soon as `b` is falsy, independent of `a`. Here `b` is a pcall result whose whole purpose is to be `false`.
 
 **Auswirkung.** One concrete broken case: `engine = "telescope"`, telescope not installed, fzf-lua installed. picker_ok becomes true from the fzf-lua probe, the error at health.lua:229 never fires, and `:checkhealth replacer` prints 'Picker engine: telescope' as OK. That is the only check that would explain why every interactive `:Replace` dies with 'telescope.nvim not found' (pickers/telescope.lua:36). The engine="fzf" branch happens to produce the right answer by accident.
+
+**Status.** ✅ erledigt (`da4037f`) — `a and b or c`-Kette (fiel bei fehlendem Telescope immer auf die fzf-lua-Probe zurück) durch explizites `if` ersetzt.
 
 ### `SEC-30` — Nutzereingabe literal escapen
 
@@ -928,6 +940,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** During `:Replace! old new --checkpoint`, any target file that is NOT itself loaded but whose path is a prefix of (or a magic-pattern match for) some loaded buffer's name causes read_current() to snapshot that foreign buffer's contents under the target's name. `:ReplaceUndo` then hands that content to write_exact (checkpoint.lua:186), which writes it byte-exactly over the real file — the undo feature destroys the file it was created to protect. Requires a colliding loaded buffer, so it is conditional rather than universal; the `[`/`*`/`?` variant additionally misfires on any target path containing those characters. rg.lua:100 (is_buffer_modified) can likewise route a whole search into the wrong buffer's contents, and export.lua:27 builds the dry-run plan from the wrong file.
 
+**Status.** ✅ erledigt (`e63e118`) — `vim.fn.bufnr(path)` (Regex-Pattern-Matching) durch literalen Abgleich über `nvim_list_bufs()`/`nvim_buf_get_name` ersetzt. Nebenfund: eine fünfte, vom Audit nicht benannte `vim.fn.bufnr(path)`-Stelle in `checkpoint.lua:188` (`M.undo`) gehört derselben Klasse an, wurde aber bewusst nicht mitgefixt (außerhalb der 17 gemeldeten Befunde) — lohnt ein Folge-Audit.
+
 ### `SEC-30` — Nutzereingabe literal escapen
 
 `lua/replacer/fnames.lua:185` · `M.apply` · confidence **high**
@@ -937,6 +951,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** Same SEC-30 violation as checkpoint.lua:57, but the consequence is a write-side one: the resolved (possibly wrong) buffer is then renamed in place via `nvim_buf_set_name`.
 
 **Auswirkung.** Renaming foo.lua -> bar.lua while foo.lua itself is not loaded but foo.lua.bak (or any buffer whose name the old path pattern-matches) is, re-points THAT buffer's name to bar.lua. The user is left with a buffer labelled bar.lua holding the .bak file's contents; the next `:w` overwrites the freshly renamed file with the wrong content. `:ReplaceFNames` reports 'renamed 1 entry' either way. When foo.lua IS loaded the full-match attempt wins, so this only fires on the near-miss case.
+
+**Status.** ✅ erledigt (`e63e118`) — Gleicher Fix (`bufnr_exact`-Helper) wie #7, hier auf der Schreib-Seite (Buffer-Umbenennung nach Rename).
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -948,6 +964,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** A throw from any register() — incompatible lib.nvim composer, verb-name collision, malformed route spec — aborts M.setup's loop at that entry. Every command later in M.REGISTRY is never created; for a failure in the third entry (replacer.regex) that means ReplaceRoot, ReplaceUndo, ReplaceHistory, ReplacePreset, ReplaceSavePreset, ReplaceBatch and ReplaceFNames all silently do not exist. The error propagates out of plugin/replacer.lua as a startup sourcing error, and because the flag is set after setup() returns, vim.g.__replacer_cmd_registered stays unset and the whole failure repeats on every reload.
 
+**Status.** ✅ erledigt (`64440a3`) — `register()` selbst wird jetzt gepcallt, nicht nur das vorangehende `require`; ein fehlschlagendes Modul bricht die Registrierungs-Schleife nicht mehr für alle nachfolgenden Kommandos ab.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/replacer/export.lua:103` · `M.build_results` · confidence **medium**
@@ -957,6 +975,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** ERR-11: the second return value exists precisely to separate "this file has no lines" from "this file could not be read", and the only consumer discards it.
 
 **Auswirkung.** An unreadable file in the match set contributes all of its matches to `totals.skipped` and none to `totals.spots`. The dry-run summary at init.lua:127-135 folds it into the generic '(N skipped)' bucket alongside genuinely stale matches, and the file is absent from `results`, so it appears in neither the diff scratch buffer (init.lua:147) nor an exported .patch/.json. One correction to the auditor: the real apply reads through the same pcall(io.open) at apply.lua:186 and would fail on that file too, so the plan is not understating what the apply will touch — it is presenting an unreadable file as a stale-match no-op, hiding the actual cause (permissions, a vanished file) behind a count the user has no way to interpret.
+
+**Status.** ✅ erledigt (`2b17f5b`) — Zweiter Rückgabewert von `read_lines` wird jetzt ausgewertet; neues `totals.unreadable`-Feld, im Dry-Run-Text sichtbar statt im „skipped“-Topf versteckt.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -968,6 +988,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** `setup({ engine = "telescpoe" })` silently degrades to engine='auto'. `:checkhealth replacer` then reports 'Picker engine: auto (resolves to fzf-lua)' and looks entirely healthy (health.lua:216-223), so a user who believes they configured telescope and keeps getting the fzf-lua picker has no diagnostic surface pointing at the typo. The warn branch that was written for exactly this is dead code.
 
+**Status.** ✅ erledigt (`da4037f`) — `config.issues()` macht degradierte Einzelwerte (engine/search_engine/progress_style) jetzt über `:checkhealth` sichtbar; der bisher tote `else`-Zweig bleibt als Fallback stehen.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/replacer/config/init.lua:259` · `M.setup / validate` · confidence **medium**
@@ -977,6 +999,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** ERR-50 requires unknown-key validation to run before the merge exactly so a typo in an option cannot disappear into the defaults unnoticed. Here it disappears twice over: it survives the merge into an intermediate table and is then dropped without a word by the key-by-key rebuild.
 
 **Auswirkung.** `setup({ smartcase = false })` (typo for smart_case, config/init.lua:198), `setup({ preserve_ws = true })`, `setup({ max_filesize = 1000 })` and every other near-miss survive the merge into the intermediate table and are then dropped without a word by validate's key-by-key rebuild. The option silently has no effect for the life of the session and there is no diagnostic path: check_config (health.lua:204-261) reads back only post-validation values, which are the defaults.
+
+**Status.** ✅ erledigt (`da4037f`) — `sanitize_keys()` verwirft unbekannte Top-Level-Keys vor dem Merge, mit Levenshtein-„did you mean“-Hinweis (Muster aus dap.nvim/mdview.nvim übernommen).
 
 ### `PERF-72` — Auto-erkannte Scan-Roots konservativ
 
@@ -988,6 +1012,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** Conditional on the user having a .git directly in $HOME (a dotfiles repo, common but not universal): `:Replace old new root` from any buffer under $HOME resolves the scope to $HOME itself rather than to the project the file belongs to, so the scan — and with `!`/--all the rewrite — covers the entire home directory. Same shape for a monorepo superproject when the user meant the submodule they are editing. Without a $HOME-level .git, detect_best is bounded by the outermost enclosing repository, which is over-broad but not catastrophic. `:ReplaceRoot` is unaffected: M.pick (106-124) prompts via ui.kit.select whenever there is more than one candidate.
 
+**Status.** ✅ erledigt (`d77b80c`) — `detect_best` überspringt das Home-Verzeichnis als „outermost .git“-Kandidat und fällt auf den nächstgelegenen Marker zurück.
+
 ### `PRIN-25` — Eingaben validieren
 
 `lua/replacer/debug.lua:177` · `M.register_command` · confidence **medium**
@@ -997,6 +1023,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** PRIN-25: the argument is mangled before it is worked with. The case fold is correct for the verb and wrong for the payload; the payload is passed on to `M.analyze_line`, which does a literal `line:find(pattern, pos, true)`.
 
 **Auswirkung.** `:ReplaceDebug analyze 42 FooBar` searches line 42 for the literal string 'foobar' and reports no occurrences. Every pattern containing an uppercase letter — most identifiers, which is what this tool exists to investigate — gets a fabricated negative. The printed 'Pattern: ...' line (debug.lua:118) shows the lowercased form, so the output is at least self-consistent and a careful reader could spot it; the line number capture (%d+) is unaffected by the fold.
+
+**Status.** ✅ erledigt (`2aa33ed`) — Suchmuster für `analyze` wird jetzt aus dem Original-`arg` extrahiert statt aus dem kleingeschriebenen `cmd`.
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -1008,6 +1036,8 @@ Two things I looked at and deliberately did NOT report:
 
 **Auswirkung.** A presets.json corrupted or hand-edited into the wrong shapes turns `:ReplacePreset <name>` into an uncaught Lua error rather than a clean rejection: numeric `old` throws at init.lua:95, a non-string entry in filters.globs/exclude throws at rg.lua:186. Two of the auditor's sub-claims are overstated: a non-table `filters.file_types` only throws for number/boolean values (a string passes through extend as a silent no-op, since `#s` and `s[i]` are both legal), and `p.overrides` is NOT wholly untrusted — cfg_mod.resolve runs it through validate, which coerces every known key. The genuinely unvalidated override path is narrower: `overrides.changed_only` is read raw at init.lua:96 and handed to gitfiles.list, whose `for _, k in ipairs(kinds)` throws on a non-table. Net effect is a crash-on-load rather than a silent-wrong-result, but the rule's requirement — re-validate every field of a persisted snapshot before use — is unmet.
 
+**Status.** ✅ erledigt (`9720bc1`) — `as_request` validiert Typ/Länge/Count-Cap jedes Feldes (inkl. `overrides.changed_only`) und liefert `(req, err)` statt unvalidierte Werte durchzureichen.
+
 ### `UI-01` — Bulk-/destruktive Aktionen
 
 `lua/replacer/batch.lua:156` · `M.run` · confidence **medium**
@@ -1017,6 +1047,8 @@ Two things I looked at and deliberately did NOT report:
 **Regelbezug.** UI-01: a bulk/destructive action is confirmed once, not once per item. `:ReplaceBatch` is the bulk action; each pair is an item.
 
 **Auswirkung.** A 40-pair batch file produces up to 40 separate 'Apply ALL N spot(s) across M file(s)?' prompts (one per pair that matched anything). Because the dispatch loop at batch.lua:156 is synchronous while collection is asynchronous (rg.collect_async / collect_streaming, init.lua:393-395), the prompts arrive in collection-completion order rather than file order, so the user answers yes/no to floats with no indication which pair each belongs to. The 'batch: dispatched N pair(s)' notification (batch.lua:167) fires before any prompt has been answered. Whether the floats visually overlap depends on ui.kit.confirm's queueing, which lives in ui.nvim and I did not read; the per-item confirmation itself is unconditional.
+
+**Status.** ✅ erledigt (`3106d56`) — Batch fragt jetzt einmal vorab (übersprungen bei `--dry` oder `confirm_all=false`); jede Einzel-Pair-Dispatch erzwingt `confirm_all=false`.
 
 ### `UI-53` — Race Conditions
 
@@ -1041,6 +1073,8 @@ RULES I COULD NOT CHECK PROPERLY.
 - PERF-80: satisfied. Every `vim.system` stdout/exit callback re-enters the loop with `vim.schedule` before touching a vim API (rg.lua:398, 406, 985, 994; gitfiles.lua:36).
 
 OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs at least 9 -- a local `make check` can be green on code CI would reject. No rule in the 76 covers it, so it is not filed above.
+
+**Status.** ✅ erledigt (`520d69e`) — „Only some“ beendet die Pro-Datei-Schleife jetzt sofort (wie „Quit“), statt das nächste Confirm-Float über dem noch offenen Picker zu öffnen. Der wörtliche Befund-Vorschlag (auf Picker-Schließen warten) war nicht umsetzbar — kein Picker-Backend liefert ein solches Signal.
 
 ---
 
