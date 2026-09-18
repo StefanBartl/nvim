@@ -2090,3 +2090,14 @@ kein inhaltlicher Grund.
   fehlerfrei. `luacheck .` (exakter CI-Befehl, 134 Dateien) 0/0, `stylua
   --check .` grün.
   Commit: `f407023`.
+
+**Alle neun Repos durch (2026-09-18).** Fünf hatten echte, bisher unentdeckte Bugs:
+images.nvim (1), markdown.nvim (4), lib.nvim (2 gefixt + 1 gepinnte Credential-Lücke),
+runtime-analysis.nvim (1 + zwei gefixte flaky Tests), ui.nvim (1). Vier waren tatsächlich
+bugfrei -- ai.nvim, hover.nvim, documentation.nvim (nur Coverage-Lücken geschlossen) und
+media.nvim (einzige der neun, bei der die 🟢-Einstufung sich vollständig bestätigte, keine
+einzige Lücke außer `health.lua`). Jeder Fund persönlich nachverifiziert (Testsuite zweimal,
+exakte CI-Lint-Befehle, `git merge-base --is-ancestor` gegen `origin/main`). Ein
+vorbestehender, von diesem Check unabhängiger Flake (`ui.nvim`s `TESTS/ui_kit_spec.lua`)
+wurde dabei gefunden und als Folgeaufgabe geflaggt statt stillschweigend übergangen. Damit
+ist die gesamte Test-Coverage-Kampagne (36/36 Repos) abgeschlossen.
