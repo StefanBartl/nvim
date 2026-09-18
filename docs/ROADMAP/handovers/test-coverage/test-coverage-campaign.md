@@ -1679,6 +1679,35 @@ Abschnitt "Offen (gepinnt)".
   `ui/{window_style,window_size_cycler,cursor_hide,tree_reset,size_info,preview}.lua`.
   CI-Workflow um `gaps.lua` ergänzt.
   Commit: `811bfed`.
+  **Re-Audit/Follow-up (Runde 26, 2026-09-18):** genau die von Runde 26 selbst vertagte
+  Liste war diesmal der eigentliche Auftrag, nicht nur Nachprüfung. Repo-weit auch die vier
+  Bug-Familien erneut durchgeprüft (alle ~16 Verfügbarkeits-Guard-Stellen plus 118
+  `pcall(require, ...)`-Stellen auf das Health-Muster durchsucht -- nichts über den schon
+  gefixten Fund hinaus; alle Augroups passen `clear=true`; alle 27 Cursor-/Extmark-
+  Aufrufstellen zeilen-weise statt spalten-genau, keine Byte/Display-Verwechslung; keine
+  naive Colon-Pfadparsung, `copy_require_relative()` live gegen einen echten
+  Backslash-`getcwd()` bestätigt korrekt). Sibling-Checkouts (neo-tree.nvim, nui.nvim,
+  plenary.nvim, nvim-web-devicons, telescope.nvim) alle real unter `nvim-data/lazy`
+  vorhanden, `adapter_lines.lua` findet sie dort schon -- nichts veraltet.
+  **Alle 14 vertagten Dateien mit echten Assertion-Suiten geschlossen** (in `TESTS/gaps.lua`):
+  `infra/file_watcher`, `nav/{auto_reveal,buffer_cycle,reveal_alt,tree_traverse}`,
+  `paths/lua_require_copy`, `search/{filter,live_search}`,
+  `ui/{window_style,window_size_cycler,cursor_hide,tree_reset,size_info,preview}`.
+  **Zwei Testfehler gefunden und gefixt** (kein Plugin-Bug): Runde 26s eigener
+  `health.lua`-Test sabotiert `lib.nvim.bindings.usercmd.composer` und ruft `health.check()`
+  transitiv auf -- vergiftet dabei dauerhaft `package.loaded["filetree"]`/
+  `["filetree.commands"]` (Luas "loop or previous error"-Sentinel), falls das der erste
+  echte `require("filetree")` im Prozess war, und brach dadurch jeden späteren bloßen
+  `require` -- gefixt, indem der Test diese zwei Cache-Einträge beim eigenen Restore mit
+  löscht. Und die neue `reveal_alt`-Spec tappte in Vims Leerer-Scratch-Buffer-Wiederverwendungs-
+  Falle (`:edit` recycelt die Buffernummer), `window_size_cycler`s Spec versuchte ein
+  Fenster zu resizen, das das einzige in seinem Tabpage war (nicht resizebar) -- beide im
+  Testcode selbst gefixt.
+  Testlauf: repo-weit (smoke+units+menu+cwd_mode+sidebar_guard+gaps+refs) 858 → 945 Checks,
+  `gaps.lua` allein 162 → 249, über zwei komplette Wiederholungsläufe stabil (von mir
+  persönlich nachgefahren). `stylua --check .` und `luacheck lua docs/BINDINGS.lua TESTS`
+  (135 Dateien) beide grün, plus der Vimdoc-Referenz-Konsistenzcheck.
+  Commit: `8976113`.
 - [x] **lsp.nvim** — fertig (Runde 27, 176 Dateien, letzter Punkt der ursprünglichen
   Warteschlange). 6 neue Spec-Dateien nach Risiko sortiert: `attach_spec.lua` (`core/attach.lua`s
   `on_init`/`on_attach`-Guards und -Effekte), `filter_spec.lua` (die zwei reinen
