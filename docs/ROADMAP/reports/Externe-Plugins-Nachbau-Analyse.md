@@ -528,12 +528,15 @@ startup path**, since harpoon is the only `lazy = false` consumer.
 
 ---
 
-### 4.5 `lua/config/gp_config/` is orphaned
+### 4.5 `lua/config/gp_config/` is orphaned ✅
 
 85 lines configuring `gp.nvim` — API keys for openai/anthropic/ollama, five
 agent definitions. **gp.nvim is not in the plugin set**, and `grep -rn gp_config`
 across `lua/` returns nothing outside the folder itself. `ai.nvim` is the
 replacement and is installed.
+
+State: `lua/config/gp_config/` removed 2026-09-18 (`git rm -r`); confirmed
+no remaining references to `gp_config` or `require("gp")` anywhere in `lua/`.
 
 ---
 
@@ -586,7 +589,7 @@ Adding B1–B4 brings it to eleven, for roughly ten more.
 1. Rebind `<leader>gd` from `:Gdiffsplit` to `:Diff … git:HEAD`. Already works.
 2. `snacks.image = false` (§4.1), after one terminal check.
 3. Resolve the five dead snacks bindings (§4.2).
-4. Decide `config/gp_config/`'s fate (§4.5).
+4. ~~Decide `config/gp_config/`'s fate~~ (§4.5) — done 2026-09-18, folder removed.
 5. Note: git-conflict and `insights.nvim/conflicts/` are **complementary**, not duplicates — repo-level report vs. buffer-level markers. Verified 2026-09-17.
 
 **Cheap removals (S):** mkdir → fileops · window-picker → lib/filetree ·
