@@ -2054,3 +2054,39 @@ kein inhaltlicher Grund.
   `luacheck lua TESTS scripts ftdetect` (exakter CI-Befehl, 78 Dateien) und
   `stylua --check .` beide grün.
   Commit: `b926560`.
+- [x] **ui.nvim** — echter erster Audit, über `scripts/test.sh`
+  (Plenary/busted, 38 Specs, 329 Assertions bereits solide bestätigt --
+  war zuvor als "✅ sehr gut" statt "🟢 gut" eingestuft, aber auch das war
+  nur der Datei-Verhältnis-Proxy, kein echter Audit). **Ein echter Bug
+  gefunden und gefixt** -- Bug-Familie (c): `ui.statusline.modules.
+  formatters.ellipsize_middle(s, max)` maß sein Budget mit `#s`
+  (Byte-Anzahl) und schnitt mit `string.sub` (Byte-Offsets), obwohl `max`
+  ein Display-Spalten-Budget für Statusline/Breadcrumb ist. Reproduziert:
+  `ellipsize_middle(("ä"):rep(30), 11)` lieferte einen orphaned UTF-8-
+  Continuation-Byte zurück. `ellipsize_path_components`/
+  `compact_breadcrumb_line` hatten dieselbe Byte/Spalten-Verwechslung
+  (keine Korruption, da nur an `/` geschnitten wird, aber reales
+  Unter-Ausnutzen des Spalten-Budgets bei Nicht-ASCII-Komponenten). Betrifft
+  den echten, sichtbaren LSP-Breadcrumb-Renderpfad. Gefixt über
+  `lib.lua.strings.width.display_width` durchgehend plus codepoint-weises
+  Schneiden via `lib.lua.strings.utf8.iter`. Vier neue Regressions-
+  Assertions in `bugfix_regressions_spec.lua` (Modul hatte vorher keine
+  eigene Spec-Datei), gegen zurückgesetzten Code als fehlschlagend
+  bestätigt. Andere drei Bug-Familien geprüft, sauber: (a) `health.lua`
+  bereits gehärtet (Commit `7ebf544`); (b) Augroup-Nutzung empirisch über
+  drei Reload-Zyklen an vier Modulen ohne Leck bestätigt; (d)
+  `ui.statusline.modules.lsp.helpers.paths`s `norm_sep()` normalisiert
+  Laufwerksbuchstaben bereits vor jedem Vergleich. `TESTS/README.md` neu
+  angelegt (gab es vorher nicht).
+  Testlauf: von mir persönlich zweimal über `scripts/test.sh` nachgefahren
+  -- erster Lauf 329/0/0 über 38 Dateien sauber; zweiter Lauf zeigte einen
+  einzelnen Fehlschlag in `TESTS/ui_kit_spec.lua` (Debounce-Timing-
+  Assertion) -- verifiziert als **vorbestehender, unabhängiger Flake**
+  (Datei zuletzt von Commit `5fba540`, dem ui.kit-Migrations-Port, berührt,
+  nicht von diesem Audit; isoliert 5× wiederholt: 1 von 5 Läufen schlägt
+  fehl). Nicht Teil dieses Audits -- als eigene Folgeaufgabe geflaggt
+  (`task_6e434c3a`), nicht stillschweigend übergangen. Die vier neuen
+  Regressions-Assertions selbst liefen in beiden vollen Durchläufen
+  fehlerfrei. `luacheck .` (exakter CI-Befehl, 134 Dateien) 0/0, `stylua
+  --check .` grün.
+  Commit: `f407023`.
