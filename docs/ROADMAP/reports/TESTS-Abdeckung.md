@@ -173,14 +173,16 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 
 ### Offen (gepinnt)
 
-Stand: **15 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18) hat bei pickers.nvim,
-cmdlog.nvim und dap.nvim nichts Neues gefunden (alle drei bereits sehr solide); buffer-ctx.nvim
-brachte zwei neue, kleine Bugs.
+Stand: **17 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim und cmdlog.nvim
+bereits sehr solide, nichts Neues; buffer-ctx.nvim und pickers.nvim brachten je zwei kleine
+neue Bugs.
 
 | Repo | Datei | Bug |
 |---|---|---|
 | buffer-ctx.nvim | `format/column_align.lua` | zielt mit einem Byte-Offset auf eine Display-Spalte → Mehrbyte-Zeichen vor der Selektion verschiebt die Ausrichtung |
 | buffer-ctx.nvim | `mark/init.lua` | Cleanup-Autocmd über String-Augroup ohne `clear = true` → zweites `setup()` verdoppelt ihn (harmlos, da idempotent) |
+| pickers.nvim | `health.lua` | letzte Zeile ruft den Composer bedingungslos außerhalb jedes `pcall` → crasht `:checkhealth pickers` komplett bei fehlendem lib.nvim |
+| pickers.nvim | `smart/frecency.lua` | `M.patch()` löst die Augroup ohne `clear=true` auf → zweites `setup()` mit Frecency verdoppelt den Autocmd |
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -210,13 +212,22 @@ brachte zwei neue, kleine Bugs.
 | cascade.nvim | `facade`-Kommandos | `cycle_group_add`/`remove` mutieren `config.DEFAULTS` direkt (Deep-Merge kopiert nur die oberste Ebene) |
 | cascade.nvim | `usrcmds.lua` | `:Cascade indent N`/`dedent N` ignorieren `N` (falscher Wert an `run_indent_command` gereicht); `cycle remove` schneidet mehrwortige Werte am ersten Leerzeichen ab |
 
-**Wiederkehrende Familien:** Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren
-`E739`/`E482` am eigenen Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; und —
-inzwischen in **sieben** Repos gefunden, sechs davon gefixt (emojis, diff, gopath, filetree
-gefixt; github_stats/fileops/cascade als Varianten in `create.lua`/direktem `require` bzw.
-Augroup-Gate) — ein Health-Check oder ein ähnlicher "Dependency fehlt"-Zweig, der danach
-unbedingt in genau diese Dependency hineinruft. Nur `gopath.nvim`s `create.lua`-Fallback
-(kein `health.lua`) ist von dieser Familie noch offen.
+**Wiederkehrende Familien:**
+- Windows-Pfadbehandlung; ungeschützte Dateisystem-Aufrufe, deren `E739`/`E482` am eigenen
+  Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
+- **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
+  ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 6 Repos, **4 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree), **2 offen**: `gopath.nvim`s
+  `create.lua`-Fallback (kein `health.lua`, gleiches Muster) und `pickers.nvim`s
+  `health.lua` selbst (neu in der Re-Audit-Runde gefunden).
+- **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
+  Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
+  `setup()` einen zweiten Autocmd-Handler registriert statt den ersten zu ersetzen.
+  Gefunden in 4 Repos, **1 gefixt** (pdfport.nvim), **3 offen**: `buffer-ctx.nvim`
+  (`mark/init.lua`, harmlos da idempotent), `pickers.nvim` (`smart/frecency.lua`, nicht
+  harmlos — verdoppelt Buffer-Read-Zählung), `cascade.nvim` (`bindings/autocmds.lua`,
+  Variante: Gate *vor* der Augroup-Auflösung statt fehlendes `clear`).
 
 ## Historie: der ursprüngliche 3-Repo-Report
 
