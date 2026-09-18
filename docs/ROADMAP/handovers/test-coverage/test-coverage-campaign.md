@@ -1431,6 +1431,30 @@ Abschnitt "Offen (gepinnt)".
   Dependency hinein — mit allen acht Deps gleichzeitig abwesend durchgefahren.
   `TESTS/README.md` neu angelegt (gab es nicht).
   Commit: `a64c208`.
+  **Noch am selben Tag, separate Sitzungen**: ein CI-/Testinfra-Fix (Commit `3046062`:
+  `luacheck` schließt installierte Deps jetzt aus, `test.sh`s Exec-Bit wiederhergestellt),
+  eine Testflakiness behoben (Commit `e613be5`: Bare-Flag-Tests nahmen fälschlich an,
+  `vim.fn.has('clipboard') == 1` gelte immer), und ein neuer, in Review gefundener Bug
+  gefixt (Commit `9937f5c`): `register.write()` behandelte `setreg`s Ausbleiben eines Wurfs
+  als Beweis für einen erfolgreichen Schreibvorgang, aber `setreg("+"/"*", ...)` wirft nie
+  bei fehlendem Clipboard-Provider -- es tut einfach nichts. Betrifft nur `+`/`*` (jedes
+  andere Register hält immer, was zuletzt gesetzt wurde), jetzt mit echtem Round-Trip-Check.
+  **Re-Audit (Runde 23, 2026-09-18):** ein sehr frischer Fall -- Runde 23 selbst und alle
+  drei obigen Fix-Commits waren alle vom selben Tag. Alle sechs ursprünglich gepinnten
+  Bugs (Health-`__call`-False-Positive, YAML-löscht-leeren-Scope, BOM-Handling, leeres
+  JSON-Objekt-Roundtrip, Extmark-Inversion, tab-eingerückter YAML-Child) explizit gegen den
+  aktuellen Quellcode nachgeprüft: alle sechs weiterhin vorhanden und korrekt gepinnt,
+  keiner stillschweigend gefixt. Die vier Bug-Familien einzeln durchgeprüft: `health.lua`
+  gated jeden Dependency-Zweig schon korrekt (mit allen acht Deps gleichzeitig abwesend
+  gegengeprüft); keine Augroups im ganzen Repo (`bindings/autocmds.lua` ein bewusster
+  No-op-Stub); keine Byte/Spalten-Verwechslung (nur zeilenbasierte Positionslogik, die eine
+  echte Subtilität dabei ist schon Bug 5 oben); kein Dateisystem-I/O, also keine
+  Windows-Pfad-Angriffsfläche (per Grep bestätigt: kein `readfile`/`writefile`/
+  `fnamemodify`/Pfadtrenner im ganzen `lua/`-Baum). Keine neuen Bugs, keine geschlossene
+  Lücke -- ehrlich nichts zu tun, keine Busywork erfunden.
+  Testlauf: 29 Spec-Dateien, 496/496 weiterhin grün über zwei von mir persönlich
+  nachgefahrene Wiederholungsläufe. `luacheck .` (52 Dateien) und `stylua --check .` beide
+  grün. Kein neuer Commit -- `HEAD` war schon `origin/main`s Tip.
 - [x] **spotlight.nvim** — fertig (Runde 24). Audit wie bei diff.nvim (Runde 20): schichtweise
   ungleich, die reinen Layer gut, `core/match.lua` (das Ledger, auf dem die
   `matchadd()`-Entscheidung ruht), `bindings/autocmds.lua`, `health.lua`, `ui/list.lua`,
