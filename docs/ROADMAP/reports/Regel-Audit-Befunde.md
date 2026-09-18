@@ -28,7 +28,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 
 | Plugin | Befunde | ✅/☑️ | ⏭️ | Stand |
 |---|---:|---:|---:|---|
-| lib.nvim | 17 | – | – | offen |
+| lib.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
 | dap.nvim | 21 | – | – | offen |
 | mdview.nvim | 18 | – | – | offen |
 | replacer.nvim | 17 | – | – | offen |
@@ -540,7 +540,7 @@ All line numbers were re-verified against the files after drafting.
 
 ## lib.nvim
 
-**17 Befunde** (11 × high). Roh gemeldet: 18.
+**17 Befunde** (11 × high). Roh gemeldet: 18. — **Stand: 17/17** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -552,6 +552,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** On ENOSPC/EIO/EROFS the buffered write surfaces on `file:close()`, whose return value is discarded, so `disk.save` reports `ok = true` over a truncated or empty file that `io.open(path, "w")` has already emptied. `store.project.save`, `frecency:flush` and `telemetry.store.save` all propagate that false success and never retry. The auditor's chain to ERR-11 is accurate but note the follow-on is bounded: the next `read_entry` backs the truncated bytes up to `.corrupt` before handing back an empty table (lines 78-91), so what is lost is the original content of THIS write, not silently the whole history.
 
+**Status.** ✅ erledigt (`f816d88`) — `save()` prüft jetzt die Rückgaben von `file:write` und `file:close` und meldet `write failed: …`/`close failed: …` statt `true` über einer abgeschnittenen Datei.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/lib/nvim/fs/write/to_file/init.lua:29` · confidence **high**
@@ -561,6 +563,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** ERR-03 forbids silent failures in functions that declare a success/error contract. Both files are documented as `---@return boolean ok, string|nil err`, so a caller is entitled to treat `ok == true` as "the bytes are on disk" — which this code cannot establish, since the flush that would reveal the error happens inside the unchecked `f:close()`.
 
 **Auswirkung.** Every caller of the library's primary synchronous write gets `ok = true` for a write whose flush error was discarded at `f:close()`. The `fs/json.write` case is the sharpest: line 54 accepts the unchecked `true`, line 59 renames the (possibly truncated or empty) `.tmp` over the real file, and `M.write` returns success — good data replaced by a partial blob with a success return. This is the same primitive `scan_roots`' disk cache and every `fs.path:write` consumer sits on.
+
+**Status.** ✅ erledigt (`f816d88`) — Beide Schreibprimitiven (`to_file`, `append`) prüfen `write`/`close` und geben den Fehler zurück; damit renamed `fs/json.write` keine leere `.tmp` mehr über die echte Datei.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -572,6 +576,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** If `io.open(path, "r")` fails transiently (sharing violation from a sync client/AV/second Neovim, permission error), `entries()` yields `{}` with no error and no `.corrupt` backup; the next `record()` sets `dirty` and the `VimLeavePre` flush replaces months of accumulated visit counts with a one-entry file, silently. The JSON-corruption path is partly protected — `read_entry` does write a one-time `.corrupt` backup (lines 80-89) before returning nil — so there the bytes survive, but the user is still never told, and the live file is still overwritten. The auditor's framing is right; the concrete unprotected case is narrower than "all three": it is the io-error case that loses data outright, and the corrupt case that loses it visibly-only-if-you-know-to-look-for-a-.corrupt-file.
 
+**Status.** ✅ erledigt (`bf49279`) — `cache.disk.load` liefert additiv einen zweiten Wert (`nil` bei fehlend/abgelaufen, `read failed: …`/`invalid json: …` sonst); `frecency` warnt einmal, `flush()` verweigert das Überschreiben bei Lesefehler (Visits bleiben pending), bei korrupter Datei wird geschrieben, weil ein `.corrupt`-Backup existiert. Nebenbefund: `read_entry` unterscheidet jetzt per `uv.fs_stat` „Datei fehlt“ von `io.open`-Fehler.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/lib/nvim/fs/collect_recursive/init.lua:75` · `walk / M.collect` · confidence **high**
@@ -581,6 +587,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** ERR-11 requires a function whose result may legitimately be empty to make "empty, but ok" distinguishable from "empty, because broken". This is the walk underneath `fs.scan_cached`, `fs.scan_roots` and `harvest.scope`'s directory sources, so the ambiguity propagates to every consumer of those.
 
 **Auswirkung.** A scan of a root that is momentarily unavailable — unmounted share, permission-denied directory, path typo — returns an empty list indistinguishable from an empty tree, and the caller has no way to ask which it was. Chained with `scan_roots`, line 79 then persists that empty list to `opts.cache_path` as a legitimate result; with `ttl_seconds` unset (the documented never-expires default) that "this project has no files" answer is returned across restarts until the JSON is deleted by hand. Note the failure is per-directory, not only per-root: a single unreadable subdirectory mid-walk is skipped just as silently, which the finding understates.
+
+**Status.** ✅ erledigt (`db3c147`) — `collect`/`files`/`dirs` und die `_async`-Callbacks liefern `errors` (`<dir>: <reason>` pro unlesbarem Verzeichnis, Root inklusive); `scan_cached`/`scan_roots` reichen es durch und cachen fehlerhafte Läufe nicht, `harvest.scope` meldet es als `err`.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -592,6 +600,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** This is the exact ERR-54 hazard from the rule's own Beleg. `table.sort(keymap.register(...))` or `table.remove(keymap.register(...), i)` by a consumer rendering its own keymap list permanently reorders or shortens the registry array for the session, and because `M.registered` shallow-copies from that same array the new order is what `:checkhealth`, `M.conflicts()` and the generated `docs/BINDINGS.md` see afterwards. No in-repo consumer does this today, so the defect is contractual rather than currently firing — but the return value carries no warning that would stop one.
 
+**Status.** ✅ erledigt (`5a56b1b`) — `register()` gibt `vim.list_extend({}, bound)` zurück statt des Registry-Arrays; Einträge sind als geteilte Live-Records dokumentiert (read-only by contract).
+
 ### `LUA-48` — Nur kollektierbare Typen sind schwach schlüsselbar
 
 `lua/lib/nvim/cache/memory.lua:46` · `caches` · confidence **high**
@@ -601,6 +611,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** LUA-48: `__mode` only affects collectible-with-identity types. Lua 5.1/LuaJIT explicitly does not remove strings from weak tables (they have no explicit construction), so both tables behave exactly like strong tables. The documented "entries are garbage-collected automatically" claim is false, which is the precise failure the rule describes. There is no compensating cleanup for `caches` itself: `setup_auto_invalidation` (line 177-204) only empties each namespace's *entries* and never removes a namespace, and `stats[name]` at line 49 is an ordinary strong table.
 
 **Auswirkung.** Both weak metatables are no-ops for the documented string-key usage, so the comment a consumer reads before deciding they need no invalidation is false. A namespace created without `opts.ttl` and without the opt-in `setup_auto_invalidation()` sweep never drops an entry for the whole session — one retained value per distinct key ever seen. The `caches`/`stats` tables themselves also never shrink, so a caller that mints namespace names dynamically leaks a stats record per name. This is a monotonic memory leak, not a correctness bug.
+
+**Status.** ✅ erledigt (`1b411e1`) — `caches` ist eine normale Tabelle, der falsche GC-Kommentar ist ersetzt; der Per-Namespace-Store behält `__mode="k"` mit präzisem Kommentar, README dokumentiert die echte Lebensdauer.
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -612,6 +624,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** Within the TTL (default 5s, line 27), two callers scanning the same root with different `ignore` predicates share one cache entry: whichever ran first wins, and the second silently gets a list computed under the other's filter. A caller with no predicate can receive a pruned list (missing files it should see) or, in reverse, a caller with a prune predicate can receive the unfiltered list and walk into `node_modules`/`.git`. The auditor's line reference into collect_recursive (92,101) is off by two — the ignore calls are at 90 and 100 — but the substance holds.
 
+**Status.** ✅ erledigt (`c0bb691`) — Key enthält jetzt `root:kind:<ignore-identity>`; der Cache-Eintrag hält die Predicate-Referenz (keine Adress-Wiederverwendung nach GC) und ein Hit prüft sie erneut.
+
 ### `PERF-46` — Cache-Key vollständig
 
 `lua/lib/nvim/fs/scan_roots/init.lua:52` · `M.scan / M.scan_async` · confidence **high**
@@ -621,6 +635,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** PERF-46: all three omitted values change `merged`. A single `cache_path` reused with different roots, a different `kind`, or a different ignore list returns the previous run's answer as if it were this run's.
 
 **Auswirkung.** One `cache_path` reused with different roots, a different `kind`, or a different `ignore_dirs` returns the previous run's list as if it were this run's, and because the cache is a JSON file on disk the wrong answer survives Neovim restarts. The severity depends on callers actually reusing one `cache_path` across differing parameters — nothing in lib.nvim itself does, so this is a latent trap for consumers rather than an active bug in this repo.
+
+**Status.** ✅ erledigt (`c0bb691`) — Cache-Payload speichert `roots`, `kind`, `ignore_dirs`; ein Read mit abweichenden Werten ist ein Miss (alte Dateien ohne diese Felder werden einmal neu geschrieben).
 
 ### `SEC-21` — Timeout **und** Byte-Limit
 
@@ -632,6 +648,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** `M.download(url, dest, opts, cb)` called without an explicit `timeout_ms` streams an unbounded body to disk with no wall-clock limit; `remove_partial` only runs once curl has exited, so a hostile or misbehaving endpoint can fill the filesystem first. `fetch_raw_blocking`/`fetch_json_blocking` with no `timeout_ms` call `:wait(nil)` and block the Neovim UI until curl returns. SEC-21 wants both bounds plus a URL-hashed cache; here the byte limit is absent entirely, the timeout is opt-in with no default, and only the delete-on-abort half is satisfied.
 
+**Status.** ✅ erledigt (`8e9a608`) — Neue Option `max_bytes` → `--max-filesize`; `download*` defaulten auf 512 MiB und `timeout_ms` auf 5 min (`false` hebt auf), Fetch-Tiers bleiben opt-in. Der von SEC-21 zusätzlich genannte URL-gehashte Re-Fetch-Cache ist bewusst nicht gebaut (eigene Schicht mit API-Entscheidungen, kein Audit-Fix).
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/lib/nvim/harvest/scope.lua:222` · `M.resolve (kind == "path")` · confidence **high**
@@ -641,6 +659,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on buffer/user text: a backtick span in the argument is a command substitution through `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. The rule names `lib.nvim.cross.fs.expand_path` as the replacement — which this very repository ships at `lua/lib/nvim/cross/fs/expand_path/init.lua` and does not use here.
 
 **Auswirkung.** Any user command routed through `harvest.scope.resolve_token` runs the contents of a backtick span in the argument as a shell command before any file is read, and resolves a `%` or `#` token to the current/alternate buffer name rather than a file of that literal name. The exposure is contingent on a consumer wiring a command argument into `resolve_token`/`resolve("path")` — which is exactly what the function is documented for — rather than being reachable today from a command shipped inside lib.nvim itself.
+
+**Status.** ✅ erledigt (`db69872`) — `vim.fn.expand(raw)` → `lib.nvim.cross.fs.expand_path(raw)`; Spec prüft, dass `%` literal bleibt und ein Backtick-Span keine Marker-Datei erzeugt.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -652,6 +672,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** The destination path of an export is user-command text passed through Vim's filename expansion: a backtick span in the `out=file:` token runs as a shell command at export time, and `out=file:%.md` writes to the current buffer's name instead of a file called `%.md`. Same contingency as the scope finding — it needs a consumer command that forwards its `out=` token, which is the documented usage.
 
+**Status.** ✅ erledigt (`db69872`) — Gleicher Tausch für den `out=file:`-Pfad; Spec schreibt eine Datei namens `%.md`.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/lib/nvim/cross/run/init.lua:65` · `M.run / M.run_blocking` · confidence **medium**
@@ -661,6 +683,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** ERR-02 requires type/nil checks before API access rather than indexing blind. Here a variable-length list is consumed through fixed indices with no length check, and the result is handed straight to `vim.system`. That the POSIX case works at all depends on `vim.list_slice` compacting the nil holes away inside Neovim's `vim.system` — an implementation detail, not a property this code establishes.
 
 **Auswirkung.** On native Windows every `cross.run.run`/`run_blocking` spawns `powershell -NoProfile -ExecutionPolicy Bypass <cmd>` with `-Command` missing. Correcting the auditor: `prog` is hardcoded `"powershell"` and never `pwsh`, so the pwsh/`-File` breakage they describe cannot occur here, and powershell.exe 5.1 binds a trailing bare string to `-Command` implicitly, so the common case still runs — the calls work by accident, not by construction. What actually breaks is a `cmd` whose first token powershell parses as a parameter (consumed as a switch instead of executed), and the POSIX branch depends on LuaJIT's `#` returning 5 for a table with nil holes so that `vim.list_slice` compacts them — an implementation detail this code never establishes. `copy_to_clipboard`'s `$input | Set-Clipboard` path carries the same construction.
+
+**Status.** ✅ erledigt (`a2de47c`) — Neues `cross.run.argv(cmd)` hängt Shell, alle `shell().args` und `cmd` an; `run`, `run_blocking` und `copy_to_clipboard` nutzen es, `-Command` geht nicht mehr verloren. Wiederverwendbar für jeden Plugin-Code, der `sh.args[1..3]` spreadet.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -672,6 +696,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** `require("lib.config").setup({ startegy = "eager" })` is completely silent: the typo is stored as a real field on `M.options`, `strategy` stays `"metatable"`, and the user believes they switched aggregator strategies. `:checkhealth lib` reads the resolved strategy, not the keys that were ignored, so there is no diagnostic path. The blast radius is small — one option exists — but the failure mode is exactly the one ERR-50 names, and it is the config accessor of the library every other plugin depends on.
 
+**Status.** ✅ erledigt (`adf5c5f`) — Unbekannte Keys werden vor dem Merge mit Levenshtein-Hint gemeldet (`startegy (did you mean strategy?)`) und nicht gespeichert; neue `TESTS/config_spec.lua`.
+
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
 `lua/lib/nvim/bindings/keymap/registry.lua:373` · `M.registered` · confidence **medium**
@@ -681,6 +707,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** ERR-54 allows a live reference only when it is documented as one. This docstring documents the opposite of what the code does: the list is a copy, the `Lib.Keymap.Registered` entries inside it are the live registry objects shared with `registered[key]` and with `keymap.records.all()`.
 
 **Auswirkung.** A consumer that normalizes entries in place — clearing `bound`, rewriting `desc`, setting `lhs` for display — mutates the registry that `:checkhealth`, `M.conflicts()` and the docs generator read afterwards, because only the containing list was copied. An unqualified "Returns a copy" invites exactly that reading. Nothing in this repo does it today, and every list-shaped mutation (sort, insert, remove) is genuinely safe, so this is a documentation-precision gap on a shallow copy, not the session-wide state corruption the auditor described.
+
+**Status.** ✅ erledigt (`5a56b1b`) — Docstring/@types/README sagen jetzt exakt: Liste frisch, Einträge geteilte Live-Records — kein Deep-Copy eingeführt (Doku-Präzisierung, wie vom Befund selbst eingeordnet).
 
 ### `SEC-13` — Telemetrie erfasst Form, nie Inhalt
 
@@ -692,6 +720,8 @@ All line numbers were re-verified against the files after drafting.
 
 **Auswirkung.** A string argument of 40 bytes or fewer is stored and rendered verbatim, and — contrary to the finding's own caveat — it is also written to disk under `stdpath("cache")`, which is precisely what the module header says a profiler must never do. A GitHub classic PAT (`ghp_` + 36 = exactly 40) sits on the boundary and is kept in full, in the `:Lib telemetry` report and in the cache file. Two limits on severity the auditor omits: argument profiling is opt-in per call site (`args = wrap_opts.profile_args or false`, `telemetry/init.lua:356`), and a secret passed inside an options table is fingerprinted as `<table:...>` by lines 40-47, so the leak needs a wrapped function that takes the secret as a direct string argument.
 
+**Status.** ✅ erledigt (`af61d37`) — Strings jeder Länge werden als `<string:<len>:<fnv1a-8hex>>` gespeichert, nie als Text; pure-Lua-Digest (kein `vim.fn.sha256`, das in Fast-Event-Kontexten verboten wäre); `M.MAX_STRING` → `M.DIGEST_BYTES`. Kein anderes Repo nutzt `lib.nvim.telemetry.fingerprint` (runtime-analysis.nvim hat ein eigenes Modul), geprüft per grep.
+
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
 `lua/lib/nvim/bindings/autocmd/docs.lua:502` · `count_unregistered` · confidence **medium**
@@ -701,6 +731,8 @@ All line numbers were re-verified against the files after drafting.
 **Regelbezug.** XP-01: `globpath` reads its argument as a pattern, so a `~` in the path is a home-directory reference. Under Windows an 8.3 short root (`C:/Users/STEFAN~1/...` — what `%TEMP%` and `vim.fn.tempname()` expand to for any profile name over eight characters) makes glob try to resolve `~1` as a user, find none, and return an empty list with no error. `TESTS/autocmd_docs_spec.lua` builds its fake repo roots from exactly `vim.fn.tempname()` (lines 47, 80) and never asserts on `unregistered`, so nothing in the suite would catch it.
 
 **Auswirkung.** `count_unregistered` returns 0 without error for a repo root that glob cannot read, and the generated autocmd document then states the repository creates no autocmds outside the module — the opposite of the truth, baked into a committed file. Correcting the auditor's scenario: their 8.3 example requires a Windows profile name over eight characters, which this machine's profile (`bartl`) is not, so `vim.fn.tempname()` here yields no `~` and the cited spec would not trip. The realistic triggers are a long Windows profile name, a repo path containing `[`, `]`, `?`, `*` or `{}`, or — specific to `globpath` and not mentioned by the auditor — a comma anywhere in the root, since `globpath` splits `{path}` on commas.
+
+**Status.** ✅ erledigt (`07ca64d`) — `globpath` ersetzt durch `fs.collect_recursive.files(root .. "/lua")` mit `.lua`-Filter — kein Glob mehr, damit auch Kommata/Metazeichen unschädlich (nicht nur `~`).
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -739,6 +771,8 @@ Rules I could NOT cover and why:
 Two things I looked at and deliberately did NOT report:
 - cache/disk.lua's read_entry collapsing missing/corrupt to nil: the Belege names lib.nvim (cache/disk.lua, read_entry) as already handled for ERR-11, and the `.corrupt` backup is in place as described. I report frecency separately because it is a distinct consumer whose own collapse is not covered by that backup on the io.open failure path.
 - cross/fs/lock/init.lua's ensure_script() caching a .ps1 under stdpath("cache") and running it with `-ExecutionPolicy Bypass`: it check-then-creates (a weak ERR-31 shape) and never refreshes a stale script after a version upgrade. The content is a compile-time constant and the directory is the user's own, so I could not make either a concrete enough failure to report.
+
+**Status.** ✅ erledigt (`07ca64d`) — `vim.fn.glob` ersetzt durch `vim.fs.dir` (Pfad, kein Pattern) + `isdirectory`-Check; die Warnung unterscheidet jetzt „No such directory“ von „No .lua files“.
 
 ---
 
