@@ -763,7 +763,9 @@ pushen.
 
 ## C. Cheap, low stakes — collected per plugin
 
-**Done 2026-09-18, all four bundles.** Sequential, one repo at a time.
+**Built 2026-09-18, all four bundles — a fleet-wide bug/security/performance
+re-check is running now before this is called closed.** Sequential, one
+repo at a time.
 
 | Bundle | Built | Commits |
 |---|---|---|
@@ -778,7 +780,15 @@ deliberately **not** fixed in the same commit (out of this bundle's scope):
 casedesk.nvim's `:Case info` edit-and-save handler silently dropped every
 sidecar field its form doesn't manage (`outcome`, `routed_to`,
 `sap_component`, …) — reported, then fixed separately
-(`casedesk.nvim@f2cf86e`).
+(`casedesk.nvim@f2cf86e`). This same session's diffopt/gitsigns move
+(F1/F2, `ui-my-Kreuzfeature-Analyse.md`) is covered by the same re-check,
+not tracked here since it never had its own entry in this file.
+
+**Not struck as DONE yet, on purpose:** an independent adversarial
+bug/security/performance pass over every commit in this bundle plus F1/F2
+is running as this line is written — three lenses per commit, findings
+verified by three independent skeptics before being trusted. This entry
+gets its final status (and any follow-up fixes) once that lands.
 
 The prompts below are kept for the record.
 
