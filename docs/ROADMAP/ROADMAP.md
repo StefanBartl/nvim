@@ -94,6 +94,7 @@
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
 3. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
+4. synthetische tests: eventuelö mit vmware, es müsste damit fast alles, was normalerweise nur ich live testen kann, damit auch testbar sein odern nicht? wenn man einen klick simulator hat, und eine vm, und man alles ausgaben, notifies usw.. von nvim überwacht, bzw bei so plugins wie mdview die auch im browser ausgaben erzeugen eben auch die browser konsole. Ich könnte mir vorstellen, neben /TESTS/ in den plugin repos auch noch eine feaure test struktur für solche synthetische tests mit einzubaune. jedes feature/binding bekommt einen synthetischen test. Was denkst du? Gibt es da bereits ein framework dafür? wie würde man dasn ormalerweiße angehen?
 
 ---
 
