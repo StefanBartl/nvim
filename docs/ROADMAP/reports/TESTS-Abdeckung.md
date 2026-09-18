@@ -130,7 +130,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | markdown.nvim | 81 | 43 | ✅ fertig (gezielter Check) |
 | documentation.nvim | 139 | 108 | ✅ fertig (gezielter Check) |
 | media.nvim | 39 | 35 | ✅ fertig (gezielter Check) |
-| ui.nvim | 93 | 232 | ✅ sehr gut |
+| ui.nvim | 93 | 38 | ✅ fertig (gezielter Check) |
 
 ## Gefundene Bugs
 
