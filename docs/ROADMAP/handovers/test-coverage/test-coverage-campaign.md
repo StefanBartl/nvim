@@ -1165,6 +1165,47 @@ Abschnitt "Offen (gepinnt)".
   nie; korrigiert samt echtem Aufruf.
   Commit: `7060232` (test: cover the bindings layer, the ops failure paths, and Windows
   path handling), direkt auf `main` gepusht.
+  **Mittlerweile gefixt, alle fünf.** Bug 1 (der gefährlichste, `bindings/keymaps.lua`s
+  ungeschütztes `delete_fn({})`) über Commit `e7185fc` (liest jetzt `config.get().delete`
+  pro Aufruf). Bug 2-4 (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer,
+  beide derselbe Windows-Trenner-Mismatch zwischen `/`-Join und `nvim_buf_get_name`s
+  Schreibweise; `ops/file.lua`s Verzeichnis-Unlink-Retry-Budget) über Commit `81e15ee`. Bug
+  5 (`conflict_marks.lua`s Match-Leak bei erneutem `:edit` ohne vorheriges `BufWinLeave`)
+  über Commit `ffc1c9a`.
+  **Re-Audit (Runde 16, 2026-09-18):** alle fünf Fixes bestätigt vorhanden. Die
+  Windows-Pfadbehandlung noch einmal komplett durchgesehen: die `comparable()`/
+  `vim.fs.normalize()`-Fixes aus der vorherigen Runde sind konsistent auf beiden Seiten
+  jedes Pfadvergleichs angewendet, keine unnormalisierte Stelle übrig; Laufwerksbuchstaben-
+  Erkennung nutzt bereits `^%a:[\\/]`, keine naive `:find(":")`-Suche. Augroups bereits
+  idempotent (`autocmd.group(name, true)`, in `lib.nvim`s Quelle gegen `nvim_create_augroup`
+  mit `clear=true` verifiziert). **Ein Bug gefunden und sofort gefixt** (fünfzehntes Repo
+  der Health-Familie): `health.lua`s `M.check()` meldete einen fehlenden
+  `lib.nvim.bindings.usercmd.composer` korrekt per `vim.health.error()`, requirte ihn dann
+  aber am Funktionsende erneut ungeschützt -- crasht statt bei der Warnung zu enden.
+  Trivialer, unzweideutiger Fix (nur der bereits kaputte Pfad ändert sich), direkt gefixt,
+  gepinnt in `health_menu_spec.lua` über einen simulierten fehlenden Composer.
+  **Zwei echte Bugs gefunden und sofort gefixt**, entdeckt beim Schließen einer veralteten
+  Auslassung (`on_hold`s Preview-Rendering stand als "bräuchte ein echtes Repo plus zwei
+  Subprozesse pro Idle-Event" auf der Ausschluss-Liste -- stimmt nicht mehr, `git_spec.lua`/
+  `git_async_spec.lua` nutzen längst ein echtes Temp-Repo für genau diesen Tausch): (1)
+  `get_previous_line_async` baute `git show <sha>:<file>` mit dem ABSOLUTEN Bufferpfad --
+  gegen echtes Git verifiziert, dass `<rev>:<path>` `<path>` gegen die Repo-Wurzel auflöst,
+  nicht gegen das Dateisystem, wodurch dieser Aufruf schon immer lautlos mit
+  `fatal: path '...' does not exist in '<rev>'` scheiterte -- die Fallback-Preview hat noch
+  nie im echten Einsatz ein Frame gerendert. Gefixt: fragt jetzt nach `sha .. ":./" ..
+  fnamemodify(file, ":t")`, da `cwd` schon das Datei-Verzeichnis selbst ist. (2) `truncate()`
+  ist dokumentiert als "so viele Zeichen", schneidet aber byte-indexiert mit `#s`/
+  `string.sub` -- bei ASCII harmlos, aber ein Mehrbyte-UTF-8-Zeichen nahe der Schnittstelle
+  würde halbiert, was `nvim_buf_set_extmark` eine kaputte `virt_text`-Byte-Sequenz übergibt
+  (empirisch bestätigt: Neovim lehnt das nicht ab, rendert nur die verstümmelten Bytes).
+  Gefixt mit `vim.fn.strchars`/`vim.fn.strcharpart`, No-op-Änderung für reines ASCII. Beide
+  mit echten Regressionstests in neuer `on_hold_preview_spec.lua` belegt, inklusive eines
+  dedizierten Mehrbyte-Falls (`string.rep("é", 20)`), der das alte Halbierungsmuster exakt
+  reproduziert.
+  Testlauf: 19 → 20 Specs, 804 → 831 Assertionen, über drei Läufe stabil (zwei davon von mir
+  persönlich nachgefahren, einer mit CI's exakten `-i NONE -u NONE`-Flags). `luacheck lua`
+  (18 Dateien) und `stylua --check .` beide grün.
+  Commit: `037d3bb`.
 - [x] **reposcope.nvim** — fertig (Runde 17). 10 → 35 Spec-Dateien, 236 → 1910 ausgeführte
   Assertions, 35/35 grün über 4 Wiederholungsläufe plus einen in Glob- statt Run-Reihenfolge
   (die Specs sind also voneinander unabhängig). `luacheck lua plugin TESTS` 0/0 über 151

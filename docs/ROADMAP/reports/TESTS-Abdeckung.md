@@ -39,10 +39,10 @@ Regeln, die sich über die Runden eingespielt haben:
 ## Fortschritt
 
 **27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett.** Der Re-Audit
-aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-15 und 17 sind durch (pickers/
-cmdlog/dap/casedesk/buffer-ctx/debugging/recommender/language/open/replacer/github_stats/
-insights/sessions/pdfport/emojis/reposcope). Runde 16 (fileops.nvim) läuft noch. Danach weiter
-mit Runde 18 (gopath.nvim).
+aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-17 sind durch (pickers/cmdlog/
+dap/casedesk/buffer-ctx/debugging/recommender/language/open/replacer/github_stats/insights/
+sessions/pdfport/emojis/fileops/reposcope). Weiter geht es ab Runde 18 (gopath.nvim), sechs
+Agents parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -61,7 +61,7 @@ mit Runde 18 (gopath.nvim).
 | 13 | sessions.nvim | 13 | `12a4fb6` (Re-Audit) | 10 neue Specs; 77 → 487 Assertion-Stellen; Re-Audit: 498 → 504 Stellen |
 | 14 | pdfport.nvim | 14 | `4bb13eb` (Re-Audit) | 11 neue Specs; 192 → 1059 Assertion-Stellen; Re-Audit: 1048 → 1057 Stellen |
 | 15 | emojis.nvim | 15 | `9de7b6d` (Re-Audit) | 13 neue Specs; 261 → 773 Assertions; Re-Audit: 773 → 775 Checks |
-| 16 | fileops.nvim | 16 | `7060232` | 10 neue Specs; 199 → 805 Assertions |
+| 16 | fileops.nvim | 16 | `037d3bb` (Re-Audit) | 10 neue Specs; 199 → 805 Assertions; Re-Audit: 804 → 831 Checks |
 | 17 | reposcope.nvim | 17 | `ab97158` (Re-Audit) | 25 neue Specs; 236 → 1910 Assertions; Re-Audit: 1908 → 1934 Checks |
 | 18 | gopath.nvim | 18 | `394b4b3` | neue Unit-Suite unter `scripts/ci/`: 17 Specs, 435 Checks |
 | 19 | color_my_ascii.nvim | 19 | `adcb5ef` | 13 neue Specs; 324 → 5566 Assertions |
@@ -184,6 +184,8 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | reposcope.nvim | `repository_fetcher.lua`s `vim.json.decode("null")`-Crash in zwei von drei Fetchern (truthy `vim.NIL` statt Tabellen-Check) | `3c82ff3` |
 | insights.nvim | `symbols/parser.lua`s Doppelpunkt-Scan fraß den Laufwerksbuchstaben, `ts_lua.lua`/`ts_lua_tables.lua`s `field("left")`/`field("right")` existierten nie, `tree/init.lua`s Glob→Regex-Escaping nutzte `%` statt `\` | `6031069`, `dcbe57a` |
 | insights.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `ui/fzf.lua`s Default-Action und `ts_lua*.lua`s `scan_cwd()`-Ignore-Liste teilten denselben Windows-Laufwerksbuchstaben- bzw. Backslash-Blindpunkt wie die drei oben genannten Bugs, an drei weiteren Stellen | `6bbab32` |
+| fileops.nvim | `bindings/keymaps.lua`s `delete_fn({})` löschte permanent ohne Undo trotz `"trash"`-Default; drei Windows-Trenner-Mismatches (`ops/cycle.lua`s No-op-Navigation, `ops/bulk.lua`s Phantom-Buffer, `ops/file.lua`s Verzeichnis-Unlink-Retry); `conflict_marks.lua`s Match-Leak bei erneutem `:edit` | `e7185fc`, `81e15ee`, `ffc1c9a` |
+| fileops.nvim | `health.lua`s abschließender Composer-Aufruf lief ungeschützt trotz vorheriger "fehlt"-Meldung; `on_hold.lua`s Git-Show-Preview löste den Pfad nie korrekt auf (hat noch nie gerendert) und `truncate()` schnitt Byte- statt zeichengenau | `037d3bb` |
 
 ### Offen (gepinnt)
 
@@ -241,12 +243,12 @@ damit fertig; weiter geht es bei Runde 12 (insights.nvim).
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 14 Repos, **9 gefixt**
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 15 Repos, **10 gefixt**
   (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open, sessions,
-  insights), **5 offen**: `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`, gleiches
-  Muster), `pickers.nvim`s `health.lua`, `casedesk.nvim`s `health.lua`, `language.nvim`s
-  `health.lua` (drei statt einem ungeschützten Aufruf) und `replacer.nvim`s `health.lua`
-  (alle vier in Re-Audit-Runden gefunden).
+  insights, fileops), **5 offen**: `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`,
+  gleiches Muster), `pickers.nvim`s `health.lua`, `casedesk.nvim`s `health.lua`,
+  `language.nvim`s `health.lua` (drei statt einem ungeschützten Aufruf) und
+  `replacer.nvim`s `health.lua` (alle vier in Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
   `setup()` einen zweiten Autocmd-Handler registriert statt den ersten zu ersetzen.
