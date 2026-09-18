@@ -14,7 +14,7 @@ the surrounding text is English like every other document here.
 
   - [Read this before pasting anything](#read-this-before-pasting-anything)
   - [A. High benefit, one session or less](#a-high-benefit-one-session-or-less)
-    - [A1 — casedesk: redaction gate before any AI attachment](#a1-casedesk-redaction-gate-before-any-ai-attachment)
+    - [~~A1 — casedesk: redaction gate before any AI attachment~~ — DONE](#a1--casedesk-redaction-gate-before-any-ai-attachment--done)
     - [~~A2 — media: SRT/VTT serialisers~~ — DONE](#a2-media-srtvtt-serialisers-done)
     - [~~A3 — media: progress handle during a transcription run~~ — DONE](#a3-media-progress-handle-during-a-transcription-run-done)
     - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
@@ -64,11 +64,36 @@ back, and if it is done, strike it and write the `FEATURES.md` entry instead.
 
 ## A. High benefit, one session or less
 
-### A1 — casedesk: redaction gate before any AI attachment
+### ~~A1 — casedesk: redaction gate before any AI attachment~~ — DONE
 
 **Source:** `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/ROADMAP.md`,
 section "Privacy and AI", second bullet.
-**Stand geprüft 2026-09-17:** open — `grep redact lua/casedesk/ki.lua` is empty.
+**Built 2026-09-18** (`casedesk.nvim`, new `lua/casedesk/redaction.lua` +
+rewritten `ui/ki.lua`'s `M.ki`, `TESTS/redaction_spec.lua`, 16 cases). Struck
+from the roadmap, recorded in `casedesk.nvim/FEATURES.md`.
+
+**A real finding on the way in:** `ki.lua` never attached any file at all —
+`:Case ki` only builds a text prompt for the clipboard. The actual leak path
+was `ocr.render`'s `{screenshots}` block, which puts `:Case ocr`'s
+recognized text straight into that prompt regardless of whether the source
+screenshot was ever redacted. That's the thing this gate had to guard, not
+a binary attachment.
+
+**Changed from the prompt's own instruction, on request mid-build:** a
+CONFIRMATION gate instead of the refusal asked for below — a case worker
+sometimes has to hand over exactly the unredacted detail, and a hard
+refusal would just push that detail into the AI chat by hand, outside
+casedesk entirely. One combined `kit.confirm` per `:Case ki` call lists
+every affected screenshot by name, not one dialog per file. A source image
+with a *current* redacted copy (`images.convert.redact`'s own
+`shot.png` -> `shot.redacted.png` naming, read off its real source, not
+guessed) has its own unredacted OCR text dropped unconditionally — the
+gap a naive "does a redacted copy exist" check would have left open, since
+both the original's and the redacted copy's sidecars can exist at once.
+Log files stay uncovered on purpose: no path sends raw log content to an
+AI yet ("Log analysis" is its own, unbuilt roadmap item in the same
+section). Full writeup: `casedesk.nvim/FEATURES.md`, "Redaction gate for
+attachments, 2026-09-18". The prompt below is kept for the record.
 
 ```
 Aufgabe: casedesk.nvim — Redaction-Gate, bevor ein Attachment an eine AI geht.
