@@ -29,7 +29,7 @@ the surrounding text is English like every other document here.
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
     - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
-  - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
+  - [~~C. Cheap, low stakes — collected per plugin~~ — DONE](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
 ---
@@ -808,8 +808,24 @@ pushen.
 
 ## C. Cheap, low stakes — collected per plugin
 
-These are one-sitting bundles rather than one task each; each bullet is small
-enough that splitting it into its own prompt would cost more than the work.
+**Done 2026-09-18, all four bundles.** Sequential, one repo at a time.
+
+| Bundle | Built | Commits |
+|---|---|---|
+| my.nvim (3 points) | Persisted overrides (opt-in, `stdpath("data")` JSON), guicursor presets (`block_only`/`classic_vim`/`mode_coloured`, modelled on `set_diff_profile`), `:My hl why` (explains exactly why the current buffer is skipped) | `my.nvim@3f8be49`, `c2f33ef`, `e253494` |
+| media.nvim (3 points) | All three were already done — in `hover.nvim`/`images.nvim`, the same evening the roadmap note was written. No media.nvim code change needed; the note itself was just never struck. | — (doc-only) |
+| lsp.nvim (2 points) | Hover cache was already built (record only, nothing to build); keymap-collision check added to `:checkhealth lsp` via `lib.nvim.bindings.keymap.conflicts()` | `lsp.nvim@49b4dfa` |
+| casedesk.nvim (2 points) | `routed_to` sidecar field replaces the dual filename/Status-section routing marker, with `:Cases doctor` migration findings for legacy cases; `ui.lua` (3,922 lines) split into 24 topical modules under `ui/`, verified as a pure move (line-for-line, generated command tree byte-identical) | `casedesk.nvim@718404f`, `2d49c2d` |
+
+luacheck/stylua/full test suites green throughout; docs and each plugin's
+`FEATURES.md` updated; no Claude co-authorship. One defect found and
+deliberately **not** fixed in the same commit (out of this bundle's scope):
+casedesk.nvim's `:Case info` edit-and-save handler silently dropped every
+sidecar field its form doesn't manage (`outcome`, `routed_to`,
+`sap_component`, …) — reported, then fixed separately
+(`casedesk.nvim@f2cf86e`).
+
+The prompts below are kept for the record.
 
 ```
 Aufgabe: my.nvim — drei kleine offene Punkte aus der Roadmap abarbeiten.
