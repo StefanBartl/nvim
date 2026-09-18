@@ -516,6 +516,27 @@ Abschnitt "Offen (gepinnt)".
   (echter persistenter Node/cspell-Prozess), 4× `@types`-Module.
   Commit: `51dd7d1` (test: cover cache, collect, job, spell, and translate gaps),
   direkt auf `main` gepusht.
+  **Re-Audit (Runde 8, 2026-09-18):** zwei Auslassungsgründe waren inzwischen veraltet.
+  `health.lua` war als "deklarativ, kein berechneter Wert" ausgeklammert -- stimmt nicht mehr:
+  `check_hover()`s Vier-Zustands-Erkennung, `check_grammar()`s Client-Liste und
+  `check_translate()`s Deepl-Key-Auflösung sind echte, berechnete Logik. Neue
+  `health_spec.lua` treibt `M.check()` direkt mit gestubbten Collaborators. Und
+  `spell/providers/cspell_server.lua` war komplett als "braucht echtes Node/cspell"
+  ausgeklammert, obwohl seine externen Aufrufe ausschließlich über `language.util.job` und
+  reines `vim.fn.jobstart/chansend/jobstop` laufen -- genauso stubbbar wie die anderen
+  CLI-Provider. Neue `spell_providers_cspell_server_spec.lua` (Kandidatenpfade, `on_stdout`s
+  Line-Buffering inklusive einer über zwei Chunks gesplitteten Zeile, Request/Reply-Matching,
+  `cancel()`, `on_exit()`, der `VimLeavePre`-Kill-Handler) -- kein echtes Node/cspell beteiligt.
+  **Ein Bug gefunden, gepinnt statt gefixt** (elftes Repo dieser Familie -- diesmal mit drei
+  statt einem Aufruf): `health.lua`s `check_lib()` meldet einen fehlenden
+  `bindings.usercmd.composer` korrekt als Warnung, aber `M.check()`s eigener Rest ruft
+  danach dreimal ungeschützt direkt in dasselbe Modul -- `:checkhealth language` crasht
+  komplett statt hinter der Warnung zu degradieren, und jede Sektion danach fällt
+  stillschweigend weg. Gepinnt mit `BUG:`-Assertion in `health_spec.lua`, da der eigentliche
+  Fix (drei Aufrufe schützen) eine Quelländerung ist, keine reine Test-Angelegenheit.
+  Testlauf: 27 → 29 Specs, 0 Fails über zwei von mir persönlich nachgefahrene
+  Wiederholungsläufe. `luacheck lua plugin TESTS` (83 Dateien) und `stylua --check` beide grün.
+  Commit: `780aea6`.
 - [x] **open.nvim** — fertig (Runde 9). Eigener framework-freier Harness beibehalten.
   9 neue Spec-Dateien: `config_spec.lua`, `util_platform_spec.lua`, `registry_spec.lua`,
   `keywords_spec.lua` (vim.system gestubbt, kein echter Subprocess), `context_spec.lua`
