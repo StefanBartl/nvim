@@ -37,7 +37,7 @@
 - Wenn nötig: Alle meine `.nvim` Plugins findest du unter `$REPOS_DIR\repos`
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit) und `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
-- Neue Features ggf. im Plugin-eigenen /TESTS/ folder testen.<F12
+- Neue Features ggf. im Plugin-eigenen /TESTS/ folder testen
 
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
@@ -50,6 +50,7 @@
   loomAI: docs/Guides/docmap-checklist-agent.md
   Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für den einfachen Fall schon heute (Aufwand dort: 0). Was L6 architektonisch eigentlich braucht — die DecisionQueue, die "Vorschlag, kein Ergebnis" durchsetzt — ist in /decision nur eine Log-Zeile ohne echte Warteschlange; Phase 3/4 aus deinem eigenen Architekturplan sind komplett offen. Empfehlung in beiden Dateien: jetzt gegen /ask bauen (~2,5–3 Sessions auf documentation.nvim/docmap-desktop-Seite, 0 bei loomAI), die Anbindung an eine echte DecisionQueue erst mitnehmen, wenn Phase 3 dort ohnehin angegangen wird.
   + neiue gh feature atag release
+  - setup.exe file
 
 - `:Git [options?]` srcmds
 

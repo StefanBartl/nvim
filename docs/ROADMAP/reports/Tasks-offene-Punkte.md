@@ -15,23 +15,20 @@ the surrounding text is English like every other document here.
   - [Read this before pasting anything](#read-this-before-pasting-anything)
   - [A. High benefit, one session or less](#a-high-benefit-one-session-or-less)
     - [A1 — casedesk: redaction gate before any AI attachment](#a1-casedesk-redaction-gate-before-any-ai-attachment)
-    - ~~[A2 — media: SRT/VTT serialisers](#a2--media-srtvtt-serialisers--done)~~ — done
-    - ~~[A3 — media: progress handle during a transcription run](#a3--media-progress-handle-during-a-transcription-run--done)~~ — done
+    - [~~A2 — media: SRT/VTT serialisers~~ — DONE](#a2-media-srtvtt-serialisers-done)
+    - [~~A3 — media: progress handle during a transcription run~~ — DONE](#a3-media-progress-handle-during-a-transcription-run-done)
     - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
     - [A5 — mdview: hand-test `any_file` in real Neovim](#a5-mdview-hand-test-any_file-in-real-neovim)
-    - ~~[A6 — my.nvim: the breadcrumb `container` provider is a no-op](#a6--mynvim-the-breadcrumb-container-provider-is-a-no-op--done)~~ — done
-    - ~~[A7 — media: prefetch hint for frame stepping](#a7--media-prefetch-hint-for-frame-stepping--done)~~ — done
+    - [~~A6 — my.nvim: the breadcrumb `container` provider is a no-op~~ — DONE](#a6-mynvim-the-breadcrumb-container-provider-is-a-no-op-done)
+    - [~~A7 — media: prefetch hint for frame stepping~~ — DONE](#a7-media-prefetch-hint-for-frame-stepping-done)
   - [B. A real sitting](#b-a-real-sitting)
-    - ~~[B1 — media: the hub dashboard](#b1--media-the-hub-dashboard--done)~~ — done
-    - ~~[B2 — media: first real whisper.cpp run](#b2--media-first-real-whispercpp-run--done)~~ — done
-    - [B3 — filetree: `TESTS/refs/` is 52 of 54](#b3-filetree-testsrefs-is-52-of-54)
-    - ~~[B4 — lsp: provoke errors in `:LspDoctor deep`](#b4--lsp-provoke-errors-in-lspdoctor-deep--done)~~ — done
-    - ~~B5 — `rules.nvim` pass over ui.nvim~~ — done 2026-09-17, prompt removed (`ui.nvim@3028cfd`; recorded in `wkdbook-myplugins/ui.nvim/FEATURES.md`)
-    - ~~B6 — data.nvim: phase 1 register scope~~ — done 2026-09-17, prompt removed (`data.nvim@8513c27`; recorded in `wkdbook-myplugins/data.nvim/FEATURES.md`)
+    - [~~B1 — media: the hub dashboard~~ — DONE](#b1-media-the-hub-dashboard-done)
+    - [~~B2 — media: first real whisper.cpp run~~ — DONE](#b2-media-first-real-whispercpp-run-done)
+    - [~~B3 — filetree: `TESTS/refs/` is 52 of 54~~ — DONE](#b3-filetree-testsrefs-is-52-of-54-done)
+    - [~~B4 — lsp: provoke errors in `:LspDoctor deep`~~ — DONE](#b4-lsp-provoke-errors-in-lspdoctor-deep-done)
     - [B7 — lib.nvim: the autocmd dispatcher](#b7-libnvim-the-autocmd-dispatcher)
     - [B8 — hover.nvim: the demo GIF](#b8-hovernvim-the-demo-gif)
     - [B9 — mdview: cooperative tab closing in `default` browser mode](#b9-mdview-cooperative-tab-closing-in-default-browser-mode)
-    - ~~B10 — documentation.nvim: the shim that behaves differently~~ — done 2026-09-17, prompt removed (`documentation.nvim@c9e7ce2`; recorded in `wkdbook-myplugins/documentation.nvim/FEATURES.md`)
   - [C. Cheap, low stakes — collected per plugin](#c-cheap-low-stakes-collected-per-plugin)
   - [Not in this file, on purpose](#not-in-this-file-on-purpose)
 
@@ -781,8 +778,6 @@ stylua grün, und die Client-Tests (vitest) ebenso. Docs/README mitpflegen.
 Kein Claude-Co-Author in Commits. Wenn fertig: committen und direkt auf main
 pushen.
 ```
-
----
 
 ---
 
