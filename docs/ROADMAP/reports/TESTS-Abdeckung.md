@@ -118,7 +118,7 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | spotlight.nvim | 27 | 19 | ✅ fertig |
 | mdview.nvim | 78 | 24 | ✅ fertig |
 | filetree.nvim | 129 | 26 | ✅ fertig |
-| lsp.nvim | 176 | 29 | 🔄 Runde 27 läuft (großes Repo) |
+| lsp.nvim | 176 | 29 | ✅ fertig |
 | images.nvim | 37 | 29 | 🟢 gut |
 | ai.nvim | 25 | 35 | 🟢 gut |
 | hover.nvim | 40 | 38 | 🟢 gut |
