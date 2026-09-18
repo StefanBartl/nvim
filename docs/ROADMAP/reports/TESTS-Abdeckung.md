@@ -51,7 +51,7 @@ laufen parallel.
 | 4 | casedesk.nvim | 4 | `3cc4cd9` | 32 neue Specs; 40 → 386 Assertions |
 | 5 | buffer-ctx.nvim | 5 | `6290f8b` | 6 neue Specs; 24 → 40 von 46 Dateien abgedeckt |
 | 6 | debugging.nvim | 6 | `5bdd781` (Re-Audit) | 10 neue Specs; ~6 → ~23 von 34 Dateien; Re-Audit: 15 → 16 Specs |
-| 7 | recommender.nvim | 7 | `6e7fb65` | 6 neue Specs; 5 → 11 von 23 Dateien |
+| 7 | recommender.nvim | 7 | `bef1939` (Re-Audit) | 6 neue Specs; 5 → 11 von 23 Dateien; Re-Audit: 12 → 15 Specs (ui.kit-Seam entsperrt) |
 | 8 | language.nvim | 8 | `51dd7d1` | 21 neue Specs; ~6 → 43 von 51 Dateien |
 | 9 | open.nvim | 9 | `a8dbe1d` | 9 neue Specs; ~12 → 24 von 26 Dateien |
 | 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
