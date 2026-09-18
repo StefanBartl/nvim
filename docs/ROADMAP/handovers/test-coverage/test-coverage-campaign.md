@@ -1822,3 +1822,57 @@ behobene Vermischung mit einem unabhängigen winhighlight-Commit im selben
 Push), fileops.nvim und gopath.nvim kamen aus ihren jeweiligen Reviews clean
 heraus -- explizit auf Shell-Injection, Config-Frische, UTF-8-Grenzfälle und
 Performance geprüft, nichts gefunden.
+
+## Gezielter Check der neun 🟢-Repos (ab 2026-09-18)
+
+Auf Nutzerwunsch: die neun Repos, die laut ursprünglicher Vorgabe keine volle
+Runde bekommen "außer eine konkrete Prüfung findet doch eine Lücke" --
+images.nvim, ai.nvim, hover.nvim, runtime-analysis.nvim, lib.nvim,
+markdown.nvim, documentation.nvim, media.nvim, ui.nvim. Das war bisher nur
+eine grobe Datei-Anzahl-Schätzung, nie ein echter Audit. runtime-analysis.nvim
+wurde zunächst ausgelassen, weil eine aktive Peer-Session mit passendem Namen
+("runtime-analysis.nvim startup profiler") parallel lief -- Konfliktvermeidung,
+kein inhaltlicher Grund.
+
+- [x] **images.nvim** — echter erster Audit, kein Nachweis-Stempel. Framework-
+  freier `H.eq`/`H.ok`/`H.falsy`/`H.contains`-Harness + `TESTS/run.lua`, 27
+  bereits substanzielle Specs (keine reinen Load-Smoke-Tests) bestätigt. 27 →
+  33 Specs. **Ein echter Bug gefunden und gefixt**: `compare.lua`s `M.open`
+  rief `require("ui.kit").compare(...)` ungeschützt auf, anders als jeder
+  andere ui.kit-Pfad im Plugin (`init.lua`s `kit()`, `browse.lua`s
+  `open_select`), die alle sauber degradieren -- `docs/installation.md`
+  dokumentiert ui.nvim durchgehend als optional mit `vim.ui.select`-Fallback,
+  aber `:Image compare` crashte stattdessen mit einem rohen "module 'ui.kit'
+  not found". Crash reproduziert, dann gefixt (pcall + Notify, passend zur
+  bestehenden Konvention), Regressionstest gegen zurückgesetzten Code
+  verifiziert. Eine überzogene Doc-Zeile nebenbei korrigiert. Fünf echte
+  Coverage-Lücken geschlossen (`cell.lua`, `scan.lua`, `guard.lua`,
+  `integrations/menu.lua`, `ascii.lua`). Vier Bug-Familien geprüft, sauber
+  (Augroups nutzen durchgehend `clear=true`, keine Byte/Spalten-Verwechslung,
+  Windows-Pfadbehandlung empirisch bestätigt). `TESTS/README.md` neu angelegt.
+  Testlauf: 33 Specs, über zwei von mir persönlich nachgefahrene
+  Wiederholungsläufe stabil. `stylua --check` und `luacheck` (explizite
+  Dateiliste statt Verzeichnisform -- Letztere ist auf dieser Maschine defekt,
+  ein lokales Umgebungsproblem, kein echter Fund) beide grün über 75 Dateien.
+  Commit: `bdc1b11`.
+- [x] **ai.nvim** — echter erster Audit. Plenary/busted-Suite (anders als die
+  meisten anderen Repos dieser Kampagne), über `scripts/test.sh`. 11
+  Spec-Dateien / 132 Tests bereits solide bestätigt (`attachments.lua`,
+  `config/init.lua`, `context/*`, `completion/prompt.lua`, die
+  Provider-Registry, `providers/transport.lua`/`util.lua`/`sse.lua`, die
+  `claude`/`gemini`-Provider). **Fünf echte Lücken geschlossen**: drei der
+  fünf eingebauten Provider (`ollama.lua`, `openai.lua`, `loomai.lua`) hatten
+  trotz gründlicher `claude`/`gemini`-Coverage null Specs; `ui/panel.lua`s
+  echte Zustandsmaschine (Delta-Akkumulation, idempotentes Cancel,
+  Snapshot-basiertes `cancel_all`); `ui/ghost.lua` (reine `vim.api`-Extmarks,
+  brauchte gar kein Stubbing); `completion/context.lua`s cursor-relative
+  Prefix/Suffix-Extraktion; `completion/init.lua`s `trigger()`/`accept()` --
+  nur das Debounce-Wiring war vorher getestet, nicht die vier
+  Stale-Response-Guards oder die Mehrzeilen-Einfüge-Mathematik. Keine Bugs
+  gefunden -- alle vier Bug-Familien geprüft (Augroups korrekt, keine
+  Byte/Spalten-Verwechslung, kein manuelles Pfad-Parsing im ganzen Repo,
+  daher (d) nicht anwendbar).
+  Testlauf: 132 → 225 Tests, 11 → 18 Spec-Dateien, über zwei von mir
+  persönlich nachgefahrene Wiederholungsläufe stabil. `luacheck lua plugin
+  TESTS` (47 Dateien) und `stylua --check` beide grün.
+  Commit: `a55a0fd`.
