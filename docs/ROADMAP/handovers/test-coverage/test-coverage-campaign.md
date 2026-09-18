@@ -1640,6 +1640,30 @@ Abschnitt "Offen (gepinnt)".
   (klein) statt `TESTS/` (groß) — auf einem case-sensitiven Filesystem wären beide lokal ins
   Leere gelaufen. Zwei Zeilen korrigiert.
   Commit: `166904e`.
+  **Mittlerweile gefixt** (separate Sitzung, Commit `cbebc48`): `start/server/launcher.lua`s
+  `has_display()` gab `nil` statt `false` zurück, wenn kein Display verfügbar war.
+  **Re-Audit (Runde 25, 2026-09-18):** kein weiterer Quelldiff seit Runde 25 außer dem
+  Fix oben, bereits korrekt gepinnt und verifiziert. Berichtigung zur eigenen Runde-25-
+  Notiz: `busted` **ist** doch lokal installierbar (per `luarocks install busted` unter
+  `AppData/Roaming/LuaRocks/bin/busted.bat`, nur nicht auf dem PATH) -- diese Runde lief
+  die echte `busted TESTS/lua` genauso wie CI, nicht mehr über plenarys gebündelte Engine
+  als Ersatz. Augroup-Idempotenz, Byte/Spalten-Konsistenz und Windows-Colon-Parsing
+  (letzteres lebt clientseitig in TypeScript, außerhalb dieses Audits) einzeln erneut
+  geprüft, alles korrekt. **Ein Bug gefunden und sofort gefixt** (siebzehntes Repo dieser
+  Familie): `health.lua`s `M.check()` degradiert korrekt bei fehlendem lib.nvim, ruft am
+  Funktionsende aber ungeschützt erneut in `lib.nvim.bindings.usercmd.composer.checkhealth`
+  hinein -- crasht bei jedem lib.nvim, das alt/unvollständig genug ist, um dieses Submodul
+  nicht zu haben, und verschluckt jeden vorherigen ok/warn/error desselben Aufrufs. Crash
+  reproduziert, dann mit demselben `pcall`-Idiom gefixt, das eine Zeile darüber schon
+  steht. **Zwei echte Lücken gefunden und geschlossen**, keine in Runde 25s eigener
+  Auslassungsliste erwähnt: `helper/copy_lines.lua`s lib.nvim-Clone-vs-Fallback-Zweig (auf
+  dem echten `BufEnter`-Pfad live genutzt); `bindings/usrcmds/init.lua`s `M.attach()`, das
+  der Harness nie erreichte, weil `setup()` nie aufgerufen wurde -- `_log_level_routes`
+  exponiert (Konvention analog zum bestehenden `_parse_start_args`).
+  Testlauf: 30 → 33 Spec-Dateien; nvim-Harness 239 → 247 Checks; busted 13 → 19 Checks;
+  über zwei von mir persönlich nachgefahrene Wiederholungsläufe beider Suiten stabil.
+  `luacheck lua/mdview --no-color` (81 Dateien) und `stylua --check lua TESTS` beide grün.
+  Commit: `59c4a6e`.
 - [x] **filetree.nvim** — fertig (Runde 26, 129 Dateien, Gap-Closing nach Risiko-Reihenfolge:
   Fs-Ops/Argv/Fehlerpfade zuerst, dann Bridge-Vertrag zu fileops.nvim, Caching, Buffer/Window-
   Lifecycle, Adapter-Helper). 6 → 7 automatisierte Testdateien (neue `TESTS/gaps.lua`),
