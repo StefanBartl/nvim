@@ -76,7 +76,7 @@ Index), ein Branchname. Alle nehmen `-nargs=*` mit Completion über
 
 | Command | Wirkung |
 |---|---|
-| `:Gdiffsplit [objekt]` | Diff gegen das Objekt (ohne Argument: den Index) in einem Split, dessen Richtung `:set diffopt` bestimmt. **Der Command hinter `<leader>gd`.** |
+| `:Gdiffsplit [objekt]` | Diff gegen das Objekt (ohne Argument: den Index) in einem Split, dessen Richtung `:set diffopt` bestimmt. War bis 2026-09-18 der Command hinter `<leader>gd`; die Taste ruft jetzt diff.nvims `:Diff target=git:HEAD`. |
 | `:Ghdiffsplit [objekt]` | Erzwingt den horizontalen Split. |
 | `:Gvdiffsplit [objekt]` | Erzwingt den vertikalen. |
 

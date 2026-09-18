@@ -1017,6 +1017,18 @@ plugins.add({
   {
     "StefanBartl/diff.nvim",
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
+    -- `<leader>gd` was fugitive's `:Gdiffsplit`; diff.nvim resolves
+    -- `git:HEAD` for the current file itself, so the key moved here. A
+    -- lazy `keys` entry rather than diff.nvim's own `keymaps.diff_head`
+    -- option, because the plugin is command-lazy and an option-registered
+    -- shortcut would only exist after the first `:Diff`.
+    keys = {
+      {
+        "<leader>gd",
+        "<cmd>Diff target=git:HEAD<cr>",
+        desc = "[diff.nvim] Diff current file against HEAD",
+      },
+    },
     opts = {}, -- all three features are on by default
   },
 
