@@ -38,7 +38,10 @@ Regeln, die sich über die Runden eingespielt haben:
 
 ## Fortschritt
 
-**26 von 36 Repos abgeschlossen** (die urspruengliche Warteschlange). Runde 27 (lsp.nvim, letzter Punkt) und fuenf Re-Audit-Runden der aeltesten fertigen Repos (pickers/cmdlog/dap/casedesk/buffer-ctx) laufen parallel.
+**27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett.** Der Re-Audit
+aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-5 (pickers/cmdlog/dap/casedesk/
+buffer-ctx) sind durch, Runden 6-11 (debugging/recommender/language/open/replacer/github_stats)
+laufen parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -68,13 +71,16 @@ Regeln, die sich über die Runden eingespielt haben:
 | 24 | spotlight.nvim | 24 | `5931a55` | 17 → 29 Specs; 472 → 1159 Assertionen |
 | 25 | mdview.nvim | 25 | `166904e` | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks |
 | 26 | filetree.nvim | 26 | `811bfed` | 696 → 858 Checks (Gap-Closing, sehr großes Repo) |
-| 27 | lsp.nvim | 27 | *läuft* | — |
+| 27 | lsp.nvim | 27 | `30e3e6a` | 6 neue Specs; 697 → 729 Checks (2 zusätzlich durch eine parallel arbeitende Peer-Session) |
 
 Details je Runde: siehe Handover, Abschnitt "Fortschritt".
 
 ## Warteschlange
 
-**Ursprüngliche Warteschlange ist mit Runde 27 (lsp.nvim) abgeschlossen.** Ab da beginnt ein Re-Audit aller 27 Runden gegen die 100%-Vorgabe (Nutzer-Entscheidung 2026-09-18): audit-first, gezielt auf die vier wiederkehrenden Bug-Familien plus Byte-Offsets, keine Auffuellung wo schon solide. → spotlight.nvim → mdview.nvim → filetree.nvim → lsp.nvim
+**Ursprüngliche Warteschlange ist mit Runde 27 (lsp.nvim) abgeschlossen.** Ab da läuft ein
+Re-Audit aller 27 Runden gegen die 100%-Vorgabe (Nutzer-Entscheidung 2026-09-18): audit-first,
+ältestes Repo zuerst, gezielt auf die wiederkehrenden Bug-Familien plus Byte-Offsets, keine
+Auffüllung wo schon solide. Reihenfolge: 1-5 durch, 6-11 laufen, danach 12 (insights.nvim) usw.
 
 Die 🟢-Repos (`images.nvim`, `ai.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `lib.nvim`,
 `markdown.nvim`, `documentation.nvim`, `media.nvim`, `ui.nvim`) bekommen keine volle Runde,
@@ -170,12 +176,13 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 | cascade.nvim | `lists/move.lua`: `renumber.tree` verankerte den Basiswert an der Zeile, die *nach* dem Move zufällig erste ist → `1. 2. 3. 4.` driftete bei jedem Move um +1 | `c23ea33` |
 | cascade.nvim | `lists.cycle`-Default konnte nicht rundlaufen: `lists.types` kannte nur zwei der vier vom Cycle erzeugten Markerarten → `a)`-Zeile verlor jede Listen-Erkennung | `c23ea33` |
 | filetree.nvim | `health.lua`s "lib.nvim fehlt"-Zweig rief danach unbedingt in lib.nvim hinein | `811bfed` |
+| cmdlog.nvim | `health.lua`s letzte Zeile rief unbedingt in `lib.nvim.bindings.usercmd.composer` hinein, bei fehlendem lib.nvim crashte `:checkhealth cmdlog` direkt nach der eigenen Fehlanzeige | `df6f716` |
 
 ### Offen (gepinnt)
 
-Stand: **17 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim und cmdlog.nvim
-bereits sehr solide, nichts Neues; buffer-ctx.nvim und pickers.nvim brachten je zwei kleine
-neue Bugs.
+Stand: **30 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim und cmdlog.nvim
+bereits sehr solide (cmdlog.nvim's einziger Fund wurde direkt gefixt, siehe "Gefixt"-Tabelle);
+buffer-ctx.nvim, pickers.nvim und casedesk.nvim brachten je ein bis zwei kleine neue Bugs.
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -183,6 +190,7 @@ neue Bugs.
 | buffer-ctx.nvim | `mark/init.lua` | Cleanup-Autocmd über String-Augroup ohne `clear = true` → zweites `setup()` verdoppelt ihn (harmlos, da idempotent) |
 | pickers.nvim | `health.lua` | letzte Zeile ruft den Composer bedingungslos außerhalb jedes `pcall` → crasht `:checkhealth pickers` komplett bei fehlendem lib.nvim |
 | pickers.nvim | `smart/frecency.lua` | `M.patch()` löst die Augroup ohne `clear=true` auf → zweites `setup()` mit Frecency verdoppelt den Autocmd |
+| casedesk.nvim | `health.lua` | `check_tools()`s "lib.nvim fehlt"-Zweig ruft danach ungeschützt in `casedesk.export.find_browser()` hinein, das wiederum ungeschützt genau die als fehlend gemeldete Dependency requirt → `:checkhealth casedesk` crasht komplett |
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -217,10 +225,10 @@ neue Bugs.
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 6 Repos, **4 gefixt**
-  (emojis, diff, gopath (in `health.lua`), filetree), **2 offen**: `gopath.nvim`s
-  `create.lua`-Fallback (kein `health.lua`, gleiches Muster) und `pickers.nvim`s
-  `health.lua` selbst (neu in der Re-Audit-Runde gefunden).
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 8 Repos, **5 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog), **3 offen**: `gopath.nvim`s
+  `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s
+  `health.lua` selbst und `casedesk.nvim`s `health.lua` (beide in Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
   `setup()` einen zweiten Autocmd-Handler registriert statt den ersten zu ersetzen.

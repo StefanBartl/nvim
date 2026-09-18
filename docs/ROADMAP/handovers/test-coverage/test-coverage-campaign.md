@@ -96,58 +96,48 @@ absteigend nach Ratio durch die 🔴/🟠 Liste, 🟡/🟢 nur falls noch Lücke
 
 ## Aktueller Stand (2026-09-18)
 
-**26 von 36 Plugins fertig — die ursprüngliche Prioritäts-Warteschlange (Runden 1-26) ist
-komplett.** Der letzte Punkt daraus, lsp.nvim (Runde 27), läuft gerade.
+**27 von 36 Plugins fertig — die ursprüngliche Prioritäts-Warteschlange (Runden 1-27,
+inklusive lsp.nvim als letztem Punkt) ist komplett.**
 
 **Nutzer-Entscheidung 2026-09-18: jedes Plugin auf 100% pushen.** Definition dabei
 unverändert (bestätigt vom Nutzer): weiterhin ohne reine `@types`/`---@meta`-Dateien, ohne
 Rendering das ein echtes Live-Backend braucht (telescope/fzf-lua/snacks), ohne echte externe
 Prozesse (echtes Docker, echtes pandoc, echter Netzwerk-Request an einen echten Server).
-"100%" heißt: jede Datei mit echter Logik hat eine echte Assertion-Suite. Ab Runde 27 läuft
-deshalb ein **systematischer Re-Audit aller fertigen Runden**, ältestes Repo zuerst — Ziel ist
-nicht, jede Runde von Grund auf zu wiederholen, sondern ehrlich zu prüfen, ob die
-damaligen Auslassungs-Gründe noch gelten (z.B. ist ein Backend inzwischen doch CI-Sibling?
-gibt es neue Dateien seit der Runde ohne Spec?) und die vier wiederkehrenden Bug-Familien
-gezielt nachzuprüfen.
+"100%" heißt: jede Datei mit echter Logik hat eine echte Assertion-Suite. Seither läuft ein
+**systematischer Re-Audit aller fertigen Runden**, ältestes Repo zuerst — Ziel ist nicht,
+jede Runde von Grund auf zu wiederholen, sondern ehrlich zu prüfen, ob die damaligen
+Auslassungs-Gründe noch gelten (z.B. ist ein Backend inzwischen doch CI-Sibling? gibt es neue
+Dateien seit der Runde ohne Spec?) und die wiederkehrenden Bug-Familien gezielt nachzuprüfen.
 
-Fünf Re-Audit-Runden laufen parallel zu lsp.nvim: pickers.nvim (Runde 1), cmdlog.nvim
-(Runde 2), dap.nvim (Runde 3), casedesk.nvim (Runde 4), buffer-ctx.nvim (Runde 5) — die
-fünf ältesten, damit am ehesten veralteten Runden.
+**Re-Audit-Fortschritt:** Runden 1-5 (pickers/cmdlog/dap/casedesk/buffer-ctx) fertig geprüft.
+Runden 6-11 (debugging/recommender/language/open/replacer/github_stats) laufen parallel.
+Danach weiter mit Runde 12 (insights.nvim) aufwärts, sechs Agents gleichzeitig.
 
-**Bugfix-Bilanz:** von den ursprünglich 25 gepinnten Bugs sind **13 offen**, 12 gefixt.
-Zusätzlich hat sich eine fünfte, jetzt sechste Familie herauskristallisiert: ein
-`health.lua` (oder vergleichbarer Preflight), dessen "Dependency fehlt"-Zweig danach
-unbedingt in genau diese Dependency hineinruft — gefunden und gefixt in emojis.nvim,
-diff.nvim, gopath.nvim und filetree.nvim; als Variante (kein `health.lua`, aber derselbe
-Fehler) noch offen in gopath.nvims `create.lua`-Fallback.
+**Nebenfund bei lsp.nvim (Runde 27):** während der eigenen Nachverifikation lief parallel
+eine andere Session direkt im selben `E:\repos\lsp.nvim`-Checkout (unabhängig von dieser
+Kampagne, echte Bugfixes an `completion`/`health`/`config`/`lsp_signature`/`ts_ls`) und
+pushte mehrfach auf `origin/main`, während der Rebase dieser Runde lief. Ein `git rebase`
+geriet dadurch in einen echten Konflikt (dieselbe Windows-Pfad-Ursache war unabhängig auch
+hier gefunden und bereits gefixt) — sauber aufgelöst, nichts verloren, am Ende beide
+Fix-Historien im finalen Commit `30e3e6a` vereint. Lehre: `git rebase`/`git push` in einem
+gemeinsam genutzten Checkout können durch fremde Commits mitten im eigenen Lauf brechen;
+`&&`-Ketten mit nachgeschaltetem `| tail`/`grep` verschleiern dabei den echten Exit-Code
+der vorderen Befehle (siehe Abschnitt "Fehler und Lektionen" weiter unten, falls vorhanden,
+sonst: `cmd | tail` liefert `tail`s Exit-Code, nicht `cmd`s — bei einer `&&`-Kette also nie
+verlässlich für Fehlererkennung).
+
+**Bugfix-Bilanz:** von den ursprünglich 25 gepinnten Bugs plus den seither in Re-Audit-Runden
+neu gefundenen sind **30 offen**, der Rest gefixt (Details: Report, Abschnitt "Gefixt"/
+"Offen (gepinnt)"). Die Health-Familie ("Dependency fehlt, ruft sie danach trotzdem auf")
+steht bei 8 gefunden / 5 gefixt (zuletzt cmdlog.nvim) / 3 offen (gopath.nvim `create.lua`,
+pickers.nvim, casedesk.nvim).
 
 Alle Coverage- und Bugfix-Commits sind per `git merge-base --is-ancestor` gegen
 `origin/main` verifiziert, inklusive eigener Nachvollzugsläufe der Suiten (nicht nur
 Agenten-Meldungen übernommen).
 
-**Offene Pins nach Repo** (Details je Runden-Eintrag unten und im Report
-`docs/ROADMAP/reports/TESTS-Abdeckung.md`):
-- **pdfport.nvim** (3): `backends/tesseract.lua`s Off-by-one beim Fehler-Zählen,
-  `bindings/autocmds.lua`s fehlende Idempotenz, `integrations/{fzf,telescope}.lua`s
-  Fehler-Caching.
-- **reposcope.nvim** (5): `clone_manager.lua`s toter Pfad-Guard (0 ist truthy),
-  `bindings/keymaps.lua`s falscher Aufräum-Tag, `repository_fetcher.lua`s
-  `vim.json.decode("null")`-Wurf, `utils/protection.lua`s fehlendes Default-Argument,
-  `ui/actions/readme_viewer.lua`s `Invalid buffer id` beim zweiten Öffnen.
-- **color_my_ascii.nvim** (4): `comment_ascii`-Byte-Offset, `parser.get_byte_offset`s
-  Iterator-Wurf, `enable_bracket_highlighting`s Wirkungslosigkeit, 12 doppelte Keywords.
-- **gopath.nvim** (7): `opener.lua`s `gsub`-Argumentfehler, `expand_right`s
-  Terminator-Leck, `tailsearch.sanitize`s Reihenfolgefehler, toter Code in
-  `require_path.lua`, `providers/token.lua`s Formatzerstörung, `check_under_cursor`s
-  unerreichbarer Zweig, `invalidate_caches()`s vergessenes `_pdir_*`, `create.lua`s
-  ungeschütztes Fallback-`require`.
-- **diff.nvim** (2): `core/directory.lua`s ungeschütztes `readfile`, `core/scratch.lua`s
-  fehlende Deduplizierung.
-- **cascade.nvim** (3): zwei der drei Augroups leeren sich nicht bei deaktiviertem Feature,
-  `cycle_group_add`/`remove` mutieren `config.DEFAULTS`, `:Cascade indent N`/`cycle remove`
-  ignorieren ihre Argumente.
-
-## Fortschritt
+Details zu allen offenen Pins nach Repo: siehe Report `docs/ROADMAP/reports/TESTS-Abdeckung.md`,
+Abschnitt "Offen (gepinnt)".
 
 ## Fortschritt
 
@@ -245,6 +235,32 @@ Agenten-Meldungen übernommen).
   unangetastet gelassen.
   Commit: `a43edc9` (test: real assertion-based coverage for core/, config/, bindings/, ui merge
   logic), direkt auf `main` gepusht.
+  **Re-Audit (Runde 2, 2026-09-18):** Round 2s Auslassungsgründe für die komplette Telescope-
+  Glue-Schicht (`ui.mappings`, `ui.cycle`, `ui.telescope-previewer`) beruhten auf zwei falschen
+  Annahmen: telescope.nvim ist doch verfügbar (als lazy.nvim-Sibling lokal und als frischer
+  Checkout in CI), und diese Module haben doch eigene Logik (`ui.mappings`s Delete-Mapping
+  verzweigt real zwischen Einzel- und Multi-Selection, Confirm-nur-einmal-fürs-Batch,
+  Fehler-Aggregation die "cancelled" ausfiltert). Zusätzlich hatte `core.tracker` (der komplette
+  `CmdlineLeave`-Recorder) außer dem Load-Smoke-Test null Assertions. Neu abgedeckt: `core.tracker`
+  über echte Tastatureingaben (`nvim_feedkeys(..., "x", ...)`, nicht `vim.cmd("normal! ...")` --
+  Letzteres wirft am `v:errmsg`-Pfad vorbei, den dieses Modul für seine Fehlererfassung braucht,
+  empirisch verifiziert), `ui.telescope-previewer`s komplettes Branch-Dispatch, `ui.mappings`'
+  komplette `attach_mappings`-Factory, `ui.cycle`s Rotation, `picker_utils.open_picker`s echter
+  Telescope- **und** fzf-Zweig (vorher beide weg-gemockt), `ui.risky_test` jetzt mit echten
+  Notify-Assertions statt reinem Pcall-Smoke, `core.shell`s SHELL-unset-Probing-Zweig (HOME über
+  `vim.uv.os_homedir` gefaked). **Bug gefunden und gefixt** (sechste Instanz derselben Familie
+  nach diff/emojis/gopath/filetree): `health.lua`s letzte Zeile rief unbedingt
+  `require("lib.nvim.bindings.usercmd.composer")` -- bei fehlendem lib.nvim brach
+  `:checkhealth cmdlog` direkt nach der eigenen "lib.nvim fehlt"-Meldung ab. Fix: `pcall`-Guard
+  analog zum Check darüber, plus ein Regressionstest der vor dem Fix nachweislich rot war.
+  Windows-Verdachtsfälle geprüft und **nicht** als Bug befunden: `project_history.get_git_root()`
+  hat nie Backslashes (vim.fs.find/dirname normalisieren schon); `core.tracker.setup()`s zweiter
+  Aufruf verdoppelt nichts (lib.nvim's `autocmd.group(name, true)` cleared korrekt). Testlauf ohne
+  Telescope/fzf-lua: 279 passed/0 failed/6 skipped (deckt sich mit Runde 2s Testumgebung); mit
+  Telescope.nvim + fzf-lua als echte Siblings: **329 passed, 0 failed, 0 skipped** -- von mir
+  gegen beide Konfigurationen persönlich nachgefahren und bestätigt. `luacheck lua` (40 Dateien)
+  und `stylua --check lua TESTS` beide grün.
+  Commit: `df6f716` (test: close the telescope-availability gap, tracker, and a health.lua crash).
 - [x] **dap.nvim** — fertig. Anders als pickers.nvim/cmdlog.nvim nutzt dieses Repo
   plenary.nvim's busted-Suite (`describe`/`it`/`assert`) statt eines eigenen Harness — Konvention
   aus `TESTS/README.md` beibehalten, nicht auf den framework-freien Stil umgestellt.
@@ -1132,4 +1148,38 @@ Agenten-Meldungen übernommen).
   `ui/{window_style,window_size_cycler,cursor_hide,tree_reset,size_info,preview}.lua`.
   CI-Workflow um `gaps.lua` ergänzt.
   Commit: `811bfed`.
+- [x] **lsp.nvim** — fertig (Runde 27, 176 Dateien, letzter Punkt der ursprünglichen
+  Warteschlange). 6 neue Spec-Dateien nach Risiko sortiert: `attach_spec.lua` (`core/attach.lua`s
+  `on_init`/`on_attach`-Guards und -Effekte), `filter_spec.lua` (die zwei reinen
+  Diagnostic-Listen-Helfer unter `core/handlers`), `mason_node_spec.lua` (der npm
+  `.bin/<name>.cmd`-Shim-Parser end-to-end gegen einen echten, umgeleiteten `stdpath("data")`,
+  inklusive Windows-Only-Gate und Backslash-Normalisierung), `rootresolvers_spec.lua`
+  (`lua_ls`s `strict_root_from`-Algorithmus gegen echte Temp-Verzeichnisse: Scope-Switch,
+  VCS-vor-Marker-Suchreihenfolge, Neovim-Config-Verzeichnis gewinnt immer; plus `marksman`s
+  eigene Marker-Liste und `eslint_prettier`s `find_root`-Unnamed-Buffer-Guard),
+  `autocmds_wiring_spec.lua` (der `LspAttach`-Handler für die `gr*`-Default-Kollisionen und
+  seine Group-Lifecycle), `usercmds_wiring_spec.lua` (drei zuvor ungetestete `:Lsp*`-Kommando-
+  Module: `formatter`, `workspace_diagnostics`, `mobile_diagnostics`).
+  **Ein echter Windows-spezifischer Test-Infra-Bug gefunden und gefixt** (kein Plugin-Bug):
+  `TESTS/minimal_init.lua`s `fnamemodify(path, ":p")` hängt bei existierenden Verzeichnissen
+  einen abschließenden Backslash an; zusammen mit rtp's vorwärtsschrägstrich-basiertem
+  `findfile("plugin/plenary.vim", ...)` ergab das unter Windows ein nie aufgelöstes `\/`, sodass
+  `PlenaryBustedDirectory`/`PlenaryBustedFile` nie definiert wurden und der Lauf lautlos hing
+  statt zu fehlern (auf Linux/CI harmlos, da ein doppelter `/` dort toleriert wird). Fix:
+  `vim.fs.normalize()` auf das Ergebnis von `fnamemodify`. Eigener Fund, unabhängig davon aber
+  auch von einer parallel arbeitenden Peer-Session im selben Checkout gefunden und bereits
+  gefixt — siehe Randnotiz im Abschnitt "Aktueller Stand" oben zum Rebase-Konflikt, der daraus
+  entstand.
+  Bewusst noch nicht erreicht, für eine Folgerunde vermerkt (Details inkl. Begründung in
+  `TESTS/README.md`): die einzelnen `servers/*`-Server-Module (`clangd.lua`, `csharp.lua`,
+  `gopls.lua`, `zig.lua`, `webdev/*`, `mobiledev/*` — je ein `vim.lsp.config()`-Aufruf plus
+  Capabilities/Root-Wiring, ein generischer Contract-Spec analog zu dap.nvim wäre der nächste
+  Schritt); `core/root_scope_picker.lua`/`core/workspace_picker.lua`; die Integrations-Module
+  jenseits ihres generisch getesteten Adapter-Contracts; `tools/deprecated_help/**` und
+  `tools/lsp_signature`s reine Formatierungshelfer.
+  Testlauf: 697 → 729 Checks (die zusätzlichen 32 stammen aus der oben erwähnten Peer-Session,
+  die parallel eigene Specs erweitert hat), 0 Fails über alle 51 Spec-Dateien, mehrfach
+  wiederholt zur Stabilitätsprüfung. `luacheck lua scripts TESTS` (231 Dateien) und
+  `stylua --check` beide grün.
+  Commit: `30e3e6a`.
 - [ ] restliche Plugins — noch nicht begonnen, siehe Tabelle oben.
