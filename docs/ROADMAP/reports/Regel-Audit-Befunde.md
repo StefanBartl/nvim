@@ -32,7 +32,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | dap.nvim | 21 | 21 | 0 | fertig (2026-09-18) |
 | mdview.nvim | 18 | 18 | 0 | fertig (2026-09-18) |
 | replacer.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
-| buffer-ctx.nvim | 16 | – | – | offen |
+| buffer-ctx.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | insights.nvim | 16 | – | – | offen |
 | language.nvim | 16 | – | – | offen |
 | debugging.nvim | 15 | – | – | offen |
@@ -1080,7 +1080,7 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 ## buffer-ctx.nvim
 
-**16 Befunde** (6 × high). Roh gemeldet: 16.
+**16 Befunde** (6 × high). Roh gemeldet: 16. — **Stand: 16/16** (⏭️ 0, 2026-09-18)
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -1092,6 +1092,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** `has_lib` is structurally always false, so M.set (line 30-33) always takes the plain `vim.keymap.set` branch and lib.nvim's keymap registry never records buffer-ctx's registrations — mark/init.lua:20 is the only consumer, so the `:Mark` toggle/yank keymaps (DEFAULTS.lua: `mark.keymaps.toggle = "<S-m>"`, `yank = "<C-p>"`) are invisible to `:LibKeymapConflicts` and to lib.nvim's option validation. M.using_lib() likewise always returns false, so `:checkhealth buffer_ctx` (health.lua:56-63) permanently prints the info line "lib.nvim not found — using plain vim.keymap.set" even though health.lua:40-47 has already reported lib.nvim as detected two sections above — a self-contradicting health report on every machine with lib.nvim installed. Functionally the keymaps still get set; the loss is registry/conflict visibility plus a misleading health line.
 
+**Status.** ✅ erledigt (`beac0f4`) — `type(lib_map) == "function"` konnte nie wahr sein, da `lib.nvim.bindings.keymap` eine per `__call` aufrufbare Tabelle ist; Check auf `"table"` umgestellt, analog zu util/notify.lua.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/buffer_ctx/format/text_width.lua:155` · `M.reflow_buffer` · confidence **high**
@@ -1101,6 +1103,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** ERR-03 requires relevant functions to return true/false plus an error object rather than failing silently; the companion warning in LLS-31 is that a success message built from the planned rather than the actual work can never reveal a no-op.
 
 **Auswirkung.** The reachable defect is the ignored range, not the invalid-buffer/zero-width cases the finding names — those two branches cannot be triggered through `:Format textwidth`. Because build_routes gives every :Format route `range = true` (init.lua:318) and the textwidth handler takes only `(args)`, `:10,20Format textwidth 80` and `:'<,'>Format textwidth 80` reflow the ENTIRE buffer and then report "Set textwidth=80 and reflowed buffer", with M.reflow_range (line 174) sitting unused. Separately, M.reflow_buffer's contract is unsafe for any future or external caller: passing a wiped bufnr or a non-numeric width is a silent no-op that the caller cannot detect, which is what ERR-03 forbids.
+
+**Status.** ✅ erledigt (`9eb5b9d`) — `reflow_buffer`/`reflow_range` geben jetzt explizit `(ok, err)` zurück; der reale Fehler (ignorierte Range bei `:Format textwidth`) ist über die Range-Verdrahtung in derselben Commit-Gruppe mitbehoben.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -1112,6 +1116,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** Cancelling the guard-clause form makes `:Insert boilerplate guard-clause` report `[buffer-ctx] boilerplate failed` — verified commands.lua:275-276 (`if not lines then notify.error(err or "boilerplate failed")`) and the same at lua/telescope/_extensions/buffer_ctx.lua:91-93. A deliberate Esc is reported to the user as a broken feature. Scope is narrower than the rule's usual case: guard-clause is the only `is_interactive` entry in REGISTRY, so today exactly one template is affected — but every future interactive template inherits the same collapse, since line 212 is the shared return path.
 
+**Status.** ✅ erledigt (`cec53d7`) — `M.get` liefert jetzt einen dritten Rückgabewert `cancelled`; beide Aufrufer (commands.lua, telescope-Extension) melden einen Abbruch nicht mehr als „boilerplate failed“.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/buffer_ctx/health.lua:115` · `M.check` · confidence **high**
@@ -1121,6 +1127,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** ERR-11 requires "nothing to report" to be distinguishable from "could not determine anything". A completely absent mark section reads as "nothing to say about marks", when in fact the mark checks were never executed because of an unrelated option.
 
 **Auswirkung.** With `format = false` (or `format = { enable = false }`) in setup(), `:checkhealth buffer_ctx` stops after the format info line: the entire `buffer_ctx.mark` section is absent with no explanation, so a mark subsystem that failed to register, or a `buffer_ctx.mark` module that failed to load, is undetectable by the health check for every user who turned :Format off. An absent section reads as "nothing to report about marks" when the truth is "the mark checks never ran, for an unrelated reason" — the ERR-11 collapse. Note the two subsystems are independent: mark_enabled is computed from cfg.mark at lines 152-156 and does not depend on format at all, so this is purely an early-return bug, not a deliberate dependency.
+
+**Status.** ✅ erledigt (`5e43f82`) — Frühes `return` nach „format disabled“ entfernt; der `buffer_ctx.mark`-Abschnitt läuft jetzt unabhängig vom Format-Zweig.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -1132,6 +1140,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** Without ui.nvim installed, four features are dead. Three of them (`:Insert`/`:Copy snippet` with no name, `:Insert boilerplate` with no template, `:Insert boilerplate guard-clause`) surface a raw `Error executing Lua callback: ...module 'ui.kit' not found` — verified that commands.lua's build_routes (line 442-456) calls `M._dispatch(...)` from `run` with no pcall, and lib.nvim's composer does `return run(ctx)` at bindings/usercmd/composer/parse.lua:199 with nothing above it. The fourth case is NOT a raw error: format/init.lua:336 wraps every :Format handler in `pcall(def.handler, args, range_ctx)`, so `:Format column` with no args degrades to a clean `[column] ...module 'ui.kit' not found` notification. The doc-level harm is the same in all four: the user was told these paths fall back to vim.ui.select, and none does.
 
+**Status.** ✅ erledigt (`cec53d7`) — `ui.kit` läuft an allen 4 Stellen (commands.lua x2, column_align.lua, guard.lua) jetzt weich mit `pcall` + `vim.ui.select`/`vim.ui.input`/`vim.fn.input`-Fallback, wie in den Docs versprochen. Nebenfund beim Implementieren: modulweites Caching eines weichen `ui.kit`-Requires ist ein Antipattern, sobald der Interaktivpfad real blockieren kann — gelöst per call-time `pcall(require, "ui.kit")`.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/buffer_ctx/format/table_fmt.lua:165` · `M.format_tables_in_scope` · confidence **high**
@@ -1141,6 +1151,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on user/buffer text: a backtick span in the argument is a command substitution through `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. This value comes straight from the user's command line, not from a static config literal, so it is exactly the case the rule names; the rule prescribes `lib.nvim.cross.fs.expand_path`, which this file already has hard access to.
 
 **Auswirkung.** `:Format table scope=`<cmd>`` runs `<cmd>` through `&shell` at line 165, before the readability check on line 166 can reject anything — a command-substitution sink reachable from a plain command-line argument. `scope=%` and `scope=#` silently resolve to the current/alternate file name instead of being rejected as an unknown path, and `<cfile>`/`<cword>` are likewise substituted (`<cword>` on an empty line additionally throws E348, which format/init.lua:336's pcall turns into a `[table] ...` notification rather than a crash). A path containing a glob metacharacter is read as a pattern and, on no match, collapses to `""`, which then fails the filereadable check with the misleading message `File not readable: ""`.
+
+**Status.** ✅ erledigt (`ceccac3`) — `vim.fn.expand(scope)` durch `lib.nvim.cross.fs.expand_path` ersetzt (kein Shell, kein Glob, keine Vim-Specials).
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -1152,6 +1164,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** Pressing CTRL-C at any annotation prompt surfaces a raw `Error executing Lua callback: Vim:Interrupt` instead of a clean cancel — the :Insert/:Copy route chain has no pcall at any level, so Neovim's own user-command error handler is the first thing to catch it. In M._interactive_function the interrupt also aborts the whole dialog, discarding the description and every parameter already entered in that session; there is no partial result and no "cancelled" path. No corruption or data loss — the buffer is untouched — the harm is an error traceback where a cancel was intended, and lost typing in the multi-prompt case.
 
+**Status.** ✅ erledigt (`10fad97`) — Alle 15 `fn.input`-Aufrufe laufen jetzt über `safe_input()` (pcall); CTRL-C liefert leeren String statt rohem Traceback.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/buffer_ctx/format/misc.lua:183` · `register_subcommands / sort, unique, trim, case, indent, clear` · confidence **medium**
@@ -1161,6 +1175,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** ERR-10 is about an argument that is silently collapsed into "no argument" and therefore acts on *everything* instead of erroring. An explicitly-given range is accepted by the command grammar, then discarded, and the operation runs over the entire buffer with no message saying the range was ignored.
 
 **Auswirkung.** A range accepted by the command grammar is silently discarded and the operation runs over the whole buffer. Concretely: select lines in Visual mode, press `:` (Neovim prefills `'<,'>`), type `Format sort` — the entire buffer is sorted, not the selection, and the message is the unqualified "Buffer sorted". Same for `unique`, `case`, `indent`, `trim` and `clear`; `:10,20Format clear` empties the whole buffer. This is recoverable with a single `u` (it is one nvim_buf_set_lines call, so one undo block), so the damage is a surprising whole-buffer rewrite plus a success message that hides it, not data loss.
+
+**Status.** ✅ erledigt (`9eb5b9d`) — `trim/sort/unique/case/indent/clear` respektieren jetzt `range_ctx` (Fallback: ganzer Buffer), analog zu `blank_lines.lua`s bestehendem Muster.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -1172,6 +1188,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** `:10,20Format enum` enumerates and overwrites whatever lines the last Visual selection in that buffer covered, not lines 10-20, and then reports "Enumerated N token(s)" for the region it actually touched (enum_lines.lua:187) — a success message about the wrong lines. When no Visual selection has ever been made in the session the marks are 0 and the user instead gets "No valid visual selection found" from a command they gave an explicit range to. Both cases are single-undo recoverable; the concrete harm is silently editing an unrelated region while claiming success.
 
+**Status.** ✅ erledigt (`9eb5b9d`) — `enum`-Handler ruft bei gegebener Range jetzt `enum_range(bufnr, line1, line2, opts)` statt immer `enum_selection` (visuelle Marks).
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/buffer_ctx/ops/filepath.lua:125` · `M.parse_args` · confidence **medium**
@@ -1181,6 +1199,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** ERR-10 forbids collapsing "no argument" and "invalid argument" onto the same result — a typo in the argument then behaves exactly like no argument. `ops/git.lua:39-42` in this same plugin shows the intended shape (`unknown git mode: … (hash|short|branch|tag)`).
 
 **Auswirkung.** `:Copy filepath absolut` (or `abso`, `rela`, `windows-1`) silently copies a cwd-relative unix path while the user believes they requested an absolute one, then pastes the wrong path wherever they were writing — a typo behaves exactly like giving no argument, which is the bug class ERR-10 names. The finding's three companion sites are real but weaker: ops/timestamp.lua:83 `FORMATS[fmt] or FORMATS.iso`, ops/uuid.lua:47 and ops/module.lua:47 each fall back to a default for an unknown value, so the same silent-typo behaviour applies to `:Copy timestamp`, `:Copy uuid` and `:Copy module`. No data loss in any of them; the harm is a wrong value in the clipboard or the buffer with no signal that the argument was not understood.
+
+**Status.** ✅ erledigt (`cec53d7`) — `parse_args` liefert jetzt einen zweiten Rückgabewert `err` für unbekannte Tokens; commands.lua meldet ihn statt stillschweigend die Defaults zu übernehmen.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -1192,6 +1212,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** `:42Copy location range` copies the span of whatever was last visually selected anywhere in that buffer this session — e.g. `file.lua:L10-L20` — instead of `file.lua:42`, and the user pastes a wrong line reference into a review comment or issue with no indication anything was substituted. Only the explicit single-line range is affected: a multi-line `:10,20Copy location range` has line1 ~= line2 and is used as given, and a genuine one-line Visual selection is unaffected because the inner `vstart ~= vend` guard on line 84 rejects single-line marks. Clipboard-only, nothing is written to a buffer or disk.
 
+**Status.** ✅ erledigt (`5db7498`) — Bedingung von `not line1 or not line2 or line1 == line2` auf `not line1 or not line2` verengt; eine explizite Einzelzeilen-Range wird nicht mehr durch die letzte visuelle Selektion ersetzt.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/buffer_ctx/ops/snippet.lua:96` · `M.load` · confidence **medium**
@@ -1201,6 +1223,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** ERR-11 requires "empty but ok" and "empty because something broke" to be distinguishable. Here the partial-failure case is worse than the rule's example: a non-empty result carrying a silently swallowed "invalid JSON in snippet file" looks exactly like a complete, healthy load.
 
 **Auswirkung.** With two or more snippet files configured and one of them corrupt, unreadable or empty, `:Insert snippet <Tab>` and `:Insert snippet <name>` simply omit that file's snippets. M.get's caller path only ever sees the err when `vim.tbl_isempty(snippets)` (line 126-128), so with a healthy second source the user gets "unknown snippet: X" for a snippet they can see in their own JSON file. Verified there is no secondary channel: health.lua has no snippet section at all (grepped — zero hits for `snippet`), so `:checkhealth buffer_ctx` will not surface it either. The user has literally nothing to debug from.
+
+**Status.** ✅ erledigt (`95764af`) — `M.load` gibt gesammelte Fehler jetzt immer zurück, nicht nur wenn das Gesamtergebnis leer ist; `M.get` faltet einen übrigen Fehler in die „unknown snippet“-Meldung.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -1212,6 +1236,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** Any misspelled option — `snipets = { paths = {...} }`, `mark = { keymap = { toggle = "<S-m>" } }`, `format = { enabled = true }` — is deep-merged in as an inert extra key. setup() succeeds, the intended setting never takes effect because every reader goes through config.get() and asks for the correctly-spelled path, and `:checkhealth buffer_ctx` reports nothing unusual. The user sees the plugin running on defaults with no error and no diagnostic pointing at their config. Severity is confined to silent misconfiguration — nothing crashes and no data is at risk — but ERR-50 exists precisely because this class of typo is otherwise undetectable.
 
+**Status.** ✅ erledigt (`5e43f82`) — `sanitize()` (KNOWN-Keys + Levenshtein-„did you mean“, Muster aus dap.nvim/replacer.nvim) läuft vor dem Merge; Issues über `config.issues()` und `:checkhealth` sichtbar.
+
 ### `LUA-16` — `vim.NIL` sanitizen
 
 `lua/buffer_ctx/ops/snippet.lua:154` · `M.get` · confidence **medium**
@@ -1222,6 +1248,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 
 **Auswirkung.** Correcting the finding's mechanism: because tostring() coerces first, nothing throws and nvim_buf_set_lines does not crash — the failure is silent corruption, not a crash. A snippet file whose `body` array contains a JSON null inserts a line reading `vim.NIL` (or `userdata: 0x...`, depending on the build's __tostring) into the user's buffer; a nested object or array inserts `table: 0x...`; a JSON number inserts its stringified form, which is usually harmless. The user gets garbage text in their buffer instead of either the intended content or an error naming the bad snippet file. Single-undo recoverable; the exposure is limited to snippet files the user configured themselves via `snippets.paths`.
 
+**Status.** ✅ erledigt (`95764af`) — Body-Zeilen werden vor `strip_tabstops` auf `vim.NIL`/Nicht-String geprüft und zu `""` sanitisiert statt blind `tostring()`t.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/buffer_ctx/ops/snippet.lua:27` · `M.set_sources` · confidence **medium**
@@ -1231,6 +1259,8 @@ OUT OF SCOPE BUT WORTH A LOOK. `make test` runs 4 of the 14 suites while CI runs
 **Regelbezug.** SEC-34 names `.rc` values as one of the hazards and says that where only `~` and environment variables are wanted the call belongs in `lib.nvim.cross.fs.expand_path` — no shell, no globbing, no Vim specials. `vim.fn.expand` additionally reads its argument as a glob pattern and as a command substitution across backticks.
 
 **Auswirkung.** A configured snippet path containing a glob metacharacter — `[`, `]`, `?`, `{`, `*`, all legal in POSIX filenames — is read as a pattern; when it matches nothing, expand() returns `""` and line 27 stores an empty string as a source. M.load then reports "snippet file not readable: " for it, and because of the ERR-11 defect at line 96 that message is swallowed whenever any other source loaded, so the file's snippets vanish with no diagnostic at all. A backtick span in a path likewise runs through `&shell` at setup() time. Practical exposure is lower than the table_fmt case (these values come from the user's own init.lua, not a command line), but the rule's point stands: the code asks for ~/env expansion and gets a shell and a globber.
+
+**Status.** ✅ erledigt (`95764af`) — `fn.expand(p)` durch `lib.nvim.cross.fs.expand_path(p)` ersetzt.
 
 ### `UI-01` — Bulk-/destruktive Aktionen
 
@@ -1251,6 +1281,8 @@ RULES I COULD NOT COVER. CMT-16: `docs/BINDINGS.md` and `docs/map/` are generate
 CHECKED AND CLEAN. SEC-03/SEC-30: `ops/git.lua:48-51` builds an argv list for `systemlist`, never a shell string, and `format/filter_lines.lua:12,15` uses `string.find(..., 1, true)` so user patterns are matched literally. LUA-06: `config/DEFAULTS.lua` is a pure literal table — no `require`, no env lookup, no filesystem access at module level. ERR-51/ERR-53: `vim.tbl_deep_extend("force", DEFAULTS, user)` builds a fresh top-level table and no submodule holds a reference into DEFAULTS. ERR-62: zero occurrences of the `pcall(f(args))` shape. LUA-48: no `__mode` anywhere; `mark/init.lua`'s bufnr-keyed `marked` table is cleaned by a real `BufDelete`/`BufWipeout` autocmd (line 517), which is exactly what the rule prescribes. PERF/timer family: the plugin has no timers, no `vim.defer_fn`/`vim.schedule`, no libuv callbacks, no module-level geometry and no autocmds on hot events (bindings/autocmds.lua is a documented no-op). XP-05: `vim.fn.executable("git")` sits inside the `git` subcommand, not on any startup path. LLS-31's inverse: `mark.toggle_range`/`clear`/`yank` all count actual work, not planned work.
 
 SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed so the triage can decide). `mark/init.lua:525` uses the `type(opts) == "table" and opts.keymaps or nil` idiom that `bindings/keymaps.lua:88` explicitly warns against — it cannot carry a `false`, but the following `if km and km ~= false` guard makes the outcome identical, so nothing breaks (ERR-60, zero impact). `config/init.lua:26` `return _active or DEFAULTS` hands out a live reference to shared state with neither a copy nor a "live reference, do not mutate" note (ERR-54) — no current consumer mutates it, so the risk is latent. `commands.lua:206` `table.remove(fargs, 1)` mutates the caller's table, which matters for the public `M.insert("annotation", my_args)` API. `format/init.lua:309-310` swallows a throwing completer into an empty candidate list. `ops/snippet.lua` re-reads and re-decodes every configured JSON file on every `<Tab>` (list_keys → load), with no caching. The TESTS/README itself documents two known-and-pinned bugs I confirmed are still present and did not re-report, since neither maps onto one of the 76 rules: `column_align`'s byte-vs-display-column off-by-one, and `mark.setup()`'s non-idempotent `BufDelete` autocmd group.
+
+**Status.** ✅ erledigt (`ceccac3`) — Vor dem `scope=cwd`-Massenrewrite steht jetzt ein einmaliges `vim.fn.confirm()`; `opts.confirm = false` als expliziter Bypass für Skripte/Tests.
 
 ---
 
