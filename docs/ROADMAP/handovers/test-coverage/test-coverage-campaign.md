@@ -1591,6 +1591,32 @@ Abschnitt "Offen (gepinnt)".
   idempotent (`augroup.create.clear` löst über eine id auf, nicht den Namen — der
   pdfport.nvim-Fehler existiert hier nicht).
   Commit: `5931a55`.
+  **Re-Audit (Runde 24, 2026-09-18):** kein Diff seit Runde 24. Alle fünf gepinnten Bugs
+  (Mehrbyte-Selektionsabschnitt, `health.lua`s viertes Instance-Muster, `ui.list.filter`s
+  `ipairs`-Abbruch, geteilte `DEFAULTS`-Sub-Tables, `menu.lua`s Padding-statt-`icon`) im
+  aktuellen Quellcode bestätigt weiterhin vorhanden und korrekt gepinnt. Augroup-
+  Idempotenz, Windows-Pfadbehandlung (case-insensitiver Präfixvergleich auf normalisierten
+  Pfaden, kein Colon-Split) und die `ui.nvim`-Auslassung (echter Sibling-Checkout, aber
+  bewusst wegen "braucht echtes Backend" ausgeklammert, nicht wegen Nichtverfügbarkeit)
+  jeweils erneut geprüft, alle korrekt. **Eine echte Lücke gefunden und geschlossen**:
+  `hover.lua`s Positions-Callback hat drei Zweige auf `core.count.count()`s Ergebnis --
+  ok, `nil` (über der Zähl-Obergrenze), `pcall`-Fehlschlag -- `hover_spec.lua` prüfte nur
+  den ersten, obwohl `TESTS/README.md` fälschlich schon vollständige Obergrenzen-Coverage
+  behauptete. **Ein echter Test-Suite-Bug gefunden und gefixt**: die README behauptet, die
+  Suite laufe "in der aufgelisteten Reihenfolge und in umgekehrter" -- beim tatsächlichen
+  Verifizieren mit umgekehrter `SPECS`-Reihenfolge brach `qf_all_spec.lua` (`expected 3,
+  got 4`). Ursache: `autocmds_spec.lua`s `teardown_case(":q on a split (buffer stays
+  loaded)", ...)` lässt seinen Buffer absichtlich geladen, um zu beweisen, dass `:q` einen
+  Pin nicht invalidiert -- korrekt --, wischt ihn danach aber nie weg, anders als jeder
+  Schwesterfall. Der übrig gebliebene Buffer überlebte die Spec und blies jeden späteren
+  buffer-weiten Scan um eins auf. Gefixt: `teardown_case` gibt jetzt die Buffernummer
+  zurück, damit dieser eine Fall sie explizit per `bwipeout!` entfernen kann.
+  Testlauf: 1159 → 1166 Assertionen (29 Spec-Dateien, unverändert -- nur zwei bestehende
+  Dateien editiert), über vier Läufe stabil (davon einer erneut in umgekehrter
+  Reihenfolge, die den Fix tatsächlich bestätigt) plus zwei von mir persönlich
+  nachgefahrene Standardläufe. `luacheck lua plugin TESTS` (59 Dateien) und
+  `stylua --check lua plugin TESTS` beide grün.
+  Commit: `1928336`.
 - [x] **mdview.nvim** — fertig (Runde 25). Audit: ganze Verzeichnisse ohne Coverage
   (`adapter/browser/*`, `adapter/{control,detached,install,log,preview_tab}.lua`, 17 von 19
   `bindings/usrcmds/*`-Actions, der komplette `bindings/usrcmds/start/*`-Baum,

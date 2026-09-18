@@ -67,7 +67,7 @@ Runde 24 (spotlight.nvim), sechs Agents parallel.
 | 21 | cascade.nvim | 21 | `0bc75e6` (Re-Audit) | 10 neue Specs; 462 → 981 Assertion-Stellen; Re-Audit: 981 → 995 Stellen |
 | 22 | sandbox.nvim | 22 | `d2ea226` (Re-Audit) | 17 → 37 Specs; 136 → 883 Checks; Re-Audit: 883 → 906 Checks |
 | 23 | data.nvim | 23 | `a64c208` (Re-Audit: solide, nichts zu tun) | 17 → 29 Specs; 309 → 847 Assertion-Stellen |
-| 24 | spotlight.nvim | 24 | `5931a55` | 17 → 29 Specs; 472 → 1159 Assertionen |
+| 24 | spotlight.nvim | 24 | `1928336` (Re-Audit) | 17 → 29 Specs; 472 → 1159 Assertionen; Re-Audit: 1159 → 1166 |
 | 25 | mdview.nvim | 25 | `166904e` | 19 → 30 Specs; 120 → 239 (nvim) + 8 → 13 (busted) Checks |
 | 26 | filetree.nvim | 26 | `811bfed` | 696 → 858 Checks (Gap-Closing, sehr großes Repo) |
 | 27 | lsp.nvim | 27 | `30e3e6a` | 6 neue Specs; 697 → 729 Checks (2 zusätzlich durch eine parallel arbeitende Peer-Session) |
