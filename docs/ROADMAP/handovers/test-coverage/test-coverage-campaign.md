@@ -1914,3 +1914,32 @@ kein inhaltlicher Grund.
   grün. `scripts/ci.sh luacheck` (254 Dateien) und `stylua --check .` beide
   grün.
   Commit: `9ed7c11`.
+- [x] **markdown.nvim** — echter erster Audit, über den framework-freien
+  `TESTS/harness.lua`/`TESTS/run.lua` (32 bereits substanzielle Specs, echte
+  Multi-Byte-Regression in `tableview_alignment_spec.lua`, `lib.nvim`/
+  `hover.nvim` als echte Sibling-Checkouts in CI und lokal). **Vier echte
+  Bugs gefunden und gefixt**, alle trivial/ohne Risiko, alle gegen
+  zurückgesetzten Code reproduziert: (1) `health.lua` meldete "lib.nvim not
+  found" und requirte das fehlende Modul danach trotzdem ungeschützt weiter
+  -- crashte `:checkhealth markdown` direkt nach der Warnung, die genau das
+  erklärt (identischer Fund wie zuvor in `color_my_ascii.nvim`, hier gespiegelt
+  gefixt); (2) `scope/init.lua`s Fold-Cache-Augroup lief über einen
+  namens-gecachten Wrapper ohne `clear=true` -- empirisch bestätigt: 3
+  Modul-Reloads hinterließen 6 statt 2 lebende Autocmds; (3)
+  `underline_headings.lua` bemaß die Setext-Unterstreichung über `#text`
+  (Byte-Länge) statt Display-Breite -- "Über uns" (8 Spalten, 9 Bytes) bekam
+  9 Zeichen Unterstrich; (4) `fold_prev.lua` (beiläufig beim
+  Coverage-Schreiben gefunden) matchte nur `-`-unterstrichene Setext-
+  Überschriften, nie `=` (im Widerspruch zum eigenen Doc-Kommentar), und die
+  Suchschleifen-Untergrenze machte eine Setext-Überschrift auf den ersten
+  zwei Pufferzeilen unerreichbar. Windows-Pfadbehandlung (`util/path.lua`)
+  gezielt geprüft -- bereits gut gehärtet, kein Fund. Neun neue Specs,
+  ~136 neue Assertions, u.a. ein echter Integrations-Vertragstest gegen den
+  echten `color_my_ascii.nvim`-Sibling (vorher nur der eingebaute
+  Fallback-Scanner getestet) und Regressionscoverage für den kürzlich
+  gelandeten `clipboard.lua`-Rückgabewert-Fix.
+  Testlauf: 32 → 41 Specs, von mir persönlich zweimal über `nvim --headless
+  -i NONE -u NONE -c "set rtp+=." -c "luafile TESTS/run.lua" -c "qa!"`
+  nachgefahren -- beide Male `MARKDOWN_TESTS_OK`. `luacheck lua` (exakter
+  CI-Befehl, 81 Dateien) 0/0, `stylua --check .` grün.
+  Commit: `9fe8537`.
