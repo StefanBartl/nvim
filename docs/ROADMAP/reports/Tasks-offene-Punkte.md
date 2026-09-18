@@ -18,7 +18,7 @@ the surrounding text is English like every other document here.
     - [~~A2 — media: SRT/VTT serialisers~~ — DONE](#a2-media-srtvtt-serialisers-done)
     - [~~A3 — media: progress handle during a transcription run~~ — DONE](#a3-media-progress-handle-during-a-transcription-run-done)
     - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#a4-casedesk-case-timeline-reports-git-pulls-as-work-sessions)
-    - [A5 — mdview: hand-test `any_file` in real Neovim](#a5-mdview-hand-test-any_file-in-real-neovim)
+    - [~~A5 — mdview: hand-test `any_file` in real Neovim~~ — DONE](#a5-mdview-hand-test-any_file-in-real-neovim)
     - [~~A6 — my.nvim: the breadcrumb `container` provider is a no-op~~ — DONE](#a6-mynvim-the-breadcrumb-container-provider-is-a-no-op-done)
     - [~~A7 — media: prefetch hint for frame stepping~~ — DONE](#a7-media-prefetch-hint-for-frame-stepping-done)
   - [B. A real sitting](#b-a-real-sitting)
@@ -285,11 +285,24 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-### A5 — mdview: hand-test `any_file` in real Neovim
+### ~~A5 — mdview: hand-test `any_file` in real Neovim~~ — DONE
 
 **Source:** `.../mdview.nvim/ROADMAP/ROADMAP.md`, first section.
-**Stand geprüft 2026-09-17:** open — the entry's own status line still says
-"not yet tested in real Neovim".
+**Already done 2026-08-30, found on re-check 2026-09-18 — no new test run.**
+This was a stale roadmap entry, not an open task: `TESTS/CHECK.md` already
+records a real `nvim --headless --listen` session (driven over
+`--remote-expr`, so every autocmd fired in the normal event loop) where all
+five checklist cases passed — highlighted rendering for `.lua`/`.py`/`.sh`,
+proportional scroll fallback, breadcrumbs staying `(top)` on `#`-comment
+languages (the exact trap this prompt describes), the exclusion gate holding
+for terminal/help/quickfix/mdview's own log buffer, and the flag-off path
+unchanged. `docs/FEATURES/MACHINERY.md` already cited it as "Shipped
+2026-08-30" before this prompt was even drafted. Nothing in the gating logic
+(`helper/previewable.lua`, `core/breadcrumbs.lua`) changed since that run, so
+the verdict still holds. Moved the closure note into `DONE.md`'s Testing
+section, removed the stale open item from `ROADMAP.md`. No code, no test
+suite, nothing to build — this was purely a documentation correction. The
+prompt below is kept for the record.
 
 ```
 Aufgabe: mdview.nvim — das any_file-Feature einmal von Hand im echten Neovim
