@@ -628,6 +628,40 @@ Abschnitt "Offen (gepinnt)".
   keinen Test-Abschnitt, daher unangetastet gelassen.
   Commit: `053e1d6` (test: cover config merge, argtypes/debug/error, health/pickers/tscode,
   bindings, and init dispatch), direkt auf `main` gepusht.
+  **Mittlerweile gefixt** (separate Session, Commit `7031f73`): `config.get()` nutzt jetzt
+  `vim.deepcopy(state)`.
+  **Re-Audit (Runde 10, 2026-09-18):** `pickers/fzf.lua`/`pickers/telescope.lua`s `run()`
+  waren komplett ausgeklammert, weil beide angeblich ein echtes Backend brauchen -- stimmt
+  nicht: nur die jeweils letzte Zeile (`fzf.fzf_exec(...)`/`picker:find()`) ist
+  Backend-spezifisch, alles davor (Candidate/Entry-Maker-Bau, jeder
+  `attach_mappings`/`actions`-Handler inkl. echtem `confirm_all` → `ui.kit.confirm`,
+  Replace-and-reopen's rekursiver Re-Run, der `<C-f>`-Filter-Guard, Telescopes
+  Previewer-Highlight-Mathematik, fzfs `to_fzf_key`-Notation) ist reine Plugin-Logik. Neue
+  `TESTS/pickers_backends.lua` stubt genau diese eine Render-Zeile und deckt den Rest real ab
+  -- 35 neue Assertionen. Beim Verifizieren (nicht erst beim Schreiben) aufgefallen: die
+  Filter-Guard-Tests nahmen an, `pickers.nvim` sei nicht auf dem rtp -- stimmt bei einem
+  Ad-hoc-`nvim -l`-Lauf, aber nicht bei der CI-Invocation (pickers.nvim als echter Sibling
+  wie jede andere Suite), wo `pickers.refine` real auflöst und auf Neovims Standard-
+  `vim.ui.select` trifft, das headless auf stdin ewig blockiert hätte. Gefixt durch
+  gezieltes Blocken von `require("pickers.refine")` via `package.preload`, damit der
+  "nicht installiert"-Pfad unabhängig vom rtp-Inhalt deterministisch getroffen wird -- hätte
+  sonst CI zum Hängen gebracht.
+  **Ein Bug gefunden, gepinnt statt gefixt** (zwölftes Repo dieser Familie): `health.check()`s
+  `check_lib_nvim()` meldet+degradiert bereits korrekt bei fehlendem
+  `lib.nvim.bindings.usercmd.composer`, aber `M.check()` requirt dasselbe Modul wenige Zeilen
+  später erneut, ungeschützt, für den Composer-Preflight (`:Replace`/`:Surround`
+  checkhealth) -- crasht auf derselben fehlenden Dependency statt zur bereits ausgegebenen
+  Warnung zu degradieren. Reproduziert über einen echten `package.preload`-Stub (echter
+  Require-Fehlschlag, keine gefakte Table).
+  **Zwei veraltete Kommentare korrigiert**: `refine_wiring.lua`s Header behauptete, `run()`
+  brauche ein geladenes Telescope/fzf ("manuell geprüft") -- oben widerlegt; `TESTS/README.md`s
+  Auslassungsgrund für `pickers/utils.lua`s `setup_highlight_groups`/`ansi_snippets` nannte
+  fehlende Backend-Verfügbarkeit, der echte Grund (laut Quellcode-Kommentar) ist schlicht
+  kein Aufrufer mehr irgendwo im Repo.
+  Testlauf: 9 → 10 CI-Suite-Dateien, 374 → 411 Assertionen, über zwei von mir persönlich
+  nachgefahrene komplette Läufe stabil (alle 10 Dateien einzeln, exakt wie CI). `find lua
+  plugin -name '*.lua' | xargs luacheck` (41 Dateien) und `stylua --check lua/` beide grün.
+  Commit: `6153561`.
 - [x] **github_stats.nvim** — fertig (Runde 11). Dieses Repo nutzt plenary/busted
   (`describe`/`it`, `scripts/test.sh` → `PlenaryBustedDirectory TESTS/` mit
   `scripts/minimal_init.lua`), Konvention beibehalten; Spec-Dateien werden per `_spec.lua`
@@ -702,6 +736,43 @@ Abschnitt "Offen (gepinnt)".
   Commit: `1b9b638` (test: cover api, fetcher, background, dashboard layers, bindings and
   health), direkt auf `main` gepusht und per `git merge-base --is-ancestor HEAD origin/main`
   verifiziert.
+  **Mittlerweile gefixt** (separate Sitzung dieser Kampagne): die beiden gepinnten Bugs --
+  `split_lines()`s `gmatch`-Zeilenverlust (jetzt `vim.split`) und `ensure_parent_dir()`s
+  verschlucktes `mkdir`-Fehler (jetzt propagiert) -- Commit `6a85943`; dabei zusätzlich ein
+  E937 beim Dashboard-`BufWipeout`-Teardown gefunden und gefixt (`ui_state.forget_buffer()`
+  statt eines redundanten zweiten Delete) -- Commit `dfdb1d8`. Danach, in einer weiteren
+  separaten Sitzung: ein wörtliches `".."`-Pfadsegment beim Bau der Tracking-Datei-Pfade in
+  `fetcher.lua`/`retention.lua` gefixt -- Commit `26d34b2`.
+  **Re-Audit (Runde 11, 2026-09-18):** alle drei Fix-Commits oben verifiziert, ihre
+  Regressionstests bestätigt vorhanden; die beiden ersten waren in `TESTS/README.md` schon
+  korrekt vermerkt, der `26d34b2`-Fix war es nicht -- jetzt nachgetragen. Die vier
+  wiederkehrenden Bug-Familien einzeln geprüft: alle `health.lua`-Zweige mit fehlender
+  Dependency sind bereits vor dem Zugriff gegated; das eine Augroup
+  (`bindings/autocmds.lua`) passt `clear = true` durch, lib.nvim's Wrapper hält sich daran;
+  keine Drive-Letter/Doppelpunkt-Pfadparsung im ganzen Repo. **Zwei echte Lücken gefunden und
+  geschlossen** (6 neue Tests in `dashboard_render_spec.lua`, 1 in `statusline_spec.lua`):
+  `dashboard/highlights.lua` hatte echte, nie geprüfte Verzweigungen (Clones/Views-Label-vs-
+  Value-Split, Period-Zeilen-Sparkline-vs-Label-Split, Flat-Trend-Färbung, Eintrags-
+  Trennmarke); `statusline.lua`s TTL-Cache-Hit-Pfad wurde nie erreicht, weil `before_each`/
+  `after_each` jeweils `invalidate()` rufen, sodass jeder bisherige Test nur einen kalten
+  Cache sah. **Ein Bug gefunden und sofort gefixt** (test-only, kein Produktionsrisiko):
+  `retention_spec.lua`s `today_midnight()` fütterte UTC-Kalenderfelder (`os.date("!*t")`) in
+  `os.time(table)`, das sein Argument aber immer als LOKALE Zeit interpretiert -- das UTC-
+  Offset wurde dadurch lautlos wieder addiert, "heute" driftete in den ersten Stunden des
+  UTC-Tages einen Tag zurück (live reproduziert: bei 00:51 UTC schlug der Cutoff-Test
+  deterministisch fehl, 12 statt erwarteter 11 gelöschter Dateien). Gefixt auf direktes
+  `os.time()`, passend zu `retention.lua`s eigenem, korrektem `cutoff_date()`.
+  **Ein Bug gefunden, gepinnt statt gefixt** (echter Produktionsbug, kein trivialer Fix):
+  `dashboard/render.lua`s `fit_width()` polstert/kürzt die Status-Header-Zeile nach
+  Byte-Länge, nicht nach Display-Breite. Unsichtbar für die eingebauten ASCII-Zeiträume,
+  aber `dashboard.time_range` akzeptiert über die Config jeden String ohne Validierung --
+  ein Mehrbyte-Wert würde die feste Header-Breite lautlos brechen. Gepinnt als
+  `BUG:`-Regressionstest.
+  Testlauf: 492 → 499 Assertionen (491 davon vorher tatsächlich grün, 1 im betroffenen
+  UTC-Zeitfenster reproduzierbar rot -- s.o.), alle 499 grün über zwei von mir persönlich
+  nachgefahrene Wiederholungsläufe. `stylua --check .` und `luacheck .` (69 Dateien) beide
+  grün.
+  Commit: `479fd9c`.
 - [x] **insights.nvim** — fertig (Runde 12). Eigener framework-freier Harness
   (`TESTS/harness.lua`, aggregiert über eine explizite Liste in `TESTS/run.lua`)
   beibehalten, kein plenary. Anders als bei open.nvim/github_stats.nvim ist hier **nur

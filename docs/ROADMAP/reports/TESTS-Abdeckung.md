@@ -39,9 +39,9 @@ Regeln, die sich über die Runden eingespielt haben:
 ## Fortschritt
 
 **27 von 36 Repos abgeschlossen — die urspruengliche Warteschlange ist komplett.** Der Re-Audit
-aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-5 (pickers/cmdlog/dap/casedesk/
-buffer-ctx) sind durch, Runden 6-11 (debugging/recommender/language/open/replacer/github_stats)
-laufen parallel.
+aller fertigen Runden gegen die 100%-Vorgabe läuft: Runden 1-11
+(pickers/cmdlog/dap/casedesk/buffer-ctx/debugging/recommender/language/open/replacer/
+github_stats) sind durch. Weiter geht es ab Runde 12 (insights.nvim), sechs Agents parallel.
 
 | # | Repo | Runde | Commit | Kurzfassung |
 |---:|---|---:|---|---|
@@ -54,8 +54,8 @@ laufen parallel.
 | 7 | recommender.nvim | 7 | `bef1939` (Re-Audit) | 6 neue Specs; 5 → 11 von 23 Dateien; Re-Audit: 12 → 15 Specs (ui.kit-Seam entsperrt) |
 | 8 | language.nvim | 8 | `780aea6` (Re-Audit) | 21 neue Specs; ~6 → 43 von 51 Dateien; Re-Audit: 27 → 29 Specs |
 | 9 | open.nvim | 9 | `553a445` (Re-Audit) | 9 neue Specs; ~12 → 24 von 26 Dateien; Re-Audit: 15 → 16 Specs |
-| 10 | replacer.nvim | 10 | `053e1d6` | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien |
-| 11 | github_stats.nvim | 11 | `1b9b638` | 13 neue Specs, 4 erweitert; 109 → 482 Assertions |
+| 10 | replacer.nvim | 10 | `6153561` (Re-Audit) | 5 neue Suiten + CI-Verdrahtung; 8 → 13 Dateien; Re-Audit: 9 → 10 CI-Dateien, 374 → 411 Checks |
+| 11 | github_stats.nvim | 11 | `479fd9c` (Re-Audit) | 13 neue Specs, 4 erweitert; 109 → 482 Assertions; Re-Audit: 492 → 499 Checks |
 | 12 | insights.nvim | 12 | `1be0f7a` | 24 neue Specs, 2 erweitert; 112 → 1590 Assertions |
 | 13 | sessions.nvim | 13 | `0034df3` | 10 neue Specs; 77 → 487 Assertion-Stellen |
 | 14 | pdfport.nvim | 14 | `3c9273a` | 11 neue Specs; 192 → 1059 Assertion-Stellen |
@@ -182,10 +182,12 @@ Erhebung 2026-09-15, die ✅-Zeilen sind seither abgearbeitet.
 
 ### Offen (gepinnt)
 
-Stand: **32 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim, cmdlog.nvim,
+Stand: **34 offen**. Re-Audit gegen die 100%-Vorgabe (ab 2026-09-18): dap.nvim, cmdlog.nvim,
 debugging.nvim und recommender.nvim bereits sehr solide (deren einzige Funde wurden direkt
-gefixt, siehe "Gefixt"-Tabelle); buffer-ctx.nvim, pickers.nvim, casedesk.nvim, open.nvim und
-language.nvim brachten je ein bis zwei kleine neue Bugs.
+gefixt, siehe "Gefixt"-Tabelle); buffer-ctx.nvim, pickers.nvim, casedesk.nvim, open.nvim,
+language.nvim, replacer.nvim und github_stats.nvim brachten je ein bis zwei kleine neue Bugs.
+Die ursprüngliche Warteschlange (Runden 1-27) sowie ihr kompletter Re-Audit (Runden 1-11) sind
+damit fertig; weiter geht es bei Runde 12 (insights.nvim).
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -196,6 +198,8 @@ language.nvim brachten je ein bis zwei kleine neue Bugs.
 | casedesk.nvim | `health.lua` | `check_tools()`s "lib.nvim fehlt"-Zweig ruft danach ungeschützt in `casedesk.export.find_browser()` hinein, das wiederum ungeschützt genau die als fehlend gemeldete Dependency requirt → `:checkhealth casedesk` crasht komplett |
 | open.nvim | `context.lua` | `gather()`s Visual-Signal-Guard (`mode()`-Check + `'<`/`'>`-Marks) kann nie zusammen zutreffen, da die Marks erst beim Verlassen von Visual committet werden → `signals.visual` ist auf dem `:Open`-Pfad immer `nil`, sonst ein Überbleibsel einer fremden Selektion |
 | language.nvim | `health.lua` | `M.check()` ruft nach `check_lib()`s korrekter "Composer fehlt"-Warnung noch dreimal ungeschützt in genau dieses Modul hinein → `:checkhealth language` crasht komplett, jede Sektion danach fällt weg |
+| replacer.nvim | `health.lua` | `M.check()` requirt den Composer für den Preflight erneut ungeschützt, obwohl `check_lib_nvim()` ihn Zeilen darüber schon korrekt als fehlend meldet und degradiert |
+| github_stats.nvim | `dashboard/render.lua` | `fit_width()` polstert/kürzt nach Byte-Länge statt Display-Breite; unsichtbar bei ASCII-Zeiträumen, bricht lautlos bei einem Mehrbyte-`time_range`-Config-Wert |
 
 | Repo | Datei | Bug |
 |---|---|---|
@@ -230,11 +234,12 @@ language.nvim brachten je ein bis zwei kleine neue Bugs.
   Fehlerpfad vorbeifliegt; Caches, die Fehlschläge memoisieren; Byte-vs-Zeichen-Offsets.
 - **"Dependency fehlt, ruft sie danach trotzdem auf"** — ein Health-Check (oder ein
   ähnlicher Preflight) meldet eine fehlende Dependency korrekt und ruft am Ende der
-  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 11 Repos, **7 gefixt**
-  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open), **4 offen**:
+  Funktion trotzdem ungeschützt in sie hinein. Gefunden in 12 Repos, **7 gefixt**
+  (emojis, diff, gopath (in `health.lua`), filetree, cmdlog, debugging, open), **5 offen**:
   `gopath.nvim`s `create.lua`-Fallback (kein `health.lua`, gleiches Muster), `pickers.nvim`s
-  `health.lua`, `casedesk.nvim`s `health.lua` und `language.nvim`s `health.lua` (drei statt
-  einem ungeschützten Aufruf; alle drei in Re-Audit-Runden gefunden).
+  `health.lua`, `casedesk.nvim`s `health.lua`, `language.nvim`s `health.lua` (drei statt
+  einem ungeschützten Aufruf) und `replacer.nvim`s `health.lua` (alle vier in
+  Re-Audit-Runden gefunden).
 - **Augroup ohne `clear=true` akkumuliert bei zweitem `setup()`** — eine gemeinsame
   Augroup wird per Namen aufgelöst statt eine id zu übergeben, sodass ein erneutes
   `setup()` einen zweiten Autocmd-Handler registriert statt den ersten zu ersetzen.
