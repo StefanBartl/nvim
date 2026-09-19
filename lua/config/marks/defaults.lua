@@ -4,11 +4,12 @@
 --- `$REPOS_DIR`, `$HOME` or `$NVIM_HOME` (the config directory), resolved by
 --- the consumer on the machine it runs on.
 ---
---- One table, two consumers, for as long as the harpoon -> sessions.nvim
---- switch runs in parallel: harpoon's `config.harpoon.persist_paths` seeds
---- its bucket from it, and sessions.nvim's `marks.defaults` seeds its store
---- from it. It used to be a local inside the harpoon spec in
---- `plugins/misc.lua`; the second consumer is why it is a module.
+--- Consumed by sessions.nvim's `marks.defaults` (plugins/personal/init.lua).
+--- Used to be a local inside harpoon's spec in `plugins/misc.lua`, and briefly
+--- fed both harpoon and sessions.nvim while the two ran in parallel; harpoon
+--- is gone since 2026-09-19 (external-plugins report, 7.4), and this stayed
+--- a module rather than moving back into the spec since a second consumer
+--- can always show up again.
 ---
 --- The workstation set is prepended, not appended: on that machine the case
 --- workflow files are what gets opened most, and slot 1..5 is where a

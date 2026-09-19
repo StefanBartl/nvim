@@ -375,30 +375,50 @@ plugins.add({
         -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
         -- autoload = true,
 
-        -- The mark list, running in parallel to harpoon since 2026-09-19
-        -- (external-plugins report, 7.4). Same default paths as harpoon's
-        -- bucket (config.marks.defaults), same global scope; the first
-        -- start takes harpoon's live list over, so both start equal. Keys
-        -- sit on <leader>H while harpoon keeps <leader>h, <C-e> and
-        -- <M-1..9>; the cut-over moves them and drops plugins/misc.lua's
-        -- harpoon spec plus config/harpoon/.
+        -- The mark list. Ran in parallel to harpoon from 2026-09-19 (a same
+        -- day trial rather than the planned week, on request) until the
+        -- cut-over below; harpoon is gone now (external-plugins report,
+        -- 7.4). Every `<leader>h*` letter key moved over 1:1; `<C-e>` and
+        -- `<M-1..9>` are bound separately below rather than through
+        -- `keymaps`/`preview_key` -- mixing them into this table would give
+        -- `sessions.bindings.keymaps`' which-key group-prefix detection a
+        -- set of lhs with no common prefix (`<leader>h*` alongside `<C-e>`
+        -- and `<M-%d>`), losing the "Session" group label on `<leader>h`
+        -- for every key, not just those two.
         marks = {
           enable = true,
           scope = "global",
           defaults = require("config.marks.defaults"),
-          select_key = "<leader>H%d",
+          select_key = "<leader>h%d",
         },
         keymaps = {
-          marks_menu = "<leader>Hm",
-          marks_edit = "<leader>He",
-          marks_add = "<leader>Ha",
-          marks_add_front = "<leader>HA",
-          marks_pin = "<leader>Hp",
-          marks_remove = "<leader>Hd",
-          marks_sync = "<leader>Hs",
-          marks_debug = "<leader>HD",
+          marks_menu = "<leader>hm",
+          marks_edit = "<leader>he",
+          marks_add = "<leader>ha",
+          marks_add_front = "<leader>hA",
+          marks_pin = "<leader>hp",
+          marks_remove = "<leader>hd",
+          marks_sync = "<leader>hs",
+          marks_debug = "<leader>hD",
         },
       }
+    end,
+    config = function(_, opts)
+      require("sessions").setup(opts)
+
+      -- Harpoon's old `<C-e>` (quick menu) and `<M-1>..<M-9>` (full-screen
+      -- preview) -- see the comment on `marks` above for why these are not
+      -- `keymaps.marks_menu`/`marks.preview_key` instead.
+      local map = require("lib.nvim.bindings.keymap")
+      map.set("n", "<C-e>", "<cmd>Session marks<cr>", { desc = "[Session] Open marks menu" })
+      for i = 1, 9 do
+        map.set(
+          "n",
+          ("<M-%d>"):format(i),
+          ("<cmd>Session marks preview %d<cr>"):format(i),
+          { desc = ("[Session] Preview mark %d (full screen)"):format(i) }
+        )
+      end
     end,
   },
 
@@ -582,20 +602,19 @@ plugins.add({
     opts = function(_, opts)
       opts.progress_style = "statusline"
       -- `require-not-declared` false positives, confirmed 2026-08-16 by
-      -- tracing every hit back to the actual require site. One of the two
-      -- known causes is gone now: `nvchad.*` (stl.utils, tabufline, themes,
-      -- term, utils, nvdash, mason, colorify, lsp.signature, winmes,
-      -- configs.lspconfig, ...) used to resolve to the real NvChad plugins'
-      -- own `lua/nvchad/*` tree, which happened to share this repo's own
-      -- (now-deleted) `lua/nvchad/` top segment -- 24 of the 31 hits at the
-      -- time. NvChad itself is gone as of roadmap step 7 and so is
-      -- `lua/nvchad/`, so `:DocMap check` should no longer list any of
-      -- those 24. What remains: `config.harpoon.api.lua`'s
-      -- `require("config.harpoon.ui.menu_" .. kind)` is a dynamic require;
-      -- the checker only ever sees the pre-concatenation literal
-      -- `"config.harpoon.ui.menu_"`, never the resolved `menu_telescope`/
-      -- `menu_fzf` it actually loads -- one warning, not fixable in the
-      -- checker without a real capability it doesn't have.
+      -- tracing every hit back to the actual require site. Both known causes
+      -- are gone now: `nvchad.*` (stl.utils, tabufline, themes, term, utils,
+      -- nvdash, mason, colorify, lsp.signature, winmes, configs.lspconfig,
+      -- ...) used to resolve to the real NvChad plugins' own `lua/nvchad/*`
+      -- tree, which happened to share this repo's own (now-deleted)
+      -- `lua/nvchad/` top segment -- 24 of the 31 hits at the time. NvChad
+      -- itself is gone as of roadmap step 7 and so is `lua/nvchad/`. The
+      -- other one, `config.harpoon.api.lua`'s dynamic
+      -- `require("config.harpoon.ui.menu_" .. kind)` (the checker only ever
+      -- saw the pre-concatenation literal, never the resolved
+      -- `menu_telescope`/`menu_fzf`), went with harpoon's removal on
+      -- 2026-09-19 (external-plugins report, 7.4). `:DocMap check` should no
+      -- longer list either.
       -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
       -- module/function in the generated page, real luac -l -l -p bytecode
       -- disassembly, not a workaround for Lua. Off by default upstream;

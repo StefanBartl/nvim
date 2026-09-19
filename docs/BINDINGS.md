@@ -475,7 +475,7 @@ silently suppressing nvim-lspconfig's own commands via an upstream
 
 ## Autocommands
 
-Sources: `lua/autocmds/**`, `lua/bindings/**`, `lua/config/harpoon/**`,
+Sources: `lua/autocmds/**`, `lua/bindings/**`,
 `lua/plugins/**`, `lua/startup/init.lua`, `lua/wkdnvchad/ui/**`.
 
 **Counted are call sites, not event registrations** — the same rule
@@ -487,6 +487,12 @@ augroups** and **15 have no augroup at all** (see
 `lib.nvim.bindings.autocmd.create` — none on the raw API. The *augroups*
 themselves are mixed (`Autocmd.group(name, true)` vs. raw
 `nvim_create_augroup`), same as in lsp.nvim.
+
+**Stale by three since 2026-09-19:** harpoon's removal (external-plugins
+report, 7.4) took the `HarpoonHardening` (2 call sites, 1 augroup) and
+`HarpoonPinMarks` (1 call site, 1 augroup) rows below with it — arithmetic
+only, not a full re-measurement: **55 call sites**, **40 in 26 augroups**,
+**15 without one**.
 
 **Three call sites are easy to miss in a fresh session**: `NeotestCore`
 (×2) and `NvChadLspSignature` (×1) register only once neotest or an LSP
@@ -558,18 +564,6 @@ autocmd inside is conditional.
 From the same local override copy of `nvchad/au.lua` as `ReloadNvChad` and
 `:MasonInstallAll` (extern cheatsheet: `NvChadUI.md`). Registered only when
 `config.lsp.signature` is true.
-
-### Harpoon — `lua/config/harpoon/`
-
-| Augroup | Event(s) | Pattern | Action |
-| --- | --- | --- | --- |
-| `HarpoonHardening` | `BufLeave`, `FocusLost` | — | Debounced save |
-| `HarpoonHardening` | `VimLeavePre` | — | Flush any pending save |
-| `HarpoonPinMarks` | `FileType` | `harpoon` | Pin marks inside the Harpoon buffer |
-
-`HarpoonPinMarks` also appears on the extern `Harpoon.md` cheatsheet, there
-described as Harpoon-UI behavior; here as this config's registration of it.
-Both are correct — the registration lives here.
 
 ### Autocmd modules and plugin specs — `lua/autocmds/`, `lua/plugins/`
 

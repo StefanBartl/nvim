@@ -35,7 +35,7 @@ which own plugin would it land in, and what would it cost?
     - [7.1 `snacks.image` was enabled and could not work here ✅](#71-snacksimage-was-enabled-and-could-not-work-here-)
     - [7.2 Keys were bound for four disabled snacks modules ✅](#72-keys-were-bound-for-four-disabled-snacks-modules-)
     - [7.3 `<leader>gd` had two owners ✅](#73-leadergd-had-two-owners-)
-    - [7.4 The harpoon rebuild is already 90% written — in the wrong place](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place)
+    - [7.4 The harpoon rebuild is already 90% written — in the wrong place ✅](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place-)
     - [7.5 `cmdlog.nvim` and plenary — already resolved when this was written ✅](#75-cmdlognvim-and-plenary--already-resolved-when-this-was-written-)
     - [7.6 The `plenary` dependency chain](#76-the-plenary-dependency-chain)
     - [7.7 `render-markdown.nvim` was kept disabled — now removed ✅](#77-render-markdownnvim-was-kept-disabled--now-removed-)
@@ -73,7 +73,7 @@ three replacements that turned out to be rewires rather than builds:
 | C · puppeteer → cascade.nvim | the `strings` domain: template-string / f-string / (opt-in) Lua format-string conversion from an autocmd, `:Cascade strings`; puppeteer spec dropped (the harvest covered the whole plugin) | cascade.nvim, nvim, 2026-09-19 |
 | neotest debug tooling → debugging.nvim | `:Debug neotest adapters\|state\|file\|root\|framework\|discover` — the five `:NeotestDebug*` commands and two keys, made adapter-generic (`file`/`root` ask the adapter tables' own `is_test_file`/`root` instead of id-matching or the TypeScript adapter; the parked "Root never resolves" bug is gone with it); `config/neotest/debug/` deleted, `<leader>ntr`/`<leader>ntD` map to the two most-used reports | debugging.nvim, nvim, 2026-09-19 |
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
-| 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
+| 7.4 harpoon → sessions.nvim (build + cut-over, same day) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; harpoon removed, keys moved to `<leader>h*`/`<C-e>`/`<M-1..9>` | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
 | 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
 | 7.3 `<leader>gd` | now diff.nvim's `:Diff target=git:HEAD` (suggested-order item 1); fugitive's `:Gdiffsplit` key removed; snacks' hunk picker moved to `<leader>gD` | nvim, 2026-09-18 |
@@ -125,7 +125,6 @@ neither chosen):
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
 | window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
 | neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
-| 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
 | neo-tree config → filetree.nvim | L | ~1,500 lines |
 
 ---
@@ -238,7 +237,7 @@ in, and the cost. Sorted by plugin.
 | `fzf-lua` → **picker engine** | `config/fzf/**`, already consumes `pickers.entry_actions.adapters.fzf` | Keep. Same relationship as snacks/telescope. | **XL** |
 | ~~`nvim-bqf` → **quickfix preview + auto-resize**~~ | ~~`auto_enable`, `auto_resize_height` — nothing else~~ | **Done 2026-09-19** — pickers.nvim `pickers.quickfix`: a cursor-following preview float over `:copen` (loaded buffers read directly, unloaded files from disk) and `pickers.refine` over the list (`zf`/`zF`), non-destructive. Auto-resize was not carried over (Neovim's own `:copen [height]` covers it). Plugin dropped. | **done** |
 | `nvim-window-picker` → **pick a window by letter** | filter rules; single call site `config/neotree/keymaps/filesystem/files.lua:44`, already `pcall`-guarded | **lib.nvim/nvim/window** (the primitive) consumed by **filetree.nvim**. Fallback path already exists, so a partial build degrades safely. *Status pass:* the call site is config code calling neo-tree's `open_with_window_picker`, so the consumer is this config until the neo-tree keymaps move (Tree table below); the primitive itself is a new `lib.nvim` module with tests. | **S** |
-| `harpoon` → **pinned file marks + quick menu** | `config/harpoon/**`, **1,707 lines**, `lazy = false` | **sessions.nvim** — see [7.4](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place). | **L** |
+| ~~`harpoon` → **pinned file marks + quick menu**~~ | ~~`config/harpoon/**`, **1,707 lines**, `lazy = false`~~ | **Done 2026-09-19** — `sessions.nvim`'s `marks` feature, cut over the same day the parallel run started (user's call, not the planned week). See [7.4](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place-). | **done** |
 
 ### Tree
 
@@ -275,7 +274,7 @@ the pieces that are config code today and should be plugin code:
 | ~~`nvim-treesitter-context` → **sticky context, 3 lines**~~ | ~~`enable = true, max_lines = 3`~~ | **Done 2026-09-19** — `ui.context` (ui.nvim `870a6bc`), a per-window float rather than the winbar; `max_lines = 3` kept. Plugin dropped. See [B5](#b5--nvim-treesitternvim-treesitter-context--uinvim-context-). | **done** |
 | `vim-matchup` → **extended `%`** | `event`, `stopline = 500` | Keep. Per-language match definitions are the plugin. | **XL** |
 | `vim-matchup` → **offscreen match shown in the status line** | `matchup_matchparen_offscreen = { method = "status" }` | **ui.nvim/statusline** — small, self-contained, and squarely in ui.nvim's domain. A nice piece to lift even though the host plugin stays. | **M** |
-| `which-key.nvim` → **pending-key popup** | `opts = {}`; wired to `:WhichKey`, `<leader>wK`, `<leader>w?`, harpoon, neotest | **ui.nvim.** Cheaper than it looks: the label/group data model is normally the hard part, and you already have a keymap corpus — `:Bindings` (search/browse over `docs/BINDINGS.md` per plugin plus the extern cheatsheets) and `:LibBindingsAudit*` / `:LibKeymapConflicts`. The popup can read what the explorer already parses. | **M–L** |
+| `which-key.nvim` → **pending-key popup** | `opts = {}`; wired to `:WhichKey`, `<leader>wK`, `<leader>w?`, sessions.nvim marks, neotest | **ui.nvim.** Cheaper than it looks: the label/group data model is normally the hard part, and you already have a keymap corpus — `:Bindings` (search/browse over `docs/BINDINGS.md` per plugin plus the extern cheatsheets) and `:LibBindingsAudit*` / `:LibKeymapConflicts`. The popup can read what the explorer already parses. | **M–L** |
 | ~~`zen-mode.nvim` → **distraction-free single window**~~ | ~~`cmd` only, no `opts` — pure defaults~~ | **Done 2026-09-19** — ui.nvim `ui.zen`: centred float over a dimmed backdrop, `laststatus`/`showtabline`/`ruler`/`showcmd` saved and restored, gutter emptied, cursor in and back out, restore on `WinClosed`. `:UI zen [on\|off]`. Plugin dropped. | **done** |
 | ~~`nvim-colorizer.lua` → **inline hex / CSS / named colour swatches**~~ | ~~`opts = {}` — pure defaults~~ | **Done 2026-09-19** — my.nvim `hl_config/features/color_codes`: hex (3/6/8), `rgb()`/`hsl()`, CSS names in stylesheet filetypes; background/foreground/virtual; viewport-only + debounced + the shared skip/large-file guards, which is the whole "performance" answer. Plugin dropped. | **done** |
 | ~~`nvzone/minty` → **colour picker**~~ | ~~one call: `minty.huefy` from the right-click menu's "Color Picker" entry~~ | **Done 2026-09-19** — `ui.colorpicker` (ui.nvim): hue row, saturation × lightness grid, shades row, `#hex`/`rgb()`/`hsl()` readout, driven by the window cursor; `:UI color [#hex]`, the menu entry calls it. minty and volt dropped. | **done** |
@@ -666,7 +665,7 @@ fugitive key left. The hunk picker moved to `<leader>gD`, following the
 cheatsheets that documented the old state (`Keymaps/Fugitive.md`,
 `Keymaps/Snacks.md`, `Usercmds/Fugitive.md`) say the new one.
 
-### 7.4 The harpoon rebuild is already 90% written — in the wrong place
+### 7.4 The harpoon rebuild is already 90% written — in the wrong place ✅
 
 **Built 2026-09-19, in the parallel-run phase this entry asked for.**
 `sessions.nvim@acdbc70` has a `marks` feature — the ordered list, a cursor
@@ -697,12 +696,26 @@ files wanted in every project. So `scope = "global"` is the default and
 `"project"` (root plus branch, keyed like sessions) is the option, not the
 reverse.
 
-**What remains is the cut-over, and it is the user's:** after the trial,
-move the keys to `<leader>h*`/`<C-e>`/`<M-%d>` (`select_key`/`preview_key`
-templates), drop harpoon's spec from `plugins/misc.lua`, delete
-`config/harpoon/` and `bindings/mappings/harpoon.lua`, and remove
-`plenary` from the startup path with it. The Harpoon cheatsheet carries
-the same list at its top.
+**Cut over 2026-09-19, same day rather than after a week's trial (user's
+call).** The letter keys (`ha`/`hA`/`hp`/`hd`/`hm`/`hs`/`hD`/`he`) moved to
+`<leader>h*` 1:1; `<C-e>` (quick menu) and `<M-1..9>` (full-screen preview)
+are bound directly to `:Session marks`/`:Session marks preview <n>` in the
+plugin spec's `config` function rather than through `keymaps.marks_menu`/
+`marks.preview_key` — mixing those two non-`<leader>h`-prefixed keys into
+that table would have broken `sessions.bindings.keymaps`' which-key
+group-prefix detection (no single common prefix across `<leader>h*`,
+`<C-e>` and `<M-%d>`), losing the "Session" group label on `<leader>h`
+entirely, not just for those two keys. `select_key` moved to `<leader>h%d`
+(a jump-to-entry-N capability harpoon's own bindings never had). Dropped:
+harpoon's spec in `plugins/misc.lua` (now an empty scaffold), `bindings/
+mappings/harpoon.lua`, `config/harpoon/` (1,707 lines), the four
+Harpoon-specific doc files, and every dangling reference found by a
+repo-wide grep. `plenary` did **not** leave the startup path the way this
+entry expected: `plugins/essentials.lua` already has its own independent
+`{ "nvim-lua/plenary.nvim", lazy = false }` spec, unrelated to harpoon's
+dependency declaration — a discrepancy this cut-over surfaced rather than
+one it caused (7.6 has the correction). The Harpoon cheatsheet is deleted,
+not carried forward.
 
 The original finding, kept for the record:
 
@@ -753,13 +766,22 @@ decided *entirely* by which external plugins keep it (7.6).
 
 ### 7.6 The `plenary` dependency chain
 
-**Open — it resolves as the items above do, not on its own.**
+**Open — it resolves as the items above do, not on its own. And the
+"out of the startup path" half of this entry was wrong when written.**
 
 Plenary is pulled in by harpoon, lazygit, diffview, neogit, telescope and
-neotest (resty and todo-comments left 2026-09-19). Doing the lazygit and harpoon
-items removes two of six. It does not remove plenary
-(telescope and neotest keep it), but it does take it **out of the startup
-path**, since harpoon is the only `lazy = false` consumer.
+neotest (resty and todo-comments left 2026-09-19; harpoon left 2026-09-19,
+7.4). Doing the lazygit item removes one more of the remaining five. It does
+not remove plenary (telescope and neotest keep it) — that much still holds.
+
+What did not hold: this entry assumed harpoon was "the only `lazy = false`
+consumer", so cutting it over would take plenary out of the startup path.
+Checked while doing that cut-over: `plugins/essentials.lua` has had its own
+independent `{ "nvim-lua/plenary.nvim", lazy = false }` spec all along,
+entirely unrelated to harpoon's `dependencies = { "nvim-lua/plenary.nvim" }`
+declaration. Plenary was never *not* eager, regardless of harpoon. Removing
+harpoon changes nothing about plenary's load timing; only dropping that
+`essentials.lua` entry (or lazy-loading it) would.
 
 ### 7.7 `render-markdown.nvim` was kept disabled — now removed ✅
 
@@ -819,7 +841,7 @@ Struck entries are done.
 | **filetree.nvim** | ~~neo-tree source switcher · centralized keymaps · node utils · checkhealth~~ (2026-09-19: `source_switcher`, `tree_toggle`; the noop tables stay as neo-tree config) · tests/diagnostics sources · snacks explorer · window picker (consumer) |
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
-| **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built, in parallel run; 7.4) |
+| **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built and cut over 2026-09-19; 7.4) |
 | **debugging.nvim** | ~~neotest adapter debug tooling~~ (`:Debug neotest`, 2026-09-19) · snacks debug inspector |
 | **pickers.nvim** | ~~search.nvim tabs~~ (`pickers.tabs`) · ~~bqf quickfix preview~~ (`pickers.quickfix`) · ~~telescope-github~~ (`pickers.sources.github`) · ~~file-browser list~~ (`pickers.browse`) — all 2026-09-19 · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · ~~devicons data~~ (`lib.nvim.ui.icons`, 2026-09-19) |
@@ -864,7 +886,7 @@ ui.nvim~~ (B5, 2026-09-19, one session: `ui.context`). ~~neo-tree config → fil
 2,035 lines were mostly already moved; the last three code-bearing pieces
 became filetree's `source_switcher` and `tree_toggle`, ~700 lines of
 neo-tree mapping tables stay as config) · ~~harpoon → sessions~~ (7.4,
-built, in its parallel-run week; the cut is the user's) ·
+built and cut over the same day, 2026-09-19) ·
 ~~todo-comments → insights~~ (B2, one session) · ~~markdown-preview →
 mdview~~ (B3).
 

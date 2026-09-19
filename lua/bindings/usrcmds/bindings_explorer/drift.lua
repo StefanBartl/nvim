@@ -106,9 +106,8 @@ local USERCMD_HEADERS = {
   command = true,
   invocation = true,
   subcommand = true,
-  -- `Dap.md`/`Harpoon.md`/`NvChadUI.md`/`Treesitter.md` head their verb
-  -- tables `Aufruf`; `lsp.nvim.md`/`Harpoon.md` list the flat shorthand for
-  -- a verb route under `Alias`.
+  -- `Dap.md`/`NvChadUI.md`/`Treesitter.md` head their verb tables `Aufruf`;
+  -- `lsp.nvim.md` lists the flat shorthand for a verb route under `Alias`.
   aufruf = true,
   alias = true,
 }

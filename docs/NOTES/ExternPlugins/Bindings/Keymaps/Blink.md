@@ -68,9 +68,9 @@ werden.
 - die aus `lsp.nvim`: `buftype ~= "nofile"`, mit Ausnahme von `dap-repl` und
   `dapui_*`.
 
-Damit sind die Telescope-Prompts außen vor — z. B. das Harpoon-Menü, das im
-Insert-Mode selbst `<C-x>` (Split) und `<CR>` (Öffnen) belegt
-([Harpoon.md](Harpoon.md)) — und ebenso die Floating-Inputs aus
+Damit sind die Telescope-Prompts außen vor — z. B. sessions.nvim's
+`:Session marks`-Telescope-Menü, das im Insert-Mode selbst `<C-x>` (Split)
+und `<CR>` (Öffnen) belegt — und ebenso die Floating-Inputs aus
 `lib.nvim.ui.kit`, wo ein akzeptierter Fuzzy-Treffer statt des getippten
 Dateinamens ein echter Bug wäre.
 
