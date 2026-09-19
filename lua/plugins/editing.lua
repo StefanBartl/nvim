@@ -16,11 +16,9 @@ return {
     end,
   },
 
-  -- Auto Template Strings for JS/TS
-  {
-    "chrisgrieser/nvim-puppeteer",
-    lazy = false,
-  },
+  -- Auto template strings / f-strings (formerly chrisgrieser/nvim-puppeteer)
+  -- are cascade.nvim's `strings` domain since 2026-09-19: on by default in
+  -- its spec, `:Cascade strings off` per buffer.
 
   -- Treesitter-based HTML tag closing and renaming
   {

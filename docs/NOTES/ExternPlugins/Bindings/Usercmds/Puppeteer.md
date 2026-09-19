@@ -1,37 +1,22 @@
-# nvim-puppeteer — User-Commands
+# ~~nvim-puppeteer~~ — User-Commands
 
-**Repo:** `chrisgrieser/nvim-puppeteer` — der Stamm `Puppeteer` löst
-normalisiert auf `nvim-puppeteer` auf.
+**Deinstalliert am 2026-09-19.** Was `chrisgrieser/nvim-puppeteer` tat —
+`"…"` wird zu `` `…` ``, sobald `${` auftaucht (JS/TS), `"…"` zu `f"…"` bei
+`{name}` (Python), und zurück, wenn die Interpolation verschwindet — ist
+seitdem cascade.nvims `strings`-Domain (`lua/cascade/strings/`), mit
+denselben Guards (leere Literale, > 200 Zeichen, Tagged Templates, `{}`/`{0}`
+in Python). Die Lua-Variante (`"%s"` → `("%s"):format()`) ist dort
+absichtlich aus (`strings.features.lua_format = false`).
 
-Alle drei Commands sind **[default]**, registriert in
-`plugin/puppeteer-autocmds.lua` des Plugins. Diese Config registriert keinen
-eigenen und konfiguriert nichts: der Spec ist
-`{ "chrisgrieser/nvim-puppeteer", lazy = false }`
-([lua/plugins/editing.lua](../../../../../lua/plugins/editing.lua)).
+Die drei Puppeteer-Commands hatten genau eine Aufgabe, das Verhalten
+buffer-lokal abzuschalten; das übernimmt jetzt ein Subcommand:
 
-## Was das Plugin tut
-
-Es wandelt Strings automatisch in Template-Strings um, sobald man eine
-Interpolation hineinschreibt — und wieder zurück, wenn man sie entfernt. In
-JavaScript/TypeScript werden `"…"` zu `` `…` ``, sobald `${` auftaucht; für
-Python (f-Strings), Ruby, Bash und Lua gilt dasselbe Prinzip. Es läuft über
-Autocmds, ohne Keymap und ohne Aufruf.
-
-Genau deshalb sind die drei Commands überhaupt interessant: sie sind der
-einzige Weg, das Verhalten abzuschalten, wenn es einmal im Weg ist.
-
-## [default] Alle drei
-
-**Alle drei wirken buffer-lokal** (`vim.b.puppeteer_enabled`), nicht global —
-abschalten gilt für den aktuellen Buffer, nicht für die Session.
-
-| Command | Wirkung |
+| Vorher | Jetzt |
 |---|---|
-| `:PuppeteerDisable` | `vim.b.puppeteer_enabled = false` für den aktuellen Buffer, plus eine Notify „Disabled". |
-| `:PuppeteerEnable` | Dasselbe mit `true`. |
-| `:PuppeteerToggle` | Kippt den Wert. Ein Buffer, in dem noch nie etwas gesetzt wurde (`nil`), gilt als **aktiviert** — der erste Toggle schaltet also ab. |
+| `:PuppeteerDisable` | `:Cascade strings off` (setzt `b:cascade_strings = false`) |
+| `:PuppeteerEnable` | `:Cascade strings on` |
+| `:PuppeteerToggle` | `:Cascade strings` / `:Cascade strings toggle` |
+| — | `:Cascade strings now` — einmalig am Cursor konvertieren |
 
-## Keine Keymaps
-
-nvim-puppeteer bindet nichts, und diese Config bindet nichts darauf. Es gibt
-folglich kein `Keymaps/Puppeteer.md`, und das ist kein Versäumnis.
+Keine Keymaps, wie vorher. Siehe [Usercmds/Cascade.md](Cascade.md), falls
+vorhanden, sonst cascade.nvims `docs/FEATURES/STRINGS.md`.
