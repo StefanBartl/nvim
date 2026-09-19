@@ -25,6 +25,14 @@
 #      without starting anything; every per-job query then comes back empty,
 #      which reads like "no failures" if you only count red jobs.
 #
+#   3. It filters to the CI workflow specifically (name == "CI", every repo's
+#      convention) before picking the newest run for a SHA. Several repos also
+#      have a path-filtered workflow (e.g. documentation.nvim's pages.yml on
+#      docs/map/**, release-engine.yml on standalone/**) that can trigger on
+#      the same push and be CREATED after the CI run -- without this filter,
+#      "newest run for this SHA" picks whichever workflow happened to finish
+#      last, not the one this script's columns are actually about.
+#
 # Usage:
 #   scripts/ci_status.sh              # every repo
 #   scripts/ci_status.sh markdown     # only repos whose name matches
@@ -67,16 +75,25 @@ for dir in "$REPOS_ROOT"/*.nvim; do
     continue
   fi
 
-  runs=$(gh api "repos/$OWNER/$name/actions/runs?head_sha=$sha&per_page=20" 2>/dev/null)
+  if ! runs=$(gh api "repos/$OWNER/$name/actions/runs?head_sha=$sha&per_page=20" 2>/tmp/ci_status_gh_err); then
+    total=$((total + 1))
+    printf '%-24s %-9s %-9s %-9s %s\n' "$name" '?' '?' '?' "gh api call failed: $(head -c 80 /tmp/ci_status_gh_err)"
+    continue
+  fi
   read -r run_id run_status <<EOF
 $(printf '%s' "$runs" | python -c "
 import sys, json
 try:
     rs = json.load(sys.stdin)['workflow_runs']
 except Exception:
-    print(' '); raise SystemExit
+    print('PARSE_ERROR'); raise SystemExit
+# Filter to the CI workflow specifically -- a path-filtered sibling workflow
+# (pages.yml, release-engine.yml, ...) can trigger on the same push and be
+# created after the CI run, and 'newest run for this SHA' with no filter
+# would silently pick that one instead.
+rs = [r for r in rs if r.get('name') == 'CI']
 if not rs:
-    print(' '); raise SystemExit
+    print('NONE'); raise SystemExit
 r = sorted(rs, key=lambda x: x['created_at'])[-1]
 print(r['id'], r['status'])
 " 2>/dev/null)
@@ -84,8 +101,12 @@ EOF
 
   total=$((total + 1))
 
-  if [ -z "${run_id// /}" ]; then
-    printf '%-24s %-9s %-9s %-9s %s\n' "$name" - - - "no run for this commit"
+  if [ "$run_id" = "PARSE_ERROR" ]; then
+    printf '%-24s %-9s %-9s %-9s %s\n' "$name" '?' '?' '?' "gh api returned unparseable JSON"
+    continue
+  fi
+  if [ "$run_id" = "NONE" ] || [ -z "${run_id// /}" ]; then
+    printf '%-24s %-9s %-9s %-9s %s\n' "$name" - - - "no CI run for this commit"
     continue
   fi
   if [ "$run_status" != "completed" ]; then
@@ -107,6 +128,16 @@ if not js:
 plat, other = {}, []
 for j in js:
     c = j.get('conclusion') or j.get('status')
+    # buffer-ctx.nvim's matrix (and any future repo shaped like it) runs an
+    # extra nightly-Neovim leg on ubuntu ALONGSIDE the stable one -- both job
+    # names match 'ubuntu'. Nightly is deliberately non-gating (it catches
+    # Neovim API drift, not the platform assumptions this table is about),
+    # so it must not share a cell with -- and silently overwrite -- the
+    # stable leg's verdict.
+    if 'nightly' in j['name'].lower():
+        if c not in ('success', 'skipped', None):
+            other.append(j['name'])
+        continue
     m = re.search(r'(ubuntu|windows|macos)', j['name'])
     if m:
         k = m.group(1)
