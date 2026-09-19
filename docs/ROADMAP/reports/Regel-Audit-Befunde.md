@@ -41,7 +41,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | sandbox.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | cascade.nvim | 14 | – | – | offen |
 | casedesk.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
-| cmdlog.nvim | 14 | – | – | offen |
+| cmdlog.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | color_my_ascii.nvim | 14 | – | – | offen |
 | media.nvim | 14 | – | – | offen |
 | ai.nvim | 13 | – | – | offen |
@@ -2869,7 +2869,7 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 ## cmdlog.nvim
 
-**14 Befunde** (7 × high). Roh gemeldet: 14.
+**14 Befunde** (7 × high). Roh gemeldet: 14. — **Stand: 14/14** (⏭️ 0, 2026-09-18)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -2881,6 +2881,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** A `project_history.json` that is present and non-empty but not valid JSON makes load() return the caller's `{}`. The very next `:` command reaches tracker.lua's scheduled callback (l.58-65), project_history.record inserts one entry into that `{}` and save_json rewrites the whole file — the recorded history for every Git root is lost with no notification and no backup. Identical for stats.json, errors.json and favorite_tags.json. Note the distinction only matters for a corrupt-but-present file; a missing file legitimately yields `{}`, which is exactly why the two cases need to be distinguishable.
 
+**Status.** ✅ erledigt (`489b504`) — `load_json` gibt jetzt einen zweiten Rückgabewert (err) zurück und sichert den Originalinhalt bei einem Decode-Fehler einmalig nach `<path>.corrupt`.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/cmdlog/core/favorites.lua:81` · `M.load` · confidence **high**
@@ -2890,6 +2892,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 **Regelbezug.** Same ERR-11 collapse as `core/store.lua`, but on the one file in this plugin that holds hand-curated, non-reconstructible user data. `M.save` (line 94) unconditionally writes the full list, so the corrupt-file case is indistinguishable from the first-run case at the only place where the difference matters.
 
 **Auswirkung.** A corrupt-but-present favorites.json is indistinguishable from first run. `:Cmdlog favorites` reports "No favorites found", and the first `<Tab>` in any other picker calls M.toggle, which writes a one-element array over the file — the hand-curated list is destroyed with no backup. undo_last_toggle cannot recover it because its snapshot is the same empty list. This is the one cmdlog store whose contents cannot be reconstructed from anything else.
+
+**Status.** ✅ erledigt (`e610f07`) — `M.load` sichert eine korrupte `favorites.json` jetzt nach `<path>.corrupt`, bevor die leere Liste zurückgegeben wird, die sonst beim nächsten Toggle die Original-Favoriten überschrieben hätte.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -2901,6 +2905,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** `picker = "fzf-lua"` — a spelling health.lua itself recommends and @types declares valid — silently falls through to the Telescope branch. With only fzf-lua installed, `:checkhealth cmdlog` prints "picker = 'fzf-lua' and fzf-lua found" while every `:Cmdlog` subcommand throws `module 'telescope.pickers' not found`. ERR-22's requirement is not just degradation but visibility via :checkhealth; here checkhealth actively certifies the broken configuration, which is worse than staying silent.
 
+**Status.** ✅ erledigt (`d79c887`) — `M.open_picker` routet jetzt sowohl `picker == "fzf"` als auch `"fzf-lua"` in den fzf-lua-Zweig, wie es health.lua und @types schon immer versprachen.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/cmdlog/core/shell.lua:380` · `M.delete_entry` · confidence **high**
@@ -2910,6 +2916,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 **Regelbezug.** ERR-30: every match/edit computed during a scan must be re-verified against the *current* text immediately before writing. Here an unbounded amount of wall-clock time (the user answering a modal) sits between the read and a full-file overwrite of a file that a live interactive shell appends to continuously.
 
 **Auswirkung.** Single-entry `<C-x>` on a shell-history entry: the confirmation float opens, and any command the user's shell appends while the dialog is up (zsh with INC_APPEND_HISTORY, or any shell exiting in that window) is silently erased when they answer yes, because writefile replaces the file with the pre-dialog snapshot. The auditor's batch claim is WRONG and I refute that half: for `#targets > 1`, mappings.lua l.186-191 confirms once and then calls run(true), and with `skip_confirm = true` shell.lua l.411-414 calls do_write() synchronously inside delete_entry — so the loop at l.168-178 is strictly sequential and each iteration's readfile already sees the previous iteration's write. There is no last-writer-wins and no N-1 lost deletions; the batch path is in fact the safer one, since all its reads happen after the single confirmation.
+
+**Status.** ✅ erledigt (`f6eb679`) — `delete_entry` scannt die Historien-Datei jetzt unmittelbar vor dem Schreiben erneut, statt den Snapshot von vor dem Dialog zu verwenden.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -2921,6 +2929,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** Installing exactly what installation.md calls required (lib.nvim + one picker) leaves four of the ten `:Cmdlog` subcommands — bare `:Cmdlog`, `full`, `shell`, `shell-full` — throwing `module 'ui.kit' not found` at require time, not at delete time as the docs promise. `:checkhealth cmdlog` then aborts at health.lua:71 on the same machine, after the picker section but before the shell-detection and composer sections, and never names ui.nvim as the missing piece.
 
+**Status.** ✅ erledigt (`f6eb679`) — Das modulweite `require("ui.kit")` wurde entfernt; `ui.kit` wird jetzt nur noch an der einen Stelle requiret, an der der Bestätigungsdialog tatsächlich gezeigt wird.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/cmdlog/core/favorites.lua:205` · `M.import / M.export` · confidence **high**
@@ -2930,6 +2940,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 **Regelbezug.** SEC-34: `vim.fn.expand()` must never be applied to user text. A backtick span in its argument is a command substitution through `&shell`, and `%`/`#`/`<cfile>`/`<cword>` are Vim specials. The value here is literally what the user typed on the `:Cmdlog` command line, and the safe expansion the rule prescribes (`lib.nvim.cross.fs.expand_path`) has already been applied upstream — this second `expand()` adds nothing but the attack surface.
 
 **Auswirkung.** A backtick span in the path argument of `:Cmdlog import`/`:Cmdlog export` is run through `&shell` by vim.fn.expand() before any file is touched — command execution from a path argument. I correct one sub-claim: `:Cmdlog export ~/notes/cmdlog%.json` does NOT misfire, because expand() only treats `%`/`#`/`<...>` as cmdline-specials when the string *starts* with them. The leading-special case is real though: `:Cmdlog import #.json` expands `#` to the alternate buffer's name, so the import reads a file the user did not name, and the same shape applied to export can overwrite an open source file. Removing the redundant expand() call costs nothing, since the composer already resolved `~`/`$VAR`.
+
+**Status.** ✅ erledigt (`e610f07`) — `M.import`/`M.export` nutzen jetzt `lib.nvim.cross.fs.expand_path` statt eines zweiten `vim.fn.expand()` auf bereits vom Composer expandiertem Text.
 
 ### `SEC-50` — Ein Preview liest, es führt nicht aus und wertet nicht aus
 
@@ -2941,6 +2953,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** Under `picker = "fzf"`, `<CR>` executes the highlighted line as an Ex command with no prompt, no risky-pattern refusal and no execution gate. The reachable-from-foreign-text part is real: all_picker/all_unique_picker fold `extra_files` content and shell history into the same list, so an arbitrary text file's line becomes an Ex command. Concretely dangerous entries are nvim-history lines like `!rm -rf build` or `qa!`, and shell-history lines that also parse as Ex commands (`source ~/.bashrc`, `set -x`). The auditor's `:!rm -rf build` example holds for nvim-history/extra_files entries; a plain shell line such as `rm -rf build` fails harmlessly with E492, so not every folded-in line is executable — but enough are, and the README states flatly that none are.
 
+**Status.** ✅ erledigt (`d79c887`) — Die fzf-Default-Action führt den ausgewählten Eintrag nicht mehr per `vim.cmd()` aus, sondern speist ihn wie bei Telescope per feedkeys in die Kommandozeile ein.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/cmdlog/ui/telescope-previewer.lua:126` · `command_previewer -> shell branch` · confidence **medium**
@@ -2950,6 +2964,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 **Regelbezug.** ERR-01 requires `pcall` at system boundaries — spawning an external process is one, and this is not a hot path. `vim.system` raises for a non-resolvable executable rather than routing the failure to `on_stderr`, so the error escapes `define_preview` into Telescope's render loop. The `:terminal` branch two lines above (line 121) shows the correct shape for the same problem (`command = vim.o.shell, args = { vim.o.shellcmdflag, plan.arg }`); the shell branch was not given it.
 
 **Auswirkung.** With `preview_execute = true` (non-default, which is why this is medium), moving the cursor onto any multi-word `:!<cmd> <args>` entry raises ENOENT out of define_preview instead of showing output — telescope does not pcall the previewer, so the error surfaces and the preview window stays empty for exactly the entry class the option was enabled for. Only single-word `:!ls`-style entries work. The fix is the one-line shape already used by the terminal branch directly above; the missing pcall is the secondary defect.
+
+**Status.** ✅ erledigt (`24370c2`) — Der shell-Zweig läuft jetzt wie der terminal-Zweig über `$SHELL -c <line>`, und `job.start` ist mit pcall abgesichert.
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -2961,6 +2977,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** `setup({ redact_patterns = "token" })` — a plausible single-pattern shorthand — makes is_redacted raise on every `:` command. The error is caught by lib.nvim's autocmd wrapper, so Neovim keeps working but the user gets an "Autocmd failed (CmdlineLeave)" notification after every single Ex command. Because is_redacted is called at l.47, before the `vim.schedule` block at l.58, project history, stats and error tracking record nothing at all for the whole session. risky.lua having the guard and tracker.lua not having it makes this a plain omission rather than a design choice.
 
+**Status.** ✅ erledigt (`189ab8c`) — `is_redacted` prüft `redact_patterns` jetzt mit `type(...) ~= "table"`, bevor `ipairs` darauf läuft.
+
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
 `lua/cmdlog/ui/mappings.lua:148` · `delete mapping -> finish()` · confidence **medium**
@@ -2970,6 +2988,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 **Regelbezug.** ERR-33/LUA-13: a callback deferred past the capture point must re-validate its window/buffer handles at execution time (`nvim_buf_is_valid` or the picker's own liveness check). `ui/telescope-previewer.lua:22,31` does exactly that for its preview buffer; these two sites do not.
 
 **Auswirkung.** Deleting a shell-history entry with the confirmation dialog: answering yes writes the file successfully, then finish() raises `attempt to index a nil value (local 'picker')` out of telescope's actions.close. The user sees a Lua error for a delete that actually succeeded, and because the error aborts finish() before `vim.schedule(refresh_fn)` at l.149, the picker list is never refreshed — though in practice the picker window is already gone, so the visible symptom is the traceback rather than a stale list. The `<C-t>` tag mapping at l.99 has the same exposure under any async vim.ui.input provider (dressing.nvim, snacks.input, noice).
+
+**Status.** ✅ erledigt (`dfa448c`) — Ein neuer `safe_close()`-Helfer prüft Bufferstatus und den aktuellen Picker, bevor `finish()` und das Tag-Mapping `actions.close` aufrufen.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -2981,6 +3001,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** Any misspelled top-level or nested option (`preview_executes`, `redact_pattern`, `higlight_risky`) is deep-merged into M.options as an inert extra key. The plugin keeps its default, :checkhealth reports everything ok, and the user has no way to learn the option never took effect. I correct the auditor's overstatement on the security case: a `redact_pattern` typo does not leave the user unredacted — DEFAULTS.lua l.29-34 still supplies password/secret/token/Bearer/api[-_]?key — it silently drops only the site-specific patterns the user added, which is a narrower but still real gap.
 
+**Status.** ✅ erledigt (`485fe4c`) — `M.setup` validiert jetzt vor dem Merge über eine `sanitize()`-Funktion mit KNOWN-Keys-Liste und Levenshtein-Hinweis; verworfene Optionen landen in `M.issues()` für `:checkhealth`.
+
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
 `lua/cmdlog/core/favorites.lua:68` · `M.load` · confidence **medium**
@@ -2991,6 +3013,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 
 **Auswirkung.** Latent, and I hold the auditor to their own wording: nothing is broken today. cmdlog satisfies the half of ERR-54 that says every consumer must hold to the no-mutate contract — they all do — but not the half that says the contract must be written down. So this is a documentation/API-hygiene gap, not a live bug: the fix is either `return vim.deepcopy(...)` or one line of docstring saying "live reference, do not mutate". Its value is preventive — the three existing deepcopy call sites show the authors already knew the return value is unsafe to own, and the next consumer that sorts or appends in place would silently reorder or corrupt favorites.json for the rest of the session via M.save. It should be ranked well below the other findings.
 
+**Status.** ✅ erledigt (`e610f07`) — Der Docstring von `M.load` dokumentiert jetzt explizit, dass die zurückgegebene Liste eine Live-Referenz ist und vor Mutation kopiert werden muss.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/cmdlog/core/stats.lua:16` · `load / by_frequency / describe` · confidence **medium**
@@ -3000,6 +3024,8 @@ PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps
 **Regelbezug.** SEC-33: persisted snapshots are untrusted and every field must be re-validated on load (type, length, count cap). Valid JSON of the wrong shape passes `store.load_json` cleanly, so ERR-11's corrupt-file path does not cover this — it is a second, distinct gap on the same files.
 
 **Auswirkung.** A stats.json entry whose value is a JSON number or null (interleaved write from a second Neovim instance — there is no locking, and each instance holds an independent module-level cache) decodes fine and then crashes `:Cmdlog stats` inside table.sort's comparator with "attempt to index a number value" / "attempt to index a userdata value" (JSON null decodes to vim.NIL, not Lua nil). The error names neither the file nor the key, and the crash repeats on every invocation until the user finds and deletes stats.json by hand. The same malformed entry also breaks stats.record at l.27-28 inside tracker.lua's scheduled callback. A string value under a command key in favorite_tags.json breaks `:Cmdlog favorites` the same way via table.concat.
+
+**Status.** ✅ erledigt (`c86d4ee`) — `load()` in stats.lua, tags.lua und project_history.lua validiert jetzt jeden Eintrag (Typ, Länge, Count-Cap) und verwirft den gesamten Load beim ersten fehlerhaften Eintrag.
 
 ### `SEC-45` — Redaktion rundet auf Übervorsicht
 
@@ -3021,6 +3047,8 @@ What I could NOT cover:
 - I did not run the plugin or its test suite; every finding is from reading code. The two lowest-certainty items are marked accordingly: ERR-33 (finding 8) depends on Telescope tearing down its picker when an async float takes focus, which I reasoned about from telescope's actions.close/get_current_picker path but did not reproduce, and ERR-50 (finding 12), where the rule is phrased about validation ordering while cmdlog has no validation step at all.
 
 Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no surface), no __mode weak tables (LUA-48), no vim.g/b/w round-tripping (LUA-17), no vim.fn.glob (XP-01), no module-level layout geometry (PERF-92), no treesitter (TS-04), no pcall(f(args)) mistakes (ERR-62), and no a-and-b-or-c hazards — I checked all 15 such expressions individually and every falsy-b case is unreachable (ERR-60 is clean). config/init.lua is ERR-51/ERR-53-correct (fresh vim.deepcopy(DEFAULTS) per setup, and every consumer dereferences config.options.X at call time rather than capturing a subtable). ui/preview_policy.lua is a well-built SEC-35 fix and matches the Belege footnote naming cmdlog for that rule; I did not re-report it. LUA-06 is likewise already cleared for cmdlog in its Belege and the DEFAULTS.lua stdpath calls are the standard idiom, so I left it alone.
+
+**Status.** ✅ erledigt (`189ab8c`) — `is_redacted` behandelt einen pcall-Fehlschlag bei einem kaputten Pattern jetzt als Treffer (Über-Redaction) statt als „kein Treffer“; ein dokumentiertes `false` bleibt bewusster Opt-out (fail-open), jeder andere ungültige Typ ist jetzt fail-closed.
 
 ---
 
