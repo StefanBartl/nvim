@@ -367,11 +367,39 @@ plugins.add({
     "stefanbartl/sessions.nvim",
     lazy = false,
     dependencies = { "stefanbartl/lib.nvim" },
-    opts = {
-      -- Bare `nvim` (no file args) resumes the last-loaded session — see
-      -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
-      -- autoload = true,
-    },
+    -- A function: `config.marks.defaults` asks the machine module, and a
+    -- table literal would do that at spec-import time for every start.
+    opts = function()
+      return {
+        -- Bare `nvim` (no file args) resumes the last-loaded session — see
+        -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
+        -- autoload = true,
+
+        -- The mark list, running in parallel to harpoon since 2026-09-19
+        -- (external-plugins report, 7.4). Same default paths as harpoon's
+        -- bucket (config.marks.defaults), same global scope; the first
+        -- start takes harpoon's live list over, so both start equal. Keys
+        -- sit on <leader>H while harpoon keeps <leader>h, <C-e> and
+        -- <M-1..9>; the cut-over moves them and drops plugins/misc.lua's
+        -- harpoon spec plus config/harpoon/.
+        marks = {
+          enable = true,
+          scope = "global",
+          defaults = require("config.marks.defaults"),
+          select_key = "<leader>H%d",
+        },
+        keymaps = {
+          marks_menu = "<leader>Hm",
+          marks_edit = "<leader>He",
+          marks_add = "<leader>Ha",
+          marks_add_front = "<leader>HA",
+          marks_pin = "<leader>Hp",
+          marks_remove = "<leader>Hd",
+          marks_sync = "<leader>Hs",
+          marks_debug = "<leader>HD",
+        },
+      }
+    end,
   },
 
   {
