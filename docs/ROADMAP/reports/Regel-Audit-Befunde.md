@@ -61,7 +61,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | fileops.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | hover.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | markdown.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
-| recommender.nvim | 10 | – | – | offen |
+| recommender.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | rules.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | spotlight.nvim | 9 | – | – | offen |
 | my.nvim | 7 | – | – | offen |
@@ -6222,7 +6222,7 @@ Could not confirm / deliberately not reported:
 
 ## recommender.nvim
 
-**10 Befunde** (5 × high). Roh gemeldet: 11.
+**10 Befunde** (5 × high). Roh gemeldet: 11. — **Stand: 10/10** (⏭️ 0, 2026-09-19)
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -6234,6 +6234,8 @@ Could not confirm / deliberately not reported:
 
 **Auswirkung.** `:Recommender javascrpt`, `:Recommender treesiter` or `:Recommender cdw` run as a bare `:Recommender` — the configured default analyzer over the current buffer — with no message at all. The user sees a plausible result list for the wrong analyzer, or a one-buffer scan where they asked for the whole project, and nothing points at the typo. One correction to the auditor's wording: the bad token is not consumed (`not threshold` stays true), so a real number later on the same line is still picked up; the defect is purely the missing 'unknown argument' report. Declaring `enum = COMPLETION_VALUES` on the three slots would close it at the composer layer.
 
+**Status.** ✅ erledigt (`fd76931`) — `classify_pos_args` sammelt jetzt nicht klassifizierbare Token statt sie fallen zu lassen; `execute()` meldet sie per `notify.error` und bricht ab, statt den Default-Analyzer stillschweigend zu benutzen.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/recommender/bindings/usrcmds.lua:240` · `execute / state.refresh / get_analyzer` · confidence **high**
@@ -6243,6 +6245,8 @@ Could not confirm / deliberately not reported:
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default and be surfaced via `:checkhealth`, not to break the plugin. Nothing validates `cfg.analyzer`: `config/init.lua:18` only deep-merges, and `health.lua` reports `float_layout`, `progress_style`, `cwd_max_files` and `cwd_ignore` but never reads `cfg.analyzer`. Positional analyzer tokens are checked against `ANALYZER_NAMES`; the config value is not.
 
 **Auswirkung.** Correcting the auditor's framing: setup() does not abort — it returns green, and so does :checkhealth recommender. The bad value is deferred to command time, where every :Recommender run and every in-float <BS>/U refresh raises an unhandled 'Error executing vim.schedule lua callback: [recommender] Unknown analyzer "treesiter"' and shows no float. That is the worse failure mode for diagnosis: two surfaces the user would check both say OK while the command is dead. statusline.lua:61-64 degrades correctly on the same typo, which is the shape ERR-22 asks for; usrcmds does not.
+
+**Status.** ✅ erledigt (`d963415`) — `cfg.analyzer` wird jetzt in `config.setup()` gegen die echten `analyzers/*`-Module geprüft und degradiert auf den Default; `get_analyzer()` läuft jetzt innerhalb des `guarded()`-Wrappers, sodass ein Restfehler `notify.error` statt einem rohen Crash erzeugt.
 
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
@@ -6254,6 +6258,8 @@ Could not confirm / deliberately not reported:
 
 **Auswirkung.** Narrower than stated but real: on the fallback path the alias is inserted once and a one-shot WinClosed autocmd stays armed against a snapshot that can no longer match. It is inert until a TelescopePrompt window closes, so the practical case is a user who has replacer.nvim (hence telescope) installed and hits the `var_name = nil` branch — perf analyzer in replace mode: the next unrelated Telescope picker close re-inserts that alias line into target_win at whatever cursor position it then has. With no telescope in the session the augroup just lingers with no effect, and a later replace-mode selection clears it via `autocmd.group(..., true)`. Fix: arm it only on the branch that actually dispatches :Replace.
 
+**Status.** ✅ erledigt (`34b354e`) — `register_replace_finish` wird nur noch auf dem Zweig scharf gemacht, der tatsächlich `:Replace` dispatcht, nicht mehr unbedingt vor der Verzweigung.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `README.md:46` · `README "Around it" section` · confidence **high**
@@ -6263,6 +6269,8 @@ Could not confirm / deliberately not reported:
 **Regelbezug.** LUA-01 says a hard dependency must never be presented as optional in the documentation. The plugin's own `docs/installation.md:9` marks ui.nvim '**required** ... `require("recommender").setup()` fails without it, no fallback', and `health.lua:30-37` emits `vim.health.error` for a missing ui.kit -- so the README contradicts both the code and the rest of the docs.
 
 **Auswirkung.** Documentation-only defect, but it breaks installs. A reader who takes the README's summary line at its word and installs only lib.nvim gets an uncaught `module 'ui.kit' not found` out of `require("recommender").setup()`: :Recommender is never registered and anything after that call in the same config block does not run. Secondary inaccuracy worth fixing in the same pass: the ui.nvim bullet describes it as only the statusline badge, when ui.kit is the suggestion picker itself.
+
+**Status.** ✅ erledigt (`d6476e5`) — ui.nvim aus der „alle sind soft“-Aussage in README.md herausgenommen, als required markiert und die Beschreibung korrigiert (`ui.kit` rendert den Suggestion-Float selbst).
 
 ### `SEC-35` — Nutzereingabe nie in einen `-c`-/`:execute`-String
 
@@ -6274,6 +6282,8 @@ Could not confirm / deliberately not reported:
 
 **Auswirkung.** In replace mode (`-r`) with replacer.nvim's `:Replace` present, <CR> on a suggestion whose chain spans lines runs every line after the first as its own Ex command in the user's session. Ordinary multi-line Lua (a `vim.tbl_map(function() ... end, t).foo`) only yields a truncated `:Replace` plus E492 noise; a crafted or pasted file executes attacker-chosen Ex commands — verified live, a register was written. Preconditions: analyzer = treesitter, replace mode, replacer.nvim installed, and the multi-line chain meeting the threshold (`:Recommender -r treesitter 1`). Fix is the list form / passing the chain as an argument rather than formatting it into the command string.
 
+**Status.** ✅ erledigt (`34b354e`) — `vim.cmd(string.format(...))` durch die List-Form `vim.cmd({cmd="Replace", args={...}})` ersetzt; verifiziert, dass eingebettete Newlines/`|` nicht mehr als separate Ex-Kommandos geparst werden.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/recommender/project.lua:278` · `M.read_lines / M.read_lines_async` · confidence **medium**
@@ -6283,6 +6293,8 @@ Could not confirm / deliberately not reported:
 **Regelbezug.** ERR-11 requires 'empty but fine' to be distinguishable from 'empty because something broke'. The module header even states the skip as the intended behaviour, but intent does not replace the signal: `usrcmds.lua:255-258` turns an empty result into `notify.info("No suggestions (threshold: %d)")`, identical to a clean scan, and the progress handle's closing text at line 386 reports `("scanned %d files"):format(#paths)` -- the number of files *found*, not the number actually read.
 
 **Auswirkung.** A cwd/path scan over a tree the user cannot read (permission-restricted checkout, files deleted mid-scan, a dropped network share) finishes with 'scanned 412 files' and 'No suggestions (threshold: 3)' — byte-identical to a clean scan of a project with genuinely no repeated chains, so the user concludes the code is clean when nothing was read. Returning a skipped-file count alongside `lines` and folding it into the finish text (and into the empty-result notify) is the missing piece; the per-file skip itself should stay.
+
+**Status.** ✅ erledigt (`fd76931`) — `read_lines`/`read_lines_async` geben jetzt zusätzlich die Anzahl übersprungener Dateien zurück; das fließt in die „No suggestions“-Meldung und den Progress-Abschlusstext ein.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -6294,6 +6306,8 @@ Could not confirm / deliberately not reported:
 
 **Auswirkung.** An installed-but-never-setup() plugin yields a fully green :checkhealth recommender, including an affirmative claim that the <leader>lr keymaps are bound when none are — so the page troubleshooting points at first actively steers away from the real cause. The fix is one line: test something setup() actually does (`vim.g.loaded_recommender == 1`, or `vim.fn.exists(':Recommender') == 2`) instead of the plugin-load guard. Caveat on classification: ERR-11 is written about a function's empty return, so the rule fit is by analogy — but the defect (two states collapsed onto one signal, negative branch unreachable, green reported for a condition never observed) is real and sits on a diagnostic surface.
 
+**Status.** ✅ erledigt (`d963415`) — Prüfung von `vim.g.loaded_recommender` (wird schon beim reinen Sourcen gesetzt) ersetzt durch `vim.fn.exists(":Recommender") == 2`, was tatsächlich testet, ob `setup()` gelaufen ist.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/recommender/config/init.lua:18` · `M.setup` · confidence **medium**
@@ -6304,6 +6318,8 @@ Could not confirm / deliberately not reported:
 
 **Auswirkung.** `setup({ threshhold = 5 })`, `setup({ blacklists = {…} })` or `setup({ float_keymap = false })` is accepted in complete silence: the orphan key lands in the merged table, nothing ever reads it, and every default stays in force. :checkhealth prints the still-default values without flagging the stray key, so the option reads as applied. Worth noting the merge is otherwise clean — it deepcopies DEFAULTS rather than mutating them (ERR-51 satisfied); the single gap is the missing pre-merge known-key/near-miss check.
 
+**Status.** ✅ erledigt (`d963415`) — Neues Schema mit `drop_unknown` und Levenshtein-„did you mean“-Hinweis vor dem Merge; Issues werden gesammelt und über `:checkhealth` gemeldet.
+
 ### `ERR-53` — In-place-Mutation statt Tabellen-Ersatz bei geteilten Referenzen
 
 `lua/recommender/config/init.lua:18` · `M.setup` · confidence **medium**
@@ -6313,6 +6329,8 @@ Could not confirm / deliberately not reported:
 **Regelbezug.** ERR-53 requires an in-place deep mutation rather than a table swap exactly when submodules hold a direct reference to the config table -- otherwise those references decouple silently from the new values. The reference is held here, and the swap does decouple it.
 
 **Auswirkung.** Structurally real, but reachable today only by calling `require("recommender.config").setup({…})` directly — a path the docs never suggest, and one that init.lua's `_setup_done` guard blocks for the documented `require("recommender").setup()` entry point; TESTS/config_spec.lua is the only current caller. When it is reached, :Recommender keeps running on the pre-swap analyzer/threshold/blacklist/cwd_max_files while :checkhealth and the statusline component report the new values, with nothing indicating which is in force. Correct classification is a latent structural violation to fix together with the LUA-87 finding (fixing that one is what would make this reachable), not a bug users hit now.
+
+**Status.** ✅ erledigt (`d963415`) — `deep_assign` mutiert die aktive Config-Tabelle jetzt in-place statt sie zu ersetzen, damit die von `bindings/usrcmds.lua` gehaltene Referenz nicht entkoppelt.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -6329,6 +6347,8 @@ Could not confirm / deliberately not reported:
 Not covered and why: CMT-16 -- docs/map/ is generated and now gitignored (52390bc 'stop committing the generated module map'), and docs/BINDINGS.md / doc/recommender.txt carry no generator banner, so I could not tell a hand-edit from a regeneration without running the generators, which this report-only task excludes. LLS-31 -- needs a LuaLS run over the tree; I did not run one, and I did not run TESTS/run.lua either. ERR-51/ERR-54 -- checked and found clean: DEFAULTS is deep-copied before every merge and no consumer mutates what `config.get()` hands back, so I report neither. XP-01 -- `find_files` correctly routes through `lib.nvim.fs.globbable` (project.lua:98), matching the existing Belege entry for this plugin; `find_files_async` uses `fs_scandir` where the pitfall does not apply. LUA-06 -- DEFAULTS.lua's two module-level requires are static data tables, matching the existing Belege note that clears recommender for this rule. I did not audit lib.nvim's or ui.nvim's internals, and I did not confirm whether replacer.nvim defines `:Replace` with `-bar`, which is why the SEC-35 finding rests on the newline carrier (confirmed) rather than the `|` one (not confirmed; it did not fire against a non-`-bar` command).
 
 I considered and deliberately dropped three weaker leads to keep the list honest: the `A` (insert-all) key writing N alias lines without a confirmation (UI-01 -- it is a single undo block and the key's whole documented purpose); the module-level `ignore_by_buf` table in usrcmds.lua:183 growing per buffer with no BufDelete cleanup (a few strings per buffer, no correctness effect since Neovim does not reuse buffer handles in a session, and no weak-table claim is made, so LUA-48 does not really bite); and the statusline cache key omitting analyzer/threshold (PERF-46 -- unreachable in practice because the config is effectively frozen after the one-shot setup).
+
+**Status.** ✅ erledigt (`d8c88e4`) — Ein zweiter `setup()`-Aufruf merged `opts` jetzt weiterhin und meldet sich per `notify`, statt komplett stillzuschweigen; nur Command/Keymaps/Autocmds bleiben einmalig.
 
 ---
 
