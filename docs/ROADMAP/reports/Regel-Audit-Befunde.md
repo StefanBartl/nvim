@@ -39,7 +39,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | pdfport.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | reposcope.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | sandbox.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
-| cascade.nvim | 14 | – | – | offen |
+| cascade.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | casedesk.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | cmdlog.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | color_my_ascii.nvim | 14 | – | – | offen |
@@ -2528,7 +2528,7 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 ## cascade.nvim
 
-**14 Befunde** (10 × high, 1 davon in Testcode). Roh gemeldet: 15.
+**14 Befunde** (10 × high, 1 davon in Testcode). Roh gemeldet: 15. — **Stand: 14/14** (⏭️ 0, 2026-09-18)
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -2540,6 +2540,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** On Windows/BSD (where os.time cannot represent pre-epoch dates), one `<C-a>`/`<C-x>`/`+`/`-` on any ISO date before 1970 — or on 1970-01-01 with a year decrement — silently replaces the whole date with today's date. No error, no notification; the user only notices if they reread the line. CI runs on ubuntu-latest, where glibc accepts the pre-1970 range, so the suite can never catch it.
 
+**Status.** ✅ erledigt (`7348578`) — `os.time(t)` kann `nil` liefern (z. B. vor 1970); `date.step` prüft das jetzt und bricht sauber ab statt heimlich das heutige Datum einzusetzen.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/cascade/init.lua:60` · `feed` · confidence **high**
@@ -2549,6 +2551,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 **Regelbezug.** ERR-02 requires a type/nil check before an API access. On the lowest version the plugin advertises, `vim.keycode` is nil and the call throws; the plugin states the requirement three times and gets it wrong in all three.
 
 **Auswirkung.** On Neovim 0.9 — the floor the plugin advertises in its badge, its docs and its health check — every native-fallback path throws "attempt to call field 'keycode' (a nil value)": `<CR>`/`o`/`O` off a list line, `+`/`-`/`<C-y>`/`<C-x>` off a cyclable token, and the visual reselect helpers. `:checkhealth cascade` reports "ok Neovim 0.9.x" while those paths are broken. The honest fix is either a `vim.keycode or vim.api.nvim_replace_termcodes` shim or raising the declared floor to 0.10 in all three places; the practical exposure is small since 0.9 is long superseded.
+
+**Status.** ✅ erledigt (`ed562f9`) — `vim.keycode` ist erst ab 0.10 vorhanden; neue `lib.keycode()`-Fallback-Funktion (`nvim_replace_termcodes`) an allen drei Stellen, damit der dokumentierte 0.9-Floor tatsächlich stimmt.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -2560,6 +2564,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** `:Cascade indent N` and `:Cascade dedent N` silently ignore their documented argument for every N and always shift by one level. The argument is neither used nor rejected — a typo'd argument and no argument produce identical behaviour. No error, no traceback; the only symptom is that the documented feature does nothing.
 
+**Status.** ✅ erledigt (`d879365`) — `run_indent_command` las `cmd.args` (den ganzen Rohtext) statt des vom Composer geparsten `ctx.args.levels`; `:Cascade indent N` shiftete immer nur eine Ebene. Jetzt wird `levels` als eigener Parameter durchgereicht.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/cascade/cycle/packs/init.lua:54` · `M.resolve` · confidence **high**
@@ -2569,6 +2575,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 **Regelbezug.** ERR-11: a function whose result can legitimately be empty must let the caller tell "empty but fine" from "empty because something broke". Here "this pack contributed nothing because it failed to load" and "this pack is simply not requested" produce byte-identical output, and the module's own docstring claims a typo "degrades to 'that pack is missing'" — which only holds for the unknown-name branch.
 
 **Auswirkung.** A known pack whose module fails to load (corrupt file, partial checkout, a syntax error introduced while editing a pack) contributes zero groups with no signal anywhere: `resolve` returns the same shape as "that pack was not requested", and `:checkhealth cascade` shows a smaller "+N from packs" number still marked ok. The user sees the pack's words simply not cycling. I did not reproduce the stubbed-load run the auditor reports, but the missing else branch is unambiguous in the source.
+
+**Status.** ✅ erledigt (`5ef5d0b`) — Ein bekannter Pack, dessen Modul nicht lädt, warnte bisher gar nicht (identisch zu „nicht angefordert“). Fehlender `else`-Zweig ergänzt, warnt einmalig pro Name.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -2580,6 +2588,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** A spec that fails to load rather than to assert — syntax error, renamed or moved file, a top-level require of a relocated module — aborts the runner before any counting, and CI still goes green with zero specs having run, because nvim honours the trailing `-c qa!` and exits 0 and nothing greps for the `CASCADE_TESTS_OK` marker. Test-only code, so no user-facing breakage, but it is a blind spot in the gate that guards everything else.
 
+**Status.** ✅ erledigt (`bbbb9e5`) — `dofile()` lag außerhalb des pcall; ein Spec mit Ladefehler riss den ganzen Runner ab, ohne den Fehlerzähler zu erhöhen — CI wäre grün geblieben. Jetzt per pcall abgesichert.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/cascade/lists/marker.lua:71` · `parse_custom` · confidence **high**
@@ -2589,6 +2599,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default and be surfaced via `:checkhealth`. `config/init.lua`'s `normalize()` (lines 53-74) normalizes only `sequence` and `lists.renumber`; `per_filetype_patterns` is never validated, and health.lua never mentions it. Instead the bad value throws from the hot path.
 
 **Auswirkung.** With a malformed or single-capture `lists.per_filetype_patterns` entry, every `<CR>`, `o`, `O` and indent keypress in a buffer of that filetype throws an unhandled traceback, and nothing in `:checkhealth cascade` names the option. One correction to the auditor: a non-string entry does NOT throw — `rest:match(42)` works because Lua coerces numbers in the string library — so only the pattern-syntax and capture-count halves of the claim are real; the "no type validation" half is inert.
+
+**Status.** ✅ erledigt (`134a8c3`) — `per_filetype_patterns`-Einträge ohne gültige Pattern-Syntax oder ohne die geforderten zwei Captures degradieren jetzt zu „kein Treffer“ statt bei jedem Tastendruck zu crashen.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -2600,6 +2612,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** A singular-string typo for `lists.filetypes` (or `cycle.filetypes`) is accepted verbatim instead of degrading to the default: the whole list domain goes silently dead — no continuation, no checkbox, no indent, no renumber, not one list keymap bound — and the one tool meant to explain it, `:checkhealth cascade`, aborts with a `table.concat` type error instead of naming the option.
 
+**Status.** ✅ erledigt (`134a8c3`) — `lists.filetypes`/`cycle.filetypes` werden jetzt in `config.init.lua` typgeprüft und degradieren auf den Default statt `table.concat` (auch in `:checkhealth`) crashen zu lassen.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/cascade/lists/format.lua:81` · `M.apply` · confidence **high**
@@ -2609,6 +2623,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 **Regelbezug.** ERR-22: an invalid config value must degrade to its default and surface in `:checkhealth`, not throw. `normalize()` validates neither `lists.continue` nor `lists.checkbox`, and `deep_merge` happily stores a non-table there.
 
 **Auswirkung.** `setup({ lists = { continue = false } })` — an easy confusion with the documented `lists.features.continue = false` — makes every markdown/text/tex/gitcommit buffer fire an "Autocmd failed (FileType)" error notification for the whole session, and hanging indent never applies. The parallel `lists.checkbox = false` kills `:checkhealth cascade` at health.lua:65 and crashes transform.rotate at :229 once an actual rotatable block is reached (my empty-buffer probe exited early, so that one is code-read, not reproduced). In every case the invalid value is kept rather than degraded, and health cannot report it.
+
+**Status.** ✅ erledigt (`134a8c3`) — `lists.checkbox`/`lists.continue` werden zentral als Tabelle erzwungen (Default-Fallback), wodurch alle fünf ungeprüften Lesestellen automatisch sicher werden.
 
 ### `ERR-51` — Merges kopieren Defaults tief
 
@@ -2620,6 +2636,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** `:Cascade cycle add`/`remove` permanently edit the shipped DEFAULTS table for the rest of the Neovim session: an added group survives every re-`setup()` despite the docstring promising it is "deliberately not persisted", and a removed default group cannot be restored by any `setup()` call. Session-scoped only (nothing is written to disk), but it also means specs mutate live DEFAULTS mid-suite. The root cause is lib.lua.config.deep_merge's shallow base copy, so a fix belongs there (LUA-02), not only at this call site.
 
+**Status.** ✅ erledigt (`3224f6a`) — `cycle_group_add`/`remove` mutierten `opts.groups` in-place, was wegen `deep_merge`s flachem Copy oft direkt `config.DEFAULTS.cycle.groups` traf. Beide Funktionen bauen jetzt eine private Kopie.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/cascade/cycle/word_cycle.lua:163` · `M.pick` · confidence **high**
@@ -2629,6 +2647,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 **Regelbezug.** LUA-01 requires a dependency to be either hard (naked require, no fallback) or soft (pcall + local fallback with an identical interface), held consistently — and forbids a hard dependency being presented as optional in the docs. `ui.kit` is hard here (no pcall, no vim.ui.select fallback of cascade's own; `respect_override = true` is a setting *inside* ui.kit, not a substitute for it) yet documented as optional. It also violates ERR-01: a plugin-API call at a system boundary with no pcall.
 
 **Auswirkung.** A user who installs what installation.md calls required (Neovim + lib.nvim) and enables the shipped preset gets an unhandled Lua traceback on the default `<leader>cp` keymap, and `:checkhealth cascade` reports a clean bill of health because it never probes ui.nvim. Scope is limited to that one action — every other cascade surface works — but the failure is a raw traceback, not a notification, and the docs plus health actively point away from the cause.
+
+**Status.** ✅ erledigt (`9d20a6f`) — Nacktes `require("ui.kit")` trotz als optional dokumentierter Abhängigkeit; jetzt pcall-geschützt mit Fallback auf `vim.ui.select`.
 
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
@@ -2640,6 +2660,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** Under a third-party `vim.ui.select` (telescope-ui-select, dressing, snacks), where the user can switch or close the buffer or an LSP/formatter autocmd can rewrite the line between opening the picker and choosing, the callback raises an unhandled traceback from inside the picker — "Invalid buffer id" for a wiped buffer, "Invalid 'start_col': out of range" for a shortened line. Both reproduced. The third case the auditor names — a line that changed but stayed long enough, overwriting the wrong span with no error — follows from the same captured columns and is the reason ERR-30 wants a re-verify, not just a validity check. Every other cascade action gates on Context.writable() first; this is the one path where time actually passes and it does not.
 
+**Status.** ✅ erledigt (`9d20a6f`) — `on_select`-Callback validiert Buffer/Span jetzt zur Ausführungszeit neu statt blind auf die beim Öffnen erfassten Werte zu vertrauen.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/cascade/config/init.lua:85` · `M.setup` · confidence **medium**
@@ -2650,6 +2672,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 
 **Auswirkung.** A typo in any nested option key is merged in and read by nobody: the real option keeps its default, and neither `setup()` nor `:checkhealth cascade` ever mentions it. The user sees a feature "not working" against a config file that looks correct, with no diagnostic path — `debug = true` only instruments dispatch.try and lists_active. This is a missing-safety-net finding rather than a crash: nothing breaks that was working, but a whole class of user error is made undiagnosable.
 
+**Status.** ✅ erledigt (`134a8c3`) — Neue `sanitize()`-Stufe vor dem Merge: unbekannte Keys werden mit Levenshtein-Hinweis verworfen, ein Nicht-Tabellen-Wert degradiert auf den Default. Nebenfund dabei gefixt: eine naive Fassung hätte bei komplett verworfenen Sub-Keys die ganze Domain auf `{}` zurückgesetzt.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/cascade/util/lib.lua:99` · `M.map` · confidence **medium**
@@ -2659,6 +2683,8 @@ Two findings share a root and could be fixed as one: PERF-46 (completion cache) 
 **Regelbezug.** LUA-01 requires the hard/soft choice to be made once and held, and forbids a hard dependency being presented as optional in the documentation. cascade is hard-dependent on lib.nvim in fact, soft-dependent in code shape, and describes itself as half-and-half in both installation.md and its own health output.
 
 **Auswirkung.** Real but narrower than claimed, and I have to correct the auditor on three points. (1) health.lua:36 is a *source comment*, not user output — the user-facing string at :38 says only "lib.map/lib.notify available", which is accurate. (2) installation.md does NOT present lib.nvim as optional; lines 8-10 call it "a *required* dependency, not a soft one", so LUA-01's documentation prong is not breached. What IS misleading is installation.md:16-18's promise that ":checkhealth cascade tells you which of the two situations you are in" — that second situation is unreachable, and health's own "lib.nvim not found" branch at line 40 can never fire either, because the `pcall(require, "cascade.config")` guard at lines 28-33 fails first and returns. (3) "~120 lines of unreachable fallback code" is wrong: the fallbacks guard against lib.nvim *submodule* drift (a renamed lib.lua.numeral, lib.nvim.dotrepeat), not lib.nvim absence, so they are reachable. What survives is the genuine LUA-01 breach — one dependency treated as hard in five modules and soft in a sixth — plus one concrete piece of dead code (M.map, tested only by a spec that tests itself) and one false promise in the docs.
+
+**Status.** ✅ erledigt (`4280ec3`) — Der unerreichbare „lib.nvim not found“-Health-Zweig lief hinter `cascade.config`s eigenem Hard-Require her und läuft jetzt zuerst; totes `M.map` (kein Produktions-Caller) entfernt, Doku-Referenzen bereinigt.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -2680,6 +2706,8 @@ What I could NOT cover:
 - ERR-30 (re-verify a match before writing): every write path here is fully synchronous — read lines, build, nvim_buf_set_lines in the same tick — so there is no window for staleness. The one exception is the cycle_pick callback, reported as ERR-33.
 - PRIN-01: lua/cascade/init.lua is 1,192 lines and carries the action surface of all four domains plus gating, count stashing and the :command runners. docs/architecture.md:39 declares this deliberately as "the action facade every keymap binds to", so I treated it as an architectural choice rather than an SRP violation and did not file it.
 - The CI workflow always checks out ui.nvim as a sibling (ci.yml), so the "ui.nvim absent" path behind finding 1 can never be exercised by the existing suite; the gap is structural, not a missing assertion.
+
+**Status.** ✅ erledigt (`6b14315`) — `setup_list_keymaps`/`setup_hanging_indent` leerten ihre Augroup nur, wenn ihr Gate durchging — auf zwei Ebenen (auch am `M.setup`-Call-Site). Augroup-Clear läuft jetzt immer vor jedem Gate.
 
 ---
 
