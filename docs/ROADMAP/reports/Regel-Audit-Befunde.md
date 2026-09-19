@@ -44,7 +44,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | cmdlog.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | color_my_ascii.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | media.nvim | 14 | 13 | 1 | fertig (2026-09-18) |
-| ai.nvim | 13 | – | – | offen |
+| ai.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | github_stats.nvim | 13 | – | – | offen |
 | gopath.nvim | 13 | – | – | offen |
 | lsp.nvim | 13 | – | – | offen |
@@ -3450,7 +3450,7 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 ## ai.nvim
 
-**13 Befunde** (5 × high). Roh gemeldet: 13.
+**13 Befunde** (5 × high). Roh gemeldet: 13. — **Stand: 13/13** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -3462,6 +3462,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 **Auswirkung.** on_error and on_done both fire for one request. Correcting the auditor on the panel claim: they are wrong that the panel finishes as a success. actions.lua's on_error calls `panel.finish(panel, "error")` first, and lib.nvim's progress handle guards on `done` (progress/init.lua:137-141), so the later finish from on_done is a no-op and the panel label stays "error". The real, confirmed damage is at the library contract, which is what ERR-03 is about: `Ai.StreamHandlers` (@types/init.lua:94) documents on_done as carrying the response, and any consumer implementing only on_done -- or treating it as "the answer is complete" -- silently records a truncated or empty answer as a finished one after an Anthropic overloaded_error/rate-limit event. The auditor's pdfport.nvim example is also wrong: providers/init.lua:137-139 says pdfport goes through ask(), not stream().
 
+**Status.** ✅ erledigt (`89725e6`) — `failed`-Flag ergänzt (wie gemini.lua), `on_done` bricht früh ab, wenn `on_chunk` schon `decoded.type == "error"` gemeldet hat.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/ai/providers/openai.lua:241` · `M.stream / on_done` · confidence **high**
@@ -3471,6 +3473,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 **Regelbezug.** ERR-03: one request must not be reported as both failed and successful. gemini.lua:274/340 shows the intended guard; openai.lua has none.
 
 **Auswirkung.** An OpenAI error object delivered as an SSE data event (quota exceeded, content filter) fires on_error and is then immediately followed by on_done carrying whatever text arrived first. Same correction as claude.lua: the panel keeps its "error" label because lib.nvim's progress `done` guard no-ops the second finish. The concrete consequence is the library API: a caller that only implements on_done (the handler @types/init.lua:94 documents as the response) accepts a half-answer as complete with no signal that anything failed.
+
+**Status.** ✅ erledigt (`89725e6`) — Gleiches `failed`-Flag-Muster für `decoded.error` im SSE-Chunk.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -3482,6 +3486,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 **Auswirkung.** Streaming against a model that is not pulled fires on_error and then on_done with an empty-but-successful response. The auditor's panel wording is wrong -- `ai.bindings.actions.stream_prompt`'s on_error finishes the panel as "error" first and lib.nvim's progress `done` guard makes the trailing finish a no-op, so the panel is not relabelled as a success. The real violation is that one request reports both outcomes across the public `Ai.StreamHandlers` contract: a library consumer keyed on on_done stores an empty string as the answer to a request that failed.
 
+**Status.** ✅ erledigt (`89725e6`) — Gleiches Muster für `type(decoded.error) == "string"` im NDJSON-Chunk.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/ai/providers/loomai.lua:166` · `M.stream / on_done` · confidence **high**
@@ -3491,6 +3497,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 **Regelbezug.** ERR-03, same as the three sibling backends: gemini.lua is the only one of the five that guards `on_done` behind a `failed` flag.
 
 **Auswirkung.** A loomAI `data: {"error":{...}}` event produces an error callback followed by a success callback with empty text. Panel-level the auditor overstates it (progress's `done` guard keeps the "error" label). The accurate consequence: the documented stream contract is violated -- a caller that implements only on_done records the failed request as an empty answer, and every caller that implements both receives contradictory outcomes for one request with no ordering guarantee stated anywhere.
+
+**Status.** ✅ erledigt (`50695b4`) — Gleiches Muster für `decoded.error ~= nil`.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -3502,6 +3510,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 **Auswirkung.** A user who follows docs/configuration.md:75 or :checkhealth's own advice and sets `completion = { provider = "ollama", model = "..." }` gets exactly ONE spurious warning on every startup: `unknown config key "completion.provider" -- check for a typo`. The value still merges and works. The second-order damage is the same either way: the pre-merge typo check cries wolf on the plugin's own documented option, training the user to ignore the one mechanism ERR-50 exists for. Note the mirror-image hole the auditor missed: because OPEN_SHAPE_KEYS matches by name and not by path, a real typo in any nested option named `model` can never be caught.
 
+**Status.** ✅ erledigt (`64c5859`) — `provider`/`model` in `completion` von `nil` auf `false` geändert (echter Key), zusätzlich `OPEN_SHAPE_KEYS`-Check von Bare-Name auf vollen Pfad umgestellt (schließt die im Parent-Report genannte Spiegel-Lücke).
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/ai/context/init.lua:98` · `add_scope / M.assemble` · confidence **medium**
@@ -3511,6 +3521,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 **Regelbezug.** ERR-11: a function whose result may legitimately be empty must let the caller tell "empty and fine" from "empty because something broke". The empty string carries no such distinction, and the only caller that branches on it guesses the benign cause.
 
 **Auswirkung.** Confirmed, though narrower than stated and with the caller's line numbers wrong -- explain_badge's fallback is actions.lua:210-213, not 223-225. When lib.nvim's harvest.scope.resolve throws (API drift, a malformed range), explain_badge reports "Nothing to explain in the current context", pointing the user at their selection instead of the real fault; for ask/stream the context block silently vanishes from the prompt and the model answers without the buffer it was meant to see. Severity depends on resolve actually throwing, which is not demonstrated here -- the violation is the lost distinction, not an observed crash.
+
+**Status.** ✅ erledigt (`552ade5`) — `M.assemble` gibt jetzt zusätzlich `errors` zurück, wenn ein `scope.resolve` wirklich geworfen hat; `explain_badge` nutzt das, um „Fehler beim Ermitteln“ von „nichts zu erklären“ zu unterscheiden.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -3522,6 +3534,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 **Auswirkung.** `provider_order = "claude"` (a plausible single-provider typo) raises at health.lua:114. Neovim's health runner pcalls each plugin's check and reports the exception, so :checkhealth itself survives, but the ai.nvim report stops there -- the completion, optional-integrations and composer-preflight sections never render, i.e. the one surface ERR-22 designates for making the mistake visible is the surface it breaks. The same value raises inside providers.resolve on every :Ai ask/stream. `completion.trigger = "atuo"` is the quieter half: it survives the merge intact, silently means "never auto-trigger" (completion/init.lua:181), and health.lua:120 prints it back as an info line without flagging it as invalid.
 
+**Status.** ✅ erledigt (`64c5859`) — Neues `VALUE_SCHEMA` + `sanitize_values()`: fehlerhaft typisierte Werte werden vor dem Merge auf ihren Default zurückgesetzt und über `config.issues()`/`:checkhealth` sichtbar.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/ai/completion/init.lua:131` · `M.accept` · confidence **medium**
@@ -3531,6 +3545,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 **Regelbezug.** ERR-30 requires an edit computed earlier to be re-verified against the current text immediately before writing, and skipped when it no longer matches. The changedtick captured in `trigger()` (line 75) is never carried into the shown suggestion, so `accept()` has nothing to compare against.
 
 **Auswirkung.** In the normal insert-mode flow the dismiss autocmds keep the stale window very small, so this is not a routinely reachable bug on its own -- it needs a ghost that survived into Normal mode (the InsertLeave/generation hole above). Once that happens, Normal-mode edits (dd, u, :%d) leave the ghost in place and the next insert-mode <Tab> writes the suggestion at the stale (row, col): text inserted at the wrong position, or -- when the row/col no longer exists -- an unguarded 'out of range' API error surfacing as E5108 out of an expr mapping, which also swallows the <Tab> the user actually pressed.
+
+**Status.** ✅ erledigt (`8f4769e`) — `ghost.show()` trägt jetzt den `changedtick`; `accept()` verifiziert ihn unmittelbar vor dem Schreiben erneut und überspringt bei Abweichung; der Schreibaufruf ist jetzt pcall-abgesichert.
 
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
@@ -3542,6 +3558,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 **Auswirkung.** Two paths, unequal in reachability. The InsertLeave one is the real one: trigger a completion with the cursor at column 0, type nothing, press Esc (column 0 is the one column Esc does not move away from) -- generation unchanged, buffer valid, changedtick unchanged, cursor unchanged, so the guard passes and ghost.show renders inline virtual text while the user is in Normal mode, where no autocmd clears it again (Normal-mode motion fires CursorMoved, not CursorMovedI). The cross-window path the auditor leads with is far narrower: it additionally requires the new window's cursor to sit at the exact same (row, col), and ghost.show's set_extmark is pcall'd (ghost.lua:55), so it degrades to an invisible extmark in a background buffer rather than a crash.
 
+**Status.** ✅ erledigt (`8f4769e`) — `trigger()` merkt sich das auslösende Fenster-Handle und validiert es im Callback erneut; `reset()` erhöht jetzt `generation`, sodass eine laufende Anfrage beim Verlassen des Insert-Modus ungültig wird.
+
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
 `lua/ai/providers/loomai.lua:102` · `M.ask / M.stream error message` · confidence **medium**
@@ -3551,6 +3569,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 **Regelbezug.** ERR-60 names exactly this: `a and b or c` falls through to `c` as soon as `b` is falsy, independent of `a`. Here the fall-through hands the whole error *table* to `tostring()`.
 
 **Auswirkung.** A loomAI error body like `{"error":{"code":500}}` or `{"error":{"message":null}}` surfaces to the user as `loomai error: table: 0x...` -- the failure is reported but the message carries no information about what went wrong, in both the buffered ask() path and the streaming path. Non-fatal (the error kind and err.data are still correct), but the one string the user actually sees is useless.
+
+**Status.** ✅ erledigt (`50695b4`) — `a and b or c`-Fallthrough durch explizite `error_message()`-Hilfsfunktion ersetzt.
 
 ### `LUA-93` — Jedes Plugin trägt seinen eigenen Lazy-Trigger
 
@@ -3562,6 +3582,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 
 **Auswirkung.** A user installing from this snippet who selects a block and presses <leader>ar before ever running :Ai or a Normal-mode <leader>a* gets nothing at all -- the plugin is unloaded, so the Visual mapping does not exist and the key falls through to whatever <leader> normally does. Because any later Normal-mode use loads the plugin and makes the Visual binds appear, the feature looks intermittent rather than broken. Fix is a one-line doc change (`keys = { { "<leader>a", mode = { "n", "v" } } }`); the plugin code itself is fine.
 
+**Status.** ✅ erledigt (`9f783b8`) — `keys = { "<leader>a" }` → `keys = { { "<leader>a", mode = { "n", "v" } } }`.
+
 ### `PRIN-20` — Keine stillen Fehler
 
 `lua/ai/bindings/keymaps.lua:59` · `M.setup / actions.ask (mode "v")` · confidence **medium**
@@ -3571,6 +3593,8 @@ Additional context for two findings: the unguarded `vim.system` behind ERR-01 al
 **Regelbezug.** PRIN-20 forbids silent failure of a relevant function: the action advertises that it sends the selection, sends nothing, and reports neither an error nor a warning. The sibling Visual binds do it correctly (`quick`/`explain` pass `vim.tbl_extend("force", cfg.context, { selection = true })`, lines 80 and 161), which makes this an omission rather than a deliberate boundary.
 
 **Auswirkung.** Selecting a function and pressing <leader>aa in Visual mode sends only the typed question -- the model answers about nothing, with no error, warning or any other signal that the selection was dropped, while which-key and BINDINGS.md both promise the selection was included. The failure is invisible precisely because the model still returns a confident-sounding answer.
+
+**Status.** ✅ erledigt (`552ade5`) — `ask_prompt` erhält optionalen `context`-Parameter; Visual-Mode-Bind übergibt jetzt `selection = true` wie die Geschwister-Binds.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -3589,6 +3613,8 @@ WHAT I COULD NOT VERIFY FROM THIS REPO: several rules hinge on lib.nvim/ui.nvim 
 DELIBERATELY NOT REPORTED: (a) `executable_cache` in providers/util.lua never invalidates (PERF-42) -- documented as an intentional session-lifetime memo and exactly what XP-05 asks for; (b) `config.get()` returning the live table by reference (ERR-54) -- explicitly documented as a live reference, and no consumer mutates it (every caller copies via vim.tbl_extend); (c) gemini.lua's plain-JSON error recovery being documented as never live-verified -- a stated gap, not a rule violation; (d) killing a stream from the panel surfaces as `[error] curl exited …` in the panel, i.e. a user-initiated cancel reads as a failure -- a UX wart with no matching rule in the 76; (e) `attachments.from_file` not checking `uv.fs_read`'s returned byte count -- same class as finding #13 but on a path already capped at 32 MB, too speculative to file twice.
 
 ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states that "none of the specs under TESTS/ai touch ai.ui.panel/ai.ui.badge/ai.bindings.actions", which is why ui.nvim is left off the rtp. TESTS/ai/panel_spec.lua does require ai.ui.panel (it stubs ui.kit via package.loaded, so the run still passes) -- the reasoning in the comment no longer matches the suite. No rule in the 76 covers it, hence no finding.
+
+**Status.** ✅ erledigt (`2f87aba`) — `write_body_file` prüft jetzt `written < #json` statt nur `not written`, damit ein Short-Write nicht als Erfolg gilt.
 
 ---
 
