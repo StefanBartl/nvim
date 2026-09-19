@@ -45,7 +45,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | color_my_ascii.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | media.nvim | 14 | 13 | 1 | fertig (2026-09-18) |
 | ai.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
-| github_stats.nvim | 13 | – | – | offen |
+| github_stats.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | gopath.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | lsp.nvim | 13 | – | – | offen |
 | open.nvim | 13 | – | – | offen |
@@ -3620,7 +3620,7 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 ## github_stats.nvim
 
-**13 Befunde** (7 × high). Roh gemeldet: 13.
+**13 Befunde** (7 × high). Roh gemeldet: 13. — **Stand: 13/13** (⏭️ 0, 2026-09-18)
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -3632,6 +3632,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 **Auswirkung.** `:GithubStats show owner/repo clones this_month` -- and every other preset name the command's own <Tab> completion offers, including today and yesterday -- silently reports the full stored history instead of the requested window, because a value the completion suggested collapses onto the same nil as "no date given". The floating window's "Period:" line (show.lua:75) prints stats.period_start/period_end, which analytics.lua:335-339 derives from the dates that actually survived, i.e. the full span -- so the output is self-consistent and gives no hint that the filter was dropped. Identical behaviour for any mistyped ISO date.
 
+**Status.** ✅ erledigt (`dddb640`) — `start_date`/`end_date` werden jetzt vor der Query gegen ISO-Format oder bekannte Presets geprüft; ein Tippfehler oder unbekannter Preset-Name bricht mit Fehlermeldung ab statt den Filter stillschweigend fallen zu lassen.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/github_stats/retention.lua:55` · `load_archive` · confidence **high**
@@ -3641,6 +3643,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 **Regelbezug.** ERR-11 requires "empty but fine" and "empty because broken" to be distinguishable; this is exactly the load-modify-save collapse the rule's Belege footnote calls the most common real bug class of the 32-repo sweep. Unlike this plugin's telemetry/report files, the archive is not a convenience artifact: it is the only remaining copy of every day older than `cutoff_days`, because compact_metric deletes the raw fetch files that produced it (line 136).
 
 **Auswirkung.** One unreadable or wrong-shaped `_archive.json` (failed rename on Windows, full disk, a hand edit) is read as "no archive yet". compact_metric rebuilds the archive from only the days still present in raw fetch files and overwrites the damaged file at line 115, destroying the last chance of recovering it by hand -- and the rule's own prescribed mitigation (rename to .corrupt before the next save) is absent. compact_metric then returns err = nil at line 145, so `:GithubStats compact` and the fetcher's retention notification both report a clean success.
+
+**Status.** ✅ erledigt (`4b049a8`) — `load_archive` unterscheidet jetzt „Datei fehlt“ von „Datei kaputt“: bei Lese-/Decode-Fehler wird das Original einmalig nach `_archive.json.corrupt` gesichert und `compact_metric` bricht mit Fehler ab statt mit leerem Archiv zu überschreiben.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -3652,6 +3656,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 **Auswirkung.** Every unreadable fetch file is dropped from the aggregation with no signal anywhere, so clone/view totals, daily breakdowns, sparklines, trend arrows, exports and diffs come out silently lower than the truth. Combined with retention: compact_metric archives from this short aggregation and then deletes every raw file with date <= cutoff (retention.lua:130-143) purely from the directory listing, without regard to whether it parsed. Note the statusline is not affected -- statusline.lua:96 wraps query_metric in pcall and degrades to an empty component.
 
+**Status.** ✅ erledigt (`4b049a8`) — `read_metric_history` gibt jetzt einen nicht-nil `err` zurück, wenn mindestens eine Datei nicht lesbar/dekodierbar war, statt das stillschweigend zu verschlucken; das Ergebnis wird in diesem Fall auch nicht gecacht.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `README.md:42` · `"Around it" section` · confidence **high**
@@ -3661,6 +3667,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 **Regelbezug.** LUA-01 requires a dependency to be hard or soft and held to consistently, and explicitly forbids presenting a hard dependency as optional in the docs. There is no pcall and no fallback anywhere on the ui.nvim path; docs/installation.md:8 and health.lua:274 both already state the opposite of what the README says ("also required, not optional -- require('github_stats') will fail to load").
 
 **Auswirkung.** A user who installs on the strength of the README front page, without StefanBartl/ui.nvim, gets an uncaught error from the first `require("github_stats")` -- which is what setup() itself is -- because init.lua:56 pulls dashboard/init.lua and its bare `require("ui.contextmenu")` at module load. No user command, autocmd or background fetch is ever registered. The failure lands during plugin load, i.e. before :checkhealth github_stats can be run to deliver the error message health.lua:274 already has ready for exactly this case.
+
+**Status.** ✅ erledigt (`a80d88b`) — README stellt ui.nvim nicht mehr als „soft“ dar, sondern als echte Abhängigkeit, passend zu docs/installation.md und health.lua.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -3672,6 +3680,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 **Auswirkung.** Running `:checkhealth github_stats` discards every setup() option for the rest of the session, reverting the module-level config to config.json-over-DEFAULTS. With `setup({ config_dir = ... })` or `{ data_dir = ... }` it is worse than a value reset: PATHS is re-pointed at stdpath('config')/lua/plugins/github-stats (creating a config.json there if none exists), so after the healthcheck the dashboard reads an empty store, fetches write to the default directory, and retention archives and os.removes there -- and the rest of the healthcheck reports on that wrong directory as though it were the configured one.
 
+**Status.** ✅ erledigt (`f214189`) — `check_config()` ruft `config.init()` nicht mehr ohne Argumente auf (das setzte PATHS zurück und verwarf setup()-Optionen), sondern liest nur noch `config.get()`.
+
 ### `PERF-62` — Timer sauber stoppen
 
 `lua/github_stats/dashboard/init.lua:43` · `M.schedule_render / cleanup_dashboard` · confidence **high**
@@ -3681,6 +3691,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 **Regelbezug.** PERF-62 requires `timer:stop()` **plus** `pcall(timer.close)` before starting a new debounce timer, and explicitly forbids just dropping the handle. The plugin's two other timers do it correctly (background.lua:101-103 and dashboard/state.lua:56-57 both stop and close), so this is the one place that diverges.
 
 **Auswirkung.** Each debounce cycle drops a stopped-but-open libuv timer handle on the event loop: the callback at 63-66 abandons its own handle every time a debounced render fires, and 41-45 abandons any still-live handle before 57 allocates a replacement. They accumulate for the session; cleanup_dashboard() leaks the last one too, so closing the dashboard does not release it. Only luv's GC finalizer eventually closes them, at a moment nothing in this code controls. The per-keypress count is lower than "dozens per scroll" -- 41-45 only leaks when a timer is still pending -- but the accumulation over a session is real and unbounded, and this is the one timer in the plugin that diverges from its two correct siblings.
+
+**Status.** ✅ erledigt (`26ad755`) — Alle drei Stellen, die den Render-Debounce-Timer anfassten, laufen jetzt über einen gemeinsamen `stop_render_timer()`, der `stop()` und `close()` aufruft (gegen `is_closing()` abgesichert).
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -3692,6 +3704,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 **Auswirkung.** vim.fn.expand() runs a backtick span in the path through &shell before anything is written, and resolves Vim specials. One correction to the auditor's proof-of-concept: execute() splits args on `%s+`, so a backtick span containing spaces is torn apart -- the shell-execution case needs a whitespace-free span (e.g. `:GithubStats export owner/repo clones \`id\`.csv`), and the same constraint applies to the right-click "Export selected..." prompt, whose text is reassembled into the same string at menu.lua:85. Unaffected by that constraint: `:GithubStats export r clones %.csv` silently resolves `%` to the current buffer's name and can overwrite the file being edited, and a path containing `[`, `{` or `*` resolves to something other than what was typed.
 
+**Status.** ✅ erledigt (`3ba8bf4`) — `write_lines`/`create_pdf` sowie die Erfolgsmeldung nutzen jetzt `lib.nvim.cross.fs.expand_path` statt `vim.fn.expand()` auf nutzergesteuertem Pfadtext.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/github_stats/bindings/usrcmds/chart.lua:38` · `M.execute` · confidence **medium**
@@ -3701,6 +3715,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 **Regelbezug.** Same ERR-10 collapse as in show.lua, with an extra inconsistency: `last_quarter` happens to match `"last"` and is routed through parse_time_range (which resolves presets correctly), while `this_quarter` does not and silently becomes "no filter". A user cannot tell which of two adjacent completion entries actually works.
 
 **Auswirkung.** `:GithubStats chart owner/repo clones this_month` draws the sparkline over the entire stored history, and the "Period:" line from visualization reports that full span, so the chart looks internally consistent while answering a different question than the one asked. Because last_* presets happen to match the "last" substring and this_*/today/yesterday do not, two adjacent entries in the same completion list behave differently with nothing to tell them apart.
+
+**Status.** ✅ erledigt (`dddb640`) — Die `arg3:match("last")`-Heuristik ist ersetzt: zwei explizite Daten werden strikt als ISO validiert, ein einzelnes Argument geht durch `analytics.parse_time_range` mit Prüfung des `recognized`-Flags.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -3712,6 +3728,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 **Auswirkung.** Much smaller than claimed, and one part of the claim is simply wrong. `table.sort` sorts the entire array regardless of `limit` (the limit is applied afterwards, at 578-580 / 612-614), so a limit=3 call cannot change what a later limit=10 call sees -- that specific scenario does not occur. I grepped every consumer: the only callers of get_top_referrers/get_top_paths are bindings/usrcmds/referrers.lua:29 and paths.lua:30, and both go through these same two functions, which apply the identical count-descending sort. Nothing today depends on the GitHub API's original array order, so the observable damage is currently nil. What is real is a latent one: the cached record's array is permanently reordered for the session, so any future consumer added against the documented read-only contract (an export of raw referrers, a differently-sorted view) would silently get mutated state. This is a contract violation to fix on principle, not a user-visible bug.
 
+**Status.** ✅ erledigt (`e88faad`) — `get_top_referrers`/`get_top_paths` sortieren jetzt eine Kopie statt des von `storage` als geteilt/read-only dokumentierten `latest.data`-Arrays in-place.
+
 ### `PERF-92` — Keine Layout-Geometrie auf Modulebene
 
 `lua/github_stats/dashboard/init.lua:136` · `create_dashboard_window` · confidence **medium**
@@ -3721,6 +3739,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 **Regelbezug.** PERF-92 requires not only that geometry be computed per open, but that every such surface carry a `recompute()` and a `VimResized` handler. The plugin's own documentation states the gap outright: "the dashboard currently does NOT re-render on terminal/window resize."
 
 **Auswirkung.** With the dashboard open, a terminal or tmux-pane resize leaves the float at the width, height and centre offsets computed at open time: nothing recomputes them and nothing triggers a re-render. The float is no longer centred after any resize. Content is laid out against the config values dashboard.header_width (render.lua:46) and dashboard.sparkline_width (render.lua:367-372) rather than the live window width, so after a shrink it is clipped by the stale window instead of re-flowing. One correction: render_dashboard does read nvim_win_get_height(win) at render.lua:524, so scroll limits do catch up -- but only on the next render, which a resize never causes. Closing and reopening the dashboard is the only fix.
+
+**Status.** ✅ erledigt (`af88fcc`) — Neuer `VimResized`-Autocmd ruft `recompute_window_geometry()` auf, die Größe/Position neu berechnet und einen Re-Render erzwingt.
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -3732,6 +3752,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 
 **Auswirkung.** A .json file in a metric directory that decodes to a table but lacks a conforming data/timestamp shape raises an uncaught Lua error. The first crash is usually earlier than the auditor's line: storage.lua:167's `table.sort(results, function(a, b) return a.timestamp < b.timestamp end)` fails with "attempt to compare nil with string" before analytics is reached. Either way, the dashboard render, :GithubStats show, summary, chart and export all fail for that repository until the file is found and deleted by hand. One correction: the statusline is NOT affected -- statusline.lua:91-99 wraps both the require and query_metric in pcall and returns nil, so the component just goes empty. The missing count cap is also real: no limit on the stored array, so an oversized one is aggregated in full on every render.
 
+**Status.** ✅ erledigt (`0522620`) — `deduplicate_by_date` validiert jetzt jedes Feld per Typ-Check und begrenzt die Item-Anzahl pro Record; zusätzlich wurde `storage.lua`s Sortier-Komparator gegen einen fehlenden/falschen `timestamp` abgesichert.
+
 ### `SEC-42` — Pfad-/Dateiname-Komponenten sanitizen
 
 `lua/github_stats/storage.lua:22` · `sanitize_repo_name` · confidence **medium**
@@ -3741,6 +3763,8 @@ ONE STALE COMMENT worth a look while fixing: TESTS/minimal_init.lua:24-29 states
 **Regelbezug.** SEC-42 requires user-controlled path components to be stripped of escape/control sequences and then whitelisted, and states that a blacklist alone is not enough. This is a one-character blacklist: backslashes, `..` segments, control characters, leading `~` and drive-letter prefixes all pass through untouched. The identifiers are user-controlled (`repos` in config.json / setup()) and partly remote-controlled (`full_name` from the GitHub API via `watch_users`), and health.lua's `^[^/]+/[^/]+$` check only runs during :checkhealth, never on the write path.
 
 **Auswirkung.** Weaker than framed as an attack, but real as a robustness hole: the "attacker" here is whoever writes the repos list, i.e. the user, and GitHub's own full_name is in practice constrained to a safe charset, so the remote vector is theoretical. What does bite is Windows path semantics -- a repos entry containing a backslash (`owner\repo` as a typo, or `owner\..\..\x`) is not sanitized, so vim.fs.joinpath produces a nested or escaping path, fetches write outside the configured data directory, and retention's os.remove operates there too (limited to files matching list_metric_files' `^YYYY-MM-DDT....json$` pattern inside whatever directory was computed). The benign case is the likelier one: the same entry resolves to a different storage location on Windows than on Linux, so history silently splits across two directories.
+
+**Status.** ✅ erledigt (`4765190`) — `sanitize_repo_name` whitelisted jetzt auf `[%w%-%._]` statt nur `/` zu ersetzen; Backslashes, Steuerzeichen, führendes `~` und Laufwerksbuchstaben werden neutralisiert.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -3759,6 +3783,8 @@ RULES I COULD NOT MEANINGFULLY CHECK: ERR-33/LUA-13 (deferred-handle revalidatio
 TWO REAL DEFECTS I FOUND THAT NO RULE IN THE 76 COVERS, noted so they are not lost: (1) bindings/keymaps.lua:205-213 calls `actions.refresh_all()` and `actions.force_refresh_selected()` without the `on_done` argument both functions exist to take, so pressing `R` or `f` notifies "Refreshing..." and then never re-renders when the fetch lands -- while integrations/menu.lua:57-64 passes on_done correctly, contradicting that file's own claim that right-click "never offers anything the keyboard doesn't already provide". (2) dashboard/render.lua:242-247 hardcodes a 72-column box border while lines 244-246 fill the interior to `header_content_width()`, so any `dashboard.header_width` other than the default 72 produces a header box whose borders no longer line up with its content.
 
 BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore not re-reported: ERR-54 on config.get_repos() (now returns vim.list_slice, config/init.lua:188), LUA-87's original form (setup() now wins over config.json, config/init.lua:139-141), SEC-21 (api_timeout_ms + --max-filesize wired through api.lua:57-64), XP-04 (health.lua:137 now uses argv `vim.fn.system({...})`), SEC-01/03/10 in health.lua (check_api_sync goes through lib.nvim.net.curl with bearer_token via stdin), PERF-81/82 (background.lua's idempotent start with deferred first cycle).
+
+**Status.** ✅ erledigt (`db88c3a`) — `fetch_all` ruft den `callback` jetzt auch auf den beiden Early-Return-Pfaden mit einer leeren Summary auf, statt den Aufrufer für immer warten zu lassen.
 
 ---
 
