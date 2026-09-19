@@ -194,10 +194,17 @@ in the re-check, `my.nvim@c17d9d3`) — **done**. A middle tier for
 large-file behaviour instead of the binary switch is **still open** — not
 part of this bundle, not checked here.
 `filetree.nvim`: make the `cwd_mode` badge cheap before the statusline
-framework is ever swapped — **still open, not part of this bundle**; the
-dead `CWD_MODES.md` link — **done, 2026-09-19**, `filetree.nvim@2ad60ef`
-(the stack was already documented under `CORE.md`; the reference was just
-a stale filename in `WORKFLOW.md`'s intro list).
+framework is ever swapped — **done, 2026-09-19**, `filetree.nvim@49a0507`.
+Confirmed the cost was real, not assumed: `badge_text()` does no I/O but
+runs `lib.nvim`'s `gmatch`-based `path_shorten` on every pull, and
+`component()`/`badge()` are exactly what lualine/heirline call on every
+statusline redraw. Now memoized against `(mode, pinned root, tree-window
+width)`, re-derived and compared on each call rather than relying on an
+explicit invalidation call at every mutation site — so it can't drift out
+of sync the way a forgotten invalidation would; the dead `CWD_MODES.md`
+link — **done, 2026-09-19**, `filetree.nvim@2ad60ef` (the stack was
+already documented under `CORE.md`; the reference was just a stale
+filename in `WORKFLOW.md`'s intro list).
 ~~`lsp.nvim`~~: hover cache via `lib.lua.memo` — **already built** (record
 only, nothing to build); the runtime half of the keymap collision check —
 **done**, `lsp.nvim@49b4dfa`, plus a case-sensitivity gap in that same
@@ -255,11 +262,10 @@ before/after for `filter` turned out to already be done
 `casedesk.nvim`'s `:Case timeline` git-pull-session decision is done
 (`casedesk.nvim@9ad5672`, §4 row 7).
 
-**A handful of small, genuinely open items remain**, none of them urgent:
-`lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s `cwd_mode` badge
-cost, and the remaining seven of `casedesk.nvim`'s eleven sibling
-integrations (§6). None of these block anything else; take them
-opportunistically.
+**A couple of small, genuinely open items remain**, none of them urgent:
+`lib.nvim`'s `autocmd-dispatcher` (§5), and the remaining seven of
+`casedesk.nvim`'s eleven sibling integrations (§6). None of these block
+anything else; take them opportunistically.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
