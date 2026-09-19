@@ -191,9 +191,14 @@ larger default float for the playing view — **already done**, all three, in
 written; the note itself was just never struck.
 ~~`my.nvim`~~: `guicursor` presets (`my.nvim@c2f33ef`); `:My hl why` for
 skip-rule tracing (`my.nvim@e253494`, and its own hot-path allocation fixed
-in the re-check, `my.nvim@c17d9d3`) — **done**. A middle tier for
-large-file behaviour instead of the binary switch is **still open** — not
-part of this bundle, not checked here.
+in the re-check, `my.nvim@c17d9d3`) — **done**. The middle tier for
+large-file behaviour — **checked 2026-09-19, already staged, no code
+change needed**: `cursorline` is never size-gated at all, `cursorcolumn`
+has its own `min_colored_file_kb` threshold, and `color_codes`/
+`cword_occurrences` each carry a per-feature `large_file_kb` override —
+`docs/PERFORMANCE.md` has documented this staged behaviour since the
+plugin's extraction, before the roadmap note asking for it existed. Struck
+from `my.nvim/ROADMAP.md`, recorded in `my.nvim/FEATURES.md`.
 `filetree.nvim`: make the `cwd_mode` badge cheap before the statusline
 framework is ever swapped — **done, 2026-09-19**, `filetree.nvim@49a0507`.
 Confirmed the cost was real, not assumed: `badge_text()` does no I/O but
