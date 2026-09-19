@@ -137,9 +137,9 @@ table — see each row.
 
 ## 5. Worth doing, but a real sitting
 
-**Status, 2026-09-18: eleven of seventeen done outright, two superseded by a
+**Status, 2026-09-19: twelve of seventeen done outright, two superseded by a
 much larger fleet-wide pass, two reclassified as decisions rather than open
-work, one rejected after investigation, one still genuinely open.**
+work, one rejected after investigation — all seventeen rows now closed.**
 
 | Plugin | Item | Effort | Benefit |
 |---|---|---|---|
@@ -152,7 +152,7 @@ work, one rejected after investigation, one still genuinely open.**
 | ~~`ui.nvim`~~ | ~~Run `rules.nvim` over `ui.nvim`~~ — **superseded, see below** | 1–2 | The per-plugin ask is now covered (and far exceeded) by the fleet-wide audit across all 38 repos, 2026-09-18 — see `Regel-Audit-Gesamtstatus.md` |
 | ~~`media.nvim`~~ | ~~Run `rules.nvim` over `media.nvim`~~ — **superseded, see below** | 1–2 | Same fleet-wide audit covers it; its own roadmap's "after transcription and the hub settle" ordering turned out moot once the sweep ran over everything at once |
 | ~~`data.nvim`~~ | ~~Phase 1 rest: `--reg=`/`--inplace`/`--split`~~ — **done, verified 2026-09-18** | 1 | All three flags typed and wired (`@types/init.lua`, `bindings/usrcmds.lua`); `scope/resolve.lua`'s own doc comment now explicitly hands the register/output half to `scope.source`/`scope.sink` |
-| `lib.nvim` | `autocmd-dispatcher` — one autocmd, many handlers | 1–2 | Medium. **Still open.** Already verified against 17 real `FileType` registrations across the fleet, with two fixes found in the prototype |
+| ~~`lib.nvim`~~ | ~~`autocmd-dispatcher` — one autocmd, many handlers~~ — **already shipped, 2026-09-19** | 1–2 | `lua/lib/nvim/bindings/autocmd/dispatcher/` implements the proposed generic factory, both recommended fixes included (sort-at-registration, per-registration id instead of `tostring(handler.load)`), honest performance framing in its own README. Migrating the nvim config's own `FileType` registry onto it (the doc's phase 2) never happened as such — the config no longer has a single bespoke dispatcher module to migrate — but `filetree.nvim` already consumes it in production, which is the actual validation phase 2 was after |
 | ~~`lib.nvim`~~ | ~~Windows elevation in the dependency installer~~ — **not an open item, decided against** | 1 | Documented as a deliberate design choice (`deps/pm/init.lua`, `deps/README.md`): "no elevation logic beyond a `sudo` prefix" — Windows elevation is left to the package manager's own UAC prompt, on purpose, not unfinished |
 | ~~`gopath.nvim`~~ | ~~Consolidate frecency~~ — **already correct, the entry's premise was wrong** | 1–2 | Verified: `gopath/alternate/frecency.lua:43` calls `require("lib.nvim.frecency").store` — the local file is the saturation curve on top of the shared implementation, not a second one |
 | ~~`my.nvim`~~ | ~~Persisted highlight overrides~~ — **done 2026-09-18**, `my.nvim@3f8be49` | 1 | Opt-in `persist_overrides = true`; `lua/my/config/persist.lua`. A follow-up bug/security/performance re-check found and fixed a non-idempotent observer registration and N redundant disk writes on `:My hl reset` — both since fixed |
@@ -243,29 +243,35 @@ open** for the rest.
 
 ## 8. What this leaves
 
-**Rewritten 2026-09-18.** Every plugin-specific item this report originally
-named in §4/§5/§6 has shipped, was already done, or was investigated and
-either rejected (`mdview.nvim` cooperative tab closing) or reclassified as a
-decision rather than work (`lib.nvim` Windows elevation, `gopath.nvim`
-frecency). That closes the entire original scope of this review. What is
-left is:
+**Rewritten 2026-09-18, closed out 2026-09-19.** Every plugin-specific item
+this report originally named in §4/§5/§6 has shipped, was already done, or
+was investigated and either rejected (`mdview.nvim` cooperative tab
+closing) or reclassified as a decision rather than work (`lib.nvim` Windows
+elevation, `gopath.nvim` frecency). That closes the entire original scope
+of this review.
 
-**Update, 2026-09-19:** the dead `CWD_MODES.md` link is fixed,
-`filetree.nvim@2ad60ef` — `WORKFLOW.md`'s intro list now only names docs
-that actually exist. The remaining five below are being worked through the
-same session.
+**2026-09-19, the six items §8 originally still listed as open all
+closed:** `filetree.nvim`'s dead `CWD_MODES.md` link
+(`filetree.nvim@2ad60ef`) and its `cwd_mode` badge cost
+(`filetree.nvim@49a0507`, memoized against mode/root/tree-window-width);
+`casedesk.nvim`'s `:Case timeline` git-pull-session decision
+(`casedesk.nvim@9ad5672`, §4 row 7 — sessions built from a bulk mtime stamp
+across multiple files now labeled "not measurable" instead of counted as
+fake zero-duration sessions); `data.nvim`'s `diff.nvim` before/after for
+`filter`, which turned out to already be done (`data.nvim@caa95af`, same
+day as this report — missed on the first pass); `ai.nvim`'s model registry
+(`ai.nvim@b34f382`, wired into `:checkhealth ai`); and `lib.nvim`'s
+`autocmd-dispatcher`, which also turned out to already be shipped
+(`lua/lib/nvim/bindings/autocmd/dispatcher/`, with `filetree.nvim` already
+consuming it in production — the actual validation the roadmap doc's
+"migrate the config" phase 2 was after, even though that literal migration
+never happened once the config was restructured away from having a single
+dispatcher module to migrate).
 
-**Update, 2026-09-19 (second pass):** `filetree.nvim`'s dead `CWD_MODES.md`
-link is fixed (`filetree.nvim@2ad60ef`); `data.nvim`'s `diff.nvim`
-before/after for `filter` turned out to already be done
-(`data.nvim@caa95af`, same day as this report — missed on the first pass);
-`casedesk.nvim`'s `:Case timeline` git-pull-session decision is done
-(`casedesk.nvim@9ad5672`, §4 row 7).
-
-**A couple of small, genuinely open items remain**, none of them urgent:
-`lib.nvim`'s `autocmd-dispatcher` (§5), and the remaining seven of
-`casedesk.nvim`'s eleven sibling integrations (§6). None of these block
-anything else; take them opportunistically.
+**One small item remains genuinely open**, not urgent, not blocking
+anything: the remaining seven of `casedesk.nvim`'s eleven sibling
+integrations (§6) — `docs/around-it.md` currently documents four
+(`spotlight`/`sessions`/`images`/`pdfport`).
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
