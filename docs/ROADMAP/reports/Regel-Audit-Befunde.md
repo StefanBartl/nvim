@@ -47,7 +47,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | ai.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | github_stats.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | gopath.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
-| lsp.nvim | 13 | – | – | offen |
+| lsp.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | open.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | ui.nvim | 13 | – | – | offen |
@@ -3962,7 +3962,7 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 ## lsp.nvim
 
-**13 Befunde** (8 × high). Roh gemeldet: 13.
+**13 Befunde** (8 × high). Roh gemeldet: 13. — **Stand: 13/13** (⏭️ 0, 2026-09-18)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -3974,6 +3974,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 **Auswirkung.** A truncated or hand-edited `lsp_completion_usage.json` under `stdpath("state")` decodes to nil, is silently treated as an empty history, and is then overwritten with the whole in-memory table — either by the legacy migration inside `load()` (line 66) or by the first `M.bump` (line 104). No `.corrupt` backup is taken and nothing is reported, so the file's remaining content is destroyed before the user has any chance to notice the history was not merely empty. Within the session `M.count` keeps working off the rebuilt table; the loss shows up only as completion ranking having quietly reset.
 
+**Status.** ✅ erledigt (`213cbef`) — `load()`/`M.bump()` unterscheiden jetzt „Datei fehlt“ von „Datei kaputt“ und sichern eine korrupte Datei einmalig nach `.corrupt`, bevor der nächste Save sie überschreibt.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/lsp/tools/ts_type_lookup/cmds.lua:265` · `M.find_in_node_modules` · confidence **high**
@@ -3983,6 +3985,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 **Regelbezug.** ERR-11 requires "nothing to report" and "failed while determining" to be distinguishable. ripgrep exits 1 for "no matches" but 2 for an actual failure (regex parse error, unreadable directory, argument error), and this collapses all three onto the same informational notice.
 
 **Auswirkung.** A ripgrep run that fails outright — for example a regex parse error from a `<cword>` containing `[` or `(`, or a missing/broken rg invocation — is reported to the user as "No results for '<symbol>' in node_modules", indistinguishable from a successful search that found nothing. The user concludes the symbol is not vendored and stops, rather than fixing the query. The auditor's permissions example is weaker than stated: rg normally warns on unreadable paths and still exits 0 or 1, so the realistic exit-2 cases are malformed patterns and argument/IO errors.
+
+**Status.** ✅ erledigt (`ee01bfe`) — rg-Exitcode 1 („keine Treffer“) wird jetzt von jedem anderen Exitcode („echter Fehler“) getrennt gemeldet statt beides als „No results“ zu kollabieren.
 
 ### `ERR-31` — `O_CREAT|O_EXCL` statt Check-dann-Erzeugen
 
@@ -3994,6 +3998,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 **Auswirkung.** Running `:AstroNewComponent Button` a second time replaces an existing `src/components/Button.astro` with the nine-line stub, and `:AstroNewPage about` does the same under `src/pages/`. No prompt, no backup, no warning — the `pcall` only catches a write that fails outright, and a successful clobber is indistinguishable from a successful create. Line 36 then `:edit`s the path, so the user is shown the stub as if it were the new file. Recovery requires VCS.
 
+**Status.** ✅ erledigt (`bb1a714`) — `scaffold()` claimt den Zielpfad jetzt mit `O_CREAT|O_EXCL`; bei EEXIST wird die vorhandene Datei nur geöffnet statt überschrieben.
+
 ### `ERR-31` — `O_CREAT|O_EXCL` statt Check-dann-Erzeugen
 
 `lua/lsp/languages/webdev/astro/keymaps.lua:161` · `astro <leader>ax extract-to-component` · confidence **high**
@@ -4003,6 +4009,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 **Regelbezug.** Same rule as the `scaffold` finding: a create-new operation that unconditionally truncates whatever is already at the target path. The surrounding comments show the site was audited for other problems (empty selections, mkdir, range shifting) but never for the pre-existing-file case.
 
 **Auswirkung.** Extracting a visual selection under a component name that already exists truncates that component's file and writes the extracted snippet over it, then replaces the selection in the source buffer with `<Name />` and reports "Created component: src/components/X.astro". The clobbered file's content is gone from disk with no backup while the message claims a creation; recovery requires VCS. The source buffer is left referencing a component whose body is now the wrong code.
+
+**Status.** ✅ erledigt (`bb1a714`) — Gleiche `O_CREAT|O_EXCL`-Absicherung für „Extract to component“; bei EEXIST bleiben Zieldatei und Quellauswahl unangetastet.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -4014,6 +4022,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 **Auswirkung.** `:LuaLsSetProfile minimal` sets an environment variable that nothing on the reload path reads, runs the same unprofiled 200-result/depth-15 `find_type_dirs` walk as before, and then tells the user "Switched to profile: minimal - Reloading...". On a large tree the scan the command exists to narrow is unchanged, and the confirmation message is the reason the user stops investigating. A typo such as `:LuaLsSetProfile ful` is accepted without validation and echoed back verbatim, so even the inert env var does not hold a value any reader would recognise.
 
+**Status.** ✅ erledigt (`08ec6d1`) — `build_library.lua` (nicht nur `reload.lua`) liest jetzt tatsächlich das aktive Profil; `:LuaLsSetProfile` validiert den Namen und meldet den Wechsel erst nach erfolgreichem Reload. Der eigentliche Defekt saß tiefer als die zitierte Zeile.
+
 ### `LUA-16` — `vim.NIL` sanitizen
 
 `lua/lsp/core/filter.lua:57` · `M.dedup` · confidence **high**
@@ -4023,6 +4033,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 **Regelbezug.** LUA-16 requires every field coming from external JSON/LSP/RPC data to be checked against `vim.NIL` before use, because `vim.NIL` is userdata, not Lua nil — exactly the `or`-idiom this function relies on is the one that fails. The module docstring (lines 39-44) states it is given raw publishDiagnostics payloads, so this is the external-data path, not an internal one.
 
 **Auswirkung.** Any language server that sends `"severity": null`, `"source": null` or `"message": null` in a publishDiagnostics item makes `dedup` throw on every push. It is not an uncaught crash: nvim dispatches notifications through `rpc.lua`'s `Client:try_call(NOTIFICATION_HANDLER_ERROR, ...)` (rpc.lua:481-487), so the error is pcall'd and surfaced as an LSP client error. The consequence is still that the whole push is dropped before `orig()` ever runs, so that server's diagnostics never render and the buffer keeps whatever stale set it had, with a recurring NOTIFICATION_HANDLER_ERROR as the only clue. `severity` and `source` are optional fields in the LSP spec, so a null there is a legal-ish payload, not only a broken server.
+
+**Status.** ✅ erledigt (`f0fa67c`) — `severity`/`source`/`message` werden vor Verwendung explizit gegen `vim.NIL` geprüft statt sich auf den `or`-Fallback zu verlassen. Nebenfund: identische Lücke in der Nachbarfunktion `M.filter()`, außerhalb des Funds — als Folgeaufgabe an einen Spawn-Task übergeben.
 
 ### `SEC-30` — Nutzereingabe literal escapen
 
@@ -4034,6 +4046,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 **Auswirkung.** A cursor word or argument containing regex metacharacters is reinterpreted as a pattern rather than matched literally: `Foo.Bar` also matches `FooXBar`, so the first hit rg returns — which is the one this function opens in a vsplit — can be a different symbol's file presented as the type's home. A pattern rg refuses to compile (`a[`, an unbalanced group) exits 2 and is reported as "No results" because of the collapse on line 265. The backtracking concern is real but secondary: rg's default engine is finite-automaton based and only falls back to PCRE2 on `-P`, which is not passed here — the practical cost of a pathological pattern is the synchronous `fn.systemlist` blocking the UI for the whole node_modules walk.
 
+**Status.** ✅ erledigt (`ee01bfe`) — rg läuft jetzt mit `-F` (fixed-strings); das Symbol wird literal statt als Regex gematcht.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/lsp/languages/documentation/markdown_words/init.lua:347` · `M.set_root` · confidence **high**
@@ -4043,6 +4057,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on user/buffer text: a backtick span in the argument is a command substitution over `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. The rule names `lib.nvim.cross.fs.expand_path` as the replacement when only `~` and environment variables are wanted, which is all this call needs.
 
 **Auswirkung.** `:MdSetRoot` runs its argument through Vim's filename expansion, so a backtick span is a command substitution over `&shell` (confirmed: the shell branch is taken on this machine, failing with E282 only because &shell is PowerShell and the temp-file redirect does not match). `usercmd.create` pcall-wraps the callback, so the user sees a notification rather than a crash — but the shell has already run. The non-malicious breakage is narrower than claimed: only a root whose string BEGINS with `%`, `#` or `<` is rewritten (`#tmp` expands to the empty string, after which the `gsub` leaves `""` and the scan walks the wrong tree), and glob metacharacters `*`, `?`, `[`, `{}` are expanded anywhere in the path. A `#` or `%` in the middle of a directory name is NOT affected.
+
+**Status.** ✅ erledigt (`8030199`) — `set_root()` nutzt jetzt `lib.nvim.cross.fs.expand_path` statt `vim.fn.expand()` — kein Shell-Risiko über Backticks mehr in `:MdSetRoot`.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -4054,6 +4070,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 **Auswirkung.** When the state directory is read-only or full, or the `.tmp`→target rename loses a race with another Neovim instance holding the file, every pick is dropped with no return value, no notification and no health signal. The auditor's "the counter reads 0 forever" is wrong for the running session: line 103 assigns `counts = current` before the write, so in-session ranking keeps working and the user sees normal behaviour. The failure only becomes visible after a restart, when the history is back to whatever last landed on disk — which is exactly the symptom hardest to trace back to a broken write weeks earlier.
 
+**Status.** ✅ erledigt (`213cbef`) — `M.bump()` gibt jetzt `(ok, err)` von `json.write()` zurück statt den Fehler stillschweigend zu verschlucken.
+
 ### `LUA-11` — Gültigkeit prüfen
 
 `lua/lsp/tools/lsp_signature/open_floating_preview.lua:67` · `open_floating_preview` · confidence **medium**
@@ -4063,6 +4081,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 **Regelbezug.** LUA-11/LUA-12 require a validity check before every `nvim_buf_*` call. `nvim_create_buf` signals failure by returning 0, and 0 is not an invalid handle in the Neovim API — it is the alias for the *current* buffer, so an unchecked failure silently retargets every following call. The plugin's own `lspdoctor/probe.lua:161-163` guards the identical call with `if probe_buf == 0 then return nil, "could not create a buffer" end`, so this is an inconsistency inside one codebase rather than a missing convention.
 
 **Auswirkung.** A defensive-rule breach whose failure mode needs `nvim_create_buf` to actually return 0 (allocation/handle exhaustion), which is rare — the auditor's own 'medium' confidence is right. Should it happen, nothing downgrades the popup to a no-op: `bufnr = 0` retargets the whole sequence at the buffer the user is editing, so its lines are replaced with the signature text, `modifiable` is set to false and `bufhidden` to `wipe`, its extmark namespaces are cleared, and it is opened in a floating window — armed to be wiped on hide. The concrete, present-tense defect is the unguarded handle and the inconsistency with probe.lua, not a bug users are hitting today.
+
+**Status.** ✅ erledigt (`b68969e`) — `nvim_create_buf()`-Rückgabe `0` wird jetzt geprüft; bei Fehlschlag bricht die Funktion mit `nil` ab, statt den aktuellen Buffer zu retargeten.
 
 ### `LUA-16` — `vim.NIL` sanitizen
 
@@ -4074,6 +4094,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 
 **Auswirkung.** A server answering signatureHelp with `"parameters": null` plus a numeric `activeParameter` makes the formatter raise "attempt to index a userdata value". It is caught, not fatal: nvim invokes the response callback through `Client:try_call(SERVER_RESULT_CALLBACK_ERROR, ...)` (rpc.lua:468-475), so the error is logged and surfaced as an LSP client error. The user-visible effect is that the signature popup silently never appears for that server — and because the error names only the Lua line, nothing points at the server payload as the cause. Note the same file has the identical exposure one step earlier at line 37 (`#sigs` on a `vim.NIL` `result.signatures`), so a fix should cover both.
 
+**Status.** ✅ erledigt (`b68969e`) — `sig.parameters` und `result.signatures` werden jetzt explizit gegen `vim.NIL` geprüft statt nur auf Wahrheitswert.
+
 ### `LUA-93` — Jedes Plugin trägt seinen eigenen Lazy-Trigger
 
 `lua/lsp/pack/core.lua:27` · `conform.nvim pack spec` · confidence **medium**
@@ -4083,6 +4105,8 @@ Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund g
 **Regelbezug.** LUA-93 states the trigger belongs in every spec that should be lazy, and that being `require`d by another module is an accident rather than a trigger — naming `lsp.integrations.blink` pulling blink into every startup as the case. The spec's module docstring explains at length why there is no `config` block but is silent on why there is no trigger, so neither a reader nor the plugin manager can tell whether the eagerness is intended.
 
 **Auswirkung.** The spec states no loading intent, so what happens depends on the host's lazy.nvim `defaults.lazy`: with the stock default (false) conform is loaded at startup by lazy.nvim itself regardless of the require; under a host that sets `defaults.lazy = true`, `lsp.setup()`'s two `require("conform")` calls become the accidental trigger and pull it into every startup anyway — the `lsp.integrations.blink` case the rule names. Either way conform is fully `setup()`-ed in sessions that never format. The concrete trap is the one the auditor identified: adding conform's documented `event = "BufWritePre", cmd = "ConformInfo"` would make the spec read lazy while the bootstrap require keeps loading it eagerly, and nothing in the file would contradict the reader.
+
+**Status.** ✅ erledigt (`397d0f2`) — conform.nvim-Spec bekommt ein explizites `lazy = false` mit Begründung, da `lsp.setup()`s Bootstrap es ohnehin jedes Mal eager requirt.
 
 ### `PRIN-10` — Keine globalen States
 
@@ -4114,6 +4138,8 @@ Could not cover / caveats:
 - TESTS/ (15,446 lines) got only targeted checks: XP-06 require-path casing (clean — minimal_init.lua resolves deps through env vars and normalizes them) and the `pcall(f(args))` shape (clean). No test-code findings; that is a statement about what I checked, not a full audit of the suite.
 - Two things I looked at and decided against reporting, so they are not silent omissions: (a) `lua/lsp/tools/lsp_signature/show_hover.lua:122` `M.clear_cache()` replaces the LRU reference instead of clearing in place, which is the letter of PERF-47 — but the cache is a module-local upvalue that nothing outside holds, so I could not name anything that actually breaks; (b) `core/workspace_diagnostics.lua`'s `files_cache` has no invalidation, which brushes PERF-42 — but the module explicitly documents session lifetime as the intended contract, so it is a design choice, not a missing definition.
 - I verified three claims empirically against nvim 0.12.2 rather than reasoning about them: the `vim.NIL` / `or`-fallback behaviour (confirms the filter.lua finding), `vim.fn.expand` backtick command substitution (confirms the markdown_words finding), and the `vim.g` function round-trip (which *disconfirmed* a LUA-17 reading of `vim.g._formatter_api`, so that finding is filed under PRIN-10 at reduced severity). One claim I could not reproduce: the E348 behaviour of `vim.fn.expand(\"<cword>\")` on blank lines that bindings/actions.lua:318-323 documents as measured — on this 0.12.2 it returned `\"\"` in both a scratch and a real file buffer. I therefore did not file findings against the four unguarded `expand(\"<cword>\")` sites (astro/usercmds.lua:178, ts_type_lookup/cmds.lua:152 and :253, ts_type_lookup/symbol_picker.lua:52, plus the two keymap RHS strings in noice_integration.lua:41,48), even though they are inconsistent with the two sites that do guard it. Worth a second look on a machine where that measurement reproduces.
+
+**Status.** ✅ erledigt (`0971c0a`) — `vim.g._formatter_api` ersetzt durch `lsp.formatter.get()`/`.set()`; Zustand lebt jetzt modulintern statt in einem unpräfixierten globalen.
 
 ---
 
