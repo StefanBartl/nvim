@@ -26,7 +26,7 @@ which own plugin would it land in, and what would it cost?
     - [A2 · `jghauser/mkdir.nvim` → fileops.nvim ✅](#a2--jghausermkdirnvim--fileopsnvim-)
     - [A3 · `dstein64/vim-startuptime` → runtime-analysis.nvim ✅](#a3--dstein64vim-startuptime--runtime-analysisnvim-)
   - [5. Tier B — full replacement that is a real build](#5-tier-b--full-replacement-that-is-a-real-build)
-    - [B2 · `folke/todo-comments.nvim` → insights.nvim](#b2--folketodo-commentsnvim--insightsnvim)
+    - [B2 · `folke/todo-comments.nvim` → insights.nvim ✅](#b2--folketodo-commentsnvim--insightsnvim-)
     - [B3 · `iamcco/markdown-preview.nvim` → mdview.nvim ✅](#b3--iamccomarkdown-previewnvim--mdviewnvim-)
     - [B4 · `dhruvasagar/vim-table-mode` → markdown.nvim](#b4--dhruvasagarvim-table-mode--markdownnvim)
     - [B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `winbar/`](#b5--nvim-treesitternvim-treesitter-context--uinvim-winbar)
@@ -56,6 +56,7 @@ three replacements that turned out to be rewires rather than builds:
 | A1 resty.nvim → runtime-analysis.nvim | nothing to build: `parse.lua` already reads the `.http` block format, `:RA send` runs the block under the cursor, and no `.http`/`.resty` file exists anywhere in `$REPOS_DIR` or the config; plugin, its 600 ms loader workaround and `lua/plugins/webdev.lua` dropped | nvim, 2026-09-19 |
 | A2 mkdir.nvim → fileops.nvim | `auto_mkdir` BufWritePre autocmd, on by default (`fileops.nvim@329a65f`, 2026-07-15); plugin dropped from the spec | nvim `3fe8afd94`, 2026-09-17 |
 | A3 vim-startuptime → runtime-analysis.nvim | `:RA startup profile [runs]`; plugin dropped | nvim `137c5f67f`, 2026-09-17 |
+| B2 todo-comments.nvim → insights.nvim | `insights.todos`: the host's keyword table shipped as the default, `:Insights todos [KEYWORD...] [ui]` over the shared rg scanner, and an own extmark highlighter with signs; plugin, `config/todo_comments/` and two cheatsheets dropped, `<leader>sT`/`ST` on the insights spec | insights.nvim `638b0f7`/`45e2911`, nvim `03f4ead9a`, 2026-09-19 |
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
 | 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
@@ -106,7 +107,6 @@ neither chosen):
 | `:Gbrowse` → open.nvim / reposcope.nvim | S–M | placement |
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
 | window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
-| B2 todo-comments → insights + spotlight + pickers | L | three plugins gain a feature each |
 | B4 table-mode → markdown.nvim | M | build |
 | B5 ts-context → ui.nvim `winbar/` | L | build; performance work is the actual scope |
 | 7.4 harpoon → sessions.nvim | L | daily-driver workflow: flag, dual-run, then cut |
@@ -294,8 +294,8 @@ the pieces that are config code today and should be plugin code:
 |---|---|---|---|
 | ~~`resty.nvim` → **HTTP client on `.http`/`.resty` buffers**~~ | ~~`config` is an elaborate `vim.filetype.add` + autocmd workaround, documented as containing a ~600 ms startup cost~~ | **Done 2026-09-19** — runtime-analysis.nvim already had all of it, including the "missing piece": `parse.lua` reads the `.http` block format and `:RA send` runs the block under the cursor. Plugin and workaround dropped. See [A1](#a1--lima1909restynvim--runtime-analysisnvim-). | **done** |
 | ~~`vim-startuptime` → **repeated runs, averaged, sorted, navigable**~~ | ~~`cmd` only~~ | **Done 2026-09-17** — see [A3](#a3--dstein64vim-startuptime--runtime-analysisnvim-). Uninstalled. The "only the presentation is missing" reading in this row was wrong and is corrected there. | **done** |
-| `todo-comments.nvim` → **keyword scan** | `config/todo_comments/**` — the keyword table and colours are **already yours**; both keymaps call `snacks.picker.todo_comments()` directly, bypassing the plugin | **insights.nvim** — `scan/rg.lua` + `scan/cache.lua` already run project-wide ripgrep scans for conflicts, unused imports, stray dev servers. | **M** |
-| `todo-comments.nvim` → **in-buffer highlight + signs** | `signs = true` | **spotlight.nvim** — "mark any number of tokens at once, in colours you can tell apart, and keep them there through searches" is the same machinery. | **M** |
+| ~~`todo-comments.nvim` → **keyword scan**~~ | ~~`config/todo_comments/**` — the keyword table and colours are **already yours**; both keymaps call `snacks.picker.todo_comments()` directly, bypassing the plugin~~ | **Done 2026-09-19** — `:Insights todos`, on `scan/rg.lua`, the host's table as the shipped default. See [B2](#b2--folketodo-commentsnvim--insightsnvim-). | **done** |
+| ~~`todo-comments.nvim` → **in-buffer highlight + signs**~~ | ~~`signs = true`~~ | **Done 2026-09-19** — `insights.todos.highlight`, an own extmark module rather than spotlight's (see B2 for why). | **done** |
 | ~~`mkdir.nvim` → **create missing parent dirs on write**~~ | ~~`lazy = true`, no config~~ | **Done** — fileops.nvim's `auto_mkdir` BufWritePre autocmd, on by default; plugin dropped 2026-09-17. See [A2](#a2--jghausermkdirnvim--fileopsnvim-). | **done** |
 | `mason.nvim` → **installer registry** | `lazy = false`; `lsp.nvim` and `:MasonInstallAll` `require("mason")` directly | Keep. | **XL** |
 | `plenary.nvim` → **shared Lua helpers** | `lazy = false` — unconditionally in the startup path | Not a rebuild target; a *dependency-chain* question. See [7.6](#76-the-plenary-dependency-chain). | — |
@@ -371,11 +371,60 @@ vim-startuptime's single averaged column left out.
 
 ## 5. Tier B — full replacement that is a real build
 
-### B2 · `folke/todo-comments.nvim` → insights.nvim
+### B2 · `folke/todo-comments.nvim` → insights.nvim ✅
 
-**Open. Benefit: high. Effort: 2–3 sessions. Risk: low.**
+**Done 2026-09-19** — `insights.nvim@638b0f7` (+ `45e2911`), config
+`03f4ead9a`. One session, not the two or three budgeted, because two of the
+three "pieces already distributed" turned out to be exactly that and the
+third was smaller than it looked.
 
-The pieces are already distributed across own code:
+**What was built.** `insights.todos` in three files. `keywords.lua` is the
+host's own table — icon, colour category, aliases per keyword, and the
+colour categories as candidate lists — shipped as the default, so the
+config keeps nothing; a host states only the difference (`FOO = { color =
+"info" }` adds, `HACK = false` drops). `init.lua` is the report: one rg
+pass through the scanner every other project report uses, case-sensitive
+regardless of a `--smart-case` in the user's ripgreprc, word-bounded and
+deliberately without the colon (a sample of the fleet found colon-less
+annotations in a third of the hits); `:Insights todos [KEYWORD...] [ui]`
+takes keywords or aliases and a UI name in any order, `<Tab>` completes
+both, `ui = "auto"` goes snacks → telescope → fzf → quickfix. `highlight.lua`
+colours the keyword as a filled block, the rest of the comment in the
+foreground, and puts the icon in the sign column — visible range only,
+re-scanned on scroll and (debounced) on change, groups redefined through
+`lib.nvim.ui.hl.persist` after a theme change. Health section, keymap
+actions (`todos`, `todos_qf`), autocmds and docs come with it;
+`TESTS/todos_spec.lua` covers the table, the filter, vimgrep parsing with a
+Windows drive path, the scan against a fake rg, and the highlight against
+a real buffer with the Lua parser.
+
+**Two things this entry had wrong, both about the shape of the build:**
+
+- **The highlight did not go through spotlight.nvim.** Its public API is a
+  *set of tokens* — `add(text)`, `remove`, `lock`, sets you save and switch —
+  the model for following a request id through a log. An annotation
+  highlighter needs a *pattern* over a keyword table, a comment gate, and a
+  sign per category, none of which spotlight has a hook for; the honest
+  reuse would have been its extmark loop, ~40 lines that are also the least
+  interesting part. So insights has its own module and spotlight is left
+  as what it is. The "same machinery" reading was true of the mechanism
+  and wrong about the interface.
+- **The list did not go through pickers.nvim either.** pickers.nvim runs
+  *named builtins* of an engine (`run("git_diff")`); it has no "show this
+  ad-hoc list" call, and adding one is a pickers.nvim feature this finding
+  did not ask for. insights already had telescope and fzf adapters shaped
+  for its symbol entries, and todo entries are shaped the same way so they
+  work unchanged; snacks gets a direct `picker.pick({ items })` with the
+  `file` format. Quickfix through `lib.nvim.ui.list` closes the gaps.
+
+**One defect found by building it.** The first version asked
+`vim.treesitter.get_captures_at_pos` whether a match sits in a comment,
+and it said "no captures" for a buffer that had a parser but no active
+Tree-sitter *highlighting* — which is where a wrong answer would have gone
+unnoticed longest. `get_node` reads the tree itself; the range is parsed
+before the scan.
+
+The original reasoning, kept for the record:
 
 - **Keywords and colors** are already yours — `lua/config/todo_comments/keywords.lua`
   and `colors/strong.lua`, passed into the external plugin.
@@ -610,9 +659,9 @@ decided *entirely* by which external plugins keep it (7.6).
 
 **Open — it resolves as the items above do, not on its own.**
 
-Plenary is pulled in by harpoon, todo-comments, lazygit, diffview, neogit,
-telescope and neotest (resty left 2026-09-19). Doing the lazygit, harpoon
-and todo-comments items removes three of seven. It does not remove plenary
+Plenary is pulled in by harpoon, lazygit, diffview, neogit, telescope and
+neotest (resty and todo-comments left 2026-09-19). Doing the lazygit and harpoon
+items removes two of six. It does not remove plenary
 (telescope and neotest keep it), but it does take it **out of the startup
 path**, since harpoon is the only `lazy = false` consumer.
 
@@ -657,7 +706,7 @@ Struck entries are done.
 | **runtime-analysis.nvim** | ~~resty's `.http` runner~~ (already had it; A1) · ~~vim-startuptime's averaged report~~ (A3) · snacks profiler (the *feature*; its keys are gone, 7.2) |
 | **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer, once the keymaps live there) |
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
-| **insights.nvim** | todo scan · git-conflict detection + resolution |
+| **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
 | **sessions.nvim** | harpoon marks, pins, persistence, preview |
 | **debugging.nvim** | neotest adapter debug tooling · snacks debug inspector |
 | **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
@@ -668,7 +717,7 @@ Struck entries are done.
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
 | **emojis.nvim** | unicode name/search/table/digraphs |
 | **cascade.nvim** | puppeteer template literals |
-| **spotlight.nvim** | todo highlight machinery · conflict marker highlight |
+| **spotlight.nvim** | ~~todo highlight machinery~~ (went to insights instead; B2) · conflict marker highlight |
 | **open.nvim** | `:Gbrowse` · lazygit nvr bridge · (`config/ui_open.lua`'s Windows URL fix) |
 | **my.nvim** | quickfile · colorizer · zen mode |
 | **images.nvim** | ~~the only working image path~~ — it already was; `snacks.image` merely stopped pretending (7.1) |
@@ -697,10 +746,11 @@ offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
 ~~startuptime → runtime-analysis~~ (A3).
 
-**Real projects (L), in order of payoff, open:** todo-comments → insights +
-spotlight (B2) · harpoon → sessions (1,707 lines out of the config; flag it,
-dual-run it, then cut; 7.4) · neo-tree config → filetree.nvim (~1,500 lines,
-same argument) · ts-context → ui.nvim (B5). ~~markdown-preview → mdview~~ (B3).
+**Real projects (L), in order of payoff, open:** harpoon → sessions (1,707
+lines out of the config; flag it, dual-run it, then cut; 7.4) · neo-tree
+config → filetree.nvim (~1,500 lines, same argument) · ts-context → ui.nvim
+(B5). ~~todo-comments → insights~~ (B2, one session) · ~~markdown-preview →
+mdview~~ (B3).
 
 **Leave alone:** the three picker engines, treesitter, mason, blink, neogit,
 gitsigns' hunk engine, noice, mini.ai/targets, autopairs, ts-autotag, matchup's
