@@ -17,30 +17,31 @@ tabline, theme). Every overlap finding below is measured against that line.
 
 ## Table of content
 
-  - [0. Status — the S-tier is done, 2026-09-17](#0-status--the-s-tier-is-done-2026-09-17)
+  - [0. Status — the S-tier is done, 2026-09-17](#0-status-the-s-tier-is-done-2026-09-17)
   - [1. Method, and what this report is not](#1-method-and-what-this-report-is-not)
   - [2. The numbers](#2-the-numbers)
   - [3. The central observation](#3-the-central-observation)
-  - [4. Tier A — the same code exists twice, both copies live](#4-tier-a--the-same-code-exists-twice-both-copies-live)
-    - [A1 · `lib.nvim.ui.kit` ↔ `ui.kit` — duplicated on purpose, diverging by accident — resolved 2026-09-17](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17)
-    - [A2 · `lib.nvim.contextmenu` ↔ `ui.contextmenu` — and ui.nvim uses the wrong one](#a2--libnvimcontextmenu--uicontextmenu--and-uinvim-uses-the-wrong-one)
-  - [5. Tier B — the same feature built twice, across the ui/my boundary](#5-tier-b--the-same-feature-built-twice-across-the-uimy-boundary)
-    - [B1 · Symbol breadcrumbs exist in both plugins; my.nvim's LSP half is dead](#b1--symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead)
-    - [B2 · Two mode classifiers that disagree](#b2--two-mode-classifiers-that-disagree)
-  - [6. Tier C — a shareable primitive that only one side has](#6-tier-c--a-shareable-primitive-that-only-one-side-has)
-    - [C1 · Nobody owns "keep these highlight groups defined"](#c1--nobody-owns-keep-these-highlight-groups-defined)
-    - [C2 · `winhighlight` merging: my.nvim has the safe one, four others hand-roll](#c2--winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll)
-    - [C3 · `vim.wo.winbar` ownership has one adopter and two non-adopters](#c3--vimwowinbar-ownership-has-one-adopter-and-two-non-adopters)
-    - [C4 · Soft-require centralization: my.nvim did it, ui.nvim did not](#c4--soft-require-centralization-mynvim-did-it-uinvim-did-not)
-    - [C5 · Nerd-font glyph probing — three approaches, and the library one is unused](#c5--nerd-font-glyph-probing--three-approaches-and-the-library-one-is-unused)
-    - [C6 · `vim.on_key` capture](#c6--vimon_key-capture)
-  - [7. Tier D — defects this check turned up at the seams](#7-tier-d--defects-this-check-turned-up-at-the-seams)
-    - [D1 · `move_buffer_to_tab` leaves a ghost chip in the source tab](#d1--move_buffer_to_tab-leaves-a-ghost-chip-in-the-source-tab)
-    - [D2 · `my.ui.line_numbers` uses a filesystem ignore list as a filetype list](#d2--myuiline_numbers-uses-a-filesystem-ignore-list-as-a-filetype-list)
-    - [D3 · `:checkhealth ui` hard-requires a module ui.nvim no longer uses](#d3--checkhealth-ui-hard-requires-a-module-uinvim-no-longer-uses)
-    - [D4 · Diagnostic virtual-text background is restored by any `:colorscheme`](#d4--diagnostic-virtual-text-background-is-restored-by-any-colorscheme)
-    - [D5 · `github_stats_badge`: German text and an unguarded emoji — widened, 2026-09-17](#d5--github_stats_badge-german-text-and-an-unguarded-emoji--widened-2026-09-17)
-  - [8. Tier E — asymmetry in who owns a sibling's statusline component](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component)
+  - [4. Tier A — the same code exists twice, both copies live](#4-tier-a-the-same-code-exists-twice-both-copies-live)
+    - [A1 · `lib.nvim.ui.kit` ↔ `ui.kit` — duplicated on purpose, diverging by accident — resolved 2026-09-17](#a1-libnvimuikit-uikit-duplicated-on-purpose-diverging-by-accident-resolved-2026-09-17)
+    - [A2 · `lib.nvim.contextmenu` ↔ `ui.contextmenu` — and ui.nvim uses the wrong one](#a2-libnvimcontextmenu-uicontextmenu-and-uinvim-uses-the-wrong-one)
+  - [5. Tier B — the same feature built twice, across the ui/my boundary](#5-tier-b-the-same-feature-built-twice-across-the-uimy-boundary)
+    - [B1 · Symbol breadcrumbs exist in both plugins; my.nvim's LSP half is dead](#b1-symbol-breadcrumbs-exist-in-both-plugins-mynvims-lsp-half-is-dead)
+    - [B2 · Two mode classifiers that disagree](#b2-two-mode-classifiers-that-disagree)
+  - [6. Tier C — a shareable primitive that only one side has](#6-tier-c-a-shareable-primitive-that-only-one-side-has)
+    - [C1 · Nobody owns "keep these highlight groups defined"](#c1-nobody-owns-keep-these-highlight-groups-defined)
+    - [C2 · `winhighlight` merging: my.nvim has the safe one, four others hand-roll](#c2-winhighlight-merging-mynvim-has-the-safe-one-four-others-hand-roll)
+    - [C3 · `vim.wo.winbar` ownership has one adopter and two non-adopters](#c3-vimwowinbar-ownership-has-one-adopter-and-two-non-adopters)
+    - [C4 · Soft-require centralization: my.nvim did it, ui.nvim did not](#c4-soft-require-centralization-mynvim-did-it-uinvim-did-not)
+    - [C5 · Nerd-font glyph probing — three approaches, and the library one is unused](#c5-nerd-font-glyph-probing-three-approaches-and-the-library-one-is-unused)
+    - [C6 · `vim.on_key` capture](#c6-vimon_key-capture)
+  - [7. Tier D — defects this check turned up at the seams](#7-tier-d-defects-this-check-turned-up-at-the-seams)
+    - [D1 · `move_buffer_to_tab` leaves a ghost chip in the source tab](#d1-move_buffer_to_tab-leaves-a-ghost-chip-in-the-source-tab)
+    - [D2 · `my.ui.line_numbers` uses a filesystem ignore list as a filetype list](#d2-myuiline_numbers-uses-a-filesystem-ignore-list-as-a-filetype-list)
+    - [D3 · `:checkhealth ui` hard-requires a module ui.nvim no longer uses](#d3-checkhealth-ui-hard-requires-a-module-uinvim-no-longer-uses)
+    - [D4 · Diagnostic virtual-text background is restored by any `:colorscheme`](#d4-diagnostic-virtual-text-background-is-restored-by-any-colorscheme)
+    - [D5 · `github_stats_badge`: German text and an unguarded emoji — widened, 2026-09-17](#d5-github_stats_badge-german-text-and-an-unguarded-emoji-widened-2026-09-17)
+  - [8. Tier E — asymmetry in who owns a sibling's statusline component](#8-tier-e-asymmetry-in-who-owns-a-siblings-statusline-component)
+    - [Done for four of the five, 2026-09-17 — and the fifth was a mistake in this finding](#done-for-four-of-the-five-2026-09-17-and-the-fifth-was-a-mistake-in-this-finding)
   - [9. Checked, and there is no overlap](#9-checked-and-there-is-no-overlap)
   - [10. Findings inside my.nvim's own scope boundary](#10-findings-inside-mynvims-own-scope-boundary)
   - [11. Suggested order](#11-suggested-order)
@@ -229,6 +230,8 @@ statusline component. Both say so now.
 Everything else the suggested order lists is done, deliberately left as
 is, or corrected as wrong — there is no open item left in this report.
 
+---
+
 ## 1. Method, and what this report is not
 
 The unit of analysis is a **feature family**, not a plugin. The pass ran in
@@ -405,6 +408,8 @@ imagined — deciding which copy survives and migrating seven call sites —
 was already decided in 2026-09 and did not need doing. The part that did
 need doing was an afternoon.
 
+---
+
 ### A2 · `lib.nvim.contextmenu` ↔ `ui.contextmenu` — and ui.nvim uses the wrong one
 
 Same shape, smaller: `lib.nvim/lua/lib/nvim/contextmenu/init.lua` (331 lines)
@@ -477,6 +482,8 @@ API, not new engineering. Add **S** if the interim fix is preferred: drop
 `prefer_lsp_function` and its provider rather than leave a default-on,
 never-firing stage in a documented pipeline.
 
+---
+
 ### B2 · Two mode classifiers that disagree
 
 Both plugins map the current Vim mode to a highlight group, independently:
@@ -540,6 +547,8 @@ a property of the library rather than of each author's memory.
 
 **Effort: M** for the primitive with tests; **S** per adopting call site.
 
+---
+
 ### C2 · `winhighlight` merging: my.nvim has the safe one, four others hand-roll
 
 `my.nvim/lua/my/hl_config/utils/winhighlight.lua` (119 lines) is a validated,
@@ -567,6 +576,8 @@ depends only on `lib.lua.strings.core` and `lib.lua.memo`, both already in
 `lib.nvim`.
 
 **Effort: M.**
+
+---
 
 ### C3 · `vim.wo.winbar` ownership has one adopter and two non-adopters
 
@@ -607,6 +618,8 @@ Two other plugins write the same surface and do not participate:
 **Effort: S** per plugin to route through `ui.winbar` (soft-required, exactly
 as `my.nvim` does it) — the module's whole API is one function.
 
+---
+
 ### C4 · Soft-require centralization: my.nvim did it, ui.nvim did not
 
 `my.nvim/lua/my/util/soft_require.lua` exists because of the `rules.nvim` pass
@@ -631,6 +644,8 @@ so this is a fleet-wide habit, not a `ui.nvim` failing, and only the
 
 **Effort: S** to give `ui.nvim` the same one-module treatment `my.nvim` got.
 The fleet-wide version is a separate, larger question and is not proposed here.
+
+---
 
 ### C5 · Nerd-font glyph probing — three approaches, and the library one is unused
 
@@ -657,6 +672,8 @@ example (`ui/contextmenu/init.lua:29`), not as a require, which is how this
 was initially mis-read for both plugins.
 
 **Effort: S** per call site.
+
+---
 
 ### C6 · `vim.on_key` capture
 
@@ -687,6 +704,8 @@ at `on_key`.
 These are not overlaps. They are bugs that only become visible when you look
 at two plugins at once, which is what this pass was for.
 
+---
+
 ### D1 · `move_buffer_to_tab` leaves a ghost chip in the source tab
 
 `lib.nvim/lua/lib/nvim/buf_win_tab/move_buffer_to_tab/init.lua` moves the
@@ -709,6 +728,8 @@ consistent, or it must call into `ui.nvim`'s state module — and `lib.nvim`
 cannot.
 
 **Effort: S.**
+
+---
 
 ### D2 · `my.ui.line_numbers` uses a filesystem ignore list as a filetype list
 
@@ -742,6 +763,8 @@ bare global (`:56`) because `statuscolumn` needs `v:lua`.
 
 **Effort: S.**
 
+---
+
 ### D3 · `:checkhealth ui` hard-requires a module ui.nvim no longer uses
 
 `ui.nvim/lua/ui/health.lua:81` lists `"lib.nvim.ui.kit.select"` among the
@@ -759,6 +782,8 @@ resolved by removing `lib.nvim`'s copy, `:checkhealth ui` fails on a
 perfectly healthy install.
 
 **Effort: S** (delete one line).
+
+---
 
 ### D4 · Diagnostic virtual-text background is restored by any `:colorscheme`
 
@@ -778,6 +803,8 @@ This is [C1](#c1--nobody-owns-keep-these-highlight-groups-defined) with the
 consequence attached, and the clearest argument for the primitive.
 
 **Effort: S** standalone, or free as C1's first adopter.
+
+---
 
 ### D5 · `github_stats_badge`: German text and an unguarded emoji — widened, 2026-09-17
 
@@ -874,6 +901,8 @@ and none of them is named in the code.
 
 **Effort: M per sibling** to move its component into it behind a documented
 `statusline.lua`, following `sandbox.nvim`'s file as the template.
+
+---
 
 ### Done for four of the five, 2026-09-17 — and the fifth was a mistake in this finding
 
@@ -1032,3 +1061,6 @@ the original reasoning, the last column says how each one ended.
 | 12 | ~~[E](#8-tier-e--asymmetry-in-who-owns-a-siblings-statusline-component) statusline components~~ | M ×5 | One sibling at a time; `sandbox.nvim` is the template | four moved; `filetree_cwd_mode` was already correct; the docs half closed with `filetree.nvim@2aada27` / `sandbox.nvim@615845b` |
 | 13 | ~~[A1](#a1--libnvimuikit--uikit--duplicated-on-purpose-diverging-by-accident--resolved-2026-09-17) kit deduplication~~ | L | The largest, and the one that needs a decision, not typing | the decision had already been made (keep both); the drift was fixed and a CI guard added, `ui.nvim@3c2eac2`/`bfd12e7` |
 | 14 | ~~[F1](#10-findings-inside-mynvims-own-scope-boundary)–F3 scope questions~~ | S–M | Done — all three resolved 2026-09-18 | `diff.nvim@03b6359`, `my.nvim@1c147de`, `my.nvim@8388b57` |
+
+---
+
