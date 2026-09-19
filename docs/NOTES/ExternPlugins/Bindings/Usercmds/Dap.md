@@ -77,7 +77,7 @@ Commands und Keymaps können in diesem einen Punkt auseinanderlaufen.
 ## `:Dap <subcommand>`
 
 Gebaut mit `lib.nvim.bindings.usercmd.composer` (`composer.verb`) — dieselbe Composer-
-Basis wie `:Harpoon` (`<Tab>`-Completion pro Subcommand, Usage-Ausgabe statt
+Basis wie `:Session` (`<Tab>`-Completion pro Subcommand, Usage-Ausgabe statt
 rohem Vim-Fehler). Jede Route spiegelt exakt eine Keymap aus
 `bindings/keymaps/init.lua` (Kommentar im Quellcode: "Every action mirrors a
 default keymap 1:1 … but is an independent entry point — the keymaps call

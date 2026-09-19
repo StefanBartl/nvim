@@ -47,7 +47,7 @@ neun `<leader>nt*`-Chords aus der Actions-Tabelle (inkl. Gruppen-Label
 `<leader>nt` = "Tests"), jeweils mit eigenem `function() require(...) end`-
 Wrapper statt der bereits gesetzten `vim.keymap.set`-Callbacks. which-key
 zeigt dadurch für diese neun Keys **zwei** überlappende Quellen (eigenes
-`vim.keymap.set` + `wk.add`-Callback) — anders als bei Harpoon/DAP, wo
+`vim.keymap.set` + `wk.add`-Callback) — anders als bei DAP, wo
 which-key nur ein Gruppen-Label ohne eigene Callbacks anlegt. Funktional macht
 das keinen Unterschied (beide rufen dieselbe `actions`-Funktion), ist aber
 eine Abweichung vom sonst in dieser Config üblichen Single-Source-Muster.

@@ -26,8 +26,8 @@ Zwei Quellen:
 | `<Leader>dt` | Diff für alle Fenster im aktuellen Tab an/aus (`windo diffthis`/`diffoff`) | — (kein Diffview-eigener Command, nutzt natives `:diffthis`/`:diffoff`) | [custom] |
 
 Alle vier sind einfache `map("n", …)`-Aufrufe in
-`bindings/mappings/git.lua` (`M.setup`), ohne which-key-Spec-Tabelle wie bei
-Harpoon — die Beschreibungen kommen direkt aus dem `desc`-Feld der Maps.
+`bindings/mappings/git.lua` (`M.setup`), ohne eine eigene which-key-Spec-
+Tabelle — die Beschreibungen kommen direkt aus dem `desc`-Feld der Maps.
 
 ---
 

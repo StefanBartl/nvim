@@ -71,8 +71,8 @@ Keymaps in diesem Setup.
 Der Wrapper registriert nur ein **Gruppen-Label** für den Prefix (`+DAP`) via
 `lua/wkddap/bindings/which_key/init.lua` (im Wrapper-Repo) —
 which-key ist Soft-Dependency, unterstützt v2 (`register`) und v3 (`add`).
-Die Beschreibungen der einzelnen Keys kommen wie bei Harpoon aus dem `desc`
-der jeweiligen `vim.keymap.set`-Aufrufe, nicht aus dem which-key-Spec selbst.
+Die Beschreibungen der einzelnen Keys kommen aus dem `desc` der jeweiligen
+`vim.keymap.set`-Aufrufe, nicht aus dem which-key-Spec selbst.
 Abschaltbar über `opts.which_key.enable = false`; in dieser Config nicht
 gesetzt → Default `true` aktiv.
 

@@ -39,7 +39,7 @@ Feature dahinter seine Funktion, der Rest läuft weiter.
 | `tesseract` | `:Case ocr` — Text aus Screenshots einer Akte lesen | Kein OCR |
 | `pandoc` | `:Case export` — Bundle → HTML, das Chrome/Edge dann als PDF druckt | Kein Export (es gibt keinen zweiten Weg) |
 | `nvr` | lazygit öffnet Dateien in *dieser* nvim-Instanz | Editor im Editor |
-| `bat` | Syntax-Highlighting in der Harpoon-fzf-Vorschau | Vorschau ohne Farbe |
+| `bat` | Syntax-Highlighting in fzf-lua-Vorschauen (`:Session marks menu fzf`, etc.) | Vorschau ohne Farbe |
 | `win32yank` | Zwischenablage unter WSL | Kein Windows-Clipboard aus WSL |
 | `wl-clipboard` | Zwischenablage unter Wayland | `+`/`*` tun nichts |
 

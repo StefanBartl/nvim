@@ -47,7 +47,7 @@
     {
       "bin": "bat",
       "required": false,
-      "why": "Syntax-highlights the file preview in the harpoon fzf menu. Purely cosmetic: without it the preview falls back to plain `cat`-style output.",
+      "why": "Syntax-highlights fzf-lua file previews (e.g. `:Session marks menu fzf`). Purely cosmetic: without it the preview falls back to plain `cat`-style output.",
       "pkg": {
         "apt": "bat",
         "dnf": "bat",

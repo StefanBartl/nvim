@@ -176,7 +176,8 @@ Da `lazy = false`, setzt Lazy.nvim diese Keymaps beim Start unmittelbar als
 echte `vim.keymap.set`-Aufrufe (nicht nur als Lazy-Load-Trigger).
 
 Es gibt kein `config/snacks/custom_dashboard/*` mehr und keinen separaten
-`config/snacks/usrcmds/`-Baum (im Gegensatz z. B. zu Harpoon) — der Kommentar
+`config/snacks/usrcmds/`-Baum (im Gegensatz z. B. zu neotest,
+`config/neotest/`) — der Kommentar
 in `plugins/snacks.lua` erklärt das: *"config.snacks.usrcmds removed: every
 command it exposed now has an engine-agnostic equivalent in
 pickers.builtins, reached via `:Pickers builtin <name>`"*. Die frühere

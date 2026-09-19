@@ -14,10 +14,10 @@ Registriert/konfiguriert in:
   und `search.nvim` (kein `keys = {...}` in den Specs — alle Keymaps kommen aus
   `bindings.mappings.telescope`).
 
-**Wichtiger Unterschied zu Harpoon.md:** Hier ist die Lage gemischt. Anders als
-Harpoon (komplett umgebaut) ist Telescope zu großen Teilen **Plugin-Standard** —
-insbesondere fast alle In-Picker-Tasten (Insert-/Normal-Mode-Mappings innerhalb
-eines offenen Pickers) sind unverändertes `telescope.nvim`-Werkseinstellung.
+**Wichtig:** Hier ist die Lage gemischt. Telescope ist zu großen Teilen
+**Plugin-Standard** — insbesondere fast alle In-Picker-Tasten (Insert-/
+Normal-Mode-Mappings innerhalb eines offenen Pickers) sind unverändertes
+`telescope.nvim`-Werkseinstellung.
 Die wenigen Leader-Keymaps, die überhaupt existieren, sind dagegen zwangsläufig
 **eigene**, denn `telescope.nvim` selbst liefert von Haus aus **keine**
 Leader-Keymaps (nur `:Telescope ...`-Commands).
@@ -75,20 +75,23 @@ Diese öffnen ebenfalls Telescope-Picker, gehören aber zu anderen Plugins/
 Features und werden dort dokumentiert, nicht hier:
 
 **Nicht live:** eine Verweistabelle. Sie zeigt auf Maps, die **andere**
-Blätter besitzen (Harpoon, Astro-Buffer, LSP-Tools); geprüft werden sie
-dort, wo sie registriert werden, nicht hier.
+Blätter besitzen (Astro-Buffer, LSP-Tools); geprüft werden sie dort, wo sie
+registriert werden, nicht hier.
 
 | Mapping | Aktion | Quelle |
 |---|---|---|
-| `<leader>ht` | Harpoon-Liste als Telescope-Picker | [Harpoon.md](Harpoon.md), `config/harpoon/ui/menu_telescope.lua` |
 | `gC` / `gL` / `gP` (Astro-Buffer) | Astro-Komponenten/-Layouts/-Pages finden (`telescope.builtin.find_files`) | `lsp/languages/webdev/astro/keymaps.lua` |
 | (LSP-Tool, kein festes Leader-Mapping) | Workspace-Symbol-Picker (eigener Telescope-Picker über `telescope.pickers`/`finders`/`previewers`) | `lsp/tools/ts_type_lookup/ts_telescope_picker.lua` |
 | (Neotest-Command, kein festes Leader-Mapping) | Neotest-Actions-Picker | `config/neotest/telescope/init.lua`, `config/neotest/commands/init.lua` |
 | `<leader>s` | `search.nvim` — tabbed UI *um* Telescope herum (eigenes Plugin, `FabianWirth/search.nvim`) | `plugins/telescope.lua`, `config/search/init.lua` |
 
 Diese nutzen Telescope nur als Backend/Picker-Engine für eine fremde Domäne
-(Astro, LSP-Tooling, Neotest, Harpoon) — sie sind keine "Telescope-Bindings"
-im engeren Sinn und daher hier nur verlinkt, nicht ausgeführt.
+(Astro, LSP-Tooling, Neotest) — sie sind keine "Telescope-Bindings" im
+engeren Sinn und daher hier nur verlinkt, nicht ausgeführt. Harpoons
+Telescope-Liste (`<leader>ht`) fiel mit dem Plugin selbst weg (2026-09-19,
+externe-plugins-report 7.4) — sessions.nvim's `:Session marks` wählt seine
+Picker-UI automatisch (`auto`, snacks → telescope → fzf → edit), ohne eine
+separate Telescope-only-Taste.
 
 ---
 
@@ -233,5 +236,5 @@ Kommentare in dessen README, z. B. Default `hidden = false`,
 Für `telescope.nvim`/`telescope-file-browser.nvim` wurden **keine** eigenen
 Autocmds oder User-Commands in diesem Config-Repo gefunden (nur die von
 `telescope.nvim` selbst intern registrierten, z. B. `:Telescope` als
-Plugin-Command — kein zusätzlicher Wrapper wie bei Harpoon). Es gibt daher
+Plugin-Command — kein zusätzlicher Wrapper wie bei `:Session`). Es gibt daher
 keine `Autocmds/Telescope.md`/`Usercmds/Telescope.md` in diesem Ordner.
