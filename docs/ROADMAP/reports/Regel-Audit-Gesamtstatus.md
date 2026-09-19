@@ -28,7 +28,7 @@
   - [Teil 5 — Aktueller Stand der vier offenen Baustellen](#teil-5-aktueller-stand-der-vier-offenen-baustellen)
     - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **30 von 30 Repos geprüft, fertig**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-30-von-30-repos-geprft-fertig)
     - [`LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**](#lua-01-hart-oder-weich-aber-konsistent-21-von-21-repos-geprft-fertig)
-    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **10 von 31 Repos geprüft, in Arbeit**](#err-50err-22-config-validierung-und-degradierung-10-von-31-repos-geprft-in-arbeit)
+    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **20 von 31 Repos geprüft, in Arbeit**](#err-50err-22-config-validierung-und-degradierung-20-von-31-repos-geprft-in-arbeit)
     - [Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**](#die-313-ungeprften-recommendednice-to-have-regeln-noch-nicht-begonnen)
   - [Empfehlung für die nächste Runde](#empfehlung-fr-die-nchste-runde)
 
@@ -55,9 +55,10 @@ Ein Audit aller 38 `.nvim`-Repos gegen den vollständigen `rules.nvim`-Regelkata
 4. **Vier Baustellen aus dem ursprünglichen Audit** sind danach separat
    angegangen worden — Stand siehe [Teil 5](#teil-5--aktueller-stand-der-vier-offenen-baustellen):
    `ERR-11` (fertig), `LUA-01` (fertig, drei kleine Nacharbeiten aus dem
-   adversarialen Verify), `ERR-50`/`ERR-22` (in Arbeit, 10 von 31 Repos,
-   9 davon mit echtem Fund — auffällig hohe Trefferquote), die 313
-   ungeprüften `recommended`/`nice-to-have`-Regeln (noch nicht begonnen).
+   adversarialen Verify), `ERR-50`/`ERR-22` (in Arbeit, 20 von 31 Repos,
+   19 davon mit echtem Fund plus 7 weitere Funde aus Nacharbeiten — durchweg
+   auffällig hohe Trefferquote), die 313 ungeprüften
+   `recommended`/`nice-to-have`-Regeln (noch nicht begonnen).
 
 Zahlenbasis des Gesamt-Audits: 421 Regeln, 38 Repos, ~390.000 LOC Lua.
 
@@ -407,7 +408,7 @@ adversarial **CONFIRMED** (0 Refutationen).
 
 ---
 
-### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **10 von 31 Repos geprüft, in Arbeit**
+### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **20 von 31 Repos geprüft, in Arbeit**
 
 `ERR-50` (Validierung unbekannter Keys vor dem Merge) und `ERR-22`
 (Degradierung ungültiger Werte auf den Default) werden pro Repo gemeinsam
@@ -450,8 +451,65 @@ echten, bis dahin ungefixten Verstoß**, nur `ai.nvim` war komplett sauber
   fand einen **weiteren Crash** im selben Muster (`core/quicks.lua`s
   `limit_good`/`limit_bad`/`thresholds`) — Nachfix `7debecd`.
 
-**Restliche 21 Repos** (inkl. `emojis`, `ui` — jetzt wieder frei) folgen in
-weiteren Runden von je bis zu 15 Repos.
+**Zwischenstand 2026-09-19 (Runde 2, 10 Repos, alle adversarial verifiziert):**
+Noch höhere Trefferquote — **alle 10 von 10 Repos hatten mindestens einen
+echten Verstoß.** Bei 6 der 10 fand der adversariale Verify zusätzliche,
+vom ersten Fix übersehene Crashes — jeder davon nachgefixt und erneut
+bestätigt.
+
+- `fileops` — ERR-50 sauber (bereits vor der Runde gefixt), ERR-22:
+  `retry.attempts`/`backoff_ms` (crashten `lib.nvim`s `mutate.lua`) und
+  `on_hold.modes` (crashte schon bei `setup()`) — `24e1a58`, CONFIRMED.
+  Verify fand einen weiteren Fund (`on_hold.ignore_buftypes`, wiederholte
+  sich bei jedem `CursorHold`) — Nachfix `71f4bf3`.
+- `filetree` — ERR-50 (Validierung war „bewusst flach" dokumentiert, ging
+  nicht in Feature-Bodies/`menu` hinein) + ERR-22 (7 Felder ohne Guard) —
+  `9355522`, CONFIRMED. Verify bestätigte den `cwd_mode`-Scope-Ausschluss
+  als vertretbar (dort bereits anderweitig pcall-geschützt) und fand
+  dasselbe Muster in ~50 weiteren, feature-eigenen Configs verteilt —
+  als eigene künftige Runde vermerkt, nicht sofort gefixt.
+- `gopath` — ERR-50 (Validierung ging nur eine Ebene tief) + ERR-22 (5
+  Crashes, zwei davon crashten `setup()` selbst synchron) — `102cdee`,
+  CONFIRMED. Verify fand einen direkt benachbarten Crash im selben
+  Code-Pfad (`truncated.excluded_dirs`) — Nachfix `e33160b`.
+- `images` — ERR-50 sauber, ERR-22: **8 Crashes** über 5 Commits (u. a.
+  `extensions = "png"` statt Tabelle, betraf fast jede Cursor-Bilderkennung).
+  Verify fand eine **dritte, noch erreichbarere Stelle** für dasselbe Feld
+  (`convert.lua`, crashte schon bei `setup()`) — Nachfix `bc7fdb3`.
+- `insights` — ERR-50 sauber, ERR-22: **5 Crashes** über 3 Commits (u. a.
+  ein `compress.engine`-Wert, der `:checkhealth insights` selbst zum
+  Absturz brachte). Verify fand **6 weitere** Stellen desselben Musters
+  (`imports.engine`, `symbols.default_scope`, `conflicts.diff_filter`,
+  `metrics.output_file`, `tree.outfile_fmt`/`outdir`,
+  `imports.output_file`) — zwei Nachfix-Runden, `e4161fa` + `327f070`.
+- `lib.nvim` — beide Regeln in `telemetry/init.lua` verletzt (ein im
+  August entferntes, im September ohne den mittlerweile üblichen
+  ERR-50/ERR-22-Schutz wiederbelebtes Modul, vorher null Testabdeckung) —
+  `2e9ae88`, CONFIRMED inkl. fleet-weiter Blast-Radius-Prüfung (aktuell
+  kein einziger produktiver Aufrufer).
+- `markdown` — ERR-50 sauber, ERR-22: 5 Crashes (`table.wrap.*`,
+  `hover.max_lines`) — `bf7f7d5`, CONFIRMED. Verify fand eine weitere
+  Stelle (`refs.debounce_ms`) — Nachfix `7ae34e8`.
+- `my` — 2 Funde außerhalb des offensichtlichen Config-Moduls: `indent_per_ft`
+  hatte gar keine Key-Validierung (ERR-50), `cword_occurrences` fehlte der
+  pcall-Schutz beim Extmark-Aufruf, den der Schwester-Code hatte (ERR-22) —
+  `d96123a`, `bcf0a37`, CONFIRMED.
+- `open` — ERR-50 sauber (Rekursionstiefe zwar begrenzt, aber aktuell nicht
+  ausnutzbar), ERR-22: 2 Crashes (`handlers`/`office_open.extensions`-
+  Listenelemente, `filemanager.command`) — `5784d3c`, CONFIRMED.
+- `pdfport` — ERR-50 + ERR-22 (`terminal_size_ratio`, Crash in einem async
+  Callback außerhalb des normalen pcall-Schutzes) — `a191978`. **Verify
+  deckte auf, dass der Fix einen strukturell unerreichbaren Config-Pfad
+  absicherte** (der `setup()`-Merge passiert für den Terminal-Modus gar
+  nicht), während der tatsächlich erreichbare Pfad
+  (`pdfport.open({mode="terminal", ...})`) weiterhin exakt so crashte wie
+  vorher — Nachfix direkt an der Verwendungsstelle in `terminal.lua`
+  (`c5b3b6f`), diesmal über den echten Dispatch-Pfad verifiziert.
+
+**Restliche 11 Repos** (`pickers`, `recommender`, `replacer`, `reposcope`,
+`rules`, `runtime-analysis`, `sandbox`, `sessions`, `spotlight`, `emojis`,
+`ui` — die letzten beiden inzwischen von der parallelen Session freigegeben)
+folgen in einer weiteren Runde.
 
 ---
 
