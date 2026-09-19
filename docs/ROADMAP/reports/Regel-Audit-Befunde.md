@@ -64,7 +64,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | recommender.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | rules.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | spotlight.nvim | 9 | 9 | 0 | fertig (2026-09-19) |
-| my.nvim | 7 | – | – | offen |
+| my.nvim | 7 | 7 | 0 | fertig (2026-09-19) |
 | data.nvim | 5 | 4 | 1 | fertig (2026-09-19) |
 
 **insights.nvim (16 Befunde) läuft, nicht von hier aus anfassen.** Ein Audit-Agent
@@ -6627,7 +6627,7 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 
 ## my.nvim
 
-**7 Befunde** (4 × high). Roh gemeldet: 10.
+**7 Befunde** (4 × high). Roh gemeldet: 10. — **Stand: 7/7** (⏭️ 0, 2026-09-19)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -6639,6 +6639,8 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 
 **Auswirkung.** Smaller reach than claimed. The `<Tab>` path does go quiet, but it blocks nothing: the registered arg type's `validate` returns `true, raw, nil` unconditionally (lines 74-76, with the comment at 63-65 explaining that rejection is left to `C.set`), so `:My hl set <key> <value>` still routes through and `C.set` reports an unknown key by name. `do_show` (line 120) and `M.setup` (line 224) call `C.modified`/`C.keys` WITHOUT pcall, so a genuinely broken config still throws loudly on those routes -- the plugin is not uniformly silent about it. The one diagnostic that is actually indistinguishable is `:My status`'s `N keys, N changed from shipped` line, which reports a healthy-looking `0`/`0` when `C.modified` or `C.keys` threw.
 
+**Status.** ✅ erledigt (`ac22c38`) — `keys_of()` gibt jetzt `(keys, ok)` zurück, `do_list`/`status_report` melden bei geworfenem `C.keys`/`C.modified` einen expliziten Fehler statt einer gesunden „0 keys, 0 changed“-Zeile.
+
 ### `PERF-42` — Invalidierbar
 
 `lua/my/italic_keywords/init.lua:23` · `M.setup` · confidence **high**
@@ -6648,6 +6650,8 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 **Regelbezug.** PERF-42 requires that it be defined when an entry becomes invalid. `matchadd` entries are window-local and permanent; here nothing defines their end of life. There is no dedupe either, so the same pattern is re-added on every FileType event for that language in that window.
 
 **Auswirkung.** Accumulation is real -- N Lua files opened in one window leave N duplicate `ItalicKeywords_lua` matches, doubled again per extra `setup()` -- but the per-match redraw cost is small, so growth is the lesser half. The user-visible defect is placement, and it is worse than the finding says: `matchadd()` targets the CURRENT window at the moment FileType fires, so (a) a buffer loaded into a background window or by a plugin puts the italics in whatever window happened to be current, (b) `:split` on a Lua file gets no italics at all until its filetype is re-set, and (c) because matches are window-local, not buffer-local, switching that window to Markdown or text keeps italicising `return`/`if`/`for` there. Cosmetic in every case -- no crash, no wrong data.
+
+**Status.** ✅ erledigt (`7a91b82`) — Match-IDs werden jetzt pro Fenster+Sprache verfolgt, vor einem neuen `matchadd` per `matchdelete` gelöscht, und ein `WinClosed`-Handler vergisst die IDs eines geschlossenen Fensters.
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -6659,6 +6663,8 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 
 **Auswirkung.** Narrower and purely cosmetic, not the session-wide freeze the finding implies. It only bites when `vim.g.have_nerd_font` is not exactly `true` -- then the fallback arrow is chosen from the terminal width at the first breadcrumb render and frozen: start in an 80-column window and maximise it, and the winbar keeps the narrow `" › "` for the rest of the session, with no VimResized handler and no TTL to recompute it. Setting `vim.g.have_nerd_font = true` after the first render never produces the glyph. `:My hl set breadcrumbs_*` re-renders (init.lua:143) but hits the same cache entry, so there is no in-session escape short of changing the hex itself. No crash, no data loss -- a wrong-width separator glyph.
 
+**Status.** ☑️ schon behoben — Bereits in Commit `181685a` (selber Tag, vor diesem Lauf) behoben: `nerd_or_fallback` nimmt `hex, wide, nerd` als Parameter, `memo.fn`s `key_of` hasht alle drei Argumente — der Befund beschrieb den alten, nicht mehr existenten Code.
+
 ### `PERF-93` — Heißes Event: billiger Guard **oder** Throttle, nie ungeschützt
 
 `lua/my/hl_config/cword_occurrences/init.lua:375` · `M.enable` · confidence **high**
@@ -6668,6 +6674,8 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 **Regelbezug.** PERF-93 names `WinScrolled` as a hot event and requires either a throttle or a guard that leaves the frequent case cheaply. `update_now` does neither: in the common case (normal buffer, feature enabled, cword >= 2 chars) it runs the entire repaint — `nvim_buf_clear_namespace`, `std_skip`, an uncached `uv.fs_stat` in `is_large_file_guard` (lines 58-73, which does not use the TTL-cached `utils/large_file.lua` next door), `vim.fn.expand("<cword>")`, then a `vim.fn.matchstrpos` loop over every viewport line placing an extmark per hit.
 
 **Auswirkung.** Every WinScrolled -- one per step of held <C-d>/<C-u> or wheel scroll, and also on window resize -- runs the whole repaint with no coalescing: one uncached fs_stat syscall, a full namespace clear, and a viewport-wide matchstrpos scan re-placing every extmark. It is the exact work the author deliberately debounced at 40ms for cursor movement and edits, on the one event that fires fastest. BufEnter/BufWinEnter on the same registration are one-shot and harmless; WinScrolled is the whole defect. No correctness impact -- highlights stay right -- so it shows up only as scroll latency in a large viewport, which is why it would never be reported as a regression.
+
+**Status.** ✅ erledigt (`b4e83cd`) — `WinScrolled` läuft jetzt wie `CursorMoved`/`TextChanged` über `update_debounced` statt über das ungeschützte `update_now`; `is_large_file_guard` nutzt zusätzlich einen TTL-Cache statt eines rohen `uv.fs_stat`.
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -6679,6 +6687,8 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 
 **Auswirkung.** Correcting the blast radius: `M.check()` (lines 460-476) runs its sections sequentially with no pcall between them, so the throw does abort the rest -- but only TWO sections follow, `check_winbar_owner` and `check_breadcrumb_lsp_provider`, not six, and the `effective: signs=...` line at 362-369 is inside the aborted section itself, not a separate trailing line. Neovim's own health runner pcalls the plugin's `check()`, so the report does not crash -- it ends with a `Failed to run healthcheck for "my" plugin. Exception: attempt to index a boolean value` block where the remaining sections should be. Reachability is narrow: it needs `mode == "contributed"` (lsp.nvim present) AND `lsp.core.diagnostics` resolving to a non-table, i.e. a module mid-refactor with no return statement. Low probability, one-line fix, and it turns the diagnostic tool itself into the thing being debugged.
 
+**Status.** ✅ erledigt (`1afce10`) — Vor dem Zugriff auf `lsp_diag.applied` steht jetzt zusätzlich `type(lsp_diag) == "table"`, analog zu bestehenden Guards im selben Modul.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/my/init.lua:38` · `M.setup` · confidence **medium**
@@ -6688,6 +6698,8 @@ Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tr
 **Regelbezug.** ERR-50's stated failure mode is precisely this: a typo in an option disappears silently into the default and is never detected. The plugin has the material to check against (`@types/init.lua:33-45` enumerates every field), and `config/core/setter.lua` already rejects an unknown key on the `:My hl set` route — the setup entry point is the one surface with no such gate.
 
 **Auswirkung.** Every typo in the setup table degrades silently to the shipped default with no notification, no health warning, and no log line -- the plugin behaves as if the option were never passed. The nested case is the worst: a mistyped inner key discards a whole override table while the outer key still counts as "configured", so the subsystem reports as on and running with defaults. The only way to discover any of it is to read the source or notice the missing behaviour later, which for `persist_overrides` means noticing after a restart that the overrides are gone. The material for a gate already exists (the @types field list) and the sibling `:My hl set` route already does it -- setup() is the one entry point with no check.
+
+**Status.** ✅ erledigt (`6aa8632`) — Neue `sanitize()`-Funktion vor dem Lesen von `opts`: unbekannte Keys werden mit Levenshtein-„did you mean“-Hinweis verworfen und gemeldet, falsch typisierte Boolean-Keys ebenso; docs entsprechend ergänzt.
 
 ### `PERF-93` — Heißes Event: billiger Guard **oder** Throttle, nie ungeschützt
 
@@ -6710,6 +6722,8 @@ Two things I judged real but below the bar for a finding, since neither maps cle
 One LUA-16 lead I could not confirm either way: ctx/providers/lsp_symbols.lua:156 does `if sym.detail and #sym.detail > 0`, and line 173 does `name:find(\"%)$\")`. If a server sent `\"detail\": null` and that reached Lua as `vim.NIL`, both would throw (vim.NIL is truthy userdata). I believe Neovim's LSP rpc decodes with `luanil = { object = true }`, which turns object nulls into Lua nil and makes the point moot, but I did not verify that against the installed Neovim, so I left it out rather than report it on an assumption.
 
 Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separator = nil` (line 51) and `cword_occurrences.large_file_kb = nil` (line 40). A nil value is an absent key, so neither is enumerated by `M.keys`, neither has a `M.default`, and `:My hl set` answers \"Unknown key\" for both — two documented knobs that are unreachable through the plugin's own config system. Nothing in the 76 covers it (the closest, LUA-86, appears only inside LUA-87's Belege footnote and has no rule entry of its own).
+
+**Status.** ✅ erledigt (`eee8337`) — Der `BufReadPost/TextChanged/TextChangedI`-Handler debounct `activate_window()` jetzt über `lib.nvim.debounce` (250 ms) statt bei jedem Tastendruck die volle Kette zu durchlaufen; das Handle wird bei erneutem Setup sauber storniert.
 
 ---
 
