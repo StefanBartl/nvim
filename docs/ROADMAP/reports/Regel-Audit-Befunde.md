@@ -50,7 +50,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | lsp.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | open.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
-| ui.nvim | 13 | – | – | offen |
+| ui.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | filetree.nvim | 12 | – | – | offen |
 | images.nvim | 12 | – | – | offen |
 | pickers.nvim | 12 | – | – | offen |
@@ -4496,7 +4496,7 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 ## ui.nvim
 
-**13 Befunde** (1 × high, 1 davon in Testcode). Roh gemeldet: 15.
+**13 Befunde** (1 × high, 1 davon in Testcode). Roh gemeldet: 15. — **Stand: 12/13** (⏭️ 1, 2026-09-18)
 
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
@@ -4508,6 +4508,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** A caller passing `M.display_path({ path_home_tilde = false }, buf)` silently loses the override: `home_tilde` falls back to the module's live config, whose shipped default is `path_home_tilde = true` (config/init.lua:27), so the path still renders `~/project/file.lua` instead of the absolute home path the call asked for. That breaks the promise in the function's own doc comment (lines 261-267) that `cfg` "overrides the module's live config for THIS call only". Scope correction: `M.display_path_for_buf` (line 307) is unaffected in practice, because when the live config's value IS false the fallback resolves to false anyway -- the defect only bites a caller who wants a different value than the live config. The auditor's secondary PERF-46 claim is half right: an explicit `false` cannot reach the line 231 cache key VIA `display_path`, but `M.path_relative` is public and can be called with `false` directly, so the cache key itself is not broken.
 
+**Status.** ✅ erledigt (`08b25f5`) — `and/or` durch explizites `if` ersetzt, damit `path_home_tilde = false` nicht mehr zu `nil` kollabiert.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/ui/contextmenu/init.lua:350` · `M.bind_buffer` · confidence **medium**
@@ -4517,6 +4519,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 **Regelbezug.** ERR-01: every call that touches a foreign plugin API must run through `pcall`. `get_items` is precisely such a boundary — the module's own doc comment says it is "safe to call unconditionally from a plugin's setup path" and that "the renderer is resolved when the trigger fires", and `M.open` on the very next line does pcall its own `require`.
 
 **Auswirkung.** A contributing plugin whose items builder raises (a renamed upstream field, a nil buffer variable) turns every right-click in that buffer into a raw Lua traceback out of a keymap callback, rather than the degradation the module's own doc comment at lines 336-339 promises ("safe to call unconditionally from a plugin's setup path; the renderer is resolved when the trigger fires"). Scope correction: the second half of the auditor's claim -- that `vim.keymap.set` is called without `nvim_buf_is_valid(bufnr)` first -- is factually true of lines 348-359, but it belongs to LUA-11/LUA-12 ("Gueltigkeit pruefen"), not ERR-01, and should be reported separately rather than ride along in this finding's impact.
+
+**Status.** ✅ erledigt (`5531b66`) — `get_items()` im `<RightMouse>`-Callback jetzt per pcall abgesichert, meldet Fehler statt Traceback. Betrifft eine Datei, die lib.nvim als „frozen copy“ hält — `TESTS/kit_drift_spec.lua` schlägt jetzt bewusst als erkannter Drift fehl, bis ein separat gespawnter Task den Fix nach lib.nvim portiert.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -4528,6 +4532,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** Correcting the auditor on the empty-fields case: it is NOT indistinguishable in the way claimed. With an empty `fields` list, `step(1)` finds no field and calls `opts.on_submit(values)` with an empty table (form.lua:38-41) before returning nil, so the caller's callback contract does fire and "empty but ok" is observable. The genuine defect is the failure case only: if `surface.open` fails at any field, neither `on_submit` nor `on_cancel` ever runs and the caller's flow stops with no error and no dialog. Through `ui.kit.sync` that becomes a `vim.wait` (sync.lua:64) that can only end on `DEFAULT_TIMEOUT_MS`, which is `10 * 60 * 1000` (sync.lua:21), reporting `timed_out` instead of the real cause. Reference correction: the auditor cites kit/sync.lua:136, but that file is 74 lines long; the wait is at line 64. Likelihood note: `surface.open` failing is itself an edge case, so this is a robustness gap in a kit twenty sibling plugins build on, not a routinely-hit bug.
 
+**Status.** ✅ erledigt (`150c09f`) — `step()` prüft jetzt `input.open()`s Rückgabe und feuert `on_cancel`, wenn das Feld-Surface nicht öffnet, statt die Kette stumm hängen zu lassen. Gleiche lib.nvim-Drift-Situation wie #2.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/ui/screenkey/init.lua:198` · `M.setup` · confidence **medium**
@@ -4537,6 +4543,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 **Regelbezug.** ERR-22: an invalid single config value must degrade to its default and be made visible through `:checkhealth`, rather than being accepted as-is. PRIN-25 says the same for arguments before they are worked with.
 
 **Auswirkung.** The `max_entries` half of the auditor's impact is backwards and I am correcting it: with a negative or zero `max_entries`, the guard at line 183 (`if #entries > cfg.max_entries then table.remove(entries, 1) end`) is always TRUE, so it removes the oldest entry on every keystroke and the list is pinned at length 1 -- it does not grow unbounded, it collapses to a single visible key. The verified consequence is the arithmetic one: a non-numeric `width` (e.g. `true`) is accepted silently and first fails inside `build_text`'s `math.max(1, cfg.width - 2)` at line 102, reached from `render()` inside the `vim.schedule` body of `on_key` (lines 156-190), which is not wrapped in pcall. That produces a repeating "attempt to perform arithmetic" error on every keystroke once the HUD is enabled, with the traceback pointing at build_text rather than at the config value that caused it. The same applies to `height`/`margin` via `corner_geometry` at line 122.
+
+**Status.** ✅ erledigt (`e70f930`) — `setup()` validiert width/height/margin/max_entries/fade_ms über `lib.nvim.normalize.as_int`, abgelehnte Werte bleiben beim aktuellen Default und erscheinen in einer neuen „Screenkey“-`:checkhealth`-Sektion.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -4548,6 +4556,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** Correcting two overstatements. First, `active_theme_cfg` itself is a file-local function, not a public getter; the exposed surface is `M.get_info()`. Second, the "permanently rewrites the shipped defaults" claim holds only on the pre-`setup()` branch: after `ui.config.setup()` has run, `_last_config.theme` is a `vim.deepcopy` of `ui.config.theme` (config/init.lua:145), so a consumer mutating the returned array corrupts the assembled session config for the rest of the session but leaves `require("ui.config.theme")` intact -- the next `setup()` still deep-copies a clean table. Only a mutation performed before the first `setup()` reaches the module singleton and survives across later `setup()` calls. The `or {}` in `get_info` also means a nil `theme_toggle` yields a fresh, safely-mutable table, so only the populated case is live. As the auditor concedes, no in-repo consumer mutates it -- `:UI status` only `table.concat`s it (usrcmds/init.lua:198) -- so this is a latent trap on the published API, not an active bug.
 
+**Status.** ✅ erledigt (`bffd47e`) — `get_info()` gibt `toggle_themes` jetzt als `vim.deepcopy` statt als Live-Referenz heraus.
+
 ### `PERF-42` — Invalidierbar
 
 `lua/ui/statusline/modules/file_icons/devicons.lua:105` · `devicon_for_path` · confidence **medium**
@@ -4557,6 +4567,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 **Regelbezug.** PERF-42: it must be defined when an entry becomes invalid. The condition that produced this entry (devicons not loaded yet) is transient and has no corresponding invalidation trigger; the entry outlives the condition.
 
 **Auswirkung.** Every path (statusline) or filename tail (tabline) rendered before nvim-web-devicons loads keeps the generic fallback glyph in a 256-entry LRU. It corrects itself only when the entry is evicted by LRU pressure or the user changes colorscheme/background -- in a session with fewer than 256 distinct files, neither happens. ui.nvim installs `lazy = false` (README:82) and paints on the first redraw, so the window is real whenever devicons is pulled in later by another plugin's lazy trigger. Severity correction: this is a cosmetic wrong-icon persistence, not a functional break -- `soft_require.try` stays correct, and any file first seen after devicons loads gets the right icon.
+
+**Status.** ✅ erledigt (`0114032`) — Fallback-Icon wird nur noch gecacht, wenn `soft_require.available()` devicons als wirklich abwesend bestätigt (nicht nur „noch nicht geladen“); identischer Fix auch in tabline/utils.lua.
 
 ### `PERF-93` — Heißes Event: billiger Guard **oder** Throttle, nie ungeschützt
 
@@ -4568,6 +4580,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** Hosts on the shipped `lsp` or `blocks` preset pay a full Tree-sitter ancestor walk plus node-text extraction on every statusline redraw, in every buffer that has a parser and where my.nvim is absent -- the common standalone case. Redraws on cursor movement and text change make this the hottest path in the plugin. Two `vim.deepcopy` calls of the config table ride along per render (helpers/paths.lua:309 and modules/formatters/init.lua:249 -- note the auditor's path for the latter omits that it lives under `modules/`, not `modules/lsp/`). Correction to the auditor's framing: PERF-93 names autocmd handlers on hot events, and this is a `'statusline'` expression rather than a handler, so the rule applies by analogy -- but the analogy runs in the strict direction, since a `%!` expression is evaluated at least as often as `CursorMoved` fires. The visible symptom (input lag on large files) is a reasonable expectation but was not measured here; what is verified is the absence of any guard and the deadness of the declared 250 ms debounce, which misleads both a reader and `:checkhealth`.
 
+**Status.** ✅ erledigt (`b527456`) — `symbol_context_smart()` cacht das Ergebnis jetzt pro Buffer für `debounce_ms` (macht den bisher toten Config-Wert real) statt bei jedem Statusline-Redraw neu zu rechnen.
+
 ### `PRIN-10` — Keine globalen States
 
 `lua/ui/statusline/cursor_ctl/init.lua:7` · `cursor_ctl.mode / set_mode` · confidence **medium**
@@ -4577,6 +4591,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 **Regelbezug.** PRIN-10: state lives module-internally, reached only through getter/setter. Here the setter exists but the field is public beside it, so the validation is advisory. ERR-03 compounds it: `set_mode(nil)` and `set_mode("row_progres")` are both silent no-ops with no return value to tell them apart.
 
 **Auswirkung.** Latent, and milder than stated. Every in-repo consumer goes through the getter -- config/statusline/lsp.lua:78, default.lua:70 and blocks.lua:136 all call `get_mode()` -- so nothing in the plugin writes the field directly. An unknown mode also does not error downstream: the cursor segment falls through every `elseif` and renders `renderer.cursor_classic()` alone, i.e. the classic display with no progress token, rather than breaking. The concrete harm is confined to a host following the published type and assigning `cursor_ctl.mode` directly: the write bypasses `set_mode`'s five-name whitelist entirely, the segment silently degrades to classic, and the next `toggle_mode()` jumps to "row_progress" instead of continuing the cycle. The ERR-03 half (both `set_mode(nil)` and a typo'd name are silent no-ops with no return value) is accurate but is the documented behaviour ("no-op on invalid input", line 9).
+
+**Status.** ✅ erledigt (`2269a72`) — `mode` ist jetzt ein modul-lokaler Upvalue statt ein öffentliches Feld neben `set_mode()`s Whitelist.
 
 ### `PRIN-20` — Keine stillen Fehler
 
@@ -4588,6 +4604,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** A host registering a variant with a slightly wrong shape (`{ statusline = {...} }` instead of `{ ui = { statusline = {...} } }`) gets `:UI variant <name>` printing the success notification at usrcmds/init.lua:261 ("Statusline variant changed to: <name>") while the statusline renders as an empty string, with no warning anywhere pointing at the cause. The state is also sticky: `current` stays nil until another `enable()` runs, so the statusline remains blank for the rest of the session, and `:UI status` reports the variant as active. Scope note: this is reachable only through a host-registered variant -- every shipped preset carries `ui.statusline`, so the default install cannot hit it.
 
+**Status.** ✅ erledigt (`1d6712a`) — `switch_variant()` prüft `assembled.ui.statusline` vor `render.enable()` und meldet bei fehlender Form Fehlschlag statt die Statusline stumm zu leeren.
+
 ### `PRIN-25` — Eingaben validieren
 
 `lua/ui/bindings/keymaps/tabufline/state.lua:373` · `M.move_buf` · confidence **medium**
@@ -4597,6 +4615,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 **Regelbezug.** PRIN-25: arguments must be validated before being worked with. The documented contract is `---@param n integer # positive moves right, negative moves left` — nothing restricts it to ±1, and `M.move_buf` is a public function on a public module.
 
 **Auswirkung.** `vim.t.bufs = bufs` at line 379 then persists a table that is no longer a proper sequence -- a nil hole at `i` plus an entry past the end. Latency correction: this is unreachable through the shipped surface, since the only in-repo callers pass literal ±1 (bindings/keymaps/init.lua:114 and :125), so it is a latent contract hole rather than an active bug. Accuracy correction: I confirmed the corrupt table is built and assigned, but I did not verify the auditor's downstream story -- Neovim's Lua-to-vimscript conversion may reject a holed table on the `vim.t` assignment rather than store it, in which case the symptom is an error at the call rather than a tabline that silently drops chips. Either way the input is unvalidated and the outcome is not the documented one.
+
+**Status.** ✅ erledigt (`f86c1a1`) — `n` wird jetzt typgeprüft und die Zielposition in `[1, #bufs]` geklemmt, statt mit `|n| > 1` ein Nil-Loch zu erzeugen und über das Arrayende zu schreiben.
 
 ### `SEC-50` — Ein Preview liest, es führt nicht aus und wertet nicht aus
 
@@ -4608,6 +4628,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** The auditor's impact overstates the exposure and I am correcting it. There is no drive-by path: the buffer is created empty by `M.open` and seeded from `initial_lines()`, a plugin-authored template; no file, picker entry, `extra_files` list or shell history is ever folded in, so content can only arrive through the user's own editing of a scratch buffer they explicitly opened with `:KitPreview`. The real, residual defect is narrower: because evaluation is bound to `TextChanged`/`TextChangedI` rather than to a deliberate action, a pasted snippet or a completion-inserted fragment executes with full Lua and vim API rights the instant it lands, before the user can read it -- which is a measurable step down from `:edit` + `:source`, where reviewing first is possible. The doc gap the auditor raises is separately true but is not a SEC-50 matter: docs/BINDINGS.md:7 claims "Nothing here is registered until require('ui').setup({ all = true }) runs", and `:KitPreview` contradicts that, appearing in no BINDINGS.md entry.
 
+**Status.** ⏭️ offen gelassen — Der Puffer wird ausschließlich aus einem selbst geöffneten, plugin-eigenen Template befüllt, es gibt keinen Pfad für fremden/ungeprüften Inhalt — das im Puffer dokumentierte Live-Eval ist der eigentliche Zweck des Features; ein Execute-Gate würde die Live-Vorschau funktional zerstören, Design-Entscheidung für den Maintainer.
+
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
 `TESTS/kit_drift_spec.lua:144` · `kit_files` · confidence **medium** · _Testcode_
@@ -4617,6 +4639,8 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 **Regelbezug.** XP-01: `vim.fn.glob` interprets `~`, `[`, `?`, `*` and `{}` in its argument, and on Windows a path carrying an 8.3 component (`C:/Users/STEFAN~1/...`, which any profile name over eight characters produces for an env-var-supplied path) makes it try to resolve `~1` as a home directory and return an **empty list with no error**. The rule says never to feed `glob` a raw path for "list the files in this directory" — use `lib.nvim`'s `fs.globbable`, which compares hit counts rather than trusting the return value.
 
 **Auswirkung.** Both failure modes are reachable, and the second is the serious one. If only the lib side globs empty, the first `it` (line 151) fails with a misleading "file sets differ" that points nowhere near the real cause. If both sides glob empty, the first `it` compares two empty lists and passes, and the second `it` (line 155) iterates nothing, so `drifted` stays `{}` and the drift guard reports success while having compared zero files -- and this spec is the only thing keeping lua/ui/kit and lib.nvim's frozen copy in sync. The spec's own header (lines 31-36) records that it already went inert in CI once for a structurally identical reason, which makes a second silent-pass mode in the same file materially worse than it looks. Realistic trigger: `ui_dir` comes from `vim.fn.getcwd()`, normally the long form, so the practical risk is the `$LIB_NVIM_DIR` path on Windows and any checkout directory containing `[`, `?`, `{}` or a literal `~`.
+
+**Status.** ✅ erledigt (`999d19a`) — `kit_files()` schickt die Root jetzt durch `lib.nvim.fs.globbable`, beide Drift-Tests brechen jetzt laut ab, wenn eine Seite null Dateien liefert, statt eine leere Glob-Antwort stillschweigend als „kein Drift“ durchgehen zu lassen.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -4642,6 +4666,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 1. `ui.health.check_segments` (health.lua:315-330) probes ten foreign plugins with `has()` = `pcall(require, mod)`, which under a lazy manager *loads* each one. This plugin's own `util/soft_require.lua:70-84` exists specifically to avoid that ("a health check that loads ten lazy plugins... has changed the session it was asked to describe... and then reporting them all as 'present' because it just made them so") and `check_soft_dependencies` uses the non-loading `available()`. LUA-92 explicitly exempts `:checkhealth` from its require ban, so this is not a violation of the letter — but the two health sections contradict each other, and the `has()` one always reports "present" for anything installed.
 2. `lua/ui/statusline/modules/variant/init.lua:29` builds an Ex command by concatenation: `vim.cmd("UI variant " .. choice)`. `choice` comes from `variants.list()`, i.e. names a host registered itself, so this is not SEC-35 in the untrusted-input sense — but a registered name containing `|` would start a second Ex command. `:UI` has no `-nargs` restriction that would catch it.
 3. `:KitPreview` and `:Theme` are registered but absent from docs/BINDINGS.md, which states it lists every command the plugin registers.
+
+**Status.** ✅ erledigt (`5573f89`) — `list_branches()` gibt jetzt einen dritten Rückgabewert `err` zurück; „leeres, aber erfolgreiches Repo“ und „git-Aufruf selbst gescheitert“ erzeugen jetzt unterscheidbare Warnungen.
 
 ---
 
