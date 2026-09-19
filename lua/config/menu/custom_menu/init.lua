@@ -59,35 +59,34 @@ local function has_selection()
 end
 
 ---Open Unicode Table in floating window
+---
+--- Was `:UnicodeTable` (chrisbra/unicode.vim, filetype "unicode"); replaced
+--- by emojis.nvim's own `:Emojis unicode table` (see the cross-feature
+--- report, "unicode.vim" row). That scratch buffer carries the name
+--- "Unicode Table" instead of a filetype, so the lookup below matches on
+--- `bufname` rather than `filetype`.
 ---@return nil
 local function open_unicode_table()
-  -- Check if unicode.vim is available
-  local ok = pcall(function()
-    vim.cmd("UnicodeTable")
-  end)
-
+  local ok, unicode = pcall(require, "emojis.unicode")
   if not ok then
-    notify.warn("unicode.vim plugin not available")
+    notify.warn("emojis.nvim not available")
     return
   end
+  unicode.table_open()
 
-  -- The plugin opens its own window
+  -- The call above opens its own window.
   vim.schedule(function()
-    -- Get the unicode table buffer
-    local bufs = vim.api.nvim_list_bufs()
-    for _, buf in ipairs(bufs) do
-      if vim.bo[buf].filetype == "unicode" then
-        -- Customize window if needed
-        local win = vim.fn.bufwinid(buf)
-        if win ~= -1 then
-          vim.api.nvim_win_set_config(win, {
-            border = "rounded",
-            title = " Unicode Table ",
-            title_pos = "center",
-          })
-        end
-        break
-      end
+    local buf = vim.fn.bufnr("Unicode Table")
+    if buf == -1 then
+      return
+    end
+    local win = vim.fn.bufwinid(buf)
+    if win ~= -1 then
+      vim.api.nvim_win_set_config(win, {
+        border = "rounded",
+        title = " Unicode Table ",
+        title_pos = "center",
+      })
     end
   end)
 end

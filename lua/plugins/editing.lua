@@ -74,7 +74,15 @@ return {
       vim.g.matchup_matchparen_enabled = 1 -- no MatchParen highlight
       vim.g.matchup_matchparen_deferred = 1 -- no delayed flashes
       -- vim.g.matchup_matchparen_offscreen = {} -- no offscreen popup
-      vim.g.matchup_matchparen_offscreen = { method = "status" } -- Show off-screen matches in a popup/status
+      -- "status_manual", not "status": "status" overwrites &l:statusline
+      -- wholesale for as long as a match is offscreen, blanking out
+      -- ui.nvim's own statusline (git/diagnostics/lsp/...) until it
+      -- clears. "status_manual" computes the same string but stashes it in
+      -- the window-local w:matchup_statusline instead of touching
+      -- &l:statusline -- ui.nvim's own `matchup_offscreen` statusline
+      -- module (config/ui_statusline/variant.lua) reads that back as one
+      -- ordinary segment. See ui.nvim's docs/modules.md.
+      vim.g.matchup_matchparen_offscreen = { method = "status_manual" }
     end,
     opts = {
       treesitter = {

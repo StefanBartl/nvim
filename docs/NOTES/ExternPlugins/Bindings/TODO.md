@@ -38,7 +38,9 @@ siehe [Keymaps/Blink.md](Keymaps/Blink.md).
 - [x] `nvzone/menu`
 - [x] `nvchad/ui`
 - [x] `nvim-neotest/neotest`
-- [x] `chrisbra/unicode.vim`
+- [x] ~~`chrisbra/unicode.vim`~~ — deinstalliert 2026-09-19, ersetzt durch
+      emojis.nvims `:Emojis unicode` (Keymaps/Usercmds am emojis-Spec); die
+      beiden Blätter sind gelöscht
 - [x] `FabianWirth/search.nvim`
 - [x] `saghen/blink.cmp` — nachgezogen 2026-09-01, siehe Nachtrag oben
 

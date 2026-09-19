@@ -94,7 +94,7 @@ Default `true`, gesetzt in der `menu`-Phase in `init.lua`.
 | 🗑️ Delete File | Datei von Disk löschen (Bestätigung) + `bdelete!` | `df` |
 | 🖥️ Open in terminal | `nvchad.term.new` (Split, cd ins Buffer-Verzeichnis) falls Base46 aktiv, sonst `:enew` + Terminal-Job | — |
 | 🎨 Color Picker | `minty.huefy.open()` | — |
-| 🔣 Unicode Table | `:UnicodeTable` (Floating Window, `unicode.vim`) | `uni` |
+| 🔣 Unicode Table | `:Emojis unicode table` (Floating Window, `emojis.nvim`; war `:UnicodeTable`/`unicode.vim`) | `uni` |
 | 󰊢 Git Actions ▸ | Untermenü aus [lua/config/menu/git.lua](../../../../../lua/config/menu/git.lua), nur wenn gitsigns.nvim da ist | — |
 
 Weggefallen gegenüber dem alten Stand:
