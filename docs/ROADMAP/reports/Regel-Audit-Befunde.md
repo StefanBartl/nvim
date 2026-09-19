@@ -35,7 +35,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | buffer-ctx.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | insights.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | language.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
-| debugging.nvim | 15 | – | – | offen |
+| debugging.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | pdfport.nvim | 15 | – | – | offen |
 | reposcope.nvim | 15 | – | – | offen |
 | sandbox.nvim | 15 | – | – | offen |
@@ -1736,7 +1736,7 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 ## debugging.nvim
 
-**15 Befunde** (8 × high, 1 davon in Testcode). Roh gemeldet: 16.
+**15 Befunde** (8 × high, 1 davon in Testcode). Roh gemeldet: 16. — **Stand: 15/15** (⏭️ 0, 2026-09-18)
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -1748,6 +1748,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** Real, but narrower than stated: it needs `features.neotree = true` (DEFAULTS.lua:18 ships it `false`) plus a user-injected target of the wrong shape. Under those conditions `:Debug neotree backup-list` throws 'attempt to index a nil value (field \'backup\')' out of the user command as an uncaught error rather than the promised 'not present here' notification, and the module docstring's pcall-guarantee is false for every field access past the top-level table.
 
+**Status.** ✅ erledigt (`50bd26c`) — Jede Aktion läuft jetzt über einen `guarded()`-Wrapper, der pcall + notify.warn übernimmt, statt bei falsch geformtem injiziertem Target unabgefangen zu crashen.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/debugging/tools/proc_trace.lua:126` · `M.watch` · confidence **high**
@@ -1757,6 +1759,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** ERR-10: a typo in the argument must not behave like an omitted argument. The sibling function in the same file, `parse_start_args` (lines 32-35), gets this right — it notifies 'ignoring non-numeric threshold_ms' — so the inconsistency is within one module.
 
 **Auswirkung.** Accurate as filed. `:Debug proc watch 6O` or `30s` opens a 120-second watcher terminal with no message anywhere explaining that the typed value was discarded, so a user timing a freeze reproduction gets a window they did not choose.
+
+**Status.** ✅ erledigt (`23605ed`) — Ungültiger `seconds`-Wert erzeugt jetzt `notify.warn` statt still auf 120 zu fallen.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -1768,6 +1772,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** Accurate as filed. `:Debug indent treesitter flase` clears `cindent`/`smartindent` on the buffer -- the opposite of the intent -- and then prints 'treesitter-prefer mode for lua set to true', confirming an action the user did not request while their indentation behaviour changes.
 
+**Status.** ✅ erledigt (`23605ed`) — Das treesitter-Argument unterscheidet jetzt explizit fehlend/true/false von einem Tippfehler, der jetzt `notify.error` auslöst statt als `true` durchzugehen.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/debugging/tools/startup.lua:115` · `M.startup` · confidence **high**
@@ -1777,6 +1783,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** ERR-10: the invalid-argument case is indistinguishable from the omitted-argument case, so a mistyped count is silently swallowed rather than reported.
 
 **Auswirkung.** Accurate as filed. `:Debug performance startup 1O` runs a single cold measurement and prints 'Runs: 1'; nothing in the report or in `:messages` says the argument was discarded, so a user who asked for an averaged benchmark silently gets a one-sample one.
+
+**Status.** ✅ erledigt (`23605ed`) — Ungültiger `runs`-Wert erzeugt jetzt `notify.warn` statt still auf 1 zu fallen.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -1788,6 +1796,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** Verified the user-facing path: `views/init.lua:91-98` does `notify.warn(detail)` on failure. So in a session with no messages yet, `:Debug messages capture` warns 'Failed to capture messages.' plus three troubleshooting suggestions -- a healthy, empty message history reported as a broken capture pipeline. Conversely a genuine `:messages` throw is reported with the text 'returned empty', naming the wrong cause and discarding the actual error. The unreachable branch at line 368 is dead code.
 
+**Status.** ✅ erledigt (`f90e038`) — `try_execute`/`try_exec2` geben jetzt ein `errored`-Flag zurück; ein echtes pcall-Scheitern wird von einer legitim leeren `:messages`-Historie unterschieden.
+
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
 `lua/debugging/autocmds/sources.lua:363` · `select_items` · confidence **high**
@@ -1797,6 +1807,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** ERR-54: a getter that returns shared internal state by reference turns every consumer into a mutator; here the consumer is a renderer that sorts for display, which is the exact counter-example the rule names. The cache neither copies on read nor documents a live-reference contract.
 
 **Auswirkung.** Within the 5-second cache TTL, a `sort=frequency` or `sort=event` run permanently reorders the cached scan lists, so an immediately following default `:Debug autocmds sources` prints items in the previous run's order instead of file-walk order, and `qf=true` fills the quickfix list in that order. The auditor overstated it: the report carries no sort label (generate_output, lines 385-423, prints only Root/Parser/Total), so nothing is 'labelled as source order' -- the user just sees an unexplained ordering. Self-heals after 5 seconds or with `refresh=true`.
+
+**Status.** ✅ erledigt (`58c5075`) — `select_items()` sortiert jetzt eine flache Kopie statt der von `get_scan()`/`scan_cache` per Referenz gehaltenen Tabelle.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -1808,6 +1820,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** A backtick span in the argument is run through `&shell` before any file is touched: `:Debug keylogger start `date`.log` executes `date`. Wildcards (`*`, `?`, `[]`, `{}`, `**`) are also expanded, so a literal path containing them opens and chmods a different file than the user named, or expands to nothing. The auditor's `./#keys.log` example is WRONG -- `expand()` only applies the cmdline-specials `%`/`#`/`<cfile>`/`<cword>` when the string *starts* with them, so a mid-string `#` is left alone; only a bare `%` or `#` as the whole argument resolves to the alternate/current file name. Harm is bounded to the keylogger's own output path, but that path is where every keystroke of a terminal session -- including sudo/ssh/gpg prompts -- gets written.
 
+**Status.** ✅ erledigt (`297eb44`) — `resolve_logfile()` nutzt jetzt `lib.nvim.cross.fs.expand_path` statt `vim.fn.expand()`, Backtick-Befehlsausführung über `&shell` ist damit ausgeschlossen.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/debugging/autocmds/sources.lua:319` · `parse_args` · confidence **high**
@@ -1817,6 +1831,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** Same SEC-34 violation on a second surface: `val` comes from `table.concat(fargs, " ")` in `commands.lua:107/110`, i.e. straight from the command line, and the `(%w+)=([^%s]+)` pattern happily accepts backticks and Vim specials since they contain no whitespace.
 
 **Auswirkung.** `` :Debug autocmds sources root=`pwd` `` executes the backticked command through `&shell` during what the user believes is a read-only source scan. Note the shell payload cannot contain whitespace (the `[^%s]+` capture truncates at the first space), so this is limited to single-token commands. The auditor's second example is WRONG: `root=%` expands to the *current file name*, `get_scan` then hits `vim.fn.isdirectory(opts.root) ~= 1` (line 341) and notifies 'autocmd sources: root is not a directory: <name>' -- it fails loudly, it does not silently scan the wrong tree.
+
+**Status.** ✅ erledigt (`58c5075`) — `root=`-Wert läuft jetzt durch `lib.nvim.cross.fs.expand_path` statt `vim.fn.expand()`.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -1828,6 +1844,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** When the directory cannot be created -- permission denied, or a plain file already occupying `stdpath('data')/debuglog` or `.../markdown_inline` -- `vim.fn.mkdir` surfaces the failure as a raised error rather than a 0 return, so `:Debug markdown inline` aborts with an uncaught E739 out of the user command instead of the 'markdown inline: ...' notification the dispatcher is written to show. The function's advertised `(ok, err)` contract is bypassed for this one boundary.
 
+**Status.** ✅ erledigt (`6e7cc3e`) — `vim.fn.mkdir(debugfolder, "p")` ist jetzt pcall-gewrappt und meldet den Fehler über den dokumentierten `(ok, err)`-Rückgabewert statt E739 unabgefangen zu werfen.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/debugging/autocmds/sources.lua:490` · `runtime_by_event` · confidence **medium**
@@ -1837,6 +1855,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** ERR-11: 'nothing to report' and 'failed to determine' must be distinguishable. `M.all()` consumes the result at line 515 and has no way to know which case it got.
 
 **Auswirkung.** Much weaker than filed. The structural collapse is real, but I found no reachable failure path: `nvim_get_autocmds({})` takes no options to reject and always returns Neovim's own core registrations, so neither the 'failed' branch nor the 'genuinely empty' branch is reachable in practice. This is a latent ERR-11 shape defect in a defensive branch, not a bug a user can hit today -- the auditor's scenario of `:Debug autocmds all` reporting 'Runtime registrations: 0' has no demonstrated trigger.
+
+**Status.** ✅ erledigt (`58c5075`) — `runtime_by_event()` gibt jetzt ein `errored`-Flag zurück; `M.all()` warnt einmalig statt eine gescheiterte Abfrage als „0 registriert“ auszugeben. Vom Agenten selbst als aktuell nicht auslösbar eingestuft (kein ablehnbarer Options-Pfad), trotzdem behoben, da die Formkorrektur billig war.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -1848,6 +1868,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** Accurate as filed. `setup({ feature = { neotree = true } })` (singular) or `{ views = { timing = { attempts = 5 } } }` is merged in silently: the junk key is stored in the active config, the intended setting never takes effect, and `:checkhealth debugging` reports the plugin healthy. Because `features` is the gating surface the whole `:Debug` dispatcher reads (commands.lua `enabled(entry)`), a typo there leaves a category disabled with the user believing they enabled it -- and the deep merge makes the nested typo invisible.
 
+**Status.** ✅ erledigt (`0cde049`) — `sanitize()` läuft jetzt vor dem Merge: unbekannte Keys werden mit Levenshtein-„did you mean“-Hinweis verworfen, falsch typisierte Options-Tabellen fallen auf den Default zurück, beides über `config.issues()` und `:checkhealth debugging` sichtbar.
+
 ### `ERR-62` — `pcall(f(args))` fängt nichts
 
 `lua/debugging/terminals/keylogger.lua:167` · `M.start` · confidence **medium**
@@ -1857,6 +1879,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** Same mechanism as ERR-62: the expression that can throw is evaluated outside the `pcall`. `vim.uv` only exists from Neovim 0.10, while README/`docs/installation.md`/`health.lua:39` all state 0.9+, and this repo's own `views/debug_helper.lua:233` uses the `(vim.uv or vim.loop)` form. The inline comment states the intent explicitly — 'must not stop logging' — which this construction does not deliver.
 
 **Auswirkung.** On Neovim 0.9 (a version this plugin's README, installation doc and healthcheck all declare supported), `:Debug keylogger start <path>` throws 'attempt to index a nil value (field \'uv\')' out of the user command after the logfile has been opened and its session header written but before `M.logging = true`. The `io` handle in `_fh` is then leaked for the rest of the session because `M.stop()` bails on `M.logging == false`, and no keys are ever recorded. The inline comment's stated intent -- chmod is best-effort and 'must not stop logging' -- is exactly what this construction fails to deliver.
+
+**Status.** ✅ erledigt (`297eb44`) — Der `vim.uv`-Lookup steckt jetzt mit im pcall, plus `(vim.uv or vim.loop)` für die deklarierte Neovim-0.9-Kompatibilität.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -1868,6 +1892,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 
 **Auswirkung.** Accurate as filed. A second `require("debugging.views").setup({})` -- the subsystem entry point per its own docstring, used by config-reload and test flows -- leaves `attempts`, `capture_timeout_ms` and the three delays at whatever the previous call set, while `_keymaps_cfg` and `_autocmds_cfg` in the same function do snap back to defaults. The resulting configuration is a mixture of two setups that matches neither, and there is no way to reset the timings short of reloading the module.
 
+**Status.** ✅ erledigt (`b6d20b9`) — `_timings` mergt jetzt in eine frische Kopie von `DEFAULT_TIMINGS` statt in die lebende Tabelle, analog zu `_keymaps_cfg`/`_autocmds_cfg`. Nebenfund: ein bestehender Test in `TESTS/views_spec.lua` hatte das alte, fehlerhafte Verhalten explizit als „documented behaviour, not a bug“ festgeschrieben — korrigiert.
+
 ### `PRIN-20` — Keine stillen Fehler
 
 `lua/debugging/views/utils.lua:173` · `M.focus_and_bottom` · confidence **medium**
@@ -1877,6 +1903,8 @@ THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two system
 **Regelbezug.** PRIN-20/ERR-03: the failure is reported by the callee and then dropped, so a failed focus becomes a silent no-op that still performs its follow-up action. Every other handle operation in this file is checked; this one return value is the exception.
 
 **Auswirkung.** Real but narrower than filed. Line 185 already does `pcall(api.nvim_win_set_cursor, win, { last, 0 })`, so `win` itself is scrolled correctly even when focus failed -- the auditor's 'the debug view is never focused, no error is reported' holds, but the view is not left unscrolled. The concrete damage is line 186: `normal! G` fires in whatever window is still current, moving the cursor to the last line of the buffer the user is actually editing. Requires `nvim_set_current_win` or `make_focusable` to fail (textlock, cmdline-window, a window closed between the deferred callback and this line), which is uncommon.
+
+**Status.** ✅ erledigt (`052f3ff`) — `normal! G` läuft nur noch, wenn `force_focus()` tatsächlich erfolgreich war, statt im jeweils aktuellen (falschen) Fenster den Cursor zu verschieben.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -1899,6 +1927,8 @@ What I could not verify, and why:
 - ERR-54 on config.get(): `config/init.lua:37-42` hands out the live `_active` table with neither a copy nor a documented live-reference contract. I did not report it because I traced every consumer and none mutates it today — it is a latent risk, not a present defect.
 
 Rules I checked and found the plugin compliant with (not merely inapplicable): ERR-20/PRIN-27 (missing Tree-sitter Lua parser falls back to the text scanner, i.e. fail-open), ERR-33/LUA-13 (every vim.defer_fn callback re-validates its window handle), ERR-51 (setup merges into vim.deepcopy(DEFAULTS)), ERR-60 (I traced all 36 `and … or` sites; none has a falsy middle operand), LUA-06 (config/DEFAULTS.lua is pure data), LUA-02 (the clipboard command-injection fix was upstreamed to lib.nvim rather than patched locally), PERF-42 (the scan cache carries a 5s TTL), PERF-72 (default scan root is stdpath("config")/lua), PERF-92 (no module-level geometry), PERF-93 (no handler on a hot event), SEC-01/03 on the process side (proc watch and the startup benchmark both spawn via argv, never a shell string), SEC-30 (every user-supplied needle uses find(..., plain=true)), XP-06 (no mixed-case module paths).
+
+**Status.** ✅ erledigt (`f90e038`) — `glob()`-Aufruf in `TESTS/capture_spec.lua` läuft jetzt durch `lib.nvim.fs.globbable`, das die 8.3-Kurzform-Falle unter Windows abfängt.
 
 ---
 
