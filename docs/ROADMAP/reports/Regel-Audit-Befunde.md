@@ -57,7 +57,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | runtime-analysis.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | diff.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | documentation.nvim | 11 | – | – | offen |
-| emojis.nvim | 11 | – | – | offen |
+| emojis.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | fileops.nvim | 11 | – | – | offen |
 | hover.nvim | 11 | – | – | offen |
 | markdown.nvim | 11 | – | – | offen |
@@ -5595,7 +5595,7 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 
 ## emojis.nvim
 
-**11 Befunde** (5 × high, 2 davon in Testcode). Roh gemeldet: 12.
+**11 Befunde** (5 × high, 2 davon in Testcode). Roh gemeldet: 12. — **Stand: 11/11** (⏭️ 0, 2026-09-18)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -5607,6 +5607,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 
 **Auswirkung.** Any file rg reported that is deleted, renamed, or made unreadable between the async scan and the user's confirmation -- or any read-only file on the write side, or a bogus path produced by the greedy parse at line 41 -- raises out of `M.apply_across_files` mid-loop. The files already processed stay rewritten and saved (buffers are written to disk at line 92), the remaining files are silently never touched, the summary notify at line 112 never runs, and the user sees a raw `Vim:E484` with no indication of how far the bulk operation got or which files changed. Partial, unreported mutation across the project, which is worse than either completing or refusing.
 
+**Status.** ✅ erledigt (`f32cd62`) — Der Datei-Loop in `apply_across_files` läuft jetzt pro Datei in einem pcall; ein Fehler wird gemeldet und gezählt, der Rest des Batches läuft trotzdem weiter.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/emojis/actions.lua:132` · `M.edit / apply` · confidence **high**
@@ -5616,6 +5618,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 **Regelbezug.** ERR-30 requires every edit computed during a scan to be re-verified against the *current* text immediately before writing, and skipped on divergence. Handle validity is re-checked (ERR-33/LUA-13 are satisfied); buffer content is not. The module's own doc advertises the preview as non-blocking so Neovim 'stays responsive' — which is exactly the window in which the user keeps typing into the range being overwritten.
 
 **Auswirkung.** Only with `preview.enable = true` (DEFAULTS.lua:177 ships it false, so the inline path is unaffected): any edit landing in `t.l1..t.l2+1` during the preview_duration_ms window -- the user typing, an LSP formatter, another autocmd -- is silently reverted by the deferred write. Because `strict_indexing` is false, `nvim_buf_set_lines` clamps rather than erroring, so there is no error and no warning; the user sees the success notify `[emojis] Removed N emoji`. Verified headless exactly as described. The loss is bounded to the action's own range and is undoable with `u`, so it is data reversion within one buffer, not unrecoverable corruption.
+
+**Status.** ✅ erledigt (`a2bce8a`) — `apply()` liest den aktuellen Buffer-Text im Zielbereich unmittelbar vor dem deferred Write erneut und überspringt bei Abweichung.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -5627,6 +5631,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 
 **Auswirkung.** Verified headless: `setup({ overlay = { colums = 3 }, preview = { enabled = true }, checkbox = { set = {...} } })` returns a config in which `overlay.colums = 3` sits next to `overlay.columns = 5`, `preview.enabled = true` next to `preview.enable = false`, and `checkbox.set` next to `checkbox.sets` -- with exactly zero notifications emitted. `:checkhealth emojis` only probes dependencies (health.lua:10-80, no config validation at all), so nothing surfaces there either. The typo'd option is inert, the real option silently keeps its default, and the user has no way to notice short of reading the plugin source.
 
+**Status.** ✅ erledigt (`f6add21`) — Ein `sanitize_level()`-Pass läuft vor dem Merge, verwirft unbekannte Keys mit Levenshtein-Hinweis.
+
 ### `PRIN-25` — Eingaben validieren
 
 `lua/emojis/core/ops.lua:207` · `M.unreplace` · confidence **high**
@@ -5636,6 +5642,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 **Regelbezug.** PRIN-25 requires arguments to be validated before they are worked with — here a value taken verbatim from an untrusted buffer reaches arithmetic that can only produce a valid byte for a bounded input. A codepoint above U+10FFFF is not a codepoint at all and must be rejected (left untouched, like any other unrecognised `:...:` token, which is what the function's own docstring promises).
 
 **Auswirkung.** Two distinct consequences, both verified headless. (1) Raise: `:Emojis unreplace` on any scope whose text contains `:U+400000:` or a longer hex run raises out of `actions.edit` -- I confirmed `pcall(actions.edit, "unreplace", target)` returns false with `ops.lua:207: bad argument #1 to 'encode' (invalid value)`. `unreplace` takes the inline `apply()` path (actions.lua:140) with no pcall anywhere, so the user gets a raw Lua error instead of the module's notify contract and nothing on the line is restored. (2) Silent corruption, which the auditor missed: codepoints in 0x110000..0x3FFFFF do NOT raise -- `:U+110000:` produces the byte sequence F4 90 80 80, which is above U+10FFFF and therefore not valid UTF-8, and `unreplace` writes it into the buffer and counts it as a successful restore.
+
+**Status.** ✅ erledigt (`ae84e3a`) — Der `:U+XXXX:`-Hex-Fallback wird jetzt auf `<= 0x10FFFF` geprüft, bevor er `patterns.encode` erreicht; ein zu großer Codepoint bleibt unangetastet statt ungültiges UTF-8 zu erzeugen.
 
 ### `PRIN-25` — Eingaben validieren
 
@@ -5647,6 +5655,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 
 **Auswirkung.** Triggered whenever a matched line contains both an emoji and a `:<digits>:` construct after the path -- a timestamp (`10:30:`), a ratio, or an embedded `file.lua:12:` reference. `:Emojis list cwd` then puts a quickfix entry with a non-existent filename and the wrong line number into the list (jumping to it opens an empty new buffer at that name). `:Emojis clear cwd` / `replace cwd` feed the same bogus path to `fn.bufnr` (returns -1, so `loaded` is false) and then to `fn.readfile` at line 79, which raises `Vim:E484: Can't open file` -- aborting the bulk run part-way through, after earlier files have already been rewritten and saved. Note this bug is the most likely real-world trigger of the unguarded-readfile finding at line 79.
 
+**Status.** ✅ erledigt (`f32cd62`) — `files_of`/`finish` splitten `file:line:text` jetzt nicht-gierig am ersten Trenner statt am letzten, damit ein `:100:`-Shortcode im Match-Text nicht mehr in den Dateinamen gezogen wird.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/emojis/core/insert.lua:41` · `M.at_cursor` · confidence **medium**
@@ -5656,6 +5666,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 **Regelbezug.** ERR-01: a write through a plugin API that can throw sits on a system boundary and needs a `pcall` (or a `modifiable` pre-check). The neighbouring cursor call on line 42 *is* pcall-wrapped, so the omission is inconsistent within the same function, and this module's contract is to return `false` on failure, not to raise.
 
 **Auswirkung.** Verified headless with the real modules: `insert.at_cursor(glyph)` with a `nomodifiable` current buffer raises `insert.lua:41: Buffer is not 'modifiable'` instead of returning `false`, and `actions.checkbox("add", target)` on the same buffer raises `actions.lua:197: Buffer is not 'modifiable'` instead of notifying. Reachable whenever the current buffer is not writable when the glyph lands -- a help buffer, quickfix, a plugin scratch window, a `:set nomodifiable`/`readonly` file. The error escapes out of the picker/overlay callback as a raw Lua error rather than the module's documented false-return and notify contract. It is a broken-contract/ugly-failure bug, not data loss: nothing is written and the buffer is untouched.
+
+**Status.** ✅ erledigt (`a2bce8a`) — `nvim_buf_set_lines` in mehreren Aufrufstellen ist jetzt pcall-abgesichert; ein nicht-modifizierbarer Buffer liefert `false`/`notify.error` statt eines rohen Lua-Fehlers.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -5667,6 +5679,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 
 **Auswirkung.** Latent, not currently observable -- the auditor overstated this. `checkbox_target()` returns nil only when `nvim_get_current_win()` or `nvim_get_current_buf()` hands back an invalid handle (init.lua:76/94, scope.lua:19/35), which does not happen in normal Neovim: the current window and buffer are valid by construction. Both non-visual branches call `scope_m.resolve("line", ...)`, which never reaches scope.lua's genuinely reachable failure paths ('cursor line is empty', 'cursor is not on a word' -- those belong to the `word` scope). So today `checkbox_add`/`checkbox_remove` never silently no-op. What is real is the inconsistency between three call sites of the same `(target, err)` helper: two of them structurally cannot report a failure, so the moment that branch becomes reachable (a new scope, a future failure mode in scope.resolve) the two API entry points and any keymap bound to them would do nothing at all while `toggle` reports it. Cheap to fix, no user-visible defect right now.
 
+**Status.** ✅ erledigt (`7ca51ed`) — `checkbox_add`/`checkbox_remove` fangen jetzt den zweiten Rückgabewert von `checkbox_target()` ab und melden ihn wie `toggle` es bereits tut.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/emojis/config/init.lua:80` · `M.setup` · confidence **medium**
@@ -5676,6 +5690,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default and be surfaced via `:checkhealth`, rather than taking a code path down with it. `overlay.mode`/`columns`/`default_scope` do exactly that (warn + fall back); the remaining scalars have no such treatment, and `health.lua` reports no config validation at all.
 
 **Auswirkung.** Verified headless against the real modules, not just the primitives. `setup({ overlay = { limit = "all" } })` then `overlay.open("grid")` raises `overlay/init.lua:105: bad argument #1 to 'min' (number expected, got string)` -- every `:Emojis overlay` throws instead of opening with the default of 20. `setup({ preview = { enable = true, duration_ms = "150ms" } })` then `actions.edit("clear", target)` raises `bad argument #1 to 'start' (number expected, got string)` from the `vim.defer_fn` at actions.lua:57 -- every `:Emojis clear`/`replace` throws. In both cases `setup()` itself completes silently and the failure only surfaces at use time as a raw Lua error, so the plugin reads as broken rather than misconfigured, and `:checkhealth emojis` gives no hint. Note a numeric string still works (`math.min("10", 5)` coerces), so only genuinely non-numeric values bite.
+
+**Status.** ✅ erledigt (`f6add21`) — Mehrere Config-Felder degradieren jetzt bei ungültigem Typ/Wert auf ihren Default, statt erst bei Nutzung zu werfen.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -5687,6 +5703,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 
 **Auswirkung.** Verified: `nvim --headless -u NONE -c "luafile boom.lua" -c "qa!"` on a file whose first line is `error("boom")` prints `E5113: Lua chunk: boom.lua:1: boom` and exits with code 0. So a syntax or load-time error in any spec, a spec listed in run.lua but missing from disk, or a failure in harness.lua / frecency.set_path makes the CI 'Run TESTS suite' step pass green with zero checks executed -- the one gate meant to catch exactly that. Because `dofile` at line 54 sits outside the per-spec pcall, a load-time error in one spec also kills the whole run rather than being reported as one failing spec. One correction to the auditor's secondary point: the hardcoded list at run.lua:21 holds 22 entries and `TESTS/` contains exactly 22 `*_spec.lua` files, so nothing is being skipped today; the risk is prospective -- a newly added spec is silently never run, contradicting run.lua's own header claim at line 8 that it 'Loads every *_spec.lua in this directory'.
 
+**Status.** ✅ erledigt (`d84bf52`) — `run.lua` läuft jetzt komplett in einem Top-Level-pcall mit `os.exit(1)` bei jedem Fehler, und bricht laut ab, falls eine `*_spec.lua`-Datei existiert, aber nicht in der Liste registriert ist.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/emojis/util/lib.lua:120` · `M.map` · confidence **medium** · _Testcode_
@@ -5696,6 +5714,8 @@ Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/do
 **Regelbezug.** LUA-01 requires the plugin to pick one policy for lib.nvim — hard (bare require) or soft (pcall + equivalent fallback) — and hold it. Here the same module is hard in one file and soft in another. The docs are honest (README and docs/requirements.md both call lib.nvim required, and health.lua reports a missing composer as `error`, not `warn`), so the doc half of the rule is satisfied; what remains is the inconsistency itself.
 
 **Auswirkung.** No runtime defect; this is a maintainability and documentation-accuracy issue. The `vim.keymap.set` fallback at util/lib.lua:132 is unreachable on every supported path: `M.map`'s only caller is overlay/init.lua:265, and reaching the overlay through the documented route requires `setup()`, which bare-requires the same `lib.nvim.bindings.keymap` at bindings/keymaps.lua:16 and the composer at commands.lua:17. It can only fire via the raw Lua API on a machine that has ui.nvim but not lib.nvim and never ran `setup()`. The concrete wrongness is the doc claim: util/lib.lua's header and docs/requirements.md:6 both describe `lib.nvim.bindings.keymap` as soft/optional, which bindings/keymaps.lua:16 contradicts -- a reader trusting either will mis-model the dependency.
+
+**Status.** ✅ erledigt (`08b1b88`) — Kein Laufzeit-Defekt (Fallback unerreichbar); Header von `util/lib.lua` und `docs/requirements.md` beschrieben `lib.nvim.bindings.keymap` pauschal als weich, was der harten `bare require` widersprach — beide Stellen präzisiert.
 
 ### `PRIN-25` — Eingaben validieren
 
@@ -5716,6 +5736,8 @@ ALREADY TRACKED IN-CODE — NOT RE-REPORTED. Two CDX markers already name real s
 DOC DRIFT WITH NO MATCHING RULE ID. @types.lua:30 describes the `cwd` scope as "ripgrep-based, async; list/count only", while commands.lua and search.lua SUPPORTED both route `clear` and `replace` through it — i.e. the most destructive operation in the plugin (rewrite + save every matched file across the project) is annotated as not existing. health.lua:56/58 and docs are correct; only the type alias is stale.
 
 RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated (plugin/emojis_autodoc.lua regenerates helptags), but I did not run the generator, so I cannot say whether either file has been hand-edited or has drifted — unverified, not clean. ERR-53/ERR-54: `config.checkbox_sets()` hands out live references into the active config's set tables (out[#out+1] = set, and `return { set }`) rather than copies, and its docstring does not say 'live reference, do not mutate'; I traced every consumer (core.checkbox.toggle/add/remove, actions.checkbox) and none mutates today, and `init.cascade_groups` deepcopies before handing the sets outside the plugin, so there is no current defect to report — only a latent one. LUA-02: whether any fix here belongs upstream in lib.nvim needs cross-repo context I did not gather. PERF-46/47: the frecency store's `_store`/`_path` caches have no TTL and `reset()` replaces the table instead of clearing in place, but no consumer holds a reference across a reset, so neither rule bites. LUA-06 is clean — DEFAULTS.lua's only module-level require is core.patterns, which is pure byte arithmetic (matching the rule's own Belege note for this plugin).
+
+**Status.** ✅ erledigt (`b759704`) — `M.next` validiert `count` jetzt als positive Ganzzahl (Ablehnung statt stillem Clamp auf 1) und deckelt ihn bei 1000.
 
 ---
 
