@@ -58,6 +58,7 @@ three replacements that turned out to be rewires rather than builds:
 | A3 vim-startuptime → runtime-analysis.nvim | `:RA startup profile [runs]`; plugin dropped | nvim `137c5f67f`, 2026-09-17 |
 | B2 todo-comments.nvim → insights.nvim | `insights.todos`: the host's keyword table shipped as the default, `:Insights todos [KEYWORD...] [ui]` over the shared rg scanner, and an own extmark highlighter with signs; plugin, `config/todo_comments/` and two cheatsheets dropped, `<leader>sT`/`ST` on the insights spec | insights.nvim `638b0f7`/`45e2911`, nvim `03f4ead9a`, 2026-09-19 |
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
+| Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
 | 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
@@ -108,6 +109,7 @@ neither chosen):
 | `:Gbrowse` → open.nvim / reposcope.nvim | S–M | placement |
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
 | window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
+| neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
 | B4 table-mode → markdown.nvim | M | build |
 | B5 ts-context → ui.nvim `winbar/` | L | build; performance work is the actual scope |
 | 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
@@ -235,10 +237,10 @@ the pieces that are config code today and should be plugin code:
 
 | Feature family | Evidence | Target | Effort |
 |---|---|---|---|
-| **Hover-based source switcher** | `sources/switcher.lua` (303 lines) — **already draws with `lib.nvim.ui.kit`** | **filetree.nvim** | **M** |
-| **Centralized buffer-local keymaps + `only_lhs` variant** | `keymaps/**` (~460 lines across filesystem/buffers/git_status/diagnostics/document_symbols) | **filetree.nvim** — it already owns `d` (trash), buffer-local, "always wins, verified" | **M** |
-| **Node utilities** | `utils/node.lua` (158 lines) | **filetree.nvim** adapter interface | **S** |
-| **Checkhealth** | `checkhealth/**` (81 lines) | **filetree.nvim** `health.lua` | **S** |
+| ~~**Hover-based source switcher**~~ | ~~`sources/switcher.lua` (303 lines) — **already draws with `lib.nvim.ui.kit`**~~ | **Done 2026-09-19** — filetree.nvim `source_switcher` (`"`/`!` in place, `:Filetree source`, display names for `source_selector`); `filetree.nvim@b7075fc` | **done** |
+| ~~**Centralized buffer-local keymaps + `only_lhs` variant**~~ | ~~`keymaps/**` (~460 lines …)~~ | **Done for what ran code** — `only_lhs` is filetree's `tree_toggle` (E95 self-heal in the adapter), the `y` delegate is `path_copy`'s key list, `"`/`!` the switcher. The per-source `noop` tables **stay**: they silence neo-tree's *own* defaults per source, which is neo-tree configuration, not a feature. | **done** |
+| ~~**Node utilities**~~ | ~~`utils/node.lua` (158 lines)~~ | **Deleted** — the adapter already had every helper; the one remaining caller (`files.lua`'s `<CR>`) reads `state.tree:get_node()` itself | **done** |
+| ~~**Checkhealth**~~ | ~~`checkhealth/**` (81 lines)~~ | **Deleted** — it only checked that the config's own modules load, and those are gone; `:checkhealth filetree` and `:Filetree source debug` are the replacements | **done** |
 | `neo-tree-tests-source` / `neo-tree-diagnostics` → **extra sources** | spec `dependencies` | **filetree.nvim** as adapter-level sources | **M** each |
 | `nui.nvim` | dependency of neo-tree and noice | Leaves only when both do. `lib.nvim.ui.kit` is the own equivalent. | — |
 
@@ -741,7 +743,7 @@ Struck entries are done.
 | Own plugin | Feature families it would absorb |
 |---|---|
 | **runtime-analysis.nvim** | ~~resty's `.http` runner~~ (already had it; A1) · ~~vim-startuptime's averaged report~~ (A3) · snacks profiler (the *feature*; its keys are gone, 7.2) |
-| **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer, once the keymaps live there) |
+| **filetree.nvim** | ~~neo-tree source switcher · centralized keymaps · node utils · checkhealth~~ (2026-09-19: `source_switcher`, `tree_toggle`; the noop tables stay as neo-tree config) · tests/diagnostics sources · snacks explorer · window picker (consumer) |
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
 | **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built, in parallel run; 7.4) |
@@ -783,9 +785,12 @@ offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
 ~~startuptime → runtime-analysis~~ (A3).
 
-**Real projects (L), in order of payoff, open:** neo-tree config →
-filetree.nvim (~1,500 lines) · ts-context → ui.nvim (B5). ~~harpoon →
-sessions~~ (7.4, built, in its parallel-run week; the cut is the user's) ·
+**Real projects (L), in order of payoff, open:** ts-context → ui.nvim
+(B5). ~~neo-tree config → filetree.nvim~~ (done 2026-09-19: the config's
+2,035 lines were mostly already moved; the last three code-bearing pieces
+became filetree's `source_switcher` and `tree_toggle`, ~700 lines of
+neo-tree mapping tables stay as config) · ~~harpoon → sessions~~ (7.4,
+built, in its parallel-run week; the cut is the user's) ·
 ~~todo-comments → insights~~ (B2, one session) · ~~markdown-preview →
 mdview~~ (B3).
 
