@@ -38,7 +38,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | debugging.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | pdfport.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | reposcope.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
-| sandbox.nvim | 15 | – | – | offen |
+| sandbox.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | cascade.nvim | 14 | – | – | offen |
 | casedesk.nvim | 14 | – | – | offen |
 | cmdlog.nvim | 14 | – | – | offen |
@@ -2334,7 +2334,7 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 ## sandbox.nvim
 
-**15 Befunde** (8 × high). Roh gemeldet: 18.
+**15 Befunde** (8 × high). Roh gemeldet: 18. — **Stand: 15/15** (⏭️ 0, 2026-09-18)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -2346,6 +2346,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** A throw out of `vim.system` (uv.spawn ENOENT when the engine binary is gone or a pinned `engine = "docker"` names one that is not installed) propagates raw to the user as an E5108 stack trace, skipping every friendly-error path this plugin has. The progress indicator started at line 148 is never finished and never cancelled, so it sits in the statusline for the rest of the session, and `on_done` never runs -- so callers that only report from the callback (image pull/push, all prunes, compose up/down/restart, devcontainer build) report nothing at all. Note the sibling failure mode is *silent*, not loud: the `vim.fn.jobstart` adapters return -1 without raising.
 
+**Status.** ✅ erledigt (`d5cd010`) — `vim.system`-Aufruf in `run_async_captured` jetzt mit pcall abgesichert; ein Fehlschlag beendet den Progress-Indikator und ruft `on_done(false, ...)` statt zu werfen.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/sandbox/adapters/docker/containers/follow_logs.lua:41` · `M.follow_logs` · confidence **high**
@@ -2355,6 +2357,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** ERR-01: an external-process start is a system boundary and must go through `pcall`. Neither this function nor its caller chain (`container_commands.logs_follow` -> `ui/log_follow_view`) has one.
 
 **Auswirkung.** If the engine binary cannot be spawned, the throw lands between log_follow_view.lua:11 (scratch buffer already open, showing "-- following logs, press q to stop --") and line 38 (`bind_close`), so `q` is unbound and the BufWipeout kill-handler at line 43 is never registered. The user is left with a stuck, keyless buffer plus a raw Lua error, and must reach for `:bwipeout` by hand. Reopening the same container's log view hits the same unguarded call again.
+
+**Status.** ✅ erledigt (`d5cd010`) — Gleicher Fix in allen drei `follow_logs`-Kopien (docker/nerdctl/podman): pcall um `vim.system`, Fehlschlag wird gemeldet statt den Aufrufer vor dem Binden von `q`/BufWipeout abzuwerfen.
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -2366,6 +2370,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** On the documented minimum (Neovim 0.10) `:Sandbox container list` indexes a nil `vim.hl` and throws inside the render loop at line 46 -- but only when the list is non-empty, since the loop body is what throws. The buffer is already open (line 36) and the throw aborts before `list_actions.set_keymaps` (line 55) and `setup_autorefresh` (line 251), so the user is left looking at a populated list buffer in which `q`, `?`, filter, engine-cycle and all sixteen row actions are unbound, plus a raw Lua error. Same for the filter re-render path (lines 195, 211).
 
+**Status.** ✅ erledigt (`6b4f47f`) — `vim.hl.range` nur noch aufgerufen, wenn `vim.hl` oder `vim.highlight` existiert; Fallback auf `vim.highlight.range` für Neovim < 0.11.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/sandbox/util/project_config.lua:18` · `M.read_engine_override` · confidence **high**
@@ -2375,6 +2381,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** ERR-10/PRIN-26: "kein Argument" and "ungültiges Argument" must be distinguishable -- returning `nil, false` vs `nil, true`, or a structured error. Here a typo in a file the user wrote specifically to pin an engine is collapsed onto the same value as "the user never wrote one".
 
 **Auswirkung.** `engine=dcoker` in a `.sandboxrc` is swallowed: init.lua:55-58 sees nil, falls through to the setup/detected engine, and the repo silently runs against an engine the file was written to override. The compounding claim checks out -- engine_commands.lua:70 asks the same nil-returning function (`elseif require("sandbox.util.project_config").read_engine_override() then source = ".sandboxrc"`), so `:Sandbox engine get` reports `(config)` and actively denies the file had anything to say. The same silence covers a valid `engine=` line typed as `engine = podman ` with a trailing token, since the pattern requires a single `%S+`.
+
+**Status.** ✅ erledigt (`f7d91af`) — `read_engine_override` gibt jetzt `(wert, invalid)` zurück statt beides auf `nil` zu kollabieren; `:Sandbox engine get` benennt eine ignorierte ungültige `.sandboxrc`-Angabe.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -2386,6 +2394,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** `setup({ refresh_interval = "2000" })` makes `setup_autorefresh` raise `attempt to compare string with number`. Because `setup_autorefresh` is the last statement of every list view (list_view.lua:251 and the image/volume/network equivalents), the buffer, highlights and keymaps are all already in place -- so the list looks and works fine, but every invocation of the command ends in a raw Lua error, with no hint that one config key is responsible and nothing in `:checkhealth` to point at it. Degrading to the DEFAULTS value (`refresh_interval = nil`) is what ERR-22 asks for.
 
+**Status.** ✅ erledigt (`21281b3`) — `type(interval) ~= "number"`-Guard vor dem Vergleich ergänzt, degradiert jetzt auf Default statt zu werfen, plus neue `:checkhealth`-Zeile für den Fall.
+
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
 `lua/sandbox/config/init.lua:26` · `M.setup` · confidence **high**
@@ -2395,6 +2405,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** LUA-87's counter-case (reposcope: "setup() merged in die aktuelle Optionstabelle statt in eine DEFAULTS-Kopie -- akkumuliert, ein zweites setup({}) setzt nichts zurück") is exactly this shape, and here the accumulation corrupts a flag whose whole purpose (documented at config/init.lua:12-18) is to tell a user *instruction* apart from a *guess*.
 
 **Auswirkung.** A second `setup()` (lazy.nvim `opts` plus an explicit `require("sandbox").setup{}`, or `:Lazy reload`) turns a guess into an instruction: `engine_named` becomes true although the user never named an engine. `resolve_engine_name` then returns the first engine on PATH verbatim and skips the liveness probe -- the exact scenario engine_utils.lua:36-45 documents as the bug it was written to prevent (Podman on PATH with its VM stopped, Docker running and never asked; every command fails after ~370 ms). Nothing surfaces the flip: `:checkhealth sandbox` reports the resolved name, not how it was resolved.
+
+**Status.** ✅ erledigt (`184f797`) — `setup()` mischt jetzt in eine frische `vim.deepcopy(defaults)`-Kopie statt in das lebende `M.options`; ein zweiter Aufruf akkumuliert nicht mehr und korrumpiert `engine_named` nicht mehr.
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -2406,6 +2418,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** After `:Sandbox engine set docker`, or a `:cd` into a repo whose `.sandboxrc` pins the other engine, `<Tab>` keeps offering the previous engine's object names until the entry ages out. With the shipped default that window is short -- `completion_cache_ttl_ms` falls back to 4000 ms (line 50) -- so the everyday impact is a few seconds of wrong candidates, not a lasting fault; a user who raises the TTL for a slow daemon extends it proportionally. Completing a name the active engine does not have produces a failed command, not silent damage. statusline.lua:47's single unkeyed `cache` slot has the same defect with a 3000 ms default (line 44).
 
+**Status.** ✅ erledigt (`6b38ed6`) — Cache-Key um den aufgelösten Enginenamen erweitert; den unkeyed Statusline-Cache in `statusline.lua` gleich mit repariert, wie vom Audit als geteilter Befund notiert.
+
 ### `PERF-82` — Idempotenter Timer-Start
 
 `lua/sandbox/ui/list_actions.lua:434` · `M.setup_autorefresh` · confidence **high**
@@ -2415,6 +2429,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** PERF-82 demands an idempotent `start()` *with an explicit `stop()` counterpart*. The stop path here tears down the timer but leaves the flag that says "a timer is already running", so the start is no longer idempotent -- it is one-shot. The buffer survives the stop: lib.nvim's `open_named_scratch` sets `bufhidden = "hide"` and reuses the buffer by name, which this function's own docstring relies on.
 
 **Auswirkung.** Closing the list *window* (`:q`, `<C-w>c`) rather than wiping the buffer stops the timer and leaves the "a timer is running" flag set on a buffer that survives. Every later `:Sandbox container list` (or image/volume/network list) reuses that bufnr, returns at line 418, and never arms a timer again -- auto-refresh is dead for that list kind for the rest of the session, silently. The flag is buffer-local, so the damage is per list kind, and only for users who set `refresh_interval`; BufWipeout is unaffected because the wipe destroys the flag with the buffer.
+
+**Status.** ✅ erledigt (`f00f9d5`) — Neue `stop()`-Funktion löscht das `sandbox_autorefresh_active`-Flag beim Selbst-Stop des Timers, nicht nur beim BufWipeout.
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -2426,6 +2442,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** With an unresolvable engine the usecase is invoked with `engine = nil` and dies at core/usecases/containers/exec_in_container.lua:8 (`engine.exec_in_container(...)`). The pcall at line 106 catches it, so the user gets two notifications for one cause -- "Invalid engine: nil" from init.lua:71, then "Failed to exec in container <id>: ...attempt to index a nil value" -- where every guarded neighbour stops after the first. Nothing is corrupted; the cost is a confusing second, internal-looking error. `M.inspect` at line 501 has the same exposure.
 
+**Status.** ✅ erledigt (`dd00d43`) — `if not engine then return end` in `M.exec`, `M.exec_once` und `M.inspect` ergänzt. Der Befund-Text widersprach sich selbst (inspect fälschlich als bereits abgesichert gelistet, aber die Auswirkung nannte genau diese Lücke) — Quellcode bestätigte die Auswirkung, danach wie beschrieben behoben.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/sandbox/health.lua:101` · `M.check` · confidence **medium**
@@ -2435,6 +2453,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** LUA-01: a plugin picks hard or soft and holds it. The documented position is hard, so the healthcheck is the place that must *report* the missing dependency -- the same counter-case already fixed in fileops.nvim (`health.lua:71-75`), where a missing lib.nvim had to become an `error` line.
 
 **Auswirkung.** Correcting the auditor: without lib.nvim, `:checkhealth sandbox` does not reach line 101. It throws at line 17, where `require("sandbox")` pulls in the three engine aggregators and thence `adapters/*/containers/follow_logs.lua:4`'s bare `require("lib.nvim.system.lines")` -- so the user sees the section header from line 12 and then `module 'lib.nvim.system.lines' not found`, with lib.nvim never named as the thing to install. (With `engine_named` set it instead survives to line 38 and dies in `engine_utils.is_executable` -> `require("lib.nvim.core")`, after one reassuring green line.) The auditor's secondary point stands: the pcall fallbacks in notify/logger/run_argv/friendly_error are unreachable in any install where the rest of the plugin loads at all.
+
+**Status.** ✅ erledigt (`c7c85a4`) — `:checkhealth` prüft jetzt zuerst über `M._lib_nvim_installed()`, ob lib.nvim installiert ist, und meldet das explizit statt tief in einem `require` zu werfen.
 
 ### `LUA-16` — `vim.NIL` sanitizen
 
@@ -2446,6 +2466,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** Any image entry whose `Names` or `Id` decodes to JSON `null` makes the render loop throw `attempt to index a userdata value`, taking down the entire `:Sandbox image list` view (and the Telescope picker) rather than degrading that one row to `<none>:<none>`. The concrete trigger the finding names -- podman marshalling a dangling image's empty `Names` slice as `null` -- is plausible (Go's encoding/json emits `null` for a nil slice) but I could not verify podman's field tags from this repo, so treat the crash as conditional on the engine's JSON rather than guaranteed. What is unconditional from the code: two external fields are consumed with a defence that cannot work, and the adapter offers none upstream. `img.Size` is safe by luck (`tonumber(vim.NIL) or 0`).
 
+**Status.** ✅ erledigt (`fde0fc4`) — `Names`/`Id` vor Nutzung explizit auf `vim.NIL` geprüft; gleicher Fix in `telescope/images.lua`.
+
 ### `LUA-92` — Ein Adapter lädt sein Plugin während `setup()` nicht
 
 `lua/sandbox/hover.lua:209` · `M.setup` · confidence **medium**
@@ -2455,6 +2477,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** LUA-92: an adapter must not load the foreign plugin during `setup()` -- under a lazy manager the `require` *is* the load trigger. The rule allows `require` only where it is read by `:checkhealth` alone, which health.lua:88 does correctly; this site does not.
 
 **Auswirkung.** Under a lazy manager the `require` is the load trigger, so `sandbox.setup()` loads hover.nvim -- and runs a position probe through it -- for every user with the integration left on, defeating whatever `keys`/`cmd` trigger hover.nvim's own spec carries. With docs/installation.md:48 recommending `event = "VimEnter"` for sandbox itself, that lands in startup. Reading `package.loaded["hover.registry"]` and deferring registration to hover.nvim's own load keeps both the feature and the laziness; the behavioural probe would move with it.
+
+**Status.** ✅ erledigt (`74534e0`) — `M.setup()` liest jetzt nur `package.loaded["hover.registry"]` statt `require`; verzögerte Registrierung über lazy.nvims `User LazyLoad`-Event.
 
 ### `PRIN-20` — Keine stillen Fehler
 
@@ -2466,6 +2490,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 
 **Auswirkung.** The reachable case is `:Sandbox container run`: container_commands.lua:436-443 passes a callback that prints either "Container started: ..." or "Failed to run container: ...", and a failed spawn prints neither -- the command returns having done and said nothing, which is indistinguishable from a slow start. The finding's devcontainer framing is weaker than claimed: build.lua only reaches `run()` after a successful `run_async_captured` build (line 57) or `pull_image` (line 68), so the engine binary has already proven spawnable by then. Returning jobstart's id and reporting `<= 0` through `on_done` would close it.
 
+**Status.** ✅ erledigt (`0f7e25b`) — `jobstart`-Rückgabewert wird geprüft; ein fehlgeschlagener Spawn wird jetzt über `on_done(false, ...)` gemeldet, gleicher Fix in nerdctl/podman.
+
 ### `PRIN-25` — Eingaben validieren
 
 `lua/sandbox/core/usecases/devcontainer/build.lua:31` · `devcontainer build use case` · confidence **medium**
@@ -2475,6 +2501,8 @@ One defect I could not map to any of the 76 rules, noted so it is not lost: `pro
 **Regelbezug.** PRIN-25/ERR-02: arguments must be validated before they are worked with, especially before a foreign API call -- and a JSONC file from a checked-out repository is external input, with `vim.NIL` in play for any `null` field (LUA-16).
 
 **Auswirkung.** A malformed or null-bearing devcontainer.json in a checked-out repo makes `:Sandbox devcontainer build` die with `attempt to concatenate a table/userdata value` inside the use case. devcontainer_commands.lua:61-63 calls it with no pcall, so the trace reaches the user raw, immediately after the `notify.info("Building devcontainer...")` at line 60 -- with nothing naming the offending key. The file is repo-controlled input, so this is reachable by checking out someone else's project, not only by the user's own typo.
+
+**Status.** ✅ erledigt (`e5bb23d`) — `workspaceFolder`/`dockerComposeFile`/`build.dockerfile`/`build.context`/`image` werden jetzt `vim.NIL`-sicher typgeprüft; ungültige Werte laufen über `on_done(false, ...)` statt in eine Concat-Exception.
 
 ### `UI-55` — Buffer löschen, dessen Fenster sichtbar sind
 
@@ -2493,6 +2521,8 @@ Not covered for lack of surface rather than lack of looking: CMT-16 (docs/GENERA
 Deliberately not reported, so you know they were checked: SEC-01/03/10 hold up -- there is no shell-string construction anywhere in the 270 files, every CLI call goes through argv, and `docker/podman login` still pipes the password via `--password-stdin` (adapters/*/registry/login.lua:17-22). SEC-30 is satisfied (the list filter uses `find(q, 1, true)`, plain). XP-06 is fixed: the specs require `TESTS.sandbox.helpers...`, matching the directory's actual case. PERF-80 is honoured at every `vim.system`/`jobstart` completion callback (all of them `vim.schedule` before touching the API). ERR-60 is explicitly reasoned about in the adapters (see the comment at adapters/*/images/prune_images.lua:17-19) and I found no falsy-middle `and/or` anywhere. ERR-62 has no instances -- both `pcall`s in the tree pass a closure. LUA-48, PERF-07, PERF-72, PERF-92, TS-04, SEC-13, SEC-20/21/23, SEC-34/35, SEC-40/46/50, XP-01/03/07 have no corresponding surface in this plugin at all (no weak tables, no delete loops, no module-level geometry, no treesitter, no telemetry, no downloads, no `vim.fn.expand`, no `vim.cmd` string built from input, no server, no preview execution, no glob, no PowerShell redirection, no clipboard).
 
 Two findings share a root and could be fixed as one: PERF-46 (completion cache) and the unkeyed statusline cache at statusline.lua:47 -- I reported the completion one because its stale values become command arguments, and folded the statusline into its impact. The two ERR-01 findings are likewise one fix in two places (run_argv's async spawn, and the three follow_logs adapters that spawn directly instead of going through run_argv).
+
+**Status.** ✅ erledigt (`44052d3`) — Neue Hilfsfunktion `close_buffer_and_its_windows` schließt sichtbare Fenster vor dem Buffer-Delete statt Neovims automatischem Fallback zu überlassen.
 
 ---
 
