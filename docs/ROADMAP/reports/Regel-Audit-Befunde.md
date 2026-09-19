@@ -46,7 +46,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | media.nvim | 14 | 13 | 1 | fertig (2026-09-18) |
 | ai.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | github_stats.nvim | 13 | – | – | offen |
-| gopath.nvim | 13 | – | – | offen |
+| gopath.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | lsp.nvim | 13 | – | – | offen |
 | open.nvim | 13 | – | – | offen |
 | sessions.nvim | 13 | – | – | offen |
@@ -3764,7 +3764,7 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 ## gopath.nvim
 
-**13 Befunde** (5 × high, 1 davon in Testcode). Roh gemeldet: 13.
+**13 Befunde** (5 × high, 1 davon in Testcode). Roh gemeldet: 13. — **Stand: 12/13** (⏭️ 1, 2026-09-18)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -3776,6 +3776,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** When the definition URI does not name a readable file (unsaved buffer, a non-file URI scheme, a file deleted since the server indexed it), readfile throws E484 out of enhance_lsp_result, up through symbol_locator, and is caught by resolve.lua's safe.call at line 114. The already-correct `base_result` built at symbol_locator.lua:29-37 is discarded with it, so the LSP phase returns nothing even though the server had answered, and resolution silently drops to the weaker treesitter/builtin phases.
 
+**Status.** ✅ erledigt (`caca106`) — `vim.fn.readfile` läuft jetzt über pcall, damit eine LSP-URI ohne lesbare Datei nicht mehr mit E484 aus `enhance_lsp_result` herausfällt.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/gopath/config/init.lua:63` · `M.setup` · confidence **high**
@@ -3785,6 +3787,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 **Regelbezug.** ERR-22 verlangt, dass ein ungültiger Config-Einzelwert auf seinen Default zurückfällt und das über `:checkhealth` sichtbar wird. Hier passiert weder das eine noch das andere -- der falsche Wert wandert roh bis an die Verwendungsstelle.
 
 **Auswirkung.** `setup({ order = "lsp" })` makes every gP/g|/g\/g} throw "bad argument #1 to 'ipairs' (table expected, got string)" at resolve.lua:113 — the error escapes resolve_at_cursor, and commands.resolve_and_open (commands.lua:68) calls it without a pcall, so it reaches the keymap. `setup({ languages = false })` throws "attempt to index a boolean value" at resolve.lua:92 the same way. Neither value degrades to its default, and `:checkhealth gopath` reports both as ordinary info lines, so the report actively suggests the config is fine.
+
+**Status.** ✅ erledigt (`bd9f9e0`) — Neue `validate()`-Funktion verwirft typfalsche Werte (`order = "lsp"`, `languages = false`) vor dem Merge, sodass der Default greift statt einen Absturz zwei Module weiter unten auszulösen.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -3796,6 +3800,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** Without ui.nvim, any probe that yields more than one match raises "module 'ui.kit' not found". Two distinct paths: from the cache fast path `finish(cached, 0.85)` the error propagates synchronously out of M.probe into the :Gopath probe / <leader>pp command (uncaught — commands.probe_selection does not pcall), and from the live branch it is thrown inside finder.find_async's callback, where nothing catches it and on_done never fires, so the command dies silently apart from the Lua error. Either way the documented vim.ui.select dialog never appears.
 
+**Status.** ✅ erledigt (`13c85a3`) — `finish()` nutzt jetzt `pcall(require, "ui.kit")` mit `vim.ui.select`-Fallback, analog zu den drei Schwesterstellen.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/gopath/create.lua:65` · `touch` · confidence **high**
@@ -3805,6 +3811,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 **Regelbezug.** Der Fallback für 'lib.nvim fehlt' benutzt lib.nvim. Es gibt also gar keinen eingebauten Pfad -- die Abhängigkeit ist hart, wird dem Nutzer aber als 'optional dependency' mit funktionierendem Ersatz gemeldet. Genau die von LUA-01 verbotene Mischform.
 
 **Auswirkung.** The auditor's scenario is overstated: if lib.nvim is genuinely absent, `require("gopath").setup()` already dies at bindings/keymaps.lua:15, so nobody ever reaches the create dialog. The branch is actually reachable on a lib.nvim old enough to lack `fs.create_entry` but still carrying `fs.write.to_file`, where it works fine — and on one lacking both, where `touch()` throws "module 'lib.nvim.fs.write.to_file' not found" out of the ui.select callback, so "Create file" aborts with a raw Lua error. The concrete, always-true defect is the user-visible warning itself: it tells the user lib.nvim is optional and that a built-in fallback is in use, when neither is true.
+
+**Status.** ✅ erledigt (`8746ff8`) — `fs.write.to_file` wird jetzt genauso beim Laden per pcall aufgelöst wie `fs.create_entry`. War bereits in `TESTS/README.md` als gepinnter Bug dokumentiert — in den „seitdem gefixt“-Abschnitt verschoben, die zugehörige BUG-Testassertion in eine grüne Assertion umgeschrieben.
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -3816,6 +3824,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** The stale-index window is narrower than claimed but real. At startup in project B, load_from_disk installs project A's path list and `needs_refresh(max_cache_age)` (3600 s) returns false, so no rebuild is scheduled; the periodic timer (cache_refresh_interval, default 600 s) only fires after one full interval, so A's file list is live for up to ~10 minutes, and for the full hour if `truncated.use_cache = false`. During that window `tailsearch.resolve_cached` can return an A-project path; because filetoken consults it only after &path and rtp searches miss (filetoken.lua:165-178), the damage is on tokens that do not resolve inside B — instead of a create-on-missing offer, gP opens the same-named file in the other project, with `pick_best` (tailsearch.lua:166-174) picking the shortest path among them. Independently of the window, the single unkeyed file means every project's build overwrites every other's on disk. The unread `version = 1` is dead: a future format change cannot be detected on read.
 
+**Status.** ✅ erledigt (`abddb82`) — `cache_file` wird jetzt aus einem Hash der `scan_roots` gebildet (ein Projekt pro Datei), `load_from_disk` prüft `scan_roots` zusätzlich beim Laden nach.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/gopath/env_shorten.lua:141` · `M.shorten_current_line` · confidence **medium**
@@ -3825,6 +3835,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 **Regelbezug.** Ein Schreibzugriff auf einen Buffer ist eine Systemgrenze im Sinne von ERR-01; der Aufruf wirft bei `nomodifiable`/`readonly`, und hier ist kein Hotpath-Argument dagegen (die Funktion läuft genau einmal pro Kommando).
 
 **Auswirkung.** Running :GopathToReposDir / :Gopath to-repos-dir in a non-modifiable buffer — a help window, a `view`-opened file, quickfix — aborts with the raw API error ("E21: Cannot make changes, 'modifiable' is off" surfaced as a Lua error from the command callback) instead of the LOG.warn the neighbouring failure path uses. Nothing is corrupted; the cost is an unhandled error message where a one-line warning belongs. The auditor's "E5108 … Buffer is not modifiable" is the wrong error text.
+
+**Status.** ✅ erledigt (`caca106`) — `nvim_buf_set_lines` läuft jetzt über pcall; ein nicht änderbarer Buffer bekommt jetzt `LOG.warn` statt eines rohen API-Fehlers.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -3836,6 +3848,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** A typo is accepted in silence at every nesting level: `setup({ truncted = { enable = false } })` creates a `truncted` branch nobody reads while `truncated` keeps its defaults, and `setup({ mappings = { open_vspit = "gv" } })` registers no keymap for the intended action. Nothing warns at setup time, and `:checkhealth gopath`'s check_config only prints named fields it knows about, so the misspelling appears nowhere — the user sees a plugin that ignores their configuration with no diagnosable cause.
 
+**Status.** ✅ erledigt (`bd9f9e0`) — Dieselbe `validate()`-Funktion meldet unbekannte Keys mit Levenshtein-„did you mean“-Hinweis; bleibt aber erhalten statt gelöscht zu werden (bestehender Test „unknown keys are kept, not dropped“ respektiert).
+
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
 `lua/gopath/truncated/cache.lua:492` · `M.add_root` · confidence **medium**
@@ -3845,6 +3859,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 **Regelbezug.** `config.get()` dokumentiert sich in `config/init.lua:67` als 'read-only reference'. ERR-54 erlaubt die Live-Referenz nur, wenn jeder Konsument sich daran hält. Hier hält sich einer nicht daran und schreibt in die zentrale Optionstabelle.
 
 **Auswirkung.** With `truncated.cache_roots` set, `:Gopath cache add-root <dir>` permanently appends to the user's own options table for the rest of the session: every later reader of `config.get().truncated.cache_roots` — including `:checkhealth gopath`'s truncated section — sees a value the user never wrote, with nothing recording that the plugin mutated it. With cache_roots left at its default the getter is not aliased and there is no leak. The secondary point holds independently: bindings/usrcmds.lua:88 documents cache_add_root as "Add a directory to the filesystem cache roots and persist it", but nothing persists the roots — _save_to_disk writes scan_roots and load_from_disk ignores the field, so the added root is gone on restart.
+
+**Status.** ✅ erledigt (`abddb82`) — `M.setup` kopiert `opts.roots` jetzt per `vim.deepcopy` statt es zu referenzieren, sodass `M.add_root`s `table.insert` nicht mehr in `config.get().truncated.cache_roots` durchschlägt.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -3856,6 +3872,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** Any throw inside a language resolver — the unguarded readfile above, a vim.NIL field, a changed third-party signature — is indistinguishable from "no match": resolve_at_cursor moves to the next provider and eventually returns the filetoken fallback or the raw <cfile>. No log line is written at any level, so `dev_mode = true` does not help either, and the only symptom is that gP lands on a weaker guess. A resolver can stay broken indefinitely without anyone having a signal that it ever ran.
 
+**Status.** ✅ erledigt (`f250374`) — Der Fehlerzweig von `safe.call` loggt jetzt Provider, Filetype und die zugrunde liegende Fehlermeldung über `LOG.debug`, statt den Traceback ersatzlos zu verwerfen.
+
 ### `LUA-02` — Fixes nach oben, nicht in die Kopie
 
 `lua/gopath/resolvers/common/tailsearch.lua:64` · `git_root` · confidence **medium**
@@ -3865,6 +3883,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 **Regelbezug.** Genau dieser Aufruf wurde in `truncated/cache.lua:111-124` bereits durch `lib.nvim.fs.find_root`s Marker-Walk ersetzt, mit ausgeschriebener Begründung im Kommentar ('synchronous subprocess spawn on the main loop … expensive on Windows (AV scan on every spawn)'). Der Fix liegt in lib.nvim, diese zweite Kopie zieht ihn nicht nach -- LUA-02s 'sonst lebt der Bug in allen anderen Kopien weiter'.
 
 **Auswirkung.** Every <leader>pp / :Gopath probe with default config blocks the UI for the duration of up to two synchronous git spawns before the search even starts — process-spawn cost, noticeably worse on Windows, though I cannot verify the auditor's 20-100 ms figure from the code. The verifiable hazard is the missing timeout: `proc:wait()` with no argument and no `opts.timeout` waits indefinitely, so a git that stalls (network drive, lock contention) freezes Neovim with no way out, where the lib.nvim replacement used one file over is a pure directory walk with no subprocess at all.
+
+**Status.** ✅ erledigt (`13c85a3`) — `git_root` nutzt jetzt `lib.nvim.fs.find_root`s Marker-Walk statt eines synchronen `git rev-parse`-Subprozesses ohne Timeout.
 
 ### `LUA-16` — `vim.NIL` sanitizen
 
@@ -3876,6 +3896,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** Narrower than the auditor implies, because Location.uri and Location.range are non-nullable in the LSP spec — this needs a server that violates it. When one does, the guard admits vim.NIL and the next line throws (bad argument to uri_to_fname, or an index on userdata) from inside the `for` loop, so the whole definition_at_cursor call dies rather than skipping the bad location; resolve.lua:119 swallows it, and the good locations later in the same response are lost with it. The fix the rule asks for (`if v == vim.NIL or type(v) ~= "..."`) would degrade to skipping just that entry.
 
+**Status.** ✅ erledigt (`57e452c`) — Neuer `present(v, type)`-Guard verwirft `vim.NIL` explizit; ein einzelner fehlerhafter Location-Eintrag wird jetzt übersprungen statt die ganze Antwort zum Absturz zu bringen.
+
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
 `lua/gopath/config/init.lua:58` · `state / M.setup` · confidence **medium**
@@ -3885,6 +3907,8 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 **Regelbezug.** Das ist der in LUA-87 namentlich geführte Gegenfall (reposcope: 'setup() merged in die aktuelle Optionstabelle statt in eine DEFAULTS-Kopie -- akkumuliert, ein zweites setup({}) setzt nichts zurück'). Der Standard-Merge-Mechanismus der Regel lautet `vim.tbl_deep_extend("force", {}, defaults, user or {})`, also Defaults als Basis bei jedem Aufruf.
 
 **Auswirkung.** Two of the auditor's three triggers do not survive checking: `:Lazy reload` clears package.loaded, so gopath.config is re-required and line 58 rebuilds state from DEFAULTS — the accumulation is reset. What remains is real but narrow: two setup() calls within one module lifetime (two specs for the same plugin, or a manual re-setup) never reset, so `setup({ truncated = { enable = false } })` followed by `setup({})` leaves truncated disabled. Worth noting for whoever fixes it: a naive switch to `vim.tbl_deep_extend("force", {}, defaults, user)` would replace the state table and decouple every consumer already holding a sub-table reference (cache.setup takes `tcfg.cache_roots` by reference) — ERR-53 requires the reset to happen in-place.
+
+**Status.** ⏭️ offen gelassen — `scripts/ci/specs/config_spec.lua` hat einen bestehenden, bewusst benannten Regressionstest, der genau das Gegenteil des Regel-Standards als beabsichtigten Vertrag festschreibt; ein korrekter Fix bräuchte zudem eine In-place-Reset-Logik, die Referenzidentität für Konsumenten wahrt — Architekturentscheidung für den Maintainer.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -3905,6 +3929,8 @@ Geprüft und sauber -- ausdrücklich keine Funde: LUA-48 (die beiden `__mode`-St
 Nicht bewertbar mangels Zugriff: ob `lib.nvim.fs.json.read` beim Lesen zwischen 'Datei fehlt' und 'Datei kaputt' unterscheidet (relevant für ERR-11 an `truncated/cache.lua:309-318`, wo `load_from_disk` für beide Fälle `false` zurückgibt). Ich habe es nicht als Fund aufgenommen: der Dateiindex ist ein reines Wegwerf-Artefakt, und der Beleg zu ERR-11 nimmt bewusst verlusttolerante Convenience-Artefakte ausdrücklich aus. Erwähnenswert bleibt, dass eine korrupte Datei nie nach `.corrupt` gesichert oder gelöscht wird und `health.lua` sie als 'Cache is empty' meldet.
 
 Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund geführt: (1) `truncated/finder.lua`s synchroner Zweig `M.find`/`search_root`/`detect_tool` (Zeilen 14-113) ist toter Code -- nichts im Plugin ruft ihn, nur `find_async` läuft; `health.lua:60-81` warnt trotzdem, ohne fd/rg seien 'suffix search and live-search fallback unavailable', was für den libuv-Walk nicht stimmt. (2) `alias_index.lua:34` und `binding_index.lua:39` holen jede Zeile mit einem eigenen `nvim_buf_get_lines(buf, i-1, i, false)` statt in einem Aufruf -- bei einer 10k-Zeilen-Datei 10.000 API-Calls pro Rebuild (changedtick-gecacht, also einmal pro Edit).
+
+**Status.** ✅ erledigt (`4de8613`) — `unit_tests.lua` und `headless_tests.lua` listen ihr Verzeichnis jetzt über `vim.fs.dir` statt `vim.fn.globpath`, das den Pfad als Glob-Pattern liest.
 
 ---
 
