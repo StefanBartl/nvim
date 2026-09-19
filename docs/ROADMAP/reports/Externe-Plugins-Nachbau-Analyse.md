@@ -38,7 +38,7 @@ which own plugin would it land in, and what would it cost?
     - [7.4 The harpoon rebuild is already 90% written — in the wrong place](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place)
     - [7.5 `cmdlog.nvim` and plenary — already resolved when this was written ✅](#75-cmdlognvim-and-plenary--already-resolved-when-this-was-written-)
     - [7.6 The `plenary` dependency chain](#76-the-plenary-dependency-chain)
-    - [7.7 `render-markdown.nvim` is installed permanently disabled](#77-render-markdownnvim-is-installed-permanently-disabled)
+    - [7.7 `render-markdown.nvim` was kept disabled — now removed ✅](#77-render-markdownnvim-was-kept-disabled--now-removed-)
     - [7.8 `lua/config/gp_config/` was orphaned ✅](#78-luaconfiggp_config-was-orphaned-)
     - [7.9 `nvzone/menu` — not a leftover ✅](#79-nvzonemenu--not-a-leftover-)
   - [8. Where this lands](#8-where-this-lands)
@@ -80,6 +80,7 @@ three replacements that turned out to be rewires rather than builds:
 | 7.5 cmdlog.nvim plenary | already gone — `cmdlog.nvim@104abc7`, 2026-07-30, seven weeks before this report claimed otherwise | — |
 | 7.8 `config/gp_config/` | removed (`git rm -r`) | nvim, 2026-09-18 |
 | 7.9 `nvzone/menu` | nothing to do; the disabled spec is a documented escape hatch | — |
+| 7.7 `render-markdown.nvim` | removed on request, no replacement; mdview.nvim/markdown.nvim never covered in-buffer concealed rendering | nvim, 2026-09-19 |
 
 **Corrections the status pass turned up.** Three findings were wrong or
 incomplete as written, and all three were found by looking at the files
@@ -299,7 +300,7 @@ the pieces that are config code today and should be plugin code:
 | Plugin → feature family | Evidence | Target | Effort |
 |---|---|---|---|
 | ~~`markdown-preview.nvim` → **browser preview with scroll sync**~~ | ~~driven by `markdown.nvim`'s `:Markdown preview` through `vim.g.mkdp_*`; `build = "cd app && yarn install"`; hardcoded per-platform Chrome paths~~ | **Done — B3, shipped 2026-09-18.** `markdown.nvim` now drives `:MDView start`/`stop`; markdown-preview.nvim uninstalled. Scroll sync and combine-preview were already covered by mdview's `browser.behavior = "reuse"` and `:MDView sync` — no new feature work, only the rewire. | **done** |
-| `render-markdown.nvim` → **in-buffer concealed rendering** | installed and immediately `setup({ enabled = false })`; toggled by `:Markdown render` | Keep, deliberately. Same shape as the `nvzone/menu` entry: carried for an on-demand feature. A full rebuild into markdown.nvim means concealed rendering of every GFM construct — **not recommended.** | **XL** |
+| ~~`render-markdown.nvim` → **in-buffer concealed rendering**~~ | ~~installed and immediately `setup({ enabled = false })`; toggled by `:Markdown render`~~ | **Removed 2026-09-19** (7.7) — user decision; no rebuild, no replacement. A full rebuild into markdown.nvim would still mean concealed rendering of every GFM construct — **not recommended.** | **done** |
 
 ### Tooling and infrastructure
 
@@ -760,15 +761,31 @@ items removes two of six. It does not remove plenary
 (telescope and neotest keep it), but it does take it **out of the startup
 path**, since harpoon is the only `lazy = false` consumer.
 
-### 7.7 `render-markdown.nvim` is installed permanently disabled
+### 7.7 `render-markdown.nvim` was kept disabled — now removed ✅
 
-**Deliberately left as is.**
+**Removed 2026-09-19, user decision, no feature carried over.** This entry
+originally recommended keeping it: it was carried for an on-demand feature
+(`setup({ enabled = false })`, toggled by `:Markdown render`), and a full
+rebuild into `markdown.nvim` — concealed rendering of every GFM construct —
+was and is **not recommended** (XL, see the Markdown catalogue table above).
 
-[markdown.lua](../../../lua/plugins/markdown.lua) installs it and immediately
-calls `setup({ enabled = false })`, with `:Markdown render` as the toggle. So
-it is carried for an on-demand feature. Fine as-is — but note that a *full*
-rebuild into `markdown.nvim` is a large project (concealed rendering of every
-GFM construct) and is **not** recommended. Left out of the tiers deliberately.
+That verdict still holds; the plugin left anyway because the feature itself
+was no longer wanted, not because a replacement appeared. **Nothing in
+mdview.nvim or markdown.nvim covers what render-markdown did.** mdview.nvim
+is a browser preview in a separate tab; render-markdown's job was in-buffer
+concealed rendering — headers, checkboxes, code-block backgrounds, list
+bullets replaced while editing the same buffer. Mechanically unrelated, and
+`markdown.nvim`'s `:Markdown render` was only ever a thin wrapper calling
+`:RenderMarkdown enable/disable` (`lua/markdown/commands/render.lua`,
+`docs/FEATURES/INTEGRATIONS.md`) — no rendering code of its own. With the
+plugin gone, that command now just warns "not available", which is the
+designed graceful-degradation path for an optional host and needed no
+change.
+
+Removed: the spec block in [markdown.lua](../../../lua/plugins/markdown.lua),
+its `lazy-lock.json` entry, and its rows in
+`docs/NOTES/ExternPlugins/Bindings/TODO.md` and
+`docs/NOTES/ExternPlugins/Bindings/Usercmds/Overview.md`.
 
 ### 7.8 `lua/config/gp_config/` was orphaned ✅
 
@@ -853,4 +870,7 @@ mdview~~ (B3).
 
 **Leave alone:** the three picker engines, treesitter, mason, blink, neogit,
 gitsigns' hunk engine, noice, mini.ai/targets, autopairs, ts-autotag, matchup's
-`%`, visual-multi, render-markdown, nvzone/menu, tokyonight.
+`%`, visual-multi, nvzone/menu, tokyonight.
+
+~~`render-markdown.nvim`~~ — removed 2026-09-19 (7.7), user decision; was on
+this list until then.
