@@ -58,7 +58,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | diff.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | documentation.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | emojis.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
-| fileops.nvim | 11 | – | – | offen |
+| fileops.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | hover.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | markdown.nvim | 11 | – | – | offen |
 | recommender.nvim | 10 | – | – | offen |
@@ -5765,7 +5765,7 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 ## fileops.nvim
 
-**11 Befunde** (5 × high). Roh gemeldet: 12.
+**11 Befunde** (5 × high). Roh gemeldet: 12. — **Stand: 10/11** (⏭️ 1, 2026-09-19)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -5777,6 +5777,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 **Auswirkung.** When the current buffer's directory has been renamed, deleted, or lives on a dropped network share, `:File next/prev/first/last`, the default `<leader>nf`/`<leader>pf` keys and `fileops.next()/prev()/first()/last()` all report "no files in directory" — byte-identical to a directory that genuinely holds no matching files. The user is pointed at the directory's contents rather than at its absence. `ops/bulk.lua:36` shows the wording the codebase itself considers correct ("cannot read directory"), which this module structurally cannot produce.
 
+**Status.** ✅ erledigt (`5533f0c`) — `list_files` prüft jetzt mit `isdirectory` statt mit dem nie feuernden `pcall(vim.fs.dir, …)`-Guard; „Verzeichnis fehlt“ wird als eigener Fehler durchgereicht, nicht mehr mit „keine Treffer“ verwechselt.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/fileops/bindings/keymaps.lua:120` · `bulk_rename` · confidence **high**
@@ -5786,6 +5788,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 **Regelbezug.** ERR-11: `bulk.plan` deliberately returns `({}, err)` to separate "nothing matched" from "the pattern is broken"; dropping `err` collapses them again. The `:File bulk rename` path does it correctly at `bindings/usrcmds.lua:364-368`, so the same plugin answers the same question two different ways.
 
 **Auswirkung.** A user who mistypes the Lua pattern in the two-step `bulk_rename` prompt is told "bulk rename: 0 file(s) renamed" — indistinguishable from a valid pattern that matched nothing — and never learns the pattern was rejected, while `:File bulk rename` with the identical pattern names the error. Narrower than the finding implies: `bulk_rename` has no default lhs (DEFAULTS.lua:89 leaves it commented out), so only users who explicitly bind it are affected.
+
+**Status.** ✅ erledigt (`2309665`) — `bulk_rename` prüft jetzt den zweiten Rückgabewert von `bulk.plan` und meldet einen ungültigen Pattern-Fehler statt stillschweigend „0 renamed“.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -5797,6 +5801,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 **Auswirkung.** A capitalisation or spelling typo in `delete.mode` ("Trash", "trash ", "recycle") silently selects permanent `fs_unlink` instead of the OS trash — the opposite of the documented default — for `:File delete`, the default-bound `<leader>dcf` key (DEFAULTS.lua:57,70), `fileops.delete_current()`, and the asset cascade in `delete_path`. The file is gone with no undo, the success message still reads "deleted <name>", and neither `:checkhealth fileops` nor anything else surfaces that the configured value was not understood.
 
+**Status.** ✅ erledigt (`db267d6`) — `delete_path_from_disk` behandelt jetzt alles außer dem literalen String `"permanent"` als trash (dokumentierter Default); der Directory-Guard in `delete_path` las dieselbe Unterscheidung bisher andersherum und wurde mit angepasst.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/fileops/ops/cycle.lua:238` · `M.open_path` · confidence **high**
@@ -5806,6 +5812,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 **Regelbezug.** LUA-01 allows a hard dependency (bare require) or a soft one (pcall + fallback) but requires consistency, and states outright that a hard dependency may never be presented as optional in the documentation. `util/notify.lua` is the soft form; these six sites are the hard form for a plugin the docs call optional.
 
 **Auswirkung.** Without ui.nvim installed, the default path throws "module 'ui.kit' not found": `:File next/prev` (and the default `<leader>nf`/`<leader>pf` keys) on a modified buffer, any `:File rename/move/duplicate/copy/touch/new` issued without an argument — each documented to prompt — and `:File bulk rename`. `:checkhealth fileops` reports nothing about it and instead vouches for `vim.ui.select`, which nothing in the plugin calls. The docs promise the opposite ("degrading to nothing when absent"), and the test harness stubs the module, so neither CI nor the health check can surface the mismatch. The two opt-in keymap sites (keymaps.lua:67, :98) and the filetree asset confirm are unbound/inactive by default, so the blast radius is the three default-reachable paths above.
+
+**Status.** ✅ erledigt (`e3ef3af`) — ui.nvim ist jetzt in docs/installation.md als required dokumentiert statt „optional, degradiert zu nichts“; `:checkhealth` prüft jetzt echt auf `ui.kit` statt auf das nie aufgerufene `vim.ui.select`.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -5817,6 +5825,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 **Auswirkung.** Any destination path a user pastes or types that contains a backtick span is executed as a shell command via `&shell` before it is ever treated as a filename — reachable from `:File new/write/saveas/writeto/touch/rename/move/duplicate/copy`, from every `ui.kit` destination prompt (usrcmds.lua:279-290), and from the public `fileops.new_file()/touch()/rename()/move()/copy()/duplicate()` Lua API. `%`, `#`, `<cfile>` are likewise expanded (the `%` case is deliberate — usrcmds.lua:139-141 offers it as a completion candidate — the shell case is not). Secondary: because `fn.expand` is unguarded, a backtick span whose command writes nothing raises a raw E282 out of an op documented to return `(false, msg)`.
 
+**Status.** ☑️ schon behoben — `resolve_path` nutzt bereits `lib.nvim.cross.fs.expand_path` statt `fn.expand` — bereits vor dieser Session (Commit 7442575) im Rahmen eines anderen Fixes behoben; im Code verifiziert.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/fileops/init.lua:10` · `M.setup` · confidence **medium**
@@ -5826,6 +5836,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 **Regelbezug.** ERR-03/PRIN-20: a function that cannot do what it was asked must say so rather than fail silently. This is the same shape as the github_stats `LUA-87` finding — `setup()` quietly throwing away every option the caller passed.
 
 **Auswirkung.** Every `setup()` after the first is a silent no-op that throws away its whole argument. Two lazy.nvim spec fragments for the same plugin, an `opts` table combined with a `config = function() ... setup() end` block, or `:source $MYVIMRC` to re-apply a changed config, all leave the user with settings visible in their config file that never reach the plugin and no message explaining why. Note this also masks the ERR-53 finding above: because the guard fires first, the config sub-table divergence is not reachable through this entry point.
+
+**Status.** ✅ erledigt (`df3f173`) — Ein zweiter `setup()`-Aufruf bleibt No-Op, meldet das jetzt aber per `notify.warn()` statt die Optionen stillschweigend zu verwerfen.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -5837,6 +5849,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 **Auswirkung.** `:File bulk rename` in a directory that has been removed or on a dropped share hits `bindings/usrcmds.lua:369-372` and reports "bulk rename: no files in %s matched %q", so the user retypes the pattern instead of checking the directory. The documented `"cannot read directory: "` return is dead code. Mildly less harmful than the cycle case because the message at least names the directory — and the same call path via `bindings/keymaps.lua:120` drops the err entirely anyway.
 
+**Status.** ✅ erledigt (`2309665`) — Gleicher Fix wie #1 (`isdirectory`-Check statt totem `pcall`-Guard), macht den dokumentierten „cannot read directory“-Fehler erreichbar statt totem Code.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/fileops/features/on_hold.lua:423` · `M.setup.run` · confidence **medium**
@@ -5846,6 +5860,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 **Regelbezug.** ERR-30 requires an edit computed during a scan to be re-verified against the *current* text immediately before it is written. The line index is the computed part here, and it is written blind. LUA-12 also applies: this is the one `vim.api` call in the file with neither a pcall nor a precondition check.
 
 **Auswirkung.** For users who opt into `on_hold` (DEFAULTS.lua:99 has `enable = false`, so this is opt-in): if the buffer shrinks below the captured line while the two git subprocesses run — `:e!`, an external reload, a formatter, undo of a large paste — the CursorHold handler raises an uncaught `Invalid 'line': out of range` at the user. The reliably-reached case is milder but certain: since `CursorMoved` does not bump the generation, moving the cursor during the git round-trip still passes `still_valid()`, so the previous line's committed content is parked as virtual text on a line the cursor has already left, until the next move clears it. Not a data-loss bug — the mis-severity in the original finding is calling the crash the primary consequence.
+
+**Status.** ✅ erledigt (`8f02c31`) — `lnum` wird unmittelbar vor dem `nvim_buf_set_extmark`-Schreiben erneut gegen die aktuelle Zeilenzahl geprüft und bei Veraltung übersprungen; der Aufruf ist zusätzlich pcall-gekapselt.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -5857,6 +5873,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 **Auswirkung.** `setup({ delete = { mode2 = "trash" } })`, `setup({ cycle = { open_taget = "split" } })` or `setup({ keymaps = { lsh = {...} } })` are accepted without a word: `tbl_deep_extend` writes the unknown key into the active config next to the correct one, nothing ever reads it, and the user gets default behaviour with no diagnostic anywhere. This is also the missing gate that lets the `delete.mode` case above turn a typo into permanent deletion. Lower severity on its own than the auditor implies — it is the absence of a guard rather than a wrong action — but it is the enabling condition for the ERR-22 finding.
 
+**Status.** ✅ erledigt (`894079d`) — Neue `sanitize`-Stufe vor dem Merge: unbekannte Keys (auch verschachtelt) werden mit Levenshtein-„did you mean“-Hinweis verworfen und über `M.issues()`/`:checkhealth` sichtbar gemacht.
+
 ### `ERR-53` — In-place-Mutation statt Tabellen-Ersatz bei geteilten Referenzen
 
 `lua/fileops/config/init.lua:16` · `M.setup` · confidence **medium**
@@ -5866,6 +5884,8 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 **Regelbezug.** ERR-53: when sub-modules hold a direct reference to a sub-table of the central config, the merge must mutate in place; replacing the table silently decouples those references from the new values.
 
 **Auswirkung.** A second `require('fileops.config').setup(...)` leaves the already-registered auto_mkdir autocmd and the on_hold / conflict_marks feature closures reading the *previous* values, while `config.get()` returns the new ones — two disagreeing views of one config with nothing to indicate it. Narrower than the finding states in two ways: the auditor's own reproduction uses `delete.mode`, which is not a held reference at all (both `bindings/usrcmds.lua:504-508` and `bindings/keymaps.lua:162-166` re-read `config.get().delete` per invocation and are unaffected); and `fileops.setup()` short-circuits on its second call (init.lua:10-13), so the divergence is only reachable by calling `fileops.config.setup()` directly, not through the documented entry point.
+
+**Status.** ✅ erledigt (`894079d`) — Merge mutiert `_active` jetzt in-place statt die Tabelle zu ersetzen, sodass von `bindings.autocmds` gehaltene Sub-Tabellen-Referenzen über einen zweiten `setup()`-Aufruf hinweg gültig bleiben.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -5886,6 +5906,8 @@ FALSE LEAD I CHECKED AND CLEARED (do not re-file). `features/on_hold.lua:233` ca
 THINGS I SAW THAT NO RULE IN THE 76 COVERS, listed so they are not lost: (1) `features/on_hold.lua:326` sets `vim.o.updatetime = 100` globally and unconditionally when the feature is opted in, with no config key and no restore — it changes CursorHold timing, swap writing and gitsigns for the whole session. (2) `util/git.lua`'s three `_async` twins have no production caller (its own header says so) while `features/on_hold.lua:143-185` keeps near-identical private copies — a fix to one will not reach the other. (3) `ops/bulk.lua:88` calls `fsops.rename_file` without the `retry_opts(...)` every other mutation in the plugin passes, so a bulk rename gets none of the Windows sharing-violation retry budget. (4) `config/init.lua:6` exposes `M.DEFAULTS` as a live reference to the shared defaults table; `M.get()` at least documents itself as a "read-only view", which I judged sufficient for ERR-54, but `M.DEFAULTS` carries no such note and a consumer mutating it would poison every later `setup()`. (5) `ops/file.lua` is 984 lines covering create/rename/delete/info/path/cd/lock-diagnosis — coherent but the weakest PRIN-01 story in the repo; I did not file it because the split is defensible.
 
 WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, so anything that happens inside `lib.nvim.cross.fs.mutate`, `lib.nvim.fs.trash`, `lib.nvim.bindings.usercmd.composer` or `lib.nvim.buffer.open_background` (retry semantics, argv handling, timeouts) is unverified from here — several of my confidence calls assume those behave as documented. Everything was exercised on Windows 11 / nvim 0.12.2 only; the Linux and macOS branches (notably `ops/cycle.lua`'s symlink handling and the `retry.attempts = 1` POSIX default) were read but not run. docs/map/ is generated output (index.html, module_map.json, overview.md, all timestamped together) and I found no sign of a hand edit, but I did not re-run its renderer to diff it, so a CMT-16 drift would not have shown up; note the map was generated 2026-09-14 while docs/ changed on 2026-09-17, so it may simply be stale.
+
+**Status.** ⏭️ offen gelassen — `complete_from_bufdir` löst den 8.3-Kurzname-Fall bereits über `fs_realpath`; der Rest (`[`,`]`,`*`,`?` echt im Verzeichnisnamen) ist laut lib.nvim.fs.globbable ein bewusst offener „Known gap“, dessen Fix die bestehende Nested-Pfad-Completion brechen würde — Maintainer-Entscheidung.
 
 ---
 
