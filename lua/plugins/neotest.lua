@@ -93,7 +93,9 @@ return {
       require("config.neotest.commands").setup()
       require("config.neotest.keymaps").setup()
       require("config.neotest.whichkey").setup()
-      require("config.neotest.debug").setup_all()
+      -- The adapter diagnostics that used to be `config.neotest.debug`
+      -- (`:NeotestDebug*`) are debugging.nvim's `:Debug neotest
+      -- adapters|state|file|root|framework|discover` since 2026-09-19.
       require("config.neotest.utils.validate_consumer").setup_command()
       -- require("config.neotest.autocmds.auto_discovery").attach()
 

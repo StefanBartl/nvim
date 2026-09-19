@@ -60,6 +60,7 @@ three replacements that turned out to be rewires rather than builds:
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
 | B5 ts-context → ui.nvim | `ui.context`: a Tree-sitter ancestor walk from the first visible line, rendered in a per-window `relative="win"` float — not the winbar this entry named (see the section for why); `:UI context [on\|off\|up n]`, `ui.setup({ context = { max_lines = 3 } })` in the config; plugin dropped | ui.nvim `870a6bc`, nvim, 2026-09-19 |
+| neotest debug tooling → debugging.nvim | `:Debug neotest adapters\|state\|file\|root\|framework\|discover` — the five `:NeotestDebug*` commands and two keys, made adapter-generic (`file`/`root` ask the adapter tables' own `is_test_file`/`root` instead of id-matching or the TypeScript adapter; the parked "Root never resolves" bug is gone with it); `config/neotest/debug/` deleted, `<leader>ntr`/`<leader>ntD` map to the two most-used reports | debugging.nvim, nvim, 2026-09-19 |
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
@@ -114,7 +115,6 @@ neither chosen):
 | neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
 | 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
 | neo-tree config → filetree.nvim | L | ~1,500 lines |
-| neotest debug tooling → debugging.nvim | M | 309 lines already written |
 | Tier C, all eleven | 1–3 each | each a placement decision plus a build |
 
 ---
@@ -251,7 +251,7 @@ the pieces that are config code today and should be plugin code:
 | Feature family | Evidence | Target | Effort |
 |---|---|---|---|
 | **Test running / discovery / adapters** | the plugin | Keep. | **XL** |
-| **Adapter debug tooling** — `:NeotestDebugAdapters`, `State`, `File`, `Root`, `Framework`; "diagnosing why an adapter isn't finding tests in a file" | `debug/init.lua`, **309 lines** | **debugging.nvim.** Its entire thesis is that debugging tools accumulate as scattered one-off commands and belong behind one dispatcher with two-level completion. This is a textbook case, and the code already exists. | **M** |
+| ~~**Adapter debug tooling** — `:NeotestDebugAdapters`, `State`, `File`, `Root`, `Framework`~~ | ~~`debug/init.lua`, **309 lines**~~ | **Done 2026-09-19** — debugging.nvim's `:Debug neotest adapters\|state\|file\|root\|framework\|discover`. Not a straight move: `file`/`root` now ask each configured adapter's own `is_test_file()`/`root()` (from `neotest.config.adapters`), so the reports are adapter-generic and the TypeScript-only root check that never resolved is gone. `config/neotest/debug/` deleted. | **done** |
 | **Adapter registration layer** (factory + a 239-line TypeScript adapter) | `adapters/**` (381 lines) | Structurally identical to **dap.nvim** ("a config layer that registers adapters and launch configurations, so `opts = {}` is a working debugger"). A `tests.nvim` sibling — or a `dap.nvim`-style neotest module — is the same pattern twice. | **L** |
 | **whichkey / telescope / neo-tree integration wrappers** | `whichkey/`, `telescope/`, `neotree/`, `consumers/` (~240 lines) | **pickers.nvim** / **filetree.nvim** — engine-agnostic instead of per-integration. | **M** |
 
@@ -792,7 +792,7 @@ Struck entries are done.
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
 | **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built, in parallel run; 7.4) |
-| **debugging.nvim** | neotest adapter debug tooling · snacks debug inspector |
+| **debugging.nvim** | ~~neotest adapter debug tooling~~ (`:Debug neotest`, 2026-09-19) · snacks debug inspector |
 | **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
 | **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · which-key popup · minty colour picker · zen mode |
@@ -824,8 +824,8 @@ Struck entries are done.
 lib/open · `:Gbrowse` → open/reposcope. ~~mkdir → fileops~~ (A2). Each of the
 three needs its home chosen first; the report names two for each.
 
-**Highest value per session (M), open:** neotest debug tooling →
-debugging.nvim (309 lines, already written) · puppeteer → cascade · matchup
+**Highest value per session (M), open:** ~~neotest debug tooling →
+debugging.nvim~~ (done 2026-09-19, `:Debug neotest`) · puppeteer → cascade · matchup
 offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
 ~~startuptime → runtime-analysis~~ (A3).

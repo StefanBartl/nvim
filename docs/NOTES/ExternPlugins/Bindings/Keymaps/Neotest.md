@@ -8,8 +8,7 @@ in [lua/config/neotest/actions/init.lua](../../../../../lua/config/neotest/actio
 
 Registriert im `config`-Block des `nvim-neotest/neotest`-Specs
 ([lua/plugins/neotest.lua](../../../../../lua/plugins/neotest.lua)):
-`require("config.neotest.keymaps").setup()`, danach zusätzlich
-`require("config.neotest.debug").setup_all()`.
+`require("config.neotest.keymaps").setup()`.
 
 ## Gruppe `<leader>nt` — "Tests"
 
@@ -28,27 +27,17 @@ Aus [lua/config/neotest/keymaps/init.lua](../../../../../lua/config/neotest/keym
 | `<leader>ntS` | Laufende Tests stoppen | `actions.stop` |
 | `<leader>ntw` | Watch-Modus togglen | `actions.toggle_watch` |
 
-Zusätzlich direkt in derselben Datei (nicht über `actions`, sondern inline):
+Zusätzlich in derselben Tabelle, als `<cmd>`-Mappings auf debugging.nvim
+(seit 2026-09-19; vorher das eigene `config/neotest/debug/`-Modul, das
+dieselben zwei Keys ein zweites Mal setzte):
 
 | Mapping | Aktion |
 |---|---|
-| `<leader>ntr` | Test-State löschen und Discovery erzwingen (`neotest.state.clear` + verzögerte `neotest.state.positions()`-Abfrage) |
-| `<leader>ntD` | Liste der geladenen Adapter anzeigen (`neotest.state.adapter_ids()`) |
+| `<leader>ntr` | `:Debug neotest discover` — gefundene Positionen je registriertem Adapter, nach Typ, plus Test-Summe |
+| `<leader>ntD` | `:Debug neotest adapters` — konfigurierte (`neotest.setup`) neben registrierten Adaptern (`state.adapter_ids()`) |
 
-## Überschreibung durch das Debug-Modul
-
-[lua/config/neotest/debug/init.lua](../../../../../lua/config/neotest/debug/init.lua)
-(`M.keymaps`, aufgerufen über `M.setup_all()` **nach** dem obigen Setup) setzt
-`<leader>ntr` und `<leader>ntD` **erneut** — letzter `vim.keymap.set`-Aufruf
-gewinnt, die Debug-Variante ist also die tatsächlich aktive:
-
-| Mapping | Aktion | Unterschied zur ersten Definition |
-|---|---|---|
-| `<leader>ntr` | Discovery erzwingen | Zählt zusätzlich rekursiv die gefundenen Tests (`count_tests`) und meldet die Zahl statt nur "gefunden/nicht gefunden". |
-| `<leader>ntD` | Adapter-Liste anzeigen | Funktional identisch zur ersten Definition. |
-
-Dieselbe Duplikation existiert auch für die zugehörigen Consumer/Command-Ebenen
-nicht — nur die beiden Keymaps sind betroffen.
+Die übrigen vier Diagnosen (`state`, `file`, `root`, `framework`) haben
+keinen Key; siehe [Usercmds/Neotest.md](../Usercmds/Neotest.md#debug-commands).
 
 ## which-key-Anbindung
 
