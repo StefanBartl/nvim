@@ -59,7 +59,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | documentation.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | emojis.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | fileops.nvim | 11 | – | – | offen |
-| hover.nvim | 11 | – | – | offen |
+| hover.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | markdown.nvim | 11 | – | – | offen |
 | recommender.nvim | 10 | – | – | offen |
 | rules.nvim | 10 | – | – | offen |
@@ -5891,7 +5891,7 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 ## hover.nvim
 
-**11 Befunde** (6 × high). Roh gemeldet: 11.
+**11 Befunde** (6 × high). Roh gemeldet: 11. — **Stand: 10/11** (⏭️ 1, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -5903,6 +5903,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 **Auswirkung.** Two consequences, and the second is the durable one. (1) The raise is not swallowed: M.trigger debounces through lib.nvim.debounce, whose timer callback calls `fn` bare inside vim.schedule (debounce/init.lua:68-72), so the error escapes as an unprotected `Error executing vim.schedule lua callback` trace on each cursor stop over the document -- lib.nvim's autocmd pcall wrapper (bindings/autocmd/init.lua:251-259) does not cover it, because show() runs from the debounce timer and not from the autocmd body. (2) `_running[key]` stays true for the rest of the session, so office.lua:227-229 answers every later hover on that document with the `converting to PDF…` pending badge while nothing is converting; only an explicit `office.reset()` (line 283) clears it.
 
+**Status.** ✅ erledigt (`ad4ff6f`) — `pdfport.create(...)` läuft jetzt in `pcall`; bei einem Raise wird `_running[key]` zurückgesetzt und ein `(conversion failed: ...)`-Badge zurückgegeben statt den Fehler bis zum CursorHold-Autocmd durchzureichen.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/hover/preview/text.lua:41` · `head` · confidence **high**
@@ -5912,6 +5914,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 **Regelbezug.** ERR-11 -- a function whose result can legitimately be empty must make "empty, but ok" distinguishable from "empty, because it could not be read". `M.directory` in the very same file does draw that line (`(cannot read directory)` at line 168); the file path does not.
 
 **Auswirkung.** classify.lua:120 already stat'd the path and classify.lua:132 routed directories elsewhere, so this branch is reached for a regular file that exists but cannot be opened: no read permission, a FIFO, or a file another process holds exclusively (routine on Windows). The float then reads `(empty file, 1.2 MB)` -- self-contradicting, since target.size comes from the same stat -- and the reader is told the file has no content rather than that hover could not open it. No error is raised and nothing else reports the failure; the wrong answer is also cached under cache.key, so it persists until the mtime changes.
+
+**Status.** ✅ erledigt (`2bb9890`) — `head()` liefert jetzt einen vierten Rückgabewert `ok`; `M.file` zeigt `(cannot read file)` statt `(empty file, ...)`, wenn `io.open` fehlschlug.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -5923,6 +5927,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 **Auswirkung.** When media.play declines without raising -- a configured player binary that is missing, an unreachable handler -- init.lua:1253-1254 still calls M.hide() and returns true. Pressing <CR> on a media hover makes the float disappear, nothing opens, and the `nothing here can open …` warning at init.lua:1305 is not reached. Narrower than the auditor implies: the branch is entered only when the `media` plugin is installed, media.is_media(what) is true, and media.core.play.player() returns an argv (lines 1247-1251), so a machine with no player configured at all takes the open.nvim/vim.ui.open path instead.
 
+**Status.** ✅ erledigt (`d059ee7`) — `pcall(media.play, what)` prüft jetzt den tatsächlichen zweiten Rückgabewert (`played == true`) statt nur `pcall`s eigenes Erfolgsflag.
+
 ### `PERF-46` — Cache-Key vollständig
 
 `lua/hover/cache.lua:63` · `M.key` · confidence **high**
@@ -5932,6 +5938,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 **Regelbezug.** PERF-46 -- the key must contain every parameter that influences the result. `bare_path.split_location` deliberately strips the `:42` suffix off `target.raw` before `classify` sees it, so two targets that differ only in line number are byte-identical to `M.key`.
 
 **Auswirkung.** Hovering `init.lua:42` and then `init.lua:100` in the same buffer (a log, a diff, a stack trace -- the population bare_path's `:line` handling was written for) serves the second from the LRU: the float shows lines 39-58 under the title `init.lua:42`. Because text.lua:132-140 derives the title from opts.line, the cached title asserts the first target's line, so the wrong content carries a confident, wrong label rather than looking stale. Entries survive until cache.reset() or the 64-entry LRU evicts them; an mtime change also breaks the collision, so editing the file masks it.
+
+**Status.** ✅ erledigt (`25f4b87`) — `M.key` nimmt jetzt optional `opts` und hängt `line`/`line_end` an, damit unterschiedliche Preview-Bereiche desselben Ziels nicht denselben Cache-Eintrag teilen.
 
 ### `PERF-62` — Timer sauber stoppen
 
@@ -5943,6 +5951,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 **Auswirkung.** Narrower than the auditor states. cancel() runs at shot.lua:459 on every M.preview call, but it only leaks when `_pending` is non-nil -- that is, when a previous render was still inside its shot_delay_ms window (default 1000 ms) and had not fired. A timer that fires clears `_pending` itself at line 476 and vim.defer_fn closes it. So the leak is one un-closed uv_timer_t per *cancelled pending* render: scrolling through a document of links faster than the render delay accumulates one handle per link passed, held on the event loop until the process exits. Not one per link in the general case.
 
+**Status.** ✅ erledigt (`b172b18`) — `cancel()` ruft jetzt zusätzlich `_pending.timer:close()`, analog zu `playback.lua`/`status_view.lua`.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/hover/classify.lua:52` · `resolve_path` · confidence **high**
@@ -5952,6 +5962,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on buffer/user text: a backtick span in the argument is a *command substitution* run through `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. Nothing between the scanner and this line escapes or rejects either. The identical defect was found and fixed in markdown.nvim and images.nvim; hover.nvim reaches `expand()` on the same class of text through its own resolver.
 
 **Auswirkung.** A link target containing a backtick span reaches Vim's file-name expansion, where backticks are a command substitution through &shell -- so `[pic](`cmd`.png)` in an attached buffer runs `cmd` on the automatic CursorHold trigger, with no keypress. This route needs a registered link scanner (markdown.nvim's), because hover's own bare_path source filters its token through 'isfname', which excludes the backtick by default. Two corrections to the auditor's impact: the `#` claim is wrong -- a leading `#` is returned as an anchor at line 94 and a mid-string `#` is split off at line 113, so `#` never reaches line 52; and `%` is only a Vim special when it is the *first* character of the argument (`:help expand()`), so `[cfg](%APPDATA%/nvim/init.lua)` resolves to the current file's name plus the remainder, while a `%` anywhere else is harmless.
+
+**Status.** ☑️ schon behoben (`7c492f1`) — War bereits vor Beginn dieses Laufs (selbe Session, unmittelbar davor) durch `expand_path` statt `vim.fn.expand` gefixt; im Code verifiziert.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -5963,6 +5975,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 **Auswirkung.** A raise from pdfport -- a changed signature, a rejected crop rect, a bad option table -- escapes as an unprotected `Error executing vim.schedule lua callback` trace, because M.trigger debounces through lib.nvim.debounce whose timer callback invokes fn bare inside vim.schedule (debounce/init.lua:68-72), outside lib.nvim's autocmd pcall wrapper. The float shows nothing and the trace repeats on each cursor stop over the PDF, instead of degrading to the `PDF · <size>` metadata line M.pdf already returns for every other failure path (lines 761-767, 771, 780, 852). Unlike office.lua:244 no module state is left stuck -- media.lua's page cache is only written in the success branch at 829-832.
 
+**Status.** ✅ erledigt (`39c540b`) — `pdfport.render_page(...)` läuft jetzt in `pcall`; ein Raise wird über `vim.schedule` an `on_png(nil, err)` gemeldet statt durchzuschlagen.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/hover/init.lua:1298` · `M.open` · confidence **medium**
@@ -5972,6 +5986,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 **Regelbezug.** LLS-31, same inversion as line 1252: the return is formed from the attempt rather than the result. This is the last fallback in `M.open`, so it is what decides whether the reader is told nothing could open the target.
 
 **Auswirkung.** On a machine with no registered handler for the target's type, vim.ui.open returns nil plus an error string without raising, pcall reports true, and M.open closes the float and returns true. <CR> on the hover makes the preview vanish, nothing opens, and the warning at init.lua:1305 is unreachable -- the reader gets a blank screen and no message, at the exact point written to catch that case. Worth noting the neighbouring open.nvim call at init.lua:1290 has the same shape, but there the comment at 1277-1281 shows the author knew and chose it deliberately; here there is no such note.
+
+**Status.** ✅ erledigt (`d059ee7`) — `pcall(vim.ui.open, what)` prüft jetzt den ersten Rückgabewert (Job-Handle), da `vim.ui.open` Fehler per `nil, errmsg` statt per Raise meldet.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -5983,6 +5999,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 **Auswirkung.** After any session in which enable() ran, editing `mode`, `auto_hover`, or any of `links.enabled/web/fetch`, `links.pdf.enabled`, `links.shot.enabled/eager`, `paths.enabled/missing/code`, `positions`, `inline_images` or `office.convert` in the installation spec has no effect: M.setup applies the new value and persist.load() overwrites it six lines later with last session's copy of the old one. Because the snapshot has no explicit-set, a value that only ever came from the spec is written back and then re-applied over that same spec, so "the reader toggled this" and "this was the spec's value at exit" are indistinguishable. Correcting the auditor on one point: this is not undocumented -- docs/configuration.md:347-370 states the DEFAULTS -> spec -> last session order outright, names the JSON file under stdpath("cache"), and offers `persist = false` as the opt-out, and `:Hover dashboard` reports the live state. The defect is the unconditional snapshot, not a hidden file.
 
+**Status.** ⏭️ offen gelassen — Die dokumentierte Reihenfolge Spec→persist.load() ist gewolltes Feature (docs/configuration.md); der eigentliche Defekt (kein „explicit“-Tracking beim Snapshot) verlangt eine Architekturentscheidung, keine chirurgische Zeilenänderung.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/hover/persist.lua:161` · `M.load` · confidence **medium**
@@ -5992,6 +6010,8 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 **Regelbezug.** SEC-33 -- a persisted snapshot is untrusted on load and every field has to be re-validated (type, length, count cap). The write side is disciplined (booleans and one enum); the read side accepts whatever the file happens to contain and merges it into the live configuration.
 
 **Auswirkung.** Real but narrower than "a truncated file": a truncated JSON fails to decode and disk.load returns nil, so the exposure is a file that parses but carries keys or types the write side never produces -- hand-editing, a partial write, or a future format change. Such a file merges straight into the live configuration and is then read unvalidated: `max_lines = {}` survives config/init.lua:559 (`c.max_lines or DEFAULTS.max_lines` -- a table is truthy) and reaches preview/text.lua:49 `#out >= limit`, raising "attempt to compare number with table" from the debounced CursorHold path; `links.timeout_ms = "soon"` survives config/init.lua:563 and is handed downstream as a timeout. Either fails as an error trace rather than as a rejected option, and survives restarts because nothing rewrites the file until VimLeavePre.
+
+**Status.** ✅ erledigt (`612ad27`) — Neue `sanitize()`-Funktion baut die Config nur aus den Feldern, die `M.snapshot()` selbst schreibt, jeweils typgeprüft; alles andere wird verworfen.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -6023,6 +6043,8 @@ Judgment calls I decided *not* to report, so they are visible rather than missed
 - scripts/test.sh interpolates `$1` into a `-c "lua require('plenary.busted').run(...'$target'...)"` string (SEC-35 shape), but the input is the developer's own argv to their own test runner. Noted, not reported.
 
 Clean areas worth recording. No shell-string construction anywhere (every external process is argv through `vim.system`); no `vim.fn.glob`/`globpath`; no `__mode` weak tables; no `next(t)`-delete loops; no module-level geometry; no `executable()` probe on the startup path; no secrets, telemetry or history persistence; `vim.g` carries only booleans; `float.close` closes the window before deleting the buffer (UI-55); `preview.webpdf` has timeout, byte cap, URL-hashed cache and active deletion of incomplete downloads (SEC-21); `preview.shot` runs the browser with `--user-data-dir` and deliberately without `--no-sandbox`; `hover.scope` fails open in every branch (ERR-20/PRIN-27); the `CursorMoved` trigger is debounced through `lib.nvim.debounce` (PERF-93); and config/DEFAULTS.lua is genuinely side-effect-free data (LUA-06).
+
+**Status.** ☑️ schon behoben (`7c492f1`) — Gleicher Vor-Sitzungs-Commit wie #6, in derselben Änderung mit `expand_path` behoben; im Code verifiziert.
 
 ---
 
