@@ -1,6 +1,8 @@
 # config.neotree
 
-Neo-tree unified configuration and initialization: default options,
-`M.setup(opts)` merging user overrides, and wiring of the optional
-`reveal_current_file`/`only_lhs` keymap submodules (see this file's own
-comments for their current status).
+What is left of this config's own neo-tree layer: the per-source
+`window.mappings` tables under `keymaps/` (neo-tree command names and
+`noop`s only) and one event handler. Everything that ran code of its own --
+the source switcher, the Alt toggle keys, node utilities, a health check --
+is filetree.nvim's since 2026-09-19 (`source_switcher`, `tree_toggle`; see
+`plugins/personal/init.lua` for how they are configured here).

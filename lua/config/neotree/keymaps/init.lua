@@ -1,9 +1,14 @@
 ---@module 'config.neotree.keymaps'
 --- Centralized, buffer-local Neo-tree keymaps that override defaults consistently.
-
-local lazy = require("lib.lua.lazy")
-local source_command = lazy.require("config.neotree.commands.source")
-local node_utils = require("config.neotree.utils.node")
+---
+--- Only neo-tree-native command names and `noop`s live here. Every key that
+--- runs code of this config's own used to be in this table too, and each
+--- one has since moved into filetree.nvim, which binds it buffer-locally on
+--- FileType and always wins: `d` (trash), `x`/`c`/`p` (copy_move), `y`
+--- (path_copy, aliased to it in plugins/personal/init.lua), `"`/`!`
+--- (source_switcher, 2026-09-19). What stays for such a key is a `noop`
+--- where neo-tree's own default would otherwise install a normal- or
+--- visual-mode map underneath filetree's.
 
 ---@return table<string, any>
 return {
@@ -15,53 +20,20 @@ return {
   --====================== Yank / Clipboard ===========================
 
   -- neo-tree's default `y` is `copy_to_clipboard`, which stages the node in
-  -- neo-tree's *filesystem* clipboard for a later paste. Two things were wrong
-  -- with leaving it:
+  -- neo-tree's *filesystem* clipboard for a later paste -- an exact
+  -- duplicate of filetree.nvim's copy_move `c`, and it never touches the
+  -- system clipboard, so `y` looked like a yank and put nothing in "+.
+  -- Worse, renderer.set_buffer_mappings() also installs a *visual-mode* map
+  -- whenever `state.commands[<name> .. "_visual"]` exists, and
+  -- copy_to_clipboard_visual does: selecting a name with `v` and pressing
+  -- `y` staged a file copy instead of yanking the text.
   --
-  --   1. It is an exact duplicate of filetree.nvim's copy_move `c` (same
-  --      stage-then-paste model, and copy_move is the one with the conflict
-  --      prompt, the marks integration and the C/X extmarks), and it never
-  --      touches the system clipboard - so `y` on a node looked like a yank
-  --      and put nothing in "+.
-  --   2. renderer.set_buffer_mappings() additionally installs a *visual-mode*
-  --      map whenever `state.commands[<name> .. "_visual"]` exists, and
-  --      copy_to_clipboard_visual does. That buffer-local `v`/`x` map shadowed
-  --      the native yank, so selecting a name with `v` and pressing `y` staged
-  --      a file copy instead of yanking the text.
-  --
-  -- Binding a *function* fixes both at once: the `_visual` lookup happens only
-  -- in the `type(func) == "string"` branch, so a function installs the
-  -- normal-mode map alone and visual `y` falls back to the native yank (which
-  -- reaches the system clipboard via 'clipboard' = unnamedplus, see options).
-  --
-  -- The normal-mode action delegates to filetree.nvim's path_copy - the same
-  -- code path as `[a` - rather than reimplementing it here. The local fallback
-  -- only runs when filetree is absent or path_copy is disabled.
-  ["y"] = {
-    ---@param state Cfg.NeoTree.State
-    function(state)
-      -- feature() hands back the module only while it is actively loaded, so
-      -- an absent or disabled path_copy falls through to the local copy below
-      -- instead of warning "No node under cursor" from a nil adapter.
-      local ok, filetree = pcall(require, "filetree")
-      local path_copy = ok and filetree.feature("path_copy") or nil
-      if path_copy and type(path_copy.copy_absolute) == "function" then
-        path_copy.copy_absolute()
-        return
-      end
-
-      local path = node_utils.get_path(node_utils.get_current(state))
-      if path == "" then
-        vim.notify("Neo-tree: no node under cursor", vim.log.levels.INFO)
-        return
-      end
-
-      vim.fn.setreg("+", path)
-      vim.fn.setreg('"', path)
-      vim.notify("Copied: " .. path, vim.log.levels.INFO)
-    end,
-    desc = "Copy absolute path to system clipboard",
-  },
+  -- "noop" is checked before any map is installed, so it drops neo-tree's
+  -- normal *and* visual map. filetree.nvim's path_copy then owns normal-mode
+  -- `y` (`keymap_abs = { "[a", "y" }` in plugins/personal/init.lua), and
+  -- visual `y` falls back to the native yank, which reaches the system
+  -- clipboard via 'clipboard' = unnamedplus.
+  ["y"] = "noop",
 
   -- Same defect as `y` above, one key over: filetree.nvim's copy_move owns
   -- normal-mode `x` (stage cut), but neo-tree's own cut_to_clipboard kept a
@@ -84,12 +56,10 @@ return {
 
   --====================== Source Switching ===========================
 
-  ['"'] = function(_)
-    source_command.next_source()
-  end,
-  ["!"] = function(_)
-    source_command.prev_source()
-  end,
+  -- `"`/`!` are filetree.nvim's source_switcher (buffer-local, FileType):
+  -- next/previous source keeping the tree's position. neo-tree's own `<`
+  -- re-opens at the configured position instead, so it stays off; `>` is
+  -- left as neo-tree's default.
   ["<"] = "noop",
 
   --====================== Window Management ==========================
