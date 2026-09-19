@@ -60,6 +60,7 @@ three replacements that turned out to be rewires rather than builds:
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
 | B5 ts-context → ui.nvim | `ui.context`: a Tree-sitter ancestor walk from the first visible line, rendered in a per-window `relative="win"` float — not the winbar this entry named (see the section for why); `:UI context [on\|off\|up n]`, `ui.setup({ context = { max_lines = 3 } })` in the config; plugin dropped | ui.nvim `870a6bc`, nvim, 2026-09-19 |
+| C · bqf → pickers.nvim | `pickers.quickfix`: preview float following the cursor in the quickfix/location window, `pickers.refine` over the list (`zf`/`zF`), `p` preview toggle; bqf spec dropped | pickers.nvim, nvim, 2026-09-19 |
 | C · zen-mode → ui.nvim | `ui.zen`: the buffer alone in a centred float over a dimmed backdrop, frame options hidden and restored, `:UI zen [on\|off]`; zen-mode spec dropped | ui.nvim, nvim, 2026-09-19 |
 | C · colorizer → my.nvim | `hl_config.features.color_codes`: hex/rgb()/hsl()/CSS-name swatches on the visible lines, background/foreground/virtual, `highlight.color_codes.*`; colorizer spec dropped | my.nvim, nvim, 2026-09-19 |
 | C · minty → ui.nvim | `ui.colorpicker`: hue row, saturation × lightness grid for that hue, shades of the pick, readout; the cursor selects, `<CR>` writes back over the `#hex` it opened on or after the cursor, `y` yanks; `:UI color [#hex]`; the right-click menu entry calls it; minty + volt dropped | ui.nvim, nvim, 2026-09-19 |
@@ -229,7 +230,7 @@ in, and the cost. Sorted by plugin.
 | `telescope-fzf-native` → **native sorter** | compiled C | Keep. Nothing to rebuild. | — |
 | `search.nvim` → **tabbed picker groups** | one key, `config/search/init.lua` (86 lines of tab/collection definitions) | **pickers.nvim** — `:Pickers <scope> <action>` is already a grammar over scopes; tabs are a UI on top. The collections are already your data. | **M** |
 | `fzf-lua` → **picker engine** | `config/fzf/**`, already consumes `pickers.entry_actions.adapters.fzf` | Keep. Same relationship as snacks/telescope. | **XL** |
-| `nvim-bqf` → **quickfix preview + auto-resize** | `auto_enable`, `auto_resize_height` — nothing else | **pickers.nvim** — it already has a `refine` filter stack (wired as `<C-f>` in replacer.nvim), and preview is core picker machinery. | **M** |
+| ~~`nvim-bqf` → **quickfix preview + auto-resize**~~ | ~~`auto_enable`, `auto_resize_height` — nothing else~~ | **Done 2026-09-19** — pickers.nvim `pickers.quickfix`: a cursor-following preview float over `:copen` (loaded buffers read directly, unloaded files from disk) and `pickers.refine` over the list (`zf`/`zF`), non-destructive. Auto-resize was not carried over (Neovim's own `:copen [height]` covers it). Plugin dropped. | **done** |
 | `nvim-window-picker` → **pick a window by letter** | filter rules; single call site `config/neotree/keymaps/filesystem/files.lua:44`, already `pcall`-guarded | **lib.nvim/nvim/window** (the primitive) consumed by **filetree.nvim**. Fallback path already exists, so a partial build degrades safely. *Status pass:* the call site is config code calling neo-tree's `open_with_window_picker`, so the consumer is this config until the neo-tree keymaps move (Tree table below); the primitive itself is a new `lib.nvim` module with tests. | **S** |
 | `harpoon` → **pinned file marks + quick menu** | `config/harpoon/**`, **1,707 lines**, `lazy = false` | **sessions.nvim** — see [7.4](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place). | **L** |
 
@@ -569,7 +570,7 @@ passes `context = { max_lines = 3 }` to `ui.setup`; the Bindings corpus
 ## 6. Tier C — harvest one feature, keep the plugin
 
 These are not replacements. The external plugin stays; one idea moves in-house.
-**Seven open; puppeteer → cascade, minty → ui.colorpicker, colorizer → my.nvim and zen-mode → ui.zen done 2026-09-19.**
+**Six open; puppeteer → cascade, minty → ui.colorpicker, colorizer → my.nvim, zen-mode → ui.zen and bqf → pickers.quickfix done 2026-09-19.**
 
 | External | Feature worth stealing | Own home | Effort |
 |---|---|---|---|
@@ -577,7 +578,7 @@ These are not replacements. The external plugin stays; one idea moves in-house.
 | ~~`nvzone/minty` (`Huefy`/`Shades`)~~ | ~~Interactive colour picker / shade ramp~~ | **Done 2026-09-19** — ui.nvim, not color_my_ascii: the picker is a themed `ui.kit.surface` float, and ui.nvim already owns palettes and the float toolkit. `ui.colorpicker` + `ui.colorpicker.color` (hex/rgb/hsl, lightness shift, WCAG contrast, hex-under-cursor); `:UI color [#hex]`; `open({ on_pick })` for hosts. minty and volt gone from the config. | **done** |
 | ~~`catgoose/nvim-colorizer.lua`~~ | ~~Inline hex/rgb colour swatches~~ | **Done 2026-09-19** — my.nvim, as `highlight.color_codes`. "Harvest, not replace" turned into a replace after all: with the scan limited to the visible lines and the existing skip/large-file guards, the large-file problem the row worried about does not arise, and two colorizers would paint twice. | **done** |
 | ~~`folke/zen-mode.nvim`~~ | ~~Distraction-free single window~~ | **Done 2026-09-19** — ui.nvim, for the reason the row gave: it owns the statusline and tabline, so hiding them is two options saved and restored. `ui.zen` with `width`/`height`/`backdrop`/`wo` tunables; no terminal-font or plugin bridges. Plugin dropped. | **done** |
-| `kevinhwang91/nvim-bqf` | Better quickfix: preview, in-list filtering | **pickers.nvim** already has a `refine` filter stack (wired as `<C-f>` in replacer.nvim). Quickfix preview is adjacent. | 2–3 |
+| ~~`kevinhwang91/nvim-bqf`~~ | ~~Better quickfix: preview, in-list filtering~~ | **Done 2026-09-19** — `pickers.quickfix`, from a `FileType qf` autocmd, no engine involved; the refine stack the row pointed at is exactly what runs over the list. bqf's fzf mode is not reproduced (`:Pickers builtin quickfix` is the fuzzy pass). Plugin dropped. | **done** |
 | `rcarriga/nvim-notify` | Notification history, stacked toasts | **lib.nvim** already has `notify/` and **ui.nvim** owns the frame. Note the config runs it *only* as a noice backend, and `snacks.notifier` is explicitly off — so removal is coupled to the noice decision. | 2 |
 | `folke/which-key.nvim` | Pending-keymap hint popup | **ui.nvim**. Genuinely useful and self-contained, but the label/group data model is the real work. Non-trivial despite looking simple. | 3 |
 | `nvim-tree/nvim-web-devicons` | Filetype → icon + colour | **lib.nvim**. `ui.nvim/statusline/modules/file_icons/devicons.lua` already isolates it behind an adapter, so this is a *data* import, not an architecture change. Low value (devicons is stable and cheap), but it would make `ui.nvim` and `lsp.nvim` dependency-free. | 2 |
@@ -797,7 +798,7 @@ Struck entries are done.
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
 | **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built, in parallel run; 7.4) |
 | **debugging.nvim** | ~~neotest adapter debug tooling~~ (`:Debug neotest`, 2026-09-19) · snacks debug inspector |
-| **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
+| **pickers.nvim** | search.nvim tabs · ~~bqf quickfix preview~~ (`pickers.quickfix`, 2026-09-19) · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
 | **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · which-key popup · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
 | **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |

@@ -23,17 +23,9 @@ return {
     end,
   },
 
-  {
-    "kevinhwang91/nvim-bqf",
-    ft = "qf",
-    opts = {
-      auto_enable = true,
-      auto_resize_height = true,
-    },
-    config = function(_, opts)
-      require("bqf").setup(opts)
-    end,
-  },
+  -- `kevinhwang91/nvim-bqf` left on 2026-09-19: the quickfix window's preview
+  -- float and in-list filter are pickers.nvim's `quickfix` module now (on by
+  -- default: `zf` refine, `zF` restore, `p` preview on/off in the list).
 
   {
     "folke/noice.nvim",
