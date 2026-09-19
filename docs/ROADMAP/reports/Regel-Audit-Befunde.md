@@ -5,9 +5,11 @@
 > 497 bestätigte Befunde aus 38 Plugin-Audits gegen die 76 kritischen, nicht
 > automatisierbaren Regeln. Jeder Befund wurde von einem zweiten Agenten gegen den
 > Quelltext gegengeprüft; 44 weitere Rohbefunde wurden dabei widerlegt und stehen
-> hier nicht. **Umsetzung abgeschlossen (2026-09-19):** 489/497 gefixt bzw. bereits
-> vor dem jeweiligen Lauf erledigt vorgefunden, 8 bewusst offen gelassen
-> (Architektur-/Maintainer-Entscheidungen, siehe die einzelnen Status-Zeilen unten).
+> hier nicht. **Umsetzung abgeschlossen (2026-09-19):** 497/497 gefixt bzw. bereits
+> vor dem jeweiligen Lauf erledigt vorgefunden. Die anfänglich 8 bewusst offen
+> gelassenen Architektur-/Maintainer-Entscheidungen wurden in einer zweiten,
+> zweistufigen Runde (Entscheiden+Implementieren, dann unabhängige Gegenprüfung
+> vor dem Push) noch am selben Tag nachträglich getroffen und umgesetzt.
 
 `confidence` ist die Einschätzung des prüfenden Agenten: `high` = am Quelltext
 eindeutig, `medium` = Regelanwendung ist Ermessenssache, `low` = Verdacht.
@@ -45,29 +47,29 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | casedesk.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | cmdlog.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | color_my_ascii.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
-| media.nvim | 14 | 13 | 1 | fertig (2026-09-18) |
+| media.nvim | 14 | 14 | 0 | fertig (2026-09-19) |
 | ai.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | github_stats.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
-| gopath.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
+| gopath.nvim | 13 | 13 | 0 | fertig (2026-09-19) |
 | lsp.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | open.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
-| ui.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
-| filetree.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
+| ui.nvim | 13 | 13 | 0 | fertig (2026-09-19) |
+| filetree.nvim | 12 | 12 | 0 | fertig (2026-09-19) |
 | images.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
-| pickers.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
+| pickers.nvim | 12 | 12 | 0 | fertig (2026-09-19) |
 | runtime-analysis.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | diff.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | documentation.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | emojis.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
-| fileops.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
-| hover.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
+| fileops.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
+| hover.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
 | markdown.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
 | recommender.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | rules.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | spotlight.nvim | 9 | 9 | 0 | fertig (2026-09-19) |
 | my.nvim | 7 | 7 | 0 | fertig (2026-09-19) |
-| data.nvim | 5 | 4 | 1 | fertig (2026-09-19) |
+| data.nvim | 5 | 5 | 0 | fertig (2026-09-19) |
 
 **insights.nvim (16 Befunde) läuft, nicht von hier aus anfassen.** Ein Audit-Agent
 dafür wurde durch ein Sitzungsende unterbrochen; parallel läuft eine unabhängige,
@@ -3270,7 +3272,7 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 ## media.nvim
 
-**14 Befunde** (7 × high). Roh gemeldet: 14. — **Stand: 13/14** (⏭️ 1, 2026-09-18)
+**14 Befunde** (7 × high). Roh gemeldet: 14. — **Stand: 14/14** (⏭️ 0, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -3426,7 +3428,7 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** Any `find()` that runs before or between `setup()` calls freezes the answer for the session. A consumer calling `media.available()` before media's own `setup()`, or a second `setup({ bin = { ffmpeg = "D:/tools/ffmpeg.exe" } })` after a reload, leaves the plugin on the previously resolved binary -- and the `false` sentinel is the worse case: a pre-setup lookup that found nothing makes `find` return nil forever, so a user who then configures an explicit `bin.ffmpeg` path still gets "ffmpeg not found". `M.reset()` would fix it but is only reachable via `VimResume`. Correctly rated low confidence on likelihood -- it needs a specific call ordering -- but the stale-key mechanism itself is certain from the code.
 
-**Status.** ⏭️ offen gelassen — Bewusstes, getestetes Design: `TESTS/bin_spec.lua` fixiert explizit, dass eine Config-Änderung erst nach `M.reset()` wirkt, und der Modul-Header nennt das als vorgesehenen Reparaturweg. Ein vollständiger Cache-Key hätte diesen dokumentierten Vertrag gebrochen — Design-Entscheidung für den Maintainer.
+**Status.** ✅ erledigt (`41b034c`) — Der Lookup-Cache in bin.lua schlüsselt jetzt zusätzlich über den konfigurierten Wert, sodass eine geänderte bin.ffmpeg-Config ohne M.reset() sofort wirkt, und bin_spec.lua pinnt die korrigierte Vertragslage statt der alten „erst nach reset()“-Erwartung. Unabhängig verifiziert und gepusht.
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -3447,6 +3449,8 @@ Rules I could not properly check: **CMT-16** — `docs/map/` is generated by `:D
 Additional context for two findings: the unguarded `vim.system` behind ERR-01 also appears at core/audio.lua:218, core/player.lua:190 and core/play.lua:72 with the same root cause (play.lua is the mildest — it verifies the binary with `executable.exists` first). Both audio.lua's and player.lua's module headers explicitly promise \"never raises\", which a misconfigured `bin.mpv` breaks. I folded these into the two anchor findings rather than filing five near-identical rows.
 
 **Status.** ✅ erledigt (`c9b8e03`) — `read_cached` verlangt jetzt zusätzlich `type(doc.segments) == "table"`, bevor ein gecachtes Transkript als gültig gilt.
+
+---
 
 ---
 
@@ -3792,7 +3796,7 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 ## gopath.nvim
 
-**13 Befunde** (5 × high, 1 davon in Testcode). Roh gemeldet: 13. — **Stand: 12/13** (⏭️ 1, 2026-09-18)
+**13 Befunde** (5 × high, 1 davon in Testcode). Roh gemeldet: 13. — **Stand: 13/13** (⏭️ 0, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -3936,7 +3940,7 @@ BELEGE ALREADY CLOSED FOR THIS PLUGIN, re-verified as still fixed and therefore 
 
 **Auswirkung.** Two of the auditor's three triggers do not survive checking: `:Lazy reload` clears package.loaded, so gopath.config is re-required and line 58 rebuilds state from DEFAULTS — the accumulation is reset. What remains is real but narrow: two setup() calls within one module lifetime (two specs for the same plugin, or a manual re-setup) never reset, so `setup({ truncated = { enable = false } })` followed by `setup({})` leaves truncated disabled. Worth noting for whoever fixes it: a naive switch to `vim.tbl_deep_extend("force", {}, defaults, user)` would replace the state table and decouple every consumer already holding a sub-table reference (cache.setup takes `tcfg.cache_roots` by reference) — ERR-53 requires the reset to happen in-place.
 
-**Status.** ⏭️ offen gelassen — `scripts/ci/specs/config_spec.lua` hat einen bestehenden, bewusst benannten Regressionstest, der genau das Gegenteil des Regel-Standards als beabsichtigten Vertrag festschreibt; ein korrekter Fix bräuchte zudem eine In-place-Reset-Logik, die Referenzidentität für Konsumenten wahrt — Architekturentscheidung für den Maintainer.
+**Status.** ✅ erledigt (`0c6cb28`) — `state` wird in `M.setup` jetzt in-place auf die Defaults zurückgesetzt (Sub-Tabellen-Referenzen wie `tcfg.cache_roots` bleiben nach ERR-53 gültig), bevor die neuen Opts gemergt werden; der Pin-Test in config_spec.lua sowie zwei veraltete Doku-Stellen, die noch das alte Akkumulations-Verhalten begründeten, wurden korrigiert. Unabhängig verifiziert und gepusht.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -3959,6 +3963,8 @@ Nicht bewertbar mangels Zugriff: ob `lib.nvim.fs.json.read` beim Lesen zwischen 
 Zwei Beobachtungen ohne passende Regel im 76er-Katalog, deshalb nicht als Fund geführt: (1) `truncated/finder.lua`s synchroner Zweig `M.find`/`search_root`/`detect_tool` (Zeilen 14-113) ist toter Code -- nichts im Plugin ruft ihn, nur `find_async` läuft; `health.lua:60-81` warnt trotzdem, ohne fd/rg seien 'suffix search and live-search fallback unavailable', was für den libuv-Walk nicht stimmt. (2) `alias_index.lua:34` und `binding_index.lua:39` holen jede Zeile mit einem eigenen `nvim_buf_get_lines(buf, i-1, i, false)` statt in einem Aufruf -- bei einer 10k-Zeilen-Datei 10.000 API-Calls pro Rebuild (changedtick-gecacht, also einmal pro Edit).
 
 **Status.** ✅ erledigt (`4de8613`) — `unit_tests.lua` und `headless_tests.lua` listen ihr Verzeichnis jetzt über `vim.fs.dir` statt `vim.fn.globpath`, das den Pfad als Glob-Pattern liest.
+
+---
 
 ---
 
@@ -4498,7 +4504,7 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 ## ui.nvim
 
-**13 Befunde** (1 × high, 1 davon in Testcode). Roh gemeldet: 15. — **Stand: 12/13** (⏭️ 1, 2026-09-18)
+**13 Befunde** (1 × high, 1 davon in Testcode). Roh gemeldet: 15. — **Stand: 13/13** (⏭️ 0, 2026-09-19)
 
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
@@ -4630,7 +4636,7 @@ COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing space
 
 **Auswirkung.** The auditor's impact overstates the exposure and I am correcting it. There is no drive-by path: the buffer is created empty by `M.open` and seeded from `initial_lines()`, a plugin-authored template; no file, picker entry, `extra_files` list or shell history is ever folded in, so content can only arrive through the user's own editing of a scratch buffer they explicitly opened with `:KitPreview`. The real, residual defect is narrower: because evaluation is bound to `TextChanged`/`TextChangedI` rather than to a deliberate action, a pasted snippet or a completion-inserted fragment executes with full Lua and vim API rights the instant it lands, before the user can read it -- which is a measurable step down from `:edit` + `:source`, where reviewing first is possible. The doc gap the auditor raises is separately true but is not a SEC-50 matter: docs/BINDINGS.md:7 claims "Nothing here is registered until require('ui').setup({ all = true }) runs", and `:KitPreview` contradicts that, appearing in no BINDINGS.md entry.
 
-**Status.** ⏭️ offen gelassen — Der Puffer wird ausschließlich aus einem selbst geöffneten, plugin-eigenen Template befüllt, es gibt keinen Pfad für fremden/ungeprüften Inhalt — das im Puffer dokumentierte Live-Eval ist der eigentliche Zweck des Features; ein Execute-Gate würde die Live-Vorschau funktional zerstören, Design-Entscheidung für den Maintainer.
+**Status.** ✅ erledigt (`2cb041c`) — `eval_config` feuert jetzt gedrosselt (300ms Ruhefenster, gleiches Debounce+`pcall(timer.close)`-Muster wie kit.live_input/picker/compare) statt bei jedem Tastendruck live auszuwerten; das Live-Eval-Feature selbst bleibt erhalten, docs/BINDINGS.md korrigiert. Unabhängig verifiziert und gepusht.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -4673,9 +4679,11 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 ---
 
+---
+
 ## filetree.nvim
 
-**12 Befunde** (3 × high). Roh gemeldet: 13. — **Stand: 11/12** (⏭️ 1, 2026-09-18)
+**12 Befunde** (3 × high). Roh gemeldet: 13. — **Stand: 12/12** (⏭️ 0, 2026-09-19)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -4747,7 +4755,7 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** Maintenance and correctness-of-documentation risk, not a user-visible failure -- and one part of the finding's reasoning needs correcting. docs/installation.md:8 does NOT present lib.nvim as optional: it says "required", and only narrows what breaks. So LUA-01's documentation clause is not violated here (it IS violated for ui.nvim -- see the refs/init.lua:32 finding); what is violated is the consistency clause. The concrete cost is 26 fallback paths that no test can exercise and no user can reach, two of which diverge behaviourally from the lib path (util/path.lua:42's vim.fn.expand, reported separately), plus the fact that no single file tells a maintainer which regime is in force -- someone "cleaning up the lib.nvim optionality" in either direction has no local signal about which way is correct.
 
-**Status.** ⏭️ offen gelassen — Betrifft ~20–30 weiche Fallback-Stellen über mind. 9 Dateien; da `commands.lua` lib.nvim ohnehin hart benötigt, ist die Richtung (alle hart vereinheitlichen vs. auch `commands.lua` weich machen) eine Architekturentscheidung mit echten Verhaltensfolgen.
+**Status.** ✅ erledigt (`f84d57d`) — lib.nvim wird jetzt überall hart requiret statt an ~20-30 Stellen tot weiche Fallbacks zu halten; die toten Reimplementierungen sind entfernt, der SEC-34-Testpin läuft jetzt gegen den echten Codepfad statt simulierter Abwesenheit, Docs inkl. doc/filetree.txt nachgezogen. Unabhängig verifiziert (volle Suite grün) und gepusht.
 
 ### `PERF-42` — Invalidierbar
 
@@ -4833,6 +4841,8 @@ RULES I CHECKED AND FOUND COMPLIANT, worth recording because they are the ones t
 ERR-31 note: I found no check-then-create race in a security-relevant place, but features/infra/safety/backup.lua:29 builds its destination from os.date("%Y%m%d_%H%M%S") plus the basename, so two backups of the same filename within one second resolve to the same path and the second overwrites the first with no error. That is a collision, not the TOCTOU race ERR-31 names, so I did not file it as a finding.
 
 **Status.** ✅ erledigt (`cd66ade`) — `M.prune()` und `M.list()` glob'en das Backup-Verzeichnis jetzt ebenfalls über `globbable()`.
+
+---
 
 ---
 
@@ -4998,7 +5008,7 @@ What I could NOT verify, and why:
 
 ## pickers.nvim
 
-**12 Befunde** (4 × high). Roh gemeldet: 13. — **Stand: 11/12** (⏭️ 1, 2026-09-18)
+**12 Befunde** (4 × high). Roh gemeldet: 13. — **Stand: 12/12** (⏭️ 0, 2026-09-19)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -5106,7 +5116,7 @@ What I could NOT verify, and why:
 
 **Auswirkung.** Because pickers' `telescope.setup()` call is always the second one, `first_non_null` hands telescope pickers' own `{ i = {...}, n = {...} }` table and it REPLACES `config.values.mappings` wholesale — the user's entire `defaults.mappings` block from their own telescope.setup() is discarded, in every telescope picker, including ones pickers.nvim never opens. Telescope's built-in `default_mappings` survive (separate table, mappings.lua:130), so the symptom is "my custom telescope keybinds silently stopped working" rather than a broken picker. On the fzf-lua side `fzf.setup({ keymap = { builtin = … } }, true)` deep-merges, so only the two keys pickers binds by default — `<PageDown>`/`<PageUp>` (keys/init.lua:95-96) — overwrite the user's own entries. Either way the plugin does exactly what its installation docs promise it never does.
 
-**Status.** ⏭️ offen gelassen (`de06d2b`) — Das erneute `telescope.setup()`/`fzf.setup()` ist ein dokumentiertes, load-bearing Feature (Keys/History-Patch, Deep-Merge); es rückgängig zu machen wäre eine Produktentscheidung für den Maintainer. Korrigiert wurde nur eine nachweislich falsche Behauptung in `docs/installation.md`/`doc/pickers.txt`.
+**Status.** ✅ erledigt (`f0cfbd5`) — `M.patch()` liest jetzt `telescope.config.values.mappings` vor dem eigenen `setup()`-Aufruf und merged pickers' eigene Bindings hinein statt sie zu ersetzen; der Nutzer-Bind gewinnt bei Konflikt. Gegen die reale telescope.nvim-Quelle verifiziert und gepusht.
 
 ### `LUA-93` — Jedes Plugin trägt seinen eigenen Lazy-Trigger
 
@@ -5151,6 +5161,8 @@ Two judgment calls I decided against reporting: (1) `integrations/images/init.lu
 PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are both already named for pickers.nvim in the Belege footnotes and the code still matches what those footnotes describe as the fixed state, so I did not re-report them.
 
 **Status.** ✅ erledigt (`c37c416`) — Der No-Preview-Zweig von `pick_item` mappt `opts.items` jetzt auf Anzeige-Strings + Rücktabelle, genau wie der Preview-Zweig — `on_select` bekommt wieder das exakte Original-Item statt fzfs rohe Zeile.
+
+---
 
 ---
 
@@ -5767,7 +5779,7 @@ RULES I COULD NOT SETTLE. CMT-16: docs/map/ and docs/BINDINGS.md look generated 
 
 ## fileops.nvim
 
-**11 Befunde** (5 × high). Roh gemeldet: 12. — **Stand: 10/11** (⏭️ 1, 2026-09-19)
+**11 Befunde** (5 × high). Roh gemeldet: 12. — **Stand: 11/11** (⏭️ 0, 2026-09-19)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -5909,13 +5921,13 @@ THINGS I SAW THAT NO RULE IN THE 76 COVERS, listed so they are not lost: (1) `fe
 
 WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, so anything that happens inside `lib.nvim.cross.fs.mutate`, `lib.nvim.fs.trash`, `lib.nvim.bindings.usercmd.composer` or `lib.nvim.buffer.open_background` (retry semantics, argv handling, timeouts) is unverified from here — several of my confidence calls assume those behave as documented. Everything was exercised on Windows 11 / nvim 0.12.2 only; the Linux and macOS branches (notably `ops/cycle.lua`'s symlink handling and the `retry.attempts = 1` POSIX default) were read but not run. docs/map/ is generated output (index.html, module_map.json, overview.md, all timestamped together) and I found no sign of a hand edit, but I did not re-run its renderer to diff it, so a CMT-16 drift would not have shown up; note the map was generated 2026-09-14 while docs/ changed on 2026-09-17, so it may simply be stale.
 
-**Status.** ⏭️ offen gelassen — `complete_from_bufdir` löst den 8.3-Kurzname-Fall bereits über `fs_realpath`; der Rest (`[`,`]`,`*`,`?` echt im Verzeichnisnamen) ist laut lib.nvim.fs.globbable ein bewusst offener „Known gap“, dessen Fix die bestehende Nested-Pfad-Completion brechen würde — Maintainer-Entscheidung.
+**Status.** ✅ erledigt (`18f9ab9`) — `complete_from_bufdir` scannt jetzt echt per `vim.fs.dir` (neuer `scandir_prefix`-Helfer) statt den Verzeichnispfad über `getcompletion` als Glob-Pattern zu interpretieren; verschachtelte Pfad-Completion bleibt erhalten, ein Testfall mit Glob-Metazeichen im Verzeichnisnamen deckt den ursprünglichen Bug ab. Unabhängig verifiziert und gepusht.
 
 ---
 
 ## hover.nvim
 
-**11 Befunde** (6 × high). Roh gemeldet: 11. — **Stand: 10/11** (⏭️ 1, 2026-09-19)
+**11 Befunde** (6 × high). Roh gemeldet: 11. — **Stand: 11/11** (⏭️ 0, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -6023,7 +6035,7 @@ WHAT I COULD NOT CHECK. lib.nvim itself is a hard dependency and out of scope, s
 
 **Auswirkung.** After any session in which enable() ran, editing `mode`, `auto_hover`, or any of `links.enabled/web/fetch`, `links.pdf.enabled`, `links.shot.enabled/eager`, `paths.enabled/missing/code`, `positions`, `inline_images` or `office.convert` in the installation spec has no effect: M.setup applies the new value and persist.load() overwrites it six lines later with last session's copy of the old one. Because the snapshot has no explicit-set, a value that only ever came from the spec is written back and then re-applied over that same spec, so "the reader toggled this" and "this was the spec's value at exit" are indistinguishable. Correcting the auditor on one point: this is not undocumented -- docs/configuration.md:347-370 states the DEFAULTS -> spec -> last session order outright, names the JSON file under stdpath("cache"), and offers `persist = false` as the opt-out, and `:Hover dashboard` reports the live state. The defect is the unconditional snapshot, not a hidden file.
 
-**Status.** ⏭️ offen gelassen — Die dokumentierte Reihenfolge Spec→persist.load() ist gewolltes Feature (docs/configuration.md); der eigentliche Defekt (kein „explicit“-Tracking beim Snapshot) verlangt eine Architekturentscheidung, keine chirurgische Zeilenänderung.
+**Status.** ✅ erledigt (`97cc6bb`) — Neues `persist.touch`-Tracking merkt sich echte Laufzeit-Toggles (switches.set/set_mode/set_auto) getrennt von Werten, die nur aus der Spec stammen; nur die getouchten Felder werden noch gesnapshottet und beim Laden re-appliziert, ein reiner Spec-Wert wird nicht mehr unbegrenzt festgeschrieben. Unabhängig verifiziert (inkl. Save/Load-Roundtrip-Test) und gepusht.
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -6069,6 +6081,8 @@ Judgment calls I decided *not* to report, so they are visible rather than missed
 Clean areas worth recording. No shell-string construction anywhere (every external process is argv through `vim.system`); no `vim.fn.glob`/`globpath`; no `__mode` weak tables; no `next(t)`-delete loops; no module-level geometry; no `executable()` probe on the startup path; no secrets, telemetry or history persistence; `vim.g` carries only booleans; `float.close` closes the window before deleting the buffer (UI-55); `preview.webpdf` has timeout, byte cap, URL-hashed cache and active deletion of incomplete downloads (SEC-21); `preview.shot` runs the browser with `--user-data-dir` and deliberately without `--no-sandbox`; `hover.scope` fails open in every branch (ERR-20/PRIN-27); the `CursorMoved` trigger is debounced through `lib.nvim.debounce` (PERF-93); and config/DEFAULTS.lua is genuinely side-effect-free data (LUA-06).
 
 **Status.** ☑️ schon behoben (`7c492f1`) — Gleicher Vor-Sitzungs-Commit wie #6, in derselben Änderung mit `expand_path` behoben; im Code verifiziert.
+
+---
 
 ---
 
@@ -6731,7 +6745,7 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 
 ## data.nvim
 
-**5 Befunde** (2 × high). Roh gemeldet: 6. — **Stand: 4/5** (⏭️ 1, 2026-09-19)
+**5 Befunde** (2 × high). Roh gemeldet: 6. — **Stand: 5/5** (⏭️ 0, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -6779,7 +6793,7 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 
 **Auswirkung.** On the default path (`preview.filter` defaults to false, so line 500's `not preview` branch is taken), a character-level edit made inside the scope while the clause prompt is open is silently replaced by the result computed from the pre-edit text -- no message, recoverable only via undo. Narrower than the auditor stated: the specific triggers they name (format-on-save, an applied LSP text edit, any plugin rewriting the buffer line-wise) go through `nvim_buf_set_lines` over exactly the scope span, which inverts the extmark and ends in a loud `JSON filter: could not write the result: 'start' is higher than 'end'` refusal instead -- the repo documents and tests that separately at TESTS/filter_lifecycle_spec.lua:602-660. So the silent-overwrite class is the character-level one (`nvim_buf_set_text`, `:s///`) plus any edit that leaves the mark sane. With `--preview` the diff's before-side is the live text, so a user who reads the diff can still see the clobbered edit and decline.
 
-**Status.** ⏭️ offen gelassen — Genau dieses Szenario ist in `TESTS/filter_lifecycle_spec.lua:697-709` als grüner „control“-Test bewusst als korrektes Verhalten fixiert, deckungsgleich mit der in `TESTS/README.md` dokumentierten Design-Entscheidung beim line-wise Pendant — Maintainer-Entscheidung, kein Versehen.
+**Status.** ✅ erledigt (`279d943`) — `M.filter` vergleicht den frisch gelesenen Scope-Inhalt jetzt gegen den Vor-Prompt-Text (`source.lines`) und verweigert den Write bei Abweichung, statt den stale berechneten `out` blind zu schreiben; der bisherige grüne „control“-Test wurde auf das korrigierte Verhalten umgestellt, TESTS/README.md entsprechend angepasst. Unabhängig verifiziert und gepusht.
 
 ### `ERR-51` — Merges kopieren Defaults tief
 
@@ -6800,6 +6814,8 @@ Genuinely no surface in this plugin: the whole SEC family (no shell string const
 What I could NOT cover: the ~250 KB spec suite under TESTS/ was sampled, not read line by line -- I read the harness, the register/health/preview/filter stub-and-restore patterns and the package.loaded teardown (all of which are careful: stubs are pcall-protected and restored, buffers deleted in after_each), but did not audit all 30 spec files. I did not run the suite. One test-hygiene observation that no rule in the 76 cleanly covers, so it is not filed as a finding: TESTS/scope_register_edge_spec.lua:197-204 (`real_clipboard_works`) writes and clears the `+` register unconditionally without saving the prior contents, so running scripts/test.sh locally destroys whatever the developer had on the system clipboard. Also worth noting for coverage rather than as a rule violation: CI deliberately checks out neither color_my_ascii, pickers.nvim nor diff.nvim, so every spec gated on one of them registers zero tests in CI -- the fenced-scope, filter and preview paths are exercised only on a machine that has those siblings checked out.
 
 **Status.** ✅ erledigt (`1e00e46`) — `M.options = DEFAULTS` durch `M.options = vim.deepcopy(DEFAULTS)` ersetzt, damit ein Schreibzugriff vor dem ersten `setup()` nicht mehr die geteilte `DEFAULTS`-Tabelle korrumpiert; die tiefere Teil-Aliasing-Problematik liegt in `lib.nvim`s `deep_merge` selbst und damit außerhalb des Scopes hier.
+
+---
 
 ---
 
