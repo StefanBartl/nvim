@@ -52,7 +52,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | ui.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | filetree.nvim | 12 | – | – | offen |
-| images.nvim | 12 | – | – | offen |
+| images.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | pickers.nvim | 12 | – | – | offen |
 | runtime-analysis.nvim | 12 | – | – | offen |
 | diff.nvim | 11 | – | – | offen |
@@ -4812,7 +4812,7 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 ## images.nvim
 
-**12 Befunde** (4 × high, 1 davon in Testcode). Roh gemeldet: 14.
+**12 Befunde** (4 × high, 1 davon in Testcode). Roh gemeldet: 14. — **Stand: 12/12** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -4824,6 +4824,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 **Auswirkung.** `:Image orphans` reports "deleted: <rel>" unconditionally after a confirmed delete, whether or not the file was removed — a read-only permission, a Windows lock held by an image viewer, or a path already gone all produce the success message. The luv error string that would name the cause is captured into a discarded return slot and never shown. The user reruns `:Image orphans`, finds the same entry still listed, and has nothing pointing at why.
 
+**Status.** ✅ erledigt (`cf331b4`) — `pcall(vim.uv.fs_unlink,...)` war immer `true`, da `fs_unlink` bei Fehlern `nil,err` zurückgibt statt zu werfen; neues `images.orphans.delete()` meldet den echten Erfolg/Fehler.
+
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
 `lua/images/paste.lua:267` · `insert_link` · confidence **high**
@@ -4833,6 +4835,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 **Regelbezug.** ERR-33 requires a deferred callback to revalidate its window *and* buffer handles at execution time. Only the buffer is revalidated; the window is not captured at all, so the cursor position used belongs to whatever window happens to be focused when the async capture finally returns. The function's own docstring (lines 240-247) states it reruns "after the clipboard write ... and therefore rechecks the buffer's state" — the window half of that check is missing.
 
 **Auswirkung.** The link's insertion point is read from whatever window is current when the async callback fires, then written into a buffer that window may not be showing. The concrete reachable case is the `ask_alt_text = true` path with ui.nvim installed: `k.input`'s `on_submit` fires from the input float's own context, so `nvim_win_get_cursor(0)` can return the popup's cursor rather than the document window's. If that row is within `buf` the markdown link lands at an unrelated line/column; if it is out of range `nvim_buf_set_text` throws, the `pcall` on line 268 swallows it, and the user is told "could not insert the link" for an image that was saved correctly. The `:Image screenshot` variant the auditor leads with is the weaker case — during the snip Neovim is not focused, so the window usually has not changed.
+
+**Status.** ✅ erledigt (`342b5ad`) — `insert_link` liest jetzt aus dem beim Start des Pastes erfassten Fenster statt aus Fenster `0`, und validiert es zur Ausführungszeit neu (`nvim_win_is_valid`).
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -4844,6 +4848,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 **Auswirkung.** Every key under `display` is writable from `stdpath("data")/images.nvim/calibration.json` with no type check, no key whitelist and no count cap, overriding the defaults for any option the user did not spell out in `setup()`. The realistic trigger is corruption or hand-editing rather than an attacker — the file is machine-local and only the user writes it — but the consequences are concrete: `display.remote.enabled = true` in that file silently turns hover on a remote link into an outbound network request, undoing the consent default the plugin documents at DEFAULTS.lua:62-68; a `clear_events` that is not a list reaches `nvim_create_autocmd` through `arm_clear`; and a JSON `null` decodes to `vim.NIL` in a field the display path reads as a number.
 
+**Status.** ✅ erledigt (`214a7da`) — `as_config` filtert jetzt gegen eine Whitelist der beiden echten Keys mit Typprüfung, statt das gesamte decodierte JSON ungeprüft in `display` zu mergen.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/images/bindings/usrcmds.lua:28` · `IMAGE_TARGET.validate` · confidence **high**
@@ -4853,6 +4859,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on user text: a backtick span in the argument is a command substitution through `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. This plugin already knows this — `resolve.to_path` (resolve.lua:101-108) carries a long comment explaining exactly why `expand` was removed there and replaced by `lib.nvim.cross.fs.expand_path`, and the rule's own Belege records that fix. The same call was left standing at this second site, which sits *in front of* the `filereadable` gate rather than behind it.
 
 **Auswirkung.** `:Image show` runs its argument's backtick span through `&shell` at validation time, before the plugin has decided the argument is a file at all — the same command substitution the author already removed from `resolve.to_path`. Two non-malicious breakages, both verified: an argument that *begins* with `%` or `#` expands to the current/alternate file and the rest of the string is discarded outright (`expand("#foo.png")` -> `"C:/tmp/current.md"`), so `:Image show #draft.png` silently shows the previous buffer's file; and an argument containing a wildcard that matches nothing expands to `""` (`expand("img*.png")` -> `""`), which then fails `filereadable` and is reported as "'img*.png' is not a readable file or URL". Mid-string `#`/`%` are NOT affected — the auditor's `notes#2.png` example does not reproduce.
+
+**Status.** ☑️ schon behoben (`39e460b`) — War bereits vor dieser Session (selbes Datum) auf `lib.nvim.cross.fs.expand_path` umgestellt; im aktuellen Code verifiziert.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -4864,6 +4872,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 **Auswirkung.** Every scanned entry — up to the 20 000 cap at DEFAULTS.lua:59 — re-derives a bound that cannot change mid-walk, costing a function call, a `pcall`, a `package.loaded` lookup, a `config.get()` and two table indexes each time, on the synchronous path that blocks the editor before the picker opens. The auditor overstates this as "the full config lookup": `config.get()` returns the memoized `current` table (config/init.lua:51-54) and re-merges nothing, so the real cost is tens of milliseconds on a full-cap scan, not a hang. The structural complaint stands — the overhead scales with tree size rather than with images found, which inverts what the cap exists to bound.
 
+**Status.** ✅ erledigt (`9af8374`) — `max_entries()` wird jetzt einmal vor der while-Schleife berechnet statt bei jedem gescannten Eintrag neu.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `TESTS/run.lua:160` · `run.lua spec loop` · confidence **medium** · _Testcode_
@@ -4873,6 +4883,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 **Regelbezug.** ERR-01 puts `pcall` at filesystem boundaries, and `dofile` is one — it reads and compiles a file. The loop is already written to collect failures and print a per-spec verdict, so the load half is the only place that can abort the whole thing.
 
 **Auswirkung.** A syntax error, a missing spec file, or an error raised at a spec's top level aborts the runner at that spec: every remaining spec in `specs` is skipped, the "N spec(s) failed" summary and the `IMAGES_TESTS_OK` marker never print, and CI sees a raw Lua traceback instead of a line naming the offending spec and the count of others skipped behind it. Test infrastructure only — no runtime impact on the plugin — but it degrades exactly the diagnostic the loop was built to produce.
+
+**Status.** ✅ erledigt (`f260dad`) — `dofile` läuft jetzt selbst durch pcall, sodass ein Syntaxfehler in einer Spec-Datei nicht mehr den ganzen Runner samt aller nachfolgenden Specs abbricht.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -4884,6 +4896,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 **Auswirkung.** On Windows, `:Image screenshot` can run `paste_with_name`'s continuation twice. The auditor's primary scenario is wrong about which way it fails: the second handler re-opens and rewrites `out` (lines 186-192) *before* calling `callback(true)`, so the temp file exists again and `move_file` succeeds — the actual outcome is a duplicate markdown link inserted at the cursor plus a second "image saved" notification, not the "could not move the file" error. The secondary observation stands unchanged: a 60 s timeout at a 600 ms interval starts up to 100 PowerShell processes for one screenshot, since nothing throttles a tick against the previous tick's still-running read.
 
+**Status.** ✅ erledigt (`5fd5cab`) — `done`/`pending`-Flags verhindern doppelte `callback`-Aufrufe durch überlappende Clipboard-Reads und drosseln neue PowerShell-Starts gegen noch laufende.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/images/calibration.lua:57` · `M.load` · confidence **medium**
@@ -4893,6 +4907,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 **Regelbezug.** ERR-11 requires "empty but ok" to be distinguishable from "empty because broken", and names the load-modify-save collapse as the most frequent real bug class of the fleet sweep: `save()` always writes the *whole* file, so a corrupt read silently becomes a destructive write. The docstring (lines 42-43) declares a missing or unreadable file "not an error case", but that framing only covers the read — it does not make the overwrite non-destructive, and unlike the documented loss-tolerant cases in the rule's Belege there is no statement that the stored measurement is a disposable convenience artifact.
 
 **Auswirkung.** A `calibration.json` truncated by a crash or a full disk is indistinguishable from "never calibrated": `terminal_padding` and `cell_aspect` revert to defaults, images land a cell off, and no message anywhere — not `:Image calibrate`, not `:checkhealth images` — says the file is corrupt rather than absent. The next `:Image calibrate` that saves only one of the two values merges into `{}` and rewrites the file with just that key. The auditor overstates this last step as "destroying the other measurement": the other measurement was already unreadable, so what is actually lost is the chance to notice the corruption and the `.corrupt` backup the rule's own fix pattern prescribes before overwriting.
+
+**Status.** ✅ erledigt (`214a7da`) — `M.load` unterscheidet jetzt „fehlt/leer“ von „kaputtes JSON“ (Backup nach `<pfad>.corrupt` vor dem nächsten überschreibenden Save).
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -4904,6 +4920,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 **Auswirkung.** A misspelled nested option is accepted silently and has no effect: `display = { max_col = 80 }` or `paste = { ask_altext = true }` merges in as a new key nobody reads, the plugin keeps its default behaviour, and neither `setup()` nor `:checkhealth images` says a word. The user concludes the option is broken rather than misspelled. This is also the missing backstop for the unvalidated calibration snapshot at calibration.lua:102 — a known-key pass over the merged `display` table would have caught foreign keys arriving from that file as well.
 
+**Status.** ✅ erledigt (`5590f77`) — `sanitize()` prüft `opts` rekursiv gegen ein bekanntes Schema vor dem Merge; unbekannte Keys mit Levenshtein-Hinweis verworfen, falsch geformte Werte fallen auf den Default zurück.
+
 ### `PERF-42` — Invalidierbar
 
 `lua/images/pixels.lua:41` · `cache` · confidence **medium**
@@ -4914,6 +4932,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 
 **Auswirkung.** Both caches grow monotonically for the session with no TTL, entry cap, eviction or `clear()`. `pixels.read` is called from `anchor.draw` (anchor.lua:282) and is documented at pixels.lua:203 as "cheap enough to call on every draw", so a `:Image pickers` run over a large tree, or a picker preview swept across a long file list, adds one permanent entry per distinct file version to each cache. Entries for files that were deleted, or never looked at again, are never reclaimed. This is a slow session-lifetime memory leak rather than a correctness bug — each entry is a small string key plus a two-field table — but nothing short of restarting Neovim reclaims it.
 
+**Status.** ✅ erledigt (`94d3ea9`) — Cache in `pixels.lua` und `info.lua` (gleiches Muster) auf `lib.nvim.cache.memory`-Namespace mit TTL umgestellt statt unbegrenzter Tabelle.
+
 ### `PRIN-10` — Keine globalen States
 
 `lua/images/debug.lua:93` · `arm` · confidence **medium**
@@ -4923,6 +4943,8 @@ ERR-31 note: I found no check-then-create race in a security-relevant place, but
 **Regelbezug.** PRIN-10 requires state to live module-internally with access through getters/setters; this reaches into another module's public table, mutates it permanently, and leaves the reader a restore path that was never written. The accompanying `log` table (line 39) is appended to on every draw and is only ever reset inside `arm()` (line 158), never after printing.
 
 **Auswirkung.** One `:Image debug report` permanently rewires `images.terminal.draw` for the rest of the session — every hover, gallery tile, picker preview and zen draw then pays a full `nvim_list_wins` + per-window `nvim_win_get_config` scan plus a config read, and appends an unbounded entry to `log`. The restore path the comment on line 91 promises does not exist, `M.report`'s second invocation only prints, and `armed` is never cleared, so the only way back is restarting Neovim. Severity is bounded by the fact that a user has to run a debug command to reach it.
+
+**Status.** ✅ erledigt (`83808c8`) — `M.disarm()` implementiert (stellt `images.terminal.draw` wieder her, leert das Log), als `:Image debug disarm` verdrahtet — der von `arm()`s Kommentar versprochene Restore-Pfad existierte vorher nirgends.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -4943,6 +4965,8 @@ What I could NOT verify, and why:
 - CMT-16: docs/map/ is generated by documentation.nvim and doc/ holds generated vimdoc plus tags. I did not diff generated output against its renderer, so I cannot say whether any hand edit has drifted into a generated file — that check needs the generator, not a read.
 - Rules I checked and found clean, so they produced no finding rather than being skipped: ERR-60 (I enumerated all 39 `and … or` sites; every `b` is a non-falsy literal, a string, or a number where 0 is truthy in Lua — none can fall through), ERR-62 (all six `pcall` sites pass a function or an anonymous wrapper, never `pcall(f(args))`), SEC-01/03 (every subprocess in the plugin is an argv array through `vim.system`; there is no shell string construction and no `io.popen`/`os.execute` anywhere), SEC-46 (paste.lua:73 embeds the output path in a PowerShell *single-quoted* literal and doubles `'`, which is the complete escape for that quoting form — backslash is not an escape character there), SEC-35 (all four `vim.cmd` calls take static strings), LUA-48 (no `__mode` in the repo), LUA-17 (`vim.g` holds only the boolean load guard), PERF-92 (all geometry is computed inside functions; zen re-derives on WinResized/VimResized), PERF-93 (the only hot-event handler is the `clear_events` autocmd, armed with `once = true` per draw), PERF-80 (every `vim.system` callback is wrapped in `vim.schedule` before touching the API, and the screenshot timer uses `vim.schedule_wrap`), LUA-87 (the calibration file is correctly outranked by `setup()` opts), PERF-62/82 (the one timer stops and closes, guarded by `is_closing`), ERR-20/PRIN-27 (the capability check fails open — it warns and draws anyway), UI-01 (`:Image orphans` confirms before the single delete it performs).
 - One thing I judged too speculative to file: `images.convert.to_format` (convert.lua:494) builds its output path as `fnamemodify(path, \":r\") .. \".\" .. format` without validating `format` against `M.target_formats()`. The `:Image convert` route constrains it with an `enum` (usrcmds.lua:203), but the public `require(\"images\").convert(format, path)` does not, so a caller passing a `format` containing path separators would write outside the source directory. The code fact is confirmed; whether any caller can supply hostile input there is not, so it is noted here rather than reported as a SEC-42 finding.
+
+**Status.** ☑️ schon behoben (`39e460b`) — Gleicher Vorab-Fix wie #4, selber Commit: `M.roots` nutzt bereits `expand_path` statt `vim.fn.expand`.
 
 ---
 
