@@ -206,8 +206,11 @@ check found and fixed in the re-check (`lsp.nvim@056639d`).
 done by the time this row was checked**, `data.nvim@caa95af` (same day as
 this report, `filter --preview` — a unified diff via `diff.nvim`'s
 `require("diff").run(...)` API, Apply/Discard prompt before writing).
-`ai.nvim`: a validated model registry per provider — **still open**,
-confirmed no such registry exists in `ai.nvim/lua/ai/providers/`.
+~~`ai.nvim`~~: a validated model registry per provider — **done 2026-09-19**,
+`ai.nvim@b34f382` (`lua/ai/providers/models.lua`, wired into the existing
+`:checkhealth ai`; `claude`/`gemini`/`openai` get a fixed catalogue,
+`ollama`/`loomai` are marked open-ended since they run arbitrary local
+models — reporting only, no request-time blocking). 16 new tests
 ~~`casedesk.nvim`~~: one routing-status field instead of filename *and*
 `## Status` — **done**, `casedesk.nvim@718404f` (`routed_to` sidecar field,
 `:Cases doctor` migration findings for legacy cases; a resulting data-loss
@@ -254,9 +257,9 @@ before/after for `filter` turned out to already be done
 
 **A handful of small, genuinely open items remain**, none of them urgent:
 `lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s `cwd_mode` badge
-cost, `ai.nvim`'s model registry, and the remaining seven of
-`casedesk.nvim`'s eleven sibling integrations (§6). None of these block
-anything else; take them opportunistically.
+cost, and the remaining seven of `casedesk.nvim`'s eleven sibling
+integrations (§6). None of these block anything else; take them
+opportunistically.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
