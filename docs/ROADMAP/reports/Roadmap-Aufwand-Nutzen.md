@@ -195,14 +195,17 @@ large-file behaviour instead of the binary switch is **still open** — not
 part of this bundle, not checked here.
 `filetree.nvim`: make the `cwd_mode` badge cheap before the statusline
 framework is ever swapped — **still open, not part of this bundle**; the
-dead `CWD_MODES.md` link — **still open, confirmed 2026-09-18** (`docs/WORKFLOW.md`
-references it, the file does not exist under `docs/FEATURES/`).
+dead `CWD_MODES.md` link — **done, 2026-09-19**, `filetree.nvim@2ad60ef`
+(the stack was already documented under `CORE.md`; the reference was just
+a stale filename in `WORKFLOW.md`'s intro list).
 ~~`lsp.nvim`~~: hover cache via `lib.lua.memo` — **already built** (record
 only, nothing to build); the runtime half of the keymap collision check —
 **done**, `lsp.nvim@49b4dfa`, plus a case-sensitivity gap in that same
 check found and fixed in the re-check (`lsp.nvim@056639d`).
-`data.nvim`: `diff.nvim` before/after for a `filter` run — **still open**,
-not part of this bundle.
+~~`data.nvim`~~: `diff.nvim` before/after for a `filter` run — **already
+done by the time this row was checked**, `data.nvim@caa95af` (same day as
+this report, `filter --preview` — a unified diff via `diff.nvim`'s
+`require("diff").run(...)` API, Apply/Discard prompt before writing).
 `ai.nvim`: a validated model registry per provider — **still open**,
 confirmed no such registry exists in `ai.nvim/lua/ai/providers/`.
 ~~`casedesk.nvim`~~: one routing-status field instead of filename *and*
@@ -242,13 +245,18 @@ left is:
 that actually exist. The remaining five below are being worked through the
 same session.
 
+**Update, 2026-09-19 (second pass):** `filetree.nvim`'s dead `CWD_MODES.md`
+link is fixed (`filetree.nvim@2ad60ef`), and `data.nvim`'s `diff.nvim`
+before/after for `filter` turned out to already be done
+(`data.nvim@caa95af`, same day as this report — missed on the first pass).
+`casedesk.nvim`'s `:Case timeline` decision is being worked now.
+
 **A handful of small, genuinely open items remain**, none of them urgent:
-`casedesk.nvim`'s `:Case timeline` git-pull-session decision (§4 row 7);
-`lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s `cwd_mode` badge
-cost, `data.nvim`'s `diff.nvim` before/after for `filter`, `ai.nvim`'s model
-registry, and the remaining seven of `casedesk.nvim`'s eleven sibling
-integrations (§6). None of these block anything else; take them
-opportunistically.
+`casedesk.nvim`'s `:Case timeline` git-pull-session decision (§4 row 7,
+in progress); `lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s
+`cwd_mode` badge cost, `ai.nvim`'s model registry, and the remaining seven
+of `casedesk.nvim`'s eleven sibling integrations (§6). None of these block
+anything else; take them opportunistically.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
