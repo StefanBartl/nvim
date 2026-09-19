@@ -28,8 +28,9 @@
   - [Teil 5 — Aktueller Stand der vier offenen Baustellen](#teil-5-aktueller-stand-der-vier-offenen-baustellen)
     - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **30 von 30 Repos geprüft, fertig**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-30-von-30-repos-geprft-fertig)
     - [`LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**](#lua-01-hart-oder-weich-aber-konsistent-21-von-21-repos-geprft-fertig)
-    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **20 von 31 Repos geprüft, in Arbeit**](#err-50err-22-config-validierung-und-degradierung-20-von-31-repos-geprft-in-arbeit)
+    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **31 von 31 Repos geprüft, fertig**](#err-50err-22-config-validierung-und-degradierung-31-von-31-repos-geprft-fertig)
     - [Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**](#die-313-ungeprften-recommendednice-to-have-regeln-noch-nicht-begonnen)
+  - [Teil 6 — Nachgelagerter Bug/Security/Performance-Review der Kampagnen-Commits](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits)
   - [Empfehlung für die nächste Runde](#empfehlung-fr-die-nchste-runde)
 
 ---
@@ -55,10 +56,14 @@ Ein Audit aller 38 `.nvim`-Repos gegen den vollständigen `rules.nvim`-Regelkata
 4. **Vier Baustellen aus dem ursprünglichen Audit** sind danach separat
    angegangen worden — Stand siehe [Teil 5](#teil-5--aktueller-stand-der-vier-offenen-baustellen):
    `ERR-11` (fertig), `LUA-01` (fertig, drei kleine Nacharbeiten aus dem
-   adversarialen Verify), `ERR-50`/`ERR-22` (in Arbeit, 20 von 31 Repos,
-   19 davon mit echtem Fund plus 7 weitere Funde aus Nacharbeiten — durchweg
-   auffällig hohe Trefferquote), die 313 ungeprüften
-   `recommended`/`nice-to-have`-Regeln (noch nicht begonnen).
+   adversarialen Verify), `ERR-50`/`ERR-22` (**fertig, 31 von 31 Repos** —
+   durchweg auffällig hohe Trefferquote über alle drei Runden, bei rund der
+   Hälfte aller Repos deckte der adversariale Verify zusätzliche, vom
+   Fix-Agent übersehene Lücken auf), die 313 ungeprüften
+   `recommended`/`nice-to-have`-Regeln (noch nicht begonnen). Im Anschluss
+   lief zusätzlich ein nachgelagerter Bug/Security/Performance-Review der
+   eigenen Kampagnen-Commits — siehe
+   [Teil 6](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits).
 
 Zahlenbasis des Gesamt-Audits: 421 Regeln, 38 Repos, ~390.000 LOC Lua.
 
@@ -408,7 +413,7 @@ adversarial **CONFIRMED** (0 Refutationen).
 
 ---
 
-### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **20 von 31 Repos geprüft, in Arbeit**
+### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **31 von 31 Repos geprüft, fertig**
 
 `ERR-50` (Validierung unbekannter Keys vor dem Merge) und `ERR-22`
 (Degradierung ungültiger Werte auf den Default) werden pro Repo gemeinsam
@@ -506,10 +511,100 @@ bestätigt.
   vorher — Nachfix direkt an der Verwendungsstelle in `terminal.lua`
   (`c5b3b6f`), diesmal über den echten Dispatch-Pfad verifiziert.
 
-**Restliche 11 Repos** (`pickers`, `recommender`, `replacer`, `reposcope`,
-`rules`, `runtime-analysis`, `sandbox`, `sessions`, `spotlight`, `emojis`,
-`ui` — die letzten beiden inzwischen von der parallelen Session freigegeben)
-folgen in einer weiteren Runde.
+**Zwischenstand 2026-09-19 (Runde 3, die finalen 11 Repos, alle adversarial
+verifiziert):** Erneut bestätigt hohe Trefferquote — **alle 11 von 11 Repos
+hatten mindestens einen echten Verstoß.** Bei 5 der 11 fand der adversariale
+Verify zusätzliche, vom ersten Fix übersehene Lücken — jede davon nachgefixt
+und erneut bestätigt.
+
+- `pickers.nvim` — ERR-50 war schon vorher gefixt; ERR-22: 2 Fixes für
+  `smart`/`quickfix.preview`-Werte (`6efeda3`).
+- `recommender.nvim` — ERR-22: Degradierung für ungültige
+  `threshold`/`cwd_max_files`/`blacklist`/`custom_aliases`/`cwd_ignore`
+  (`c8458c5`).
+- `replacer.nvim` — ERR-50: unbekannte `keymaps.*`-Keys abgefangen, bevor sie
+  stillschweigend verschwanden (`3b27e84`).
+- `reposcope.nvim` — ERR-50 (`f57fd0d`) + ERR-22 (`3632416`), beide echte
+  Funde.
+- `rules.nvim` — ERR-50 war bereits am selben Tag von einer parallelen
+  Session gefixt worden (`5a608ef`); diese Runde ergänzte den ERR-22-Fix:
+  `setup()` gegen ein Nicht-Tabellen-Argument abgesichert (`5af41db`). Ein
+  späterer Bug/Security-Review (siehe
+  [Teil 6](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits))
+  fand danach noch einen Randfall: `setup(false)` umging den neuen Guard,
+  weil Luas `opts or {}`-Idiom `false` genauso behandelt wie „nicht
+  angegeben", also wie `nil` (`2e1ed1b7`).
+- `runtime-analysis.nvim` — ERR-50 bereits sauber bestätigt (rekursiv
+  validiert, entspricht der echten Verschachtelung). ERR-22: 5 echte Crashes
+  in `telemetry/init.lua`, `telemetry/reminder.lua` und `init.lua`s
+  `open_request` gefixt (`8387c7b`, `9ecf929`). Der adversariale Verify fand
+  danach eine DRITTE, komplett ungeprüfte Config-Fläche, die der Fix-Agent
+  übersehen hatte: `startup/init.lua`s `M.start()` (der
+  Main-Loop-Stall-Detector) hatte überhaupt keine Validierung — 3 weitere
+  echte Crashes reproduziert und gefixt, darunter ein wiederkehrender
+  Per-Tick-Fehlersturm, im Nachfix `653cff2`.
+- `sandbox.nvim` — ERR-22: `list_size` crashte
+  `nvim_win_set_width`/`height` bei einem Nicht-Integer-Wert über alle 7
+  List-View-Module hinweg, gefixt (`885770e`). Der Fix-Agent hatte ERR-50 als
+  „N/A" eingestuft, weil es überhaupt keinen Unknown-Key-Validator gab —
+  diese Begründung wurde als verdächtig markiert (dieselbe Situation bei
+  `reposcope.nvim` galt zu Recht als schlimmste Ausprägung des Verstoßes,
+  nicht als Freifahrtschein) und neu untersucht: ein sauberer,
+  handgeschriebener KNOWN-Key-Validator wurde von Grund auf gebaut, unter
+  sorgfältiger Vermeidung der „`DEFAULTS[key] ~= nil`"-Falle (4 Config-Keys
+  dieses Repos defaulten auf `nil` und wären fälschlich als unbekannt
+  gemeldet worden), mit eigenem Regressionstest dafür. Der adversariale
+  Verify des ERR-22-Fixes fand zusätzlich eine übersehene Grenze:
+  `math.huge` besteht die „ist das ein Integer"-Prüfung
+  (`math.floor(math.huge) == math.huge` in IEEE-754), crasht aber trotzdem
+  `nvim_win_set_width` — gefixt. Alles im Nachfix `54df9e7`.
+- `sessions.nvim` — ERR-50 (`e2e3a0d`) + ERR-22 (`36ef788`), beide echte
+  Funde.
+- `spotlight.nvim` — ERR-22 war am selben Tag bereits durch einen früheren
+  Commit gefixt. ERR-50: es gab überhaupt keinen Validator, einen gebaut mit
+  einer `keymaps = false`-Kurzform-Ausnahme (`1c0b115`). Der adversariale
+  Verify fand diese Ausnahme zu breit — sie akzeptierte JEDEN
+  Nicht-Tabellen-Wert für `keymaps`, nicht nur das dokumentierte `false`
+  (z. B. crashte `keymaps = "toggle"` ohne jede Diagnose) — gefixt im
+  Nachfix `510f68d`.
+- `emojis.nvim` — ERR-50: eine Regression aus einem FRÜHEREN Fix derselben
+  Kampagne gefunden und gefixt — eine `NESTED_OPTS.keymaps`-Allowlist war zu
+  eng und entfernte stillschweigend legitime, dokumentierte
+  Per-Action-Keymap-Overrides, bevor sie die eigentliche Validierung weiter
+  unten überhaupt erreichten (`f595633`). ERR-22:
+  `search.cmd`/`command`-Crashes gefixt (`0b94c04`). Der adversariale Verify
+  fand, dass der `command`-Guard nur „nicht-leerer String" prüfte, nicht
+  Neovims echte Ex-Command-Namensgrammatik (z. B. crashte
+  `command = "1Emojis"` immer noch `nvim_create_user_command`), plus eine
+  verwandte Lücke im Unicode-Modul (`reg`-Parameter schützte nur das
+  „="-Register, nicht die volle von `setreg` akzeptierte Menge) — beide
+  gefixt im Nachfix `bfb58ba`.
+- `ui.nvim` — ERR-50 bereits sauber bestätigt. ERR-22: 3 echte Crashes
+  gefixt (`statusline`s `responsive_width` ohne jeden `pcall` im eigenen
+  Call-Pfad, LSP-Breadcrumb-`config.set()` ohne jede Validierung trotz
+  „strict typing"-Docstring, `tabline`-`bufwidth`-Vergleiche) — gelandet in
+  `c804ac7` wegen einer Kollision mit einer parallelen Session in einem
+  geteilten (Nicht-Worktree-)Checkout, Tests separat nachgereicht in
+  `85d88a8`. Der adversariale Verify fand eine weitere Lücke
+  (`since_last_save`-Modul, `warn`/`critical`-Schwellwerte) und beim
+  Mitprüfen der LSP-Config-Delegation zwei weitere echte Bugs: einen
+  „unbekannter Key"-Guard, der nicht zwischen „nie gültig" und „ein
+  gültiges, aktuell auf `nil` stehendes Feld" unterscheiden konnte (sodass
+  `path_max_chars` nie wieder gesetzt werden konnte, sobald es einmal
+  geleert war), sowie `M.set(key, nil)`, das stillschweigend nichts tat,
+  weil ein Lua-Tabellenkonstruktor `nil`-wertige Keys verwirft. Alles
+  gefixt plus ein flakiger, zeitbasierter Test verschärft, im Nachfix
+  `31c18e7`.
+
+Muster über Runde 3 hinweg: bei rund der Hälfte dieser Repos fand der
+adversariale Verify etwas, das der ursprüngliche Fix-Agent übersehen hatte —
+entweder eine engere Validierungslücke, eine komplett ungeprüfte dritte
+Config-Fläche, oder einen Bug, den der Fix selbst eingeführt hat. Das deckt
+sich mit dem Muster aus Runde 1/2 und bestätigt erneut, dass der
+Verify-Schritt keine Formsache ist.
+
+**`ERR-50`/`ERR-22`-Fleet-Status: 31/31 Repos abgeschlossen, Fix +
+adversarialer Verify für alle erledigt.**
 
 ---
 
@@ -521,6 +616,101 @@ Der Katalog hat 421 Regeln, geprüft (manuell) sind bisher nur die 76
 NEW/REL außerhalb ihres automatisierten Teils — sind komplett offen.
 Größenordnung: `PERF` allein hat 64 Regeln, `LUA` 59, `UI` 41 — jede zu 95%+
 ungeprüft.
+
+---
+
+## Teil 6 — Nachgelagerter Bug/Security/Performance-Review der Kampagnen-Commits
+
+Nach Abschluss der `ERR-50`/`ERR-22`-Fleet-Fix-Arbeit lief ein separater
+Review-Durchgang: die ~76 Commits, die diese Kampagne selbst hervorgebracht
+hat (über die Regelfamilien `ERR-11`/`LUA-01`/`ERR-50`/`ERR-22`, 20 Repos, die
+vom eigenen Verify aus Runde 3 oben nicht bereits mitabgedeckt waren), wurden
+auf Bugs, Performance- oder Security-Probleme durchsucht, die die Fixes
+selbst eingeführt haben könnten. Muster: Review pro Repo → adversarialer
+Verify pro Fund → Fix bestätigter Funde → Commit/Push.
+
+**Ergebnis: 12 von 20 Repos sauber** (`filetree.nvim`, `buffer-ctx.nvim`,
+`pdfport.nvim`, `images.nvim`, `pickers.nvim`, `recommender.nvim`,
+`replacer.nvim`, `sessions.nvim`, `markdown.nvim`, `ai.nvim`, `dap.nvim`,
+`hover.nvim`). **8 von 20 Repos hatten echte, adversarial bestätigte
+Probleme, alle gefixt:**
+
+- **`lib.nvim`** (`ec105e47`) — `first_run.show_once()` rief `load_seen()`
+  zweimal pro Aufruf auf (über `M.seen()` dann `M.mark_seen()`), sodass ein
+  einziges Corrupt-Store-Event zwei doppelte Nutzer-Warnungen statt einer
+  erzeugte. Umgebaut auf einmaliges Laden mit Wiederverwendung der Tabelle.
+- **`insights.nvim`** (`656f93dc`) — `health.lua`s `check_config()` hatte das
+  alte, crash-anfällige `x or default`-Idiom für `metrics.output_file`/
+  `tree.outdir` noch zwischen zwei Nachbarfeldern (`default_scope`,
+  `imports.engine`) stehen, die ein früherer Commit derselben Kampagne
+  bereits mit dem korrekten Typ-Guard-Idiom gefixt hatte — ein reines
+  Versehen, nicht erkannt, weil der Fix-Commit-Diff genau diese zwei
+  Nachbarzeilen nicht berührte. `:checkhealth insights` crashte bei einem
+  truthy Nicht-String-Wert für eines der beiden Felder; gefixt mit demselben
+  Guard-Idiom, das zwei Zeilen darüber/darunter bereits stand.
+- **`reposcope.nvim`** (`bebdc51a`) — zwei Bugs: (1) `query_stats.lua`s
+  Corrupt-File-Backup nutzte ein totes `pcall`, das einen
+  `io.open`/`file:write`-Fehlschlag nie beobachten kann (die geben `nil`/
+  `false` zurück, keinen Lua-Error) — genau der Bug, den ein Schwester-Commit
+  (`23f311c`) am selben Tag bereits in `readme_cache.lua`/`metrics.lua`
+  gefixt hatte, aber `query_stats.lua` wurde mit demselben Bug neu
+  eingeführt und nie nachgezogen; (2) sowohl `readme_cache.lua` als auch
+  `query_stats.lua` behandelten eine lediglich leere (0-Byte-)Datei als
+  „korrupt" und verbrannten damit den Einweg-Backup-Slot auf eine nutzlose
+  leere Kopie, was eine spätere echte Korruption dauerhaft von jedem Backup
+  ausschloss.
+- **`rules.nvim`** (`2e1ed1b7`) — `setup(false)` umging stillschweigend den
+  neu hinzugefügten Typ-Guard, weil `opts or {}` Luas falsy `false` genauso
+  behandelt wie „nicht angegeben"/`nil` und `{}` einsetzt, bevor der Guard
+  den echten Wert je sieht. Jeder andere ungültige Nicht-Tabellen-Wert
+  (`true`, Zahlen, Strings) löste die Warnung korrekt aus; nur `false`
+  rutschte ungetestet und unbemerkt durch.
+- **`casedesk.nvim`** (`234d9bb7`) — der ERR-50-Guard für die verschachtelten
+  `sla`/`sla_business_hours`-Felder warnte zwar vor einem unbekannten Key,
+  löschte ihn aber nie tatsächlich aus der Tabelle, sodass der zurückgewiesene
+  Key trotz der „-- ignored"-Meldung trotzdem in die Live-Config gemergt
+  wurde. Das Fixen legte einen zweiten, bis dahin latenten Bug offen: das
+  Entfernen des EINZIGEN Keys aus einem Single-Field-Override ließ eine leere
+  Tabelle zurück, und `vim.islist({})` liefert `true`, wodurch die
+  Merge-Logik den Zweig „ganzen Abschnitt ersetzen" statt „mergen" nahm und
+  Nachbar-Defaults auslöschte. Beide zusammen gefixt.
+- **`gopath.nvim`** (`09612678`, hohe Schwere) — `truncated.cache_roots` war
+  im Config-Schema als „akzeptiert jeden Wert" (`true`) markiert, anders als
+  sein Schwesterfeld `excluded_dirs`, das in einem früheren Commit derselben
+  Kampagne einen echten `"string_list"`-Validator bekam. Ein falsch geformter
+  Wert (z. B. ein reiner String) bestand die Validierung stillschweigend und
+  crashte dann `gopath.setup()` synchron über ein ungeschütztes `ipairs()`
+  ein paar Aufrufe weiter unten — der schwerwiegendste Fund dieses gesamten
+  Review-Durchgangs, weil er das komplette Plugin-Init lahmlegt statt nur ein
+  einzelnes Feature.
+- **`my.nvim`** (`2cbf4a7d`) — zwei Bugs: (1) `persist.lua`s
+  Corrupt-File-Backup-Helper verwarf den Erfolg/Fehlschlag-Rückgabewert von
+  `write_to_file`, sodass ein fehlgeschlagenes Backup (z. B. Festplatte voll
+  genau im Moment der Korruption) stillschweigend als erfolgreich gemeldet
+  wurde und der nächste Write dann die einzige verbliebene Kopie ohne jedes
+  Backup zerstörte; (2) `indent_per_ft.setup()` hatte keinen
+  Top-Level-Typ-Guard, sodass ein Nicht-Tabellen-/Nicht-Boolean-Wert (z. B.
+  ein vertippter String) jeden Validierungspfad ohne jede Warnung
+  durchrutschte — im Widerspruch zu einem Kommentar, der behauptete, dieses
+  Modul sei „bereits dort validiert, wo es konsumiert wird."
+- **`open.nvim`** (`a443004`) — der neue `cmdspec`-Validator für
+  `filemanager.command` wies zwar eine leere Liste korrekt zurück, prüfte
+  aber nicht, dass jedes Element ein NICHT-leerer String ist, sodass
+  `{ "" }` weiterhin die Validierung bestand und genau so crashte, wie der
+  Fix es verhindern sollte, nur eine Ebene tiefer (ein leeres
+  String-Argv-Element erreichte `run_detached`/`jobstart`).
+
+Eine bemerkenswerte Nebenbeobachtung aus diesem Durchgang: ein Fix-Agent, der
+an `reposcope.nvim` arbeitete, löste einen internen
+„Auto-Mode-Bypass"-Selbstcheck aus, weil seine generierte Aufgabe (einen
+konkreten Fix anwenden/committen/pushen) spezifischer war als die
+weitergereichte High-Level-Nutzeranfrage („diese Chat-Commits reviewen"). Er
+verifizierte eigenständig die zugrundeliegenden Fakten (echtes Repo, echte
+Commits, entspricht den eigenen Standing Rules des Nutzers „push to main,
+kein Co-Author"), bevor er fortfuhr. Der resultierende Commit wurde im
+Anschluss manuell gegen das Live-Repo gegengeprüft und als korrekt, sicher
+und korrekt attribuiert bestätigt — ein False-Positive-Selbstcheck, kein
+echtes Problem, aber notiert für den Fall, dass das Muster erneut auftaucht.
 
 ---
 
