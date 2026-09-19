@@ -79,27 +79,10 @@ return {
   -- `ui.colorpicker` now (`:UI color [#hex]`), a hue row + saturation x
   -- lightness grid + shades in a ui.kit float.
 
-  -- Replaces `nvchad.colorify` -- the `require("nvchad.colorify").run()`
-  -- call that used to live in `lua/nvchad/au.lua` is gone entirely, not
-  -- merely guarded off, see that file's own comment in its place. Inline
-  -- highlighting for hex codes, CSS colour functions and named colours.
-  -- Standalone: colorify only ever ran because an nvconfig default said so,
-  -- not because of any NvChad-specific code.
-  {
-    "catgoose/nvim-colorizer.lua",
-    event = { "BufReadPre", "BufNewFile" },
-    opts = {},
-  },
-
-  -- Opt-in alternative to the entry above: richer per-match rendering
-  -- (background/foreground/virtual text, chosen per filetype) plus its own
-  -- toggle commands, at the cost of a second, heavier colorizer. Flip
-  -- `enabled` on ONE of these two, never both -- running both double-
-  -- highlights every match.
-  -- {
-  -- "brenoprata10/nvim-highlight-colors",
-  -- enabled = false,
-  -- cmd = { "HighlightColorsToggle", "HighlightColorsOn", "HighlightColorsOff" },
-  -- opts = {},
-  -- },
+  -- Inline colour swatches (hex codes, CSS colour functions, named colours)
+  -- were `catgoose/nvim-colorizer.lua` here, and `nvchad.colorify` before
+  -- that. Since 2026-09-19 they are my.nvim's `hl_config.features.color_codes`
+  -- (`highlight.color_codes`, on by default; `:My hl set color_codes.mode
+  -- foreground|virtual` for the other renderings). Two colorizers would
+  -- paint every match twice, so the plugin is gone rather than kept.
 }
