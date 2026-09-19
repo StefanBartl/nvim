@@ -28,7 +28,7 @@
   - [Teil 5 — Aktueller Stand der vier offenen Baustellen](#teil-5-aktueller-stand-der-vier-offenen-baustellen)
     - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **30 von 30 Repos geprüft, fertig**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-30-von-30-repos-geprft-fertig)
     - [`LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**](#lua-01-hart-oder-weich-aber-konsistent-21-von-21-repos-geprft-fertig)
-    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **noch nicht begonnen**](#err-50err-22-config-validierung-und-degradierung-noch-nicht-begonnen)
+    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **10 von 31 Repos geprüft, in Arbeit**](#err-50err-22-config-validierung-und-degradierung-10-von-31-repos-geprft-in-arbeit)
     - [Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**](#die-313-ungeprften-recommendednice-to-have-regeln-noch-nicht-begonnen)
   - [Empfehlung für die nächste Runde](#empfehlung-fr-die-nchste-runde)
 
@@ -55,7 +55,8 @@ Ein Audit aller 38 `.nvim`-Repos gegen den vollständigen `rules.nvim`-Regelkata
 4. **Vier Baustellen aus dem ursprünglichen Audit** sind danach separat
    angegangen worden — Stand siehe [Teil 5](#teil-5--aktueller-stand-der-vier-offenen-baustellen):
    `ERR-11` (fertig), `LUA-01` (fertig, drei kleine Nacharbeiten aus dem
-   adversarialen Verify), `ERR-50`/`ERR-22` (in Arbeit), die 313
+   adversarialen Verify), `ERR-50`/`ERR-22` (in Arbeit, 10 von 31 Repos,
+   9 davon mit echtem Fund — auffällig hohe Trefferquote), die 313
    ungeprüften `recommended`/`nice-to-have`-Regeln (noch nicht begonnen).
 
 Zahlenbasis des Gesamt-Audits: 421 Regeln, 38 Repos, ~390.000 LOC Lua.
@@ -406,14 +407,51 @@ adversarial **CONFIRMED** (0 Refutationen).
 
 ---
 
-### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **noch nicht begonnen**
+### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **10 von 31 Repos geprüft, in Arbeit**
 
-`ERR-50` (Validierung unbekannter Keys vor dem Merge) betrifft 24 Repos,
-`ERR-22` (Degradierung ungültiger Werte auf den Default) 22 Repos, oft im
-selben `config/init.lua`. Bekannte Abweichung von den 2026-09-18-Zahlen:
-`ai.nvim`s `ERR-50`-Fund (`DEFAULTS.lua:64`) ist bereits durch eine parallele
-Session behoben — die Zahl „24" ist entsprechend mindestens um eins veraltet,
-wie bei `ERR-11`/`LUA-01` zu erwarten.
+`ERR-50` (Validierung unbekannter Keys vor dem Merge) und `ERR-22`
+(Degradierung ungültiger Werte auf den Default) werden pro Repo gemeinsam
+geprüft, da beide oft im selben `config/init.lua` hängen. Zusammen betroffen
+(Vereinigungsmenge der 2026-09-18-Repolisten): 31 Repos. Bekannte Abweichung:
+`ai.nvim`s `ERR-50`-Fund (`DEFAULTS.lua:64`) war schon vor Rundenstart durch
+eine parallele Session behoben.
+
+**Zwischenstand 2026-09-19 (Runde 1, 10 Repos, alle adversarial verifiziert):**
+Ungewöhnlich hohe Trefferquote — **9 von 10 Repos hatten mindestens einen
+echten, bis dahin ungefixten Verstoß**, nur `ai.nvim` war komplett sauber
+(CONFIRMED per unabhängigem Gegen-Audit, 265/265 Tests).
+
+- `buffer-ctx` — ERR-22: `format.command`/`mark.command` als Zahl crashten
+  den gesamten Plugin-Start (`6018519`). Der adversariale Verify fand danach
+  **3 weitere Crash-Pfade**, die der erste Fix übersah (leerer String bei
+  denselben zwei Feldern, `mark.keymaps` als Zahl) — Nachfix `7a71d2e`,
+  danach CONFIRMED.
+- `cascade` — ERR-50 (Validierung ging nur eine Ebene tief) + ERR-22 (3
+  reproduzierte Crashes: `lists.types`/`lists.unordered_markers`/
+  `cycle.groups` als `false`) — `bf227c3`, `5bf592f`, CONFIRMED.
+- `casedesk` — ERR-50 (verschachtelte `sla`/`sla_business_hours`-Keys
+  ungeprüft) + ERR-22 (5 Felder ohne Guard) — `2a6b1d2`. Verify fand einen
+  **weiteren, direkt benachbarten Crash** (`sla_stale_days`, dieselbe
+  Fehlerklasse wie das gerade gefixte `stale_days_default`) — Nachfix
+  `9ce3e1e`, CONFIRMED (585/585 Tests).
+- `cmdlog` — ERR-22: ungültiger `picker`-Wert crashte trotz
+  `:checkhealth`-Meldung (`b96e05e`), CONFIRMED.
+- `color_my_ascii` — ERR-22: `language_detection_threshold` ohne jede
+  Validierung crashte pro ASCII-Block (`5d0c7b3`), CONFIRMED.
+- `dap` — ERR-22: `adapters`/`configurations` hatten keinen Typ-Default,
+  rutschten unvalidiert durch (`a777815`), CONFIRMED.
+- `debugging` — ERR-50: Validierung ging nur 2 Ebenen tief (`71194eb`),
+  CONFIRMED.
+- `diff` — ERR-22: `default_view`/`default_output`/`default_orig_view`
+  brachen `:Diff` dauerhaft, bis die Config erneut geändert wurde (`6d48e1b`),
+  CONFIRMED.
+- `documentation` — ERR-50 (Known-Keys-Liste war von den echten Optionen
+  abgedriftet) + ERR-22 (4 Felder ohne Guard) — `38ba192`, `19ef5f3`. Verify
+  fand einen **weiteren Crash** im selben Muster (`core/quicks.lua`s
+  `limit_good`/`limit_bad`/`thresholds`) — Nachfix `7debecd`.
+
+**Restliche 21 Repos** (inkl. `emojis`, `ui` — jetzt wieder frei) folgen in
+weiteren Runden von je bis zu 15 Repos.
 
 ---
 
