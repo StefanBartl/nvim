@@ -19,16 +19,7 @@ return {
   -- translate.nvim replaced by the standalone language.nvim plugin
   -- (see lua/plugins/language.lua). Use :Translate.
 
-  {
-    "chrisbra/unicode.vim",
-    cmd = {
-      "UnicodeName",
-      "UnicodeSearch",
-      "UnicodeTable",
-      "Digraphs",
-    },
-    keys = {
-      { "uni", desc = "Show Unicode character info" },
-    },
-  },
+  -- chrisbra/unicode.vim replaced by emojis.nvim's `:Emojis unicode`
+  -- (see lua/plugins/personal/init.lua's emojis.nvim spec). Use
+  -- :Emojis unicode name|search|table|digraphs, or the "uni" key.
 }

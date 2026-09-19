@@ -1129,6 +1129,14 @@ plugins.add({
   {
     "StefanBartl/emojis.nvim",
     cmd = "Emojis",
+    -- "uni" was chrisbra/unicode.vim's own default mapping (character info
+    -- under the cursor) -- a bare `keys` entry used to lazy-load that
+    -- plugin and replay the key into its mapping. unicode.vim is gone (see
+    -- plugins/workflow.lua's removed spec); this binds straight to its
+    -- emojis.nvim replacement instead.
+    keys = {
+      { "uni", "<cmd>Emojis unicode name<cr>", desc = "Unicode: character info under cursor" },
+    },
     opts = {}, -- default_scope is already "%"
   },
 

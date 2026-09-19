@@ -81,6 +81,8 @@ three replacements that turned out to be rewires rather than builds:
 | 7.8 `config/gp_config/` | removed (`git rm -r`) | nvim, 2026-09-18 |
 | 7.9 `nvzone/menu` | nothing to do; the disabled spec is a documented escape hatch | — |
 | 7.7 `render-markdown.nvim` | removed on request, no replacement; mdview.nvim/markdown.nvim never covered in-buffer concealed rendering | nvim, 2026-09-19 |
+| vim-matchup offscreen match → ui.nvim | `ui.statusline.modules.matchup_offscreen`: reads vim-matchup's own `w:matchup_statusline` (set via `matchup_matchparen_offscreen = { method = "status_manual" }`, not `"status"`) back as one ordinary segment, instead of vim-matchup overwriting `&l:statusline` wholesale for as long as the match stays offscreen; `%=` block in `config/ui_statusline/variant.lua`'s `order`. vim-matchup itself stays (extended `%` is kept, per its own row) | ui.nvim `0981f43`, nvim, 2026-09-19 |
+| unicode.vim → emojis.nvim | `:Emojis unicode name\|search\|table\|digraphs`: `name` reports the character under the cursor (codepoint, glyph, name, digraph, optional register save), `search[!]` looks up by name substring or `U+xxxx`/`0xNNNN`/decimal (bang inserts instead of reporting), `table`/`digraphs` open a scratch buffer. Name lookup is two-tier: the plugin's own curated catalog first (no network), then the UCD's `UnicodeData.txt` (downloaded once via `curl`, cached under `stdpath("cache")/emojis/`); large contiguous blocks (CJK, Hangul, Tangut, ...) get a synthesized `PREFIX-HEX` name rather than one stored row each. `digraphs` needs no download — reads `vim.fn.digraph_getlist()` directly. All four sub-actions built, not just `:UnicodeName` — the "S if only that's used" get-out this row offered was not taken. Plugin, its spec, and its two per-plugin bindings sheets dropped; `uni` key rebound to `:Emojis unicode name` | emojis.nvim `d6300dd`, nvim, 2026-09-19 |
 
 **Corrections the status pass turned up.** Three findings were wrong or
 incomplete as written, and all three were found by looking at the files
@@ -273,7 +275,7 @@ the pieces that are config code today and should be plugin code:
 | `nvim-notify` → **toast backend** | only a noice dependency | Coupled to noice. `lib.nvim` has `notify/`; notification *history* is already reachable via `builtin("notifications")` through pickers. | — |
 | ~~`nvim-treesitter-context` → **sticky context, 3 lines**~~ | ~~`enable = true, max_lines = 3`~~ | **Done 2026-09-19** — `ui.context` (ui.nvim `870a6bc`), a per-window float rather than the winbar; `max_lines = 3` kept. Plugin dropped. See [B5](#b5--nvim-treesitternvim-treesitter-context--uinvim-context-). | **done** |
 | `vim-matchup` → **extended `%`** | `event`, `stopline = 500` | Keep. Per-language match definitions are the plugin. | **XL** |
-| `vim-matchup` → **offscreen match shown in the status line** | `matchup_matchparen_offscreen = { method = "status" }` | **ui.nvim/statusline** — small, self-contained, and squarely in ui.nvim's domain. A nice piece to lift even though the host plugin stays. | **M** |
+| ~~`vim-matchup` → **offscreen match shown in the status line**~~ | ~~`matchup_matchparen_offscreen = { method = "status" }`~~ | **Done 2026-09-19** — `ui.statusline.modules.matchup_offscreen`; the config now sets `method = "status_manual"` so vim-matchup stashes the string in `w:matchup_statusline` instead of overwriting `&l:statusline` itself. Host plugin (extended `%`) stays. | **done** |
 | `which-key.nvim` → **pending-key popup** | `opts = {}`; wired to `:WhichKey`, `<leader>wK`, `<leader>w?`, sessions.nvim marks, neotest | **ui.nvim.** Cheaper than it looks: the label/group data model is normally the hard part, and you already have a keymap corpus — `:Bindings` (search/browse over `docs/BINDINGS.md` per plugin plus the extern cheatsheets) and `:LibBindingsAudit*` / `:LibKeymapConflicts`. The popup can read what the explorer already parses. | **M–L** |
 | ~~`zen-mode.nvim` → **distraction-free single window**~~ | ~~`cmd` only, no `opts` — pure defaults~~ | **Done 2026-09-19** — ui.nvim `ui.zen`: centred float over a dimmed backdrop, `laststatus`/`showtabline`/`ruler`/`showcmd` saved and restored, gutter emptied, cursor in and back out, restore on `WinClosed`. `:UI zen [on\|off]`. Plugin dropped. | **done** |
 | ~~`nvim-colorizer.lua` → **inline hex / CSS / named colour swatches**~~ | ~~`opts = {}` — pure defaults~~ | **Done 2026-09-19** — my.nvim `hl_config/features/color_codes`: hex (3/6/8), `rgb()`/`hsl()`, CSS names in stylesheet filetypes; background/foreground/virtual; viewport-only + debounced + the shared skip/large-file guards, which is the whole "performance" answer. Plugin dropped. | **done** |
@@ -292,7 +294,7 @@ the pieces that are config code today and should be plugin code:
 | `nvim-treesitter-textobjects` → **`[u`/`]u` climb out of the enclosing structure** | `bindings/mappings/treesitter_structure.lua`; `move` module on `@block.outer` — **and the queries extending it for lua/json/python/rust/toml/yaml are already yours** in `after/queries/` | **lib.nvim/nvim/treesitter** gets a `move` helper; the binding stays in config. Only the `move` module is used — not swap, not lsp_interop, not select. | **M** |
 | `mini.ai`, `targets.vim` → **textobjects** | pure defaults | Keep. No own plugin owns this domain and creating one has no payoff. | **XL** |
 | ~~`vim-table-mode` → **realign while typing, `:Tableize`**~~ | ~~`table_mode_corner = "|"`, `cmd` + `ft` gated~~ | **Done 2026-09-19** — markdown.nvim already had it: `core/table_mode.lua`, "a focused, dependency-free reimplementation of the vim-table-mode essentials" (`:Markdown table mode\|tableize\|new`, `]\|`/`[\|`). Plugin dropped. See [B4](#b4--dhruvasagarvim-table-mode--markdownnvim-). | **done** |
-| `unicode.vim` → **`:UnicodeName`, `:UnicodeSearch`, `:UnicodeTable`, `:Digraphs`** | `cmd` list + `uni` key | **emojis.nvim** — it already ships a pure UTF-8 byte tokenizer with no external library, which is the hard half of `:UnicodeName`. The rest is a Unicode name table (a few hundred KB of data) plus digraphs, which Neovim partly exposes via `vim.fn.digraph_get*`. **If only `:UnicodeName` is really used, this drops to S — worth checking your own habit first.** | **M** |
+| ~~`unicode.vim` → **`:UnicodeName`, `:UnicodeSearch`, `:UnicodeTable`, `:Digraphs`**~~ | ~~`cmd` list + `uni` key~~ | **Done 2026-09-19** — `:Emojis unicode name\|search\|table\|digraphs` in emojis.nvim, reusing its UTF-8 byte tokenizer for the decode/encode half as predicted. Name data: the plugin's own curated catalog first, then the UCD's `UnicodeData.txt` fetched once and cached (not bundled — it revises every Unicode release). `digraphs` reads `vim.fn.digraph_getlist()` directly, no fetch at all. All four built, not reduced to the `:UnicodeName`-only S case this row offered. Plugin dropped. | **done** |
 
 ### Markdown
 
@@ -846,11 +848,11 @@ Struck entries are done.
 | **pickers.nvim** | ~~search.nvim tabs~~ (`pickers.tabs`) · ~~bqf quickfix preview~~ (`pickers.quickfix`) · ~~telescope-github~~ (`pickers.sources.github`) · ~~file-browser list~~ (`pickers.browse`) — all 2026-09-19 · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · ~~devicons data~~ (`lib.nvim.ui.icons`, 2026-09-19) |
 | **ui.nvim (notify)** | ~~nvim-notify toasts + history~~ (`ui.notify`, 2026-09-19; the plugin stays until noice is decided) |
-| **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · ~~which-key popup~~ (`ui.keys`, on request; the plugin stays for the timeout popup) · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
+| **ui.nvim** | ~~matchup offscreen status~~ (`matchup_offscreen`, 2026-09-19) · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · ~~which-key popup~~ (`ui.keys`, on request; the plugin stays for the timeout popup) · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
 | **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · ~~file-browser operations~~ (consumed by `pickers.browse`, 2026-09-19) · snacks scratch |
-| **emojis.nvim** | unicode name/search/table/digraphs |
+| **emojis.nvim** | ~~unicode name/search/table/digraphs~~ (2026-09-19) |
 | **cascade.nvim** | ~~puppeteer template literals~~ (the `strings` domain, 2026-09-19) |
 | **spotlight.nvim** | ~~todo highlight machinery~~ (went to insights instead; B2) · conflict marker highlight |
 | **open.nvim** | `:Gbrowse` · lazygit nvr bridge · (`config/ui_open.lua`'s Windows URL fix) |
@@ -876,10 +878,11 @@ lib/open · `:Gbrowse` → open/reposcope. ~~mkdir → fileops~~ (A2). Each of t
 three needs its home chosen first; the report names two for each.
 
 **Highest value per session (M), open:** ~~neotest debug tooling →
-debugging.nvim~~ (done 2026-09-19, `:Debug neotest`) · ~~puppeteer → cascade~~ (done 2026-09-19) · matchup
-offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
+debugging.nvim~~ (done 2026-09-19, `:Debug neotest`) · ~~puppeteer → cascade~~ (done 2026-09-19) · ~~matchup
+offscreen → ui.nvim~~ (done 2026-09-19) · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
-~~startuptime → runtime-analysis~~ (A3).
+~~startuptime → runtime-analysis~~ (A3). ~~unicode.vim → emojis.nvim~~ (done
+2026-09-19, all four sub-actions).
 
 **Real projects (L), in order of payoff — all done:** ~~ts-context →
 ui.nvim~~ (B5, 2026-09-19, one session: `ui.context`). ~~neo-tree config → filetree.nvim~~ (done 2026-09-19: the config's
