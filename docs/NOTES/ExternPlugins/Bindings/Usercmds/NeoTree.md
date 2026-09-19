@@ -2,8 +2,10 @@
 
 Betrifft `nvim-neo-tree/neo-tree.nvim`. Die Source-Plugins
 `mrbjarksen/neo-tree-diagnostics.nvim` und
-`TimCreasman/neo-tree-tests-source.nvim` sowie `s1n7ax/nvim-window-picker`
-registrieren keine eigenen User-Commands.
+`TimCreasman/neo-tree-tests-source.nvim` sowie der Window-Picker
+(`s1n7ax/nvim-window-picker` bis 2026-09-19, seither ui.nvim's
+`ui.windowpicker`, dessen `:UI winpick` unabhängig davon existiert)
+registrieren keine eigenen `:Neotree`-User-Commands.
 
 ## 1. `:Neotree` — Plugin-Default
 

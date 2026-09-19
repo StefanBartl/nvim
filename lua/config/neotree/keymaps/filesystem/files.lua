@@ -12,9 +12,13 @@ local notify = require("lib.nvim.notify").create("[cfg.neotree.keymaps.fs] ")
 -- captures and wraps THIS <CR> handler as its non-image/PDF fallback
 -- (see filetree/features/ui/preview/init.lua, `original_cr_cb`), so it is not
 -- a duplicate -- removing it would silently downgrade <CR> to neo-tree's raw
--- default action and drop the window-picker integration below. It goes the
--- day the window picker does (external-plugins report, "window-picker ->
--- lib.nvim/filetree.nvim").
+-- default action and drop the window-picker integration below. The
+-- `pcall(require, "window-picker")` guard below no longer describes an
+-- optional external plugin (`s1n7ax/nvim-window-picker` left 2026-09-19,
+-- external-plugins report) -- ui.nvim now ships a `require("window-picker")`
+-- compatibility shim over `ui.windowpicker`, always present once ui.nvim is
+-- loaded. Left as a real pcall anyway: this file has no business knowing
+-- whether that shim continues to exist, only what to do if it doesn't.
 ---@type table<string, any>
 return {
 
