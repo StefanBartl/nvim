@@ -573,8 +573,12 @@ Nach Verhältnis von Wirkung zu Aufwand. Nichts davon ist umgesetzt.
     (`lib`, `mdview`, `filetree`, `open`, `ui`, `rules`, `runtime-analysis`, `sandbox`).
     Vorher entscheiden, ob die Regel „alle drei immer" meint oder „alle drei, sofern das
     Plugin sie braucht" — der Check kann das nicht unterscheiden.
-12. **`sessions.nvim` fehlt in der Installations-Spec** (`lua/plugins/personal/init.lua`).
-    37 von 38 Repos sind dort aktiv eingetragen, dieses eine gar nicht.
+12. ~~**`sessions.nvim` fehlt in der Installations-Spec**~~ — **Fehlbefund, 2026-09-19
+    korrigiert.** Alle 38 Repos sind eingetragen. Der Eintrag lautet
+    `"stefanbartl/sessions.nvim"`, klein geschrieben, und die Erhebung suchte
+    case-sensitiv nach `"StefanBartl/"`. Derselbe Fehlerkopf wie bei den
+    Check-Defekten in Teil 1: eine Prüfung, die eine zulässige Schreibweise
+    nicht kennt, meldet einen Fund, wo keiner ist.
 13. **`REL-29`**: uncommitted changes in `casedesk.nvim` und `ui.nvim` zum Scanzeitpunkt.
 
 ---
