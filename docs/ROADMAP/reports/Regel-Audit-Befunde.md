@@ -56,7 +56,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | pickers.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
 | runtime-analysis.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | diff.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
-| documentation.nvim | 11 | – | – | offen |
+| documentation.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | emojis.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | fileops.nvim | 11 | – | – | offen |
 | hover.nvim | 11 | – | – | offen |
@@ -5464,7 +5464,7 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 
 ## documentation.nvim
 
-**11 Befunde** (4 × high, 1 davon in Testcode). Roh gemeldet: 13.
+**11 Befunde** (4 × high, 1 davon in Testcode). Roh gemeldet: 13. — **Stand: 11/11** (⏭️ 0, 2026-09-18)
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -5476,6 +5476,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 
 **Auswirkung.** A repository whose `.docmap.json` is malformed JSON, names a host-only key, or misspells a `checks` code is mapped with the defaults, and the `:checkhealth documentation` section literally headed "resolved configuration" prints those defaults as if they were what the user asked for. The one surface ERR-22 names as the place degradation must be visible reports nothing -- the fix is a `notify`-shaped adapter funnelling into the section's own `h_warn`.
 
+**Status.** ✅ erledigt (`f785e93`) — `:checkhealth` ruft `config.build()` jetzt mit einem notify-Adapter auf, der in `h_warn` mündet, statt Degradations-Warnungen stillschweigend zu verschlucken.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/documentation/bindings/usrcmds/annotate.lua:147` · `apply_all/apply_one` · confidence **high**
@@ -5485,6 +5487,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 **Regelbezug.** ERR-30 requires an edit computed during a scan to be re-verified against the current text immediately before writing. The code itself states the requirement and then breaks it: `Documentation.AnnotatePlan.lines` is documented as "stale the moment the file changes on disk" and `M.plan`'s header says "always call it right before `apply`, never cache the result across edits" (`lua/documentation/core/annotate.lua:163-166`). The only caller caches every plan across many ticks.
 
 **Auswirkung.** On the wide path only (more than `CHUNK` = 10 candidates), any write to one of those files between its plan and its apply -- a buffer save, a formatter, a `git checkout` -- is silently discarded: `apply` rewrites the file from the earlier snapshot plus the generated header, returns ok, and the path is listed in the quickfix as "annotated". No error, no skip, no diff. Scope correction to the finding: at 10 or fewer candidates both phases run in one synchronous pass with no event-loop yield, so the window is zero there; the defect is confined to the chunked path.
+
+**Status.** ✅ erledigt (`8d77f5f`) — `annotate.apply` liest die Datei jetzt unmittelbar vor dem Schreiben erneut und vergleicht sie mit dem Plan-Snapshot; bei Abweichung wird verworfen statt überschrieben.
 
 ### `LUA-16` — `vim.NIL` sanitizen
 
@@ -5496,6 +5500,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 
 **Auswirkung.** `"source": null` yields `opts.source = vim.NIL`; `core/scan.lua:327` then calls `chomp(slash(entry))` and `slash` (line 79-81) does `p:gsub("\\", "/")` on userdata, so `:DocMap` dies with "attempt to index a userdata value" rather than reporting a bad config line -- the crash is real, but the message is an index error, not the "attempt to concatenate a userdata value" the finding names (that would only be reached at scan.lua:407 if slash were bypassed). `"title": null` / `"repo_url": null` instead survive as truthy userdata into the merged opts and are carried into `module_map.json` and the rendered page. The missing type check is real and independent: `"out_dir": 7` or `"branch": {}` are accepted verbatim by the same loop.
 
+**Status.** ✅ erledigt (`f273173`) — `vim.json.decode` bekommt jetzt `{ luanil = { object = true, array = true } }`, sodass `null`-Felder zu Lua-`nil` statt zu truthy `vim.NIL` dekodieren.
+
 ### `SEC-03` — Nutzereingabe nie shell-interpoliert
 
 `standalone/docmap.lua:381` · `popen_git` · confidence **high**
@@ -5505,6 +5511,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 **Regelbezug.** SEC-03 forbids putting a value that comes from outside the program into a command string. `shell_quote` wraps the value in double quotes, which on a POSIX shell does not neutralise `$(...)`, backticks or `$VAR` — so the quoting the comment calls "the second lock on that door" is in fact the only lock, and it does not hold. The comment's premise ("`opts.root`/`opts.out_dir` (config, not request input)") is wrong: `out_dir` is repository input, and `config/file.lua`'s own header states the threat model — the file is read "out of a repository that CI just cloned, or that a person added to a desktop app by pointing at a directory".
 
 **Auswirkung.** On Linux/macOS, a cloned repository shipping `.docmap.json` with `"out_dir": "docs/map$(cmd)"` gets `cmd` executed with the privileges of whoever runs the standalone binary, as soon as the binary answers `--api=commit/<sha>` for that tree. Precondition is only a sha that exists in the clone (the preceding `git show -s` must succeed) -- no map, no checklist, no other setup. Since `docmap-desktop` runs this binary per project, adding an untrusted project to the app is arbitrary code execution. Scope correction: on Windows the shell is cmd.exe, which does not expand `$(...)`/backticks, so the RCE as described is POSIX-only; only the `commit/<sha>` route is confirmed to pass `out_dir` into a git argument.
+
+**Status.** ✅ erledigt (`77944f6`) — `shell_quote` weist Werte mit `$`/Backtick jetzt hart zurück statt sie zu quoten, da Quoting das in einem doppelt-gequoteten POSIX-String nicht neutralisieren kann.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -5516,6 +5524,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 
 **Auswirkung.** `core/api.lua:33-35`'s `current_ir` is the only reader, and lines 124-127 collapse the `nil` into `{ available = false, namespace = ..., reason = "no map generated yet" }`. So a truncated or half-written `docs/map/module_map.json` makes every server-backed panel and every standalone `--api` route tell the user to generate a map they already have, naming the wrong cause; the next `:DocMap` regenerates over the corrupt file and it is never reported. Impact is a misleading diagnosis, not data loss -- the file is going to be rewritten anyway -- but the user is sent looking in the wrong place.
 
+**Status.** ✅ erledigt (`13be506`) — `M.decode`/`M.load` geben jetzt einen zweiten `err`-Wert zurück, der „vorhanden, aber kaputt“ von „nie generiert“ unterscheidet.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `scripts/gen_map.lua:67` · `top-level opts build` · confidence **medium** · _Testcode_
@@ -5525,6 +5535,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 **Regelbezug.** Same ERR-22 gap as `editor/health.lua`, in the host where it is least recoverable. Both other non-editor hosts fixed it deliberately: `scripts/action_run.lua:112-124` ("a host that hands it none turns every one of those into silence. In a CI log silence is the worst of the three places it can happen — nobody is watching, and the run goes green") and `standalone/docmap.lua:272-290`.
 
 **Auswirkung.** A malformed `.docmap.json`, a host-only key or a typo'd `checks` code is dropped without a word in the host the pre-commit hook and the `map` CI gate run. Under `--check` the run then compares a defaults-built map against the committed one and prints "Module map is stale" with byte offsets, with nothing naming the config file as the cause. The finding's `is_test_code: true` is mislabelled -- this is a build/CI entry point, not a test, which is what makes it matter. The claim that every repository copying it per `docs/reuse.md` inherits the silence is plausible but not something I verified against those repos.
+
+**Status.** ✅ erledigt (`b81f39f`) — Gleicher Fix wie #1, hier für den Pre-Commit-Hook/CI-Gate.
 
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
@@ -5536,6 +5548,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 
 **Auswirkung.** No wrong output today: `is_internal` (kotlin.lua:278-287) already returns `false` when a declaration has no `modifiers` node, so an interface member with no modifier is reported public either way and the dead branch's value coincides with the live one. The concrete defect is that the branch is silently unreachable while the comment above it claims the behaviour is implemented, so nothing -- no test, no diagnostic -- would notice if the `is_internal` default changed or a future `inherited = true` case were added. Lower severity than the finding implies: this is dead code and a false comment, not a current visibility bug.
 
+**Status.** ✅ erledigt (`2626461`) — `what == "interface" and false or nil` (immer `nil`) durch ein explizites if ersetzt; heute kein Verhaltensunterschied, aber der Zweig ist jetzt erreichbar.
+
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
 `lua/documentation/core/lang/php.lua:503` · `scan (interface member visibility)` · confidence **medium**
@@ -5545,6 +5559,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 **Regelbezug.** Same ERR-60 trap as the Kotlin site: a falsy middle operand makes the condition irrelevant. The `if` form is already used for the identical decision in `core/lang/swift.lua:518-521` and `core/lang/scala.lua:454-456`.
 
 **Auswirkung.** `is_internal`'s third parameter is threaded through the call chain and is always `nil`, so the interface-member rule is dead code. Invisible today because the `if not vis` fallthrough returns `false` anyway, which is the same answer. As with the Kotlin site, the real cost is an unreachable branch plus documentation asserting behaviour the code does not have -- it would become a wrong-visibility bug only if that fallback changed.
+
+**Status.** ✅ erledigt (`6ff934c`) — Identischer Fix wie #7, gleiche Falle in der PHP-Backend-Zeile.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -5556,6 +5572,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 
 **Auswirkung.** `setup({ telemetry_ttl_ms = 500 })` passes `KNOWN_OPTS_KEYS` validation without a warning and is then discarded -- the hover telemetry cache always uses the 2000 ms default. The option is documented in three places as configurable and is, in fact, inert. Scope: this affects only the hover/CursorHold telemetry read in `callhierarchy.lua`, so the user-visible effect is that the number cannot be made to refresh faster or slower; nothing crashes.
 
+**Status.** ✅ erledigt (`aecaa4d`) — `telemetry_ttl_ms` liest jetzt zuerst die resolved config, nicht mehr nur DEFAULTS.
+
 ### `SEC-42` — Pfad-/Dateiname-Komponenten sanitizen
 
 `lua/documentation/init.lua:533` · `M.write_artifacts` · confidence **medium**
@@ -5565,6 +5583,8 @@ AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.d
 **Regelbezug.** SEC-42 requires a user-controlled string that becomes part of a path to be sanitised and whitelisted before use. `core/docs.lua:451` strips leading slashes off the same value for its own exclusion check, so the need for normalisation is already recognised — but the write path does none, and `..` segments are never removed anywhere.
 
 **Auswirkung.** Opening an untrusted checkout and running `:DocMap` with `"out_dir": "../../../../.config/nvim/lua"` in its `.docmap.json` makes `mkdirp` create that directory tree and writes `module_map.json`, `index.html` and `overview.md` into it (plus `coverage.svg` when `badge` is set), outside the repository, overwriting any existing files of those names. It is an overwrite limited to docmap's own three or four artifact filenames, not arbitrary-name file creation -- but `~/.config/nvim/lua/index.html` landing on disk from opening a cloned repo is real. The same unnormalised value also moves `editor/serve.lua`'s static route out of the repository.
+
+**Status.** ✅ erledigt (`e3182c3`) — Neue `safe_out_dir`-Whitelist-Funktion prüft jedes Pfadsegment, verwirft `.`/`..`-Segmente sowie absolute Pfade/Laufwerksbuchstaben.
 
 ### `SEC-46` — Beim String-Literal-Einbetten das Escape-Zeichen **zuerst** escapen
 
@@ -5590,6 +5610,8 @@ Rules I checked and found clean rather than inapplicable, so they are deliberate
 One thing I could not confirm either way: `core/api.lua:136`/`204` pass a percent-decoded `snapshot` name straight into `runtime-analysis.telemetry.load_snapshot` / `loaded.load_snapshot` with no shape check. Whether a `../`-bearing name can escape that plugin's own snapshot directory depends on runtime-analysis.nvim, which is outside this repository and which I did not read. If it resolves the name as a path component, that is a SEC-42 finding at `lua/documentation/core/api.lua:94` (`M.decode_param`), reachable from the 127.0.0.1 server's `?snapshot=` query.
 
 Three of the four `config.build` hosts (`scripts/action_run.lua`, `standalone/docmap.lua`) pass a `notify`; the three that do not (`editor/health.lua`, `bindings/usrcmds/init.lua`'s per-invocation path, `scripts/gen_map.lua`) are reported separately because they fail for different reasons and would be fixed in different places, but they share one root cause — `notify` being an optional argument on the function that owns every config-degradation warning.
+
+**Status.** ✅ erledigt (`77944f6`) — Zusammen mit #4 gefixt: `shell_quote` escaped jetzt zuerst `\`, dann `"`; auf Windows wird ein literales `"` hart abgelehnt.
 
 ---
 
