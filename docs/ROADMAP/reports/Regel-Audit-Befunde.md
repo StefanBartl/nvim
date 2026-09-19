@@ -60,7 +60,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | emojis.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | fileops.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | hover.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
-| markdown.nvim | 11 | – | – | offen |
+| markdown.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
 | recommender.nvim | 10 | – | – | offen |
 | rules.nvim | 10 | – | – | offen |
 | spotlight.nvim | 9 | – | – | offen |
@@ -6072,7 +6072,7 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 
 ## markdown.nvim
 
-**11 Befunde** (8 × high). Roh gemeldet: 11.
+**11 Befunde** (8 × high). Roh gemeldet: 11. — **Stand: 11/11** (⏭️ 0, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -6084,6 +6084,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 
 **Auswirkung.** One unreadable file under cwd (permission denied, broken symlink, a file removed between the globpath and the read) aborts `:Markdown links show cwd`. Above 20 files the throw happens inside a vim.schedule callback, so the step chain dies: on_done never fires, no picker opens, and the progress handle created at line 89 is never finished or cancelled -- lib.nvim.progress has no expiry, so the indicator stays for the rest of the session. The user gets a scheduler error with no indication of which file or how far the scan got. Below 20 files the error surfaces through the :Markdown command instead, which is noisier but not stuck.
 
+**Status.** ✅ erledigt (`4ca26fd`) — `links_from_file` liest jetzt via `pcall(vim.fn.readfile, path)`; eine nicht lesbare Datei liefert `{}` statt die `vim.schedule(step)`-Kette abzureißen.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/markdown/core/link_sanitize.lua:97` · `M.file` · confidence **high**
@@ -6093,6 +6095,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 **Regelbezug.** ERR-01 requires pcall at filesystem boundaries. Both functions raise on failure (verified: writefile to an unwritable path returns false, "Vim:E482: Can't open file ... for writing"). `M.file` is reached from `M.path` → `sanitize_one` in `commands/links.lua:312-318`, which runs inside the same `vim.schedule(step)` chunk loop.
 
 **Auswirkung.** `:Markdown links sanitize cwd` over a tree containing one read-only *.md file (or one that vanishes between globpath and the write) throws mid-run. Files already processed stay rewritten on disk, the rest are never touched, the done() summary at lines 302-310 never runs, and above 20 files the throw is inside the scheduled step so the loop dies and the progress handle is left hanging for the session. The user is left not knowing how much of the tree was modified. Note the write itself is not partial -- vim.fn.writefile either replaces the file or fails -- so no file is left half-written; the loss is knowledge of scope, not data.
+
+**Status.** ✅ erledigt (`2bbe456`) — `M.file` pcallt jetzt `readfile` und `writefile`; ein Berechtigungsfehler bricht `:Markdown links sanitize cwd` nicht mehr mittendrin ab.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -6104,6 +6108,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 
 **Auswirkung.** `:w` in a TableView opened over a %/cwd/path scope raises E482 on the first read-only or vanished file. The loop over state.tables aborts, so every remaining table is silently not written; `vim.bo[state.buf].modified = false` on line 844 never runs, so the float keeps claiming unsaved changes; and the summary notification on lines 846-858 never appears. The finding overstates one detail: the user does not see a raw stack trace -- lib.nvim's autocmd wrapper catches it and emits a single notify.error("Autocmd failed (BufWriteCmd): ..."). That outer catch does not satisfy ERR-01, because it cannot resume the loop or report how many of n files were written.
 
+**Status.** ✅ erledigt (`f0769f8`) — Der `writefile`-Aufruf im file-Zweig von `write_back` ist jetzt pcall-abgesichert, symmetrisch zum bereits abgesicherten `readfile` zwei Zeilen darüber.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/markdown/tableview/renderer.lua:822` · `M.write_back` · confidence **high**
@@ -6113,6 +6119,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 **Regelbezug.** ERR-30 requires every edit computed during a scan to be re-verified against the current text immediately before writing, and skipped when it has drifted. The float is a normal window the user can leave and return to, so an arbitrary amount of editing can happen between the parse and the `:w`. `core/link_delete.lua:209-224` does exactly this re-verification twice (before the dialog and before the delete) for the same reason, so the pattern is established in this repo.
 
 **Auswirkung.** Leave the float, edit the source buffer above the table so it shifts, return to the float and press :w -- the stale range is overwritten blind. Whatever now occupies mt.start_line..mt.end_line is replaced by the table's rendered lines and the table's real, moved location is left untouched, producing content loss plus a duplicate, reported as the success message "TableView: wrote back to 1 buffer(s)" (line 852-857). The damage is undoable in the source buffer (it is a normal nvim_buf_set_lines edit, so `u` works), but nothing warns and nothing is skipped. The file-on-disk branch below has the same defect against mt.source.
+
+**Status.** ✅ erledigt (`f0769f8`) — `parser.parse_table` speichert jetzt einen Snapshot der Quellzeilen; `write_back` vergleicht den aktuellen Bereich damit vor dem Schreiben und überspringt (gezählt, gemeldet) eine verschobene Range statt sie blind zu überschreiben.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -6124,6 +6132,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 
 **Auswirkung.** The fence guard is dead code: search_and_jump_to_fragment scans fenced code blocks as ordinary prose. Following a `#anchor` (or a `file.md#fragment`) jumps the cursor to the first matching `## Heading`, `{#id}` or `id="..."` even when that line is only an example inside a ``` block, and reports success (returns true), so no fallback and no message. Scope is narrower than a crash: it only misfires on documents that contain a fenced block whose content mimics the anchor being followed -- common in this plugin's own docs, rare elsewhere. It is exactly the silent no-op LLS-31 names, and this is the one fence scanner in the repo that the fix sweep missed.
 
+**Status.** ✅ erledigt (`31dabbf`) — `fence_pattern` von `"^%s*([`~]{3,})%S*%s*$"` auf `"^%s*[`~][`~][`~]+%S*%s*$"` korrigiert, identisch zu `anchor/jump.lua`.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/markdown/bindings/autocmds.lua:84` · `M.setup` · confidence **high**
@@ -6133,6 +6143,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 **Regelbezug.** LUA-01 requires a dependency to be consistently hard or soft, and forbids presenting a hard dependency as optional in the docs. docs/installation.md lists hover.nvim under "every one of them is optional" and its Requirements table names only Neovim, lib.nvim and rg; README.md says "All of the above are soft: without them everything else works unchanged. lib.nvim is the one real dependency". TESTS/run.lua:65-70 and .github/workflows/ci.yml treat hover.nvim as fatal-required, exactly like lib.nvim — the code and the tests agree it is hard, only the docs say soft. The documented vim-plug spec (docs/installation.md:66-68) does not install hover.nvim at all.
 
 **Auswirkung.** Confirmed by running it. With lib.nvim present and hover.nvim absent, require("markdown").setup() raises "module 'hover' not found" at markdown/hover/init.lua:140. The throw is on line 83 (configure -> lib().setup), one line before the line 84 the finding anchors, so line 84 is never even reached. Measured after the failure: exists(":Markdown") = 0, exists(":TableView") = 0, augroups MarkdownNvimKeymaps, MarkdownNvimUserCommands and MarkdownNvimLinksSanitize do not exist; only MarkdownNvimTableView survives (4 autocmds), because it is created above the throw. So the plugin is not merely missing its hover float -- no keymaps, no user commands, no fold options, no link sanitize-on-save. :checkhealth markdown does not mention hover.nvim, so nothing tells the user why. A user who follows README.md or the vim-plug section of docs/installation.md gets exactly this.
+
+**Status.** ✅ erledigt (`544d030`) — `hover/init.lua`s `lib()` sowie alle Konsumenten sind jetzt weich (pcall + Degradation); Setup bricht ohne hover.nvim nicht mehr komplett ab, nur die Hover-Vorschau fehlt.
 
 ### `PERF-62` — Timer sauber stoppen
 
@@ -6144,6 +6156,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 
 **Auswirkung.** With table.wrap.auto_resize = true, every resize event that arrives while a debounce is already pending stops the pending libuv timer and drops the handle without closing it; the handle stays open for the rest of the session. Confirmed at runtime that a stopped vim.defer_fn timer is never closed. The finding's "hundreds of never-closed uv handles per resize gesture" is overstated -- the leak is one handle per resize event that lands inside the 300 ms window, so a drag of a split leaks on the order of tens, not hundreds, and each handle is small. It is a genuine unbounded-growth leak over a long session with frequent resizing, not something that breaks a feature.
 
+**Status.** ✅ erledigt (`894ae36`) — Resize-Debounce ruft jetzt `timer:stop()` und `pcall(timer.close)` vor dem Start eines neuen Timers, statt das Handle nur zu überschreiben.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/markdown/commands/create.lua:16` · `resolve` · confidence **high**
@@ -6153,6 +6167,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on buffer/user text: a backtick span in the argument is a command substitution through `&shell`, and `%`/`#`/`<cfile>` are Vim specials. This is the exact call site class that `lua/markdown/util/path.lua:38-62` was rewritten for — its docstring documents the same attack against link targets ("![x](`mkdir /tmp/pwned; echo a.png#`) was arbitrary command execution ... confirmed, the directory appeared") and provides `expand_path`/`M.resolve` as the safe replacement. create.lua reimplements path resolution instead of calling it, so the fix never reached it.
 
 **Auswirkung.** Opening an untrusted .md file and running `:Markdown create fs` executes the shell on every backtick span inside a markdown link target. Confirmed by side effect on this machine: vim.fn.expand with a backtick argument created a directory via cmd.exe. Severity is bounded by the fact that :Markdown create fs is an explicit, deliberate command over the buffer (or a visual range), not something an autocmd or hover triggers -- this is not a drive-by from merely opening a file. Second, smaller defect confirmed: when the shell invocation fails, expand raises E282 and that error propagates out of do_fs with no pcall, so a single backtick anywhere in any link target aborts the whole command. The plugin already has the fix in-tree (util/path.lua expand_path / M.resolve); create.lua reimplements resolution and misses it.
+
+**Status.** ☑️ schon behoben (`dcabf81`) — War bereits vor Sessionstart auf `origin/main` gefixt (`expand_path` statt `vim.fn.expand`); geprüft und für vollständig befunden.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -6164,6 +6180,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 
 **Auswirkung.** Confirmed but narrower than stated. In the single-file path the caller first does uv.fs_stat (commands/links.lua:352-355), so a *missing* file is caught there with "scope not found". The collapse bites for a file that exists but is not readable (permissions) or for a directory passed as the scope: both pass fs_stat, fail filereadable, and are reported as "links sanitize: nothing to normalize" -- the user is told the file was clean when it was never opened. Over cwd the case is broader: unreadable files are silently excluded from both counters, so "normalized N link target(s) across M file(s)" understates the scope with nothing saying files were skipped. No data is lost; the defect is a false clean bill of health.
 
+**Status.** ✅ erledigt (`2bbe456`) — `M.file` gibt jetzt `(changed, err)` zurück; „übersprungen (nicht lesbar/schreibbar)“ wird getrennt von „gelesen, nichts zu normalisieren“ gezählt.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/markdown/config/init.lua:117` · `M.setup` · confidence **medium**
@@ -6173,6 +6191,8 @@ Clean areas worth recording. No shell-string construction anywhere (every extern
 **Regelbezug.** ERR-50 requires config validation (unknown keys, "did you mean …") to run before the merge, precisely so a typo in a nested option cannot vanish into the defaults unnoticed. `config/DEFAULTS.lua` is 393 lines with roughly 25 nested option tables (`hover.url`, `hover.office`, `table.wrap`, `toc`, `refs`, `links.diagnostics`, `fenced_scope.operations`, …), and `vim.tbl_deep_extend("force", …)` happily accepts any key at any depth.
 
 **Auswirkung.** A typo in any option key other than a features.* name is accepted in total silence: the bogus key is merged into the resolved config and the intended option keeps its default. Concrete cases against the real defaults: setup({ table = { wrap = { maximum = 40 } } }) leaves the actual key `max` (DEFAULTS.lua:122) at nil, so wrapping stays unlimited; setup({ tabel = {...} }) drops the whole block. :checkhealth markdown reports nothing, because it only validates links.picker. The user's only symptom is an option that appears to do nothing. The finding's own hover.enable/enabled example is weak -- hover.enabled already defaults to true, so that particular typo is invisible for a different reason -- but the underlying gap is real.
+
+**Status.** ✅ erledigt (`f27a0cf`) — Rekursiver Sanitize-Pass vor dem Merge über bekannte Options-Pfade, unbekannte Keys mit Levenshtein-Hinweis verworfen; mehrere Skalare degradieren jetzt auf Default statt `setup()` zu brechen. `config.issues()` neu, von `:checkhealth markdown` mitgemeldet.
 
 ### `XP-05` — Ein fehlschlagendes `executable()`/`exepath()` ist unter Windows teuer und ungecacht
 
@@ -6195,6 +6215,8 @@ Could not confirm / deliberately not reported:
 - UI-01: `:Markdown links sanitize cwd` and `:Markdown table format scope=cwd` rewrite every `*.md` file under the cwd with no confirmation at all. UI-01 as written targets per-item confirmation (\"once, not once per item\"), and the user names the scope explicitly, so I did not file it — but a one-off \"rewrite N files?\" prompt is the obvious gap.
 - PERF (not in the 76): `core/file_refs.lua:44` rebuilds the whole ignore set (including a `pcall(require, …)`) once per scanned file inside `is_ignored`; `hover/section.lua:40-45` reads an entire linked file into memory with no line or byte cap before taking the first 20 lines.
 - Not a listed rule, but almost certainly a live bug: `core/headings.lua:303` is `vim.cmd(\"normal! \\\\<Esc>\")`, i.e. a literal backslash-`<Esc>` typed as normal-mode input rather than an escape — `vim.cmd(\"normal! \" .. vim.api.nvim_replace_termcodes(...))` or `<Esc>` via `nvim_feedkeys` is what was meant.
+
+**Status.** ✅ erledigt (`074009c`) — `vim.fn.executable("rg")` durch `lib.nvim.cross.executable.exists("rg")` ersetzt (gecacht, inkl. negativem Ergebnis, mit `clear()`-Invalidierung).
 
 ---
 
