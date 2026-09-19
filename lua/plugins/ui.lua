@@ -65,10 +65,8 @@ return {
     end,
   },
 
-  {
-    "folke/zen-mode.nvim",
-    cmd = "ZenMode",
-  },
+  -- `folke/zen-mode.nvim` (`:ZenMode`, pure defaults) left on 2026-09-19:
+  -- ui.nvim's `ui.zen` is the distraction-free box now -- `:UI zen [on|off]`.
 
   {
     "MunifTanjim/nui.nvim",
