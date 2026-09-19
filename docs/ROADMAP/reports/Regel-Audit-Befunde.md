@@ -36,7 +36,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | insights.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | language.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | debugging.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
-| pdfport.nvim | 15 | – | – | offen |
+| pdfport.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | reposcope.nvim | 15 | – | – | offen |
 | sandbox.nvim | 15 | – | – | offen |
 | cascade.nvim | 14 | – | – | offen |
@@ -1934,7 +1934,7 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 ## pdfport.nvim
 
-**15 Befunde** (6 × high, 2 davon in Testcode). Roh gemeldet: 18.
+**15 Befunde** (6 × high, 2 davon in Testcode). Roh gemeldet: 18. — **Stand: 15/15** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -1946,6 +1946,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** Any spawn failure -- the binary disappearing or PATH changing after has_exec memoized its answer, EACCES, or fd exhaustion -- leaves the callback unsettled forever. The public `pdfport.render_page()` (init.lua:190-201) then never calls back, so its two documented consumers (hover.nvim's PDF preview, images.nvim's picker preview) wait on a promise that can never resolve, with no error anywhere. renderers/terminal.lua's page chain stops silently at that page (the `render_next` recursion only continues from inside the callback). One uv pipe handle leaks per attempt, since its only `close()` is in the exit callback.
 
+**Status.** ✅ erledigt (`382f36c`) — `uv.spawn`s Rückgabewert wird jetzt geprüft; schlägt der Spawn fehl, wird `callback(nil, err)` aufgerufen und die stderr-Pipe geschlossen statt den Callback für immer offenzulassen.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/pdfport/integrations/telescope.lua:90` · `M.filetype_hook` · confidence **high** · _Testcode_
@@ -1955,6 +1957,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** ERR-11: a result that can legitimately be empty must stay distinguishable from "empty because it broke". Here a failed extraction (no backend available, backend timed out, backend threw) and a genuinely empty PDF both render as a blank buffer with filetype `markdown` (line 94).
 
 **Auswirkung.** Under the second documented usage (`preview = { filetype_hook = pdfport_tel.filetype_hook }`, telescope.lua:11-17) every PDF previews as an empty pane when extraction fails -- no backend installed, backend timed out, backend threw -- and the error text that `dispatcher.err_result` went to the trouble of composing is thrown away at the last step. The user reads it as "this PDF has no text" and has no route to the real cause except guessing to run `:checkhealth pdfport`. Single-picker users of `M.previewer` are unaffected; this is the global-hook path only.
+
+**Status.** ✅ erledigt (`8231cd6`) — `filetype_hook` zeigt bei fehlgeschlagener Extraktion jetzt „-- pdfport error: … --“ statt eines leeren Buffers, analog zu `define_preview` in derselben Datei.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -1966,6 +1970,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** The CI test job cannot distinguish "all 20 specs passed" from "the runner aborted before asserting anything". A syntax error in any spec, a spec renamed without updating the `specs` list at :26-61, or a broken harness.lua produces a green check with zero assertions executed -- the failure prints E5113 into the log and the job still exits 0. The sentinel at :88 exists for precisely this and is unused, so the fix is one grep in the workflow plus moving `dofile` inside the pcall.
 
+**Status.** ✅ erledigt (`df95d6a`) — `dofile()` für jedes Spec und für `harness.lua` liegt jetzt innerhalb des pcall; ein Ladefehler wird als FAIL gemeldet statt den Lauf vor `os.exit(1)` stillschweigend abzubrechen.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/pdfport/backends/docling.lua:104` · `M.extract` · confidence **high**
@@ -1975,6 +1981,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** LLS-31's stated inverse: a function that forms its return value from the *planned* rather than the *performed* work cannot be noticed (`return #geplant` instead of `return #erledigt`). The sibling backend `pdfplumber.lua:42` does apply the slice (`pdf.pages[:max_pages]`), and `docs/FEATURES/BACKENDS.md:155-158` states the project's own standard for claude/gemini: "`pages_processed` stays `nil` rather than claiming otherwise".
 
 **Auswirkung.** `max_pages` is silently dropped: `extract({ max_pages = 5 })` against a 300-page PDF converts all 300 pages through docling, which is the expensive half of a run the caller explicitly asked to bound, and there is no timeout escape short of `timeout_ms` (default 120000). The returned `pages_processed = 5` is a fabricated number on the public `PdfPort.Result` contract and gets persisted under that lie by util/cache.lua:75, so it survives restarts. No in-tree consumer reads the field today (the buffer header at renderers/buffer.lua:91-98 does not), so the damage is the wasted work plus a public API field that reports planned rather than performed work to any embedder that trusts it.
+
+**Status.** ✅ erledigt (`c2b3018`) — `pages_processed` meldet nicht mehr `max_pages`, das vom generierten Skript nie angewendet wird; bleibt `nil`, wie bei claude/gemini.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -1986,6 +1994,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** With ui.nvim not installed, every path that prompts for a page range raises `module 'ui.kit' not found` instead of prompting: `:PdfPort float <path>` and `:PdfPort terminal <path>` without an explicit `pages=`, and choices 8 and 9 of the mode picker. The picker's own soft fallback at picker.lua:138-156 makes this worse, not better -- it succeeds via vim.ui.select and then hands the user straight into the hard require. The docs actively promise the opposite (requirements.md:17), and :checkhealth calls the missing module harmless. The suite stays green because the only ui.kit-absent test picks a choice that never reaches the prompt.
 
+**Status.** ✅ erledigt (`9a3fdba`) — `M.prompt` fällt jetzt auf `vim.ui.input` zurück, wenn `ui.kit` fehlt, genau wie `util/picker.lua` es für den Modus-Picker schon tat und die Doku versprach.
+
 ### `PERF-46` — Cache-Key vollständig
 
 `lua/pdfport/integrations/fzf.lua:14` · `_cache` · confidence **high**
@@ -1995,6 +2005,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** PERF-46 requires the key to contain every parameter that influences the result ("Pfad + Backend + Variante"), otherwise the cache silently serves the wrong result for a different configuration of the same input. The plugin's own `util/cache.lua:22-24` gets this right with `path::backend::variant`.
 
 **Auswirkung.** Two fzf-lua pickers configured with different `preview_fn` opts in one session share one table, so whichever previewed a given PDF first wins for the rest of the session: a `{ backend_id = "marker" }` picker shows the earlier `{ backend_id = "pdftotext", max_pages = 1 }` extraction, freshly rendered and indistinguishable from a real result. Two further consequences the finding did not name: line 48 caches failures too, so one transient backend error is pinned as that file's preview permanently, and line 35 forces filetype `markdown` on every hit even when the cached text is plain. Nothing checks mtime either, so editing the PDF does not invalidate it -- unlike util/cache.lua, which does.
+
+**Status.** ✅ erledigt (`576304b`) — `_cache` ist jetzt über `path::backend::max_pages` geschlüsselt statt nur über den Pfad, damit zwei Picker mit unterschiedlicher `preview_fn`-Konfiguration sich nicht mehr gegenseitig überschreiben.
 
 ### `ERR-31` — `O_CREAT|O_EXCL` statt Check-dann-Erzeugen
 
@@ -2006,6 +2018,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** The TOCTOU window is not microseconds -- it is the full producer run, bounded only by `create_opts.timeout_ms` (default 60000 per DEFAULTS.lua:46) and covering soffice's first start, a pandoc+LaTeX run or a headless Chromium print. Anything that creates `report-1.pdf` in that window -- a second `pdfport.create()`, another Neovim instance, an unrelated process -- has its file overwritten by the producer, under the one `on_conflict` setting the user picked to prevent exactly that, and with no error reported. Claiming the name with `O_CREAT|O_EXCL` before handing it over (treating EEXIST as "try the next suffix") closes it without changing the producer contract.
 
+**Status.** ✅ erledigt (`8f61c26`) — `resolve_conflict()` claimt den Suffix-Kandidaten jetzt mit `O_CREAT|O_EXCL` statt stat-dann-erzeugen; ein nie überschriebener leerer Platzhalter wird bei Producer-Fehlschlag wieder gelöscht (Nebenfund, mitbehoben).
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/pdfport/config/init.lua:16` · `M.setup` · confidence **medium**
@@ -2015,6 +2029,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** ERR-50 requires config validation (unknown keys, "did you mean") to run before the merge, precisely so a typo in a nested option does not vanish into the default and stay undetected. `vim.tbl_deep_extend("force", …)` is the opposite: it happily adopts any key the user invents.
 
 **Auswirkung.** Any user config key is adopted verbatim with no signal of any kind. A nested typo (`extract_opts.max_page`) is stored and never read, so the option appears to do nothing forever; a wrong-typed `fallback_chain = "pdftotext"` makes the resolver's chain loop a no-op and falls through to the registry-order chain, which looks like the plugin ignoring the setting; a misspelled `render_opts.split` silently degrades to the current window. Because :checkhealth has no config section at all, there is no surface anywhere in the plugin where the user could discover any of this -- the only diagnostic is `require("pdfport").config()`, which is undocumented.
+
+**Status.** ✅ erledigt (`804a08a`) — `setup()` validiert jetzt gegen eine KNOWN-Keys-Tabelle vor dem Merge; unbekannte Keys mit Levenshtein-„did you mean“, falsch typisierte Tabellenwerte fallen auf den Default zurück. Neue `:checkhealth`-Sektion über `config.issues()`.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -2026,6 +2042,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** `:PdfPort float report.pdf pages=2-3` on a machine without pdftotext resolves down the default chain (DEFAULTS.lua:12-28) to pdfplumber, marker or docling, all of which return `status = "ok"` for the entire document -- the page selection is accepted and discarded with no warning and no degraded-result marker. The cache then compounds it: dispatcher.lua:205/271 stores that whole-document text under the variant key "2,3", so every later `pages=2-3` request against the unchanged file is served from a cache entry that looks correct and is not, across restarts. pdfplumber's own `pages_processed` is not itself a lie here (it stays nil when only `pages` was given); the lie is the `ok` status.
 
+**Status.** ✅ erledigt (`c2b3018`) — pdfplumber honoriert jetzt `opts.pages` (Vorrang vor `max_pages`, wie pdftotext). marker.lua und docling.lua können `opts.pages` technisch nicht umsetzen und melden bei explizitem Wunsch jetzt `status="partial"` mit erklärendem Fehler statt fälschlich „ok“.
+
 ### `PERF-42` — Invalidierbar
 
 `lua/pdfport/util/cache.lua:71` · `M.set` · confidence **medium**
@@ -2035,6 +2053,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** PERF-42 requires a defined point at which an entry becomes invalid. mtime invalidation makes a *stale* entry unreadable but never *removes* it, so entries for deleted, renamed or moved PDFs, and every superseded (path, backend, variant) combination, live forever.
 
 **Auswirkung.** Invalidation by mtime is defined and works for live files, but there is no point at which an entry is ever *removed*: entries for deleted, renamed or moved PDFs, and every superseded (path, backend, variant) combination, stay in the store permanently and unreachable. Since lib.nvim's disk cache holds one JSON file per namespace with no memoization, every extraction and every cache probe -- including the hit that is meant to be the fast path -- parses the entire accumulated store and, on a miss, re-serialises all of it. Each entry holds a PDF's full extracted text, so the per-open cost grows monotonically with the number of PDFs ever opened and never shrinks, and the only remedy shipped is an undocumented-in-UI manual function call.
+
+**Status.** ✅ erledigt (`b28ebee`) — `M.set` evict­iert jetzt älteste Einträge (nach `cached_at`), sobald der Store 500 Einträge überschreitet — ein definierter Entfernungspunkt, den es vorher gar nicht gab.
 
 ### `SEC-15` — API-Keys nie selbst verwalten
 
@@ -2046,6 +2066,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** For users who took the documented `setup({ claude_api_key = ... })` route rather than the env var, the key is held for the session in a table the plugin hands out whole, with no redaction path. `:lua vim.print(require("pdfport").config())` -- the ordinary way to inspect a plugin's settings, and exactly what one pastes into a bug report or has on screen while sharing -- prints both API keys in cleartext. Nothing is written to disk, so this is session-scoped exposure, not persistence; the fix is either to redact these two keys in `M.config()` or to drop the config-option route in favour of the env var that backends/claude.lua:53 already falls back to.
 
+**Status.** ✅ erledigt (`85bb60d`) — `M.config()` redigiert `claude_api_key`/`gemini_api_key` jetzt zu `<redacted>` (gesetzt bleibt von nicht-gesetzt unterscheidbar), statt sie im Klartext zurückzugeben.
+
 ### `SEC-15` — API-Keys nie selbst verwalten
 
 `lua/pdfport/health.lua:207` · `check_backends` · confidence **medium**
@@ -2055,6 +2077,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** SEC-15 defines what :checkhealth owes the user for a key: present yes/no and which provider is active. A user who set the key through `setup()` — the route `docs/configuration.md:41,43` offers — gets "not set" and "backend unavailable", which is false.
 
 **Auswirkung.** A user who set the key through `setup()` -- the route docs/configuration.md:41,43 offers as equal to the env var -- gets one `:checkhealth pdfport` run that contradicts itself: "ANTHROPIC_API_KEY not set - claude backend unavailable" (warn, with a remediation hint telling them to export it) in the extraction-backends section, and `claude  available` (ok) in the registered-backends section eleven sections later. The advice is actively wrong: there is nothing to fix, and following the hint writes the key into the environment for no reason. Same for gemini at :220.
+
+**Status.** ✅ erledigt (`85bb60d`) — `check_backends` liest jetzt zusätzlich `config.get().claude_api_key`/`.gemini_api_key`, nicht mehr nur die Env-Var — meldet nur die Länge, nie den Wert.
 
 ### `SEC-21` — Timeout **und** Byte-Limit
 
@@ -2066,6 +2090,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 
 **Auswirkung.** On a machine that has the ollama binary but where port 11434 is filtered rather than refused -- a firewall that drops instead of resetting, a VPN, a container network -- `:checkhealth pdfport` blocks the whole editor inside `vim.fn.system` for curl's default connect timeout, uninterruptibly and with no partial output, in the middle of a diagnostic command whose whole point is to be run when something is already wrong. If anything other than ollama answers on 11434, the entire response body is read into memory with no ceiling. Both are one flag each (`--max-time`, `--max-filesize`) on a call site that already builds its argv as a list.
 
+**Status.** ✅ erledigt (`017211a`) — Der ollama-curl-Aufruf bekommt jetzt `--connect-timeout 1`, `--max-time 2` und `--max-filesize 1048576`, statt den Editor bei gefiltertem Port unbegrenzt zu blockieren.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/pdfport/util/cache.lua:48` · `M.get` · confidence **medium**
@@ -2075,6 +2101,8 @@ Rules I checked and found the plugin compliant with (not merely inapplicable): E
 **Regelbezug.** SEC-33: persisted snapshots are untrusted and every field must be re-validated on load (type, length, count cap). The store is a JSON file under `stdpath("cache")`, written and read across sessions, and its contents flow straight into buffer APIs.
 
 **Auswirkung.** The reachable trigger is narrower than claimed: it needs a store file that still decodes as valid JSON but carries a non-string `text` -- a hand-edited store, a third-party writer, or a JSON `null` decoding to `vim.NIL`. Truncation does not do it. When it happens, the value flows unvalidated through `M.get` into `vim.split(result.text or "", ...)` at renderers/buffer.lua:82 and raises. In `dispatcher.M.open` that is caught and mis-reported as "renderer 'buffer' failed", pointing at the renderer instead of the cache, and since the entry is never removed the PDF stays unopenable through the cache path until the user finds and deletes the store by hand. In the telescope and fzf previewer `__callback`s it raises uncaught inside the picker. A `type(entry.text) == "string"` guard at :46 costs one line.
+
+**Status.** ✅ erledigt (`b28ebee`) — `M.get` prüft jetzt den Typ jedes geladenen Feldes (text/format/backend/pages_processed); bei Abweichung wird der Eintrag als Miss behandelt UND aus dem Store gelöscht, statt die PDF dauerhaft unöffenbar zu lassen.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -2097,6 +2125,8 @@ RULES THAT GENUINELY HAVE NO SURFACE HERE (checked, not assumed): TS-04 (no `vim
 RULES I CHECKED AND FOUND CLEAN: LUA-06 (config/DEFAULTS.lua is a pure-data factory function, no env or FS lookup at module level — this plugin is on the right side of the reposcope/pickers/casedesk sweep), ERR-51 (defaults() returns a fresh table per call, so the merge cannot mutate shared defaults), ERR-53 (`_set_config` hands the whole config table around; no submodule caches a subtable, and every consumer re-reads through `_config.X` at call time), ERR-54 (the public `M.config()` deepcopies; internal holders never mutate), SEC-03/SEC-35 (every external tool is invoked through argv — `spawn_capture`/`uv.spawn`/`vim.system` — with zero shell-string construction across all nine producers and all eight backends; the three `vim.cmd("split | terminal …")` calls in renderers/terminal.lua interpolate only a plugin-generated `tempname()` PNG, shellescaped, and `:terminal` does not treat `|` as a command separator), SEC-11/SEC-13 (nothing is logged or persisted beyond the extracted text the user asked for), PERF-80 (both fast-event callbacks — rasterize.lua:111 and ollama.lua:109,270 — wrap their API access in `vim.schedule`, with the reason written down).
 
 WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDINGS.md may be too, but I did not run `:DocMap`/the renderer, so I cannot say whether either has drifted or been hand-edited — that needs a regeneration diff, not a read. (b) The LUA-16 finding depends on ai.nvim's contract for `Ai.Response.text`, which lives in a different repo I did not open; if ai.nvim guarantees a string, that finding collapses to a style note. (c) SEC-01/SEC-02 and the `lib.nvim` side of every delegated call (`spawn_capture`, `cache.disk`, `open_default`, `deps.detect`, `make_scratch`, `run.env`) are out of scope here — pdfport's ERR-11 correctness for the disk cache in particular rests entirely on lib.nvim's `read_entry()`, which the rules file records as already fixed at the root. (d) I read the test suite only where it bore on a specific finding; I did not audit all 6223 LOC under TESTS/ for its own defects.
+
+**Status.** ✅ erledigt (`e5fa039`) — `resolve_path()` und `:PdfPort merge` nutzen jetzt `lib.nvim.cross.fs.expand_path` (nur `~`/Env-Vars) statt `vim.fn.expand()` auf getippten Pfad-Argumenten.
 
 ---
 
