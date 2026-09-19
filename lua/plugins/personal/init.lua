@@ -745,6 +745,12 @@ plugins.add({
       -- Building the cwd symbol index runs one rg pass per language pattern;
       -- reports into the shared lib.nvim.progress registry.
       symbols = { progress_style = "statusline" },
+      -- The two keys todo-comments.nvim's spec used to bind, on the feature
+      -- that replaced it (plugins/workflow.lua has the history): the picker
+      -- on the lowercase key, the quickfix list on the uppercase one. The
+      -- keyword table itself is insights' shipped default -- it was this
+      -- config's table to begin with.
+      keymaps = { todos = "<leader>sT", todos_qf = "<leader>ST" },
     },
   },
 

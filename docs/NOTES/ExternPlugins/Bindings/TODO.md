@@ -31,7 +31,9 @@ siehe [Keymaps/Blink.md](Keymaps/Blink.md).
 - [x] `mfussenegger/nvim-dap` (via `StefanBartl/dap.nvim`)
 - [x] `nvim-treesitter/nvim-treesitter`
 - [x] `folke/noice.nvim`
-- [x] `folke/todo-comments.nvim`
+- [x] ~~`folke/todo-comments.nvim`~~ — deinstalliert 2026-09-19, ersetzt durch
+      insights.nvims `:Insights todos` (Keymaps `<leader>sT`/`<leader>ST` am
+      insights-Spec); die beiden Blätter sind gelöscht
 - [x] `mg979/vim-visual-multi`
 - [x] `nvzone/menu`
 - [x] `nvchad/ui`
