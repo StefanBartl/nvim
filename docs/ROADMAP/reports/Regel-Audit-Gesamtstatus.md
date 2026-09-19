@@ -14,11 +14,22 @@
 ## Table of content
 
   - [Kurzfassung](#kurzfassung)
-  - [Teil 1 — Ursprünglicher Audit (2026-09-18): Methode und automatische Regeln](#teil-1--ursprnglicher-audit-2026-09-18-methode-und-automatische-regeln)
-  - [Teil 2 — Die 497-Befund-Kampagne](#teil-2--die-497-befund-kampagne)
-  - [Teil 3 — Zwei Regressions-Nachträge](#teil-3--zwei-regressions-nachtrge)
-  - [Teil 4 — Bemerkenswerte Einzelbefunde](#teil-4--bemerkenswerte-einzelbefunde)
-  - [Teil 5 — Aktueller Stand der vier offenen Baustellen](#teil-5--aktueller-stand-der-vier-offenen-baustellen)
+  - [Teil 1 — Ursprünglicher Audit (2026-09-18): Methode und automatische Regeln](#teil-1-ursprnglicher-audit-2026-09-18-methode-und-automatische-regeln)
+    - [Regelkatalog nach Familie](#regelkatalog-nach-familie)
+    - [Automatische Regeln: 66 Treffer, 10 echte](#automatische-regeln-66-treffer-10-echte)
+    - [Die fünf systematischen Muster des Original-Audits](#die-fnf-systematischen-muster-des-original-audits)
+  - [Teil 2 — Die 497-Befund-Kampagne](#teil-2-die-497-befund-kampagne)
+    - [Verteilung nach Familie](#verteilung-nach-familie)
+    - [Häufigste Regel-IDs (Top 15 von 497 Einzelbefunden)](#hufigste-regel-ids-top-15-von-497-einzelbefunden)
+    - [Befunde je Plugin](#befunde-je-plugin)
+    - [Die 8 anfänglich zurückgestellten Architekturentscheidungen](#die-8-anfnglich-zurckgestellten-architekturentscheidungen)
+  - [Teil 3 — Zwei Regressions-Nachträge](#teil-3-zwei-regressions-nachtrge)
+  - [Teil 4 — Bemerkenswerte Einzelbefunde](#teil-4-bemerkenswerte-einzelbefunde)
+  - [Teil 5 — Aktueller Stand der vier offenen Baustellen](#teil-5-aktueller-stand-der-vier-offenen-baustellen)
+    - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **24 von 30 Repos geprüft**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-24-von-30-repos-geprft)
+    - [`LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**](#lua-01-hart-oder-weich-aber-konsistent-21-von-21-repos-geprft-fertig)
+    - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **noch nicht begonnen**](#err-50err-22-config-validierung-und-degradierung-noch-nicht-begonnen)
+    - [Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**](#die-313-ungeprften-recommendednice-to-have-regeln-noch-nicht-begonnen)
   - [Empfehlung für die nächste Runde](#empfehlung-fr-die-nchste-runde)
 
 ---
@@ -58,6 +69,8 @@ Lauf über alle 38 Repos gegen den vollständigen Regelkatalog aus
 API von `rules.nvim` (`check_family_json`) für automatisierbare Regeln, plus eine
 Agent-Runde für den Rest.
 
+---
+
 ### Regelkatalog nach Familie
 
 | Familie | gesamt | automatisiert | manuell | davon critical |
@@ -79,6 +92,8 @@ Agent-Runde für den Rest.
 
 389 der 421 Regeln haben per Design keinen automatischen Verdict — der Katalog
 ist zum ganz überwiegenden Teil Handarbeit.
+
+---
 
 ### Automatische Regeln: 66 Treffer, 10 echte
 
@@ -109,6 +124,8 @@ Separat gefunden und gefixt: `rules.nvim`s `fswalk.lua` scannte
 `.claude/worktrees/` mit (`SKIP_DIRS` kannte nur `.git`/`.deps`) — bei
 `documentation.nvim` machte das aus 17 echten `SEC-01`-Treffern 68 gemeldete.
 Eine Zeile Fix, seither behoben.
+
+---
 
 ### Die fünf systematischen Muster des Original-Audits
 
@@ -148,6 +165,8 @@ headless Neovim). Workflow mit 76 Agents (38 Audits, 38 Gegenprüfungen).
   selben Tag in einer zweiten, zweistufigen Runde entschieden und umgesetzt —
   siehe zwei Beispiele am Ende dieses Teils).
 
+---
+
 ### Verteilung nach Familie
 
 | Familie | Befunde | Anteil |
@@ -160,6 +179,8 @@ headless Neovim). Workflow mit 76 Agents (38 Audits, 38 Gegenprüfungen).
 | LLS — LuaLS-Diagnosen | 21 | 4% |
 | XP — Cross-Platform | 15 | 3% |
 | UI — Oberfläche | 7 | 1% |
+
+---
 
 ### Häufigste Regel-IDs (Top 15 von 497 Einzelbefunden)
 
@@ -186,6 +207,8 @@ headless Neovim). Workflow mit 76 Agents (38 Audits, 38 Gegenprüfungen).
 `ERR-51`=6, `SEC-30`=5, danach Einzelfälle bis hinunter zu `XP-04`, `UI-53`,
 `SEC-45`, `LUA-02`, `ERR-62` u. a.)
 
+---
+
 ### Befunde je Plugin
 
 | Plugin | Befunde | Status | Plugin | Befunde | Status |
@@ -211,6 +234,8 @@ headless Neovim). Workflow mit 76 Agents (38 Audits, 38 Gegenprüfungen).
 | filetree.nvim | 12 | fertig | images.nvim | 12 | fertig |
 
 **Summe: 497 Befunde, 497 fertig (0 offen).**
+
+---
 
 ### Die 8 anfänglich zurückgestellten Architekturentscheidungen
 
@@ -321,6 +346,8 @@ dem ursprünglichen Audit vier Baustellen, die bewusst als eigene Runden
 zurückgestellt wurden (Verhaltensänderungen mit echtem Urteilsbedarf, keine
 mechanische Textersetzung). Stand hier ist live, nicht der vom 2026-09-18.
 
+---
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **24 von 30 Repos geprüft**
 
 Durchgeführt am 2026-09-19 als Multi-Agent-Workflow: pro Repo ein Fix-Agent
@@ -338,6 +365,8 @@ Refutationen.
   `pickers`, `ui`) — waren beim Start aktiv von einer parallelen Session
   belegt, wurden bewusst ausgeklammert. **Nachtrag empfohlen**, sobald Zeit da
   ist — reine Formsache, dieselbe Methode wie oben.
+
+---
 
 ### `LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**
 
@@ -366,6 +395,8 @@ adversarial **CONFIRMED** (0 Refutationen).
   `LUA-01` inklusive aller adversarial aufgedeckten Nachfixes vollständig
   abgeschlossen.**
 
+---
+
 ### `ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **noch nicht begonnen**
 
 `ERR-50` (Validierung unbekannter Keys vor dem Merge) betrifft 24 Repos,
@@ -374,6 +405,8 @@ selben `config/init.lua`. Bekannte Abweichung von den 2026-09-18-Zahlen:
 `ai.nvim`s `ERR-50`-Fund (`DEFAULTS.lua:64`) ist bereits durch eine parallele
 Session behoben — die Zahl „24" ist entsprechend mindestens um eins veraltet,
 wie bei `ERR-11`/`LUA-01` zu erwarten.
+
+---
 
 ### Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**
 
@@ -405,3 +438,6 @@ ungeprüft.
    (kleinster Aufwand, Methode bereits etabliert), dann `ERR-50`/`ERR-22`
    zusammen (oft dieselbe `config/init.lua`-Stelle), die 313 ungeprüften
    Regeln als eigenes, deutlich größeres Vorhaben zuletzt.
+
+---
+

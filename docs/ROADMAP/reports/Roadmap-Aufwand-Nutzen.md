@@ -158,7 +158,7 @@ work, one rejected after investigation, one still genuinely open.**
 | ~~`hover.nvim`~~ | ~~The demo GIF~~ — **done, the screenkey HUD it needed shipped and the GIF followed** | 0.5–1 | Recorded once `ui.nvim`'s screenkey HUD existed |
 | ~~`mdview.nvim`~~ | ~~Cooperative tab closing in `browser.mode = "default"`~~ — **investigated and rejected, 2026-09-18** | 1–2 | `window.close()` only closes a tab the script itself opened — checked against the actual mechanism, not assumed. Recorded as a decision, not left open |
 | ~~`documentation.nvim`~~ | ~~A shim function that behaves differently~~ — **done 2026-09-17**, `documentation.nvim@c9e7ce2` | 1–2 | Fixed the shim so it matches the contract the static spec checks |
-| ~~`ui.nvim` / `my.nvim`~~ | ~~Cross-feature check against the ~30 sibling plugins~~ — **done, in full — Tiers A–F all resolved by 2026-09-18** | 2–3 | `ui-my-Kreuzfeature-Analyse.md`. The S- and M-tier findings shipped 2026-09-17; F1 (diffopt profiles) and F2 (`gh` gitsigns peek) were decided (move to `diff.nvim`) and built 2026-09-18, `diff.nvim@03b6359`/`my.nvim@1c147de` |
+| ~~`ui.nvim` / `my.nvim`~~ | ~~Cross-feature check against the ~30 sibling plugins~~ — **done, in full — Tiers A–F all resolved by 2026-09-18** | 2–3 | `../personal/All/FINISH/ERLEDIGT/ui-my-Kreuzfeature-Analyse.md`. The S- and M-tier findings shipped 2026-09-17; F1 (diffopt profiles) and F2 (`gh` gitsigns peek) were decided (move to `diff.nvim`) and built 2026-09-18, `diff.nvim@03b6359`/`my.nvim@1c147de` |
 
 **The `rules.nvim` sweep this section pointed at happened, and it is bigger
 than either row above imagined.** `Regel-Audit-rules-nvim.md`
