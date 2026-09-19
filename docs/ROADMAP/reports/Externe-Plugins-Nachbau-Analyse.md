@@ -22,7 +22,7 @@ which own plugin would it land in, and what would it cost?
     - [Markdown](#markdown)
     - [Tooling and infrastructure](#tooling-and-infrastructure)
   - [4. Tier A — full replacement of a small plugin](#4-tier-a--full-replacement-of-a-small-plugin)
-    - [A1 · `lima1909/resty.nvim` → runtime-analysis.nvim](#a1--lima1909restynvim--runtime-analysisnvim)
+    - [A1 · `lima1909/resty.nvim` → runtime-analysis.nvim ✅](#a1--lima1909restynvim--runtime-analysisnvim-)
     - [A2 · `jghauser/mkdir.nvim` → fileops.nvim ✅](#a2--jghausermkdirnvim--fileopsnvim-)
     - [A3 · `dstein64/vim-startuptime` → runtime-analysis.nvim ✅](#a3--dstein64vim-startuptime--runtime-analysisnvim-)
   - [5. Tier B — full replacement that is a real build](#5-tier-b--full-replacement-that-is-a-real-build)
@@ -53,6 +53,7 @@ three replacements that turned out to be rewires rather than builds:
 
 | Finding | What changed | Where |
 |---|---|---|
+| A1 resty.nvim → runtime-analysis.nvim | nothing to build: `parse.lua` already reads the `.http` block format, `:RA send` runs the block under the cursor, and no `.http`/`.resty` file exists anywhere in `$REPOS_DIR` or the config; plugin, its 600 ms loader workaround and `lua/plugins/webdev.lua` dropped | nvim, 2026-09-19 |
 | A2 mkdir.nvim → fileops.nvim | `auto_mkdir` BufWritePre autocmd, on by default (`fileops.nvim@329a65f`, 2026-07-15); plugin dropped from the spec | nvim `3fe8afd94`, 2026-09-17 |
 | A3 vim-startuptime → runtime-analysis.nvim | `:RA startup profile [runs]`; plugin dropped | nvim `137c5f67f`, 2026-09-17 |
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
@@ -101,7 +102,6 @@ neither chosen):
 
 | Item | Effort | Blocked on |
 |---|---|---|
-| A1 resty → runtime-analysis.nvim | M–L | whether `parse.lua` speaks `.http` syntax — **unverified** in the catalogue, still unverified |
 | `:Git blame` (the last fugitive feature) | M | new code; home undecided: diff.nvim or `lib.nvim/nvim/git` |
 | `:Gbrowse` → open.nvim / reposcope.nvim | S–M | placement |
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
@@ -292,7 +292,7 @@ the pieces that are config code today and should be plugin code:
 
 | Plugin → feature family | Evidence | Target | Effort |
 |---|---|---|---|
-| `resty.nvim` → **HTTP client on `.http`/`.resty` buffers** | `config` is an elaborate `vim.filetype.add` + autocmd workaround, documented as containing a ~600 ms startup cost | **runtime-analysis.nvim** already has `curl.lua`, `runner.lua`, `parse.lua`, `env.lua`, `graphql.lua`, `multipart.lua`, `assertions.lua`, `history.lua`, `view.lua`, `inspect.lua` — a complete REST client. Missing piece: running the request under the cursor out of an `.http` buffer. Whether `parse.lua` already speaks that syntax is **unverified**. Deleting resty deletes the workaround with it. See [A1](#a1--lima1909restynvim--runtime-analysisnvim). | **M–L** |
+| ~~`resty.nvim` → **HTTP client on `.http`/`.resty` buffers**~~ | ~~`config` is an elaborate `vim.filetype.add` + autocmd workaround, documented as containing a ~600 ms startup cost~~ | **Done 2026-09-19** — runtime-analysis.nvim already had all of it, including the "missing piece": `parse.lua` reads the `.http` block format and `:RA send` runs the block under the cursor. Plugin and workaround dropped. See [A1](#a1--lima1909restynvim--runtime-analysisnvim-). | **done** |
 | ~~`vim-startuptime` → **repeated runs, averaged, sorted, navigable**~~ | ~~`cmd` only~~ | **Done 2026-09-17** — see [A3](#a3--dstein64vim-startuptime--runtime-analysisnvim-). Uninstalled. The "only the presentation is missing" reading in this row was wrong and is corrected there. | **done** |
 | `todo-comments.nvim` → **keyword scan** | `config/todo_comments/**` — the keyword table and colours are **already yours**; both keymaps call `snacks.picker.todo_comments()` directly, bypassing the plugin | **insights.nvim** — `scan/rg.lua` + `scan/cache.lua` already run project-wide ripgrep scans for conflicts, unused imports, stray dev servers. | **M** |
 | `todo-comments.nvim` → **in-buffer highlight + signs** | `signs = true` | **spotlight.nvim** — "mark any number of tokens at once, in colours you can tell apart, and keep them there through searches" is the same machinery. | **M** |
@@ -308,23 +308,32 @@ the pieces that are config code today and should be plugin code:
 
 ## 4. Tier A — full replacement of a small plugin
 
-### A1 · `lima1909/resty.nvim` → runtime-analysis.nvim
+### A1 · `lima1909/resty.nvim` → runtime-analysis.nvim ✅
 
-**Open. Effort M–L.**
+**Done 2026-09-19, and it was S, not M–L.** The "first hour of the build"
+this entry asked for — check whether `parse.lua` reads `.http` syntax —
+answered the whole thing: it does, and has for a while. Its own docstring
+names the format (VS Code REST Client / IntelliJ HTTP Client: `METHOD url`,
+`Header: value` lines, blank line, body), `M.split` slices a buffer on
+`###`, and `:RA send` runs the block under the cursor from a committed
+`.http`/`.rest` file as well as from a `:RA request` scratch buffer. On top
+of what resty offered: `{{var}}` environments from `http-client.env.json`,
+`# @expect status` assertions, GraphQL and multipart shorthands, per-project
+history. The one thing resty had that runtime-analysis does not is the
+`.resty` extension, and a `find` across `$REPOS_DIR` and the config found
+**no `.http`, `.rest` or `.resty` file at all** — the plugin was installed
+for a workflow that had never produced a file.
 
-The decisive argument is in the config's own comment in
-[webdev.lua](../../../lua/plugins/webdev.lua): resty cost roughly **600 ms of
-startup** because loading it drags in telescope, nvim-cmp and LuaSnip through
-its `plugin/` and `after/plugin/` files, defeating their own lazy triggers.
-The current spec is an elaborate `vim.filetype.add` + autocmd workaround
-built purely to contain that damage. Deleting resty deletes the workaround
-too.
-
-runtime-analysis.nvim has the whole client (see the Tooling table). What it
-needs is the *entry point*: run the request under the cursor from an
-`.http`/`.resty` buffer. Whether `parse.lua` already reads that file syntax
-is still **unverified** — that check is the first hour of the build, and it
-decides whether this is M or L.
+The decisive argument was in the config's own comment in the now-deleted
+`lua/plugins/webdev.lua`: resty cost roughly **600 ms of startup** because
+loading it dragged in telescope, nvim-cmp and LuaSnip through its `plugin/`
+and `after/plugin/` files, defeating their own lazy triggers. The spec was
+an elaborate `vim.filetype.add` + autocmd workaround built purely to
+contain that damage. Deleting resty deleted the workaround too — the file
+held nothing else — along with its `WebdevRestyLoader` row in
+`docs/BINDINGS.md`, its `:Resty` row in the usercmd overview, and its
+lock-file entry (together with the stale `markdown-preview.nvim` and
+`vim-startuptime` entries that `:Lazy clean` had not yet dropped).
 
 ### A2 · `jghauser/mkdir.nvim` → fileops.nvim ✅
 
@@ -601,9 +610,9 @@ decided *entirely* by which external plugins keep it (7.6).
 
 **Open — it resolves as the items above do, not on its own.**
 
-Plenary is pulled in by harpoon, todo-comments, resty, lazygit, diffview,
-neogit, telescope and neotest. Doing the resty, lazygit, harpoon and
-todo-comments items removes four of eight. It does not remove plenary
+Plenary is pulled in by harpoon, todo-comments, lazygit, diffview, neogit,
+telescope and neotest (resty left 2026-09-19). Doing the lazygit, harpoon
+and todo-comments items removes three of seven. It does not remove plenary
 (telescope and neotest keep it), but it does take it **out of the startup
 path**, since harpoon is the only `lazy = false` consumer.
 
@@ -645,7 +654,7 @@ Struck entries are done.
 
 | Own plugin | Feature families it would absorb |
 |---|---|
-| **runtime-analysis.nvim** | resty's `.http` runner · ~~vim-startuptime's averaged report~~ (A3) · snacks profiler (the *feature*; its keys are gone, 7.2) |
+| **runtime-analysis.nvim** | ~~resty's `.http` runner~~ (already had it; A1) · ~~vim-startuptime's averaged report~~ (A3) · snacks profiler (the *feature*; its keys are gone, 7.2) |
 | **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer, once the keymaps live there) |
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | todo scan · git-conflict detection + resolution |
@@ -682,12 +691,11 @@ Struck entries are done.
 lib/open · `:Gbrowse` → open/reposcope. ~~mkdir → fileops~~ (A2). Each of the
 three needs its home chosen first; the report names two for each.
 
-**Highest value per session (M), open:** resty → runtime-analysis (removes a
-repo, an autocmd workaround and a documented 600 ms startup hazard; A1) ·
-neotest debug tooling → debugging.nvim (309 lines, already written) ·
-puppeteer → cascade · matchup offscreen → ui.nvim · `:Git blame` (the one
-new piece that retires fugitive + rhubarb). ~~startuptime →
-runtime-analysis~~ (A3).
+**Highest value per session (M), open:** neotest debug tooling →
+debugging.nvim (309 lines, already written) · puppeteer → cascade · matchup
+offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
++ rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
+~~startuptime → runtime-analysis~~ (A3).
 
 **Real projects (L), in order of payoff, open:** todo-comments → insights +
 spotlight (B2) · harpoon → sessions (1,707 lines out of the config; flag it,
