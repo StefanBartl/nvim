@@ -72,18 +72,27 @@ Registriert in [lua/config/neotest/commands/init.lua](../../../../../lua/config/
 
 ## Debug-Commands
 
-Registriert in [lua/config/neotest/debug/init.lua](../../../../../lua/config/neotest/debug/init.lua)
-(`M.usercommands`, via `lib.nvim.bindings.usercmd.create`), Teil desselben `M.setup_all()`-
-Aufrufs, der auch die überschreibenden Keymaps setzt (siehe
-[Keymaps/Neotest.md](../Keymaps/Neotest.md)).
+Seit 2026-09-19 nicht mehr in dieser Config: die fünf `:NeotestDebug*`-Commands
+aus `config/neotest/debug/init.lua` sind debugging.nvims
+`:Debug neotest {adapters|state|file|root|framework|discover}` (Kategorie
+`neotest`, `features.neotest = true` im Plugin-Default). Der Unterschied zur
+alten Fassung: `file` und `root` fragen die Adapter-Tabellen aus
+`neotest.setup()` selbst (`is_test_file(path)`, `root(dir)`) statt
+Adapter-IDs gegen den Dateinamen zu matchen bzw. nur den TypeScript-Adapter
+zu kennen — damit ist auch der geparkte Bug erledigt, dass `NeotestDebugRoot`
+nie einen Root fand.
 
-| Command | Zweck |
-|---|---|
-| `:NeotestDebugAdapters` | Liste aller registrierten Adapter-IDs (`neotest.state.adapter_ids()`). |
-| `:NeotestDebugState` | Kompletter Debug-Dump: Adapter, aktueller Buffer (Pfad/Filetype), ob ein Test-Tree für den Buffer gefunden wurde. |
-| `:NeotestDebugFile` | Prüft, ob für die aktuelle Datei ein passender Adapter existiert (Pattern-Match des Adapter-IDs gegen den Dateinamen). |
-| `:NeotestDebugRoot` | Root-Detection-Debug speziell für den TypeScript-Adapter (`config.neotest.adapters.typescript`), listet gefundene Marker-Dateien (`vitest.config.ts`, `package.json`, `tsconfig.json`). |
-| `:NeotestDebugFramework` | Framework-Erkennung im CWD: listet Vitest-/Jest-Configs und prüft `package.json` auf `"vitest"`/`"jest"`-Einträge. |
+| Command | Zweck | Vorher |
+|---|---|---|
+| `:Debug neotest adapters` | Konfigurierte (`neotest.setup`) neben registrierten Adaptern (`state.adapter_ids()`); Hinweis, wenn nichts registriert ist | `:NeotestDebugAdapters` |
+| `:Debug neotest state` | Adapter, aktueller Buffer (Pfad/Filetype), Positions-Tree für den Buffer inkl. Root-Name und Zählung nach Typ | `:NeotestDebugState` |
+| `:Debug neotest file` | `is_test_file(path)` jedes konfigurierten Adapters für die aktuelle Datei | `:NeotestDebugFile` |
+| `:Debug neotest root` | `root(dir)` jedes Adapters für die aktuelle Datei, Marker-Dateien im gefundenen Root | `:NeotestDebugRoot` |
+| `:Debug neotest framework` | Marker-Dateien im CWD, Test-Frameworks laut `package.json` | `:NeotestDebugFramework` |
+| `:Debug neotest discover` | Positionen je registriertem Adapter nach Typ, Test-Summe | `<leader>ntr` |
+
+Keys: `<leader>ntr` → `discover`, `<leader>ntD` → `adapters`
+([Keymaps/Neotest.md](../Keymaps/Neotest.md)).
 
 ## Consumer-Validierung
 
