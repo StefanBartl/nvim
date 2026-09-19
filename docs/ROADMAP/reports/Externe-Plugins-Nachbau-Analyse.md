@@ -58,6 +58,7 @@ three replacements that turned out to be rewires rather than builds:
 | A3 vim-startuptime → runtime-analysis.nvim | `:RA startup profile [runs]`; plugin dropped | nvim `137c5f67f`, 2026-09-17 |
 | B2 todo-comments.nvim → insights.nvim | `insights.todos`: the host's keyword table shipped as the default, `:Insights todos [KEYWORD...] [ui]` over the shared rg scanner, and an own extmark highlighter with signs; plugin, `config/todo_comments/` and two cheatsheets dropped, `<leader>sT`/`ST` on the insights spec | insights.nvim `638b0f7`/`45e2911`, nvim `03f4ead9a`, 2026-09-19 |
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
+| 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
 | 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
 | 7.3 `<leader>gd` | now diff.nvim's `:Diff target=git:HEAD` (suggested-order item 1); fugitive's `:Gdiffsplit` key removed; snacks' hunk picker moved to `<leader>gD` | nvim, 2026-09-18 |
@@ -109,7 +110,7 @@ neither chosen):
 | window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
 | B4 table-mode → markdown.nvim | M | build |
 | B5 ts-context → ui.nvim `winbar/` | L | build; performance work is the actual scope |
-| 7.4 harpoon → sessions.nvim | L | daily-driver workflow: flag, dual-run, then cut |
+| 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
 | neo-tree config → filetree.nvim | L | ~1,500 lines |
 | neotest debug tooling → debugging.nvim | M | 309 lines already written |
 | Tier C, all eleven | 1–3 each | each a placement decision plus a build |
@@ -608,7 +609,43 @@ cheatsheets that documented the old state (`Keymaps/Fugitive.md`,
 
 ### 7.4 The harpoon rebuild is already 90% written — in the wrong place
 
-**Open. Effort L.**
+**Built 2026-09-19, in the parallel-run phase this entry asked for.**
+`sessions.nvim@acdbc70` has a `marks` feature — the ordered list, a cursor
+position per entry, pins and config defaults, `defaults sync`/`reset`, an
+editable float with the pin flags and the pinned-removal prompt, snacks/
+telescope/fzf pickers with shortened labels, the read-only preview, and a
+one-time import of harpoon's bucket — behind `marks.enable`, off by
+default. Config `54a17d253` turns it on next to harpoon: the
+`target_specs` moved out of harpoon's spec into `config/marks/defaults.lua`
+so both lists read one set; keys on `<leader>H*` and `<leader>H1..9` while
+harpoon keeps `<leader>h*`, `<C-e>`, `<M-1..9>`; the first start took
+harpoon's live list over (verified headless: harpoon's two entries in its
+order with their cursor rows, then the three remaining defaults). One
+session, not the three to five budgeted — the 1,707 lines were mostly
+defence against harpoon's own list semantics (`remove_at` leaving nil
+holes, `settings.key` re-resolved on every autosave, a debounced save
+around a plugin that saves itself), none of which a store this plugin owns
+needs.
+
+**One premise of this entry was wrong, and the build kept the config's
+behaviour rather than the report's.** It said marks "resolving per project
+root and per git branch are a strictly better model than harpoon's flat
+list". The config had deliberately gone the other way — one global list
+pinned to `stdpath("config")`, documented in `featurelist.md` item 1 as the
+fix for "an empty quick menu whenever the cwd differs from where the marks
+were set" — because the list holds notes, cheatsheets and the plugin spec,
+files wanted in every project. So `scope = "global"` is the default and
+`"project"` (root plus branch, keyed like sessions) is the option, not the
+reverse.
+
+**What remains is the cut-over, and it is the user's:** after the trial,
+move the keys to `<leader>h*`/`<C-e>`/`<M-%d>` (`select_key`/`preview_key`
+templates), drop harpoon's spec from `plugins/misc.lua`, delete
+`config/harpoon/` and `bindings/mappings/harpoon.lua`, and remove
+`plenary` from the startup path with it. The Harpoon cheatsheet carries
+the same list at its top.
+
+The original finding, kept for the record:
 
 `lua/config/harpoon/` is **1,707 lines** across nine modules:
 
@@ -707,7 +744,7 @@ Struck entries are done.
 | **filetree.nvim** | neo-tree source switcher · centralized keymaps · node utils · checkhealth · tests/diagnostics sources · snacks explorer · window picker (consumer, once the keymaps live there) |
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · `git blame` · `ToggleInlineDiff` · diffview side-by-side + file history |
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
-| **sessions.nvim** | harpoon marks, pins, persistence, preview |
+| **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built, in parallel run; 7.4) |
 | **debugging.nvim** | neotest adapter debug tooling · snacks debug inspector |
 | **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
@@ -746,10 +783,10 @@ offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
 ~~startuptime → runtime-analysis~~ (A3).
 
-**Real projects (L), in order of payoff, open:** harpoon → sessions (1,707
-lines out of the config; flag it, dual-run it, then cut; 7.4) · neo-tree
-config → filetree.nvim (~1,500 lines, same argument) · ts-context → ui.nvim
-(B5). ~~todo-comments → insights~~ (B2, one session) · ~~markdown-preview →
+**Real projects (L), in order of payoff, open:** neo-tree config →
+filetree.nvim (~1,500 lines) · ts-context → ui.nvim (B5). ~~harpoon →
+sessions~~ (7.4, built, in its parallel-run week; the cut is the user's) ·
+~~todo-comments → insights~~ (B2, one session) · ~~markdown-preview →
 mdview~~ (B3).
 
 **Leave alone:** the three picker engines, treesitter, mason, blink, neogit,
