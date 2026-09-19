@@ -82,9 +82,9 @@ that have since actually run.
 
 ## 4. Do these first — high benefit, ≤1 session
 
-**Status, 2026-09-18: ten of eleven rows are done, already-built, or the
-row's own premise turned out wrong — only row 7 is still genuinely open.**
-Verified against source, not against this table — see each row.
+**Status, 2026-09-19: all eleven rows are done, already-built, or the row's
+own premise turned out wrong.** Verified against source, not against this
+table — see each row.
 
 | # | Plugin | Item | Effort | Why it ranks here |
 |---|---|---|---|---|
@@ -94,7 +94,7 @@ Verified against source, not against this table — see each row.
 | ~~4~~ | `filetree.nvim` | ~~Implement `get_node_at_line` for the neo-tree and nvim-tree adapters~~ — **already done by the time this row was drafted** | 1 | Built for both adapters, verified live against a real tree (19 checks). Corrects itself on the way: **four** features were unlocked, not five — `filter`'s dim fallback never reaches its gate on either adapter |
 | ~~5~~ | `media.nvim` | ~~Segments → SRT/VTT serialisers~~ — **done 2026-09-17**, `media.nvim@f6a2ca8` | 0.5 | `output/srt.lua`, `output/vtt.lua`, `:Media transcribe out=srt\|vtt`. A silent fall-through was fixed on the way — any mode that wasn't `sidecar` used to open a buffer regardless of the requested format |
 | ~~6~~ | `media.nvim` | ~~`lib.nvim.progress` handle during a transcription run~~ — **done 2026-09-17**, `media.nvim@feeb08a` | 0.5 | `opts.on_phase` + a `lib.nvim.progress` handle in `bindings/usrcmds.lua`. Larger find on the way: `:Media transcribe` was **not cancellable at all** — a cancel handle existed since it was written and the command dropped it |
-| 7 | `casedesk.nvim` | Decide what `:Case timeline` does about git-pull sessions | 0.5 | **Still open.** It currently reports wrong numbers, measured, not suspected: every "session" is a `git pull` collapsing to zero duration. Three options are already weighed in the entry |
+| ~~7~~ | `casedesk.nvim` | ~~Decide what `:Case timeline` does about git-pull sessions~~ — **done 2026-09-19**, `casedesk.nvim@9ad5672` | 0.5 | Chose option 2 (detect + label), not option 3 (a duration journal) — `usage.lua` only keeps one throttled last-touched stamp, not the session/event log a forward-looking journal would need, so that would have been a new feature, not this 0.5-session fix. A bulk mtime stamp across multiple distinct files (the git-pull signature) now marks `session.artifact = true`; `:Case timeline` shows those as "not measurable (synced together, e.g. git pull)" and excludes them from the focused-time total. 3 new tests in `TESTS/timeline_spec.lua` |
 | ~~8~~ | `mdview.nvim` | ~~Hand-test `any_file` in real Neovim~~ — **done, already built by the time this row was checked** | 0.5 | Verified 2026-09-18: was already tested against the roadmap's own checklist. Struck without further work |
 | ~~9~~ | `media.nvim` | ~~Prefetch hint for frame stepping~~ — **done 2026-09-17**, `media.nvim@c72d8ba` | 0.25 | The ten-line estimate held — `cache.ensure` already joins an in-flight render, so `prefetch` is `frame` with nobody listening |
 | ~~10~~ | `my.nvim` | ~~Breadcrumb `container` provider is a no-op~~ — **done 2026-09-17**, `my.nvim@fdeacd4` | 0.25 | Retired rather than wired: measured against a real Lua tree, the provider's own input unchanged all four times — `ts_symbol` already yields the qualified name, so it never had anything to add. Two bigger defects found underneath (a Tree-sitter node reaching no provider at all, a `memo.fn` crash on userdata keys) were fixed the same day too |
@@ -246,16 +246,16 @@ that actually exist. The remaining five below are being worked through the
 same session.
 
 **Update, 2026-09-19 (second pass):** `filetree.nvim`'s dead `CWD_MODES.md`
-link is fixed (`filetree.nvim@2ad60ef`), and `data.nvim`'s `diff.nvim`
+link is fixed (`filetree.nvim@2ad60ef`); `data.nvim`'s `diff.nvim`
 before/after for `filter` turned out to already be done
-(`data.nvim@caa95af`, same day as this report — missed on the first pass).
-`casedesk.nvim`'s `:Case timeline` decision is being worked now.
+(`data.nvim@caa95af`, same day as this report — missed on the first pass);
+`casedesk.nvim`'s `:Case timeline` git-pull-session decision is done
+(`casedesk.nvim@9ad5672`, §4 row 7).
 
 **A handful of small, genuinely open items remain**, none of them urgent:
-`casedesk.nvim`'s `:Case timeline` git-pull-session decision (§4 row 7,
-in progress); `lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s
-`cwd_mode` badge cost, `ai.nvim`'s model registry, and the remaining seven
-of `casedesk.nvim`'s eleven sibling integrations (§6). None of these block
+`lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s `cwd_mode` badge
+cost, `ai.nvim`'s model registry, and the remaining seven of
+`casedesk.nvim`'s eleven sibling integrations (§6). None of these block
 anything else; take them opportunistically.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
