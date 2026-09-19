@@ -1,5 +1,15 @@
 # Harpoon — Keymaps
 
+> **Parallelbetrieb seit 2026-09-19.** sessions.nvims Mark-Liste
+> (`:Session marks`, Doku in `E:/repos/sessions.nvim/docs/marks.md`) läuft
+> mit denselben Default-Pfaden (`lua/config/marks/defaults.lua`) neben
+> Harpoon her: `<leader>Ha`/`HA`/`Hp`/`Hd` (add/add-front/pin/remove),
+> `<leader>Hm`/`He` (Picker/Edit-Float), `<leader>Hs`/`HD` (sync/debug),
+> `<leader>H1`…`H9` (Sprung). Beim ersten Start übernimmt sie Harpoons
+> Liste. Nach der Probewoche: Tasten auf `<leader>h`/`<C-e>`/`<M-1..9>`
+> umziehen, Harpoon-Spec in `plugins/misc.lua` und `config/harpoon/`
+> streichen — dann ist dieses Blatt Geschichte.
+
 Registriert in
 [lua/bindings/mappings/harpoon.lua](../../../../../lua/bindings/mappings/harpoon.lua)
 (aufgerufen aus `bindings.mappings.init`).
