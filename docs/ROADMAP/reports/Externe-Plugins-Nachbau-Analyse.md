@@ -60,6 +60,7 @@ three replacements that turned out to be rewires rather than builds:
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
 | B5 ts-context → ui.nvim | `ui.context`: a Tree-sitter ancestor walk from the first visible line, rendered in a per-window `relative="win"` float — not the winbar this entry named (see the section for why); `:UI context [on\|off\|up n]`, `ui.setup({ context = { max_lines = 3 } })` in the config; plugin dropped | ui.nvim `870a6bc`, nvim, 2026-09-19 |
+| C · which-key → ui.nvim | `ui.keys` built: `:UI keys [prefix]` menu over the mappings under a prefix, drill-down groups; which-key stays for the automatic popup | ui.nvim, 2026-09-19 |
 | C · nvim-notify → ui.nvim | `ui.notify` built: toasts + history behind `vim.notify`, `:UI notify`; the plugin stays as noice's backend (the noice decision is separate) | ui.nvim, 2026-09-19 |
 | C · bqf → pickers.nvim | `pickers.quickfix`: preview float following the cursor in the quickfix/location window, `pickers.refine` over the list (`zf`/`zF`), `p` preview toggle; bqf spec dropped | pickers.nvim, nvim, 2026-09-19 |
 | C · zen-mode → ui.nvim | `ui.zen`: the buffer alone in a centred float over a dimmed backdrop, frame options hidden and restored, `:UI zen [on\|off]`; zen-mode spec dropped | ui.nvim, nvim, 2026-09-19 |
@@ -571,7 +572,7 @@ passes `context = { max_lines = 3 }` to `ui.setup`; the Bindings corpus
 ## 6. Tier C — harvest one feature, keep the plugin
 
 These are not replacements. The external plugin stays; one idea moves in-house.
-**Five open; puppeteer → cascade, minty → ui.colorpicker, colorizer → my.nvim, zen-mode → ui.zen, bqf → pickers.quickfix done and nvim-notify → ui.notify built (plugin kept, coupled to noice) 2026-09-19.**
+**Four open; puppeteer → cascade, minty → ui.colorpicker, colorizer → my.nvim, zen-mode → ui.zen, bqf → pickers.quickfix done; nvim-notify → ui.notify and which-key → ui.keys built with the plugins kept, 2026-09-19.**
 
 | External | Feature worth stealing | Own home | Effort |
 |---|---|---|---|
@@ -581,7 +582,7 @@ These are not replacements. The external plugin stays; one idea moves in-house.
 | ~~`folke/zen-mode.nvim`~~ | ~~Distraction-free single window~~ | **Done 2026-09-19** — ui.nvim, for the reason the row gave: it owns the statusline and tabline, so hiding them is two options saved and restored. `ui.zen` with `width`/`height`/`backdrop`/`wo` tunables; no terminal-font or plugin bridges. Plugin dropped. | **done** |
 | ~~`kevinhwang91/nvim-bqf`~~ | ~~Better quickfix: preview, in-list filtering~~ | **Done 2026-09-19** — `pickers.quickfix`, from a `FileType qf` autocmd, no engine involved; the refine stack the row pointed at is exactly what runs over the list. bqf's fzf mode is not reproduced (`:Pickers builtin quickfix` is the fuzzy pass). Plugin dropped. | **done** |
 | ~~`rcarriga/nvim-notify`~~ | ~~Notification history, stacked toasts~~ | **Built 2026-09-19, plugin kept** — ui.nvim `ui.notify`: `vim.notify` as level-coloured `ui.kit.toast`s with per-level timeouts and a ring-buffer history (`:UI notify [on\|off\|history\|clear]`, `ui.setup({ notify = true })`, explicit-only). This config keeps nvim-notify as noice's backend, exactly as the row says: the removal is the noice decision, not this one. `:UI notify on` is the trial switch. | **built** |
-| `folke/which-key.nvim` | Pending-keymap hint popup | **ui.nvim**. Genuinely useful and self-contained, but the label/group data model is the real work. Non-trivial despite looking simple. | 3 |
+| ~~`folke/which-key.nvim`~~ | ~~Pending-keymap hint popup~~ | **Built 2026-09-19, plugin kept** — ui.nvim `ui.keys`: the mappings under a prefix as a `ui.kit.menu` (rows from `desc`, drill-down groups named via `setup({ groups })`, a picked row feeds the keys), `:UI keys [prefix]`. Asked for, not timeout-triggered: the pending-key interception is the hard part of which-key and the part left to it. which-key stays for the automatic popup; the data model the row worried about turned out to be `nvim_get_keymap` plus the `desc`s the registry already writes. | **built** |
 | `nvim-tree/nvim-web-devicons` | Filetype → icon + colour | **lib.nvim**. `ui.nvim/statusline/modules/file_icons/devicons.lua` already isolates it behind an adapter, so this is a *data* import, not an architecture change. Low value (devicons is stable and cheap), but it would make `ui.nvim` and `lsp.nvim` dependency-free. | 2 |
 | `FabianWirth/search.nvim` | Tabbed picker groups | **pickers.nvim** — `:Pickers <scope> <action>` is already a grammar over scopes. Tabs are a UI on top of it. Arguably already redundant; **needs a closer look** at whether it is still used at all. | 1–2 |
 | `nvim-telescope/telescope-github.nvim` | GitHub issues/PRs/gists as pickers | **reposcope.nvim** (already talks to GitHub/GitLab/Codeberg) + **github_stats.nvim**. Picker delivery via `pickers.nvim` so it is not telescope-bound. | 2–3 |
@@ -802,7 +803,7 @@ Struck entries are done.
 | **pickers.nvim** | search.nvim tabs · ~~bqf quickfix preview~~ (`pickers.quickfix`, 2026-09-19) · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
 | **ui.nvim (notify)** | ~~nvim-notify toasts + history~~ (`ui.notify`, 2026-09-19; the plugin stays until noice is decided) |
-| **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · which-key popup · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
+| **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · ~~which-key popup~~ (`ui.keys`, on request; the plugin stays for the timeout popup) · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
 | **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
