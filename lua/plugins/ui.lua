@@ -3,25 +3,15 @@
 
 ---@type LazyPluginSpec[]
 return {
-  {
-    "s1n7ax/nvim-window-picker",
-    version = "2.*",
-    config = function()
-      require("window-picker").setup({
-        filter_rules = {
-          include_current_win = false,
-          autoselect_one = true,
-          -- filter using buffer options
-          bo = {
-            -- if the file type is one of following, the window will be ignored
-            filetype = { "neo-tree", "neo-tree-popup", "notify" },
-            -- if the buffer type is one of following, the window will be ignored
-            buftype = { "terminal", "quickfix" },
-          },
-        },
-      })
-    end,
-  },
+  -- `s1n7ax/nvim-window-picker` left on 2026-09-19: ui.nvim's `ui.windowpicker`
+  -- is the primitive now (external-plugins report, the window-picker item).
+  -- neo-tree's own `open_with_window_picker` (`<CR>` in filesystem/files.lua,
+  -- the `W` keymap) needed no changes at all -- it does
+  -- `pcall(require, "window-picker")` internally, and ui.nvim ships a
+  -- `require("window-picker")` compatibility shim (`lua/window-picker/`)
+  -- that delegates to `ui.windowpicker` for exactly that. Same
+  -- `filter_rules` this spec used to pass, carried over as
+  -- `ui.windowpicker`'s own shipped defaults.
 
   -- `kevinhwang91/nvim-bqf` left on 2026-09-19: the quickfix window's preview
   -- float and in-list filter are pickers.nvim's `quickfix` module now (on by

@@ -75,6 +75,7 @@ three replacements that turned out to be rewires rather than builds:
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + cut-over, same day) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; harpoon removed, keys moved to `<leader>h*`/`<C-e>`/`<M-1..9>` | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.4 cut-over review | 3-lens workflow review found 2 real issues, both fixed: `<leader>he`/`<leader>help` prefix collision (→ `<leader>hE`), `<C-e>`/marks_* keymaps on the synchronous path (→ `bindings/mappings/sessions.lua`, UIReady) | nvim, 2026-09-19 |
+| nvim-window-picker → ui.windowpicker | not lib.nvim as planned (filetree.nvim already hard-depends on ui.nvim); one-cell floating hint via `lib.nvim.window.make_scratch`; `require("window-picker")` compat shim means neo-tree's own integration needed zero changes; `:UI winpick` also works standalone; plugin dropped | ui.nvim, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
 | 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
 | 7.3 `<leader>gd` | now diff.nvim's `:Diff target=git:HEAD` (suggested-order item 1); fugitive's `:Gdiffsplit` key removed; snacks' hunk picker moved to `<leader>gD` | nvim, 2026-09-18 |
@@ -127,7 +128,6 @@ neither chosen):
 | `:Git blame` (the last fugitive feature) | M | new code; home undecided: diff.nvim or `lib.nvim/nvim/git` |
 | `:Gbrowse` → open.nvim / reposcope.nvim | S–M | placement |
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
-| window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
 | neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
 
 ---
@@ -239,7 +239,7 @@ in, and the cost. Sorted by plugin.
 | `search.nvim` → **tabbed picker groups** | one key, `config/search/init.lua` (86 lines of tab/collection definitions) | **pickers.nvim** — `:Pickers <scope> <action>` is already a grammar over scopes; tabs are a UI on top. The collections are already your data. | **M** |
 | `fzf-lua` → **picker engine** | `config/fzf/**`, already consumes `pickers.entry_actions.adapters.fzf` | Keep. Same relationship as snacks/telescope. | **XL** |
 | ~~`nvim-bqf` → **quickfix preview + auto-resize**~~ | ~~`auto_enable`, `auto_resize_height` — nothing else~~ | **Done 2026-09-19** — pickers.nvim `pickers.quickfix`: a cursor-following preview float over `:copen` (loaded buffers read directly, unloaded files from disk) and `pickers.refine` over the list (`zf`/`zF`), non-destructive. Auto-resize was not carried over (Neovim's own `:copen [height]` covers it). Plugin dropped. | **done** |
-| `nvim-window-picker` → **pick a window by letter** | filter rules; single call site `config/neotree/keymaps/filesystem/files.lua:44`, already `pcall`-guarded | **lib.nvim/nvim/window** (the primitive) consumed by **filetree.nvim**. Fallback path already exists, so a partial build degrades safely. *Status pass:* the call site is config code calling neo-tree's `open_with_window_picker`, so the consumer is this config until the neo-tree keymaps move (Tree table below); the primitive itself is a new `lib.nvim` module with tests. | **S** |
+| ~~`nvim-window-picker` → **pick a window by letter**~~ | ~~filter rules; single call site `config/neotree/keymaps/filesystem/files.lua:44`, already `pcall`-guarded~~ | **Done 2026-09-19** — not `lib.nvim/nvim/window` as this entry planned: filetree.nvim already had a *hard* dependency on **ui.nvim** (`require("ui.kit")` pervasively, `docs/installation.md`), which this entry missed, and `lib.nvim.ui.kit`'s own README says "do not build new callers" against it since the 2026-09-14 migration — so the primitive is `ui.windowpicker` instead (a one-cell floating hint via `lib.nvim.window.make_scratch`, not kit at all: a letter overlay doesn't need kit's theming). A `require("window-picker")` compatibility shim (`ui.nvim/lua/window-picker/`) means neo-tree's own `open_with_window_picker`/`use_window_picker` needed zero changes — the `pcall(require, "window-picker")` guard just always succeeds now. `:UI winpick` also works standalone. Plugin dropped. | **done** |
 | ~~`harpoon` → **pinned file marks + quick menu**~~ | ~~`config/harpoon/**`, **1,707 lines**, `lazy = false`~~ | **Done 2026-09-19** — `sessions.nvim`'s `marks` feature, cut over the same day the parallel run started (user's call, not the planned week). See [7.4](#74-the-harpoon-rebuild-is-already-90-written--in-the-wrong-place-). | **done** |
 
 ### Tree
@@ -879,15 +879,15 @@ Struck entries are done.
 | Own plugin | Feature families it would absorb |
 |---|---|
 | **runtime-analysis.nvim** | ~~resty's `.http` runner~~ (already had it; A1) · ~~vim-startuptime's averaged report~~ (A3) · snacks profiler (the *feature*; its keys are gone, 7.2) |
-| **filetree.nvim** | ~~neo-tree source switcher · centralized keymaps · node utils · checkhealth~~ (2026-09-19: `source_switcher`, `tree_toggle`; the noop tables stay as neo-tree config) · tests/diagnostics sources · snacks explorer · window picker (consumer) |
+| **filetree.nvim** | ~~neo-tree source switcher · centralized keymaps · node utils · checkhealth~~ (2026-09-19: `source_switcher`, `tree_toggle`; the noop tables stay as neo-tree config) · tests/diagnostics sources · snacks explorer |
 | **diff.nvim** | ~~`:Gdiffsplit`~~ (7.3) · ~~diffview side-by-side + file history~~ (`:DiffHistory`, 2026-09-19) · `git blame` · `ToggleInlineDiff` |
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
 | **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built and cut over 2026-09-19; 7.4) |
 | **debugging.nvim** | ~~neotest adapter debug tooling~~ (`:Debug neotest`, 2026-09-19) · snacks debug inspector |
 | **pickers.nvim** | ~~search.nvim tabs~~ (`pickers.tabs`) · ~~bqf quickfix preview~~ (`pickers.quickfix`) · ~~telescope-github~~ (`pickers.sources.github`) · ~~file-browser list~~ (`pickers.browse`) — all 2026-09-19 · neotest picker integration |
-| **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · ~~devicons data~~ (`lib.nvim.ui.icons`, 2026-09-19) |
+| **lib.nvim** | treesitter `move` helper · lazygit terminal + nvr bridge · ~~devicons data~~ (`lib.nvim.ui.icons`, 2026-09-19) |
 | **ui.nvim (notify)** | ~~nvim-notify toasts + history~~ (`ui.notify`, 2026-09-19; the plugin stays until noice is decided) |
-| **ui.nvim** | ~~matchup offscreen status~~ (`matchup_offscreen`, 2026-09-19) · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · ~~which-key popup~~ (`ui.keys`, on request; the plugin stays for the timeout popup) · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
+| **ui.nvim** | ~~matchup offscreen status~~ (`matchup_offscreen`, 2026-09-19) · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · ~~which-key popup~~ (`ui.keys`, on request; the plugin stays for the timeout popup) · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) · ~~window picker~~ (`ui.windowpicker` + a `require("window-picker")` compat shim, 2026-09-19 — not `lib.nvim` as first planned; see the catalogue row above) |
 | **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · ~~file-browser operations~~ (consumed by `pickers.browse`, 2026-09-19) · snacks scratch |
@@ -912,9 +912,11 @@ Struck entries are done.
 5. Note: git-conflict and `insights.nvim/conflicts/` are **complementary**, not
    duplicates — repo-level report vs. buffer-level markers. Verified 2026-09-17.
 
-**Cheap removals (S), open:** window-picker → lib/filetree · lazygit float →
-lib/open · `:Gbrowse` → open/reposcope. ~~mkdir → fileops~~ (A2). Each of the
-three needs its home chosen first; the report names two for each.
+**Cheap removals (S), open:** lazygit float → lib/open · `:Gbrowse` →
+open/reposcope. ~~mkdir → fileops~~ (A2), ~~window-picker → ui.nvim~~ (done
+2026-09-19, `ui.windowpicker` — not lib.nvim, see the catalogue entry).
+Each of the remaining two needs its home chosen first; the report names two
+for each.
 
 **Highest value per session (M), open:** ~~neotest debug tooling →
 debugging.nvim~~ (done 2026-09-19, `:Debug neotest`) · ~~puppeteer → cascade~~ (done 2026-09-19) · ~~matchup

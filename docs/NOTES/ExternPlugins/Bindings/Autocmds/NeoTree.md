@@ -2,7 +2,8 @@
 
 Betrifft `nvim-neo-tree/neo-tree.nvim`. Für
 `mrbjarksen/neo-tree-diagnostics.nvim`, `TimCreasman/neo-tree-tests-source.nvim`
-und `s1n7ax/nvim-window-picker` gibt es in dieser Config keine eigenen
+und den Window-Picker (`s1n7ax/nvim-window-picker` bis 2026-09-19, seither
+ui.nvim's `ui.windowpicker`) gibt es in dieser Config keine eigenen
 Autocmds/Event-Handler — siehe stattdessen
 [Keymaps/NeoTree.md](../Keymaps/NeoTree.md).
 

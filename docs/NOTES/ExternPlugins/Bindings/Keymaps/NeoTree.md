@@ -2,9 +2,10 @@
 
 Betrifft `nvim-neo-tree/neo-tree.nvim` (Core) plus die beiden Source-Plugins
 `mrbjarksen/neo-tree-diagnostics.nvim` und
-`TimCreasman/neo-tree-tests-source.nvim`. `s1n7ax/nvim-window-picker` wird nur
-an einem Punkt eingebunden (`W`, `<CR>`-Fallback) und wird deshalb unten als
-Unterabschnitt statt als eigene Datei geführt.
+`TimCreasman/neo-tree-tests-source.nvim`. Der Window-Picker (`W`,
+`<CR>`-Fallback) läuft seit 2026-09-19 über ui.nvim's `ui.windowpicker`
+statt über `s1n7ax/nvim-window-picker` (externe-plugins-report) und wird
+deshalb unten als Unterabschnitt statt als eigene Datei geführt.
 
 Registriert über
 [lua/plugins/neotree.lua](../../../../../lua/plugins/neotree.lua), das die
@@ -70,7 +71,7 @@ als `opts.window.mappings` (global).
 | `s` | `noop` | [custom] (Default wäre `open_vsplit`; Splits laufen pro Quelle über eigene 2-Zeichen-Keys wie `sv`/`sg`/`st`) |
 | `t` | `noop` | [custom] (Default wäre `open_tabnew`) |
 | `w` | `open_with_window_picker` | [default], aber ungenutzt — bewusst **nicht** in dieser Config gemappt, weil filetree.nvim's `window_size_cycler` (buffer-lokal, `filesystem`) denselben Key belegt und immer gewinnt |
-| `W` | `open_with_window_picker` | [custom] (neue Großbuchstaben-Taste als Fallback, siehe [window-picker](#nvim-window-picker-integration) unten) |
+| `W` | `open_with_window_picker` | [custom] (neue Großbuchstaben-Taste als Fallback, siehe [Window-Picker-Integration](#window-picker-integration) unten) |
 | `C` | `close_node` | [custom] (= Default-Wert, explizit gesetzt) |
 | `z` | `close_all_nodes` | [custom] (= Default-Wert, explizit gesetzt) |
 | `R` | `refresh` | [custom] (= Default-Wert, explizit gesetzt) |
@@ -136,20 +137,29 @@ Teil dieser Config mehr): `d` (Trash), `w` (Window-Size-Cycler), `<Esc>`
 Diff), `i`/`tf`/`tg`/`ML`/`MR`/`MM` (Shell-Run/Find-Files/Grep-in-Dir/
 Markdown-Links).
 
-### nvim-window-picker-Integration
+### Window-Picker-Integration
 
-`s1n7ax/nvim-window-picker` wird eigenständig konfiguriert in
-[lua/plugins/ui.lua](../../../../../lua/plugins/ui.lua) (`filter_rules`:
-Neo-tree-, Popup- und Notify-Fenster werden von der Auswahl ausgeschlossen,
-`autoselect_one = true`). Es bringt selbst keine Keymaps mit — es wird nur an
-zwei Stellen aufgerufen:
+`s1n7ax/nvim-window-picker` ist seit 2026-09-19 deinstalliert
+(externe-plugins-report). Neo-tree ruft intern weiterhin bare
+`require("window-picker")` auf (fest verdrahtet in seinem eigenen
+`use_window_picker`) — ui.nvim liefert dafür seit demselben Tag einen
+`require("window-picker")`-Kompatibilitäts-Shim
+([`ui.nvim/lua/window-picker/init.lua`](https://github.com/StefanBartl/ui.nvim)),
+der an `ui.windowpicker` delegiert. An `lua/plugins/ui.lua` und den beiden
+Aufrufstellen unten musste nichts geändert werden:
 
 - `W` im Basis-Layer → `open_with_window_picker` (Neo-tree-Command, ruft
-  intern `window-picker` auf).
+  intern `window-picker` auf — landet jetzt beim Shim).
 - `<CR>` in `filesystem/files.lua` → versucht
   `state.commands.open_with_window_picker`, fällt bei fehlendem
   `window-picker` (`pcall(require, "window-picker")` schlägt fehl) auf
-  `state.commands.open` zurück.
+  `state.commands.open` zurück — praktisch nie, da ui.nvim (`lazy = false`)
+  den Shim immer mitbringt.
+
+`ui.windowpicker`s Defaults entsprechen exakt den alten `filter_rules`:
+Neo-tree-, Popup- und Notify-Fenster ausgeschlossen, `autoselect_one =
+true`. Override über `require("ui.windowpicker").setup({...})`; `:UI
+winpick` picked und springt auch direkt, unabhängig von Neo-tree.
 
 ---
 
