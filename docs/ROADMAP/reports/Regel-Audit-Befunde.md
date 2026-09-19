@@ -53,7 +53,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | ui.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | filetree.nvim | 12 | – | – | offen |
 | images.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
-| pickers.nvim | 12 | – | – | offen |
+| pickers.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
 | runtime-analysis.nvim | 12 | – | – | offen |
 | diff.nvim | 11 | – | – | offen |
 | documentation.nvim | 11 | – | – | offen |
@@ -4972,7 +4972,7 @@ What I could NOT verify, and why:
 
 ## pickers.nvim
 
-**12 Befunde** (4 × high). Roh gemeldet: 13.
+**12 Befunde** (4 × high). Roh gemeldet: 13. — **Stand: 11/12** (⏭️ 1, 2026-09-18)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -4984,6 +4984,8 @@ What I could NOT verify, and why:
 
 **Auswirkung.** On a large root, a bad glob from `find.exclude`, a permission error, a killed-at-timeout run, or simply a machine without `fd`/`rg` installed, `pickers.smart` ranks and caps a partial result set as if it were complete and shows a short or empty list. The user reads that as "there are no more matches". No notify, no prompt-title marker, and `:checkhealth pickers` does report whether the CLI tools exist but says nothing about a run that was cut off. Callers above (`pickers.smart.query` and every engine adapter) have no return value to branch on.
 
+**Status.** ✅ erledigt (`aa7e3a8`) — `M.collect` klassifiziert jeden fd/rg-Lauf und gibt zusätzlich `problems` zurück; `pickers.smart.query` reicht es durch, sodass ein abgebrochener/getöteter Lauf nicht mehr wie „keine Treffer“ aussieht.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/pickers/bindings/collections.lua:16` · `M.register` · confidence **high**
@@ -4993,6 +4995,8 @@ What I could NOT verify, and why:
 **Regelbezug.** ERR-22 says a single invalid config value must degrade to its default rather than abort the whole plugin initialisation. lib.nvim's `usercmd.create` calls `nvim_create_user_command` raw (no pcall — verified in lib.nvim/lua/lib/nvim/bindings/usercmd/init.lua), so an illegal name throws. `to_pascal` only uppercases and strips `_`, so `"my-notes"` -> `"My-notes"` and `"notes v2"` -> `"Notes v2"`, both of which Neovim rejects (command names must be alphanumeric and start with an uppercase letter).
 
 **Auswirkung.** `setup({ collections = { { name = "my-notes", dir = … } } })` throws `Invalid command name: 'My-notesFiles'` out of `bindings.collections.register`, out of `bindings.setup`, out of `pickers.setup()`. Because the collections loop (bindings/init.lua:24-26) sits before `pickers.mappings.apply(cfg)` (line 30) and `pickers.keys.patch(cfg)` (line 37), the declarative `mappings` surface and every in-picker key are never registered, and lazy.nvim reports a plugin-load failure instead of naming the one bad collection name. Any collection already registered earlier in the loop stays half-installed. Note the blast radius is narrower than the auditor implied: only names with characters nvim actually rejects (e.g. `-`, `.`, leading lowercase is auto-fixed by `to_pascal`) trigger it — a space does not.
+
+**Status.** ✅ erledigt (`9f875aa`) — Ein Collection-Name, dessen Pascal-Form kein legaler `:{Name}Files`-Befehl wäre, wird jetzt in `normalise_collection` mit Warnung verworfen statt erst in `nvim_create_user_command` zu krachen.
 
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
@@ -5004,6 +5008,8 @@ What I could NOT verify, and why:
 
 **Auswirkung.** Snacks picker + images.nvim + a PDF page not yet rasterized (needs pdfport.nvim/pdftoppm), picker closed mid-render: images.nvim fires `on_done(false, …)`, pickers' ticket still matches, and `fallback()` runs `snacks.picker.preview.file(ctx)` against the destroyed preview. `ctx.buf` is a live metatable proxy for `self.win.buf` (core/preview.lua:193-200) and snacks' `Win:close()` sets `self.win = nil` / `self.buf = nil` and `nvim_buf_delete`s the scratch buffer (win.lua:542-577), so `vim.bo[ctx.buf].buftype = ""` raises `Invalid 'name': Expected Lua string` (verified in nvim 0.12.2; `Invalid buffer id: N` when the buffer number survives). The error escapes into images.nvim's rasterizer callback as a stray unhandled error with no connection to anything the user did. Trigger window is narrow (first, uncached page only — afterwards the page is on disk and the draw is synchronous), but the missing re-validation is exactly what ERR-33 requires and what the telescope adapter already does via `pcall` at lines 101/105 plus its teardown.
 
+**Status.** ✅ erledigt (`a3f725e`) — `fallback()`s Aufruf von `snacks.picker.preview.file(ctx)` läuft jetzt in pcall — die Snacks-eigenen Proxys sind bei geschlossenem Picker nicht sauber neu validierbar.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/pickers/bindings/util.lua:21` · `M.usercmd / M.map` · confidence **high**
@@ -5013,6 +5019,8 @@ What I could NOT verify, and why:
 **Regelbezug.** LUA-01 requires a plugin to pick hard or soft and hold it. `plugin/pickers.lua:14` requires `pickers.command.composer`, which bare-requires `lib.nvim.bindings.usercmd.composer` at module level, so the plugin cannot even load without lib.nvim. Every `pcall`-plus-fallback branch is therefore unreachable, and health.lua contradicts itself about it: line 9 calls lib.nvim "a hard dependency here", line 31 claims the bindings/util.lua aliases "still degrade gracefully without lib.nvim".
 
 **Auswirkung.** Documentation and dead-code drift, not a runtime fault: nothing misbehaves today, because lib.nvim is in fact always present. The concrete cost is that bindings/util.lua:35, bindings/autocmds.lua:35 and engines/when_loaded.lua:75 are unreachable branches a maintainer keeps paying for, and health.lua:29-31 actively tells a reader a standalone mode exists. Anyone who removes lib.nvim gets a module-not-found abort from plugin/pickers.lua:14 (and from `require("pickers.config")`), not the degraded mode the comments promise. The auditor's impact statement is accurate; I would only downgrade the severity from a behavioural bug to a maintenance/documentation defect.
+
+**Status.** ✅ erledigt (`de0b8db`) — `bindings/util.lua`, `bindings/autocmds.lua`, `engines/when_loaded.lua` requiren `lib.nvim.bindings.*` jetzt hart wie der Rest des Baums; toter pcall+Fallback-Code entfernt.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -5024,6 +5032,8 @@ What I could NOT verify, and why:
 
 **Auswirkung.** With `history = { enabled = true, dir = <unwritable> }` — a read-only mount, a path whose parent is a file, a Windows path or drive the user has no rights to — every picker open throws E739 before the picker appears, on both the telescope and fzf-lua paths. The error names `vim.fn.mkdir` and a path fragment rather than the `history.dir` option that caused it, and `:checkhealth pickers` never probes the directory, so there is nothing that points at the real cause.
 
+**Status.** ✅ erledigt (`8fd9c40`) — `vim.fn.mkdir(dir, "p")` läuft jetzt in pcall; bei Fehler eine `notify.warn` mit echtem Pfad statt E739 vor jedem Picker-Open.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/pickers/sources/collection.lua:27` · `list_subdirs` · confidence **medium**
@@ -5033,6 +5043,8 @@ What I could NOT verify, and why:
 **Regelbezug.** ERR-11 requires a function whose result can legitimately be empty to return "empty but ok" distinguishably from "empty because broken". `M.list_subdirs` is deliberately exported (lines 55-63) "for callers that need the raw path list without going through the engine sub-picker (e.g. command-line completion)", and those callers — sources/repos.lua:34 and sources/plugins_book.lua:36 — get no way to tell the cases apart.
 
 **Auswirkung.** A collection directory that exists but cannot be scanned (permissions, a broken mount or network share, an I/O error) reaches `M.get`'s `#subdirs == 0` branch and reports "[name] no subdirs with prefix 'x' found in: <dir>" (collection.lua:106-112) — a message that diagnoses the wrong problem and sends the user looking at their `prefix`/`only_git`/`exclude` settings. Through `M.complete` in repos.lua and plugins_book.lua the failure is even quieter: `:RepoFiles <Tab>` simply offers nothing, with no message at all, indistinguishable from "you have no repos".
+
+**Status.** ✅ erledigt (`02cd759`) — `list_subdirs` gibt jetzt `(paths, err)` zurück; `M.get` meldet einen echten `fs_scandir`-Fehler statt der irreführenden „no subdirs found“-Meldung.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -5044,6 +5056,8 @@ What I could NOT verify, and why:
 
 **Auswirkung.** Any mistyped option — top-level (`engien`), nested-and-dropped (`display.path_shortern`, `images.enabeld`), or nested-and-absorbed (`smart.limmit`, `find.hiden`) — produces default behaviour with zero feedback: no notify at setup, nothing in `:checkhealth pickers`. The absorbed variety is the nastier half, because the wrong key sits in the live config table and would even survive a `vim.inspect(cfg)` inspection while doing nothing. The author already treats this class as worth reporting (the `selected_index` warning), so the general case is an acknowledged gap rather than a design choice.
 
+**Status.** ✅ erledigt (`9f875aa`) — Neues `sanitize_level` vor dem Merge: explizite Known-Key-Sets pro Ebene, Levenshtein-Hinweis, unbekannte Keys werden verworfen.
+
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
 `lua/pickers/config/init.lua:121` · `M.apply` · confidence **medium**
@@ -5053,6 +5067,8 @@ What I could NOT verify, and why:
 **Regelbezug.** LUA-87's standard merge mechanism is `M.options = vim.tbl_deep_extend("force", {}, defaults, user or {})` — options formed anew from the defaults plus this call's user table. The rule names exactly this counter-case for reposcope.nvim ("setup() merges into the current options table instead of a DEFAULTS copy — accumulates, a second setup({}) resets nothing"); pickers.nvim has the identical shape, and the Belege footnote does not list pickers for it.
 
 **Auswirkung.** Two `setup()` calls in one Lua state compose instead of the second one winning cleanly: `setup({ engine = "fzf", find = { no_ignore = true } })` followed by `setup({})` leaves `engine = "fzf"` and `no_ignore = true` in place. Reachable when configuration is split across two lazy specs, when a spec's `config` block and a manual `require("pickers").setup()` both run, or on a config re-source that does not clear `package.loaded`. I would soften the auditor's hot-reload framing: a reload that re-requires the module resets `_cfg` along with it, so the realistic trigger is two setup() calls within one Lua state, where the result is order-dependent with no way to reset to defaults short of restarting Neovim.
+
+**Status.** ✅ erledigt (`9f875aa`) — Neues `config.reset()`, von `pickers.setup()` vor `apply()` aufgerufen — ein zweiter echter `setup()`-Call startet wieder bei den Defaults. `config.apply()` bleibt bewusst akkumulierend, da ~80 Testaufrufstellen das als Inkrement-Utility nutzen.
 
 ### `LUA-90` — Ein globales `setup()` hat genau einen Besitzer
 
@@ -5064,6 +5080,8 @@ What I could NOT verify, and why:
 
 **Auswirkung.** Because pickers' `telescope.setup()` call is always the second one, `first_non_null` hands telescope pickers' own `{ i = {...}, n = {...} }` table and it REPLACES `config.values.mappings` wholesale — the user's entire `defaults.mappings` block from their own telescope.setup() is discarded, in every telescope picker, including ones pickers.nvim never opens. Telescope's built-in `default_mappings` survive (separate table, mappings.lua:130), so the symptom is "my custom telescope keybinds silently stopped working" rather than a broken picker. On the fzf-lua side `fzf.setup({ keymap = { builtin = … } }, true)` deep-merges, so only the two keys pickers binds by default — `<PageDown>`/`<PageUp>` (keys/init.lua:95-96) — overwrite the user's own entries. Either way the plugin does exactly what its installation docs promise it never does.
 
+**Status.** ⏭️ offen gelassen (`de06d2b`) — Das erneute `telescope.setup()`/`fzf.setup()` ist ein dokumentiertes, load-bearing Feature (Keys/History-Patch, Deep-Merge); es rückgängig zu machen wäre eine Produktentscheidung für den Maintainer. Korrigiert wurde nur eine nachweislich falsche Behauptung in `docs/installation.md`/`doc/pickers.txt`.
+
 ### `LUA-93` — Jedes Plugin trägt seinen eigenen Lazy-Trigger
 
 `lua/pickers/plugin_spec.lua:78` · `M.plugin_spec` · confidence **medium**
@@ -5074,6 +5092,8 @@ What I could NOT verify, and why:
 
 **Auswirkung.** Only under `lazy.setup({ defaults = { lazy = true } })`: the spec returned by `plugin_spec()` resolves to lazy with no trigger, lazy.nvim never loads it, `config` never runs, and the user gets no `:Pickers`, no keymaps, no compat commands and no error explaining why. Under lazy.nvim's own default (`defaults.lazy = false`) the generated spec loads at startup and works, so this is conditional rather than universal — but it means the hand-written spec in the docs is correct and the generated one silently is not, and with `own_engine = true` the engine spec at lines 104-110 has the same gap.
 
+**Status.** ✅ erledigt (`abd9cfe`) — Beide generierten lazy.nvim-Specs (und ggf. der Engine-Eintrag) tragen jetzt explizit `lazy = false` mit Begründungskommentar.
+
 ### `PERF-42` — Invalidierbar
 
 `lua/pickers/sources/drives.lua:55` · `_cache` · confidence **medium**
@@ -5083,6 +5103,8 @@ What I could NOT verify, and why:
 **Regelbezug.** PERF-42 requires it to be defined when a cache entry becomes invalid. The comment at line 54 ("drives don't change during a session") states the assumption but is not a mechanism, and the assumption is false on the platform this module goes to the most trouble for: removable drives and network shares appear and disappear while Neovim is running.
 
 **Auswirkung.** After the first `:Pickers drives` (or any `:Pickers system` with no path token, which routes through `drives.roots`), a USB drive plugged in or a share mounted later stays invisible for the rest of the session, so a systemwide search silently skips it with no indication that its root list is stale. The reverse also holds: an unmounted drive stays in the list and its picker opens on a path that no longer exists. Restarting Neovim is the only remedy, and because nothing resets `_cache`, spec suites carry the same value across tests.
+
+**Status.** ✅ erledigt (`85d6408`) — `_cache` ersetzt durch `lib.nvim.cache.memory`-Namespace mit 60s-TTL statt Session-Cache ohne Invalidierung.
 
 ### `PRIN-25` — Eingaben validieren
 
@@ -5101,6 +5123,8 @@ Rules I checked but found clean, so they are neither findings nor listed as inap
 Two judgment calls I decided against reporting: (1) `integrations/images/init.lua:211` calls `images.clear()` without the shape guard the same module applies to `is_previewable` and `is_pdf` — real inconsistency, but it only fires against an images.nvim old enough to lack `clear`, which I could not confirm ever shipped. (2) `pickers.refine` (252 lines plus its @types module) has zero callers anywhere in lua/, plugin/ or TESTS/ — it is a documented public API (docs/FEATURES/REFINE.md), so no rule in this set covers it, but it is worth a maintainer's attention.
 
 PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are both already named for pickers.nvim in the Belege footnotes and the code still matches what those footnotes describe as the fixed state, so I did not re-report them.
+
+**Status.** ✅ erledigt (`c37c416`) — Der No-Preview-Zweig von `pick_item` mappt `opts.items` jetzt auf Anzeige-Strings + Rücktabelle, genau wie der Preview-Zweig — `on_select` bekommt wieder das exakte Original-Item statt fzfs rohe Zeile.
 
 ---
 
