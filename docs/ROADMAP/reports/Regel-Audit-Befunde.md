@@ -63,7 +63,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | markdown.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
 | recommender.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | rules.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
-| spotlight.nvim | 9 | – | – | offen |
+| spotlight.nvim | 9 | 9 | 0 | fertig (2026-09-19) |
 | my.nvim | 7 | – | – | offen |
 | data.nvim | 5 | – | – | offen |
 
@@ -6497,7 +6497,7 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 
 ## spotlight.nvim
 
-**9 Befunde** (3 × high). Roh gemeldet: 9.
+**9 Befunde** (3 × high). Roh gemeldet: 9. — **Stand: 9/9** (⏭️ 0, 2026-09-19)
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -6509,6 +6509,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 
 **Auswirkung.** Any empty nested section passed to `setup()` (plausible via a lazy.nvim `opts = { keymaps = {} }` or a scaffolded config) discards every default in that section. Confirmed consequences: word-bounded matching silently off (`pattern.build` omits `\<`/`\>`, so `error` lights up inside `errors`), persistence entirely off (autocmds.lua:120 registers neither the VimEnter load nor the VimLeavePre flush), no preset keys bound, no `<cword>` fallback in the cursor resolver. Two corrections to the auditor: `config.issues` held 6 entries, not 5, and `cursor.patterns` IS restored to the defaults with an issue recorded (normalize_cursor_patterns' `type(list) ~= "table"` branch at init.lua:84-88 catches it). The booleans and strings remain nil with nothing in `config.issues`, so `:checkhealth` reports only the numeric knobs and says nothing about them.
 
+**Status.** ✅ erledigt (`15505c7`) — `setup()` verwirft jetzt leere Record-Overrides (z.B. `{ keymaps = {} }`) vor dem Merge, statt sie via `deep_merge`+`is_array({})` die ganze Sektion überschreiben zu lassen; ein explizites leeres Array-Override bleibt unangetastet.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `docs/installation.md:44` · `lazy.nvim spec` · confidence **high**
@@ -6518,6 +6520,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 **Regelbezug.** LUA-01: a hard dependency must never be presented as optional in the documentation. README.md:52 goes further and states outright that "lib.nvim is the one real dependency", directly contradicting installation.md's "Both are **required** dependencies" three clicks away.
 
 **Auswirkung.** A user copying any of the six specs installs spotlight without ui.nvim. `:Spotlight list` / `<leader>sL` then hits ui/list.lua:180-184 and refuses with "ui.kit.select unavailable — cannot open the list" — the plugin's single most-used surface, dead. A user following the documented menu recipe (menu.lua:9) with `require("spotlight.integrations.menu").items()` gets a hard throw at menu.lua:20. `:checkhealth` names it (health.lua:31-33) but only after the fact. Two corrections to the auditor: `ui.kit.select` is NOT bare-required — ui/list.lua:181 goes through `lib.try_require` and degrades with a notify, so installation.md:11's "with no fallback" overstates the code; and nothing in-tree requires `spotlight.integrations.menu`, so `setup()` itself never throws — only the user's own dispatcher does.
+
+**Status.** ✅ erledigt (`3dd1db0`) — ui.nvim in allen sieben Install-Specs ergänzt, README.md und doc/spotlight.txt korrigiert, „with no fallback“ für `ui.kit.select` präzisiert.
 
 ### `PRIN-20` — Keine stillen Fehler
 
@@ -6529,6 +6533,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 
 **Auswirkung.** With only "this occurrence only" spotlights active (`<leader>sk`, DEFAULTS.keymaps.toggle_here), `:Spotlight yank` returns 0 and reports "no matching lines in this buffer" while `:Spotlight qf` finds the line and the sign map places a mark — a wrong reason reported for a failure that is not a lack of matches. With a mix of global and pinned spotlights, the pinned ones are silently dropped from the yanked text with no truncation flag. One correction to the auditor: the unnamed register is not emptied, it is left untouched (verified: a sentinel written beforehand survives), because the `#entries == 0` early return at yank.lua:41-43 runs before `setreg`.
 
+**Status.** ✅ erledigt (`fa0389b`) — `M.yank` nutzt jetzt `count.matching_lines_for` (item-aware) statt `count.matching_lines` (pattern-only), damit gepinnte Spotlights nicht mehr aus dem Scan fallen.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/spotlight/init.lua:73` · `M.toggle_selection / M.toggle_here_selection` · confidence **medium**
@@ -6538,6 +6544,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 **Regelbezug.** `vim.keycode()` is a 0.10 addition — confirmed in the shipped `runtime/doc/news-0.10.txt:276` ("vim.keycode() translates keycodes in a string"). On 0.9 the field is nil, so the call raises before `nvim_feedkeys` is even reached. ERR-02 asks for a type/nil check before an API access; a version-gated API used under a lower declared floor is exactly that gap. (Note: the rule fit is by analogy — none of the 76 covers "API newer than the declared minimum" head-on.)
 
 **Auswirkung.** On Neovim 0.9 — which `:checkhealth spotlight` reports as `ok` — `<leader>sk` and `<leader>sK` in visual mode (`M.toggle_here_selection`, `M.toggle_selection`) throw "attempt to call a nil value (field 'keycode')" at init.lua:73/113, after the selection has already been resolved and before it is used, so the work is discarded. These are the only two 0.10-only API uses in spotlight's own Lua, so the rest of the plugin keeps working and the failure reads as a Neovim bug rather than an unsupported version. Two caveats the auditor did not state: I verified the 0.10 introduction from the runtime docs but did not run an actual 0.9 build, and lib.nvim — a hard dependency — may carry its own 0.10 requirements that would make the 0.9 floor moot anyway. The cheapest honest fix is either a nil-guarded fallback to `nvim_replace_termcodes` or raising the declared floor to 0.10 in README.md:18, installation.md:5 and health.lua:47.
+
+**Status.** ✅ erledigt (`60eabd6`) — Neuer Helfer prüft `type(vim.keycode) == "function"` und fällt sonst auf `nvim_replace_termcodes` zurück; beide Aufrufstellen umgestellt.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -6549,6 +6557,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 
 **Auswirkung.** Downgrade the auditor's impact substantially: I could find no reachable input, and I tried. `core.pattern` builds every pattern as `\C`/`\c` + `\V` + a backslash-escaped body, and I compiled six adversarial bodies in headless nvim — embedded newline (word and literal kinds), carriage return, NUL byte, trailing backslash, 256 consecutive backslashes — and all six compiled. `registry.restore` (registry.lua:426) rebuilds the regex from `text` rather than trusting the snapshot, so even a hand-edited JSON cannot inject an uncompilable pattern; it can only supply text, and text cannot produce one. So nothing currently breaks: this is a contract gap, not an observable bug. It still matters as a latent one — the day `core.pattern` gains a non-literal mode or a user-supplied regex path, the list will report `0` ("this token appears nowhere") for a spotlight Vim refused to compile instead of the `?` it shows for every other unscanned case. The same silent drop exists in `matching_lines` (count.lua:161-166), which skips uncompilable patterns without telling the caller.
 
+**Status.** ✅ erledigt (`2514835`) — `M.count` gibt bei nicht kompilierbarem Pattern jetzt `nil, 0` („nicht gezählt“) statt `0, 0` zurück, konsistent mit der bestehenden `max_lines`-Konvention.
+
 ### `ERR-51` — Merges kopieren Defaults tief
 
 `lua/spotlight/config/init.lua:97` · `normalize_cursor_patterns / normalize_palette` · confidence **medium**
@@ -6558,6 +6568,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 **Regelbezug.** ERR-51: a merge must deep-copy the defaults rather than mutate the shared defaults table. Verified in headless nvim — after a plain `config.setup()`, `rawequal(config.options.cursor, DEFAULTS.cursor)` is true, and both `DEFAULTS.cursor.patterns` and `DEFAULTS.palette.colors` are no longer the table objects the module returned at load.
 
 **Auswirkung.** Latent, and the auditor is right to say so: every write-back is content-identical (the `kept` tables rebuild the same valid entries), so nothing observable breaks today. The concrete violation is that DEFAULTS' own "never mutate" contract is broken on every `setup()` call. It becomes a real bug the moment a normalizer writes a *changed* value into a section the user did not override, because the fallback branches (`o.palette[key] = DEFAULTS.palette[key]` at :52/:63, `o.match.max = DEFAULTS.match.max` at :106) then read the corrupted copy and a later corrected `setup()` cannot recover the real default. Two consequences the auditor did not name, both worth fixing in the same pass: config/init.lua:23 sets `M.options = DEFAULTS` outright, so before `setup()` the live options table IS the defaults table; and for an empty-table override (`setup({ match = {} })`, see the ERR-22 finding) the merge hands back the *user's own* table by reference and the normalizers write into that instead. Note the mutation only reaches DEFAULTS for sections the user did not override — an overridden section gets a fresh table from the recursive merge — which is precisely why it has stayed invisible.
+
+**Status.** ✅ erledigt (`15505c7`) — `M.options`/`setup()` bauen jetzt auf `vim.deepcopy(DEFAULTS)`; eine frühere Session hatte den Bug bereits mit gepinnten `t.ok("BUG: ...")`-Tests dokumentiert statt gefixt — der Fix ist jetzt umgesetzt, die Tests auf das korrekte Verhalten umgestellt.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -6569,6 +6581,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 
 **Auswirkung.** A statusline doing `table.sort(require("spotlight").spotlights(), by_slot)` permanently reorders the live registry for the session, changing list order, `registry.snapshot()`'s write order (and therefore what gets persisted) and `nav`'s alternation order. A `table.remove` on it is worse: `registry.remove(id)` looks the item up by iterating `items` (registry.lua:69-76), so it returns nil without ever calling `match.remove(id)`, leaving core/match's ledger holding live `matchadd()` ids for an item no longer in the registry — a highlight lit with nothing able to clear it. Correction to the auditor's severity: this is recoverable, not permanent — `registry.clear()` calls `match.clear()` (core/match.lua:218), so `:Spotlight clear` or `spotlight.refresh()` does clean up the orphaned matches. The minimal fix is either returning a shallow copy or adding "live reference — do not mutate" to init.lua:606 and docs/api.md:99.
 
+**Status.** ✅ erledigt (`60eabd6`) — `M.spotlights()` liefert per `vim.list_slice(registry.all())` eine flache Kopie statt der lebenden Registry-Liste; Doku entsprechend angepasst.
+
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
 `lua/spotlight/hover.lua:44` · `MAX_LINES` · confidence **medium**
@@ -6578,6 +6592,8 @@ WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). E
 **Regelbezug.** LUA-87's merge section requires config values to be read through `config.options.X`, never duplicated as a direct field on the module. `list.count_max_lines` defaults to 200000 (config/DEFAULTS.lua), ten times this constant, and a user raising or lowering it has no effect here at all. The doc comment asserts the opposite of what the code does. (The file carries a `CDX:` marker at line 41 saying the same; I confirmed both numbers independently rather than taking that comment's word for it.)
 
 **Auswirkung.** On any buffer between 20,001 and 200,000 lines under default config, `:Spotlight list` prints a real occurrence count while hover.nvim's float over the same token says "too many lines to count here" (hover.lua:146) — two spotlight surfaces disagreeing about whether the buffer was scanned, which is exactly the nil-vs-0 distinction core/count.lua:76-79 exists to keep honest. Raising or lowering `list.count_max_lines` has no effect on the float. Nothing crashes and no wrong number is shown; the cost is the inconsistency plus a doc comment that states the opposite of what the code does. Note the repo already carries a `CDX:` marker on the constant (hover.lua:41-43) flagging this same gap, so this is a known open item rather than a discovery — but the constant and the comment are still both live in the tree. A tighter hover-specific ceiling may be defensible design (the float fires on CursorHold, the list on an explicit action); if so it belongs in DEFAULTS as its own key, with hover.lua:38-40 corrected.
+
+**Status.** ✅ erledigt (`38ab6c2`) — Die Modul-Konstante `MAX_LINES = 20000` entfernt; die Ceiling wird jetzt live über `config.get("list.count_max_lines")` gelesen, dieselbe Grenze wie in der Liste.
 
 ### `PERF-42` — Invalidierbar
 
@@ -6604,6 +6620,8 @@ Two things I looked at hard and chose not to file:
 - persist.lua shares sets.lua's read-once/write-whole-file shape, but follows the fleet's project-store semantics rather than keeping its own uninvalidated cache, so only the sets.lua case is filed.
 
 Verified clean, with no findings: ERR-60 (checked every `a and b or c` in the tree — all middles are non-falsy; `""`, `0` and `1` are truthy in Lua), ERR-62 (no `pcall(f(args))` anywhere), LUA-17 (only booleans cross `vim.w`), SEC-03/SEC-35 (zero shell-string or `:execute`-string construction — no io.popen, os.execute, vim.fn.system, vim.system or jobstart in the plugin), XP-01 (no glob/globpath), XP-06 (TESTS/run.lua sets package.path from its own directory, so no case-sensitive require path), PERF-80 (util/lib.lua's timer fallback schedules before touching vim.api), PERF-93 (no CursorMoved/TextChanged/WinScrolled handler exists at all, by design).
+
+**Status.** ✅ erledigt (`ca84e68`) — `M.save`/`M.delete` erzwingen jetzt via `invalidate()` einen frischen Read vom Store unmittelbar vor dem Schreiben, statt mit dem session-alten Cache die ganze Datei zu überschreiben.
 
 ---
 
