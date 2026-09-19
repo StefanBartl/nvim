@@ -74,17 +74,10 @@ return {
     "MunifTanjim/nui.nvim",
   },
 
-  -- Own spec, not NvChad's: `plugins/nvchad.lua`'s own comment already notes
-  -- that `nvzone/minty` "hangs off NvChad's list, not off this one" and
-  -- "leaves with NvChad, not with the menu" -- it never depended on NvChad
-  -- code, only on being declared somewhere. `config/menu/custom_menu/
-  -- init.lua`'s right-click "Color Picker" entry calls `minty.huefy` directly
-  -- (a plain `pcall(require, ...)`), so this is the only wiring it needed.
-  {
-    "nvzone/minty",
-    cmd = { "Huefy", "Shades" },
-    dependencies = { "nvzone/volt" },
-  },
+  -- `nvzone/minty` (and its `nvzone/volt` dependency) left on 2026-09-19:
+  -- the right-click menu's "Color Picker" entry opens ui.nvim's
+  -- `ui.colorpicker` now (`:UI color [#hex]`), a hue row + saturation x
+  -- lightness grid + shades in a ui.kit float.
 
   -- Replaces `nvchad.colorify` -- the `require("nvchad.colorify").run()`
   -- call that used to live in `lua/nvchad/au.lua` is gone entirely, not

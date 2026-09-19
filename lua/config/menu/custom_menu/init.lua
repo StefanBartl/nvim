@@ -252,12 +252,14 @@ local function open_terminal()
   end
 end
 
----Open minty's colour picker, when minty is installed.
+---Open ui.nvim's colour picker (`ui.colorpicker`, the in-house replacement
+---for minty's Huefy since 2026-09-19): it opens on the `#hex` under the
+---cursor and writes the pick back over it on `<CR>`.
 ---@return nil
 local function open_color_picker()
-  local ok, huefy = pcall(require, "minty.huefy")
-  if ok and huefy and huefy.open then
-    pcall(huefy.open)
+  local ok, picker = pcall(require, "ui.colorpicker")
+  if ok and picker and picker.open then
+    pcall(picker.open)
   end
 end
 
