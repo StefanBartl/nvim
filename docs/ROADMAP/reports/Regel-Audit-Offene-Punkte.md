@@ -35,7 +35,7 @@
   - [Kurzfassung](#kurzfassung)
   - [Erledigt: `ERR-11` — 24 von 30 Repos geprüft, 14 echte Fixes](#erledigt-err-11--24-von-30-repos-geprft-14-echte-fixes)
   - [Die zwei verbleibenden offenen Mehrfach-Repo-Sweeps](#die-zwei-verbleibenden-offenen-mehrfach-repo-sweeps)
-    - [`LUA-01` — 21 Repos, 25 Fundstellen](#lua-01--21-repos-25-fundstellen)
+    - [`LUA-01` — 21 Repos, 25 Fundstellen — 6 von 21 geprüft, in Arbeit](#lua-01--21-repos-25-fundstellen--6-von-21-geprft-in-arbeit)
     - [`ERR-50`/`ERR-22` — 24 bzw. 22 Repos](#err-50err-22--24-bzw-22-repos)
   - [Warum nicht im Vorbeigehen miterledigt](#warum-nicht-im-vorbeigehen-miterledigt)
   - [Bekannte Abweichung: `ai.nvim`s `ERR-50`-Fund ist bereits erledigt](#bekannte-abweichung-ainvims-err-50-fund-ist-bereits-erledigt)
@@ -46,19 +46,20 @@
 
 ## Kurzfassung
 
-`ERR-11` ist durch (siehe eigener Abschnitt unten). Offen bleiben noch zwei
-der ursprünglich drei großen Mehrfach-Repo-Sweeps (`LUA-01`, `ERR-50`/`ERR-22`)
-und die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — das sind eigene
-Runden, kein Nachtrag.
+`ERR-11` ist durch (siehe eigener Abschnitt unten). `LUA-01` ist angefangen
+(6 von 21 Repos geprüft, siehe eigener Abschnitt) und pausiert, bis die
+restlichen 15 Repos aus einer parallelen Session frei werden. `ERR-50`/
+`ERR-22` sowie die 313 ungeprüften `recommended`/`nice-to-have`-Regeln sind
+noch komplett offen — das sind eigene Runden, kein Nachtrag.
 
-Zusammen sind das noch über 70 Einzelstellen mit Verhaltensänderung, verteilt
-über gut 25 der 38 Repos. Das ist dieselbe Größenordnung wie die
+Zusammen sind das noch knapp 70 Einzelstellen mit Verhaltensänderung,
+verteilt über gut 25 der 38 Repos. Das ist dieselbe Größenordnung wie die
 Cross-Platform-CI-Fix-Runde vom 2026-09-18/19 (dort: 18 Repos, 16 echte
-Defekte, per Multi-Agent-Workflow mit adversarialer Gegenprüfung) und wie der
-inzwischen abgeschlossene `ERR-11`-Sweep (24 Repos geprüft, 14 echte Fixes,
-0 Refutationen im adversarialen Verify). Jede Gruppe gehört in eine eigene,
-ebenso ausgestattete Runde, nicht in einen Nachtrag am Ende eines anderen
-Tasks.
+Defekte, per Multi-Agent-Workflow mit adversarialer Gegenprüfung), wie der
+abgeschlossene `ERR-11`-Sweep (24 Repos geprüft, 14 echte Fixes, 0
+Refutationen) und wie `LUA-01`s bisheriger Teilstand (6 Repos geprüft, 1
+echter Fix, 0 Refutationen). Jede Gruppe gehört in eine eigene, ebenso
+ausgestattete Runde, nicht in einen Nachtrag am Ende eines anderen Tasks.
 
 ## Erledigt: `ERR-11` — 24 von 30 Repos geprüft, 14 echte Fixes
 
@@ -113,7 +114,7 @@ aktuellen Stand nachverifiziert — siehe die Abweichung weiter unten, die
 genau deshalb schon aufgefallen ist, und `ERR-11`s Ergebnis oben (dort war
 bei fast der Hälfte der geprüften Repos inzwischen nichts mehr zu tun).
 
-### `LUA-01` — 21 Repos, 25 Fundstellen
+### `LUA-01` — 21 Repos, 25 Fundstellen — **6 von 21 geprüft, in Arbeit**
 
 „Hart oder weich, aber konsistent" — meist ein `require("ui.kit")` ohne
 `pcall`, während die eigene `docs/installation.md` `ui.nvim` als optional
@@ -121,6 +122,30 @@ führt. Betroffen: `buffer-ctx`, `cascade`, `cmdlog`, `color_my_ascii`, `dap`,
 `emojis`, `fileops`, `filetree`, `github_stats`, `gopath`, `insights`,
 `markdown`, `media`, `open`, `pdfport`, `pickers`, `recommender`,
 `reposcope`, `sandbox`, `sessions`, `spotlight`.
+
+**Zwischenstand 2026-09-19:** Sechs Repos geprüft (nach demselben
+Fix+adversarialer-Verify-Muster wie `ERR-11`, hier per direktem Agent-Tool-
+Fan-out statt Workflow, da Ultracode für diesen Task nicht aktiv war):
+`cascade` (echter Fund — `lua/cascade/integrations/menu.lua:22` hatte ein
+bares `require("ui.contextmenu")` beim Modul-Load, obwohl die Doku
+(`docs/installation.md`, `docs/BINDINGS.md`, `docs/integrations.md`) die
+Menü-Integration durchgängig als optional/opt-in führt; gefixt mit `pcall` +
+einem gegen die echte `ui.nvim`-Implementierung abgeglichenen lokalen
+Fallback, neuer Testfall, Doku ergänzt — Commit `c008fff`, gepusht,
+adversarial CONFIRMED), sowie `media`, `open`, `pickers`, `recommender`,
+`spotlight` (alle bereits sauber, teils durch frühere Arbeit desselben Tages
+— jede „nichts gefunden"-Begründung wurde von einem zweiten Agenten
+unabhängig aus dem aktuellen Code neu hergeleitet, nicht nur geglaubt; 0
+Refutationen).
+
+**Restliche 15 Repos zurückgestellt:** `buffer-ctx`, `cmdlog`, `color_my_ascii`,
+`dap`, `emojis`, `fileops`, `filetree`, `github_stats`, `gopath`, `insights`,
+`markdown`, `pdfport`, `reposcope`, `sandbox`, `sessions` — dort lief beim
+Start aktiv die parallele Session „Regel-Audit-Befunde Abarbeitung"
+schreibend (13 davon) bzw. mit einem baldigen Schreibrisiko (2 davon:
+`cmdlog`, `buffer-ctx`, damals nur lesend/verifizierend). Diese Session hat
+zugesagt, sich zu melden, sobald ihr eigener Workflow durch ist — dann sind
+alle 38 Repos wieder frei für den Rest von `LUA-01`.
 
 ### `ERR-50`/`ERR-22` — 24 bzw. 22 Repos
 
