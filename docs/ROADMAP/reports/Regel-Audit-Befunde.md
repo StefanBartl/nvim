@@ -54,7 +54,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | filetree.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
 | images.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | pickers.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
-| runtime-analysis.nvim | 12 | – | – | offen |
+| runtime-analysis.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | diff.nvim | 11 | – | – | offen |
 | documentation.nvim | 11 | – | – | offen |
 | emojis.nvim | 11 | – | – | offen |
@@ -5154,7 +5154,7 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 ## runtime-analysis.nvim
 
-**12 Befunde** (5 × high). Roh gemeldet: 13.
+**12 Befunde** (5 × high). Roh gemeldet: 13. — **Stand: 12/12** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -5166,6 +5166,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 **Auswirkung.** A typo in a GraphQL request's variables JSON is completely silent: the written error message never reaches the user, the `{"query":…,"variables":…}` envelope is never built, and the raw query text plus the still-attached `X-Request-Type: GraphQL` header is sent to the server as an ordinary body. The user sees an opaque server 400 with nothing pointing at the variables block. `:RA export` yanks the same wrong curl command.
 
+**Status.** ✅ erledigt (`5547517`) — `M.resolve` gab bei ungültigem JSON `request, err` zurück statt `nil, err`; beide Aufrufer prüfen `if not resolved`, das griff nie — jetzt `nil` auf dem Fehlerpfad.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/runtime-analysis/env.lua:64` · `read_env_file` · confidence **high**
@@ -5175,6 +5177,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 **Regelbezug.** ERR-11 requires 'empty but fine' to be distinguishable from 'empty because broken': file missing → empty table, no error; file corrupt → empty table *with* an error message. Both collapse to the same value here.
 
 **Auswirkung.** A JSON syntax error in `http-client.env.json` or `http-client.private.env.json` is indistinguishable from the file not existing. Every environment disappears: `:RA send` on a request using `{{baseUrl}}` reports "no environment is selected ... (available: none defined)", `:RA env` completion offers nothing, and `:checkhealth` tells the user to create a file that already exists. No message anywhere mentions the decode failure, so the user is pointed away from the actual cause.
+
+**Status.** ✅ erledigt (`18aab13`) — `read_env_file` verwarf `json.read`s Fehler; `load_all`/`list_names` geben ihn jetzt als zweiten Rückgabewert weiter, `:checkhealth` meldet ihn separat von „keine Environments definiert“.
 
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
@@ -5186,6 +5190,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 **Auswirkung.** Send a request block carrying `@expect status N`, then WIPE the request buffer (`:bw!`, or any buffer with `bufhidden=wipe`) before the response arrives -- `:bd!` alone does not reproduce this. On a status mismatch the response is rendered first, then `list.qf` -> `vim.fn.setqflist` raises an uncaught `Vim:E92: Buffer N not found` out of the scheduled callback; the `notify.error("✗ expect status ...")` on line 284 never runs, so the assertion verdict is replaced by a raw E92 with no connection to the assertion.
 
+**Status.** ✅ erledigt (`6d2f0f0`) — `check_assertion` validiert `source_bufnr` jetzt mit `nvim_buf_is_valid` zur Ausführungszeit im `vim.schedule`-Callback und lässt `bufnr` im Quickfix-Item weg statt E92 zu riskieren.
+
 ### `PERF-93` — Heißes Event: billiger Guard **oder** Throttle, nie ungeschützt
 
 `lua/runtime-analysis/statusline.lua:148` · `M.status` · confidence **high**
@@ -5195,6 +5201,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 **Regelbezug.** PERF-93 requires a handler on a hot path to either leave the common case cheap or be throttled; a statusline component is re-evaluated on nearly every redraw. The module recognises the problem for the disk *read* (5-second TTL cache, lines 43-46, 86-89) but the directory scan and the live-instance report path have neither a cache nor a throttle nor a cheap early-out.
 
 **Auswirkung.** With telemetry running and the component wired in, every statusline redraw performs a synchronous directory scan of the telemetry cache dir plus, per live instance, a full `vim.deepcopy` + re-merge + re-sort of the entire accumulated dataset (every wrapped-function key, every day bucket, every argument/error/caller fingerprint) -- all to produce one of three emoji. Cost grows with how long telemetry has been collecting and with how many plugins are instrumented. The module's own 5s cache proves the author saw the problem for the disk read but left the scandir and the live-instance report path unguarded.
+
+**Status.** ✅ erledigt (`158c3f8`) — `M.status()` cachet jetzt das komplette Ergebnis (inkl. Namespace-Scan und Live-Instanz-Report) 1s lang, key'd nach `slow_mean_ms`, nicht nur den Disk-Read.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -5206,6 +5214,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 **Auswirkung.** Two real effects, one narrower than claimed. (1) Shell execution is reachable only when the whole argument is a backtick span -- `:RATelemetry flamegraph `whoami`` runs the shell, then fails with `UserCommand 'RATelemetry' failed: Vim:E282` and writes no flamegraph; `` `whoami`.svg `` does NOT (verified). (2) The everyday effect is silent path rewriting: an output path containing `%`, `#` or an unmatched `*` expands to the empty string, `fnamemodify("", ":p")` turns that into the cwd, and the SVG is written to a path the user never named while `notify.info("wrote " .. path)` reports that other path as success.
 
+**Status.** ☑️ schon behoben (`a5c6f65`) — War bereits vor dieser Session (selbes Datum) auf `expand_path` umgestellt; keine Änderung nötig.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/runtime-analysis/init.lua:64` · `M.open_request` · confidence **medium**
@@ -5215,6 +5225,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 **Regelbezug.** ERR-02 requires `type(...)`/`nil` checks before API access, especially on a boundary; PRIN-25 requires arguments to be validated before being worked with. `lines or {…}` only substitutes for nil — an explicitly passed `{}` is truthy and passes straight through.
 
 **Auswirkung.** A consumer passing an empty table -- a documentation.nvim Endpoints route with nothing resolvable to pre-fill, or any caller that built its lines in a loop that produced no rows -- gets `:enew` run, buftype/filetype set, and then a raw `attempt to get length of a nil value` from inside runtime-analysis. The user is left standing in a stray scratch `acwrite` buffer with an error that names neither the calling plugin nor the empty argument. A non-string element fails one line earlier, at 60, with the same outcome.
+
+**Status.** ✅ erledigt (`8aeb19b`) — `lines = lines or {...}` ließ ein explizit leeres/fehlgeformtes `lines` durch; neue `valid_lines()`-Prüfung fällt auf das Default-Template zurück statt zu crashen.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -5226,6 +5238,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 **Auswirkung.** On POSIX, a `< ./path` reference pointing at a directory (io.open succeeds, read returns nil), or any genuine mid-read IO error on either platform, makes that part's content vanish from the reassembled body while the surrounding boundary lines stay. `M.resolve` reports success with a nil error, so `:RA send` ships a structurally broken multipart body and the resulting server-side rejection looks like a server problem. The narrow trigger makes this lower-severity than the finding implies, but the silent-success return is a genuine ERR-03 break in a function that reports its other failure explicitly.
 
+**Status.** ✅ erledigt (`0b4258b`) — `f:read("*a")`-Rückgabe `nil` wurde ungeprüft angehängt (No-Op); jetzt expliziter Fehler analog zum `io.open`-Fehlerpfad eine Zeile darüber.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/runtime-analysis/view.lua:84` · `M.show` · confidence **medium**
@@ -5235,6 +5249,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default and to be surfaced through `:checkhealth`. Here it degrades to nothing: the value is handed to `vim.cmd` unchecked, and the health check reports on curl, lib.nvim, telemetry, history, env files, usage and optional tools but never on the option values themselves.
 
 **Auswirkung.** `setup({ split = "vsplt" })` is accepted silently. The first `:RA send` of the session reaches `view.show` for the "→ sending ..." placeholder, `find_window` finds no response window, and `vim.cmd("vsplt")` fails with `E492: Not an editor command: vsplt`, surfaced as `UserCommand 'RASend' failed: Vim:E492: ...`. The request is never dispatched, and because the response window is never created, every subsequent send fails the same way. Nothing degrades to `"vsplit"` and `:checkhealth` stays green.
+
+**Status.** ✅ erledigt (`1135a8b`) — `vim.cmd(opts.split or "vsplit")` lief ungeprüft; jetzt pcall-geschützt mit Fallback auf „vsplit“, von `:checkhealth` neu berichtet.
 
 ### `PERF-42` — Invalidierbar
 
@@ -5246,6 +5262,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 **Auswirkung.** After `:RA usage stop` + `:RA usage start`, the namespace has two entries in `instances` and every `M.get`-based path binds to the dead one. Concretely: the traffic light freezes at the pre-stop counts because `statusline.entries_for` reports the stopped instance's own `base`; `:checkhealth` lists the namespace twice; `:RATelemetry reset <ns>` resets the dead instance and leaves the live one's data intact (so the user's reset appears to do nothing); and `:RATelemetry stop <ns>` / `start <ns>` act on the dead instance. The spurious "namespace already has a live instance; both will write the same cache file" warning fires on every restart.
 
+**Status.** ✅ erledigt (`d27597c`) — Nicht in `inst.stop()` selbst behoben (das hätte `:RATelemetry stop/start <ns>` gebrochen), sondern in `M.new()`: eine bereits gestoppte Registry-Instanz für denselben Namespace wird beim nächsten `new()` stillschweigend entfernt statt dupliziert.
+
 ### `SEC-23` — Remote-Content clientseitig sanitizen
 
 `lua/runtime-analysis/telemetry/renderers/html.lua:301` · `M.render` · confidence **medium**
@@ -5256,6 +5274,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 
 **Auswirkung.** Narrower than 'the row payload' but real. The fields that carry unescaped text into the embedded JSON are `namespace`, `key`, `top_arg`, `top_caller` and `hint`. Any of those containing `</SCRIPT` (or `</Script`) terminates the script element in the HTML parser; everything after it is parsed as markup. The `key`/`namespace` route needs a wrapped function or namespace named that way; the argument route additionally needs `profile_args` on (opt-in) and a string argument of at most 40 bytes -- `</SCRIPT><img src=x onerror=...>` fits at 37. `:RATelemetry export report.html` or the float's `gO` then opens the file in the system browser and the injected element executes with `file://` origin. The lowercase-only guard leaves open exactly the case the comment on lines 295-300 was written to close.
 
+**Status.** ✅ erledigt (`b26a24b`) — `</script`-Guard war case-sensitiv; jetzt case-insensitives Pattern, ursprüngliche Groß-/Kleinschreibung bleibt im JSON erhalten.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/runtime-analysis/loaded.lua:246` · `M.load_snapshot` · confidence **medium**
@@ -5265,6 +5285,8 @@ PERF-84 (`smart/search.lua`'s blocking `vim.system():wait()`) and LUA-06 are bot
 **Regelbezug.** SEC-33 requires every field of a persisted snapshot to be revalidated on load (type, length, count cap). Nothing here checks `version`, `modules` or any nested value, yet the return type promises a specific shape.
 
 **Auswirkung.** The exposure is a syntactically VALID snapshot with the wrong shape -- hand-edited, written by an older/newer schema, or produced by a future format change. Such a file is handed back typed as if it were well-formed: `raw.modules` may be nil, a string or a number, and `raw.version` is never compared against anything, so a schema change reads back as the current version. A consumer iterating `snap.modules` raises `bad argument to pairs` or `attempt to index a nil value` inside itself, with nothing naming the snapshot as the cause. I could not confirm from this repo that documentation.nvim's Loaded panel is a live consumer, so the concrete blast radius is 'whatever reads the documented return type', not that specific panel.
+
+**Status.** ✅ erledigt (`dd8ea08`) — `M.load_snapshot` gab rohes JSON ungeprüft zurück; neue `normalize_snapshot` validiert `version`/`prefix`/`modules`-Shape, verwirft unbekannte Version/falschen Prefix komplett.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -5285,6 +5307,8 @@ CMT-16 I could not settle. docs/map/ is generated by scripts/gen_map.lua and doc
 RULES CHECKED AND CLEAN (so their absence from the findings is a result, not a gap). ERR-60: I enumerated every `and … or` site in lua/ and confirmed each `b` is a table, a non-empty string, a number or a literal — 0 and "" are truthy in Lua, so the only real exposure is reminder.lua, reported at low confidence. ERR-62: every pcall in the plugin is `pcall(f, args)` or `pcall(function() … end)`; none evaluates its callee first. SEC-30: every match against caller-supplied text uses `find(…, 1, true)`. SEC-03/SEC-35: no shell-string construction anywhere; startup/profile.lua uses argv through `vim.system`, and renderers/mdview.lua:48 goes through `fnameescape`. PERF-62/PERF-82: both timers (startup/init.lua:243, telemetry/init.lua:750) stop and close before a restart. PERF-80: both fast-event callbacks (startup/profile.lua:361, telemetry/init.lua:757) wrap in vim.schedule, and the stall timer touches no vim.api at all. PERF-92: ui/float.lua computes geometry per open, not at require. LUA-48: registry.lua:35's `__mode = "k"` is keyed by container *tables*, which is the correct use — matching the Belege entry that already names this file as a positive example. LUA-06: config/DEFAULTS.lua is pure data with no env or filesystem access at module level. LUA-87/LUA-93: docs/installation.md uses `opts` (not a `config` block) and gives `lazy = false` an explicit stated reason. ERR-50/51: validation runs before the merge, and the merge deep-copies DEFAULTS. SEC-11/SEC-13: history.lua stores exactly method/url/status/timestamp and fingerprint.lua caps strings — both already cited as positive Belege for this plugin. telemetry/store.lua's load-modify-save collapse is the case the ERR-11 Belege footnote explicitly clears for this repo as deliberately loss-tolerant, so I did not re-report it.
 
 TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `request.method` into the exported curl command without the `shq` quoting every other field gets — but parse.lua:81 constrains the method to `%u+`, so there is no reachable impact today; it is an inconsistency, not a defect. And multipart.lua:160-174 resolves `< path` references with a naive per-line regex over the whole body, while the export side (`part_content`, line 129-138) only honours a reference that is a part's entire content — the two directions disagree about what counts as a file reference, and neither constrains the path to the request buffer's own tree. I could not tie that cleanly to one of the 76 rules, so I am flagging it here rather than inventing a rule id for it; it is worth a look if a checked-in `.http` file from an untrusted repo is ever a scenario you care about.
+
+**Status.** ✅ erledigt (`52570f0`) — `M.configured()` gab die lebende `opts`-Tabelle des Aufrufers zurück; jetzt `vim.deepcopy` vor der Rückgabe.
 
 ---
 
