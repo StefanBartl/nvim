@@ -20,6 +20,10 @@
 
 ---
 
+- checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
+
+---
+
 ## Cdx
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
