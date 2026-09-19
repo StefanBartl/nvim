@@ -55,7 +55,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | images.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | pickers.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
 | runtime-analysis.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
-| diff.nvim | 11 | – | – | offen |
+| diff.nvim | 11 | 11 | 0 | fertig (2026-09-18) |
 | documentation.nvim | 11 | – | – | offen |
 | emojis.nvim | 11 | – | – | offen |
 | fileops.nvim | 11 | – | – | offen |
@@ -5314,7 +5314,7 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 
 ## diff.nvim
 
-**11 Befunde** (7 × high). Roh gemeldet: 18.
+**11 Befunde** (7 × high). Roh gemeldet: 18. — **Stand: 11/11** (⏭️ 0, 2026-09-18)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -5326,6 +5326,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 
 **Auswirkung.** Any listed file that becomes unreadable between `list_files` and `diff_trees` (permission change, lock, branch switch, another process deleting it) raises `E484: Can't open file` out of `diff_trees`, past `directory.run`'s own `(nil, err)` + `notify.error` contract, and out of `core.execute` — which never reaches either `done(dir_result)` or `fail(dir_err)`. The user sees a raw Vim error instead of the plugin's message, and an API caller's `on_done` never fires at all, so it waits forever. Confirmed by the repo's own pinned test.
 
+**Status.** ✅ erledigt (`e57b5c7`) — Alle vier `fn.readfile`-Aufrufe in `diff_trees` mit pcall abgesichert, Fehler wird über den bestehenden `(entries, err)`-Vertrag von `diff_trees`/`directory.run` gemeldet.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/diff/core/directory.lua:138` · `diff_trees` · confidence **high**
@@ -5335,6 +5337,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 **Regelbezug.** ERR-11: a result that can legitimately be empty must distinguish "empty, but fine" from "empty, because it broke". Here a file whose diff could not be *computed* is recorded identically to a file that is genuinely unchanged — no entry, no error, no notification. `compute_unified` correctly returns `(nil, err)`; the caller throws the err away.
 
 **Auswirkung.** A file whose diff could not be computed is recorded identically to an unchanged file — no entry, no error, no notification. With a typo'd `diff.algorithm`, `compute_stats` returns nil for every file present in both trees, so `:Diff` on two directories whose filenames match but whose contents all differ reports "No differences found" as a success. Narrower than the auditor stated: files present in only one tree still produce A/D entries via the bare `#fn.readfile` on lines 144/147, which never calls `compute_stats` — so trees that also differ in their file sets do report something, just with every modified file missing. The non-directory paths surface the same error correctly as "diff failed: …".
+
+**Status.** ✅ erledigt (`e57b5c7`) — `compute_stats`' zweiter Rückgabewert `err` wird jetzt ausgewertet und als Fehler propagiert, statt eine nicht berechenbare Datei wie eine unveränderte zu behandeln.
 
 ### `LUA-93` — Jedes Plugin trägt seinen eigenen Lazy-Trigger
 
@@ -5346,6 +5350,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 
 **Auswirkung.** With the documented spec, `:DiffProfile` gives `E492: Not an editor command` until one of the five listed commands has been run once, and the default-on `gh` hunk-peek keymap is simply absent at startup, appearing only after an unrelated `:Diff*` command loads the plugin — which reads as "the feature does not work", with nothing pointing at load order. Two of the auditor's four sub-claims do not hold: `exit.key` defaults to `scope = "buffer"` (DEFAULTS.lua:81), so it only ever binds to diff buffers that cannot exist before the plugin loads, and `keymaps` defaults to `{}` (DEFAULTS.lua:78), so that part affects only users who configure entries — real for them, but not a default-path breakage.
 
+**Status.** ✅ erledigt (`a33dc93`) — `DiffProfile` zu allen drei `cmd=`-Listen ergänzt und `keys = { "gh" }` für das default-on `gitsigns_peek`-Keymap ergänzt.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/diff/core/resolve.lua:127` · `M.resolve_lines` · confidence **high**
@@ -5355,6 +5361,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on user/buffer text: a backtick span in the argument is a command substitution over `&shell`, and `%`/`#`/`<cfile>` are Vim specials. `spec` here is whatever the user typed after `target=`/`source=` in `:Diff`, or whatever an integrating plugin passed to `require('diff').run(...)` — the rule's `lib.nvim.cross.fs.expand_path` (no shell, no globbing, no specials) is the intended tool.
 
 **Auswirkung.** `:Diff target=`<cmd>`` — the whole value being a backtick span, no suffix — runs `<cmd>` through `&shell` and uses its stdout as the file path. `%`, `#`, `<cfile>` are likewise substituted when they are the whole token. Nothing throws: `expand` returns normally, so there is no crash, no leaked scratch buffer and `on_done` still fires. The concrete harm is silent command execution from a `:Diff` argument (or from whatever an integrating plugin passes to `require('diff').run(...)`), plus resolving to a path the user never wrote.
+
+**Status.** ☑️ schon behoben (`f6ab910`) — War bereits vor Beginn dieses Laufs durch `expand_path` statt `fn.expand` gefixt.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -5366,6 +5374,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 
 **Auswirkung.** Every `:Diff` whose target or source is a plain path runs `vim.fn.expand` on it before anything else touches it, so a specifier that is entirely a backtick span (`:Diff target=`id``) executes through `&shell` here first. The E282/uncaught-error part of the claim does not hold — `expand` returns normally on nvim 0.12.2, so `:Diff` does not die; the specifier is simply resolved from command output instead of from what the user typed.
 
+**Status.** ☑️ schon behoben (`f6ab910`) — Dito, `is_directory_spec` nutzt bereits `expand_path`.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/diff/core/init.lua:274` · `stat_list_target` · confidence **high**
@@ -5375,6 +5385,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 **Regelbezug.** Fourth call site of the same SEC-34 defect, on the `output=stat` + `stat_list="qf"/"loc"` path.
 
 **Auswirkung.** On the `output=stat` + `stat_list="qf"/"loc"` path the specifier is shell-expanded a second time (resolve.lua:127 already did it once), so a backtick-span specifier runs its command twice per `:Diff`. The auditor's alternative claim that it raises E282 and discards the completed diff is wrong — `expand` returns normally, so the diff is not discarded; the quickfix entry just points at whatever the command printed.
+
+**Status.** ☑️ schon behoben (`f6ab910`) — Dito, `stat_list_target` nutzt bereits `expand_path`.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -5386,6 +5398,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 
 **Auswirkung.** A third unconditional shell-expansion of the same user specifier on every plain-path `:Diff`, running before the image-extension check so it is not limited to image workflows. When the expansion does produce command output and that output happens to end in an image extension and be readable, it is handed to images.nvim as a file path. No error escapes; the damage is the command execution itself plus a path the user never supplied crossing a plugin boundary.
 
+**Status.** ☑️ schon behoben (`f6ab910`) — Dito, `is_image_file_spec` nutzt bereits `expand_path`.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/diff/core/resolve.lua:25` · `M.parse_args` · confidence **medium**
@@ -5395,6 +5409,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 **Regelbezug.** ERR-10: "kein Argument" must not collapse onto "ungültiges Argument" — the rule's named bug type is a typo in an argument behaving like an absent argument. `:Diff veiw=inline` parses cleanly into `kv.veiw`, `kv.view` stays nil, and `resolve_view_output` silently substitutes `cfg.default_view`. The plugin does reject a *known* key with a *bad value* loudly (`Unknown view=%q (valid: …)`), which makes the silence on a misspelled key the inconsistency.
 
 **Auswirkung.** A misspelled option name is applied as though it had never been typed, with no message: `:Diff veiw=inline target=x` opens the default vsplit, `:Diff ouput=stat target=x` opens a buffer diff, `:Diff sorce=clipboard` silently diffs the current buffer. Because the plugin is loud about a bad value under a correct key, the user reasonably concludes the feature itself is broken rather than that the key is misspelled.
+
+**Status.** ✅ erledigt (`89aca4f`) — `parse_args` nimmt optional eine Liste bekannter Keys und liefert unbekannte Keys separat zurück; `core.run`/`core.run_buffers` warnen jetzt bei einem verschriebenen Key statt ihn wie „kein Argument“ zu behandeln.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -5406,6 +5422,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 
 **Auswirkung.** An invalid single config value neither degrades to its default nor becomes visible in `:checkhealth`; it propagates unchanged into every consumer. A typo'd `diff.algorithm` makes `vim.diff` fail on every invocation, so text outputs report "diff failed: not a valid algorithm" on every `:Diff` with no hint the config is the cause, directory diffs report "No differences found" instead (per the ERR-11 finding, for files present in both trees), and `:checkhealth diff` reports every section green. The same absence of validation applies to `ctxlen` and `directory_max_files`.
 
+**Status.** ✅ erledigt (`5e554a9`) — Werte-Validierung für die relevanten Felder ergänzt; ein ungültiger Wert degradiert auf den Default statt `setup()` abzubrechen, sichtbar über `:checkhealth diff`.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/diff/config/init.lua:25` · `M.setup` · confidence **medium**
@@ -5415,6 +5433,8 @@ TWO THINGS I SAW AND DELIBERATELY DID NOT REPORT. curl.lua:329 interpolates `req
 **Regelbezug.** ERR-50 requires unknown-key/"did you mean" validation to run *before* the merge, precisely so "ein Tippfehler in einer verschachtelten Option verschwindet nicht stillschweigend im Default". Running it nowhere produces exactly the harm the rule names. The plugin already has the counterpart machinery one layer up — `bindings/keymaps.lua:196` warns on an unknown `keymaps.*` name with the full accepted list — so the pattern exists but is not applied to the config table itself.
 
 **Auswirkung.** A misspelled option key is accepted in complete silence: `setup({ features = { diff_orgin = false } })` or `setup({ diff = { word_diffs = false } })` merges the typo'd key into the active config, the real option keeps its default, and neither `setup()` nor `:checkhealth diff` ever mentions it. Because `M.setup` returns early on a second call (`_setup_done` in init.lua:27-30), there is also no later opportunity for the mistake to surface. The user concludes the option does not work.
+
+**Status.** ✅ erledigt (`5e554a9`) — `sanitize()` läuft jetzt vor dem Merge und verwirft unbekannte Keys mit Levenshtein-Hinweis; Befunde landen in `config.issues()`.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -5437,6 +5457,8 @@ ALREADY PINNED BY THE REPO. Two of the findings (ERR-01 at directory.lua:136, LL
 NOT REPORTED FOR LACK OF A MATCHING RULE ID. Three real drift hazards found no clean home among the 76: (a) VALID_VIEWS/VALID_OUTPUTS are declared twice — core/init.lua:21-24 and bindings/usrcmds.lua:25-26 — with core/init.lua:943's M.valid_lists() carrying a CDX comment saying it has zero callers; adding a view to one copy silently breaks the other. (b) docs/BINDINGS.md claims to list "Every keymap, user command, and autocommand" but omits both :DiffProfile and the default-on `gh` keymap. (c) features/gitsigns_peek.lua:45 binds a global `gh` by default, which contradicts bindings/keymaps.lua's own header ("diff.nvim still imposes no mappings… the exit key is the only thing bound without being asked for"). CMT-16 does not apply — docs/BINDINGS.md is hand-maintained, not renderer-generated, and docs/map/ shows no hand-edit.
 
 AREAS I COULD NOT FULLY CLOSE. ERR-11 on directory.lua's list_files: if vim.fs.dir cannot open a directory that isdirectory() just confirmed (permission on the dir itself), the iterator may yield nothing and list_files would return an empty list with no error — the same collapse as the reported finding one function down. I could not confirm vim.fs.dir's exact failure mode for this Neovim version without constructing an unreadable directory on Windows, so I left it out rather than guess. ERR-54 (config.get() returns the live _active table by reference, neither copied nor documented as "live reference, do not mutate") is technically unmet, but I traced every consumer and none mutates it, so there is no impact to state and I did not report it. SEC-23 I judged satisfied: URL content is normalized through split_lines into a nomodifiable, buftype=nofile scratch buffer with no filetype set, so no FileType autocmd chain fires on fetched content.
+
+**Status.** ✅ erledigt (`db2f453`) — `M.track` ist jetzt idempotent pro Buffer-Handle — ein zweifach getrackter Buffer zählt nur noch einmal in `active_count()`/`diff.status()`.
 
 ---
 
