@@ -29,7 +29,7 @@ which own plugin would it land in, and what would it cost?
     - [B2 · `folke/todo-comments.nvim` → insights.nvim ✅](#b2--folketodo-commentsnvim--insightsnvim-)
     - [B3 · `iamcco/markdown-preview.nvim` → mdview.nvim ✅](#b3--iamccomarkdown-previewnvim--mdviewnvim-)
     - [B4 · `dhruvasagar/vim-table-mode` → markdown.nvim ✅](#b4--dhruvasagarvim-table-mode--markdownnvim-)
-    - [B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `winbar/`](#b5--nvim-treesitternvim-treesitter-context--uinvim-winbar)
+    - [B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `context/` ✅](#b5--nvim-treesitternvim-treesitter-context--uinvim-context-)
   - [6. Tier C — harvest one feature, keep the plugin](#6-tier-c--harvest-one-feature-keep-the-plugin)
   - [7. Findings worth acting on regardless](#7-findings-worth-acting-on-regardless)
     - [7.1 `snacks.image` was enabled and could not work here ✅](#71-snacksimage-was-enabled-and-could-not-work-here-)
@@ -59,6 +59,7 @@ three replacements that turned out to be rewires rather than builds:
 | B2 todo-comments.nvim → insights.nvim | `insights.todos`: the host's keyword table shipped as the default, `:Insights todos [KEYWORD...] [ui]` over the shared rg scanner, and an own extmark highlighter with signs; plugin, `config/todo_comments/` and two cheatsheets dropped, `<leader>sT`/`ST` on the insights spec | insights.nvim `638b0f7`/`45e2911`, nvim `03f4ead9a`, 2026-09-19 |
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
+| B5 ts-context → ui.nvim | `ui.context`: a Tree-sitter ancestor walk from the first visible line, rendered in a per-window `relative="win"` float — not the winbar this entry named (see the section for why); `:UI context [on\|off\|up n]`, `ui.setup({ context = { max_lines = 3 } })` in the config; plugin dropped | ui.nvim `870a6bc`, nvim, 2026-09-19 |
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
@@ -111,7 +112,6 @@ neither chosen):
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
 | window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
 | neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
-| B5 ts-context → ui.nvim `winbar/` | L | build; performance work is the actual scope |
 | 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
 | neo-tree config → filetree.nvim | L | ~1,500 lines |
 | neotest debug tooling → debugging.nvim | M | 309 lines already written |
@@ -261,7 +261,7 @@ the pieces that are config code today and should be plugin code:
 |---|---|---|---|
 | `noice.nvim` → **cmdline UI, message routing, LSP progress, popupmenu** | `config/noice/**`, 187 lines of routes/views/presets | Keep. Message-system interception is a project. | **XL** |
 | `nvim-notify` → **toast backend** | only a noice dependency | Coupled to noice. `lib.nvim` has `notify/`; notification *history* is already reachable via `builtin("notifications")` through pickers. | — |
-| `nvim-treesitter-context` → **sticky context, 3 lines** | `enable = true, max_lines = 3` | **ui.nvim/winbar/** — it owns the frame, and `lib.nvim` has `treesitter/`. The concept is easy; the incremental-update/large-file/fold behaviour is the actual work, and `winbar/` is one `init.lua` today. | **L** |
+| ~~`nvim-treesitter-context` → **sticky context, 3 lines**~~ | ~~`enable = true, max_lines = 3`~~ | **Done 2026-09-19** — `ui.context` (ui.nvim `870a6bc`), a per-window float rather than the winbar; `max_lines = 3` kept. Plugin dropped. See [B5](#b5--nvim-treesitternvim-treesitter-context--uinvim-context-). | **done** |
 | `vim-matchup` → **extended `%`** | `event`, `stopline = 500` | Keep. Per-language match definitions are the plugin. | **XL** |
 | `vim-matchup` → **offscreen match shown in the status line** | `matchup_matchparen_offscreen = { method = "status" }` | **ui.nvim/statusline** — small, self-contained, and squarely in ui.nvim's domain. A nice piece to lift even though the host plugin stays. | **M** |
 | `which-key.nvim` → **pending-key popup** | `opts = {}`; wired to `:WhichKey`, `<leader>wK`, `<leader>w?`, harpoon, neotest | **ui.nvim.** Cheaper than it looks: the label/group data model is normally the hard part, and you already have a keymap corpus — `:Bindings` (search/browse over `docs/BINDINGS.md` per plugin plus the extern cheatsheets) and `:LibBindingsAudit*` / `:LibKeymapConflicts`. The popup can read what the explorer already parses. | **M–L** |
@@ -509,26 +509,56 @@ it is FileType-scoped in a plugin that is already FileType-scoped. The spec is
 `cmd` + `ft` gated, so this is not a startup win — it is a
 "one command grammar instead of two plugins" win.
 
-### B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `winbar/`
+### B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `context/` ✅
 
-**Open. Benefit: moderate. Effort: 2–3 sessions. Risk: low-medium.**
+**Done 2026-09-19, in one session rather than the two to three budgeted,
+and not in the winbar.** `ui.context` (ui.nvim `870a6bc`) is the replacement:
+the first visible line's innermost Tree-sitter node, walked up through its
+ancestors; every ancestor that starts above the top line and whose node type
+matches a scope pattern (`function`, `method`, `^class`, `^if_statement$`,
+`^for`, `switch`, … — Lua patterns over the type name, so one list covers
+every grammar's spelling) contributes its first source line, outermost first,
+capped at `max_lines = 3` with the *outer* ones dropped first (`trim`
+selects). Rendered in a non-focusable `relative="win"` float at row 0 of the
+window, full width, with the same parser started on the overlay buffer so
+keywords keep their colours and the source line numbers reproduced in the
+gutter in `LineNr`. Refresh on `WinScrolled`/`CursorMoved`/`BufEnter`/
+`TextChanged`/`WinResized`, debounced through `lib.nvim.debounce`; the
+overlay is never drawn over the focused window's cursor line, and floats,
+special buffers, parser-less filetypes and windows shorter than six rows are
+skipped before any parse runs. `:UI context [on|off]`, `:UI context up [n]`
+jumps to the n-th enclosing scope (works with the overlay off), explicit-only
+in `ui.setup` (`all = true` does not turn it on, because it draws over the
+buffer). Ten plenary cases against a real window and the bundled Lua parser.
 
-`ui.nvim` already owns the frame: `statusline/`, `tabline/`, `winbar/`,
-`highlights/`, `theme/`. And `lib.nvim` has a `treesitter/` module. Sticky
-context is "walk the TS tree upward from the top visible line, render those
-lines in the winbar" — both halves are in-house.
+**Why a float and not `ui.winbar`.** The status-pass note below this entry
+said a sticky-context line "has to go through `ui.winbar.set()` like the
+other two" producers. Checked against what the winbar actually is: one line
+per window, already contested between my.nvim's symbol breadcrumbs and
+filetree.nvim's path trail. A sticky context is one to three lines that
+must sit *inside* the text area, over the rows they replace, with the
+window's own gutter — the upstream plugin draws a float for the same reason.
+Putting it in the winbar would have meant a third producer fighting for one
+line and a context capped at one entry. So the frame-owner argument still
+holds (it is ui.nvim's module) but the surface is a per-window float via
+Neovim's own `nvim_open_win`, not `ui.kit.surface` either, since the overlay
+needs `relative="win"` with no border, no title and no focus.
 
-The honest caveat: ts-context's difficulty is not the concept, it is the
-performance work — incremental updates, large files, fold interaction, and
-correct behaviour on scroll. `ui.nvim/winbar/` is currently a single `init.lua`,
-so this is a genuine build, not a wiring job. Budget the sessions.
+**What the trade is.** Upstream ships a `context.scm` query per grammar;
+this module matches node-type names by pattern. That is no per-language
+file to maintain, at the price of an occasional scope a query would have
+named differently — `cfg.node_types`/`cfg.exclude_node_types` are the knob,
+and the Lua run in the real config showed exactly the upstream set for this
+file (`function_declaration`, nothing for a multi-line table). The
+"performance work" this entry warned about turned out to be two decisions:
+parse only the range above the top line (incremental after the first) and
+skip ineligible windows before parsing. Fold interaction is not special-cased;
+a folded region's first line is still a real line and the walk starts there.
 
-*Status-pass note:* since this was written, `ui.winbar` became the arbiter
-for `vim.wo.winbar` between my.nvim's symbol breadcrumbs and filetree.nvim's
-path trail (see `ui-my-Kreuzfeature-Analyse.md`, C3). A sticky-context line
-would be a third producer on the same surface and has to go through
-`ui.winbar.set()` like the other two — which also means the "one `init.lua`"
-remark is out of date; the module grew.
+**Config side (nvim, 2026-09-19):** the `nvim-treesitter-context` spec is
+gone from `lua/plugins/treesitter.lua`; `config/ui_statusline/init.lua`
+passes `context = { max_lines = 3 }` to `ui.setup`; the Bindings corpus
+(`Autocmds/Treesitter.md`, `TODO.md`) says where it went.
 
 ---
 
@@ -765,7 +795,7 @@ Struck entries are done.
 | **debugging.nvim** | neotest adapter debug tooling · snacks debug inspector |
 | **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
-| **ui.nvim** | matchup offscreen status · ts-context winbar (through `ui.winbar`) · which-key popup · minty colour picker · zen mode |
+| **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · which-key popup · minty colour picker · zen mode |
 | **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
@@ -800,8 +830,8 @@ offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
 ~~startuptime → runtime-analysis~~ (A3).
 
-**Real projects (L), in order of payoff, open:** ts-context → ui.nvim
-(B5). ~~neo-tree config → filetree.nvim~~ (done 2026-09-19: the config's
+**Real projects (L), in order of payoff — all done:** ~~ts-context →
+ui.nvim~~ (B5, 2026-09-19, one session: `ui.context`). ~~neo-tree config → filetree.nvim~~ (done 2026-09-19: the config's
 2,035 lines were mostly already moved; the last three code-bearing pieces
 became filetree's `source_switcher` and `tree_toggle`, ~700 lines of
 neo-tree mapping tables stay as config) · ~~harpoon → sessions~~ (7.4,
