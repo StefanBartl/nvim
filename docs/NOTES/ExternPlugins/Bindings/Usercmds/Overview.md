@@ -99,7 +99,6 @@ existieren.
 | `nvim-tree.lua` | `:NvimTreeToggle` `:NvimTreeFocus` |
 | `render-markdown.nvim` | `:RenderMarkdown` |
 | `screenkey.nvim` | `:Screenkey` |
-| `zen-mode.nvim` | `:ZenMode` |
 
 Einen Stub zu dokumentieren hieße, den Ladeauslöser zu dokumentieren statt
 das Feature. Wo eines dieser Plugins ein Blatt verdient, gehört dort sein
