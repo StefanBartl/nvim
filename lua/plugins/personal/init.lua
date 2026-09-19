@@ -926,6 +926,21 @@ plugins.add({
           -- replaces config.neotree's window/{disable_statusline,highlight}.lua
           -- + autocmds/init.lua, all removed.
           window_style = { statusline = false, highlights_isolate = true },
+
+          -- The last three pieces of this config's own neo-tree layer,
+          -- moved into filetree.nvim 2026-09-19 (external-plugins report,
+          -- "neo-tree config -> filetree.nvim"):
+          --   * the source switcher -- `"`/`!` cycle in place (default),
+          --     `<leader>ns` picks from a list (was config.neotree's global
+          --     key), and plugins/neotree.lua takes the source_selector
+          --     names from the same module;
+          --   * the four Alt toggle keys, with the E95 self-heal now in the
+          --     adapter (was config/neotree/window/open/keymaps/only_lhs.lua);
+          --   * `y` in the tree as a second key for path_copy's absolute-path
+          --     copy (was a hand-rolled delegate in config.neotree.keymaps).
+          source_switcher = { keymap_pick = "<leader>ns" },
+          tree_toggle = { enabled = true },
+          path_copy = { keymap_abs = { "[a", "y" } },
         },
       })
     end,

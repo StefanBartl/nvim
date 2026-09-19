@@ -35,19 +35,16 @@ Dieser Ordner enthält alle Typdefinitionen für das `config.neotree` Modul, org
   - Wird an Commands und Event Handler übergeben
   - Enthält Tree, Current Node, Clipboard, etc.
 
-- **`config.lua`**: Setup und Initialisierung
   - `Cfg.NeoTree.InitOpts` für `setup()` (nur noch die Felder, die
     `config.neotree.init`'s `M.setup()` tatsächlich liest — trash, current_hl,
     cwd_sync, watcher_quarantine, layout_guard usw. sind vollständig nach
     filetree.nvim migriert und haben hier keine Laufzeit-Entsprechung mehr)
 
-- **`commands.lua`**: Custom Command Optionen
 
 ---
 
 ### Integration Modules
 
-- **`sources.lua`**: Source Display
   - Icon-Sets, Dynamic Config
 
 ---
@@ -111,9 +108,6 @@ Oder spezifisch:
 
 | Modul-Folder  |    Type-File     |  Beschreibung  |
 |---------------|------------------|----------------|
-|  `/` (root)   |   `config.lua`   | Setup & Init   |
-| `/commands/`  |  `commands.lua`  | Custom Commands|
-|  `/sources/`  |  `sources.lua`   | Source Display |
 
 Trash, Safety, Reveal, CwdSync, CurrentHl (highlights), Watcher(-Quarantine)
 und WSL-Integration wurden vollständig nach filetree.nvim migriert; die

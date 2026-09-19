@@ -78,7 +78,7 @@ als `opts.window.mappings` (global).
 | `A` | `add_directory` | [default] |
 | `d` | `noop` | [custom] (Default wäre `delete`; in `filesystem` übernimmt filetree.nvim's Trash-Feature `d` buffer-lokal, s. o.) |
 | `r` | `rename` | [default] |
-| `y` | `copy_to_clipboard` | [default] |
+| `y` | `noop` | [custom] (Default wäre `copy_to_clipboard`; normal-mode `y` gehört filetree.nvims `path_copy` (`keymap_abs = { "[a", "y" }`), das `noop` räumt neo-trees Normal- *und* Visual-Map weg, s. Kommentar in `keymaps/init.lua`) |
 | `x` | `cut_to_clipboard` | [default] |
 | `p` | `paste_from_clipboard` | [default] |
 | `<C-r>` | `clear_clipboard` | [default] |
@@ -90,11 +90,13 @@ als `opts.window.mappings` (global).
 | `g?` | `noop` | [custom] (deaktiviert bewusst) |
 | `>` | `next_source` | [default] |
 | `<` | `noop` | [custom] (Default wäre `prev_source`) |
-| `"` | `source_command.next_source()` | [custom] (neue Taste, funktional wie `>`, hält aber die aktuelle Fenster-Position bei) |
-| `!` | `source_command.prev_source()` | [custom] (neue Taste, Ersatz für das deaktivierte `<`) |
+| `"` | filetree.nvim `source_switcher`: nächste Source, Fenster-Position bleibt | [custom] (seit 2026-09-19 buffer-lokal aus filetree.nvim, vorher `config.neotree.commands.source`) |
+| `!` | filetree.nvim `source_switcher`: vorherige Source | [custom] (Ersatz für das deaktivierte `<`) |
 
-Quelle für `"`/`!`:
-[lua/config/neotree/commands/source/init.lua](../../../../../lua/config/neotree/commands/source/init.lua).
+Quelle für `"`/`!`: filetree.nvims Feature `source_switcher`
+(`E:/repos/filetree.nvim/lua/filetree/features/nav/source_switcher/init.lua`,
+Doku in dessen `docs/FEATURES/NAVIGATION.md`). `:Filetree source [name|pick|next|prev|debug]`
+ist die Command-Form.
 
 ---
 
@@ -337,18 +339,22 @@ Registriert in
 [lua/config/neotree/window/open/keymaps/only_lhs.lua](../../../../../lua/config/neotree/window/open/keymaps/only_lhs.lua)
 (aktiviert via `only_lhs = true` in `lua/plugins/neotree.lua`s `config`-Block)
 und
-[lua/config/neotree/keymaps/global.lua](../../../../../lua/config/neotree/keymaps/global.lua).
-Beides `[custom]` — Neo-tree selbst definiert außerhalb seiner eigenen Fenster
-keine Keymaps, nur das Usercmd `:Neotree` (siehe
-[Usercmds/NeoTree.md](../Usercmds/NeoTree.md)).
+filetree.nvim (seit 2026-09-19; vorher `config/neotree/window/open/keymaps/only_lhs.lua`
+und `config/neotree/keymaps/global.lua`, beide gelöscht). Alles `[custom]` —
+Neo-tree selbst definiert außerhalb seiner eigenen Fenster keine Keymaps, nur
+das Usercmd `:Neotree` (siehe [Usercmds/NeoTree.md](../Usercmds/NeoTree.md)).
 
 | Mapping | Aktion | Status |
 |---|---|---|
-| `<M-c>` | Neo-tree togglen, Position `current` (ersetzt aktuelles Fenster), `reveal` + `reveal_force_cwd` | [custom] |
-| `<M-f>` | Neo-tree togglen, Position `float` | [custom] |
-| `<M-l>` | Neo-tree togglen, Position `left` | [custom] |
-| `<M-r>` | Neo-tree togglen, Position `right` | [custom] |
-| `<leader>ns` | Source-Switcher-Picker öffnen (`config.neotree.sources.switcher`) | [custom] |
+| `<M-c>` | filetree `tree_toggle`: Tree togglen, Position `current`, `reveal` + `reveal_force_cwd` | [custom] (`features.tree_toggle.enabled = true` in `plugins/personal/init.lua`) |
+| `<M-f>` | filetree `tree_toggle`: Position `float` | [custom] |
+| `<M-l>` | filetree `tree_toggle`: Position `left` | [custom] |
+| `<M-r>` | filetree `tree_toggle`: Position `right` | [custom] |
+| `<leader>ns` | filetree `source_switcher`: Source-Picker öffnen | [custom] (`features.source_switcher.keymap_pick`) |
+
+Die E95-Selbstheilung (zweiter Toggle, bevor der erste fertig gerendert hat,
+hinterließ ein leeres, unfokussierbares Tree-Fenster) sitzt jetzt im
+neo-tree-Adapter von filetree.nvim (`toggle_at`), nicht mehr im Keymap.
 
 Das alternative Modul `window/open/keymaps/reveal_current_file.lua` (per
 `reveal_current_file = true` aktivierbar) existiert in dieser Config **nicht
