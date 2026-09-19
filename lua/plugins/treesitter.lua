@@ -26,7 +26,6 @@ local plugins = require("plugins.control.mode").new()
 -- they only extend a capture nobody queries.
 plugins.modes({
   -- ["nvim-treesitter-textobjects"] = "disabled",
-  -- ["nvim-treesitter-context"] = "disabled",
 })
 
 plugins.add({
@@ -175,20 +174,6 @@ plugins.add({
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
     lazy = false,
-  },
-
-  ---------------------------------------------------------------------------
-  -- Context (sticky code context window)
-  ---------------------------------------------------------------------------
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-
-    event = "BufReadPost",
-
-    opts = {
-      enable = true,
-      max_lines = 3,
-    },
   },
 })
 

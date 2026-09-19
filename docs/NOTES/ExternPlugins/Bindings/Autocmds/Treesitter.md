@@ -54,12 +54,18 @@ still ins Leere läuft (kein Fehler, kein Effekt — das ist der Zweck des
 `pcall`). Die tatsächlich wirksame Aktivierung läuft ausschließlich über die
 drei `FileType`-Autocmds oben.
 
-## `nvim-treesitter-context`
+## ~~`nvim-treesitter-context`~~ → `ui.context`
 
-Kein Autocmd, aber themengleich: [lua/plugins/treesitter.lua](../../../../../lua/plugins/treesitter.lua)
-lädt `nvim-treesitter/nvim-treesitter-context` lazy on `BufReadPost` mit
-`opts = { enable = true, max_lines = 3 }` — Sticky-Context-Fenster oben im
-Buffer, keine eigenen Keymaps/Usercmds in dieser Config.
+Deinstalliert am 2026-09-19. Den Sticky-Context (die umschließenden
+`function`/`class`/Schleifen-Zeilen, die oben aus dem Fenster gescrollt
+sind, über den ersten Zeilen fixiert) zeichnet seitdem ui.nvims `ui.context`,
+eingeschaltet in
+[lua/config/ui_statusline/init.lua](../../../../../lua/config/ui_statusline/init.lua)
+über `require("ui").setup({ context = { max_lines = 3 } })` — derselbe
+Deckel wie im alten Spec. Kein Autocmd in dieser Config; die Autocmds
+(`WinScrolled`/`CursorMoved`/`BufEnter`/…, debounced) gehören dem Modul.
+Bedienung: `:UI context [on|off]` für die Session, `:UI context up [n]`
+springt zum n-ten umschließenden Scope. Keine Keymaps.
 
 ## `nvim-treesitter-textobjects`
 
