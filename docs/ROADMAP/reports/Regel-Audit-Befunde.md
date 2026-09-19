@@ -51,7 +51,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | open.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | ui.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
-| filetree.nvim | 12 | – | – | offen |
+| filetree.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
 | images.nvim | 12 | 12 | 0 | fertig (2026-09-18) |
 | pickers.nvim | 12 | 11 | 1 | fertig (2026-09-18) |
 | runtime-analysis.nvim | 12 | – | – | offen |
@@ -4673,7 +4673,7 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 ## filetree.nvim
 
-**12 Befunde** (3 × high). Roh gemeldet: 13.
+**12 Befunde** (3 × high). Roh gemeldet: 13. — **Stand: 11/12** (⏭️ 1, 2026-09-18)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -4685,6 +4685,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** Accurate as written, and the default-on status makes it worse than the finding states. Any event that leaves sessions.json unparseable -- a truncated writefile at line 82, a hand edit, a crash mid-write -- silently resets the in-memory store to {}. The next VimLeavePre or BufHidden auto-save (wired at lines 228-240) then writes a file containing only the current project's entry, discarding every other project's saved adapter, tree root, cursor line, topline and expanded-dir list. No notification is emitted at load time or save time, so the user's only signal is that every other project reopens at its default root.
 
+**Status.** ✅ erledigt (`1a7664b`) — `load_store()` sichert eine kaputte/unlesbare `sessions.json` jetzt einmalig nach `.corrupt`, bevor sie als leer behandelt wird, und meldet es per `notify.warn`.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/filetree/refs/init.lua:32` · `filetree.refs` · confidence **high**
@@ -4694,6 +4696,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 **Regelbezug.** LUA-01 requires one regime, held consistently, and forbids presenting a hard dependency as optional in the docs. docs/installation.md:9 says ui.nvim "degrades to a single notify, not an error, if missing". It does not: the require chain from setup() is bare all the way down, so the failure is an error thrown out of setup(), not a degraded context menu. The single soft-require in create_from_template is the inconsistency the rule names.
 
 **Auswirkung.** With ui.nvim absent or older than ui.kit, `require("filetree").setup({})` throws "module 'ui.kit' not found" out of init.lua:94 -- before tree_attach.install (139), before bufevents.install (145), before commands.setup (147). The plugin is not partially degraded, it is entirely absent: no :Filetree/:Ft, no keymaps, no features, and the error surfaces as a lazy.nvim config-function traceback rather than anything filetree-branded. A user following installation.md:9 expects to lose only the right-click context menu.
+
+**Status.** ✅ erledigt (`f6da006`) — `create_from_template`s einziges weiches `pcall(require, "ui.kit")` auf hart umgestellt und die falsche Behauptung „degradiert ohne Fehler“ in `docs/installation.md` korrigiert — ui.nvim ist eine harte Abhängigkeit.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -4705,6 +4709,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** Platform-split, and the auditor overstated it as universal. On Linux/macOS this is code execution: Neovim routes any pattern containing a matched backtick pair through the shell (SPECIAL_WILDCHAR -> os_expand_wildcards -> `echo <pattern>`, backticks left unescaped), which is the same primitive the rule's own Beleg records as confirmed in markdown.nvim (`![x](./`mkdir -p /tmp/pwned; echo a.png#`)` really created the directory). Cloning a repo containing `[x](~%60cmd%60/y.md)` and then renaming any file runs `cmd` during the pre-mutation scan, with no prompt in between. On Windows this does NOT execute: I ran `vim.fn.expand("~`echo PWNED > <probe>`/y.md")` under nvim 0.12.2 headless and the probe file was not created -- expand returned "", so the Windows consequence is only a silently mis-resolved link candidate. Fix is the same either way (lib.nvim.cross.fs.expand_path), but severity is RCE on Unix/macOS and a correctness bug on Windows.
 
+**Status.** ☑️ schon behoben (`51c5a46`) — Bereits vor Sitzungsbeginn durch einen früheren Commit auf `vim.fn.expand` → `lib.nvim.cross.fs.expand_path` umgestellt; im Code verifiziert.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/filetree/init.lua:69` · `M.setup` · confidence **medium**
@@ -4714,6 +4720,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default rather than abort the entire plugin initialisation, with the problem surfaced through :checkhealth. Here the two things validate() actually checks (config/init.lua:240-241: `adapter` must be a string, `features` must be a table) are single values with obvious defaults -- "auto" and `{}` -- yet either one being the wrong type takes the whole plugin down.
 
 **Auswirkung.** Confirmed as described. `setup({ adapter = 0 })` or `setup({ features = "all" })` produces one `[filetree]` notification and a completely inert plugin -- :Filetree and :Ft are never registered, no keymaps are bound, no feature runs. The only remaining in-editor diagnostic is :checkhealth filetree, which re-runs validate() at health.lua:58 and prints the same message. Degrading the offending field to its default would have cost one line and left the rest of the plugin working.
+
+**Status.** ✅ erledigt (`f431d8d`) — `M.setup()` bricht bei ungültigem `adapter`/`features` nicht mehr komplett ab, sondern degradiert auf den Default; ein nicht auflösbarer Adaptername fällt auf `"auto"` zurück.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -4725,6 +4733,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** Confirmed. `setup({ adaptor = "neotree" })`, `setup({ features = { auto_reaveal = { enabled = false } } })` or any misspelled nested field is merged into the active config, never read by anything, and produces no warning at setup time or in :checkhealth -- which affirmatively reports "Config validated". The feature silently keeps running on its default. Because M.setup also re-deepcopies DEFAULTS each call, there is not even an accumulating-garbage symptom that might tip the user off.
 
+**Status.** ✅ erledigt (`f431d8d`) — Neue `sanitize()`-Stufe läuft vor dem Merge, verwirft unbekannte Top-Level-Keys/Feature-Namen mit Levenshtein-Hinweis und legt sie über `config.issues()` für `:checkhealth` offen.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/filetree/util/path.lua:30` · `filetree.util.path` · confidence **medium**
@@ -4734,6 +4744,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 **Regelbezug.** LUA-01 requires one regime held consistently. Because commands.lua:19 bare-requires lib.nvim.bindings.usercmd.composer and init.lua:9 requires commands.lua at load time, `require("filetree")` cannot succeed without lib.nvim at all -- so every soft fallback is unreachable for the case it was written for. docs/installation.md:8 reinforces the wrong mental model by saying only the commands fail to register. Two of the fallbacks also diverge behaviourally from the lib path (util/path.lua:42's vim.fn.expand, reported separately), and cwd_sync:291/path_copy:320 pcall-require lib.nvim.fs.find_root while nav/cwd_mode/init.lua:49 bare-requires the identical module.
 
 **Auswirkung.** Maintenance and correctness-of-documentation risk, not a user-visible failure -- and one part of the finding's reasoning needs correcting. docs/installation.md:8 does NOT present lib.nvim as optional: it says "required", and only narrows what breaks. So LUA-01's documentation clause is not violated here (it IS violated for ui.nvim -- see the refs/init.lua:32 finding); what is violated is the consistency clause. The concrete cost is 26 fallback paths that no test can exercise and no user can reach, two of which diverge behaviourally from the lib path (util/path.lua:42's vim.fn.expand, reported separately), plus the fact that no single file tells a maintainer which regime is in force -- someone "cleaning up the lib.nvim optionality" in either direction has no local signal about which way is correct.
+
+**Status.** ⏭️ offen gelassen — Betrifft ~20–30 weiche Fallback-Stellen über mind. 9 Dateien; da `commands.lua` lib.nvim ohnehin hart benötigt, ist die Richtung (alle hart vereinheitlichen vs. auch `commands.lua` weich machen) eine Architekturentscheidung mit echten Verhaltensfolgen.
 
 ### `PERF-42` — Invalidierbar
 
@@ -4745,6 +4757,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** A file's size is measured once per Neovim session and then frozen for that path. Writing the file, a build growing it, or a directory gaining entries leaves the tree's eol extmark showing the first value indefinitely; the BufEnter and CursorHold triggers the header advertises as refreshes re-render the stale number rather than re-measuring it. Only :Filetree size refresh (M.refresh) or a plugin re-setup corrects it. The feature is on by default (init.lua:114-121 forces enabled=true; size_info is not in DEFAULT_DISABLED), so this is the default behaviour, not an opt-in edge case.
 
+**Status.** ✅ erledigt (`18887fe`) — Cache-Einträge tragen jetzt einen Timestamp mit TTL (5s) plus einen `BufWritePost`-Hook, der den geschriebenen Pfad sofort invalidiert.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/filetree/features/org/session/init.lua:190` · `M.restore` · confidence **medium**
@@ -4754,6 +4768,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 **Regelbezug.** SEC-33 requires every field of a persisted snapshot to be re-validated on load (type, length, count cap). This module does validate `entry.root` properly (normkey + is_subpath, lines 176-181, with a comment naming hand-edited stores as the threat) and `entry.adapter`, which shows the intent -- but topline and cursor are exempted from the same discipline, and topline is the one that is concatenated into an executable string rather than passed as an argument.
 
 **Auswirkung.** Two distinct silent failures on every restore from a corrupt or hand-edited sessions.json, both swallowed by the pcall at 187-192 and never reported. (a) A string topline makes `:normal!` replay it as literal keystrokes in the tree window. (b) A table/boolean topline makes the concatenation at line 190 throw -- and it throws AFTER nvim_win_set_current_win(winid) at 189 but BEFORE the restore at 191, so the pcall leaves the user's cursor parked in the sidebar window at every startup, with no message explaining it. The auditor missed (b), which is the more likely of the two to actually bite. The count cap the rule asks for (a plausible line number, bounded entry.expanded) is absent throughout.
+
+**Status.** ✅ erledigt (`0dce1cb`) — `entry.expanded` wird jetzt als String-Liste gefiltert und auf `MAX_EXPANDED_DIRS` gedeckelt, `entry.cursor`/`entry.topline` müssen Zahlen sein.
 
 ### `UI-55` — Buffer löschen, dessen Fenster sichtbar sind
 
@@ -4765,6 +4781,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** `:bdelete` never closes a window; Neovim loads the alternate buffer into it, or creates a fresh empty one when there is no alternate. M.close() is reached from features/fileops/open_replace/init.lua:183 (`pcall(adapter.close)` -- the "open this file and close the tree" flow), so under the netrw adapter that operation leaves the sidebar window open holding either a stray file buffer or an empty [No Name], instead of closing it. Scope is narrower than the finding implies: adapter = "auto" resolves to neo-tree/nvim-tree, so only users who explicitly select the netrw adapter are affected.
 
+**Status.** ✅ erledigt (`758cebc`) — `M.close()` schließt jetzt zuerst das Fenster statt nur den Buffer zu löschen, passend zum Vertrag der anderen Adapter.
+
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
 `lua/filetree/features/infra/project_root/init.lua:92` · `find_from` · confidence **medium**
@@ -4775,6 +4793,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 
 **Auswirkung.** Narrower than the finding claims, but real. "*.rockspec" is the only glob-shaped entry in the default marker list (lines 16-36) and it is tried after .git, .hg, .svn, package.json, Cargo.toml, go.mod, Makefile, CMakeLists.txt and others, so the root is only lost for a project whose sole marker is a rockspec, located under a path containing a glob metacharacter or a Windows 8.3 component. In that case find_from returns nil, M.find (126-134) falls back to fallback="parent" (the file's own directory), and line 113-115 caches that wrong answer under every visited ancestor for the rest of the session -- so find_files, grep_in_dir, git_status, breadcrumbs and the refs scan scope all inherit it until :Filetree root clear. Not a silent-wrong-root for the average user; a permanent one for the affected project.
 
+**Status.** ✅ erledigt (`b89154e`) — Der Verzeichnisanteil vor dem Glob-Marker läuft jetzt durch `lib.nvim.fs.globbable`, wie bereits bei `find_files`.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/filetree/util/path.lua:42` · `M.to_absolute` · confidence **low**
@@ -4784,6 +4804,8 @@ TWO OBSERVATIONS THAT ARE NOT RULE VIOLATIONS BUT WORTH PASSING ON:
 **Regelbezug.** SEC-34 names lib.nvim.cross.fs.expand_path as the correct primitive precisely because vim.fn.expand runs backtick spans through &shell and honours `%`/`#`/`<cfile>` specials. M.to_absolute is the plugin's general path normaliser and is reached with user-typed paths (features/infra/safety/backup.lua:19 passes `config.backup_dir`, and the module header at lines 66-72 describes raw paths typed by the user flowing through this module).
 
 **Auswirkung.** Latent, not live -- the auditor was right to rate it low and I would rate it lower still. The branch only runs when lib.nvim.cross.fs.expand_path is absent, and that module is present in the installed lib.nvim (E:/repos/lib.nvim/lua/lib/nvim/cross/fs/expand_path exists), so on any current install line 42 is dead and nothing is exploitable today. It would only wake up for someone pinned to an older lib.nvim tag, and even then, on Windows it cannot execute anything (verified: expand() returns "" for a backtick span rather than running the shell), so the exposure is Unix/macOS-only. Worth fixing as a one-line consistency change (route the fallback through the same primitive, or drop the fallback in line with the LUA-01 finding), not worth prioritising as a vulnerability.
+
+**Status.** ✅ erledigt (`d0e9c8d`) — Der lib.nvim-lose Fallback in `to_absolute()` nutzt jetzt eine lokale `~`/`$VAR`-Expansion statt `vim.fn.expand` — aktuell totes Codestück, aber ohne Shell-Risiko.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -4807,6 +4829,8 @@ ALREADY-HANDLED BELEGE, RE-CHECKED AND STILL CLEAN. LUA-48 (util/buffer.lua:55-5
 RULES I CHECKED AND FOUND COMPLIANT, worth recording because they are the ones that usually break. ERR-30: refs/apply.lua:161-195 re-reads the line and re-runs rewrite_line against the current text before writing, in both the buffer and the readfile branch. ERR-51: config/init.lua:220 rebuilds from vim.deepcopy(_defaults) on every setup(), so a second setup({}) resets rather than accumulates (the reposcope counter-case). SEC-46: trash/platform.lua:76-79 escapes the backslash before the quote for AppleScript with the reasoning written out, and the PowerShell sites double `'` correctly. SEC-03/SEC-01: every shell-out in the plugin is argv (vim.system / lib.nvim.cross.run_argv); I found no shell string construction. PERF-80: the uv fs_event callback in file_watcher goes through lib.nvim.debounce, and size_info wraps its vim.system callback in vim.schedule_wrap. UI-01: trash confirms the whole batch once and offers per-item confirmation as an explicit choice. SEC-30: the filter fallback uses find(pattern, 1, true) (plain), not a raw regex. SEC-33: cwd_mode's persist_restore (lines 330-350) validates version, mode against MODES, and the pinned directory's existence -- the model the session store does not follow.
 
 ERR-31 note: I found no check-then-create race in a security-relevant place, but features/infra/safety/backup.lua:29 builds its destination from os.date("%Y%m%d_%H%M%S") plus the basename, so two backups of the same filename within one second resolve to the same path and the second overwrites the first with no error. That is a collision, not the TOCTOU race ERR-31 names, so I did not file it as a finding.
+
+**Status.** ✅ erledigt (`cd66ade`) — `M.prune()` und `M.list()` glob'en das Backup-Verzeichnis jetzt ebenfalls über `globbable()`.
 
 ---
 
