@@ -49,7 +49,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | gopath.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | lsp.nvim | 13 | – | – | offen |
 | open.nvim | 13 | – | – | offen |
-| sessions.nvim | 13 | – | – | offen |
+| sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | ui.nvim | 13 | – | – | offen |
 | filetree.nvim | 12 | – | – | offen |
 | images.nvim | 12 | – | – | offen |
@@ -4274,7 +4274,7 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 ## sessions.nvim
 
-**13 Befunde** (9 × high). Roh gemeldet: 13.
+**13 Befunde** (9 × high). Roh gemeldet: 13. — **Stand: 13/13** (⏭️ 0, 2026-09-18)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -4286,6 +4286,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 **Auswirkung.** Restoring a layout with more windows than the current terminal can fit throws E36 as a raw Lua traceback out of `:Session load-layout`, so the `n().error("layout restore failed: ...")` branch at bindings/usercmds/init.lua:281 is unreachable for this failure and M.restore's documented `@return boolean ok, string path_or_err` contract is bypassed. The aggravating detail is verified: line 153 has already run `silent! only!` by that point, so the user's previous window arrangement is gone and the replacement is half-built when the error lands.
 
+**Status.** ✅ erledigt (`f27dfca`) — `build()` läuft jetzt unter pcall; ein Split-Fehler (z. B. E36) liefert `false, err` statt einer rohen Traceback aus `M.restore`.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/sessions/git.lua:30` · `M.current_branch` · confidence **high**
@@ -4295,6 +4297,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 **Regelbezug.** ERR-02 requires a `type`/`nil` check before API access. `vim.uv` was introduced in Neovim 0.10; on 0.9 it is nil. The plugin explicitly claims 0.9 support (README badge "Neovim 0.9+", health.lua:15-19 passes on `nvim-0.9`, health.lua:29-33 deliberately probes `vim.uv or vim.loop`), so this is the one place that breaks the contract the rest of the file honours.
 
 **Auswirkung.** Narrower than stated. I read E:/repos/lib.nvim/lua/lib/nvim/git/init.lua: it requires lib.nvim.cross.run_argv lazily inside git_system, not at module level, so `pcall(require, "lib.nvim.git")` at git.lua:11 succeeds on any install that has lib.nvim at all -- and lib.nvim is a hard dependency (bare module-level require at bindings/usercmds/init.lua:6). The fallback branch containing line 30 therefore only executes on a partial or version-skewed lib.nvim checkout that is missing the git submodule. On such a checkout running Neovim 0.9, M.current_branch() raises `attempt to index a nil value (field 'uv')` on the resolve path shared by :Session save, :Session load, the VimLeavePre autosave and the VimEnter autoload, instead of degrading to default_name as the rest of the function is written to do. The one-line `vim.uv or vim.loop` the other four sites use is the whole fix; the code-level inconsistency is unambiguous even where the impact is not reachable.
+
+**Status.** ✅ erledigt (`9315dff`) — `vim.uv.fs_stat` durch `(vim.uv or vim.loop).fs_stat` ersetzt, analog zu den übrigen vier Stellen im Plugin.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -4306,6 +4310,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 **Auswirkung.** Accurate as written. With relative_paths = true, a failed post-processing read or write (file held by a sync client or antivirus, read-only volume) leaves the session file host-absolute while :Session save reports success -- bindings/usercmds/init.lua's save route sees ok = true and prints "saved: <path>". The failure is discovered only on the second machine, where the session sources paths that do not exist there, which is the one scenario the feature exists for. Note M.prepare_for_load (portable.lua:137-171) has the mirror-image gap: portable.lua:169 discards the write result for the temp copy, so a failed temp write hands core.load a path it will then try to source. Giving make_relative a `(boolean, string|nil)` return and checking it at core.lua:243 and :300 is the whole fix.
 
+**Status.** ✅ erledigt (`f9c183a`) — `make_relative`/`prepare_for_load` geben jetzt explizit `(ok, err)` zurück; `core.save`/`core.save_tab` melden einen fehlgeschlagenen `relative_paths`-Schritt statt stillschweigend Erfolg.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/sessions/picker.lua:80` · `do_delete` · confidence **high**
@@ -4315,6 +4321,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 **Regelbezug.** LLS-31's inversion clause: "eine Funktion, die ihre Rückgabe aus der geplanten statt der tatsächlichen Arbeit bildet, kann nicht auffallen (`return #geplant` statt `return #erledigt`)". Same failure as PRIN-20/ERR-03: a relevant function swallows failure and reports success. The `:Session delete` route (bindings/usercmds/init.lua:160-165) handles the same call correctly, so the picker path is the outlier.
 
 **Auswirkung.** A session file that is read-only, held open by another process, or on a read-only volume is reported as "deleted: alpha, beta" while still on disk. The Snacks branch makes it worse in a verifiable way: picker.lua:129-136 filters the names out of picker.opts.items and calls picker:refresh() unconditionally, so the entry disappears from the open picker regardless of what happened on disk and reappears on the next :SessionLoad with no explanation. do_delete's notifier only ever exposes `info` (picker.lua:70-76 builds a fallback table containing info alone), so there is currently no channel through which a per-name failure could even be reported without also extending that table.
+
+**Status.** ✅ erledigt (`1937e3e`) — `do_delete` sammelt jetzt tatsächlich gelöschte vs. fehlgeschlagene Namen getrennt, meldet beides und gibt die wirklich gelöschten zurück; beide Backends aktualisieren ihre Item-Liste danach.
 
 ### `LUA-06` — `config/DEFAULTS.lua` bleibt reine Daten
 
@@ -4326,6 +4334,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 **Auswirkung.** The auditor's stated impact overstates the runtime consequence and I am correcting it: because config/init.lua:48-59 appends the runtime %TEMP% spellings additively (deduping first) rather than replacing them, the module-level value is not actually 'overwritten' and does not produce wrong behaviour on any machine today. The accurate consequence is the one the rule exists for: `require("sessions.config.DEFAULTS")` is not side-effect-free -- it performs an environment lookup and a stdpath resolution -- which breaks the contract that docgen, TESTS/config_spec.lua:7 and any future early accessor-less reference rely on, and freezes both values at first-require time instead of at config-build time. This is a conformance fix with no user-visible behaviour change, matching how pickers.nvim, casedesk.nvim and reposcope.nvim were migrated.
 
+**Status.** ✅ erledigt (`ac239e1`) — `default_blacklist_paths()` läuft nicht mehr auf Modul-Ebene; `DEFAULTS.blacklist.paths` ist jetzt `{}`, der Plattform-Default wird in `M.setup()` aufgelöst, sofern kein expliziter Nutzerwert vorliegt.
+
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
 `lua/sessions/meta.lua:32` · `M.read` · confidence **high**
@@ -4335,6 +4345,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 **Regelbezug.** SEC-33 requires every field of a persisted snapshot to be re-validated on load (type, length, count cap). The `.{name}.json` sidecar is exactly such a snapshot: it lives next to the session file in a directory the plugin itself encourages to be git-tracked and synced across machines (`:Session toggle-track`, docs/git-integration.md). The plugin's own `layout.lua:118-138` (`is_valid_node`) does this validation properly, with a comment describing a crash caused by precisely this omission -- meta.lua never got the same treatment. Dropping the `err` also collapses "no sidecar" and "corrupt sidecar" into one `nil` (ERR-11); `layout.lua:148-150` keeps the `err`, meta.lua does not.
 
 **Auswirkung.** A sidecar whose `saved_at` or `branch` decodes to a table (e.g. `"branch": {}`) makes `:Session list` raise `attempt to concatenate a table value` at bindings/usercmds/init.lua:198-199, and because that concatenation sits inside the `for _, p in ipairs(list)` loop, one bad sidecar takes out the listing of every session, not just its own. `"buffers": "x"` makes picker.lua:55 raise `bad argument #1 to 'ipairs'` in the preview. Neither is caught: lib.nvim's composer ends with a bare `return run(ctx)` at bindings/usercmd/composer/parse.lua:199, so the error surfaces as a raw traceback. The ERR-11 half is also real -- a corrupt sidecar and a missing one both arrive as nil, so picker.lua:59-60 tells the user "(no metadata recorded -- enable `metadata = true` ...)" about an option that is already on by default (DEFAULTS.lua:43).
+
+**Status.** ✅ erledigt (`58962b9`) — `M.read` validiert jetzt jedes Feld (Typ, `buffers`-Count-Cap) und verwirft den gesamten Read beim ersten ungültigen Feld.
 
 ### `UI-55` — Buffer löschen, dessen Fenster sichtbar sind
 
@@ -4346,6 +4358,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 **Auswirkung.** `:Session save` (and `:Session save-tab`) with a sidebar or dashboard open force-deletes that buffer while its window is still showing it. Neovim then reassigns the window -- to the alternate buffer when one exists, to a newly created empty buffer when none does -- so the user's visible layout changes as a side effect of saving, and :mksession records the substituted window instead of the sidebar. The auditor's "empty [No Name] scratch buffer" is the worst case, not the only one; the load-bearing consequence is that the saved layout no longer matches what was on screen. Separately real: `{ force = true }` discards unsaved changes without a prompt in any buffer whose name starts with a blacklisted path prefix (the $TEMP / /tmp / %TEMP% entries added by DEFAULTS.lua:12-22 and config/init.lua:29-59).
 
+**Status.** ✅ erledigt (`a33ab89`) — Neue `switch_windows_off()` leitet sichtbare Fenster vor dem `nvim_buf_delete` auf einen echten, gelisteten Alternativ-Buffer um.
+
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
 `lua/sessions/core.lua:424` · `M.list` · confidence **high**
@@ -4355,6 +4369,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 **Regelbezug.** XP-01 states that `glob`/`globpath` read their first argument as a *pattern*, not a path, and names `lib.nvim.fs.globbable` as the mandatory wrapper for "list the files in this directory". `cfg.root` is user-supplied and only passes through `lib.nvim.cross.fs.expand_path`, which expands a *leading* `~` and `$VAR`/`%VAR%` but leaves an 8.3 `~1` component untouched -- so `root = "%TEMP%/nvim-sessions"` resolves to `C:/Users/STEFAN~1/Temp/nvim-sessions` and glob tries to resolve `~1` as a user. lib.nvim is already a hard dependency here (20+ bare requires), so the prescribed helper is available at zero cost.
 
 **Auswirkung.** Only reachable with a non-default root: the default `vim.fn.stdpath("data") .. "/sessions"` is long-form and safe. With a root under an 8.3 short path (e.g. `root = "%TEMP%/nvim-sessions"` on a profile name over eight characters) or a root containing `[`, `]`, `?` or `*`, globpath returns {} silently while core.save keeps writing files there by concatenation. Verified consumers of that empty list: `:Session list` prints "No sessions saved." (bindings/usercmds/init.lua:187-189), `:SessionLoad` prints "no sessions saved yet" (picker.lua:233-234), and <Tab> completion for `:Session load`/`delete`/`rename` offers nothing (the SESSION type at bindings/usercmds/init.lua:65-72 is built on core.list()). :checkhealth also reports "0 session(s) stored" for a full directory (health.lua:134-135). The sessions stay on disk and are unreachable through the plugin's own UI.
+
+**Status.** ✅ erledigt (`a2b08f5`) — `M.list`/`M.list_tabs` glob'en jetzt über `lib.nvim.fs.globbable(...)` statt den rohen Pfad direkt an `globpath` zu übergeben.
 
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
@@ -4366,6 +4382,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 **Auswirkung.** Same precondition as the core.lua finding (a session root with an 8.3 component or a glob metacharacter, not the default root). Under it, `:Session load-layout <Tab>` offers no candidates even though layout.save wrote the file successfully via lib.nvim.fs.json.write (which never globs), so a saved layout can only be restored by typing a name the plugin will no longer show. Note the restore itself still works if the name is typed exactly -- layout_path() concatenates rather than globbing -- so this is a discoverability failure, not data loss.
 
+**Status.** ✅ erledigt (`a2b08f5`) — Gleicher Fix, gleicher Commit wie #8 (dieselbe Regel, zwei Fundstellen).
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/sessions/config/init.lua:18` · `M.setup` · confidence **medium**
@@ -4375,6 +4393,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 **Regelbezug.** ERR-50 requires validation (unknown keys, "meintest du ...") to run *before* the merge, precisely so that a typo in a nested option does not vanish into the default. With no validation at any point, the failure the rule exists to prevent is fully present; ERR-22's "sichtbar gemacht über `:checkhealth`" is likewise unmet. TESTS/config_spec.lua tests only the merge itself and DEFAULTS immutability, never an unknown key.
 
 **Auswirkung.** Worth stating precisely: the finding is really 'no validation exists at all' rather than 'validation runs on the wrong side of the merge', but the harm ERR-50 is written to prevent is fully present, so the site is in scope. Concretely, setup({ autosave_names = "proj" }) is accepted in silence, autosave keeps its default of resolving a project/branch name, and nothing -- not setup(), not :checkhealth sessions -- ever mentions the unknown key; setup({ blacklist = { filetype = {...} } }) likewise leaves the real filetypes list at its default so the buffers the user meant to exclude keep landing in the session file. The user sees the symptom (wrong autosave naming, temp buffers in sessions) with no path back to the typo. Lowest-cost fix is a KNOWN_OPTS table checked against opts before line 18, surfaced via vim.health.warn in health.lua.
+
+**Status.** ✅ erledigt (`ac239e1`) — `M.setup()` validiert `opts` jetzt vor dem Merge gegen ein KNOWN-Schema (unbekannte Keys mit Levenshtein-Hinweis, falsch typisierte Werte verworfen); über `:checkhealth` sichtbar.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -4386,6 +4406,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 
 **Auswirkung.** Two corrections to the auditor. First, the companion claim about health.lua:67 is wrong and I am dropping it: the vim.notify fallback genuinely exists in three of the four modules (bindings/usercmds/init.lua:19-35, picker.lua:70-76, bindings/autocmds/init.lua:18-24); only bindings/keymaps/init.lua:91 lacks it, so line 67 is broadly honest and the autocmds comment is half-right rather than wholly false. Second, the failure is narrower: a completely absent lib.nvim already throws at sessions/init.lua:27 (usercmds.enable) before keymaps are reached, and cfg.keymaps defaults to false (DEFAULTS.lua:66), so attach() is skipped entirely for default users. What survives is real: on a partial or version-skewed lib.nvim that has the composer but not bindings.keymap, :checkhealth reports "info: using vim.keymap.set fallback", and a user who then calls setup({ keymaps = {...} }) gets a throw out of attach at sessions/init.lua:34 -- after :Session/:LastSession/:SessionLoad and the autocmds were already registered and before `vim.g.loaded_sessions_nvim = 1` at line 40, with _setup_done already true (init.lua:23) so a retry is a silent no-op. Fix is one line: report it as an error, or keep the wording honest about there being no fallback.
 
+**Status.** ✅ erledigt (`29d1b64`) — Health-Meldung behauptet keinen Fallback mehr, der nicht existiert; der irreführende Kommentar in `bindings/autocmds/init.lua` korrigiert.
+
 ### `LUA-16` — `vim.NIL` sanitizen
 
 `lua/sessions/bindings/usercmds/init.lua:198` · `M.enable (list route)` · confidence **medium**
@@ -4395,6 +4417,8 @@ TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shel
 **Regelbezug.** LUA-16 requires every field coming from external JSON to be checked with `if v == vim.NIL or type(v) ~= "string" then v = "" end` before use. `lib.nvim.json.decode` normalizes `vim.NIL` into `lib.lua.null`'s `M.NULL`, which is a table carrying only `__tostring` -- no `__concat` -- and is therefore *truthy*, so it sails past the `meta.saved_at and ...` guard and then blows up on the concatenation.
 
 **Auswirkung.** A sidecar containing `"saved_at": null` or `"branch": null` makes `:Session list` fail with `attempt to concatenate a table value` (tostring would have printed "null") instead of listing anything, and makes the picker preview fail for that entry at picker.lua:45-51. Same blast radius as the SEC-33 finding -- one bad sidecar breaks the listing of all sessions -- and the two findings are two views of one defect: SEC-33 names the missing validation at the meta.lua load boundary, LUA-16 names the missing type guard at these two use sites. Fixing it at meta.lua:32 closes both.
+
+**Status.** ✅ erledigt (`58962b9`) — Über denselben `meta.lua`-Fix wie #6 geschlossen: ein `vim.NIL`/Null-Feld führt jetzt zu `meta == nil` statt zu einer wahrheitswertigen Tabelle, die die Guards umgeht.
 
 ### `UI-01` — Bulk-/destruktive Aktionen
 
@@ -4413,6 +4437,8 @@ CHECKED AND CLEAN (leads that did not survive reading the code): ERR-11 in sessi
 NOT REPORTED, JUDGMENT CALLS I chose to leave out rather than pad the list: (a) ERR-53 at bindings/autocmds/init.lua:107 -- `M.enable()` captures `cfg` once and the VimLeavePre callback reads `cfg.autosave_name` from that captured table, while config/init.lua:18 *replaces* `M.cfg` rather than mutating it in place, and all nine call sites in core.lua re-read the live table. The decoupling is real but I could not name anything that actually breaks: `sessions.setup()` is idempotent and `sessions.config` is not documented as public API, so the only trigger is an undocumented direct `require("sessions.config").setup(...)` at runtime. (b) ERR-31 at core.lua:471-478 -- `M.rename` is a textbook check-then-create (`filereadable` then `os.rename`, which silently overwrites on POSIX); the race needs two Neovim instances sharing one session root, which `:Session toggle-track`'s sync story makes plausible but not demonstrable. (c) LUA-11 at picker.lua:181 -- `nvim_buf_set_lines(self.state.bufnr, ...)` on a telescope-owned handle with no `nvim_buf_is_valid` check; strictly a violation, but telescope drives `define_preview` synchronously and I could not construct the failure. (d) PERF-46 at statusline.lua:35 -- the memo key is the opts table's identity, not its contents, so a consumer that mutates its own opts table in place gets a permanently stale merge; docs/statusline.md:65-70 documents the identity-keyed scheme, so it is a deliberate trade.
 
 COULD NOT VERIFY: whether `vim.cmd.source(path)` escapes a path containing spaces (core.lua:340, 391). `nvim_cmd` is documented to escape file arguments for XFILE commands, and I had no way to run Neovim here to confirm, so I left it out; if it does not escape, a session root under a directory with a space in its name would break `:Session load` outright. I also could not execute the test suite (no Neovim in this environment), so every finding rests on reading, not on a reproduction.
+
+**Status.** ✅ erledigt (`1937e3e`) — `<C-d>` fragt jetzt einmal über das vorhandene `float_confirm` nach, bevor irgendetwas gelöscht wird, in beiden Backends.
 
 ---
 
