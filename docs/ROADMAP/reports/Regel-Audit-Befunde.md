@@ -40,7 +40,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | reposcope.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | sandbox.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | cascade.nvim | 14 | – | – | offen |
-| casedesk.nvim | 14 | – | – | offen |
+| casedesk.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | cmdlog.nvim | 14 | – | – | offen |
 | color_my_ascii.nvim | 14 | – | – | offen |
 | media.nvim | 14 | – | – | offen |
@@ -2685,7 +2685,7 @@ What I could NOT cover:
 
 ## casedesk.nvim
 
-**14 Befunde** (10 × high). Roh gemeldet: 15.
+**14 Befunde** (10 × high). Roh gemeldet: 15. — **Stand: 14/14** (⏭️ 0, 2026-09-18)
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -2697,6 +2697,8 @@ What I could NOT cover:
 
 **Auswirkung.** `:Cases stale 3O` (letter O) or `:Cases stale 7days` does not report the typo; it switches the command into per-priority threshold mode, which is a materially different query. The header confirms the wrong mode in a way that reads deliberate — `("Stale (%d, priority-based threshold)"):format(#rows)` at line 261 — and the empty-result notify says 'no open case is stale for its priority' rather than naming a bad argument. The user believes they filtered on a day count that was never applied. Low severity, trivially fixed by distinguishing `days_arg == nil` from `tonumber(days_arg) == nil` (or by declaring the arg as a numeric argtype).
 
+**Status.** ✅ erledigt (`6198ba2`) — `days`-Arg von STRING auf INT umgestellt, Composer weist Tippfehler jetzt vor `run()` zurück statt auf `nil` zu kollabieren.
+
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
 `lua/casedesk/ui/cases.lua:218` · `M.recent` · confidence **high**
@@ -2706,6 +2708,8 @@ What I could NOT cover:
 **Regelbezug.** ERR-10: a mistyped count degrades to the default exactly as if no argument had been passed, with no way for the caller to tell the two apart.
 
 **Auswirkung.** `:Cases recent 2O` silently lists 10 entries rather than rejecting the argument. Same class as the `stale` case and equally cheap to fix, but milder in consequence: the picker header reads `("Recent (%d)"):format(#rows)` with the true row count, so the number on screen is at least honest about how many were returned — the user just does not learn that their requested count was discarded.
+
+**Status.** ✅ erledigt (`6198ba2`) — `n`-Arg von STRING auf INT umgestellt, gleiche Begründung wie `stale`.
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -2717,6 +2721,8 @@ What I could NOT cover:
 
 **Auswirkung.** `opts = { sla_notify_interval_seconds = "15m" }` (or any non-numeric-coercible value) makes `casedesk.setup()` raise 'attempt to perform arithmetic on a string value' from sla/notify.lua:93. Because this runs before the route table is registered, and before `keymaps.setup()`/`autocmds.setup()` in init.lua, the entire plugin surface is gone: `:Case`, `:Cases` and `:Tricentis` do not exist, and the plugin's keymaps and autocmds are never installed. The traceback names sla/notify.lua, not the option the user mistyped, and `:checkhealth casedesk` — which validates no option types — offers no path to the answer. ERR-22 asks for exactly the opposite: degrade that one value to its default and surface it in checkhealth.
 
+**Status.** ✅ erledigt (`17654e2`) — Ungültiges `sla_notify_interval_seconds` degradiert jetzt auf den Default statt `setup()` vor der Routentabelle abstürzen zu lassen; via `M.issues()` in `:checkhealth` sichtbar.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/casedesk/apply.lua:30` · `M.run (kind == "write")` · confidence **high**
@@ -2726,6 +2732,8 @@ What I could NOT cover:
 **Regelbezug.** ERR-30 requires every edit computed during a scan to be re-verified against the current state immediately before writing. Here the only guard against clobbering is a stat taken before an unbounded human-time confirmation gap, and `lib.nvim.fs.write.to_file` opens with `io.open(path, "wb")`, which truncates unconditionally.
 
 **Auswirkung.** Between the `uv.fs_stat` in `plan.build` and the truncating `io.open(path, "wb")` in `apply.run` there is an unbounded, event-loop-live confirmation window during which nothing re-checks the target. If a blueprint file materializes in that window, confirming `:Case sync` silently truncates it and writes the blank template (H1 + empty body) over it, with `apply.errors` reporting success. The practical exposure is narrower than the auditor implies: for `:Case new` the directory is brand new, so essentially only `:Case sync` on an existing case is at risk, and it needs the file to appear in the seconds the dialog is up. What is unambiguously broken regardless of timing is the written policy — plan.lua:3-5 and apply.lua:2-4 both claim 'never overwrite an existing file' / 'safe to run against a case that already has some of its blueprint in place', and that guarantee holds only at scan time, not at write time.
+
+**Status.** ✅ erledigt (`d9552fd`) — `write`/`copy`-Actions re-verifizieren das Ziel unmittelbar vor dem Schreiben; ein zwischenzeitlich aufgetauchtes Ziel wird verweigert statt überschrieben, außer der Blueprint-Node setzt `overwrite = true`.
 
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
@@ -2737,6 +2745,8 @@ What I could NOT cover:
 
 **Auswirkung.** The 'target already exists -> ambiguous, leave it to a human' policy that doctor.lua and normalize.lua are jointly built around never fires at all, at any time. Because `exists(to) and nil or to` always evaluates to `to`, every such finding reaches `normalize.plan` as a candidate with a non-nil `to`, is listed as a normal rename in the viewer, and `:Cases normalize` then renames over the existing file via `uv.fs_rename` — destroying it without a word. This does not require the confirmation-window race the finding describes; it happens on the very first run against any case where e.g. both `CaseNote.md` and `Summary.md` already exist. The ERR-30 defect (no re-verification before the write) is the second layer: even once the `and/or` bug is fixed, a target created during the confirmation pause is still clobbered.
 
+**Status.** ☑️ schon behoben — Bereits durch Commit `2ee2541` (derselbe Tag, vor dieser Session) behoben: `M.run` prüft `uv.fs_stat(s.to)` unmittelbar vor `mutate.rename_file` und verweigert bei Kollision.
+
 ### `ERR-33` — Fenster-/Buffer-Handles bei Ausführung erneut validieren
 
 `lua/casedesk/ui/reply_check.lua:109` · `M.reply_check` · confidence **high**
@@ -2746,6 +2756,8 @@ What I could NOT cover:
 **Regelbezug.** ERR-33/LUA-13: a handle captured before a deferred/async hop must be revalidated at execution time, not only at capture time. Everything between capture and use is asynchronous — network round-trips, a `vim.schedule`, and then an open-ended wait for a keypress.
 
 **Auswirkung.** Close or wipe the reply draft while the async link check is in flight (each HEAD request carries its own timeout, so this is a multi-second window), then press `c` or `s` on the report that appears afterwards: the keymap callback raises a raw 'Invalid buffer id: N' instead of doing the action or saying anything useful. One correction to the auditor: the report does NOT stay open indefinitely — `kit.viewer` wires `close_on_focus_lost` (ui.nvim `kit/viewer.lua:63-65`), so the float dismisses itself on WinLeave/BufLeave and the user cannot leave it, close the draft, and come back. The reachable window is the async link check itself, not 'any time afterwards'.
+
+**Status.** ✅ erledigt (`f14249a`) — `c`- und `s`-Keymap prüfen `nvim_buf_is_valid(bufnr)` erneut zum Ausführungszeitpunkt, statt den beim `bufnr`-Capture erfassten Zustand blind anzunehmen.
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -2757,6 +2769,8 @@ What I could NOT cover:
 
 **Auswirkung.** Any misspelled option is accepted in total silence and stored on the config table where nothing reads it. Concretely, `opts = { case_root = "D:/work" }` (the real key is `cases_root`) leaves `cases_root` at the derived default `<$REPOS_DIR or C:/repos>/WKDBook-Tricentis/Cases/SAP_Support/Cases` (config/init.lua:127-130), so `:Cases list` scans the author's path and comes back empty. `:checkhealth casedesk` then reports on that default path — ok if it happens to exist, `error: repo_root does not exist` otherwise — and never mentions that an option was supplied and ignored, which is precisely the 'typo disappears into the default and is never noticed' failure ERR-50 names.
 
+**Status.** ✅ erledigt (`17654e2`) — Unbekannte Keys werden vor dem Merge zurückgewiesen (Levenshtein-„did you mean“-Hinweis), gesammelt in `M.issues()` für `:checkhealth`.
+
 ### `ERR-51` — Merges kopieren Defaults tief
 
 `lua/casedesk/config/init.lua:13` · `M (= DEFAULTS)` · confidence **high**
@@ -2766,6 +2780,8 @@ What I could NOT cover:
 **Regelbezug.** ERR-51 requires merges to copy the defaults deeply rather than mutate the shared defaults table. The module's own rationale (lines 5-8) only justifies "a module table rather than a get() accessor" — a deep copy would give exactly the same ergonomics. This is also the reposcope counter-case cited under LUA-87: merging into the current options table instead of a DEFAULTS copy accumulates.
 
 **Auswirkung.** Two real consequences, both as stated. (1) There is no pristine copy of the defaults anywhere after `setup()` — `require("casedesk.config.DEFAULTS")` hands back the mutated table, so any future consumer wanting a default value (doc generation, a health check that wants to say 'this differs from the default', a reset path) silently gets the user's value instead; the test suite already has to work around this by clearing two `package.loaded` entries. (2) `setup()` is not idempotent-with-respect-to-reset: a second `setup({})`, as a config reload or a `:Lazy reload` would issue, cannot restore any default, because `explicit` is empty and every derived path is recomputed from the already-overridden base. The module doc's stated rationale (lines 5-8) only argues for a module table over a `get()` accessor, which a `vim.deepcopy(DEFAULTS)` would satisfy equally well — the aliasing buys nothing.
+
+**Status.** ✅ erledigt (`17654e2`) — `M` ist jetzt `vim.deepcopy(DEFAULTS)`; `M.area`/`M.state_dir`/`M.all_states` wurden neu gebunden, da `vim.deepcopy` Funktionsfelder nur per Referenz kopiert und sie sonst weiter auf `DEFAULTS`s eigene Tabelle gezeigt hätten.
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -2777,6 +2793,8 @@ What I could NOT cover:
 
 **Auswirkung.** Correcting the auditor on reachability: no caller in this ecosystem currently passes an explicit buffer. ui.nvim's casedesk segment (`lua/ui/statusline/modules/casedesk/init.lua:30`) calls `statusline.status()` with no argument, and `M.lualine_component()` does the same, so on the nil path the key and the computed value agree and today's output is correct. The defect is latent, not live: `M.status(buf)` is documented public API, and the moment any consumer uses it as documented — a heirline/lualine component rendering an inactive window's statusline — it gets the ACTIVE buffer's case label back, and that wrong label is then cached under the inactive buffer's name for up to `SLA_REFRESH_SECONDS` (60s), so repeat redraws keep returning it. Fix is one line: pass `buf` through to the resolve call instead of `nil` (or drop the parameter from the signature).
 
+**Status.** ✅ erledigt (`44f77d7`) — `resolve.sync` erhält einen neuen optionalen `buf`-Parameter; `statusline.status(buf)` reicht ihn jetzt durch, sodass Cache-Key und berechneter Wert übereinstimmen.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/casedesk/ui/copy.lua:27` · `M.copy / with_src` · confidence **high**
@@ -2786,6 +2804,8 @@ What I could NOT cover:
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on buffer/user text: a backtick span in the argument is a command substitution through `&shell`, and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. The rule names `lib.nvim.cross.fs.expand_path` as the safe replacement — which the composer's PATH argtype (lib.nvim `composer/argtypes.lua:145`) already applied to `ctx.args.src`, so this second expansion is both redundant on that path and the dangerous one.
 
 **Auswirkung.** A source path containing a backtick span — typed at the `Source file` prompt, or passed to `:Case copy` — is executed as a shell command by `vim.fn.expand` before `uv.fs_stat` is ever reached, and the command's stdout becomes the path that is then read and copied. `%` and `#` in a path are likewise silently replaced by the current/alternate filename. Reachability is limited (the string has to come from the user's own keystrokes or a pasted path), so this is a latent injection sink rather than a remote-triggered one, but it is the exact pattern SEC-34 exists to forbid, and the fix is a one-line swap to `lib.nvim.cross.fs.expand_path` — on the `:Case copy` path, simply deleting line 27 is already correct.
+
+**Status.** ✅ erledigt (`b9b394b`) — `vim.fn.expand(source)` durch `lib.nvim.cross.fs.expand_path` ersetzt (kein Shell, kein Globbing, keine Vim-Specials).
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -2797,6 +2817,8 @@ What I could NOT cover:
 
 **Auswirkung.** `:Case similar 049885 1O` ranks 5 hits instead of 10 without saying the argument was rejected. Milder than the auditor states: the picker title is `("Similar to %s (%d)"):format(entry.short, #hits)` and `#hits` is the real returned count, so the displayed number is accurate — what is lost is only the signal that the requested count was discarded. Lowest-severity of the three ERR-10 instances.
 
+**Status.** ✅ erledigt (`6198ba2`) — `n`-Arg von STRING auf INT umgestellt, gleiche Begründung wie die anderen beiden ERR-10-Funde.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/casedesk/templates.lua:97` · `M.render` · confidence **medium**
@@ -2807,6 +2829,8 @@ What I could NOT cover:
 
 **Auswirkung.** Three causally distinct outcomes — unknown tag, unreadable/missing template file, legitimately empty template — are indistinguishable to the caller, so `:Case new` and `:Case sync` cannot tell a broken install from an empty template and report success either way. The realized consequence is a scaffolded case whose documents contain nothing but their H1, with no error and no health warning. The chosen mitigation is a spec assertion (`TESTS/templates_spec.lua` checks every registered tag resolves to a readable file), which catches a shipped-path regression in CI but covers nothing that happens at the user's install: a `M.register(tag, path)` typo, a case-sensitive filesystem, or a packaging change that drops `templates/` all reproduce the silent outcome the doc comment already describes. ERR-11's fix is a second return value (`{}, nil` vs `{}, err`) that plan.lua can surface.
 
+**Status.** ✅ erledigt (`d9552fd`) — `M.render` liefert jetzt einen zweiten Rückgabewert (`nil` nur bei echtem Erfolg); `plan.build` sammelt Template-Fehler und `:Case new`/`:Case sync` warnen davor.
+
 ### `LUA-11` — Gültigkeit prüfen
 
 `lua/casedesk/ui/cases.lua:174` · `M.list_all` · confidence **medium**
@@ -2816,6 +2840,8 @@ What I could NOT cover:
 **Regelbezug.** LUA-11 requires `nvim_win_is_valid` before every window API call, and the handle here is a stale capture used from a callback that runs arbitrarily later. Correctly this should read the *current* window (`0`), which is by definition the one showing the buffer the mapping fired in.
 
 **Auswirkung.** Press `<C-w>s` in the `:Cases list` viewer: ui.nvim's `close_on_focus_lost` (kit/viewer.lua:63-65, lib.nvim `window/close_on_focus_lost.lua:39-45`) closes the float on WinLeave, but the scratch buffer survives in the new split because it is displayed there (`bufhidden=wipe` only wipes on hide), and its buffer-local `m`/`c` maps stay live. Pressing `m` there raises a raw 'Invalid window id: N' out of the keymap. Two corrections to the auditor: the user does not need to close the original window — the float closes itself — and the 'worse than an error, reads the other window's cursor' claim does not hold, because the two windows never coexist for longer than one scheduled tick. The fix is the one the auditor names: read window `0`, which is by definition the window the buffer-local mapping fired in.
+
+**Status.** ✅ erledigt (`6198ba2`) — Die `m`-Keymap liest jetzt Fenster `0` statt des beim Viewer-Aufbau erfassten `surf.winid`.
 
 ### `PERF-82` — Idempotenter Timer-Start
 
@@ -2836,6 +2862,8 @@ NOT CHECKED AT ALL. TESTS/ (44 spec files) and scripts/ were only spot-read — 
 DELIBERATELY NOT REPORTED. Three things look like hits but are not. (1) `usage.lua:77` collapses "journal missing" and "journal corrupt" onto `{}` and then rewrites the whole file — textbook ERR-11 load-modify-save, but the module doc (lines 20-22) declares the journal explicitly loss-tolerant and reconstructible, which is the documented exemption the ERR-11 Belege grants github_stats' telemetry store. (2) `attachments.lua:18` doubles `'` for a PowerShell single-quoted literal — that is complete and correct for that context (backslash is literal there), so SEC-46 is satisfied, not violated. (3) `registry.list()` hands out the live cache table by reference and `ui/insert.lua:305` passes it straight into `kit.select` — the ERR-54 shape, but I read ui.nvim's `kit/select.lua`, `chooser.lua` and `picker.lua` and none of them mutates the caller's `selection`, so there is no current defect; it stays a latent one if that picker ever starts sorting in place. I also left out the check-then-create in `ui/add.lua:76` (ERR-31): it is the named anti-pattern, but the "exists" branch opens the file rather than claiming exclusivity, and a TOCTOU race needs two concurrent `:Case add` calls in one single-user editor.
 
 PRIORITISATION. If only three are fixed: the two ERR-30 write-after-confirm gaps (they destroy user data silently) and SEC-34 in ui/copy.lua (it executes a shell).
+
+**Status.** ✅ erledigt (`17654e2`) — Neues `M.stop()` (`timer:stop()` + `pcall(timer.close)` + `timer = nil`) als explizites Gegenstück zum idempotenten `start()`.
 
 ---
 
