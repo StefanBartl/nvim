@@ -67,6 +67,36 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | my.nvim | 7 | – | – | offen |
 | data.nvim | 5 | – | – | offen |
 
+**insights.nvim (16 Befunde) läuft, nicht von hier aus anfassen.** Ein Audit-Agent
+dafür wurde durch ein Sitzungsende unterbrochen; parallel läuft eine unabhängige,
+vom Nutzer selbst gestartete Session in derselben Arbeitskopie (`E:/repos/insights.nvim`,
+kein eigenes Worktree), die einen `pairs(saved)`-Modul-Restore-Bug in mehreren
+`TESTS/*_spec.lua`-Dateien fixt. Beide Arbeiten stehen gemischt unstaged/uncommitted
+im selben Checkout. **Nicht `git add -A` in diesem Repo, nicht committen, bis diese
+Session erkennbar fertig ist** — dann den unterbrochenen Audit-Agenten sauber
+fortsetzen (Startpunkt: `git -C E:/repos/insights.nvim log --oneline -15` und
+`git status -s` zeigen, was von wem stammt).
+
+### Nachtrag — Regressions-Review der ersten fünf Fixrunden (2026-09-19)
+
+Nach den ersten fünf Runden (lib.nvim, dap.nvim, mdview.nvim, replacer.nvim,
+buffer-ctx.nvim) lief ein separater Multi-Agent-Review (3 Dimensionen — Bugs,
+Security, Performance — je Repo, mit adversarialer Gegenprüfung jedes Fundes)
+gegen genau die in diesen Runden entstandenen Diffs. **6 echte Regressionen**
+gefunden und in dieser Runde direkt gefixt, getestet und gepusht:
+
+| Repo | Datei | Befund | Commit |
+|---|---|---|---|
+| lib.nvim | `frecency/init.lua` | Ein Leseffehler beim ersten Laden blieb dauerhaft hängen — `flush()` verweigerte für den Rest der Session, obwohl die Datei längst wieder lesbar war | `fe1c746` |
+| lib.nvim | `telemetry/fingerprint.lua` | Digest-Fenster von 512 Bytes/Byte-Loop auf einem dokumentierten Hot Path — auf 64 Bytes reduziert, gleiche Sicherheitsgarantie | `3050594` |
+| dap.nvim | `configurations/init.lua` | `load_all()` deduplizierte nicht nach Alias-Ziel — `javascript`/`typescript` luden dasselbe Modul zweimal, doppelte Launch-Configs im Default-Setup | `b6fe1be` |
+| mdview.nvim | `launcher.lua` | `%d`-Format auf einem jetzt legitim `nil`en Timeout — echter Relay-Timeout crashte statt der vorgesehenen Warnung | `d5bb8b1` |
+| replacer.nvim | `fnames.lua` | Der neue ERR-30-Check verwechselte eine Nur-Case-Umbenennung auf NTFS/APFS mit einer echten Zieldatei-Kollision — jede Nur-Case-Umbenennung schlug fehl | `264cbec` |
+| buffer-ctx.nvim | `templates/guard.lua` | Der `vim.fn.input`-Fallback lief beim Abbruch des ersten Prompts trotzdem in den zweiten statt das ganze Formular abzubrechen | `9191fbe` |
+
+Alle sechs sind gefixt, mit Tests abgesichert, alle Gates grün, alle Repos auf
+`main` gepusht. Details siehe die Commit-Messages in den jeweiligen Repos.
+
 ---
 
 ## Table of content
