@@ -11,6 +11,7 @@ what it buys.
 **Hand-off prompts:** [`../personal/All/FINISH/ERLEDIGT/Tasks-offene-Punkte.md`](../personal/All/FINISH/ERLEDIGT/Tasks-offene-Punkte.md) — one
 paste-ready task per open item, and a list of what had already been built
 again by the time those were drafted.
+**Regel-Audit follow-up:** [`Regel-Audit-Tasks.md`](Regel-Audit-Tasks.md) — hand-off prompts for what `Regel-Audit-Gesamtstatus.md`'s own four open construction sites still need (`ERR-50`/`ERR-22`, the 313 uncosted rules). `LUA-01` finished at 21/21 since that file was drafted; `ERR-50`/`ERR-22` are being picked up by a live parallel session as of 2026-09-19 using its own established pattern — check before pasting those two prompts.
 
 ---
 
@@ -148,7 +149,7 @@ work, one rejected after investigation, one still genuinely open.**
 | ~~`casedesk.nvim`~~ | ~~Tests for the pure functions~~ — **already built by the time this row was drafted** | 1 | Suite went from 5 specs to 40, including the case-number guard with the real incident behind it |
 | ~~`filetree.nvim`~~ | ~~`TESTS/refs/` — 52 of 54~~ — **already fixed weeks before this row was drafted (2026-08-27)** | 1–1.5 | The entry's own premise was the bug: a spec/fixture string mismatch, not the apply layer the "to_absolute" lead pointed at. `run.lua` now asserts fixtures contain what their spec expects, so the same drift names its own cause |
 | ~~`lsp.nvim`~~ | ~~`:LspDoctor deep` — provoke errors~~ — **done 2026-09-17**, `lsp.nvim@60ba2c6` | 1 | `TESTS/lsp/probe_live_spec.lua` + a CI step installing a real server. Fails instead of skipping under CI — plenary's `Pending` tallies as `Success`, which would have hidden exactly the gap this check exists to catch |
-| ~~`ui.nvim`~~ | ~~Run `rules.nvim` over `ui.nvim`~~ — **superseded, see below** | 1–2 | The per-plugin ask is now covered (and far exceeded) by the fleet-wide audit across all 38 repos, 2026-09-18 — see `Regel-Audit-rules-nvim.md` |
+| ~~`ui.nvim`~~ | ~~Run `rules.nvim` over `ui.nvim`~~ — **superseded, see below** | 1–2 | The per-plugin ask is now covered (and far exceeded) by the fleet-wide audit across all 38 repos, 2026-09-18 — see `Regel-Audit-Gesamtstatus.md` |
 | ~~`media.nvim`~~ | ~~Run `rules.nvim` over `media.nvim`~~ — **superseded, see below** | 1–2 | Same fleet-wide audit covers it; its own roadmap's "after transcription and the hub settle" ordering turned out moot once the sweep ran over everything at once |
 | ~~`data.nvim`~~ | ~~Phase 1 rest: `--reg=`/`--inplace`/`--split`~~ — **done, verified 2026-09-18** | 1 | All three flags typed and wired (`@types/init.lua`, `bindings/usrcmds.lua`); `scope/resolve.lua`'s own doc comment now explicitly hands the register/output half to `scope.source`/`scope.sink` |
 | `lib.nvim` | `autocmd-dispatcher` — one autocmd, many handlers | 1–2 | Medium. **Still open.** Already verified against 17 real `FileType` registrations across the fleet, with two fixes found in the prototype |
@@ -161,8 +162,8 @@ work, one rejected after investigation, one still genuinely open.**
 | ~~`ui.nvim` / `my.nvim`~~ | ~~Cross-feature check against the ~30 sibling plugins~~ — **done, in full — Tiers A–F all resolved by 2026-09-18** | 2–3 | `../personal/All/FINISH/ERLEDIGT/ui-my-Kreuzfeature-Analyse.md`. The S- and M-tier findings shipped 2026-09-17; F1 (diffopt profiles) and F2 (`gh` gitsigns peek) were decided (move to `diff.nvim`) and built 2026-09-18, `diff.nvim@03b6359`/`my.nvim@1c147de` |
 
 **The `rules.nvim` sweep this section pointed at happened, and it is bigger
-than either row above imagined.** `Regel-Audit-rules-nvim.md`
-(2026-09-18) ran the full 421-rule catalogue over all 38 repos: 497
+than either row above imagined.** `Regel-Audit-Gesamtstatus.md`
+(2026-09-18/19) ran the full 421-rule catalogue over all 38 repos: 497
 confirmed rule violations (from 541 raw findings after adversarial
 verification), 52% of them error-handling (`ERR`), plus a fleet-wide
 migration left half-finished (`lib.nvim.cross.fs.expand_path` replacing
@@ -253,8 +254,9 @@ both moved from `my.nvim` to `diff.nvim`). All resolved.
 
 **The cross-cutting item this report flagged and got, at ten times the
 scale it asked for: `rules.nvim` has now been run over all 38 plugins**,
-not the one (`my.nvim`, 2026-09-15) this report knew about. `Regel-Audit-
-rules-nvim.md` (2026-09-18) is the result: **497 confirmed rule violations**
+not the one (`my.nvim`, 2026-09-15) this report knew about.
+`Regel-Audit-Gesamtstatus.md` (2026-09-18/19) is the result:
+**497 confirmed rule violations**
 fleet-wide (52% error handling), a security-relevant migration
 (`lib.nvim.cross.fs.expand_path` replacing raw `vim.fn.expand()` on shell-
 command paths) started on 15 of 38 repos and not finished on the other 21,
