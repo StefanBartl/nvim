@@ -74,6 +74,7 @@ three replacements that turned out to be rewires rather than builds:
 | neotest debug tooling → debugging.nvim | `:Debug neotest adapters\|state\|file\|root\|framework\|discover` — the five `:NeotestDebug*` commands and two keys, made adapter-generic (`file`/`root` ask the adapter tables' own `is_test_file`/`root` instead of id-matching or the TypeScript adapter; the parked "Root never resolves" bug is gone with it); `config/neotest/debug/` deleted, `<leader>ntr`/`<leader>ntD` map to the two most-used reports | debugging.nvim, nvim, 2026-09-19 |
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + cut-over, same day) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; harpoon removed, keys moved to `<leader>h*`/`<C-e>`/`<M-1..9>` | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
+| 7.4 cut-over review | 3-lens workflow review found 2 real issues, both fixed: `<leader>he`/`<leader>help` prefix collision (→ `<leader>hE`), `<C-e>`/marks_* keymaps on the synchronous path (→ `bindings/mappings/sessions.lua`, UIReady) | nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
 | 7.2 dead snacks keys | eight keys for four disabled modules removed; `<leader>ns` conflict with Neo-tree's source switcher gone with them | nvim, 2026-09-18 |
 | 7.3 `<leader>gd` | now diff.nvim's `:Diff target=git:HEAD` (suggested-order item 1); fugitive's `:Gdiffsplit` key removed; snacks' hunk picker moved to `<leader>gD` | nvim, 2026-09-18 |
@@ -701,23 +702,61 @@ reverse.
 **Cut over 2026-09-19, same day rather than after a week's trial (user's
 call).** The letter keys (`ha`/`hA`/`hp`/`hd`/`hm`/`hs`/`hD`/`he`) moved to
 `<leader>h*` 1:1; `<C-e>` (quick menu) and `<M-1..9>` (full-screen preview)
-are bound directly to `:Session marks`/`:Session marks preview <n>` in the
-plugin spec's `config` function rather than through `keymaps.marks_menu`/
-`marks.preview_key` — mixing those two non-`<leader>h`-prefixed keys into
-that table would have broken `sessions.bindings.keymaps`' which-key
-group-prefix detection (no single common prefix across `<leader>h*`,
-`<C-e>` and `<M-%d>`), losing the "Session" group label on `<leader>h`
-entirely, not just for those two keys. `select_key` moved to `<leader>h%d`
-(a jump-to-entry-N capability harpoon's own bindings never had). Dropped:
-harpoon's spec in `plugins/misc.lua` (now an empty scaffold), `bindings/
-mappings/harpoon.lua`, `config/harpoon/` (1,707 lines), the four
-Harpoon-specific doc files, and every dangling reference found by a
-repo-wide grep. `plenary` did **not** leave the startup path the way this
-entry expected: `plugins/essentials.lua` already has its own independent
-`{ "nvim-lua/plenary.nvim", lazy = false }` spec, unrelated to harpoon's
-dependency declaration — a discrepancy this cut-over surfaced rather than
-one it caused (7.6 has the correction). The Harpoon cheatsheet is deleted,
-not carried forward.
+are bound directly to `:Session marks`/`:Session marks preview <n>` rather
+than through `keymaps.marks_menu`/`marks.preview_key` — mixing those two
+non-`<leader>h`-prefixed keys into that table would have broken
+`sessions.bindings.keymaps`' which-key group-prefix detection (no single
+common prefix across `<leader>h*`, `<C-e>` and `<M-%d>`), losing the
+"Session" group label on `<leader>h` entirely, not just for those two keys.
+`select_key` moved to `<leader>h%d` (a jump-to-entry-N capability harpoon's
+own bindings never had). Dropped: harpoon's spec in `plugins/misc.lua` (now
+an empty scaffold), `bindings/mappings/harpoon.lua`, `config/harpoon/`
+(1,707 lines), the four Harpoon-specific doc files, and every dangling
+reference found by a repo-wide grep. `plenary` did **not** leave the
+startup path the way this entry expected: `plugins/essentials.lua` already
+has its own independent `{ "nvim-lua/plenary.nvim", lazy = false }` spec,
+unrelated to harpoon's dependency declaration — a discrepancy this
+cut-over surfaced rather than one it caused (7.6 has the correction). The
+Harpoon cheatsheet is deleted, not carried forward.
+
+**Reviewed same day, two real findings, both fixed.** A three-lens workflow
+(correctness/performance/security, each finding adversarially verified by
+three independent skeptics) checked the cut-over diff against the live
+source rather than trusting the commit's own comments. Two distinct issues
+survived verification unanimously:
+
+- **`<leader>he` silently collided with the pre-existing `<leader>help`**
+  (`config/snacks/mappings/standard.lua`, pickers.nvim's help-pages picker,
+  untouched by this cut-over). `<leader>he` is a strict prefix of
+  `<leader>help`, so Neovim cannot fire it without first waiting out
+  `timeoutlen` (1000 ms, unoverridden) to rule out the longer mapping — a
+  real per-press input-lag regression, not cosmetic, and invisible to
+  `:LibKeymapConflicts` (which only catches *exact*-lhs collisions, not
+  prefix overlap). The same bug class was already hit and fixed once in
+  this repo: `bindings/mappings/fzf.lua`'s `<leader>ffk` vs. `<leader>ff`,
+  fixed by capitalizing. **Fixed the same way** — `marks_edit` is
+  `<leader>hE`, not `<leader>he`.
+- **The new `<C-e>`/`<M-1..9>` bindings ran on the synchronous startup
+  path**, inside sessions.nvim's own `lazy = false` plugin spec, instead of
+  this config's UIReady-deferred keymap phase that harpoon's own bindings
+  (`bindings/mappings/harpoon.lua`) correctly used. The which-key
+  group-prefix reasoning above never required this — that computation only
+  ever sees lhs values registered through `sessions.bindings.keymaps`
+  itself, never a bare `map.set` call, so deferring costs nothing
+  functionally. The deeper finding: sessions.nvim's own `marks_*` keymaps
+  were *already* eager before this cut-over (dating to the 2026-09-19
+  parallel-run start), just on the low-traffic `<leader>H*` trial set —
+  this cut-over is what made the eager path carry the actual daily-use
+  surface. **Fixed by moving the whole marks keymap surface**, not just the
+  two new bindings: the plugin spec now sets `keymaps = false` (skips
+  sessions.nvim's own eager auto-attach) and a new
+  [`bindings/mappings/sessions.lua`](../../../lua/bindings/mappings/sessions.lua),
+  wired into the existing UIReady `"mappings"` phase, attaches all eight
+  `marks_*` letter keys plus `<C-e>`/`<M-1..9>` from there — full parity
+  with how harpoon.lua worked.
+
+Both fixes verified with a full-repo `luacheck`/`stylua` pass (190 files,
+matching CI's own invocation), 0 warnings.
 
 The original finding, kept for the record:
 
