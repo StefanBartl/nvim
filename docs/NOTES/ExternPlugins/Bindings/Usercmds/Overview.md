@@ -96,7 +96,6 @@ existieren.
 | Plugin | Stubs |
 |---|---|
 | `mason.nvim` | `:Mason` `:MasonUpdate` |
-| `minty` | `:Huefy` `:Shades` |
 | `nvim-tree.lua` | `:NvimTreeToggle` `:NvimTreeFocus` |
 | `render-markdown.nvim` | `:RenderMarkdown` |
 | `screenkey.nvim` | `:Screenkey` |
