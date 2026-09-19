@@ -48,7 +48,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | github_stats.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | gopath.nvim | 13 | 12 | 1 | fertig (2026-09-18) |
 | lsp.nvim | 13 | – | – | offen |
-| open.nvim | 13 | – | – | offen |
+| open.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | sessions.nvim | 13 | 13 | 0 | fertig (2026-09-18) |
 | ui.nvim | 13 | – | – | offen |
 | filetree.nvim | 12 | – | – | offen |
@@ -4119,7 +4119,7 @@ Could not cover / caveats:
 
 ## open.nvim
 
-**13 Befunde** (8 × high). Roh gemeldet: 13.
+**13 Befunde** (8 × high). Roh gemeldet: 13. — **Stand: 13/13** (⏭️ 0, 2026-09-18)
 
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
@@ -4131,6 +4131,8 @@ Could not cover / caveats:
 
 **Auswirkung.** One wrong-typed config value aborts the whole of `setup()` with a raw Lua traceback and the plugin's `:Open` is never registered — verified for all four values. One correction that makes this worse, not better: `:Open` does not simply vanish. Neovim's own netrw ships a built-in `:Open`, so after a failed setup `:Open <file>` silently runs netrw's `vim.ui.open` shim instead of the plugin's command, with different semantics and no error. `:checkhealth open` cannot explain it: there is no validation to report and `check_handlers()` only says the registry is empty. Abort points differ — `handlers`/`custom_handlers` abort before anything is registered, `office_open` and `command` abort after handlers (and, for `command`, after the office autocmd) are already in place, leaving a genuinely partial state.
 
+**Status.** ✅ erledigt (`550153c`) — `setup()` validiert jetzt alle Optionen gegen ein bekanntes Schema, bevor gemergt wird; ein falsch typisierter Wert fällt auf den Default zurück statt `setup()` abzubrechen.
+
 ### `ERR-51` — Merges kopieren Defaults tief
 
 `lua/open/config/init.lua:39` · `M.setup` · confidence **high**
@@ -4140,6 +4142,8 @@ Could not cover / caveats:
 **Regelbezug.** ERR-51 requires the merge to deep-copy the defaults rather than share them. Verified in nvim: after `setup({})`, `config.get().viewer == DEFAULTS.viewer`, `config.get().office_open == DEFAULTS.office_open` and `config.get().filemanager == DEFAULTS.filemanager` are all `true`.
 
 **Auswirkung.** Any write through `config.get()` permanently rewrites the plugin's module-level DEFAULTS table for the rest of the session, and a later bare `setup({})` — which is supposed to restore defaults — returns the mutated value. Verified end to end for `viewer.sort`. Correction to the auditor: the suggested fix is wrong. `vim.tbl_deep_extend("force", {}, defaults, opts_rest)` still shares the sub-tables — verified — because `tbl_deep_extend` only recurses where both sides have a table, and assigns by reference otherwise. The working fix is to base the merge on a copy, e.g. `vim.tbl_deep_extend("force", vim.deepcopy(defaults), opts_rest)`.
+
+**Status.** ✅ erledigt (`550153c`) — `current` wird jetzt gegen `vim.deepcopy(defaults)` statt gegen die geteilte `defaults`-Tabelle gemergt, sodass ein bare `setup({})` DEFAULTS nicht mehr per Referenz aliast.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -4151,6 +4155,8 @@ Could not cover / caveats:
 
 **Auswirkung.** ui.nvim is a hard dependency of two surfaces while the docs present it as optional and degrading. Verified: with ui.nvim absent, `setup({ picker = { enabled = true } })` turns a documented option into a hard failure — every subsequent `:Open` that reaches the picker throws `module 'ui.kit' not found` instead of falling back to `vim.ui.select`, which the picker's own docstring says it wants to honour anyway. `require("open.integrations.menu")` throws at load. `:checkhealth open` cannot diagnose either, because it has no ui.nvim probe. The default path (`picker.enabled = false`, menu never required) is unaffected, so this bites only users who follow the docs and enable the option.
 
+**Status.** ✅ erledigt (`93dca71`) — `picker.lua` pcallt `require("ui.kit")` und fällt ohne ui.nvim auf `vim.ui.select` zurück; `integrations/menu.lua` lädt `ui.contextmenu` jetzt lazy und liefert ohne ui.nvim `{}`/`nil` statt zu werfen.
+
 ### `LUA-16` — `vim.NIL` sanitizen
 
 `lua/open/keywords.lua:158` · `resolve_pip_conf` · confidence **high**
@@ -4160,6 +4166,8 @@ Could not cover / caveats:
 **Regelbezug.** LUA-16 is exactly this: `vim.NIL` is userdata, not `nil`, and string concatenation with it throws. The field must be checked as `v == vim.NIL` (or read via `vim.env.APPDATA`, which does return `nil`).
 
 **Auswirkung.** `:Open <handler> pip_conf` (and `require('open').open(..., 'pip_conf')`) raises a Lua error instead of degrading, and because of the confirmed ERR-01 defect at context.lua:341 the throw is not contained — `context.with_cache` re-raises at line 52, so the whole invocation aborts with a traceback rather than reporting "Nothing to open". Trigger is narrower than the auditor implies: Windows only, and only when APPDATA is unset or empty, which is unusual outside stripped service/CI environments. The defect is still real — the written guard does nothing.
+
+**Status.** ✅ erledigt (`fcd51ff`) — `resolve_pip_conf` liest APPDATA jetzt über `vim.env` statt `vim.fn.getenv`, das für eine nicht gesetzte Variable `vim.NIL` statt `nil` zurückgibt.
 
 ### `LUA-92` — Ein Adapter lädt sein Plugin während `setup()` nicht
 
@@ -4171,6 +4179,8 @@ Could not cover / caveats:
 
 **Auswirkung.** Calling `require("open.integrations.urlview").setup()` from urlview.nvim's config block — the module's own documented usage — fully loads telescope.nvim, and if telescope is absent then fully loads fzf-lua, defeating whatever `cmd`/`keys`/`ft` trigger that engine's spec declares and pulling it into that startup. It also selects a picker that is merely installed rather than set up (LUA-91). Scope is narrower than a core defect: this module is opt-in, is not loaded by `open.setup()`, and the probes are skipped entirely when the caller passes an explicit `default_picker`.
 
+**Status.** ✅ erledigt (`f69f74a`) — `default_picker` prüft jetzt `package.loaded["telescope"/"fzf-lua"]` statt `pcall(require, ...)`, sodass `setup()` unter einem Lazy-Manager kein Picker-Plugin mehr ungewollt lädt.
+
 ### `SEC-30` — Nutzereingabe literal escapen
 
 `lua/open/viewer/init.lua:342` · `M.open` · confidence **high**
@@ -4180,6 +4190,8 @@ Could not cover / caveats:
 **Regelbezug.** SEC-30 requires a pattern built from user/foreign input to be literal-escaped before it reaches the regex engine. Only `-` is touched here (and deliberately turned INTO a character class); every other Vim-regex metacharacter in the anchor — `.`, `*`, `[`, `~`, `\\`, `\\(`, `\\{n,m}` — is passed through raw.
 
 **Auswirkung.** Following a markdown link whose anchor contains a Vim-regex metacharacter (`.`, `*`, `[`, `~`, `\`) jumps the cursor to the wrong heading, silently — verified: an anchor naming a literal heading `a.*b` landed on an earlier unrelated heading instead. The `pcall` hides a malformed pattern but does nothing for a pattern that is merely wrong, so the user sees a successful jump to the wrong place. Two parts of the auditor's impact I am trimming: the "unbounded time backtracking" claim is speculative — a probe with `a\{1,99}[` returned immediately without error — and the `:Open viewer cwd` scope remark describes `scan`, not this search, which only runs once per link the user actually follows. Fix is a very-nomagic (`\V`) prefix or literal-escaping the slug.
+
+**Status.** ✅ erledigt (`4ad1371`) — Der Anchor-Slug wird vor der Suche literal-escaped (neue `escape_vim_pattern`-Hilfsfunktion), sodass ein Vim-Regex-Metazeichen im Anchor nicht mehr auf eine falsche, frühere Überschrift springt.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -4191,6 +4203,8 @@ Could not cover / caveats:
 
 **Auswirkung.** Silent shell execution via `&shell` with no gesture beyond invoking `:Open`. Verified on Windows with the default `cmd.exe` shell (and with `powershell.exe`): the embedded command runs, its output is discarded, and `expand()` returns the string unchanged, so nothing in the UI indicates anything ran. Because the call sits in the unconditional `is_path` probe at line 371, it fires before any handler is chosen and regardless of which handler was asked for, and again per entry scrolled in the telescope previewer. The trigger is a backtick span occupying the whole resolved text — a visually selected line, the `<cWORD>` under the cursor, or a literal `:Open <handler> <text>` argument. Unix `&shell` accepts a wider set of spans than the Windows whole-string case.
 
+**Status.** ✅ erledigt (`b39888d`) — `resolve_existing_path()` nutzt jetzt `lib.nvim.cross.fs.expand_path` statt `vim.fn.expand` auf dem Kandidaten.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/open/handlers/filemanager.lua:35` · `resolve_path` · confidence **high**
@@ -4200,6 +4214,8 @@ Could not cover / caveats:
 **Regelbezug.** Same rule as the context.lua case, but these are four independent call sites that each need their own fix — swapping only the central one in context.lua leaves all four live. None of them restricts the input to a path it produced itself.
 
 **Auswirkung.** Four independent execution sites: fixing only `context.lua` leaves each one live. Verified that the filemanager handler alone executes the embedded command when handed a context built elsewhere, so the viewer's own dispatches (viewer/init.lua:318/328/337) and any programmatic caller reach it without `context.resolve`. On the normal `:Open filemanager <backtick span>` path the command runs twice — once in the `is_path` probe, once in `resolve_path`. Note browser.lua:26 is gated on `ctx.is_path`, so in practice it only re-expands text that already stat'd as an existing path; the other three are reached with arbitrary text.
+
+**Status.** ✅ erledigt (`e5e595b`) — Alle vier verbleibenden Handler-Call-Sites (filemanager, nvim_internal, terminal, browser) nutzen jetzt ebenfalls `expand_path` statt `vim.fn.expand` auf `ctx.text`.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -4211,6 +4227,8 @@ Could not cover / caveats:
 
 **Auswirkung.** A throwing scope-keyword resolver aborts the entire `:Open` invocation with a Lua traceback instead of degrading to the "Nothing to open" path that already exists eight lines below at line 353. Verified with a user-supplied keyword and, independently, with the plugin's own `pip_conf` built-in. The resolvers are exactly the kind of boundary ERR-01 names — `capture()` shells out via `vim.system():wait()`, others read the filesystem and the environment — and `with_cache`'s deliberate re-raise means the error surfaces raw to the user.
 
+**Status.** ✅ erledigt (`b39888d`) — Der Aufruf des Funktions-Keyword-Resolvers ist jetzt pcallt; ein Wurf degradiert zu unresolved statt die ganze `:Open`-Anfrage abzubrechen.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/open/init.lua:119` · `M.setup` · confidence **medium**
@@ -4220,6 +4238,8 @@ Could not cover / caveats:
 **Regelbezug.** ERR-01 covers the call into a plugin API, not just its require. The guard as written only defends against the module being absent, not against `show_once` itself failing — an API-signature change, a malformed `docs/install.json`, or a failure inside the popup.
 
 **Auswirkung.** An error inside `show_once` — an API-signature change, a malformed docs/install.json, a failure while drawing the popup — makes `setup()` raise, which is precisely the outcome the comment above it set out to prevent. Correction to the auditor: nothing is left half-initialised. Line 119 is the final statement, so the command, keymaps and the office_open autocmd are all already registered and the plugin works; what the user gets is a raw traceback out of their lazy.nvim config block over an informational popup, and any caller that checks `pcall(setup, ...)` concludes setup failed when it did not. Fix is `pcall(deps.show_once, "open.nvim")`.
+
+**Status.** ✅ erledigt (`614299a`) — `deps.show_once("open.nvim")` wird jetzt selbst pcallt, nicht nur sein require.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -4231,6 +4251,8 @@ Could not cover / caveats:
 
 **Auswirkung.** The success/failure boolean every handler carefully computes is discarded at the dispatch layer and never reaches a caller — verified, `registry.dispatch` and `require('open').open` both return 0 values. A programmatic caller (integrations/menu.lua, integrations/urlview.lua:44, viewer/init.lua:318/328/337, or a user keymap) cannot distinguish a successful open from a failed one and therefore cannot fall back to another handler. Not fully silent to the human: every handler notifies on its own failure, so the user does see something — this is a broken return contract, not an invisible failure. `err` at line 112 is also misnamed: on success it holds the handler's return value, not an error.
 
+**Status.** ✅ erledigt (`79ff6e8`) — `registry.dispatch` gibt jetzt explizit `(ok, err)` zurück statt die pcall-Rückgabe mit dem Handler-eigenen Rückgabewert zu verwechseln.
+
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
 `lua/open/config/init.lua:47` · `M.get` · confidence **medium**
@@ -4240,6 +4262,8 @@ Could not cover / caveats:
 **Regelbezug.** ERR-54 requires one of the two: copy on the way out, or an explicit live-reference contract every consumer honours. Neither is present, and because of the ERR-51 defect above the shared state reaches all the way back into the module-level DEFAULTS.
 
 **Auswirkung.** Latent, not yet triggered: no module inside open.nvim currently mutates the table `config.get()` hands out, so nothing breaks today. What the missing contract buys is that any consumer — a user's config, another plugin, a future renderer that sorts a config list for display — can rewrite the plugin's DEFAULTS for the session without any signal, because ERR-51 above makes the handed-out sub-tables the DEFAULTS sub-tables. Fixing ERR-51 alone reduces the blast radius to the session's config; the getter still needs either a copy or an explicit documented contract.
+
+**Status.** ✅ erledigt (`550153c`) — `config.get()` gibt jetzt eine `vim.deepcopy`-Kopie statt der internen `current`-Tabelle zurück.
 
 ### `PRIN-20` — Keine stillen Fehler
 
@@ -4269,6 +4293,8 @@ JUDGMENT CALLS I DELIBERATELY DID NOT REPORT:
 - context.lua:340-344 inconsistency: a STRING keyword gets `expand_path`, a FUNCTION keyword's return does not. It currently works only because the SEC-34-violating `vim.fn.expand` downstream happens to expand the `~`. Whoever fixes SEC-34 must route function-keyword results through `expand_path` too, or `:Open gitignore_global` breaks when git config returns a literal `~/...`.
 
 TEST-COVERAGE GAPS relevant to these findings: no spec exercises a backtick/shell-metacharacter target, a wrong-typed config value, `vim.fn.getenv` returning `vim.NIL`, or mutation-through-`config.get()`. `TESTS/config_spec.lua:111` asserts that a bare `setup({})` restores `command` to its default — that assertion passes only because `command` is a scalar; the same claim is false for every nested table, which is the ERR-51 finding.
+
+**Status.** ✅ erledigt (`ff01051`) — Ein fehlgeschlagenes require(), ein fehlendes `register_all` oder ein werfendes `register_all` wird jetzt per `notify.error` gemeldet statt kommentarlos übersprungen zu werden.
 
 ---
 
