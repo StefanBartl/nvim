@@ -60,6 +60,7 @@ three replacements that turned out to be rewires rather than builds:
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
 | B5 ts-context → ui.nvim | `ui.context`: a Tree-sitter ancestor walk from the first visible line, rendered in a per-window `relative="win"` float — not the winbar this entry named (see the section for why); `:UI context [on\|off\|up n]`, `ui.setup({ context = { max_lines = 3 } })` in the config; plugin dropped | ui.nvim `870a6bc`, nvim, 2026-09-19 |
+| C · puppeteer → cascade.nvim | the `strings` domain: template-string / f-string / (opt-in) Lua format-string conversion from an autocmd, `:Cascade strings`; puppeteer spec dropped (the harvest covered the whole plugin) | cascade.nvim, nvim, 2026-09-19 |
 | neotest debug tooling → debugging.nvim | `:Debug neotest adapters\|state\|file\|root\|framework\|discover` — the five `:NeotestDebug*` commands and two keys, made adapter-generic (`file`/`root` ask the adapter tables' own `is_test_file`/`root` instead of id-matching or the TypeScript adapter; the parked "Root never resolves" bug is gone with it); `config/neotest/debug/` deleted, `<leader>ntr`/`<leader>ntD` map to the two most-used reports | debugging.nvim, nvim, 2026-09-19 |
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
@@ -565,11 +566,11 @@ passes `context = { max_lines = 3 }` to `ui.setup`; the Bindings corpus
 ## 6. Tier C — harvest one feature, keep the plugin
 
 These are not replacements. The external plugin stays; one idea moves in-house.
-**All eleven are open.**
+**Ten open; puppeteer → cascade done 2026-09-19.**
 
 | External | Feature worth stealing | Own home | Effort |
 |---|---|---|---|
-| `chrisgrieser/nvim-puppeteer` | Auto-convert quotes → template literal when `${}` is typed | **cascade.nvim** — its whole thesis is *detect context → advance it one step*. This is that pattern exactly, and it is a small plugin. Closest thing to a free win in Tier C. | 1–2 |
+| ~~`chrisgrieser/nvim-puppeteer`~~ | ~~Auto-convert quotes → template literal when `${}` is typed~~ | **Done 2026-09-19** — cascade.nvim's fifth domain, `strings` (`lua/cascade/strings/`): JS/TS template strings, Python f-strings, opt-in Lua `(…):format()`, with puppeteer's guards; `:Cascade strings on\|off\|toggle\|now`, `strings.*` config, autocmd-driven. The one Tier C item where the harvest *is* the whole plugin, so the plugin is gone from the config rather than kept — keeping both would convert every string twice. | **done** |
 | `nvzone/minty` (`Huefy`/`Shades`) | Interactive colour picker / shade ramp | **color_my_ascii.nvim** or **ui.nvim/theme** — both already reason about colour. Removes `nvzone/volt` as a dependency too. | 2 |
 | `catgoose/nvim-colorizer.lua` | Inline hex/rgb colour swatches | **my.nvim** (per-buffer visual features) or **color_my_ascii.nvim**. Concept is trivial, the performance work on large files is not — hence "harvest", not "replace". | 2–3 |
 | `folke/zen-mode.nvim` | Distraction-free single window | **my.nvim** or **ui.nvim** — `lib.nvim/nvim/window/` + `ui/` covers the mechanics; ui.nvim already controls statusline/tabline visibility, which is the fiddly part. | 1–2 |
@@ -800,7 +801,7 @@ Struck entries are done.
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
 | **emojis.nvim** | unicode name/search/table/digraphs |
-| **cascade.nvim** | puppeteer template literals |
+| **cascade.nvim** | ~~puppeteer template literals~~ (the `strings` domain, 2026-09-19) |
 | **spotlight.nvim** | ~~todo highlight machinery~~ (went to insights instead; B2) · conflict marker highlight |
 | **open.nvim** | `:Gbrowse` · lazygit nvr bridge · (`config/ui_open.lua`'s Windows URL fix) |
 | **my.nvim** | quickfile · colorizer · zen mode |
@@ -825,7 +826,7 @@ lib/open · `:Gbrowse` → open/reposcope. ~~mkdir → fileops~~ (A2). Each of t
 three needs its home chosen first; the report names two for each.
 
 **Highest value per session (M), open:** ~~neotest debug tooling →
-debugging.nvim~~ (done 2026-09-19, `:Debug neotest`) · puppeteer → cascade · matchup
+debugging.nvim~~ (done 2026-09-19, `:Debug neotest`) · ~~puppeteer → cascade~~ (done 2026-09-19) · matchup
 offscreen → ui.nvim · `:Git blame` (the one new piece that retires fugitive
 + rhubarb). ~~resty → runtime-analysis~~ (A1, turned out to be S) ·
 ~~startuptime → runtime-analysis~~ (A3).
