@@ -65,7 +65,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | rules.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | spotlight.nvim | 9 | 9 | 0 | fertig (2026-09-19) |
 | my.nvim | 7 | – | – | offen |
-| data.nvim | 5 | – | – | offen |
+| data.nvim | 5 | 4 | 1 | fertig (2026-09-19) |
 
 **insights.nvim (16 Befunde) läuft, nicht von hier aus anfassen.** Ein Audit-Agent
 dafür wurde durch ein Sitzungsende unterbrochen; parallel läuft eine unabhängige,
@@ -6715,7 +6715,7 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 
 ## data.nvim
 
-**5 Befunde** (2 × high). Roh gemeldet: 6.
+**5 Befunde** (2 × high). Roh gemeldet: 6. — **Stand: 4/5** (⏭️ 1, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -6727,6 +6727,8 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 
 **Auswirkung.** The auditor overstated the surfacing. data.nvim registers its verbs through `lib.nvim.bindings.usercmd.composer`, whose `register` hands the handler to `usercmd.create` (composer/init.lua:214), and that wrapper pcalls every handler and reports `UserCommand 'JSON' failed: <lua error>` (lib.nvim usercmd/init.lua:72-80). So this is not a raw error escaping the usercmd handler -- it is a notification carrying a Lua internal message. There are no keymaps in this plugin (bindings/keymaps.lua defines none), so the only path that would see it raw is a direct Lua caller of `require("data").run/filter/run_auto`. The real consequence is the lost fallback: an upstream rename/removal of `block_at`, a signature change, or an error raised inside `list_blocks` aborts the command outright instead of falling through to the whole-buffer scope at resolve.lua:81 -- the graceful path a *missing* color_my_ascii already takes at lines 50-53. It affects only installations that actually have color_my_ascii and have not set `fenced_scope.enable = false`.
 
+**Status.** ✅ erledigt (`f0cd973`) — `block_at` wird jetzt per `pcall` aufgerufen, zusätzlich zur bestehenden Table-Prüfung eine Callable-Prüfung ergänzt, damit ein interner Fehler/API-Drift bei color_my_ascii wie ein fehlendes Plugin zum Whole-Buffer-Fallback führt statt den Befehl abzubrechen.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/data/detect/init.lua:65` · `fenced_block_format` · confidence **high**
@@ -6736,6 +6738,8 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 **Regelbezug.** ERR-01: a plugin-API call at a system boundary, outside any hotpath, with no pcall and no check that the member being called is callable.
 
 **Auswirkung.** An error inside `block_at`/`list_blocks`, or a renamed or removed member after a color_my_ascii update, aborts a rangeless `:Data pretty`/`lines`/`keys`/`sort`/`filter` entirely instead of falling through to the filetype-based detection written directly beneath it. It is reported as `UserCommand 'Data' failed: <lua error>` through lib.nvim's usercmd pcall wrapper (usercmd/init.lua:72-80), not as an uncaught raw error as the auditor claimed, and only on installations where color_my_ascii is present -- with it absent, line 60-63 already short-circuits cleanly.
+
+**Status.** ✅ erledigt (`f0cd973`) — Identisches Muster wie #1 behoben: `block_at` per `pcall` plus Callable-Check, Fallback auf die Filetype-Erkennung bleibt intakt.
 
 ### `ERR-02` — Type Guards & Literal Checks
 
@@ -6747,6 +6751,8 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 
 **Auswirkung.** Two of the auditor's premises need correcting. The reload trigger is wrong: I tested `:edit!` on a real file and the extmark survived it intact, so autoread/`:e!` does not reach this. What does reach it is a foreign `nvim_buf_clear_namespace(buf, -1, 0, -1)` -- verified to wipe the mark, and a common enough idiom in plugins clearing highlights. And the error is usually not raw: with Neovim's default `vim.ui.select`/`vim.ui.input` (both synchronous), `pickers.refine`'s `Handle:prompt` (E:/repos/pickers.nvim/lua/pickers/refine/init.lua:199-250) invokes its done-callback before returning, so the throw is caught by `pcall(h.prompt, ...)` at lua/data/filter/init.lua:115 and re-enters the very same callback as `on_done(nil, err)`, surfacing as `notify.error("JSON filter: ...Invalid 'start': Expected Lua number")`. Only under an async `vim.ui.select` replacement (dressing.nvim, snacks, telescope-ui-select) does the error escape uncaught into that plugin's callback. Either way the outcome the rule exists to prevent holds: the filter result is lost, and the user is shown an API constraint rather than the clean, actionable message every other failure path in this function produces.
 
+**Status.** ✅ erledigt (`ea3ea50`) — Neue Hilfsfunktion prüft, ob das Tracking-Extmark verschwunden ist, und bricht mit sauberer `notify.error` ab, statt `source.s0 = nil` ungeprüft an `nvim_buf_get_lines`/`nvim_buf_set_lines` weiterzureichen; an beiden betroffenen Stellen angewendet.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/data/init.lua:500` · `M.filter (on_done callback)` · confidence **medium**
@@ -6756,6 +6762,8 @@ Also noted, not reported: config/data/highlight.lua writes `breadcrumbs_separato
 **Regelbezug.** ERR-30 requires every edit computed during a scan to be re-verified against the *current* text immediately before writing, and skipped when it differs. Here the freshly re-read text is already in hand (`before`, line 497) and the original is still in `source.lines`, but the two are never compared -- `before` is only compared against `out` (line 500) to decide whether a diff is worth showing, not to detect that the scope drifted under the prompt.
 
 **Auswirkung.** On the default path (`preview.filter` defaults to false, so line 500's `not preview` branch is taken), a character-level edit made inside the scope while the clause prompt is open is silently replaced by the result computed from the pre-edit text -- no message, recoverable only via undo. Narrower than the auditor stated: the specific triggers they name (format-on-save, an applied LSP text edit, any plugin rewriting the buffer line-wise) go through `nvim_buf_set_lines` over exactly the scope span, which inverts the extmark and ends in a loud `JSON filter: could not write the result: 'start' is higher than 'end'` refusal instead -- the repo documents and tests that separately at TESTS/filter_lifecycle_spec.lua:602-660. So the silent-overwrite class is the character-level one (`nvim_buf_set_text`, `:s///`) plus any edit that leaves the mark sane. With `--preview` the diff's before-side is the live text, so a user who reads the diff can still see the clobbered edit and decline.
+
+**Status.** ⏭️ offen gelassen — Genau dieses Szenario ist in `TESTS/filter_lifecycle_spec.lua:697-709` als grüner „control“-Test bewusst als korrektes Verhalten fixiert, deckungsgleich mit der in `TESTS/README.md` dokumentierten Design-Entscheidung beim line-wise Pendant — Maintainer-Entscheidung, kein Versehen.
 
 ### `ERR-51` — Merges kopieren Defaults tief
 
@@ -6774,6 +6782,8 @@ Rules verified as COMPLIANT rather than untested (each checked against actual co
 Genuinely no surface in this plugin: the whole SEC family (no shell string construction, no io.popen/os.execute/vim.fn.system/vim.system, no downloads, no secrets, no persistence, no vim.cmd, no vim.fn.expand), the whole XP family (no path handling, no glob, no executable() probe, no cross-platform command branch), PERF-07/42/46/47/62/72/80/82/92/93 (no caches, no timers, no libuv callbacks, no autocmds at all, no layout geometry), TS-04, LUA-17, LUA-48, ERR-31, CMT-16 (docs/BINDINGS.md is explicitly hand-maintained and says so; the composer's .document() generator is named as a cross-check, not as its renderer).
 
 What I could NOT cover: the ~250 KB spec suite under TESTS/ was sampled, not read line by line -- I read the harness, the register/health/preview/filter stub-and-restore patterns and the package.loaded teardown (all of which are careful: stubs are pcall-protected and restored, buffers deleted in after_each), but did not audit all 30 spec files. I did not run the suite. One test-hygiene observation that no rule in the 76 cleanly covers, so it is not filed as a finding: TESTS/scope_register_edge_spec.lua:197-204 (`real_clipboard_works`) writes and clears the `+` register unconditionally without saving the prior contents, so running scripts/test.sh locally destroys whatever the developer had on the system clipboard. Also worth noting for coverage rather than as a rule violation: CI deliberately checks out neither color_my_ascii, pickers.nvim nor diff.nvim, so every spec gated on one of them registers zero tests in CI -- the fenced-scope, filter and preview paths are exercised only on a machine that has those siblings checked out.
+
+**Status.** ✅ erledigt (`1e00e46`) — `M.options = DEFAULTS` durch `M.options = vim.deepcopy(DEFAULTS)` ersetzt, damit ein Schreibzugriff vor dem ersten `setup()` nicht mehr die geteilte `DEFAULTS`-Tabelle korrumpiert; die tiefere Teil-Aliasing-Problematik liegt in `lib.nvim`s `deep_merge` selbst und damit außerhalb des Scopes hier.
 
 ---
 
