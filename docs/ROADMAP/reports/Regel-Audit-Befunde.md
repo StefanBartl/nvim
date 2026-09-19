@@ -5,7 +5,9 @@
 > 497 bestätigte Befunde aus 38 Plugin-Audits gegen die 76 kritischen, nicht
 > automatisierbaren Regeln. Jeder Befund wurde von einem zweiten Agenten gegen den
 > Quelltext gegengeprüft; 44 weitere Rohbefunde wurden dabei widerlegt und stehen
-> hier nicht. **Nichts davon ist umgesetzt** — das ist die Befundlage, nicht der Fix.
+> hier nicht. **Umsetzung abgeschlossen (2026-09-19):** 489/497 gefixt bzw. bereits
+> vor dem jeweiligen Lauf erledigt vorgefunden, 8 bewusst offen gelassen
+> (Architektur-/Maintainer-Entscheidungen, siehe die einzelnen Status-Zeilen unten).
 
 `confidence` ist die Einschätzung des prüfenden Agenten: `high` = am Quelltext
 eindeutig, `medium` = Regelanwendung ist Ermessenssache, `low` = Verdacht.
