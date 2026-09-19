@@ -34,7 +34,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | replacer.nvim | 17 | 17 | 0 | fertig (2026-09-18) |
 | buffer-ctx.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | insights.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
-| language.nvim | 16 | – | – | offen |
+| language.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | debugging.nvim | 15 | – | – | offen |
 | pdfport.nvim | 15 | – | – | offen |
 | reposcope.nvim | 15 | – | – | offen |
@@ -1528,7 +1528,7 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 ## language.nvim
 
-**16 Befunde** (14 × high). Roh gemeldet: 16.
+**16 Befunde** (14 × high). Roh gemeldet: 16. — **Stand: 16/16** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -1540,6 +1540,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** A failed write (read-only file, permissions, full disk, path no longer valid) is completely silent: no notification, no log, and a history entry that names the path as if the translation had been written there. The `translated N file(s)` summary counts it too. In `--files=replace` mode the user's only remaining signal that nothing happened is opening the file. Note `vim.fn.writefile` can both throw (caught by the pcall) and return -1 (discarded) — both channels are dropped.
 
+**Status.** ✅ erledigt (`880577d`) — `deliver()`/`M.process()` geben jetzt echten Schreibstatus zurück, pcall-Ergebnis und `writefile()`-Rückgabewert werden geprüft statt verworfen.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/language/spell/ui/item_menu.lua:135` · `M._items (ignore_persistent)` · confidence **high**
@@ -1549,6 +1551,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** ERR-03 requires a real error object to travel with the failure rather than a silent or content-free one. Both producers do the right thing — `ignore.lua:76-79` returns `false, tostring(err)` from the `mkdir`/`readfile`/`writefile` pcall, `actions.lua:58-60` returns `false, tostring(err)` — and both call sites discard it at the last hop.
 
 **Auswirkung.** When persisting an ignore or a dictionary word fails — state directory not writable, disk full, the ignore file owned by another user, a `:spellgood` rejection — the user's notification body is the literal string `nil`. The real cause existed one frame earlier and is discarded, so there is nothing to act on, and the word stays flagged on the next scan with no explanation. Non-destructive, but it converts a diagnosable failure into an undiagnosable one.
+
+**Status.** ✅ erledigt (`ab5e86e`) — `add_persistent`/`add_to_dict` werden vor `done_msg()` in `(ok, err)` entpackt statt als Nicht-Letzt-Argument auf einen Wert gekürzt zu werden; die Meldung zeigt jetzt die echte Ursache statt des Literals `nil`.
 
 ### `ERR-10` — „Kein Argument" ≠ „ungültiges Argument"
 
@@ -1560,6 +1564,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** `:TranslateReplace DE selction` translates and overwrites the ENTIRE buffer with no warning, because the unrecognised token is discarded and `scope.parse` defaults to `buffer` while `dispatch_translate` forces `output = "replace"` (usrcmds/init.lua:254). That is the real and destructive consequence. The second example in the finding does NOT hold: `--output=raplace` is rejected before `run` is ever called — `composer.flags.split` routes the value through `argtypes.validate`, which checks `spec.enum` first (argtypes.lua:61-66) and returns `expected one of popup|replace|…`, and `parse.dispatch` (parse.lua:157-161) notifies that error and returns. So flag values ARE validated; it is only the positional scope word that silently degrades to 'everything'.
 
+**Status.** ✅ erledigt (`644b14e`) — Ein überzähliges, nicht erkanntes Token nach der Zielsprache (z. B. Tippfehler „selction“) wird jetzt explizit abgelehnt statt still verworfen zu werden und auf den ganzen Puffer zu wirken.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/language/translate/history.lua:44` · `ensure_loaded` · confidence **high**
@@ -1569,6 +1575,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** This is the canonical ERR-11 load-modify-save collapse: "Datei fehlt" and "Datei korrupt" resolve to the same empty structure, and `save()` at line 61 then writes the WHOLE file back. The err value that would distinguish the two cases is available from the very call being made and is thrown away.
 
 **Auswirkung.** Only reachable with the opt-in `translate.history.persist = true` (`config/DEFAULTS.lua:92` defaults it to `false`), so this is not a default-path bug. For a user who has opted in, a `translate_history.json` that exists but does not decode (interrupted write — `json.write` renames via `uv.fs_rename`, which lib.nvim's own header documents as best-effort on Windows — a hand edit, a partial sync) is indistinguishable from a missing file: `ring` stays `{}`, no error is surfaced anywhere, and the next `M.record` writes the whole file back with a single entry. The rest of the history is unrecoverable; nothing copies the bad file to `.corrupt` first, which is the remedy the rule's own Beleg block prescribes.
+
+**Status.** ✅ erledigt (`fc826cd`) — `ensure_loaded()` unterscheidet jetzt eine korrupte Datei (Backup nach `.corrupt` + Warnung) von einer fehlenden; vorher kollabierten beide auf denselben leeren Ring.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -1580,6 +1588,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** `:Spellcheck en path=/does/not/exist` ends with `[language] 0 spelling issue(s)` from the progress handle and `No spelling errors found (path:/does/not/exist)` — a clean bill of health for a path that was never opened, with a mistyped path indistinguishable from a genuinely clean one. Reachable when the native provider is the one chosen for the cwd/path scope (collect.lua:220-238 picks the first available external CLI provider first). The `gather_tree_files` variant is the quieter one: an error mid-walk yields a silently truncated file list, so a large-tree scan reports a plausible subset as if it were the whole tree.
 
+**Status.** ✅ erledigt (`f47cdb9`) — `collect_file()` liefert `(ok, err)`; `M.scan_tree` warnt bei nicht lesbarem `path=`-Ziel, `gather_tree_files` warnt bei abgebrochenem Tree-Walk statt eine trunkierte Liste als vollständig auszugeben.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/language/spell/providers/cspell_server.lua:299` · `M.check` · confidence **high**
@@ -1589,6 +1599,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** ERR-11: the callback signature `fun(issues: LanguageSpellIssue[])` has no error channel at all, so "the sidecar timed out / never started / died" is delivered as the same value as "this buffer has no spelling issues". `collect.gather` (collect.lua:207-211) merges that empty list into the results and the panel renders `No spelling issues — nothing to review` (panel.lua:200).
 
 **Auswirkung.** Overstated by the auditor: the buffer is NOT reported clean. `collect.raw_buffer` (collect.lua:142-149) runs `native_cached` unconditionally, so native and LSP issues still reach `cb(post(raw, cfg))` at collect.lua:213 — what silently vanishes is cspell's contribution on top of them. The accurate consequence is a partial result presented as a complete one: with `"cspell_server"` in `spell.providers.buffer`, a sidecar that fails to start, dies, or exceeds the hardcoded 6 s shows only the native subset with no indication that the configured checker did not run, and `state.failed` is never set on the timeout path so it recurs indefinitely. Separately, each timed-out check leaks one libuv timer handle for the session.
+
+**Status.** ✅ erledigt (`8c3d43e`) — Timeout-, Sidecar-nicht-gestartet- und `on_exit`-Drain-Pfade warnen jetzt einmalig pro Session statt `cb({})` kommentarlos zurückzugeben. Nebenfund: der Guard-Timer wurde beim Timeout-Pfad nie geschlossen (nur der Erfolgspfad schloss ihn) — ein Handle-Leak pro Timeout, im selben Commit mitgefixt.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -1600,6 +1612,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** A misconfigured `spell.providers.custom` is reported as a clean scan. `:Spellcheck cwd` finishes with `[language] 0 spelling issue(s)` and `No spelling errors found`, whether the adapter ran or the user's `cmd` threw, returned a non-list, or `parse` blew up. Since `custom` is the documented escape hatch for checkers the plugin ships no adapter for, first-time misconfiguration is the expected case, and it is the case with zero feedback — the user has no way to distinguish 'my tree is clean' from 'my adapter never ran'. The silent shape-filter drop at lines 73-94 hides a third case: a `parse` that returns the wrong field names yields 0 issues with no count of what was discarded.
 
+**Status.** ✅ erledigt (`e272510`) — Werfendes/falsch geformtes `cmd()`/`parse()` sowie verworfene fehlgeformte Einträge werden jetzt per notify gemeldet statt als sauberer Scan mit 0 Funden durchzugehen.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/language/translate/files.lua:115` · `deliver` · confidence **high**
@@ -1609,6 +1623,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** ERR-30 requires every edit computed during a scan to be re-verified against the *current* text immediately before writing and skipped on mismatch. Nothing here re-stats or re-reads `abs`. The plugin's own `spell/core/actions.lua:40-47` does exactly this re-verification for a much shorter staleness window, so the rule is understood in the other domain and simply not applied here.
 
 **Auswirkung.** Destructive and unrecoverable within the plugin: the file is overwritten with a translation of its pre-request content, so any edit saved to that file while its request was in flight is lost with no message. Files are processed strictly sequentially with one full network round trip each (`timeout_ms` default 8000), so a 20-file batch keeps every not-yet-processed file exposed for the whole run — tens of seconds. `fn.confirm` at line 223 asks once before the batch starts and is not a guard against mid-batch drift. Note the exposure is disk-level: a file open in a buffer is overwritten on disk underneath the buffer rather than in it.
+
+**Status.** ✅ erledigt (`880577d`) — `deliver()` liest die Zieldatei im `replace`-Modus unmittelbar vor dem Schreiben erneut und überspringt bei Abweichung (selber Commit wie #1).
 
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
@@ -1620,6 +1636,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** The reachable replace paths are narrower than claimed: `:Translate DE cword` uses `opts.output or c.default_output or "popup"` (init.lua:80), and popup does not write. The genuinely affected callers are `:TranslateReplace` (usrcmds/init.lua:254 forces `"replace"`), the operator/motion mappings (`translate/motion.lua:100` passes `output = "replace"`), and the public `language.translate_replace()` (init.lua:91). On those paths the byte span computed before the request is written blind after it: if the user edits the line during the round trip (0.5-8 s, and longer on the motion path, where `choose_target` opens a language picker before the request even starts) the translation lands on whatever bytes now occupy those coordinates. If the coordinates have gone out of range instead, the pcall discards the error and the mapping silently does nothing.
 
+**Status.** ✅ erledigt (`8dbaf23`) — `M.run_region` liest die Byte-Spanne unmittelbar vor `nvim_buf_set_text` erneut und verwirft die Übersetzung bei Abweichung oder ungültigem Puffer/Position.
+
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
 `lua/language/thesaurus/init.lua:146` · `M.replace_under_cursor/apply` · confidence **high**
@@ -1629,6 +1647,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** ERR-30: the span is never re-verified to still hold `word`. `spell/core/actions.lua:40-47` performs precisely this check (`nvim_buf_get_text` then compare against `issue.word`) before its own `nvim_buf_set_text`, so the correct pattern exists two modules away and is not used here.
 
 **Auswirkung.** The `ui.kit.select` menu has no timeout, so the window between capturing the span and writing it is bounded only by how long the user takes to pick. Any change to that line meanwhile (another window, format-on-save, undo) shifts the byte offsets and the chosen synonym is written over unrelated text on that line. The `pcall` with no failure branch means an out-of-range span produces no message either, so the keymap looks like it did nothing. Non-destructive relative to the file-overwrite findings (it is a buffer edit and undoable), but silent in both failure modes.
+
+**Status.** ✅ erledigt (`d99cb49`) — `apply()` verifiziert die Wortspanne unmittelbar vor dem Schreiben erneut gegen den ursprünglichen Wortlaut und verwirft bei Abweichung.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -1640,6 +1660,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** The one line the user reads after a multi-file run asserts work that may not have happened. With a provider failure partway through a 20-file batch, the run ends with `translated 20 file(s) → DE` after N error notifications have already scrolled by in the same notification stream. In `--files=replace` mode there is no per-file success record either (see the ERR-03 finding on `deliver`), so nothing in the UI tells the user which files were actually rewritten.
 
+**Status.** ✅ erledigt (`880577d`) — Die Abschlussmeldung zählt jetzt tatsächlich geschriebene Dateien statt der geplanten Anzahl; der Lesefehler-Skip-Pfad meldet jetzt ebenfalls (selber Commit wie #1/#8).
+
 ### `PERF-46` — Cache-Key vollständig
 
 `lua/language/spell/core/cache.lua:47` · `M.set` · confidence **high**
@@ -1649,6 +1671,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** PERF-46: the key must contain every parameter that influences the result, otherwise the cache silently returns results computed for a different configuration of the same input. `collect.native_cached` (collect.lua:123-134) consults it for every `kind == "buffer"` scope.
 
 **Auswirkung.** Reproducible exactly as described: `:Spellcheck en`, `:Spellcheck clear`, `:Spellcheck de` on an unedited buffer returns the cached English issue list — the German check never runs and the user is shown English results labelled as a German session. The same holds for a `spell.word_split` or `spell.regions` change via `setup()` (or a `spelllang` change made outside the plugin) while buffers are already cached: until the buffer is edited or deleted, the stale result is served. Wrong-but-plausible output, not a crash, and it persists for the life of the buffer.
+
+**Status.** ✅ erledigt (`9d68660`) — Der Cache-Key enthält jetzt eine Signatur aus `spelllang` plus `word_split`/`regions`-Config zusätzlich zu `changedtick`.
 
 ### `SEC-10` — Nie als Prozessargument
 
@@ -1660,6 +1684,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** For the duration of each translation request the paid DeepL key is a process argument, visible to any local process that can read the process table (`ps auxww`, `/proc/<pid>/cmdline`, `Get-CimInstance Win32_Process`) — a real exposure of a billable credential to anything running as the same or a higher-privileged user. The Windows escalation in the finding is wrong, though: `util/job/init.lua`'s `resolve_argv` (lines 20-40) explicitly returns the argv unchanged when `exepath` ends in `.exe`/`.com`, and `curl` resolves to `curl.exe` on Windows 10+, so there is no `cmd.exe /c` hop and no shell history involvement. Fixing this needs a stdin channel in `job.run`, which today takes only `{ timeout_ms, cwd, on_done }`.
 
+**Status.** ✅ erledigt (`6459263`) — Der DeepL-Key geht jetzt über `curl -K -` per stdin statt als `-H`-Argv-Element; `language.util.job.run()` hat dafür einen neuen `opts.stdin`-Kanal.
+
 ### `SEC-35` — Nutzereingabe nie in einen `-c`-/`:execute`-String
 
 `lua/language/spell/extra_dict.lua:48` · `M.ensure` · confidence **high**
@@ -1670,6 +1696,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 
 **Auswirkung.** Two consequences, and the mundane one is the likelier: any wordlist entry containing whitespace or another Ex-special makes `:spellgood!` fail, the bare `pcall` eats the error, and the word is silently never added — the user sees it flagged forever with no way to tell why. The injection case requires the user to load a wordlist they did not author (a shared team config, a copied snippet, a generated glossary), and then a `|` in an entry runs the trailing text as an Ex command at every `setup()`. Trust boundary is narrower than 'arbitrary attacker' — the words come from the user's own Lua config — so this is primarily a correctness bug with an injection tail, not a remote-code-execution hole.
 
+**Status.** ✅ erledigt (`b02f353`) — Beide Wordlist-Loader (`extra_dict.lua` und das im Finding-Text mitgenannte `programming_dict.lua`) nutzen jetzt die Tabellenform von `vim.cmd({cmd="spellgood",...})` statt eines gespleißten Command-Strings.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/language/translate/window.lua:128` · `on_change` · confidence **medium**
@@ -1679,6 +1707,8 @@ One observation with no matching rule, so not filed as a finding: symbols/ts_lua
 **Regelbezug.** ERR-02/LUA-12: an API return must be type/nil-checked before use. This is the one place in the plugin that does not — `spell/live.lua:115-118` guards it (`if not fresh then return end`), `util/job/init.lua:90` and `:139` guard it (`if timer then`), and `spell/providers/cspell_server.lua:294` guards it. The inconsistency is the evidence that the omission is accidental rather than a considered exemption.
 
 **Auswirkung.** Latent rather than observed: `vim.uv.new_timer()` returns nil only on libuv handle exhaustion, which in practice takes thousands of leaked handles. If it does happen, the consequence is milder than claimed — `autocmd.create` in lib.nvim wraps the callback in `pcall` unless `opts.raw` is set, and `window.lua:266-270` does not set it, so the indexing error becomes one error notification per `TextChanged`/`TextChangedI` keystroke rather than a raw crash. The live-translate refresh never fires again for that window. Worth fixing as a consistency gap with the plugin's own three guarded sites, not as an active defect.
+
+**Status.** ✅ erledigt (`ac62e3e`) — `on_change()` prüft jetzt explizit auf `nil` nach `vim.uv.new_timer()` und bricht ab.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -1699,6 +1729,8 @@ WHAT I CHECKED AND FOUND CLEAN. PRIN-10 / LUA-17: zero uses of vim.g/vim.b/vim.w
 JUDGMENT CALLS I DELIBERATELY DID NOT REPORT. (1) LUA-06 on config/DEFAULTS.lua:54 and :93 — `vim.fn.stdpath("state") .. "/language/…"` is computed at module level. I calibrated against the fleet: casedesk.nvim's DEFAULTS.lua:193 does the same with vim.fs.joinpath(vim.fn.stdpath("data"), …) and survived the 2026-09-12 LUA-06 sweep untouched, so stdpath appears to be treated as naming rather than resolving. Flagging it here would contradict that precedent. (2) The two `cond and X or X` no-op expressions (cspell_server.lua:295 `cfg.scan_debounce_ms and 6000 or 6000`, window.lua:127 `cfg().timeout_ms and 300 or 300`) are real dead expressions that make two timeouts non-configurable, but they are already annotated in-tree with `--- CDX:` comments explaining exactly that (commit 3626c67, "tag no-op timeouts"), and neither breaks the way ERR-60 describes, since the middle operand is a literal and never falsy. Known and documented, so not re-raised as findings. (3) translate/window.lua leaks two scratch buffers per `:Translate!` — M.close closes the windows but never deletes the `nvim_create_buf(false, true)` buffers — a genuine resource leak that no rule in the 76 covers, so it has no home in this report. (4) SEC-11 on the persisted translation history: it stores full source and translated text, but that IS the feature (recall previous translations) and it is off by default, so it reads as the github_stats "convenience artifact" counter-case rather than a violation.
 
 THEMES WORTH THE MAINTAINER'S ATTENTION, BEYOND THE INDIVIDUAL LINES. Two systematic gaps account for most of what I found. First, ERR-11: the spell provider contract `fun(issues: LanguageSpellIssue[])` has no error channel at all, so every provider collapses failure onto `cb({})` — I counted nine such call sites across typos.lua:65, cspell.lua:66, codespell.lua:69, custom.lua:47/53/67 and cspell_server.lua:217/257/299, plus the silent-skip paths in native.lua. The three I reported are the ones with the sharpest user-visible consequence; the fix is one signature change, not nine patches, and it belongs at the contract rather than in each adapter. Second, ERR-30: the spell domain re-verifies edits correctly (actions.lua:40-47, with a comment explaining why), and the translate and thesaurus domains do not — same plugin, same class of write, opposite conclusion. The asymmetry is what makes those three findings high-confidence rather than speculative.
+
+**Status.** ✅ erledigt (`0ddf641`) — `path=<p>` wird jetzt über `lib.nvim.cross.fs.expand_path` expandiert (nur `~` und Env-Vars) statt über `vim.fn.expand` (Shell-Backtick-Substitution, Vim-Specials, Glob).
 
 ---
 
