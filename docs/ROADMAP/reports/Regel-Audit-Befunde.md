@@ -43,7 +43,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | casedesk.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | cmdlog.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | color_my_ascii.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
-| media.nvim | 14 | – | – | offen |
+| media.nvim | 14 | 13 | 1 | fertig (2026-09-18) |
 | ai.nvim | 13 | – | – | offen |
 | github_stats.nvim | 13 | – | – | offen |
 | gopath.nvim | 13 | – | – | offen |
@@ -3268,7 +3268,7 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 ## media.nvim
 
-**14 Befunde** (7 × high). Roh gemeldet: 14.
+**14 Befunde** (7 × high). Roh gemeldet: 14. — **Stand: 13/14** (⏭️ 1, 2026-09-18)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -3280,6 +3280,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** With `bin.ffmpeg`/`bin.ffprobe` pointed at a nonexistent path, each render attempt raises out of `pump()` with `running` already incremented and `inflight[out]` still populated. After `render_concurrency` (default 4) such failures, `running >= limit()` permanently and the `while running < limit()` loop at line 203 never starts anything again: every later `media.frame`/`frames`/`sheet`/`waveform` sits in the queue with a callback that never fires -- no error surfaced to the caller, no timeout. Re-requesting the same output joins the stuck `inflight` entry (line 255), and `cancel()` refuses to clear it because `started` is true. Correct as described; one scoping note -- `transcribe` reaches this only through its normalize/frame steps, not directly.
 
+**Status.** ✅ erledigt (`8083257`) — `entry.render(...)` läuft jetzt über pcall; ein Spawn-Fehler settled den Slot statt `running` für immer hochzuhalten.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/media/core/probe.lua:258` · `M.probe` · confidence **high**
@@ -3289,6 +3291,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 **Regelbezug.** ERR-01: the spawn is a system boundary and `vim.system` raises on spawn failure (verified, see above). The module's own contract two lines up says the callback "runs exactly once, always on the main loop", and `media.init`'s header promises consumers the same.
 
 **Auswirkung.** With `bin.ffprobe` set to a nonexistent path, `media.probe(path, cb)` raises out of the public API instead of calling back with an error, breaking the module's own "callback runs exactly once" contract, and the raise propagates into the synchronous callers (frame.lua:157 and the equivalents in frames/sheet/waveform/normalize). `inflight[path]` stays populated for the rest of the session, so every subsequent probe of that same path is appended to a waiter list nobody will ever drain -- the first attempt errors loudly, every one after it goes permanently silent. Scope correction: this needs a misconfigured `bin.ffprobe`; a simply-absent ffprobe is caught cleanly at line 233.
+
+**Status.** ✅ erledigt (`66a6ef7`) — `vim.system(...)` läuft über pcall; ein Spawn-Fehler ruft jetzt `finish(nil, err)` statt aus `M.probe` herauszuwerfen.
 
 ### `ERR-60` — `a and b or c` bricht, sobald `b` falsy sein kann
 
@@ -3300,6 +3304,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** `media.play_window(path, { ontop = false })` still passes `--ontop` to mpv, so the documented per-call override is inoperative in the one direction anybody would use it -- there is no way to get a non-floating player window except the global `window.ontop = false`. A consumer such as hover.nvim that asks for a window that must not float over everything gets one that does. One correction to the auditor: the `autofit` line above is NOT latent for the same reason -- `spec.autofit` is typed `string`, and every Lua string including `""` is truthy, so that chain cannot fall through. Only `ontop` is affected.
 
+**Status.** ✅ erledigt (`1e16a76`) — `opts.ontop ~= nil and opts.ontop or window.ontop` durch explizites if/else ersetzt; `ontop = false` wirkt jetzt tatsächlich.
+
 ### `PRIN-20` — Keine stillen Fehler
 
 `lua/media/hub/actions.lua:266` · `M.run_batch` · confidence **high**
@@ -3309,6 +3315,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 **Regelbezug.** Cancelling the dispatcher handle (`core/dispatcher.lua:192-213`) removes this batch's waiter from `job.waiters`; when it was the last one the job is cancelled and `fan_out` — the only thing that calls `w.done` — never runs. So the callback that would schedule the next `step()` is suppressed, and the `if cancelled then on_done(...)` branch at line 223-226 is unreachable. The docstring claims the opposite ("the handle stops the run after the item currently in flight").
 
 **Auswirkung.** Cancelling a marked-set batch while an audio/video item is transcribing leaves `on_done` uncalled forever: the dashboard's summary never runs, so the sidecars/SRT files already written for earlier items are never reported, the accumulated per-file failure list is dropped, and `progress.finish` is never called on the lib.nvim handle (leaving the indicator up). Note the leak is not limited to the last-waiter case -- if another consumer has joined the same transcription key, `job.cancel` is correctly skipped, but this batch's waiter has still been removed from the list, so its callback is suppressed either way. OCR and PDF items are unaffected: `hub.run` returns nil for those, so cancel only sets the flag and the in-flight callback still drives `step()` to the cancelled branch.
+
+**Status.** ✅ erledigt (`e936dd9`) — `cancel()` ruft `current.cancel()` nicht mehr auf (das unterdrückte den Callback, der `on_done` erreicht hätte); nur noch das Flag, `step()`-Reentry beendet den Batch wie im Docstring versprochen. Der Docstring beschrieb das korrekte Verhalten schon, der Fix brauchte am Ende weniger Code.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -3320,6 +3328,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** Every `:Media <verb> <path>` runs the typed argument through Vim's filename expansion. Two real consequences. (1) Buffer specials silently retarget: `:Media frame "#1 Intro.mp4"` renders buffer 1's file, `%`-prefixed arguments render the current buffer -- the wrong file, reported as success. (2) A backtick span executes through `&shell`; I confirmed the side effect (file created). One correction to the auditor: on Windows the substituted output cannot be read back, so `expand` then raises `E282: Cannot read from ...` -- the command still runs, but the user sees a raw Vim error rather than a silent success, which makes the injection noisier than described, not absent. The fix is `lib.nvim.cross.fs.expand_path`, which does `~`/env only.
 
+**Status.** ✅ erledigt (`635b25f`) — `vim.fn.expand(explicit)` durch lokales `expand_path()` (weiche `lib.nvim.cross.fs.expand_path`-Abhängigkeit + `~`/Env-Fallback) ersetzt.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/media/bindings/keymaps.lua:32` · `M.target` · confidence **high**
@@ -3329,6 +3339,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 **Regelbezug.** SEC-34 names this exact failure mode: the cursor specials do not return `""` when there is nothing under the cursor, they throw. The rule's own Beleg (spotlight.nvim `cursor.token()`) is the same crash one plugin over.
 
 **Auswirkung.** On an empty or whitespace-only line, `<leader>Mp`/`Mf`/`Ms`/`Mo` and any bare `:Media <verb>` with no path argument abort with a raw `E446: No file name under cursor` instead of the intended warning at usrcmds.lua:414 ("no file given, and none under the cursor"). `M.register_fallback` (usrcmds.lua:671) resolves the path before dispatching, so under the no-lib.nvim fallback even `:Media health` and `:Media cache clear` -- which need no path -- throw on such a line. Scope correction: `:Media cache clear` and `:Media health` are only affected on the fallback path, not under the lib.nvim composer, where each verb calls `require_path` itself.
+
+**Status.** ✅ erledigt (`635b25f`) — `vim.fn.expand("<cfile>")` über pcall abgesichert; E446 auf leerer Zeile fällt jetzt sauber auf den Buffer-Namen-Fallback zurück.
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -3340,6 +3352,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** `:Media dashboard path=<arg>` runs the argument through Vim's filename expansion twice per open. A backtick span executes through `&shell`. A `#`/`#N` argument with no alternate buffer raises a raw `E194` out of the command. The auditor's headline claim -- that `path=#1` silently scans buffer 1's directory -- does NOT happen: the `isdirectory` check on line 98 rejects it with a clean "not a directory: #1". So the exposure here is command substitution plus uncaught Vim errors, not a silent wrong-directory scan.
 
+**Status.** ✅ erledigt (`d1bb33f`) — `vim.fn.expand(arg)` in `M.root` durch dieselbe lokale `expand_path()`-Lösung ersetzt.
+
 ### `ERR-03` — Explizite Rückgaben
 
 `lua/media/output/init.lua:72` · `write` · confidence **medium**
@@ -3349,6 +3363,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 **Regelbezug.** ERR-03/PRIN-20: the function's contract is `---@return boolean ok, string|nil err`, but the success value is formed from the work that was *attempted*, not from the work that succeeded. Lua's buffered `io` reports a full disk or a failing flush from `write`/`close`, which are exactly the two results thrown away here.
 
 **Auswirkung.** Any write failure after a successful open -- full volume, quota, a disconnected network share, a flush error at close -- is reported as success. `:Media transcribe out=srt` (and out=vtt, out=sidecar, and the OCR/PDF `.ocr.md`/`.text.md` routes) tells the user `wrote <name>.srt` while the file on disk is empty or truncated, after a run that took minutes. The auditor's confidence rating of medium is right: the discard is certain from the code, but triggering it needs a genuinely failing volume, so this is a correctness/contract defect rather than an everyday break.
+
+**Status.** ✅ erledigt (`9ba43fc`) — `fd:write`/`fd:close`-Rückgabewerte werden jetzt geprüft, bevor `true, nil` zurückkommt.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -3360,6 +3376,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** A scan root that resolves but cannot be read -- a permission-denied share, a dropped NAS mount, a Windows junction that `isdirectory` accepts but `fs_scandir` refuses -- yields zero entries, and the dashboard states "no images, PDFs, audio or video under <root>" about a directory it never actually opened. A partially unreadable tree silently shows a short list with no indication anything was skipped. Note the `path` scope is partly protected by the `isdirectory` check at line 98 (a plainly nonexistent path errors cleanly); the gap is the readable-looking-but-unopenable directory, and the `cwd`/`cfile` scopes, which have no such check.
 
+**Status.** ✅ erledigt (`d1bb33f`) — `M.walk` gibt jetzt auch `unreadable: string[]` zurück; `M.scan` faltet das in `err`, das Dashboard warnt statt „nichts gefunden“ zu behaupten.
+
 ### `ERR-31` — `O_CREAT|O_EXCL` statt Check-dann-Erzeugen
 
 `lua/media/core/cache.lua:247` · `M.ensure` · confidence **medium**
@@ -3369,6 +3387,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 **Regelbezug.** ERR-31: naive check-then-create instead of an exclusive create (or the equivalent here, render to a unique temp path and rename into place). The module header asserts "Two `ffmpeg` processes writing the same file is a corrupt PNG, so the second caller waits on the first instead" — true within one Neovim, not across two.
 
 **Auswirkung.** Two Neovim instances that request the same still concurrently both see no file and both run ffmpeg with `-y` on the same path. Because `settle` only tests existence, the interleaved result is accepted as a success and handed to callers. Since the cache key is content-derived (kind + path + mtime + args) and documented as safe to keep forever, that entry is never re-rendered, so one race can leave a permanently broken still for both instances and all future sessions until `:Media cache clear`. A reader in a second instance can also be served a half-written PNG through the line-247 fast path. Correctly rated medium: the mechanism is certain, but it needs two concurrent instances hitting the same key in the same window.
+
+**Status.** ✅ erledigt (`8083257`) — Jeder Renderer schreibt jetzt auf einen privaten `<out>.tmp-<pid>`; `settle` verschiebt per atomarem Rename nach `out`. Griff tiefer als die zwei benannten Stellen: alle fünf Renderer (frame/frames/sheet/waveform/normalize) mussten auf das neue Signaturschema umgestellt werden.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -3380,6 +3400,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** The plugin gives two contradictory answers about its own dependency. `:checkhealth media` reports lib.nvim as an optional integration and stays green without it, while the README and installation docs call it required. Someone trusting checkhealth and removing lib.nvim gets a green report and a quietly degraded plugin (no `:Media` tab completion, no float dashboard -- a long `vim.notify` instead per dashboard.lua:776-780, no progress indicator, no cancel key for a minutes-long transcription); someone trusting the docs installs a dependency the code demonstrably does not need. Note the direction is the reverse of the rule's second sentence -- this is a soft dependency documented as hard, not a hard one documented as optional -- so the correct resolution is to align the docs with the soft implementation (or vice versa), not necessarily to raise the health level.
 
+**Status.** ✅ erledigt (`72a75e2`) — Nicht der Code war falsch (die weiche Abhängigkeit ist konsequent durchgezogen), sondern README/`docs/installation.md` behaupteten „required“ — beide jetzt an die weiche Realität angeglichen.
+
 ### `PRIN-20` — Keine stillen Fehler
 
 `lua/media/core/dispatcher.lua:277` · `fan_out` · confidence **medium**
@@ -3390,6 +3412,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 
 **Auswirkung.** When two callers have joined one transcription -- the documented case of `:Media transcribe` alongside a background hover.nvim request for the same file/engine/lang/task -- and the first caller's `done` callback cancels a handle, the second caller's `done` is silently skipped. That caller waits forever on a run that has already completed, with no error anywhere. Note `inflight[key]` is already cleared at line 273, so a later request for the same key does start a fresh run; the permanent hang is confined to the skipped waiter, not to the key. Fix is one line: copy the list as `fan_phase` already does.
 
+**Status.** ✅ erledigt (`c9b8e03`) — `fan_out` kopiert `job.waiters` jetzt wie `fan_phase` es bereits tut, statt die Liste nur zu aliasen — ein `table.remove` während der Iteration überspringt keinen Waiter mehr.
+
 ### `PERF-46` — Cache-Key vollständig
 
 `lua/media/core/bin.lua:76` · `M.find` · confidence **low**
@@ -3399,6 +3423,8 @@ NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is rende
 **Regelbezug.** PERF-46: the key has to carry every input that changes the result. Here the configured override is an input to the result and is absent from the key.
 
 **Auswirkung.** Any `find()` that runs before or between `setup()` calls freezes the answer for the session. A consumer calling `media.available()` before media's own `setup()`, or a second `setup({ bin = { ffmpeg = "D:/tools/ffmpeg.exe" } })` after a reload, leaves the plugin on the previously resolved binary -- and the `false` sentinel is the worse case: a pre-setup lookup that found nothing makes `find` return nil forever, so a user who then configures an explicit `bin.ffmpeg` path still gets "ffmpeg not found". `M.reset()` would fix it but is only reachable via `VimResume`. Correctly rated low confidence on likelihood -- it needs a specific call ordering -- but the stale-key mechanism itself is certain from the code.
+
+**Status.** ⏭️ offen gelassen — Bewusstes, getestetes Design: `TESTS/bin_spec.lua` fixiert explizit, dass eine Config-Änderung erst nach `M.reset()` wirkt, und der Modul-Header nennt das als vorgesehenen Reparaturweg. Ein vollständiger Cache-Key hätte diesen dokumentierten Vertrag gebrochen — Design-Entscheidung für den Maintainer.
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -3417,6 +3443,8 @@ Three behaviours were verified empirically against the installed Neovim 0.12.2 r
 Rules I could not properly check: **CMT-16** — `docs/map/` is generated by `:DocMap` and its `module_map.json` is stale (it reports 31 lua files / 4828 lines against the current 39 / 8058), but I have no way to tell from inside this repo whether `docs/BINDINGS.md` is generated or hand-written, or whether any generated file was hand-edited, so I report nothing there. **LUA-02** (fixes upward into lib.nvim) and **LUA-06**-adjacent cross-repo questions need lib.nvim itself, which is outside this plugin. **ERR-50** — there is no config validation of unknown keys at all (`config/init.lua:27` is a bare `vim.tbl_deep_extend` with no `KNOWN_OPTS` gate), which is an absence rather than a wrong ordering, so I did not force it into an ERR-50 finding; ERR-51/ERR-53/LUA-87 are all satisfied (the merge starts from `vim.deepcopy(DEFAULTS)`, nothing holds a module-level reference into the config tree, and no self-written config file exists). **PERF-93/PERF-92** have no surface: the plugin registers exactly one autocommand (`VimResume`) and computes no geometry at module level. **LUA-48** is clean — the one `__mode = \"k\"` (core/player.lua:59) is keyed by handle *tables*, which are collectible.
 
 Additional context for two findings: the unguarded `vim.system` behind ERR-01 also appears at core/audio.lua:218, core/player.lua:190 and core/play.lua:72 with the same root cause (play.lua is the mildest — it verifies the binary with `executable.exists` first). Both audio.lua's and player.lua's module headers explicitly promise \"never raises\", which a misconfigured `bin.mpv` breaks. I folded these into the two anchor findings rather than filing five near-identical rows.
+
+**Status.** ✅ erledigt (`c9b8e03`) — `read_cached` verlangt jetzt zusätzlich `type(doc.segments) == "table"`, bevor ein gecachtes Transkript als gültig gilt.
 
 ---
 
