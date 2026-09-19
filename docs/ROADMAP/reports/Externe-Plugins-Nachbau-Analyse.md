@@ -60,6 +60,9 @@ three replacements that turned out to be rewires rather than builds:
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
 | B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
 | B5 ts-context → ui.nvim | `ui.context`: a Tree-sitter ancestor walk from the first visible line, rendered in a per-window `relative="win"` float — not the winbar this entry named (see the section for why); `:UI context [on\|off\|up n]`, `ui.setup({ context = { max_lines = 3 } })` in the config; plugin dropped | ui.nvim `870a6bc`, nvim, 2026-09-19 |
+| C · search.nvim → pickers.nvim | `pickers.tabs` built: tab groups over `:Pickers` targets with query carry-over, `:Pickers tabs`, opt-in `tab_next`/`tab_prev`; search.nvim stays on `<leader>s` | pickers.nvim, 2026-09-19 |
+| C · telescope-github → pickers.nvim | `pickers.sources.github` built: `gh`-backed issue/PR lists fill the telescope/fzf branches of the `gh_*` builtins | pickers.nvim, 2026-09-19 |
+| C · telescope-file-browser → pickers.nvim | `pickers.browse` built: directory browser on `pick_item` with fileops-backed new/rename/delete rows; fzf-lua's `explorer` | pickers.nvim, 2026-09-19 |
 | C · devicons → lib.nvim | `lib.nvim.ui.icons` built: glyph/colour/name per extension, file name, filetype (curated devicons subset), ui.nvim's adapter falls back to it; the plugin stays for its other consumers | lib.nvim, ui.nvim, 2026-09-19 |
 | C · which-key → ui.nvim | `ui.keys` built: `:UI keys [prefix]` menu over the mappings under a prefix, drill-down groups; which-key stays for the automatic popup | ui.nvim, 2026-09-19 |
 | C · nvim-notify → ui.nvim | `ui.notify` built: toasts + history behind `vim.notify`, `:UI notify`; the plugin stays as noice's backend (the noice decision is separate) | ui.nvim, 2026-09-19 |
@@ -123,7 +126,6 @@ neither chosen):
 | neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
 | 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
 | neo-tree config → filetree.nvim | L | ~1,500 lines |
-| Tier C, all eleven | 1–3 each | each a placement decision plus a build |
 
 ---
 
@@ -573,7 +575,8 @@ passes `context = { max_lines = 3 }` to `ui.setup`; the Bindings corpus
 ## 6. Tier C — harvest one feature, keep the plugin
 
 These are not replacements. The external plugin stays; one idea moves in-house.
-**Three open; puppeteer → cascade, minty → ui.colorpicker, colorizer → my.nvim, zen-mode → ui.zen, bqf → pickers.quickfix done; nvim-notify → ui.notify, which-key → ui.keys and devicons → lib.nvim.ui.icons built with the plugins kept, 2026-09-19.**
+(In practice five of the eleven became replacements after all — see each row for why.)
+**All eleven done 2026-09-19:** five replaced (puppeteer → cascade, minty → ui.colorpicker, colorizer → my.nvim, zen-mode → ui.zen, bqf → pickers.quickfix) and six built with the plugin kept (nvim-notify → ui.notify, which-key → ui.keys, devicons → lib.nvim.ui.icons, search.nvim → pickers.tabs, telescope-github → pickers.sources.github, telescope-file-browser → pickers.browse).
 
 | External | Feature worth stealing | Own home | Effort |
 |---|---|---|---|
@@ -585,9 +588,9 @@ These are not replacements. The external plugin stays; one idea moves in-house.
 | ~~`rcarriga/nvim-notify`~~ | ~~Notification history, stacked toasts~~ | **Built 2026-09-19, plugin kept** — ui.nvim `ui.notify`: `vim.notify` as level-coloured `ui.kit.toast`s with per-level timeouts and a ring-buffer history (`:UI notify [on\|off\|history\|clear]`, `ui.setup({ notify = true })`, explicit-only). This config keeps nvim-notify as noice's backend, exactly as the row says: the removal is the noice decision, not this one. `:UI notify on` is the trial switch. | **built** |
 | ~~`folke/which-key.nvim`~~ | ~~Pending-keymap hint popup~~ | **Built 2026-09-19, plugin kept** — ui.nvim `ui.keys`: the mappings under a prefix as a `ui.kit.menu` (rows from `desc`, drill-down groups named via `setup({ groups })`, a picked row feeds the keys), `:UI keys [prefix]`. Asked for, not timeout-triggered: the pending-key interception is the hard part of which-key and the part left to it. which-key stays for the automatic popup; the data model the row worried about turned out to be `nvim_get_keymap` plus the `desc`s the registry already writes. | **built** |
 | ~~`nvim-tree/nvim-web-devicons`~~ | ~~Filetype → icon + colour~~ | **Built 2026-09-19, plugin kept** — `lib.nvim.ui.icons` (data + lookup, README), wired as ui.nvim's fallback behind the adapter seam the row named. Exactly the data import it predicted; the plugin stays for the consumers that are not ours. | **built** |
-| `FabianWirth/search.nvim` | Tabbed picker groups | **pickers.nvim** — `:Pickers <scope> <action>` is already a grammar over scopes. Tabs are a UI on top of it. Arguably already redundant; **needs a closer look** at whether it is still used at all. | 1–2 |
-| `nvim-telescope/telescope-github.nvim` | GitHub issues/PRs/gists as pickers | **reposcope.nvim** (already talks to GitHub/GitLab/Codeberg) + **github_stats.nvim**. Picker delivery via `pickers.nvim` so it is not telescope-bound. | 2–3 |
-| `nvim-telescope/telescope-file-browser.nvim` | Browse + create/rename/delete from a picker | **fileops.nvim** (the operations) + **pickers.nvim** (the list). Both halves exist; only the composition is missing. | 2–3 |
+| ~~`FabianWirth/search.nvim`~~ | ~~Tabbed picker groups~~ | **Built 2026-09-19, plugin kept** — pickers.nvim `pickers.tabs`: named groups of `:Pickers` argument strings, `:Pickers tabs <group>`, opt-in in-picker `tab_next`/`tab_prev` (telescope + snacks; fzf-lua's `keymap.builtin` cannot run Lua) with the typed query carried into the next target (`command.handle` gained `query`). The closer look: `<leader>s` still opens search.nvim here, so it stays until the host rebinds. | **built** |
+| ~~`nvim-telescope/telescope-github.nvim`~~ | ~~GitHub issues/PRs/gists as pickers~~ | **Built 2026-09-19, plugin kept** — not in reposcope or github_stats after all: pickers.nvim already had the four `gh_*` builtins for snacks, so `pickers.sources.github` (`gh <kind> list --json` → `pick_item`, a pick opens the entry in the browser) fills the telescope and fzf-lua branches. Gists were not carried (the extension was unused here). telescope-github stays installed but nothing in the config reaches it. | **built** |
+| ~~`nvim-telescope/telescope-file-browser.nvim`~~ | ~~Browse + create/rename/delete from a picker~~ | **Built 2026-09-19, plugin kept** — the composition the row described: pickers.nvim `pickers.browse` (one directory per `pick_item` list, dirs first, `../`, new/rename/delete rows through fileops.nvim when installed), `:Pickers browse [dir]`, `:Pickers builtin browse`, and fzf-lua's `explorer` — the one engine that had none. telescope's `explorer` keeps the extension; the config's `<leader>.` still uses it. | **built** |
 
 ---
 
@@ -801,13 +804,13 @@ Struck entries are done.
 | **insights.nvim** | ~~todo scan~~ and ~~todo highlight~~ (both; B2) · git-conflict detection + resolution |
 | **sessions.nvim** | ~~harpoon marks, pins, persistence, preview~~ (built, in parallel run; 7.4) |
 | **debugging.nvim** | ~~neotest adapter debug tooling~~ (`:Debug neotest`, 2026-09-19) · snacks debug inspector |
-| **pickers.nvim** | search.nvim tabs · ~~bqf quickfix preview~~ (`pickers.quickfix`, 2026-09-19) · telescope-github · file-browser list · neotest picker integration |
+| **pickers.nvim** | ~~search.nvim tabs~~ (`pickers.tabs`) · ~~bqf quickfix preview~~ (`pickers.quickfix`) · ~~telescope-github~~ (`pickers.sources.github`) · ~~file-browser list~~ (`pickers.browse`) — all 2026-09-19 · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · ~~devicons data~~ (`lib.nvim.ui.icons`, 2026-09-19) |
 | **ui.nvim (notify)** | ~~nvim-notify toasts + history~~ (`ui.notify`, 2026-09-19; the plugin stays until noice is decided) |
 | **ui.nvim** | matchup offscreen status · ~~ts-context~~ (B5, as `ui.context`, a float — not the winbar) · ~~which-key popup~~ (`ui.keys`, on request; the plugin stays for the timeout popup) · ~~minty colour picker~~ (`ui.colorpicker`, 2026-09-19) · ~~zen mode~~ (`ui.zen`, 2026-09-19) |
 | **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
-| **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
+| **fileops.nvim** | ~~mkdir-on-write~~ (A2) · ~~file-browser operations~~ (consumed by `pickers.browse`, 2026-09-19) · snacks scratch |
 | **emojis.nvim** | unicode name/search/table/digraphs |
 | **cascade.nvim** | ~~puppeteer template literals~~ (the `strings` domain, 2026-09-19) |
 | **spotlight.nvim** | ~~todo highlight machinery~~ (went to insights instead; B2) · conflict marker highlight |
