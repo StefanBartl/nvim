@@ -37,7 +37,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | language.nvim | 16 | 16 | 0 | fertig (2026-09-18) |
 | debugging.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | pdfport.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
-| reposcope.nvim | 15 | – | – | offen |
+| reposcope.nvim | 15 | 15 | 0 | fertig (2026-09-18) |
 | sandbox.nvim | 15 | – | – | offen |
 | cascade.nvim | 14 | – | – | offen |
 | casedesk.nvim | 14 | – | – | offen |
@@ -2132,7 +2132,7 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 ## reposcope.nvim
 
-**15 Befunde** (8 × high). Roh gemeldet: 15.
+**15 Befunde** (8 × high). Roh gemeldet: 15. — **Stand: 15/15** (⏭️ 0, 2026-09-18)
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -2144,6 +2144,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** After one truncated/interrupted write to query_stats.json, the next `M.record` (prompt_input on_enter) rewrites the file with a single entry and the query-frequency history behind `:Reposcope queries` is gone. The user is warned (an ERROR-level notify fires on the corrupt load), but the original bytes are not preserved, so the loss is unrecoverable. Not "silent" as claimed — unrecoverable.
 
+**Status.** ✅ erledigt (`8e6e482`) — `M.load` sichert eine korrupte `query_stats.json` jetzt nach `.corrupt` statt sie stillschweigend zu verwerfen.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/reposcope/ui/prompt/prompt_config.lua:107` · `M.set_fields` · confidence **high**
@@ -2153,6 +2155,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default rather than break initialisation, and to be surfaced via `:checkhealth`. Neither happens. Level 2 is below the threshold in `utils/debug.lua:49` (`if M.is_dev_mode() or level >= 3`), so the "Ignored invalid field" message is invisible outside dev mode, and `health.lua` (read in full) never validates `prompt_fields`.
 
 **Auswirkung.** `setup({ prompt_fields = { "keyword" } })` (missing 's') or `:Reposcope prompt keyword` leaves background, list and preview windows open with no prompt window and no way to type a query. The only feedback is "Layout empty or invalid" at ERROR level, which names neither the option nor the typo; the message that would ("Ignored invalid field: keyword") is suppressed at level 2 outside dev mode, and :checkhealth does not surface it either.
+
+**Status.** ✅ erledigt (`151dda1`) — `M.set_fields` fällt bei ungültigen Feldern jetzt auf die Defaults zurück und macht die Ablehnung über `:checkhealth` sichtbar.
 
 ### `ERR-51` — Merges kopieren Defaults tief
 
@@ -2164,6 +2168,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** `require("reposcope.config.DEFAULTS")` stops answering "what are the defaults" and answers "what did this machine's environment resolve to" for clone.std_dir and the three tokens. TESTS/config_spec.lua reads that table, which is why the generic scalar-DEFAULTS test had to hard-exclude the token fields. Before setup() runs, any write through `config.options.*` (ui/prompt/init.lua, state/session_state.lua, utils/metrics.lua) lands in the DEFAULTS module itself. No user-visible crash — this is a correctness/testability defect, not a runtime failure.
 
+**Status.** ✅ erledigt (`aa78755`) — Defaults werden jetzt tief kopiert und `options` bei jedem `setup()` neu aufgebaut, statt die gleiche Tabelle wiederzuverwenden.
+
 ### `ERR-53` — In-place-Mutation statt Tabellen-Ersatz bei geteilten Referenzen
 
 `lua/reposcope/ui/list/list_config.lua:38` · `M.highlight_color / M.normal_color` · confidence **high**
@@ -2173,6 +2179,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** ERR-53: when submodules hold values derived from a central table, the update must mutate in place, never replace the table, or those references silently decouple. The comment directly above line 38 claims the opposite — "sourced from the active colortheme (so a theme/colorscheme switch via `ui.config.update_theme()` is reflected here too, instead of these staying pinned to the original dark-theme hex values)" — which is exactly what does happen.
 
 **Auswirkung.** After `require("reposcope.ui.config").update_theme("light")` the UI is half-converted: list_window and prompt_manager pick up the light palette at call time, while list_config.highlight_color/normal_color, background_config.color_bg and preview_config.layout.Normal.background/highlight_color/normal_color stay on the dark hex values. update_theme is public API with no internal caller, so it is latent until a user calls it. Fixing it by making update_theme mutate in place would NOT help.
+
+**Status.** ✅ erledigt (`219f37c`) — `M.highlight_color`/`M.normal_color` leiten die Farben jetzt bei jedem `recompute()` neu ab statt eine geteilte Tabelle in-place zu mutieren.
 
 ### `LUA-01` — Hart oder weich, aber konsistent
 
@@ -2184,6 +2192,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** Nothing breaks at runtime: the soft path is unreachable, because a missing lib.nvim kills the plugin at the first bare require long before progress.create is called. The concrete cost is a header comment that asserts a project-wide convention that does not exist, so a maintainer copying it into a new module inherits a fallback that can never run and a false impression that lib.nvim is optional. This is a documentation/consistency defect, not a functional one — lower severity than the finding's framing.
 
+**Status.** ✅ erledigt (`6bddb11`) — `progress.lua` bezeichnet `lib.nvim` nicht mehr als optionale Abhängigkeit in der Doku, obwohl der Code sie hart voraussetzt.
+
 ### `LUA-13` — Deferred Calls absichern
 
 `lua/reposcope/ui/list/list_manager.lua:79` · `M.update_list` · confidence **high**
@@ -2193,6 +2203,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** LUA-13/ERR-33 require handles to be re-validated inside deferred and async callbacks, because they can go invalid in between. Every other buffer writer in the plugin does this — `preview_manager.inject_content:67`, `status_view._set_buffer_lines:493`, `readme_viewer._prepare_readme_buffer:73` all guard.
 
 **Auswirkung.** Close the Reposcope UI while a search is still in flight and the fetch's scheduled `update_list` callback runs against the deleted buffer id: `vim.bo[buf].modifiable = true` raises "Invalid buffer id: N" out of a scheduled callback after the UI is gone. Not a crash of Neovim — an unhandled error notification with no context, plus the list update is lost.
+
+**Status.** ✅ erledigt (`49495d9`) — `M.update_list`s per `vim.schedule` verzögerter Buffer-Write überspringt jetzt einen zwischenzeitlich gelöschten List-Buffer statt gegen ein ungültiges Handle zu werfen. Neuer `list_manager_spec.lua`-Test deckt beide Pfade ab.
 
 ### `PERF-92` — Keine Layout-Geometrie auf Modulebene
 
@@ -2204,6 +2216,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** Resize the terminal after plugin load, then run a search with no hits: the "No results..." line is padded for the preview width as of plugin-load time, so it sits off-centre (or wraps, if the terminal shrank) for the rest of the session. Cosmetic only — nothing errors, and it affects only the empty-result message.
 
+**Status.** ✅ erledigt (`19775d8`) — `preview_width`/`empty_tbl_msg` werden jetzt in `build_empty_tbl_msg()` zum Aufrufzeitpunkt aus `preview_config.width` gebaut statt einmalig beim `require`.
+
 ### `PERF-93` — Heißes Event: billiger Guard **oder** Throttle, nie ungeschützt
 
 `lua/reposcope/ui/prompt/prompt_autocmds.lua:65` · `M.setup_autocmds (cursor-lock autocmd)` · confidence **high**
@@ -2213,6 +2227,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** PERF-93 requires a hot event to leave the common case cheaply — the model being a first-line filetype/scope check. The sibling `TextChangedI` handler ten lines above does exactly that (`get_active_prompt_field()` -> `if not field then return end`); this one omits it, so it treats every buffer in the editor as a prompt buffer.
 
 **Auswirkung.** While the Reposcope UI is open the cursor lock is editor-wide, not prompt-scoped. Any window with >= 2 lines that gets focus while the augroup lives has its cursor snapped back to line 2 on every CursorMoved/CursorMovedI/InsertEnter/InsertLeave — including help_view (`?`), which opens a kit.viewer and does not call cleanup_autocmds, so the cheatsheet cannot be scrolled. I verified the global registration, the missing guard and the readme_viewer workaround directly; the per-viewer breakage follows from those but I did not drive the UI to observe it.
+
+**Status.** ✅ erledigt (`dcab622`) — Das Cursor-Lock-Autocmd (`CursorMoved`/`CursorMovedI`/`InsertEnter`/`InsertLeave`) bekommt jetzt denselben billigen Guard wie der `TextChangedI`-Handler daneben, statt ungeschützt in jedem Fenster zu laufen.
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -2224,6 +2240,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** Latent, not currently reachable from the UI. If any caller is added — or a test/API consumer invokes it — a non-JSON body (proxy error page, 502, truncated capture) makes vim.json.decode raise inside the spawn_capture completion callback instead of failing through the error path. A response where `resources` exists but `core` does not throws on the nested index at line 311 for the same reason. Today the practical impact is confined to TESTS/metrics_spec.lua and the public API surface.
 
+**Status.** ✅ erledigt (`de6fe51`) — `decode(response)` läuft jetzt durch `pcall` plus Typ-Guard auf `data.resources.core`/`.search` vor dem Indizieren.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/reposcope/ui/prompt/prompt_manager.lua:53` · `_add_title_to_prompt_buffer` · confidence **medium**
@@ -2233,6 +2251,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** ERR-02 requires nil checks before API access. The misspelled key evaluates to `nil` and is handed straight to `nvim_set_hl`, which accepts a table with `fg = nil` and simply defines the group without a foreground — no error, no warning, nothing that makes the typo visible.
 
 **Auswirkung.** ReposcopePromptTitle is defined with only bg and bold, so each prompt field's centred title ("KEYWORDS", "OWNER", ...) renders with the inherited foreground over the accent_1 background instead of the intended one. Purely visual — nothing errors and nothing is unusable; on the default dark theme it happens to stay legible. The two halves of a single nvim_set_hl call disagreeing is the real signal, and it would get worse on a light palette.
+
+**Status.** ✅ erledigt (`241c178`) — Tippfehler `colortheme.backg` (nicht existent) auf `colortheme.background` korrigiert — vorher war `fg` in `ReposcopePromptTitle` immer `nil`.
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -2244,6 +2264,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** On a machine with none of gh/curl/wget on PATH, setup() leaves request_tool = "gh" and says nothing. The first search then fails with "gh request failed (code ...)" from the gh.lua error path (around line 104, not 188), which names the wrong problem; the correct diagnosis exists only in :checkhealth. Secondary and confirmed: the notify branch cannot be entered in normal configurations, so the failure path is untestable, and the caller gets no return value to check.
 
+**Status.** ✅ erledigt (`a0d5503`) — `resolve_request_tool` prüfte in der Fehlerverzweigung `req_tool` statt `new_req_tool` (nie erreichbar); gibt jetzt explizit `(ok, err)` zurück und notifiziert auch bei einem konfigurierten, aber nicht installierten Tool. Zwei bestehende Tests, die das alte Verhalten fixiert hatten, wurden inhaltlich korrigiert.
+
 ### `LUA-16` — `vim.NIL` sanitizen
 
 `lua/reposcope/providers/gitlab/repositories/repository_fetcher.lua:50` · `_normalize` · confidence **medium**
@@ -2253,6 +2275,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** LUA-16: JSON `null` decodes to `vim.NIL`, which is userdata and therefore **truthy**, so the usual `x or fallback` idiom does not catch it. `readme_manager.fetch_for_selected:187` does `local branch = repo.default_branch or "main"` and hands the result to `gitlab/readme/readme_urls.lua:24`, which concatenates it into a URL and passes it to `urlencode` at line 28.
 
 **Auswirkung.** A GitLab project with null default_branch (GitLab returns null for a project with no commits, and such projects appear in /projects?search=) makes `branch` vim.NIL, and readme_urls.lua:24's concatenation raises "attempt to concatenate a userdata value" inside the README-fetch path — so arrow-key navigation over the result list throws. A null star_count breaks sort_prompt.lua:31 with "attempt to compare userdata with number"; a null http_url_to_repo/web_url breaks clone_command.lua:25 with "attempt to index a userdata value". Codeberg has the same three holes. I could not verify the GitLab API's null behaviour from this repo, so the trigger condition rests on the external API contract; the Lua-side breakage is certain once a null arrives.
+
+**Status.** ✅ erledigt (`0c11139`) — Neue `_denull()`-Hilfsfunktion wandelt `vim.NIL` in echtes Lua-`nil`, angewendet auf `html_url`, `default_branch` und `stargazers_count`, damit die vorhandenen `or`-Fallbacks wieder greifen.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -2264,6 +2288,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 
 **Auswirkung.** setup() is accumulative rather than idempotent. A second setup() cannot clear anything the first set, and `setup({})` — the documented way to take the defaults — resets nothing. Two lazy.nvim specs for the same plugin, or re-sourcing the config in a session, keep the union of everything ever passed. No crash; the failure is a config that silently does not match what the user wrote.
 
+**Status.** ✅ erledigt (`aa78755`) — Gleicher Commit wie #3 — `M.setup` respektiert jetzt eine selbstgeschriebene Config-Datei statt sie beim tiefen Rebuild stillschweigend zu überstimmen.
+
 ### `SEC-10` — Nie als Prozessargument
 
 `lua/reposcope/network/request_tools/gh.lua:137` · `M.request` · confidence **medium**
@@ -2273,6 +2299,8 @@ WHAT I COULD NOT COVER. (a) CMT-16: docs/map/ is generated output and docs/BINDI
 **Regelbezug.** SEC-10 forbids passing tokens as argv elements — a process command line is world-readable via `ps`/`Win32_Process` for the lifetime of the request. `curl.lua:43-51,65-69,78` implements precisely the opposite and says why: secret headers go into a curl config fed on stdin (`-K -`), never into argv. `gh.lua` itself already has the safe channel for this — lines 159-161 layer `GITHUB_TOKEN` into the child's environment — so the header is redundant as well as exposed.
 
 **Auswirkung.** `utils/metrics.lua:301` builds `headers["Authorization"] = "Bearer " .. token` and passes it through `api_client.request` -> `http_client.request`; `_build_auth_header` returns `{}` for the gh tool but `tbl_extend("force", headers or {}, auth_headers)` at http_client.lua:98 preserves the caller's header, so the token reaches gh's argv. Any unprivileged local process enumerating the process list during that request reads the GitHub token in clear. Reachability is limited today — `check_rate_limit` has no production caller — but the argv path is live for any caller that passes an auth header, which is the documented shape of `api_client.request`'s `headers` parameter.
+
+**Status.** ✅ erledigt (`d561621`) — Als geheim erkannte Header landen nicht mehr im `gh`-argv, da `gh` ohnehin per `GITHUB_TOKEN`-Env authentifiziert; der Header war schlicht redundant und sichtbar. Stdin war hier nicht anwendbar, da die `gh`-CLI keinen Stdin-Kanal für Header bietet.
 
 ### `SEC-21` — Timeout **und** Byte-Limit
 
@@ -2299,6 +2327,8 @@ Rules checked and found compliant (not merely inapplicable): SEC-03/SEC-01 (no s
 Rules with no such surface in this plugin: ERR-30, ERR-31, LUA-02, LUA-48 (zero `__mode` occurrences), LUA-17 (only a read of `vim.g.statusline_winid`), LUA-90, LUA-91, LUA-92, LUA-93 (these govern nvim-config specs, not a plugin repo), PERF-07 (metrics.lua:139 is a single `next()`, not a delete loop), SEC-13, SEC-20, SEC-40, SEC-42, SEC-45, SEC-46, SEC-50, TS-04, XP-01 (zero `glob`/`globpath` calls), XP-02, XP-03, XP-06, XP-07.
 
 One defect I could not map to any of the 76 rules, noted so it is not lost: `providers/github/repositories/repository_fetcher.lua:63` reads `notify(\"[reposcope] \" .. #parsed.items or 0 .. \" repositories received from GitHub.\", 2)`. `..` binds tighter than `or`, so this evaluates as `(\"[reposcope] \" .. #parsed.items) or (0 .. \" repositories...\")` — the left side is always a truthy string, so the message is permanently truncated to \"[reposcope] 25\". The gitlab and codeberg equivalents spell the same line correctly. Two more in the same category: `status_view.M.show:1364-1366` moves the *current* window's cursor to `_last_view.line` even for the `clipboard` and `path` output modes, where no Reposcope window was opened — `:Reposcope status --out=clipboard` yanks the cursor in whatever buffer the user was editing; and `github/clone/clone_manager.lua:70` calls `request_state.end_request(uuid)` synchronously right after `execute_clone`, which became asynchronous, so the UUID lifecycle no longer spans the clone and the duplicate-request guard the module header promises does not hold for its one real consumer.
+
+**Status.** ✅ erledigt (`05bac1a`) — `--max-filesize 20971520` (20 MiB) zusätzlich zum bestehenden 20s-Timeout ins curl-argv aufgenommen.
 
 ---
 
