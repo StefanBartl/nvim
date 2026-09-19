@@ -26,7 +26,7 @@
   - [Teil 3 — Zwei Regressions-Nachträge](#teil-3-zwei-regressions-nachtrge)
   - [Teil 4 — Bemerkenswerte Einzelbefunde](#teil-4-bemerkenswerte-einzelbefunde)
   - [Teil 5 — Aktueller Stand der vier offenen Baustellen](#teil-5-aktueller-stand-der-vier-offenen-baustellen)
-    - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **24 von 30 Repos geprüft**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-24-von-30-repos-geprft)
+    - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **30 von 30 Repos geprüft, fertig**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-30-von-30-repos-geprft-fertig)
     - [`LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**](#lua-01-hart-oder-weich-aber-konsistent-21-von-21-repos-geprft-fertig)
     - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **noch nicht begonnen**](#err-50err-22-config-validierung-und-degradierung-noch-nicht-begonnen)
     - [Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**](#die-313-ungeprften-recommendednice-to-have-regeln-noch-nicht-begonnen)
@@ -54,8 +54,8 @@ Ein Audit aller 38 `.nvim`-Repos gegen den vollständigen `rules.nvim`-Regelkata
    38 Repos (34 Kandidaten, 31 bestätigt, **23 Repos** betroffen, alle gefixt).
 4. **Vier Baustellen aus dem ursprünglichen Audit** sind danach separat
    angegangen worden — Stand siehe [Teil 5](#teil-5--aktueller-stand-der-vier-offenen-baustellen):
-   `ERR-11` (fast fertig), `LUA-01` (fertig, drei kleine Nacharbeiten aus dem
-   adversarialen Verify), `ERR-50`/`ERR-22` (noch nicht begonnen), die 313
+   `ERR-11` (fertig), `LUA-01` (fertig, drei kleine Nacharbeiten aus dem
+   adversarialen Verify), `ERR-50`/`ERR-22` (in Arbeit), die 313
    ungeprüften `recommended`/`nice-to-have`-Regeln (noch nicht begonnen).
 
 Zahlenbasis des Gesamt-Audits: 421 Regeln, 38 Repos, ~390.000 LOC Lua.
@@ -348,23 +348,32 @@ mechanische Textersetzung). Stand hier ist live, nicht der vom 2026-09-18.
 
 ---
 
-### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **24 von 30 Repos geprüft**
+### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **30 von 30 Repos geprüft, fertig**
 
-Durchgeführt am 2026-09-19 als Multi-Agent-Workflow: pro Repo ein Fix-Agent
+Durchgeführt am 2026-09-19 als Multi-Agent-Runden: pro Repo ein Fix-Agent
 (frischer Audit gegen aktuellen Code, dann Fix + lokaler Lint/Test + Push),
-danach ein adversarialer Verify-Agent pro Repo. 48 Agents, 0 Fehler, 0
-Refutationen.
+danach ein adversarialer Verify-Agent pro Repo. 48 Agents in der Hauptrunde,
+0 Fehler, 0 Refutationen.
 
-- **14 Repos mit echten Verstößen**, gefunden/gefixt/gepusht: `ai`,
-  `buffer-ctx` (2 Stellen), `cascade`, `casedesk`, `cmdlog`, `insights`, `lib`,
-  `markdown`, `my`, `pdfport`, `recommender`, `reposcope` (2 Stellen),
-  `runtime-analysis`, `spotlight`.
-- **10 Repos bereits sauber**: `dap`, `debugging`, `diff`, `documentation`,
-  `github_stats`, `images`, `language`, `lsp`, `replacer`, `rules`.
-- **6 Repos noch nicht geprüft** (`fileops`, `filetree`, `hover`, `media`,
-  `pickers`, `ui`) — waren beim Start aktiv von einer parallelen Session
-  belegt, wurden bewusst ausgeklammert. **Nachtrag empfohlen**, sobald Zeit da
-  ist — reine Formsache, dieselbe Methode wie oben.
+- **15 Repos mit echten Verstößen**, gefunden/gefixt/gepusht: `ai`,
+  `buffer-ctx` (2 Stellen), `cascade`, `casedesk`, `cmdlog`, `filetree`
+  (`.order.json`-Backup, per Sabotage-Gegenprobe bestätigt), `insights`,
+  `lib`, `markdown`, `my`, `pdfport`, `recommender`, `reposcope`
+  (2 Stellen), `runtime-analysis`, `spotlight`.
+- **15 Repos bereits sauber**: `dap`, `debugging`, `diff`, `documentation`,
+  `fileops`, `github_stats`, `hover`, `images`, `language`, `lsp`, `media`,
+  `pickers`, `replacer`, `rules`, `ui`.
+
+**Nachtrag für die 6 anfänglich ausgeklammerten Repos** (`fileops`,
+`filetree`, `hover`, `media`, `pickers`, `ui` — waren beim Start der
+Hauptrunde aktiv von einer parallelen Session belegt) ist inzwischen
+durchgeführt: 1 echter Fund (`filetree.nvim`), 5 bereits sauber. Der
+adversariale Gegen-Check (1 gründlicher Verify für den echten Fund, 1
+gebündelter Sanity-Check für die 5 „nichts gefunden"-Verdikte) fand keinen
+einzigen übersehenen Bug — nur bei 3 der 5 sauberen Repos kleinere
+Zitat-Ungenauigkeiten in der Prosa (behauptete Code-Kommentare, die es so
+nicht gab; das zugrundeliegende Verhalten war in jedem Fall trotzdem
+korrekt).
 
 ---
 
