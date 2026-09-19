@@ -66,7 +66,6 @@ nicht wenn man etwas tut.
 |---|---|---|---|
 | `:PlenaryBustedFile` | `plenary.nvim` | Führt eine einzelne busted-Testdatei in einer Neovim-Instanz aus. | Test-Runner der Bibliothek. Wer ihn braucht, arbeitet gerade an einem Plugin und kennt ihn; die Personal-Repos rufen ihn aus ihren eigenen Test-Skripten auf, nicht von Hand. |
 | `:PlenaryBustedDirectory` | `plenary.nvim` | Dasselbe für ein ganzes Verzeichnis. | dito |
-| `:StartupTime` | `vim-startuptime` | Misst und visualisiert die Startzeit. | Ein Command, ein Zweck, kein Zustand und keine Argumente, die man nachschlagen müsste. Diese Config hat mit `startup.lua` ohnehin eine eigene Startphasen-Messung. |
 | `:NvimWebDeviconsHiTest` | `nvim-web-devicons` | Zeigt alle Icon-Highlights zur Sichtprüfung. | Ein Debug-Command der Icon-Bibliothek. Er wird benutzt, wenn ein Theme kaputt aussieht, und dann sucht man ihn nicht im Cheatsheet. |
 | `:BlinkCmp {status\|build\|build-log}` | `blink.cmp` | `status` ruft `:checkhealth blink.cmp`, `build` baut die Fuzzy-Matcher-Bibliothek neu, `build-log` zeigt deren Build-Log. | Wartung der Completion-Engine, kein Bedienelement. Man tippt es einmal nach einem Update, wenn die Completion stumm bleibt. Die Keymaps, mit denen man blink tatsächlich benutzt, stehen in [Keymaps/Blink.md](../Keymaps/Blink.md). |
 
@@ -96,13 +95,11 @@ existieren.
 
 | Plugin | Stubs |
 |---|---|
-| `markdown-preview.nvim` | `:MarkdownPreview` `:MarkdownPreviewStop` `:MarkdownPreviewToggle` |
 | `mason.nvim` | `:Mason` `:MasonUpdate` |
 | `minty` | `:Huefy` `:Shades` |
 | `nvim-tree.lua` | `:NvimTreeToggle` `:NvimTreeFocus` |
 | `vim-table-mode` | `:TableModeToggle` `:Tableize` |
 | `render-markdown.nvim` | `:RenderMarkdown` |
-| `resty.nvim` | `:Resty` |
 | `screenkey.nvim` | `:Screenkey` |
 | `zen-mode.nvim` | `:ZenMode` |
 

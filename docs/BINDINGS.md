@@ -576,7 +576,12 @@ Both are correct — the registration lives here.
 | Augroup | Event(s) | Pattern | Action |
 | --- | --- | --- | --- |
 | `MarkdownLocalFolds` | `FileType` | `markdown` | Lightweight markdown folding, markdown buffers only (`lua/autocmds/markdown_folds.lua` — came out of `lua/options.lua` when that moved to my.nvim, and stayed here because it is a markdown.nvim integration rather than a generic option) |
-| `WebdevRestyLoader` | `FileType` | `http`, `resty` | Lazy-load `resty.nvim` on its own filetypes (`once`) |
+
+`WebdevRestyLoader` (`FileType` on `http`/`resty`, lazy-loading `resty.nvim`)
+was here until 2026-09-19. resty.nvim is gone — runtime-analysis.nvim's
+`:RA send` runs the same `.http` request blocks — and the autocmd existed
+only to contain the ~600 ms that loading resty cost (see the former
+`lua/plugins/webdev.lua` in git history, or the external-plugins report).
 
 ### Statusline — `lua/wkdnvchad/`
 
