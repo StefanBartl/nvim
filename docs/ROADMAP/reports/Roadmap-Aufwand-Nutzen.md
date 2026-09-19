@@ -11,7 +11,7 @@ what it buys.
 **Hand-off prompts:** [`../personal/All/FINISH/ERLEDIGT/Tasks-offene-Punkte.md`](../personal/All/FINISH/ERLEDIGT/Tasks-offene-Punkte.md) — one
 paste-ready task per open item, and a list of what had already been built
 again by the time those were drafted.
-**Regel-Audit follow-up:** [`Regel-Audit-Tasks.md`](Regel-Audit-Tasks.md) — hand-off prompts for what `Regel-Audit-Gesamtstatus.md`'s own four open construction sites still need (`ERR-50`/`ERR-22`, the 313 uncosted rules). `LUA-01` finished at 21/21 since that file was drafted; `ERR-50`/`ERR-22` are being picked up by a live parallel session as of 2026-09-19 using its own established pattern — check before pasting those two prompts.
+**Regel-Audit follow-up:** [`Regel-Audit-Tasks.md`](Regel-Audit-Tasks.md) — hand-off prompts for what `Regel-Audit-Gesamtstatus.md`'s own four open construction sites still need (`ERR-50`/`ERR-22`, the 313 uncosted rules). `LUA-01` finished at 21/21 since that file was drafted; `ERR-50`/`ERR-22` is being run by a live parallel session ("Rewgel Audit") — **20 of 31 repos done as of 2026-09-19** (two rounds, adversarially verified, several follow-up crashes caught per round), remaining 11 repos (`pickers`, `recommender`, `replacer`, `reposcope`, `rules`, `runtime-analysis`, `sandbox`, `sessions`, `spotlight`, `emojis`, `ui`) still to come — check `ListAgents` before pasting either prompt.
 
 ---
 
@@ -237,13 +237,18 @@ decision rather than work (`lib.nvim` Windows elevation, `gopath.nvim`
 frecency). That closes the entire original scope of this review. What is
 left is:
 
-**Six small, genuinely open items**, none of them urgent:
+**Update, 2026-09-19:** the dead `CWD_MODES.md` link is fixed,
+`filetree.nvim@2ad60ef` — `WORKFLOW.md`'s intro list now only names docs
+that actually exist. The remaining five below are being worked through the
+same session.
+
+**A handful of small, genuinely open items remain**, none of them urgent:
 `casedesk.nvim`'s `:Case timeline` git-pull-session decision (§4 row 7);
 `lib.nvim`'s `autocmd-dispatcher` (§5); `filetree.nvim`'s `cwd_mode` badge
-cost and its dead `CWD_MODES.md` link, `data.nvim`'s `diff.nvim` before/after
-for `filter`, `ai.nvim`'s model registry, and the remaining seven of
-`casedesk.nvim`'s eleven sibling integrations (§6). None of these block
-anything else; take them opportunistically.
+cost, `data.nvim`'s `diff.nvim` before/after for `filter`, `ai.nvim`'s model
+registry, and the remaining seven of `casedesk.nvim`'s eleven sibling
+integrations (§6). None of these block anything else; take them
+opportunistically.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
