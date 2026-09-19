@@ -42,7 +42,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | cascade.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | casedesk.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | cmdlog.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
-| color_my_ascii.nvim | 14 | – | – | offen |
+| color_my_ascii.nvim | 14 | 14 | 0 | fertig (2026-09-18) |
 | media.nvim | 14 | – | – | offen |
 | ai.nvim | 13 | – | – | offen |
 | github_stats.nvim | 13 | – | – | offen |
@@ -3082,7 +3082,7 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 ## color_my_ascii.nvim
 
-**14 Befunde** (7 × high). Roh gemeldet: 16.
+**14 Befunde** (7 × high). Roh gemeldet: 16. — **Stand: 14/14** (⏭️ 0, 2026-09-18)
 
 ### `ERR-03` — Explizite Rückgaben
 
@@ -3094,6 +3094,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** A bad colour anywhere in `overrides`, `languages` or a scheme raises inside `build_char_lookup`/`build_keyword_lookup` — which run at config/init.lua:419-421, i.e. *after* `current_config` was already replaced at line 404. So the session is left with the new config applied but `M.char_lookup`/`M.keyword_lookup`/`M.unique_keyword_lookup` still holding their previous (on a first setup: empty) values, `M.setup` reports success to lazy.nvim, and highlighting is silently wrong for the rest of the session with nothing in `:messages` and nothing in `:checkhealth`.
 
+**Status.** ✅ erledigt (`1f4c208`) — `M.setup` meldet einen fehlgeschlagenen `config.setup` jetzt immer als `false, err`, nicht mehr nur wenn `debug_enabled` bereits an war.
+
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
 `lua/color_my_ascii/parser.lua:304` · `M.get_byte_offset` · confidence **high**
@@ -3103,6 +3105,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 **Regelbezug.** LLS-31 covers a call made with the wrong signature that throws at runtime and therefore never does the work it claims to; the rule marks this class critical rather than mere diagnostics hygiene. `get_byte_offset` is a public, annotated function on `color_my_ascii.parser`, a module four other modules require.
 
 **Auswirkung.** Correcting the auditor on reach: a grep over `lua/` finds no caller at all — only the definition here and TESTS/byte_offsets_spec.lua:155-156, which already pins it (`'BUG: get_byte_offset raises for every column > 0'`). So nothing in the plugin is currently broken by it. What is true is that a documented public entry point of a module four others require is dead on arrival: any external caller, or the first internal caller added later, gets a raised error instead of a byte offset for every `col > 0`.
+
+**Status.** ✅ erledigt (`8af8922`) — `vim.str_utf_pos` liefert eine Tabelle, keinen Iterator; `get_byte_offset` indiziert sie jetzt direkt statt sie per generic-for zu treiben.
 
 ### `LLS-31` — Ein `pcall` um einen bemängelten Aufruf ist nie kosmetisch
 
@@ -3114,6 +3118,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** Both are cold: each needs an already-failing API call to be reached, and line 278 is additionally gated on `debug_enabled` (false by default). When reached, `M.highlight_buffer` raises instead of returning `false, msg`. Line 215's throw escapes the unprotected call sites at init.lua:125 (hot-reload loop in setup), init.lua:322 (`toggle_buffer`), init.lua:336 (`toggle`) and commands/schemes.lua:94 — the two loops abort entirely rather than skipping one buffer. Line 278 replaces the debug warning that was meant to name the real cause with an opaque format error. The auditor's line references (126/333) are off by one or two; the defects themselves are exactly where claimed.
 
+**Status.** ✅ erledigt (`1f4c208`) — Doppelter `string.format`-Aufruf (`(...):format()` ohne Argument) an beiden Stellen durch einen einzelnen `string.format(fmt, err)` ersetzt.
+
 ### `LUA-01` — Hart oder weich, aber konsistent
 
 `lua/color_my_ascii/integrations/menu.lua:20` · `module top level` · confidence **high**
@@ -3123,6 +3129,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 **Regelbezug.** LUA-01 requires a plugin to declare a dependency either hard (bare require, no fallback) or soft (pcall + fallback with an identical interface) and to hold that line, and says a hard dependency may never be presented as optional in the documentation. The same repo does the soft form correctly for the *same* plugin elsewhere (`commands/hover.lua:175`, `commands/fence/export.lua:76,93` all use `pcall(require, 'ui.kit')` with real fallbacks), so the treatment is inconsistent as well as mis-documented.
 
 **Auswirkung.** On a machine without ui.nvim the failure is at `require` time of the integration module itself, not inside `items()`: the snippet docs/integrations.md tells users to paste into their own <RightMouse> dispatcher raises "module 'ui.contextmenu' not found" and takes the whole dispatcher down, not just this plugin's entries. The `cfg.menu.enable` opt-out at line 34 cannot help, because it sits behind the top-level require. `:checkhealth` offers no explanation, since health.lua probes only lib.nvim.
+
+**Status.** ✅ erledigt (`03b347c`) — `require('ui.contextmenu')` wird jetzt bei jedem Aufruf per pcall aufgelöst statt beim Modul-Load, passend zur dokumentierten weichen Abhängigkeit.
 
 ### `PERF-46` — Cache-Key vollständig
 
@@ -3134,6 +3142,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** Correct in mechanism; the auditor overstated the visible half. `fence_hl.apply` does consume the stale flag (`b.is_ascii` at fence_hl.lua:369-370), but `apply_to` defaults to `'all'` for both sub-features (DEFAULTS.lua:168 and the fence_line_highlight block), so the mis-painting only shows for a user who set `apply_to = "ascii"`. The unconditional damage is the public API: after `:ColorMyAscii schemes switch matrix` (or back), every buffer that is not edited afterwards keeps its old `is_ascii` classification for the rest of the session, and `require('color_my_ascii').fences.list_blocks()` hands consumers (mdview.nvim, markdown.nvim) those stale flags with no way to force a rescan short of calling the undocumented `M.invalidate` themselves.
 
+**Status.** ✅ erledigt (`28d9891`) — Cache-Key um `config.generation()` erweitert; ein Scheme-Wechsel/erneutes `setup()` invalidiert jetzt auch den Fence-API-Cache.
+
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
 `lua/color_my_ascii/commands/fence/export.lua:165` · `write_and_finish` · confidence **high**
@@ -3143,6 +3153,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 **Regelbezug.** SEC-34 forbids `vim.fn.expand()` on buffer/user text: a backtick span in the argument is a command substitution through `&shell` (`vim.fn.expand("`cmd`")` runs the shell), and `%`, `#`, `<cfile>`, `<cword>` are Vim specials. The rule names `lib.nvim.cross.fs.expand_path` as the replacement for the `~`/env-var expansion actually wanted here; lib.nvim is a hard dependency of this plugin and that module exists.
 
 **Auswirkung.** A backtick span anywhere in the export path — typed after `:Fence export` or pasted into the export prompt — is executed through 'shell' before anything is written, and the exit is silent (expand returns the command's stdout as the path). `%`/`#`/`<cfile>` are Vim specials: typing `%` at the prompt resolves to the current file's name, so the overwrite-confirm dialog at line 173 offers to overwrite the markdown document the block came from. This is a self-inflicted hazard (the user types or pastes the string), not a remotely reachable RCE, but a path copied out of a README or repo is a realistic carrier.
+
+**Status.** ✅ erledigt (`81a10f7`) — `vim.fn.expand()` durch `lib.nvim.cross.fs.expand_path` ersetzt (nur `~`/Env-Var, keine Shell, keine Vim-Specials).
 
 ### `SEC-34` — `vim.fn.expand()` nie auf Buffer-/Nutzertext
 
@@ -3154,6 +3166,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** `:Fence import` with a backtick span in the argument runs that command through 'shell' before the readability check at line 18; the substituted stdout then becomes the path, so the user sees a 'file not readable' message rather than any sign that a command ran. `%`, `#`, `<cfile>` also resolve as Vim specials, so `:Fence import %` reads the current file instead of erroring.
 
+**Status.** ✅ erledigt (`81a10f7`) — Gleicher Fix wie #6, hier `commands/fence/import.lua`.
+
 ### `ERR-22` — Ungültiger Config-Wert degradiert auf Default
 
 `lua/color_my_ascii/fence_hl.lua:169` · `M.setup_hl` · confidence **medium**
@@ -3163,6 +3177,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 **Regelbezug.** ERR-22 requires an invalid single config value to degrade to its default rather than abort plugin initialisation, and to be surfaced through `:checkhealth`. The neighbouring `right_pad` is handled correctly (`tonumber` + clamp at `fence_hl.lua:346-347`); `amount` is not. The mechanism is ERR-62's: the `pcall` that appears to guard the line protects only `nvim_set_hl`, never the argument that computes its value.
 
 **Auswirkung.** Overstated by the auditor, and the correction matters. `plugin/color_my_ascii.lua:44` calls `setup()` with **no** opts, so the bad value can never be present there, and lazy.nvim sources `plugin/` before running `config`/`opts` — lines 47 and 50 (the `:ColorMyAscii` command tree and the FileType autocmds) have already run. What actually happens is that the user's own `setup({ fence_content_highlight = { amount = '6%' } })` throws at init.lua:80, so everything registered after it never exists: the two ColorScheme re-resolve autocmds (lines 81-96) and the WinResized/VimResized right_pad recompute (lines 100-115), plus the hot-reload re-highlight. Fence highlighting therefore goes stale on the next `:colorscheme` with no explanation, lazy.nvim surfaces an opaque stack trace ending in utils/color.lua:46, and `:checkhealth` says nothing about the offending value instead of degrading it to its default of 6.
+
+**Status.** ✅ erledigt (`dd77518`) — `fch.amount` wird jetzt vor dem `color.shade`-Aufruf mit `tonumber(...) or 6` abgesichert statt ungetypt durchzureichen.
 
 ### `ERR-30` — Match/Edit vor dem Schreiben re-verifizieren
 
@@ -3174,6 +3190,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** Any edit inside the fenced block between the spawn and the callback is silently replaced by output computed from the pre-edit text — the extmarks even follow inserted lines, so the replace range grows to cover the new content and swallows it whole. No warning is emitted; the only recovery is undo. The window is the formatter's runtime: short for `gofmt`, but a cold `prettier` or `rustfmt` start is comfortably long enough to type into, and `:Fence format` is exactly the command a user fires and keeps typing after.
 
+**Status.** ✅ erledigt (`e84595c`) — Der Formatter-Callback vergleicht die aktuelle Interior-Textur jetzt gegen den tatsächlich gesendeten Input, bevor geschrieben wird; bei Abweichung wird verworfen statt überschrieben.
+
 ### `ERR-50` — Config-Validierung vor dem Merge
 
 `lua/color_my_ascii/config/init.lua:404` · `M.setup` · confidence **medium**
@@ -3183,6 +3201,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 **Regelbezug.** ERR-50 requires config validation (unknown keys, "did you mean …") to run before the merge, precisely so a typo in a nested option cannot vanish into the default. Here nothing runs at all, before or after, and `health.lua` does not report unknown keys either.
 
 **Auswirkung.** Accurate as filed. `setup({ fence_line_higlight = { enable = false } })` or `setup({ comment_ascii = { enabled = true } })` is accepted without a word: the misspelled key lands in `current_config` as dead data, the real option keeps its default, and the user gets a feature that appears not to work with no diagnostic anywhere — not in `:messages`, not in `:ColorMyAscii show-config` (bindings/usrcmds.lua:56, which prints only known fields), not in `:checkhealth`.
+
+**Status.** ✅ erledigt (`28d9891`) — `sanitize()` mit KNOWN-Keys-Tabelle und Levenshtein-„did you mean“ läuft jetzt vor dem Merge; Ablehnungen landen in `config.issues()` und in `:checkhealth`.
 
 ### `LUA-87` — Eine selbstgeschriebene Config-Datei darf `setup()` nicht still überstimmen
 
@@ -3194,6 +3214,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** `:ColorMyAscii schemes switch <name>` resets every option the user passed to `setup()` that the chosen scheme does not mention — back to the DEFAULTS value, not to `false`: `fence_line_highlight`, `fence_content_highlight`, `comment_ascii`, custom `languages`, `treesitter`, `fence_export/run/format`, `cache`, `debounce`, `menu`, `keymaps`. `comment_ascii.enable` defaults to `false` (DEFAULTS.lua:41), and init.lua:76 then re-runs `bindings.autocmds.enable()`, which clears and rebuilds the `ColorMyAscii` augroup from the reset config, so comment-block highlighting stops until the user re-runs their own setup() or restarts. The Telescope picker is worse than the auditor says: `preview_scheme` applies each scheme for real, and closing with `<Esc>` runs no restore, so the last previewed scheme stays applied even when the user cancelled.
 
+**Status.** ✅ erledigt (`e84595c`) — `switch_scheme` (und die Telescope-Vorschau) mergen das Schema jetzt auf die aktuelle Config statt auf die nackten Defaults, damit andere `setup()`-Optionen erhalten bleiben.
+
 ### `PERF-93` — Heißes Event: billiger Guard **oder** Throttle, nie ungeschützt
 
 `lua/color_my_ascii/commands/schemes.lua:154` · `preview_scheme` · confidence **medium**
@@ -3204,6 +3226,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 
 **Auswirkung.** Every j/k in the scheme picker runs the plugin's most expensive operation end to end: full config merge, all three lookup tables rebuilt, four augroups torn down and recreated, the libuv cache-cleanup timer closed and replaced, the parse cache flushed and every managed markdown buffer re-parsed and re-extmarked. Holding `j` across ten schemes does that ten times. One correction to the auditor: `bundled_defs()` is memoised (config/init.lua:147-163), so the 31 language files are not re-globbed or re-required — only the lookups built from the already-loaded tables. Scope is also narrower than 'a hot event' in general, since the autocmd is buffer-local to the picker prompt (line 172).
 
+**Status.** ✅ erledigt (`e84595c`) — `preview_scheme` bricht jetzt sofort ab, wenn sich der ausgewählte Eintrag gegenüber dem letzten Aufruf nicht geändert hat.
+
 ### `XP-01` — `glob`/`globpath` lesen ihr Argument als Pattern, nicht als Pfad
 
 `lua/color_my_ascii/config/init.lua:50` · `load_languages` · confidence **medium**
@@ -3213,6 +3237,8 @@ Genuinely clean areas worth recording: no timers anywhere (PERF-62/82 have no su
 **Regelbezug.** XP-01 forbids feeding a raw path to `glob`/`globpath` for "list the files in this directory" and names `lib.nvim.fs.globbable` as the replacement — it globs a real tree and compares the hit count instead of trusting the return value. lib.nvim is a hard dependency here and that module exists. `~`, `[`, `?`, `*`, `{}` in the path are interpreted, and on Windows an 8.3-shortened rtp entry makes glob try to resolve `~1` as a home directory and return an empty list with no error.
 
 **Auswirkung.** Conditional but verified: if the install path contains a glob metacharacter (`[ ] { } ? *`) — or a comma, since globpath splits its {path} argument on commas — both loaders return early with zero entries. `defaults.keywords` and `defaults.groups` are then empty, so `build_char_lookup`/`build_keyword_lookup` produce nothing and character and keyword highlighting do nothing at all, while the only signal is the generic 'WARNING - No language files found in: …' at line 57 that does not name path syntax as the cause; health.lua:28 reports a file count of 0 for the same reason. I could not reproduce the 8.3-short-path half of the auditor's claim on this machine, so treat that part as unverified; the metacharacter/comma half is demonstrated.
+
+**Status.** ✅ erledigt (`28d9891`) — `load_languages`/`load_groups`/`count_files` nutzen jetzt `vim.fn.readdir` (echter Pfad) statt `globpath` (Pattern). Abweichung vom vorgeschlagenen `lib.nvim.fs.globbable`: dessen README deckt laut eigener Doku nur den `~`-Fall ab, nicht den hier tatsächlich verifizierten Komma-/Metazeichen-Fall, und empfiehlt selbst eine reine Pfad-API für „Liste die Dateien in diesem Verzeichnis“.
 
 ### `ERR-54` — Getter auf geteiltem Zustand: Kopie oder dokumentierte Live-Referenz
 
@@ -3235,6 +3261,8 @@ THINGS I CHECKED AND FOUND CLEAN. PERF-07 (no `next(t)` delete loops); PERF-62/8
 THINGS I DELIBERATELY DID NOT REPORT AS FINDINGS, because the rule's failure mode does not materialise today: (a) api/fences.lua:200 `cache = {}` replaces the table reference rather than emptying it in place, which is the pattern PERF-47 forbids — but `cache` is a module-private upvalue shared through closures, so no second holder can freeze on stale data until someone adds one; (b) `vim.fn.writefile` return values are ignored at commands/fence/run.lua:89 and commands/fence/open.lua:125, so an unwritable temp dir surfaces as a confusing interpreter error rather than "could not write temp file"; (c) plugin/ carries two independent helptag generators (color_my_ascii.lua:35 and color_my_ascii_autodoc.lua:20), the first unconditional, so doc/tags is rewritten on every startup.
 
 NOT COVERED. CMT-16: docs/map/ is a generated tree and docs/BINDINGS.md is renderer-produced, but I could not tell from the working tree alone whether either carries a hand edit — that needs a `:DocMap`/gen_map run plus a diff, which is out of scope for a read-only audit. I also did not attempt to run the headless suite, so every claim above rests on reading, not execution; the two places where that matters most are the E348 behaviour of `expand('<cword>')` on a whitespace-only line (hover.lua:146, asserted as fact by the rules file's own spotlight.nvim Beleg) and the exact reachability of the two `('…%s'):format()` sites in init.lua, which I have flagged as cold paths in the finding itself.
+
+**Status.** ✅ erledigt (`28d9891`) — `M.get()` dokumentiert jetzt explizit „live reference, nicht mutieren“; ein Dokubeispiel in `docs/guides/inline-code.md`, das genau diese Mutation vorführte, wurde mitgefixt.
 
 ---
 
