@@ -62,7 +62,7 @@ Befunde ohne Status-Zeile sind offen. Jeder Plugin-Header trägt zusätzlich
 | hover.nvim | 11 | 10 | 1 | fertig (2026-09-19) |
 | markdown.nvim | 11 | 11 | 0 | fertig (2026-09-19) |
 | recommender.nvim | 10 | – | – | offen |
-| rules.nvim | 10 | – | – | offen |
+| rules.nvim | 10 | 10 | 0 | fertig (2026-09-19) |
 | spotlight.nvim | 9 | – | – | offen |
 | my.nvim | 7 | – | – | offen |
 | data.nvim | 5 | – | – | offen |
@@ -6334,7 +6334,7 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 
 ## rules.nvim
 
-**10 Befunde** (7 × high). Roh gemeldet: 13.
+**10 Befunde** (7 × high). Roh gemeldet: 13. — **Stand: 10/10** (⏭️ 0, 2026-09-19)
 
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
@@ -6346,6 +6346,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 
 **Auswirkung.** A ruleset-authored Lua pattern with an unescaped `(`/`[`/trailing `%` aborts the whole `:Rules check --family=X` run with a raw internal error naming checks/grep.lua, not the offending rule id or ruleset file. Because the two return values (`status`, `findings`) never come back, no report buffer opens and the quickfix list is left untouched — every other rule in the family goes unreported. The unescaped-`(` case is the nastiest: the family passes cleanly on a repo with no violation and throws only on the repo that has one.
 
+**Status.** ✅ erledigt (`912cc90`) — `impl.run(check, root, ctx)` läuft jetzt über `safe_error.safe_call`; ein Crash der Check-Implementierung liefert „error“ statt den ganzen Family-Run abzubrechen.
+
 ### `ERR-02` — Type Guards & Literal Checks
 
 `lua/rules/engine/checks/lua_predicate.lua:35` · `M.run` · confidence **high**
@@ -6355,6 +6357,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 **Regelbezug.** ERR-02 requires `type(...)`/nil checks before API access. The consumer `report/buffer.lua:41` formats `f.line` with `%d`, which is a hard type requirement, and this is the only place a findings table enters the system without being constructed by the plugin itself.
 
 **Auswirkung.** A `lua_predicate` — the documented free-form escape hatch — that returns findings without a `line` field produces a half-completed run: the findings reach the quickfix list, then the report buffer throws at render with an error naming report/buffer.lua. Nothing points back at the predicate that produced the malformed entry, and this is the only place a findings table enters the system without being built by the plugin itself.
+
+**Status.** ✅ erledigt (`88c8a2b`) — Neue `validate_findings()` prüft jeden Eintrag auf `{file:string, line:number, text:string}`, bevor er als `Rules.Finding[]` durchgereicht wird; fehlende Felder ergeben jetzt „error“ statt eines Crashs in report/buffer.lua.
 
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
@@ -6366,6 +6370,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 
 **Auswirkung.** A ruleset path that does not resolve (a `~`-prefixed one, as the plugin's own quickstart shows in three places, or a typo) is indistinguishable from an empty ruleset directory: `loader.load` returns `{}, {}`, so `M.load_rules` notifies nothing and every `:Rules check`/`:Rules gate`/`:Rules stats` runs against zero rules and reports a clean, empty result. The user has no signal anywhere that the path was never read.
 
+**Status.** ✅ erledigt (`fe0a036`) — `~`/`$VAR`-Pfade werden jetzt via `lib.nvim.cross.fs.expand_path` expandiert (das eigene Quickstart-Beispiel lud vorher live 0 Regeln); ein Pfad, der weder Verzeichnis noch lesbare `.md`-Datei ist, erzeugt jetzt einen Eintrag im `errors`-Kanal statt still `{}` zurückzugeben.
+
 ### `ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln"
 
 `lua/rules/init.lua:98` · `M.check_family` · confidence **high**
@@ -6375,6 +6381,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 **Regelbezug.** ERR-11: a typo'd or not-yet-loaded family is "empty because broken" and is rendered identically to "empty, nothing to report". A family prefix is derived from loaded rule ids, so a prefix matching zero rules is ALWAYS an error, never a legitimate empty result.
 
 **Auswirkung.** A transposed `--family=SCE` opens a report tab containing only the title line and a blank line, and replaces the quickfix list with an empty one — visually identical to a clean run. Nothing distinguishes it from a family that genuinely has no rules, and the stale comment in usrcmds.lua tells the next maintainer this case is already handled.
+
+**Status.** ✅ erledigt (`efce4ef`) — `run_family` prüft jetzt per `gate.unknown_families`, ob `--family=` null Regeln trifft, und warnt genau wie `run_gate_results` es schon tat.
 
 ### `PRIN-25` — Eingaben validieren
 
@@ -6386,6 +6394,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 
 **Auswirkung.** A misspelled or missing `path` key in a `file_exists`/`file_absent` rule throws out of the entire family run (nothing catches it between here and `:Rules check`), so no report opens and every other rule in the family is silently skipped. The error text names plugin internals only — neither the rule id nor the ruleset file — so the user cannot tell which of their rules is malformed.
 
+**Status.** ✅ erledigt (`b522810`) — Der Nil/Missing-Fall war bereits vor Sessionstart gefixt; der fehlende `type(...)=="string"`-Guard für einen falsch typisierten, aber vorhandenen `path`/`paths`-Wert war es nicht — jetzt ergänzt.
+
 ### `PRIN-25` — Eingaben validieren
 
 `lua/rules/engine/checks/json_key.lua:19` · `M.run` · confidence **high**
@@ -6395,6 +6405,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 **Regelbezug.** Same as file_exists: PRIN-25 requires validating these before use, and the module's declared return type includes no path for a malformed spec.
 
 **Auswirkung.** Same blast radius as the file_exists case: a `json_key_absent` rule missing either field aborts the whole `:Rules check --family=<X>` run before any report or quickfix output, with an error pointing at checks/json_key.lua instead of at the rule that is broken.
+
+**Status.** ✅ erledigt (`b522810`) — `type(spec.path)`/`type(spec.key)` werden jetzt vor der String-Konkatenation bzw. `gmatch` geprüft; Rückgabetyp um `"error"` erweitert.
 
 ### `SEC-33` — Persistierte Snapshots sind untrusted
 
@@ -6406,6 +6418,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 
 **Auswirkung.** A multi-line reason string (legal JSON, natural for a justification with a ticket reference) makes every `:Rules check`/`:Rules gate` run in that repo throw at report rendering with an error naming report/window.lua, not the waivers file — the user has to find the newline by hand. Separately, because the waivers file is read from the audited root and `json.exit_code` never counts `waived`, an audited third-party repo can suppress its own critical findings and flip a CI exit code from 1 to 0.
 
+**Status.** ✅ erledigt (`6a1fa75`) — `M.load` lehnt jetzt einen Reason-String mit Newline, eine Länge über 500 Zeichen und mehr als 500 Waiver-Einträge ab. Das grundsätzliche Vertrauensmodell (Waivers aus dem geprüften Root selbst) ist laut Moduldoku beabsichtigt und wurde nicht verändert.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/rules/engine/parser.lua:47` · `M.extract_rules` · confidence **medium**
@@ -6416,6 +6430,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 
 **Auswirkung.** Narrow trigger (the file must be removed, renamed or exclusively locked between `filereadable` and `readfile` — the realistic case is a Windows lock or a ruleset checked out/updated mid-run), but when it fires the throw bypasses the function's `(rules, errors)` contract entirely and propagates through `loader.load` → `M.load_rules` into every `:Rules` subcommand and the `RULES_FAMILY`/`RULES_ID` completion handlers (usrcmds.lua:24, :50), so even pressing <Tab> errors. waivers.lua:30 has the same shape and breaks the `(waivers, error)` contract that exists precisely to separate "no file" from "bad file".
 
+**Status.** ✅ erledigt (`8ac65f9`) — `parser.lua`, `waivers.lua` und `json_key.lua` lesen jetzt über `safe_error.safe_call(vim.fn.readfile, ...)` statt ungeschützt nach dem `filereadable`-TOCTOU-Fenster.
+
 ### `ERR-01` — `pcall()` an Systemgrenzen Pflicht
 
 `lua/rules/bindings/usrcmds.lua:127` · `M.setup` · confidence **medium**
@@ -6425,6 +6441,8 @@ I considered and deliberately dropped three weaker leads to keep the list honest
 **Regelbezug.** ERR-01: `:edit` is a filesystem boundary that genuinely fails in ordinary situations. `nvim_win_set_cursor` then runs unconditionally on whatever buffer the window actually holds.
 
 **Auswirkung.** `:Rules show <id>` on a rule whose source file cannot be opened (modified current buffer under `'nohidden'`, a swapfile, a file deleted or moved since the ruleset was loaded, an autocmd vetoing the edit) surfaces a raw Vim error (e.g. E37) instead of this file's own `[rules.nvim] ...` notify style, with no indication which rule or ruleset file was involved. The subsequent cursor jump simply never happens — there is no second error.
+
+**Status.** ✅ erledigt (`741a9c6`) — `vim.cmd.edit(...)` und `nvim_win_set_cursor(...)` in `:Rules show` sind jetzt pcall-geschützt und melden Fehler im plugin-eigenen Notify-Stil statt eines rohen Vim-Fehlers (E37).
 
 ### `ERR-50` — Config-Validierung vor dem Merge
 
@@ -6452,6 +6470,8 @@ OBSERVATIONS DELIBERATELY NOT FILED AS FINDINGS (no rule in the 76 covers them).
 3. config/init.lua:71 replaces the `state` table on setup() while M.get() (documented at :74-78) hands out a live reference. No current consumer caches that reference across a second setup(), so ERR-53's precondition is unmet and I did not file it - but the two contracts do contradict each other and would bite a future consumer that caches.
 
 WHAT IS GENUINELY WELL DONE (so the report is not read as uniformly negative). ERR-54 is handled correctly and explicitly documented at config/init.lua:74-78. ERR-51 (deepcopy of DEFAULTS before merge), LUA-06 (DEFAULTS.lua is pure data), LUA-01 (lib.nvim is uniformly a hard dependency in code and in the README), LUA-17 (vim.w carries only a boolean, the serializable case), SEC-03 (gate.lua:67,74 use argv-list `vim.fn.system`, never a shell string), XP-01 (loader.lua:17-24 deliberately avoids globpath with a correct explanation, and TESTS/loader_spec.lua:71 covers it), and ERR-60 (grep.lua:74-87 rejects the `and/or` ternary for a nil-able value, with a regression test) are all met, several with the reasoning recorded in-code. The three remaining `a and b or c` sites (grep.lua:139, init.lua:66, buffer.lua:36) were each checked: none has a falsy middle operand that changes the outcome.
+
+**Status.** ✅ erledigt (`5a608ef`) — `validate()` erkennt jetzt unbekannte Top-Level-Keys vor dem Merge und warnt mit Levenshtein-„did you mean“-Hinweis.
 
 ---
 
