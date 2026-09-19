@@ -97,7 +97,6 @@ existieren.
 |---|---|
 | `mason.nvim` | `:Mason` `:MasonUpdate` |
 | `nvim-tree.lua` | `:NvimTreeToggle` `:NvimTreeFocus` |
-| `render-markdown.nvim` | `:RenderMarkdown` |
 | `screenkey.nvim` | `:Screenkey` |
 
 Einen Stub zu dokumentieren hieße, den Ladeauslöser zu dokumentieren statt

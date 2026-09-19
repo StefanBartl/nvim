@@ -80,10 +80,11 @@ siehe [Keymaps/Blink.md](Keymaps/Blink.md).
 
 Reine Dependencies, Type-Stubs oder Specs ohne aktive Bindings (deaktiviert,
 auskommentiert, oder schlicht ohne `keys`/`vim.keymap.set`/Autocmd/Usercmd):
-`wezterm-types`, `render-markdown.nvim`, `nui.nvim`, `screenkey.nvim`,
+`wezterm-types`, `nui.nvim`, `screenkey.nvim`,
 `structlog.nvim`, `git-conflict.nvim`, `vim-matchup`, `nvim-lsp-file-operations`,
 ~~`nvim-puppeteer`~~ (deinstalliert 2026-09-19, ersetzt durch cascade.nvims `strings`-Domain),
 `mini.ai`, `mini.icons`, `mini.nvim`, `lazydev.nvim`, ~~`zen-mode.nvim`~~ (deinstalliert 2026-09-19, ersetzt durch ui.nvims `:UI zen`),
+~~`render-markdown.nvim`~~ (deinstalliert 2026-09-19, ersatzlos — kein Feature-Nachbau, siehe Report 7.7),
 `autolist.nvim` (deaktiviert), `nvim-cmp` (nicht installiert; die schlafende
 Keymap dafür steht in [Keymaps/Blink.md](Keymaps/Blink.md)),
 `csharp.nvim` (deaktiviert),
