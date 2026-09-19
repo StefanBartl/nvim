@@ -179,10 +179,11 @@ a "take it when you're in the file anyway" item.
 
 ## 6. Cheap, low stakes — take them when you are in the file anyway
 
-**Status, 2026-09-18: most of this list shipped as one bundle (`C.` in
-`Tasks-offene-Punkte.md`, sequential, one repo at a time, 2026-09-18), then
-went through the same bug/security/performance re-check as everything else
-below.**
+**Status, 2026-09-19: everything in this section is now closed.** Most
+shipped as one bundle (`C.` in `Tasks-offene-Punkte.md`, sequential, one
+repo at a time, 2026-09-18); the last remaining row (`casedesk.nvim`'s
+sibling integrations) closed 2026-09-19. All of it went through the same
+bug/security/performance re-check as everything else in this report.
 
 ~~`media.nvim`~~: resolution tied to the float / `levels` per material / a
 larger default float for the playing view — **already done**, all three, in
@@ -222,9 +223,20 @@ models — reporting only, no request-time blocking). 16 new tests
 `## Status` — **done**, `casedesk.nvim@718404f` (`routed_to` sidecar field,
 `:Cases doctor` migration findings for legacy cases; a resulting data-loss
 bug and a pattern-injection bug were both found and fixed in the re-check).
-The eleven sibling-plugin integrations — **partial**: `docs/around-it.md`
-lists four (`spotlight`/`sessions`/`images`/`pdfport`), not eleven; **still
-open** for the rest.
+The eleven sibling-plugin integrations — **done, 2026-09-19**,
+`casedesk.nvim@239ca13`/`d448341`/`d945e69`. Of the 8 the roadmap's own
+"Sibling plugins" table left unverified beyond the 4 `around-it.md`
+already documented: `language.nvim` and `markdown.nvim`/`cascade.nvim`
+turned out to already work with no wiring needed (case files are plain
+`.md` buffers `cascade` already treats as list-continuation-eligible);
+`open.nvim` and `diff.nvim` were built now (`:Case diff stream|solution`,
+7 new tests); `replacer.nvim`/`pickers.nvim`/`buffer-ctx.nvim` were left as
+documented decisions rather than rushed — `replacer`'s generic find/replace
+doesn't map onto `anonymize.lua`'s structural-anchor detection without an
+over/under-redaction risk, `pickers` was already a deliberate deferral in
+the existing code, and `buffer-ctx`'s flagged overlaps (`marks.lua`,
+`:Case insert`) turned out to not actually overlap on inspection but also
+have no clean integration point.
 
 ---
 
@@ -268,10 +280,19 @@ consuming it in production — the actual validation the roadmap doc's
 never happened once the config was restructured away from having a single
 dispatcher module to migrate).
 
-**One small item remains genuinely open**, not urgent, not blocking
-anything: the remaining seven of `casedesk.nvim`'s eleven sibling
-integrations (§6) — `docs/around-it.md` currently documents four
-(`spotlight`/`sessions`/`images`/`pdfport`).
+**2026-09-19, the last item closed too:** `casedesk.nvim`'s remaining seven
+sibling integrations (§6), `casedesk.nvim@239ca13`/`d448341`/`d945e69`.
+`language.nvim`/`markdown.nvim`/`cascade.nvim` needed no wiring (already
+worked or applied automatically to plain `.md` case files); `open.nvim`
+and `diff.nvim` (`:Case diff stream|solution`) were built; `replacer.nvim`,
+`pickers.nvim`, and `buffer-ctx.nvim` were left as documented decisions
+rather than rushed — see §6 for why each. **Every item this report has
+ever named as open is now closed**, one way or another: shipped, found
+already built, or resolved as a decision. A same-session
+bug/security/performance re-check of this round's own fixes (the pattern
+every prior bundle in this report went through, per the closing note
+below) is in progress; this section will be updated again if it turns up
+anything.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
