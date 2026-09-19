@@ -98,7 +98,6 @@ existieren.
 | `mason.nvim` | `:Mason` `:MasonUpdate` |
 | `minty` | `:Huefy` `:Shades` |
 | `nvim-tree.lua` | `:NvimTreeToggle` `:NvimTreeFocus` |
-| `vim-table-mode` | `:TableModeToggle` `:Tableize` |
 | `render-markdown.nvim` | `:RenderMarkdown` |
 | `screenkey.nvim` | `:Screenkey` |
 | `zen-mode.nvim` | `:ZenMode` |

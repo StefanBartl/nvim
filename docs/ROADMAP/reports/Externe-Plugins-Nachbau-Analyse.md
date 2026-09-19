@@ -28,7 +28,7 @@ which own plugin would it land in, and what would it cost?
   - [5. Tier B — full replacement that is a real build](#5-tier-b--full-replacement-that-is-a-real-build)
     - [B2 · `folke/todo-comments.nvim` → insights.nvim ✅](#b2--folketodo-commentsnvim--insightsnvim-)
     - [B3 · `iamcco/markdown-preview.nvim` → mdview.nvim ✅](#b3--iamccomarkdown-previewnvim--mdviewnvim-)
-    - [B4 · `dhruvasagar/vim-table-mode` → markdown.nvim](#b4--dhruvasagarvim-table-mode--markdownnvim)
+    - [B4 · `dhruvasagar/vim-table-mode` → markdown.nvim ✅](#b4--dhruvasagarvim-table-mode--markdownnvim-)
     - [B5 · `nvim-treesitter/nvim-treesitter-context` → ui.nvim `winbar/`](#b5--nvim-treesitternvim-treesitter-context--uinvim-winbar)
   - [6. Tier C — harvest one feature, keep the plugin](#6-tier-c--harvest-one-feature-keep-the-plugin)
   - [7. Findings worth acting on regardless](#7-findings-worth-acting-on-regardless)
@@ -58,6 +58,7 @@ three replacements that turned out to be rewires rather than builds:
 | A3 vim-startuptime → runtime-analysis.nvim | `:RA startup profile [runs]`; plugin dropped | nvim `137c5f67f`, 2026-09-17 |
 | B2 todo-comments.nvim → insights.nvim | `insights.todos`: the host's keyword table shipped as the default, `:Insights todos [KEYWORD...] [ui]` over the shared rg scanner, and an own extmark highlighter with signs; plugin, `config/todo_comments/` and two cheatsheets dropped, `<leader>sT`/`ST` on the insights spec | insights.nvim `638b0f7`/`45e2911`, nvim `03f4ead9a`, 2026-09-19 |
 | B3 markdown-preview.nvim → mdview.nvim | `:Markdown preview` drives `:MDView start/stop`; plugin, yarn build and `mkdp_*` globals gone | nvim `83b7a627f`, 2026-09-18 |
+| B4 vim-table-mode → markdown.nvim | nothing to build: `core/table_mode.lua` already is the vim-table-mode reimplementation (`:Markdown table mode\|tableize\|new`, cell motions); plugin and `plugins/experimental.lua` dropped | nvim, 2026-09-19 |
 | Tree: neo-tree config → filetree.nvim | the last code-bearing pieces of `config/neotree/` — source switcher, Alt toggle keys with the E95 self-heal, the `y` delegate, node utils, health — are filetree's `source_switcher` and `tree_toggle`; ~700 lines of per-source `noop` tables stay as neo-tree config | filetree.nvim `b7075fc`/`21db446`, nvim, 2026-09-19 |
 | 7.4 harpoon → sessions.nvim (build + parallel run) | `sessions.marks`: list, pins, defaults, edit float, pickers, preview, harpoon import; on in the config next to harpoon with shared defaults and `<leader>H*` keys | sessions.nvim `acdbc70`, nvim, 2026-09-19 |
 | 7.1 `snacks.image` | `enabled = false`, with the reason in the spec comment | nvim, 2026-09-18 |
@@ -110,7 +111,6 @@ neither chosen):
 | lazygit float + nvr bridge → lib.nvim / open.nvim | S + M | placement |
 | window-picker → `lib.nvim/nvim/window` | S | a new primitive with tests in a shared checkout; the only call site is config code, not filetree.nvim |
 | neo-tree extra sources (tests, diagnostics) as adapter-level sources | M each | build; the only Tree-table row left after 2026-09-19 |
-| B4 table-mode → markdown.nvim | M | build |
 | B5 ts-context → ui.nvim `winbar/` | L | build; performance work is the actual scope |
 | 7.4 harpoon → sessions.nvim, the cut-over | S | built and running in parallel (2026-09-19); the user decides after the trial week: move keys, drop the harpoon spec and `config/harpoon/` |
 | neo-tree config → filetree.nvim | L | ~1,500 lines |
@@ -281,7 +281,7 @@ the pieces that are config code today and should be plugin code:
 | `nvim-ts-autotag` → **close + rename HTML/TSX tags** | `enable_close`, `enable_rename`, html close off | Treesitter query work per language. Keep. | **L** |
 | `nvim-treesitter-textobjects` → **`[u`/`]u` climb out of the enclosing structure** | `bindings/mappings/treesitter_structure.lua`; `move` module on `@block.outer` — **and the queries extending it for lua/json/python/rust/toml/yaml are already yours** in `after/queries/` | **lib.nvim/nvim/treesitter** gets a `move` helper; the binding stays in config. Only the `move` module is used — not swap, not lsp_interop, not select. | **M** |
 | `mini.ai`, `targets.vim` → **textobjects** | pure defaults | Keep. No own plugin owns this domain and creating one has no payoff. | **XL** |
-| `vim-table-mode` → **realign while typing, `:Tableize`** | `table_mode_corner = "|"`, `cmd` + `ft` gated | **markdown.nvim** — `tableview/` already has `parser.lua`, `renderer.lua`, `views/`. The model exists; the interactive half is missing. | **M** |
+| ~~`vim-table-mode` → **realign while typing, `:Tableize`**~~ | ~~`table_mode_corner = "|"`, `cmd` + `ft` gated~~ | **Done 2026-09-19** — markdown.nvim already had it: `core/table_mode.lua`, "a focused, dependency-free reimplementation of the vim-table-mode essentials" (`:Markdown table mode\|tableize\|new`, `]\|`/`[\|`). Plugin dropped. See [B4](#b4--dhruvasagarvim-table-mode--markdownnvim-). | **done** |
 | `unicode.vim` → **`:UnicodeName`, `:UnicodeSearch`, `:UnicodeTable`, `:Digraphs`** | `cmd` list + `uni` key | **emojis.nvim** — it already ships a pure UTF-8 byte tokenizer with no external library, which is the hard half of `:UnicodeName`. The rest is a Unicode name table (a few hundred KB of data) plus digraphs, which Neovim partly exposes via `vim.fn.digraph_get*`. **If only `:UnicodeName` is really used, this drops to S — worth checking your own habit first.** | **M** |
 
 ### Markdown
@@ -480,9 +480,24 @@ form.
 markdown.nvim's preview toggle from depending on a foreign plugin's globals,
 and fixes `:Markdown mdview` which had not actually worked.
 
-### B4 · `dhruvasagar/vim-table-mode` → markdown.nvim
+### B4 · `dhruvasagar/vim-table-mode` → markdown.nvim ✅
 
-**Open. Benefit: moderate. Effort: 2–3 sessions. Risk: low.**
+**Done 2026-09-19, and there was nothing to build.** This entry read the
+`tableview/` folder and concluded the interactive half was missing. It is
+not in that folder: `core/table_mode.lua` (492 lines) is markdown.nvim's
+own "focused, dependency-free reimplementation of the vim-table-mode
+essentials" — auto-realign as you type, `tableize` from delimited text
+with the separator auto-detected, `]|`/`[|` cell motions, `insert_row` for
+cascade.nvim's `o`/`O` — behind `:Markdown table mode|tableize|new` and
+`<leader>tvm`, next to `table_fmt` (the GFM formatter) and `table_wrap`
+(`:MDTable*`). Its own `docs/FEATURES/TABLES.md` says so in the first
+sentence of the section. The plugin was installed for a workflow the
+notes tree does not even contain (`grep '^|.*|.*|$'` over `Notes/` finds
+no table at all), so nothing had to be migrated; the spec — the whole of
+`plugins/experimental.lua` — is gone, with its `g:table_mode_corner` and
+the cheatsheet rows.
+
+The original reasoning, kept for the record:
 
 `markdown.nvim` already has `tableview/` with `parser.lua`, `renderer.lua` and
 `views/`, and the README names GFM tables as a core feature. So the table
@@ -751,7 +766,7 @@ Struck entries are done.
 | **pickers.nvim** | search.nvim tabs · bqf quickfix preview · telescope-github · file-browser list · neotest picker integration |
 | **lib.nvim** | window picker primitive · treesitter `move` helper · lazygit terminal + nvr bridge · devicons data |
 | **ui.nvim** | matchup offscreen status · ts-context winbar (through `ui.winbar`) · which-key popup · minty colour picker · zen mode |
-| **markdown.nvim** | table-mode realign + `:Tableize` |
+| **markdown.nvim** | ~~table-mode realign + `:Tableize`~~ (already had it, `core/table_mode.lua`; B4) |
 | **mdview.nvim** | ~~markdown-preview's scroll sync + combine-preview~~ (already had both; B3) |
 | **fileops.nvim** | ~~mkdir-on-write~~ (A2) · file-browser operations · snacks scratch |
 | **emojis.nvim** | unicode name/search/table/digraphs |

@@ -82,7 +82,7 @@ Reine Dependencies, Type-Stubs oder Specs ohne aktive Bindings (deaktiviert,
 auskommentiert, oder schlicht ohne `keys`/`vim.keymap.set`/Autocmd/Usercmd):
 `wezterm-types`, `render-markdown.nvim`, `nui.nvim`, `screenkey.nvim`,
 `structlog.nvim`, `git-conflict.nvim`, `vim-matchup`, `nvim-lsp-file-operations`,
-`nvim-puppeteer`, `vim-table-mode`,
+`nvim-puppeteer`,
 `mini.ai`, `mini.icons`, `mini.nvim`, `lazydev.nvim`, `zen-mode.nvim`,
 `autolist.nvim` (deaktiviert), `nvim-cmp` (nicht installiert; die schlafende
 Keymap dafür steht in [Keymaps/Blink.md](Keymaps/Blink.md)),
