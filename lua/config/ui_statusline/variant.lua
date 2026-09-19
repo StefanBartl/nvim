@@ -32,6 +32,7 @@ local filetree_cwd_mode = lazy.require("ui.statusline.modules.filetree_cwd_mode"
 local casedesk = lazy.require("ui.statusline.modules.casedesk")
 local undo_depth = lazy.require("ui.statusline.modules.undo_depth")
 local search_count = lazy.require("ui.statusline.modules.search_count")
+local matchup_offscreen = lazy.require("ui.statusline.modules.matchup_offscreen")
 
 -- ============================================================================
 -- Modules
@@ -52,6 +53,7 @@ return {
         "mode",
         "git",
         "%=",
+        "matchup_offscreen",
         "diagnostics",
         "lsp",
         "search_count",
@@ -73,6 +75,15 @@ return {
         -- has actually branched (an edit after an undo).
         undo_depth = function()
           return undo_depth()
+        end,
+
+        -- vim-matchup's offscreen-match source line (empty unless the
+        -- cursor sits on a bracket whose match scrolled out of view). See
+        -- plugins/editing.lua's matchup_matchparen_offscreen comment for
+        -- why this reads w:matchup_statusline rather than letting matchup
+        -- itself overwrite &l:statusline.
+        matchup_offscreen = function()
+          return matchup_offscreen()
         end,
 
         plugin_progress = function()
