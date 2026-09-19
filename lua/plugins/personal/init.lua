@@ -377,48 +377,25 @@ plugins.add({
 
         -- The mark list. Ran in parallel to harpoon from 2026-09-19 (a same
         -- day trial rather than the planned week, on request) until the
-        -- cut-over below; harpoon is gone now (external-plugins report,
-        -- 7.4). Every `<leader>h*` letter key moved over 1:1; `<C-e>` and
-        -- `<M-1..9>` are bound separately below rather than through
-        -- `keymaps`/`preview_key` -- mixing them into this table would give
-        -- `sessions.bindings.keymaps`' which-key group-prefix detection a
-        -- set of lhs with no common prefix (`<leader>h*` alongside `<C-e>`
-        -- and `<M-%d>`), losing the "Session" group label on `<leader>h`
-        -- for every key, not just those two.
+        -- cut-over on the same day; harpoon is gone now (external-plugins
+        -- report, 7.4).
         marks = {
           enable = true,
           scope = "global",
           defaults = require("config.marks.defaults"),
           select_key = "<leader>h%d",
         },
-        keymaps = {
-          marks_menu = "<leader>hm",
-          marks_edit = "<leader>he",
-          marks_add = "<leader>ha",
-          marks_add_front = "<leader>hA",
-          marks_pin = "<leader>hp",
-          marks_remove = "<leader>hd",
-          marks_sync = "<leader>hs",
-          marks_debug = "<leader>hD",
-        },
+        -- `false`, not a table: the actual keymaps are attached from
+        -- bindings/mappings/sessions.lua at UIReady instead of here. This
+        -- spec has `lazy = false` for the autoload/autosave reason above, so
+        -- anything bound directly in `opts`/`config` runs on the synchronous
+        -- startup path -- exactly what this config's keymap registration is
+        -- everywhere else deliberately kept off of (see init.lua's UIReady
+        -- phases). harpoon's own bindings (bindings/mappings/harpoon.lua,
+        -- now deleted) respected that; this doesn't need to stop doing so
+        -- just because the feature moved plugins.
+        keymaps = false,
       }
-    end,
-    config = function(_, opts)
-      require("sessions").setup(opts)
-
-      -- Harpoon's old `<C-e>` (quick menu) and `<M-1>..<M-9>` (full-screen
-      -- preview) -- see the comment on `marks` above for why these are not
-      -- `keymaps.marks_menu`/`marks.preview_key` instead.
-      local map = require("lib.nvim.bindings.keymap")
-      map.set("n", "<C-e>", "<cmd>Session marks<cr>", { desc = "[Session] Open marks menu" })
-      for i = 1, 9 do
-        map.set(
-          "n",
-          ("<M-%d>"):format(i),
-          ("<cmd>Session marks preview %d<cr>"):format(i),
-          { desc = ("[Session] Preview mark %d (full screen)"):format(i) }
-        )
-      end
     end,
   },
 
