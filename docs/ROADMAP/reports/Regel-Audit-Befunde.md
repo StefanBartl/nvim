@@ -101,6 +101,59 @@ gefunden und in dieser Runde direkt gefixt, getestet und gepusht:
 Alle sechs sind gefixt, mit Tests abgesichert, alle Gates grün, alle Repos auf
 `main` gepusht. Details siehe die Commit-Messages in den jeweiligen Repos.
 
+### Nachtrag 2 — Regressions-Audit über die gesamte Session (2026-09-19)
+
+Nach Abschluss der vollständigen Kampagne (497/497, inkl. der 8 nachträglich
+entschiedenen Architektur-Befunde) lief ein zweiter, fleet-weiter
+Multi-Agent-Review gegen **genau die Commits, die diese Session selbst
+gemacht hat** — alle 38 Repos, jeweils Bugs/Security/Performance in einem
+Durchgang, jeder Fund danach von 3 unabhängigen Agenten adversarial
+gegengeprüft (Mehrheitsvotum). 34 Kandidaten, **31 überlebten die
+Gegenprüfung**, in 23 Repos gefixt — pro Repo wieder zweistufig: Fix-Agent,
+dann ein unabhängiger zweiter Agent, der den Diff selbst liest, die Gates
+selbst neu fährt und erst danach pusht.
+
+| Repo | Befund | Commit(s) |
+|---|---|---|
+| lib.nvim | `disk.lua`: „invalid json"-Fehler behauptete ein `.corrupt`-Backup, das nie geschrieben wurde | `98ddf12` |
+| lib.nvim | `cache/memory.lua`: Cache-Namespace wuchs unbegrenzt für Einweg-Closure-Keys (z. B. in `scan_cached`) — jetzt periodischer Sweep statt rein lazy Eviction | `4cd7793` |
+| dap.nvim | `config/init.lua`: ein typfalscher `languages`-Wert aktivierte fälschlich alle Sprachen statt keine | `722cb84` |
+| mdview.nvim | `breadcrumbs.lua`: Buffer-Reuse-Fix leakte pro Aufruf einen Scratch-Buffer aus einem Tab, das ihn noch nicht zeigte | `8d388bf` |
+| insights.nvim | `ui/scratch.lua`: ui.kit-Fallback zerstörte den Report-Buffer, aus dem er geöffnet wurde | `0eb88b0` |
+| insights.nvim | `config/init.lua`: Config-Validierung degradierte nur oberste Ebene, nicht verschachtelte Fehltypen | `c53a422` |
+| pdfport.nvim | `dispatcher.lua`: docling/markers neuer „partial"-Status erreichte nie den Nutzer | `a735b9d` |
+| reposcope.nvim | `wget.lua`: SEC-21-Lücke (kein Byte-Limit) auch im wget-Fallback-Pfad, per `--limit-rate` geschlossen; `readme_cache.lua`/`metrics.lua`: totes `pcall`-Fehlerhandling beim Backup-Schreiben durch echte Prüfung ersetzt; zusätzlich 2 Commits neu geschnitten, um die durch einen früheren Lauf gebrochene Bisektierbarkeit wiederherzustellen (Testabdeckung stand am falschen Commit) | `ac75b52`, `5859bf6`, `23f311c` (force-with-lease, nach Rückfrage) |
+| sandbox.nvim | `project_config.lua`: unbegrenzter, nur cwd-gebundener `.sandboxrc`-Cache lieferte auch für `:Sandbox engine get` und echte Container-Operationen veraltete Werte | `3be9342` |
+| cmdlog.nvim | — (kein bestätigter Fund) | – |
+| color_my_ascii.nvim | `schemes.lua`: unnötige Deep-Copy der gesamten Live-Config bei jedem Schema-Wechsel/Preview entfernt | `073eb71` |
+| github_stats.nvim | `storage.lua`: Repo-Name-Whitelist-Sanitizer kollabierte unterschiedliche Repos in dasselbe Storage-Verzeichnis | `3e1a20e` |
+| gopath.nvim | `providers/lsp.lua`: verschachteltes `range.start` ungeschützt gegen `vim.NIL`; `truncated/cache.lua`: Cache-Key wurde nach `add_root()`-Mutation nicht erneuert | `aa627c9`, `cb76e70` |
+| lsp.nvim | `format_signature_help.lua`: `result.value`-Fallback nach dem vim.NIL-Fix noch ungeschützt; `astro/usercmds.lua`+`keymaps.lua`: fehlgeschlagenes `writefile` nach `O_CREAT|O_EXCL` blockierte Retries dauerhaft mit einer leeren Datei | `5ff2ab1`, `2467f6d` |
+| filetree.nvim | `size_info`: Cache-Key-Format matchte unter Windows nie mit dem `BufWritePost`-Invalidierungspfad; 5s-TTL erzwang beim normalen Tree-Browsen wiederholte Subprozess-Spawns | `a59c5e5` |
+| filetree.nvim | `config/init.lua`: `config.adapter` wurde nach dem Adapter-Fallback nie zurückgeschrieben — `:checkhealth` meldete dauerhaft den falschen Adapter | `9ef7450` |
+| runtime-analysis.nvim | `view.lua`: ERR-22-Fallback bei einem teilweise erfolgreichen Compound-Split-Kommando leakte dauerhaft ein Extra-Fenster | `f9f1c20` |
+| documentation.nvim | `standalone/docmap.lua`: Windows-Zweig von `shell_quote` brach weiterhin bei einem Wert, der auf einen einzelnen Backslash endet (SEC-46 unter Windows nicht wirklich geschlossen) | `941ccfd` |
+| fileops.nvim | `ops/cycle.lua`: ERR-11-Fix deckte nur den nicht-rekursiven Zweig von `list_files` ab | `45219e1` |
+| hover.nvim | `persist.lua`: `persist.touch("auto_hover")` zu grob — das Umschalten eines Auto-Hover-Typs persistierte und replayte alle Typen | `86afad3` |
+| markdown.nvim | `file_refs.lua`: `rg`-Executable-Cache wurde nie invalidiert, was die eigene Mid-Session-Install-Behandlung wirkungslos machte | `bd6bea5` |
+| rules.nvim | `checks/init.lua`+`json_key.lua`: rohe mehrzeilige `debug.traceback()`-Strings in `Rules.Finding.text` ließen das Report-Rendering abstürzen | `91d238a` |
+| sessions.nvim | `config/init.lua`: `keymaps.delete`/`rename` fehlten in `KNOWN.keymaps` — `validate()` verwarf sie vor der eigens dafür gedachten `UNMAPPABLE`-Warnung | `032706e` |
+| images.nvim | `screenshot.lua`: Windows-Clipboard-Poll konnte den eigentlich zur Rettung eingebauten Timeout durch einen hängenden Read aushebeln | `c9abde2` |
+| data.nvim | `config/init.lua`: `setup()`s `deep_merge`-Ergebnis war nur eine Ebene tief kopiert — unberührte DEFAULTS-Untertabellen wurden bei jedem echten `setup()` wieder aliasiert | `cc7664e` |
+| data.nvim | `init.lua`: Preview-Bestätigungsdialog erkannte eine gleichzeitige Bearbeitung der Zielspanne noch nicht | `6f2e706` |
+
+15 Repos (ai, buffer-ctx, cascade, casedesk, debugging, diff, emojis,
+language, lsp — teilw. s.o., media, my, open, pickers, recommender, replacer,
+rules — teilw. s.o., spotlight, ui) hatten entweder keinen überlebenden Fund
+oder der gemeldete Fund war bei genauerer Prüfung bereits anderweitig
+behoben; Details in den jeweiligen Push-Agent-Berichten.
+
+Alle Fixes: eigene Tests, alle Gates grün, unabhängig gegengeprüft, auf
+`main` gepusht — bis auf reposcope.nvim, das wegen einer nötigen
+Commit-Neuschneidung (Bisektierbarkeit) einen `git push --force-with-lease`
+brauchte; dafür wurde vorab explizit nachgefragt und erst nach Zustimmung
+ausgeführt.
+
 ---
 
 ## Table of content
