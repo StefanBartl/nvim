@@ -218,7 +218,12 @@ this report, `filter --preview` — a unified diff via `diff.nvim`'s
 `ai.nvim@b34f382` (`lua/ai/providers/models.lua`, wired into the existing
 `:checkhealth ai`; `claude`/`gemini`/`openai` get a fixed catalogue,
 `ollama`/`loomai` are marked open-ended since they run arbitrary local
-models — reporting only, no request-time blocking). 16 new tests
+models — reporting only, no request-time blocking). 16 new tests. A
+same-session re-check found 2 real bugs and fixed both, `ai.nvim@319eda4`:
+the default `provider = "auto"` bypassed the whole catalogue (the lookup
+key was the literal string `"auto"`, absent from `M.KNOWN`, so a typo'd
+`completion.model` was silently never flagged under default settings), and
+`M.OPEN_ENDED` was declared but never actually consulted anywhere — see §8
 ~~`casedesk.nvim`~~: one routing-status field instead of filename *and*
 `## Status` — **done**, `casedesk.nvim@718404f` (`routed_to` sidecar field,
 `:Cases doctor` migration findings for legacy cases; a resulting data-loss
@@ -288,11 +293,34 @@ and `diff.nvim` (`:Case diff stream|solution`) were built; `replacer.nvim`,
 `pickers.nvim`, and `buffer-ctx.nvim` were left as documented decisions
 rather than rushed — see §6 for why each. **Every item this report has
 ever named as open is now closed**, one way or another: shipped, found
-already built, or resolved as a decision. A same-session
-bug/security/performance re-check of this round's own fixes (the pattern
-every prior bundle in this report went through, per the closing note
-below) is in progress; this section will be updated again if it turns up
-anything.
+already built, or resolved as a decision.
+
+**The same-session bug/security/performance re-check of this round's own
+fixes** (the pattern every prior bundle in this report went through) ran
+over the three code-bearing commits from this round —
+`casedesk.nvim@9ad5672`, `ai.nvim@b34f382`, `filetree.nvim@49a0507` —
+each via an independent review agent followed by an adversarial verify
+pass per finding. `casedesk.nvim` and `filetree.nvim` came back clean.
+`ai.nvim` did not: **2 real correctness bugs**, both confirmed and fixed,
+`ai.nvim@319eda4`. (1) `check_config()`'s `completion.model` check resolved
+the provider via a raw `completion.provider or cfg.provider` fallback
+instead of going through `provider_order` the way the real request path
+(`ai/init.lua`'s `resolve()`) deliberately does — under the out-of-the-box
+default (`provider = "auto"`), the lookup key passed to `is_known()` was
+the literal string `"auto"`, which has no entry in `M.KNOWN` and is
+therefore always treated as "no fixed catalogue", so a typo'd
+`completion.model` under default settings was silently never flagged even
+though the actually-resolved provider would reject it. Fixed by resolving
+`"auto"` through `provider_order` first, mirroring `resolve()`. (2)
+`M.OPEN_ENDED` was declared but never consulted anywhere, so a future
+built-in provider added without a catalogue entry would fail silently
+instead of the safety net it was documented to be — fixed with a
+completeness test asserting every built-in provider id appears in either
+`M.KNOWN` or `M.OPEN_ENDED`, matching the module's own "fails loudly in
+review/tests" framing rather than changing runtime behavior. This is the
+same lesson §5 already drew from the `casedesk.nvim` `ui.lua` re-check:
+work that looked complete and tested still had a real gap until an
+independent adversarial pass checked it against the actual code.
 
 **The cross-cutting item this report closed out itself: the `ui.nvim`/
 `my.nvim` cross-feature check ran in full**, six tiers (A–F), and found four
