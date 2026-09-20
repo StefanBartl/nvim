@@ -350,6 +350,11 @@ Plugin wandert (`buffer-ctx.nvim`, `sessions.nvim`, `pickers.nvim`,
 
 ## spec.nvim.md — Test-Runner-Engine (Meta-Review)
 
+> **2026-09-20:** `spec.nvim.md` ist zusammen mit `test.md` in
+> [testing.md](testing.md) aufgegangen (dort Teil A; Teil C/D ergänzen
+> synthetische Feature-Tests und die überarbeitete Zielarchitektur samt
+> Meilensteinplan). Dieser Meta-Review bezieht sich auf den Stand davor.
+
 Umfangreichste der zwölf Dateien (15 Abschnitte, Ist-Zustand-Scan über 19
 Repos, Dialekt-Analyse, Architektur, Migrationsplan). Eigenes Fazit: „Ja,
 lohnt sich" — mit ausdrücklich benannten Risiken (NIH-Falle, Scope-Explosion,
@@ -384,6 +389,9 @@ lohnt sich" — mit ausdrücklich benannten Risiken (NIH-Falle, Scope-Explosion,
 ---
 
 ## test.md — neotest-Auslagerung (Meta-Review)
+
+> **2026-09-20:** `test.md` ist in [testing.md](testing.md) aufgegangen
+> (dort Teil B, inhaltlich unverändert).
 
 Bereits eine vollständige Ist-Zustand-Analyse mit vier konkret benannten,
 unabhängig vom Auslagerungsthema bestehenden Bugs im heutigen Code
