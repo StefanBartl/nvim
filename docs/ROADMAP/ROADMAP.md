@@ -20,10 +20,6 @@
 
 ---
 
-- checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
-
----
-
 ## Cdx
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
@@ -32,6 +28,8 @@
 | **work** |   21. Sept    |   Sa., 06:00    |     22:30       |   100% /100%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     00:00       |    47% / 92%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
+
+- checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
@@ -53,15 +51,43 @@
 ---
 
 ## Claude Tasks
+
 - [ ] docmap-desktop: docs/AGENT_CHECKLIST_RUNNER.md — dazu PLAN.md's L6-Zeile mit einem Verweis versehen.
   loomAI: docs/Guides/docmap-checklist-agent.md
   Kernaussage in beiden: /ask//ask/stream sind bei loomAI fertig und reichen für den einfachen Fall schon heute (Aufwand dort: 0). Was L6 architektonisch eigentlich braucht — die DecisionQueue, die "Vorschlag, kein Ergebnis" durchsetzt — ist in /decision nur eine Log-Zeile ohne echte Warteschlange; Phase 3/4 aus deinem eigenen Architekturplan sind komplett offen. Empfehlung in beiden Dateien: jetzt gegen /ask bauen (~2,5–3 Sessions auf documentation.nvim/docmap-desktop-Seite, 0 bei loomAI), die Anbindung an eine echte DecisionQueue erst mitnehmen, wenn Phase 3 dort ohnehin angegangen wird.
-  + neiue gh feature atag release
-  - setup.exe file
+  - neue gh feature tag release
+  - setup.exe file, zum download anbieten
+
+- [ ] Jedes Plugin aus sicht eines endusers/developers "durchspielen" - von Beginn an, also vom ankommen auf der github seite, ssagne wikr dealerweiße kommend von derr wkd seite. DAnn möchte m an mal als erstes normalerweiße die instsalltion + optionen sehen. ist am flow etwas nicht in ordnung? stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar und ansprechend, modern aufbereitet? Ist die Dokumentation an Stellen verwirrend? Gib es docs, die mich als enduser/dev nicht betreffen? ([alte] Telemetry daten, Deutsche dokumentation, backlogs,..)
 
 - `:Git [options?]` srcmds
 
 - [ ] mdview: Auf der workstation funktinrt cursor section nicht, also die sektion wird nicht hl, caret funktionert gut, line auch; standalone gar nichts
+
+- wkd:
+  - startseite.: commitsanzahl alle plugins sllte nicht als prominente kachel stehen, das ist keinalitätsmerkaml, tasuche es auus gegen eine kachel wie "+500 features" also die ungghefähre gheschätze features zahl ode<F, auch vimdoc als eoigene kachelk finde ich nicht gut, inde eine bessere metrik die für user geeignet ist; last push auch ersetzen- #
+  - die indexlöeiste All 36 AI EEditing Files & Navigaet usw... hier auch beim hovern zufallsfarben wie beiu den kachel
+  - 	every tagline, status and commit below is read from the source, not written here. -- das , not wriitten here. - streichen
+  - bottom leiste das "Generated from the plugin repositories — nothing here is written twice." streichen u8nd "a famili of neoivim plugins" in die mitte.- darunter MIT Livemncse
+  - tapes:
+    - images.nvim:
+
+      ```markdown
+      9. TROUBLESHOOTING  *images-troubleshooting*
+
+      Nothing is drawn
+          Verify the terminal itself first, outside Neovim:
+          wezterm imgcat picture.png
+          If that shows nothing, the terminal does not do OSC 1337 — with
+          ImageMagick installed, :Image show/hover already fall back to a
+          block-character rendering instead (|images-ascii-config|); without it,
+          this plugin cannot help. If OSC 1337 works but Neovim does not, run
+          :checkhealth images.
+      ```
+
+    Hier wird spezifisch wezterm genannt, weil ich es verwende. Es geht aber um das kitty protocolö wenn ich richtig liege, alsao sollte man das abcheken, nicht wahr? Das slllten wir auch in den anderen repos in den docs checken, ob wezterm oder typiache ähnliche fälle findet. wenn euin bestimtes tool zwingend hnotwendig ist, dann kann kan das schon verwenden als namen
+
+    - kacheln im normalen skin, beim hovern könnte man zufäälige fgarben verwenden statt nur weiß, zb diessese pink, oder giftgrün, alsos ehr grelle farben, so ein higllight marker leuctendes gelb und ein kjmnalliges orange..-.
 
 ---
 
@@ -230,7 +256,6 @@ fertig: committen und direkt auf main pushen.
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
 3. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
-4. synthetische tests: eventuelö mit vmware, es müsste damit fast alles, was normalerweise nur ich live testen kann, damit auch testbar sein odern nicht? wenn man einen klick simulator hat, und eine vm, und man alles ausgaben, notifies usw.. von nvim überwacht, bzw bei so plugins wie mdview die auch im browser ausgaben erzeugen eben auch die browser konsole. Ich könnte mir vorstellen, neben /TESTS/ in den plugin repos auch noch eine feaure test struktur für solche synthetische tests mit einzubaune. jedes feature/binding bekommt einen synthetischen test. Was denkst du? Gibt es da bereits ein framework dafür? wie würde man dasn ormalerweiße angehen?
 
 ---
 
