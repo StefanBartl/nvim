@@ -1764,6 +1764,10 @@ rücken nach vorn. Aufwände sind grobe Personentage für einen Entwickler mit
 
 #### D.9.0 Sofortmaßnahmen (ohne spec.nvim, je < 1 Tag)
 
+> **Stand und Wiederaufnahme:** [sofortmassnahmen.md](sofortmassnahmen.md)
+> (2026-09-20: 4 war schon erledigt, 6 ist erledigt, 1/2/3/5 sind per
+> `scripts/ci_hardening.py` vorbereitet, aber noch nicht ausgerollt).
+
 1. `timeout-minutes: 15` in allen 38 `ci.yml` — heute hängt ein toter
    Runner bis GitHubs 6-Stunden-Limit.
 2. `-n -i NONE` in allen Runner-Aufrufen (Swap-/Shada-Freiheit; ~2 000

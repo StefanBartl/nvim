@@ -36,8 +36,13 @@ run_one() {
     return
   fi
 
+  # `env -u NVIM -u NVIM_LISTEN_ADDRESS`: when this runs from a :terminal, the
+  # child would otherwise inherit the editor's own RPC socket and a spec could
+  # reach back into the live session. `-n`: no swap files (stale ones fail
+  # suites with E326); `--clean` already implies `-i NONE`.
   local out verdict
-  out=$(LIB_NVIM_PATH=$LIB LIB_NVIM_DIR=$LIB timeout 120 nvim --clean --headless -u NONE \
+  out=$(LIB_NVIM_PATH=$LIB LIB_NVIM_DIR=$LIB timeout 120 env -u NVIM -u NVIM_LISTEN_ADDRESS \
+        nvim -n --clean --headless -u NONE \
         -c "set rtp+=." -c "set rtp+=$LIB" -l "$runner" 2>&1 | tail -25)
 
   verdict=$(echo "$out" | grep -oiE '[0-9]+ (passed|failed)[a-z ]*' | tail -2 | tr '\n' ' ')
