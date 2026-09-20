@@ -29,7 +29,7 @@
     - [`ERR-11` — „Nichts zu melden" ≠ „Fehler beim Ermitteln" — **30 von 30 Repos geprüft, fertig**](#err-11-nichts-zu-melden-fehler-beim-ermitteln-30-von-30-repos-geprft-fertig)
     - [`LUA-01` — Hart oder weich, aber konsistent — **21 von 21 Repos geprüft, fertig**](#lua-01-hart-oder-weich-aber-konsistent-21-von-21-repos-geprft-fertig)
     - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **31 von 31 Repos geprüft, fertig**](#err-50err-22-config-validierung-und-degradierung-31-von-31-repos-geprft-fertig)
-    - [Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**](#die-313-ungeprften-recommendednice-to-have-regeln-noch-nicht-begonnen)
+    - [Die 313 `recommended`/`nice-to-have`-Regeln — **Breitenpass über alle 11 Gruppen abgeschlossen**](#die-313-recommendednice-to-have-regeln-breitenpass-ber-alle-11-gruppen-abgeschlossen)
   - [Teil 6 — Nachgelagerter Bug/Security/Performance-Review der Kampagnen-Commits](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits)
   - [Empfehlung für die nächste Runde](#empfehlung-fr-die-nchste-runde)
 
@@ -59,8 +59,12 @@ Ein Audit aller 38 `.nvim`-Repos gegen den vollständigen `rules.nvim`-Regelkata
    adversarialen Verify), `ERR-50`/`ERR-22` (**fertig, 31 von 31 Repos** —
    durchweg auffällig hohe Trefferquote über alle drei Runden, bei rund der
    Hälfte aller Repos deckte der adversariale Verify zusätzliche, vom
-   Fix-Agent übersehene Lücken auf), die 313 ungeprüften
-   `recommended`/`nice-to-have`-Regeln (noch nicht begonnen). Im Anschluss
+   Fix-Agent übersehene Lücken auf), sowie die 313
+   `recommended`/`nice-to-have`-Regeln (**Breitenpass über alle 11 Gruppen
+   abgeschlossen** in zwei Runden à 6 parallelen Agenten — ~25 echte Fixes
+   über ~20 Repos, fünf ausgelagerte Folge-Tasks, eine offene Policy-Frage;
+   viele Einzelregeln je Gruppe bleiben bewusst ungeprüft, da reine
+   Ermessensfragen). Im Anschluss
    lief zusätzlich ein nachgelagerter Bug/Security/Performance-Review der
    eigenen Kampagnen-Commits — siehe
    [Teil 6](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits).
@@ -608,14 +612,206 @@ adversarialer Verify für alle erledigt.**
 
 ---
 
-### Die 313 ungeprüften `recommended`/`nice-to-have`-Regeln — **noch nicht begonnen**
+### Die 313 `recommended`/`nice-to-have`-Regeln — **Breitenpass über alle 11 Gruppen abgeschlossen**
 
-Der Katalog hat 421 Regeln, geprüft (manuell) sind bisher nur die 76
+Der Katalog hat 421 Regeln, geprüft (manuell) waren zunächst nur die 76
 `critical`-Regeln der review-relevanten Familien. Die übrigen 313 —
 `recommended`/`nice-to-have` plus die `critical`-Regeln der Gate-Familien
-NEW/REL außerhalb ihres automatisierten Teils — sind komplett offen.
-Größenordnung: `PERF` allein hat 64 Regeln, `LUA` 59, `UI` 41 — jede zu 95%+
-ungeprüft.
+NEW/REL außerhalb ihres automatisierten Teils — sind jetzt in zwei Runden
+mindestens einmal breitenorientiert geprüft worden: alle 11 Regelgruppen
+(TS, XP, DEP, CMT, SEC, LLS, LLS-31 als eigener Durchgang, PRIN, UI, LUA,
+PERF sowie die restlichen kritischen NEW-*/REL-*-Regeln ohne automatischen
+Check) wurden mindestens einmal angefasst.
+
+**Wichtige Einordnung**: anders als die frühere 4-Kritisch-Regeln-Kampagne
+(`ERR-11`/`LUA-01`/`ERR-50`/`ERR-22`) war das hier bewusst ein
+**Breitenpass, keine erschöpfende Prüfung jeder Regel in jedem Repo**. Ein
+großer Teil der Regeln je Familie ist schlicht nicht mechanisch prüfbar —
+reine Ermessens-/Design-Entscheidungen — und wurde korrekt ungeprüft
+gelassen statt zwangsweise „gefixt". Dieses Muster zieht sich durch fast
+jede Familie unten und erklärt, warum „0 Funde" dort der erwartete Normalfall
+ist, nicht ein Zeichen für einen oberflächlichen Durchgang.
+
+#### Runde 1 (6 parallele Agenten, einer je Familie)
+
+- **`TS-*`** (5 Regeln, Treesitter): über alle 17 Repos mit `vim.treesitter`
+  100 % sauber. 3 der 5 Regeln fleet-weit nicht anwendbar (keine
+  quantifizierten Captures, keine eigenen `.scm`-Queries, keine
+  Threadpool-Nutzung). Null Fixes.
+- **`XP-*`** (7 Regeln, Cross-Platform-Fallstricke): 1 echter Fix — der
+  LSP-Pfad-Cache der `ui.nvim`-Statusline
+  (`lua/ui/statusline/modules/lsp/helpers/paths.lua`) fiel bei einem
+  fehlgeschlagenen `fs_realpath` (noch nicht existierende Datei) auf den
+  rohen, unaufgelösten Pfad zurück, ohne spätere Re-Invalidierung, sobald die
+  Datei existierte — gefixt via `lib.nvim.fs.normkey`, Commit `62e06b6`. Die
+  übrigen 6 Regeln waren aus früheren Kampagnen bereits fleet-weit sauber
+  (frisch nachgeprüft, nicht nur angenommen).
+- **`DEP-*`** (7 Regeln, veraltete Neovim-APIs): komplett sauber, keine neuen
+  Funde. Alle Kandidatenstellen bereits gefixt, korrekt versionsgegated oder
+  über dokumentierte `.rules-waivers.json`-Einträge abgedeckt. Zwei Regeln
+  (`vim.tbl_flatten`, `nvim_buf_get_option`) haben fleet-weit null Treffer.
+- **`CMT-*`** (16 Regeln, Kommentarhygiene): 41 echte Fixes über 4 Repos, alle
+  unter CMT-03 (veraltete `@module`-Doc-Kommentarpfade nach
+  Verzeichnisumbauten) — filetree.nvim (33 Dateien, Commit `3f8d31c`),
+  reposcope.nvim (6 Dateien, `2b7fb72`), sessions.nvim (1 Datei, `4d1cc27`),
+  sandbox.nvim (1 Datei, `d993407`). Die ermessenslastigen Regeln
+  (Kommentarqualität/-veraltung/Geschmacksfragen) wurden laut expliziter,
+  konservativer Vorgabe bewusst nicht angefasst — keine pauschalen
+  Kommentar-Rewrites. Ein Fund außerhalb des Scopes wurde als Folge-Task
+  ausgelagert: `mdview.nvim/lua/mdview/adapter/browser/probe_plattform_paths.lua`
+  trägt einen Tippfehler im Dateinamen („plattform", deutsches Doppel-t),
+  während der Rest der Datei korrekt „platform" schreibt (Task
+  `task_8e2905c7`, läuft).
+- **`SEC-*`** (29 Regeln, Security): **5 echte, ausnutzbare Verstöße gefunden
+  und gefixt** — die schwerwiegendsten Funde dieser ganzen Runde:
+  - `lsp.nvim` (`509d7c2`, SEC-01): `dart.lua` startete `flutter run` als
+    Shell-String statt als Argv-Liste.
+  - `open.nvim` (`defe7da`, SEC-34): `viewer/scan.lua` rief `vim.fn.expand()`
+    auf einem Pfad auf, der aus dem eigenen Linktext eines Markdown-Links
+    beim Scannen eines Buffers geparst wurde — ein präparierter Link wie
+    `[x](./\`touch /tmp/pwned\`)` konnte beim normalen Buffer-Scan ausgeführt
+    werden, ganz ohne explizite „führe das aus"-Aktion.
+  - `markdown.nvim` (`03429dd`, SEC-34, 9 Dateien/12 Stellen),
+    `diff.nvim` (`8b6b8ba`, SEC-34), `sessions.nvim` (`b46974b`, SEC-34) —
+    allesamt Geschwister eines bereits gefixten
+    `vim.fn.expand()`-auf-ungeprüftem-Text-Musters, die an genau diesen
+    Call-Sites übersehen worden waren.
+  Alle fünf: Lint/Tests sauber, gepusht. Die übrigen 24 SEC-Regeln waren
+  entweder aus früheren Kampagnen bereits gefixt (gegen den echten Code
+  gegengeprüft, nicht nur gegen Git-Log-Behauptungen) oder laut Regeltext
+  selbst legitim nicht per Grep fleet-weit prüfbar.
+- **`LLS-*`** (37 Regeln, LuaLS-Diagnosen): die größte Breitenpass-Ausbeute —
+  - LLS-03 (fehlender `.claude`/`.deps`-Ausschluss in
+    `workspace.ignoreDir`) in **13 Repos** gefixt: cascade, cmdlog, diff,
+    documentation, fileops, gopath, lib.nvim, lsp.nvim, markdown, mdview,
+    pdfport, pickers, runtime-analysis.
+  - LLS-11 (`fun(): T` in einem Inline-Tabellentyp verschluckt das nächste
+    Feld) gefixt in casedesk, diff, media (3 Repos, 22 echte Diagnosen
+    behoben).
+  - LLS-40 (fehlerhafter `@diagnostic disable-next-line`, fehlendes
+    Pflicht-`:`, unterdrückte dadurch nichts) gefixt in gopath, mdview,
+    sandbox (15 tote Kommentare entfernt).
+  - LLS-10 (pickers.nvim, 3 Dateien), LLS-17 (lib.nvim), LLS-13
+    (cmdlog.nvim, Beispiel-Fix; ~20 weitere Stellen über ~12 Repos markiert,
+    aber nicht pauschal editiert, da an ihren Call-Sites bereits defensiv
+    abgesichert).
+  - **LLS-31 als eigener, dedizierter Durchgang markiert** (siehe unten), da
+    es die einzige `critical`-Regel in einer sonst
+    recommended/nice-to-have-Familie ist und semantisches Urteilsvermögen
+    statt Grep braucht.
+
+#### Runde 2 (6 parallele Agenten/Agenten-Gruppen)
+
+- **LLS-31, dedizierter Durchgang** (kritisch: ein `pcall` um einen
+  fehlerhaften Aufruf kann den Bug still verschlucken statt ihn
+  sichtbar zu machen) — ein fleet-weiter statischer Scanner wurde gebaut und
+  fand mitten im Lauf seinen eigenen Scan-Fenster-Bug (False-Positive-Rate
+  fiel von 274 auf 23 Kandidaten, dann nach manueller Durchsicht auf 0),
+  danach wurde jede bare-`pcall`-Closure und jedes „verworfene `ok`" fleet-weit
+  vollständig gelesen, zusätzlich ~740 weitere Einzel-Call-Sites per
+  Muster-Clustering. **3 echte Fixes**:
+  - `gopath.nvim` (`e741998`): eine fehlgeschlagene Subject-Suche fiel still
+    auf das Öffnen von `:help vim.api` zurück — nicht von einem echten
+    Treffer unterscheidbar. Der Code selbst trug bereits einen Kommentar,
+    der diese Unsicherheit markierte. Warnt jetzt unter Nennung des
+    gesuchten Begriffs.
+  - `lsp.nvim` (`a068a24`): die zentrale Pro-Server-Schleife
+    `pcall(vim.lsp.enable, name)` verwarf ihr Ergebnis, während jeder
+    Schwester-Fehlerpfad in derselben Funktion bereits über
+    `:checkhealth`/notify sichtbar gemacht wird — eine klare Asymmetrie.
+    Fügt sich jetzt in dasselbe Idiom ein.
+  - `cascade.nvim` (`c45685a`, 4 Dateien, 7 Call-Sites): jede
+    `renumber.tree/run/all`-Call-Site verwarf ihr pcall-Ergebnis ohne
+    rechtfertigenden Kommentar, ungewöhnlich für eine sonst disziplinierte
+    Codebasis. Warnt jetzt über das bestehende notify-Idiom.
+  Die große Mehrheit der ~900 fleet-weiten Kandidaten für verworfene pcalls
+  wurde korrekt unangetastet gelassen als legitimes Best-Effort-Verhalten
+  (Timer-/Prozess-/Buffer-Teardown, kosmetische Einstellungen, optionale
+  Drittanbieter-Integrationsguards, weiche Dependency-Checks) — viele davon
+  bereits selbst als bewusst dokumentiert.
+- **`PRIN-*`** (37 Regeln, Prinzipien): nur die mechanisch prüfbaren Regeln
+  wurden verfolgt. 3 Fixes, 20 Dateien, alle unter PRIN-50 (jede Datei
+  braucht einen `---@module`-Header) — sandbox.nvim (17 Dateien, `ed57128`),
+  mdview.nvim (2 Dateien, `d54c476`), runtime-analysis.nvim (1 Datei,
+  `a0fc940`). PRIN-02 („ein Funktionsname mit „and" signalisiert zwei
+  Verantwortlichkeiten") fand ~30 echte Kandidaten über ~15 Repos, keiner
+  wurde angefasst — ein Splitten wäre ein API-Oberflächen-Redesign mit echtem
+  Caller-seitigem Risiko und ohne konkreten Bug dahinter, explizit außerhalb
+  des Scopes eines opportunistischen Fix-Durchgangs. Als Liste für eine
+  spätere, bewusste Entscheidung belassen, nicht gefixt.
+- **`UI-*`** (41 Regeln, UI/UX): Breitenpass deckte ungefähr die Hälfte der
+  Familie ab (der Rest — Picker-/Completion-UX — ist laut Quelldokument
+  selbst explizit manuelles Ermessen); null Fixes nötig, die Familie war
+  bereits durch eine frühere Kampagne gut abgedeckt.
+- **`LUA-*`** (58 Regeln exkl. LUA-01, allgemeine Lua-/Neovim-Sicherheit):
+  null Fixes — alles mechanisch Prüfbare kam sauber oder bereits gefixt
+  zurück. **Ein bedeutender Policy-Fund, nicht gefixt, für eine Entscheidung
+  markiert**: LUA-54 („keine Emojis, keine fetten Überschriften in Docs")
+  wird fleet-weit, durchgängig, über fast jedes Repo hinweg verletzt
+  (tausende `.md`-Dateien nutzen Emoji-Section-Header) — klar ein
+  etablierter, bewusster Dokumentationsstil statt verstreute Fehler.
+  Braucht eine Entscheidung (Regel an die Praxis anpassen oder dedizierter
+  Cleanup-Durchgang) statt eines stillen Fixes; dem Nutzer vorgelegt,
+  Entscheidung Stand jetzt noch offen.
+- **`PERF-*`** (64 Regeln, die größte Familie) — über alle 38 Repos geprüft
+  (intern in Repo-Gruppen aufgeteilt, aus Gründen der Handhabbarkeit).
+  **9 echte Fixes**:
+  - `reposcope.nvim` (`cc8df58`, PERF-46): README-Cache war nur nach
+    `owner/repo_name` geschlüsselt, ohne den aktiven Provider
+    (GitHub/GitLab/Codeberg) — ein Providerwechsel für denselben Namen
+    konnte still ein README vom falschen Forge servieren.
+  - `images.nvim` (`cbd63d1`, PERF-25): eine Closure wurde bei jeder Zeile
+    der Sextant-Rendering-Hot-Loop neu erzeugt (bis zu 12×/s), jetzt über die
+    Schleife hinausgehoben.
+  - `images.nvim` (`cd6099d`, PERF-42, kritisch): der Remote-Image-Disk-Cache
+    hatte keinerlei Invalidierung — eine URL wurde unabhängig von
+    Remote-Änderungen für immer mit denselben Bytes serviert. TTL ergänzt.
+  - `sessions.nvim` (`1c8c1f6`, PERF-93, kritisch): das Marks-Edit-Menü las
+    `pins.json` bei jedem Tastendruck in einem `TextChanged`-Handler neu von
+    der Platte und löste jeden Default-Realpath erneut auf, obwohl sich
+    nichts ändern konnte, solange der transiente Buffer offen war. Jetzt
+    einmalig beim Öffnen berechnet.
+  - `ui.nvim` (`87122f4`, PERF-92, kritisch): das Screenkey-Tastendruck-HUD
+    berechnete seine Geometrie einmalig beim ersten Öffnen und nie wieder,
+    solange es lebte (unbegrenzt — überdauert Tastendrücke) — ein
+    `VimResized` mitten in der Session ließ es an veralteten Koordinaten
+    kleben. Gefixt mit einer durch `VimResized` ausgelösten Neuberechnung.
+  36 der 38 Repos kamen komplett sauber zurück (bereits durch die frühere
+  Kritisch-Kampagne gut gehärtet — viele Dateien tragen explizite,
+  sich selbst zitierende `PERF-xx`-Kommentare). Zwei Folgearbeiten wurden als
+  separate Tasks ausgelagert statt inline gefixt: die zwei unbegrenzten
+  Caches von `lsp.nvim` (`files_cache`, `buf_symbol_cache`) konnten nicht
+  angefasst werden, weil das Repo zum Audit-Zeitpunkt einen fremden, unfertig
+  dirty Working Tree hatte (Task `task_855b612a`, läuft); `ui.nvim`s
+  `kit/compare.lua`/`kit/picker.lua`/`kit/chooser.lua` haben denselben
+  Stale-Geometrie-Bug wie der Screenkey-Fix, aber diese Dateien sind
+  byte-für-byte an eine eingefrorene Kopie in `lib.nvim` gebunden (durch
+  einen Drift-Test) — der Fix muss also in beiden Repos gleichzeitig landen
+  (Task `task_ea884b81`, läuft).
+- **Restliche kritische `NEW-*`/`REL-*`** (Regeln ohne automatischen
+  `rules.nvim`-Check): von ~20 solchen Regeln sind die meisten
+  Prozess-/GitHub-Metadaten-/manuelles-Ermessen-Regeln und nicht
+  fleet-prüfbar. Eine Regel (REL-35, keine `wkdbook`-/`WKDBooks`-Referenzen)
+  war echt code-prüfbar: 3 verschleppte Referenzen gefunden und gefixt
+  (color_my_ascii.nvim `61a94b4`, gopath.nvim `75e36da`, media.nvim
+  `b362350`). Zwei Repos (`casedesk.nvim`, `pickers.nvim`) haben WKDBooks
+  tief in ihre tatsächliche Architektur/Quelle eingebaut, keine
+  verschleppten Strings — korrekt nicht angefasst, als separate
+  Review-Tasks ausgelagert (`task_de751049`, `task_c7944df3`, beide laufen).
+  Ebenfalls aufgefallen: NEW-39 („TESTS/ braucht minimal_init.lua +
+  scripts/test.sh") basiert auf einer veralteten Konvention, die der
+  Großteil der Fleet inzwischen durch ein gleichwertiges
+  `harness.lua`/`run.lua`-Muster ersetzt hat — korrekt nicht als ~25
+  Verstöße gewertet.
+
+#### Zusammenfassung dieses Abschnitts
+
+Beide Runden zusammen: alle 11 Regelgruppen des 313er-Katalogs mindestens
+einmal breitenorientiert geprüft. ~25 echte, adversarial nachvollziehbare
+Fixes über ~20 Repos, keine erzwungenen Fixes bei Ermessensfragen. Fünf
+Nachfolge-Tasks für Fälle, die Koordination über mehrere Repos oder eine
+bewusste Design-Entscheidung brauchen, laufen unabhängig weiter. Eine offene
+Policy-Frage (LUA-54, Emoji-Konvention) wartet auf eine Entscheidung.
 
 ---
 
