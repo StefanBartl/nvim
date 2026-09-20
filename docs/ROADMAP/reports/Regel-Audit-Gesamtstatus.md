@@ -745,14 +745,33 @@ ist, nicht ein Zeichen für einen oberflächlichen Durchgang.
   bereits durch eine frühere Kampagne gut abgedeckt.
 - **`LUA-*`** (58 Regeln exkl. LUA-01, allgemeine Lua-/Neovim-Sicherheit):
   null Fixes — alles mechanisch Prüfbare kam sauber oder bereits gefixt
-  zurück. **Ein bedeutender Policy-Fund, nicht gefixt, für eine Entscheidung
-  markiert**: LUA-54 („keine Emojis, keine fetten Überschriften in Docs")
-  wird fleet-weit, durchgängig, über fast jedes Repo hinweg verletzt
-  (tausende `.md`-Dateien nutzen Emoji-Section-Header) — klar ein
-  etablierter, bewusster Dokumentationsstil statt verstreute Fehler.
-  Braucht eine Entscheidung (Regel an die Praxis anpassen oder dedizierter
-  Cleanup-Durchgang) statt eines stillen Fixes; dem Nutzer vorgelegt,
-  Entscheidung Stand jetzt noch offen.
+  zurück. **Ein bedeutender Policy-Fund, dediziert nachbearbeitet**: LUA-54
+  („keine Emojis, keine fetten Überschriften in Docs") wurde fleet-weit,
+  durchgängig, über fast jedes Repo hinweg verletzt (tausende
+  `.md`-Dateien nutzten Emoji-Section-Header oder fett gesetzten
+  Pseudo-Überschriften-Text) — klar ein etablierter, bewusster
+  Dokumentationsstil statt verstreute Fehler. Dem Nutzer mit drei Optionen
+  vorgelegt (Regel an die Praxis anpassen / als bekannte Lücke stehen
+  lassen / dedizierter Cleanup-Durchgang); Entscheidung: dedizierter
+  Cleanup. Lief anschließend über alle 38 Repos (6 parallele Agenten, je
+  ein Batch von ~6 Repos): dekoratives Emoji entfernt, fett gesetzter
+  Pseudo-Text in echte Markdown-Überschriften umgewandelt — insgesamt rund
+  470 Überschriften-Konvertierungen und rund 345 entfernte Emoji. Emoji,
+  die reale Plugin-Ausgabe oder Config-Werte wortgetreu dokumentieren,
+  blieben bewusst unangetastet, z. B. bei emojis.nvim und
+  color_my_ascii.nvim (deren Doku-Beispiele selbst aus Emoji bestehen),
+  bei runtime-analysis.nvim (Emoji sind byte-genaue Rückgabewerte aus dem
+  eigenen Code) und bei sessions.nvim (`pin_marker = "📌 pin"` als echter
+  Config-Default). Jeder Batch prüfte danach die Stabilität der
+  GitHub-Anchor-Slugs; einzig bei github_stats.nvim (mit 272
+  Konvertierungen und ~49 entfernten Emoji der größte Einzel-Batch) hätte
+  das tatsächlich einen bestehenden Inhaltsverzeichnis-Link stillschweigend
+  umgeleitet — gefixt. Nebenbefund bei media.nvim: eine andere,
+  unabhängige Session bearbeitete parallel dieselbe README.md; sauber per
+  `git checkout` aufgelöst, bevor der Cleanup dort weiterlief. Lint
+  (stylua/luacheck je nach Repo-CI) blieb überall grün — bei einer
+  reinen Doku-Änderung ohne Verhaltensrisiko, aber aus Disziplin trotzdem
+  geprüft.
 - **`PERF-*`** (64 Regeln, die größte Familie) — über alle 38 Repos geprüft
   (intern in Repo-Gruppen aufgeteilt, aus Gründen der Handhabbarkeit).
   **9 echte Fixes**:
@@ -810,8 +829,9 @@ Beide Runden zusammen: alle 11 Regelgruppen des 313er-Katalogs mindestens
 einmal breitenorientiert geprüft. ~25 echte, adversarial nachvollziehbare
 Fixes über ~20 Repos, keine erzwungenen Fixes bei Ermessensfragen. Fünf
 Nachfolge-Tasks für Fälle, die Koordination über mehrere Repos oder eine
-bewusste Design-Entscheidung brauchen, laufen unabhängig weiter. Eine offene
-Policy-Frage (LUA-54, Emoji-Konvention) wartet auf eine Entscheidung.
+bewusste Design-Entscheidung brauchen, laufen unabhängig weiter. Die eine
+Policy-Frage (LUA-54, Emoji-Konvention) ist entschieden und per
+dediziertem Cleanup über alle 38 Repos abgearbeitet.
 
 ---
 
