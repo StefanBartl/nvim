@@ -2,7 +2,7 @@
 
 **Reviewed:** 2026-09-17 · **Updated:** 2026-09-21 — everything the review
 ranked as done, already built or rejected has been struck; this file now holds
-only what is still open and the decisions that keep it closed.
+the decisions that keep it closed. Nothing ranked by it is open any more.
 **Scope:** all 38 `ROADMAP/ROADMAP.md` files under
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`, plus the sibling
 documents they hand their queue to.
@@ -54,12 +54,8 @@ collection.
 
 ## 2. What is left
 
-Checked against source on 2026-09-21. The item is tracked in the plugin's own
-roadmap, not here.
-
-| Plugin | Item | Effort | Benefit | Tracked in |
-|---|---|---|---|---|
-| `lib.nvim` | Decide whether `ai`, `debugging`, `emojis`, `fileops` and `sandbox` declare their external tools in a `docs/install.json`. All five still hand-roll `vim.fn.executable()`, so `deps.health` cannot apply | 0.5 to decide, then ~0.25 each | Consistent `:checkhealth` output and install hints. A question first, not a migration — nobody should "migrate" them before it is answered | `lib.nvim/ROADMAP/ROADMAP.md` |
+Nothing. Checked against source on 2026-09-21; every item this review ranked is
+shipped, was already built, or is a recorded decision (§3).
 
 ---
 
@@ -76,3 +72,5 @@ Decisions, each with the reason, so nobody re-opens them by accident.
 | `casedesk.nvim` | `area` in `.case.json` | The roadmap itself argues against it: an area is derived from where the case lies, and a stored copy that disagrees with the folder is wrong rather than helpful. Leave it as a question |
 | `ui.nvim` | Own terminal implementation instead of `Snacks.terminal` | Raised in feedback, never commissioned. The actual complaint (no border) was fixed with one explicit option |
 | `lib.nvim` | Windows elevation in the dependency installer | A deliberate design choice, documented in `deps/pm/init.lua` and `deps/README.md`: nothing beyond a `sudo` prefix, Windows elevation is the package manager's own UAC prompt. Only worth a look if someone lands on a machine that really needs it |
+| `debugging.nvim` | A `docs/install.json` | Its externals are per-platform (clipboard helpers, Windows PowerShell) and the install spec has no platform filter, so `:Lib deps status` would list the other platform's tools as missing everywhere. Revisit only if the spec grows a platform key |
+| `sandbox.nvim` | A `docs/install.json` for `podman`/`docker`/`nerdctl` | The spec answers "is the binary on `PATH`"; sandbox needs an engine that *answers*. `:Lib deps install` could install a CLI with no running daemon and report success while nothing works. `:checkhealth sandbox` already tells the two apart |
