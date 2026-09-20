@@ -31,6 +31,9 @@
     - [`ERR-50`/`ERR-22` — Config-Validierung und -Degradierung — **31 von 31 Repos geprüft, fertig**](#err-50err-22-config-validierung-und-degradierung-31-von-31-repos-geprft-fertig)
     - [Die 313 `recommended`/`nice-to-have`-Regeln — **Breitenpass über alle 11 Gruppen abgeschlossen**](#die-313-recommendednice-to-have-regeln-breitenpass-ber-alle-11-gruppen-abgeschlossen)
   - [Teil 6 — Nachgelagerter Bug/Security/Performance-Review der Kampagnen-Commits](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits)
+    - [Runde 1 — Review der 4-Kritisch-Regeln-Kampagne (~76 Commits, 20 Repos)](#runde-1-review-der-4-kritisch-regeln-kampagne-76-commits-20-repos)
+    - [Runde 2 — Review der 313-Regeln-Kampagne (18 Repos)](#runde-2-review-der-313-regeln-kampagne-18-repos)
+    - [Zusammenfassung: beide Runden im Vergleich](#zusammenfassung-beide-runden-im-vergleich)
   - [Empfehlung für die nächste Runde](#empfehlung-fr-die-nchste-runde)
 
 ---
@@ -64,9 +67,11 @@ Ein Audit aller 38 `.nvim`-Repos gegen den vollständigen `rules.nvim`-Regelkata
    abgeschlossen** in zwei Runden à 6 parallelen Agenten — ~25 echte Fixes
    über ~20 Repos, fünf ausgelagerte Folge-Tasks, eine offene Policy-Frage;
    viele Einzelregeln je Gruppe bleiben bewusst ungeprüft, da reine
-   Ermessensfragen). Im Anschluss
-   lief zusätzlich ein nachgelagerter Bug/Security/Performance-Review der
-   eigenen Kampagnen-Commits — siehe
+   Ermessensfragen). Im Anschluss liefen zusätzlich **zwei Runden** eines
+   nachgelagerten Bug/Security/Performance-Reviews der eigenen
+   Kampagnen-Commits — Runde 1 für die 4-Kritisch-Regeln-Kampagne (8 von 20
+   Repos mit echten Funden), Runde 2 für die 313-Regeln-Kampagne (12 von 18
+   Repos mit echten Funden) — siehe
    [Teil 6](#teil-6-nachgelagerter-bugsecurityperformance-review-der-kampagnen-commits).
 
 Zahlenbasis des Gesamt-Audits: 421 Regeln, 38 Repos, ~390.000 LOC Lua.
@@ -837,13 +842,28 @@ dediziertem Cleanup über alle 38 Repos abgearbeitet.
 
 ## Teil 6 — Nachgelagerter Bug/Security/Performance-Review der Kampagnen-Commits
 
-Nach Abschluss der `ERR-50`/`ERR-22`-Fleet-Fix-Arbeit lief ein separater
-Review-Durchgang: die ~76 Commits, die diese Kampagne selbst hervorgebracht
-hat (über die Regelfamilien `ERR-11`/`LUA-01`/`ERR-50`/`ERR-22`, 20 Repos, die
-vom eigenen Verify aus Runde 3 oben nicht bereits mitabgedeckt waren), wurden
-auf Bugs, Performance- oder Security-Probleme durchsucht, die die Fixes
-selbst eingeführt haben könnten. Muster: Review pro Repo → adversarialer
-Verify pro Fund → Fix bestätigter Funde → Commit/Push.
+Zwei unabhängige Review-Durchgänge, jeweils von einem anderen Agenten als dem,
+der den jeweiligen Original-Fix geschrieben hat: nicht die Kampagnen-Arbeit
+selbst, sondern eine gezielte Suche nach Bugs, Security- oder
+Performance-Problemen, die die Kampagnen-Commits selbst eingeführt oder
+übersehen haben könnten. Runde 1 deckte die ursprüngliche
+4-Kritisch-Regeln-Kampagne (`ERR-11`/`LUA-01`/`ERR-50`/`ERR-22`) ab, Runde 2
+folgte nach Abschluss des vollständigen 313-Regeln-Breitenpasses (siehe oben)
+samt dem `LUA-54`-Emoji-/Fett-Überschriften-Cleanup und deckte gezielt die
+davon neu erzeugten Commits ab, die bis dahin noch nie adversarial
+gegengeprüft worden waren.
+
+---
+
+### Runde 1 — Review der 4-Kritisch-Regeln-Kampagne (~76 Commits, 20 Repos)
+
+Nach Abschluss der `ERR-50`/`ERR-22`-Fleet-Fix-Arbeit lief die erste Runde
+dieses Review-Durchgangs: die ~76 Commits, die diese Kampagne selbst
+hervorgebracht hat (über die Regelfamilien `ERR-11`/`LUA-01`/`ERR-50`/`ERR-22`,
+20 Repos, die vom eigenen Verify aus Runde 3 oben nicht bereits mitabgedeckt
+waren), wurden auf Bugs, Performance- oder Security-Probleme durchsucht, die
+die Fixes selbst eingeführt haben könnten. Muster: Review pro Repo →
+adversarialer Verify pro Fund → Fix bestätigter Funde → Commit/Push.
 
 **Ergebnis: 12 von 20 Repos sauber** (`filetree.nvim`, `buffer-ctx.nvim`,
 `pdfport.nvim`, `images.nvim`, `pickers.nvim`, `recommender.nvim`,
@@ -927,6 +947,158 @@ kein Co-Author"), bevor er fortfuhr. Der resultierende Commit wurde im
 Anschluss manuell gegen das Live-Repo gegengeprüft und als korrekt, sicher
 und korrekt attribuiert bestätigt — ein False-Positive-Selbstcheck, kein
 echtes Problem, aber notiert für den Fall, dass das Muster erneut auftaucht.
+
+---
+
+### Runde 2 — Review der 313-Regeln-Kampagne (18 Repos)
+
+Nach Abschluss des vollständigen 313-Regeln-Breitenpasses (Runde 1 davon:
+TS/XP/DEP/CMT/SEC/LLS; Runde 2 davon: LLS-31/PRIN/UI/LUA/PERF/restliche
+kritische NEW-/REL-Regeln, siehe oben) sowie des `LUA-54`-Emoji-/Fett-
+Überschriften-Cleanups bat der Nutzer um eine zweite
+Bug/Security/Performance-Review-Runde — diesmal gezielt für die NEUEN
+Commits aus der 313er-Kampagne. Anders als die ursprüngliche
+4-Kritisch-Regeln-Kampagne (Runde 1 oben) waren diese noch nie adversarial
+gegengeprüft worden. Diese Runde lief mit einem deutlich engeren
+Concurrency-Limit (1 Agent gleichzeitig, sequenziell statt bis zu 6 parallel)
+auf explizite Nutzervorgabe, und jeder Agent hat in einem einzigen Durchgang
+sowohl reviewt als auch gefixt (kein separater Verify-Schritt), weil der
+Nutzer „fixe sie gleich" vorgab.
+
+18 Repos wurden geprüft, je ein Agent pro Repo mit dem Auftrag: (a) die
+Korrektheit der jeweiligen regel-getaggten Kampagnen-Commits adversarial aus
+dem echten Diff/aktuellen Code neu herzuleiten (nicht der Commit-Message
+vertrauen), (b) ein frischer Sweep nach denselben Bug-Klassen-Mustern
+(`LLS-31` stillschweigend verschluckter `pcall`, `SEC-34` `vim.fn.expand()`
+auf ungeprüftem Input, `PERF-46` unvollständige Cache-Keys, `ERR-50`/`ERR-22`
+Config-Validierungslücken) anderswo im Repo, und (c) alles echt Falsche
+sofort fixen — mit Tests, Lint, Commit, Push.
+
+**Ergebnis: 12 von 18 Repos hatten mindestens einen echten Fund, alle
+gefixt. 6 Repos kamen sauber zurück** (`open.nvim`, `markdown.nvim`,
+`sessions.nvim`, `media.nvim`, `mdview.nvim`, `color_my_ascii.nvim`) — bei
+`markdown.nvim`, `media.nvim` und `mdview.nvim` allerdings nicht folgenlos:
+der Review bestätigte dort einzelne Fixes empirisch (z. B. `media.nvim`s
+`LLS-11`-Fix per lokalem LuaLS: 27→17 Diagnosen, exakt die behauptete
+Delta von 10), fand einen zusätzlichen, von der eigenen Aufgabenbeschreibung
+behaupteten Fix, der in `mdview.nvim` gar nicht existiert (vermutlich mit
+einem ähnlichen Fix in einem anderen Repo verwechselt — als Falschbehauptung
+geflaggt, nicht stillschweigend hingenommen), und deckte bei `markdown.nvim`
+sogar eine noch gründlichere Umsetzung auf, als der Commit selbst behauptete
+(12 statt der dokumentierten Stellen über eine Datei mehr).
+
+Die 12 Repos mit echten Funden, in Review-Reihenfolge:
+
+1. **`lsp.nvim`** (`41ad284`) — der zentrale `LLS-31`-Fix (Warnung bei
+   fehlgeschlagenem `vim.lsp.enable`) war nur ein zufälliges Backstop: alle
+   18 einzelnen `lsp.servers.*`-Module trugen je ein eigenes, ungeschütztes
+   `pcall(vim.lsp.enable, name)`, das über `registry.setup_all()` zuerst
+   feuerte. An der Wurzel gefixt: `registry.setup_all()` übergibt jetzt
+   `{enable = false}`, sodass `vim.lsp.enable` genau einmal aufgerufen wird,
+   an der einen, korrekt abgesicherten Stelle. Regressionstests ergänzt
+   (weder dieser Fix noch der ursprüngliche `a068a24` aus Runde 1 hatten
+   vorher Testabdeckung).
+2. **`diff.nvim`** (`93c1f16`) — der `SEC-34`-Fix (`:DiffOrig`-
+   Dateinamensbehandlung) bestätigt korrekt; schließt nebenbei einen
+   zweiten, unabhängigen Korrektheitsbug: `vim.fn.expand()` ersetzt jede
+   `$VAR`-förmige Teilzeichenfolge irgendwo im Dateinamen, was
+   `filereadable()` für eine ganz normale gespeicherte Datei mit `$` im
+   Namen bricht — kein Angreifer nötig. Ohne vorherige Testabdeckung;
+   Regressionstest ergänzt.
+3. **`gopath.nvim`** (`9312642`) — der `LLS-31`-Warnfix (Fallback in
+   `help.lua`) war korrekt, hatte aber keine Testabdeckung, die den
+   tatsächlichen Warntext prüft; ergänzt.
+4. **`cascade.nvim`** (`2822488`) — die eigene Behauptung des `LLS-31`-Fixes
+   „alle 7 Renumber-Call-Sites" war falsch: 3 weitere ungefixte Stellen
+   gefunden, darunter die mit Abstand am häufigsten durchlaufene (der
+   `<CR>`/`o`/`O`-Listen-Fortsetzungs-Handler) sowie der primäre
+   Dot-Repeat-Dispatch-Pfad, über den die meisten anderen Aktionen laufen.
+   Alle 4 gefixt, je mit Regressionstest, der einen echten Throw erzwingt
+   und genau eine Warnung erwartet.
+5. **`ui.nvim` + `lib.nvim`** (`c8c062f` / `3456998`) — die `XP-02`- und
+   `PERF-92`-Fixes bestätigt korrekt und nicht überkorrigiert (die
+   Pro-Tastendruck-Geometrieneuberechnung in Screenkey ist nachweislich
+   billig). Der koordinierte Kit-Geometrie-Fix (Picker/Compare/Chooser, in
+   beide Repos portiert) über den Drift-Test tatsächlich byte-identisch
+   bestätigt — aber ein 4. Geschwister gefunden, `kit/toast.lua`, mit
+   demselben Stale-Geometry-Bug, das die Koordination übersehen hatte. In
+   beiden Repos gefixt (Toasts mit `timeout = 0`, ein unterstützter Modus,
+   konnten nach einem Resize unbegrenzt in einer veralteten Ecke hängen
+   bleiben).
+6. **`reposcope.nvim`** (`c33fb1c`) — der `PERF-46`-Provider-geschlüsselte-
+   Cache-Fix bestätigt korrekt, inklusive sicherer Migration alter
+   Cache-Dateiformate. Derselbe tote-`pcall`-Backup-Bug, den 3
+   Schwestermodule (`readme_cache`/`metrics`/`query_stats`) bereits in
+   Runde 1 gefixt bekommen hatten, noch unangetastet in einem 4.,
+   `favorites_state.lua`, gefunden. Gefixt, passend zum etablierten Muster.
+7. **`images.nvim`** (`a8b1eed`) — beide `PERF`-Fixes (Closure-Hoisting,
+   Remote-Cache-TTL) bestätigt korrekt. Zwei Lücken gefunden: die neue
+   `cache_ttl_s`-Option war undokumentiert (Verstoß gegen die eigene
+   „Docs aktuell halten"-Konvention dieser Kampagne) und der Disk-Cache
+   hatte keine Testabdeckung; beides gefixt.
+8. **`casedesk.nvim`** (`86c9964`, `9113edd`) — `LLS-11`/`ERR-50`/`ERR-22`/
+   `ERR-11`/`PERF-82`-Fixes allesamt bestätigt korrekt (`LLS-11` empirisch
+   über lokales lua-language-server verifiziert). Frischer Sweep fand zwei
+   weitere `LLS-31`-Bugs: ein `FocusGained`-SLA-Check, dessen inneres
+   `pcall` einen besser getesteten äußeren Error-Handler vorzeitig abfing,
+   und ein Directory-Open-Befehl, der abbrach statt zurückzufallen, wenn
+   `filetree.nvim` wirft.
+9. **`sandbox.nvim`** (`3f55c40`) — der from-scratch-`ERR-50`-Validator
+   (gebaut, nachdem ein früherer Agent fälschlich „N/A" geschlossen hatte)
+   feldweise vollständig und korrekt bestätigt. Der `ERR-22`-`list_size`-
+   Fix-Check auf `math.huge` war zu eng — jeder andere große, aber endliche
+   Double (`1e20`, `2^63` usw.) crashte weiterhin
+   `nvim_win_set_width`/`nvim_win_set_height`; auf einen
+   Schwellenwert-Check erweitert, der `math.huge` mit abdeckt.
+10. **`pickers.nvim`** (`0d30400`) — eine 4. Stelle des harten-Require-
+    Musters aus `LUA-01` gefunden (`frecency.lua`), die 3 Geschwister-Fixes
+    aus Runde 1 übersehen hatten. Zusätzlich ein nicht verdrahtetes
+    `ERR-11`-Signal geflaggt (nicht überstürzt gefixt, sondern als eigener
+    Task ausgelagert) — eine fehlgeschlagene Smart-Search rendert identisch
+    zu „keine Treffer", und das sauber zu verdrahten braucht ein
+    gedrosseltes Notify-Design, da es pro Tastendruck feuert.
+11. **`cmdlog.nvim`** (`6e1b480`) — zwei weitere `SEC-34`-Lücken gefunden
+    (`store.lua`, `extra_files.lua`) mit demselben verwundbaren Muster, das
+    im selben Repo bereits in einer Schwesterdatei (`favorites.lua`)
+    gefixt war, vom früheren Sweep übersehen.
+12. **`lib.nvim`** (`54ea1fb`, `b151f22`) — ein zweiter, unabhängiger
+    Review-Durchgang für lib.nvim, diesmal für dessen eigene
+    `LLS-17`-Fixes statt der mit ui.nvim geteilten Kit-Geometrie-Commits
+    oben: der `LLS-17`-Fix empirisch bestätigt korrekt; dasselbe verwaiste
+    Doc-Kommentar-Muster in einer zweiten Datei gefunden
+    (`open_default/init.lua`), gefixt. Eine echte `ERR-50`-Lücke in einer
+    breit genutzten Shared-Library-Config-Oberfläche gefunden,
+    `kit.theme.setup()` (erreichbar über das gängige `kit.setup()`) —
+    keinerlei Unknown-Key- oder Wert-Validierung, sodass ein vertippter
+    Preset-Name stillschweigend beim alten Default blieb, ganz ohne
+    Feedback. Gehärtet, passend zur etablierten Konvention von
+    `lib.config.setup()`.
+
+Rund 20 weitere Repos der Fleet erhielten in der 313er-Kampagne nur rein
+mechanische, risikoarme Änderungen (ein `.luarc.json`-Einzeiler für
+`LLS-03`, ein `---@module`-Header für `PRIN-50`/`CMT-03`, oder reine
+Markdown-Änderungen für `LUA-54`) ohne Laufzeitlogik-Änderungen. Diese
+wurden dort, wo sie im Zuge der 18 Repo-Reviews zufällig mit auftauchten,
+stichprobenartig als korrekt bestätigt (z. B. `LLS-03`s
+`.luarc.json`-Ergänzung wurde in `lsp.nvim`, `diff.nvim`, `markdown.nvim`,
+`gopath.nvim`, `cascade.nvim`, `reposcope.nvim`, `mdview.nvim` und
+`sandbox.nvim` geprüft und jedes Mal als harmlos bestätigt), erhielten aber
+keinen eigenen, dedizierten Review-Durchgang — ein reiner Doku- oder
+Workspace-Config-Diff kann keinen Laufzeitbug einführen.
+
+---
+
+### Zusammenfassung: beide Runden im Vergleich
+
+Beide Runden bestätigen dasselbe Muster: ein genuin adversarialer zweiter
+Blick, von einem anderen Agenten als dem, der den Original-Fix geschrieben
+hat, findet zuverlässig echte Lücken. Runde 1: 8 von 20 Repos (40 %) hatten
+echte Funde. Runde 2: 12 von 18 Repos (67 %) hatten echte Funde. Trotz des
+viel engeren Concurrency-Limits (1 statt bis zu 6 parallelen Agenten) und
+des kombinierten Review-plus-Fix-Schritts in einem Durchgang blieb die
+Trefferquote mindestens so hoch wie in Runde 1, tendenziell sogar höher —
+ein Hinweis darauf, dass die Fundrate eher an Regelfamilie und Codebasis
+liegt als am Konkurrenzgrad der Agenten oder einem separaten Verify-Schritt.
 
 ---
 
