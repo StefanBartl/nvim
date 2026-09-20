@@ -54,12 +54,11 @@ collection.
 
 ## 2. What is left
 
-Checked against source on 2026-09-21. Both items are tracked in the plugin's
-own roadmap, not here.
+Checked against source on 2026-09-21. The item is tracked in the plugin's own
+roadmap, not here.
 
 | Plugin | Item | Effort | Benefit | Tracked in |
 |---|---|---|---|---|
-| `filetree.nvim` | Validate the feature-owned config bodies (`ERR-50`/`ERR-22`). `sanitize()` checks top-level keys, feature names and the six bodies `DEFAULTS.lua` declares centrally; the 39 feature modules that merge their own options with a bare `tbl_deep_extend` accept a typo'd key and an out-of-range value without a diagnostic | ~1.5 | A typo in any feature option stops vanishing into the default. Found by the audit's `ERR-50`/`ERR-22` round and deliberately left as its own round | `filetree.nvim/ROADMAP/ROADMAP.md` |
 | `lib.nvim` | Decide whether `ai`, `debugging`, `emojis`, `fileops` and `sandbox` declare their external tools in a `docs/install.json`. All five still hand-roll `vim.fn.executable()`, so `deps.health` cannot apply | 0.5 to decide, then ~0.25 each | Consistent `:checkhealth` output and install hints. A question first, not a migration — nobody should "migrate" them before it is answered | `lib.nvim/ROADMAP/ROADMAP.md` |
 
 ---
