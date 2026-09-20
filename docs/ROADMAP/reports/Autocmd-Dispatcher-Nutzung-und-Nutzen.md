@@ -15,26 +15,27 @@ und wenn ja, wo, und was würde er dort konkret bringen?
 ## Handover — Stand der Arbeitsliste
 
 Die Liste besteht aus den Plugins, für die die Analyse (§5) mindestens „maybe“
-ergeben hat, plus dem einen offenen Prüfpunkt aus §7. Reihenfolge = Nutzen.
+ergeben hat, plus dem offenen Prüfpunkt aus §7 und den zwei Aufräumpunkten aus §8. Reihenfolge = Nutzen.
 
 | # | Plugin | Verdikt der Analyse | Ergebnis der Umsetzung | Commits |
 |---|---|---|---|---|
 | 1 | `mdview.nvim` | **yes** | **Erledigt.** Zwei Commits: (a) `autocmds_registry` abgeschafft, (b) die drei `BufEnter`-Handler hinter einem gemeinsamen Dispatcher (`enter_hub.lua`). Suite 263 → 276 grün. | `2baebfb`, `75ec57e` |
 | 2 | `markdown.nvim` | **maybe** | **Migration bewusst nicht gemacht** (Begründung §9.3), stattdessen beim Lesen einen **echten Bug** gefunden und behoben: das Öffnen des TableView-Popups löschte den `FileType`-Autocmd von `setup()`. Regressions-Spec vorhanden. | `7a52855` |
 | 3 | `lsp.nvim` (`LspAttach` ×4) | **unchecked** | **Gelesen → no.** Vier voneinander unabhängige Handler, kein gemeinsamer Key, keine Reihenfolge untereinander (§9.4). | — |
+| 4 | `lsp.nvim` (fünf leere `FileType`-Stubs) | „stattdessen löschen“ (§8) | **Erledigt.** Fünf Module, zwei Listen, zwei Helfer, Typ-Aliasse, Stub-Spec und Doku-Absatz entfernt. Suite 784 → 779 Erfolge (genau die fünf Stub-Tests), 0 Failed. | `fe23c74` |
+| 5 | Konzept-Doc `autocmd-dispatcher.md` | „in den Ruhestand“ (§8) | **Erledigt.** Von `ROADMAP/` nach `FINISHED/` verschoben, Eintrag aus „Open concepts“ entfernt, Rollout-Notiz im Status. (WKDBooks, nicht lib.nvim — siehe §9.6.) | WKDBooks `9384d4c` |
 
 **Offen — braucht eine Entscheidung von Stefan** (nichts davon ist begonnen):
 
-1. **Die fünf leeren `lsp.nvim`-Stubs löschen** (Plan in §8). Das kehrt eine
-   dokumentierte Entscheidung um (`docs/autocmds.md` nennt sie „deliberate
-   placeholders“) — deshalb nicht ohne Rückfrage.
-2. **Konzept-Doc `lib.nvim/ROADMAP/autocmd-dispatcher.md` in den Ruhestand schicken**
-   und den durchgestrichenen Eintrag in `ROADMAP.md` entfernen (§8).
-3. **`my.nvim`: identischer Handler in `breadcrumbs` und `indent_scope`** auf drei
+1. **`my.nvim`: identischer Handler in `breadcrumbs` und `indent_scope`** auf drei
    Events zu einer Funktion zusammenlegen (§5) — ausdrücklich *kein* Dispatcher-Thema,
    nur Duplikat-Abbau.
-4. **`markdown.nvim`-Migration doch noch machen?** Nur falls gewünscht; Aufwand und
+2. **`markdown.nvim`-Migration doch noch machen?** Nur falls gewünscht; Aufwand und
    Gegenargumente in §9.3.
+3. **`B7` in `docs/ROADMAP/ROADMAP.md`** („lib.nvim: the autocmd dispatcher“) ist
+   inhaltlich erledigt und verweist noch auf den alten Pfad des Konzept-Docs
+   (`…/lib.nvim/ROADMAP/autocmd-dispatcher.md`, jetzt `…/lib.nvim/FINISHED/`). Ich habe
+   die Datei nicht angefasst: Sie hat lokale, nicht committete Änderungen von dir.
 
 **Nicht verifiziert:** Die `mdview`-Änderungen sind durch die Headless-Suite
 (276 Specs) abgedeckt, aber **nicht in einer echten Session** mit laufendem Relay und
@@ -63,7 +64,9 @@ Markdown-Buffern wechseln unter `browser.behavior = "reuse"` und `"new_tab"`,
     - [9.2 `mdview.nvim`](#92-mdviewnvim)
     - [9.3 `markdown.nvim`](#93-markdownnvim)
     - [9.4 `lsp.nvim` und `LspAttach`](#94-lspnvim-und-lspattach)
+    - [9.4a `lsp.nvim`: die fünf Stubs](#94a-lspnvim-die-fünf-stubs)
     - [9.5 Prüfen und Reproduzieren](#95-prüfen-und-reproduzieren)
+    - [9.6 Das Konzept-Doc](#96-das-konzept-doc)
 
 ---
 
@@ -257,7 +260,7 @@ angefasst wird), **no** (würde nichts gewinnen oder falsches Werkzeug). Die Spa
 | **`mdview.nvim`** `bindings/autocmds/` | 11 Dateien im Ordner, die meisten hängen ihr eigenes Autocmd an, 12 Dateien referenzierten die handgeschriebene `autocmds_registry`; vier `BufEnter`-Handler (`breadcrumbs`, `bufenter`, `buffer_switch`, `preview_tab_sync`), drei davon mit *demselben* `defaults.ft_pattern`; `teardown()` = `detach_all()` + `del_augroup` | Am stärksten. Die Spiegel-Registry ist das, was `dispatcher.registry()` und `owner` ersetzen. Ein gemeinsames `pattern = ft_pattern` hält den Fehlschlag in C (§3.3). Gemischte Events (`CursorMoved`, `CursorMovedI`, `BufWritePost`, `VimLeave`) heißen: nur eine *Teilmenge* der Handler, nicht alle elf | **yes** — etwa eine Sitzung | **erledigt** (§9.2) — mit Korrektur: die Registry fiel wegen der Augroup weg, nicht wegen des Dispatchers |
 | **`markdown.nvim`** `bindings/autocmds.lua` | vier `FileType`-Registrierungen in einem `setup()`, alle `pattern = ftpat`, je hinter einem eigenen Feature-Gate, drei davon prüfen zuerst noch `is_md(ev.buf)` | Vier Autocmds werden zu einem, ein gemeinsamer `is_md`-Guard, bedingtes `register()` ist trivial. Der Gewinn ist klein: keine erkennbare Reihenfolge-Bedingung, jede Gruppe ist schon `clear = true` | **maybe** — halbe Sitzung, wenig Wert | **geprüft, Migration nicht gemacht; Bug gefunden und behoben** (§9.3) |
 | **`my.nvim`** `hl_config/` | neun `BufEnter`, fünf `BufWinEnter`, vier `CursorMoved`, vier `WinScrolled`-Registrierungen über unabhängige Features | Schwach. Die Features sind unabhängig, entprellt und schalten sich durch Leeren der eigenen Augroup ab. `breadcrumbs` und `indent_scope` registrieren einen *identischen* Handler auf denselben drei Events, was für sich zusammengelegt werden sollte, aber das ist eine Funktion, kein Dispatcher. Kein gemeinsames Prädikat, keine Reihenfolge-Abhängigkeit gefunden. Die Registry-Sicht gibt es schon über die Autocmd-Records | **no** | unverändert |
-| **`lsp.nvim`** `FileType` ×14 | fünf sind leere Stubs (`csharp`, `lua`, `c`, `go`, `zig`); der Rest setzt `shiftwidth` / `tabstop` / ein Keymap für **einen** Filetype je | Falsche Form. Ein Handler pro Key, verschiedene Keys, alle nativ pattern-gefiltert — der Mechanismus des Dispatchers (viele Handler pro Key) greift nie. Per-Filetype-Optionen setzt nativ und lazy `after/ftplugin/<ft>.lua` | **no** — stattdessen die Stubs löschen (§8) | Stubs: **offen** (Rückfrage, siehe Handover) |
+| **`lsp.nvim`** `FileType` ×14 | fünf sind leere Stubs (`csharp`, `lua`, `c`, `go`, `zig`); der Rest setzt `shiftwidth` / `tabstop` / ein Keymap für **einen** Filetype je | Falsche Form. Ein Handler pro Key, verschiedene Keys, alle nativ pattern-gefiltert — der Mechanismus des Dispatchers (viele Handler pro Key) greift nie. Per-Filetype-Optionen setzt nativ und lazy `after/ftplugin/<ft>.lua` | **no** — stattdessen die Stubs löschen (§8) | **Stubs gelöscht** (§9.4a) |
 | **`lsp.nvim`** `LspAttach` ×4 | `bindings/autocmds`, `core/inlay_hints`, `core/lightbulb`, `core/supervisor` | Unbekannt. `LspAttach`-Handler sind der klassische Ort, an dem die Reihenfolge zählt. Ich habe sie nicht gelesen | **ungeprüft** (§7) | **gelesen → no** (§9.4) |
 | **`ui.nvim` / `lib.nvim`** Kit `TextChanged` ×6, `VimResized` ×6–8 | eine Registrierung pro Widget (`input`, `picker`, `preview`, `compare`, `toast`, …) | Scheint pro Widget zu sein, angelegt beim Öffnen und entfernt beim Schließen. Ein Dispatcher ist für langlebige Handler. (Nicht zeilenweise gelesen.) Außerdem doppelt gezählt, siehe §1 | **no** | unverändert |
 | **`images.nvim`** `WinClosed` ×5 | alle `once = true`, eine pro fensterbezogenem Feature | Pro-Fenster-Einmalhandler sind genau das, wofür das native `once` da ist | **no** | unverändert |
@@ -329,17 +332,12 @@ Stand nach der Umsetzung; Durchgestrichenes ist erledigt, das Übrige weiter off
   `once` wird weiterhin *vor* dem Aufruf verbraucht, ein dauerhaft werfender Handler
   wird also einmal pro Buffer gemeldet, nicht pro Event. Die Spec prüft das in beiden
   Modi und scheitert gegen die alte Schleife.
-- **Die fünf leeren `lsp.nvim`-Stubs löschen — noch nicht gemacht.** Der Plan:
-  `app/csharp`, `scripting/lua`, `systems/{c,go,zig}` entfernen, die Listen
-  `scripting` und `systems` samt Helfern aus `lua/lsp/languages/init.lua` streichen,
-  die passenden Aliasse aus `@types`, den Stub-Test in
-  `TESTS/lsp/languages_spec.lua` sowie die Zeilen und den Absatz „deliberate
-  placeholder“ in `docs/autocmds.md`. `docs/autocmds.md` nennt die Stubs derzeit
-  „deliberate … placeholders for future QoL additions“, das Löschen kehrt also eine
-  dokumentierte Entscheidung um. **Wartet auf Rückfrage.**
-- **Das Konzept-Doc in den Ruhestand schicken — noch nicht gemacht.**
-  `lib.nvim/ROADMAP/autocmd-dispatcher.md` trägt ein „shipped“-Banner, und der Eintrag
-  in `ROADMAP.md` ist durchgestrichen statt entfernt. **Wartet auf Rückfrage.**
+- **Die fünf leeren `lsp.nvim`-Stubs löschen — erledigt** (`lsp.nvim` `fe23c74`,
+  Details §9.4a). Der ursprüngliche Plan stimmte im Kern; abweichend von ihm ist
+  die Zahl der betroffenen Autocmds (sechs, nicht fünf: `LangC` hat zwei Patterns).
+- **Das Konzept-Doc in den Ruhestand schicken — erledigt** (WKDBooks `9384d4c`,
+  Details §9.6). Es lag nicht in `lib.nvim/ROADMAP/`, sondern in
+  `WKDBooks/Development/wkdbook-myplugins/lib.nvim/ROADMAP/`.
 
 ---
 
@@ -483,6 +481,40 @@ die einzige Reihenfolge-Anforderung im Code ist „vor dem ersten *Serverstart*
 registriert“ (`lsp/init.lua`) — nicht zwischen den vier Handlern. **Verdikt: no.**
 `lsp.nvim` ist damit vollständig geprüft; übrig bleibt nur das Löschen der Stubs (§8).
 
+### 9.4a `lsp.nvim`: die fünf Stubs
+
+Commit `fe23c74`. Vorher gelesen statt dem Plan aus §8 zu folgen; er stimmte, mit einer
+Ergänzung.
+
+- **Gelöscht:** `languages/app/csharp.lua`, `scripting/lua.lua`,
+  `systems/{c,go,zig}.lua` — damit sind die Ordner `scripting/` und `systems/` weg.
+  `app/` behält `java` und `dart`.
+- **`languages/init.lua`:** Listen `scripting_langs` / `system_langs` und die Helfer
+  `enable_scripting()` / `enable_systems()` samt Aufrufen entfernt, `app_langs` auf
+  `{ "java", "dart" }`. Der Kommentar, warum `shell` kein Modul hat (es kopierte
+  `lsp.servers.bashls` und registrierte den Server *ohne* Capabilities), stand über
+  der `scripting`-Liste und würde dort ins Leere hängen; er steht jetzt vor
+  `enable_all()` und sagt zusätzlich, wann ein Sprachmodul überhaupt hierher gehört.
+- **`@types`:** die Literale `Scripting` / `Systems` und fünf `…Module`-Aliasse
+  entfernt, `Literal.App` ist `"java"|"dart"`.
+- **Test:** der Block „the no-op language stubs“ in `TESTS/lsp/languages_spec.lua`
+  entfernt (fünf Tests). Er prüfte nur, dass die Stubs nichts tun.
+- **Doku:** `docs/autocmds.md` — Tabellenzeilen raus; der Absatz nannte die Stubs
+  „deliberate … placeholders“ und wurde neu geschrieben (statt nur gekürzt), damit die
+  Umkehr dieser Entscheidung dort nachvollziehbar bleibt. `lua/lsp/languages/README.md`
+  und `TESTS/README.md` nannten die Kategorien und sind angepasst.
+- **Abweichung vom Plan:** Der Doku-Absatz nannte „24 Autocmds ohne `desc`“. Die
+  sechs Stub-Registrierungen (`LangC` hat zwei Patterns) waren darin mitgezählt; der
+  Text sagt jetzt **18**. Das ist *abgeleitet* (24 − 6), nicht neu gemessen — die
+  restlichen Gruppen (`MasonEslintPrettier`, `ToolsNoiceIntegration`) laufen nicht in
+  `enable_all()` und habe ich nicht separat gezählt.
+- **Nicht betroffen:** Die Server selbst (`lsp.servers.lua_ls`, `clangd`, `gopls`,
+  `zig`, `csharp`) — die Stubs haben nie einen Server konfiguriert. In deiner
+  nvim-Config gibt es keine Referenz auf die entfernten Module.
+- **Ergebnis:** Volle Plenary-Suite (51 Spec-Dateien, sequenziell) 784 → **779**
+  Erfolge, 0 Failed, 0 Errors; `TESTS/smoke.lua` → `LSP_NVIM_SMOKE_OK`; stylua und
+  luacheck sauber (224 Dateien).
+
 ### 9.5 Prüfen und Reproduzieren
 
 `mdview.nvim` (aus `E:\repos\mdview.nvim`):
@@ -503,7 +535,41 @@ nvim --headless -u NONE -c "set rtp+=." -c "luafile TESTS/run.lua" -c "qa!"
 
 Erwartet: `MARKDOWN_TESTS_OK`.
 
+`lsp.nvim` (aus `E:\repos\lsp.nvim`; die Plenary-Suite braucht rund neun Minuten):
+
+```sh
+PLENARY_PATH="$LOCALAPPDATA/nvim-data/lazy/plenary.nvim" LIB_NVIM_PATH=../lib.nvim UI_NVIM_PATH=../ui.nvim \
+nvim --headless --noplugin -u TESTS/minimal_init.lua \
+  -c "PlenaryBustedDirectory TESTS/lsp { minimal_init = 'TESTS/minimal_init.lua', sequential = true }" -c "qa!"
+```
+
+Fallstrick dabei: Ist `PLENARY_PATH` falsch, bricht Neovim headless mit
+`E492: Not an editor command: PlenaryBustedDirectory` ab, **hängt aber, statt zu
+enden**. Immer mit `timeout` starten.
+
 Manuell (nicht automatisiert, siehe „Nicht verifiziert“ oben): `mdview` in einer echten
 Session — Start, Wechsel zwischen Markdown-Buffern unter `reuse` und `new_tab`, Stopp,
 Neustart — und in `markdown.nvim` ein TableView-Popup öffnen und danach eine *neue*
 Markdown-Datei öffnen (`:TableViewToggle` muss dort existieren).
+
+### 9.6 Das Konzept-Doc
+
+Es lag nicht in `lib.nvim` selbst, sondern im WKDBooks-Repo
+(`Development/wkdbook-myplugins/lib.nvim/ROADMAP/`), das die Konzept-Dokumente seit
+2026-09-12 hält. Commit WKDBooks `9384d4c`:
+
+- `ROADMAP/autocmd-dispatcher.md` → `FINISHED/autocmd-dispatcher.md` (`git mv`, die
+  Historie bleibt). Der Ordnername folgt `filetree.nvim/FINISHED/`; `lib.nvim` hatte
+  bisher nur `handovers/ERLEDIGT/`.
+- In `ROADMAP/ROADMAP.md` fehlt der durchgestrichene Eintrag jetzt; der Einleitungssatz
+  von „Open concepts“ sagt, dass Umgesetztes nach `../FINISHED/` wandert.
+- Der Status-Kasten des Docs bekam eine Notiz „Rollout, 2026-09-21: surveyed, closed“
+  mit dem Ergebnis (Struktur- statt Geschwindigkeits-Werkzeug, zweiter Nutzer
+  `mdview.nvim`, Rest bewusst nicht) und einem Verweis auf diesen Report.
+- Der Doc hat keine relativen Links, es brach also nichts durch das Verschieben. Die
+  einzige weitere Erwähnung (`rules.nvim/handovers/2026-09-12-v1-engine.md`) ist ein
+  datiertes Protokoll und blieb unverändert.
+- Beim Pushen lagen drei fremde, nicht committete Änderungen im WKDBooks-Arbeitsbaum
+  (`debugging.nvim`, `sandbox.nvim`, `lib.nvim/ROADMAP/dependency-installer.md`) — nicht
+  von dieser Arbeit. Ich habe nur die zwei eigenen Dateien committet und nichts
+  gestasht oder rebased.
