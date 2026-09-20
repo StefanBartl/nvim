@@ -19,21 +19,21 @@
 ## Table of content
 
   - [Legende](#legende)
-  - [Übersicht](#bersicht)
-  - [Arbeiotsspeicher.md — Speicher-Viewer](#arbeiotsspeichermd-speicher-viewer)
-  - [Better_TODOComments.md — TODO-Kommentar-Ersatz](#better_todocommentsmd-todo-kommentar-ersatz)
-  - [IDEAS.md — vier Einzelideen](#ideasmd-vier-einzelideen)
+  - [Übersicht](#übersicht)
+  - [Arbeiotsspeicher.md — Speicher-Viewer](#arbeiotsspeichermd--speicher-viewer)
+  - [Better_TODOComments.md — TODO-Kommentar-Ersatz](#better_todocommentsmd--todo-kommentar-ersatz)
+  - [IDEAS.md — vier Einzelideen](#ideasmd--vier-einzelideen)
     - [#1 Externe Deps durch Eigenimplementierungen ersetzen](#1-externe-deps-durch-eigenimplementierungen-ersetzen)
     - [#2 Wezterm-Integration (Tabs steuern, Wezterm-Statusline durch nvim ersetzen)](#2-wezterm-integration-tabs-steuern-wezterm-statusline-durch-nvim-ersetzen)
     - [#3 Screenkey-Integration](#3-screenkey-integration)
     - [#4 `lazy.nvim` nachbauen ("moderner, performanter, sicherer")](#4-lazynvim-nachbauen-moderner-performanter-sicherer)
-  - [TMUX_WEZTERM_USW.md — leer](#tmux_wezterm_uswmd-leer)
-  - [blueprint.nvim.md — Template-Bibliothek (Meta-Review)](#blueprintnvimmd-template-bibliothek-meta-review)
-  - [git_nvim.md — Git-Konsolidierung](#git_nvimmd-git-konsolidierung)
-  - [health.md — `:checkhealth`-Erweiterung](#healthmd-checkhealth-erweiterung)
-  - [slots.nvim.md — nummerierte Datei-Slots (Meta-Review)](#slotsnvimmd-nummerierte-datei-slots-meta-review)
-  - [spec.nvim.md — Test-Runner-Engine (Meta-Review)](#specnvimmd-test-runner-engine-meta-review)
-  - [test.md — neotest-Auslagerung (Meta-Review)](#testmd-neotest-auslagerung-meta-review)
+  - [TMUX_WEZTERM_USW.md — leer](#tmux_wezterm_uswmd--leer)
+  - [blueprint.nvim.md — Template-Bibliothek (Meta-Review)](#blueprintnvimmd--template-bibliothek-meta-review)
+  - [git_nvim.md — Git-Konsolidierung](#git_nvimmd--git-konsolidierung)
+  - [health.md — `:checkhealth`-Erweiterung](#healthmd--checkhealth-erweiterung)
+  - [slots.nvim.md — nummerierte Datei-Slots (Meta-Review)](#slotsnvimmd--nummerierte-datei-slots-meta-review)
+  - [spec.nvim.md — Test-Runner-Engine (Meta-Review)](#specnvimmd--test-runner-engine-meta-review)
+  - [test.md — neotest-Auslagerung (Meta-Review)](#testmd--neotest-auslagerung-meta-review)
   - [Priorisierungsvorschlag](#priorisierungsvorschlag)
 
 ---
@@ -171,7 +171,7 @@ sollte dorthin konsolidiert werden statt an zwei Stellen zu leben.
 
 ### #3 Screenkey-Integration
 
-→ siehe eigener Abschnitt [Screenkey.md](#screenkeymd--tastenanzeige), dort
+→ siehe eigener Abschnitt [Screenkey.md](#3-screenkey-integration), dort
 ausführlich behandelt. Kurzfassung: ja, aber als `ui.nvim`-Feature.
 
 ---
