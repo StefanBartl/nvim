@@ -1078,18 +1078,14 @@ plugins.add({
   },
 
   {
-    -- One :Git <scope> <action> command tree. Replaces vim-fugitive (blame)
-    -- and vim-rhubarb (:Gbrowse) -- both removed from plugins/git.lua,
-    -- since fugitive defines its own :Git command and two plugins racing to
-    -- register the same name is not a degrade-gracefully situation. Also
-    -- replaces akinsho/git-conflict.nvim (also removed from plugins/git.lua):
-    -- :Git conflict * covers the same nine commands and the same six
-    -- buffer-local keys (co/ct/cb/c0/]x/[x) now, with its own
-    -- BufReadPost/BufNewFile marker scan -- keeping both installed would
-    -- have meant two plugins racing to set the identical buffer-local keys.
-    -- kdheepak/lazygit.nvim stays installed for now: :Git ui lazygit is
-    -- still a stub (phase 3), and `<leader>lg` must keep working in the
-    -- meantime, not silently become a "not implemented yet" notification.
+    -- One :Git <scope> <action> command tree. Replaces vim-fugitive (blame),
+    -- vim-rhubarb (:Gbrowse), akinsho/git-conflict.nvim (:GitConflict* +
+    -- co/ct/cb/c0/]x/[x) and kdheepak/lazygit.nvim (the float + the nvr O/
+    -- <C-o> bridge) -- all four removed from plugins/git.lua. fugitive
+    -- defines its own :Git command (a hard collision, not just redundancy);
+    -- git-conflict.nvim would race gitsuite.nvim to set the same
+    -- buffer-local keys; lazygit.nvim's wrapper is fully superseded by
+    -- gitsuite's own float around the real `lazygit` binary.
     "StefanBartl/gitsuite.nvim",
     cmd = "Git",
     -- Conflict markers live in a buffer's text, so there is nothing to
@@ -1102,6 +1098,9 @@ plugins.add({
       -- Was fugitive's `:Git blame`; gitsuite's own blame is a real
       -- implementation (native git blame --porcelain), not a stub.
       { "<leader>gb", "<cmd>Git blame full<cr>", desc = "[gitsuite.nvim] Blame (full)" },
+      -- Was kdheepak/lazygit.nvim's `:LazyGit`; the UI is still the real
+      -- lazygit TUI, just in gitsuite.nvim's own float now.
+      { "<leader>lg", "<cmd>Git ui lazygit<cr>", desc = "[gitsuite.nvim] Open lazygit" },
     },
     config = function(_, opts)
       require("gitsuite").setup(opts)

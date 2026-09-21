@@ -1,32 +1,16 @@
 ---@module 'plugins.git'
---- Git integration via LazyGit, Gitsigns, and visual diff tools.
+--- Git integration via Gitsigns and visual diff tools -- git.nvim's own
+--- command tree (gitsuite.nvim, plugins/personal/init.lua) owns everything
+--- else that used to live here.
 
 ---@type LazyPluginSpec[]
 return {
 
-  -- LazyGit: External Git TUI (via `lazygit`)
-  {
-    "kdheepak/lazygit.nvim",
-    lazy = true,
-    cmd = {
-      "LazyGit",
-      "LazyGitConfig",
-      "LazyGitCurrentFile",
-      "LazyGitFilter",
-      "LazyGitFilterCurrentFile",
-      "LazyGitLog",
-    },
-    dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {
-      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "[LazyGit] Open UI" },
-    },
-    config = function()
-      -- Explicitly sets the editor command for Neovim's sub-processes
-      vim.g.lazygit_use_neovim_remote = 1 -- uses the internal nvim-remote feature if available
-
-      require("config.lazygit").setup()
-    end,
-  },
+  -- kdheepak/lazygit.nvim removed: gitsuite.nvim's `:Git ui lazygit`
+  -- (plugins/personal/init.lua) opens the same real `lazygit` binary in its
+  -- own floating terminal now, plus the nvr O/<C-o> bridge this plugin's
+  -- config used to own (ported to gitsuite.nvim's
+  -- features/ui/lazygit/{badd,replace}.lua -- lua/config/lazygit/ removed).
 
   -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
   {
