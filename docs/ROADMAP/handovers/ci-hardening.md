@@ -37,7 +37,7 @@
 | Abschlussprotokoll Runde 1+2 | `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md` |
 | Plugin-Repos | `E:\repos\<name>.nvim` |
 | CI-Verdikt je Plattform | `scripts/ci_status.sh [--red] [<name>]` (braucht `gh`) |
-| Vorlage für `publish-ci-verified` | `E:\repos\diff.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (vorwärts, fail-closed, `--force-with-lease`); gleiche Fassung in `lib.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `pickers.nvim`, `ui.nvim`, `documentation.nvim`; nur `lsp.nvim` hat noch die alte (siehe Kleinkram) |
+| Vorlage für `publish-ci-verified` | `E:\repos\diff.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (vorwärts, fail-closed, `--force-with-lease`); gleiche Fassung in allen acht Repos mit Publish-Job (`lib`, `hover`, `runtime-analysis`, `pickers`, `ui`, `documentation`, `lsp`, `diff`); Scan: Workflows nach `refs/heads/ci-verified` durchsuchen und `--force-with-lease` zählen |
 | Gelöschter Transformer | `git show 96c3b8537^:scripts/ci_hardening.py` — **ohne** die Pins für ui/documentation/pickers (diese Ergänzung ging mit der Löschung verloren; für einen Folge-Rollout `PIN_BRANCH` neu erweitern) |
 
 ## Erledigt 2026-09-21
@@ -96,6 +96,7 @@ umgesetzt.
 | `pickers.nvim` | `fa90048` | ersetzt die Vorwärts-Fassung mit `\|\| status=new`; `needs` unverändert |
 | `ui.nvim` | `3890818` | wie oben |
 | `documentation.nvim` | `088c27f` | wie oben; `needs` bleibt `stylua, luacheck, tests, map, standalone` |
+| `lsp.nvim` | `3147e92` | ersetzt das bedingungslose `--force` (`needs: [lint, test, smoke]` unverändert); `docs/CONTRIBUTING.md` sagt nicht mehr „force-pushes“ |
 
 Der Guard (Skript im Job-Schritt „Publish ci-verified“):
 
@@ -124,7 +125,7 @@ Der Guard (Skript im Job-Schritt „Publish ci-verified“):
 
 | Fund | Repo | Commit | Fix |
 |---|---|---|---|
-| Guard schluckte API-Fehler und hatte ein Race-Fenster (s. o.) | `diff`, `lib`, `hover`, `runtime-analysis`, `pickers`, `ui`, `documentation` | `a0807a9`, `2400f7e`, `dce6f07`, `4b513e4`, `fa90048`, `3890818`, `088c27f` | fail-closed + Lease; bei allen sieben lief der Lease-Pfad im echten Lauf (`<alt>...<neu> (forced update)`), `ci-verified` steht jeweils auf dem gepushten Commit |
+| Guard schluckte API-Fehler und hatte ein Race-Fenster (s. o.) | `diff`, `lib`, `hover`, `runtime-analysis`, `pickers`, `ui`, `documentation`, `lsp` | `a0807a9`, `2400f7e`, `dce6f07`, `4b513e4`, `fa90048`, `3890818`, `088c27f`, `3147e92` | fail-closed + Lease; bei allen acht lief der Lease-Pfad im echten Lauf (`<alt>...<neu> (forced update)`), `ci-verified` steht jeweils auf dem gepushten Commit |
 | Test überschrieb bei jedem lokalen Lauf das System-Clipboard mit „233“ (schon im Original; ein Restore-Versuch erwies sich als unzuverlässig) | `emojis.nvim` | `532d633` | In-Memory-Provider im Runner; `*` wird nun auch auf nacktem Linux getestet, das `has("clipboard")`-Gate entfällt |
 | Runner ließ Stubs nach einer fehlgeschlagenen Spec in die nächste lecken (Ursache des irreführenden `url_spec`-Fehlers) | `diff.nvim` | `4c2c5ad` | Snapshot/Restore pro Spec; mit absichtlich gebrochener Spec belegt: nur noch 1 statt 2 Fehlschläge |
 | `record_as_windows` stellte `platform.current` nicht wieder her, wenn `record` wirft | `filetree.nvim` | `498330d` | `pcall` + Restore + erneutes Werfen |
@@ -134,19 +135,13 @@ Geprüft ohne Befund: `fileops.nvim` `cad3e1a` (reine Formatierung),
 allen fünf berührten Repos **read-only** (`contents: write` gibt es nur im
 Publish-Job), der neue Publish-Schritt reicht `github.*`-Werte über `env:` durch
 statt sie in die Shell zu interpolieren, und keine Commit-Message trägt eine Co-Author-Zeile.
+Der Flotten-Scan findet keinen Publish-Job mehr ohne Guard (8 von 8), und
 `scripts/ci_status.sh` bestätigt am Ende: **39 / 39 voll grün**.
 
 ## Offene Punkte
 
 ### Kleinkram
 
-- **`lsp.nvim` hat noch die alte Publish-Fassung:** ein bedingungsloses
-  `git push origin HEAD:refs/heads/ci-verified --force`, `needs: [lint,
-  test, smoke]`. Beim flottenweiten Scan (Workflows nach
-  `refs/heads/ci-verified` durchsucht, dann `--force-with-lease` gezählt)
-  entdeckt; die frühere Liste der Repos mit alter Fassung nannte es nicht.
-  Kein Teil der freigegebenen Repos, deshalb nicht angefasst. Gleicher
-  Austausch wie in `diff.nvim`, danach `needs:` beibehalten.
 - **13 Kind-Prozess-Spawns in Specs** (`"--headless"` in `casedesk`,
   `cmdlog`, `insights`, `language`, `media`, `pdfport` u. a.) ohne
   `-n`/`--clean`: prüfen, ob eines davon Dateien öffnet (E326-Risiko), bevor
