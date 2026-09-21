@@ -3,9 +3,9 @@
 > Der Flotten-Rollout der CI-Sofortmaßnahmen ist **fertig** (2026-09-21, alle
 > 39 Plugin-Repos, Protokoll:
 > [sofortmassnahmen.md](../personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md)).
-> Die vier danach noch roten Repos sind **repariert** (siehe
-> [Erledigt](#erledigt-2026-09-21)); offen ist der `ci-verified`-Branch für
-> `diff.nvim` samt Pin in `gitsuite.nvim` und der Kleinkram.
+> Die vier danach noch roten Repos sind **repariert**, `diff.nvim`
+> veröffentlicht `ci-verified` und `gitsuite.nvim` pinnt darauf (siehe
+> [Erledigt](#erledigt-2026-09-21)); offen bleibt nur der Kleinkram.
 
 ## Table of content
 
@@ -13,8 +13,7 @@
 - [Orte](#orte)
 - [Erledigt 2026-09-21](#erledigt-2026-09-21)
 - [Offene Punkte](#offene-punkte)
-  - [1. diff.nvim: ci-verified veröffentlichen, gitsuite pinnen](#1-diffnvim-ci-verified-veröffentlichen-gitsuite-pinnen)
-  - [2. Kleinkram](#2-kleinkram)
+  - [Kleinkram](#kleinkram)
 - [Handwerkszeug](#handwerkszeug)
 
 ---
@@ -45,7 +44,8 @@
 
 Alle vier waren schon vor dem Rollout rot; die Ursachen lagen ausnahmslos im
 **Testcode**, nicht im Produktcode. Stand nach den Fixes: CI voll grün auf
-ubuntu, windows und macOS in `fileops`, `emojis`, `diff` und `filetree`.
+ubuntu, windows und macOS in `fileops`, `emojis`, `diff` und `filetree`
+(damit 39 von 39 Repos grün).
 
 | Repo | Commit | Ursache | Fix |
 |---|---|---|---|
@@ -70,28 +70,21 @@ Lehren (auch für künftige rote Repos):
   Produktcode, zwingt man den Test in diese Verzweigung, statt ihn
   „zufällig" nur unter Windows grün zu haben.
 
+### `ci-verified` für diff.nvim
+
+Der Auto-Mode-Classifier lehnte das Anlegen des Jobs zunächst ab (Kategorie
+„Unauthorized Persistence“: ein CI-Job, der per `--force` einen
+Remote-Branch überschreibt); nach ausdrücklicher Freigabe des Nutzers
+umgesetzt.
+
+| Repo | Commit | Was |
+|---|---|---|
+| `diff.nvim` | `84987ab` | Job `publish-ci-verified` (`needs: [lint, tests]`, Vorwärts-Guard wie in pickers.nvim). CI grün, `ci-verified` steht auf `84987ab` |
+| `gitsuite.nvim` | `b458053` | `diff.nvim`-Checkout mit `ref: ci-verified`; der letzte ungepinnte Konsument. CI grün auf allen drei Plattformen |
+
 ## Offene Punkte
 
-### 1. diff.nvim: ci-verified veröffentlichen, gitsuite pinnen
-
-`diff.nvim` ist jetzt grün auf allen drei Plattformen, die Voraussetzung ist
-erfüllt. Noch **nichts davon ist umgesetzt** — der Auto-Mode-Classifier
-lehnte das Anlegen des Jobs ab (Kategorie „Unauthorized Persistence": ein
-CI-Job, der per `--force` einen Remote-Branch überschreibt). Es bleibt eine
-bewusste Freigabe des Nutzers.
-
-1. `publish-ci-verified`-Job an `diff.nvim/.github/workflows/ci.yml` anhängen.
-   Vorlage: pickers.nvim (Vorwärts-Guard), `needs: [lint, tests]` — in
-   diff.nvim heißen die Jobs `lint` und `tests`, nicht `lint`/`test`.
-   Die Datei ist im Arbeitsbaum **LF** (nicht CRLF), `python`-Skript reicht.
-2. Push, CI grün abwarten, `git ls-remote --heads
-   https://github.com/StefanBartl/diff.nvim ci-verified` bestätigen.
-3. In `gitsuite.nvim/.github/workflows/ci.yml` (Zeile ~53, Job-Schritt
-   „Checkout diff.nvim") `ref: ci-verified` ergänzen; der einzige noch
-   ungepinnte Konsument. Erst **nach** Schritt 2, sonst schlägt der Checkout
-   auf einen nicht existierenden Branch fehl.
-
-### 2. Kleinkram
+### Kleinkram
 
 - **Publish-Guard nachziehen** (Review-Fund vom 2026-09-21): der Job in
   `pickers.nvim`/`ui.nvim`/`documentation.nvim` veröffentlicht `ci-verified`
