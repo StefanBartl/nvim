@@ -221,6 +221,10 @@ startup.now("lsp", function()
     -- Stage/Reset/Preview Hunk in the `lsa` list when the cursor is on a hunk.
     -- Trial from 2026-09-21; drop the line to go back to the default (off).
     code_actions = { gitsigns = true },
+    -- Count of implementers at the end of an `interface` line (`3 impl`).
+    -- Measured 2026-09-21: capped at `max_requests` per round, one round per
+    -- typing pause, no event-loop stall. Drop the line to go back to off.
+    implement = { enable = true },
     -- The plugin-name list is this config's data, so it is handed over rather
     -- than reached for. Passed here and not from a completion engine's spec:
     -- it used to be wired from nvim-cmp's `opts`, which meant switching to

@@ -3,7 +3,8 @@
 **Stand:** 2026-09-21
 
 Alles Umgesetzte (10 Lücken + eigener Winbar-Breadcrumb, lspsaga entfernt, `code_actions.gitsigns` als
-Probe an, altes `lazy/lspsaga.nvim` gelöscht, lspsaga-Reste in der Plugin-Roadmap markiert) ist archiviert in
+Probe an, `implement` an (gemessen), altes `lazy/lspsaga.nvim` gelöscht, lspsaga-Reste in der
+Plugin-Roadmap markiert) ist archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
 (Code: `StefanBartl/lsp.nvim` `e49fdbe` + `e6d716d`, auf `main` und `origin/main`).
 Hier steht nur, was noch zu tun oder zu entscheiden ist.
@@ -16,32 +17,20 @@ merklich Zeit). Beides Schätzungen, keine Messungen.
 ## Nach Aufwand / Nutzen
 
 Reihenfolge = was man zuerst tun sollte (viel Nutzen für wenig Aufwand oben). Der Abschluss-Task steht
-zuletzt und blockiert nichts: er braucht dein echtes Terminal und ist von 1–2 unabhängig.
+zuletzt und blockiert nichts: er braucht dein echtes Terminal und ist von 1 unabhängig.
 
 | Rang | Punkt | Art | Aufwand | Nutzen |
 |---|---|---|---|---|
-| 1 | [Implementations-Marker im Alltag messen, dann entscheiden](#1-implementations-marker-messen) | Messen + Entscheiden | S | 2 |
-| 2 | [Type Hierarchy an clangd/jdtls/dartls prüfen](#2-type-hierarchy-an-anderen-servern) | Prüfen | S | 1 |
+| 1 | [Type Hierarchy an clangd/jdtls/dartls prüfen](#1-type-hierarchy-an-anderen-servern) | Prüfen | S | 1 |
 | A | [**Abschluss: deine Prüfungen im echten Terminal**](#abschluss-deine-prüfungen-im-echten-terminal) | Prüfen (nur du) | XS–S | 4 |
 
-2 erst, wenn ein solcher Server überhaupt im Alltag ist.
+1 erst, wenn ein solcher Server überhaupt im Alltag ist.
 
 ---
 
 ## Die Punkte
 
-### 1. Implementations-Marker messen
-
-`implement.enable` ist per Default **aus** (`:Lsp implement`). Geprüft gegen ts_ls (`2 impl` an
-`interface Repository`), aber die Dauerlast im Alltag — zusätzliche `textDocument/implementation`-
-Anfragen pro Buffer — ist nicht gemessen. lspsaga-Lightbulb hatte damals ~214 ms im Startup-Sample.
-Nutzen nur in TS/Go/Java, nicht in Lua/Markdown.
-
-- Vorgehen: in einem TS-Projekt einschalten, `implement.max_requests` / `debounce_ms` beobachten,
-  Startup- und Tipp-Latenz vergleichen; dann an lassen oder wieder aus.
-- **Aufwand S, Nutzen 2.**
-
-### 2. Type Hierarchy an anderen Servern
+### 1. Type Hierarchy an anderen Servern
 
 lua_ls, marksman und ts_ls liefern sie nicht (gemessen); `lsh`/`lsH` antworten dort mit einem Hinweis,
 wer sie kann. Dass `clangd`, `jdtls` und `dartls` sie liefern, stammt aus Wissen über die Server, nicht
@@ -86,7 +75,8 @@ export function total(a: number, b: number): number {
 | A3 | `l` im Visual-Mode wartet nicht mehr | `V`, dann `l`/`j` drücken, `vl`, `vjl` | Selektion wächst sofort, kein Hänger von `timeoutlen` | `mapcheck("l","x")` gemessen (Fix in `e6d716d`); nicht gefühlt |
 | A4 | gitsigns-Hunk-Aktionen (Probe) | Zeile in einem geänderten Hunk, `lsa` | „Stage / Reset / Preview Hunk“ in der Liste; „Stage hunk“ stagt wirklich. Auch bei einer **gelöschten** Zeile am Dateianfang/-ende | Gegen echtes gitsigns geprüft; Randfälle per Test; nicht im Alltag |
 | A5 | Peek: übernommener Buffer ist gelistet | `lsp` auf einem Symbol, im Float `<C-o>` / `<C-v>` / `<C-x>` / `<C-t>`; danach `:ls` und Tabline/Buffer-Picker | Der Buffer taucht auf | Per Test, Fix in `e6d716d`; nicht von Hand |
-| A6 | Winbar-Trenner | Lua-Datei in einer Funktion öffnen | Trenner `›` sauber (kein `â€º`) zwischen den Chips | Kodierung per Test abgesichert; nicht angesehen |
+| A6 | Implementations-Marker (Probe) | `.ts`-Datei mit `interface Repo {…}` und einer Klasse, die es `implements`, ein paar Sekunden warten | Am Zeilenende des Interfaces `1 impl` (Comment-Farbe); nach einer Änderung an der Klasse aktualisiert es sich. Beim schnellen Tippen kein Ruckeln | Gemessen (siehe Archiv): Kosten vernachlässigbar, an echtem ts_ls gezeichnet; nicht im echten Fenster gesehen |
+| A7 | Winbar-Trenner | Lua-Datei in einer Funktion öffnen | Trenner `›` sauber (kein `â€º`) zwischen den Chips | Kodierung per Test abgesichert; nicht angesehen |
 
 Wenn A1 oder A2 scheitern: `code_actions.picker = "native"` in `init.lua` als Fallback und den
 Befund melden.
@@ -96,5 +86,7 @@ Befund melden.
 ## Nicht geprüft / Grenzen
 
 - Aufwand- und Nutzen-Werte oben sind Schätzungen auf Basis deines Stacks (Lua, Markdown, TS/Astro).
-- A3–A6 stammen aus dem Commit `e6d716d`; ich habe nur gelesen, was dort als gemessen bzw. getestet
+- Der Implementations-Marker wurde nur gegen tsserver gemessen (synthetische Projekte mit 5/20/200
+  Interfaces, zwei echte Projekte); tsserver-CPU und große Monorepos nicht.
+- A3–A5 und A7 stammen aus dem Commit `e6d716d`; ich habe nur gelesen, was dort als gemessen bzw. getestet
   steht, nicht jede Aussage selbst neu gemessen.
