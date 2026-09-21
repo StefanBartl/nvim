@@ -1078,6 +1078,31 @@ plugins.add({
   },
 
   {
+    -- One :Git <scope> <action> command tree replacing vim-fugitive (blame)
+    -- and vim-rhubarb (:Gbrowse) -- both removed from plugins/git.lua in the
+    -- same commit that adds this spec, since fugitive defines its own :Git
+    -- command and two plugins racing to register the same name is not a
+    -- degrade-gracefully situation. git-conflict.nvim and kdheepak/
+    -- lazygit.nvim stay installed for now: neither collides with anything
+    -- gitsuite.nvim defines yet, and their features (:GitConflict*, the
+    -- lazygit float) migrate here feature by feature, not in one cutover --
+    -- `<leader>lg` stays kdheepak/lazygit.nvim's until :Git ui lazygit is a
+    -- real implementation (phase 3), not a stub that would silently replace
+    -- a working shortcut with a "not implemented yet" notification.
+    "StefanBartl/gitsuite.nvim",
+    cmd = "Git",
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim", "StefanBartl/open.nvim" },
+    keys = {
+      -- Was fugitive's `:Git blame`; gitsuite's own blame is a real
+      -- implementation (native git blame --porcelain), not a stub.
+      { "<leader>gb", "<cmd>Git blame full<cr>", desc = "[gitsuite.nvim] Blame (full)" },
+    },
+    config = function(_, opts)
+      require("gitsuite").setup(opts)
+    end,
+  },
+
+  {
     -- JSON/YAML/XML pretty/compact/lines/keys/sort/filter, range-aware
     -- (buffer or visual selection), plus :Data for format auto-detection.
     -- All four commands must be listed here, not just "JSON" -- lazy.nvim

@@ -67,27 +67,10 @@ return {
     },
   },
 
-  -- Fugitive: lightweight, CLI-oriented Git inside Neovim
-  -- :Git, :Gstatus (via :Git), :Gblame, :Gbrowse (with rhubarb)
-  --
-  -- `<leader>gd` used to be `:Gdiffsplit` here. It is diff.nvim's
-  -- `:Diff target=git:HEAD` now (plugins/personal/init.lua) -- the same
-  -- file-vs-HEAD diff, in the plugin that already owns every other diff
-  -- view in this config. Blame is the one fugitive feature left in use.
-  {
-    "tpope/vim-fugitive",
-    event = "VeryLazy", -- or load on Git buffers: "BufReadPost"
-    keys = {
-      -- Blame
-      { "<leader>gb", "<cmd>Git blame<cr>", desc = "Git blame" },
-    },
-  },
-  {
-    -- Optional: :Gbrowse to open current file/selection in hosting provider
-    "tpope/vim-rhubarb",
-    event = "VeryLazy",
-    dependencies = { "tpope/vim-fugitive" },
-  },
+  -- vim-fugitive/vim-rhubarb removed (gitsuite.nvim, plugins/personal/init.lua):
+  -- both `:Git blame` (`<leader>gb`) and `:Gbrowse` are now gitsuite.nvim's
+  -- own `:Git blame full`/`:Git browse *`, and fugitive's own `:Git` command
+  -- would collide with gitsuite.nvim's if both were loaded.
 
   {
     "akinsho/git-conflict.nvim",

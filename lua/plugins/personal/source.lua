@@ -136,6 +136,7 @@ plugins.modes({
   ["debugging.nvim"] = "dir",
   ["dap.nvim"] = "dir",
   ["diff.nvim"] = "dir",
+  ["gitsuite.nvim"] = "dir",
   ["language.nvim"] = "dir", -- basename of spec "StefanBartl/language.nvim"
   ["cmdlog.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
