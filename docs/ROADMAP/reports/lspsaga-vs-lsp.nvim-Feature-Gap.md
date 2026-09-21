@@ -19,7 +19,7 @@ weil lspsaga sowieso raus sollte:
 |---|---|---|---|
 | 1 | Peek Definition / Type Definition | eigenes Modul `core/peek/` (editierbares Float, Stack, Aktionen in Fenster/Split/Tab, Beacon) | `lsp` / `lsT`, `:Lsp peek` |
 | 2 | Finder | `FzfLua lsp_finder` mit `finder.*` als Quellen | `lsf` |
-| 3 | Code-Action mit Diff-Vorschau | `FzfLua lsp_code_actions` (`silent`), Fallback nativ, `code_actions.picker` | `lsa` (n + x) |
+| 3 | Code-Action mit Diff-Vorschau | `FzfLua lsp_code_actions` (`silent`), Fallback nativ, `code_actions.picker` | `lsa` (n), `gra` (x) |
 | 4 | Outline | `Trouble symbols toggle` | `<leader>xo` |
 | 5 | Type Hierarchy | `lsp_type_super/sub`, vorher Capability-Check mit Klartext-Meldung | `lsh` / `lsH` |
 | 6 | gitsigns-Hunk-Aktionen in Code-Actions | kleiner In-Process-LSP-Server (`core/gitsigns_actions.lua`), **aus** per Default | `code_actions.gitsigns = true` |
@@ -38,7 +38,13 @@ Zu den offenen Punkten am Ende des Reports:
 
 - **Type Hierarchy:** keiner der drei gemessenen Server (lua_ls, marksman,
   ts_ls) liefert sie. Die Taste antwortet dort mit dem Hinweis, wer sie kann.
-- **`lsa` im Visual-Mode (`range`):** als `n`+`x` gebunden. Gemessen: der
+- **Code-Action im Visual-Mode (`range`):** `lsa` ist nur `n` gebunden; die
+  Selektion hat einen eigenen Katalog-Eintrag `code_action_range` auf `gra`
+  (`x`). *Korrektur (2026-09-21):* zuerst war `lsa` `n`+`x`, und das ließ jedes
+  `l` im Visual-Mode auf `timeoutlen` warten (`mapcheck("l", "x")` lieferte
+  genau dieses Mapping; `vl`/`vjl` erweitern die Selektion). `gra` ist in `x`
+  schon Präfix (Neovims eigenes Mapping) und lässt damit keine Taste warten.
+  Gemessen: der
   Callback läuft im Visual-Mode (`V`), und dieser Modus kommt in
   `FzfLua lsp_code_actions` an; `vim.lsp.buf.code_action` liest die Selektion
   (`range_from_selection`, Neovim-Runtime), und fzf-lua ruft genau das auf.
