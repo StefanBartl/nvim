@@ -1078,19 +1078,25 @@ plugins.add({
   },
 
   {
-    -- One :Git <scope> <action> command tree replacing vim-fugitive (blame)
-    -- and vim-rhubarb (:Gbrowse) -- both removed from plugins/git.lua in the
-    -- same commit that adds this spec, since fugitive defines its own :Git
-    -- command and two plugins racing to register the same name is not a
-    -- degrade-gracefully situation. git-conflict.nvim and kdheepak/
-    -- lazygit.nvim stay installed for now: neither collides with anything
-    -- gitsuite.nvim defines yet, and their features (:GitConflict*, the
-    -- lazygit float) migrate here feature by feature, not in one cutover --
-    -- `<leader>lg` stays kdheepak/lazygit.nvim's until :Git ui lazygit is a
-    -- real implementation (phase 3), not a stub that would silently replace
-    -- a working shortcut with a "not implemented yet" notification.
+    -- One :Git <scope> <action> command tree. Replaces vim-fugitive (blame)
+    -- and vim-rhubarb (:Gbrowse) -- both removed from plugins/git.lua,
+    -- since fugitive defines its own :Git command and two plugins racing to
+    -- register the same name is not a degrade-gracefully situation. Also
+    -- replaces akinsho/git-conflict.nvim (also removed from plugins/git.lua):
+    -- :Git conflict * covers the same nine commands and the same six
+    -- buffer-local keys (co/ct/cb/c0/]x/[x) now, with its own
+    -- BufReadPost/BufNewFile marker scan -- keeping both installed would
+    -- have meant two plugins racing to set the identical buffer-local keys.
+    -- kdheepak/lazygit.nvim stays installed for now: :Git ui lazygit is
+    -- still a stub (phase 3), and `<leader>lg` must keep working in the
+    -- meantime, not silently become a "not implemented yet" notification.
     "StefanBartl/gitsuite.nvim",
     cmd = "Git",
+    -- Conflict markers live in a buffer's text, so there is nothing to
+    -- detect before one is read -- same eager-ish trigger git-conflict.nvim
+    -- used, needed here too since gitsuite.nvim's conflict scan/highlight/
+    -- keymap setup must not wait for the user to type :Git first.
+    event = { "BufReadPost", "BufNewFile" },
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim", "StefanBartl/open.nvim" },
     keys = {
       -- Was fugitive's `:Git blame`; gitsuite's own blame is a real

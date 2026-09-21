@@ -72,14 +72,11 @@ return {
   -- own `:Git blame full`/`:Git browse *`, and fugitive's own `:Git` command
   -- would collide with gitsuite.nvim's if both were loaded.
 
-  {
-    "akinsho/git-conflict.nvim",
-    version = "*",
-    config = true,
-    -- Conflict markers live in a buffer's text, so there is nothing to detect
-    -- before one is read. BufReadPost is also early enough for the first
-    -- buffer: the plugin's own scan hangs off BufEnter, which fires *after*
-    -- BufReadPost, so the file opened on the command line is still seen.
-    event = { "BufReadPost", "BufNewFile" },
-  },
+  -- akinsho/git-conflict.nvim removed: gitsuite.nvim's `:Git conflict *`
+  -- (plugins/personal/init.lua) covers the same nine commands and the same
+  -- six buffer-local keys (co/ct/cb/c0/]x/[x) now, with its own
+  -- BufReadPost/BufNewFile marker scan -- keeping both installed would have
+  -- meant two plugins racing to set the identical buffer-local keys the
+  -- moment a conflict is found, an actual behavioural collision, not just a
+  -- redundant install.
 }
