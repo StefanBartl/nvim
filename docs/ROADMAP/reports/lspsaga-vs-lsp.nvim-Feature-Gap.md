@@ -1,6 +1,7 @@
 # lspsaga.nvim → lsp.nvim — offene Punkte
 
-**Stand:** 2026-09-21, nach dem Review der Config-Commits (Befunde 1–4 behoben, siehe unten)
+**Stand:** 2026-09-21, nach dem Review der Config-Commits (Befunde 1–4 behoben) und Rang 2/3 aus der
+Aufwand/Nutzen-Tabelle (siehe unten)
 
 ## Commits dieser Arbeit (ohne WKDBooks)
 
@@ -20,8 +21,18 @@ stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBoo
 | `9b60d98` | 23:14 | fix(gitsigns_actions): Force-Stop hinterlässt keinen Zombie-Client mehr; lsp.nvims eigene Clients zählen nicht als Sprachserver (Winbar, `:Lsp stop`/`restart`) |
 | `12e4e8e` | 23:20 | fix(gitsigns_actions): Stage/Reset/Preview wirken auf die Selektion, für die sie angeboten wurden |
 | `e50e10a` | 23:20 | fix(implement): eine Runde, deren Text sich nach dem Versand geändert hat, zeichnet nichts |
+| `8895cd8` | — | fix(actions): `lsh`/`lsH`-Meldung nennt gopls als gemessenen Type-Hierarchy-Server (Rang 2) |
 
 CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verified` veröffentlicht.
+CI zu `8895cd8`: grün (2m11s).
+
+**`StefanBartl/ui.nvim`** — die Statuszeile
+
+| SHA | Zeit | Inhalt |
+|---|---|---|
+| `d96fe16` | — | fix(statusline): lsp.nvims eigener In-Process-Client zählt in Label und Datei-Icon nicht mehr als Sprachserver (Rang 3, zweite Hälfte von Review-Befund 1) |
+
+CI zu `d96fe16`: grün (1m12s).
 
 **`StefanBartl/nvim`** — diese Config (Doku, Bindings, Schalter)
 
@@ -38,17 +49,18 @@ CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verifi
 `225dd0ab5` hieß zuerst `138c4a175`: eine andere Sitzung hat den Commit per `--amend` umgeschrieben und
 dabei eine Zeile in `docs/ROADMAP/ROADMAP.md` (die Usage-Tabelle) mit hineingenommen. Der Report-Inhalt
 ist derselbe. Der Commit dieser Aktualisierung steht direkt darüber im `git log` der Config.
-Andere Repos (documentation.nvim, ui.nvim, pickers.nvim, lib.nvim) hatten heute nur CI- und fremde
-Arbeit; nichts davon gehört zu dieser Aufgabe.
+`ui.nvim` bekam mit `d96fe16` echte Arbeit für diese Aufgabe (Rang 3, s. o.). Andere Repos
+(documentation.nvim, pickers.nvim, lib.nvim) hatten heute nur CI- und fremde Arbeit; nichts davon gehört
+zu dieser Aufgabe.
 
 ## Wohin das Erledigte gewandert ist
 
 Alles Umgesetzte (10 Lücken + eigener Winbar-Breadcrumb, lspsaga entfernt, `code_actions.gitsigns` als
 Probe an, `implement` an (gemessen), altes `lazy/lspsaga.nvim` gelöscht, lspsaga-Reste in der
-Plugin-Roadmap markiert), **die Type-Hierarchy-Messung** und **die vier behobenen Review-Befunde**
-liegen archiviert in
+Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen Review-Befunde** und
+**Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)** liegen archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
-(dort „Nachtrag“, „Nachtrag 2“ und „Nachtrag 3“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
+(dort „Nachtrag“ bis „Nachtrag 4“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart
 merklich Zeit). Beides Schätzungen, keine Messungen.
@@ -63,81 +75,21 @@ Bedingung geknüpft sind, nach den unbedingten. Die Spalte „Wer“ sagt, ob ic
 | Rang | Punkt | Wer | Repo | Aufwand | Nutzen |
 |---|---|---|---|---|---|
 | 1 | [**Abschluss: Prüfungen im echten Terminal (A1–A10)**](#abschluss-deine-prüfungen-im-echten-terminal) | du | — | XS–S (~20 min) | 4 |
-| 2 | [`lsh`/`lsH`-Meldung: gopls nennen](#2-lshlsh-meldung-gopls-nennen) | ich | lsp.nvim | XS | 2 |
-| 3 | [Statuszeile und Datei-Icon zeigen den In-Process-Client](#3-statuszeile-und-datei-icon-zeigen-den-in-process-client) | ich | ui.nvim | XS–S (~30 min) | 3 |
-| 4 | [Selbstrekursion bei „outgoing“ zeigen?](#4-selbstrekursion-bei-outgoing) | Entscheidung | documentation.nvim | XS | 1 |
-| 5 | [`UiSticky.md`: zwei Ungenauigkeiten](#5-uistickymd-zwei-ungenauigkeiten) | ich | Config | XS | 1 |
-| 6 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
-| 7 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
-| 8 | [Hunk-Spannen cachen](#8-hunk-spannen-cachen) | ich | lsp.nvim | S | 1 |
-| 9 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
+| 2 | [Selbstrekursion bei „outgoing“ zeigen?](#4-selbstrekursion-bei-outgoing) | Entscheidung | documentation.nvim | XS | 1 |
+| 3 | [`UiSticky.md`: zwei Ungenauigkeiten](#5-uistickymd-zwei-ungenauigkeiten) | ich | Config | XS | 1 |
+| 4 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
+| 5 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
+| 6 | [Hunk-Spannen cachen](#8-hunk-spannen-cachen) | ich | lsp.nvim | S | 1 |
+| 7 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
 
 Rang 1 kommt zuerst, weil es das Billigste und Nützlichste ist und alles andere Umgesetzte erst danach
-„wirklich“ als abgenommen gilt. Rang 2 hängt teilweise an Rang 1 (A8 zeigt die Meldung im echten
-Fenster). Rang 3 ist die zweite Hälfte von Review-Befund 1: der lsp.nvim-Teil ist behoben, der ui.nvim-Teil
-ist täglich sichtbar. Rang 9 nur, wenn Rust im Alltag ist.
+„wirklich“ als abgenommen gilt. Die früheren Rang 2 (`lsh`/`lsH`-Meldung, gopls) und Rang 3 (ui.nvim-
+Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4, s. o.); der letzte Rang nur, wenn Rust
+im Alltag ist.
 
 ---
 
 ## Die Punkte
-
-### 2. `lsh`/`lsH`-Meldung: gopls nennen
-
-**Messstand (echte Anfragen an die installierten Server, frühere Sitzung, nicht neu gemessen):**
-
-| Server | Type Hierarchy | Echte Antwort |
-|---|---|---|
-| clangd | ja | Supertypen von `Derived` = `Base` |
-| gopls | **ja** | Subtypen von `Shape` = `Sq` |
-| jdtls | ja | Supertypen von `Sq` = `Shape` |
-| ts_ls, vtsls, lua_ls, zls, pylsp | nein | — |
-| rust-analyzer | nicht gemessen | nicht installiert (nur die rustup-Verknüpfung ohne Komponente) |
-
-Neu gegenüber der Annahme im Report: **gopls kann es.** Die Meldung von `lsh`/`lsH` nennt aber nur
-„clangd, jdtls, dartls“ (aus Wissen über die Server, nicht gemessen — `dartls` ist weiter ungemessen).
-Für deine Sprachen (C/C++, Java, Go) ist Type Hierarchy sinnvoll, für TS und Lua nicht, weil deren Server
-sie nicht liefern. Die Tasten gibt es schon und sie prüfen vorher die Fähigkeit; es fehlt nur der Text.
-
-Stellen (Zeilen im Stand `e50e10a`, per `grep dartls` nachzusehen):
-
-- `lua/lsp/bindings/actions.lua` (Doc-Kommentar und Meldung)
-- `lua/lsp/config/KEYMAPS.lua` (Kommentar)
-- `docs/FEATURES/NAVIGATION.md`
-- `TESTS/lsp/navigation_features_spec.lua` — prüft nur, dass die Meldung `clangd` enthält; bleibt
-  grün, sollte aber um `gopls` ergänzt werden
-
-Vorschlag: „clangd, gopls, jdtls“ als gemessen nennen, `dartls` mit dem Zusatz „laut Server-Doku“ oder
-streichen. Danach `lsh`/`lsH` einmal in einer Go-Datei im echten Fenster sehen (= A8).
-
-**Aufwand XS, Nutzen 2.**
-
----
-
-### 3. Statuszeile und Datei-Icon zeigen den In-Process-Client
-
-Zweite Hälfte von Review-Befund 1. Mit `code_actions.gitsigns = true` hängt der Client `lsp.nvim-gitsigns` an
-jedem Buffer, den gitsigns trackt. Der lsp.nvim-Teil ist behoben (Winbar, `:Lsp stop`/`restart` sehen ihn
-nicht mehr, `9b60d98`); **ui.nvim** listet aber `vim.lsp.get_clients()` selbst.
-
-**Gemessen** (echte Config, Wegwerf-Repo, headless, vor dem Fix in lsp.nvim; ui.nvim ist unverändert):
-
-| Buffer | Clients (in Reihenfolge) | Chip der Statuszeile |
-|---|---|---|
-| getrackte `notes.txt` | `lsp.nvim-gitsigns` | `LSP ~ lsp.nvim-gitsigns` |
-| getrackte `mod.lua` | `lsp.nvim-gitsigns`, `lua_ls` | `LSP ~ lsp.nvim-gitsigns` — **nicht** `lua_ls` |
-| `notes.txt` außerhalb eines Repos | — | leer |
-
-- `ui/statusline/utils/primitives.lua` (`M.lsp`) nimmt den **ersten** Client, der am Buffer hängt. Wer zuerst
-  gestartet ist, entscheidet; öffnest du zuerst eine `.txt`, hat der Fake-Client die niedrigere Id.
-- `ui/statusline/modules/file_icons/devicons.lua:230` zeigt das Icon nur bei angehängtem Client, also jetzt
-  auch auf Dateien ohne Server. Nur im Quelltext gesehen, nicht gemessen.
-
-Fix in **ui.nvim**: Clients mit dem Präfix `lsp.nvim-` überspringen. ui.nvim darf lsp.nvim nicht laden; der
-Präfix ist der Vertrag (`lsp.core.util.INTERNAL_PREFIX`). Spec mit Stub-Clients, danach CI beider Repos.
-
-**Aufwand XS–S (~30 min), Nutzen 3** — die Statuszeile ist täglich sichtbar.
-
----
 
 ### 4. Selbstrekursion bei „outgoing“
 
@@ -297,7 +249,7 @@ export function total(a: number, b: number): number {
 | A5 | Peek: übernommener Buffer ist gelistet | `lsp` auf einem Symbol, im Float `<C-o>` / `<C-v>` / `<C-x>` / `<C-t>`; danach `:ls` und Tabline/Buffer-Picker | Der Buffer taucht auf | Per Test, Fix in `e6d716d`; nicht von Hand |
 | A6 | Implementations-Marker (Probe) | `.ts`-Datei mit `interface Repo {…}` und einer Klasse, die es `implements`, ein paar Sekunden warten | Am Zeilenende des Interfaces `1 impl` (Comment-Farbe); nach einer Änderung an der Klasse aktualisiert es sich. Beim schnellen Tippen kein Ruckeln und **keine Marker auf der falschen Zeile**, auch wenn du im Insert-Mode über dem Interface eine Zeile tippst | Gemessen (siehe Archiv), Veraltungs-Fix `e50e10a` per Spec; nicht im echten Fenster gesehen |
 | A7 | Winbar-Trenner | Lua-Datei in einer Funktion öffnen | Trenner `›` sauber (kein `â€º`) zwischen den Chips | Kodierung per Test abgesichert; nicht angesehen |
-| A8 | Type Hierarchy im echten Fenster | In einer Go-Datei (gopls) einen Typ, der ein Interface implementiert: `lsh` bzw. `lsH`; danach dieselben Tasten in einer `.ts`-Datei | Go: Picker mit Sub-/Supertypen (gemessen: `Shape` → `Sq`). TS: die Klartext-Meldung, wer es kann, kein „No results“ nach Wartezeit | Beide Antworten gemessen; die Meldung nennt gopls noch nicht (siehe Rang 2); nicht im echten Fenster gesehen |
+| A8 | Type Hierarchy im echten Fenster | In einer Go-Datei (gopls) einen Typ, der ein Interface implementiert: `lsh` bzw. `lsH`; danach dieselben Tasten in einer `.ts`-Datei | Go: Picker mit Sub-/Supertypen (gemessen: `Shape` → `Sq`). TS: die Klartext-Meldung, wer es kann, kein „No results“ nach Wartezeit | Beide Antworten gemessen; die Meldung nennt gopls jetzt (`8895cd8`, Spec-Test grün); nicht im echten Fenster gesehen |
 | A9 | `gra` über **zwei** Hunks (neu) | In einer getrackten Datei zwei Zeilen an verschiedenen Stellen ändern, beide plus die Zeilen dazwischen mit `V` markieren, `gra`, „gitsigns: Stage hunk“ | Beide geänderten Zeilen sind danach gestaged (`git diff --cached`), unabhängig davon, wo der Cursor stand. Bei Cursor auf einer Zeile *in* einem mehrzeiligen Hunk stagt „Stage hunk“ den **ganzen** Hunk | Gegen echtes gitsigns headless bestätigt (Selektion über Zeilen 2–8, Cursor auf Zeile 9: beide Hunks gestaged; Cursor-Anfrage: ganzer 3-Zeilen-Hunk); nicht im echten fzf-Fenster |
 | A10 | Restart, Stop und Winbar in einem Repo (neu) | In einer getrackten `.txt`-Datei: `:LspRestartHere`, `:LspStopHere`; in einer Lua-Datei `:LspRestartHere`; danach `lsa` auf einer geänderten Zeile | `.txt`: „No LSP clients to restart“ / „No LSP clients running“, **keine Winbar**. Lua: „Restarted N/N“ mit N = Anzahl echter Server (nicht N+1), die Winbar bleibt. „gitsigns: Stage hunk“ ist weiter in `lsa` | Headless mit echter Config bestätigt (Winbar leer auf `.txt`/`.json`, Restart/Stop-Meldungen, Force-Stop entfernt den Client und er kommt zurück); nicht von Hand |
 
@@ -311,11 +263,11 @@ Befund melden.
 - Aufwand- und Nutzen-Werte oben sind Schätzungen auf Basis deines Stacks (Lua, Markdown, TS/Astro; dazu
   C/C++, Java, Go für die Type Hierarchy).
 - Der Implementations-Marker wurde nur gegen tsserver gemessen (synthetische Projekte mit 5/20/200
-  Interfaces, zwei echte Projekte); tsserver-CPU, große Monorepos und Bibliotheks-Typdateien nicht (Rang 7);
+  Interfaces, zwei echte Projekte); tsserver-CPU, große Monorepos und Bibliotheks-Typdateien nicht (Rang 5);
   Go/Java/C# nicht.
-- Die Type-/Call-Hierarchy-Zahlen in Rang 2 und 6 stammen aus einer früheren Sitzung. Ich habe sie **übernommen,
-  nicht neu gemessen**; nur die Aussage zu `calls.lua:425–427` (Selbstkanten absichtlich weggelassen) habe ich im
-  Quelltext nachgelesen.
+- Die Type-Hierarchy-Zahlen (jetzt erledigt, Nachtrag 4) und die Call-Hierarchy-Zahlen in Rang 4 stammen aus
+  einer früheren Sitzung. Ich habe sie **übernommen, nicht neu gemessen**; nur die Aussage zu
+  `calls.lua:425–427` (Selbstkanten absichtlich weggelassen) habe ich im Quelltext nachgelesen.
 - Die vier Review-Fixes sind headless mit deiner echten Config und dem echten gitsigns bestätigt (Winbar,
   Restart/Stop, Force-Stop, Staging über eine Selektion), **nicht** in einem echten fzf-Fenster. Für den
   Marker (`e50e10a`) gibt es nur Specs mit einem Stub-Client, keinen Lauf gegen einen echten ts_ls.
