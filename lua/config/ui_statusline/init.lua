@@ -85,10 +85,13 @@ function M.setup()
       -- draws over the buffer's first rows. `max_lines` is the row cap: 3 for
       -- code (the old spec's cap), 6 for Markdown so a whole H1..H6 chain
       -- fits. `headings.max_level` is the deepest Markdown heading level that
-      -- gets pinned (1..6).
+      -- gets pinned (1..6). `persist` keeps what `:UI sticky depth|lines` set
+      -- across restarts (stdpath("state")/ui.nvim/sticky.json, on top of the
+      -- values here); `:UI sticky reset` drops it again.
       sticky = {
         max_lines = { default = 3, markdown = 6 },
         headings = { max_level = 6 },
+        persist = true,
       },
     })
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))

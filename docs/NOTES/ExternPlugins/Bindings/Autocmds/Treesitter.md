@@ -76,17 +76,24 @@ Alias):
 | `:UI sticky status` | zeigt Zustand, Heading-Tiefe und Zeilenlimit |
 | `:UI sticky depth [1-6\|all]` | tiefste Markdown-Heading-Ebene, die gepinnt wird (ohne Argument: Anzeige) |
 | `:UI sticky lines [ft] [n]` | Zeilenlimit für einen Filetype oder für alle anderen; `0` = unbegrenzt |
+| `:UI sticky reset` | verwirft, was `depth`/`lines` geändert haben, zurück zu den Werten aus `ui_statusline/init.lua` |
 | `:UI sticky up [n]` | springt zum n-ten umschließenden Scope (auch bei ausgeschaltetem Overlay) |
 
-`depth` und `lines` gelten nur für die laufende Session; dauerhaft steht es in
-`ui_statusline/init.lua` (`sticky = false` schaltet das Feature ab). Keine
-Keymaps.
+`depth` und `lines` werden seit 2026-09-21 gespeichert (`persist = true` im
+`sticky`-Block von `ui_statusline/init.lua`, Datei
+`stdpath("state")/ui.nvim/sticky.json`) und beim nächsten Start über die Werte
+aus der Config gelegt; `reset` löscht sie wieder. Die vollständige Befehlsliste
+steht im Blatt [Usercmds/UiSticky.md](../Usercmds/UiSticky.md).
+`sticky = false` schaltet das Feature ab. Keine Keymaps.
 
 Welche Knoten als Scope gelten, steht in ui.nvims `docs/configuration.md`
 (Tabelle je Sprache; `require("ui.context").is_scope_type("<typ>")` fragt einen
 Namen ab). Seit 2026-09-21 pinnt Rust auch `if`/`for`/`while`/`loop`/`match`/`mod`:
 ein `node_types`-Eintrag mit Anker an beiden Enden (`^if_expression$`) benennt
-genau einen Typ und wird von `exclude_node_types` nicht überstimmt.
+genau einen Typ und wird von `exclude_node_types` nicht überstimmt. Ebenfalls seit
+2026-09-21 pinnt YAML die Eltern-Schlüssel eines tief verschachtelten Schlüssels
+(`^block_mapping_pair$`: `jobs:` > `build:` > `steps:`); JSON und TOML pinnen weiter
+nichts.
 
 ## `nvim-treesitter-textobjects`
 
