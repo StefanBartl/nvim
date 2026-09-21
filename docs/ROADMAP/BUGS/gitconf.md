@@ -1,5 +1,5 @@
 :GitConflictListQF
-19:05:09 msg_show.bufwrite "~\AppData\Local\nvim\docs\ROADMAP\reports\Externe-Plugins-Nachbau-Analyse.md" [unix] 636L, 43065B written
+19:05:09 msg_show.bufwrite "~/AppData/Local/nvim/docs/ROADMAP/personal/All/FINISH/ERLEDIGT/Externe-Plugins-Nachbau-Analyse.md" [unix] 636L, 43065B written
    Error  19:05:24 msg_show.emsg Decoration provider "win" (ns=git-conflict):
 Lua: ...al/nvim-data/lazy/git-conflict.nvim/lua/git-conflict.lua:266: Invalid 'line': out of range
 stack traceback:

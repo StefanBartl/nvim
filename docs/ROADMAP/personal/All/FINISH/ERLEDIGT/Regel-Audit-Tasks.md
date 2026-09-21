@@ -8,11 +8,11 @@
 > the results are in `Regel-Audit-Gesamtstatus.md`, Teil 5.
 
 **Date:** 2026-09-19
-**Companion to:** [`Regel-Audit-Gesamtstatus.md`](../../../../reports/Regel-Audit-Gesamtstatus.md)
+**Companion to:** [`Regel-Audit-Gesamtstatus.md`](Regel-Audit-Gesamtstatus.md)
 (the source of every number and repo list below — as of 2026-09-19 this is the
 single consolidated report; it replaced three separate documents this file
 originally pointed at), and
-[`Roadmap-Aufwand-Nutzen.md`](../../../../reports/Roadmap-Aufwand-Nutzen.md).
+[`Roadmap-Aufwand-Nutzen.md`](Roadmap-Aufwand-Nutzen.md).
 
 **What this is:** paste-ready prompts for the fleet-wide `rules.nvim` audit's
 remaining work. Status as of 2026-09-19, corrected after cross-checking with
