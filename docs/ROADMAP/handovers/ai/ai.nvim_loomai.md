@@ -12,7 +12,7 @@
   - [Regeln für diese Session](#regeln-fr-diese-session)
   - [Orte](#orte)
   - [Offene Punkte](#offene-punkte)
-    - [1. ai.nvim im Alltag validieren + Live-Testing](#1-ainvim-im-alltag-validieren--live-testing)
+    - [1. ai.nvim im Alltag validieren + Live-Testing](#1-ainvim-im-alltag-validieren-live-testing)
     - [2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release](#2-phase-10-gatesreleasemd-vor-dem-ersten-tagrelease)
     - [3. ui/panel.lua: Voll-Buffer-set_lines pro Stream-Chunk](#3-uipanellua-voll-buffer-set_lines-pro-stream-chunk)
     - [4. loomAI: Connection-Pooling zu Ollama und Cloud-Backends](#4-loomai-connection-pooling-zu-ollama-und-cloud-backends)
@@ -60,6 +60,8 @@ Stand 2026-09-21. Alles andere (Phasen 0-8, Code-Review, loomai-Provider,
 ModelRouter, Dashboard-Testpanel, Gemini, Completion-Capability, rules.nvim-
 Durchgänge, `pdfport.nvim`-Migration) ist erledigt.
 
+---
+
 ### 1. ai.nvim im Alltag validieren + Live-Testing
 
 - `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, dazu `loomai`/`gemini`),
@@ -72,6 +74,8 @@ Durchgänge, `pdfport.nvim`-Migration) ist erledigt.
   loomAI-Seite (`gemini_client.cpp`) wurde mit einem bewusst ungültigen Key auf
   dem Fehlerpfad verifiziert. Happy-Path + Streaming + Safety-Block gegen die
   echte API nachholen.
+
+---
 
 ### 2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release
 
@@ -90,6 +94,8 @@ judgment-basiert:
 - REL-32 (Literatur und Referenzen) — `nice-to-have`, nicht begonnen.
 - Danach: Tag/Release selbst.
 
+---
+
 ### 3. ui/panel.lua: Voll-Buffer-set_lines pro Stream-Chunk
 
 `ui/panel.lua` (`panel.surface:set_lines(panel.lines)`, Zeile ~93) schreibt pro
@@ -98,6 +104,8 @@ nicht gefixt (kein Beleg, dass es bei realistischen Antwortlängen ein Problem
 ist; `ui.nvim`/Surface hatte keine günstigere Append-API). Nur angehen, falls es
 in der Praxis spürbar wird.
 
+---
+
 ### 4. loomAI: Connection-Pooling zu Ollama und Cloud-Backends
 
 `src/ollama_client.cpp` (`make_client()`) und die drei Cloud-Clients öffnen pro
@@ -105,6 +113,8 @@ in der Praxis spürbar wird.
 zusätzlich TLS-Handshake). Bewusst nicht gefixt: ein echtes Pooling braucht ein
 Design (geteilte Client-Lebensdauer, Thread-Sicherheit, z. B. thread-lokale
 Clients), keine Bugkorrektur. Erst bei spürbarem Bedarf angehen.
+
+---
 
 ### 5. loomAI-ModelRouter: Präfix-Liste, Timeout/Retry, Capabilities
 
@@ -120,6 +130,8 @@ Alle drei sind `nice-to-have`, nicht blockierend:
   buffern — heute nicht relevant, alle vier Backends streamen nativ; erst falls
   ein zukünftiges Open-Source-Tool kein Streaming kann.
 
+---
+
 ### 6. loomAI: ki-agenten-framework-architektur.md im öffentlichen Repo?
 
 `E:\repos\loomAI\docs\Guides\ki-agenten-framework-architektur.md` (weiterhin
@@ -128,6 +140,8 @@ ausgelagerte `setup-guide.md` (beschreibt eine deutlich größere, nie gebaute
 Zukunftsvision) und damit eher nicht ins öffentliche Repo, sondern nach
 `WKDBooks\Development\wkdbook-loomai\Guides\`. Nicht angefasst, weil nicht
 angefragt — bei Gelegenheit gegenchecken (`README.md`/`README.de.md` verweisen nicht darauf).
+
+---
 
 ### 7. Datenschutz-Prinzip in Checklists.md festhalten
 
@@ -139,6 +153,8 @@ Die Datei existiert nicht (2026-09-21 gegengeprüft: unter `personal/All/` kein
 bestehenden Checklisten unter `WKDBooks\...\wkdbook-Lua\Checklists`. Kurz
 klären, wohin.
 
+---
+
 ### 8. Completion: Abgleich mit fertigen Completion-Plugins
 
 Offene Vorfrage aus dem `typepilot`-Scoping: ob parallel geprüft werden soll,
@@ -147,8 +163,13 @@ macht bereits Multi-Provider-Completion gegen OpenAI/Claude/Gemini/Ollama —
 nicht live verifiziert) bereits abdecken. Die Capability selbst ist gebaut
 (Scope-Entscheidung: Teil von `ai.nvim`), die Frage bleibt ein reiner Abgleich.
 
+---
+
 ### 9. Wkdbook-ROADMAP: veralteter Pfad-Verweis
 
 `WKDBooks\Development\wkdbook-myplugins\ai.nvim\ROADMAP\ROADMAP.md`
 verweist im Kopf auf `nvim/docs/ROADMAP/handovers/ai.nvim.md`; die Datei liegt
 jetzt unter `handovers/ai/ai.nvim_loomai.md`. Pfad dort nachziehen.
+
+---
+

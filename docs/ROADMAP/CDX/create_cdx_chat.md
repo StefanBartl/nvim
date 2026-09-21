@@ -19,11 +19,12 @@
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
 - Neue Features ggf. im Plugin-eigenen /TESTS/ folder testenV
 
+Wenn du mit etwas fertig bist committe / pushe / pulle so dass das update sofort im main branch, sodass ich es gleich verwenden kann.
+
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`
 
-Wenn du mit etwas fertig bist committe / pushe / pulle so dass das update sofort im main branch, sodass ich es gleich verwenden kann.
 
 ---
 

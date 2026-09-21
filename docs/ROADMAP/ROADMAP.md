@@ -24,9 +24,9 @@ Roadmap
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:10       |    04% / 13%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:10       |    16% / 14%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     22:30       |    71% / 74%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     05:30       |    00% / 00%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     14:50       |    96% / 25%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 
@@ -44,8 +44,7 @@ Roadmap
   - alle plugins readme.mnd auf wkd verweißen
   - kacheln hover soll kurze beschreibung des plugins, aber cool geschreiben und kurz
   - auch gruppierungen zusätzl9ich machen wie zb die hover/images/pdfport/sw... kombo die wir empfehlen gemienedaam z ulasden weil xy kreuzfeatures...
-
-- lsp.nvim: breadscrumbs selsbt implemnentiert, brauchen wir dann lsp saga noch und wenn ja, welche features habet lksp.nvim nicht, was lspsaga hat?
+  - Tapes/Feature hl: auch in der nvim-config isntallations spec checken, was ich dort gesetzt habe, könnte hinweiß sein auf interessantes feature zum hl
 
 ## lib.nvim
 
