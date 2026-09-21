@@ -1,6 +1,6 @@
-# Roadmap
+## Roadmap
 
-## Table of content
+### Table of content
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
@@ -22,18 +22,18 @@
 
 ---
 
-## Cdx
+### Cdx
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:10       |    16% / 14%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     22:30       |    71% / 74%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:10       |    85% / 23%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     18:40       |    07% / 79%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     14:50       |    96% / 25%     |
 | **dev**  |    04. Sep    |   Sa., --:--    |     --:--       |    --% / --%     | !!!
 
 ---
 
-## Claude Tasks
+### Claude Tasks
 
 - [ ] Jedes Plugin aus sicht eines endusers/developers "durchspielen" - von Beginn an, also vom ankommen auf der github seite, ssagne wikr dealerweiße kommend von derr wkd seite. DAnn möchte m an mal als erstes normalerweiße die instsalltion + optionen sehen. ist am flow etwas nicht in ordnung? stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar und ansprechend, modern aufbereitet? Ist die Dokumentation an Stellen verwirrend? Gib es docs, die mich als enduser/dev nicht betreffen? ([alte] Telemetry daten, Deutsche dokumentation, backlogs,..)
 
@@ -49,9 +49,9 @@
 
 ---
 
-### lib.nvim
+#### lib.nvim
 
-### casedesk
+#### casedesk
 
 - problems / solutions matrix us den cases erstellen
 - casedesk file im wkdbook implementieren
@@ -82,7 +82,7 @@
 
 ---
 
-#### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
+##### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
 
 **Source:** `.../casedesk.nvim/ROADMAP/ROADMAP.md`, section "Workflow", fourth bullet.
 **Stand geprüft 2026-09-17:** open — `timeline.lua` still derives sessions
@@ -174,7 +174,7 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-### Nice-to-Have wenn Limit über ist
+#### Nice-to-Have wenn Limit über ist
 
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
@@ -182,7 +182,7 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-### Live-Testing (braucht laufende, interaktive nvim-Session)
+#### Live-Testing (braucht laufende, interaktive nvim-Session)
 
   - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH
   - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
@@ -191,9 +191,9 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-## Tasks
+### Tasks
 
-### TOP interessant gerade
+#### TOP interessant gerade
 
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
@@ -202,7 +202,7 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-### Ganz zum Schluss erst erledigen - wenn alles fertig ist
+#### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
@@ -210,7 +210,7 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-#### Git & Repo-Hygiene / Docs, Comments,...
+##### Git & Repo-Hygiene / Docs, Comments,...
 
 - [ ] Git-Release pro Repo, sobald fertig.
 
@@ -224,13 +224,13 @@ fertig: committen und direkt auf main pushen.
 
 ---
 
-## Misc
+### Misc
 
 - [ ] Anticheat knacken
 
 ---
 
-## Plugin-Liste
+### Plugin-Liste
 
 Hier die Liste meiner Plugins - du findest sie unter `$REPOS_DIR\repos` - und du hast Zugriff darauf:
 
@@ -276,14 +276,14 @@ ui.nvim
 
 ---
 
-### die nativen
+#### die nativen
 
 docmap-desktop
 loomAI
 
 ---
 
-### docs
+#### docs
 
 Kurse
 Notes (privates repo)
@@ -292,14 +292,14 @@ WKDBook-Tricentis (privates repo)
 
 ---
 
-### Web
+#### Web
 
 wkd
 FightingGame
 
 ---
 
-### MISC
+#### MISC
 
 Configs
 my-zsh

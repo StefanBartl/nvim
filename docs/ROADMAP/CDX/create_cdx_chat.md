@@ -11,7 +11,6 @@
 - Docs / README.md updaten sofern es Sinn macht
 - Wenn ein binding updatent wird, dann gggf. auch vim.fn.stdpath('config') .. /docs/NOTES/BINDINGS updaten
 - Keine Co-Authorenschaft von Claude in den Commits
-- Wenn du mit etwas fertig bist committe / pushe / pulle so live-testing-braucht-laufende-interaktive-nvim-sessionass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 - code der implementiert wurde muss luacheck / stylua grün sein
 - Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Wenn nötig: Alle meine `.nvim` Plugins findest du unter `$REPOS_DIR\repos`
@@ -19,8 +18,7 @@
   - Solltest du im Zuge der Task ein Tol bauen, das für kpnftige Users/Devs/Agents interessant sein könnte, sichere es an einer geeigneteten Stelle in diesem `TOOLS/`-Folder
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
 - Neue Features ggf. im Plugin-eigenen /TESTS/ folder testenV
-
-Wenn du mit etwas fertig bist committe / pushe / pulle so dass das update sofort im main branch, sodass ich es gleich verwenden kann.
+- Wenn du mit etwas fertig bist committe / pushe / pulle so live-testing-braucht-laufende-interaktive-nvim-sessionass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
 
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
