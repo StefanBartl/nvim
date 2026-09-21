@@ -21,18 +21,19 @@
 
 - [ ] **ui.nvim, Tabline-Umbau (laufende Session)**
   - Worktree `E:\repos\ui.nvim\.claude\worktrees\rules-nvim-review-277-071e53`,
-    detached bei `3890818`, ohne Branch. Beim ersten Lauf war er sauber; die
-    Änderungen kamen erst danach, dort wird gerade gearbeitet.
-  - 8 Dateien: geändert `TESTS/tabufline_state_spec.lua`, `lua/ui/@types/init.lua`,
+    zuletzt gesehen auf Branch `claude/tableiste-tab-context-menu-f812d9` (bei
+    Lauf-Ende noch detached bei `3890818`, dann von der Session angelegt).
+    Beim ersten Lauf war er sauber; die Änderungen kamen erst danach, dort wird
+    gerade gearbeitet.
+  - Zuletzt 10 Änderungen (Zahl wächst), darunter: geändert `TESTS/tabufline_state_spec.lua`, `lua/ui/@types/init.lua`,
     `lua/ui/bindings/keymaps/tabufline/state.lua`, `lua/ui/tabline/modules.lua`,
     `lua/ui/tabline/utils.lua`; neu und untracked `lua/ui/tabline/drag.lua`,
     `lua/ui/tabline/layout.lua`, `lua/ui/tabline/menu.lua`.
   - Task: nach Abschluss der Session committen und nach `main` bringen (stylua,
     luacheck und `bash scripts/test.sh` vorher grün), **oder** bewusst verwerfen.
     Erst danach den Worktree entfernen
-    (`git -C E:\repos\ui.nvim worktree remove <worktree>`). Ein Detached-HEAD-Commit
-    ist ohne Branch nur über das Reflog wiederzufinden, also vor dem Entfernen
-    auf einen Branch legen.
+    (`git -C E:\repos\ui.nvim worktree remove <worktree>`). Der Branch der Session
+    (`claude/tableiste-tab-context-menu-f812d9`) gehört danach ebenfalls bereinigt.
 
 - [ ] **runtime-analysis.nvim, Telemetry-Status**
   - Worktree `E:\repos\runtime-analysis.nvim\.claude\worktrees\ratelemetry-status-46d39e`,
