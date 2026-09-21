@@ -3,7 +3,7 @@
 > Stand 2026-09-21 (nachmittags, nach dem zweiten Lauf). Aufräumlauf über die 39
 > Plugin-Repos unter `E:\repos` und diese Config. Diese Liste enthält **nur**, was
 > danach noch eine Entscheidung oder Handlung braucht: uncommittete Änderungen,
-> Commits, die nicht in `main` sind, und zwei Worktrees, die sich nicht entfernen
+> Commits, die nicht in `main` sind, und Worktrees, die sich nicht entfernen
 > ließen. Was verlustfrei weg konnte, ist weg und steht hier nicht.
 > Verglichen wurde gegen `origin/main` (nach `git fetch`), „nicht in main“ nach
 > Patch-ID (`git cherry`), nicht nur nach SHA.
@@ -18,6 +18,27 @@
 ---
 
 ## 1. Uncommittete Änderungen
+
+- [ ] **Config, ci-hardening-Session: Worktree wurde ihr kurz entzogen** (zuerst
+  erledigen, sobald die Session weiterläuft)
+  - Worktree `C:\Users\bartl\AppData\Local\nvim\.claude\worktrees\menu-integration-ui-kit-712771`,
+    Branch `claude/ci-hardening-nvim-ced241` (`84eb9778b`, gleich `main`).
+  - Was passiert ist: Beim Aufräumlauf wurde der Worktree von git entfernt
+    (Registrierung und alle Dateien), das Verzeichnis selbst blieb wegen
+    „Permission denied“ stehen, weil die Session darin Shells offen hatte. Der
+    Worktree wurde danach am Branch-Tip neu angelegt. Sauber, nichts verloren.
+    Stand danach: wieder Shells darin, die Session arbeitet weiter.
+  - Task 1 (Session): Prüfen, dass Dateien und Branch stimmen
+    (`git -C <worktree> status -sb` zeigt sauber auf `claude/ci-hardening-nvim-ced241`),
+    Shells, die vor dem Wiederanlegen geöffnet wurden, schließen und neu im Ordner
+    starten (ihr altes Verzeichnis-Handle zeigt auf das entfernte). Der Worktree
+    war beim Entfernen sauber; Ungespeichertes in einem Editor wäre davon nicht
+    erfasst gewesen.
+  - Task 2 (nach Sessionende): Worktree entfernen
+    (`git -C C:\Users\bartl\AppData\Local\nvim worktree remove <worktree>`) und Branch
+    löschen (`git branch -D claude/ci-hardening-nvim-ced241`), nachdem
+    `git cherry origin/main claude/ci-hardening-nvim-ced241` nichts mit `+` zeigt.
+  - Lehre für künftige Läufe: siehe Hinweise, Prozessprüfung vor dem Entfernen.
 
 - [ ] **ui.nvim, Tabline-Umbau (laufende Session)**
   - Worktree `E:\repos\ui.nvim\.claude\worktrees\rules-nvim-review-277-071e53`,
@@ -94,8 +115,10 @@ einem Remote**. In den Plugin-Repos gibt es keine.
 
 ## 3. Nichts Offenes, aber gerade in Benutzung
 
-Beide Worktrees sind sauber und ihr Inhalt steckt vollständig in `main`. Sie ließen
-sich nicht entfernen, weil eine laufende Session sie als Arbeitsverzeichnis hält.
+Der Worktree ist sauber und sein Inhalt steckt vollständig in `main`. Er ließ sich
+nicht entfernen, weil die laufende Session ihn als Arbeitsverzeichnis hält. (Der
+zweite solche Fall, der ci-hardening-Worktree der Config, steht mit Handlung oben
+in Abschnitt 1.)
 
 - [ ] **ui.nvim `roadmap-regeln-nvim-manual-0f8fb4`**, Branch
   `claude/ui-sticky-context-12370f` (auf `main`, außerdem als Backup gepusht).
@@ -104,15 +127,6 @@ sich nicht entfernen, weil eine laufende Session sie als Arbeitsverzeichnis häl
   Session aus einem anderen Verzeichnis:
   `git -C E:\repos\ui.nvim worktree remove E:\repos\ui.nvim\.claude\worktrees\roadmap-regeln-nvim-manual-0f8fb4`
   und `git -C E:\repos\ui.nvim branch -D claude/ui-sticky-context-12370f`.
-
-- [ ] **Config `menu-integration-ui-kit-712771`**, Branch
-  `claude/ci-hardening-nvim-ced241` (steht auf `84eb9778b`, gleich `main`).
-  Beim zweiten Lauf brach das Entfernen mit „Permission denied“ ab, nachdem git
-  die Registrierung und alle Dateien schon gelöscht hatte; vier Shell-Prozesse
-  (`bash.exe`, `powershell.exe`) hielten das Verzeichnis, dort läuft also eine
-  Session. Der Worktree wurde am Branch-Tip wiederhergestellt (sauber, kein
-  Inhalt ging verloren; die Session muss ggf. ihr Verzeichnis neu betreten).
-  Task: nach Ende dieser Session entfernen und den Branch löschen.
 
 ## Hinweise
 
