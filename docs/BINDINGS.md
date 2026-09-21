@@ -361,7 +361,7 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
 | `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
 | `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command |
-| `:MyPlugins dashboard [dir]` | Opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `:MyPluginsDashboard [dir]` is a flat shorthand |
+| `:MyPlugins dashboard [dir]` | Opens `reposcope.nvim`'s own `:Reposcope dashboard [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `:MyPluginsDashboard [dir]` is a flat shorthand |
 | `:MyPlugins reclone [dir] [--only=<name>] [--dry-run]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |

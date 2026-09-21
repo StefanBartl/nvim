@@ -1392,7 +1392,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:MyPlugins list` -- Render every plugin in plugins.personal.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)
 - [ ] `:MyPlugins pull` -- git pull --ff-only on every present listed plugin (or just --only=<name>)
 - [ ] `:MyPlugins update` -- Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits
-- [ ] `:MyPlugins dashboard` -- Open reposcope.nvim's git-status dashboard (:Reposcope status) for dir/$REPOS_DIR
+- [ ] `:MyPlugins dashboard` -- Open reposcope.nvim's git-status dashboard (:Reposcope dashboard) for dir/$REPOS_DIR
 
 ### :MyPluginsDashboard
 
@@ -1611,7 +1611,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Reposcope close` -- Close all Reposcope windows and buffers
 - [ ] `:Reposcope filter-clear` -- Clear the active filter and show the full list again
 - [ ] `:Reposcope favorites` -- List or clear favorited repositories (:Reposcope favorites list|clear)
-- [ ] `:Reposcope status` -- Show the git status overview of all repositories in a directory (or one repository)
+- [ ] `:Reposcope dashboard` -- Show the git dashboard of all repositories in a directory (or one repository)
 - [ ] `:Reposcope sort` -- Open an interactive menu to sort the repository list
 - [ ] `:Reposcope session` -- Manage the persisted search session (:Reposcope session save|restore|clear)
 - [ ] `:Reposcope toggle-dev` -- Toggle developer mode (debug logging, internal info)
