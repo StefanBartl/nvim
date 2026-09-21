@@ -2,7 +2,7 @@
 
 ## notes
 
-- checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
+checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden

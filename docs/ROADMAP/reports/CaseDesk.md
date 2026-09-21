@@ -1,5 +1,130 @@
 # caaedesk todo/ideas
 
+## noch nicht gut beschrieben
+
+### casedesk
+
+- problems / solutions matrix us den cases erstellen
+- casedesk file im wkdbook implementieren
+- keuzfeatures data.nvim
+- Research/NN_ActivityStream.md sgleich anlegen und bei :Case new auc gleich abfragen, ob der activiyf stream hineinposten will - dazu braucht es aber mehr als nur einen einzeiler prompt, also zuerst abfragen ob as angehöngt werden soll wenn ja, dann sollte sich ein float window öffnen, in der ich den hineinposten kann, dann specihern und schlie0en -> weiter frage, ob gleich ananomisiert werden soll, wennja, dann geocih de acivity stream ananonmyiseren und so abspeichern (den normalen unter einer level 2 amrkdown headline und darüber der annanomiserungsversuch )
+  - warum dinenen wir die datei Research/NN_ActivityStream.md und nicht Research/ActivityStream.md?
+  - :Case anonymize . (oder case number) ->   Warn  10:17:30 AM notify.warn [usrcmds.case] 1195796: no Activity Stream found under Research/
+- docs/ auf deutsch, alles auf deustch weil sdas nur ein repo fpr mich ist, nicht fpr die öffentlichkeit^
+- JQL.md: kein project key, also  `project = "TOSCA"` oder ähnliches, das bringt bei unserer suche nichts. Beispiele:
+
+  **1. Search for 2026.1 Upgrade & UPN Login / 403 Issues:**
+
+  ```jql
+  text ~ "403 Forbidden" AND text ~ "UPN" AND text ~ "2026.1" ORDER BY created DESC
+  ```
+
+  **2. Search for Active Directory / LDAP Authentication Failures after Upgrade:**
+
+  ```jql
+  component in ("User Administration", "Authentication Service") AND text ~ "Active Directory" AND text ~ "upgrade" ORDER BY updated DESC
+  ```
+
+  **3. Search for `/tua/api/session` or Identity Server Token Errors:**
+
+  ```jql
+  text ~ "tua/api/session" AND (summary ~ "AD" OR summary ~ "LDAP" OR summary ~ "login") ORDER BY created DESC
+  ```
+
+---
+
+### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
+
+**Source:** `.../casedesk.nvim/ROADMAP/ROADMAP.md`, section "Workflow", fourth bullet.
+**Stand geprüft 2026-09-17:** open — `timeline.lua` still derives sessions
+from mtimes (11 `mtime` references).
+
+```
+Aufgabe: casedesk.nvim — entscheiden, was ":Case timeline" mit
+Git-Pull-Sessions macht. Das Feature liefert derzeit messbar falsche Zahlen.
+
+Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
+ROADMAP/ROADMAP.md, Abschnitt "Workflow", Punkt ":Case timeline reports git
+pulls as work sessions". Der Punkt ist gemessen, nicht vermutet: timeline.lua
+rekonstruiert Sessions rein aus Datei-mtimes unter dem Case-Ordner, aber der
+Korpus ist ein mit einer zweiten Maschine synchronisierter git-Working-Tree —
+und git stempelt jede Datei, die es schreibt. Die Timeline zeigt also die
+Pull-Historie:
+
+  case 1135620: 1 session   2026-09-02 20:17 → 2026-09-02 20:17   7 files
+  case 988483:  2 sessions  2026-08-19 14:48 → …  /  2026-09-02 20:17 → …
+
+Das sind exakt die git-reflog-Einträge, und jede Session kollabiert auf Dauer
+null, weil ein Pull alle Dateien in derselben Sekunde schreibt.
+
+Prüfe ZUERST, ob das noch gilt (Stand 2026-09-17: ja, mtime-basiert).
+
+Das ist ausdrücklich eine ENTSCHEIDUNG, kein Bau-Auftrag. Die Roadmap wiegt
+drei Optionen gegeneinander ab, lies sie dort im Original:
+  a) Feature fallenlassen — auf einem synchronisierten Korpus nicht tragfähig
+  b) behalten, aber eine Session, deren Dateien alle dieselbe Sekunde
+     tragen, als "nicht messbar" labeln
+  c) Dauern künftig im Usage-Journal mitschreiben und nur zeigen, was es
+     abdeckt (kann die Vergangenheit nicht rekonstruieren, startet leer)
+
+Bring mir eine Empfehlung mit Begründung, BEVOR du etwas baust.
+
+Mitbetroffen und im selben Zug anzusehen: detect.last_touched ruht auf
+denselben mtimes und verdient denselben Blick.
+
+Repo: E:/repos/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
+Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
+stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
+fertig: committen und direkt auf main pushen.
+```
+
+---### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
+
+**Source:** `.../casedesk.nvim/ROADMAP/ROADMAP.md`, section "Workflow", fourth bullet.
+**Stand geprüft 2026-09-17:** open — `timeline.lua` still derives sessions
+from mtimes (11 `mtime` references).
+
+```
+Aufgabe: casedesk.nvim — entscheiden, was ":Case timeline" mit
+Git-Pull-Sessions macht. Das Feature liefert derzeit messbar falsche Zahlen.
+
+Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
+ROADMAP/ROADMAP.md, Abschnitt "Workflow", Punkt ":Case timeline reports git
+pulls as work sessions". Der Punkt ist gemessen, nicht vermutet: timeline.lua
+rekonstruiert Sessions rein aus Datei-mtimes unter dem Case-Ordner, aber der
+Korpus ist ein mit einer zweiten Maschine synchronisierter git-Working-Tree —
+und git stempelt jede Datei, die es schreibt. Die Timeline zeigt also die
+Pull-Historie:
+
+  case 1135620: 1 session   2026-09-02 20:17 → 2026-09-02 20:17   7 files
+  case 988483:  2 sessions  2026-08-19 14:48 → …  /  2026-09-02 20:17 → …
+
+Das sind exakt die git-reflog-Einträge, und jede Session kollabiert auf Dauer
+null, weil ein Pull alle Dateien in derselben Sekunde schreibt.
+
+Prüfe ZUERST, ob das noch gilt (Stand 2026-09-17: ja, mtime-basiert).
+
+Das ist ausdrücklich eine ENTSCHEIDUNG, kein Bau-Auftrag. Die Roadmap wiegt
+drei Optionen gegeneinander ab, lies sie dort im Original:
+  a) Feature fallenlassen — auf einem synchronisierten Korpus nicht tragfähig
+  b) behalten, aber eine Session, deren Dateien alle dieselbe Sekunde
+     tragen, als "nicht messbar" labeln
+  c) Dauern künftig im Usage-Journal mitschreiben und nur zeigen, was es
+     abdeckt (kann die Vergangenheit nicht rekonstruieren, startet leer)
+
+Bring mir eine Empfehlung mit Begründung, BEVOR du etwas baust.
+
+Mitbetroffen und im selben Zug anzusehen: detect.last_touched ruht auf
+denselben mtimes und verdient denselben Blick.
+
+Repo: E:/repos/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
+Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
+stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
+fertig: committen und direkt auf main pushen.
+```
+
+---
+
 ## TCSupportInfo
 
 C:\repos\WKDBook-Tricentis\Cases\SAP_Support\Cases\Open\1201484\assets\second\ToscaSupportInfo.txt
