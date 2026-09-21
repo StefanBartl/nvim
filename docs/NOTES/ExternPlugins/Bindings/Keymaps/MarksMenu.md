@@ -49,9 +49,16 @@ hineinlesen und etwas kopieren, bevor man sie öffnet.
 - **Umkonfigurieren:** `marks.menu.preview_keys` im `sessions`-Spec dieser
   Config (`lua/plugins/personal/init.lua`, Block `marks`). Gruppen:
   `scroll_down`, `scroll_up`, `half_down`, `half_up`, `focus`, `cycle`, `close`,
-  `submit`; eine Liste ersetzt die Tasten der Gruppe, `false` schaltet sie ab,
-  `preview_keys = false` alle. Diese Config setzt derzeit nichts, es gelten die
-  Voreinstellungen.
+  `submit`; eine Liste ersetzt die Tasten der Gruppe (ein einzelner String zählt
+  als Liste mit einem Eintrag, Einträge, die keine nicht-leeren Strings sind,
+  werden ignoriert; bleibt keine Taste übrig, ist die Gruppe aus), `false`
+  schaltet sie ab, `preview_keys = false` alle. Diese Config setzt derzeit
+  nichts, es gelten die Voreinstellungen.
+- **Dateien mit NUL-Bytes** (Binärdateien, UTF-16) lassen sich in der Preview
+  ansehen: jedes NUL erscheint als `^@`, wie in Vim. Vorher scheiterte das
+  Rendern, und die Preview zeigte weiter die vorige Datei, während `<CR>` dort
+  die neue Datei an der Zeile des alten Inhalts geöffnet hätte
+  (sessions.nvim `ea54d89`, ui.nvim `a895244`).
 - Getestet in `ui.nvim/TESTS/ui_kit_shortlist_preview_spec.lua` (die Tasten
   werden über `nvim_feedkeys` gedrückt) und in `sessions.nvim/TESTS/marks_spec.lua`
   (Öffnen an der Preview-Zeile, `preview_keys` durchgereicht).
