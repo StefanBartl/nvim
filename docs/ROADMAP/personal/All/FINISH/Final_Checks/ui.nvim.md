@@ -2,21 +2,7 @@
 
 ## Table of content
 
-  - [Review letzter commits mit "ultracode"](#review-letzter-commits-mit-ultracode)
   - [Sichtprüfung im echten Fenster](#sichtprfung-im-echten-fenster)
-
----
-
-## Review letzter commits mit "ultracode"
-
-7d2f872
-04ec151
-43234a9
-4d09eb934
-8603b92
-1162d4d
-ccbf994
-530e8bd
 
 ---
 

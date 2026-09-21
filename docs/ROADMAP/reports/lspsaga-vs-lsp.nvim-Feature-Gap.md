@@ -3,6 +3,23 @@
 **Stand:** 2026-09-21, nach dem Review der Config-Commits (Befunde 1–4 behoben) und Rang 2/3 aus der
 Aufwand/Nutzen-Tabelle (siehe unten)
 
+## Table of content
+
+  - [Commits dieser Arbeit (ohne WKDBooks)](#commits-dieser-arbeit-ohne-wkdbooks)
+  - [Wohin das Erledigte gewandert ist](#wohin-das-erledigte-gewandert-ist)
+  - [Nach Aufwand / Nutzen](#nach-aufwand-nutzen)
+  - [Die Punkte](#die-punkte)
+    - [4. Selbstrekursion bei „outgoing“](#4-selbstrekursion-bei-outgoing)
+    - [5. `UiSticky.md`: zwei Ungenauigkeiten](#5-uistickymd-zwei-ungenauigkeiten)
+    - [6. Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-fr-lua-dnne-lazy-schicht)
+    - [7. Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-groen-projekten-und-dts)
+    - [8. Hunk-Spannen cachen](#8-hunk-spannen-cachen)
+    - [9. rust-analyzer messen](#9-rust-analyzer-messen)
+  - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prfungen-im-echten-terminal)
+  - [Nicht geprüft / Grenzen](#nicht-geprft-grenzen)
+
+---
+
 ## Commits dieser Arbeit (ohne WKDBooks)
 
 Alle auf `main` und `origin/main` der jeweiligen Repos. WKDBooks-Commits (Archiv, Backlog, Tool-Rezepte)
@@ -54,6 +71,8 @@ ist derselbe. Der Commit dieser Aktualisierung steht direkt darüber im `git log
 `ui.nvim` bekam mit `d96fe16` echte Arbeit für diese Aufgabe (Rang 3, s. o.). Andere Repos
 (documentation.nvim, pickers.nvim, lib.nvim) hatten heute nur CI- und fremde Arbeit; nichts davon gehört
 zu dieser Aufgabe.
+
+---
 
 ## Wohin das Erledigte gewandert ist
 
@@ -276,3 +295,6 @@ Befund melden.
 - A3–A5 und A7 stammen aus dem Commit `e6d716d`; ich habe nur gelesen, was dort als gemessen bzw. getestet
   steht, nicht jede Aussage selbst neu gemessen.
 - `dartls` ist weiterhin nicht gemessen (kein Server installiert).
+
+---
+

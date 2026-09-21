@@ -1,12 +1,10 @@
-## Roadmap
+# Roadmap
 
-### Table of content
+## Table of content
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
     - [lib.nvim](#libnvim)
-    - [casedesk](#nice-to-have-wenn-limit-ber-ist)
-      - [A4 — casedesk: `:Case timeline` reports git pulls as work sessions](#nice-to-have-wenn-limit-ber-ist)
     - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Tasks](#tasks)
@@ -22,21 +20,17 @@
 
 ---
 
-### Cdx
+## Cdx
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:20       |   100% / 51%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     23:40       |    03% / 79%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     21:50       |   100% / 38%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    03% / 80%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     03:20       |    92% / 50%     |
 
 ---
 
-### Claude Tasks
-
-filetree: links mark/paste erzeugeh auf windows os symlinks - funkltiert gut. aber es wäre cool, wenn dsymlinks iwie abghehoben werden, damit man gleich erkennt, dasss sind symlins. entweder ein zweites icon nach / vor dem filetype und/poder andere fg farbe oder so.. auf linux systemen müsste man dann glaube ich nch zwischen soft/hardlinks unterschieden. Außerdem: im "I" infofenster dteht als dfiletype "file" - dort sollte auch irwo stehen, dass es ein symlunk/soft/hardlink ist.
-  Weiters sollte man weitere features/module checken in filetre,m ob noch wo irdgendwo mit links gearbeitet wird und man sie speiell behandeln sollte. In den docs sollte man dan auch angeben, dass links unterschiedlich desiugn haben
-
+## Claude Tasks
 
 sesions.nvim:
   `16:46:42 msg_show [sessions] loaded: C:\Users\bartl\AppData\Local\nvim-data/sessions/nvim_main.vim`
@@ -47,14 +41,14 @@ sesions.nvim:
 
 - [ ] mdview: Auf der workstation funktinrt cursor section nicht, also die sektion wird nicht hl, caret funktionert gut, line auch; standalone gar nichts
 
-- noice erstzen ?
+- noice & restliche externe plugins erstzen ?
 - plugins die meinen ähneln auf features abgrasen, die ich noch nicht imlpementiert habe
 
 ---
 
-#### lib.nvim
+### lib.nvim
 
-#### Nice-to-Have wenn Limit über ist
+### Nice-to-Have wenn Limit über ist
 
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
@@ -62,7 +56,7 @@ sesions.nvim:
 
 ---
 
-#### Live-Testing (braucht laufende, interaktive nvim-Session)
+### Live-Testing (braucht laufende, interaktive nvim-Session)
 
   - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH
   - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
@@ -71,9 +65,9 @@ sesions.nvim:
 
 ---
 
-### Tasks
+## Tasks
 
-#### TOP interessant gerade
+### TOP interessant gerade
 
 - [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
@@ -82,7 +76,7 @@ sesions.nvim:
 
 ---
 
-#### Ganz zum Schluss erst erledigen - wenn alles fertig ist
+### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
@@ -91,7 +85,7 @@ sesions.nvim:
 
 ---
 
-##### Git & Repo-Hygiene / Docs, Comments,...
+#### Git & Repo-Hygiene / Docs, Comments,...
 
 - [ ] Git-Release pro Repo, sobald fertig.
 
@@ -105,13 +99,13 @@ sesions.nvim:
 
 ---
 
-### Misc
+## Misc
 
 - [ ] Anticheat knacken
 
 ---
 
-### Plugin-Liste
+## Plugin-Liste
 
 Hier die Liste meiner Plugins - du findest sie unter `$REPOS_DIR\repos` - und du hast Zugriff darauf:
 
@@ -157,14 +151,14 @@ ui.nvim
 
 ---
 
-#### die nativen
+### die nativen
 
 docmap-desktop
 loomAI
 
 ---
 
-#### docs
+### docs
 
 Kurse
 Notes (privates repo)
@@ -173,14 +167,14 @@ WKDBook-Tricentis (privates repo)
 
 ---
 
-#### Web
+### Web
 
 wkd
 FightingGame
 
 ---
 
-#### MISC
+### MISC
 
 Configs
 my-zsh
