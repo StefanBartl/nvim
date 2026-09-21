@@ -49,7 +49,7 @@
 |---|---|
 | Modul | `E:\repos\ui.nvim\lua\ui\context\init.lua` |
 | Command | `E:\repos\ui.nvim\lua\ui\bindings\usrcmds\init.lua`, Funktion `ui_sticky` |
-| Specs | `E:\repos\ui.nvim\TESTS\context_spec.lua` (57 Tests), dazu `config_spec.lua` (`opts.sticky / opts.context`) und `health_spec.lua` (Abschnitt Context) |
+| Specs | `E:\repos\ui.nvim\TESTS\context_spec.lua` (62 Tests), dazu `config_spec.lua` (`opts.sticky / opts.context`) und `health_spec.lua` (Abschnitt Context) |
 | Plugin-Docs | `ui.nvim/docs/configuration.md` (Abschnitt Context inkl. Tabelle „was pro Sprache gepinnt wird“), `docs/BINDINGS.md`, `docs/health.md`, `docs/scope.md` |
 | Verdrahtung in dieser Config | `lua/config/ui_statusline/init.lua`, Schlüssel `sticky = { … }` |
 | Bindings-Notiz | `docs/NOTES/ExternPlugins/Bindings/Autocmds/Treesitter.md`, Abschnitt `ui.context` |
@@ -134,6 +134,9 @@ Bekannte Restlücken (bewusst nicht angefasst):
 - Rusts `x?` und Kotlins `try` heißen beide `try_expression` und bleiben wegen
   `_expression$` ausgeschlossen (sonst pinnt jedes `?` eine Zeile).
 - Zsh-Queries nennen `elif_clause` nicht; Bash schon.
+- Nix und OCaml nutzen `function_expression` für das dateiweite Lambda: eine
+  Nix-Datei behält ihren `{ pkgs, ... }:`-Kopf dauerhaft gepinnt (Nix ist hier
+  nicht im Einsatz; in `docs/configuration.md` vermerkt).
 - Ruby (`if`, `elsif`, `when`, `begin`/`rescue`), PHP und übrige Sprachen sind
   nicht abgedeckt; `node_types` ist der Hebel.
 
@@ -158,6 +161,7 @@ Nur anfassen, wenn du diese Dateitypen benutzt.
 | Eine gemeinsame `atx_heading()`: eingerückte und leere Headings werden gezeichnet, Icon sitzt auf dem `#` | ui.nvim `ae95e7f` |
 | Specs: `ui.setup` sticky/context-Vorrang, Health-Zeile mit Tabellen-`max_lines`, Scope-Tabellen für 12 Sprachen, Rust-/Python-Buffer | ui.nvim `ae95e7f` |
 | Testleck behoben: `after_each` stellt Icons und Node-Listen wieder her (ein Test mit `icons = false` verfälschte die folgenden) | ui.nvim `ae95e7f` |
+| Self-Review von `ae95e7f`: die längere Pattern-Liste machte `is_scope_type` 4× langsamer (108 statt 26 µs je Vorfahrenkette, bei jeder Cursorbewegung); jetzt Cache pro Typname (0,11 µs). Kaputtes Pattern oder Nicht-String in `node_types` wirft nicht mehr (eine Warnung), `is_scope_type(nil)` auch nicht | ui.nvim `8379ca7` |
 
 Bewusst **nicht** gebaut: ein `:Markdown breadcrumbs` in markdown.nvim. Der Begriff
 „Breadcrumbs“ meint bei dir den lspsaga-Winbar aus lsp.nvim, ein gleichnamiger
@@ -172,7 +176,7 @@ Specs aus einem Worktree laufen lassen (die Geschwister-Suche in
 cd E:/repos/ui.nvim
 export LIB_NVIM_DIR=/e/repos/lib.nvim PLENARY_DIR="$LOCALAPPDATA/nvim-data/lazy/plenary.nvim"
 bash scripts/test.sh TESTS/context_spec.lua    # eine Spec
-bash scripts/test.sh                            # alle (47 Spec-Dateien, 490 Tests)
+bash scripts/test.sh                            # alle (47 Spec-Dateien, 495 Tests)
 stylua --check . && luacheck .                  # die beiden CI-Gates
 ```
 
