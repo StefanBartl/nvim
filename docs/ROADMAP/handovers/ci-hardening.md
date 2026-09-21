@@ -37,7 +37,7 @@
 | Abschlussprotokoll Runde 1+2 | `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md` |
 | Plugin-Repos | `E:\repos\<name>.nvim` |
 | CI-Verdikt je Plattform | `scripts/ci_status.sh [--red] [<name>]` (braucht `gh`) |
-| Vorlage für `publish-ci-verified` | `E:\repos\pickers.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (Vorwärts-Guard über die Compare-API). **Nicht** die Fassung in `lib.nvim` nehmen: die pusht bedingungslos `--force` (siehe Kleinkram) |
+| Vorlage für `publish-ci-verified` | `E:\repos\diff.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (vorwärts, fail-closed, `--force-with-lease`); gleiche Fassung in `lib.nvim`, `hover.nvim`, `runtime-analysis.nvim`. `pickers.nvim`/`ui.nvim`/`documentation.nvim` haben noch die ältere Fassung (siehe Kleinkram) |
 | Gelöschter Transformer | `git show 96c3b8537^:scripts/ci_hardening.py` — **ohne** die Pins für ui/documentation/pickers (diese Ergänzung ging mit der Löschung verloren; für einen Folge-Rollout `PIN_BRANCH` neu erweitern) |
 
 ## Erledigt 2026-09-21
@@ -69,8 +69,17 @@ Lehren (auch für künftige rote Repos):
   Plattformtest.** Sitzt der Stub hinter einer `if platform`-Verzweigung im
   Produktcode, zwingt man den Test in diese Verzweigung, statt ihn
   „zufällig" nur unter Windows grün zu haben.
+- **Ein Clipboard-Restore ist unzuverlässig.** Provider wie `win32yank`
+  schreiben asynchron; trotz Sichern/Wiederherstellen stand in 2 von 3 Läufen
+  der Testwert im System-Clipboard. Specs, die `*`/`+` schreiben, brauchen
+  einen In-Memory-Provider (`vim.g.clipboard`, vor dem ersten Registerzugriff
+  im Runner), keinen Restore.
+- **Stubs im Runner isolieren, nicht nur in der Spec.** Die Aufräumzeile einer
+  Spec läuft nicht, wenn ein `eq` davor wirft. `diff.nvim/TESTS/run.lua`
+  sichert deshalb die gestubbten Funktionen vor jeder Spec und stellt sie
+  danach wieder her.
 
-### `ci-verified` für diff.nvim
+### `ci-verified`: Job und Guard
 
 Der Auto-Mode-Classifier lehnte das Anlegen des Jobs zunächst ab (Kategorie
 „Unauthorized Persistence“: ein CI-Job, der per `--force` einen
@@ -79,19 +88,61 @@ umgesetzt.
 
 | Repo | Commit | Was |
 |---|---|---|
-| `diff.nvim` | `84987ab` | Job `publish-ci-verified` (`needs: [lint, tests]`, Vorwärts-Guard wie in pickers.nvim). CI grün, `ci-verified` steht auf `84987ab` |
+| `diff.nvim` | `84987ab`, `a0807a9` | Job `publish-ci-verified` (`needs: [lint, tests]`); `a0807a9` ersetzt die Vorwärts-Vorlage aus pickers.nvim durch den gehärteten Guard (s. u.) |
 | `gitsuite.nvim` | `b458053` | `diff.nvim`-Checkout mit `ref: ci-verified`; der letzte ungepinnte Konsument. CI grün auf allen drei Plattformen |
+| `lib.nvim` | `2400f7e` | gehärteter Guard statt bedingungslosem `--force`; `docs/CONTRIBUTING.md` und `templates/README.md` sprechen nicht mehr von „force-pushed“ |
+| `hover.nvim` | `dce6f07` | gehärteter Guard statt bedingungslosem `--force` |
+| `runtime-analysis.nvim` | `4b513e4` | gehärteter Guard statt bedingungslosem `--force`; `map` bleibt bewusst **nicht** in `needs` |
+
+Der Guard (Skript im Job-Schritt „Publish ci-verified“):
+
+- Der aktuelle Stand von `ci-verified` kommt aus `git ls-remote`, nicht aus
+  einer API-Antwort: „Branch fehlt“ ist damit sauber von einem Fehler
+  unterscheidbar, und ein fehlgeschlagener Lookup **stoppt den Job**. Die
+  Vorlage aus pickers.nvim verschluckte jeden Compare-Fehler
+  (`|| status=new`) und pushte dann trotzdem mit `--force`.
+- `behind`/`identical` (Stand ist schon veröffentlicht oder überholt) wird
+  übersprungen; `ahead`/`diverged` aktualisiert mit
+  `--force-with-lease=refs/heads/ci-verified:<verglichener Stand>`. Läuft
+  zwischen Vergleich und Push ein neuerer Lauf durch, lehnt der Server den
+  Push ab, statt ihn zu überschreiben. Beides lokal gegen ein Bare-Remote
+  mit flachem Klon und Stub-`gh` durchgespielt (Erst-Publish, ahead, behind,
+  identical, diverged, API-Fehler, Race, unerreichbares Remote); die alte
+  Vorlage fällt bei API-Fehler und Race durch.
+- **Bekannte Grenze:** laufen zwei Läufe praktisch gleichzeitig ab, kann der
+  spätere am Lease scheitern; der Job ist dann rot und `ci-verified` bleibt
+  auf dem früheren Commit. Sicher (fail-closed), ein Re-run genügt.
+- `map` in `runtime-analysis.nvim` bleibt draußen: der Self-Heal-`git push`
+  dort kann bei einem Push-Race scheitern, ohne dass der Code kaputt wäre; die
+  frühere Review-Notiz „wartet nicht auf `map`“ war demnach kein Fehler, der
+  Kommentar im Workflow hat recht.
+
+### Review der Commits dieser Session
+
+| Fund | Repo | Commit | Fix |
+|---|---|---|---|
+| Guard schluckte API-Fehler und hatte ein Race-Fenster (s. o.) | `diff`, `lib`, `hover`, `runtime-analysis` | `a0807a9`, `2400f7e`, `dce6f07`, `4b513e4` | fail-closed + Lease |
+| Test überschrieb bei jedem lokalen Lauf das System-Clipboard mit „233“ (schon im Original; ein Restore-Versuch erwies sich als unzuverlässig) | `emojis.nvim` | `532d633` | In-Memory-Provider im Runner; `*` wird nun auch auf nacktem Linux getestet, das `has("clipboard")`-Gate entfällt |
+| Runner ließ Stubs nach einer fehlgeschlagenen Spec in die nächste lecken (Ursache des irreführenden `url_spec`-Fehlers) | `diff.nvim` | `4c2c5ad` | Snapshot/Restore pro Spec; mit absichtlich gebrochener Spec belegt: nur noch 1 statt 2 Fehlschläge |
+| `record_as_windows` stellte `platform.current` nicht wieder her, wenn `record` wirft | `filetree.nvim` | `498330d` | `pcall` + Restore + erneutes Werfen |
+
+Geprüft ohne Befund: `fileops.nvim` `cad3e1a` (reine Formatierung),
+`gitsuite.nvim` `b458053` (nur `ref`), der Standard-`GITHUB_TOKEN` ist in
+allen fünf berührten Repos **read-only** (`contents: write` gibt es nur im
+Publish-Job), der neue Publish-Schritt reicht `github.*`-Werte über `env:` durch
+statt sie in die Shell zu interpolieren, und keine Commit-Message trägt eine Co-Author-Zeile.
+`scripts/ci_status.sh` bestätigt am Ende: **39 / 39 voll grün**.
 
 ## Offene Punkte
 
 ### Kleinkram
 
-- **Publish-Guard nachziehen** (Review-Fund vom 2026-09-21): der Job in
-  `pickers.nvim`/`ui.nvim`/`documentation.nvim` veröffentlicht `ci-verified`
-  nur noch vorwärts (Compare-API). `lib.nvim`, `hover.nvim` und
-  `runtime-analysis.nvim` haben noch die alte Fassung (`git push --force`
-  bedingungslos); `runtime-analysis.nvim` wartet zudem nicht auf den
-  `map`-Job. Vorlage: Job `publish-ci-verified` in `pickers.nvim`.
+- **Gehärteten Guard auch in `pickers.nvim`/`ui.nvim`/`documentation.nvim`
+  einsetzen:** dort steht noch die Vorwärts-Fassung mit `|| status=new` und
+  `--force` (siehe „Der Guard“ oben). Gleicher Austausch wie in `diff.nvim`
+  (`needs:` je Repo beibehalten, in `documentation.nvim` sind es
+  `stylua, luacheck, tests, map, standalone`). Bewusst nicht mit angefasst:
+  keine Commits dieser Session.
 - **13 Kind-Prozess-Spawns in Specs** (`"--headless"` in `casedesk`,
   `cmdlog`, `insights`, `language`, `media`, `pdfport` u. a.) ohne
   `-n`/`--clean`: prüfen, ob eines davon Dateien öffnet (E326-Risiko), bevor
