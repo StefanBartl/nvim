@@ -26,7 +26,7 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:20       |    08% / 38%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:20       |   100% / 51%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     23:40       |    03% / 79%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     21:50       |   100% / 38%     |
 
@@ -87,6 +87,7 @@ sesions.nvim:
 - [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
   - [ ] reale Beispiele: (bitte fixen):
     - [ ] ...
+- [ ] autocmds, usrcmds, keymaps -> bindings cheinen ein guter zeiger für features eines opklugins zu sein, arbeiten wird iese durch im sinne, dass in den dcos ach alle features des plugins dargestellt werden, aksi zb können usrcmds 1 und zwqeiu sowie keymapo x,y,z und autocmd drei -> ein feature des polugins darstellen; so hääte man die bindings docs auf der einen seite, und auf der andererrn seite die features, die dann in ihrer beschreibung mit den bindings verknüpft werden.
 
 ---
 
