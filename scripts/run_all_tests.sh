@@ -6,8 +6,8 @@
 # it assumes THIS machine's checkout layout (thirty sibling repos under
 # E:/repos), which is exactly what no published plugin should ship. So it
 # stays a script, in the folder for scripts rather than the one for open
-# questions. See docs/ROADMAP/personal/All/FINISH/ERLEDIGT/
-# roadmap-tools-analysis.md for the other seven.
+# questions. See $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/
+# ALL/Backlog/TASKS/roadmap-tools-analysis.md for the other seven.
 #
 # The point is the "no runner found" case: during the keymap migration I called
 # TESTS/run.lua in a repo whose runner is TESTS/pickers_spec.lua, got "cannot

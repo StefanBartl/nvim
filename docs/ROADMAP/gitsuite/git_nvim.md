@@ -19,7 +19,7 @@
 > Repo-Name — siehe [Offene Fragen](#offene-fragen).
 
 Angelegt 2026-09-17 aus dem Stub in dieser Datei, auf Basis von
-[`Externe-Plugins-Nachbau-Analyse.md`](../../personal/All/FINISH/ERLEDIGT/Externe-Plugins-Nachbau-Analyse.md)
+`Externe-Plugins-Nachbau-Analyse.md` (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/FEATURES/`)
 und einer Erhebung der tatsächlichen Git-Oberfläche dieser Config.
 
 ## Table of content
