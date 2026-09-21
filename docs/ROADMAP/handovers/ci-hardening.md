@@ -48,8 +48,10 @@
 `scripts/ci_status.sh` am 2026-09-21: **35 von 39** Repos voll grün. Die vier
 roten waren es schon vor dem Rollout (Jobs und Steps in `HEAD~1` und `HEAD`
 identisch), sie hängen also nicht an Timeouts, Flags, Artefakten oder Pins.
-Alle vier laden inzwischen bei Fehlschlag ihr Testlog als Artefakt hoch
-(`test-output-<job>-<os>`), das ist der schnellste Einstieg:
+Die drei Test-Fehlschläge (`emojis`, `diff`, `filetree`) laden bei Fehlschlag
+ihr Testlog als Artefakt hoch (`test-output-<job>-<os>`, 14 Tage), das ist
+der schnellste Einstieg; `fileops` ist ein Lint-Fehler ohne Artefakt (die
+stylua-Ausgabe steht im Job-Log):
 
 ```bash
 cd E:/repos/<repo>
@@ -119,6 +121,20 @@ Reihenfolge nach Aufwand, kleinstes zuerst.
 
 ### 5. Kleinkram
 
+- **Publish-Guard nachziehen** (Review-Fund vom 2026-09-21): der Job in
+  `pickers.nvim`/`ui.nvim`/`documentation.nvim` veröffentlicht `ci-verified`
+  nur noch vorwärts (Compare-API). `lib.nvim`, `hover.nvim` und
+  `runtime-analysis.nvim` haben noch die alte Fassung (`git push --force`
+  bedingungslos); `runtime-analysis.nvim` wartet zudem nicht auf den
+  `map`-Job. Vorlage: Job `publish-ci-verified` in `pickers.nvim`.
+- **13 Kind-Prozess-Spawns in Specs** (`"--headless"` in `casedesk`,
+  `cmdlog`, `insights`, `language`, `media`, `pdfport` u. a.) ohne
+  `-n`/`--clean`: prüfen, ob eines davon Dateien öffnet (E326-Risiko), bevor
+  man Testcode anfasst.
+- **Node-20-Verdacht** bei Aktionen außerhalb des Rollouts (mdview-WASM- und
+  `release-engine`-Artefakte, `setup-node@v4`, `setup-go@v5`, `cache@v4`,
+  Pages-Aktionen): Liste im Abschlussprotokoll; erst die Annotation eines
+  echten Laufs lesen, dann gezielt anheben.
 - **`TESTS/run.lua`-Kopfkommentare** nennen in mehreren Repos weiterhin die
   alten Aufrufe ohne `-n` — Dokumentationsdrift, kein Funktionsproblem;
   bei Gelegenheit mit den `ci.yml`-Aufrufen angleichen.
