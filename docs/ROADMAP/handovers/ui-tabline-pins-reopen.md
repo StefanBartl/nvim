@@ -1,9 +1,29 @@
 # ui.nvim Tableiste: Pinnen, „Tab wieder öffnen“ — Handover
 
-> Stand 2026-09-21. Das Rechtsklick-Tab-Menü, das Ziehen der Tabs und der
-> schnellere Close sind **fertig und gepusht** (ui.nvim `5bc0921`, Config
-> `ed04b5abd`). Diese Akte hält die zwei danach besprochenen Features, ein
-> optionales drittes und die Commit-Liste dieses Chats zum Gegenprüfen.
+> **ERLEDIGT (2026-09-21).** Alle drei Aufgaben unten sind umgesetzt, getestet
+> (Unit-Specs plus ein Headless-Smoke-Test mit echtem `require("ui").setup()`
+> und echten `<leader>bp`/`<leader>bu`-Tastendrücken) und gepusht:
+> Pinnen (Aufgabe 1), „Tab wieder öffnen“ (Aufgabe 2) und Auto-Scroll beim
+> Ziehen (Aufgabe 3 — trotz „optional/niedrige Priorität“ auf Wunsch mit
+> umgesetzt). ui.nvim `bfd5db9` (`feat(tabline): pin tabs, reopen closed
+> tabs, auto-scroll while dragging`), Config `c51dea88c` (`docs(bindings): …`).
+> Details siehe [BINDINGS.md](../../BINDINGS.md) → „Pinning“ / „Reopening a
+> closed tab“ / „Dragging“ in `ui.nvim/docs/BINDINGS.md`, und die
+> Bindings-Notiz `docs/NOTES/ExternPlugins/Bindings/Keymaps/NvChadUI.md`.
+>
+> Ein echter Fund unterwegs: `vim.t`/`vim.g`/`vim.b` runden eine Lua-Tabelle
+> mit kleinen positiven Integer-Keys beim Round-Trip zu einer mit `vim.NIL`
+> aufgefüllten VimL-Liste ab, nicht zu einem Dict — und `vim.NIL` ist in Lua
+> *truthy*. Ein naives `{[bufnr]=true}`-Pin-Set hätte deshalb jeden
+> niedrigeren Bufnr fälschlich als gepinnt gelesen; der Pin-Zustand ist jetzt
+> eine reine Liste von Bufnrn (siehe `state.lua`'s `is_pinned`-Kommentar).
+>
+> Stand davor (2026-09-21, vor dieser Session): Das Rechtsklick-Tab-Menü, das
+> Ziehen der Tabs und der schnellere Close waren **fertig und gepusht**
+> (ui.nvim `5bc0921`, Config `ed04b5abd`). Diese Akte hielt die zwei danach
+> besprochenen Features, ein optionales drittes und die Commit-Liste dieses
+> Chats zum Gegenprüfen — Rest der Datei unten ist der ursprüngliche Auftrag,
+> unverändert für die Nachvollziehbarkeit stehengelassen.
 
 ## Table of content
 
