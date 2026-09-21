@@ -61,11 +61,26 @@ Deinstalliert am 2026-09-19. Den Sticky-Context (die umschließenden
 sind, über den ersten Zeilen fixiert) zeichnet seitdem ui.nvims `ui.context`,
 eingeschaltet in
 [lua/config/ui_statusline/init.lua](../../../../../lua/config/ui_statusline/init.lua)
-über `require("ui").setup({ context = { max_lines = 3 } })` — derselbe
-Deckel wie im alten Spec. Kein Autocmd in dieser Config; die Autocmds
+über `require("ui").setup({ sticky = { max_lines = { default = 3, markdown = 6 },
+headings = { max_level = 6 } } })` — für Code derselbe Deckel wie im alten
+Spec, für Markdown 6 Zeilen, damit eine ganze H1..H6-Kette hineinpasst. Kein
+Autocmd in dieser Config; die Autocmds
 (`WinScrolled`/`CursorMoved`/`BufEnter`/…, debounced) gehören dem Modul.
-Bedienung: `:UI context [on|off]` für die Session, `:UI context up [n]`
-springt zum n-ten umschließenden Scope. Keine Keymaps.
+
+Bedienung (seit 2026-09-21 unter dem Namen `sticky`; `:UI context` bleibt als
+Alias):
+
+| Command | Effect |
+|---|---|
+| `:UI sticky [on\|off\|toggle]` | schaltet den Overlay für die Session um bzw. setzt ihn explizit |
+| `:UI sticky status` | zeigt Zustand, Heading-Tiefe und Zeilenlimit |
+| `:UI sticky depth [1-6\|all]` | tiefste Markdown-Heading-Ebene, die gepinnt wird (ohne Argument: Anzeige) |
+| `:UI sticky lines [ft] [n]` | Zeilenlimit für einen Filetype oder für alle anderen; `0` = unbegrenzt |
+| `:UI sticky up [n]` | springt zum n-ten umschließenden Scope (auch bei ausgeschaltetem Overlay) |
+
+`depth` und `lines` gelten nur für die laufende Session; dauerhaft steht es in
+`ui_statusline/init.lua` (`sticky = false` schaltet das Feature ab). Keine
+Keymaps.
 
 ## `nvim-treesitter-textobjects`
 
