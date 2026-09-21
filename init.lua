@@ -218,6 +218,9 @@ startup.now("lsp", function()
   -- migration is gone, the plugin is the only source now.
   require("lsp").setup({
     mason = { ensure_install = false },
+    -- Stage/Reset/Preview Hunk in the `lsa` list when the cursor is on a hunk.
+    -- Trial from 2026-09-21; drop the line to go back to the default (off).
+    code_actions = { gitsigns = true },
     -- The plugin-name list is this config's data, so it is handed over rather
     -- than reached for. Passed here and not from a completion engine's spec:
     -- it used to be wired from nvim-cmp's `opts`, which meant switching to
