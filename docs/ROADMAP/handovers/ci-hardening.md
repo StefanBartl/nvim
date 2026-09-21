@@ -37,7 +37,7 @@
 | Abschlussprotokoll Runde 1+2 | `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md` |
 | Plugin-Repos | `E:\repos\<name>.nvim` |
 | CI-Verdikt je Plattform | `scripts/ci_status.sh [--red] [<name>]` (braucht `gh`) |
-| Vorlage für `publish-ci-verified` | `E:\repos\diff.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (vorwärts, fail-closed, `--force-with-lease`); gleiche Fassung in `lib.nvim`, `hover.nvim`, `runtime-analysis.nvim`. `pickers.nvim`/`ui.nvim`/`documentation.nvim` haben noch die ältere Fassung (siehe Kleinkram) |
+| Vorlage für `publish-ci-verified` | `E:\repos\diff.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (vorwärts, fail-closed, `--force-with-lease`); gleiche Fassung in `lib.nvim`, `hover.nvim`, `runtime-analysis.nvim`, `pickers.nvim`, `ui.nvim`, `documentation.nvim`; nur `lsp.nvim` hat noch die alte (siehe Kleinkram) |
 | Gelöschter Transformer | `git show 96c3b8537^:scripts/ci_hardening.py` — **ohne** die Pins für ui/documentation/pickers (diese Ergänzung ging mit der Löschung verloren; für einen Folge-Rollout `PIN_BRANCH` neu erweitern) |
 
 ## Erledigt 2026-09-21
@@ -93,6 +93,9 @@ umgesetzt.
 | `lib.nvim` | `2400f7e` | gehärteter Guard statt bedingungslosem `--force`; `docs/CONTRIBUTING.md` und `templates/README.md` sprechen nicht mehr von „force-pushed“ |
 | `hover.nvim` | `dce6f07` | gehärteter Guard statt bedingungslosem `--force` |
 | `runtime-analysis.nvim` | `4b513e4` | gehärteter Guard statt bedingungslosem `--force`; `map` bleibt bewusst **nicht** in `needs` |
+| `pickers.nvim` | `fa90048` | ersetzt die Vorwärts-Fassung mit `\|\| status=new`; `needs` unverändert |
+| `ui.nvim` | `3890818` | wie oben |
+| `documentation.nvim` | `088c27f` | wie oben; `needs` bleibt `stylua, luacheck, tests, map, standalone` |
 
 Der Guard (Skript im Job-Schritt „Publish ci-verified“):
 
@@ -121,7 +124,7 @@ Der Guard (Skript im Job-Schritt „Publish ci-verified“):
 
 | Fund | Repo | Commit | Fix |
 |---|---|---|---|
-| Guard schluckte API-Fehler und hatte ein Race-Fenster (s. o.) | `diff`, `lib`, `hover`, `runtime-analysis` | `a0807a9`, `2400f7e`, `dce6f07`, `4b513e4` | fail-closed + Lease |
+| Guard schluckte API-Fehler und hatte ein Race-Fenster (s. o.) | `diff`, `lib`, `hover`, `runtime-analysis`, `pickers`, `ui`, `documentation` | `a0807a9`, `2400f7e`, `dce6f07`, `4b513e4`, `fa90048`, `3890818`, `088c27f` | fail-closed + Lease; bei allen sieben lief der Lease-Pfad im echten Lauf (`<alt>...<neu> (forced update)`), `ci-verified` steht jeweils auf dem gepushten Commit |
 | Test überschrieb bei jedem lokalen Lauf das System-Clipboard mit „233“ (schon im Original; ein Restore-Versuch erwies sich als unzuverlässig) | `emojis.nvim` | `532d633` | In-Memory-Provider im Runner; `*` wird nun auch auf nacktem Linux getestet, das `has("clipboard")`-Gate entfällt |
 | Runner ließ Stubs nach einer fehlgeschlagenen Spec in die nächste lecken (Ursache des irreführenden `url_spec`-Fehlers) | `diff.nvim` | `4c2c5ad` | Snapshot/Restore pro Spec; mit absichtlich gebrochener Spec belegt: nur noch 1 statt 2 Fehlschläge |
 | `record_as_windows` stellte `platform.current` nicht wieder her, wenn `record` wirft | `filetree.nvim` | `498330d` | `pcall` + Restore + erneutes Werfen |
@@ -137,12 +140,13 @@ statt sie in die Shell zu interpolieren, und keine Commit-Message trägt eine Co
 
 ### Kleinkram
 
-- **Gehärteten Guard auch in `pickers.nvim`/`ui.nvim`/`documentation.nvim`
-  einsetzen:** dort steht noch die Vorwärts-Fassung mit `|| status=new` und
-  `--force` (siehe „Der Guard“ oben). Gleicher Austausch wie in `diff.nvim`
-  (`needs:` je Repo beibehalten, in `documentation.nvim` sind es
-  `stylua, luacheck, tests, map, standalone`). Bewusst nicht mit angefasst:
-  keine Commits dieser Session.
+- **`lsp.nvim` hat noch die alte Publish-Fassung:** ein bedingungsloses
+  `git push origin HEAD:refs/heads/ci-verified --force`, `needs: [lint,
+  test, smoke]`. Beim flottenweiten Scan (Workflows nach
+  `refs/heads/ci-verified` durchsucht, dann `--force-with-lease` gezählt)
+  entdeckt; die frühere Liste der Repos mit alter Fassung nannte es nicht.
+  Kein Teil der freigegebenen Repos, deshalb nicht angefasst. Gleicher
+  Austausch wie in `diff.nvim`, danach `needs:` beibehalten.
 - **13 Kind-Prozess-Spawns in Specs** (`"--headless"` in `casedesk`,
   `cmdlog`, `insights`, `language`, `media`, `pdfport` u. a.) ohne
   `-n`/`--clean`: prüfen, ob eines davon Dateien öffnet (E326-Risiko), bevor
@@ -195,5 +199,13 @@ statt sie in die Shell zu interpolieren, und keine Commit-Message trägt eine Co
 - **`docs_linkcheck.py` unter Windows:** mit `PYTHONUTF8=1
   PYTHONIOENCODING=utf-8` starten, sonst bricht es bei Emoji-Zeichen mit
   `UnicodeEncodeError` ab.
+- **Push auf `main` verifizieren:** `main` wird gelegentlich aus dem
+  Hauptcheckout force-gepusht, ein eigener Push kann dabei verschwinden
+  (so geschehen mit dem Akten-Commit dieser Session; die Plugin-Repos
+  waren nicht betroffen). Nach jedem Push `git fetch` und
+  `git merge-base --is-ancestor HEAD origin/main`; bei `NO` auf das neue
+  `origin/main` rebasen und neu pushen. Die Remote-Tracking-Refs teilen
+  sich alle Worktrees: eine andere Session kann sie zwischen zwei Befehlen
+  weiterbewegen.
 - **Worktree-Falle:** In einer Worktree-Session Dateien nur unter dem
   Worktree-Pfad ändern, nicht im Hauptcheckout (`nvim-worktree-vs-main-checkout-trap`).
