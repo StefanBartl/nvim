@@ -1,12 +1,14 @@
 # ui.nvim Sticky-Context — Handover (nur offene Punkte)
 
-> Stand 2026-09-21 (abends). `:UI sticky` (Alias `:UI context`) mit Heading-Tiefe
+> Stand 2026-09-21 (spätabends). `:UI sticky` (Alias `:UI context`) mit Heading-Tiefe
 > und Zeilenlimit ist **fertig, gemergt und gepusht** (ui.nvim `fa2dfa9`). Die
 > Scope-Lücken (Rust und andere Sprachen), die gemeinsame Heading-Erkennung und
-> die fehlenden Specs sind seit ui.nvim `ae95e7f` erledigt. Diese Akte hält nur,
-> was danach übrig ist: eine Sichtprüfung im echten Fenster, ein paar
-> Entscheidungen von dir und einige Sprachen, die nur per Query, nicht per
-> echtem Parser geprüft sind.
+> die fehlenden Specs sind seit ui.nvim `ae95e7f` erledigt. Die sechs offenen
+> Fragen sind entschieden und, wo gewählt, gebaut (ui.nvim `ef5c8e2`: YAML-Scope,
+> gespeicherte `depth`/`lines`, `:UI sticky reset`; Config `423164869`). Diese
+> Akte hält nur, was danach übrig ist: eine Sichtprüfung im echten Fenster (die
+> auch das Winbar-Duplikat entscheidet) und einige Sprachen, die nur per Query,
+> nicht per echtem Parser geprüft sind.
 
 ## Table of content
 
@@ -15,7 +17,7 @@
 - [Ausgangslage](#ausgangslage)
 - [Offene Punkte](#offene-punkte)
   - [1. Sichtprüfung im echten Fenster](#1-sichtprüfung-im-echten-fenster)
-  - [2. Entscheidungen, noch nicht getroffen](#2-entscheidungen-noch-nicht-getroffen)
+  - [2. Entscheidungen (getroffen 2026-09-21)](#2-entscheidungen-getroffen-2026-09-21)
   - [3. Sprachen ohne echten Parser-Test](#3-sprachen-ohne-echten-parser-test)
   - [4. Markdown-Varianten: mdx, quarto, rmd](#4-markdown-varianten-mdx-quarto-rmd)
 - [Was schon erledigt ist](#was-schon-erledigt-ist)
@@ -47,12 +49,13 @@
 
 | Was | Wo |
 |---|---|
-| Modul | `E:\repos\ui.nvim\lua\ui\context\init.lua` |
+| Modul | `E:\repos\ui.nvim\lua\ui\context\init.lua`, gespeicherte Werte in `lua\ui\context\state.lua` |
 | Command | `E:\repos\ui.nvim\lua\ui\bindings\usrcmds\init.lua`, Funktion `ui_sticky` |
-| Specs | `E:\repos\ui.nvim\TESTS\context_spec.lua` (62 Tests), dazu `config_spec.lua` (`opts.sticky / opts.context`) und `health_spec.lua` (Abschnitt Context) |
+| Specs | `E:\repos\ui.nvim\TESTS\context_spec.lua` (74 Tests), dazu `config_spec.lua` (`opts.sticky / opts.context`) und `health_spec.lua` (Abschnitt Context) |
 | Plugin-Docs | `ui.nvim/docs/configuration.md` (Abschnitt Context inkl. Tabelle „was pro Sprache gepinnt wird“), `docs/BINDINGS.md`, `docs/health.md`, `docs/scope.md` |
 | Verdrahtung in dieser Config | `lua/config/ui_statusline/init.lua`, Schlüssel `sticky = { … }` |
-| Bindings-Notiz | `docs/NOTES/ExternPlugins/Bindings/Autocmds/Treesitter.md`, Abschnitt `ui.context` |
+| Bindings-Notiz | `docs/NOTES/ExternPlugins/Bindings/Autocmds/Treesitter.md`, Abschnitt `ui.context`; Befehlsblatt `Usercmds/UiSticky.md` |
+| State-Datei (mit `persist = true`) | `C:\Users\bartl\AppData\Local\nvim-data\ui.nvim\sticky.json` |
 | CI-Verdikt | `bash scripts/ci_status.sh ui.nvim` (braucht `gh`) |
 
 ## Ausgangslage
@@ -96,35 +99,47 @@ Alles wurde headless getestet, nichts visuell. Einmal von Hand ansehen:
    ruhig genug, oder pinnt es jetzt zu viel? Ein eingerückter Markdown-Heading
    (` ## x`) trägt Band und Icon auf dem `#`.
 
-### 2. Entscheidungen, noch nicht getroffen
+### 2. Entscheidungen (getroffen 2026-09-21)
 
-- **Filetype-Schalter.** Es gibt nur ein globales an/aus. Falls das Overlay nur
-  in Markdown oder nur in Code laufen soll: `filetypes`-Include-Liste oder
-  `enable = { markdown = true }`. Heute geht nur `exclude_filetypes`.
-- **Session-Werte dauerhaft.** `:UI sticky depth` und `lines` gelten nur bis
-  zum Neustart. Dauerhaft nur über `ui_statusline/init.lua`. Falls gewünscht:
-  Persistenz (State-Datei) oder ein Hinweis im Notify-Text.
-- **Winbar-Duplikat** (Punkt 1.5): Entweder `winbar_max_symbols.markdown`
-  in lsp.nvim erhöhen und das Overlay auf Code beschränken, oder umgekehrt.
-- **JSON/YAML/TOML pinnen nichts.** Kein Knotentyp dort ist ein Scope. Für
-  tief verschachteltes YAML wäre eine Kette der Eltern-Schlüssel nützlich:
-  `"^block_mapping_pair$"` in `node_types` (YAML-Parser ist installiert, also
-  echt prüfbar). Nicht gebaut, weil es Verhalten ist, das du nicht verlangt hast.
-- **Lambdas/Closures** (Java, C#, Rust, Kotlin) bleiben draußen, obwohl
-  `arrow_function`/`function_expression`/`func_literal` (JS/TS/Go) gepinnt
-  werden. Begründung: dort sind Callbacks Testrümpfe, in den anderen Sprachen
-  meist Einzeiler. Falls anders gewünscht, `^lambda_expression$` /
-  `^closure_expression$` ergänzen.
-- **Usercmds-Cheatsheet.** `docs/NOTES/BINDINGS-FORMAT.md` sieht je Plugin eine
-  Datei unter `Usercmds/` vor. Für die `:UI`-Familie gibt es keine
-  (nur `Usercmds/NvChadUI.md`), die Sticky-Befehle stehen ausschließlich in der
-  Treesitter-Notiz. Nicht geprüft, ob das Absicht ist.
+Alle sechs offenen Fragen sind beantwortet. Gebaut wurde, was du gewählt hast
+(ui.nvim `ef5c8e2`, Config `423164869`):
+
+| Frage | Entscheidung | Stand |
+|---|---|---|
+| Filetype-Schalter (nur Markdown / nur Code) | nichts bauen; `exclude_filetypes` und der globale Toggle reichen | erledigt (nichts zu tun) |
+| Session-Werte dauerhaft | State-Datei | **gebaut**: `persist = true` speichert `depth`/`lines` nach `stdpath("state")/ui.nvim/sticky.json`, `:UI sticky reset` verwirft sie; in der Config an (`ui_statusline/init.lua`) |
+| Winbar-Duplikat in Markdown | so lassen, erst die Sichtprüfung (Punkt 1.5) | **offen**, hängt an der Sichtprüfung |
+| JSON/YAML/TOML | nur YAML | **gebaut**: `^block_mapping_pair$` pinnt die Eltern-Schlüssel (`jobs:` > `build:` > `steps:`), am echten YAML-Parser geprüft; JSON und TOML pinnen weiter nichts |
+| Lambdas/Closures (Java, C#, Rust, Kotlin) | draußen lassen | erledigt (nichts zu tun) |
+| Usercmds-Cheatsheet für `:UI sticky` | neues Blatt | **gebaut**: `docs/NOTES/ExternPlugins/Bindings/Usercmds/UiSticky.md`; `:Bindings check` zeigt dazu keinen neuen Befund |
+
+Wie die Persistenz arbeitet, damit sie nicht überrascht:
+
+- Gespeichert wird nur, was ein Befehl geändert hat; der Rest bleibt in der Config.
+- Ein gespeicherter Wert schlägt die Config, bis `:UI sticky reset`. Ändert man
+  `max_lines` in `ui_statusline/init.lua` und sieht keinen Effekt, zeigt
+  `:UI sticky status` den Override.
+- Ein `setup`, das `max_lines` oder `headings.max_level` neu nennt, ersetzt den
+  Override des Befehls für genau diesen Wert; `set_max_level`/`set_max_lines`
+  laufen nicht mehr über `setup` (sonst würde `reset` auf den falschen Stand
+  zurückgehen).
+- Aus im Plugin (`persist = false`), damit ein geteiltes Plugin nichts schreibt,
+  was der Host nicht verlangt hat. Kaputte oder unsinnige Dateien werden
+  ignoriert. Live in der echten Config geprüft: speichern, Neustart, laden, reset.
+
+**Nebenbefund, nicht Teil dieser Aufgabe:** die CI ist auf Windows und macOS seit
+`bfd5db9` rot (Ubuntu grün), alle lokalen Läufe sind grün. Es sind genau zwei
+Tabline-Specs (`tabline_menu_spec.lua:375`, `tabline_reopen_spec.lua:175`), die
+Pfade als rohe Strings vergleichen: Windows mischt `\` und `/`, macOS liefert
+`/private/var/...` gegen `/var/...`. Als eigene Aufgabe vorgemerkt.
 
 ### 3. Sprachen ohne echten Parser-Test
 
-Echt am Parser geprüft sind nur Lua, Markdown, Rust und Python (nur diese Parser
-sind hier installiert). Go, Java, C#, JavaScript, TypeScript, Kotlin, Bash, C,
-JSON, YAML, TOML sind gegen die Knotennamen in
+Echt am Parser geprüft sind Lua, Markdown, Rust, Python und (seit `ef5c8e2`)
+YAML. Im Ordner `nvim-data/site/parser` liegen außerdem `json.so` und `toml.so`
+(das Handover behauptete früher, es gäbe nur vier Parser), sie sind nur nicht
+per Spec eingebunden. Go, Java, C#, JavaScript, TypeScript, Kotlin, Bash, C,
+JSON, TOML sind gegen die Knotennamen in
 `nvim-treesitter/runtime/queries/<lang>/*.scm` geprüft, nicht an einem Buffer.
 Wer eine dieser Sprachen benutzt und ein Fehlverhalten sieht: `:lua
 =vim.treesitter.get_node():type()` am Cursor, dann `is_scope_type("<typ>")`.
@@ -162,6 +177,9 @@ Nur anfassen, wenn du diese Dateitypen benutzt.
 | Specs: `ui.setup` sticky/context-Vorrang, Health-Zeile mit Tabellen-`max_lines`, Scope-Tabellen für 12 Sprachen, Rust-/Python-Buffer | ui.nvim `ae95e7f` |
 | Testleck behoben: `after_each` stellt Icons und Node-Listen wieder her (ein Test mit `icons = false` verfälschte die folgenden) | ui.nvim `ae95e7f` |
 | Self-Review von `ae95e7f`: die längere Pattern-Liste machte `is_scope_type` 4× langsamer (108 statt 26 µs je Vorfahrenkette, bei jeder Cursorbewegung); jetzt Cache pro Typname (0,11 µs). Kaputtes Pattern oder Nicht-String in `node_types` wirft nicht mehr (eine Warnung), `is_scope_type(nil)` auch nicht | ui.nvim `8379ca7` |
+| YAML pinnt die Eltern-Schlüssel (`^block_mapping_pair$`), Spec am echten YAML-Parser | ui.nvim `ef5c8e2` |
+| Gespeicherte `depth`/`lines` (`persist`, `state_file`), `:UI sticky reset`, `status` zeigt die Overrides, Health zeigt die Datei; 10 Specs | ui.nvim `ef5c8e2` |
+| `persist = true` in der Config, Blatt `Usercmds/UiSticky.md`, Treesitter-Notiz nachgezogen | Config `423164869` |
 
 Bewusst **nicht** gebaut: ein `:Markdown breadcrumbs` in markdown.nvim. Der Begriff
 „Breadcrumbs“ meint bei dir den lspsaga-Winbar aus lsp.nvim, ein gleichnamiger
@@ -176,7 +194,7 @@ Specs aus einem Worktree laufen lassen (die Geschwister-Suche in
 cd E:/repos/ui.nvim
 export LIB_NVIM_DIR=/e/repos/lib.nvim PLENARY_DIR="$LOCALAPPDATA/nvim-data/lazy/plenary.nvim"
 bash scripts/test.sh TESTS/context_spec.lua    # eine Spec
-bash scripts/test.sh                            # alle (47 Spec-Dateien, 495 Tests)
+bash scripts/test.sh                            # alle (52 Spec-Dateien)
 stylua --check . && luacheck .                  # die beiden CI-Gates
 ```
 
