@@ -3,20 +3,18 @@
 > Der Flotten-Rollout der CI-Sofortmaßnahmen ist **fertig** (2026-09-21, alle
 > 39 Plugin-Repos, Protokoll:
 > [sofortmassnahmen.md](../personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md)).
-> Diese Akte hält nur, was danach übrig ist: vier vorbestehende rote Repos
-> und ein fehlender `ci-verified`-Branch.
+> Die vier danach noch roten Repos sind **repariert** (siehe
+> [Erledigt](#erledigt-2026-09-21)); offen ist der `ci-verified`-Branch für
+> `diff.nvim` samt Pin in `gitsuite.nvim` und der Kleinkram.
 
 ## Table of content
 
 - [Regeln für diese Session](#regeln-für-diese-session)
 - [Orte](#orte)
-- [Ausgangslage](#ausgangslage)
+- [Erledigt 2026-09-21](#erledigt-2026-09-21)
 - [Offene Punkte](#offene-punkte)
-  - [1. fileops.nvim: stylua-Abweichung](#1-fileopsnvim-stylua-abweichung)
-  - [2. emojis.nvim: eine Spec rot unter ubuntu](#2-emojisnvim-eine-spec-rot-unter-ubuntu)
-  - [3. diff.nvim: macOS-Suite rot, dann ci-verified](#3-diffnvim-macos-suite-rot-dann-ci-verified)
-  - [4. filetree.nvim: ubuntu und macOS rot](#4-filetreenvim-ubuntu-und-macos-rot)
-  - [5. Kleinkram](#5-kleinkram)
+  - [1. diff.nvim: ci-verified veröffentlichen, gitsuite pinnen](#1-diffnvim-ci-verified-veröffentlichen-gitsuite-pinnen)
+  - [2. Kleinkram](#2-kleinkram)
 - [Handwerkszeug](#handwerkszeug)
 
 ---
@@ -40,86 +38,60 @@
 | Abschlussprotokoll Runde 1+2 | `docs/ROADMAP/personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md` |
 | Plugin-Repos | `E:\repos\<name>.nvim` |
 | CI-Verdikt je Plattform | `scripts/ci_status.sh [--red] [<name>]` (braucht `gh`) |
-| Vorlage für `publish-ci-verified` | `E:\repos\lib.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` |
+| Vorlage für `publish-ci-verified` | `E:\repos\pickers.nvim\.github\workflows\ci.yml`, Job `publish-ci-verified` (Vorwärts-Guard über die Compare-API). **Nicht** die Fassung in `lib.nvim` nehmen: die pusht bedingungslos `--force` (siehe Kleinkram) |
 | Gelöschter Transformer | `git show 96c3b8537^:scripts/ci_hardening.py` — **ohne** die Pins für ui/documentation/pickers (diese Ergänzung ging mit der Löschung verloren; für einen Folge-Rollout `PIN_BRANCH` neu erweitern) |
 
-## Ausgangslage
+## Erledigt 2026-09-21
 
-`scripts/ci_status.sh` am 2026-09-21: **35 von 39** Repos voll grün. Die vier
-roten waren es schon vor dem Rollout (Jobs und Steps in `HEAD~1` und `HEAD`
-identisch), sie hängen also nicht an Timeouts, Flags, Artefakten oder Pins.
-Die drei Test-Fehlschläge (`emojis`, `diff`, `filetree`) laden bei Fehlschlag
-ihr Testlog als Artefakt hoch (`test-output-<job>-<os>`, 14 Tage), das ist
-der schnellste Einstieg; `fileops` ist ein Lint-Fehler ohne Artefakt (die
-stylua-Ausgabe steht im Job-Log):
+Alle vier waren schon vor dem Rollout rot; die Ursachen lagen ausnahmslos im
+**Testcode**, nicht im Produktcode. Stand nach den Fixes: CI voll grün auf
+ubuntu, windows und macOS in `fileops`, `emojis`, `diff` und `filetree`.
 
-```bash
-cd E:/repos/<repo>
-id=$(gh run list --workflow CI --limit 1 --json databaseId -q '.[0].databaseId')
-gh run view "$id" --log-failed | tail -60
-gh api repos/StefanBartl/<repo>/actions/runs/$id/artifacts -q '.artifacts[].name'
-```
+| Repo | Commit | Ursache | Fix |
+|---|---|---|---|
+| `fileops.nvim` | `cad3e1a` | eine Zeile in `TESTS/cycle_edge_spec.lua` nicht stylua-konform | `stylua` |
+| `emojis.nvim` | `2202683` | `unicode_spec` las `getreg("*")` zurück; ein Linux-Runner ohne Clipboard-Provider (xclip/wl-copy) speichert das Register nicht | Rücklesen von `*` nur bei `has("clipboard") == 1`, Rundreise zusätzlich über das immer vorhandene Register `-` |
+| `diff.nvim` | `f1e0dbc`, `60fe9d4` | `history_spec` verglich den Buffernamen mit dem unaufgelösten `tempname()`; nvim speichert Buffernamen umgeschrieben (macOS `/var` → `/private/var`, Windows behält `RUNNER~1`). Der `url_spec`-„404"-Fehler war ein **Folgefehler** davon (s. u.) | Erwartung aus dem tatsächlichen Buffernamen ableiten |
+| `filetree.nvim` | `fbe3812` | `TESTS/refs/run.lua` täuscht den OS-Restore über `run_argv.run_blocking` vor; das ruft nur `restore_windows` bedingungslos auf, `restore_linux_mac` braucht ein echtes `gio`/XDG-Trash → „Could not restore" auf ubuntu und macOS | Einträge der „chunked race"-Spec als `windows` aufzeichnen (`platform.current` kurz überschrieben), sodass jeder Host den vorgetäuschten Zweig nimmt |
+
+Lehren (auch für künftige rote Repos):
+
+- **Kaskadenfehler zuerst ausschließen.** Wirft ein `eq` in einer Spec, bricht
+  sie ab, ohne ihre Aufräumzeilen (`vim.system = saved_system`) auszuführen;
+  der Stub leckt in die **nächste** Spec. Der `url_spec`-Fehler war die
+  zurückgegebene URL aus dem `vim.system`-Stub von `history_spec`. Die zweite
+  rote Spec im Log erst nach der ersten prüfen. (Passt zu `busted-cascade-failures`.)
+- **`fs_realpath` ist kein plattformübergreifender Normalisierer.** Es löst
+  unter macOS Symlinks auf (richtig), expandiert unter Windows aber
+  8.3-Kurznamen, die der Buffername behält. Erwartungswerte besser aus dem
+  ableiten, was das System tatsächlich liefert (`nvim_buf_get_name`).
+- **Ein Stub, der nur auf einer Plattform greift, ist ein versteckter
+  Plattformtest.** Sitzt der Stub hinter einer `if platform`-Verzweigung im
+  Produktcode, zwingt man den Test in diese Verzweigung, statt ihn
+  „zufällig" nur unter Windows grün zu haben.
 
 ## Offene Punkte
 
-Reihenfolge nach Aufwand, kleinstes zuerst.
+### 1. diff.nvim: ci-verified veröffentlichen, gitsuite pinnen
 
-### 1. fileops.nvim: stylua-Abweichung
+`diff.nvim` ist jetzt grün auf allen drei Plattformen, die Voraussetzung ist
+erfüllt. Noch **nichts davon ist umgesetzt** — der Auto-Mode-Classifier
+lehnte das Anlegen des Jobs ab (Kategorie „Unauthorized Persistence": ein
+CI-Job, der per `--force` einen Remote-Branch überschreibt). Es bleibt eine
+bewusste Freigabe des Nutzers.
 
-- **Symptom:** `lint (stylua + luacheck)`, Step `stylua --check`.
-- **Befund:** Diff in `TESTS/cycle_edge_spec.lua` um Zeile 280 — die Zeile
-  `local rnok, rnmsg = cycle.navigate(missing, "next", opts_with({ root = "buffer_dir_recursive" }), 1)`
-  muss nach stylua umbrochen werden (`local rnok, rnmsg =` / Aufruf eingerückt
-  in der Folgezeile).
-- **Vorgehen:** im Repo `stylua TESTS/cycle_edge_spec.lua` (v2.5.2!),
-  `git diff` prüfen, committen, pushen. Kein Verhalten betroffen.
+1. `publish-ci-verified`-Job an `diff.nvim/.github/workflows/ci.yml` anhängen.
+   Vorlage: pickers.nvim (Vorwärts-Guard), `needs: [lint, tests]` — in
+   diff.nvim heißen die Jobs `lint` und `tests`, nicht `lint`/`test`.
+   Die Datei ist im Arbeitsbaum **LF** (nicht CRLF), `python`-Skript reicht.
+2. Push, CI grün abwarten, `git ls-remote --heads
+   https://github.com/StefanBartl/diff.nvim ci-verified` bestätigen.
+3. In `gitsuite.nvim/.github/workflows/ci.yml` (Zeile ~53, Job-Schritt
+   „Checkout diff.nvim") `ref: ci-verified` ergänzen; der einzige noch
+   ungepinnte Konsument. Erst **nach** Schritt 2, sonst schlägt der Checkout
+   auf einen nicht existierenden Branch fehl.
 
-### 2. emojis.nvim: eine Spec rot unter ubuntu
-
-- **Symptom:** ubuntu, Step „Run TESTS suite": `1 spec(s) failed (885 checks
-  ran)`; windows und macos grün.
-- **Offen:** welche Spec, und warum nur ubuntu. Das Log-Ende zeigt die
-  passierten Dateien (`api_spec`, `bindings_spec`, `health_spec`,
-  `install_spec_spec`), nicht die fehlgeschlagene — im vollen Log nach
-  `FAIL` suchen, dann lokal mit dem CI-Aufruf
-  (`nvim -n -i NONE --headless … TESTS/run.lua` bzw. was `ci.yml` nennt)
-  nachstellen.
-- **Hypothese (ungeprüft):** Plattformabhängigkeit (Pfad/Case-Sensitivity,
-  fehlendes `rg`/`curl` auf dem Runner — `docs/install.json` deklariert `rg`
-  und `curl` seit `da9daaf`).
-
-### 3. diff.nvim: macOS-Suite rot, dann ci-verified
-
-- **Symptom:** macOS, Step „Run spec suite" (Job „Headless spec suite
-  (macos-latest)"); ubuntu/windows grün.
-- **Offen:** Ursache unbekannt. **Erste Hypothese:** derselbe macOS-Fall wie
-  bei `pickers.nvim` (`/var/folders/…` vs. `/private/var/folders/…` — ein
-  Test vergleicht `tempname()` mit einem aufgelösten Pfad, oder Produktcode
-  vergleicht Buffernamen mit dem übergebenen Pfad). Dort war der Fix
-  `vim.uv.fs_realpath` vor dem Verschieben (siehe `d48ca24` in pickers.nvim,
-  `lua/pickers/browse/init.lua`, `M.rename`) plus realpath-Vergleich im Test.
-  Erst am Log bestätigen, nicht blind übertragen.
-- **Danach (Folgearbeit, hängt an diesem Punkt):**
-  1. `publish-ci-verified`-Job in `diff.nvim/.github/workflows/ci.yml`
-     ergänzen (Vorlage lib.nvim; `needs:` = alle Gate-Jobs, mit
-     `python`-Snippet oder von Hand, **CRLF im Arbeitsbaum beachten**).
-  2. Push, CI grün abwarten, `git ls-remote --heads
-     https://github.com/StefanBartl/diff.nvim ci-verified` bestätigen.
-  3. In `gitsuite.nvim/.github/workflows/ci.yml` den `diff.nvim`-Checkout um
-     `ref: ci-verified` ergänzen (der einzige noch ungepinnte
-     Konsument; ein Dry-Run des alten Transformers meldete ihn als `NOTE`).
-
-### 4. filetree.nvim: ubuntu und macOS rot
-
-- **Symptom:** ubuntu und macOS, Step „Run test suites"; windows grün.
-- **Offen:** Ursache unbekannt. Zwei Plattformen rot, eine grün: eher etwas
-  Unix-Spezifisches (Pfad-Trenner, Rechte, Symlinks, `/private/var`) als ein
-  Logikfehler. Log per `gh run view --log-failed` lesen.
-- Der Rollout hat hier nur den Kommentar zum fehlenden `ui.nvim`-Pin
-  entfernt (`ebc5131`) und die Pins gesetzt; die Fehlerursache liegt im
-  Repo-Code.
-
-### 5. Kleinkram
+### 2. Kleinkram
 
 - **Publish-Guard nachziehen** (Review-Fund vom 2026-09-21): der Job in
   `pickers.nvim`/`ui.nvim`/`documentation.nvim` veröffentlicht `ci-verified`
@@ -146,6 +118,9 @@ Reihenfolge nach Aufwand, kleinstes zuerst.
 - **ui.nvim-Primärcheckout:** nicht in diesem Rollout angefasst; falls dort
   ein Pull ansteht, vorher den Arbeitsbaum prüfen (andere Sessions haben
   eigene Worktrees unter `ui.nvim/.claude/worktrees/`).
+- **luacheck im Repo-Wurzelverzeichnis** (`luacheck .`) meldet in
+  `filetree.nvim` Treffer aus fremden Worktrees unter `.claude/worktrees/`.
+  Wie CI aufrufen (`luacheck lua docs/BINDINGS.lua TESTS`), sonst falsche Alarme.
 
 ## Handwerkszeug
 
@@ -161,6 +136,15 @@ Reihenfolge nach Aufwand, kleinstes zuerst.
   done
   ```
 
+- **Fehlgeschlagene Specs aus dem Log ziehen:**
+
+  ```bash
+  gh run view "$id" --log-failed | grep -n "FAIL"
+  ```
+
+  Bei einem Verdacht auf Kaskade (Lehren oben) den Fehler-Text im Test
+  vorübergehend um den tatsächlich erhaltenen Wert erweitern; das hat beim
+  `url_spec`-Fall die Ursache in einem Lauf sichtbar gemacht.
 - **`ci_status.sh` meldete einmal „no CI run for this commit"** (replacer.nvim),
   obwohl der Lauf grün war (vermutlich ein Timing-Effekt, nicht geprüft) —
   dann `gh run list --limit 3` direkt lesen.
