@@ -37,7 +37,6 @@
 filetree: links mark/paste erzeugeh auf windows os symlinks - funkltiert gut. aber es wäre cool, wenn dsymlinks iwie abghehoben werden, damit man gleich erkennt, dasss sind symlins. entweder ein zweites icon nach / vor dem filetype und/poder andere fg farbe oder so.. auf linux systemen müsste man dann glaube ich nch zwischen soft/hardlinks unterschieden. Außerdem: im "I" infofenster dteht als dfiletype "file" - dort sollte auch irwo stehen, dass es ein symlunk/soft/hardlink ist.
   Weiters sollte man weitere features/module checken in filetre,m ob noch wo irdgendwo mit links gearbeitet wird und man sie speiell behandeln sollte. In den docs sollte man dan auch angeben, dass links unterschiedlich desiugn haben
 
-ui.nvim marked (harpoon ersatz) - mit c-f/c-p soewiew pageup/pagedown soll im dokument preview scrolled weren können. wenn möglich soll man mit c-w c-w als beipsiel auch n deas previerw fenster hineinkönnen, om etwas zu kopieren. read only - es mus nicht schreibbar sein
 
 sesions.nvim:
   `16:46:42 msg_show [sessions] loaded: C:\Users\bartl\AppData\Local\nvim-data/sessions/nvim_main.vim`
