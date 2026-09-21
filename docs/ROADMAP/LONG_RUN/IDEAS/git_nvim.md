@@ -1,5 +1,18 @@
 # `git.nvim` — Konzept
 
+> **Status (2026-09-21): umgesetzt** als
+> [`gitsuite.nvim`](https://github.com/StefanBartl/gitsuite.nvim) (öffentlich,
+> `E:\repos\gitsuite.nvim`) — der Name aus Offener Frage 1 ist final
+> `gitsuite`, nicht `git`/`wkdgit`. Jede `:Git`-Subcommand-Familie
+> (`conflict`, `blame`, `diff`, `browse`, `branch`, `status`, `hunk`, `ui`)
+> ist eine echte Implementierung, kein Stub mehr — CI grün, 85/85 Tests.
+> `vim-fugitive`, `vim-rhubarb`, `akinsho/git-conflict.nvim` und
+> `kdheepak/lazygit.nvim` sind aus `lua/plugins/git.lua` entfernt.
+> Umsetzungskonzept (inkl. Anwendung von `PRINCIPLES.md`/`LUA_NVIM.md` auf
+> die Architektur) und offene Folgearbeit:
+> `wkdbook-myplugins/gitsuite.nvim/ROADMAP/ROADMAP.md`. Dieses Dokument
+> bleibt als Entstehungs-Analyse stehen, nicht als aktueller Stand.
+
 > Arbeitstitel. `git.nvim` ist auf GitHub mehrfach vergeben (u. a.
 > `dinhhuy258/git.nvim`, `akinsho/git-conflict.nvim` als Nachbar im Namensraum).
 > Der Lua-Modulwurzel-Name ist das eigentliche Kollisionsrisiko, nicht der
