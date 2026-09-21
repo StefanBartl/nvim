@@ -40,8 +40,10 @@ Cursor im Tree-Fenster.
 Seit 2026-09-21 prüft `<RightMouse>` nach dem Replay zusätzlich
 `ui.statusline.menu.pointer_on_statusline()` (analog zum bestehenden
 `ui.tabline.menu.pointer_on_tabline()`-Check direkt darüber) und bricht ab,
-wenn der Zeiger auf der Statuszeile war — sonst poppt dort das eigene
-Rechtsklick-Menü der Statuszeile (Modul entfernen/hinzufügen, siehe
+wenn der Zeiger auf einem tatsächlichen Statuszeilen-Modul saß (nicht bloß
+irgendwo auf der Zeile — Padding einer `%=`-Lücke zählt bewusst nicht, dort
+gäbe es ohnehin keine Click-Region zum Abfangen) — sonst poppt dort das
+eigene Rechtsklick-Menü der Statuszeile (Modul entfernen/hinzufügen, siehe
 `ui.nvim`s `docs/modules.md`, Abschnitt "Hover tooltip and the 'manage this
 module' menu") zusammen mit diesem allgemeinen Menü auf. Die Statuszeile
 selbst bindet dafür kein eigenes `<RightMouse>` — jedes Statuszeilen-Modul
