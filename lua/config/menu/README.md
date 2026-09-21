@@ -1,7 +1,9 @@
 # config.menu
 
 The general (non-tree) context menu: `<A-b>` at the cursor, `<RightMouse>`
-at the pointer.
+at the pointer. A right-click on the tab bar is not this menu's business: the
+dispatcher replays the click (which fires the chip's own handler, opening
+ui.nvim's per-tab menu) and returns.
 
 ```lua
 require("config.menu").setup({ renderer = "kit", enable_git_section = true })

@@ -250,6 +250,15 @@ function M.setup()
     -- and the menu is built for that buffer rather than the previous one.
     vim.cmd.exec('"normal! \\<RightMouse>"')
 
+    -- A click on the tab bar: the replay above already fired the chip's own
+    -- click handler, which opens that tab's menu (ui.nvim's ui.tabline.menu).
+    -- The general menu below is about the buffer under the pointer, which the
+    -- tab bar is not -- and two menus would open on top of each other.
+    local ok_tb, tabline_menu = pcall(require, "ui.tabline.menu")
+    if ok_tb and tabline_menu.pointer_on_tabline() then
+      return
+    end
+
     local winid
     local ok_mouse, m = pcall(vim.fn.getmousepos)
     if ok_mouse and type(m) == "table" and m.winid and m.winid ~= 0 then

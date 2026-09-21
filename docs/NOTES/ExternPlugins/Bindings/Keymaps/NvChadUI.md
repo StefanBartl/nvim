@@ -40,3 +40,36 @@ lazy-geladene Helper aus [lua/wkdnvchad/mappings/tabufline/init.lua](../../../..
 
 Alle Handler sind `pcall`-abgesichert; schlägt der zugrunde liegende Aufruf
 fehl, kommt eine `notify.warn` statt eines rohen Fehlers.
+
+### Maus auf der Tableiste (ui.nvim)
+
+Keine Keymaps im engeren Sinn: `ui.tabline` bekommt vom Tabline-Klickprotokoll
+den Button und den Buffer des Chips mitgeliefert (siehe ui.nvim
+`docs/BINDINGS.md` → „Tabline mouse"). `context_menu`, `drag` und
+`middle_click_close` in der Tabline-Config schalten je eine Geste ab.
+
+| Geste | Auf | Aktion |
+|---|---|---|
+| Linksklick | Chip | Zum Buffer wechseln |
+| Linksklick halten + ziehen | Chip | Chip entlang der Leiste verschieben (live) |
+| Rechtsklick | Chip oder dessen „x“ | Tab-Kontextmenü (`ui.tabline.menu`) |
+| Mittelklick | Chip | Buffer schließen |
+| Linksklick | „x“ des Chips | Buffer schließen |
+
+Das Tab-Kontextmenü enthält nur Aktionen auf genau diesen Tab: Save (nur bei
+Änderungen), Close, Close others / to the left / to the right / saved,
+Move to position… (`3` absolut, `+2`/`-1` relativ), Move left / right / to
+start / to end, Copy path, Open in split / vertical split, Move to new tab
+page.
+
+Der globale `<RightMouse>`-Dispatcher in
+[lua/config/menu/mappings.lua](../../../../../lua/config/menu/mappings.lua)
+spielt den Klick nach (`normal! <RightMouse>`), wodurch der Chip-Handler
+feuert, und kehrt danach zurück, wenn
+`require("ui.tabline.menu").pointer_on_tabline()` wahr ist — sonst würde das
+allgemeine Menü über dem Tab-Menü aufgehen.
+
+## Changelog
+
+- 2026-09-21: Abschnitt „Maus auf der Tableiste“ (Rechtsklick-Menü, Ziehen,
+  Mittelklick) ergänzt; `<RightMouse>`-Dispatcher tritt auf der Tableiste zurück.

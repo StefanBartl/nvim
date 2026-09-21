@@ -169,7 +169,7 @@ V (Visual Line) → Select → <C-c>
 
 ### Global
 - `<Alt-b>`: Open custom menu
-- `<RightMouse>`: Context menu at the pointer (inside the tree, filetree.nvim's own menu shadows it)
+- `<RightMouse>`: Context menu at the pointer (inside the tree, filetree.nvim's own menu shadows it; on a tab-bar chip, ui.nvim's own tab menu opens instead and this one steps aside)
 
 ### Copy/Paste
 - `<C-a>`: Copy all
