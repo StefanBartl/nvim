@@ -1093,7 +1093,17 @@ plugins.add({
     -- used, needed here too since gitsuite.nvim's conflict scan/highlight/
     -- keymap setup must not wait for the user to type :Git first.
     event = { "BufReadPost", "BufNewFile" },
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim", "StefanBartl/open.nvim" },
+    -- open.nvim deliberately NOT listed here: gitsuite.nvim's own browse
+    -- feature already treats it as a genuinely optional, pcall-guarded
+    -- adapter (features/browse/init.lua) -- a hard `dependencies` entry
+    -- would force it to load eagerly on every buffer read (this spec's own
+    -- `event` trigger) for a feature (:Git browse *) most sessions never
+    -- touch. diff.nvim STAYS: lazy.nvim has no "load on require()" trigger
+    -- (only cmd/event/ft/keys), and gitsuite's diff feature calls
+    -- require("diff") directly -- without this entry, :Git diff * would
+    -- error on a session where the user never separately triggered one of
+    -- diff.nvim's own commands first. Found and fixed 2026-09-21.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim" },
     keys = {
       -- Was fugitive's `:Git blame`; gitsuite's own blame is a real
       -- implementation (native git blame --porcelain), not a stub.
