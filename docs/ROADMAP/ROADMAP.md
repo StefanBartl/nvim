@@ -26,25 +26,29 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     20:10       |    86% / 36%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     18:40       |    07% / 79%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:20       |    08% / 38%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     23:40       |    03% / 79%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     21:50       |   100% / 38%     |
 
 ---
 
 ### Claude Tasks
 
+filetree: links mark/paste erzeugeh auf windows os symlinks - funkltiert gut. aber es wäre cool, wenn dsymlinks iwie abghehoben werden, damit man gleich erkennt, dasss sind symlins. entweder ein zweites icon nach / vor dem filetype und/poder andere fg farbe oder so.. auf linux systemen müsste man dann glaube ich nch zwischen soft/hardlinks unterschieden. Außerdem: im "I" infofenster dteht als dfiletype "file" - dort sollte auch irwo stehen, dass es ein symlunk/soft/hardlink ist.
+  Weiters sollte man weitere features/module checken in filetre,m ob noch wo irdgendwo mit links gearbeitet wird und man sie speiell behandeln sollte. In den docs sollte man dan auch angeben, dass links unterschiedlich desiugn haben
+
+ui.nvim marked (harpoon ersatz) - mit c-f/c-p soewiew pageup/pagedown soll im dokument preview scrolled weren können. wenn möglich soll man mit c-w c-w als beipsiel auch n deas previerw fenster hineinkönnen, om etwas zu kopieren. read only - es mus nicht schreibbar sein
+
 sesions.nvim:
   `16:46:42 msg_show [sessions] loaded: C:\Users\bartl\AppData\Local\nvim-data/sessions/nvim_main.vim`
   Kann man das schöner egstaleten, also das es nicht nur text ist, sondern wir sie statusline opder die winbar / tableiste sich ins design einfügt?
 
-ui.nvim: statusline doppelklick/rechtsklick menu, ausß´erdem bei hover über iein modul kurz werklären was da nagezeigt wird (englisch), bem hovern soll fg farbe der schreift äneern (hl als von weiß -> orange  oder so); rechtsklick  -> module hinzufpgen/entfernen wäre cool
 
 - [ ] Jedes Plugin aus sicht eines endusers/developers "durchspielen" - von Beginn an, also vom ankommen auf der github seite, ssagne wikr dealerweiße kommend von derr wkd seite. DAnn möchte m an mal als erstes normalerweiße die instsalltion + optionen sehen. ist am flow etwas nicht in ordnung? stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar und ansprechend, modern aufbereitet? Ist die Dokumentation an Stellen verwirrend? Gib es docs, die mich als enduser/dev nicht betreffen? ([alte] Telemetry daten, Deutsche dokumentation, backlogs,..)
 
 - [ ] mdview: Auf der workstation funktinrt cursor section nicht, also die sektion wird nicht hl, caret funktionert gut, line auch; standalone gar nichts
 
-- wkd
+- noice erstzen ?
 - plugins die meinen ähneln auf features abgrasen, die ich noch nicht imlpementiert habe
 
 ---
