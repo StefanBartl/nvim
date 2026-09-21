@@ -82,6 +82,12 @@ Alias):
 `ui_statusline/init.lua` (`sticky = false` schaltet das Feature ab). Keine
 Keymaps.
 
+Welche Knoten als Scope gelten, steht in ui.nvims `docs/configuration.md`
+(Tabelle je Sprache; `require("ui.context").is_scope_type("<typ>")` fragt einen
+Namen ab). Seit 2026-09-21 pinnt Rust auch `if`/`for`/`while`/`loop`/`match`/`mod`:
+ein `node_types`-Eintrag mit Anker an beiden Enden (`^if_expression$`) benennt
+genau einen Typ und wird von `exclude_node_types` nicht überstimmt.
+
 ## `nvim-treesitter-textobjects`
 
 Der Plugin-Spec (`lazy = false`) lädt `nvim-treesitter/nvim-treesitter-textobjects`,
