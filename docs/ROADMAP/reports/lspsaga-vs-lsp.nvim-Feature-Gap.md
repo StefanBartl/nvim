@@ -7,6 +7,52 @@ ohnehin mitbringt (fzf-lua, Trouble, snacks, gitsigns, lensline, inc-rename).
 
 ---
 
+## Status: umgesetzt (2026-09-21)
+
+Alles aus der Tabelle ist in `StefanBartl/lsp.nvim` umgesetzt (Commit `e49fdbe`),
+und **lspsaga ist ganz entfernt** — aus dem Pack, aus dem Adapter, aus dieser
+Config (`lazy-lock.json`; `:Lazy clean` räumt das Plugin-Verzeichnis weg).
+Abweichend von der Empfehlung im Report wurde durchgehend **Weg B** gewählt,
+weil lspsaga sowieso raus sollte:
+
+| # | Feature | Umsetzung | Taste |
+|---|---|---|---|
+| 1 | Peek Definition / Type Definition | eigenes Modul `core/peek/` (editierbares Float, Stack, Aktionen in Fenster/Split/Tab, Beacon) | `lsp` / `lsT`, `:Lsp peek` |
+| 2 | Finder | `FzfLua lsp_finder` mit `finder.*` als Quellen | `lsf` |
+| 3 | Code-Action mit Diff-Vorschau | `FzfLua lsp_code_actions` (`silent`), Fallback nativ, `code_actions.picker` | `lsa` (n + x) |
+| 4 | Outline | `Trouble symbols toggle` | `<leader>xo` |
+| 5 | Type Hierarchy | `lsp_type_super/sub`, vorher Capability-Check mit Klartext-Meldung | `lsh` / `lsH` |
+| 6 | gitsigns-Hunk-Aktionen in Code-Actions | kleiner In-Process-LSP-Server (`core/gitsigns_actions.lua`), **aus** per Default | `code_actions.gitsigns = true` |
+| 7 | Diagnose → Code-Action | Quick-Fix für die Diagnose der Zeile | `<leader>xa` |
+| 8 | Implementations-Marker | `core/implement.lua`, **aus** per Default | `implement.enable`, `:Lsp implement` |
+| 9 | Beacon | `peek.beacon` (feuert nach „Peek in Fenster übernehmen“) | — |
+| 10 | Winbar an/aus | `:Lsp winbar [toggle\|on\|off\|status\|clear] [filetype]` | `<leader>tW` |
+| — | Winbar-Breadcrumb selbst | eigene Implementierung (`core/winbar/`, `core/symbols.lua`): Chips, Tiefenkappung (`markdown = 1`), Markdown-Hashtag-Icon | `winbar.*` |
+
+Gegen echte Server geprüft, nicht nur gegen Stubs: lua_ls, marksman, ts_ls und
+das echte gitsigns (Breadcrumb `proj › mod.lua › M.outer › inner`, Markdown auf
+die erste Überschrift gekappt, `2 impl` an `interface Repository`, Peek von
+`use` nach `repo.ts:17`, „Stage hunk“ stagt tatsächlich).
+
+Zu den offenen Punkten am Ende des Reports:
+
+- **Type Hierarchy:** keiner der drei gemessenen Server (lua_ls, marksman,
+  ts_ls) liefert sie. Die Taste antwortet dort mit dem Hinweis, wer sie kann.
+- **`lsa` im Visual-Mode (`range`):** als `n`+`x` gebunden. Gemessen: der
+  Callback läuft im Visual-Mode (`V`), und dieser Modus kommt in
+  `FzfLua lsp_code_actions` an; `vim.lsp.buf.code_action` liest die Selektion
+  (`range_from_selection`, Neovim-Runtime), und fzf-lua ruft genau das auf.
+  **Nicht** mit einem echten fzf-Fenster ausprobiert — das braucht ein Terminal.
+- **`lsp_code_actions` ohne `register_ui_select`:** wird mit `silent = true`
+  geöffnet (fzf-lua registriert sich nur für diesen einen Aufruf). Ebenfalls
+  nicht mit echtem fzf-Fenster beobachtet; das ist der erste Test im Alltag.
+
+Doku im Plugin: `docs/FEATURES/NAVIGATION.md` (inkl. Tabelle „Coming from
+lspsaga“), `docs/FEATURES/INDICATORS.md` (Breadcrumb, Marker),
+`docs/configuration.md`, `doc/lsp.nvim.txt`.
+
+---
+
 ## Table of content
 
   - [Kurzfazit](#kurzfazit)

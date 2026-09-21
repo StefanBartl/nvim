@@ -498,7 +498,7 @@ only, not a full re-measurement: **55 call sites**, **40 in 26 augroups**,
 (×2) and `NvChadLspSignature` (×1) register only once neotest or an LSP
 client has actually loaded, so a `:Bindings check` run right after startup
 reports them as `autocmd-not-live` — the same class as lsp.nvim's
-`LspNvimSagaWinbarDepth` (hangs off `LspAttach`) and `LspFormatOnSave`
+`lsp_nvim_peek` (created on the first peek) and `LspFormatOnSave`
 (hangs off a feature switch). Kept as real table rows rather than prose, so
 a renamed augroup would still be caught.
 

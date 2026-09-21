@@ -40,6 +40,7 @@ trotz gleicher lhs, weil hier eigenständig vergeben statt aus dem README
 | `<leader>xlt` | Type Definitions | `:Trouble lsp_type_definitions` | [custom] |
 | `<leader>xli` | Implementations | `:Trouble lsp_implementations` | [custom] |
 | `<leader>xls` | Document Symbols | `:Trouble lsp_document_symbols` | [custom] |
+| `<leader>xo` | Outline (sidebar that follows the cursor) | `:Trouble symbols toggle` | [custom] (`lsp.nvim`'s catalogue: `trouble_outline`) |
 
 ## Listen
 

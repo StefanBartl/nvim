@@ -91,8 +91,9 @@ Alles wurde headless getestet, nichts visuell. Einmal von Hand ansehen:
 4. Kleines Fenster (unter 6 Zeilen oder Cursor in den obersten Zeilen): kein
    Overlay, der Cursor wird nie verdeckt. Bei 6 Zeilen Markdown-Limit prüfen, dass
    das Overlay ein kleines Fenster nicht aufzehrt (`min_window_height = 6`).
-5. Zusammenspiel mit dem lspsaga-Winbar aus lsp.nvim: der Winbar schneidet
-   Markdown auf `winbar_max_symbols = { markdown = 1 }` (eine Heading). Das
+5. Zusammenspiel mit dem Winbar-Breadcrumb aus lsp.nvim (seit 2026-09-21
+   lsp.nvims eigener, lspsaga ist entfernt): der Winbar schneidet
+   Markdown auf `winbar.max_symbols = { markdown = 1 }` (eine Heading). Das
    Sticky-Overlay zeigt bis zu sechs. Doppelt sich das? Siehe Punkt 2.
 6. Neu seit `ae95e7f`: eine lange Rust-Funktion (oder ein Python-`elif`-Zweig)
    scrollen: erscheinen `if`/`for`/`match`/`elif` als Zeilen, und ist das Bild

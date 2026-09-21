@@ -92,7 +92,7 @@ Keymap dafür steht in [Keymaps/Blink.md](Keymaps/Blink.md)),
 `csharp.nvim` (deaktiviert),
 `nvim-tree.lua` (nicht installiert), `nvim-web-devicons`,
 ~~`treesitter-context`~~ (deinstalliert 2026-09-19, ersetzt durch ui.nvims
-`ui.context`), `treesitter-textobjects`, `lspsaga.nvim`, `lensline.nvim`,
+`ui.context`), `treesitter-textobjects`, `lensline.nvim`,
 `nvim-notify`, `triptych.nvim` (nicht installiert),
 `vim-rhubarb`, `vim-wakatime` (deaktiviert), `targets.vim`, `mason.nvim`,
 `nvim-ts-autotag`, `telescope-fzf-native.nvim`, `telescope-github.nvim` (ungenutzt),
