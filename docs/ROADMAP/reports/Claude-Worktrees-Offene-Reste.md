@@ -1,9 +1,10 @@
 # Claude-Worktrees und -Branches: offene Reste
 
-> Stand 2026-09-21 (nachmittags). Aufräumlauf über die 39 Plugin-Repos unter
-> `E:\repos` und diese Config. Diese Liste enthält **nur**, was nach dem Lauf noch
-> eine Entscheidung braucht: uncommittete Änderungen und Commits, die nicht in
-> `main` sind. Was verlustfrei weg konnte, ist weg und steht hier nicht.
+> Stand 2026-09-21 (nachmittags, nach dem zweiten Lauf). Aufräumlauf über die 39
+> Plugin-Repos unter `E:\repos` und diese Config. Diese Liste enthält **nur**, was
+> danach noch eine Entscheidung oder Handlung braucht: uncommittete Änderungen,
+> Commits, die nicht in `main` sind, und zwei Worktrees, die sich nicht entfernen
+> ließen. Was verlustfrei weg konnte, ist weg und steht hier nicht.
 > Verglichen wurde gegen `origin/main` (nach `git fetch`), „nicht in main“ nach
 > Patch-ID (`git cherry`), nicht nur nach SHA.
 
@@ -11,12 +12,27 @@
 
 - [1. Uncommittete Änderungen](#1-uncommittete-änderungen)
 - [2. Commits, die nicht in main sind](#2-commits-die-nicht-in-main-sind)
-- [3. Nichts Offenes, nur noch nicht entfernt](#3-nichts-offenes-nur-noch-nicht-entfernt)
+- [3. Nichts Offenes, aber gerade in Benutzung](#3-nichts-offenes-aber-gerade-in-benutzung)
 - [Hinweise](#hinweise)
 
 ---
 
 ## 1. Uncommittete Änderungen
+
+- [ ] **ui.nvim, Tabline-Umbau (laufende Session)**
+  - Worktree `E:\repos\ui.nvim\.claude\worktrees\rules-nvim-review-277-071e53`,
+    detached bei `3890818`, ohne Branch. Beim ersten Lauf war er sauber; die
+    Änderungen kamen erst danach, dort wird gerade gearbeitet.
+  - 8 Dateien: geändert `TESTS/tabufline_state_spec.lua`, `lua/ui/@types/init.lua`,
+    `lua/ui/bindings/keymaps/tabufline/state.lua`, `lua/ui/tabline/modules.lua`,
+    `lua/ui/tabline/utils.lua`; neu und untracked `lua/ui/tabline/drag.lua`,
+    `lua/ui/tabline/layout.lua`, `lua/ui/tabline/menu.lua`.
+  - Task: nach Abschluss der Session committen und nach `main` bringen (stylua,
+    luacheck und `bash scripts/test.sh` vorher grün), **oder** bewusst verwerfen.
+    Erst danach den Worktree entfernen
+    (`git -C E:\repos\ui.nvim worktree remove <worktree>`). Ein Detached-HEAD-Commit
+    ist ohne Branch nur über das Reflog wiederzufinden, also vor dem Entfernen
+    auf einen Branch legen.
 
 - [ ] **runtime-analysis.nvim, Telemetry-Status**
   - Worktree `E:\repos\runtime-analysis.nvim\.claude\worktrees\ratelemetry-status-46d39e`,
@@ -27,17 +43,19 @@
     `lua/runtime-analysis/telemetry/command.lua`,
     `lua/runtime-analysis/telemetry/init.lua`. Nach Branch-Name ein `status`-Befehl
     für die Telemetrie; der Inhalt wurde nicht geprüft.
-  - Entscheiden: committen und pushen (dann Specs und Lint laufen lassen) **oder**
-    verwerfen (`git -C <worktree> checkout -- .`). Danach den Worktree entfernen:
-    `git -C E:\repos\runtime-analysis.nvim worktree remove <worktree>`.
+  - Task: Änderung ansehen, dann committen und pushen (Specs und Lint laufen
+    lassen) **oder** verwerfen (`git -C <worktree> checkout -- .`). Danach den
+    Worktree entfernen:
+    `git -C E:\repos\runtime-analysis.nvim worktree remove <worktree>`, und den
+    Branch löschen.
 
 - [ ] **mdview.nvim, Wegwerfdatei**
   - Worktree `E:\repos\mdview.nvim\.claude\worktrees\mdview-nvim-replacement-cb13d0`,
     Branch `claude/mdview-nvim-replacement-cb13d0` (gepusht, 0 Commits vor main).
   - Einzige Änderung: `help_out.txt` (untracked, 69 KB), ein Dump von
-    `:help cmdline`, also Abfall. Die Datei wurde gestern 20:09 geschrieben, deshalb
-    wurde der Worktree als möglicherweise aktive Session nicht angefasst.
-  - Datei löschen, dann Worktree entfernen (wie oben).
+    `:help cmdline`, also Abfall. Die Datei wurde gestern 20:09 geschrieben,
+    deshalb wurde der Worktree als möglicherweise aktive Session nicht angefasst.
+  - Task: Datei löschen, Worktree entfernen (wie oben), Branch löschen.
 
 ## 2. Commits, die nicht in main sind
 
@@ -51,7 +69,7 @@ einem Remote**. In den Plugin-Repos gibt es keine.
     `claude/regel-audit-review-521280`.
   - `main` hat den Report inzwischen entfernt (zuletzt angefasst in `1ede45835`,
     die Datei existiert dort nicht mehr), daher würde ein Merge konfliktieren.
-  - Entscheiden: Inhalt retten
+  - Task: Inhalt retten
     (`git show 6f3c5f313:docs/ROADMAP/reports/Autocmd-Dispatcher-Nutzung-und-Nutzen.md`,
     z. B. in die WKDBooks) **oder** verwerfen. Danach die vier Branches löschen.
   - Die zwei Vorgänger-Commits derselben Kette sind der Wirkung nach schon in
@@ -62,37 +80,38 @@ einem Remote**. In den Plugin-Repos gibt es keine.
   - Löscht den Report `Roadmap-Aufwand-Nutzen.md` (auf main schon weg) und ändert
     5 Zeilen in `Regel-Audit-Tasks.md` und `Tasks-offene-Punkte.md`. Beide Dateien
     hat `main` mit `807e921e4` ins WKDBooks-Backlog verschoben.
-  - Prüfen, ob die verschobenen Kopien noch auf den gelöschten Report verweisen;
-    wenn nicht, Branch löschen.
+  - Task: prüfen, ob die verschobenen Kopien noch auf den gelöschten Report
+    verweisen; wenn nicht, Branch löschen.
 
 - [ ] **`claude/zen-panini-183f41`** (Commits `4f72bdee0`, `fcc068ff6`)
   - Klären die offene Frage SEC-42 (documentation.nvim, Parameter `snapshot`) in
     `docs/ROADMAP/reports/Regel-Audit-Befunde.md`, +4 Zeilen plus Korrekturen.
   - Die Datei ist auf main durch `94f1709fd` (drei Regel-Audit-Reports
     zusammengeführt) weg, und „SEC-42“ kommt in `docs/` auf main nirgends mehr vor.
-  - Prüfen, ob die Klärung im konsolidierten Report fehlt und übernommen werden
-    muss (`git show 4f72bdee0 fcc068ff6`); sonst Branch löschen.
+  - Task: prüfen, ob die Klärung im konsolidierten Report fehlt und übernommen
+    werden muss (`git show 4f72bdee0 fcc068ff6`); sonst Branch löschen.
 
-## 3. Nichts Offenes, nur noch nicht entfernt
+## 3. Nichts Offenes, aber gerade in Benutzung
 
-Diese Worktrees sind sauber und alles darin steckt in `main`. Sie blieben nur
-stehen, weil in den letzten 24 h ein Commit oder eine Dateiänderung war (mögliche
-laufende Session). Beim nächsten Aufräumlauf sind sie löschbar.
+Beide Worktrees sind sauber und ihr Inhalt steckt vollständig in `main`. Sie ließen
+sich nicht entfernen, weil eine laufende Session sie als Arbeitsverzeichnis hält.
 
-| Repo | Worktree | Branch |
-|---|---|---|
-| filetree.nvim | `filetree-checkmarks-persist-16f23c` | detached |
-| gitsuite.nvim | `gitsuite-implementierungsplan-f6be05` | `claude/gitsuite-implementierungsplan-f6be05` |
-| images.nvim | `nvim-image-plugins-review-d6d0c2` | `claude/nvim-image-plugins-review-d6d0c2` (1 Commit nach SHA ungepusht, Inhalt per Patch-ID in main) |
-| lib.nvim | `lib-nvim-deps-analysis-963af9`, `lib-nvim-quick-wins-dc99ed` | detached |
-| markdown.nvim | `integrations-menu-layout-0794ed`, `lspsaga-lsp-nvim-features-f492d1`, `markdown-headline-formatting-5407a6` | `claude/markdown-breadcrumbs-links-a5e193`, `claude/lspsaga-lsp-nvim-features-f492d1`, `claude/markdown-breadcrumbs-toggle-a043c2` |
-| media.nvim | `media-nvim-handover-roadmap-2b7c97` | detached (Datei-Aktivität: `.github/workflows/ci.yml`) |
-| reposcope.nvim | `reposcope-status-dashboard-rename-421b8d` | detached |
-| ui.nvim | `rules-nvim-review-277-071e53` | detached |
-| ui.nvim | `roadmap-regeln-nvim-manual-0f8fb4` (Session, in der dieser Lauf lief) | `claude/ui-sticky-context-12370f`, komplett in main |
-| Config | `ai-loomai-handover-tasks-6dcab4`, `buffer-write-framerate-2c6a85`, `nvim-plugins-quality-review-30b806` | detached |
-| Config | `externe-plugins-nachbau-88158c` | `claude/gitsuite-nvim-plugin-c4fcb8` |
-| Config | `menu-integration-ui-kit-712771` | `claude/ci-hardening-nvim-ced241` (1 Commit nach SHA ungepusht, Inhalt per Patch-ID in main) |
+- [ ] **ui.nvim `roadmap-regeln-nvim-manual-0f8fb4`**, Branch
+  `claude/ui-sticky-context-12370f` (auf `main`, außerdem als Backup gepusht).
+  Das ist die Session, die diesen Lauf gemacht hat. Ein Worktree lässt sich unter
+  Windows nicht löschen, solange ein Prozess darin steht. Task, nach Ende der
+  Session aus einem anderen Verzeichnis:
+  `git -C E:\repos\ui.nvim worktree remove E:\repos\ui.nvim\.claude\worktrees\roadmap-regeln-nvim-manual-0f8fb4`
+  und `git -C E:\repos\ui.nvim branch -D claude/ui-sticky-context-12370f`.
+
+- [ ] **Config `menu-integration-ui-kit-712771`**, Branch
+  `claude/ci-hardening-nvim-ced241` (steht auf `84eb9778b`, gleich `main`).
+  Beim zweiten Lauf brach das Entfernen mit „Permission denied“ ab, nachdem git
+  die Registrierung und alle Dateien schon gelöscht hatte; vier Shell-Prozesse
+  (`bash.exe`, `powershell.exe`) hielten das Verzeichnis, dort läuft also eine
+  Session. Der Worktree wurde am Branch-Tip wiederhergestellt (sauber, kein
+  Inhalt ging verloren; die Session muss ggf. ihr Verzeichnis neu betreten).
+  Task: nach Ende dieser Session entfernen und den Branch löschen.
 
 ## Hinweise
 
@@ -101,8 +120,12 @@ laufende Session). Beim nächsten Aufräumlauf sind sie löschbar.
   Geschwister-Suche der Tests im Worktree `lib.nvim` finden.
 - Auf GitHub liegen weiterhin alle bereits gepushten `claude/*`-Branches. Es
   wurden nur lokale Branches gelöscht; Remote-Branches sind unberührt.
-- Löschkriterium des Laufs. Worktrees: sauber (oder nur generierter Abfall),
-  nichts Ungepushtes, letzter Commit älter als 24 h und keine Dateiänderung der
-  letzten 24 h darin. Lokale Branches: nirgends ausgecheckt und vollständig auf
-  einem Remote, oder nachweislich inhaltlich schon in main. Vor jedem Löschen
-  wurde der Zustand erneut geprüft.
+- Löschkriterium der Läufe. Worktrees: sauber (oder nur generierter Abfall) und
+  jeder Commit per Patch-ID schon in `origin/main`, bzw. nichts Ungepushtes.
+  Lokale Branches: nirgends ausgecheckt und vollständig auf einem Remote, oder
+  nachweislich inhaltlich schon in main. Vor jedem Löschen wurde der Zustand
+  erneut geprüft, kein `--force` außer für den `$SCRATCH`-Abfall.
+- Für künftige Läufe: **vor** dem Entfernen prüfen, ob ein Prozess den Worktree
+  hält (`Get-CimInstance Win32_Process | Where-Object CommandLine -like '*<name>*'`),
+  nicht erst am Fehler. Sauber und Patch-ID-in-main heißt „nichts geht verloren“,
+  aber nicht „keiner arbeitet gerade darin“.
