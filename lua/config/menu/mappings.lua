@@ -259,6 +259,20 @@ function M.setup()
       return
     end
 
+    -- Same reasoning, for the statusline: the replay above already fired
+    -- whichever module was clicked (its own menu, or the generic "manage
+    -- this module" one every plain segment gets -- ui.nvim's
+    -- ui.statusline.menu / ui.statusline.render). `getmousepos()` reports
+    -- `winid == 0` there (both the global statusline row and the command
+    -- line do), which the `winid ~= 0` fallback just below would otherwise
+    -- read as "no window under the pointer" and quietly resolve to the
+    -- CURRENT window's buffer instead -- opening a second, unrelated menu
+    -- on top of the statusline's own.
+    local ok_sl, statusline_menu = pcall(require, "ui.statusline.menu")
+    if ok_sl and statusline_menu.pointer_on_statusline() then
+      return
+    end
+
     local winid
     local ok_mouse, m = pcall(vim.fn.getmousepos)
     if ok_mouse and type(m) == "table" and m.winid and m.winid ~= 0 then

@@ -37,6 +37,19 @@ zuschneidet. In neo-tree greift ohnehin filetree.nvims eigene buffer-lokale
 buffer-lokal geshadowed, erreicht diesen Dispatcher also auch mit dem
 Cursor im Tree-Fenster.
 
+Seit 2026-09-21 prüft `<RightMouse>` nach dem Replay zusätzlich
+`ui.statusline.menu.pointer_on_statusline()` (analog zum bestehenden
+`ui.tabline.menu.pointer_on_tabline()`-Check direkt darüber) und bricht ab,
+wenn der Zeiger auf der Statuszeile war — sonst poppt dort das eigene
+Rechtsklick-Menü der Statuszeile (Modul entfernen/hinzufügen, siehe
+`ui.nvim`s `docs/modules.md`, Abschnitt "Hover tooltip and the 'manage this
+module' menu") zusammen mit diesem allgemeinen Menü auf. Die Statuszeile
+selbst bindet dafür kein eigenes `<RightMouse>` — jedes Statuszeilen-Modul
+bekommt stattdessen eine native Click-Region (`%N@Func@…%X`), die vor jedem
+Keymap-Dispatch feuert; nur der Hover-Tooltip braucht ein echtes globales
+Keymap (`<MouseMove>`, Modi `n`/`i`/`v`, registriert von `ui.nvim` selbst
+sobald eine Statuszeile aktiviert wird — kein Eintrag in dieser Config).
+
 Seit 2026-09-09 (`contributed_submenus()` in `mappings.lua`) hängt hinter
 den Fly-outs zusätzlich eine flache Zeile von filetree.nvim
 (`filetree.integrations.menu.window_entry()`): "Open filetree" in jedem
