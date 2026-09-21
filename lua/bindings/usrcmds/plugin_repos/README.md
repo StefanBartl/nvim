@@ -129,13 +129,13 @@ guaranteed-fresh checkouts". Dirty/unpushed repos are left alone, same as
 
 ### `:MyPlugins dashboard [dir]`
 
-Just opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a read-only
+Just opens `reposcope.nvim`'s own `:Reposcope dashboard [dir]` — a read-only
 git-status overview (branch, ahead/behind, dirty) of every repo under
 `dir`/`$REPOS_DIR`. That dashboard is already exactly the "overview of what's
 going on" this needed, so there's no separate `plugins.personal.list`-scoped
 status reader here anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`,
 `dashboard` shows *every* repo in the directory, not just the listed
-plugins — same trade-off as `:Reposcope status`/`:MyReposUpdate` make.
+plugins — same trade-off as `:Reposcope dashboard`/`:MyReposUpdate` make.
 Flat shorthand: `:MyPluginsDashboard [dir]`.
 
 ```vim
@@ -255,7 +255,7 @@ uncommitted work permanently. Sticking to the named list is what makes
   - `MYPLUGINS_DIR` — same validation as the built-in `DIR` type (must expand
     to an existing directory), plus `$REPOS_DIR` offered as a completion
     keyword when that env var is set. Modeled directly on `reposcope.nvim`'s
-    `REPOSCOPE_STATUS_DIR`.
+    `REPOSCOPE_DASHBOARD_DIR`.
   - `MYPLUGINS_NAME` — validates and completes against `plugin_list.read()`
     freshly on every call, not a snapshot taken once at `enable()` time (same
     principle `reposcope.nvim`'s own per-subcommand completers use).

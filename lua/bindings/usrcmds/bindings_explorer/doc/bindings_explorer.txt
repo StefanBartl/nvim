@@ -258,7 +258,7 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
 2.7 :BINDINGS STATUS                                   *bindings_explorer-status*
 
 :Bindings status
-    One page, after the model of `:Reposcope status`:
+    One page, after the model of `:Reposcope dashboard`:
 
     • Corpus - files and table rows per root and category, the total, and
       how many rows come from a corpus-level file (`All.md`,

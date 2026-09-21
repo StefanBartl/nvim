@@ -1,7 +1,7 @@
 ---@module 'bindings.usrcmds.bindings_explorer.status'
 --- `:Bindings status` — one screen answering "what does this thing know, and
 --- what is this session actually running", after the model of
---- `:Reposcope status`.
+--- `:Reposcope dashboard`.
 ---
 --- Deliberately does NOT run the drift check. That takes ~650ms across four
 --- axes and produces a report, which is what `:Bindings check` and
