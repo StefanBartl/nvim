@@ -45,6 +45,8 @@ CI zu `d96fe16`: grün (1m12s).
 | `a4a140f49` | 21:08 | feat(lsp): gitsigns-Hunk-Aktionen in `lsa` als Probe an |
 | `a106754b0` | 21:41 | feat(lsp): Implementations-Marker an; Report auf das Offene gekürzt |
 | `225dd0ab5` | 22:31 | docs(reports): Report auf das Offene gekürzt, nach Aufwand/Nutzen, Commit-Liste vorn |
+| `e47dfbf23` | — | docs(reports): Report nach dem Review der Config-Commits, neue SHAs, offene Punkte neu geordnet |
+| `b65670e41` | — | docs(reports): Rang 2/3 erledigt, Aufwand/Nutzen-Tabelle neu nummeriert |
 
 `225dd0ab5` hieß zuerst `138c4a175`: eine andere Sitzung hat den Commit per `--amend` umgeschrieben und
 dabei eine Zeile in `docs/ROADMAP/ROADMAP.md` (die Usage-Tabelle) mit hineingenommen. Der Report-Inhalt
