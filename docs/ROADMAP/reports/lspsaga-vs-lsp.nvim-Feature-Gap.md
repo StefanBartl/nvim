@@ -2,8 +2,8 @@
 
 **Stand:** 2026-09-22, nach dem Review der Config-Commits (Befunde 1–4 behoben), Rang 2/3 aus der
 Aufwand/Nutzen-Tabelle, einer adversarialen Commit-Review (ein Doku-Fund, behoben) und den ehemaligen
-Rang 2/3/6 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert, Hunk-Spannen gecacht;
-siehe unten)
+Rang 2/3/6/7 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert, Hunk-Spannen gecacht,
+rust-analyzer gemessen; siehe unten)
 
 ## Table of content
 
@@ -13,7 +13,6 @@ siehe unten)
   - [Die Punkte](#die-punkte)
     - [6. Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-fr-lua-dnne-lazy-schicht)
     - [7. Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-groen-projekten-und-dts)
-    - [9. rust-analyzer messen](#9-rust-analyzer-messen)
   - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prfungen-im-echten-terminal)
   - [Nicht geprüft / Grenzen](#nicht-geprft-grenzen)
 
@@ -40,10 +39,12 @@ stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBoo
 | `8895cd8` | — | fix(actions): `lsh`/`lsH`-Meldung nennt gopls als gemessenen Type-Hierarchy-Server (Rang 2) |
 | `dddd97c` | — | docs(navigation): Type-Hierarchy-Fallback nennt Zig, nicht nur vier Sprachen (Fund aus der adversarialen Commit-Review von `8895cd8`) |
 | `8d805c1` | — | perf(gitsigns_actions): Hunk-Spannen gecacht, nur bei `GitSignsUpdate` neu berechnet (Rang, jetzt erledigt) |
+| `3c1d5fe` | — | docs(navigation): rust-analyzer gemessen — keine Type-Hierarchy-Unterstützung |
 
 CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `8895cd8`: grün (2m11s). CI zu `dddd97c`: grün (smoke/lint/3 Plattformen), `ci-verified` veröffentlicht.
 CI zu `8d805c1`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
+CI zu `3c1d5fe`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 
 **`StefanBartl/ui.nvim`** — die Statuszeile
 
@@ -86,7 +87,7 @@ Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen R
 **Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)**, **die Selbstrekursions-Entscheidung, die
 `UiSticky.md`-Korrektur und das Hunk-Spannen-Caching** liegen archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
-(dort „Nachtrag“ bis „Nachtrag 6“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
+(dort „Nachtrag“ bis „Nachtrag 7“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart
 merklich Zeit). Beides Schätzungen, keine Messungen.
@@ -103,13 +104,12 @@ Bedingung geknüpft sind, nach den unbedingten. Die Spalte „Wer“ sagt, ob ic
 | 1 | [**Abschluss: Prüfungen im echten Terminal (A1–A10)**](#abschluss-deine-prüfungen-im-echten-terminal) | du | — | XS–S (~20 min) | 4 |
 | 2 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
 | 3 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
-| 4 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
 
 Rang 1 kommt zuerst, weil es das Billigste und Nützlichste ist und alles andere Umgesetzte erst danach
 „wirklich“ als abgenommen gilt. Die früheren Rang 2/3 (`lsh`/`lsH`-Meldung, gopls; ui.nvim-
 Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4); die Selbstrekursions-Frage ist
-entschieden (so gelassen), `UiSticky.md` korrigiert und die Hunk-Spannen werden jetzt gecacht (alle drei
-Nachtrag 5/6, s. u.); der letzte Rang nur, wenn Rust im Alltag ist.
+entschieden (so gelassen), `UiSticky.md` korrigiert, die Hunk-Spannen werden jetzt gecacht und
+rust-analyzer ist gemessen (alle vier Nachtrag 5–7, s. u.).
 
 ---
 
@@ -180,21 +180,6 @@ in derselben Zeit):
   jeder Pause: die Implementierer stehen meist in anderen Dateien.
 
 **Aufwand S (Messung + Änderung), Nutzen 2.**
-
----
-
-### 9. rust-analyzer messen
-
-rust-analyzer ist nicht installiert, nur die rustup-Verknüpfung ohne Komponente. Ob er Type Hierarchy
-liefert, ist deshalb ungemessen. Installieren wäre:
-
-```bash
-rustup component add rust-analyzer
-```
-
-Das ändere ich nur mit deinem Ja. Nur relevant, wenn Rust im Alltag ist — sonst verwerfen.
-
-**Aufwand XS, Nutzen 1.**
 
 ---
 
