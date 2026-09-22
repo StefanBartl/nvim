@@ -16,6 +16,8 @@
 | GS-14 | Sammel-Swaps `insights`/`buffer-ctx`/`diff`/`fileops` → `lib.nvim.git` | insights.nvim, buffer-ctx.nvim, diff.nvim, fileops.nvim, lib.nvim | 2026-09-22 | [GS-14](TASKS/GS-14_sammel-swaps-lib-git.md) |
 | GS-15 | `ui.nvim`s `git_clickable` auf lib-Primitive, plus `lib.nvim.git.checkout` | ui.nvim, lib.nvim, gitsuite.nvim | 2026-09-22 | [GS-15](TASKS/GS-15_ui-nvim-git-clickable-to-lib.md) |
 | GS-16 | Remote-URL-Grammatik (`parse_remote`/`host_kind`/`build`) nach `lib.nvim` heben | lib.nvim, gitsuite.nvim, github_stats.nvim, documentation.nvim | 2026-09-22 | [GS-16](TASKS/GS-16_remote-url-grammar-to-lib.md) |
+| GS-17 | README-Doku: Pflichtseiten (requirements/installation/quickstart/configuration/commands) | gitsuite.nvim | 2026-09-22 | [GS-17](TASKS/GS-17_readme-doku-pflichtseiten.md) |
+| GS-18 | README-Doku: Rest, `:DocMap`-Prüfung, vimdoc-Abgleich | gitsuite.nvim | 2026-09-22 | [GS-18](TASKS/GS-18_readme-doku-rest.md) |
 
 ## FEATURES
 
