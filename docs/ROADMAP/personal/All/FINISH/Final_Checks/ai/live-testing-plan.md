@@ -1,9 +1,16 @@
 # Live-Testing-Plan: `ai.nvim` + `loomAI` (2026-09-14)
 
 > **Zweck:** ein abhakbarer Plan, um die meisten Features beider Repos live
-> zu testen — lokal (Ollama) und cloud (Anthropic/OpenAI, Gemini folgt).
+> zu testen — lokal (Ollama) und cloud (Anthropic/OpenAI/Gemini).
 > Alle Angaben hier sind gegen den echten Code und die echte Maschine
 > geprüft (nicht angenommen), Stand 2026-09-14.
+>
+> **Update 2026-09-23:** seither wurden `providers/gemini.lua` in `ai.nvim`
+> und loomAIs ModelRouter (alle vier Backends per Modellname-Präfix) gebaut.
+> Abschnitt 9 und die Test-Matrix unten sind entsprechend nachgezogen; der
+> Rest (Env-Vars, `OLLAMA_HOST`-Bug, Schritt-für-Schritt-Anleitungen) ist
+> weiterhin Stand 2026-09-14 und noch nicht erneut gegen die Maschine
+> verifiziert.
 
 ---
 
@@ -78,7 +85,7 @@ angewendet. **Live reproduziert** auf dieser Maschine (`ollama list` mit
 | `lib.nvim` mit `fetch_stream` | ✅ verifiziert in vorherigen Sitzungen | Nein |
 | `ANTHROPIC_API_KEY` | ❌ **nicht gesetzt** | Ja — setzen, sonst meldet `claude.lua` "not set" |
 | `OPENAI_API_KEY` | ✅ gesetzt | Nein |
-| `GEMINI_API_KEY`/`GOOGLE_API_KEY` | ❌ nicht gesetzt, **kein Provider existiert bisher** | Siehe [Abschnitt 9](#9-cloud-llm-breite-was-geht-heute-was-fehlt) |
+| `GEMINI_API_KEY`/`GOOGLE_API_KEY` | ❌ weiterhin nicht gesetzt (Stand 2026-09-23) — `providers/gemini.lua` existiert seither, aber **nie live gegen die echte API getestet** | Ja — setzen, dann Happy-Path/Streaming/Safety-Block nachholen, siehe [Abschnitt 9](#9-cloud-llm-breite-was-geht-heute-was-fehlt) |
 | `OLLAMA_HOST` | ⚠️ gesetzt auf `0.0.0.0:11434` — **bricht `ollama.lua`**, siehe oben | Ja, s. o. |
 | Ollama-Daemon läuft | ❌ kein Prozess gefunden (`tasklist`) | Ja — `ollama serve` |
 | Ein Ollama-Modell gepullt | ungeprüft (Verbindung schlug fehl, `ollama list` kam nicht durch) | Ja — mind. `llama3.2` (ai.nvim-Default) oder `llama3.1:8b-q5_K_M` (loomAI-Default) |
@@ -94,6 +101,7 @@ angewendet. **Live reproduziert** auf dieser Maschine (`ollama list` mit
 | --- | --- | --- | --- | --- | --- |
 | `claude` | ☐ | ☐ | ☐ (ungültiger Key) | ☐ | ☐ |
 | `openai` | ☐ | ☐ | ☐ (ungültiger Key) | ☐ | ☐ |
+| `gemini` | ☐ | ☐ | ☐ (ungültiger Key) | ☐ | ☐ (+ Safety-Block-Fehlerpfad) |
 | `ollama` | ☐ | ☐ | ☐ (Daemon aus) | ☐ | ☐ |
 | `loomai` | ☐ | ☐ | ☐ (Server aus) | ☐ | ☐ |
 | `auto` | ☐ (resolution order) | — | — | — | — |
@@ -248,18 +256,21 @@ im Dashboard, um `/ask` visuell zu testen — das geht nur über `curl` oder
 
 ## 9. Cloud-LLM-Breite: was geht heute, was fehlt
 
-| Anbieter | In `ai.nvim` direkt | Im (noch nicht gebauten) loomAI-ModelRouter | Heute testbar? |
+**Update 2026-09-23:** loomAIs ModelRouter routet inzwischen alle vier
+Backends (Ollama/OpenAI/Anthropic/Gemini) per Modellname-Präfix
+(`gpt-`/`o1-`/`o3-`/`claude-`/`gemini-`), und `ai.nvim` hat einen eigenen
+`providers/gemini.lua`. Tabelle entsprechend nachgezogen:
+
+| Anbieter | In `ai.nvim` direkt | Im loomAI-ModelRouter | Heute testbar? |
 | --- | --- | --- | --- |
-| Anthropic (Claude) | ✅ `providers/claude.lua` | 🔲 geplant (Scoping steht) | ✅ Ja (Key setzen) |
-| OpenAI | ✅ `providers/openai.lua` | 🔲 geplant (Scoping steht) | ✅ Ja (Key vorhanden) |
-| Ollama (lokal) | ✅ `providers/ollama.lua` | ✅ bereits einziges Backend | ✅ Ja (nach OLLAMA_HOST-Fix) |
-| **Gemini** | ❌ **existiert nicht** | ❌ **existiert nicht** | ❌ **Nein — noch kein Provider gebaut, siehe Design-Entscheidungen** |
+| Anthropic (Claude) | ✅ `providers/claude.lua` | ✅ gebaut (Präfix `claude-`) | ✅ Ja (Key setzen) |
+| OpenAI | ✅ `providers/openai.lua` | ✅ gebaut (Präfix `gpt-`/`o1-`/`o3-`) | ✅ Ja (Key vorhanden) |
+| Ollama (lokal) | ✅ `providers/ollama.lua` | ✅ Default-Backend (kein Präfix-Treffer) | ✅ Ja (nach OLLAMA_HOST-Fix) |
+| **Gemini** | ✅ `providers/gemini.lua` | ✅ gebaut (Präfix `gemini-`) | ⚠️ **Code fertig, aber nie live gegen die echte API getestet** — kein `GEMINI_API_KEY` gesetzt (Stand 2026-09-23). Nur loomAIs `gemini_client.cpp` wurde mit einem bewusst ungültigen Key auf dem Fehlerpfad verifiziert. Happy-Path + Streaming + Safety-Block gegen die echte API noch offen. |
 | Andere Open-Source (vLLM/llama.cpp-Server/LM Studio) | ❌ existiert nicht | 🔲 geplant (über OpenAI-kompatiblen Client) | ❌ Nein |
 
-Gemini testen zu wollen ist also aktuell **blockiert**, bis entschieden ist,
-wo ein Gemini-Client gebaut wird (`ai.nvim` direkt, loomAI-Router, oder
-beides) — siehe die Design-Entscheidungen, die parallel zu diesem Report
-zur Auswahl gestellt werden.
+Gemini-Tests brauchen also nur noch einen echten `GEMINI_API_KEY` — kein
+Scoping/Design-Blocker mehr, im Unterschied zum Stand 2026-09-14.
 
 ---
 
@@ -356,6 +367,8 @@ Update einmal Neovim neu starten, damit die neue Lazy-Spec zieht.
 - [ ] loomAI gebaut und läuft
 - [ ] `claude`: available/ask/stream/Fehlerpfad ✅
 - [ ] `openai`: available/ask/stream/Fehlerpfad ✅
+- [ ] `gemini`: available/ask/stream/Fehlerpfad/Safety-Block ✅ (`GEMINI_API_KEY`
+      nötig, bislang nie live getestet)
 - [ ] `ollama`: available/ask/stream/Fehlerpfad ✅
 - [ ] `loomai`: available/ask/stream/Fehlerpfad (inkl. loomAI-intern) ✅
 - [ ] `auto`-Resolution mit mind. 2 unterschiedlichen Verfügbarkeits-
