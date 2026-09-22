@@ -1,18 +1,17 @@
 # lspsaga.nvim → lsp.nvim — offene Punkte
 
-**Stand:** 2026-09-22, nach dem Review der Config-Commits (Befunde 1–4 behoben), Rang 2/3 aus der
-Aufwand/Nutzen-Tabelle, einer adversarialen Commit-Review (ein Doku-Fund, behoben) und fünf weiteren
-erledigten Punkten dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert, Hunk-Spannen
-gecacht, rust-analyzer gemessen, Implementations-Marker lässt `.d.ts`/`node_modules` aus; siehe unten).
-Offen: nur noch Call Hierarchy für Lua (Rang 2) und deine Terminal-Prüfungen (Rang 1).
+**Stand:** 2026-09-22. Alle Punkte aus der Aufwand/Nutzen-Tabelle sind erledigt bis auf Rang 1 (deine
+Prüfungen im echten Terminal, A1–A10) — zuletzt Call Hierarchy für Lua: `lsc`/`lsC` fallen in einem
+Lua-Buffer ohne antwortenden Client auf `documentation.nvim` zurück (`opts.callhierarchy = true`), gegen
+echtes documentation.nvim und echtes lua_ls headless bestätigt. Details zu allem Erledigten (Befunde 1–4,
+Rang 2/3 des Reviews, die adversariale Commit-Review, Selbstrekursion, `UiSticky.md`, Hunk-Spannen-Cache,
+rust-analyzer, `.d.ts`/`node_modules`-Ausnahme, Call Hierarchy) liegen archiviert, siehe unten.
 
 ## Table of content
 
   - [Commits dieser Arbeit (ohne WKDBooks)](#commits-dieser-arbeit-ohne-wkdbooks)
   - [Wohin das Erledigte gewandert ist](#wohin-das-erledigte-gewandert-ist)
   - [Nach Aufwand / Nutzen](#nach-aufwand-nutzen)
-  - [Die Punkte](#die-punkte)
-    - [6. Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-fr-lua-dnne-lazy-schicht)
   - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prfungen-im-echten-terminal)
   - [Nicht geprüft / Grenzen](#nicht-geprft-grenzen)
 
@@ -41,12 +40,14 @@ stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBoo
 | `8d805c1` | — | perf(gitsigns_actions): Hunk-Spannen gecacht, nur bei `GitSignsUpdate` neu berechnet (Rang, jetzt erledigt) |
 | `3c1d5fe` | — | docs(navigation): rust-analyzer gemessen — keine Type-Hierarchy-Unterstützung |
 | `cfd6e92` | — | perf(implement): `.d.ts`-Dateien und `node_modules` ausgelassen |
+| `88ba62f` | — | feat(call_hierarchy): `lsc`/`lsC` fallen für Lua auf documentation.nvim zurück |
 
 CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `8895cd8`: grün (2m11s). CI zu `dddd97c`: grün (smoke/lint/3 Plattformen), `ci-verified` veröffentlicht.
 CI zu `8d805c1`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `3c1d5fe`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `cfd6e92`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
+CI zu `88ba62f`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 
 **`StefanBartl/ui.nvim`** — die Statuszeile
 
@@ -87,9 +88,10 @@ Alles Umgesetzte (10 Lücken + eigener Winbar-Breadcrumb, lspsaga entfernt, `cod
 Probe an, `implement` an (gemessen), altes `lazy/lspsaga.nvim` gelöscht, lspsaga-Reste in der
 Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen Review-Befunde**,
 **Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)**, **die Selbstrekursions-Entscheidung, die
-`UiSticky.md`-Korrektur und das Hunk-Spannen-Caching** liegen archiviert in
+`UiSticky.md`-Korrektur, das Hunk-Spannen-Caching, rust-analyzer gemessen, die `.d.ts`/`node_modules`-
+Ausnahme und Call Hierarchy für Lua** liegen archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
-(dort „Nachtrag“ bis „Nachtrag 8“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
+(dort „Nachtrag“ bis „Nachtrag 9“). Hier steht nur noch Rang 1, deine eigene Terminal-Prüfung.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart
 merklich Zeit). Beides Schätzungen, keine Messungen.
@@ -104,66 +106,9 @@ Bedingung geknüpft sind, nach den unbedingten. Die Spalte „Wer“ sagt, ob ic
 | Rang | Punkt | Wer | Repo | Aufwand | Nutzen |
 |---|---|---|---|---|---|
 | 1 | [**Abschluss: Prüfungen im echten Terminal (A1–A10)**](#abschluss-deine-prüfungen-im-echten-terminal) | du | — | XS–S (~20 min) | 4 |
-| 2 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
 
-Rang 1 kommt zuerst, weil es das Billigste und Nützlichste ist und alles andere Umgesetzte erst danach
-„wirklich“ als abgenommen gilt. Die früheren Rang 2/3 (`lsh`/`lsH`-Meldung, gopls; ui.nvim-
-Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4); die Selbstrekursions-Frage ist
-entschieden (so gelassen), `UiSticky.md` korrigiert, die Hunk-Spannen werden jetzt gecacht,
-rust-analyzer ist gemessen und der Implementations-Marker lässt `.d.ts`/`node_modules` jetzt aus (alle
-fünf Nachtrag 5–8, s. u.).
-
----
-
-## Die Punkte
-
-### 6. Call Hierarchy für Lua: dünne, lazy Schicht
-
-**Ausgangslage.** lua_ls hat keine Call Hierarchy. documentation.nvim kann sie mit `opts.callhierarchy = true`:
-ein zweiter, schmaler LSP-Client in-process, gestützt auf die Aufrufkarte aus `install()`
-(`docs/call_hierarchy.md`). In deiner Config ist das **aus** (`grep callhierarchy lua/` ohne Treffer), und
-documentation.nvim lädt nur auf Kommandos (`cmd = { "DocMap", … }`).
-
-**Gemessen (frühere Sitzung, headless):**
-
-- Der Client hängt sich an, meldet `supports_method("textDocument/prepareCallHierarchy") = true`, und
-  fzf-lua behandelt ihn wie einen normalen Server.
-- In `lsp.nvim/lua/lsp` liefert er für `symbols.walk` genau einen Aufrufer, `M.candidates` in
-  `implement.lua` — stimmt mit `rg` überein.
-- **Kosten:** `install()` brauchte ~2 s (Scan). Beim Start jedes Lua-Buffers spürbar.
-- **Grenze:** er deckt nur das gescannte `source`-Verzeichnis ab, also ein Plugin oder eine Config auf einmal.
-
-**Entschiedene Architektur:** Client und Aufrufkarte **bleiben in documentation.nvim.** Grund (deine
-Frage, und dein Verständnis stimmt): der Client ist ohne documentation.nvim gar nicht lauffähig, weil er
-auf dessen IR aus dem Modul-Scan sitzt. Nach lsp.nvim zu verschieben hieße, documentation.nvim trotzdem zu
-brauchen oder dessen Scanner zu kopieren — beides schlechter. Umgekehrt ist es sauber: lsp.nvim bekommt
-nur eine **kleine, optionale Schicht**, die documentation.nvim per `pcall` anstößt.
-
-**Entwurf der Schicht:**
-
-1. Erster `lsc`/`lsC` in einem Lua-Buffer, für den kein Client `prepareCallHierarchy` beantwortet.
-2. `pcall(require, "documentation")`; ist es nicht da, eine Klartext-Meldung („Call Hierarchy für Lua
-   braucht documentation.nvim mit `opts.callhierarchy`“) statt „No results“.
-3. Ist es da: documentation.nvim laden (es ist lazy — `require("lazy").load({ plugins = … })` bzw. der
-   Weg, den seine Doku vorsieht), `install()` mit `callhierarchy = true` für die Wurzel des Buffers, warten,
-   dann den Picker öffnen. Die ~2 s fallen **einmal pro Projekt** an, nicht beim Start.
-4. Kein Eingriff, solange kein Lua-Buffer `lsc`/`lsC` drückt.
-
-**Offen dabei (vor dem Bauen klären):**
-
-- **Welche Wurzel als `source`?** Genau eine Config/ein Plugin wird gescannt. `lua/`-Wurzel des Buffers vs.
-  Git-Root vs. das vorhandene Root-Erkennen in lsp.nvim. (In WKDBooks liegt
-  `lsp.nvim/NOTES/HANDOVER-headless-root-detection.md`; ich habe sie nicht gelesen, ob sie hier passt, ist
-  ungeprüft.)
-- Was, wenn der Buffer in einem anderen Plugin liegt als das zuvor Gescannte (zweite `install()`, Wechsel
-  des Handles)?
-- **Test mit documentation.nvim-Stub** in `lsp.nvim/TESTS/`: lsp.nvims CI holt documentation.nvim nicht
-  (kein Treffer in `.github/workflows/`); mit einem Stub bekommt die CI keine echte Abhängigkeit.
-- **Der Client heißt dann anders als `lsp.nvim-*`** (er gehört documentation.nvim). Er hat aber, anders als
-  der gitsigns-Client, echte Fähigkeiten und soll von Winbar und `:Lsp stop` gesehen werden; nichts zu tun,
-  nur bewusst lassen.
-
-**Aufwand S, Nutzen 3** — nur für Lua, dort aber dein Hauptfall.
+Alles andere aus dieser Tabelle ist erledigt und archiviert (Nachtrag 4–9, s. u.), zuletzt Call Hierarchy
+für Lua. Nur Rang 1 bleibt — deine Prüfungen im echten Fenster, die ich headless nicht abnehmen kann.
 
 ---
 
@@ -202,6 +147,7 @@ export function total(a: number, b: number): number {
 | A8 | Type Hierarchy im echten Fenster | In einer Go-Datei (gopls) einen Typ, der ein Interface implementiert: `lsh` bzw. `lsH`; danach dieselben Tasten in einer `.ts`-Datei | Go: Picker mit Sub-/Supertypen (gemessen: `Shape` → `Sq`). TS: die Klartext-Meldung, wer es kann, kein „No results“ nach Wartezeit | Beide Antworten gemessen; die Meldung nennt gopls jetzt (`8895cd8`, Spec-Test grün); nicht im echten Fenster gesehen |
 | A9 | `gra` über **zwei** Hunks (neu) | In einer getrackten Datei zwei Zeilen an verschiedenen Stellen ändern, beide plus die Zeilen dazwischen mit `V` markieren, `gra`, „gitsigns: Stage hunk“ | Beide geänderten Zeilen sind danach gestaged (`git diff --cached`), unabhängig davon, wo der Cursor stand. Bei Cursor auf einer Zeile *in* einem mehrzeiligen Hunk stagt „Stage hunk“ den **ganzen** Hunk | Gegen echtes gitsigns headless bestätigt (Selektion über Zeilen 2–8, Cursor auf Zeile 9: beide Hunks gestaged; Cursor-Anfrage: ganzer 3-Zeilen-Hunk); nicht im echten fzf-Fenster |
 | A10 | Restart, Stop und Winbar in einem Repo (neu) | In einer getrackten `.txt`-Datei: `:LspRestartHere`, `:LspStopHere`; in einer Lua-Datei `:LspRestartHere`; danach `lsa` auf einer geänderten Zeile | `.txt`: „No LSP clients to restart“ / „No LSP clients running“, **keine Winbar**. Lua: „Restarted N/N“ mit N = Anzahl echter Server (nicht N+1), die Winbar bleibt. „gitsigns: Stage hunk“ ist weiter in `lsa` | Headless mit echter Config bestätigt (Winbar leer auf `.txt`/`.json`, Restart/Stop-Meldungen, Force-Stop entfernt den Client und er kommt zurück); nicht von Hand |
+| A11 | Call Hierarchy für Lua im echten Fenster (neu) | In einer Lua-Datei dieser Config (`documentation.nvim` mit `opts.callhierarchy = true` installiert, s. Nachtrag 9), Cursor auf einer Funktion, die eine andere aufruft: `lsc` | Kurze „scanning …“-Meldung beim ersten Mal im Projekt, danach das fzf-lua-Fenster mit den Aufrufern (bzw. „No results“, wenn wirklich keiner da ist) | Gegen echtes documentation.nvim und echtes lua_ls headless bestätigt: der Client hängt sich an, `textDocument/prepareCallHierarchy` und `callHierarchy/incomingCalls` liefern die echte Aufrufkette (`M.main` als Aufrufer von `M.helper`); `vim.lsp.buf.incoming_calls()`s Quickfix blieb headless leer (bekannte Grenze ohne echtes Fenster), das fzf-lua-Fenster selbst nicht gesehen |
 
 Wenn A1 oder A2 scheitern: `code_actions.picker = "native"` in `init.lua` als Fallback und den
 Befund melden.
@@ -215,9 +161,12 @@ Befund melden.
 - Der Implementations-Marker wurde nur gegen tsserver gemessen (synthetische Projekte mit 5/20/200
   Interfaces, zwei echte Projekte, dazu jetzt das echte `lib.dom.d.ts`, Nachtrag 8); tsserver-CPU und
   große Monorepos jenseits eines einzelnen 2,3-MB-`.d.ts` bleiben ungemessen; Go/Java/C# nicht.
-- Die Type-Hierarchy-Zahlen (jetzt erledigt, Nachtrag 4) und die Call-Hierarchy-Zahlen in Rang 2 stammen aus
-  einer früheren Sitzung. Ich habe sie **übernommen, nicht neu gemessen**; nur die Aussage zu
-  `calls.lua:425–427` (Selbstkanten absichtlich weggelassen) habe ich im Quelltext nachgelesen.
+- Die Type-Hierarchy-Zahlen sind jetzt erledigt (Nachtrag 4, 7). Die Call-Hierarchy-Grundlage (Client
+  hängt sich an, liefert für `symbols.walk` einen Aufrufer) stammte aus einer früheren Sitzung und wurde
+  **übernommen**; die Schicht selbst (Nachtrag 9) ist gegen echtes documentation.nvim und echtes lua_ls
+  headless neu geprüft, inklusive der End-to-End-Antwort von `callHierarchy/incomingCalls`. Nur die
+  Aussage zu `calls.lua:425–427` (Selbstkanten absichtlich weggelassen) habe ich im Quelltext nachgelesen,
+  nicht erneut ausgeführt.
 - Die vier Review-Fixes sind headless mit deiner echten Config und dem echten gitsigns bestätigt (Winbar,
   Restart/Stop, Force-Stop, Staging über eine Selektion), **nicht** in einem echten fzf-Fenster. Für den
   Marker (`e50e10a`) gibt es nur Specs mit einem Stub-Client, keinen Lauf gegen einen echten ts_ls.
