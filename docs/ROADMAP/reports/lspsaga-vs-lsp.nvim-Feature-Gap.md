@@ -1,9 +1,10 @@
 # lspsaga.nvim → lsp.nvim — offene Punkte
 
 **Stand:** 2026-09-22, nach dem Review der Config-Commits (Befunde 1–4 behoben), Rang 2/3 aus der
-Aufwand/Nutzen-Tabelle, einer adversarialen Commit-Review (ein Doku-Fund, behoben) und den ehemaligen
-Rang 2/3/6/7 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert, Hunk-Spannen gecacht,
-rust-analyzer gemessen; siehe unten)
+Aufwand/Nutzen-Tabelle, einer adversarialen Commit-Review (ein Doku-Fund, behoben) und fünf weiteren
+erledigten Punkten dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert, Hunk-Spannen
+gecacht, rust-analyzer gemessen, Implementations-Marker lässt `.d.ts`/`node_modules` aus; siehe unten).
+Offen: nur noch Call Hierarchy für Lua (Rang 2) und deine Terminal-Prüfungen (Rang 1).
 
 ## Table of content
 
@@ -12,7 +13,6 @@ rust-analyzer gemessen; siehe unten)
   - [Nach Aufwand / Nutzen](#nach-aufwand-nutzen)
   - [Die Punkte](#die-punkte)
     - [6. Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-fr-lua-dnne-lazy-schicht)
-    - [7. Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-groen-projekten-und-dts)
   - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prfungen-im-echten-terminal)
   - [Nicht geprüft / Grenzen](#nicht-geprft-grenzen)
 
@@ -40,11 +40,13 @@ stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBoo
 | `dddd97c` | — | docs(navigation): Type-Hierarchy-Fallback nennt Zig, nicht nur vier Sprachen (Fund aus der adversarialen Commit-Review von `8895cd8`) |
 | `8d805c1` | — | perf(gitsigns_actions): Hunk-Spannen gecacht, nur bei `GitSignsUpdate` neu berechnet (Rang, jetzt erledigt) |
 | `3c1d5fe` | — | docs(navigation): rust-analyzer gemessen — keine Type-Hierarchy-Unterstützung |
+| `cfd6e92` | — | perf(implement): `.d.ts`-Dateien und `node_modules` ausgelassen |
 
 CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `8895cd8`: grün (2m11s). CI zu `dddd97c`: grün (smoke/lint/3 Plattformen), `ci-verified` veröffentlicht.
 CI zu `8d805c1`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `3c1d5fe`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
+CI zu `cfd6e92`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 
 **`StefanBartl/ui.nvim`** — die Statuszeile
 
@@ -87,7 +89,7 @@ Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen R
 **Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)**, **die Selbstrekursions-Entscheidung, die
 `UiSticky.md`-Korrektur und das Hunk-Spannen-Caching** liegen archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
-(dort „Nachtrag“ bis „Nachtrag 7“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
+(dort „Nachtrag“ bis „Nachtrag 8“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart
 merklich Zeit). Beides Schätzungen, keine Messungen.
@@ -103,13 +105,13 @@ Bedingung geknüpft sind, nach den unbedingten. Die Spalte „Wer“ sagt, ob ic
 |---|---|---|---|---|---|
 | 1 | [**Abschluss: Prüfungen im echten Terminal (A1–A10)**](#abschluss-deine-prüfungen-im-echten-terminal) | du | — | XS–S (~20 min) | 4 |
 | 2 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
-| 3 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
 
 Rang 1 kommt zuerst, weil es das Billigste und Nützlichste ist und alles andere Umgesetzte erst danach
 „wirklich“ als abgenommen gilt. Die früheren Rang 2/3 (`lsh`/`lsH`-Meldung, gopls; ui.nvim-
 Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4); die Selbstrekursions-Frage ist
-entschieden (so gelassen), `UiSticky.md` korrigiert, die Hunk-Spannen werden jetzt gecacht und
-rust-analyzer ist gemessen (alle vier Nachtrag 5–7, s. u.).
+entschieden (so gelassen), `UiSticky.md` korrigiert, die Hunk-Spannen werden jetzt gecacht,
+rust-analyzer ist gemessen und der Implementations-Marker lässt `.d.ts`/`node_modules` jetzt aus (alle
+fünf Nachtrag 5–8, s. u.).
 
 ---
 
@@ -165,24 +167,6 @@ nur eine **kleine, optionale Schicht**, die documentation.nvim per `pcall` anst�
 
 ---
 
-### 7. Implementations-Marker: Last in großen Projekten und `.d.ts`
-
-**Nicht gemessen.** Der Marker fragt nach jeder Tipp-Pause neu (`TextChanged`, `InsertLeave`, `BufEnter`,
-`LspAttach`), höchstens `max_requests = 20` Anfragen je Runde; in kleinen Projekten gemessen 10–28 ms für
-20 Anfragen. Was fehlt: Bibliotheks-Typdateien (`lib.dom.d.ts`, `node_modules/@types/**`). Ein Interface wie
-`HTMLElement` hat hunderte Implementierer, die Antwort trägt alle Locations, und der Marker zählt sie nur.
-
-Vorschläge, **erst nach einer Messung** (`lib.dom.d.ts` öffnen, Rundendauer und tsserver-Latenz von Hover
-in derselben Zeit):
-
-- `*.d.ts` und `node_modules` auslassen.
-- Nur bei `BufEnter`, `LspAttach`, `BufWritePost` und bei geänderten Interface-Knoten fragen, nicht nach
-  jeder Pause: die Implementierer stehen meist in anderen Dateien.
-
-**Aufwand S (Messung + Änderung), Nutzen 2.**
-
----
-
 ## Abschluss: deine Prüfungen im echten Terminal
 
 Alles hier ist **committet, gemergt und in Tests oder headless gemessen** — aber nie mit echten Augen
@@ -229,8 +213,8 @@ Befund melden.
 - Aufwand- und Nutzen-Werte oben sind Schätzungen auf Basis deines Stacks (Lua, Markdown, TS/Astro; dazu
   C/C++, Java, Go für die Type Hierarchy).
 - Der Implementations-Marker wurde nur gegen tsserver gemessen (synthetische Projekte mit 5/20/200
-  Interfaces, zwei echte Projekte); tsserver-CPU, große Monorepos und Bibliotheks-Typdateien nicht (Rang 3);
-  Go/Java/C# nicht.
+  Interfaces, zwei echte Projekte, dazu jetzt das echte `lib.dom.d.ts`, Nachtrag 8); tsserver-CPU und
+  große Monorepos jenseits eines einzelnen 2,3-MB-`.d.ts` bleiben ungemessen; Go/Java/C# nicht.
 - Die Type-Hierarchy-Zahlen (jetzt erledigt, Nachtrag 4) und die Call-Hierarchy-Zahlen in Rang 2 stammen aus
   einer früheren Sitzung. Ich habe sie **übernommen, nicht neu gemessen**; nur die Aussage zu
   `calls.lua:425–427` (Selbstkanten absichtlich weggelassen) habe ich im Quelltext nachgelesen.
