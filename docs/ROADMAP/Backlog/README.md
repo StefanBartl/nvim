@@ -21,7 +21,9 @@
 
 ## FEATURES
 
-_Noch keine archivierten Feature-Karten._
+| ID | Titel | Repo(s) | Datum | Karte |
+|---|---|---|---|---|
+| GS-20 | Konflikt-Konsumenten (`has_conflicts`): Fence-Filter, Buffer-Report, Devcontainer-Preflight | gitsuite.nvim, color_my_ascii.nvim, debugging.nvim, sandbox.nvim | 2026-09-22 | [GS-20](FEATURES/GS-20_konflikt-konsumenten.md) |
 
 ## Hinweis zu früheren Wellen (`GS-00`…`GS-12`)
 
