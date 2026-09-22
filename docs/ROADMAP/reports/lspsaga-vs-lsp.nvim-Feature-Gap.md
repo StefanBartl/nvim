@@ -1,7 +1,8 @@
 # lspsaga.nvim → lsp.nvim — offene Punkte
 
-**Stand:** 2026-09-21, nach dem Review der Config-Commits (Befunde 1–4 behoben) und Rang 2/3 aus der
-Aufwand/Nutzen-Tabelle (siehe unten)
+**Stand:** 2026-09-22, nach dem Review der Config-Commits (Befunde 1–4 behoben), Rang 2/3 aus der
+Aufwand/Nutzen-Tabelle, einer adversarialen Commit-Review (ein Doku-Fund, behoben) und den ehemaligen
+Rang 2/3 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert; siehe unten)
 
 ## Table of content
 
@@ -9,8 +10,6 @@ Aufwand/Nutzen-Tabelle (siehe unten)
   - [Wohin das Erledigte gewandert ist](#wohin-das-erledigte-gewandert-ist)
   - [Nach Aufwand / Nutzen](#nach-aufwand-nutzen)
   - [Die Punkte](#die-punkte)
-    - [4. Selbstrekursion bei „outgoing“](#4-selbstrekursion-bei-outgoing)
-    - [5. `UiSticky.md`: zwei Ungenauigkeiten](#5-uistickymd-zwei-ungenauigkeiten)
     - [6. Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-fr-lua-dnne-lazy-schicht)
     - [7. Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-groen-projekten-und-dts)
     - [8. Hunk-Spannen cachen](#8-hunk-spannen-cachen)
@@ -39,9 +38,10 @@ stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBoo
 | `12e4e8e` | 23:20 | fix(gitsigns_actions): Stage/Reset/Preview wirken auf die Selektion, für die sie angeboten wurden |
 | `e50e10a` | 23:20 | fix(implement): eine Runde, deren Text sich nach dem Versand geändert hat, zeichnet nichts |
 | `8895cd8` | — | fix(actions): `lsh`/`lsH`-Meldung nennt gopls als gemessenen Type-Hierarchy-Server (Rang 2) |
+| `dddd97c` | — | docs(navigation): Type-Hierarchy-Fallback nennt Zig, nicht nur vier Sprachen (Fund aus der adversarialen Commit-Review von `8895cd8`) |
 
 CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verified` veröffentlicht.
-CI zu `8895cd8`: grün (2m11s).
+CI zu `8895cd8`: grün (2m11s). CI zu `dddd97c`: grün (smoke/lint/3 Plattformen), `ci-verified` veröffentlicht.
 
 **`StefanBartl/ui.nvim`** — die Statuszeile
 
@@ -64,6 +64,8 @@ CI zu `d96fe16`: grün (1m12s).
 | `225dd0ab5` | 22:31 | docs(reports): Report auf das Offene gekürzt, nach Aufwand/Nutzen, Commit-Liste vorn |
 | `e47dfbf23` | — | docs(reports): Report nach dem Review der Config-Commits, neue SHAs, offene Punkte neu geordnet |
 | `b65670e41` | — | docs(reports): Rang 2/3 erledigt, Aufwand/Nutzen-Tabelle neu nummeriert |
+| `092ea0169` | — | docs(reports): zwei fehlende Commit-Zeilen nachgetragen |
+| `94bcb6b3d` | — | docs(bindings): UiSticky-Blatt an ui.nvims tatsächliche sanitize/may_touch-Logik angepasst (Rang 3) |
 
 `225dd0ab5` hieß zuerst `138c4a175`: eine andere Sitzung hat den Commit per `--amend` umgeschrieben und
 dabei eine Zeile in `docs/ROADMAP/ROADMAP.md` (die Usage-Tabelle) mit hineingenommen. Der Report-Inhalt
@@ -78,10 +80,11 @@ zu dieser Aufgabe.
 
 Alles Umgesetzte (10 Lücken + eigener Winbar-Breadcrumb, lspsaga entfernt, `code_actions.gitsigns` als
 Probe an, `implement` an (gemessen), altes `lazy/lspsaga.nvim` gelöscht, lspsaga-Reste in der
-Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen Review-Befunde** und
-**Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)** liegen archiviert in
+Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen Review-Befunde**,
+**Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)** sowie **die Selbstrekursions-Entscheidung und die
+`UiSticky.md`-Korrektur** liegen archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
-(dort „Nachtrag“ bis „Nachtrag 4“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
+(dort „Nachtrag“ bis „Nachtrag 5“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart
 merklich Zeit). Beides Schätzungen, keine Messungen.
@@ -96,51 +99,20 @@ Bedingung geknüpft sind, nach den unbedingten. Die Spalte „Wer“ sagt, ob ic
 | Rang | Punkt | Wer | Repo | Aufwand | Nutzen |
 |---|---|---|---|---|---|
 | 1 | [**Abschluss: Prüfungen im echten Terminal (A1–A10)**](#abschluss-deine-prüfungen-im-echten-terminal) | du | — | XS–S (~20 min) | 4 |
-| 2 | [Selbstrekursion bei „outgoing“ zeigen?](#4-selbstrekursion-bei-outgoing) | Entscheidung | documentation.nvim | XS | 1 |
-| 3 | [`UiSticky.md`: zwei Ungenauigkeiten](#5-uistickymd-zwei-ungenauigkeiten) | ich | Config | XS | 1 |
-| 4 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
-| 5 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
-| 6 | [Hunk-Spannen cachen](#8-hunk-spannen-cachen) | ich | lsp.nvim | S | 1 |
-| 7 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
+| 2 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
+| 3 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
+| 4 | [Hunk-Spannen cachen](#8-hunk-spannen-cachen) | ich | lsp.nvim | S | 1 |
+| 5 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
 
 Rang 1 kommt zuerst, weil es das Billigste und Nützlichste ist und alles andere Umgesetzte erst danach
-„wirklich“ als abgenommen gilt. Die früheren Rang 2 (`lsh`/`lsH`-Meldung, gopls) und Rang 3 (ui.nvim-
-Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4, s. o.); der letzte Rang nur, wenn Rust
-im Alltag ist.
+„wirklich“ als abgenommen gilt. Die früheren Rang 2/3 (`lsh`/`lsH`-Meldung, gopls; ui.nvim-
+Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4); die Selbstrekursions-Frage ist
+entschieden (so gelassen) und `UiSticky.md` korrigiert (beides Nachtrag 5, s. u.); der letzte Rang nur,
+wenn Rust im Alltag ist.
 
 ---
 
 ## Die Punkte
-
-### 4. Selbstrekursion bei „outgoing“
-
-In der Messung fehlte bei `symbols.walk` die Selbstrekursion unter „outgoing“ (0). **Das ist Absicht,
-nicht Fehler:** `documentation.nvim/lua/documentation/core/calls.lua:425–427` lässt Selbstkanten beim
-Aufbau des Graphen weg („Direct recursion … tells the reader nothing a self-loop on a diagram would not
-obscure“, und `:516` verlässt sich darauf für die Zyklenfreiheit). Diese Regel gilt für das Diagramm.
-
-Offen ist nur, ob die **LSP-Antwort** die Rekursion trotzdem zeigen soll (clangd/gopls tun es). Das wäre
-ein Sonderweg im Client, der den Guard von `:516` nicht verletzen darf.
-
-- Empfehlung: so lassen. Wer eine Rekursion sucht, findet sie im Quelltext schneller als in der Hierarchie.
-- **Aufwand XS (nur Entscheidung), Nutzen 1.** Verwerfen ist legitim.
-
----
-
-### 5. `UiSticky.md`: zwei Ungenauigkeiten
-
-`docs/NOTES/ExternPlugins/Bindings/Usercmds/UiSticky.md` (Config, Commit `a2095deeb`) stimmt bis auf zwei
-Stellen mit ui.nvim `c2d5d53` überein:
-
-- „wird beim Lesen ignoriert“ trifft auf ein **Feld** zu, nicht auf die ganze Datei: `sanitize`
-  (`ui/context/state.lua`) verwirft nur das Ungültige. Mehr als 64 Filetypes verwirft `lines`,
-  `max_level` bleibt.
-- Eine leere JSON-Datei (`{}` oder `[]`) gilt als eigene Datei und darf überschrieben werden
-  (`may_touch`, kein fremder Schlüssel vorhanden).
-
-**Aufwand XS, Nutzen 1.**
-
----
 
 ### 6. Call Hierarchy für Lua: dünne, lazy Schicht
 
