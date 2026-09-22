@@ -17,10 +17,7 @@
     - [3. ui/panel.lua: Voll-Buffer-set_lines pro Stream-Chunk](#3-uipanellua-voll-buffer-set_lines-pro-stream-chunk)
     - [4. loomAI: Connection-Pooling zu Ollama und Cloud-Backends](#4-loomai-connection-pooling-zu-ollama-und-cloud-backends)
     - [5. loomAI-ModelRouter: Präfix-Liste, Timeout/Retry, Capabilities](#5-loomai-modelrouter-prfix-liste-timeoutretry-capabilities)
-    - [6. loomAI: ki-agenten-framework-architektur.md im öffentlichen Repo?](#6-loomai-ki-agenten-framework-architekturmd-im-ffentlichen-repo)
-    - [7. Datenschutz-Prinzip in Checklists.md festhalten](#7-datenschutz-prinzip-in-checklistsmd-festhalten)
-    - [8. Completion: Abgleich mit fertigen Completion-Plugins](#8-completion-abgleich-mit-fertigen-completion-plugins)
-    - [9. Wkdbook-ROADMAP: veralteter Pfad-Verweis](#9-wkdbook-roadmap-veralteter-pfad-verweis)
+  - [Erledigt seit 2026-09-21](#erledigt-seit-2026-09-21)
 
 ---
 
@@ -56,9 +53,10 @@
 
 ## Offene Punkte
 
-Stand 2026-09-21. Alles andere (Phasen 0-8, Code-Review, loomai-Provider,
+Stand 2026-09-23. Alles andere (Phasen 0-8, Code-Review, loomai-Provider,
 ModelRouter, Dashboard-Testpanel, Gemini, Completion-Capability, rules.nvim-
-Durchgänge, `pdfport.nvim`-Migration) ist erledigt.
+Durchgänge, `pdfport.nvim`-Migration, sowie die vier Punkte unter
+[Erledigt seit 2026-09-21](#erledigt-seit-2026-09-21)) ist erledigt.
 
 ---
 
@@ -67,10 +65,13 @@ Durchgänge, `pdfport.nvim`-Migration) ist erledigt.
 - `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, dazu `loomai`/`gemini`),
   um v1 vor einem Tag zu validieren.
 - [Live-Testing-Plan](../../personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
-  geht noch von "loomAI kann nur Ollama" aus — beim nächsten Durchgang um die
-  drei Cloud-Backends (OpenAI/Anthropic/Gemini) ergänzen.
+  **aktualisiert (2026-09-23):** ging noch von "loomAI kann nur Ollama" und
+  "kein Gemini-Provider" aus — Abschnitt 9 und die Test-Matrix sind jetzt um
+  die drei Cloud-Backends (OpenAI/Anthropic/Gemini) im ModelRouter sowie um
+  `providers/gemini.lua` ergänzt. Der eigentliche Alltagsdurchlauf (Env-Vars
+  setzen, Schritte abhaken) steht weiterhin aus.
 - **`gemini.lua` wurde nie live gegen die echte Gemini-API getestet** (kein
-  `GEMINI_API_KEY` vorhanden, am 2026-09-21 weiterhin nicht gesetzt). Nur die
+  `GEMINI_API_KEY` vorhanden, am 2026-09-23 weiterhin nicht gesetzt). Nur die
   loomAI-Seite (`gemini_client.cpp`) wurde mit einem bewusst ungültigen Key auf
   dem Fehlerpfad verifiziert. Happy-Path + Streaming + Safety-Block gegen die
   echte API nachholen.
@@ -132,44 +133,43 @@ Alle drei sind `nice-to-have`, nicht blockierend:
 
 ---
 
-### 6. loomAI: ki-agenten-framework-architektur.md im öffentlichen Repo?
+## Erledigt seit 2026-09-21
 
-`E:\repos\loomAI\docs\Guides\ki-agenten-framework-architektur.md` (weiterhin
-im Repo getrackt) gehört vermutlich demselben Muster wie das bereits
-ausgelagerte `setup-guide.md` (beschreibt eine deutlich größere, nie gebaute
-Zukunftsvision) und damit eher nicht ins öffentliche Repo, sondern nach
-`WKDBooks\Development\wkdbook-loomai\Guides\`. Nicht angefasst, weil nicht
-angefragt — bei Gelegenheit gegenchecken (`README.md`/`README.de.md` verweisen nicht darauf).
-
----
-
-### 7. Datenschutz-Prinzip in Checklists.md festhalten
-
-Datenschutz-Prinzip (kein zentrales Key-Storage, Keys aus Env) als allgemeine
-Regel in `personal/All/Checklists.md` festhalten, gültig für jedes Plugin mit
-API-Key-Kontakt (`reposcope.nvim`, `github_stats.nvim`, `ai.nvim`-Completion).
-Die Datei existiert nicht (2026-09-21 gegengeprüft: unter `personal/All/` kein
-`Checklists*`), müsste neu angelegt werden — oder das Prinzip landet in den
-bestehenden Checklisten unter `WKDBooks\...\wkdbook-Lua\Checklists`. Kurz
-klären, wohin.
-
----
-
-### 8. Completion: Abgleich mit fertigen Completion-Plugins
-
-Offene Vorfrage aus dem `typepilot`-Scoping: ob parallel geprüft werden soll,
-was `copilot.lua`, `codeium.vim`, `supermaven-nvim`, `minuet-ai.nvim` (Letzteres
-macht bereits Multi-Provider-Completion gegen OpenAI/Claude/Gemini/Ollama —
-nicht live verifiziert) bereits abdecken. Die Capability selbst ist gebaut
-(Scope-Entscheidung: Teil von `ai.nvim`), die Frage bleibt ein reiner Abgleich.
-
----
-
-### 9. Wkdbook-ROADMAP: veralteter Pfad-Verweis
-
-`WKDBooks\Development\wkdbook-myplugins\ai.nvim\ROADMAP\ROADMAP.md`
-verweist im Kopf auf `nvim/docs/ROADMAP/handovers/ai.nvim.md`; die Datei liegt
-jetzt unter `handovers/ai/ai.nvim_loomai.md`. Pfad dort nachziehen.
+- **loomAI: `ki-agenten-framework-architektur.md`.** Gehörte demselben Muster
+  wie das bereits ausgelagerte `setup-guide.md` (beschreibt eine deutlich
+  größere, nie gebaute Zukunftsvision) — nach
+  `WKDBooks\Development\wkdbook-loomai\Guides\` verschoben (`loomAI@0938b73`,
+  `WKDBooks@043f31b`), README dort nachgezogen, die drei Code-/Doc-Verweise im
+  öffentlichen Repo (`model_client.hpp`, `ollama_client.hpp`,
+  `docmap-checklist-agent.md`) zeigen jetzt auf den neuen Ort
+  (`loomAI@0938b73`).
+- **Datenschutz-Prinzip.** Existiert bereits als `SEC-15` in
+  `WKDBooks\...\wkdbook-Lua\Checklists\regeln\LUA_NVIM.md` — kanonisch, keine
+  neue `personal/All/Checklists.md` nötig. Beleg-Zeile war nur gegen das
+  ungebaute `typepilot.nvim`-Konzept referenziert; jetzt durch drei tatsächlich
+  gebaute, geprüfte Plugins ersetzt: `ai.nvim` (`providers/{openai,claude,
+  gemini}.lua` + `providers/util.lua:57-64`, env-only; `health.lua:76-108`,
+  Presence-only), `reposcope.nvim` (`utils/env.lua:13-24`, `health.lua:89-95`),
+  `github_stats.nvim` (`config/init.lua:204-240`, `health.lua:88-101`)
+  (`WKDBooks@425a4a7`).
+- **Completion: Abgleich mit fertigen Completion-Plugins.** Vergleich
+  geschrieben: `WKDBooks\...\wkdbook-myplugins\ai.nvim\NOTES\
+  completion-plugin-comparison.md` (`WKDBooks@e5fb4b2`). Ergebnis: `copilot.lua`
+  /`codeium.vim`/`supermaven-nvim` sind Single-Vendor-Hosted-Modelle, keine
+  Überschneidung mit `ai.nvim`s BYOK-Design. `minuet-ai.nvim` überschneidet
+  sich tatsächlich (auch BYOK, auch Chat-Prompt-Trick für Chat-only-Backends),
+  ist aber auf der Completion-Achse deutlich weiter ausgebaut (echtes FIM für
+  FIM-fähige Modelle, Multi-Suggestion-Cycling, Throttle/Debounce, Kontext-
+  Fenster, Streaming) — bewusst kein Vorbild für `ai.nvim`s Scope (reine
+  Ein-Vorschlag-Wiederverwendung der bestehenden `ask()`-Pipeline), höchstens
+  Referenz, falls der jetzige Ansatz sich als zu eng erweist. Keine weitere
+  Aktion.
+- **Wkdbook-ROADMAP: Pfad-Verweis.** Bereits korrekt — bei Prüfung am
+  2026-09-23 zeigten alle vier Fundstellen in
+  `wkdbook-myplugins\ai.nvim\{FEATURES.md,ROADMAP/ROADMAP.md,Backlog/FEATURES/
+  {typepilot.nvim.md,FINISHED_ai_loomai.md}}` bereits auf
+  `handovers/ai/ai.nvim_loomai.md`. War wohl schon in einem früheren Durchgang
+  mit erledigt worden, nur hier nicht abgehakt.
 
 ---
 
