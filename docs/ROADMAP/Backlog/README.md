@@ -14,6 +14,7 @@
 |---|---|---|---|---|
 | GS-13 | `filetree.nvim`: eigener Porcelain-Parser → `lib.nvim.git` | filetree.nvim, lib.nvim | 2026-09-22 | [GS-13](TASKS/GS-13_filetree-porcelain-to-lib.md) |
 | GS-14 | Sammel-Swaps `insights`/`buffer-ctx`/`diff`/`fileops` → `lib.nvim.git` | insights.nvim, buffer-ctx.nvim, diff.nvim, fileops.nvim, lib.nvim | 2026-09-22 | [GS-14](TASKS/GS-14_sammel-swaps-lib-git.md) |
+| GS-15 | `ui.nvim`s `git_clickable` auf lib-Primitive, plus `lib.nvim.git.checkout` | ui.nvim, lib.nvim, gitsuite.nvim | 2026-09-22 | [GS-15](TASKS/GS-15_ui-nvim-git-clickable-to-lib.md) |
 
 ## FEATURES
 
