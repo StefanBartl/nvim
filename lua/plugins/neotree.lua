@@ -121,19 +121,18 @@ return {
             highlight_opened_files = true,
             highlight = "NeoTreeFileName",
           },
-          git_status = {
-            symbols = {
-              added = "A",
-              deleted = "D",
-              modified = "M",
-              renamed = "R",
-              unstaged = "✗",
-              staged = "✓",
-              untracked = "★",
-              ignored = "◌",
-              conflict = "C",
-            },
-          },
+          -- `git_status.symbols` (M/A/D/R/...), the `git_status`/`diagnostics`/
+          -- `clipboard` renderer entries below, and their config are gone
+          -- (2026-09-22): filetree.nvim's own `git_status`/`lsp_diagnostics`/
+          -- `copy_move` features draw the same three things as their own
+          -- extmarks -- always have, adapter-agnostically -- so neo-tree's
+          -- native versions were a second, independent copy of the same
+          -- information. Invisible under filetree's un-styled default
+          -- signs; visibly redundant once `decoration_style = "rounded"`
+          -- turned filetree's half into a colored pill next to neo-tree's
+          -- own plain glyph. `name.use_git_status_colors` stays -- coloring
+          -- the filename itself is a technique filetree.nvim doesn't have,
+          -- not a duplicate sign.
         },
 
         renderers = {
@@ -142,31 +141,11 @@ return {
             { "icon" },
             { "current_filter" },
             { "name" },
-            { "git_status", highlight = "NeoTreeDimText" },
-            {
-              "diagnostics",
-              symbols = {
-                hint = "",
-                info = "",
-                warn = "",
-                error = "",
-              },
-              highlights = {
-                hint = "DiagnosticSignHint",
-                info = "DiagnosticSignInfo",
-                warn = "DiagnosticSignWarn",
-                error = "DiagnosticSignError",
-              },
-            },
-            { "clipboard" },
           },
           file = {
             { "indent" },
             { "icon" },
             { "name", use_git_status_colors = true },
-            { "git_status", highlight = "NeoTreeDimText" },
-            { "diagnostics" },
-            { "clipboard" },
           },
         },
 

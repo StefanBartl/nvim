@@ -4,8 +4,7 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
-    - [lib.nvim](#libnvim)
-    - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
+  - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
   - [Tasks](#tasks)
     - [TOP interessant gerade](#top-interessant-gerade)
@@ -24,17 +23,15 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:40       |    59% / 70%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:43       |    90% / 82%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    03% / 80%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     21:00       |    62% / 71%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     03:10       |    26% / 79%     |
 
 ---
 
 ## Claude Tasks
 
-sesions.nvim:
-  `16:46:42 msg_show [sessions] loaded: C:\Users\bartl\AppData\Local\nvim-data/sessions/nvim_main.vim`
-  Kann man das schöner egstaleten, also das es nicht nur text ist, sondern wir sie statusline opder die winbar / tableiste sich ins design einfügt?
+- markdown.nvim: brreadrumbs statt linksbündig rectsbündig machen - auch ohne "underline" testen, wenn rechts brauh tes das vl gar nicht
 
 - - gitsuite.nvim:
   - wkd
@@ -49,9 +46,7 @@ sesions.nvim:
 
 ---
 
-### lib.nvim
-
-### Nice-to-Have wenn Limit über ist
+## Nice-to-Have wenn Limit über ist
 
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin

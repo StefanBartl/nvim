@@ -868,17 +868,6 @@ plugins.add({
           -- see wkdbook-myplugins/filetree.nvim/ROADMAP/IDEAS/Cascade_Delete_Assets.md.
           outgoing_assets = { enabled = true },
         },
-        -- NEW (2026-09-22, testing): opt-in "rounded" skin for the five
-        -- line-based markers (git_status/size_info/link_marker/
-        -- lsp_diagnostics/copy_move's clipboard overlay) plus breadcrumbs'
-        -- new root segment, coloured by the active cwd_mode policy
-        -- (project/nearest/lock/manual/tree_leads), read live from the
-        -- colorscheme via ui.theme.palette.accent(). "plain" (default,
-        -- unset) leaves every one of those unchanged. "rounded_nerdfont" is
-        -- the same pill with true Powerline caps instead of the plain-
-        -- Unicode ones, if WezTerm's font actually has them. See filetree.
-        -- nvim docs/FEATURES/UI.md#decoration-style.
-        decoration_style = "rounded",
         features = {
           cwd_sync = { enabled = true, reveal = false },
           -- The mode badge (PROJECT/LOCK/…) is shown in this host's own
