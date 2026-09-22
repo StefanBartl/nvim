@@ -25,7 +25,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:43       |    90% / 82%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    03% / 80%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     03:10       |    26% / 79%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     03:10       |    70% / 85%     |
 
 ---
 
@@ -36,13 +36,13 @@
 - - gitsuite.nvim:
   - wkd
   - rules.nvim (eventuell gleich mit agent aus document-explrer / documentation.nvim / loomAI / ai.nvim)
+  - implemtniert es lazygit bzw die anderen externen git plgins nur, oder ersetzt es diese tatsächlich? Wenich zb leader lg aufrufe, dann bekomme ich lazygit ui, bzw die gleiche ausschauende ui sogar mit "lazygit" als überschrift; Idealerewiße würde es die funktinen von lazyghit + neogit als eine uzi verbnidnen im lazygit look.
+  - `:Git ui ` hat als options auch nicht installierte plugins zb neogit ist nbei mir nicht installiert das nvim plugin, ist aber in der options list
 
 - [ ] Jedes Plugin aus sicht eines endusers/developers "durchspielen" - von Beginn an, also vom ankommen auf der github seite, ssagne wikr dealerweiße kommend von derr wkd seite. DAnn möchte m an mal als erstes normalerweiße die instsalltion + optionen sehen. ist am flow etwas nicht in ordnung? stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar und ansprechend, modern aufbereitet? Ist die Dokumentation an Stellen verwirrend? Gib es docs, die mich als enduser/dev nicht betreffen? ([alte] Telemetry daten, Deutsche dokumentation, backlogs,..)
 
-- [ ] mdview: Auf der workstation funktinrt cursor section nicht, also die sektion wird nicht hl, caret funktionert gut, line auch; standalone gar nichts
-
-- noice & restliche externe plugins erstzen ?
 - plugins die meinen ähneln auf features abgrasen, die ich noch nicht imlpementiert habe
+  - noice & restliche externe plugins ersetzen ? Was macht SIn, was nicht?
 
 ---
 
