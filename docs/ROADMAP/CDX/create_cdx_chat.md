@@ -1,6 +1,7 @@
 # ___
 
 ## notes
+
 Tip: For a deeper cloud-based review, try /ultrareview next time.
 checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
 
@@ -18,7 +19,7 @@ checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen 
   - Solltest du im Zuge der Task ein Tol bauen, das für kpnftige Users/Devs/Agents interessant sein könnte, sichere es an einer geeigneteten Stelle in diesem `TOOLS/`-Folder
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
 - Neue Features ggf. im Plugin-eigenen /TESTS/ folder testenV
-- Wenn du mit etwas fertig bist committe / pushe / pulle so live-testing-braucht-laufende-interaktive-nvim-sessionass das uupdate sofort im main branch, sodass ich es gleich verwenden kann.
+- Wenn du mit etwas fertig bist committe / pushe / pulle sofort im main branch, sodass ich es gleich verwenden kann.
 
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
