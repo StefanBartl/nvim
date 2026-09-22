@@ -196,8 +196,18 @@ function M.enable(cfg)
     ---@type table<integer, table<integer, [integer, integer][]>>
     local pending = {}
 
+    -- Scans every line 1..last, so this costs O(buffer size) in the (common)
+    -- case where nothing is closed. Only worth paying on `foldmethod=expr`
+    -- windows -- markdown.nvim's heading folds, Treesitter's -- which is
+    -- exactly the class of fold implementation that recomputes levels from
+    -- scratch and is prone to losing manual close state; `manual`/`marker`/
+    -- `syntax`/`indent`/`diff` (the vast majority of buffers, most of which
+    -- have no folds at all) skip the scan entirely.
     ---@return [integer, integer][]
     local function closed_ranges()
+      if vim.wo.foldmethod ~= "expr" then
+        return {}
+      end
       local ranges = {}
       local last = api.nvim_buf_line_count(0)
       local lnum = 1
@@ -234,9 +244,12 @@ function M.enable(cfg)
           per_win[win] = ranges
         end
       end
-      if next(per_win) then
-        pending[buf] = per_win
-      end
+      -- Always (re)assign, including to nil: a previous write that never
+      -- reached BufWritePost (failed, or aborted by another plugin's own
+      -- BufWritePre) would otherwise leave a stale entry here, which this
+      -- write's BufWritePost would then apply on top of a state the user may
+      -- have since changed on purpose (e.g. manually reopened that fold).
+      pending[buf] = next(per_win) and per_win or nil
     end, {
       group = augroup("preserve_folds_pre"),
       pattern = norm_pattern(cfg.preserve_folds.pattern),
