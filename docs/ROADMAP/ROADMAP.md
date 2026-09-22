@@ -24,7 +24,7 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     19:00       |    59% / 70%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:40       |    59% / 70%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    03% / 80%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     21:00       |    62% / 71%     |
 
@@ -36,7 +36,7 @@ sesions.nvim:
   `16:46:42 msg_show [sessions] loaded: C:\Users\bartl\AppData\Local\nvim-data/sessions/nvim_main.vim`
   Kann man das schöner egstaleten, also das es nicht nur text ist, sondern wir sie statusline opder die winbar / tableiste sich ins design einfügt?
 
-- gitsuite.nvim:
+- - gitsuite.nvim:
   - wkd
   - rules.nvim (eventuell gleich mit agent aus document-explrer / documentation.nvim / loomAI / ai.nvim)
 
