@@ -487,7 +487,7 @@ Nur verifizierte Fähigkeiten der jeweiligen Plugins:
 | **2** | Fehler-Sammeln (P1), Assertion-Count (P4), Diff (P8), Filter (P5). Ab hier Mehrwert bei null Migrationskosten. | — |
 | **3** | Isolation + Shuffle + State-Leak-Guard. Erwartung: deckt bestehende Reihenfolge-Abhängigkeiten auf — das ist Erfolg, nicht Fehlschlag. **Voraussetzung für Teil C/Tier 1** (§C.4), weil Feature-Tests ohne Isolation Zustand zwischen sich hinterlassen. | — |
 | **4** | F1 Cache + F2 Affected-Selection. Der Punkt, ab dem es sich schneller anfühlt als alles andere. | — |
-| **5** | Dialekt E ⇒ plenary aus `dap`/`sandbox`/`github_stats`-CI werfen. | — |
+| **5** | Dialekt E ⇒ plenary aus der CI werfen. **Veraltet:** ursprünglich nur `dap`/`sandbox`/`github_stats`, seit §B.11-Update 2026-09-22 alle elf betroffenen Repos (Liste dort). | — |
 | **6** | Multilang: JS/TS zuerst (`portfolio-next-ts`, `docmap-desktop`), dann Go/Python. | — |
 | **7** | Reporter: JSON/JUnit/Markdown/PDF, UI-Report, neo-tree-Source, Picker. | — |
 | **8** | Property-based, Snapshot, Flaky. | — |
@@ -919,6 +919,26 @@ vorschlägt. Kein aktuell geplantes Feature außerhalb davon, nur als
 Beobachtung festgehalten, damit die Antwort beim nächsten Aufkommen dieser
 Frage nicht neu recherchiert werden muss.
 
+> **Update 2026-09-22 (Nutzerentscheidung): "kein Handlungsbedarf" gilt nicht
+> mehr.** `plenary.nvim` als Test-Harness soll aktiv ersetzt werden —
+> flottenweit, nicht nur für die drei in §A.1/§A.2 als Dialekt E gelisteten
+> Repos (`dap`, `sandbox`, `github_stats`). Diese Liste war zum
+> 2026-08-17-Snapshot korrekt, ist aber überholt: eine frische
+> Bestandsaufnahme (2026-09-22) findet Dialekt E (busted-artig, `describe`/
+> `it`, `PLENARY_DIR`/`PLENARY_PATH` zum Laufen nötig) in **elf** Repos:
+> `ai.nvim`, `casedesk.nvim`, `dap.nvim`, `data.nvim`, `github_stats.nvim`,
+> `gitsuite.nvim`, `hover.nvim`, `lsp.nvim`, `my.nvim`, `rules.nvim`,
+> `sandbox.nvim`. §A.1/§A.2/§A.13-Phase-5 sind an dieser Stelle entsprechend
+> veraltet. Sieben weitere Repos erwähnen "plenary" im Testbaum, nutzen es
+> aber **nicht** als eigenen Harness (Dialekt A/eigener Runner, "plenary"
+> taucht nur als Fixture-Inhalt oder als Dependency-Check für ein *anderes*
+> getestetes Plugin auf): `cmdlog.nvim`, `documentation.nvim`, `fileops.nvim`,
+> `filetree.nvim`, `media.nvim`, `pickers.nvim`, `runtime-analysis.nvim` —
+> für diese besteht kein Handlungsbedarf. Der Ersatz läuft über den in §D.10
+> ohnehin vorgesehenen busted-Shim von `spec.nvim` (Dialekt E bleibt lauffähig,
+> ohne dass die echte `plenary.nvim`-Dependency gebraucht wird) — s. den
+> neuen Entscheidungseintrag in [§D.10](#d10-entscheidungen-vor-m0).
+
 ---
 
 ## Teil C — Synthetische Feature-Tests: Analyse & Konzept
@@ -1051,7 +1071,7 @@ Toolkit in `ui.nvim`, konsumiert von vielen).
 
 | Baustein | Wofür | Bereits im Ökosystem relevant? |
 |---|---|---|
-| **plenary.nvim** | Dialekt E, aktuell in `dap`/`sandbox`/`github_stats` | Ja (§A.2), wird laut §A.13 Phase 5 abgelöst |
+| **plenary.nvim** | Dialekt E, aktuell in elf Repos (Liste in §B.11-Update 2026-09-22) | Ja (§A.2), wird laut §A.13 Phase 5 / §D.10 aktiv abgelöst |
 | **mini.test** (echasnovski) | Kindprozess-nvim + Text-Screen-Snapshots — härtester Konkurrent zu `spec.nvim`, s. §A.5 | Bisher nicht genutzt; Referenz-Verfahren für Tier 2 |
 | **Neovim-Core `test/functional/ui/screen.lua`** | Grid-basierte Screen-Assertions — Vorbild für Tier 2 | Kein eigenes Plugin, nur Vorlage |
 | **VHS** (charmbracelet) | Skriptbare Terminal-Sessions, Screenshot-diffbar — Tier 3 für images/media/pdfport | Neu einzuführen als `spec.nvim`-`lang`-Backend |
@@ -1823,6 +1843,7 @@ ROADMAP.md,FEATURES/}`, `lua/spec/health.lua`, `.luarc.json` (ohne
 | Release-Policy | `ci-verified`-Ref wie lib.nvim; Konsumenten pinnen in `.deps/` | bewährt, kein Registry-Zwang | Tags/Semver |
 | UI | neotest-Adapter zuerst, eigene UI später optional | Scope-Explosion (§A.15) begrenzen | eigene UI in M3 |
 | Skips | erlaubt, aber nie still, nie grün, `--strict` in CI | NEW-43 bleibt; fehlende Tier-3-Tools sind ein gemeldeter Zustand, kein Pass | Skips verbieten (bricht Tier 3 auf Maschinen ohne Tools) |
+| `plenary.nvim` (Test-Harness) | **aktiv ersetzen**, nicht nur bis Dialekt E lauffähig bleibt (§B.11-Update 2026-09-22) | Nutzerentscheidung; echte `plenary.nvim`-Dependency in allen elf betroffenen Repos (Liste in §B.11) entfernen, sobald deren busted-Shim (Zeile "DSL" oben) sie ersetzt — nicht nur für `dap`/`sandbox`/`github_stats` (alter §A.13-Phase-5-Stand) | plenary als Dauerzustand für Dialekt E belassen (verworfen) |
 
 ### D.11 Offene Fragen und Risiken v2
 
