@@ -1,5 +1,14 @@
 # Fugitive — User-Commands
 
+> **Entfernt, ersetzt durch gitsuite.nvim.** `tpope/vim-fugitive` (und
+> `vim-rhubarb`) sind aus [lua/plugins/git.lua](../../../../../lua/plugins/git.lua)
+> raus; `:Git blame`/`:GBrowse` entsprechen jetzt gitsuite.nvims
+> `:Git blame full`/`:Git browse *`. Die restlichen 34 Commands unten (Objekte
+> öffnen/lesen, Stage/Diff/Log/Rebase über `:Git …`) hat gitsuite.nvim
+> **nicht** nachgebaut -- eigener, schmalerer Befehlsbaum statt Fugitives
+> vollem `:Git`-Dispatcher. Blatt bleibt als historischer Extern-Korpus-Eintrag
+> stehen.
+
 Alle Commands sind **[default]**. Diese Config registriert keinen eigenen
 und setzt `g:fugitive_no_maps` nicht — sie bindet nur zwei Tasten auf zwei
 davon, siehe [Keymaps/Fugitive.md](../Keymaps/Fugitive.md).
@@ -19,14 +28,14 @@ danach nicht mehr.
 ## Table of content
 
   - [1. Der Dispatcher](#1-der-dispatcher)
-  - [2. Ein Git-Objekt öffnen](#2-ein-git-objekt-öffnen)
+  - [2. Ein Git-Objekt öffnen](#2-ein-git-objekt-ffnen)
   - [3. Ein Git-Objekt in den Buffer lesen](#3-ein-git-objekt-in-den-buffer-lesen)
   - [4. Schreiben und stagen](#4-schreiben-und-stagen)
   - [5. Diff](#5-diff)
   - [6. Suchen und Log in Quickfix](#6-suchen-und-log-in-quickfix)
   - [7. Dateioperationen, die Git mitbekommt](#7-dateioperationen-die-git-mitbekommt)
   - [8. Verzeichnis wechseln](#8-verzeichnis-wechseln)
-  - [9. Im Browser öffnen](#9-im-browser-öffnen)
+  - [9. Im Browser öffnen](#9-im-browser-ffnen)
   - [Die Legacy-Aliase](#die-legacy-aliase)
 
 ---

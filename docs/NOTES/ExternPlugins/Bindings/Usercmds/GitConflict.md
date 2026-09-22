@@ -1,5 +1,12 @@
 # git-conflict.nvim — User-Commands
 
+> **Entfernt, ersetzt durch gitsuite.nvim.** `akinsho/git-conflict.nvim` ist
+> aus [lua/plugins/git.lua](../../../../../lua/plugins/git.lua) raus;
+> gitsuite.nvims `:Git conflict *` deckt dieselben neun Commands und dieselben
+> sechs buffer-lokalen Tasten (`co`/`ct`/`cb`/`c0`/`]x`/`[x`) ab, mit eigenem
+> `BufReadPost`/`BufNewFile`-Marker-Scan. Blatt bleibt als historischer
+> Extern-Korpus-Eintrag stehen.
+
 **Repo:** `akinsho/git-conflict.nvim` — der Stamm `GitConflict` löst
 normalisiert auf `git-conflict.nvim` auf; die Zeile steht hier nur, weil das
 Blatt neu ist und die Zuordnung damit auch ohne Nachrechnen lesbar ist.

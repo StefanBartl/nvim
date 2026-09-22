@@ -1,5 +1,12 @@
 # Fugitive — Keymaps
 
+> **Entfernt, ersetzt durch gitsuite.nvim.** `tpope/vim-fugitive` (und
+> `vim-rhubarb`) sind aus [lua/plugins/git.lua](../../../../../lua/plugins/git.lua)
+> raus; `<leader>gb` ruft jetzt gitsuite.nvims `:Git blame full`. Die
+> Fugitive-Objektbuffer (Abschnitt 2 unten, `fugitive-maps`) hat gitsuite.nvim
+> **nicht** nachgebaut -- anderes UI-Konzept (`:Git`-Composer statt
+> Summary-Buffer). Blatt bleibt als historischer Extern-Korpus-Eintrag stehen.
+
 Zwei Quellen:
 
 1. Globale, config-eigene Maps, die einen Fugitive-Command aufrufen —

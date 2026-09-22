@@ -1,7 +1,7 @@
 ---@module 'plugins.git'
---- Git integration via Gitsigns and visual diff tools -- git.nvim's own
---- command tree (gitsuite.nvim, plugins/personal/init.lua) owns everything
---- else that used to live here.
+--- Git integration via Gitsigns and visual diff tools -- gitsuite.nvim's own
+--- command tree (plugins/personal/init.lua) owns everything else that used
+--- to live here.
 
 ---@type LazyPluginSpec[]
 return {
