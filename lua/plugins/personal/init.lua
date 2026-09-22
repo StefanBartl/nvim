@@ -1001,8 +1001,9 @@ plugins.add({
   -- that module maps (see its `map("n", prefix .. …)` calls). A binding
   -- missing here would simply never load the plugin and silently do nothing.
   (function()
-    -- "<leader>d" alone collides with existing git/fzf mappings
-    -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
+    -- "<leader>d" alone collides with existing git/fzf mappings (dc = :Git
+    -- ui diffview close, di = :Git hunk inline, do = FzfLua diagnostics --
+    -- dc/di are gitsuite.nvim's since GS-08, not this config's own)
     local dap_prefix = "<leader>da"
 
     ---@type table[]

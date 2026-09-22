@@ -291,7 +291,6 @@ Sources: `lua/bindings/usrcmds/init.lua`,
 | --- | --- | --- |
 | `:WinVertical` | — | `:wincmd H` — move the current window into a vertical split, left side. Same action as `<leader>wl` |
 | `:WinHorizontal` | — | `:wincmd K` — move it into a horizontal split, top. Same action as `<leader>wh` |
-| `:ToggleInlineDiff` | — | Invert gitsigns' `word_diff` and `linehl` and preview the current hunk inline. Same action as `<leader>di` (`bindings/mappings/git.lua`) |
 
 Only two of the five `window_orientation` moves have a command; the right,
 bottom and rotate variants are keymap-only.

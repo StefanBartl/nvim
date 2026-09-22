@@ -15,8 +15,9 @@ Deklariert in
 (`"StefanBartl/dap.nvim"`-Block), gesetzt via
 `opts.keymaps.prefix = "<leader>da"` — überschreibt den Wrapper-Default
 `<leader>d` bewusst, weil `<leader>d` allein bereits mit git-/fzf-Mappings
-kollidiert (`dc` = DiffviewClose, `di` = ToggleInlineDiff, `do` = FzfLua
-diagnostics).
+kollidiert (`dc` = `:Git ui diffview close`, `di` = `:Git hunk inline`, `do`
+= FzfLua diagnostics -- seit `GS-08` alle drei aus gitsuite.nvim statt aus
+dieser Config).
 
 Quelle im Wrapper: `lua/wkddap/bindings/keymaps/init.lua` im Repo
 `E:/repos/dap.nvim` (eigenes Repo, liegt außerhalb dieser Config — kein

@@ -1,8 +1,10 @@
 # Gitsigns — Keymaps
 
-Registriert in
-[lua/bindings/mappings/git.lua](../../../../../lua/bindings/mappings/git.lua)
-(aufgerufen aus `bindings.mappings.init`) sowie in
+`<leader>di` kommt seit `GS-08` (gitsuite.nvim) aus
+`gitsuite/bindings/keymaps.lua` (`E:/repos/gitsuite.nvim`, Aktion
+`hunk_inline`) statt aus der Config selbst — ehemals
+`lua/bindings/mappings/git.lua`, das mit der Migration entfernt wurde.
+`gh` bleibt Config-eigen, registriert in
 [lua/wkdoptions/hl_config/features/diff_peek.lua](../../../../../lua/wkdoptions/hl_config/features/diff_peek.lua)
 (Feature-Toggle `enable_diff_peek`, Default `true` — siehe
 [lua/wkdoptions/config/data/highlight.lua](../../../../../lua/wkdoptions/config/data/highlight.lua)).
@@ -23,7 +25,7 @@ aber ausschließlich öffentliche Gitsigns-API-Funktionen auf
 
 | Mapping | Aktion | Quelle | Status |
 |---|---|---|---|
-| `<leader>di` | **ToggleInlineDiff**: invertiert `toggle_word_diff()` + `toggle_linehl()`, danach `preview_hunk_inline()` (Fallback `preview_hunk()`, falls in der installierten Version nicht vorhanden) für den Hunk unter dem Cursor | `bindings/mappings/git.lua` (`M.toggle_inline_diff`) | [custom] |
+| `<leader>di` | `:Git hunk inline` (gitsuite.nvim): invertiert `toggle_word_diff()` + `toggle_linehl()`, danach `preview_hunk_inline()` (Fallback `preview_hunk()`, falls in der installierten Version nicht vorhanden) für den Hunk unter dem Cursor | gitsuite.nvim `adapter/gitsigns.lua` (`M.toggle_inline_diff`) | [custom] |
 | `gh` | Git-Hunk-Peek: `preview_hunk_inline()` (Fallback `preview_hunk()`) für den Hunk unter dem Cursor | `wkdoptions/hl_config/features/diff_peek.lua` | [custom] |
 
 Zu `gh`: ist gitsigns beim Setzen der Map nicht ladbar, wird stattdessen ein
