@@ -2,7 +2,8 @@
 
 **Stand:** 2026-09-22, nach dem Review der Config-Commits (Befunde 1–4 behoben), Rang 2/3 aus der
 Aufwand/Nutzen-Tabelle, einer adversarialen Commit-Review (ein Doku-Fund, behoben) und den ehemaligen
-Rang 2/3 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert; siehe unten)
+Rang 2/3/6 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert, Hunk-Spannen gecacht;
+siehe unten)
 
 ## Table of content
 
@@ -12,7 +13,6 @@ Rang 2/3 dieser Tabelle (Selbstrekursion entschieden, `UiSticky.md` korrigiert; 
   - [Die Punkte](#die-punkte)
     - [6. Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-fr-lua-dnne-lazy-schicht)
     - [7. Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-groen-projekten-und-dts)
-    - [8. Hunk-Spannen cachen](#8-hunk-spannen-cachen)
     - [9. rust-analyzer messen](#9-rust-analyzer-messen)
   - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prfungen-im-echten-terminal)
   - [Nicht geprüft / Grenzen](#nicht-geprft-grenzen)
@@ -39,9 +39,11 @@ stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBoo
 | `e50e10a` | 23:20 | fix(implement): eine Runde, deren Text sich nach dem Versand geändert hat, zeichnet nichts |
 | `8895cd8` | — | fix(actions): `lsh`/`lsH`-Meldung nennt gopls als gemessenen Type-Hierarchy-Server (Rang 2) |
 | `dddd97c` | — | docs(navigation): Type-Hierarchy-Fallback nennt Zig, nicht nur vier Sprachen (Fund aus der adversarialen Commit-Review von `8895cd8`) |
+| `8d805c1` | — | perf(gitsigns_actions): Hunk-Spannen gecacht, nur bei `GitSignsUpdate` neu berechnet (Rang, jetzt erledigt) |
 
 CI zu `e50e10a`: grün auf Ubuntu, macOS und Windows, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `8895cd8`: grün (2m11s). CI zu `dddd97c`: grün (smoke/lint/3 Plattformen), `ci-verified` veröffentlicht.
+CI zu `8d805c1`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 
 **`StefanBartl/ui.nvim`** — die Statuszeile
 
@@ -81,10 +83,10 @@ zu dieser Aufgabe.
 Alles Umgesetzte (10 Lücken + eigener Winbar-Breadcrumb, lspsaga entfernt, `code_actions.gitsigns` als
 Probe an, `implement` an (gemessen), altes `lazy/lspsaga.nvim` gelöscht, lspsaga-Reste in der
 Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen Review-Befunde**,
-**Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)** sowie **die Selbstrekursions-Entscheidung und die
-`UiSticky.md`-Korrektur** liegen archiviert in
+**Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)**, **die Selbstrekursions-Entscheidung, die
+`UiSticky.md`-Korrektur und das Hunk-Spannen-Caching** liegen archiviert in
 `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
-(dort „Nachtrag“ bis „Nachtrag 5“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
+(dort „Nachtrag“ bis „Nachtrag 6“). Hier steht nur, was noch zu tun oder zu entscheiden ist.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart
 merklich Zeit). Beides Schätzungen, keine Messungen.
@@ -101,14 +103,13 @@ Bedingung geknüpft sind, nach den unbedingten. Die Spalte „Wer“ sagt, ob ic
 | 1 | [**Abschluss: Prüfungen im echten Terminal (A1–A10)**](#abschluss-deine-prüfungen-im-echten-terminal) | du | — | XS–S (~20 min) | 4 |
 | 2 | [Call Hierarchy für Lua: dünne, lazy Schicht](#6-call-hierarchy-für-lua-dünne-lazy-schicht) | ich | lsp.nvim | S | 3 |
 | 3 | [Implementations-Marker: Last in großen Projekten und `.d.ts`](#7-implementations-marker-last-in-großen-projekten-und-dts) | ich (erst messen) | lsp.nvim | S | 2 |
-| 4 | [Hunk-Spannen cachen](#8-hunk-spannen-cachen) | ich | lsp.nvim | S | 1 |
-| 5 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
+| 4 | [rust-analyzer installieren und Type Hierarchy messen](#9-rust-analyzer-messen) | du (Ja nötig) | — | XS | 1 |
 
 Rang 1 kommt zuerst, weil es das Billigste und Nützlichste ist und alles andere Umgesetzte erst danach
 „wirklich“ als abgenommen gilt. Die früheren Rang 2/3 (`lsh`/`lsH`-Meldung, gopls; ui.nvim-
 Statuszeile/Datei-Icon) sind erledigt und archiviert (Nachtrag 4); die Selbstrekursions-Frage ist
-entschieden (so gelassen) und `UiSticky.md` korrigiert (beides Nachtrag 5, s. u.); der letzte Rang nur,
-wenn Rust im Alltag ist.
+entschieden (so gelassen), `UiSticky.md` korrigiert und die Hunk-Spannen werden jetzt gecacht (alle drei
+Nachtrag 5/6, s. u.); der letzte Rang nur, wenn Rust im Alltag ist.
 
 ---
 
@@ -182,19 +183,6 @@ in derselben Zeit):
 
 ---
 
-### 8. Hunk-Spannen cachen
-
-`gitsigns.get_hunks` baut für **jeden** Hunk `patch_lines` (`gitsigns/actions.lua:679`), und die Lightbulb
-fragt bei jedem CursorHold. Gemessen pro Abfrage: 0,02 ms (1 Hunk), 0,55 ms (200), 15 ms (10 000). Nur bei
-extremen Dateien spürbar (frisch formatiert, generiert).
-
-Fix: die Spannen einmal je `GitSignsUpdate` berechnen und aus dem Cache beantworten. `hunk_spans` in
-`gitsigns_actions.lua` liefert sie schon in der passenden Form.
-
-**Aufwand S, Nutzen 1.**
-
----
-
 ### 9. rust-analyzer messen
 
 rust-analyzer ist nicht installiert, nur die rustup-Verknüpfung ohne Komponente. Ob er Type Hierarchy
@@ -256,9 +244,9 @@ Befund melden.
 - Aufwand- und Nutzen-Werte oben sind Schätzungen auf Basis deines Stacks (Lua, Markdown, TS/Astro; dazu
   C/C++, Java, Go für die Type Hierarchy).
 - Der Implementations-Marker wurde nur gegen tsserver gemessen (synthetische Projekte mit 5/20/200
-  Interfaces, zwei echte Projekte); tsserver-CPU, große Monorepos und Bibliotheks-Typdateien nicht (Rang 5);
+  Interfaces, zwei echte Projekte); tsserver-CPU, große Monorepos und Bibliotheks-Typdateien nicht (Rang 3);
   Go/Java/C# nicht.
-- Die Type-Hierarchy-Zahlen (jetzt erledigt, Nachtrag 4) und die Call-Hierarchy-Zahlen in Rang 4 stammen aus
+- Die Type-Hierarchy-Zahlen (jetzt erledigt, Nachtrag 4) und die Call-Hierarchy-Zahlen in Rang 2 stammen aus
   einer früheren Sitzung. Ich habe sie **übernommen, nicht neu gemessen**; nur die Aussage zu
   `calls.lua:425–427` (Selbstkanten absichtlich weggelassen) habe ich im Quelltext nachgelesen.
 - Die vier Review-Fixes sind headless mit deiner echten Config und dem echten gitsigns bestätigt (Winbar,
