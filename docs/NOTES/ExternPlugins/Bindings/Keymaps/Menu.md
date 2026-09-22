@@ -110,7 +110,7 @@ Default `true`, gesetzt in der `menu`-Phase in `init.lua`.
 | 🖥️ Open in terminal | `nvchad.term.new` (Split, cd ins Buffer-Verzeichnis) falls Base46 aktiv, sonst `:enew` + Terminal-Job | — |
 | 🎨 Color Picker | `minty.huefy.open()` | — |
 | 🔣 Unicode Table | `:Emojis unicode table` (Floating Window, `emojis.nvim`; war `:UnicodeTable`/`unicode.vim`) | `uni` |
-| 󰊢 Git Actions ▸ | Untermenü aus [lua/config/menu/git.lua](../../../../../lua/config/menu/git.lua), nur wenn gitsigns.nvim da ist | — |
+| 󰊢 Git Actions ▸ | Untermenü aus `gitsuite.integrations.menu` (`E:/repos/gitsuite.nvim`, GS-09), `pcall`-geguardet -- jede Zeile geht über `:Git hunk\|blame\|diff *`, nicht mehr über rohe `gitsigns.<fn>()`-Aufrufe; nur die gitsigns-exklusiven Zeilen (Stage/Reset Hunk, Stage/Reset Buffer, Toggle Deleted) blenden ohne gitsigns.nvim aus, Blame/Diff/Preview Hunk bleiben (Preview fällt auf `:Git diff head` zurück) | — |
 
 Weggefallen gegenüber dem alten Stand:
 
@@ -120,7 +120,9 @@ Weggefallen gegenüber dem alten Stand:
 - **„Lsp Actions" (`items = "lsp"`)** kommt jetzt als Contributor von
   `lsp.nvim` aus dessen aufgelöstem Keymap-Katalog.
 - **`menus.gitsigns`** war eine Datendatei von nvzone/menu; die Git-Sektion
-  ist jetzt `config/menu/git.lua`.
+  war danach `config/menu/git.lua` (126 Zeilen, rohe `gitsigns.<fn>()`-Aufrufe)
+  und ist seit `GS-09` (2026-09-22) `gitsuite.integrations.menu` --
+  `config/menu/git.lua` ist gelöscht.
 - **Das Legacy-Neo-tree-Menü** (`lua/config/menu/neotree/`) ist gelöscht;
   filetree.nvim macht das.
 

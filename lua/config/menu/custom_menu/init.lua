@@ -348,10 +348,21 @@ return function(opts)
   -- holding a single entry is a frame around one row, which reads as a fault
   -- rather than as structure.
   --
-  -- Its item list is ours (config.menu.git), not nvzone/menu's
-  -- `menus.gitsigns` -- the section has to survive nvzone/menu being
-  -- uninstalled, which was the whole point of the renderer swap.
-  local git = opts.enable_git_section and require("config.menu.git").items() or {}
+  -- Its item list is gitsuite.nvim's own (GS-09: `config.menu.git`, 126
+  -- lines of raw `gitsigns.<fn>()` calls, is gone -- gitsuite routes every
+  -- entry through its own `:Git hunk|blame|diff *` commands instead, so the
+  -- section works with any adapter and no longer vanishes whole when
+  -- gitsigns isn't loaded). `pcall`-guarded like every other Pattern-B
+  -- contributor here: gitsuite.nvim is a hard `dependencies` entry of this
+  -- config's plugin spec, but a menu built before it has loaded (or without
+  -- it installed at all) must not error.
+  local git = {}
+  if opts.enable_git_section then
+    local ok_gitsuite, gitsuite_menu = pcall(require, "gitsuite.integrations.menu")
+    if ok_gitsuite then
+      git = gitsuite_menu.items()
+    end
+  end
 
   contextmenu.group(
     out,
