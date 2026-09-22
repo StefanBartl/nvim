@@ -24,9 +24,9 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     01:20       |   100% / 51%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     19:00       |    59% / 70%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    03% / 80%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     03:20       |    92% / 50%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     21:00       |    62% / 71%     |
 
 ---
 
@@ -36,6 +36,9 @@ sesions.nvim:
   `16:46:42 msg_show [sessions] loaded: C:\Users\bartl\AppData\Local\nvim-data/sessions/nvim_main.vim`
   Kann man das schöner egstaleten, also das es nicht nur text ist, sondern wir sie statusline opder die winbar / tableiste sich ins design einfügt?
 
+- gitsuite.nvim:
+  - wkd
+  - rules.nvim (eventuell gleich mit agent aus document-explrer / documentation.nvim / loomAI / ai.nvim)
 
 - [ ] Jedes Plugin aus sicht eines endusers/developers "durchspielen" - von Beginn an, also vom ankommen auf der github seite, ssagne wikr dealerweiße kommend von derr wkd seite. DAnn möchte m an mal als erstes normalerweiße die instsalltion + optionen sehen. ist am flow etwas nicht in ordnung? stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar und ansprechend, modern aufbereitet? Ist die Dokumentation an Stellen verwirrend? Gib es docs, die mich als enduser/dev nicht betreffen? ([alte] Telemetry daten, Deutsche dokumentation, backlogs,..)
 
@@ -82,6 +85,7 @@ sesions.nvim:
   - [ ] reale Beispiele: (bitte fixen):
     - [ ] ...
 - [ ] autocmds, usrcmds, keymaps -> bindings cheinen ein guter zeiger für features eines opklugins zu sein, arbeiten wird iese durch im sinne, dass in den dcos ach alle features des plugins dargestellt werden, aksi zb können usrcmds 1 und zwqeiu sowie keymapo x,y,z und autocmd drei -> ein feature des polugins darstellen; so hääte man die bindings docs auf der einen seite, und auf der andererrn seite die features, die dann in ihrer beschreibung mit den bindings verknüpft werden.
+- [ ] Alle Features der Plugins als opt-in/opt-out auflisten (und auch in die docs/FEATURES al Note anmerken) unddann nochmal entscheiden für ejde einzelne option, onb opt-in oder opt-out
 
 ---
 

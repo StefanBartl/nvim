@@ -2,6 +2,9 @@
 
 ## noch nicht gut beschrieben
 
+- `:Case open` öffnet nur den filetreee, aber der casse folder ist nicht selektiert, ich wüde gerne haben, dass das Summary geöffnet wird wenn man case open ausfüphrt. Sollte aus irgeneienen grund das summary nicht im folder sein, einfach die nöchste file
+- `:Case attachments` soll eine option `find` erfhalten, die alle attahcments ineinen pociker zeigt sowie `nsert oder attach oder s.ä.` um wieder den file explorer in Downoads ordner zu öffnen und files auszuwählen die dann direkt reingeladen werden
+
 ### casedesk
 
 - problems / solutions matrix us den cases erstellen
