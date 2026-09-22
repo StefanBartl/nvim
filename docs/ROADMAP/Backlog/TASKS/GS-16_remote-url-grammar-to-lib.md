@@ -94,3 +94,36 @@ der einen Git-Remote in einen Host/Owner/Repo zerlegen oder eine
 Blob-/Repo-Web-URL bauen will, braucht keine eigene Regex mehr. `hover.nvim`
 und `buffer-ctx.nvim` (Permalinks) sind laut Plan als Welle-5-Konsumenten
 vorgemerkt, nicht Teil dieser Karte.
+
+## Nachtrag 2026-09-22: zwei Funde aus der Session-Selbstprüfung
+
+Auf Nutzeranfrage alle Commits dieser Session gegen Bugs/Security/
+Performance geprüft — zwei echte Funde, beide sofort gefixt und CI-grün
+nachgezogen:
+
+1. **Bug, `lib.nvim.git.remote.build()`** — Branch/Pfad wurden roh in die
+   URL interpoliert. Ein getrackter Datei- oder Branch-Name mit Leerzeichen,
+   `#` oder `?` (alle auf POSIX-Dateisystemen gültig) hätte den Link
+   stillschweigend abgeschnitten (`#` = Fragment-Trenner) oder umgeleitet
+   (`?` = Query-Trenner). Fix (`7a10289`): jedes Pfadsegment einzeln über
+   `lib.lua.strings.encoding.url_encode` kodiert, `/` bleibt als Trenner
+   erhalten (sonst hätte ein Unterordner oder ein Branch mit `/` einen
+   literalen `%2F` bekommen). Zwei neue Testfälle in
+   `TESTS/git_remote_spec.lua`.
+2. **Performance-Regression, `documentation.nvim`** — die
+   Git-Ableitung landete ursprünglich in `config.build()`. Laut dessen
+   eigenem (vorbestehendem) Kommentar in `bindings/usrcmds/init.lua` läuft
+   genau diese Funktion bei **jedem Tastendruck** während
+   `:DocMap <Tab>`-Completion, weil sie als "cheap" (Table-Merge + ein
+   `vim.fs.dir`-Probe) dokumentiert und darauf verlassen ist. Die neuen
+   zwei Git-Prozessaufrufe hätten jeden Tastendruck blockiert. Fix
+   (`ddb0335`, dokumentation.nvim): Ableitung nach `core/scan.lua`
+   verschoben — läuft nur noch einmal pro echtem Scan, nicht pro
+   Tastendruck. `config/DEFAULTS.lua`s Kommentar entsprechend korrigiert,
+   der GS-16-Testfall von `config_file_spec.lua` nach der neuen
+   `TESTS/scan_repo_url_derive_spec.lua` verschoben (prüft jetzt
+   `scan()`s IR-Ausgabe statt `config.build()`s Opts-Tabelle).
+
+Beide Fixes CI-grün auf allen Systemen; `gitsuite.nvim`/`github_stats.nvim`
+gegen das aktualisierte `lib.nvim` erneut lokal getestet, unverändert grün
+(ihr eigener Code war von keinem der beiden Funde betroffen).
