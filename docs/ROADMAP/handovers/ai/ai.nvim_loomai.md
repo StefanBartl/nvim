@@ -14,9 +14,6 @@
   - [Offene Punkte](#offene-punkte)
     - [1. ai.nvim im Alltag validieren + Live-Testing](#1-ainvim-im-alltag-validieren-live-testing)
     - [2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release](#2-phase-10-gatesreleasemd-vor-dem-ersten-tagrelease)
-    - [3. ui/panel.lua: Voll-Buffer-set_lines pro Stream-Chunk](#3-uipanellua-voll-buffer-set_lines-pro-stream-chunk)
-    - [4. loomAI: Connection-Pooling zu Ollama und Cloud-Backends](#4-loomai-connection-pooling-zu-ollama-und-cloud-backends)
-    - [5. loomAI-ModelRouter: Präfix-Liste, Timeout/Retry, Capabilities](#5-loomai-modelrouter-prfix-liste-timeoutretry-capabilities)
   - [Erledigt seit 2026-09-21](#erledigt-seit-2026-09-21)
 
 ---
@@ -55,7 +52,7 @@
 
 Stand 2026-09-23. Alles andere (Phasen 0-8, Code-Review, loomai-Provider,
 ModelRouter, Dashboard-Testpanel, Gemini, Completion-Capability, rules.nvim-
-Durchgänge, `pdfport.nvim`-Migration, sowie die vier Punkte unter
+Durchgänge, `pdfport.nvim`-Migration, sowie die sieben Punkte unter
 [Erledigt seit 2026-09-21](#erledigt-seit-2026-09-21)) ist erledigt.
 
 ---
@@ -97,42 +94,6 @@ judgment-basiert:
 
 ---
 
-### 3. ui/panel.lua: Voll-Buffer-set_lines pro Stream-Chunk
-
-`ui/panel.lua` (`panel.surface:set_lines(panel.lines)`, Zeile ~93) schreibt pro
-Stream-Chunk den kompletten Buffer neu statt inkrementell anzuhängen. Bewusst
-nicht gefixt (kein Beleg, dass es bei realistischen Antwortlängen ein Problem
-ist; `ui.nvim`/Surface hatte keine günstigere Append-API). Nur angehen, falls es
-in der Praxis spürbar wird.
-
----
-
-### 4. loomAI: Connection-Pooling zu Ollama und Cloud-Backends
-
-`src/ollama_client.cpp` (`make_client()`) und die drei Cloud-Clients öffnen pro
-`/ask`/`/ask/stream`-Request eine neue TCP-Verbindung (bei den Cloud-Clients
-zusätzlich TLS-Handshake). Bewusst nicht gefixt: ein echtes Pooling braucht ein
-Design (geteilte Client-Lebensdauer, Thread-Sicherheit, z. B. thread-lokale
-Clients), keine Bugkorrektur. Erst bei spürbarem Bedarf angehen.
-
----
-
-### 5. loomAI-ModelRouter: Präfix-Liste, Timeout/Retry, Capabilities
-
-Alle drei sind `nice-to-have`, nicht blockierend:
-
-- Die Modellname-Präfix-Liste (`gpt-`/`o1-`/`o3-`/`claude-`/`gemini-`) ist
-  hartkodiert, keine Config-Möglichkeit — bislang kein Bedarf.
-- Timeout-/Retry-Verhalten pro Backend: aktuell identisch zu Ollama übernommen.
-  API-spezifisch wäre möglich (Anthropic/OpenAI haben eigene Rate-Limit-Header,
-  die man auswerten könnte) — bisher nicht durchdacht.
-- Server-seitige `capabilities` (analog `Ai.Provider.capabilities`), z. B. um
-  `/ask/stream` für ein Backend ohne Streaming sauber abzulehnen statt zu
-  buffern — heute nicht relevant, alle vier Backends streamen nativ; erst falls
-  ein zukünftiges Open-Source-Tool kein Streaming kann.
-
----
-
 ## Erledigt seit 2026-09-21
 
 - **loomAI: `ki-agenten-framework-architektur.md`.** Gehörte demselben Muster
@@ -170,6 +131,38 @@ Alle drei sind `nice-to-have`, nicht blockierend:
   {typepilot.nvim.md,FINISHED_ai_loomai.md}}` bereits auf
   `handovers/ai/ai.nvim_loomai.md`. War wohl schon in einem früheren Durchgang
   mit erledigt worden, nur hier nicht abgehakt.
+- **`ui/panel.lua`: Voll-Buffer-`set_lines` pro Stream-Chunk.** Zwar kein
+  belegter Bedarf, aber auf Wunsch trotzdem umgesetzt statt weiter
+  zurückgestellt. `ui.kit.surface` bekam zwei neue Primitiven,
+  `set_last_line`/`append_lines` (`ui.nvim@6b9082e`, portiert in `lib.nvim`s
+  eingefrorene Kopie `lib.nvim@e44dc2a` — sonst hätte `kit_drift_spec.lua`
+  das als Drift geflaggt, live so gefunden), `panel.lua`s `append()` nutzt
+  jetzt beide statt eines vollen `set_lines()` (`ai.nvim@b7f8bb2`). 14 neue/
+  angepasste Tests in `ai.nvim`, 3 in `ui.nvim`, alle grün; komplette
+  `ui.nvim`-Suite (28 Dateien) einmal komplett gegenlaufen lassen.
+- **loomAI: Connection-Pooling.** Ebenfalls ohne belegten Bedarf, aber auf
+  Wunsch umgesetzt. Alle vier Backend-Clients (`ollama_client.cpp`,
+  `openai_client.cpp`, `anthropic_client.cpp`, `gemini_client.cpp`) haben
+  jetzt `client_for_thread()`: ein `thread_local`, keep-alive-`httplib::Client`
+  statt einer neuen TCP-Verbindung (+ TLS-Handshake bei den drei Cloud-
+  Backends) pro Request — sicher ohne Locking, weil `main.cpp`s Server-
+  Thread-Pool jeden Request sequentiell auf einem Worker-Thread abarbeitet
+  (`loomAI@09ee09c`). Live gegen echtes Ollama verifiziert: erster `/ask`
+  ~4,5s (kalter Modell-Load + Connect), die beiden folgenden ~300ms;
+  Streaming und der Connection-refused-Fehlerpfad laufen danach weiter
+  sauber.
+- **loomAI-ModelRouter: Präfix-Liste + Timeout, Capabilities bewusst nicht.**
+  Präfix-Listen jetzt per `LOOMAI_PREFIXES_{OPENAI,CLAUDE,GEMINI}`
+  (kommagetrennt) überschreibbar, Default-Timeout jetzt backend-spezifisch
+  (120s Ollama, 60s Cloud) statt einheitlich 60s (`loomAI@6ddeaa4`), beides
+  live verifiziert (ein Custom-Präfix routet mit gesetzter Env-Var an OpenAI,
+  ohne fällt derselbe Modellname zurück auf Ollama). **Retry** und
+  **server-seitige `capabilities`** bewusst nicht gebaut: Retry ist bei einem
+  bereits teilweise gestreamten Response oder einer abgeschlossenen
+  Cloud-Anfrage nicht sicher wiederholbar (doppelte Deltas beim Client bzw.
+  doppelte Abrechnung beim Anbieter) und war im Handover selbst als "nicht
+  durchdacht" markiert; `capabilities` bliebe reine Spekulation, solange alle
+  vier Backends nativ streamen.
 
 ---
 
