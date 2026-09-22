@@ -5,6 +5,7 @@ local AUTOCMDS_TEXT_DEFAULTS = {
   trim_trailing = {
     enable = true,
     pattern = "*",
+    preserve_cursor = true,
     ignore_filetypes = { "diff" },
     ignore_buftypes = { "nofile", "prompt" },
     only_modifiable = true,
@@ -24,6 +25,13 @@ local AUTOCMDS_TEXT_DEFAULTS = {
     pattern = "*",
     exclude = { "commit", "gitrebase", "xxd" },
     min_line = 1,
+  },
+  preserve_folds = {
+    enable = true,
+    pattern = "*",
+    ignore_filetypes = { "diff" },
+    ignore_buftypes = { "nofile", "prompt" },
+    only_normal_bufs = true,
   },
 }
 

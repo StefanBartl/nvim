@@ -74,6 +74,9 @@ require("autocmds.text").enable({
   last_loc = {
     enable = true, -- On BufReadPost, jumps back to the last saved cursor position unless filetype is excluded.
   },
+  preserve_folds = {
+    enable = true, -- Re-closes folds (e.g. a folded markdown heading) that a save's own BufWritePre edits reopened.
+  },
 })
 
 ------------------------------------------------------

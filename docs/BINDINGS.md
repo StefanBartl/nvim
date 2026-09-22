@@ -527,9 +527,11 @@ awareness of each other).
 | `git_autocmds_commit_ft` | `FileType` | `gitcommit` | Buffer options for the commit-message buffer |
 | `gitsigns_refresh` | `BufEnter`, `FocusGained` | — | Re-read gitsigns on focus/entry |
 | `numbers` | `TermOpen` | — | Terminal: disable absolute and relative line numbers locally |
-| `trim_trailing` | `BufWritePre` | `*` | Strip trailing whitespace on save |
+| `trim_trailing` | `BufWritePre` | `*` | Strip trailing whitespace on save, preserving cursor position |
 | `trim_blank` | `BufWritePre` | `*` | Clean fully-blank lines, preserving cursor position |
 | `last_loc` | `BufReadPost` | `*` | Restore the last cursor position after reading |
+| `preserve_folds_pre` | `BufWritePre` | `*` | Snapshot which fold ranges are manually closed before a save |
+| `preserve_folds_post` | `BufWritePost` | `*` | Re-close whatever fold ranges the save's own edits reopened |
 
 The Kitty augroup's doubled prefix
 (`general_autocmds_autocmds_general_…`) is an artefact of the name-building
