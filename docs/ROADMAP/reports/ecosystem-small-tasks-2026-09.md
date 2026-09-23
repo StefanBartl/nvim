@@ -5,7 +5,7 @@ werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
 bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
 erledigt.
 
-**Stand 2026-09-23, Fortsetzung nach Zuruf.** 8/15 committed + gepusht
+**Stand 2026-09-23, Fortsetzung nach Zuruf.** 9/15 committed + gepusht
 (siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz). Punkt 7s
 manuelle Sichtprüfung (Wrap-Verhalten von `<M-j>`/`<M-k>` im Insert-Mode)
 steht laut vorherigem Stand noch aus — Weiterarbeit an Punkt 8ff. wurde
@@ -60,7 +60,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 ### Phase 3 — Neue kleine Subsysteme
 
 8. [x] **images.nvim** — `:Images paste [path=...]` + `ui.kit.select`-Abfrage (relativ/absolut/`$REPOS_DIR`/custom)
-9. [ ] **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
+9. [x] **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
 10. [ ] **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
 
 ### Phase 4 — Größer, braucht eigenen Design-Pass
@@ -408,6 +408,93 @@ plus einen zweiten Fall, der an `open.nvim` (falls installiert) oder einen
 minimalen `vim.ui.open`-Fallback delegiert.
 
 **Aufwand:** klein–mittel.
+
+**Umgesetzt (2026-09-23):** neues, in sich geschlossenes Subsystem
+`buffer_ctx.reveal` (`lua/buffer_ctx/reveal/init.lua`, analog zu `mark`/
+`format`), plus die eigentliche Dispatch-Logik in
+`lua/buffer_ctx/ops/reveal.lua` (`M.fm()`, `M.browser()`, beide mit
+`(ok, err)`-Rückgabe statt Text-Rückgabe — anders als jeder andere
+`ops/*`-Getter, weil hier ein externer Prozess der eigentliche "Wert"
+ist). Zwei eigenständige Kommandos statt eines `:Reveal {subcmd}`-
+Composer-Verbs, weil beide Aktionen argumentlos sind und keinen
+gemeinsamen Zustand teilen — eine Subcommand-Routing-Schicht hätte
+nichts zu routen gehabt: `:RevealInFm` und `:OpenInBrowser`, registriert
+über `lib.nvim.bindings.usercmd` (nicht den Composer), exakt das Muster
+der bestehenden Compat-Kommandos (`:CopyFilepathAbsolute`,
+`:MarkLineToggle`).
+
+`open.nvim` ist im Ökosystem bereits vorhanden (`StefanBartl/open.nvim`,
+in `plugins/personal/init.lua` mit `cmd = { "Open", "UrlView",
+"MDLinksView" }`) und hat einen fertigen `browser`-Handler
+(`open/handlers/browser.lua`) plus eine öffentliche Lua-API
+(`require("open").open(target, scope)`). `:OpenInBrowser` delegiert
+dorthin mit explizitem Target+Scope (`require("open").open("browser",
+"%")`) — dadurch läuft open.nvims eigene No-Target-Heuristik (Tree-Node/
+`<cfile>`/`<cWORD>`/…) gar nicht erst an, und dessen opt-in Picker (der
+nur bei fehlendem Target eingreift) bleibt außen vor. Ohne `open.nvim`
+fällt `M.browser()` auf `vim.ui.open` zurück (Neovim 0.10+). `open.nvim`
+ist als Soft-Dep über `pcall(require, "open")` eingebunden, exakt das
+`resolve_kit()`-Muster aus `commands.lua:37-47`, das die Aufgabe als
+Vorlage nannte.
+
+Keymap-Entscheidung: **nicht** `<leader>fm` — der Check in
+`BINDINGS-RUNTIME-CHECKLIST.md` (unter diesem Pfad liegt das, was die
+Aufgabe als "docs/NOTES/BINDINGS" bezeichnete; eine Datei exakt an
+diesem Pfad existiert nicht) zeigte `<leader>fm` bereits doppelt belegt
+("[General] Format file" und "[lsp] Format markdown buffer", Zeilen
+150/309) — eine echte globale Kollision, kein bloßer Buffer-lokal-vs-
+global-Sonderfall wie bei filetree.nvims eigenem `<leader>fm` (das nur
+in Tree-Buffern aktiv ist und daher ungefährlich gewesen wäre). Das
+gesamte `<leader>o*`-Präfix war dagegen ökosystemweit komplett frei —
+gewählt: `<leader>of` (open → file manager) und `<leader>ob` (open →
+browser), beide neu in `buffer_ctx.reveal`s `reveal.keymaps`-Config
+(Default gesetzt, analog zu `mark.keymaps`).
+
+Config: neuer Abschnitt `reveal = { enable = true, keymaps = { fm =
+"<leader>of", browser = "<leader>ob" } }` in `DEFAULTS.lua`, `KNOWN`-
+Validierung in `config/init.lua`, `BufferCtx.RevealConfig`-Typ in
+`@types.lua`, Wiring in `init.lua` (gleiches `mark`/`format`-Muster:
+eigener `enable`-Gate, sowohl im Aufrufer als auch nochmal in
+`reveal/init.lua`s `setup()` selbst).
+
+Beim Ergänzen der `health.lua`-Sektion für `reveal` fiel eine echte
+Regression im **bestehenden** Code auf: die `mark`-Sektion hatte bisher
+ein frühes `return` im "disabled"-Zweig, weil sie bis dahin die letzte
+Sektion in `M.check()` war — nach dem Anhängen der neuen `reveal`-
+Sektion DAHINTER hätte das `return` deren komplette Ausgabe verschluckt,
+sobald `mark = false` gesetzt ist (auch wenn `reveal` selbst aktiv
+bleibt). Gefixt: sowohl `mark`s als auch `reveal`s "disabled"-Zweig
+fallen jetzt durch statt früh zurückzukehren. Regressionstest dafür in
+`TESTS/config_spec.lua` (stubbt `vim.health.start`, prüft dass die
+`"buffer_ctx.reveal"`-Sektion bei `mark = false` trotzdem aufgerufen
+wird).
+
+Tests in neuem `TESTS/reveal_spec.lua`: Pfad-Auflösung/Dispatch-Logik
+von `ops.reveal.fm()`/`.browser()` (unbenannter Buffer, `lib.nvim.cross.
+reveal_in_fm` erfolgreich/fehlschlagend/fehlend, `open.nvim` erfolgreich/
+fehlschlagend/fehlend mit `vim.ui.open`-Fallback, `vim.ui.open` selbst
+fehlend) — der externe Seiteneffekt selbst (tatsächliches Öffnen eines
+Fensters) wird nirgends ausgeführt, alle drei Abhängigkeiten sind
+gestubt (`package.loaded`/`package.preload`-Swap für "Modul fehlt",
+`vim.ui.open` direkt überschrieben für den Fallback-Pfad). Plus
+Registrierungs-Check für `buffer_ctx.reveal.setup()` (Usercmds
+vorhanden, `enable = false` ist No-Op). luacheck (0/0 über den ganzen
+`lua`/`TESTS`/`plugin`-Baum) und stylua `--check` grün, volle Suite
+headless grün (12/12 Specs). Docs aktualisiert: `docs/commands.md`,
+`docs/BINDINGS.md`, `doc/buffer-ctx.txt` (TOC neu nummeriert, neuer
+Abschnitt 8, Requirements/Keymaps/Health/Architecture ergänzt),
+`docs/health.md`, `docs/configuration.md`, `docs/keymaps.md`,
+`docs/architecture.md`, `docs/installation.md`, `docs/CONTRIBUTING.md`,
+`docs/FEATURES/README.md` + neue `docs/FEATURES/REVEAL.md`.
+`plugins/personal/init.lua`s buffer-ctx.nvim-Spec um die zwei neuen
+Usercmds (`cmd`-Liste, für Lazy-Loading) und die zwei neuen Keymaps
+(`keys`-Liste) ergänzt. `BINDINGS-RUNTIME-CHECKLIST.md` bewusst **nicht**
+angefasst: es ist laut eigenem Kopfkommentar generiert
+(`bindings.audit.checklist_lines`) und scannt offenbar nur nvim-configs
+eigene `bindings/`-Module, nicht von Plugins selbst zur Laufzeit
+registrierte Keymaps — buffer-ctx.nvims bereits bestehende Keys
+(`<leader>cnl`/`<S-m>`/`<C-p>`) fehlen dort aus demselben Grund
+ebenfalls. Commit `buffer-ctx.nvim@cd57c10`.
 
 ### 10. pickers.nvim: filetree.nvim-Keymaps in der Ergebnisliste
 
