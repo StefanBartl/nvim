@@ -65,7 +65,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
 ### Phase 4 — Größer, braucht eigenen Design-Pass
 
-11. [ ] **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
+11. [x] **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
 12. [ ] **pickers.nvim** — neuer Builtin: Marks-artige Liste, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar) — Ort geklärt: `pickers.nvim`, nicht `ui.nvim` (siehe Klärungen oben)
 13. [ ] **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
 14. [ ] **lsp.nvim** — Winbar-Breadcrumb rechtsbündig (Ort geklärt: `lua/lsp/core/winbar/render.lua`) + Underline-Test ohne feste Abgrenzung
@@ -640,6 +640,69 @@ Einstiegspunkt existiert).
 **Aufwand:** größer — das ist der Punkt, an dem sich ein generisches
 "Provider-Registry"-Konzept lohnt statt N Einzel-Hacks (siehe Phase 4).
 Eigener Design-Pass empfohlen, bevor Code geschrieben wird.
+
+**Umgesetzt (2026-09-24):** Design-Entscheidung **gegen** eine generische
+Provider-Registry, **für** zwei explizite Shims nach dem `resolve_kit()`-
+Muster — begründet in `docs/FEATURES/CROSS_PLUGIN.md` (neu) im
+buffer-ctx.nvim-Repo selbst: mit exakt zwei Sister-Plugins, die zudem
+unterschiedlich scheitern (kein vs. Inline-Fallback) und an
+unterschiedlicher Stelle im Kommandobaum sitzen (`markdownlink` normaler
+`DISPATCH`-Eintrag unter beiden Verben, `imagepaste` `:Insert`-only außerhalb
+von `DISPATCH`), hätte eine Registry-Abstraktion beide Formen von Tag eins
+an abdecken müssen — für zwei Aufrufstellen, die je nur wenige Zeilen neben
+dem bereits etablierten `resolve_kit()`-Muster brauchen. Genau der
+"drei ähnliche Zeilen statt verfrühter Abstraktion"-Fall aus den
+Projekt-Leitlinien; eine dritte, real andersartige Sister-Plugin-Integration
+wäre der richtige Anlass, das nachträglich zu generalisieren.
+
+Zwei Subcommands auf `buffer-ctx.nvim`s `:Insert`/`:Copy` ergänzt:
+
+- **`markdownlink`** (`ops/markdown_link.lua`, neu) — wrapt denselben
+  Pfad-String, den `filepath` liefern würde (identische `mode`/`format`/
+  `depth`-Argumente, per direktem Aufruf von `ops/filepath.lua` statt einer
+  zweiten Pfad-Auflösung), in einen Markdown-Link. Delegiert an
+  `markdown.commands.markdown_links.for_paths()` — die Funktion hinter
+  `:Markdown links <path>` — wenn `markdown.nvim` installiert ist (das im
+  Fund genannte Modul existiert und hat einen passenden öffentlichen
+  Einstiegspunkt, keine Ratearbeit nötig), fällt sonst auf das identische
+  literale `"[%s](%s)"`-Format zurück (`markdown.nvim` hardcoded selbst
+  exakt dasselbe Format für eine Einzeldatei — der Fallback kann also nicht
+  aus dem Takt geraten). Reiner Text-Producer, passt 1:1 in die bestehende
+  `DISPATCH`/`sink_text`-Pipeline, unter beiden Verben registriert.
+- **`imagepaste`** (`ops/imagepaste.lua`, neu) — delegiert an
+  `images.nvim`s `paste`-Feature (`require("images").paste(name, nil,
+  path_mode)`, dieselbe `{name}`/`path=...`-Grammatik wie `:Image paste`
+  selbst aus Punkt 8). **Kein `:Copy imagepaste`** — anders als jeder andere
+  Subcommand ist `images.paste` kein Text-Producer: es liest den Clipboard
+  *asynchron* und fügt den Markdown-Link direkt selbst am Cursor ein (siehe
+  `images/paste.lua`s `insert_link`), exakt dieselbe "Seiteneffekt statt
+  Sink-Rückgabe"-Form, die `ops/reveal.lua` (Punkt 9) für
+  `:RevealInFm`/`:OpenInBrowser` schon hat. Deshalb als eigene Route nur auf
+  den `:Insert`-Verb gehängt (`commands.lua`s `M.register()`, außerhalb der
+  über `SUBCMDS` iterierenden `build_routes(sink)`-Schleife) statt eines
+  erzwungenen `:Copy`-Gegenstücks ohne sinnvolle Bedeutung. Kein lokaler
+  Fallback ohne `images.nvim` — dessen Clipboard-Lesepfad ist genuin
+  plattformspezifisch (`paste.lua`s Windows/macOS/Linux-Dispatch), ihn hier
+  zu duplizieren wäre exakt die Duplikation, die `ops/reveal.lua` für
+  `reveal_in_fm` schon bewusst vermeidet.
+
+`resolve_kit()`s Muster (`pcall(require, ...)`, pro Aufruf neu geprüft, nicht
+gecacht) 1:1 für beide übernommen. Tests in neuem `TESTS/cross_plugin_spec.lua`
+(beide `ops/*`-Module isoliert mit gestubtem/fehlendem Zielmodul, `commands.lua`s
+Routing strukturell geprüft — `:Insert` hat `imagepaste`, `:Copy` nicht,
+beide haben `markdownlink` —, sowie ein Ende-zu-Ende-`vim.cmd("Insert
+imagepaste myshot path=absolute")`-Aufruf gegen die echte Composer-Pipeline).
+luacheck (0/0 über `lua`/`TESTS`/`plugin`) und `stylua --check` grün, volle
+Suite headless grün (12/12 Specs). Docs aktualisiert: `docs/commands.md`,
+`docs/BINDINGS.md`, `doc/buffer-ctx.txt` (TOC + zwei neue Abschnitte 5.14/
+5.15), `docs/health.md` + `health.lua` (zwei neue Soft-Dep-Checks, analog zu
+`ui.kit`/`open.nvim`), `docs/installation.md`, `docs/architecture.md`,
+`docs/CONTRIBUTING.md` (Ground-Rules-Ausnahme für `imagepaste` dokumentiert),
+`docs/FEATURES/README.md` + `CONTEXT.md` (Querverweis) + neue
+`docs/FEATURES/CROSS_PLUGIN.md`. Kein Config-Options-Change (keine neuen
+Keymaps, kein `plugins/personal/init.lua`-Edit nötig — `:Insert`/`:Copy`
+stehen schon in dessen `cmd`-Liste seit vor Punkt 1). Commit
+`buffer-ctx.nvim@307dd67`.
 
 ### 12. ui.nvim: Git-Status-gefilterte Marks-Ansicht
 
