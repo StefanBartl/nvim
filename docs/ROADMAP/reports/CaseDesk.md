@@ -5,7 +5,21 @@
 - `:Case open` öffnet nur den filetreee, aber der casse folder ist nicht selektiert, ich wüde gerne haben, dass das Summary geöffnet wird wenn man case open ausfüphrt. Sollte aus irgeneienen grund das summary nicht im folder sein, einfach die nöchste file
 - `:Case attachments` soll eine option `find` erfhalten, die alle attahcments ineinen pociker zeigt sowie `nsert oder attach oder s.ä.` um wieder den file explorer in Downoads ordner zu öffnen und files auszuwählen die dann direkt reingeladen werden
 
-### casedesk
+- solange ich azf der worksation bin soll ui.nvim marks folgende ofade führen und aucah in dieser ordnung:
+  1. C:/repos/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
+  2. C:\repos\WKDBook-Tricentis\Workflow\CDX\StartChat.md
+  3. C:/repos/WKDBook-Tricentis/Workflow/Templates/SummaryTemplate.md
+  4. C:/repos/WKDBook-Tricentis/Cases/DRAFT-Solution.md
+  5. C:/repos/WKDBook-Tricentis/Notes/Credentials.md
+  6. C:/repos/WKDBook-Tricentis/Notes/Links.md
+  7. C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+
+- eine möglihkeit, beim ertellen eines cases, aber nch nachher, `Tags` zu vergeben, also zb in C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Solved/888622/Notes.md ist klar, dss das ein Mobile Engine case ist. das wäre super, weil wir dnan später zb `:Cases MobileEngine` oder `:Cases TTA` usw.. eine lsite `pickers.nvim` ausgeben könnten. Beim erstelen eines cases soll das gleich abgefragt werden, aebr wenn möglcih und sinnvoll auvhch glidhc vorschläge, zb aus dem titel ode activity stream ableiten. ich köntn mir vorstellen, dass hier ein kleirner buffer audgehtm in der man die tags eintragt (können auch herer sein), zb jede zeile einer bzw auvh , oder - als trennzeichne erlauben. eventuell eie eigen file für diese tags im casde angeben, oder woander unterbfingen, zb in Notes.md
+
+
+---
+
+## casedesk
 
 - problems / solutions matrix us den cases erstellen
 - casedesk file im wkdbook implementieren
@@ -36,7 +50,7 @@
 
 ---
 
-### A4 — casedesk: `:Case timeline` reports git pulls as work sessions
+## A4 — casedesk: `:Case timeline` reports git pulls as work sessions
 
 **Source:** `.../casedesk.nvim/ROADMAP/ROADMAP.md`, section "Workflow", fourth bullet.
 **Stand geprüft 2026-09-17:** open — `timeline.lua` still derives sessions
@@ -159,16 +173,15 @@ C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen apiegelt docs aus C:\repo
 
 - [ ] Anonymsierungs-Feature: Activity Streams anaonymiseren, sodass ich sie dann in eine ai prompt posten kann, ohne dass daten von kunden / tricentis weiteregegeben werden, die nicht nötiog sind (Namen, Kontaktdaten. Company, usw...)
 
+- [ ] jeglich ai ausführeungen müssen immer explizizt bestötigt werdne, auch wenn man da mitusrcmd angibt da klar ist dass das ai ist, aber trpotzdm frGEN : SINN IST; DAS ich ncht an ai daten schick die dort gar nicht sein sollten. erstmal sollte das default sein, soll aber in der installations spec als config key toggled werden können
+
 ## MISC
 
 - [ ] tosca commander propertie s: ControlFramwwork (oeder so) wenn SAP UI5 satt none steht: ui5.sap.com
 - [ ] Wenn ein cases mal closed/solved ist, muss e strotzdem eine Möglichkeit geben, inhn wieder con dort nach open zu schieben, ohne dass ich das manuell mit copy past emache, also mit fdem usrrcmd :Case sollte das auch funktioneren
 - [ ] Eine neue File kategorie einführen "Task.md" oder so: in der sollen wir festhalten, was der kunde genau erreichen will/ machen will, was das ziel des tickets ist. das ist so wichtig, dass ich dneke, es macht sinn, dies expizit festzuhalten. als ort würde ich vorschlagen: {CASE NUMBER}/TASK.md - auch fethalten wenn sinnvoll was er NIHCT will
 
-
 ## Solution/
-
-
 
 - [ ] DRAFT-Solution.md -> aus dessen files mus noch das formattierte dolutzion file hezogen werden.nn ich nicht sicher sein, dass dass de korrekte Soluton war, könnte aber sein....
   eitpunkt des clsing, auf die der customer nicht mehr geantwortet hat / den case geschlossen hat. Daher kann man daraus nicht ableiten, dass das die solutions war, es klönnte sein, aber wir haenm keine bestätigung. tzrotzdem kan man damit vl etwas machen... also für kpnftgie solutions suche verwednen, halt mit demhinweiß, dass eine solution die saus einer DRAFT-Solution.md kommt nicht korrekt sien könnte
@@ -192,7 +205,7 @@ Hier brauchen wir eine einheitliches system.
 
 ## solved cases
 
-- [ ] Gemejni soll reposrts mit keywpors usw.. schreiben. TEMPLATE ausarboeten
+- [ ] Gemeni soll reports mit keymaps usw.. schreiben. TEMPLATE ausarboeten (weiß nicht mehr genau was ich damit meinte. akannst du das aus dem kontext herleiten?
 
 ## reports/log
 
