@@ -516,8 +516,22 @@ plugins.add({
       "CopyFilepathAbsolute",
       "CopyFilepathRelative",
       "CopyFilepathRepos",
+      "RevealInFm",
+      "OpenInBrowser",
     },
-    keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
+    -- <leader>of/<leader>ob (reveal-in-filemanager / open-in-browser): picked
+    -- over the more obvious <leader>fm because that key is already taken
+    -- globally (Format file, see BINDINGS-RUNTIME-CHECKLIST.md) — <leader>o*
+    -- was entirely free across the ecosystem at the time this was added.
+    keys = {
+      "<leader>cnl",
+      "<leader>cnm",
+      "<leader>cnf",
+      "<S-m>",
+      "<C-p>",
+      "<leader>of",
+      "<leader>ob",
+    },
     opts = {},
   },
 
