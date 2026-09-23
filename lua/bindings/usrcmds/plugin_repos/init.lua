@@ -358,18 +358,34 @@ end
 ---reports it, the final summary breaks the success count down into
 ---"changed" vs "already up to date" instead of just a bare total, so
 ---`:MyPlugins update` (etc.) actually says whether anything happened.
+---
+---`on_complete`, when given, always runs exactly once — after the summary
+---notify, on every exit path (no base dir, nothing present, or the run
+---actually finishing) — so a caller can chain work onto "this op is done"
+---without caring whether there was anything to do. `:MyPlugins dashboard
+---fetch` (below) is the reason this exists: open the dashboard once the
+---fetch settles, whatever its outcome.
 ---@param gerund string
 ---@param past string
 ---@param op_fn fun(path: string, on_done: fun(ok: boolean, err: string|nil, changed: boolean|nil))
 ---@param path string|nil
 ---@param only_name string|nil
-local function run_listed_op(gerund, past, op_fn, path, only_name)
+---@param on_complete fun()|nil
+local function run_listed_op(gerund, past, op_fn, path, only_name, on_complete)
+  local function finish()
+    if on_complete then
+      on_complete()
+    end
+  end
+
   local present, base_dir = present_listed_names(path, only_name)
   if not present then
+    finish()
     return
   end
   if #present == 0 then
     notify.info("None of the listed plugins are present in " .. tostring(base_dir))
+    finish()
     return
   end
 
@@ -414,13 +430,15 @@ local function run_listed_op(gerund, past, op_fn, path, only_name)
         ("%d repositor%s %s%s"):format(#ok_items, #ok_items == 1 and "y" or "ies", past, detail)
       )
     end
+    finish()
   end, prog)
 end
 
 ---@param path string|nil
 ---@param only_name string|nil
-local function fetch_all(path, only_name)
-  run_listed_op("Fetching", "fetched", ops.fetch_one, path, only_name)
+---@param on_complete fun()|nil
+local function fetch_all(path, only_name, on_complete)
+  run_listed_op("Fetching", "fetched", ops.fetch_one, path, only_name, on_complete)
 end
 
 ---@param path string|nil
@@ -443,14 +461,86 @@ end
 -- Dashboard (delegates to reposcope.nvim's own git-status overview)
 -- =============================================================================
 
+---Best-effort "the plugin this context belongs to": the current buffer's
+---file, falling back to the working directory, matched against `base_dir`'s
+---immediate children and cross-checked against the live
+---`plugins.personal.list` — a bare directory-name match with no list entry
+---is not "this plugin", it is some unrelated checkout `$REPOS_DIR` also
+---holds (Notes, WKDBooks, ...), same distinction every other subcommand in
+---this file already makes.
+---@param base_dir string
+---@return string|nil name
+local function resolve_current_plugin_name(base_dir)
+  local normalized_base = (fnamemodify(base_dir, ":p"):gsub("[\\/]+$", "")) .. "/"
+  local candidates = { vim.api.nvim_buf_get_name(0), fn.getcwd() }
+
+  local entries = plugin_list.read() or {}
+  for _, candidate in ipairs(candidates) do
+    if candidate and candidate ~= "" then
+      local normalized = fnamemodify(candidate, ":p"):gsub("\\", "/")
+      if normalized:sub(1, #normalized_base) == normalized_base then
+        local name = normalized:sub(#normalized_base + 1):match("^([^/]+)")
+        if name then
+          for _, entry in ipairs(entries) do
+            if entry.name == name then
+              return name
+            end
+          end
+        end
+      end
+    end
+  end
+  return nil
+end
+
 ---`reposcope.nvim` already has exactly this dashboard (`:Reposcope dashboard`),
 ---so there's no reason to keep maintaining a parallel implementation here —
 ---this used to be its own scoped-to-`plugins.personal.list` status reader,
 ---but that scoping isn't worth the duplication; `:Reposcope dashboard` shows
 ---every repo under `dir`/`$REPOS_DIR` instead.
+---
+---`fetch_mode` prefetches before the dashboard opens, using the very same
+---`fetch` subcommand `:MyPlugins fetch` runs — "all" fetches every present
+---listed plugin first (`:MyPlugins fetch [dir]`); "this" narrows to the one
+---plugin the current buffer/cwd resolves to, via `fetch`'s own `--only`
+---scoping (`ctx.flags.only`, the same one `:MyPlugins fetch --only=<name>`
+---already exposes) rather than inventing a second scope option. When "this"
+---can't resolve to a listed plugin (the buffer isn't inside one, or
+---`$REPOS_DIR` isn't set), that is reported and the dashboard still opens,
+---just without a fetch — a prefetch that cannot be scoped is not a reason to
+---refuse the dashboard itself.
 ---@param path string|nil
-local function open_dashboard(path)
-  vim.cmd("Reposcope dashboard" .. (path and (" " .. fn.fnameescape(path)) or ""))
+---@param fetch_mode "all"|"this"|nil
+local function open_dashboard(path, fetch_mode)
+  local function open()
+    vim.cmd("Reposcope dashboard" .. (path and (" " .. fn.fnameescape(path)) or ""))
+  end
+
+  if not fetch_mode then
+    open()
+    return
+  end
+
+  local base_dir = resolve_base_dir(path)
+  if not base_dir then
+    notify.error("No repository directory provided and REPOS_DIR is not set")
+    return
+  end
+
+  if fetch_mode == "this" then
+    local name = resolve_current_plugin_name(base_dir)
+    if not name then
+      notify.warn(
+        "Could not resolve the current buffer/cwd to a listed plugin — opening the dashboard without fetching."
+      )
+      open()
+      return
+    end
+    fetch_all(path, name, open)
+    return
+  end
+
+  fetch_all(path, nil, open)
 end
 
 -- =============================================================================
@@ -979,9 +1069,15 @@ function M.enable()
       {
         path = { "dashboard" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "Open reposcope.nvim's git-status dashboard (:Reposcope dashboard) for dir/$REPOS_DIR",
+        flags = {
+          { name = "fetch", bool = true },
+          { name = "fetch-this", bool = true },
+        },
+        desc = "Open reposcope.nvim's git-status dashboard (:Reposcope dashboard) for dir/$REPOS_DIR; --fetch runs :MyPlugins fetch first, --fetch-this scopes that fetch to the plugin the current buffer/cwd belongs to",
         run = function(ctx)
-          open_dashboard(ctx.args.dir)
+          local fetch_mode = ctx.flags["fetch-this"] and "this"
+            or (ctx.flags.fetch and "all" or nil)
+          open_dashboard(ctx.args.dir, fetch_mode)
         end,
       },
 

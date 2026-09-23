@@ -994,6 +994,14 @@ plugins.add({
       -- `:Reposcope update`/`status` walk a whole directory of clones; both
       -- report into the shared lib.nvim.progress registry.
       progress_style = "statusline",
+      dashboard = {
+        -- This config is a git repo of its own but lives outside
+        -- `$REPOS_DIR`, so the dashboard's normal scan never finds it --
+        -- listing it here surfaces it alongside every other plugin
+        -- checkout instead of it being invisible to `:MyPlugins
+        -- dashboard`/`:Reposcope dashboard` entirely.
+        extra_paths = { vim.fn.stdpath("config") },
+      },
     },
   },
 
