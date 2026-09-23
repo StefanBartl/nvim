@@ -1,15 +1,27 @@
 # Ökosystem-Review: viele kleine Tasks (2026-09-23)
 
+**Handover-Datei — wird laufend aktualisiert, während die Punkte umgesetzt
+werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
+bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
+erledigt.
+
 Analyse + Umsetzungsplan für die Sammlung an kleinen Tasks aus der Session
 vom 2026-09-23, quer über `gopath.nvim`, `images.nvim`, `pickers.nvim`,
-`buffer-ctx.nvim`, `fileops.nvim`, `filetree.nvim`, `ui.nvim` und die
-nvim-config selbst. Jeder Punkt wurde im echten Quellcode verortet (Datei +
-Zeile), nicht nur aus der Beschreibung geraten. Zwei Punkte ließen sich nicht
-eindeutig verorten — siehe [Offene Fragen](#offene-fragen).
+`buffer-ctx.nvim`, `fileops.nvim`, `filetree.nvim`, `lsp.nvim`, `ui.nvim`
+und die nvim-config selbst. Jeder Punkt wurde im echten Quellcode verortet
+(Datei + Zeile), nicht nur aus der Beschreibung geraten.
 
 Der zugehörige Cross-Cutting-Task "Workflows" (interaktive Bestätigung statt
 Notify-mit-Anleitung) hat eine eigene Datei:
 [`Final_Checks/workflows-interactive-confirm.md`](../personal/All/FINISH/Final_Checks/workflows-interactive-confirm.md).
+
+## Klärungen (2026-09-23, zweite Runde)
+
+- **Breadcrumbs (Punkt 14):** ist `lsp.nvim`s Winbar-Breadcrumb
+  (`lua/lsp/core/winbar/render.lua`), nicht `filetree.nvim` oder `my.nvim`.
+  Bestätigt.
+- **Punkt 10/12 (pickers.nvim-Keymaps, Git-Status-Marks):** Empfehlung aus
+  dieser Datei übernommen — `pickers.nvim`-Builtin, nicht `ui.nvim`.
 
 ---
 
@@ -18,35 +30,38 @@ Notify-mit-Anleitung) hat eine eigene Datei:
 Sortiert nach Aufwand/Risiko, nicht nach Wunsch-Priorität — die Reihenfolge
 ist ein Vorschlag, keine Verpflichtung, einzeln umsetzbar/verschiebbar.
 
+Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
+
 ### Phase 1 — Isolierte Ein-Datei-Fixes (je < 1h, keine Designfrage offen)
 
-1. **buffer-ctx.nvim** — `$REPOS_DIR`-rooted `:Copy`/`:Insert filepath`-Modus
-2. **pickers.nvim** — `oldfiles`-Builtin auf `<leader>fo` freilegen
-3. **fileops.nvim** — `:File delete` bei ungespeicherten Änderungen: Confirm statt Notify (Workflows-Instanz #1)
-4. **nvim-config** — `:MyPlugins`' `confirm.lua`: `ui.kit.confirm` statt `getcharstr()`+`print()` (Workflows-Instanz #2)
+1. [x] **buffer-ctx.nvim** — `$REPOS_DIR`-rooted `:Copy`/`:Insert filepath`-Modus
+2. [x] **pickers.nvim** — `oldfiles`-Builtin auf `<leader>fo` freilegen
+3. [x] **fileops.nvim** — `:File delete` bei ungespeicherten Änderungen: Confirm statt Notify (Workflows-Instanz #1)
+4. [ ] **nvim-config** — `:MyPlugins`' `confirm.lua`: `ui.kit.confirm` statt `getcharstr()`+`print()` (Workflows-Instanz #2)
 
 ### Phase 2 — Einzelrepo, klare Lösung, eine Designentscheidung nötig
 
-5. **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
-6. **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
-7. **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst)
+5. [ ] **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
+6. [ ] **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
+7. [ ] **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst)
 
 ### Phase 3 — Neue kleine Subsysteme
 
-8. **images.nvim** — `:Images paste [path=...]` + `ui.kit.select`-Abfrage (relativ/absolut/`$REPOS_DIR`/custom)
-9. **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
-10. **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
+8. [ ] **images.nvim** — `:Images paste [path=...]` + `ui.kit.select`-Abfrage (relativ/absolut/`$REPOS_DIR`/custom)
+9. [ ] **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
+10. [ ] **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
 
 ### Phase 4 — Größer, braucht eigenen Design-Pass
 
-11. **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
-12. **ui.nvim** — neue Marks-artige UI, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar)
-13. **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
-14. **Klärungsbedarf** — Breadcrumbs rechtsbündig + Underline-Test (Ort unklar, siehe unten)
+11. [ ] **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
+12. [ ] **pickers.nvim** — neuer Builtin: Marks-artige Liste, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar) — Ort geklärt: `pickers.nvim`, nicht `ui.nvim` (siehe Klärungen oben)
+13. [ ] **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
+14. [ ] **lsp.nvim** — Winbar-Breadcrumb rechtsbündig (Ort geklärt: `lua/lsp/core/winbar/render.lua`) + Underline-Test ohne feste Abgrenzung
 
-Ein separater, expliziter Folge-Task (wie angefragt):
+Ein separater, expliziter Folge-Task (wie angefragt) — **nicht Teil dieser
+Implementierungs-Reihenfolge**, bereits als eigener Task formuliert:
 
-15. **Audit-Task** — "Vorschlag ablehnen ⇒ trotzdem ursprüngliche Aktion möglich" systematisch für alle Bindings prüfen (nicht nur `gF`)
+15. **Audit-Task** — "Vorschlag ablehnen ⇒ trotzdem ursprüngliche Aktion möglich" systematisch für alle Bindings prüfen (nicht nur `gF`) — siehe [`Final_Checks/workflows-interactive-confirm.md`](../personal/All/FINISH/Final_Checks/workflows-interactive-confirm.md)
 
 ---
 
@@ -66,6 +81,16 @@ um ein drittes Compat-Kommando, z. B. `:CopyFilepathRepos` →
 
 **Aufwand:** klein. **Risiko:** keins (neuer, additiver Modus).
 
+**Umgesetzt (2026-09-23):** `mode="repos"` in `ops/filepath.lua`, Token
+`repos`/`reposdir` in `parse_args`, `:CopyFilepathRepos`-Compat-Kommando,
+Typ `BufferCtx.FilepathMode` erweitert, `docs/commands.md`/`BINDINGS.md`/
+`doc/buffer-ctx.txt`/`health.md` + `health.lua`-Check aktualisiert,
+`lazy.nvim`'s `cmd`-Liste in `plugins/personal/init.lua` ergänzt (sonst wäre
+der Compat-Befehl vor dem ersten `Copy`/`Insert`/… nicht registriert
+gewesen). Test in `TESTS/ops_edge_spec.lua` (innerhalb `$REPOS_DIR`,
+außerhalb → cwd-Fallback, `$REPOS_DIR` unset → Error). luacheck/stylua
+grün, volle Suite grün. Commit `buffer-ctx.nvim@3d3e657`.
+
 ### 2. pickers.nvim: `oldfiles` auf `<leader>fo`
 
 **Fund:** `oldfiles` existiert bereits als Builtin
@@ -74,6 +99,16 @@ verdrahtet). Es fehlt nur die Bindung — analog zu den anderen
 `<leader>f*`-Einträgen in `pickers/bindings/keymaps.lua`.
 
 **Aufwand:** trivial.
+
+**Umgesetzt (2026-09-23):** doch kein Code-Change in `pickers.nvim` nötig —
+`pickers/mappings/init.lua` hatte bereits genau die richtige Erweiterung
+("declarative mappings", jeder `pickers.builtins`-Name dispatchbar) und wird
+in `pickers/bindings/init.lua:31` unbedingt aus `setup()` heraus aufgerufen.
+Nur `mappings = { recent = { "<leader>fo" } }` in der pickers.nvim-Spec in
+`plugins/personal/init.lua` ergänzt (Registry-Name ist `recent`, nicht
+`oldfiles` — so heißt der Builtin bei snacks; telescope/fzf-lua nennen ihn
+intern `oldfiles`, aber der `pickers.builtins`-Eintrag selbst `recent`).
+luacheck/stylua grün. Commit `nvim-config@c8f24a1c`.
 
 ### 3. fileops.nvim: `:File delete` + ungespeicherte Änderungen
 
@@ -104,6 +139,24 @@ Gleiches für die `!`-Overwrite-Fälle.
 
 **Aufwand:** klein–mittel (Fallback auf `vim.ui.select` wenn `ui.nvim` fehlt,
 analog zu `gopath.create.ask()`).
+
+**Umgesetzt (2026-09-23):** `ui.kit.confirm` direkt (kein `vim.ui.select`-
+Fallback — passt zum bestehenden Stil in diesem Repo: `ui.kit` wird schon
+an anderer Stelle ungeguardet aufgerufen, `health.lua` nennt es explizit
+als benötigte Abhängigkeit für genau diese Prompts). Sowohl `:File delete`
+als auch die `delete`/`delete_force`-Keymaps abgedeckt — letztere hatten
+bisher eine **eigene, parallele** Delete-Implementierung
+(`bindings/keymaps.lua`), die meinen ersten Fix in `usrcmds.lua` komplett
+umgangen hätte. Beide Stellen jetzt auf ein gemeinsames
+`bindings/delete_confirm.lua` gezogen (vorher schon per Kommentar als
+"mirroring" markiert, aber tatsächlich bereits auseinandergelaufen — die
+Keymap-Kopie ignorierte `delete.mode` komplett und rief `on_before_delete`
+nie auf). Gleiche Behandlung auch für die `!`-Overwrite-Fälle bei
+rename/move/duplicate/copy (`run_with_overwrite_confirm`-Helper). Zwei
+bestehende Tests (`usrcmds_dispatch_spec.lua`, `keymaps_spec.lua`) testeten
+noch das alte "refuse"-Verhalten — auf das neue Confirm-Verhalten
+umgeschrieben, nicht nur ergänzt. luacheck/stylua grün, volle Suite grün
+(932 Checks). Commit `fileops.nvim@0902912`.
 
 ### 4. `:MyPlugins` Confirm-Dialog
 
@@ -300,9 +353,27 @@ Request, kein `:MyPlugins`-Fix.
 
 **Aufwand:** (a) klein, (b) unbekannt ohne `reposcope.nvim`-Review.
 
-### 14. Breadcrumbs rechtsbündig — Ort unklar
+### 14. lsp.nvim: Winbar-Breadcrumb rechtsbündig
 
-Siehe [Offene Fragen](#offene-fragen).
+**Geklärt (2026-09-23):** `lua/lsp/core/winbar/render.lua`, nicht
+`markdown.nvim`/`filetree.nvim`/`my.nvim`. `M.render()` baut den
+`'winbar'`-String selbst zusammen (`table.concat(drawn, sep)`,
+`render.lua:262-280`) — kein `align`-Feld, keine Rechtsbündig-Logik.
+
+**Fix ist trivial:** Neovims `'statusline'`-Format (das `'winbar'` erbt)
+kennt `%=` als eingebautes Rechtsbündig-Item — alles danach wird an den
+rechten Rand gedrückt. Ein `opts.align == "right"`-Zweig, der dem
+zurückgegebenen String `%=` voranstellt, reicht; keine eigene
+Padding-Berechnung nötig.
+
+**Underline:** kein `underline` im Code gefunden (weder `render.lua` noch
+`init.lua`/`kinds.lua`) — die vom Nutzer beobachtete Linie kommt aus dem
+Colorscheme-eigenen `WinBar`-Highlight-Group, nicht aus lsp.nvim selbst.
+Der "Test ohne Underline" ist also `:hi WinBar gui=NONE` (oder ein
+Colorscheme-Override), keine Code-Änderung hier — lsp.nvim zwingt aktuell
+gar kein Underline, es erbt nur, was das Colorscheme für `WinBar` vorgibt.
+
+**Aufwand:** klein (ein `%=`-Zweig + Config-Feld `align`).
 
 ### 15. Audit-Task: "Vorschlag ablehnen ⇒ Ursprungs-Aktion bleibt möglich"
 
@@ -316,39 +387,14 @@ unabhängige Entscheidungen sind".
 
 ---
 
-## Offene Fragen
-
-**Breadcrumbs rechtsbündig (Punkt aus der Anfrage unter "markdown.nvim"):**
-In `markdown.nvim` selbst existiert **kein** Breadcrumb-Code (Grep leer).
-Zwei plausible Kandidaten mit demselben Namen, aber unterschiedlichem
-Zweck:
-
-- `filetree.nvim`s `B:\repos\filetree.nvim\lua\filetree\features\ui\breadcrumbs\init.lua`
-  — Pfad-Breadcrumb (Root → Datei) für die Tree-Sidebar, Modi
-  `winbar`/`float`/`statusline`. Hat ein `align="left"` — aber nur für die
-  **Float-Positionierung**, nicht für Text-Ausrichtung innerhalb der Zeile.
-  In der aktuellen Config nirgends explizit aktiviert (`enabled=false`
-  Default, kein Override in `plugins/personal/init.lua` gefunden).
-- `my.nvim`s `hl_config/breadcrumbs/` — VSCode-artiger Symbol-Breadcrumb
-  (Treesitter/LSP-Pfad) im Winbar, generisch für jeden Dateityp inkl.
-  Markdown. Kein `align`/`underline` im Code gefunden.
-
-Keins der beiden hat aktuell eine Rechtsbündig-Option — die Anfrage
-bräuchte also so oder so neue Logik, nicht nur einen Config-Switch. Bevor
-daran gearbeitet wird: **bitte kurz bestätigen, welches der beiden Module
-gemeint ist** (oder ob es ein drittes ist, das dieser Review nicht
-gefunden hat).
-
-**Punkt 10/12 (pickers.nvim-Keymaps, Git-Status-Marks):** beide brauchen
-vor der Umsetzung eine kurze Scope-Entscheidung (welche Keymaps genau /
-wo die Datenquelle herkommt) — siehe jeweilige Abschnitte oben.
-
----
-
 ## Methodik
 
 Jeder Fund wurde am echten Code verortet (`grep`/`Read`), nicht aus der
 Beschreibung geschlussfolgert — wo eine Datei/Zeile fehlt, ist das ein
 bewusster Hinweis auf "noch nicht gefunden", nicht auf "existiert nicht".
-Kein Code wurde in dieser Session verändert; das ist reine Analyse +
-Plan, wie angefragt.
+
+Ursprünglich (2026-09-23, erste Fassung) reine Analyse + Plan ohne
+Code-Änderung. Ab der zweiten Runde (gleicher Tag, nach Klärung der beiden
+offenen Fragen) läuft die Umsetzung entlang des Plans oben, ein Punkt nach
+dem anderen — diese Datei wird dabei als Handover mitgeführt: Status-Häkchen
+in der Übersicht, ein "Umgesetzt"-Absatz je Punkt sobald erledigt.

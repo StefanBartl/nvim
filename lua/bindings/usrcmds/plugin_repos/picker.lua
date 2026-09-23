@@ -228,26 +228,28 @@ local function run_batch(removal, direct_clone, fetch_items, pull_items, update_
       base_dir,
       table.concat(names, "\n")
     )
-    if not confirm.yesno(msg, "delete") then
-      notify.info("Deletion cancelled — remove/reclone skipped for this batch.")
-      after_removal({})
-      return
-    end
-
-    local to_clone, delete_failed = {}, {}
-    for _, p in ipairs(safe) do
-      if ops.delete_one(base_dir .. "/" .. p.name) then
-        if p.action == "reclone" then
-          to_clone[#to_clone + 1] = p
-        end
-      else
-        delete_failed[#delete_failed + 1] = p.name
+    confirm.yesno(msg, "delete", function(accepted)
+      if not accepted then
+        notify.info("Deletion cancelled — remove/reclone skipped for this batch.")
+        after_removal({})
+        return
       end
-    end
-    if #delete_failed > 0 then
-      notify.error("Failed to remove: " .. table.concat(delete_failed, ", "))
-    end
-    after_removal(to_clone)
+
+      local to_clone, delete_failed = {}, {}
+      for _, p in ipairs(safe) do
+        if ops.delete_one(base_dir .. "/" .. p.name) then
+          if p.action == "reclone" then
+            to_clone[#to_clone + 1] = p
+          end
+        else
+          delete_failed[#delete_failed + 1] = p.name
+        end
+      end
+      if #delete_failed > 0 then
+        notify.error("Failed to remove: " .. table.concat(delete_failed, ", "))
+      end
+      after_removal(to_clone)
+    end)
   end, prog)
 end
 
