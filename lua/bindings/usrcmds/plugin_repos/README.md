@@ -22,7 +22,7 @@ those names no longer exist.
 :MyPlugins pull [dir] [--only=<name>]
 :MyPlugins update [dir] [--only=<name>]
 :MyPlugins reclone [dir] [--only=<name>]
-:MyPlugins dashboard [dir]
+:MyPlugins dashboard [dir] [--fetch] [--fetch-this]
 :MyPlugins mode [auto|dir|remote|disabled]
 :MyPlugins list [dir]
 :MyPlugins picker [dir]
@@ -127,7 +127,7 @@ guaranteed-fresh checkouts". Dirty/unpushed repos are left alone, same as
 :MyPlugins reclone                        " reclone everything clean + clone everything missing
 ```
 
-### `:MyPlugins dashboard [dir]`
+### `:MyPlugins dashboard [dir] [--fetch] [--fetch-this]`
 
 Just opens `reposcope.nvim`'s own `:Reposcope dashboard [dir]` — a read-only
 git-status overview (branch, ahead/behind, dirty) of every repo under
@@ -136,13 +136,34 @@ going on" this needed, so there's no separate `plugins.personal.list`-scoped
 status reader here anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`,
 `dashboard` shows *every* repo in the directory, not just the listed
 plugins — same trade-off as `:Reposcope dashboard`/`:MyReposUpdate` make.
-Flat shorthand: `:MyPluginsDashboard [dir]`.
+Flat shorthand: `:MyPluginsDashboard [dir]` (no `--fetch`/`--fetch-this` on
+the shorthand — it only ever takes `dir`).
+
+`--fetch` runs the exact same `fetch` subcommand above (`git fetch --all
+--prune` on every present listed repo) before opening the dashboard, so what
+you see is current instead of whatever the last `git fetch` (by hand, or by
+gitsigns/lazygit polling) happened to leave behind. `--fetch-this` scopes
+that same fetch to one repo via `fetch`'s own `--only` (nothing new invented
+there) — the plugin the current buffer or `cwd` resolves to under
+`dir`/`$REPOS_DIR`. If that can't be resolved (you're not inside a listed
+plugin, or `$REPOS_DIR` isn't set), it's reported and the dashboard still
+opens, just without a fetch. The two flags are mutually exclusive in effect
+(`--fetch-this` wins if both are given); the dashboard itself always shows
+every repo in the directory either way — the flags only affect the prefetch.
 
 ```vim
 :MyPlugins dashboard
 :MyPlugins dashboard $REPOS_DIR
+:MyPlugins dashboard --fetch              " fetch every present listed plugin first
+:MyPlugins dashboard --fetch-this         " fetch just the plugin you're currently in
 :MyPluginsDashboard
 ```
+
+The nvim config itself (this checkout) is not under `$REPOS_DIR`, so it
+never shows up here on its own — see
+[`reposcope.nvim`'s `dashboard.extra_paths`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/configuration.md)
+(configured in this repo's own `plugins/personal/init.lua`) for how it's
+made visible anyway.
 
 ### `:MyPlugins picker [dir]`
 

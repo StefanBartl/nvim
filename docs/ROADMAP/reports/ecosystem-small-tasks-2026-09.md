@@ -67,7 +67,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
 11. [x] **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
 12. [x] **pickers.nvim** — neuer Builtin: Marks-artige Liste, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar) — Ort geklärt: `pickers.nvim`, nicht `ui.nvim` (siehe Klärungen oben)
-13. [ ] **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
+13. [x] **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
 14. [ ] **lsp.nvim** — Winbar-Breadcrumb rechtsbündig (Ort geklärt: `lua/lsp/core/winbar/render.lua`) + Underline-Test ohne feste Abgrenzung
 
 Ein separater, expliziter Folge-Task (wie angefragt) — **nicht Teil dieser
@@ -833,6 +833,120 @@ dieser Session untersucht) — sonst wird das ein `reposcope.nvim`-Feature-
 Request, kein `:MyPlugins`-Fix.
 
 **Aufwand:** (a) klein, (b) unbekannt ohne `reposcope.nvim`-Review.
+
+**Umgesetzt (2026-09-24):** Beide Teile wie geplant, mit einer Korrektur
+gegenüber dem ursprünglichen Fund-Text bei (b).
+
+**(a) `--fetch`/`--fetch-this` auf `:MyPlugins dashboard`:** Kein
+`fetch=true`/`fetchThis=true`-Flag im wörtlichen Sinn des Fix-Texts, sondern
+zwei boolesche Composer-Flags (`--fetch`, `--fetch-this`) nach dem im
+selben Repo bereits etablierten `--dry-run`-Muster (`clone`/`reclone`) —
+`:MyPlugins dashboard fetch` als bares Positional-Argument hätte mit dem
+optionalen `dir`-Slot kollidiert (beide optional, keine typbasierte
+Disambiguierung wie bei `mode`s Enum), und die Analyse selbst nannte die
+Kommandos nur als "z. B."-Beispiel, nicht als Vorgabe. `--fetch` läuft
+`:MyPlugins fetch [dir]` (den bestehenden Subcommand, unverändert in seiner
+Scope-Logik) vor dem Öffnen; `--fetch-this` nutzt **keinen neuen
+Scope-Parameter**, sondern `fetch`s bereits vorhandenes `--only=<name>` —
+`ops.lua`/`fetch_all` hatten dafür schon alles, was gebraucht wurde. Neu ist
+nur `resolve_current_plugin_name(base_dir)`: liest den aktuellen Buffer-Pfad
+(Fallback: `cwd`), matched gegen `base_dir`s erstes Pfadsegment und
+verifiziert das Ergebnis gegen die *live* `plugins.personal.list` (ein
+bloßer Verzeichnistreffer ohne Listen-Eintrag ist "irgendein anderer
+`$REPOS_DIR`-Checkout", nicht "dieses Plugin" — dieselbe Unterscheidung, die
+jeder andere Subcommand in dieser Datei schon macht). Lässt sich das nicht
+auflösen (Buffer/cwd liegt in keinem gelisteten Plugin, oder `$REPOS_DIR`
+ist nicht gesetzt), wird das per `notify.warn` gemeldet und das Dashboard
+öffnet trotzdem — ohne Fetch, aber nicht verweigert.
+
+`run_listed_op` (der gemeinsame Runner hinter `fetch`/`pull`/`update`)
+bekam dafür einen optionalen `on_complete`-Callback, der garantiert genau
+einmal läuft — auf jedem Exit-Pfad (kein `base_dir`, nichts Present, oder
+der Lauf ist fertig), nach der Summary-Notify. `fetch_all` reicht ihn nur
+durch; `pull_all`/`update_all` unverändert (kein Bedarf, kein Scope-Creep).
+`open_dashboard()` öffnet damit die Dashboard erst NACHDEM der Fetch (egal
+mit welchem Ausgang) abgeschlossen ist, statt parallel dazu.
+
+Headless verifiziert (`nvim --headless`, echtes `M.enable()` + `vim.cmd`):
+`--fetch-this` ohne auflösbares Plugin meldet die Warnung und öffnet
+trotzdem; `--fetch` mit leerem `$REPOS_DIR`-Verzeichnis meldet "None of the
+listed plugins are present" und öffnet danach trotzdem; bare `dashboard`
+(keine Flags) verhält sich exakt wie vorher (kein Fetch, kein zusätzlicher
+Notify) — alle drei Pfade schlagen im Test nur daran fehl, dass
+`reposcope.nvim` in der minimalen Test-Runtime nicht geladen war
+(`E492: Not an editor command: Reposcope dashboard`), was die eigentliche
+`:MyPlugins`-Logik bereits vollständig durchlaufen hatte, bevor dieser
+externe Fehler auftrat.
+
+**(b) nvim-config selbst im Dashboard sichtbar:** `reposcope.nvim` hatte
+**keinen** Extra-Pfad-Mechanismus — verifiziert am tatsächlichen Code
+(`utils/repo_dashboard.lua`s `dashboard_all()` baut `repos` ausschließlich
+aus `collect_repos(base_dir)`/dem Single-Repo-Fall, keine weitere Quelle;
+`utils/repos.lua` hat keine zweite Konfigurationsachse). Also, wie in der
+Analyse als Alternative vorgesehen: als `reposcope.nvim`-Feature additiv
+implementiert, nicht als reiner `:MyPlugins`-Fix.
+
+Neue Config-Option `dashboard.extra_paths` (`string[]`, Default `{}`) in
+`reposcope.nvim/lua/reposcope/config/DEFAULTS.lua`, typisiert als
+`DashboardOptions` in `@types/classes/configs.lua`, `"dashboard"` in
+`ConfigOptionKey` (`@types/aliases.lua`) ergänzt — die bestehende
+ERR-50-Validierung (`sanitize_opts` in `config/init.lua`) griff dafür
+unverändert, kein eigener Code nötig. Merge-Logik in
+`utils/repo_dashboard.lua`s neuer, privater `extra_repo_paths(existing)`:
+jeder Eintrag wird expandiert (`~`, Env-Vars, via `lib.nvim`s
+`expand_path`), gegen die schon gescannten Pfade dedupliziert und als
+echtes Git-Repo validiert — ein ungültiger Eintrag wird gemeldet
+(`notify`, Level 3) und übersprungen, statt das ganze Dashboard abzubrechen.
+`dashboard_all()` hängt das Ergebnis an `repos` an, **bevor** die
+"keine Repos gefunden"-Prüfung läuft (ein Verzeichnis ohne Plugin-Checkouts,
+aber mit konfiguriertem Extra-Pfad, zeigt trotzdem ein Dashboard) und
+**auch** im Single-Repo-Override-Fall (`:Reposcope dashboard
+~/projects/foo` zeigt weiterhin zusätzlich jeden konfigurierten Extra-Pfad).
+Bewusst nur für `dashboard`, nicht für `:Reposcope update`/`repo_updater.lua`
+— letzteres würde die nvim-config auch tatsächlich `pull`en, was hier nicht
+gefragt war und ein eigenes Risiko wäre (anderer Remote-Workflow als die
+Plugin-Checkouts).
+
+`health.lua` bekam eine neue Sektion (`dashboard.extra_paths`: leer → info,
+alle Einträge lösen zu echten Git-Repos auf → ok, sonst → warn mit den
+defekten Pfaden benannt) — dabei einen eigenen Bug in der ersten Fassung
+gefunden und gefixt: `config.get_option("dashboard").extra_paths` crashte
+in `health_spec.lua`, weil dessen Stub `get_option` für jeden Key außer
+`"request_tool"` `nil` liefert (`nil` direkt zu indizieren, bevor das `or
+{}` greift) — auf `local dashboard_opts = config.get_option("dashboard");
+(dashboard_opts and dashboard_opts.extra_paths) or {}` umgestellt, dieselbe
+"degradiert statt crasht"-Linie (ERR-22), die die Sektionen direkt darüber
+schon fahren.
+
+Docs aktualisiert: `docs/configuration.md` (Options-Tabelle + Setup-Beispiel),
+`docs/commands.md` (`:Reposcope dashboard`-Abschnitt), `doc/reposcope.txt`
+(Setup-Beispiel + Prosa-Abschnitt), `@types`-Dateien wie oben. Tests in
+`TESTS/repos_util_spec.lua`, neuer Block direkt nach dem bestehenden
+"single repository path"-Test: Extra-Pfad wird zum Single-Repo-Override
+hinzugefügt (2 Ergebnisse statt 1), Deduplizierung (ein Extra-Pfad, den der
+Scan schon gefunden hat, erscheint nicht doppelt), ungültiger Extra-Pfad
+trägt nichts bei und wird per `notify` gemeldet statt zu crashen. luacheck
+(0/0 über `lua`/`TESTS`/`plugin`) und `stylua --check` grün für
+`reposcope.nvim`; volle Suite headless grün (`REPOSCOPE_TESTS_OK`, inkl.
+`health_spec.lua` nach dem Fix). Für die nvim-config-Seite: luacheck/stylua
+grün für `lua/bindings/usrcmds/plugin_repos/init.lua` und
+`lua/plugins/personal/init.lua`; weiterhin keine Test-Infrastruktur für die
+persönliche Config selbst (verifiziert: kein `TESTS/`-Runner unter
+`bindings/usrcmds/plugin_repos/`, `scripts/run_all_tests.sh` deckt nur
+Plugin-Repos ab, nicht die Config), stattdessen headless gegen die echten
+Commands verifiziert (siehe oben).
+
+`plugins/personal/init.lua`s reposcope.nvim-Spec (`opts`) bekam
+`dashboard.extra_paths = { vim.fn.stdpath("config") }` — dieses Config-
+Checkout selbst als Extra-Pfad, damit es ab dem nächsten `:Reposcope
+dashboard`/`:MyPlugins dashboard` neben den echten Plugin-Checkouts
+auftaucht. `lua/bindings/usrcmds/plugin_repos/README.md` und
+`docs/BINDINGS.md` um `--fetch`/`--fetch-this` sowie den Verweis auf
+`dashboard.extra_paths` ergänzt.
+
+Commits: `reposcope.nvim` (config option + merge + health + docs + tests),
+`nvim-config` (`:MyPlugins dashboard`-Flags + Plugin-Spec + Doku + diese
+Handover-Datei).
 
 ### 14. lsp.nvim: Winbar-Breadcrumb rechtsbündig
 
