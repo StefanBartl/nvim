@@ -66,7 +66,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 ### Phase 4 — Größer, braucht eigenen Design-Pass
 
 11. [x] **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
-12. [ ] **pickers.nvim** — neuer Builtin: Marks-artige Liste, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar) — Ort geklärt: `pickers.nvim`, nicht `ui.nvim` (siehe Klärungen oben)
+12. [x] **pickers.nvim** — neuer Builtin: Marks-artige Liste, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar) — Ort geklärt: `pickers.nvim`, nicht `ui.nvim` (siehe Klärungen oben)
 13. [ ] **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
 14. [ ] **lsp.nvim** — Winbar-Breadcrumb rechtsbündig (Ort geklärt: `lua/lsp/core/winbar/render.lua`) + Underline-Test ohne feste Abgrenzung
 
@@ -724,6 +724,97 @@ filetree-Keymaps)? Empfehlung: **`pickers.nvim`-Builtin**, nicht `ui.nvim`
 — matcht der Sache nach eher zu Punkt 10 als zu einer neuen UI-Primitive.
 
 **Aufwand:** mittel–groß, abhängig von der Klärung.
+
+**Umgesetzt (2026-09-24):** zwei Fund-Korrekturen vor dem eigentlichen Code:
+
+1. `gitsuite.nvim` exportiert **keine** eigene listbare Status-API. Sein
+   `features.status.repo()`/`.quickfix()` (`gitsuite/features/status/init.lua`)
+   sind Notify- bzw. Quickfix-Seiteneffekte, keine Datenquelle mit stabiler
+   Rückgabe. Der tatsächliche, wiederverwendbare Parser liegt in
+   `lib.nvim.git.status_porcelain()`/`.parse_status()`
+   (`lib.nvim/lua/lib/nvim/git/init.lua`) — `gitsuite.nvim`s eigener Modul-
+   Kommentar sagt das sogar wörtlich ("`lib.nvim.git.status_porcelain`,
+   already written, not duplicated").
+2. `filetree.nvim/lua/filetree/features/git/git_status/init.lua` hat **keinen**
+   eigenen `git status --porcelain`-Parser (der ursprüngliche Fund-Text war
+   hier veraltet) — es ruft ebenfalls `lib.nvim.git.status_porcelain_async`
+   auf, exakt dieselbe Quelle wie `gitsuite.nvim`. Alle drei Repos (jetzt auch
+   `pickers.nvim`) teilen sich denselben Parser; kein zweiter wurde gebaut.
+
+Neuer Builtin `git_status_marks` in `pickers.nvim/lua/pickers/builtins/init.lua`
+(REGISTRY, direkt neben dem bestehenden `git_status`-Eintrag), mit eigenem
+Modul `pickers/git_status_marks/init.lua` — bewusst NICHT der bestehende
+`git_status`-Name: der ist bereits durch den nativen Passthrough-Builtin belegt
+(`Snacks.picker.git_status()`/`telescope.builtin.git_status()`/`fzf-lua
+.git_status()`, ohne Staged/Unstaged-Trennung). `git_status_marks` ist ein
+eigenständiges, engine-agnostisches Item-Picker (`pick_item()` auf allen drei
+Engines, wie `pickers.browse`) mit drei Toggle-Zeilen am Listenanfang
+(`[x] show: staged only` etc.), die die Liste mit dem neuen Filter neu öffnen
+— bewusst KEINE rohe Tastenkombination: `pick_item()` hat auf keiner der drei
+Engines einen Per-Call-Hook für zusätzliche Keymaps (snacks' `Picker.select`
+ist laut eigenem Modul-Kommentar bewusst minimal gehalten), während
+`pickers.browse`s "Zeile wählen → Liste neu öffnen"-Muster im selben Repo
+bereits genau dieses Problem löst — übernommen statt einen zweiten Mechanismus
+zu erfinden. Auswahl einer Datei-Zeile öffnet sie normal (`vim.cmd.edit`).
+
+Die in Punkt 10 gebauten `entry_actions` (`[a`/`]a`/`[e`/`ML`) greifen
+automatisch, ohne eigene Verdrahtung — verifiziert: jede `pick_item()`-basierte
+Liste in `pickers.nvim` bekommt sie über die nvim-config-eigenen
+`lua/config/{telescope,fzf,snacks/picker}/init.lua`-Merges für frei, exakt wie
+Punkt 10s Bericht es für native Engine-Builtins schon beschrieben hatte.
+
+Default-Key: `<leader>gm` ("git marks"), registriert über die "declarative
+mappings" (`mappings.git_status_marks` in `plugins/personal/init.lua`, analog
+Punkt 2s `recent`-Eintrag). Kollisionsprüfung ergab einen bereits sehr dicht
+belegten `<leader>g*`-Namensraum, den die ursprüngliche Aufgabenstellung so
+nicht erwartet hatte: `<leader>gs`/`gS`/`gl`/`gL`/`gB`/`gD`/`gf`/`gi`/`gI`/
+`gp`/`gP` sind alle schon vergeben (`config/snacks/mappings/standard.lua`,
+darunter `<leader>gs` selbst — für genau den nativen `git_status`-Builtin!),
+plus bare `gb` (gitsuite Blame) und `gg` (Neogit) außerhalb des Leader-Raums.
+`<leader>fg`/`<leader>fgs` (aus der Aufgabenstellung als Kandidat genannt)
+sind ebenfalls belegt (FzfLua Live Grep bzw. FzfLua Git Status,
+`BINDINGS-RUNTIME-CHECKLIST.md`). `<leader>gm` war ökosystemweit frei (weder im
+Checklist noch in `config/snacks/mappings/standard.lua` noch sonstwo).
+`BINDINGS-RUNTIME-CHECKLIST.md` bewusst NICHT angefasst — dieselbe Begründung
+wie bei Punkt 9/10: sie ist generiert (`bindings.audit.checklist_lines`) und
+scannt nur nvim-configs eigene `bindings/`-Module, nicht zur Laufzeit über
+`pickers.mappings` registrierte Keymaps (`<leader>fo` aus Punkt 2 fehlt dort
+aus demselben Grund).
+
+Tests in `TESTS/pickers_spec.lua` (neue Suite direkt nach `pickers.browse`s
+eigener): reine Klassifizierung (`is_staged`/`is_unstaged`/`matches_filter`
+über alle relevanten XY-Codes inkl. `??`/`MM`), `build_rows`/`to_items`/
+`toggle_rows` gegen eine fixe Status-Map (kein echtes Git-Repo, kein
+Git-Prozess), sowie `open()`/Toggle-Flow gegen eine gestubbte
+`lib.nvim.git` und eine Fake-Engine nach demselben Muster wie `pickers.browse`s
+eigene Suite. Eine Testfalle unterwegs gefunden und korrigiert: ein literaler
+`"/fake/repo"`-Pfad wird auf dieser Windows-Devbox von `:edit` NICHT als
+absolut erkannt (fehlender Laufwerksbuchstabe) und stattdessen cwd-relativ
+aufgelöst — Fixture auf einen echten absoluten Pfad (`vim.fn.tempname()`s
+Elternverzeichnis) umgestellt, plus `vim.fs.normalize()` beim Vergleich.
+luacheck (0/0 über `lua`/`plugin`/`TESTS`) und `stylua --check` grün. Volle
+Suite: 722 Checks grün bis zu einem **vorbestehenden**, umgebungsabhängigen
+Crash in der `quickfix`-Preview-Suite (`'noautocmd' cannot be used with
+existing windows`, NVIM v0.11.4) — per `git stash` gegengeprüft: identischer
+Crash an derselben Stelle bereits vor dieser Änderung (exakt das schon aus
+Punkt 10s Bericht bekannte Problem). Zur eigentlichen Verifikation der neuen
+Suite wurde eine temporäre Kopie der Spec-Datei ohne den abstürzenden
+`quickfix`-Block separat lokal ausgeführt (722/722 grün, nie committed).
+
+Docs aktualisiert: `docs/builtins.md` (Matrix-Zeile, Zähler 52→53, neuer
+Abschnitt "`git_status` vs. `git_status_marks`" zur Abgrenzung),
+`docs/FEATURES/BUILTINS.md` (Verweis auf das neue Modul). `doc/pickers.txt`
+bewusst NICHT angefasst: die vimdoc-Datei listet die Builtin-Registry gar
+nicht einzeln auf (nur generische `mappings`-Prosa, ohne Per-Builtin-Inhalt) —
+dort gibt es nichts Git-Status-Spezifisches nachzuziehen.
+
+Plugin-Spec: `mappings.git_status_marks = { "<leader>gm" }` in
+`plugins/personal/init.lua` ergänzt (kein automatisches Greifen wie bei
+Punkt 10 — anders als `entry_actions`, ist ein Builtin-Name in `mappings` ohne
+expliziten Eintrag schlicht ungebunden, exakt wie Punkt 2s Fund für `recent`).
+
+Commits: `pickers.nvim@8c9afbd`, `nvim-config` (diese Handover-Datei +
+Plugin-Spec, separater Commit).
 
 ### 13. `:MyPlugins` — nvim-config + fetch-Optionen
 
