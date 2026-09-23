@@ -5,6 +5,16 @@ werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
 bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
 erledigt.
 
+**Stand 2026-09-23, pausiert nach Punkt 7 auf Zuruf.** 7/15 committed +
+gepusht (siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz).
+Punkte 8–14 (images.nvim, buffer-ctx.nvim fm/browser, pickers.nvim-Keymaps
++ Git-Status-Marks, `:Insert`-Cross-Plugin-Shims, `:MyPlugins`
+nvim-config+fetch, lsp.nvim-Breadcrumb) sind **noch nicht begonnen**. Punkt
+15 (Audit-Task) ist bereits als eigene Aufgabe formuliert, nicht Teil dieser
+Umsetzungs-Reihenfolge. Bevor hier weitergemacht wird: Punkt 7 bitte einmal
+von Hand testen (siehe dessen Abschnitt) — Wrap-Verhalten ließ sich headless
+nicht abschließend verifizieren.
+
 Analyse + Umsetzungsplan für die Sammlung an kleinen Tasks aus der Session
 vom 2026-09-23, quer über `gopath.nvim`, `images.nvim`, `pickers.nvim`,
 `buffer-ctx.nvim`, `fileops.nvim`, `filetree.nvim`, `lsp.nvim`, `ui.nvim`
@@ -43,7 +53,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
 5. [x] **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
 6. [x] **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
-7. [ ] **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst)
+7. [x] **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst) — **manuelle Sichtprüfung empfohlen, siehe unten**
 
 ### Phase 3 — Neue kleine Subsysteme
 
@@ -280,7 +290,27 @@ aus, ohne den Insert-Mode zu verlassen.
 
 **Aufwand:** trivial, aber Konflikt-Check zuerst nicht überspringen.
 
-### 8. images.nvim: `:Images paste` Pfad-Wahl
+**Umgesetzt (2026-09-23):** Konflikt-Check ergab: `<C-j>`/`<C-k>` sind im
+Insert-Mode tatsächlich schon belegt — aber auf reine `<Down>`/`<Up>`
+(`bindings/mappings/general.lua:102-103`), nicht auf Completion-Navigation.
+Empirisch geprüft (headless, `nvim_input`): Insert-Mode-`<Down>`/`<Up>`
+bewegen sich per **Textzeile**, nicht Bildschirmzeile — also kein
+gj/gk-Äquivalent, aber ähnlicher Zweck. Rückfrage an dich ergab: `<M-j>`/
+`<M-k>` verwenden. Die waren zwar in der ersten Grep-Runde nicht geprüft,
+aber `screen_line.lua`s eigener Kommentar hatte sie schon als "free ...
+portable fallback" vorgemerkt — passt. `<A-j>`/`<A-k>` (Noice LSP-Scroll)
+kollidieren nicht: buffer-lokal, nur in Noice-eigenen Floats aktiv.
+
+Implementiert in `bindings/mappings/screen_line.lua`:
+`map("i", "<M-j>", "<C-o>gj", ...)`, `map("i", "<M-k>", "<C-o>gk", ...)`.
+luacheck/stylua grün. **Nicht abschließend headless verifizierbar** — der
+eigentliche Bildschirmzeilen-Umbruch (`gj`/`gk` bei `wrap=true`) hängt von
+echter Fenstergeometrie ab, die ein reines `--headless` ohne angehängte UI
+nicht zuverlässig berechnet (gleiches Problem wie schon bei
+`filetree.nvim`s `cursor_hide`-Feature in dieser Session). Der
+Keymap-Mechanismus (`<C-o>` + Multi-Key-Motion) selbst ist Standard-Vim-
+Idiom, aber bitte einmal von Hand testen (langer Absatz, `wrap` an, im
+Insert-Mode `<M-j>`/`<M-k>` drücken).
 
 **Fund:** `B:\repos\images.nvim\lua\images\paste.lua:204-223`
 (`target_paths`) berechnet `rel` hart als Pfad relativ zum Dokument — keine
