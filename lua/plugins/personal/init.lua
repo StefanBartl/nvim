@@ -486,6 +486,14 @@ plugins.add({
         mappings = {
           -- Recently opened files (snacks "recent" / telescope+fzf "oldfiles").
           recent = { "<leader>fo" },
+          -- Uncommitted files (staged/unstaged/both, toggle rows at the top of
+          -- the list) -- pickers.nvim's own in-house `git_status_marks`
+          -- builtin, NOT the native `git_status` picker already on <leader>gs
+          -- (config/snacks/mappings/standard.lua). <leader>g{s,S,l,L,B,D,f,i,I,
+          -- p,P} and bare gb/gd/gg are all taken across this ecosystem's git
+          -- keymaps (pickers.nvim's own + gitsuite.nvim + neogit + diff.nvim);
+          -- <leader>gm ("git marks") was free.
+          git_status_marks = { "<leader>gm" },
         },
 
         history = {
