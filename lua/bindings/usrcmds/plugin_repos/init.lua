@@ -268,29 +268,31 @@ finish_check = function(safe, unsafe, base_dir)
     base_dir,
     table.concat(safe, "\n")
   )
-  if not confirm.yesno(msg, "delete") then
-    notify.info("Cancelled — nothing deleted.")
-    return
-  end
-
-  local removed, remove_failed = {}, {}
-  for _, name in ipairs(safe) do
-    local target = base_dir .. "/" .. name
-    local ok = fn.delete(target, "rf")
-    if ok == 0 then
-      removed[#removed + 1] = name
-    else
-      remove_failed[#remove_failed + 1] = name
+  confirm.yesno(msg, "delete", function(accepted)
+    if not accepted then
+      notify.info("Cancelled — nothing deleted.")
+      return
     end
-  end
 
-  if #remove_failed > 0 then
-    notify.error(
-      ("Removed %d, failed to remove: %s"):format(#removed, table.concat(remove_failed, ", "))
-    )
-  else
-    notify.info(("Removed %d repositor%s"):format(#removed, #removed == 1 and "y" or "ies"))
-  end
+    local removed, remove_failed = {}, {}
+    for _, name in ipairs(safe) do
+      local target = base_dir .. "/" .. name
+      local ok = fn.delete(target, "rf")
+      if ok == 0 then
+        removed[#removed + 1] = name
+      else
+        remove_failed[#remove_failed + 1] = name
+      end
+    end
+
+    if #remove_failed > 0 then
+      notify.error(
+        ("Removed %d, failed to remove: %s"):format(#removed, table.concat(remove_failed, ", "))
+      )
+    else
+      notify.info(("Removed %d repositor%s"):format(#removed, #removed == 1 and "y" or "ies"))
+    end
+  end)
 end
 
 -- =============================================================================
@@ -590,71 +592,85 @@ finish_reclone = function(safe, unsafe, missing, base_dir, dry_run)
     return
   end
 
-  if #safe > 0 then
-    local names = {}
-    for _, entry in ipairs(safe) do
-      names[#names + 1] = entry.name
-    end
-    local msg = ("Delete and re-clone %d repositor%s from %s?\n\n%s"):format(
-      #safe,
-      #safe == 1 and "y" or "ies",
-      base_dir,
-      table.concat(names, "\n")
-    )
-    if not confirm.yesno(msg, "reclone") then
-      notify.info(
-        #missing > 0 and "Reclone of the clean set cancelled — cloning only the missing ones."
-          or "Cancelled — nothing recloned."
-      )
-      safe = {}
-    end
-  end
-
-  ---@type Plugins.Personal.Entry[]
-  local to_clone = {}
-  if #safe > 0 then
-    local delete_failed = {}
-    for _, entry in ipairs(safe) do
-      if ops.delete_one(base_dir .. "/" .. entry.name) then
-        to_clone[#to_clone + 1] = entry
-      else
-        delete_failed[#delete_failed + 1] = entry.name
+  ---Delete `remaining_safe` (already-confirmed, or empty on decline) and
+  ---clone it plus `missing` — the shared tail of both the confirmed and
+  ---declined paths below, since a decline still clones what was merely
+  ---missing (never asked about in the first place).
+  ---@param remaining_safe Plugins.Personal.Entry[]
+  local function continue_with(remaining_safe)
+    ---@type Plugins.Personal.Entry[]
+    local to_clone = {}
+    if #remaining_safe > 0 then
+      local delete_failed = {}
+      for _, entry in ipairs(remaining_safe) do
+        if ops.delete_one(base_dir .. "/" .. entry.name) then
+          to_clone[#to_clone + 1] = entry
+        else
+          delete_failed[#delete_failed + 1] = entry.name
+        end
+      end
+      if #delete_failed > 0 then
+        notify.error("Failed to remove before reclone: " .. table.concat(delete_failed, ", "))
       end
     end
-    if #delete_failed > 0 then
-      notify.error("Failed to remove before reclone: " .. table.concat(delete_failed, ", "))
-    end
-  end
-  vim.list_extend(to_clone, missing)
+    vim.list_extend(to_clone, missing)
 
-  if #to_clone == 0 then
-    notify.info("Nothing left to clone.")
+    if #to_clone == 0 then
+      notify.info("Nothing left to clone.")
+      return
+    end
+
+    local prog = new_progress("[usrcmds.plugin_repos] reclone: cloning")
+    notify.info(("Cloning %d plugin(s) fresh..."):format(#to_clone))
+
+    ops.run_sequential(to_clone, function(entry, on_done)
+      clone_one(entry, base_dir, function(status, clone_err)
+        on_done(status ~= "failed", clone_err)
+      end)
+    end, function(entry)
+      return entry.name
+    end, function(cloned, failed)
+      if prog then
+        prog:finish(("%d cloned fresh, %d failed"):format(#cloned, #failed))
+      end
+      if #failed > 0 then
+        local lines = {}
+        for _, f in ipairs(failed) do
+          lines[#lines + 1] = f.item.name .. ": " .. f.err
+        end
+        notify.warn(("%d cloned, failed:\n%s"):format(#cloned, table.concat(lines, "\n")))
+      else
+        notify.info(("%d repositor%s cloned fresh"):format(#cloned, #cloned == 1 and "y" or "ies"))
+      end
+    end, prog)
+  end
+
+  if #safe == 0 then
+    continue_with(safe)
     return
   end
 
-  local prog = new_progress("[usrcmds.plugin_repos] reclone: cloning")
-  notify.info(("Cloning %d plugin(s) fresh..."):format(#to_clone))
-
-  ops.run_sequential(to_clone, function(entry, on_done)
-    clone_one(entry, base_dir, function(status, clone_err)
-      on_done(status ~= "failed", clone_err)
-    end)
-  end, function(entry)
-    return entry.name
-  end, function(cloned, failed)
-    if prog then
-      prog:finish(("%d cloned fresh, %d failed"):format(#cloned, #failed))
+  local names = {}
+  for _, entry in ipairs(safe) do
+    names[#names + 1] = entry.name
+  end
+  local msg = ("Delete and re-clone %d repositor%s from %s?\n\n%s"):format(
+    #safe,
+    #safe == 1 and "y" or "ies",
+    base_dir,
+    table.concat(names, "\n")
+  )
+  confirm.yesno(msg, "reclone", function(accepted)
+    if accepted then
+      continue_with(safe)
+      return
     end
-    if #failed > 0 then
-      local lines = {}
-      for _, f in ipairs(failed) do
-        lines[#lines + 1] = f.item.name .. ": " .. f.err
-      end
-      notify.warn(("%d cloned, failed:\n%s"):format(#cloned, table.concat(lines, "\n")))
-    else
-      notify.info(("%d repositor%s cloned fresh"):format(#cloned, #cloned == 1 and "y" or "ies"))
-    end
-  end, prog)
+    notify.info(
+      #missing > 0 and "Reclone of the clean set cancelled — cloning only the missing ones."
+        or "Cancelled — nothing recloned."
+    )
+    continue_with({})
+  end)
 end
 
 -- =============================================================================
