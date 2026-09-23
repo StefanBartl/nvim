@@ -31,6 +31,17 @@
 
 ## Claude Tasks
 
+
+`:File delete` in buffer mit ungeseicherten ödnerungen gibt notify aus, dass man `:File! delete` verwenen soll. das kann aks terative vorgeschlagen werden, aber es wre besser wenn eine Selection ausgelöst wird bei der ih darauf hingeiweoen werden das ich ungespeicherte änderungen habe und ob ihc trptzdem löschen will
+wkd: eihgene abschnitt auf der startseite usw... für meine nativen apps, wie docmap-desktop, loomAI und später wenn fertig TAKT
+
+- `gk` bzw `gj` auch im insert mode verfpgbar macen wenn an `C-` vorher eingibt also ctrl, sofern nichts dagegen spricht.
+
+- `:Telescope oldfiles` bzw das fzföua äquivalent auf `leader fo` wenn frei legen über pickers.nvim
+
+- Bug beobachteet: Auf einmal gab es keinen cursor mehr im filetre, ich konnte alles öfnnen, oben/unten gehen usw.. aber der cursor war komplett veschwunden, auch nach neuerlichen schliießen/öffnen, ich musste neu startetn. mir ist da szum ersten mal in 5 jahren nvim passiert, trotzdem sollte es nciht sein und wennmöglich einne guard oder so dsgegen machen. eventuell auch nvim pr checken o das schonmal thema war auf nvjim github
+- buffer-ctx: `leader fm` wie im filetre.nvim soll die akteuelle buffer fiel im fieeanger öffnen- same with open in browser use...
+
 - markdown.nvim: brreadrumbs statt linksbündig rectsbündig machen - auch ohne "underline" testen, wenn rechts brauh tes das vl gar nicht
 
 - - gitsuite.nvim:
