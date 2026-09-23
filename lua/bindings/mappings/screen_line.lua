@@ -12,6 +12,14 @@
 --- Neovim only ever sees the one keycode the terminal actually sent).
 --- <M-k>/<M-j> (Alt) is free in normal buffers and is the more portable
 --- fallback if that happens.
+---
+--- Insert mode gets its own pair, <M-j>/<M-k> — not <C-j>/<C-k>, which are
+--- already bound there (general.lua) to plain <Down>/<Up>. Neovim's insert
+--- mode <Down>/<Up> move by logical (text) line, not screen line — verified
+--- empirically, not assumed from Vim's normal-mode j/k semantics — so they
+--- are not already a gj/gk equivalent and this is additive, not a
+--- duplicate. <C-o> runs one normal-mode command without leaving insert
+--- mode, which is the only way to reach gj/gk (a motion) from there.
 
 local M = {}
 
@@ -21,6 +29,9 @@ function M.setup()
 
   map({ "n", "v" }, "<C-S-k>", "gk", { desc = "Move up by screen line (through wrapped text)" })
   map({ "n", "v" }, "<C-S-j>", "gj", { desc = "Move down by screen line (through wrapped text)" })
+
+  map("i", "<M-k>", "<C-o>gk", { desc = "Move up by screen line (through wrapped text)" })
+  map("i", "<M-j>", "<C-o>gj", { desc = "Move down by screen line (through wrapped text)" })
 end
 
 return M
