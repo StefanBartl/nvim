@@ -225,6 +225,12 @@ startup.now("lsp", function()
     -- Measured 2026-09-21: capped at `max_requests` per round, one round per
     -- typing pause, no event-loop stall. Drop the line to go back to off.
     implement = { enable = true },
+    -- New in lsp.nvim (2026-09-24): `winbar.align = "right"` pushes the
+    -- breadcrumb to the window's right edge via 'winbar''s own `%=`
+    -- right-align item. Left (the default) stays as it is here -- nobody
+    -- has asked for the right-aligned look yet, this is just where to set
+    -- it once someone does.
+    -- winbar = { align = "right" },
     -- The plugin-name list is this config's data, so it is handed over rather
     -- than reached for. Passed here and not from a completion engine's spec:
     -- it used to be wired from nvim-cmp's `opts`, which meant switching to

@@ -1,21 +1,53 @@
 # Ökosystem-Review: viele kleine Tasks (2026-09-23)
 
+## Table of content
+
+  - [Intro](#intro)
+  - [Klärungen (2026-09-23, zweite Runde)](#klrungen-2026-09-23-zweite-runde)
+  - [Umsetzungsplan (Reihenfolge)](#umsetzungsplan-reihenfolge)
+    - [Phase 1 — Isolierte Ein-Datei-Fixes (je < 1h, keine Designfrage offen)](#phase-1-isolierte-ein-datei-fixes-je-1h-keine-designfrage-offen)
+    - [Phase 2 — Einzelrepo, klare Lösung, eine Designentscheidung nötig](#phase-2-einzelrepo-klare-lsung-eine-designentscheidung-ntig)
+    - [Phase 3 — Neue kleine Subsysteme](#phase-3-neue-kleine-subsysteme)
+    - [Phase 4 — Größer, braucht eigenen Design-Pass](#phase-4-grer-braucht-eigenen-design-pass)
+  - [Details je Punkt](#details-je-punkt)
+    - [1. buffer-ctx.nvim: `$REPOS_DIR`-Pfad-Modus](#1-buffer-ctxnvim-repos_dir-pfad-modus)
+    - [2. pickers.nvim: `oldfiles` auf `<leader>fo`](#2-pickersnvim-oldfiles-auf-leaderfo)
+    - [3. fileops.nvim: `:File delete` + ungespeicherte Änderungen](#3-fileopsnvim-file-delete-ungespeicherte-nderungen)
+    - [4. `:MyPlugins` Confirm-Dialog](#4-myplugins-confirm-dialog)
+    - [5. gopath.nvim: Alternate-Picker-Abbruch blockiert Create-Offer](#5-gopathnvim-alternate-picker-abbruch-blockiert-create-offer)
+    - [6. gopath.nvim: "im Filetree öffnen" als eigener Eintrittspunkt](#6-gopathnvim-im-filetree-ffnen-als-eigener-eintrittspunkt)
+    - [7. `gj`/`gk` im Insert-Mode](#7-gjgk-im-insert-mode)
+    - [9. buffer-ctx.nvim: Datei-Manager/Browser öffnen](#9-buffer-ctxnvim-datei-managerbrowser-ffnen)
+    - [10. pickers.nvim: filetree.nvim-Keymaps in der Ergebnisliste](#10-pickersnvim-filetreenvim-keymaps-in-der-ergebnisliste)
+    - [11. `:Insert`/`:Copy` Cross-Plugin-Shims](#11-insertcopy-cross-plugin-shims)
+    - [12. ui.nvim: Git-Status-gefilterte Marks-Ansicht](#12-uinvim-git-status-gefilterte-marks-ansicht)
+    - [13. `:MyPlugins` — nvim-config + fetch-Optionen](#13-myplugins-nvim-config-fetch-optionen)
+    - [14. lsp.nvim: Winbar-Breadcrumb rechtsbündig](#14-lspnvim-winbar-breadcrumb-rechtsbndig)
+    - [15. Audit-Task: "Vorschlag ablehnen ⇒ Ursprungs-Aktion bleibt möglich"](#15-audit-task-vorschlag-ablehnen-ursprungs-aktion-bleibt-mglich)
+  - [Methodik](#methodik)
+
+---
+
+## Intro
+
 **Handover-Datei — wird laufend aktualisiert, während die Punkte umgesetzt
 werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
 bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
 erledigt.
 
-**Stand 2026-09-23, Fortsetzung nach Zuruf.** 10/15 committed + gepusht
-(siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz). Punkt 7s
-manuelle Sichtprüfung (Wrap-Verhalten von `<M-j>`/`<M-k>` im Insert-Mode)
-steht laut vorherigem Stand noch aus — Weiterarbeit an Punkt 8ff. wurde
-trotzdem freigegeben; Punkt 7 selbst bleibt unverändert `[x]` (Code steht,
-nur die Sichtprüfung ist ein separates, unabhängiges To-Do für dich).
-Punkte 8–14 (images.nvim, buffer-ctx.nvim fm/browser, pickers.nvim-Keymaps
-+ Git-Status-Marks, `:Insert`-Cross-Plugin-Shims, `:MyPlugins`
-nvim-config+fetch, lsp.nvim-Breadcrumb) werden jetzt nacheinander
-umgesetzt, ein Punkt pro Agent-Runde. Punkt 15 (Audit-Task) ist bereits als
-eigene Aufgabe formuliert, nicht Teil dieser Umsetzungs-Reihenfolge.
+**Stand 2026-09-24, final.** 14/14 Implementierungspunkte committed +
+gepusht (siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz) —
+diese Reihenfolge ist damit abgeschlossen. Einziges noch offenes To-Do aus
+der ganzen Liste ist Punkt 7s manuelle Sichtprüfung (Wrap-Verhalten von
+`<M-j>`/`<M-k>` im Insert-Mode bei `wrap=true`): der Code steht und ist
+`[x]`, aber headless nicht abschließend verifizierbar (echte
+Fenstergeometrie nötig) — bitte einmal von Hand testen, siehe Punkt 7s
+eigenen Absatz. Punkt 15 (Audit-Task, "Vorschlag ablehnen ⇒ Ursprungs-Aktion
+bleibt möglich") ist bewusst **nicht** Teil dieser Umsetzungs-Reihenfolge,
+sondern ein separater, eigenständiger Folge-Task — bereits als eigener
+Abschnitt in
+[`Final_Checks/workflows-interactive-confirm.md`](../personal/All/FINISH/Final_Checks/workflows-interactive-confirm.md)
+formuliert.
 
 Analyse + Umsetzungsplan für die Sammlung an kleinen Tasks aus der Session
 vom 2026-09-23, quer über `gopath.nvim`, `images.nvim`, `pickers.nvim`,
@@ -26,6 +58,8 @@ und die nvim-config selbst. Jeder Punkt wurde im echten Quellcode verortet
 Der zugehörige Cross-Cutting-Task "Workflows" (interaktive Bestätigung statt
 Notify-mit-Anleitung) hat eine eigene Datei:
 [`Final_Checks/workflows-interactive-confirm.md`](../personal/All/FINISH/Final_Checks/workflows-interactive-confirm.md).
+
+---
 
 ## Klärungen (2026-09-23, zweite Runde)
 
@@ -44,6 +78,8 @@ ist ein Vorschlag, keine Verpflichtung, einzeln umsetzbar/verschiebbar.
 
 Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
+---
+
 ### Phase 1 — Isolierte Ein-Datei-Fixes (je < 1h, keine Designfrage offen)
 
 1. [x] **buffer-ctx.nvim** — `$REPOS_DIR`-rooted `:Copy`/`:Insert filepath`-Modus
@@ -51,11 +87,15 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 3. [x] **fileops.nvim** — `:File delete` bei ungespeicherten Änderungen: Confirm statt Notify (Workflows-Instanz #1)
 4. [x] **nvim-config** — `:MyPlugins`' `confirm.lua`: `ui.kit.confirm` statt `getcharstr()`+`print()` (Workflows-Instanz #2)
 
+---
+
 ### Phase 2 — Einzelrepo, klare Lösung, eine Designentscheidung nötig
 
 5. [x] **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
 6. [x] **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
 7. [x] **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst) — **manuelle Sichtprüfung empfohlen, siehe unten**
+
+---
 
 ### Phase 3 — Neue kleine Subsysteme
 
@@ -63,12 +103,14 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 9. [x] **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
 10. [x] **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
 
+---
+
 ### Phase 4 — Größer, braucht eigenen Design-Pass
 
 11. [x] **buffer-ctx.nvim** — `:Insert`/`:Copy` cross-plugin "shimmed providers" (z. B. `images.nvim`s `paste`)
 12. [x] **pickers.nvim** — neuer Builtin: Marks-artige Liste, gefiltert auf Git-Status (uncommitted/staged/unstaged, umschaltbar) — Ort geklärt: `pickers.nvim`, nicht `ui.nvim` (siehe Klärungen oben)
 13. [x] **nvim-config `:MyPlugins`** — nvim-config selbst im Dashboard zeigen, `fetch`/`fetchThis`-Optionen beim Öffnen
-14. [ ] **lsp.nvim** — Winbar-Breadcrumb rechtsbündig (Ort geklärt: `lua/lsp/core/winbar/render.lua`) + Underline-Test ohne feste Abgrenzung
+14. [x] **lsp.nvim** — Winbar-Breadcrumb rechtsbündig (Ort geklärt: `lua/lsp/core/winbar/render.lua`) + Underline-Test ohne feste Abgrenzung
 
 Ein separater, expliziter Folge-Task (wie angefragt) — **nicht Teil dieser
 Implementierungs-Reihenfolge**, bereits als eigener Task formuliert:
@@ -103,6 +145,8 @@ gewesen). Test in `TESTS/ops_edge_spec.lua` (innerhalb `$REPOS_DIR`,
 außerhalb → cwd-Fallback, `$REPOS_DIR` unset → Error). luacheck/stylua
 grün, volle Suite grün. Commit `buffer-ctx.nvim@3d3e657`.
 
+---
+
 ### 2. pickers.nvim: `oldfiles` auf `<leader>fo`
 
 **Fund:** `oldfiles` existiert bereits als Builtin
@@ -121,6 +165,8 @@ Nur `mappings = { recent = { "<leader>fo" } }` in der pickers.nvim-Spec in
 `oldfiles` — so heißt der Builtin bei snacks; telescope/fzf-lua nennen ihn
 intern `oldfiles`, aber der `pickers.builtins`-Eintrag selbst `recent`).
 luacheck/stylua grün. Commit `nvim-config@c8f24a1c`.
+
+---
 
 ### 3. fileops.nvim: `:File delete` + ungespeicherte Änderungen
 
@@ -170,6 +216,8 @@ noch das alte "refuse"-Verhalten — auf das neue Confirm-Verhalten
 umgeschrieben, nicht nur ergänzt. luacheck/stylua grün, volle Suite grün
 (932 Checks). Commit `fileops.nvim@0902912`.
 
+---
+
 ### 4. `:MyPlugins` Confirm-Dialog
 
 **Fund:** [`bindings/usrcmds/plugin_repos/confirm.lua`](../../../lua/bindings/usrcmds/plugin_repos/confirm.lua)
@@ -199,6 +247,8 @@ nichts zu bestätigen ist) aufgerufen, damit dieses Verhalten exakt erhalten
 bleibt. luacheck/stylua grün; kein automatisierter Test möglich/vorhanden
 für dieses Repo (keine Test-Infrastruktur für die persönliche Config, UI-
 Interaktion). Commit `nvim-config@c4a3709c`.
+
+---
 
 ### 5. gopath.nvim: Alternate-Picker-Abbruch blockiert Create-Offer
 
@@ -238,6 +288,8 @@ on_done`-Doku an beiden öffentlichen Funktionen (`try_resolve`/
 luacheck grün, alle drei CI-Runner grün (unit: 468 Checks/1696 Assertions,
 functional, headless). Commit `gopath.nvim@4843133`.
 
+---
+
 ### 6. gopath.nvim: "im Filetree öffnen" als eigener Eintrittspunkt
 
 **Fund:** Die Bausteine existieren fast komplett schon:
@@ -270,6 +322,8 @@ kein Override nötig — `open_filetree` war bei den überschriebenen
 Mappings nicht dabei, `gT` greift automatisch als Shipped-Default.
 luacheck grün, alle drei CI-Runner grün (unit: 470 Checks/1702
 Assertions). Commit `gopath.nvim@e58fb73`.
+
+---
 
 ### 7. `gj`/`gk` im Insert-Mode
 
@@ -392,6 +446,8 @@ Lazy-`cmd`-Eintrag nötig (`path=` ist ein Argument auf der bestehenden
 `:Image`-Route, `cmd = { "Image" }` deckt das schon ab). Commit
 `images.nvim@4a79085`.
 
+---
+
 ### 9. buffer-ctx.nvim: Datei-Manager/Browser öffnen
 
 **Fund:** buffer-ctx.nvim hat aktuell **keine** entsprechende Funktion
@@ -496,6 +552,8 @@ registrierte Keymaps — buffer-ctx.nvims bereits bestehende Keys
 (`<leader>cnl`/`<S-m>`/`<C-p>`) fehlen dort aus demselben Grund
 ebenfalls. Commit `buffer-ctx.nvim@cd57c10`.
 
+---
+
 ### 10. pickers.nvim: filetree.nvim-Keymaps in der Ergebnisliste
 
 **Fund:** Beide Engines (`telescope.lua`, `fzf.lua`) haben bereits ein
@@ -532,7 +590,7 @@ Kuratierte Auswahl wie empfohlen — vier statt fünf Keymaps: `[a`
 (`markdown_link`), exakte Formate 1:1 aus `filetree.nvim/lua/filetree/
 features/paths/path_copy/init.lua` und `.../markdown_links/init.lua`
 übernommen (absolute Pfad, absoluter Parent, `$REPOS_DIR`-gefalteter Pfad,
-`[name](relative/path)`-Markdown-Link). `gb` ("add to buffer list, no focus
+`[name](./relative/path)`-Markdown-Link). `gb` ("add to buffer list, no focus
 switch") bewusst **nicht** dupliziert — beim Nachlesen von
 `entry_actions/adapters/telescope.lua`s eigenem Modul-Kommentar stellte sich
 heraus, dass `pickers.nvim`s bereits bestehende `open_background`-Aktion
@@ -621,6 +679,8 @@ Laufzeit von Plugins registrierten In-Picker-Keys — dieselbe Begründung wie
 bei Punkt 9, und keine der bereits bestehenden `pickers.keys`-Aktionen
 (`<C-a>` etc.) taucht dort ebenfalls auf. Commit `pickers.nvim@132cf8f`.
 
+---
+
 ### 11. `:Insert`/`:Copy` Cross-Plugin-Shims
 
 **Fund:** `B:\repos\buffer-ctx.nvim\lua\buffer_ctx\commands.lua:37-47`
@@ -665,7 +725,7 @@ Zwei Subcommands auf `buffer-ctx.nvim`s `:Insert`/`:Copy` ergänzt:
   `:Markdown links <path>` — wenn `markdown.nvim` installiert ist (das im
   Fund genannte Modul existiert und hat einen passenden öffentlichen
   Einstiegspunkt, keine Ratearbeit nötig), fällt sonst auf das identische
-  literale `"[%s](%s)"`-Format zurück (`markdown.nvim` hardcoded selbst
+  literale `"[%s](./%s)"`-Format zurück (`markdown.nvim` hardcoded selbst
   exakt dasselbe Format für eine Einzeldatei — der Fallback kann also nicht
   aus dem Takt geraten). Reiner Text-Producer, passt 1:1 in die bestehende
   `DISPATCH`/`sink_text`-Pipeline, unter beiden Verben registriert.
@@ -703,6 +763,8 @@ Suite headless grün (12/12 Specs). Docs aktualisiert: `docs/commands.md`,
 Keymaps, kein `plugins/personal/init.lua`-Edit nötig — `:Insert`/`:Copy`
 stehen schon in dessen `cmd`-Liste seit vor Punkt 1). Commit
 `buffer-ctx.nvim@307dd67`.
+
+---
 
 ### 12. ui.nvim: Git-Status-gefilterte Marks-Ansicht
 
@@ -815,6 +877,8 @@ expliziten Eintrag schlicht ungebunden, exakt wie Punkt 2s Fund für `recent`).
 
 Commits: `pickers.nvim@8c9afbd`, `nvim-config` (diese Handover-Datei +
 Plugin-Spec, separater Commit).
+
+---
 
 ### 13. `:MyPlugins` — nvim-config + fetch-Optionen
 
@@ -948,6 +1012,8 @@ Commits: `reposcope.nvim` (config option + merge + health + docs + tests),
 `nvim-config` (`:MyPlugins dashboard`-Flags + Plugin-Spec + Doku + diese
 Handover-Datei).
 
+---
+
 ### 14. lsp.nvim: Winbar-Breadcrumb rechtsbündig
 
 **Geklärt (2026-09-23):** `lua/lsp/core/winbar/render.lua`, nicht
@@ -969,6 +1035,86 @@ Colorscheme-Override), keine Code-Änderung hier — lsp.nvim zwingt aktuell
 gar kein Underline, es erbt nur, was das Colorscheme für `WinBar` vorgibt.
 
 **Aufwand:** klein (ein `%=`-Zweig + Config-Feld `align`).
+
+**Umgesetzt (2026-09-24):** Fund bestätigt, Zeilennummern in `render.lua`
+hatten sich seit der Analyse leicht verschoben (zwei zwischenzeitliche
+Commits zum Chip-Rendering, `git log` geprüft) — inhaltlich unverändert,
+`M.render()` baute den String immer noch selbst per `table.concat`, kein
+`align`.
+
+Neues Config-Feld `winbar.align` (`"left"|"right"`, Default `"left"`,
+Namensgebung 1:1 aus dem Analyse-Text übernommen — passt zur bestehenden
+Konvention der anderen `winbar`-Optionen, alle flache String-/Boolean-Felder
+ohne verschachtelte Tabellen). `render.lua`s `M.render()` baut den Body-String
+wie vorher (Chips oder flach), stellt ihm bei `opts.align == "right"` `"%="`
+voran — Neovims `'statusline'`-Format (das `'winbar'` erbt) kennt das als
+eingebautes Rechtsbündig-Item, keine eigene Padding-Berechnung nötig, exakt
+wie in der Analyse vorgeschlagen. `init.lua` fädelt `align` durch
+`defaults()`/`State`/`setup()` (`opts.align == "right" and "right" or "left"`,
+jeder andere Wert fällt auf `"left"` zurück, kein Error) und in
+`M.build()`s `render.render(...)`-Aufruf; `M.status()` bekam eine neue
+`align:`-Zeile.
+
+**`%`-Escaping-Klärung:** bereits vollständig gehandhabt, kein neuer Code
+nötig. `render.lua`s `escape()` verdoppelt `%` in jedem Part-Text, Icon und
+im Separator, bevor der String zusammengesetzt wird (bestand schon vor
+diesem Fix, siehe Moduldoc). `"%="` selbst wird *nach* diesem Punkt einfach
+vorangestellt — es ist ein von diesem Modul selbst geschriebenes
+`'statusline'`-Format-Item, keine Nutzer-/LSP-Text, das escaped werden
+müsste; würde man es *vor* `escape()` einfließen lassen (z. B. versehentlich
+in den zu escapenden String selbst), würde es zu `%%=` verdoppelt und liefe
+als literaler Text statt als Rechtsbündig-Marker — deshalb bewusst als
+reiner String-Concat außerhalb jeder `escape()`-Aufrufkette gehalten.
+Verifiziert per `nvim_eval_statusline`: ein Symbolname mit echtem `%` und
+`align = "right"` rendert unverändert korrekt, nicht abgeschnitten.
+
+**Underline:** wie in der Analyse festgestellt, kein Code-Fix nötig — reine
+Doku-Ergänzung (`:hi WinBar gui=NONE` als Weg, falls das Colorscheme-eigene
+Underline stört), in `docs/configuration.md` und
+`docs/FEATURES/INDICATORS.md` aufgenommen.
+
+Tests in `TESTS/lsp/winbar_render_spec.lua` (neue `describe("align", ...)`:
+identisch zum Default bei `align` fehlend/`"left"`, `"%="` wird bei
+`"right"` vorangestellt — sowohl flach als auch Chips-Modus —, leere Liste
+bleibt `""` auch mit `align = "right"`; plus ein `nvim_eval_statusline`-Test,
+der einen literalen `%` im Symboltext bei `align = "right"` gegen echtes
+Neovim-Rendering prüft) und `TESTS/lsp/winbar_spec.lua` (State-Resolution:
+Default `"left"`, `"right"` erscheint als tatsächliches `%=` am Anfang des
+geschriebenen `'winbar'`-Strings, ein ungültiger Wert wie `"center"` fällt
+auf `"left"` zurück, `status()` nennt die aktuelle Ausrichtung). luacheck
+(0/0 über `lua`/`TESTS`) und `stylua --check` grün. Volle Suite headless
+grün (`PlenaryBustedDirectory TESTS/lsp`) bis auf einen einzelnen,
+**vorbestehenden**, umgebungsabhängigen Fail in
+`TESTS/lsp/usercmds_impl_spec.lua` ("force-stops a server that never answers
+shutdown") — anderes Subsystem (Server-Shutdown/`ui.kit`-Modulauflösung in
+dieser Laufumgebung), in Isolation gegengeprüft: schlägt dort abweichend
+und umgebungsabhängig fehl, nichts mit `winbar`/`render`/`align` zu tun.
+
+Docs aktualisiert: `docs/configuration.md` (Options-Beispiel + neuer Absatz
+zu `align`/Underline), `docs/FEATURES/INDICATORS.md` (neuer
+"Alignment"-Absatz + Underline-Absatz, `winbar.align` in der Config-Liste),
+`doc/lsp.nvim.txt` (Options-Referenz + Setup-Beispiel). `@types/init.lua`
+(`LspNvim.WinbarOpts.align`), `config/DEFAULTS.lua` (`align = "left"` mit
+Kommentar) entsprechend ergänzt.
+
+**Plugin-Spec-Korrektur gegenüber der Aufgabenstellung:** `plugins/personal/
+init.lua`s lsp.nvim-Spec (Zeile ~292) hat bewusst **kein** `opts`/`config` —
+der eigene Kommentar dort nennt den Grund (Capabilities müssen synchron vor
+dem ersten Client-Attach angewendet werden, ein lazy `opts`-Block würde die
+Reihenfolge dem Plugin-Manager überlassen). Der tatsächliche
+`require("lsp").setup({...})`-Aufruf sitzt in `init.lua`s
+`startup.now("lsp", ...)`-Block (Zeile ~219). Dort, nach `implement`, als
+auskommentiertes Beispiel ergänzt (`-- winbar = { align = "right" }`,
+gleicher "an, aber mit Erklärung, warum (noch) nicht aktiviert"-Stil wie
+sessions.nvim-Specs `-- autoload = true`) — nicht aktiviert, weil nichts in
+dieser Session nach der rechtsbündigen Optik verlangt hat; die Zeile
+markiert nur, wo sie hinkommt, sobald das gewünscht wird. luacheck/stylua
+für `init.lua` grün.
+
+Commit `lsp.nvim@94f94c2`, `nvim-config` (diese Handover-Datei +
+`init.lua`-Beispielkommentar, separater Commit).
+
+---
 
 ### 15. Audit-Task: "Vorschlag ablehnen ⇒ Ursprungs-Aktion bleibt möglich"
 
@@ -993,3 +1139,6 @@ Code-Änderung. Ab der zweiten Runde (gleicher Tag, nach Klärung der beiden
 offenen Fragen) läuft die Umsetzung entlang des Plans oben, ein Punkt nach
 dem anderen — diese Datei wird dabei als Handover mitgeführt: Status-Häkchen
 in der Übersicht, ein "Umgesetzt"-Absatz je Punkt sobald erledigt.
+
+---
+
