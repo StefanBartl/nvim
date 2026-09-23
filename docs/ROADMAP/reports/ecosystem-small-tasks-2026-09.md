@@ -37,7 +37,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 1. [x] **buffer-ctx.nvim** — `$REPOS_DIR`-rooted `:Copy`/`:Insert filepath`-Modus
 2. [x] **pickers.nvim** — `oldfiles`-Builtin auf `<leader>fo` freilegen
 3. [x] **fileops.nvim** — `:File delete` bei ungespeicherten Änderungen: Confirm statt Notify (Workflows-Instanz #1)
-4. [ ] **nvim-config** — `:MyPlugins`' `confirm.lua`: `ui.kit.confirm` statt `getcharstr()`+`print()` (Workflows-Instanz #2)
+4. [x] **nvim-config** — `:MyPlugins`' `confirm.lua`: `ui.kit.confirm` statt `getcharstr()`+`print()` (Workflows-Instanz #2)
 
 ### Phase 2 — Einzelrepo, klare Lösung, eine Designentscheidung nötig
 
@@ -173,6 +173,20 @@ sollte konsistent bleiben). Jede Aufrufstelle von `confirm.yesno(...)`
 bleibt unverändert (`ops.lua`/`init.lua`), nur die Interaktion ändert sich.
 
 **Aufwand:** klein.
+
+**Umgesetzt (2026-09-23):** `M.yesno` ist jetzt callback-basiert
+(`cb(accepted)` statt Rückgabewert) — `ui.kit.confirm` ist asynchron, das
+alte `if not confirm.yesno(msg) then return end` ließ sich nicht 1:1
+übernehmen. **Drei** statt zwei Aufrufstellen gefunden (die dritte, in
+`picker.lua:231`, hatte mein erster Grep in der Analyse-Phase übersehen —
+gehört zur Batch-Aktion des Pickers). Bei `finish_reclone` (`init.lua`) mit
+Bedacht umgebaut: dort läuft nach einer Ablehnung weiterhin der
+"nur die fehlenden Plugins klonen"-Zweig — als eigene `continue_with()`-
+Funktion extrahiert, sowohl vom Confirm-Callback als auch direkt (wenn gar
+nichts zu bestätigen ist) aufgerufen, damit dieses Verhalten exakt erhalten
+bleibt. luacheck/stylua grün; kein automatisierter Test möglich/vorhanden
+für dieses Repo (keine Test-Infrastruktur für die persönliche Config, UI-
+Interaktion). Commit `nvim-config@c4a3709c`.
 
 ### 5. gopath.nvim: Alternate-Picker-Abbruch blockiert Create-Offer
 
