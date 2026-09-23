@@ -5,7 +5,7 @@ werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
 bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
 erledigt.
 
-**Stand 2026-09-23, Fortsetzung nach Zuruf.** 9/15 committed + gepusht
+**Stand 2026-09-23, Fortsetzung nach Zuruf.** 10/15 committed + gepusht
 (siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz). Punkt 7s
 manuelle Sichtprüfung (Wrap-Verhalten von `<M-j>`/`<M-k>` im Insert-Mode)
 steht laut vorherigem Stand noch aus — Weiterarbeit an Punkt 8ff. wurde
@@ -61,7 +61,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
 8. [x] **images.nvim** — `:Images paste [path=...]` + `ui.kit.select`-Abfrage (relativ/absolut/`$REPOS_DIR`/custom)
 9. [x] **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
-10. [ ] **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
+10. [x] **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
 
 ### Phase 4 — Größer, braucht eigenen Design-Pass
 
@@ -513,6 +513,113 @@ Klärungsbedarf-Charakter dieses Punkts unten.
 **Aufwand:** mittel (zwei Engines separat verdrahten, `[a`/`ML` selbst
 implementieren statt filetree.nvim direkt zu importieren — Picker-Zeilen
 sind keine `FiletreeNode`s).
+
+**Umgesetzt (2026-09-23):** Fund korrigiert — der tatsächliche Erweiterungspunkt
+ist **nicht** `engines/telescope.lua`/`engines/fzf.lua` (deren
+`attach_mappings`/eigenes `actions`-Table dienen nur `pickers.nvim`s eigenen
+Pickern und werden nirgends von außen gemerged), sondern das schon bestehende
+`pickers.entry_actions`-System (`create_file`/`open_background`/`cheatsheet`),
+das die nvim-config bereits generisch in `lua/config/telescope/init.lua`,
+`lua/config/fzf/init.lua` und `lua/config/snacks/picker/init.lua` einbindet
+(`entry_actions.get_mappings()`/`.get_actions()`/`.get_keys()`, jeweils
+komplett gemerged) — genau dort greifen auch native Telescope/fzf-lua/snacks-
+Builtins (git, buffers, …) mit, nicht nur `pickers.nvim`s eigene Finder. Neue
+Aktionen dort ergänzt bedeutet: **kein** nvim-config-Change nötig, die
+Defaults gelten sofort überall.
+
+Kuratierte Auswahl wie empfohlen — vier statt fünf Keymaps: `[a`
+(`copy_absolute`), `]a` (`copy_dirname`), `[e` (`copy_env_rooted`), `ML`
+(`markdown_link`), exakte Formate 1:1 aus `filetree.nvim/lua/filetree/
+features/paths/path_copy/init.lua` und `.../markdown_links/init.lua`
+übernommen (absolute Pfad, absoluter Parent, `$REPOS_DIR`-gefalteter Pfad,
+`[name](relative/path)`-Markdown-Link). `gb` ("add to buffer list, no focus
+switch") bewusst **nicht** dupliziert — beim Nachlesen von
+`entry_actions/adapters/telescope.lua`s eigenem Modul-Kommentar stellte sich
+heraus, dass `pickers.nvim`s bereits bestehende `open_background`-Aktion
+(`<S-CR>`/`<C-o>`) historisch selbst aus `open_badd` umbenannt wurde — sie IST
+das `gb`-Äquivalent, eine zusätzliche Aktion wäre reine Doppelung gewesen.
+
+**Wichtiger Design-Fund, der die Aufgabenstellung so nicht vorwegnahm:**
+`[a`/`]a`/`[e`/`ML` sind reine druckbare Zeichen (anders als jede bisherige
+`pickers.keys`-Aktion, die durchweg Control-/Sondertasten nutzt —
+`<C-a>`/`<S-CR>`/`<C-/>`/Pfeiltasten). Im Insert-Mode des Picker-Prompts
+(wo praktisch jede Suchanfrage eingegeben wird) hätte eine Bindung dort genau
+diese Zeichen aus einer eingegebenen Suchanfrage geschluckt (z. B. Suche nach
+einer Datei mit "ML" im Namen). Fix: alle vier Aktionen sind
+**Ergebnisfenster/Normal-Mode-only** (`modes = {"n"}`, gleiche Klasse wie das
+bereits bestehende `mouse_confirm`), nie im Insert-Mode gebunden — bei snacks
+deshalb nur in `get_keys()` (List-Fenster, Normal-Mode), nie in
+`get_input_keys()`. fzf-lua hat dazu noch einen zweiten, unabhängigen Grund:
+fzfs `--bind`-Syntax kennt keine Mehrtasten-Chords wie `[a` (bindet ein
+einzelnes logisches Event, keine Pending-Key-State-Machine) — daher dort feste
+Einzeltasten (`ctrl-y`/`alt-y`/`alt-r`/`alt-m`, geprüft gegen fzf-luas echte
+`defaults.lua` UND die nvim-config-eigenen `config/fzf/*`-Overrides auf
+Kollisionen — keine gefunden; `ctrl-y` überschattet nur `git_yank_commit` in
+git-spezifischen Pickern, exakt dieselbe akzeptierte Präzedenz wie
+`ctrl-a`/`create_file` dort schon dubletten).
+
+Neues, eigenständiges Modul `pickers/entry_actions/path_copy.lua` (reine
+Formate + `run()` mit Register-/Notify-Seiteneffekt, testbar ohne Engine-
+Stubbing) — kein bestehendes gemeinsames Pfad-Utility in `pickers.nvim`
+gefunden, also nach etablierter `entry_actions/*.lua`-Konvention dieses Repos
+angelegt (nicht `ops/path_copy.lua`, wie die Aufgabe als Fallback-Namen
+vorschlug — `pickers.nvim` hat keinen `ops/`-Ordner, `entry_actions/` ist der
+tatsächlich etablierte Ort für genau diese Art von Engine-agnostischer
+Action-Logik). `copy_env_rooted` liest `pickers.config`s bereits aufgelöstes
+`repos_dir` (nicht `vim.env.REPOS_DIR` direkt — Konvention laut
+`config/init.lua`s eigenem Kommentar) und fällt bei unset/außerhalb auf den
+reinen Absolutpfad zurück statt zu fehlern — bewusst filetree.nvims
+Semantik nachgebildet, nicht buffer-ctx.nvims strengerer "repos"-Modus
+(Punkt 1).
+
+Verdrahtet in allen DREI Engines (`entry_actions/adapters/{telescope,fzf,
+snacks}.lua`), nicht nur den zwei in der Aufgabe genannten — snacks
+konsequent mitgezogen, weil `create_file`/`open_background`/`cheatsheet`
+in genau diesem Namespace bereits alle drei Engines abdecken und eine
+Zwei-von-drei-Lücke inkonsistent gewirkt hätte. `pickers.keys.adapters.
+snacks`s generische `SKIP`-Liste um die vier neuen Namen ergänzt (sonst
+hätte deren Fallback-Zweig sie versehentlich auch aufs Input-Fenster
+gebunden — dieselbe Druckzeichen-Falle wie oben). `pickers.keys.ACTIONS`/
+`ORDER`, `pickers.cheatsheet.DESCRIPTIONS`, `config/DEFAULTS.lua`,
+`config/init.lua`s `NESTED_OPTS.keys` (sonst würde ein eigener Override per
+ERR-50 als "unknown key" verworfen) und `keys/@types/init.lua` entsprechend
+ergänzt.
+
+Tests in `TESTS/pickers_spec.lua` (neue Suiten: reine `path_copy.build()`-
+Formate inkl. `env_rooted`-Fallback-Matrix, `path_copy.run()`-Register-/
+Notify-Seiteneffekt, `pickers.keys`-Resolve/Defaults/Modes, alle drei
+Adapter-Bindungen inkl. "leer bei `keys.enable=false`", Cheatsheet-Zeilen
+mit/ohne fzf-Override). Eine Testfalle unterwegs gefunden und korrigiert:
+`vim.fn.fnamemodify("/tmp/x", ":p")` verhält sich auf diesem Windows-Devbox
+für einen laufwerkslosen POSIX-Pfad je nach Anzahl der Pfadsegmente
+**inkonsistent** (verifiziert direkt) — Fixtures deshalb cwd-verwurzelt statt
+hart "/tmp/…" getippt. luacheck (0/0 über `lua`/`plugin`/`TESTS`) und
+stylua `--check` grün. Volle Suite: 281 neue+alte Checks grün bis zu einem
+**vorbestehenden**, umgebungsabhängigen Crash in der `quickfix`-Preview-Suite
+(`'noautocmd' cannot be used with existing windows`, NVIM v0.11.4) — per
+`git stash` gegengeprüft: identischer Crash an derselben Stelle bereits vor
+dieser Änderung, nichts mit `path_copy` zu tun.
+
+Docs aktualisiert: `docs/keymaps.md`, `docs/FEATURES/KEYS.md`, `doc/
+pickers.txt` (Prosa-Abschnitt + Config-Referenz), `lua/pickers/
+entry_actions/README.md`. `health.lua` bewusst unverändert — die vier neuen
+Aktionen laufen über `entry_actions`, nicht über `keys.patch()`, und
+erscheinen deshalb korrekterweise auch nicht in `fzf_skipped()` (exakt wie
+`create_file`/`open_background`/`cheatsheet` schon vorher). Keine
+nvim-config-Änderung nötig: die drei `lua/config/{telescope,fzf,snacks/
+picker}/init.lua`-Module mergen `entry_actions.get_*()` bereits vollständig,
+neue Aktionen dort greifen automatisch, ohne Versions-Bump oder
+`plugins/personal/init.lua`-Edit (anders als Punkt 2, wo ein fehlender
+Default einen `mappings`-Eintrag brauchte — hier lieferen die Shipped-
+Defaults `[a`/`]a`/`[e`/`ML` bereits exakt das Gewünschte). Keine Kollision
+mit bestehenden Telescope-/snacks-/fzf-lua-Defaults gefunden (`M` als
+Telescope-Normal-Mode-Default kollidiert mit `ML` nur im üblichen Vim-
+Chord-Sinn — Timeout-Disambiguierung, kein echter Konflikt).
+`BINDINGS-RUNTIME-CHECKLIST.md` bewusst nicht angefasst: sie scannt laut
+eigenem Kopfkommentar nur nvim-configs eigene `bindings/`-Module, keine zur
+Laufzeit von Plugins registrierten In-Picker-Keys — dieselbe Begründung wie
+bei Punkt 9, und keine der bereits bestehenden `pickers.keys`-Aktionen
+(`<C-a>` etc.) taucht dort ebenfalls auf. Commit `pickers.nvim@132cf8f`.
 
 ### 11. `:Insert`/`:Copy` Cross-Plugin-Shims
 
