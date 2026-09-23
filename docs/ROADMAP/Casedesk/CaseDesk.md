@@ -1,5 +1,25 @@
 # caaedesk todo/ideas
 
+## `:JSON`
+
+C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1201484/assets/third/ShortenedLog.txt -> `:JSON pretty` ->
+
+  ```vim
+    Error  10:28:20 AM notify.error [data] JSON decode failed: invalid JSON: Expected the end but found T_OBJ_BEGIN at character 285
+  ```
+
+---
+
+## MISC
+
+- Im chrome browser ein kleines window irgendow schaffen dass mean weg und her togglen kann, indem mann notizen absoechern kann, die aber mnicht ins netzt gechickt werden, sondern rei lokal sind - wie die hrome exteension `Notes Online`, die das wunderbr macht auch von derui her, aber ich will das selbst schreiben damit ichmir ganz sicherbin, dass keine daten irgendow hin gehen. Aber man kann es als vorlage / template verwenden
+- Alle files checken darauf, dass Tosca Keyword wie `ExecutionList` oder `ExecutionList`-Folder oder `TestCase` normiert formatiert sind, also die keywords alle zusammen, anfangsbuchtaben groß + in `` und zusammen ohne leerzeichen, wenn -Folder dann eben genau so sheriben und nicht ExecutionList Folder; usw... und auch sicherstellen, das intexterzeugung von ao / heurtik in casedesk dies auch soeingehalten wird.
+
+
+## WKDBook-Tricentis
+
+- Filename-Hygine (beginn mit großbuchtsbaen, dann aif art camelCase)
+
 ## noch nicht gut beschrieben
 
 - `:Case open` öffnet nur den filetreee, aber der casse folder ist nicht selektiert, ich wüde gerne haben, dass das Summary geöffnet wird wenn man case open ausfüphrt. Sollte aus irgeneienen grund das summary nicht im folder sein, einfach die nöchste file
@@ -13,6 +33,7 @@
   5. C:/repos/WKDBook-Tricentis/Notes/Credentials.md
   6. C:/repos/WKDBook-Tricentis/Notes/Links.md
   7. C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
+  8. C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/Casedesk/Casedesk.md
 
 - eine möglihkeit, beim ertellen eines cases, aber nch nachher, `Tags` zu vergeben, also zb in C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Solved/888622/Notes.md ist klar, dss das ein Mobile Engine case ist. das wäre super, weil wir dnan später zb `:Cases MobileEngine` oder `:Cases TTA` usw.. eine lsite `pickers.nvim` ausgeben könnten. Beim erstelen eines cases soll das gleich abgefragt werden, aebr wenn möglcih und sinnvoll auvhch glidhc vorschläge, zb aus dem titel ode activity stream ableiten. ich köntn mir vorstellen, dass hier ein kleirner buffer audgehtm in der man die tags eintragt (können auch herer sein), zb jede zeile einer bzw auvh , oder - als trennzeichne erlauben. eventuell eie eigen file für diese tags im casde angeben, oder woander unterbfingen, zb in Notes.md
 
@@ -183,6 +204,10 @@ C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen apiegelt docs aus C:\repo
 
 ## Solution/
 
+- [ ] Solutions.md -> durchgehend erstellen
+
+- [ ] Es ist nicht nötig einen eigenen /Solutions/ folder u erstellen, einfach im cae root "DRAFT-Solution.md" bzw `Solution.md` genügt. Das muss in den Richrlinine ersetzt werden (glaube in engine lab im WKDBook-Tricentis)
+
 - [ ] DRAFT-Solution.md -> aus dessen files mus noch das formattierte dolutzion file hezogen werden.nn ich nicht sicher sein, dass dass de korrekte Soluton war, könnte aber sein....
   eitpunkt des clsing, auf die der customer nicht mehr geantwortet hat / den case geschlossen hat. Daher kann man daraus nicht ableiten, dass das die solutions war, es klönnte sein, aber wir haenm keine bestätigung. tzrotzdem kan man damit vl etwas machen... also für kpnftgie solutions suche verwednen, halt mit demhinweiß, dass eine solution die saus einer DRAFT-Solution.md kommt nicht korrekt sien könnte
 
@@ -216,3 +241,40 @@ Hier brauchen wir eine einheitliches system.
 
 ---
 
+- wenn zb in jql file gesucht wird fpr summaryies / ai uw.. aber auch in leeren sokutiosn usw.. das template text der nicht updatet wurde, dersolte bei solvhen infomration gatherings immer überbsrpungen weren, auch wenn sie 10 mal enthalten sind als files... zb in JQL.md:
+
+    ```markdown
+    # 1245018 - `Concurrent users execution in Tosca` - JQL
+
+    Wenn du im internen Tricentis-/Partner-Jira oder Support-Portal nach
+    ähnlichen Fällen, Tickets und Best Practices suchen möchtest, helfen
+    JQL-Queries wie die folgenden. Der Case-Titel allein ist selten der beste
+    Suchbegriff — echte Fehlermeldungen und Fachbegriffe aus `Summary.md`/
+    `Research/` liefern bessere Treffer, sobald die bekannt sind.
+
+    **Nach `<Fehlermeldung>` suchen:**
+
+    ```jql
+    text ~ "<Fehlermeldung>" ORDER BY created DESC
+
+    ```
+
+    **Nach `<Fachbegriff A>` & `<Fachbegriff B>` kombiniert suchen:**
+
+    ```jql
+    text ~ "<Fachbegriff A>" AND text ~ "<Fachbegriff B>" ORDER BY updated DESC
+
+    ```
+
+    **Nach Komponente + Zeitraum eingrenzen:**
+
+    ```jql
+    text ~ "<Fachbegriff>" AND created >= -90d ORDER BY created DESC
+
+    ```
+
+
+    Das ist reiner temoakte text
+    ```
+
+---
