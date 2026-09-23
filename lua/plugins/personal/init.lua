@@ -480,6 +480,14 @@ plugins.add({
           config_smart = "<leader>cf", -- smart grep+find in nvim config
         },
 
+        -- Declarative mappings surface: any pickers.builtins name, or any
+        -- <scope>_<files|grep|smart|find_all>, each with its own lhs -- the
+        -- flexible alternative to the fixed `keymaps` fields above.
+        mappings = {
+          -- Recently opened files (snacks "recent" / telescope+fzf "oldfiles").
+          recent = { "<leader>fo" },
+        },
+
         history = {
           enabled = true,
           fzf_scope = "patch", -- patches telescope + fzf-lua setup() itself, no config change needed elsewhere
@@ -507,6 +515,7 @@ plugins.add({
       "MarkLinesYank",
       "CopyFilepathAbsolute",
       "CopyFilepathRelative",
+      "CopyFilepathRepos",
     },
     keys = { "<leader>cnl", "<leader>cnm", "<leader>cnf", "<S-m>", "<C-p>" },
     opts = {},
