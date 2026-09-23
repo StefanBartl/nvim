@@ -41,7 +41,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
 ### Phase 2 — Einzelrepo, klare Lösung, eine Designentscheidung nötig
 
-5. [ ] **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
+5. [x] **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
 6. [ ] **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
 7. [ ] **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst)
 
@@ -215,6 +215,16 @@ den Moment NACH einem echten Cancel — bleibt also unberührt.
 **Aufwand:** eine Zeile, aber verdient einen expliziten Test
 (`gopath.nvim/TESTS/`, falls vorhanden) für: Alternates gefunden + Cancel ⇒
 Create-Offer erscheint; Alternates gefunden + Auswahl ⇒ kein Create-Offer.
+
+**Umgesetzt (2026-09-23):** `on_done(true)` → `on_done(false)` im
+Cancel-Zweig von `alternate/init.lua`s `present()`, plus die `@param
+on_done`-Doku an beiden öffentlichen Funktionen (`try_resolve`/
+`try_resolve_with_matches`) korrigiert. `docs/resolution.md`s
+"dismissing counts as handled"-Absatz umgeschrieben. Bestehender Test
+`scripts/ci/specs/alternate_spec.lua` testete explizit das ALTE Verhalten
+("cancelling counts as handled") — umgeschrieben, nicht nur ergänzt.
+luacheck grün, alle drei CI-Runner grün (unit: 468 Checks/1696 Assertions,
+functional, headless). Commit `gopath.nvim@4843133`.
 
 ### 6. gopath.nvim: "im Filetree öffnen" als eigener Eintrittspunkt
 
