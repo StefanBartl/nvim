@@ -42,7 +42,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 ### Phase 2 — Einzelrepo, klare Lösung, eine Designentscheidung nötig
 
 5. [x] **gopath.nvim** — Alternate-Picker abbrechen fällt jetzt auf Create-Offer zurück
-6. [ ] **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
+6. [x] **gopath.nvim** — neuer Eintrittspunkt „im Filetree öffnen/fokussieren" (deckt sowohl `gF`-auf-Markdown-Bild als auch die separat gewünschte `:Filetree open **`-Idee ab)
 7. [ ] **nvim-config** — `gj`/`gk` im Insert-Mode via `<C-`-Kombination (Konflikt-Check zuerst)
 
 ### Phase 3 — Neue kleine Subsysteme
@@ -243,6 +243,21 @@ letzterer braucht keinen eigenen filetree.nvim-Befehl, `open_reveal` ist
 schon da (`filetree/@types/adapter.lua:30`).
 
 **Aufwand:** klein–mittel (neue Route, kein neuer Unterbau).
+
+**Umgesetzt (2026-09-23):** neuer Modus `"filetree"` (analog zum
+bestehenden `"explorer"` = OS-Dateimanager), Default-Key `gT`
+(`mappings.open_filetree`), Usercmd `:Gopath open filetree` /
+`:GopathOpen filetree`. Ruft `filetree.adapter().open_reveal(path)` — läuft
+durch dieselbe Resolve-Pipeline wie jeder andere Open-Modus (Fuzzy-
+Alternate, Tailsearch, `:line:col`), warnt statt zu fehlern wenn
+filetree.nvim fehlt/nicht gesetzt ist (kein Create-Offer, wie bei `gM`).
+`gopath.util.filetree` als neues gemeinsames Modul für die
+Adapter-Auflösung (vorher nur intern in `create.lua`, jetzt von `open/
+init.lua` mitbenutzt statt einer zweiten Kopie). In der eigenen Config
+kein Override nötig — `open_filetree` war bei den überschriebenen
+Mappings nicht dabei, `gT` greift automatisch als Shipped-Default.
+luacheck grün, alle drei CI-Runner grün (unit: 470 Checks/1702
+Assertions). Commit `gopath.nvim@e58fb73`.
 
 ### 7. `gj`/`gk` im Insert-Mode
 
