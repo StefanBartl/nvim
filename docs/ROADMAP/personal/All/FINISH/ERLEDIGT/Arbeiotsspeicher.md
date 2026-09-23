@@ -1,4 +1,0 @@
- eine Möglichkeiot, den arbeoitsspeicher wie in vuisual studio anzeigen zu können, also dort gibt es eine view / ein windfow, mit dem man zu einer adresse springen kann und dort die current biuts angezeigt werden; das ist vor allem für assembly devs cool.
-da braucht ess aber erstein machbarkeitonzeopt.
-
--> wäre es möglich, dass ein nvim plugimn bei start vi usrcmd zb eine neue nvim instnz in einen neuen terminal startet, das "attached" wird z ur ursprünglichen instanz, und dort in nvim dann zb.: eben ausschließ0elich der arbeitssepicher in bits angezeigt wird, mit klickbaren buttons zum modifizieren ´usw... die idee ist, das man das trennt von de rusrtprünglichen instanz, damit das window stabil blebt und  seoearate prozesse sauber getrennt sind usw.. ich weiß nciht opb das eine gte ide ist, ob da smachbar isst, ob das wo gemacht wird.. usw..

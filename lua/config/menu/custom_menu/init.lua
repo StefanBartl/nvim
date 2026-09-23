@@ -59,35 +59,34 @@ local function has_selection()
 end
 
 ---Open Unicode Table in floating window
+---
+--- Was `:UnicodeTable` (chrisbra/unicode.vim, filetype "unicode"); replaced
+--- by emojis.nvim's own `:Emojis unicode table` (see the cross-feature
+--- report, "unicode.vim" row). That scratch buffer carries the name
+--- "Unicode Table" instead of a filetype, so the lookup below matches on
+--- `bufname` rather than `filetype`.
 ---@return nil
 local function open_unicode_table()
-  -- Check if unicode.vim is available
-  local ok = pcall(function()
-    vim.cmd("UnicodeTable")
-  end)
-
+  local ok, unicode = pcall(require, "emojis.unicode")
   if not ok then
-    notify.warn("unicode.vim plugin not available")
+    notify.warn("emojis.nvim not available")
     return
   end
+  unicode.table_open()
 
-  -- The plugin opens its own window
+  -- The call above opens its own window.
   vim.schedule(function()
-    -- Get the unicode table buffer
-    local bufs = vim.api.nvim_list_bufs()
-    for _, buf in ipairs(bufs) do
-      if vim.bo[buf].filetype == "unicode" then
-        -- Customize window if needed
-        local win = vim.fn.bufwinid(buf)
-        if win ~= -1 then
-          vim.api.nvim_win_set_config(win, {
-            border = "rounded",
-            title = " Unicode Table ",
-            title_pos = "center",
-          })
-        end
-        break
-      end
+    local buf = vim.fn.bufnr("Unicode Table")
+    if buf == -1 then
+      return
+    end
+    local win = vim.fn.bufwinid(buf)
+    if win ~= -1 then
+      vim.api.nvim_win_set_config(win, {
+        border = "rounded",
+        title = " Unicode Table ",
+        title_pos = "center",
+      })
     end
   end)
 end
@@ -252,12 +251,14 @@ local function open_terminal()
   end
 end
 
----Open minty's colour picker, when minty is installed.
+---Open ui.nvim's colour picker (`ui.colorpicker`, the in-house replacement
+---for minty's Huefy since 2026-09-19): it opens on the `#hex` under the
+---cursor and writes the pick back over it on `<CR>`.
 ---@return nil
 local function open_color_picker()
-  local ok, huefy = pcall(require, "minty.huefy")
-  if ok and huefy and huefy.open then
-    pcall(huefy.open)
+  local ok, picker = pcall(require, "ui.colorpicker")
+  if ok and picker and picker.open then
+    pcall(picker.open)
   end
 end
 
@@ -347,10 +348,21 @@ return function(opts)
   -- holding a single entry is a frame around one row, which reads as a fault
   -- rather than as structure.
   --
-  -- Its item list is ours (config.menu.git), not nvzone/menu's
-  -- `menus.gitsigns` -- the section has to survive nvzone/menu being
-  -- uninstalled, which was the whole point of the renderer swap.
-  local git = opts.enable_git_section and require("config.menu.git").items() or {}
+  -- Its item list is gitsuite.nvim's own (GS-09: `config.menu.git`, 126
+  -- lines of raw `gitsigns.<fn>()` calls, is gone -- gitsuite routes every
+  -- entry through its own `:Git hunk|blame|diff *` commands instead, so the
+  -- section works with any adapter and no longer vanishes whole when
+  -- gitsigns isn't loaded). `pcall`-guarded like every other Pattern-B
+  -- contributor here: gitsuite.nvim is a hard `dependencies` entry of this
+  -- config's plugin spec, but a menu built before it has loaded (or without
+  -- it installed at all) must not error.
+  local git = {}
+  if opts.enable_git_section then
+    local ok_gitsuite, gitsuite_menu = pcall(require, "gitsuite.integrations.menu")
+    if ok_gitsuite then
+      git = gitsuite_menu.items()
+    end
+  end
 
   contextmenu.group(
     out,

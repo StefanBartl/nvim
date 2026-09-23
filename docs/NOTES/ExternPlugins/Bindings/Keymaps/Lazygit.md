@@ -1,8 +1,16 @@
 # LazyGit — Keymaps
 
+> **Entfernt, ersetzt durch gitsuite.nvim.** `kdheepak/lazygit.nvim` ist aus
+> [lua/plugins/git.lua](../../../../../lua/plugins/git.lua) raus; `<leader>lg`
+> ruft jetzt gitsuite.nvims `:Git ui lazygit` (dessen eigener Default-Keymap,
+> siehe gitsuites `docs/BINDINGS.md`). `O`/`<C-o>` funktionieren unverändert
+> über gitsuite.nvims `features/ui/lazygit/{badd,replace}.lua`. Blatt bleibt
+> als historischer Extern-Korpus-Eintrag stehen, alle Links unten zeigen auf
+> entfernte Dateien.
+
 Plugin: [`kdheepak/lazygit.nvim`](https://github.com/kdheepak/lazygit.nvim).
-Spec in [lua/plugins/git.lua](../../../../../lua/plugins/git.lua), Bridge-Setup
-in [lua/config/lazygit/init.lua](../../../../../lua/config/lazygit/init.lua).
+Spec war in [lua/plugins/git.lua](../../../../../lua/plugins/git.lua),
+Bridge-Setup in `lua/config/lazygit/init.lua` (**entfernt**).
 
 ---
 
@@ -43,11 +51,10 @@ Effekt-Spalte — siehe [Usercmds/Lazygit.md](../Usercmds/Lazygit.md).
 | `O` | Custom Command → `nvr` → `:LazygitBadd` | Datei als Hintergrund-Buffer (`:badd`), kein Fokuswechsel | **[custom]** |
 | `<C-o>` | Custom Command → `nvr` → `:LazygitReplace` | Datei ersetzt sichtbaren Editor-Buffer, fokus-sicher | **[custom]** |
 
-Konfiguriert in der externen `lazygit`-`config.yml`
-(`customCommands`, Referenz-Kopie unter
-[lua/config/lazygit/docs/config.yml](../../../../../lua/config/lazygit/docs/config.yml)),
-nicht in Neovim selbst. Details zum RPC-Mechanismus (`$NVIM` + `nvr`):
-[lua/config/lazygit/README.md](../../../../../lua/config/lazygit/README.md).
+War konfiguriert in der externen `lazygit`-`config.yml` (`customCommands`,
+Referenz-Kopie lag in `lua/config/lazygit/docs/config.yml`, entfernt), nicht
+in Neovim selbst. Details zum RPC-Mechanismus (`$NVIM` + `nvr`) standen in
+`lua/config/lazygit/README.md` (entfernt).
 
 Siehe [Usercmds/Lazygit.md](../Usercmds/Lazygit.md) für die Neovim-seitigen
 Commands `:LazygitBadd` / `:LazygitReplace`, die diese beiden Tasten aufrufen.

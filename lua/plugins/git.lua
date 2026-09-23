@@ -1,32 +1,16 @@
 ---@module 'plugins.git'
---- Git integration via LazyGit, Gitsigns, and visual diff tools.
+--- Git integration via Gitsigns and visual diff tools -- gitsuite.nvim's own
+--- command tree (plugins/personal/init.lua) owns everything else that used
+--- to live here.
 
 ---@type LazyPluginSpec[]
 return {
 
-  -- LazyGit: External Git TUI (via `lazygit`)
-  {
-    "kdheepak/lazygit.nvim",
-    lazy = true,
-    cmd = {
-      "LazyGit",
-      "LazyGitConfig",
-      "LazyGitCurrentFile",
-      "LazyGitFilter",
-      "LazyGitFilterCurrentFile",
-      "LazyGitLog",
-    },
-    dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {
-      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "[LazyGit] Open UI" },
-    },
-    config = function()
-      -- Explicitly sets the editor command for Neovim's sub-processes
-      vim.g.lazygit_use_neovim_remote = 1 -- uses the internal nvim-remote feature if available
-
-      require("config.lazygit").setup()
-    end,
-  },
+  -- kdheepak/lazygit.nvim removed: gitsuite.nvim's `:Git ui lazygit`
+  -- (plugins/personal/init.lua) opens the same real `lazygit` binary in its
+  -- own floating terminal now, plus the nvr O/<C-o> bridge this plugin's
+  -- config used to own (ported to gitsuite.nvim's
+  -- features/ui/lazygit/{badd,replace}.lua -- lua/config/lazygit/ removed).
 
   -- Gitsigns: Git hunks, blame, stage/unstage in signcolumn
   {
@@ -67,33 +51,16 @@ return {
     },
   },
 
-  -- Fugitive: lightweight, CLI-oriented Git inside Neovim
-  -- :Git, :Gstatus (via :Git), :Gdiffsplit, :Gblame, :Gbrowse (mit rhubarb)
-  {
-    "tpope/vim-fugitive",
-    event = "VeryLazy", -- or load on Git buffers: "BufReadPost"
-    keys = {
-      -- Diff current file vs HEAD
-      { "<leader>gd", "<cmd>Gdiffsplit<cr>", desc = "Git diff split" },
-      -- Blame
-      { "<leader>gb", "<cmd>Git blame<cr>", desc = "Git blame" },
-    },
-  },
-  {
-    -- Optional: :Gbrowse to open current file/selection in hosting provider
-    "tpope/vim-rhubarb",
-    event = "VeryLazy",
-    dependencies = { "tpope/vim-fugitive" },
-  },
+  -- vim-fugitive/vim-rhubarb removed (gitsuite.nvim, plugins/personal/init.lua):
+  -- both `:Git blame` (`<leader>gb`) and `:Gbrowse` are now gitsuite.nvim's
+  -- own `:Git blame full`/`:Git browse *`, and fugitive's own `:Git` command
+  -- would collide with gitsuite.nvim's if both were loaded.
 
-  {
-    "akinsho/git-conflict.nvim",
-    version = "*",
-    config = true,
-    -- Conflict markers live in a buffer's text, so there is nothing to detect
-    -- before one is read. BufReadPost is also early enough for the first
-    -- buffer: the plugin's own scan hangs off BufEnter, which fires *after*
-    -- BufReadPost, so the file opened on the command line is still seen.
-    event = { "BufReadPost", "BufNewFile" },
-  },
+  -- akinsho/git-conflict.nvim removed: gitsuite.nvim's `:Git conflict *`
+  -- (plugins/personal/init.lua) covers the same nine commands and the same
+  -- six buffer-local keys (co/ct/cb/c0/]x/[x) now, with its own
+  -- BufReadPost/BufNewFile marker scan -- keeping both installed would have
+  -- meant two plugins racing to set the identical buffer-local keys the
+  -- moment a conflict is found, an actual behavioural collision, not just a
+  -- redundant install.
 }

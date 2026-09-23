@@ -2,10 +2,17 @@
 
 Zwei Quellen:
 
-1. Config-eigene Maps zum Öffnen/Schließen der Ansicht — registriert im
-   Lazy-Spec [lua/plugins/git.lua](../../../../../lua/plugins/git.lua)
-   (`sindrets/diffview.nvim`, `config = true`) und in
-   [lua/bindings/mappings/git.lua](../../../../../lua/bindings/mappings/git.lua).
+1. **`<leader>dv`/`dc`** öffnen/schließen die Ansicht über gitsuite.nvim
+   (`:Git ui diffview open|close`, seit `GS-08`) statt über diffview.nvim's
+   eigene `:DiffviewOpen`/`:DiffviewClose` direkt -- registriert in
+   `gitsuite/bindings/keymaps.lua` (`E:/repos/gitsuite.nvim`), nicht mehr in
+   dieser Config. `<leader>dh` (File-History) ist mit derselben Karte auf
+   `:Git diff history` umgezogen -- das ist **diff.nvim**s eigene
+   `:DiffHistory`, nicht mehr diffview.nvim's `:DiffviewFileHistory` (bewusst
+   ersetzt, kein Alias). `<leader>dt` (`windo diffthis`/`diffoff`) ist kein
+   Diffview-Feature und blieb deshalb Config-eigen, jetzt in
+   [lua/bindings/mappings/general.lua](../../../../../lua/bindings/mappings/general.lua)
+   (vorher: das inzwischen entfernte `lua/bindings/mappings/git.lua`).
 2. Die Maps **innerhalb** einer offenen Diffview (Dateibaum, Diff-Fenster,
    History-Panel, …) — vollständig durch das Plugin selbst gesetzt. Der
    Plugin-Spec ruft `config = true` auf, also `require("diffview").setup({})`
@@ -16,18 +23,14 @@ Zwei Quellen:
 
 ---
 
-## 1. Maps zum Öffnen/Schließen (config-eigen)
+## 1. Maps zum Öffnen/Schließen
 
-| Mapping | Aktion | = Command | Status |
-|---|---|---|---|
-| `<leader>dv` | Diffview öffnen | `:DiffviewOpen` | [custom] |
-| `<leader>dc` | Diffview schließen | `:DiffviewClose` | [custom] |
-| `<leader>dh` | File-History-Panel öffnen | `:DiffviewFileHistory` | [custom] |
-| `<Leader>dt` | Diff für alle Fenster im aktuellen Tab an/aus (`windo diffthis`/`diffoff`) | — (kein Diffview-eigener Command, nutzt natives `:diffthis`/`:diffoff`) | [custom] |
-
-Alle vier sind einfache `map("n", …)`-Aufrufe in
-`bindings/mappings/git.lua` (`M.setup`), ohne which-key-Spec-Tabelle wie bei
-Harpoon — die Beschreibungen kommen direkt aus dem `desc`-Feld der Maps.
+| Mapping | Aktion | = Command | Quelle | Status |
+|---|---|---|---|---|
+| `<leader>dv` | Diffview öffnen | `:Git ui diffview open` | gitsuite.nvim | [custom] |
+| `<leader>dc` | Diffview schließen | `:Git ui diffview close` | gitsuite.nvim | [custom] |
+| `<leader>dh` | Diff-Historie (diff.nvim, **nicht** diffview.nvim) | `:Git diff history` | gitsuite.nvim | [custom] |
+| `<Leader>dt` | Diff für alle Fenster im aktuellen Tab an/aus (`windo diffthis`/`diffoff`) | — (kein Diffview-eigener Command, nutzt natives `:diffthis`/`:diffoff`) | `bindings/mappings/general.lua` | [custom] |
 
 ---
 

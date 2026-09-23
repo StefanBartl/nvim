@@ -6,8 +6,8 @@
 # it assumes THIS machine's checkout layout (thirty sibling repos under
 # E:/repos), which is exactly what no published plugin should ship. So it
 # stays a script, in the folder for scripts rather than the one for open
-# questions. See docs/ROADMAP/personal/All/FINISH/ERLEDIGT/
-# roadmap-tools-analysis.md for the other seven.
+# questions. See $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/
+# ALL/Backlog/TASKS/roadmap-tools-analysis.md for the other seven.
 #
 # The point is the "no runner found" case: during the keymap migration I called
 # TESTS/run.lua in a repo whose runner is TESTS/pickers_spec.lua, got "cannot
@@ -36,8 +36,13 @@ run_one() {
     return
   fi
 
+  # `env -u NVIM -u NVIM_LISTEN_ADDRESS`: when this runs from a :terminal, the
+  # child would otherwise inherit the editor's own RPC socket and a spec could
+  # reach back into the live session. `-n`: no swap files (stale ones fail
+  # suites with E326); `--clean` already implies `-i NONE`.
   local out verdict
-  out=$(LIB_NVIM_PATH=$LIB LIB_NVIM_DIR=$LIB timeout 120 nvim --clean --headless -u NONE \
+  out=$(LIB_NVIM_PATH=$LIB LIB_NVIM_DIR=$LIB timeout 120 env -u NVIM -u NVIM_LISTEN_ADDRESS \
+        nvim -n --clean --headless -u NONE \
         -c "set rtp+=." -c "set rtp+=$LIB" -l "$runner" 2>&1 | tail -25)
 
   verdict=$(echo "$out" | grep -oiE '[0-9]+ (passed|failed)[a-z ]*' | tail -2 | tr '\n' ' ')

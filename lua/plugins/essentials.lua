@@ -25,13 +25,13 @@ return {
   },
 
   -- which-key: the <leader> popup and its group labels. Actively wired
-  -- (harpoon, neotest, bindings/mappings/general.lua's :WhichKey and
+  -- (neotest, bindings/mappings/general.lua's :WhichKey and
   -- <leader>wK/<leader>w?) -- was previously installed only via NvChad's own
   -- bundle. Lazy on the keys that actually trigger it, matching NvChad's own
   -- spec: every call site that reaches for `require("which-key")` already
-  -- checks `package.loaded["which-key"]` first (see harpoon.lua) rather than
-  -- forcing a load, so keeping it lazy here doesn't strand anything the way
-  -- a `cmd`-only trigger would for Mason above.
+  -- checks `package.loaded["which-key"]` first rather than forcing a load,
+  -- so keeping it lazy here doesn't strand anything the way a `cmd`-only
+  -- trigger would for Mason above.
   {
     "folke/which-key.nvim",
     keys = { "<leader>", "<c-w>", '"', "'", "`", "c", "v", "g" },

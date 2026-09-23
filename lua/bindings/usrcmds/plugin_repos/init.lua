@@ -8,7 +8,7 @@
 --- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
 ---
 --- Every subcommand except `dashboard` (which just opens reposcope.nvim's
---- own `:Reposcope status`) operates only on the repos `plugins.personal.list`
+--- own `:Reposcope dashboard`) operates only on the repos `plugins.personal.list`
 --- names against `dir`/`$REPOS_DIR` — never on whatever a directory scan
 --- turns up, unlike `:MyReposUpdate`, because `$REPOS_DIR` also holds
 --- non-plugin checkouts (Notes, WKDBooks, ...) a scan-and-delete would put
@@ -441,14 +441,14 @@ end
 -- Dashboard (delegates to reposcope.nvim's own git-status overview)
 -- =============================================================================
 
----`reposcope.nvim` already has exactly this dashboard (`:Reposcope status`),
+---`reposcope.nvim` already has exactly this dashboard (`:Reposcope dashboard`),
 ---so there's no reason to keep maintaining a parallel implementation here —
 ---this used to be its own scoped-to-`plugins.personal.list` status reader,
----but that scoping isn't worth the duplication; `:Reposcope status` shows
+---but that scoping isn't worth the duplication; `:Reposcope dashboard` shows
 ---every repo under `dir`/`$REPOS_DIR` instead.
 ---@param path string|nil
 local function open_dashboard(path)
-  vim.cmd("Reposcope status" .. (path and (" " .. fn.fnameescape(path)) or ""))
+  vim.cmd("Reposcope dashboard" .. (path and (" " .. fn.fnameescape(path)) or ""))
 end
 
 -- =============================================================================
@@ -857,7 +857,7 @@ end
 function M.enable()
   -- Directory arg: real directory completion plus `$REPOS_DIR` offered up
   -- front when resolvable, mirroring reposcope.nvim's own
-  -- `REPOSCOPE_STATUS_DIR` type. Validation is otherwise the built-in DIR
+  -- `REPOSCOPE_DASHBOARD_DIR` type. Validation is otherwise the built-in DIR
   -- semantics (must expand to an existing directory).
   composer.register_type("MYPLUGINS_DIR", {
     validate = function(raw)
@@ -963,7 +963,7 @@ function M.enable()
       {
         path = { "dashboard" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "Open reposcope.nvim's git-status dashboard (:Reposcope status) for dir/$REPOS_DIR",
+        desc = "Open reposcope.nvim's git-status dashboard (:Reposcope dashboard) for dir/$REPOS_DIR",
         run = function(ctx)
           open_dashboard(ctx.args.dir)
         end,

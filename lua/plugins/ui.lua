@@ -3,37 +3,19 @@
 
 ---@type LazyPluginSpec[]
 return {
-  {
-    "s1n7ax/nvim-window-picker",
-    version = "2.*",
-    config = function()
-      require("window-picker").setup({
-        filter_rules = {
-          include_current_win = false,
-          autoselect_one = true,
-          -- filter using buffer options
-          bo = {
-            -- if the file type is one of following, the window will be ignored
-            filetype = { "neo-tree", "neo-tree-popup", "notify" },
-            -- if the buffer type is one of following, the window will be ignored
-            buftype = { "terminal", "quickfix" },
-          },
-        },
-      })
-    end,
-  },
+  -- `s1n7ax/nvim-window-picker` left on 2026-09-19: ui.nvim's `ui.windowpicker`
+  -- is the primitive now (external-plugins report, the window-picker item).
+  -- neo-tree's own `open_with_window_picker` (`<CR>` in filesystem/files.lua,
+  -- the `W` keymap) needed no changes at all -- it does
+  -- `pcall(require, "window-picker")` internally, and ui.nvim ships a
+  -- `require("window-picker")` compatibility shim (`lua/window-picker/`)
+  -- that delegates to `ui.windowpicker` for exactly that. Same
+  -- `filter_rules` this spec used to pass, carried over as
+  -- `ui.windowpicker`'s own shipped defaults.
 
-  {
-    "kevinhwang91/nvim-bqf",
-    ft = "qf",
-    opts = {
-      auto_enable = true,
-      auto_resize_height = true,
-    },
-    config = function(_, opts)
-      require("bqf").setup(opts)
-    end,
-  },
+  -- `kevinhwang91/nvim-bqf` left on 2026-09-19: the quickfix window's preview
+  -- float and in-list filter are pickers.nvim's `quickfix` module now (on by
+  -- default: `zf` refine, `zF` restore, `p` preview on/off in the list).
 
   {
     "folke/noice.nvim",
@@ -65,48 +47,22 @@ return {
     end,
   },
 
-  {
-    "folke/zen-mode.nvim",
-    cmd = "ZenMode",
-  },
+  -- `folke/zen-mode.nvim` (`:ZenMode`, pure defaults) left on 2026-09-19:
+  -- ui.nvim's `ui.zen` is the distraction-free box now -- `:UI zen [on|off]`.
 
   {
     "MunifTanjim/nui.nvim",
   },
 
-  -- Own spec, not NvChad's: `plugins/nvchad.lua`'s own comment already notes
-  -- that `nvzone/minty` "hangs off NvChad's list, not off this one" and
-  -- "leaves with NvChad, not with the menu" -- it never depended on NvChad
-  -- code, only on being declared somewhere. `config/menu/custom_menu/
-  -- init.lua`'s right-click "Color Picker" entry calls `minty.huefy` directly
-  -- (a plain `pcall(require, ...)`), so this is the only wiring it needed.
-  {
-    "nvzone/minty",
-    cmd = { "Huefy", "Shades" },
-    dependencies = { "nvzone/volt" },
-  },
+  -- `nvzone/minty` (and its `nvzone/volt` dependency) left on 2026-09-19:
+  -- the right-click menu's "Color Picker" entry opens ui.nvim's
+  -- `ui.colorpicker` now (`:UI color [#hex]`), a hue row + saturation x
+  -- lightness grid + shades in a ui.kit float.
 
-  -- Replaces `nvchad.colorify` -- the `require("nvchad.colorify").run()`
-  -- call that used to live in `lua/nvchad/au.lua` is gone entirely, not
-  -- merely guarded off, see that file's own comment in its place. Inline
-  -- highlighting for hex codes, CSS colour functions and named colours.
-  -- Standalone: colorify only ever ran because an nvconfig default said so,
-  -- not because of any NvChad-specific code.
-  {
-    "catgoose/nvim-colorizer.lua",
-    event = { "BufReadPre", "BufNewFile" },
-    opts = {},
-  },
-
-  -- Opt-in alternative to the entry above: richer per-match rendering
-  -- (background/foreground/virtual text, chosen per filetype) plus its own
-  -- toggle commands, at the cost of a second, heavier colorizer. Flip
-  -- `enabled` on ONE of these two, never both -- running both double-
-  -- highlights every match.
-  -- {
-  -- "brenoprata10/nvim-highlight-colors",
-  -- enabled = false,
-  -- cmd = { "HighlightColorsToggle", "HighlightColorsOn", "HighlightColorsOff" },
-  -- opts = {},
-  -- },
+  -- Inline colour swatches (hex codes, CSS colour functions, named colours)
+  -- were `catgoose/nvim-colorizer.lua` here, and `nvchad.colorify` before
+  -- that. Since 2026-09-19 they are my.nvim's `hl_config.features.color_codes`
+  -- (`highlight.color_codes`, on by default; `:My hl set color_codes.mode
+  -- foreground|virtual` for the other renderings). Two colorizers would
+  -- paint every match twice, so the plugin is gone rather than kept.
 }

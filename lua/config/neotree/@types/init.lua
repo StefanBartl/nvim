@@ -5,23 +5,11 @@
 --- This module serves as the entry point for all Neo-tree type definitions.
 --- Individual type modules are organized by functional domain:
 ---
---- Core Structures:
+--- Core Structures (what is left after the 2026-09-19 move of the
+--- config's own neo-tree code into filetree.nvim):
 ---   - aliases:     Common type aliases and string literal unions
 ---   - node:        Tree node structure and methods
 ---   - state:       Neo-tree state passed to commands/handlers
----   - config:      Setup and initialization configuration
----
---- Feature Modules:
----   - actions:     Custom command options (copy, convert, info)
----   - safety:      Backup, recovery, and operation queue
----   - open:        Window management and positioning
----   - reveal:      File reveal and navigation context
----   - highlights:  Current file highlighting
----
---- Integration:
----   - sources:     Icon and source selector display
----   - wsl:         WSL file manager integration
----   - project_root: Project root detection interface
 ---
 --- Usage:
 ---   All type files use the `Cfg.NeoTree.*` namespace prefix.

@@ -2,6 +2,15 @@
 --- neo-tree.nvim's lazy.nvim spec: sources (filesystem/git_status/
 --- diagnostics/tests via neo-tree-tests-source.nvim), and keymaps
 --- assembled from config.neotree.keymaps.* per source.
+---
+--- What is NOT here any more (2026-09-19, external-plugins report "neo-tree
+--- config -> filetree.nvim"): the source switcher (picker, `"`/`!` cycling,
+--- the source_selector display names), the `<M-c/f/l/r>` toggle keys with
+--- their E95 self-heal, the node utilities, the config-level health check
+--- and its two commands. All of it is filetree.nvim's `source_switcher` and
+--- `tree_toggle` now (features configured in plugins/personal/init.lua);
+--- `config/neotree/` keeps only what is genuinely neo-tree configuration --
+--- the per-source `window.mappings` tables and one event handler.
 
 local KEYMAPS = require("config.neotree.keymaps")
 local NEOTEST = require("config.neotest.neotree")
@@ -10,7 +19,10 @@ local DOCUMENT_SYMBOLS = require("config.neotree.keymaps.document_symbols")
 local FILESYSTEM = require("config.neotree.keymaps.filesystem")
 local GIT_STATUS = require("config.neotree.keymaps.git_status")
 local DIAGNOSTICS = require("config.neotree.keymaps.diagnostics")
-local ICONS = require("config.neotree.sources.icons")
+
+-- Where every source opens by default; filetree.nvim's tree_toggle keys
+-- pick a position per key on top of this.
+local DEFAULT_POSITION = "left"
 
 return {
   {
@@ -61,39 +73,16 @@ return {
         "tests",
       }
 
-      -- Configuration knobs
-      local icon_family = "nerd" -- common | nerd | codicons
-      local icon_variant = "v1" -- v1 | v2
-      local name_length = "long" -- long | short
-
-      -- Build sources for source_selector
-      ---@type table[]
-      local sources = {
-        {
-          source = "filesystem",
-          display_name = ICONS.format(icon_family, icon_variant, "filesystem", name_length),
-        },
-        {
-          source = "buffers",
-          display_name = ICONS.format(icon_family, icon_variant, "buffers", name_length),
-        },
-        {
-          source = "git_status",
-          display_name = ICONS.format(icon_family, icon_variant, "git_status", name_length),
-        },
-        {
-          source = "document_symbols",
-          display_name = ICONS.format(icon_family, icon_variant, "document_symbols", name_length),
-        },
-        {
-          source = "diagnostics",
-          display_name = ICONS.format(icon_family, icon_variant, "diagnostics", name_length),
-        },
-        {
-          source = "tests",
-          display_name = ICONS.format(icon_family, icon_variant, "tests", name_length),
-        },
-      }
+      -- The source_selector names come from filetree.nvim's source switcher,
+      -- whose `display_names` is a pure function -- no setup() needed, and
+      -- it is what `:Filetree source` shows in its own picker, so the two
+      -- cannot disagree. Icon family/variant/length are its config knobs.
+      local switcher = require("filetree.features.nav.source_switcher")
+      local sources = switcher.display_names(enabled_sources, {
+        family = "nerd", -- common | nerd | codicons
+        variant = "v1", -- v1 | v2
+        length = "long", -- long | short
+      })
 
       -- config.neotree.commands (custom_add/telescope_*/markdown_links/diff/mark)
       -- were removed: filetree.nvim owns those and none were key-bound here.
@@ -132,19 +121,18 @@ return {
             highlight_opened_files = true,
             highlight = "NeoTreeFileName",
           },
-          git_status = {
-            symbols = {
-              added = "A",
-              deleted = "D",
-              modified = "M",
-              renamed = "R",
-              unstaged = "✗",
-              staged = "✓",
-              untracked = "★",
-              ignored = "◌",
-              conflict = "C",
-            },
-          },
+          -- `git_status.symbols` (M/A/D/R/...), the `git_status`/`diagnostics`/
+          -- `clipboard` renderer entries below, and their config are gone
+          -- (2026-09-22): filetree.nvim's own `git_status`/`lsp_diagnostics`/
+          -- `copy_move` features draw the same three things as their own
+          -- extmarks -- always have, adapter-agnostically -- so neo-tree's
+          -- native versions were a second, independent copy of the same
+          -- information. Invisible under filetree's un-styled default
+          -- signs; visibly redundant once `decoration_style = "rounded"`
+          -- turned filetree's half into a colored pill next to neo-tree's
+          -- own plain glyph. `name.use_git_status_colors` stays -- coloring
+          -- the filename itself is a technique filetree.nvim doesn't have,
+          -- not a duplicate sign.
         },
 
         renderers = {
@@ -153,31 +141,11 @@ return {
             { "icon" },
             { "current_filter" },
             { "name" },
-            { "git_status", highlight = "NeoTreeDimText" },
-            {
-              "diagnostics",
-              symbols = {
-                hint = "",
-                info = "",
-                warn = "",
-                error = "",
-              },
-              highlights = {
-                hint = "DiagnosticSignHint",
-                info = "DiagnosticSignInfo",
-                warn = "DiagnosticSignWarn",
-                error = "DiagnosticSignError",
-              },
-            },
-            { "clipboard" },
           },
           file = {
             { "indent" },
             { "icon" },
             { "name", use_git_status_colors = true },
-            { "git_status", highlight = "NeoTreeDimText" },
-            { "diagnostics" },
-            { "clipboard" },
           },
         },
 
@@ -185,7 +153,7 @@ return {
         window = {
           width = 25,
           mappings = KEYMAPS,
-          position = require("config.neotree").get_default_position(),
+          position = DEFAULT_POSITION,
         },
 
         filesystem = {
@@ -199,7 +167,7 @@ return {
           use_libuv_file_watcher = true,
           window = {
             mappings = FILESYSTEM,
-            position = require("config.neotree").get_default_position(),
+            position = DEFAULT_POSITION,
           },
           filtered_items = {
             visible = true,
@@ -216,14 +184,14 @@ return {
         buffers = {
           window = {
             mappings = BUFFERS,
-            position = require("config.neotree").get_default_position(),
+            position = DEFAULT_POSITION,
           },
         },
 
         git_status = {
           window = {
             mappings = GIT_STATUS,
-            position = require("config.neotree").get_default_position(),
+            position = DEFAULT_POSITION,
           },
         },
 
@@ -250,7 +218,7 @@ return {
           },
           window = {
             mappings = DOCUMENT_SYMBOLS,
-            position = require("config.neotree").get_default_position(),
+            position = DEFAULT_POSITION,
           },
         },
 
@@ -276,7 +244,7 @@ return {
           },
           window = {
             mappings = DIAGNOSTICS,
-            position = require("config.neotree").get_default_position(),
+            position = DEFAULT_POSITION,
           },
         },
 
@@ -284,21 +252,10 @@ return {
           follow_cursor = true,
           window = {
             mappings = NEOTEST.keymaps(),
-            position = require("config.neotree").get_default_position(),
+            position = DEFAULT_POSITION,
           },
         },
       }
-    end,
-
-    config = function(_, opts)
-      require("neo-tree").setup(opts)
-      require("config.neotree").setup({
-        debug = true,
-        default_position = "left",
-        restore_last_position = false,
-        reveal_current_file = false,
-        only_lhs = true,
-      })
     end,
   },
 }

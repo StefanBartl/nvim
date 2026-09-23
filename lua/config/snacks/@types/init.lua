@@ -20,11 +20,9 @@
 ---@field filename? string
 ---@field item? table<string, any>
 
---- `todo-comments.nvim` registers this picker source into
---- `Snacks.picker.sources` from its own `setup()` (todo-comments/config.lua),
---- so it exists at runtime -- but snacks' generated `picker/types.lua` lists
---- only snacks' own sources, so nothing declares it.
----@class snacks.picker
----@field todo_comments fun(opts?: snacks.picker.todo.Config|{}): snacks.Picker
+-- A `snacks.picker.todo_comments` field used to be declared here: the
+-- picker source todo-comments.nvim registered at runtime, which snacks'
+-- generated types did not know. The plugin is gone (insights.nvim's
+-- `:Insights todos` replaced it, 2026-09-19), and with it the source.
 
 return {}

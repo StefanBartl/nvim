@@ -1,5 +1,12 @@
 # Fugitive — Keymaps
 
+> **Entfernt, ersetzt durch gitsuite.nvim.** `tpope/vim-fugitive` (und
+> `vim-rhubarb`) sind aus [lua/plugins/git.lua](../../../../../lua/plugins/git.lua)
+> raus; `<leader>gb` ruft jetzt gitsuite.nvims `:Git blame full`. Die
+> Fugitive-Objektbuffer (Abschnitt 2 unten, `fugitive-maps`) hat gitsuite.nvim
+> **nicht** nachgebaut -- anderes UI-Konzept (`:Git`-Composer statt
+> Summary-Buffer). Blatt bleibt als historischer Extern-Korpus-Eintrag stehen.
+
 Zwei Quellen:
 
 1. Globale, config-eigene Maps, die einen Fugitive-Command aufrufen —
@@ -19,12 +26,18 @@ Zwei Quellen:
 
 | Mapping | Aktion | = Command | Status |
 |---|---|---|---|
-| `<leader>gd` | Diff der aktuellen Datei gegen den Index | `:Gdiffsplit` | [custom] |
 | `<leader>gb` | Git-Blame der aktuellen Datei | `:Git blame` | [custom] |
 
-Beide sind reine `<cmd>…<cr>`-Wrapper ohne zusätzliche Logik, gesetzt über
-die `keys`-Spezifikation des Lazy-Plugin-Specs (lazy-loaded via
+Ein reiner `<cmd>…<cr>`-Wrapper ohne zusätzliche Logik, gesetzt über die
+`keys`-Spezifikation des Lazy-Plugin-Specs (lazy-loaded via
 `event = "VeryLazy"`).
+
+`<leader>gd` (`:Gdiffsplit`, Diff gegen den Index) lag bis 2026-09-18 ebenfalls
+hier — und gleichzeitig auf snacks' Hunk-Picker, wer zuletzt registrierte,
+gewann. Die Taste gehört jetzt diff.nvim (`:Diff target=git:HEAD`, Spec in
+`lua/plugins/personal/init.lua`); der Hunk-Picker ist auf `<leader>gD`
+gewandert. Blame ist damit das einzige noch benutzte Fugitive-Feature
+(Externe-Plugins-Nachbau-Analyse, Git-Tabelle).
 
 `tpope/vim-rhubarb` (GitHub-Provider für `:GBrowse`) ist als Dependency
 mitgeladen, bringt aber selbst keine zusätzlichen Keymaps — nur die

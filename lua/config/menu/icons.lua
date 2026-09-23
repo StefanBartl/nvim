@@ -43,18 +43,10 @@ local M = {
   terminal = g("F120", ">"), -- terminal
   color_picker = g("F03D8", "#"), -- palette
   unicode_table = g("F031", "U"), -- font
+  -- Icon for the "Git Actions" fly-out row itself (custom_menu/init.lua);
+  -- the entries inside it are gitsuite.nvim's own (GS-09) and carry their
+  -- own icons, so there is no "Git subsection" here any more.
   git = g("F02A2", "G"), -- source-branch
-
-  -- Git subsection ----------------------------------------------------------
-  git_stage = g("F067", "+"), -- plus
-  git_reset = g("F0E2", "-"), -- undo
-  git_stage_buffer = g("F0FE", "+"), -- plus-square
-  git_reset_buffer = g("F021", "-"), -- refresh
-  git_preview = g("F06E", "o"), -- eye
-  git_blame = g("F007", "b"), -- user
-  git_toggle = g("F205", "t"), -- toggle-on
-  git_diff = g("F0EC", "d"), -- exchange
-  git_history = g("F1DA", "h"), -- history
 
   -- Contributor fallbacks (see `config.menu.mappings`) -----------------------
   --

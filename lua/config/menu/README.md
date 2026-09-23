@@ -1,7 +1,9 @@
 # config.menu
 
 The general (non-tree) context menu: `<A-b>` at the cursor, `<RightMouse>`
-at the pointer.
+at the pointer. A right-click on the tab bar is not this menu's business: the
+dispatcher replays the click (which fires the chip's own handler, opening
+ui.nvim's per-tab menu) and returns.
 
 ```lua
 require("config.menu").setup({ renderer = "kit", enable_git_section = true })
@@ -23,8 +25,7 @@ Neovim behaviour.
 |---|---|
 | `init.lua` | picks the renderer, passes options on, binds the triggers |
 | `mappings.lua` | the two keymaps, and the `CONTRIBUTORS` list that composes plugin sections |
-| `custom_menu/init.lua` | the general sections (Code, Clipboard, Delete, Tools) |
-| `git.lua` | the Git fly-out (Hunks, Blame, Diff), gated on gitsigns.nvim |
+| `custom_menu/init.lua` | the general sections (Code, Clipboard, Delete, Tools) -- the Git fly-out inside Tools is `pcall`-required from `gitsuite.integrations.menu` (`E:/repos/gitsuite.nvim`), not a file in this directory any more (`git.lua` removed, GS-09) |
 | `icons.lua` | the glyphs the icon column draws, resolved once for every section |
 
 ## Who draws it
@@ -42,9 +43,12 @@ switch. Nothing in this directory calls a renderer itself.
   now falls back to the kit with one notify; putting it back means
   re-enabling that spec too.
 
-Nothing registers itself under nvzone/menu's `menus.*` namespace any more,
-and the Git section is this config's own item list (`git.lua`) rather than
-nvzone/menu's `menus.gitsigns`.
+Nothing registers itself under nvzone/menu's `menus.*` namespace any more.
+The Git section used to be this config's own item list (`git.lua`, raw
+`gitsigns.<fn>()` calls); since GS-09 (2026-09-22) it is `gitsuite.nvim`'s
+own `integrations/menu.lua`, routed through `:Git hunk|blame|diff *` instead
+-- this config only wraps its `items()` result in one "Git Actions" fly-out
+(`custom_menu/init.lua`).
 
 ## What lands in the menu
 

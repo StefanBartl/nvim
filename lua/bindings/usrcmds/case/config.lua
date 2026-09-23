@@ -13,7 +13,7 @@ local M = {}
 --- below) anchor here rather than walking up from `M.root`.
 ---
 --- Derived from `$REPOS_DIR` (the convention every other module already uses
---- — `plugin_repos/*`, `harpoon/persist_paths.lua`) rather than a hardcoded
+--- — `plugin_repos/*`, `config/marks/defaults.lua`) rather than a hardcoded
 --- drive letter, since where repos live varies per machine (e.g. `C:/repos`
 --- on the workstation, `E:/repos` elsewhere). Falls back to `C:/repos` when
 --- unset, matching the workstation's own default.

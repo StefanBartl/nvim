@@ -547,7 +547,7 @@ vor dem Lauf per Definition noch nicht.
 
 ## Dashboard (`:Bindings status`)
 
-Eine Seite, nach dem Vorbild von `:Reposcope status`:
+Eine Seite, nach dem Vorbild von `:Reposcope dashboard`:
 
 - **Korpus** — Dateien und Tabellenzeilen je Wurzel und Kategorie, die Summe,
   und wie viele Zeilen aus Korpus-Dateien stammen (`All`/`Collisions`/

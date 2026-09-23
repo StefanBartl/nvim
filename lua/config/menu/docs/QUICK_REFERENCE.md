@@ -46,7 +46,7 @@ Spotlight, Color My ASCII, LSP. The list is `CONTRIBUTORS` in
 | **Open in terminal** | - | Open terminal in current directory |
 | **Color Picker** | - | Open color picker (minty.huefy) |
 | **Unicode Table** | `uni` | Open Unicode table (floating) |
-| **Git Actions** | - | Fly-out from `config/menu/git.lua` (Hunks / Blame / Diff), gated on gitsigns.nvim |
+| **Git Actions** | - | Fly-out from `gitsuite.nvim`'s `integrations/menu.lua` (Hunks / Blame / Diff), via `:Git hunk\|blame\|diff *` -- only the gitsigns-only rows (stage/reset hunk or buffer, toggle deleted) are gated on gitsigns.nvim |
 
 ---
 
@@ -169,7 +169,7 @@ V (Visual Line) → Select → <C-c>
 
 ### Global
 - `<Alt-b>`: Open custom menu
-- `<RightMouse>`: Context menu at the pointer (inside the tree, filetree.nvim's own menu shadows it)
+- `<RightMouse>`: Context menu at the pointer (inside the tree, filetree.nvim's own menu shadows it; on a tab-bar chip, ui.nvim's own tab menu opens instead and this one steps aside)
 
 ### Copy/Paste
 - `<C-a>`: Copy all

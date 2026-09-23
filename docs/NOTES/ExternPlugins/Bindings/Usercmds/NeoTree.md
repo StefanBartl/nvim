@@ -2,8 +2,10 @@
 
 Betrifft `nvim-neo-tree/neo-tree.nvim`. Die Source-Plugins
 `mrbjarksen/neo-tree-diagnostics.nvim` und
-`TimCreasman/neo-tree-tests-source.nvim` sowie `s1n7ax/nvim-window-picker`
-registrieren keine eigenen User-Commands.
+`TimCreasman/neo-tree-tests-source.nvim` sowie der Window-Picker
+(`s1n7ax/nvim-window-picker` bis 2026-09-19, seither ui.nvim's
+`ui.windowpicker`, dessen `:UI winpick` unabhängig davon existiert)
+registrieren keine eigenen `:Neotree`-User-Commands.
 
 ## 1. `:Neotree` — Plugin-Default
 
@@ -36,17 +38,16 @@ Argumenten direkt auf, ohne über das Ex-Command zu gehen.
 
 ## 2. Custom-Usercmds dieser Config
 
-Registriert in
-[lua/config/neotree/usercmds/init.lua](../../../../../lua/config/neotree/usercmds/init.lua)
-(`M.enable()`), aufgerufen aus
-[lua/config/neotree/init.lua](../../../../../lua/config/neotree/init.lua)s
-`M.setup()`. Gebaut mit `lib.nvim.bindings.usercmd.create` (kein Composer/Verb wie bei
-Harpoon — einfache 1:1-Commands).
+**Keine mehr seit 2026-09-19.** `:NeoTreeCheckHealth` prüfte nur noch, ob
+die Config-eigenen neo-tree-Module laden, und `:NeoTreeDebugSources` gehörte
+zum Source-Switcher; beides ist mit dem Umzug in filetree.nvim entfallen
+(`lua/config/neotree/usercmds/`, `checkhealth/`, `sources/` gelöscht).
+Ersatz: `:checkhealth filetree` und `:Filetree source debug`.
 
 | Command | Wirkung | Status |
 |---|---|---|
-| `:NeoTreeCheckHealth` | Ruft `config.neotree.checkhealth.check()` auf — Config-eigener Health-Check (getrennt von Neo-trees eigenem `:checkhealth neo-tree`). | [custom] |
-| `:NeoTreeDebugSources` | Ruft `config.neotree.sources.switcher.debug_sources()` auf — Debug-Ausgabe zur Source-Erkennung des Switchers. | [custom] |
+| `:Filetree source [name\|pick\|next\|prev\|debug]` | filetree.nvims Source-Switcher — Picker, Wechsel nach Name, Zyklus, Debug-Dump | [custom] (filetree.nvim) |
+| `:Filetree toggle [left\|right\|float\|current]` | filetree.nvims `tree_toggle` — dieselbe Aktion wie die `<M-*>`-Tasten | [custom] (filetree.nvim) |
 
 Ein früherer dritter Usercmd-Block für `pdfport` wurde entfernt (Kommentar in
 derselben Datei) — filetree.nvim's `preview`-Feature dispatcht PDFs jetzt über

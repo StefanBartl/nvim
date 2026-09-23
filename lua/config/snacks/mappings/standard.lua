@@ -118,8 +118,16 @@ function M.keys()
   -- Git
   ---------------------------------------------------------------------------
 
+  -- `<leader>gB`, not `<leader>gb`: the lowercase key is gitsuite.nvim's
+  -- `:Git blame full` (plugins/personal/init.lua) -- same precedent as
+  -- `<leader>gD` below (picker bumped to the capital variant, the specific
+  -- git-action plugin keeps the lowercase mnemonic). Found and fixed
+  -- 2026-09-21: gitsuite.nvim's own keymap registration has no
+  -- already-mapped guard and loads eagerly (BufReadPost), so it always won
+  -- this race silently -- this picker was unreachable via <leader>gb from
+  -- the moment gitsuite.nvim shipped.
   maps[#maps + 1] = {
-    "<leader>gb",
+    "<leader>gB",
     builtin("git_branches"),
     mode = "n",
     desc = "[pickers] Git Branches",
@@ -153,8 +161,12 @@ function M.keys()
     desc = "[pickers] Git Stash",
   }
 
+  -- `<leader>gD`, not `<leader>gd`: the lowercase key is diff.nvim's
+  -- file-vs-HEAD diff (plugins/personal/init.lua). Both were bound to it
+  -- before -- this picker and fugitive's `:Gdiffsplit` -- and whichever
+  -- registered last won silently.
   maps[#maps + 1] = {
-    "<leader>gd",
+    "<leader>gD",
     builtin("git_diff"),
     mode = "n",
     desc = "[pickers] Git Diff (Hunks)",

@@ -45,6 +45,15 @@
 --- opt-in needed (see `ui.bindings.keymaps`'s own doc comment,
 --- `ui.nvim@<pending>`) -- if the spec does not set the field at all.
 ---
+--- `sticky = {...}` turns on `ui.context`, the sticky code-context overlay
+--- that replaced `nvim-treesitter-context` on 2026-09-19 (the enclosing
+--- function/class/loop lines, or in Markdown the heading chain, pinned over
+--- the window's first rows). `:UI sticky` toggles it for the session, `:UI
+--- sticky depth <1-6>` / `:UI sticky lines [ft] <n>` change how deep it
+--- reaches, `:UI sticky up [n]` jumps to the n-th enclosing scope. It is
+--- explicit-only in `ui.setup` -- `all = true` would not turn it on -- so it
+--- is named here rather than in the spec; `sticky = false` opts out.
+---
 --- `ui.bindings.keymaps.tabufline.state.setup()` is still called directly,
 --- unconditionally, regardless of `opts.keymaps`: the tabline renderer needs
 --- `vim.t.bufs` maintained even when a host turns ui.nvim's own keymaps off
@@ -68,7 +77,23 @@ function M.setup()
       keymaps_opts = spec.keymaps
     end
 
-    require("ui").setup({ usrcmds = true, keymaps = keymaps_opts })
+    require("ui").setup({
+      usrcmds = true,
+      keymaps = keymaps_opts,
+      -- The sticky code context (what nvim-treesitter-context did until
+      -- 2026-09-19): explicit-only in ui.setup, never under `all`, because it
+      -- draws over the buffer's first rows. `max_lines` is the row cap: 3 for
+      -- code (the old spec's cap), 6 for Markdown so a whole H1..H6 chain
+      -- fits. `headings.max_level` is the deepest Markdown heading level that
+      -- gets pinned (1..6). `persist` keeps what `:UI sticky depth|lines` set
+      -- across restarts (stdpath("state")/ui.nvim/sticky.json, on top of the
+      -- values here); `:UI sticky reset` drops it again.
+      sticky = {
+        max_lines = { default = 3, markdown = 6 },
+        headings = { max_level = 6 },
+        persist = true,
+      },
+    })
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))
     local assembled = require("ui.config").setup({ variant = "personal" })
     require("ui.bindings.keymaps.tabufline.state").setup()

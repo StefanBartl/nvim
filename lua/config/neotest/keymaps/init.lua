@@ -6,9 +6,10 @@ local actions = require("config.neotest.actions")
 
 local M = {}
 
--- <leader>ntr / <leader>ntD live in config.neotest.debug (M.keymaps()),
--- called after this module's M.setup() from plugins/neotest.lua — defining
--- them here too would just be silently shadowed by that later call.
+-- <leader>ntr / <leader>ntD are the two diagnostics reached often enough
+-- to deserve a key; the rest of `:Debug neotest` (state, file, root,
+-- framework) is a command away. debugging.nvim loads on VeryLazy, so the
+-- `<cmd>` form is what makes these safe to press at any time.
 
 ---@type table[]
 M.keymaps = {
@@ -21,6 +22,18 @@ M.keymaps = {
   { "n", "<leader>ntO", actions.toggle_output_panel, "Toggle output panel" },
   { "n", "<leader>ntS", actions.stop, "Stop test" },
   { "n", "<leader>ntw", actions.toggle_watch, "Toggle watch mode" },
+  {
+    "n",
+    "<leader>ntr",
+    "<cmd>Debug neotest discover<cr>",
+    "Discovered positions per adapter (debugging.nvim)",
+  },
+  {
+    "n",
+    "<leader>ntD",
+    "<cmd>Debug neotest adapters<cr>",
+    "Configured vs registered adapters (debugging.nvim)",
+  },
 }
 
 ---@return nil

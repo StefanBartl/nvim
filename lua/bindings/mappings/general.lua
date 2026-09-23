@@ -5,7 +5,10 @@
 --- NvChad-specific any more once its one real NvChad feature, the theme
 --- picker, moved into `ui.nvim` itself as a configurable keymap) `<Esc>`
 --- search-highlight clear, copy-whole-file, format-via-conform, which-key,
---- and insert-mode cursor movement.
+--- insert-mode cursor movement, and (moved in from the retired
+--- `bindings.mappings.git` 2026-09-22, GS-08 -- the rest of that file's
+--- keymaps moved into gitsuite.nvim itself) `<leader>dt`, native
+--- `:diffthis`/`:diffoff` for every window in the tab.
 
 local M = {}
 
@@ -98,6 +101,14 @@ function M.setup()
   map("i", "<C-l>", "<Right>", { desc = "[Text] Right" })
   map("i", "<C-j>", "<Down>", { desc = "[Text] Down" })
   map("i", "<C-k>", "<Up>", { desc = "[Text] Up" })
+
+  -- Native diff mode, all windows in the tab. Not a git.nvim/diff.nvim
+  -- feature -- vim's own `:diffthis`/`:diffoff`, so it stayed here rather
+  -- than moving into gitsuite.nvim with the rest of the old
+  -- `bindings.mappings.git` (GS-08).
+  map("n", "<leader>dt", function()
+    vim.cmd("windo diff" .. (vim.wo.diff and "off" or "this"))
+  end, { desc = "[General] Diff windows in tab" })
 end
 
 return M

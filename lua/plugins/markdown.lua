@@ -1,18 +1,11 @@
 ---@module 'plugins.markdown'
-return {
-
-  -- render-markdown.nvim: installed disabled; toggled via `:Markdown render`
-  -- (markdown.nvim owns the toggle command).
-  {
-    "MeanderingProgrammer/render-markdown.nvim",
-    ft = { "markdown" },
-    cmd = { "RenderMarkdown" },
-    config = function()
-      require("render-markdown").setup({ enabled = false })
-    end,
-  },
-  -- markdown-preview.nvim replaced by mdview.nvim (see
-  -- lua/plugins/personal/init.lua) — `:Markdown preview` now drives it
-  -- directly, no node/yarn toolchain needed. See
-  -- docs/ROADMAP/reports/Externe-Plugins-Nachbau-Analyse.md, B3.
-}
+-- render-markdown.nvim removed 2026-09-19: mdview.nvim covers preview, and
+-- the in-buffer concealed rendering it provided was never rebuilt anywhere
+-- else. `:Markdown render` (markdown.nvim) now just warns that no host is
+-- installed. See docs/ROADMAP/reports/Externe-Plugins-Nachbau-Analyse.md, 7.7.
+--
+-- markdown-preview.nvim replaced by mdview.nvim (see
+-- lua/plugins/personal/init.lua) — `:Markdown preview` now drives it
+-- directly, no node/yarn toolchain needed. See
+-- docs/ROADMAP/reports/Externe-Plugins-Nachbau-Analyse.md, B3.
+return {}

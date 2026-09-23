@@ -54,12 +54,46 @@ still ins Leere läuft (kein Fehler, kein Effekt — das ist der Zweck des
 `pcall`). Die tatsächlich wirksame Aktivierung läuft ausschließlich über die
 drei `FileType`-Autocmds oben.
 
-## `nvim-treesitter-context`
+## ~~`nvim-treesitter-context`~~ → `ui.context`
 
-Kein Autocmd, aber themengleich: [lua/plugins/treesitter.lua](../../../../../lua/plugins/treesitter.lua)
-lädt `nvim-treesitter/nvim-treesitter-context` lazy on `BufReadPost` mit
-`opts = { enable = true, max_lines = 3 }` — Sticky-Context-Fenster oben im
-Buffer, keine eigenen Keymaps/Usercmds in dieser Config.
+Deinstalliert am 2026-09-19. Den Sticky-Context (die umschließenden
+`function`/`class`/Schleifen-Zeilen, die oben aus dem Fenster gescrollt
+sind, über den ersten Zeilen fixiert) zeichnet seitdem ui.nvims `ui.context`,
+eingeschaltet in
+[lua/config/ui_statusline/init.lua](../../../../../lua/config/ui_statusline/init.lua)
+über `require("ui").setup({ sticky = { max_lines = { default = 3, markdown = 6 },
+headings = { max_level = 6 } } })` — für Code derselbe Deckel wie im alten
+Spec, für Markdown 6 Zeilen, damit eine ganze H1..H6-Kette hineinpasst. Kein
+Autocmd in dieser Config; die Autocmds
+(`WinScrolled`/`CursorMoved`/`BufEnter`/…, debounced) gehören dem Modul.
+
+Bedienung (seit 2026-09-21 unter dem Namen `sticky`; `:UI context` bleibt als
+Alias):
+
+| Command | Effect |
+|---|---|
+| `:UI sticky [on\|off\|toggle]` | schaltet den Overlay für die Session um bzw. setzt ihn explizit |
+| `:UI sticky status` | zeigt Zustand, Heading-Tiefe und Zeilenlimit |
+| `:UI sticky depth [1-6\|all]` | tiefste Markdown-Heading-Ebene, die gepinnt wird (ohne Argument: Anzeige) |
+| `:UI sticky lines [ft] [n]` | Zeilenlimit für einen Filetype oder für alle anderen; `0` = unbegrenzt |
+| `:UI sticky reset` | verwirft, was `depth`/`lines` geändert haben, zurück zu den Werten aus `ui_statusline/init.lua` |
+| `:UI sticky up [n]` | springt zum n-ten umschließenden Scope (auch bei ausgeschaltetem Overlay) |
+
+`depth` und `lines` werden seit 2026-09-21 gespeichert (`persist = true` im
+`sticky`-Block von `ui_statusline/init.lua`, Datei
+`stdpath("state")/ui.nvim/sticky.json`) und beim nächsten Start über die Werte
+aus der Config gelegt; `reset` löscht sie wieder. Die vollständige Befehlsliste
+steht im Blatt [Usercmds/UiSticky.md](../Usercmds/UiSticky.md).
+`sticky = false` schaltet das Feature ab. Keine Keymaps.
+
+Welche Knoten als Scope gelten, steht in ui.nvims `docs/configuration.md`
+(Tabelle je Sprache; `require("ui.context").is_scope_type("<typ>")` fragt einen
+Namen ab). Seit 2026-09-21 pinnt Rust auch `if`/`for`/`while`/`loop`/`match`/`mod`:
+ein `node_types`-Eintrag mit Anker an beiden Enden (`^if_expression$`) benennt
+genau einen Typ und wird von `exclude_node_types` nicht überstimmt. Ebenfalls seit
+2026-09-21 pinnt YAML die Eltern-Schlüssel eines tief verschachtelten Schlüssels
+(`^block_mapping_pair$`: `jobs:` > `build:` > `steps:`); JSON und TOML pinnen weiter
+nichts.
 
 ## `nvim-treesitter-textobjects`
 

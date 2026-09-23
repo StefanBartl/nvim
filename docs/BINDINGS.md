@@ -291,7 +291,6 @@ Sources: `lua/bindings/usrcmds/init.lua`,
 | --- | --- | --- |
 | `:WinVertical` | — | `:wincmd H` — move the current window into a vertical split, left side. Same action as `<leader>wl` |
 | `:WinHorizontal` | — | `:wincmd K` — move it into a horizontal split, top. Same action as `<leader>wh` |
-| `:ToggleInlineDiff` | — | Invert gitsigns' `word_diff` and `linehl` and preview the current hunk inline. Same action as `<leader>di` (`bindings/mappings/git.lua`) |
 
 Only two of the five `window_orientation` moves have a command; the right,
 bottom and rotate variants are keymap-only.
@@ -361,7 +360,7 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
 | `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
 | `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command |
-| `:MyPlugins dashboard [dir]` | Opens `reposcope.nvim`'s own `:Reposcope status [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `:MyPluginsDashboard [dir]` is a flat shorthand |
+| `:MyPlugins dashboard [dir]` | Opens `reposcope.nvim`'s own `:Reposcope dashboard [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `:MyPluginsDashboard [dir]` is a flat shorthand |
 | `:MyPlugins reclone [dir] [--only=<name>] [--dry-run]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
@@ -475,7 +474,7 @@ silently suppressing nvim-lspconfig's own commands via an upstream
 
 ## Autocommands
 
-Sources: `lua/autocmds/**`, `lua/bindings/**`, `lua/config/harpoon/**`,
+Sources: `lua/autocmds/**`, `lua/bindings/**`,
 `lua/plugins/**`, `lua/startup/init.lua`, `lua/wkdnvchad/ui/**`.
 
 **Counted are call sites, not event registrations** — the same rule
@@ -488,11 +487,17 @@ augroups** and **15 have no augroup at all** (see
 themselves are mixed (`Autocmd.group(name, true)` vs. raw
 `nvim_create_augroup`), same as in lsp.nvim.
 
+**Stale by three since 2026-09-19:** harpoon's removal (external-plugins
+report, 7.4) took the `HarpoonHardening` (2 call sites, 1 augroup) and
+`HarpoonPinMarks` (1 call site, 1 augroup) rows below with it — arithmetic
+only, not a full re-measurement: **55 call sites**, **40 in 26 augroups**,
+**15 without one**.
+
 **Three call sites are easy to miss in a fresh session**: `NeotestCore`
 (×2) and `NvChadLspSignature` (×1) register only once neotest or an LSP
 client has actually loaded, so a `:Bindings check` run right after startup
 reports them as `autocmd-not-live` — the same class as lsp.nvim's
-`LspNvimSagaWinbarDepth` (hangs off `LspAttach`) and `LspFormatOnSave`
+`lsp_nvim_peek` (created on the first peek) and `LspFormatOnSave`
 (hangs off a feature switch). Kept as real table rows rather than prose, so
 a renamed augroup would still be caught.
 
@@ -522,9 +527,11 @@ awareness of each other).
 | `git_autocmds_commit_ft` | `FileType` | `gitcommit` | Buffer options for the commit-message buffer |
 | `gitsigns_refresh` | `BufEnter`, `FocusGained` | — | Re-read gitsigns on focus/entry |
 | `numbers` | `TermOpen` | — | Terminal: disable absolute and relative line numbers locally |
-| `trim_trailing` | `BufWritePre` | `*` | Strip trailing whitespace on save |
+| `trim_trailing` | `BufWritePre` | `*` | Strip trailing whitespace on save, preserving cursor position |
 | `trim_blank` | `BufWritePre` | `*` | Clean fully-blank lines, preserving cursor position |
 | `last_loc` | `BufReadPost` | `*` | Restore the last cursor position after reading |
+| `preserve_folds_pre` | `BufWritePre` | `*` | Snapshot which fold ranges are manually closed before a save |
+| `preserve_folds_post` | `BufWritePost` | `*` | Re-close whatever fold ranges the save's own edits reopened |
 
 The Kitty augroup's doubled prefix
 (`general_autocmds_autocmds_general_…`) is an artefact of the name-building
@@ -559,24 +566,17 @@ From the same local override copy of `nvchad/au.lua` as `ReloadNvChad` and
 `:MasonInstallAll` (extern cheatsheet: `NvChadUI.md`). Registered only when
 `config.lsp.signature` is true.
 
-### Harpoon — `lua/config/harpoon/`
-
-| Augroup | Event(s) | Pattern | Action |
-| --- | --- | --- | --- |
-| `HarpoonHardening` | `BufLeave`, `FocusLost` | — | Debounced save |
-| `HarpoonHardening` | `VimLeavePre` | — | Flush any pending save |
-| `HarpoonPinMarks` | `FileType` | `harpoon` | Pin marks inside the Harpoon buffer |
-
-`HarpoonPinMarks` also appears on the extern `Harpoon.md` cheatsheet, there
-described as Harpoon-UI behavior; here as this config's registration of it.
-Both are correct — the registration lives here.
-
 ### Autocmd modules and plugin specs — `lua/autocmds/`, `lua/plugins/`
 
 | Augroup | Event(s) | Pattern | Action |
 | --- | --- | --- | --- |
 | `MarkdownLocalFolds` | `FileType` | `markdown` | Lightweight markdown folding, markdown buffers only (`lua/autocmds/markdown_folds.lua` — came out of `lua/options.lua` when that moved to my.nvim, and stayed here because it is a markdown.nvim integration rather than a generic option) |
-| `WebdevRestyLoader` | `FileType` | `http`, `resty` | Lazy-load `resty.nvim` on its own filetypes (`once`) |
+
+`WebdevRestyLoader` (`FileType` on `http`/`resty`, lazy-loading `resty.nvim`)
+was here until 2026-09-19. resty.nvim is gone — runtime-analysis.nvim's
+`:RA send` runs the same `.http` request blocks — and the autocmd existed
+only to contain the ~600 ms that loading resty cost (see the former
+`lua/plugins/webdev.lua` in git history, or the external-plugins report).
 
 ### Statusline — `lua/wkdnvchad/`
 

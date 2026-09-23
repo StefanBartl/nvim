@@ -37,6 +37,21 @@ zuschneidet. In neo-tree greift ohnehin filetree.nvims eigene buffer-lokale
 buffer-lokal geshadowed, erreicht diesen Dispatcher also auch mit dem
 Cursor im Tree-Fenster.
 
+Seit 2026-09-21 prüft `<RightMouse>` nach dem Replay zusätzlich
+`ui.statusline.menu.pointer_on_statusline()` (analog zum bestehenden
+`ui.tabline.menu.pointer_on_tabline()`-Check direkt darüber) und bricht ab,
+wenn der Zeiger auf einem tatsächlichen Statuszeilen-Modul saß (nicht bloß
+irgendwo auf der Zeile — Padding einer `%=`-Lücke zählt bewusst nicht, dort
+gäbe es ohnehin keine Click-Region zum Abfangen) — sonst poppt dort das
+eigene Rechtsklick-Menü der Statuszeile (Modul entfernen/hinzufügen, siehe
+`ui.nvim`s `docs/modules.md`, Abschnitt "Hover tooltip and the 'manage this
+module' menu") zusammen mit diesem allgemeinen Menü auf. Die Statuszeile
+selbst bindet dafür kein eigenes `<RightMouse>` — jedes Statuszeilen-Modul
+bekommt stattdessen eine native Click-Region (`%N@Func@…%X`), die vor jedem
+Keymap-Dispatch feuert; nur der Hover-Tooltip braucht ein echtes globales
+Keymap (`<MouseMove>`, Modi `n`/`i`/`v`, registriert von `ui.nvim` selbst
+sobald eine Statuszeile aktiviert wird — kein Eintrag in dieser Config).
+
 Seit 2026-09-09 (`contributed_submenus()` in `mappings.lua`) hängt hinter
 den Fly-outs zusätzlich eine flache Zeile von filetree.nvim
 (`filetree.integrations.menu.window_entry()`): "Open filetree" in jedem
@@ -94,8 +109,8 @@ Default `true`, gesetzt in der `menu`-Phase in `init.lua`.
 | 🗑️ Delete File | Datei von Disk löschen (Bestätigung) + `bdelete!` | `df` |
 | 🖥️ Open in terminal | `nvchad.term.new` (Split, cd ins Buffer-Verzeichnis) falls Base46 aktiv, sonst `:enew` + Terminal-Job | — |
 | 🎨 Color Picker | `minty.huefy.open()` | — |
-| 🔣 Unicode Table | `:UnicodeTable` (Floating Window, `unicode.vim`) | `uni` |
-| 󰊢 Git Actions ▸ | Untermenü aus [lua/config/menu/git.lua](../../../../../lua/config/menu/git.lua), nur wenn gitsigns.nvim da ist | — |
+| 🔣 Unicode Table | `:Emojis unicode table` (Floating Window, `emojis.nvim`; war `:UnicodeTable`/`unicode.vim`) | `uni` |
+| 󰊢 Git Actions ▸ | Untermenü aus `gitsuite.integrations.menu` (`E:/repos/gitsuite.nvim`, GS-09), `pcall`-geguardet -- jede Zeile geht über `:Git hunk\|blame\|diff *`, nicht mehr über rohe `gitsigns.<fn>()`-Aufrufe; nur die gitsigns-exklusiven Zeilen (Stage/Reset Hunk, Stage/Reset Buffer, Toggle Deleted) blenden ohne gitsigns.nvim aus, Blame/Diff/Preview Hunk bleiben (Preview fällt auf `:Git diff head` zurück) | — |
 
 Weggefallen gegenüber dem alten Stand:
 
@@ -105,7 +120,9 @@ Weggefallen gegenüber dem alten Stand:
 - **„Lsp Actions" (`items = "lsp"`)** kommt jetzt als Contributor von
   `lsp.nvim` aus dessen aufgelöstem Keymap-Katalog.
 - **`menus.gitsigns`** war eine Datendatei von nvzone/menu; die Git-Sektion
-  ist jetzt `config/menu/git.lua`.
+  war danach `config/menu/git.lua` (126 Zeilen, rohe `gitsigns.<fn>()`-Aufrufe)
+  und ist seit `GS-09` (2026-09-22) `gitsuite.integrations.menu` --
+  `config/menu/git.lua` ist gelöscht.
 - **Das Legacy-Neo-tree-Menü** (`lua/config/menu/neotree/`) ist gelöscht;
   filetree.nvim macht das.
 

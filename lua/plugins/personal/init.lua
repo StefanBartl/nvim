@@ -367,11 +367,36 @@ plugins.add({
     "stefanbartl/sessions.nvim",
     lazy = false,
     dependencies = { "stefanbartl/lib.nvim" },
-    opts = {
-      -- Bare `nvim` (no file args) resumes the last-loaded session — see
-      -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
-      -- autoload = true,
-    },
+    -- A function: `config.marks.defaults` asks the machine module, and a
+    -- table literal would do that at spec-import time for every start.
+    opts = function()
+      return {
+        -- Bare `nvim` (no file args) resumes the last-loaded session — see
+        -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
+        -- autoload = true,
+
+        -- The mark list. Ran in parallel to harpoon from 2026-09-19 (a same
+        -- day trial rather than the planned week, on request) until the
+        -- cut-over on the same day; harpoon is gone now (external-plugins
+        -- report, 7.4).
+        marks = {
+          enable = true,
+          scope = "global",
+          defaults = require("config.marks.defaults"),
+          select_key = "<leader>h%d",
+        },
+        -- `false`, not a table: the actual keymaps are attached from
+        -- bindings/mappings/sessions.lua at UIReady instead of here. This
+        -- spec has `lazy = false` for the autoload/autosave reason above, so
+        -- anything bound directly in `opts`/`config` runs on the synchronous
+        -- startup path -- exactly what this config's keymap registration is
+        -- everywhere else deliberately kept off of (see init.lua's UIReady
+        -- phases). harpoon's own bindings (bindings/mappings/harpoon.lua,
+        -- now deleted) respected that; this doesn't need to stop doing so
+        -- just because the feature moved plugins.
+        keymaps = false,
+      }
+    end,
   },
 
   {
@@ -554,20 +579,19 @@ plugins.add({
     opts = function(_, opts)
       opts.progress_style = "statusline"
       -- `require-not-declared` false positives, confirmed 2026-08-16 by
-      -- tracing every hit back to the actual require site. One of the two
-      -- known causes is gone now: `nvchad.*` (stl.utils, tabufline, themes,
-      -- term, utils, nvdash, mason, colorify, lsp.signature, winmes,
-      -- configs.lspconfig, ...) used to resolve to the real NvChad plugins'
-      -- own `lua/nvchad/*` tree, which happened to share this repo's own
-      -- (now-deleted) `lua/nvchad/` top segment -- 24 of the 31 hits at the
-      -- time. NvChad itself is gone as of roadmap step 7 and so is
-      -- `lua/nvchad/`, so `:DocMap check` should no longer list any of
-      -- those 24. What remains: `config.harpoon.api.lua`'s
-      -- `require("config.harpoon.ui.menu_" .. kind)` is a dynamic require;
-      -- the checker only ever sees the pre-concatenation literal
-      -- `"config.harpoon.ui.menu_"`, never the resolved `menu_telescope`/
-      -- `menu_fzf` it actually loads -- one warning, not fixable in the
-      -- checker without a real capability it doesn't have.
+      -- tracing every hit back to the actual require site. Both known causes
+      -- are gone now: `nvchad.*` (stl.utils, tabufline, themes, term, utils,
+      -- nvdash, mason, colorify, lsp.signature, winmes, configs.lspconfig,
+      -- ...) used to resolve to the real NvChad plugins' own `lua/nvchad/*`
+      -- tree, which happened to share this repo's own (now-deleted)
+      -- `lua/nvchad/` top segment -- 24 of the 31 hits at the time. NvChad
+      -- itself is gone as of roadmap step 7 and so is `lua/nvchad/`. The
+      -- other one, `config.harpoon.api.lua`'s dynamic
+      -- `require("config.harpoon.ui.menu_" .. kind)` (the checker only ever
+      -- saw the pre-concatenation literal, never the resolved
+      -- `menu_telescope`/`menu_fzf`), went with harpoon's removal on
+      -- 2026-09-19 (external-plugins report, 7.4). `:DocMap check` should no
+      -- longer list either.
       -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
       -- module/function in the generated page, real luac -l -l -p bytecode
       -- disassembly, not a workaround for Lua. Off by default upstream;
@@ -745,6 +769,12 @@ plugins.add({
       -- Building the cwd symbol index runs one rg pass per language pattern;
       -- reports into the shared lib.nvim.progress registry.
       symbols = { progress_style = "statusline" },
+      -- The two keys todo-comments.nvim's spec used to bind, on the feature
+      -- that replaced it (plugins/workflow.lua has the history): the picker
+      -- on the lowercase key, the quickfix list on the uppercase one. The
+      -- keyword table itself is insights' shipped default -- it was this
+      -- config's table to begin with.
+      keymaps = { todos = "<leader>sT", todos_qf = "<leader>ST" },
     },
   },
 
@@ -892,6 +922,21 @@ plugins.add({
           -- replaces config.neotree's window/{disable_statusline,highlight}.lua
           -- + autocmds/init.lua, all removed.
           window_style = { statusline = false, highlights_isolate = true },
+
+          -- The last three pieces of this config's own neo-tree layer,
+          -- moved into filetree.nvim 2026-09-19 (external-plugins report,
+          -- "neo-tree config -> filetree.nvim"):
+          --   * the source switcher -- `"`/`!` cycle in place (default),
+          --     `<leader>ns` picks from a list (was config.neotree's global
+          --     key), and plugins/neotree.lua takes the source_selector
+          --     names from the same module;
+          --   * the four Alt toggle keys, with the E95 self-heal now in the
+          --     adapter (was config/neotree/window/open/keymaps/only_lhs.lua);
+          --   * `y` in the tree as a second key for path_copy's absolute-path
+          --     copy (was a hand-rolled delegate in config.neotree.keymaps).
+          source_switcher = { keymap_pick = "<leader>ns" },
+          tree_toggle = { enabled = true },
+          path_copy = { keymap_abs = { "[a", "y" } },
         },
       })
     end,
@@ -956,8 +1001,9 @@ plugins.add({
   -- that module maps (see its `map("n", prefix .. …)` calls). A binding
   -- missing here would simply never load the plugin and silently do nothing.
   (function()
-    -- "<leader>d" alone collides with existing git/fzf mappings
-    -- (dc = DiffviewClose, di = ToggleInlineDiff, do = FzfLua diagnostics)
+    -- "<leader>d" alone collides with existing git/fzf mappings (dc = :Git
+    -- ui diffview close, di = :Git hunk inline, do = FzfLua diagnostics --
+    -- dc/di are gitsuite.nvim's since GS-08, not this config's own)
     local dap_prefix = "<leader>da"
 
     ---@type table[]
@@ -1017,7 +1063,59 @@ plugins.add({
   {
     "StefanBartl/diff.nvim",
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
+    -- `<leader>gd` was fugitive's `:Gdiffsplit`; diff.nvim resolves
+    -- `git:HEAD` for the current file itself, so the key moved here. A
+    -- lazy `keys` entry rather than diff.nvim's own `keymaps.diff_head`
+    -- option, because the plugin is command-lazy and an option-registered
+    -- shortcut would only exist after the first `:Diff`.
+    keys = {
+      {
+        "<leader>gd",
+        "<cmd>Diff target=git:HEAD<cr>",
+        desc = "[diff.nvim] Diff current file against HEAD",
+      },
+    },
     opts = {}, -- all three features are on by default
+  },
+
+  {
+    -- One :Git <scope> <action> command tree. Replaces vim-fugitive (blame),
+    -- vim-rhubarb (:Gbrowse), akinsho/git-conflict.nvim (:GitConflict* +
+    -- co/ct/cb/c0/]x/[x) and kdheepak/lazygit.nvim (the float + the nvr O/
+    -- <C-o> bridge) -- all four removed from plugins/git.lua. fugitive
+    -- defines its own :Git command (a hard collision, not just redundancy);
+    -- git-conflict.nvim would race gitsuite.nvim to set the same
+    -- buffer-local keys; lazygit.nvim's wrapper is fully superseded by
+    -- gitsuite's own float around the real `lazygit` binary.
+    "StefanBartl/gitsuite.nvim",
+    cmd = "Git",
+    -- Conflict markers live in a buffer's text, so there is nothing to
+    -- detect before one is read -- same eager-ish trigger git-conflict.nvim
+    -- used, needed here too since gitsuite.nvim's conflict scan/highlight/
+    -- keymap setup must not wait for the user to type :Git first.
+    event = { "BufReadPost", "BufNewFile" },
+    -- open.nvim deliberately NOT listed here: gitsuite.nvim's own browse
+    -- feature already treats it as a genuinely optional, pcall-guarded
+    -- adapter (features/browse/init.lua) -- a hard `dependencies` entry
+    -- would force it to load eagerly on every buffer read (this spec's own
+    -- `event` trigger) for a feature (:Git browse *) most sessions never
+    -- touch. diff.nvim STAYS: lazy.nvim has no "load on require()" trigger
+    -- (only cmd/event/ft/keys), and gitsuite's diff feature calls
+    -- require("diff") directly -- without this entry, :Git diff * would
+    -- error on a session where the user never separately triggered one of
+    -- diff.nvim's own commands first. Found and fixed 2026-09-21.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim" },
+    keys = {
+      -- Was fugitive's `:Git blame`; gitsuite's own blame is a real
+      -- implementation (native git blame --porcelain), not a stub.
+      { "<leader>gb", "<cmd>Git blame full<cr>", desc = "[gitsuite.nvim] Blame (full)" },
+      -- Was kdheepak/lazygit.nvim's `:LazyGit`; the UI is still the real
+      -- lazygit TUI, just in gitsuite.nvim's own float now.
+      { "<leader>lg", "<cmd>Git ui lazygit<cr>", desc = "[gitsuite.nvim] Open lazygit" },
+    },
+    config = function(_, opts)
+      require("gitsuite").setup(opts)
+    end,
   },
 
   {
@@ -1049,6 +1147,14 @@ plugins.add({
   {
     "StefanBartl/emojis.nvim",
     cmd = "Emojis",
+    -- "uni" was chrisbra/unicode.vim's own default mapping (character info
+    -- under the cursor) -- a bare `keys` entry used to lazy-load that
+    -- plugin and replay the key into its mapping. unicode.vim is gone (see
+    -- plugins/workflow.lua's removed spec); this binds straight to its
+    -- emojis.nvim replacement instead.
+    keys = {
+      { "uni", "<cmd>Emojis unicode name<cr>", desc = "Unicode: character info under cursor" },
+    },
     opts = {}, -- default_scope is already "%"
   },
 

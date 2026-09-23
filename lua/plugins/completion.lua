@@ -7,7 +7,7 @@
 --- config and would be wrong to ship inside a plugin.
 ---
 --- This used to be `plugins/lsp.lua`. The name outlived its contents: the
---- lazydev, conform, lspsaga, lensline, inc-rename, workspace-diagnostics and
+--- lazydev, conform, lensline, inc-rename, workspace-diagnostics and
 --- trouble specs it once held now live in `lsp.pack.{core,ui}`, and what was
 --- left had no more to do with LSP than any other cmp source does.
 ---

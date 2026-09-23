@@ -83,7 +83,7 @@ nur `<leader>F` ruft `snacks.explorer()` direkt).
 | `<leader>gL` | Git Log Line | [custom] |
 | `<leader>gs` | Git Status | [custom] |
 | `<leader>gS` | Git Stash | [custom] |
-| `<leader>gd` | Git Diff (Hunks) | [custom] |
+| `<leader>gD` | Git Diff (Hunks) — war `<leader>gd`; die Kleinschreibung gehört seit 2026-09-18 diff.nvims `:Diff target=git:HEAD` (vorher doppelt belegt mit fugitives `:Gdiffsplit`) | [custom] |
 | `<leader>gf` | Git Log File | [custom] |
 
 ## Gruppe: GitHub
@@ -148,23 +148,18 @@ Alle rufen ihr Submodul über einen `safe_call(mod, fn, ...)`-Dispatcher auf
 |---|---|---|---|
 | `<leader>ud` | Snacks Debug: Inspector öffnen | [custom] | `snacks.debug.open()` |
 | `<leader>uD` | Snacks Debug: Overlay togglen | [custom] | `snacks.debug.toggle()` |
-| `<leader>uf` | Snacks Dim: Focus-Scope togglen | [custom] | `snacks.dim.toggle()` |
-| `<leader>ps` | Snacks Profiler: Start | [custom] | `snacks.profiler.start()` |
-| `<leader>pS` | Snacks Profiler: Stop | [custom] | `snacks.profiler.stop()` |
-| `<leader>pr` | Snacks Profiler: Report | [custom] | `snacks.profiler.report()` |
 | `<leader>uq` | Snacks Quickfile: Deaktivieren (Session) | [custom] | `snacks.quickfile.disable()` |
-| `]s` | Snacks Scope: Nächster | [custom] | `snacks.scope.jump_next()` |
-| `[s` | Snacks Scope: Vorheriger | [custom] | `snacks.scope.jump_prev()` |
-| `<leader>ns` | Snacks Scratch: Öffnen | [custom] | `snacks.scratch.open()` |
-| `<leader>nS` | Snacks Scratch: Neu | [custom] | `snacks.scratch.new()` |
 
-Hinweis: `opts.dim.enabled`, `opts.profiler.enabled` und `opts.scope.enabled`
-sind in `plugins/snacks.lua` auf `false` gesetzt — dank des impliziten
-`setup(opts)`-Aufrufs (siehe oben) greift das auch tatsächlich, d. h. `dim`,
-`profiler` und `scope` sind hier disabled. Die zugehörigen Keymaps sind zwar
-registriert und rufen ihr Submodul bei Bedarf lazy auf (`safe_call`), die
-Submodule selbst tun aber standardmäßig nichts Sichtbares, solange sie
-disabled bleiben.
+Hinweis: Bis 2026-09-18 standen hier acht weitere Maps für `dim`
+(`<leader>uf`), `profiler` (`<leader>ps`/`pS`/`pr`), `scope` (`]s`/`[s`) und
+`scratch` (`<leader>ns`/`nS`). Alle vier Submodule sind in
+`plugins/snacks.lua` auf `enabled = false` gesetzt, die Tasten konnten also
+nur `safe_call`s „missing“-Warnung auslösen — und drei davon lagen zusätzlich
+auf einer lebenden Taste: `<leader>ns` auf Neo-trees Source-Switcher,
+`<leader>ps` auf insights.nvims Symbols-Picker, `]s` auf language.nvim. Sie
+sind entfernt (Externe-Plugins-Nachbau-Analyse, §7.2). Wer eines der Module braucht,
+schaltet es im Spec ein und bindet die Taste dann wieder; der Profiler hat
+mit `:RA` in runtime-analysis.nvim ein eigenes Zuhause.
 
 ---
 
@@ -181,7 +176,8 @@ Da `lazy = false`, setzt Lazy.nvim diese Keymaps beim Start unmittelbar als
 echte `vim.keymap.set`-Aufrufe (nicht nur als Lazy-Load-Trigger).
 
 Es gibt kein `config/snacks/custom_dashboard/*` mehr und keinen separaten
-`config/snacks/usrcmds/`-Baum (im Gegensatz z. B. zu Harpoon) — der Kommentar
+`config/snacks/usrcmds/`-Baum (im Gegensatz z. B. zu neotest,
+`config/neotest/`) — der Kommentar
 in `plugins/snacks.lua` erklärt das: *"config.snacks.usrcmds removed: every
 command it exposed now has an engine-agnostic equivalent in
 pickers.builtins, reached via `:Pickers builtin <name>`"*. Die frühere

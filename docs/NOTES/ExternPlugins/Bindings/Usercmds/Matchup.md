@@ -10,8 +10,12 @@ Commands existieren also ab dem Start.
 
 Konfiguriert wird über `vim.g.matchup_*` im `init`-Block, nicht über die
 Commands: `matchup_matchparen_deferred = 1` (kein verzögertes Aufblitzen) und
-`matchup_matchparen_offscreen = { method = "status" }` (ein Off-Screen-Match
-wird in der Statuszeile gezeigt statt als Popup).
+`matchup_matchparen_offscreen = { method = "status_manual" }` (ein
+Off-Screen-Match landet in `w:matchup_statusline`, statt dass vim-matchup wie
+bei `method = "status"` `&l:statusline` selbst überschreibt — ui.nvim's
+`matchup_offscreen`-Statuszeilenmodul liest die Variable zurück, siehe
+[config/ui_statusline/variant.lua](../../../../../lua/config/ui_statusline/variant.lua)
+und ui.nvim's `docs/modules.md`).
 
 ## [default] Die zwei aus `plugin/matchup.vim`
 

@@ -45,11 +45,15 @@ return {
         scratch = { enabled = false },
         toggle = { enabled = false },
         words = { enabled = false },
-        -- In-terminal image rendering (kitty graphics protocol).
-        -- Requires nvim to run inside a graphics-capable terminal (WezTerm on
-        -- Windows) and the `magick` CLI in PATH for png/webp/svg conversion.
-        -- Defaults already enable doc.inline + doc.float for markdown.
-        image = { enabled = true },
+        -- In-terminal image rendering, off: snacks.image draws through the
+        -- Kitty graphics protocol, and Kitty sequences sent from native
+        -- Windows Neovim in WezTerm are never drawn -- no error, nothing on
+        -- screen (images.nvim's docs/scope.md records the finding; that
+        -- plugin exists because of it and draws through iTerm2 OSC 1337
+        -- instead). Enabled, this module loaded and rendered nothing next
+        -- to the path that works. Flip it back only on a terminal where
+        -- Kitty graphics have been seen to render from inside nvim.
+        image = { enabled = false },
         bigfile = { enabled = false },
         notifier = { enabled = false },
 

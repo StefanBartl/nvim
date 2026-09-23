@@ -14,9 +14,9 @@
 --- kit renderer, and a grep for `require("menu")` across the whole plugin
 --- tree comes back empty.
 ---
---- `volt` and `minty` are unaffected by NvChad leaving -- both now have their
---- own direct specs in `plugins/ui.lua` (minty as its own entry depending on
---- volt, for the right-click menu's colour picker).
+--- `volt` and `minty` left on 2026-09-19: the right-click menu's colour
+--- picker is ui.nvim's own `ui.colorpicker` now, so neither is declared
+--- anywhere any more.
 ---
 --- To render context menus with nvzone/menu again: drop `enabled = false`
 --- here and set `renderer = "nvzone"` in init.lua's `menu` phase.
