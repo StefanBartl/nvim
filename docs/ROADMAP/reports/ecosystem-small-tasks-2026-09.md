@@ -5,7 +5,7 @@ werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
 bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
 erledigt.
 
-**Stand 2026-09-23, Fortsetzung nach Zuruf.** 7/15 committed + gepusht
+**Stand 2026-09-23, Fortsetzung nach Zuruf.** 8/15 committed + gepusht
 (siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz). Punkt 7s
 manuelle Sichtprüfung (Wrap-Verhalten von `<M-j>`/`<M-k>` im Insert-Mode)
 steht laut vorherigem Stand noch aus — Weiterarbeit an Punkt 8ff. wurde
@@ -59,7 +59,7 @@ Status: `[ ]` offen · `[~]` in Arbeit · `[x]` fertig (committed+pushed).
 
 ### Phase 3 — Neue kleine Subsysteme
 
-8. [ ] **images.nvim** — `:Images paste [path=...]` + `ui.kit.select`-Abfrage (relativ/absolut/`$REPOS_DIR`/custom)
+8. [x] **images.nvim** — `:Images paste [path=...]` + `ui.kit.select`-Abfrage (relativ/absolut/`$REPOS_DIR`/custom)
 9. [ ] **buffer-ctx.nvim** — `<leader>fm`-Äquivalent (im Dateimanager öffnen) + im Browser öffnen
 10. [ ] **pickers.nvim** — filetree.nvim-Keymaps (`[a`, `ML`, …) in der Ergebnisliste (Telescope + fzf-lua)
 
@@ -329,6 +329,68 @@ filetree.nvim zeigen die Referenzlogik).
 
 **Aufwand:** mittel (neue Pfad-Transformation + Argument-Parsing +
 UI-Abfrage, aber jede Zutat hat schon eine Vorlage in einem Schwester-Plugin).
+
+**Umgesetzt (2026-09-23):** `path=relative|absolute|repos|<prefix>` als
+bare `key=value` (kv, kein `--flag`) auf der `paste`-Route in
+`bindings/usrcmds.lua` — exakt das schon etablierte Muster aus
+`media.nvim`s `:Media dashboard path=<dir>` (`kv = { { key = "path", type =
+"STRING", values = {...} } }`), nicht händisch geparst. Eine wichtige
+Klarstellung gegenüber dem ursprünglichen Fund: der Modus verändert nur den
+**String im eingefügten Markdown-Link**, niemals den tatsächlichen
+Speicherort der Datei (bleibt immer `paste.dir`/ein vorhandener
+Resource-Ordner neben dem Dokument, wie vorher) — neue reine Funktion
+`images.paste.resolve_link_path(abs, doc_rel, mode)` in `paste.lua`, von
+`target_paths` aufgerufen. `mode="repos"` übernimmt exakt Punkt 1s
+Fallback-Logik aus `buffer-ctx.nvim/ops/filepath.lua` (innerhalb
+`$REPOS_DIR` → Prefix strippen, außerhalb → Fallback auf den
+dokument-relativen Pfad, `$REPOS_DIR` unset → Error). Ein nicht erkannter
+Wert wird nicht validiert/abgelehnt, sondern wörtlich als Custom-Prefix vor
+den dokument-relativen Pfad gesetzt (`path=/static/img` →
+`/static/img/assets/shot-1.png`).
+
+Eine bewusste Abweichung vom wörtlichen Fix-Text: statt "kein fester
+Default gesetzt ⇒ immer fragen" bekommt `paste.default_path_mode` einen
+sinnvollen eingebauten Default (`"relative"`, exakt das Verhalten von
+vorher) statt `nil`/unset — sonst hätte jeder bestehende `:Image
+paste`/`<leader>iv`-Aufruf nach diesem Update plötzlich eine interaktive
+Abfrage bekommen, im Widerspruch zum Plugin-eigenen Leitmotiv ("screenshot,
+one keypress, done", so explizit in `paste.lua`s Moduldoc). `false` ist
+jetzt das Opt-in-Signal für "frag mich jedes Mal" (gleiche
+`false`-schaltet-ab-Konvention wie bei den Keymap-Optionen). `:Image
+screenshot` bleibt bewusst außen vor (pinned auf `"relative"`, kein
+`path=`-Argument dafür angefragt) — kein Scope-Creep in einen Befehl, der
+gar nicht Teil der Aufgabe war.
+
+`ui.kit.select`-Abfrage (vier Optionen: relativ/absolut/`$REPOS_DIR`/Custom)
+mit `vim.ui.select`-Fallback nach dem etablierten
+`pcall(require, "ui.kit")`-Muster von `images.paste.kit()`; "custom
+prefix…" öffnet einen zweiten Prompt (`ui.kit.input`/`vim.fn.input`) für den
+literalen Prefix. Config-seitig gab es noch kein Default-Mode-Feld — neu
+ergänzt: `paste.default_path_mode` (DEFAULTS.lua, KNOWN-Schema in
+`config/init.lua`, `@types/init.lua`).
+
+Tests in `TESTS/paste_target_spec.lua` (neue Abschnitte 5-7: `resolve_link_path`
+pur für alle vier Modi inkl. `$REPOS_DIR` unset/außerhalb, End-to-end über
+`paste_with_name` — Datei bleibt in `assets/`, nur der Link ändert sich —,
+und `resolve_path_mode`: expliziter Arg gewinnt, konfigurierter Default
+überspringt die Abfrage nachweislich [`vim.ui.select` wirft, wenn
+aufgerufen], `default_path_mode=false` fragt via gestubtem `vim.ui.select`,
+"custom" fragt ein zweites Mal via gestubtem `vim.fn.input`, Abbruch ⇒ nil)
+sowie `TESTS/usrcmds_spec.lua` (kv-Parsing von `path=...`, kombiniert mit
+`name`, unbekannter Wert bleibt Custom-Prefix). luacheck (0
+Warnings/Errors, `lua/`+`plugin/`+`scripts/`+`TESTS/`) und stylua (`--check`
+grün) für alle geänderten/neuen Dateien. Volle Suite headless grün bis auf
+zwei bereits vor dieser Änderung fehlschlagende, umgebungsabhängige Specs
+(`capability_spec.lua`, `guard_spec.lua`, beide zu Terminal-Capability-
+Erkennung, nichts mit `paste`/Pfaden zu tun — vor dieser Änderung per `git
+stash` gegengeprüft: identischer Fehlschlag). Docs aktualisiert:
+`docs/commands.md`, `docs/configuration.md` (neuer Abschnitt
+`paste.default_path_mode` / `:Image paste path=...`), `docs/BINDINGS.md`,
+`doc/images.txt` (Befehlssyntax, Config-Beispiel, Prosa-Abschnitt,
+`images.paste()`-API-Signatur). Kein neues Usercmd, kein neuer
+Lazy-`cmd`-Eintrag nötig (`path=` ist ein Argument auf der bestehenden
+`:Image`-Route, `cmd = { "Image" }` deckt das schon ab). Commit
+`images.nvim@4a79085`.
 
 ### 9. buffer-ctx.nvim: Datei-Manager/Browser öffnen
 
