@@ -5,15 +5,17 @@ werden.** Status-Spalte pro Punkt unten in der Übersicht; Details-Abschnitte
 bleiben als Analyse stehen, bekommen aber einen "Umgesetzt"-Absatz sobald
 erledigt.
 
-**Stand 2026-09-23, pausiert nach Punkt 7 auf Zuruf.** 7/15 committed +
-gepusht (siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz).
+**Stand 2026-09-23, Fortsetzung nach Zuruf.** 7/15 committed + gepusht
+(siehe Häkchen unten, je mit Commit-Hash im "Umgesetzt"-Absatz). Punkt 7s
+manuelle Sichtprüfung (Wrap-Verhalten von `<M-j>`/`<M-k>` im Insert-Mode)
+steht laut vorherigem Stand noch aus — Weiterarbeit an Punkt 8ff. wurde
+trotzdem freigegeben; Punkt 7 selbst bleibt unverändert `[x]` (Code steht,
+nur die Sichtprüfung ist ein separates, unabhängiges To-Do für dich).
 Punkte 8–14 (images.nvim, buffer-ctx.nvim fm/browser, pickers.nvim-Keymaps
 + Git-Status-Marks, `:Insert`-Cross-Plugin-Shims, `:MyPlugins`
-nvim-config+fetch, lsp.nvim-Breadcrumb) sind **noch nicht begonnen**. Punkt
-15 (Audit-Task) ist bereits als eigene Aufgabe formuliert, nicht Teil dieser
-Umsetzungs-Reihenfolge. Bevor hier weitergemacht wird: Punkt 7 bitte einmal
-von Hand testen (siehe dessen Abschnitt) — Wrap-Verhalten ließ sich headless
-nicht abschließend verifizieren.
+nvim-config+fetch, lsp.nvim-Breadcrumb) werden jetzt nacheinander
+umgesetzt, ein Punkt pro Agent-Runde. Punkt 15 (Audit-Task) ist bereits als
+eigene Aufgabe formuliert, nicht Teil dieser Umsetzungs-Reihenfolge.
 
 Analyse + Umsetzungsplan für die Sammlung an kleinen Tasks aus der Session
 vom 2026-09-23, quer über `gopath.nvim`, `images.nvim`, `pickers.nvim`,
