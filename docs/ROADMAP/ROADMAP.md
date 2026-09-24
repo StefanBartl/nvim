@@ -4,14 +4,14 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
-    - [Cross-Plugin / Konkurrenzanalyse](#cross-plugin-konkurrenzanalyse)
-    - [AI / Claude (zeitlich begrenzt)](#ai-claude-zeitlich-begrenzt)
+    - [Cross-Plugin / Konkurrenzanalyse](#cross-plugin--konkurrenzanalyse)
+    - [AI / Claude (zeitlich begrenzt)](#ai--claude-zeitlich-begrenzt)
     - [interessant](#interessant)
   - [Tasks](#tasks)
-    - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
+    - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-über-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
-    - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
-      - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
+    - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen---wenn-alles-fertig-ist)
+      - [Git & Repo-Hygiene / Docs, Comments,...](#git--repo-hygiene--docs-comments)
 
 ---
 

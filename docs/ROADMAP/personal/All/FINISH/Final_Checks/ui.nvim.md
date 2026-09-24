@@ -2,7 +2,7 @@
 
 ## Table of content
 
-  - [Sichtprüfung im echten Fenster](#sichtprfung-im-echten-fenster)
+  - [Sichtprüfung im echten Fenster](#sichtprüfung-im-echten-fenster)
 
 ---
 

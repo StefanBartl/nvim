@@ -26,7 +26,7 @@ niemand liest.
   - [Bewusst ohne eigenes Blatt](#bewusst-ohne-eigenes-blatt)
   - [Nicht im Scope: Neovims eigene](#nicht-im-scope-neovims-eigene)
   - [Nicht im Scope: lazy-`cmd`-Stubs](#nicht-im-scope-lazy-cmd-stubs)
-  - [Was die Null nicht heißt](#was-die-null-nicht-heit)
+  - [Was die Null nicht heißt](#was-die-null-nicht-heißt)
 
 ---
 

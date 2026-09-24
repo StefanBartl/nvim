@@ -11,9 +11,9 @@ rust-analyzer, `.d.ts`/`node_modules`-Ausnahme, Call Hierarchy) liegen archivier
 
   - [Commits dieser Arbeit (ohne WKDBooks)](#commits-dieser-arbeit-ohne-wkdbooks)
   - [Wohin das Erledigte gewandert ist](#wohin-das-erledigte-gewandert-ist)
-  - [Nach Aufwand / Nutzen](#nach-aufwand-nutzen)
-  - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prfungen-im-echten-terminal)
-  - [Nicht geprüft / Grenzen](#nicht-geprft-grenzen)
+  - [Nach Aufwand / Nutzen](#nach-aufwand--nutzen)
+  - [Abschluss: deine Prüfungen im echten Terminal](#abschluss-deine-prüfungen-im-echten-terminal)
+  - [Nicht geprüft / Grenzen](#nicht-geprüft--grenzen)
 
 ---
 

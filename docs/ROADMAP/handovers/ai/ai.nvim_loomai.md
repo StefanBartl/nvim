@@ -9,11 +9,11 @@
 ## Table of content
 
   - [Feedback](#feedback)
-  - [Regeln für diese Session](#regeln-fr-diese-session)
+  - [Regeln für diese Session](#regeln-für-diese-session)
   - [Orte](#orte)
   - [Offene Punkte](#offene-punkte)
-    - [1. ai.nvim im Alltag validieren + Live-Testing](#1-ainvim-im-alltag-validieren-live-testing)
-    - [2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release](#2-phase-10-gatesreleasemd-vor-dem-ersten-tagrelease)
+    - [1. ai.nvim im Alltag validieren + Live-Testing](#1-ainvim-im-alltag-validieren--live-testing)
+    - [2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release](#2-phase-10--gatesreleasemd-vor-dem-ersten-tagrelease)
   - [Erledigt seit 2026-09-21](#erledigt-seit-2026-09-21)
 
 ---

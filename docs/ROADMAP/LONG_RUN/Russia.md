@@ -5,7 +5,7 @@
   - [intro](#intro)
   - [Rechtlicher Rahmen (kurz, aber wichtig)](#rechtlicher-rahmen-kurz-aber-wichtig)
   - [Warum „darf KI das meistens nicht"](#warum-darf-ki-das-meistens-nicht)
-  - [Konzept-Überblick](#konzept-berblick)
+  - [Konzept-Überblick](#konzept-überblick)
 
 ---
 

@@ -28,14 +28,14 @@ danach nicht mehr.
 ## Table of content
 
   - [1. Der Dispatcher](#1-der-dispatcher)
-  - [2. Ein Git-Objekt öffnen](#2-ein-git-objekt-ffnen)
+  - [2. Ein Git-Objekt öffnen](#2-ein-git-objekt-öffnen)
   - [3. Ein Git-Objekt in den Buffer lesen](#3-ein-git-objekt-in-den-buffer-lesen)
   - [4. Schreiben und stagen](#4-schreiben-und-stagen)
   - [5. Diff](#5-diff)
   - [6. Suchen und Log in Quickfix](#6-suchen-und-log-in-quickfix)
   - [7. Dateioperationen, die Git mitbekommt](#7-dateioperationen-die-git-mitbekommt)
   - [8. Verzeichnis wechseln](#8-verzeichnis-wechseln)
-  - [9. Im Browser öffnen](#9-im-browser-ffnen)
+  - [9. Im Browser öffnen](#9-im-browser-öffnen)
   - [Die Legacy-Aliase](#die-legacy-aliase)
 
 ---
