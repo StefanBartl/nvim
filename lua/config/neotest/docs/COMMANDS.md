@@ -4,10 +4,10 @@
 
 - [Neotest commands](#neotest-commands)
   - [1. User Commands](#1-user-commands)
-  - [2. Keymaps (Tastenkürzel)](#2-keymaps-tastenkrzel)
+  - [2. Keymaps (Tastenkürzel)](#2-keymaps-tastenkürzel)
     - [Test-Steuerung](#test-steuerung)
-    - [UI & Übersicht](#ui-bersicht)
-    - [Wartung & Diagnose](#wartung-diagnose)
+    - [UI & Übersicht](#ui--übersicht)
+    - [Wartung & Diagnose](#wartung--diagnose)
   - [3. Autocommands (Detailliert)](#3-autocommands-detailliert)
     - [Initial Test Discovery](#initial-test-discovery)
 

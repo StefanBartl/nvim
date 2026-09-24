@@ -13,7 +13,7 @@ Dieser Ordner enthält alle Typdefinitionen für das `config.neotree` Modul, org
     - [String Literal Unions als Aliases](#string-literal-unions-als-aliases)
   - [Organisation Principles](#organisation-principles)
   - [Import](#import)
-  - [Mapping: Folder → Type File](#mapping-folder-type-file)
+  - [Mapping: Folder → Type File](#mapping-folder--type-file)
 
 ---
 

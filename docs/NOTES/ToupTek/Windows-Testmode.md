@@ -7,7 +7,7 @@ Mit dem Befehl `bcdedit /set testsigning on` hast du den **Test-Modus (Test Sign
   - [Was wurde genau gemacht?](#was-wurde-genau-gemacht)
   - [Welche Gefahren birgt das?](#welche-gefahren-birgt-das)
   - [Kannst du erst mal so weiterlaufen lassen?](#kannst-du-erst-mal-so-weiterlaufen-lassen)
-  - [Wann und wie solltest du das zurücksetzen?](#wann-und-wie-solltest-du-das-zurcksetzen)
+  - [Wann und wie solltest du das zurücksetzen?](#wann-und-wie-solltest-du-das-zurücksetzen)
 
 ---
 
