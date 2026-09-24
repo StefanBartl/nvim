@@ -36,6 +36,12 @@ nowhere else. That is IGNORED — the same failure as CASE, from the other side.
 Sources are the files git tracks plus the ones it does not ignore yet, so a
 docs/README.md written a minute ago is checked rather than silently passed.
 
+A leading `$REPOS_DIR/...` or `$NVIM_CONFIG_DIR/...` is expanded the same
+way gopath.nvim's `env_variable_resolution` does (real env var first, then
+its "well-known dirs" fallback) -- the point of writing a link that way at
+all is that gopath.nvim's `gF` can also open it, so this checker resolves
+it identically rather than reporting a personal-machine path it can't judge.
+
 Links quoted as examples — inside a fenced code block or inline backticks —
 are not links, and are skipped.
 
@@ -80,6 +86,47 @@ for _stream in (sys.stdout, sys.stderr):
 
 SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__"}
 SKIP_PATHS = (os.path.join("docs", "map"),)
+
+VAR_RE = re.compile(r"^\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?(?:[/\\]|$)")
+
+# Mirrors gopath.nvim's own env_variable_resolution.shorten_known_dirs (see
+# gopath.nvim/docs/configuration.md): a real environment variable of that
+# name always wins (checked first, below); this is only the fallback for
+# "well-known" directories nobody necessarily exports a var for. Keeping the
+# two in sync is the point -- a link written as $REPOS_DIR/... or
+# $NVIM_CONFIG_DIR/... is meant to be opened with gopath.nvim's gF as much
+# as checked by this script, so both must resolve the same token the same
+# way. NVIM_CONFIG_DIR has no real env var on this machine; stdpath("config")
+# is $LOCALAPPDATA/nvim on Windows (XDG_CONFIG_HOME/.config on Unix) absent
+# an override this script has no way to see -- a Lua-side deviation here
+# would only ever make the check MORE conservative (a false DEAD), never
+# silently wrong.
+WELL_KNOWN_DIRS = {
+    "NVIM_CONFIG_DIR": lambda: (
+        os.path.join(os.environ["LOCALAPPDATA"], "nvim") if os.name == "nt" and "LOCALAPPDATA" in os.environ
+        else os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "nvim")
+    ),
+}
+
+
+def expand_vars(p: str) -> str:
+    """$VAR/... or ${VAR}/... -> the real directory, gopath.nvim-style.
+
+    Only a LEADING token is a directory reference here (matching how these
+    are actually written in this ecosystem's docs); a bare `$` elsewhere in
+    a path is left alone.
+    """
+    m = VAR_RE.match(p)
+    if not m:
+        return p
+    name = m.group(1)
+    base = os.environ.get(name)
+    if base is None and name in WELL_KNOWN_DIRS:
+        base = WELL_KNOWN_DIRS[name]()
+    if base is None:
+        return p
+    rest = p[m.end():]
+    return os.path.join(base, rest) if rest else base
 
 # [^)\n]: an unclosed "(" on a malformed line (escaped brackets, a stray
 # paren in prose) must never let the match run on into the NEXT line's real
@@ -439,7 +486,7 @@ def check(root: str) -> tuple[list[Finding], int]:
             # working link DEAD. `path` itself stays encoded -- it is the
             # literal substring `target`'s own text is built from, needed
             # verbatim for the CASE/DEAD --fix string replace below.
-            resolved = md if not path else os.path.normpath(os.path.join(base, unquote(path)))
+            resolved = md if not path else os.path.normpath(os.path.join(base, expand_vars(unquote(path))))
             if path:
                 if not os.path.exists(resolved):
                     if index is None:
