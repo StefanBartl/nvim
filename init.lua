@@ -32,10 +32,10 @@ vim.opt.rtp:prepend(lazypath)
 -- require config modules that use lib.* already during the spec-import phase of
 -- lazy.setup(). It must therefore be on the runtimepath BEFORE the specs are
 -- imported, so we bootstrap it the same way as lazy.nvim itself. The lazy spec
--- in plugins/personal.lua keeps it updatable; this only guarantees early
+-- in plugins/personal/init.lua keeps it updatable; this only guarantees early
 -- availability.
 --
--- Must resolve to the same dir plugins/personal/init.lua's apply_source() will
+-- Must resolve to the same dir plugins/personal/source.lua's resolve() will
 -- later assign to the "StefanBartl/lib.nvim" spec (local repos checkout when
 -- present, else lazy's managed dir). Otherwise lazy sees the plugin's `dir`
 -- change after it's already on the runtimepath and errors ("changed dir ...
@@ -90,18 +90,6 @@ require("lazy").setup({
   { import = "plugins.colorscheme" },
 }, lazy_config)
 
--- NvChad (`NvChad/NvChad`, branch v2.5, plus the `{ import = "nvchad.plugins"
--- }` fragment that pulled in its own bundled base46/nvchad-ui/nvzone specs)
--- is gone as of ui.nvim's roadmap step 7: every feature it still provided
--- (statusline/tabline/theme -> ui.nvim; signature help -> lsp.nvim's own
--- tool; colorify -> nvim-colorizer.lua; the theme/colour pickers -> ui.nvim's
--- :UI picker and a standalone nvzone/minty; Mason and which-key -> their own
--- specs in plugins/essentials.lua) has a direct, NvChad-independent owner
--- now. `vim.g.base46_cache` is gone with it -- its only remaining reader
--- (lua/config/menu/custom_menu/init.lua's terminal fallback) never needed
--- base46 itself, only NvChad's presence, and degrades to its own plain
--- terminal path without it.
-
 -- =============================================================================
 -- STARTUP PHASES
 -- =============================================================================
@@ -123,10 +111,9 @@ startup.setup_usercmds()
 require("bindings.usrcmds.update_repos").enable()
 require("bindings.usrcmds.plugin_repos").enable()
 require("bindings.usrcmds.who_locks").enable()
--- :DocMapAll / :RATelemetryStartAll+StopAll (2026-08-14): moved into
--- documentation.nvim / runtime-analysis.nvim themselves -- see
--- plugins/personal/init.lua's opts.generate_all for the data this config
--- still supplies. No usrcmd wrapper needed here any more.
+-- :DocMapAll and :RATelemetry* live in documentation.nvim / runtime-analysis
+-- .nvim themselves; see plugins/personal/init.lua's opts.generate_all for the
+-- data this config supplies them.
 
 -- --- synchronous ------------------------------------------------------------
 
@@ -154,12 +141,8 @@ end)
 -- Sync, and it has to be: `declarative` shapes how the first buffer renders,
 -- the highlight groups must land before the first paint to avoid a visible
 -- flash, and vim.diagnostic.config() must precede the first LSP attach.
---
--- One phase where there used to be two ("options" against lua/options.lua and
--- "wkdoptions" against lua/wkdoptions/**). Both now live in
--- StefanBartl/my.nvim, and `declarative` is the switch for the former --
--- which is why setup() names it explicitly rather than relying on the
--- default: this call is the documentation of what the phase does.
+-- `declarative` is named explicitly rather than relying on the default:
+-- this call is the documentation of what the phase does.
 startup.now("my", function()
   require("my").setup({
     declarative = true,
@@ -170,10 +153,10 @@ startup.now("my", function()
   })
 end)
 
--- Sync: THIS IS THE ONE THAT WAS BROKEN. autocmds/general registers a VimEnter
--- handler (kitty spacing) and autocmds/text a BufReadPost handler (last_loc).
--- Under the old 10ms timer both were registered ~2s after their events had
--- already fired, so neither ever ran. Registration must happen before VimEnter.
+-- Sync: autocmds/general registers a VimEnter handler (kitty spacing) and
+-- autocmds/text a BufReadPost handler (last_loc). Both must be registered
+-- before their event fires, i.e. before VimEnter -- a wall-clock timer here
+-- would register them too late (see the STARTUP PHASES note above).
 startup.now("autocmds", function()
   require("autocmds")
 end)
@@ -213,9 +196,7 @@ end
 
 startup.now("lsp", function()
   -- `require("lsp")` resolves to the lsp.nvim plugin (lazy = false, so it is on
-  -- the runtimepath by the time this runs). This config's former lua/lsp/**
-  -- lives there; the local lsp_legacy copy it was renamed to during the
-  -- migration is gone, the plugin is the only source now.
+  -- the runtimepath by the time this runs).
   require("lsp").setup({
     mason = { ensure_install = false },
     -- Stage/Reset/Preview Hunk in the `lsa` list when the cursor is on a hunk.
@@ -225,16 +206,14 @@ startup.now("lsp", function()
     -- Measured 2026-09-21: capped at `max_requests` per round, one round per
     -- typing pause, no event-loop stall. Drop the line to go back to off.
     implement = { enable = true },
-    -- New in lsp.nvim (2026-09-24): `winbar.align = "right"` pushes the
-    -- breadcrumb to the window's right edge via 'winbar''s own `%=`
-    -- right-align item. Left (the default) stays as it is here -- nobody
-    -- has asked for the right-aligned look yet, this is just where to set
-    -- it once someone does.
+    -- `winbar.align = "right"` pushes the breadcrumb to the window's right
+    -- edge via 'winbar''s own `%=` right-align item. Left (the default)
+    -- stays as it is here -- the breadcrumb (path chips) is fine on the
+    -- left; it's the sticky-scroll pinned headings that should move.
     -- winbar = { align = "right" },
     -- The plugin-name list is this config's data, so it is handed over rather
-    -- than reached for. Passed here and not from a completion engine's spec:
-    -- it used to be wired from nvim-cmp's `opts`, which meant switching to
-    -- blink silently dropped the source.
+    -- than reached for from a completion engine's own spec -- that way it
+    -- does not depend on which completion engine (blink, cmp, ...) is active.
     completion = {
       personal_names = {
         enable = true,
@@ -285,10 +264,8 @@ end)
 
 -- UIReady: the context menu is two keymaps plus the item builders behind
 -- them, so it belongs with the other keymaps rather than on the synchronous
--- path. It used to be set up from nvzone/menu's lazy `config` hook, which
--- tied a config feature to a plugin it no longer needs: rendering goes
--- through lib.nvim.contextmenu now, and `renderer = "nvzone"` is all it
--- takes to put the old drawing back.
+-- path. Rendering goes through lib.nvim.contextmenu; `renderer = "nvzone"`
+-- switches to nvzone/menu's own drawing instead.
 -- Neovim's own built-in PopUp menu is off by default (lib.nvim.contextmenu's
 -- own default, not something set here), since it is what used to show up as
 -- "a different right-click menu" on any click a mapping doesn't cover (a
@@ -304,12 +281,10 @@ startup.on("UIReady", "menu", function()
   })
 end)
 
--- UIReady, deliberately last among these: everything else, including
--- NvChad's own chadrc-driven statusline, has already booted by the time this
--- runs, so ui.nvim's own render entrypoint wins vim.o.statusline without
--- this config touching chadrc.lua or NvChad at all. See
--- lua/config/ui_statusline/init.lua's own doc comment for what this is (and
--- is not -- not roadmap step 7).
+-- UIReady, deliberately last among these: everything else has already booted
+-- by the time this runs, so ui.nvim's own render entrypoint wins
+-- vim.o.statusline. See lua/config/ui_statusline/init.lua's own doc comment
+-- for what this is.
 startup.on("UIReady", "ui_statusline", function()
   require("config.ui_statusline").setup()
 end)
@@ -322,7 +297,7 @@ end)
 
 -- DAP setup (adapters, launch configs, UI, keymaps) lives in
 -- StefanBartl/dap.nvim, loaded via lua/plugins/personal/init.lua (event =
--- "VeryLazy"). The former lua/wkddap prototype has been extracted there.
+-- "VeryLazy").
 
 -- Show startup time
 vim.defer_fn(function()
@@ -331,8 +306,3 @@ vim.defer_fn(function()
     vim.notify(string.format("Config loaded in %.2f ms", load_time), vim.log.levels.INFO)
   end
 end, 0)
-
--- The hard-contrast Visual highlight that used to sit here moved into
--- my.nvim's bindings/autocmds.lua -- its own comment already said it belonged
--- in options/. It is on a ColorScheme hook there, so unlike this line it
--- survives a `:UI theme` switch.

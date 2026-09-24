@@ -279,10 +279,7 @@ plugins.add({
   },
 
   {
-    -- The whole LSP subsystem, extracted from this config's former lua/lsp/**
-    -- (see docs/ROADMAP/personal/lsp.nvim.md). Module root is still `lsp`, so
-    -- every existing require("lsp.…") keeps resolving -- which also means this
-    -- plugin and a local lua/lsp/** cannot coexist: the config would shadow it.
+    -- The whole LSP subsystem (see docs/ROADMAP/personal/lsp.nvim.md).
     --
     -- No `opts`/`config` on purpose. init.lua calls setup() inside
     -- startup.now("lsp", ...) because capabilities have to be applied globally
@@ -296,12 +293,8 @@ plugins.add({
   },
 
   {
-    -- This config's former lua/wkdoptions/** plus lua/options.lua: the
-    -- declarative option set, the highlight features, the editor-option
-    -- toggles, italic keywords and per-filetype indentation. Module root is
-    -- `my`, so a local lua/wkdoptions/ would not shadow it -- but the old
-    -- callers were repointed in the same commit that deleted it, so there is
-    -- nothing left to shadow either.
+    -- The declarative option set, the highlight features, the editor-option
+    -- toggles, italic keywords and per-filetype indentation.
     --
     -- PRIVATE repo, unlike every other entry here. See source.lua's mode entry
     -- for what that means on a machine that resolves to "remote".
@@ -319,23 +312,13 @@ plugins.add({
   },
 
   {
-    -- This config's former lua/wkdnvchad/** statusline/tabline/theme code,
-    -- extracted, then rebuilt standalone -- as of its own roadmap step 6 it
-    -- needs neither NvChad nor base46 any more for statusline, tabline or
-    -- theme (see the plugin's own README). `config/ui_statusline.lua` wires
-    -- this host's own statusline into it at UIReady. `chadrc.lua` and
-    -- `lua/wkdnvchad/` are gone (step 7, first round); NvChad's plugin
-    -- itself, its tabufline and its remaining core features (nvdash, LSP
-    -- signature, colorify, the theme/colour pickers) are gone too as of step
-    -- 7's later rounds -- see ui.nvim's own NOTES.md.
+    -- Statusline/tabline/theme -- needs neither NvChad nor base46 (see the
+    -- plugin's own README). `config/ui_statusline.lua` wires this host's own
+    -- statusline into it at UIReady.
     --
     -- No `opts`/`config` on purpose, same reason as my.nvim/lsp.nvim above:
     -- the actual setup() calls happen from a startup phase (UIReady) rather
-    -- than a lazy hook. UIReady used to matter for winning a race against
-    -- NvChad's own statusline setter (running last so this one stuck); that
-    -- competing setter is gone now, so the phase just runs once with nothing
-    -- left to race -- the ordering guarantee still holds, it just no longer
-    -- has to.
+    -- than a lazy hook.
     --
     -- `keymaps` below IS read, though -- by config/ui_statusline/init.lua, at
     -- that same UIReady phase, via `require("lazy.core.config")
@@ -375,10 +358,7 @@ plugins.add({
         -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
         -- autoload = true,
 
-        -- The mark list. Ran in parallel to harpoon from 2026-09-19 (a same
-        -- day trial rather than the planned week, on request) until the
-        -- cut-over on the same day; harpoon is gone now (external-plugins
-        -- report, 7.4).
+        -- The mark list.
         marks = {
           enable = true,
           scope = "global",
@@ -391,9 +371,7 @@ plugins.add({
         -- anything bound directly in `opts`/`config` runs on the synchronous
         -- startup path -- exactly what this config's keymap registration is
         -- everywhere else deliberately kept off of (see init.lua's UIReady
-        -- phases). harpoon's own bindings (bindings/mappings/harpoon.lua,
-        -- now deleted) respected that; this doesn't need to stop doing so
-        -- just because the feature moved plugins.
+        -- phases).
         keymaps = false,
       }
     end,
@@ -612,21 +590,7 @@ plugins.add({
     -- (lua/<name>, when lua/ contains exactly one candidate).
     opts = function(_, opts)
       opts.progress_style = "statusline"
-      -- `require-not-declared` false positives, confirmed 2026-08-16 by
-      -- tracing every hit back to the actual require site. Both known causes
-      -- are gone now: `nvchad.*` (stl.utils, tabufline, themes, term, utils,
-      -- nvdash, mason, colorify, lsp.signature, winmes, configs.lspconfig,
-      -- ...) used to resolve to the real NvChad plugins' own `lua/nvchad/*`
-      -- tree, which happened to share this repo's own (now-deleted)
-      -- `lua/nvchad/` top segment -- 24 of the 31 hits at the time. NvChad
-      -- itself is gone as of roadmap step 7 and so is `lua/nvchad/`. The
-      -- other one, `config.harpoon.api.lua`'s dynamic
-      -- `require("config.harpoon.ui.menu_" .. kind)` (the checker only ever
-      -- saw the pre-concatenation literal, never the resolved
-      -- `menu_telescope`/`menu_fzf`), went with harpoon's removal on
-      -- 2026-09-19 (external-plugins report, 7.4). `:DocMap check` should no
-      -- longer list either.
-      -- Experimental (2026-08-10): a "Compiler Explorer" link next to every
+      -- Experimental: a "Compiler Explorer" link next to every
       -- module/function in the generated page, real luac -l -l -p bytecode
       -- disassembly, not a workaround for Lua. Off by default upstream;
       -- turned on here explicitly per request.
@@ -688,9 +652,7 @@ plugins.add({
         opts.generate_all = {
           projects = gen_projects,
           -- Listing a plugin in the spec below is already the active signal
-          -- that its data is wanted -- see bindings.usrcmds.docmap_all's old
-          -- header (now removed) for the "never infer" reasoning this
-          -- overrides deliberately, once, here.
+          -- that its data is wanted, so autoload is deliberately on here.
           autoload = true,
         }
       end
