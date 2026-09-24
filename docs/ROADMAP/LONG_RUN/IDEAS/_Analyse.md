@@ -249,10 +249,10 @@ Muster von `filetree.nvim`/`dap.nvim`. Die Datei selbst ist nur eine
 
 Ein Grep über die Config bestätigt den in der Notiz vermuteten Zustand: die
 Git-Integration ist tatsächlich über mindestens fünf Orte verstreut —
-[`nvim/lua/config/lazygit/`]($NVIM_CONFIG_DIR/lua/config/lazygit),
+[`nvim/lua/config/lazygit/`, now gitsuite.nvim]($REPOS_DIR/gitsuite.nvim),
 [`nvim/lua/autocmds/git/`]($NVIM_CONFIG_DIR/lua/autocmds/git),
-[`nvim/lua/bindings/mappings/git.lua`]($NVIM_CONFIG_DIR/lua/bindings/mappings/git.lua),
-[`nvim/lua/config/menu/git.lua`]($NVIM_CONFIG_DIR/lua/config/menu/git.lua),
+[`nvim/lua/bindings/mappings/git.lua`, now gitsuite.nvim]($REPOS_DIR/gitsuite.nvim),
+[`nvim/lua/config/menu/git.lua`, now gitsuite.nvim]($REPOS_DIR/gitsuite.nvim),
 [`nvim/lua/plugins/git.lua`]($NVIM_CONFIG_DIR/lua/plugins/git.lua) —
 exakt das Muster „stateful Subsystem über den Host verstreut", das laut
 `test.md`s eigener Begründung (§3 dort) bereits zweimal (`dap.nvim`,

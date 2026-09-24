@@ -1,12 +1,12 @@
 # Trouble — Keymaps
 
 Registriert in
-[lua/bindings/mappings/trouble.lua](../../../../../lua/bindings/mappings/trouble.lua)
+[lsp.integrations.trouble]($REPOS_DIR/lsp.nvim/lua/lsp/integrations/trouble.lua)
 (aufgerufen aus `bindings.mappings.init`).
 
 **Wichtig:** `trouble.nvim` bringt selbst **keine** globalen Default-Keymaps
 mit. Der Plugin-Spec
-([lua/plugins/trouble.lua](../../../../../lua/plugins/trouble.lua)) ruft
+([lsp.nvim's pack/ui.lua]($REPOS_DIR/lsp.nvim/lua/lsp/pack/ui.lua)) ruft
 `require("trouble").setup({ preview = …, modes = … })` auf — **ohne**
 `opts.keys`. Das im README des installierten Plugins
 (`nvim-data/lazy/trouble.nvim/README.md`) gezeigte `keys = { … }`-Beispiel

@@ -6,7 +6,7 @@
 > Baupläne, neue Fähigkeiten. Aufteilung folgt Commit `445e307` der
 > nvim-Config. Jede Karte wird beim Fertigstellen aus dem Plan
 > ausgeschnitten und landet hier (siehe dessen
-> [Lebenszyklus-Abschnitt](../personal/All/FINISH/Final_Checks/gitsuite.nvim.md#lebenszyklus-erledigtes-wandert-ins-backlog)).
+> [Lebenszyklus-Abschnitt]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/gitsuite.nvim/ROADMAP/IMPLEMENTATION-PLAN.md#lebenszyklus-erledigtes-wandert-ins-backlog)).
 
 ## TASKS
 

@@ -1,4 +1,4 @@
-[→ Reply draft](../Replies/00_PSO.md)
+[→ Reply draft]
 
 ## Notes
 

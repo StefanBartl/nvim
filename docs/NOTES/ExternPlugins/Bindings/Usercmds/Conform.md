@@ -20,20 +20,22 @@ mit `conform.nvim` in der Eigentümerspalte.
 
 ## Die eigene Wrapper-Schicht
 
-Zwei Setup-Stellen rufen `conform.setup()` auf (letzter Aufruf gewinnt):
+Früher riefen zwei Stellen `conform.setup()` auf (letzter Aufruf gewinnt); die
+erste — der `config`-Block des `stevearc/conform.nvim`-Specs in dieser Config
+selbst — ist mit der lsp.nvim-Extraktion entfallen (`lua/plugins/lsp.lua`
+existiert nicht mehr; siehe
+[lsp.nvim's pack/core.lua]($REPOS_DIR/lsp.nvim/lua/lsp/pack/core.lua), das den
+Spec bewusst ohne eigenen `config` lässt, "damit nichts konkurriert").
 
-1. [lua/plugins/lsp.lua](../../../../../lua/plugins/lsp.lua) — im `config`-Block
-   des `stevearc/conform.nvim`-Specs, mit einer eigenen `formatters_by_ft`-Tabelle
-   und `format_on_save = { timeout_ms = 1200, lsp_fallback = true }`.
-2. [lua/lsp/formatter/conform.lua]($REPOS_DIR/lsp.nvim/lua/lsp/formatter/conform.lua)
-   (`M.setup`), aufgerufen aus
-   [lua/lsp/init.lua]($REPOS_DIR/lsp.nvim/lua/lsp/init.lua) direkt danach — setzt
-   `notify_on_error = true`, eine eigene (überlappende, aber nicht identische)
-   `formatters_by_ft`-Tabelle sowie explizite `command`-Pfade (Mason/pipx/pyenv-
-   Auflösung via `resolve()`), **ohne** `format_on_save`. Dieser zweite Aufruf
-   überschreibt den ersten vollständig (Conform hält nur eine globale Config) —
-   Format-on-Save ist also faktisch nicht durch conform.setup selbst aktiv,
-   sondern ausschließlich durch die eigene `lsp.formatter`-Abstraktion (s.u.).
+[lua/lsp/formatter/conform.lua]($REPOS_DIR/lsp.nvim/lua/lsp/formatter/conform.lua)
+(`M.setup`), aufgerufen aus
+[lua/lsp/init.lua]($REPOS_DIR/lsp.nvim/lua/lsp/init.lua), ist damit die einzige
+verbliebene, autoritative `conform.setup()`-Stelle — setzt
+`notify_on_error = true`, eine eigene `formatters_by_ft`-Tabelle sowie
+explizite `command`-Pfade (Mason/pipx/pyenv-Auflösung via `resolve()`),
+**ohne** `format_on_save`. Format-on-Save ist also faktisch nicht durch
+conform.setup selbst aktiv, sondern ausschließlich durch die eigene
+`lsp.formatter`-Abstraktion (s.u.).
 
 ## Format-on-Save ist eine eigene Abstraktion, kein Conform-Feature
 
@@ -81,7 +83,7 @@ Beide fallen auf `vim.lsp.buf.format()` zurück, falls `conform` nicht ladbar is
 Nicht als Command, sondern direkt aus Keymaps/Menu-Einträgen aufgerufen — siehe
 [Keymaps/Conform.md](../Keymaps/Conform.md):
 
-- `<leader>fm` (global, [lua/bindings/mappings/nvchad.lua](../../../../../lua/bindings/mappings/nvchad.lua))
+- `<leader>fm` (global, [lua/bindings/mappings/general.lua](../../../../../lua/bindings/mappings/general.lua))
 - `<leader>fm` (buffer-lokal, überschrieben für `markdown`/`mdx`)
 - `<leader>aF` (buffer-lokal, nur `astro`)
 - Menu-Eintrag "Format Buffer" in [lua/config/menu/custom_menu/init.lua](../../../../../lua/config/menu/custom_menu/init.lua)

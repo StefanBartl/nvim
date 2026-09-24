@@ -59,7 +59,7 @@ bewusst geparkt (Nutzen 1, Spielerei).
 ## Nicht umgesetzt — bewusst geparkt
 
 `dap.nvim`-Konflikt-Guard vor `continue()` (Nutzen 1 laut Bewertung, siehe
-[Bewusst geparkt](../../personal/All/FINISH/Final_Checks/gitsuite.nvim.md#bewusst-geparkt-oder-verworfen)
+[Bewusst geparkt]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/gitsuite.nvim/ROADMAP/IMPLEMENTATION-PLAN.md#bewusst-geparkt-oder-verworfen)
 in der ursprünglichen Plan-Fassung) — nicht Teil dieser Karte.
 
 ## Tests
