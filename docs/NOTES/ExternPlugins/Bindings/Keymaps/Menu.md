@@ -110,7 +110,7 @@ Default `true`, gesetzt in der `menu`-Phase in `init.lua`.
 | 🖥️ Open in terminal | `nvchad.term.new` (Split, cd ins Buffer-Verzeichnis) falls Base46 aktiv, sonst `:enew` + Terminal-Job | — |
 | 🎨 Color Picker | `minty.huefy.open()` | — |
 | 🔣 Unicode Table | `:Emojis unicode table` (Floating Window, `emojis.nvim`; war `:UnicodeTable`/`unicode.vim`) | `uni` |
-| 󰊢 Git Actions ▸ | Untermenü aus `gitsuite.integrations.menu` (`E:/repos/gitsuite.nvim`, GS-09), `pcall`-geguardet -- jede Zeile geht über `:Git hunk\|blame\|diff *`, nicht mehr über rohe `gitsigns.<fn>()`-Aufrufe; nur die gitsigns-exklusiven Zeilen (Stage/Reset Hunk, Stage/Reset Buffer, Toggle Deleted) blenden ohne gitsigns.nvim aus, Blame/Diff/Preview Hunk bleiben (Preview fällt auf `:Git diff head` zurück) | — |
+| 󰊢 Git Actions ▸ | Untermenü aus `gitsuite.integrations.menu` (`$REPOS_DIR/gitsuite.nvim`, GS-09), `pcall`-geguardet -- jede Zeile geht über `:Git hunk\|blame\|diff *`, nicht mehr über rohe `gitsigns.<fn>()`-Aufrufe; nur die gitsigns-exklusiven Zeilen (Stage/Reset Hunk, Stage/Reset Buffer, Toggle Deleted) blenden ohne gitsigns.nvim aus, Blame/Diff/Preview Hunk bleiben (Preview fällt auf `:Git diff head` zurück) | — |
 
 Weggefallen gegenüber dem alten Stand:
 

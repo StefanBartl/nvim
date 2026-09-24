@@ -12,7 +12,7 @@ Alle 421 Regeln aus `rules.nvim`s Regelwerk
 (`WKDBooks/Development/wkdbook-Lua/Checklists/regeln/` +
 `Checklists/gates/NEW_PROJECT.md`/`RELEASE.md`, 13 Familien: `PRIN`, `LUA`,
 `ERR`, `SEC`, `UI`, `TS`, `XP`, `DEP`, `LLS`, `CMT`, `PERF`, `NEW`, `REL`) —
-automatisiert (headless `rules.nvim` gegen `E:\repos\gitsuite.nvim`) **und**
+automatisiert (headless `rules.nvim` gegen `$REPOS_DIR/gitsuite.nvim`) **und**
 manuell (kompletter Regeltext + kompletter gitsuite-Quellcode + alle Docs
 gelesen und abgeglichen) — gegen gitsuite.nvim geprüft.
 

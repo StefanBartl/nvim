@@ -1,14 +1,14 @@
 # `learn-cli.nvim`
 
 Angelegt 2026-08-08 aus der Analyse von
-`E:/repos/Notes/MyPlugin-Notes/nvim-train/train-notes.md`.
+`$REPOS_DIR/Notes/MyPlugin-Notes/nvim-train/train-notes.md`.
 
 ---
 
 ## Zuordnung
 
 `nvim-train` war der Vorläufer dessen, was heute als `learn-cli.nvim` im
-Repo-Bestand liegt (`E:/repos/learn-cli.nvim`, Modulwurzel `learn_cli`).
+Repo-Bestand liegt (`$REPOS_DIR/learn-cli.nvim`, Modulwurzel `learn_cli`).
 Struktur: `core/{cycle_manager,exercise_runner,scorer,scoring,validator}.lua`,
 `state/{init,progress}.lua`, `ui/{dashboard,exercise_view,info_reader}.lua`,
 `data/{exercises/grep.lua,persistence.lua}`.

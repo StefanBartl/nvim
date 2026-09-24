@@ -1,6 +1,6 @@
 # Oekosystem-Recherche: filetree.nvim, open.nvim, language.nvim, nvzone/menu (+ volt)
 
-Stand: 2026-09-21. Read-only; nur temporaere Testskripte im Scratchpad (`t_gsub.lua`, `t_ps.lua`, `t_job*.lua`, `t_amp.lua`). Pfade relativ zu `E:\repos\<plugin>` sofern nicht anders angegeben. "DOCS" = Behauptung in der Dokumentation, "CODE" = im Code gelesen, "VERIFIED" = ausgefuehrt/gemessen (Windows 11, Neovim 0.12.2), "UNVERIFIED" = nicht geprueft.
+Stand: 2026-09-21. Read-only; nur temporaere Testskripte im Scratchpad (`t_gsub.lua`, `t_ps.lua`, `t_job*.lua`, `t_amp.lua`). Pfade relativ zu `$REPOS_DIR/<plugin>` sofern nicht anders angegeben. "DOCS" = Behauptung in der Dokumentation, "CODE" = im Code gelesen, "VERIFIED" = ausgefuehrt/gemessen (Windows 11, Neovim 0.12.2), "UNVERIFIED" = nicht geprueft.
 
 ## 0. Wichtigste Befunde (Kurzfassung)
 

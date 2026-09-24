@@ -23,7 +23,7 @@ Die wenigen Leader-Keymaps, die überhaupt existieren, sind dagegen zwangsläufi
 Leader-Keymaps (nur `:Telescope ...`-Commands).
 
 Zusätzliche Komplikation: **`pickers.nvim`** (StefanBartl/pickers.nvim, separates
-Plugin, lokal aus `E:/repos/pickers.nvim`) patcht global einen Teil von
+Plugin, lokal aus `$REPOS_DIR/pickers.nvim`) patcht global einen Teil von
 Telescopes `defaults.mappings` nach — unabhängig davon, ob der Picker über
 `config.telescope` oder direkt über `:Telescope ...`/`pickers.nvim` selbst
 geöffnet wurde. Das passiert **nicht** in den hier gelisteten Dateien, sondern

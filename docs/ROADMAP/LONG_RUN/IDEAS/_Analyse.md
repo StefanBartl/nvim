@@ -4,7 +4,7 @@
 > `docs/ROADMAP/IDEAS/` nach Nutzen, Umsetzbarkeit und Aufwand — und, wo
 > zutreffend, ob eine Idee eher als Feature in ein bereits bestehendes eigenes
 > Plugin gehört statt ein neues Repo zu rechtfertigen. Gegen den echten Stand
-> von `E:/repos/*.nvim` und `nvim/lua/**` geprüft, nicht nur gegen die
+> von `$REPOS_DIR/*.nvim` und `nvim/lua/**` geprüft, nicht nur gegen die
 > IDEAS-Datei selbst — konkrete Fundstellen sind referenziert.
 >
 > Fünf der zwölf Dateien (`blueprint.nvim.md`, `spec.nvim.md`, `test.md`,
@@ -89,7 +89,7 @@ gestartete nvim-Instanz, die an die Ursprungsinstanz „attached" wird.
   `readMemory`/`writeMemory`-Requests (`supportsReadMemoryRequest`), die
   GDB-/LLDB-/Cortex-Debug-basierte Adapter typischerweise unterstützen.
   `dap.nvim` registriert bereits Adapter für mehrere dieser Targets
-  ([README.md](E:/repos/dap.nvim/README.md)) — ein Speicher-Viewer ist damit
+  ([README.md]($REPOS_DIR/dap.nvim/README.md)) — ein Speicher-Viewer ist damit
   ein **Feature auf der bestehenden DAP-Session**, kein zweiter Prozess: ein
   Floating-Window (über `ui.kit`, falls als Cross-Plugin-Feature gebaut) mit
   Hex/Bit-Darstellung, das per Timer/`on_click` `readMemory` pollt und
@@ -162,7 +162,7 @@ sollte dorthin konsolidiert werden statt an zwei Stellen zu leben.
   Pflicht, sonst bricht das Feature auf jedem anderen Terminal.
 - **Aufwand: Mittel.**
 - **Fit: Feature in `ui.nvim`s `tabline`-Modul**
-  ([`lua/ui/tabline`](E:/repos/ui.nvim/lua/ui/tabline)), nicht eigenständiges
+  ([`lua/ui/tabline`]($REPOS_DIR/ui.nvim/lua/ui/tabline)), nicht eigenständiges
   Plugin — `ui.nvim` besitzt bereits die Tabline-Rendering-Infrastruktur, ein
   Wezterm-Bridge-Adapter ist ein weiterer Renderer/Datenlieferant dort, kein
   neues UI-Subsystem.
@@ -249,11 +249,11 @@ Muster von `filetree.nvim`/`dap.nvim`. Die Datei selbst ist nur eine
 
 Ein Grep über die Config bestätigt den in der Notiz vermuteten Zustand: die
 Git-Integration ist tatsächlich über mindestens fünf Orte verstreut —
-[`nvim/lua/config/lazygit/`](C:/Users/bartl/AppData/Local/nvim/lua/config/lazygit),
-[`nvim/lua/autocmds/git/`](C:/Users/bartl/AppData/Local/nvim/lua/autocmds/git),
-[`nvim/lua/bindings/mappings/git.lua`](C:/Users/bartl/AppData/Local/nvim/lua/bindings/mappings/git.lua),
-[`nvim/lua/config/menu/git.lua`](C:/Users/bartl/AppData/Local/nvim/lua/config/menu/git.lua),
-[`nvim/lua/plugins/git.lua`](C:/Users/bartl/AppData/Local/nvim/lua/plugins/git.lua) —
+[`nvim/lua/config/lazygit/`]($NVIM_CONFIG_DIR/lua/config/lazygit),
+[`nvim/lua/autocmds/git/`]($NVIM_CONFIG_DIR/lua/autocmds/git),
+[`nvim/lua/bindings/mappings/git.lua`]($NVIM_CONFIG_DIR/lua/bindings/mappings/git.lua),
+[`nvim/lua/config/menu/git.lua`]($NVIM_CONFIG_DIR/lua/config/menu/git.lua),
+[`nvim/lua/plugins/git.lua`]($NVIM_CONFIG_DIR/lua/plugins/git.lua) —
 exakt das Muster „stateful Subsystem über den Host verstreut", das laut
 `test.md`s eigener Begründung (§3 dort) bereits zweimal (`dap.nvim`,
 geplant `test.nvim`) den Ausschlag für eine Auslagerung gegeben hat.
@@ -288,7 +288,7 @@ geplant `test.nvim`) den Ausschlag für eine Auslagerung gegeben hat.
 **Einschätzung:**
 
 - **Klärungsbedarf zuerst:** Ein Scan von
-  [`nvim/after/`](C:/Users/bartl/AppData/Local/nvim/after) findet aktuell
+  [`nvim/after/`]($NVIM_CONFIG_DIR/after) findet aktuell
   **keine** Datei, die zu „Info-Tag" passt (nur `after/queries/**` für
   Treesitter-Textobjects). Entweder ist das seither entfernt worden, oder
   gemeint ist etwas anderes (z. B. das `:h`-Tags-Dateiformat, oder
@@ -310,7 +310,7 @@ geplant `test.nvim`) den Ausschlag für eine Auslagerung gegeben hat.
   `insights.nvim` scheidet aus, weil dessen „automatische Checks" (Git-
   Konflikte, unused imports, verwaiste Dev-Server) auf **ein** Projekt
   bezogen sind, nicht auf die eigene Plugin-Flotte
-  ([README.md](E:/repos/insights.nvim/README.md)).
+  ([README.md]($REPOS_DIR/insights.nvim/README.md)).
 - **Aufwand/Nutzen:** ohne Klärung der Grundfrage nicht seriös bezifferbar.
 
 ---
@@ -326,7 +326,7 @@ Plugin wandert (`buffer-ctx.nvim`, `sessions.nvim`, `pickers.nvim`,
 
 - Verifiziert: `buffer-ctx.nvim` hat tatsächlich ein extmark-basiertes
   `mark/`-Modul mit eigenem Feature-Dokument
-  ([`docs/FEATURES/MARK.md`](E:/repos/buffer-ctx.nvim/docs/FEATURES/MARK.md))
+  ([`docs/FEATURES/MARK.md`]($REPOS_DIR/buffer-ctx.nvim/docs/FEATURES/MARK.md))
   und sogar einen eigenen ROADMAP-Eintrag `anchor-stable-marks.md` — die
   Vermutung der Notiz ist also korrekt belegt.
 - **Aber:** `buffer-ctx.nvim`s Marks sind **pro Buffer** (Zeilen markieren +

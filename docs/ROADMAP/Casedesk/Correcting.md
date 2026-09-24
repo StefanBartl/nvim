@@ -3,7 +3,7 @@
 - Referenzen in den dokumenten zu anderen doumentne implementieren, damit sich alles aufeinenader bezieht usw...
   - Auffällige fehllende themen gleich notieren und sammeln, eventuell schreiben wir die neu. Also wenn in einen dok sich auf etwas beieht wsa wir noch nicht erkläte haben, dann notieren. Übrigens kanne sauh sein, dass thematiken in "docs versteckt" sind, also der file name ein ganz anderees tema hat, abe riene abscnitt im dokment dann etwas anderes beschreibt, meistens einverewadntes thema. wenn sinnvoll, dann diese abschnitt als eigen file anlegen und im doc entfernen, aber da sneue doc referenzieren
 
-- C:/repos/WKDBook-Tricentis/Workflow korrekturlesen / besser anordnen
+- $REPOS_DIR/WKDBook-Tricentis/Workflow korrekturlesen / besser anordnen
 
 - Wenn man texte aus aichats ü+bernimmt hat man oft formatierungen drinnen wie:
   1. `$$\text{UPN} = \text{ValuePrefix} + \text{"@"} + \text{ValueSuffix}$$` -> mit was rsetzten oder einfach entfenren?

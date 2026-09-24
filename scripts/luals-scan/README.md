@@ -118,7 +118,7 @@ denen eine laufende Session (`vim.diagnostic.get`) keinen einzigen zeigt.
 Deshalb trägt der Dump `<plugin>/lua` ein, wo es das gibt.
 
 > Ausführlich, mit Nachweis:
-> `E:/repos/WKDBooks/Development/wkdbook-Lua/LuaLanguageServer/_luarc_json/Reichweite-und-Praezedenz.md`
+> `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/LuaLanguageServer/_luarc_json/Reichweite-und-Praezedenz.md`
 
 ---
 

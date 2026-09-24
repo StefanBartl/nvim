@@ -18,5 +18,5 @@ buffer-lokal abzuschalten; das übernimmt jetzt ein Subcommand:
 | `:PuppeteerToggle` | `:Cascade strings` / `:Cascade strings toggle` |
 | — | `:Cascade strings now` — einmalig am Cursor konvertieren |
 
-Keine Keymaps, wie vorher. Siehe cascade.nvims [`docs/FEATURES/STRINGS.md`](B:/repos/cascade.nvim/docs/FEATURES/STRINGS.md)
+Keine Keymaps, wie vorher. Siehe cascade.nvims [`docs/FEATURES/STRINGS.md`]($REPOS_DIR/cascade.nvim/docs/FEATURES/STRINGS.md)
 (kein eigenes `Cascade.md` in diesem Ordner).

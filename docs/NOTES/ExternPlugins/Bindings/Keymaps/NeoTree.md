@@ -95,7 +95,7 @@ als `opts.window.mappings` (global).
 | `!` | filetree.nvim `source_switcher`: vorherige Source | [custom] (Ersatz für das deaktivierte `<`) |
 
 Quelle für `"`/`!`: filetree.nvims Feature `source_switcher`
-(`E:/repos/filetree.nvim/lua/filetree/features/nav/source_switcher/init.lua`,
+(`$REPOS_DIR/filetree.nvim/lua/filetree/features/nav/source_switcher/init.lua`,
 Doku in dessen `docs/FEATURES/NAVIGATION.md`). `:Filetree source [name|pick|next|prev|debug]`
 ist die Command-Form.
 
@@ -346,7 +346,7 @@ Command-Registry für die obigen Aktionen:
 ## Außerhalb von Neo-tree-Fenstern (globale Keymaps)
 
 Registriert in
-[lua/config/neotree/window/open/keymaps/only_lhs.lua](B:/repos/filetree.nvim/lua/filetree/adapter/neotree.lua)
+[lua/config/neotree/window/open/keymaps/only_lhs.lua]($REPOS_DIR/filetree.nvim/lua/filetree/adapter/neotree.lua)
 (aktiviert via `only_lhs = true` in `lua/plugins/neotree.lua`s `config`-Block)
 und
 filetree.nvim (seit 2026-09-19; vorher `config/neotree/window/open/keymaps/only_lhs.lua`

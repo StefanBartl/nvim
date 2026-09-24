@@ -6,7 +6,7 @@
 Entscheidung des Plugins, siehe dessen README: "The arrow keys are good
 candidates for keymaps…" — bewusst dem Nutzer überlassen). Alles, was hier
 dokumentiert ist, stammt daher von `StefanBartl/dap.nvim` — einem
-Wrapper-Plugin (eigenes Repo, `E:/repos/dap.nvim`), das über
+Wrapper-Plugin (eigenes Repo, `$REPOS_DIR/dap.nvim`), das über
 `mfussenegger/nvim-dap` und die UI-Provider (`nvim-dap-view` /
 `rcarriga/nvim-dap-ui`) sitzt und dessen rohe Lua-API bindet.
 
@@ -20,7 +20,7 @@ kollidiert (`dc` = `:Git ui diffview close`, `di` = `:Git hunk inline`, `do`
 dieser Config).
 
 Quelle im Wrapper: `lua/wkddap/bindings/keymaps/init.lua` im Repo
-`E:/repos/dap.nvim` (eigenes Repo, liegt außerhalb dieser Config — kein
+`$REPOS_DIR/dap.nvim` (eigenes Repo, liegt außerhalb dieser Config — kein
 relativer Link möglich, anderes Laufwerk).
 
 Alle Einträge sind **[custom]** — es gibt keine nvim-dap-Defaults, die sie

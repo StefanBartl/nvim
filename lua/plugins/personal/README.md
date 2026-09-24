@@ -35,7 +35,7 @@ functions are lazy.nvim's business and do not run.
 local specs = require("plugins.personal")
 #specs                --> 33   (every declared repo, disabled ones included)
 specs[1][1]           --> "StefanBartl/lib.nvim"
-specs[1].dir          --> "E:/repos/lib.nvim"   (mode "dir", checkout present)
+specs[1].dir          --> "$REPOS_DIR/lib.nvim"   (mode "dir", checkout present)
                       --> nil                   (mode "remote", or not cloned)
 specs[n].enabled      --> false                 (mode "disabled")
 ```
@@ -72,7 +72,7 @@ local projects, err = require("plugins.personal.export").projects()
 -- projects[i] = {
 --   name = "markdown.nvim",
 --   repo = "StefanBartl/markdown.nvim",
---   dir  = "E:/repos/markdown.nvim",
+--   dir  = "$REPOS_DIR/markdown.nvim",
 -- }
 ```
 
@@ -95,7 +95,7 @@ checkout axis all read.
 local u = require("plugins.personal.utils")
 
 u.repos_path            --> "E:\\repos"  (or "" when there is no local root)
-u.local_dev("lib.nvim") --> "E:/repos/lib.nvim"   (directory exists)
+u.local_dev("lib.nvim") --> "$REPOS_DIR/lib.nvim"   (directory exists)
                         --> nil                   (no root, or not cloned)
 ```
 

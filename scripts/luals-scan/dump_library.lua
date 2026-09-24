@@ -4,7 +4,7 @@
 -- Run headless with the normal config, so the runtimepath is the real one.
 -- LUALS_SCAN_ROOTS is a ";"-separated list. An entry is either a plain root or
 -- "<name>=<root>", where <name> is the file the dump is written to:
---   LUALS_SCAN_ROOTS="lsp.nvim=E:/repos/lsp.nvim;nvim-config=E:/wt/cfg" \
+--   LUALS_SCAN_ROOTS="lsp.nvim=$REPOS_DIR/lsp.nvim;nvim-config=E:/wt/cfg" \
 --   LUALS_SCAN_OUT="<cache dir>" \
 --   nvim --headless -c "luafile scripts/luals-scan/dump_library.lua"
 --

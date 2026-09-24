@@ -147,7 +147,7 @@ M.headline_format = "# %s - `%s` - %s"
 M.infocard_fields = { "title", "company", "name", "notes", "priority", "tosca_version" }
 
 -- ── SLA (docs/ROADMAP/casedesk/SLA.md) ──────────────────────────────────
--- Source: C:/repos/WKDBook-Tricentis/Workflow/SLA_ServiceLevelAgreement.md
+-- Source: $REPOS_DIR/WKDBook-Tricentis/Workflow/SLA_ServiceLevelAgreement.md
 -- — these are SAP's SLAs TOWARDS Tricentis, not necessarily a given SolEx
 -- customer's own contract (see that file's own warning). Never surface
 -- these numbers to a customer as binding.

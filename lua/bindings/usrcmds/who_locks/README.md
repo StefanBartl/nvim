@@ -35,6 +35,6 @@ object itself rather than routing through `report`.
 
 ```vim
 :WhoLocks                                  " the current buffer's file
-:WhoLocks C:/repos/foo.nvim/lua/init.lua
+:WhoLocks $REPOS_DIR/foo.nvim/lua/init.lua
 :WhoLocks --json                           " structured, for scripts
 ```

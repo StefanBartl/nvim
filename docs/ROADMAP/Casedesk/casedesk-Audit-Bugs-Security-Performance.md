@@ -1,8 +1,8 @@
 # casedesk.nvim — Audit: Bugs, Security/Privacy, Performance
 
 **Stand:** 2026-09-19 (Runde 1), aktualisiert 2026-09-19 (Runde 2, s. [H](#h--zweite-runde-der-gesamte-diff-seit-runde-1))
-**Prüfstand:** `E:/repos/casedesk.nvim` @ `df5eae9` (~14.000 Zeilen, 76 Lua-Module)
-**Abhängigkeiten mitgelesen:** `E:/repos/lib.nvim`, `E:/repos/ui.nvim`
+**Prüfstand:** `$REPOS_DIR/casedesk.nvim` @ `df5eae9` (~14.000 Zeilen, 76 Lua-Module)
+**Abhängigkeiten mitgelesen:** `$REPOS_DIR/lib.nvim`, `$REPOS_DIR/ui.nvim`
 
 ---
 

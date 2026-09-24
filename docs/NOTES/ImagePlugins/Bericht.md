@@ -10,7 +10,7 @@ Untersuchte Stände:
 | snacks.nvim `image` | lokal installiert, `882c996` (2026-05-25), v2.31.0 |
 | images.nvim (eigen) | `8a865c2` (2026-09-20), 187 Commits |
 | nvzone/menu (+volt) | Shallow-Clone `7a0a4a2` (2025-06-01) |
-| übrige Plugins | jeweils HEAD von `E:\repos\<name>` |
+| übrige Plugins | jeweils HEAD von `$REPOS_DIR/<name>` |
 
 Alle Belege sind `Datei:Zeile`. **UNVERIFIED** = nicht selbst gemessen. Das betrifft vor allem alles, was ein echtes Terminal-Rendering braucht. Ich habe kein Bild live in WezTerm gezeichnet.
 

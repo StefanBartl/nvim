@@ -18,8 +18,8 @@ rufen Conform "roh".
 
 | Mapping | Filetype | Aktion | Quelle |
 |---|---|---|---|
-| `<leader>fm` | `markdown`, `mdx` | `conform.format({ bufnr, timeout_ms = 2000, lsp_fallback = false })` — LSP-Fallback bewusst aus, nur Conform-Formatter | [lua/lsp/languages/documentation/markdown.lua](B:/repos/lsp.nvim/lua/lsp/languages/documentation/markdown.lua) |
-| `<leader>aF` | `astro` | `conform.format({ bufnr, timeout_ms = 2000 })`, Fallback auf `vim.lsp.buf.format` falls Conform fehlt | [lua/lsp/languages/webdev/astro/keymaps.lua](B:/repos/lsp.nvim/lua/lsp/languages/webdev/astro/keymaps.lua) |
+| `<leader>fm` | `markdown`, `mdx` | `conform.format({ bufnr, timeout_ms = 2000, lsp_fallback = false })` — LSP-Fallback bewusst aus, nur Conform-Formatter | [lua/lsp/languages/documentation/markdown.lua]($REPOS_DIR/lsp.nvim/lua/lsp/languages/documentation/markdown.lua) |
+| `<leader>aF` | `astro` | `conform.format({ bufnr, timeout_ms = 2000 })`, Fallback auf `vim.lsp.buf.format` falls Conform fehlt | [lua/lsp/languages/webdev/astro/keymaps.lua]($REPOS_DIR/lsp.nvim/lua/lsp/languages/webdev/astro/keymaps.lua) |
 
 Beide buffer-lokalen Mappings werden per `FileType`-Autocmd mit `{ buffer = ev.buf }`
 gesetzt und überschreiben damit für Buffer dieses Filetyps die globale
@@ -28,7 +28,7 @@ gewinnt).
 
 ## Hinweis: `<leader>fm` ist überladen
 
-Derselbe Chord taucht in [lua/config/menu/neotree/entries.lua](B:/repos/filetree.nvim/lua/filetree/features/ui/context_menu/init.lua)
+Derselbe Chord taucht in [lua/config/menu/neotree/entries.lua]($REPOS_DIR/filetree.nvim/lua/filetree/features/ui/context_menu/init.lua)
 als Neo-Tree-Menüeintrag "Open in file manager" auf — das ist aber ein
 Neo-Tree-internes Mapping (nur im Neo-Tree-Fenster aktiv, eigener Kontext) und
 kollidiert nicht mit dem globalen Format-Mapping in normalen Buffern.

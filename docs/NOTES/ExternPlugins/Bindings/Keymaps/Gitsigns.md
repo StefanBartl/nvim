@@ -1,7 +1,7 @@
 # Gitsigns — Keymaps
 
 `<leader>di` kommt seit `GS-08` (gitsuite.nvim) aus
-`gitsuite/bindings/keymaps.lua` (`E:/repos/gitsuite.nvim`, Aktion
+`gitsuite/bindings/keymaps.lua` (`$REPOS_DIR/gitsuite.nvim`, Aktion
 `hunk_inline`) statt aus der Config selbst — ehemals
 `lua/bindings/mappings/git.lua`, das mit der Migration entfernt wurde.
 `gh` bleibt Config-eigen, registriert in

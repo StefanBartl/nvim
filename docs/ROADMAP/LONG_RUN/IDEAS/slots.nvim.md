@@ -1,6 +1,6 @@
 # `nvim-slots` — Konzept (aus den Notizen geborgen)
 
-Angelegt 2026-08-08 aus `E:/repos/Notes/MyPlugin-Notes/slots/`
+Angelegt 2026-08-08 aus `$REPOS_DIR/Notes/MyPlugin-Notes/slots/`
 (`Konzept.md`, `slots-dev-notes.md`).
 
 ---
@@ -29,7 +29,7 @@ Kern:
 
 ## Entscheidung, die vor allem anderen ansteht
 
-**Kein Repo unter `E:/repos/`, kein Eintrag in `plugins/personal/source.lua`.**
+**Kein Repo unter `$REPOS_DIR/`, kein Eintrag in `plugins/personal/source.lua`.**
 Das Konzept liegt seit April 2025 unangetastet.
 
 Bevor irgendetwas gebaut wird, ist zu klären, ob die Nische überhaupt noch frei

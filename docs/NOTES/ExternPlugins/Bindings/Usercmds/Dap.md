@@ -3,7 +3,7 @@
 **Repo:** `StefanBartl/dap.nvim` — gelesen von `:Bindings check`, weil `Dap` sonst mehrdeutig zwischen `dap.nvim` und `nvim-dap` wäre.
 
 Zwei Sätze: die **[custom]** `:Dap`-Routen des Wrappers
-`StefanBartl/dap.nvim` (eigenes Repo, `E:/repos/dap.nvim` — kein relativer
+`StefanBartl/dap.nvim` (eigenes Repo, `$REPOS_DIR/dap.nvim` — kein relativer
 Link möglich, anderes Laufwerk), das über `mfussenegger/nvim-dap` und die
 UI-Provider (`nvim-dap-view`/`rcarriga/nvim-dap-ui`) sitzt, und die
 **[default]** Commands von `nvim-dap` selbst.
@@ -56,7 +56,7 @@ Folgende von `StefanBartl/dap.nvim`.
 
 Quelle im Wrapper: `lua/wkddap/bindings/usercmds/init.lua` (Registrierung)
 und `lua/wkddap/bindings/init.lua` (Orchestrierung), beide in
-`E:/repos/dap.nvim`. Aufgerufen aus `wkddap.bindings.setup(cfg)`, das wiederum
+`$REPOS_DIR/dap.nvim`. Aufgerufen aus `wkddap.bindings.setup(cfg)`, das wiederum
 aus `require("wkddap").setup(opts)` läuft — demselben Setup-Aufruf, der auch
 die Keymaps bindet (siehe
 [lua/plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua),

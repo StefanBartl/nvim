@@ -2,7 +2,7 @@
 
 ## `:JSON`
 
-C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1201484/assets/third/ShortenedLog.txt -> `:JSON pretty` ->
+$REPOS_DIR/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1201484/assets/third/ShortenedLog.txt -> `:JSON pretty` ->
 
   ```vim
     Error  10:28:20 AM notify.error [data] JSON decode failed: invalid JSON: Expected the end but found T_OBJ_BEGIN at character 285
@@ -26,16 +26,16 @@ C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1201484/assets/third/Sho
 - `:Case attachments` soll eine option `find` erfhalten, die alle attahcments ineinen pociker zeigt sowie `nsert oder attach oder s.ä.` um wieder den file explorer in Downoads ordner zu öffnen und files auszuwählen die dann direkt reingeladen werden
 
 - solange ich azf der worksation bin soll ui.nvim marks folgende ofade führen und aucah in dieser ordnung:
-  1. C:/repos/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
-  2. C:\repos\WKDBook-Tricentis\Workflow\CDX\StartChat.md
-  3. C:/repos/WKDBook-Tricentis/Workflow/Templates/SummaryTemplate.md
-  4. C:/repos/WKDBook-Tricentis/Cases/DRAFT-Solution.md
-  5. C:/repos/WKDBook-Tricentis/Notes/Credentials.md
-  6. C:/repos/WKDBook-Tricentis/Notes/Links.md
+  1. $REPOS_DIR/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
+  2. $REPOS_DIR/WKDBook-Tricentis\Workflow\CDX\StartChat.md
+  3. $REPOS_DIR/WKDBook-Tricentis/Workflow/Templates/SummaryTemplate.md
+  4. $REPOS_DIR/WKDBook-Tricentis/Cases/DRAFT-Solution.md
+  5. $REPOS_DIR/WKDBook-Tricentis/Notes/Credentials.md
+  6. $REPOS_DIR/WKDBook-Tricentis/Notes/Links.md
   7. C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/ROADMAP.md
   8. C:/Users/StefanBartl/AppData/Local/nvim/docs/ROADMAP/Casedesk/Casedesk.md
 
-- eine möglihkeit, beim ertellen eines cases, aber nch nachher, `Tags` zu vergeben, also zb in C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Solved/888622/Notes.md ist klar, dss das ein Mobile Engine case ist. das wäre super, weil wir dnan später zb `:Cases MobileEngine` oder `:Cases TTA` usw.. eine lsite `pickers.nvim` ausgeben könnten. Beim erstelen eines cases soll das gleich abgefragt werden, aebr wenn möglcih und sinnvoll auvhch glidhc vorschläge, zb aus dem titel ode activity stream ableiten. ich köntn mir vorstellen, dass hier ein kleirner buffer audgehtm in der man die tags eintragt (können auch herer sein), zb jede zeile einer bzw auvh , oder - als trennzeichne erlauben. eventuell eie eigen file für diese tags im casde angeben, oder woander unterbfingen, zb in Notes.md
+- eine möglihkeit, beim ertellen eines cases, aber nch nachher, `Tags` zu vergeben, also zb in $REPOS_DIR/WKDBook-Tricentis/Cases/SAP_Support/Cases/Solved/888622/Notes.md ist klar, dss das ein Mobile Engine case ist. das wäre super, weil wir dnan später zb `:Cases MobileEngine` oder `:Cases TTA` usw.. eine lsite `pickers.nvim` ausgeben könnten. Beim erstelen eines cases soll das gleich abgefragt werden, aebr wenn möglcih und sinnvoll auvhch glidhc vorschläge, zb aus dem titel ode activity stream ableiten. ich köntn mir vorstellen, dass hier ein kleirner buffer audgehtm in der man die tags eintragt (können auch herer sein), zb jede zeile einer bzw auvh , oder - als trennzeichne erlauben. eventuell eie eigen file für diese tags im casde angeben, oder woander unterbfingen, zb in Notes.md
 
 
 ---
@@ -81,7 +81,7 @@ from mtimes (11 `mtime` references).
 Aufgabe: casedesk.nvim — entscheiden, was ":Case timeline" mit
 Git-Pull-Sessions macht. Das Feature liefert derzeit messbar falsche Zahlen.
 
-Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
+Roadmap-Punkt: $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
 ROADMAP/ROADMAP.md, Abschnitt "Workflow", Punkt ":Case timeline reports git
 pulls as work sessions". Der Punkt ist gemessen, nicht vermutet: timeline.lua
 rekonstruiert Sessions rein aus Datei-mtimes unter dem Case-Ordner, aber der
@@ -110,7 +110,7 @@ Bring mir eine Empfehlung mit Begründung, BEVOR du etwas baust.
 Mitbetroffen und im selben Zug anzusehen: detect.last_touched ruht auf
 denselben mtimes und verdient denselben Blick.
 
-Repo: E:/repos/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
+Repo: $REPOS_DIR/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
 Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
 stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
 fertig: committen und direkt auf main pushen.
@@ -126,7 +126,7 @@ from mtimes (11 `mtime` references).
 Aufgabe: casedesk.nvim — entscheiden, was ":Case timeline" mit
 Git-Pull-Sessions macht. Das Feature liefert derzeit messbar falsche Zahlen.
 
-Roadmap-Punkt: E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
+Roadmap-Punkt: $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/
 ROADMAP/ROADMAP.md, Abschnitt "Workflow", Punkt ":Case timeline reports git
 pulls as work sessions". Der Punkt ist gemessen, nicht vermutet: timeline.lua
 rekonstruiert Sessions rein aus Datei-mtimes unter dem Case-Ordner, aber der
@@ -155,7 +155,7 @@ Bring mir eine Empfehlung mit Begründung, BEVOR du etwas baust.
 Mitbetroffen und im selben Zug anzusehen: detect.last_touched ruht auf
 denselben mtimes und verdient denselben Blick.
 
-Repo: E:/repos/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
+Repo: $REPOS_DIR/casedesk.nvim (lua/casedesk/timeline.lua, 79 Zeilen)
 Regeln: Antworte auf Deutsch, Code und Kommentare auf Englisch. luacheck und
 stylua grün. Docs/README mitpflegen. Kein Claude-Co-Author in Commits. Wenn
 fertig: committen und direkt auf main pushen.
@@ -165,14 +165,14 @@ fertig: committen und direkt auf main pushen.
 
 ## TCSupportInfo
 
-C:\repos\WKDBook-Tricentis\Cases\SAP_Support\Cases\Open\1201484\assets\second\ToscaSupportInfo.txt
-darausa soll dann wie in C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1201484/Versions.md eine Versions.md (oder ao ähnlkcuh, gerne auch bessere bennenung der file) angelegt weren, in der man schnell das environment daten bekommt ohne im Supportfile scchen zu müssen.
+$REPOS_DIR/WKDBook-Tricentis\Cases\SAP_Support\Cases\Open\1201484\assets\second\ToscaSupportInfo.txt
+darausa soll dann wie in $REPOS_DIR/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1201484/Versions.md eine Versions.md (oder ao ähnlkcuh, gerne auch bessere bennenung der file) angelegt weren, in der man schnell das environment daten bekommt ohne im Supportfile scchen zu müssen.
 
 Wenn im `:Case new` am schluus bei den attachments eine SupprtFile dabewi ist, wäre es ksuper, wenn ddas gleih autoamtisch angelegt und befüllt wird. (Support file ssind normiert und werden aus dem Tosca Commander exportiert, also immer gleich bis auf die versionsnummern.)
 
 ## Jira jgl
 
-Ein noirmaler weg ist fpr dne case in usneree jira jql datenbank zu sucen, dort sicnd swat tickets, usw... enthalten. dafür brauche ich jqlueries, wie in C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1004926/Research/JQL.md
+Ein noirmaler weg ist fpr dne case in usneree jira jql datenbank zu sucen, dort sicnd swat tickets, usw... enthalten. dafür brauche ich jqlueries, wie in $REPOS_DIR/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1004926/Research/JQL.md
 
 Bem erstellen des cases wäre es gut, wenn diese file in Reaseaarch folder gleich angelegt wird, und wenn möglich, auch gleich dieueries, heuristisch mlglich? oder brauchen weird dazu eine ai?
 
@@ -188,7 +188,7 @@ Jeder case braucht in snow ein Summary (Workflow/Templates/SummaryTemplate.md) -
 
 ## Workflow links
 
-C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen apiegelt docs aus C:\repos\WKDBook-Tricentis\Workflow - aber wenn ich in einen der files was ändere, müsste ich das in der korrespondoierenden ebefnalls machen - klassische fehlerwuelle. also mit links arbeiten, da wir in windows snd, mit verknüpfungen. Richte diese bitte ein.
+$REPOS_DIR/WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen apiegelt docs aus $REPOS_DIR/WKDBook-Tricentis\Workflow - aber wenn ich in einen der files was ändere, müsste ich das in der korrespondoierenden ebefnalls machen - klassische fehlerwuelle. also mit links arbeiten, da wir in windows snd, mit verknüpfungen. Richte diese bitte ein.
 
 ## ai
 
@@ -214,7 +214,7 @@ C:\repos\WKDBook-Tricentis\Workflow\CDX\CDX_Ressourcen apiegelt docs aus C:\repo
 - [ ] Wenn man `:Case close XY` eingibt, und dan close oder anderes snnvolles auswählt, soll man danahc gefragt werden, ob man gleicheine Solution.nmnd anlegen möchte, wenn ja dann anlegen und gleich aufmachen, damit die solutin hineinkopiert werden kann. AUßerdem eine weitere option "Customer didnt respond" oder so,---
   - [ ] Dieser "Workflow" ist natürlich, wird fast immer so sein das man sdann solutuions anhängt. Anlaysieren wir auch andreee usrcmd options, ob da ähnlichjes optimneret weren kann
 
-- [ ] Ich habe einige nach Solved/ schieben können, mit dem usrcmds :Case solved XY - wie kommten diese solutions daraus nun nach C:\repos\WKDBook-Tricentis\Cases\Solutions?
+- [ ] Ich habe einige nach Solved/ schieben können, mit dem usrcmds :Case solved XY - wie kommten diese solutions daraus nun nach $REPOS_DIR/WKDBook-Tricentis\Cases\Solutions?
 
 - [ ] wenn wir kemananden zu PAC rpouten, dann soll das eine info sein, die interesant iost, dnen man soll dann auf einmal eine liste ziehen können mit beipelen, die zu PÜAC routet wurde. selbiges für License, Education department bzw PSO (Proffesional Service), momentan bennen ich die solutions file dann so Solution_PAC.md opder Solution_PSO.md usw... und im doc dann unter:
 
@@ -226,7 +226,7 @@ PAC
 
 Hier brauchen wir eine einheitliches system.
 
-  - [ ] Was da auch noch mitbedacht weren soll: ich hab für Tier 2 - Support Engineering - auch einen neuen folder erstellt: C:\repos\WKDBook-Tricentis\Cases\SAP_Support\Cases\T2\996010 - hier kommen cases hin, die schon eine läöngere zeit in T2 liegen, nicht closed sind, aber es unwahrscheinlich ist, dass ich selbst noch etwas beitragen kann und eigentlich nicht mehr watche.
+  - [ ] Was da auch noch mitbedacht weren soll: ich hab für Tier 2 - Support Engineering - auch einen neuen folder erstellt: $REPOS_DIR/WKDBook-Tricentis\Cases\SAP_Support\Cases\T2\996010 - hier kommen cases hin, die schon eine läöngere zeit in T2 liegen, nicht closed sind, aber es unwahrscheinlich ist, dass ich selbst noch etwas beitragen kann und eigentlich nicht mehr watche.
 
 ## solved cases
 
