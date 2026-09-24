@@ -3,9 +3,11 @@
 
     python scripts/docs_linkcheck.py <repo-root> [...] [options]
 
-    --fix    rewrite CASE mismatches in place (the only finding kind that is
-             ever unambiguous enough to auto-correct); everything else is
-             printed, never guessed at.
+    --fix    rewrite in place what can be corrected without guessing: every
+             CASE mismatch, and every ANCHOR whose fragment fuzzy-matches
+             exactly one real heading in the same file (see anchor_fix()).
+             DEAD and an unmatched ANCHOR are never auto-fixed -- printed
+             only, with a SUGGEST hint for DEAD where one exists.
     --json   emit one JSON array of findings on stdout instead of the
              human-readable report -- for scripting / diffing runs / feeding
              another tool, not for reading in a terminal.
@@ -55,7 +57,18 @@ import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from difflib import SequenceMatcher
+
+# Windows' default console/pipe encoding is cp1252, not UTF-8: a link whose
+# TEXT (not path) contains an emoji or a non-Latin-1 character then blows up
+# `print()` with UnicodeEncodeError deep inside a large multi-repo run,
+# after most of the work is already done. reconfigure() is Python 3.7+;
+# stdout/stderr are always text streams here (never redirected to a raw
+# binary target by this script), so it is always safe to call.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
 
 SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__"}
 SKIP_PATHS = (os.path.join("docs", "map"),)
@@ -120,6 +133,32 @@ def strip_code(text: str) -> str:
     for n, line in uncoded(text):
         out[n - 1] = INLINE_CODE_RE.sub("", line)
     return "\n".join(out)
+
+
+def read_text(path: str) -> tuple[str, str] | None:
+    """Read `path` as text without silently corrupting non-UTF-8 notes.
+
+    `open(path, encoding="utf-8", errors="replace")` turns every byte an
+    editor's cp1252 default produced for an umlaut into U+FFFD -- invisible
+    right up until a computed ANCHOR fix contains a literal `�` and --fix
+    would WRITE that into the file. utf-8 is tried first (the common case);
+    cp1252 next (the realistic alternative on a Windows-authored note);
+    latin-1 last, because it decodes any byte sequence and so is guaranteed
+    to terminate the loop -- a non-corrupting last resort, not a claim that
+    the bytes really are Latin-1. Returns (text, encoding) so a writer can
+    round-trip in the same encoding it read, or None if the file cannot be
+    read at all.
+    """
+    try:
+        data = open(path, "rb").read()
+    except OSError:
+        return None
+    for enc in ("utf-8", "cp1252", "latin-1"):
+        try:
+            return data.decode(enc), enc
+        except UnicodeDecodeError:
+            continue
+    return None
 
 
 def line_of(text: str, needle: str, start_hint: int = 0) -> int:
@@ -298,11 +337,38 @@ def suggest(index: dict[str, list[str]], target_path: str, rel_md: str) -> str:
 def anchors_of(path: str, cache: dict) -> set[str]:
     """The heading anchors of `path`, read once per run."""
     if path not in cache:
-        try:
-            cache[path] = slugs(open(path, encoding="utf-8", errors="replace").read())
-        except OSError:
-            cache[path] = set()
+        got = read_text(path)
+        cache[path] = slugs(got[0]) if got else set()
     return cache[path]
+
+
+def anchor_fix(frag: str, real_slugs: set[str]) -> str | None:
+    """The one real heading slug `frag` almost certainly meant, or None.
+
+    Written against a concrete, recurring cause: a table-of-contents
+    generator that drops a heading's leading diacritic (`Öffentliche API`
+    -> `#ffentliche-api` instead of `#öffentliche-api`) -- same failure
+    shape every time, across hundreds of files, so a close-but-not-exact
+    match is corrected rather than just reported. difflib's ratio is a
+    stdlib similarity measure (no Levenshtein dependency needed); the
+    threshold and margin are deliberately strict -- an unrelated heading
+    that happens to share a few words must never win a silent rewrite.
+    """
+    if len(frag) < 3 or not real_slugs or "�" in frag:
+        return None
+    real_slugs = {s for s in real_slugs if "�" not in s}
+    if not real_slugs:
+        return None
+    scored = sorted(
+        ((SequenceMatcher(None, frag, s).ratio(), s) for s in real_slugs),
+        reverse=True,
+    )
+    best_ratio, best_slug = scored[0]
+    if best_ratio < 0.82:
+        return None
+    if len(scored) > 1 and (best_ratio - scored[1][0]) < 0.06:
+        return None  # too close to a second candidate to guess safely
+    return best_slug
 
 
 def check(root: str) -> tuple[list[Finding], int]:
@@ -315,10 +381,10 @@ def check(root: str) -> tuple[list[Finding], int]:
 
     for md in sorted(markdown_files(root)):
         files += 1
-        try:
-            raw = open(md, encoding="utf-8", errors="replace").read()
-        except OSError:
+        got = read_text(md)
+        if got is None:
             continue
+        raw, _ = got
         stripped = strip_code(raw)
         base = os.path.dirname(md)
         rel_md = os.path.relpath(md, root).replace(os.sep, "/")
@@ -331,9 +397,10 @@ def check(root: str) -> tuple[list[Finding], int]:
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
             lineno = line_of(raw, f"]({m.group(1)})", 0)
-            path, _, frag = target.partition("#")
+            path, _, raw_frag_full = target.partition("#")
             path = path.split('"', 1)[0].strip()
-            frag = frag.split('"', 1)[0].strip()
+            raw_frag = raw_frag_full.split('"', 1)[0]  # unstripped: needed verbatim for --fix
+            frag = raw_frag.strip()
             # A bare "#heading" points into the document it is written in --
             # which is where a table of contents lives, and where a renamed
             # heading is least likely to be noticed.
@@ -356,10 +423,17 @@ def check(root: str) -> tuple[list[Finding], int]:
                     ))
                     continue
             if frag and resolved.lower().endswith((".md", ".markdown")):
-                if frag.lower() not in anchors_of(resolved, heads):
+                real_slugs = anchors_of(resolved, heads)
+                if frag.lower() not in real_slugs:
+                    fixed_slug = anchor_fix(frag.lower(), real_slugs)
+                    corrected = (
+                        target.replace(f"#{raw_frag}", f"#{fixed_slug}", 1)
+                        if fixed_slug else None
+                    )
+                    detail = f"no such heading -- fix: #{fixed_slug}" if fixed_slug else "no such heading"
                     findings.append(Finding(
                         repo=root, file=rel_md, line=lineno, kind="ANCHOR",
-                        target=target, detail="no such heading",
+                        target=target, detail=detail, fix=corrected,
                     ))
             if not path:
                 continue
@@ -382,19 +456,22 @@ def check(root: str) -> tuple[list[Finding], int]:
 
 
 def apply_fixes(root: str, findings: list[Finding]) -> int:
-    """Rewrite CASE findings with a computed `fix` in place. Returns count fixed."""
+    """Rewrite CASE/ANCHOR findings with a computed `fix` in place. Returns count fixed."""
     by_file: dict[str, list[Finding]] = {}
     for f in findings:
-        if f.kind == "CASE" and f.fix:
+        # "�" is defense in depth, not the primary guard (read_text's
+        # cp1252/latin-1 fallback is): a fix computed from a lossily-decoded
+        # heading must never be written back, whatever produced it.
+        if f.kind in ("CASE", "ANCHOR") and f.fix and "�" not in f.fix:
             by_file.setdefault(f.file, []).append(f)
 
     fixed = 0
     for rel_file, items in by_file.items():
         path = os.path.join(root, rel_file)
-        try:
-            text = open(path, encoding="utf-8", errors="replace").read()
-        except OSError:
+        got = read_text(path)
+        if got is None:
             continue
+        text, enc = got
         changed = text
         for f in items:
             old, new = f"]({f.target})", f"]({f.fix})"
@@ -402,7 +479,10 @@ def apply_fixes(root: str, findings: list[Finding]) -> int:
                 changed = changed.replace(old, new)
                 fixed += 1
         if changed != text:
-            with open(path, "w", encoding="utf-8", newline="") as fh:
+            # Round-trip in the encoding it was read with: rewriting a
+            # cp1252 note as UTF-8 would touch every non-ASCII byte in the
+            # file, not just the link this tool actually means to fix.
+            with open(path, "w", encoding=enc, newline="") as fh:
                 fh.write(changed)
     return fixed
 
