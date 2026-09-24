@@ -12,10 +12,15 @@ mit der nötigen Option fortsetzt. Zweites Beispiel aus derselben Session:
 UI — sieht wie eine reine Text-Notify aus, ist aber schon eine Ja/Nein-
 Abfrage, nur ohne die gewohnte Optik.
 
-Ausführliche Einzel-Befunde (welche Datei, welche Zeile, pro Plugin):
-siehe [`docs/ROADMAP/reports/ecosystem-small-tasks-2026-09.md`](../../../../reports/ecosystem-small-tasks-2026-09.md),
-Abschnitte 3 und 4. Diese Datei hier ist der übergreifende Rahmen, nicht die
-Einzelumsetzung.
+Die beiden konkreten Beispiele (fileops.nvim `:File delete`, `:MyPlugins`
+Confirm-Dialog) sind inzwischen umgesetzt und archiviert — Einzel-Befunde und
+Umsetzungsdetails siehe `fileops.nvim/Backlog/FEATURES/delete-confirm-
+instead-of-refuse.md` bzw. `nvim-config/Backlog/FEATURES/myplugins-confirm-
+dialog.md` in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`. Der
+ursprüngliche Sammel-Report (`ecosystem-small-tasks-2026-09.md`) ist nach
+Abschluss aller 14 Punkte per Plugin dorthin aufgeteilt und gelöscht worden.
+Diese Datei hier ist der übergreifende Rahmen für den noch offenen
+Audit-Task (Punkt 15 des ehemaligen Reports), nicht die Einzelumsetzung.
 
 Passende Regel im Kanon (neu angelegt in dieser Session): `UI-05` in
 `B:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\LUA_NVIM.md`,
