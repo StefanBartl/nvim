@@ -1,7 +1,7 @@
 # IncRename — Keymaps
 
 Registriert in
-[lua/config/inc_rename/init.lua](B:/repos/lsp.nvim/lua/lsp/integrations/inc_rename/setup.lua),
+[lua/config/inc_rename/init.lua]($REPOS_DIR/lsp.nvim/lua/lsp/integrations/inc_rename/setup.lua),
 aufgerufen aus dem `config`-Block des Plugin-Specs
 ([lua/plugins/lsp.lua](../../../../../lua/plugins/lsp.lua), `smjonas/inc-rename.nvim`,
 `cmd = "IncRename"`).

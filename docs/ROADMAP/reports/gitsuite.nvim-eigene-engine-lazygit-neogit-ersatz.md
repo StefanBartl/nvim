@@ -10,7 +10,7 @@ Konzept & Implementierungsplan zu Punkt 2 aus der gitsuite.nvim-Aufgabenliste:
 > werden.
 
 Reine Recherche + Planung, kein Code. Alle Repo-Pfade beziehen sich auf
-`B:\repos\gitsuite.nvim` (bzw. `B:\repos\lib.nvim`) und `stdpath('config')`
+`$REPOS_DIR/gitsuite.nvim` (bzw. `$REPOS_DIR/lib.nvim`) und `stdpath('config')`
 für die nvim-Konfiguration, sofern nicht anders angegeben.
 
 ---
@@ -57,7 +57,7 @@ Backend entfällt (Phase 9).
 
 ### 1.3 Was bereits an Infrastruktur existiert und wiederverwendbar ist
 
-`lib.nvim.git` (`B:\repos\lib.nvim\lua\lib\nvim\git\init.lua`) ist die
+`lib.nvim.git` (`$REPOS_DIR/lib.nvim\lua\lib\nvim\git\init.lua`) ist die
 **einzige** Stelle, über die gitsuite.nvim heute git aufruft (Contributing-Regel:
 "Every git call goes through `lib.nvim.git`/`lib.nvim.cross.run_argv` — no
 `vim.fn.system("git " .. ...)` anywhere"). Vorhanden, alle rein lesend:
@@ -280,7 +280,7 @@ wird:
   (bzw. deren finaler Name nach Cutover), generierte Tabelle neu erzeugen.
 - `docs/configuration.md` — neue `keymaps`/`features`-Einträge für die
   Engine.
-- `C:\Users\Bernhard\AppData\Local\nvim\lua\plugins\personal\init.lua` und
+- `$NVIM_CONFIG_DIR/lua\plugins\personal\init.lua` und
   `lua\plugins\git.lua` — Kommentare, die aktuell erklären, dass neogit
   separat installiert ist bzw. dass `<leader>lg` "still the real lazygit TUI"
   ist, müssen aktualisiert werden; `dependencies`-Eintrag ggf. erweitert.

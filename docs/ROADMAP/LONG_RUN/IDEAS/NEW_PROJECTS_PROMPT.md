@@ -3,22 +3,22 @@
 | Was | Wo |
 |---|---|
 | Konzept (Quelle dieses Plans) | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
-| Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `E:\repos\ai.nvim` |
-| Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `E:\repos\WKDBooks\Development\wkdbook-myplugins\ai.nvim\{ROADMAP,NOTES}` |
+| Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
+| Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `$REPOS_DIR/WKDBooks\Development\wkdbook-myplugins\ai.nvim\{ROADMAP,NOTES}` |
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai.nvim.md` |
-| Transport-Erweiterung | `E:\repos\lib.nvim\lua\lib\nvim\net\curl` |
-| loomAI (nativ, Referenz für späteren Provider) | `E:\repos\loomAI` |
-| Regelwerk für neue Projekte | `E:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
+| Transport-Erweiterung | `$REPOS_DIR/lib.nvim\lua\lib\nvim\net\curl` |
+| loomAI (nativ, Referenz für späteren Provider) | `$REPOS_DIR/loomAI` |
+| Regelwerk für neue Projekte | `$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
 
 
-wir implementieren jetzt data.nvim - dazu musst du ein öffentlich gh repo stefanbartl/data.nvim anlegen und in E:\repos\ anlegen
+wir implementieren jetzt data.nvim - dazu musst du ein öffentlich gh repo stefanbartl/data.nvim anlegen und in $REPOS_DIR/ anlegen
 
 Hier die konzept:
-C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN\IDEAS\data.nvim.md
+$NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN\IDEAS\data.nvim.md
 
 zu begin auch ein `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/data.nvim` anelgen - doirt komten roadmapm, notes und alles rein, was nicht in da slffentliche repo docs gehört
 
-Außérdem von anfang an eine handover file führen, diese ausnahsmweiß0e nach C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\handovers schreiebn
+Außérdem von anfang an eine handover file führen, diese ausnahsmweiß0e nach $NVIM_CONFIG_DIR/docs\ROADMAP\handovers schreiebn
 
 in `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/` gibt es eine ruleslist für neue projekte - lese dir bitte eram anfan an auch durch, damit wir sie einhalten. wir klnnen auch immer weider mit rules.nvim arbeiten, aein weteres meiner nivm polugin sdie die ruleslisten ach integfriert andausführen kann
 
@@ -27,7 +27,7 @@ Außerdem - wenn möglich - halte bitte auch die performance, security usw... ru
 WICHITG: lib.nvim verwenden
 
 
-hier bekommst du eine übersiucht üpber nützliche tools: E:/repos/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md
+hier bekommst du eine übersiucht üpber nützliche tools: $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md
 
 - never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden

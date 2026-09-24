@@ -13,11 +13,11 @@
 # TESTS/run.lua in a repo whose runner is TESTS/pickers_spec.lua, got "cannot
 # open", and read the missing output as success. A stale spec stayed red for
 # hours. So: locate the runner, and say so loudly when there isn't one.
-LIB=E:/repos/lib.nvim
+LIB=$REPOS_DIR/lib.nvim
 
 run_one() {
   local repo="$1"
-  cd "E:/repos/$repo" || return
+  cd "$REPOS_DIR/$repo" || return
 
   local runner="" cand
   for cand in TESTS/run.lua tests/run.lua TESTS/smoke.lua TESTS/smoke_spec.lua; do

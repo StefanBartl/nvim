@@ -1,1 +1,1 @@
-B:/repos/WKDBooks/Development/wkdbook-wkd/Handover/wkd_Handover.md
+$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Handover/wkd_Handover.md

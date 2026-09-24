@@ -1,8 +1,8 @@
 # images.nvim — Analyse für den Vergleich (vs. 3rd/image.nvim, snacks.image)
 
-Stand: Worktree `E:\repos\images.nvim\.claude\worktrees\nvim-image-plugins-review-d6d0c2`, HEAD `8a865c2` (2026-09-20), 187 Commits seit 2026-08-05.
+Stand: Worktree `$REPOS_DIR/images.nvim\.claude\worktrees\nvim-image-plugins-review-d6d0c2`, HEAD `8a865c2` (2026-09-20), 187 Commits seit 2026-08-05.
 Alle Pfade relativ zum Repo-Root. Belegt sind `Datei:Zeile`. "UNVERIFIED" = nicht selbst geprüft.
-Lokal verifiziert: Testsuite läuft grün (`LIB_NVIM_PATH=E:/repos/lib.nvim nvim --headless -u NONE -l TESTS/run.lua` -> `IMAGES_TESTS_OK`, Windows 11); Arbeitsbaum danach unverändert (`git status` sauber).
+Lokal verifiziert: Testsuite läuft grün (`LIB_NVIM_PATH=$REPOS_DIR/lib.nvim nvim --headless -u NONE -l TESTS/run.lua` -> `IMAGES_TESTS_OK`, Windows 11); Arbeitsbaum danach unverändert (`git status` sauber).
 
 ---
 
@@ -86,7 +86,7 @@ Keine `User`-Events (`grep nvim_exec_autocmds|User ` in `lua/` = 0). Autocmds: s
 
 ## 2. CLI-TOOLS
 
-Alle Aufrufe über `vim.system(<argv-Liste>, …)` (kein Shell-String, kein `os.execute`/`io.popen`/`jobstart`; verifiziert per Grep über `lua/`). Erkennung: `lib.nvim.cross.executable.exists(name)` = `vim.fn.executable(name)==1`, **pro Name memoisiert** (`E:\repos\lib.nvim\lua\lib\nvim\cross\executable\init.lua:24-46`); `clear()` nötig nach Installation.
+Alle Aufrufe über `vim.system(<argv-Liste>, …)` (kein Shell-String, kein `os.execute`/`io.popen`/`jobstart`; verifiziert per Grep über `lua/`). Erkennung: `lib.nvim.cross.executable.exists(name)` = `vim.fn.executable(name)==1`, **pro Name memoisiert** (`$REPOS_DIR/lib.nvim\lua\lib\nvim\cross\executable\init.lua:24-46`); `clear()` nötig nach Installation.
 
 | Tool | Wofür | Aufruf / Stelle | Async? | Timeout | Fehlt es |
 | --- | --- | --- | --- | --- | --- |
@@ -213,7 +213,7 @@ Sonstiges: Health, Vimdoc (`doc/images.txt`, 800+ Zeilen), CONTRIBUTING, `docs/`
 | URL-Handling (Remote) | **Scheme-Allowlist:** nur `^https?://` (`remote.lua:24-26`; `ftp://`, `file://` explizit ausgeschlossen, Test `remote_spec.lua:31`). Default aus (`enabled=false`). Größe: curl `--max-filesize` (`remote.lua:104`), wget `-Q` (`remote.lua:111`). Timeout: `--max-time`/`--timeout`. Cache-Name = sha256(URL) + nur `[%w]+`-Extension (`remote.lua:42-47`), kein Pfad aus URL. URL kommt als eigenes argv-Element, führt wegen `^https?://` nie mit `-`. | s. links |
 | SSRF / private IPs / Redirects | **Nicht vorhanden.** Kein Block von localhost/RFC1918/Link-Local/Metadata-IPs, keine DNS-Rebinding-Abwehr. curl läuft mit `-L` (`-fsSL`), folgt also Redirects **ohne** `--max-redirs`, `--proto`, `--proto-redir` (`remote.lua:98-108`). Mitigation ist nur das Opt-in-Default. | `remote.lua:80-114` |
 | Größenlimits (Remote) | curl `--max-filesize` greift laut curl-Doku nur, wenn die Größe vorab bekannt ist (Content-Length); bei chunked/unbekannter Länge kein Abbruch (curl-Verhalten, UNVERIFIED hier). wget `-Q` greift laut wget-Handbuch **nie** bei einem einzelnen Download (`-O`-Einzeldatei) -> die "Äquivalenz" im Kommentar `remote.lua:110-111` stimmt vermutlich nicht (UNVERIFIED). Nach dem Download keine Größen- oder Typprüfung (nur `size==0`, `remote.lua:126-131`). | `remote.lua:98-131` |
-| Lokale Dateigröße | **Kein Limit:** `lib.nvim.fs.read` liest die ganze Datei (`E:\repos\lib.nvim\lua\lib\nvim\fs\read\init.lua:17-33`), dann base64 im Hauptthread und ein `nvim_ui_send` (`terminal.lua:180-205, 297`). Ein sehr großes Bild = UI-Blockade + RAM (Faktor >2). Kein Chunking. Terminal-seitige Limits UNVERIFIED. | `terminal.lua` |
+| Lokale Dateigröße | **Kein Limit:** `lib.nvim.fs.read` liest die ganze Datei (`$REPOS_DIR/lib.nvim\lua\lib\nvim\fs\read\init.lua:17-33`), dann base64 im Hauptthread und ein `nvim_ui_send` (`terminal.lua:180-205, 297`). Ein sehr großes Bild = UI-Blockade + RAM (Faktor >2). Kein Chunking. Terminal-seitige Limits UNVERIFIED. | `terminal.lua` |
 | Pfadbehandlung | Kein Confinement der Link-Ziele: `to_path` löst auch `../..`/absolute Pfade auf (`resolve.lua:97-131`) -> jede lesbare Datei mit Bild-Endung; Dokument = vom Benutzer geöffnet, kein Netzwerk-Bezug. Paste: `sanitize_filename` verwirft Pfadanteile (auch `\` auf Linux), erzwingt `.png` (`paste.lua:155-165`, Test `sanitize_filename_spec`). Nicht-http(s)-Schemata werden von `to_path` abgewiesen (`resolve.lua:98-100`). `browse` Root nur aus `expand_path` + `isdirectory`. | s. links |
 | Temp-/Cache-Dateien | Test-/Paste-Zwischendateien via `vim.fn.tempname()`; Caches unter `stdpath("cache")/images.nvim/{remote,svg,pdf}`. Keine restriktiven Dateirechte gesetzt (Neovim-Default). **Cache-Cleanup:** nur Remote hat TTL (und auch nur beim Wiederaufruf derselben URL, kein Sweep). SVG- und PDF-Cache wachsen unbegrenzt (Key enthält mtime, alte Einträge bleiben liegen). | `remote.lua:88-90`, `convert.lua:65-70`, `pdf.lua:87-122` |
 | Ressourcen-Caps | Blockgrafik: `levels` -> max levels³ HL-Gruppen, Budget + Grobpalette bei Erschöpfung (`blocks.lua:249-280`), `GROUP_BUDGET`; `browse_max_entries=20000` (`browse.lua:38-47, 84`); JPEG-Headerwalk auf 512 Segmente begrenzt (`pixels.lua:165-167`); Berechnungs-/Config-Sanitisierung (`valid_positive`, `valid_box`, ERR-22-Serie: 6 Commits, u.a. `e7fc84b`). Kein Cap für die Anzahl gleichzeitiger Downloads/Prozesse; keine ImageMagick-`-limit`-Flags (Speicher/Zeit/`policy.xml` bleiben Sache des Systems); ImageMagick wird auf beliebige Benutzerdateien (SVG-Delegates, externe Referenzen) losgelassen, ohne `-limit`/Delegate-Beschränkung (mein Wissen zu ImageMagick-SVG/MSL-Risiken; UNVERIFIED hier). | s. links |
@@ -309,17 +309,17 @@ Aus images.nvim (Aufrufe nach außen, alle soft/`pcall`, ausser lib.nvim):
 | **snacks.nvim** | `snacks.picker` für `:Image pickers` (eigene Preview-Funktion) | `browse.lua:157-238` |
 | **language.nvim** | keine Code-Kopplung: OCR-Buffer hat `filetype=markdown` | `init.lua:560-565`, `docs/FEATURES/INTEGRATIONS.md:273-294` |
 
-In images.nvim hineinrufende Plugins (im Nachbar-Repo unter `E:\repos\` per Grep verifiziert):
+In images.nvim hineinrufende Plugins (im Nachbar-Repo unter `$REPOS_DIR/` per Grep verifiziert):
 
 | Plugin | Aufruf in images.nvim | Beleg |
 | --- | --- | --- |
-| **hover.nvim** | `images.info` (`collect`), `images.scale.fit_cells`, `images.anchor.draw` (deferred, `opts.defer`), `images.terminal.clear`, Fallback `images.browse.draw_in_window`; `images.convert.crop` (Zoom) | `E:\repos\hover.nvim\lua\hover\preview\media.lua:176,234,307-328,433-480` |
-| **pickers.nvim** | `images.integrations.picker`: `available`, `is_previewable`, `is_pdf`, `is_image`, `preview(winid, file, {on_ready,on_done,page,dpi,position,scale,inset,defer})`, `clear` | `E:\repos\pickers.nvim\lua\pickers\integrations\images\init.lua:77-211`, Adapter `snacks.lua:61-99`, `telescope.lua:50-119` |
-| **markdown.nvim** | `require("images").paste()` / `.screenshot()`; `images.terminal.clear()`; `images.browse.draw_in_window` (per Doku `INTEGRATIONS.md:30-34`) | `E:\repos\markdown.nvim\lua\markdown\commands\image.lua:14-35`, `commands\links.lua:221` |
-| **lib.nvim** (`image_preview`) | bevorzugt images.nvim vor snacks/image.nvim: `pcall(require,"images")`+`images.show`, `images.guard.check`, `images.browse.draw_in_window`, `images.terminal.clear` (Erkennung prüft nur "Modul ladbar", nicht "rendert") | `E:\repos\lib.nvim\lua\lib\nvim\image_preview\init.lua:42-45, 129-151` |
-| **filetree.nvim** | `images.show(path)` als erstes Preview-Backend | `E:\repos\filetree.nvim\lua\filetree\features\ui\preview\init.lua:153-159` |
-| **open.nvim** | `images.show(ctx.text)` für `:Open image` | `E:\repos\open.nvim\lua\open\handlers\image.lua:25-27` |
-| **media.nvim** | `images.show(png)`; `images.ocr.run(path, nil, cb)`, `images.ocr.bin()` | `E:\repos\media.nvim\lua\media\ui.lua:168-170`, `hub\text.lua:82, 181` |
+| **hover.nvim** | `images.info` (`collect`), `images.scale.fit_cells`, `images.anchor.draw` (deferred, `opts.defer`), `images.terminal.clear`, Fallback `images.browse.draw_in_window`; `images.convert.crop` (Zoom) | `$REPOS_DIR/hover.nvim\lua\hover\preview\media.lua:176,234,307-328,433-480` |
+| **pickers.nvim** | `images.integrations.picker`: `available`, `is_previewable`, `is_pdf`, `is_image`, `preview(winid, file, {on_ready,on_done,page,dpi,position,scale,inset,defer})`, `clear` | `$REPOS_DIR/pickers.nvim\lua\pickers\integrations\images\init.lua:77-211`, Adapter `snacks.lua:61-99`, `telescope.lua:50-119` |
+| **markdown.nvim** | `require("images").paste()` / `.screenshot()`; `images.terminal.clear()`; `images.browse.draw_in_window` (per Doku `INTEGRATIONS.md:30-34`) | `$REPOS_DIR/markdown.nvim\lua\markdown\commands\image.lua:14-35`, `commands\links.lua:221` |
+| **lib.nvim** (`image_preview`) | bevorzugt images.nvim vor snacks/image.nvim: `pcall(require,"images")`+`images.show`, `images.guard.check`, `images.browse.draw_in_window`, `images.terminal.clear` (Erkennung prüft nur "Modul ladbar", nicht "rendert") | `$REPOS_DIR/lib.nvim\lua\lib\nvim\image_preview\init.lua:42-45, 129-151` |
+| **filetree.nvim** | `images.show(path)` als erstes Preview-Backend | `$REPOS_DIR/filetree.nvim\lua\filetree\features\ui\preview\init.lua:153-159` |
+| **open.nvim** | `images.show(ctx.text)` für `:Open image` | `$REPOS_DIR/open.nvim\lua\open\handlers\image.lua:25-27` |
+| **media.nvim** | `images.show(png)`; `images.ocr.run(path, nil, cb)`, `images.ocr.bin()` | `$REPOS_DIR/media.nvim\lua\media\ui.lua:168-170`, `hub\text.lua:82, 181` |
 | **pdfport.nvim** | ruft nicht in `images` (Grep leer); Kopplung nur in Gegenrichtung (`render_page`/`create`) | Grep |
 | **gopath.nvim**, **language.nvim** | keine Aufrufe in `images` gefunden | Grep |
 

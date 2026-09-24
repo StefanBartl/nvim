@@ -31,7 +31,7 @@
 ### Cross-Plugin / Konkurrenzanalyse
 
 - [ ] **Feature-Scan:** Bei Plugins, die meinen ähneln (z. B. gitsigns → gitsuite.nvim, 3rd/images.nvim → images.nvim, tabufline → ui.nvim, lspsaga.nvim → lspo.nvim), die Repos mit hoher bzw. mittlerer Ähnlichkeit **und** hoher Reichweite/Nutzerzahl nach Features abgrasen, die ich noch nicht implementiert habe. Gibt es bei „mittlerer Ähnlichkeit" nur wenige Treffer, nur die reichweitenstärksten davon berücksichtigen.
-- [ ] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: C:/Users/Bernhard/AppData/Local/nvim/docs/ROADMAP/reports
+- [ ] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
 
 ---
 
@@ -46,7 +46,7 @@
 - [ ] AI: Mit Claude Code das für den Rechner beste lokale LLM installieren, dabei ein paar Modelle ausprobieren. Nicht offen ins Netz hängen (VPN), opencode bzw. Ollama-Alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichtig: genau lernen, wie das funktioniert — LLMs, auch Quantisierung usw. Wie arbeitet dabei genau die Grafikkarte, RAM-Upgrade, Treiber erstellen usw.
 
-- [ ] [TAKT](B:/repos/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
+- [ ] [TAKT]($REPOS_DIR/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
 
 - [ ] Gaming-Anticheat-Systeme aus Red-/Blue-Team-Cybersec-Sicht lernen
 
@@ -58,13 +58,13 @@
 
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
-3. C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\LONG_RUN
+3. $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN
 
 ---
 
 ### Live-Testing (braucht laufende, interaktive nvim-Session)
 
-  - [ ] C:\Users\bartl\AppData\Local\nvim\docs\ROADMAP\personal\All\FINISH
+  - [ ] $NVIM_CONFIG_DIR/docs\ROADMAP\personal\All\FINISH
   - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
   - [loom.ai + ai.nvim](personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
   - [media.nvim](personal/All/FINISH/Final_Checks/media/live-testing-plan.md)

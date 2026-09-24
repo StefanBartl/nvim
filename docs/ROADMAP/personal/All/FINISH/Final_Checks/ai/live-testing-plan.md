@@ -55,7 +55,7 @@ ist Ollamas **eigene** Bind-Adressen-Variable für den Server, üblich z. B.
 bei WSL2-/LAN-Setups). `ai.nvim`s `lua/ai/providers/ollama.lua` liest aber
 exakt dieselbe Variable, um daraus die **Client**-Ziel-URL zu bauen
 (`host()` → `util.env_value("OLLAMA_HOST", DEFAULT_HOST)`,
-[ollama.lua:28](E:/repos/ai.nvim/lua/ai/providers/ollama.lua:28)) — das
+[ollama.lua:28]($REPOS_DIR/ai.nvim/lua/ai/providers/ollama.lua:28)) — das
 Ergebnis wäre die Client-Request-URL `0.0.0.0:11434/api/chat` **ohne**
 `http://`-Schema, was fehlschlägt.
 

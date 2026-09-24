@@ -25,9 +25,9 @@ Zwei Setup-Stellen rufen `conform.setup()` auf (letzter Aufruf gewinnt):
 1. [lua/plugins/lsp.lua](../../../../../lua/plugins/lsp.lua) — im `config`-Block
    des `stevearc/conform.nvim`-Specs, mit einer eigenen `formatters_by_ft`-Tabelle
    und `format_on_save = { timeout_ms = 1200, lsp_fallback = true }`.
-2. [lua/lsp/formatter/conform.lua](B:/repos/lsp.nvim/lua/lsp/formatter/conform.lua)
+2. [lua/lsp/formatter/conform.lua]($REPOS_DIR/lsp.nvim/lua/lsp/formatter/conform.lua)
    (`M.setup`), aufgerufen aus
-   [lua/lsp/init.lua](B:/repos/lsp.nvim/lua/lsp/init.lua) direkt danach — setzt
+   [lua/lsp/init.lua]($REPOS_DIR/lsp.nvim/lua/lsp/init.lua) direkt danach — setzt
    `notify_on_error = true`, eine eigene (überlappende, aber nicht identische)
    `formatters_by_ft`-Tabelle sowie explizite `command`-Pfade (Mason/pipx/pyenv-
    Auflösung via `resolve()`), **ohne** `format_on_save`. Dieser zweite Aufruf
@@ -38,7 +38,7 @@ Zwei Setup-Stellen rufen `conform.setup()` auf (letzter Aufruf gewinnt):
 ## Format-on-Save ist eine eigene Abstraktion, kein Conform-Feature
 
 Diese Config benutzt **nicht** Conforms eingebautes `format_on_save`. Stattdessen
-baut [lua/lsp/formatter/init.lua](B:/repos/lsp.nvim/lua/lsp/formatter/init.lua)
+baut [lua/lsp/formatter/init.lua]($REPOS_DIR/lsp.nvim/lua/lsp/formatter/init.lua)
 (`M.build`) eine eigene Formatter-API (`vim.g._formatter_api`) mit:
 
 - Conform-first, LSP-`vim.lsp.buf.format`-Fallback,
@@ -48,7 +48,7 @@ baut [lua/lsp/formatter/init.lua](B:/repos/lsp.nvim/lua/lsp/formatter/init.lua)
   Default **deaktiviert** (`opts.format_on_save = false`).
 
 Die folgenden Commands sind dünne Wrapper um genau diese API. Registriert in
-[lua/lsp/usercmds/formatter.lua](B:/repos/lsp.nvim/lua/lsp/usercmds/formatter.lua)
+[lua/lsp/usercmds/formatter.lua]($REPOS_DIR/lsp.nvim/lua/lsp/usercmds/formatter.lua)
 (`M.attach`), aufgerufen aus `lsp/init.lua`.
 
 | Command | Wirkung |
@@ -66,7 +66,7 @@ Alle Registrierungen sind per `pcall` gegen doppelte Definition abgesichert
 ## Markdown-spezifische Commands
 
 Zusätzlich, buffer-unabhängig registriert in
-[lua/lsp/languages/documentation/markdown.lua](B:/repos/lsp.nvim/lua/lsp/languages/documentation/markdown.lua)
+[lua/lsp/languages/documentation/markdown.lua]($REPOS_DIR/lsp.nvim/lua/lsp/languages/documentation/markdown.lua)
 (FileType-Autocmd-Setup für `markdown`/`mdx`):
 
 | Command | Wirkung |

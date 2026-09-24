@@ -116,8 +116,8 @@ Am 2026-08-29 mit einem Prototyp gegen drei realistische Mapping-Formen
 gemessen (Probe-Ergebnis wörtlich):
 
 ```
-seq=[a   tier=return value             result=C:/repos/lib.nvim/init.lua
-seq=[b   tier=observed + register      result=C:/repos/filetree.nvim/lua/node.lua
+seq=[a   tier=return value             result=$REPOS_DIR/lib.nvim/init.lua
+seq=[b   tier=observed + register      result=$REPOS_DIR/filetree.nvim/lua/node.lua
 seq=[c   tier=no capturable result     result=nil
 seq=[z   -> unresolved
 ```

@@ -1,7 +1,7 @@
 # Activity-Stream vom Referenzierten case
 
 [SNOW Link](https://support-hub.tricentis.com/now/cwf/agent/record/x_ttng2_sapresolve_case/FA163EC3A29B1FD1A1A1FB176F463EB1)
-[Case 888622](C:/repos/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1245018/Research/ReferencedCase_ActivityStream.md)
+[Case 888622]($REPOS_DIR/WKDBook-Tricentis/Cases/SAP_Support/Cases/Open/1245018/Research/ReferencedCase_ActivityStream.md)
 
 [1/45] 2026-08-25 06:46:21 | Comment | SAP Resolve
 at: 2026-08-25 04:44:59 GMT

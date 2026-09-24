@@ -1,6 +1,6 @@
 # Okosystem-Recherche: hover.nvim / pdfport.nvim / media.nvim (Bezug zu Bildanzeige)
 
-Read-only. Stand: 2026-09-21, alle drei Repos auf HEAD von `E:\repos\<name>`. Pfade relativ zum jeweiligen Repo,
+Read-only. Stand: 2026-09-21, alle drei Repos auf HEAD von `$REPOS_DIR/<name>`. Pfade relativ zum jeweiligen Repo,
 `lua/`-Prefix meist weggelassen wo eindeutig. "DOCS" = Behauptung in README/Docs, "CODE" = im Quelltext gelesen.
 Nichts ausgefuehrt (keine Tests gestartet, keine Tools aufgerufen) -> Laufzeitverhalten ist "gelesen", nicht "gemessen".
 

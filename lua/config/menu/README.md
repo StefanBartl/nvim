@@ -25,7 +25,7 @@ Neovim behaviour.
 |---|---|
 | `init.lua` | picks the renderer, passes options on, binds the triggers |
 | `mappings.lua` | the two keymaps, and the `CONTRIBUTORS` list that composes plugin sections |
-| `custom_menu/init.lua` | the general sections (Code, Clipboard, Delete, Tools) -- the Git fly-out inside Tools is `pcall`-required from `gitsuite.integrations.menu` (`E:/repos/gitsuite.nvim`), not a file in this directory any more (`git.lua` removed, GS-09) |
+| `custom_menu/init.lua` | the general sections (Code, Clipboard, Delete, Tools) -- the Git fly-out inside Tools is `pcall`-required from `gitsuite.integrations.menu` (`$REPOS_DIR/gitsuite.nvim`), not a file in this directory any more (`git.lua` removed, GS-09) |
 | `icons.lua` | the glyphs the icon column draws, resolved once for every section |
 
 ## Who draws it

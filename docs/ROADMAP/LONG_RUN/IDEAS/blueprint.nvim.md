@@ -42,9 +42,9 @@
 
 ## Problem
 
-Das Wissen aus [`Arch&Coding-Regeln.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Arch&Coding-Regeln.md),
-[`Zentrale-Prinzipien.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Zentrale-Prinzipien.md) und
-[`Checklist.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Checklist.md) liegt als Prosa in Markdown-Dateien.
+Das Wissen aus [`Arch&Coding-Regeln.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Arch&Coding-Regeln.md),
+[`Zentrale-Prinzipien.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Zentrale-Prinzipien.md) und
+[`Checklist.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Checklist.md) liegt als Prosa in Markdown-Dateien.
 Beim Codieren ist es damit **nicht abrufbar**: Wer mitten in einer Funktion
 denkt „ich brauche jetzt einen Aggregator" oder „wie war die allokationsfreie
 Schleifenvariante nochmal", müsste die Datei öffnen, scrollen, den Codeblock
@@ -159,7 +159,7 @@ Ein Compound-Command nach der Hausregel, gebaut mit
 ```
 
 Range-Unterstützung (`v`, `V`, `<C-v>`) ist Pflicht laut
-[NEW_PROJECT](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md) und hier auch inhaltlich sinnvoll:
+[NEW_PROJECT]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md) und hier auch inhaltlich sinnvoll:
 
 - `:'<,'>Blueprint …` → gewählte Selektion wird **ersetzt** statt eingefügt,
   und steht dem Template zusätzlich als `${SELECTION}` zur Verfügung
@@ -321,7 +321,7 @@ ein Team-Template lokal angepasst werden, ohne es zu forken.
 
 ### Modulbaum
 
-Nach [NEW_PROJECT](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md):
+Nach [NEW_PROJECT]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md):
 
 ```
 blueprint.nvim/
@@ -361,7 +361,7 @@ blueprint.nvim/
 
 ### Index und Cache
 
-Direkt aus [Zentrale-Prinzipien](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Zentrale-Prinzipien.md) §7 und §2:
+Direkt aus [Zentrale-Prinzipien]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Zentrale-Prinzipien.md) §7 und §2:
 
 - Der Index enthält **nur** was die Liste braucht: `id, lang, category, title,
   short, keywords, tags, path, mtime`. Body und Langbeschreibung werden erst
@@ -612,10 +612,10 @@ Komposition · Export/PDF · Kontext-Vorschlag.
 ## Literatur und Referenzen
 
 - Eigene Regelwerke:
-  [`Arch&Coding-Regeln.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Arch&Coding-Regeln.md) ·
-  [`Zentrale-Prinzipien.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Zentrale-Prinzipien.md) ·
-  [`Checklist.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Checklist.md) ·
-  [`NEW_PROJECT.md`](B:/repos/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md) · `REVIEW.md` · `PERFORMANCE.md`
+  [`Arch&Coding-Regeln.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Arch&Coding-Regeln.md) ·
+  [`Zentrale-Prinzipien.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Zentrale-Prinzipien.md) ·
+  [`Checklist.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/archiv/Checklist.md) ·
+  [`NEW_PROJECT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md) · `REVIEW.md` · `PERFORMANCE.md`
   (`$REPOS_DIR\WKDBooks\Development\wkdbook-Lua\Checklists\`)
 - Eigene Plugins: [`lib.nvim`](https://github.com/StefanBartl/lib.nvim) ·
   [`pickers.nvim`](https://github.com/StefanBartl/pickers.nvim) ·

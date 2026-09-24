@@ -23,7 +23,7 @@ Diese Datei hier ist der übergreifende Rahmen für den noch offenen
 Audit-Task (Punkt 15 des ehemaligen Reports), nicht die Einzelumsetzung.
 
 Passende Regel im Kanon (neu angelegt in dieser Session): `UI-05` in
-`B:\repos\WKDBooks\Development\wkdbook-Lua\Checklists\regeln\LUA_NVIM.md`,
+`$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\regeln\LUA_NVIM.md`,
 Abschnitt "Notifications".
 
 ---

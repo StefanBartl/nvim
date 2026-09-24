@@ -5,7 +5,7 @@ Zwei Quellen:
 1. **`<leader>dv`/`dc`** öffnen/schließen die Ansicht über gitsuite.nvim
    (`:Git ui diffview open|close`, seit `GS-08`) statt über diffview.nvim's
    eigene `:DiffviewOpen`/`:DiffviewClose` direkt -- registriert in
-   `gitsuite/bindings/keymaps.lua` (`E:/repos/gitsuite.nvim`), nicht mehr in
+   `gitsuite/bindings/keymaps.lua` (`$REPOS_DIR/gitsuite.nvim`), nicht mehr in
    dieser Config. `<leader>dh` (File-History) ist mit derselben Karte auf
    `:Git diff history` umgezogen -- das ist **diff.nvim**s eigene
    `:DiffHistory`, nicht mehr diffview.nvim's `:DiffviewFileHistory` (bewusst
