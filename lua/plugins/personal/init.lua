@@ -487,13 +487,16 @@ plugins.add({
           -- Recently opened files (snacks "recent" / telescope+fzf "oldfiles").
           recent = { "<leader>fo" },
           -- Uncommitted files (staged/unstaged/both, toggle rows at the top of
-          -- the list) -- pickers.nvim's own in-house `git_status_marks`
-          -- builtin, NOT the native `git_status` picker already on <leader>gs
-          -- (config/snacks/mappings/standard.lua). <leader>g{s,S,l,L,B,D,f,i,I,
-          -- p,P} and bare gb/gd/gg are all taken across this ecosystem's git
-          -- keymaps (pickers.nvim's own + gitsuite.nvim + neogit + diff.nvim);
-          -- <leader>gm ("git marks") was free.
-          git_status_marks = { "<leader>gm" },
+          -- the list) -- pickers.nvim's own in-house `git_status_filtered`
+          -- builtin (renamed from `git_status_marks`: it has no bookmark/mark
+          -- semantics, just a filtered git status list -- ecosystem-wide
+          -- mark/link naming-consistency pass), NOT the native `git_status`
+          -- picker already on <leader>gs (config/snacks/mappings/standard.lua).
+          -- <leader>g{s,S,l,L,B,D,f,i,I,p,P} and bare gb/gd/gg are all taken
+          -- across this ecosystem's git keymaps (pickers.nvim's own +
+          -- gitsuite.nvim + neogit + diff.nvim); <leader>gm was free -- kept
+          -- as the mnemonic key even though the builtin name moved on.
+          git_status_filtered = { "<leader>gm" },
         },
 
         history = {
