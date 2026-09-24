@@ -22,7 +22,7 @@ Das hier formalisiert also etwas Bewährtes, statt etwas Neues zu erfinden —
 und macht images.nvim.md gleich zum ersten Korrekturfall.
 
 Zweiter Grund: das hier gebaute Schema ist genau das, was
-[bindings-explorer.nvim.md](ROADMAP/personal/bindings-explorer.nvim.md)s
+[bindings_explorer/README.md](../../lua/bindings/usrcmds/bindings_explorer/README.md)s
 Phase 2 (Tabellenzeilen als Datensätze) und Phase 3 (Drift-Erkennung)
 brauchten — beide seit 2026-08-09 implementiert (`:Bindings browse`/
 `:Bindings check`, siehe dessen

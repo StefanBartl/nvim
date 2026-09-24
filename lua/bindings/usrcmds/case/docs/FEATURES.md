@@ -2,9 +2,9 @@
 
 `:Case` / `:Cases` / `:Tricentis` — SAP-Support case scaffolding for the
 Tricentis/Tosca support workflow. Full command tables:
-[Usercmds.md](../../../../../docs/NOTES/casedesk/Usercmds.md), worked
-examples: [Workflow.md](../../../../../docs/NOTES/casedesk/Workflow.md),
-module design: [CONCEPT.md](../../../../../docs/ROADMAP/casedesk/CONCEPT.md).
+[CHEATSHEET.md]($REPOS_DIR/casedesk.nvim/CHEATSHEET.md), worked
+examples: [docs/WORKFLOW.md]($REPOS_DIR/casedesk.nvim/docs/WORKFLOW.md),
+module design: [docs/CONCEPT.md]($REPOS_DIR/casedesk.nvim/docs/CONCEPT.md).
 This file tracks features finished after the initial build — the smaller
 ones that don't warrant their own CONCEPT.md §-entry; `:Case(s) close`
 below got a full CONCEPT.md write-up (state model, extended there) and is
@@ -135,7 +135,7 @@ standen rechts außerhalb des Fensters.
 
 ## KI-Faktenblock + Widerspruchsprüfung (EXTRACTION.md Paket 5 — letztes Paket)
 
-Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+Konzept: [docs/EXTRACTION.md]($REPOS_DIR/casedesk.nvim/docs/EXTRACTION.md)
 §7, §12 (Paket 5, steht seit 2026-08-10 — mit diesem Paket ist
 Artefakt-Extraktion komplett fertig, alle 5 Pakete).
 
@@ -166,8 +166,8 @@ Artefakt-Extraktion komplett fertig, alle 5 Pakete).
 
 ## Korrekturmaßnahme-Pause + auto `last_reply_sent` (EXTRACTION.md Paket 4)
 
-Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
-§5, §12, and [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md)'s
+Konzept: [docs/EXTRACTION.md]($REPOS_DIR/casedesk.nvim/docs/EXTRACTION.md)
+§5, §12, and [docs/SLA.md]($REPOS_DIR/casedesk.nvim/docs/SLA.md)'s
 second Nachtrag to §3 (Paket 4, steht seit 2026-08-10 — letztes offenes
 Stück von Artefakt-Extraktion, außer Paket 5).
 
@@ -193,7 +193,7 @@ Stück von Artefakt-Extraktion, außer Paket 5).
 
 ## `:Case doclinks` (EXTRACTION.md Paket 3)
 
-Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+Konzept: [docs/EXTRACTION.md]($REPOS_DIR/casedesk.nvim/docs/EXTRACTION.md)
 §6, §12 (Paket 3, steht seit 2026-08-10). `extract/doclinks.lua` compares
 every `docs.tricentis.com/tosca-<version>/` link found in a case (Activity
 Streams + Replies) against the customer's actual Tosca version — a live
@@ -217,7 +217,7 @@ the customer follows it.
 
 ## `:Case versions` (EXTRACTION.md Paket 1)
 
-Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+Konzept: [docs/EXTRACTION.md]($REPOS_DIR/casedesk.nvim/docs/EXTRACTION.md)
 §2, §3, §12 (Paket 1, steht seit 2026-08-10). `extract/supportinfo.lua`
 parses `assets/ToscaSupportInfo*.txt` — validated against all four
 real support-info files EXTRACTION.md's own analysis is based on, not just
@@ -245,7 +245,7 @@ that has it, and zero false positives across the other three.
 
 ## Stream signals: `extract/stream.lua` (EXTRACTION.md Paket 2)
 
-Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+Konzept: [docs/EXTRACTION.md]($REPOS_DIR/casedesk.nvim/docs/EXTRACTION.md)
 §4, §12 (Paket 2, steht seit 2026-08-10). A second, independent pass over
 `Research/NN_ActivityStream.md` — `sla/stream.lua` stays narrow (only
 what the three SLA clocks need), this reads everything else. Validated
@@ -277,7 +277,7 @@ value (`HEC_ABAP`) as a false positive.
 
 ## Zweite Quelle: SAP Resolve (EXTRACTION.md §13, Pakete 6a-6c)
 
-Konzept: [EXTRACTION.md](../../../../../docs/ROADMAP/casedesk/EXTRACTION.md)
+Konzept: [docs/EXTRACTION.md]($REPOS_DIR/casedesk.nvim/docs/EXTRACTION.md)
 §13 (steht seit 2026-08-21). Neben SNOW gibt es für den SAP-Bereich **SAP
 Resolve**, dessen "Conversations"-Reiter ein Tampermonkey-Script in die
 Zwischenablage formatiert. `:Case activity` nimmt das jetzt genauso an.
@@ -309,7 +309,7 @@ Zwischenablage formatiert. `:Case activity` nimmt das jetzt genauso an.
 
 ## Active SLA notifications + KI-prompt context (SLA.md Paket 4, last one)
 
-Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6C, §6E,
+Konzept: [docs/SLA.md]($REPOS_DIR/casedesk.nvim/docs/SLA.md) §6C, §6E,
 §10 (Paket 4, steht seit 2026-08-10 — mit diesem Paket ist SLA-Überwachung
 komplett fertig, kein ROADMAP.md-Eintrag mehr).
 
@@ -336,7 +336,7 @@ komplett fertig, kein ROADMAP.md-Eintrag mehr).
 
 ## `:Cases sla report [--year N]` (SLA.md Paket 3)
 
-Konzept: [SLA.md](../../../../../docs/ROADMAP/casedesk/SLA.md) §6D, §10
+Konzept: [docs/SLA.md]($REPOS_DIR/casedesk.nvim/docs/SLA.md) §6D, §10
 (Paket 3, steht seit 2026-08-10 — letztes offenes Stück war nur der Report
 selbst, `last_reply_sent` kam schon mit Paket 1). Retrospektiv über **jeden**
 Zustand, nicht nur offene Cases wie `:Cases sla`s Dashboard (SLA.md §9 Q5):
@@ -358,9 +358,9 @@ Datensammlung/Rendering-Split wie jeder andere `:Cases`-Befehl.
 
 Was ROADMAP.md's `:Case(s) close & mark system` entry (removed from
 ROADMAP.md now that this is built). Full design: CONCEPT.md's §3 (state
-model), command tables: [Usercmds.md](../../../../../docs/NOTES/casedesk/Usercmds.md),
-keymaps: [Keymaps.md](../../../../../docs/NOTES/casedesk/Keymaps.md), day-
-to-day use: [Workflow.md](../../../../../docs/NOTES/casedesk/Workflow.md)
+model), command tables: [CHEATSHEET.md]($REPOS_DIR/casedesk.nvim/CHEATSHEET.md),
+keymaps: [docs/BINDINGS.md#keymaps]($REPOS_DIR/casedesk.nvim/docs/BINDINGS.md#keymaps), day-
+to-day use: [docs/WORKFLOW.md]($REPOS_DIR/casedesk.nvim/docs/WORKFLOW.md)
 §3. One-paragraph summary:
 
 - **`:Case close [nr]`** no longer assumes "Closed" — it opens a
@@ -382,9 +382,9 @@ to-day use: [Workflow.md](../../../../../docs/NOTES/casedesk/Workflow.md)
 
 ## Case-Session-Kurzstart (SESSIONS.md Paket 2)
 
-Konzept: [SESSIONS.md](../../../../../docs/ROADMAP/casedesk/SESSIONS.md) §4,
+Konzept: [docs/SESSIONS.md]($REPOS_DIR/casedesk.nvim/docs/SESSIONS.md) §4,
 §10 (Paket 2, steht seit 2026-08-09). Baut auf Paket 1 (`<leader>cs`,
-Auto-Save bei `:Case new`, s. [Keymaps.md](../../../../../docs/NOTES/casedesk/Keymaps.md))
+Auto-Save bei `:Case new`, s. [docs/BINDINGS.md#keymaps]($REPOS_DIR/casedesk.nvim/docs/BINDINGS.md#keymaps))
 auf — Paket 2 macht den Wiedereinstieg selbst bequem:
 
 - **`autoload = true`** in `plugins/personal/init.lua`s `sessions.nvim`-Spec.

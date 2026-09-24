@@ -12,7 +12,7 @@ rufen Conform "roh".
 
 | Mapping | Modus | Aktion | Quelle |
 |---|---|---|---|
-| `<leader>fm` | n, x | `conform.format({ lsp_fallback = true, timeout_ms = 3000 })` | [lua/bindings/mappings/nvchad.lua](../../../../../lua/bindings/mappings/nvchad.lua) |
+| `<leader>fm` | n, x | `conform.format({ lsp_fallback = true, timeout_ms = 3000 })` | [lua/bindings/mappings/general.lua](../../../../../lua/bindings/mappings/general.lua) |
 
 ## Buffer-lokal (überschreibt `<leader>fm` je Filetype)
 

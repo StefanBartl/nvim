@@ -48,8 +48,8 @@
 
 ## Intro
 
-Dritte Datei neben [`PLUGIN_ROADMAPS.md`](./PLUGIN_ROADMAPS.md) (offene Arbeit)
-und [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) (was gebaut
+Dritte Datei neben [`PLUGIN_ROADMAPS.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Backlog/FEATURES/ROADMAPS/PLUGIN_ROADMAPS.md) (offene Arbeit)
+und [`PLUGIN_ROADMAPS_FINISHED.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Backlog/FEATURES/ROADMAPS/PLUGIN_ROADMAPS_FINISHED.md) (was gebaut
 wurde und warum so). **Diese hier beantwortet die dritte Frage: wie prüfe ich
 von Hand nach, dass es tut, was dort steht.**
 
@@ -58,7 +58,7 @@ auflösen lassen. Reihenfolge ist nach Plugin, nicht nach ID — beim Testen sit
 man in einem Repo und nicht in einer Chronologie.
 
 > **Nicht zu verwechseln mit
-> [`docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES/`](../../../NOTES/PersonelPlugins/TO_CHECK_FEATURES/).**
+> `docs/NOTES/PersonelPlugins/TO_CHECK_FEATURES/` (nicht mehr vorhanden).**
 > Die dortigen Dateien testen ein Plugin **vollständig**, Feature für Feature.
 > Diese hier testet nur, **was über diese Roadmap dazugekommen ist** — deutlich
 > kürzer, und der richtige Einstieg nach einer Bauphase. Wo eine Feature-Datei
@@ -249,7 +249,7 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 ## `mdview.nvim`
 
 Ausführlicher (inklusive der älteren Features) in
-[`TO_CHECK_FEATURES/mdview.md`](../../../NOTES/PersonelPlugins/TO_CHECK_FEATURES/mdview.md),
+`TO_CHECK_FEATURES/mdview.md` (nicht mehr vorhanden),
 Abschnitte 3b und 3c.
 
 ---
@@ -516,14 +516,14 @@ Vollständigkeitshalber, damit niemand danach sucht.
 
 ## Wenn etwas nicht stimmt
 
-1. In [`PLUGIN_ROADMAPS_FINISHED.md`](./PLUGIN_ROADMAPS_FINISHED.md) den Eintrag
+1. In [`PLUGIN_ROADMAPS_FINISHED.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Backlog/FEATURES/ROADMAPS/PLUGIN_ROADMAPS_FINISHED.md) den Eintrag
    zur ID lesen — dort steht, **was genau** gebaut wurde und was bewusst nicht.
    Ein gutes Drittel der Einträge korrigiert die ursprüngliche Beschreibung;
    die Erwartung kann also am falschen Text hängen.
 2. Prüfen, ob der Punkt eine Vorbedingung hat, die hier oben unter
    *Vorbereitung* steht (Rebuild, externes Werkzeug).
 3. Bleibt es ein echter Befund: als offener Punkt zurück in
-   [`PLUGIN_ROADMAPS.md`](./PLUGIN_ROADMAPS.md), mit der ID des ursprünglichen
+   [`PLUGIN_ROADMAPS.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Backlog/FEATURES/ROADMAPS/PLUGIN_ROADMAPS.md), mit der ID des ursprünglichen
    Punktes im Text — sonst geht der Zusammenhang beim nächsten Durchgang
    verloren.
 

@@ -3,7 +3,7 @@
 Registriert in
 [lua/config/inc_rename/init.lua]($REPOS_DIR/lsp.nvim/lua/lsp/integrations/inc_rename/setup.lua),
 aufgerufen aus dem `config`-Block des Plugin-Specs
-([lua/plugins/lsp.lua](../../../../../lua/plugins/lsp.lua), `smjonas/inc-rename.nvim`,
+([lsp.nvim's pack/ui.lua]($REPOS_DIR/lsp.nvim/lua/lsp/pack/ui.lua), `smjonas/inc-rename.nvim`,
 `cmd = "IncRename"`).
 
 **Wichtig:** `inc-rename.nvim` bringt selbst **kein** Keymap mit — nur den
