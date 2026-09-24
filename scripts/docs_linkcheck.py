@@ -600,18 +600,25 @@ def summary_counts(findings: list[Finding]) -> dict[str, int]:
 
 
 def write_report(path: str, roots: list[str], results: dict[str, tuple[list[Finding], int, int]]) -> int:
-    """Write the unresolved findings across all `roots` to `path` as a
+    """Write the findings still standing across all `roots` to `path` as a
     Markdown checklist, grouped by repo then by file. Returns the count
-    written. A CASE/ANCHOR/DEAD finding with a computed `.fix` is excluded
-    even without --fix having actually run: it means what's left really
-    does need eyes on it, and a checklist item you can't act on is noise.
+    written.
+
+    Reports every `Finding` still in `results` -- no `.fix`-based filtering.
+    That was tried and was wrong: a DEAD finding's `.fix` is only the
+    basename-SUGGEST guess (`--fix-dead`'s territory, never applied by plain
+    --fix), proven capable of pointing at a same-named-but-unrelated file
+    after a refactor (see --fix-dead's own docstring) -- excluding it from
+    the checklist hid exactly the cases that most needed a human. If a
+    finding survived to this point (after whatever --fix/--fix-dead pass
+    already ran, or none at all), it still needs eyes on it, full stop.
     """
     total = 0
     lines = ["# Link-check report", "", "Unresolved after auto-fix -- each needs a look at the surrounding",
               "file, not another --fix pass. Tick a box once handled; the blank", "line below each is for a note.", ""]
     for root in roots:
         findings, _, _ = results[root]
-        left = [f for f in findings if not f.fix]
+        left = findings
         if not left:
             continue
         repo = repo_name(root)
