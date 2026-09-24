@@ -80,10 +80,48 @@ Dateinamens ein echter Bug wäre.
 
 ## Cmdline
 
-Eigenes Preset (`cmdline`), von den Insert-Keys unberührt: `opts.keymap` gilt
-nur für den Default-Modus, und `cmdline.keymap.preset` steht nicht auf
-`"inherit"`. `<C-x>` ist dort also nicht belegt, `<C-y>` accepted (Preset),
-`<Tab>` zeigt/akzeptiert.
+Eigener Namespace (`config.cmdline.keymap`), von den Insert-Keys oben
+unberührt: `opts.keymap` (was `<CR>`/`<C-y>`/`<Right>`/`<C-x>` setzt) gilt nur
+für den Default-(Insert-)Modus, und `cmdline.keymap.preset` steht nicht auf
+`"inherit"`. `<C-x>` ist dort also nicht belegt, `<C-y>` accepted (Preset).
+
+| Mapping | blink-Command | Aktion | Status |
+|---|---|---|---|
+| `<Right>` | `select_and_accept`, `fallback` | Nimmt immer einen Vorschlag — überschreibt das Presets eigenes `select_next` | [custom] |
+| `<Left>` | `select_prev`, `fallback` | Voriger Kandidat | [default] |
+| `<C-n>` / `<C-p>` | `select_next` / `select_prev`, `fallback` | Nächster/voriger Kandidat | [default] |
+| `<Tab>` | `show_and_insert_or_accept_single`, `select_next` | Zeigt/wählt, akzeptiert bei genau einem Treffer | [default] |
+| `<C-y>` | `select_and_accept`, `fallback` | Nimmt immer einen Vorschlag | [default] |
+| `<End>` | `hide`, `fallback` | Schließt die Liste | [default] |
+
+`<Right>` war bis 2026-09-24 nicht überschrieben und lief auf dem Preset-Default
+`select_next`: bei nur einem Kandidaten und Cursor am Zeilenende (der Normalfall
+in der `:`-Kommandozeile, wo nur Ghost-Text statt eines Dropdowns gezeigt wird —
+`menu.auto_show` ist dort auf `cmdwin` beschränkt) ist das ein No-op in beide
+Richtungen. Sichtbar wurde das z. B. bei `:Lazy sy`, wo Ghost-Text schon `nc`
+zu `sync` ergänzt zeigte, `<Right>` aber nichts tat. Verifiziert per Headless-
+Lauf: `require("blink.cmp.config").cmdline.keymap` behält `preset = "cmdline"`
+neben der `<Right>`-Ergänzung, `nvim_get_keymap('c')` bestätigt `<Right>` auf
+`blink.cmp: Select And Accept`.
+
+### Bekannte Eigenheit: Ghost-Text kehrt nach Backspace+Retype nicht zurück
+
+Reproduzierbar mit z. B. `:Lazy s`, `<BS>` (löscht das `s`), dann erneut `s`
+tippen: keine Vervollständigung mehr, bis `<Esc>` und neu angesetzt wird. Beim
+Verfolgen von `blink.cmp`s eigenem Trigger-Code
+(`lua/blink/cmp/completion/trigger/init.lua` und
+`lua/blink/cmp/lib/cmdline_events.lua`) fällt auf: `cmdline_events`s
+`on_cursor_moved`-Aufruf übergibt nur `(event, is_ignored)` -- die Parameter
+`is_backspace`/`last_event`, die `on_cursor_moved` im Trigger für seine
+`show_on_backspace*`-Zweige braucht, kommen dort nie an. Diese Optionen sind
+für Cmdline also strukturell wirkungslos. Das erklärt aber nicht abschließend,
+warum das erneute Tippen von `s` (das über `on_char_added`, nicht
+`on_cursor_moved`, läuft und dessen `show_on_keyword`-Zweig eigentlich greifen
+sollte) stumm bleibt -- dafür bräuchte es interaktives Debugging der
+Trigger-Kontext-Grenzen (`context:within_query_bounds`), das sich per
+Headless-`feedkeys`-Simulation nicht sauber nachstellen ließ. Sieht nach einer
+blink.cmp-eigenen Grenze aus, nicht nach einem Fehler dieser Config.
+Workaround: `<C-space>` erzwingt die Anzeige neu.
 
 ---
 
