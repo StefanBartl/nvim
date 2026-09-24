@@ -14,9 +14,9 @@
 --- Both engines are configured here, not just the one that happens to be
 --- installed. `vim.g.lsp_nvim.pack.completion` decides which of the two specs
 --- resolves `enabled`, and the accept/dismiss keys are supposed to survive
---- that switch -- so <CR>, <C-y> and <C-x> are spelled out twice, once in
---- each engine's own vocabulary. Everything else about the two fragments is
---- unrelated: they do not share a code path, only an intent.
+--- that switch -- so <CR>, <C-y>, <Right> and <C-x> are spelled out twice,
+--- once in each engine's own vocabulary. Everything else about the two
+--- fragments is unrelated: they do not share a code path, only an intent.
 
 ---@type LazyPluginSpec[]
 return {
@@ -46,7 +46,7 @@ return {
       -- source itself lives in the plugin.
       table.insert(opts.sources, { name = "personal_names", priority = 100 })
 
-      -- The same three keys the blink fragment below claims, in cmp's terms.
+      -- The same four keys the blink fragment below claims, in cmp's terms.
       -- Each helper already carries the "only while the menu is open" rule:
       -- they call `fallback()` when there is nothing to confirm or abort, and
       -- cmp's fallback runs the mapping the key had before cmp took it -- the
@@ -58,6 +58,11 @@ return {
       --                                   `close()`, what NvChad puts on <C-e>,
       --                                   would keep it)
       --
+      -- <Right> uses the same `select = true` behavior as <C-y>: it always
+      -- takes a suggestion (selecting the top one first if none is marked)
+      -- rather than declining like a bare `accept` would with nothing
+      -- selected.
+      --
       -- `ConfirmBehavior.Insert` rather than `Replace` follows NvChad's own
       -- cmp config, which is what supplies the rest of the mapping table here.
       local cmp = require("cmp")
@@ -65,6 +70,7 @@ return {
       opts.mapping = opts.mapping or {}
       opts.mapping["<CR>"] = cmp.mapping.confirm({ behavior = insert, select = false })
       opts.mapping["<C-y>"] = cmp.mapping.confirm({ behavior = insert, select = true })
+      opts.mapping["<Right>"] = cmp.mapping.confirm({ behavior = insert, select = true })
       opts.mapping["<C-x>"] = cmp.mapping.abort()
     end,
   },
@@ -88,19 +94,21 @@ return {
   -- feeds the raw key through when there is none. Nothing here is live
   -- outside an open completion menu. Concretely: <CR> still reaches
   -- nvim-autopairs' pair-expanding Enter, <C-y> still copies the character
-  -- from the line above, <C-x> still opens Vim's own ins-completion prefix.
+  -- from the line above, <Right> still moves the cursor, <C-x> still opens
+  -- Vim's own ins-completion prefix.
   -- The keymaps are buffer-local and applied on InsertEnter, and blink's own
   -- `config.enabled()` additionally refuses `buftype = "prompt"`, so the
   -- telescope pickers that bind <C-x>/<CR> in insert mode never see them.
   --
-  -- <CR> and <C-y> differ on purpose, each keeping the meaning its own preset
-  -- gives it:
+  -- <CR> and <C-y>/<Right> differ on purpose, each keeping the meaning its
+  -- own preset gives it:
   --   - `accept` takes what is *selected*. With blink's default
   --     `completion.list.selection.preselect`, that is the first item from the
   --     moment the menu opens -- so Enter accepts the first suggestion -- but
   --     with nothing selected it declines and Enter is just a newline again.
   --   - `select_and_accept` selects the top item first when there is no
-  --     selection, so <C-y> is the one that always takes a suggestion.
+  --     selection, so <C-y>/<Right> are the ones that always take a
+  --     suggestion.
   --
   -- Binding <CR> here does make `vim.g.lsp_nvim.pack.completion_accept` inert
   -- for this config: both keys accept now, whichever preset the option picks.
@@ -118,6 +126,7 @@ return {
         ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
         ["<CR>"] = { "accept", "fallback" },
         ["<C-y>"] = { "select_and_accept", "fallback" },
+        ["<Right>"] = { "select_and_accept", "fallback" },
         ["<C-x>"] = { "cancel", "fallback" },
       })
     end,

@@ -26,6 +26,7 @@ Preset ist `enter` (aus `vim.g.lsp_nvim.pack.completion_accept`, Default
 |---|---|---|---|
 | `<CR>` | `accept`, `fallback` | Nimmt den **markierten** Eintrag an — durch `completion.list.selection.preselect` (blink-Default) ist das ab dem Öffnen des Menüs der erste Vorschlag | [custom] |
 | `<C-y>` | `select_and_accept`, `fallback` | Wie `<CR>`, wählt aber vorher den obersten Eintrag, falls gar nichts markiert ist | [custom] |
+| `<Right>` | `select_and_accept`, `fallback` | Dasselbe wie `<C-y>` — nimmt immer einen Vorschlag, auch ohne Markierung | [custom] |
 | `<C-x>` | `cancel`, `fallback` | Schließt die Liste und nimmt die `auto_insert`-Vorschau zurück | [custom] |
 | `<C-e>` | `cancel`, `fallback` | Dasselbe wie `<C-x>`; blinks eigener Key, bleibt erhalten | [default] |
 | `<Tab>` | `select_next`, `snippet_forward`, `fallback` | Nächster Eintrag, sonst Snippet-Sprung vorwärts | [custom] |
@@ -37,8 +38,8 @@ Preset ist `enter` (aus `vim.g.lsp_nvim.pack.completion_accept`, Default
 | `<C-k>` | `show_signature`, `hide_signature`, `fallback` | Signature-Help auf/zu | [default] |
 
 Keines der `[custom]`-Mappings ersetzt einen Preset-Key: `<CR>` wird auf
-denselben Wert gepinnt, den `enter` ohnehin liefert, `<C-y>`/`<C-x>` sind
-Ergänzungen.
+denselben Wert gepinnt, den `enter` ohnehin liefert, `<C-y>`/`<Right>`/`<C-x>`
+sind Ergänzungen.
 
 ### Warum das die anderen Belegungen nicht frisst
 
@@ -50,6 +51,7 @@ offenen Completion-Menüs ist hier also nichts belegt:
 
 - `<CR>` erreicht weiter das Enter-Mapping von `nvim-autopairs`,
 - `<C-y>` bleibt „Zeichen aus der Zeile darüber kopieren" (`i_CTRL-Y`),
+- `<Right>` bleibt normale Cursor-Bewegung,
 - `<C-x>` bleibt Vims eigener ins-completion-Präfix (`i_CTRL-X`).
 
 Gemessen am 2026-09-01 mit einer minimalen headless-Instanz (blink solo, plus
@@ -102,7 +104,7 @@ Fehler dieser Config — hier nur notiert, weil es dieselbe Frage betrifft.
 `vim.g.lsp_nvim.pack.completion = "cmp"` dreht die beiden `enabled`-Flags um:
 lsp.nvims blink-Spec geht aus, und der `nvim-cmp`-Spec — den **NvChad**
 mitbringt (`nvchad.plugins`, via `{ import = "nvchad.plugins" }` in
-[init.lua](../../../../../init.lua)) — geht an. Damit die drei Keys diesen
+[init.lua](../../../../../init.lua)) — geht an. Damit die vier Keys diesen
 Wechsel überleben, definiert `plugins/completion.lua` sie auch in cmps
 Vokabular:
 
@@ -110,6 +112,7 @@ Vokabular:
 |---|---|---|---|
 | `<CR>` | `cmp.mapping.confirm({ behavior = Insert, select = false })` | `accept` | [custom] |
 | `<C-y>` | `cmp.mapping.confirm({ behavior = Insert, select = true })` | `select_and_accept` | [custom] |
+| `<Right>` | `cmp.mapping.confirm({ behavior = Insert, select = true })` | `select_and_accept` | [custom] |
 | `<C-x>` | `cmp.mapping.abort()` | `cancel` | [custom] |
 
 Den Rest der Mapping-Tabelle liefert dann `nvchad.configs.cmp`: `<C-n>`/`<C-p>`
@@ -125,8 +128,8 @@ Die „nur bei offenem Menü"-Garantie ist dieselbe: `cmp.mapping.confirm` und
 abzubrechen ist, und cmps `fallback` führt die Belegung aus, die der Key vor
 cmp hatte.
 
-**Nicht verifiziert.** Diese drei Zeilen sind der einzige Teil der Datei, der
+**Nicht verifiziert.** Diese vier Zeilen sind der einzige Teil der Datei, der
 nie gelaufen ist — ohne installiertes cmp gibt es nichts, wogegen man sie
 ausführen könnte. Sie benutzen deshalb ausschließlich cmps dokumentierte
 Mapping-Helper statt selbstgebauter Closures. Wer den Schalter umlegt, sollte
-die drei Keys einmal von Hand gegenprüfen.
+die vier Keys einmal von Hand gegenprüfen.
