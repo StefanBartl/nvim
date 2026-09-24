@@ -129,6 +129,23 @@ return {
         ["<Right>"] = { "select_and_accept", "fallback" },
         ["<C-x>"] = { "cancel", "fallback" },
       })
+
+      -- Cmdline (`:`) is a separate keymap namespace from insert mode --
+      -- `config.cmdline.keymap`, not `config.keymap` -- so the override above
+      -- never reaches it. Its own preset ("cmdline", blink's default there)
+      -- already binds `<Right>`/`<Left>` to `select_next`/`select_prev`; with
+      -- only one candidate and the cursor at end-of-line that is a no-op in
+      -- both directions, which is what made `<Right>` look dead right after
+      -- typing e.g. `:Lazy sy` with its ghost-text preview of `nc`. Same
+      -- override as insert mode's <Right>, in cmdline's vocabulary: cmdline
+      -- has no `auto_insert`/preview distinction, `select_and_accept` covers
+      -- it. `<C-n>`/`<C-p>`/`<Tab>` stay on the preset for cycling multiple
+      -- candidates, so only `<Right>` changes meaning here.
+      opts.cmdline = vim.tbl_deep_extend("force", opts.cmdline or {}, {
+        keymap = {
+          ["<Right>"] = { "select_and_accept", "fallback" },
+        },
+      })
     end,
   },
 }
