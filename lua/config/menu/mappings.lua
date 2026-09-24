@@ -137,6 +137,17 @@ local CONTRIBUTORS = {
       return true
     end,
   },
+  -- gopath.nvim: also global -- a "Paths" entry for whatever gopath would
+  -- resolve (cursor, or the live visual selection if one is up when the menu
+  -- opens -- partial matches included). items() self-gates on nothing
+  -- resolving, same reasoning as open.nvim/lsp.nvim above.
+  {
+    module = "gopath.integrations.menu",
+    icon = icons.gopath,
+    applies = function()
+      return true
+    end,
+  },
   -- Add more Pattern-B plugins here as their menu integrations land, e.g.:
   -- { module = "cascade.integrations.menu", applies = function(buf) return is_markdown(vim.bo[buf].ft) end },
 }
