@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """Relative-link checker for a repo's markdown files.
 
-    python scripts/docs_linkcheck.py <repo-root> [...]
+    python scripts/docs_linkcheck.py <repo-root> [...] [options]
+
+    --fix    rewrite CASE mismatches in place (the only finding kind that is
+             ever unambiguous enough to auto-correct); everything else is
+             printed, never guessed at.
+    --json   emit one JSON array of findings on stdout instead of the
+             human-readable report -- for scripting / diffing runs / feeding
+             another tool, not for reading in a terminal.
 
 Reports every ](target) link whose file does not exist, and — the reason this
 exists at all — every link whose spelling differs from the file's real name.
+Each report line carries `file:line`, this project's own convention, so an
+editor jump-to-location works on the report directly.
 
 On Windows the filesystem is case-insensitive: a link [x](COMMANDS.md) at a
 file actually named commands.md resolves locally and 404s on GitHub. Python's
@@ -25,14 +34,28 @@ A link can name a file that exists and a heading in it that does not. That is
 ANCHOR, and it is the failure a table of contents produces on its own: nothing
 consumes it, so a renamed heading leaves it behind. Anchors are matched the way
 GitHub builds them, including the -1/-2 suffix on repeated headings.
+
+A DEAD link whose basename exists exactly once elsewhere in the repo (moved,
+not deleted) gets a SUGGEST hint alongside it — the repo-wide basename index
+is git-backed too, so it costs one extra `ls-files` per root, not a directory
+walk. Ambiguous or absent basenames get no suggestion: a guess printed with no
+signal it might be wrong is worse than no guess.
+
+Multiple roots are scanned concurrently (I/O-bound: git subprocesses and file
+reads release the GIL) but reported in the order given, so a diff between two
+runs of the same command line is meaningful.
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 import os
 import re
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 
 SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__"}
 SKIP_PATHS = (os.path.join("docs", "map"),)
@@ -41,6 +64,22 @@ LINK_RE = re.compile(r"\]\(([^)]+)\)")
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)")
+
+
+@dataclass
+class Finding:
+    repo: str
+    file: str  # relative to repo root
+    line: int
+    kind: str  # DEAD | CASE | IGNORED | ANCHOR
+    target: str  # link text exactly as written
+    detail: str = ""
+    fix: str | None = None  # corrected target, CASE only
+
+    def human(self) -> str:
+        loc = f"{self.file}:{self.line}"
+        extra = f"   ({self.detail})" if self.detail else ""
+        return f"{self.kind:<7} {loc}  ->  {self.target}{extra}"
 
 
 def uncoded(text: str):
@@ -70,11 +109,27 @@ def uncoded(text: str):
 
 
 def strip_code(text: str) -> str:
-    """Blank out fenced blocks and inline code so quoted links are not links."""
+    """Blank out fenced blocks and inline code so quoted links are not links.
+
+    Line count and line *content length* are not preserved (INLINE_CODE_RE
+    removes the backtick span rather than blanking it in place) -- callers
+    that need a line number look it up via `line_of()` on the ORIGINAL text
+    instead of counting newlines in this output.
+    """
     out = [""] * len(text.splitlines())
     for n, line in uncoded(text):
         out[n - 1] = INLINE_CODE_RE.sub("", line)
     return "\n".join(out)
+
+
+def line_of(text: str, needle: str, start_hint: int = 0) -> int:
+    """1-based line number of `needle`'s first occurrence at/after char start_hint."""
+    idx = text.find(needle, start_hint)
+    if idx < 0:
+        idx = text.find(needle)
+    if idx < 0:
+        return 1
+    return text.count("\n", 0, idx) + 1
 
 
 def slugs(text: str) -> set[str]:
@@ -133,6 +188,29 @@ def tracked_markdown(root: str) -> list[str] | None:
     if paths is None:
         return None
     return [os.path.join(root, p) for p in dict.fromkeys(paths)]
+
+
+def tracked_all(root: str) -> list[str] | None:
+    """Every tracked/untracked-but-not-ignored path — the basename index's source.
+
+    Deliberately not scoped to *.md: a DEAD link just as often names an image,
+    a script or a sibling doc's asset, and the suggestion is only worth giving
+    when it is exactly this same search the rest of the tool already trusts
+    (git-backed, gitignore-aware) rather than a second, divergent os.walk.
+    """
+    paths = git(root, "ls-files", "-z", "--cached", "--others", "--exclude-standard")
+    if paths is None:
+        return None
+    return list(dict.fromkeys(paths))
+
+
+def basename_index(root: str) -> dict[str, list[str]]:
+    """basename.lower() -> [repo-relative paths], for DEAD-link SUGGEST hints."""
+    index: dict[str, list[str]] = {}
+    for rel in tracked_all(root) or ():
+        base = os.path.basename(rel).lower()
+        index.setdefault(base, []).append(rel.replace("\\", "/"))
+    return index
 
 
 def ignored(root: str, targets: list[str]) -> set[str]:
@@ -204,6 +282,19 @@ def real_name_mismatch(root: str, path: str) -> str | None:
     return "/".join(fixed) if wrong else None
 
 
+def suggest(index: dict[str, list[str]], target_path: str, rel_md: str) -> str:
+    """One-line SUGGEST hint for a DEAD link, or "" if no safe guess exists."""
+    base = os.path.basename(target_path).lower()
+    if not base:
+        return ""
+    candidates = index.get(base, [])
+    if len(candidates) == 1:
+        return f"moved to {candidates[0]}?"
+    if 1 < len(candidates) <= 3:
+        return f"{len(candidates)} files named {os.path.basename(target_path)}: " + ", ".join(candidates)
+    return ""
+
+
 def anchors_of(path: str, cache: dict) -> set[str]:
     """The heading anchors of `path`, read once per run."""
     if path not in cache:
@@ -214,27 +305,32 @@ def anchors_of(path: str, cache: dict) -> set[str]:
     return cache[path]
 
 
-def check(root: str) -> tuple[int, int, int, int, int]:
-    dead = case = anchor = files = 0
-    live: list[tuple[str, str, str]] = []  # (source, target as written, rel path)
+def check(root: str) -> tuple[list[Finding], int]:
+    """Scan one repo root. Returns (findings, files-scanned)."""
+    findings: list[Finding] = []
+    files = 0
+    live: list[tuple[str, str, str, int]] = []  # (rel_md, target, rel_target, line)
     heads: dict[str, set[str]] = {}
+    index: dict[str, list[str]] | None = None  # built lazily, only if a DEAD link needs it
 
     for md in sorted(markdown_files(root)):
         files += 1
         try:
-            text = open(md, encoding="utf-8", errors="replace").read()
+            raw = open(md, encoding="utf-8", errors="replace").read()
         except OSError:
             continue
+        stripped = strip_code(raw)
         base = os.path.dirname(md)
-        rel_md = os.path.relpath(md, root)
+        rel_md = os.path.relpath(md, root).replace(os.sep, "/")
         seen = set()
-        for target in LINK_RE.findall(strip_code(text)):
-            target = target.strip()
+        for m in LINK_RE.finditer(stripped):
+            target = m.group(1).strip()
             if not target or target in seen:
                 continue
             seen.add(target)
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
+            lineno = line_of(raw, f"]({m.group(1)})", 0)
             path, _, frag = target.partition("#")
             path = path.split('"', 1)[0].strip()
             frag = frag.split('"', 1)[0].strip()
@@ -244,18 +340,27 @@ def check(root: str) -> tuple[int, int, int, int, int]:
             resolved = md if not path else os.path.normpath(os.path.join(base, path))
             if path:
                 if not os.path.exists(resolved):
-                    print(f"DEAD  {rel_md}  ->  {target}")
-                    dead += 1
+                    if index is None:
+                        index = basename_index(root)
+                    findings.append(Finding(
+                        repo=root, file=rel_md, line=lineno, kind="DEAD",
+                        target=target, detail=suggest(index, path, rel_md),
+                    ))
                     continue
                 real = real_name_mismatch(root, resolved)
                 if real:
-                    print(f"CASE  {rel_md}  ->  {target}   (on disk: {real})")
-                    case += 1
+                    corrected = target.replace(path, real, 1) if target.startswith(path) else None
+                    findings.append(Finding(
+                        repo=root, file=rel_md, line=lineno, kind="CASE",
+                        target=target, detail=f"on disk: {real}", fix=corrected,
+                    ))
                     continue
             if frag and resolved.lower().endswith((".md", ".markdown")):
                 if frag.lower() not in anchors_of(resolved, heads):
-                    print(f"ANCHOR  {rel_md}  ->  {target}   (no such heading)")
-                    anchor += 1
+                    findings.append(Finding(
+                        repo=root, file=rel_md, line=lineno, kind="ANCHOR",
+                        target=target, detail="no such heading",
+                    ))
             if not path:
                 continue
             try:
@@ -264,37 +369,127 @@ def check(root: str) -> tuple[int, int, int, int, int]:
                 continue  # different drive on Windows -- an absolute personal-machine
                 # path, not a repo-relative reference to check for gitignore-hiding
             if not rel_target.startswith(".."):
-                live.append((rel_md, target, rel_target.replace(os.sep, "/")))
+                live.append((rel_md, target, rel_target.replace(os.sep, "/"), lineno))
 
-    hidden = ignored(root, sorted({t for _, _, t in live}))
-    gone = 0
-    for rel_md, target, rel_target in live:
+    hidden = ignored(root, sorted({t for _, _, t, _ in live}))
+    for rel_md, target, rel_target, lineno in live:
         if rel_target in hidden:
-            print(f"IGNORED  {rel_md}  ->  {target}   (gitignored: 404 on the remote)")
-            gone += 1
-    return dead, case, gone, anchor, files
+            findings.append(Finding(
+                repo=root, file=rel_md, line=lineno, kind="IGNORED",
+                target=target, detail="gitignored: 404 on the remote",
+            ))
+    return findings, files
+
+
+def apply_fixes(root: str, findings: list[Finding]) -> int:
+    """Rewrite CASE findings with a computed `fix` in place. Returns count fixed."""
+    by_file: dict[str, list[Finding]] = {}
+    for f in findings:
+        if f.kind == "CASE" and f.fix:
+            by_file.setdefault(f.file, []).append(f)
+
+    fixed = 0
+    for rel_file, items in by_file.items():
+        path = os.path.join(root, rel_file)
+        try:
+            text = open(path, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        changed = text
+        for f in items:
+            old, new = f"]({f.target})", f"]({f.fix})"
+            if old in changed:
+                changed = changed.replace(old, new)
+                fixed += 1
+        if changed != text:
+            with open(path, "w", encoding="utf-8", newline="") as fh:
+                fh.write(changed)
+    return fixed
+
+
+def summary_counts(findings: list[Finding]) -> dict[str, int]:
+    counts = {"DEAD": 0, "CASE": 0, "IGNORED": 0, "ANCHOR": 0}
+    for f in findings:
+        counts[f.kind] = counts.get(f.kind, 0) + 1
+    return counts
+
+
+def run_root(root: str, do_fix: bool) -> tuple[str, list[Finding], int, int]:
+    """One root's full pipeline: scan, optionally fix, return (root, findings, files, fixed)."""
+    findings, files = check(root)
+    fixed = apply_fixes(root, findings) if do_fix else 0
+    if fixed:
+        # Re-scan so the report reflects what is actually on disk now, rather
+        # than claiming a CASE mismatch the fix pass just corrected.
+        findings, files = check(root)
+    return root, findings, files, fixed
 
 
 def main() -> int:
-    roots = sys.argv[1:]
-    if not roots:
+    ap = argparse.ArgumentParser(add_help=False)
+    ap.add_argument("roots", nargs="*")
+    ap.add_argument("--fix", action="store_true")
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("-h", "--help", action="store_true")
+    args = ap.parse_args()
+
+    if args.help or not args.roots:
         print(__doc__)
-        return 2
-    grand_dead = grand_case = grand_gone = grand_anchor = 0
+        return 0 if args.help else 2
+
+    roots = args.roots
+    results: dict[str, tuple[list[Finding], int, int]] = {}
+    workers = min(8, len(roots)) or 1
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(run_root, r, args.fix): r for r in roots}
+        done = 0
+        for fut in futures:
+            root, findings, files, fixed = fut.result()
+            results[root] = (findings, files, fixed)
+            done += 1
+            if len(roots) > 1 and not args.json:
+                print(f"# scanned {os.path.basename(os.path.normpath(root))} "
+                      f"({done}/{len(roots)})", file=sys.stderr)
+
+    if args.json:
+        payload = []
+        for root in roots:
+            findings, files, fixed = results[root]
+            payload.append({
+                "repo": os.path.basename(os.path.normpath(root)),
+                "root": root,
+                "files_scanned": files,
+                "fixed": fixed,
+                "findings": [
+                    {"file": f.file, "line": f.line, "kind": f.kind,
+                     "target": f.target, "detail": f.detail}
+                    for f in findings
+                ],
+            })
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 1 if any(p["findings"] for p in payload) else 0
+
+    grand = {"DEAD": 0, "CASE": 0, "IGNORED": 0, "ANCHOR": 0}
+    grand_fixed = 0
     for root in roots:
+        findings, files, fixed = results[root]
         if len(roots) > 1:
             print(f"##### {os.path.basename(os.path.normpath(root))}")
-        d, c, g, a, f = check(root)
-        grand_dead += d
-        grand_case += c
-        grand_gone += g
-        grand_anchor += a
-        print(f"--- {f} files, {d} dead, {c} case-mismatch, {g} gitignored, "
-              f"{a} dead anchors ---")
+        for f in sorted(findings, key=lambda f: (f.file, f.line)):
+            print(f.human())
+        counts = summary_counts(findings)
+        for k in grand:
+            grand[k] += counts[k]
+        grand_fixed += fixed
+        fixed_note = f", {fixed} fixed" if fixed else ""
+        print(f"--- {files} files, {counts['DEAD']} dead, {counts['CASE']} case-mismatch, "
+              f"{counts['IGNORED']} gitignored, {counts['ANCHOR']} dead anchors{fixed_note} ---")
+
     if len(roots) > 1:
-        print(f"===== TOTAL: {grand_dead} dead, {grand_case} case-mismatch, "
-              f"{grand_gone} gitignored, {grand_anchor} dead anchors =====")
-    return 1 if (grand_dead or grand_case or grand_gone or grand_anchor) else 0
+        fixed_note = f", {grand_fixed} fixed" if grand_fixed else ""
+        print(f"===== TOTAL: {grand['DEAD']} dead, {grand['CASE']} case-mismatch, "
+              f"{grand['IGNORED']} gitignored, {grand['ANCHOR']} dead anchors{fixed_note} =====")
+    return 1 if any(grand.values()) else 0
 
 
 if __name__ == "__main__":
