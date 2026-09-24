@@ -461,6 +461,8 @@ end
 -- Dashboard (delegates to reposcope.nvim's own git-status overview)
 -- =============================================================================
 
+local is_windows = fn.has("win32") == 1 or fn.has("win64") == 1
+
 ---Best-effort "the plugin this context belongs to": the current buffer's
 ---file, falling back to the working directory, matched against `base_dir`'s
 ---immediate children and cross-checked against the live
@@ -471,14 +473,23 @@ end
 ---@param base_dir string
 ---@return string|nil name
 local function resolve_current_plugin_name(base_dir)
-  local normalized_base = (fnamemodify(base_dir, ":p"):gsub("[\\/]+$", "")) .. "/"
+  -- `fnamemodify(..., ":p")` on Windows keeps backslashes, so normalize them
+  -- to "/" here too -- otherwise this always fails to match, since the
+  -- candidate side below already converts every "\" to "/".
+  local normalized_base = (fnamemodify(base_dir, ":p"):gsub("\\", "/"):gsub("/+$", "")) .. "/"
   local candidates = { vim.api.nvim_buf_get_name(0), fn.getcwd() }
 
   local entries = plugin_list.read() or {}
   for _, candidate in ipairs(candidates) do
     if candidate and candidate ~= "" then
       local normalized = fnamemodify(candidate, ":p"):gsub("\\", "/")
-      if normalized:sub(1, #normalized_base) == normalized_base then
+      -- Windows paths (and drive letters in particular) are case-insensitive
+      -- -- $REPOS_DIR's casing need not match what getcwd()/the buffer name
+      -- happens to report.
+      local base_prefix = normalized:sub(1, #normalized_base)
+      local prefix_matches = is_windows and base_prefix:lower() == normalized_base:lower()
+        or base_prefix == normalized_base
+      if prefix_matches then
         local name = normalized:sub(#normalized_base + 1):match("^([^/]+)")
         if name then
           for _, entry in ipairs(entries) do
