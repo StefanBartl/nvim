@@ -4,6 +4,8 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
+    - [Cross-Plugin / Konkurrenzanalyse](#cross-plugin-konkurrenzanalyse)
+    - [AI / Claude (zeitlich begrenzt)](#ai-claude-zeitlich-begrenzt)
     - [interessant](#interessant)
   - [Tasks](#tasks)
     - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
@@ -25,34 +27,27 @@
 
 ## Claude Tasks
 
-- grats guthaben 250 dolar beommen, daher idealer zeitpunkt um ai.nvim bz loomai mit claude accout live u testen; rulers. auch checken mit agent
+### Cross-Plugin / Konkurrenzanalyse
 
-. rechsklickmenu im bnrmaln bffer w3enn auf ienen freitext pfad/ markdown linkusw... rechtsklick uwrde bzw ein teil eines links markiert wurde, dann sol e einen eigenen entry "paths " geben von gopath, und dann halt aufmachen können. die idee, dass man von einen pfad auch nur einen teil msaarkieren kann um idesen dan z uöffenn, wäre en neues feature in goapth auch zu implementieren bzw auch ein feature, u den pfad ob ganz oder teilmarkeirt auch in filetree zu öffnen wäre auch ein neues featrue glaub ich. und noch was: wenn man auf einen folder, nicht filepath goapth gF/usw ausführt, dsann zigt e mopmentan n, ob man diese file erstellen will. es ollte aber so esein, dass es frat, ob man in den folder eine neue file erstlellen will und wnen ja dann den namen, oder ob man im im filetree.nvim öffnen möchte (nur wen installiert) das macht mehr sinn. und: wenn man mit gopath keymap eine file öffnet un dder filetee ist offen, dann rereshed der nicht autoamtisch. dass dsollte imer sein, also sobald der buffer wechselt zu einer anderen file, alo nee buffer file fksuert, sollte der filetree refreshen.
+- [ ] **Feature-Scan:** Bei Plugins, die meinen ähneln (z. B. gitsigns → gitsuite.nvim, 3rd/images.nvim → images.nvim, tabufline → ui.nvim, lspsaga.nvim → lspo.nvim), die Repos mit hoher bzw. mittlerer Ähnlichkeit **und** hoher Reichweite/Nutzerzahl nach Features abgrasen, die ich noch nicht implementiert habe. Gibt es bei „mittlerer Ähnlichkeit" nur wenige Treffer, nur die reichweitenstärksten davon berücksichtigen.
+- [ ] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: C:/Users/Bernhard/AppData/Local/nvim/docs/ROADMAP/reports
 
-- ui.nvi m statusline, hoverüber ien stauslne modul soll ein kleines popup öffnen das bescheibt, was das modul macht/anzeigt auc him rechtklick auf ein stausline modul wrd gerade ien menu abgezeigt, das passt, aber da wäre es ch cool, wenn eine kurze description steht, nur zweiu dre wörtwr
+---
 
-- gitsuite.nvim:
-  - implemtniert es lazygit bzw die anderen externen git plgins nur, oder ersetzt es diese tatsächlich? Wenich zb leader lg aufrufe, dann bekomme ich lazygit ui, bzw die gleiche ausschauende ui sogar mit "lazygit" als überschrift; Idealerewiße würde es die funktinen von lazyghit + neogit als eine uzi verbnidnen im lazygit look.
-  - `:Git ui ` hat als options auch nicht installierte plugins zb neogit ist nbei mir nicht installiert das nvim plugin, ist aber in der options list
+### AI / Claude (zeitlich begrenzt)
 
-- lsp.nvim / blin / nvim-cmp -> Es fehlt $REPOS_DIR - egal auch wenn ich es schonmal geschireben habe, ist es nicht in der autocompletoin list. fixen
-
-- hover.nvim:
-  - wenn pfad oder markdownlink path auf einen folder fällt, dann im hver den ordner anzeigen mit seinen subfolder + fles, abr ssrtamal nur root ebnene des folders, eventuell dann mit keyxs / linksklickl im hover auf/zu klappen der folder. cool wäre dann auch, wenn man mit deem curtor ins hover gehen kölnte bzw mit linksklick auf eine file im hover diese dann als neuen buffer nrmnal n nvim öfnen kann. ein bschen wie ein mini filetree -> eventuell wenn nötig sol filetree.nvim dafür eine api anbieten, dieknnte später auch hilfeich sein; zb fürs rendern oder für die actions usw...
-
-- plugins die meinen ähneln (zb gitsigns -> gitsuite.nvim oder 3rd/images.nvim -> images.nvim oder tabufline -> uinvim oder lspsaga.nvim -> lspo.nvim ,also repos vopn andren dvs die direkt, sehr oviel, vile oder mittel ähnmlcihelkt haben, aber nuciht alle sondern nur die mit virl reichweite/hohr nutzerzahl um das ein wengnig abzugrenzen; wenn es wenige ähnlichke gibt, sondren nur vueke ab "mittel-ähnlcihketi" dann drt auch nur die reichweitenstärksten usw...) auf features abgrasen, die ich noch nicht imlpementiert habe
-  - noice & restliche der externe plugins ersetzen ? Was macht SIn, was nicht?
+- [ ] $250 Guthaben bekommen → guter Zeitpunkt, um ai.nvim bzw. loom.ai live mit einem echten Claude-Account zu testen (inkl. Rulers), auch im Agent-Modus checken.
 
 ---
 
 ### interessant
 
-- [ ] ai: mit slaude code die beste für den rechner lokale llm installieren, soll ein paar modelle auspropoeren,  vpn hängen nicht offen ins netz, opencode usw / ollame alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
-    Wichrig: genau lernen, wie da sfunkitnert, llm, auch wuantisierung usw... graka _> iwe aerbeiten di egnau, ram upgrde treiber erstllen usw....
+- [ ] AI: Mit Claude Code das für den Rechner beste lokale LLM installieren, dabei ein paar Modelle ausprobieren. Nicht offen ins Netz hängen (VPN), opencode bzw. Ollama-Alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
+    Wichtig: genau lernen, wie das funktioniert — LLMs, auch Quantisierung usw. Wie arbeitet dabei genau die Grafikkarte, RAM-Upgrade, Treiber erstellen usw.
 
-- [ ] [TAKT](./$REPOS_DIR/takt) -> ai impllementierung von anfang an mitbauen; ins konzept mit aufnehmen
+- [ ] [TAKT](./$REPOS_DIR/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
 
-- [ ] Gaming-Anticheat systeme lernen aus red/blue team cyber sec sicht
+- [ ] Gaming-Anticheat-Systeme aus Red-/Blue-Team-Cybersec-Sicht lernen
 
 ---
 
@@ -77,12 +72,12 @@
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
 
-- [ ] Alle Plugin-Root-README.md files Abschnitt für Abschnitt durchgehen: Dies ist der entry für devs die da s plugin nutzen, aber auch für normale user. Daher sollte die Sprache auch so sein, dass User sie gut verstehen. Das muss nicht low-level sein, aber edie Readme soll nciht überladen sein, usw..
-  - [ ] reale Beispiele: (bitte fixen):
+- [ ] Alle Plugin-Root-README.md-Dateien Abschnitt für Abschnitt durchgehen: Das ist der Einstiegspunkt für Devs, die das Plugin nutzen, aber auch für normale User. Die Sprache soll daher so sein, dass User sie gut verstehen — muss nicht low-level sein, aber die Readme soll auch nicht überladen sein, usw.
+  - [ ] Reale Beispiele (bitte fixen):
     - [ ] ...
-- [ ] autocmds, usrcmds, keymaps -> bindings cheinen ein guter zeiger für features eines opklugins zu sein, arbeiten wird iese durch im sinne, dass in den dcos ach alle features des plugins dargestellt werden, aksi zb können usrcmds 1 und zwqeiu sowie keymapo x,y,z und autocmd drei -> ein feature des polugins darstellen; so hääte man die bindings docs auf der einen seite, und auf der andererrn seite die features, die dann in ihrer beschreibung mit den bindings verknüpft werden.
-- [ ] Alle Features der Plugins als opt-in/opt-out auflisten (und auch in die docs/FEATURES al Note anmerken) unddann nochmal entscheiden für ejde einzelne option, onb opt-in oder opt-out
-- Jedes Plugin aus sicht eines endusers/developers "durchspielen" - von Beginn an, also vom ankommen auf der github seite, ssagne wikr dealerweiße kommend von derr wkd seite. DAnn möchte m an mal als erstes normalerweiße die instsalltion + optionen sehen. ist am flow etwas nicht in ordnung? stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar und ansprechend, modern aufbereitet? Ist die Dokumentation an Stellen verwirrend? Gib es docs, die mich als enduser/dev nicht betreffen? ([alte] Telemetry daten, Deutsche dokumentation, backlogs,..)
+- [ ] Autocmds, Usercmds, Keymaps → Bindings scheinen ein guter Indikator für die Features eines Plugins zu sein. Damit so arbeiten, dass in den Docs auch alle Features des Plugins dargestellt werden: z. B. können Usercmds 1 und 2 sowie Keymaps x, y, z und Autocmd 3 zusammen ein Feature des Plugins darstellen. So hätte man die Bindings-Docs auf der einen Seite und auf der anderen Seite die Features, die dann in ihrer Beschreibung mit den Bindings verknüpft werden.
+- [ ] Alle Features der Plugins als Opt-in/Opt-out auflisten (auch in docs/FEATURES als Notiz anmerken) und dann nochmal für jede einzelne Option entscheiden, ob Opt-in oder Opt-out sinnvoller ist.
+- Jedes Plugin aus Sicht eines Endusers/Developers „durchspielen" — von Beginn an, also vom Ankommen auf der GitHub-Seite (idealerweise kommend von der wkd-Seite). Dann zuerst normalerweise Installation + Optionen ansehen. Ist am Flow etwas nicht in Ordnung? Stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar, ansprechend und modern aufbereitet? Ist die Dokumentation an manchen Stellen verwirrend? Gibt es Docs, die mich als Enduser/Dev nicht betreffen ([alte] Telemetriedaten, deutsche Dokumentation, Backlogs, ...)?
 
 ---
 
@@ -90,13 +85,13 @@
 
 - [ ] Git-Release pro Repo, sobald fertig.
 
-- [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich).
-  - [ ] Core-Features + Ablauf des Video/Gifs kann aber con claude vorbereitet werden
-  - [ ] Logo / Bild für repo (socal prview card aber auch images.nvim hover)
-    - [ ] diese logo soll dann auch in ui.nvim menu angezeigt werden
-  - [ ] docmap-desktop app icon desktop
-- [ ] feaure highlichts auf der root readme
-- [ ] claude co author aus allen commits löschen
+- [ ] README.md mit Video-Demo oder GIF ausstatten (Aufnahme/Schnitt nur durch dich selbst).
+  - [ ] Core-Features + Ablauf des Videos/GIFs kann von Claude vorbereitet werden.
+  - [ ] Logo/Bild für Repo (Social-Preview-Card, aber auch für images.nvim-Hover).
+    - [ ] Dieses Logo soll auch im ui.nvim-Menü angezeigt werden.
+  - [ ] docmap-Desktop-App-Icon (Desktop).
+- [ ] Feature-Highlights auf der Root-README.
+- [ ] Claude-Co-Author aus allen Commits löschen.
 
 ---
 
