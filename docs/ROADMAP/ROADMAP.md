@@ -4,14 +4,20 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
-    - [Cross-Plugin / Konkurrenzanalyse](#cross-plugin--konkurrenzanalyse)
-    - [AI / Claude (zeitlich begrenzt)](#ai--claude-zeitlich-begrenzt)
+    - [Generell](#generell)
+    - [Ideen](#ideen)
+    - [nvim-config](#nvim-config)
+    - [wkd](#wkd)
+    - [sessions.nvim:](#sessionsnvim)
+    - [Cross-Plugin](#cross-plugin)
+      - [Konkurrenzanalyse](#konkurrenzanalyse)
+    - [AI / Claude (zeitlich begrenzt)](#ai-claude-zeitlich-begrenzt)
     - [interessant](#interessant)
   - [Tasks](#tasks)
-    - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-über-ist)
+    - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
-    - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen---wenn-alles-fertig-ist)
-      - [Git & Repo-Hygiene / Docs, Comments,...](#git--repo-hygiene--docs-comments)
+    - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
+      - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
 
 ---
 
@@ -28,7 +34,45 @@
 
 ## Claude Tasks
 
-### Cross-Plugin / Konkurrenzanalyse
+### Generell
+
+- Wir haben ein Klick-Problem: JHeder KLcik in den BUfer, freezed nvim für mehrere sekunden ein. das ist nicht gut. Wir haben viel miot mausklickdssinplementiert inden eltzen tagen, da swird wohl damit zu tun haben. Das Problem ist aber offensichtlich nicht ur ein klick problem, auch so bei editieren mit keyboard hatte ich jetzt merhamls einen freeze.
+
+---
+
+### Ideen
+
+- Zeiger-Mode: KExymap um den Mode zu toggeln, wenn on, dann kann man den Mauszeiger innerhalb nvims mit den keyboard tasten steuern, klciken, und die egschwindigkeit mit ändern, zb schnell mit shift und sehr schnell mit ctrl+shift lnagsm alt und sehr langsam ctrl+akt - oder so -> die idee ist eher ein "Scherz"-Feature, weil es absurd ist, gerade in nvim den masuzeiger mit dem keyboard steuern u wollen
+
+---
+
+### nvim-config
+
+- startup time  optimieren
+- config optimieren
+
+---
+
+### wkd
+
+- mobile optimierung
+- umschalten zwische featureviews optimieren
+
+---
+
+### sessions.nvim:
+
+- sesion loaded neu designen also das notify weude schon gemacht, aber bei ir ist es so wie immer. fehlt eine option key in der instaltions spec ?
+
+---
+
+### Cross-Plugin
+
+- `lib.nvim` Module -> ALle Plugins nochmal checken, ob Module/Funktionen implementieren, welche die `lib.nvim` beretis bereitsetellt oder bereitstellen sollte. Das wurde vor ein/zwei Monaten schonmal gemacht, in der Zwischnezit wurde aber viel neu gemacht. Report hierher schreiebn: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
+
+---
+
+#### Konkurrenzanalyse
 
 - [ ] **Feature-Scan:** Bei Plugins, die meinen ähneln (z. B. gitsigns → gitsuite.nvim, 3rd/images.nvim → images.nvim, tabufline → ui.nvim, lspsaga.nvim → lspo.nvim), die Repos mit hoher bzw. mittlerer Ähnlichkeit **und** hoher Reichweite/Nutzerzahl nach Features abgrasen, die ich noch nicht implementiert habe. Gibt es bei „mittlerer Ähnlichkeit" nur wenige Treffer, nur die reichweitenstärksten davon berücksichtigen.
 - [ ] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
@@ -46,9 +90,11 @@
 - [ ] AI: Mit Claude Code das für den Rechner beste lokale LLM installieren, dabei ein paar Modelle ausprobieren. Nicht offen ins Netz hängen (VPN), opencode bzw. Ollama-Alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichtig: genau lernen, wie das funktioniert — LLMs, auch Quantisierung usw. Wie arbeitet dabei genau die Grafikkarte, RAM-Upgrade, Treiber erstellen usw.
 
-- [ ] [TAKT]($REPOS_DIR/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
+- [ ] [TAKT](./$REPOS_DIR/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
 
 - [ ] Gaming-Anticheat-Systeme aus Red-/Blue-Team-Cybersec-Sicht lernen
+
+- [ ] Mobile App entwickeln
 
 ---
 
@@ -66,8 +112,8 @@
 
   - [ ] $NVIM_CONFIG_DIR/docs\ROADMAP\personal\All\FINISH
   - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
-  - [loom.ai + ai.nvim](personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
-  - [media.nvim](personal/All/FINISH/Final_Checks/media/live-testing-plan.md)
+  - [loom.ai + ai.nvim](./personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
+  - [media.nvim](./personal/All/FINISH/Final_Checks/media/live-testing-plan.md)
 
 ---
 
