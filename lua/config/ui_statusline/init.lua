@@ -54,6 +54,18 @@
 --- explicit-only in `ui.setup` -- `all = true` would not turn it on -- so it
 --- is named here rather than in the spec; `sticky = false` opts out.
 ---
+--- `position`/`style` (new in ui.nvim 2026-09-24): where the overlay sits and
+--- how it looks. `position.anchor = "top-right"` moves it into a compact box
+--- pinned to the window's top-right corner instead of spanning the full
+--- width at the top; `style = "chips"` draws it as one row of rounded,
+--- coloured chips (the same visual language as `lsp.nvim`'s winbar
+--- breadcrumb) instead of mimicking real buffer lines -- the pairing this
+--- module's own docs recommend for a non-`"top"`/`"bottom"` anchor. Other
+--- anchors: `"top"` (the old default, full width), `"bottom"`,
+--- `"top-left"`, `"top-center"`, `"bottom-left"`, `"bottom-right"`,
+--- `"bottom-center"`; `position.row`/`col` override the anchor outright for
+--- an exact spot. See `ui.nvim/docs/configuration.md`, Context section.
+---
 --- `ui.bindings.keymaps.tabufline.state.setup()` is still called directly,
 --- unconditionally, regardless of `opts.keymaps`: the tabline renderer needs
 --- `vim.t.bufs` maintained even when a host turns ui.nvim's own keymaps off
@@ -92,6 +104,8 @@ function M.setup()
         max_lines = { default = 3, markdown = 6 },
         headings = { max_level = 6 },
         persist = true,
+        position = { anchor = "top-right" },
+        style = "chips",
       },
     })
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))
