@@ -147,7 +147,7 @@ Die 80 waren, nach Eigentümer:
 [`Neogit`](./Neogit.md) (4), [`DapVirtualText`](./DapVirtualText.md) (4) —
 und drei erweiterte: [`Dap`](./Dap.md) um nvim-daps eigene fünfzehn,
 [`Neotest`](./Neotest.md) um `:Neotest` und vim-tests sechs,
-[`Unicode`](./Unicode.md) um zwei Aliase. `:BlinkCmp` steht als Werkzeug in
+`Unicode` (chrisbra/unicode.vim, ersetzt durch emojis.nvim -- kein eigenes Blatt hier) um zwei Aliase. `:BlinkCmp` steht als Werkzeug in
 der Tabelle oben.
 
 `usercmd-undocumented` steht damit auch bei voll geladenen Plugins auf

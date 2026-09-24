@@ -1,16 +1,16 @@
 # workspace-diagnostics.nvim — User-Commands
 
 Registriert in
-[lua/lsp/usercmds/workspace_diagnostics.lua](../../../../../lua/lsp/usercmds/workspace_diagnostics.lua),
+[lua/lsp/usercmds/workspace_diagnostics.lua](B:/repos/lsp.nvim/lua/lsp/usercmds/workspace_diagnostics.lua),
 aufgerufen aus dem `config`-Block in
-[lua/lsp/init.lua](../../../../../lua/lsp/init.lua) (`M.setup`).
+[lua/lsp/init.lua](B:/repos/lsp.nvim/lua/lsp/init.lua) (`M.setup`).
 
 Alle Kommandos sind **[custom]** — `workspace-diagnostics.nvim` selbst bringt
 keinerlei Usercmds, Keymaps oder Autocmds mit (reine Library-API: eine
 Funktion `populate_workspace_diagnostics(client, bufnr)`, die alle Dateien des
 Repos per `git ls-files` in Buffer lädt und Diagnostics dafür einsammelt). Das
 Wann/Ob dieses Aufrufs steuert vollständig
-[lua/lsp/core/workspace_diagnostics.lua](../../../../../lua/lsp/core/workspace_diagnostics.lua).
+[lua/lsp/core/workspace_diagnostics.lua](B:/repos/lsp.nvim/lua/lsp/core/workspace_diagnostics.lua).
 
 ---
 

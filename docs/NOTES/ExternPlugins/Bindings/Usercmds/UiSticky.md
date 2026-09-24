@@ -2,7 +2,8 @@
 
 **Repo:** `StefanBartl/ui.nvim` (`ui.context`) — der Stamm `UiSticky` steht für
 den Sticky-Teil des `:UI`-Dispatchers; die Theme-/Transparenz-Subcommands von
-`:UI` stehen in [NvChadUI.md](./NvChadUI.md).
+`:UI` stehen inzwischen komplett in ui.nvim (nicht mehr in chadrc/base46 --
+das NvChadUI-Blatt dazu wurde entfernt), siehe `ui.nvim/docs/BINDINGS.md`.
 
 Source: `ui.nvim/lua/ui/bindings/usrcmds/init.lua` (`ui_sticky`),
 `ui.nvim/lua/ui/context/init.lua`, `ui.nvim/lua/ui/context/state.lua`
