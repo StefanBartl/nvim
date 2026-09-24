@@ -64,6 +64,7 @@ local M = {
   spotlight = g("F002", "S"), -- search
   color_my_ascii = g("F1FC", "A"), -- paint-brush
   lsp = g("F0E7", "L"), -- bolt
+  gopath = g("F14E", "g"), -- compass
 }
 
 return M
