@@ -189,11 +189,20 @@ nothing, rather than binding keys that would complain when pressed);
 | `<C-l>` | t | Window right | `[Terminal] Right` | `terminal.lua` |
 | `<C-j>` | t | Window down | `[Terminal] Down` | `terminal.lua` |
 | `<C-k>` | t | Window up | `[Terminal] Up` | `terminal.lua` |
-| `<A-h>` | n, t | Toggle NvChad's floating terminal (`floatTerm`); no-op when `nvchad.term` is absent | `[Term] Toggle floating` | `terminal.lua` |
+| `<A-l>` | t | Send `clear`/`cls` to the terminal job | `[Terminal] Clear screen` | `terminal.lua` |
+| `<A-h>` | n, t | Toggle snacks.nvim's floating terminal; no-op when `snacks.terminal` is absent | `[Term] Toggle floating` | `terminal.lua` |
 
 `<C-l>` was once mapped twice in `terminal.lua` — window-right and a
 `clear`/`cls` send — eleven lines apart, and the second silently won. Only
-the window movement is left; the shell's own `clear` does the other job.
+the window movement is left; `<A-l>` now carries the clear/cls job instead,
+terminal-mode only so it can't collide with filetree.nvim's normal-mode
+`<A-l>` explorer toggle.
+
+The `<A-h>` float also disables snacks' own buffer-local `<Esc>` handler
+(`win.keys.term_normal = false`): snacks' default requires a *double*
+`<Esc>` within 200ms to leave terminal mode, and being buffer-local it wins
+over the global `<Esc>` map above — a single `<Esc>` looked like it did
+nothing. Disabling it restores single-press `<Esc>` for this float.
 
 ### Against NvChad's own features (`nvchad.lua`)
 
