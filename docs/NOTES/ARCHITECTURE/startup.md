@@ -1,8 +1,8 @@
 # Startup-Policy
 
 Verbindliche Regeln dafür, wann ein Config-Modul geladen wird. Umgesetzt in
-[`lua/startup/init.lua`](../../lua/startup/init.lua), angewendet in
-[`init.lua`](../../init.lua), zur Laufzeit prüfbar mit `:StartupReport`.
+[`lua/startup/init.lua`](../../../lua/startup/init.lua), angewendet in
+[`init.lua`](../../../init.lua), zur Laufzeit prüfbar mit `:StartupReport`.
 
 ## Warum die alten Timer weg mussten
 
@@ -124,8 +124,8 @@ Zeile markiert; die nachfolgenden Phasen laufen weiter.
 
 | Datei | Rolle |
 | --- | --- |
-| [`lua/startup/init.lua`](../../lua/startup/init.lua) | Runner: `now`, `on`, `marks`, `pending`, `failed`, `total`, `slowest` |
-| [`lua/startup/report.lua`](../../lua/startup/report.lua) | Darstellung: Float via `lib.nvim.ui.kit`, `check()` |
+| [`lua/startup/init.lua`](../../../lua/startup/init.lua) | Runner: `now`, `on`, `marks`, `pending`, `failed`, `total`, `slowest` |
+| [`lua/startup/report.lua`](../../../lua/startup/report.lua) | Darstellung: Float via `lib.nvim.ui.kit`, `check()` |
 
 Die Trennung ist Absicht: der Runner läuft in der allerersten Phase, die UI darf
 deshalb nicht auf dem synchronen Pfad landen. `report.lua` wird erst durch

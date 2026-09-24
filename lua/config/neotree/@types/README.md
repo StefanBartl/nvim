@@ -7,7 +7,6 @@ Dieser Ordner enthält alle Typdefinitionen für das `config.neotree` Modul, org
 - [Neo-tree Configuration Type System](#neo-tree-configuration-type-system)
   - [Struktur](#struktur)
     - [Core Types (Kernstrukturen)](#core-types-kernstrukturen)
-    - [Feature Modules (Funktionsmodule)](#feature-modules-funktionsmodule)
     - [Integration Modules](#integration-modules)
   - [Namenskonventionen](#namenskonventionen)
     - [String Literal Unions als Aliases](#string-literal-unions-als-aliases)

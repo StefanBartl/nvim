@@ -6,8 +6,15 @@
     --fix    rewrite in place what can be corrected without guessing: every
              CASE mismatch, and every ANCHOR whose fragment fuzzy-matches
              exactly one real heading in the same file (see anchor_fix()).
-             DEAD and an unmatched ANCHOR are never auto-fixed -- printed
-             only, with a SUGGEST hint for DEAD where one exists.
+             An unmatched ANCHOR is never auto-fixed -- printed only.
+    --fix-dead
+             also rewrite a DEAD link whose basename exists exactly once
+             elsewhere in the repo (the SUGGEST hint). Separate from --fix
+             on purpose: unlike CASE/ANCHOR, this asserts the same-named
+             file elsewhere IS the moved target, not just that the string
+             is close -- two files that happen to share a generic name
+             (a stray "Overview.md") would be a wrong, silent rewrite.
+             Implies --fix. Review the diff before trusting it at scale.
     --json   emit one JSON array of findings on stdout instead of the
              human-readable report -- for scripting / diffing runs / feeding
              another tool, not for reading in a terminal.
@@ -321,17 +328,24 @@ def real_name_mismatch(root: str, path: str) -> str | None:
     return "/".join(fixed) if wrong else None
 
 
-def suggest(index: dict[str, list[str]], target_path: str, rel_md: str) -> str:
-    """One-line SUGGEST hint for a DEAD link, or "" if no safe guess exists."""
+def suggest(index: dict[str, list[str]], target_path: str) -> tuple[str, str | None]:
+    """(SUGGEST detail, single unambiguous candidate or None) for a DEAD link.
+
+    The candidate is only returned when exactly one file anywhere in the repo
+    has this basename -- a generic name (`Overview.md`, `README.md`) will
+    almost always have several, which correctly yields no candidate rather
+    than a guess among them.
+    """
     base = os.path.basename(target_path).lower()
     if not base:
-        return ""
+        return "", None
     candidates = index.get(base, [])
     if len(candidates) == 1:
-        return f"moved to {candidates[0]}?"
+        return f"moved to {candidates[0]}?", candidates[0]
     if 1 < len(candidates) <= 3:
-        return f"{len(candidates)} files named {os.path.basename(target_path)}: " + ", ".join(candidates)
-    return ""
+        return (f"{len(candidates)} files named {os.path.basename(target_path)}: "
+                + ", ".join(candidates)), None
+    return "", None
 
 
 def anchors_of(path: str, cache: dict) -> set[str]:
@@ -409,9 +423,16 @@ def check(root: str) -> tuple[list[Finding], int]:
                 if not os.path.exists(resolved):
                     if index is None:
                         index = basename_index(root)
+                    detail, candidate = suggest(index, path)
+                    dead_fix = None
+                    if candidate and target.startswith(path):
+                        new_rel = os.path.relpath(
+                            os.path.join(root, candidate), base
+                        ).replace(os.sep, "/")
+                        dead_fix = target.replace(path, new_rel, 1)
                     findings.append(Finding(
                         repo=root, file=rel_md, line=lineno, kind="DEAD",
-                        target=target, detail=suggest(index, path, rel_md),
+                        target=target, detail=detail, fix=dead_fix,
                     ))
                     continue
                 real = real_name_mismatch(root, resolved)
@@ -455,14 +476,16 @@ def check(root: str) -> tuple[list[Finding], int]:
     return findings, files
 
 
-def apply_fixes(root: str, findings: list[Finding]) -> int:
-    """Rewrite CASE/ANCHOR findings with a computed `fix` in place. Returns count fixed."""
+def apply_fixes(root: str, findings: list[Finding], fix_dead: bool = False) -> int:
+    """Rewrite CASE/ANCHOR (and, if `fix_dead`, DEAD) findings with a computed
+    `fix` in place. Returns count fixed."""
+    kinds = ("CASE", "ANCHOR", "DEAD") if fix_dead else ("CASE", "ANCHOR")
     by_file: dict[str, list[Finding]] = {}
     for f in findings:
         # "�" is defense in depth, not the primary guard (read_text's
         # cp1252/latin-1 fallback is): a fix computed from a lossily-decoded
         # heading must never be written back, whatever produced it.
-        if f.kind in ("CASE", "ANCHOR") and f.fix and "�" not in f.fix:
+        if f.kind in kinds and f.fix and "�" not in f.fix:
             by_file.setdefault(f.file, []).append(f)
 
     fixed = 0
@@ -494,10 +517,10 @@ def summary_counts(findings: list[Finding]) -> dict[str, int]:
     return counts
 
 
-def run_root(root: str, do_fix: bool) -> tuple[str, list[Finding], int, int]:
+def run_root(root: str, do_fix: bool, fix_dead: bool = False) -> tuple[str, list[Finding], int, int]:
     """One root's full pipeline: scan, optionally fix, return (root, findings, files, fixed)."""
     findings, files = check(root)
-    fixed = apply_fixes(root, findings) if do_fix else 0
+    fixed = apply_fixes(root, findings, fix_dead) if do_fix else 0
     if fixed:
         # Re-scan so the report reflects what is actually on disk now, rather
         # than claiming a CASE mismatch the fix pass just corrected.
@@ -509,6 +532,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(add_help=False)
     ap.add_argument("roots", nargs="*")
     ap.add_argument("--fix", action="store_true")
+    ap.add_argument("--fix-dead", action="store_true")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("-h", "--help", action="store_true")
     args = ap.parse_args()
@@ -517,11 +541,12 @@ def main() -> int:
         print(__doc__)
         return 0 if args.help else 2
 
+    do_fix = args.fix or args.fix_dead  # --fix-dead implies --fix
     roots = args.roots
     results: dict[str, tuple[list[Finding], int, int]] = {}
     workers = min(8, len(roots)) or 1
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(run_root, r, args.fix): r for r in roots}
+        futures = {pool.submit(run_root, r, do_fix, args.fix_dead): r for r in roots}
         done = 0
         for fut in futures:
             root, findings, files, fixed = fut.result()

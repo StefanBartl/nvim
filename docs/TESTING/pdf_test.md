@@ -1,2 +1,2 @@
 
-[pdf test](docs\TESTING\pdf_test.pdf)
+[pdf test](pdf_test.pdf)
