@@ -3,9 +3,9 @@
 ## notes
 
 Tip: For a deeper cloud-based review, try /ultrareview next time.
-checke alle commits dieses chats auf Bugs, Securitx / Performance Optimierungen und fixe sie gleich.
+checke alle commits dieses chats auf Bugs, Security / Performance Optimierungen und fixe sie gleich.
 
-- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
+ never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 - Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
@@ -83,10 +83,14 @@ sessions.nvim
 spotlight.nvim
 ui.nvim
 
+---
+
 ### die nativen
 
 docmap-desktop
 loomAI
+
+---
 
 ### docs
 
@@ -95,15 +99,19 @@ Notes (privates repo)
 WDBooks (privates repo)
 WKDBook-Tricentis (privates repo)
 
+---
+
 ### Web
 
 wkd
 FightingGame
+
+---
 
 ### MISC
 
 Configs
 my-zsh
 
-
+---
 
