@@ -66,6 +66,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from difflib import SequenceMatcher
+from urllib.parse import unquote
 
 # Windows' default console/pipe encoding is cp1252, not UTF-8: a link whose
 # TEXT (not path) contains an emoji or a non-Latin-1 character then blows up
@@ -429,12 +430,21 @@ def check(root: str) -> tuple[list[Finding], int]:
             # A bare "#heading" points into the document it is written in --
             # which is where a table of contents lives, and where a renamed
             # heading is least likely to be noticed.
-            resolved = md if not path else os.path.normpath(os.path.join(base, path))
+            #
+            # unquote(path): a link's PATH component may be percent-encoded
+            # (a filename with spaces, "+", a comma -- "%20"/"%2B"/"%2C"),
+            # and every real link-follower (browser, GitHub, vim.ui.open)
+            # decodes it before touching the filesystem. Comparing the raw
+            # "%2B%2B" against a real on-disk "++" would call an actually
+            # working link DEAD. `path` itself stays encoded -- it is the
+            # literal substring `target`'s own text is built from, needed
+            # verbatim for the CASE/DEAD --fix string replace below.
+            resolved = md if not path else os.path.normpath(os.path.join(base, unquote(path)))
             if path:
                 if not os.path.exists(resolved):
                     if index is None:
                         index = basename_index(root)
-                    detail, candidate = suggest(index, path)
+                    detail, candidate = suggest(index, unquote(path))
                     dead_fix = None
                     if candidate and target.startswith(path):
                         new_rel = os.path.relpath(
