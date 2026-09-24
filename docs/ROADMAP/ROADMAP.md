@@ -17,6 +17,7 @@
 
 ## Cdx
 
+
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     02:30       |    94% / 95%     |
