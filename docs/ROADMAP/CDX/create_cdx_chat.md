@@ -21,6 +21,7 @@ checke alle commits dieses chats auf Bugs, Security / Performance Optimierungen 
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
 - Neue Features ggf. im Plugin-eigenen /TESTS/ folder testenV
 - Wenn du mit etwas fertig bist committe / pushe / pulle sofort im main branch, sodass ich es gleich verwenden kann.
+- Wenn du chip tasks anlegst, diese auch bitte auf deutsch
 
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
