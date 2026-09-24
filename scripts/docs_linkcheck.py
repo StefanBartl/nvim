@@ -80,7 +80,12 @@ for _stream in (sys.stdout, sys.stderr):
 SKIP_DIRS = {".git", "node_modules", "dist", "build", "__pycache__"}
 SKIP_PATHS = (os.path.join("docs", "map"),)
 
-LINK_RE = re.compile(r"\]\(([^)]+)\)")
+# [^)\n]: an unclosed "(" on a malformed line (escaped brackets, a stray
+# paren in prose) must never let the match run on into the NEXT line's real
+# link, swallowing it into one corrupted multi-line "target" -- found live
+# in Notes/MyNotes/Notes.md:381 (`\[COM\](e:/...COM.md` with no closing
+# paren) merging into line 382's actual `](../Learning/DOTnet_CSHARP.md)`.
+LINK_RE = re.compile(r"\]\(([^)\n]+)\)")
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)")
@@ -207,7 +212,13 @@ def git(root: str, *args: str, stdin: str | None = None) -> list[str] | None:
     try:
         out = subprocess.run(
             ["git", "-C", root, *args],
-            input=stdin, capture_output=True, text=True, timeout=30,
+            input=stdin, capture_output=True, timeout=30,
+            # encoding=utf-8 explicitly: text=True alone decodes with
+            # locale.getpreferredencoding(), which on Windows is the console's
+            # ANSI codepage (cp1252), not UTF-8 -- silently mojibake-corrupting
+            # any non-ASCII path git prints (a German umlaut in a filename,
+            # common in this vault). git itself always writes UTF-8 paths.
+            encoding="utf-8", errors="surrogateescape",
         )
     except (OSError, subprocess.SubprocessError):
         return None
