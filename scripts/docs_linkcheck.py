@@ -18,6 +18,14 @@
     --json   emit one JSON array of findings on stdout instead of the
              human-readable report -- for scripting / diffing runs / feeding
              another tool, not for reading in a terminal.
+    --report FILE
+             write every finding LEFT after --fix (or all of them, if --fix
+             wasn't passed) to FILE as a Markdown checklist, one file:line
+             per checkbox with a blank line underneath for a hand-written
+             note -- these are exactly the ones that needed a real read of
+             the surrounding file and couldn't be resolved mechanically, so
+             the checklist is meant to be worked through by hand (or copied
+             into a note) rather than re-run.
 
 Reports every ](target) link whose file does not exist, and — the reason this
 exists at all — every link whose spelling differs from the file's real name.
@@ -578,11 +586,52 @@ def apply_fixes(root: str, findings: list[Finding], fix_dead: bool = False) -> i
     return fixed
 
 
+def repo_name(root: str) -> str:
+    """Display name for a root -- abspath first, so "." names the real
+    directory instead of printing a bare "."."""
+    return os.path.basename(os.path.normpath(os.path.abspath(root)))
+
+
 def summary_counts(findings: list[Finding]) -> dict[str, int]:
     counts = {"DEAD": 0, "CASE": 0, "IGNORED": 0, "ANCHOR": 0}
     for f in findings:
         counts[f.kind] = counts.get(f.kind, 0) + 1
     return counts
+
+
+def write_report(path: str, roots: list[str], results: dict[str, tuple[list[Finding], int, int]]) -> int:
+    """Write the unresolved findings across all `roots` to `path` as a
+    Markdown checklist, grouped by repo then by file. Returns the count
+    written. A CASE/ANCHOR/DEAD finding with a computed `.fix` is excluded
+    even without --fix having actually run: it means what's left really
+    does need eyes on it, and a checklist item you can't act on is noise.
+    """
+    total = 0
+    lines = ["# Link-check report", "", "Unresolved after auto-fix -- each needs a look at the surrounding",
+              "file, not another --fix pass. Tick a box once handled; the blank", "line below each is for a note.", ""]
+    for root in roots:
+        findings, _, _ = results[root]
+        left = [f for f in findings if not f.fix]
+        if not left:
+            continue
+        repo = repo_name(root)
+        lines.append(f"## {repo}")
+        lines.append("")
+        by_file: dict[str, list[Finding]] = {}
+        for f in left:
+            by_file.setdefault(f.file, []).append(f)
+        for file in sorted(by_file):
+            lines.append(f"### `{file}`")
+            lines.append("")
+            for f in sorted(by_file[file], key=lambda f: f.line):
+                extra = f"  ({f.detail})" if f.detail else ""
+                lines.append(f"- [ ] `:{f.line}` **{f.kind}** -> `{f.target}`{extra}")
+                lines.append("      Notiz: ")
+                total += 1
+            lines.append("")
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write("\n".join(lines).rstrip() + "\n")
+    return total
 
 
 def run_root(root: str, do_fix: bool, fix_dead: bool = False) -> tuple[str, list[Finding], int, int]:
@@ -602,6 +651,7 @@ def main() -> int:
     ap.add_argument("--fix", action="store_true")
     ap.add_argument("--fix-dead", action="store_true")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--report")
     ap.add_argument("-h", "--help", action="store_true")
     args = ap.parse_args()
 
@@ -621,15 +671,19 @@ def main() -> int:
             results[root] = (findings, files, fixed)
             done += 1
             if len(roots) > 1 and not args.json:
-                print(f"# scanned {os.path.basename(os.path.normpath(root))} "
+                print(f"# scanned {repo_name(root)} "
                       f"({done}/{len(roots)})", file=sys.stderr)
+
+    if args.report:
+        n = write_report(args.report, roots, results)
+        print(f"# report: {n} unresolved finding(s) -> {args.report}", file=sys.stderr)
 
     if args.json:
         payload = []
         for root in roots:
             findings, files, fixed = results[root]
             payload.append({
-                "repo": os.path.basename(os.path.normpath(root)),
+                "repo": repo_name(root),
                 "root": root,
                 "files_scanned": files,
                 "fixed": fixed,
@@ -647,7 +701,7 @@ def main() -> int:
     for root in roots:
         findings, files, fixed = results[root]
         if len(roots) > 1:
-            print(f"##### {os.path.basename(os.path.normpath(root))}")
+            print(f"##### {repo_name(root)}")
         for f in sorted(findings, key=lambda f: (f.file, f.line)):
             print(f.human())
         counts = summary_counts(findings)
