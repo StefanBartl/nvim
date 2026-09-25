@@ -47,13 +47,6 @@
 
 - C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/context_open -> mal ein wenig ausprobieren, und solte es erweitert werden? seit der implementierung sind einige plugins dazu gekommen + features innerhalb der damlas schon bestehenden
 
-- - `ui.nvim`
-  - sticky: Markdown ✅, C++ 🟡 Namespace funktiert, aber zb nicht Funktionen; Lua ❌ Hier wird gar nichts angezeigt; Rust 🟡 pubs, struct  habe ich angezeigt bekommen, abner ich hatte nicht den eindruck, das ses immer stimmte, bzw zuverlässig war. manchmal war ich in einen struct drienn, es hat nchts angzeigt,m dann gin g innerhalbn des structs ein paar zeilen runter, dann wurde es wieder angezeigt... Note: Treesitter ist für alle diese Sprachen installiert in nvim via mason
-  - contextmenu fehlt  "save"; wenn ich im bffer amkere, dan rechtzsklick und copy marked selletion, dann wird die selection eentfernet und einfac er ganze buffer kopeiert. WEil diese sachen buggy sind, prüdffe biette die funktioanlität aler menu einträge; synhetisceh TESTS dafür möglich?
-  - Dies vonfigs haben keine funktion mehr seit `ui.nvim` und können gelöscht werden oder:
-    - C:/Users/Bernhard/AppData/Local/nvim/lua/config/tabufline/init.lua
-    -
-
 ---
 
 ### Generel
