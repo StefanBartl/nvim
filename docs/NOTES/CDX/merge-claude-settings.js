@@ -37,22 +37,25 @@ existing.permissions.allow = [...new Set([...existing.permissions.allow, ...(tem
 
 existing.hooks ??= {};
 existing.hooks.PostToolUse ??= [];
+existing.hooks.Stop ??= [];
 // Drop the superseded Lua-only hook (replaced by check-hook.js) to avoid double runs.
 existing.hooks.PostToolUse = existing.hooks.PostToolUse.filter((e) => {
   const stale = e.hooks?.some((h) => h.command?.includes('check-lua-hook.js'));
   if (stale) console.log('  Veralteten Hook check-lua-hook.js entfernt.');
   return !stale;
 });
-for (const entry of template.hooks?.PostToolUse ?? []) {
-  const entryCommand = entry.hooks?.[0]?.command;
-  const alreadyPresent = existing.hooks.PostToolUse.some(
-    (e) => e.matcher === entry.matcher && e.hooks?.[0]?.command === entryCommand
-  );
-  if (alreadyPresent) {
-    console.log(`  Hook fuer Matcher '${entry.matcher}' bereits vorhanden - uebersprungen.`);
-  } else {
-    existing.hooks.PostToolUse.push(entry);
-    console.log(`  Hook fuer Matcher '${entry.matcher}' ergaenzt.`);
+for (const event of ['PostToolUse', 'Stop']) {
+  for (const entry of template.hooks?.[event] ?? []) {
+    const entryCommand = entry.hooks?.[0]?.command;
+    const alreadyPresent = existing.hooks[event].some(
+      (e) => e.matcher === entry.matcher && e.hooks?.[0]?.command === entryCommand
+    );
+    if (alreadyPresent) {
+      console.log(`  Hook ${event} '${entry.matcher ?? '*'}' bereits vorhanden - uebersprungen.`);
+    } else {
+      existing.hooks[event].push(entry);
+      console.log(`  Hook ${event} '${entry.matcher ?? '*'}' ergaenzt.`);
+    }
   }
 }
 
