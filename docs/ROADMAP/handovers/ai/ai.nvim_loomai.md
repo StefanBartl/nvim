@@ -61,7 +61,7 @@ Durchgänge, `pdfport.nvim`-Migration, sowie die sieben Punkte unter
 
 - `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, dazu `loomai`/`gemini`),
   um v1 vor einem Tag zu validieren.
-- [Live-Testing-Plan](../../personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
+- [Live-Testing-Plan](../../Final_Checks/ai/live-testing-plan.md)
   **aktualisiert (2026-09-23):** ging noch von "loomAI kann nur Ollama" und
   "kein Gemini-Provider" aus — Abschnitt 9 und die Test-Matrix sind jetzt um
   die drei Cloud-Backends (OpenAI/Anthropic/Gemini) im ModelRouter sowie um

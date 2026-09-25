@@ -1,7 +1,7 @@
 # gitsuite.nvim & Schwesterplugins — Backlog
 
 > Archiv für erledigte Task-Karten aus
-> [`ROADMAP/handovers/IMPLEMENTATION-PLAN.md`](../personal/All/FINISH/Final_Checks/gitsuite.nvim.md).
+> [`ROADMAP/handovers/IMPLEMENTATION-PLAN.md`](../Final_Checks/gitsuite.nvim.md).
 > **TASKS** = Audits, Sweeps, Reviews, Migrationen. **FEATURES** = Konzepte,
 > Baupläne, neue Fähigkeiten. Aufteilung folgt Commit `445e307` der
 > nvim-Config. Jede Karte wird beim Fertigstellen aus dem Plan
