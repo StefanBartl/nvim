@@ -11,6 +11,7 @@ require("bindings.usrcmds.context_open").enable()
 require("bindings.usrcmds.telemetry_nvim_config").enable()
 require("bindings.usrcmds.autocmd_docs").enable()
 require("bindings.usrcmds.bindings_audit").enable()
+require("bindings.usrcmds.learn_plan_viewer").enable()
 
 -- Was `require("nvchad.mason").install_all()` in lua/nvchad/au.lua, NvChad's
 -- own wrapper around a flat nvconfig.mason.pkgs list. lsp.nvim already ships
