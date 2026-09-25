@@ -12,12 +12,14 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
 
 ## Dateien in diesem Ordner
 
-| Datei                    | Zweck                                                                 |
-|---------------------------|------------------------------------------------------------------------|
-| `CLAUDE.global.md`        | Quelle der Wahrheit fuer `~/.claude/CLAUDE.md` (Verhaltensregeln, Konventionen) |
-| `settings.global.json`    | Quelle der Wahrheit fuer `~/.claude/settings.json` (Permissions-Allowlist + Hooks) |
-| `check-lua-hook.js`       | Vom PostToolUse-Hook aufgerufenes Skript: prueft `.lua`-Dateien nach jedem Edit/Write mit `stylua --check` + `luacheck` |
-| `setup-claude-code.ps1`   | Rollt die beiden Vorlagen oben nach `~/.claude/` aus. Idempotent, auf jeder Maschine erneut ausfuehrbar. |
+| Datei                       | Zweck                                                                 |
+|------------------------------|------------------------------------------------------------------------|
+| `CLAUDE.global.md`           | Quelle der Wahrheit fuer `~/.claude/CLAUDE.md` (Verhaltensregeln, Konventionen) |
+| `settings.global.json`       | Quelle der Wahrheit fuer `~/.claude/settings.json` (Permissions-Allowlist + Hooks) |
+| `check-lua-hook.js`          | Vom PostToolUse-Hook aufgerufenes Skript: prueft `.lua`-Dateien nach jedem Edit/Write mit `stylua --check` + `luacheck` |
+| `merge-claude-settings.js`   | Gemeinsame Merge-Logik fuer `settings.json`, von beiden Setup-Skripten unten aufgerufen (verhindert, dass Windows- und Unix-Skript bei dieser Logik auseinanderlaufen) |
+| `setup-claude-code.ps1`      | Windows: rollt die Vorlagen oben nach `~/.claude/` aus. Idempotent. |
+| `setup-claude-code.sh`       | Linux/macOS: dasselbe wie oben, plus `~/.claude/env.sh` fuer die Env-Variablen. Idempotent. |
 
 ## Funktionsprinzip
 
@@ -27,17 +29,25 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
   moeglich sind (kein Developer Mode, keine Admin-Rechte), wird stattdessen
   kopiert - dann muss man nach Aenderungen `setup-claude-code.ps1` erneut
   laufen lassen.
-- **`settings.json`**: Wird **gemerged**, nicht ueberschrieben. Bestehende
-  Eintraege (z. B. maschinenspezifische Permissions) bleiben erhalten, die
-  Vorlage wird nur ergaenzt (Allowlist-Eintraege vereinigt, Hooks nur
-  hinzugefuegt, wenn noch nicht vorhanden). Vor jedem Schreiben wird ein
-  Backup `settings.json.bak-<timestamp>` angelegt.
+- **`settings.json`**: Wird **gemerged**, nicht ueberschrieben (Logik in
+  `merge-claude-settings.js`, per `node` von beiden Setup-Skripten
+  aufgerufen). Bestehende Eintraege (z. B. maschinenspezifische Permissions)
+  bleiben erhalten, die Vorlage wird nur ergaenzt (Allowlist-Eintraege
+  vereinigt, Hooks nur hinzugefuegt, wenn noch nicht vorhanden). Vor jedem
+  Schreiben wird ein Backup `settings.json.bak-<timestamp>` angelegt.
+  Braucht `node` auf PATH (wird eh fuer `check-lua-hook.js` gebraucht).
 - **Env-Variablen**: `$NVIM_CONFIG` wird automatisch aus dem Speicherort
   dieses Skripts ermittelt. `$REPOS_DIR` ist pro Maschine unterschiedlich
   (z. B. `B:\repos` hier, ggf. andere Pfade auf Heim-PC/Workstation) und wird
-  beim ersten Lauf interaktiv abgefragt, danach wiederverwendet. Beide werden
-  als **User-Env-Var** gesetzt (`[Environment]::SetEnvironmentVariable(...,
-  'User')`) - gelten also erst in neu gestarteten Shells/der Claude-Code-App.
+  beim ersten Lauf interaktiv abgefragt, danach wiederverwendet.
+  - **Windows**: als User-Env-Var gesetzt
+    (`[Environment]::SetEnvironmentVariable(..., 'User')`) - gilt in neu
+    gestarteten Shells/der Claude-Code-App.
+  - **Linux/macOS**: es gibt kein Registry-Pendant, daher landen die Werte in
+    `~/.claude/env.sh` (bei jedem Lauf neu generiert), und `setup-claude-code.sh`
+    ergaenzt eine `source`-Zeile in `~/.bashrc` und/oder `~/.zshrc` (welche
+    Datei jeweils existiert), falls dort noch nicht vorhanden. Gilt ab der
+    naechsten Shell bzw. `source ~/.claude/env.sh`.
 
 ## Was die Hooks konkret machen
 
@@ -62,17 +72,28 @@ Rueckfrage erlaubt.
 
 ## Setup auf einer (neuen) Maschine
 
+Windows:
+
 ```powershell
 pwsh -File "$env:LOCALAPPDATA\nvim\docs\NOTES\CDX\setup-claude-code.ps1"
 ```
 
-Ablauf:
+Linux/macOS (Pfad je nach `NVIM_CONFIG`-Ort anpassen, z. B.
+`~/.config/nvim` oder `~/.local/share/nvim` - wo auch immer dieses Repo dort
+liegt):
+
+```bash
+bash ~/.config/nvim/docs/NOTES/CDX/setup-claude-code.sh
+```
+
+Ablauf (beide Skripte, gleiches Prinzip):
 
 1. Setzt/prueft `NVIM_CONFIG` (automatisch) und `REPOS_DIR` (fragt beim
-   ersten Mal nach, falls noch nicht gesetzt).
+   ersten Mal nach, validiert dass der Pfad existiert).
 2. Verlinkt/kopiert `CLAUDE.global.md` nach `~/.claude/CLAUDE.md` (mit
    Backup, falls dort schon etwas anderes liegt).
-3. Merged `settings.global.json` in `~/.claude/settings.json` (mit Backup).
+3. Merged `settings.global.json` in `~/.claude/settings.json` (mit Backup,
+   ueber `merge-claude-settings.js`).
 
 Danach Claude-Code-App/Terminal neu starten, damit die Env-Vars gezogen
 werden.
@@ -83,7 +104,7 @@ werden.
 2. Committen/pushen (siehe Git-Regel in `CLAUDE.global.md` - main branch,
    sofort).
 3. Auf den anderen Maschinen `git pull` (+ bei `settings.json`-Aenderungen
-   `setup-claude-code.ps1` erneut ausfuehren, da die Merge-Logik nicht
+   das jeweilige Setup-Skript erneut ausfuehren, da die Merge-Logik nicht
    automatisch bei jedem Claude-Code-Start laeuft).
 
 ## API-Zugang
@@ -97,12 +118,18 @@ Secret-Manager-Eintrag.
 
 ## Bekannte Einschraenkungen
 
-- Der Merge in `setup-claude-code.ps1` ist bewusst simpel gehalten (Array-
-  Union bei Permissions, Vorhandensein-Check bei Hooks ueber
+- Der Merge in `merge-claude-settings.js` ist bewusst simpel gehalten
+  (Array-Union bei Permissions, Vorhandensein-Check bei Hooks ueber
   `matcher`+`command`). Komplexere manuelle `settings.json`-Strukturen
   (z. B. verschachtelte `PreToolUse`-Hooks mit demselben Matcher aber
   anderem Inhalt) bitte im Zweifel manuell pruefen statt blind laufen
   lassen.
 - Symlink-Erstellung fuer `CLAUDE.md` braucht auf Windows entweder
-  Developer Mode oder Admin-Rechte. Ohne beides faellt das Skript automatisch
-  auf eine Kopie zurueck (siehe oben).
+  Developer Mode oder Admin-Rechte. Ohne beides faellt `setup-claude-code.ps1`
+  automatisch auf eine Kopie zurueck (siehe oben). Auf Linux/macOS
+  funktionieren unprivilegierte Symlinks immer, `setup-claude-code.sh` hat
+  daher keinen Kopie-Fallback.
+- Beide Setup-Skripte brauchen `node` auf PATH (fuer den Settings-Merge und
+  fuer `check-lua-hook.js`). `stylua`/`luacheck` sind nur fuer den Hook
+  noetig - fehlen sie auf einer Maschine, wird der jeweilige Check
+  uebersprungen statt hart zu blockieren (siehe `check-lua-hook.js`).

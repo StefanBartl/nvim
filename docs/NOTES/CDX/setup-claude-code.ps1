@@ -77,68 +77,21 @@ if ($alreadyLinked) {
     }
 }
 
-# --- 3. ~/.claude/settings.json (Merge) -------------------------------------
+# --- 3. ~/.claude/settings.json (Merge, ueber gemeinsames Node-Skript) -----
+# Merge-Logik lebt in merge-claude-settings.js, geteilt mit
+# setup-claude-code.sh (Linux/macOS), damit beide Plattformen nicht
+# auseinanderlaufen.
 
 Write-Host "`n[3/3] settings.json"
 
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Error "node nicht gefunden. Wird sowohl fuer den Merge als auch fuer check-lua-hook.js gebraucht - bitte Node.js installieren und Skript erneut ausfuehren."
+}
+
 $templatePath = Join-Path $PSScriptRoot 'settings.global.json'
 $settingsPath = Join-Path $claudeDir 'settings.json'
+$mergeScript = Join-Path $PSScriptRoot 'merge-claude-settings.js'
 
-$nvimConfigForward = $nvimConfig -replace '\\', '/'
-$templateJson = (Get-Content $templatePath -Raw).Replace('__NVIM_CONFIG__', $nvimConfigForward)
-$template = $templateJson | ConvertFrom-Json
-
-if (Test-Path $settingsPath) {
-    $backup = "$settingsPath.bak-$(Get-Date -Format 'yyyyMMdd-HHmmssfff')"
-    Copy-Item $settingsPath $backup -Force
-    Write-Host "  Bestehende settings.json gesichert nach: $backup"
-    $existing = Get-Content $settingsPath -Raw | ConvertFrom-Json
-} else {
-    $existing = [PSCustomObject]@{}
-}
-
-function Test-HasProperty($obj, $name) {
-    return [bool]($obj.PSObject.Properties.Match($name).Count)
-}
-
-# permissions.allow: Vereinigung, dedupliziert
-if (-not (Test-HasProperty $existing 'permissions')) {
-    $existing | Add-Member -MemberType NoteProperty -Name permissions -Value ([PSCustomObject]@{ allow = @() })
-}
-if (-not (Test-HasProperty $existing.permissions 'allow')) {
-    $existing.permissions | Add-Member -MemberType NoteProperty -Name allow -Value @()
-}
-$mergedAllow = @($existing.permissions.allow) + @($template.permissions.allow) | Select-Object -Unique
-$existing.permissions.allow = $mergedAllow
-
-# hooks.PostToolUse: Template-Eintraege anhaengen, falls noch nicht vorhanden
-if (-not (Test-HasProperty $existing 'hooks')) {
-    $existing | Add-Member -MemberType NoteProperty -Name hooks -Value ([PSCustomObject]@{ PostToolUse = @() })
-}
-if (-not (Test-HasProperty $existing.hooks 'PostToolUse')) {
-    $existing.hooks | Add-Member -MemberType NoteProperty -Name PostToolUse -Value @()
-}
-
-$existingEntries = @($existing.hooks.PostToolUse)
-foreach ($entry in $template.hooks.PostToolUse) {
-    $entryCommand = $entry.hooks[0].command
-    $alreadyPresent = $false
-    foreach ($e in $existingEntries) {
-        if ($e.matcher -eq $entry.matcher -and $e.hooks[0].command -eq $entryCommand) {
-            $alreadyPresent = $true
-            break
-        }
-    }
-    if ($alreadyPresent) {
-        Write-Host "  Hook fuer Matcher '$($entry.matcher)' bereits vorhanden - uebersprungen."
-    } else {
-        $existingEntries = $existingEntries + $entry
-        Write-Host "  Hook fuer Matcher '$($entry.matcher)' ergaenzt."
-    }
-}
-$existing.hooks.PostToolUse = $existingEntries
-
-$existing | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath -Encoding UTF8
-Write-Host "  settings.json geschrieben: $settingsPath"
+node $mergeScript $templatePath $settingsPath $nvimConfig
 
 Write-Host "`nFertig."
