@@ -400,12 +400,14 @@ All three left `lua/bindings/usrcmds/` on 2026-09-25:
   `watcher_quarantine`, which touch the same neo-tree `fs_watch` internals.
 - **`:StripCoauthor`** is now a script, `scripts/strip_coauthor.lua` — workspace
   tooling for this machine's checkout layout, not config runtime. Needs a real
-  startup (like `docmap_projects.lua`); arguments go after `--`:
+  startup (like `docmap_projects.lua`); arguments go in the env var
+  `STRIP_COAUTHOR_ARGS` (on the command line nvim would open them as file
+  buffers and the session autosave would store them):
 
   ```
-  nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- scan
-  nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- rewrite --only=<name>
-  nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- push
+  STRIP_COAUTHOR_ARGS="scan" nvim --headless -c "luafile scripts/strip_coauthor.lua"
+  STRIP_COAUTHOR_ARGS="rewrite --only=<name>" nvim --headless -c "luafile scripts/strip_coauthor.lua"
+  STRIP_COAUTHOR_ARGS="push" nvim --headless -c "luafile scripts/strip_coauthor.lua"
   ```
 
   `push` asks on stdin (`yes`), or takes `--yes`; without stdin it aborts. A
