@@ -903,7 +903,7 @@ plugins.add({
           -- context_menu: left on its default (<RightMouse>, opt-out) -
           -- filetree.nvim is now the sole right-click implementation for the
           -- tree. config/menu/neotree/ (the old hand-maintained entries) is
-          -- gone, and config/menu/mappings.lua's global RightMouse handler no
+          -- gone, and ui.nvim's ui.menu global RightMouse handler no
           -- longer special-cases neo-tree - filetree's own buffer-local
           -- binding shadows it inside the tree, same items() source either
           -- way. Non-tree right-click (markdown, everything else) still goes

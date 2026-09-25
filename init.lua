@@ -260,24 +260,9 @@ startup.on("UIReady", "mappings", function()
   require("bindings.mappings").setup()
 end)
 
--- UIReady: the context menu is two keymaps plus the item builders behind
--- them, so it belongs with the other keymaps rather than on the synchronous
--- path. Rendering goes through lib.nvim.contextmenu; `renderer = "nvzone"`
--- switches to nvzone/menu's own drawing instead.
--- Neovim's own built-in PopUp menu is off by default (lib.nvim.contextmenu's
--- own default, not something set here), since it is what used to show up as
--- "a different right-click menu" on any click a mapping doesn't cover (a
--- blank filetree line past the last node, say). Pass `native_popup = true`
--- below to bring vanilla Neovim's fallback back.
-startup.on("UIReady", "menu", function()
-  require("config.menu").setup({
-    renderer = "kit",
-    enable_format = true,
-    enable_code_actions = true,
-    enable_git_section = true,
-    enable_paste = true,
-  })
-end)
+-- The right-click menu (`ui.menu`) is configured in lua/config/ui_statusline/init.lua
+-- (`menu = { ... }` in the ui.setup call): it lived in config/menu until it moved
+-- into ui.nvim.
 
 -- UIReady, deliberately last among these: everything else has already booted
 -- by the time this runs, so ui.nvim's own render entrypoint wins
