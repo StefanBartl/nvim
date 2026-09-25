@@ -1,9 +1,12 @@
----@module 'bindings.usrcmds.strip_coauthor.git'
----@brief Git primitives behind `:StripCoauthor` — find the trailer, rebuild
+---@brief Git primitives behind `scripts/strip_coauthor.lua` — find the trailer, rebuild
 ---the affected commits without it, move the branch refs, push.
 ---@description
 --- Pure git operations, no notify/confirm/UI — `init.lua` drives these and
 --- owns all reporting, the same split `plugin_repos.ops` uses.
+---
+--- Not on the runtimepath: `scripts/strip_coauthor.lua` loads this file with
+--- `dofile`, so it must not `require` anything from this config's own modules
+--- other than `plugins.personal.list`.
 ---
 --- **Why `commit-tree` + `update-ref` and not a rebase.** Every affected
 --- commit is rebuilt object by object and the branch refs are moved by hand.
@@ -84,18 +87,37 @@ end
 -- Repository set
 -- =============================================================================
 
+---@param override string|nil
+---@return string|nil
+function M.resolve_base_dir(override)
+  if override and override ~= "" then
+    return fn.fnamemodify(override, ":p")
+  end
+  local env = vim.env.REPOS_DIR
+  if env and env ~= "" then
+    return fn.fnamemodify(env, ":p")
+  end
+  return nil
+end
+
+---@param path string
+---@return boolean
+function M.is_git_repo(path)
+  local stat = loop.fs_stat(path .. "/.git")
+  return stat ~= nil and stat.type == "directory"
+end
+
 ---Every repository this command knows about: the config itself, plus every
 ---personal plugin that is actually checked out under `base_dir`. The plugin
 ---list comes from `plugins.personal.list`, so a plugin added to the spec is
 ---covered from then on without editing anything here.
----@param base_dir string|nil Already resolved (`ops.resolve_base_dir`), or nil.
+---@param base_dir string|nil Already resolved (see `M.resolve_base_dir`), or nil.
 ---@return { name: string, path: string }[]
 function M.repos(base_dir)
-  local ops = require("bindings.usrcmds.plugin_repos.ops")
   local out = {}
 
   local config = fn.stdpath("config")
-  if ops.is_git_repo(config) then
+  if M.is_git_repo(config) then
     out[#out + 1] = { name = fn.fnamemodify(config, ":t"), path = config }
   end
 
@@ -106,7 +128,7 @@ function M.repos(base_dir)
   local entries = require("plugins.personal.list").read() or {}
   for _, entry in ipairs(entries) do
     local path = base_dir .. "/" .. entry.name
-    if loop.fs_stat(path) and ops.is_git_repo(path) then
+    if loop.fs_stat(path) and M.is_git_repo(path) then
       out[#out + 1] = { name = entry.name, path = path }
     end
   end

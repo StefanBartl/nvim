@@ -10,7 +10,7 @@
 --- Every subcommand except `dashboard` (which just opens reposcope.nvim's
 --- own `:Reposcope dashboard`) operates only on the repos `plugins.personal.list`
 --- names against `dir`/`$REPOS_DIR` — never on whatever a directory scan
---- turns up, unlike `:MyReposUpdate`, because `$REPOS_DIR` also holds
+--- turns up, unlike `:Reposcope update`, because `$REPOS_DIR` also holds
 --- non-plugin checkouts (Notes, WKDBooks, ...) a scan-and-delete would put
 --- at risk. `remove`/`reclone` only touch repos confirmed clean via `git
 --- status --porcelain --branch`, named in a single confirmation prompt
@@ -448,7 +448,7 @@ local function pull_all(path, only_name)
 end
 
 ---Fetch + fast-forward pull, scoped to the named plugin list — the
----`:MyReposUpdate`-equivalent for just `plugins.personal.list`, so a second
+---`:Reposcope update`-equivalent for just `plugins.personal.list`, so a second
 ---machine can bring its `dir`-mode checkouts level with commits pushed from
 ---the first without touching the unrelated repos `$REPOS_DIR` also holds.
 ---@param path string|nil

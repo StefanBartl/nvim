@@ -3,18 +3,13 @@
 local usercmd = require("lib.nvim.bindings.usercmd")
 local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
--- casedesk is a plugin now (StefanBartl/casedesk.nvim, spec in
--- plugins/personal/init.lua, local checkout under $REPOS_DIR). The tree under
--- usrcmds/case/ is frozen and kept only as a fallback: uncomment the line
--- below and comment out the spec entry to go back. Exactly one of the two may
--- ever be active -- both would register :Case twice, and which code ran would
--- be anyone's guess. See docs/ROADMAP/casedesk/PLUGIN.md section 3.8.
--- require("bindings.usrcmds.case").enable()
+-- casedesk (`:Case` / `:Cases` / `:Tricentis`) is a plugin: StefanBartl/casedesk.nvim,
+-- spec in plugins/personal/init.lua. The frozen copy that used to live under
+-- usrcmds/case/ was removed on 2026-09-25.
 require("bindings.usrcmds.bindings_explorer").enable()
 require("bindings.usrcmds.context_open").enable()
 require("bindings.usrcmds.telemetry_nvim_config").enable()
 require("bindings.usrcmds.autocmd_docs").enable()
-require("bindings.usrcmds.strip_coauthor").enable()
 require("bindings.usrcmds.bindings_audit").enable()
 
 -- Was `require("nvchad.mason").install_all()` in lua/nvchad/au.lua, NvChad's

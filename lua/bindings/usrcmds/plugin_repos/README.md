@@ -47,7 +47,7 @@ of failing loudly. `:MyPlugins update` (fetch + fast-forward pull, scoped to
 the named list) is the one command that closes that gap: run it on the
 machine you're returning to, before you start working there.
 
-It deliberately does **not** reuse `:MyReposUpdate` — that command scans
+It deliberately does **not** reuse `:Reposcope update` — that command scans
 every subdirectory of a path and fetch/pulls whatever it finds, which is the
 right behavior for an arbitrary clone folder but would also drag in every
 non-plugin checkout `$REPOS_DIR` holds (Notes, WKDBooks, ...). `update`
@@ -104,7 +104,7 @@ creating a merge commit or clobbering local work.
 ### `:MyPlugins update [dir] [--only=<name>]`
 
 `fetch` then `pull` (in that order) on every present listed repo — the
-`:MyReposUpdate`-equivalent scoped to just `plugins.personal.list`. This is
+`:Reposcope update`-equivalent scoped to just `plugins.personal.list`. This is
 the command for the two-machine sync case described above.
 
 ```vim
@@ -135,7 +135,7 @@ git-status overview (branch, ahead/behind, dirty) of every repo under
 going on" this needed, so there's no separate `plugins.personal.list`-scoped
 status reader here anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`,
 `dashboard` shows *every* repo in the directory, not just the listed
-plugins — same trade-off as `:Reposcope dashboard`/`:MyReposUpdate` make.
+plugins — same trade-off as `:Reposcope dashboard`/`:Reposcope update` make.
 Flat shorthand: `:MyPluginsDashboard [dir]` (no `--fetch`/`--fetch-this` on
 the shorthand — it only ever takes `dir`).
 
