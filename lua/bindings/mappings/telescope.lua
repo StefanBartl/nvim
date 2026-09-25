@@ -13,19 +13,25 @@ function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 
   map("n", "<leader>ts", ":Telescope<CR>", { desc = "[Telescope] UI" })
+  -- Grep with an own prompt first, then pickers.nvim's live grep in the cwd,
+  -- seeded with what was typed (engine-agnostic: pickers.nvim picks telescope /
+  -- fzf-lua / snacks). Telescope's grep_string only when pickers.nvim is absent.
   map("n", "<leader>tg", function()
-    local ok, tb = pcall(require, "telescope.builtin")
-    if not ok then
-      return
-    end
-
     require("lib.nvim.ui.kit").input({
       title = "Grep > ",
       on_submit = function(query)
-        tb.grep_string({ search = query })
+        local ok, command = pcall(require, "pickers.command")
+        if ok then
+          command.handle({ fargs = { "cwd", "grep" }, query = query })
+          return
+        end
+        local ok_tb, tb = pcall(require, "telescope.builtin")
+        if ok_tb then
+          tb.grep_string({ search = query })
+        end
       end,
     })
-  end, { desc = "[Telescope] Grep" })
+  end, { desc = "[Pickers] Grep (own prompt)" })
 
   map(
     "n",
