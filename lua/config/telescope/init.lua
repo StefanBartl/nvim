@@ -17,7 +17,6 @@ local actions = require("telescope.actions")
 local files_path_shorten = require("lib.nvim.fs.path_shorten")
 local ignore_list = require("lib.nvim.fs.ignore.list")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
-local entry_actions = require("pickers.entry_actions.adapters.telescope")
 
 local notify = require("lib.nvim.notify").create("[telescope.cfg]")
 
@@ -53,7 +52,9 @@ end
 -- Returns merged default options for telescope.setup
 ---@return table opts
 function M.defaults()
-  local km = vim.tbl_deep_extend("force", fb_keymaps.get(actions), entry_actions.get_mappings())
+  -- pickers.nvim patches its entry actions (create_file/open_background/
+  -- cheatsheet/path_copy) into defaults.mappings itself.
+  local km = fb_keymaps.get(actions)
 
   return {
     path_display = function(picker_opts, path)
