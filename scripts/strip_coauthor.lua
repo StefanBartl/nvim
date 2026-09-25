@@ -305,9 +305,15 @@ local function push(dir, only, skip_confirm)
   prompt[#prompt + 1] = "Die alte History bleibt auf der Forge über ihre SHA erreichbar,"
   prompt[#prompt + 1] = "bis diese sie einsammelt. Wer sie schon geholt hat, behält sie."
 
-  if fn.confirm(table.concat(prompt, "\n"), "&Ja, pushen\n&Nein", 2) ~= 1 then
-    notify.info("Abgebrochen — nichts gepusht.")
-    return
+  out(table.concat(prompt, "\n"))
+  if not skip_confirm then
+    io.stdout:write("\nTippe 'yes' zum Pushen: ")
+    io.stdout:flush()
+    local answer = io.read("*l")
+    if answer == nil or answer:lower() ~= "yes" then
+      notify.info("Abgebrochen — nichts gepusht.")
+      return
+    end
   end
 
   local lines, pushed, failed = {}, 0, 0
