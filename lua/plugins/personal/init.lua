@@ -471,14 +471,50 @@ plugins.add({
         -- <scope>_<files|grep|smart|find_all>, each with its own lhs -- the
         -- flexible alternative to the fixed `keymaps` fields above.
         mappings = {
-          -- Recently opened files (snacks "recent" / telescope+fzf "oldfiles").
-          recent = { "<leader>fo" },
+          -- Formerly config/snacks/mappings/standard.lua (lazy `keys` of the snacks
+          -- spec), now declared here: they dispatch through pickers.builtins /
+          -- :Pickers anyway, whichever engine is active. `recent` is also on
+          -- <leader>fo (snacks "recent" / telescope+fzf "oldfiles").
+          command_history = { "<leader>:", desc = "Command History" },
+          notifications = { "<leader>N", desc = "Notification History" },
+          cwd_files = { "<leader>ff", desc = "Find Files" },
+          projects = { "<leader>pro", desc = "Projects" },
+          recent = { { "<leader>fo", "<leader>old" }, desc = "Recent Files" },
+          git_branches = { "<leader>gB", desc = "Git Branches" },
+          git_log = { "<leader>gl", desc = "Git Log" },
+          git_log_line = { "<leader>gL", desc = "Git Log Line" },
+          git_status = { "<leader>gs", desc = "Git Status" },
+          git_stash = { "<leader>gS", desc = "Git Stash" },
+          git_diff = { "<leader>gD", desc = "Git Diff (Hunks)" },
+          git_log_file = { "<leader>gf", desc = "Git Log File" },
+          gh_issue = { "<leader>gi", desc = "GitHub Issues (open)" },
+          gh_issue_all = { "<leader>gI", desc = "GitHub Issues (all)" },
+          gh_pr = { "<leader>gp", desc = "GitHub Pull Requests (open)" },
+          gh_pr_all = { "<leader>gP", desc = "GitHub Pull Requests (all)" },
+          lines = { "<leader>cb", desc = "Buffer Lines" },
+          grep_buffers = { "<leader>cB", desc = "Grep Open Buffers" },
+          cwd_grep = { "<leader><leader>", desc = "Grep" },
+          commands = { "<leader>com", desc = "Commands" },
+          keymaps = { "<leader>fk", desc = "Keymaps" },
+          man = { "<leader>sM", desc = "Man Pages" },
+          help = { "<leader>help", desc = "Help Pages" },
+          colorschemes = { "<leader>ch", desc = "Colorschemes" },
+          undo = { "<leader>UN", desc = "Undo History" },
+          lsp_definitions = { "GD", desc = "Goto Definition" },
+          lsp_declarations = { "gD", desc = "Goto Declaration" },
+          lsp_references = { "GR", desc = "References", nowait = true },
+          lsp_implementations = { "GI", desc = "Goto Implementation" },
+          lsp_type_definitions = { "GY", desc = "Goto Type Definition" },
+          lsp_incoming_calls = { "GAI", desc = "Calls Incoming" },
+          lsp_outgoing_calls = { "GAO", desc = "Calls Outgoing" },
+          lsp_symbols = { "<leader>SS", desc = "LSP Symbols" },
+          lsp_workspace_symbols = { "<leader>sS", desc = "LSP Workspace Symbols" },
           -- Uncommitted files (staged/unstaged/both, toggle rows at the top of
           -- the list) -- pickers.nvim's own in-house `git_status_filtered`
           -- builtin (renamed from `git_status_marks`: it has no bookmark/mark
           -- semantics, just a filtered git status list -- ecosystem-wide
           -- mark/link naming-consistency pass), NOT the native `git_status`
-          -- picker already on <leader>gs (config/snacks/mappings/standard.lua).
+          -- picker already on <leader>gs (the `git_status` entry above).
           -- <leader>g{s,S,l,L,B,D,f,i,I,p,P} and bare gb/gd/gg are all taken
           -- across this ecosystem's git keymaps (pickers.nvim's own +
           -- gitsuite.nvim + neogit + diff.nvim); <leader>gm was free -- kept

@@ -9,11 +9,6 @@ function M.get_all_keys()
   ---@type table[]
   local keys = {}
 
-  local standard = require("config.snacks.mappings.standard").keys()
-  if type(standard) == "table" then
-    vim.list_extend(keys, standard)
-  end
-
   local ext = require("config.snacks.mappings.extended").keys()
   if type(ext) == "table" then
     vim.list_extend(keys, ext)
