@@ -1,4 +1,4 @@
----@brief `scripts/strip_coauthor.lua {scan|rewrite|push} [dir] [--only=<name>] [--yes]` — remove the
+---@brief `scripts/strip_coauthor.lua` — `STRIP_COAUTHOR_ARGS="{scan|rewrite|push} [dir] [--only=<name>] [--yes]"` — remove the
 ---`Co-Authored-By: Claude` trailer from the commits that carry it, across the
 ---config and the personal plugin checkouts.
 ---@description
@@ -42,11 +42,13 @@
 --- **Usage.** Must run through a real startup (`-c "luafile ..."`, not `-l`):
 --- the repository set comes from `plugins.personal.list`, which needs this
 --- config's resolved plugin policy — same constraint as `docmap_projects.lua`.
---- Arguments go after `--`:
+--- Arguments go in `STRIP_COAUTHOR_ARGS` (not on the command line: nvim would
+--- open them as file buffers and the session autosave would remember them):
 ---
----     nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- scan
----     nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- rewrite --only=lib.nvim
----     nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- push
+---     STRIP_COAUTHOR_ARGS="scan" nvim --headless -c "luafile scripts/strip_coauthor.lua"
+---     STRIP_COAUTHOR_ARGS="rewrite --only=lib.nvim" nvim --headless -c "luafile scripts/strip_coauthor.lua"
+---     STRIP_COAUTHOR_ARGS="push" nvim --headless -c "luafile scripts/strip_coauthor.lua"
+---     # PowerShell: $env:STRIP_COAUTHOR_ARGS = "scan"; nvim --headless -c "luafile ..."
 ---
 --- Reports go to stdout. `push` asks on stdin (`yes` to proceed); `--yes`
 --- answers for you. With no stdin it aborts — never a silent force-push.
@@ -366,13 +368,16 @@ local function parse(argv)
   return verb, dir, only, yes == true, nil
 end
 
-local verb, dir, only, yes, err = parse(fn.argv())
+local verb, dir, only, yes, err =
+  parse(vim.split(vim.env.STRIP_COAUTHOR_ARGS or "", "%s+", { trimempty = true }))
 if not verb then
   out("ERROR: " .. tostring(err))
-  vim.cmd("cquit 2")
-else
-  VERBS[verb](dir, only, yes)
-  if had_error then
-    vim.cmd("cquit 1")
-  end
+  io.stdout:flush()
+  os.exit(2)
 end
+
+VERBS[verb](dir, only, yes)
+io.stdout:flush()
+-- `os.exit`, not `:qa`: leaving normally fires VimLeavePre, and sessions.nvim's
+-- autosave would overwrite the interactive session with this headless one.
+os.exit(had_error and 1 or 0)
