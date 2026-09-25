@@ -4,8 +4,7 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
-    - [Generell](#generell)
-    - [Ideen](#ideen)
+    - [Generel](#generel)
     - [nvim-config](#nvim-config)
     - [wkd](#wkd)
     - [sessions.nvim:](#sessionsnvim)
@@ -27,22 +26,47 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     02:30       |    94% / 95%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    03% / 80%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    19% / 98%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     03:10       |    98% / 98%     |
 
 ---
 
 ## Claude Tasks
 
-### Generell
+- claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
-- Wir haben ein Klick-Problem: JHeder KLcik in den BUfer, freezed nvim für mehrere sekunden ein. das ist nicht gut. Wir haben viel miot mausklickdssinplementiert inden eltzen tagen, da swird wohl damit zu tun haben. Das Problem ist aber offensichtlich nicht ur ein klick problem, auch so bei editieren mit keyboard hatte ich jetzt merhamls einen freeze.
+- `documentation.nvim` && `docmap-explorer`: Könnten die Informationen von `github_stats.nvim` einbindne und verwenden, sofern der user es installiert hat.
+
+- markdown.nvim: `:Markdown format` und dort dann sowas wie "entferne rekursiv oider fett" in cfile/buffer/path/cwd/... - da gibt es bestmmt mehrere optionen dafür
+
+- wo sind meine ganzern templates hin, ich hatte "snippets" für viele fileformate wie zb markdown captions zum eifnügen via custmn usrcmd, aber auch Design patterns als ganze files angelegt um sie dann als snippets zu verwenden, Design patterns in mehreren sprachen usw. Ein teil davn ist in filetree.nvim `Actual aber nich sowas wie die captions die ich erwäühnte`
+
+- `filetree.nvim`: `leader tf / leader tg` -> binden telescope/fzf-lua ein, sollten aber pickers.nvim einbinden
+
+- nvim/config/autocmds -> nvim/config/bindings/autocmds moven
+- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/strip_coauthor -> sollte das nicht zu den TOOLS ausgeglkiedert werden
+- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/update_repos -> wurde das nicht durch `MyPlugins` abeglöst?
+- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/who_locks
+- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/case -> wurd darasu nicht casedesk.nvim und kann entfernt werden?
+- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/bindings_audit -> wäre das nmicht ein `lib.nvim` Tool?
+- würde das C:/Users/Bernhard/AppData/Local/nvim/lua/spell_wordlists.lua nicht mehr nach casedesk.nvim passen thematisch oder WKDBook-Tricentis?
+
+- mappings durchchecken
+
+- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/context_open -> mal ein wenig ausprobieren, und solte es erweitert werden? seit der implementierung sind einige plugins dazu gekommen + features innerhalb der damlas schon bestehenden
+
+- - `ui.nvim`
+  - sticky: Markdown ✅, C++ 🟡 Namespace funktiert, aber zb nicht Funktionen; Lua ❌ Hier wird gar nichts angezeigt; Rust 🟡 pubs, struct  habe ich angezeigt bekommen, abner ich hatte nicht den eindruck, das ses immer stimmte, bzw zuverlässig war. manchmal war ich in einen struct drienn, es hat nchts angzeigt,m dann gin g innerhalbn des structs ein paar zeilen runter, dann wurde es wieder angezeigt... Note: Treesitter ist für alle diese Sprachen installiert in nvim via mason
+  - contextmenu fehlt  "save"; wenn ich im bffer amkere, dan rechtzsklick und copy marked selletion, dann wird die selection eentfernet und einfac er ganze buffer kopeiert. WEil diese sachen buggy sind, prüdffe biette die funktioanlität aler menu einträge; synhetisceh TESTS dafür möglich?
+  - Dies vonfigs haben keine funktion mehr seit `ui.nvim` und können gelöscht werden oder:
+    - C:/Users/Bernhard/AppData/Local/nvim/lua/config/tabufline/init.lua
+    -
 
 ---
 
-### Ideen
+### Generel
 
-- Zeiger-Mode: KExymap um den Mode zu toggeln, wenn on, dann kann man den Mauszeiger innerhalb nvims mit den keyboard tasten steuern, klciken, und die egschwindigkeit mit ändern, zb schnell mit shift und sehr schnell mit ctrl+shift lnagsm alt und sehr langsam ctrl+akt - oder so -> die idee ist eher ein "Scherz"-Feature, weil es absurd ist, gerade in nvim den masuzeiger mit dem keyboard steuern u wollen
+- Wir haben ein Klick-Problem: Jeder KLcik in den BUfer, freezed nvim für mehrere sekunden ein. das ist nicht gut. Wir haben viel miot mausklickdssinplementiert inden eltzen tagen, da swird wohl damit zu tun haben. Das Problem ist aber offensichtlich nicht ur ein klick problem, auch so bei editieren mit keyboard hatte ich jetzt mehramls einen freeze.
 
 ---
 
