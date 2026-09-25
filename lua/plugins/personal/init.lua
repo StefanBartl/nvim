@@ -399,7 +399,7 @@ plugins.add({
         find = { ignore_list = true },
         -- Prompt on top, wrap-around navigation, no preview line wrapping --
         -- on every engine, native pickers included.
-        display = { cycle = true, prompt_top = true, preview_wrap = false },
+        display = { cycle = true, prompt_top = true, preview_wrap = false, path_adaptive = true },
         collections = {
           {
             name = "notes",
