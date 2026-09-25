@@ -239,10 +239,32 @@ local function menu_source(buf)
   return composed
 end
 
+--- Whether the pointer sits inside the live Visual selection of the current
+--- window (line range; for a single-line charwise selection also the columns).
+---@return boolean
+function M.pointer_in_selection()
+  local ok, m = pcall(vim.fn.getmousepos)
+  if not ok or type(m) ~= "table" or m.winid ~= vim.api.nvim_get_current_win() then
+    return false
+  end
+  local a, b = vim.fn.getpos("v"), vim.fn.getpos(".")
+  if a[2] > b[2] or (a[2] == b[2] and a[3] > b[3]) then
+    a, b = b, a
+  end
+  if m.line < a[2] or m.line > b[2] then
+    return false
+  end
+  if vim.fn.mode() == "v" and a[2] == b[2] then
+    return m.column >= a[3] and m.column <= b[3]
+  end
+  return true
+end
+
 ---@return nil
 function M.setup()
   -- Alt-b: the same menu, anchored at the cursor instead of the pointer.
-  map("n", "<A-b>", function()
+  -- Also from Visual mode, so "Copy/Delete Marked" can act on a selection.
+  map({ "n", "v" }, "<A-b>", function()
     local items = menu_source(vim.api.nvim_get_current_buf())
     if #items > 0 then
       contextmenu.open(items, { mouse = false })
@@ -257,31 +279,41 @@ function M.setup()
   -- the pointer. It still contributes one row from any OTHER buffer (open
   -- the tree) via contributed_submenus()'s filetree bridge, above.
   map({ "n", "v" }, "<RightMouse>", function()
-    -- Replay the native click so the cursor lands where the user pointed,
-    -- and the menu is built for that buffer rather than the previous one.
-    vim.cmd.exec('"normal! \\<RightMouse>"')
-
-    -- A click on the tab bar: the replay above already fired the chip's own
-    -- click handler, which opens that tab's menu (ui.nvim's ui.tabline.menu).
-    -- The general menu below is about the buffer under the pointer, which the
-    -- tab bar is not -- and two menus would open on top of each other.
+    -- Bars first: a click on the tab bar or the statusline is answered by that
+    -- bar's own click handler (ui.nvim's ui.tabline.menu / ui.statusline.menu
+    -- -- a tab's menu, a module's own or generic "manage this module" one),
+    -- which only the native right click fires, so it is replayed as one. The
+    -- general menu below is about the buffer under the pointer, which a bar is
+    -- not -- and two menus would open on top of each other.
+    --
+    -- `getmousepos()` reports `winid == 0` on the global statusline row and the
+    -- command line, which the `winid ~= 0` fallback further down would read as
+    -- "no window under the pointer" and quietly resolve to the CURRENT
+    -- window's buffer -- another reason this is decided up front.
     local ok_tb, tabline_menu = pcall(require, "ui.tabline.menu")
-    if ok_tb and tabline_menu.pointer_on_tabline() then
+    local ok_sl, statusline_menu = pcall(require, "ui.statusline.menu")
+    if
+      (ok_tb and tabline_menu.pointer_on_tabline())
+      or (ok_sl and statusline_menu.pointer_on_statusline())
+    then
+      vim.cmd.exec('"normal! \\<RightMouse>"')
       return
     end
 
-    -- Same reasoning, for the statusline: the replay above already fired
-    -- whichever module was clicked (its own menu, or the generic "manage
-    -- this module" one every plain segment gets -- ui.nvim's
-    -- ui.statusline.menu / ui.statusline.render). `getmousepos()` reports
-    -- `winid == 0` there (both the global statusline row and the command
-    -- line do), which the `winid ~= 0` fallback just below would otherwise
-    -- read as "no window under the pointer" and quietly resolve to the
-    -- CURRENT window's buffer instead -- opening a second, unrelated menu
-    -- on top of the statusline's own.
-    local ok_sl, statusline_menu = pcall(require, "ui.statusline.menu")
-    if ok_sl and statusline_menu.pointer_on_statusline() then
-      return
+    -- In the buffer: the selection is what the menu's "Copy/Delete Marked"
+    -- act on, so a right click INSIDE a live Visual selection leaves it alone.
+    -- Anywhere else the selection ends and the cursor moves to the pointer --
+    -- with a left click, not a replayed right one: `'mousemodel'` "extend"
+    -- (set by ui.nvim's contextmenu) makes a native right click start a
+    -- Visual selection from the old cursor to the pointer, and the menu would
+    -- then offer to copy/delete THAT.
+    local mode = vim.fn.mode()
+    local visual = mode == "v" or mode == "V" or mode == "\22"
+    if not (visual and M.pointer_in_selection()) then
+      if visual then
+        vim.cmd.exec('"normal! \\<Esc>"')
+      end
+      vim.cmd.exec('"normal! \\<LeftMouse>"')
     end
 
     local winid

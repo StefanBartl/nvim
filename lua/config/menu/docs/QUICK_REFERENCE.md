@@ -33,6 +33,12 @@ Spotlight, Color My ASCII, LSP. The list is `CONTRIBUTORS` in
 | **Copy Marked/Selected** | `<C-c>` | Copy visual selection or entire buffer |
 | **Paste Content** | `<C-v>` | Paste from system clipboard |
 
+### File
+| Entry | Shortcut | Description |
+|-------|----------|-------------|
+| **Save** | `<C-s>` | Write the current buffer (errors are reported, not raised) |
+| **Save All** | | Write every modified buffer |
+
 ### Delete
 | Entry | Shortcut | Description |
 |-------|----------|-------------|
@@ -190,7 +196,8 @@ V (Visual Line) → Select → <C-c>
 
 ### 1. Smart Copy
 Menu's "Copy Marked/Selected" automatically detects:
-- Visual selection → Copy only selected
+- Visual selection → Copy only selected (captured when the menu opens; a
+  right-click inside the selection keeps it, a click outside ends it)
 - No selection → Copy entire buffer
 
 ### 2. Safe Delete File

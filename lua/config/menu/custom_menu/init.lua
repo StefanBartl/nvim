@@ -21,6 +21,8 @@ local defaults = {
   enable_copy_all = true,
   enable_copy_marked = true,
   enable_paste = true,
+  enable_save = true,
+  enable_save_all = true,
   enable_delete_marked = true,
   enable_delete_all = true,
   enable_delete_file = true,
@@ -51,11 +53,45 @@ local function colored(item, hl)
   return item
 end
 
----Check if text is selected in visual mode
----@return boolean
-local function has_selection()
+---@class ConfigMenu.Selection
+---@field buf integer
+---@field mode string  "v", "V" or "\22" (blockwise)
+---@field from integer[]  getpos()-style start (the selection's fixed end)
+---@field to integer[]  getpos()-style end (the cursor end)
+
+---Snapshot the live visual selection, or nil when none is up.
+---
+--- Taken when the menu is BUILT, not when an entry runs: by the time a
+--- callback fires the menu float has taken focus and closed again, Visual mode
+--- is long over, and `mode()` reports "n" -- which is exactly why "Copy
+--- Marked" used to copy the whole buffer instead of the selection.
+---@return ConfigMenu.Selection|nil
+local function snapshot_selection()
   local mode = vim.fn.mode()
-  return mode == "v" or mode == "V" or mode == "\22" -- \22 is <C-v>
+  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then -- \22 is <C-v>
+    return nil
+  end
+  return {
+    buf = vim.api.nvim_get_current_buf(),
+    mode = mode,
+    from = vim.fn.getpos("v"),
+    to = vim.fn.getpos("."),
+  }
+end
+
+---Whether `sel` can still be acted on (same buffer, still current).
+---@param sel ConfigMenu.Selection|nil
+---@return boolean
+local function selection_usable(sel)
+  return sel ~= nil and vim.api.nvim_get_current_buf() == sel.buf
+end
+
+---The text of `sel` as `getregion` lines plus the register type to store it as.
+---@param sel ConfigMenu.Selection
+---@return string[] lines, string regtype
+local function selection_text(sel)
+  local lines = vim.fn.getregion(sel.from, sel.to, { type = sel.mode })
+  return lines, sel.mode
 end
 
 ---Open Unicode Table in floating window
@@ -115,15 +151,47 @@ local function format_buffer()
   end
 end
 
----Copy the visual selection, or the whole buffer when nothing is selected.
+---Copy the selection captured at open time, or the whole buffer when there
+---was none.
+---@param sel ConfigMenu.Selection|nil
 ---@return nil
-local function copy_marked()
-  if has_selection() then
-    vim.cmd("normal! gvy")
+local function copy_marked(sel)
+  if selection_usable(sel) then
+    ---@cast sel ConfigMenu.Selection
+    local lines, regtype = selection_text(sel)
+    vim.fn.setreg("+", lines, regtype)
+    vim.fn.setreg('"', lines, regtype)
     notify.info("Copied selection to clipboard")
   else
     vim.cmd("%y+")
     notify.info("Copied entire buffer to clipboard")
+  end
+end
+
+---Write the current buffer, reporting instead of raising when it cannot be
+---(unnamed, read-only, ...).
+---@return nil
+local function save_buffer()
+  local ok, err = pcall(function()
+    vim.cmd("write")
+  end)
+  if ok then
+    notify.info("Saved " .. vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t"))
+  else
+    notify.error("Could not save: " .. tostring(err))
+  end
+end
+
+---Write every modified buffer.
+---@return nil
+local function save_all()
+  local ok, err = pcall(function()
+    vim.cmd("silent! wall")
+  end)
+  if ok then
+    notify.info("Saved all modified buffers")
+  else
+    notify.error("Could not save all: " .. tostring(err))
   end
 end
 
@@ -144,10 +212,22 @@ local function paste_clipboard()
   vim.api.nvim_put(lines, "l", true, true)
 end
 
----Delete the visual selection (no-op with a warning when there is none).
+---Delete the selection captured at open time (no-op with a warning when
+---there was none).
+---@param sel ConfigMenu.Selection|nil
 ---@return nil
-local function delete_marked()
-  if has_selection() then
+local function delete_marked(sel)
+  if selection_usable(sel) then
+    ---@cast sel ConfigMenu.Selection
+    -- `gv` reselects from the '< / '> marks and the last Visual mode; both are
+    -- restored from the snapshot first, so a mark that moved in the meantime
+    -- cannot change what is deleted.
+    local first, last = sel.from, sel.to
+    if last[2] < first[2] or (last[2] == first[2] and last[3] < first[3]) then
+      first, last = last, first
+    end
+    vim.fn.setpos("'<", first)
+    vim.fn.setpos("'>", last)
     vim.cmd("normal! gvd")
     notify.info("Deleted selection")
   else
@@ -270,6 +350,10 @@ return function(opts)
 
   local out = {}
 
+  -- Resolved now, while Visual mode (if any) is still live; the entries below
+  -- act on this snapshot, never on the mode at click time.
+  local selection = snapshot_selection()
+
   -- Each group names itself. The title is a `heading(...)` marker passed as
   -- the group's first argument rather than a parameter of its own, so gating
   -- reaches it: a section whose every entry is switched off in `opts` takes
@@ -303,13 +387,9 @@ return function(opts)
     contextmenu.entry(opts.enable_copy_all, "Copy All (Buffer)", function()
       vim.cmd("%y+")
     end, "<C-a>", { icon = icons.copy_all }),
-    contextmenu.entry(
-      opts.enable_copy_marked,
-      "Copy Marked/Selected",
-      copy_marked,
-      "<C-c>",
-      { icon = icons.copy_marked }
-    ),
+    contextmenu.entry(opts.enable_copy_marked, "Copy Marked/Selected", function()
+      copy_marked(selection)
+    end, "<C-c>", { icon = icons.copy_marked }),
     contextmenu.entry(
       opts.enable_paste,
       "Paste Content",
@@ -321,14 +401,17 @@ return function(opts)
 
   contextmenu.group(
     out,
+    contextmenu.heading("File"),
+    contextmenu.entry(opts.enable_save, "Save", save_buffer, "<C-s>", { icon = icons.save }),
+    contextmenu.entry(opts.enable_save_all, "Save All", save_all, nil, { icon = icons.save_all })
+  )
+
+  contextmenu.group(
+    out,
     contextmenu.heading("Delete"),
-    contextmenu.entry(
-      opts.enable_delete_marked,
-      "Delete Marked/Selected",
-      delete_marked,
-      "dm",
-      { icon = icons.delete_marked }
-    ),
+    contextmenu.entry(opts.enable_delete_marked, "Delete Marked/Selected", function()
+      delete_marked(selection)
+    end, "dm", { icon = icons.delete_marked }),
     contextmenu.entry(
       opts.enable_delete_all,
       "Delete All (Clear Buffer)",
