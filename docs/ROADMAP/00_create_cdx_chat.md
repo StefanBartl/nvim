@@ -6,7 +6,7 @@ Tip: For a deeper cloud-based review, try /ultrareview next time.
 
 checke alle commits dieses chats auf Bugs, Security / Performance Optimierungen und fixe sie gleich.
 
- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
+- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 - Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
@@ -19,9 +19,11 @@ checke alle commits dieses chats auf Bugs, Security / Performance Optimierungen 
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit) und `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
   - Solltest du im Zuge der Task ein Tol bauen, das für kpnftige Users/Devs/Agents interessant sein könnte, sichere es an einer geeigneteten Stelle in diesem `TOOLS/`-Folder
 - Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
+- in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/**` bzw `$REPOS_DIR/WKDBooks/Development/**` liegen alle Backlogs, Noptizen die Enduser niht betrift, Features, Roadmaps , usw.. Die Plugin-Repo-Docs bleiben für echte Dokumentation des PLugins, der FeatureBeschreibungen für den Enduser gedacht, README's, usw... Im Zweifelfsall frage nach, es sind aber schon ausreichend Files vrohanden um Ableitungen zu treffen. In `$NVIM_CONFIG/docs` kommen die Reports sowie Originale Handover files hin, in den `wkdbook's` dann gerade symlinks darauf.
 - Neue Features ggf. im Plugin-eigenen /TESTS/ folder testenV
 - Wenn du mit etwas fertig bist committe / pushe / pulle sofort im main branch, sodass ich es gleich verwenden kann.
 - Wenn du chip tasks anlegst, diese auch bitte auf deutsch
+
 
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
