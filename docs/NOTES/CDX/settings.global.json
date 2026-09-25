@@ -7,12 +7,13 @@
       "Bash(git log:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)",
+      "Bash(git push)",
+      "Bash(git push origin main)",
+      "Bash(git push origin HEAD)",
       "Bash(git pull:*)",
       "Bash(luacheck:*)",
       "Bash(stylua:*)",
-      "Bash(ls:*)",
-      "Bash(find:*)"
+      "Bash(ls:*)"
     ]
   },
   "hooks": {
