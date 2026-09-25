@@ -295,6 +295,6 @@ wird:
 1. Die fünf offenen Entscheidungen in [§5](#5-offene-entscheidungen) mit dem
    User klären.
 2. GS-29 bis GS-39 als Backlog-Tasks anlegen, gleiches Dateiformat wie die
-   bestehenden `docs/ROADMAP/Backlog/TASKS/GS-13..28_*.md`.
+   bestehenden `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/gitsuite.nvim/Backlog/{TASKS,FEATURES}/GS-13..28_*.md`.
 3. Mit GS-30 (`lib.nvim.git`: schreibende Primitive) beginnen — alle
    folgenden Phasen bauen darauf auf.
