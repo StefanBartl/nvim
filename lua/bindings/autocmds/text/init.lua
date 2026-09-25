@@ -81,10 +81,15 @@ function M.enable(cfg)
       then
         return
       end
-      local row, col
+      local row, col, view
       if cfg.trim_trailing.preserve_cursor ~= false then
         ---@diagnostic disable-next-line: deprecated
         row, col = unpack(api.nvim_win_get_cursor(0))
+        -- The cursor alone is not enough: the `:substitute` below drags the
+        -- cursor to the last changed line, and setting it back afterwards
+        -- makes nvim scroll that line to the window's top edge. Restoring
+        -- the whole view (topline, leftcol, ...) keeps the screen still.
+        view = vim.fn.winsaveview()
       end
       -- Use a buffer-local :substitute that ignores errors (`e` flag) and is silent.
       -- The pattern `\s\+$` trims any whitespace at the end of lines. Like any
@@ -104,6 +109,10 @@ function M.enable(cfg)
           col = math.min(col, math.max(0, #target_line - 1))
         end
         pcall(api.nvim_win_set_cursor, 0, { row, col })
+        if view then
+          view.lnum, view.col = row, col
+          pcall(vim.fn.winrestview, view)
+        end
       end
     end, {
       group = augroup("trim_trailing"),
@@ -127,10 +136,15 @@ function M.enable(cfg)
       then
         return
       end
-      local row, col
+      local row, col, view
       if cfg.trim_blank.preserve_cursor ~= false then
         ---@diagnostic disable-next-line: deprecated
         row, col = unpack(api.nvim_win_get_cursor(0))
+        -- The cursor alone is not enough: the `:substitute` below drags the
+        -- cursor to the last changed line, and setting it back afterwards
+        -- makes nvim scroll that line to the window's top edge. Restoring
+        -- the whole view (topline, leftcol, ...) keeps the screen still.
+        view = vim.fn.winsaveview()
       end
       -- Substitute leading whitespace on empty lines with nothing.
       -- `^\s*$` matches lines entirely composed of whitespace.
@@ -146,6 +160,10 @@ function M.enable(cfg)
           col = math.min(col, math.max(0, #target_line - 1))
         end
         pcall(api.nvim_win_set_cursor, 0, { row, col })
+        if view then
+          view.lnum, view.col = row, col
+          pcall(vim.fn.winrestview, view)
+        end
       end
     end, {
       group = augroup("trim_blank"),
