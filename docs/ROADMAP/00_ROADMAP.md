@@ -37,14 +37,11 @@
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
 
-- markdown.nvim: `:Markdown format` und dort dann sowas wie "entferne rekursiv oder fett tags" in cfile/buffer/path/cwd/... - da gibt es bestmmt mehrere optionen dafür
-
-
-
-
 - mappings durchchecken
 
 - C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/context_open -> mal ein wenig ausprobieren, und solte es erweitert werden? seit der implementierung sind einige plugins dazu gekommen + features innerhalb der damlas schon bestehenden
+
+- ui,nvim marks: schlieen auich mit doppelt c-e nicht nur mit und esc -> also c-euasi als togglw.
 
 ---
 
@@ -125,8 +122,8 @@
 
   - [ ] $NVIM_CONFIG_DIR/docs\ROADMAP\personal\All\FINISH
   - [ ] vim.fn.stdpath('config') .. /docs/ROADMAP/personal/All/PLUGIN_ROADMAPS_TESTPLAN.md
-  - [loom.ai + ai.nvim](./personal/All/FINISH/Final_Checks/ai/live-testing-plan.md)
-  - [media.nvim](./personal/All/FINISH/Final_Checks/media/live-testing-plan.md)
+  - [loom.ai + ai.nvim](./Final_Checks/ai/live-testing-plan.md)
+  - [media.nvim](./Final_Checks/media/live-testing-plan.md)
 
 ---
 
