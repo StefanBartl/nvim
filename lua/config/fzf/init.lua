@@ -1,10 +1,14 @@
 ---@module 'config.fzf'
----Composed fzf-lua configuration with custom actions
-
-local keymaps = require("config.fzf.keymaps")
-local fzf_opts = require("config.fzf.fzf_opts")
-local grep_cfg = require("config.fzf.grep")
-local files_cfg = require("config.fzf.files")
+---fzf-lua configuration. Only what is genuinely personal lives here; the rest
+---is owned by pickers.nvim and patched onto fzf-lua once it loads:
+---  - excludes for files/grep         -> `find.ignore_list` / `find.exclude`
+---  - entry actions (create_file, …)  -> pickers.entry_actions.patch
+---  - preview scroll, history         -> pickers.keys (fzf's own ctrl-n/ctrl-p
+---                                       history keys are native with --history)
+---  - --cycle, --layout, preview wrap -> `display.*`
+---(ctrl-s/ctrl-v/ctrl-t split/vsplit/tab and grep's ctrl-g are fzf-lua defaults;
+---a top-level `actions = { default = … }` is not read by fzf-lua, which keys
+---global actions per provider, so none is set here.)
 
 local M = {}
 
@@ -13,23 +17,21 @@ function M.get()
   local fzf_actions = require("fzf-lua").actions
 
   return {
-    -- Builtin keymaps
-    keymap = keymaps.get(),
+    fzf_opts = {
+      ["--info"] = "inline",
+    },
 
-    -- fzf command-line options
-    fzf_opts = fzf_opts.get(),
+    files = {
+      fd_opts = "--type f --hidden",
+    },
 
-    -- Per-picker config
-    grep = grep_cfg.get(fzf_actions),
-    files = files_cfg.get(),
-
-    -- Global actions (apply to all pickers). pickers.nvim patches its own
-    -- entry actions (create_file/open_background/cheatsheet/path_copy) in.
-    actions = {
-      ["default"] = fzf_actions.file_edit,
-      ["ctrl-s"] = fzf_actions.file_split,
-      ["ctrl-v"] = fzf_actions.file_vsplit,
-      ["ctrl-t"] = fzf_actions.file_tabedit,
+    grep = {
+      rg_glob = true,
+      glob_flag = "--iglob",
+      silent = true,
+      actions = {
+        ["ctrl-r"] = { fzf_actions.toggle_ignore },
+      },
     },
   }
 end
