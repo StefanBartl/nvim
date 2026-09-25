@@ -165,7 +165,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `<leader>nvt` -- [nvchad] Themes switcher
 - [ ] `<leader>q` -- [Windows] Close window
 - [ ] `<leader>tc` -- [Tabs] New tab
-- [ ] `<leader>tg` -- [Telescope] Grep
+- [ ] `<leader>tg` -- [Pickers] Grep (own prompt)
 - [ ] `<leader>tn` -- [Tabs] Next tab
 - [ ] `<leader>tp` -- [Tabs] Previous tab
 - [ ] `<leader>ts` -- [Telescope] UI

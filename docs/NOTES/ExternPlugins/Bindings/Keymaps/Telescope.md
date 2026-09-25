@@ -50,7 +50,7 @@ davon — jede Zeile ist eine bewusste Config-Entscheidung.
 | Mapping | Aktion | Ziel | Status |
 |---|---|---|---|
 | `<leader>ts` | Telescope-Picker-Übersicht öffnen | `:Telescope` | [custom] |
-| `<leader>tg` | Grep mit eigenem Prompt (`lib.nvim.ui.kit.input`) über `telescope.builtin.grep_string` | Lua-Funktion | [custom] |
+| `<leader>tg` | Grep mit eigenem Prompt (`lib.nvim.ui.kit.input`), danach `pickers.nvim`-Live-Grep im CWD mit dem getippten Text vorbelegt (`pickers.command.handle({ "cwd", "grep" })`, Engine wählt pickers.nvim); nur ohne pickers.nvim Fallback auf `telescope.builtin.grep_string` | Lua-Funktion | [custom] |
 | `<leader>fa` | Find All Files (folgt Symlinks, `no_ignore`, `hidden`) | `:Telescope find_files follow=true no_ignore=true hidden=true` | [custom] |
 | `<leader>,` | File-Browser-Extension am aktuellen **CWD** öffnen (lädt `file_browser` bei Bedarf nach) | Lua-Funktion → `telescope.extensions.file_browser.file_browser({ path = vim.uv.cwd() })` | [custom] |
 
