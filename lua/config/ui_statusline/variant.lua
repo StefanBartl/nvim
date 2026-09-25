@@ -95,7 +95,7 @@ return {
         end,
 
         -- Case short-info (number · company · N replies), empty outside a
-        -- case folder — see lua/bindings/usrcmds/case/.
+        -- case folder — see casedesk.nvim.
         casedesk = function()
           return casedesk()
         end,

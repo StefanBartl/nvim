@@ -1,4 +1,0 @@
-[→ Reply draft]
-
-## Notes
-

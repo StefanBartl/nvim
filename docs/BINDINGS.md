@@ -376,7 +376,7 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
 
 `dir` is where to look for the listed repos, never a folder to enumerate —
-contrast with `:MyReposUpdate` below, which does scan. `mode` requires a
+contrast with `:Reposcope update`, which does scan. `mode` requires a
 restart: `source.lua` is `require()`d once and already baked into the spec
 list lazy-loaded at startup.
 
@@ -386,33 +386,31 @@ list lazy-loaded at startup.
 :MyPlugins picker               " assign different actions to different plugins, run as one batch
 ```
 
-### `:MyReposUpdate` — update every git repo in a directory
+### `:MyReposUpdate`, `:WhoLocks`, `:StripCoauthor` — moved out
 
-Full docs: [`lua/bindings/usrcmds/update_repos/README.md`](../lua/bindings/usrcmds/update_repos/README.md).
+All three left `lua/bindings/usrcmds/` on 2026-09-25:
 
-| Command | Effect |
-| --- | --- |
-| `:MyReposUpdate [path]` | `git fetch --all --prune` + `git pull --ff-only` on every git repo directly under `path` (default `$REPOS_DIR`), sequentially |
-| `:MyReposUpdate [path] --only=<name>` | The same, restricted to the one repo whose directory basename matches |
+- **`:MyReposUpdate [path]`** is superseded by reposcope.nvim's
+  `:Reposcope update [path]` — the same fetch + fast-forward pull over every
+  git repo under a directory (default `$REPOS_DIR`). Only `--only=<name>` has
+  no counterpart there; for a single listed plugin use `:MyPlugins update
+  --only=<name>`.
+- **`:WhoLocks [path] [--json]`** is now filetree.nvim's `:Filetree wholocks
+  [path] [--json]` (`features/infra/who_locks`), next to `handle_guard` and
+  `watcher_quarantine`, which touch the same neo-tree `fs_watch` internals.
+- **`:StripCoauthor`** is now a script, `scripts/strip_coauthor.lua` — workspace
+  tooling for this machine's checkout layout, not config runtime. Needs a real
+  startup (like `docmap_projects.lua`); arguments go after `--`:
 
-Unlike `:MyPlugins update`, `path` is a folder to *enumerate* — every git
-repo found there is touched, not just the ones in the personal-plugin list.
-That is why `$REPOS_DIR`'s non-plugin checkouts (`Notes`, `WKDBooks`, ...)
-are updated by this command and ignored by `:MyPlugins update`.
+  ```
+  nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- scan
+  nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- rewrite --only=<name>
+  nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- push
+  ```
 
-### `:WhoLocks` — diagnose a Windows file lock
+  `push` asks on stdin (`yes`), or takes `--yes`; without stdin it aborts. A
+  `scan` walks every repo's history and takes about a minute per large repo.
 
-Full docs: [`lua/bindings/usrcmds/who_locks/README.md`](../lua/bindings/usrcmds/who_locks/README.md).
-
-| Command | Effect |
-| --- | --- |
-| `:WhoLocks [path]` | Report who is holding `path` (default: the current buffer's file) open |
-| `:WhoLocks [path] --json` | The same findings as one `vim.json.encode`d object |
-
-Run right after a file operation fails with `EBUSY`/`EPERM`/`EACCES`. Measures
-via a live `uv.fs_rename` probe, the Windows Restart Manager (processes
-holding the file), and neo-tree's own `fs_event` watchers — the last one is
-what makes this useful outside any one plugin.
 
 ### `:Bindings` — the picker over this very corpus
 

@@ -108,9 +108,7 @@ require("lazy").setup({
 -- did nothing.
 local startup = require("startup")
 startup.setup_usercmds()
-require("bindings.usrcmds.update_repos").enable()
 require("bindings.usrcmds.plugin_repos").enable()
-require("bindings.usrcmds.who_locks").enable()
 -- :DocMapAll and :RATelemetry* live in documentation.nvim / runtime-analysis
 -- .nvim themselves; see plugins/personal/init.lua's opts.generate_all for the
 -- data this config supplies them.

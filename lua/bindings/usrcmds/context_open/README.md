@@ -100,7 +100,7 @@ deliberately excluded from counting as a real candidate (see
   oriented (cwd/folder/repos/drives) — there is no "picker over an arbitrary
   Lua list" entry point. `kit.select` is the fallback already used in this
   exact situation by `open.nvim`'s own `open.picker` (its opt-in
-  ambiguous-target chooser), `images.nvim`, and `bindings.usrcmds.case`/
+  ambiguous-target chooser), `images.nvim`, and `casedesk.nvim`/
   `bindings_explorer`. `respect_override = true` is used throughout, so a
   `vim.ui.select` override (telescope-ui-select, fzf-lua, dressing.nvim) is
   still picked up automatically if one is active.

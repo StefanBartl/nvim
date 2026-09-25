@@ -1243,10 +1243,8 @@ plugins.add({
   {
     -- casedesk: the `:Case` / `:Cases` / `:Tricentis` command tree for
     -- SAP-Support case work, extracted from this config's former
-    -- lua/bindings/usrcmds/case/** (docs/ROADMAP/casedesk/PLUGIN.md). That
-    -- copy is still on disk but FROZEN -- bindings/usrcmds/init.lua no longer
-    -- calls its enable(). Exactly one of the two may be active; both would
-    -- register :Case twice.
+    -- lua/bindings/usrcmds/case/** (docs/ROADMAP/casedesk/PLUGIN.md); that
+    -- copy was deleted on 2026-09-25.
     --
     -- Eager on purpose. setup() registers the command tree AND starts the SLA
     -- watcher (sla/notify.lua: a background timer plus a FocusGained hook that
@@ -1596,6 +1594,8 @@ plugins.add({
       -- anyway because it fixes the load order rather than borrowing it from
       -- hover.nvim's `lazy = false`.
       "StefanBartl/hover.nvim",
+      -- Provides `casedesk.spell_wordlists` (spell.extra_wordlists below).
+      "StefanBartl/casedesk.nvim",
     },
     config = function()
       require("language").setup({
@@ -1608,10 +1608,10 @@ plugins.add({
           -- flagging it in German notes about plugin development.
           programming_dict = true,
           -- Tricentis/TOSCA support vocabulary, same reasoning — see
-          -- lua/spell_wordlists.lua. Load unconditionally: a few hundred
+          -- casedesk.spell_wordlists (casedesk.nvim). Load unconditionally: a few hundred
           -- `:spellgood!` calls, scheduled off the hot path, is not worth
           -- gating behind machine.is("workstation").
-          extra_wordlists = require("spell_wordlists"),
+          extra_wordlists = require("casedesk.spell_wordlists"),
         },
         -- The commands (:Translate/:TranslateReplace/...) already work with
         -- zero config (engine = "google", keyless, is the plugin's own

@@ -1,5 +1,4 @@
----@module 'bindings.usrcmds.strip_coauthor'
----@brief `:StripCoauthor {scan|rewrite|push} [dir]` — remove the
+---@brief `scripts/strip_coauthor.lua {scan|rewrite|push} [dir] [--only=<name>] [--yes]` — remove the
 ---`Co-Authored-By: Claude` trailer from the commits that carry it, across the
 ---config and the personal plugin checkouts.
 ---@description
@@ -39,15 +38,48 @@
 --- forge by their SHA until it garbage-collects them. Rewriting removes the
 --- trailer from the history everyone will *see*, not from everything that has
 --- ever existed.
+---
+--- **Usage.** Must run through a real startup (`-c "luafile ..."`, not `-l`):
+--- the repository set comes from `plugins.personal.list`, which needs this
+--- config's resolved plugin policy — same constraint as `docmap_projects.lua`.
+--- Arguments go after `--`:
+---
+---     nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- scan
+---     nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- rewrite --only=lib.nvim
+---     nvim --headless -c "luafile scripts/strip_coauthor.lua" -c "qa" -- push
+---
+--- Reports go to stdout. `push` asks on stdin (`yes` to proceed); `--yes`
+--- answers for you. With no stdin it aborts — never a silent force-push.
+--- Moved here from `lua/bindings/usrcmds/strip_coauthor/` (2026-09-25): it is
+--- workspace tooling for this machine's checkout layout, not config runtime.
 
-local notify = require("lib.nvim.notify").create("[usrcmds.strip_coauthor]")
-local composer = require("lib.nvim.bindings.usercmd.composer")
-local ops = require("bindings.usrcmds.plugin_repos.ops")
-local gitx = require("bindings.usrcmds.strip_coauthor.git")
-
-local M = {}
+local script_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h")
+local gitx = dofile(script_dir .. "/strip_coauthor/git.lua")
 
 local fn = vim.fn
+
+---Report through stdout (headless `print` goes to stderr), one block per call.
+---@param text string
+local function out(text)
+  io.stdout:write(text .. "\n")
+end
+
+---@type boolean  Set when any step failed, drives the exit code.
+local had_error = false
+
+local notify = {
+  info = out,
+  warn = function(text)
+    out("WARN: " .. text)
+  end,
+  error = function(text)
+    had_error = true
+    out("ERROR: " .. text)
+  end,
+}
+
+---Resolve `--only=` and the base directory the same way for every verb.
+local ops = { resolve_base_dir = gitx.resolve_base_dir }
 
 -- =============================================================================
 -- Repository set
@@ -143,10 +175,10 @@ local function scan(dir, only)
 
   if affected > 0 then
     lines[#lines + 1] = ""
-    lines[#lines + 1] = "  :StripCoauthor rewrite  schreibt das lokal um (kein Push)"
+    lines[#lines + 1] = "  `rewrite`  schreibt das lokal um (kein Push)"
   elseif pending_total > 0 then
     lines[#lines + 1] = ""
-    lines[#lines + 1] = "  :StripCoauthor push  bringt das nach origin"
+    lines[#lines + 1] = "  `push`  bringt das nach origin"
   end
 
   if failed > 0 then
@@ -219,7 +251,7 @@ local function rewrite(dir, only)
   if pending > 0 then
     lines[#lines + 1] = ""
     lines[#lines + 1] = ("  %d Branch(es) haben auf origin noch die alte History."):format(pending)
-    lines[#lines + 1] = "  :StripCoauthor push  fragt nach und macht den Force-Push."
+    lines[#lines + 1] = "  `push`  fragt nach und macht den Force-Push."
   end
 
   if failed > 0 then
@@ -235,7 +267,7 @@ end
 
 ---@param dir string|nil
 ---@param only string|nil
-local function push(dir, only)
+local function push(dir, only, skip_confirm)
   local repos, err = collect(dir, only)
   if not repos then
     notify.error(tostring(err))
@@ -307,73 +339,40 @@ local function push(dir, only)
 end
 
 -- =============================================================================
--- Command registration
+-- Entry point
 -- =============================================================================
 
----Register `:StripCoauthor {scan|rewrite|push} [dir]`.
----@return nil
-function M.enable()
-  -- `--only=<name>` is validated and completed against the *live* repository
-  -- set on every request rather than a snapshot taken here, the same principle
-  -- `:MyPlugins`'s own name type follows: the set depends on what is checked
-  -- out right now, which registration time cannot know.
-  composer.register_type("STRIPCOAUTHOR_REPO", {
-    validate = function(raw)
-      for _, repo in ipairs(gitx.repos(ops.resolve_base_dir(nil))) do
-        if repo.name == raw then
-          return true, raw, nil
-        end
-      end
-      return false, nil, ("'%s' is not a checked-out repository"):format(raw)
-    end,
-    complete = function(arg_lead)
-      local out = {}
-      for _, repo in ipairs(gitx.repos(ops.resolve_base_dir(nil))) do
-        if arg_lead == "" or repo.name:sub(1, #arg_lead) == arg_lead then
-          out[#out + 1] = repo.name
-        end
-      end
-      return out
-    end,
-  })
+local VERBS = { scan = scan, rewrite = rewrite, push = push }
 
-  local dir_arg = { { name = "dir", type = "DIR", optional = true } }
-  local only_flag = { { name = "only", type = "STRIPCOAUTHOR_REPO" } }
-
-  composer.verb("StripCoauthor", {
-    desc = "Find and remove the Co-Authored-By: Claude trailer across the config and the personal plugin checkouts",
-    routes = {
-      {
-        path = { "scan" },
-        args = dir_arg,
-        flags = only_flag,
-        desc = "Report which repositories, branches and commits carry the trailer, and what is still to push — changes nothing",
-        run = function(ctx)
-          scan(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-
-      {
-        path = { "rewrite" },
-        args = dir_arg,
-        flags = only_flag,
-        desc = "Rebuild the affected commits without the trailer and move the branch refs — local only, never pushes",
-        run = function(ctx)
-          rewrite(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-
-      {
-        path = { "push" },
-        args = dir_arg,
-        flags = only_flag,
-        desc = "Force-push (with lease) the branches whose origin still carries the trailer, after naming every one of them and asking",
-        run = function(ctx)
-          push(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-    },
-  })
+---@return string|nil verb, string|nil dir, string|nil only, boolean yes, string|nil err
+local function parse(argv)
+  local verb, dir, only, yes
+  for _, tok in ipairs(argv) do
+    if tok == "--yes" then
+      yes = true
+    elseif tok:sub(1, 7) == "--only=" then
+      only = tok:sub(8)
+    elseif not verb then
+      verb = tok
+    elseif not dir then
+      dir = tok
+    else
+      return nil, nil, nil, false, ("unexpected argument '%s'"):format(tok)
+    end
+  end
+  if not verb or not VERBS[verb] then
+    return nil, nil, nil, false, "usage: {scan|rewrite|push} [dir] [--only=<name>] [--yes]"
+  end
+  return verb, dir, only, yes == true, nil
 end
 
-return M
+local verb, dir, only, yes, err = parse(fn.argv())
+if not verb then
+  out("ERROR: " .. tostring(err))
+  vim.cmd("cquit 2")
+else
+  VERBS[verb](dir, only, yes)
+  if had_error then
+    vim.cmd("cquit 1")
+  end
+end
