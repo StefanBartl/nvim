@@ -394,6 +394,9 @@ plugins.add({
       require("pickers").setup({
         engine = "snacks",
         repos_dir = repos,
+        -- One exclude list for every engine (lib.nvim.fs.ignore.list), also
+        -- patched onto the native :FzfLua / :Telescope / Snacks pickers.
+        find = { ignore_list = true },
         collections = {
           {
             name = "notes",

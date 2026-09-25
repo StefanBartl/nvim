@@ -7,8 +7,9 @@ local M = {}
 ---@return table
 function M.get(actions)
   return {
-    cmd = "rg --vimgrep --column --line-number --no-heading --color=always --smart-case --max-columns=4096",
-    rg_opts = "-e --glob '!.git/' --glob '!node_modules/' --glob '!.github/' --glob '!dist/' --glob '!package.lock.json'",
+    -- No `cmd`/`rg_opts` here: with a custom `cmd` fzf-lua ignores `rg_opts`,
+    -- so the excludes could never apply. pickers.nvim patches its
+    -- `find.exclude` into fzf-lua's default `rg_opts` instead.
     rg_glob = true,
     glob_flag = "--iglob",
     silent = true,

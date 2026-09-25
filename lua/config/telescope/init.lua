@@ -15,7 +15,6 @@ local M = {}
 
 local actions = require("telescope.actions")
 local files_path_shorten = require("lib.nvim.fs.path_shorten")
-local ignore_list = require("lib.nvim.fs.ignore.list")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 
 local notify = require("lib.nvim.notify").create("[telescope.cfg]")
@@ -62,7 +61,7 @@ function M.defaults()
       return files_path_shorten(path, max_len)
     end,
 
-    file_ignore_patterns = ignore_list.as_telescope_patterns(),
+    -- file_ignore_patterns: patched in by pickers.nvim (`find.exclude`).
     sorting_strategy = "ascending",
     layout_config = { prompt_position = "top" },
     preview = {

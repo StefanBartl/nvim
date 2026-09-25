@@ -5,38 +5,11 @@ local path_shorten = require("lib.nvim.fs.path_shorten")
 
 local M = {}
 
+---fd options for the files picker. The exclude list itself comes from
+---pickers.nvim (`find.ignore_list`, patched onto fzf-lua's `files.fd_opts`).
 ---@return string
 local function build_fd_opts()
-  local parts = {
-    "--type",
-    "f",
-    "--hidden",
-    "--exclude",
-    ".dist",
-    "--exclude",
-    ".git",
-    "--exclude",
-    ".github",
-    "--exclude",
-    "node_modules",
-    "--exclude",
-    "package.lock.json",
-    "--exclude",
-    "yarn.lock",
-    "--exclude",
-    "pnpm-lock.yaml",
-    "--exclude",
-    ".build",
-    "--exclude",
-    "out",
-    "--exclude",
-    "obj",
-    "--exclude",
-    ".tmp",
-    "--exclude",
-    ".vscode",
-  }
-  return table.concat(parts, " ")
+  return "--type f --hidden"
 end
 
 ---@return integer
