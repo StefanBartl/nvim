@@ -10,7 +10,7 @@
 --- plugin declaration by itself (the name alone resolves the GitHub repo),
 --- so this file needs no change to keep menu off.
 ---
---- It is safe to keep off: `config.menu` draws through `lib.nvim.contextmenu`'s
+--- It is safe to keep off: `ui.menu` (ui.nvim) draws through `ui.contextmenu`'s
 --- kit renderer, and a grep for `require("menu")` across the whole plugin
 --- tree comes back empty.
 ---

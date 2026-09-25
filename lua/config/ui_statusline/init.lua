@@ -111,6 +111,24 @@ function M.setup()
         style = "chips",
         chips = { layout = "stack" }, -- trial: one chip per line instead of one shared row; shape = "rounded" stays the default
       },
+      -- The right-click menu (ui.menu, lua/ui/menu/README.md in ui.nvim). Sister
+      -- plugins show up when installed; switch one off with
+      -- `integrations = { lsp = false }` (or in that plugin's own setup).
+      -- `hints` are the mappings shown next to an entry -- mine, not ui.nvim's.
+      menu = {
+        entries = { delete_all = true, delete_file = true },
+        hints = {
+          format = "<leader>fm",
+          code_actions = "<leader>ca",
+          copy_all = "<C-a>",
+          copy_marked = "<C-c>",
+          paste = "<C-v>",
+          delete_marked = "dm",
+          delete_all = "da",
+          delete_file = "df",
+          unicode_table = "uni",
+        },
+      },
     })
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))
     local assembled = require("ui.config").setup({ variant = "personal" })
