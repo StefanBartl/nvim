@@ -32,6 +32,11 @@
   - [Stark, aber Phase 2+](#stark-aber-phase-2)
   - [Spielwiese / später prüfen](#spielwiese--später-prüfen)
 - [Die Regel-Dokumente als Quelle](#die-regel-dokumente-als-quelle)
+- [Bestand: was es schon gibt (Funde 2026-09-25)](#bestand-was-es-schon-gibt-funde-2026-09-25)
+  - [1. `:Insert` in `buffer-ctx.nvim`](#1-insert-in-buffer-ctxnvim-ersetzt-custominsert-der-config)
+  - [2. Fertige Dateien: `Notes/Templates`](#2-fertige-dateien-notestemplates)
+  - [3. Weitere Fundstellen](#3-weitere-fundstellen)
+  - [Folgerungen für dieses Konzept](#folgerungen-für-dieses-konzept)
 - [Phasen](#phasen)
 - [Checklisten-Abgleich (NEW_PROJECT)](#checklisten-abgleich-new_project)
 - [Risiken / Komplexitätstreiber](#risiken--komplexitätstreiber)
@@ -537,6 +542,109 @@ Diese **nicht abtippen**. Stattdessen ein Source-Adapter
 Effekt: Die Bibliothek startet nicht bei null, und die Regel-Dokumente bleiben
 die **einzige Quelle der Wahrheit** — keine Kopie, die auseinanderläuft.
 
+## Bestand: was es schon gibt (Funde 2026-09-25)
+
+Vor dem Bau geprüft, was an Templates, Captions und Snippets bereits
+existiert — in der Config-History, in `buffer-ctx.nvim` und in `Notes`. Kurzfassung:
+**verloren ist nichts, aber es liegt an drei Orten, und die fertigen
+Pattern-Dateien waren nie an ein Einfüge-Werkzeug angebunden.** Das ist genau
+die Lücke, die `blueprint.nvim` schließt.
+
+### 1. `:Insert` in `buffer-ctx.nvim` (ersetzt `custom.insert` der Config)
+
+Die Config hatte bis 2026-06-23 ein eigenes `lua/custom/insert/` (Commit
+`4480b751`, „buffer-ctx.nvim implementiert", ~3.700 Zeilen entfernt; davor
+`lua/usrcmds/templates/`, Commit `ddeaee8f` 2026-01-06). Alles davon lebt in
+`$REPOS_DIR/buffer-ctx.nvim` weiter, Quelle der Wahrheit für die Doku:
+`docs/commands.md` dort.
+
+| `:Insert …` | Ergebnis |
+|---|---|
+| `filepath`, `mdlink`, `filename`, `location` | Pfad, `[title](path)`, Dateiname, `path:line` |
+| `module`, `annotation` | Lua `require(…)` / `---@module`, LuaLS-Annotationen |
+| `timestamp`, `date`, `uuid` | Zeitstempel, UUID v4 in mehreren Stilen |
+| `env`, `git`, `linecount`, `bufnr` | Umgebungsvariable, Git-Revision, Zeilenzahl, Buffer-Nr. |
+| `boilerplate [template] [name]` | **Mehrzeilige Code-Templates**, ohne Argument ein Picker |
+| `snippet [name]` | Snippets im **VSCode-Format** (JSON), ohne Argument ein Picker |
+
+Eingebaute `boilerplate`-Templates (`lua/buffer_ctx/ops/boilerplate/templates/`):
+
+- **Lua:** `module`, `class`, `func`, `test`, `enum`
+- **Neovim:** `autocmd`, `keymap`
+- **Guards:** `guard`, `guard_interactive`
+- **Markdown:** nur `frontmatter`
+- **HTML-Captions/Blöcke:** `figure`, `code`, `quote`, `formula_table`, `aside`,
+  `pagination`, `accordion` — das sind die 7 Vorlagen aus dem alten
+  `lua/usrcmds/templates/html/` (Commit `89fbbb04`, 2025-10-31) — plus neu
+  `table` und `section`. Mit Markdown-Captions sind vermutlich diese
+  `<figure>`-Blöcke gemeint; eigene Markdown-Caption-Templates gab es in der
+  History nicht.
+
+**Grenzen, an denen `blueprint.nvim` ansetzt:**
+
+- Die Templates sind **im Plugin-Code fest verdrahtet** (Lua-Funktionen), nicht
+  als Dateien in einer Bibliothek — neue Bausteine bedeuten Code ändern.
+- `snippet` liest nur VSCode-JSON, expandiert keine Tabstops und hat in der
+  Config **keine Pfade** gesetzt (`opts = {}` in `lua/plugins/personal/init.lua`,
+  also leere `snippets.paths`).
+- Kein Metadaten-Modell (Beschreibung, Keywords, Sprache, Regel-Rückverweis),
+  keine Vorschau, keine Sprach-Sortierung.
+
+### 2. Fertige Dateien: `Notes/Templates`
+
+`$REPOS_DIR/Notes/Templates/` (204 Dateien) — das sind die „ganzen Files als
+Vorlage":
+
+| Ort | Inhalt |
+|---|---|
+| `GangOfFour/designpatterns/creational/` | `abstractfactory.ts`, `builder.ts`, `factory.ts`, dazu `staticmethod_class.ts`; Next.js-Projekt (`src/app/designpatterns/`) — bisher **nur TypeScript**, keine Mehrsprachigkeit |
+| `Web/JavaScript/Design Patterns`, `Web/TypeScript`, `Web/NodeJS`, `Web/WebComponents` | JS/TS-Beispiele |
+| `Skeletons/` | `CSS`, `NEXT_JS`, `NEXT_TS_SASS_Translate` |
+| `Lua/` | `debug`, `hover_select` |
+| `Docker/`, `Git/`, `Colors/`, `prettier_template/` | Projekt-/Tool-Vorlagen |
+| Einzeldateien | `AI-Prompt.md`, `Chatregeln.md`, `EBNF.md`, `VORLAGE-Thema.md`, `VORLAGE-Languages.md`, Übersetzungsregeln |
+
+**In der ganzen Config-History gibt es keinen Verweis auf `Notes/Templates`**
+(geprüft in `main` und in `origin/main-history-before-24July2026`). Diese Dateien
+waren also nie an `:Insert` oder einen Picker angebunden.
+
+### 3. Weitere Fundstellen
+
+- Pattern-**Texte** (Prosa, keine einfügbaren Dateien):
+  `WKDBooks/Development/wkdbook-SoftwareDevelopment/Architektur/DesignPattern`,
+  `wkdbook-C++/Entwurfsmuster/DesignPattern.md`,
+  `wkdbook-Nodejs/…/00_ReactorDesignPattern.md`.
+- Projekt-/Dokument-Vorlagen an anderen Orten: `casedesk.nvim/lua/casedesk/templates`
+  (Case-Antworten), `WKDBooks/Development/wkdbook-myplugins/TEMPLATES`,
+  `WKDBook-Tricentis/Workflow/Templates`, `WKDBook-Tricentis/MyDomains/Tosca/HTML_TEMPLATES`,
+  `filetree.nvim` (`create_from_template`, Datei-Vorlagen beim Anlegen).
+- Alte Config-Spuren: `lua/custom/mynotes/specs/*` (Spickzettel-Specs, keine
+  Templates), `docs/BUGS/TEMPLATES/*` (Bug-/Modul-Vorlagen).
+
+### Folgerungen für dieses Konzept
+
+1. **Nichts neu erfinden, was `:Insert boilerplate` schon kann.** `blueprint.nvim`
+   löst die *Bibliotheks-Ebene* (Dateien + `meta.lua`, mehrere Sprachen, Suche,
+   Vorschau). Die Kurz-Einfüger (`filepath`, `uuid`, `timestamp` …) bleiben in
+   `buffer-ctx.nvim`.
+2. **Migration als Startbestand:** die fest verdrahteten `boilerplate`-Templates
+   (Lua, Neovim, HTML-Captions, Guards) sind der natürliche erste Inhalt der
+   Bibliothek — als Dateien, nicht als Lua-Funktionen. `buffer-ctx.nvim` könnte
+   danach `:Insert boilerplate` an `blueprint.nvim` delegieren, statt eine
+   zweite Engine zu halten (vgl. Abschnitt *Wiederverwendung*).
+3. **`Notes/Templates` als erste Quelle (`sources`).** Ohne Umbau einbindbar,
+   sobald die Sources-Schicht steht; die Design-Patterns dort (`creational/`)
+   sind der Kern der Kategorie `patterns`. Für die geforderte Mehrsprachigkeit
+   müssten die Patterns in weiteren Sprachen (Lua, JS, …) erst noch angelegt
+   werden — der Bestand ist reines TypeScript.
+4. **Übergangslösung ohne neues Plugin:** VSCode-Snippet-JSON erzeugen und in
+   `buffer-ctx.nvim`s `snippets.paths` eintragen. Lohnt sich nur für kleine
+   Einzelbausteine; ganze Dateien passen nicht in dieses Format.
+5. **Zu klären:** `:Insert template` als Subcommand von `buffer-ctx.nvim`
+   (Picker über einen Ordner, ganze Datei einfügen) wäre der kleinste
+   Zwischenschritt — dann aber bewusst als Vorstufe von `blueprint.nvim`
+   planen, nicht als zweite Insellösung.
+
 ## Phasen
 
 **Phase 0 — MVP (lauffähig, nützlich)**
@@ -600,6 +708,9 @@ Komposition · Export/PDF · Kontext-Vorschlag.
    Langbeschreibung.
 3. **Ort der Bibliothek.** `Notes`-Repo (git-synchron, aber Notes wird groß)
    vs. eigenes Repo `templates` vs. `stdpath("config")/templates`.
+   Stand 2026-09-25: `Notes/Templates` existiert bereits mit 204 Dateien und
+   den TS-Design-Patterns (siehe [Bestand](#bestand-was-es-schon-gibt-funde-2026-09-25)) —
+   spricht dafür, es als erste `source` einzubinden statt umzuziehen.
 4. **Kategorie-Taxonomie.** Fix vorgeben (`patterns`, `perf`, `module`,
    `idioms`, `misc`) oder komplett frei? Frei ist erweiterbarer, fix ist
    auffindbarer. Vorschlag: frei, aber `check` warnt bei Kategorien mit nur
