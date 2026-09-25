@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"__NVIM_CONFIG__/docs/NOTES/CDX/check-lua-hook.js\""
+            "command": "node \"__NVIM_CONFIG__/docs/NOTES/CDX/check-hook.js\""
           }
         ]
       }

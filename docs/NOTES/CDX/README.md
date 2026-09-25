@@ -16,7 +16,11 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
 |------------------------------|------------------------------------------------------------------------|
 | `CLAUDE.global.md`           | Quelle der Wahrheit fuer `~/.claude/CLAUDE.md` (Verhaltensregeln, Konventionen) |
 | `settings.global.json`       | Quelle der Wahrheit fuer `~/.claude/settings.json` (Permissions-Allowlist + Hooks) |
-| `check-lua-hook.js`          | Vom PostToolUse-Hook aufgerufenes Skript: prueft `.lua`-Dateien nach jedem Edit/Write mit `stylua --check` + `luacheck` |
+| `check-hook.js`              | Vom PostToolUse-Hook aufgerufener Dispatcher: prueft je nach Endung `.lua` (stylua+luacheck), `.rs` (rustfmt), C/C++ (clang-format, nur mit `.clang-format`), `.ts/.js/.css/.json` (projektlokales prettier) |
+| `setup-devtools.js` + `tools.json` | Installiert fehlende Toolchains pro Profil (`nvim`, `cpp`, `rust`, `web`, `tauri`) via winget/apt/brew. `node setup-devtools.js --profile nvim,rust --dry-run` |
+| `new-project-claude.js`      | Kopiert die Projekt-Vorlage aus `templates/<stack>/` (`CLAUDE.md` + `.claude/settings.json`) in ein Repo: `node new-project-claude.js rust [zielordner]` |
+| `templates/`                 | Vorlagen je Stack: `nvim-plugin`, `rust`, `cpp`, `tauri`, `web` |
+| `KONZEPT-multi-stack.md`     | Begruendung/Architektur der drei Schichten |
 | `merge-claude-settings.js`   | Gemeinsame Merge-Logik fuer `settings.json`, von beiden Setup-Skripten unten aufgerufen (verhindert, dass Windows- und Unix-Skript bei dieser Logik auseinanderlaufen) |
 | `setup-claude-code.ps1`      | Windows: rollt die Vorlagen oben nach `~/.claude/` aus. Idempotent. |
 | `setup-claude-code.sh`       | Linux/macOS: dasselbe wie oben, plus `~/.claude/env.sh` fuer die Env-Variablen. Idempotent. |
@@ -35,7 +39,7 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
   bleiben erhalten, die Vorlage wird nur ergaenzt (Allowlist-Eintraege
   vereinigt, Hooks nur hinzugefuegt, wenn noch nicht vorhanden). Vor jedem
   Schreiben wird ein Backup `settings.json.bak-<timestamp>` angelegt.
-  Braucht `node` auf PATH (wird eh fuer `check-lua-hook.js` gebraucht).
+  Braucht `node` auf PATH (wird eh fuer `check-hook.js` gebraucht).
 - **Env-Variablen**: `$NVIM_CONFIG` wird automatisch aus dem Speicherort
   dieses Skripts ermittelt. `$REPOS_DIR` ist pro Maschine unterschiedlich
   (z. B. `B:\repos` hier, ggf. andere Pfade auf Heim-PC/Workstation) und wird
@@ -49,12 +53,20 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
     Datei jeweils existiert), falls dort noch nicht vorhanden. Gilt ab der
     naechsten Shell bzw. `source ~/.claude/env.sh`.
 
+## Drei Schichten (Multi-Stack)
+
+1. **Claude-Setup** (`setup-claude-code.*`): globale `CLAUDE.md` (stack-neutral) + `settings.json`.
+2. **Toolchains** (`setup-devtools.js`): Programme pro Profil installieren (winget; MSVC primaer, clang als Fallback). Gewaehlte Profile landen in `~/.claude/devtools.profile`.
+3. **Projekt-Konfig** (`new-project-claude.js`): stack-spezifische `CLAUDE.md` + Allowlist pro Repo, im Repo versioniert.
+
+Neues Repo einrichten: `node $NVIM_CONFIG/docs/NOTES/CDX/new-project-claude.js <stack>` im Repo-Root, dann committen.
+Wichtig: Die Lua-/Plugin-Regeln stehen nicht mehr global, sondern in `templates/nvim-plugin/CLAUDE.md` - jedes Plugin-Repo einmal mit `new-project-claude.js nvim-plugin` ausstatten.
+
 ## Was die Hooks konkret machen
 
 `settings.global.json` registriert einen `PostToolUse`-Hook auf
-`Edit|Write`: Nach jedem Datei-Edit prueft `check-lua-hook.js`, ob die
-betroffene Datei auf `.lua` endet, und laesst dann `stylua --check` sowie
-`luacheck` darueber laufen. Schlaegt eine der beiden Pruefungen fehl, bricht
+`Edit|Write`: Nach jedem Datei-Edit prueft `check-hook.js` anhand der Dateiendung und laesst die
+passenden Checks darueber laufen (bei `.lua`: `stylua --check` und `luacheck`). Schlaegt eine der beiden Pruefungen fehl, bricht
 der Hook mit Exit-Code 2 ab - Claude bekommt die Fehlermeldung direkt
 zurueckgespielt und muss die Datei korrigieren, bevor es weitergeht. Das
 erzwingt technisch, was in `CLAUDE.global.md` als Regel steht ("Code muss
@@ -130,6 +142,6 @@ Secret-Manager-Eintrag.
   funktionieren unprivilegierte Symlinks immer, `setup-claude-code.sh` hat
   daher keinen Kopie-Fallback.
 - Beide Setup-Skripte brauchen `node` auf PATH (fuer den Settings-Merge und
-  fuer `check-lua-hook.js`). `stylua`/`luacheck` sind nur fuer den Hook
+  fuer `check-hook.js`). `stylua`/`luacheck` sind nur fuer den Hook
   noetig - fehlen sie auf einer Maschine, wird der jeweilige Check
-  uebersprungen statt hart zu blockieren (siehe `check-lua-hook.js`).
+  uebersprungen statt hart zu blockieren (siehe `check-hook.js`).

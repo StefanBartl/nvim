@@ -98,4 +98,11 @@ node "$SCRIPT_DIR/merge-claude-settings.js" \
   "$NVIM_CONFIG"
 
 echo
+echo "[optional] Dev-Toolchains (nvim/cpp/rust/web/tauri) installieren?"
+read -r -p "  Profile kommagetrennt (z.B. nvim,rust,web) oder leer zum Ueberspringen: " PROFILES
+if [ -n "$PROFILES" ]; then
+  node "$SCRIPT_DIR/setup-devtools.js" --profile "$PROFILES"
+fi
+
+echo
 echo "Fertig."

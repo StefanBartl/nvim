@@ -1,0 +1,35 @@
+{
+  "_comment": "Package table for setup-devtools.js. 'check' = command looked up on PATH (or 'vswhere' for MSVC). 'fallbackFor' = only installed when the named tool is still missing afterwards. 'manual' = hint printed when no package exists for the OS.",
+  "implies": {
+    "tauri": ["rust", "web"]
+  },
+  "tools": [
+    { "name": "git", "profiles": ["core"], "check": "git", "winget": "Git.Git", "apt": "git", "brew": "git" },
+    { "name": "node", "profiles": ["core"], "check": "node", "winget": "OpenJS.NodeJS.LTS", "apt": "nodejs", "brew": "node" },
+    { "name": "ripgrep", "profiles": ["core"], "check": "rg", "winget": "BurntSushi.ripgrep.MSVC", "apt": "ripgrep", "brew": "ripgrep" },
+    { "name": "fd", "profiles": ["core"], "check": "fd", "winget": "sharkdp.fd", "apt": "fd-find", "brew": "fd" },
+
+    { "name": "neovim", "profiles": ["nvim"], "check": "nvim", "winget": "Neovim.Neovim", "apt": "neovim", "brew": "neovim" },
+    { "name": "stylua", "profiles": ["nvim"], "check": "stylua", "winget": "JohnnyMorganz.StyLua", "brew": "stylua", "manual": "cargo install stylua" },
+    { "name": "lua-language-server", "profiles": ["nvim"], "check": "lua-language-server", "winget": "LuaLS.lua-language-server", "brew": "lua-language-server" },
+    { "name": "luacheck", "profiles": ["nvim"], "check": "luacheck", "manual": "luarocks install luacheck (kein winget-Paket; ggf. lua+luarocks vorher installieren)" },
+
+    { "name": "cmake", "profiles": ["cpp"], "check": "cmake", "winget": "Kitware.CMake", "apt": "cmake", "brew": "cmake" },
+    { "name": "ninja", "profiles": ["cpp"], "check": "ninja", "winget": "Ninja-build.Ninja", "apt": "ninja-build", "brew": "ninja" },
+    {
+      "name": "msvc",
+      "profiles": ["cpp"],
+      "check": "vswhere",
+      "winget": "Microsoft.VisualStudio.2022.BuildTools",
+      "wingetOverride": "--passive --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended",
+      "osOnly": "win32"
+    },
+    { "name": "clang", "profiles": ["cpp"], "check": "clang-format", "winget": "LLVM.LLVM", "apt": "clang clang-format", "brew": "llvm", "fallbackFor": "msvc" },
+
+    { "name": "rustup", "profiles": ["rust"], "check": "cargo", "winget": "Rustlang.Rustup", "brew": "rustup", "manual": "curl https://sh.rustup.rs -sSf | sh" },
+
+    { "name": "pnpm", "profiles": ["web"], "check": "pnpm", "winget": "pnpm.pnpm", "brew": "pnpm", "manual": "npm install -g pnpm" },
+
+    { "name": "webview2", "profiles": ["tauri"], "check": "webview2", "winget": "Microsoft.EdgeWebView2Runtime", "osOnly": "win32" }
+  ]
+}

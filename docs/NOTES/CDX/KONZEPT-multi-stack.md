@@ -1,6 +1,6 @@
 # Konzept: Claude-Code-Setup fuer mehrere Stacks (Nvim / C++ / Rust / Web / Tauri)
 
-Status: Entwurf, noch nicht umgesetzt. Ergaenzt `README.md` in diesem Ordner.
+Status: umgesetzt (2026-09-25). Abweichungen: `setup-devtools` und `new-project-claude` sind Node-Skripte (ein Code fuer alle OS) statt ps1/sh; der Hook-Dispatcher enthaelt nur schnelle Checks, ein Stop-Hook fuer `clippy` ist noch offen. Entscheidungen: winget, MSVC (Fallback clang), Neovim-Installation ueber winget im Profil `nvim`. Ergaenzt `README.md` in diesem Ordner.
 
 ## Projekte und Stacks
 
