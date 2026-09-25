@@ -7,6 +7,7 @@
     - [Generel](#generel)
     - [nvim-config](#nvim-config)
     - [wkd](#wkd)
+    - [https://github.com/StefanBartl updaten - schon relativ alt](#httpsgithubcomstefanbartl-updaten-schon-relativ-alt)
     - [sessions.nvim:](#sessionsnvim)
     - [Cross-Plugin](#cross-plugin)
       - [Konkurrenzanalyse](#konkurrenzanalyse)
@@ -35,13 +36,11 @@
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
-- `documentation.nvim` && `docmap-explorer`: Könnten die Informationen von `github_stats.nvim` einbindne und verwenden, sofern der user es installiert hat.
 
-- markdown.nvim: `:Markdown format` und dort dann sowas wie "entferne rekursiv oider fett" in cfile/buffer/path/cwd/... - da gibt es bestmmt mehrere optionen dafür
+- markdown.nvim: `:Markdown format` und dort dann sowas wie "entferne rekursiv oder fett tags" in cfile/buffer/path/cwd/... - da gibt es bestmmt mehrere optionen dafür
 
-- wo sind meine ganzern templates hin, ich hatte "snippets" für viele fileformate wie zb markdown captions zum eifnügen via custmn usrcmd, aber auch Design patterns als ganze files angelegt um sie dann als snippets zu verwenden, Design patterns in mehreren sprachen usw. Ein teil davn ist in filetree.nvim `Actual aber nich sowas wie die captions die ich erwäühnte`
 
-- `filetree.nvim`: `leader tf / leader tg` -> binden telescope/fzf-lua ein, sollten aber pickers.nvim einbinden
+
 
 - mappings durchchecken
 
@@ -66,8 +65,11 @@
 
 - mobile optimierung
 - umschalten zwische featureviews optimieren
+- Docmap-desktop Kachel: `The kind of shell Tosca Commander or Blender put in front of a project`
 
 ---
+
+### https://github.com/StefanBartl updaten - schon relativ alt
 
 ### sessions.nvim:
 
@@ -78,6 +80,8 @@
 ### Cross-Plugin
 
 - `lib.nvim` Module -> ALle Plugins nochmal checken, ob Module/Funktionen implementieren, welche die `lib.nvim` beretis bereitsetellt oder bereitstellen sollte. Das wurde vor ein/zwei Monaten schonmal gemacht, in der Zwischnezit wurde aber viel neu gemacht. Report hierher schreiebn: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
+
+- Von welchen meiner `.nvim`-Plugins ist eine CLI-Version denkbar? `reposcope.nvim`, `gitsuite.nvim`,...
 
 ---
 
