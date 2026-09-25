@@ -86,4 +86,4 @@ Nicht als Command, sondern direkt aus Keymaps/Menu-Einträgen aufgerufen — sie
 - `<leader>fm` (global, [lua/bindings/mappings/general.lua](../../../../../lua/bindings/mappings/general.lua))
 - `<leader>fm` (buffer-lokal, überschrieben für `markdown`/`mdx`)
 - `<leader>aF` (buffer-lokal, nur `astro`)
-- Menu-Eintrag "Format Buffer" in [lua/config/menu/custom_menu/init.lua](../../../../../lua/config/menu/custom_menu/init.lua)
+- Menu-Eintrag "Format Buffer" in `ui.menu` (ui.nvim, `lua/ui/menu/sections.lua`; die Config-Version `lua/config/menu/` ist seit 2026-09-25 gelöscht)
