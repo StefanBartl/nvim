@@ -9,7 +9,6 @@ local M = {}
 function M.get()
   return {
     ["--ansi"] = "",
-    ["--cycle"] = "",
     ["--info"] = "inline",
     ["--multi"] = "",
   }

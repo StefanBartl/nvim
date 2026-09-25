@@ -397,6 +397,9 @@ plugins.add({
         -- One exclude list for every engine (lib.nvim.fs.ignore.list), also
         -- patched onto the native :FzfLua / :Telescope / Snacks pickers.
         find = { ignore_list = true },
+        -- Prompt on top, wrap-around navigation, no preview line wrapping --
+        -- on every engine, native pickers included.
+        display = { cycle = true, prompt_top = true, preview_wrap = false },
         collections = {
           {
             name = "notes",
