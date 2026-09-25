@@ -1,11 +1,11 @@
 # Gitsigns — Autocmds
 
 Registriert über
-[lua/autocmds/git/init.lua](../../../../../lua/autocmds/git/init.lua)
-(`require('autocmds.git').enable(cfg)`, aufgerufen mit `cfg = true` aus
-[lua/autocmds/init.lua](../../../../../lua/autocmds/init.lua) — d.h. es
+[lua/bindings/autocmds/git/init.lua](../../../../../lua/bindings/autocmds/git/init.lua)
+(`require('bindings.autocmds.git').enable(cfg)`, aufgerufen mit `cfg = true` aus
+[lua/bindings/autocmds/init.lua](../../../../../lua/bindings/autocmds/init.lua) — d.h. es
 gelten die Defaults aus
-[lua/autocmds/git/defaults.lua](../../../../../lua/autocmds/git/defaults.lua)
+[lua/bindings/autocmds/git/defaults.lua](../../../../../lua/bindings/autocmds/git/defaults.lua)
 unverändert).
 
 Beide Autocmds sind **[custom]** — gitsigns selbst registriert intern eigene
@@ -17,8 +17,8 @@ config-eigene Wrapper, die gezielt `require("gitsigns").refresh()` bzw.
 
 | Gruppe | Event(s) | Quelle | Zweck | Status |
 |---|---|---|---|---|
-| `gitsigns_refresh` | `BufEnter`, `FocusGained` (konfigurierbar via `gitsigns_refresh.events`) | [autocmds/git/gitsigns_refresh.lua](../../../../../lua/autocmds/git/gitsigns_refresh.lua) | Ruft `gitsigns.refresh()` auf, damit die Sign-Spalte nach Fokuswechsel/Buffer-Wechsel aktuell bleibt. **Aktiv** (`enable = true` im Default). | [custom] |
-| `blame_on_hold` | `CursorHold` | [autocmds/git/blame_on_hold.lua](../../../../../lua/autocmds/git/blame_on_hold.lua) | Zeigt Inline-Blame via `gitsigns.blame_line({ full = false, ignore_whitespace = true, virt_text = … })` für die Zeile unter dem Cursor. Buftype-Ausschluss über `ignore_buftypes` (Default `{ "nofile", "prompt" }`), optionale Verzögerung über `delay`. **Inaktiv per Default** (`enable = false` in `defaults.lua`) — wird also derzeit nicht ausgeführt, obwohl der Code registriert würde, sobald `enable = true` gesetzt wird. | [custom] |
+| `gitsigns_refresh` | `BufEnter`, `FocusGained` (konfigurierbar via `gitsigns_refresh.events`) | [autocmds/git/gitsigns_refresh.lua](../../../../../lua/bindings/autocmds/git/gitsigns_refresh.lua) | Ruft `gitsigns.refresh()` auf, damit die Sign-Spalte nach Fokuswechsel/Buffer-Wechsel aktuell bleibt. **Aktiv** (`enable = true` im Default). | [custom] |
+| `blame_on_hold` | `CursorHold` | [autocmds/git/blame_on_hold.lua](../../../../../lua/bindings/autocmds/git/blame_on_hold.lua) | Zeigt Inline-Blame via `gitsigns.blame_line({ full = false, ignore_whitespace = true, virt_text = … })` für die Zeile unter dem Cursor. Buftype-Ausschluss über `ignore_buftypes` (Default `{ "nofile", "prompt" }`), optionale Verzögerung über `delay`. **Inaktiv per Default** (`enable = false` in `defaults.lua`) — wird also derzeit nicht ausgeführt, obwohl der Code registriert würde, sobald `enable = true` gesetzt wird. | [custom] |
 
 ---
 
@@ -33,7 +33,7 @@ config-eigene Wrapper, die gezielt `require("gitsigns").refresh()` bzw.
   `vim.defer_fn` verzögert, sonst synchron im `CursorHold`-Callback
   ausgeführt.
 - Beide Submodule laufen unter derselben Orchestrierung wie `commit_ft`
-  (siehe [autocmds/git/init.lua](../../../../../lua/autocmds/git/init.lua));
+  (siehe [autocmds/git/init.lua](../../../../../lua/bindings/autocmds/git/init.lua));
   `commit_ft` selbst ist aber allgemeines `gitcommit`-Filetype-Tuning (Spell,
   Textwidth, `startinsert`, …) und nicht gitsigns-spezifisch — daher hier
   nicht aufgeführt.
