@@ -5,14 +5,12 @@
 --- - Single point of configuration with pcall guards (no hard crashes on API shifts).
 --- - Explicit module enablement (opt-in) for predictable behavior.
 --- - Picker is the engine behind pickers.nvim (`engine = "snacks"`); its
----   in-picker keys come from `config.snacks.picker`, not from a snacks-only copy.
+---   in-picker keys are patched in by pickers.nvim, not from a snacks-only copy.
 --- - Keymaps use a safe dispatcher to avoid runtime errors when submodules change.
 ---
 --- No dashboard: snacks.dashboard is left at its default (off), and the former
 --- `config.snacks.custom_dashboard` module tree (sessions section, autocmds,
 --- :SnacksOpen) has been removed. Startup shows no dashboard at all.
-
-local picker_config = require("config.snacks.picker")
 
 ---@type table
 return {
@@ -26,12 +24,6 @@ return {
     "folke/snacks.nvim",
     lazy = false,
     priority = 1000,
-    -- Forces lazy.nvim to load pickers.nvim before this spec's opts() runs,
-    -- since opts() pulls in-picker actions/keys from pickers.nvim (see
-    -- config.snacks.picker). Without this, priority alone doesn't guarantee
-    -- order against pickers.nvim's lower/default priority.
-    dependencies = { "StefanBartl/pickers.nvim" },
-
     ---@param _ any
     ---@return Plugins.Snacks.Setup|table
     opts = function(_)
@@ -57,7 +49,11 @@ return {
         bigfile = { enabled = false },
         notifier = { enabled = false },
 
-        picker = picker_config.get_config(),
+        -- In-picker keys/actions come from pickers.nvim, which patches them
+        -- into Snacks.config.picker itself (pickers.entry_actions.patch).
+        -- No line wrapping in the preview (like Telescope): this belongs on
+        -- the preview WINDOW's `wo`, not on `picker.preview` (the previewer).
+        picker = { enabled = true, win = { preview = { wo = { wrap = false } } } },
       }
       return cfg
     end,

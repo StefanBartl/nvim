@@ -11,10 +11,6 @@ local M = {}
 ---@return table
 function M.get()
   local fzf_actions = require("fzf-lua").actions
-  -- Deferred (not a module-top-level require): this module is itself
-  -- required eagerly from plugins/fzf.lua's spec top level, before
-  -- lazy=false plugins like pickers.nvim have been loaded onto the path.
-  local entry_actions = require("pickers.entry_actions.adapters.fzf")
 
   return {
     -- Builtin keymaps
@@ -27,14 +23,14 @@ function M.get()
     grep = grep_cfg.get(fzf_actions),
     files = files_cfg.get(),
 
-    -- Global actions (apply to all pickers)
-    actions = vim.tbl_extend("force", {
-      -- Default actions
+    -- Global actions (apply to all pickers). pickers.nvim patches its own
+    -- entry actions (create_file/open_background/cheatsheet/path_copy) in.
+    actions = {
       ["default"] = fzf_actions.file_edit,
       ["ctrl-s"] = fzf_actions.file_split,
       ["ctrl-v"] = fzf_actions.file_vsplit,
       ["ctrl-t"] = fzf_actions.file_tabedit,
-    }, entry_actions.get_actions()),
+    },
   }
 end
 
