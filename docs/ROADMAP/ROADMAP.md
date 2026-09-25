@@ -43,14 +43,6 @@
 
 - `filetree.nvim`: `leader tf / leader tg` -> binden telescope/fzf-lua ein, sollten aber pickers.nvim einbinden
 
-- nvim/config/autocmds -> nvim/config/bindings/autocmds moven
-- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/strip_coauthor -> sollte das nicht zu den TOOLS ausgeglkiedert werden
-- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/update_repos -> wurde das nicht durch `MyPlugins` abeglöst?
-- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/who_locks
-- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/case -> wurd darasu nicht casedesk.nvim und kann entfernt werden?
-- C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/bindings_audit -> wäre das nmicht ein `lib.nvim` Tool?
-- würde das C:/Users/Bernhard/AppData/Local/nvim/lua/spell_wordlists.lua nicht mehr nach casedesk.nvim passen thematisch oder WKDBook-Tricentis?
-
 - mappings durchchecken
 
 - C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/context_open -> mal ein wenig ausprobieren, und solte es erweitert werden? seit der implementierung sind einige plugins dazu gekommen + features innerhalb der damlas schon bestehenden
