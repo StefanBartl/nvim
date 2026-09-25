@@ -24,7 +24,7 @@ function M.setup()
   require("sessions.bindings.keymaps").attach({
     marks_menu = "<leader>hm",
     -- Capitalized, not `<leader>he`: that would be a strict prefix of the
-    -- already-bound `<leader>help` (config/snacks/mappings/standard.lua),
+    -- already-bound `<leader>help` (plugins/personal/init.lua pickers `mappings`),
     -- forcing a `timeoutlen` wait on every press before Neovim can tell the
     -- two apart. Same bug class as the `<leader>ffk`/`<leader>ff` collision
     -- fixed in bindings/mappings/fzf.lua -- same fix, capitalize to break it.

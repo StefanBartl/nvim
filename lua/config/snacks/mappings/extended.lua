@@ -1,6 +1,6 @@
 ---@module 'config.snacks.mappings.extended'
---- Keymap definitions for the optional Snacks submodules that are actually
---- enabled in `plugins/snacks.lua`: debug and quickfile.
+--- Keymap definitions for the Snacks submodules that are actually enabled in
+--- `plugins/snacks.lua` (debug, quickfile) plus the explorer.
 --- Expose keys() which returns the array expected by the plugin spec.
 ---
 --- This file used to bind keys for `dim`, `profiler`, `scope` and `scratch`
@@ -52,6 +52,18 @@ function M.keys()
       safe_call("debug", "toggle")
     end,
     desc = "Snacks Debug: Toggle Overlay",
+  }
+  -- Not a picker (snacks' tree explorer), so it stays a direct snacks key; every
+  -- picker key lives in pickers.nvim's `mappings` (plugins/personal/init.lua).
+  maps[4] = {
+    "<leader>F",
+    function()
+      local ok, snacks = pcall(require, "snacks")
+      if ok then
+        snacks.explorer()
+      end
+    end,
+    desc = "[snacks] File Explorer",
   }
   maps[3] = {
     "<leader>uq",
