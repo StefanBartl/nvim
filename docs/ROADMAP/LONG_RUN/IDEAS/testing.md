@@ -1785,7 +1785,9 @@ rücken nach vorn. Aufwände sind grobe Personentage für einen Entwickler mit
 #### D.9.0 Sofortmaßnahmen (ohne spec.nvim, je < 1 Tag)
 
 > **Stand:** alle sechs Maßnahmen sind seit 2026-09-21 in der Flotte umgesetzt,
-> Protokoll in [sofortmassnahmen.md](../../personal/All/FINISH/ERLEDIGT/sofortmassnahmen.md).
+> Protokoll seit 2026-09-25 in WKDBooks
+> `Development/wkdbook-myplugins/ALL/Backlog/TASKS/Handover_ERLEDIGT/ci-sofortmassnahmen-rollout.md`
+> (anderes Repo, kein relativer Link von hier aus möglich).
 
 1. `timeout-minutes: 15` in allen 38 `ci.yml` — heute hängt ein toter
    Runner bis GitHubs 6-Stunden-Limit.
