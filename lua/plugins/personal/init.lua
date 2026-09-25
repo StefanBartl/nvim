@@ -364,6 +364,9 @@ plugins.add({
           scope = "global",
           defaults = require("config.marks.defaults"),
           select_key = "<leader>h%d",
+          -- `<C-e>` opens the marks popup (bindings/mappings/sessions.lua), so
+          -- pressing it again closes it: a toggle, alongside q / <Esc>.
+          menu = { preview_keys = { close = { "q", "<Esc>", "<C-e>" } } },
         },
         -- `false`, not a table: the actual keymaps are attached from
         -- bindings/mappings/sessions.lua at UIReady instead of here. This
