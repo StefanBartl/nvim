@@ -1,7 +1,8 @@
 # config.menu.custom_menu
 
-The general part of the context menu, in four named sections: `Code`
-(format, code actions), `Clipboard` (copy, copy selection, paste), `Delete`
+The general part of the context menu, in five named sections: `Code`
+(format, code actions), `Clipboard` (copy, copy selection, paste), `File`
+(save, save all), `Delete`
 (selection / buffer / file) and `Tools` (terminal, colour picker, unicode
 table, and the Git fly-out).
 

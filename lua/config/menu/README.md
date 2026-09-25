@@ -60,8 +60,12 @@ own `integrations/menu.lua`, routed through `:Git hunk|blame|diff *` instead
    doesn't qualify. The shared heading is presentation only — still one entry
    per plugin, still no nesting under a common parent.
 2. **The general sections** — `Code` (Format, Code Actions, Inspect),
-   `Clipboard`, `Delete`, `Tools` — rebuilt on every open, because several
-   entries depend on the live visual selection and buffer.
+   `Clipboard`, `File` (Save, Save All), `Delete`, `Tools` — rebuilt on every
+   open, because several entries depend on the live visual selection and
+   buffer. The visual selection is captured when the menu is built (a
+   right-click inside it keeps it), so "Copy/Delete Marked" act on exactly
+   what was marked, not on whatever mode the editor is in once the menu has
+   closed.
 
 ## How it looks
 
