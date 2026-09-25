@@ -133,7 +133,7 @@ natives Neo-tree-Mapping war totes Gewicht, das mit demselben Key racete).
 Entfernte, jetzt von filetree.nvim gehaltene Keys (nur zur Einordnung, nicht
 Teil dieser Config mehr): `d` (Trash), `w` (Window-Size-Cycler), `<Esc>`
 (Tree-Reset), `B`/`<S-CR>`/`gb`/`sg`/`sv`/`st` (Reveal-Alt/Open-Variants),
-`c`/`x`/`p`/`<C-c>` (Clipboard/Copy-Move), `a`/`r`/`D` (Smart-Create/-Rename/
+`c`/`x`/`p`/`X` (Clipboard/Copy-Move; `<C-c>` ist der Filter-Clear), `a`/`r`/`D` (Smart-Create/-Rename/
 Diff), `i`/`tf`/`tg`/`ML`/`MR`/`MM` (Shell-Run/Find-Files/Grep-in-Dir/
 Markdown-Links).
 
