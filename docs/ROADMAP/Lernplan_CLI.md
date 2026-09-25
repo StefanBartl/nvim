@@ -1,5 +1,11 @@
 # CLI-Lernplan
 
+> Diese Seiten sind jetzt in Neovim nutzbar: `:LearnPlanViewer`, Konzept unter
+> [docs/ROADMAP/LONG_RUN/learn-cli.nvim.md](LONG_RUN/learn-cli.nvim.md)
+> ("Phase 0"), die einzelnen Wochen unter
+> [docs/ROADMAP/CLI_Lernplan/](CLI_Lernplan/week-01.md). Diese Datei bleibt als
+> ursprüngliche Quelle stehen.
+
 ## Table of content
 
   - [Grundlegendes Mindset: Linux vs. PowerShell](#grundlegendes-mindset-linux-vs-powershell)
