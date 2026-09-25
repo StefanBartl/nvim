@@ -14,25 +14,9 @@
 local M = {}
 
 local actions = require("telescope.actions")
-local files_path_shorten = require("lib.nvim.fs.path_shorten")
 local fb_keymaps = require("config.telescope.file_browser.keymaps")
 
 local notify = require("lib.nvim.notify").create("[telescope.cfg]")
-
--- Helper: compute effective max length for path display
----@param picker_opts table|nil Telescope picker options
----@param default integer fallback maximum length
----@return integer
-local function adapt_max_len(picker_opts, default)
-  if
-    type(picker_opts) == "table"
-    and picker_opts.winwidth
-    and type(picker_opts.winwidth) == "number"
-  then
-    return math.max(10, picker_opts.winwidth - 10)
-  end
-  return default or 60
-end
 
 -- Returns merged default options for telescope.setup
 ---@return table opts
@@ -42,13 +26,9 @@ function M.defaults()
   local km = fb_keymaps.get(actions)
 
   return {
-    path_display = function(picker_opts, path)
-      local max_len = adapt_max_len(picker_opts, 60)
-      return files_path_shorten(path, max_len)
-    end,
-
     -- file_ignore_patterns: patched in by pickers.nvim (`find.exclude`).
     -- sorting_strategy / prompt position / cycling: pickers.nvim `display.*`.
+    -- path shortening: pickers.nvim `display.path_adaptive`.
     -- PDF text preview: pickers.nvim `images.pdf_text`.
     mappings = km,
   }
