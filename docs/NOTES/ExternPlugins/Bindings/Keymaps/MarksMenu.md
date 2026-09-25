@@ -31,6 +31,7 @@ hineinlesen und etwas kopieren, bevor man sie öffnet.
 | `<C-x>`, `<C-v>`, `<C-t>` | Liste | in Split, Vsplit oder Tab öffnen | [default] `sessions.marks.menu` |
 | `<CR>` | Preview | Datei **an der Zeile des Preview-Cursors** öffnen | [default] `sessions.marks.menu` |
 | `q`, `<Esc>` | Liste, Preview | Popup schließen | [default] `ui.kit.chooser` / `ui.kit.shortlist` |
+| `<C-e>` | Liste, Preview | Popup schließen (dieselbe Taste öffnet es: Toggle) | [custom] `marks.menu.preview_keys.close` in `lua/plugins/personal/init.lua` |
 
 ---
 
