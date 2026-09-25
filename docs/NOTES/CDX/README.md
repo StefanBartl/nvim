@@ -17,6 +17,8 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
 | `CLAUDE.global.md`           | Quelle der Wahrheit fuer `~/.claude/CLAUDE.md` (Verhaltensregeln, Konventionen) |
 | `settings.global.json`       | Quelle der Wahrheit fuer `~/.claude/settings.json` (Permissions-Allowlist + Hooks) |
 | `check-hook.js`              | Vom PostToolUse-Hook aufgerufener Dispatcher: prueft je nach Endung `.lua` (stylua+luacheck), `.rs` (rustfmt), C/C++ (clang-format, nur mit `.clang-format`), `.ts/.js/.css/.json` (projektlokales prettier) |
+| `check-stop.js`              | Stop-Hook: bei geaenderten Dateien `cargo clippy -D warnings` (Rust) bzw. `tsc --noEmit` (TS) |
+| `WORKFLOW.md`                | Anleitung: neuer Chat, neues Repo, neue Maschine |
 | `setup-devtools.js` + `tools.json` | Installiert fehlende Toolchains pro Profil (`nvim`, `cpp`, `rust`, `web`, `tauri`) via winget/apt/brew. `node setup-devtools.js --profile nvim,rust --dry-run` |
 | `new-project-claude.js`      | Kopiert die Projekt-Vorlage aus `templates/<stack>/` (`CLAUDE.md` + `.claude/settings.json`) in ein Repo: `node new-project-claude.js rust [zielordner]` |
 | `templates/`                 | Vorlagen je Stack: `nvim-plugin`, `rust`, `cpp`, `tauri`, `web` |
@@ -129,6 +131,11 @@ in diesem Ordner, sondern hoechstens als maschinenlokale User-Env-Var oder
 Secret-Manager-Eintrag.
 
 ## Bekannte Einschraenkungen
+
+- `setup-devtools` unter Linux/macOS ist ungetestet. `apt install neovim` liefert
+  auf Debian/Ubuntu oft eine veraltete Version - besser Neovim per brew,
+  Snap/AppImage oder Release-Tarball installieren. `rustup`, `stylua`,
+  `luacheck` gibt es dort nicht per apt (Hinweis wird ausgegeben).
 
 - Der Merge in `merge-claude-settings.js` ist bewusst simpel gehalten
   (Array-Union bei Permissions, Vorhandensein-Check bei Hooks ueber
