@@ -58,8 +58,6 @@
 local script_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h")
 local gitx = dofile(script_dir .. "/strip_coauthor/git.lua")
 
-local fn = vim.fn
-
 ---Report through stdout (headless `print` goes to stderr), one block per call.
 ---@param text string
 local function out(text)
