@@ -37,6 +37,12 @@ existing.permissions.allow = [...new Set([...existing.permissions.allow, ...(tem
 
 existing.hooks ??= {};
 existing.hooks.PostToolUse ??= [];
+// Drop the superseded Lua-only hook (replaced by check-hook.js) to avoid double runs.
+existing.hooks.PostToolUse = existing.hooks.PostToolUse.filter((e) => {
+  const stale = e.hooks?.some((h) => h.command?.includes('check-lua-hook.js'));
+  if (stale) console.log('  Veralteten Hook check-lua-hook.js entfernt.');
+  return !stale;
+});
 for (const entry of template.hooks?.PostToolUse ?? []) {
   const entryCommand = entry.hooks?.[0]?.command;
   const alreadyPresent = existing.hooks.PostToolUse.some(

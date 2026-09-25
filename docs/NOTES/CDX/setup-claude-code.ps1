@@ -94,4 +94,10 @@ $mergeScript = Join-Path $PSScriptRoot 'merge-claude-settings.js'
 
 node $mergeScript $templatePath $settingsPath $nvimConfig
 
+Write-Host "`n[optional] Dev-Toolchains (nvim/cpp/rust/web/tauri) per winget installieren?"
+$profileAnswer = Read-Host '  Profile kommagetrennt eingeben (z.B. nvim,rust,web) oder leer lassen zum Ueberspringen'
+if ($profileAnswer) {
+    node (Join-Path $PSScriptRoot 'setup-devtools.js') --profile $profileAnswer
+}
+
 Write-Host "`nFertig."
