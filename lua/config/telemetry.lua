@@ -96,7 +96,6 @@ local SELF_PREFIXES = {
   "plugins",
   "lsp",
   "startup",
-  "themes",
   "machine",
   "my",
 }
