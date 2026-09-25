@@ -2,6 +2,67 @@
 
 Angelegt 2026-08-08 aus der Analyse von
 `$REPOS_DIR/Notes/MyPlugin-Notes/nvim-train/train-notes.md`.
+Ergänzt 2026-09-25 um Phase 0 (siehe unten): ein eigenständiger
+Lernplan-Viewer, unabhängig von der offenen Grundsatzfrage zum Plugin selbst.
+
+---
+
+## Phase 0: Standalone-Lernplan-Viewer (umgesetzt)
+
+Ursprung: `docs/ROADMAP/Lernplan_CLI.md` (12-Wochen-Plan, grep/find/head/tail,
+Linux vs. PowerShell, Spaced-Repetition-Rhythmus). Der Plan selbst war
+inhaltlich fertig, hatte aber keine Form in Neovim — nur eine Markdown-Datei
+ohne Navigation, Fortschrittsanzeige oder Wiederholungs-Tracking.
+
+**Bewusst getrennt von der Plugin-Frage unten:** `learn-cli.nvim` (das
+Plugin) ist deaktiviert (`plugins/personal/source.lua`) und die
+Grundsatzfrage "vielleicht doch?" ist offen. Dieser Viewer rührt den Plugin-
+Code nicht an — er ist ein kleines, eigenständiges Feature direkt in dieser
+Config, das schon jetzt nutzbar ist, ganz gleich wie die Plugin-Frage später
+ausgeht. Falls `learn-cli.nvim` irgendwann doch reaktiviert wird, kann der
+Lernplan hier als eigener Cycle re-exportiert werden (die Struktur pro Woche
+— Themen, Beispiele, Linux/PowerShell — ist dafür bereits nah am
+`learn-cli.nvim`-Cycle-Format aus `docs/DE/CLI/Zyklus-1.md` dort).
+
+### Inhalt
+
+- `docs/ROADMAP/CLI_Lernplan/week-01.md` … `week-12.md` — eine Seite pro
+  Woche, aus `Lernplan_CLI.md` abgeleitet: Themen, Linux-/PowerShell-Befehl
+  nebeneinander, pro Befehl 3 Wiederholungs-Checkboxen (`- [ ] Durchlauf N`)
+  plus eine "Woche abgeschlossen"-Checkbox. Reine Markdown-Dateien — les- und
+  editierbar auch außerhalb von Neovim.
+- `lua/bindings/usrcmds/learn_plan_viewer/` — `:LearnPlanViewer [week N]`
+  plus Buffer-lokale Keymaps in einer Wochen-Seite:
+  `<leader>ln`/`<leader>lp` (nächste/vorige Woche), `<leader>lx` (Checkbox auf
+  der aktuellen Zeile togglen), `<leader>lb` (aktuelle Woche im Browser
+  öffnen). Merkt sich die zuletzt geöffnete Woche
+  (`stdpath("data")/learn_plan_viewer_state.json`), damit der Command ohne
+  Argument dort fortsetzt.
+
+### Kreuzfeature-Audit (2026-09-25, alle ~35 eigenen Plugins geprüft)
+
+Einzeln durchgesprochen und je mit Empfehlung entschieden, bevor etwas
+geschrieben wurde:
+
+| Plugin | Rolle | Entscheidung |
+| --- | --- | --- |
+| `mdview.nvim` | Browser-Vorschau der Wochen-Seiten (`:MDView start <datei>`) | **Übernommen** — explizite Anforderung |
+| `lib.nvim` | `notify`, `fs.json` (State), `bindings.usercmd` | **Übernommen** — Baseline-Konvention dieser Config |
+| `pickers.nvim` | Einheitliche `:Pickers`-Navigation statt Buffer-Keymaps | **Verworfen für v1** — einfache `<leader>ln`/`<leader>lp`-Keymaps reichen; Picker wäre spätere Komfort-Erweiterung, kein Kernbedarf |
+| `ui.nvim` (Statusline-Badge) | Fortschritt/Woche ständig in der Statusline, nach dem `recommender_badge`/`github_stats_badge`-Muster | **Vertagt auf Phase 1** (siehe unten) — geringer Aufwand, aber kein Kernbestandteil eines ersten Viewers |
+| `cmdlog.nvim` | Abgleich "wurde der Befehl wirklich in der Shell ausgeführt" statt reiner Checkbox-Selbsteinschätzung | **Verworfen** — Aufwand (History-Parsing, Abgleichslogik) steht in keinem Verhältnis zum Nutzen für v1 |
+| `sessions.nvim`, `insights.nvim`, `documentation.nvim`, `data.nvim`, `spotlight.nvim`, `reposcope.nvim`, `rules.nvim`, `gitsuite.nvim` | — | **Geprüft, kein inhaltlicher Bezug** zu einem Lernplan-Viewer gefunden |
+
+### Phase 1 (vorgemerkt, nicht umgesetzt)
+
+- [ ] `ui.nvim`-Statusline-Badge: `learn_plan_viewer/statusline.lua` mit
+      `status()` (z. B. `"Woche 3/12 · 5 Checks"`), plus ein
+      `learn_plan_viewer_badge`-Modul in `ui.nvim` nach dem Muster von
+      `ui/statusline/modules/recommender_badge/init.lua` (dünnes
+      `package.loaded[...]`-Require, leer wenn das Feature nicht geladen ist).
+- [ ] Optional: Fortschritt pro Woche (wie viele der 3 Durchläufe erledigt)
+      statt nur "Woche abgeschlossen ja/nein" in einer Übersichtsseite
+      zusammenfassen.
 
 ---
 
