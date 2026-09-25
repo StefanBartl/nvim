@@ -34,7 +34,13 @@ Set-UserEnvVar -name 'NVIM_CONFIG' -value $nvimConfig
 
 $reposDir = [Environment]::GetEnvironmentVariable('REPOS_DIR', 'User')
 if (-not $reposDir) {
-    $reposDir = Read-Host '  REPOS_DIR ist auf dieser Maschine nicht gesetzt. Pfad zur Repos-Wurzel eingeben (z.B. B:\repos)'
+    do {
+        $reposDir = Read-Host '  REPOS_DIR ist auf dieser Maschine nicht gesetzt. Pfad zur Repos-Wurzel eingeben (z.B. B:\repos)'
+        if ($reposDir -and -not (Test-Path $reposDir)) {
+            Write-Host "  Pfad '$reposDir' existiert nicht - bitte erneut eingeben." -ForegroundColor Yellow
+            $reposDir = $null
+        }
+    } while (-not $reposDir)
     Set-UserEnvVar -name 'REPOS_DIR' -value $reposDir
 } else {
     Write-Host "  REPOS_DIR bereits gesetzt: $reposDir"
@@ -57,8 +63,8 @@ if ($alreadyLinked) {
     Write-Host "  Symlink bereits korrekt."
 } else {
     if (Test-Path $claudeMdTarget) {
-        $backup = "$claudeMdTarget.bak-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-        Move-Item $claudeMdTarget $backup
+        $backup = "$claudeMdTarget.bak-$(Get-Date -Format 'yyyyMMdd-HHmmssfff')"
+        Move-Item $claudeMdTarget $backup -Force
         Write-Host "  Bestehende CLAUDE.md gesichert nach: $backup"
     }
     try {
@@ -83,8 +89,8 @@ $templateJson = (Get-Content $templatePath -Raw).Replace('__NVIM_CONFIG__', $nvi
 $template = $templateJson | ConvertFrom-Json
 
 if (Test-Path $settingsPath) {
-    $backup = "$settingsPath.bak-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-    Copy-Item $settingsPath $backup
+    $backup = "$settingsPath.bak-$(Get-Date -Format 'yyyyMMdd-HHmmssfff')"
+    Copy-Item $settingsPath $backup -Force
     Write-Host "  Bestehende settings.json gesichert nach: $backup"
     $existing = Get-Content $settingsPath -Raw | ConvertFrom-Json
 } else {

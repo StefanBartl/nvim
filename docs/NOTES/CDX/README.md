@@ -52,9 +52,13 @@ luacheck/stylua clean sein").
 
 Die Permissions-Allowlist in `settings.global.json` erlaubt ein paar
 ungefaehrliche, haeufig gebrauchte Befehle ohne Rueckfrage (`git status/diff/
-log/add/commit/push/pull`, `luacheck`, `stylua`, `ls`, `find`). Das reduziert
-Permission-Prompts, ohne echte Freigaben wie `push --force` o.ae. pauschal
-zu erteilen.
+log/add/commit/pull`, `luacheck`, `stylua`, `ls`). `git push` ist bewusst
+**nicht** als `push:*`-Wildcard freigegeben, sondern nur als exakte,
+ungefaehrliche Formen (`git push`, `git push origin main`, `git push origin
+HEAD`) - ein Wildcard wuerde stillschweigend auch `git push --force`
+durchlassen. `find` ist aus demselben Grund nicht in der Liste: `find -exec`
+kann beliebige Befehle ausfuehren, ein `find:*`-Wildcard haette das ohne
+Rueckfrage erlaubt.
 
 ## Setup auf einer (neuen) Maschine
 
