@@ -339,7 +339,10 @@ plugins.add({
     lazy = false,
     priority = 900,
     dependencies = { "StefanBartl/lib.nvim" },
-    keymaps = true,
+    -- A table: every shipped action stays at its default, and `toggle_sticky`
+    -- (no default in ui.nvim) gets Alt+P -- top right of the letter block and
+    -- free here (`<C-p>` is my.nvim's; `<C-;>`-style keys need a CSI-u terminal).
+    keymaps = { toggle_sticky = "<M-p>" },
   },
 
   {
