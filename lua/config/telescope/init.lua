@@ -62,10 +62,8 @@ function M.defaults()
     end,
 
     -- file_ignore_patterns: patched in by pickers.nvim (`find.exclude`).
-    sorting_strategy = "ascending",
-    layout_config = { prompt_position = "top" },
+    -- sorting_strategy / prompt position / cycling: pickers.nvim `display.*`.
     preview = {
-      wrap = false,
       filetype_hook = pdf_filetype_hook(),
     },
     mappings = km,

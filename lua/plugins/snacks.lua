@@ -51,9 +51,8 @@ return {
 
         -- In-picker keys/actions come from pickers.nvim, which patches them
         -- into Snacks.config.picker itself (pickers.entry_actions.patch).
-        -- No line wrapping in the preview (like Telescope): this belongs on
-        -- the preview WINDOW's `wo`, not on `picker.preview` (the previewer).
-        picker = { enabled = true, win = { preview = { wo = { wrap = false } } } },
+        -- Preview line wrapping: pickers.nvim `display.preview_wrap`.
+        picker = { enabled = true },
       }
       return cfg
     end,
