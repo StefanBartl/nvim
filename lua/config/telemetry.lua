@@ -94,7 +94,6 @@ local SELF_PREFIXES = {
   "config",
   "bindings",
   "plugins",
-  "autocmds",
   "lsp",
   "startup",
   "themes",

@@ -9,14 +9,14 @@ Untersuchung zweier gemeldeter Symptome beim Speichern von Markdown-Dateien
    Heading-Zeile) öffnet sich nach jedem Save wieder — zuverlässig
    reproduzierbar.
 
-Betroffener/geänderter Code: [`lua/autocmds/text/init.lua`](../../lua/autocmds/text/init.lua),
-[`lua/autocmds/text/defaults.lua`](../../lua/autocmds/text/defaults.lua),
-[`lua/autocmds/text/@types/init.lua`](../../lua/autocmds/text/@types/init.lua),
-[`lua/autocmds/init.lua`](../../lua/autocmds/init.lua).
+Betroffener/geänderter Code: [`lua/bindings/autocmds/text/init.lua`](../../lua/bindings/autocmds/text/init.lua),
+[`lua/bindings/autocmds/text/defaults.lua`](../../lua/bindings/autocmds/text/defaults.lua),
+[`lua/bindings/autocmds/text/@types/init.lua`](../../lua/bindings/autocmds/text/@types/init.lua),
+[`lua/bindings/autocmds/init.lua`](../../lua/bindings/autocmds/init.lua).
 
 ## 1. Springender Cursor — Ursache gefunden und bestätigt
 
-`autocmds.text` registriert zwei `BufWritePre`-Hooks, die je ein
+`bindings.autocmds.text` registriert zwei `BufWritePre`-Hooks, die je ein
 buffer-weites `:substitute` fahren:
 
 - `trim_trailing`: `%s/\s\+$//e` (Trailing Whitespace entfernen)
@@ -56,7 +56,7 @@ hatte bereits einen eigenen Cursor-Save/Restore-Wrapper um `vim.cmd("write")`
 — das federte einen Teil der Fälle ab, aber nicht alle (z. B. wenn die
 gespeicherte Spalte durch das Trimmen ungültig wird und der interne `pcall`
 dort ebenfalls scheitert). Reines `:w` hatte gar keinen Schutz. Mit dem Fix
-in `autocmds.text` ist das Problem an der Quelle behoben, unabhängig davon,
+in `bindings.autocmds.text` ist das Problem an der Quelle behoben, unabhängig davon,
 über welchen Weg gespeichert wird.
 
 ## 2. TOC-Fold öffnet sich nach jedem Save — Ursache nicht abschließend isoliert
@@ -111,7 +111,7 @@ identisch verhält — konnte damit nicht zweifelsfrei benannt werden.
 Fold-Zustand bei einer Neuberechnung auf `foldlevel` zurückzusetzen statt den
 manuell geschlossenen Zustand zu erhalten — unabhängig davon, welcher
 konkrete Hook die Neuberechnung auslöst. Statt jede denkbare Ursache einzeln
-zu jagen, wurde ein neues Feature `preserve_folds` in `autocmds.text`
+zu jagen, wurde ein neues Feature `preserve_folds` in `bindings.autocmds.text`
 ergänzt:
 
 - `BufWritePre`: für jedes Fenster, das den Buffer zeigt, wird gescannt,

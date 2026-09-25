@@ -153,12 +153,12 @@ startup.now("my", function()
   })
 end)
 
--- Sync: autocmds/general registers a VimEnter handler (kitty spacing) and
--- autocmds/text a BufReadPost handler (last_loc). Both must be registered
+-- Sync: bindings/autocmds/general registers a VimEnter handler (kitty spacing) and
+-- bindings/autocmds/text a BufReadPost handler (last_loc). Both must be registered
 -- before their event fires, i.e. before VimEnter -- a wall-clock timer here
 -- would register them too late (see the STARTUP PHASES note above).
 startup.now("autocmds", function()
-  require("autocmds")
+  require("bindings.autocmds")
 end)
 
 -- Sync: lsp.setup() only registers configs and an LspAttach handler; servers

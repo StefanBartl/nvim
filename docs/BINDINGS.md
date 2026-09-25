@@ -8,7 +8,7 @@ itself, read by `bindings_explorer` the same way (see
 
 This file exists because `:Bindings check`'s source axis
 (`drift.source_check`, reading `docs/map/module_map.json`) had nothing to
-compare `lua/bindings/mappings/*`, `lua/autocmds/**` and this config's own
+compare `lua/bindings/mappings/*`, `lua/bindings/autocmds/**` and this config's own
 user commands against — every one of them reported as "registered in
 source, not documented" until this page existed.
 
@@ -483,7 +483,7 @@ silently suppressing nvim-lspconfig's own commands via an upstream
 
 ## Autocommands
 
-Sources: `lua/autocmds/**`, `lua/bindings/**`,
+Sources: `lua/bindings/autocmds/**`, `lua/bindings/**`,
 `lua/plugins/**`, `lua/startup/init.lua`, `lua/wkdnvchad/ui/**`.
 
 **Counted are call sites, not event registrations** — the same rule
@@ -510,7 +510,7 @@ reports them as `autocmd-not-live` — the same class as lsp.nvim's
 (hangs off a feature switch). Kept as real table rows rather than prose, so
 a renamed augroup would still be caught.
 
-### Filesystem explorer — `lua/autocmds/`
+### Filesystem explorer — `lua/bindings/autocmds/`
 
 | Augroup | Event(s) | Pattern | Action |
 | --- | --- | --- | --- |
@@ -527,7 +527,7 @@ there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for why
 this exists (neo-tree and snacks.picker's `explorer` source have no
 awareness of each other).
 
-### Terminal, Git, Text — `lua/autocmds/`
+### Terminal, Git, Text — `lua/bindings/autocmds/`
 
 | Augroup | Event(s) | Pattern | Action |
 | --- | --- | --- | --- |
@@ -544,7 +544,7 @@ awareness of each other).
 
 The Kitty augroup's doubled prefix
 (`general_autocmds_autocmds_general_…`) is an artefact of the name-building
-in `lua/autocmds/general/init.lua`, not a second mechanism — noted because a
+in `lua/bindings/autocmds/general/init.lua`, not a second mechanism — noted because a
 grep for `general_kitty_spacing` alone would not find it.
 
 ### Keymaps and commands — `lua/bindings/`
@@ -575,11 +575,11 @@ From the same local override copy of `nvchad/au.lua` as `ReloadNvChad` and
 `:MasonInstallAll` (extern cheatsheet: `NvChadUI.md`). Registered only when
 `config.lsp.signature` is true.
 
-### Autocmd modules and plugin specs — `lua/autocmds/`, `lua/plugins/`
+### Autocmd modules and plugin specs — `lua/bindings/autocmds/`, `lua/plugins/`
 
 | Augroup | Event(s) | Pattern | Action |
 | --- | --- | --- | --- |
-| `MarkdownLocalFolds` | `FileType` | `markdown` | Lightweight markdown folding, markdown buffers only (`lua/autocmds/markdown_folds.lua` — came out of `lua/options.lua` when that moved to my.nvim, and stayed here because it is a markdown.nvim integration rather than a generic option) |
+| `MarkdownLocalFolds` | `FileType` | `markdown` | Lightweight markdown folding, markdown buffers only (`lua/bindings/autocmds/markdown_folds.lua` — came out of `lua/options.lua` when that moved to my.nvim, and stayed here because it is a markdown.nvim integration rather than a generic option) |
 
 `WebdevRestyLoader` (`FileType` on `http`/`resty`, lazy-loading `resty.nvim`)
 was here until 2026-09-19. resty.nvim is gone — runtime-analysis.nvim's
