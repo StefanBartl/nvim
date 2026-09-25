@@ -116,6 +116,7 @@ function M.setup()
       -- `integrations = { lsp = false }` (or in that plugin's own setup).
       -- `hints` are the mappings shown next to an entry -- mine, not ui.nvim's.
       menu = {
+        key = "<A-b>", -- the same menu at the cursor; ui.nvim binds no key on its own
         entries = { delete_all = true, delete_file = true },
         hints = {
           format = "<leader>fm",
