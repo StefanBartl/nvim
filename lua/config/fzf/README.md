@@ -1,5 +1,5 @@
 # config.fzf
 
-Composed fzf-lua configuration, assembled from the
-`keymaps`, `fzf_opts`, `files` and `grep` submodules. This is the config
-fzf-lua's own `setup()` is called with.
+fzf-lua configuration: the personal remainder only (info style, `ctrl-r` ignore
+toggle in grep). Excludes, entry actions, in-picker keys and layout switches come
+from pickers.nvim.
