@@ -5,7 +5,7 @@ Status: **designed, nothing built.** Recorded 2026-09-25.
 The *why*, the alternatives and the risks are in the concept, which this file
 does not repeat:
 [`GITHUB_STATS_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md)
-(a copy also sits in `docmap-desktop/docs/`, where that repo's README links it).
+(the one copy; since 2026-09-25 no planning documents live in the `docmap-desktop` repository).
 This file is the *how*: order, files, tests, gates, and what to check at the end.
 
 ## Read this first
@@ -66,9 +66,11 @@ token ever enters the app.
 
 - **ROADMAP entries live in WKDBooks, never in a plugin repo.** Roadmap text for
   the three targets is under `wkdbook-myplugins/{github_stats.nvim,documentation.nvim,docmap-desktop}/ROADMAP/`.
-  Open: `docmap-desktop/docs/PLAN.md` already carries an **L11** row and
-  `ROADMAP.md`/`HANDOVER.md` mention it; that repo keeps its queue in-repo by
-  its own convention, so decide whether to move it (see *Open questions*).
+  The **L11** queue entry is in `wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md`
+  (that app's `PLAN.md`, `ROADMAP.md`, `WORKPLAN.md` and `HANDOVER.md` moved out of
+  its repository on 2026-09-25; see the vault's README, *Repository versus vault*).
+  The `docmap-desktop` repository's `docs/` is only `USAGE.md`, `FEATURES/` and
+  `RELEASING.md` now.
 - Code and comments in English. No `Co-Authored-By` trailer. `luacheck` and
   `stylua` green before every commit (`nvim --headless -l scripts/ci.lua` where a
   repo has it). Commit and push to `main` as soon as a step is done.
@@ -307,10 +309,9 @@ one that is not.
 
 ## Open questions
 
-1. **Where does L11 live?** `docmap-desktop/docs/PLAN.md` (L11), `ROADMAP.md` and
-   `HANDOVER.md` already mention it, in-repo. The brief says roadmap entries
-   belong in WKDBooks. Decide: move the L11 row out, or keep that repo's own
-   convention (its `PLAN.md` is "the one queue for all three repositories").
+1. ~~**Where does L11 live?**~~ **Decided 2026-09-25:** in the vault, with the
+   whole `docmap-desktop` queue (`docmap-desktop/ROADMAP/PLAN.md`); the repository
+   holds no planning documents.
 2. **Is P1b needed?** Only if P0 slips or an older plugin version must be
    supported. It is a second implementation of the plugin's rules; skip it
    otherwise.
@@ -324,7 +325,7 @@ one that is not.
 | What | Where |
 |---|---|
 | Concept (canonical copy in the vault) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md` |
-| Concept (repo copy, linked from its README) | `$REPOS_DIR/docmap-desktop/docs/GITHUB_STATS_CONCEPT.md` |
+| The app's queue and roadmap (L11) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/` |
 | This handover (real file) | `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/github_stats_traffic_integration.md` |
 | Vault entries pointing here | `wkdbook-myplugins/{github_stats.nvim,documentation.nvim,docmap-desktop}/ROADMAP/` |
 | Collector | `$REPOS_DIR/github_stats.nvim` |
