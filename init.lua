@@ -93,7 +93,7 @@ require("lazy").setup({
 -- =============================================================================
 -- STARTUP PHASES
 -- =============================================================================
--- Policy and rationale: docs/ARCHITECTURE/startup.md
+-- Policy and rationale: docs/NOTES/ARCHITECTURE/startup.md
 -- Timeline and pending-phase check at runtime: :StartupReport
 --
 -- Two triggers only, and each phase must justify which one it uses:

@@ -8,7 +8,7 @@
 --- they listen for, and their handlers never fired.
 ---
 --- Phases are attached to events, and every phase is recorded so the policy can
---- be checked instead of assumed. See docs/ARCHITECTURE/startup.md.
+--- be checked instead of assumed. See docs/NOTES/ARCHITECTURE/startup.md.
 ---
 --- Usage:
 ---   local startup = require("startup")
@@ -119,7 +119,7 @@ function M.on(event, label, fn)
 end
 
 --- Phases that never ran: their event has not fired, or had already fired when
---- the phase registered. Both are bugs — see docs/ARCHITECTURE/startup.md.
+--- the phase registered. Both are bugs — see docs/NOTES/ARCHITECTURE/startup.md.
 ---@return Startup.Mark[]
 function M.pending()
   return vim.tbl_filter(function(m)
