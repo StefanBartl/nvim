@@ -4,9 +4,10 @@ Stand: 2026-09-26 · Rechner `OHANA` (Windows, Rolle `default`) · Neovim 0.11.4
 Status: **Analyse und Konzept, keine Änderung an der Config.** Neu angelegt wurde
 nur das Messwerkzeug [`scripts/startup-probe/`](../../../scripts/startup-probe/README.md).
 
-**Umsetzungsstand (2026-09-26): Phase 1 zu großen Teilen umgesetzt, `UIReady` von
-≈ 1,05 s auf ≈ 0,68 s. Siehe Abschnitt 12.** Die Abschnitte 1 bis 9 sind die Analyse
-vor der Umsetzung und bleiben als Ausgangslage stehen.
+**Umsetzungsstand (2026-09-26): Phase 1 abgeschlossen, `UIReady` von ≈ 1,05 s auf
+≈ 0,68 s. Siehe Abschnitt 12 (erste Runde) und Abschnitt 13 (Review + Phase-1-Rest
++ Korrektur zu Phase 2).** Die Abschnitte 1 bis 9 sind die Analyse vor der
+Umsetzung und bleiben als Ausgangslage stehen.
 
 Diese Fassung ersetzt die erste, die ich im Chat ausgegeben hatte. Sie ist nach
 einer Prüfung von `lua/startup/`, der Startup-Policy
@@ -513,3 +514,142 @@ F2 und an den Menü-Modulen.
 | Phase 2 und 3 | jetzt der größte verbleibende Hebel: Stöße Σ ≈ 1,2 s, `runtimepath`-Neuberechnung ≈ 545 ms |
 | Gegenproben zu F2 | Neovim 0.12 und Defender-Ausnahme: warten auf dich |
 | Dokumentation `startup.md` | noch nicht nachgezogen (Regeln zu PATH-Suchen und Menü-Prewarm) |
+
+---
+
+## 13. Fortsetzung (2026-09-26, zweite Runde)
+
+### Review der Commits aus Abschnitt 12
+
+Vor der Weiterarbeit alle in Abschnitt 12 gelisteten Commits auf Bugs, Sicherheit
+und Performance geprüft. Zwei echte Bugs gefunden, beide behoben:
+
+- **`lib.nvim`** (`TESTS/cross_executable_spec.lua`, `TESTS/which_key_spec.lua`,
+  neu in `c35c8ca`/`644d732`): beide Spezifikationen sind flache Skripte (kein
+  `describe`/`it`), die globalen Zustand patchen (`PATH`/`PATHEXT`,
+  `vim.fn.executable`/`exepath`, `vim.uv.hrtime`,
+  `package.loaded`/`preload["which-key"]`) und ihn erst am Dateiende
+  wiederherstellen. Ein fehlschlagender Assert irgendwo dazwischen hätte die
+  Wiederherstellung übersprungen und den kaputten Zustand in **alle 58 Specs
+  des gemeinsamen Laufs** durchgereicht — exakt die Falle, vor der
+  `H.with_patched`s eigener Kommentar warnt, hier aber nicht angewendet. Fix:
+  beide Testkörper laufen jetzt in einem `pcall`, die Wiederherstellung läuft
+  garantiert, ein echter Fehler wird weitergereicht. Commit `2caec3c`.
+- **`lsp.nvim`** (`TESTS/lsp/bindings_actions_spec.lua`, neu in `f043bd5`):
+  derselbe Fehlertyp, kleiner — `package.preload["which-key"]` wurde nur am
+  Ende des einzelnen `it()`-Blocks zurückgesetzt statt im ohnehin vorhandenen
+  `after_each`. Verschoben. Commit `0512e6d`.
+
+Keine Sicherheitsbefunde. Der synchrone Index-Build bei 60 ms Breakeven
+(`78d2c9b`, Abweichung 1 in Abschnitt 12) wurde geprüft, aber nicht verändert —
+das ist eine begründete, dokumentierte Abwägung, kein Defekt. Beide Fixes
+lint- und testgrün (`lib.nvim`: `LIB_TESTS_OK`; `lsp.nvim`: 1123 Erfolge, nur
+der bekannte unabhängige Fehler).
+
+### Erklärung der 76-ms-Lücke aus Abschnitt 12
+
+Die `lsp`-Phase landete bei 76 ms statt der in Abschnitt 7 geschätzten 40–50 ms.
+Ursache: `executable.warm()` wird **nirgends** aufgerufen (geprüft in
+`lsp.nvim`, `dap.nvim`, `my.nvim`, der Config) — der einmalige synchrone
+Index-Build (~60–65 ms) fällt also zwangsläufig in die `lsp`-Phase, weil deren
+Formatter-/HTML-Lookups die ersten sind, die die 60-ms-Schwelle reißen.
+
+Geprüft, ob ein früher `warm()`-Aufruf das verschieben könnte: **nein.** `my`,
+`autocmds` und `lsp` laufen alle synchron innerhalb eines einzigen
+`init.lua`-Durchlaufs vor `VimEnter`, ohne dass die Event-Loop dazwischen
+`vim.schedule()`-Callbacks abarbeitet — exakt der Grund, warum `78d2c9b` den
+Index synchron statt im Hintergrund baut. Ein `warm()`-Aufruf am Anfang von
+`init.lua` hätte keine Gelegenheit, seine Ticks vor der `lsp`-Phase
+abzuarbeiten. Die 76 ms sind also kein Fehler und keine Regression, sondern
+reine Buchhaltung: welche Phase die Indexkosten trägt, ändert `UIReady` nicht.
+Kein Handlungsbedarf.
+
+### Abgeschlossen: Rest von Phase 1
+
+- **Dritter which-key-Auslöser** (`lua/config/neotest/whichkey/init.lua`):
+  behoben, aber anders als angenommen. Neun der zehn `wk.add()`-Einträge waren
+  reine Duplikate der Keymaps aus `config/neotest/keymaps/init.lua` (dort
+  bereits über den einfachen `vim.keymap.set`-Wrapper gesetzt, ohne
+  which-key-Anbindung); die Datei hatte nur einen eigenständigen Zweck, das
+  Gruppenlabel `<leader>nt`. Auf `lib.nvim`s `add_group()` reduziert — fixt den
+  eager-Load und entfernt die Redundanz in einem Schritt. Commit `92a618b0`
+  (nvim-config).
+- **Stale Doku-Pfade**: die drei aus Abschnitt 6 bekannten
+  (`lua/startup/init.lua:11,122`, `lua/startup/report.lua`) plus ein vierter,
+  bisher nicht erfasster (`init.lua:96`, Kommentar über den Startup-Phasen).
+  Alle vier auf `docs/NOTES/ARCHITECTURE/startup.md` korrigiert. Commit
+  `92a618b0`.
+- **F5-Rest in `my.nvim`**: `shell.lua`/`clipboard.lua` nutzen jetzt
+  `lib.nvim.cross.executable` statt rohem `vim.fn.executable`. Commit `8683320`
+  (my.nvim). Nebeneffekt: der Neovim-<0.10-Fallback für `pwsh` findet jetzt
+  auch eine Windows-Store-Installation, die `vim.fn` wegen EACCES nicht sehen
+  kann. **Erwarteter Laufzeitgewinn in diesem Umlauf gering bis null:** alle
+  fünf betroffenen Namen (`powershell`, `pwsh`, `zsh`, `wl-copy`/`wl-paste`,
+  `win32yank`) sind laut Abschnitt 5 bereits Treffer (0 Fehlversuche), und jeder
+  wird nur einmal pro Session geprüft — der Index hilft vor allem bei
+  Wiederholung (z. B. `:checkhealth`), nicht beim einzigen Aufruf einer
+  Session. Der Wert liegt in Konsistenz, nicht in gemessener Zeit.
+
+### Korrektur: Phase 2 wie geplant funktioniert nicht
+
+Vor der Umsetzung von Phase 2 wurde die Architektur von `ui.nvim`s
+Menü-Prewarm und der vier betroffenen Module geprüft
+(`wkddap`/`dap.nvim`, `filetree.nvim`, `gitsuite.nvim`, `gopath.nvim`).
+Ergebnis: **die im Konzept (Abschnitt 6, Phase 2b) angenommene Ursache stimmt
+nicht.**
+
+Alle vier `integrations/menu.lua`-Module sind bereits "statisch" im gewünschten
+Sinn: kein schweres `require` am Dateikopf, Label und Aktion sauber getrennt,
+das eigentliche Plugin wird erst in der Klick-Closure requiret. Der
+tatsächliche Mechanismus ist ein anderer: **lazy.nvims globaler
+`package.loaders`-Hook** (`lazy/core/loader.lua:531–568`) lädt beim `require()`
+JEDER Datei unterhalb eines noch nicht geladenen Plugin-Verzeichnisses
+automatisch das GANZE Plugin samt `dependencies` — unabhängig vom Inhalt der
+konkret angeforderten Datei. `ui.nvim`s eigenes README dokumentiert das exakt
+so ("requiring it loads the whole plugin"), und der Prewarm existiert genau
+deswegen.
+
+Konkret: `wkddap.integrations.menu` hat **keinen** `event`-Trigger in der
+Plugin-Spec (nur `cmd = "Dap"` + `keys`), ist also im Prewarm-Slot
+(~`VimEnter`+320 ms) so gut wie nie schon geladen — der Prewarm-`require`
+zwingt lazy.nvim, `dap.nvim` und alle sechs `dependencies` vollständig zu
+laden. Das ist mit hoher Sicherheit der Hauptverursacher des 400–500-ms-Stoßes.
+`gitsuite.nvim` ist ein sekundärer, startup-abhängiger Kandidat (nur wenn kein
+Datei-Argument übergeben wird, sonst lädt `BufReadPost` es vorher).
+`filetree.nvim`/`gopath.nvim` haben `event = "VeryLazy"` und sind vermutlich
+meist schon geladen, bevor der Prewarm sie anfasst (Annahme, nicht mit
+Zeitstempeln verifiziert).
+
+**Nebenbefund.** Der Kommentar in `plugins/personal/init.lua:1151–1152`
+("lazy.nvim has no 'load on require()' trigger") ist nach Prüfung des
+lazy.nvim-Quellcodes nicht korrekt — der Hook existiert und greift bei jedem
+Plugin ohne `module = false`. Sollte richtiggestellt werden, damit künftige
+Analysen nicht wieder in dieselbe falsche Richtung laufen.
+
+**Konsequenz.** "Menü-Integrationsmodule statisch machen" bringt nichts, weil
+das Problem nicht im Dateiinhalt liegt. Es bleiben drei Optionen:
+
+- **A.** Menü-Metadaten (Label, Icon, Kommando-Referenz) für `wkddap` und
+  `gitsuite` nicht mehr per `require()` aus dem jeweiligen Plugin holen,
+  sondern direkt in `ui.nvim`s `contributors.lua` hinterlegen — dort gibt es
+  mit den `filetree`/`gitsuite`-Sonderfällen bereits Präzedenz für
+  plugin-spezifisches Wissen. Der schwere `require` bleibt exakt dort, wo er
+  schon ist: in der Klick-Closure. Prewarm bräuchte für diese Einträge dann gar
+  kein `require()` mehr.
+- **B.** `wkddap`/`gitsuite` aus dem Prewarm-Kandidatenset ausschließen (z. B.
+  über `applies`/`ft` in `prewarm_modules()`). Kleinster Eingriff, ein Repo
+  (`ui.nvim`), aber das DAP-Untermenü fehlt dann bis zum ersten echten
+  `dap.nvim`-Gebrauch.
+- **C.** `event = "VeryLazy"` ergänzen — **keine gute Option**: das würde die
+  schweren Dependencies wieder bei jedem Start eager laden, das Gegenteil vom
+  Zweck des `cmd`/`keys`-Gatings.
+
+Das entscheidet über `ui.nvim`s Kopplung an andere Plugins und über das
+Verhalten des DAP-Menüs — mehr, als Entscheidung 4 (Abschnitt 11) ursprünglich
+abgedeckt hat. **Offen, wartet auf eine Entscheidung.**
+
+### Phase 3
+
+Unverändert blockiert auf die beiden Gegenproben, die nur der Nutzer auslösen
+kann (Neovim 0.12, Defender-Ausnahme für `%LOCALAPPDATA%\nvim-data` und
+`B:\repos`). Kein Umbau auf Verdacht (Abschnitt 6).
