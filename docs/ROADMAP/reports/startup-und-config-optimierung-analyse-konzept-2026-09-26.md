@@ -4,10 +4,12 @@ Stand: 2026-09-26 · Rechner `OHANA` (Windows, Rolle `default`) · Neovim 0.11.4
 Status: **Analyse und Konzept, keine Änderung an der Config.** Neu angelegt wurde
 nur das Messwerkzeug [`scripts/startup-probe/`](../../../scripts/startup-probe/README.md).
 
-**Umsetzungsstand (2026-09-26): Phase 1 abgeschlossen, `UIReady` von ≈ 1,05 s auf
-≈ 0,68 s. Siehe Abschnitt 12 (erste Runde) und Abschnitt 13 (Review + Phase-1-Rest
-+ Korrektur zu Phase 2).** Die Abschnitte 1 bis 9 sind die Analyse vor der
-Umsetzung und bleiben als Ausgangslage stehen.
+**Umsetzungsstand (2026-09-26): Phasen 1 und 2 abgeschlossen. `UIReady` ≈ 0,68 s
+(Phase 1), Event-Loop-Stöße nach `VimEnter` von Σ 1209 ms auf Σ ≈ 868 ms (Phase 2).
+Phase 3 blockiert weiter auf Gegenproben nur des Nutzers. Siehe Abschnitt 12
+(erste Runde) und Abschnitt 13 (Review + Phase-1-Rest + Phase 2).** Die
+Abschnitte 1 bis 9 sind die Analyse vor der Umsetzung und bleiben als
+Ausgangslage stehen.
 
 Diese Fassung ersetzt die erste, die ich im Chat ausgegeben hatte. Sie ist nach
 einer Prüfung von `lua/startup/`, der Startup-Policy
@@ -646,7 +648,50 @@ das Problem nicht im Dateiinhalt liegt. Es bleiben drei Optionen:
 
 Das entscheidet über `ui.nvim`s Kopplung an andere Plugins und über das
 Verhalten des DAP-Menüs — mehr, als Entscheidung 4 (Abschnitt 11) ursprünglich
-abgedeckt hat. **Offen, wartet auf eine Entscheidung.**
+abgedeckt hat. **Entscheidung: A** (Metadaten in `ui.nvim` hinterlegen, siehe
+unten).
+
+### Umgesetzt: Phase 2 (Option A)
+
+`ui.nvim`s `Ui.Menu.ContributorSpec` bekommt ein neues optionales Feld `lazy =
+{ label, plugin? }`. Ein so markierter Contributor wird nicht mehr prewarmt und
+nicht mehr eager per `require(module)` + `submenu()` aufgebaut: er erscheint
+als ein einziger Eintrag mit dem statischen `label`, dessen Anwesenheit über
+lazy.nvims eigene Registry geprüft wird (`require("lazy.core.config").plugins[plugin]`,
+ohne zu laden) — erst beim Anklicken wird das echte Plugin requiret und die
+echte `submenu()` in einem frischen Popup an der Mausposition geöffnet, statt
+inline als Fly-out. Genau dasselbe Muster für `gitsuite`s "Git Actions"-Zeile
+in `ui.menu.sections` (dort bisher ungetestet gewesen). Beide aus
+`prewarm_modules()` entfernt — nichts mehr, was dort vorzuladen wäre. Commit
+`5102712` (ui.nvim), inklusive vier neuer Tests für den `lazy`-Mechanismus und
+Korrektur der beiden bestehenden Prewarm-Assertions. Volle Suite: 63/63 in
+`menu_spec.lua`, gesamte `ui.nvim`-Suite grün.
+
+**UX-Änderung, bewusst in Kauf genommen:** `ui.kit.menu` kennt kein
+Hover-Fly-out für nachträglich geladene Einträge (`items` muss beim Öffnen
+schon eine fertige Liste sein, keine Funktion) — ein Klick auf "Debug"/"Git
+Actions" öffnet deshalb ein zweites, eigenständiges Popup an der Mausposition,
+statt dass sich das bestehende Menü seitlich erweitert. Nicht live mit der Maus
+geprüft (nur die Datenseite über die Testsuite); bei Bedarf gegenprüfen.
+
+**Gemessene Wirkung** (`startup-probe`, `PROBE=exe,stall,report,marks,rtp`, 3
+Läufe; Lauf 1 verworfen als Kaltstart-Ausreißer nach dem Commit, 5770 ms
+Gesamt-Stall gegenüber ~870 ms in Lauf 2/3 — siehe Abschnitt 8 zu
+kalt/warm-Streuung):
+
+| Größe | vorher (Abschnitt 12) | jetzt (Median Lauf 2/3) |
+| --- | ---: | ---: |
+| Event-Loop-Stöße > 60 ms | 5, Σ 1209 ms, größter 461 ms | **4, Σ ≈ 868 ms, größter ≈ 384 ms** |
+| `nvim_get_runtime_file("")` | 91 Aufrufe, 545 ms | 81 Aufrufe, ≈ 411 ms |
+
+Der größte verbleibende Stoß (≈ 384 ms) passt zur `filetree`-Neuberechnung
+(F2/Phase 3, unverändert); ein zweiter (≈ 331–337 ms) zur dritten Gruppe
+(`gitsuite`-Restplugins/`emojis`/`fzf-lua`/`trouble`/`color_my_ascii`, die
+weiterhin regulär prewarmt werden). Der `wkddap`-Stoß aus Abschnitt 12
+(≈ 235 ms nach Phase 1) taucht in keinem der drei Läufe mehr auf. Die
+`nvim_get_runtime_file`-Kosten sind trotz unveränderter Ursache mitgesunken,
+vermutlich weil insgesamt weniger Plugins beim Prewarm laden (jede
+Laderunde ändert `runtimepath` und damit die zu invalidierende Liste).
 
 ### Phase 3
 
