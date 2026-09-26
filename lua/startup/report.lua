@@ -132,7 +132,7 @@ function M.lines()
     for _, m in ipairs(failed) do
       add(("  ! '%s' threw; phases after it still ran."):format(m.label), "StartupPending")
     end
-    add("  See docs/ARCHITECTURE/startup.md", "StartupMuted")
+    add("  See docs/NOTES/ARCHITECTURE/startup.md", "StartupMuted")
   end
 
   add("")

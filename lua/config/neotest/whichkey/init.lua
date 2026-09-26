@@ -1,84 +1,21 @@
 ---@module 'config.neotest.whichkey'
---- Which-key integration for Neotest actions (new spec)
+--- which-key group label for the Neotest prefix.
+---
+--- The actual `<leader>nt*` keymaps are set by `config.neotest.keymaps` via
+--- the plain `vim.keymap.set` wrapper (no which-key group support there); this
+--- module's only job is the `<leader>nt` group header. It used to also
+--- re-register all nine individual mappings through `wk.add()` -- redundant
+--- with `config.neotest.keymaps`, and `pcall(require, "which-key")` forced
+--- which-key to load right here (from the menu prewarm loading neotest),
+--- which is the load trigger under a lazy manager for a popup nobody had
+--- opened yet. `add_group` never requires it: applied at once if it is
+--- already loaded, queued until it loads otherwise.
 
 local M = {}
 
 ---@return nil
 function M.setup()
-  local ok, wk = pcall(require, "which-key")
-  if not ok then
-    return
-  end
-
-  wk.add({
-    { "<leader>nt", group = "Tests" },
-
-    {
-      "<leader>ntt",
-      function()
-        require("config.neotest.actions").run_nearest()
-      end,
-      desc = "Run nearest test",
-    },
-    {
-      "<leader>ntf",
-      function()
-        require("config.neotest.actions").run_file()
-      end,
-      desc = "Run file tests",
-    },
-    {
-      "<leader>nta",
-      function()
-        require("config.neotest.actions").run_all()
-      end,
-      desc = "Run all tests",
-    },
-    {
-      "<leader>ntd",
-      function()
-        require("config.neotest.actions").debug_nearest()
-      end,
-      desc = "Debug nearest test",
-    },
-
-    {
-      "<leader>nts",
-      function()
-        require("config.neotest.actions").toggle_summary()
-      end,
-      desc = "Toggle summary",
-    },
-    {
-      "<leader>nto",
-      function()
-        require("config.neotest.actions").open_output()
-      end,
-      desc = "Show output",
-    },
-    {
-      "<leader>ntO",
-      function()
-        require("config.neotest.actions").toggle_output_panel()
-      end,
-      desc = "Toggle output panel",
-    },
-
-    {
-      "<leader>ntS",
-      function()
-        require("config.neotest.actions").stop()
-      end,
-      desc = "Stop tests",
-    },
-    {
-      "<leader>ntw",
-      function()
-        require("config.neotest.actions").toggle_watch()
-      end,
-      desc = "Toggle watch mode",
-    },
-  })
+  require("lib.nvim.bindings.keymap.which_key").add_group({ prefix = "<leader>nt", group = "Tests" })
 end
 
 return M
