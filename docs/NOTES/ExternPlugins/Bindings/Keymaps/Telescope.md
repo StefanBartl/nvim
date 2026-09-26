@@ -125,7 +125,7 @@ ist unverändertes `telescope.nvim`-Werksverhalten.
 | `<PageDown>` | **überschrieben:** `preview_scroll_down` (`preview_scrolling_down`, pickers.nvim) | **[custom]** — Default wäre `results_scrolling_down`. |
 | `<M-Left>` | `preview_scrolling_left` (pickers.nvim, `keys.preview_scroll_left` explizit auf `<M-Left>` gesetzt statt Plugin-Default `<C-Left>`) | **[custom]** |
 | `<M-Right>` | `preview_scrolling_right` (pickers.nvim, dito statt `<C-Right>`) | **[custom]** |
-| `<C-a>` | `create_file` (pickers.nvim `entry_actions`, via `config.telescope`) | **[custom]** — kein Telescope-Default auf dieser Taste. |
+| `<C-a>` | `create_file` (pickers.nvim `entry_actions`, von pickers.nvim in `defaults.mappings` gepatcht) | **[custom]** — kein Telescope-Default auf dieser Taste. |
 | `<S-CR>` | `open_background` (pickers.nvim `entry_actions`) | **[custom]** |
 | `<C-o>` | `open_background` (pickers.nvim `entry_actions`) | **[custom]** — siehe Kollisions-Hinweis unten (§5). |
 | `<C-s>` | `split` (`select_horizontal`, pickers.nvim) | **[custom]**, aber wirkungsgleich zu `<C-x>` (Default, s. u.) — reine Zweit-Taste. |

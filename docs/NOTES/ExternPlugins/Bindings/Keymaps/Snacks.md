@@ -38,8 +38,8 @@ Bindings) stillschweigend verwerfen — deshalb fehlt er absichtlich.
 
 | Modul | Zweck | Quelle der Keymaps |
 |---|---|---|
-| `snacks.explorer` | Datei-Explorer | [mappings/standard.lua](../../../../../lua/config/snacks/mappings/standard.lua) |
-| `snacks.picker` | Picker-Backend (Command-History, Notifications) — restliche Picker-Bindings laufen über **pickers.nvim**, nicht direkt über Snacks | [mappings/standard.lua](../../../../../lua/config/snacks/mappings/standard.lua) |
+| `snacks.explorer` | Datei-Explorer | [mappings/extended.lua](../../../../../lua/config/snacks/mappings/extended.lua) |
+| `snacks.picker` | Picker-Backend — alle Picker-Bindings laufen über **pickers.nvim**, nicht direkt über Snacks | `pickers.setup({ mappings })` in [plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua) |
 | `snacks.debug` | Inspector/Overlay | [mappings/extended.lua](../../../../../lua/config/snacks/mappings/extended.lua) |
 | `snacks.dim` | Focus-Scope-Dimmer | dito |
 | `snacks.profiler` | Lua-Profiler | dito |
@@ -56,9 +56,11 @@ Dashboard bleibt auf Upstream-Default (aus).
 
 ## Gruppe: Top Pickers & Explorer
 
-Quelle: [lua/config/snacks/mappings/standard.lua](../../../../../lua/config/snacks/mappings/standard.lua)
-(dispatcht größtenteils über `pickers.nvim`, s. Kommentar-Header der Datei —
-nur `<leader>F` ruft `snacks.explorer()` direkt).
+Quelle: `pickers.setup({ mappings })` in [plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua)
+(seit 2026-09-26 dort deklariert; vorher `config/snacks/mappings/standard.lua` als
+lazy-`keys` des Snacks-Specs, die Datei ist gelöscht). Alles dispatcht über
+`pickers.nvim`; nur `<leader>F` ruft `snacks.explorer()` direkt
+([mappings/extended.lua](../../../../../lua/config/snacks/mappings/extended.lua)).
 
 | Mapping | Aktion | Status | Ziel |
 |---|---|---|---|
@@ -128,11 +130,11 @@ nur `<leader>F` ruft `snacks.explorer()` direkt).
 | `<leader>sS` | LSP Workspace Symbols | [custom] |
 
 Alle Einträge dieser sechs Gruppen sind rein `mode = "n"`. Sie rufen **nicht**
-Snacks' eigenen Picker direkt, sondern **pickers.nvim** (`builtin(...)` /
-`scope_action(...)` in `standard.lua`) — Snacks fungiert hier nur als eines von
-mehreren möglichen Picker-Backends (Telescope/fzf-lua/Snacks), aktiv über
-`picker = picker_config.get_config()` in `opts`, das dank des impliziten
-`setup(opts)`-Aufrufs (s.o.) tatsächlich wirkt. Details zu den
+Snacks' eigenen Picker direkt, sondern **pickers.nvim** (Einträge in `mappings`, z. B. `git_log = { "<leader>gl" }`) —
+Snacks fungiert hier nur als eines von mehreren möglichen Picker-Backends
+(Telescope/fzf-lua/Snacks). Die In-Picker-Tasten und Entry-Actions patcht
+pickers.nvim selbst in `Snacks.config.picker` (`pickers.entry_actions.patch`);
+`plugins/snacks.lua` setzt nur noch `picker = { enabled = true }`. Details zu den
 Picker-internen Tasten (Preview-Scroll, History, `<CR>`/`<C-v>`/`<C-x>`/`<C-t>`)
 liegen bei **pickers.nvim**, nicht in diesem Dokument.
 
@@ -166,11 +168,12 @@ mit `:RA` in runtime-analysis.nvim ein eigenes Zuhause.
 ## Registrierung — technischer Ablauf
 
 `keys = require("config.snacks.mappings").get_all_keys()` in
-[lua/plugins/snacks.lua](../../../../../lua/plugins/snacks.lua) sammelt zwei
-Quellen ein ([mappings/init.lua](../../../../../lua/config/snacks/mappings/init.lua)):
+[lua/plugins/snacks.lua](../../../../../lua/plugins/snacks.lua) sammelt eine
+Quelle ein ([mappings/init.lua](../../../../../lua/config/snacks/mappings/init.lua)):
 
-1. `config.snacks.mappings.standard` (Picker/Explorer, s.o.)
-2. `config.snacks.mappings.extended` (Snacks-Utility, s.o.)
+1. `config.snacks.mappings.extended` (Snacks-Utility und Explorer, s.o.)
+
+Die Picker-Keys sind keine Snacks-`keys` mehr, sondern pickers.nvim-`mappings`.
 
 Da `lazy = false`, setzt Lazy.nvim diese Keymaps beim Start unmittelbar als
 echte `vim.keymap.set`-Aufrufe (nicht nur als Lazy-Load-Trigger).

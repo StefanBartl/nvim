@@ -230,7 +230,7 @@ Prueft **nicht**:
 ## 9. Die tatsaechliche User-Konfiguration und Fehlkonfigurationen
 
 ### Snacks
-`$NVIM_CONFIG_DIR/lua\plugins\snacks.lua:37-63`: `image = { enabled = false }` (Zeile 56), mit Kommentar 48-55 (Kitty-Sequenzen aus nativem Windows-nvim in WezTerm werden nie gezeichnet). Rest: `debug.enabled=true`, `quickfile=true`, `picker=config.snacks.picker`; `dim/profiler/scope/scratch/toggle/words/bigfile/notifier` aus.
+`$NVIM_CONFIG_DIR/lua\plugins\snacks.lua:37-63`: `image = { enabled = false }` (Zeile 56), mit Kommentar 48-55 (Kitty-Sequenzen aus nativem Windows-nvim in WezTerm werden nie gezeichnet). Rest: `debug.enabled=true`, `quickfile=true`, `picker={ enabled = true }` (In-Picker-Keys patcht pickers.nvim); `dim/profiler/scope/scratch/toggle/words/bigfile/notifier` aus.
 - Historie (`git log -S image`, nvim-Config-Repo): `image = { enabled = true }` seit Initial-Commit (336ddeb92, 2026-07-24) bis `986842d6c` (2026-09-18, "snacks.image off"). Also lief die Modul-Variante tatsaechlich mit Default-Optionen (`formats`, `doc.inline=true`, `doc.float=true` usw.) ohne `force`, ohne `debug`, ohne `convert.notify`.
 - Kein `image`-Override von `formats`, `convert`, `cache`, `env`, `force`, `debug`.
 - Weitere Nutzung: keine `Snacks.image.*`-Aufrufe im Lua-Tree (Grep `lua`: 0 Treffer). Doku-Verweis `docs/ROADMAP/reports/Externe-Plugins-Nachbau-Analyse.md:606-621` (Abschnitt 7.1) bestaetigt die Deaktivierung und weist darauf hin, dass sie nicht live verifiziert wurde, sondern auf `images.nvim/docs/scope.md` beruht.
