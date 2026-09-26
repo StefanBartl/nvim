@@ -1375,7 +1375,7 @@ function M.check(plugin, opts)
   -- one or two global `<leader>` entry points alongside a dozen in-window
   -- keys, so "not one key of this plugin is live" is never true and the
   -- verdict would never fire. The table is the right unit, and not by
-  -- accident — `BINDINGS-FORMAT.md` §1 makes a heading above every table
+  -- accident — `docs/BINDINGS-FORMAT.md` §1 makes a heading above every table
   -- mandatory precisely so a parser has "das Scope-Label, das der Scraper
   -- pro Zeile braucht". Empirically the corpus honours that: the groups
   -- this fires on carry headings like "Prompt-field keymaps

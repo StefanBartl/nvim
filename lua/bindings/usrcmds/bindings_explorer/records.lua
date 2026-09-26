@@ -2,7 +2,7 @@
 --- Phase 2 (see this module's own docs/FEATURES.md): tolerant
 --- table-row scraper. Every `|…|…|` line found under the nearest preceding
 --- `##`/`###` heading becomes a flat record — column names and count stay
---- free-form (`docs/NOTES/BINDINGS-FORMAT.md` §1 only mandates a heading right
+--- free-form (`docs/BINDINGS-FORMAT.md` §1 only mandates a heading right
 --- above every table, not a fixed schema across the whole corpus — a rule
 --- added specifically so this scraper wouldn't need one). Files without a table
 --- under a heading (prose-only sections, `Telescope.md`-style stretches)

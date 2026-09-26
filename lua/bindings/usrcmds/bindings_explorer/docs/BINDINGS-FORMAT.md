@@ -22,11 +22,11 @@ Das hier formalisiert also etwas Bewährtes, statt etwas Neues zu erfinden —
 und macht images.nvim.md gleich zum ersten Korrekturfall.
 
 Zweiter Grund: das hier gebaute Schema ist genau das, was
-[bindings_explorer/README.md](../../lua/bindings/usrcmds/bindings_explorer/README.md)s
+[bindings_explorer/README.md](../README.md)s
 Phase 2 (Tabellenzeilen als Datensätze) und Phase 3 (Drift-Erkennung)
 brauchten — beide seit 2026-08-09 implementiert (`:Bindings browse`/
 `:Bindings check`, siehe dessen
-[FEATURES.md](../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md)).
+[FEATURES.md](FEATURES.md)).
 Mit festen Überschriften statt freier Prosa wurde aus dem dort skizzierten
 *toleranten* Scraper ein einfacher, verlässlicher Parser (`records.lua`,
 weiterverarbeitet von `drift.lua`) — die "eigene Überschrift über jeder
@@ -167,7 +167,7 @@ Drei Fälle im heutigen Korpus, und alle drei brauchen sie wirklich:
 Eine neue Zeile ist nur nötig, wenn `:Bindings check` das Blatt als
 übersprungen führt, obwohl sein Plugin geladen ist — oder umgekehrt Befunde
 für ein Plugin meldet, das gar nicht läuft. Alles Weitere in
-[FEATURES.md](../../lua/bindings/usrcmds/bindings_explorer/docs/FEATURES.md),
+[FEATURES.md](FEATURES.md),
 „Wie ein Cheatsheet-Stamm zu seinem Plugin findet".
 
 ## 6. `**Nicht live:**` — wenn eine Tabelle gar nichts über diese Session sagt (2026-09-02)
