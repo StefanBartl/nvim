@@ -395,3 +395,20 @@ Kalter Start, echtes UI (Paint, `UIEnter`), die andere Maschine (Rolle
 `workstation`, dort bremst laut `config/lazy.lua` der EDR jeden `git.exe`-Spawn),
 Tipp-Latenz während der Stöße (die Tasten werden vermutlich gepuffert, nicht
 verworfen: ungeprüft).
+
+---
+
+## 11. Entscheidungen (2026-09-26)
+
+Die fünf offenen Punkte aus Abschnitt 9, einzeln besprochen und entschieden:
+
+| # | Frage | Entscheidung |
+| --- | --- | --- |
+| 1 | Ziel | **Beides, gestuft:** erst Phase 0 und 1, dann neu messen und über Phase 2 und 3 entscheiden |
+| 2 | Repos | **Alle fünf** für Phase 0 und 1: `nvim-config`, `lib.nvim`, `lsp.nvim`, `wkddap`, `my.nvim`; jeweils eigener Commit und Push im `main`, ohne Co-Author; Reihenfolge `lib.nvim` → `lsp.nvim`/`wkddap`/`my.nvim` → `nvim-config`, Messung nach jedem Schritt |
+| 3 | Executables | **Lazy plus Index als Absicherung:** Auflösung beim ersten Bedarf, zusätzlich zentraler PATH-Index in `lib.nvim.cross.executable` mit `clear()` bei Mason-Installationen; die `dap.nvim`-Meldung erscheint nur noch bei `:checkhealth` oder beim Debug-Start |
+| 4 | Menü-Prewarm | **D:** vorerst unverändert; nach Phase 1 neu messen, dann B (Prewarm nur bei Idle) oder A (statische Menü-Integrationen) |
+| 5 | Gegenproben zu F2 | **Beide:** Neovim 0.12 parallel testen und Defender/EDR-Ausnahme testweise; beides löst der Nutzer aus, gemessen wird mit `startup-probe` (`PROBE=rtp,fs,marks`) |
+
+Offen bleibt Phase 3 (F2), bis die Gegenproben vorliegen. Umsetzungsstand:
+siehe die Commits in den genannten Repos.
