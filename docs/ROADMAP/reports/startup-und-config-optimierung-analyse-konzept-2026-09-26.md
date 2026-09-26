@@ -698,3 +698,34 @@ Laderunde ändert `runtimepath` und damit die zu invalidierende Liste).
 Unverändert blockiert auf die beiden Gegenproben, die nur der Nutzer auslösen
 kann (Neovim 0.12, Defender-Ausnahme für `%LOCALAPPDATA%\nvim-data` und
 `B:\repos`). Kein Umbau auf Verdacht (Abschnitt 6).
+
+### Zweiter Review-Durchgang (alle Code-Commits dieser Runde, per Agent)
+
+Jeder Code-Commit aus Phase 1 und 2 einzeln von einem eigenen Review-Agenten
+geprüft (sequenziell, nie parallel). Drei weitere, kleinere Funde, alle sofort
+behoben:
+
+- **`lib.nvim` (`5683bfe`):** `registry.forget()` räumt laut eigener Doku nur
+  direkte `set()`-Records auf, nicht `registry.register()`-Einträge — der
+  Testabschluss in `which_key_spec.lua` verließ sich fälschlich darauf, ließ
+  `"wk_queue_probe"` in `registry.registered()` zurück. Über die dokumentierte
+  Methode (`register()` erneut, leer) korrigiert.
+- **`lsp.nvim` (`117b121`):** dieselbe Bugklasse wie in Abschnitt 13 oben,
+  in derselben Datei, aber unabhängig vom which-key-Fix: `capture_notify()`s
+  `restore()` lief in einem anderen Test erst NACH einer Schleife mit
+  Asserts — ein fehlschlagender Assert hätte den Notify-Capture-Stub in den
+  Rest des gemeinsamen Laufs durchgereicht. Gleiches `pcall`-Muster angewendet.
+- **`ui.nvim` (`19087e5`):** zwei Funde im Phase-2-Commit selbst. (1) Ein
+  `lazy`-Eintrag ("Debug"/"Git Actions") erschien unabhängig davon, ob das
+  Plugin sich selbst per `enabled() == false` abgeschaltet hatte — brach den
+  dokumentierten Opt-out-Vertrag, ein Klick tat dann still nichts. Das lässt
+  sich nicht vorab prüfen, ohne genau den `require` zu bezahlen, den `lazy`
+  vermeiden soll; ein Klick, der ins Leere läuft, sagt das jetzt (`notify.warn`)
+  statt zu schweigen. (2) Das nachträglich geöffnete Popup öffnete immer mit
+  `mouse = true`, unabhängig davon, ob das Menü selbst per Maus oder per
+  `key`-Bindung am Cursor geöffnet wurde — bei reiner Tastaturnutzung konnte
+  das Popup an einer veralteten Mausposition erscheinen. `mouse` wird jetzt von
+  `M.open()`/`M.warm()` durch `M.items()` bis zur Klick-Closure gereicht.
+  Zwei neue Tests, volle Suite weiterhin grün (65/65 in `menu_spec.lua`).
+
+`nvim-config` (`92a618b0`) und `my.nvim` (`8683320`) ohne Befund.
