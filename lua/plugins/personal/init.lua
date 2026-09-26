@@ -1000,19 +1000,9 @@ plugins.add({
     -- required from init.lua's own top level (moved out of
     -- lib.nvim.ui.kit in the 2026-09 migration).
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
-    opts = {
-      -- `:Reposcope update`/`status` walk a whole directory of clones; both
-      -- report into the shared lib.nvim.progress registry.
-      progress_style = "statusline",
-      dashboard = {
-        -- This config is a git repo of its own but lives outside
-        -- `$REPOS_DIR`, so the dashboard's normal scan never finds it --
-        -- listing it here surfaces it alongside every other plugin
-        -- checkout instead of it being invisible to `:MyPlugins
-        -- dashboard`/`:Reposcope dashboard` entirely.
-        extra_paths = { vim.fn.stdpath("config") },
-      },
-    },
+    -- The multi-repo git dashboard (and its `progress_style`/`dashboard.*`
+    -- options) moved to gitsuite.nvim's `:Git dashboard` -- see that spec's
+    -- `opts` below. reposcope stays scoped to search/filter/clone.
   },
 
   -- {
@@ -1153,7 +1143,10 @@ plugins.add({
     -- require("diff") directly -- without this entry, :Git diff * would
     -- error on a session where the user never separately triggered one of
     -- diff.nvim's own commands first. Found and fixed 2026-09-21.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim" },
+    -- ui.nvim: the multi-repo `:Git dashboard` (moved from reposcope.nvim)
+    -- uses `ui.kit` for its popup/confirm dialogs, same as reposcope's own
+    -- prompt/filter UI did.
+    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim", "StefanBartl/ui.nvim" },
     keys = {
       -- Was fugitive's `:Git blame`; gitsuite's own blame is a real
       -- implementation (native git blame --porcelain), not a stub.
@@ -1161,6 +1154,21 @@ plugins.add({
       -- Was kdheepak/lazygit.nvim's `:LazyGit`; the UI is still the real
       -- lazygit TUI, just in gitsuite.nvim's own float now.
       { "<leader>lg", "<cmd>Git ui lazygit<cr>", desc = "[gitsuite.nvim] Open lazygit" },
+    },
+    opts = {
+      -- `:Git dashboard`/`:Git dashboard update` walk a whole directory of
+      -- clones; both report into the shared lib.nvim.progress registry.
+      -- Moved from reposcope.nvim's own `progress_style` along with the
+      -- dashboard itself.
+      progress_style = "statusline",
+      dashboard = {
+        -- This config is a git repo of its own but lives outside
+        -- `$REPOS_DIR`, so the dashboard's normal scan never finds it --
+        -- listing it here surfaces it alongside every other plugin
+        -- checkout instead of it being invisible to `:MyPlugins
+        -- dashboard`/`:Git dashboard` entirely.
+        extra_paths = { vim.fn.stdpath("config") },
+      },
     },
     config = function(_, opts)
       require("gitsuite").setup(opts)

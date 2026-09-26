@@ -47,7 +47,7 @@ of failing loudly. `:MyPlugins update` (fetch + fast-forward pull, scoped to
 the named list) is the one command that closes that gap: run it on the
 machine you're returning to, before you start working there.
 
-It deliberately does **not** reuse `:Reposcope update` — that command scans
+It deliberately does **not** reuse `:Git dashboard update` — that command scans
 every subdirectory of a path and fetch/pulls whatever it finds, which is the
 right behavior for an arbitrary clone folder but would also drag in every
 non-plugin checkout `$REPOS_DIR` holds (Notes, WKDBooks, ...). `update`
@@ -104,7 +104,7 @@ creating a merge commit or clobbering local work.
 ### `:MyPlugins update [dir] [--only=<name>]`
 
 `fetch` then `pull` (in that order) on every present listed repo — the
-`:Reposcope update`-equivalent scoped to just `plugins.personal.list`. This is
+`:Git dashboard update`-equivalent scoped to just `plugins.personal.list`. This is
 the command for the two-machine sync case described above.
 
 ```vim
@@ -129,13 +129,15 @@ guaranteed-fresh checkouts". Dirty/unpushed repos are left alone, same as
 
 ### `:MyPlugins dashboard [dir] [--fetch] [--fetch-this]`
 
-Just opens `reposcope.nvim`'s own `:Reposcope dashboard [dir]` — a read-only
+Just opens `gitsuite.nvim`'s own `:Git dashboard [dir]` — a read-only
 git-status overview (branch, ahead/behind, dirty) of every repo under
-`dir`/`$REPOS_DIR`. That dashboard is already exactly the "overview of what's
-going on" this needed, so there's no separate `plugins.personal.list`-scoped
-status reader here anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`,
-`dashboard` shows *every* repo in the directory, not just the listed
-plugins — same trade-off as `:Reposcope dashboard`/`:Reposcope update` make.
+`dir`/`$REPOS_DIR`, plus whatever pages `dashboard.groups` configures (moved
+there from reposcope.nvim's former `:Reposcope dashboard`). That dashboard
+is already exactly the "overview of what's going on" this needed, so
+there's no separate `plugins.personal.list`-scoped status reader here
+anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`, `dashboard` shows
+*every* repo in the directory, not just the listed plugins — same trade-off
+as `:Git dashboard`/`:Git dashboard update` make.
 Flat shorthand: `:MyPluginsDashboard [dir]` (no `--fetch`/`--fetch-this` on
 the shorthand — it only ever takes `dir`).
 
@@ -161,7 +163,7 @@ every repo in the directory either way — the flags only affect the prefetch.
 
 The nvim config itself (this checkout) is not under `$REPOS_DIR`, so it
 never shows up here on its own — see
-[`reposcope.nvim`'s `dashboard.extra_paths`](https://github.com/StefanBartl/reposcope.nvim/blob/main/docs/configuration.md)
+[`gitsuite.nvim`'s `dashboard.extra_paths`](https://github.com/StefanBartl/gitsuite.nvim/blob/main/docs/configuration.md)
 (configured in this repo's own `plugins/personal/init.lua`) for how it's
 made visible anyway.
 
@@ -248,8 +250,8 @@ subfolder. None of them ever enumerate `dir`'s contents.
 
 That distinction matters concretely: `$REPOS_DIR` also holds `Notes`,
 `WKDBooks` and other non-plugin checkouts. Compare with
-[`reposcope.nvim`](https://github.com/StefanBartl/reposcope.nvim)'s own
-`:Reposcope update`/`status`, which *do* scan every immediate subdirectory of
+[`gitsuite.nvim`](https://github.com/StefanBartl/gitsuite.nvim)'s own
+`:Git dashboard update`/`dashboard`, which *do* scan every immediate subdirectory of
 a given path — the right behavior there (it manages an arbitrary clone
 folder, not a fixed plugin list), but exactly the behavior that would make
 `:MyPlugins remove $REPOS_DIR` unsafe if it worked the same way. Cloning

@@ -369,14 +369,14 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
 | `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
 | `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command |
-| `:MyPlugins dashboard [dir] [--fetch] [--fetch-this]` | Opens `reposcope.nvim`'s own `:Reposcope dashboard [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list). `--fetch` runs `fetch` (below) first; `--fetch-this` scopes that to the plugin the current buffer/cwd belongs to. `:MyPluginsDashboard [dir]` is a flat shorthand (no fetch flags) |
+| `:MyPlugins dashboard [dir] [--fetch] [--fetch-this]` | Opens `gitsuite.nvim`'s own `:Git dashboard [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list), plus whatever `dashboard.groups` pages are configured. `--fetch` runs `fetch` (below) first; `--fetch-this` scopes that to the plugin the current buffer/cwd belongs to. `:MyPluginsDashboard [dir]` is a flat shorthand (no fetch flags) |
 | `:MyPlugins reclone [dir] [--only=<name>] [--dry-run]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
 | `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
 
 `dir` is where to look for the listed repos, never a folder to enumerate —
-contrast with `:Reposcope update`, which does scan. `mode` requires a
+contrast with `:Git dashboard update`, which does scan. `mode` requires a
 restart: `source.lua` is `require()`d once and already baked into the spec
 list lazy-loaded at startup.
 
@@ -390,8 +390,8 @@ list lazy-loaded at startup.
 
 All three left `lua/bindings/usrcmds/` on 2026-09-25:
 
-- **`:MyReposUpdate [path]`** is superseded by reposcope.nvim's
-  `:Reposcope update [path]` — the same fetch + fast-forward pull over every
+- **`:MyReposUpdate [path]`** is superseded by gitsuite.nvim's
+  `:Git dashboard update [path]` — the same fetch + fast-forward pull over every
   git repo under a directory (default `$REPOS_DIR`). Only `--only=<name>` has
   no counterpart there; for a single listed plugin use `:MyPlugins update
   --only=<name>`.

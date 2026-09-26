@@ -7,10 +7,10 @@
 --- dashboard|mode|list|picker} [args]` command via `lib.nvim.bindings.usercmd.composer`
 --- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
 ---
---- Every subcommand except `dashboard` (which just opens reposcope.nvim's
---- own `:Reposcope dashboard`) operates only on the repos `plugins.personal.list`
+--- Every subcommand except `dashboard` (which just opens gitsuite.nvim's
+--- own `:Git dashboard`) operates only on the repos `plugins.personal.list`
 --- names against `dir`/`$REPOS_DIR` — never on whatever a directory scan
---- turns up, unlike `:Reposcope update`, because `$REPOS_DIR` also holds
+--- turns up, unlike `:Git dashboard update`, because `$REPOS_DIR` also holds
 --- non-plugin checkouts (Notes, WKDBooks, ...) a scan-and-delete would put
 --- at risk. `remove`/`reclone` only touch repos confirmed clean via `git
 --- status --porcelain --branch`, named in a single confirmation prompt
@@ -448,7 +448,7 @@ local function pull_all(path, only_name)
 end
 
 ---Fetch + fast-forward pull, scoped to the named plugin list — the
----`:Reposcope update`-equivalent for just `plugins.personal.list`, so a second
+---`:Git dashboard update`-equivalent for just `plugins.personal.list`, so a second
 ---machine can bring its `dir`-mode checkouts level with commits pushed from
 ---the first without touching the unrelated repos `$REPOS_DIR` also holds.
 ---@param path string|nil
@@ -504,11 +504,12 @@ local function resolve_current_plugin_name(base_dir)
   return nil
 end
 
----`reposcope.nvim` already has exactly this dashboard (`:Reposcope dashboard`),
----so there's no reason to keep maintaining a parallel implementation here —
----this used to be its own scoped-to-`plugins.personal.list` status reader,
----but that scoping isn't worth the duplication; `:Reposcope dashboard` shows
----every repo under `dir`/`$REPOS_DIR` instead.
+---`gitsuite.nvim` already has exactly this dashboard (`:Git dashboard`, moved
+---there from reposcope.nvim's former `:Reposcope dashboard`), so there's no
+---reason to keep maintaining a parallel implementation here — this used to
+---be its own scoped-to-`plugins.personal.list` status reader, but that
+---scoping isn't worth the duplication; `:Git dashboard` shows every repo
+---under `dir`/`$REPOS_DIR` instead.
 ---
 ---`fetch_mode` prefetches before the dashboard opens, using the very same
 ---`fetch` subcommand `:MyPlugins fetch` runs — "all" fetches every present
@@ -524,7 +525,7 @@ end
 ---@param fetch_mode "all"|"this"|nil
 local function open_dashboard(path, fetch_mode)
   local function open()
-    vim.cmd("Reposcope dashboard" .. (path and (" " .. fn.fnameescape(path)) or ""))
+    vim.cmd("Git dashboard" .. (path and (" " .. fn.fnameescape(path)) or ""))
   end
 
   if not fetch_mode then
@@ -1084,7 +1085,7 @@ function M.enable()
           { name = "fetch", bool = true },
           { name = "fetch-this", bool = true },
         },
-        desc = "Open reposcope.nvim's git-status dashboard (:Reposcope dashboard) for dir/$REPOS_DIR; --fetch runs :MyPlugins fetch first, --fetch-this scopes that fetch to the plugin the current buffer/cwd belongs to",
+        desc = "Open gitsuite.nvim's git-status dashboard (:Git dashboard) for dir/$REPOS_DIR; --fetch runs :MyPlugins fetch first, --fetch-this scopes that fetch to the plugin the current buffer/cwd belongs to",
         run = function(ctx)
           local fetch_mode = ctx.flags["fetch-this"] and "this"
             or (ctx.flags.fetch and "all" or nil)
