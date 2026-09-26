@@ -85,9 +85,16 @@ process.stdin.on('end', () => {
     try {
       // .cmd shims on Windows need a shell; args are still a fixed, quoted list.
       const needsShell = IS_WIN && bin.toLowerCase().endsWith('.cmd');
+      // cwd: the file's own directory, not this process's -- luacheck and
+      // stylua both resolve their config (.luacheckrc, stylua.toml) by
+      // searching upward from cwd, not from the file path. Without this, a
+      // file written into another repo (e.g. a *.nvim plugin checkout) is
+      // checked against whatever config sits above wherever this hook
+      // happened to be launched -- silently wrong rather than missing.
       execFileSync(needsShell ? `"${bin}"` : bin, needsShell ? args.map((a) => `"${a}"`) : args, {
         stdio: 'pipe',
         shell: needsShell,
+        cwd: dir,
       });
     } catch (err) {
       if (err.code === 'ENOENT') {
