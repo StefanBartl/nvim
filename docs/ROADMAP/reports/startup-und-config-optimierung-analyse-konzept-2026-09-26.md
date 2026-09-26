@@ -4,6 +4,10 @@ Stand: 2026-09-26 · Rechner `OHANA` (Windows, Rolle `default`) · Neovim 0.11.4
 Status: **Analyse und Konzept, keine Änderung an der Config.** Neu angelegt wurde
 nur das Messwerkzeug [`scripts/startup-probe/`](../../../scripts/startup-probe/README.md).
 
+**Umsetzungsstand (2026-09-26): Phase 1 zu großen Teilen umgesetzt, `UIReady` von
+≈ 1,05 s auf ≈ 0,68 s. Siehe Abschnitt 12.** Die Abschnitte 1 bis 9 sind die Analyse
+vor der Umsetzung und bleiben als Ausgangslage stehen.
+
 Diese Fassung ersetzt die erste, die ich im Chat ausgegeben hatte. Sie ist nach
 einer Prüfung von `lua/startup/`, der Startup-Policy
 ([`docs/NOTES/ARCHITECTURE/startup.md`](../../NOTES/ARCHITECTURE/startup.md)) und
@@ -412,3 +416,100 @@ Die fünf offenen Punkte aus Abschnitt 9, einzeln besprochen und entschieden:
 
 Offen bleibt Phase 3 (F2), bis die Gegenproben vorliegen. Umsetzungsstand:
 siehe die Commits in den genannten Repos.
+
+---
+
+## 12. Umsetzungsstand (2026-09-26)
+
+Nach den Entscheidungen aus Abschnitt 11 umgesetzt: Phase 1 in `lib.nvim`, `lsp.nvim`
+und `dap.nvim`, dazu die which-key-Kette. **Nicht angefasst:** Phase 0 in
+`nvim-config` (Marken, Stall-Detektor, Budget, Metrik, Doku-Verweise), der Rest von F5
+in `my.nvim` (`powershell`/`win32yank`), F6, F7 (`gitsigns`), Phasen 2 und 3.
+
+### Gemessenes Ergebnis
+
+Median aus 5 Läufen, mit `startup-probe` (Sonden `exe,stall,report,marks,rtp`,
+Overhead inklusive), Zeiten in ms seit Beginn von `init.lua`. Ausgangswerte aus
+Abschnitt 4 und 5.
+
+| Größe | vorher | jetzt | Änderung |
+| --- | ---: | ---: | ---: |
+| `lsp`-Phase | 390 | **76** | −314 |
+| `my`-Phase | 85 | **57** | −28 |
+| `LazyDone` | ≈ 390 | 396 | unverändert |
+| `VimEnter` | ≈ 890 | **583** | −307 |
+| `UIReady` (`usrcmds` / `mappings` / `ui_statusline`) | 1049 / 1059 / 1076 | **677 / 688 / 703** | ≈ −370 |
+| `exepath`/`executable` | 790 ms in 24 Aufrufen, 15 ohne Treffer | **166 ms in 9 Aufrufen, 2 ohne Treffer** | −624 ms |
+| Event-Loop-Stöße > 60 ms nach `VimEnter` | 5, Σ 1399, größter 486 | 5, Σ 1209, größter 461 | −190 ms |
+| `nvim_get_runtime_file("")` | 91 Aufrufe, ≈ 560 ms | 91 Aufrufe, 545 ms | unverändert |
+
+**Das Ziel für `UIReady` (< 700 ms) ist erreicht, knapp.** Die Stöße nach dem ersten
+Frame sind kaum kleiner geworden: `wkddap.integrations.menu` schrumpfte von ≈ 486 auf
+≈ 235 ms, aber `filetree` (≈ 400–450 ms, `runtimepath`-Neuberechnung) und der dritte
+Stoß (≈ 320 ms) blieben. Das bestätigt Entscheidung 4 (Prewarm nach Phase 1 neu
+bewerten) und rückt Phase 2 und 3 nach vorn: die Stöße hängen jetzt fast nur noch an
+F2 und an den Menü-Modulen.
+
+### Was in welchem Repo passiert ist
+
+| Repo | Commit | Inhalt |
+| --- | --- | --- |
+| `lib.nvim` | `c35c8ca`, `78d2c9b`, `4845fbf` | `cross.executable.index`: `$PATH`-Index für native Windows; `clear(name)` umgeht ihn, `warm()` baut ihn vorab |
+| `lib.nvim` | `644d732`, `8a557de` | which-key-Labels laden which-key nicht mehr (`require`), sie werden bis zum Laden gepuffert; `when_loaded(fn)` für Aufrufer mit eigenem Weg |
+| `lsp.nvim` | `8246a37` | Formatter-`command` als Funktion, HTML-`cmd` als Funktion, NvChad-Probe nur einmal |
+| `lsp.nvim` | `f043bd5` | which-key-Labels über `when_loaded` statt `require` |
+| `dap.nvim` | `4bbc963` | keine Startmeldung mehr für nicht installierte Adapter; `adapters.unavailable` und `:checkhealth wkddap` |
+| `nvim-config` | `90823a5f`, `3023b4d4` | `startup-probe`, dieser Bericht |
+
+### Abweichungen vom Konzept, und warum
+
+1. **Index-Strategie geändert.** Geplant war ein Hintergrund-Index ab dem dritten
+   nativen Lookup. Beim Lesen von `wkddap` fiel auf, dass `register_all` **synchron**
+   über alle Sprachen läuft: ein Hintergrundaufbau braucht Event-Loop-Ticks und kann
+   in so einer Schleife nie fertig werden. Jetzt wird die Zeit in nativen Lookups
+   aufsummiert, und bei **60 ms** (etwa der Preis des Index, 27–65 ms) wird er
+   **synchron** gebaut. Damit zahlen native Lookups nie viel mehr als der Index
+   gekostet hätte. `warm()` bleibt für den Hintergrundaufbau.
+2. **Index gegen `vim.fn` geprüft.** 379 von 380 Namen einer echten `$PATH`
+   stimmen überein. Nötig war die Regel, dass ein **exakter Dateiname** (auch ohne
+   `.exe`, z. B. das Shell-Skript `npm` neben `npm.cmd`) als ausführbar zählt und die
+   `$PATHEXT`-Erweiterung im selben Verzeichnis schlägt. Die eine Abweichung geht
+   zugunsten des Index: Windows-Store-App-Aliase (`pwsh` aus dem Store) kann
+   `vim.fn` wegen EACCES nicht sehen, der Index findet sie.
+3. **Neuer Fund bei `conform`.** `conform` ruft bei **jedem** Format-Aufruf
+   `vim.fn.executable(command)` auf. Bei einem fehlenden Formatter mit bloßem Namen
+   (`prettierd` steht in fünf Ketten vor `prettier`) ist das jedes Mal die volle
+   PATH-Suche, ≈ 40 ms pro Speichern. Ein nicht installiertes Tool antwortet jetzt mit
+   dem **absoluten Mason-Pfad**: eine `stat`-Abfrage, und eine spätere
+   Mason-Installation wird dort gefunden.
+4. **`dap.nvim` nur teilweise lazy.** Entscheidung 3 verlangte Auflösung beim ersten
+   Bedarf. Umgesetzt ist: keine Startmeldung, und die Auflösung selbst kostet dank
+   Index ≈ 80 ms statt ≈ 360 ms. Die **Registrierung** der Sprachen bleibt beim
+   Laden des Plugins, weil sie an jedem der zehn Sprachmodule hängt (`setup()` und
+   `load()` lesen den Adapterpfad). Ein vollständiges Lazy-Registrieren wäre ein
+   Umbau von `dap.nvim` und bringt nach der Neumessung noch ≈ 100 ms; ich habe ihn
+   **nicht** gemacht.
+5. **Ein Fehlgriff, korrigiert.** Ein Commit in `lib.nvim` (`78d2c9b`) ist mit einem
+   zeitabhängigen Test gepusht worden, der im Ganzlauf scheiterte; die Prüfung des
+   Exit-Codes war maskiert. `4845fbf` ersetzt ihn durch eine kontrollierte Uhr.
+   Seitdem laufen die Suiten mit Exit-Code-Prüfung, bevor committet wird.
+
+### Tests
+
+| Repo | Suite | Ergebnis |
+| --- | --- | --- |
+| `lib.nvim` | `TESTS/run.lua` (58 Specs, neu: `cross_executable_spec`, `which_key_spec`) | `LIB_TESTS_OK` |
+| `lsp.nvim` | plenary-Verzeichnislauf | 1123 Erfolge (vorher 1111), derselbe einzige Fehler wie vor den Änderungen (`usercmds stop force-stops a server that never answers shutdown`, unabhängig) |
+| `dap.nvim` | plenary-Verzeichnislauf | 283 Erfolge (vorher 280), keine Fehler |
+
+### Offen
+
+| Punkt | Stand |
+| --- | --- |
+| Phase 0 in `nvim-config` | nicht begonnen |
+| F5-Rest in `my.nvim` | `powershell`-, `win32yank`-Prüfung noch direkt über `vim.fn` (17–20 ms) |
+| which-key wird noch geladen | zwei Auslöser behoben (`lib.nvim`, `lsp.nvim`). Ein dritter liegt in der Config: `lua/config/neotest/whichkey/init.lua:8` lädt which-key, sobald neotest lädt (über den Menü-Prewarm). Gleiches Muster, gleiche Lösung (`when_loaded`) |
+| F6, F7 | unberührt (`usrcmds`-Registrierungen, `gitsigns`-`require` im Autocmd) |
+| Phase 2 und 3 | jetzt der größte verbleibende Hebel: Stöße Σ ≈ 1,2 s, `runtimepath`-Neuberechnung ≈ 545 ms |
+| Gegenproben zu F2 | Neovim 0.12 und Defender-Ausnahme: warten auf dich |
+| Dokumentation `startup.md` | noch nicht nachgezogen (Regeln zu PATH-Suchen und Menü-Prewarm) |
