@@ -550,6 +550,7 @@ plugins.add({
       "CopyFilepathAbsolute",
       "CopyFilepathRelative",
       "CopyFilepathRepos",
+      "CopyFilepathEnv",
       "RevealInFm",
       "OpenInBrowser",
     },
