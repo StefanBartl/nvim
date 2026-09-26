@@ -60,4 +60,4 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
 - Keine Co-Autorenschaft von Claude in Commits.
 - Nach Abschluss einer Aufgabe sofort committen/pushen (und ggf. vorher
   pullen) im main branch, damit die Änderung sofort nutzbar ist.
-- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository
+- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository. Jedes bekomtm einen grünen Haken, wenn das Commit durch einen `ultracode`-Agenten reviewd wurden.
