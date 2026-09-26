@@ -5,13 +5,11 @@
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
     - [Generel](#generel)
-    - [nvim-config](#nvim-config)
     - [wkd](#wkd)
     - [https://github.com/StefanBartl updaten - schon relativ alt](#httpsgithubcomstefanbartl-updaten-schon-relativ-alt)
     - [sessions.nvim:](#sessionsnvim)
     - [Cross-Plugin](#cross-plugin)
       - [Konkurrenzanalyse](#konkurrenzanalyse)
-    - [AI / Claude (zeitlich begrenzt)](#ai-claude-zeitlich-begrenzt)
     - [interessant](#interessant)
   - [Tasks](#tasks)
     - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
@@ -26,8 +24,8 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     02:30       |    94% / 95%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    19% / 98%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     02:30       |    00% / 45%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    00% / 00%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     03:10       |    98% / 98%     |
 
 ---
@@ -36,27 +34,13 @@
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
-
 - mappings durchchecken
 
 - C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/context_open -> mal ein wenig ausprobieren, und solte es erweitert werden? seit der implementierung sind einige plugins dazu gekommen + features innerhalb der damlas schon bestehenden
 
-- ui,nvim marks: schlieen auich mit doppelt c-e nicht nur mit und esc -> also c-euasi als togglw.
-
 ---
 
 ### Generel
-
-- Wir haben ein Klick-Problem: Jeder KLcik in den BUfer, freezed nvim für mehrere sekunden ein. das ist nicht gut. Wir haben viel miot mausklickdssinplementiert inden eltzen tagen, da swird wohl damit zu tun haben. Das Problem ist aber offensichtlich nicht ur ein klick problem, auch so bei editieren mit keyboard hatte ich jetzt mehramls einen freeze.
-
----
-
-### nvim-config
-
-- startup time  optimieren
-- config optimieren
-
----
 
 ### wkd
 
@@ -86,12 +70,6 @@
 
 - [ ] **Feature-Scan:** Bei Plugins, die meinen ähneln (z. B. gitsigns → gitsuite.nvim, 3rd/images.nvim → images.nvim, tabufline → ui.nvim, lspsaga.nvim → lspo.nvim), die Repos mit hoher bzw. mittlerer Ähnlichkeit **und** hoher Reichweite/Nutzerzahl nach Features abgrasen, die ich noch nicht implementiert habe. Gibt es bei „mittlerer Ähnlichkeit" nur wenige Treffer, nur die reichweitenstärksten davon berücksichtigen.
 - [ ] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
-
----
-
-### AI / Claude (zeitlich begrenzt)
-
-- [ ] $250 Guthaben bekommen → guter Zeitpunkt, um ai.nvim bzw. loom.ai live mit einem echten Claude-Account zu testen (inkl. Rulers), auch im Agent-Modus checken.
 
 ---
 

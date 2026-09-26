@@ -17,6 +17,7 @@ checke alle commits dieses chats auf Bugs, Security / Performance Optimierungen 
 
 - Wenn eine Aufgabe fertig ist: sofort committen / pushen / pullen im main-Branch, sodass ich es gleich verwenden kann.
 - Keine Co-Autorenschaft von Claude in den Commits.
+- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository
 
 ### Code-Qualität
 
