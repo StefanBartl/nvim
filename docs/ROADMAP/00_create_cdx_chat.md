@@ -2,7 +2,7 @@
 
 ## notes
 
-checke alle commits dieses chats auf Bugs, Security / Performance Optimierungen und fixe sie gleich.
+checke/review alle commits dieses chats auf Bugs, Security / Performance Optimierungen und fixe sie gleich.
 
 ## Vorgaben/Richtlinien/Guiding
 
