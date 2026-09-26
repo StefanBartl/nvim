@@ -165,7 +165,7 @@ daraus einen Datensatz —
 ```
 
 Spaltenzahl/-namen sind bewusst nicht festgeschrieben (siehe
-[`docs/NOTES/BINDINGS-FORMAT.md`](../../../../../docs/NOTES/BINDINGS-FORMAT.md)) —
+[`BINDINGS-FORMAT.md`](BINDINGS-FORMAT.md)) —
 `Keymaps/*.md` hat meist `Key|Mode|Effect|Option`, Extern-Dateien wie
 `Telescope.md` bringen mehrere Tabellen unterschiedlicher Form mit. Dateien
 ohne saubere Tabelle unter einer Überschrift liefern hier einfach keine
@@ -729,7 +729,7 @@ Blätter. Sie melden sich trotzdem, weil der Scraper ihre Key-Spalte findet.
 Sie können es jetzt sagen: eine Zeile `**Nicht live:**` direkt unter der
 Überschrift markiert alle Tabellen dieses Abschnitts als unprüfbar
 (`records.lua`s `NOT_LIVE_MARKER`, Format in
-[`BINDINGS-FORMAT.md`](../../../../../docs/NOTES/BINDINGS-FORMAT.md) §6).
+[`BINDINGS-FORMAT.md`](BINDINGS-FORMAT.md) §6).
 Nur die Live-Richtung ehrt ihn; die Zeilen bleiben in `browse` und zählen als
 Dokumentation — dieselbe Trennung wie bei `META_FILES`.
 
