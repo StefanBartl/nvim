@@ -131,8 +131,10 @@ guaranteed-fresh checkouts". Dirty/unpushed repos are left alone, same as
 
 Just opens `gitsuite.nvim`'s own `:Git dashboard [dir]` — a read-only
 git-status overview (branch, ahead/behind, dirty) of every repo under
-`dir`/`$REPOS_DIR`, plus whatever pages `dashboard.groups` configures (moved
-there from reposcope.nvim's former `:Reposcope dashboard`). That dashboard
+`dir`/`$REPOS_DIR`, plus whatever pages `dashboard.groups` configures -- a
+gitsuite-native addition; the dashboard feature itself moved here from
+reposcope.nvim's former `:Reposcope dashboard`, which had no paging/group
+concept at all. That dashboard
 is already exactly the "overview of what's going on" this needed, so
 there's no separate `plugins.personal.list`-scoped status reader here
 anymore; unlike `clone`/`remove`/`fetch`/.../`reclone`, `dashboard` shows

@@ -91,8 +91,8 @@ function M.pull_one(path, on_done)
   end)
 end
 
----Fetch then fast-forward pull — same sequence `:Reposcope update` runs, scoped
----to a single already-resolved path. `changed` mirrors the pull's own —
+---Fetch then fast-forward pull — same sequence `:Git dashboard update` runs,
+---scoped to a single already-resolved path. `changed` mirrors the pull's own —
 ---that's what "did this checkout actually move forward" means for the
 ---combined operation.
 ---@param path string
