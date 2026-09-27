@@ -14,47 +14,11 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 |---|---|---|
 | P0 | `lib.nvim.notify.popup` erweitern (Kappung, `toast_min_level`, globaler Default, `expand_last`, `:Lib notify`) | ✅ erledigt (`80bdc3d`, `a60c481`) |
 | P1 | `lib.nvim.echo`, `lib.nvim.output`-Fassade, `output.viewer` | ✅ erledigt |
-| P2 | Progress-Style `echo`, Style-Liste | offen |
+| P2 | Progress-Style `echo`, Style-Liste | ✅ erledigt |
 | P3 | Aktivierung in der Installations-Spec | ✅ erledigt |
 | P4 | Wrapper-Repos umstellen | ✅ erledigt — 11/12, 1 bewusst zurückgestellt (siehe Tabelle) |
 | P5 | Load-Time-Bindungen | offen |
 | P6 | `print`-Dumps auf `output.viewer.show_lines` | offen |
-
-## P2 — Progress-Style `echo` + Style-Liste
-
-**Dateien:** `lua/lib/nvim/progress/styles/echo.lua` (neu),
-`lua/lib/nvim/progress/resolve_style.lua`, `lua/lib/nvim/progress/init.lua`
-
-- `styles/echo.lua` implementiert denselben Vertrag wie `styles/statusline.lua`
-  (`start(spec, opts, request_cancel) -> state`, `update(state, spec, opts) -> state`,
-  `finish(state, spec, opts)`, `cancel(state, spec, opts)`), rendert über
-  `lib.nvim.echo.write(chunks, {history=false})` bei `update`, und einmalig
-  `history=true` bei `finish`/`cancel` (Abschluss-Nachricht bleibt im Log).
-- `resolve_style.lua`: neuer Zweig `if want == "echo" then return require(...) end`,
-  analog zu `"statusline"` — kein Soft-Dependency-Check nötig, `nvim_echo`
-  ist Core-API.
-- **Style-Liste:** `lib.nvim.progress`s `create(opts)` nimmt `opts.style`
-  heute als **einen** Wert. Für `opts.style = {"statusline", "echo"}` muss
-  `create()` **mehrere** `style_state`s parallel führen: aus
-  `local style_state = nil` wird `local style_states = {}` (Liste), aus
-  `style.start(...)`/`.update(...)`/`.finish(...)`/`.cancel(...)` werden
-  Schleifen über alle aufgelösten Styles. **Rückwärtskompatibel:** ein
-  String-`opts.style` wird zu einer Einzel-Element-Liste normalisiert,
-  bestehende Aufrufer (`style = "notify"` etc.) ändern sich nicht.
-- `@types/init.lua`: `Lib.Progress.Opts.style` Alias erweitern auf
-  `Lib.Progress.Style|Lib.Progress.Style[]`.
-
-### Tests (P2)
-
-- Neue `TESTS/progress_echo_style_spec.lua` (vorher prüfen, ob es bereits
-  Tests für `progress/init.lua` gibt und deren Konventionen übernehmen).
-- Style-Liste: `create({style = {"statusline", "echo"}})`, `update(...)`
-  aufrufen, prüfen dass **beide** Styles ihre `update`-Funktion mit
-  demselben `spec` erhalten (zwei Stubs, zwei Call-Counts).
-
-**Akzeptanzkriterium P2:** ein Handle mit `style = {"statusline", "echo"}`
-zeigt Statusline-Badge UND eine Cmdline-Zeile für dieselbe Operation, ohne
-doppelten aufruferseitigen Code.
 
 ## P4 — Wrapper-Repos (abgeschlossen)
 
