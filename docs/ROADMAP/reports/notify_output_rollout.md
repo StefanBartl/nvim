@@ -15,7 +15,7 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 | P0 | `lib.nvim.notify.popup` erweitern (Kappung, `toast_min_level`, globaler Default, `expand_last`, `:Lib notify`) | ✅ erledigt (`80bdc3d`, `a60c481`) |
 | P1 | `lib.nvim.echo`, `lib.nvim.output`-Fassade, `output.viewer` | ✅ erledigt |
 | P2 | Progress-Style `echo`, Style-Liste | offen |
-| P3 | Aktivierung in der Installations-Spec | offen — braucht eine Rückfrage (siehe unten) |
+| P3 | Aktivierung in der Installations-Spec | ✅ erledigt |
 | P4 | Wrapper-Repos umstellen | ✅ erledigt — 11/12, 1 bewusst zurückgestellt (siehe Tabelle) |
 | P5 | Load-Time-Bindungen | offen |
 | P6 | `print`-Dumps auf `output.viewer.show_lines` | offen |
@@ -55,30 +55,6 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 **Akzeptanzkriterium P2:** ein Handle mit `style = {"statusline", "echo"}`
 zeigt Statusline-Badge UND eine Cmdline-Zeile für dieselbe Operation, ohne
 doppelten aufruferseitigen Code.
-
-## P3 — Aktivierung in der Installations-Spec
-
-**Datei:** `C:\Users\bartl\AppData\Local\nvim\lua\plugins\personal\init.lua`
-(dort, wo lib.nvim konfiguriert wird)
-
-```lua
-require("lib.nvim.notify").setup({ popup = true })
-require("lib.nvim.notify.popup").setup({
-  toast_min_level = vim.log.levels.INFO,
-  -- max_lines/width/toast_max_bytes/entry_max_bytes: Defaults reichen erstmal
-})
-```
-
-- **Offene Entscheidung (bei dir):** ein optionaler globaler Keymap für
-  `popup.toggle_full()`/`expand_last()` zusätzlich zu `:Lib notify last`.
-  Komfortfrage, der Befehl funktioniert auch ohne Taste — in dieser Runde
-  nachfragen, welche Taste (`<leader>n…`-Namespace prüfen, ob frei).
-- Falls die Taste gewünscht wird: Eintrag in **lib.nvims** `docs/BINDINGS.md`
-  (nicht nvim-config), wenn der Keymap über `lib.nvim.bindings.keymap`
-  läuft; sonst ins nvim-configs eigenes `docs/BINDINGS.md`.
-
-**Akzeptanzkriterium P3:** nach einem `:so` der Spec zeigen alle ~30
-lib-Nutzer Toasts, ohne dass ein Plugin angefasst wurde.
 
 ## P4 — Wrapper-Repos (abgeschlossen)
 

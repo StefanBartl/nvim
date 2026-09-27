@@ -39,6 +39,20 @@ plugins.add({
       })
 
       require("lib.nvim.lastcmd").setup({ experimental = true })
+
+      -- Global default: every lib.nvim.notify consumer (~30 plugins, none
+      -- touched) now shows a non-focus-stealing corner toast instead of the
+      -- plain `vim.notify` more-prompt. `toast_min_level` keeps chatty
+      -- INFO-level plugins (e.g. lsp.nvim, 60+ call sites) from spamming the
+      -- corner -- below it, a message still lands in history/:messages, it
+      -- just never becomes a toast. No keymap for `expand_last()`/
+      -- `toggle_full()`: `:Lib notify last|history|clear` cover it, and the
+      -- history buffer's own buffer-local `<C-s>` (see lib.nvim's
+      -- docs/BINDINGS.md) toggles collapsed/full there.
+      require("lib.nvim.notify").setup({ popup = true })
+      require("lib.nvim.notify.popup").setup({
+        toast_min_level = vim.log.levels.INFO,
+      })
     end,
   },
 
