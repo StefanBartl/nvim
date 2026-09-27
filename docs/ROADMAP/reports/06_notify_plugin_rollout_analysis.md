@@ -13,6 +13,14 @@ mit den 37 in Report 02 gescannten Repos (Report 02 zählte zusätzlich
 `reposcope.nvim` mit, das in deiner Liste diesmal ebenfalls enthalten ist — die
 Mengen sind identisch).
 
+**Status P4:** `sessions.nvim` (Rang 1) ist erledigt — sessions.nvim-Commit
+`6bda06f`. Beim Umsetzen zeigte sich, dass die 6 Wrapper-Dateien schon
+`lib.nvim.notify.create()` mit einem korrekten Fallback aufriefen (kein reiner
+`vim.notify`-Direktaufruf, wie unten in Kategorie B ursprünglich vermutet) —
+das eigentliche Problem war 7-fache Code-Duplikation, nicht fehlende
+lib.nvim-Anbindung, plus zwei wirklich unangebundene `vim.notify`-Aufrufe in
+`picker.lua`s `M.pick()`. Siehe die Korrektur in Kategorie B unten.
+
 ## Kurzfassung
 
 Nach P0 (konfigurierbare Kappung, `toast_min_level`, globaler
@@ -76,7 +84,7 @@ Reihenfolge; hier nachgezogen.
 
 | Rang | Repo | Fundstelle | Befund (frisch) | Empfehlung |
 |---|---|---|---|---|
-| 1 | sessions.nvim | 7 Dateien (`bindings/{autocmds,keymaps,usercmds}/init.lua`, `marks/{init,menu,preview}.lua`, `picker.lua`) | 20 raw `vim.notify` (12 WARN/ERROR), je 2-4 pro Datei, fast identisch dupliziert | einen gemeinsamen `sessions/util/notify.lua` auf Basis `lib.nvim.notify.create(..., {popup=true})` einführen, alle 7 Stellen darauf umstellen |
+| 1 | ~~sessions.nvim~~ **erledigt** (`6bda06f`) | 7 Dateien (`bindings/{autocmds,keymaps,usercmds}/init.lua`, `marks/{init,menu,preview}.lua`, `picker.lua`) | Korrektur beim Umsetzen: 6 der 7 Stellen riefen `lib.nvim.notify.create()` bereits korrekt mit Fallback auf — der Scanner zählte deren fallback-Zweig als "raw `vim.notify`" mit. Das eigentliche Problem war 7-fache Duplikation derselben ~30-Zeilen-Closure, plus zwei echte, unangebundene `vim.notify`-Aufrufe in `picker.lua`s `M.pick()` | `sessions/util/notify.lua` eingeführt (`create`/`create_titled`), alle 7 Stellen darauf umgestellt, `M.pick()`s zwei Rohaufrufe mitmigriert |
 | 2 | rules.nvim | `bindings/usrcmds.lua`, `config/init.lua`, `init.lua` | 15 raw `vim.notify` (14 WARN/ERROR!), 3 `print`, **null** `lib_notify` — komplett unmigriert | Wrapper einführen; klassischer Fall für mehrzeilige mehrzeilige Config-Fehler → Popup; `:Rules messages` ergänzen |
 | 3 | mdview.nvim | `adapter/ws_client.lua` (7 Stellen) | 7 raw `nvim_echo` (Server-Health-Check-Fehler, stderr, oft lang); 24 andere Stellen sind bereits `lib_notify` | nur `ws_client.lua` umstellen — der Rest des Plugins ist schon migriert; `test/runner.lua`s Load-Time-Bindung ignorieren (Test-Runner) |
 | 4 | media.nvim | `ui.lua`, `hub/dashboard.lua`, `bindings/*` | 6 raw `notify` (2 WARN/ERROR), **kein** `lib_notify` — kein Wrapper vorhanden | Wrapper neu einführen |
