@@ -16,7 +16,7 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 | P1 | `lib.nvim.echo`, `lib.nvim.output`-Fassade, `output.viewer` | offen |
 | P2 | Progress-Style `echo`, Style-Liste | offen |
 | P3 | Aktivierung in der Installations-Spec | offen — braucht eine Rückfrage (siehe unten) |
-| P4 | Wrapper-Repos umstellen | läuft — 4/12 erledigt, siehe Tabelle |
+| P4 | Wrapper-Repos umstellen | ✅ erledigt — 11/12, 1 bewusst zurückgestellt (siehe Tabelle) |
 | P5 | Load-Time-Bindungen | offen |
 | P6 | `print`-Dumps auf `output.viewer.show_lines` | offen |
 
@@ -177,7 +177,7 @@ require("lib.nvim.notify.popup").setup({
 **Akzeptanzkriterium P3:** nach einem `:so` der Spec zeigen alle ~30
 lib-Nutzer Toasts, ohne dass ein Plugin angefasst wurde.
 
-## P4 — Wrapper-Repos (läuft)
+## P4 — Wrapper-Repos (abgeschlossen)
 
 Reihenfolge nach Hebelwirkung. Je Repo, eine Runde (max. 1 Agent): Wrapper
 ändern (nicht die Aufrufer), Repo-eigenen `:<Plugin> messages`-Befehl
@@ -190,17 +190,28 @@ Commit/Push auf `main`.
 | 2 | rules.nvim | ✅ erledigt (`f4e4fea`) | 15 raw `vim.notify`, null `lib_notify` | `rules/util/notify.lua`, harte Abhängigkeit |
 | 3 | mdview.nvim | ✅ erledigt (`2aa6978`) | 7 raw `nvim_echo` in `ws_client.lua` | explizites `popup=true, source="mdview"` |
 | 4 | media.nvim | ✅ erledigt (`308ddee`) | `ui.lua`, `hub/dashboard.lua`, `bindings/*`: 6 raw `notify`, kein `lib_notify` | `media/util/notify.lua` (soft dependency, wie `sessions.nvim`) |
-| 5 | my.nvim (privat) | offen | `declarative/clipboard.lua:178,180,185`: 3 raw `notify` | nur diese Datei |
-| 6 | dap.nvim | offen | `languages/rust.lua:138`, `zig.lua:109,119`: 3 raw `notify` WARN | nur diese zwei Dateien |
-| 7 | sandbox.nvim | offen | `notify.lua:17-23`: 3 raw `notify` | Wrapper umstellen; Load-Time-Bindung separat (P5) |
-| 8 | buffer-ctx.nvim | offen | `util/notify.lua:29-56`: 4 raw `notify` | `health.lua` unangetastet lassen |
-| 9 | markdown.nvim | offen | `util/notify.lua:29`: 1 raw `notify` INFO | wie buffer-ctx |
-| 10 | insights.nvim | offen | `config/init.lua:158`: 1 raw `notify` WARN, mehrzeilig | klassischer Popup-Kandidat |
-| 11 | diff.nvim | offen | `core/directory.lua:281`, `core/render.lua:755`: 2 raw `nvim_echo` | Wrapper existiert schon für andere Stellen |
-| 12 | pickers.nvim | offen | `cheatsheet/init.lua:122`: 1 raw `notify`, mehrzeilig | **Einzelfall**: Cheatsheet-Inhalt, kein Ereignis — eher P6-Viewer-Kandidat als P4 |
+| 5 | my.nvim (privat) | ✅ erledigt (`73670ce`) | `declarative/clipboard.lua:178,180,185`: 3 raw `notify` | hart auf `lib.nvim.notify.create("[my]")` |
+| 6 | dap.nvim | ✅ erledigt (`892e804`) | `languages/rust.lua:138`, `zig.lua:109,119`: 3 raw `notify` WARN | auf bestehenden `wkddap.utils.notify`-Wrapper umgestellt |
+| 7 | sandbox.nvim | ✅ erledigt (`b8c4c12`) | `notify.lua:17-23` | **Korrektur:** Wrapper rief `lib.nvim.notify.create()` schon korrekt mit Fallback auf — Scanner zählte den Fallback-Zweig mit. Fix: `popup=true, source="sandbox"` ergänzt |
+| 8 | buffer-ctx.nvim | ✅ erledigt (`de930b8`) | `util/notify.lua:29-56` | dieselbe Korrektur wie sandbox.nvim: `popup=true, source="buffer-ctx"` ergänzt |
+| 9 | markdown.nvim | ✅ erledigt (`a89d578`) | `util/notify.lua:29` | dieselbe Korrektur: `popup=true, source="markdown"` ergänzt |
+| 10 | insights.nvim | ✅ erledigt (`68671e6`) | `config/init.lua:158`: 1 raw `notify` WARN, mehrzeilig | auf bestehenden `insights.util.notify`-Wrapper umgestellt (hart) |
+| 11 | diff.nvim | ✅ erledigt (`e331128`) | `util/notify.lua`: `popup=true, source="diff"` ergänzt | **Reklassifiziert:** die 2 `nvim_echo`-Stellen (`core/directory.lua:281`, `core/render.lua:755`) sind bewusste Inhalts-Ausgabe (voller Diffstat/Unified-Diff-Text als eigener, expliziter Output-Modus), keine Notify-Kandidaten — unangetastet gelassen, siehe P6 |
+| 12 | pickers.nvim | zurückgestellt | `cheatsheet/init.lua:122` | **Bestätigt kein P4-Fall:** `vim.notify`-Dump ist der Fallback für `ui.kit.viewer` (Cheatsheet-Inhalt, kein Ereignis) — gehört zu P6 (`output.viewer.show_lines`), sobald P1 steht. Kein Code geändert |
 
 **Nicht anfassen:** `buffer-ctx.nvim/health.lua` (checkhealth),
 `debugging.nvim/views/debug_helper.lua:260` (Selbsttest).
+
+**Muster, das sich durch Rang 7-9 zog:** bei drei von zwölf Repos
+(`sandbox.nvim`, `buffer-ctx.nvim`, `markdown.nvim`) war der vermeintlich
+"unmigrierte" Wrapper bereits korrekt auf `lib.nvim.notify.create()` mit
+sauberem Fallback gebaut — der Scanner zählte den Fallback-Zweig (nur
+erreichbar, wenn `lib.nvim` fehlt) als "raw `vim.notify`" mit. Echte Lücke
+war jeweils nur das fehlende `popup=true`/`source=...`. Bei zwei Repos
+(`diff.nvim`, `pickers.nvim`) waren die gemeldeten `nvim_echo`/`vim.notify`-
+Stellen bei genauerem Lesen bewusste Inhalts-Ausgabe statt Notify-Events —
+Report 06 (jetzt archiviert) hatte das als reinen Zeilen-Scanner nicht
+unterscheiden können.
 
 ## P5 — Load-Time-Bindungen
 
