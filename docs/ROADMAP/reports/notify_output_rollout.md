@@ -16,7 +16,7 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 | P1 | `lib.nvim.echo`, `lib.nvim.output`-Fassade, `output.viewer` | offen |
 | P2 | Progress-Style `echo`, Style-Liste | offen |
 | P3 | Aktivierung in der Installations-Spec | offen — braucht eine Rückfrage (siehe unten) |
-| P4 | Wrapper-Repos umstellen | läuft — 3/12 erledigt, siehe Tabelle |
+| P4 | Wrapper-Repos umstellen | läuft — 4/12 erledigt, siehe Tabelle |
 | P5 | Load-Time-Bindungen | offen |
 | P6 | `print`-Dumps auf `output.viewer.show_lines` | offen |
 
@@ -189,7 +189,7 @@ Commit/Push auf `main`.
 | 1 | sessions.nvim | ✅ erledigt (`6bda06f`) | 7-fache Wrapper-Duplikation + 2 unangebundene `M.pick()`-Aufrufe | `sessions/util/notify.lua` |
 | 2 | rules.nvim | ✅ erledigt (`f4e4fea`) | 15 raw `vim.notify`, null `lib_notify` | `rules/util/notify.lua`, harte Abhängigkeit |
 | 3 | mdview.nvim | ✅ erledigt (`2aa6978`) | 7 raw `nvim_echo` in `ws_client.lua` | explizites `popup=true, source="mdview"` |
-| 4 | media.nvim | offen | `ui.lua`, `hub/dashboard.lua`, `bindings/*`: 6 raw `notify`, kein `lib_notify` | Wrapper neu einführen |
+| 4 | media.nvim | ✅ erledigt (`308ddee`) | `ui.lua`, `hub/dashboard.lua`, `bindings/*`: 6 raw `notify`, kein `lib_notify` | `media/util/notify.lua` (soft dependency, wie `sessions.nvim`) |
 | 5 | my.nvim (privat) | offen | `declarative/clipboard.lua:178,180,185`: 3 raw `notify` | nur diese Datei |
 | 6 | dap.nvim | offen | `languages/rust.lua:138`, `zig.lua:109,119`: 3 raw `notify` WARN | nur diese zwei Dateien |
 | 7 | sandbox.nvim | offen | `notify.lua:17-23`: 3 raw `notify` | Wrapper umstellen; Load-Time-Bindung separat (P5) |
