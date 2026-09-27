@@ -13,109 +13,12 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 | Phase | Inhalt | Status |
 |---|---|---|
 | P0 | `lib.nvim.notify.popup` erweitern (Kappung, `toast_min_level`, globaler Default, `expand_last`, `:Lib notify`) | ✅ erledigt (`80bdc3d`, `a60c481`) |
-| P1 | `lib.nvim.echo`, `lib.nvim.output`-Fassade, `output.viewer` | offen |
+| P1 | `lib.nvim.echo`, `lib.nvim.output`-Fassade, `output.viewer` | ✅ erledigt |
 | P2 | Progress-Style `echo`, Style-Liste | offen |
 | P3 | Aktivierung in der Installations-Spec | offen — braucht eine Rückfrage (siehe unten) |
 | P4 | Wrapper-Repos umstellen | ✅ erledigt — 11/12, 1 bewusst zurückgestellt (siehe Tabelle) |
 | P5 | Load-Time-Bindungen | offen |
 | P6 | `print`-Dumps auf `output.viewer.show_lines` | offen |
-
-## P1 — `lib.nvim.echo` und `lib.nvim.output.viewer` (neu)
-
-### `lua/lib/nvim/echo/init.lua` (neu)
-
-```lua
----@param text_or_chunks string|{[1]:string,[2]:string}[]
----@param opts? { level?: integer, history?: boolean }
-function M.write(text_or_chunks, opts) end
-```
-
-- Baut auf demselben Fast-Event-Schedule wie `popup.write_messages`
-  (`popup.lua`) — **Code-Dopplung vermeiden**: die
-  `vim.in_fast_event() → vim.schedule(...)`-Reentry-Guard-Funktion aus
-  `popup.lua` in ein gemeinsames internes Modul heben (z. B.
-  `lua/lib/nvim/notify/internal/fast_event.lua`), von `popup.lua` UND
-  `echo/init.lua` genutzt. Ohne diese Extraktion entsteht sofort dieselbe
-  Art Duplikat, die bei `sessions.nvim` gefunden und behoben wurde (7 fast
-  identische Wrapper) — nur diesmal im lib selbst.
-- `history = false` (Default für Zwischenstände) → `nvim_echo(chunks, false, {})`.
-  `history = true` (Default für Endergebnis, explizit gesetzt) →
-  `nvim_echo(chunks, true, {})`, plus optional Eintrag in `popup.history()`
-  (gemeinsame History über beide Kanäle).
-- **Feature-Detection für `nvim_echo`-Optionen (`id`, `kind="progress"`,
-  `status`, `percent`)** — *vor* der Umsetzung mit `vim.fn.has("nvim-0.11")`
-  o. ä. gegen die tatsächlich unterstützte Neovim-Version prüfen
-  (versionsabhängig). Einziger Punkt in diesem Plan, der eine
-  Versionsrecherche **vor** dem Schreiben von Code braucht: in Runde 1 von
-  P1 zuerst `:version`/`:h nvim_echo` in der Ziel-Neovim prüfen, dann erst
-  den Progress-Style (P2) darauf aufbauen.
-
-### `lua/lib/nvim/output/viewer.lua` (neu)
-
-```lua
----@param title string
----@param lines string[]
----@param opts? table  -- durchgereicht an ui.kit.viewer.open
-function M.show_lines(title, lines, opts) end
-```
-
-Dünner Wrapper um das **bereits vorhandene**
-`require("lib.nvim.ui.kit.viewer").open({ lines = lines, title = title })`
-(`lua/lib/nvim/ui/kit/viewer.lua`) — keine neue Fenster-/Buffer-Logik, nur
-eine stabile, dump-taugliche Signatur (`title, lines` statt `opts`-Tabelle)
-für die spätere `print`-Migration (P6).
-
-### `lua/lib/nvim/output/init.lua` (neu, die Fassade)
-
-```lua
----@alias Lib.Output.Channel "popup"|"echo"|"vim_notify"
-
-local channels = {}  -- registry: name -> notifier-factory
-
-function M.register_channel(name, factory) channels[name] = factory end
-
----@param prefix string
----@param opts? { channel?: Lib.Output.Channel }  -- default "popup"
----@return table notifier  -- gleiche Form wie lib.nvim.notify.create: info/warn/error/debug/notify, plus dump(lines, title)
-function M.create(prefix, opts) end
-```
-
-- Default-Kanal **immer explizit `"popup"`**, keine Heuristik (Entscheidung,
-  siehe WKDBooks-Archiv).
-- `channels.popup` delegiert an `require("lib.nvim.notify").create(prefix, {popup=true, ...})`,
-  `channels.vim_notify` an `require("lib.nvim.notify").create(prefix)`,
-  `channels.echo` an einen neuen Notifier-Adapter um `lib.nvim.echo.write`.
-- `notifier.dump(lines, title)` → `require("lib.nvim.output.viewer").show_lines(title, lines)`
-  auf jedem Kanal identisch (das ist der Ersatz für `print` — kein eigener
-  Kanal `print`, der lässt sich nicht sauber abfangen).
-- **Headless-Fallback:** `#vim.api.nvim_list_uis() == 0` → alle Kanäle
-  fallen auf `print`/`io.stderr:write` zurück. Wiederverwendbar: vor dem
-  Schreiben kurz grep nach `nvim_list_uis` im Repo, um keine zweite Variante
-  davon einzuführen.
-
-### Tests (P1)
-
-- `TESTS/echo_spec.lua`: `history=false` vs. `true` (Stub `nvim_echo`,
-  Argumente prüfen), Fast-Event-Reentry (Stub `vim.in_fast_event() = true`,
-  `vim.schedule` capturen).
-- `TESTS/output_spec.lua`: `create(prefix, {channel="echo"})` liefert
-  `info/warn/error/debug/dump`; `register_channel` mit einem Test-Kanal;
-  Default ohne `channel`-Angabe ist nachweislich `"popup"` (Stub prüfen,
-  dass `notify.popup.deliver` aufgerufen wird, nicht `vim.notify` direkt).
-- `TESTS/output_viewer_spec.lua`: `show_lines` ruft `ui.kit.viewer.open` mit
-  den erwarteten `lines`/`title` auf (Stub, analog zu `notify_popup_spec.lua`).
-
-### Doku (P1)
-
-- Neues `lua/lib/nvim/echo/README.md`, `lua/lib/nvim/output/README.md`
-  (jedes lib.nvim-Modul hat eins).
-- `docs/modules.md` (lib.nvim) um `echo` und `output` ergänzen — dabei auch
-  `lib.nvim.cache` nachtragen, das dort schon heute fehlt (siehe `LUA-08`
-  im WKDBooks-Archiv).
-
-**Akzeptanzkriterium P1:** `require("lib.nvim.output").create("[x]", {channel="echo"}).info(...)`
-zeigt eine flüchtige Cmdline-Zeile ohne History-Eintrag; `.dump({...}, "title")`
-öffnet den Viewer; alles luacheck/stylua-grün, getestet.
 
 ## P2 — Progress-Style `echo` + Style-Liste
 
