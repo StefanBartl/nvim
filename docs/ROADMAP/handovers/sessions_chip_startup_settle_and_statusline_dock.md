@@ -1,9 +1,11 @@
 # sessions.nvim chip: startup settle, auto-hide, statusline-docked default — handover
 
-Status: **Planned (2026-09-28). Nothing built yet.** Designed 2026-09-28,
-from four issues the user spotted live (screenshots) after the chip
+Status: **Partly built (2026-09-28).** Designed 2026-09-28, from four
+issues the user spotted live (screenshots) after the chip
 preset/session-pin work shipped, plus a fifth ("why so many saved
-sessions") added the same day.
+sessions") and a sixth ("configurable chip text, icons") added the same
+day. **P0 done** (Issue 3 root-caused and fixed for real — `ui.nvim`
+`a78b319`, `lib.nvim` `2cd6bc3`); everything else still planned.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -17,6 +19,7 @@ something worth knowing turns up.
     - [Issue 3 — chip outlives timeout_ms](#issue-3--chip-outlives-timeout_ms)
     - [Issue 4 — statusline-docked, mode-tracking default](#issue-4--statusline-docked-mode-tracking-default)
     - [Issue 5 — why so many saved sessions](#issue-5--why-so-many-saved-sessions)
+    - [Issue 6 — configurable chip text (icons, folder/branch)](#issue-6--configurable-chip-text-icons-folderbranch)
   - [Plan, phased](#plan-phased)
   - [Open questions / assumptions made](#open-questions--assumptions-made)
   - [Practical notes](#practical-notes)
@@ -134,21 +137,71 @@ code change proposed here.
 
 ### Issue 3 — chip outlives timeout_ms
 
-`schedule_hide()`/`hide_generation`
-([`sessions/chip.lua:59-82`](E:\repos\sessions.nvim\lua\sessions\chip.lua))
-reads correctly on a static pass: every `pulse()`/`ensure_mounted()` call
-reschedules one hide, guarded against an earlier, now-stale one firing
-late. `M.refresh()` (chip.lua lines 119-127, wired to the dirty-tracking
-events) does **not** reschedule or cancel the hide — so on paper the 3s
-timer should fire regardless of ordinary editing activity.
+**Status:** Root-caused and fixed — 2026-09-28, `ui.nvim` `a78b319`,
+`lib.nvim` `2cd6bc3`. (Heading kept short on purpose, matching the Table
+of contents above — a `— DONE (...)` suffix appended straight into a
+heading silently breaks its own ToC anchor, a real mistake the sibling
+chip-presets-and-pins handover hit and had to fix; not repeating it here.)
 
-Best current hypothesis: **the same mechanism as Issue 1.** I cannot find,
-from reading the code alone, a path that actually *prevents* the 3s hide
-firing — so before writing a fix, this needs a **live reproduction**
-(P0 below), not a guess. If Issue 1's settle-pass fix (P1) also happens to
-resolve this (plausible: a late, unrelated `M.refresh()` could be
-re-showing/re-drawing the chip in a way that looks like "never hid"), P2 is
-a confirmation step, not new code.
+Root-caused via a live reproduction, not the "same as Issue 1" guess this
+section originally proposed — a real, independent bug, unrelated to
+Issue 1's startup-timing hypothesis:
+
+`sessions/chip.lua`'s `schedule_hide()`/`hide_generation`
+([lines 59-82](E:\repos\sessions.nvim\lua\sessions\chip.lua)) turned out to
+read correctly, confirmed by instrumenting it live: the deferred callback
+fires exactly on schedule, correctly identifies itself as the current
+generation, sets `visible = false`, and calls
+`kit_mod.chip.refresh(CHIP_ID)` — all of that works. The chip still stayed
+on screen anyway.
+
+The actual bug was one layer down, in `ui.kit.chip`'s own
+`resolve_visible()`
+([`ui/kit/chip.lua:224-233`](E:\repos\ui.nvim\lua\ui\kit\chip.lua)). Its
+function branch used the classic `a and b or c` ternary idiom:
+
+```lua
+local ok, out = pcall(v)
+return ok and out and true or (ok and false or nil)
+```
+
+That idiom cannot express a provider **returning `false`**: the moment
+`out` is `false`, `ok and out` is already `false`, so the whole expression
+always falls through to the `or` branch — and `(ok and false or nil)` is
+`nil` regardless of `ok`, by the exact same flaw. So a `visible = function()
+... end` provider returning `false` was **indistinguishable from one
+returning `nil`/erroring** — `M.refresh()`'s own fallback
+(`if visible == nil then visible = text ~= "" end`) then took over and
+re-showed the chip anyway, since its text was still non-empty. `sessions.chip`'s
+auto-hide is exactly this shape (`visible = function() return visible end`,
+the closure flipping to `false`), so it could never actually hide,
+regardless of `timeout_ms`.
+
+Confirmed with a real, unstubbed headless reproduction before touching any
+code: mounted the real chip, loaded a real session (the same
+`core.load()` → `chip.refresh()` → `chip.pulse()` sequence `:LastSession`
+runs), and sampled `require("ui.kit").chip.active()` over several seconds
+with real timers running (`vim.wait`) — the chip was still active at
+4000ms+ with the bug, and correctly gone by ~3200ms once
+`resolve_visible()` was fixed to return the provider's actual boolean.
+
+Fixed by rewriting `resolve_visible()`'s function branch as a plain
+`if`/`return` instead of the broken ternary. Regression test added
+(`TESTS/ui_kit_chip_spec.lua`: "a visible PROVIDER (function) returning
+false wins over non-empty text"). Full suite green in both repos (one
+unrelated pre-existing failure each: `ui.nvim`'s
+`context_languages_spec.lua` kotlin case, `lib.nvim`'s `git_sync_spec.lua`
+async-timing test — both untouched by this fix, both already documented
+elsewhere in this repo's own history). Ported to `lib.nvim`'s frozen copy
+per the usual drift-guard convention, `kit_drift_spec.lua` confirmed clean
+afterward.
+
+This bug is not `sessions.nvim`-specific — **any** `ui.kit.chip` consumer
+passing a `visible` *function* that can return `false` was affected (a
+`visible = false` *literal*, the other code path, was always fine — see
+the pre-existing "an explicit visible = false wins over non-empty text"
+test, which never caught this because it only exercised the boolean-literal
+path, not the function path).
 
 ### Issue 4 — statusline-docked, mode-tracking default
 
@@ -242,42 +295,113 @@ way to remove a stale session today is a manual `:Session delete <name>`
 per file, and nothing ever tells the user which ones are stale in the
 first place.
 
+### Issue 6 — configurable chip text (icons, folder/branch)
+
+Feature request: the chip currently shows the raw resolved session name as
+one line of plain text (e.g. `nvim_main`) — the user wants a nicer default
+(a folder icon + project name, and *below it* a git-branch icon + branch
+name), while keeping today's plain-text look available as an explicit
+opt-out, and the whole thing user-customizable (which icon, what order),
+not just a fixed on/off switch.
+
+- Today's chip text comes straight from
+  [`sessions.statusline.component()`](E:\repos\sessions.nvim\lua\sessions\statusline.lua)
+  (lines 48-57: `resolved.icon .. name .. dirty`, one line) — `chip.lua`'s
+  `ensure_mounted()` wires `text = function() return
+  require("sessions.statusline").component() end` directly. That function
+  also feeds the *plain statusline segment*, which genuinely cannot go
+  multi-line — so the chip needs its **own** formatter, not a reuse of
+  that single-line one.
+- `ui.kit.chip` already supports multi-line text via embedded `\n`
+  (`split_lines()`, [`ui/kit/chip.lua`](E:\repos\ui.nvim\lua\ui\kit\chip.lua))
+  — `casedesk.nvim`'s pin chip already renders two lines
+  (case number / title) this way, so a two-line "folder / branch" chip is
+  not new ground, just a new caller.
+- The folder/branch values should come from a **live** lookup
+  ([`sessions.git`](E:\repos\sessions.nvim\lua\sessions\git.lua)'s
+  `project_root()`/`current_branch()`), **not** by parsing the resolved
+  session *name* back apart — the same ambiguity Issue 5's own Open
+  Question 6 already flags for P6's staleness check (a name like
+  `nvim-usercmds-env-vars-3560c9_claude-cursor-jump-save-1f9524` has
+  underscores on both sides of the real split, so there is no reliable way
+  to un-concatenate it). Querying live also means the chip stays accurate
+  even for a session loaded under an unrelated custom name.
+- Proposed shape: two named presets plus full custom control —
+  - `"classic_text"` — today's exact behaviour (one line, plain resolved
+    name), for anyone who wants the current look back outright.
+  - `"modern"` — the new **default**: two lines, `{icon} {folder}` then
+    `{icon} {branch}`.
+  - A template string for anyone who wants something in between, using
+    `folder`/`branch` as keywords, with each icon settable *separately*
+    from the layout (so swapping one glyph does not mean rewriting the
+    whole template) — e.g. (exact keys/names TBD at implementation time)
+    `chip.text = { preset = "modern", icons = { folder = "<glyph>", branch
+    = "<glyph>" }, template = "{icon.folder} {folder}\n{icon.branch}
+    {branch}" }`. Icons accept a literal glyph string (nerd-font icon or
+    plain unicode/ASCII) — no dependency on `nvim-web-devicons`/`mini.icons`
+    being installed, though the *default* glyphs should match whatever this
+    user's own `filetree.nvim` setup already shows for a folder, for visual
+    consistency. `filetree.nvim` itself delegates its own folder glyph to
+    whichever icon provider is installed (`nvim-web-devicons`/`mini.icons`)
+    rather than hardcoding one — the exact default glyph needs a live check
+    against this user's actual setup at implementation time, not a guess
+    here.
+  - Graceful fallback: when `branch_aware`/`project_aware` are both off, or
+    the loaded session has a custom name unrelated to the live
+    folder/branch, `"modern"` falls back to `"classic_text"`'s single-line
+    behaviour rather than showing an icon next to something that isn't
+    really a folder/branch pair.
+
 ## Plan, phased
 
 ### P0 — Diagnose Issue 3 live
 
-~0.25 session. Repo: none (a live nvim session with the real config).
+**Status:** Done — 2026-09-28, `ui.nvim` `a78b319`, `lib.nvim` `2cd6bc3`.
 
-- Reproduce with the actual config: start Neovim, run `:LastSession` (or
-  let autoload fire, whichever matches the user's real workflow),
-  instrument `schedule_hide()`/`hide_generation`
-  ([`sessions/chip.lua:65-82`](E:\repos\sessions.nvim\lua\sessions\chip.lua))
-  with a temporary `vim.notify`/debug log to see: does the 3s deferred
-  callback ever actually fire? If it fires, what re-shows the chip
-  afterward (which event, calling which function)? This confirms or
-  refutes the "same root cause as Issue 1" hypothesis *before* writing a
-  fix for it.
+~0.25 session, as estimated. Repo: none for the diagnosis itself (a real
+headless reproduction, not a guess); `ui.nvim` + `lib.nvim` for the fix
+the diagnosis led straight to.
 
-### P1 — ui.kit.chip: post-startup settle pass + pulse-revert fix
+**As done.** Instrumented `schedule_hide()`/`hide_generation`
+([`sessions/chip.lua:65-82`](E:\repos\sessions.nvim\lua\sessions\chip.lua))
+with temporary prints in a real headless reproduction (real `setup()`,
+real `core.load()` → `chip.refresh()` → `chip.pulse()`, the exact
+`:LastSession` sequence, sampled with `vim.wait()` so real timers fire).
+Result: the deferred hide **does** fire exactly on schedule and **does**
+correctly call `refresh()` with `visible = false` — `sessions.chip`'s own
+logic was never the problem. The bug was one layer down, in
+`ui.kit.chip.resolve_visible()`. Full write-up, the fix, and its
+regression test are now in Issue 3's own section above — **this was not
+the same mechanism as Issue 1** (the original hypothesis in this phase's
+description), a genuinely separate, now independently confirmed-fixed bug.
+Debug prints removed from `sessions.nvim` before committing (that repo has
+no changes from this phase — the fix lives entirely in `ui.nvim`/`lib.nvim`).
 
-~0.5 session. Repo: `ui.nvim`. Fixes Issue 1, likely Issue 3.
+### P1 — ui.kit.chip: post-startup settle pass (Issue 1 only)
+
+~0.5 session. Repo: `ui.nvim`. Fixes Issue 1. **No longer expected to touch
+Issue 3** — P0 found and fixed that independently; do not re-scope this
+phase back onto it.
 
 1. Add a one-time (`once = true`) handler in
    [`ensure_hooks()`](E:\repos\ui.nvim\lua\ui\kit\chip.lua) (lines
-   432-465) for `VimEnter` (or `UIEnter` — pick whichever P0's
-   instrumentation shows fires more reliably after the real settle point)
-   that, wrapped in `vim.schedule()` (or a short `vim.defer_fn` if a
-   single scheduled tick proves too early — decide from real
-   measurements, not a guess), re-resolves colours **and** calls
-   `reflow()` for every currently mounted chip. Same shape as the existing
-   `ColorScheme` handler (lines 450-464) — "re-settle everything" — just
-   triggered by "Neovim's own startup finished" instead of "the
-   colorscheme changed".
-2. Fix `M.pulse()`'s revert-callback stale-window guard (lines 621-627):
-   compare against the **current** `chips[id].win` at revert time, not the
-   `win` local captured when the pulse started, so a text/width-driven
-   window replacement mid-pulse can no longer leave a chip stuck in its
-   pulse colour.
+   432-465, shifted a little further down after the `a78b319`/P0 fix) for
+   `VimEnter` (or `UIEnter` — pick whichever a live reproduction shows
+   fires more reliably after the real settle point, same
+   "instrument-first" discipline P0 just used) that, wrapped in
+   `vim.schedule()` (or a short `vim.defer_fn` if a single scheduled tick
+   proves too early — decide from real measurements, not a guess),
+   re-resolves colours **and** calls `reflow()` for every currently
+   mounted chip. Same shape as the existing `ColorScheme` handler
+   (lines 450-464) — "re-settle everything" — just triggered by "Neovim's
+   own startup finished" instead of "the colorscheme changed".
+2. Fix `M.pulse()`'s revert-callback stale-window guard (lines 621-627 pre-
+   `a78b319`): compare against the **current** `chips[id].win` at revert
+   time, not the `win` local captured when the pulse started, so a
+   text/width-driven window replacement mid-pulse can no longer leave a
+   chip stuck in its pulse colour. (Independent of P0's fix — both live in
+   `ui.kit.chip`, but in different functions; do both in this phase since
+   they're adjacent and small.)
 3. Tests (`TESTS/ui_kit_chip_spec.lua`): a regression spec that pulses a
    chip, closes+reopens its window mid-pulse (simulating the width-change
    race), and asserts the colour still reverts to the steady one; a
@@ -285,13 +409,13 @@ first place.
    event fires (and is genuinely deferred, not synchronous with the
    autocmd).
 
-### P2 — sessions.nvim: confirm Issue 3
+### P2 — sessions.nvim: confirm the pop-in is gone
 
-~0.25 session. Repo: `sessions.nvim` (verification only, code only if P1 turns out insufficient).
+~0.25 session. Repo: `sessions.nvim` (verification only, no code expected).
 
-- Re-run P0's live repro against the P1 build. If the hide still does not
-  fire, escalate with fresh instrumentation — do not guess a second fix
-  blind.
+- Live-check Issue 1's original symptom (colour/position pop-in a few
+  seconds after startup) is gone after P1. Issue 3 no longer needs
+  re-confirming here — P0 already did, live, with real timers.
 
 ### P3 — ui.kit.chip: docked-left preset + function-valued colour + mode-track hook
 
@@ -374,6 +498,32 @@ first place.
   exactly the second and `delete-stale` removes exactly the second's
   `.vim`/`.json`/sidecar files.
 
+### P7 — sessions.nvim: configurable, icon-capable chip text
+
+~0.75 session. Repo: `sessions.nvim`.
+
+1. New chip-text formatter (name TBD, e.g. `sessions/chip_text.lua`),
+   separate from `sessions.statusline.component()` — the latter stays
+   exactly as-is (single line, used by the plain statusline segment); the
+   new one is what `chip.lua`'s `ensure_mounted()` wires as `text` instead.
+2. `"classic_text"` preset: today's exact one-line output (delegates
+   straight to the existing `sessions.statusline.component()` — no
+   behaviour change for anyone who picks it).
+3. `"modern"` preset (new **default**): two lines via `\n`, live
+   `sessions.git.project_root()`/`current_branch()` lookups (not a
+   session-name parse — see Issue 6), each prefixed by its own
+   separately-configurable icon; falls back to `"classic_text"`'s output
+   when `branch_aware`/`project_aware` are off or the live lookup comes up
+   empty.
+4. Template/icon override support for anyone who wants a custom layout
+   (exact option shape TBD, see Issue 6's proposed sketch).
+5. `docs/configuration.md`/`docs/statusline.md`: document the new
+   `chip.text` option, both presets, and the template override.
+6. Tests: `"classic_text"` byte-for-byte matches today's output;
+   `"modern"`'s two-line output and icon placement; the fallback path when
+   git-awareness is off; a custom template round-tripping through the
+   formatter correctly.
+
 ## Open questions / assumptions made
 
 1. The exact "~4-5 seconds" in Issue 1 is environment/session-specific
@@ -396,9 +546,13 @@ first place.
    `sessions.nvim` first, `casedesk.nvim` can adopt later once the look is
    proven live, rather than defaulting two consumers to an unproven style
    at once.
-5. P0/P2's live-diagnosis steps mean P1's exact fix (VimEnter vs UIEnter,
-   `vim.schedule()` vs a short `vim.defer_fn`) is provisional until that
-   data comes back — do not implement P1 blind without running P0 first.
+5. **Superseded by P0's actual finding**: P0 turned out to be unrelated to
+   Issue 1's startup-timing hypothesis (it root-caused Issue 3 to a plain
+   `ui.kit.chip` logic bug instead). P1's exact fix (VimEnter vs UIEnter,
+   `vim.schedule()` vs a short `vim.defer_fn`) still needs its *own* live
+   measurement before implementation — just not from P0's data, which
+   doesn't speak to it. Do the same "instrument first, then fix" discipline
+   P0 just used, fresh, inside P1 itself.
 6. P6's staleness check re-derives the branch from the session's recorded
    `cwd`, not from the session *name* (name-parsing a `<project>_<branch>`
    string back apart is ambiguous whenever either half itself contains an
@@ -408,6 +562,13 @@ first place.
    to re-run the branch lookup from (it should be — `cwd` is captured at
    save time from wherever the session was actually saved from) before
    building on that assumption.
+7. P7's default icon glyphs are an open lookup, not a guess made here:
+   `filetree.nvim` delegates its own folder icon to whichever provider
+   (`nvim-web-devicons`/`mini.icons`) is installed rather than hardcoding
+   one — check this user's actual live setup (`:checkhealth` or a direct
+   provider query) at implementation time for the exact default glyph, and
+   pick a conventional git-branch glyph (nerd-font `nf-oct-git_branch` or
+   similar) to match it stylistically.
 
 ## Practical notes
 
