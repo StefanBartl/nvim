@@ -33,22 +33,33 @@ doc-comment wording nit left as-is). **P7 done and reviewed**
 smaller issues (`f39ae9c`), round 2 found the exact same hot-path bug
 recurring in `sessions/marks/init.lua`'s `scope_key()` — fixed in
 `39a098d`). **P2's live check (round 2, real terminal screenshots) found
-two more real bugs**, both root-caused and fixed the same day: a
-`dock_left` left-edge gap (Neovim reserves 1 screen column for the
-preset's invisible left border regardless of the empty glyph — `ui.nvim`
-`96e695d`, `lib.nvim` `d2c8d49`), and an orange-then-turquoise startup
-colour race (`St_<Mode>Mode` not yet defined when the chip's own P1
-settle pass wins its race against this config's `UIReady` wiring — `nvim`
-config `ca926df4`). **Both put through an ultracode review** (3
-dimensions × 3 adversarial verifiers per finding): security/performance 0
-findings; correctness found 3 confirmed, live-reproduced issues —a HIGH
-incomplete-fix gap (the `dock_left` offset only covered `reflow()`'s
-`docked` branch) and a MEDIUM staleness risk (keyed on shape name, not
-the actual border) in the position fix, plus a LOW pre-existing
-`ColorScheme`-staleness gap the colour fix's own new comment overclaimed
-around. All three addressed — `ui.nvim` `305e49b`, `lib.nvim` `3296b7e`,
-`nvim` config `54503920` — see P2's own section below for the full
-write-up. **A third live confirmation from the user is what's left.**
+two apparent bugs**, one real, one a misdiagnosis caught by a *third*
+live check: an orange-then-turquoise startup colour race, real and
+fixed (`St_<Mode>Mode` not yet defined when the chip's own P1 settle
+pass wins its race against this config's `UIReady` wiring — `nvim`
+config `ca926df4`, later corrected once more, see below); and a
+`dock_left` left-edge gap that looked like a Neovim border-reservation
+issue and got a `col = -1` fix plus an ultracode review (3 dimensions ×
+3 adversarial verifiers; found and fixed a real HIGH incomplete-fix gap
+and a MEDIUM staleness risk in that fix itself — `ui.nvim` `305e49b`,
+`lib.nvim` `3296b7e`) — **but the whole diagnosis was wrong**: round 3's
+live screenshots showed the fix had zero visible effect (identical pixel
+position before/after), and the actual cause turned out to be this
+user's own terminal emulator's `window_padding` setting, set
+deliberately for an unrelated feature — outside anything Neovim can
+reach. **Fully reverted** — `ui.nvim` `65f9032`, `lib.nvim` `83801f3` —
+see P2's own section for the full account, including why the review
+that found real bugs *in* the fix still didn't catch that the fix
+itself was solving the wrong problem (adversarial review checks a
+diff's own logic against the codebase; it has no way to know the
+diff's premise doesn't match physical reality outside the code, which
+only a live screenshot comparison can show). The colour-race fix's own
+comment also got one correction along the way (`nvim` config
+`54503920`, a pre-existing `ColorScheme`-staleness gap it had
+overclaimed around) — that one stands, independent of the position
+revert. **Live re-confirmation from the user, this time of the
+now-correctly-scoped state (colour race fixed, position gap understood
+as terminal padding, not a code bug), is what's left.**
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -625,17 +636,90 @@ verified by 3 adversarial skeptics per finding) checked `96e695d`/
    architecture (a `ColorScheme`-handler change was judged disproportionate
    for a low-severity, long-pre-existing gap).
 
-**Fixed:** finding 1+2 together, by computing the blank-left-border offset
-once from `entry.border`'s own left corners/edge (indices 1, 7, 8) instead
-of the shape name, and applying it in both `reflow()` branches — `ui.nvim`
-`305e49b`, `lib.nvim` `3296b7e` (mirrored, `kit_drift_spec` confirms this
-file in sync). Three new regression tests (top-left anchor, degraded
-bottom-left-dock without a statusline row, a `theme.setup()` override with
-a real border). Finding 3: comment corrected, architecture left as a
-known, documented gap — `nvim` config `54503920`. Full `ui.nvim` suite
-green (62/62 files) both before and after merging in a concurrent
-session's unrelated `ui.kit` work (`c2da442`..`6d3a46a`, a clean merge, no
+**Fixed (at the time):** finding 1+2 together, by computing the
+blank-left-border offset once from `entry.border`'s own left corners/edge
+(indices 1, 7, 8) instead of the shape name, and applying it in both
+`reflow()` branches — `ui.nvim` `305e49b`, `lib.nvim` `3296b7e` (mirrored,
+`kit_drift_spec` confirmed this file in sync). Three new regression tests
+(top-left anchor, degraded bottom-left-dock without a statusline row, a
+`theme.setup()` override with a real border). Finding 3: comment
+corrected, architecture left as a known, documented gap — `nvim` config
+`54503920` (this one still stands, see below). Full `ui.nvim` suite green
+(62/62 files) both before and after merging in a concurrent session's
+unrelated `ui.kit` work (`c2da442`..`6d3a46a`, a clean merge, no
 conflicts).
+
+**Round 3 (live check, 2026-09-29): the whole `col = -1` diagnosis was
+wrong.** The user sent a *third* round of live screenshots after
+`305e49b` shipped, describing the chip as sitting even further wrong
+("zu weit links... übersteht"). Direct pixel comparison this time,
+instead of another speculative fix:
+
+```
+img1 (before 96e695d) row 760: ...(3,3,3)×10... (179,246,192)  -- content starts at x=11
+img3 (after  305e49b) row 760: ...(3,3,3)×10... (224,175,104)  -- content ALSO starts at x=11
+```
+
+Identical screen column, before and after two rounds of "fixes" to
+`col`. That is decisive: `col` was never the variable that mattered, so
+every findings/fix cycle up to this point (`96e695d` → review → `305e49b`
+→ another review) had been debugging the wrong layer — real, logically
+sound findings about code that was solving a problem it didn't actually
+have. Asked the user which terminal they view this in
+([`AskUserQuestion`]): WezTerm. Grepped their `Configs` repo and found
+`terminals/wezterm/config/experimental.lua:68`:
+
+```lua
+-- Padding in Zell-Einheiten statt Pixeln: WezTerm rechnet selbst um, das
+-- Ergebnis ist damit per Definition ein glattes Vielfaches der Zellgröße.
+-- Nötig, weil WezTerms OSC-1337-Bildplatzierung das Fenster-Padding nicht
+-- mitrechnet -- bei einem Pixelwert, der keine ganze Zelle ist (vorher 9/8),
+-- bleibt ein Sub-Zellen-Versatz, den kein Plugin ausgleichen kann.
+-- Messprotokoll: images.nvim, docs/ROADMAP/TERMINALS.md.
+Config.window_padding = { left = "1cell", right = "1cell", top = "1cell", bottom = "1cell" }
+```
+
+A full cell of padding on every side, set **deliberately**, for
+`images.nvim`'s OSC-1337 image placement — matching the measured ~10-11px
+gap exactly (one cell at this font size). This is WezTerm's own grid
+inset, applied entirely outside anything Neovim draws into; no floating
+window `col` value, on any shape, can reach into or compensate for
+padding the terminal emulator adds around its whole grid from the
+outside. The original "gap" was never a `ui.kit.chip`/Neovim bug at all.
+
+**Why the ultracode review didn't catch this:** it couldn't have —
+adversarial review checks a diff's logic against the rest of the
+codebase (and it did real, valuable work: `305e49b`'s HIGH/MEDIUM fixes
+were genuine bugs *in* `96e695d`'s own logic). It has no way to know a
+diff's starting premise fails to match physical reality *outside* the
+code (a specific user's terminal config) — only a live screenshot,
+compared pixel-for-pixel against an earlier one, can show that. This is
+exactly why P2 (a live human confirmation step) existed as its own phase
+in this plan to begin with, separate from the ultracode gate the other
+phases rely on.
+
+**Reverted:** the entire `col = -1` compensation (and `border_left_is_blank()`)
+removed, `reflow()` back to a plain `col = 0` for every left-anchored
+shape including `dock_left` — `ui.nvim` `65f9032`, `lib.nvim` `83801f3`
+(mirrored). The 4 dock_left/`col=-1` regression tests replaced with one
+confirming `col = 0` for a docked `dock_left` chip too, locking in the
+reverted (correct) behaviour rather than leaving no coverage. Full suite
+green (62/62 files), `kit_drift_spec` confirms this file in sync.
+`ca926df4`/`54503920` (the colour-race fix and its comment correction)
+are unaffected and still stand — that diagnosis was independently
+verified via a pure Lua-level headless proof (calling the function
+before/after `ensure()`), not a screen-pixel-dependent claim, and
+nothing in round 3 contradicts it.
+
+**Open, for the user to decide, not for me:** the ~1-cell gap that
+started this whole investigation is real, visible, and will stay
+exactly as-is unless `window_padding` in
+`terminals/wezterm/config/experimental.lua` changes — which trades away
+whatever `images.nvim`/OSC-1337 benefit that setting exists for (see
+that file's own comment and `docs/ROADMAP/TERMINALS.md` in the `Configs`
+repo). Not touched here: this repo (`nvim` config here) has no
+authority over the `Configs` repo, and the tradeoff is a personal
+preference call, not a bug to fix.
 
 ### P3 — ui.kit.chip: docked-left preset + function-valued colour + mode-track hook
 
@@ -1075,12 +1159,14 @@ reference them by SHA.
 | `sessions.nvim` | `39a098d` | P7 | same hot-path fix applied to `marks.scope_key()` — round-2 finding — **final** | ✅ 2 rounds |
 | `nvim` (config) | `a919264f` | P5 | mode-colour wiring for the session chip | ✅ live-verified, no dedicated review round |
 | `nvim` (config) | `067c7c46` | P6/P7 | handover updated, P6/P7 marked done and reviewed | ✅ docs-only |
-| `ui.nvim` | `96e695d` | P2 (live check round 2) | `dock_left` shifts `col = -1` for its invisible left border, first pass | ✅ (superseded by `305e49b`) |
-| `lib.nvim` | `d2c8d49` | P2 (live check round 2) | mirror of `96e695d`, first pass | ✅ (superseded by `3296b7e`) |
-| `nvim` (config) | `ca926df4` | P2 (live check round 2) | `chip.color` forces `St_<Mode>Mode` via `highlights.ensure()` | ✅ 1 round, 0 correctness findings on this commit itself |
-| `ui.nvim` | `305e49b` | P2 (live check round 2) | `dock_left` offset covers the else branch + keys on border — **final** | ✅ 1 round, 3 confirmed findings (1 HIGH, 1 MEDIUM, 1 LOW) fixed |
-| `lib.nvim` | `3296b7e` | P2 (live check round 2) | mirror of `305e49b` — **final** | ✅ same |
-| `nvim` (config) | `54503920` | P2 (live check round 2) | `chip.color` comment corrected (LOW finding on `ca926df4`) | ✅ same review round |
+| `ui.nvim` | `96e695d` | P2 (live check round 2) | `dock_left` shifts `col = -1` for its invisible left border, first pass | ✅ (superseded by `305e49b`, later reverted) |
+| `lib.nvim` | `d2c8d49` | P2 (live check round 2) | mirror of `96e695d`, first pass | ✅ (superseded by `3296b7e`, later reverted) |
+| `nvim` (config) | `ca926df4` | P2 (live check round 2) | `chip.color` forces `St_<Mode>Mode` via `highlights.ensure()` — **final, stands** | ✅ 1 round, 0 correctness findings on this commit itself |
+| `ui.nvim` | `305e49b` | P2 (live check round 2) | `dock_left` offset covers the else branch + keys on border | ✅ 1 round, 3 confirmed findings (1 HIGH, 1 MEDIUM, 1 LOW) fixed — **later reverted, round 3 found the whole diagnosis wrong** |
+| `lib.nvim` | `3296b7e` | P2 (live check round 2) | mirror of `305e49b` | ✅ same — **later reverted** |
+| `nvim` (config) | `54503920` | P2 (live check round 2) | `chip.color` comment corrected (LOW finding on `ca926df4`) — **final, stands** | ✅ same review round |
+| `ui.nvim` | `65f9032` | P2 (live check round 3) | revert: drop `col = -1` entirely, real cause was WezTerm's own `window_padding` — **final** | ✅ live pixel-comparison proof, no ultracode round needed (a revert to prior-reviewed behaviour) |
+| `lib.nvim` | `83801f3` | P2 (live check round 3) | mirror of `65f9032` — **final** | ✅ same |
 
 ## Practical notes
 
