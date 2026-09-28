@@ -1,7 +1,8 @@
 # UI chip/style preset unification + session-persisted tab pins — handover
 
-Status: **Planned (2026-09-28). Nothing built yet except the prerequisite fix
-below.** Designed 2026-09-28.
+Status: **P0 + P1 built and pushed (2026-09-28). Next: P2 (sessions.nvim) and
+P3 (casedesk.nvim), either order, then P4 (pin persistence), then P5
+(verify-only).** Designed 2026-09-28.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up (status line above, the step's *As built*
@@ -181,9 +182,23 @@ template the pin feature should follow — [`sessions/buforder.lua`](E:\repos\se
 - **Conclusion: already correct.** No fresh `ui.nvim` install shows this
   module. P5 below is verification/documentation only.
 
-## P0 — naming module + ui.nvim adoption
+## P0 — naming module + ui.nvim adoption — DONE (2026-09-28, `ui.nvim` `ae8119f`)
 
 ~1 session. Repo: `ui.nvim`.
+
+**As built.** Matches the plan below with one deliberate deviation: no
+`"classic"` entry was added to the statusline separators
+(`ui/statusline/utils/primitives.lua`). `primitives_separators_spec.lua` has
+an explicit regression test (`"every named style has a non-empty left and
+right glyph"`) guarding against the exact historical bug an empty
+`"classic"` separator would reproduce — a statusline module boundary always
+needs *some* connecting glyph, unlike a standalone corner chip's box. Only
+`chip`/`rounded_chip` were added there, as aliases of `block`/`round`. Every
+other point below shipped as planned, verified with the full spec suite
+(`ui_kit_chip_spec.lua` 27/27, `context_spec.lua` 117/117,
+`tabline_styles_spec.lua` 14/14, `primitives_separators_spec.lua` 6/6, all
+green including live deprecation warnings firing for the old names) plus
+`stylua`/`luacheck` clean.
 
 1. New `ui/kit/presets.lua`: exports the canonical list
    `{ "classic", "chip", "rounded_chip" }` plus `M.normalize(value)` that
@@ -207,9 +222,20 @@ template the pin feature should follow — [`sessions/buforder.lua`](E:\repos\se
 6. Update/add tests per module; update any docs (`ui/kit/README.md` already
    documents chip's shape option — update it).
 
-## P1 — lib.nvim frozen-copy sync
+## P1 — lib.nvim frozen-copy sync — DONE (2026-09-28, `lib.nvim` `3ce0926`)
 
 ~0.5 session. Repo: `lib.nvim`.
+
+**As built.** `kit_drift_spec.lua` compares ui.nvim's source against
+lib.nvim's copy after whitespace-flattening, but the `---` comment marker
+itself is NOT whitespace — a doc comment that re-wraps differently between
+the two files (which the `ui.kit`→`lib.nvim.ui.kit` rename's extra length
+naturally causes) reads as real drift even when semantically identical.
+Fixed by isolating the renamed token onto its own comment line in both
+files' new doc blocks, so surrounding line breaks never depend on the
+token's length. `kit_drift_spec.lua` (4/4) and lib.nvim's full suite both
+green (one unrelated pre-existing failure, `git_sync_spec.lua`, an
+async-timing test untouched by this work).
 
 - Port P0 steps 1-2 into `lib/nvim/ui/kit/presets.lua` (new) and
   `lib/nvim/ui/kit/chip.lua` (frozen copy of ui.nvim's, per the existing
