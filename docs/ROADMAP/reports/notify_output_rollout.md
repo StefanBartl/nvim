@@ -17,7 +17,7 @@ gepflegt als einzige lebende Datei statt als Plan+Worklist-Paar.
 | P2 | Progress-Style `echo`, Style-Liste | ✅ erledigt |
 | P3 | Aktivierung in der Installations-Spec | ✅ erledigt |
 | P4 | Wrapper-Repos umstellen | ✅ erledigt — 11/12, 1 bewusst zurückgestellt (siehe Tabelle) |
-| P5 | Load-Time-Bindungen | offen |
+| P5 | Load-Time-Bindungen | ✅ erledigt — 1 echter Bugfix, 2 als Fehlalarm bestätigt, 1 ignoriert (siehe Archiv) |
 | P6 | `print`-Dumps auf `output.viewer.show_lines` | offen |
 
 ## P4 — Wrapper-Repos (abgeschlossen)
@@ -55,18 +55,6 @@ war jeweils nur das fehlende `popup=true`/`source=...`. Bei zwei Repos
 Stellen bei genauerem Lesen bewusste Inhalts-Ausgabe statt Notify-Events —
 Report 06 (jetzt archiviert) hatte das als reinen Zeilen-Scanner nicht
 unterscheiden können.
-
-## P5 — Load-Time-Bindungen
-
-| Repo | Fundstelle | Hinweis |
-|---|---|---|
-| color_my_ascii.nvim | `commands/fence_check.lua:15`, `commands/format.lua:8`, `config/init.lua:10`, `highlighter.lua:15` | 4× `local notify = vim.notify` bei Modulload — klarer Bug, zuerst dran |
-| filetree.nvim | `features/infra/watcher_quarantine/init.lua:85` | **erst Absicht prüfen** — sieht nach bewusster Sicherung fürs temporäre Unterdrücken aus |
-| sandbox.nvim | `bindings/usrcmds/init.lua:85` | **erst Absicht prüfen** — vermutlich Sicherung rund um einen Sandbox-Lauf |
-| mdview.nvim | `test/runner.lua:12` | Test-Runner, ignorieren |
-
-`filetree.nvim`s eigener Notify-Wrapper (`util/notify.lua:13`) ist bereits
-sauber `lib_notify` — nur die Load-Time-Bindung braucht hier noch etwas.
 
 ## P6 — `print`-Dumps
 
