@@ -23,7 +23,7 @@ This file is the *how*: order, files, tests, gates, and what to check at the end
   - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0--github_statsnvim-05-session--done)
   - [P1 — docmap-desktop core (~1 session) — DONE](#p1--docmap-desktop-core-1-session--done)
   - [P2 — detail dialog (~1 session) — DONE](#p2--detail-dialog-1-session--done)
-  - [P3 — documentation.nvim (~0.5–1 session) — NEXT](#p3--documentationnvim-051-session)
+  - [P3 — documentation.nvim (~0.5–1 session) — NEXT](#p3--documentationnvim-051-session--next)
   - [Verification, end to end](#verification-end-to-end)
   - [Open questions](#open-questions)
   - [Practical notes](#practical-notes)
@@ -440,7 +440,7 @@ outstanding "Done when" check as P1, and it needs the same first real
 
 ---
 
-## P3 — documentation.nvim (~0.5–1 session)
+## P3 — documentation.nvim (~0.5–1 session) — NEXT
 
 Model: **`lua/documentation/core/rules_join.lua`** and the `rules` mode.
 
