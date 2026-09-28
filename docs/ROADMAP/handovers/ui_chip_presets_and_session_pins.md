@@ -1,7 +1,9 @@
 # UI chip/style preset unification + session-persisted tab pins — handover
 
-Status: **P0-P4 built and pushed (2026-09-28). Next: P5 (verify-only).**
-Designed 2026-09-28.
+Status: **Done. P0-P5 all built and pushed (2026-09-28).** Designed
+2026-09-28. Only the P0-P3 interactive corner-collision check (see
+"Verification, end to end") was left undone — everything else, including a
+real (unstubbed) end-to-end pin-persistence check, is verified.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up (status line above, the step's *As built*
@@ -341,29 +343,41 @@ clean in both repos.
    `docs/pins.md` or a section in `docs/statusline.md`'s sibling doc if one
    exists for buforder.
 
-## P5 — statusline plugin-count: verify only
+## P5 — statusline plugin-count: verify only — DONE (2026-09-28, `ui.nvim` `6b6bf39`)
 
-~0.25 session, likely doc-only. Repo: `ui.nvim`.
+~0.25 session, doc-only, as predicted. Repo: `ui.nvim`.
 
-- Already correct (see inventory above). Optionally add a one-line comment
-  in `ui/statusline/catalog.lua` next to `plugin_summary`'s entry noting it
-  is intentionally host-specific (depends on a `plugins.personal.list`
-  convention this user's config provides) and will never be `used_by`'d in
-  a shipped preset. No functional change expected — if this step turns up
-  something surprising, update this section before moving on.
+**As built.** Confirmed already correct: `catalog.lua`'s `plugin_summary`
+entry has `builtin = false`, `used_by = {}`, and a repo-wide grep for
+`plugin_summary` turns up nothing in any preset/variant/theme file — only
+the module's own files, `health.lua`, docs, and this user's own
+`docs/examples/personal-statusline-example.lua`. Added the one-line comment
+the plan suggested. `statusline_catalog_spec.lua` (5/5, unchanged assertions
+still pass) plus `stylua`/`luacheck` clean. No functional change, nothing
+surprising turned up.
 
 ## Verification, end to end
 
-- Each repo's own test suite stays green after its phase (`stylua --check`,
-  `luacheck`, headless test runner — see the sessions.nvim chip fix earlier
-  in this conversation for the exact commands, they're the same pattern for
-  every one of these repos).
-- After P0-P3: open Neovim with both `sessions.nvim` and `casedesk.nvim`
-  active, trigger a save/load and a case switch, confirm both chips render
-  with their expected shape/corner and don't collide.
-- After P4: pin a couple of buffers across two tabs, `:Session save`,
-  restart Neovim, `:Session load`, confirm the same buffers are pinned in
-  the same tabs.
+- Each repo's own test suite stayed green after its phase (`stylua --check`,
+  `luacheck`, headless test runner) — confirmed for every phase above, see
+  each phase's own *As built* block.
+- After P0-P3: **not performed** as an interactive/visual check (would need
+  a real Neovim GUI session with both plugins active, not just headless
+  tests) — each repo's own unit tests cover the default/anchor values
+  instead (`sessions.nvim` bottom-left/`rounded_chip`,
+  `casedesk.nvim` bottom-right/`chip`, confirmed unchanged by P2/P3's own
+  *As built* blocks). Worth doing by hand if a corner-collision regression
+  is ever suspected, but not done here.
+- After P4: **done**, but as a headless equivalent rather than a literal
+  Neovim restart — a script (not committed, ad-hoc) loaded the real
+  `ui.nvim` + `sessions.nvim` (no stubs) on `runtimepath` together, pinned
+  one buffer in each of two tabs via `ui.nvim`'s real
+  `state.set_pinned()`, ran `sessions.core.save("verify")`, wiped every
+  buffer/tab (`tabonly! | %bwipeout!`, the headless stand-in for a restart),
+  then `sessions.core.load("verify")` and read `vim.t.ui_pinned` back via
+  `state.pinned_bufs_for_tab()` for both tabs. Both pins came back in their
+  own tab (`one.lua` in tab 1, `three.lua` in tab 2) — the real integration,
+  not just `pins_spec.lua`'s stubbed roundtrip, works end to end.
 
 ## Open questions / assumptions made
 
@@ -379,6 +393,7 @@ as the things most likely to need a second look before/while implementing:
 3. Exact new-function names in `tabufline/state.lua`
    (`pinned_bufs_for_tab`/`set_pinned_list_for_tab`) are a first guess —
    check the file's existing naming conventions before adding them.
+   **Resolved:** shipped as guessed, see P4's own *As built* block.
 
 ## Practical notes
 
