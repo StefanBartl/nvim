@@ -1178,10 +1178,13 @@ plugins.add({
       --
       -- "kit", not "statusline": the first `:Git dashboard` of a session
       -- reads 60+ clones (several seconds on Windows) and only then opens its
-      -- float, and the statusline text is easy to miss meanwhile -- a second
-      -- <CR> in the tree during that wait opened neo-tree's window picker
-      -- right under the freshly opened dashboard. "kit" is a themed corner
-      -- float with an (n/total) counter that never takes focus.
+      -- float, and the statusline text is easy to miss meanwhile. That gap
+      -- is presumably how a stray <CR> in the tree once landed on neo-tree's
+      -- window picker right as the dashboard opened underneath it (not
+      -- confirmed via last_call() or another diagnostic at the time -- ui.nvim
+      -- windowpicker's own focus-cancel fix, 2db4c0a/79da6d4, addresses this
+      -- exact race independently of which style shows the scan). "kit" is a
+      -- themed corner float with an (n/total) counter that never takes focus.
       progress_style = "kit",
       dashboard = {
         -- This config is a git repo of its own but lives outside
