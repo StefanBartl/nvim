@@ -1,7 +1,7 @@
 # UI chip/style preset unification + session-persisted tab pins — handover
 
-Status: **P0-P3 built and pushed (2026-09-28). Next: P4 (pin persistence,
-ui.nvim + sessions.nvim), then P5 (verify-only).** Designed 2026-09-28.
+Status: **P0-P4 built and pushed (2026-09-28). Next: P5 (verify-only).**
+Designed 2026-09-28.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up (status line above, the step's *As built*
@@ -290,10 +290,33 @@ suite green: `pin_spec.lua` 11/11, `config_spec.lua` 60/60.
   (still accurate: `sessions.nvim` defaults `rounded_chip`/bottom-left,
   `casedesk.nvim` defaults `chip`/bottom-right).
 
-## P4 — pin persistence feature (ui.nvim + sessions.nvim)
+## P4 — pin persistence feature (ui.nvim + sessions.nvim) — DONE (2026-09-28, `ui.nvim` `4733b6f`, `sessions.nvim` `8944116`)
 
 ~1 session. Repos: `ui.nvim` then `sessions.nvim` (in that order — the new
 API has to exist before sessions.nvim can call it).
+
+**As built.** Matches the plan below, with the exact function names guessed
+in [Open questions](#open-questions--assumptions-made) item 3 confirmed
+correct as guessed (`pinned_bufs_for_tab`/`set_pinned_list_for_tab` — they
+read naturally next to the file's existing `pinned_bufs()`/`set_pinned()`).
+`sessions.pins` is a close structural copy of `sessions.buforder` (sidecar
+naming, save/restore/delete/rename shape, soft-dependency pattern) — see
+that file's own doc comment for why: same problem (a piece of tab state
+neither `:mksession` nor the other sidecar carries), same fix. One real bug
+caught writing `TESTS/pins_spec.lua`'s stubbed `core.save`/`core.load`
+roundtrip test: reassigning the test's local `pins_by_tab = {}` to "clear"
+it between save and restore silently detached that local from the table the
+stub's closures actually write into (a fresh table replaces the reference,
+it does not clear the one `set_pinned_list_for_tab`'s closure still points
+at) — fixed by clearing the existing table in place
+(`for k in pairs(t) do t[k] = nil end`) instead of rebinding it. Full suite
+green both repos: `ui.nvim`'s `tabufline_state_spec.lua` 53/53 (new tests for
+the two functions) plus the full `scripts/test.sh` run (one unrelated
+pre-existing failure, `context_languages_spec.lua`'s kotlin case — see the
+`Real-grammar specs` memory, a real-tree-sitter-parser-availability flake,
+untouched by this work); `sessions.nvim`'s `TESTS/run.lua` full suite
+(`SESSIONS_TESTS_OK`, including the new `pins_spec.lua`). `stylua`/`luacheck`
+clean in both repos.
 
 1. **ui.nvim**, `ui/bindings/keymaps/tabufline/state.lua`: add two small,
    explicitly tab-parametrized functions —
