@@ -13,8 +13,20 @@ ultracode-reviewed across 5 rounds, 0 findings on the last). **P3 done and
 reviewed** (Issue 4's dock preset/function-colour/mode-track primitives —
 final state `ui.nvim` `276b05f`, `lib.nvim` `387a666`, ultracode-reviewed
 across 2 rounds, round 1 found a severe group-clear regression, round 2:
-0 findings). P2 (live user confirmation) and everything past P3 still
-open.
+0 findings). **P4 done and reviewed** (sessions.nvim adopts the dock
+preset as its own default — final state `sessions.nvim` `1bfa3f8`,
+ultracode-reviewed across 2 rounds, round 1 found a real anchor/shape
+rendering defect, round 2 found a minor follow-up inconsistency in the
+same fix, both resolved). **P5 done** (mode-colour wiring in this user's
+own config — `nvim` config `a919264f`, live-verified against the real
+statusline's own mode colours, not yet put through a dedicated ultracode
+review round). **P6 done and reviewed** (`:Session stale`/`delete-stale`
+— final state `sessions.nvim` `7ca6ad3`, ultracode-reviewed across 2
+rounds; round 1 found a serious, live-reproduced correctness bug in
+`branch_exists()`'s git-subprocess approach, round 2 [pending] checks the
+filesystem-only rewrite that replaced it). **P7 done** (configurable,
+icon-capable chip text — `sessions.nvim` `89edc35`, review round
+[pending]). Only P2's live user confirmation stays open.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -609,6 +621,11 @@ fixes on top of the first pass (`667b1be`/`fe803c8` → `276b05f`/`387a666`):
 
 ### P4 — sessions.nvim: adopt the new preset as its own default
 
+**Status:** Done and reviewed — 2026-09-28. Final state `sessions.nvim`
+`1bfa3f8`. ultracode-reviewed across 2 rounds: round 1 found a real,
+confirmed rendering defect (below), round 2 found one more minor
+follow-up inconsistency in that same fix, both resolved.
+
 ~0.5 session. Repo: `sessions.nvim`.
 
 - `config/DEFAULTS.lua`: document the new dock preset as an allowed
@@ -618,7 +635,41 @@ fixes on top of the first pass (`667b1be`/`fe803c8` → `276b05f`/`387a666`):
   anyone not running `ui.nvim`'s statusline.
 - Update `docs/configuration.md`/`docs/statusline.md` accordingly.
 
+**As done**, plus two review fixes: `chip.shape` defaults to `"dock_left"`
+and `chip.dock` to `true` (both landed together, `bc74979`) — the plan
+above only mentions `shape`, but per the original request ("sitting flush
+against it, not floating with a gap above") the shape alone does not
+deliver the fused-with-the-statusline look without `dock` too.
+
+- **Round 1 finding, confirmed:** `"dock_left"`'s left-side border is only
+  correct paired with a left anchor (`bottom-left`/`top-left`, the
+  default) — a right-side anchor (`bottom-right`/`top-right`, both
+  documented, first-class values, and the latter was this plugin's own
+  *old* default) left it rendering backwards: the blank edge facing into
+  the screen, the rounded edge touching nothing. `sessions/chip.lua`
+  gained `effective_shape(anchor, shape)`, forwarding `"rounded_chip"`
+  instead whenever `shape == "dock_left"` and `anchor` isn't a left one —
+  scoped to exactly that shape; an explicit `"chip"`/`"classic"` override
+  passes through untouched. Fixed in `c022fb5`.
+- **Round 2 finding, confirmed (minor):** that same fallback checked the
+  *raw*, unvalidated `cfg.chip.anchor` string against exactly
+  `"bottom-left"`/`"top-left"` — but config validation accepts any string
+  unchecked, and `ui.kit.chip.mount()` itself resolves an unrecognized
+  anchor to `"bottom-left"`. A typo'd anchor therefore fell back to
+  `"rounded_chip"` even though the chip actually ends up anchored
+  bottom-left, where `"dock_left"` would have been correct. Harmless
+  (`rounded_chip` never renders backwards), but real. Fixed in `1bfa3f8`
+  by resolving an unrecognized anchor to `"bottom-left"` first, matching
+  `ui.kit.chip`'s own fallback exactly.
+
 ### P5 — This config: wire mode-colour tracking for the session chip
+
+**Status:** Done — 2026-09-28. `nvim` config `a919264f`. Live-verified,
+not yet put through a dedicated ultracode review round (a small, single-
+file config change calling already-reviewed primitives from P3 — `chip.
+color`/`track_mode` — and an already-existing helper this config's own
+statusline already relies on; low enough risk that a round is optional
+here, not skipped by oversight).
 
 ~0.25 session. Repo: this nvim config (`C:\Users\bartl\AppData\Local\nvim`).
 
@@ -631,7 +682,40 @@ fixes on top of the first pass (`667b1be`/`fe803c8` → `276b05f`/`387a666`):
   user's own screenshots — not just the automated tests, since this is
   fundamentally a visual-fit feature.
 
+**As done:** `shape`/`dock` are left unset (P4 made `"dock_left"`/`true`
+sessions.nvim's own defaults, so nothing to override here). `chip.color`
+is a function calling `ui.statusline.modules.highlighting.mode_band_group()`
+(the exact helper the real statusline's own mode pill already resolves its
+colour through, `St_<Suffix>Mode`, already cached/invalidated on
+`ModeChanged`) and returns that group's `{fg,bg}` pair verbatim — not the
+group *name*, which `ui.kit.chip` would only tint the `fg` of rather than
+use the actual accent `bg` the statusline pill shows. `track_mode = true`
+alongside it. Live-verified headlessly against the real config (from a
+throwaway scratch cwd, not a tracked project — see the caution below):
+Normal `bg = #b3f6c0` (light green), Visual `bg = #1abc9c` (teal) — both
+confirmed to match `St_NormalMode`/`St_VisualMode` exactly by calling
+`cfg.chip.color()` directly and comparing. Insert (`#0db9d7`, turquoise)
+and the others were read directly off the materialized highlight groups
+rather than actually entered (headless keystroke simulation cannot
+reliably enter insert/replace/etc.), matching the "hellgrün Normal /
+türkis Insert" look from the original screenshots.
+
+**Caution for whoever repeats this kind of live check:** the first probe
+attempt ran from `E:\repos\ui.nvim` (to force a real session load) and
+its `qa!` triggered `sessions.nvim`'s real `VimLeavePre` autosave,
+overwriting that project's actual `ui-nvim_main` saved session with an
+empty buffer list — not something this diagnosis needed. The second,
+corrected attempt ran from a scratch temp directory instead (no tracked
+project, so nothing of value to overwrite even if autosave fires) and
+avoided the repeat.
+
 ### P6 — sessions.nvim: surface (and optionally clean up) stale sessions
+
+**Status:** Done and reviewed — 2026-09-28. Final state `sessions.nvim`
+`7ca6ad3`. ultracode-reviewed across 2 rounds: round 1 (on the first
+implementation, `1efe68e`) found a serious, live-reproduced correctness
+bug in the staleness check itself; round 2 (checking the rewrite that
+replaced it, `7ca6ad3`) is pending at the time of this write-up.
 
 ~0.5 session. Repo: `sessions.nvim`.
 
@@ -659,7 +743,53 @@ fixes on top of the first pass (`667b1be`/`fe803c8` → `276b05f`/`387a666`):
   exactly the second and `delete-stale` removes exactly the second's
   `.vim`/`.json`/sidecar files.
 
+**As done**, `:Session stale`/`:Session delete-stale` landed as named
+(`1efe68e`), with `sessions.git.branch_exists(cwd, branch)` as the
+detection primitive and `find_stale()` (a local helper in
+`bindings/usercmds/init.lua`) as the collector, exactly as planned. The
+detection primitive itself needed a full rewrite after review, though:
+
+- **Round 1 finding, confirmed, high severity, live-reproduced:** the
+  first `branch_exists()` went through `lib.nvim.git`'s
+  `in_git_repo()`/`refs()` (real `git` subprocess calls) and tried to
+  keep the "ambiguous is not the same as confirmed-gone" guarantee this
+  plan itself calls for by catching a *raised* Lua error via `pcall` — on
+  the theory that a failed lookup would raise. It does not: the real
+  `lib.nvim.git` swallows *every* subprocess failure (a missing `git`
+  binary, a `safe.directory` refusal, a stale/disconnected network mount
+  the worktree used to live on, a corrupted pack, ...) into a plain
+  `false`/empty table and never raises — so the "ambiguous" branch was
+  dead code in production. A purely transient git failure on a perfectly
+  healthy, still-checked-out session read as confirmed-stale, and
+  `delete-stale` could then permanently delete it after one confirm.
+  Live-reproduced (a fake failing `git` on PATH flipped a real, existing
+  branch's answer from `true` to `false`).
+- **Fix, `7ca6ad3`:** `branch_exists()` rewritten to be purely
+  filesystem-based — no `git` subprocess at all. A new `find_gitdir()`
+  (shared with `current_branch()`'s own existing fallback in the same
+  file, which already avoids spawning `git` for an unrelated reason — the
+  hot "every session name resolution" path) walks upward for `.git`,
+  follows a worktree's `.git` FILE redirect, and `branch_exists()` then
+  checks for a loose `refs/heads/<branch>` file or a matching line in
+  `packed-refs`. No external binary to be missing, refuse, or hang on —
+  this eliminates the whole class of failure round 1 found, not just its
+  specific manifestation, and (as a side effect) also closes a smaller
+  round-1 finding about `lib.nvim.git` itself being an optional,
+  soft-guarded submodule per this project's own docs/health check, which
+  the first version's "lib.nvim is a hard dependency" reasoning had
+  wrongly conflated with the whole `lib.nvim` package.
+- Tests rewritten to match: real hand-written `.git` fixtures (a loose
+  ref, `packed-refs` including a same-named *tag* to confirm branch/tag
+  disambiguation, a worktree `.git`-file redirect, an upward walk from a
+  subdirectory, a real empty repo with zero refs) instead of stubbing
+  `lib.nvim.git` with failure modes the real dependency cannot actually
+  produce (which is exactly what let the original bug through
+  undetected).
+
 ### P7 — sessions.nvim: configurable, icon-capable chip text
+
+**Status:** Done — 2026-09-28. `sessions.nvim` `89edc35`. ultracode review
+round pending at the time of this write-up.
 
 ~0.75 session. Repo: `sessions.nvim`.
 
@@ -684,6 +814,48 @@ fixes on top of the first pass (`667b1be`/`fe803c8` → `276b05f`/`387a666`):
    `"modern"`'s two-line output and icon placement; the fallback path when
    git-awareness is off; a custom template round-tripping through the
    formatter correctly.
+
+**As done**, landed close to the plan, with two resolutions the plan
+itself left open:
+
+- **Default icon glyphs (Open question 7, resolved):** `folder` is
+  neo-tree's own built-in `folder_closed` default (U+E5FF) — this user's
+  *own* neo-tree spec (`plugins/neotree.lua`) currently overrides that
+  same field to an empty string, which turned out to be the exact same
+  silent-glyph-loss accident this whole convention exists to avoid (see
+  below), confirmed by reading its raw bytes; unrelated to this feature
+  and not this module's place to fix, so used neo-tree's own intended
+  default instead of the corrupted override. `branch` matches
+  `ui.statusline.utils.primitives`'s own `ICON_GIT_BRANCH` (U+EA68)
+  exactly, for visual consistency with what this user's own statusline
+  already shows elsewhere — a stronger match than just "conventional".
+  Both byte-escaped in source (`"\xEE\x97\xBF"`/`"\xEE\xA9\xA8"`), not
+  literal glyphs — the exact same convention `ICON_GIT_BRANCH` itself
+  already uses, after a private-use-area glyph pasted straight into a Lua
+  file there once silently stripped to nothing going through some
+  editor/tool. Writing this handover's own two doc examples hit that
+  *exact* failure live while drafting them (one glyph substituted for a
+  different, wrong codepoint; the other silently vanished to zero bytes)
+  — independent, live corroboration of exactly the risk that convention
+  exists to guard against, caught and fixed by re-deriving the correct
+  bytes programmatically rather than trusting what had been typed.
+- **"modern"'s shape is one line per part that resolved, not always
+  two:** the plan's own step 3 says "two lines via `\n`" as the default
+  shape, but implemented as one icon-prefixed line per part that
+  *actually* resolved instead (`branch_aware = false`, or a detached
+  HEAD, means just the folder line) — matching Issue 6's own explicit
+  "rather than showing an icon next to something that isn't really a
+  folder/branch pair" reasoning more precisely than a fixed two-line
+  template would (which would still render an icon next to an empty
+  string for whichever half is missing). An *explicit* custom `template`
+  still renders literally even with one part empty, since that is the
+  caller's own layout, asked for outright — the omit-the-line behaviour
+  is specifically "modern"'s own built-in shape, not the module's only
+  option.
+- `config/init.lua`'s `KNOWN.chip` gained `text = true` (an unvalidated
+  leaf, same as `color`) rather than a nested per-field schema — `icons`
+  only ever needs the keys a caller wants to override, which a fixed
+  schema would fight rather than help.
 
 ## Open questions / assumptions made
 
@@ -761,6 +933,14 @@ reference them by SHA.
 | `lib.nvim` | `fe803c8` | P3 | mirror of `667b1be` | ✅ (superseded by `387a666`) |
 | `ui.nvim` | `276b05f` | P3 | group-clear + preset-staleness + dock-offset fixes — **final** | ✅ 2 rounds, 0 findings on the last |
 | `lib.nvim` | `387a666` | P3 | mirror of `276b05f` — **final** | ✅ same |
+| `nvim` (config) | `5f88892f` | P3 | this handover, marked P3 done | ✅ docs-only |
+| `sessions.nvim` | `bc74979` | P4 | `chip.shape`/`dock` default to `"dock_left"`/`true` | ✅ (superseded by `c022fb5`) |
+| `sessions.nvim` | `c022fb5` | P4 | anchor/shape fallback fix — round-1 finding | ✅ (superseded by `1bfa3f8`) |
+| `sessions.nvim` | `1bfa3f8` | P4 | invalid-anchor resolution fix — round-2 finding — **final** | ✅ 2 rounds |
+| `sessions.nvim` | `1efe68e` | P6 | `:Session stale`/`delete-stale`, first pass | ✅ (superseded by `7ca6ad3`) |
+| `sessions.nvim` | `7ca6ad3` | P6 | `branch_exists()` rewritten filesystem-only — **final** | ✅ round 1 found the bug this fixes; round 2 pending |
+| `sessions.nvim` | `89edc35` | P7 | configurable, icon-capable chip text | ⏳ review pending |
+| `nvim` (config) | `a919264f` | P5 | mode-colour wiring for the session chip | ✅ live-verified, no dedicated review round |
 
 ## Practical notes
 
