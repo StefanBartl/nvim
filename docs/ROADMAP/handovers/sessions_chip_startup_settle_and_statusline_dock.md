@@ -39,8 +39,16 @@ preset's invisible left border regardless of the empty glyph — `ui.nvim`
 `96e695d`, `lib.nvim` `d2c8d49`), and an orange-then-turquoise startup
 colour race (`St_<Mode>Mode` not yet defined when the chip's own P1
 settle pass wins its race against this config's `UIReady` wiring — `nvim`
-config `ca926df4`). Neither fix has a dedicated ultracode review round
-yet. **A third live confirmation from the user is what's left.**
+config `ca926df4`). **Both put through an ultracode review** (3
+dimensions × 3 adversarial verifiers per finding): security/performance 0
+findings; correctness found 3 confirmed, live-reproduced issues —a HIGH
+incomplete-fix gap (the `dock_left` offset only covered `reflow()`'s
+`docked` branch) and a MEDIUM staleness risk (keyed on shape name, not
+the actual border) in the position fix, plus a LOW pre-existing
+`ColorScheme`-staleness gap the colour fix's own new comment overclaimed
+around. All three addressed — `ui.nvim` `305e49b`, `lib.nvim` `3296b7e`,
+`nvim` config `54503920` — see P2's own section below for the full
+write-up. **A third live confirmation from the user is what's left.**
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -585,10 +593,49 @@ exactly why neither one showed up there:
    returns `nil` without the fix, a real `{fg,bg}` pair with it. `nvim`
    config `ca926df4`.
 
-Neither fix has its own dedicated ultracode review round yet (both are
-small, single-function changes with a live-reproduced root cause and a
-passing regression test/headless proof each) — flag for one if a
-further round is wanted before closing this handover out completely.
+**Round-2 fixes, ultracode-reviewed (2026-09-28):** a multi-agent review
+(3 dimensions — correctness, security, performance — each independently
+verified by 3 adversarial skeptics per finding) checked `96e695d`/
+`d2c8d49`/`ca926df4`. Security and performance: 0 findings. Correctness:
+**3 confirmed findings, all live-reproduced, 0 refuted**:
+
+1. **HIGH.** The `col = -1` compensation was scoped only to `reflow()`'s
+   `docked` branch, but `docked` requires a bottom anchor **and** a
+   visible statusline row. A `dock_left`-shaped chip anchored `top-left`,
+   or `bottom-left` with `dock = true` but no statusline row visible
+   (`laststatus = 0`, or `laststatus = 1` with a single window —
+   `sessions.nvim`'s own shipped defaults under a lone window), fell into
+   the *other* branch's unguarded `col = 0` and reproduced the exact gap
+   `96e695d` was meant to close. Untested by the original fix's own new
+   spec, which only exercised the `docked` branch.
+2. **MEDIUM.** The offset was keyed on `entry.shape == "dock_left"` by
+   *name*, not the actual resolved border. `theme.setup()` lets any
+   consumer fully replace the `"dock_left"` preset at runtime; one doing
+   so with a real left border glyph would still get `col = -1` and lose a
+   column of their own border. Currently latent (no shipped consumer does
+   this), but reachable by design of the preset-override system.
+3. **LOW, pre-existing.** `resolve_colors()` always marks a table-valued
+   `color()` result `themed = false`, so `ui.kit.chip`'s own `ColorScheme`
+   re-tint handler (gated on `themed`) permanently skips this chip. A real
+   `:colorscheme` switch during an idle session (no mode change, no
+   buffer/window/tab churn) can leave it stale until an unrelated refresh.
+   Predates `ca926df4` — that commit's own new comment just overclaimed
+   "can never drift", which review caught and a follow-up commit corrected
+   to state this gap accurately instead of fixing the underlying
+   architecture (a `ColorScheme`-handler change was judged disproportionate
+   for a low-severity, long-pre-existing gap).
+
+**Fixed:** finding 1+2 together, by computing the blank-left-border offset
+once from `entry.border`'s own left corners/edge (indices 1, 7, 8) instead
+of the shape name, and applying it in both `reflow()` branches — `ui.nvim`
+`305e49b`, `lib.nvim` `3296b7e` (mirrored, `kit_drift_spec` confirms this
+file in sync). Three new regression tests (top-left anchor, degraded
+bottom-left-dock without a statusline row, a `theme.setup()` override with
+a real border). Finding 3: comment corrected, architecture left as a
+known, documented gap — `nvim` config `54503920`. Full `ui.nvim` suite
+green (62/62 files) both before and after merging in a concurrent
+session's unrelated `ui.kit` work (`c2da442`..`6d3a46a`, a clean merge, no
+conflicts).
 
 ### P3 — ui.kit.chip: docked-left preset + function-valued colour + mode-track hook
 
@@ -1028,9 +1075,12 @@ reference them by SHA.
 | `sessions.nvim` | `39a098d` | P7 | same hot-path fix applied to `marks.scope_key()` — round-2 finding — **final** | ✅ 2 rounds |
 | `nvim` (config) | `a919264f` | P5 | mode-colour wiring for the session chip | ✅ live-verified, no dedicated review round |
 | `nvim` (config) | `067c7c46` | P6/P7 | handover updated, P6/P7 marked done and reviewed | ✅ docs-only |
-| `ui.nvim` | `96e695d` | P2 (live check round 2) | `dock_left` shifts `col = -1` for its invisible left border | ⏳ live-reproduced, no dedicated review round yet |
-| `lib.nvim` | `d2c8d49` | P2 (live check round 2) | mirror of `96e695d` | ⏳ same |
-| `nvim` (config) | `ca926df4` | P2 (live check round 2) | `chip.color` forces `St_<Mode>Mode` via `highlights.ensure()` | ⏳ live-reproduced, no dedicated review round yet |
+| `ui.nvim` | `96e695d` | P2 (live check round 2) | `dock_left` shifts `col = -1` for its invisible left border, first pass | ✅ (superseded by `305e49b`) |
+| `lib.nvim` | `d2c8d49` | P2 (live check round 2) | mirror of `96e695d`, first pass | ✅ (superseded by `3296b7e`) |
+| `nvim` (config) | `ca926df4` | P2 (live check round 2) | `chip.color` forces `St_<Mode>Mode` via `highlights.ensure()` | ✅ 1 round, 0 correctness findings on this commit itself |
+| `ui.nvim` | `305e49b` | P2 (live check round 2) | `dock_left` offset covers the else branch + keys on border — **final** | ✅ 1 round, 3 confirmed findings (1 HIGH, 1 MEDIUM, 1 LOW) fixed |
+| `lib.nvim` | `3296b7e` | P2 (live check round 2) | mirror of `305e49b` — **final** | ✅ same |
+| `nvim` (config) | `54503920` | P2 (live check round 2) | `chip.color` comment corrected (LOW finding on `ca926df4`) | ✅ same review round |
 
 ## Practical notes
 
