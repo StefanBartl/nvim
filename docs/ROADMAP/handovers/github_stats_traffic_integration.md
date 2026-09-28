@@ -1,8 +1,9 @@
 # GitHub traffic in docmap-desktop and documentation.nvim — implementation handover
 
 Status: **P0 built and pushed (2026-09-28, `github_stats.nvim` `13fb0a2`). P1 built and pushed
-(2026-09-28, `docmap-desktop` `02b84fc` + `2a8d561`). Next: P2 (detail dialog), then P3 (`documentation.nvim`);
-they are independent of each other.** Designed 2026-09-25.
+(2026-09-28, `docmap-desktop` `02b84fc` + `2a8d561`). P2 built and pushed (2026-09-28, `docmap-desktop`
+`4774f11`, branch `claude/github-stats-traffic-integration-46c7c0`). Next: P3 (`documentation.nvim`),
+independent of the other three.** Designed 2026-09-25.
 
 **Keep this file current:** update it whenever a step is finished or something
 worth knowing turns up (status line above, the step's *As built* block, *Open
@@ -21,8 +22,8 @@ This file is the *how*: order, files, tests, gates, and what to check at the end
   - [Order and sizes](#order-and-sizes)
   - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0--github_statsnvim-05-session--done)
   - [P1 — docmap-desktop core (~1 session) — DONE](#p1--docmap-desktop-core-1-session--done)
-  - [P2 — detail dialog (~1 session) — NEXT](#p2--detail-dialog-1-session)
-  - [P3 — documentation.nvim (~0.5–1 session)](#p3--documentationnvim-051-session)
+  - [P2 — detail dialog (~1 session) — DONE](#p2--detail-dialog-1-session--done)
+  - [P3 — documentation.nvim (~0.5–1 session) — NEXT](#p3--documentationnvim-051-session)
   - [Verification, end to end](#verification-end-to-end)
   - [Open questions](#open-questions)
   - [Practical notes](#practical-notes)
@@ -396,7 +397,7 @@ Follow the dependency matrix dialog for the pattern (`matrixbox` in `main.js`), 
 
 ---
 
-## P2 — detail dialog (~1 session)
+## P2 — detail dialog (~1 session) — DONE
 
 1. Dialog after the pattern of the dependency matrix: an inline-SVG sparkline
    over the **whole stored span** (that is the point — not 14 days), referrers,
@@ -409,6 +410,33 @@ Follow the dependency matrix dialog for the pattern (`matrixbox` in `main.js`), 
    plain, unlinked line. Label it "top 10 on GitHub", never "views".
 3. Tests: traversal cases (`../..`, `C:\`, `%2e%2e`), a referrer named
    `<img onerror=…>` rendered as text, an entry that does not resolve.
+
+### P2 as built
+
+`traffic::resolve_page_path` (new, `traffic.rs`) does the path resolution:
+pre-validated (`..`, backslash, leading `/`, drive letter each reject before
+touching the filesystem), then `fs::canonicalize` + `starts_with(&root)` —
+the same idiom `open_in_editor`/`filetree::list` already use. It lives on
+`PathItem.project_path` (`#[serde(skip_deserializing)]` — computed by this
+process, never trusted from the digest), wired into `traffic_detail`, the
+only command that has both the digest and the project's own root.
+
+Frontend: `<dialog id="trafficbox">` next to `matrixbox`, same conventions
+(no charting library, `textContent` only). Views and clones each get their
+own sparkline block, hidden independently when that series has fewer than
+two points. A top-page row is a link only when `project_path` resolved.
+
+Suite: `cargo test` 125 (was 122; 3 new for `resolve_page_path`),
+`node --test src/lib/*.test.js` 157 (was 149; 8 new — `sparklinePoints`,
+markup/wire-naming/command-registration guards, i18n completeness), 0
+compiler warnings. Pre-existing clippy warnings elsewhere in `main.rs` are
+untouched (not part of this change). Looked at in the browser preview
+(`python tools/preview/preview.py`, with a new `traffic_detail` stub) at
+the app's 900×600 minimum: both charts, an XSS-shaped referrer rendering as
+inert text, a resolved vs. an unresolved top-page row, and both empty
+states. **Not run in the real window** with a real digest — same
+outstanding "Done when" check as P1, and it needs the same first real
+`:GithubStats fetch`.
 
 ---
 
