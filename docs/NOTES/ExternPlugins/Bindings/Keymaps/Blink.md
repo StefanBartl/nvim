@@ -58,7 +58,6 @@ offenen Completion-Menüs ist hier also nichts belegt:
 
 - `<CR>` erreicht weiter das Enter-Mapping von `nvim-autopairs`,
 - `<C-y>` bleibt „Zeichen aus der Zeile darüber kopieren" (`i_CTRL-Y`),
-- `<Right>` bleibt normale Cursor-Bewegung,
 - `<C-x>` bleibt Vims eigener ins-completion-Präfix (`i_CTRL-X`).
 
 Gemessen am 2026-09-01 mit einer minimalen headless-Instanz (blink solo, plus
@@ -88,8 +87,8 @@ Dateinamens ein echter Bug wäre.
 ## Cmdline
 
 Eigener Namespace (`config.cmdline.keymap`), von den Insert-Keys oben
-unberührt: `opts.keymap` (was `<CR>`/`<C-y>`/`<Right>`/`<C-x>` setzt) gilt nur
-für den Default-(Insert-)Modus, und `cmdline.keymap.preset` steht nicht auf
+unberührt: `opts.keymap` (was `<CR>`/`<C-y>`/`<C-x>` setzt) gilt nur für den
+Default-(Insert-)Modus, und `cmdline.keymap.preset` steht nicht auf
 `"inherit"`. `<C-x>` ist dort also nicht belegt, `<C-y>` accepted (Preset).
 
 | Mapping | blink-Command | Aktion | Status |

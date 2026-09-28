@@ -97,10 +97,12 @@ return {
   -- double as an accept key (`select_and_accept`), which made plain cursor
   -- movement through an open completion menu indistinguishable from accepting
   -- it -- the same confusion the lsp.nvim `auto_insert = false` fix (see
-  -- `lsp.pack.completion_blink`) was chasing from the other side. `<Right>`
-  -- is left on the preset's own select_prev/select_next (or, unbound, plain
-  -- cursor motion), so only <CR>/<C-y> and their cmp equivalents ever commit
-  -- a completion. lsp.nvim exposes this as an opt-in pack option
+  -- `lsp.pack.completion_blink`) was chasing from the other side. None of
+  -- blink's insert-mode presets (`default`/`enter`/`super-tab`, the only ones
+  -- `completion_accept` ever selects) bind `<Right>` themselves -- only the
+  -- unrelated `cmdline` preset does -- so leaving it unclaimed here means
+  -- plain cursor motion, full stop; only <CR>/<C-y> and their cmp equivalents
+  -- ever commit a completion. lsp.nvim exposes this as an opt-in pack option
   -- (`completion_arrow_accept`) for anyone who wants that habit back, rather
   -- than this config hard-wiring it.
   --
