@@ -1,8 +1,48 @@
 # Finish the markdown-link sweep across the repo collection
 
-Status: **paused, resume any time.** Recorded 2026-09-24. Not urgent — every
-repo is already in a far better state than it started; this is the tail end,
-explicitly deferred rather than pushed through.
+Status: **mostly done, small tail left.** Recorded 2026-09-24, updated
+2026-09-28. Every repo is already in a far better state than it started;
+what remains below is genuinely the tail end.
+
+## 2026-09-28 update
+
+Resumed in worktree `docs-linkcheck-followup-5b3584` (branch
+`claude/docs-linkcheck-followup-5b3584`, pushed). Re-ran
+`docs_linkcheck.py` across all of `$REPOS_DIR/WKDBooks`: 87 findings
+(down from the ~90 estimated here).
+
+- Reviewed all 29 findings outside `wkdbook-myplugins` by hand. 1 real fix
+  (`wkdbook-Neovim/nvim-api/Main/Main.md`: `JobControl.md` link updated to
+  `JobControl-Lua.md` after that doc was split — commit `37fd881`). The
+  other 28 re-confirmed as LEAVE (unfilled `Vorlage.md` templates,
+  "how to insert a link" example syntax, an anchor that's real but set via
+  HTML `<figure id=...>` rather than a heading — a checker limitation, not
+  a bug in the doc — and a genuinely missing `casedesk.nvim.md` belege doc
+  that nobody ever wrote, which is a content gap, not a link fix).
+- Delegated `wkdbook-myplugins` (58 findings, the bulk) to one background
+  agent per the established pattern. It found and fixed 5 real issues
+  (commit `5a144b4`): a duplicated `repos/` path segment, a link into
+  another machine's `/home/steve/...`, two `$NVIM_CONFIG_DIR/...`-style
+  reformats for links that can never resolve as relative paths (nvim
+  config's docs live outside the vault), and 3 anchors that drifted after
+  headings gained a "— built <date>" suffix. Everything else re-confirmed
+  LEAVE, matching prior sweeps.
+- **New finding worth keeping**: running the checker from *inside* a
+  nested worktree (`.claude/worktrees/<branch>/...`) adds extra path
+  depth versus the real checkout, which turns correct
+  `../../../../../<plugin>.nvim/...` cross-repo links into false-positive
+  DEAD reports. Always verify a DEAD cross-repo relative link against the
+  real `$REPOS_DIR/WKDBooks` checkout depth before trusting the worktree's
+  own scan.
+- Remaining ~82 findings in `wkdbook-myplugins` after this pass are almost
+  entirely: (a) the same cross-repo relative links that are only
+  false-positive-DEAD from a nested worktree and are fine at real depth
+  (spot-checked several, e.g. `debugging.nvim/lua/debugging/commands.lua`,
+  `color_my_ascii.nvim/docs/BINDINGS.md` — both exist), and (b) genuine
+  never-created backlog/template targets already documented as LEAVE
+  across three sweeps now (`acc977f`, `02b582e`, `5a144b4`). Treat the
+  remainder as permanently LEAVE — a fourth pass is very unlikely to find
+  anything new.
 
 ## Where this came from
 
