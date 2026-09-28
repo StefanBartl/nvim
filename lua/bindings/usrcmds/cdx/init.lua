@@ -47,8 +47,8 @@ local function read_template(name)
   end
   local text = fh:read("*a")
   fh:close()
-  -- The templates start with a blank line and the file may have CRLF endings
-  -- on Windows; neither belongs in the pasted prompt.
+  -- Strip a leading blank line (in case a template ever has one) and CRLF
+  -- endings from Windows; neither belongs in the pasted prompt.
   text = text:gsub("\r\n", "\n"):gsub("^%s*\n", ""):gsub("%s+$", "")
   return text, nil
 end
