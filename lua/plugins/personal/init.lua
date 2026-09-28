@@ -402,9 +402,28 @@ plugins.add({
           -- not when the mode itself actually changes.
           track_mode = true,
           color = function()
-            -- `ui.statusline.modules.highlighting.mode_band_group()` is the
-            -- same helper the real statusline's own mode pill resolves its
-            -- colour through (`St_<Suffix>Mode`, cached/invalidated on
+            -- `St_<Suffix>Mode` is only DEFINED once `ui.statusline.highlights
+            -- .ensure()` has run -- and this config wires that in at UIReady
+            -- (VimEnter + vim.schedule(), see config/ui_statusline/init.lua),
+            -- the same deferred pattern ui.kit.chip's own startup settle pass
+            -- uses for its VimEnter re-resolve. Whichever of the two
+            -- `vim.schedule()` callbacks happens to queue first wins the
+            -- race; when the chip's settle pass wins, this function read an
+            -- undefined group on its first (and, until some later unrelated
+            -- refresh/mode-change, only) resolution -- `hl.fg`/`hl.bg` were
+            -- nil, this returned nil, and the chip fell back to
+            -- `ui.kit.chip`'s own default (`"Special"`, an amber/orange in
+            -- this colorscheme) until whatever incidental event happened to
+            -- refresh it next. Live-reproduced via real startup screenshots:
+            -- orange on first paint, the real mode colour only after ~1-2s.
+            -- `ensure()` is idempotent (a boolean guard) and reads the LIVE
+            -- colorscheme fresh, so calling it here closes the race outright
+            -- regardless of which `vim.schedule() ` wins -- by the time this
+            -- function is ever invoked, the groups it is about to read are
+            -- guaranteed to already exist.
+            require("ui.statusline.highlights").ensure()
+            -- The same helper the real statusline's own mode pill resolves
+            -- its colour through (`St_<Suffix>Mode`, cached/invalidated on
             -- ModeChanged already) -- reusing it here means this chip can
             -- never drift from what the statusline itself is showing.
             local group = require("ui.statusline.modules.highlighting").mode_band_group()
