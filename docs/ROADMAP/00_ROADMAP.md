@@ -30,8 +30,31 @@
 ---
 
 ## Claude Tasks
+E:\repos\images.nvim\.claude\worktrees\image-paste-performance-d063fc\lua\images\config\DEFAULTS.lua:
 
-- `:Image paste` dauert in etws 10 saekunden, es ist zwar assynchrn, trotzdem ist es auffallend lange
+```lua
+pdf = {
+    enabled = true,
+    -- Which page. There is no paging in a preview window -- the first page is    === REVIEW -> Das ist komisch geschreiben
+    -- what says "this is that document", which is the whole question a
+    -- preview answers.
+    page = 1,
+    -- Rasterization resolution. 120 puts an A4 page at ~1000x1400 px, which
+    -- is more than a preview window (a few hundred pixels across) can show,
+    -- and about a third of the bytes of the 216 hover.nvim rasterizes a
+    -- full-screen float at. Raise it if you read pages in a large preview.
+    dpi = 120,
+  },
+
+  -- Right-click context menu (nvzone/menu, soft dependency; entries from    === REVIEW -> nvzone/menu verewnde ich nicht mehr, sondern ui.nvim menu!
+  -- images.integrations.menu). Automatically inactive without nvzone/menu
+  -- installed -- this only controls whether M.items()/M.submenu() return any
+  -- entries at all.
+  menu = {
+    enable = true,
+  },
+```
+
 
 - Auch so ausgaben wie `:Hover all off` geben jetzt einen chip rechts oben aus, aber aucheine noirmale `more` Benachrichtigung unten am bldschirm. es sollte aber nur das chip sein, oder nicht?schau dir da sbitte an, weir haben kja jetzt erst lib.nvim output implementierte, bei dem man das silent angeben kann - es sollte default sein - und daher iegntlich auch diese ausgabe unterdrücken, wenn maer die message in :messages hineinscheribt, dafür aber den chip ausgibt. Warum ist das ncht der Fall? Wenn es dabei ein generelles problem gitb -> Das Plugin `noice` kann das auch, eventuell etwas "abgucken"?
 
