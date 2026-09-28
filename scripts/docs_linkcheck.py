@@ -513,7 +513,22 @@ def check(root: str) -> tuple[list[Finding], int]:
                     continue
                 real = real_name_mismatch(root, resolved)
                 if real:
-                    corrected = target.replace(path, real, 1) if target.startswith(path) else None
+                    # `real` is root-relative (real_name_mismatch's own contract);
+                    # `path`/`target` are written relative to `base`, the linking
+                    # file's own directory -- re-relativize before substituting,
+                    # the same way the DEAD branch above does for `candidate`.
+                    # Substituting `real` in as-is only happened to work when
+                    # `base == root`; anywhere else it wrote a root-relative
+                    # path into a base-relative link, landing one directory too
+                    # deep on every non-root linking file (E:/repos/Configs'
+                    # shells/pwsh/ROADMAP.md -> Shells/pwsh/... was the case that
+                    # exposed it).
+                    corrected = None
+                    if target.startswith(path):
+                        new_rel = os.path.relpath(
+                            os.path.join(root, real), base
+                        ).replace(os.sep, "/")
+                        corrected = target.replace(path, new_rel, 1)
                     findings.append(Finding(
                         repo=root, file=rel_md, line=lineno, kind="CASE",
                         target=target, detail=f"on disk: {real}", fix=corrected,
