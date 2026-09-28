@@ -2,7 +2,8 @@
 
 Status: **Planned (2026-09-28). Nothing built yet.** Designed 2026-09-28,
 from four issues the user spotted live (screenshots) after the chip
-preset/session-pin work shipped.
+preset/session-pin work shipped, plus a fifth ("why so many saved
+sessions") added the same day.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -15,6 +16,7 @@ something worth knowing turns up.
     - [Issue 2 — "nvim_main" instead of "last"](#issue-2--nvim_main-instead-of-last)
     - [Issue 3 — chip outlives timeout_ms](#issue-3--chip-outlives-timeout_ms)
     - [Issue 4 — statusline-docked, mode-tracking default](#issue-4--statusline-docked-mode-tracking-default)
+    - [Issue 5 — why so many saved sessions](#issue-5--why-so-many-saved-sessions)
   - [Plan, phased](#plan-phased)
   - [Open questions / assumptions made](#open-questions--assumptions-made)
   - [Practical notes](#practical-notes)
@@ -202,6 +204,44 @@ a confirmation step, not new code.
   former.** See [Open questions](#open-questions--assumptions-made) if you
   disagree.
 
+### Issue 5 — why so many saved sessions
+
+Checked live: [`sessions/`](C:\Users\bartl\AppData\Local\nvim-data\sessions)
+holds **11 distinct sessions** (`.vim` + matching `.json` metadata pairs,
+plus `marks/` and the shared `.state.json` pointer), all saved between
+2026-09-26 and 2026-09-28:
+
+| Session name | Repo it belongs to (by name pattern) | Still exists? |
+|---|---|---|
+| `WKDBooks_main` | `WKDBooks`, branch `main` | yes |
+| `case-number-pin-position-8abe97_claude-case-number-pin-position-8abe97` | some repo, branch `claude/case-number-pin-position-8abe97` | **branch not found** — likely a merged/removed Claude worktree |
+| `github_stats-nvim_main` | `github_stats.nvim`, branch `main` | yes |
+| `insights-nvim_main` | `insights.nvim`, branch `main` | yes |
+| `last` | the `default_name` fallback slot (see Issue 2) | n/a |
+| `lib-nvim_main` | `lib.nvim`, branch `main` | yes |
+| `nvim-usercmds-env-vars-3560c9_claude-cursor-jump-save-1f9524` | this nvim config, branch `claude/cursor-jump-save-1f9524` | yes — active worktree `nvim-usercmds-env-vars-3560c9` |
+| `nvim_main` | this nvim config, branch `main` | yes |
+| `rules-nvim-review-277-071e53_claude-ui-nvim-statusline-integration-ece8e4` | some repo, branch `claude/ui-nvim-statusline-integration-ece8e4` | **branch not found** — likely a merged/removed Claude worktree |
+| `ui-nvim_main` | `ui.nvim`, branch `main` | yes |
+
+This is **not really "too many"** for three days of active multi-repo work
+with `branch_aware`/`project_aware` both on (the defaults): one session per
+distinct `(project, branch)` combination the user actually worked in is
+exactly what that naming scheme is designed to produce
+([`sessions/git.lua`'s `resolve_name()`](E:\repos\sessions.nvim\lua\sessions\git.lua),
+lines 111-148 — `<project-root-basename>_<sanitized-branch>`, see Issue 2's
+full explanation above for the mechanism). What IS a real gap: **two of
+these are already orphaned** — their git branch no longer exists (a merged
+and deleted Claude Code worktree branch), so nothing will ever resolve to
+or load them again by name, yet they sit in `sessions/` forever. Grepped
+`sessions.nvim`'s `bindings/usercmds/init.lua` for every registered
+`:Session <verb>` — there is `save`/`save-timestamp`/`load`/`delete`/
+`rename`/`list`/`current`/`toggle-track`/`save-tab`/`load-tab`/
+`save-layout`/`load-layout`/`marks *`, but **no prune/gc verb** — the only
+way to remove a stale session today is a manual `:Session delete <name>`
+per file, and nothing ever tells the user which ones are stale in the
+first place.
+
 ## Plan, phased
 
 ### P0 — Diagnose Issue 3 live
@@ -306,6 +346,34 @@ a confirmation step, not new code.
   user's own screenshots — not just the automated tests, since this is
   fundamentally a visual-fit feature.
 
+### P6 — sessions.nvim: surface (and optionally clean up) stale sessions
+
+~0.5 session. Repo: `sessions.nvim`.
+
+- New `:Session stale` (name TBD): for every saved session whose name
+  matches the `<project>_<branch>` pattern (i.e. was `branch_aware`-
+  resolved, not a custom name), re-run
+  [`sessions.git`](E:\repos\sessions.nvim\lua\sessions\git.lua)'s branch
+  lookup against that session's own recorded `cwd`
+  ([`sessions.meta`](E:\repos\sessions.nvim\lua\sessions\meta.lua) already
+  stores `cwd`/`branch` per save) and list the ones whose branch no longer
+  exists there. Read-only by default — just a list, same shape as
+  `:Session list`.
+- `:Session delete-stale` (name TBD): same detection, deletes what it
+  finds, after one confirm for the whole batch (same "ask once, not once
+  per item" pattern `close_bufs`/`close_all_bufs` already use elsewhere in
+  this plugin family) — never silently, and never on a session whose
+  branch lookup itself fails/errors (ambiguous is not the same as
+  confirmed-gone).
+- Explicitly **not** proposed: automatic deletion on its own (e.g. on
+  `VimLeavePre`) — a session for a branch that is merely checked out
+  elsewhere right now (a worktree not currently open) must never look
+  "stale" and get swept.
+- Tests: a fixture with one live-branch session and one session whose
+  recorded `cwd`/branch no longer resolves, asserting `stale` lists
+  exactly the second and `delete-stale` removes exactly the second's
+  `.vim`/`.json`/sidecar files.
+
 ## Open questions / assumptions made
 
 1. The exact "~4-5 seconds" in Issue 1 is environment/session-specific
@@ -331,6 +399,15 @@ a confirmation step, not new code.
 5. P0/P2's live-diagnosis steps mean P1's exact fix (VimEnter vs UIEnter,
    `vim.schedule()` vs a short `vim.defer_fn`) is provisional until that
    data comes back — do not implement P1 blind without running P0 first.
+6. P6's staleness check re-derives the branch from the session's recorded
+   `cwd`, not from the session *name* (name-parsing a `<project>_<branch>`
+   string back apart is ambiguous whenever either half itself contains an
+   underscore — e.g. `nvim-usercmds-env-vars-3560c9_claude-cursor-jump-save-1f9524`
+   above has underscores on both sides of the real project/branch split).
+   Confirm `sessions.meta`'s stored `cwd` is reliably the right directory
+   to re-run the branch lookup from (it should be — `cwd` is captured at
+   save time from wherever the session was actually saved from) before
+   building on that assumption.
 
 ## Practical notes
 
@@ -362,7 +439,10 @@ a confirmation step, not new code.
   `lua/sessions/chip.lua`; autoload/`:LastSession`:
   `lua/sessions/bindings/autocmds/init.lua`,
   `lua/sessions/bindings/usercmds/init.lua`; name resolution:
-  `lua/sessions/core.lua`)
+  `lua/sessions/core.lua`, `lua/sessions/git.lua`; saved metadata (`cwd`/
+  `branch`, for P6): `lua/sessions/meta.lua`)
+- Saved session files on this machine: `C:\Users\bartl\AppData\Local\
+  nvim-data\sessions\` (11 sessions as of 2026-09-28, see Issue 5)
 - `casedesk.nvim` — `E:\repos\casedesk.nvim` (referenced only for the P3
   "should the dock style spread there too" open question)
 - This nvim config — `C:\Users\bartl\AppData\Local\nvim` (sessions.nvim's
