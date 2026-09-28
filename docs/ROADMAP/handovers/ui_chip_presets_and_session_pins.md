@@ -1,8 +1,7 @@
 # UI chip/style preset unification + session-persisted tab pins — handover
 
-Status: **P0 + P1 built and pushed (2026-09-28). Next: P2 (sessions.nvim) and
-P3 (casedesk.nvim), either order, then P4 (pin persistence), then P5
-(verify-only).** Designed 2026-09-28.
+Status: **P0-P3 built and pushed (2026-09-28). Next: P4 (pin persistence,
+ui.nvim + sessions.nvim), then P5 (verify-only).** Designed 2026-09-28.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up (status line above, the step's *As built*
@@ -243,9 +242,17 @@ async-timing test untouched by this work).
 - Run `kit_drift_spec.lua` (or extend it to also diff the new `presets.lua`)
   to confirm the two copies stay identical.
 
-## P2 — sessions.nvim adoption
+## P2 — sessions.nvim adoption — DONE (2026-09-28, `sessions.nvim` `4cad07f`)
 
 ~0.5 session. Repo: `sessions.nvim`.
+
+**As built.** No behavior-changing code needed in `chip.lua` itself: it
+already just forwards `cfg.chip.shape` verbatim to `ui.kit.chip.mount()`,
+which normalizes old/new names on its own. Only `config/DEFAULTS.lua`'s
+default value, the `Sessions.Chip.Shape` alias (new, in `@types/init.lua`,
+listing all six accepted names for completion) and docs changed. Full suite
+green (`SESSIONS_TESTS_OK`), including `chip_spec.lua`'s default-value
+assertion updated to `"rounded_chip"`.
 
 - `config/DEFAULTS.lua`: `shape = "rounded_chip"` (was `"rounded"`), update
   the inline comment.
@@ -261,9 +268,22 @@ async-timing test untouched by this work).
 - Extend `TESTS/chip_spec.lua`'s forwarding test to also assert the new
   default name.
 
-## P3 — casedesk.nvim adoption
+## P3 — casedesk.nvim adoption — DONE (2026-09-28, `casedesk.nvim` `a8f257d`)
 
 ~0.5 session. Repo: `casedesk.nvim`.
+
+**As built.** Unlike sessions.nvim, casedesk.nvim has its own closed-enum
+validation for `pin.shape` (`config/init.lua`'s `PIN_ENUM_VALUES.shape`) —
+extended to accept all six names (three canonical + three old), not just
+normalized downstream. Default changed `"rect"` → `"chip"`. Caught a real
+test bug while updating `TESTS/pin_spec.lua`: its `install_pin_config()`
+helper fakes `casedesk.config` entirely with its own hardcoded
+`opts.shape or "rect"` fallback, independent of the real `DEFAULTS.lua` —
+updating only the assertion (to `"chip"`) without also updating that
+fallback would have left the test silently checking the OLD default forever
+(the stub would keep emitting `"rect"` regardless of what the real config
+now defaults to). Both the fallback and the assertion were updated. Full
+suite green: `pin_spec.lua` 11/11, `config_spec.lua` 60/60.
 
 - `pin.lua`: rename its default from `"rect"` to `"chip"` — same visual
   result, new name only. Keep the anchor-collision-avoidance comment
