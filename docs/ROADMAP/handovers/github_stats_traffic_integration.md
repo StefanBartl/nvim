@@ -1,7 +1,8 @@
 # GitHub traffic in docmap-desktop and documentation.nvim — implementation handover
 
-Status: **P0 built and pushed (2026-09-28, `github_stats.nvim` commit `13fb0a2`).
-P1, P2, P3 not started — next is P1.** Designed 2026-09-25.
+Status: **P0 built and pushed (2026-09-28, `github_stats.nvim` `13fb0a2`). P1 built and pushed
+(2026-09-28, `docmap-desktop` `02b84fc` + `2a8d561`). Next: P2 (detail dialog), then P3 (`documentation.nvim`);
+they are independent of each other.** Designed 2026-09-25.
 
 **Keep this file current:** update it whenever a step is finished or something
 worth knowing turns up (status line above, the step's *As built* block, *Open
@@ -19,8 +20,8 @@ This file is the *how*: order, files, tests, gates, and what to check at the end
   - [Data flow](#data-flow)
   - [Order and sizes](#order-and-sizes)
   - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0-github_statsnvim-05-session)
-  - [P1 — docmap-desktop core (~1 session)](#p1-docmap-desktop-core-1-session)
-  - [P2 — detail dialog (~1 session)](#p2-detail-dialog-1-session)
+  - [P1 — docmap-desktop core (~1 session) — DONE](#p1-docmap-desktop-core-1-session)
+  - [P2 — detail dialog (~1 session) — NEXT](#p2-detail-dialog-1-session)
   - [P3 — documentation.nvim (~0.5–1 session)](#p3-documentationnvim-051-session)
   - [Verification, end to end](#verification-end-to-end)
   - [Open questions](#open-questions)
@@ -130,7 +131,7 @@ GitHub traffic API ──► github_stats.nvim (fetcher, retention)
 | Step | Repo | What | Size |
 |---|---|---|---|
 | **P0** ✅ | `github_stats.nvim` | Write the digest and `root.json`; `github_stats.digest` module — **done 2026-09-28** | ~0.5 session |
-| **P1** | `docmap-desktop` | `traffic.rs`, discovery chain, folder button, header line, list column, opt-out | ~1 session |
+| **P1** ✅ | `docmap-desktop` | `traffic.rs`, discovery chain, folder button, header line, list column, opt-out — **done 2026-09-28** | ~1 session |
 | **P2** | `docmap-desktop` | Detail dialog: sparkline, referrers, pages, pages linked to files | ~1 session |
 | **P3** | `documentation.nvim` | `core/traffic_join.lua`, `traffic` browse mode | ~0.5–1 session |
 | P1b | `docmap-desktop` | Raw-history fallback, **only if P0 slips** | ~0.5 session, optional |
@@ -272,7 +273,10 @@ on the author's machine is the one remaining "Done when" item.
 
 ---
 
-## P1 — docmap-desktop core (~1 session)
+## P1 — docmap-desktop core (~1 session) — DONE
+
+> **Built 2026-09-28** in `docmap-desktop`, commits `02b84fc` and `2a8d561` (pushed to `main`). The steps below are
+> the plan; [*P1 as built*](#p1-as-built) says what was actually built and where it differs.
 
 Goal: the sidebar shows a project's traffic line, the project list can sort by it,
 and the user can point the app at the digest folder.
@@ -336,6 +340,59 @@ refusal, saturating numbers, a malformed file, the outcome states) and
 **Done when:** with a real digest on disk, the section shows numbers and the list
 sorts by traffic; with none, it says why and offers the button; a project without
 a GitHub remote shows nothing and no error.
+
+### P1 as built
+
+Suite: `cargo test` 122 (was 79; 43 new in `traffic.rs`), `node --test src/lib/*.test.js` 149 (was 129 + the
+new `traffic.test.js`), 0 compiler and 0 clippy warnings. The layout was looked at in the preview
+(`python tools/preview/preview.py`): the line for each of the seven outcomes, the sort order, the overview figure and
+the Settings section. **Not run in the real window** with the real digest — that is the remaining "Done when" check
+(needs `github_stats.nvim` to have written one, i.e. a first real `:GithubStats fetch`).
+
+**Files:** `src-tauri/src/traffic.rs` (new; all the logic, testable without an app), `src-tauri/src/main.rs` (the
+commands, `Workspace.traffic_dir` / `traffic_asked_dir`, `Project.traffic_hidden`), `src/lib/traffic.js` + `.test.js`
+(new; pure helpers), `src/main.js` (a marked *GitHub traffic* section), `src/index.html`, `src/style.css`,
+`src/lib/i18n.js` (en + de), `tools/preview/stub.js`, `docs/FEATURES/TRAFFIC.md` (new), `docs/USAGE.md`, `README.md`.
+
+**Where it differs from the plan above:**
+
+- **The telemetry block is not in the sidebar** — it is in the *Settings* dialog (`renderTelemetry`, `prefs-section`),
+  which the trap list above got wrong. So the traffic *line* went into the sidebar's project detail block
+  (`#proj-detail`, under the counts and the staleness mark) and the *folder button / Ask Neovim / opt-out* into a new
+  *GitHub traffic* section of Settings, next to Telemetry.
+- **The "list column" is a figure on the overview rows** (*210 views / 30 d*), not a column: the project list is a
+  `<select>`, and the only list with rows is the *All projects* overview. It shows only where there are numbers, and
+  does not change that screen's ranking (it ranks by what needs doing).
+- **The opt-out is `Project.traffic_hidden`** with its own command `traffic_set_hidden`; `project_scope_get/_set` are
+  **untouched**, which settles open question 5 (an older front end never sees the field, and `project_scope_set`
+  cannot overwrite it). Off means nothing is read for the project — not even `git remote get-url origin`.
+- **Digest parsing is typed with a lenient number type** (`Count`: any JSON number → `u64`, negatives/NaN → 0, huge →
+  saturates), rather than `#[serde(default)]` alone: one bad count must not make the other hundred unreadable. The
+  schema is checked on the raw value *before* the structure is read, so a newer plugin is named "newer" and not
+  reported as a type error.
+- **Seven outcomes**, not six: `newer_schema` is its own (`ok`, `not_tracked`, `no_remote`, `no_digest`, `unreadable`,
+  `newer_schema`, `disabled`). The sidebar shows a line for four of them; `no_remote`, `no_digest` and `disabled` show
+  **nothing** (no plugin ⇒ the window looks as before). `no_digest` is explained in Settings, where it can be acted on.
+- **Discovery accepts three folder shapes** — the plugin's data folder (has `root.json`), a `digest_dir` (has `digest/`),
+  or the `digest/` folder itself — and follows `root.json`'s `digest_dir`. A stem from `root.json` is validated
+  (`[A-Za-z0-9._%-]`, no separators, not `.`/`..`), and the path is always `files_dir/<stem>.json`. A file whose own
+  `repo` field names another repository (the `/`-vs-`_` collision) is treated as *not tracked*.
+- **"Ask Neovim" is one `-c "lua …"` one-liner** (`traffic::ASK_LUA`), not a script file: it requires
+  `github_stats.digest`, and the answer is read between markers (`<<docmap-traffic-dir:` … `:>>`) so a config that
+  prints at startup cannot be mistaken for a path. The answer is stored (`traffic_asked_dir`) like a chosen folder.
+- **Default place** (`traffic::default_data_dir`): Windows `%LOCALAPPDATA%/nvim-data/github_stats.nvim`, else
+  `$XDG_DATA_HOME|~/.local/share/nvim/github_stats.nvim`. A run under another `NVIM_APPNAME` puts it elsewhere; that is
+  what the button is for.
+- **Staleness in the UI:** data older than **3 days** (`STALE_DAYS`) is called old, with the bullet the staleness mark
+  uses. Judged from `fetched` (falling back to `generated`).
+- **Not done in P1, deliberately:** the raw-history fallback (P1b — `data_dir` is in `root.json` for it); a
+  `traffic` *column* proper; an export. The `github.com` link helper (`githubUrl`) is written and tested for P2 but
+  not used yet.
+
+**What P2 has already:** `traffic_detail(id)` returns the whole `Digest` (daily series, referrers, paths) and
+`traffic::detail` is tested. What is left is the dialog, the sparkline, and the page→file links with their checks.
+Follow the dependency matrix dialog for the pattern (`matrixbox` in `main.js`), and the *GitHub traffic* section in
+`main.js` for how to keep everything `textContent`.
 
 ---
 
@@ -415,8 +472,8 @@ one that is not.
    (one file, two writers) is the only exposure. Unlikely, not fixed, written up in the plugin's wkdbook
    `ROADMAP.md` with the fix if it is ever wanted.
 4. ~~**`digest_daily_days`.**~~ **Measured 2026-09-28:** ~4–5 KB at 87 days, so ~20 KB at 400. Keep 400.
-5. **Opt-out storage.** A field on `ProjectSettings` is the plan; confirm it does
-   not change what `project_scope_get` returns to older front ends.
+5. ~~**Opt-out storage.**~~ **Settled in P1:** `Project.traffic_hidden` with its own command; `project_scope_get/_set`
+   untouched, so older front ends see no change.
 
 ---
 
@@ -436,6 +493,12 @@ Learned in P0; they save time.
   or use the Edit tool for source that contains escapes. (`HEREDOC.md` again.)
 - **`luacheck` and `stylua` run as a hook after every Write/Edit** and report inline; `stylua --check .`
   prints nothing when clean.
+- **Rust, Windows:** `cargo test` in `src-tauri` needs the placeholder sidecar under `src-tauri/binaries/` (present in
+  this worktree); a run takes ~25 s after the first build. `main.rs` is **not** rustfmt-clean (it was not before) —
+  do not reformat it wholesale; run `rustfmt --edition 2021 src/traffic.rs` on new modules (a hook checks them).
+- **Preview:** `preview_start` (`.claude/launch.json`, port 8731) and `navigate` to
+  `/tools/preview/preview.html`. The pane must be fronted (`tabs_select`) or navigation hangs; the native menu
+  (`Ctrl+,`) does not exist there — open Settings with `window.__stubEmit("menu", "menu.file.settings")`.
 - **Commit trailer:** none. The harness suggests a `Co-Authored-By` line; the global rule (no Claude
   co-authorship) wins.
 - **The plugin's specs must not touch real directories:** `scripts/test.sh` sets `NVIM_APPNAME`; a spec
