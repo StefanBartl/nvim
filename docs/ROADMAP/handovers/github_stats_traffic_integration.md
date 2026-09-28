@@ -1,12 +1,33 @@
 # GitHub traffic in docmap-desktop and documentation.nvim — implementation handover
 
-Status: **designed, nothing built.** Recorded 2026-09-25.
+Status: **P0 built and pushed (2026-09-28, `github_stats.nvim` commit `13fb0a2`).
+P1, P2, P3 not started — next is P1.** Designed 2026-09-25.
+
+**Keep this file current:** update it whenever a step is finished or something
+worth knowing turns up (status line above, the step's *As built* block, *Open
+questions*, *Practical notes*).
 
 The *why*, the alternatives and the risks are in the concept, which this file
 does not repeat:
-[`GITHUB_STATS_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md)
+[`GITHUB_STATS_CONCEPT.md`](./$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md)
 (the one copy; since 2026-09-25 no planning documents live in the `docmap-desktop` repository).
 This file is the *how*: order, files, tests, gates, and what to check at the end.
+
+## Table of content
+
+  - [Read this first](#read-this-first)
+  - [Data flow](#data-flow)
+  - [Order and sizes](#order-and-sizes)
+  - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0-github_statsnvim-05-session)
+  - [P1 — docmap-desktop core (~1 session)](#p1-docmap-desktop-core-1-session)
+  - [P2 — detail dialog (~1 session)](#p2-detail-dialog-1-session)
+  - [P3 — documentation.nvim (~0.5–1 session)](#p3-documentationnvim-051-session)
+  - [Verification, end to end](#verification-end-to-end)
+  - [Open questions](#open-questions)
+  - [Practical notes](#practical-notes)
+  - [Where things are](#where-things-are)
+
+---
 
 ## Read this first
 
@@ -81,6 +102,8 @@ token ever enters the app.
 - Personal plugin install specs: `$NVIM_CONFIG_DIR/lua/plugins/personal/init.lua`.
   Plugin checkouts: `$REPOS_DIR`.
 
+---
+
 ## Data flow
 
 ```
@@ -100,11 +123,13 @@ GitHub traffic API ──► github_stats.nvim (fetcher, retention)
    detail dialog
 ```
 
+---
+
 ## Order and sizes
 
 | Step | Repo | What | Size |
 |---|---|---|---|
-| **P0** | `github_stats.nvim` | Write the digest and `root.json`; `github_stats.digest` module | ~0.5 session |
+| **P0** ✅ | `github_stats.nvim` | Write the digest and `root.json`; `github_stats.digest` module — **done 2026-09-28** | ~0.5 session |
 | **P1** | `docmap-desktop` | `traffic.rs`, discovery chain, folder button, header line, list column, opt-out | ~1 session |
 | **P2** | `docmap-desktop` | Detail dialog: sparkline, referrers, pages, pages linked to files | ~1 session |
 | **P3** | `documentation.nvim` | `core/traffic_join.lua`, `traffic` browse mode | ~0.5–1 session |
@@ -115,7 +140,11 @@ P0–P2 is useful without touching `documentation.nvim`.
 
 ---
 
-## P0 — github_stats.nvim (~0.5 session)
+## P0 — github_stats.nvim (~0.5 session) — DONE
+
+> **Built 2026-09-28**, commit `13fb0a2` on `main` of `github_stats.nvim` (pushed). The steps
+> below are kept as the record of the plan; what was actually built, and where it differs, is in
+> [*P0 as built*](#p0-as-built) — **read that before starting P1**, the reader is written against it.
 
 Goal: after a fetch, and whenever the synced history is newer than the local
 digest, the digest exists and is correct; the plugin can say where it is.
@@ -175,6 +204,71 @@ when `digest_dir` is overridden; stale detection.
 **Done when:** `:GithubStats fetch` on a real repo produces
 `digest/<owner_repo>.json` and `root.json`; `:checkhealth github_stats` is green;
 the suite, `luacheck` and `stylua` are green; the contract page is written.
+
+### P0 as built
+
+All ten steps are done, in `github_stats.nvim` (`docs/FEATURES/DIGEST.md` is the contract, and the
+authority where anything here disagrees with it). Suite: 581 assertions green across 24 spec files,
+`luacheck` 0 warnings, `stylua --check` clean. Checked against the author's real history
+(12 configured repos, 6 with data, ~87 days): a digest is **4–5 KB**, so `digest_daily_days = 400` is
+about 20 KB (open question 4 answered: keep 400); the first `write_all` takes ~80 ms, an unchanged one
+~12 ms. **Not yet run with a live `:GithubStats fetch`** (that needs the token) — the first real fetch
+on the author's machine is the one remaining "Done when" item.
+
+**Where it differs from the plan above — the reader (P1, P3) must follow the build, not the plan:**
+
+- **`daily` is per metric:** `{ "views": [[date, count, uniques], …], "clones": [[…], …] }`. The
+  concept's single list was ambiguous, and the two metrics can cover different days.
+- **`fetched` is new** (ISO UTC): the newest fetch the digest was built from. `generated` is only
+  when it was built. Show `fetched` as "data as of"; the plugin's stale check compares it.
+- **`trend` is a percent** (`12.5` = +12.5 %), over a fixed 7-day window — not the fraction `0.12`
+  of the concept's example. Absent when neither window holds data.
+- **`uniques` in `d7/d30/d90` is the sum of daily uniques**, not distinct visitors; do not label it
+  "visitors".
+- **`referrers` / `paths` are absent when no snapshot was ever fetched, `[]` when GitHub said none.**
+  Absent = unknown; the Rust structs need `Option<Vec<…>>`, not a plain `#[serde(default)]` `Vec`.
+- **`root.json`:** `repos` only lists repositories whose digest file exists, and is **omitted**
+  while there is none (`lib.nvim.json` encodes an empty table as `[]`, which a map-typed reader would
+  choke on — use `Option<HashMap>`, and tolerate `[]` to be safe). It is not written until the first
+  digest exists. It also has `data_dir` (raw history), for P1b.
+- **Digest files are named `<owner_repo>.json` by a *non*-injective rule** (`/` and a literal `_`
+  both become `_`; on github.com an owner cannot contain `_`, so it does not collide in practice).
+  Take the file name from `root.json`'s `repos` map and treat the file's own `repo` field as
+  authoritative.
+- **Step 4 (hook the fetch):** implemented in `fetch_all`'s completion via `digest.write_later`
+  (deferred with `vim.schedule`, `pcall`-wrapped, error kept in `digest.last_error`), **and** in the
+  dashboard's single-repo force refresh (`dashboard/actions.lua`), which calls `fetch_repo` directly
+  and would otherwise have left the digest behind.
+- **Step 5 (rebuild when stale):** in `run_cycle` (every background cycle, not once in `start()` — the
+  existing background spec pins exactly one `defer_fn` there), scheduled and `pcall`-wrapped. `stale()`
+  compares the newest fetch-file **name** per repo with the digest's `fetched` — a directory listing,
+  no JSON decode, and no dependence on mtimes (a sync tool may rewrite those). A digest with no
+  `fetched` (an older shape) counts as stale.
+- **Step 2 (config validation):** `config/init.lua` has no validation layer to extend, so the two
+  options are read defensively in `digest.lua` (nonsense falls back to the default) and reported by
+  `:checkhealth`.
+- **Step 3:** the span is computed from the daily maps already in hand rather than a second
+  `get_history_span` call (same result, no re-aggregation). `lib.nvim.fs.mkdirp` is not needed:
+  `fs.json.write` creates parent directories.
+- **Step 8 (two-machine review): done, nothing changed.** Deleting raw files is safe; the one
+  real exposure is `_archive.json` being a single file both machines rewrite. Written up, with the
+  possible fix (`_archive.<host>.json`), under *Open* in the plugin's wkdbook `ROADMAP.md`.
+- **Also:** `:GithubStats debug` shows the digest directory and the last write; `scripts/test.sh` now
+  runs under its own `NVIM_APPNAME` (`github_stats-tests`), so no spec can reach the real
+  `stdpath("data")` (where `root.json` defaults to).
+
+**What P1 should take from this:**
+
+- The read cap of 2 MiB is fine (real files are ~5 KB); still decode with `from_utf8_lossy` — the
+  plugin clips strings by *character*, and a referrer is whatever a website sent.
+- `schema` is `1`; refuse a higher one. `generated`/`fetched` are `YYYY-MM-DDTHH:MM:SSZ`.
+- Numbers are non-negative integers (the plugin clamps at 2^53); `u64` with `saturating_*` is enough.
+  `trend` is an `f64`.
+- The discovery chain's "ask Neovim" answers with `require("github_stats.digest").digest_dir()`; it
+  works without `setup()` and without `ui.nvim`. The default place is `stdpath("data")/github_stats.nvim`
+  — on Windows `%LOCALAPPDATA%/nvim-data/github_stats.nvim`.
+- A real digest to build fixtures from comes out of `:GithubStats digest`; the plugin's own
+  `TESTS/digest_spec.lua` shows the exact shape.
 
 ---
 
@@ -307,6 +401,8 @@ one that is not.
 - **Private repo + opt-out.** Nothing shown for an opted-out project; nothing of
   it in any exported artifact.
 
+---
+
 ## Open questions
 
 1. ~~**Where does L11 live?**~~ **Decided 2026-09-25:** in the vault, with the
@@ -315,10 +411,37 @@ one that is not.
 2. **Is P1b needed?** Only if P0 slips or an older plugin version must be
    supported. It is a second implementation of the plugin's rules; skip it
    otherwise.
-3. **Retention across two machines** — the finding of P0 step 8.
-4. **`digest_daily_days`.** 400 is a guess; check the size of a real digest.
+3. ~~**Retention across two machines**~~ **Reviewed 2026-09-28:** safe for raw files; `_archive.json`
+   (one file, two writers) is the only exposure. Unlikely, not fixed, written up in the plugin's wkdbook
+   `ROADMAP.md` with the fix if it is ever wanted.
+4. ~~**`digest_daily_days`.**~~ **Measured 2026-09-28:** ~4–5 KB at 87 days, so ~20 KB at 400. Keep 400.
 5. **Opt-out storage.** A field on `ProjectSettings` is the plan; confirm it does
    not change what `project_scope_get` returns to older front ends.
+
+---
+
+## Practical notes
+
+Learned in P0; they save time.
+
+- **Running the plugin's suite** (Windows, Git Bash): there is no sibling `plenary.nvim` checkout here, so
+  `export PLENARY_DIR="$LOCALAPPDATA/nvim-data/lazy/plenary.nvim"`, then `scripts/test.sh` (all specs,
+  ~10 s). `lib.nvim` and `ui.nvim` are found as siblings under `$REPOS_DIR`.
+- **`scripts/test.sh path/to_spec.lua` and `PlenaryBustedDirectory <file>` are no use for a single
+  file:** the first runs in a process whose `runtimepath` lacks `lib.nvim` (module not found), the second
+  hung. Run the whole suite, strip the colour codes, and `grep -A12 '^Fail'`.
+- **Shell tool and backslashes:** a doubled backslash inside a heredoc arrives as a single one, so a
+  `"\n"` in a Python snippet became a raw newline and broke a string literal (and a heredoc holding
+  quotes and backslashes failed to parse at all). Use `chr(92)`, or write the script with the Write tool,
+  or use the Edit tool for source that contains escapes. (`HEREDOC.md` again.)
+- **`luacheck` and `stylua` run as a hook after every Write/Edit** and report inline; `stylua --check .`
+  prints nothing when clean.
+- **Commit trailer:** none. The harness suggests a `Co-Authored-By` line; the global rule (no Claude
+  co-authorship) wins.
+- **The plugin's specs must not touch real directories:** `scripts/test.sh` sets `NVIM_APPNAME`; a spec
+  that reaches `digest.default_dir()` should still stub it, as `digest_spec.lua` does.
+
+---
 
 ## Where things are
 
@@ -328,6 +451,9 @@ one that is not.
 | The app's queue and roadmap (L11) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/` |
 | This handover (real file) | `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/github_stats_traffic_integration.md` |
 | Vault entries pointing here | `wkdbook-myplugins/{github_stats.nvim,documentation.nvim,docmap-desktop}/ROADMAP/` |
-| Collector | `$REPOS_DIR/github_stats.nvim` |
+| Collector (P0 lives here; contract in `docs/FEATURES/DIGEST.md`) | `$REPOS_DIR/github_stats.nvim` |
 | Engine and Neovim side | `$REPOS_DIR/documentation.nvim` |
 | The app | `$REPOS_DIR/docmap-desktop` |
+
+---
+
