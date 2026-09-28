@@ -4,8 +4,9 @@ Status: **Partly built (2026-09-28).** Designed 2026-09-28, from four
 issues the user spotted live (screenshots) after the chip
 preset/session-pin work shipped, plus a fifth ("why so many saved
 sessions") and a sixth ("configurable chip text, icons") added the same
-day. **P0 done** (Issue 3 root-caused and fixed for real — `ui.nvim`
-`a78b319`, `lib.nvim` `2cd6bc3`); everything else still planned.
+day. **P0 done and reviewed** (Issue 3 root-caused and fixed for real —
+`ui.nvim` `a78b319`, `lib.nvim` `2cd6bc3`, ultracode-reviewed 0 findings);
+everything else still planned.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -137,11 +138,15 @@ code change proposed here.
 
 ### Issue 3 — chip outlives timeout_ms
 
-**Status:** Root-caused and fixed — 2026-09-28, `ui.nvim` `a78b319`,
-`lib.nvim` `2cd6bc3`. (Heading kept short on purpose, matching the Table
-of contents above — a `— DONE (...)` suffix appended straight into a
-heading silently breaks its own ToC anchor, a real mistake the sibling
-chip-presets-and-pins handover hit and had to fix; not repeating it here.)
+**Status:** Root-caused, fixed, and reviewed — 2026-09-28, `ui.nvim`
+`a78b319`, `lib.nvim` `2cd6bc3`. Reviewed the same day by an adversarial
+multi-agent pass across correctness/bugs, security, and performance (3
+dimensions, each independently checked against both diffs plus every other
+caller of `resolve_visible()`/`M.refresh()`): **0 findings**. (Heading kept
+short on purpose, matching the Table of contents above — a `— DONE (...)`
+suffix appended straight into a heading silently breaks its own ToC
+anchor, a real mistake the sibling chip-presets-and-pins handover hit and
+had to fix; not repeating it here.)
 
 Root-caused via a live reproduction, not the "same as Issue 1" guess this
 section originally proposed — a real, independent bug, unrelated to
@@ -356,7 +361,9 @@ not just a fixed on/off switch.
 
 ### P0 — Diagnose Issue 3 live
 
-**Status:** Done — 2026-09-28, `ui.nvim` `a78b319`, `lib.nvim` `2cd6bc3`.
+**Status:** Done and reviewed — 2026-09-28, `ui.nvim` `a78b319`, `lib.nvim`
+`2cd6bc3` (ultracode multi-agent review, 0 findings across
+correctness/security/performance — see Issue 3's own section above).
 
 ~0.25 session, as estimated. Repo: none for the diagnosis itself (a real
 headless reproduction, not a guess); `ui.nvim` + `lib.nvim` for the fix
