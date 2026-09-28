@@ -390,6 +390,38 @@ plugins.add({
         -- everywhere else deliberately kept off of (see init.lua's UIReady
         -- phases).
         keymaps = false,
+
+        -- shape/dock already default to sessions.nvim's own "dock_left"/true
+        -- (statusline-docked look) -- only the mode-colour wiring belongs
+        -- here, per ui.kit.chip's own design: it stays statusline-agnostic,
+        -- so a `St_<Mode>Mode`-specific colour source is this config's job,
+        -- not sessions.nvim's or ui.kit's.
+        chip = {
+          -- Without this, the colour function below would only ever be
+          -- re-read at the next incidental save/load/dirty-tracking event,
+          -- not when the mode itself actually changes.
+          track_mode = true,
+          color = function()
+            -- `ui.statusline.modules.highlighting.mode_band_group()` is the
+            -- same helper the real statusline's own mode pill resolves its
+            -- colour through (`St_<Suffix>Mode`, cached/invalidated on
+            -- ModeChanged already) -- reusing it here means this chip can
+            -- never drift from what the statusline itself is showing.
+            local group = require("ui.statusline.modules.highlighting").mode_band_group()
+            -- The chip wants the group's own {fg,bg} pair verbatim (the
+            -- mode's accent colour as the chip's background, same as the
+            -- statusline's pill), not a highlight-group NAME -- ui.kit.chip
+            -- would tint a name's fg toward the window background instead
+            -- of using the referenced group's own bg, which reads as a
+            -- washed-out version of the mode colour rather than the actual
+            -- accent pill this is supposed to match.
+            local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+            if not hl.fg or not hl.bg then
+              return nil -- ui.kit.chip falls back to its own default colour
+            end
+            return { fg = hl.fg, bg = hl.bg }
+          end,
+        },
       }
     end,
   },
