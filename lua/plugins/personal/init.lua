@@ -424,8 +424,24 @@ plugins.add({
             require("ui.statusline.highlights").ensure()
             -- The same helper the real statusline's own mode pill resolves
             -- its colour through (`St_<Suffix>Mode`, cached/invalidated on
-            -- ModeChanged already) -- reusing it here means this chip can
-            -- never drift from what the statusline itself is showing.
+            -- ModeChanged already) -- reusing it here means this chip
+            -- reads the exact same source the statusline does, every time
+            -- it repaints. That is NOT an unconditional "never drifts"
+            -- guarantee, though: `ui.kit.chip`'s own `ColorScheme` re-tint
+            -- handler only re-paints a chip whose `color` resolves through
+            -- a highlight-group *name* (`resolve_colors()`'s `themed =
+            -- true` branch) -- this chip's `color` always returns a
+            -- `{fg,bg}` table instead, so that handler skips it. A real
+            -- `:colorscheme` switch during an otherwise idle session (no
+            -- mode change, no buffer/window/tab churn) can therefore leave
+            -- this chip showing pre-switch colours until the next
+            -- incidental refresh -- found and confirmed live (adversarial
+            -- review, 2026-09-28); pre-existing since `track_mode`/
+            -- function-valued `color` shipped, not something this
+            -- `ensure()` call introduces or fixes. Low-impact in practice
+            -- (`track_mode` alone re-paints on every real mode change,
+            -- which is frequent), left as a known gap rather than a
+            -- rushed fix here.
             local group = require("ui.statusline.modules.highlighting").mode_band_group()
             -- The chip wants the group's own {fg,bg} pair verbatim (the
             -- mode's accent colour as the chip's background, same as the
