@@ -27,6 +27,7 @@ something worth knowing turns up.
     - [Issue 6 — configurable chip text (icons, folder/branch)](#issue-6--configurable-chip-text-icons-folderbranch)
   - [Plan, phased](#plan-phased)
   - [Open questions / assumptions made](#open-questions--assumptions-made)
+  - [Shipped commits (ledger)](#shipped-commits-ledger)
   - [Practical notes](#practical-notes)
   - [Where things are](#where-things-are)
 
@@ -616,6 +617,31 @@ committed, not just asserted to pass against the new one.
    provider query) at implementation time for the exact default glyph, and
    pick a conventional git-branch glyph (nerd-font `nf-oct-git_branch` or
    similar) to match it stylistically.
+
+## Shipped commits (ledger)
+
+Archive of every commit this handover's work has produced, reviewed and
+pushed — kept here so a chat's own running commit list only has to show
+what's new *this* session instead of re-listing everything again each
+turn. Intermediate commits superseded by a same-phase follow-up fix are
+marked as such rather than dropped, since the follow-up commit messages
+reference them by SHA.
+
+| Repo | Commit | Phase | Description | Review |
+| --- | --- | --- | --- | --- |
+| `ui.nvim` | `a78b319` | P0 | `resolve_visible()` ternary bug fix (Issue 3) | ✅ 0 findings |
+| `lib.nvim` | `2cd6bc3` | P0 | mirror of `a78b319` | ✅ 0 findings |
+| `ui.nvim` | `746d510` | P1 | settle pass + pulse-revert fix v1 | ✅ (superseded by `c9fd0f3`) |
+| `lib.nvim` | `c48b460` | P1 | mirror of `746d510` | ✅ (superseded by `cd9534f`) |
+| `ui.nvim` | `249800e` | P1 | pulse-revert generation counter | ✅ (superseded) |
+| `lib.nvim` | `cece91c` | P1 | mirror of `249800e` | ✅ (superseded) |
+| `ui.nvim` | `8d5f071` | P1 | pulse-revert entry-table identity | ✅ (superseded) |
+| `lib.nvim` | `ceaac1a` | P1 | mirror of `8d5f071` | ✅ (superseded) |
+| `ui.nvim` | `dc704be` | P1 | `pulse_active` guard (refresh/mount) | ✅ (superseded) |
+| `lib.nvim` | `077658b` | P1 | mirror of `dc704be` | ✅ (superseded) |
+| `ui.nvim` | `c9fd0f3` | P1 | `open_window()` syncs `pulse_active` — **final** | ✅ 5 rounds, 0 findings on the last |
+| `lib.nvim` | `cd9534f` | P1 | mirror of `c9fd0f3` — **final** | ✅ same |
+| `nvim` (config) | `3c480aa7` | P1 | this handover, marked P1 done | ✅ docs-only |
 
 ## Practical notes
 
