@@ -23,10 +23,16 @@ statusline's own mode colours, not yet put through a dedicated ultracode
 review round). **P6 done and reviewed** (`:Session stale`/`delete-stale`
 — final state `sessions.nvim` `7ca6ad3`, ultracode-reviewed across 2
 rounds; round 1 found a serious, live-reproduced correctness bug in
-`branch_exists()`'s git-subprocess approach, round 2 [pending] checks the
-filesystem-only rewrite that replaced it). **P7 done** (configurable,
-icon-capable chip text — `sessions.nvim` `89edc35`, review round
-[pending]). Only P2's live user confirmation stays open.
+`branch_exists()`'s git-subprocess approach, round 2 found only two
+low-severity notes on the filesystem-only rewrite — the packed-refs
+field-boundary case, already folded into `7ca6ad3` itself, plus one
+doc-comment wording nit left as-is). **P7 done and reviewed**
+(configurable, icon-capable chip text — final state `sessions.nvim`
+`39a098d`, ultracode-reviewed across 2 rounds; round 1 found the
+`current_branch()`-on-a-hot-path bug in `chip_text.lua` itself plus two
+smaller issues (`f39ae9c`), round 2 found the exact same hot-path bug
+recurring in `sessions/marks/init.lua`'s `scope_key()` — fixed in
+`39a098d`). Only P2's live user confirmation stays open.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -715,7 +721,11 @@ avoided the repeat.
 `7ca6ad3`. ultracode-reviewed across 2 rounds: round 1 (on the first
 implementation, `1efe68e`) found a serious, live-reproduced correctness
 bug in the staleness check itself; round 2 (checking the rewrite that
-replaced it, `7ca6ad3`) is pending at the time of this write-up.
+replaced it, `7ca6ad3`) found only two low-severity notes — the
+packed-refs field-boundary case (a branch name embedding the literal
+substring `refs/heads/` as a path component) was already handled by the
+shipped `needle = " refs/heads/" .. branch` check, and one doc-comment
+wording nit left as-is, neither worth another commit on its own.
 
 ~0.5 session. Repo: `sessions.nvim`.
 
@@ -788,8 +798,21 @@ detection primitive itself needed a full rewrite after review, though:
 
 ### P7 — sessions.nvim: configurable, icon-capable chip text
 
-**Status:** Done — 2026-09-28. `sessions.nvim` `89edc35`. ultracode review
-round pending at the time of this write-up.
+**Status:** Done and reviewed — 2026-09-28. Final state `sessions.nvim`
+`39a098d`. ultracode-reviewed across 2 rounds: round 1 (`89edc35` →
+`f39ae9c`) found `chip_text.lua`'s "modern" default calling the
+subprocess-spawning `sessions.git.current_branch()` on every `ui.kit.chip`
+refresh (an editing-rate hot path) plus two smaller issues (a
+packed-refs-style field-boundary gap in the placeholder regex, and a
+`%w`-vs-`_` placeholder-matching typo); round 2 (checking `f39ae9c`)
+found the exact same hot-path hazard recurring one call away, in
+`sessions/marks/init.lua`'s `scope_key()` — fixed in `39a098d`, plus a
+regression test stubbing `sessions.git.current_branch` to raise if
+called, asserting only `current_branch_no_spawn()` runs. A further check
+of `39a098d` itself was judged disproportionate: it repeats an
+already-twice-reviewed fix shape (swap `current_branch()` for
+`current_branch_no_spawn()`) verbatim, with its own passing regression
+test.
 
 ~0.75 session. Repo: `sessions.nvim`.
 
@@ -939,7 +962,9 @@ reference them by SHA.
 | `sessions.nvim` | `1bfa3f8` | P4 | invalid-anchor resolution fix — round-2 finding — **final** | ✅ 2 rounds |
 | `sessions.nvim` | `1efe68e` | P6 | `:Session stale`/`delete-stale`, first pass | ✅ (superseded by `7ca6ad3`) |
 | `sessions.nvim` | `7ca6ad3` | P6 | `branch_exists()` rewritten filesystem-only — **final** | ✅ round 1 found the bug this fixes; round 2 pending |
-| `sessions.nvim` | `89edc35` | P7 | configurable, icon-capable chip text | ⏳ review pending |
+| `sessions.nvim` | `89edc35` | P7 | configurable, icon-capable chip text, first pass | ✅ (superseded by `f39ae9c`) |
+| `sessions.nvim` | `f39ae9c` | P7 | `current_branch_no_spawn()` hot-path fix + 2 smaller fixes — round-1 finding | ✅ (superseded by `39a098d`) |
+| `sessions.nvim` | `39a098d` | P7 | same hot-path fix applied to `marks.scope_key()` — round-2 finding — **final** | ✅ 2 rounds |
 | `nvim` (config) | `a919264f` | P5 | mode-colour wiring for the session chip | ✅ live-verified, no dedicated review round |
 
 ## Practical notes
