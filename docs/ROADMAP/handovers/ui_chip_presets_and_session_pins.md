@@ -1,6 +1,11 @@
 # UI chip/style preset unification + session-persisted tab pins — handover
 
 Status: **Done and fully verified (2026-09-28).** Designed 2026-09-28.
+Reviewed 2026-09-28 by an adversarial multi-agent review of every commit
+this file describes: 7/7 raised findings confirmed (0 refuted across 3
+independent votes each) — 2 real code bugs (fixed, see P0's and P4's own
+*As built* blocks) and 5 doc-accuracy errors in this file itself (fixed
+below, listed once each in the phase they were found in).
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up (status line above, the step's *As built*
@@ -134,7 +139,7 @@ having no background at all, ignoring any configured `color.bg`.
   `M.toggle_pinned(bufnr)` (lines 137-139).
 - Cleared on `BufDelete` (lines 214-224) and when a buffer moves to another
   tab via `M.forget_buffer` (lines 501-510).
-- **Persistence: explicitly none** (doc line 78: *"not persisted across a
+- **Persistence: explicitly none** (doc line 76: *"not persisted across a
   restart"*). UI entry points: the tab context menu's Pin/Unpin toggle
   ([`ui/tabline/menu.lua:209-218`](E:\repos\ui.nvim\lua\ui\tabline\menu.lua)),
   clicking a pinned chip's own pin-glyph to unpin
@@ -180,7 +185,13 @@ template the pin feature should follow — [`sessions/buforder.lua`](E:\repos\se
 - **Conclusion: already correct.** No fresh `ui.nvim` install shows this
   module. P5 below is verification/documentation only.
 
-## P0 — naming module + ui.nvim adoption — DONE (2026-09-28, `ui.nvim` `ae8119f`)
+## P0 — naming module + ui.nvim adoption
+
+**Status:** Done — 2026-09-28, `ui.nvim` `ae8119f`. (Every phase heading
+below stays in its original short form on purpose, matching the Table of
+contents above — an earlier revision appended `— DONE (...)` straight into
+each heading, which silently broke every ToC anchor; the 2026-09-28 review
+caught it, see the Status line at the top.)
 
 ~1 session. Repo: `ui.nvim`.
 
@@ -197,6 +208,17 @@ other point below shipped as planned, verified with the full spec suite
 `tabline_styles_spec.lua` 14/14, `primitives_separators_spec.lua` 6/6, all
 green including live deprecation warnings firing for the old names) plus
 `stylua`/`luacheck` clean.
+
+**Post-review fix (2026-09-28, `ui.nvim` `51e605e`):** the adversarial
+review caught a real bug in `ui/context/init.lua`'s new `shape = "classic"`
+branch — for a heading entry it reused `UiContextH<level>` directly, but
+that group is a `link` to the colorscheme's own
+`@markup.heading.<level>.markdown` group and inherits that group's `bg`
+verbatim, contradicting "classic"'s documented no-background guarantee on
+any colorscheme that gives headings one. Fixed by adding a dedicated
+fg-only `UiContextChipH<level>Classic` group per heading level (same idea
+as the already-correct non-heading `UiContextChipScopeClassic`), plus a
+regression test asserting the highlight group used carries no `bg`.
 
 1. New `ui/kit/presets.lua`: exports the canonical list
    `{ "classic", "chip", "rounded_chip" }` plus `M.normalize(value)` that
@@ -220,7 +242,9 @@ green including live deprecation warnings firing for the old names) plus
 6. Update/add tests per module; update any docs (`ui/kit/README.md` already
    documents chip's shape option — update it).
 
-## P1 — lib.nvim frozen-copy sync — DONE (2026-09-28, `lib.nvim` `3ce0926`)
+## P1 — lib.nvim frozen-copy sync
+
+**Status:** Done — 2026-09-28, `lib.nvim` `3ce0926`.
 
 ~0.5 session. Repo: `lib.nvim`.
 
@@ -241,7 +265,9 @@ async-timing test untouched by this work).
 - Run `kit_drift_spec.lua` (or extend it to also diff the new `presets.lua`)
   to confirm the two copies stay identical.
 
-## P2 — sessions.nvim adoption — DONE (2026-09-28, `sessions.nvim` `4cad07f`)
+## P2 — sessions.nvim adoption
+
+**Status:** Done — 2026-09-28, `sessions.nvim` `4cad07f`.
 
 ~0.5 session. Repo: `sessions.nvim`.
 
@@ -267,7 +293,9 @@ assertion updated to `"rounded_chip"`.
 - Extend `TESTS/chip_spec.lua`'s forwarding test to also assert the new
   default name.
 
-## P3 — casedesk.nvim adoption — DONE (2026-09-28, `casedesk.nvim` `a8f257d`)
+## P3 — casedesk.nvim adoption
+
+**Status:** Done — 2026-09-28, `casedesk.nvim` `a8f257d`.
 
 ~0.5 session. Repo: `casedesk.nvim`.
 
@@ -277,19 +305,28 @@ extended to accept all six names (three canonical + three old), not just
 normalized downstream. Default changed `"rect"` → `"chip"`. Caught a real
 test bug while updating `TESTS/pin_spec.lua`: its `install_pin_config()`
 helper fakes `casedesk.config` entirely with its own hardcoded
-`opts.shape or "rect"` fallback, independent of the real `DEFAULTS.lua` —
+`opts.shape or "rect"` fallback, independent of the real `DEFAULTS.lua`.
+**Corrected 2026-09-28 (review):** the original wording here claimed
 updating only the assertion (to `"chip"`) without also updating that
-fallback would have left the test silently checking the OLD default forever
-(the stub would keep emitting `"rect"` regardless of what the real config
-now defaults to). Both the fallback and the assertion were updated. Full
-suite green: `pin_spec.lua` 11/11, `config_spec.lua` 60/60.
+fallback "would have left the test silently checking the OLD default
+forever" — wrong, since `assert.equals("chip", opts.shape)` compares
+directly against the stub's own literal, so that mismatch would have
+failed loudly on the very next run, not passed silently. The real risk was
+leaving *both* the fallback and the assertion at `"rect"` together, which
+*would* stay silently green while drifting from the real, now-`"chip"`,
+production default. Both were updated regardless, so the shipped fix is
+unaffected — only this file's explanation of why it mattered was wrong.
+Full suite green: `pin_spec.lua` 11/11, `config_spec.lua` 60/60.
 
 - `pin.lua`: rename its default from `"rect"` to `"chip"` — same visual
   result, new name only. Keep the anchor-collision-avoidance comment
   (still accurate: `sessions.nvim` defaults `rounded_chip`/bottom-left,
   `casedesk.nvim` defaults `chip`/bottom-right).
 
-## P4 — pin persistence feature (ui.nvim + sessions.nvim) — DONE (2026-09-28, `ui.nvim` `4733b6f`, `sessions.nvim` `8944116`)
+## P4 — pin persistence feature (ui.nvim + sessions.nvim)
+
+**Status:** Done — 2026-09-28, `ui.nvim` `4733b6f`, `sessions.nvim`
+`8944116`.
 
 ~1 session. Repos: `ui.nvim` then `sessions.nvim` (in that order — the new
 API has to exist before sessions.nvim can call it).
@@ -309,13 +346,22 @@ stub's closures actually write into (a fresh table replaces the reference,
 it does not clear the one `set_pinned_list_for_tab`'s closure still points
 at) — fixed by clearing the existing table in place
 (`for k in pairs(t) do t[k] = nil end`) instead of rebinding it. Full suite
-green both repos: `ui.nvim`'s `tabufline_state_spec.lua` 53/53 (new tests for
-the two functions) plus the full `scripts/test.sh` run (one unrelated
-pre-existing failure, `context_languages_spec.lua`'s kotlin case — see the
-`Real-grammar specs` memory, a real-tree-sitter-parser-availability flake,
-untouched by this work); `sessions.nvim`'s `TESTS/run.lua` full suite
-(`SESSIONS_TESTS_OK`, including the new `pins_spec.lua`). `stylua`/`luacheck`
-clean in both repos.
+green both repos: `ui.nvim`'s `tabufline_state_spec.lua` 49/49 (**corrected
+2026-09-28 (review)** — originally logged as "53/53" here, which never
+matched the file; `grep -c "^\s*it("` and an actual test run both give 49,
+including the 4 new pin tests) plus the full `scripts/test.sh` run (one
+unrelated pre-existing failure, `context_languages_spec.lua`'s kotlin
+case — see the `Real-grammar specs` memory, a real-tree-sitter-parser-
+availability flake, untouched by this work); `sessions.nvim`'s
+`TESTS/run.lua` full suite (`SESSIONS_TESTS_OK`, including the new
+`pins_spec.lua`). `stylua`/`luacheck` clean in both repos.
+
+**Post-review fix (2026-09-28, `ui.nvim` `e2e9c40`):** the review also
+caught `M.pinned_bufs_for_tab(tab)` throwing "Invalid tabpage id" for a
+stale/closed tab handle instead of returning `{}`, unlike its sibling
+`M.set_pinned_list_for_tab` (added in this same P4 commit, two lines away)
+which already guards the identical case. Fixed with the same
+`nvim_tabpage_is_valid()` guard, plus a matching regression test.
 
 1. **ui.nvim**, `ui/bindings/keymaps/tabufline/state.lua`: add two small,
    explicitly tab-parametrized functions —
@@ -340,7 +386,9 @@ clean in both repos.
    `docs/pins.md` or a section in `docs/statusline.md`'s sibling doc if one
    exists for buforder.
 
-## P5 — statusline plugin-count: verify only — DONE (2026-09-28, `ui.nvim` `6b6bf39`)
+## P5 — statusline plugin-count: verify only
+
+**Status:** Done — 2026-09-28, `ui.nvim` `6b6bf39`.
 
 ~0.25 session, doc-only, as predicted. Repo: `ui.nvim`.
 
@@ -373,10 +421,17 @@ surprising turned up.
   35-36/col 0-11, `NW`-anchored rounded border (`╭─╮│╯─╰│`, i.e.
   `rounded_chip`), bottom-left, text `"chipcheck"` (the real session name);
   `casedesk_pin` chip at row 36-38/col 99-119, `border="none"` (i.e. `chip`),
-  bottom-right, text `"AB-1234 | Login fails on SSO"` (real field
-  rendering). Their rectangles do not intersect (a: cols 99-119, b: cols
-  0-11) — confirmed both shapes, both corners, and no collision, all from
-  the real primitive rather than a stub.
+  bottom-right, real field rendering as **two separate buffer lines**,
+  `"AB-1234"` then `"Login fails on SSO"` (`casedesk.pin.compute()` joins
+  `pin.content` fields with `"\n"`, one per line, per its default
+  `content = {"casenumber","title"}` — never a `" | "` join; **corrected
+  2026-09-28 (review)**, the original wording here wrongly described the
+  observed text as a single pipe-joined line, which was this session's own
+  debug-print formatting for a compact terminal log, not what actually
+  renders, matching its 2-row box height, row 36-38). Their rectangles do
+  not intersect (a: cols 99-119, b: cols 0-11) — confirmed both shapes,
+  both corners, and no collision, all from the real primitive rather than
+  a stub.
 - After P4: **done**, but as a headless equivalent rather than a literal
   Neovim restart — a script (not committed, ad-hoc) loaded the real
   `ui.nvim` + `sessions.nvim` (no stubs) on `runtimepath` together, pinned
