@@ -513,7 +513,74 @@ actually gone end-to-end, position included.
 
 ### P3 — ui.kit.chip: docked-left preset + function-valued colour + mode-track hook
 
-~1 session. Repo: `ui.nvim`.
+**Status:** Done and reviewed — 2026-09-28. Final state: `ui.nvim`
+`276b05f`, `lib.nvim` `387a666` (mirrored, `kit_drift_spec.lua` clean).
+ultracode-reviewed across 2 rounds: round 1 (3 dimensions, adversarially
+verified) found and got a real, live-reproduced fix; round 2: 0 findings.
+Full suite green in both repos afterward (the same two pre-existing,
+already-documented failures aside: `ui.nvim`'s `context_languages_spec.lua`
+kotlin case, `lib.nvim`'s `git_sync_spec.lua` async-timing test — neither
+touched by this work).
+
+**As done**, items 1–4 landed close to the plan below, with three review
+fixes on top of the first pass (`667b1be`/`fe803c8` → `276b05f`/`387a666`):
+
+- Preset named `dock_left` (not `dock`, which became the separate
+  `chip.mount()` boolean opt instead — see item 2): `ui/kit/theme.lua`'s
+  `BUILTIN` table gains `dock_left = { border = { "", "─", "╮", "│", "╯",
+  "─", "", "" } }`, exactly the array this section already specified.
+  Also fixed `theme.lua`'s `border_glyphs()` (the static preset-preview
+  helper) to read glyphs straight out of any raw 8-element border array
+  instead of only recognizing the hardcoded `"ascii"` case — otherwise
+  `dock_left`'s own preview would have silently shown `"single"`'s glyphs.
+- `chip.mount()` gained `opts.dock` (boolean, nil-checked like `visible`)
+  and `reflow()` special-cases it exactly as planned — row on the
+  statusline row, col 0, degrading to the ordinary placement without a
+  statusline row. A docked entry also no longer advances the corner's
+  `offset` accumulator (it doesn't occupy a stacked slot at all) — a
+  review finding, low severity (extra spacing only, never an overlap with
+  the pre-fix code), fixed anyway.
+- `resolve_colors()` accepts a zero-arg function, resolved fresh every
+  call — used by every one of its callers automatically (`M.refresh()`,
+  `M.pulse()`, the `ColorScheme`/`VimEnter` handlers) without touching
+  each call site.
+- `chip.mount()` gained `opts.track_mode` (boolean); a new
+  `ensure_mode_tracking()` registers/tears down a **per-entry** `ModeChanged`
+  autocmd (its id stored on the entry, deleted on `M.unmount()` or when
+  `track_mode` flips back off).
+- **Review round 1's finding, severity high, live-reproduced:**
+  `ensure_mode_tracking()` first called `autocmd.group("UiKitChip", true)`
+  — re-requesting an *already-existing* group with `clear = true` re-clears
+  it (`lib.nvim.bindings.autocmd`'s own documented behaviour), silently
+  wiping every autocmd already in it — `ensure_hooks()`'s own
+  `VimResized`/`TabEnter`/`ColorScheme`/`VimEnter`, and any *other* chip's
+  own `ModeChanged` tracker — the moment **any** chip opted into
+  `track_mode`. No error, nothing logged; chips would just silently stop
+  re-tinting/repositioning/following tabs for the rest of the session.
+  Exactly the hazard `ui.kit.picker` already documents for itself (its own
+  comment on why it suffixes its group name per-window rather than reusing
+  one shared name with `clear = true`). Fixed by dropping the `true` —
+  `ensure_hooks()` already creates/clears the group once.
+- Same round also flagged `entry.border`'s new shape-keyed caching
+  (an optimization added to avoid a `theme.resolve()` deep-copy on every
+  `refresh()`) as capable of going stale if a preset is redefined at
+  runtime via `theme.setup({presets=...})` without the chip's own shape
+  changing — removed the caching entirely rather than adding a
+  generation-counter fix; `theme.resolve()`'s deep-copy is negligible next
+  to `resolve_colors()` already doing comparable work on every `refresh()`.
+- Item 5 (tests): `TESTS/ui_kit_chip_spec.lua` grew 6 new specs (border
+  shape, dock row/col — compared directly against a non-docked chip's own
+  placement rather than hand-computed arithmetic, so it doesn't silently
+  drift from the real formula — function-colour freshness, `track_mode`'s
+  exactly-one-extra-refresh, and a regression spec for the group-clear
+  finding: snapshot every autocmd id in the shared group, enable
+  `track_mode` on a second chip, assert every pre-existing id survived).
+  Confirmed the group-clear spec fails against the pre-fix commit
+  (reverted locally, ran the suite, restored) before committing the fix.
+- **Architecture call from this section's own write-up, followed as
+  written:** `ui.kit.chip`/`ui.kit.theme` stayed statusline-agnostic — no
+  `St_<Mode>Mode` awareness anywhere in `ui.nvim`. That wiring is P5's job,
+  in this user's own config.
 
 1. New `ui/kit/theme.lua` preset (name TBD): border array with a flush
    (non-rounded, no glyph) left edge, rounded top-right/bottom-right —
@@ -688,6 +755,12 @@ reference them by SHA.
 | `ui.nvim` | `c9fd0f3` | P1 | `open_window()` syncs `pulse_active` — **final** | ✅ 5 rounds, 0 findings on the last |
 | `lib.nvim` | `cd9534f` | P1 | mirror of `c9fd0f3` — **final** | ✅ same |
 | `nvim` (config) | `3c480aa7` | P1 | this handover, marked P1 done | ✅ docs-only |
+| `nvim` (config) | `ed2c1f55` | P1 | added this ledger section | ✅ docs-only |
+| `nvim` (config) | `304a7e3b` | P2 | headless corroboration documented, live check flagged open | ✅ docs-only |
+| `ui.nvim` | `667b1be` | P3 | dock preset + function-colour + mode-track, first pass | ✅ (superseded by `276b05f`) |
+| `lib.nvim` | `fe803c8` | P3 | mirror of `667b1be` | ✅ (superseded by `387a666`) |
+| `ui.nvim` | `276b05f` | P3 | group-clear + preset-staleness + dock-offset fixes — **final** | ✅ 2 rounds, 0 findings on the last |
+| `lib.nvim` | `387a666` | P3 | mirror of `276b05f` — **final** | ✅ same |
 
 ## Practical notes
 
