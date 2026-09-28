@@ -313,6 +313,8 @@ bottom and rotate variants are keymap-only.
 | `:CwdHere` | — | `:lcd` to the directory of the current buffer's file. Window-local, not global. Known gap: an open `neo-tree`/`nvim-tree`/`netrw` does not pick the new cwd up until it is reloaded |
 | `:PowershellProfile` | — | Resolve `$PROFILE` through `powershell -NoProfile` and `:edit` it. Errors out when `powershell` is not executable |
 | `:ContextOpen` / `:ContextOpen list` | — | Open whatever is under the cursor, through one verb instead of five plugin-specific keys: gopath, markdown, images, pdfport and open.nvim are tried in turn. `list` shows every openable target in the buffer and jumps to the one you pick |
+| `:Cdx prompt base` / `review` | — | Copy `docs/NOTES/CDX/templates/PROMPT/Base.md` / `review_w_ultracode.md` to the clipboard (cross-platform via `lib.nvim.cross.copy_to_clipboard`; the templates are read from `stdpath("config")`, so it works from any project) |
+| `:Cdx prompt ultra_sha [sha ...]` | — | Copy `PROMPT/ultra_sha.md`. Any number of SHAs — separate arguments, one comma-separated token, or a quoted string — replace `{SHA}` as `a, b`; without a SHA the template is copied unchanged. Non-hex arguments are rejected |
 
 `:BindingsPath` used to sit here and copied `docs/NOTES/BINDINGS`, a
 directory that never existed — the two trees were
