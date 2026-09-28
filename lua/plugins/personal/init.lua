@@ -1175,7 +1175,14 @@ plugins.add({
       -- clones; both report into the shared lib.nvim.progress registry.
       -- Moved from reposcope.nvim's own `progress_style` along with the
       -- dashboard itself.
-      progress_style = "statusline",
+      --
+      -- "kit", not "statusline": the first `:Git dashboard` of a session
+      -- reads 60+ clones (several seconds on Windows) and only then opens its
+      -- float, and the statusline text is easy to miss meanwhile -- a second
+      -- <CR> in the tree during that wait opened neo-tree's window picker
+      -- right under the freshly opened dashboard. "kit" is a themed corner
+      -- float with an (n/total) counter that never takes focus.
+      progress_style = "kit",
       dashboard = {
         -- This config is a git repo of its own but lives outside
         -- `$REPOS_DIR`, so the dashboard's normal scan never finds it --
