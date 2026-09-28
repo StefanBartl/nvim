@@ -146,10 +146,12 @@ function M.enable(cfg)
         -- the whole view (topline, leftcol, ...) keeps the screen still.
         view = vim.fn.winsaveview()
       end
-      -- Substitute leading whitespace on empty lines with nothing.
-      -- `^\s*$` matches lines entirely composed of whitespace.
+      -- Empty out lines that consist of whitespace only. `^\s\+$`, not
+      -- `^\s*$`: the latter also matches genuinely empty lines, and nvim counts
+      -- substituting "" for "" as a change -- so every save of a clean file
+      -- bumped 'changedtick' and added an undo step for nothing.
       api.nvim_buf_call(buf, function()
-        cmd([[silent! keepjumps keeppatterns %s/^\s*$//e]])
+        cmd([[silent! keepjumps keeppatterns %s/^\s\+$//e]])
       end)
       if row and col then
         -- Same clamp as trim_trailing: if the cursor's own line was blanked
