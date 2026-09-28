@@ -14,6 +14,7 @@ local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
 ---@type fun(cmd: string[], opts?: table, on_exit?: fun(out: vim.SystemCompleted)): vim.SystemObj
 local system = vim.system
 local fnamemodify = fn.fnamemodify
+local git = require("lib.nvim.git")
 
 ---@param override string|nil
 ---@return string|nil
@@ -57,55 +58,39 @@ function M.clone_one(entry, base_dir, on_done)
   end)
 end
 
----`changed` reports whether the fetch actually moved any remote-tracking
----ref: `git fetch` prints ref updates ("<old>..<new> main -> origin/main")
----to stderr and stays silent there when nothing was new, so an empty
----stderr is the "nothing changed" signal (a fetch that fails never reaches
----here since `on_done` short-circuits on `res.code ~= 0` first).
+---Delegates to `lib.nvim.git.fetch_async` -- `changed` reports whether the
+---fetch actually moved any remote-tracking ref (see its own doc comment for
+---how that's derived), computed there rather than re-implemented here so
+---this and every other `lib.nvim.git` consumer (e.g. gitsuite.nvim's
+---dashboard) agree on exactly what "changed" means for a fetch.
 ---@param path string
 ---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
 ---@return nil
 function M.fetch_one(path, on_done)
-  system({ "git", "fetch", "--all", "--prune" }, { cwd = path, text = true }, function(res)
-    if res.code ~= 0 then
-      on_done(false, res.stderr or "git fetch failed")
-    else
-      on_done(true, nil, (res.stderr or ""):match("%S") ~= nil)
-    end
-  end)
+  git.fetch_async({ dir = path }, on_done)
 end
 
----`changed` reports whether the pull actually fast-forwarded: git prints
----"Already up to date." to stdout when there was nothing to merge, and a
----"Updating <old>..<new>" / "Fast-forward" summary otherwise.
+---Delegates to `lib.nvim.git.pull_async` (`--ff-only`) -- `changed` reports
+---whether the pull actually fast-forwarded, via a before/after HEAD compare
+---rather than the locale-fragile "Already up to date." string match this
+---used to do itself.
 ---@param path string
 ---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
 ---@return nil
 function M.pull_one(path, on_done)
-  system({ "git", "pull", "--ff-only" }, { cwd = path, text = true }, function(res)
-    if res.code ~= 0 then
-      on_done(false, res.stderr or "git pull failed")
-    else
-      on_done(true, nil, not (res.stdout or ""):lower():match("already up.to.date"))
-    end
-  end)
+  git.pull_async({ dir = path }, on_done)
 end
 
----Fetch then fast-forward pull — same sequence `:Git dashboard update` runs,
----scoped to a single already-resolved path. `changed` mirrors the pull's own —
----that's what "did this checkout actually move forward" means for the
----combined operation.
+---Delegates to `lib.nvim.git.update_async` (fetch, then fast-forward pull) —
+---the same sequence `:Git dashboard update` runs, scoped to a single
+---already-resolved path. `changed` mirrors the pull's own — that's what
+---"did this checkout actually move forward" means for the combined
+---operation.
 ---@param path string
 ---@param on_done fun(ok: boolean, err: string|nil, changed: boolean|nil)
 ---@return nil
 function M.update_one(path, on_done)
-  M.fetch_one(path, function(ok, err)
-    if not ok then
-      on_done(false, err)
-      return
-    end
-    M.pull_one(path, on_done)
-  end)
+  git.update_async({ dir = path }, on_done)
 end
 
 ---Reads `git status --porcelain --branch` and reports whether it's safe to
