@@ -84,7 +84,7 @@ local function copy(text, label)
     notify.error("Could not write to the clipboard")
     return false
   end
-  notify.info(("Copied %s (%d chars)"):format(label, #text))
+  notify.info(("Copied %s (%d chars)"):format(label, vim.fn.strchars(text)))
   return true
 end
 
