@@ -32,7 +32,15 @@ doc-comment wording nit left as-is). **P7 done and reviewed**
 `current_branch()`-on-a-hot-path bug in `chip_text.lua` itself plus two
 smaller issues (`f39ae9c`), round 2 found the exact same hot-path bug
 recurring in `sessions/marks/init.lua`'s `scope_key()` — fixed in
-`39a098d`). Only P2's live user confirmation stays open.
+`39a098d`). **P2's live check (round 2, real terminal screenshots) found
+two more real bugs**, both root-caused and fixed the same day: a
+`dock_left` left-edge gap (Neovim reserves 1 screen column for the
+preset's invisible left border regardless of the empty glyph — `ui.nvim`
+`96e695d`, `lib.nvim` `d2c8d49`), and an orange-then-turquoise startup
+colour race (`St_<Mode>Mode` not yet defined when the chip's own P1
+settle pass wins its race against this config's `UIReady` wiring — `nvim`
+config `ca926df4`). Neither fix has a dedicated ultracode review round
+yet. **A third live confirmation from the user is what's left.**
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -529,6 +537,59 @@ and watching the corner chip at a real startup (ideally right after
 checkouts) to confirm the pop-in they originally saw in screenshots is
 actually gone end-to-end, position included.
 
+**Live check, round 2 (2026-09-28, real terminal screenshots):** the user
+did the live check the headless half above could not do, and it surfaced
+two real, independent bugs the headless probe's own blind spots explain
+exactly why neither one showed up there:
+
+1. **Left-edge gap, not flush.** Two screenshots showed the docked chip's
+   green content starting ~1 cell in from the real screen edge, not
+   touching it. Root cause: `dock_left`'s border array leaves the left
+   corners/edge as `""` (nothing drawn), but Neovim still reserves 1
+   screen column for that position regardless of whether its char is a
+   glyph or `""` (`:h nvim_open_win()`'s `border`; confirmed live with a
+   real floating window opened at `col = 0` using this exact array — its
+   first *visible* column landed one cell in from the real edge). The
+   existing "flush left, no gap" test only ever asserted the *configured*
+   `col` value (0, which was in fact correct) — it could never have caught
+   this, since a reserved-but-blank border cell is invisible to
+   `nvim_win_get_config()`, only to an actual rendered screen (which
+   headless Neovim never attaches). Fixed: `reflow()` now uses `col = -1`
+   for `dock_left` specifically, pushing the blank cell off-screen so the
+   first real, visible column lands at the true edge. `ui.nvim` `96e695d`,
+   `lib.nvim` `d2c8d49` (mirrored).
+2. **Orange-then-turquoise on startup, not turquoise-from-the-first-paint.**
+   The chip painted `ui.kit.chip`'s own "Special" fallback (amber/orange in
+   this colourscheme) for roughly 1-2 seconds, then flipped to the real
+   mode-accent colour. Root cause: P5's `chip.color` function reads
+   `St_<Suffix>Mode`, which is only *defined* once
+   `ui.statusline.highlights.ensure()` has run — and this config wires
+   that in at `UIReady` (`VimEnter` + `vim.schedule()`,
+   `config/ui_statusline/init.lua`), the exact same deferred pattern
+   `ui.kit.chip`'s own P1 settle pass uses for its `VimEnter` re-resolve.
+   Whichever of the two `vim.schedule()` callbacks happened to queue first
+   won the race; the chip's settle pass won it, read an undefined group,
+   got `nil`, and fell back to the default colour until whatever
+   incidental dirty-tracking event or `ModeChanged` happened to refresh it
+   next (real, human-timescale usage rather than any fixed delay — matches
+   the "~1-2s" report far better than an instant VimEnter fix would). The
+   headless corroboration above never caught this because it drove a
+   `nvim --headless -u <real init.lua>` run against `ui.nvim`'s own repo,
+   not `sessions.nvim`'s real chip.color wiring, and it sampled colour at
+   the `VimEnter` settle tick specifically rather than checking what an
+   *undefined* highlight group resolves to that early. Fixed: the colour
+   function now calls `require("ui.statusline.highlights").ensure()`
+   (idempotent, reads the live colourscheme fresh) before reading the
+   group, closing the race outright regardless of load order — confirmed
+   live (headless): calling the function before `ensure()` has ever run
+   returns `nil` without the fix, a real `{fg,bg}` pair with it. `nvim`
+   config `ca926df4`.
+
+Neither fix has its own dedicated ultracode review round yet (both are
+small, single-function changes with a live-reproduced root cause and a
+passing regression test/headless proof each) — flag for one if a
+further round is wanted before closing this handover out completely.
+
 ### P3 — ui.kit.chip: docked-left preset + function-valued colour + mode-track hook
 
 **Status:** Done and reviewed — 2026-09-28. Final state: `ui.nvim`
@@ -966,6 +1027,10 @@ reference them by SHA.
 | `sessions.nvim` | `f39ae9c` | P7 | `current_branch_no_spawn()` hot-path fix + 2 smaller fixes — round-1 finding | ✅ (superseded by `39a098d`) |
 | `sessions.nvim` | `39a098d` | P7 | same hot-path fix applied to `marks.scope_key()` — round-2 finding — **final** | ✅ 2 rounds |
 | `nvim` (config) | `a919264f` | P5 | mode-colour wiring for the session chip | ✅ live-verified, no dedicated review round |
+| `nvim` (config) | `067c7c46` | P6/P7 | handover updated, P6/P7 marked done and reviewed | ✅ docs-only |
+| `ui.nvim` | `96e695d` | P2 (live check round 2) | `dock_left` shifts `col = -1` for its invisible left border | ⏳ live-reproduced, no dedicated review round yet |
+| `lib.nvim` | `d2c8d49` | P2 (live check round 2) | mirror of `96e695d` | ⏳ same |
+| `nvim` (config) | `ca926df4` | P2 (live check round 2) | `chip.color` forces `St_<Mode>Mode` via `highlights.ensure()` | ⏳ live-reproduced, no dedicated review round yet |
 
 ## Practical notes
 
