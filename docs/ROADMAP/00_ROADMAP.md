@@ -4,7 +4,7 @@
 
   - [Cdx](#cdx)
   - [Claude Tasks](#claude-tasks)
-    - [Generel](#generel)
+    - [Generell](#generell)
     - [wkd](#wkd)
     - [https://github.com/StefanBartl updaten - schon relativ alt](#httpsgithubcomstefanbartl-updaten-schon-relativ-alt)
     - [Cross-Plugin](#cross-plugin)
@@ -25,38 +25,20 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    21% / 28%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     10:20       |    87% / 22%     |
-
----
-
-- ui.nvi/gitsuit.nvim/lib.nvim: ![screenbshot](./$NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1790589839.png)  zeigt, dass dich `:Git dashboard` bzw aufgerufen über `:MyPlugins dashboard` beim lesen der repos aufeghöngt hat anscheinend.
-
-1. es muss sichergestellt werden, dass diese chips nicht hängen bleiben, sich selbst nach einer dauer entfernen - da mus es einen guard oder üähnliches geben
-2. der bug an sich gehört fixed beim repo fetchen
-
-hier die ausgaben
-
-```vim
-11:51:21 msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: E:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context
-11:51:25 msg_show.echomsg [gitsuite] push docmap-desktop ...
-11:51:27 msg_show.echomsg [gitsuite] docmap-desktop: push failed - To https://github.com/StefanBartl/docmap-desktop.git
- ! [rejected]        main -> main (non-fast-forward)
-error: failed to push some refs to 'https://github.com/StefanBartl/docmap-desktop.git'
-hint: Updates were rejected because the tip of your current branch is behind
-hint: its remote counterpart. If you want to integrate the remote changes,
-hint: use 'git pull' before pushing again.
-hint: See the 'Note about fast-forwards' in 'git push --help' for details.
-12:02:37 msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: E:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context
-```
-
-3. Wenn wir schon bei Git dashboard sind: wenn ein CR aufd ein repo in m dashboard ausgefhrt wiord, dass keine readme.md hat, dann sollte es irgendwo anders ins projekt springen, vl sollte man einfach eine lsite der fielös / order auflisrten in einen eigenen piopup, und der user kann sich dann saussuchen wo er hin wioll. das wäre aös dritte möglichkeit auch bei repos mit readme interssant; aber wenn die prompt kommt, ob man reinspringen will, sollte die readme.md immer vorselektiert werden
+| **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |   100% / 36%     |
 
 ---
 
 ## Claude Tasks
 
-filetree.nvim: wenn ich eine file habe zb ./Research/Research.md und dort ist ein markdon lonk auf ../assets/Screesnhot.png, wenn ich dann entweder mit `x` oder mit `c` und dann `p` die
+- `:Image paste` dauert in etws 10 saekunden, es ist zwar assynchrn, trotzdem ist es auffallend lange
 
+- Auch so ausgaben wie `:Hover all off` geben jetzt einen chip rechts oben aus, aber aucheine noirmale `more` Benachrichtigung unten am bldschirm. es sollte aber nur das chip sein, oder nicht?schau dir da sbitte an, weir haben kja jetzt erst lib.nvim output implementierte, bei dem man das silent angeben kann - es sollte default sein - und daher iegntlich auch diese ausgabe unterdrücken, wenn maer die message in :messages hineinscheribt, dafür aber den chip ausgibt. Warum ist das ncht der Fall? Wenn es dabei ein generelles problem gitb -> Das Plugin `noice` kann das auch, eventuell etwas "abgucken"?
+
+- replacer.nvim bzw pickers.nvim / lib.nvim: Wenn ich replacer ausfphre, dann habe ich ja ein dreigeteilrtes     ui, die resultatslioste und darunter die prompt, nebenbei das preview. das preciew ist aber deutlich zu schjamal um bei langen links zb den trefer zu zeigen. daher mpssen wir . und das gilt füpr alle -
+  1. eine key einführen, um im previerw zu moven, also nach rechts/link und unten oben, am besten buffer lokal C-Arrowes/hjkl; page/up pageDown soll auch klaopoen, da halt dann nicht zeilenweiße sonder immer ganze seiten
+  2. eine legende : untere kante, zentriert;
+  3. ein chewatsheet `C-?` ereichbasr, erstmal nur mit den arrows und wenn es schon andre gibt.
 
 - lib.nvim output: wenn man einj popup gewählt hat uns es in die :messges geschrieben wird, dann soll default es aber nicht nochmal als 'more' unten am bildschirm angeeigt werden, also default soll da silent hineingeshreiben werden. das soll auch konfuigurierebrar sien. DAS IST AUCH ZB WICHTIG WERNN MAN .gIT DASHBOARD HAT; UND DORT DANN EIN PULL ALS BEISPIEL AUSGEFÜHRT WIRD; DANN MOMENTAN WIRD DASS SOWOHL ALS CHIOP RECHTS OBEN ALS AUCH ALS MORE DAN ANGEZEIGT; DAS IST EXTREM VERWEIRREND: eine sache aber ncoh: wir mpssen was einbauen, dein konzept, denn wenn zb eine fehlermeldung ausgegeben wird, und didese dann rechts oben im chip hienin angezgit wird, dann ist es schlecht wenn einafach eine lange wurst an text angezeigt wird. idealer werße wäre es so, dass ein "titel" angezeigt wird und dann darunter im gleichen chip der text, aber dann ... als forsetzung angezeigt wird, also sprich, wenn man dass aganz lesen will, uss man in :mersages oder in ":noice" rein. wenn der text fgür dne chip über normalesouput kommt, dann könnten wir hier zumindest einen optionalen, aber bniesser ppflicht, ein "titel" feld dazu geben, dass man ausfüllen muss als dev. aber was ist, wenn man von nvim als beipiel eine fehler meldung bekomment wie
 
@@ -78,12 +60,14 @@ und bei:
 wre es cool wenn man auf einmkalk sehen würde, dass es ein error keine debugnotiz ist, (fabre macht das gleuch ich eh schon) dann E354: Invalid register name als titel und  '^@' diue mesage sein, aber weil dja das aus nvim kommt nicht voneinen plugin, mpsste das autoatisch sein. und es gibt ja noch beilöe andere beispeile
 Wir brauchen da ein gutres kponzeopt
 
-- sesssions.nvim:; checken, warum ses soviele session saved gibt.
 
- runtime-analysis.nvimQ: Das 7 Tagews reminder wird als notify ausgegebn, dass sollte auch popup sein, dass aber indie :messages schreibt. lib.nvim nvim.output ist es denke ich das richtige dafür.
-- MyPlugins reclpne ein weoiteres besiopeil., das promt ob man es dann machen will oder nicht wre auch als popujp besser mit xssummay, dann mit ja / nein buttonss - also lib.nvim selection/pronmopt
+ runtime-analysis.nvim: Das 7 Tages reminder wird als notify ausgegebn, dass sollte auch popup sein, dass aber in die :messages schreibt. lib.nvim nvim.output ist es denke ich das richtige dafür.
+
+  - `:MyPlugins reclone` ein weiteres besiopeil., das promt, ob man den reclone übher x plugins machen will oder nicht wer auch als popup besser mit summary, dann mit ja / nein buttons - also lib.nvim selection/prompt
+
 - bei längeren prozesse, die über die statusline pugin modul abgewockt werden, wäre es sinnvoll, wenn im hover über das statsuline modul auch der progress dargestellt wid. also zb
-MyPlugins reclone -> wenn man über das statsuline pmodul hovert, soll nicht nur eine beschreibeung, sondern der satuelle state angezgit werden. aund: generell wäre 3es cgut, wenn man etwas über das statusline modul "verseckt", dass man das auch über einen normalen bpopup float oder so aufrufen kann, idealeerwei´e weiße sowas wie :Ui statsuline ** und a eine option. denn ich habne in mehrere plugins statusline module, ich 3ill ncht jhedes einelne updaten dass es neben den statsuline noch ein toggle popup oder so aufrufbra bmacht, eleganter wäre, wenn das über sas Ui statusolnbe modul angezigt werden könntew
+  `:MyPlugins reclone` -> wenn man über das statuline modul hovert, soll nicht nur eine beschreibung, sondern der aktuelle state angezeigt werden. und: generell wäre es cgut, wenn man progress über das statusline modul "versteckt"/anzeigt, dass man das auch über einen normalen popup float oder so aufrufen kann, idealerweiße sowas wie `:Ui statusline **` und da eine option. denn ich habe in mehreren plugins statusline module, ich will nicht jedes einzeln updaten dass es neben den statsuline noch ein toggle popup oder so aufrufbar macht, eleganter wäre, wenn das über sas Ui statusline modul angezigt werden könntew
+   Also sprich: Wenn ein pluginj progress über statusline modul anzeigt, dann soll an mit einen allgemeinen usercmd wie `:Ui statusline [**/showProgess]` o.ä. ein popup bekommen, dass eine ausführlichere ansicht des progreess aufeigt + im hover über dem statsuline progress modul soll der state des oprgress angezeigt werden
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
@@ -93,7 +77,7 @@ MyPlugins reclone -> wenn man über das statsuline pmodul hovert, soll nicht nur
 
 ---
 
-### Generel
+### Generell
 
 ### wkd
 
