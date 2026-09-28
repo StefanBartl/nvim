@@ -1,7 +1,5 @@
 # ___
 
-## notes
-
 ## Vorgaben/Richtlinien/Guiding
 
 ### Allgemeines Verhalten

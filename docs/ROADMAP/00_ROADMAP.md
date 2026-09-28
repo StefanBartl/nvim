@@ -23,13 +23,21 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     02:30       |    00% / 45%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    00% / 00%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     10:20       |    87% / 22-%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     10:20       |    87% / 22%     |
 
 ---
 
 ## Claude Tasks
+
+filetree.nvim: wenn ich eine file habe zb ./Research/Research.md und dort ist ein markdon lonk auf ../assets/Screesnhot.png, wenn ich dann entweder mit `x` oder mit `c` und dann `p` die
+
+
+ runtime-analysis.nvimQ: Das 7 Tagews reminder wird als notify ausgegebn, dass sollte auch popup sein, dass aber indie :messages schreibt. lib.nvim nvim.output ist es denke ich das richtige dafür.
+- MyPlugins reclpne ein weoiteres besiopeil., das promt ob man es dann machen will oder nicht wre auch als popujp besser mit xssummay, dann mit ja / nein buttonss - also lib.nvim selection/pronmopt
+- bei längeren prozesse, die über die statusline pugin modul abgewockt werden, wäre es sinnvoll, wenn im hover über das statsuline modul auch der progress dargestellt wid. also zb
+MyPlugins reclone -> wenn man über das statsuline pmodul hovert, soll nicht nur eine beschreibeung, sondern der satuelle state angezgit werden. aund: generell wäre 3es cgut, wenn man etwas über das statusline modul "verseckt", dass man das auch über einen normalen bpopup float oder so aufrufen kann, idealeerwei´e weiße sowas wie :Ui statsuline ** und a eine option. denn ich habne in mehrere plugins statusline module, ich 3ill ncht jhedes einelne updaten dass es neben den statsuline noch ein toggle popup oder so aufrufbra bmacht, eleganter wäre, wenn das über sas Ui statusolnbe modul angezigt werden könntew
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
