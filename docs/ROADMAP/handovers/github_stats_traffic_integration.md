@@ -19,10 +19,10 @@ This file is the *how*: order, files, tests, gates, and what to check at the end
   - [Read this first](#read-this-first)
   - [Data flow](#data-flow)
   - [Order and sizes](#order-and-sizes)
-  - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0-github_statsnvim-05-session)
-  - [P1 — docmap-desktop core (~1 session) — DONE](#p1-docmap-desktop-core-1-session)
-  - [P2 — detail dialog (~1 session) — NEXT](#p2-detail-dialog-1-session)
-  - [P3 — documentation.nvim (~0.5–1 session)](#p3-documentationnvim-051-session)
+  - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0--github_statsnvim-05-session--done)
+  - [P1 — docmap-desktop core (~1 session) — DONE](#p1--docmap-desktop-core-1-session--done)
+  - [P2 — detail dialog (~1 session) — NEXT](#p2--detail-dialog-1-session)
+  - [P3 — documentation.nvim (~0.5–1 session)](#p3--documentationnvim-051-session)
   - [Verification, end to end](#verification-end-to-end)
   - [Open questions](#open-questions)
   - [Practical notes](#practical-notes)
@@ -343,8 +343,8 @@ a GitHub remote shows nothing and no error.
 
 ### P1 as built
 
-Suite: `cargo test` 122 (was 79; 43 new in `traffic.rs`), `node --test src/lib/*.test.js` 149 (was 129 + the
-new `traffic.test.js`), 0 compiler and 0 clippy warnings. The layout was looked at in the preview
+Suite: `cargo test` 122 (was 79; 43 new in `traffic.rs`), `node --test src/lib/*.test.js` 149 (was 130 + 19
+new in `traffic.test.js`), 0 compiler and 0 clippy warnings. The layout was looked at in the preview
 (`python tools/preview/preview.py`): the line for each of the seven outcomes, the sort order, the overview figure and
 the Settings section. **Not run in the real window** with the real digest — that is the remaining "Done when" check
 (needs `github_stats.nvim` to have written one, i.e. a first real `:GithubStats fetch`).
