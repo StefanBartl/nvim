@@ -7,7 +7,6 @@
     - [Generel](#generel)
     - [wkd](#wkd)
     - [https://github.com/StefanBartl updaten - schon relativ alt](#httpsgithubcomstefanbartl-updaten-schon-relativ-alt)
-    - [sessions.nvim:](#sessionsnvim)
     - [Cross-Plugin](#cross-plugin)
       - [Konkurrenzanalyse](#konkurrenzanalyse)
     - [interessant](#interessant)
@@ -25,8 +24,8 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     02:30       |    00% / 45%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     04:45       |    00% / 00%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     03:10       |    98% / 98%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    00% / 00%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     10:20       |    87% / 22-%     |
 
 ---
 
@@ -51,12 +50,6 @@
 ---
 
 ### https://github.com/StefanBartl updaten - schon relativ alt
-
-### sessions.nvim:
-
-- sesion loaded neu designen also das notify weude schon gemacht, aber bei ir ist es so wie immer. fehlt eine option key in der instaltions spec ?
-
----
 
 ### Cross-Plugin
 
@@ -93,6 +86,10 @@
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
 3. $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN
+4. Repos abchecken, ob
+  6. Design-Patterns gezielt eingestzt werden können
+    7. Auflistung, wo welche Design Patterns eingestzt wurden
+  7. co-routinen langsamere implementierungen erstetzen könnten.
 
 ---
 
@@ -110,6 +107,7 @@
 - [ ] Alle Plugin-Root-README.md-Dateien Abschnitt für Abschnitt durchgehen: Das ist der Einstiegspunkt für Devs, die das Plugin nutzen, aber auch für normale User. Die Sprache soll daher so sein, dass User sie gut verstehen — muss nicht low-level sein, aber die Readme soll auch nicht überladen sein, usw.
   - [ ] Reale Beispiele (bitte fixen):
     - [ ] ...
+  - [ ] Check ob es wichtige Features gib die nicht prominent genug als Feature dargestell werden
 - [ ] Autocmds, Usercmds, Keymaps → Bindings scheinen ein guter Indikator für die Features eines Plugins zu sein. Damit so arbeiten, dass in den Docs auch alle Features des Plugins dargestellt werden: z. B. können Usercmds 1 und 2 sowie Keymaps x, y, z und Autocmd 3 zusammen ein Feature des Plugins darstellen. So hätte man die Bindings-Docs auf der einen Seite und auf der anderen Seite die Features, die dann in ihrer Beschreibung mit den Bindings verknüpft werden.
 - [ ] Alle Features der Plugins als Opt-in/Opt-out auflisten (auch in docs/FEATURES als Notiz anmerken) und dann nochmal für jede einzelne Option entscheiden, ob Opt-in oder Opt-out sinnvoller ist.
 - Jedes Plugin aus Sicht eines Endusers/Developers „durchspielen" — von Beginn an, also vom Ankommen auf der GitHub-Seite (idealerweise kommend von der wkd-Seite). Dann zuerst normalerweise Installation + Optionen ansehen. Ist am Flow etwas nicht in Ordnung? Stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar, ansprechend und modern aufbereitet? Ist die Dokumentation an manchen Stellen verwirrend? Gibt es Docs, die mich als Enduser/Dev nicht betreffen ([alte] Telemetriedaten, deutsche Dokumentation, Backlogs, ...)?
