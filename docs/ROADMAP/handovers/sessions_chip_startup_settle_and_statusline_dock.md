@@ -459,11 +459,53 @@ committed, not just asserted to pass against the new one.
 
 ### P2 — sessions.nvim: confirm the pop-in is gone
 
+**Status:** Partly done, 2026-09-28 — headless corroboration only; the
+user's own live visual check is still open (see below, this is
+fundamentally a "does it *look* right" question the original bug was
+reported the same way).
+
 ~0.25 session. Repo: `sessions.nvim` (verification only, no code expected).
 
 - Live-check Issue 1's original symptom (colour/position pop-in a few
   seconds after startup) is gone after P1. Issue 3 no longer needs
   re-confirming here — P0 already did, live, with real timers.
+
+**As done (headless half):** reproduced the real `:LastSession` sequence
+headlessly against the actual user config (`nvim --headless -u
+<real init.lua>`, cwd `E:\repos\ui.nvim` so a real saved session exists to
+load — `autoload` is off in this config, so `:LastSession` was called
+explicitly to force the same load→`chip.refresh()`→`chip.pulse()` path
+Issue 1/3 are about), instrumenting `VimEnter`/the settle-pass's own
+`vim.schedule()` tick to sample the chip window's colour/position at each
+step. Result: the chip picks up the pulse's warning colour
+(`#e0af68`, tokyonight's orange) immediately on load, the new
+`VimEnter` settle-pass correctly leaves it alone while the pulse is active
+(`pulse_active` doing its job live, not just in the unit tests), and it
+reverts to the steady colour (`#2ac3de`) deterministically within its
+configured `duration_ms` — not "eventually, whenever some unrelated event
+happens to fire", which is what made the original report read as an
+arbitrary multi-second pop-in. Position (`row`/`col`) stayed constant
+across every sample in this run, but that is expected and not conclusive
+either way: headless Neovim never attaches a real terminal UI, so it can't
+reproduce the specific "real terminal geometry settles a beat after the
+process starts" half of Issue 1 that motivated the settle-pass in the
+first place — only a real interactive session can.
+
+**Caution for whoever repeats this kind of live headless check:** running
+it against a real project's cwd with `:LastSession` + `qa!` **does**
+trigger `sessions.nvim`'s real `VimLeavePre` autosave on quit, which
+overwrote this machine's actual `ui-nvim_main` saved session (emptied its
+buffer list, since the headless probe process itself had none open) —
+not something the diagnosis needed and not something a plain unit test
+harness would do. Prefer a scratch/throwaway cwd (or a config with
+autosave disabled) for anything that calls `:LastSession` outside
+`TESTS/`.
+
+**Still open:** the user opening this config normally, in a real terminal,
+and watching the corner chip at a real startup (ideally right after
+`git pull`ing `ui.nvim`'s `c9fd0f3`/`lib.nvim`'s `cd9534f` into their local
+checkouts) to confirm the pop-in they originally saw in screenshots is
+actually gone end-to-end, position included.
 
 ### P3 — ui.kit.chip: docked-left preset + function-valued colour + mode-track hook
 
