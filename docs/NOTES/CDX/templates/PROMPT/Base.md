@@ -38,5 +38,6 @@
 - Keine großen/escapehaltigen Literale durch die Shell schleusen: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md`
 - Performance-Optimierungen: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 - Lua-Projekte für Neovim: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
+- `$REPOS_DIR/lib.nvim` verwenden, wo möglich und simnnvoll. Dies ist wichtig, um maintainance für mich zu ermöglichen.
 
 ---

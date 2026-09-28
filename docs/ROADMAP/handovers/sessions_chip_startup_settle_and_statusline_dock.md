@@ -9,8 +9,12 @@ day. **P0 done and reviewed** (Issue 3 root-caused and fixed for real —
 **P1 done and reviewed** (Issue 1's startup pop-in fixed, plus the pulse
 revert bug found while reading the code for it — see P1's own section
 below; final state `ui.nvim` `c9fd0f3`, `lib.nvim` `cd9534f`,
-ultracode-reviewed across 5 rounds, 0 findings on the last). Everything
-else still planned.
+ultracode-reviewed across 5 rounds, 0 findings on the last). **P3 done and
+reviewed** (Issue 4's dock preset/function-colour/mode-track primitives —
+final state `ui.nvim` `276b05f`, `lib.nvim` `387a666`, ultracode-reviewed
+across 2 rounds, round 1 found a severe group-clear regression, round 2:
+0 findings). P2 (live user confirmation) and everything past P3 still
+open.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.

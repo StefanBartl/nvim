@@ -46,7 +46,7 @@ pdf = {
     dpi = 120,
   },
 
-  -- Right-click context menu (nvzone/menu, soft dependency; entries from    === REVIEW -> nvzone/menu verewnde ich nicht mehr, sondern ui.nvim menu!
+  -- Right-click context menu (nvzone/menu, soft dependency; entries from    === RE
   -- images.integrations.menu). Automatically inactive without nvzone/menu
   -- installed -- this only controls whether M.items()/M.submenu() return any
   -- entries at all.
