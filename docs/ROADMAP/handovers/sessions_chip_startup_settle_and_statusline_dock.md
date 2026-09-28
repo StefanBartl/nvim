@@ -5,8 +5,12 @@ issues the user spotted live (screenshots) after the chip
 preset/session-pin work shipped, plus a fifth ("why so many saved
 sessions") and a sixth ("configurable chip text, icons") added the same
 day. **P0 done and reviewed** (Issue 3 root-caused and fixed for real —
-`ui.nvim` `a78b319`, `lib.nvim` `2cd6bc3`, ultracode-reviewed 0 findings);
-everything else still planned.
+`ui.nvim` `a78b319`, `lib.nvim` `2cd6bc3`, ultracode-reviewed 0 findings).
+**P1 done and reviewed** (Issue 1's startup pop-in fixed, plus the pulse
+revert bug found while reading the code for it — see P1's own section
+below; final state `ui.nvim` `c9fd0f3`, `lib.nvim` `cd9534f`,
+ultracode-reviewed across 5 rounds, 0 findings on the last). Everything
+else still planned.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up.
@@ -386,35 +390,71 @@ no changes from this phase — the fix lives entirely in `ui.nvim`/`lib.nvim`).
 
 ### P1 — ui.kit.chip: post-startup settle pass (Issue 1 only)
 
-~0.5 session. Repo: `ui.nvim`. Fixes Issue 1. **No longer expected to touch
-Issue 3** — P0 found and fixed that independently; do not re-scope this
-phase back onto it.
+**Status:** Done and reviewed — 2026-09-28. Final state: `ui.nvim`
+`c9fd0f3`, `lib.nvim` `cd9534f` (mirrored, `kit_drift_spec.lua` clean).
+ultracode-reviewed across 5 rounds (correctness/bugs, security,
+performance, each independently checked and adversarially verified) — the
+first 4 rounds each found and got a real, live-reproduced fix; round 5
+found nothing. Full suite green in both repos afterward (the two
+pre-existing, already-documented failures aside: `ui.nvim`'s
+`context_languages_spec.lua` kotlin case, `lib.nvim`'s `git_sync_spec.lua`
+async-timing test — neither touched by this work).
 
-1. Add a one-time (`once = true`) handler in
-   [`ensure_hooks()`](E:\repos\ui.nvim\lua\ui\kit\chip.lua) (lines
-   432-465, shifted a little further down after the `a78b319`/P0 fix) for
-   `VimEnter` (or `UIEnter` — pick whichever a live reproduction shows
-   fires more reliably after the real settle point, same
-   "instrument-first" discipline P0 just used) that, wrapped in
-   `vim.schedule()` (or a short `vim.defer_fn` if a single scheduled tick
-   proves too early — decide from real measurements, not a guess),
-   re-resolves colours **and** calls `reflow()` for every currently
-   mounted chip. Same shape as the existing `ColorScheme` handler
-   (lines 450-464) — "re-settle everything" — just triggered by "Neovim's
-   own startup finished" instead of "the colorscheme changed".
-2. Fix `M.pulse()`'s revert-callback stale-window guard (lines 621-627 pre-
-   `a78b319`): compare against the **current** `chips[id].win` at revert
-   time, not the `win` local captured when the pulse started, so a
-   text/width-driven window replacement mid-pulse can no longer leave a
-   chip stuck in its pulse colour. (Independent of P0's fix — both live in
-   `ui.kit.chip`, but in different functions; do both in this phase since
-   they're adjacent and small.)
-3. Tests (`TESTS/ui_kit_chip_spec.lua`): a regression spec that pulses a
-   chip, closes+reopens its window mid-pulse (simulating the width-change
-   race), and asserts the colour still reverts to the steady one; a
-   VimEnter-settle spec asserting `reflow()`/recolour runs once after the
-   event fires (and is genuinely deferred, not synchronous with the
-   autocmd).
+**As done**, item 1 (settle pass): a one-time (`once = true`) `VimEnter`
+handler in `ensure_hooks()`, wrapped in `vim.schedule()`, re-resolves
+colour and calls `reflow()` for every mounted chip. `VimEnter`, not
+`UIEnter` — confirmed live (a headless repro) that `UIEnter` never fires
+at all in a `--headless` run, which would make the settle pass silently
+skip there; this also matches an identical, already-made choice in this
+user's own nvim config (`lua/startup/init.lua`'s `UI_READY`: "does NOT use
+lazy.nvim's `User VeryLazy`... measured not firing at all in headless
+runs").
+
+Item 2 (the pulse-revert guard) turned out to need **four** follow-up
+fixes past the one originally scoped here, each found by the next
+adversarial review round catching a real regression or gap in the
+previous one — the full chain, in order:
+
+1. `746d510`/`c48b460` — as planned: stopped comparing the revert
+   callback's captured window handle (`e.win == win`) against the
+   **current** one, fixing the original "stuck in pulse colour after a
+   window replacement" bug.
+2. `249800e`/`cece91c` — review found (1) alone let an **earlier** pulse's
+   now-unconditional revert cut a **later**, still-active pulse short once
+   the window had been replaced in between. Fixed with a per-entry
+   `pulse_generation` counter (same shape as `sessions.nvim`'s own
+   `hide_generation`).
+3. `8d5f071`/`ceaac1a` — review found the counter alone still wasn't
+   enough: `M.unmount(id)` + `M.mount(id, ...)` allocates a brand-new
+   entry table whose own counter restarts from scratch, so a stale
+   callback from the orphaned old entry could numerically collide with the
+   new entry's first pulse. Fixed by also requiring `chips[id] == target`
+   (the entry table captured at pulse-start), not just a matching
+   generation.
+4. `dc704be`/`077658b` — review found a much bigger, pre-existing gap none
+   of the above touched: `M.refresh()`'s own colour reconciliation (and
+   `M.mount()`, which always tail-calls it) had no idea a pulse could be
+   in flight and would unconditionally snap the colour back to
+   `entry.color` on **any** refresh — a path that never goes through
+   `M.pulse()`'s guarded callback at all. Since `sessions.nvim` wires
+   `chip.refresh()` into ordinary `BufAdd`/`BufDelete`/`WinNew`/
+   `WinClosed`/`TabNewEntered`/`TabClosed` dirty-tracking, this fired on
+   nearly every real pulse. Fixed with `entry.pulse_active`, set by
+   `M.pulse()` and read (not touched) by `M.refresh()`'s colour block and
+   the `ColorScheme`/`VimEnter` re-tint handlers, which now all skip
+   colour reconciliation while it's `true`.
+5. `c9fd0f3`/`cd9534f` — review found `open_window()` (reopening a chip's
+   window, e.g. `ensure_current_tab()`'s tab-switch reopen) always
+   repaints the steady colour by design, but left `pulse_active` still
+   `true` — desyncing the flag from reality and wrongly blocking a
+   **later, unrelated** colour change for up to the rest of the original
+   pulse's `duration_ms`. Fixed by having `open_window()` clear
+   `pulse_active` alongside its existing repaint.
+
+Item 3 (tests): `TESTS/ui_kit_chip_spec.lua` grew one regression spec per
+fix above (9 new specs total) — each confirmed to fail against the prior
+commit's code (reverted locally, ran the suite, restored) before being
+committed, not just asserted to pass against the new one.
 
 ### P2 — sessions.nvim: confirm the pop-in is gone
 
