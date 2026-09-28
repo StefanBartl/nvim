@@ -1,9 +1,6 @@
 # UI chip/style preset unification + session-persisted tab pins — handover
 
-Status: **Done. P0-P5 all built and pushed (2026-09-28).** Designed
-2026-09-28. Only the P0-P3 interactive corner-collision check (see
-"Verification, end to end") was left undone — everything else, including a
-real (unstubbed) end-to-end pin-persistence check, is verified.
+Status: **Done and fully verified (2026-09-28).** Designed 2026-09-28.
 
 **Keep this file current:** update it whenever a step is finished or
 something worth knowing turns up (status line above, the step's *As built*
@@ -361,13 +358,25 @@ surprising turned up.
 - Each repo's own test suite stayed green after its phase (`stylua --check`,
   `luacheck`, headless test runner) — confirmed for every phase above, see
   each phase's own *As built* block.
-- After P0-P3: **not performed** as an interactive/visual check (would need
-  a real Neovim GUI session with both plugins active, not just headless
-  tests) — each repo's own unit tests cover the default/anchor values
-  instead (`sessions.nvim` bottom-left/`rounded_chip`,
-  `casedesk.nvim` bottom-right/`chip`, confirmed unchanged by P2/P3's own
-  *As built* blocks). Worth doing by hand if a corner-collision regression
-  is ever suspected, but not done here.
+- After P0-P3: **done**, but via window-geometry introspection rather than
+  eyeballing a screenshot (no computer-use/screenshot tool was available in
+  that session to look at a real GUI). A script (not committed, ad-hoc)
+  loaded real `sessions.nvim` + `casedesk.nvim` + `ui.nvim` together — only
+  `casedesk.resolve`/`casedesk.meta` faked as a data source (the same narrow
+  seam `TESTS/pin_spec.lua` stubs; `casedesk.config.pin` entered literally
+  from the real `DEFAULTS.lua` values), everything downstream including
+  `ui.kit.chip` itself ran for real — mounted `sessions.chip` via a real
+  `core.save()` + `chip.refresh()`/`pulse()` (the same pair
+  `bindings/usercmds` calls after a real `:Session save`) and
+  `casedesk.pin.setup()`, then read both floats' real
+  `nvim_win_get_config()` + buffer text. Result: `sessions` chip at row
+  35-36/col 0-11, `NW`-anchored rounded border (`╭─╮│╯─╰│`, i.e.
+  `rounded_chip`), bottom-left, text `"chipcheck"` (the real session name);
+  `casedesk_pin` chip at row 36-38/col 99-119, `border="none"` (i.e. `chip`),
+  bottom-right, text `"AB-1234 | Login fails on SSO"` (real field
+  rendering). Their rectangles do not intersect (a: cols 99-119, b: cols
+  0-11) — confirmed both shapes, both corners, and no collision, all from
+  the real primitive rather than a stub.
 - After P4: **done**, but as a headless equivalent rather than a literal
   Neovim restart — a script (not committed, ad-hoc) loaded the real
   `ui.nvim` + `sessions.nvim` (no stubs) on `runtimepath` together, pinned
