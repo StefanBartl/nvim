@@ -24,8 +24,32 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    00% / 00%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    21% / 28%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     10:20       |    87% / 22%     |
+
+---
+
+- ui.nvi/gitsuit.nvim/lib.nvim: ![screenbshot](./$NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1790589839.png)  zeigt, dass dich `:Git dashboard` bzw aufgerufen über `:MyPlugins dashboard` beim lesen der repos aufeghöngt hat anscheinend.
+
+1. es muss sichergestellt werden, dass diese chips nicht hängen bleiben, sich selbst nach einer dauer entfernen - da mus es einen guard oder üähnliches geben
+2. der bug an sich gehört fixed beim repo fetchen
+
+hier die ausgaben
+
+```vim
+11:51:21 msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: E:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context
+11:51:25 msg_show.echomsg [gitsuite] push docmap-desktop ...
+11:51:27 msg_show.echomsg [gitsuite] docmap-desktop: push failed - To https://github.com/StefanBartl/docmap-desktop.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/StefanBartl/docmap-desktop.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+12:02:37 msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: E:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context
+```
+
+3. Wenn wir schon bei Git dashboard sind: wenn ein CR aufd ein repo in m dashboard ausgefhrt wiord, dass keine readme.md hat, dann sollte es irgendwo anders ins projekt springen, vl sollte man einfach eine lsite der fielös / order auflisrten in einen eigenen piopup, und der user kann sich dann saussuchen wo er hin wioll. das wäre aös dritte möglichkeit auch bei repos mit readme interssant; aber wenn die prompt kommt, ob man reinspringen will, sollte die readme.md immer vorselektiert werden
 
 ---
 
@@ -33,6 +57,28 @@
 
 filetree.nvim: wenn ich eine file habe zb ./Research/Research.md und dort ist ein markdon lonk auf ../assets/Screesnhot.png, wenn ich dann entweder mit `x` oder mit `c` und dann `p` die
 
+
+- lib.nvim output: wenn man einj popup gewählt hat uns es in die :messges geschrieben wird, dann soll default es aber nicht nochmal als 'more' unten am bildschirm angeeigt werden, also default soll da silent hineingeshreiben werden. das soll auch konfuigurierebrar sien. DAS IST AUCH ZB WICHTIG WERNN MAN .gIT DASHBOARD HAT; UND DORT DANN EIN PULL ALS BEISPIEL AUSGEFÜHRT WIRD; DANN MOMENTAN WIRD DASS SOWOHL ALS CHIOP RECHTS OBEN ALS AUCH ALS MORE DAN ANGEZEIGT; DAS IST EXTREM VERWEIRREND: eine sache aber ncoh: wir mpssen was einbauen, dein konzept, denn wenn zb eine fehlermeldung ausgegeben wird, und didese dann rechts oben im chip hienin angezgit wird, dann ist es schlecht wenn einafach eine lange wurst an text angezeigt wird. idealer werße wäre es so, dass ein "titel" angezeigt wird und dann darunter im gleichen chip der text, aber dann ... als forsetzung angezeigt wird, also sprich, wenn man dass aganz lesen will, uss man in :mersages oder in ":noice" rein. wenn der text fgür dne chip über normalesouput kommt, dann könnten wir hier zumindest einen optionalen, aber bniesser ppflicht, ein "titel" feld dazu geben, dass man ausfüllen muss als dev. aber was ist, wenn man von nvim als beipiel eine fehler meldung bekomment wie
+
+```vim
+11:51:27 msg_show.echomsg [gitsuite] docmap-desktop: push failed - To https://github.com/StefanBartl/docmap-desktop.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/StefanBartl/docmap-desktop.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+   Error  11:51:41 msg_show.emsg E354: Invalid register name: '^@'
+```
+
+dann mpsste zb [gitsuite] docmap-desktop: der titel sein und der rest dann als vcneetne abgeschnitten.
+und bei:
+  Error  11:51:41 msg_show.emsg E354: Invalid register name: '^@'
+
+wre es cool wenn man auf einmkalk sehen würde, dass es ein error keine debugnotiz ist, (fabre macht das gleuch ich eh schon) dann E354: Invalid register name als titel und  '^@' diue mesage sein, aber weil dja das aus nvim kommt nicht voneinen plugin, mpsste das autoatisch sein. und es gibt ja noch beilöe andere beispeile
+Wir brauchen da ein gutres kponzeopt
+
+- sesssions.nvim:; checken, warum ses soviele session saved gibt.
 
  runtime-analysis.nvimQ: Das 7 Tagews reminder wird als notify ausgegebn, dass sollte auch popup sein, dass aber indie :messages schreibt. lib.nvim nvim.output ist es denke ich das richtige dafür.
 - MyPlugins reclpne ein weoiteres besiopeil., das promt ob man es dann machen will oder nicht wre auch als popujp besser mit xssummay, dann mit ja / nein buttonss - also lib.nvim selection/pronmopt
