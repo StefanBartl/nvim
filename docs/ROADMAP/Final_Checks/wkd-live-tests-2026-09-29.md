@@ -114,6 +114,10 @@ Build-Check, nicht zum interaktiven Durchklicken.
 - [ ] Kein „Phantom-Treffer": Health der Gegenseite sinkt nur, wenn wirklich kurz zuvor
       angegriffen wurde, nicht einfach beim Wieder-Annähern ohne neuen Angriff.
   - Notiz:
+- [ ] **Besonders wichtig (war ein echter, vom Review gefundener Bug):** nach dem
+      ERSTEN kassierten Treffer kann die getroffene Seite (Spieler UND KI) weiterhin
+      normal angreifen/sich bewegen, bleibt NICHT dauerhaft in der Trefferpose hängen.
+  - Notiz:
 - [ ] KI-Gegner bewegt sich Richtung Spieler, greift gelegentlich an, springt selten.
   - Notiz:
 - [ ] Match endet nach 60 s (Timer-Ablauf) oder bei K. o. — Ergebnistext („You win." /
@@ -155,6 +159,9 @@ Build-Check, nicht zum interaktiven Durchklicken.
   - Notiz:
 - [ ] **Vollbild-Button** — Arena geht in echten Vollbildmodus, Button-Text wechselt zu
       „Exit fullscreen", Escape/Browser-eigene Vollbild-Taste verlässt ihn wieder.
+      **War ein echter, vom Review gefundener Bug:** Touch-Buttons und Tasten-Legende
+      müssen im Vollbild sichtbar/erreichbar bleiben (nicht unten aus dem Bild
+      gedrängt).
   - Notiz:
 - [ ] **Sieg/Niederlage-Zähler** zwischen den Health-Bars zählt nach einem gewonnenen/
       verlorenen Match hoch und bleibt auch nach Neuladen der Seite erhalten
@@ -164,7 +171,9 @@ Build-Check, nicht zum interaktiven Durchklicken.
       groß ins Bild, kurz bevor die Steuerung aktiv wird. Dazu ein Sound — **das ist
       bewusst kein echtes „FIGHT!"-Voice-Sample, sondern ein synthetischer Platzhalter-
       Ton** (Web Audio, kein Audio-Asset vorhanden). Bewerten: stört es, ist es zu leise/
-      laut, reicht es als Platzhalter?
+      laut, reicht es als Platzhalter? Zusätzlich: einen Touch-Button (z. B. Sprung)
+      GENAU während der kurzen Intro-Phase gedrückt halten — sollte trotzdem wirken,
+      sobald die Intro vorbei ist (war ebenfalls ein Review-Fund).
   - Notiz:
 - [ ] **Musik-Toggle** (Button oben rechts): schaltet eine simple, ebenfalls nur
       prozedural erzeugte Hintergrund-Loop an/aus, Einstellung bleibt nach Neuladen
