@@ -95,10 +95,11 @@ Build-Check, nicht zum interaktiven Durchklicken.
 
 ## T7 — Fight-Minigame
 
-- [ ] Fight-Tab öffnen — Charakterauswahl zeigt zwei Karten, je ein sauberes Sprite-
-      Standbild (nicht gequetscht/als Streifen).
+- [ ] Fight-Tab öffnen — Charakterauswahl zeigt drei Karten (Samurai Mack, Martial Hero,
+      Kenji), je ein sauberes Sprite-Standbild (nicht gequetscht/als Streifen).
   - Notiz:
 - [ ] Martial Hero ist farblich (grünlich getönt) klar von Samurai Mack unterscheidbar.
+      Kenji ist eine echt andere Grafik (eigenes Outfit/Farbe).
   - Notiz:
 - [ ] Kämpfer wählen — Arena erscheint, beide Health-Bars bei 100 %, Timer bei 60.
   - Notiz:
@@ -106,9 +107,9 @@ Build-Check, nicht zum interaktiven Durchklicken.
   - Notiz:
 - [ ] Sprung: Pfeil hoch springt (nur wenn am Boden, kein Doppelsprung in der Luft).
   - Notiz:
-- [ ] Angriff: Leertaste löst eine Angriffsanimation aus, danach geht der Charakter
-      wieder normal in Idle/Run/Jump über (bleibt NICHT dauerhaft in der Angriffspose
-      hängen).
+- [ ] Angriff: Leertaste (leicht) UND `X` (schwer, mehr Schaden, längerer Cooldown)
+      lösen je eine eigene Angriffsanimation aus, danach geht der Charakter wieder
+      normal in Idle/Run/Jump über (bleibt NICHT dauerhaft in der Angriffspose hängen).
   - Notiz:
 - [ ] Kein „Phantom-Treffer": Health der Gegenseite sinkt nur, wenn wirklich kurz zuvor
       angegriffen wurde, nicht einfach beim Wieder-Annähern ohne neuen Angriff.
@@ -140,8 +141,39 @@ Build-Check, nicht zum interaktiven Durchklicken.
       mindestens die Charakterauswahl-Vorschau (CSP-Fix) und einen kompletten Kampf.
   - Notiz:
 
+### T7-Folgerunde (nach deinem Live-Test-Screenshot, `wkd@74e9bf4`, noch nicht gemergt)
+
+- [ ] **Boden-Fix:** Kämpfer stehen jetzt mit den Füßen sauber auf dem Steinweg, nicht
+      mehr schwebend darüber (war der ursprüngliche Bug aus deinem Screenshot).
+  - Notiz:
+- [ ] **Touch-Steuerung:** die On-Screen-Buttons (←/→/↑/A/B) unter der Arena bewegen/
+      springen/greifen den Charakter genauso wie Tastatur — testweise auch mit der Maus
+      anklickbar, nicht nur auf echtem Touch.
+  - Notiz:
+- [ ] **Kenji spielbar:** eigene Animationen (kürzere Idle/Angriffs-Zyklen als die
+      anderen beiden), Bodenausrichtung auch bei Kenji korrekt.
+  - Notiz:
+- [ ] **Vollbild-Button** — Arena geht in echten Vollbildmodus, Button-Text wechselt zu
+      „Exit fullscreen", Escape/Browser-eigene Vollbild-Taste verlässt ihn wieder.
+  - Notiz:
+- [ ] **Sieg/Niederlage-Zähler** zwischen den Health-Bars zählt nach einem gewonnenen/
+      verlorenen Match hoch und bleibt auch nach Neuladen der Seite erhalten
+      (`localStorage`).
+  - Notiz:
+- [ ] **„FIGHT!"-Intro:** beim Start eines Matches (und jedem Rematch) fliegt „FIGHT!"
+      groß ins Bild, kurz bevor die Steuerung aktiv wird. Dazu ein Sound — **das ist
+      bewusst kein echtes „FIGHT!"-Voice-Sample, sondern ein synthetischer Platzhalter-
+      Ton** (Web Audio, kein Audio-Asset vorhanden). Bewerten: stört es, ist es zu leise/
+      laut, reicht es als Platzhalter?
+  - Notiz:
+- [ ] **Musik-Toggle** (Button oben rechts): schaltet eine simple, ebenfalls nur
+      prozedural erzeugte Hintergrund-Loop an/aus, Einstellung bleibt nach Neuladen
+      erhalten, Musik startet automatisch mit jedem Match, wenn eingeschaltet.
+  - Notiz:
+
 ---
 
 *Erstellt aus dem Chat-Verlauf der wkd-Handover-Fortsetzungs-Session vom 2026-09-29
-(T13/T14/T15/T7 + alle Nachfixe). Vollständige Historie/Details in
-`$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Backlog/wkd_Completed.md`.*
+(T13/T14/T15/T7 + alle Nachfixe + T7-Folgerunde nach Live-Test-Feedback). Vollständige
+Historie/Details in `$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Backlog/wkd_Completed.md`
+bzw. `Handover/wkd_Handover.md`.*
