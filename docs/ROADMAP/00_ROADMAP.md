@@ -1,4 +1,7 @@
 # Roadmap
+Erstelle einen report: Kreuzfeatures für casedesk von meinen anderen .nvim plugins. niht umgekehrt, casedesk ist mein privates repo, aber können meine anderen plugins features beitragen, die sinnoll mich bei der arbeit unterstützen ? Mitdneken: das repo WKDBook-Tricentis ist meine Dokumentaoins repositiory, das wird keine features per se beisteuern, aberim kontext vielleicht... Also man kan sagen, casedesk.nvim ist mein nvi mwerkzeugtopol, wkdbook-tricentis meine dokumentation und wissensort
+
+schreibe es heir hin:$NVIM_CONFIG_DIR/docs/ROADMAP/reports
 
 ## Table of content
 
@@ -24,17 +27,14 @@
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
-| **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    21% / 28%     |
+| **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |   100% / 36%     |
 
 ---
 
-- WKDBook Tricentis LSP check machen
-  - alle pfdade auf env umstellen
-  - lsp weorkspace diagnostcce für wkdbooks tricentis abdfrehen, brauceh aber einen aschalter toggle, um ihn explizit wieder aufdrehenm z können
-- casedesk:
-  - leader cf -> im aktuelen case find files pickers.nvim
-  - leader cg -> im aktellen case grep
+- w3enn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
+
+- zum `:Cdx` usrcmd noch eine `open` option machen, also `Cdx open [prompt/**/] [base/review/ultra_sha]` um die enstpechende file als buffer zu öffnen
 
 im pickers.nvim a] usw..
 
@@ -74,6 +74,8 @@ im pickers.nvim a] usw..
 - `lib.nvim` Module -> ALle Plugins nochmal checken, ob Module/Funktionen implementieren, welche die `lib.nvim` beretis bereitsetellt oder bereitstellen sollte. Das wurde vor ein/zwei Monaten schonmal gemacht, in der Zwischnezit wurde aber viel neu gemacht. Report hierher schreiebn: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
 
 - Von welchen meiner `.nvim`-Plugins ist eine CLI-Version denkbar? `reposcope.nvim`, `gitsuite.nvim`,...
+
+- Jedes plugin ein eigener Kreuzfeature durchgang
 
 ---
 
