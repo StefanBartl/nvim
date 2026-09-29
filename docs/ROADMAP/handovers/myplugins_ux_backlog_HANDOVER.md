@@ -119,7 +119,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   machen, konfigurierbar lassen, an Gitsuite-Fall verifizieren.
 - **Aufwand:** M
 
-### [ ] T5 — Chip-Konzept: Titel/Kurztext + automatische Fehler-Erkennung
+### [x, teilweise — Rest technisch nicht möglich] T5 — Chip-Konzept: Titel/Kurztext + automatische Fehler-Erkennung
 - **Ist:** Existiert noch nicht. `opts.title` überschreibt bereits den
   Default-Titel (popup.lua:81), aber kein Truncation/"..."-Konzept für
   lange Inhalte, keine automatische Titel/Inhalt-Trennung für rohe,
@@ -181,6 +181,27 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   die der User explizit erwähnt hat. Betrifft ~30 Plugins global
   (`lua/plugins/personal/init.lua:43-52`). Kein Code geändert — Rückfrage
   an User nötig, bevor hier etwas umgestellt wird.
+- **2026-09-29, T5:** Titel+Truncation-Teil umgesetzt: ohne explizites
+  `opts.title` wird jetzt die erste Zeile einer mehrzeiligen Message zum
+  Toast-Titel (z.B. `"[gitsuite] docmap-desktop: push failed"` statt
+  `"[gitsuite] error"`), der Rest (git-Hinweiszeilen) wandert in den Body;
+  bereits vorhandenes `wrap()` schneidet weiterhin ab und verweist auf
+  `:Lib notify last`. Guard gegen einen echten gefundenen Bug beim ersten
+  Anlauf: eine riesige einzeilige Message plus `deliver()`s eigener
+  `entry_max_bytes`-Kürzungsmarker ("\n... (truncated)") sah für die
+  Split-Logik ebenfalls wie "hat eine erste Zeile" aus — durch vollen
+  Testlauf (nicht nur Lesen) gefunden und mit einer Zeilenlängen-Schwelle
+  gefixt; neue Regressionstests dafür ergänzt. Commit: `lib.nvim@53db016`.
+  **Automatische Error-vs-Info-Erkennung für ECHTE, nicht von einem Plugin
+  kommende Nvim-Fehler (das `E354`-Beispiel) ist technisch nicht umsetzbar**
+  — native `:echoerr`/Message-Subsystem-Ausgaben laufen nie durch
+  `vim.notify` oder irgendeinen von Lua aus erreichbaren Hook; nur ein
+  vollständiges `ext_messages`-UI (das, was `noice.nvim` tatsächlich tut)
+  könnte das abfangen — das wäre kein Feature-Zusatz mehr, sondern im
+  Kern ein eigenes noice.nvim nachbauen. `ui.notify` (ui.nvim, aktuell in
+  dieser Config NICHT aktiviert) fängt zwar `vim.notify`-Aufrufe von
+  Drittplugins ab, aber eben nicht echte Nvim-interne Fehler. Bewusst nicht
+  umgesetzt statt eine Scheinlösung zu bauen.
 - **2026-09-29, T6:** Ursprüngliche Annahme (Feature existiert in
   pickers.nvim, muss nur eingehängt werden) war falsch — replacer.nvim
   nutzt fzf-lua/Telescope als eigentliches Picker-UI, nicht pickers.nvim.
