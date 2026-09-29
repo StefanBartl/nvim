@@ -131,15 +131,70 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   danach umsetzen in `popup.lua`. Sauber von T4 abgrenzen.
 - **Aufwand:** L
 
-### [ ] T1 — Einheitliches Chip/Toast/UI-Theme-System
-- **Ist:** Existiert nicht, ist reine Neu-Konzeption.
-- **Aufgabe:** Presets für Chips/Toasts/UIs plugin-übergreifend
-  vereinheitlichen (Naming + Styles) in `ui.kit`/`lib.nvim`, inkl. zweier
-  Stilrichtungen: "rounded" und "ascii/omarchy/hacker-style". Geht über
-  reines Colorscheme-Theming hinaus (ganze UIs gestaltbar).
-- **Aufwand:** XL — eigener Konzept-Vorlauf empfohlen (Naming-Konvention,
-  welche Plugins/UIs zuerst), bevor implementiert wird. Wird zuletzt
-  angegangen bzw. ggf. in eigenem Handover fortgeführt.
+### [in Arbeit] T1 — Einheitliches Chip/Toast/UI-Theme-System
+- **Korrigierte Ist-Analyse (2026-09-29, großer Fund):** Ursprüngliche
+  XL-Schätzung ging von "existiert nicht" aus — falsch. Zwei Registries
+  existieren bereits fleet-weit:
+  - `ui.kit/presets.lua` — kanonische Shape-Namen (`classic`/`chip`/
+    `rounded_chip`) mit Alias-Normalisierung, schon in 6 Modulen verdrahtet
+    (Tabline-Chips, Statusline-Separatoren, Context-Chips, ...).
+  - `ui.kit/theme.lua` — Rahmen+Farben-Presets (`rounded`/`solid`/`double`/
+    `minimal`/`ascii`/`menu`), von praktisch jeder `ui.kit`-Oberfläche über
+    `ui.kit.surface` genutzt (Popup, Toast, Menu, Viewer, Confirm, Chooser,
+    Chip — 12 Consumer). "Rounded chips" ist bereits Default überall.
+  - **Echte Lücken** (viel kleiner als ursprünglich gedacht):
+    1. Ein designter "Hacker/Omarchy"-Preset mit echter Farbidentität (der
+       vorhandene `ascii`-Preset tauscht nur Rahmenzeichen, keine eigene
+       Farbwelt) — Geschmacksfrage, nicht von mir entscheidbar.
+    2. Kein kombinierter Schalter, der Shape- und Theme-Preset zusammen
+       umschaltet (zwei unabhängige Achsen bisher).
+    3. Keine interaktive `:UI`-Befehl für `ui.kit.theme`'s Preset überhaupt
+       (nur per Lua-`setup()` erreichbar) — separat von Punkt 2 fehlend.
+    4. Einzelne UI-Flächen, die trotz `ui.kit`-Verfügbarkeit eigene,
+       hartkodierte Styles fahren (Audit nötig).
+- **Umgesetzt in dieser Session:**
+  - **Punkt 2+3 zusammen:** Neuer Befehl `:UI kit-preset <name>` /
+    `:UI kit-presets` in `ui.nvim` — schaltet `ui.kit.theme`'s aktiven
+    Default um (vorher nur per Lua erreichbar) und schaltet best-effort
+    `ui.tabline.styles` mit um, wenn ein gleichnamiger Tabline-Style
+    registriert ist (aktuell "rounded"). 6 neue Tests, alle grün.
+    Commit: `ui.nvim@b6343b0`.
+  - **Punkt 4 (Audit):** Fleet-weite Suche nach hartkodiertem
+    `border = "rounded"` außerhalb `ui/kit/` per Subagent klassifiziert.
+    8 Kandidaten gefunden, 4 als echte Inkonsistenz bestätigt, 4 als
+    legitime Ausnahme (z.B. `gitsuite`'s eingebettetes lazygit-Terminal,
+    zwei `sessions.nvim`-Fallbacks, die bereits `ui.kit` bevorzugen wenn
+    vorhanden). Alle 4 echten Fälle gefixt, je mit vollem Testlauf verifiziert:
+    - `ui.nvim`: Statusline-Hover-Tooltip (bereits Teil von T9-Nacharbeit) —
+      `ui.nvim@b98a0a9`.
+    - `filetree.nvim`: Float-Preview — `filetree.nvim@8dbdfd1` (301/301 grün,
+      neuer Themed-Test).
+    - `replacer.nvim`: `:ReplaceTest`-Panel — `replacer.nvim@cb3c4fb`
+      (36/36 grün, neuer Themed-Test).
+    - `sessions.nvim`: Marks-Preview — `sessions.nvim@ff0a23d` (ui.nvim ist
+      dort Soft-Dependency, daher `theme.resolve()`/`theme.apply()` direkt
+      statt `ui.kit.surface`, mit Fallback wenn ui.nvim fehlt; beide Pfade
+      gegen die volle Suite verifiziert).
+    - **Bewusst NICHT gefixt:** `pickers.nvim`'s Quickfix-Preview-Float hat
+      ein eigenes, dokumentiertes `preview.border`-Config-Feld UND wird per
+      `nvim_win_set_config` bei jedem `CursorMoved` wiederverwendet/
+      aktualisiert (kein Neuaufbau) — passt nicht in `ui.kit.surface`s
+      Einmal-Erzeugungs-Modell, und ein Fix würde entweder die bestehende
+      Config-Option entwerten oder mehr Umbau riskieren als der Nutzen
+      hier rechtfertigt. Judgment Call, keine vergessene Aufgabe.
+  - Nebenfund + gefixt: `ui.kit`'s in `lib.nvim` eingefrorene Kopie von
+    `theme.lua` war reindriftet (reine Kommentarumbruch-Differenz, vom
+    Drift-Guard als echte Abweichung erkannt) — behoben, `kit_drift_spec.lua`
+    wieder grün. Commit: `lib.nvim@8f96c69`.
+  - **Fehlt noch (Geschmacksentscheidung, kein Code):** 3 visuelle
+    Kandidaten für den Hacker/Omarchy-Preset als Mockup gezeigt (Matrix-
+    Grün monochrom / Omarchy-inspirierte gedeckte warme Töne / Phosphor-
+    Amber) — User-Auswahl steht noch aus, danach Umsetzung als neuer
+    `ui.kit.theme`-Preset (+ passender Tabline-Style-Eintrag für den
+    kombinierten Schalter).
+- **Aufwand:** von XL auf M korrigiert, nachdem der Großteil der
+  Infrastruktur sich als bereits vorhanden herausstellte. Reine
+  Preset-Umsetzung (sobald Farbentscheidung steht) ist S.
 
 ## Fortschritt / Log
 
