@@ -138,7 +138,16 @@ ignorieren.
 - **Anker:** Die Existenz der Datei wird geprüft, ob die Überschrift vorhanden
   ist, dagegen nicht (nur bei Definition: Sprung dorthin, sonst Dateianfang).
 - **Undefinierte Variable:** Der Link bleibt unangetastet (keine Aussage
-  möglich), die alte Pauschalregel gilt weiter.
+  möglich), die alte Pauschalregel gilt weiter. Dasselbe gilt für `${VAR}text`
+  ohne Trenner: In der Shell ist das der Wert mit angehängtem Text, kein
+  Unterordner, also wird nicht geraten.
+- **Längenlimits (Review-Nachtrag):** Zeilen über 20000 Byte werden nicht nach
+  Links durchsucht, Linkziele über 4096 Byte werden abgelehnt (nicht
+  abgeschnitten), Überschriften-Zeilen über 2000 Byte zählen nicht als
+  Überschrift. Das begrenzt die Arbeit bei pathologischem Inhalt: Der erste
+  Entwurf brauchte für eine Zeile aus 20000 `[` 1,2 s, und das
+  Überschriften-Pattern war kubisch (2000 Zeichen mit Leerzeichen: 4,3 s).
+  Beides ist jetzt linear (ca. 1 ms) und per Spec abgesichert.
 - **Ein Client mehr:** sichtbar in `vim.lsp.get_clients()`; jedes Feature, das
   nur fragt „hängt irgendein Client dran“, sieht ihn.
 - **Verwandtes, nicht Teil davon:** marksman meldet in Repos mit doppelten
