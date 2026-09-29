@@ -31,6 +31,7 @@
 
 - WKDBook Tricentis LSP check machen
   - alle pfdade auf env umstellen
+  - lsp weorkspace diagnostcce für wkdbooks tricentis abdfrehen, brauceh aber einen aschalter toggle, um ihn explizit wieder aufdrehenm z können
 - casedesk:
   - leader cf -> im aktuelen case find files pickers.nvim
   - leader cg -> im aktellen case grep
@@ -125,6 +126,7 @@ im pickers.nvim a] usw..
   - [ ] Reale Beispiele (bitte fixen):
     - [ ] ...
   - [ ] Check ob es wichtige Features gib die nicht prominent genug als Feature dargestell werden
+  - [ ] Zur fariness gehört wie ich finde, dass ich bei meinen entwickelten Plugins auch die Vorbilder nenne. also zb.: in ui.nvim tabufline oder statusline (war glaub ich eins) usw... Das möchte ich am Ende der Root-Reamde.md angeben und honorieren
 - [ ] Autocmds, Usercmds, Keymaps → Bindings scheinen ein guter Indikator für die Features eines Plugins zu sein. Damit so arbeiten, dass in den Docs auch alle Features des Plugins dargestellt werden: z. B. können Usercmds 1 und 2 sowie Keymaps x, y, z und Autocmd 3 zusammen ein Feature des Plugins darstellen. So hätte man die Bindings-Docs auf der einen Seite und auf der anderen Seite die Features, die dann in ihrer Beschreibung mit den Bindings verknüpft werden.
 - [ ] Alle Features der Plugins als Opt-in/Opt-out auflisten (auch in docs/FEATURES als Notiz anmerken) und dann nochmal für jede einzelne Option entscheiden, ob Opt-in oder Opt-out sinnvoller ist.
 - Jedes Plugin aus Sicht eines Endusers/Developers „durchspielen" — von Beginn an, also vom Ankommen auf der GitHub-Seite (idealerweise kommend von der wkd-Seite). Dann zuerst normalerweise Installation + Optionen ansehen. Ist am Flow etwas nicht in Ordnung? Stört oder fehlt etwas? Ist die Dokumentation gut nachvollziehbar, ansprechend und modern aufbereitet? Ist die Dokumentation an manchen Stellen verwirrend? Gibt es Docs, die mich als Enduser/Dev nicht betreffen ([alte] Telemetriedaten, deutsche Dokumentation, Backlogs, ...)?
