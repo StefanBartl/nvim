@@ -36,7 +36,7 @@ docs/configuration.md#keymaps), oder alle vier auf einmal mit
 
 `<leader>cf` ist in diesem Config bereits als `config_smart` belegt
 (personal/init.lua, "smart grep+find in nvim config" — snacks/pickers-Picker
-gescoped auf `$NVIM_CONFIG`). casedesk.nvim's `setup()` bindet seinen
+gescoped auf `$NVIM_CONFIG_DIR`). casedesk.nvim's `setup()` bindet seinen
 eigenen `<leader>cf` (`find_files` → `:Case files`) darüber, je nach
 Ladereihenfolge — bewusst noch nicht aufgelöst (2026-09-29): siehe
 casedesk.nvim's eigenes `bindings/keymaps.lua` für den `config.keymaps`-Weg,
