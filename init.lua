@@ -209,6 +209,18 @@ startup.now("lsp", function()
     -- stays as it is here -- the breadcrumb (path chips) is fine on the
     -- left; it's the sticky-scroll pinned headings that should move.
     -- winbar = { align = "right" },
+    -- Workspace diagnostics OFF by default for the WKDBook-Tricentis vault:
+    -- ~900 .md files and growing, past the max_files gate, so the scan only
+    -- produced a warning -- and marksman pushes diagnostics for every file it
+    -- indexed on its own, which the scan switch alone never stopped. Off here
+    -- skips the scan AND holds back pushes for files that are not open.
+    -- Turn it back on at runtime with `:Lsp workspace on WKDBook-Tricentis`
+    -- (or `.` inside the repo); `:Lsp workspace list` shows what is set.
+    attach = {
+      workspace_diagnostics_projects = {
+        ["$REPOS_DIR/WKDBook-Tricentis"] = false,
+      },
+    },
     -- The plugin-name list is this config's data, so it is handed over rather
     -- than reached for from a completion engine's own spec -- that way it
     -- does not depend on which completion engine (blink, cmp, ...) is active.
