@@ -107,7 +107,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   auflistet (ohne Hover nötig).
 - **Aufwand:** M
 
-### [ ] T4 — lib.nvim output: Chip + ":messages"-Duplikat / Hit-Enter-Prompt
+### [blocked — Rückfrage nötig] T4 — lib.nvim output: Chip + ":messages"-Duplikat / Hit-Enter-Prompt
 - **Ist:** `config.messages = true` ist bereits Default (Chip UND
   `:messages` laufen parallel, das ist gewollt). Vermutetes eigentliches
   Problem: `nvim_echo(..., true, {})` in `write_messages` (popup.lua
@@ -158,6 +158,29 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   auf "umgesetzt" aktualisiert). `md_words` hat denselben Root Cause,
   wurde bewusst nicht mit angefasst (kein Teil der gemeldeten Beschwerde) —
   als Beobachtungspunkt vermerkt, falls es dort auch auffällt.
+- **2026-09-29, T4:** Tief geprüft (`lib.nvim/lua/lib/nvim/notify/popup.lua`,
+  `write_messages`) — **echter Blocker, keine Umsetzung ohne Rückfrage.**
+  `nvim_echo(..., true, {})` ist laut Nvims eigener API (gegen 0.12
+  verifiziert, `api.txt` gelesen) die EINZIGE Möglichkeit, eine Message in
+  `:messages`-History aufzunehmen, und sie ECHOT dabei zwangsläufig kurz
+  sichtbar — es gibt kein `opts`-Feld, das das unterdrückt (`verbose`
+  steuert nur Log-Datei-Ausgabe, nicht das). Git-History des Moduls zeigt
+  bereits zwei gescheiterte frühere Versuche (`:silent! echomsg` — silenced
+  nichts; `vim.ui_attach` — hing bei offenem Float) — das aktuelle
+  `nvim_echo` + `vim.o.more = false` ist bereits der dritte, beste bekannte
+  Kompromiss (verhindert wenigstens den blockierenden "Press ENTER"-Prompt,
+  der kurze Flash bleibt aber). `gitsuite.util.notify` (das Pull-Beispiel
+  des Users) ist nur ein plain `lib.nvim.notify.create("[gitsuite]")` ohne
+  Sonderfall — kein separater Doppel-Notify-Bug am Call-Site, sondern
+  derselbe globale Mechanismus wie überall.
+  **Echte Entscheidung, keine Bugfix-Frage:** entweder (a) den kurzen Flash
+  als Nvim-Limitation akzeptieren (Status quo), oder (b) `messages` global
+  auf `false` umstellen und stattdessen `:Lib notify history` (eigene,
+  bereits vorhandene History-Ansicht) als "voller Text"-Ziel bewerben —
+  das würde aber echte `:messages`/`noice.nvim`-Kompatibilität aufgeben,
+  die der User explizit erwähnt hat. Betrifft ~30 Plugins global
+  (`lua/plugins/personal/init.lua:43-52`). Kein Code geändert — Rückfrage
+  an User nötig, bevor hier etwas umgestellt wird.
 - **2026-09-29, T6:** Ursprüngliche Annahme (Feature existiert in
   pickers.nvim, muss nur eingehängt werden) war falsch — replacer.nvim
   nutzt fzf-lua/Telescope als eigentliches Picker-UI, nicht pickers.nvim.
