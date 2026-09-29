@@ -33,7 +33,7 @@ reclone` liegt in der Config selbst (`$NVIM_CONFIG/lua/bindings/usrcmds/...`).
 
 Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
 
-### [ ] T8 — `:MyPlugins reclone`: Popup-Prompt mit Summary
+### [x] T8 — `:MyPlugins reclone`: Popup-Prompt mit Summary
 - **Ist:** Bereits umgesetzt (23.09.), läuft über `ui.kit.confirm` async
   statt `getcharstr()`. Datei: `bindings/usrcmds/plugin_repos/init.lua`
   (`reclone_all`, `finish_reclone`, Aufruf `confirm.yesno(...)` ~Zeile 765).
@@ -41,7 +41,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   ausreicht (Anzahl/Namen der betroffenen Plugins sichtbar). Kein Neubau.
 - **Aufwand:** XS
 
-### [ ] T7 — runtime-analysis.nvim: 7-Tage-Reminder als Popup + :messages
+### [x] T7 — runtime-analysis.nvim: 7-Tage-Reminder als Popup + :messages
 - **Ist:** Läuft bereits über eine `lib.nvim.notify`-Instanz (nicht rohes
   `vim.notify`), gebatcht via `vim.schedule`. Dateien:
   `telemetry/reminder.lua` (Defaults/Message), `telemetry/init.lua`
@@ -51,7 +51,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   `channel="popup"` umstellen.
 - **Aufwand:** S
 
-### [ ] T3 — lsp.nvim: keine Autocompletion bei `---` in Markdown
+### [x] T3 — lsp.nvim: keine Autocompletion bei `---` in Markdown
 - **Ist:** Diagnostiziert, Konzept im WKDBooks-Backlog fertig, nicht
   umgesetzt. Ursache: blink.cmp-Variante der "Plugin-Namen"-Source
   (`lsp/completion/personal_names/init.lua`) hat keinen Keyword-Filter
@@ -132,4 +132,18 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
 
 ## Fortschritt / Log
 
-_(wird pro Task ergänzt: Datum, was gemacht wurde, Commit-Hash + Repo)_
+- **2026-09-29, T8:** Verifiziert, kein Codeänderungsbedarf. Summary-Text vor
+  Ja/Nein in `finish_reclone` zeigt bereits Anzahl + alle Repo-Namen + Basis-
+  Ordner (`bindings/usrcmds/plugin_repos/init.lua:759-765`). Kein Commit.
+- **2026-09-29, T7:** Verifiziert, kein Codeänderungsbedarf. Globaler
+  `require("lib.nvim.notify").setup({ popup = true })` in
+  `lua/plugins/personal/init.lua:52` (nvim-config) schaltet für **alle**
+  `lib.nvim.notify`-Consumer (~30 Plugins, inkl. runtime-analysis.nvim's
+  Telemetry-Reminder) automatisch Chip + `:messages` frei. Kein Commit.
+- **2026-09-29, T3:** Umgesetzt. `min_keyword_length = 1` für den
+  `personal_names`-Provider in `lsp.nvim` ergänzt (blockt den leeren
+  Keyword-Kontext, den blink.cmp nach reinen Satzzeichen wie `---` sieht).
+  Commits: `lsp.nvim@79b5714` (fix), `WKDBooks@79bc69e` (Backlog-Eintrag
+  auf "umgesetzt" aktualisiert). `md_words` hat denselben Root Cause,
+  wurde bewusst nicht mit angefasst (kein Teil der gemeldeten Beschwerde) —
+  als Beobachtungspunkt vermerkt, falls es dort auch auffällt.
