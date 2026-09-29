@@ -25,7 +25,7 @@ in der jeweiligen Datei anpassen, committen, pushen.
 2. **Aufgabe in einem Satz + Ziel-Repo nennen.** Beispiel:
    "Im ui.nvim: Picker X um Y erweitern, Tests in /TESTS."
 3. **Bei Bedarf Kontext verlinken statt einfuegen:** Handover-Datei aus
-   `$NVIM_CONFIG/docs` oder Backlog aus den wkdbooks nennen, Claude liest sie.
+   `$NVIM_CONFIG_DIR/docs` oder Backlog aus den wkdbooks nennen, Claude liest sie.
 4. **Ein Chat = eine Aufgabe.** Nach Abschluss committet/pusht Claude auf
    `main` (Regel aus `CLAUDE.global.md`). Fuer die naechste Aufgabe neuen Chat
    starten; Zwischenstaende gehoeren in ein Handover-File, nicht in den Chat.

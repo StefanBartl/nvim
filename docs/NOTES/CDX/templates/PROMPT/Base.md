@@ -22,7 +22,7 @@
 
 - Docs / README.md aktualisieren, sofern es Sinn ergibt.
 - Wird ein Binding aktualisiert, ggf. auch `vim.fn.stdpath('config') .. /docs/NOTES/BINDINGS` aktualisieren.
-- Reports sowie Original-Handover-Files kommen nach `$NVIM_CONFIG/docs`; in den wkdbooks liegen dann nur Symlinks darauf.
+- Reports sowie Original-Handover-Files kommen nach `$NVIM_CONFIG_DIR/docs`; in den wkdbooks liegen dann nur Symlinks darauf.
 - Feature-/Backlog-/Roadmap-Notizen (alles, was Endnutzer nicht betrifft) gehören nach `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`.
 - Die Plugin-Repo-Docs (README, Feature-Beschreibungen für Endnutzer usw.) bleiben für die echte Endnutzer-Dokumentation reserviert. Im Zweifelsfall nachfragen – es sind aber bereits genug Dateien vorhanden, um Ableitungen zu treffen.
 

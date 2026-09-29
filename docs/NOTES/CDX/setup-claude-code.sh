@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NVIM_CONFIG="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
-echo "NVIM_CONFIG = $NVIM_CONFIG"
+echo "NVIM_CONFIG = $NVIM_CONFIG_DIR"
 
 # --- 1. Env-Variablen -------------------------------------------------------
 
@@ -42,7 +42,7 @@ fi
 
 cat > "$ENV_FILE" <<EOF
 # Generiert von setup-claude-code.sh - nicht von Hand editieren.
-export NVIM_CONFIG="$NVIM_CONFIG"
+export NVIM_CONFIG="$NVIM_CONFIG_DIR"
 export REPOS_DIR="$REPOS_DIR_VALUE"
 EOF
 echo "  $ENV_FILE geschrieben."
@@ -95,7 +95,7 @@ fi
 node "$SCRIPT_DIR/merge-claude-settings.js" \
   "$SCRIPT_DIR/settings.global.json" \
   "$CLAUDE_DIR/settings.json" \
-  "$NVIM_CONFIG"
+  "$NVIM_CONFIG_DIR"
 
 echo
 echo "[optional] Dev-Toolchains (nvim/cpp/rust/web/tauri) installieren?"

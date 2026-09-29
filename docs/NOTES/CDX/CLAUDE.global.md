@@ -8,7 +8,7 @@ pull`).
 
 Diese Datei ist bewusst stack-neutral. Stack-spezifische Regeln (Lua/Nvim,
 Rust, C++, Web/Tauri) stehen in der `CLAUDE.md` des jeweiligen Repos
-(Vorlagen: `$NVIM_CONFIG/docs/NOTES/CDX/templates/`, ausrollen mit
+(Vorlagen: `$NVIM_CONFIG_DIR/docs/NOTES/CDX/templates/`, ausrollen mit
 `node new-project-claude.js <stack>`).
 
 ## Sprache
@@ -31,17 +31,17 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
 
 - `$REPOS_DIR` - Wurzel aller Repos (u.a. alle eigenen `.nvim`-Plugins unter
   `$REPOS_DIR/repos`). Wert ist pro Maschine unterschiedlich.
-- `$NVIM_CONFIG` - `vim.fn.stdpath('config')`, also das nvim-Config-Repo. Wird
+- `$NVIM_CONFIG_DIR` - `vim.fn.stdpath('config')`, also das nvim-Config-Repo. Wird
   vom Setup-Skript automatisch aus dessen eigenem Pfad ermittelt.
 
 ## Doku-Struktur (nicht verwechseln)
 
 - Repo-Docs (README, Feature-Docs) -> für Endnutzer, im jeweiligen Repo.
-- `$NVIM_CONFIG/docs` -> Reports, Handover-Files (Originale).
+- `$NVIM_CONFIG_DIR/docs` -> Reports, Handover-Files (Originale).
 - `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/**` bzw.
   `.../Development/**` -> Backlogs, interne Notizen, Roadmaps, Features -
   alles was Endnutzer nicht betrifft. In den wkdbooks liegen dann Symlinks
-  auf die Originale aus `$NVIM_CONFIG/docs`.
+  auf die Originale aus `$NVIM_CONFIG_DIR/docs`.
 - Im Zweifelsfall nachfragen, es sind aber idR genug Files vorhanden, um
   Ableitungen zu treffen.
 - `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md`

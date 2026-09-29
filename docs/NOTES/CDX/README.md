@@ -42,7 +42,7 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
   vereinigt, Hooks nur hinzugefuegt, wenn noch nicht vorhanden). Vor jedem
   Schreiben wird ein Backup `settings.json.bak-<timestamp>` angelegt.
   Braucht `node` auf PATH (wird eh fuer `check-hook.js` gebraucht).
-- **Env-Variablen**: `$NVIM_CONFIG` wird automatisch aus dem Speicherort
+- **Env-Variablen**: `$NVIM_CONFIG_DIR` wird automatisch aus dem Speicherort
   dieses Skripts ermittelt. `$REPOS_DIR` ist pro Maschine unterschiedlich
   (z. B. `B:\repos` hier, ggf. andere Pfade auf Heim-PC/Workstation) und wird
   beim ersten Lauf interaktiv abgefragt, danach wiederverwendet.
@@ -61,7 +61,7 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
 2. **Toolchains** (`setup-devtools.js`): Programme pro Profil installieren (winget; MSVC primaer, clang als Fallback). Gewaehlte Profile landen in `~/.claude/devtools.profile`.
 3. **Projekt-Konfig** (`new-project-claude.js`): stack-spezifische `CLAUDE.md` + Allowlist pro Repo, im Repo versioniert.
 
-Neues Repo einrichten: `node $NVIM_CONFIG/docs/NOTES/CDX/new-project-claude.js <stack>` im Repo-Root, dann committen.
+Neues Repo einrichten: `node $NVIM_CONFIG_DIR/docs/NOTES/CDX/new-project-claude.js <stack>` im Repo-Root, dann committen.
 Wichtig: Die Lua-/Plugin-Regeln stehen nicht mehr global, sondern in `templates/nvim-plugin/CLAUDE.md` - jedes Plugin-Repo einmal mit `new-project-claude.js nvim-plugin` ausstatten.
 
 ## Was die Hooks konkret machen
