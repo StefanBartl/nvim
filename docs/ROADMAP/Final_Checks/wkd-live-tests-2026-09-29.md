@@ -13,6 +13,35 @@ Astro-Dev-Server die strikte CSP nicht durchsetzt wie das echte GitHub-Pages-Dep
 
 ---
 
+## Wie starte ich das?
+
+**Deployte Seite (empfohlen für die meisten Punkte, Pflicht für den CSP-Hinweis oben):**
+einfach `https://stefanbartl.github.io/wkd/` im Browser öffnen. Alle Commits aus diesem
+Chat sind bereits auf `main` gemergt und `.github/workflows/deploy.yml` deployt bei jedem
+Push nach `main` automatisch — sollte also schon live sein (im Zweifel unter
+`github.com/StefanBartl/wkd/actions` den letzten „deploy"-Run prüfen, falls die Seite
+noch alt aussieht: GitHub Pages cached teils ein paar Minuten).
+
+**Lokal per `pnpm dev`:** dein Haupt-Checkout unter `$REPOS_DIR/wkd` (nicht diese
+Worktree-Session) steht noch auf dem alten Stand `9c6b500` — erst pullen:
+
+```bash
+cd $REPOS_DIR/wkd
+git pull
+pnpm install   # nur nötig, falls sich Dependencies geändert haben
+pnpm dev
+```
+
+Dann `http://localhost:4321/wkd/` öffnen (Pfad-Präfix `/wkd/` nicht vergessen, sonst
+404). **Für den Fight-Tab lokal:** Charakterauswahl-Vorschau/Filter werden dort
+funktionieren, obwohl der zugrunde liegende CSP-Bug real war — der Dev-Server setzt die
+CSP einfach nicht durch. Nur die deployte Seite ist der echte Test dafür.
+
+Kein `pnpm build`/`pnpm preview` nötig zum Testen — beides nur für den reinen
+Build-Check, nicht zum interaktiven Durchklicken.
+
+---
+
 ## T13 — Mobile-Optimierung
 
 - [ ] Header-Nav bei 375px und 768px (echtes Handy/Tablet oder Android-Emulator) — kein
