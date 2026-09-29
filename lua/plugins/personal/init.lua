@@ -406,6 +406,8 @@ plugins.add({
           -- re-read at the next incidental save/load/dirty-tracking event,
           -- not when the mode itself actually changes.
           track_mode = true,
+          row_offset = 0,
+          col_offset = -1,
           color = function()
             -- `St_<Suffix>Mode` is only DEFINED once `ui.statusline.highlights
             -- .ensure()` has run -- and this config wires that in at UIReady
