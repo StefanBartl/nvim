@@ -3,7 +3,7 @@
 ## Konventionen
 
 - Installations-Specs meiner Plugins:
-  `$NVIM_CONFIG/lua/plugins/personal/init.lua`
+  `$NVIM_CONFIG_DIR/lua/plugins/personal/init.lua`
 - Alle eigenen `.nvim`-Plugin-Repos liegen unter `$REPOS_DIR/repos`.
 - Code muss luacheck- und stylua-clean sein, bevor er als fertig gilt (wird
   zusätzlich per globalem Hook `check-hook.js` erzwungen).
@@ -15,4 +15,4 @@
 ## Bindings
 
 - Wird ein Keybinding geändert/hinzugefügt, ggf.
-  `$NVIM_CONFIG/docs/NOTES/BINDINGS` aktualisieren.
+  `$NVIM_CONFIG_DIR/docs/NOTES/BINDINGS` aktualisieren.

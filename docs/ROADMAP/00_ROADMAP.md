@@ -1,7 +1,4 @@
 # Roadmap
-Erstelle einen report: Kreuzfeatures für casedesk von meinen anderen .nvim plugins. niht umgekehrt, casedesk ist mein privates repo, aber können meine anderen plugins features beitragen, die sinnoll mich bei der arbeit unterstützen ? Mitdneken: das repo WKDBook-Tricentis ist meine Dokumentaoins repositiory, das wird keine features per se beisteuern, aberim kontext vielleicht... Also man kan sagen, casedesk.nvim ist mein nvi mwerkzeugtopol, wkdbook-tricentis meine dokumentation und wissensort
-
-schreibe es heir hin:$NVIM_CONFIG_DIR/docs/ROADMAP/reports
 
 ## Table of content
 
@@ -31,6 +28,8 @@ schreibe es heir hin:$NVIM_CONFIG_DIR/docs/ROADMAP/reports
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |   100% / 36%     |
 
 ---
+
+- nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
 
 - w3enn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
 

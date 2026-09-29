@@ -17,7 +17,7 @@ abgearbeitet werden.
 Betroffene Repos liegen alle unter `$REPOS_DIR/repos` (`E:\repos\...`):
 `lib.nvim`, `ui.nvim`, `filetree.nvim`, `lsp.nvim`, `pickers.nvim`,
 `replacer.nvim`, `runtime-analysis.nvim`, `gitsuite.nvim`. `:MyPlugins
-reclone` liegt in der Config selbst (`$NVIM_CONFIG/lua/bindings/usrcmds/...`).
+reclone` liegt in der Config selbst (`$NVIM_CONFIG_DIR/lua/bindings/usrcmds/...`).
 
 ## Guiding Rules für diese Abarbeitung
 
@@ -27,8 +27,8 @@ reclone` liegt in der Config selbst (`$NVIM_CONFIG/lua/bindings/usrcmds/...`).
   plugin-eigenen `/TESTS/`-Ordner testen.
 - Wo sinnvoll `lib.nvim` verwenden (Wartbarkeit).
 - Docs/README je Plugin aktualisieren, wenn inhaltlich sinnvoll; Bindings
-  zusätzlich in `$NVIM_CONFIG/docs/NOTES/BINDINGS` pflegen.
-- Reports/Handover-Originale -> `$NVIM_CONFIG/docs` (diese Datei), Backlog/
+  zusätzlich in `$NVIM_CONFIG_DIR/docs/NOTES/BINDINGS` pflegen.
+- Reports/Handover-Originale -> `$NVIM_CONFIG_DIR/docs` (diese Datei), Backlog/
   Feature-Notizen -> `WKDBooks/Development/wkdbook-myplugins/**` (Symlinks
   von dort auf Originale hier, nicht umgekehrt).
 - Nach jedem fertigen Task: sofort commit + push im jeweiligen Repo (main).
