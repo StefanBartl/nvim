@@ -39,6 +39,16 @@ function M.setup()
 
   local map = require("lib.nvim.bindings.keymap")
   map.set("n", "<C-e>", "<cmd>Session marks<cr>", { desc = "[Session] Open marks menu" })
+  -- Bound directly, same reasoning as <C-e>/<M-%d> above: <leader>sc shares
+  -- no prefix with the marks table's <leader>h*, and mixing it into that
+  -- attach() call would lose the "Session" which-key group label for ALL
+  -- of them, not just this one.
+  map.set(
+    "n",
+    "<leader>sc",
+    "<cmd>Session chip-toggle<cr>",
+    { desc = "[Session] Toggle chip visibility" }
+  )
   for i = 1, 9 do
     map.set(
       "n",
