@@ -62,16 +62,27 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   Frontmatter testen.
 - **Aufwand:** S
 
-### [ ] T6 — replacer.nvim: Preview-Scroll + Legende + Cheatsheet nachziehen
-- **Ist:** Existiert bereits vollständig in `pickers.nvim`
-  (`preview_scroll_up/down/left/right`-Actions, `<C-/>`-Cheatsheet mit
-  Legende aller aktiven Keymaps in `pickers/cheatsheet/init.lua`).
-  `replacer.nvim` hat eine eigene `pickers/common.lua` und bindet das nicht
-  ein.
-- **Aufgabe:** replacer.nvim an vorhandene pickers.nvim-Features anschließen
-  statt neu bauen; danach kurz prüfen, welche anderen Picker-Nutzer das noch
-  brauchen ("gilt für alle").
-- **Aufwand:** S
+### [x] T6 — replacer.nvim: Preview-Scroll + Legende + Cheatsheet nachziehen
+- **Korrigierter Ist-Zustand (nach Deep-Dive, ursprüngliche Annahme war
+  falsch):** replacer.nvim rendert sein Picker-UI gar nicht über
+  `pickers.nvim` — das dreigeteilte UI (Resultatsliste/Prompt/Preview), das
+  der User beschreibt, ist **fzf-lua** (Default-Engine, da installiert;
+  `pickers.refine` wird nur als optionales Filter-Modul mitbenutzt, nicht
+  als UI). Beide Engines bringen die gewünschten Features bereits nativ mit:
+  fzf-lua `<S-Up>/<S-Down>` (Preview Page), `<M-S-Up>/<M-S-Down>` (Preview
+  Zeile), `<F3>` (Preview-Wrap toggeln — löst "lange URLs abgeschnitten"
+  eleganter als horizontales Scrollen), `<F1>` (volles Keymap-Cheatsheet,
+  ersetzt genau den gewünschten `C-?`-Legend-Popup). Telescope:
+  `<C-u>/<C-d>` (Preview vertikal), `<C-f>/<C-k>` (Preview horizontal —
+  existiert dort sogar schon nativ). Nichts davon war dokumentiert.
+- **Aufgabe (umgesetzt):** Statt Neubau nur Doku ergänzt
+  (`docs/BINDINGS.md`, neuer Abschnitt "Preview navigation"), inkl. eines
+  gefundenen Nebenbefunds: `keymaps.filter` (Default `<C-f>`) überschreibt
+  auf beiden Engines eine vorhandene Standard-Bindung (Telescope:
+  `preview_scrolling_left`; fzf-lua: `ctrl-f`/`half-page-down` auf der
+  Liste) — dokumentiert als bekannter Caveat, nicht verändert.
+- **Aufwand:** ursprünglich auf S geschätzt (Neubau angenommen); tatsächlich
+  nur Doku, da Engine-Feature bereits vorhanden war.
 
 ### [ ] T2 — filetree.nvim: blinkendes "unsaved changes"-Icon
 - **Ist:** Kein eigenes Icon, natives Neo-tree-Marker-Feature
@@ -147,3 +158,9 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   auf "umgesetzt" aktualisiert). `md_words` hat denselben Root Cause,
   wurde bewusst nicht mit angefasst (kein Teil der gemeldeten Beschwerde) —
   als Beobachtungspunkt vermerkt, falls es dort auch auffällt.
+- **2026-09-29, T6:** Ursprüngliche Annahme (Feature existiert in
+  pickers.nvim, muss nur eingehängt werden) war falsch — replacer.nvim
+  nutzt fzf-lua/Telescope als eigentliches Picker-UI, nicht pickers.nvim.
+  Beide Engines hatten die gewünschten Features (Preview-Scroll,
+  Wrap-Toggle, Cheatsheet) bereits nativ, nur undokumentiert. Nur Doku
+  ergänzt, kein Verhalten geändert. Commit: `replacer.nvim@27fc1e2`.
