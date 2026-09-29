@@ -39,13 +39,25 @@ function M.setup()
 
   local map = require("lib.nvim.bindings.keymap")
   map.set("n", "<C-e>", "<cmd>Session marks<cr>", { desc = "[Session] Open marks menu" })
-  -- Bound directly, same reasoning as <C-e>/<M-%d> above: <leader>sc shares
-  -- no prefix with the marks table's <leader>h*, and mixing it into that
+  -- Bound directly, same reasoning as <C-e>/<M-%d> above: this shares no
+  -- prefix with the marks table's <leader>h*, and mixing it into that
   -- attach() call would lose the "Session" which-key group label for ALL
   -- of them, not just this one.
+  --
+  -- NOT <leader>sc: found live (adversarial review) that it is a strict
+  -- prefix of the already-bound <leader>s (plugins/telescope.lua, search.nvim's
+  -- tabbed UI) -- forcing a full timeoutlen wait on every plain <leader>s
+  -- press before Neovim could tell the two apart. Same bug class as the
+  -- <leader>ffk/<leader>ff and <leader>hE/<leader>help fixes elsewhere in
+  -- this config. <M-s> ("session") shares no prefix with anything and is
+  -- already deliberately kept a no-op inside neo-tree's own buffer-local
+  -- keymaps (lua/config/neotree/keymaps/*.lua) -- this buffer-local noop
+  -- still wins over this global mapping while focus is inside a neo-tree
+  -- window, so the toggle is a no-op there specifically, same tradeoff
+  -- <C-e>/<M-%d> above already accept for their own hardcoded keys.
   map.set(
     "n",
-    "<leader>sc",
+    "<M-s>",
     "<cmd>Session chip-toggle<cr>",
     { desc = "[Session] Toggle chip visibility" }
   )
