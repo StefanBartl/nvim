@@ -84,7 +84,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
 - **Aufwand:** ursprünglich auf S geschätzt (Neubau angenommen); tatsächlich
   nur Doku, da Engine-Feature bereits vorhanden war.
 
-### [ ] T2 — filetree.nvim: blinkendes "unsaved changes"-Icon
+### [x] T2 — filetree.nvim: blinkendes "unsaved changes"-Icon
 - **Ist:** Kein eigenes Icon, natives Neo-tree-Marker-Feature
   (`enable_modified_markers`). Blinking beim Collapse bereits bekannt,
   über `redraw_soon()`/Debounce in `adapter/neotree.lua` teilweise
@@ -95,7 +95,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   sonst als dokumentierte Grenze schließen ("won't fix, bereits gemildert").
 - **Aufwand:** S
 
-### [ ] T9 — Statusline-Progress: Hover-Live-State + zentraler Popup-Befehl
+### [x] T9 — Statusline-Progress: Hover-Live-State + zentraler Popup-Befehl
 - **Ist:** Zentrales Modul existiert schon (`ui.statusline` +
   `lib.nvim.progress.styles.statusline`-Registry) — jedes Plugin mit
   `progress_style = "statusline"` taucht automatisch auf. Hover-Tooltip
@@ -164,3 +164,24 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   Beide Engines hatten die gewünschten Features (Preview-Scroll,
   Wrap-Toggle, Cheatsheet) bereits nativ, nur undokumentiert. Nur Doku
   ergänzt, kein Verhalten geändert. Commit: `replacer.nvim@27fc1e2`.
+- **2026-09-29, T2:** Geprüft, ob es einen bislang ungenutzten Neo-tree-
+  Hook gibt, der den Rest-Blink abfangen könnte — es gibt keinen
+  (`defaults.lua` hat kein Debounce/Throttle-Setting für
+  `opened_buffers_changed`, das direkt und synchron auf jedem
+  `VIM_BUFFER_MODIFIED_SET`/`VIM_BUFFER_ADDED`/`VIM_BUFFER_DELETED`-Event
+  redrawt). Bereits vorhandene Doku in filetree.nvim war schon korrekt und
+  vollständig. Geschlossen als bestätigte, dokumentierte Grenze — kein
+  Commit. Eine größere Alternative (eigene Icon-Rendering-Pipeline statt
+  Neo-trees nativer Marker) wäre möglich, aber XL-Aufwand und nicht Teil
+  dieses Durchgangs.
+- **2026-09-29, T9:** Umgesetzt. `ui.statusline.catalog`-Einträge können
+  jetzt ein optionales `live()` deklarieren; `ui.statusline.hover` zeigt
+  dessen Text statt der statischen `summary`, solange er nicht leer ist
+  (`plugin_progress` an `lib.nvim.progress.styles.statusline` angebunden).
+  Neuer Befehl `:UI progress` (Namensgebung an bestehende `:UI`-Konvention
+  angepasst, nicht `:Ui statusline showProgress` wie ursprünglich
+  vorgeschlagen — das Präfix und der Subcommand-Stil sind in `ui.nvim`
+  bereits einheitlich `:UI <subcommand>`) zeigt dieselbe Registry als
+  Popup, ohne Hover/Maus. 10 + 4 neue Tests (`statusline_catalog_spec.lua`,
+  `statusline_hover_menu_spec.lua`), alle grün; luacheck/stylua grün.
+  Commit: `ui.nvim@9f1e792`.
