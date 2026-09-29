@@ -1,5 +1,9 @@
 # Handover: UX-Backlog über mehrere .nvim-Plugins (2026-09-29)
 
+**Status: alle 9 Tasks (T1–T9) abgeschlossen.** Diese Datei bleibt als
+Referenz/Fortschritts-Log stehen; siehe "Fortschritt / Log" für die
+Chronologie und alle Commit-Hashes.
+
 ## Kontext
 
 Stefan hat eine Liste loser UX-/Bug-Notizen zu mehreren eigenen `.nvim`-Plugins
@@ -131,7 +135,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   danach umsetzen in `popup.lua`. Sauber von T4 abgrenzen.
 - **Aufwand:** L
 
-### [in Arbeit] T1 — Einheitliches Chip/Toast/UI-Theme-System
+### [x] T1 — Einheitliches Chip/Toast/UI-Theme-System
 - **Korrigierte Ist-Analyse (2026-09-29, großer Fund):** Ursprüngliche
   XL-Schätzung ging von "existiert nicht" aus — falsch. Zwei Registries
   existieren bereits fleet-weit:
@@ -186,15 +190,21 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
     `theme.lua` war reindriftet (reine Kommentarumbruch-Differenz, vom
     Drift-Guard als echte Abweichung erkannt) — behoben, `kit_drift_spec.lua`
     wieder grün. Commit: `lib.nvim@8f96c69`.
-  - **Fehlt noch (Geschmacksentscheidung, kein Code):** 3 visuelle
-    Kandidaten für den Hacker/Omarchy-Preset als Mockup gezeigt (Matrix-
-    Grün monochrom / Omarchy-inspirierte gedeckte warme Töne / Phosphor-
-    Amber) — User-Auswahl steht noch aus, danach Umsetzung als neuer
-    `ui.kit.theme`-Preset (+ passender Tabline-Style-Eintrag für den
-    kombinierten Schalter).
+  - **Farbentscheidung (User, 2026-09-29):** Matrix-Grün, Name bewusst ohne
+    Omarchy-Bezug. Neuer Preset `hacker` in `ui.kit/theme.lua` — Monochrom
+    Grün-auf-Schwarz (`#33ff66` auf `#060a06`, Border/Titel `#16c60c`),
+    ASCII-Box (`+`/`-`/`|`), als bewusste EINZIGE Ausnahme von "jeder
+    Preset bleibt Colorscheme-adaptiv" dokumentiert (fixe Hex-Farben statt
+    Standard-Group-Links). `ui.tabline.styles` bekommt einen passenden
+    `hacker`-Alias (= `square`, flush/eckig), sodass der kombinierte
+    `:UI kit-preset hacker`-Schalter aus Punkt 2 auch die Tabline-Chips
+    mit umfärbt. In `lib.nvim`s eingefrorene Kopie synchronisiert (Drift-
+    Guard weiterhin grün). 11 neue Tests für den Preset selbst + den
+    kombinierten Schalter, 1 neuer Test für den Tabline-Alias — alle
+    grün, volle Suite (ui.nvim + lib.nvim) ohne Regression.
+    Commits: `ui.nvim@542383a`, `lib.nvim@638a03a`.
 - **Aufwand:** von XL auf M korrigiert, nachdem der Großteil der
-  Infrastruktur sich als bereits vorhanden herausstellte. Reine
-  Preset-Umsetzung (sobald Farbentscheidung steht) ist S.
+  Infrastruktur sich als bereits vorhanden herausstellte.
 
 ## Fortschritt / Log
 
