@@ -107,7 +107,7 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   auflistet (ohne Hover nötig).
 - **Aufwand:** M
 
-### [blocked — Rückfrage nötig] T4 — lib.nvim output: Chip + ":messages"-Duplikat / Hit-Enter-Prompt
+### [x] T4 — lib.nvim output: Chip + ":messages"-Duplikat / Hit-Enter-Prompt
 - **Ist:** `config.messages = true` ist bereits Default (Chip UND
   `:messages` laufen parallel, das ist gewollt). Vermutetes eigentliches
   Problem: `nvim_echo(..., true, {})` in `write_messages` (popup.lua
@@ -179,8 +179,23 @@ Reihenfolge = Abarbeitungsreihenfolge (klein/klar -> groß/konzeptionell).
   bereits vorhandene History-Ansicht) als "voller Text"-Ziel bewerben —
   das würde aber echte `:messages`/`noice.nvim`-Kompatibilität aufgeben,
   die der User explizit erwähnt hat. Betrifft ~30 Plugins global
-  (`lua/plugins/personal/init.lua:43-52`). Kein Code geändert — Rückfrage
-  an User nötig, bevor hier etwas umgestellt wird.
+  (`lua/plugins/personal/init.lua:43-52`).
+  **Entscheidung des Users: Option (b).** `config.messages` Default in
+  `lib.nvim/lua/lib/nvim/notify/popup.lua` von `true` auf `false`
+  umgestellt — Chip bleibt, aber es landet nichts mehr automatisch in
+  echten `:messages`; `:Lib notify history`/`:Lib notify last` (liest
+  weiterhin unconditional die eigene History) ist jetzt die Anlaufstelle
+  für den vollen Text. Pro Call/Notifier/global weiterhin mit
+  `messages = true` reaktivierbar (z.B. für einen expliziten
+  noice.nvim-Anwendungsfall). Vier bestehende Tests im lib.nvim-Testsuite
+  gingen implizit vom alten Default aus (gefunden durch vollen Testlauf,
+  nicht nur Lesen) und wurden korrigiert, plus neue Tests für den neuen
+  Default ergänzt — komplette Suite (alle Module, nicht nur notify) läuft
+  grün. README + Code-Kommentare aktualisiert. **Breaking Change** für
+  jeden Call-Site, der sich bisher auf den impliziten Default verlassen
+  hat, um wirklich in `:messages` zu landen — laut Repo-Suche verlässt
+  sich aktuell kein anderes Plugin-Testsuite darauf. Commits:
+  `lib.nvim@27d8251`, `nvim-config@73961182` (Kommentar-Korrektur).
 - **2026-09-29, T5:** Titel+Truncation-Teil umgesetzt: ohne explizites
   `opts.title` wird jetzt die erste Zeile einer mehrzeiligen Message zum
   Toast-Titel (z.B. `"[gitsuite] docmap-desktop: push failed"` statt
