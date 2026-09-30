@@ -23,6 +23,61 @@ Korrektur unten (§4).
 
 ---
 
+## 0. Klarstellung der Blickrichtung: WKDBook-Tricentis ← Plugins (nicht nur ← casedesk.nvim)
+
+Nachtrag zur ursprünglichen Formulierung unten (§1-§4 waren als "was hilft
+casedesk.nvim bei der Arbeit" gerahmt): WKDBook-Tricentis ist ein
+git-getracktes Verzeichnis aus Markdown + Anhängen (Screenshots, Logs,
+PDFs, `.docx`) — **die meisten der 37 anderen Plugins wissen nichts von
+"Cases" oder `.case.json` und brauchen das auch nicht**, um direkt auf
+diesem Repo etwas zu leisten. casedesk.nvim ist nur das EINE Plugin, das
+speziell für dieses Repos Struktur gebaut ist (Case-Ordner, Sidecar,
+SLA, Ähnlichkeitssuche); alles andere unten funktioniert bereits *heute*,
+ohne dass casedesk.nvim überhaupt installiert sein müsste, einfach weil
+WKDBook-Tricentis ein normales git+Markdown-Verzeichnis ist.
+
+### Tier A — arbeitet HEUTE direkt auf WKDBook-Tricentis, ganz ohne casedesk.nvim
+
+| Plugin | Was es auf diesem Repo konkret tut |
+| --- | --- |
+| `filetree.nvim` | Der `Cases/`-, `Workflow/`-, `MyDomains/`-, `Notes/`-, `Terminologie/`-Baum selbst — Navigation, egal ob casedesk je einen Case daraus kennt |
+| `markdown.nvim` | TOC/Heading-Navigation auf JEDER `.md`-Datei — `Solution_TEMPLATE.md`, KB-Artikel, Wordings, nicht nur Case-Dateien |
+| `mdview.nvim` | Browser-Vorschau einer beliebigen `.md`-Datei — z. B. den neuen `DEX_GPO_Preflight_Checklist.md` oder einen KB-Artikel vor dem Weitergeben gegenlesen |
+| `cascade.nvim` | Listen-/Checkbox-Fortsetzung — trifft `Notes/Improvements/General.md`s nummerierte Liste genauso wie `Task.md` |
+| `gitsuite.nvim` | Das ganze Repo IST ein Git-Klon — `:Git dashboard`/`blame`/`diff history` funktionieren auf jeder Datei, unabhängig von Cases; direkt nützlich für den Mehr-Maschinen-Sync, den `timeline.lua` schon als Artefaktquelle kennt |
+| `spotlight.nvim` | Token-Highlighting in JEDEM Buffer — ein roh eingefügter Log/Activity-Stream, nicht nur ein von casedesk erzeugter |
+| `hover.nvim` | Link-/Pfad-Vorschau auf jedem `[Text](./assets/...)`- oder `https://docs.tricentis.com/...`-Link im Repo |
+| `images.nvim` | Jeder Screenshot im Repo, geöffnet/OCR'd — unabhängig davon, ob er in einem Case-`assets/`-Ordner oder anderswo liegt |
+| `pdfport.nvim` | Jedes PDF im Repo lesbar im Buffer |
+| `data.nvim` | `:JSON pretty` auf `.case.json`, aber genauso auf jeden anderen JSON-Blob, der irgendwo im Repo landet |
+| `replacer.nvim` | Bulk-Edits über beliebige Dateien des Repos, nicht nur eines Case |
+| `language.nvim`, `emojis.nvim` | Rechtschreibung/Emoji-Check auf jedem Buffer im Repo |
+| `pickers.nvim` | Fuzzy-Datei-/Grep-Suche über das GANZE Repo |
+| `diff.nvim` | Zwei beliebige Dateien/Revisionen des Repos nebeneinander |
+| `open.nvim` | Jeden Link/Anhang im Repo mit dem passenden externen Handler öffnen |
+| `cmdlog.nvim` | Zeichnet jedes `:`-Kommando auf, das in diesem Repo läuft — auch ohne casedesk |
+| `insights.nvim` (nur `:Insights compress`) | Einen beliebigen Ordner des Repos zippen |
+| `sessions.nvim` | Eine Session pro geöffnetem Ordner — funktioniert für jeden Unterordner, den man wiederholt aufmacht |
+
+**Das ist die eigentliche Antwort auf "was können meine anderen Plugins
+damit machen":** ein Großteil der wkd-Familie behandelt WKDBook-Tricentis
+schon heute wie jedes andere ihrer Projekte — Navigation, Vorschau, Suche,
+Diff, Rechtschreibung, Anhänge. casedesk.nvim kommt erst dazu, wenn eine
+Frage *case-spezifisch* wird ("welcher Case ist das", "wie lange ist er
+offen", "welcher andere Case ähnelt ihm").
+
+### Tier B — braucht casedesk.nvim's semantische Schicht, um sinnvoll zu sein
+
+`ai.nvim` (der Prompt braucht Case-Kontext: Titel, Activity Stream,
+SLA-Status — ohne casedesk nur ein generischer Chat), `similar.lua`/
+`solution.lua`-artige Ähnlichkeitssuche (ohne den Case-Begriff keine
+sinnvolle Vergleichsmenge), alles SLA-bezogene (Fristen ergeben nur pro
+Case Sinn). Das sind casedesk.nvim's eigene Module, keine anderen Plugins
+— genau deshalb existiert casedesk überhaupt als eigenes Repo statt als
+Sammlung generischer Tools.
+
+---
+
 ## 1. Der größte Einzelfund: `ai.nvim` existiert jetzt
 
 `REQUESTS.md`/`ROADMAP.md` (casedesk) gehen davon aus, dass die KI-Anbindung
