@@ -2,19 +2,22 @@
 
 ## Table of content
 
-  - [Bezug zum Vorbericht](#bezug-zum-vorbericht)
-  - [0. Klarstellung der Blickrichtung: WKDBook-Tricentis ← Plugins (nicht nur ← casedesk.nvim)](#0-klarstellung-der-blickrichtung-wkdbook-tricentis-plugins-nicht-nur-casedesknvim)
-    - [Tier A — arbeitet HEUTE direkt auf WKDBook-Tricentis, ganz ohne casedesk.nvim](#tier-a-arbeitet-heute-direkt-auf-wkdbook-tricentis-ganz-ohne-casedesknvim)
-    - [Tier B — braucht casedesk.nvim's semantische Schicht, um sinnvoll zu sein](#tier-b-braucht-casedesknvims-semantische-schicht-um-sinnvoll-zu-sein)
-  - [1. Der größte Einzelfund: `ai.nvim` existiert jetzt](#1-der-grte-einzelfund-ainvim-existiert-jetzt)
-  - [2. Kombinationen, die der Vorbericht (Einzelplugin-Fokus) nicht zeigt](#2-kombinationen-die-der-vorbericht-einzelplugin-fokus-nicht-zeigt)
-    - [2.1 `images.nvim` (OCR) + `media.nvim` (Transkription) + casedesk — eine gemeinsame Textablage statt zwei getrennte](#21-imagesnvim-ocr-medianvim-transkription-casedesk-eine-gemeinsame-textablage-statt-zwei-getrennte)
-    - [2.2 `hover.nvim` + `pdfport.nvim` + casedesk.nvim — dieselbe Chromium-Suche dreimal gebaut](#22-hovernvim-pdfportnvim-casedesknvim-dieselbe-chromium-suche-dreimal-gebaut)
-    - [2.3 `rules.nvim` als Engine HINTER `doctor.lua` — offene Frage, keine Empfehlung](#23-rulesnvim-als-engine-hinter-doctorlua-offene-frage-keine-empfehlung)
-  - [3. Was WKDBook-Tricentis selbst beisteuert (nicht: Plugin-Feature, sondern Rohmaterial)](#3-was-wkdbook-tricentis-selbst-beisteuert-nicht-plugin-feature-sondern-rohmaterial)
-  - [4. Korrektur am Vorbericht](#4-korrektur-am-vorbericht)
-  - [5. Aufwand/Nutzen — Quick Wins zuerst](#5-aufwandnutzen-quick-wins-zuerst)
-  - [Referenzen](#referenzen)
+- [Bezug zum Vorbericht](#bezug-zum-vorbericht)
+- [0. Klarstellung der Blickrichtung: WKDBook-Tricentis ← Plugins (nicht nur ← casedesk.nvim)](#0-klarstellung-der-blickrichtung-wkdbook-tricentis--plugins-nicht-nur--casedesknvim)
+  - [Tier A — arbeitet HEUTE direkt auf WKDBook-Tricentis, ganz ohne casedesk.nvim](#tier-a--arbeitet-heute-direkt-auf-wkdbook-tricentis-ganz-ohne-casedesknvim)
+  - [Tier B — braucht casedesk.nvim's semantische Schicht, um sinnvoll zu sein](#tier-b--braucht-casedesknvims-semantische-schicht-um-sinnvoll-zu-sein)
+- [1. Der größte Einzelfund: `ai.nvim` existiert jetzt](#1-der-größte-einzelfund-ainvim-existiert-jetzt)
+- [2. Kombinationen, die der Vorbericht (Einzelplugin-Fokus) nicht zeigt](#2-kombinationen-die-der-vorbericht-einzelplugin-fokus-nicht-zeigt)
+  - [2.1 `images.nvim` (OCR) + `media.nvim` (Transkription) + casedesk — eine gemeinsame Textablage statt zwei getrennte](#21-imagesnvim-ocr--medianvim-transkription--casedesk--eine-gemeinsame-textablage-statt-zwei-getrennte)
+  - [2.2 `hover.nvim` + `pdfport.nvim` + casedesk.nvim — dieselbe Chromium-Suche dreimal gebaut](#22-hovernvim--pdfportnvim--casedesknvim--dieselbe-chromium-suche-dreimal-gebaut)
+  - [2.3 `rules.nvim` als Engine HINTER `doctor.lua` — offene Frage, keine Empfehlung](#23-rulesnvim-als-engine-hinter-doctorlua--offene-frage-keine-empfehlung)
+- [3. Was WKDBook-Tricentis selbst beisteuert (nicht: Plugin-Feature, sondern Rohmaterial)](#3-was-wkdbook-tricentis-selbst-beisteuert-nicht-plugin-feature-sondern-rohmaterial)
+- [4. Korrektur am Vorbericht](#4-korrektur-am-vorbericht)
+- [5. Aufwand/Nutzen — Quick Wins zuerst](#5-aufwandnutzen--quick-wins-zuerst)
+- [6. Neue Idee (Nutzer, 2026-09-30): `:Case translate` mit `language.nvim`](#6-neue-idee-nutzer-2026-09-30-case-translate-mit-languagenvim)
+  - [Konkrete casedesk-Kombinationen (nicht nur "Plugin X existiert")](#konkrete-casedesk-kombinationen-nicht-nur-plugin-x-existiert)
+  - [Reihenfolge, falls gebaut](#reihenfolge-falls-gebaut)
+- [Referenzen](#referenzen)
 
 ---
 
@@ -71,7 +74,7 @@ WKDBook-Tricentis ein normales git+Markdown-Verzeichnis ist.
 | `pdfport.nvim` | Jedes PDF im Repo lesbar im Buffer |
 | `data.nvim` | `:JSON pretty` auf `.case.json`, aber genauso auf jeden anderen JSON-Blob, der irgendwo im Repo landet |
 | `replacer.nvim` | Bulk-Edits über beliebige Dateien des Repos, nicht nur eines Case |
-| `language.nvim`, `emojis.nvim` | Rechtschreibung/Emoji-Check auf jedem Buffer im Repo |
+| `language.nvim`, `emojis.nvim` | Rechtschreibung/Emoji-Check auf jedem Buffer im Repo — `language.nvim` kann zusätzlich **übersetzen** (`:Translate`, Google-Engine keyless per curl), auf jeder Datei, nicht nur Case-Dateien; s. §6 unten für die casedesk-spezifische Kombination |
 | `pickers.nvim` | Fuzzy-Datei-/Grep-Suche über das GANZE Repo |
 | `diff.nvim` | Zwei beliebige Dateien/Revisionen des Repos nebeneinander |
 | `open.nvim` | Jeden Link/Anhang im Repo mit dem passenden externen Handler öffnen |
@@ -271,9 +274,77 @@ stellen.
 | 5 | `rules.nvim`-Frage klären (§2.3) | klein (1h) | unklar, aber billig zu klären | Kombination (offen) |
 | 6 | `gitsuite.nvim` `:Git blame` in `:Case info` (Vorbericht §B.3) | klein-mittel | mittel (Mehr-Maschinen-Sync-Frage) | Einzelintegration |
 | 7 | pdfport-AI-Extraktionspfad-Check (§1, Folgefrage) | ~null (nur nachsehen) | potenziell groß, wenn schon aktiv nutzbar | Kombination (Bestand prüfen) |
+| 8 | `:Case translate` Schritt 1+2 (§6) | klein | mittel (täglicher Nutzen bei zweisprachigem Bestand) | Kombination (`language.nvim`) |
 
 **Sofort ohne Code machbar (heute):** #3 und #7 — beides ist "ausprobieren/
 nachsehen", kein Schreibaufwand.
+
+---
+
+## 6. Neue Idee (Nutzer, 2026-09-30): `:Case translate` mit `language.nvim`
+
+Auslöser: der Bestand ist zweisprachig gemischt — Activity Streams/Kunden-
+Kommunikation überwiegend Englisch, eigene Notizen/interne Vermerke
+überwiegend Deutsch. `language.nvim` deckt Übersetzung bereits vollständig
+ab, codeverifiziert (`docs/FEATURES/TRANSLATE.md`, `lua/language/init.lua`):
+
+- **`M.translate(lang, opts)`** — `opts.scope` ∈ `cword|selection|buffer|
+  cwd|path=<p>`, Output ∈ `popup` (Default, non-mutierend) `|replace|buffer|
+  vsplit|split|tab|insert|clipboard|notify`. `M.translate_replace(lang,
+  opts)` ist die direkte, mutierende Variante.
+- **Tiefer liegend, für casedesk direkt aufrufbar ohne Buffer-Umweg:**
+  `translate/providers/google.lua`s `M.translate(lines, target, source,
+  cfg, cb)` — nimmt eine reine Zeilenliste, keinen Buffer, async mit
+  Callback. Genau die Form, die `anonymize.lua`/`ki.lua` heute schon für
+  Zwischenablage-Text verwenden (Text rein, Text raus, kein Editor-State
+  nötig).
+- **Engine-Kette bereits eingebaut:** Google (keyless, Standard) → DeepL
+  (mit API-Key) → `translate-shell` → eigenes CLI — `opts.translate.
+  fallback`. Für später: nichts hindert einen fünften Eintrag "via
+  `ai.nvim`" in derselben Fallback-Kette, sobald dessen Anbindung steht
+  (s. §1 oben) — Übersetzung ist eine der Aufgaben, bei denen ein
+  LLM branchen-/SAP-Jargon-bewusster übersetzt als eine Wort-für-Wort-
+  Engine, aber die deterministische Engine bleibt der Standardfall.
+
+### Konkrete casedesk-Kombinationen (nicht nur "Plugin X existiert")
+
+1. **`:Case translate [lang] [nr]`** — übersetzt den neuesten Activity
+   Stream (`Research/NN_ActivityStream.md`) nach `lang` (Default z. B. `DE`
+   aus einer neuen `config.translate_default_target`), Ausgabe als
+   Read-Only-Popup — selbe Machart wie `:Case ki`s "Artefakt aus
+   Zwischenablage bauen", aber ohne KI-Aufruf. `pcall`-guarded wie
+   `:Case diff`/`:Case ocr`, wenn `language.nvim` fehlt.
+2. **Visueller Bereich/aktueller Puffer** — `:Case translate` ohne Case-
+   Bezug, auf `.`/Visual-Selektion: ruft direkt `language.translate`/
+   `translate_replace` mit `scope = selection` durch. Nützlich für einen
+   PSO-Reply-Entwurf: deutschen internen Gedanken schreiben, markieren,
+   auf Englisch übersetzen lassen, bevor er in `Replies/` landet — oder
+   umgekehrt, einen englischen Kundensatz zum eigenen Verständnis ins
+   Deutsche.
+3. **Pipeline-Idee (größer):** `:Case activity`s bestehender Flow ("Paste
+   Activity Stream in eine neue `Research/`-Datei") um zwei optionale
+   Nachfragen erweitern — "Jetzt anonymisieren?" (existiert schon als
+   `:Case anonymize`, nur separater Schritt) und "Jetzt übersetzen?" (neu).
+   Beide Schritte reiner Text-rein-Text-raus, verkettbar OHNE KI
+   (`anonymize.lua` → `language`s Google-Engine) oder später WAHLWEISE
+   über `ai.nvim`, wenn Kontext/Idiomatik wichtiger ist als Tempo — der
+   Nutzer selbst nannte genau diese beiden Varianten ("mal ohne AI nur
+   Heuristik, mal mit").
+4. **Row-Level statt Pipeline:** dieselbe Idee auch einzeln aus `:Case ki`
+   heraus nutzbar — `ki_import`s Reply-Entwurf (Abschnitt 4 der KI-
+   Antwort, standardmäßig Englisch) könnte auf Wunsch direkt eine deutsche
+   Zweitfassung für die interne Notiz bekommen, ohne die KI ein zweites
+   Mal zu fragen.
+
+### Reihenfolge, falls gebaut
+
+Schritt 2 (Selection/Buffer, kein Case-Bezug) ist der günstigste Einstieg
+— nahezu reine Delegation an `language.nvim`, kein neuer Zustand. Schritt 1
+(`Research/`-Artefakt) braucht nur ein neues, kleines Blueprint-ähnliches
+Muster (Datei erzeugen + Popup), keine neue Infrastruktur. Schritt 3
+(Pipeline in `:Case activity`) ist der eigentliche Komfortgewinn, aber
+berührt einen bestehenden, viel genutzten Befehl — erst nach 1+2 in
+Ruhe angehen, nicht im ersten Wurf.
 
 ---
 
@@ -282,7 +353,6 @@ nachsehen", kein Schreibaufwand.
 - Vorbericht: [casedesk-cross-plugin-features-2026-09-29.md](./casedesk-cross-plugin-features-2026-09-29.md)
 - Case-Korpus-Analyse: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/Backlog/FEATURES/case-corpus-analyse-2026-09-30.md`
 - casedesk ROADMAP: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/ROADMAP.md`
-- Quellcode-Belege: `ai.nvim/README.md:17-21`, `pdfport.nvim/lua/pdfport/health.lua:332-340`, `media.nvim/lua/media/hub/kinds.lua:22-29`, `data.nvim/docs/scope.md:74-79`, `rules.nvim/README.md:24-31`
+- Quellcode-Belege: `ai.nvim/README.md:17-21`, `pdfport.nvim/lua/pdfport/health.lua:332-340`, `media.nvim/lua/media/hub/kinds.lua:22-29`, `data.nvim/docs/scope.md:74-79`, `rules.nvim/README.md:24-31`, `language.nvim/docs/FEATURES/TRANSLATE.md`, `language.nvim/lua/language/init.lua:73-93`, `language.nvim/lua/language/translate/providers/google.lua:63`
 
 ---
-
