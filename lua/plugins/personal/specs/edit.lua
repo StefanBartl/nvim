@@ -54,13 +54,114 @@ return {
       "ibhagwan/fzf-lua",
       "StefanBartl/lib.nvim",
       -- ui.kit.confirm/select/input (dialogs, root/rename pickers, prompts)
-      -- moved out of lib.nvim.ui.kit in the 2026-09 migration.
       "StefanBartl/ui.nvim",
       -- "j-hui/fidget.nvim"
     },
     opts = {
-      engine = "telescope", -- plugin default is "auto" (fzf-lua first)
-      progress_style = "statusline", -- "auto" | "notify" | "statusline" | "fidget" | "float" (needs lib.nvim)
+      -- Picker UI: "fzf" | "telescope" | "auto". "telescope" instead of the
+      -- default "auto" (fzf-lua first) so the pickers always open in telescope.
+      -- Default: "auto".
+      engine = "telescope",
+      -- Search backend: "ripgrep" | "vimgrep" | "auto" (ripgrep when available,
+      -- else the native scanner).
+      -- search_engine = "auto",
+      -- Progress indicator: "auto" | "notify" | "statusline" | "fidget" | "float" | "kit"
+      -- (needs lib.nvim, silently skipped otherwise). "statusline" pins the
+      -- style instead of letting "auto" choose.
+      -- Default: "auto".
+      progress_style = "statusline",
+
+      -- Write applied changes to disk (false = leave them as unsaved buffers).
+      -- write_changes = true,
+      -- Ask before applying ALL matches.
+      -- confirm_all = true,
+      -- Also ask when the scope is wide.
+      -- confirm_wide_scope = false,
+      -- Context lines shown around a hit in the preview.
+      -- preview_context = 3,
+      -- Search hidden files.
+      -- hidden = true,
+      -- Never search inside .git.
+      -- exclude_git_dir = true,
+      -- Default search mode: literal text instead of regex (flags override per run).
+      -- literal = true,
+      -- Case-insensitive unless the pattern has uppercase.
+      -- smart_case = true,
+      -- "%", "cwd", "." or an explicit path.
+      -- default_scope = "%",
+      -- Keep a match's own leading/trailing whitespace around the replacement.
+      -- preserve_whitespace = false,
+      -- Re-case the replacement to each match's case style (foo->bar, Foo->Bar, FOO->BAR).
+      -- case_preserve = false,
+      -- Keep only whole-word matches.
+      -- word_boundary = false,
+      -- Skip matches inside strings/comments (Tree-sitter, best effort).
+      -- code_only = false,
+      -- Skip read-only / oversized / binary files; max_file_size and
+      -- skip_binary only apply once this is on.
+      -- safe_mode = false,
+      -- Size limit in bytes (5 MiB) enforced by safe_mode.
+      -- max_file_size = 5 * 1024 * 1024,
+      -- Skip binary files (enforced by safe_mode).
+      -- skip_binary = true,
+      -- ALL-mode: ask All/Skip/Only-some/Quit per file instead of one global
+      -- confirmation (supersedes confirm_all/confirm_wide_scope).
+      -- confirm_per_file = false,
+      -- ALL-mode: snapshot every file before applying so :ReplaceUndo can restore it.
+      -- checkpoint = false,
+      -- Callbacks around the apply pipeline; each key takes a function or a list.
+      -- hooks = {}, -- { before_apply?, after_apply?, before_write?, after_write? }
+      -- Overrides for the message templates (string.format), merged key by key
+      -- over the built-in ones; the defaults are shown below.
+      -- messages = {
+      --   confirm_all = "Apply ALL %d spot(s) across %d file(s)?",
+      --   confirm_all_short = "Apply replacement to ALL %d spot(s)?",
+      --   cancelled = "cancelled",
+      --   result = "%d spot(s) in %d file(s)",
+      --   no_matches = "no matches found",
+      --   surround_prompt = "Surround with: ",
+      --   surround_cancelled = "Surround: cancelled (no delimiter)",
+      -- },
+      -- Suppress routine info-level notifications (warnings/errors always show).
+      -- quiet = false,
+      -- Use an LSP rename for identifier-shaped matches when the buffer has a
+      -- capable client (falls back to a plain edit).
+      -- lsp = false,
+      -- Parse ripgrep's output incrementally for smoother progress.
+      -- stream = false,
+      -- How many past searches :ReplaceHistory keeps (0 disables history).
+      -- history_max_entries = 50,
+      -- Minimum time between progress redraws while streaming, in ms.
+      -- progress_throttle_ms = 100,
+      -- One-time popup listing the CLI tools the plugin wants (via lib.nvim.deps).
+      -- deps_popup = true,
+
+      -- Filters, also overridable per run via command flags.
+      -- file_types = {}, -- string[]; ripgrep --type values, e.g. { "lua", "md" }
+      -- globs = {}, -- string[]; include globs, e.g. { "*.lua" }
+      -- exclude = {}, -- string[]; paths/globs to exclude, e.g. { "node_modules", "*.min.js" }
+
+      -- Picker window sizes, merged over the defaults.
+      -- fzf = { winopts = { width = 0.85, height = 0.7 } },
+      -- telescope = { layout_config = { width = 0.85, height = 0.7 } },
+      -- Respect .gitignore.
+      -- git_ignore = true,
+
+      -- Buffer-local keymaps inside the picker window.
+      -- keymaps = {
+      --   -- Multi-select and move to the next entry.
+      --   toggle_select = "<Tab>",
+      --   -- Multi-select and move to the previous entry.
+      --   toggle_select_prev = "<S-Tab>",
+      --   -- Replace ALL matches (respects confirm_all).
+      --   apply_all = "<C-a>",
+      --   -- Close the picker.
+      --   quit = "<Esc>",
+      --   -- Apply the entry under the cursor and reopen with the rest.
+      --   replace_and_reopen = "<C-r>",
+      --   -- Open the stacked filter prompt (needs pickers.nvim).
+      --   filter = "<C-f>",
+      -- },
     },
   },
 
@@ -157,6 +258,43 @@ return {
     "StefanBartl/data.nvim",
     cmd = { "JSON", "YAML", "XML", "Data" },
     dependencies = { "StefanBartl/lib.nvim" },
-    opts = {},
+    opts = {
+      -- json / yaml / xml: default indent width for `pretty`/`sort`, and path
+      -- separator for `lines`/`keys`.
+      -- json = { indent = 2, sep = "." },
+      -- yaml = { indent = 2, sep = "." },
+      -- xml = { indent = 2, sep = "." },
+
+      -- fenced_scope = {
+      --   -- Inside a matching ```json/```yaml/```xml fence, act on the block
+      --   -- instead of the whole buffer (needs color_my_ascii.nvim).
+      --   enable = true,
+      -- },
+
+      -- register = {
+      --   -- Register a bare `--reg` reads from ("+" = system clipboard).
+      --   default = "+",
+      -- },
+
+      -- target = {
+      --   -- Where `--split` opens its scratch window: "above" | "below" |
+      --   -- "left" | "right", or "auto" for a plain :new honoring
+      --   -- 'splitbelow'/'splitright'.
+      --   split = "right",
+      -- },
+
+      -- preview = {
+      --   -- Show a diff.nvim before/after preview and ask before an in-place
+      --   -- `filter` replaces its scope (--preview/--no-preview override per run).
+      --   filter = false,
+      --   -- diff.nvim view: "inline" | "float" | "vsplit" | "split" | "tab".
+      --   view = "inline",
+      -- },
+
+      -- keymaps = {
+      --   -- Reserved for a future keymap preset; no effect today.
+      --   preset = false,
+      -- },
+    },
   },
 }
