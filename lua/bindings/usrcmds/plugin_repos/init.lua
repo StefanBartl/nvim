@@ -880,7 +880,7 @@ end
 
 ---@return string
 local function source_file_path()
-  return vim.fs.joinpath(fn.stdpath("config"), "lua", "plugins", "personal", "source.lua")
+  return vim.fs.joinpath(fn.stdpath("config"), "lua", "plugins", "personal", "core", "source.lua")
 end
 
 ---Reads the live `OVERRIDE` value straight out of source.lua — that file is
