@@ -9,13 +9,13 @@
 ---
 --- All source control (which repo loads locally / remotely / not at all, the
 --- global OVERRIDE switch, machine-role handling and the per-repo mode table)
---- lives in plugins.personal.source. To turn a repo off or switch it
---- local/remote, edit plugins/personal/source.lua, not these files.
+--- lives in plugins.personal.core.source. To turn a repo off or switch it
+--- local/remote, edit plugins/personal/core/source.lua, not these files.
 
-local plugins = require("plugins.personal.source")
+local plugins = require("plugins.personal.core.source")
 
 -- foundation first: lib.nvim is a hard dependency of nearly everything below,
--- and `plugins.personal.list` documents it as the first entry.
+-- and `plugins.personal.core.list` documents it as the first entry.
 local CATEGORIES = { "foundation", "ai", "edit", "navigate", "inspect", "project", "view" }
 
 for _, category in ipairs(CATEGORIES) do

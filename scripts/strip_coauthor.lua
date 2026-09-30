@@ -16,7 +16,7 @@
 --- undoing that for anyone who has already fetched.
 ---
 --- **What it operates on.** The config repository itself, plus every plugin
---- `plugins.personal.list` declares that is actually checked out under `dir`
+--- `plugins.personal.core.list` declares that is actually checked out under `dir`
 --- (or `$REPOS_DIR`). Deriving the set from the spec rather than a list kept
 --- here means a plugin added to the spec is covered from then on, and one that
 --- was never cloned is not reported as a failure. `--only=<name>` narrows to a
@@ -40,7 +40,7 @@
 --- ever existed.
 ---
 --- **Usage.** Must run through a real startup (`-c "luafile ..."`, not `-l`):
---- the repository set comes from `plugins.personal.list`, which needs this
+--- the repository set comes from `plugins.personal.core.list`, which needs this
 --- config's resolved plugin policy — same constraint as `docmap_projects.lua`.
 --- Arguments go in `STRIP_COAUTHOR_ARGS` (not on the command line: nvim would
 --- open them as file buffers and the session autosave would remember them):

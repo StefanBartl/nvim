@@ -403,7 +403,7 @@ Abschnitt im Bericht.
   enthält, bleibt übersprungen — "nichts gefunden" und "konnte nicht
   nachsehen" bleiben getrennt.
 - **Auflösung austauschbar.** `config.repo_dirs()` liefert `{name, dir}` je
-  Plugin; Default ist `plugins.personal.export.projects()` (aus dem echten
+  Plugin; Default ist `plugins.personal.core.export.projects()` (aus dem echten
   Lazy-Spec abgeleitet, nicht aus einer handgepflegten Liste).
   `config.set_repo_dirs(fn)` ersetzt sie — die Tests hängen daran und laufen
   gegen ein Fixture-Repo im Temp-Verzeichnis statt gegen echte

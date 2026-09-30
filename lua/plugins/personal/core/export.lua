@@ -1,4 +1,4 @@
----@module 'plugins.personal.export'
+---@module 'plugins.personal.core.export'
 --- The shared interface `:DocMapAll` (fed through `opts.generate_all` on
 --- documentation.nvim's own plugin spec, `plugins/personal/init.lua` —
 --- the command itself lives in documentation.nvim now, not here) and
@@ -6,7 +6,7 @@
 --- against: which personal plugins are enabled right now, and where each
 --- one's local checkout actually is.
 ---
---- Built on `plugins.personal.list` — the same drift-proof, fully-resolved
+--- Built on `plugins.personal.core.list` — the same drift-proof, fully-resolved
 --- entry list `:MyPlugins clone`/`remove` and the statusline's own/external
 --- badge already read — rather than re-deriving activation from
 --- `source.lua`'s raw mode table a second time. What this file adds on top
@@ -19,7 +19,7 @@
 --- is filtered out here rather than returned with a directory a caller
 --- would have to remember to check for `nil`.
 
-local personal_utils = require("plugins.personal.utils")
+local personal_utils = require("plugins.personal.core.utils")
 
 local M = {}
 
@@ -37,7 +37,7 @@ local M = {}
 ---@return Plugins.Personal.Project[] projects Sorted by name, so two calls in the same session agree on order.
 ---@return string? err Set only when the entry list itself failed to read — no local checkouts is `nil, nil`.
 function M.projects()
-  local entries, err = require("plugins.personal.list").read()
+  local entries, err = require("plugins.personal.core.list").read()
   if not entries then
     return {}, err
   end

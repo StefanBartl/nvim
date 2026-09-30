@@ -35,16 +35,16 @@ vim.opt.rtp:prepend(lazypath)
 -- in plugins/personal/init.lua keeps it updatable; this only guarantees early
 -- availability.
 --
--- Must resolve to the same dir plugins/personal/source.lua's resolve() will
+-- Must resolve to the same dir plugins/personal/core/source.lua's resolve() will
 -- later assign to the "StefanBartl/lib.nvim" spec (local repos checkout when
 -- present, else lazy's managed dir). Otherwise lazy sees the plugin's `dir`
 -- change after it's already on the runtimepath and errors ("changed dir ...
 -- already partially loaded") on every startup.
-local libpath = require("plugins.personal.utils").local_dev("lib.nvim")
+local libpath = require("plugins.personal.core.utils").local_dev("lib.nvim")
   or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
 -- No clone fallback like lib.nvim's below: lsp.nvim is not required before
 -- lazy runs, so lazy can fetch it itself if the local checkout is absent.
-local lsppath = require("plugins.personal.utils").local_dev("lsp.nvim")
+local lsppath = require("plugins.personal.core.utils").local_dev("lsp.nvim")
   or (vim.fn.stdpath("data") .. "/lazy/lsp.nvim")
 if not vim.uv.fs_stat(libpath) then
   vim.fn.system({
@@ -183,7 +183,7 @@ vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 ---   a nil the reader would have to guard.
 ---@type LspNvim.PersonalNames.Reader
 local personal_name_labels = function()
-  local entries = require("plugins.personal.list").read() or {}
+  local entries = require("plugins.personal.core.list").read() or {}
   ---@type LspNvim.PersonalNames.Entry[]
   local out = {}
   for _, entry in ipairs(entries) do

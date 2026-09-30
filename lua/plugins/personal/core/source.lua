@@ -1,23 +1,23 @@
----@module 'plugins.personal.source'
+---@module 'plugins.personal.core.source'
 --- SOURCE CONTROL for the personal plugins: decides, per repo, whether it loads
 --- locally ("dir"), from GitHub ("remote") or not at all ("disabled"), plus the
 --- global OVERRIDE switch and machine-role handling.
 ---
---- Deliberately separate from plugins/personal/init.lua: this file is the
---- *policy* (which repo in which mode), init.lua is the *spec implementation*
---- (the actual lazy definitions). init.lua just does:
----   local plugins = require("plugins.personal.source")
+--- Deliberately separate from the specs (plugins/personal/specs/*.lua, one file
+--- per category): this file is the *policy* (which repo in which mode), the
+--- specs are the actual lazy definitions. plugins/personal/init.lua just does:
+---   local plugins = require("plugins.personal.core.source")
 ---   plugins.add({ ...specs... })
 ---   return plugins.export()
 ---
 --- Returns the configured plugins.control.mode instance (resolver + modes
 --- already applied), ready for `add`/`export`.
 ---
---- NOTE: sibling of init.lua inside plugins/personal/. lazy's
+--- NOTE: lives in plugins/personal/core/, below init.lua. lazy's
 --- `{ import = "plugins" }` only picks up personal/init.lua (one level deep),
---- never its siblings, so this file is not seen by the importer.
+--- never anything below it, so this file is not seen by the importer.
 
-local personal_utils = require("plugins.personal.utils")
+local personal_utils = require("plugins.personal.core.utils")
 local machine = require("machine")
 local notify = require("lib.nvim.notify").create("[plugins.personal]")
 local control = require("plugins.control.mode")

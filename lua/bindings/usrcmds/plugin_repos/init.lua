@@ -8,7 +8,7 @@
 --- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
 ---
 --- Every subcommand except `dashboard` (which just opens gitsuite.nvim's
---- own `:Git dashboard`) operates only on the repos `plugins.personal.list`
+--- own `:Git dashboard`) operates only on the repos `plugins.personal.core.list`
 --- names against `dir`/`$REPOS_DIR` — never on whatever a directory scan
 --- turns up, unlike `:Git dashboard update`, because `$REPOS_DIR` also holds
 --- non-plugin checkouts (Notes, WKDBooks, ...) a scan-and-delete would put
@@ -24,7 +24,7 @@ local composer = require("lib.nvim.bindings.usercmd.composer")
 local is_dir = require("lib.nvim.fs.is_dir")
 local expand_path = require("lib.nvim.cross.fs.expand_path")
 local open_named_scratch = require("lib.nvim.window.open_named_scratch")
-local plugin_list = require("plugins.personal.list")
+local plugin_list = require("plugins.personal.core.list")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 local confirm = require("bindings.usrcmds.plugin_repos.confirm")
 
@@ -448,7 +448,7 @@ local function pull_all(path, only_name)
 end
 
 ---Fetch + fast-forward pull, scoped to the named plugin list — the
----`:Git dashboard update`-equivalent for just `plugins.personal.list`, so a second
+---`:Git dashboard update`-equivalent for just `plugins.personal.core.list`, so a second
 ---machine can bring its `dir`-mode checkouts level with commits pushed from
 ---the first without touching the unrelated repos `$REPOS_DIR` also holds.
 ---@param path string|nil
@@ -466,7 +466,7 @@ local is_windows = fn.has("win32") == 1 or fn.has("win64") == 1
 ---Best-effort "the plugin this context belongs to": the current buffer's
 ---file, falling back to the working directory, matched against `base_dir`'s
 ---immediate children and cross-checked against the live
----`plugins.personal.list` — a bare directory-name match with no list entry
+---`plugins.personal.core.list` — a bare directory-name match with no list entry
 ---is not "this plugin", it is some unrelated checkout `$REPOS_DIR` also
 ---holds (Notes, WKDBooks, ...), same distinction every other subcommand in
 ---this file already makes.
@@ -507,7 +507,7 @@ end
 ---`gitsuite.nvim` already has exactly this dashboard (`:Git dashboard`, moved
 ---there from reposcope.nvim's former `:Reposcope dashboard`), so there's no
 ---reason to keep maintaining a parallel implementation here — this used to
----be its own scoped-to-`plugins.personal.list` status reader, but that
+---be its own scoped-to-`plugins.personal.core.list` status reader, but that
 ---scoping isn't worth the duplication; `:Git dashboard` shows every repo
 ---under `dir`/`$REPOS_DIR` instead.
 ---
@@ -926,7 +926,7 @@ local function write_override(new_mode)
 end
 
 ---Bare `:MyPlugins mode` reports the current value; `:MyPlugins mode <x>`
----persists it. `require()` caches `plugins.personal.source`, and the spec
+---persists it. `require()` caches `plugins.personal.core.source`, and the spec
 ---list it produces is already baked into what lazy loaded at startup, so a
 ---change here only takes effect after a full restart — `:Lazy reload` does
 ---not re-evaluate this file.
@@ -958,7 +958,7 @@ local function mode_cmd(new_mode)
     return
   end
   notify.warn(
-    ("OVERRIDE changed %q -> %q. Restart Neovim for plugins.personal.source to re-resolve — :Lazy reload will NOT pick this up (require() is cached)."):format(
+    ("OVERRIDE changed %q -> %q. Restart Neovim for plugins.personal.core.source to re-resolve — :Lazy reload will NOT pick this up (require() is cached)."):format(
       current,
       new_mode
     )
@@ -996,7 +996,7 @@ function M.enable()
   })
 
   -- `--only=<name>` for clone/remove: validated and completed against the
-  -- *live* plugins.personal.list on every request (not a snapshot taken once
+  -- *live* plugins.personal.core.list on every request (not a snapshot taken once
   -- at registration time), same principle reposcope.nvim's own per-request
   -- completers use — the list only changes on a config edit anyway, but
   -- there is no reason to risk a stale copy for a lookup this cheap.
@@ -1008,7 +1008,7 @@ function M.enable()
           return true, raw, nil
         end
       end
-      return false, nil, ("'%s' is not in plugins.personal.list"):format(raw)
+      return false, nil, ("'%s' is not in plugins.personal.core.list"):format(raw)
     end,
     complete = function(arg_lead)
       local entries = plugin_list.read() or {}
@@ -1125,7 +1125,7 @@ function M.enable()
             optional = true,
           },
         },
-        desc = "Show, or persistently switch, plugins.personal.source's OVERRIDE (restart required to apply)",
+        desc = "Show, or persistently switch, plugins.personal.core.source's OVERRIDE (restart required to apply)",
         run = function(ctx)
           mode_cmd(ctx.args.mode)
         end,
@@ -1134,7 +1134,7 @@ function M.enable()
       {
         path = { "list" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "Render every plugin in plugins.personal.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)",
+        desc = "Render every plugin in plugins.personal.core.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)",
         run = function(ctx)
           list_all(ctx.args.dir)
         end,

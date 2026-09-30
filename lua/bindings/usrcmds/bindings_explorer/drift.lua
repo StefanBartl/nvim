@@ -717,7 +717,7 @@ end
 --- itself.
 ---
 --- Derived, never hand-kept: `config.repo_dirs()` resolves the enabled
---- personal plugins from the lazy spec (see `plugins/personal/list.lua`'s
+--- personal plugins from the lazy spec (see `plugins/personal/core/list.lua`'s
 --- module doc on why the Markdown list was given up as a source).
 ---
 --- `nil` rather than an empty set when the resolution fails, and the caller

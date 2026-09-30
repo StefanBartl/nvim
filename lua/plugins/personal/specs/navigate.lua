@@ -3,10 +3,10 @@
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.
---- disabled -- is NOT decided here but in plugins.personal.source; this
+--- disabled -- is NOT decided here but in plugins.personal.core.source; this
 --- file only declares the specs. Registered from plugins/personal/init.lua.
 
-local personal_utils = require("plugins.personal.utils")
+local personal_utils = require("plugins.personal.core.utils")
 
 ---@type LazyPluginSpec[]
 return {

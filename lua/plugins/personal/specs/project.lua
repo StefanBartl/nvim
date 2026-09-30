@@ -3,7 +3,7 @@
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.
---- disabled -- is NOT decided here but in plugins.personal.source; this
+--- disabled -- is NOT decided here but in plugins.personal.core.source; this
 --- file only declares the specs. Registered from plugins/personal/init.lua.
 
 local machine = require("machine")
@@ -143,11 +143,11 @@ return {
       -- `:DocMap all` / `:DocMapAll` (2026-08-14): documentation.nvim owns
       -- the command, this config supplies only the data -- the same split
       -- runtime-analysis.nvim's own `opts.telemetry` already draws one
-      -- entry below. `plugins.personal.export.projects()` is the same
+      -- entry below. `plugins.personal.core.export.projects()` is the same
       -- resolved entry list `config.telemetry.build()` reads, so nothing
       -- here has to be kept in sync with `plugins/personal/init.lua` by
       -- hand -- add a plugin to the spec below and both wirings pick it up.
-      local export = require("plugins.personal.export")
+      local export = require("plugins.personal.core.export")
       local projects = export.projects()
       local gen_projects = {}
       for _, p in ipairs(projects) do
