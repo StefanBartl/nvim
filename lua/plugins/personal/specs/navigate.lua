@@ -21,36 +21,200 @@ return {
     -- the (optional) coupling explicitly.
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     opts = {
+      -- Print debug notifies.
+      -- dev_mode = false,
+
+      -- Resolution strategy: "hybrid" | "lsp" | "treesitter" | "builtin".
+      -- Equals the default, set explicitly so the strategy is visible here:
+      -- LSP first, then Treesitter, then the plain builtin resolvers.
+      -- Default: "hybrid".
       mode = "hybrid",
+      -- Provider order tried in "hybrid" mode. Replaces the list, so give it
+      -- in full.
+      -- order = { "lsp", "treesitter", "builtin" },
+      -- How long the LSP provider may take before the next one is tried, in ms.
+      -- lsp_timeout_ms = 200,
+
+      -- Per-filetype resolver configuration. `enable = false` switches the
+      -- language resolvers off for that filetype (universal features such as
+      -- file paths and help tags keep working). `resolvers` (string[]) is a
+      -- whitelist of resolver names for the filetype, `custom_resolvers`
+      -- (table|string module name) are user resolvers run BEFORE the built-in
+      -- ones; both nil = all built-in resolvers. A partial table merges per key.
+      -- languages = {
+      --   lua = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   python = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   javascript = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   javascriptreact = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   typescript = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   typescriptreact = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   rust = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   go = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   c = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   cpp = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   cs = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   zig = { enable = true, resolvers = nil, custom_resolvers = nil },
+      --   java = { enable = true, resolvers = nil, custom_resolvers = nil },
+      -- },
+
+      -- Fuzzy alternate: offer close matches when the resolved file is missing.
       alternate = {
+        -- Offer alternates at all. Equals the default, set explicitly.
         enable = true,
+        -- Minimum similarity (0-100) for a candidate; higher is stricter.
+        -- Equals the default, set explicitly.
         similarity_threshold = 75,
+        -- Candidates chosen from the dialog before rise within their
+        -- similarity band, so history breaks near-ties but never inverts a
+        -- clear winner.
+        -- frecency = {
+        --   enable = true, -- false records nothing and reorders nothing
+        --   max_bonus = 10, -- band size in similarity points; 0 records but no longer reorders
+        --   dir = nil, -- string; storage directory, nil = lib.nvim's stdpath("data")/lib.nvim/frecency
+        -- },
       },
+
+      -- Open non-text files (images, PDFs, ...) with an external program.
       external = {
+        -- Equals the default, set explicitly.
         enable = true,
+        -- extensions = nil, -- string[]; extra extensions, EXTENDS the built-in list
+        -- PDF handling; only takes effect when pdfport.nvim is installed, else
+        -- a PDF always goes to the system viewer.
+        -- pdf = {
+        --   picker = true, -- false: always open with `default`, no chooser
+        --   default = "system", -- mode used when picker = false: "system" | "buffer" | "float" | "terminal"
+        -- },
       },
+
+      -- URLs under the cursor open in the browser instead of resolving to a file.
+      -- url = {
+      --   enable = true,
+      --   bare_hosts = true, -- also accept "github.com/x" / "git@github.com:a/b.git"; only after every file resolver missed
+      --   schemes = nil, -- string[]; extra URL schemes, EXTENDS the built-in list
+      --   tlds = nil, -- string[]; extra TLDs for bare_hosts, EXTENDS the built-in list
+      -- },
+
+      -- $VAR / ${VAR} prefix expansion, and the reverse shortening commands.
+      -- env_variable_resolution = {
+      --   enable = true,
+      --   -- Segment name -> env var name, for :GopathToReposDir. Structural:
+      --   -- a path whose root segment is "repos" (any drive, any OS) becomes
+      --   -- `$REPOS_DIR` whatever $REPOS_DIR resolves to on this machine.
+      --   shorten_dirs = { repos = "REPOS_DIR" },
+      --   -- Var name -> absolute path or resolver function, for well-known
+      --   -- directories: :GopathToNvimDir shortens literal occurrences, and
+      --   -- forward resolution falls back to it when no real env var of that
+      --   -- name is set (a real one wins).
+      --   shorten_known_dirs = {
+      --     NVIM_CONFIG_DIR = function()
+      --       return vim.fn.stdpath("config")
+      --     end,
+      --   },
+      -- },
+
+      -- Offer to create a resolved-but-missing file instead of erroring
+      -- (the `gC` / :GopathCheck key always offers, regardless of `enable`).
+      -- create_on_missing = {
+      --   enable = true,
+      --   confirm = true, -- false: create silently, no dialog
+      -- },
+
+      -- Truncated ("...") path resolution via a cache of known files.
+      -- truncated = {
+      --   enable = true,
+      --   use_cache = true,
+      --   cache_refresh_interval = 600, -- seconds between automatic refreshes
+      --   -- How long the per-runtimepath-entry name index stays valid, in ms.
+      --   -- Lower it if you install plugins while Neovim is running.
+      --   rtp_index_ttl_ms = 30000,
+      --   max_cache_age = 3600, -- seconds before the cache counts as stale
+      --   live_search_fallback = true, -- fd/rg/find when the cache misses
+      --   similarity_threshold = 75, -- for picking among several matches
+      --   cache_roots = nil, -- table; nil = auto-detect drives/stdpaths
+      --   max_depth = 6, -- maximum directory depth to scan
+      --   excluded_dirs = { ".git", ".github", "node_modules", "target", "build", ".cache", "venv" }, -- replaces the list
+      --   watch_patterns = nil, -- string[]; nil = { "*.lua", "*.vim" }
+      --   auto_rebuild_on_save = false,
+      -- },
+
+      -- Whole-line path extraction.
+      -- linepath = {
+      --   enable = true, -- scan the whole line for path-like candidates
+      --   cascade = true, -- run linepath inside the resolve pipeline
+      -- },
+
+      -- Cache + filesystem suffix search for partial paths.
+      -- tailsearch = {
+      --   enable = true,
+      --   max_components = 6, -- longest path suffix, in components, to try
+      --   ask_on_ambiguous = true, -- vim.ui.select when several files match
+      --   roots = nil, -- string[]; nil = auto (buffer dir, cwd, git root, stdpath dirs)
+      --   limit = 100, -- maximum matches collected per search
+      -- },
+
+      -- Normal-mode keymaps (`false` disables one; a list binds several lhs;
+      -- `mappings = false` disables all).
       mappings = {
-        -- `gF` only. `<2-LeftMouse>` used to be listed here as well, but
-        -- gopath maps its lhs globally in normal mode: every double-click in
-        -- any buffer then ran a path resolve instead of selecting the word
-        -- under the cursor, and each miss logged `[gopath] no match: no-match`
-        -- -- including the one right after startup on the dashboard.
+        -- Open the path under the cursor in the current window: "gF" instead of
+        -- the default "gP", so it replaces Neovim's own `gF`. `<2-LeftMouse>` is
+        -- deliberately not bound: gopath maps its lhs globally in normal mode,
+        -- so every double-click in any buffer would run a path resolve instead
+        -- of selecting the word under the cursor.
+        -- Default: "gP".
         open_here = "gF",
+        -- Equals the default, set explicitly: open in a horizontal split.
         open_split = "g|",
+        -- Equals the default, set explicitly: open in a vertical split.
         open_vsplit = "g\\",
+        -- Equals the default, set explicitly: open in a new tab.
         open_tab = "g}",
+        -- Reveal in the system file manager instead of opening.
+        -- open_explorer = "gM",
+        -- Reveal in filetree.nvim instead of opening (soft dependency).
+        -- open_filetree = "gT",
+        -- Equals the default, set explicitly: copy file:line:col.
         copy_location = "gY",
+        -- Equals the default, set explicitly: debug output for the resolution.
         debug = "g?",
+        -- Probe keymap (normal and visual mode).
+        -- probe = "<leader>pp",
+        -- Check the path and offer to create it when missing.
+        -- check = "gC",
       },
+
+      -- User commands; `false` skips one, `commands = false` skips all.
+      -- commands = {
+      --   resolve = true, -- :GopathResolve
+      --   open = true, -- :GopathOpen
+      --   copy = true, -- :GopathCopy
+      --   debug = true, -- :GopathDebug
+      --   check = true, -- :GopathCheck
+      --   to_repos_dir = true, -- :GopathToReposDir
+      --   to_nvim_dir = true, -- :GopathToNvimDir
+      -- },
+
+      -- Label the probe keymap via which-key.nvim when it is installed.
+      -- which_key = true,
+
+      -- One-time popup listing the CLI tools this plugin wants (lib.nvim.deps),
+      -- shown on the first setup() after install.
+      -- deps_popup = true,
+
+      -- Which hosts may drive this plugin; `ui_menu = false` keeps ui.nvim's
+      -- right-click menu from composing the "Paths" entry.
+      -- integrations = {
+      --   ui_menu = true,
+      -- },
     },
   },
 
   {
-    -- Path/link hover for every filetype. Formerly lib.nvim.hover; split out
-    -- 2026-09-01 as the only lib.nvim module that opens windows, installs
-    -- autocmds in every buffer, borrows keymaps, ships usercommands and
-    -- knows four sibling plugins by name -- see documentation.nvim/
-    -- docs/ECOSYSTEM.md for the rule behind that split.
+    -- Path/link hover for every filetype. Lives in its own plugin rather than
+    -- in lib.nvim because it opens windows, installs autocmds in every
+    -- buffer, borrows keymaps, ships usercommands and knows four sibling
+    -- plugins by name -- see documentation.nvim/docs/ECOSYSTEM.md for the
+    -- rule behind that split.
     --
     -- `lazy = false` because `enable()` must run from something that isn't
     -- itself lazy: markdown.nvim is ft-lazy on Markdown, so a session that
@@ -58,13 +222,13 @@ return {
     -- case this feature is meant to cover (paths in .txt, code comments,
     -- :messages). `priority` sits below lib.nvim, a hard dependency.
     --
-    -- No options set below -- every feature switch (web links + fetch/shot,
-    -- office documents via pdfport, zen, persist, zoom keys, `auto_hover`)
-    -- runs on hover.nvim's own defaults. Full behaviour, the two-axis
-    -- on/auto distinction, and measured costs (browser start, page render,
-    -- LibreOffice conversion) are documented in hover.nvim/docs/
-    -- configuration.md and docs/FEATURES/*.md; `:Hover why`/`:Hover status`
-    -- explain a given switch at runtime.
+    -- Only the video playback choices below are set -- every other feature
+    -- switch (web links + fetch/shot, office documents via pdfport, zen,
+    -- persist, zoom keys, `auto_hover`) runs on hover.nvim's own defaults.
+    -- Full behaviour, the two-axis on/auto distinction, and measured costs
+    -- (browser start, page render, LibreOffice conversion) are documented in
+    -- hover.nvim/docs/configuration.md and docs/FEATURES/*.md; `:Hover why`
+    -- / `:Hover status` explain a given switch at runtime.
     "StefanBartl/hover.nvim",
     lazy = false,
     priority = 900,
@@ -80,8 +244,9 @@ return {
         -- mode = "auto",
 
         -- Which target *types* the automatic trigger opens for -- gates the
-        -- trigger only, `:Hover show` always answers for every type. Default
-        -- shown in full because a partial table merges additively.
+        -- trigger only, `:Hover show` always answers for every type. A table
+        -- merges additively (`{ file = true }` adds one type); a list of type
+        -- names replaces the whole setting. Default shown in full.
         -- auto_hover = {
         --   image = true, pdf = true,
         --   anchor = false, directory = false, file = false, git = false,
@@ -186,51 +351,45 @@ return {
           -- (real video+sound, just not mpv) and silences inline's optional
           -- sound too. Different from playback = "inline", which also gives
           -- up that fallback entirely for silent block graphics.
-          -- Confirmed working 2026-09-09.
+          -- Default: true (set false here, so the system player is used).
           use_mpv = false,
 
           -- ---------------------------------------------------------------
           -- EXPERIMENTAL (system-player window positioning) -- nested under
           -- its own key so it reads as clearly separate from ordinary
-          -- playback settings above. None of these three only do anything
-          -- when there is no mpv window (no mpv, or use_mpv = false above),
-          -- and the second and third only matter at all when the first is
-          -- true. Nothing here is load-bearing for ordinary playback; all
-          -- three are "best effort, may silently do nothing" by design --
-          -- see docs/FEATURES/VIDEO.md.
+          -- playback settings above. None of these three do anything when
+          -- there is an mpv window (only with no mpv, or use_mpv = false
+          -- above), and the second and third only matter at all when the
+          -- first is true. Nothing here is load-bearing for ordinary
+          -- playback; all three are "best effort, may silently do nothing"
+          -- by design -- see docs/FEATURES/VIDEO.md.
           -- ---------------------------------------------------------------
           experimental = {
             -- Best-effort centre whatever window the system-player fallback
-            -- opens, on the monitor the terminal is on right now. Off by
-            -- default -- whether it does anything depends on what is
-            -- registered on this machine (a UWP handler on Windows
-            -- historically ignores it; macOS needs Accessibility permission;
-            -- Linux needs xdotool/wmctrl and no Wayland in the way). Never
-            -- reports failure either way.
+            -- opens, on the monitor the terminal is on right now. Whether it
+            -- does anything depends on what is registered on the machine (a
+            -- UWP handler on Windows historically ignores it; macOS needs
+            -- Accessibility permission; Linux needs xdotool/wmctrl and no
+            -- Wayland in the way). Never reports failure either way.
+            -- Default: false (set true here).
             system_player_align = true,
 
-            -- Only consulted when system_player_align (above) is true. A
-            -- fullscreen window defeats alignment before it starts --
-            -- reported 2026-09-09: VLC (this machine's system handler) opens
-            -- in its remembered fullscreen state, same visible result as
-            -- system_player_align = false. With this true (the default), the
-            -- fallback tries a known, scriptable player by name first (`vlc
-            -- --no-fullscreen`, today) before the system's own handler, so
-            -- there is a non-fullscreen window for alignment to actually act
-            -- on. Set false to always go through the system handler even
-            -- with alignment on.
+            -- Only consulted when system_player_align is true. A fullscreen
+            -- window defeats alignment before it starts (a player that opens
+            -- in its remembered fullscreen state looks the same as
+            -- alignment off), so the fallback first tries a known, scriptable
+            -- player by name (`vlc --no-fullscreen`, today) before the
+            -- system's own handler, giving alignment a non-fullscreen window
+            -- to act on. false always goes through the system handler.
+            -- Equals the default, set explicitly.
             system_player_prefer_classic = true,
 
-            -- Only consulted when system_player_align (above) is true, same
-            -- as system_player_prefer_classic. `vlc` alone missed on PATH on
-            -- this machine -- reported 2026-09-12: the Windows VLC installer
-            -- does not extend PATH, so the known-player search above found
-            -- nothing and fell all the way through to the system handler's
-            -- remembered fullscreen state, same as if alignment were off
-            -- entirely. With this true (the default), a name that misses on
-            -- PATH is tried again against the install locations Windows
-            -- actually puts it in (Program Files / Program Files (x86)).
-            -- Set false to search PATH only.
+            -- Only consulted when system_player_align is true. A known player
+            -- that misses on PATH is tried again against the install
+            -- locations Windows actually uses (Program Files / Program Files
+            -- (x86)), since a Windows installer routinely does not extend
+            -- PATH. false searches PATH only.
+            -- Equals the default, set explicitly.
             system_player_search_installs = true,
           },
 
@@ -268,14 +427,28 @@ return {
         -- },
         -- dismiss_keys = { "q", "<Esc>" },
         -- open_keys = { "gf" }, -- open what the float shows, externally
-        -- nav_keys = { left = { "h" }, right = { "l" }, up = { "k" }, down = { "j" } }, -- pan while zoomed
+        -- nav_keys = { left = { "h" }, right = { "l" }, up = { "k" }, down = { "j" } }, -- pan while zoomed; also moves in a directory's mini filetree
+        -- dir_keys = { click = { "<LeftMouse>" } }, -- click an entry in a directory hover's mini filetree ({} = no click); a click that misses the float is replayed as a normal click
         -- position_keys = { next = { "<M-n>" } }, -- step to the next position-preview contributor
         -- zoom_keys = { into = { ">" }, out = { "|" }, reset = { "=" } },
         -- zen_keys = { toggle = { "F" } },
         -- transport_keys = { toggle = { "<CR>" }, forward = { "." }, back = { "," } }, -- video play/pause, frame step
 
         -- Keymaps this plugin sets in the user's own namespace.
-        -- keymaps = { show = false },
+        -- keymaps = { show = false }, -- string|string[]|false; a key for `:Hover show`
+
+        -- Your own sources, previews and position previews, registered under
+        -- the name "user" (handed to hover.registry, never stored in the
+        -- options).
+        -- contribute = nil, -- Hover.Contribution
+
+        -- Legacy spellings, still accepted on input and then dropped:
+        -- deprecated -- enabled = false is read as mode = "off".
+        -- enabled = nil, -- boolean
+        -- deprecated -- read as paths.enabled.
+        -- bare_paths = nil, -- boolean
+        -- deprecated -- folded into links (hover -> web, fetch, timeout_ms).
+        -- url = nil, -- { hover?: boolean, fetch?: boolean, timeout_ms?: integer }
       })
       require("hover").enable()
     end,
@@ -823,96 +996,203 @@ return {
     -- table literal would do that at spec-import time for every start.
     opts = function()
       return {
-        -- Bare `nvim` (no file args) resumes the last-loaded session — see
-        -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
-        -- autoload = true,
+        -- Root directory for session files.
+        -- root = vim.fn.stdpath("data") .. "/sessions",
 
-        -- The mark list.
+        -- Session name used when auto-resolution yields nothing.
+        -- default_name = "last",
+
+        -- Append the current git branch to the auto-resolved name.
+        -- branch_aware = true,
+
+        -- Prefix the auto-resolved name with the detected project root's basename.
+        -- project_aware = true,
+
+        -- Files searched upward from the cwd to detect a project root. Replaces
+        -- the list, so give it in full.
+        -- project_markers = { ".git", "pyproject.toml", "package.json", "Makefile", "Cargo.toml", "go.mod" },
+
+        -- Passed to 'sessionoptions' before every save/load.
+        -- sessionoptions = "buffers,curdir,tabpages,winsize,help,folds",
+
+        -- Rewrite the saved cwd to a portable placeholder, re-anchored to the
+        -- cwd on load (see docs/portability.md).
+        -- relative_paths = false,
+
+        -- Old root -> new root path prefixes translated on load, for
+        -- cross-OS / cross-machine sync (see docs/portability.md).
+        -- root_remap = {},
+
+        -- Load the contextual session on VimEnter when Neovim starts without
+        -- file args: true | false | "ask" (confirm float first). A bare `nvim`
+        -- then resumes the last-loaded session -- see
+        -- docs/ROADMAP/casedesk/SESSIONS.md §4.3.
+        -- autoload = false,
+
+        -- Save the session on VimLeavePre.
+        -- autosave = true,
+
+        -- Autosave target: true resolves the name like a bare `:Session save`
+        -- (branch/project-aware when configured), a string pins autosave to
+        -- that one fixed name regardless of project, false disables autosave
+        -- despite `autosave = true`.
+        -- autosave_name = true,
+
+        -- Write a `.{name}.json` companion file with the save context.
+        -- metadata = true,
+
+        -- Persist the per-tabpage buffer order (`vim.t.bufs`) that a tabline
+        -- such as NvChad's tabufline renders from; a no-op without one.
+        -- restore_buffer_order = true,
+
+        -- Persist per-tabpage tab-pin state (ui.nvim's `vim.t.ui_pinned`);
+        -- restored after the buffer order. A no-op without ui.nvim's tabline.
+        -- restore_pinned_buffers = true,
+
+        -- Attach `opts.title = "Sessions"` to `:Session`/autoload notify calls,
+        -- for rich vim.notify backends; false calls vim.notify plainly.
+        -- notify_title = true,
+
+        -- Callbacks after save/load (errors are swallowed via pcall).
+        -- hooks = {
+        --   on_save = nil, -- fun(name: string, path: string)
+        --   on_load = nil, -- fun(name: string, path: string)
+        -- },
+
+        -- Buffers matching these are wiped before `:mksession`.
+        -- blacklist = {
+        --   buftypes = { "quickfix", "nofile", "prompt" }, -- replaces the list
+        --   filetypes = { "gitcommit", "gitrebase" }, -- replaces the list
+        --   paths = {}, -- empty here; setup() fills in the platform temp dirs (/tmp/, %TEMP% on Windows) unless set explicitly
+        -- },
+
+        -- The mark list: an ordered set of files jumped to by number
+        -- (`:Session marks`).
         marks = {
+          -- Turn the mark list on. Default: false.
           enable = true,
+          -- "global": one list wherever Neovim runs; "project": one per project
+          -- root (and branch when `branch_aware`). Equals the default, set
+          -- explicitly.
           scope = "global",
+          -- Paths seeded into the list on first use and restored by
+          -- `:Session marks defaults reset`; each entry is a list of path
+          -- segments (the first may be `$REPOS_DIR`, `$HOME`, `$NVIM_HOME`) or
+          -- one absolute string. Comes from this config's machine module.
+          -- Default: {}.
           defaults = require("config.marks.defaults"),
+          -- First run: take over a harpoon v2 list before falling back to
+          -- `defaults` (also `:Session marks import-harpoon`).
+          -- import_harpoon = true,
+          -- Remember a marked file's cursor position when its buffer is left,
+          -- debounced by this many ms (0 = write at once).
+          -- context_debounce_ms = 200,
+          -- Template with one `%d` for 1..9: `<leader>h1` .. `<leader>h9` jump
+          -- to that entry. Default: false (no keys bound).
           select_key = "<leader>h%d",
-          -- `<C-e>` opens the marks popup (bindings/mappings/sessions.lua), so
-          -- pressing it again closes it: a toggle, alongside q / <Esc>.
-          menu = { preview_keys = { close = { "q", "<Esc>", "<C-e>" } } },
+          menu = {
+            -- "auto" (kit, then snacks, telescope, fzf-lua, then the float) |
+            -- "edit" | "kit" | "snacks" | "telescope" | "fzf".
+            -- ui = "auto",
+            -- End-of-line flag on a default/pin in the edit float.
+            -- pin_marker = "📌 pin",
+            -- Keys of the kit menu's preview pane: a table changes single
+            -- groups, `false` turns them off. Default: nil (the kit's own keys,
+            -- <C-f>/<C-p> scroll the preview, <Tab> hops into it).
+            -- `<C-e>` opens the marks popup (bindings/mappings/sessions.lua), so
+            -- adding it to `close` makes it a toggle, alongside q / <Esc>.
+            preview_keys = { close = { "q", "<Esc>", "<C-e>" } },
+          },
+          -- Preview limits for the marks list.
+          -- preview = {
+          --   max_kb = 1536, -- larger files show only the first `max_lines`
+          --   max_lines = 4000,
+          -- },
+          -- Template like `select_key`, e.g. "<M-%d>" to preview entry N.
+          -- preview_key = false,
         },
+
         -- `false`, not a table: the actual keymaps are attached from
         -- bindings/mappings/sessions.lua at UIReady instead of here. This
         -- spec has `lazy = false` for the autoload/autosave reason above, so
         -- anything bound directly in `opts`/`config` runs on the synchronous
         -- startup path -- exactly what this config's keymap registration is
         -- everywhere else deliberately kept off of (see init.lua's UIReady
-        -- phases).
+        -- phases). As a table it maps name -> lhs; names: save, load, save_ts,
+        -- list, current, chip_toggle, picker, toggle_track, save_tab, load_tab,
+        -- save_layout, load_layout, plus marks_menu, marks_edit, marks_add,
+        -- marks_add_front, marks_pin, marks_remove, marks_sync, marks_debug.
+        -- Default: false.
         keymaps = false,
 
-        -- shape/dock already default to sessions.nvim's own "dock_left"/true
-        -- (statusline-docked look) -- only the mode-colour wiring belongs
-        -- here, per ui.kit.chip's own design: it stays statusline-agnostic,
-        -- so a `St_<Mode>Mode`-specific colour source is this config's job,
-        -- not sessions.nvim's or ui.kit's.
+        -- Register a which-key group label for the keymap prefix, if which-key
+        -- is installed and at least one keymap is configured.
+        -- which_key = { enable = true },
+
+        -- Editor-corner indicator (ui.kit.chip); while shown it REPLACES the
+        -- plain save/load/autoload notify. A soft dependency on ui.kit.
+        -- Only the mode-colour wiring is set here, per ui.kit.chip's own
+        -- design: it stays statusline-agnostic, so a `St_<Mode>Mode`-specific
+        -- colour source is this config's job, not sessions.nvim's or ui.kit's.
         chip = {
-          -- Without this, the colour function below would only ever be
-          -- re-read at the next incidental save/load/dirty-tracking event,
-          -- not when the mode itself actually changes.
+          -- enable = true,
+          -- "bottom-left" | "bottom-right" | "top-left" | "top-right".
+          -- anchor = "bottom-left",
+          -- "dock_left" (rounded except the left edge, meant to sit flush on
+          -- the screen's left edge) | "rounded_chip" | "chip" | "classic".
+          -- shape = "dock_left",
+          -- Sit flush on the statusline row instead of floating above it;
+          -- degrades to the ordinary placement without a real statusline row.
+          -- dock = true,
+          -- Refresh the chip on every ModeChanged; needed here because the
+          -- `color` function below follows the mode, and without it the colour
+          -- would only be re-read at the next incidental save/load/dirty event.
+          -- Default: false.
           track_mode = true,
+          -- Nudge on top of the computed placement: 0 is no change (the
+          -- default is nil, equivalent), set explicitly.
           row_offset = 0,
+          -- One column to the left of the computed placement. Default: nil.
           col_offset = -1,
+          -- A highlight-group name, a `{ fg, bg }` table or a zero-arg function
+          -- returning either; here a function returning the statusline's
+          -- mode-pill colours, so the chip matches the current mode.
+          -- Default: nil (the kit's own default colour).
           color = function()
-            -- `St_<Suffix>Mode` is only DEFINED once `ui.statusline.highlights
-            -- .ensure()` has run -- and this config wires that in at UIReady
-            -- (VimEnter + vim.schedule(), see config/ui_statusline/init.lua),
-            -- the same deferred pattern ui.kit.chip's own startup settle pass
-            -- uses for its VimEnter re-resolve. Whichever of the two
-            -- `vim.schedule()` callbacks happens to queue first wins the
-            -- race; when the chip's settle pass wins, this function read an
-            -- undefined group on its first (and, until some later unrelated
-            -- refresh/mode-change, only) resolution -- `hl.fg`/`hl.bg` were
-            -- nil, this returned nil, and the chip fell back to
-            -- `ui.kit.chip`'s own default (`"Special"`, an amber/orange in
-            -- this colorscheme) until whatever incidental event happened to
-            -- refresh it next. Live-reproduced via real startup screenshots:
-            -- orange on first paint, the real mode colour only after ~1-2s.
-            -- `ensure()` is idempotent (a boolean guard) and reads the LIVE
-            -- colorscheme fresh, so calling it here closes the race outright
-            -- regardless of which `vim.schedule() ` wins -- by the time this
-            -- function is ever invoked, the groups it is about to read are
-            -- guaranteed to already exist.
+            -- `St_<Suffix>Mode` is only defined once `ui.statusline.highlights
+            -- .ensure()` has run, and this config defers that to UIReady, so
+            -- the chip's first colour resolution can come earlier. `ensure()`
+            -- is idempotent, which guarantees the groups exist before they
+            -- are read below.
             require("ui.statusline.highlights").ensure()
-            -- The same helper the real statusline's own mode pill resolves
-            -- its colour through (`St_<Suffix>Mode`, cached/invalidated on
-            -- ModeChanged already) -- reusing it here means this chip
-            -- reads the exact same source the statusline does, every time
-            -- it repaints. That is NOT an unconditional "never drifts"
-            -- guarantee, though: `ui.kit.chip`'s own `ColorScheme` re-tint
-            -- handler only re-paints a chip whose `color` resolves through
-            -- a highlight-group *name* (`resolve_colors()`'s `themed =
-            -- true` branch) -- this chip's `color` always returns a
-            -- `{fg,bg}` table instead, so that handler skips it. A real
-            -- `:colorscheme` switch during an otherwise idle session (no
-            -- mode change, no buffer/window/tab churn) can therefore leave
-            -- this chip showing pre-switch colours until the next
-            -- incidental refresh -- found and confirmed live (adversarial
-            -- review, 2026-09-28); pre-existing since `track_mode`/
-            -- function-valued `color` shipped, not something this
-            -- `ensure()` call introduces or fixes. Low-impact in practice
-            -- (`track_mode` alone re-paints on every real mode change,
-            -- which is frequent), left as a known gap rather than a
-            -- rushed fix here.
+            -- The same helper the statusline's own mode pill resolves its
+            -- colour through, so chip and pill read one source.
             local group = require("ui.statusline.modules.highlighting").mode_band_group()
-            -- The chip wants the group's own {fg,bg} pair verbatim (the
-            -- mode's accent colour as the chip's background, same as the
-            -- statusline's pill), not a highlight-group NAME -- ui.kit.chip
-            -- would tint a name's fg toward the window background instead
-            -- of using the referenced group's own bg, which reads as a
-            -- washed-out version of the mode colour rather than the actual
-            -- accent pill this is supposed to match.
+            -- The chip wants the group's own {fg,bg} pair verbatim (the mode's
+            -- accent as background, like the statusline pill), not a group
+            -- NAME: ui.kit.chip would tint a name's fg toward the window
+            -- background, which reads as a washed-out version of the accent.
+            -- Being a table, it is not re-tinted on `:colorscheme` -- it
+            -- refreshes on the next mode change.
             local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
             if not hl.fg or not hl.bg then
               return nil -- ui.kit.chip falls back to its own default colour
             end
             return { fg = hl.fg, bg = hl.bg }
           end,
+          -- Floor under the chip's content-derived width (longest line + 2);
+          -- nil/0 = none.
+          -- min_width = nil, -- integer
+          -- What the chip shows: "modern" (icon + folder, icon + branch, live)
+          -- | "classic_text" (the plain resolved name) | a table
+          -- `{ preset = "modern", icons = { folder = ..., branch = ... }, template = "..." }`.
+          -- text = "modern",
+          -- Auto-hide after this many ms; false (or <= 0) keeps it up.
+          -- timeout_ms = 3000,
+          -- Flash the chip's colour on save/load/autoload.
+          -- pulse = false,
+          -- pulse_color = nil, -- Sessions.Chip.Color; nil = kit.chip.pulse's "DiagnosticWarn"
+          -- pulse_duration_ms = nil, -- integer; nil = kit.chip.pulse's 300
         },
       }
     end,
