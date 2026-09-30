@@ -29,19 +29,8 @@
 
 ---
 
--> Für die workstation passen die UI marks pinned nicht:
-Momentan:
-$REPOS_DIR/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
-$NVIM_CONFIG_DIR/lua/plugins/personal/init.lua
-$REPOS_DIR/WKDBooks/Spickzettel/spickzettel.md
 
-Bräuchte:
-$REPOS_DIR/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
-$NVIM_CONFIG_DIR/docs/ROADMAP/ROADMAP.md
-$REPOS_DIR/WKDBooks/Spickzettel/spickzettel.md
-...
-
-- markdown.nvim: wie im ![screesnhot](./assets/00_ROADMAP-1790770895.png) sichlich, wird bei `>` die zeile grün hinterelget, das passt auch, aber es sol im idealfall nur so breit sein, wie die breitrste zeile beschreiben sit; das soll amn als user in der installations spec auch setzenkönnen.
+- markdown.nvim: wie im ![screesnhot](./$NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1790770895.png) sichlich, wird bei `>` die zeile grün hinterelget, das passt auch, aber es sol im idealfall nur so breit sein, wie die breitrste zeile beschreiben sit; das soll amn als user in der installations spec auch setzenkönnen.
 
 - [Senior Ausbildung](./$REPOS_DIR/WKDBook-Tricentis/Notes/Team/Tricentis-Meetings/Veit/300926.md) -> Markdown linka bekommen ein ./ beim specihern, das ist aeb suboptimal, denn damit wird e nicht mehr gefunden wenn vor der ENV var ein ./ ist
 
@@ -49,11 +38,7 @@ ui.nvim/lib.nvim: der chip rechts oben für die notifys, der kann ruhig breiter 
 
 images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann der cursor gleich im titel tekl des markdownl inks steht und nicht am ende als nach dem link. das gilt eigentlich für jedes usrcmd, dass ein amrkdown link einfügt, wie in amrkdown.nvim oder in gfiletree,nvim bei den usrmcsd. bei filetre ist auch mit marks mehere link genreieren möglich auf einmal und einfügen, dann einfach im ersten link im titel. checke noch andere plugins auf binfings ab die makrdon links einfpgen. diese liste bitte auch als report in die nvim config docs/ROADMAP/repoerts schreiben.
 
-- casedesk.nvim: ![Beispiel error log](./Casedesk/assets/Beispiel_failed_login_errorlog.png) -> Aud so einen screenshot korrekte json herausholen + auswertung
-
-- image.nvim vs snipping tool icr funktoine
-
-- spotlight.nvim, wie mehrere hl machen, lernen! [note](../NOTES/Notes.md)
+- spotlight.nvim, wie mehrere hl machen, lernen! [note](./$NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
 - pickers pickers.nvim: die [e usw mappings funltieren, aber sie geben kein feedback ob man sie nun ausgeführt hat.. am besten ein output/notify
 
@@ -65,11 +50,7 @@ images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann 
 
 - nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
 
-- w3enn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
-
-
-
-im pickers.nvim a] usw..
+- wenn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
 
 ---
 
