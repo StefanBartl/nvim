@@ -53,7 +53,7 @@ Vorschlag, nur damit unten klar ist, was schon abgedeckt ist:
 | **images.nvim** | Anhangs-Vorschau, `:Case ocr` nutzt `images.ocr` |
 | **pdfport.nvim** | PDF-Anhänge im Buffer gerendert |
 | **replacer.nvim** | Bulk-Edits über die Dateien eines Case |
-| **language.nvim** | `:Case reply check`'s Rechtschreibprüfung (`spell_wordlists`) |
+| **language.nvim** | `:Case reply check`'s Rechtschreibprüfung (`spell_wordlists`). Kann zusätzlich übersetzen (`:Translate`, Google-Engine) — noch nicht in casedesk verdrahtet, s. [casedesk-cross-plugin-combinations-2026-09-30.md](./casedesk-cross-plugin-combinations-2026-09-30.md) §6 für die konkrete `:Case translate`-Idee |
 | **emojis.nvim** | `:Case reply check`'s Emoji-Zähler ("Emojis N found — press 'c' to remove") |
 | **open.nvim** | Links/Ordner öffnen |
 | **diff.nvim** | `:Case diff` — zwei Cases' Streams/Lösungen vergleichen |
@@ -227,4 +227,3 @@ Verben — jeder wäre ein zusätzlicher, optionaler Pfad neben dem, was heute
 schon funktioniert.
 
 ---
-
