@@ -82,9 +82,20 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    `WKDBooks/Development/wkdbook-myplugins/{debugging.nvim,lib.nvim,ui.nvim}/ROADMAP/…`
    + Noice-Feature-Matrix-Report (Punkt in `00_ROADMAP.md` Z. ~97 — **Datei gehört dem
    Nutzer, lokal modifiziert, nicht anfassen**). Kein Bau. Plan steht im Plan-Report (T7).
-8. **Neue Idee (Nutzer, offen, nicht gebaut):** cascade `<C-a>`/`<C-x>` auf einer Aufzählungszahl
-   soll die Nachbarn mitziehen. Mein Vorschlag steht im Chat; Entscheidung des Nutzers abwarten,
-   dann in `cascade.nvim` umsetzen (Roadmap `WKDBooks/…/cascade.nvim`).
+8. **Neue Idee (Nutzer, entschieden, noch nicht gebaut):** cascade, Aufzählungszahlen per
+   `<C-a>`/`<C-x>` ändern und die Nachbarn mitziehen lassen (Roadmap `WKDBooks/…/cascade.nvim`).
+   - `<C-a>`/`<C-x>` **auf einem Aufzählungsmarker** (nur in Listen-Buffern, sonst nativ): Zahl um
+     `count` ändern, alle **folgenden** Geschwister derselben Ebene um denselben Wert mit;
+     Vorangehende bleiben. Count + Dot-Repeat. Kein volles Renumbering (würde Startzahl/Lücken
+     zerstören); das vorhandene `renumber` bleibt der bewusste Glattzieh-Befehl.
+   - **Variante für die ganze Ebene** (auch die Geschwister davor): vom Nutzer auf
+     **`<C-S-a>` / `<C-S-x>`** festgelegt (er schrieb „`<C-S-x>` bzw. `<C-S-y>`" — gemeint ist
+     vermutlich das Paar inc/dec analog zu `<C-a>`/`<C-x>`; beim Bau kurz rückfragen).
+     Vorsicht: viele Terminals liefern `<C-S-x>` nicht von `<C-x>` unterscheidbar (braucht
+     kitty-Keyboard-Protokoll/modifyOtherKeys; Windows Terminal/WezTerm prüfen). Als Fallback
+     `g<C-a>`/`g<C-x>` anbieten (im Normal-Modus wahrscheinlich frei — vor dem Bau verifizieren).
+   - Offene Kleinigkeit: „Ebene" = gleiche Einrückung im selben Block, verschachtelte Unterlisten
+     zählen nicht mit (Annahme, bestätigen lassen).
 
 ## Fallen, die ich getroffen habe
 - **nvim-Config: Worktree vs. Haupt-Checkout.** Dieses Dokument liegt im Worktree
