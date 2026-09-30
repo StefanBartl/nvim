@@ -25,7 +25,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |   100% / 36%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    90% / 50%     |
 
 ---
 
@@ -33,7 +33,7 @@
 
 - w3enn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
 
-- zum `:Cdx` usrcmd noch eine `open` option machen, also `Cdx open [prompt/**/] [base/review/ultra_sha]` um die enstpechende file als buffer zu öffnen
+
 
 im pickers.nvim a] usw..
 
