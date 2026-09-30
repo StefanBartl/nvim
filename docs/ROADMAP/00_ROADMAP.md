@@ -23,7 +23,7 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     23:30       |    50% / 75%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    90% / 50%     |
 
@@ -31,12 +31,18 @@
 
 
 - markdown.nvim: wie im ![screesnhot](./$NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1790770895.png) sichlich, wird bei `>` die zeile grün hinterelget, das passt auch, aber es sol im idealfall nur so breit sein, wie die breitrste zeile beschreiben sit; das soll amn als user in der installations spec auch setzenkönnen.
+  - Beispiel: [Senior Ausbildung](./$REPOS_DIR/WKDBook-Tricentis/Notes/Team/Tricentis-Meetings/Veit/300926.md) -> Markdown links bekommen automatisch ein ./ beim speichern, das ist aber suboptimal wenn man Env variablen verwendet, denn damit wird es dann nicht mehr gefunden wenn vor der ENV var ein ./ ist
 
-- [Senior Ausbildung](./$REPOS_DIR/WKDBook-Tricentis/Notes/Team/Tricentis-Meetings/Veit/300926.md) -> Markdown linka bekommen ein ./ beim specihern, das ist aeb suboptimal, denn damit wird e nicht mehr gefunden wenn vor der ENV var ein ./ ist
+- nvim-config: Ihc möchte ein usrcmd das
+  `$NVIM_CONFIG_DIR/docs/ROADMAP/reports` diesen pfad in die zwischenablage kopiert,
+  `Clipboard reports`;
+  das geliche mit
+  `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers` -> `Clipboard handovers`
+
 
 ui.nvim/lib.nvim: der chip rechts oben für die notifys, der kann ruhig breiter dein, ich würde dagen probiren wir mal 40% nvim instnaz breite. das soll der usre auch eintsllen können, wieiviele cols/prozente
 
-images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann der cursor gleich im titel tekl des markdownl inks steht und nicht am ende als nach dem link. das gilt eigentlich für jedes usrcmd, dass ein amrkdown link einfügt, wie in amrkdown.nvim oder in gfiletree,nvim bei den usrmcsd. bei filetre ist auch mit marks mehere link genreieren möglich auf einmal und einfügen, dann einfach im ersten link im titel. checke noch andere plugins auf binfings ab die makrdon links einfpgen. diese liste bitte auch als report in die nvim config docs/ROADMAP/repoerts schreiben.
+images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann der cursor gleich im titel tekl des markdownl inks steht und nicht am ende als nach dem link. das gilt eigentlich für jedes usrcmd, dass ein amrkdown link einfügt, wie in amrkdown.nvim oder in gfiletree,nvim bei den usrmcsd. bei filetre ist auch mit marks mehere link genreieren möglich auf einmal und einfügen, dann einfach im ersten link im titel. checke noch andere plugins auf binfings ab die makrdon links einfpgen. diese liste bitte auch als report in die nvim config docs/ROADMAP/repoerts schreiben. Außerdem eine `:Image paste [env?/abs?/rel?]` option einbauen, und `:Image paste env`, die aus dem erstellten pfad gleich `:Gopath [to-nvim-dir?to-repos-dir?rel?]` anwendet, sollte man bei dieser option weder in einen repo, $REPOS_DIR noch in $NVIM_CONFIG_DIR sein, dann denn relativen pfad als fallback verwenden. relativ verwendet werden, daher müsstest du die `env` option als personal installations sec config zum default machen. Der user soll das auch alles konfigureuen können, meinetwegen auch eigene env varierblan hinzufügen können
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note](./$NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
@@ -44,17 +50,22 @@ images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann 
 
 - cascade: leader cf cg sind mit cascade.nvim vergeben
 
-- filetree.nvim: wenn ich mit x cutte und dann woander s paste, aber zb der folder in file explorer offen ist, dann zeigt er mir als notify an "cut" und dnan "pasted", aber er wurde gar nicht moved. also das wenn das gesperrt ist, dann sollte jendefalls eine ausgabe sein, damit ich das weiß und nicht übersehe, das er gar nicht moved ist
+- filetree.nvim:
+  - wenn ich mit x cutte und dann woander s paste, aber zb der folder in file explorer offen ist, dann zeigt er mir als notify an "cut" und dnan "pasted", aber er wurde gar nicht moved. also das wenn das gesperrt ist, dann sollte jendefalls eine ausgabe sein, damit ich das weiß und nicht übersehe, das er gar nicht moved ist
+  - Das cheatsheet kann ein wenifg formatierung, border, hl - kurz ein wenig deagin vertragen. ![](./assets/00_ROADMAP-1790789810.png)
+    - Dies soll in der config isntallations spec vom user konfiguriert werden können. Dabei stellen wir ihnen ein paar presets zur verfügung. Zb.: könnte ich mir gut vorstellen, neben dem `classic` auch ein `chips`/`rounded_chips` so wie in `sessions.nvim` bzw `ui.nvim` beretis angewendet werden als Layouts. Gerne aber auch weitere ideen.
 
 - Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
 
-- nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
-
-- wenn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
+- wenn noice ersetzen: popup per usrcmd/keymap (`<\<{n/m/e}>`) das nur die meldungen der letzten 10 sekunden zeigt (einstellbar in user config), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden alle restlichen messages/errors geladen). Auch einstallbar soll sein, ob topdown oder bottom up die neuesten meldungen stehen, in :messages ist es glaube ich so, dass die neuesten Meldumgen immer unten angehängt werden. Dann wir folgerichtig ältere meldungen nach oben sein, also auch der "Pfeil"  um mehr Meldungen zu sehen nach oben sein. Dabei fällt mir ein, dass weitere Meldungen mit zweimal nach unten/nach oben vieleicht false trriggern könnte, wenn man zb auf dem arrow key gerückt bleibt als beiusiel. viellcviht ein einfaches mapping wie "in der letzten Zeile bekommt man einen Ofewil in die richtung angezeiogt, wenn dieser da ist, mit Shift-Pfgeiltaste oder Cntrol-Pfeiltaste";
+  Weiters wäre eine ein optionaler mode, dass von jeder mesage immer erstmal nur die erste zeile angezeigt wird, sozusagen eingeklappt ist. mit Shift/Control Pfeiöltaste Lnks/rechts soll man dann ein nd ausklapen können. Diesen mode sol man auch innerhalb der windows togglen können, niocht nur in der installations spec. Dabei fällt mir ein, dass Control wrsch die besser super taste ist, weil dann kann man auch mi <C-{h/j/k/l}> ein/ausklappen bzw mehr messages anfordern. Mit shift wäerre das im normal mode zwar auch möglich aaber nicht so naheliegen, oder siehst du das annders?
+  Das führt uns zu einem Cheatsheet, dass mit `?` als Legende am Rahmen des windows aufmerksam gemacht werden asoll, wie immer bei meinen .nvim plugin cheatsheets sollen dieses mit `q/Escape` geschlossen werdne können
 
 ---
 
 ## Claude Tasks
+
+- nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
@@ -90,6 +101,13 @@ images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann 
 - Von welchen meiner `.nvim`-Plugins ist eine CLI-Version denkbar? `reposcope.nvim`, `gitsuite.nvim`,...
 
 - Jedes plugin ein eigener Kreuzfeature durchgang
+
+- Alle Plugins, die ein Window mit Cheatsheet haben, sollen die gleiche Strukut / Formatzierung ders CHeatsheets aufweißen:
+  - Gleiches Layout
+  - `?` und `q` beenden das Cheatsheets
+  - Neben Usrcmds können, wenn sinnvoll und nicht zu viele, auch uscmds angegeben werden (Vorbild: `filetree.nvim`)
+  - Die Bindings sollen in Kategorien eingeteilt werden, die in Pages angeordnet sind und über `Tab` erreichbar sind (Vorbild: `filetree.nvim`)
+  - Einiges deutet darauf hin, dass ein `lib.nvim ui.kit`-Cheatsheet Modul hilfreich sein könnte
 
 ---
 
