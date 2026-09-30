@@ -1,6 +1,6 @@
 ---@module 'plugins.personal.core.export'
 --- The shared interface `:DocMapAll` (fed through `opts.generate_all` on
---- documentation.nvim's own plugin spec, `plugins/personal/init.lua` —
+--- documentation.nvim's own plugin spec, `plugins/personal/specs/project.lua` —
 --- the command itself lives in documentation.nvim now, not here) and
 --- docmap-desktop's own spec-import feature are both meant to be built
 --- against: which personal plugins are enabled right now, and where each

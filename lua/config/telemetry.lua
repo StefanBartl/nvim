@@ -1,6 +1,6 @@
 ---@module 'config.telemetry'
 --- Builds the `opts.telemetry` table `runtime-analysis.nvim`'s own plugin
---- spec (`plugins/personal/init.lua`) passes into `require("runtime-
+--- spec (`plugins/personal/specs/inspect.lua`) passes into `require("runtime-
 --- analysis").setup(opts)`. The mechanism -- catch-up scan + `User
 --- LazyLoad` autocmd, dispatch to `telemetry.auto()` / lib.nvim's
 --- `lib.strategies.telemetry_wrap` -- lives in that plugin's own

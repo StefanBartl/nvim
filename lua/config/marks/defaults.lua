@@ -4,7 +4,7 @@
 --- `$REPOS_DIR`, `$HOME` or `$NVIM_HOME` (the config directory), resolved by
 --- the consumer on the machine it runs on.
 ---
---- Consumed by sessions.nvim's `marks.defaults` (plugins/personal/init.lua).
+--- Consumed by sessions.nvim's `marks.defaults` (plugins/personal/specs/navigate.lua).
 --- Used to be a local inside harpoon's spec in `plugins/misc.lua`, and briefly
 --- fed both harpoon and sessions.nvim while the two ran in parallel; harpoon
 --- is gone since 2026-09-19 (external-plugins report, 7.4), and this stayed

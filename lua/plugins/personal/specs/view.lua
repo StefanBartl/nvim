@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.view'
---- View & render -- personal plugin specs (Statusline/theme, pictures, video, PDF and markdown rendering.)
+--- Personal plugin specs: View & render.
+---
+--- Statusline/theme, pictures, video, PDF and markdown rendering.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.

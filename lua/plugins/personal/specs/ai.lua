@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.ai'
---- AI -- personal plugin specs (Provider-agnostic ask/stream layer and buffer-context helpers.)
+--- Personal plugin specs: AI.
+---
+--- Provider-agnostic ask/stream layer and buffer-context helpers.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.
