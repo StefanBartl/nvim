@@ -706,7 +706,249 @@ return {
     -- color_my_ascii's fence API when present (falls back to a built-in scanner
     -- otherwise). Listing it here just guarantees load order in this config.
     dependencies = { "StefanBartl/color_my_ascii.nvim" },
-    opts = {},
+    opts = {
+      -- Feature gating; `just_enable` wins over `disable`/`enable`. Gateable
+      -- names are listed in docs/configuration.md.
+      -- features = {
+      --   disable = "all", -- nil; "all" | string[] -- turn gateable features off
+      --   enable = {}, -- nil; string[] -- re-enable after `disable`
+      --   just_enable = {}, -- nil; string[] -- hard allowlist, only these stay on
+      -- },
+
+      -- Progress indicator for scope-wide *.md walks (`:Markdown links show|sanitize cwd`):
+      -- "auto" | "notify" | "statusline" | "fidget" | "float" | "kit".
+      -- progress_style = "auto",
+
+      -- Map `**` in visual mode to toggle bold.
+      -- map_double_asterisk = true,
+      -- Map `<leader>[` to wrap the word/selection in a link.
+      -- map_wrap_link = true,
+      -- After toggling bold, keep the inner text selected.
+      -- keep_inner_selection = true,
+      -- Protect H1 from being shifted down.
+      -- protect_h1 = false,
+      -- Override `zf` to fold under the cursor.
+      -- use_zf_override = true,
+      -- Install the FileType autocmds (keymaps + user commands).
+      -- enable_autocmds = true,
+      -- Install the buffer-local keymaps (needs enable_autocmds).
+      -- enable_keymaps = true,
+      -- Only activate for markdown filetypes.
+      -- ft_only = true,
+      -- TOC refresh also ensures `[blank]---[blank]` between H2+ sections.
+      -- ensure_headline_spacing = true,
+      -- TOC refresh also reports skipped heading levels (H1 -> H3) and offers a fix.
+      -- check_heading_gaps = true,
+
+      -- Underline character of `:MarkdownNvimUnderlineHeadings`.
+      -- underline_headings = {
+      --   char = "=",
+      -- },
+
+      -- nvzone/menu entries; `enable = false` provides none at all.
+      -- menu = {
+      --   enable = true,
+      --   fold = true, -- fold/unfold entries (shown on a heading)
+      --   toc = true, -- Insert/Refresh TOC
+      --   refs = true, -- Sync References
+      -- },
+
+      -- `ui_menu = false` keeps ui.nvim's right-click menu from composing the
+      -- Markdown fly-out.
+      -- integrations = {
+      --   ui_menu = true,
+      -- },
+
+      -- Heading navigation (`<C-p>`/`<C-f>`, `[[`/`]]`): also stop on a fenced
+      -- block's opening/closing delimiter line. false = headings only.
+      -- nav = {
+      --   fences = true,
+      -- },
+
+      -- Heading text normalization (`:Markdown headings format`, `<leader><C-Left>`/`<C-Right>`).
+      -- heading_format = {
+      --   -- Strip `**bold**` / `*italic*` / `__x__` / `_x_` / `~~x~~` markers.
+      --   strip_emphasis = true,
+      --   -- `## Title ##` -> `## Title`.
+      --   strip_closing_hashes = true,
+      --   -- Runs of spaces/tabs become one space; the ends are trimmed.
+      --   collapse_whitespace = true,
+      --   -- Drop a trailing `.` `,` `;` `:` (`?` and `!` are never dropped).
+      --   strip_trailing_punctuation = false,
+      --   -- false | "first" (first letter) | "title" (every word but the stopwords).
+      --   capitalize = "first",
+      --   -- Words `capitalize = "title"` keeps lowercase mid-heading; replaces the
+      --   -- built-in English closed-class list, so give it in full.
+      --   -- stopwords = { "a", "an", "and", "as", "at", "but", "by", "for", "from", "in",
+      --   --   "into", "nor", "of", "on", "onto", "or", "over", "per", "the", "to", "up",
+      --   --   "via", "vs", "with" },
+      -- },
+
+      -- Per-binding keymap control by id (see docs/keymaps.md and docs/BINDINGS.lua):
+      -- false disables, a string remaps, `{ lhs = ..., mode = ... }` remaps key/mode.
+      -- keymaps = {
+      --   jump_anchor = false,
+      --   toc = "<leader>T",
+      --   fold_toggle = { lhs = "<F2>" },
+      -- },
+
+      -- `:Markdown table format` defaults (explicit command args override per call).
+      -- table = {
+      --   header_align = "center", -- "left" | "center" | "right"
+      --   entry_align = "center",
+      --   -- Per-column overrides on every format; `col` is a 1-based index or a
+      --   -- case-insensitive header name, `max`/`min` limit the width.
+      --   -- col_overrides = { { col = 1, align = "left" }, { col = "Name", align = "left" } },
+      --
+      --   -- Width-limited wrapping (`:MDTable*` commands). Off by default: natural widths.
+      --   wrap = {
+      --     enabled = false, -- also wrap on plain `:Markdown table format`/table mode
+      --     auto = false, -- fit column widths to the window instead of a fixed `max`
+      --     min = 3, -- minimum column width (chars)
+      --     -- max = nil, -- maximum column width; nil = unlimited (still capped by `auto`)
+      --     pad = 1, -- cell padding on each side
+      --     join = " ", -- `:MDTableUnwrap` continuation join: " " | "<br>"
+      --     soft_break_chars = "/._-?,&=#@:", -- extra break points besides whitespace
+      --     continuation_marker = "↳", -- gutter hint on continuation rows
+      --     flavor = "github", -- "github" (strict GFM) | "loose"
+      --     auto_resize = false, -- debounced reflow of auto tables on resize
+      --     resize_debounce_ms = 300,
+      --     selective_reflow = false, -- BufWritePre: only reflow tables that changed
+      --   },
+      --
+      --   -- Presets for `:MDTableProfile {name}`; merged per profile, add your own.
+      --   wrap_profiles = {
+      --     compact = { auto = false, min = 4, max = 20, pad = 0 },
+      --     docs = { auto = true, min = 10, max = 40, pad = 1 },
+      --     wide = { auto = true, min = 15, max = nil, pad = 1 },
+      --   },
+      -- },
+
+      -- Default style of the floating TableView: "markdown" | "box".
+      -- tableview = {
+      --   style = "markdown",
+      -- },
+
+      -- Link handling.
+      -- links = {
+      --   -- `:Markdown links show` backend: "hover_select" | "select" | "telescope" | "fzf".
+      --   picker = "hover_select",
+      --   -- Normalize inline-link targets before every write (backslashes -> `/`, bare
+      --   -- relative path gains `./`).
+      --   sanitize_on_save = true,
+      --   -- Dead relative links / duplicate anchors via vim.diagnostic.
+      --   diagnostics = {
+      --     mode = "off", -- "off" | "save" (also rerun on BufWritePost)
+      --   },
+      -- },
+
+      -- `:Markdown list` backend; same vocabulary as `links.picker`.
+      -- list = {
+      --   picker = "hover_select",
+      -- },
+
+      -- Link-target preview under the cursor; handed to hover.nvim, which accepts
+      -- many more keys (see its spec in navigate.lua).
+      -- hover = {
+      --   enabled = true,
+      --   -- "CursorHold" follows 'updatetime'; "mouse" also needs `:set mousemoveevent`.
+      --   trigger = { "CursorHold" },
+      --   delay_ms = 250,
+      --   -- How long an async preview may take before a "rendering..." placeholder shows.
+      --   placeholder_grace_ms = 250,
+      --   max_lines = 20,
+      --   max_width = 80,
+      --   border = "rounded",
+      --   -- Also hover a bare path without link syntax (must exist on disk).
+      --   bare_paths = true,
+      --   -- Buffers that get a hover: "*" or a filetype list.
+      --   filetypes = "*",
+      --   -- Draw images / rasterized PDF pages into the float (needs images.nvim).
+      --   inline_images = true,
+      --   url = {
+      --     hover = false, -- whether a link hovers at all
+      --     fetch = false, -- fetch the page for its status code (discloses links to hosts)
+      --     timeout_ms = 2000,
+      --   },
+      --   -- Office documents: a badge by default; `convert` renders page 1 via LibreOffice.
+      --   office = {
+      --     convert = false,
+      --     timeout_ms = 60000,
+      --   },
+      -- },
+
+      -- Following an image target (`mi`): "ask" | "preview" (in-Neovim float) | "system".
+      -- image = {
+      --   preview = "ask",
+      -- },
+
+      -- Followed file targets with these extensions launch the system app; others
+      -- open via :edit. Replaces the list, so give it in full.
+      -- open = {
+      --   external_extensions = {
+      --     "png", "jpg", "jpeg", "gif", "bmp", "svg", "webp", "ico", "tif", "tiff", "pdf",
+      --     "mp4", "mkv", "mov", "avi", "webm", "wmv", "flv", "mp3", "wav", "flac", "ogg", "m4a",
+      --     "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp",
+      --     "zip", "tar", "gz", "tgz", "7z", "rar", "exe", "msi", "dmg", "app",
+      --   },
+      -- },
+
+      -- Blockquote colors; a fixed VS Code-style green, independent of the
+      -- colorscheme. `false` for marker_fg/text_fg derives them from it instead.
+      -- blockquote_hl = {
+      --   marker_fg = "#6A9955", -- the `>` token
+      --   text_fg = "#7EE787", -- text after `>`
+      --   text_bg = "dimm", -- whole line gets a dimmed bg derived from marker_fg
+      --   text_bold = true,
+      --   text_italic = false,
+      -- },
+
+      -- Keep the treesitter underline on inline-link URLs/labels.
+      -- link_hl = {
+      --   underline = false,
+      -- },
+
+      -- TOC defaults for `<leader>toc` / `:Markdown toc`.
+      -- toc = {
+      --   header = "## Table of content",
+      --   marker = "-", -- bullet prefix, e.g. "-" or "*"
+      --   min_level = 2,
+      --   max_level = 4,
+      --   anchor_style = "gfm", -- "gfm" | "keep-case"
+      --   anchor_separator = "-",
+      -- },
+
+      -- Keep `[text](#anchor)` links and the TOC in sync when headings are renamed.
+      -- refs = {
+      --   mode = "save", -- automatic runs: "off" | "save" (BufWritePre) | "live" (debounced)
+      --   debounce_ms = 2000, -- live-mode debounce
+      --   update_toc = true, -- refresh an existing TOC block on sync
+      --   orphans = "report", -- "report" | "ignore" links whose #anchor matches no heading
+      --   -- toc_header = nil, -- string; TOC header to detect, falls back to `toc.header`
+      -- },
+
+      -- Highlights for inline code in fenced blocks.
+      -- fenced_fix = {
+      --   -- Candidate groups for inline `code`; the first that exists wins.
+      --   inline_base_hl = { "DiagnosticWarn", "Special", "Constant", "String" },
+      --   inline_style = { italic = false, bold = false },
+      --   delimiter_hl = "Comment", -- group for the backtick delimiters
+      -- },
+
+      -- Treat markdown-family fenced blocks as their own document scope.
+      -- fenced_scope = {
+      --   enable = true,
+      --   langs = { "markdown", "md", "mdx", "ascii-markdown", "ascii-md" },
+      --   provider = "auto", -- "auto" | "color_my_ascii" | "builtin"
+      --   operations = {
+      --     toc = true,
+      --     nav = true,
+      --     jump = true,
+      --     shift = true,
+      --     fold = true, -- scope-aware foldexpr
+      --   },
+      -- },
+    },
   },
 
   {
