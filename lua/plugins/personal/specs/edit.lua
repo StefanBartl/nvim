@@ -12,38 +12,223 @@ return {
     "StefanBartl/cascade.nvim",
     ft = { "markdown", "markdown.mdx", "text", "tex", "norg" },
     event = "VeryLazy",
-    -- Every other option in this domain is already the plugin's default; only
-    -- the keymap preset has to be asked for (cascade ships `preset = false`,
-    -- so the opinionated keys are opt-in). The per-feature switches and what
-    -- they bind are documented in cascade's own config/DEFAULTS.lua.
+    -- Only the keymap preset is asked for (cascade ships `preset = false`, so
+    -- the opinionated keys are opt-in); every other option below is listed
+    -- commented out with its default. The per-feature switches and what they
+    -- bind are documented in cascade's own config/DEFAULTS.lua.
     --
-    -- Two of cascade's preset keys are moved out of the way of keys this
-    -- config already owns in `bindings/mappings/custom.lua`. Both are cascade
-    -- losing, not the config: the config's two are long-standing muscle
-    -- memory, and moving a plugin default is exactly what `keymaps.globals` /
-    -- `keymaps.list` exist for.
+    -- Two preset keys are moved out of the way of keys this config already
+    -- owns in `bindings/mappings/custom.lua`; cascade yields, since
+    -- `keymaps.globals` / `keymaps.list` exist for exactly that:
     --
     --   <leader>cp  custom.lua: copy the current file path  (global)
     --               vs. cascade `cycle_pick`                (global preset)
     --     An exact duplicate. `bindings.mappings` runs in the UIReady phase,
-    --     i.e. AFTER cascade's VeryLazy setup, so custom.lua silently
-    --     overwrote cascade's -- the same load-order trap this config has
-    --     paid for once before (see the note at the top of
-    --     bindings/mappings/init.lua). Nothing was broken for the config, but
-    --     cascade's picker was unreachable.
+    --     i.e. after cascade's VeryLazy setup, so custom.lua would silently
+    --     overwrite cascade's map and leave its picker unreachable.
     --
     --   <leader>cs  custom.lua: save a casedesk session      (global)
     --               vs. cascade `sort` (list surface)        (buffer-local)
     --     Cross-scope: cascade's buffer-local key wins inside its
-    --     `lists.filetypes` (markdown, markdown.mdx, text, tex, norg) -- which
-    --     is precisely where casedesk notes live, so session save was the one
-    --     that went missing, in the only buffers it matters.
+    --     `lists.filetypes`, which is exactly where casedesk notes live, so
+    --     session save would be the one that goes missing.
     opts = {
+      -- Debug logging at cascade's decision points (detect -> advance -> fallback).
+      -- debug = false,
+
+      -- Which hosts may drive this plugin. `ui_menu = false` keeps ui.nvim's
+      -- right-click menu from composing the Cascade fly-out.
+      -- integrations = {
+      --   ui_menu = true,
+      -- },
+
+      -- Key bindings. Each key is an individually overridable named action
+      -- (`false` drops one); action names: lua/cascade/bindings/keymaps.lua
+      -- in the plugin.
       keymaps = {
-        preset = true, -- bind the opinionated default keys
+        -- Bind the opinionated default keys; the preset is opt-in.
+        -- Default: false.
+        preset = true,
+        -- Keys that work everywhere. `cycle_pick` moved off its default
+        -- "<leader>cp" (see above).
+        -- Default: {}.
         globals = { cycle_pick = "<leader>cP" },
+        -- Keys bound inside a buffer whose filetype matched `lists.filetypes`.
+        -- `sort` moved off its default "<leader>cs" (see above).
+        -- Default: {}.
         list = { sort = "<leader>cS" },
       },
+
+      -- List domain: continuation, checkbox, marker cycling, rotate/sort/
+      -- reverse, indent, move, renumber.
+      -- lists = {
+      --   enable = true,
+      --   -- Per-feature switches. Disabling one stops its keymap action (and the
+      --   -- preset stops binding its keys); keys with a native meaning fall back to it.
+      --   features = {
+      --     continue = true, -- <CR>/o/O continuation + empty-bullet deletion
+      --     checkbox = true, -- toggle/cycle checkbox
+      --     cycle_type = true, -- cycle a single item's marker shape
+      --     rotate = true, -- block/visual form rotation
+      --     sort = true, -- block/visual A-Z sort
+      --     reverse = true, -- block/visual reverse order
+      --     strip = true, -- block/visual remove checkboxes
+      --     indent = true, -- indent/outdent + level-aware renumber
+      --     move = true, -- move line/selection up/down + renumber
+      --     bullet_toggle = true, -- quick "-" bullet on/off, no existing marker required
+      --     number_toggle = true, -- quick "1." marker on/off, no existing marker required
+      --     checkbox_toggle = true, -- quick "- [ ]" insert/cycle/remove, no existing marker required
+      --   },
+      --   -- Prose / markup filetypes the list features attach to (replaces the list).
+      --   -- List actions no-op on lines without a marker, so a broad set is safe.
+      --   -- The word/number cycle lives in the `cycle` domain and is global.
+      --   filetypes = {
+      --     "markdown",
+      --     "markdown.mdx",
+      --     "mdx",
+      --     "text",
+      --     "txt",
+      --     "tex",
+      --     "plaintex",
+      --     "latex",
+      --     "norg",
+      --     "org",
+      --     "rst",
+      --     "asciidoc",
+      --     "asciidoctor",
+      --     "typst",
+      --     "quarto",
+      --     "pandoc",
+      --     "vimwiki",
+      --     "gitcommit",
+      --     "mail",
+      --   },
+      --   -- Marker kinds recognized when parsing a line, in detection order. Must
+      --   -- cover every kind `cycle` below can produce, or a line cycled into an
+      --   -- unparsed kind stops being a list item. Roman comes before ascii because
+      --   -- "I." is valid in both shapes and the cycle walks the same letter through
+      --   -- "a)" then "I.".
+      --   types = { "unordered", "digit", "roman", "ascii" },
+      --   unordered_markers = { "-", "*", "+" },
+      --   -- Custom, non-incrementing marker patterns per filetype, tried before the
+      --   -- built-in kinds. Each pattern needs two captures: the marker token, then
+      --   -- the rest of the line, e.g. { tex = { "^(\\item)%s(.*)$" } }. Matches
+      --   -- count as "unordered" (fixed token, never renumbered).
+      --   per_filetype_patterns = {},
+      --   -- Marker shapes `cycle_type` steps through (replaces the list).
+      --   cycle = { "-", "*", "+", "1.", "a)", "I." },
+      --   -- Forms block/visual rotation steps through: shape + optional checkbox.
+      --   forms = { "1.", "1. [ ]", "- [ ]", "-" },
+      --   checkbox = {
+      --     -- Ordered states cycled inside `[ ]`; longer states (e.g. "✅") must
+      --     -- be listed here to be recognized on parse.
+      --     states = { " ", "x", "~" },
+      --   },
+      --   continue = {
+      --     -- <CR> on an empty bullet removes the bullet instead of continuing.
+      --     delete_empty = true,
+      --     -- Set buffer-local 'formatlistpat' and add `n` to 'formatoptions' on
+      --     -- the list filetypes, so gq/auto-wrap hang-indents a wrapped item.
+      --     hanging_indent = true,
+      --   },
+      --   -- When ordered lists are auto-renumbered.
+      --   renumber = {
+      --     -- Master switch (false = only manual :Cascade renumber).
+      --     enable = true,
+      --     -- "edit" (right after indent/move/continue/...) and/or "save"
+      --     -- (BufWritePre); "save" also catches pastes and external edits.
+      --     on = { "edit", "save" },
+      --     -- Consecutive blank lines a list tolerates before they end it; 1 gives
+      --     -- the CommonMark "loose list" reading.
+      --     blank_break = 0,
+      --   },
+      --   -- "off" = plain line scan; "treesitter" additionally skips single-cursor
+      --   -- list actions inside a skip node (default: a fenced code block).
+      --   precision = "off",
+      --   -- Per-filetype skip-node overrides for precision = "treesitter".
+      --   precision_nodes = {},
+      -- },
+
+      -- Word/number cycle domain (<C-y>/<C-x> and friends).
+      -- cycle = {
+      --   enable = true,
+      --   features = {
+      --     word = true, -- cycle the word/boolean under the cursor
+      --     date = true, -- step the year/month/day segment of an ISO date (YYYY-MM-DD) under the cursor
+      --     letter = true, -- cycle a single a-z/A-Z letter through the alphabet (case preserved)
+      --     char = true, -- <C-M-y>/<C-M-x>: step the character under the cursor through the alphabet, inside a word too
+      --   },
+      --   -- Restrict the cycle to these filetypes.
+      --   -- filetypes = nil, -- string[]|nil; nil = every filetype
+      --   -- Fall back to native <C-y>/<C-x> on numeric tokens.
+      --   number_fallback = true,
+      --   -- Named bundles of word groups ("en", "de", "es", "fr", "it", "pt", "nl",
+      --   -- "ru", "dev"). Order is precedence: the first group a word appears in
+      --   -- wins. {} = only your own `groups`.
+      --   packs = { "en", "de", "dev" },
+      --   -- Your own groups, checked BEFORE the packs (replaces the list); the
+      --   -- default carries the language-neutral syntax cycles.
+      --   groups = {
+      --     { ".", "/", "\\" },
+      --     { "==", "!=" },
+      --     { "&&", "||" },
+      --     { "<", ">" },
+      --     { "+", "-" },
+      --   },
+      --   -- Extra groups merged in per filetype, e.g. { lua = { { "local", "global" } } }.
+      --   per_filetype = {},
+      -- },
+
+      -- Renumbering inside a selection, independent of filetype (numbered
+      -- headlines, inline numbers in prose).
+      -- sequence = {
+      --   enable = true,
+      --   -- "keep" = start from the first hit's value; "one" = always restart at 1/a/i.
+      --   start = "keep",
+      --   -- Kinds tried, in order, to classify the first hit (which locks the
+      --   -- kind). Put "roman" first for i./ii./iii. sequences.
+      --   types = { "digit", "ascii", "roman" },
+      -- },
+
+      -- Swap the char / word (or same-line selection) with its neighbor.
+      -- transpose = {
+      --   enable = true,
+      --   features = {
+      --     char = true, -- swap the char with its left/right neighbor
+      --     word = true, -- swap the word with its left/right neighbor word
+      --   },
+      -- },
+
+      -- Advance a string literal's kind when its contents ask for it
+      -- (Tree-sitter based, inactive without a parser).
+      -- strings = {
+      --   enable = true,
+      --   features = {
+      --     template = true, -- JS/TS: "…${x}…" <-> `…${x}…`
+      --     fstring = true, -- Python: "…{x}…" <-> f"…{x}…"
+      --     -- Lua: "%s" -> ("%s"):format(). Off by default: a `%s` is a pattern
+      --     -- class as often as a placeholder.
+      --     lua_format = false,
+      --   },
+      --   template_filetypes = {
+      --     "javascript",
+      --     "typescript",
+      --     "javascriptreact",
+      --     "typescriptreact",
+      --     "vue",
+      --     "astro",
+      --     "svelte",
+      --   },
+      --   fstring_filetypes = { "python" },
+      --   lua_format_filetypes = { "lua" },
+      --   -- A literal longer than this is never rewritten.
+      --   max_characters = 200,
+      --   -- The quote a template string turns back into: '"' or "'".
+      --   quote = '"',
+      --   -- Events that trigger a conversion at the cursor; {} = manual only
+      --   -- (`:Cascade strings now`).
+      --   on = { "InsertLeave", "TextChanged" },
+      -- },
     },
   },
 
@@ -168,15 +353,120 @@ return {
   {
     "StefanBartl/emojis.nvim",
     cmd = "Emojis",
-    -- "uni" was chrisbra/unicode.vim's own default mapping (character info
-    -- under the cursor) -- a bare `keys` entry used to lazy-load that
-    -- plugin and replay the key into its mapping. unicode.vim is gone (see
-    -- plugins/workflow.lua's removed spec); this binds straight to its
-    -- emojis.nvim replacement instead.
+    -- "uni": character info under the cursor (the mapping chrisbra/unicode.vim
+    -- used to provide), bound straight to `:Emojis unicode name`.
     keys = {
       { "uni", "<cmd>Emojis unicode name<cr>", desc = "Unicode: character info under cursor" },
     },
-    opts = {}, -- default_scope is already "%"
+    opts = {
+      -- Scope used when none is given: "word"|"line"|"visual"|"%"|"cwd".
+      -- default_scope = "%",
+      -- Name of the user command.
+      -- command = "Emojis",
+
+      -- Insert-picker entries: { glyph, label }. Merged index-wise over the
+      -- defaults (a shorter list keeps the default tail). Two of the defaults
+      -- shown; full default list: CATALOG in lua/emojis/config/DEFAULTS.lua
+      -- in the plugin (also feeds `names`).
+      -- picks = {
+      --   { "✅", "white_check_mark" },
+      --   { "❌", "x" },
+      -- },
+      -- Codepoint -> :name: used by the `replace`/`unreplace` actions; a free
+      -- map of shortcodes, merged key by key over the defaults. Two of the
+      -- defaults shown; full default list: CATALOG in
+      -- lua/emojis/config/DEFAULTS.lua in the plugin.
+      -- names = {
+      --   [10004] = ":heavy_check_mark:",
+      --   [10024] = ":sparkles:",
+      -- },
+
+      -- cwd search (rg).
+      -- search = {
+      --   -- External search binary.
+      --   cmd = "rg",
+      --   -- Extra args appended before the pattern.
+      --   extra_args = { "--no-heading", "--line-number", "--with-filename", "--color=never" },
+      --   -- Pass --no-ignore so rg also searches gitignored files.
+      --   no_ignore = false,
+      -- },
+
+      -- Opt-in preset keymaps. `preset = false` binds nothing; each action is
+      -- also individually overridable by name (`false` drops one); a wrong
+      -- name is reported instead of silently binding nothing.
+      -- keymaps = {
+      --   preset = false,
+      --   -- insert = "<C-e>", -- picker
+      --   -- overlay = "<leader>ee", -- quick-insert overlay
+      --   -- toggle = "<leader>et", -- toggle checkbox (n, x)
+      --   -- count = "<leader>ec", -- count buffer
+      --   -- list = "<leader>el", -- list buffer
+      -- },
+
+      -- Marker the `wrap` action surrounds each emoji with.
+      -- wrap = {
+      --   prefix = "[[",
+      --   suffix = "]]",
+      -- },
+
+      -- Opt-in: briefly highlight affected emojis before `clear`/`replace`
+      -- mutate the buffer.
+      -- preview = {
+      --   enable = false,
+      --   -- How long the highlight shows before mutating, in ms.
+      --   duration_ms = 150,
+      --   hl_group = "IncSearch",
+      -- },
+
+      -- Insert-picker engine: "auto" tries telescope.nvim then fzf-lua (both
+      -- optional), falling back to vim.ui.select; or "telescope" | "fzf-lua" |
+      -- "select".
+      -- picker = {
+      --   engine = "auto",
+      -- },
+
+      -- Emoji checkbox cycles (`:Emojis toggle [set]`). Order matters twice: it
+      -- is the cycle order within a set, and across sets a glyph in two sets
+      -- belongs to the one listed first. The default sets are disjoint; a
+      -- redefined set or `order` replaces its default entirely.
+      -- checkbox = {
+      --   -- Documented as "set `:Emojis toggle` uses with no argument", but no
+      --   -- code path reads it today: every set is always searched.
+      --   default_set = "",
+      --   sets = {
+      --     checkbox = { "🔲", "✅" },
+      --     status = { "🔴", "🟡", "🟢" },
+      --     review = { "👍", "👎" },
+      --   },
+      --   -- Order in which sets are searched; sets missing here are appended
+      --   -- name-sorted, so a new set is never silently disabled.
+      --   order = { "checkbox", "status", "review" },
+      -- },
+
+      -- Quick-insert overlay (`:Emojis overlay [mode]`).
+      -- overlay = {
+      --   -- "grid" (hjkl/arrows + <CR>) | "grid_keys" (direct hotkey per cell) |
+      --   -- "list" (one per row).
+      --   mode = "grid",
+      --   -- Curated quick-insert set { glyph, label }, in starting order; replaced
+      --   -- wholesale. Two of the defaults shown; full default list:
+      --   -- OVERLAY_LABELS in lua/emojis/config/DEFAULTS.lua in the plugin.
+      --   picks = {
+      --     { "✅", "white_check_mark" },
+      --     { "❌", "x" },
+      --   },
+      --   -- Reorder `picks` by recorded usage (never adds/removes entries).
+      --   frecency = true,
+      --   -- Cells per row in the grid modes.
+      --   columns = 5,
+      --   -- Maximum cells shown.
+      --   limit = 20,
+      --   -- Float title.
+      --   title = " Emojis ",
+      --   -- Any ui.kit theme arg: preset name or override table.
+      --   theme = "rounded",
+      -- },
+    },
   },
 
   {
@@ -185,12 +475,11 @@ return {
     dependencies = {
       "StefanBartl/lib.nvim",
       "folke/trouble.nvim", -- optional: nicer list; pcall-guarded in the plugin
-      -- Required for the feature, not for the plugin: since `b592b9f`,
-      -- language.nvim registers an on_request position contribution with
-      -- hover.nvim, so `:Hover show` over a word also shows its translation.
-      -- It `pcall`s hover.nvim itself and runs fine without it; listed here
-      -- anyway because it fixes the load order rather than borrowing it from
-      -- hover.nvim's `lazy = false`.
+      -- Needed for the feature, not for the plugin: language.nvim registers an
+      -- on_request position contribution with hover.nvim, so `:Hover show`
+      -- over a word also shows its translation. The plugin `pcall`s hover.nvim
+      -- and runs fine without it; it is listed here to fix the load order
+      -- instead of borrowing it from hover.nvim's `lazy = false`.
       "StefanBartl/hover.nvim",
       -- Provides `casedesk.spell_wordlists` (spell.extra_wordlists below).
       "StefanBartl/casedesk.nvim",
@@ -198,42 +487,214 @@ return {
     config = function()
       require("language").setup({
         spell = {
-          -- Panel is the default UI; set view = "quickfix" for the classic
-          -- diagnostics + quickfix session flow instead.
-          ui = { view = "picker", preview = true },
-          -- Covers general nvim/Lua plugin-dev vocabulary (nvim, buffer,
-          -- function, table, bindings, ...) so `:Spellcheck de` stops
-          -- flagging it in German notes about plugin development.
+          -- Spelling + grammar providers.
+          -- providers = {
+          --   -- Provider resolution order.
+          --   order = { "native", "lsp", "typos", "cspell", "codespell" },
+          --   -- Providers used for buffer/visible scope.
+          --   buffer = { "native", "lsp" },
+          --   -- Providers used for cwd/path scope (CLI preferred for a tree scan).
+          --   cwd = { "typos", "native" },
+          --   native = {
+          --     -- Language(s) the native checker uses; nil = inherit vim 'spelllang'.
+          --     spelllang = nil, -- string|nil
+          --   },
+          --   lsp = {
+          --     enable = true,
+          --     servers = { "harper_ls", "ltex" },
+          --   },
+          --   -- Escape hatch for a spellchecker CLI without a bundled adapter: add
+          --   -- "custom" to `providers.cwd` and set cmd/parse. Mirrors translate.custom.
+          --   custom = nil, -- { cmd = function(scope, cfg) ... end, parse = function(out, base) ... end }
+          -- },
+          -- Filetypes the spell session attaches to.
+          -- filetypes = { "markdown", "text", "gitcommit", "tex", "rst", "asciidoc", "help" },
+          -- Scope used when none is given: buffer|visible|cwd|path.
+          -- default_scope = "buffer",
+          -- Opt-in live scan.
+          -- live = false,
+          -- Live scans only within this scope (perf).
+          -- live_scope = "visible",
+          -- Debounce before a live scan, in ms.
+          -- scan_debounce_ms = 400,
+          -- Code-identifier splitting: break CamelCase & snake_case into subwords
+          -- before checking against the dictionary.
+          -- word_split = {
+          --   enable = true,
+          --   -- Ignore subwords shorter than this.
+          --   min_length = 4,
+          -- },
+
+          -- Perf/safety caps.
+          -- Max highlighted errors per buffer.
+          -- max_highlights = 100,
+          -- Above this many lines: no auto/live scan.
+          -- max_file_lines = 20000,
+          -- Do not scan readonly buffers.
+          -- skip_readonly = true,
+          -- Only check spellable regions (Treesitter @spell / predicate).
+          -- regions = {
+          --   treesitter_spell = true,
+          --   skip_urls = true,
+          --   skip_emails = true,
+          -- },
+
+          ui = {
+            -- Both values equal the default, set explicitly. Use
+            -- view = "quickfix" for the classic diagnostics + quickfix session
+            -- flow instead of the picker panel.
+            -- Default: view = "picker" ("picker"|"select"|"quickfix"), preview = true.
+            view = "picker",
+            preview = true,
+            -- "file"|"none".
+            -- group_by = "file",
+            -- dedupe = true,
+            -- Wait after an LSP code action before re-reading the buffer, in ms.
+            -- There is no completion signal to hook, so this guesses the
+            -- server's latency -- raise it for a slow one.
+            -- lsp_refresh_delay_ms = 500,
+          },
+          -- Extra technical wordlist appended to spelllang. Covers general
+          -- nvim/Lua plugin-dev vocabulary (nvim, buffer, function, table,
+          -- bindings, ...) so `:Spellcheck de` stops flagging it in German
+          -- notes about plugin development.
+          -- Default: false.
           programming_dict = true,
-          -- Tricentis/TOSCA support vocabulary, same reasoning — see
-          -- casedesk.spell_wordlists (casedesk.nvim). Load unconditionally: a few hundred
-          -- `:spellgood!` calls, scheduled off the hot path, is not worth
-          -- gating behind machine.is("workstation").
+          -- User-supplied session wordlists, applied like programming_dict
+          -- (`:spellgood!`) but independent of it and of `spelllang`:
+          -- { ["my-list"] = { "word1", ... } }. Here: Tricentis/TOSCA support
+          -- vocabulary from casedesk.spell_wordlists (casedesk.nvim). Loaded
+          -- unconditionally: a few hundred `:spellgood!` calls, scheduled off
+          -- the hot path, are not worth gating behind machine.is("workstation").
+          -- Default: {}.
           extra_wordlists = require("casedesk.spell_wordlists"),
+          -- dictionary = {
+          --   -- Persistent ignore list.
+          --   ignore_file = vim.fn.stdpath("state") .. "/language/spell_ignore.txt",
+          --   -- Also write to the nvim spellfile on add-to-dict.
+          --   use_spellfile = true,
+          --   -- Apply a chosen suggestion to all identical errors in scope.
+          --   replace_all = true,
+          -- },
+          -- Opt-in: abort :w on spelling errors.
+          -- guard = { block_write_on_error = false },
+          -- Opt-in: mark issues directly in the buffer via extmarks
+          -- (LanguageSpellHighlight/LanguageGrammarHighlight groups),
+          -- independent of vim.diagnostic config.
+          -- highlights = {
+          --   enable = false,
+          --   -- "underline"|"undercurl".
+          --   style = "underline",
+          -- },
+          -- Each key is one lhs, a list of them, or false to not bind. `panel`
+          -- is global; the others are buffer-local during a spell session.
+          -- keymaps = {
+          --   panel = "<leader>ss", -- toggle the spell session
+          --   next = "]s", -- next spell error
+          --   fix = "<leader>z=", -- correct word & advance
+          --   fix1 = "<leader>z1", -- accept first suggestion & advance
+          -- },
         },
+
+        -- Register a position preview with hover.nvim, so `:Hover show` over a
+        -- word answers with its translation. It is `on_request` there (the
+        -- automatic hover trigger never asks), because every answer is a
+        -- network request carrying the word under the cursor. No-op without
+        -- hover.nvim; false registers nothing at all.
+        -- hover = true,
+
         -- The commands (:Translate/:TranslateReplace/...) already work with
-        -- zero config (engine = "google", keyless, is the plugin's own
-        -- default) — this just claims the motion/visual keymaps, off by
-        -- default upstream "to avoid claiming keys". <leader>lt sits next to
-        -- this config's other <leader>l* (LSP/language) bindings; <leader>t*
-        -- itself is already all tab-navigation here.
+        -- zero config (engine = "google", keyless); the keymaps below only
+        -- claim the motion/visual keys, which are off by default upstream to
+        -- avoid claiming keys. <leader>lt sits next to this config's other
+        -- <leader>l* (LSP/language) bindings; <leader>t* itself is already all
+        -- tab-navigation here.
         translate = {
-          keymaps = { operator = "<leader>lt", visual = "<leader>lt" },
+          -- "google"|"deepl"|"shell"|<custom key>.
+          -- engine = "google",
+          -- Engine fallback chain (graceful degradation).
+          -- fallback = { "google" },
+          -- Where the result goes: "popup"|"replace"|"buffer"|"vsplit"|"split"|"tab"|"insert"|"clipboard"|"notify".
+          -- default_output = "popup",
+          -- Where the text comes from: "selection"|"clipboard"|"input".
+          -- default_input = "selection",
+          -- default_langs = { "EN", "DE", "FR", "ZH", "JA" },
+          -- Opt-in motion/visual keymaps; each is one lhs, a list of them, or false.
+          keymaps = {
+            -- `<lhs>{motion}` translates the moved-over text (e.g. gtrip).
+            -- Default: false.
+            operator = "<leader>lt",
+            -- `<lhs>` translates the visual selection.
+            -- Default: false.
+            visual = "<leader>lt",
+            -- One key per language, forcing that target for a single run, in
+            -- both normal (operator) and visual mode, e.g.
+            -- { EN = "<leader>te", DE = "<leader>td" }. A count cannot carry
+            -- the language on an operator, hence a key per language.
+            -- to = {},
+          },
           -- Target language for anything that does not name one explicitly.
-          --
-          -- **This also changes `<leader>lt`.** Without this value, the
-          -- motion/visual maps ask for the language; with it, they translate
-          -- straight to German with no prompt. That is the point, but it is
-          -- a behaviour change, not a pure addition -- for a one-off run into
-          -- a different language, use `translate.keymaps.to.<LANG>` or
-          -- `:Translate <lang>`.
-          --
-          -- Needed by hover: `:Hover show` over a word has nowhere to ask,
-          -- and would otherwise fall back to the plugin's `EN` default
-          -- (English, since most readers translate into their own language,
-          -- and that is not German here).
+          -- "DE" instead of the default nil (= prompt). **This also changes
+          -- `<leader>lt`:** the motion/visual maps translate straight to German
+          -- with no prompt instead of asking for the language; for a one-off
+          -- run into another language use `translate.keymaps.to.<LANG>` or
+          -- `:Translate <lang>`. It is also needed by hover: `:Hover show` over
+          -- a word has nowhere to ask and would otherwise fall back to the
+          -- plugin's `EN` default, which is not the reader's language here.
+          -- Default: nil.
           default_target = "DE",
+          -- nocode_default = false,
+          -- Network timeout per job, in ms.
+          -- timeout_ms = 8000,
+          -- deepl = {
+          --   -- string|nil; or the ENV var DEEPL_API_KEY.
+          --   api_key = nil,
+          -- },
+          -- Custom engine.
+          -- custom = nil, -- { cmd = function(text, target) ... end, parse = function(out) ... end }
+          -- Recall previous translations (:Translate history picker / window <C-h>).
+          -- history = {
+          --   enable = true,
+          --   -- Ring size.
+          --   max = 50,
+          --   -- Also save to disk (JSON) across sessions.
+          --   persist = false,
+          --   file = vim.fn.stdpath("state") .. "/language/translate_history.json",
+          -- },
+          -- Multi-file translation (:Translate cwd / path=<dir>): pick files
+          -- (kit multi-select, <Tab>), then per file; override per call with
+          -- `--files=<mode>`.
+          -- files = {
+          --   -- "suffix" writes a sibling name.<TARGET>.ext (non-destructive);
+          --   -- "replace" overwrites in place (asks first); "buffers" opens each
+          --   -- translation in a scratch buffer (no disk write).
+          --   output = "suffix",
+          --   extensions = { "md", "markdown", "txt", "text", "rst", "adoc", "asciidoc", "tex", "org" },
+          --   max_kb = 512,
+          -- },
         },
+
+        -- Thesaurus / synonyms (writing aid). Default source is the free,
+        -- keyless Datamuse API (English); set a `custom` function for another
+        -- source/language.
+        -- thesaurus = {
+        --   enable = true,
+        --   -- "datamuse" | "custom".
+        --   source = "datamuse",
+        --   max = 20,
+        --   timeout_ms = 6000,
+        --   -- Opt-in: replace the word under the cursor with a synonym
+        --   -- (string|string[]|false).
+        --   keymap = false,
+        --   custom = nil, -- fun(word: string, cb: fun(synonyms: string[])); e.g. function(word, cb) cb({ "syn1", "syn2" }) end
+        -- },
+
+        -- Define the user commands (:Translate, :Spellcheck, ...).
+        -- commands = true,
+        -- which_key = { enable = true },
+        -- One-time "which CLI tools does this plugin want, and why" popup on
+        -- first setup() after install (via lib.nvim.deps); false disables it.
+        -- deps_popup = true,
       })
     end,
   },
