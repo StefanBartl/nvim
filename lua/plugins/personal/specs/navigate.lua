@@ -289,7 +289,69 @@ return {
     -- plugin in.
     cmd = { "Open", "UrlView", "MDLinksView" },
     dependencies = { "StefanBartl/lib.nvim" },
-    opts = {},
+    opts = {
+      -- User command name.
+      -- command = "Open",
+      -- Handler keys used when `:Open` gets no explicit target: paths / URLs.
+      -- default_filemanager = "filemanager",
+      -- default_browser = "browser",
+      -- Handler modules to load; also what `:Open` tab-completes. Replaces the
+      -- list, so give it in full.
+      -- handlers = { "filemanager", "browser", "notepad", "nvim_internal", "default", "terminal", "image" },
+      -- Load the built-in scope keywords (shell profiles, git, SSH, ...).
+      -- builtin_keywords = true,
+      -- User keyword -> path (or `function(): string|nil`) additions/overrides.
+      -- keywords = {},
+      -- Extra handlers registered after `handlers`; each is { key, desc, run }.
+      -- custom_handlers = {},
+      -- Keymaps for fixed invocations (none by default): open_default and
+      -- open_<handler key> (open_browser, open_split, ...), value is the lhs.
+      -- keymaps = {},
+
+      -- `filemanager` handler.
+      -- filemanager = {
+      --   -- true: select a file in its parent dir; false: just open the parent dir.
+      --   reveal = true,
+      --   -- command = nil, -- string|string[]; launcher override, path appended as last arg
+      -- },
+
+      -- Redirect Office documents to the system app on any read (BufReadCmd).
+      -- office_open = {
+      --   enabled = true,
+      --   extensions = { "doc", "docx", "xls", "xlsx", "ppt", "pptx" },
+      -- },
+
+      -- Log every context-gather and dispatch step to :messages.
+      -- debug = false,
+
+      -- Show a handler picker for ambiguous no-target `:Open` instead of guessing.
+      -- picker = { enabled = false },
+
+      -- Whether nvzone/menu entries are provided at all.
+      -- menu = {
+      --   enable = true,
+      -- },
+
+      -- `ui_menu = false` keeps ui.nvim's right-click menu from composing the
+      -- Open fly-out.
+      -- integrations = {
+      --   ui_menu = true,
+      -- },
+
+      -- `:Open viewer [kind]`: list links in a scope.
+      -- viewer = {
+      --   -- Wrapper command per filter; false skips registering it.
+      --   commands = {
+      --     urls = "UrlView", -- only browser-openable targets
+      --     mdlinks = "MDLinksView", -- only markdown-syntax links
+      --     all = false, -- everything; use `:Open viewer` instead
+      --   },
+      --   sort = "none", -- "none" | "file" | "kind" | "alpha"
+      --   output = "picker", -- "picker" | "table" | "clipboard" | "mdlinks" | "csv"
+      --   mdlinks_output = "clipboard", -- sink for `out=mdlinks`
+      --   open_file = "split", -- handler for a picked local file: "split" | "vsplit" | "tab"
+      -- },
+    },
   },
 
   {
@@ -611,11 +673,141 @@ return {
   {
     "StefanBartl/fileops.nvim",
     event = "VeryLazy",
-    -- auto_mkdir, conflict_marks and the cycle keymaps used to live in this
-    -- config's own autocmds/ and were moved into the plugin; they are on by
-    -- default there, so nothing has to be repeated here.
     opts = {
-      cycle = { open_target = "current" }, -- default is a split
+      -- `:File next` / `:File prev` (file cycling in the buffer's directory).
+      cycle = {
+        -- Where the next/prev file opens: "replace" | "current" | "split" |
+        -- "vsplit" | "tab" | "background". "current" loads it into the current
+        -- window. Default: "replace".
+        open_target = "current",
+        -- Return focus to the origin window after split/vsplit.
+        -- keep_focus = true,
+        -- Include dot-files.
+        -- include_hidden = false,
+        -- Wrap around at the directory boundary.
+        -- wrap = true,
+        -- Resolve symlinks for comparisons.
+        -- follow_symlinks = true,
+        -- Directory to list: "buffer_dir" | "cwd" | "buffer_dir_recursive" | "cwd_recursive".
+        -- root = "buffer_dir",
+        -- Ask (via ui.kit) before leaving a modified buffer.
+        -- confirm_on_modified = true,
+        -- Case-insensitive sort and comparison.
+        -- case_insensitive = true,
+        -- pattern = nil, -- string; glob filter such as "*.lua" (also the `:File next [glob]` arg)
+      },
+
+      -- `:File cd`.
+      -- cd = {
+      --   scope = "window", -- "window" (:lcd) | "tab" (:tcd) | "global" (:cd)
+      --   refresh_explorers = true, -- refresh neo-tree/nvim-tree/netrw after cd
+      -- },
+
+      -- Refresh tree explorers after a file op (a `User FileopsChanged` fires either way).
+      -- explorer = {
+      --   refresh_on_change = true,
+      -- },
+
+      -- `:File[!] delete`.
+      -- delete = {
+      --   mode = "trash", -- "trash" (OS trash, recoverable) | "permanent" (no undo)
+      --   -- on_before_delete = nil, -- fun(path: string): boolean|nil; return false to abort
+      -- },
+
+      -- Git-tracked-file awareness for rename/move/duplicate/copy/delete.
+      -- git_aware = {
+      --   enable = false, -- master switch; opt-in because it shells out to git
+      --   warn_only = true, -- true: only note tracked-ness; false: use `git mv`/`git rm`
+      --   git_cmd = "git",
+      -- },
+
+      -- Retry a transient sharing violation (EBUSY/EPERM/EACCES). Default
+      -- attempts is 6 on Windows and 1 elsewhere; backoff doubles each round.
+      -- retry = {
+      --   attempts = 6,
+      --   backoff_ms = 60,
+      -- },
+
+      -- `ui_menu = false` keeps ui.nvim's right-click menu from composing the
+      -- File fly-out.
+      -- integrations = {
+      --   ui_menu = true,
+      -- },
+
+      -- After rename/move, resave the active `:mksession` session.
+      -- session_compat = {
+      --   enable = true,
+      -- },
+
+      -- Keymaps; the two switches gate whole families, `lhs` overrides single keys
+      -- (false disables one, another string remaps it).
+      -- keymaps = {
+      --   cycle = true, -- <leader>nf / <leader>pf family
+      --   delete = true, -- <leader>dcf
+      --   lhs = {
+      --     next_replace = "<leader>nf",
+      --     prev_replace = "<leader>pf",
+      --     next_current = "<leader>nfn",
+      --     prev_current = "<leader>pfn",
+      --     next_background = "<leader>nF",
+      --     prev_background = "<leader>pF",
+      --     next_vsplit = "<leader>NF",
+      --     prev_vsplit = "<leader>PF",
+      --     delete = "<leader>dcf",
+      --     -- Unset by default; bound only when named:
+      --     -- next_filtered = "<leader>nfg", -- prompt for a glob, then cycle within it
+      --     -- prev_filtered = "<leader>pfg",
+      --     -- delete_force = "<leader>dcF", -- the `:File! delete` form
+      --     -- path = "<leader>fp",
+      --     -- cd = "<leader>fd",
+      --     -- info = "<leader>fi",
+      --     -- lockinfo = "<leader>fl",
+      --     -- bulk_rename = "<leader>fR", -- prompts for pattern + replacement
+      --   },
+      -- },
+
+      -- Register the `:File` command.
+      -- commands = true,
+
+      -- Create missing parent directories on save (BufWritePre).
+      -- auto_mkdir = {
+      --   enable = true,
+      --   skip_remote = true, -- leave remote buffers alone
+      --   detect_remote_pattern = "^%w%w+:[\\/][\\/]", -- Lua pattern, e.g. "ssh://", "http://"
+      -- },
+
+      -- Ambient CursorHold preview of the line's previous text (opt-in).
+      -- on_hold = {
+      --   enable = false,
+      --   modes = "n", -- "n" | "v" | "i" (any combination) or a list; nil = n+v
+      --   delay = 3000, -- extra debounce in ms beyond 'updatetime'
+      --   throttle_ms = 1200, -- min ms between triggers per window
+      --   git_cmd = "git",
+      --   ignore_buftypes = { "nofile", "prompt", "terminal" },
+      --   only_tracked = true, -- skip files not tracked by git
+      --   require_clean_buffer = false, -- skip if the buffer has unsaved changes
+      --   prefix = "previous: ", -- prefix of the fallback EOL preview text
+      --   right_align = false, -- right-aligned virt_text instead of eol
+      --   max_len = 160, -- truncate the fallback preview to this many chars
+      --   hl_prev = "Comment", -- highlight group of the fallback preview
+      --   virt_priority = 1000, -- extmark virt_text priority
+      --   prefer_inline = true, -- prefer gitsigns.preview_hunk_inline() when available
+      --   restore_view = true, -- save/restore winsaveview() to avoid scroll jumps
+      --   -- events_override = nil, -- string[]; fully replaces the auto-mapped events
+      -- },
+
+      -- Highlight git conflict markers.
+      -- conflict_marks = {
+      --   enable = true,
+      --   hl_a = "DiffDelete", -- "<<<<<<<" lines
+      --   hl_b = "DiffChange", -- "=======" separator
+      --   hl_c = "DiffAdd", -- ">>>>>>>" lines
+      -- },
+
+      -- Refresh explorers on gitsuite.nvim's branch-switch/conflict-resolved events.
+      -- gitsuite_events = {
+      --   enable = true,
+      -- },
     },
   },
 
