@@ -1,5 +1,23 @@
 # Bericht: Cross-Feature-Kandidaten für casedesk.nvim aus den anderen .nvim-Plugins (2026-09-29)
 
+## Table of content
+
+  - [Auftrag](#auftrag)
+  - [A. Bereits integriert (Bestand, zur Einordnung)](#a-bereits-integriert-bestand-zur-einordnung)
+  - [B. Konkrete neue Kandidaten (empfohlen, absteigend nach Nutzen)](#b-konkrete-neue-kandidaten-empfohlen-absteigend-nach-nutzen)
+    - [1. `ai.nvim` → `:Case ki` ohne Zwischenablage-Umweg](#1-ainvim-case-ki-ohne-zwischenablage-umweg)
+    - [2. `hover.nvim` → Vorschau auf `[Log.txt](../assets/Log.txt)`- und Doku-Links](#2-hovernvim-vorschau-auf-logtxtassetslogtxt-und-doku-links)
+    - [3. `gitsuite.nvim` → Herkunft einer Case-Datei](#3-gitsuitenvim-herkunft-einer-case-datei)
+    - [4. `data.nvim` → `.case.json` direkt als JSON bearbeiten](#4-datanvim-casejson-direkt-als-json-bearbeiten)
+    - [5. `insights.nvim` → `:Insights compress` für einen Case-Ordner](#5-insightsnvim-insights-compress-fr-einen-case-ordner)
+    - [6. `cmdlog.nvim` → ergänzendes Audit "welche :Case-Kommandos liefen heute"](#6-cmdlognvim-ergnzendes-audit-welche-case-kommandos-liefen-heute)
+    - [7. `mdview.nvim` → Summary.md/Reply vor dem Copy-Paste ins SNOW-Ticket gegenchecken](#7-mdviewnvim-summarymdreply-vor-dem-copy-paste-ins-snow-ticket-gegenchecken)
+    - [8. `media.nvim` → Standbild aus einem Kunden-Screen-Recording](#8-medianvim-standbild-aus-einem-kunden-screen-recording)
+  - [C. Geprüft, nicht empfohlen (mit Begründung)](#c-geprft-nicht-empfohlen-mit-begrndung)
+  - [Zusammenfassung](#zusammenfassung)
+
+---
+
 ## Auftrag
 
 casedesk.nvim ist das private Werkzeug-Repo für die SAP-Support-Fallarbeit
@@ -76,6 +94,8 @@ eingefügt wird; eine automatisierte Anbindung würde stillschweigend den in
 (existiert schon, PII-Scrub) als Pflichtschritt vor einem automatisierten
 Send, nicht nur als Empfehlung.
 
+---
+
 ### 2. `hover.nvim` → Vorschau auf `[Log.txt](../assets/Log.txt)`- und Doku-Links
 
 `hover.nvim`s eigene Beschreibung nennt explizit "a markdown link, or a
@@ -91,6 +111,8 @@ ist laut eigenem Anspruch adapter-/kontextagnostisch und braucht keine
 Konfiguration pro Zielplugin. Einfach installieren/aktivieren, ausprobieren
 ob es die relativen `assets/`-Pfade und `docs.tricentis.com`-URLs schon ohne
 Weiteres trifft.
+
+---
 
 ### 3. `gitsuite.nvim` → Herkunft einer Case-Datei
 
@@ -110,6 +132,8 @@ mtime-Rekonstruktion um die echte Versions-Historie, gerade bei
 Mehr-Maschinen-Sync (dasselbe Problem, das SESSIONS.md schon für
 Buffer-Layout löst, hier für Datei-Historie).
 
+---
+
 ### 4. `data.nvim` → `.case.json` direkt als JSON bearbeiten
 
 `.case.json` ist die Sidecar-Datei jedes Case — im Normalfall über `:Case
@@ -120,6 +144,8 @@ nicht abdeckt, oder eine roh eingefügte JSON-Antwort aus einem
 Support-Tool/einer API lesbar machen, bevor sie irgendwo hin kopiert wird.
 Punktueller Nutzen, kein Wiring nötig — einfach `:JSON pretty` auf einer
 `.case.json` oder einem eingefügten JSON-Blob aufrufen.
+
+---
 
 ### 5. `insights.nvim` → `:Insights compress` für einen Case-Ordner
 
@@ -132,6 +158,8 @@ vor dem Verschicken/Archivieren zu zippen. Der Rest von insights.nvim
 ist durchweg auf Code-Projekte zugeschnitten und passt nicht — Case-Ordner
 sind Markdown + Anhänge, kein Code.
 
+---
+
 ### 6. `cmdlog.nvim` → ergänzendes Audit "welche :Case-Kommandos liefen heute"
 
 `:Cmdlog project`/`:Cmdlog stats` protokollieren `:`-Kommandos pro Projekt
@@ -141,6 +169,8 @@ mit eigener Statistik — unabhängig von casedesk.nvim's eigenem
 tun muss — cmdlog zeichnet ohnehin jedes `:Case ...`/`:Cases ...` auf, sobald
 es aktiv ist. Eher nice-to-have als Lücke.
 
+---
+
 ### 7. `mdview.nvim` → Summary.md/Reply vor dem Copy-Paste ins SNOW-Ticket gegenchecken
 
 Rendert Markdown live im Browser. SNOW selbst rendert kein Markdown, aber ein
@@ -148,6 +178,8 @@ gerenderter Blick auf `Summary.md` oder einen Reply-Entwurf vor dem
 Kopieren hilft, Formatierungsfehler (kaputte Listen, falsch verschachtelte
 Überschriften) zu sehen, die im rohen Text leicht übersehen werden.
 Spekulativ, aber im Zweifel ein einzelner `:MdView`-Aufruf.
+
+---
 
 ### 8. `media.nvim` → Standbild aus einem Kunden-Screen-Recording
 
@@ -193,3 +225,6 @@ jeweils punktuell nützlich, aber kein Muss.
 Keiner der Vorschläge verlangt eine Änderung an bestehenden casedesk.nvim-
 Verben — jeder wäre ein zusätzlicher, optionaler Pfad neben dem, was heute
 schon funktioniert.
+
+---
+
