@@ -29,7 +29,7 @@
 - `TOOL-PLACEMENT.md` / `HEREDOC.md` beachten, falls Nebenbei-Tooling entsteht.
 - Code muss luacheck/stylua-grün sein (stylua v2.5.2, luacheck 1.2.0, siehe `ci-fleet-conventions`).
 - Plugin-Installations-Specs: `vim.fn.stdpath('config')/lua/plugins/personal/init.lua`
-  (+ Policy in `plugins/personal/source.lua`).
+  (+ Policy in `plugins/personal/core/source.lua`).
 
 ---
 

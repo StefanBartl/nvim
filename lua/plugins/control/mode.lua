@@ -63,7 +63,7 @@ function M.new(opts)
     ---
     --- IDEMPOTENT PER REPO, and that is load-bearing rather than tidiness.
     --- This instance lives in a module-level closure of the *calling* spec
-    --- file's helper (e.g. plugins.personal.source), which `require` caches --
+    --- file's helper (e.g. plugins.personal.core.source), which `require` caches --
     --- but the spec file itself is evaluated more than once per session:
     --- lazy's `{ import = "plugins" }` loads it through lazy's own importer,
     --- while a later `require("plugins.personal")` from ordinary Lua code is a

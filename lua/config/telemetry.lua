@@ -151,7 +151,7 @@ function M.build(opts)
   -- A plain data read of the already-built lazy spec table, no side
   -- effects (see that module's own doc-comment) -- safe from anywhere.
   local ok_list, entries = pcall(function()
-    return require("plugins.personal.list").read()
+    return require("plugins.personal.core.list").read()
   end)
 
   ---@type table<string, RA.Telemetry.LazyPluginOpts>

@@ -4,19 +4,20 @@ The personal `StefanBartl/*.nvim` plugins: which ones exist, whether each loads
 from a local checkout or from GitHub, and where its checkout is on this
 machine.
 
-Five files plus one folder of specs, and the split between them is the point:
+An entry point, one folder of specs and one folder of core modules, and the
+split between them is the point:
 
 | Module | Role |
 | --- | --- |
 | [`plugins.personal`](init.lua) | **Entry point.** Collects the category spec lists and exports them for `lazy`; declares no plugin itself. |
 | [`plugins.personal.specs.*`](specs/) | **The `lazy` specs**, one file per plugin category (see below). |
-| [`plugins.personal.source`](source.lua) | **Policy.** Which repo loads how (`dir` / `remote` / `disabled`), the global `OVERRIDE` switch, machine-role handling. |
-| [`plugins.personal.list`](list.lua) | **The repo list**, derived from the resolved spec. |
-| [`plugins.personal.export`](export.lua) | **The repo list plus each local checkout path.** |
-| [`plugins.personal.utils`](utils.lua) | **Where `repos` is on this machine**, and whether a given plugin is cloned there. |
+| [`plugins.personal.core.source`](core/source.lua) | **Policy.** Which repo loads how (`dir` / `remote` / `disabled`), the global `OVERRIDE` switch, machine-role handling. |
+| [`plugins.personal.core.list`](core/list.lua) | **The repo list**, derived from the resolved spec. |
+| [`plugins.personal.core.export`](core/export.lua) | **The repo list plus each local checkout path.** |
+| [`plugins.personal.core.utils`](core/utils.lua) | **Where `repos` is on this machine**, and whether a given plugin is cloned there. |
 
 To turn a repo off, or move it between local and remote, edit
-[`source.lua`](source.lua) — never `init.lua`, and never a single spec.
+[`core/source.lua`](core/source.lua) — never `init.lua`, and never a single spec.
 
 ### Spec files by category
 
@@ -70,10 +71,10 @@ field (`lazy`, `priority`, `dependencies`, …). For "which repos are there" and
 "where are they", prefer `list` and `export` below — they answer that question
 without making the caller re-derive it.
 
-### `plugins.personal.list.read()` → `entries|nil, err`
+### `plugins.personal.core.list.read()` → `entries|nil, err`
 
 ```lua
-local entries, err = require("plugins.personal.list").read()
+local entries, err = require("plugins.personal.core.list").read()
 -- entries[i] = { repo = "StefanBartl/markdown.nvim", name = "markdown.nvim" }
 ```
 
@@ -90,10 +91,10 @@ than left to the caller to compute.
 Returns `nil, err` when the spec itself could not be read, or when it yielded
 no enabled repos. Never returns an empty list with no error.
 
-### `plugins.personal.export.projects()` → `projects, err`
+### `plugins.personal.core.export.projects()` → `projects, err`
 
 ```lua
-local projects, err = require("plugins.personal.export").projects()
+local projects, err = require("plugins.personal.core.export").projects()
 -- projects[i] = {
 --   name = "markdown.nvim",
 --   repo = "StefanBartl/markdown.nvim",
@@ -114,10 +115,10 @@ This is the interface to build tools against: it is what
 `:DocMapAll`, docmap-desktop's spec import, and `:Bindings check repo`'s
 checkout axis all read.
 
-### `plugins.personal.utils`
+### `plugins.personal.core.utils`
 
 ```lua
-local u = require("plugins.personal.utils")
+local u = require("plugins.personal.core.utils")
 
 u.repos_path            --> "E:\\repos"  (or "" when there is no local root)
 u.local_dev("lib.nvim") --> "$REPOS_DIR/lib.nvim"   (directory exists)
@@ -144,13 +145,13 @@ error.
 > `init.lua` calls `local_dev("lib.nvim")` to locate lib.nvim itself, before it
 > is on the runtime path. Hence the plain `vim.notify` calls inside.
 
-### `plugins.personal.source` → `Plugins.Control.ModeApi`
+### `plugins.personal.core.source` → `Plugins.Control.ModeApi`
 
 The configured mode-control instance, with the personal resolver already
 injected. `init.lua` uses exactly three calls:
 
 ```lua
-local plugins = require("plugins.personal.source")
+local plugins = require("plugins.personal.core.source")
 plugins.add(require("plugins.personal.specs.edit"))  -- once per category; chainable; idempotent per repo
 return plugins.export()                              -- apply the modes, return the list for lazy
 ```
@@ -185,7 +186,7 @@ do not need should load neither locally nor remotely.
 
 #### `OVERRIDE`
 
-One line near the top of [`source.lua`](source.lua), currently `"dir"`. It
+One line near the top of [`core/source.lua`](core/source.lua), currently `"dir"`. It
 forces a single source for *all* personal plugins.
 
 | Value | Meaning |
@@ -251,7 +252,7 @@ every spec file under `lua/plugins/`. `M.new(opts)` returns one instance;
 The core only knows the shape (`basename -> mode string`). The default
 resolver honours `"disabled"` and ignores everything else, which is all a
 third-party spec file needs — lazy manages those remotely regardless.
-`plugins.personal.source` injects the resolver that adds `dir`/`remote` and the
+`plugins.personal.core.source` injects the resolver that adds `dir`/`remote` and the
 `OVERRIDE` switch.
 
 `plugins/control/` deliberately has **no** `init.lua`: lazy's
@@ -260,5 +261,5 @@ and normalizes the return value as a plugin spec. A folder without one is
 skipped entirely, which is exactly right for a helper module.
 
 The same rule is why `source.lua`, `list.lua`, `export.lua` and `utils.lua` can
-live next to `personal/init.lua` without lazy trying to read them as specs —
+live below `personal/` (in `core/` and `specs/`) without lazy trying to read them as specs —
 the importer only ever looks at the `init.lua`.

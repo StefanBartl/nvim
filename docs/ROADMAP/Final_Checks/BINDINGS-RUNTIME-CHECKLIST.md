@@ -1389,7 +1389,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 ### :MyPlugins
 
 - [ ] `:MyPlugins clone` -- Clone every listed plugin not yet present (or just --only=<name>) into dir/$REPOS_DIR; --dry-run previews without cloning
-- [ ] `:MyPlugins list` -- Render every plugin in plugins.personal.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)
+- [ ] `:MyPlugins list` -- Render every plugin in plugins.personal.core.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)
 - [ ] `:MyPlugins pull` -- git pull --ff-only on every present listed plugin (or just --only=<name>)
 - [ ] `:MyPlugins update` -- Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits
 - [ ] `:MyPlugins dashboard` -- Open reposcope.nvim's git-status dashboard (:Reposcope dashboard) for dir/$REPOS_DIR
@@ -1995,7 +1995,7 @@ caution, not a verdict. Read the description before triggering any of these.
 - [ ] `:MdRebuildWords` -- [md_words] Force full rebuild of the project-wide word cache
 - [ ] `:MyPlugins remove` -- Remove clean (no uncommitted/unpushed work) listed plugins (or just --only=<name>), after confirmation
 - [ ] `:MyPlugins fetch` -- git fetch --all --prune on every present listed plugin (or just --only=<name>)
-- [ ] `:MyPlugins mode` -- Show, or persistently switch, plugins.personal.source's OVERRIDE (restart required to apply)
+- [ ] `:MyPlugins mode` -- Show, or persistently switch, plugins.personal.core.source's OVERRIDE (restart required to apply)
 - [ ] `:MyPlugins reclone` -- Delete (if clean) and re-clone present listed plugins, or clone missing ones fresh, after confirmation; --dry-run previews the safe/unsafe/missing split without touching anything
 - [ ] `:MyPlugins picker` -- Interactive multi-select: assign clone/update/pull/fetch/remove/reclone per plugin, then run them all at once
 - [ ] `:NeotestClearAll` -- Stop tests and close all windows

@@ -3,7 +3,7 @@
 ---actions onto different plugins in one pass.
 ---@description
 --- `M.open(path)` opens a `Snacks.picker` listing every entry in
---- `plugins.personal.list`. `<Tab>` cycles the highlighted plugin through a
+--- `plugins.personal.core.list`. `<Tab>` cycles the highlighted plugin through a
 --- per-presence action cycle (present: update → pull → fetch → remove →
 --- reclone → none; missing: clone → none), shown as a one-letter marker in
 --- front of the entry. `<CR>` closes the picker and runs every assigned
@@ -22,7 +22,7 @@
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.picker]")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 local confirm = require("bindings.usrcmds.plugin_repos.confirm")
-local plugin_list = require("plugins.personal.list")
+local plugin_list = require("plugins.personal.core.list")
 
 local M = {}
 

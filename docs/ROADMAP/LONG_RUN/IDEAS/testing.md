@@ -1352,7 +1352,7 @@ return {
   `require("spec.cli").main(arg)`). `nvim -l` reicht die Argumente nach dem
   Skript in `_G.arg` durch — keine `-c`-Strings mit Nutzertext (SEC-34/35).
 - Cross-Repo-Wissen (Repo-Liste, lokale Checkouts) kommt **nicht** aus
-  spec.nvim, sondern vom Aufrufer: `plugins.personal.export.projects()`
+  spec.nvim, sondern vom Aufrufer: `plugins.personal.core.export.projects()`
   liefert `{ name, repo, dir }` für alle aktiven Personal-Plugins — genau
   das, was `run_all_tests.sh` heute per Verzeichnis-Glob nachbaut.
 
@@ -1765,7 +1765,7 @@ nie Default in CI (§A.15).
 | Tier 3 | Browser-/Driver-Downloads | Versionen gepinnt, Checksums, Byte-Limits, Timeouts (SEC-20/21); Container-Image für CI |
 | Debugging | osv-Port offen | `127.0.0.1`, nur `--debug`, zufälliger Port, Token in der Attach-Konfiguration |
 | Mutation-Testing | mutierter Code tut Unvorhersehbares (Pfadprüfung `~=`→`==` und ein `rm`) | nur mit allen Guards, nur im Kind, nur mit umgeleitetem `HOME`, nie mit Netz |
-| Fremde Repos | „Tests laufen lassen" = Code ausführen | `--trust` für Repos außerhalb der eigenen Liste (`plugins.personal.export.projects()`), Entscheidung in `stdpath("state")` gespeichert — VS-Code-Workspace-Trust |
+| Fremde Repos | „Tests laufen lassen" = Code ausführen | `--trust` für Repos außerhalb der eigenen Liste (`plugins.personal.core.export.projects()`), Entscheidung in `stdpath("state")` gespeichert — VS-Code-Workspace-Trust |
 
 **Ehrliche Grenze:** Monkeypatch-Guards halten Unfälle auf, keine
 Angreifer. Wer fremden Code testet, tut das im Container (sandbox.nvim

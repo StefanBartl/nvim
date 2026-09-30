@@ -1,7 +1,7 @@
----@module 'plugins.personal.list'
+---@module 'plugins.personal.core.list'
 --- Repo list sourced directly from `plugins.personal` — the actual, fully
 --- resolved lazy spec (`plugins/personal/init.lua`'s `.add({...})`, with
---- `plugins/personal/source.lua`'s per-repo mode already applied) — rather
+--- `plugins/personal/core/source.lua`'s per-repo mode already applied) — rather
 --- than parsed out of a hand-maintained markdown doc.
 ---
 --- Requiring `plugins.personal` only builds and returns the spec table; none
