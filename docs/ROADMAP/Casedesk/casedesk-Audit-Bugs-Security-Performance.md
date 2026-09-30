@@ -19,6 +19,7 @@
   - [F — Korrektheit](#f--korrektheit)
   - [G — Performance](#g--performance)
   - [H — Zweite Runde: der gesamte Diff seit Runde 1](#h--zweite-runde-der-gesamte-diff-seit-runde-1)
+  - [I — Dritte Runde: ultracode-Review der :Case-open/-attachments/-clean/-swat/-doctor-Commits](#i--dritte-runde-ultracode-review-der-case-open-attachments-clean-swat-doctor-commits-2026-09-30)
   - [Verworfene Funde](#verworfene-funde)
   - [Geprüft und freigesprochen](#geprüft-und-freigesprochen)
   - [Grenzen dieses Audits](#grenzen-dieses-audits)
@@ -1079,6 +1080,101 @@ Regressionsbeweis (revert → Test schlägt fehl → restore) wo ein Test-Seam
 existierte (CD-30–32, CD-34, CD-35, CD-37, CD-38), sonst per Code-Lesung plus
 gezielter Headless-Verifikation (CD-33, CD-36). Suite danach **565 grün**,
 `luacheck`/`stylua` sauber über 125 Dateien.
+
+---
+
+## I — Dritte Runde: ultracode-Review der :Case-open/-attachments/-clean/-swat/-doctor-Commits (2026-09-30)
+
+**Prüfstand:** 6 Commits einer laufenden Session (`a929e1c`..`204ccd0`) —
+`:Case open` öffnet `Summary.md` statt nur zu reveal'n, der zugehörige
+`filetree.nvim`-Reveal-API-Fix, `:Case attachments find`/`insert`, das
+AI-Paste-Cleanup-Modul (`:Case clean`, Auto-Cleanup in `:Case ki import`),
+der neue `SWAT`-Blueprint-Node, und `doctor.lua`s neue `stale-unconfirmed`-
+Regel.
+
+**Methode:** Drei parallele Finder (Bugs, Security, Performance) über den
+vollen Diff plus den jeweils umgebenden Live-Code, danach je Fund ein
+unabhängiger Gegenprüfer, der den Fund gegen den echten aktuellen Code
+verifizieren oder widerlegen musste (`real: false` als Default bei
+Unsicherheit). Security fand nichts Reales. 3 von 4 gemeldeten Bug-/
+Perf-Funden bestanden die Gegenprüfung; alle drei sofort behoben.
+
+### CD-39 · `lua/casedesk/doctor.lua` (`stale_unconfirmed_findings`) · MEDIUM · ✅ **behoben in `ccfcef7`**
+
+**Der Fix-Action der `stale-unconfirmed`-Regel ist keine Transaktion — ein
+halb durchgeführter Fix macht den Case für immer unsichtbar.**
+
+Die `action` benennt zuerst `Solution/Solution.md` nach
+`UNCONFIRMED-Solution.md` um, dann verschiebt sie den kompletten Case-Ordner
+von Open nach Closed — zwei sequenzielle `mutate.rename_file`-Aufrufe.
+Schlägt der zweite fehl (laufwerksübergreifendes `state_dir`, ein Windows-
+Lock, der die 3 Retries überdauert), bleibt der Case offen, sein Entwurf
+aber bereits umbenannt. Der Dateinamen-Guard, der dies eigentlich als
+„schon erledigt" erkennen sollte, ließ den Fund danach nie wieder
+entstehen — der Case verschwindet für immer aus jedem künftigen `:Cases
+doctor`-Lauf.
+
+**Fix:** Ein bereits umbenannter Entwurf auf einem noch offenen Case wird
+jetzt als „fortsetzen", nicht „fertig" behandelt — der Fund bleibt sichtbar,
+`action()` überspringt nur den bereits erledigten Rename-Schritt und
+versucht erneut den Move. 2 neue Regressionstests
+(`TESTS/doctor_spec.lua`).
+
+### CD-40 · `lua/casedesk/ui/file_verbs.lua` (`M.open_dir`) · MEDIUM · ✅ **behoben in `c67f99f`**
+
+**`:Case open` reveal'te VOR dem Öffnen der Datei — auf `mini.files`/
+`nvim-tree` (Tree geschlossen) landet der nachfolgende `:edit` im
+Tree-Fenster statt im echten Fenster.**
+
+`try_reveal(target)` lief vor `common.edit(target)`; `common.edit` ist ein
+blankes `:edit`, das auf dem AKTUELLEN Fenster wirkt. `neo-tree`/`netrw`/
+`oil`s eigene `open_reveal`-Implementierungen sichern und stellen das
+aufrufende Fenster wieder her — `mini.files` öffnet aber ein fokussiertes
+Float ohne Wiederherstellung, `nvim-tree` fokussiert bei geschlossenem Tree
+dessen Sidebar, ebenfalls ohne Wiederherstellung. Auf dieser Workstation
+(nur `neo-tree` installiert) nicht auslösbar, im geteilten
+casedesk.nvim/filetree.nvim-Codepfad aber real und erreichbar.
+
+**Fix:** Reihenfolge getauscht — `common.edit` zuerst, `try_reveal` danach.
+Ein fokusstehlender Reveal kann das Ergebnis dann nicht mehr beeinflussen.
+Neuer Regressionstest, der die Aufrufreihenfolge selbst pinnt.
+
+### CD-41 · `lua/casedesk/doctor.lua` (`routing_findings`/`stale_unconfirmed_findings`) · LOW · ✅ **behoben in `ccfcef7`**
+
+**Beide Funktionen lokalisierten, lasen und parsten dieselbe Solution-Datei
+desselben Cases unabhängig voneinander in derselben `M.check()`-Iteration.**
+
+Für jeden offenen, noch nicht dateinamens-gerouteten Case mit einer
+`Solution/`-Datei verdoppelte das Disk-I/O und den Parse-Aufwand bei jedem
+`:Cases doctor`-Lauf, ohne Nutzen — beide wollten exakt dasselbe
+`(path, content, parsed)`-Tripel.
+
+**Fix:** `resolve_solution(e)` löst das jetzt einmal pro Case auf (mit
+lazy/memoized `content()`/`parsed()`, damit `routing_findings`s billiger
+Dateinamens-Only-Rückweg weiterhin nichts lesen/parsen muss) und wird an
+beide Finder durchgereicht.
+
+### CD-42 · `lua/casedesk/solution.lua` (`M.locate`) · LOW · ✅ **behoben in `ccfcef7`**
+
+**`M.locate` stattet den kanonischen/flachen Pfad bereits selbst, um dessen
+Existenz zu prüfen — ein Aufrufer, der das mtime braucht, stattete danach
+ein zweites Mal denselben Pfad.**
+
+**Fix:** `M.locate` gibt den bereits geholten Stat jetzt als dritten
+Rückgabewert zurück (abwärtskompatibel geprüft — alle 5 bestehenden
+Aufrufstellen nehmen höchstens 2 Rückgabewerte entgegen); `stale_
+unconfirmed_findings` nutzt ihn statt erneut zu statten. 3 neue
+Regressionstests (`TESTS/solution_spec.lua`).
+
+---
+
+**Verifikation dieser Runde:** Multi-Agent-Workflow — 3 unabhängige Finder
+(Bugs/Security/Performance) + 1 unabhängiger Gegenprüfer pro gemeldetem
+Fund, jeder Gegenprüfer musste den Fund am echten aktuellen Code
+nachvollziehen (nicht nur die Beschreibung glauben) und durfte bei
+Unsicherheit nur mit `real: false` antworten. Alle 3 bestätigten Funde
+sofort behoben, committet, gepusht; volle Suite danach grün
+(`luacheck`/`stylua` sauber).
 
 ---
 
