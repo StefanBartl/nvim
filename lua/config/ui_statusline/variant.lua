@@ -102,7 +102,7 @@ return {
 
         -- The label itself (PROJECT/PKG/LOCK/… vs P/N/L/… vs 1/2/3/… vs a
         -- Nerd Font glyph) is filetree's own `features.cwd_mode.indicator.
-        -- style` (see lua/plugins/personal/init.lua) — this only controls
+        -- style` (see lua/plugins/personal/specs/view.lua) — this only controls
         -- how THIS statusline renders whatever text that produces.
         filetree_cwd_mode = function()
           return filetree_cwd_mode({

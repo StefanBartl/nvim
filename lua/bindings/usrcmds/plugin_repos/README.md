@@ -166,7 +166,7 @@ every repo in the directory either way — the flags only affect the prefetch.
 The nvim config itself (this checkout) is not under `$REPOS_DIR`, so it
 never shows up here on its own — see
 [`gitsuite.nvim`'s `dashboard.extra_paths`](https://github.com/StefanBartl/gitsuite.nvim/blob/main/docs/configuration.md)
-(configured in this repo's own `plugins/personal/init.lua`) for how it's
+(configured in this repo's own `plugins/personal/specs/project.lua`) for how it's
 made visible anyway.
 
 ### `:MyPlugins picker [dir]`

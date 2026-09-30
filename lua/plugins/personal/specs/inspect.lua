@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.inspect'
---- Debug & inspect -- personal plugin specs (Debugging, diffing, LSP, runtime analysis, code review and rule checking.)
+--- Personal plugin specs: Debug & inspect.
+---
+--- Debugging, diffing, LSP, runtime analysis, code review and rule checking.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.

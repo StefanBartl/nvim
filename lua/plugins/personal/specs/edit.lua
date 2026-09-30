@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.edit'
---- Editing -- personal plugin specs (Text transformation: lists, replace, emoji, spell/translate, markdown, structured data.)
+--- Personal plugin specs: Editing.
+---
+--- Text transformation: lists, replace, emoji, spell/translate, markdown, structured data.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.

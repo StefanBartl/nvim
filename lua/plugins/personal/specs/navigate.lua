@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.navigate'
---- Files & navigation -- personal plugin specs (Paths, hover previews, pickers, trees, file operations and sessions.)
+--- Personal plugin specs: Files & navigation.
+---
+--- Paths, hover previews, pickers, trees, file operations and sessions.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.

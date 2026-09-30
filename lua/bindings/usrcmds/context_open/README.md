@@ -109,7 +109,7 @@ deliberately excluded from counting as a real candidate (see
   filesystem/buffer reads), so `M-o` can safely run every provider on every
   keypress without worrying about accidentally triggering something.
 - **`cmd`-only plugins.** `open.nvim` and `pdfport.nvim` are `cmd`-gated in
-  `plugins/personal/init.lua`, not `ft`/`event`-gated — unlike
+  `plugins/personal/specs/navigate.lua`, not `ft`/`event`-gated — unlike
   `gopath.nvim` (`event = "VeryLazy"`), `markdown.nvim` and `images.nvim`
   (both `ft`-gated, so already loaded in any buffer where their providers
   would apply). `util.ensure_loaded()` force-loads them via

@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.project'
---- Project & repos -- personal plugin specs (Repository tooling, project documentation, sandboxes, stats and case work.)
+--- Personal plugin specs: Project & repos.
+---
+--- Repository tooling, project documentation, sandboxes, stats and case work.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.

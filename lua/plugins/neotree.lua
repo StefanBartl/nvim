@@ -8,7 +8,7 @@
 --- the source_selector display names), the `<M-c/f/l/r>` toggle keys with
 --- their E95 self-heal, the node utilities, the config-level health check
 --- and its two commands. All of it is filetree.nvim's `source_switcher` and
---- `tree_toggle` now (features configured in plugins/personal/init.lua);
+--- `tree_toggle` now (features configured in plugins/personal/specs/navigate.lua);
 --- `config/neotree/` keeps only what is genuinely neo-tree configuration --
 --- the per-source `window.mappings` tables and one event handler.
 

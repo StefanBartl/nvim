@@ -34,7 +34,7 @@
 --- equivalent was never turned on to replace it.
 ---
 --- `opts.keymaps` now comes from this plugin's own installation spec
---- (`plugins/personal/init.lua`'s `"StefanBartl/ui.nvim"` entry) rather than
+--- (`plugins/personal/specs/view.lua`'s `"StefanBartl/ui.nvim"` entry) rather than
 --- being fixed here, so enabling/disabling it or remapping one action is a
 --- one-line edit in the spec, not a change to this wiring file. A custom
 --- field there (`keymaps = {...}`), not lazy.nvim's own `opts`/`config`:

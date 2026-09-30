@@ -1,5 +1,7 @@
 ---@module 'plugins.personal.specs.foundation'
---- Foundation -- personal plugin specs (The shared library and the option/highlight/diagnostics layer everything else stands on.)
+--- Personal plugin specs: Foundation.
+---
+--- The shared library and the option/highlight/diagnostics layer everything else stands on.
 ---
 --- Category names follow the plugin website's registry
 --- (wkd/src/data/registry.json). Source control -- local vs. remote vs.
