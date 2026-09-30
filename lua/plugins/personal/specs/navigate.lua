@@ -539,14 +539,80 @@ return {
     config = function()
       local repos = personal_utils.repos_path
       require("pickers").setup({
+        -- Which picker engine runs. "snacks" instead of the default "auto" so every
+        -- collection opens in the same UI regardless of what else is installed.
+        -- Values: "auto" | "telescope" | "fzf" | "snacks".
+        -- Default: "auto" (first available of telescope, fzf-lua, snacks).
         engine = "snacks",
+        -- One-time "which CLI tools does this plugin want" popup on first setup().
+        -- deps_popup = true,
+        -- Root directory of the git repositories (the "repos" scope and the base
+        -- of every collection below). Passed explicitly so it also works through
+        -- the local-checkout fallback when $REPOS_DIR is unset.
+        -- Default: nil (resolved from $REPOS_DIR via lib.nvim's env snapshot).
         repos_dir = repos,
-        -- One exclude list for every engine (lib.nvim.fs.ignore.list), also
-        -- patched onto the native :FzfLua / :Telescope / Snacks pickers.
-        find = { ignore_list = true },
-        -- Prompt on top, wrap-around navigation, no preview line wrapping --
-        -- on every engine, native pickers included.
-        display = { cycle = true, prompt_top = true, preview_wrap = false, path_adaptive = true },
+
+        -- File-listing behaviour of the built-in file pickers. The `system` scope
+        -- builds its own fd command and ignores this table.
+        find = {
+          -- Show dotfiles.
+          -- hidden = true,
+          -- Also list files ignored by .gitignore / .ignore.
+          -- no_ignore = false,
+          -- Follow symlinks.
+          -- follow = true,
+          -- Extra globs to skip, e.g. { "node_modules", "*.min.js" }.
+          -- exclude = nil, -- string[]
+          -- One exclude list for every engine (lib.nvim.fs.ignore.list), also
+          -- patched onto the native :FzfLua / :Telescope / Snacks pickers.
+          -- Default: false.
+          ignore_list = true,
+          -- Apply `exclude` to the engines' native pickers too (no-op while
+          -- `exclude` is empty).
+          -- native = true,
+        },
+
+        -- Enable the :Pickers user commands and the generated collection commands.
+        -- usercmds = { enable = true },
+
+        -- Layout switches patched onto every engine's global config, so native
+        -- pickers follow too. All default to nil (the engine keeps its own behaviour).
+        display = {
+          -- Shorten long paths via the engine's own mechanism.
+          -- path_shorten = false,
+          -- Wrap around at either end of the list, on every engine.
+          -- Default: nil (engine default).
+          cycle = true,
+          -- Prompt above the results, on every engine.
+          -- Default: nil (engine default).
+          prompt_top = true,
+          -- Preview line wrapping off, on every engine.
+          -- Default: nil (engine default).
+          preview_wrap = false,
+          -- Telescope: shorten paths to the picker width (lib.nvim fs.path_shorten).
+          -- Default: nil (off).
+          path_adaptive = true,
+        },
+
+        -- Image previews via images.nvim (soft dependency, inert without it).
+        -- images = {
+        --   enabled = true, -- false keeps the engine's text preview
+        --   pdf_text = true, -- telescope + pdfport.nvim: undrawable PDFs preview as extracted text
+        -- },
+
+        -- filetree.nvim's `f` / `gr` run through this plugin when it is installed.
+        -- filetree = { enabled = true }, -- false makes filetree use its own backends
+
+        -- Named scopes; each gets :Pickers <name> files/grep/smart, compat commands
+        -- and the listed keymaps. Collection fields:
+        --   name      string  unique scope name
+        --   dir       string  root directory
+        --   prefix    string  nil = `dir` is the search root, "" = pick among all subdirs,
+        --                     "xyz-" = only subdirs starting with "xyz-"
+        --   keys      table   { files = lhs, grep = lhs, smart = lhs }
+        --   only_git  boolean only subdirs containing .git
+        --   exclude   string[] subdir basenames to hide (exact match)
+        --   find      table   per-collection override of `find`, merged over the global one
         collections = {
           {
             name = "notes",
@@ -606,22 +672,52 @@ return {
           },
         },
 
+        -- Named dir aliases for the `dir` navigation picker. Additive: merged over
+        -- the four built-ins below, so only list your own or overrides.
+        -- depth_aliases = {
+        --   cwd = function() return vim.uv.cwd() or vim.fn.getcwd() end,
+        --   home = function() return vim.uv.os_homedir() or vim.fn.expand("~") end,
+        --   root = function() ... end, -- filesystem root of the cwd
+        --   git = function() ... end, -- nearest .git ancestor of the cwd, else the cwd
+        --   work = function() return "/home/user/work" end, -- example of your own
+        -- },
+
+        -- Fixed keymap fields. Each is an lhs or nil/false (off); `enable = false`
+        -- turns the whole table off.
         keymaps = {
+          -- enable = true,
+          -- cwd_files = nil, -- find files in the cwd
+          -- cwd_grep = "<leader>li", -- live grep in the cwd
+          -- config_files = "<leader>fc", -- find files in the nvim config
+          -- config_grep = "<leader>gc", -- grep in the nvim config
+          -- folder_files = "<leader>fb", -- find in an interactively picked folder
+          -- dir_pick = "<leader>dp", -- dir navigation picker
+          -- explorer = "<leader>.", -- file explorer / browser on the active engine
+          -- repos_files = nil, -- pick a repo, then find files
+          -- repos_grep = nil, -- pick a repo, then live grep
+          -- system_files = nil, -- systemwide fd search (prompts for a query)
+
           -- Smart action: one picker running grep (content) + find (filenames)
           -- for the same query, merged and ranked by relevance. See
           -- pickers.nvim docs/COMMANDS.md#the-smart-action.
+          -- Default: nil (opt-in, unopinionated like cwd_files).
           cwd_smart = "<leader>CW", -- smart grep+find in CWD
           config_smart = "<leader>CF", -- smart grep+find in nvim config
+          -- folder_smart = nil, -- smart grep+find in a picked folder
+          -- Forces hidden + no_ignore + follow for this one search (= `:Pickers cwd files all`).
+          -- cwd_find_all = nil,
         },
 
         -- Declarative mappings surface: any pickers.builtins name, or any
         -- <scope>_<files|grep|smart|find_all>, each with its own lhs -- the
-        -- flexible alternative to the fixed `keymaps` fields above.
+        -- flexible alternative to the fixed `keymaps` fields above. Entry shape:
+        -- { lhs | { lhs, ... }, engine?, desc?, nowait? }; `engine` pins one
+        -- entry to "telescope" | "fzf" | "snacks", and a missing engine falls back
+        -- to the default one. Default: {} (no mappings).
+        -- Collection scopes work too, e.g. `notes_grep = { "<leader>ng", "fzf" }`.
         mappings = {
-          -- Formerly config/snacks/mappings/standard.lua (lazy `keys` of the snacks
-          -- spec), now declared here: they dispatch through pickers.builtins /
-          -- :Pickers anyway, whichever engine is active. `recent` is also on
-          -- <leader>fo (snacks "recent" / telescope+fzf "oldfiles").
+          -- They dispatch through pickers.builtins / :Pickers, whichever engine is
+          -- active. `recent` shows the list form: one picker on two keys.
           command_history = { "<leader>:", desc = "Command History" },
           notifications = { "<leader>N", desc = "Notification History" },
           cwd_files = { "<leader>ff", desc = "Find Files" },
@@ -657,30 +753,113 @@ return {
           lsp_symbols = { "<leader>SS", desc = "LSP Symbols" },
           lsp_workspace_symbols = { "<leader>sS", desc = "LSP Workspace Symbols" },
           -- Uncommitted files (staged/unstaged/both, toggle rows at the top of
-          -- the list) -- pickers.nvim's own in-house `git_status_filtered`
-          -- builtin (renamed from `git_status_marks`: it has no bookmark/mark
-          -- semantics, just a filtered git status list -- ecosystem-wide
-          -- mark/link naming-consistency pass), NOT the native `git_status`
-          -- picker already on <leader>gs (the `git_status` entry above).
-          -- <leader>g{s,S,l,L,B,D,f,i,I,p,P} and bare gb/gd/gg are all taken
-          -- across this ecosystem's git keymaps (pickers.nvim's own +
-          -- gitsuite.nvim + neogit + diff.nvim); <leader>gm was free -- kept
-          -- as the mnemonic key even though the builtin name moved on.
+          -- the list): pickers.nvim's own `git_status_filtered` builtin, NOT the
+          -- native `git_status` picker already on <leader>gs above.
+          -- <leader>gm because <leader>g{s,S,l,L,B,D,f,i,I,p,P} and bare gb/gd/gg
+          -- are all taken across this ecosystem's git keymaps (pickers.nvim,
+          -- gitsuite.nvim, neogit, diff.nvim).
           git_status_filtered = { "<leader>gm" },
         },
 
+        -- Native picker history under stdpath("data")/pickers.nvim/history.
+        -- Telescope's history is process-wide; snacks has its own and ignores this.
         history = {
+          -- Default: false.
           enabled = true,
-          fzf_scope = "patch", -- patches telescope + fzf-lua setup() itself, no config change needed elsewhere
+          -- fzf-lua only: "plugin" (per-provider files, pickers.nvim's own calls) |
+          -- "global" (you merge history.fzf_opts() yourself) | "patch" (pickers.nvim
+          -- patches fzf-lua's and telescope's setup() itself, so the native pickers
+          -- share the history without any other config change).
+          -- Default: "plugin".
+          fzf_scope = "patch",
+          -- dir = nil, -- string; default stdpath("data")/pickers.nvim/history
+          -- limit = 200, -- entries kept per history
         },
 
+        -- Unified in-picker keys: preview scroll, history navigation, entry
+        -- actions. Each action takes one lhs, a list of lhs, or `false` to unbind it.
+        -- fzf-lua binds only the vertical scroll and fixed entry-action keys.
         keys = {
-          -- Keep the old config.telescope.keymaps horizontal-scroll bindings
-          -- (that module is now redundant/removed) instead of the plugin's
-          -- own <C-Left>/<C-Right> default.
+          -- enable = true,
+          -- preview_scroll_down = "<PageDown>",
+          -- preview_scroll_up = "<PageUp>",
+          -- Alt+Left/Right scroll the preview horizontally instead of the default
+          -- <C-Left>/<C-Right>.
+          -- Default: "<C-Left>" / "<C-Right>".
           preview_scroll_left = "<M-Left>",
           preview_scroll_right = "<M-Right>",
+          -- history_back = "<C-p>",
+          -- history_forward = "<C-n>",
+          -- create_file = "<C-a>",
+          -- open_background = { "<S-CR>", "<C-o>" }, -- preload the entry's buffer, keep the picker open
+          -- open_background_show = false, -- also display (not focus) it in the window behind the picker
+          -- preview_toggle = false, -- telescope only; fzf-lua/snacks ship <F4> / <A-p>
+          -- split = "<C-s>",
+          -- vsplit = "<C-v>",
+          -- tab = "<C-t>",
+          -- mouse_confirm = "<2-LeftMouse>", -- double-click opens a result
+          -- cheatsheet = { "<C-/>", "<M-?>" }, -- panel listing every bound key
+          -- Path-copy entry actions on the marked entries, else the current one.
+          -- copy_absolute = { "<C-y>", "[a", "[f" },
+          -- copy_dirname = { "<M-y>", "]a" },
+          -- copy_env_rooted = { "<M-v>", "[e" }, -- $REPOS_DIR/... form
+          -- copy_project_root = { "<M-t>", "[R" },
+          -- copy_project_relative = { "<M-e>", "]R" },
+          -- copy_buffer_relative = { "<M-j>", "]b" },
+          -- markdown_link = { "<M-l>", "ML", "MM" },
+          -- Hand the entry to the OS: default application / file manager.
+          -- open_system = { "<M-o>", "<leader>sm" },
+          -- reveal_in_manager = { "<M-x>", "<leader>fm" },
+          -- Switch between the targets of a tab group (telescope + snacks).
+          -- tab_next = false, -- e.g. "<Tab>"
+          -- tab_prev = false, -- e.g. "<S-Tab>"
         },
+
+        -- Live result count in the prompt title (telescope only; the others show one natively).
+        -- result_count = {
+        --   enabled = false,
+        --   interval_ms = 150, -- poll interval while a picker is open
+        -- },
+
+        -- Smart action: rg (content) + fd (filenames) merged into one ranked list.
+        -- smart = {
+        --   weights = { filename = 1.0, content = 1.0, both = 25 }, -- `both` = flat bonus for a file matched by name AND content
+        --   limit = 2000, -- max merged results kept after ranking
+        --   timeout = 3000, -- per-command (rg / fd) wait in ms
+        --   frecency = {
+        --     enabled = false, -- recency/frequency ranking boost
+        --     weight = 1.0,
+        --     dir = nil, -- string; default stdpath("data")/pickers.nvim
+        --   },
+        --   dedup_grep_rows = false, -- collapse several grep hits per file to the best line
+        -- },
+
+        -- Tab groups: named lists of `:Pickers` argument strings, cycled with
+        -- keys.tab_next/tab_prev. A group given here replaces the default group of
+        -- the same name wholesale; `false` drops one.
+        -- tabs = {
+        --   groups = {
+        --     default = { "cwd files", "cwd grep", "builtin buffers" },
+        --     git = { "builtin git_branches", "builtin git_commits", "builtin git_stash" },
+        --   },
+        -- },
+
+        -- The quickfix / location window: preview float + refine filter over the list.
+        -- quickfix = {
+        --   enabled = true,
+        --   preview = {
+        --     enabled = true,
+        --     height = 12, -- rows
+        --     context = 4, -- lines shown above the entry's line
+        --     border = "rounded",
+        --     delay_ms = 40, -- debounce after CursorMoved
+        --   },
+        --   keys = { -- buffer-local; false unbinds
+        --     filter = "zf", -- refine
+        --     restore = "zF",
+        --     toggle_preview = "p",
+        --   },
+        -- },
       })
     end,
   },
@@ -713,111 +892,685 @@ return {
     event = "VeryLazy", -- must load AFTER the tree plugin's config function runs
     dependencies = {
       "StefanBartl/lib.nvim", -- shared helpers (neo-tree node utils, etc.)
-      -- ui.kit/ui.contextmenu (right-click menu, on by default) -- moved out
-      -- of lib.nvim.ui.kit/lib.nvim.contextmenu in the 2026-09 migration.
+      -- ui.kit / ui.contextmenu: the right-click menu (on by default).
       "StefanBartl/ui.nvim",
       -- only ONE tree plugin is needed:
       "nvim-neo-tree/neo-tree.nvim",
       -- or: "nvim-tree/nvim-tree.lua",
     },
     config = function()
-      -- Every feature is on by default; cwd_sync is opt-in (auto-chdir), so
-      -- enable it explicitly. It anchors the cwd to the nearest .git ancestor on
-      -- buffer switch. reveal = false because neo-tree already follows the cwd
-      -- (bind_to_cwd + follow_current_file) — so cwd_sync only sets the cwd and
-      -- lets neo-tree root/reveal, instead of the two fighting each other.
       require("filetree").setup({
+        -- Which tree plugin filetree drives. Pinned to neo-tree instead of
+        -- auto-detection so the backend cannot change when another tree plugin is
+        -- installed.
+        -- Values: "auto" | "neotree" | "nvimtree" | "netrw" | "oil" | "mini_files".
+        -- Default: "auto" (first available, in that order).
         adapter = "neotree",
-        -- Reference engine: also rewrite bare filesystem paths written as
-        -- running text (`see ../Test/Tester.md` in a note) or in code
-        -- comments, not just paths inside link/require/import syntax. Opt-in
-        -- and namespaced under `experimental` on purpose — it is a new
-        -- provider whose config shape may still move, and future
-        -- in-development refs features land under the same key. `comments`
-        -- defaults to true (scan comment lines in .lua/.py/.ts/… too); set
-        -- it false to restrict to prose/text files. A token is only ever
-        -- rewritten when it resolves to exactly the file that moved.
+        -- Show notifier.debug(...) messages (troubleshooting).
+        -- debug = false,
+        -- Hide common clutter (.git, node_modules, ...) from the tree.
+        -- Values: true (built-in list) | false (show everything) | string[] (custom list).
+        -- ignore_list = true,
+        -- Confirmation prompts for paste / delete / rename_batch. nil keeps each
+        -- feature's own default (delete asks, the others do not); true/false sets all
+        -- three; a table sets one, e.g. { delete = false }. A feature's own
+        -- `confirm` wins over this.
+        -- confirmations = nil, -- boolean | { paste?, delete?, rename_batch? }
+        -- One-time "which CLI tools does this plugin want" popup on first setup().
+        -- deps_popup = true,
+        -- Progress indicator for batch operations (trash, paste, ...).
+        -- Values: "auto" (fidget if installed, else notify) | "notify" | "statusline" |
+        -- "fidget" | "float" | "kit".
+        -- progress_style = "auto",
+        -- Cap on nodes collected in one walk of the rendered tree (a guard against a
+        -- directory expanded with tens of thousands of entries).
+        -- max_visible_nodes = 5000,
+        -- Global key remap over every feature keymap: { ["<old>"] = "<new>" }, or
+        -- { ["<key>"] = false } to drop one.
+        -- keymaps = nil, -- table<string, string|false>
+        -- Override the adapter's own native keymaps after they are set: false -> <Nop>,
+        -- string -> remap target, e.g. { ["i"] = false }.
+        -- adapter_keymaps = nil, -- table<string, string|false>
+        -- User command name (or { name, aliases }); default "Filetree" plus the alias "Ft".
+        -- command = nil, -- string | { name = string, aliases = string[] }
+        -- Disable the autocmds of single features: { auto_reveal = false }.
+        -- autocmds = nil, -- table<string, false>
+
+        -- Reference engine: keeps markdown links and require()/import statements
+        -- pointing at the right file after a rename / move / delete.
         refs = {
+          -- enabled = true,
+          -- Languages taking part; a third-party provider counts as on unless false.
+          -- providers = { markdown = true, lua = true, python = true, ts_js = false },
+          -- What happens once references are found: "ask" (chooser) | "auto" (update
+          -- everything) | "off" (do not scan).
+          -- on_rename = "ask",
+          -- on_move = "ask",
+          -- on_delete = "ask", -- trash: mark the now-dangling links as REF!
+          -- copy = false, -- a copy leaves the original in place, so nothing breaks
+          -- Backend of the "Select..." multi-select: "auto" | "telescope" | "fzf-lua" | "quickfix".
+          -- picker = "auto",
+          -- Skip the textual code providers when an LSP client already applied a
+          -- workspace edit for the rename.
+          -- prefer_lsp = true,
+          -- Also scan [[wiki]]-style links.
+          -- wiki_links = false,
+
+          -- Also rewrite bare filesystem paths written as running text
+          -- (`see ../Test/Tester.md` in a note) or in code comments, not just paths
+          -- inside link/require/import syntax. A token is only rewritten when it
+          -- resolves to exactly the file that moved. Opt-in and namespaced under
+          -- `experimental` because the config shape may still move.
           experimental = {
-            plaintext = { enabled = true },
-          },
-          -- Cascade-delete-assets: when a file is deleted, also detect
-          -- outgoing links it holds to asset files (screenshots etc.) under
-          -- assets/ and offer to delete those too, once nothing else still
-          -- references them. Opt-in upstream (default off); enabled here
-          -- since this is the feature under active development/testing —
-          -- see wkdbook-myplugins/filetree.nvim/ROADMAP/IDEAS/Cascade_Delete_Assets.md.
-          outgoing_assets = { enabled = true },
-        },
-        features = {
-          cwd_sync = { enabled = true, reveal = false },
-          -- The mode badge (PROJECT/LOCK/…) is shown in this host's own
-          -- ui.nvim statusline instead (config/ui_statusline/variant.lua,
-          -- filetree_cwd_mode module) via cwd_mode's
-          -- external-statusline API (badge()/component()). indicator.enabled
-          -- must stay false here, or the mode shows twice: once in the
-          -- shared statusline, once as a float in the tree window (with
-          -- laststatus=3 there is no per-window statusline for it to use,
-          -- so it would fall back to exactly that float).
-          -- labels.follow is "" upstream by design: filetree's own in-tree
-          -- badge is meant to be invisible while no policy is active. In a
-          -- shared statusline that reads as "the component is broken" rather
-          -- than "no mode" — so give follow a visible label. Everything else
-          -- keeps filetree's defaults (PROJECT/PKG/LOCK/MANUAL/TREE).
-          cwd_mode = {
-            indicator = {
-              enabled = false,
-              labels = { follow = "FOLLOW" },
+            plaintext = {
+              -- Default: false.
+              enabled = true,
+              -- Also scan comment lines in .lua/.py/.ts/... files; false restricts the
+              -- scan to prose/text files.
+              -- comments = true,
+              -- extensions = nil, -- string[]; replaces the built-in prose-extension list
+              -- comment_extensions = nil, -- string[]; replaces the built-in comment-extension list
             },
           },
-          -- Mark the currently-focused file with a sign-column icon (on top of
-          -- neo-tree's own fg colour for all opened files). opened_sync is on by
-          -- default and keeps those opened-file colours in sync as buffers open/
-          -- close, so no config needed for it.
-          current_hl = { enabled = true, icon = "▸" },
-          -- Trash and watcher_quarantine are on by default in filetree.nvim
-          -- (not in its DEFAULT_DISABLED list) - listed here only to make
-          -- that explicit, no functional effect.
-          trash = { enabled = true },
-          watcher_quarantine = { enabled = true },
-          -- handle_guard: actually closes neo-tree's leaked directory-watcher
-          -- handles before a rename/move so the Windows EPERM file-lock can't
-          -- happen (watcher_quarantine only hides the error). Opt-in / default
-          -- off; enabled here to test whether the sporadic lock stops recurring.
-          handle_guard = { enabled = true },
-          -- context_menu: left on its default (<RightMouse>, opt-out) -
-          -- filetree.nvim is now the sole right-click implementation for the
-          -- tree. config/menu/neotree/ (the old hand-maintained entries) is
-          -- gone, and ui.nvim's ui.menu global RightMouse handler no
-          -- longer special-cases neo-tree - filetree's own buffer-local
-          -- binding shadows it inside the tree, same items() source either
-          -- way. Non-tree right-click (markdown, everything else) still goes
-          -- through the global handler, unaffected.
-          -- statusline defaults to true, but that blanks the tree window's
-          -- local 'statusline' — harmless under laststatus=2 (per-window),
-          -- but with laststatus=3 (global statusline, see options.lua) that
-          -- blank local override becomes the content of the ONE shared
-          -- statusline whenever the tree is focused. Disabled here so
-          -- filetree leaves the global statusline alone.
-          -- highlights_isolate confirmed working in real interactive use -
-          -- replaces config.neotree's window/{disable_statusline,highlight}.lua
-          -- + autocmds/init.lua, all removed.
-          window_style = { statusline = false, highlights_isolate = true },
+          -- Cascade-delete-assets: when a file is deleted, also detect outgoing links
+          -- it holds to asset files (screenshots etc.) under assets/ and offer to
+          -- delete those too, once nothing else still references them. Opt-in
+          -- upstream; enabled here to exercise it. See
+          -- wkdbook-myplugins/filetree.nvim/ROADMAP/IDEAS/Cascade_Delete_Assets.md.
+          outgoing_assets = {
+            -- Default: false.
+            enabled = true,
+            -- "ask" | "auto" | "off"; "off" also short-circuits `enabled`.
+            -- on_delete = "ask",
+            -- roots = nil, -- string[]; default { "assets" }, tried next to the linking file, then at the project root
+            -- extensions = nil, -- string[]; allowlist, default image/video shapes (no pdf)
+          },
+          -- Rewrite the outgoing links inside a moved/renamed/copied file so they
+          -- still resolve from its new location.
+          -- outgoing_links = {
+          --   enabled = false,
+          --   mode = nil, -- "ask" | "auto" | "off"; nil inherits on_move / on_rename
+          --   env_vars = {}, -- string[]; env var names (no "$") recognised in "$VAR/..." targets
+          -- },
+          -- scan = {
+          --   root = "project", -- "project" (nearest root) | "cwd"
+          --   respect_gitignore = true,
+          --   max_files = 5000, -- cap for the ripgrep-free fallback walk
+          --   timeout_ms = 3000,
+          -- },
+          -- Keep the replaced lines so `:Filetree refs undo` can put them back.
+          -- undo = true,
+          -- undo_depth = 10, -- rewrites that stay undoable
+        },
 
-          -- The last three pieces of this config's own neo-tree layer,
-          -- moved into filetree.nvim 2026-09-19 (external-plugins report,
-          -- "neo-tree config -> filetree.nvim"):
-          --   * the source switcher -- `"`/`!` cycle in place (default),
-          --     `<leader>ns` picks from a list (was config.neotree's global
-          --     key), and plugins/neotree.lua takes the source_selector
-          --     names from the same module;
-          --   * the four Alt toggle keys, with the E95 self-heal now in the
-          --     adapter (was config/neotree/window/open/keymaps/only_lhs.lua);
-          --   * `y` in the tree as a second key for path_copy's absolute-path
-          --     copy (was a hand-rolled delegate in config.neotree.keymaps).
-          source_switcher = { keymap_pick = "<leader>ns" },
-          tree_toggle = { enabled = true },
-          path_copy = { keymap_abs = { "[a", "y" } },
+        -- nvzone/menu / right-click menu entries. `enable = false` yields no entries;
+        -- entries of a disabled feature are omitted automatically.
+        -- menu = {
+        --   enable = true,
+        --   fileops = true, -- create / rename / batch rename / move / template
+        --   clipboard = true, -- copy / cut / paste
+        --   delete = true, -- trash
+        --   open = true, -- vsplit / split / tab / system app / file manager
+        --   paths = true, -- copy path / markdown link
+        --   search = true, -- find files / grep in dir
+        --   info = true, -- node info
+        --   marks = true, -- toggle / mark all / unmark all / clear / show marked
+        --   window = true, -- open/close the tree itself
+        -- },
+
+        -- Sister plugins filetree may hand work to (opt-out, all soft).
+        -- integrations = {
+        --   pickers = true, -- false keeps find_files / grep_in_dir off pickers.nvim
+        --   ui_menu = true, -- false keeps ui.nvim's right-click menu from offering "Open/Close filetree"
+        -- },
+
+        -- Every feature is on by default except the few marked "opt-in" below; a
+        -- feature table only needs `enabled = false` to switch one off.
+        features = {
+          -- layout_guard = { enabled = true, delay_ms = 50 },
+          -- no_name_guard = { enabled = true }, -- redirect stray [No Name] editor windows to a real buffer
+          -- Warn when a just-opened buffer turns out to be a dangling symlink's target.
+          -- broken_link_notify = { enabled = true },
+          -- Keep the tree in its sidebar: a buffer landing there is moved to an editor
+          -- window and the tree put back (neo-tree only).
+          -- sidebar_guard = {
+          --   enabled = true,
+          --   winfixbuf = false, -- refuse with 'winfixbuf' instead of redirecting; also breaks plugins that open files without checking it (E1513)
+          -- },
+
+          -- Opt-in (default off): anchor the cwd to the nearest .git ancestor on
+          -- buffer switch. `reveal = false` because neo-tree already follows the cwd
+          -- (bind_to_cwd + follow_current_file), so cwd_sync only sets the cwd and
+          -- lets neo-tree root/reveal instead of the two fighting each other.
+          cwd_sync = {
+            enabled = true,
+            -- debounce_ms = 150,
+            -- parent_levels = 0, -- how far the tree-reveal call itself ascends
+            -- keep_focus = true, -- stay in the editor window after the reveal
+            -- change_dir = true, -- actually chdir, never prompts
+            -- Also reveal/root the tree from cwd_sync. Default: true.
+            reveal = false,
+            -- use_project_root = true, -- target the project root, not the file's dir
+            -- root_markers = { ".git" }, -- string[] | false; fallback when cwd_mode is enabled
+          },
+          -- Root policy in front of cwd_sync. Enabled but inert while mode = "follow";
+          -- switch modes at runtime with :Filetree cwd ...
+          cwd_mode = {
+            -- enabled = true,
+            -- mode = "follow", -- "follow" | "project" | "nearest" | "lock" | "manual" | "tree_leads"
+            -- scope = "global", -- directory scope: "global" | "tab" | "win"
+            -- project = {
+            --   markers = { ".git", ".hg", ".svn" }, -- adding package.json / Cargo.toml gives nearest-package (monorepo) behaviour
+            --   skip_dirs = { "node_modules", ".venv", "vendor" }, -- names that can never hold a root
+            --   max_depth = nil, -- number; levels to walk upward, nil = unbounded
+            --   sticky = true, -- keep the current root for a file without one of its own
+            -- },
+            -- nearest = {
+            --   markers = { -- package boundaries for "nearest" mode; replaces the list
+            --     "package.json",
+            --     "Cargo.toml",
+            --     "go.mod",
+            --     "pyproject.toml",
+            --     "setup.py",
+            --     "*.rockspec",
+            --     "mix.exs",
+            --     "build.zig",
+            --     "CMakeLists.txt",
+            --     ".git",
+            --   },
+            -- },
+            -- lock = {
+            --   enforce = true, -- revert foreign cwd changes
+            --   follow_manual_root = true, -- re-rooting the tree by hand moves the lock
+            -- },
+            -- reveal_outside = "skip", -- file outside the held root: "skip" | "reveal"
+            -- persist = false, -- remember mode, scope and lock pin per project
+            -- The mode badge is shown in this host's own ui.nvim statusline
+            -- (filetree_cwd_mode module) via cwd_mode's external-statusline API
+            -- (badge() / component()). The in-tree indicator must stay off, or the mode
+            -- shows twice: with laststatus=3 there is no per-window statusline for it,
+            -- so it would fall back to a float in the tree window.
+            indicator = {
+              -- Default: true.
+              enabled = false,
+              -- mode = "auto", -- "auto" | "statusline" | "float"
+              -- align = "left", -- "left" | "center" | "right"
+              -- show_path = "lock", -- append the pinned path: "never" | "lock" | "always"
+              -- style = "text", -- label set used: "text" | "short" | "numeric" | "icon"
+              labels = {
+                -- Upstream leaves this "" so the in-tree badge is invisible while no policy
+                -- is active; in a shared statusline that reads as a broken component, so
+                -- give it a visible label. Default: "".
+                follow = "FOLLOW",
+                -- project = "PROJECT",
+                -- nearest = "PKG",
+                -- lock = "LOCK",
+                -- manual = "MANUAL",
+                -- tree_leads = "TREE",
+              },
+              -- labels_short = { follow = "", project = "P", nearest = "N", lock = "L", manual = "M", tree_leads = "T" },
+              -- labels_numeric = { follow = "0", project = "1", nearest = "2", lock = "3", manual = "4", tree_leads = "5" },
+              -- Nerd Font glyphs; swap one if it renders as tofu.
+              -- icons = {
+              --   follow = "",
+              --   project = "",
+              --   nearest = "",
+              --   lock = "",
+              --   manual = "",
+              --   tree_leads = "",
+              -- },
+              -- Highlight group per mode, shared across styles.
+              -- hl = {
+              --   follow = "Comment",
+              --   project = "DiagnosticInfo",
+              --   nearest = "DiagnosticInfo",
+              --   lock = "DiagnosticWarn",
+              --   manual = "Comment",
+              --   tree_leads = "DiagnosticHint",
+              -- },
+            },
+            -- cycle = { "follow", "project", "lock" }, -- order of `:Filetree cwd toggle`; replaces the list
+            -- keymap_cycle = "L", -- tree-buffer key; "" disables
+            -- keymap_lock_here = "gp", -- lock onto the node under the cursor; "" disables
+          },
+          -- Mark the currently-focused file with a sign-column icon, on top of
+          -- neo-tree's own fg colour for all opened files. opened_sync is on by
+          -- default and keeps those opened-file colours in sync as buffers
+          -- open/close, so it needs no config.
+          current_hl = {
+            -- Default: false.
+            enabled = true,
+            -- file_hl = { fg = "#7aa2f7", bold = true }, -- string | table highlight spec
+            -- parent_hl = { fg = "#565f89" },
+            -- debounce_ms = 100,
+            -- Sign-column marker on the current file's line. Default: nil (off).
+            icon = "▸",
+            -- icon_hl = nil, -- string | table; default the file_hl group
+          },
+          -- Opt-in (default off): backup API, no keymaps.
+          -- safety = {
+          --   enabled = false,
+          --   backup_dir = nil, -- string; default stdpath("data")/filetree/backups
+          --   max_backups = 5, -- per file
+          --   dry_run = false, -- log operations without executing them
+          -- },
+          -- Delete to the OS trash with undo. Equals the default, set explicitly.
+          trash = {
+            enabled = true,
+            -- mode = "trash", -- "trash" (undoable) | "permanent" (fs delete, no undo)
+            -- confirm = true, -- ask before trashing (unlike paste / rename_batch)
+            -- use_safety = false, -- back up before trashing
+            -- dry_run = false,
+            -- max_history = 50, -- undoable trash operations; 0 = unlimited
+            -- keymap = "d", -- trash the node / all marked
+            -- keymap_undo = "U",
+            -- keymap_history = "<leader>th",
+            -- check_markdown_refs = nil, -- deprecated: use refs.on_delete (false -> "off")
+            -- refs_picker_prefer = nil, -- deprecated: use refs.picker
+          },
+          -- Swallows the neo-tree file-watcher errors caused by a rename/move.
+          -- Equals the default, set explicitly.
+          watcher_quarantine = {
+            enabled = true,
+            -- duration_ms = 500,
+            -- silent = true, -- no quarantine notifications
+            -- patch_neotree_watch = true, -- wrap neo-tree's fs_watch callbacks to swallow EPERM
+          },
+          -- Opt-in (default off): closes neo-tree's leaked directory-watcher handles
+          -- before a rename/move, so the Windows EPERM file-lock cannot happen at the
+          -- source (watcher_quarantine only hides the error). neo-tree adapter and
+          -- Windows/WSL only, a no-op elsewhere. Inspect with `:Filetree handles`.
+          handle_guard = { enabled = true },
+          -- context_menu (enabled = true, keymap = "<RightMouse>", or false to unbind) stays
+          -- on its defaults: filetree's buffer-local binding is the only right-click
+          -- handler inside the tree (it shadows ui.nvim's global RightMouse handler
+          -- there); right-click in other buffers still goes through the global one.
+          window_style = {
+            -- enabled = true,
+            -- Blank the tree window's local 'statusline'. Harmless under laststatus=2, but
+            -- with laststatus=3 (global statusline, see options.lua) that blank override
+            -- becomes the content of the ONE shared statusline whenever the tree is
+            -- focused, so it is off here. Default: true.
+            statusline = false,
+            -- Link the tree's Normal/NormalNC/EndOfBuffer groups to the editor's own.
+            -- Default: false.
+            highlights_isolate = true,
+          },
+          -- Source switcher: `"` / `!` cycle the neo-tree sources in place. The extra
+          -- global key picks one from a list; plugins/neotree.lua takes the
+          -- source_selector names from the same module.
+          source_switcher = {
+            -- enabled = true,
+            -- keymap_next = '"', -- string | string[] | false; tree-buffer key, wraps
+            -- keymap_prev = "!",
+            -- Global normal-mode key. Default: nil.
+            keymap_pick = "<leader>ns",
+            -- sources = nil, -- string[]; default neo-tree's configured `sources`
+            -- icons = {
+            --   family = nil, -- "nerd" | "codicons" | "common"; unset: "nerd" when vim.g.have_nerd_font, else "common"
+            --   variant = "v1", -- "v1" | "v2"
+            --   length = "long", -- name length: "long" | "short"
+            -- },
+          },
+          -- Opt-in (default off): four global Alt keys toggling the tree, a claim on
+          -- the keyboard the user makes. The E95 self-heal lives in the adapter.
+          tree_toggle = {
+            enabled = true,
+            -- reveal = true, -- reveal the current file when opening
+            -- reveal_force_cwd = true, -- re-root to the cwd when that file lies outside the tree
+            -- keymap_current = "<M-c>", -- string | string[] | false; toggle in the current window
+            -- keymap_float = "<M-f>",
+            -- keymap_left = "<M-l>",
+            -- keymap_right = "<M-r>",
+          },
+          -- Path-copy family.
+          path_copy = {
+            -- enabled = true,
+            -- keymap_pick = nil, -- opens a format picker
+            -- Absolute path. `y` is added as a second key next to the default `[a`.
+            -- Default: "[a".
+            keymap_abs = { "[a", "y" },
+            -- keymap_dirname = "]a", -- absolute parent directory
+            -- keymap_name = nil, -- filename only
+            -- keymap_project_root = "[R", -- absolute project root
+            -- keymap_project_rel = "]R", -- relative to the project root
+            -- keymap_buffer_rel = "]b", -- relative to the buffer open in the editor
+            -- keymap_env_root = "[e", -- $REPOS_DIR/... form
+            -- root_markers = { ".git" }, -- string[] | false (use the cwd)
+            -- env_roots = { "REPOS_DIR" }, -- env var names tried by the env-rooted copy, without "$"
+            -- nvim_config_root = true, -- also fold in $NVIM_CONFIG_DIR (stdpath("config"))
+            -- notify = true,
+          },
+
+          -- Further features, all at their defaults.
+          -- auto_reveal = {
+          --   enabled = true,
+          --   debounce_ms = 150,
+          --   ignore_ft = { "neo-tree", "NvimTree", "netrw", "TelescopePrompt", "fzf", "lazy", "mason", "trouble", "qf", "help", "man", "terminal", "nofile", "prompt" }, -- replaces the list
+          --   only_if_open = true, -- reveal only while the tree window is visible
+          --   sync_on_enter = true, -- move the tree cursor onto the current file when the tree is entered
+          --   follow_root = true, -- re-root for a file outside the current root
+          -- },
+          -- Opt-in (default off): automatic width management, fights window_size_cycler.
+          -- auto_resize = {
+          --   enabled = false,
+          --   breakpoints = { { cols = 0, width = 25 }, { cols = 100, width = 30 }, { cols = 140, width = 35 } }, -- { cols = min editor columns, width = tree width }; replaces the list
+          --   min_width = 20,
+          --   max_width = 60,
+          -- },
+          -- buffer_cycle = {
+          --   enabled = true,
+          --   keymap_next = "<C-n>", -- next buffer in the adjacent editor window
+          --   keymap_prev = "<C-p>",
+          -- },
+          -- reveal_alt = { enabled = true, keymap = "B" }, -- reveal the alternate buffer (#) in the tree
+          -- tree_traverse = {
+          --   enabled = true,
+          --   keymap_up = "-", -- navigate to the parent directory
+          --   keymap_down = "+", -- set the current dir as root
+          --   sync_cwd = false, -- also change Vim's cwd
+          -- },
+          -- window_size_cycler = {
+          --   enabled = true,
+          --   keymap = "w",
+          --   sizes = { 30, 50, 15 }, -- width presets; replaces the list
+          -- },
+          -- cursor_hide = {
+          --   enabled = true, -- hide the block cursor in the tree window
+          --   force_cursorline = true, -- keep 'cursorline' on while the cursor is hidden
+          -- },
+          -- tree_reset = { enabled = true, keymap = "<Esc>" }, -- clears preview, filter, live search, quarantine and search highlights
+          -- preview = {
+          --   enabled = true,
+          --   mode = "buffer", -- "buffer" (in the editor window) | "float"
+          --   highlight = true, -- syntax/treesitter highlighting
+          --   cursor_debounce_ms = 80, -- live update while scrolling the tree
+          --   keymap = "<Tab>", -- toggle the text preview; dispatch image/PDF
+          --   keymap_open = "<CR>", -- dispatch image/PDF; adapter default for other nodes
+          --   max_lines = 40, -- float mode
+          --   max_width = 80, -- float mode
+          --   max_height = 25, -- float mode
+          --   wrap = false, -- float mode
+          --   keymap_scroll_up = "<C-b>",
+          --   keymap_scroll_down = "<C-f>",
+          --   keymap_scroll_up10 = "<PageUp>",
+          --   keymap_scroll_down10 = "<PageDown>",
+          --   image = { backend = "auto" }, -- "auto" | "images.nvim" | "snacks" | "image.nvim" | "system" | false
+          --   pdf = { backend = "pdfport" }, -- "pdfport" | "system" | false
+          -- },
+          -- node_info = {
+          --   enabled = true,
+          --   keymap = "I",
+          --   show_lines = true, -- line count for files
+          --   max_lines_size = nil, -- bytes; skip the line count above this, default 5 MB
+          --   max_entries = 100000, -- cap of the recursive directory scan behind Items/Size
+          -- },
+          -- breadcrumbs = {
+          --   enabled = true,
+          --   mode = "winbar", -- "winbar" | "float" | "statusline"
+          --   separator = "  ",
+          --   max_depth = 5, -- path segments shown
+          --   hl_dir = "Comment",
+          --   hl_file = "Normal",
+          --   hl_sep = "NonText",
+          --   winbar_hl = "WinBar",
+          -- },
+          -- Opt-in (default off): per-node `du` / `Get-ChildItem` by default, so cosmetic clutter.
+          -- size_info = {
+          --   enabled = false,
+          --   show_files = true,
+          --   show_dirs = true,
+          --   hl_group = "Comment",
+          --   dir_async = true, -- use du / PowerShell for directory sizes
+          -- },
+          -- link_marker = {
+          --   enabled = true,
+          --   show_target = false, -- also show the link target after the sign
+          --   target_hl = "Comment",
+          --   signs = { -- merged per key
+          --     symlink = { text = "⇢", hl = "Special" },
+          --     broken = { text = "⇢!", hl = "DiagnosticError" }, -- neo-tree only
+          --   },
+          -- },
+          -- opened_sync = { enabled = true, debounce_ms = 60 }, -- re-render delay after a buffer opens/closes
+          -- cheatsheet = { enabled = true, keymap = "?" }, -- no-op on the neotree adapter, whose native `?` already covers it
+          -- smart_create = {
+          --   enabled = true,
+          --   keymap = "a",
+          --   auto_module_annot = false, -- new .lua files get a `---@module` header
+          --   auto_types_template = false, -- files under an @types path get `---@meta` + `---@module`
+          --   auto_init_lua = false, -- creating a directory also creates init.lua
+          --   ask_clipboard = false, -- offer to paste a non-empty clipboard into the new file
+          --   notify_level = "verbose", -- success message: "verbose" | "short" | "off"
+          -- },
+          -- copy_move = {
+          --   enabled = true,
+          --   keymaps = { copy = "c", cut = "x", paste = "p", show = "P", clear = "X" },
+          --   confirm = false, -- ask before paste
+          --   use_safety = true, -- back up before a move
+          --   dry_run = false,
+          --   check_markdown_refs = nil, -- deprecated: use refs.on_move (false -> "off")
+          --   refs_picker_prefer = nil, -- deprecated: use refs.picker
+          -- },
+          -- move = { enabled = true, keymap = "M", use_safety = true, dry_run = false },
+          -- rename_batch = {
+          --   enabled = true,
+          --   keymap = "<leader>rb",
+          --   confirm = false, -- ask before applying the plan
+          --   use_safety = true,
+          --   dry_run = false,
+          --   check_markdown_refs = nil, -- deprecated: use refs.on_rename (false -> "off")
+          --   refs_picker_prefer = nil, -- deprecated: use refs.picker
+          -- },
+          -- smart_rename = {
+          --   enabled = true,
+          --   keymap = "r",
+          --   use_safety = true,
+          --   dry_run = false,
+          --   update_references = nil, -- deprecated: use refs.providers (false turns the lua/python/ts_js providers off)
+          --   check_markdown_refs = nil, -- deprecated: use refs.on_rename (false -> "off")
+          --   refs_picker_prefer = nil, -- deprecated: use refs.picker
+          -- },
+          -- create_from_template = {
+          --   enabled = true,
+          --   keymap = "A",
+          --   template_dir = nil, -- string; default stdpath("data")/filetree/templates
+          --   author = nil, -- string; for ${author}, default $USER / $USERNAME
+          --   open_after = true, -- open the created file
+          --   prefer = "auto", -- template picker: "auto" | "telescope" | "fzf" | "snacks" | "builtin"
+          -- },
+          -- Symlink / hardlink creation; no default keymap, use `:Filetree symlink`.
+          -- link_create = {
+          --   enabled = true,
+          --   keymap = nil, -- prompt for a link target
+          --   keymap_mark = nil, -- mark a link source
+          --   keymap_paste = nil, -- paste the marked source as a link
+          --   repair_roots = { "$REPOS_DIR" }, -- extra dirs searched for a broken link's moved target; merged by index, so a shorter list does not clear the default
+          --   repair_nvim_config_root = true, -- also search stdpath("config")
+          --   repair_search_progress = "auto", -- "auto" | "notify" | "statusline" | "fidget" | "float" | "kit" | false
+          --   repair_search_slow_hint_ms = 2000, -- number | false; warn when that search takes longer
+          -- },
+          -- open_replace = {
+          --   enabled = true,
+          --   keymap = "O", -- open over the editor window, the old buffer stays listed
+          --   keymap_swap = "<M-CR>", -- same, and close the old buffer
+          --   keymap_swap_alt = "<C-CR>", -- for terminals that send <C-CR> distinctly
+          --   close_tree = true, -- close the tree after `keymap`
+          --   swap_close_tree = false, -- ... and after a swap
+          --   keep_position = true, -- new buffer takes the replaced one's bufferline slot
+          -- },
+          -- open_variants = {
+          --   enabled = true,
+          --   keymap_vsplit = "sg",
+          --   keymap_split = "sv",
+          --   keymap_tabnew = "st",
+          --   keymap_badd = "gb", -- add to the buffer list without switching focus
+          --   keymap_badd_alt = "<S-CR>",
+          -- },
+          -- buffer_save = {
+          --   enabled = true,
+          --   keymap_adjacent = "<C-s>", -- save the last adjacent editor buffer
+          --   keymap_node = "<M-s>", -- save the buffer of the node under the cursor
+          --   force = true, -- write! instead of update
+          -- },
+          -- filter = {
+          --   enabled = true,
+          --   keymap = "/",
+          --   keymap_clear = "<C-c>",
+          --   case_sensitive = false,
+          --   dim_hl_group = "Comment", -- non-matching lines
+          --   debounce_ms = 80,
+          -- },
+          -- live_search = {
+          --   enabled = true,
+          --   keymap = "gs",
+          --   match = "name", -- "name" | "path"
+          --   hl_match = "Search",
+          --   hl_dim = "Comment",
+          --   commit_to_filter = true, -- <CR> pushes the query to the filter feature
+          --   debounce_ms = 80,
+          -- },
+          -- find_files = {
+          --   enabled = true,
+          --   keymap_tree = "f",
+          --   keymap_pickers = "tf", -- force pickers.nvim
+          --   keymap_telescope = nil, -- force telescope
+          --   keymap_global = nil, -- global normal-mode key
+          --   prefer = "auto", -- "auto" | "pickers" | "telescope" | "fzf-lua" | "mini.pick" | "builtin"
+          --   reveal_on_open = true, -- reveal the picked file in the tree
+          --   hidden = false,
+          -- },
+          -- grep_in_dir = {
+          --   enabled = true,
+          --   keymap = "gr",
+          --   keymap_cword = nil, -- grep the word under the cursor
+          --   keymap_pickers = "tg", -- force pickers.nvim
+          --   keymap_telescope = nil, -- force telescope
+          --   prefer = "auto", -- "auto" | "pickers" | "telescope" | "fzf-lua" | "builtin"
+          --   hidden = false,
+          --   extra_args = {}, -- string[]; extra args for rg / grep
+          -- },
+          -- lua_require_copy = { enabled = true, keymap = "rq" },
+          -- copy_file_list = {
+          --   enabled = true,
+          --   keymap_files_abs = "[f",
+          --   keymap_files_rel = "]f",
+          --   keymap_dirs_abs = "[F",
+          --   keymap_dirs_rel = "]F",
+          --   preview_limit = 5, -- max lines shown in the notification
+          --   separator = "\n", -- between paths
+          -- },
+          -- markdown_links = {
+          --   enabled = true,
+          --   keymap = "ML", -- link for the current node
+          --   keymap_recursive = "MR",
+          --   keymap_from_marked = "MM",
+          -- },
+          -- git_status = {
+          --   enabled = true,
+          --   debounce_ms = 300, -- delay between write and re-query
+          --   show_ignored = false,
+          --   signs = { -- merged per key; { text, hl } per status
+          --     modified = { text = "●", hl = "DiagnosticWarn" },
+          --     added = { text = "+", hl = "DiagnosticOk" },
+          --     deleted = { text = "-", hl = "DiagnosticError" },
+          --     renamed = { text = "»", hl = "DiagnosticHint" },
+          --     untracked = { text = "?", hl = "Comment" },
+          --     ignored = { text = "·", hl = "Comment" },
+          --     conflict = { text = "✗", hl = "DiagnosticError" },
+          --   },
+          -- },
+          -- marks = {
+          --   enabled = true,
+          --   indicator = "✓", -- shown before marked nodes
+          --   hl_group = "DiagnosticOk",
+          --   keymap = "m", -- toggle the mark
+          --   keymap_all = "]m",
+          --   keymap_unmark_all = "[m",
+          --   keymap_clear = "<leader>mc",
+          --   keymap_show = "<leader>ms",
+          --   keymap_goto = "gm", -- count-prefixed
+          --   keymap_next = "]M",
+          --   keymap_prev = "[M",
+          --   auto_clear_ms = 60000, -- clear all marks after this idle time; 0 disables
+          -- },
+          -- session = {
+          --   enabled = true,
+          --   auto_save = true, -- on VimLeavePre and tree BufHidden
+          --   auto_restore = true, -- on the first neo-tree / NvimTree FileType
+          --   max_sessions = 50,
+          -- },
+          -- open_in_fm = {
+          --   enabled = true,
+          --   keymap = "<leader>fm", -- show the node in the system file manager
+          --   command = nil, -- string; launcher override, auto-detected per OS
+          --   reveal = true, -- select a file node; false opens the containing directory
+          --   debug = false, -- log every launch attempt
+          --   reuse_existing = false, -- Windows: navigate an open Explorer window instead of spawning one
+          -- },
+          -- open_with = {
+          --   enabled = true,
+          --   keymap = "<leader>sm", -- system default application
+          --   apps = {}, -- { name, cmd, args?, keymap? }[]; custom application entries
+          -- },
+          -- shell_run = {
+          --   enabled = true,
+          --   keymap = "i", -- prompt for a command, run it in the node's directory
+          --   close_on_ok = true, -- close the terminal when the command exits 0
+          --   split = "split", -- "split" | "vsplit"
+          --   height = 12, -- terminal height for a horizontal split
+          -- },
+          -- pdf_open = {
+          --   enabled = true,
+          --   default_mode = "buffer", -- mode of keymap_open: "buffer" | "float" | "terminal" | "system" | "picker"
+          --   keymap_open = "go",
+          --   keymap_text = false, -- force text extraction into a buffer
+          --   keymap_system = false, -- force the OS viewer
+          --   keymap_terminal = false, -- force pdfport's terminal mode
+          --   keymap_picker = false, -- ask how to open it
+          -- },
+          -- pdf_create = {
+          --   enabled = true,
+          --   keymap = "gP", -- create a PDF from the node / marks / folder
+          --   on_conflict = "suffix", -- "overwrite" | "suffix" | "error"
+          --   confirm = true,
+          -- },
+          -- lsp_diagnostics = {
+          --   enabled = true,
+          --   show_errors = true,
+          --   show_warnings = true,
+          --   show_hints = false,
+          --   show_info = false,
+          --   format = nil, -- fun(counts): string?; default renders the non-zero counts like "E:1 W:2", nil hides the row
+          --   debounce_ms = 300,
+          -- },
+          -- diff = {
+          --   enabled = true,
+          --   split = "vsplit", -- "vsplit" | "split"
+          --   keymap = "D",
+          -- },
+          -- ignore_list = {
+          --   enabled = true,
+          --   names = nil, -- string[]; nil = built-in list (or lib.nvim's)
+          -- },
+          -- project_root = {
+          --   enabled = true,
+          --   markers = { ".git", ".hg", ".svn", "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "Cargo.toml", "go.mod", "pyproject.toml", "setup.py", "setup.cfg", "Makefile", "CMakeLists.txt", "*.rockspec", ".luarc.json", "selene.toml", "mix.exs", "build.zig" }, -- replaces the list
+          --   fallback = "parent", -- when no marker is found: "parent" (the file's dir) | "cwd"
+          --   cache = true, -- cache resolved roots per directory
+          --   max_cache_entries = 1000, -- directories held before the cache is cleared
+          -- },
+          -- file_watcher = {
+          --   enabled = true,
+          --   debounce_ms = 500,
+          --   watch_recursive = true,
+          --   ignore_events = {}, -- string[]; uv event types to ignore
+          -- },
+          -- hooks_api = { enabled = true },
+          -- tree_integrity = {
+          --   enabled = true, -- keep neo-tree's node index from being corrupted by a re-set subtree
+          --   silent = true, -- false: debug note whenever a corrupt subtree is healed
+          -- },
         },
       })
     end,
