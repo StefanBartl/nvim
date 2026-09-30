@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-09-30, nach dem Task „lib.nvim: `insert_links` + `previous_window`".
+**Stand:** 2026-09-30, nach dem Task „filetree.nvim: `MI` Link einfügen".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -25,6 +25,7 @@ Repos liegen als Checkouts unter `E:\repos\<name>.nvim` (alle auf `main`).
 | T5a Helper | lib.nvim | `664667c`, `62c559a` | `lib.nvim.markdown.link_cursor` (`locate/place/insert/insert_links`, `setup`), `window.find_usable.previous_window` |
 | T5 gopath-API | gopath.nvim | `f1cfe5c` | `require("gopath").shorten_path(abs)` → `$VAR/rest` oder nil (+ Variablenname) |
 | T5b images | images.nvim | `242f3ed` | `:Image paste [env\|abs\|rel\|repos] [name]`, `paste.env_roots`, `paste.link_cursor`; Cursor nach Insert in den Alt-Text + Insert-Modus |
+| T5c filetree `MI` | filetree.nvim | `9a0e0dc` | `MI` / `:Filetree mdlink insert`: Marks (sonst aktueller Node) als Links ins vorherige Fenster, Cursor in den ersten Link + Insert; `insert_path` = buffer (Default) / cwd / absolute / env, `env_roots`, `cursor` |
 | T5c markdown wrap | markdown.nvim | `19fabae` | `wrap_link` nutzt den Helper; `links.cursor` (`enable/startinsert/path_cursor`) |
 
 ### Cursor-Regel (entschieden, gilt überall)
@@ -39,17 +40,9 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 
 ## Offen — in dieser Reihenfolge weitermachen
 
-1. **filetree.nvim: „Link einfügen"-Aktion** (`features/paths/markdown_links/init.lua`).
-   Heute kopieren `ML`/`MR`/`MM` nur in die Register. Neu: Aktion (Vorschlag `MI`,
-   Key vorher gegen `key_conflicts` prüfen), die Marks-falls-vorhanden-sonst-aktueller-
-   Node als Links in das **vorherige Fenster** einfügt:
-   `lib.nvim.window.find_usable.previous_window()` + `lib.nvim.markdown.link_cursor.insert_links(buf, win, links)`.
-   Link-Pfad konfigurierbar `insert_path = "buffer"|"cwd"|"absolute"|"env"`
-   (Default `"buffer"`; `env` über `filetree.util.path.env_rooted(p, {"REPOS_DIR"}, {{name="NVIM_CONFIG_DIR", root=stdpath("config")}})`,
-   sonst `util.path.dot_relative(p, <Verzeichnis des Ziel-Buffers>)`). Bestehendes Kopieren bleibt.
-   Dazu: `@types/config.lua`, DEFAULTS, `SCHEMA` (Test `config_schema.lua` fällt sonst um),
-   README/docs, `TESTS/smoke.lua`/`units.lua`. filetree hatte 3 neue Upstream-Commits (gepullt).
-2. **pickers.nvim: Link-Einfügen-Aktion** analog (Datei `lua/pickers/entry_actions/path_copy.lua`,
+1. ~~filetree.nvim `MI`~~ — **erledigt** (`9a0e0dc`). Vorbild für die Picker-Aktion:
+   `features/paths/markdown_links/init.lua` (`insert_current`, `insert_target`, `build_insert_links`).
+2. **pickers.nvim: Link-Einfügen-Aktion** analog zu filetree `MI` (Datei `lua/pickers/entry_actions/path_copy.lua`,
    Format `markdown_link`; `opts.win` ist das Fenster hinter dem Picker). Picker **schließen**,
    dann einfügen; je Engine-Adapter (`adapters/{telescope,snacks,fzf}.lua`; Nutzer verwendet **snacks**).
 3. **T6 Picker-Feedback** (Nutzer: „mach es so, dass du dir sicher sein kannst, dass es klappt";
@@ -101,8 +94,11 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 - **nvim-Config: Worktree vs. Haupt-Checkout.** Dieses Dokument liegt im Worktree
   `…/nvim/.claude/worktrees/nvim-plugin-cleanup-daf894` (Branch `claude/nvim-plugin-cleanup-daf894`).
   `$NVIM_CONFIG_DIR` ist der Haupt-Checkout `C:\Users\bartl\AppData\Local\nvim`; dort hat der
-  Nutzer `docs/ROADMAP/00_ROADMAP.md` lokal geändert. Erst nach `git pull` im Haupt-Checkout
-  ist diese Datei dort sichtbar.
+  Nutzer `docs/ROADMAP/00_ROADMAP.md` lokal geändert. **Routine nach jedem Handover-Update:**
+  committen, im Worktree `git pull --rebase origin main` + `git push origin HEAD:main`, dann im
+  Haupt-Checkout `git fetch && git merge --ff-only origin/main` (klappt, solange die eingehenden
+  Commits keine lokal geänderten Dateien des Nutzers berühren — vorher
+  `git diff --name-only HEAD origin/main` prüfen).
 - `lib.nvim.notify.popup` hängt an **`ui.kit.toast` aus ui.nvim**, nicht an lib.nvims Kopie
   (Kit ist nach ui.nvim migriert, lib-Kopie „frozen"; Drift-Test `ui.nvim/TESTS/kit_drift_spec.lua`).
 - Popup-Toast-Footer `… (:Lib notify last)` ist 22 Spalten breit — Tests mit kleiner `width` beachten.
@@ -123,3 +119,5 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | images.nvim | `242f3ed` | feat(paste): env mode, mode words, cursor | – |
 | markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | – |
 | lib.nvim | `62c559a` | feat: insert_links, previous_window | – |
+| filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | – |
+| nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
