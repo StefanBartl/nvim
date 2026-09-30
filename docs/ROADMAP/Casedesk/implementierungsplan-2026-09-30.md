@@ -1,0 +1,1 @@
+E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/Backlog/TASKS/implementierungsplan-2026-09-30.md
