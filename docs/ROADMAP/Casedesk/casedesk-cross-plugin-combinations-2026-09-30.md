@@ -1,8 +1,26 @@
 # Bericht: Plugin-Kombinationen für casedesk/WKDBook-Tricentis (2026-09-30)
 
+## Table of content
+
+  - [Bezug zum Vorbericht](#bezug-zum-vorbericht)
+  - [0. Klarstellung der Blickrichtung: WKDBook-Tricentis ← Plugins (nicht nur ← casedesk.nvim)](#0-klarstellung-der-blickrichtung-wkdbook-tricentis-plugins-nicht-nur-casedesknvim)
+    - [Tier A — arbeitet HEUTE direkt auf WKDBook-Tricentis, ganz ohne casedesk.nvim](#tier-a-arbeitet-heute-direkt-auf-wkdbook-tricentis-ganz-ohne-casedesknvim)
+    - [Tier B — braucht casedesk.nvim's semantische Schicht, um sinnvoll zu sein](#tier-b-braucht-casedesknvims-semantische-schicht-um-sinnvoll-zu-sein)
+  - [1. Der größte Einzelfund: `ai.nvim` existiert jetzt](#1-der-grte-einzelfund-ainvim-existiert-jetzt)
+  - [2. Kombinationen, die der Vorbericht (Einzelplugin-Fokus) nicht zeigt](#2-kombinationen-die-der-vorbericht-einzelplugin-fokus-nicht-zeigt)
+    - [2.1 `images.nvim` (OCR) + `media.nvim` (Transkription) + casedesk — eine gemeinsame Textablage statt zwei getrennte](#21-imagesnvim-ocr-medianvim-transkription-casedesk-eine-gemeinsame-textablage-statt-zwei-getrennte)
+    - [2.2 `hover.nvim` + `pdfport.nvim` + casedesk.nvim — dieselbe Chromium-Suche dreimal gebaut](#22-hovernvim-pdfportnvim-casedesknvim-dieselbe-chromium-suche-dreimal-gebaut)
+    - [2.3 `rules.nvim` als Engine HINTER `doctor.lua` — offene Frage, keine Empfehlung](#23-rulesnvim-als-engine-hinter-doctorlua-offene-frage-keine-empfehlung)
+  - [3. Was WKDBook-Tricentis selbst beisteuert (nicht: Plugin-Feature, sondern Rohmaterial)](#3-was-wkdbook-tricentis-selbst-beisteuert-nicht-plugin-feature-sondern-rohmaterial)
+  - [4. Korrektur am Vorbericht](#4-korrektur-am-vorbericht)
+  - [5. Aufwand/Nutzen — Quick Wins zuerst](#5-aufwandnutzen-quick-wins-zuerst)
+  - [Referenzen](#referenzen)
+
+---
+
 ## Bezug zum Vorbericht
 
-Ergänzt [casedesk-cross-plugin-features-2026-09-29.md](casedesk-cross-plugin-features-2026-09-29.md)
+Ergänzt [casedesk-cross-plugin-features-2026-09-29.md](./casedesk-cross-plugin-features-2026-09-29.md)
 (gestern), nicht ersetzt. Der Vorbericht hat sauber vorgearbeitet: Tabelle A
 dort (13 bereits integrierte Plugins) bleibt der Stand; Abschnitt C dort
 (explizit geprüft & abgelehnt) bleibt größtenteils gültig — mit einer
@@ -36,6 +54,8 @@ SLA, Ähnlichkeitssuche); alles andere unten funktioniert bereits *heute*,
 ohne dass casedesk.nvim überhaupt installiert sein müsste, einfach weil
 WKDBook-Tricentis ein normales git+Markdown-Verzeichnis ist.
 
+---
+
 ### Tier A — arbeitet HEUTE direkt auf WKDBook-Tricentis, ganz ohne casedesk.nvim
 
 | Plugin | Was es auf diesem Repo konkret tut |
@@ -65,6 +85,8 @@ schon heute wie jedes andere ihrer Projekte — Navigation, Vorschau, Suche,
 Diff, Rechtschreibung, Anhänge. casedesk.nvim kommt erst dazu, wenn eine
 Frage *case-spezifisch* wird ("welcher Case ist das", "wie lange ist er
 offen", "welcher andere Case ähnelt ihm").
+
+---
 
 ### Tier B — braucht casedesk.nvim's semantische Schicht, um sinnvoll zu sein
 
@@ -144,6 +166,8 @@ sind laut Case-Korpus die Ausnahme, kein einziger der 45 Fälle hatte eins),
 aber die Fallhöhe ist null — der Mechanismus trägt sich, sobald der erste
 Fall auftritt, ohne dass dann noch etwas gebaut werden muss.
 
+---
+
 ### 2.2 `hover.nvim` + `pdfport.nvim` + casedesk.nvim — dieselbe Chromium-Suche dreimal gebaut
 
 Codeverifiziert (nicht vermutet): `pdfport.nvim`s eigener Kommentar
@@ -165,6 +189,8 @@ dreimal statt einmal.
 bereits vorhanden in allen drei Repos zum Gegenprüfen). **Nutzen:** klein,
 aber die Art Nutzen, die sich über Jahre aufsummiert (drei Wartungsstellen
 → eine). Bester Quick Win dieses Berichts nach dem ai.nvim-Punkt.
+
+---
 
 ### 2.3 `rules.nvim` als Engine HINTER `doctor.lua` — offene Frage, keine Empfehlung
 
@@ -253,7 +279,10 @@ nachsehen", kein Schreibaufwand.
 
 ## Referenzen
 
-- Vorbericht: [casedesk-cross-plugin-features-2026-09-29.md](casedesk-cross-plugin-features-2026-09-29.md)
+- Vorbericht: [casedesk-cross-plugin-features-2026-09-29.md](./casedesk-cross-plugin-features-2026-09-29.md)
 - Case-Korpus-Analyse: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/Backlog/FEATURES/case-corpus-analyse-2026-09-30.md`
 - casedesk ROADMAP: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/ROADMAP.md`
 - Quellcode-Belege: `ai.nvim/README.md:17-21`, `pdfport.nvim/lua/pdfport/health.lua:332-340`, `media.nvim/lua/media/hub/kinds.lua:22-29`, `data.nvim/docs/scope.md:74-79`, `rules.nvim/README.md:24-31`
+
+---
+
