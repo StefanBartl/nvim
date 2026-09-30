@@ -23,11 +23,16 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     23:30       |    50% / 75%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     23:30       |    90% / 80%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    90% / 50%     |
 
 ---
+
+reposcope: Die Spec hat weder opts noch config, und nirgends wird require("reposcope") aufgerufen. setup() läuft also vermutlich nie, Keymaps und Befehle sind dann nicht gebunden. Das war schon vorher so.
+sessions: chip.col_offset = -1 mit shape = "dock_left" könnte laut Doku auf rounded_chip zurückfallen. Ungeprüft.
+pdfport: ollama_model = "qwen2.5-coder:7b" ist ein Coding-Modell, der Default llava ein Vision-Modell. Ist das gewollt?
+Doku und Defaults: Mehrere Plugins haben widersprüchliche Angaben, etwa hover play_scale, filetree smart_create, emojis checkbox.default_set (wirkungslos) und mdview click_navigate. Die Liste steht in TOOLS/spec-full-options.md.
 
 
 - markdown.nvim: wie im ![screesnhot](./$NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1790770895.png) sichlich, wird bei `>` die zeile grün hinterelget, das passt auch, aber es sol im idealfall nur so breit sein, wie die breitrste zeile beschreiben sit; das soll amn als user in der installations spec auch setzenkönnen.
