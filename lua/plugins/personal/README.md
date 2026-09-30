@@ -4,11 +4,12 @@ The personal `StefanBartl/*.nvim` plugins: which ones exist, whether each loads
 from a local checkout or from GitHub, and where its checkout is on this
 machine.
 
-Five files, and the split between them is the point:
+Five files plus one folder of specs, and the split between them is the point:
 
 | Module | Role |
 | --- | --- |
-| [`plugins.personal`](init.lua) | **Spec implementation.** The `lazy` specs themselves, and nothing else. |
+| [`plugins.personal`](init.lua) | **Entry point.** Collects the category spec lists and exports them for `lazy`; declares no plugin itself. |
+| [`plugins.personal.specs.*`](specs/) | **The `lazy` specs**, one file per plugin category (see below). |
 | [`plugins.personal.source`](source.lua) | **Policy.** Which repo loads how (`dir` / `remote` / `disabled`), the global `OVERRIDE` switch, machine-role handling. |
 | [`plugins.personal.list`](list.lua) | **The repo list**, derived from the resolved spec. |
 | [`plugins.personal.export`](export.lua) | **The repo list plus each local checkout path.** |
@@ -16,6 +17,30 @@ Five files, and the split between them is the point:
 
 To turn a repo off, or move it between local and remote, edit
 [`source.lua`](source.lua) — never `init.lua`, and never a single spec.
+
+### Spec files by category
+
+The categories are the ones on the plugin website (`wkd`, `registry.json`), so a
+plugin lives in the same place here as on the site. A new plugin goes into the
+file of its category *and* into the matching group of `source.lua`'s mode table.
+
+| File | Plugins |
+| --- | --- |
+| [`specs/foundation.lua`](specs/foundation.lua) | lib, my |
+| [`specs/ai.lua`](specs/ai.lua) | ai, buffer-ctx |
+| [`specs/edit.lua`](specs/edit.lua) | cascade, replacer, emojis, language, markdown, data |
+| [`specs/navigate.lua`](specs/navigate.lua) | gopath, hover, open, pickers, filetree, fileops, sessions |
+| [`specs/inspect.lua`](specs/inspect.lua) | dap, debugging, diff, lsp, insights, runtime-analysis, recommender, spotlight, cmdlog, rules |
+| [`specs/project.lua`](specs/project.lua) | sandbox, github_stats, reposcope, documentation, gitsuite, casedesk |
+| [`specs/view.lua`](specs/view.lua) | ui, color_my_ascii, images, mdview, media, pdfport |
+
+The website's eighth category, `desktop`, holds a standalone app and has no
+Neovim spec.
+
+Every spec lists **all** user-settable options of its plugin: values that are
+set on purpose stay active and carry a comment saying what they do and what the
+default is; everything else is commented out with its default value, ready to
+be uncommented and changed.
 
 `plugins/control/` holds the generic mode-control core the policy file builds
 on; it is shared with the other spec files under `lua/plugins/` and is
@@ -126,8 +151,8 @@ injected. `init.lua` uses exactly three calls:
 
 ```lua
 local plugins = require("plugins.personal.source")
-plugins.add({ ...specs... })   -- register; chainable; idempotent per repo
-return plugins.export()        -- apply the modes, return the list for lazy
+plugins.add(require("plugins.personal.specs.edit"))  -- once per category; chainable; idempotent per repo
+return plugins.export()                              -- apply the modes, return the list for lazy
 ```
 
 | Call | Effect |

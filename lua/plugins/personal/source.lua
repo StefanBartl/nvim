@@ -94,64 +94,67 @@ end
 
 local plugins = control.new({ resolve = resolve })
 
--- Per repo (key = folder/repo basename). Not listed → "dir".
+-- Per repo (key = folder/repo basename). Not listed → "dir". Grouped by the
+-- same categories as the spec files in plugins/personal/specs/ and the plugin
+-- website's registry.
 plugins.modes({
-  -- 1. CORE / INFRASTRUCTURE, UTILITIES & SYSTEM
+  -- foundation
   ["lib.nvim"] = "dir",
-  ["lsp.nvim"] = "dir",
-  -- The one PRIVATE repo in this list. "remote" would have lazy clone
+  -- The one PRIVATE repo in this list: "remote" would have lazy clone
   -- https://github.com/StefanBartl/my.nvim, which fails without credentials.
-  -- Gated on the *effective* SOURCE, not raw machine role: this used to read
-  -- `machine.is("workstation") and "disabled" or "dir"`, back when the
-  -- workstation role (with OVERRIDE == "auto") always resolved SOURCE to
-  -- "remote" and had no local checkout of this repo to fall back on. Since
-  -- my.nvim's 2026-09 extraction into its own repo, the workstation DOES have
-  -- a local checkout (same as every other repo here) -- so that literal
-  -- reproduced exactly the bug it was meant to prevent: my.nvim silently
-  -- disabled ("module 'my' not found" at startup) whenever OVERRIDE forces
-  -- "dir" (or anything but "remote") on the workstation, ignoring the
-  -- checkout that is right there. Disabling only when SOURCE actually
-  -- resolves to "remote" keeps the original protection without breaking
-  -- every other mode on this machine.
+  -- Gated on the *effective* SOURCE, not the raw machine role, so a local
+  -- checkout is still used whenever OVERRIDE forces anything but "remote".
   ["my.nvim"] = (SOURCE == "remote") and "disabled" or "dir",
-  ["sessions.nvim"] = "dir",
-  ["pickers.nvim"] = "dir",
-  ["buffer-ctx.nvim"] = "dir",
-  ["open.nvim"] = "dir",
-  ["sandbox.nvim"] = "dir",
-  ["spotlight.nvim"] = "dir",
-  ["documentation.nvim"] = "dir",
-  ["runtime-analysis.nvim"] = "dir",
 
-  -- 2. NAVIGATION, FILE SYSTEM, SEARCH & TREES
-  ["fileops.nvim"] = "dir",
-  ["gopath.nvim"] = "dir",
-  ["replacer.nvim"] = "dir", -- basename of spec "StefanBartl/replacer.nvim"
-  ["insights.nvim"] = "dir",
-  ["filetree.nvim"] = "dir",
-  ["reposcope.nvim"] = "dir",
-
-  -- 3. CODE QUALITY, UI, LOGGING & PRODUCTIVITY
+  -- ai
   ["ai.nvim"] = "dir",
-  ["debugging.nvim"] = "dir",
-  ["dap.nvim"] = "dir",
-  ["diff.nvim"] = "dir",
-  ["gitsuite.nvim"] = "dir",
-  ["language.nvim"] = "dir", -- basename of spec "StefanBartl/language.nvim"
-  ["cmdlog.nvim"] = "dir",
+  ["buffer-ctx.nvim"] = "dir",
+
+  -- edit
+  ["cascade.nvim"] = "dir",
+  ["replacer.nvim"] = "dir",
   ["emojis.nvim"] = "dir",
+  ["language.nvim"] = "dir",
+  ["markdown.nvim"] = "dir",
+  ["data.nvim"] = "dir",
+
+  -- navigate
+  ["gopath.nvim"] = "dir",
+  ["hover.nvim"] = "dir",
+  ["open.nvim"] = "dir",
+  ["pickers.nvim"] = "dir",
+  ["filetree.nvim"] = "dir",
+  ["fileops.nvim"] = "dir",
+  ["sessions.nvim"] = "dir",
+
+  -- inspect
+  ["dap.nvim"] = "dir",
+  ["debugging.nvim"] = "dir",
+  ["diff.nvim"] = "dir",
+  ["lsp.nvim"] = "dir",
+  ["insights.nvim"] = "dir",
+  ["runtime-analysis.nvim"] = "dir",
+  ["recommender.nvim"] = "dir",
+  ["spotlight.nvim"] = "dir",
+  ["cmdlog.nvim"] = "dir",
+  ["rules.nvim"] = "dir",
+
+  -- project
+  ["sandbox.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
+  ["reposcope.nvim"] = "dir",
+  ["documentation.nvim"] = "dir",
+  ["gitsuite.nvim"] = "dir",
   ["casedesk.nvim"] = "dir",
   ["learn-cli.nvim"] = "disabled", -- needed neither locally nor remotely
 
-  -- 4. FILE TYPES (MARKDOWN & DOCUMENTS)
-  ["cascade.nvim"] = "dir",
-  ["pdfport.nvim"] = "dir",
-  ["markdown.nvim"] = "dir",
+  -- view
+  ["ui.nvim"] = "dir",
   ["color_my_ascii.nvim"] = "dir",
-  ["recommender.nvim"] = "dir",
-  ["mdview.nvim"] = "dir",
   ["images.nvim"] = "dir",
+  ["mdview.nvim"] = "dir",
+  ["media.nvim"] = "dir",
+  ["pdfport.nvim"] = "dir",
 })
 
 return plugins
