@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „Report Markdown-Link-Einfügestellen (+ buffer-ctx, casedesk)".
+**Stand:** 2026-10-01, nach dem Task „T7-Roadmap-Einträge (WKDBooks)".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -79,10 +79,14 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    Treffer; color_my_ascii/open/documentation bewusst unverändert). Dabei zusätzlich umgesetzt, weil
    „jedes Usercmd, das einen Link einfügt": buffer-ctx `:Insert mdlink` (`006a306`) und casedesk
    `:Case insert asset` (`dd58bc1`) nutzen jetzt `link_cursor.place`.
-7. **T7 Message-Popup**: nur Roadmap-Einträge (freigegeben!) in
-   `WKDBooks/Development/wkdbook-myplugins/{debugging.nvim,lib.nvim,ui.nvim}/ROADMAP/…`
-   + Noice-Feature-Matrix-Report (Punkt in `00_ROADMAP.md` Z. ~97 — **Datei gehört dem
-   Nutzer, lokal modifiziert, nicht anfassen**). Kein Bau. Plan steht im Plan-Report (T7).
+7. **T7 Message-Popup** — Roadmap-Einträge **erledigt** (WKDBooks `1afb268`): Konzept
+   `lib.nvim/ROADMAP/messages-log-and-recent-popup.md` (Befund, Schichten, Spezifikation, Roadmap-Abgleich,
+   Umsetzungsplan) + Verweise in `lib.nvim/ROADMAP/ROADMAP.md`, `debugging.nvim/ROADMAP/ROADMAP.md`
+   („Offen"), `ui.nvim/ROADMAP/ROADMAP.md`. **Offen:** der Noice-Feature-Matrix-Report (Punkt in
+   `00_ROADMAP.md` Z. ~97, Datei gehört dem Nutzer und ist lokal modifiziert — nicht anfassen; Report
+   nach `docs/ROADMAP/reports/`), danach TUI-Spike. **Kein Bau** (Nutzer: erst Review/Abgleich).
+   Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
+   `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. **Neue Idee (Nutzer, entschieden, noch nicht gebaut):** cascade, Aufzählungszahlen per
    `<C-a>`/`<C-x>` ändern und die Nachbarn mitziehen lassen (Roadmap `WKDBooks/…/cascade.nvim`).
    - `<C-a>`/`<C-x>` **auf einem Aufzählungsmarker** (nur in Listen-Buffern, sonst nativ): Zahl um
@@ -137,4 +141,5 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | buffer-ctx.nvim | `006a306` | feat(insert): `:Insert mdlink` setzt den Cursor in den Link | – |
 | casedesk.nvim | `dd58bc1` | feat(insert): `:Case insert asset` setzt den Cursor in den Link | – |
 | nvim-config | (Report) | docs: Report Markdown-Link-Einfügestellen | ✅ |
+| WKDBooks | `1afb268` | docs(roadmap): Message-Log + Recent-Popup + Live-Chips Konzept (3 Roadmaps) | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
