@@ -130,11 +130,25 @@ dem Tag (Punkt 1). Automatisch prüfbare `REL-*`-Punkte sind grün.
 | Repo | Commit | Was |
 |---|---|---|
 | `ai.nvim` | `2813081` | `test(docs)`: `docs_examples_spec.lua` (REL-08) + Absatz in `TESTS/README.md` |
+| `ai.nvim` | `a0a072e` | `test(docs)`: Spec nach ultracode-Review gehärtet (vakuöse Checks, `%`-in-Temp-Pfad, Lua-5.1-Portabilität, `ask()`-Beispiele über echtes `ai.ask`) |
+| `ai.nvim` | `6bc2b0d` | `docs(vimdoc)`: `doc/ai.txt` wieder auf Stand von `docs/*.md` (ui.nvim, rewrite/append/prepend + Keymaps, structured_data/conflict) — Drift, den der Review fand |
+| `ai.nvim` | `1815932` | `test(docs)`: 2. Review-Runde (registry-unabhängiger Keymap-Scan, alle Provider gestubbt, breitere Extraktoren). CI auf ubuntu/windows/macos grün |
 | `WKDBooks` | `c377f0b` | Handover-Erledigtes („Erledigt seit 2026-09-21“ + docmap-Auslagerung `loomAI@776a830`) nach `Backlog/FEATURES/FINISHED_ai_loomai.md` verschoben |
 
 Der `WKDBooks`-Commit wurde auf Nutzerwunsch nachträglich ohne
 `Co-Authored-By`-Trailer umgeschrieben (vorher `0eee4b8`, force-with-lease auf
 `main`).
+
+**Review (ultracode, nur Nicht-Doku-Commit `2813081`):** zwei streng
+sequentielle Workflow-Läufe (Review in 3 Linsen → Skeptiker pro Fund →
+Fixer → Re-Review). Gesamt 33 geprüfte Funde: 30 bestätigt (27 behoben, 3
+bewusst nicht, s. u.), 3 widerlegt. Lauf 2 endete am Rundenlimit (3), nicht „trocken“;
+die Funde der letzten Runde waren durchweg `low`/Fehlermeldungs-Qualität
+und sind noch von keinem frischen Reviewer gesehen worden (nur lokal +
+CI-Matrix grün). Bewusst nicht gefixt/akzeptiert: `register()`-Beispiel
+wird per exaktem Text gepatcht; Block-Suche per Substring; Soft-Deps in
+der `require`-Suche. Der Spec ist dabei auf ~690 Zeilen gewachsen —
+bei weiterer Härtung lieber vereinfachen als noch einen Scan ergänzen.
 
 Weitere Funde: CI-Matrix-Korrektur (s. REL-19); `loomAI@776a830` stand im
 Handover noch nirgends (jetzt im Backlog nachgetragen).
