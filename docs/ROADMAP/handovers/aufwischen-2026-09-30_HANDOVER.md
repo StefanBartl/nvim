@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „Noice-Feature-Abdeckungs-Report".
+**Stand:** 2026-10-01, nach dem Review-Durchlauf aller Nicht-Doku-Commits (alle ✅).
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -197,6 +197,6 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | WKDBooks | `1afb268` | docs(roadmap): Message-Log + Recent-Popup + Live-Chips Konzept (3 Roadmaps) | ✅ |
 | cascade.nvim | `236ace2` | feat(lists): `<C-y>`/`<C-x>` auf Marker + Ebenen-Variante | ✅ (Fix `1ff1069`) |
 | cascade.nvim | `1ff1069` | fix(lists): Buchstaben-Listen enden bei `z` | ✅ |
-| nvim-config | (Spec) | chore(specs): `lists.features.shift` | – |
+| nvim-config | (Spec) | chore(specs): `lists.features.shift` (nur Kommentar) | ✅ |
 | nvim-config | (Report) | docs: noice.nvim Feature-Abdeckung | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
