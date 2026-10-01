@@ -7,11 +7,16 @@
 --- measured with `-c "... vim.wait(..)"` never sees the UIReady phases or the
 --- post-VimEnter work (menu prewarm, VeryLazy plugins). See README.md.
 ---
----   PROBE=req,exe,rtp,stall,spawn,fs,marks,report   (default: all)
+---   PROBE=req,exe,rtp,stall,spawn,fs,lazy,marks,report   (default: these)
 ---   PROBE_MS=6000                                   ms to wait after VimEnter
 ---   PROBE_OUT=<path>                                report file (default: $TEMP/startup-probe.txt)
 ---
----   nvim --headless --cmd "luafile scripts/startup-probe/probe.lua"
+---   nvim --headless -l scripts/startup-probe/tui.lua                  with a UI
+---   nvim --headless --cmd "luafile scripts/startup-probe/probe.lua"   without
+---
+--- A headless run has no UIEnter, so lazy.nvim never fires VeryLazy and every
+--- plugin waiting for it stays unloaded. Measure through tui.lua unless the
+--- question is about the time before VimEnter only.
 ---
 --- Probes:
 ---   req     exclusive require time per module / namespace, top-level requires
@@ -19,10 +24,13 @@
 ---   exe     vim.fn.executable / exepath calls: count, time, found or not
 ---   rtp     nvim_get_runtime_file calls (vim.loader recomputes the runtimepath
 ---           list on every 'runtimepath' change -- one call per plugin load)
----   stall   event-loop stalls (a 10 ms heartbeat that finds gaps > 60 ms)
+---   stall   event-loop stalls (a 10 ms heartbeat that finds gaps > 60 ms) and
+---           how busy the loop was per second, small gaps included
+---   where   (opt-in, costs time) which code each stall belongs to
 ---   spawn   vim.system / vim.fn.system: spawn cost and blocking wait
 ---   fs      other C-level calls that are cheap alone and not in bulk
----   marks   when VimEnter / UIEnter / LazyDone happened
+---   lazy    what lazy.nvim loaded, why, and for how long
+---   marks   when VimEnter / UIEnter / LazyDone / VeryLazy happened
 ---   report  the `startup` module's phase timeline (:StartupReport as text)
 ---
 --- Overhead: every probe adds a wrapper, the totals are ~5-10 % too high with
@@ -38,11 +46,15 @@ local function now()
 end
 
 local wanted = {}
-for name in (vim.env.PROBE or "req,exe,rtp,stall,spawn,fs,marks,report"):gmatch("[^,%s]+") do
+for name in (vim.env.PROBE or "req,exe,rtp,stall,spawn,fs,lazy,marks,report"):gmatch("[^,%s]+") do
   wanted[name] = true
 end
 
 local dumps = {} ---@type (fun(out: string[]))[]
+
+--- The numbers a benchmark compares, written next to the report as JSON
+--- (`<PROBE_OUT>.json`). bench.lua takes the median of these over several runs.
+local summary = {} ---@type table<string, any>
 
 ---@param out string[]
 ---@param fmt string
@@ -226,32 +238,227 @@ if wanted.rtp then
 end
 
 -- ── stall ───────────────────────────────────────────────────────────────────
+-- `beat` and `stalls` are shared with `where`, which attributes every stall.
+local beat = nil ---@type number? ms of the last heartbeat
+local stalls = {} ---@type { at: number, gap: number }[]
+if wanted.where then
+  wanted.stall = true
+end
 if wanted.stall then
-  local last, stalls = nil, {}
+  -- A stall is one gap > 60 ms. `busy` also counts the small ones (a process
+  -- spawn is ~15 ms of main thread on Windows, fifty of them never show up as
+  -- a stall): every gap above the timer's own jitter, summed per second.
+  local TICK, JITTER = 10, 16
+  local first = nil ---@type number?
+  local busy = {} ---@type table<integer, number>
   local timer = uv.new_timer()
   timer:start(
     0,
-    10,
+    TICK,
     vim.schedule_wrap(function()
       local t = now()
-      if last and t - last > 60 then
-        stalls[#stalls + 1] = { at = last, gap = t - last }
+      if beat and first then
+        local gap = t - beat
+        if gap > 60 then
+          stalls[#stalls + 1] = { at = beat, gap = gap }
+        end
+        if gap > JITTER then
+          local sec = math.floor((beat - first) / 1000)
+          busy[sec] = (busy[sec] or 0) + (gap - TICK)
+        end
+      else
+        first = t
       end
-      last = t
+      beat = t
     end)
   )
   dumps[#dumps + 1] = function(out)
-    local sum = 0
+    local sum, max = 0, 0
     for _, s in ipairs(stalls) do
       sum = sum + s.gap
+      max = math.max(max, s.gap)
     end
     add(out, "== stall: %d event-loop stalls > 60 ms, %.0f ms blocked in total", #stalls, sum)
-    table.sort(stalls, function(a, b)
+    local sorted = vim.list_slice(stalls)
+    table.sort(sorted, function(a, b)
       return a.gap > b.gap
     end)
-    for i = 1, math.min(#stalls, 8) do
-      add(out, "%8.0f ms  starting at %7.0f", stalls[i].gap, stalls[i].at)
+    for i = 1, math.min(#sorted, 8) do
+      add(out, "%8.0f ms  starting at %7.0f", sorted[i].gap, sorted[i].at)
     end
+    add(
+      out,
+      "-- loop busy per second (all gaps > %d ms), from the first heartbeat at %.0f ms",
+      JITTER,
+      first or 0
+    )
+    local busy_total, per_second = 0, {}
+    for sec = 0, math.floor(((beat or 0) - (first or 0)) / 1000) do
+      local ms = busy[sec] or 0
+      busy_total = busy_total + ms
+      per_second[#per_second + 1] = math.floor(ms + 0.5)
+      add(out, "%8.0f ms  in second %d", ms, sec + 1)
+    end
+    summary.stall = {
+      count = #stalls,
+      sum = sum,
+      max = max,
+      busy = busy_total,
+      busy_per_second = per_second,
+      first_beat = first,
+    }
+  end
+end
+
+-- ── where ───────────────────────────────────────────────────────────────────
+-- Which code a stall belongs to. A count hook samples the Lua stack while the
+-- heartbeat is overdue and charges the time since the previous sample to that
+-- stack. A blocking C call shows up as one long sample at the place it returned
+-- to, busy Lua as many short ones. Sampling costs time: do not compare the
+-- totals of a run with `where` to one without.
+if wanted.where then
+  local OVERDUE, EVERY, FRAMES = 60, 2, 9
+  local last_sample = 0
+  local samples = {} ---@type { at: number, ms: number, tb: string }[]
+  debug.sethook(function()
+    local t = now()
+    if beat and t - beat > OVERDUE and t - last_sample >= EVERY then
+      local from = math.max(last_sample, beat)
+      samples[#samples + 1] = { at = from, ms = t - from, tb = debug.traceback("", 2) }
+      last_sample = t
+    end
+  end, "", 1000)
+
+  local NOISE = { "^%[C%]: in function 'require'", "^%[C%]: in function 'x?pcall'" }
+
+  ---@param tb string
+  ---@return string[] frames innermost first, paths cut down to `<plugin>/lua/...`
+  local function frames(tb)
+    local res = {}
+    for line in tb:gmatch("[^\n]+") do
+      local f = line:match("^%s+(.+)$")
+      if f then
+        local keep = true
+        for _, pat in ipairs(NOISE) do
+          keep = keep and not f:find(pat)
+        end
+        if keep then
+          res[#res + 1] = (f:gsub("\\", "/"):gsub("^.-/([^/]+/lua/)", "%1"))
+        end
+      end
+    end
+    return res
+  end
+
+  ---@param fr string[]
+  ---@return string owner the innermost frame that is neither Neovim nor lazy.nvim
+  local function owner(fr)
+    for _, f in ipairs(fr) do
+      local ns = f:match("/lua/([^/:]+)/") or f:match("/lua/([^/:]+)%.lua")
+      if ns and ns ~= "lazy" then
+        return f:find("^nvim/lua/") and ("config:" .. ns) or ns
+      end
+    end
+    return "(neovim / lazy.nvim)"
+  end
+
+  ---@param tbl table<string, number>
+  ---@return string[] keys sorted by value, largest first
+  local function by_value(tbl)
+    local keys = vim.tbl_keys(tbl)
+    table.sort(keys, function(a, b)
+      return tbl[a] > tbl[b]
+    end)
+    return keys
+  end
+
+  dumps[#dumps + 1] = function(out)
+    debug.sethook()
+    add(out, "== where: the stalls by owner and by stack (ms sampled, innermost frame first)")
+    local total = {} ---@type table<string, number>
+    for _, s in ipairs(stalls) do
+      local owners, stacks, shown, sampled = {}, {}, {}, 0
+      for _, e in ipairs(samples) do
+        if e.at + e.ms >= s.at and e.at <= s.at + s.gap then
+          local fr = frames(e.tb)
+          local who = owner(fr)
+          local key = table.concat(fr, "\n", 1, math.min(#fr, 3))
+          owners[who] = (owners[who] or 0) + e.ms
+          total[who] = (total[who] or 0) + e.ms
+          stacks[key] = (stacks[key] or 0) + e.ms
+          shown[key] = shown[key] or fr
+          sampled = sampled + e.ms
+        end
+      end
+      add(out, "-- stall %.0f ms at %.0f (%.0f ms sampled)", s.gap, s.at, sampled)
+      local line = {}
+      for i, who in ipairs(by_value(owners)) do
+        if i <= 6 then
+          line[#line + 1] = ("%s %.0f"):format(who, owners[who])
+        end
+      end
+      add(out, "   owners: %s", table.concat(line, " · "))
+      for i, key in ipairs(by_value(stacks)) do
+        if i > 3 or stacks[key] < 20 then
+          break
+        end
+        add(out, "   %6.0f ms in", stacks[key])
+        for j = 1, math.min(#shown[key], FRAMES) do
+          add(out, "          %s", shown[key][j])
+        end
+      end
+    end
+    add(out, "-- all stalls by owner")
+    for i, who in ipairs(by_value(total)) do
+      if i <= 12 then
+        add(out, "%8.0f ms  %s", total[who], who)
+      end
+    end
+    summary.where = total
+  end
+end
+
+-- ── lazy ────────────────────────────────────────────────────────────────────
+-- What lazy.nvim loaded, why, and for how long. Times include the plugin's
+-- dependencies and everything its `config` required: they overlap.
+if wanted.lazy then
+  dumps[#dumps + 1] = function(out)
+    local ok, config = pcall(require, "lazy.core.config")
+    if not ok then
+      add(out, "== lazy: lazy.nvim is not loaded")
+      return
+    end
+    local rows, kinds, total = {}, {}, 0
+    for name, plugin in pairs(config.plugins) do
+      total = total + 1
+      local l = plugin._ and plugin._.loaded
+      if l then
+        local kind, detail = "other", ""
+        for _, k in ipairs({ "event", "ft", "cmd", "keys", "require", "start", "plugin", "source" }) do
+          if l[k] then
+            kind, detail = k, tostring(l[k])
+            break
+          end
+        end
+        kind = kind == "plugin" and "dependency" or kind
+        kinds[kind] = (kinds[kind] or 0) + 1
+        rows[#rows + 1] = { name = name, ms = (l.time or 0) / 1e6, kind = kind, detail = detail }
+      end
+    end
+    table.sort(rows, function(a, b)
+      return a.ms > b.ms
+    end)
+    local parts = {}
+    for kind, n in pairs(kinds) do
+      parts[#parts + 1] = ("%s %d"):format(kind, n)
+    end
+    table.sort(parts)
+    add(out, "== lazy: %d of %d plugins loaded (%s)", #rows, total, table.concat(parts, ", "))
+    for i = 1, math.min(#rows, 30) do
+      local r = rows[i]
+      add(out, "%8.1f ms  %-28s %s %s", r.ms, r.name, r.kind, r.detail:sub(1, 50))
+    end
+    summary.lazy = { loaded = #rows, total = total }
   end
 end
 
@@ -288,11 +495,37 @@ if wanted.spawn then
     }
     return r
   end)
+  -- Every process, whoever starts it: vim.system ends up here too, and
+  -- lazy.nvim's checker (one git per plugin) only shows up here. The spawn
+  -- itself runs on the main thread, ~15 ms each on Windows.
+  local procs, procs_n, procs_ms = {}, 0, 0
+  wrap(uv, "spawn", function(orig, path, opts, on_exit)
+    local t0 = uv.hrtime()
+    local handle, pid = orig(path, opts, on_exit)
+    local dt = (uv.hrtime() - t0) / 1e6
+    local args = type(opts) == "table" and opts.args or {}
+    local head = table.concat(args, " ", 1, math.min(#args, 2))
+    local key = vim.fs.basename(tostring(path)) .. " " .. head
+    local p = procs[key] or { n = 0, ms = 0, first = (t0 - t_start) / 1e6 }
+    p.n, p.ms = p.n + 1, p.ms + dt
+    procs[key] = p
+    procs_n, procs_ms = procs_n + 1, procs_ms + dt
+    return handle, pid
+  end)
   dumps[#dumps + 1] = function(out)
+    add(out, "== spawn: %d processes, %.0f ms of main thread spent spawning", procs_n, procs_ms)
+    local keys = vim.tbl_keys(procs)
+    table.sort(keys, function(a, b)
+      return procs[a].ms > procs[b].ms
+    end)
+    for i = 1, math.min(#keys, 12) do
+      local p = procs[keys[i]]
+      add(out, "%8.1f ms  x%-3d first at %7.0f  %s", p.ms, p.n, p.first, keys[i]:sub(1, 70))
+    end
     table.sort(log, function(a, b)
       return a.spawn + a.wait > b.spawn + b.wait
     end)
-    add(out, "== spawn: %d processes", #log)
+    add(out, "-- through vim.system / vim.fn.system (blocking wait = :wait() on the main thread)")
     for i = 1, math.min(#log, 10) do
       local e = log[i]
       add(
@@ -304,6 +537,7 @@ if wanted.spawn then
         e.cmd:sub(1, 90)
       )
     end
+    summary.spawn = { count = procs_n, ms = procs_ms }
   end
 end
 
@@ -377,8 +611,14 @@ if wanted.marks then
   })
   dumps[#dumps + 1] = function(out)
     add(out, "== marks (ms since the probe was loaded, i.e. since init.lua started)")
+    summary.marks = {}
     for _, m in ipairs(marks) do
       add(out, "%8.0f  %s", m[2], m[1])
+      summary.marks[m[1]:gsub("^User ", "")] = m[2]
+    end
+    if not summary.marks.VeryLazy then
+      add(out, "          (no VeryLazy: lazy.nvim waits for UIEnter, which a headless run never")
+      add(out, "           gets. Plugins on that event are missing from this run: use tui.lua)")
     end
   end
 end
@@ -394,6 +634,10 @@ if wanted.report then
     end
     for _, line in ipairs(report.text_lines()) do
       out[#out + 1] = line
+    end
+    summary.phases = {}
+    for _, mark in ipairs(require("startup").marks) do
+      summary.phases[mark.label] = { at = mark.at, dur = mark.dur }
     end
   end
 end
@@ -419,6 +663,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
       end
       local path = vim.env.PROBE_OUT or ((vim.env.TEMP or "/tmp") .. "/startup-probe.txt")
       vim.fn.writefile(out, path)
+      summary.ui = #vim.api.nvim_list_uis() > 0
+      vim.fn.writefile({ vim.json.encode(summary) }, path .. ".json")
       vim.cmd("qa!")
     end, tonumber(vim.env.PROBE_MS) or 6000)
   end,

@@ -559,18 +559,20 @@ return {
             -- server's latency -- raise it for a slow one.
             -- lsp_refresh_delay_ms = 500,
           },
-          -- Extra technical wordlist appended to spelllang. Covers general
-          -- nvim/Lua plugin-dev vocabulary (nvim, buffer, function, table,
-          -- bindings, ...) so `:Spellcheck de` stops flagging it in German
-          -- notes about plugin development.
+          -- Extra technical wordlist, added to the session word list (like
+          -- `zG`). Covers general nvim/Lua plugin-dev vocabulary (nvim, buffer,
+          -- function, table, bindings, ...) so `:Spellcheck de` stops flagging
+          -- it in German notes about plugin development.
           -- Default: false.
           programming_dict = true,
-          -- User-supplied session wordlists, applied like programming_dict
-          -- (`:spellgood!`) but independent of it and of `spelllang`:
+          -- User-supplied session wordlists, applied like programming_dict but
+          -- independent of it and of `spelllang`:
           -- { ["my-list"] = { "word1", ... } }. Here: Tricentis/TOSCA support
           -- vocabulary from casedesk.spell_wordlists (casedesk.nvim). Loaded
-          -- unconditionally: a few hundred `:spellgood!` calls, scheduled off
-          -- the hot path, are not worth gating behind machine.is("workstation").
+          -- unconditionally: language.nvim compiles all lists in one go (a few
+          -- ms for ~300 words), so gating them behind machine.is("workstation")
+          -- buys nothing. That only holds since language.nvim ad355be -- one
+          -- `:spellgood!` per word, as before, was 1.2 s of frozen UI per start.
           -- Default: {}.
           extra_wordlists = require("casedesk.spell_wordlists"),
           -- dictionary = {
