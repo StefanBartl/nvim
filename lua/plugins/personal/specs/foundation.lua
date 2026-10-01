@@ -124,6 +124,18 @@ return {
       -- No keymap for `expand_last()`/`toggle_full()`: `:Lib notify
       -- last|history|clear` cover it, and the history buffer has its own
       -- buffer-local `<C-s>` (see lib.nvim's docs/BINDINGS.md).
+
+      -- Global default for every markdown-link-insert consumer (markdown.nvim
+      -- `links.cursor`, images.nvim paste, pickers.nvim `link_insert.cursor`,
+      -- filetree.nvim `markdown_links`): where the cursor lands after a
+      -- `[title](path)`/`![alt](path)` insert, then insert mode. Explicit
+      -- here even though it equals the module's own defaults -- was flagged
+      -- as "configurable but never actually set" (aufwischen-2026-09-30
+      -- handover); every current call site already relies on these same
+      -- values, this just makes that a real, central setup() call instead
+      -- of four independent assumptions.
+      -- Default: { enable = true, startinsert = true, path_cursor = "end" }.
+      require("lib.nvim.markdown.link_cursor").setup({})
     end,
   },
 
