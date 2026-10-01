@@ -61,7 +61,8 @@ buffer-ctx/casedesk/gopath.
 | pickers `7fbd2aa`, `6e34dcf` (Einfügen, Feedback) | `:p` gibt Ordnern ein `/` → leerer Titel (`markdown_link` und `link_insert`); `copied [fmt] <langer Pfad>` konnte die Cmdline sprengen → Hit-Enter ohne noice; Zielfenster | pickers `688f03f` (`link_name`, `shorten_for_echo`, `insertion_window`) |
 | nvim-config `27a46759` (`:Clipboard`) | Meldung `copied … -> <langer Pfad>` konnte die Cmdline sprengen (Hit-Enter ohne noice); `$NVIM_CONFIG_DIR`-Folding case-insensitiv auf allen Systemen | nvim-config `fd32956e` (Tail-Kürzung, Folding nur Windows) |
 | cascade `236ace2` (Listen-Schritte) | **Bug:** `z)` + 1 erzeugte `aa)` (`alpha.to_alpha(27)`), das der Parser nicht als Marker liest → Item verlässt die Liste still | cascade `1ff1069` (Buchstaben enden bei `z`, Test) |
-| ohne Befund (gelesen, Randfälle geprüft) | markdown `19fabae` (`wrap_link`), cascade `f5baa6d` (Keymaps), buffer-ctx `006a306`, casedesk `dd58bc1`, gopath `f1cfe5c`, nvim-config `b11c2356` (Specs: nur Kommentare + `default_path_mode = "env"`, mit der echten Config geladen) | – |
+| pickers `0684430`, `c51fe4f`, `265b01c` (pickers.tabs) | 4 Befunde per `ultracode`-Workflow (4 Agenten parallel, je adversarial verifiziert): (1) **Bug:** `arm_tag()`s `FileType`-Autocmd war `once=true` — markierte nur den ERSTEN passenden Buffer; ein Ziel mit Zwischenauswahl (`dir`/`repos`/Prefix-Collection) markierte den Auswahl-Picker statt des echten Ziels, `tab_next`/`tab_prev` brach dort still. (2) **Bug:** `pickers.actions.smart.run()` reichte `source.query` nie an die Engine durch (anders als `files`/`grep`) — der Query-Fix aus `265b01c` erreichte ein `smart`-Tab-Ziel nie. (3) **Risk:** Fallback-Richtung von `tab_next_select`/`tab_prev_select` hing an der Aktion (`tab_next`/`tab_prev`), nicht an der gedrückten Taste — bei vertauschten `keys.tab_next`/`tab_prev`-Lhs lief die Mehrfachauswahl rückwärts. (4) **Bug (vorbestehend, nicht Teil dieser 3 Commits):** `tabs.groups.git`-Default nutzte `"builtin git_commits"`, kein registrierter Name (`git_log` ist korrekt) — seit Feature-Einführung, von `b1c0170a`s eigenem Override zufällig nicht betroffen. | pickers `40ab6ec` (jeder Buffer wird markiert + Debounce, `smart` reicht Query durch, Fallback folgt der physischen Taste, beide Default-Kopien + Doku auf `git_log`), 6 neue Regressionstests |
+| ohne Befund (gelesen, Randfälle geprüft) | markdown `19fabae` (`wrap_link`), cascade `f5baa6d` (Keymaps), buffer-ctx `006a306`, casedesk `dd58bc1`, gopath `f1cfe5c`, nvim-config `b11c2356` (Specs: nur Kommentare + `default_path_mode = "env"`, mit der echten Config geladen), nvim-config `b1c0170a` (`<leader>s` → `:Pickers tabs default`; Default-Gruppen `cwd files/files all/grep`, `builtin buffers/git_branches/git_log/git_stash` gegen Registry + Command-Parsing geprüft, korrekt) | – |
 
 Nebenbefund (nicht angefasst): `nvim-data/swap` enthält ~600 Swap-Dateien (u. a. von abgebrochenen Headless-Läufen);
 sie lösen in Testläufen `E326: Too many swap files` aus → Tests mit `nvim -n` starten. Aufräumen nur nach Rückfrage.
@@ -134,8 +135,9 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    **Entscheidung 1 umgesetzt (2026-10-01): `pickers.tabs` aktiv, search.nvim abgelöst** (nvim-config `b1c0170a`; `<leader>s` →
    `:Pickers tabs default`, `<Tab>`/`<S-Tab>` in `specs/navigate.lua`, Gruppen dort). Live-Test in echter TUI fand 3 Fehler in
    pickers.nvim (`0684430` Tab schloss jeden Picker; `c51fe4f` `builtin`-Ziele gingen nicht + nur Tab-Picker schalten; `265b01c`
-   snacks reichte die Query nicht durch) — alle behoben, 996 Tests grün. Details im Nachtrag des Reports. **Code-Commits noch nicht
-   reviewt** (kein Haken). Offen: `:Lazy clean` für das verwaiste search.nvim (nicht ausgeführt); `<leader>s`-Präfixwartezeit (1 s) bekannt.
+   snacks reichte die Query nicht durch) — alle behoben, 996 Tests grün. Details im Nachtrag des Reports. **Code-Commits reviewt**
+   (`ultracode`-Workflow 2026-10-01, 4 weitere Befunde + Fix `40ab6ec`, siehe Review-Durchlauf-Tabelle oben; alle 4 Commits ✅).
+   Offen: `:Lazy clean` für das verwaiste search.nvim (nicht ausgeführt); `<leader>s`-Präfixwartezeit (1 s) bekannt.
    **Offen:** nichts aus dem Roadmap-Punkt; Entscheidungen stehen in §9 des Reports. **Kein Bau** (Nutzer: erst Review/Abgleich).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
@@ -221,8 +223,15 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | `4fa89614` | docs: ext_messages TUI-Spike-Report + Handover | ✅ |
 | nvim-config | `e01f6fc7` | docs: Report externe Plugins Feature-Abdeckung + Handover | ✅ |
 | nvim-config | `92a217fe` | docs: Report-Nachtrag (pickers.tabs aktiv) | ✅ |
-| pickers.nvim | `0684430` | fix(tabs): tab_next/tab_prev schließen keinen Picker ohne Gruppe; `<Tab>` behält Mehrfachauswahl | – |
-| pickers.nvim | `c51fe4f` | fix(tabs): `builtin`-Ziele über pickers.builtins; nur Tab-Picker schalten (Buffer-Markierung) | – |
-| pickers.nvim | `265b01c` | fix(snacks): Query beim Tab-Wechsel durchreichen (pattern/search) | – |
-| nvim-config | `b1c0170a` | feat(pickers): Tab-Gruppen aktiv, search.nvim abgelöst (`<leader>s`) | – |
+| pickers.nvim | `0684430` | fix(tabs): tab_next/tab_prev schließen keinen Picker ohne Gruppe; `<Tab>` behält Mehrfachauswahl | ✅ (Fix `40ab6ec`) |
+| pickers.nvim | `c51fe4f` | fix(tabs): `builtin`-Ziele über pickers.builtins; nur Tab-Picker schalten (Buffer-Markierung) | ✅ (Fix `40ab6ec`) |
+| pickers.nvim | `265b01c` | fix(snacks): Query beim Tab-Wechsel durchreichen (pattern/search) | ✅ (Fix `40ab6ec`) |
+| nvim-config | `b1c0170a` | feat(pickers): Tab-Gruppen aktiv, search.nvim abgelöst (`<leader>s`) | ✅ (ohne Befund, Default-Gruppen korrekt) |
 | WKDBooks | `2ab6d71` | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
+| pickers.nvim | `40ab6ec` | fix(tabs): arm_tag markiert jeden passenden Buffer, smart reicht die Query durch, Fallback folgt der physischen Taste, git-Gruppe repariert | ✅ |
+
+## Reviewed commits (ultracode) — nicht mehr offen
+
+`0684430`, `c51fe4f`, `265b01c`, `b1c0170a` sind durch die `ultracode`-Workflow-Review vom 2026-10-01
+abgehakt (Details + Fix-Commit `40ab6ec` in der Tabelle „Review-Durchlauf" oben, Zeile `pickers.tabs`);
+sie tauchen hier nicht mehr als zu reviewen auf.
