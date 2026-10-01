@@ -51,6 +51,31 @@ function M.commands()
   }
 end
 
+--- Load neotest right before neo-tree's `tests` source renders for the first
+--- time. Call once, after `require("neo-tree").setup()`.
+---
+--- neotest is not a `dependency` of neo-tree: that made every start pay for it
+--- (~150 ms, right after the first frame), because filetree.nvim loads neo-tree
+--- on VeryLazy. The only thing neo-tree needs it for is this source, which
+--- asks `neotest.consumers.neotree` for its items when it renders -- and that
+--- consumer has a client only once `neotest.setup()` has run. Requiring
+--- `neotest` makes lazy.nvim load the plugin and run its config, which is
+--- exactly that. Every way into the source (`:Neotree tests`, the source
+--- selector, the `R` refresh mapping) ends in the module's `navigate`.
+---@return nil
+function M.load_with_tests_source()
+  local ok, tests = pcall(require, "neo-tree.sources.tests")
+  if not ok or tests.neotest_on_demand then
+    return
+  end
+  local navigate = tests.navigate
+  tests.navigate = function(...)
+    pcall(require, "neotest")
+    return navigate(...)
+  end
+  tests.neotest_on_demand = true
+end
+
 --- Neo-tree window mappings, used in source.window.mappings
 ---@return table<string, string>
 function M.keymaps()

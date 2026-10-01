@@ -51,6 +51,7 @@
     - [Was von den Schlussfolgerungen hält](#was-von-den-schlussfolgerungen-hlt)
     - [Neue Befunde](#neue-befunde)
     - [Umgesetzt in dieser Runde](#umgesetzt-in-dieser-runde)
+    - [Zweiter Schritt: die `VeryLazy`-Welle](#zweiter-schritt-die-verylazy-welle)
     - [Messwerkzeug erweitert](#messwerkzeug-erweitert)
     - [Neue Reihenfolge](#neue-reihenfolge)
     - [Offen für dich](#offen-fr-dich)
@@ -999,6 +1000,17 @@ Abwägung des Plugins, kein Fehler, aber sichtbar.
 > 60 ms) hat N2 systematisch übersehen. Die Sonde zählt jetzt zusätzlich alle
 Lücken über dem Timer-Rauschen, summiert pro Sekunde.
 
+**N6: Die Keymap-Reihenfolge stand falsch herum im Code.** Der Kommentar in
+`lua/bindings/mappings/init.lua` behauptete, die `mappings`-Phase (`UIReady`)
+laufe *nach* den Plugins auf `VeryLazy`, ein dort gemapptes Key gewinne also.
+Mit UI ist es umgekehrt: `UIReady` ist `VimEnter` + `vim.schedule`, `VeryLazy`
+ist `UIEnter` + `vim.schedule`, und `UIEnter` kommt nach `VimEnter`. Gemessen:
+`mappings` bei ≈ 505 ms, `VeryLazy` bei ≈ 550 ms. **Ein Plugin auf `VeryLazy`
+überschreibt also ein gleichnamiges Config-Mapping, nicht umgekehrt.** Headless
+gab es nie ein `VeryLazy`, das dem widersprochen hätte. Kommentar korrigiert;
+`Keymaps-Collisions.md` in den WKDBooks sollte gegen diese Reihenfolge geprüft
+werden.
+
 ---
 
 ### Umgesetzt in dieser Runde
@@ -1006,13 +1018,56 @@ Lücken über dem Timer-Rauschen, summiert pro Sekunde.
 | Repo | Commit | Inhalt |
 | --- | --- | --- |
 | `language.nvim` | `ad355be` | neues `spell/session_words.lua`: erstes Wort per `:spellgood!` (legt die Listendatei an), die mittleren direkt in die Datei, letztes Wort per `:spellgood!` (kompiliert alles in einem Zug). Die Datei wird an dem erkannt, was der erste Befehl hinterlassen haben muss, und an dem bestätigt, was der letzte hinterlassen haben muss; schlägt eine Prüfung fehl, gehen die Wörter einzeln durch, in 8-ms-Scheiben statt in einem Callback. Semantik unverändert (wie `zG`). Tests: 300 Wörter kosten ≤ 2 Befehle, Fallback, falsche Datei, ungültige Einträge. Suite grün (`LANGUAGE_TESTS_OK`). |
-| `nvim-config` | Commit dieses Abschnitts | `lua/config/lazy/init.lua`: Checker nur in der Session, in der der wöchentliche Check fällig ist (aus lazys `state.json` gelesen). `scripts/startup-probe/`: siehe unten. Kommentare in `neotree.lua` und `specs/edit.lua` korrigiert. `docs/NOTES/ARCHITECTURE/startup.md`: `VeryLazy`-Erklärung richtiggestellt, Regeln „`VeryLazy` ist ein Stapel" und „Headless ist kein Start". |
+| `nvim-config` | `a6d0f455` | `lua/config/lazy/init.lua`: Checker nur in der Session, in der der wöchentliche Check fällig ist (aus lazys `state.json` gelesen). `scripts/startup-probe/`: siehe unten. Kommentare in `neotree.lua` und `specs/edit.lua` korrigiert. `docs/NOTES/ARCHITECTURE/startup.md`: `VeryLazy`-Erklärung richtiggestellt, Regeln „`VeryLazy` ist ein Stapel" und „Headless ist kein Start". |
 
 Wirkung: Tabelle in der Kurzfassung oben.
 
 **Nebenwirkung der Checker-Änderung:** In den Sessions zwischen zwei Checks
 zeigt `:Lazy` keine anstehenden Updates, bis dort `C` gedrückt wird. In der
 Session, in der der Check fällig ist, läuft alles wie bisher.
+
+---
+
+### Zweiter Schritt: die `VeryLazy`-Welle
+
+Nach den beiden großen Posten war die Welle (N3) der längste Stoß. Zwei
+Plugins sind aus ihr heraus, ohne dass sich an ihrer Bedienung etwas ändert:
+
+| Änderung (`nvim-config`) | Vorher | Jetzt |
+| --- | --- | --- |
+| `neotest` | Dependency von `neo-tree`, lud mit `filetree.nvim` bei jedem Start (≈ 150 ms mit Adaptern, `vim-test`, `nio`) | eigene Auslöser: die 12 `:Neotest*`-Kommandos, die `<leader>nt*`-Tasten als lazy-Stubs (aus derselben Liste wie die echten Mappings), Testdateien (`*_spec.lua`, `*.test.ts` …, die Muster aus `config.neotest.core`), und die `tests`-Quelle von neo-tree |
+| `sandbox.nvim` | `event = "VeryLazy"` (≈ 110 ms: sechs Engine-Adapter, PATH-Suche nach `nerdctl`/`podman`/`docker`/`wsl`) | `cmd = "Sandbox"` und `ft = dockerfile / yaml` (dort lebt seine Hover-Vorschau); es registriert keine globalen Tasten oder Autocmds |
+
+Zu `neotest`: der Kommentar an der neo-tree-Spec hatte recht, dass das bloße
+Streichen der Dependency `:Neotree tests` bricht (die Quelle holt ihre Einträge
+über einen neotest-Consumer, der erst nach `neotest.setup()` einen Client hat).
+Deshalb lädt `config.neotest.neotree.load_with_tests_source()` neotest
+unmittelbar, bevor diese Quelle zum ersten Mal rendert: jeder Weg in die Quelle
+endet in deren `navigate`. Das `<leader>nt`-Gruppenlabel registriert jetzt die
+`mappings`-Phase, weil es vor dem ersten Tastendruck da sein muss.
+
+Geprüft mit UI, gegen den Worktree als Config: `:Neotree tests` rendert und
+lädt neotest; `<leader>nts` lädt neotest und öffnet die Summary; eine
+`*_spec.lua` lädt neotest per Event, eine normale Lua-Datei nicht;
+`:Sandbox engine get` und ein `Dockerfile` laden `sandbox.nvim`.
+
+| Größe (Median aus 5 Läufen, mit UI) | Beginn der Runde | nach Schritt 1 (N1, N2) | nach Schritt 2 |
+| --- | ---: | ---: | ---: |
+| Stöße > 60 ms, Summe | 2538 ms | 912 ms | **595 ms** |
+| längster Stoß | 1131 ms | 585 ms | **348 ms** |
+| Event-Loop belegt in den ersten 6 s | 2993 ms | 1203 ms | **938 ms** |
+| geladene Plugins | 60 | 60 | 47 |
+
+(„Nach Schritt 1" ist hier die reale Config nach dem Pull gemessen und liegt
+deshalb etwas unter der Tabelle in der Kurzfassung, die den Checker per
+`--cmd` eingeschleust hatte.) Benutzbar ist der Editor damit nach etwa 0,9 s
+(`VeryLazy` bei ≈ 525 ms plus der Stoß), zu Beginn der Runde waren es ≈ 2,5 s.
+
+Was in der Welle bleibt (≈ 350 ms): `filetree.nvim` mit `neo-tree` (≈ 130–165 ms),
+`gopath.nvim` (20–90 ms, schwankt mit der Ladereihenfolge; darin
+`truncated/cache.lua` `load_from_disk` ≈ 30 ms), `language.nvim` mit
+`trouble.nvim` (≈ 35–45 ms), lazys eigene Arbeit pro Plugin
+(`source_runtime`, `runtimepath`-Neuberechnung: F2).
 
 ---
 
@@ -1040,11 +1095,13 @@ Session, in der der Check fällig ist, läuft alles wie bisher.
 Ersetzt die Prioritäten aus Abschnitt 12 („Offen"). Erwartungen sind Schätzungen
 für `STEVESPC`.
 
-1. **`VeryLazy`-Welle verkleinern (N3), Erwartung −250 bis −350 ms am Stoß.**
-   (a) `filetree.nvim` so umbauen, dass es `neo-tree` nicht beim eigenen Laden
-   braucht, dann die Dependency streichen: `neo-tree` und `neotest` laden wieder
-   erst bei Bedarf. (b) `sandbox.nvim`: Engine in der Spec benennen (spart die
-   PATH-Suchen) oder auf `cmd`/`keys` stellen. (c) `gopath.nvim` prüfen.
+1. **`VeryLazy`-Welle verkleinern (N3).** `neotest` und `sandbox.nvim` sind
+   erledigt (siehe „Zweiter Schritt"), der Stoß ist von 585 auf 348 ms gefallen.
+   Offen: (a) `filetree.nvim` so umbauen, dass es `neo-tree` nicht beim eigenen
+   Laden braucht (Erwartung −50 bis −70 ms; der Adapter hängt sich mit
+   Reihenfolge-Annahmen in neo-tree-Interna, das ist kein Nebenbei-Umbau).
+   (b) `gopath.nvim`: `load_from_disk` aus `setup()` nehmen. (c) Die Welle in
+   Scheiben laden statt in einem Callback, falls (a) und (b) nicht reichen.
 2. **F1-Rest:** die sieben `git`-Suchen über den Index aus `lib.nvim` führen;
    `sandbox.nvim` ebenso (`lib.nvim.core.has_exec` umgeht ihn).
 3. **Phase 0 nachziehen:** `:StartupReport` zeigt weiter nur Phasen-Bodies. Mit
@@ -1066,9 +1123,12 @@ für `STEVESPC`.
 2. **Checker:** Reicht `C` in `:Lazy` für die Tage zwischen zwei Checks, oder
    soll die Update-Liste beim Öffnen von `:Lazy` automatisch berechnet werden
    (kostet dann dort ≈ 0,1 s)?
-3. **`neo-tree`/`neotest`:** Punkt 1a ist ein Umbau in `filetree.nvim`. Die
-   billigere Alternative, `neotest` aus den Dependencies von `neo-tree` zu
-   nehmen, ist laut Kommentar an der Spec eine Regression (`:Neotree tests`).
+3. **`neotest` im Alltag gegenprüfen:** die Auslöser sind automatisiert
+   geprüft, nicht von Hand bedient. Auffallen würde es an einem `<leader>nt*`,
+   das beim ersten Druck nichts tut, oder an Statuszeichen, die in einer
+   Testdatei fehlen, deren Name auf keines der Muster passt.
+4. **`filetree.nvim` ohne `neo-tree` beim Laden** (Punkt 1a): lohnt sich das
+   für ≈ 60 ms, oder bleibt es so?
 
 ---
 

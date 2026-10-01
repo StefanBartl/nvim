@@ -150,9 +150,22 @@ if wanted.exe then
       local dt = (uv.hrtime() - t0) / 1e6
       total = total + dt
       local key = fname .. " " .. tostring(name)
-      local c = calls[key] or { n = 0, ms = 0, found = (r ~= 0 and r ~= "") }
+      local c = calls[key]
+      if not c then
+        -- Who asked first: the two frames above this wrapper (level 3 is the
+        -- caller of vim.fn.*, often a shared helper, level 4 its caller).
+        local who = {}
+        for level = 3, 4 do
+          local info = debug.getinfo(level, "Sl")
+          if info then
+            local src = info.short_src:gsub("\\", "/"):gsub("^.-/([^/]+/lua/)", "%1")
+            who[#who + 1] = ("%s:%d"):format(src, info.currentline)
+          end
+        end
+        c = { n = 0, ms = 0, found = (r ~= 0 and r ~= ""), who = table.concat(who, " < ") }
+        calls[key] = c
+      end
       c.n, c.ms = c.n + 1, c.ms + dt
-      calls[key] = c
       return r
     end)
   end
@@ -184,6 +197,7 @@ if wanted.exe then
         tostring(rows[i][2].found),
         rows[i][1]
       )
+      add(out, "              first from %s", rows[i][2].who)
     end
     add(
       out,
