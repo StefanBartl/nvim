@@ -599,6 +599,16 @@ not a genuine fetched digest.
    `opts.traffic.digest_dir`, and the one field that could have been repo-settable (`repo`) has a
    good derivable default (the git remote, like `repo_url`), so it did not need its own top-level
    key the way a gate name (no derivable default at all) needed `rules_gate`.
+7. **On-demand live fetch when there is no digest yet** — not decided, not sized, not part of
+   P0–P3. Raised 2026-10-01 alongside a cross-cutting principle for the rules.nvim/ai.nvim
+   ("loomAI") agent integration being planned: an external call and the credential it needs stay
+   inside the one Neovim-side plugin that owns the integration (`github_stats.nvim` for traffic,
+   `rules.nvim`/`ai.nvim` for the agent); the app only triggers it via the existing "Ask Neovim"
+   pattern and reads back an artifact, never holds the credential or makes the call itself. Written
+   up as its own idea (not the existing, unrelated, still-not-planned P4 "traffic × churn") in
+   [`GITHUB_STATS_CONCEPT.md`'s *On-demand live fetch*
+   section]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md#on-demand-live-fetch-idea-not-built)
+   and decision 5 there.
 
 ---
 
