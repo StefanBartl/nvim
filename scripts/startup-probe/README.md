@@ -50,8 +50,9 @@ Bericht, wenn `VeryLazy` fehlt.
 
 ```bash
 # mit UI, alle Standard-Sonden, Bericht nach $TEMP/startup-probe.txt
-# (stdout in eine Datei oder nach NUL umleiten, siehe „Bekannte Grenzen“)
-nvim --headless -l scripts/startup-probe/tui.lua > NUL
+# (stdout umleiten, siehe „Bekannte Grenzen“; in PowerShell:
+#  cmd /c "nvim --headless -l scripts/startup-probe/tui.lua > NUL")
+nvim --headless -l scripts/startup-probe/tui.lua > /dev/null
 
 # Stöße ihrem Code zuordnen (kostet Zeit, nicht mit anderen Läufen vergleichen)
 PROBE=stall,where,lazy,marks nvim --headless -l scripts/startup-probe/tui.lua
@@ -142,8 +143,12 @@ Idle, und sieht weder die `UIReady`-Phasen noch die Stöße danach.
   eingebautem `:terminal`, die Zeit für das Zeichnen im echten Emulator fehlt.
   Ist stdout des Treibers eine Pipe (`| tee`, CI, Agenten-Shell), zeichnet der
   gemessene Neovim seine Oberfläche **auch** in diese Pipe (25–45 KB
-  Escape-Sequenzen pro Lauf): stdout in eine Datei oder nach NUL umleiten.
-  Die Zahlen ändert das nicht, `bench.lua` verwirft die Ausgabe selbst.
+  Escape-Sequenzen pro Lauf): stdout auf eine echte Datei umleiten, in bash
+  `> /dev/null`, in cmd `> NUL`. **In PowerShell** machen `>` und `| Out-Null`
+  weiterhin eine Pipe: dort `cmd /c "nvim --headless -l … > NUL"` (oder
+  `Start-Process -RedirectStandardOutput`). In bash legt `> NUL` eine Datei
+  namens `NUL` an, die `git add -A` blockiert. Die Zahlen ändert das nicht,
+  `bench.lua` verwirft die Ausgabe selbst.
 - `first from` der Sonde `exe` zeigt die beiden Frames oberhalb des
   `vim.fn.*`-Aufrufs. Ruft eine Hilfsfunktion `exepath`/`executable` per Tail
   Call auf (`return vim.fn.exepath(cmd)`), hinterlässt sie keinen Frame
@@ -151,7 +156,9 @@ Idle, und sieht weder die `UIReady`-Phasen noch die Stöße danach.
   dessen Aufrufer und den Aufrufer davon.
 - Ist `PROBE_OUT` nicht beschreibbar (Verzeichnis fehlt, Platte voll), beendet
   sich der gemessene Neovim mit Exit-Code 1 und bleibt nicht hängen: `tui.lua`
-  reicht den Code weiter, `bench.lua` meldet den Lauf als fehlgeschlagen.
+  reicht den Code weiter und gibt bei jedem Exit ≠ 0 die letzten Zeilen aus dem
+  Pseudo-Terminal des Kindes auf stderr aus (dort steht der Grund),
+  `bench.lua` meldet den Lauf als fehlgeschlagen und druckt diesen Text.
 - lazys wöchentlicher Check läuft in dem einen Lauf mit, in dem er fällig wird
   (`git fetch` für jedes Remote-Plugin). lazy schreibt `last_check` gleich zu
   Beginn des Checks, die Läufe danach sind also wieder normal, auch wenn die

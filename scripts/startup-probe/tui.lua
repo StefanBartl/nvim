@@ -28,10 +28,15 @@ end
 if vim.uv.guess_handle(1) == "pipe" then
   io.stderr:write(
     "startup-probe: stdout is a pipe, so the probed nvim draws its UI into it (25-45 KB of"
-      .. " escape sequences). Redirect stdout to a file or NUL; the report goes to PROBE_OUT.\n"
+      .. " escape sequences). Redirect it to a real file: `> /dev/null` in bash, `> NUL` in"
+      .. " cmd. In PowerShell `>` and `| Out-Null` still make a pipe: use"
+      .. ' cmd /c "nvim --headless -l ... > NUL". The report goes to PROBE_OUT.\n'
   )
 end
 
+-- jobstart(term = true) turns the current buffer into the terminal buffer: what
+-- the child printed to its (pty) stderr, e.g. why it exited with 1, only lives there.
+local term_buf = vim.api.nvim_get_current_buf()
 local code = nil ---@type integer?
 local job = vim.fn.jobstart(cmd, {
   term = true,
@@ -51,5 +56,15 @@ end, 50) then
   vim.fn.jobstop(job)
   io.stderr:write("startup-probe: the probed nvim did not exit within " .. budget .. " ms\n")
   os.exit(2)
+end
+if code ~= 0 then
+  -- The last lines the child drew, so a failure says why (bench prints this).
+  local shown = {}
+  for _, line in ipairs(vim.api.nvim_buf_get_lines(term_buf, 0, -1, false)) do
+    if line:match("%S") then
+      shown[#shown + 1] = line
+    end
+  end
+  io.stderr:write(table.concat(shown, "\n", math.max(1, #shown - 19), #shown) .. "\n")
 end
 os.exit(code)
