@@ -152,10 +152,11 @@ if wanted.exe then
       local key = fname .. " " .. tostring(name)
       local c = calls[key]
       if not c then
-        -- Who asked first: the two frames above this wrapper (level 3 is the
-        -- caller of vim.fn.*, often a shared helper, level 4 its caller).
+        -- Who asked first: the caller of vim.fn.* (often a shared helper) and
+        -- its caller. Levels 2 and 3, not 3 and 4: `wrap` tail-calls this
+        -- function, and a tail call leaves no frame of its own behind.
         local who = {}
-        for level = 3, 4 do
+        for level = 2, 3 do
           local info = debug.getinfo(level, "Sl")
           if info then
             local src = info.short_src:gsub("\\", "/"):gsub("^.-/([^/]+/lua/)", "%1")
@@ -515,7 +516,8 @@ if wanted.spawn then
   local procs, procs_n, procs_ms = {}, 0, 0
   wrap(uv, "spawn", function(orig, path, opts, on_exit)
     local t0 = uv.hrtime()
-    local handle, pid = orig(path, opts, on_exit)
+    -- Three values: on failure uv.spawn answers `nil, message, name`.
+    local handle, pid, errname = orig(path, opts, on_exit)
     local dt = (uv.hrtime() - t0) / 1e6
     local args = type(opts) == "table" and opts.args or {}
     local head = table.concat(args, " ", 1, math.min(#args, 2))
@@ -524,7 +526,7 @@ if wanted.spawn then
     p.n, p.ms = p.n + 1, p.ms + dt
     procs[key] = p
     procs_n, procs_ms = procs_n + 1, procs_ms + dt
-    return handle, pid
+    return handle, pid, errname
   end)
   dumps[#dumps + 1] = function(out)
     add(out, "== spawn: %d processes, %.0f ms of main thread spent spawning", procs_n, procs_ms)

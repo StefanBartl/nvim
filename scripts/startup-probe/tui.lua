@@ -12,7 +12,8 @@
 --- PROBE, PROBE_MS and PROBE_OUT are read from the environment by probe.lua
 --- (the child inherits them). Exits with the child's exit code, 2 on timeout.
 
-local here = debug.getinfo(1, "S").source:sub(2):gsub("\\", "/"):match("^(.*)/[^/]*$")
+-- "." when started from this directory: the source then has no path part.
+local here = debug.getinfo(1, "S").source:sub(2):gsub("\\", "/"):match("^(.*)/[^/]*$") or "."
 
 local cmd = { vim.v.progpath, "--cmd", "luafile " .. here .. "/probe.lua" }
 for i = 1, #arg do
