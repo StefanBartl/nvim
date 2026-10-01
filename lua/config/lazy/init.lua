@@ -33,10 +33,11 @@ local function check_due(frequency)
     local state = vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
     return tonumber(state.checker.last_check)
   end)
-  -- A negative age is a `last_check` in the future (the clock was set ahead
-  -- once): it would read as "checked a moment ago" until the clock catches up.
-  local age = os.time() - (ok and last or 0)
-  return age < 0 or age >= frequency
+  -- A `last_check` in the future (the clock was set ahead once) is NOT "due":
+  -- lazy schedules from that value too, so enabling the checker for it would
+  -- run the per-plugin `git log` pass at every start and still never fetch, or
+  -- rewrite the value, until the clock catches up. Postponed is the cheap side.
+  return os.time() - (ok and last or 0) >= frequency
 end
 
 return {
