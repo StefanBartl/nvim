@@ -68,6 +68,23 @@ buffer-ctx/casedesk/gopath.
 | debugging.nvim `8a85a26` (`views/recent.lua`) | **Bug:** der Fallback-Pfad ohne ui.nvim taggte sein Popup-Fenster nie → `<x>` (`clear_all`) fand es nicht, wiederholtes `<m>/<n>/<e>` öffnete immer ein neues Fenster statt das bestehende zu fokussieren. | debugging.nvim `6b0a981` (Surface-Rückgabewert von `show_lines()` jetzt mit `window_tag.set` getaggt) |
 | nvim-config `097e3f8a` (Wiring: `wrap_noice()`/`notify_renderer_changed()`) | **Bug, High:** eigentliche Ursache lag in lib.nvim: `has_renderer()` prüfte nur `package.loaded["noice"] ~= nil`, nicht den tatsächlichen Running-Status — `package.loaded` bleibt nach `:Noice disable` weiterhin gesetzt. Damit löste `:Noice disable` nie ein Detach aus, der `ext_messages`-Logger blieb als einziger Listener hängen → Messages **und** Cmdline hätten komplett aufgehört zu rendern. | lib.nvim `f59c705` (`has_renderer()` prüft jetzt `noice.config.is_running()`); kein eigener nvim-config-Commit nötig, die Verdrahtung dort war schon korrekt |
 
+### Review-Durchlauf 2 (Auftrag des Nutzers, Reasoning `ultracode`, 2026-10-01) — die eigenen Fix-Commits
+
+Die oben gelisteten Fix-Commits (`f59c705`, `b390de7`, `45c2df7`, `6b0a981`, `1305ae3`) waren bis hierhin nur
+durchs „Reasoning auf `ultracode`" automatisch abgehakt, nie durch einen echten `ultracode`-Workflow
+gegengeprüft — genau die Art Lücke, die den Float-Guard-Fehlschlag oben erst live auffliegen ließ. Zweiter
+Durchlauf (4 Ziele, 10 Agenten, adversarial verifiziert) auf exakt diese Commits:
+
+| Geprüfter Commit | Befund | Fix-Commit |
+|---|---|---|
+| lib.nvim `f59c705`+`1305ae3` (finaler Stand `messages/init.lua`) | **Bug (niedrig):** `ring_size` wurde mit `math.max(1, …)` geklammert, aber nie auf Integer gerundet — der neue zirkuläre Buffer nutzt `ring_size` direkt als Modulo-Divisor, ein Bruchwert zerstört die Index-Arithmetik (der alte `table.remove`-Ring tolerierte das noch harmlos). | lib.nvim `5c94153` (`math.floor` ergänzt) |
+| ui.nvim `45c2df7` + lib.nvim-Spiegel `b390de7` (`message_log.lua`) | 2 Befunde, unabhängig in beiden Kopien bestätigt: (1) **Bug (mittel):** `M.open()` öffnet das Fenster mit einem 1-Zeilen-Platzhalter, `_redraw()` rief nie `nvim_win_set_config` — das Popup blieb für die gesamte Lebensdauer exakt 1 Zeile hoch, unabhängig vom tatsächlichen Inhalt. (2) **Bug (mittel):** `Handle:_trim()` setzte `has_more_older = true` bedingungslos beim Trimmen — ohne `load_more` ein dauerhafter toter „more above"-Hinweis, mit `load_more` konnte ein bereits erschöpfter Pagination-Status wieder scharf geschaltet werden. Nebenbei gefunden: die `<C-j>`/`<C-k>`-Hinweistexte waren vertauscht (Cheatsheet war korrekt). | ui.nvim `ae0a5aa`, lib.nvim-Spiegel `c8cc28a` (Resize-to-Content in `_redraw()`, `_trim()` fasst `has_more_older` nicht mehr an, Hinweistexte korrigiert) |
+| debugging.nvim `6b0a981` (`views/recent.lua`) | **Bug (mittel):** der gerade erst getaggte Fallback-Pfad blieb trotzdem unsichtbar für `window_tag.find()` — bei 0–1 Einträgen (Normalfall beim Error-Filter) öffnet das Fenster mit exakt 1 Zeile Höhe, `find()` verlangt aber `height > 1` strikt. Die Reuse-Prüfung und `<x>`-Cleanup blieben damit genau in dem Fall kaputt, den `6b0a981` beheben sollte. | debugging.nvim `914add1` (`height = math.max(2, #lines)` explizit an `show_lines()` übergeben) |
+
+Alle vier Ziele mit frischen Regressionstests abgesichert, luacheck/stylua grün, volle Testsuiten aller drei
+Repos grün (ui.nvim: nur die vorbestehende, unabhängige Kotlin-Treesitter-Testfailure, nicht Teil dieses
+Reviews).
+
 Nebenbefund (nicht angefasst): `nvim-data/swap` enthält ~600 Swap-Dateien (u. a. von abgebrochenen Headless-Läufen);
 sie lösen in Testläufen `E326: Too many swap files` aus → Tests mit `nvim -n` starten. Aufräumen nur nach Rückfrage.
 Falle beim Testen: `nvim --headless -u NONE` hat `stdpath("config")` (= Haupt-Checkout) **im rtp** — Module der
@@ -364,13 +381,17 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | debugging.nvim | `8a85a26` | feat(views): recent-Popup ersetzt messages/noice_all/noice_errors-Dumps | ✅ (Fix `6b0a981`) |
 | nvim-config | `097e3f8a` | feat(debugging): lib.nvim.messages-Aktivierung + recent-Popup-Config verdrahtet | ✅ (Ursache in lib.nvim `f59c705` behoben) |
 | nvim-config | `3559c019` | docs: Handover um die 5 T7-Commits ergänzt | ✅ |
-| lib.nvim | `f59c705` | fix(messages): Float-Guard+Retry, Listener-Snapshot, zirkulärer Ring-Buffer | ✅ |
-| lib.nvim | `b390de7` | fix(ui.kit): message_log Cap + Namespace-Hoisting (Spiegel) | ✅ |
-| ui.nvim | `45c2df7` | fix(kit): message_log Cap + Namespace-Hoisting | ✅ |
-| debugging.nvim | `6b0a981` | fix(views): Fallback-Fenster jetzt getaggt | ✅ |
+| lib.nvim | `f59c705` | fix(messages): Float-Guard+Retry, Listener-Snapshot, zirkulärer Ring-Buffer | ✅ (Fix `5c94153`) |
+| lib.nvim | `b390de7` | fix(ui.kit): message_log Cap + Namespace-Hoisting (Spiegel) | ✅ (Fix `c8cc28a`) |
+| ui.nvim | `45c2df7` | fix(kit): message_log Cap + Namespace-Hoisting | ✅ (Fix `ae0a5aa`) |
+| debugging.nvim | `6b0a981` | fix(views): Fallback-Fenster jetzt getaggt | ✅ (Fix `914add1`) |
 | lib.nvim | `0f94c7a` | docs(messages): Attach-Policy-Doku aktualisiert | ✅ |
 | lib.nvim | `1305ae3` | fix(messages): Float-Guard aus `f59c705` wieder entfernt (Live-Test zeigte Totalausfall des Attach, kein reproduzierbarer Hang) | ✅ (Live-TUI-Test) |
 | WKDBooks | `81d118d` | docs(tools): s7/s7b TUI-Spike-Skripte für die Live-Verifikation von `<m>/<n>/<e>` | ✅ |
+| lib.nvim | `5c94153` | fix(messages): ring_size vor Modulo-Indizierung floor-en | ✅ |
+| lib.nvim | `c8cc28a` | fix(ui.kit): message_log-Spiegel — Resize-to-Content + `has_more_older`-Fix | ✅ |
+| ui.nvim | `ae0a5aa` | fix(kit): message_log — Resize-to-Content + `has_more_older`-Fix + vertauschte Hinweistexte | ✅ |
+| debugging.nvim | `914add1` | fix(views): Fallback-Popup braucht Mindesthöhe 2 für `window_tag.find()` | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
