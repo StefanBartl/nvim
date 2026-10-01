@@ -27,7 +27,9 @@
 ---   stall   event-loop stalls (a 10 ms heartbeat that finds gaps > 60 ms) and
 ---           how busy the loop was per second, small gaps included
 ---   where   (opt-in, costs time) which code each stall belongs to
----   spawn   vim.system / vim.fn.system: spawn cost and blocking wait
+---   spawn   processes started through uv.spawn (vim.system, lazy.nvim, plugins)
+---           plus vim.fn.system: spawn cost and blocking wait. Not seen:
+---           jobstart, termopen, system()/systemlist() calls from Vimscript, :!
 ---   fs      other C-level calls that are cheap alone and not in bulk
 ---   lazy    what lazy.nvim loaded, why, and for how long
 ---   marks   when VimEnter / UIEnter / LazyDone / VeryLazy happened
@@ -79,13 +81,31 @@ end
 if wanted.req then
   local orig_require = require
   local stack, excl, count, top = {}, {}, {}, {}
+
+  -- Re-raising below starts a new unwind, so the failing module's own frames
+  -- would be gone for lazy.nvim's trace. Keep them in the message instead:
+  -- once (the innermost wrapper wins) and never for "module not found", which
+  -- plugins probe with pcall(require, ...) all the time.
+  ---@param err any
+  ---@return any
+  local function with_chain(err)
+    if
+      type(err) == "string"
+      and not err:find("stack traceback:", 1, true)
+      and not err:find("^module '.-' not found")
+    then
+      return err .. "\n" .. debug.traceback("", 2)
+    end
+    return err
+  end
+
   _G.require = function(name)
     if package.loaded[name] ~= nil then
       return orig_require(name)
     end
     local t0 = uv.hrtime()
     stack[#stack + 1] = { child = 0 }
-    local ok, res = pcall(orig_require, name)
+    local ok, res = xpcall(orig_require, with_chain, name)
     local frame = table.remove(stack)
     local dt = uv.hrtime() - t0
     excl[name] = (excl[name] or 0) + (dt - frame.child)
@@ -154,7 +174,10 @@ if wanted.exe then
       if not c then
         -- Who asked first: the caller of vim.fn.* (often a shared helper) and
         -- its caller. Levels 2 and 3, not 3 and 4: `wrap` tail-calls this
-        -- function, and a tail call leaves no frame of its own behind.
+        -- function, and a tail call leaves no frame of its own behind. A caller
+        -- that tail-calls vim.fn.* itself (`return vim.fn.exepath(cmd)`) is
+        -- invisible too and LuaJIT keeps no marker for it, so the chain then
+        -- starts one level higher: the helper is missing from it.
         local who = {}
         for level = 2, 3 do
           local info = debug.getinfo(level, "Sl")
@@ -262,10 +285,25 @@ end
 if wanted.stall then
   -- A stall is one gap > 60 ms. `busy` also counts the small ones (a process
   -- spawn is ~15 ms of main thread on Windows, fifty of them never show up as
-  -- a stall): every gap above the timer's own jitter, summed per second.
+  -- a stall): every gap above the timer's own jitter, summed per second. A gap
+  -- is split over the seconds it covers, so no second can read more than 1000.
   local TICK, JITTER = 10, 16
   local first = nil ---@type number?
   local busy = {} ---@type table<integer, number>
+
+  --- Busy time from..to (ms since `first`), spread over the second-long buckets
+  --- it spans.
+  ---@param from number
+  ---@param to number
+  local function add_busy(from, to)
+    while from < to do
+      local sec = math.floor(from / 1000)
+      local upto = math.min(to, (sec + 1) * 1000)
+      busy[sec] = (busy[sec] or 0) + (upto - from)
+      from = upto
+    end
+  end
+
   local timer = uv.new_timer()
   timer:start(
     0,
@@ -278,8 +316,8 @@ if wanted.stall then
           stalls[#stalls + 1] = { at = beat, gap = gap }
         end
         if gap > JITTER then
-          local sec = math.floor((beat - first) / 1000)
-          busy[sec] = (busy[sec] or 0) + (gap - TICK)
+          -- The timer would have idled for TICK anyway: the rest is busy time.
+          add_busy(beat - first + TICK, t - first)
         end
       else
         first = t
@@ -328,9 +366,11 @@ end
 -- ── where ───────────────────────────────────────────────────────────────────
 -- Which code a stall belongs to. A count hook samples the Lua stack while the
 -- heartbeat is overdue and charges the time since the previous sample to that
--- stack. A blocking C call shows up as one long sample at the place it returned
--- to, busy Lua as many short ones. Sampling costs time: do not compare the
--- totals of a run with `where` to one without.
+-- stack. A blocking C call, or JIT-compiled Lua (neither calls the hook), shows
+-- up as one long sample at the first code that runs 1000+ instructions after
+-- it ended -- the NEXT function when the stall was the last thing a callback
+-- did. Busy interpreted Lua shows up as many short samples. Sampling costs
+-- time: do not compare the totals of a run with `where` to one without.
 if wanted.where then
   local OVERDUE, EVERY, FRAMES = 60, 2, 9
   local last_sample = 0
@@ -370,7 +410,9 @@ if wanted.where then
   local function owner(fr)
     for _, f in ipairs(fr) do
       local ns = f:match("/lua/([^/:]+)/") or f:match("/lua/([^/:]+)%.lua")
-      if ns and ns ~= "lazy" then
+      -- `runtime/lua/...` is Neovim's own tree (vim.lsp, vim.treesitter,
+      -- vim.diagnostic when loaded from disk, editorconfig, man): not an owner.
+      if ns and ns ~= "lazy" and not f:find("^runtime/lua/") then
         return f:find("^nvim/lua/") and ("config:" .. ns) or ns
       end
     end
@@ -394,7 +436,12 @@ if wanted.where then
     for _, s in ipairs(stalls) do
       local owners, stacks, shown, sampled = {}, {}, {}, 0
       for _, e in ipairs(samples) do
-        if e.at + e.ms >= s.at and e.at <= s.at + s.gap then
+        -- A sample belongs to the stall its midpoint falls into. Its start can be
+        -- the closing heartbeat of the previous stall (the first sample of a stall
+        -- right behind another one), which an inclusive test on the start would
+        -- credit to both.
+        local mid = e.at + e.ms / 2
+        if mid > s.at and mid <= s.at + s.gap then
           local fr = frames(e.tb)
           local who = owner(fr)
           local key = table.concat(fr, "\n", 1, math.min(#fr, 3))
@@ -510,9 +557,11 @@ if wanted.spawn then
     }
     return r
   end)
-  -- Every process, whoever starts it: vim.system ends up here too, and
-  -- lazy.nvim's checker (one git per plugin) only shows up here. The spawn
-  -- itself runs on the main thread, ~15 ms each on Windows.
+  -- Every uv.spawn, whoever calls it: vim.system ends up here too, and
+  -- lazy.nvim's checker (one git per plugin) only shows up here. NOT seen:
+  -- jobstart, termopen, system(), systemlist() and `:!` (C-level, they never
+  -- touch the Lua binding, and Vimscript callers bypass the vim.fn wrappers).
+  -- The spawn itself runs on the main thread, ~15 ms each on Windows.
   local procs, procs_n, procs_ms = {}, 0, 0
   wrap(uv, "spawn", function(orig, path, opts, on_exit)
     local t0 = uv.hrtime()
@@ -529,7 +578,13 @@ if wanted.spawn then
     return handle, pid, errname
   end)
   dumps[#dumps + 1] = function(out)
-    add(out, "== spawn: %d processes, %.0f ms of main thread spent spawning", procs_n, procs_ms)
+    add(
+      out,
+      "== spawn: %d processes via uv.spawn, %.0f ms of main thread spent spawning",
+      procs_n,
+      procs_ms
+    )
+    add(out, "-- not counted: jobstart, termopen, system()/systemlist(), :! (C-level)")
     local keys = vim.tbl_keys(procs)
     table.sort(keys, function(a, b)
       return procs[a].ms > procs[b].ms
@@ -561,13 +616,16 @@ end
 if wanted.fs then
   local acc = {}
   local function track(tbl, name, label)
-    wrap(tbl, name, function(orig, ...)
-      local t0 = uv.hrtime()
-      local a, b, c, d = orig(...)
+    -- Forward exactly what `orig` returned, no padding with nils: callers such
+    -- as table.insert(t, f()) or vim.fn.g(f()) are sensitive to the count.
+    local function finish(t0, ...)
       local e = acc[label] or { n = 0, ms = 0 }
       e.n, e.ms = e.n + 1, e.ms + (uv.hrtime() - t0) / 1e6
       acc[label] = e
-      return a, b, c, d
+      return ...
+    end
+    wrap(tbl, name, function(orig, ...)
+      return finish(uv.hrtime(), orig(...))
     end)
   end
   for _, n in ipairs({
@@ -678,9 +736,17 @@ vim.api.nvim_create_autocmd("VimEnter", {
         out[#out + 1] = ""
       end
       local path = vim.env.PROBE_OUT or ((vim.env.TEMP or "/tmp") .. "/startup-probe.txt")
-      vim.fn.writefile(out, path)
-      summary.ui = #vim.api.nvim_list_uis() > 0
-      vim.fn.writefile({ vim.json.encode(summary) }, path .. ".json")
+      local wrote, err = pcall(function()
+        vim.fn.writefile(out, path)
+        summary.ui = #vim.api.nvim_list_uis() > 0
+        vim.fn.writefile({ vim.json.encode(summary) }, path .. ".json")
+      end)
+      if not wrote then
+        -- A scheduled callback that raises leaves the editor running forever:
+        -- say why and quit with a failure instead (tui.lua passes the code on).
+        io.stderr:write("startup-probe: " .. tostring(err) .. "\n")
+        vim.cmd("1cquit")
+      end
       vim.cmd("qa!")
     end, tonumber(vim.env.PROBE_MS) or 6000)
   end,

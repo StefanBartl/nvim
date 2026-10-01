@@ -5,25 +5,44 @@
 ---
 ---   nvim --headless -l scripts/startup-probe/bench.lua [runs] [tui|headless] [args...]
 ---
---- Defaults: 5 runs, `tui` (see tui.lua for why headless misses VeryLazy).
+--- Defaults: 5 runs, `tui` (see tui.lua for why headless misses VeryLazy). Either
+--- leading argument can be left out: `bench.lua headless` is 5 headless runs.
 --- Further arguments go to the probed Neovim, which makes an A/B without
 --- touching the config possible: `... 5 tui --cmd "lua vim.g.some_switch = false"`.
 --- PROBE defaults to `stall,marks,report`, the cheapest set that yields these
 --- numbers; PROBE_MS is passed through. The first run is a warm-up and is not
 --- counted.
 
-local runs = tonumber(arg[1]) or 5
-local mode = arg[2] or "tui"
-assert(mode == "tui" or mode == "headless", "mode is `tui` or `headless`")
+-- No table.unpack in this Neovim: take the leading arguments off a copy.
+local args = {}
+for i = 1, #arg do
+  args[i] = arg[i]
+end
+local runs, mode = 5, "tui"
+local count = tonumber(args[1])
+if count then
+  table.remove(args, 1)
+  runs = math.floor(count)
+end
+if args[1] == "tui" or args[1] == "headless" then
+  mode = table.remove(args, 1)
+end
+assert(runs >= 1, "runs must be >= 1")
 
 -- "." when started from this directory: the source then has no path part.
 local here = debug.getinfo(1, "S").source:sub(2):gsub("\\", "/"):match("^(.*)/[^/]*$") or "."
 local out = vim.fn.tempname():gsub("\\", "/") .. ".txt"
 
+-- fnameescape: `luafile` expands % and # in its argument like any file name.
 local cmd = mode == "tui" and { vim.v.progpath, "--headless", "-l", here .. "/tui.lua" }
-  or { vim.v.progpath, "--headless", "--cmd", "luafile " .. here .. "/probe.lua" }
-for i = 3, #arg do
-  cmd[#cmd + 1] = arg[i]
+  or {
+    vim.v.progpath,
+    "--headless",
+    "--cmd",
+    "luafile " .. vim.fn.fnameescape(here .. "/probe.lua"),
+  }
+for _, a in ipairs(args) do
+  cmd[#cmd + 1] = a
 end
 local env = { PROBE = vim.env.PROBE or "stall,marks,report", PROBE_OUT = out }
 
@@ -70,10 +89,17 @@ local ORDER = {
   "loop busy, second 4",
 }
 
+-- A probed start that never ends fails the run instead of waiting forever
+-- (tui.lua has its own, shorter budget and exits 2 first).
+local budget = (tonumber(vim.env.PROBE_MS) or 6000) + 70000
+
 local samples = {} ---@type table<string, number[]>
 for run = 0, runs do
   vim.fn.delete(out .. ".json")
-  local res = vim.system(cmd, { env = env, text = true }):wait()
+  -- stdout = false: with a pipe as stdout the probed TUI draws its screen into
+  -- it (tens of KB of escape sequences per run) instead of only into its pty.
+  -- The numbers come from the .json file; stderr is kept for the failure message.
+  local res = vim.system(cmd, { env = env, text = true, stdout = false, timeout = budget }):wait()
   local ok, lines = pcall(vim.fn.readfile, out .. ".json")
   if res.code ~= 0 or not ok then
     io.stderr:write(("run %d failed (exit %d): %s\n"):format(run, res.code, res.stderr or ""))
