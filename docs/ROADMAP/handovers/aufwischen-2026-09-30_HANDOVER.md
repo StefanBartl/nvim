@@ -130,15 +130,26 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    Git/Picker/Tree/Completion/Editing/UI/Tests, Lückenliste, Abhängigkeitsketten, Reichweite+Wartung per `gh api`).
    Befunde: `plenary` (Upstream kündigt Archivierung an; kein eigenes Plugin braucht es), `telescope-github` + `nvim-notify`
    ohne Nutzung, `search.nvim` ↔ `pickers.tabs` (in der Config nicht aktiviert), 13 direkte Telescope/fzf-lua-Maps trotz
-   pickers.nvim, nvim-treesitter-Pin mit veraltetem Kommentar (Neovim ist 0.12.2), **gitsuite-Doku sagt native Hunk-Implementierung,
-   Code hat keine für stage/reset** (nicht korrigiert). Nichts entfernt/ersetzt. Nicht ausgeführt, nur gelesen/gezählt.
+   pickers.nvim, nvim-treesitter-Pin mit veraltetem Kommentar (Neovim ist 0.12.2), **gitsuite-Doku sagte native Hunk-Implementierung,
+   Code hat keine für stage/reset** (jetzt korrigiert, siehe unten). Nichts entfernt/ersetzt. Nicht ausgeführt, nur gelesen/gezählt.
    **Entscheidung 1 umgesetzt (2026-10-01): `pickers.tabs` aktiv, search.nvim abgelöst** (nvim-config `b1c0170a`; `<leader>s` →
    `:Pickers tabs default`, `<Tab>`/`<S-Tab>` in `specs/navigate.lua`, Gruppen dort). Live-Test in echter TUI fand 3 Fehler in
    pickers.nvim (`0684430` Tab schloss jeden Picker; `c51fe4f` `builtin`-Ziele gingen nicht + nur Tab-Picker schalten; `265b01c`
    snacks reichte die Query nicht durch) — alle behoben, 996 Tests grün. Details im Nachtrag des Reports. **Code-Commits reviewt**
    (`ultracode`-Workflow 2026-10-01, 4 weitere Befunde + Fix `40ab6ec`, siehe Review-Durchlauf-Tabelle oben; alle 4 Commits ✅).
-   Offen: `:Lazy clean` für das verwaiste search.nvim (nicht ausgeführt); `<leader>s`-Präfixwartezeit (1 s) bekannt.
-   **Offen:** nichts aus dem Roadmap-Punkt; Entscheidungen stehen in §9 des Reports. **Kein Bau** (Nutzer: erst Review/Abgleich).
+   `:Lazy clean` für das verwaiste search.nvim — **erledigt** (vom Nutzer selbst ausgeführt, 2026-10-01).
+   Offen: `<leader>s`-Präfixwartezeit (1 s) bekannt.
+   **Entscheidung 4 umgesetzt (2026-10-01): gitsuite-Doku an den Code angleichen** (gitsuite.nvim `f841e4a`) —
+   `docs/scope.md`/`docs/around-it.md` behaupteten eine native `git`-only-Alternative für `:Git hunk *`;
+   `features/hunk/init.lua` hat keine für `stage`/`reset`/`stage-buffer`/`reset-buffer`/`toggle-deleted`/`inline`
+   (melden „not installed" ohne gitsigns), nur `preview` fällt auf `diff.nvim`s `:Git diff head` zurück.
+   Dieselbe veraltete Behauptung steckte auch in `docs/architecture.md` (`"hunk wants {gitsigns, native}"`) und in
+   zwei Code-Kommentaren (`adapter/init.lua`s `resolve_first`-Doku, `health.lua`) — `resolve_first` hat gar keine
+   Aufrufer, nichts nutzt aktuell eine geordnete Adapter-Fallback-Liste. Alle fünf Stellen korrigiert
+   (`integrations.md` hatte es schon richtig); dazu `scope.md`s veraltete Familien-Zahl „Eight" → „Nine" gefixt.
+   Reine Doku-/Kommentar-Änderung, Tests (`adapter_spec`, `hunk_spec`) liefen zur Kontrolle grün.
+   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (2, 3, 5, 6, 7) stehen in §9 des Reports.
+   **Kein Bau** von `lib.nvim.messages` ohne Nutzerfreigabe (unverändert).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
@@ -229,6 +240,7 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | `b1c0170a` | feat(pickers): Tab-Gruppen aktiv, search.nvim abgelöst (`<leader>s`) | ✅ (ohne Befund, Default-Gruppen korrekt) |
 | WKDBooks | `2ab6d71` | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
 | pickers.nvim | `40ab6ec` | fix(tabs): arm_tag markiert jeden passenden Buffer, smart reicht die Query durch, Fallback folgt der physischen Taste, git-Gruppe repariert | ✅ |
+| gitsuite.nvim | `f841e4a` | docs: hunk hat keinen nativen Fallback für stage/reset — Doku/Kommentare an den Code angeglichen | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
