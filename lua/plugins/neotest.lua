@@ -45,17 +45,36 @@ return {
         group = vim.api.nvim_create_augroup("neotest_on_test_file", { clear = true }),
         pattern = TEST_FILES,
         once = true,
-        callback = function()
-          local function load()
+        callback = function(ev)
+          local file = vim.fn.fnamemodify(ev.file, ":p")
+          local function load(deferred)
             require("lazy").load({ plugins = { "neotest" } })
+            if deferred then
+              -- The auto-attach that starts neotest's client (it discovers the
+              -- tests and places the signs) is a BufEnter autocmd, and the
+              -- BufEnter of the startup buffers has passed by now: without this
+              -- a test buffer that is open but not current (a restored session)
+              -- gets no signs until it is visited. Asking for the file's tree
+              -- starts the client; its discovery then covers every open buffer.
+              -- `get_tree_from_args` is neotest-internal, hence the pcall: if it
+              -- ever changes, the signs come with the next BufEnter again.
+              require("nio").run(function()
+                pcall(function()
+                  require("neotest").run.get_tree_from_args({ file }, false)
+                end)
+              end)
+            end
           end
           if vim.v.vim_did_enter == 1 then
-            load()
+            load(false)
           else
-            vim.api.nvim_create_autocmd(
-              "User",
-              { pattern = "VeryLazy", once = true, callback = load }
-            )
+            vim.api.nvim_create_autocmd("User", {
+              pattern = "VeryLazy",
+              once = true,
+              callback = function()
+                load(true)
+              end,
+            })
           end
         end,
       })
