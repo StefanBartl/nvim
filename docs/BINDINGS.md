@@ -230,27 +230,24 @@ Full implementation notes: [`lua/bindings/usrcmds/context_open/README.md`](../lu
 
 ### fzf-lua pickers (`fzf.lua`)
 
-The fzf-lua entry points this config binds directly. The `<leader>ff` /
-`<leader>fb` family belongs to `pickers.nvim` and is documented on that
-plugin's own `docs/BINDINGS.md` — those collisions are why two keys here
-have the shape they do.
+The fzf-lua entry points this config binds directly — down to one now.
+Everything `pickers.builtins` already covers (colorschemes, keymaps,
+git_status, quickfix, man, live_grep, files, treesitter,
+lsp_workspace_symbols) moved to `pickers.nvim`'s own declarative
+`mappings`/`keymaps` config in `plugins/personal/specs/navigate.lua`
+instead (2026-10-01, externe-plugins report §9.2) — engine-agnostic there,
+and most already had an established `pickers.nvim` key of their own, so the
+old `<leader>f*` keys were dropped rather than kept as duplicates. `<leader>
+ff` / `<leader>fb` belong to `pickers.nvim` the same way and are why the one
+key still here has the shape it does.
 
 | Key | Mode | Effect | desc | Source |
 | --- | --- | --- | --- | --- |
-| `<leader>fth` | n | `:FzfLua colorschemes` | `[FzfLua] Colorschemes` | `fzf.lua` |
-| `<leader>fK` | n | `:FzfLua keymaps` | `[FzfLua] Keymaps` | `fzf.lua` |
-| `<leader>fgs` | n | `:FzfLua git_status` | `[FzfLua] Git Status` | `fzf.lua` |
-| `<leader>fq` | n | `:FzfLua quickfix` | `[Quickfix] Quickfix` | `fzf.lua` |
-| `<leader>man` | n | `:FzfLua man_pages` | `[FzfLua] Man Pages` | `fzf.lua` |
-| `<leader>fg` | n | `:FzfLua live_grep` | `[FzfLua] Live Grep` | `fzf.lua` |
 | `<leader>fB` | n | `:FzfLua grep_curbuf` | `[FzfLua] Grep current buffer` | `fzf.lua` |
-| `<leader>fzf` | n | `:FzfLua files` | `[FzfLua] Files` | `fzf.lua` |
-| `<leader>ftf` | n | `:FzfLua treesitter` | `[FzfLua] Search Tree-sitter symbols` | `fzf.lua` |
-| `<leader>fws` | n | `fzf-lua.lsp_workspace_symbols()` | `[FzfLua] Search workspace symbols (LSP)` | `fzf.lua` |
 
-Two were renamed away from collisions and the old names are gone:
-`<leader>fK` was `<leader>ffk`, a prefix of `pickers.nvim`'s `<leader>ff`,
-which made every `<leader>ff` press wait out `timeoutlen`; `<leader>fB` was
+The only one left: a live interactive regex grep scoped to the current
+buffer, with no `pickers.builtins` match (`lines`/`blines` is a fuzzy
+line-filter, a different mechanic under a similar name). `<leader>fB` was
 `<leader>fb`, which `pickers.nvim`'s `keymaps.folder_files` owns now. The
 LSP-flavoured entries that used to live here (`<leader>do`, `<leader>dos`,
 `<leader>wo`, `<leader>wos`) moved into `lsp.nvim`'s keymap catalogue.
