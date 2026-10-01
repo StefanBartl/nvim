@@ -40,6 +40,18 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 - ui.nvim `ui.context … kotlin` (Parser-abhängig)
 - markdown-Runner meldet am Ende „Error in command line" (besteht auch ohne meine Änderungen)
 
+## Review-Durchlauf (Auftrag des Nutzers, Reasoning `ultracode`, 2026-10-01)
+
+Alle Nicht-Doku-Commits dieses Chats auf Bugs / Security / Performance prüfen und Funde sofort fixen;
+Handover nach **jedem** Commit aktualisieren. Geprüfte Commits bekommen unten ✅ (Review durch den Nutzer-
+`ultracode`-Modus). Reihenfolge: markdown → ui/lib → images → filetree → pickers → nvim-config → cascade →
+buffer-ctx/casedesk/gopath.
+
+| Geprüfter Commit | Befund | Fix-Commit |
+|---|---|---|
+| markdown `03b0867` (Env-Ziele) | `%VAR%` griff bei prozentkodierten Zielen (`%E2%80%93x.md`) und `$foo.md`; Config-Lookup pro Link bei jedem Speichern | markdown `4247bbf` |
+| markdown `779c4d1` (Blockquote-Breite) | Padding konnte bei `wrap` breiter als das Fenster werden → leere Folgezeilen | markdown `5c618d3` |
+
 ## Offen — in dieser Reihenfolge weitermachen
 
 1. ~~filetree.nvim `MI`~~ — **erledigt** (`9a0e0dc`). Vorbild für die Picker-Aktion:
@@ -123,12 +135,14 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 - `:startinsert` wird in `nvim -l`-Läufen nie verarbeitet → Tests stubben `vim.cmd`.
 - Shell-Tools fielen einmal mit „classifier error" aus; Retry half.
 
-## Commit-Liste dieses Chats (grüner Haken = `ultracode`-Review; bisher **keiner** reviewed)
+## Commit-Liste dieses Chats (✅ = vom Nutzer-`ultracode`-Modus reviewt; Doku-Commits ✅ ohne Review)
 
 | Repo | Commit | Beschreibung | Review |
 |---|---|---|---|
-| markdown.nvim | `03b0867` | fix(links): no `./` before env-rooted targets, repair | – |
-| markdown.nvim | `779c4d1` | feat(hl): blockquote width | – |
+| markdown.nvim | `03b0867` | fix(links): no `./` before env-rooted targets, repair | ✅ (Fix `4247bbf`) |
+| markdown.nvim | `779c4d1` | feat(hl): blockquote width | ✅ (Fix `5c618d3`) |
+| markdown.nvim | `4247bbf` | fix(links): Env-Referenz = ganzes erstes Segment, Config-Lookup nur für Kandidaten | ✅ |
+| markdown.nvim | `5c618d3` | fix(hl): Blockquote-Padding nie breiter als das Fenster | ✅ |
 | cascade.nvim | `f5baa6d` | feat(keymaps): rotation → `cl/cL` | – |
 | ui.nvim | `10082fc` | feat(toast): width min/max/padding/wrap | – |
 | lib.nvim | `53417e1` | feat(toast): mirror + popup wrap width | – |
