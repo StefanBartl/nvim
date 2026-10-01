@@ -275,9 +275,24 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    rendert `:echo` wieder normal. `VeryLazy` feuert in `nvim --headless` weiterhin nicht (debugging.nvim/
    noice laden dort nie), die Keymap-Registrierung selbst ist aber über `bindings_spec.lua`s echte
    `lib.nvim.bindings.keymap`-Registrierung abgedeckt — und jetzt zusätzlich durch den echten TUI-Lauf
-   oben. **Noch nicht live geprüft:** Pagination-Pfeile (`<C-j>`/`<C-k>` mit tatsächlich vorhandener
-   älterer Historie) und der `?`-Cheatsheet-Inhalt im Detail — beide öffneten sich fehlerfrei, aber ohne
-   visuelle Detailprüfung.
+   oben.
+
+   **Update 2026-10-01 (Pagination/Cheatsheet live geprüft, Harness `s8.lua`):** Store mit expliziten
+   Zeitstempeln geseedet (`messages.push({time_ms=...})`), damit 3 echte Pagination-Stufen deterministisch
+   erreichbar sind, ohne auf reale Wanduhrzeit zu warten. `<C-j>` dreimal in Folge: Stufe 1 (10-20s)
+   und Stufe 2 (20-30s) laden korrekt gefilterte ältere Einträge nach, Stufe 3 (nichts mehr da) meldet
+   erschöpft, ohne Fehler. `?`-Cheatsheet zeigt alle 7 Zeilen korrekt.
+   **Dabei echten Bug gefunden:** der „more above"-Hinweis blieb trotz korrekt reserviertem Platz im
+   Fenster (mein eigener Resize-Fix von eben) als **leere Zeile** sichtbar — der Text selbst fehlte.
+   Ursache per `nvim_buf_get_extmarks` direkt geprüft: das Extmark existierte korrekt mit dem richtigen
+   Text — Neovims Standard-Viewport zeigt `virt_lines_above` auf Puffer-Zeile 1 aber nicht automatisch
+   an (manuelles Hochscrollen mit `<C-y>` holte den Text sichtbar hervor). Fix: `winsaveview().topfill`
+   explizit setzen (`vim.fn.winrestview({topfill=1})`, partielles Update) direkt nach dem Resize — lib.nvim
+   `175831c`, ui.nvim `33f83b4`. Danach erneut live verifiziert: Hinweis erscheint sofort, bleibt über
+   alle 3 Pagination-Stufen sichtbar, verschwindet exakt bei Erschöpfung. Neue Tests in
+   `ui_kit_message_log_spec.lua` (Fensterhöhe UND `topfill` direkt geprüft). Harness-Rezept um zwei
+   Fallen ergänzt (`nvim_list_uis()[1].ext_messages` ist nicht das richtige Signal für einen
+   `vim.ui_attach`-Listener; `virt_lines_above` auf Zeile 1 braucht `topfill`).
    **Nicht Teil dieses Durchgangs** (bewusst, s. Plan): das volle Live-Chip-System (noch-Ersatz, Konzept-
    Schritt 7) bleibt separat; `debugging.nvim/views/utils.lua` vs. `lib.nvim.window.focus_helpers`
    (Dopplung, gefunden, nicht bereinigt) bleibt ein Folge-Cleanup.
@@ -392,6 +407,9 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | lib.nvim | `c8cc28a` | fix(ui.kit): message_log-Spiegel — Resize-to-Content + `has_more_older`-Fix | ✅ |
 | ui.nvim | `ae0a5aa` | fix(kit): message_log — Resize-to-Content + `has_more_older`-Fix + vertauschte Hinweistexte | ✅ |
 | debugging.nvim | `914add1` | fix(views): Fallback-Popup braucht Mindesthöhe 2 für `window_tag.find()` | ✅ |
+| WKDBooks | `aed1fb6` | docs(tools): s8 Live-Pagination/Cheatsheet-Check, Harness-Rezept ergänzt | ✅ |
+| ui.nvim | `33f83b4` | fix(kit): message_log 'more above'-Hinweis brauchte `topfill` zum Anzeigen | ✅ (Live-TUI-Test) |
+| lib.nvim | `175831c` | fix(ui.kit): message_log-Spiegel — `topfill`-Fix | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
