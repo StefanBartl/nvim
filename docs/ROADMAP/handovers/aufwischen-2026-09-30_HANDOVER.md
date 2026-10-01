@@ -122,9 +122,12 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    `foundation.lua` (`popup.setup`: `width = nil`, `toast = { width, min_width, padding }`), `navigate.lua`
    (pickers `keys.markdown_link_insert`, `link_insert`; filetree `markdown_links` `keymap_insert`/`insert_path`/
    `env_roots`/`cursor`), `docs/NOTES/ExternPlugins/Bindings/Keymaps/Casedesk.md` (Kollisionsnotiz → gelöst;
-   `config_smart` liegt schon auf `<leader>CF`). Noch **nicht** gesetzt: `lib.nvim.markdown.link_cursor.setup`
-   global (nur über die Plugin-Optionen steuerbar). Ui.nvim-Spec: ein `ui.setup({ toast = … })` gibt es in
+   `config_smart` liegt schon auf `<leader>CF`). Ui.nvim-Spec: ein `ui.setup({ toast = … })` gibt es in
    der Config nicht, `toast` läuft über `popup.setup`.
+   **Update 2026-10-01:** `lib.nvim.markdown.link_cursor.setup` global jetzt doch aktiviert (nvim-config
+   `c288b187`, in `foundation.lua`) — verhaltensneutral, da alle vier Konsumenten (markdown.nvim, images.nvim,
+   pickers.nvim, filetree.nvim) ohnehin schon auf den Modul-Defaults laufen; macht das nur explizit statt vier
+   unabhängige Annahmen.
 6. ~~Report „Markdown-Link-Einfügestellen"~~ — **erledigt**: `reports/markdown-link-einfuegestellen-2026-10-01.md`
    (alle Stellen, vorher/nachher, Optionen, Commits; mdview/media/hover/gopath/recommender/insights ohne
    Treffer; color_my_ascii/open/documentation bewusst unverändert). Dabei zusätzlich umgesetzt, weil
@@ -423,6 +426,7 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | lib.nvim | `175831c` | fix(ui.kit): message_log-Spiegel — `topfill`-Fix | ✅ |
 | lib.nvim | `7e027a8` | feat(window): focus_helpers übernimmt debugging.nvims robustere Variante (Dedup) | ✅ |
 | debugging.nvim | `101e445` | refactor(views): Fokus-/Scroll-Dopplung entfernt, ruft lib.nvim.window.focus_helpers direkt | ✅ |
+| nvim-config | `c288b187` | chore(specs): lib.nvim.markdown.link_cursor.setup global aktiviert (verhaltensneutral) | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
