@@ -37,6 +37,12 @@ Median aus 5 Läufen mit UI (`bench.lua 5 tui`), echte Config:
 Benutzbar ist der Editor nach etwa 0,9 s (`VeryLazy` bei ≈ 525 ms plus der
 Stoß danach), zu Beginn waren es ≈ 2,5 s.
 
+Eine spätere Messung am selben Tag, bei unruhigerer Maschine und nach den
+Review-Fixes, ergab mit UI 699 ms Stöße, längster 407 ms, 47 Plugins (14 per
+Event); headless 439 ms und 171 ms bei 39 Plugins. Die Plugin-Zahl ist stabil,
+die Millisekunden schwanken mit der Last: nur Läufe derselben Sitzung
+vergleichen.
+
 Der längste verbleibende Stoß ist die `VeryLazy`-Welle: alle Plugins auf
 diesem Event laden in einem Callback direkt nach dem ersten Frame.
 
@@ -87,7 +93,14 @@ ersten Analyse) ist mit UI noch nicht gemessen.
 - `neotest` und `sandbox.nvim` laden über eigene Auslöser, nicht mehr bei jedem
   Start. Wer ein Plugin von „immer geladen" auf Bedarf umstellt, braucht
   **jedes** Kommando als Auslöser, das es oder seine Dependencies anlegen
-  (`:Neotest` und die `:Test*` von vim-test fehlten zuerst).
+  (`:Neotest` und die `:Test*` von vim-test fehlten zuerst, bei `sandbox.nvim`
+  der Alias `:Sbx`) und muss prüfen, was der Auslöser **beim Start** tut: lazys
+  `event` kennt kein „nach `VimEnter`", ein breiter `ft` (`yaml`) lädt bei der
+  ersten beliebigen Datei dieser Art. `neotest` wartet für eine Testdatei als
+  Argument deshalb auf `VeryLazy`, `sandbox.nvim` löst für Compose-Dateien über
+  den Dateinamen aus.
+- `:checkhealth <plugin>` findet ein per Auslöser geladenes Plugin erst nach dem
+  Laden (bei `sandbox.nvim`: vorher `:Sandbox engine get`).
 
 ---
 
@@ -104,8 +117,11 @@ Nach erwartetem Gewinn, Schätzungen für `STEVESPC`.
 | 5 | `:StartupReport` zeigt weiter nur Phasen-Bodies; „Stöße und Belegung der ersten Sekunden" wäre die ehrlichere Zeile als „Config loaded in … ms" | Messbarkeit | mittel |
 | 6 | `gitsigns` lädt per `require` schon vor `VimEnter` (≈ 30 ms, `bindings/autocmds/git/gitsigns_refresh.lua`); NvChad-Probe in `lsp.nvim` (ein fehlgeschlagenes `require`, 6–7 ms) | −35 ms | klein |
 | 7 | `Keymaps-Collisions.md` (WKDBooks, `wkdbook-myplugins/ALL/`) gegen die richtige Reihenfolge prüfen: ein Plugin auf `VeryLazy` überschreibt ein Mapping der `mappings`-Phase | Korrektheit | klein |
-| 8 | `filetree.nvim` Source-Switcher prüft `require("neo-tree-tests-source")`, das Modul gibt es nicht: die `tests`-Quelle gilt dort immer als „nicht installiert" | Fehler, älter als diese Arbeit | klein, als Chip angelegt |
-| 9 | `OHANA` mit `bench.lua 5 tui` neu messen; erst danach dort über F2 (`runtimepath`-Neuberechnung) entscheiden | Vergleichbarkeit | nur du |
+| 8 | `OHANA` mit `bench.lua 5 tui` neu messen; erst danach dort über F2 (`runtimepath`-Neuberechnung) entscheiden | Vergleichbarkeit | nur du |
+
+Der frühere Punkt 8 (Source-Switcher in `filetree.nvim` prüfte ein Modul, das
+es nicht gibt) ist erledigt: `08708b0`, `30d338b`, `c445079` in `filetree.nvim`,
+aus einer eigenen Session.
 
 ---
 
@@ -117,12 +133,22 @@ Nach erwartetem Gewinn, Schätzungen für `STEVESPC`.
 2. **Punkt 1** (`filetree` ohne `neo-tree` beim Laden): lohnt der Umbau für
    ≈ 60 ms, oder bleibt es so?
 3. **`sandbox.nvim`:** die Hover-Vorschau für Image-Referenzen gibt es außerhalb
-   von Dockerfile/YAML (z. B. `devcontainer.json`) erst, wenn das Plugin geladen
-   ist. So lassen oder einen weiteren Auslöser ergänzen?
+   von Dockerfiles und Compose-Dateien (k8s- und Workflow-YAML,
+   `devcontainer.json`) erst, wenn das Plugin geladen ist. `yaml` als Auslöser
+   kostet ≈ 110 ms bei der ersten beliebigen YAML-Datei und ist deshalb raus.
+   So lassen oder weitere Dateinamen ergänzen (z. B. `devcontainer.json`)?
 4. **`neotest` von Hand gegenprüfen:** die Auslöser sind automatisiert getestet,
    nicht bedient. Auffallen würde ein `<leader>nt*`, das beim ersten Druck
    nichts tut, oder fehlende Statuszeichen in einer Testdatei, deren Name auf
    keines der Muster in `lua/plugins/neotest.lua` passt.
+5. **Erster langsamer `<leader>`-Druck:** which-key lädt erst auf seinen
+   Tasten. Ist `<Space>` die erste Stub-Taste der Sitzung und kommt der Druck
+   langsam, löst lazys Stub erst nach `timeoutlen` aus und es erscheint **kein
+   Popup**; erst der zweite Druck zeigt es. Das war schon vor dieser Arbeit so
+   (Review, Einheit „Lazy key stubs"). Option A: `event = "VeryLazy"` an der
+   which-key-Spec (≈ 16–27 ms in der Welle, kehrt die dokumentierte
+   lib.nvim-Entscheidung „lädt auf dem ersten `<leader>`" um). Option B: lassen
+   und den Hänger an der Spec dokumentieren.
 
 ---
 
@@ -137,3 +163,12 @@ Details, Messreihen und Begründungen im Archiv (Pfad oben).
 | `nvim-config` | `a6d0f455` | `startup-probe` mit UI (`tui.lua`, `bench.lua`, Sonden `where`/`lazy`/`spawn`), lazy-Checker nur bei Fälligkeit (101 git-Prozesse pro Start) |
 | `nvim-config` | `1e34a249`, `190a896e` | `neotest` und `sandbox.nvim` aus der `VeryLazy`-Welle; Review-Fixes (`:Neotest`, vim-test, Sonde) |
 | `WKDBooks` | `cb22850` | `PERF-94..97`, Nachtrag zur Checker-Notiz, Tool-Index |
+| `language.nvim` | `bba2adb` | Review-Fixes: Leer- und BOM-Einträge am Rand eines Stapels, kein Scan des Arbeitsverzeichnisses ohne Temp-Verzeichnis, Tests, die jetzt scheitern können |
+| `nvim-config` | `627dff8e` | Review-Fixes `startup-probe`: `where`-Zuordnung, Belegung pro Sekunde, `fs`-Rückgabewerte, Pfade mit `%`/`#`, `bench.lua`-Argumente, Exit-Codes |
+| `nvim-config` | `737a27b3` | Review-Fixes: `:Sbx`-Stub, `sandbox.nvim` ohne `yaml`-Auslöser, `neotest` für Testdatei als Argument erst nach `VeryLazy`, Checker bei Uhr-Sprung |
+| `nvim-config` | `e80d52f6` | Neotest-Doku in `docs/NOTES/ExternPlugins/Bindings` an Code und Lazy-Stubs angepasst |
+
+Der Review dieser Fixes (25 bestätigte Funde aus 45 Agenten, 7 widerlegt) steht
+im Archiv; die nicht umgesetzten Funde sind oben Entscheidung 5 und, aus dem
+Review des `neotest`-Auslösers, ein Zielkonflikt: die Event-Muster entsprechen
+bewusst `core.is_test_file`.
