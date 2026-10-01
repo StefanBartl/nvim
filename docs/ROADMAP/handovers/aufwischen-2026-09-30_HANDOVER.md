@@ -182,7 +182,13 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    angefasst (kein `:Lazy update`/`sync` ausgeführt, das würde Live-Zustand außerhalb des Git-Repos ändern —
    bewusst dem Nutzer überlassen, inklusive der eigentlichen Verifikation: Highlighting/Folding/Indent an
    echten Buffern nach dem Sync prüfen, ein Commit-Log-Review ersetzt das nicht). luacheck/stylua grün.
-   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (5, 7) stehen in §9 des Reports.
+   **Entscheidung 7 getroffen (2026-10-01): Editing-Primitive (autopairs, autotag, matchup, visual-multi,
+   mini.ai/targets) bleiben dauerhaft extern** — Nutzerentscheidung, kein Handlungsbedarf, nichts geändert.
+   **Entscheidung 5 (`plenary.nvim`-Risiko) bleibt Beobachtungspunkt**, keine Aktion nötig, solange
+   telescope/neo-tree/diffview/neogit/neotest es brauchen.
+   **Alle 7 Entscheidungen aus §9 des Externe-Plugins-Reports damit abgeschlossen** — dieser Teilstrang
+   von T7 ("Übrige externe Plugins") ist durch. T7 selbst bleibt offen: der eigentliche Message-Popup-Bau
+   (`lib.nvim.messages`) wartet weiter auf Nutzerfreigabe, s. u.
    **Kein Bau** von `lib.nvim.messages` ohne Nutzerfreigabe (unverändert).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
