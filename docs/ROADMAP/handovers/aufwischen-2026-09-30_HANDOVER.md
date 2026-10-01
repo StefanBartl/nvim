@@ -169,7 +169,20 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    `config/telescope/file_browser/keymaps.lua` bleibt (reines `telescope.actions.which_key`, nie extension-abhängig).
    luacheck über den ganzen `lua/`-Baum grün (132 Dateien). `docs/NOTES/ExternPlugins/Bindings/{Keymaps/Telescope.md,TODO.md}`
    mitgezogen (Abschnitt 5/6 der Telescope.md zusammengelegt zu „Entfernt: telescope-file-browser.nvim").
-   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (5, 6, 7) stehen in §9 des Reports.
+   **Entscheidung 6 umgesetzt (2026-10-01): nvim-treesitter-Pin entfernt** (nvim-config `17194f13`) —
+   Pin-Bedingung „Unpin sobald Neovim auf 0.12" war selbst erfüllt (`nvim --version` → 0.12.2). Statt dem
+   Kommentar zu vertrauen: die 85 Commits zwischen gepinntem `f873ec29` und `origin/main` im echten
+   `nvim-data/lazy/nvim-treesitter`-Checkout geprüft (`git fetch` + `git log`) — nur der unmittelbar
+   nächste (`c82bf96f`, bereits bekannt) hob die Neovim-Mindestversion an, der Rest sind Routine-
+   Parser-/Query-Updates (`bot(parsers): …`, `feat(X)!: update parser and queries`) und ein
+   abwärtskompatibler `install.lua`-Refactor (`32dbd2e8`, gleiche Public-API-Signatur). Die von dieser
+   Config genutzte Public API (`get_installed`/`install`/`indentexpr`, `lua/nvim-treesitter/init.lua`)
+   existiert auf `origin/main` unverändert. **Nur die Config geändert** — `commit = "..."` entfernt, Kommentar
+   mit der Begründung ersetzt; das installierte Plugin selbst (`nvim-data/lazy/nvim-treesitter`) nicht
+   angefasst (kein `:Lazy update`/`sync` ausgeführt, das würde Live-Zustand außerhalb des Git-Repos ändern —
+   bewusst dem Nutzer überlassen, inklusive der eigentlichen Verifikation: Highlighting/Folding/Indent an
+   echten Buffern nach dem Sync prüfen, ein Commit-Log-Review ersetzt das nicht). luacheck/stylua grün.
+   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (5, 7) stehen in §9 des Reports.
    **Kein Bau** von `lib.nvim.messages` ohne Nutzerfreigabe (unverändert).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
@@ -264,6 +277,7 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | gitsuite.nvim | `f841e4a` | docs: hunk hat keinen nativen Fallback für stage/reset — Doku/Kommentare an den Code angeglichen | ✅ |
 | nvim-config | `8ce11b11` | feat(pickers): 10 der 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin` umgestellt | ✅ |
 | nvim-config | `1c440eb8` | chore(plugins): telescope-github, nvim-notify, telescope-file-browser + 3 ungenutzte Tasten entfernt | ✅ |
+| nvim-config | `17194f13` | chore(treesitter): nvim-treesitter-Pin entfernt (Neovim ist 0.12.2) | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
