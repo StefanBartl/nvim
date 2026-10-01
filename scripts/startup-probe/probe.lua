@@ -85,7 +85,11 @@ if wanted.req then
   -- Re-raising below starts a new unwind, so the failing module's own frames
   -- would be gone for lazy.nvim's trace. Keep them in the message instead:
   -- once (the innermost wrapper wins) and never for "module not found", which
-  -- plugins probe with pcall(require, ...) all the time.
+  -- plugins probe with pcall(require, ...) all the time. That message is raised
+  -- again with `error(res, 2)`, which puts the position of the requiring line in
+  -- front of it, as the unwrapped C `require` does when a Lua function calls it
+  -- (pcall as the caller has no position, so those stay bare): the message then
+  -- no longer matches the exemption and the outer wrapper adds the chain once.
   ---@param err any
   ---@return any
   local function with_chain(err)
@@ -116,6 +120,9 @@ if wanted.req then
       top[#top + 1] = { name = name, at = (t0 - t_start) / 1e6, ms = dt / 1e6 }
     end
     if not ok then
+      if type(res) == "string" and res:find("^module '.-' not found") then
+        error(res, 2)
+      end
       error(res, 0)
     end
     return res
