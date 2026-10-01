@@ -187,9 +187,59 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    **Entscheidung 5 (`plenary.nvim`-Risiko) bleibt Beobachtungspunkt**, keine Aktion nötig, solange
    telescope/neo-tree/diffview/neogit/neotest es brauchen.
    **Alle 7 Entscheidungen aus §9 des Externe-Plugins-Reports damit abgeschlossen** — dieser Teilstrang
-   von T7 ("Übrige externe Plugins") ist durch. T7 selbst bleibt offen: der eigentliche Message-Popup-Bau
-   (`lib.nvim.messages`) wartet weiter auf Nutzerfreigabe, s. u.
-   **Kein Bau** von `lib.nvim.messages` ohne Nutzerfreigabe (unverändert).
+   von T7 ("Übrige externe Plugins") ist durch.
+
+   **T7 Message-Popup: Freigabe erteilt und gebaut (2026-10-01).** Architektur im Planning-Dialog
+   gegenüber dem ursprünglichen Konzept verfeinert (Nutzer-Einwand + Diskussion): 3-Repo-Schnitt statt
+   2, da `lib.nvim` laut eigener Regel ("Dependencies point down or stay soft, never back up") keine
+   Abhängigkeit zurück auf debugging.nvim bekommen darf, `lib.nvim.notify`s `M.deliver` den Store aber
+   direkt befüllen muss (Spike-Empfehlung: Toasts nicht über den Logger, sondern direkt in den Store) —
+   und weil lib.nvim laut `PLAN-ui-kit-migration.md` ohnehin "nur Nicht-UI" bekommen soll.
+
+   - **lib.nvim `bd1b0b8`** — neues `lib.nvim.messages` (Ring-Puffer, kein UI): `push`/`snapshot`/
+     `on_message`/`off_message`, Attach-Policy exakt nach Spike-Empfehlung (nur attachen, wenn ein
+     Renderer existiert; `notify_renderer_changed()`/`wrap_noice()` für `:Noice enable`/`disable`, das
+     selbst kein Event feuert). Hook in `notify/popup.lua`s `M.deliver` (Toasts landen direkt im Store,
+     nicht über den Logger). `vim.uv.hrtime()`-basierte Zeitstempel (monoton, kein Epoch/DST-Problem für
+     "letzte N Sekunden"). Neuer Test `messages_spec.lua`, `TESTS_OK`.
+   - **ui.nvim `8acc800`** — neue, generische `ui.kit.message_log`-Komponente (Popup: `<C-j>/<C-k>`
+     Pagination, `<C-l>/<C-h>/<C-e>` Eingeklappt-Modus, `?` Cheatsheet) — kennt `lib.nvim.messages` nicht,
+     nimmt nur Einträge + Callbacks. Neuer Test `ui_kit_message_log_spec.lua` (7 Checks), README-Abschnitt.
+     **lib.nvim `95b66ba`** — mechanischer Spiegel-Port (kit_drift_spec verlangt exakte Dateisatz- und
+     Inhaltsgleichheit; "frozen: no new features" heißt laut Spec-Kommentar selbst "die *eigenen*
+     Aufrufer von lib.nvim werden nie überrascht", nicht "der Dateibaum hört auf zu matchen" — alle
+     16+ bestehenden kit-Module sind schon so gespiegelt, `chip`/`compare`/`shortlist` eingeschlossen).
+   - **debugging.nvim `8a85a26`** — `<m>`/`<n>`/`<e>` sind keine rohen `:messages`/`:Noice all`/
+     `:Noice errors`-Dumps mehr, sondern drei gefilterte Ansichten (`non_error`/`all`/`error`) ins
+     selbe neue Popup (`views/recent.lua`, dünner Dispatcher: Daten aus `lib.nvim.messages`, Rendering
+     über `ui.kit.message_log` wenn ui.nvim da ist, sonst statischer `lib.nvim.output.viewer`-Dump wie
+     bei pickers.nvims Cheatsheet-Fallback). Fenster-Wiederverwendung über `lib.nvim.window.tag`, neue
+     Tags (`recent_messages`/`recent_all`/`recent_errors`), da der alte Mechanismus (periodisches
+     `vim.cmd("messages")` auf WinEnter) für das neue Live-Popup falsch wäre. `show_command_output` hatte
+     danach keine Aufrufer mehr — komplett entfernt; `refresh_log_view`s jetzt unerreichbare Zweige blieben
+     stehen (harmlos, `clear_all()`/Tag-Lookup im selben Modul bleiben echt genutzt). Neuer Test
+     `views_recent_spec.lua`, `bindings_spec.lua`/`views_spec.lua` an die neue Signatur/Tags angepasst,
+     `TESTS_OK`. `docs/BINDINGS.md`/`configuration.md` aktualisiert.
+   - **nvim-config `097e3f8a`** — `lib.nvim.messages.setup({})` im lib.nvim-Bootstrap (lädt eager, vor
+     allem anderen); noice-Spec von `opts` auf `config` umgestellt, ruft dort `wrap_noice()` +
+     `notify_renderer_changed()` (der erste echte Check, sobald noice selbst fertig geladen ist).
+     `views.recent` im auskommentierten Beispielblock von `specs/inspect.lua` dokumentiert (bei Defaults
+     belassen).
+
+   **Verifiziert:** luacheck/stylua grün in allen vier Repos; volle Testsuiten grün (lib.nvim, ui.nvim
+   inkl. `kit_drift_spec`, debugging.nvim); echter Config-Headless-Start fehlerfrei; `debugging.views.
+   recent.show()` direkt aufgerufen öffnet im echten, geladenen Setup ein echtes `ui.kit`-Fenster ohne
+   Fehler. **Nicht verifiziert (bewusst, s. Plan):** die beiden TUI-Spike-eigenen Risiken live geprüft —
+   (a) `ui_attach` hängt laut Vorbefund, wenn beim Attach schon ein Float offen ist, (b) `:Noice disable`
+   bei aktivem Logger darf nichts verschlucken (Detach muss greifen). `VeryLazy` feuert in `nvim
+   --headless` nicht (debugging.nvim/noice laden dort nie), die Keymap-Registrierung selbst ist aber über
+   `bindings_spec.lua`s echte `lib.nvim.bindings.keymap`-Registrierung abgedeckt. **Bitte einmal live
+   `<m>`/`<n>`/`<e>` in einer echten Session drücken** (Pagination-Pfeile, Eingeklappt-Modus, `?`,
+   `:Noice disable` währenddessen) — das ist die Verifikation, die ein Headless-Lauf laut Spike selbst
+   nicht leisten kann.
+   **Nicht Teil dieses Durchgangs** (bewusst, s. Plan): das volle Live-Chip-System (noch-Ersatz, Konzept-
+   Schritt 7) bleibt separat; `debugging.nvim/views/utils.lua` vs. `lib.nvim.window.focus_helpers`
+   (Dopplung, gefunden, nicht bereinigt) bleibt ein Folge-Cleanup.
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
@@ -284,6 +334,11 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | `8ce11b11` | feat(pickers): 10 der 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin` umgestellt | ✅ |
 | nvim-config | `1c440eb8` | chore(plugins): telescope-github, nvim-notify, telescope-file-browser + 3 ungenutzte Tasten entfernt | ✅ |
 | nvim-config | `17194f13` | chore(treesitter): nvim-treesitter-Pin entfernt (Neovim ist 0.12.2) | ✅ |
+| lib.nvim | `bd1b0b8` | feat(messages): Zeitstempel-Ringpuffer, kein UI | – |
+| ui.nvim | `8acc800` | feat(kit): message_log Popup-Komponente | – |
+| lib.nvim | `95b66ba` | chore(ui.kit): message_log-Spiegel | – |
+| debugging.nvim | `8a85a26` | feat(views): recent-Popup ersetzt messages/noice_all/noice_errors-Dumps | – |
+| nvim-config | `097e3f8a` | feat(debugging): lib.nvim.messages-Aktivierung + recent-Popup-Config verdrahtet | – |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
