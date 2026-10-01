@@ -81,14 +81,42 @@ function M.format(path)
     end
   end
   local cfg = (vim.fs.normalize(vim.fn.stdpath("config")):gsub("/+$", ""))
-  if path:lower() == cfg:lower() then
+  -- Case-insensitive only where the file system is (Windows).
+  local fold = vim.fn.has("win32") == 1 and string.lower or function(s)
+    return s
+  end
+  if fold(path) == fold(cfg) then
     return "$NVIM_CONFIG_DIR"
   end
-  if path:sub(1, #cfg + 1):lower() == (cfg .. "/"):lower() then
+  if fold(path:sub(1, #cfg + 1)) == fold(cfg .. "/") then
     return "$NVIM_CONFIG_DIR" .. path:sub(#cfg + 1)
   end
   return path
 end
+
+--- Shorten `text` for a one-line status message: past the editor width minus
+--- room for the prefix only the tail is kept, behind an ellipsis. A message wider
+--- than the command line raises a hit-enter prompt when no message UI is attached.
+---@param text string
+---@return string
+local function shorten_for_echo(text)
+  local max = math.max(20, vim.o.columns - 30)
+  if vim.fn.strdisplaywidth(text) <= max then
+    return text
+  end
+  local chars = vim.fn.strchars(text)
+  local lo, hi = 1, chars
+  while lo < hi do
+    local mid = math.ceil((lo + hi) / 2)
+    if vim.fn.strdisplaywidth(vim.fn.strcharpart(text, chars - mid)) <= max - 1 then
+      lo = mid
+    else
+      hi = mid - 1
+    end
+  end
+  return "…" .. vim.fn.strcharpart(text, chars - lo)
+end
+M.shorten_for_echo = shorten_for_echo
 
 --- Copy the directory of target `name` to the clipboard.
 ---@param name string
@@ -108,10 +136,10 @@ function M.copy(name)
 
   local text = M.format(path)
   if not copy_to_clipboard(text) then
-    notify.warn(("no clipboard provider accepted %s"):format(text))
+    notify.warn(("no clipboard provider accepted %s"):format(shorten_for_echo(text)))
     return false
   end
-  notify.info(("copied %s -> %s"):format(name, text))
+  notify.info(("copied %s -> %s"):format(name, shorten_for_echo(text)))
   return true
 end
 
