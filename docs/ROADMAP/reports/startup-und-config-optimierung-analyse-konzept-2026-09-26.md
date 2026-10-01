@@ -149,6 +149,17 @@ aus einer eigenen Session.
    which-key-Spec (≈ 16–27 ms in der Welle, kehrt die dokumentierte
    lib.nvim-Entscheidung „lädt auf dem ersten `<leader>`" um). Option B: lassen
    und den Hänger an der Spec dokumentieren.
+6. **neotests `localhost`-Listener:** Beim Start des Clients öffnet neotest
+   selbst `serverstart("localhost:0")` ohne Zugangsschutz (ohne Option
+   abschaltbar). Das Review hat gezeigt, dass sich ein zweiter nvim ohne
+   Zugangsdaten verbindet und Lua in der Sitzung ausführt. Neotests Hilfsprozess
+   startet hier nicht (`lib.nvim` `rpc_pipe` vererbt `NVIM_LISTEN_ADDRESS` an
+   Kinder), der Listener bleibt also ungenutzt offen. Er war schon vorher offen
+   (erster Besuch eines Test-Buffers). Schließen lässt er sich nur über
+   `lib.nvim` (`rpc_pipe` darf die Variable nicht an Kinder exportieren), und
+   dann startet neotests Hilfsprozess, was 110–140 ms am Start kostet und
+   gemessen gehört. So lassen, `lib.nvim` ändern oder neotests Client-Start auf
+   Abruf (`:Neotest …`) beschränken?
 
 ---
 
@@ -171,8 +182,15 @@ Details, Messreihen und Begründungen im Archiv (Pfad oben).
 | `nvim-config` | `87a29e20` | Zweiter Review: `neotest` startet den Client auch für offene Test-Buffer (Session), Uhr-Härtung des Checkers zurückgenommen (sie schaltete den `git log`-Sturm ein) |
 | `nvim-config` | `d1087b50` | Zweiter Review: `startup-probe` behält bei fehlenden Modulen den Aufrufer, Fehlergrund im Treiber, Umleitungsrat je Shell |
 
+| `language.nvim` | `7b8ee9a` | (Review der zweiten Runde, ohne Fund) |
+| `nvim-config` | `a28ce217` | Dritter Review: `neotest` normalisiert das Trennzeichen der auslösenden Datei (0 → 4 Signs bei `edit E:/…`), Kommentar zu Reichweite, Listener und „No tests found" |
+| `nvim-config` | `e4849b68` | Dritter Review: `tui.lua` warnt bei offener stdin-Pipe und nennt die Ursachen eines Exit 2 |
+
 Die Reviews dieser Fixes (erst 25 bestätigte Funde aus 45 Agenten, 7 widerlegt;
-dann 8 aus 11 Agenten, 0 widerlegt) stehen im Archiv. Nicht umgesetzt ist nur
-Entscheidung 5 oben; aus dem Review des `neotest`-Auslösers bleibt ein
-Zielkonflikt stehen: die Event-Muster entsprechen bewusst
-`core.is_test_file`.
+dann 8 aus 11 Agenten, 0 widerlegt; zuletzt 4 aus 8 Agenten, 1 widerlegt, keine
+Regression mehr) stehen im Archiv. Nicht umgesetzt: Entscheidung 5 oben (erster
+`<leader>`-Druck), der unauthentifizierte `localhost`-Listener, den neotests
+Client-Start öffnet (Entscheidung 6), und der Auto-Attach, der auch ohne
+laufenden Test „No tests found" bzw. „No running process found" meldet. Aus dem
+Review des `neotest`-Auslösers bleibt ein Zielkonflikt stehen: die
+Event-Muster entsprechen bewusst `core.is_test_file`.
