@@ -11,7 +11,7 @@ Registriert/konfiguriert in:
   die einzige lokale Ergänzung zu den In-Picker-Mappings.
 - [lua/plugins/telescope.lua](../../../../../lua/plugins/telescope.lua) — Lazy-Specs
   für `telescope.nvim`, `telescope-fzf-native.nvim`, `telescope-file-browser.nvim`
-  und `search.nvim` (kein `keys = {...}` in den Specs — alle Keymaps kommen aus
+  (search.nvim seit 2026-10-01 abgelöst durch `pickers.tabs`; kein `keys = {...}` in den Specs — alle Keymaps kommen aus
   `bindings.mappings.telescope`).
 
 **Wichtig:** Hier ist die Lage gemischt. Telescope ist zu großen Teilen
@@ -83,7 +83,7 @@ registriert werden, nicht hier.
 | `gC` / `gL` / `gP` (Astro-Buffer) | Astro-Komponenten/-Layouts/-Pages finden (`telescope.builtin.find_files`) | `lsp/languages/webdev/astro/keymaps.lua` |
 | (LSP-Tool, kein festes Leader-Mapping) | Workspace-Symbol-Picker (eigener Telescope-Picker über `telescope.pickers`/`finders`/`previewers`) | `lsp/tools/ts_type_lookup/ts_telescope_picker.lua` |
 | (Neotest-Command, kein festes Leader-Mapping) | Neotest-Actions-Picker | `config/neotest/telescope/init.lua`, `config/neotest/commands/init.lua` |
-| `<leader>s` | `search.nvim` — tabbed UI *um* Telescope herum (eigenes Plugin, `FabianWirth/search.nvim`) | `plugins/telescope.lua`, `config/search/init.lua` |
+| `<leader>s` | `:Pickers tabs default` — Tab-Gruppe Files / All Files / Grep / Buffers über pickers.nvim (löste `search.nvim` am 2026-10-01 ab; `<Tab>`/`<S-Tab>` wechseln, Query wandert mit) | `bindings/mappings/telescope.lua`, `pickers.tabs` in `specs/navigate.lua` |
 
 Diese nutzen Telescope nur als Backend/Picker-Engine für eine fremde Domäne
 (Astro, LSP-Tooling, Neotest) — sie sind keine "Telescope-Bindings" im

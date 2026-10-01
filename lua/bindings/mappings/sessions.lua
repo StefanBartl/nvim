@@ -45,8 +45,8 @@ function M.setup()
   -- of them, not just this one.
   --
   -- NOT <leader>sc: found live (adversarial review) that it is a strict
-  -- prefix of the already-bound <leader>s (plugins/telescope.lua, search.nvim's
-  -- tabbed UI) -- forcing a full timeoutlen wait on every plain <leader>s
+  -- prefix of the already-bound <leader>s (bindings/mappings/telescope.lua,
+  -- pickers.nvim's tabbed search, formerly search.nvim) -- forcing a full timeoutlen wait on every plain <leader>s
   -- press before Neovim could tell the two apart. Same bug class as the
   -- <leader>ffk/<leader>ff and <leader>hE/<leader>help fixes elsewhere in
   -- this config. <M-s> ("session") shares no prefix with anything and is
