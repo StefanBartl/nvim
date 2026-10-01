@@ -277,6 +277,28 @@ Plan und Phasenstatus: `../handovers/wkd_FightingGame_Implementierungsplan.md`.
 - [ ] **Leertaste auf Buttons:** nach einem Match Tab auf „Rematch" oder „Disconnect", Space
       löst sie aus (im laufenden Match bleibt Space der leichte Angriff).
   - Notiz:
+- [ ] **Spezial-Moves:** jeder der vier Kämpfer hat einen (`C`, Pad `Y`, Touch `S`):
+      Samurai Mack Bodenwelle, Martial Hero Orb, Kenji Teleport hinter den Gegner, Ronin
+      Pistole. Name steht neben dem Kämpfernamen und ist abgedunkelt, solange der Move
+      abklingt. Passen Tempo, Schaden, Abklingzeiten (2,5–4,5 s)? Sehen die gezeichneten
+      Projektile gut genug aus oder sollen sie Pixel-Art bekommen?
+  - Notiz:
+- [ ] **Sprung-Ausweichen (Abnahme T21):** einem leichten Schwung kann man ausweichen, wenn
+      man kurz *vor* dem Schwung springt (Samurai: 2–12 Frames vorher); der schwere Schwung
+      trifft Springer weiter. Der Bodenwelle weicht jeder Sprung aus. Ist das der Mittelweg,
+      zu leicht, zu schwer?
+  - Notiz:
+- [ ] **Figurengröße:** die Kämpfer sind größer gezeichnet (2,1 statt 1,7). Passt das zur
+      Arena und zu den Treffern?
+  - Notiz:
+- [ ] **Unwinnable:** vierte Stufe in der Gegner-Zeile. Lässt sie sich wirklich nicht
+      schlagen? (13 Skript-Strategien gewinnen kein Match; ein Mensch wurde nicht getestet.)
+      Ist der Name ok oder lieber „Impossible"?
+  - Notiz:
+- [ ] **Gegner allgemein:** die KI schlägt jetzt aus voller Reichweite zu, nutzt ihren
+      Spezial-Move und springt über Projektile. „Reinlaufen und Angriff halten" gewinnt
+      gegen Hard aber noch oft — so lassen?
+  - Notiz:
 - [ ] **Schwierigkeitsgrad:** auf der Kämpferauswahl Easy / Normal / Hard (wird gemerkt,
       Standard Normal). „Hard" ist der Gegner von vorher. Passt die Abstufung, passt Normal
       als Standard?
