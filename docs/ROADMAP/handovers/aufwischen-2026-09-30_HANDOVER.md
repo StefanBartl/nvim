@@ -214,5 +214,5 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | (Report) | docs: noice.nvim Feature-Abdeckung | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
 | nvim-config | `4fa89614` | docs: ext_messages TUI-Spike-Report + Handover | ✅ |
-| nvim-config | (Report) | docs: Report externe Plugins Feature-Abdeckung + Handover | ✅ |
+| nvim-config | `e01f6fc7` | docs: Report externe Plugins Feature-Abdeckung + Handover | ✅ |
 | WKDBooks | `2ab6d71` | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
