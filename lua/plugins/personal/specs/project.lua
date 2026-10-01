@@ -19,6 +19,9 @@ return {
     -- registers no global key or autocmd: outside its own buffers it is the
     -- `:Sandbox` command and a hover.nvim preview for image references, and
     -- those live in Dockerfiles and compose files.
+    -- Trade-off: the preview itself is not filetype-bound, so an image
+    -- reference elsewhere (devcontainer.json, a shell script, Markdown) gets
+    -- it only once one of these triggers has loaded the plugin.
     cmd = "Sandbox",
     ft = { "dockerfile", "yaml", "yaml.docker-compose" },
     -- ui.nvim: ui.contextmenu (right-click menu) and ui.kit (kit.input() prompts).

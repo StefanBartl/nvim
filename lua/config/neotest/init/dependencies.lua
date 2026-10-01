@@ -7,7 +7,13 @@ local PLUGINS = {
   "nvim-lua/plenary.nvim",
   "antoinemadec/FixCursorHold.nvim",
   "nvim-treesitter/nvim-treesitter",
-  "vim-test/vim-test",
+  -- Its own `cmd` trigger: this is vim-test's only spec, and neotest loads on
+  -- demand, so without it `:TestNearest` & co. would not exist until
+  -- something else had loaded neotest.
+  {
+    "vim-test/vim-test",
+    cmd = { "TestNearest", "TestFile", "TestSuite", "TestLast", "TestVisit", "TestClass" },
+  },
 }
 
 local CONSUMER = {

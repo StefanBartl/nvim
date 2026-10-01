@@ -16,7 +16,8 @@ local runs = tonumber(arg[1]) or 5
 local mode = arg[2] or "tui"
 assert(mode == "tui" or mode == "headless", "mode is `tui` or `headless`")
 
-local here = debug.getinfo(1, "S").source:sub(2):gsub("\\", "/"):match("^(.*)/[^/]*$")
+-- "." when started from this directory: the source then has no path part.
+local here = debug.getinfo(1, "S").source:sub(2):gsub("\\", "/"):match("^(.*)/[^/]*$") or "."
 local out = vim.fn.tempname():gsub("\\", "/") .. ".txt"
 
 local cmd = mode == "tui" and { vim.v.progpath, "--headless", "-l", here .. "/tui.lua" }

@@ -52,6 +52,7 @@
     - [Neue Befunde](#neue-befunde)
     - [Umgesetzt in dieser Runde](#umgesetzt-in-dieser-runde)
     - [Zweiter Schritt: die `VeryLazy`-Welle](#zweiter-schritt-die-verylazy-welle)
+    - [Review der Commits dieser Runde](#review-der-commits-dieser-runde)
     - [Messwerkzeug erweitert](#messwerkzeug-erweitert)
     - [Neue Reihenfolge](#neue-reihenfolge)
     - [Offen für dich](#offen-fr-dich)
@@ -1035,7 +1036,7 @@ Plugins sind aus ihr heraus, ohne dass sich an ihrer Bedienung etwas ändert:
 
 | Änderung (`nvim-config`) | Vorher | Jetzt |
 | --- | --- | --- |
-| `neotest` | Dependency von `neo-tree`, lud mit `filetree.nvim` bei jedem Start (≈ 150 ms mit Adaptern, `vim-test`, `nio`) | eigene Auslöser: die 12 `:Neotest*`-Kommandos, die `<leader>nt*`-Tasten als lazy-Stubs (aus derselben Liste wie die echten Mappings), Testdateien (`*_spec.lua`, `*.test.ts` …, die Muster aus `config.neotest.core`), und die `tests`-Quelle von neo-tree |
+| `neotest` | Dependency von `neo-tree`, lud mit `filetree.nvim` bei jedem Start (≈ 150 ms mit Adaptern, `vim-test`, `nio`) | eigene Auslöser: `:Neotest` und die 12 `:Neotest*`-Kommandos der Config, die `<leader>nt*`-Tasten als lazy-Stubs (aus derselben Liste wie die echten Mappings), Testdateien (`*_spec.lua`, `*.test.ts` …, die Muster aus `config.neotest.core`), und die `tests`-Quelle von neo-tree. `vim-test` hat einen eigenen `cmd`-Auslöser (`:TestNearest` …) |
 | `sandbox.nvim` | `event = "VeryLazy"` (≈ 110 ms: sechs Engine-Adapter, PATH-Suche nach `nerdctl`/`podman`/`docker`/`wsl`) | `cmd = "Sandbox"` und `ft = dockerfile / yaml` (dort lebt seine Hover-Vorschau); es registriert keine globalen Tasten oder Autocmds |
 
 Zu `neotest`: der Kommentar an der neo-tree-Spec hatte recht, dass das bloße
@@ -1068,6 +1069,29 @@ Was in der Welle bleibt (≈ 350 ms): `filetree.nvim` mit `neo-tree` (≈ 130–
 `truncated/cache.lua` `load_from_disk` ≈ 30 ms), `language.nvim` mit
 `trouble.nvim` (≈ 35–45 ms), lazys eigene Arbeit pro Plugin
 (`source_runtime`, `runtimepath`-Neuberechnung: F2).
+
+---
+
+### Review der Commits dieser Runde
+
+Ein unabhängiger Review-Agent (nur lesend) hat `ad355be`, `a6d0f455` und
+`1e34a249` geprüft. `check_due` und der Umbau selbst ohne Befund; sieben Funde,
+alle belegt, sechs behoben:
+
+| Fund | Wirkung | Behoben in |
+| --- | --- | --- |
+| `:Neotest` (neotests eigener Dispatcher) fehlte in der `cmd`-Liste | `:Neotest summary` endete in `E464` (mehrdeutig gegen die zwölf Stubs), bis neotest anders geladen war | `nvim-config`, Folge-Commit |
+| `vim-test` hatte keinen eigenen Auslöser, kam nur noch mit neotest | `:TestNearest`, `:TestFile` … existierten in einer frischen Session nicht | `nvim-config`, Folge-Commit (`cmd` an der Dependency) |
+| `session_words.valid()` prüfte kein UTF-8 | ein fehlerhaft kodierter Eintrag *mitten* in einer Wortliste landete direkt in der Listendatei; `mkspell` gibt dann stumm auf, die Wörter und jedes spätere `zG` der Session blieben unbekannt | `language.nvim` `f737371`, Test mit Mutationsprobe |
+| `exe`-Sonde: Aufrufer einen Frame zu hoch (`wrap` ruft per Tail-Call) | „first from" zeigte den Aufrufer des Aufrufers | `nvim-config`, Folge-Commit |
+| `tui.lua`/`bench.lua` aus dem eigenen Verzeichnis gestartet | `here` war `nil`, Abbruch | `nvim-config`, Folge-Commit |
+| `uv.spawn`-Wrapper der Sonde gab nur zwei Rückgabewerte weiter | der Fehlername eines gescheiterten Spawns ging verloren | `nvim-config`, Folge-Commit |
+| Hover-Vorschau von `sandbox.nvim` ist nicht an einen Dateityp gebunden | Image-Referenzen außerhalb von Dockerfile/YAML (z. B. `devcontainer.json`) bekommen sie erst, wenn sandbox geladen ist | bewusst so gelassen, an der Spec vermerkt |
+
+Nebenfund außerhalb der Commits: `filetree.nvim` `features/nav/source_switcher`
+prüft `pcall(require, "neo-tree-tests-source")`; ein Modul dieses Namens gibt es
+nicht, der Source-Switcher hält die `tests`-Quelle deshalb immer für „nicht
+installiert". Älter als diese Runde, nicht behoben.
 
 ---
 
