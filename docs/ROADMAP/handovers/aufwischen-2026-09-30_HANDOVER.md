@@ -55,6 +55,7 @@ buffer-ctx/casedesk/gopath.
 | lib `53417e1`, `360a137` (Toast-Spiegel / Popup) | Spiegel nachgezogen; `popup.setup({ width = nil })` konnte eine explizite Breite nicht zurücksetzen | lib `e8a75f3` (`width = false`), Spiegel `e2faeb4` |
 | lib `664667c`, `62c559a` (`link_cursor`, `insert_links`) | async Einfügen konnte den Cursor eines Fensters bewegen, das inzwischen einen anderen Buffer zeigt; `previous_window()` falsch für Befehle aus dem Editor | lib `c368b5d` (`place(…, buf)`), `e8a75f3` (`insertion_window()`) |
 | images `242f3ed` (`env`-Modus, Cursor) | Case-Folding der Env-Roots auf allen Systemen (Linux: `/Repos` = `/repos`); Einfügepunkt aus einem Fenster gelesen, das inzwischen einen anderen Buffer zeigt (Link scheiterte still, Cursor-Fallback setzte den Cursor im falschen Buffer) | images `c27f16a` (Windows-only Folding, Warnung + Cursor-Guard, Test) |
+| filetree `9a0e0dc` (`MI`) | per `:Filetree mdlink insert` im Editor getippt wählte `previous_window()` den zuvor besuchten Split; Ordner mit abschließendem `/` ergaben leeren Titel | filetree `3a932e2`, nutzt `insertion_window()` |
 
 ## Offen — in dieser Reihenfolge weitermachen
 
@@ -156,7 +157,8 @@ buffer-ctx/casedesk/gopath.
 | images.nvim | `c27f16a` | fix(paste): Env-Folding nur Windows; kein Einfügen/Cursor in Fenster mit anderem Buffer | ✅ |
 | markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | – |
 | lib.nvim | `62c559a` | feat: insert_links, previous_window | ✅ (Fix `c368b5d`, `e8a75f3`) |
-| filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | – |
+| filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | ✅ (Fix `3a932e2`) |
+| filetree.nvim | `3a932e2` | fix(markdown_links): MI ins aktuelle Editorfenster; Ordner-Links behalten Titel | ✅ |
 | pickers.nvim | `7fbd2aa` | feat(entry_actions): Links ins Fenster hinter dem Picker einfügen | – |
 | ui.nvim | `a1574ca` | fix(toast): theme zindex.toast (70), Toast lag unter snacks-Pickern | ✅ |
 | lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | ✅ |
