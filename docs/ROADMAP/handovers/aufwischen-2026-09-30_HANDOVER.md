@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „cascade: Listen-Schrittweite (`<C-y>`/`<C-x>` auf Marker, `<C-S-y>`/`<C-S-x>` Ebene)".
+**Stand:** 2026-10-01, nach dem Task „Noice-Feature-Abdeckungs-Report".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -82,9 +82,14 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 7. **T7 Message-Popup** — Roadmap-Einträge **erledigt** (WKDBooks `1afb268`): Konzept
    `lib.nvim/ROADMAP/messages-log-and-recent-popup.md` (Befund, Schichten, Spezifikation, Roadmap-Abgleich,
    Umsetzungsplan) + Verweise in `lib.nvim/ROADMAP/ROADMAP.md`, `debugging.nvim/ROADMAP/ROADMAP.md`
-   („Offen"), `ui.nvim/ROADMAP/ROADMAP.md`. **Offen:** der Noice-Feature-Matrix-Report (Punkt in
-   `00_ROADMAP.md` Z. ~97, Datei gehört dem Nutzer und ist lokal modifiziert — nicht anfassen; Report
-   nach `docs/ROADMAP/reports/`), danach TUI-Spike. **Kein Bau** (Nutzer: erst Review/Abgleich).
+   („Offen"), `ui.nvim/ROADMAP/ROADMAP.md`. **Noice-Feature-Matrix-Report: erledigt**
+   (`docs/ROADMAP/reports/noice-feature-abdeckung-2026-10-01.md`; Kernbefunde: zwei parallele
+   Meldungs-Pipelines — `lib.nvim.notify`-Toasts umgehen `vim.notify` und damit noice; Nvim 0.12.2 bringt
+   experimentell `vim._core.ui2` mit, kann aber kein Routing/Skip; nur `ext_messages` erreicht native Meldungen;
+   „übrige externe Plugins" aus dem Roadmap-Punkt **nicht** geprüft, nur gelistet). Der Roadmap-Punkt in
+   `00_ROADMAP.md` Z. ~96 gehört dem Nutzer (Datei lokal modifiziert) — **nicht abgehakt**.
+   **Offen:** TUI-Spike (Schritt 1 im Konzept), Einordnung der übrigen externen Plugins (eigener Report).
+   **Kein Bau** (Nutzer: erst Review/Abgleich).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
@@ -145,4 +150,5 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | WKDBooks | `1afb268` | docs(roadmap): Message-Log + Recent-Popup + Live-Chips Konzept (3 Roadmaps) | ✅ |
 | cascade.nvim | `236ace2` | feat(lists): `<C-y>`/`<C-x>` auf Marker + Ebenen-Variante | – |
 | nvim-config | (Spec) | chore(specs): `lists.features.shift` | – |
+| nvim-config | (Report) | docs: noice.nvim Feature-Abdeckung | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
