@@ -25,7 +25,7 @@
 | -------- | ------------- | --------------- | --------------- | ---------------- |
 | **main** |   ~ 28. Sep   |   Fr., 11:00    |     23:30       |    65% / 76%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    90% / 50%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
 
 ---
 
@@ -39,11 +39,13 @@ Doku und Defaults: Mehrere Plugins haben widersprüchliche Angaben, etwa hover p
 
 - Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
 
-- spotlight.nvim, wie mehrere hl machen, lernen! [note](./$NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
+- spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
 ---
 
 ## Claude Tasks
+
+-  -Editing-Primitive (autopairs, autotag, matchup, visual-multi, mini.ai/targets) bleiben dauerhaft extern> Anylse, wir aufwendig ist es,d iese zu erstetzen, welche vorteile? könnte man alle features der plugins zu einen zusmmenoen=
 
 - nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
 
@@ -102,7 +104,7 @@ Doku und Defaults: Mehrere Plugins haben widersprüchliche Angaben, etwa hover p
 - [ ] AI: Mit Claude Code das für den Rechner beste lokale LLM installieren, dabei ein paar Modelle ausprobieren. Nicht offen ins Netz hängen (VPN), opencode bzw. Ollama-Alternativen verwenden: https://www.youtube.com/watch?v=M1j_uRqKMKI
     Wichtig: genau lernen, wie das funktioniert — LLMs, auch Quantisierung usw. Wie arbeitet dabei genau die Grafikkarte, RAM-Upgrade, Treiber erstellen usw.
 
-- [ ] [TAKT](./$REPOS_DIR/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
+- [ ] [TAKT]($REPOS_DIR/takt) -> KI-Implementierung von Anfang an mitbauen; ins Konzept mit aufnehmen
 
 - [ ] Gaming-Anticheat-Systeme aus Red-/Blue-Team-Cybersec-Sicht lernen
 
