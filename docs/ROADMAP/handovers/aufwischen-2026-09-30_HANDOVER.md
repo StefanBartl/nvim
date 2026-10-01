@@ -154,14 +154,22 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    `man` → `<leader>sM`, `files` → `<leader>ff`, `lsp_workspace_symbols` → `<leader>sS`) — auf Nutzerentscheidung wurden
    die alten `<leader>f*`-Tasten dafür **entfernt statt verdoppelt**. Die anderen 3 (`quickfix`, `treesitter`,
    `cwd_find_all`) hatten noch keine Bindung — in `pickers.nvim`s eigene `mappings`/`keymaps`-Config aufgenommen,
-   gleiche Taste wie vorher (`<leader>fq`, `<leader>ftf`, `<leader>fa`). `bindings/mappings/fzf.lua` hat nur noch
-   `<leader>fB` (`grep_curbuf`, kein `pickers.builtins`-Äquivalent). **Bewusst nicht umgestellt** (keine Entsprechung):
-   `<leader>ts` (Telescope-Picker-Übersicht), `<leader>,` (file_browser — kein stabiler Opts-Pfad-Override über Engines
-   hinweg), `<leader>fB` selbst. luacheck/stylua grün, keine Lhs-/Präfix-Kollisionen geprüft. `docs/BINDINGS.md` und
-   `docs/NOTES/ExternPlugins/Bindings/Keymaps/Telescope.md` mitgezogen. **Nicht angefasst:** `docs/map/module_map.json`
-   (Cache, braucht `:DocMap` zum Auffrischen) und `docs/ROADMAP/Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md` (generiert,
-   `:BindingsRuntimeChecklist!` würde bereits angehakte Boxen zurücksetzen — beides dem Nutzer überlassen).
-   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (3, 5, 6, 7) stehen in §9 des Reports.
+   gleiche Taste wie vorher (`<leader>fq`, `<leader>ftf`, `<leader>fa`). luacheck/stylua grün, keine Lhs-/Präfix-Kollisionen
+   geprüft. `docs/BINDINGS.md` und `docs/NOTES/ExternPlugins/Bindings/Keymaps/Telescope.md` mitgezogen. **Nicht angefasst:**
+   `docs/map/module_map.json` (Cache, braucht `:DocMap` zum Auffrischen) und
+   `docs/ROADMAP/Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md` (generiert, `:BindingsRuntimeChecklist!` würde bereits
+   angehakte Boxen zurücksetzen — beides dem Nutzer überlassen).
+   **Follow-up (2026-10-01, Nutzerentscheidung): die 3 bewusst nicht umgestellten Tasten entfernt** (nvim-config `1c440eb8`) —
+   `<leader>ts` (Telescope-Picker-Übersicht), `<leader>,` (file_browser), `<leader>fB` (`grep_curbuf`) waren nie benutzt.
+   `bindings/mappings/fzf.lua` komplett gelöscht (war nur noch `<leader>fB`). `<leader>,`s Wegfall macht
+   `telescope-file-browser.nvim` ungenutzt — **Entscheidung 3 im selben Zug umgesetzt**: `telescope-github.nvim`
+   (nie `load_extension`'t) und `nvim-notify` (nie `require()`d, kein Backend für `config.noice`) ebenfalls entfernt.
+   `pickers.builtins`' `explorer`-Eintrag auf der Telescope-Engine fängt die fehlende file-browser-Extension per `pcall`
+   ab (kein Crash). `config/telescope/init.lua`s `extensions().file_browser`-Opts mit entfernt;
+   `config/telescope/file_browser/keymaps.lua` bleibt (reines `telescope.actions.which_key`, nie extension-abhängig).
+   luacheck über den ganzen `lua/`-Baum grün (132 Dateien). `docs/NOTES/ExternPlugins/Bindings/{Keymaps/Telescope.md,TODO.md}`
+   mitgezogen (Abschnitt 5/6 der Telescope.md zusammengelegt zu „Entfernt: telescope-file-browser.nvim").
+   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (5, 6, 7) stehen in §9 des Reports.
    **Kein Bau** von `lib.nvim.messages` ohne Nutzerfreigabe (unverändert).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
@@ -255,6 +263,7 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | pickers.nvim | `40ab6ec` | fix(tabs): arm_tag markiert jeden passenden Buffer, smart reicht die Query durch, Fallback folgt der physischen Taste, git-Gruppe repariert | ✅ |
 | gitsuite.nvim | `f841e4a` | docs: hunk hat keinen nativen Fallback für stage/reset — Doku/Kommentare an den Code angeglichen | ✅ |
 | nvim-config | `8ce11b11` | feat(pickers): 10 der 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin` umgestellt | ✅ |
+| nvim-config | `1c440eb8` | chore(plugins): telescope-github, nvim-notify, telescope-file-browser + 3 ungenutzte Tasten entfernt | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
