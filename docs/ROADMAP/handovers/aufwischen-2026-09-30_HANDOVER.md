@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „`:Clipboard [path] reports|handovers`".
+**Stand:** 2026-10-01, nach dem Task „Personal-Spec nachziehen".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -65,17 +65,15 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    Modul `lua/bindings/usrcmds/clipboard/init.lua`, README ergänzt. Getestet headless (Modul mit
    Worktree im `rtp`; **Achtung:** `nvim --headless` mit der vollen Config lädt den **Haupt-Checkout**,
    nicht den Worktree).
-5. **Personal-Spec nachziehen** (`lua/plugins/personal/specs/*.lua`, kommentierte volle Optionen,
-   Rezept `WKDBooks/…/TOOLS/spec-full-options.md`):
-   - `edit.lua` (markdown): `blockquote_hl.width`, `links.repair_env_prefix`, `links.cursor`;
-     cascade-Keys `cl/cL`-Hinweis (Kommentar Z. ~41–61 zu `cS` prüfen)
-   - `view.lua:~577` (images): `default_path_mode = "env"` **als Nutzer-Default setzen**,
-     `env_roots`, `link_cursor`
-   - `foundation.lua:~74` (`lib.nvim.notify.popup`): `toast = { width = "40%", min_width = 40 }`,
-     `width` jetzt `nil`
-   - `navigate.lua` (pickers): neue Optionen nach Punkt 2/3
-   - Docs: `docs/NOTES/ExternPlugins/Bindings/Keymaps/Casedesk.md` (Kollisionsnotiz `cf` ist
-     jetzt gelöst), cascade-Bindings-Notiz, BINDINGS für `:Image paste`, `:Clipboard`
+5. ~~Personal-Spec nachziehen~~ — **erledigt** (`b11c2356`): `view.lua` (images: `paste = {…}` jetzt aktiv mit
+   `default_path_mode = "env"` als Nutzer-Default, `env_roots`/`link_cursor` kommentiert), `edit.lua`
+   (markdown: `links.repair_env_prefix`, `links.cursor`, `blockquote_hl.width`; cascade-Kommentar zu `cl/cL`),
+   `foundation.lua` (`popup.setup`: `width = nil`, `toast = { width, min_width, padding }`), `navigate.lua`
+   (pickers `keys.markdown_link_insert`, `link_insert`; filetree `markdown_links` `keymap_insert`/`insert_path`/
+   `env_roots`/`cursor`), `docs/NOTES/ExternPlugins/Bindings/Keymaps/Casedesk.md` (Kollisionsnotiz → gelöst;
+   `config_smart` liegt schon auf `<leader>CF`). Noch **nicht** gesetzt: `lib.nvim.markdown.link_cursor.setup`
+   global (nur über die Plugin-Optionen steuerbar). Ui.nvim-Spec: ein `ui.setup({ toast = … })` gibt es in
+   der Config nicht, `toast` läuft über `popup.setup`.
 6. **Report „Markdown-Link-Einfügestellen"** als eigene Datei in `docs/ROADMAP/reports/`
    (Inventar steht als Anhang A im Plan; um „vorher/nachher"-Cursorverhalten ergänzen,
    `mdview/media/hover/gopath` noch gegenprüfen; buffer-ctx.nvim `ops/markdown_link.lua`
@@ -134,4 +132,5 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | – |
 | pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | – |
 | nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | – |
+| nvim-config | `b11c2356` | chore(specs): neue Plugin-Optionen (images env, Toast, Blockquote, Link-Cursor, Picker/filetree) | – |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
