@@ -2,7 +2,7 @@
 
 *Monat 3 · Woche 10*
 
-[⬅ Woche 09](./week-09.md) · [Lernplan-Konzept](../LONG_RUN/learn-cli.nvim.md) · [Woche 11 ➡](./week-11.md)
+[⬅ Woche 09](./week-09.md) · [Lernplan-Konzept](../IDEAS/learn-cli.nvim.md) · [Woche 11 ➡](./week-11.md)
 
 ---
 
@@ -24,4 +24,4 @@
 ## Woche abgeschlossen
 - [ ] Alle Themen dieser Woche mindestens 1x durchlaufen
 
-[⬅ Woche 09](./week-09.md) · [Lernplan-Konzept](../LONG_RUN/learn-cli.nvim.md) · [Woche 11 ➡](./week-11.md)
+[⬅ Woche 09](./week-09.md) · [Lernplan-Konzept](../IDEAS/learn-cli.nvim.md) · [Woche 11 ➡](./week-11.md)
