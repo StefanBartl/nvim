@@ -14,7 +14,13 @@ local machine = require("machine")
 return {
   {
     "StefanBartl/sandbox.nvim",
-    event = "VeryLazy",
+    -- Its own triggers instead of VeryLazy, where it cost every start ~110 ms
+    -- (six engine adapters, a PATH search per engine) for a plugin that
+    -- registers no global key or autocmd: outside its own buffers it is the
+    -- `:Sandbox` command and a hover.nvim preview for image references, and
+    -- those live in Dockerfiles and compose files.
+    cmd = "Sandbox",
+    ft = { "dockerfile", "yaml", "yaml.docker-compose" },
     -- ui.nvim: ui.contextmenu (right-click menu) and ui.kit (kit.input() prompts).
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {

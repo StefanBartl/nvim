@@ -68,7 +68,7 @@ nvim --headless --cmd "luafile scripts/startup-probe/probe.lua"
 | Sonde | Antwortet auf |
 | --- | --- |
 | `req` | Welches Modul kostet (exklusiv) wie viel? Welche Top-Level-`require`s blockieren lange? |
-| `exe` | Wie viele PATH-Suchen, wie lange, wie viele ohne Treffer? |
+| `exe` | Wie viele PATH-Suchen, wie lange, wie viele ohne Treffer, und wer hat zuerst gefragt (Datei:Zeile)? |
 | `rtp` | Wie oft berechnet `vim.loader` die `runtimepath`-Liste neu und was kostet das? |
 | `stall` | Wie lange stand die Event-Loop still (Lücken > 60 ms im 10-ms-Herzschlag)? Wie belegt war sie pro Sekunde, kleine Lücken eingerechnet? |
 | `where` | **Wem gehört jeder Stoß?** Besitzer (Plugin) und Stack, zeitgewichtet. Nur auf Wunsch (`PROBE=…,where`). |

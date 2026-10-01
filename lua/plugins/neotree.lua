@@ -28,26 +28,23 @@ return {
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
-    -- Loaded on demand, not at startup, and that is worth more than it looks:
-    -- neo-tree's own load cost is ~27ms, but `dependencies` drags neotest and
-    -- its eight adapters, nvim-treesitter, nvim-web-devicons, nui, plenary,
-    -- vim-test and FixCursorHold in with it. Eager, that chain was the single
-    -- largest item in startup -- 44 plugins loaded and ~1300ms; lazy it is 29
-    -- and ~1050ms, measured over seven runs each.
+    -- Not a startup plugin by its own trigger, but not on demand either:
+    -- filetree.nvim loads on VeryLazy and lists neo-tree as a dependency, so
+    -- in every session with a UI it comes in right after the first frame.
+    -- (An earlier version of this comment claimed "29 instead of 44 plugins,
+    -- ~1050 instead of ~1300 ms". That was measured headless, where VeryLazy
+    -- never fires; see section 14 of docs/ROADMAP/reports/startup-und-config-
+    -- optimierung-analyse-konzept-2026-09-26.md.)
     --
-    -- CAVEAT (2026-10-01): those runs were headless, and only there does this
-    -- hold. In a session with a UI, filetree.nvim loads on VeryLazy and lists
-    -- neo-tree as a dependency, so the whole chain comes in right after the
-    -- first frame anyway: ~170 ms of the ~600 ms VeryLazy stall, neotest ~150
-    -- of them. Not at startup proper, but not on demand either. See section
-    -- 14 of docs/ROADMAP/reports/startup-und-config-optimierung-analyse-
-    -- konzept-2026-09-26.md.
-    --
-    -- The dependency on neotest stays. Dropping it instead was tried first and
-    -- is a regression: the tests source builds its items through a neotest
-    -- *consumer* that has to be registered before the source runs, so without
-    -- it `:Neotree tests` dies on a nil consumer. Deferring the whole group
-    -- keeps the ordering intact -- lazy loads dependencies with the parent.
+    -- What its `dependencies` drag in is therefore paid at every start, and
+    -- neotest was most of it: ~150 of neo-tree's ~170 ms, with its adapters,
+    -- vim-test, nio and FixCursorHold. neotest is no dependency any more. The
+    -- `tests` source builds its items through a neotest *consumer* that only
+    -- has a client once neotest is set up -- just dropping the dependency
+    -- makes `:Neotree tests` die on a nil consumer -- so `config` below loads
+    -- neotest right before that source first renders
+    -- (config.neotest.neotree.load_with_tests_source). The source's own plugin
+    -- stays a dependency: neo-tree's setup() requires every enabled source.
     cmd = "Neotree",
     -- `lazy = false` is the usual way to keep `nvim <dir>` opening the tree
     -- instead of netrw. This does the same thing without paying for it on
@@ -68,9 +65,12 @@ return {
     dependencies = {
       "MunifTanjim/nui.nvim",
       "TimCreasman/neo-tree-tests-source.nvim",
-      "nvim-neotest/neotest",
       "mrbjarksen/neo-tree-diagnostics.nvim",
     },
+    config = function(_, opts)
+      require("neo-tree").setup(opts)
+      NEOTEST.load_with_tests_source()
+    end,
     opts = function()
       local enabled_sources = {
         "filesystem",

@@ -73,17 +73,23 @@ folgende Paint wird nicht blockiert.
 Alle Plugins mit `event = "VeryLazy"` laden **in einem einzigen Callback**
 direkt nach dem ersten Frame: der Editor ist sichtbar, nimmt aber keine
 Eingabe an, bis das letzte von ihnen geladen ist. Gemessen am 2026-10-01
-(`STEVESPC`, mit UI): 15 Plugins, **≈ 600 ms am Stück**. Daraus folgt:
+(`STEVESPC`, mit UI): 15 Plugins, **≈ 600 ms am Stück**; nachdem `neotest`
+und `sandbox.nvim` eigene Auslöser bekommen haben, ≈ 350 ms. Daraus folgt:
 
 1. Ein Plugin auf `VeryLazy` zahlt jeder Start, samt seiner `dependencies`.
-   `filetree.nvim` zieht so `neo-tree` und über dessen Dependencies `neotest`
-   nach (≈ 170 ms), obwohl `neo-tree` selbst auf `cmd = "Neotree"` steht.
+   `filetree.nvim` zieht so `neo-tree` nach, obwohl das selbst auf
+   `cmd = "Neotree"` steht, und zog darüber auch `neotest` (≈ 150 ms), bis
+   das aus den Dependencies von `neo-tree` herausgenommen wurde.
 2. Was ein solches Plugin in `setup()` per `vim.schedule` „aus dem Weg"
    schiebt, läuft im nächsten Tick, also immer noch in den ersten zwei
    Sekunden. `vim.schedule` verschiebt Arbeit, es macht sie nicht billig.
 3. Hat ein Plugin einen echten Auslöser (`cmd`, `keys`, `ft`), ist der dem
    `VeryLazy` vorzuziehen. `VeryLazy` ist richtig für globale Keymaps und
    Autocmds, die vor der ersten Nutzung existieren müssen.
+4. **Reihenfolge der Keymaps:** `UIReady` (`VimEnter` + `vim.schedule`) läuft
+   vor `VeryLazy` (`UIEnter` + `vim.schedule`). Ein Plugin auf `VeryLazy`
+   überschreibt also ein gleichnamiges Mapping aus der `mappings`-Phase, nicht
+   umgekehrt (gemessen: ≈ 505 ms gegen ≈ 550 ms).
 
 ### Verboten
 
@@ -265,12 +271,13 @@ nicht gemessen: genau so ist der Kommentar an der neo-tree-Spec entstanden
 
 Stand 2026-10-01, `STEVESPC`, Neovim 0.12.2, Median aus 5 Läufen mit UI:
 
-| Größe | vorher | nach `language.nvim` ad355be | zusätzlich Checker nur bei Fälligkeit |
+| Größe | vorher | `language.nvim` ad355be und Checker nur bei Fälligkeit | zusätzlich `neotest`, `sandbox.nvim` mit eigenen Auslösern |
 | --- | ---: | ---: | ---: |
-| Stöße > 60 ms, Summe | 2538 ms | 1522 ms | 1086 ms |
-| längster Stoß | 1131 ms | 560 ms | 662 ms |
-| Event-Loop belegt (6 s) | 2993 ms | 2012 ms | 1309 ms |
-| gestartete Prozesse | 106 | 106 | 5 |
+| Stöße > 60 ms, Summe | 2538 ms | 912 ms | 595 ms |
+| längster Stoß | 1131 ms | 585 ms | 348 ms |
+| Event-Loop belegt (6 s) | 2993 ms | 1203 ms | 938 ms |
+| gestartete Prozesse | 106 | 5 | 5 |
+| geladene Plugins | 60 | 60 | 47 |
 
 Der längste verbleibende Stoß ist der `VeryLazy`-Stapel. Herleitung und
 Einzelposten: Abschnitt 14 des Reports
