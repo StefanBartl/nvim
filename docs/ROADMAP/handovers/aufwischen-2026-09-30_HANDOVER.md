@@ -117,8 +117,14 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    experimentell `vim._core.ui2` mit, kann aber kein Routing/Skip; nur `ext_messages` erreicht native Meldungen;
    „übrige externe Plugins" aus dem Roadmap-Punkt **nicht** geprüft, nur gelistet). Der Roadmap-Punkt in
    `00_ROADMAP.md` Z. ~96 gehört dem Nutzer (Datei lokal modifiziert) — **nicht abgehakt**.
-   **Offen:** TUI-Spike (Schritt 1 im Konzept), Einordnung der übrigen externen Plugins (eigener Report).
-   **Kein Bau** (Nutzer: erst Review/Abgleich).
+   **TUI-Spike: erledigt** (2026-10-01) — `docs/ROADMAP/reports/ext-messages-tui-spike-2026-10-01.md`
+   (10 Punkte belegt/widerlegt, Kind-Katalog, Attach-Policy-Empfehlung „nur attachen, wenn ein Renderer
+   existiert" + detachen bei `:Noice disable`); Konzept in WKDBooks um „Spike-Ergebnisse" ergänzt; Harness als
+   Rezept `TOOLS/tui-spike-harness.md` + `TOOLS/scripts/tui-spike/`.
+   Kernergebnisse: Logger allein = Meldungen **und** Cmdline weg; noice-Koexistenz ok (Logger sieht ungefilterten
+   Strom, aber nicht `vim.notify`/lib-Toasts; `:redir`/`:silent`/`execute` unsichtbar); noice + `ui2` = Doppelanzeige;
+   Ringpuffer-Kosten vernachlässigbar.
+   **Offen:** Einordnung der übrigen externen Plugins (eigener Report). **Kein Bau** (Nutzer: erst Review/Abgleich).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
@@ -200,3 +206,5 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | (Spec) | chore(specs): `lists.features.shift` (nur Kommentar) | ✅ |
 | nvim-config | (Report) | docs: noice.nvim Feature-Abdeckung | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
+| nvim-config | (Report) | docs: ext_messages TUI-Spike-Report + Handover | ✅ |
+| WKDBooks | (Konzept) | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
