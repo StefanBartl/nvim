@@ -63,6 +63,10 @@ buffer-ctx/casedesk/gopath.
 | cascade `236ace2` (Listen-Schritte) | **Bug:** `z)` + 1 erzeugte `aa)` (`alpha.to_alpha(27)`), das der Parser nicht als Marker liest → Item verlässt die Liste still | cascade `1ff1069` (Buchstaben enden bei `z`, Test) |
 | pickers `0684430`, `c51fe4f`, `265b01c` (pickers.tabs) | 4 Befunde per `ultracode`-Workflow (4 Agenten parallel, je adversarial verifiziert): (1) **Bug:** `arm_tag()`s `FileType`-Autocmd war `once=true` — markierte nur den ERSTEN passenden Buffer; ein Ziel mit Zwischenauswahl (`dir`/`repos`/Prefix-Collection) markierte den Auswahl-Picker statt des echten Ziels, `tab_next`/`tab_prev` brach dort still. (2) **Bug:** `pickers.actions.smart.run()` reichte `source.query` nie an die Engine durch (anders als `files`/`grep`) — der Query-Fix aus `265b01c` erreichte ein `smart`-Tab-Ziel nie. (3) **Risk:** Fallback-Richtung von `tab_next_select`/`tab_prev_select` hing an der Aktion (`tab_next`/`tab_prev`), nicht an der gedrückten Taste — bei vertauschten `keys.tab_next`/`tab_prev`-Lhs lief die Mehrfachauswahl rückwärts. (4) **Bug (vorbestehend, nicht Teil dieser 3 Commits):** `tabs.groups.git`-Default nutzte `"builtin git_commits"`, kein registrierter Name (`git_log` ist korrekt) — seit Feature-Einführung, von `b1c0170a`s eigenem Override zufällig nicht betroffen. | pickers `40ab6ec` (jeder Buffer wird markiert + Debounce, `smart` reicht Query durch, Fallback folgt der physischen Taste, beide Default-Kopien + Doku auf `git_log`), 6 neue Regressionstests |
 | ohne Befund (gelesen, Randfälle geprüft) | markdown `19fabae` (`wrap_link`), cascade `f5baa6d` (Keymaps), buffer-ctx `006a306`, casedesk `dd58bc1`, gopath `f1cfe5c`, nvim-config `b11c2356` (Specs: nur Kommentare + `default_path_mode = "env"`, mit der echten Config geladen), nvim-config `b1c0170a` (`<leader>s` → `:Pickers tabs default`; Default-Gruppen `cwd files/files all/grep`, `builtin buffers/git_branches/git_log/git_stash` gegen Registry + Command-Parsing geprüft, korrekt) | – |
+| lib.nvim `bd1b0b8` (Messages-Store) | 3 Befunde per `ultracode`-Workflow (5 Agenten, adversarial verifiziert): (1) **Bug, High:** `maybe_attach()` verließ sich auf `pcall` um `vim.ui_attach`s dokumentierten Hang abzusichern, wenn beim Attach bereits ein Float offen ist (z. B. ein Toast) — `pcall` schützt nicht gegen einen Call, der nie zurückkehrt. (2) **Bug:** `store()` dispatchte Listener per `ipairs` über das live Array, während ein Listener sich synchron per `off_message()` abmelden konnte → der nächste Listener wurde übersprungen. (3) **Performance:** Ring-Buffer nutzte `table.remove(entries,1)` → O(n) bei jedem Push nach Erreichen der Kapazität. | lib.nvim `f59c705` (Float-Guard + Retry via `WinClosed`-Autocmd, Dispatch über Listener-Snapshot, echter zirkulärer Buffer mit head/count, O(1)) |
+| ui.nvim `8acc800` + lib.nvim-Spiegel `95b66ba` (`ui.kit.message_log`-Popup) | 2 Befunde: (1) **Performance:** `entries` nie begrenzt → unbegrenztes Wachstum + volles O(n)-Redraw bei jeder Live-Nachricht (`debugging.nvim`s `on_message`-Anbindung). (2) **Performance:** Highlight-/Pfeil-Namespaces pro `open()`-Aufruf neu erstellt (bufnr-suffixed) → Leak im Namespace-Registry bei jedem Öffnen/Schließen. | ui.nvim `45c2df7`, lib.nvim-Spiegel `b390de7` (`max_entries`-Cap, bewusst NICHT für `load_more("older")` — ein erster Versuch das doch zu tun warf die gerade geladenen älteren Einträge sofort wieder raus, per Test gefangen; zwei modulweite statt per-Instanz-Namespaces) |
+| debugging.nvim `8a85a26` (`views/recent.lua`) | **Bug:** der Fallback-Pfad ohne ui.nvim taggte sein Popup-Fenster nie → `<x>` (`clear_all`) fand es nicht, wiederholtes `<m>/<n>/<e>` öffnete immer ein neues Fenster statt das bestehende zu fokussieren. | debugging.nvim `6b0a981` (Surface-Rückgabewert von `show_lines()` jetzt mit `window_tag.set` getaggt) |
+| nvim-config `097e3f8a` (Wiring: `wrap_noice()`/`notify_renderer_changed()`) | **Bug, High:** eigentliche Ursache lag in lib.nvim: `has_renderer()` prüfte nur `package.loaded["noice"] ~= nil`, nicht den tatsächlichen Running-Status — `package.loaded` bleibt nach `:Noice disable` weiterhin gesetzt. Damit löste `:Noice disable` nie ein Detach aus, der `ext_messages`-Logger blieb als einziger Listener hängen → Messages **und** Cmdline hätten komplett aufgehört zu rendern. | lib.nvim `f59c705` (`has_renderer()` prüft jetzt `noice.config.is_running()`); kein eigener nvim-config-Commit nötig, die Verdrahtung dort war schon korrekt |
 
 Nebenbefund (nicht angefasst): `nvim-data/swap` enthält ~600 Swap-Dateien (u. a. von abgebrochenen Headless-Läufen);
 sie lösen in Testläufen `E326: Too many swap files` aus → Tests mit `nvim -n` starten. Aufräumen nur nach Rückfrage.
@@ -229,14 +233,22 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    **Verifiziert:** luacheck/stylua grün in allen vier Repos; volle Testsuiten grün (lib.nvim, ui.nvim
    inkl. `kit_drift_spec`, debugging.nvim); echter Config-Headless-Start fehlerfrei; `debugging.views.
    recent.show()` direkt aufgerufen öffnet im echten, geladenen Setup ein echtes `ui.kit`-Fenster ohne
-   Fehler. **Nicht verifiziert (bewusst, s. Plan):** die beiden TUI-Spike-eigenen Risiken live geprüft —
-   (a) `ui_attach` hängt laut Vorbefund, wenn beim Attach schon ein Float offen ist, (b) `:Noice disable`
-   bei aktivem Logger darf nichts verschlucken (Detach muss greifen). `VeryLazy` feuert in `nvim
-   --headless` nicht (debugging.nvim/noice laden dort nie), die Keymap-Registrierung selbst ist aber über
-   `bindings_spec.lua`s echte `lib.nvim.bindings.keymap`-Registrierung abgedeckt. **Bitte einmal live
-   `<m>`/`<n>`/`<e>` in einer echten Session drücken** (Pagination-Pfeile, Eingeklappt-Modus, `?`,
-   `:Noice disable` währenddessen) — das ist die Verifikation, die ein Headless-Lauf laut Spike selbst
-   nicht leisten kann.
+   Fehler.
+
+   **Update 2026-10-01 (Review-Durchlauf, s. Tabelle oben):** die beiden ursprünglich hier als „nur live
+   zu prüfen" vermerkten TUI-Spike-Risiken waren tatsächlich **echte, reproduzierbare Bugs**, kein bloßes
+   Test-Loch — beide jetzt im Code behoben, nicht mehr nur ungetestet: (a) `maybe_attach()` prüft vor
+   `vim.ui_attach` jetzt selbst auf ein offenes Floating-Fenster und verschiebt den Attach-Versuch per
+   `WinClosed`-Autocmd, statt sich auf `pcall` zu verlassen (das einen hängenden Call nie gefangen hätte).
+   (b) `has_renderer()` prüft jetzt `noice.config.is_running()` statt nur `package.loaded["noice"]` —
+   `:Noice disable` löst jetzt tatsächlich ein Detach aus (vorher wäre der Logger für den Rest der Session
+   als einziger `ext_messages`-Listener hängen geblieben). Je ein eigener Regressionstest in
+   `lib.nvim/TESTS/messages_spec.lua` (echtes Float-Fenster + `vim.wait`, gemockter `noice.config`).
+   `VeryLazy` feuert in `nvim --headless` weiterhin nicht (debugging.nvim/noice laden dort nie), die
+   Keymap-Registrierung selbst ist aber über `bindings_spec.lua`s echte `lib.nvim.bindings.keymap`-
+   Registrierung abgedeckt. **Weiterhin empfohlen, aber kein bekannter Bug mehr offen:** einmal live
+   `<m>`/`<n>`/`<e>` in einer echten Session drücken (Pagination-Pfeile, Eingeklappt-Modus, `?`) — das
+   volle visuelle Rendering kann auch ein Review nicht ersetzen.
    **Nicht Teil dieses Durchgangs** (bewusst, s. Plan): das volle Live-Chip-System (noch-Ersatz, Konzept-
    Schritt 7) bleibt separat; `debugging.nvim/views/utils.lua` vs. `lib.nvim.window.focus_helpers`
    (Dopplung, gefunden, nicht bereinigt) bleibt ein Folge-Cleanup.
@@ -334,11 +346,17 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | `8ce11b11` | feat(pickers): 10 der 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin` umgestellt | ✅ |
 | nvim-config | `1c440eb8` | chore(plugins): telescope-github, nvim-notify, telescope-file-browser + 3 ungenutzte Tasten entfernt | ✅ |
 | nvim-config | `17194f13` | chore(treesitter): nvim-treesitter-Pin entfernt (Neovim ist 0.12.2) | ✅ |
-| lib.nvim | `bd1b0b8` | feat(messages): Zeitstempel-Ringpuffer, kein UI | – |
-| ui.nvim | `8acc800` | feat(kit): message_log Popup-Komponente | – |
-| lib.nvim | `95b66ba` | chore(ui.kit): message_log-Spiegel | – |
-| debugging.nvim | `8a85a26` | feat(views): recent-Popup ersetzt messages/noice_all/noice_errors-Dumps | – |
-| nvim-config | `097e3f8a` | feat(debugging): lib.nvim.messages-Aktivierung + recent-Popup-Config verdrahtet | – |
+| lib.nvim | `bd1b0b8` | feat(messages): Zeitstempel-Ringpuffer, kein UI | ✅ (Fix `f59c705`) |
+| ui.nvim | `8acc800` | feat(kit): message_log Popup-Komponente | ✅ (Fix `45c2df7`) |
+| lib.nvim | `95b66ba` | chore(ui.kit): message_log-Spiegel | ✅ (Fix `b390de7`) |
+| debugging.nvim | `8a85a26` | feat(views): recent-Popup ersetzt messages/noice_all/noice_errors-Dumps | ✅ (Fix `6b0a981`) |
+| nvim-config | `097e3f8a` | feat(debugging): lib.nvim.messages-Aktivierung + recent-Popup-Config verdrahtet | ✅ (Ursache in lib.nvim `f59c705` behoben) |
+| nvim-config | `3559c019` | docs: Handover um die 5 T7-Commits ergänzt | ✅ |
+| lib.nvim | `f59c705` | fix(messages): Float-Guard+Retry, Listener-Snapshot, zirkulärer Ring-Buffer | ✅ |
+| lib.nvim | `b390de7` | fix(ui.kit): message_log Cap + Namespace-Hoisting (Spiegel) | ✅ |
+| ui.nvim | `45c2df7` | fix(kit): message_log Cap + Namespace-Hoisting | ✅ |
+| debugging.nvim | `6b0a981` | fix(views): Fallback-Fenster jetzt getaggt | ✅ |
+| lib.nvim | `0f94c7a` | docs(messages): Attach-Policy-Doku aktualisiert | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
