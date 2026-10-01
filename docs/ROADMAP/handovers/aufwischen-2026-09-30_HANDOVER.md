@@ -56,6 +56,9 @@ buffer-ctx/casedesk/gopath.
 | lib `664667c`, `62c559a` (`link_cursor`, `insert_links`) | async Einfügen konnte den Cursor eines Fensters bewegen, das inzwischen einen anderen Buffer zeigt; `previous_window()` falsch für Befehle aus dem Editor | lib `c368b5d` (`place(…, buf)`), `e8a75f3` (`insertion_window()`) |
 | images `242f3ed` (`env`-Modus, Cursor) | Case-Folding der Env-Roots auf allen Systemen (Linux: `/Repos` = `/repos`); Einfügepunkt aus einem Fenster gelesen, das inzwischen einen anderen Buffer zeigt (Link scheiterte still, Cursor-Fallback setzte den Cursor im falschen Buffer) | images `c27f16a` (Windows-only Folding, Warnung + Cursor-Guard, Test) |
 | filetree `9a0e0dc` (`MI`) | per `:Filetree mdlink insert` im Editor getippt wählte `previous_window()` den zuvor besuchten Split; Ordner mit abschließendem `/` ergaben leeren Titel | filetree `3a932e2`, nutzt `insertion_window()` |
+| markdown `4247bbf` (eigener Fix) | **Regression:** beim Neuschreiben ging `\` in `[/\\]` verloren → `$VAR\x`, `%VAR%\x`, `.\$VAR\x` nicht mehr erkannt | markdown `6d7e2c5` + Regressionstests (Long-Bracket-Strings) |
+| filetree `3a932e2` (eigener Fix) | gleiche Backslash-Regression in `link_name` | filetree `990f067` + Windows-Test |
+| pickers `7fbd2aa`, `6e34dcf` (Einfügen, Feedback) | `:p` gibt Ordnern ein `/` → leerer Titel (`markdown_link` und `link_insert`); `copied [fmt] <langer Pfad>` konnte die Cmdline sprengen → Hit-Enter ohne noice; Zielfenster | pickers `688f03f` (`link_name`, `shorten_for_echo`, `insertion_window`) |
 
 ## Offen — in dieser Reihenfolge weitermachen
 
@@ -126,6 +129,12 @@ buffer-ctx/casedesk/gopath.
      Nicht geprüft: ob dein Terminal (WezTerm?) `<C-S-y>` sendet — sonst `<leader>c+`/`c-` nehmen.
 
 ## Fallen, die ich getroffen habe
+- **Backslashes in Lua-Edit-Skripten werden halbiert** (Tool-/Shell-Schicht): `"[/\\]"` kam als `"[/\]"` an und
+  stylua machte daraus `"[/]"` — dadurch ging in markdown `4247bbf` die Backslash-Unterstützung verloren
+  (behoben in `6d7e2c5`), ebenso in filetree/pickers `link_name`. **Regel:** Code mit Backslashes nur mit dem
+  Edit-Tool schreiben, Tests mit Long-Bracket-Strings `[[C:\x]]` oder `string.char(92)`; nach dem Schreiben
+  `grep -n '\[/\]'` o. Ä. gegenprüfen. Nie unquotierte Heredocs (`<<EOF`) mit Backticks (`` ` ``) — die Shell
+  führt sie aus.
 - **nvim-Config: Worktree vs. Haupt-Checkout.** Dieses Dokument liegt im Worktree
   `…/nvim/.claude/worktrees/nvim-plugin-cleanup-daf894` (Branch `claude/nvim-plugin-cleanup-daf894`).
   `$NVIM_CONFIG_DIR` ist der Haupt-Checkout `C:\Users\bartl\AppData\Local\nvim`; dort hat der
@@ -146,7 +155,8 @@ buffer-ctx/casedesk/gopath.
 |---|---|---|---|
 | markdown.nvim | `03b0867` | fix(links): no `./` before env-rooted targets, repair | ✅ (Fix `4247bbf`) |
 | markdown.nvim | `779c4d1` | feat(hl): blockquote width | ✅ (Fix `5c618d3`) |
-| markdown.nvim | `4247bbf` | fix(links): Env-Referenz = ganzes erstes Segment, Config-Lookup nur für Kandidaten | ✅ |
+| markdown.nvim | `4247bbf` | fix(links): Env-Referenz = ganzes erstes Segment, Config-Lookup nur für Kandidaten | ✅ (Fix `6d7e2c5`) |
+| markdown.nvim | `6d7e2c5` | fix(links): Backslash-Separatoren wiederhergestellt (Regression von `4247bbf`) | ✅ |
 | markdown.nvim | `5c618d3` | fix(hl): Blockquote-Padding nie breiter als das Fenster | ✅ |
 | cascade.nvim | `f5baa6d` | feat(keymaps): rotation → `cl/cL` | – |
 | ui.nvim | `10082fc` | feat(toast): width min/max/padding/wrap | ✅ (Fix `d3ea28a`) |
@@ -158,15 +168,17 @@ buffer-ctx/casedesk/gopath.
 | markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | – |
 | lib.nvim | `62c559a` | feat: insert_links, previous_window | ✅ (Fix `c368b5d`, `e8a75f3`) |
 | filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | ✅ (Fix `3a932e2`) |
-| filetree.nvim | `3a932e2` | fix(markdown_links): MI ins aktuelle Editorfenster; Ordner-Links behalten Titel | ✅ |
-| pickers.nvim | `7fbd2aa` | feat(entry_actions): Links ins Fenster hinter dem Picker einfügen | – |
+| filetree.nvim | `3a932e2` | fix(markdown_links): MI ins aktuelle Editorfenster; Ordner-Links behalten Titel | ✅ (Fix `990f067`) |
+| filetree.nvim | `990f067` | fix(markdown_links): `link_name` entfernt auch abschließende Backslashes | ✅ |
+| pickers.nvim | `7fbd2aa` | feat(entry_actions): Links ins Fenster hinter dem Picker einfügen | ✅ (Fix `688f03f`) |
 | ui.nvim | `a1574ca` | fix(toast): theme zindex.toast (70), Toast lag unter snacks-Pickern | ✅ |
 | lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | ✅ |
 | ui.nvim | `d3ea28a` | fix(toast): begrenzte Arbeit (8 KB, max_lines, Ellipse) | ✅ |
 | lib.nvim | `e2faeb4` | fix(toast): Spiegel zu `d3ea28a` | ✅ |
 | lib.nvim | `c368b5d` | fix(link_cursor): `place()` prüft den Buffer des Fensters | ✅ |
 | lib.nvim | `e8a75f3` | feat(window): `insertion_window()`; fix(popup): `width = false` | ✅ |
-| pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | – |
+| pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | ✅ (Fix `688f03f`) |
+| pickers.nvim | `688f03f` | fix(entry_actions): Ordner-Links mit Titel, Feedback passt in die Cmdline, Einfügen ins aktuelle Fenster | ✅ |
 | nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | – |
 | nvim-config | `b11c2356` | chore(specs): neue Plugin-Optionen (images env, Toast, Blockquote, Link-Cursor, Picker/filetree) | – |
 | buffer-ctx.nvim | `006a306` | feat(insert): `:Insert mdlink` setzt den Cursor in den Link | – |
