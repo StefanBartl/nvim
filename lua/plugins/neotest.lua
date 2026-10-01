@@ -46,7 +46,10 @@ return {
         pattern = TEST_FILES,
         once = true,
         callback = function(ev)
-          local file = vim.fn.fnamemodify(ev.file, ":p")
+          -- With neotest's own separator: its lib.files.parent splits on "\" and
+          -- finds no parent for a path with "/" (a session's `edit E:/...`), so
+          -- the project root of that file would never be registered.
+          local file = (vim.fn.fnamemodify(ev.file, ":p"):gsub("/", package.config:sub(1, 1)))
           local function load(deferred)
             require("lazy").load({ plugins = { "neotest" } })
             if deferred then
@@ -55,9 +58,20 @@ return {
               -- BufEnter of the startup buffers has passed by now: without this
               -- a test buffer that is open but not current (a restored session)
               -- gets no signs until it is visited. Asking for the file's tree
-              -- starts the client; its discovery then covers every open buffer.
+              -- starts the client; its discovery then covers the open buffers
+              -- under the current directory's project (a buffer of another
+              -- project gets its signs when it is visited).
               -- `get_tree_from_args` is neotest-internal, hence the pcall: if it
               -- ever changes, the signs come with the next BufEnter again.
+              -- Two properties of the client start itself, both neotest's own:
+              -- it opens an unauthenticated `serverstart("localhost:0")` listener
+              -- for its parse subprocess (any local process can then run Lua in
+              -- this session; here the subprocess cannot start, because lib.nvim's
+              -- rpc_pipe exports NVIM_LISTEN_ADDRESS to children, so the listener
+              -- stays open unused -- it has always opened on the first visit to a
+              -- test buffer); and for 100+ test files the BufEnter attach can beat
+              -- the discovery and say "No tests found" where it used to say "No
+              -- running process found".
               require("nio").run(function()
                 pcall(function()
                   require("neotest").run.get_tree_from_args({ file }, false)
