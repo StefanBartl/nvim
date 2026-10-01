@@ -228,29 +228,21 @@ nothing. Disabling it restores single-press `<Esc>` for this float.
 
 Full implementation notes: [`lua/bindings/usrcmds/context_open/README.md`](../lua/bindings/usrcmds/context_open/README.md).
 
-### fzf-lua pickers (`fzf.lua`)
+### fzf-lua pickers — removed
 
-The fzf-lua entry points this config binds directly — down to one now.
-Everything `pickers.builtins` already covers (colorschemes, keymaps,
-git_status, quickfix, man, live_grep, files, treesitter,
-lsp_workspace_symbols) moved to `pickers.nvim`'s own declarative
-`mappings`/`keymaps` config in `plugins/personal/specs/navigate.lua`
-instead (2026-10-01, externe-plugins report §9.2) — engine-agnostic there,
-and most already had an established `pickers.nvim` key of their own, so the
-old `<leader>f*` keys were dropped rather than kept as duplicates. `<leader>
-ff` / `<leader>fb` belong to `pickers.nvim` the same way and are why the one
-key still here has the shape it does.
-
-| Key | Mode | Effect | desc | Source |
-| --- | --- | --- | --- | --- |
-| `<leader>fB` | n | `:FzfLua grep_curbuf` | `[FzfLua] Grep current buffer` | `fzf.lua` |
-
-The only one left: a live interactive regex grep scoped to the current
-buffer, with no `pickers.builtins` match (`lines`/`blines` is a fuzzy
-line-filter, a different mechanic under a similar name). `<leader>fB` was
-`<leader>fb`, which `pickers.nvim`'s `keymaps.folder_files` owns now. The
-LSP-flavoured entries that used to live here (`<leader>do`, `<leader>dos`,
-`<leader>wo`, `<leader>wos`) moved into `lsp.nvim`'s keymap catalogue.
+`bindings/mappings/fzf.lua` is gone as of 2026-10-01 (externe-plugins report
+§9.2 follow-up): 9 of its 10 direct `<leader>f*` maps moved to
+`pickers.nvim`'s own declarative `mappings`/`keymaps` config in
+`plugins/personal/specs/navigate.lua` instead (engine-agnostic there, and
+most already had an established `pickers.nvim` key of their own, so the old
+keys were dropped rather than kept as duplicates — see that file's
+`cwd_find_all`/`quickfix`/`treesitter` entries plus `colorschemes`/
+`keymaps`/`git_status`/`cwd_grep`/`man`/`cwd_files`/`lsp_workspace_symbols`);
+the last one, `<leader>fB` (`grep_curbuf`), had no `pickers.builtins` match
+(`lines`/`blines` is a fuzzy line-filter, a different mechanic) and was
+simply unused, so it was dropped too rather than kept as the sole survivor.
+`ibhagwan/fzf-lua` the plugin stays installed — `pickers.nvim`'s own engine
+option, and `replacer`/`cmdlog`/`lsp` still reach it directly.
 
 ### which-key
 

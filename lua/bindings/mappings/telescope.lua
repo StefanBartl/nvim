@@ -12,9 +12,9 @@ local M = {}
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 
-  -- Telescope's own picker-of-pickers meta UI: no pickers.nvim equivalent
-  -- (nothing there lists "every picker"), stays a direct call.
-  map("n", "<leader>ts", ":Telescope<CR>", { desc = "[Telescope] UI" })
+  -- <leader>ts (":Telescope<CR>", the picker-of-pickers meta UI) left on
+  -- 2026-10-01: never used (externe-plugins report §9.2 follow-up).
+
   -- Grep with an own prompt first, then pickers.nvim's live grep in the cwd,
   -- seeded with what was typed (engine-agnostic: pickers.nvim picks telescope /
   -- fzf-lua / snacks). Telescope's grep_string only when pickers.nvim is absent.
@@ -50,23 +50,10 @@ function M.setup()
   -- the same hidden+no_ignore+follow flags, engine-agnostic instead of
   -- telescope-only (2026-10-01, externe-plugins report §9.2).
 
-  ---==== Telescope file browser extension mappings =====---
-  -- <leader>. now belongs to pickers.nvim's own "explorer" builtin
-  -- (engine-agnostic, same "at current file" behavior this used to have on
-  -- <leader>,). Keeping only the CWD variant here since pickers.builtins
-  -- doesn't take a path override with a stable cross-engine opts shape.
-
-  map("n", "<leader>,", function()
-    local ok, telescope = pcall(require, "telescope")
-    if not ok then
-      return
-    end
-
-    pcall(telescope.load_extension, "file_browser")
-    telescope.extensions.file_browser.file_browser({
-      path = vim.uv.cwd(),
-    })
-  end, { desc = "[Telescope] File Browser (at CWD)" })
+  -- <leader>, (telescope-file-browser.nvim "at CWD") left on 2026-10-01:
+  -- never used, same pass as <leader>ts above. <leader>. (pickers.nvim's own
+  -- engine-agnostic "explorer" builtin, "at current file") was already the
+  -- replacement and is unaffected.
 end
 
 return M
