@@ -59,6 +59,15 @@ buffer-ctx/casedesk/gopath.
 | markdown `4247bbf` (eigener Fix) | **Regression:** beim Neuschreiben ging `\` in `[/\\]` verloren → `$VAR\x`, `%VAR%\x`, `.\$VAR\x` nicht mehr erkannt | markdown `6d7e2c5` + Regressionstests (Long-Bracket-Strings) |
 | filetree `3a932e2` (eigener Fix) | gleiche Backslash-Regression in `link_name` | filetree `990f067` + Windows-Test |
 | pickers `7fbd2aa`, `6e34dcf` (Einfügen, Feedback) | `:p` gibt Ordnern ein `/` → leerer Titel (`markdown_link` und `link_insert`); `copied [fmt] <langer Pfad>` konnte die Cmdline sprengen → Hit-Enter ohne noice; Zielfenster | pickers `688f03f` (`link_name`, `shorten_for_echo`, `insertion_window`) |
+| nvim-config `27a46759` (`:Clipboard`) | Meldung `copied … -> <langer Pfad>` konnte die Cmdline sprengen (Hit-Enter ohne noice); `$NVIM_CONFIG_DIR`-Folding case-insensitiv auf allen Systemen | nvim-config `fd32956e` (Tail-Kürzung, Folding nur Windows) |
+| cascade `236ace2` (Listen-Schritte) | **Bug:** `z)` + 1 erzeugte `aa)` (`alpha.to_alpha(27)`), das der Parser nicht als Marker liest → Item verlässt die Liste still | cascade `1ff1069` (Buchstaben enden bei `z`, Test) |
+| ohne Befund (gelesen, Randfälle geprüft) | markdown `19fabae` (`wrap_link`), cascade `f5baa6d` (Keymaps), buffer-ctx `006a306`, casedesk `dd58bc1`, gopath `f1cfe5c`, nvim-config `b11c2356` (Specs: nur Kommentare + `default_path_mode = "env"`, mit der echten Config geladen) | – |
+
+Nebenbefund (nicht angefasst): `nvim-data/swap` enthält ~600 Swap-Dateien (u. a. von abgebrochenen Headless-Läufen);
+sie lösen in Testläufen `E326: Too many swap files` aus → Tests mit `nvim -n` starten. Aufräumen nur nach Rückfrage.
+Falle beim Testen: `nvim --headless -u NONE` hat `stdpath("config")` (= Haupt-Checkout) **im rtp** — Module der
+Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getestet; und Testskripte dürfen nichts in
+`stdpath("config")` anlegen (ich habe dort versehentlich ein leeres Verzeichnis erzeugt und wieder entfernt).
 
 ## Offen — in dieser Reihenfolge weitermachen
 
@@ -158,14 +167,14 @@ buffer-ctx/casedesk/gopath.
 | markdown.nvim | `4247bbf` | fix(links): Env-Referenz = ganzes erstes Segment, Config-Lookup nur für Kandidaten | ✅ (Fix `6d7e2c5`) |
 | markdown.nvim | `6d7e2c5` | fix(links): Backslash-Separatoren wiederhergestellt (Regression von `4247bbf`) | ✅ |
 | markdown.nvim | `5c618d3` | fix(hl): Blockquote-Padding nie breiter als das Fenster | ✅ |
-| cascade.nvim | `f5baa6d` | feat(keymaps): rotation → `cl/cL` | – |
+| cascade.nvim | `f5baa6d` | feat(keymaps): rotation → `cl/cL` | ✅ (ohne Befund) |
 | ui.nvim | `10082fc` | feat(toast): width min/max/padding/wrap | ✅ (Fix `d3ea28a`) |
 | lib.nvim | `53417e1` | feat(toast): mirror + popup wrap width | ✅ |
 | lib.nvim | `664667c` | feat(markdown): link_cursor | ✅ (Fix `c368b5d`) |
-| gopath.nvim | `f1cfe5c` | feat(api): shorten_path | – |
+| gopath.nvim | `f1cfe5c` | feat(api): shorten_path | ✅ (ohne Befund) |
 | images.nvim | `242f3ed` | feat(paste): env mode, mode words, cursor | ✅ (Fix `c27f16a`) |
 | images.nvim | `c27f16a` | fix(paste): Env-Folding nur Windows; kein Einfügen/Cursor in Fenster mit anderem Buffer | ✅ |
-| markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | – |
+| markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | ✅ (ohne Befund) |
 | lib.nvim | `62c559a` | feat: insert_links, previous_window | ✅ (Fix `c368b5d`, `e8a75f3`) |
 | filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | ✅ (Fix `3a932e2`) |
 | filetree.nvim | `3a932e2` | fix(markdown_links): MI ins aktuelle Editorfenster; Ordner-Links behalten Titel | ✅ (Fix `990f067`) |
@@ -179,13 +188,15 @@ buffer-ctx/casedesk/gopath.
 | lib.nvim | `e8a75f3` | feat(window): `insertion_window()`; fix(popup): `width = false` | ✅ |
 | pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | ✅ (Fix `688f03f`) |
 | pickers.nvim | `688f03f` | fix(entry_actions): Ordner-Links mit Titel, Feedback passt in die Cmdline, Einfügen ins aktuelle Fenster | ✅ |
-| nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | – |
-| nvim-config | `b11c2356` | chore(specs): neue Plugin-Optionen (images env, Toast, Blockquote, Link-Cursor, Picker/filetree) | – |
-| buffer-ctx.nvim | `006a306` | feat(insert): `:Insert mdlink` setzt den Cursor in den Link | – |
-| casedesk.nvim | `dd58bc1` | feat(insert): `:Case insert asset` setzt den Cursor in den Link | – |
+| nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | ✅ (Fix `fd32956e`) |
+| nvim-config | `fd32956e` | fix(usrcmds): `:Clipboard`-Meldung passt in die Cmdline; Folding nur Windows | ✅ |
+| nvim-config | `b11c2356` | chore(specs): neue Plugin-Optionen (images env, Toast, Blockquote, Link-Cursor, Picker/filetree) | ✅ (ohne Befund) |
+| buffer-ctx.nvim | `006a306` | feat(insert): `:Insert mdlink` setzt den Cursor in den Link | ✅ (ohne Befund) |
+| casedesk.nvim | `dd58bc1` | feat(insert): `:Case insert asset` setzt den Cursor in den Link | ✅ (ohne Befund) |
 | nvim-config | (Report) | docs: Report Markdown-Link-Einfügestellen | ✅ |
 | WKDBooks | `1afb268` | docs(roadmap): Message-Log + Recent-Popup + Live-Chips Konzept (3 Roadmaps) | ✅ |
-| cascade.nvim | `236ace2` | feat(lists): `<C-y>`/`<C-x>` auf Marker + Ebenen-Variante | – |
+| cascade.nvim | `236ace2` | feat(lists): `<C-y>`/`<C-x>` auf Marker + Ebenen-Variante | ✅ (Fix `1ff1069`) |
+| cascade.nvim | `1ff1069` | fix(lists): Buchstaben-Listen enden bei `z` | ✅ |
 | nvim-config | (Spec) | chore(specs): `lists.features.shift` | – |
 | nvim-config | (Report) | docs: noice.nvim Feature-Abdeckung | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
