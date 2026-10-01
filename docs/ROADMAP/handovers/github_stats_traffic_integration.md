@@ -2,8 +2,16 @@
 
 Status: **P0 built and pushed (2026-09-28, `github_stats.nvim` `13fb0a2`). P1 built and pushed
 (2026-09-28, `docmap-desktop` `02b84fc` + `2a8d561`). P2 built and pushed (2026-09-28, `docmap-desktop`
-`4774f11`, branch `claude/github-stats-traffic-integration-46c7c0`). Next: P3 (`documentation.nvim`),
-independent of the other three.** Designed 2026-09-25.
+`4774f11`, branch `claude/github-stats-traffic-integration-46c7c0`). P3 built and pushed (2026-10-01,
+`documentation.nvim` `main` `b39c3be`). All four steps done.** Designed 2026-09-25.
+
+**What is left, across all four steps:** the real end-to-end checks in
+[*Verification, end to end*](#verification-end-to-end) — a genuine
+`:GithubStats fetch` has still not been run on the author's machine (every
+step's own "Done when"/"as built" notes this), so nothing here has been
+exercised against real GitHub traffic data yet, only fixtures. That is the
+one remaining item before this integration can be called finished rather than
+"built and self-tested".
 
 **Keep this file current:** update it whenever a step is finished or something
 worth knowing turns up (status line above, the step's *As built* block, *Open
@@ -11,7 +19,7 @@ questions*, *Practical notes*).
 
 The *why*, the alternatives and the risks are in the concept, which this file
 does not repeat:
-[`GITHUB_STATS_CONCEPT.md`](./$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md)
+[`GITHUB_STATS_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md)
 (the one copy; since 2026-09-25 no planning documents live in the `docmap-desktop` repository).
 This file is the *how*: order, files, tests, gates, and what to check at the end.
 
@@ -20,10 +28,14 @@ This file is the *how*: order, files, tests, gates, and what to check at the end
   - [Read this first](#read-this-first)
   - [Data flow](#data-flow)
   - [Order and sizes](#order-and-sizes)
-  - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0--github_statsnvim-05-session--done)
-  - [P1 — docmap-desktop core (~1 session) — DONE](#p1--docmap-desktop-core-1-session--done)
-  - [P2 — detail dialog (~1 session) — DONE](#p2--detail-dialog-1-session--done)
-  - [P3 — documentation.nvim (~0.5–1 session) — NEXT](#p3--documentationnvim-051-session--next)
+  - [P0 — github_stats.nvim (~0.5 session) — DONE](#p0-github_statsnvim-05-session-done)
+    - [P0 as built](#p0-as-built)
+  - [P1 — docmap-desktop core (~1 session) — DONE](#p1-docmap-desktop-core-1-session-done)
+    - [P1 as built](#p1-as-built)
+  - [P2 — detail dialog (~1 session) — DONE](#p2-detail-dialog-1-session-done)
+    - [P2 as built](#p2-as-built)
+  - [P3 — documentation.nvim (~0.5–1 session) — DONE](#p3-documentationnvim-051-session-done)
+    - [P3 as built](#p3-as-built)
   - [Verification, end to end](#verification-end-to-end)
   - [Open questions](#open-questions)
   - [Practical notes](#practical-notes)
@@ -207,6 +219,8 @@ when `digest_dir` is overridden; stale detection.
 `digest/<owner_repo>.json` and `root.json`; `:checkhealth github_stats` is green;
 the suite, `luacheck` and `stylua` are green; the contract page is written.
 
+---
+
 ### P0 as built
 
 All ten steps are done, in `github_stats.nvim` (`docs/FEATURES/DIGEST.md` is the contract, and the
@@ -342,6 +356,8 @@ refusal, saturating numbers, a malformed file, the outcome states) and
 sorts by traffic; with none, it says why and offers the button; a project without
 a GitHub remote shows nothing and no error.
 
+---
+
 ### P1 as built
 
 Suite: `cargo test` 122 (was 79; 43 new in `traffic.rs`), `node --test src/lib/*.test.js` 149 (was 130 + 19
@@ -411,6 +427,8 @@ Follow the dependency matrix dialog for the pattern (`matrixbox` in `main.js`), 
 3. Tests: traversal cases (`../..`, `C:\`, `%2e%2e`), a referrer named
    `<img onerror=…>` rendered as text, an entry that does not resolve.
 
+---
+
 ### P2 as built
 
 `traffic::resolve_page_path` (new, `traffic.rs`) does the path resolution:
@@ -440,7 +458,11 @@ outstanding "Done when" check as P1, and it needs the same first real
 
 ---
 
-## P3 — documentation.nvim (~0.5–1 session) — NEXT
+## P3 — documentation.nvim (~0.5–1 session) — DONE
+
+> **Built 2026-10-01**, commit `b39c3be` on `main` of `documentation.nvim` (pushed; feature commit
+> `c566b3b`, merged with `--no-ff`). The steps below are kept as the record of the plan; what was
+> actually built, and where it differs, is in [*P3 as built*](#p3-as-built).
 
 Model: **`lua/documentation/core/rules_join.lua`** and the `rules` mode.
 
@@ -466,6 +488,75 @@ Model: **`lua/documentation/core/rules_join.lua`** and the `rules` mode.
 **Done when:** `:DocMap browse traffic` (or whatever the mode's entry point ends up
 being) lists the digest for a tree whose remote is tracked, and says "no data" for
 one that is not.
+
+---
+
+### P3 as built
+
+All four steps are done in `documentation.nvim`. Suite: the whole `TESTS/run.lua` run is green
+(`TESTS/browse_traffic_spec.lua` new, 1 spec), `luacheck` 0 warnings, `stylua --check` clean,
+`:DocMap` module map and `docs/BINDINGS.md` regenerated (11 modes now) and verified stale-free
+(`gen_map.lua --check`). **Not yet run against a real `:GithubStats fetch`** — same outstanding
+"Done when" item P0/P1/P2 each still have; the real end-to-end block in
+`TESTS/browse_traffic_spec.lua` only exercises the real `github_stats.digest`'s
+`digest_dir()`/`file_stem()`/`digest_file()` path-building (no live Neovim/fetch needed for that),
+not a genuine fetched digest.
+
+**Where it differs from the plan above:**
+
+- **`:DocBrowse traffic` takes `opts.traffic` (a table), not a flat `opts.traffic_gate`-shaped
+  string** — `opts.traffic.repo` (override) and `opts.traffic.digest_dir` (override), both
+  optional. This follows DIGEST.md's own published contract, which names this exact field
+  (*"`documentation.nvim`: `opts.traffic.digest_dir`"*), and keeps `traffic` a single host-only
+  option — not split into a repo-settable string plus a host-only table the way
+  `telemetry_namespace`/`telemetry` are, since the one thing that would be repo-settable
+  (`opts.traffic.repo`) already has a good derivable default (see next point) and does not need
+  its own top-level key. Not added to `config/file.lua`'s `REPO_KEYS` — `.docmap.json` says nothing
+  about traffic, by design (same bucket as `keys`/`browse`/`godbolt`).
+- **The repository is derived from `root`'s git "origin" remote by default** — the same derivation
+  `core/scan.lua` already does for `opts.repo_url` (GS-16), duplicated in `core/traffic_join.lua`
+  rather than threaded through as a forwarded field, because the auto-derived `repo_url` is
+  scan-time-only and never written back onto the caller's own config table (nothing to forward).
+  `opts.traffic.repo` overrides it for a fork/mirror/non-`origin` remote.
+- **Artifact-first, not live** — like `telemetry_join`, unlike `rules_join`: the digest is already
+  on disk, written by `github_stats.nvim`'s own background cycle, so `traffic_join.load` reads a
+  JSON file straight off disk through the probed `github_stats.digest` module's own
+  `digest_file(repo)`/`file_stem(repo)` (reusing its sanitizer rather than re-implementing it), not
+  `root.json` and not a live call. A 2 MiB read cap and a `repo` field cross-check (the file-stem
+  sanitizer is not injective, per DIGEST.md) guard against an oversized or mismatched file.
+- **Row granularity:** a digest is a handful of aggregate numbers for one repository, not a
+  per-node list (unlike `rules`/`loaded`/`telemetry`, one row per rule/function). Traffic mode
+  emits two summary rows (`views`, `clones`, each with d7/d30/d90 counts+uniques and the 7-day
+  trend), then one row per referrer and one row per top page — GitHub's own top 10, labeled as
+  such, **never** resolved to a local file (unlike docmap-desktop's P2, which does that resolution
+  in Rust for its own detail dialog — out of scope here, and deliberately not replicated: a
+  `path` is a URL path on github.com, not a filesystem path, and `documentation.nvim`'s browse
+  list has no use for a browser-opening action the way the app's dialog does).
+- **Mode 11, not a renumbering.** `traffic` was appended after `rules` (position 10) in `MODES`;
+  `tostring(11)` as a two-digit keymap LHS works the same way mode 10 already does (sequential
+  digit presses within `timeoutlen` — no new binding mechanism needed).
+- **Docs:** followed the `rules` precedent exactly, including where it does *not* document a mode
+  — `doc/documentation.txt`'s vimdoc (§5.2) and `docs/FEATURES/CORE.md`'s HTML-Analysis-panel list
+  never got entries for `rules`/`loaded` either (checked both before skipping traffic there), so the
+  only prose is `lua/documentation/editor/browse/README.md`'s new "## Traffic mode" section plus the
+  `Documentation.Opts.traffic`/`Documentation.TrafficOpts`/`Documentation.TrafficJoin.Row`
+  doc-comments. `docs/ecosystem.md` and `docs/FEATURE_LOG.md` were checked the same way — `rules`
+  has no entry in either, so traffic gets none either, for consistency rather than omission.
+- **Running this repo's own suite needs `LIB_NVIM_DIR`/`UI_NVIM_DIR`/`GITHUB_STATS_DIR` set
+  explicitly when run from inside a nested worktree** (`.claude/worktrees/...`): `TESTS/run.lua`'s
+  "beside this repo" fallback resolves against the worktree's own parent directory, not the real
+  checkout's siblings under `$REPOS_DIR`, so the env vars have to name the sibling checkouts'
+  absolute paths explicitly in that case. `scripts/gen_map.lua` needs the same treatment for
+  `LIB_NVIM_DIR`, but has **no** `ui.nvim`/`UI_NVIM_DIR` candidate of its own at all (`ensure()` is
+  only called for `lib.nvim` and `documentation.nvim` itself) even though rendering
+  `docs/BINDINGS.md` transitively requires `ui.kit`/`ui.contextmenu` through `editor/browse/init.lua`
+  — pre-existing, not something this step introduced (confirmed `.github/workflows/ci.yml`'s `map`
+  job never sets `UI_NVIM_DIR` either, so CI's own `--check` run hits the same "could not render
+  docs/BINDINGS.md" warning and silently skips verifying that file; `--check` skips writing it
+  regardless). Worked around for this one regeneration with a one-off `--cmd` that prepends
+  `ui.nvim` to `rtp` and `package.path` by hand; worth a real fix (give `gen_map.lua` its own
+  `ensure("ui.kit", "ui.nvim")`) if `docs/BINDINGS.md` needs regenerating again before the plugin
+  manager's own ui.nvim install makes this moot.
 
 ---
 
@@ -502,6 +593,12 @@ one that is not.
 4. ~~**`digest_daily_days`.**~~ **Measured 2026-09-28:** ~4–5 KB at 87 days, so ~20 KB at 400. Keep 400.
 5. ~~**Opt-out storage.**~~ **Settled in P1:** `Project.traffic_hidden` with its own command; `project_scope_get/_set`
    untouched, so older front ends see no change.
+6. ~~**`opts.traffic` shape in `documentation.nvim`: one table, or a repo-settable string plus a
+   host-only table (the `telemetry_namespace`/`telemetry` split)?**~~ **Settled in P3:** one
+   host-only table, `{ repo?, digest_dir? }` — DIGEST.md's own contract already names
+   `opts.traffic.digest_dir`, and the one field that could have been repo-settable (`repo`) has a
+   good derivable default (the git remote, like `repo_url`), so it did not need its own top-level
+   key the way a gate name (no derivable default at all) needed `rules_gate`.
 
 ---
 
@@ -531,6 +628,13 @@ Learned in P0; they save time.
   co-authorship) wins.
 - **The plugin's specs must not touch real directories:** `scripts/test.sh` sets `NVIM_APPNAME`; a spec
   that reaches `digest.default_dir()` should still stub it, as `digest_spec.lua` does.
+- **`documentation.nvim`'s own test runner, from a nested worktree** (`.claude/worktrees/...`):
+  `TESTS/run.lua`'s "beside this repo" sibling fallback resolves against the *worktree's* parent
+  directory, not the real checkout's siblings under `$REPOS_DIR` — set `LIB_NVIM_DIR`/`UI_NVIM_DIR`/
+  `GITHUB_STATS_DIR` (or whichever `<NAME>_DIR` a given spec needs) to the real absolute sibling
+  paths explicitly in that case. `scripts/gen_map.lua` needs the same for `LIB_NVIM_DIR`, and has
+  no `UI_NVIM_DIR` fallback at all even though regenerating `docs/BINDINGS.md` needs `ui.nvim` —
+  see P3-as-built's last bullet for the one-off workaround and why it is pre-existing, not new.
 
 ---
 
