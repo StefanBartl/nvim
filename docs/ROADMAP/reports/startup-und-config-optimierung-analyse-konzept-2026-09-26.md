@@ -165,10 +165,14 @@ Details, Messreihen und Begründungen im Archiv (Pfad oben).
 | `WKDBooks` | `cb22850` | `PERF-94..97`, Nachtrag zur Checker-Notiz, Tool-Index |
 | `language.nvim` | `bba2adb` | Review-Fixes: Leer- und BOM-Einträge am Rand eines Stapels, kein Scan des Arbeitsverzeichnisses ohne Temp-Verzeichnis, Tests, die jetzt scheitern können |
 | `nvim-config` | `627dff8e` | Review-Fixes `startup-probe`: `where`-Zuordnung, Belegung pro Sekunde, `fs`-Rückgabewerte, Pfade mit `%`/`#`, `bench.lua`-Argumente, Exit-Codes |
-| `nvim-config` | `737a27b3` | Review-Fixes: `:Sbx`-Stub, `sandbox.nvim` ohne `yaml`-Auslöser, `neotest` für Testdatei als Argument erst nach `VeryLazy`, Checker bei Uhr-Sprung |
+| `nvim-config` | `737a27b3` | Review-Fixes: `:Sbx`-Stub, `sandbox.nvim` ohne `yaml`-Auslöser, `neotest` für Testdatei als Argument erst nach `VeryLazy` |
 | `nvim-config` | `e80d52f6` | Neotest-Doku in `docs/NOTES/ExternPlugins/Bindings` an Code und Lazy-Stubs angepasst |
+| `language.nvim` | `7b8ee9a` | Zweiter Review: Testfallen je Art und Ende, Slash-Regel abgesichert, README-Zeile |
+| `nvim-config` | `87a29e20` | Zweiter Review: `neotest` startet den Client auch für offene Test-Buffer (Session), Uhr-Härtung des Checkers zurückgenommen (sie schaltete den `git log`-Sturm ein) |
+| `nvim-config` | `d1087b50` | Zweiter Review: `startup-probe` behält bei fehlenden Modulen den Aufrufer, Fehlergrund im Treiber, Umleitungsrat je Shell |
 
-Der Review dieser Fixes (25 bestätigte Funde aus 45 Agenten, 7 widerlegt) steht
-im Archiv; die nicht umgesetzten Funde sind oben Entscheidung 5 und, aus dem
-Review des `neotest`-Auslösers, ein Zielkonflikt: die Event-Muster entsprechen
-bewusst `core.is_test_file`.
+Die Reviews dieser Fixes (erst 25 bestätigte Funde aus 45 Agenten, 7 widerlegt;
+dann 8 aus 11 Agenten, 0 widerlegt) stehen im Archiv. Nicht umgesetzt ist nur
+Entscheidung 5 oben; aus dem Review des `neotest`-Auslösers bleibt ein
+Zielkonflikt stehen: die Event-Muster entsprechen bewusst
+`core.is_test_file`.
