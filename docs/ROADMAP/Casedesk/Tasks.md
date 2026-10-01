@@ -1,0 +1,5 @@
+hover.nvim:
+  - nach zoom, kan icvh nur nach links und rechts navigieren. Ein vollbildmouds wäre super, bei dem ich aber auch teile des hover bildes markieren kann mit der maus als beispel und herauskopoeren, wäre das möglich?
+  - website cache, zumindest von unseren tricentis docs und micrtsoft docs, auf die gehe ich immer wieder, und os chenll ändern sic die auch nciht, so mus nicht jedes mal neu gelade werden dwen dergleiche uttl angefragt wird, ich denke da an einen ppersisteneten cache, der auchn nvim sessions überlebt. abwägen obn das ein feature unur spezifsch für mich in meiner support spezalist arbeti bei tricentis sein soll,. oder ob auch andere user devs vcon hover.nvim das brauhen könnten - eventell konfigurierbar, welche urls cached werden könne, alsoi zb alles von  https://docs.tricentis.com/** usw... und validieren als neu fethcen und genereien, das kan n man ja so machen, dass es nach xy tagen gemacht wrid, und dan so, dss aber erstmal das alte cachde angezeigt wird, das aber als trigger verwendet wird, um die atualsierte zu hoen undz ugenerieren, beimnöchsten hover dann ist wiede  neu generiert
+
+
