@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „T7-Roadmap-Einträge (WKDBooks)".
+**Stand:** 2026-10-01, nach dem Task „cascade: Listen-Schrittweite (`<C-y>`/`<C-x>` auf Marker, `<C-S-y>`/`<C-S-x>` Ebene)".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -87,20 +87,21 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    nach `docs/ROADMAP/reports/`), danach TUI-Spike. **Kein Bau** (Nutzer: erst Review/Abgleich).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
-8. **Neue Idee (Nutzer, entschieden, noch nicht gebaut):** cascade, Aufzählungszahlen per
-   `<C-a>`/`<C-x>` ändern und die Nachbarn mitziehen lassen (Roadmap `WKDBooks/…/cascade.nvim`).
-   - `<C-a>`/`<C-x>` **auf einem Aufzählungsmarker** (nur in Listen-Buffern, sonst nativ): Zahl um
-     `count` ändern, alle **folgenden** Geschwister derselben Ebene um denselben Wert mit;
-     Vorangehende bleiben. Count + Dot-Repeat. Kein volles Renumbering (würde Startzahl/Lücken
-     zerstören); das vorhandene `renumber` bleibt der bewusste Glattzieh-Befehl.
-   - **Variante für die ganze Ebene** (auch die Geschwister davor): vom Nutzer auf
-     **`<C-S-a>` / `<C-S-x>`** festgelegt (er schrieb „`<C-S-x>` bzw. `<C-S-y>`" — gemeint ist
-     vermutlich das Paar inc/dec analog zu `<C-a>`/`<C-x>`; beim Bau kurz rückfragen).
-     Vorsicht: viele Terminals liefern `<C-S-x>` nicht von `<C-x>` unterscheidbar (braucht
-     kitty-Keyboard-Protokoll/modifyOtherKeys; Windows Terminal/WezTerm prüfen). Als Fallback
-     `g<C-a>`/`g<C-x>` anbieten (im Normal-Modus wahrscheinlich frei — vor dem Bau verifizieren).
-   - Offene Kleinigkeit: „Ebene" = gleiche Einrückung im selben Block, verschachtelte Unterlisten
-     zählen nicht mit (Annahme, bestätigen lassen).
+8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
+   **Korrektur zur früheren Notiz:** gemeint waren `<C-y>`/`<C-x>` (nicht `<C-a>`) — `<C-y>`/`<C-x>`
+   sind in der Config cascades `cycle_word_next/prev` (preset); die Listen-Logik hängt dort ein.
+   - `<C-y>`/`<C-x>` (und `+`/`-`) **auf/vor dem Marker** einer geordneten Liste: Item + alle **folgenden**
+     Geschwister derselben Ebene ±count; Vorangehende, Kinder und Fortsetzungszeilen bleiben; kein
+     Renumber (Startzahl/Lücken bleiben); Dot-Repeat; Cursor im Text → altes Wort-/Zahlenverhalten.
+   - Ganze Ebene (auch davor): `shift_level_next/prev` auf **`<C-S-y>`/`<C-S-x>`** und Alias
+     **`<leader>c+`/`<leader>c-`** (Terminal liefert `<C-S-y>` nur mit kitty-Protokoll/modifyOtherKeys
+     unabhängig von `<C-y>`; das Leader-Alias geht überall). `g<C-a>`-Fallback wurde **nicht** gebaut.
+   - Ziffern bis 0, Buchstaben/Römisch durch ihre Folge (Case bleibt, mehrdeutige c/d/i/l/m/v/x je Lauf
+     aufgelöst); außerhalb des Bereichs ändert sich nichts + Hinweis. `lists.features.shift` schaltet beides.
+   - Verifiziert mit der **echten Config** und echten Tasten (`feedkeys`): `<C-x>` auf `2.`, `3<C-y>`,
+     `<leader>c+` + `.`, `<C-y>` auf der `3` im Text.
+   - Offen/Annahme: „Ebene" = gleiche Einrückung im selben Block (verschachtelte Unterlisten zählen nicht).
+     Nicht geprüft: ob dein Terminal (WezTerm?) `<C-S-y>` sendet — sonst `<leader>c+`/`c-` nehmen.
 
 ## Fallen, die ich getroffen habe
 - **nvim-Config: Worktree vs. Haupt-Checkout.** Dieses Dokument liegt im Worktree
@@ -142,4 +143,6 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | casedesk.nvim | `dd58bc1` | feat(insert): `:Case insert asset` setzt den Cursor in den Link | – |
 | nvim-config | (Report) | docs: Report Markdown-Link-Einfügestellen | ✅ |
 | WKDBooks | `1afb268` | docs(roadmap): Message-Log + Recent-Popup + Live-Chips Konzept (3 Roadmaps) | ✅ |
+| cascade.nvim | `236ace2` | feat(lists): `<C-y>`/`<C-x>` auf Marker + Ebenen-Variante | – |
+| nvim-config | (Spec) | chore(specs): `lists.features.shift` | – |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
