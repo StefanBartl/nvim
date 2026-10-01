@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „pickers.nvim: Link einfügen (`<M-n>`/`MI`)".
+**Stand:** 2026-10-01, nach dem Task „T6 Picker-Feedback (Toast-zindex-Fix + Meldungen)".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -25,6 +25,7 @@ Repos liegen als Checkouts unter `E:\repos\<name>.nvim` (alle auf `main`).
 | T5a Helper | lib.nvim | `664667c`, `62c559a` | `lib.nvim.markdown.link_cursor` (`locate/place/insert/insert_links`, `setup`), `window.find_usable.previous_window` |
 | T5 gopath-API | gopath.nvim | `f1cfe5c` | `require("gopath").shorten_path(abs)` → `$VAR/rest` oder nil (+ Variablenname) |
 | T5b images | images.nvim | `242f3ed` | `:Image paste [env\|abs\|rel\|repos] [name]`, `paste.env_roots`, `paste.link_cursor`; Cursor nach Insert in den Alt-Text + Insert-Modus |
+| T6 Toast-zindex + Feedback | ui.nvim, lib.nvim, pickers.nvim | `a1574ca`, `360a137`, `6e34dcf` | Ursache: Toast zindex 50 < snacks 52/54; Fix + Meldungen in `:messages` |
 | T5c pickers insert | pickers.nvim | `7fbd2aa` | `keys.markdown_link_insert` (`<M-n>`/`MI`, fzf `alt-n`): Einträge als Links ins Fenster hinter dem Picker, Cursor in den Link; `link_insert = { path, cursor }` |
 | T5c filetree `MI` | filetree.nvim | `9a0e0dc` | `MI` / `:Filetree mdlink insert`: Marks (sonst aktueller Node) als Links ins vorherige Fenster, Cursor in den ersten Link + Insert; `insert_path` = buffer (Default) / cwd / absolute / env, `env_roots`, `cursor` |
 | T5c markdown wrap | markdown.nvim | `19fabae` | `wrap_link` nutzt den Helper; `links.cursor` (`enable/startinsert/path_cursor`) |
@@ -48,15 +49,16 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    der Test `keys: no default direct lhs shadows an engine default` fängt das), neues Modul
    `entry_actions/link_insert.lua`, `link_insert = { path, cursor }` in der Config, alle 3 Adapter.
    Schließt den Picker, fügt per `vim.schedule` ein.
-3. **T6 Picker-Feedback** (Nutzer: „mach es so, dass du dir sicher sein kannst, dass es klappt";
-   Meldungen über lib.nvim/ui.nvim-Module ausgeben wie filetree). Befund: `path_copy.run`
-   ruft `notify.info`, das bei ihm über `lib.nvim.notify` im Popup-Modus nur als **Toast
-   (zindex 50 = gleich wie Picker)** ankommt, nicht in `:messages`; Toast liegt vermutlich
-   unter dem snacks-Layout. Plan: `pickers.feedback.show(result, {engine, picker})` mit
-   Kanälen `{ "picker", "messages" }` (Default): Titel/Footer des snacks-Pickers kurz
-   ersetzen + `:messages`; Toast nur mit explizit höherem zindex. `path_copy.run` soll
-   `{ ok, fmt, count, preview }` zurückgeben. **Erst in echter TUI reproduzieren**
-   (Headless kann snacks nicht bedienen), dann bauen.
+3. ~~T6 Picker-Feedback~~ — **erledigt**. **Ursache gefunden und im echten snacks-Picker
+   headless reproduziert/verifiziert** (Skript-Muster: `Snacks.picker.files{}` öffnen,
+   `Snacks.picker.get()[1]:action("copy_env_rooted")`, Fenster + zindex dumpen — geht in
+   `nvim --headless` mit der echten Config): Toast hatte `zindex 50`, snacks-Layout 52, dessen
+   Fenster 54 → Toast lag **unter** dem Picker. Fix an der Wurzel: `ui.kit.toast` nutzt jetzt
+   `theme.zindex.toast` (70) — ui.nvim `a1574ca`, lib.nvim-Spiegel `360a137`. Dazu pickers
+   `6e34dcf`: Erfolgsmeldungen `copied [fmt] …` / `opened x` / `inserted N markdown link(s)` über
+   `lib.nvim.notify` mit `messages = true` (landen auch in `:messages`, wie filetree), Test
+   „feedback". Der ursprünglich geplante `pickers.feedback`-Titel-Kanal wurde **nicht** gebaut
+   (nicht nötig; bei Bedarf Titel/Footer des snacks-Pickers als zusätzlicher Kanal).
 4. **`:Clipboard reports|handovers`** in der nvim-Config: `lua/bindings/usrcmds/clipboard/`
    (Muster `context_open/`, `composer.verb`), **keine Keymap** (bestätigt).
 5. **Personal-Spec nachziehen** (`lua/plugins/personal/specs/*.lua`, kommentierte volle Optionen,
@@ -124,4 +126,7 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | lib.nvim | `62c559a` | feat: insert_links, previous_window | – |
 | filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | – |
 | pickers.nvim | `7fbd2aa` | feat(entry_actions): Links ins Fenster hinter dem Picker einfügen | – |
+| ui.nvim | `a1574ca` | fix(toast): theme zindex.toast (70), Toast lag unter snacks-Pickern | – |
+| lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | – |
+| pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | – |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
