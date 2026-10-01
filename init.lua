@@ -32,19 +32,19 @@ vim.opt.rtp:prepend(lazypath)
 -- require config modules that use lib.* already during the spec-import phase of
 -- lazy.setup(). It must therefore be on the runtimepath BEFORE the specs are
 -- imported, so we bootstrap it the same way as lazy.nvim itself. The lazy spec
--- in plugins/personal/init.lua keeps it updatable; this only guarantees early
+-- in plugins/personal/specs/foundation.lua keeps it updatable; this only guarantees early
 -- availability.
 --
--- Must resolve to the same dir plugins/personal/source.lua's resolve() will
+-- Must resolve to the same dir plugins/personal/core/source.lua's resolve() will
 -- later assign to the "StefanBartl/lib.nvim" spec (local repos checkout when
 -- present, else lazy's managed dir). Otherwise lazy sees the plugin's `dir`
 -- change after it's already on the runtimepath and errors ("changed dir ...
 -- already partially loaded") on every startup.
-local libpath = require("plugins.personal.utils").local_dev("lib.nvim")
+local libpath = require("plugins.personal.core.utils").local_dev("lib.nvim")
   or (vim.fn.stdpath("data") .. "/lazy/lib.nvim")
 -- No clone fallback like lib.nvim's below: lsp.nvim is not required before
 -- lazy runs, so lazy can fetch it itself if the local checkout is absent.
-local lsppath = require("plugins.personal.utils").local_dev("lsp.nvim")
+local lsppath = require("plugins.personal.core.utils").local_dev("lsp.nvim")
   or (vim.fn.stdpath("data") .. "/lazy/lsp.nvim")
 if not vim.uv.fs_stat(libpath) then
   vim.fn.system({
@@ -77,12 +77,12 @@ require("lazy").setup({
   -- can register a dir-less fragment (defaulting to lazy's managed dir)
   -- before plugins/personal/init.lua's dir-overriding fragment is merged in,
   -- which trips lazy's "changed dir ... already partially loaded" error.
-  -- plugins/personal/init.lua still owns the full spec (lazy=false,
+  -- plugins/personal/specs/foundation.lua still owns the full spec (lazy=false,
   -- priority, config); this only pins `dir` early enough to avoid the race.
   { "StefanBartl/lib.nvim", dir = libpath },
   -- Same reason as lib.nvim above, one step further: `import` makes lazy
   -- `require("lsp.pack")` while it is still collecting specs, so the plugin's
-  -- `dir` has to be known by then. plugins/personal/init.lua still owns the
+  -- `dir` has to be known by then. plugins/personal/specs/inspect.lua still owns the
   -- full spec (lazy = false, priority); this pins `dir` early enough and adds
   -- the import that installs the LSP ecosystem.
   { "StefanBartl/lsp.nvim", dir = lsppath, import = "lsp.pack" },
@@ -110,7 +110,7 @@ local startup = require("startup")
 startup.setup_usercmds()
 require("bindings.usrcmds.plugin_repos").enable()
 -- :DocMapAll and :RATelemetry* live in documentation.nvim / runtime-analysis
--- .nvim themselves; see plugins/personal/init.lua's opts.generate_all for the
+-- .nvim themselves; see plugins/personal/specs/project.lua's opts.generate_all for the
 -- data this config supplies them.
 
 -- --- synchronous ------------------------------------------------------------
@@ -183,7 +183,7 @@ vim.env.LUA_LS_PROFILE = "normal" -- "minimal"|"normal"|"full"
 ---   a nil the reader would have to guard.
 ---@type LspNvim.PersonalNames.Reader
 local personal_name_labels = function()
-  local entries = require("plugins.personal.list").read() or {}
+  local entries = require("plugins.personal.core.list").read() or {}
   ---@type LspNvim.PersonalNames.Entry[]
   local out = {}
   for _, entry in ipairs(entries) do
@@ -291,7 +291,7 @@ end)
 -- `:RATelemetry setup|full nvim-config` re-wraps on demand.
 
 -- DAP setup (adapters, launch configs, UI, keymaps) lives in
--- StefanBartl/dap.nvim, loaded via lua/plugins/personal/init.lua (event =
+-- StefanBartl/dap.nvim, loaded via lua/plugins/personal/specs/inspect.lua (event =
 -- "VeryLazy").
 
 -- Show startup time

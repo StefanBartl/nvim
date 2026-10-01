@@ -34,7 +34,7 @@ end
 local function plugin_sheet_path(name)
   local candidates = {}
 
-  local ok, personal_utils = pcall(require, "plugins.personal.utils")
+  local ok, personal_utils = pcall(require, "plugins.personal.core.utils")
   if ok then
     local dev = personal_utils.local_dev(name)
     if dev then
@@ -75,14 +75,14 @@ end
 ---@return Bindings.PluginSheet[]|nil
 ---@return string|nil reason
 function M.plugin_sheets()
-  local ok, list = pcall(require, "plugins.personal.list")
+  local ok, list = pcall(require, "plugins.personal.core.list")
   if not ok then
-    return nil, "plugins.personal.list not loadable: " .. tostring(list)
+    return nil, "plugins.personal.core.list not loadable: " .. tostring(list)
   end
 
   local entries, err = list.read()
   if not entries then
-    return nil, err or "plugins.personal.list.read() returned nothing"
+    return nil, err or "plugins.personal.core.list.read() returned nothing"
   end
 
   local out = {}
@@ -145,7 +145,7 @@ end
 
 ---@alias Bindings.RepoResolver fun(): Bindings.RepoDir[]|nil, string|nil
 
---- Default resolution: `plugins.personal.export` already yields exactly
+--- Default resolution: `plugins.personal.core.export` already yields exactly
 --- `{ name, repo, dir }` per enabled personal plugin with a local checkout,
 --- derived from the real lazy spec, not a hand-kept list.
 ---
@@ -154,9 +154,9 @@ end
 --- reads like one where the axis found nothing.
 ---@type Bindings.RepoResolver
 local function default_repo_dirs()
-  local ok, export = pcall(require, "plugins.personal.export")
+  local ok, export = pcall(require, "plugins.personal.core.export")
   if not ok then
-    return nil, "plugins.personal.export not loadable: " .. tostring(export)
+    return nil, "plugins.personal.core.export not loadable: " .. tostring(export)
   end
 
   local projects, err = export.projects()

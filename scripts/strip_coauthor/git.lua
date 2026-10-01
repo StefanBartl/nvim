@@ -6,7 +6,7 @@
 ---
 --- Not on the runtimepath: `scripts/strip_coauthor.lua` loads this file with
 --- `dofile`, so it must not `require` anything from this config's own modules
---- other than `plugins.personal.list`.
+--- other than `plugins.personal.core.list`.
 ---
 --- **Why `commit-tree` + `update-ref` and not a rebase.** Every affected
 --- commit is rebuilt object by object and the branch refs are moved by hand.
@@ -109,7 +109,7 @@ end
 
 ---Every repository this command knows about: the config itself, plus every
 ---personal plugin that is actually checked out under `base_dir`. The plugin
----list comes from `plugins.personal.list`, so a plugin added to the spec is
+---list comes from `plugins.personal.core.list`, so a plugin added to the spec is
 ---covered from then on without editing anything here.
 ---@param base_dir string|nil Already resolved (see `M.resolve_base_dir`), or nil.
 ---@return { name: string, path: string }[]
@@ -125,7 +125,7 @@ function M.repos(base_dir)
     return out
   end
 
-  local entries = require("plugins.personal.list").read() or {}
+  local entries = require("plugins.personal.core.list").read() or {}
   for _, entry in ipairs(entries) do
     local path = base_dir .. "/" .. entry.name
     if loop.fs_stat(path) and M.is_git_repo(path) then

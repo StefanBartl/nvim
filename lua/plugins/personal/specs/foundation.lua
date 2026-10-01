@@ -1,0 +1,452 @@
+---@module 'plugins.personal.specs.foundation'
+--- Personal plugin specs: Foundation.
+---
+--- The shared library and the option/highlight/diagnostics layer everything else stands on.
+---
+--- Category names follow the plugin website's registry
+--- (wkd/src/data/registry.json). Source control -- local vs. remote vs.
+--- disabled -- is NOT decided here but in plugins.personal.core.source; this
+--- file only declares the specs. Registered from plugins/personal/init.lua.
+
+---@type LazyPluginSpec[]
+return {
+  {
+    "StefanBartl/lib.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      -- lib.config -- which aggregator `require("lib")` uses. Not called here;
+      -- it would have to run before the first `require("lib")` anywhere.
+      -- require("lib.config").setup({
+      --   -- "metatable" = per-key proxy, a submodule loads on first access;
+      --   -- "lazy" = eager key registry, submodules load on first access;
+      --   -- "eager" = every submodule is required up-front.
+      --   -- strategy = "metatable",
+      -- })
+
+      -- NOTE: helptags could be generated generically and the usrcmds set up
+      -- as normal user config instead of this dedicated setup() call.
+      require("lib.nvim_usrcmds").setup({
+        -- Regenerate helptags for all plugins after lazy.nvim installs/updates/syncs
+        -- (not on every start) and register `:Lib helptags`.
+        -- Default: true (equals the default, set explicitly to keep it on).
+        helptags = true,
+        -- Register `:CwdHere` (set the local cwd to the current buffer's directory)
+        -- and `:Lib cwd-here`.
+        -- Default: true (equals the default, set explicitly to keep it on).
+        cwd_here = true,
+        -- Register `:PowershellProfile` (open the active PowerShell profile in
+        -- Neovim) and `:Lib ps-profile`. Forced on here so it is also available
+        -- on machines where the default would be false.
+        -- Default: true on Windows, false elsewhere.
+        powershell_profile = true,
+        -- Register the unified `:Lib` verb (cwd-here | ps-profile | helptags ...)
+        -- with completion. false drops the verb but keeps the flat commands.
+        -- lib_verb = true,
+        -- Add `:Lib deps show|install <plugin>` (inspect/install a plugin's
+        -- declared external tools). Requires `lib_verb`.
+        -- deps = true,
+      })
+
+      -- Repeat the last real command (mapping or native change), skipping pure
+      -- motions. Experimental and off unless asked for, because the tracker
+      -- sees every keypress of the session.
+      require("lib.nvim.lastcmd").setup({
+        -- true = on at the default trigger `<M-.>`, a string = on at that lhs,
+        -- nil/false = off (and undoes an earlier setup). Set to true here so the
+        -- default trigger is bound.
+        -- Default: nil (off).
+        experimental = true,
+        -- Extra mapped lhs values (in `keytrans` notation) to treat as motions,
+        -- i.e. never record as "the last command".
+        -- ignore = {}, -- string[]
+        -- false drops the built-in motion denylist (h/j/k/l, w/b/e, gg/G, ...).
+        -- motions = true,
+      })
+
+      -- Global default: every lib.nvim.notify consumer shows a non-focus-stealing
+      -- corner toast (with history) instead of the plain `vim.notify`
+      -- more-prompt, without the consumers changing anything. A notifier that
+      -- sets `popup` itself in `create()` keeps its own choice.
+      -- Default: false (plain `vim.notify`).
+      require("lib.nvim.notify").setup({ popup = true })
+
+      require("lib.nvim.notify.popup").setup({
+        -- Also write every message to real `:messages`. That always briefly
+        -- echoes it at the bottom, so it stays off: a toast is not followed by
+        -- an echo flash. The popup history (`:Lib notify last|history|clear`)
+        -- always holds the full text, whatever this says.
+        -- messages = false,
+        -- Toast line cap.
+        -- max_lines = 12,
+        -- Toast wrap width in columns. nil = follow the chip's own text budget
+        -- (`ui.kit.toast.inner_width()`: the chip width minus border and padding).
+        -- Default: nil.
+        -- width = nil,
+        -- Size of the corner chip itself (forwarded to `ui.kit.toast.setup`,
+        -- needs ui.nvim): as wide as its text plus padding, at least `min_width`
+        -- (a short message still gets a chip about this wide), at most `width`;
+        -- columns or "NN%" of the editor width, both re-evaluated on resize.
+        -- Default: { width = "40%", min_width = 40, padding = 1 }.
+        -- toast = { width = "40%", min_width = 40, padding = 1 },
+        -- Bytes of a message considered when wrapping the toast; only the head of
+        -- a huge message is ever shown there.
+        -- toast_max_bytes = 4000,
+        -- Bytes kept per history entry.
+        -- entry_max_bytes = 64 * 1024,
+        -- Messages below this vim.log.levels value are recorded in the history
+        -- only and never become a toast. Keeps chatty INFO-level plugins (e.g.
+        -- lsp.nvim) from spamming the corner -- a message below it still lands
+        -- in the history.
+        -- Default: vim.log.levels.INFO (equals the default, set explicitly
+        -- to make the threshold visible here).
+        toast_min_level = vim.log.levels.INFO,
+        -- Per-level toast lifetime in ms, merged over the built-in values
+        -- (TRACE/DEBUG 3000, INFO 4000, WARN 6000, ERROR 10000).
+        -- timeouts = {}, -- table<integer, integer>, e.g. [vim.log.levels.WARN] = 8000
+        -- `show_history()` shows entries in full instead of collapsed to `max_lines`
+        -- (toggle in the history buffer with `<C-s>`).
+        -- history_full = false,
+      })
+
+      -- No keymap for `expand_last()`/`toggle_full()`: `:Lib notify
+      -- last|history|clear` cover it, and the history buffer has its own
+      -- buffer-local `<C-s>` (see lib.nvim's docs/BINDINGS.md).
+    end,
+  },
+
+  {
+    -- The declarative option set, the highlight features, the editor-option
+    -- toggles, italic keywords and per-filetype indentation.
+    --
+    -- PRIVATE repo (unlike the other personal plugins). See source.lua's mode
+    -- entry for what that means on a machine that resolves to "remote".
+    --
+    -- No `opts`/`config` on purpose: init.lua calls setup() inside
+    -- startup.now("my", ...) because the highlight groups must land before the
+    -- first paint and vim.diagnostic.config() before the first LSP attach. A
+    -- lazy opts block would hand that ordering to the plugin manager.
+    -- `lazy = false` only guarantees the module is on the runtimepath by then.
+    "StefanBartl/my.nvim",
+    lazy = false,
+    priority = 900,
+    dependencies = { "StefanBartl/lib.nvim" },
+    --
+    -- OPTION REFERENCE (comment only, nothing here is executed).
+    -- The options go to `require("my").setup({...})` in init.lua (phase
+    -- startup.now("my", ...)), not to this spec.
+    --
+    -- Currently set in init.lua: declarative = true, highlights = true,
+    -- options = true, italic_keywords = true, indent_per_ft = true
+    -- (all equal to their default, written out explicitly there).
+    --
+    -- Part 1 -- arguments of require("my").setup(). Every subsystem is on
+    -- unless set to false; an unknown key or a mistyped boolean is reported
+    -- and ignored.
+    --
+    -- {
+    --   -- The flat `vim.opt` set (appearance, clipboard, indentation, search,
+    --   -- folding, latency, undo, wildignore) plus platform shell/clipboard.
+    --   -- Set in init.lua.
+    --   declarative = true,
+    --   -- hl_config: every visual feature and its highlight groups (Part 2).
+    --   -- Set in init.lua.
+    --   highlights = true,
+    --   -- options_config: matchparen, guicursor, cursorline defaults (Part 2).
+    --   -- Set in init.lua.
+    --   options = true,
+    --   -- Italicize language keywords, per filetype. Set in init.lua.
+    --   italic_keywords = true,
+    --   -- Indentation width per filetype. false = off; a table is merged over
+    --   -- the shipped widths (additive). Set in init.lua as `true`.
+    --   indent_per_ft = true,
+    --   -- indent_per_ft = {
+    --   --   -- Width for a filetype the table does not list.
+    --   --   default_width = 2,
+    --   --   -- Per filetype: an integer width, or { width = N, expandtab = false }.
+    --   --   filetypes = {
+    --   --     lua = 2, markdown = 2, javascript = 2, typescript = 2, css = 2, html = 2,
+    --   --     python = 4, java = 4, rust = 4, c = 4, cpp = 4,
+    --   --     go = { width = 4, expandtab = false },
+    --   --     make = { width = 4, expandtab = false },
+    --   --   },
+    --   -- },
+    --   -- Profile `diffopt` is built from at startup (passed through to
+    --   -- `declarative`): "minimal" | "context" | "review" | "strict".
+    --   -- diff_profile = "review",
+    --   -- Per-buffer line-number mode (passed through to `declarative`).
+    --   -- line_numbers = true,
+    --   -- Per-action keymap overrides, keyed by action name. false = bind nothing.
+    --   -- keymaps = {
+    --   --   -- false binds nothing at all.
+    --   --   preset = true,
+    --   --   -- Cycle the diff profile.
+    --   --   diff_profile = "<leader>od",
+    --   --   -- Toggle the cursorline highlight.
+    --   --   toggle_cursorline = "<leader>oh",
+    --   -- },
+    --   -- How the diagnostic look reaches vim.diagnostic.config(): "auto" =
+    --   -- contribute to lsp.nvim when present, apply directly otherwise;
+    --   -- true = always apply directly; false = never touch it.
+    --   -- diagnostics = "auto",
+    --   -- Opt-in: persist `:My hl/opt set` overrides to stdpath("data") and
+    --   -- restore them at setup(). An omitted key means off.
+    --   -- persist_overrides = false,
+    -- }
+    --
+    -- Part 2 -- the live registry (config/data/*.lua). NOT setup() arguments:
+    -- these are changed at runtime with `:My hl set <key> <value>` /
+    -- `:My opt set <key> <value>` (or require("my").set), and kept across
+    -- restarts with `persist_overrides = true`. `skip` is read-only at
+    -- runtime. Lists are shown in full; `:My hl set` can change an item, never
+    -- a list's length.
+    --
+    -- highlight = {
+    --   -- CursorLine in the active window (per-mode variants with
+    --   -- enable_insert_submode_colors).
+    --   enable_line = true,
+    --   -- Vertical cursorcolumn guide; suppressed above min_colored_file_kb.
+    --   enable_column = true,
+    --   -- Re-apply all custom groups after a :colorscheme change.
+    --   color_persist = true,
+    --   -- Map guicursor to the Cursor* groups (per-mode with enable_insert_submode_colors).
+    --   map_cursor_to_hl = true,
+    --   -- Size in KiB above which column-tinted visuals are suppressed.
+    --   min_colored_file_kb = 4096,
+    --
+    --   -- Highlight the current indent-scoped block in the viewport (IndentScope).
+    --   enable_indent_scope = false,
+    --
+    --   -- Flash yanked / pasted regions (YankFlash / PutFlash).
+    --   enable_yank_flash = true,
+    --   enable_put_flash = true,
+    --   -- Install the p/P mappings enable_put_flash needs.
+    --   map_put_flash = true,
+    --   -- Tint the SignColumn by the worst diagnostic severity (SignCol*).
+    --   enable_signcolumn_tint = true,
+    --   -- Unify terminal buffer visuals with the theme (TermNormal/TermCursorLine).
+    --   enable_terminal_palette = true,
+    --   -- Per-mode CursorLine tints (CursorLineN/I/V/R) and cursor faces.
+    --   enable_insert_submode_colors = true,
+    --
+    --   -- Underline the word under the cursor (CursorWord), outside Insert mode.
+    --   enable_current_word = true,
+    --   -- Highlight the other occurrences of <cword>.
+    --   cword_occurrences = {
+    --     -- Master switch.
+    --     enabled = true,
+    --     -- "highlight"|"underline"|"undercurl"|"underdouble"|"underdotted"|"underdashed"
+    --     render = "underdashed",
+    --     -- Special colour (`sp`) for the underline renders.
+    --     underline_color = "#5FB0FC",
+    --     -- Always include a plain underline in the underline renders.
+    --     force_plain_underline = true,
+    --     -- Slice of the word to render: "leadingchar"|"word"|"tailchar"|"firstn".
+    --     marking = "word",
+    --     -- Leading bytes to render when marking = "firstn".
+    --     first_n = 1,
+    --     -- Restrict to the visible lines.
+    --     viewport_only = true,
+    --     -- Minimum <cword> length.
+    --     min_len = 2,
+    --     -- Legacy smart-case flag (see case_mode).
+    --     smart_case = true,
+    --     -- "smart"|"sensitive"|"insensitive".
+    --     case_mode = "sensitive",
+    --     -- "exact"|"substring".
+    --     match_kind = "exact",
+    --     -- Keep the decorations in Insert mode.
+    --     in_insert = false,
+    --     -- Highlight group for full-word slices / for partial slices.
+    --     hl = "CwordOccur",
+    --     hl_lead = "CwordOccurLead",
+    --     -- Fallback attributes for those two groups.
+    --     hl_attr = { bg = "#334155" },
+    --     hl_lead_attr = { bg = "#475569" },
+    --     -- Extmark priority and debounce interval in ms.
+    --     priority = 9,
+    --     debounce_ms = 40,
+    --     -- Per-feature override of the global large_file_kb guard.
+    --     large_file_kb = nil, -- integer|nil
+    --   },
+    --
+    --   -- Colour literals (#rrggbb, #rgb, rgb()/hsl(), CSS names) painted in their
+    --   -- own colour, on the visible lines only.
+    --   color_codes = {
+    --     enabled = true,
+    --     -- "background" (swatch behind the text), "foreground", or "virtual"
+    --     -- (a `virtual_text` glyph after the literal).
+    --     mode = "background",
+    --     -- The glyph mode = "virtual" inserts.
+    --     virtual_text = "■",
+    --     -- `#rgb` / `#rrggbb` / `#rrggbbaa`.
+    --     hex = true,
+    --     -- `rgb()` / `rgba()` / `hsl()` / `hsla()`.
+    --     css = true,
+    --     -- CSS colour names: true = every filetype, a list = only these, false = never.
+    --     names = { "css", "scss", "sass", "less", "stylus", "html", "vue", "svelte", "astro" },
+    --     -- Only these filetypes; nil = every filetype the skip rules allow.
+    --     filetypes = nil, -- string[]|nil
+    --     exclude_filetypes = {},
+    --     -- Scan the visible lines only (recommended).
+    --     viewport_only = true,
+    --     debounce_ms = 60,
+    --     -- Extmark priority.
+    --     priority = 100,
+    --     -- Per-feature override of the global large_file_kb guard.
+    --     large_file_kb = nil, -- integer|nil
+    --   },
+    --
+    --   -- Global guard for expensive visuals (e.g. indent scope), in KiB.
+    --   large_file_kb = 5000,
+    --
+    --   -- Winbar breadcrumbs (repo-relative path plus optional symbol trail).
+    --   enable_breadcrumbs = false,
+    --   -- Who writes `vim.wo.winbar`: "auto" = hand the line to ui.nvim when
+    --   -- present, write directly otherwise; true = always directly; false = never.
+    --   winbar_mode = "auto",
+    --   -- Longer strings are middle-ellipsized.
+    --   breadcrumbs_max_len = 120,
+    --   -- Separator used verbatim (wins over breadcrumbs_nerd_hex when non-empty).
+    --   breadcrumbs_separator = nil, -- string|nil
+    --   -- Nerd Font glyph codepoint (hex) for the separator; needs vim.g.have_nerd_font.
+    --   breadcrumbs_nerd_hex = "f0058",
+    --
+    --   -- How the symbol trail is built.
+    --   breadcrumbs_ctx = {
+    --     -- No consumer found in the plugin's code (appears unused).
+    --     lua_table_root = {
+    --       enable = true,
+    --       mode = "only",
+    --     },
+    --     -- Prefix the owner inside literals / on member access (`M.run`, `obj.save`).
+    --     prefer_owner_in_literals = true,
+    --     prefer_owner_on_member_access = true,
+    --     -- Collapse adjacent duplicate container segments.
+    --     dedupe_containers = true,
+    --     -- Prefer the LSP documentSymbol trail (old key `prefer_lsp_function` is an alias).
+    --     prefer_lsp_symbols = true,
+    --     -- Wait after the last triggering event before the documentSymbol request.
+    --     lsp_debounce_ms = 250,
+    --     -- Events after which the symbol cache is refreshed (a list, shown in full).
+    --     lsp_update_events = { "BufEnter", "CursorHold", "CursorHoldI", "InsertLeave", "TextChanged", "LspAttach" },
+    --     -- Build the symbol path via Tree-sitter.
+    --     use_treesitter_symbol = true,
+    --     -- Currently has no effect on the live pipeline (gates a provider nothing calls).
+    --     use_container_chain = true,
+    --     -- Fallbacks when no symbol is found: the owner object, then <cword>.
+    --     fallback_object_when_empty = true,
+    --     fallback_word_when_empty = true,
+    --     -- Enable the language-specific providers.
+    --     use_lang_specific = true,
+    --     -- Debug probe only: join string and max depth of container segments.
+    --     container_join = ".",
+    --     container_max_depth = 2,
+    --     -- Provider execution order (a list, shown in full).
+    --     providers_order = { "lsp_symbols", "ts_symbol", "lang_extra", "word" },
+    --   },
+    --
+    --   -- Highlight groups painted by the features above (attrs as nvim_set_hl).
+    --   colors = {
+    --     CursorLine = { bg = "#2a2e36" }, CursorColumn = { bg = "#2a2e36" },
+    --     CursorLineNr = { fg = "#ffd75f", bold = true }, LineNrDim = { fg = "#5a6374" },
+    --
+    --     -- Per-mode CursorLine tints: Normal, Insert, Visual, Replace.
+    --     CursorLineN = { bg = "#2a2e36" }, CursorLineI = { bg = "#24313a" },
+    --     CursorLineV = { bg = "#322b3a" }, CursorLineR = { bg = "#3a2323" },
+    --
+    --     -- Cursor faces used through guicursor.
+    --     Cursor = { bg = "#ff5f87", fg = "#1e1e1e" }, CursorNormal = { bg = "#ffcc00", fg = "#1e1e1e" },
+    --     CursorInsert = { bg = "#5fd7ff", fg = "#1e1e1e" }, CursorVisual = { bg = "#ff5f2a", fg = "#1e1e1e" },
+    --     CursorReplace = { bg = "#ff0000", fg = "#1e1e1e" },
+    --
+    --     YankFlash = { bg = "#3e5f2a" }, PutFlash = { bg = "#2a4d6b" },
+    --
+    --     -- SignColumn tints by worst severity.
+    --     SignColError = { bg = "#3a2323" }, SignColWarn = { bg = "#3a3623" },
+    --     SignColInfo = { bg = "#22333e" }, SignColHint = { bg = "#1f2f2a" },
+    --     SignColNeutral = { bg = "NONE" },
+    --
+    --     TermNormal = { bg = "#151a1f" }, TermCursorLine = { bg = "#20262d" },
+    --
+    --     CursorWord = { underline = true }, MatchParen = { bg = "#3b4048", bold = true },
+    --     IndentScope = { bg = "#2f3440" },
+    --   },
+    --
+    --   -- Windows where the winbar is suppressed.
+    --   winbar_skip = {
+    --     -- Skip when buftype ~= "".
+    --     only_normal_buffers = true,
+    --     -- Skip floating windows.
+    --     skip_floating = true,
+    --     -- Skip windows lower than this.
+    --     min_height = 2,
+    --     buftypes = { "nofile", "prompt", "terminal", "quickfix", "help", "acwrite" },
+    --     filetypes = {
+    --       "TelescopePrompt", "TelescopeResults", "fzf", "fzf-lua", "snacks_picker", "alpha",
+    --       "dashboard", "starter", "neo-tree", "neo-tree-popup", "NvimTree", "oil", "aerial",
+    --       "Outline", "trouble", "Trouble", "noice", "notify", "lazy", "mason", "LspInfo",
+    --       "fugitive", "fugitiveblame", "NeogitStatus", "octo", "git", "gitcommit", "lazygit",
+    --       "dapui_scopes", "dapui_breakpoints", "dapui_stacks", "dapui_watches", "dap-repl",
+    --       "dapui_console", "help", "man", "qf", "checkhealth", "undotree", "which-key",
+    --       "spectre_panel", "spectre_replace",
+    --     },
+    --     -- Lua patterns matched against the buffer name/path.
+    --     name_patterns = {
+    --       "^oil://", "^term://", "^man://", ".*[\\/]neo%-tree[\\/].*", ".*[\\/]NvimTree[\\/].*",
+    --       ".*[\\/]lazy[\\/].*", ".*[\\/]mason[\\/].*",
+    --     },
+    --   },
+    --
+    --   -- Buffers where indent-scope highlighting is skipped (same shape as winbar_skip).
+    --   indent_scope_skip = {
+    --     only_normal_buffers = true,
+    --     skip_floating = true,
+    --     buftypes = { "nofile", "prompt", "terminal", "quickfix", "help", "acwrite" },
+    --     filetypes = {
+    --       "neo-tree", "neo-tree-popup", "NvimTree", "oil", "fzf", "fzf-lua", "TelescopePrompt",
+    --       "TelescopeResults", "snacks_picker", "snacks_dashboard", "alpha", "dashboard",
+    --       "starter", "aerial", "Outline", "trouble", "Trouble", "noice", "notify", "lazy",
+    --       "mason", "LspInfo", "fugitive", "fugitiveblame", "NeogitStatus", "octo", "git",
+    --       "gitcommit", "lazygit", "dapui_scopes", "dapui_breakpoints", "dapui_stacks",
+    --       "dapui_watches", "dap-repl", "dapui_console", "help", "man", "qf", "checkhealth",
+    --       "which-key", "spectre_panel", "spectre_replace", "neo-term", "minipick",
+    --       "mini.files", "nvdash",
+    --     },
+    --     name_patterns = {
+    --       "^oil://", "^term://", "^man://", ".*[\\/]neo%-tree[\\/].*", ".*[\\/]NvimTree[\\/].*",
+    --       ".*[\\/]lazy[\\/].*", ".*[\\/]mason[\\/].*",
+    --     },
+    --   },
+    -- },
+    --
+    -- Editor option toggles that cooperate with the highlights (`:My opt ...`).
+    -- options = {
+    --   -- Matchparen blink of matching pairs (sets showmatch).
+    --   enable_matchparen = true,
+    --   -- Blink duration in tenths of a second (applied to 'matchtime').
+    --   matchtime_tenths = 2,
+    -- },
+    --
+    -- Buffers every highlight feature leaves alone (read-only at runtime).
+    -- The UI buftypes (nofile, prompt, help, quickfix, terminal) are always
+    -- checked first and are not configurable.
+    -- skip = {
+    --   filetypes = {
+    --     "neo-tree", "neo-tree-popup", "NvimTree", "oil", "fzf", "fzf-lua", "TelescopePrompt",
+    --     "TelescopeResults", "snacks_picker", "snacks_dashboard", "alpha", "dashboard",
+    --     "starter", "aerial", "Outline", "trouble", "Trouble", "noice", "notify", "lazy",
+    --     "mason", "LspInfo", "fugitive", "fugitiveblame", "NeogitStatus", "octo", "git",
+    --     "gitcommit", "lazygit", "dapui_scopes", "dapui_breakpoints", "dapui_stacks",
+    --     "dapui_watches", "dap-repl", "dapui_console", "help", "man", "qf", "checkhealth",
+    --     "which-key", "spectre_panel", "spectre_replace", "neo-term", "minipick", "mini.files",
+    --     "nvdash",
+    --   },
+    --   -- Lua patterns, unanchored (no leading/trailing `.*`).
+    --   name_patterns = {
+    --     "^oil://", "^term://", "^man://", "[\\/]neo%-tree[\\/]", "[\\/]NvimTree[\\/]",
+    --     "[\\/]lazy[\\/]", "[\\/]mason[\\/]",
+    --   },
+    -- },
+  },
+}

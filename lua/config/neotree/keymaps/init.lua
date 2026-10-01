@@ -5,7 +5,7 @@
 --- runs code of this config's own used to be in this table too, and each
 --- one has since moved into filetree.nvim, which binds it buffer-locally on
 --- FileType and always wins: `d` (trash), `x`/`c`/`p` (copy_move), `y`
---- (path_copy, aliased to it in plugins/personal/init.lua), `"`/`!`
+--- (path_copy, aliased to it in plugins/personal/specs/navigate.lua), `"`/`!`
 --- (source_switcher, 2026-09-19). What stays for such a key is a `noop`
 --- where neo-tree's own default would otherwise install a normal- or
 --- visual-mode map underneath filetree's.
@@ -30,7 +30,7 @@ return {
   --
   -- "noop" is checked before any map is installed, so it drops neo-tree's
   -- normal *and* visual map. filetree.nvim's path_copy then owns normal-mode
-  -- `y` (`keymap_abs = { "[a", "y" }` in plugins/personal/init.lua), and
+  -- `y` (`keymap_abs = { "[a", "y" }` in plugins/personal/specs/navigate.lua), and
   -- visual `y` falls back to the native yank, which reaches the system
   -- clipboard via 'clipboard' = unnamedplus.
   ["y"] = "noop",

@@ -186,7 +186,7 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
       run), unlike the three axes that probe a running session.
 
     The checkout list comes from `config.repo_dirs()`, whose default calls
-    `plugins.personal.export.projects()`; `config.set_repo_dirs()` replaces
+    `plugins.personal.core.export.projects()`; `config.set_repo_dirs()` replaces
     it (the tests use a fixture repo in a temp directory).
 
     ROOT={DIR} - ONE PATH INSTEAD OF THE PLUGIN LIST

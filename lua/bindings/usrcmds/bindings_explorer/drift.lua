@@ -81,8 +81,8 @@ local M = {}
 ---
 --- Four German-corpus headers are deliberately NOT added -- their cells are
 --- not keys, and admitting them would let unrelated text "document" a
---- binding: `Eintrag` (`Menu.md`, nvzone/menu labels), `Tab` (`Search.md`,
---- search.nvim tab names), `Modul` (`Snacks.md`, module names), `Vorschlag
+--- binding: `Eintrag` (`Menu.md`, nvzone/menu labels), `Tab` (the former
+--- `Search.md`, search.nvim tab names), `Modul` (`Snacks.md`, module names), `Vorschlag
 --- (README)` (`Gitsigns.md`, keys upstream merely suggests). Same reason
 --- `` `lhs` key `` (fileops.nvim.md) and `` `keymaps.<name>` `` (diff.nvim.md)
 --- stay out -- both name a config KEY, not a keystroke.
@@ -717,7 +717,7 @@ end
 --- itself.
 ---
 --- Derived, never hand-kept: `config.repo_dirs()` resolves the enabled
---- personal plugins from the lazy spec (see `plugins/personal/list.lua`'s
+--- personal plugins from the lazy spec (see `plugins/personal/core/list.lua`'s
 --- module doc on why the Markdown list was given up as a source).
 ---
 --- `nil` rather than an empty set when the resolution fails, and the caller

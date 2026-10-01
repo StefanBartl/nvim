@@ -23,57 +23,29 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     13:20       |    91% / 55%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     23:30       |    65% / 76%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    90% / 50%     |
 
 ---
 
--> Für die workstation passen die UI marks pinned nicht:
-Momentan:
-$REPOS_DIR/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
-$NVIM_CONFIG_DIR/lua/plugins/personal/init.lua
-$REPOS_DIR/WKDBooks/Spickzettel/spickzettel.md
+reposcope: Die Spec hat weder opts noch config, und nirgends wird require("reposcope") aufgerufen. setup() läuft also vermutlich nie, Keymaps und Befehle sind dann nicht gebunden. Das war schon vorher so. Links und Verweise: 0 tote Markdown-Links in den geänderten Dateien. Die Behauptung „reposcope setup() läuft nie“ in der Notiz habe ich nachgeprüft, sie stimmt und war schon vorher so.
 
-Bräuchte:
-$REPOS_DIR/WKDBook-Tricentis/ToDo-Collection/SAP_Support_ToDo.md
-$NVIM_CONFIG_DIR/docs/ROADMAP/ROADMAP.md
-$REPOS_DIR/WKDBooks/Spickzettel/spickzettel.md
-...
+sessions: chip.col_offset = -1 mit shape = "dock_left" könnte laut Doku auf rounded_chip zurückfallen. Ungeprüft.
 
-- markdown.nvim: wie im ![screesnhot](./assets/00_ROADMAP-1790770895.png) sichlich, wird bei `>` die zeile grün hinterelget, das passt auch, aber es sol im idealfall nur so breit sein, wie die breitrste zeile beschreiben sit; das soll amn als user in der installations spec auch setzenkönnen.
+pdfport: ollama_model = "qwen2.5-coder:7b" ist ein Coding-Modell, der Default llava ein Vision-Modell. Ist das gewollt?
 
-- [Senior Ausbildung](./$REPOS_DIR/WKDBook-Tricentis/Notes/Team/Tricentis-Meetings/Veit/300926.md) -> Markdown linka bekommen ein ./ beim specihern, das ist aeb suboptimal, denn damit wird e nicht mehr gefunden wenn vor der ENV var ein ./ ist
-
-ui.nvim/lib.nvim: der chip rechts oben für die notifys, der kann ruhig breiter dein, ich würde dagen probiren wir mal 40% nvim instnaz breite. das soll der usre auch eintsllen können, wieiviele cols/prozente
-
-images.nvim: :Image paste erzegt ei en markdown link, es wäre super, wenn dann der cursor gleich im titel tekl des markdownl inks steht und nicht am ende als nach dem link. das gilt eigentlich für jedes usrcmd, dass ein amrkdown link einfügt, wie in amrkdown.nvim oder in gfiletree,nvim bei den usrmcsd. bei filetre ist auch mit marks mehere link genreieren möglich auf einmal und einfügen, dann einfach im ersten link im titel. checke noch andere plugins auf binfings ab die makrdon links einfpgen. diese liste bitte auch als report in die nvim config docs/ROADMAP/repoerts schreiben.
-
-- casedesk.nvim: ![Beispiel error log](./Casedesk/assets/Beispiel_failed_login_errorlog.png) -> Aud so einen screenshot korrekte json herausholen + auswertung
-
-- image.nvim vs snipping tool icr funktoine
-
-- spotlight.nvim, wie mehrere hl machen, lernen! [note](../NOTES/Notes.md)
-
-- pickers pickers.nvim: die [e usw mappings funltieren, aber sie geben kein feedback ob man sie nun ausgeführt hat.. am besten ein output/notify
-
-- cascade: leader cf cg sind mit cascade.nvim vergeben
-
-- filetree.nvim: wenn ich mit x cutte und dann woander s paste, aber zb der folder in file explorer offen ist, dann zeigt er mir als notify an "cut" und dnan "pasted", aber er wurde gar nicht moved. also das wenn das gesperrt ist, dann sollte jendefalls eine ausgabe sein, damit ich das weiß und nicht übersehe, das er gar nicht moved ist
+Doku und Defaults: Mehrere Plugins haben widersprüchliche Angaben, etwa hover play_scale, filetree smart_create, emojis checkbox.default_set (wirkungslos) und mdview click_navigate. Die Liste steht in TOOLS/spec-full-options.md.
 
 - Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
 
-- nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
-
-- w3enn noice ersetzteen: popup per usrcmd/keymap (`<n/m/e`) das nr die meldungen der letzten 10 sekunden zeigt (einstellbar), wenn man mehr lesen will, ganz nach unten gehen, dann wird ein pfeil icon nach unten eingeblednet, wenn man nochmal unten eingibt, werden all e restichen messages/errors geladen)=
-
-
-
-im pickers.nvim a] usw..
+- spotlight.nvim, wie mehrere hl machen, lernen! [note](./$NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
 ---
 
 ## Claude Tasks
+
+- nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
 
@@ -86,7 +58,6 @@ im pickers.nvim a] usw..
 ### Generell
 
 ### wkd
-
 
 **Offene Tasks im wkd-Repo:**
   - **T2** — 38 knackige Kurzbeschreibungen für die Plugin-Kacheln schreiben (Technik fertig, wartet nur auf deinen Text).
@@ -109,6 +80,13 @@ im pickers.nvim a] usw..
 - Von welchen meiner `.nvim`-Plugins ist eine CLI-Version denkbar? `reposcope.nvim`, `gitsuite.nvim`,...
 
 - Jedes plugin ein eigener Kreuzfeature durchgang
+
+- Alle Plugins, die ein Window mit Cheatsheet haben, sollen die gleiche Strukut / Formatzierung ders CHeatsheets aufweißen:
+  - Gleiches Layout
+  - `?` und `q` beenden das Cheatsheets
+  - Neben Usrcmds können, wenn sinnvoll und nicht zu viele, auch uscmds angegeben werden (Vorbild: `filetree.nvim`)
+  - Die Bindings sollen in Kategorien eingeteilt werden, die in Pages angeordnet sind und über `Tab` erreichbar sind (Vorbild: `filetree.nvim`)
+  - Einiges deutet darauf hin, dass ein `lib.nvim ui.kit`-Cheatsheet Modul hilfreich sein könnte
 
 ---
 

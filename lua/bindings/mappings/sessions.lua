@@ -2,7 +2,7 @@
 --- sessions.nvim's marks keymaps, deferred to UIReady like every other
 --- module `bindings.mappings.setup()` pulls in -- rather than the eager
 --- `opts`/`config` sessions.nvim's own lazy.nvim spec runs at
---- (plugins/personal/init.lua), which is on the synchronous startup path
+--- (plugins/personal/specs/navigate.lua), which is on the synchronous startup path
 --- this config otherwise keeps keymap registration off of (see init.lua's
 --- UIReady phases). That spec sets `keymaps = false` to skip sessions.nvim's
 --- own (also eager) auto-attach; this module calls the same attach function
@@ -24,7 +24,7 @@ function M.setup()
   require("sessions.bindings.keymaps").attach({
     marks_menu = "<leader>hm",
     -- Capitalized, not `<leader>he`: that would be a strict prefix of the
-    -- already-bound `<leader>help` (plugins/personal/init.lua pickers `mappings`),
+    -- already-bound `<leader>help` (plugins/personal/specs/navigate.lua pickers `mappings`),
     -- forcing a `timeoutlen` wait on every press before Neovim can tell the
     -- two apart. Same bug class as the `<leader>ffk`/`<leader>ff` collision
     -- fixed in bindings/mappings/fzf.lua -- same fix, capitalize to break it.
@@ -45,8 +45,8 @@ function M.setup()
   -- of them, not just this one.
   --
   -- NOT <leader>sc: found live (adversarial review) that it is a strict
-  -- prefix of the already-bound <leader>s (plugins/telescope.lua, search.nvim's
-  -- tabbed UI) -- forcing a full timeoutlen wait on every plain <leader>s
+  -- prefix of the already-bound <leader>s (bindings/mappings/telescope.lua,
+  -- pickers.nvim's tabbed search, formerly search.nvim) -- forcing a full timeoutlen wait on every plain <leader>s
   -- press before Neovim could tell the two apart. Same bug class as the
   -- <leader>ffk/<leader>ff and <leader>hE/<leader>help fixes elsewhere in
   -- this config. <M-s> ("session") shares no prefix with anything and is
