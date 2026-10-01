@@ -265,6 +265,18 @@ Plan und Phasenstatus: `../handovers/wkd_FightingGame_Implementierungsplan.md`.
 - [ ] **Partikel beim Rematch:** das Match mit einem Treffer beenden, Rematch klicken — die
       Funken des letzten Schlags tauchen im neuen Match nicht wieder auf.
   - Notiz:
+- [ ] **Online nach langer Pause:** beide verbunden, 1 Minute auf der Kämpferauswahl oder
+      dem Ergebnisbildschirm sitzen, dann Match/Rematch starten — die Verbindung bleibt.
+      Gast-Tab beim Start in den Hintergrund legen: das Match wartet, der Host zeigt
+      „waiting for your friend", nach Rückkehr geht es mit „FIGHT!"-Banner und Sound los.
+  - Notiz:
+- [ ] **Code mit Tippfehler:** im Antwort- oder Einladungscode ein Zeichen ändern und
+      „Connect"/„Create reply" klicken — „not valid", die Einladung bleibt, der richtige
+      Code funktioniert danach.
+  - Notiz:
+- [ ] **Leertaste auf Buttons:** nach einem Match Tab auf „Rematch" oder „Disconnect", Space
+      löst sie aus (im laufenden Match bleibt Space der leichte Angriff).
+  - Notiz:
 - [ ] **Hover-Blip vor dem ersten Klick:** frisch geladene Seite, Maus über den Fight-Tab:
       kein Ton, auch nicht verspätet nach dem ersten Klick. Danach (nach einem Klick)
       funktioniert der Blip. Safari/iOS: Ton kommt nach Telefonat/Sperrbildschirm zurück.
