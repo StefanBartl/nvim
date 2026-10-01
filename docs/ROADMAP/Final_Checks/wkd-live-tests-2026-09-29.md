@@ -277,6 +277,25 @@ Plan und Phasenstatus: `../handovers/wkd_FightingGame_Implementierungsplan.md`.
 - [ ] **Leertaste auf Buttons:** nach einem Match Tab auf „Rematch" oder „Disconnect", Space
       löst sie aus (im laufenden Match bleibt Space der leichte Angriff).
   - Notiz:
+- [ ] **Schwierigkeitsgrad:** auf der Kämpferauswahl Easy / Normal / Hard (wird gemerkt,
+      Standard Normal). „Hard" ist der Gegner von vorher. Passt die Abstufung, passt Normal
+      als Standard?
+  - Notiz:
+- [ ] **Pause:** im Match gegen die KI `P` oder „Pause" — Bild steht, Uhr steht, „Paused"
+      mit Resume / Change fighter. Zu Grid und zurück: bleibt pausiert. Online gibt es weder
+      Pause noch „Change fighter".
+  - Notiz:
+- [ ] **K.O.-Ausklang:** beim K.O. fällt der Verlierer wirklich um, „K.O." fliegt ein, gut
+      eine Sekunde später kommt das Ergebnis („K.O. You win."), bei Zeitablauf „TIME" und
+      „Time up. …". Fühlt sich die Länge richtig an?
+  - Notiz:
+- [ ] **HUD und Treffer:** Namen über den Balken („You · Kenji"), Balken blinkt unter 25 %,
+      bei Treffern ruckt das Bild kurz. Zu viel, zu wenig?
+  - Notiz:
+- [ ] **Flüssigkeit:** Nacht-/Dämmerungs-Arena und Martial Hero auf einem 120/144-Hz-Display
+      oder einem schwachen Gerät — läuft es spürbar ruhiger als vorher? (Filter werden jetzt
+      einmal vorgerendert; echte Messung auf dem Gerät steht aus.)
+  - Notiz:
 - [ ] **Hover-Blip vor dem ersten Klick:** frisch geladene Seite, Maus über den Fight-Tab:
       kein Ton, auch nicht verspätet nach dem ersten Klick. Danach (nach einem Klick)
       funktioniert der Blip. Safari/iOS: Ton kommt nach Telefonat/Sperrbildschirm zurück.
