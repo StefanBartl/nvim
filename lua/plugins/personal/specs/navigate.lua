@@ -707,7 +707,10 @@ return {
           config_smart = "<leader>CF", -- smart grep+find in nvim config
           -- folder_smart = nil, -- smart grep+find in a picked folder
           -- Forces hidden + no_ignore + follow for this one search (= `:Pickers cwd files all`).
-          -- cwd_find_all = nil,
+          -- Was a direct ":Telescope find_files follow=true no_ignore=true hidden=true"
+          -- call in bindings/mappings/telescope.lua; engine-agnostic here instead
+          -- (2026-10-01, externe-plugins report §9.2).
+          cwd_find_all = "<leader>fa",
         },
 
         -- Declarative mappings surface: any pickers.builtins name, or any
@@ -744,6 +747,11 @@ return {
           man = { "<leader>sM", desc = "Man Pages" },
           help = { "<leader>help", desc = "Help Pages" },
           colorschemes = { "<leader>ch", desc = "Colorschemes" },
+          -- Were direct ":FzfLua quickfix"/"treesitter" calls in
+          -- bindings/mappings/fzf.lua, same lhs kept (2026-10-01, externe-plugins
+          -- report §9.2).
+          quickfix = { "<leader>fq", desc = "Quickfix" },
+          treesitter = { "<leader>ftf", desc = "Search Tree-sitter Symbols" },
           undo = { "<leader>UN", desc = "Undo History" },
           lsp_definitions = { "GD", desc = "Goto Definition" },
           lsp_declarations = { "gD", desc = "Goto Declaration" },

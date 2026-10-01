@@ -12,6 +12,8 @@ local M = {}
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
 
+  -- Telescope's own picker-of-pickers meta UI: no pickers.nvim equivalent
+  -- (nothing there lists "every picker"), stays a direct call.
   map("n", "<leader>ts", ":Telescope<CR>", { desc = "[Telescope] UI" })
   -- Grep with an own prompt first, then pickers.nvim's live grep in the cwd,
   -- seeded with what was typed (engine-agnostic: pickers.nvim picks telescope /
@@ -43,12 +45,10 @@ function M.setup()
     { desc = "[Pickers] Tabbed search (files/all/grep/buffers)" }
   )
 
-  map(
-    "n",
-    "<leader>fa",
-    "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
-    { desc = "[Telescope] Find All Files" }
-  )
+  -- <leader>fa moved to pickers.nvim's own opt-in `keymaps.cwd_find_all`
+  -- (plugins/personal/specs/navigate.lua): `:Pickers cwd files all` forces
+  -- the same hidden+no_ignore+follow flags, engine-agnostic instead of
+  -- telescope-only (2026-10-01, externe-plugins report §9.2).
 
   ---==== Telescope file browser extension mappings =====---
   -- <leader>. now belongs to pickers.nvim's own "explorer" builtin

@@ -49,10 +49,15 @@ davon — jede Zeile ist eine bewusste Config-Entscheidung.
 
 | Mapping | Aktion | Ziel | Status |
 |---|---|---|---|
-| `<leader>ts` | Telescope-Picker-Übersicht öffnen | `:Telescope` | [custom] |
+| `<leader>ts` | Telescope-Picker-Übersicht öffnen (keine `pickers.nvim`-Entsprechung, nichts dort listet "jeden Picker") | `:Telescope` | [custom] |
 | `<leader>tg` | Grep mit eigenem Prompt (`lib.nvim.ui.kit.input`), danach `pickers.nvim`-Live-Grep im CWD mit dem getippten Text vorbelegt (`pickers.command.handle({ "cwd", "grep" })`, Engine wählt pickers.nvim); nur ohne pickers.nvim Fallback auf `telescope.builtin.grep_string` | Lua-Funktion | [custom] |
-| `<leader>fa` | Find All Files (folgt Symlinks, `no_ignore`, `hidden`) | `:Telescope find_files follow=true no_ignore=true hidden=true` | [custom] |
 | `<leader>,` | File-Browser-Extension am aktuellen **CWD** öffnen (lädt `file_browser` bei Bedarf nach) | Lua-Funktion → `telescope.extensions.file_browser.file_browser({ path = vim.uv.cwd() })` | [custom] |
+
+**`<leader>fa` ist seit 2026-10-01 kein direkter Telescope-Call mehr**
+(externe-plugins-report §9.2): engine-agnostisch über `pickers.nvim`s
+eigenes opt-in `keymaps.cwd_find_all` (`plugins/personal/specs/navigate.lua`),
+Ziel `:Pickers cwd files all` — gleiche drei Flags (`hidden`/`no_ignore`/
+`follow`), aber nicht mehr telescope-only.
 
 Hinweis aus dem Quellcode: `<leader>.` gehört inzwischen `pickers.nvim`s
 eigenem engine-agnostischem `explorer`-Builtin (File-Browser "am aktuellen
