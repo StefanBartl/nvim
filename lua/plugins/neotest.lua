@@ -23,16 +23,6 @@ local TEST_FILES = {
   "test_*.cpp",
 }
 
----@return string[]
-local function test_file_events()
-  local events = {}
-  for _, pattern in ipairs(TEST_FILES) do
-    events[#events + 1] = "BufReadPost " .. pattern
-    events[#events + 1] = "BufNewFile " .. pattern
-  end
-  return events
-end
-
 return {
   {
     "nvim-neotest/neotest",
@@ -44,7 +34,32 @@ return {
     lazy = true,
     dependencies = require("config.neotest.init.dependencies"),
     cmd = require("config.neotest.init.cmd"),
-    event = test_file_events(),
+    -- The test-file trigger is an autocmd of its own instead of `event`: lazy's
+    -- event handler has no "after VimEnter" condition, so a test file that is a
+    -- command-line argument (or comes back with a session) loaded neotest inside
+    -- BufReadPost, ~190 ms before the first frame, and its auto-attach then ran
+    -- before the buffer's tests were discovered ("No tests found"). Opened later
+    -- the load is immediate; opened as part of startup it waits for VeryLazy.
+    init = function()
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+        group = vim.api.nvim_create_augroup("neotest_on_test_file", { clear = true }),
+        pattern = TEST_FILES,
+        once = true,
+        callback = function()
+          local function load()
+            require("lazy").load({ plugins = { "neotest" } })
+          end
+          if vim.v.vim_did_enter == 1 then
+            load()
+          else
+            vim.api.nvim_create_autocmd(
+              "User",
+              { pattern = "VeryLazy", once = true, callback = load }
+            )
+          end
+        end,
+      })
+    end,
     -- Stubs: lazy binds these at startup, the first press loads neotest and
     -- replays the key into the real mapping its config sets (same list, so
     -- the two cannot drift).
@@ -56,8 +71,11 @@ return {
       return keys
     end,
     -- (The `<leader>nt` group label is registered by bindings.mappings: it has
-    -- to be there before the first press, too, and an `init` here would
-    -- require lib.nvim before lazy has loaded it as a start plugin.)
+    -- to exist before the first press, so it cannot wait for this plugin's
+    -- config. `add_group` queues until which-key loads. The `init` above could
+    -- do it too -- lib.nvim is on the rtp from the init.lua bootstrap, as the
+    -- `keys` function relies on -- but that would run inside lazy.setup, before
+    -- the first frame, instead of in the UIReady mappings phase.)
 
     config = function()
       local neotest = require("neotest")

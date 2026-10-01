@@ -10,6 +10,23 @@
 
 local machine = require("machine")
 
+--- The compose file names sandbox.nvim knows (its `util.compose_file`) plus the
+--- usual variants (`docker-compose.override.yml`, `compose.prod.yaml`), as
+--- autocmd patterns. They are matched by name because Neovim gives them the
+--- plain filetype `yaml` -- there is no `yaml.docker-compose`.
+local COMPOSE_FILES =
+  { "compose.y*ml", "compose.*.y*ml", "docker-compose*.y*ml", "podman-compose*.y*ml" }
+
+---@return string[]
+local function compose_file_events()
+  local events = {}
+  for _, pattern in ipairs(COMPOSE_FILES) do
+    events[#events + 1] = "BufReadPost " .. pattern
+    events[#events + 1] = "BufNewFile " .. pattern
+  end
+  return events
+end
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -17,13 +34,19 @@ return {
     -- Its own triggers instead of VeryLazy, where it cost every start ~110 ms
     -- (six engine adapters, a PATH search per engine) for a plugin that
     -- registers no global key or autocmd: outside its own buffers it is the
-    -- `:Sandbox` command and a hover.nvim preview for image references, and
-    -- those live in Dockerfiles and compose files.
+    -- `:Sandbox` / `:Sbx` commands and a hover.nvim preview for image
+    -- references, and those live in Dockerfiles and compose files.
+    -- `yaml` is deliberately not a filetype trigger: it would load the plugin
+    -- (~110 ms, plus a second FileType round for every plugin) on the first CI
+    -- config or k8s manifest, where the plugin has nothing to offer.
     -- Trade-off: the preview itself is not filetype-bound, so an image
-    -- reference elsewhere (devcontainer.json, a shell script, Markdown) gets
-    -- it only once one of these triggers has loaded the plugin.
-    cmd = "Sandbox",
-    ft = { "dockerfile", "yaml", "yaml.docker-compose" },
+    -- reference elsewhere (k8s or workflow YAML, devcontainer.json, a shell
+    -- script, Markdown) gets it only once one of these triggers has loaded the
+    -- plugin. Likewise `:checkhealth sandbox` finds nothing until it is
+    -- loaded: run `:Sandbox engine get` first.
+    cmd = { "Sandbox", "Sbx" },
+    ft = "dockerfile",
+    event = compose_file_events(),
     -- ui.nvim: ui.contextmenu (right-click menu) and ui.kit (kit.input() prompts).
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     opts = {

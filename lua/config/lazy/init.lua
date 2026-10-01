@@ -20,6 +20,10 @@ local CHECK_EVERY = 3600 * 24 * 7
 ---seconds after startup. Nothing reads that list between two checks
 ---(`notify = false`, no statusline component), so the checker is switched on
 ---only for the session in which the fetch is due.
+---
+---lazy writes `last_check` when a check starts, not when it succeeds: a due
+---session that is offline, or quit during the fetch, still uses up the week.
+---`C` in `:Lazy` (or `:Lazy check`) refreshes by hand.
 ---@param frequency integer seconds
 ---@return boolean
 local function check_due(frequency)
@@ -29,7 +33,10 @@ local function check_due(frequency)
     local state = vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
     return tonumber(state.checker.last_check)
   end)
-  return os.time() - (ok and last or 0) >= frequency
+  -- A negative age is a `last_check` in the future (the clock was set ahead
+  -- once): it would read as "checked a moment ago" until the clock catches up.
+  local age = os.time() - (ok and last or 0)
+  return age < 0 or age >= frequency
 end
 
 return {
