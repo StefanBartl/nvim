@@ -90,6 +90,17 @@ und `sandbox.nvim` eigene Auslöser bekommen haben, ≈ 350 ms. Daraus folgt:
    vor `VeryLazy` (`UIEnter` + `vim.schedule`). Ein Plugin auf `VeryLazy`
    überschreibt also ein gleichnamiges Mapping aus der `mappings`-Phase, nicht
    umgekehrt (gemessen: ≈ 505 ms gegen ≈ 550 ms).
+5. **`event`-Auslöser kennen kein „nach dem Start".** `BufReadPost` und Co.
+   feuern auch für eine Datei, die beim Start geöffnet wird (Argument, Session):
+   das Plugin lädt dann vor dem ersten Frame. Soll es erst dahinter laden,
+   braucht es einen eigenen Autocmd in `init`, der bei `vim.v.vim_did_enter == 0`
+   auf `VeryLazy` wartet (so `neotest` für Testdateien; vorher lud es für
+   `nvim foo_spec.lua` ≈ 190 ms vor dem Frame und meldete „No tests found").
+6. **`ft` feuert `FileType` danach für alle Plugins noch einmal.** Ein breiter
+   Dateityp als Auslöser (`yaml`) lädt das Plugin bei der ersten beliebigen
+   Datei dieser Art: `sandbox.nvim` ≈ 110 ms beim ersten CI-YAML. Solche Fälle
+   über Dateinamen auslösen (Compose-Dateien sind in Neovim 0.12 schlicht
+   `yaml`, ein `yaml.docker-compose` gibt es nicht).
 
 ### Verboten
 
@@ -276,12 +287,19 @@ Stand 2026-10-01, `STEVESPC`, Neovim 0.12.2, Median aus 5 Läufen mit UI:
 | Stöße > 60 ms, Summe | 2538 ms | 912 ms | 595 ms |
 | längster Stoß | 1131 ms | 585 ms | 348 ms |
 | Event-Loop belegt (6 s) | 2993 ms | 1203 ms | 938 ms |
-| gestartete Prozesse | 106 | 5 | 5 |
+| gestartete Prozesse (`uv.spawn`) | 106 | 5 | 5 |
 | geladene Plugins | 60 | 60 | 47 |
 
-Der längste verbleibende Stoß ist der `VeryLazy`-Stapel. Herleitung und
-Einzelposten: Abschnitt 14 des Reports
-[`startup-und-config-optimierung-analyse-konzept-2026-09-26.md`](../../ROADMAP/reports/startup-und-config-optimierung-analyse-konzept-2026-09-26.md).
+„Prozesse" zählt `uv.spawn` (`vim.system`, lazy.nvim); `jobstart` und
+`system()` sieht die Sonde nicht. In der echten Config wurden am 2026-10-01
+keine solchen Starts beobachtet. Eine spätere Messung am selben Tag ergab bei
+unruhigerer Maschine 699 ms und 407 ms: die Spalten vergleichen nur Läufe
+derselben Sitzung.
+
+Der längste verbleibende Stoß ist der `VeryLazy`-Stapel. Stand und offene
+Punkte: [`startup-und-config-optimierung-analyse-konzept-2026-09-26.md`](../../ROADMAP/reports/startup-und-config-optimierung-analyse-konzept-2026-09-26.md).
+Herleitung und Einzelposten (der frühere Abschnitt 14) stehen im Archiv
+`wkdbook-myplugins/nvim-config/Backlog/TASKS/startup-und-config-optimierung-2026-09-26.md`.
 
 ### `after/` ist hier kein Thema
 
