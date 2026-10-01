@@ -148,7 +148,20 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    Aufrufer, nichts nutzt aktuell eine geordnete Adapter-Fallback-Liste. Alle fünf Stellen korrigiert
    (`integrations.md` hatte es schon richtig); dazu `scope.md`s veraltete Familien-Zahl „Eight" → „Nine" gefixt.
    Reine Doku-/Kommentar-Änderung, Tests (`adapter_spec`, `hunk_spec`) liefen zur Kontrolle grün.
-   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (2, 3, 5, 6, 7) stehen in §9 des Reports.
+   **Entscheidung 2 umgesetzt (2026-10-01): 10 der 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin` umgestellt**
+   (nvim-config `8ce11b11`). 7 davon hatten bereits eine eigene `pickers.nvim`-Taste unter anderem Namen
+   (`colorschemes` → `<leader>ch`, `keymaps` → `<leader>fk`, `git_status` → `<leader>gs`, `live_grep` → `<leader><leader>`,
+   `man` → `<leader>sM`, `files` → `<leader>ff`, `lsp_workspace_symbols` → `<leader>sS`) — auf Nutzerentscheidung wurden
+   die alten `<leader>f*`-Tasten dafür **entfernt statt verdoppelt**. Die anderen 3 (`quickfix`, `treesitter`,
+   `cwd_find_all`) hatten noch keine Bindung — in `pickers.nvim`s eigene `mappings`/`keymaps`-Config aufgenommen,
+   gleiche Taste wie vorher (`<leader>fq`, `<leader>ftf`, `<leader>fa`). `bindings/mappings/fzf.lua` hat nur noch
+   `<leader>fB` (`grep_curbuf`, kein `pickers.builtins`-Äquivalent). **Bewusst nicht umgestellt** (keine Entsprechung):
+   `<leader>ts` (Telescope-Picker-Übersicht), `<leader>,` (file_browser — kein stabiler Opts-Pfad-Override über Engines
+   hinweg), `<leader>fB` selbst. luacheck/stylua grün, keine Lhs-/Präfix-Kollisionen geprüft. `docs/BINDINGS.md` und
+   `docs/NOTES/ExternPlugins/Bindings/Keymaps/Telescope.md` mitgezogen. **Nicht angefasst:** `docs/map/module_map.json`
+   (Cache, braucht `:DocMap` zum Auffrischen) und `docs/ROADMAP/Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md` (generiert,
+   `:BindingsRuntimeChecklist!` würde bereits angehakte Boxen zurücksetzen — beides dem Nutzer überlassen).
+   **Offen:** nichts aus dem Roadmap-Punkt; restliche Entscheidungen (3, 5, 6, 7) stehen in §9 des Reports.
    **Kein Bau** von `lib.nvim.messages` ohne Nutzerfreigabe (unverändert).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
@@ -241,6 +254,7 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | WKDBooks | `2ab6d71` | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
 | pickers.nvim | `40ab6ec` | fix(tabs): arm_tag markiert jeden passenden Buffer, smart reicht die Query durch, Fallback folgt der physischen Taste, git-Gruppe repariert | ✅ |
 | gitsuite.nvim | `f841e4a` | docs: hunk hat keinen nativen Fallback für stage/reset — Doku/Kommentare an den Code angeglichen | ✅ |
+| nvim-config | `8ce11b11` | feat(pickers): 10 der 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin` umgestellt | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
