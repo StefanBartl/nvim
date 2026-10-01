@@ -556,30 +556,49 @@ return {
       },
 
       -- `:Image paste`.
-      -- paste = {
-      --   -- Directory next to the document; "" puts the image beside it.
-      --   dir = "assets",
-      --   -- An existing folder with one of these names (case-insensitive)
-      --   -- is used instead of `dir`. Empty list disables the detection.
-      --   existing_dir_names = { "Resources", "Ressourcen" },
-      --   -- File name template, args: (document stem, os.time()).
-      --   name_template = "%s-%d.png",
-      --   -- Link inserted into the document, arg: (path).
-      --   link_template = "![](%s)",
-      --   -- Ask for alt text / a file name before inserting.
-      --   ask_alt_text = false,
-      --   -- Link used when alt text was asked for, args: (alt, path).
-      --   alt_link_template = "![%s](%s)",
-      --   ask_filename = false,
-      --   -- How the link's path is spelled: "relative" | "absolute" | "repos"
-      --   -- ($REPOS_DIR-rooted) | a custom prefix such as "/static/img" |
-      --   -- false (ask every time). Never changes where the file is written.
-      --   default_path_mode = "relative",
-      --   -- Windows only: hang limit of one clipboard read on the PowerShell helper.
-      --   windows_clipboard_timeout_ms = 20000,
-      --   -- Windows only: keep one PowerShell process alive across pastes.
-      --   windows_persistent_helper = true,
-      -- },
+      paste = {
+        -- Directory next to the document; "" puts the image beside it.
+        -- dir = "assets",
+        -- An existing folder with one of these names (case-insensitive)
+        -- is used instead of `dir`. Empty list disables the detection.
+        -- existing_dir_names = { "Resources", "Ressourcen" },
+        -- File name template, args: (document stem, os.time()).
+        -- name_template = "%s-%d.png",
+        -- Link inserted into the document, arg: (path).
+        -- link_template = "![](%s)",
+        -- Ask for alt text / a file name before inserting.
+        -- ask_alt_text = false,
+        -- Link used when alt text was asked for, args: (alt, path).
+        -- alt_link_template = "![%s](%s)",
+        -- ask_filename = false,
+        -- How the link's path is spelled: "relative" | "absolute" | "repos"
+        -- ($REPOS_DIR-rooted) | "env" | a custom prefix such as "/static/img" |
+        -- false (ask every time). Never changes where the file is written.
+        -- Set to "env" here: a pasted image under $NVIM_CONFIG_DIR / $REPOS_DIR
+        -- (or one of `env_roots`) is linked as `$VAR/...` -- machine-independent
+        -- and untouched by markdown.nvim's sanitize-on-save -- and anywhere else
+        -- falls back to the relative path. The plugin default stays "relative".
+        -- `:Image paste env|abs|rel` overrides it per call.
+        -- Default: "relative".
+        default_path_mode = "env",
+        -- Extra roots for "env": variable name -> directory (or a function
+        -- returning one). Checked before gopath.nvim's `shorten_path`
+        -- (`:Gopath to-repos-dir` / `to-nvim-dir` logic) and the built-in
+        -- $REPOS_DIR / $NVIM_CONFIG_DIR; the longest directory wins.
+        -- env_roots = {}, -- e.g. { WIKI_DIR = "E:/wiki" }
+        -- Where the cursor goes after the link is inserted: into the empty alt
+        -- text of `![](path)` (or the path of a link that already has alt text)
+        -- and into insert mode, instead of behind the link.
+        -- link_cursor = {
+        --   enable = true, -- false: cursor behind the link, as before
+        --   startinsert = true, -- enter insert mode afterwards
+        --   path_cursor = "end", -- in a filled path: "end" | "start"
+        -- },
+        -- Windows only: hang limit of one clipboard read on the PowerShell helper.
+        -- windows_clipboard_timeout_ms = 20000,
+        -- Windows only: keep one PowerShell process alive across pastes.
+        -- windows_persistent_helper = true,
+      },
 
       -- `:Image ocr` (tesseract).
       ocr = {

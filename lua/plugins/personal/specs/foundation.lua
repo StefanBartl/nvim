@@ -79,8 +79,16 @@ return {
         -- messages = false,
         -- Toast line cap.
         -- max_lines = 12,
-        -- Toast wrap width in columns (ui.kit toasts are 40 wide, minus the border).
-        -- width = 38,
+        -- Toast wrap width in columns. nil = follow the chip's own text budget
+        -- (`ui.kit.toast.inner_width()`: the chip width minus border and padding).
+        -- Default: nil.
+        -- width = nil,
+        -- Size of the corner chip itself (forwarded to `ui.kit.toast.setup`,
+        -- needs ui.nvim): as wide as its text plus padding, at least `min_width`
+        -- (a short message still gets a chip about this wide), at most `width`;
+        -- columns or "NN%" of the editor width, both re-evaluated on resize.
+        -- Default: { width = "40%", min_width = 40, padding = 1 }.
+        -- toast = { width = "40%", min_width = 40, padding = 1 },
         -- Bytes of a message considered when wrapping the toast; only the head of
         -- a huge message is ever shown there.
         -- toast_max_bytes = 4000,

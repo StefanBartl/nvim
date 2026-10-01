@@ -56,7 +56,9 @@ return {
         -- Default: {}.
         globals = { cycle_pick = "<leader>cP" },
         -- Keys bound inside a buffer whose filetype matched `lists.filetypes`.
-        -- `sort` moved off its default "<leader>cs" (see above).
+        -- `sort` moved off its default "<leader>cs" (see above). The list-form
+        -- rotation (`rotate_form_next/prev`) is `<leader>cl` / `<leader>cL` by plugin
+        -- default now, because casedesk.nvim owns `<leader>cf` / `cF`.
         -- Default: {}.
         list = { sort = "<leader>cS" },
       },
@@ -836,8 +838,19 @@ return {
       --   -- `:Markdown links show` backend: "hover_select" | "select" | "telescope" | "fzf".
       --   picker = "hover_select",
       --   -- Normalize inline-link targets before every write (backslashes -> `/`, bare
-      --   -- relative path gains `./`).
+      --   -- relative path gains `./`). Env-rooted targets (`$VAR/x`, `${VAR}/x`,
+      --   -- `%VAR%/x`) never get a `./`.
       --   sanitize_on_save = true,
+      --   -- Repair a `./` an older version wrote in front of an env-rooted target
+      --   -- (`./$REPOS_DIR/x.md` -> `$REPOS_DIR/x.md`), only when the variable is set.
+      --   repair_env_prefix = true,
+      --   -- Where the cursor goes after the link-wrap keymap: the empty title, else
+      --   -- the path, and into insert mode (lib.nvim.markdown.link_cursor).
+      --   cursor = {
+      --     enable = true, -- false: cursor inside the link, but normal mode
+      --     startinsert = true, -- enter insert mode afterwards
+      --     path_cursor = "end", -- in a filled path: "end" | "start"
+      --   },
       --   -- Dead relative links / duplicate anchors via vim.diagnostic.
       --   diagnostics = {
       --     mode = "off", -- "off" | "save" (also rerun on BufWritePost)
@@ -900,9 +913,13 @@ return {
       -- blockquote_hl = {
       --   marker_fg = "#6A9955", -- the `>` token
       --   text_fg = "#7EE787", -- text after `>`
-      --   text_bg = "dimm", -- whole line gets a dimmed bg derived from marker_fg
+      --   text_bg = "dimm", -- quoted text gets a dimmed bg derived from marker_fg
       --   text_bold = true,
       --   text_italic = false,
+      --   -- How far that background reaches: "block" (as wide as the widest line of
+      --   -- the contiguous `>` block) | "line" (own text only) | "window" (to the
+      --   -- window edge, the former behavior) | <n> (at least n columns).
+      --   width = "block",
       -- },
 
       -- Keep the treesitter underline on inline-link URLs/labels.
