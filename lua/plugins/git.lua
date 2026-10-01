@@ -1,13 +1,13 @@
 ---@module 'plugins.git'
 --- Git integration via Gitsigns and visual diff tools -- gitsuite.nvim's own
---- command tree (plugins/personal/init.lua) owns everything else that used
+--- command tree (plugins/personal/specs/project.lua) owns everything else that used
 --- to live here.
 
 ---@type LazyPluginSpec[]
 return {
 
   -- kdheepak/lazygit.nvim removed: gitsuite.nvim's `:Git ui lazygit`
-  -- (plugins/personal/init.lua) opens the same real `lazygit` binary in its
+  -- (plugins/personal/specs/project.lua) opens the same real `lazygit` binary in its
   -- own floating terminal now, plus the nvr O/<C-o> bridge this plugin's
   -- config used to own (ported to gitsuite.nvim's
   -- features/ui/lazygit/{badd,replace}.lua -- lua/config/lazygit/ removed).
@@ -51,13 +51,13 @@ return {
     },
   },
 
-  -- vim-fugitive/vim-rhubarb removed (gitsuite.nvim, plugins/personal/init.lua):
+  -- vim-fugitive/vim-rhubarb removed (gitsuite.nvim, plugins/personal/specs/project.lua):
   -- both `:Git blame` (`<leader>gb`) and `:Gbrowse` are now gitsuite.nvim's
   -- own `:Git blame full`/`:Git browse *`, and fugitive's own `:Git` command
   -- would collide with gitsuite.nvim's if both were loaded.
 
   -- akinsho/git-conflict.nvim removed: gitsuite.nvim's `:Git conflict *`
-  -- (plugins/personal/init.lua) covers the same nine commands and the same
+  -- (plugins/personal/specs/project.lua) covers the same nine commands and the same
   -- six buffer-local keys (co/ct/cb/c0/]x/[x) now, with its own
   -- BufReadPost/BufNewFile marker scan -- keeping both installed would have
   -- meant two plugins racing to set the identical buffer-local keys the

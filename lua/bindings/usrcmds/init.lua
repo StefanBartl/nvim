@@ -4,7 +4,7 @@ local usercmd = require("lib.nvim.bindings.usercmd")
 local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
 -- casedesk (`:Case` / `:Cases` / `:Tricentis`) is a plugin: StefanBartl/casedesk.nvim,
--- spec in plugins/personal/init.lua. The frozen copy that used to live under
+-- spec in plugins/personal/specs/project.lua. The frozen copy that used to live under
 -- usrcmds/case/ was removed on 2026-09-25.
 require("bindings.usrcmds.bindings_explorer").enable()
 require("bindings.usrcmds.context_open").enable()
@@ -13,6 +13,7 @@ require("bindings.usrcmds.autocmd_docs").enable()
 require("bindings.usrcmds.bindings_audit").enable()
 require("bindings.usrcmds.learn_plan_viewer").enable()
 require("bindings.usrcmds.cdx").enable()
+require("bindings.usrcmds.clipboard").enable()
 
 -- Was `require("nvchad.mason").install_all()` in lua/nvchad/au.lua, NvChad's
 -- own wrapper around a flat nvconfig.mason.pkgs list. lsp.nvim already ships
@@ -76,7 +77,7 @@ require("lib.nvim.bindings.keymap")(
 )
 
 -- Window-local cwd only. An open file tree does not re-root on this by
--- itself; filetree.nvim's `cwd_sync` (see plugins/personal/init.lua) is the
+-- itself; filetree.nvim's `cwd_sync` (see plugins/personal/specs/navigate.lua) is the
 -- automatic path -- this command is the manual one-off.
 usercmd.create("CwdHere", function()
   local bufname = vim.api.nvim_buf_get_name(0)

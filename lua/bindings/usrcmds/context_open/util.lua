@@ -3,7 +3,7 @@
 --- `cmd`-gated (not `ft`/`event`-gated), so a provider's very first
 --- invocation in a session still finds the plugin's Lua modules on the
 --- runtime path. `open.nvim` and `pdfport.nvim` are both `cmd`-only in
---- plugins/personal/init.lua; calling e.g. `require("open.context")` before
+--- plugins/personal/specs/navigate.lua; calling e.g. `require("open.context")` before
 --- `:Open` has ever run would otherwise fail with "module not found".
 ---
 --- Cheap and idempotent: `lazy.core.loader.load` checks `plugin._.loaded`

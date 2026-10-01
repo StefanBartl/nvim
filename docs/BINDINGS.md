@@ -360,21 +360,21 @@ small addition if it is ever wanted — not a missing capability.
 ### `:MyPlugins` — config-internal plugin-repo management
 
 Manages the checkouts of the personal `.nvim` plugins listed in
-[`lua/plugins/personal/list.lua`](../lua/plugins/personal/list.lua). Full
+[`lua/plugins/personal/core/list.lua`](../lua/plugins/personal/core/list.lua). Full
 implementation notes and safety rationale:
 [`lua/bindings/usrcmds/plugin_repos/README.md`](../lua/bindings/usrcmds/plugin_repos/README.md).
 Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 
 | Command | Effect |
 | --- | --- |
-| `:MyPlugins clone [dir] [--only=<name>] [--dry-run]` | Clone every repo in `plugins.personal.list` not yet present in `dir` (default `$REPOS_DIR`); `--only` limits to one, `--dry-run` only reports what would be cloned |
+| `:MyPlugins clone [dir] [--only=<name>] [--dry-run]` | Clone every repo in `plugins.personal.core.list` not yet present in `dir` (default `$REPOS_DIR`); `--only` limits to one, `--dry-run` only reports what would be cloned |
 | `:MyPlugins remove [dir] [--only=<name>]` | Remove clean (no uncommitted/unpushed work) listed repos from `dir`, after a confirmation naming exactly what will be deleted |
 | `:MyPlugins fetch [dir] [--only=<name>]` | `git fetch --all --prune` on every present listed repo |
 | `:MyPlugins pull [dir] [--only=<name>]` | `git pull --ff-only` on every present listed repo |
 | `:MyPlugins update [dir] [--only=<name>]` | `fetch` + `pull` on every present listed repo — the two-machine sync command |
 | `:MyPlugins dashboard [dir] [--fetch] [--fetch-this]` | Opens `gitsuite.nvim`'s own `:Git dashboard [dir]` — a git-status overview of every repo in `dir`/`$REPOS_DIR` (not scoped to the plugin list), plus whatever `dashboard.groups` pages are configured. `--fetch` runs `fetch` (below) first; `--fetch-this` scopes that to the plugin the current buffer/cwd belongs to. `:MyPluginsDashboard [dir]` is a flat shorthand (no fetch flags) |
 | `:MyPlugins reclone [dir] [--only=<name>] [--dry-run]` | Delete-if-clean + fresh clone for present repos (same safety check as `remove`); plain clone for anything missing |
-| `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.source`'s `OVERRIDE` — writes directly into `source.lua` |
+| `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.core.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
 | `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
 
@@ -469,8 +469,8 @@ the normal startup sequence first.
 stdout carries exactly one line of JSON, no pretty-printing; anything that
 goes wrong is reported on stderr with a non-zero exit code, so a subprocess
 caller can check `.code` without parsing stdout in the failure case. Built
-on [`plugins.personal.export`](../lua/plugins/personal/export.lua), which wraps
-[`plugins.personal.list`](../lua/plugins/personal/list.lua) plus each plugin's
+on [`plugins.personal.core.export`](../lua/plugins/personal/core/export.lua), which wraps
+[`plugins.personal.core.list`](../lua/plugins/personal/core/list.lua) plus each plugin's
 resolved local directory; a remote-mode entry with no local checkout is
 filtered out rather than passed through with a directory a caller would have
 to remember to check for `nil`.

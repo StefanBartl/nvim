@@ -15,7 +15,7 @@ inhaltlich fertig, hatte aber keine Form in Neovim — nur eine Markdown-Datei
 ohne Navigation, Fortschrittsanzeige oder Wiederholungs-Tracking.
 
 **Bewusst getrennt von der Plugin-Frage unten:** `learn-cli.nvim` (das
-Plugin) ist deaktiviert (`plugins/personal/source.lua`) und die
+Plugin) ist deaktiviert (`plugins/personal/core/source.lua`) und die
 Grundsatzfrage "vielleicht doch?" ist offen. Dieser Viewer rührt den Plugin-
 Code nicht an — er ist ein kleines, eigenständiges Feature direkt in dieser
 Config, das schon jetzt nutzbar ist, ganz gleich wie die Plugin-Frage später
@@ -75,7 +75,7 @@ Struktur: `core/{cycle_manager,exercise_runner,scorer,scoring,validator}.lua`,
 `data/{exercises/grep.lua,persistence.lua}`.
 
 **Status laut `docs/ROADMAP/ROADMAP.md` der Config: „`learn-cli.nvim` vielleicht
-doch?"** — das Plugin ist in `plugins/personal/source.lua` deaktiviert. Die
+doch?"** — das Plugin ist in `plugins/personal/core/source.lua` deaktiviert. Die
 Punkte unten sind deshalb erst dann relevant, wenn diese Grundsatzfrage mit „ja"
 beantwortet ist. Vorher lohnt keine Zeile Code.
 

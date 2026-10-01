@@ -54,7 +54,7 @@ function M.keys()
     desc = "Snacks Debug: Toggle Overlay",
   }
   -- Not a picker (snacks' tree explorer), so it stays a direct snacks key; every
-  -- picker key lives in pickers.nvim's `mappings` (plugins/personal/init.lua).
+  -- picker key lives in pickers.nvim's `mappings` (plugins/personal/specs/navigate.lua).
   maps[4] = {
     "<leader>F",
     function()

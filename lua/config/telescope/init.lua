@@ -7,7 +7,7 @@
 --- telescope's defaults.mappings — do not rebind them here, see
 --- pickers.nvim's docs/KEYMAPS.md. Horizontal preview scroll
 --- (<M-Left>/<M-Right>) is configured via pickers.setup({ keys = {
---- preview_scroll_left/right = ... } }) in plugins/personal/init.lua, same
+--- preview_scroll_left/right = ... } }) in plugins/personal/specs/navigate.lua, same
 --- reason. This module only merges file-browser keymaps, sets UI highlights,
 --- and loads extensions safely.
 

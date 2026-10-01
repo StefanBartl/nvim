@@ -29,7 +29,7 @@ Kern:
 
 ## Entscheidung, die vor allem anderen ansteht
 
-**Kein Repo unter `$REPOS_DIR/`, kein Eintrag in `plugins/personal/source.lua`.**
+**Kein Repo unter `$REPOS_DIR/`, kein Eintrag in `plugins/personal/core/source.lua`.**
 Das Konzept liegt seit April 2025 unangetastet.
 
 Bevor irgendetwas gebaut wird, ist zu klären, ob die Nische überhaupt noch frei
