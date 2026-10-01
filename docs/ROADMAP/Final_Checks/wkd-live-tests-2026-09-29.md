@@ -182,6 +182,41 @@ Build-Check, nicht zum interaktiven Durchklicken.
 
 ---
 
+## T16/T17 — FightingGame-Ausbau (ab 2026-10-01)
+
+Plan und Phasenstatus: `../handovers/wkd_FightingGame_Implementierungsplan.md`.
+
+- [ ] **T16 Hover-Sound:** Maus über den „Fight"-Tab bewegen — kurzer Blip (erst nach dem
+      ersten Klick irgendwo auf der Seite hörbar, Browser-Autoplay-Regel).
+  - Notiz:
+- [ ] **F1 Gegner trifft jetzt wirklich.** Die KI-Blickrichtung war seit T7 invertiert,
+      sie konnte praktisch nie treffen. Jetzt verliert man im Stehen in rund 10 s.
+      Bewerten: Schwierigkeit ok, zu hart, zu leicht?
+  - Notiz:
+- [ ] **F1 Kenji schaut in die richtige Richtung** (als Spieler nach rechts zum Gegner,
+      als Gegner nach links), Schwertschlag geht Richtung Gegner.
+  - Notiz:
+- [ ] **F1 Geschwindigkeit:** auf einem 120/144-Hz-Display läuft das Spiel gleich schnell
+      wie auf 60 Hz (vorher doppelt so schnell). Fühlt sich das Tempo insgesamt richtig an?
+      Schwünge sind ca. 15 % schneller als vorher.
+  - Notiz:
+- [ ] **F1 Gedrückt halten:** Leertaste/X/Touch-Button halten greift wiederholt an, sobald
+      der Cooldown es zulässt; Pfeil hoch halten springt nach der Landung erneut.
+  - Notiz:
+- [ ] **F1 Pause:** während eines Matches zu Grid wechseln, 10 s warten, zurück — die
+      Matchuhr steht dort, wo sie war (lief vorher im Hintergrund weiter).
+  - Notiz:
+- [ ] **F2 Gamepad:** Controller anschließen, eine Taste drücken — Legendenzeile
+      „Gamepad: …" erscheint. Stick/D-Pad bewegt, A springt, X leicht, B/Y schwer.
+      Bisher nur mit simuliertem Controller getestet.
+  - Notiz:
+- [ ] **F3 Musik/SFX über AudioWorklet:** klingt die Musik-Loop gleichmäßig (kein
+      Stottern, wenn die Seite gerade beschäftigt ist)? Treffer-, „FIGHT!"- und Hover-Sound
+      ok? Auf der deployten Seite testen (CSP).
+  - Notiz:
+
+---
+
 *Erstellt aus dem Chat-Verlauf der wkd-Handover-Fortsetzungs-Session vom 2026-09-29
 (T13/T14/T15/T7 + alle Nachfixe + T7-Folgerunde nach Live-Test-Feedback). Vollständige
 Historie/Details in `$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Backlog/wkd_Completed.md`
