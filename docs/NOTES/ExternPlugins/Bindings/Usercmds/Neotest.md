@@ -29,13 +29,15 @@ das als Dependency mitkommt. Beide unten.
 [lua/config/neotest/init/dependencies.lua](../../../../../lua/config/neotest/init/dependencies.lua)
 als `dependency` — es ist das Backend des Adapters
 `nvim-neotest/neotest-vim-test` (aktiv für `vim`, `lua`, `sh`, `bash`, `zsh`,
-`asm`). Es kommt also nicht als eigenständiges Werkzeug mit, sondern damit
-neotest auch für Sprachen ohne eigenen Adapter etwas anzubieten hat.
+`asm`). Es steht dort, damit neotest auch für Sprachen ohne eigenen Adapter
+etwas anzubieten hat.
 
-Seine sechs Commands funktionieren trotzdem und sind live, sobald neotest
-geladen ist. **Der Weg dieser Config führt aber über neotest**, nicht über
-sie — sie sind hier dokumentiert, weil sie existieren, nicht weil sie
-empfohlen wären.
+Seine sechs Commands sind vom Start an als lazy.nvim-Stubs da: vim-test hat in
+der genannten Datei einen eigenen `cmd`-Trigger. Der erste Aufruf lädt nur
+vim-test, nicht neotest, seine Adapter oder seine Config. Die `cmd`-Liste dort
+muss zu den Commands in vim-tests `plugin/test.vim` passen. **Der Weg dieser
+Config führt aber über neotest**, nicht über sie — sie sind hier dokumentiert,
+weil sie existieren, nicht weil sie empfohlen wären.
 
 | Command | Wirkung |
 |---|---|
@@ -68,7 +70,7 @@ Registriert in [lua/config/neotest/commands/init.lua](../../../../../lua/config/
 | `:NeotestOutputPanelToggle` | Output-Panel togglen | `actions.toggle_output_panel` |
 | `:NeotestStop` | Laufende Tests stoppen | `actions.stop` |
 | `:NeotestWatchToggle` | Watch-Modus togglen | `actions.toggle_watch` |
-| `:NeotestClearAll` | Tests stoppen und alle Neotest-Fenster (Output, Summary) schließen | inline (`neotest.run.stop()`, `neotest.output.close()`, `neotest.summary.close()`) |
+| `:NeotestClearAll` | Tests stoppen und alle Neotest-Fenster (Output-Panel, Summary) schließen | inline (`neotest.run.stop()`, `neotest.output_panel.close()`, `neotest.summary.close()`) |
 
 ## Debug-Commands
 

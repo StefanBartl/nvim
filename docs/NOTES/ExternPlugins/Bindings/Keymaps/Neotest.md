@@ -6,8 +6,11 @@ in [lua/config/neotest/actions/init.lua](../../../../../lua/config/neotest/actio
 (gemeinsame Basis für Keymaps, Usercmds und Menüs — siehe Modul-Kommentar
 "Centralized Neotest actions usable by keymaps, usercommands and menus").
 
-Registriert im `config`-Block des `nvim-neotest/neotest`-Specs
-([lua/plugins/neotest.lua](../../../../../lua/plugins/neotest.lua)):
+Bis neotest geladen ist, sind die Chords Lazy-Stubs (`keys` in
+[lua/plugins/neotest.lua](../../../../../lua/plugins/neotest.lua), aus
+derselben `config.neotest.keymaps.keymaps`-Liste gebaut): der erste Druck lädt
+neotest und spielt die Taste in die echte Belegung nach. Die echten Mappings
+setzt der `config`-Block des `nvim-neotest/neotest`-Specs:
 `require("config.neotest.keymaps").setup()`.
 
 ## Gruppe `<leader>nt` — "Tests"
@@ -42,12 +45,16 @@ keinen Key; siehe [Usercmds/Neotest.md](../Usercmds/Neotest.md#debug-commands).
 ## which-key-Anbindung
 
 [lua/config/neotest/whichkey/init.lua](../../../../../lua/config/neotest/whichkey/init.lua)
-registriert **zusätzlich** eigene, redundante `wk.add`-Einträge für dieselben
-neun `<leader>nt*`-Chords aus der Actions-Tabelle (inkl. Gruppen-Label
-`<leader>nt` = "Tests"), jeweils mit eigenem `function() require(...) end`-
-Wrapper statt der bereits gesetzten `vim.keymap.set`-Callbacks. which-key
-zeigt dadurch für diese neun Keys **zwei** überlappende Quellen (eigenes
-`vim.keymap.set` + `wk.add`-Callback) — anders als bei DAP, wo
-which-key nur ein Gruppen-Label ohne eigene Callbacks anlegt. Funktional macht
-das keinen Unterschied (beide rufen dieselbe `actions`-Funktion), ist aber
-eine Abweichung vom sonst in dieser Config üblichen Single-Source-Muster.
+registriert nur das Gruppen-Label `<leader>nt` = "Tests", über
+`which_key.add_group` aus lib.nvim. Das lädt which-key nie: ist es schon da,
+gilt das Label sofort, sonst wartet es in der Warteschlange bis zum Laden. Der
+Aufruf steht in `bindings.mappings.setup()`
+([lua/bindings/mappings/init.lua](../../../../../lua/bindings/mappings/init.lua)),
+nicht im `config`-Block von neotest: das Label muss vor dem ersten Druck
+existieren, solange neotest noch nicht geladen ist.
+
+Die einzelnen Keys brauchen kein `wk.add`: which-key nimmt ihre Beschriftung
+aus dem `desc` des Mappings (zuerst der des Lazy-Stubs, danach der des echten
+Mappings). Es gibt also genau eine Quelle pro Key, wie bei DAP. Das Modul hat
+früher alle neun Keys zusätzlich per `wk.add` angelegt; das ist mit 59de4d68
+entfallen.
