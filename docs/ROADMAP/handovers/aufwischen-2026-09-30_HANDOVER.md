@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „T6 Picker-Feedback (Toast-zindex-Fix + Meldungen)".
+**Stand:** 2026-10-01, nach dem Task „`:Clipboard [path] reports|handovers`".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -59,8 +59,12 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    `lib.nvim.notify` mit `messages = true` (landen auch in `:messages`, wie filetree), Test
    „feedback". Der ursprünglich geplante `pickers.feedback`-Titel-Kanal wurde **nicht** gebaut
    (nicht nötig; bei Bedarf Titel/Footer des snacks-Pickers als zusätzlicher Kanal).
-4. **`:Clipboard reports|handovers`** in der nvim-Config: `lua/bindings/usrcmds/clipboard/`
-   (Muster `context_open/`, `composer.verb`), **keine Keymap** (bestätigt).
+4. ~~`:Clipboard`~~ — **erledigt** (`27a46759`): auf Wunsch des Nutzers `:Clipboard [path] reports|handovers`
+   (`path` optional und erstes Unterkommando, damit später weitere Optionen neben `path` kommen;
+   Targets sind Daten in `M.TARGETS`, `enable({ targets, form = "absolute"|"env" })`), keine Keymap.
+   Modul `lua/bindings/usrcmds/clipboard/init.lua`, README ergänzt. Getestet headless (Modul mit
+   Worktree im `rtp`; **Achtung:** `nvim --headless` mit der vollen Config lädt den **Haupt-Checkout**,
+   nicht den Worktree).
 5. **Personal-Spec nachziehen** (`lua/plugins/personal/specs/*.lua`, kommentierte volle Optionen,
    Rezept `WKDBooks/…/TOOLS/spec-full-options.md`):
    - `edit.lua` (markdown): `blockquote_hl.width`, `links.repair_env_prefix`, `links.cursor`;
@@ -129,4 +133,5 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | ui.nvim | `a1574ca` | fix(toast): theme zindex.toast (70), Toast lag unter snacks-Pickern | – |
 | lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | – |
 | pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | – |
+| nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | – |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
