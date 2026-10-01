@@ -51,6 +51,9 @@ buffer-ctx/casedesk/gopath.
 |---|---|---|
 | markdown `03b0867` (Env-Ziele) | `%VAR%` griff bei prozentkodierten Zielen (`%E2%80%93x.md`) und `$foo.md`; Config-Lookup pro Link bei jedem Speichern | markdown `4247bbf` |
 | markdown `779c4d1` (Blockquote-Breite) | Padding konnte bei `wrap` breiter als das Fenster werden → leere Folgezeilen | markdown `5c618d3` |
+| ui `10082fc` (Toast-Breite) | `ui.notify` reicht ganze Befehlsausgaben durch; Umbruch eines 64-KB-Strings quadratisch, Float höher als der Bildschirm | ui `d3ea28a` (8 KB, `max_lines` = 20, Ellipse) |
+| lib `53417e1`, `360a137` (Toast-Spiegel / Popup) | Spiegel nachgezogen; `popup.setup({ width = nil })` konnte eine explizite Breite nicht zurücksetzen | lib `e8a75f3` (`width = false`), Spiegel `e2faeb4` |
+| lib `664667c`, `62c559a` (`link_cursor`, `insert_links`) | async Einfügen konnte den Cursor eines Fensters bewegen, das inzwischen einen anderen Buffer zeigt; `previous_window()` falsch für Befehle aus dem Editor | lib `c368b5d` (`place(…, buf)`), `e8a75f3` (`insertion_window()`) |
 
 ## Offen — in dieser Reihenfolge weitermachen
 
@@ -144,17 +147,21 @@ buffer-ctx/casedesk/gopath.
 | markdown.nvim | `4247bbf` | fix(links): Env-Referenz = ganzes erstes Segment, Config-Lookup nur für Kandidaten | ✅ |
 | markdown.nvim | `5c618d3` | fix(hl): Blockquote-Padding nie breiter als das Fenster | ✅ |
 | cascade.nvim | `f5baa6d` | feat(keymaps): rotation → `cl/cL` | – |
-| ui.nvim | `10082fc` | feat(toast): width min/max/padding/wrap | – |
-| lib.nvim | `53417e1` | feat(toast): mirror + popup wrap width | – |
-| lib.nvim | `664667c` | feat(markdown): link_cursor | – |
+| ui.nvim | `10082fc` | feat(toast): width min/max/padding/wrap | ✅ (Fix `d3ea28a`) |
+| lib.nvim | `53417e1` | feat(toast): mirror + popup wrap width | ✅ |
+| lib.nvim | `664667c` | feat(markdown): link_cursor | ✅ (Fix `c368b5d`) |
 | gopath.nvim | `f1cfe5c` | feat(api): shorten_path | – |
 | images.nvim | `242f3ed` | feat(paste): env mode, mode words, cursor | – |
 | markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | – |
-| lib.nvim | `62c559a` | feat: insert_links, previous_window | – |
+| lib.nvim | `62c559a` | feat: insert_links, previous_window | ✅ (Fix `c368b5d`, `e8a75f3`) |
 | filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | – |
 | pickers.nvim | `7fbd2aa` | feat(entry_actions): Links ins Fenster hinter dem Picker einfügen | – |
-| ui.nvim | `a1574ca` | fix(toast): theme zindex.toast (70), Toast lag unter snacks-Pickern | – |
-| lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | – |
+| ui.nvim | `a1574ca` | fix(toast): theme zindex.toast (70), Toast lag unter snacks-Pickern | ✅ |
+| lib.nvim | `360a137` | fix(toast): Spiegel zu ui.nvim | ✅ |
+| ui.nvim | `d3ea28a` | fix(toast): begrenzte Arbeit (8 KB, max_lines, Ellipse) | ✅ |
+| lib.nvim | `e2faeb4` | fix(toast): Spiegel zu `d3ea28a` | ✅ |
+| lib.nvim | `c368b5d` | fix(link_cursor): `place()` prüft den Buffer des Fensters | ✅ |
+| lib.nvim | `e8a75f3` | feat(window): `insertion_window()`; fix(popup): `width = false` | ✅ |
 | pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | – |
 | nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | – |
 | nvim-config | `b11c2356` | chore(specs): neue Plugin-Optionen (images env, Toast, Blockquote, Link-Cursor, Picker/filetree) | – |
