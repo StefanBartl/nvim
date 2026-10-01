@@ -1,6 +1,7 @@
 # `wkd` - `FightingGame`
 
-- Wenn man den "Fight"-Button hovert, wird ein Sound Effect ausgespielt
+- ~~Wenn man den "Fight"-Button hovert, wird ein Sound Effect ausgespielt~~ — erledigt als
+  T16, siehe `$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Backlog/wkd_Completed.md`.
 - Netzwerk: Sind 2 Personen glerichzeitig auf der Website, können sie einen Kämpefernamen eingeben und gegen einen zufälligen Gegner spielen, der auch gerade auf der Website ist. Anbsonsten spielt man gegen KI. Das wäre ein witziger Gag und könnte mehr Personen auf die Seite bringen.
 
 ---
