@@ -214,6 +214,28 @@ Plan und Phasenstatus: `../handovers/wkd_FightingGame_Implementierungsplan.md`.
       Stottern, wenn die Seite gerade beschäftigt ist)? Treffer-, „FIGHT!"- und Hover-Sound
       ok? Auf der deployten Seite testen (CSP).
   - Notiz:
+- [ ] **F4 Partikel:** bei Treffern fliegen Pixel-Funken in Schlagrichtung, beim Landen
+      nach einem Sprung staubt es kurz. Stil passend, zu viel, zu wenig? (Nur mit WebGPU,
+      also Chrome/Edge; ohne WebGPU oder mit „Bewegung reduzieren" gibt es keine.)
+  - Notiz:
+- [ ] **F5 WASM-Kern:** Seite mit `?sim=wasm` öffnen — unter der Arena steht „Sim core:
+      Rust / WebAssembly", das Spiel verhält sich identisch.
+  - Notiz:
+- [ ] **F6 Rollback fühlen:** Seite mit `?net=loopback&lag=100` öffnen und gegen die KI
+      spielen (auch `lag=200&jitter=50&loss=10` probieren). Statuszeile unter der Arena
+      zählt Rollbacks. Eigene Eingaben sollten sich trotz Latenz direkt anfühlen, der
+      Gegner „springt" bei Fehlvorhersagen leicht.
+  - Notiz:
+- [ ] **F7 Online gegen einen Freund (gleiches WLAN):** Gerät A „Invite a friend", Code an
+      Gerät B schicken, dort „Join with a code", Antwortcode zurück, „Connect". Beide wählen
+      einen Kämpfer. Prüfen: Verbindung kommt zustande, „you" steht über dem eigenen
+      Balken, Ergebnis stimmt auf beiden Seiten, Rematch (beide klicken), ein Gerät
+      schließt den Tab und das andere fällt auf die Kämpferauswahl zurück. Bisher nur mit
+      zwei Tabs auf einem Rechner getestet.
+  - Notiz:
+- [ ] **F7 Balance:** Samurai Mack gegen Kenji im PvP, beide halten Angriff gedrückt —
+      Kenji kommt nicht zum Zug (Stun-Lock). So lassen oder angleichen?
+  - Notiz:
 
 ---
 
