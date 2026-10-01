@@ -71,6 +71,18 @@ return {
       -- Default: false (plain `vim.notify`).
       require("lib.nvim.notify").setup({ popup = true })
 
+      -- Time-stamped message/event ring buffer behind debugging.nvim's
+      -- recent-messages popup (<lt>m/n/e). No UI, no keymaps of its own --
+      -- just the store. Set up here (lib.nvim loads first, eagerly) so it's
+      -- ready before anything pushes into it; its ext_messages logger only
+      -- attaches once a renderer (noice) actually exists, re-checked from
+      -- noice's own `config` in plugins/ui.lua (which also wraps `:Noice
+      -- enable`/`disable` to keep that attach decision current -- see
+      -- lib.nvim.messages' own module doc for why that can't be detected any
+      -- other way).
+      -- Default: { ring_size = 1000, kinds = {}, renderer_override = nil }.
+      require("lib.nvim.messages").setup({})
+
       require("lib.nvim.notify.popup").setup({
         -- Also write every message to real `:messages`. That always briefly
         -- echoes it at the bottom, so it stays off: a toast is not followed by
