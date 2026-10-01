@@ -34,6 +34,17 @@ if vim.uv.guess_handle(1) == "pipe" then
   )
 end
 
+-- An open stdin pipe on the driver stalls the probed nvim before VimEnter: from
+-- an agent shell, `nvim --headless -l tui.lua` waits out the 60 s budget and
+-- exits 2 with nothing to say why (the same run with `< /dev/null` takes 3 s).
+---@diagnostic disable-next-line: undefined-field -- missing from the uv type stubs
+if vim.uv.guess_handle(0) == "pipe" then
+  io.stderr:write(
+    "startup-probe: stdin is a pipe; the probed nvim may never reach VimEnter (60 s, then"
+      .. " exit 2). Redirect it: `< /dev/null` in bash, `< NUL` in cmd.\n"
+  )
+end
+
 -- jobstart(term = true) turns the current buffer into the terminal buffer: what
 -- the child printed to its (pty) stderr, e.g. why it exited with 1, only lives there.
 local term_buf = vim.api.nvim_get_current_buf()
@@ -54,7 +65,13 @@ if not vim.wait(budget, function()
   return code ~= nil
 end, 50) then
   vim.fn.jobstop(job)
-  io.stderr:write("startup-probe: the probed nvim did not exit within " .. budget .. " ms\n")
+  -- No terminal dump here: the pty buffer is blank until the child exits.
+  io.stderr:write(
+    "startup-probe: the probed nvim did not exit within "
+      .. budget
+      .. " ms (an init error leaves it at a hit-enter prompt, and an open stdin pipe on"
+      .. " this driver stalls it before VimEnter: run with `< /dev/null`, `< NUL` in cmd)\n"
+  )
   os.exit(2)
 end
 if code ~= 0 then

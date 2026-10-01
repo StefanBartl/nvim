@@ -50,9 +50,9 @@ Bericht, wenn `VeryLazy` fehlt.
 
 ```bash
 # mit UI, alle Standard-Sonden, Bericht nach $TEMP/startup-probe.txt
-# (stdout umleiten, siehe „Bekannte Grenzen“; in PowerShell:
-#  cmd /c "nvim --headless -l scripts/startup-probe/tui.lua > NUL")
-nvim --headless -l scripts/startup-probe/tui.lua > /dev/null
+# (stdout und stdin umleiten, siehe „Bekannte Grenzen“; in PowerShell:
+#  cmd /c "nvim --headless -l scripts/startup-probe/tui.lua > NUL < NUL")
+nvim --headless -l scripts/startup-probe/tui.lua > /dev/null < /dev/null
 
 # Stöße ihrem Code zuordnen (kostet Zeit, nicht mit anderen Läufen vergleichen)
 PROBE=stall,where,lazy,marks nvim --headless -l scripts/startup-probe/tui.lua
@@ -149,6 +149,13 @@ Idle, und sieht weder die `UIReady`-Phasen noch die Stöße danach.
   `Start-Process -RedirectStandardOutput`). In bash legt `> NUL` eine Datei
   namens `NUL` an, die `git add -A` blockiert. Die Zahlen ändert das nicht,
   `bench.lua` verwirft die Ausgabe selbst.
+- Exit-Code 2 („did not exit within …“) trägt keinen Grund: bei einem Timeout
+  ist der Terminal-Buffer des Kindes noch leer, `tui.lua` kann nichts ausgeben.
+  Zwei bekannte Ursachen. Ein Fehler in der Config oder in `--cmd` lässt das
+  Kind an einem Hit-Enter-Prompt stehen. Und eine **offene stdin-Pipe** am
+  Treiber (Agenten-Shell) hält das Kind vor `VimEnter` an: der Lauf braucht dann
+  die 60 s Budget, mit `< /dev/null` (bash) bzw. `< NUL` (cmd) nur etwa 3 s.
+  `tui.lua` warnt, wenn stdin eine Pipe ist.
 - `first from` der Sonde `exe` zeigt die beiden Frames oberhalb des
   `vim.fn.*`-Aufrufs. Ruft eine Hilfsfunktion `exepath`/`executable` per Tail
   Call auf (`return vim.fn.exepath(cmd)`), hinterlässt sie keinen Frame
