@@ -254,6 +254,14 @@ return {
       --   },
       --   capture = true,
       --   output_dir = nil, -- string; only used with capture = true, nil = stdpath("config")/docs/debug_views
+      --   -- The <lt>m/<lt>n/<lt>e popup: lib.nvim.messages + ui.kit.message_log
+      --   -- (live, paginated) when ui.nvim is installed, a static
+      --   -- lib.nvim.output.viewer dump otherwise.
+      --   recent = {
+      --     window_s = 10, -- seconds of history shown on open; <C-j> extends by the same amount
+      --     order = "newest_last", -- or "newest_first"
+      --     collapsed_default = false,
+      --   },
       -- },
 
       -- Name of the single unified user command.

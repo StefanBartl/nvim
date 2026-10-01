@@ -25,6 +25,16 @@ return {
     -- stub that no plugin command ever replaced -- it loaded noice, did
     -- nothing, and answered E492 on the second call.
     cmd = { "Noice", "NoiceAll", "NoiceHistory", "NoiceDismiss", "NoiceErrors" },
+    -- `config` instead of `opts`: lib.nvim.messages' ext_messages logger only
+    -- attaches once a renderer (noice) actually exists -- `wrap_noice()`
+    -- patches `:Noice enable`/`disable` to keep that current (noice fires no
+    -- event of its own for either), and `notify_renderer_changed()` fires the
+    -- first check right here, the moment noice itself finishes loading.
+    config = function(_, opts)
+      require("noice").setup(opts)
+      require("lib.nvim.messages").wrap_noice()
+      require("lib.nvim.messages").notify_renderer_changed()
+    end,
     opts = require("config.noice"),
     -- rcarriga/nvim-notify left on 2026-10-01: declared but never require()d
     -- anywhere (no "notify" view/backend wired into config.noice), externe-
