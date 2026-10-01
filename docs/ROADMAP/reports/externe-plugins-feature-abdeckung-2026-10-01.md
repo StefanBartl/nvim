@@ -35,6 +35,25 @@ hier geht es um das, was **in meiner Config läuft**, und wie viel davon ein eig
 - **Doku-Abweichung gefunden:** gitsuites `scope.md`/`around-it.md` behaupten eine native Hunk-Implementierung; im Code gibt es für
   stage/reset **keine** (nur `preview` fällt zurück). → §7.
 
+## Nachtrag (2026-10-01, nach Entscheidung 1 aus §9): `pickers.tabs` aktiv, search.nvim abgelöst
+
+Auf Anweisung umgesetzt: `search.nvim` ist aus den Specs, `config/search/` und `Keymaps/Search.md` entfernt; `<leader>s` ruft jetzt
+`:Pickers tabs default` (Gruppen `default` = cwd files / cwd files all / cwd grep / builtin buffers, `git` = Branches / Log / Stash;
+`<Tab>`/`<S-Tab>` wechseln). Das Plugin-Verzeichnis liegt noch in `nvim-data/lazy/search.nvim` (bis `:Lazy clean`).
+Der Live-Test in einer echten TUI mit der echten Config fand **drei Fehler in pickers.nvim**, die die Unit-Tests (mit gestubbtem `handle`)
+nicht sahen; alle behoben (pickers.nvim `0684430`, `c51fe4f`, `265b01c`):
+
+1. `tab_next`/`tab_prev` schlossen *jeden* Picker, auch ohne Tab-Gruppe — an `<Tab>` hätte das die Mehrfachauswahl überall zerstört.
+   Jetzt wechseln sie nur in Pickern, die eine Tab-Gruppe geöffnet hat (Markierung `b:pickers_tab_picker` auf dem Prompt-Buffer); sonst
+   bleibt `<Tab>`/`<S-Tab>` das native Select-and-Step. Eine per `<Esc>` verlassene Gruppe kapert keinen späteren Picker.
+2. `builtin …`-Ziele (Standardgruppe, ganze `git`-Gruppe) liefen über `command.handle`, das `builtin` nicht kennt → Fehler. Jetzt `pickers.builtins.run`.
+3. Die Snacks-Engine las `opts.query` nie; die Query wanderte beim Wechsel nur mit telescope mit. Jetzt `pattern` (files) bzw. `search` (grep/smart).
+
+Gemessen (echte TUI, `Pickers tabs default`): Tab-Zyklus 1→2→3→4→1, `<S-Tab>` zurück, Query „ini" files → files all → grep, Builtin-Ziel ohne
+Fehler in `:messages`; `<Tab>` in einem außerhalb geöffneten Builtin-Picker toggelt die Auswahl, der Gruppenzustand bleibt unberührt.
+Bekannt, unverändert: `<leader>s` ist Präfix von `<leader>sM`/`<leader>sS`/`<leader>sm` → `timeoutlen` (1000 ms) Wartezeit beim Öffnen, wie vorher mit
+search.nvim. Offene Folgeentscheidung: `telescope` bleibt wegen der übrigen direkten Maps und eigener Plugins installiert.
+
 ## 1. Grundlage und Methode
 
 | Quelle | Was daraus kam |
@@ -271,7 +290,7 @@ Konzept (`test.nvim`), für den Rest keine Roadmap-Fundstelle in `WKDBooks/…/R
 | `nvim-notify`: benutzt nichts Sichtbares | noice routet auf `mini`; nur `noice.util.notify` (Fehlerfall) | Entfernen würde nur noices *eigene* Fehlermeldungen anders anzeigen |
 | `telescope-github`: keine Nutzung gefunden | kein Treffer in `lua/`, `after/`; nur `dependencies`-Eintrag | `pickers.sources.github` deckt Issues/PRs |
 | `nvim-cmp`-Spec ohne installiertes Plugin | `plugins/completion.lua`, lsp.nvim `pack.completion` (Default `blink`) | toter, ungetesteter Zweig |
-| `search.nvim` (189★, 2024-05) ↔ `pickers.tabs`, **nicht aktiviert** | `specs/navigate.lua:858` auskommentiert | Funktion vorhanden, Config nutzt sie nicht |
+| ~~`search.nvim` ↔ `pickers.tabs` nicht aktiviert~~ | erledigt, siehe Nachtrag | search.nvim abgelöst |
 | mini.ai + targets.vim gleichzeitig | beide `event = "VeryLazy"` | überlappende Objekte; Zusammenspiel nicht geprüft |
 | `nvim-treesitter`-Pin: Kommentar „unpin once … 0.12" | `plugins/treesitter.lua`; Neovim ist 0.12.2 | Begründung gilt nicht mehr; Entpinnen nicht getestet |
 | `diffview` (2024-08), `vim-visual-multi` (2024-09), `targets.vim` (2024-07), `neo-tree-diagnostics` (2024-02) ohne Upstream-Push | `gh api` | Wartungsrisiko, bei diffview existiert ein Ausfallpfad (diff.nvim) |
@@ -309,7 +328,7 @@ snacks; diffview/neogit → plenary. `nui.nvim` fiele nur weg, wenn *beide* neo-
 
 Nur Hinweise, welche Entscheidungen *anstehen*, falls du den Bestand ausdünnen willst:
 
-1. Soll `pickers.tabs` aktiviert werden (damit `search.nvim` überflüssig wird)? Voraussetzung wäre eine Entscheidung zu `<Tab>` (telescope-Mehrfachauswahl).
+1. ~~Soll `pickers.tabs` aktiviert werden?~~ — erledigt (Nachtrag oben).
 2. Sollen die 13 direkten Telescope/fzf-lua-Maps auf `:Pickers builtin …` umgestellt werden (macht eine Engine entbehrlich)?
 3. `telescope-github` und `nvim-notify` aus den Abhängigkeiten nehmen? (Beides ohne sichtbaren Nutzen.)
 4. gitsuite-Doku oder -Code angleichen (§7).
