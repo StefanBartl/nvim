@@ -54,6 +54,7 @@ buffer-ctx/casedesk/gopath.
 | ui `10082fc` (Toast-Breite) | `ui.notify` reicht ganze Befehlsausgaben durch; Umbruch eines 64-KB-Strings quadratisch, Float höher als der Bildschirm | ui `d3ea28a` (8 KB, `max_lines` = 20, Ellipse) |
 | lib `53417e1`, `360a137` (Toast-Spiegel / Popup) | Spiegel nachgezogen; `popup.setup({ width = nil })` konnte eine explizite Breite nicht zurücksetzen | lib `e8a75f3` (`width = false`), Spiegel `e2faeb4` |
 | lib `664667c`, `62c559a` (`link_cursor`, `insert_links`) | async Einfügen konnte den Cursor eines Fensters bewegen, das inzwischen einen anderen Buffer zeigt; `previous_window()` falsch für Befehle aus dem Editor | lib `c368b5d` (`place(…, buf)`), `e8a75f3` (`insertion_window()`) |
+| images `242f3ed` (`env`-Modus, Cursor) | Case-Folding der Env-Roots auf allen Systemen (Linux: `/Repos` = `/repos`); Einfügepunkt aus einem Fenster gelesen, das inzwischen einen anderen Buffer zeigt (Link scheiterte still, Cursor-Fallback setzte den Cursor im falschen Buffer) | images `c27f16a` (Windows-only Folding, Warnung + Cursor-Guard, Test) |
 
 ## Offen — in dieser Reihenfolge weitermachen
 
@@ -151,7 +152,8 @@ buffer-ctx/casedesk/gopath.
 | lib.nvim | `53417e1` | feat(toast): mirror + popup wrap width | ✅ |
 | lib.nvim | `664667c` | feat(markdown): link_cursor | ✅ (Fix `c368b5d`) |
 | gopath.nvim | `f1cfe5c` | feat(api): shorten_path | – |
-| images.nvim | `242f3ed` | feat(paste): env mode, mode words, cursor | – |
+| images.nvim | `242f3ed` | feat(paste): env mode, mode words, cursor | ✅ (Fix `c27f16a`) |
+| images.nvim | `c27f16a` | fix(paste): Env-Folding nur Windows; kein Einfügen/Cursor in Fenster mit anderem Buffer | ✅ |
 | markdown.nvim | `19fabae` | feat(links): wrap_link cursor + insert mode | – |
 | lib.nvim | `62c559a` | feat: insert_links, previous_window | ✅ (Fix `c368b5d`, `e8a75f3`) |
 | filetree.nvim | `9a0e0dc` | feat(markdown_links): `MI` fügt Links ein, Cursor in den Link | – |
