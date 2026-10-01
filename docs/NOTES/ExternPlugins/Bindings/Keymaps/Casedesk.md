@@ -32,13 +32,13 @@ Individuell umlegbar/deaktivierbar über `config.keymaps` (siehe casedesk.nvim
 docs/configuration.md#keymaps), oder alle vier auf einmal mit
 `keymaps = false`.
 
-## Bekannte Kollision: `<leader>cf`
+## Kollisionen um `<leader>cf` / `cg` / `cF` / `cG` — gelöst (2026-10-01)
 
-`<leader>cf` ist in diesem Config bereits als `config_smart` belegt
-(personal/init.lua, "smart grep+find in nvim config" — snacks/pickers-Picker
-gescoped auf `$NVIM_CONFIG_DIR`). casedesk.nvim's `setup()` bindet seinen
-eigenen `<leader>cf` (`find_files` → `:Case files`) darüber, je nach
-Ladereihenfolge — bewusst noch nicht aufgelöst (2026-09-29): siehe
-casedesk.nvim's eigenes `bindings/keymaps.lua` für den `config.keymaps`-Weg,
-den `find_files` dort auf einen anderen Key umzulegen, ohne den
-Plugin-Default selbst zu ändern.
+casedesk.nvim behält `<leader>cf`, `cg`, `cF`, `cG`. Die beiden anderen Besitzer sind
+ausgewichen:
+
+- **cascade.nvim**: Listenform-Rotation von `<leader>cf` / `cF` auf **`<leader>cl` /
+  `<leader>cL`** (Plugin-Default geändert, cascade `f5baa6d`; `sort` bleibt in dieser
+  Config auf `<leader>cS`).
+- **pickers.nvim** `config_smart` (smart grep+find in der nvim-Config): liegt in
+  `plugins/personal/specs/navigate.lua` auf **`<leader>CF`**.

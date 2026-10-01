@@ -809,6 +809,9 @@ return {
           -- copy_project_relative = { "<M-e>", "]R" },
           -- copy_buffer_relative = { "<M-j>", "]b" },
           -- markdown_link = { "<M-l>", "ML", "MM" },
+          -- Same links, but INSERTED into the window behind the picker (closes the
+          -- picker, cursor into the first link, insert mode). See `link_insert` below.
+          -- markdown_link_insert = { "<M-n>", "MI" },
           -- Hand the entry to the OS: default application / file manager.
           -- open_system = { "<M-o>", "<leader>sm" },
           -- reveal_in_manager = { "<M-x>", "<leader>fm" },
@@ -816,6 +819,19 @@ return {
           -- tab_next = false, -- e.g. "<Tab>"
           -- tab_prev = false, -- e.g. "<S-Tab>"
         },
+
+        -- The "insert Markdown link(s)" entry action (`keys.markdown_link_insert`).
+        -- link_insert = {
+        --   -- How the link path is spelled: "buffer" (relative to the target buffer,
+        --   -- ./x ../x) | "cwd" | "absolute" | "env" ($REPOS_DIR/..., $NVIM_CONFIG_DIR/...;
+        --   -- via gopath.nvim's shorten_path when installed, else "buffer").
+        --   path = "buffer",
+        --   cursor = {
+        --     enable = true, -- false: cursor behind the inserted text
+        --     startinsert = true, -- insert mode, cursor where the link still needs typing
+        --     path_cursor = "end", -- in a filled path: "end" | "start"
+        --   },
+        -- },
 
         -- Live result count in the prompt title (telescope only; the others show one natively).
         -- result_count = {
@@ -1467,6 +1483,10 @@ return {
           --   keymap = "ML", -- link for the current node
           --   keymap_recursive = "MR",
           --   keymap_from_marked = "MM",
+          --   keymap_insert = "MI", -- INSERT link(s) (marked, else current) into the window you came from
+          --   insert_path = "buffer", -- "buffer" (relative to the target buffer) | "cwd" | "absolute" | "env"
+          --   env_roots = { "REPOS_DIR" }, -- variables tried for "env"; $NVIM_CONFIG_DIR always is
+          --   cursor = {}, -- link_cursor: enable / startinsert / path_cursor
           -- },
           -- git_status = {
           --   enabled = true,
