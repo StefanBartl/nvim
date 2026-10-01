@@ -145,12 +145,13 @@ GitHub traffic API ──► github_stats.nvim (fetcher, retention)
 |---|---|---|---|
 | **P0** ✅ | `github_stats.nvim` | Write the digest and `root.json`; `github_stats.digest` module — **done 2026-09-28** | ~0.5 session |
 | **P1** ✅ | `docmap-desktop` | `traffic.rs`, discovery chain, folder button, header line, list column, opt-out — **done 2026-09-28** | ~1 session |
-| **P2** | `docmap-desktop` | Detail dialog: sparkline, referrers, pages, pages linked to files | ~1 session |
-| **P3** | `documentation.nvim` | `core/traffic_join.lua`, `traffic` browse mode | ~0.5–1 session |
-| P1b | `docmap-desktop` | Raw-history fallback, **only if P0 slips** | ~0.5 session, optional |
+| **P2** ✅ | `docmap-desktop` | Detail dialog: sparkline, referrers, pages, pages linked to files — **done 2026-09-28** | ~1 session |
+| **P3** ✅ | `documentation.nvim` | `core/traffic_join.lua`, `traffic` browse mode — **done 2026-10-01** | ~0.5–1 session |
+| ~~P1b~~ | `docmap-desktop` | Raw-history fallback, **only if P0 slips** — **skipped, open question 2** | ~0.5 session, optional |
 
 P0 first. P1 and P3 are independent of each other afterwards; P2 needs P1.
-P0–P2 is useful without touching `documentation.nvim`.
+P0–P2 is useful without touching `documentation.nvim`. All four real steps are done; only P1b was
+(deliberately) never started.
 
 ---
 
@@ -584,9 +585,10 @@ not a genuine fetched digest.
 1. ~~**Where does L11 live?**~~ **Decided 2026-09-25:** in the vault, with the
    whole `docmap-desktop` queue (`docmap-desktop/ROADMAP/PLAN.md`); the repository
    holds no planning documents.
-2. **Is P1b needed?** Only if P0 slips or an older plugin version must be
-   supported. It is a second implementation of the plugin's rules; skip it
-   otherwise.
+2. ~~**Is P1b needed?**~~ **Settled 2026-10-01:** no. P1b was only a hedge against P0 slipping
+   (the raw-history fallback would have let P1 start without a digest) — P0 shipped on schedule
+   (2026-09-28), so P1 built straight against the real digest contract and P1b was never started.
+   Skip it; it would now be a second implementation of logic the digest already covers.
 3. ~~**Retention across two machines**~~ **Reviewed 2026-09-28:** safe for raw files; `_archive.json`
    (one file, two writers) is the only exposure. Unlikely, not fixed, written up in the plugin's wkdbook
    `ROADMAP.md` with the fix if it is ever wanted.
