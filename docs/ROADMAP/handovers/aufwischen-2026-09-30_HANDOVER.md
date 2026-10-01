@@ -124,7 +124,14 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    Kernergebnisse: Logger allein = Meldungen **und** Cmdline weg; noice-Koexistenz ok (Logger sieht ungefilterten
    Strom, aber nicht `vim.notify`/lib-Toasts; `:redir`/`:silent`/`execute` unsichtbar); noice + `ui2` = Doppelanzeige;
    Ringpuffer-Kosten vernachlässigbar.
-   **Offen:** Einordnung der übrigen externen Plugins (eigener Report). **Kein Bau** (Nutzer: erst Review/Abgleich).
+   **Übrige externe Plugins: erledigt** (2026-10-01) — `docs/ROADMAP/reports/externe-plugins-feature-abdeckung-2026-10-01.md`
+   (31 Plugins: 11 Engine/Host, 5 teilweise ersetzbar, 5 Zulieferer, 9 ohne Pendant, 1 nicht installiert; Matrix je Cluster
+   Git/Picker/Tree/Completion/Editing/UI/Tests, Lückenliste, Abhängigkeitsketten, Reichweite+Wartung per `gh api`).
+   Befunde: `plenary` (Upstream kündigt Archivierung an; kein eigenes Plugin braucht es), `telescope-github` + `nvim-notify`
+   ohne Nutzung, `search.nvim` ↔ `pickers.tabs` (in der Config nicht aktiviert), 13 direkte Telescope/fzf-lua-Maps trotz
+   pickers.nvim, nvim-treesitter-Pin mit veraltetem Kommentar (Neovim ist 0.12.2), **gitsuite-Doku sagt native Hunk-Implementierung,
+   Code hat keine für stage/reset** (nicht korrigiert). Nichts entfernt/ersetzt. Nicht ausgeführt, nur gelesen/gezählt.
+   **Offen:** nichts aus dem Roadmap-Punkt; Entscheidungen stehen in §9 des Reports. **Kein Bau** (Nutzer: erst Review/Abgleich).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
@@ -207,4 +214,5 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | (Report) | docs: noice.nvim Feature-Abdeckung | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
 | nvim-config | `4fa89614` | docs: ext_messages TUI-Spike-Report + Handover | ✅ |
+| nvim-config | (Report) | docs: Report externe Plugins Feature-Abdeckung + Handover | ✅ |
 | WKDBooks | `2ab6d71` | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
