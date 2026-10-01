@@ -125,8 +125,11 @@ Idle, und sieht weder die `UIReady`-Phasen noch die Stöße danach.
 - `tui.lua` zeichnet in ein Pseudo-Terminal ohne echten Emulator dahinter:
   Terminal-Antworten (Farbabfragen, Bildprotokolle) kommen von Neovims
   eingebautem `:terminal`, die Zeit für das Zeichnen im echten Emulator fehlt.
-- lazys wöchentlicher Check läuft in dem Lauf mit, in dem er fällig ist, und
-  bleibt fällig, wenn die Sonde Neovim vorher beendet: eine Messreihe an so
-  einem Tag enthält ihn in jedem Lauf.
+- lazys wöchentlicher Check läuft in dem einen Lauf mit, in dem er fällig wird
+  (`git fetch` für jedes Remote-Plugin). lazy schreibt `last_check` gleich zu
+  Beginn des Checks, die Läufe danach sind also wieder normal, auch wenn die
+  Sonde Neovim mitten im Fetch beendet hat. `bench.lua` verwirft den ersten
+  Lauf, fällt die Fälligkeit dorthin, merkt man nichts; ein einzelner
+  Ausreißer in „max" an so einem Tag ist dieser Lauf.
 - JIT-kompilierter Lua-Code ruft keine Hooks auf: `where` unterschätzt heiße
   Schleifen. Beim Start ist fast alles interpretiert, dort stört es nicht.
