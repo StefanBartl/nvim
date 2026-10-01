@@ -39,15 +39,21 @@ plugins.add({
 
     build = ":TSUpdate",
 
-    -- Pinned: main@c82bf96f (2026-04-01, "feat!: drop support for Nvim 0.11")
-    -- rewrote get_available()/parser dedup to call vim.list.unique(), which
-    -- only exists on Neovim 0.12+. On 0.11.x that crashes EVERY parser
-    -- install ("attempt to index field 'list' (a nil value)"), regardless of
-    -- language - not a markdown-specific issue. f873ec29 is the last commit
-    -- before that health-check bump (still requires only nvim-0.11). Unpin
-    -- once this Neovim is on 0.12, or if nvim-treesitter restores 0.11
-    -- compat.
-    commit = "f873ec2955098fc4b7c3abfe891bdd49fa7947e2",
+    -- Was pinned to main@f873ec29 (2026-04-01) because the next commit,
+    -- c82bf96f ("feat!: drop support for Nvim 0.11"), rewrote
+    -- get_available()/parser dedup to call vim.list.unique(), which only
+    -- exists on Neovim 0.12+ -- crashing EVERY parser install on 0.11.x
+    -- ("attempt to index field 'list' (a nil value)"), not a
+    -- language-specific issue. Unpinned 2026-10-01 (externe-plugins report
+    -- §9, reassessed): this Neovim is 0.12.2, so the blocking requirement is
+    -- met. Checked the 85 commits between the pin and upstream main at the
+    -- time -- only that one bumped the Neovim floor; the rest are routine
+    -- parser/query updates and backward-compatible internal refactors, and
+    -- the public API this config calls (get_installed/install/indentexpr,
+    -- lua/nvim-treesitter/init.lua) is unchanged. Run `:Lazy update
+    -- nvim-treesitter` (or `:Lazy sync`) to actually pull it; highlighting/
+    -- folding/indent on a few buffers afterward is the real verification --
+    -- a commit-log read isn't a substitute for that.
 
     config = function()
       -----------------------------------------------------------------------
