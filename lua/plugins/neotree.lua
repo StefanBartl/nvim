@@ -35,6 +35,14 @@ return {
     -- largest item in startup -- 44 plugins loaded and ~1300ms; lazy it is 29
     -- and ~1050ms, measured over seven runs each.
     --
+    -- CAVEAT (2026-10-01): those runs were headless, and only there does this
+    -- hold. In a session with a UI, filetree.nvim loads on VeryLazy and lists
+    -- neo-tree as a dependency, so the whole chain comes in right after the
+    -- first frame anyway: ~170 ms of the ~600 ms VeryLazy stall, neotest ~150
+    -- of them. Not at startup proper, but not on demand either. See section
+    -- 14 of docs/ROADMAP/reports/startup-und-config-optimierung-analyse-
+    -- konzept-2026-09-26.md.
+    --
     -- The dependency on neotest stays. Dropping it instead was tried first and
     -- is a regression: the tests source builds its items through a neotest
     -- *consumer* that has to be registered before the source runs, so without

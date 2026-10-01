@@ -58,14 +58,32 @@ Für alles, was der Nutzer erst *nach* dem Start auslösen kann: Keymaps,
 User-Commands. Vor dem ersten Frame kann niemand tippen, also gehört nichts
 davon auf den synchronen Pfad.
 
-Aktuell: `usrcmds`, `mappings`, `menu`.
+Aktuell: `usrcmds`, `mappings`, `ui_statusline`.
 
 `UIReady` ist `VimEnter` + `vim.schedule` — VimEnter ist gefeuert, aber der
 folgende Paint wird nicht blockiert.
 
-> **Kein `User VeryLazy` im Config-Kern.** lazy.nvim emittiert das Event nur,
-> wenn eine Plugin-Spec es abonniert; in Headless-Runs feuerte es messbar gar
-> nicht. Plugin-Specs dürfen `VeryLazy` weiter nutzen — die Kern-Config nicht.
+> **Kein `User VeryLazy` im Config-Kern.** lazy.nvim feuert das Event erst
+> nach `UIEnter` (`lazy/core/util.lua`, `very_lazy()`); ein Headless-Neovim
+> bekommt kein `UIEnter`, dort feuert es deshalb nie. Plugin-Specs dürfen
+> `VeryLazy` weiter nutzen — die Kern-Config nicht.
+
+### `VeryLazy` ist ein Stapel, kein Hintergrund
+
+Alle Plugins mit `event = "VeryLazy"` laden **in einem einzigen Callback**
+direkt nach dem ersten Frame: der Editor ist sichtbar, nimmt aber keine
+Eingabe an, bis das letzte von ihnen geladen ist. Gemessen am 2026-10-01
+(`STEVESPC`, mit UI): 15 Plugins, **≈ 600 ms am Stück**. Daraus folgt:
+
+1. Ein Plugin auf `VeryLazy` zahlt jeder Start, samt seiner `dependencies`.
+   `filetree.nvim` zieht so `neo-tree` und über dessen Dependencies `neotest`
+   nach (≈ 170 ms), obwohl `neo-tree` selbst auf `cmd = "Neotree"` steht.
+2. Was ein solches Plugin in `setup()` per `vim.schedule` „aus dem Weg"
+   schiebt, läuft im nächsten Tick, also immer noch in den ersten zwei
+   Sekunden. `vim.schedule` verschiebt Arbeit, es macht sie nicht billig.
+3. Hat ein Plugin einen echten Auslöser (`cmd`, `keys`, `ft`), ist der dem
+   `VeryLazy` vorzuziehen. `VeryLazy` ist richtig für globale Keymaps und
+   Autocmds, die vor der ersten Nutzung existieren müssen.
 
 ### Verboten
 
@@ -225,6 +243,38 @@ Für die Frage „wer lädt das eigentlich" reicht `--startuptime` nicht — dor
 fehlt der Aufrufer. `require` von außen wrappen (`nvim --cmd "luafile
 tracker.lua"`, läuft vor `init.lua`) und im Wrapper `debug.traceback()`
 mitschreiben: das nennt Modul, Selbstzeit und Verursacher in einem.
+
+Dafür gibt es inzwischen ein Werkzeug:
+[`scripts/startup-probe/`](../../../scripts/startup-probe/README.md).
+
+### Headless ist kein Start
+
+Ein Headless-Lauf endet für diese Config faktisch bei `VimEnter`: kein
+`UIEnter`, also kein `VeryLazy`, also weder die Plugins, die darauf laden,
+noch lazys Checker. Die Messungen vom 2026-09-08 (oben) und der Report vom
+2026-09-26 sind headless entstanden und haben deshalb zwei Drittel der Arbeit
+nach dem Start nicht gesehen: mit UI 2538 ms Stöße, headless 562 ms.
+
+**Regel:** Aussagen über die Zeit nach `VimEnter` nur aus Läufen mit UI
+(`scripts/startup-probe/tui.lua`, `bench.lua`). Headless ist für den Teil
+davor in Ordnung. Eine „Einsparung", die nur headless gemessen ist, gilt als
+nicht gemessen: genau so ist der Kommentar an der neo-tree-Spec entstanden
+(„29 statt 44 Plugins"), während in der echten Session 60 laden.
+
+### Was der Start nach dem ersten Frame kostet
+
+Stand 2026-10-01, `STEVESPC`, Neovim 0.12.2, Median aus 5 Läufen mit UI:
+
+| Größe | vorher | nach `language.nvim` ad355be | zusätzlich Checker nur bei Fälligkeit |
+| --- | ---: | ---: | ---: |
+| Stöße > 60 ms, Summe | 2538 ms | 1522 ms | 1086 ms |
+| längster Stoß | 1131 ms | 560 ms | 662 ms |
+| Event-Loop belegt (6 s) | 2993 ms | 2012 ms | 1309 ms |
+| gestartete Prozesse | 106 | 106 | 5 |
+
+Der längste verbleibende Stoß ist der `VeryLazy`-Stapel. Herleitung und
+Einzelposten: Abschnitt 14 des Reports
+[`startup-und-config-optimierung-analyse-konzept-2026-09-26.md`](../../ROADMAP/reports/startup-und-config-optimierung-analyse-konzept-2026-09-26.md).
 
 ### `after/` ist hier kein Thema
 
