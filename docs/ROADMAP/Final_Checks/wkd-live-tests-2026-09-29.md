@@ -237,6 +237,39 @@ Plan und Phasenstatus: `../handovers/wkd_FightingGame_Implementierungsplan.md`.
       Kenji kommt nicht zum Zug (Stun-Lock). So lassen oder angleichen?
   - Notiz:
 
+### Nach dem Review (2026-10-01) — nur auf echten Geräten prüfbar
+
+- [ ] **Tempo auf anderen Displays:** Spiel auf einem 144-Hz-, 75-Hz- und einem 60-Hz-
+      Display (oder bei hoher Last) laufen lassen — Matchuhr und Bewegung gleich schnell?
+      (Der alte Frame-Snap ließ 15-ms-Frames 11 % zu schnell und 18-ms-Frames 7 % zu
+      langsam laufen.)
+  - Notiz:
+- [ ] **Online: Verlassen, Rematch, Tippfehler.** Nach dem ersten Match gibt es oben in der
+      Arena „Disconnect"; es führt zur Kämpferauswahl, das Gegenüber bekommt „connection
+      lost". Falschen Antwortcode einfügen und „Connect": Meldung „not valid", die
+      Einladung bleibt, ein zweiter Versuch mit dem richtigen Code klappt. Zweimal
+      „Rematch" klicken löst nicht das übernächste Match aus.
+  - Notiz:
+- [ ] **Online: schlechte Leitung.** Eine Seite wechselt für > 1 s den Tab: die andere zeigt
+      „waiting for your friend", nach 30 s ohne Spielpakete wird die Verbindung beendet.
+      Mit WLAN-Aussetzern spielen (oder Gerät kurz in den Flugmodus): am Ende zeigen beide
+      Seiten dasselbe Ergebnis.
+  - Notiz:
+- [ ] **Tap-Eingaben:** ein sehr kurzer Tipper auf einen Touch-Button während des
+      „FIGHT!"-Intros löst den Angriff beim ersten Live-Frame aus (wie im alten Spiel).
+  - Notiz:
+- [ ] **Treffer-Funken online:** bei 100 ms+ Latenz sehen und hören auch die Treffer, die
+      erst durch eine Korrektur der Vorhersage entstehen, Funken und Sound (vorher rund
+      9 % ohne). Ein vorhergesagter Treffer, der dann zurückgenommen wird, bleibt gemeldet.
+  - Notiz:
+- [ ] **Partikel beim Rematch:** das Match mit einem Treffer beenden, Rematch klicken — die
+      Funken des letzten Schlags tauchen im neuen Match nicht wieder auf.
+  - Notiz:
+- [ ] **Hover-Blip vor dem ersten Klick:** frisch geladene Seite, Maus über den Fight-Tab:
+      kein Ton, auch nicht verspätet nach dem ersten Klick. Danach (nach einem Klick)
+      funktioniert der Blip. Safari/iOS: Ton kommt nach Telefonat/Sperrbildschirm zurück.
+  - Notiz:
+
 ---
 
 *Erstellt aus dem Chat-Verlauf der wkd-Handover-Fortsetzungs-Session vom 2026-09-29
