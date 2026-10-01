@@ -27,7 +27,8 @@ function M.setup()
     -- already-bound `<leader>help` (plugins/personal/specs/navigate.lua pickers `mappings`),
     -- forcing a `timeoutlen` wait on every press before Neovim can tell the
     -- two apart. Same bug class as the `<leader>ffk`/`<leader>ff` collision
-    -- fixed in bindings/mappings/fzf.lua -- same fix, capitalize to break it.
+    -- that used to exist in bindings/mappings/fzf.lua (removed 2026-10-01,
+    -- see plugins/telescope.lua) -- same fix, capitalize to break it.
     marks_edit = "<leader>hE",
     marks_add = "<leader>ha",
     marks_add_front = "<leader>hA",

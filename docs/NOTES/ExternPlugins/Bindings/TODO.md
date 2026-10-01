@@ -93,7 +93,10 @@ Keymap dafür steht in [Keymaps/Blink.md](Keymaps/Blink.md)),
 `nvim-tree.lua` (nicht installiert), `nvim-web-devicons`,
 ~~`treesitter-context`~~ (deinstalliert 2026-09-19, ersetzt durch ui.nvims
 `ui.context`), `treesitter-textobjects`, `lensline.nvim`,
-`nvim-notify`, `triptych.nvim` (nicht installiert),
+~~`nvim-notify`~~ (deinstalliert 2026-10-01, ungenutzt — kein Backend für `config.noice`),
+`triptych.nvim` (nicht installiert),
 `vim-rhubarb`, `vim-wakatime` (deaktiviert), `targets.vim`, `mason.nvim`,
-`nvim-ts-autotag`, `telescope-fzf-native.nvim`, `telescope-github.nvim` (ungenutzt),
+`nvim-ts-autotag`, `telescope-fzf-native.nvim`,
+~~`telescope-github.nvim`~~ (deinstalliert 2026-10-01, ungenutzt — nie `load_extension`'t),
+~~`telescope-file-browser.nvim`~~ (deinstalliert 2026-10-01, ungenutzt — ihr einziger Aufrufer `<leader>,` wurde nie benutzt),
 `plenary.nvim`.

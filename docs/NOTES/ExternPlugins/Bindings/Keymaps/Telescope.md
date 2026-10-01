@@ -1,18 +1,20 @@
 # Telescope — Keymaps
 
-Betrifft `nvim-telescope/telescope.nvim` und `nvim-telescope/telescope-file-browser.nvim`.
-Registriert/konfiguriert in:
+Betrifft `nvim-telescope/telescope.nvim`. Registriert/konfiguriert in:
 
 - [lua/bindings/mappings/telescope.lua](../../../../../lua/bindings/mappings/telescope.lua)
   (aufgerufen aus `bindings.mappings.init`) — die Leader-Keymaps.
 - [lua/config/telescope/init.lua](../../../../../lua/config/telescope/init.lua) —
   `telescope.setup()`, inkl. Merge der In-Picker-`mappings`.
 - [lua/config/telescope/file_browser/keymaps.lua](../../../../../lua/config/telescope/file_browser/keymaps.lua) —
-  die einzige lokale Ergänzung zu den In-Picker-Mappings.
+  die einzige lokale Ergänzung zu den In-Picker-Mappings (reines
+  `telescope.actions.which_key`, seit 2026-10-01 **nicht** mehr von
+  `telescope-file-browser.nvim` abhängig — der Modulpfad ist historisch).
 - [lua/plugins/telescope.lua](../../../../../lua/plugins/telescope.lua) — Lazy-Specs
-  für `telescope.nvim`, `telescope-fzf-native.nvim`, `telescope-file-browser.nvim`
-  (search.nvim seit 2026-10-01 abgelöst durch `pickers.tabs`; kein `keys = {...}` in den Specs — alle Keymaps kommen aus
-  `bindings.mappings.telescope`).
+  für `telescope.nvim`, `telescope-fzf-native.nvim`
+  (search.nvim seit 2026-10-01 abgelöst durch `pickers.tabs`; `telescope-github.nvim`
+  und `telescope-file-browser.nvim` am selben Tag entfernt, beide ungenutzt — externe-plugins-report §9.2/§9.3;
+  kein `keys = {...}` in den Specs — alle Keymaps kommen aus `bindings.mappings.telescope`).
 
 **Wichtig:** Hier ist die Lage gemischt. Telescope ist zu großen Teilen
 **Plugin-Standard** — insbesondere fast alle In-Picker-Tasten (Insert-/
@@ -49,21 +51,20 @@ davon — jede Zeile ist eine bewusste Config-Entscheidung.
 
 | Mapping | Aktion | Ziel | Status |
 |---|---|---|---|
-| `<leader>ts` | Telescope-Picker-Übersicht öffnen (keine `pickers.nvim`-Entsprechung, nichts dort listet "jeden Picker") | `:Telescope` | [custom] |
 | `<leader>tg` | Grep mit eigenem Prompt (`lib.nvim.ui.kit.input`), danach `pickers.nvim`-Live-Grep im CWD mit dem getippten Text vorbelegt (`pickers.command.handle({ "cwd", "grep" })`, Engine wählt pickers.nvim); nur ohne pickers.nvim Fallback auf `telescope.builtin.grep_string` | Lua-Funktion | [custom] |
-| `<leader>,` | File-Browser-Extension am aktuellen **CWD** öffnen (lädt `file_browser` bei Bedarf nach) | Lua-Funktion → `telescope.extensions.file_browser.file_browser({ path = vim.uv.cwd() })` | [custom] |
+
+**`<leader>ts`** (Telescope-Picker-Übersicht, `:Telescope`) und **`<leader>,`**
+(File-Browser-Extension am CWD) sind seit 2026-10-01 entfernt — nie benutzt,
+keine `pickers.nvim`-Entsprechung nötig gewesen (externe-plugins-report §9.2
+Follow-up). `<leader>.` (`pickers.nvim`s eigenes, engine-agnostisches
+`explorer`-Builtin, "am aktuellen Buffer") war bereits vorher der
+Ersatz für `<leader>,` und bleibt unverändert.
 
 **`<leader>fa` ist seit 2026-10-01 kein direkter Telescope-Call mehr**
 (externe-plugins-report §9.2): engine-agnostisch über `pickers.nvim`s
 eigenes opt-in `keymaps.cwd_find_all` (`plugins/personal/specs/navigate.lua`),
 Ziel `:Pickers cwd files all` — gleiche drei Flags (`hidden`/`no_ignore`/
 `follow`), aber nicht mehr telescope-only.
-
-Hinweis aus dem Quellcode: `<leader>.` gehört inzwischen `pickers.nvim`s
-eigenem engine-agnostischem `explorer`-Builtin (File-Browser "am aktuellen
-Buffer") — dieses Modul behält nur noch die CWD-Variante, weil
-`pickers.builtins` keinen Pfad-Override mit engine-übergreifend stabiler
-Opts-Form annimmt.
 
 **Auskommentiert/inaktiv** (Zeilen 26–34 in der Quelldatei, bewusst
 deaktiviert, kein Effekt): `<leader><leader>` (Live Grep), `<leader>fk`
@@ -100,12 +101,13 @@ separate Telescope-only-Taste.
 
 ---
 
-## 2. File-Browser-Extension: lokale Zusatz-Mappings
+## 2. Lokale Zusatz-Mappings (`config.telescope.file_browser.keymaps.lua`)
 
-Aus `config.telescope.file_browser.keymaps.lua`, gemerged in
-`config.telescope.defaults().mappings` (gilt **global** für jeden
-Telescope-Picker, nicht nur `file_browser`, da `telescope.setup()`s
-`defaults.mappings` nicht picker-scoped ist):
+Trotz des Modulpfads **nicht** von `telescope-file-browser.nvim` abhängig —
+reines `telescope.actions.which_key` (Core-Telescope). Gemerged in
+`config.telescope.defaults().mappings`, gilt daher **global** für jeden
+Telescope-Picker, nicht nur einen einzelnen (`telescope.setup()`s
+`defaults.mappings` ist nicht picker-scoped):
 
 | Modus | Taste | Aktion | Status |
 |---|---|---|---|
@@ -132,7 +134,7 @@ ist unverändertes `telescope.nvim`-Werksverhalten.
 | `<M-Right>` | `preview_scrolling_right` (pickers.nvim, dito statt `<C-Right>`) | **[custom]** |
 | `<C-a>` | `create_file` (pickers.nvim `entry_actions`, von pickers.nvim in `defaults.mappings` gepatcht) | **[custom]** — kein Telescope-Default auf dieser Taste. |
 | `<S-CR>` | `open_background` (pickers.nvim `entry_actions`) | **[custom]** |
-| `<C-o>` | `open_background` (pickers.nvim `entry_actions`) | **[custom]** — siehe Kollisions-Hinweis unten (§5). |
+| `<C-o>` | `open_background` (pickers.nvim `entry_actions`) | **[custom]** — kollidierte bis 2026-10-01 mit `telescope-file-browser.nvim`s eigenem `open` innerhalb des `file_browser`-Pickers; mit der Extension entfernt, siehe §5. |
 | `<C-s>` | `split` (`select_horizontal`, pickers.nvim) | **[custom]**, aber wirkungsgleich zu `<C-x>` (Default, s. u.) — reine Zweit-Taste. |
 | `<C-v>` | `select_vertical` | [default] — pickers.nvim bindet `vsplit` zusätzlich auf **dieselbe** Taste/Aktion, also keine funktionale Änderung. |
 | `<C-t>` | `select_tab` | [default] — dito für `tab`, keine Änderung. |
@@ -178,68 +180,23 @@ Taste zum Ein-/Ausklappen der Preview über `pickers.nvim`.
 
 ---
 
-## 5. `telescope-file-browser.nvim` — eigene Default-Mappings
+## 5. Entfernt: `telescope-file-browser.nvim`
 
-Ausschließlich innerhalb des `file_browser`-Pickers aktiv (`fb_actions`,
-`lua/telescope/_extensions/file_browser/actions.lua`). In dieser Config
-**keine einzige** dieser Tasten überschrieben — nur die zusätzliche `?`-Zeile
-aus §2 kommt oben drauf. Alle Zeilen unten sind daher **[default]**.
-
-| Insert/Normal | Aktion | Beschreibung |
-|---|---|---|
-| `<A-c>` / `c` | `create` | Datei/Ordner an aktuellem `path` erstellen (Pfadtrenner am Ende → Ordner) |
-| `<S-CR>` | `create_from_prompt` | Aus dem Prompt-Text erstellen und öffnen |
-| `<A-r>` / `r` | `rename` | (Multi-)Selektion umbenennen |
-| `<A-m>` / `m` | `move` | (Multi-)Selektion an `path` verschieben |
-| `<A-y>` / `y` | `copy` | (Multi-)Selektion an `path` kopieren |
-| `<A-d>` / `d` | `remove` | (Multi-)Selektion löschen |
-| `<C-o>` / `o` | `open` | Mit System-Standardanwendung öffnen |
-| `<C-g>` / `g` | `goto_parent_dir` | Zum Parent-Verzeichnis |
-| `<C-e>` / `e` | `goto_home_dir` | Zum Home-Verzeichnis |
-| `<C-w>` / `w` | `goto_cwd` | Zum aktuellen `cwd` |
-| `<C-t>` / `t` | `change_cwd` | `cwd` auf selektierten Ordner/Datei-Parent setzen |
-| `<C-f>` / `f` | `toggle_browser` | Zwischen Datei- und Ordner-Browser wechseln |
-| `<C-h>` / `h` | `toggle_hidden` | Versteckte Dateien/Ordner ein-/ausblenden |
-| `<C-s>` / `s` | `toggle_all` | Alle Einträge (außer `./`, `../`) selektieren |
-| `<Tab>` / `<S-Tab>` | siehe `telescope.nvim` | Selektion togglen + vor/zurück springen |
-| `<bs>` | `backspace` | Bei leerem Prompt: zum Parent-Verzeichnis, sonst normal |
-
-**Kollisions-Hinweis (offene Frage, nicht abschließend verifiziert):**
-`<S-CR>` und `<C-o>` sind gleichzeitig (a) `file_browser`-eigene Defaults
-(`create_from_prompt` bzw. `open`) **und** (b) global von `pickers.nvim`s
-`entry_actions` auf `open_background` gelegt (§3/§4). `file_browser` bindet
-seine eigenen Aktionen im Picker-eigenen `attach_mappings` **nach** den
-globalen `defaults.mappings` — vermutlich gewinnt also innerhalb des
-`file_browser`-Pickers die `file_browser`-eigene Aktion (`create_from_prompt`/
-`open`), während `open_background` auf denselben Tasten in **allen anderen**
-Telescope-Pickern (find_files, live_grep, etc.) aktiv bleibt. Das wurde hier
-nur aus dem Quellcode abgeleitet, nicht zur Laufzeit getestet — im Zweifel
-`:Telescope file_browser` öffnen und `<C-/>`/`?` (which_key) prüfen, welche
-Aktion tatsächlich unter `<C-o>`/`<S-CR>` hängt.
-
-`<C-s>` hat dieselbe Doppelbelegung wie oben (`toggle_all` in `file_browser`
-vs. `split` global via pickers.nvim) — mit derselben Vermutung (picker-lokal
-gewinnt `toggle_all` innerhalb `file_browser`).
-
----
-
-## 6. Extension-Konfiguration (kein Keymap, aber verhaltensrelevant)
-
-Aus `config.telescope.extensions()` — nicht Teil der Tastenbelegung, aber
-bestimmt, *was* die obigen Aktionen sehen: `path = "%:p:h"`, `cwd_to_path =
-true`, `select_buffer = true`, `hidden = true`, `respect_gitignore = false`,
-`follow_symlinks = true`, `use_fd = true`, `git_status = true`, `prompt_path =
-true`, `display_stat = { date = true, size = true, mode = false }`. Alles
-**[custom]** gegenüber `telescope-file-browser.nvim`s eigenen Defaults (siehe
-Kommentare in dessen README, z. B. Default `hidden = false`,
-`respect_gitignore` je nach `fd`-Verfügbarkeit, `display_stat.mode = true`).
+Die Extension (eigene Default-Mappings, `M.extensions()`'s `file_browser`-Opts
+in `config.telescope.init.lua`) ist seit 2026-10-01 deinstalliert — ihr
+einziger Aufrufer (`<leader>,`, §1) wurde nie benutzt. `pickers.builtins`'
+`explorer`-Eintrag auf der Telescope-Engine fängt das Fehlen bereits per
+`pcall` ab (`notify.error`, kein Crash). Die früheren Abschnitte 5
+(file_browser-eigene Tasten) und 6 (Extension-Konfiguration) samt ihrer
+Kollisions-Hinweise (`<S-CR>`/`<C-o>`/`<C-s>` gegen `pickers.nvim`s globale
+`entry_actions`) sind damit gegenstandslos und entfallen.
 
 ---
 
 ## Autocmds / Usercmds
 
-Für `telescope.nvim`/`telescope-file-browser.nvim` wurden **keine** eigenen
-Autocmds oder User-Commands in diesem Config-Repo gefunden (nur die von
-`telescope.nvim` selbst intern registrierten, z. B. `:Telescope` als
-Plugin-Command — kein zusätzlicher Wrapper wie bei `:Session`). Es gibt daher
-keine `Autocmds/Telescope.md`/`Usercmds/Telescope.md` in diesem Ordner.
+Für `telescope.nvim` wurden **keine** eigenen Autocmds oder User-Commands in
+diesem Config-Repo gefunden (nur die von `telescope.nvim` selbst intern
+registrierten, z. B. `:Telescope` als Plugin-Command — kein zusätzlicher
+Wrapper wie bei `:Session`). Es gibt daher keine `Autocmds/Telescope.md`/
+`Usercmds/Telescope.md` in diesem Ordner.

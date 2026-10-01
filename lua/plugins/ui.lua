@@ -26,10 +26,12 @@ return {
     -- nothing, and answered E492 on the second call.
     cmd = { "Noice", "NoiceAll", "NoiceHistory", "NoiceDismiss", "NoiceErrors" },
     opts = require("config.noice"),
+    -- rcarriga/nvim-notify left on 2026-10-01: declared but never require()d
+    -- anywhere (no "notify" view/backend wired into config.noice), externe-
+    -- plugins report §9.3.
     dependencies = {
       "MunifTanjim/nui.nvim",
       "folke/snacks.nvim",
-      "rcarriga/nvim-notify",
     },
   },
 

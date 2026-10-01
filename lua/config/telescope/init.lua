@@ -1,5 +1,5 @@
 ---@module 'config.telescope'
---- Modularized Telescope setup with file browser keymaps.
+--- Modularized Telescope setup.
 --- History is owned by pickers.nvim (history.fzf_scope = "patch" in its setup()),
 --- which patches telescope's defaults.history itself — see StefanBartl/pickers.nvim.
 --- Preview-scroll (<PageUp>/<PageDown>) and history-nav (<C-p>/<C-n>) keys are
@@ -8,8 +8,10 @@
 --- pickers.nvim's docs/KEYMAPS.md. Horizontal preview scroll
 --- (<M-Left>/<M-Right>) is configured via pickers.setup({ keys = {
 --- preview_scroll_left/right = ... } }) in plugins/personal/specs/navigate.lua, same
---- reason. This module only merges file-browser keymaps, sets UI highlights,
---- and loads extensions safely.
+--- reason. This module merges the `?` -> which_key mapping (core telescope.actions,
+--- not tied to any extension -- the `config.telescope.file_browser.keymaps` path
+--- predates telescope-file-browser.nvim's removal, 2026-10-01) into
+--- defaults.mappings, sets UI highlights, and loads extensions safely.
 
 local M = {}
 
@@ -34,23 +36,12 @@ function M.defaults()
   }
 end
 
--- Returns extension configuration table
+-- Returns extension configuration table. telescope-file-browser.nvim's own
+-- `file_browser = {...}` opts left on 2026-10-01 with the plugin itself --
+-- its only caller (<leader>,) was never used, see plugins/telescope.lua.
 ---@return table extensions
 function M.extensions()
-  return {
-    file_browser = {
-      path = "%:p:h",
-      cwd_to_path = true,
-      select_buffer = true,
-      hidden = true,
-      respect_gitignore = false,
-      follow_symlinks = true,
-      display_stat = { date = true, size = true, mode = false },
-      use_fd = true,
-      git_status = true,
-      prompt_path = true,
-    },
-  }
+  return {}
 end
 
 -- Returns list of extensions to load
