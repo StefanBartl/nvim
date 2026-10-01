@@ -131,6 +131,11 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    ohne Nutzung, `search.nvim` ↔ `pickers.tabs` (in der Config nicht aktiviert), 13 direkte Telescope/fzf-lua-Maps trotz
    pickers.nvim, nvim-treesitter-Pin mit veraltetem Kommentar (Neovim ist 0.12.2), **gitsuite-Doku sagt native Hunk-Implementierung,
    Code hat keine für stage/reset** (nicht korrigiert). Nichts entfernt/ersetzt. Nicht ausgeführt, nur gelesen/gezählt.
+   **Entscheidung 1 umgesetzt (2026-10-01): `pickers.tabs` aktiv, search.nvim abgelöst** (nvim-config `b1c0170a`; `<leader>s` →
+   `:Pickers tabs default`, `<Tab>`/`<S-Tab>` in `specs/navigate.lua`, Gruppen dort). Live-Test in echter TUI fand 3 Fehler in
+   pickers.nvim (`0684430` Tab schloss jeden Picker; `c51fe4f` `builtin`-Ziele gingen nicht + nur Tab-Picker schalten; `265b01c`
+   snacks reichte die Query nicht durch) — alle behoben, 996 Tests grün. Details im Nachtrag des Reports. **Code-Commits noch nicht
+   reviewt** (kein Haken). Offen: `:Lazy clean` für das verwaiste search.nvim (nicht ausgeführt); `<leader>s`-Präfixwartezeit (1 s) bekannt.
    **Offen:** nichts aus dem Roadmap-Punkt; Entscheidungen stehen in §9 des Reports. **Kein Bau** (Nutzer: erst Review/Abgleich).
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
@@ -215,4 +220,9 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
 | nvim-config | `4fa89614` | docs: ext_messages TUI-Spike-Report + Handover | ✅ |
 | nvim-config | `e01f6fc7` | docs: Report externe Plugins Feature-Abdeckung + Handover | ✅ |
+| nvim-config | `92a217fe` | docs: Report-Nachtrag (pickers.tabs aktiv) | ✅ |
+| pickers.nvim | `0684430` | fix(tabs): tab_next/tab_prev schließen keinen Picker ohne Gruppe; `<Tab>` behält Mehrfachauswahl | – |
+| pickers.nvim | `c51fe4f` | fix(tabs): `builtin`-Ziele über pickers.builtins; nur Tab-Picker schalten (Buffer-Markierung) | – |
+| pickers.nvim | `265b01c` | fix(snacks): Query beim Tab-Wechsel durchreichen (pattern/search) | – |
+| nvim-config | `b1c0170a` | feat(pickers): Tab-Gruppen aktiv, search.nvim abgelöst (`<leader>s`) | – |
 | WKDBooks | `2ab6d71` | docs: Spike-Ergebnisse im Message-Log-Konzept + TUI-Harness-Rezept/Skripte | ✅ |
