@@ -5,7 +5,7 @@ einsteigt, liest erst diese Datei, dann den Plan
 [`reports/aufwischen-2026-09-30-implementierungsplan.md`](../reports/aufwischen-2026-09-30-implementierungsplan.md)
 (dort stehen Befunde, Designs und Begründungen je Task).
 
-**Stand:** 2026-10-01, nach dem Task „Personal-Spec nachziehen".
+**Stand:** 2026-10-01, nach dem Task „Report Markdown-Link-Einfügestellen (+ buffer-ctx, casedesk)".
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. 1 Agent
 gleichzeitig; nach jedem Task sofort auf `main` pushen; **keine** Co-Author-Zeile;
 vor `git add` immer `git status`; Edit-Skripte mit Backslashes **in eine Datei
@@ -74,10 +74,11 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
    `config_smart` liegt schon auf `<leader>CF`). Noch **nicht** gesetzt: `lib.nvim.markdown.link_cursor.setup`
    global (nur über die Plugin-Optionen steuerbar). Ui.nvim-Spec: ein `ui.setup({ toast = … })` gibt es in
    der Config nicht, `toast` läuft über `popup.setup`.
-6. **Report „Markdown-Link-Einfügestellen"** als eigene Datei in `docs/ROADMAP/reports/`
-   (Inventar steht als Anhang A im Plan; um „vorher/nachher"-Cursorverhalten ergänzen,
-   `mdview/media/hover/gopath` noch gegenprüfen; buffer-ctx.nvim `ops/markdown_link.lua`
-   + `imagepaste` und casedesk `ui/insert.lua` prüfen, ob sie den Helper nutzen sollen).
+6. ~~Report „Markdown-Link-Einfügestellen"~~ — **erledigt**: `reports/markdown-link-einfuegestellen-2026-10-01.md`
+   (alle Stellen, vorher/nachher, Optionen, Commits; mdview/media/hover/gopath/recommender/insights ohne
+   Treffer; color_my_ascii/open/documentation bewusst unverändert). Dabei zusätzlich umgesetzt, weil
+   „jedes Usercmd, das einen Link einfügt": buffer-ctx `:Insert mdlink` (`006a306`) und casedesk
+   `:Case insert asset` (`dd58bc1`) nutzen jetzt `link_cursor.place`.
 7. **T7 Message-Popup**: nur Roadmap-Einträge (freigegeben!) in
    `WKDBooks/Development/wkdbook-myplugins/{debugging.nvim,lib.nvim,ui.nvim}/ROADMAP/…`
    + Noice-Feature-Matrix-Report (Punkt in `00_ROADMAP.md` Z. ~97 — **Datei gehört dem
@@ -133,4 +134,7 @@ entscheidet der **erste**; immer Insert-Modus (`startinsert`), abschaltbar.
 | pickers.nvim | `6e34dcf` | feat(entry_actions): Aktionen melden, was sie taten, auch in :messages | – |
 | nvim-config | `27a46759` | feat(usrcmds): `:Clipboard [path] reports|handovers` | – |
 | nvim-config | `b11c2356` | chore(specs): neue Plugin-Optionen (images env, Toast, Blockquote, Link-Cursor, Picker/filetree) | – |
+| buffer-ctx.nvim | `006a306` | feat(insert): `:Insert mdlink` setzt den Cursor in den Link | – |
+| casedesk.nvim | `dd58bc1` | feat(insert): `:Case insert asset` setzt den Cursor in den Link | – |
+| nvim-config | (Report) | docs: Report Markdown-Link-Einfügestellen | ✅ |
 | nvim-config | `264531a0`, `7bf3d7ce` | docs: Plan-Report + Handover | ✅ |
