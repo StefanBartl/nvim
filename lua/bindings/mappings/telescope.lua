@@ -33,6 +33,16 @@ function M.setup()
     })
   end, { desc = "[Pickers] Grep (own prompt)" })
 
+  -- Tabbed search (was search.nvim): Files / All Files / Grep / Buffers, cycled with
+  -- <Tab>/<S-Tab> inside the picker, the typed query travelling along. Groups:
+  -- pickers.nvim `tabs` in plugins/personal/specs/navigate.lua.
+  map(
+    "n",
+    "<leader>s",
+    "<cmd>Pickers tabs default<CR>",
+    { desc = "[Pickers] Tabbed search (files/all/grep/buffers)" }
+  )
+
   map(
     "n",
     "<leader>fa",

@@ -41,7 +41,7 @@ siehe [Keymaps/Blink.md](Keymaps/Blink.md).
 - [x] ~~`chrisbra/unicode.vim`~~ — deinstalliert 2026-09-19, ersetzt durch
       emojis.nvims `:Emojis unicode` (Keymaps/Usercmds am emojis-Spec); die
       beiden Blätter sind gelöscht
-- [x] `FabianWirth/search.nvim`
+- [x] ~~`FabianWirth/search.nvim`~~ — abgelöst 2026-10-01 durch pickers.nvims `tabs` (`<leader>s` → `:Pickers tabs default`); das Blatt `Search.md` ist gelöscht
 - [x] `saghen/blink.cmp` — nachgezogen 2026-09-01, siehe Nachtrag oben
 
 ## Findings aus der Doku-Initiative — Status

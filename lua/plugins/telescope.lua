@@ -54,23 +54,7 @@ return {
     lazy = true,
   },
 
-  ------------------------------------------------------------------------------
-  -- search.nvim (Tabbed UI wrapper)
-  ------------------------------------------------------------------------------
-  {
-    "FabianWirth/search.nvim",
-    dependencies = { "nvim-telescope/telescope.nvim" },
-    keys = {
-      {
-        "<leader>s",
-        function()
-          require("search").open()
-        end,
-        desc = "Search (tabbed UI)",
-      },
-    },
-    config = function()
-      require("config.search").setup()
-    end,
-  },
+  -- search.nvim (tabbed UI) left on 2026-10-01: pickers.nvim's `tabs` is the
+  -- replacement (`<leader>s` -> `:Pickers tabs default`, groups in
+  -- plugins/personal/specs/navigate.lua), engine-neutral instead of telescope-only.
 }

@@ -815,9 +815,11 @@ return {
           -- Hand the entry to the OS: default application / file manager.
           -- open_system = { "<M-o>", "<leader>sm" },
           -- reveal_in_manager = { "<M-x>", "<leader>fm" },
-          -- Switch between the targets of a tab group (telescope + snacks).
-          -- tab_next = false, -- e.g. "<Tab>"
-          -- tab_prev = false, -- e.g. "<S-Tab>"
+          -- Switch between the targets of a tab group (telescope + snacks). On
+          -- <Tab>/<S-Tab> they only switch while a group is active (`<leader>s`);
+          -- in every other picker they keep the engine's own multi-select.
+          tab_next = "<Tab>",
+          tab_prev = "<S-Tab>",
         },
 
         -- The "insert Markdown link(s)" entry action (`keys.markdown_link_insert`).
@@ -855,12 +857,14 @@ return {
         -- Tab groups: named lists of `:Pickers` argument strings, cycled with
         -- keys.tab_next/tab_prev. A group given here replaces the default group of
         -- the same name wholesale; `false` drops one.
-        -- tabs = {
-        --   groups = {
-        --     default = { "cwd files", "cwd grep", "builtin buffers" },
-        --     git = { "builtin git_branches", "builtin git_commits", "builtin git_stash" },
-        --   },
-        -- },
+        -- Replaces search.nvim's tabbed UI (Files / All Files / Grep / Buffers, plus the
+        -- `git` collection). `<leader>s` opens `default`; `:Pickers tabs git` the other.
+        tabs = {
+          groups = {
+            default = { "cwd files", "cwd files all", "cwd grep", "builtin buffers" },
+            git = { "builtin git_branches", "builtin git_log", "builtin git_stash" },
+          },
+        },
 
         -- The quickfix / location window: preview float + refine filter over the list.
         -- quickfix = {
