@@ -293,9 +293,20 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
    `ui_kit_message_log_spec.lua` (Fensterhöhe UND `topfill` direkt geprüft). Harness-Rezept um zwei
    Fallen ergänzt (`nvim_list_uis()[1].ext_messages` ist nicht das richtige Signal für einen
    `vim.ui_attach`-Listener; `virt_lines_above` auf Zeile 1 braucht `topfill`).
+   **Update 2026-10-01 (`utils.lua` vs. `focus_helpers`-Dopplung erledigt):** geprüft, wer
+   `debugging.nvim/views/utils.lua`s vier Fokus-/Scroll-Funktionen (`ensure_bottom`/`make_focusable`/
+   `force_focus`/`reveal_at_bottom`) wirklich noch aufruft — nur `reveal_at_bottom` (in `refresh_log_view`,
+   selbst seit dem T7-Umbau nur noch für die drei alten, jetzt unerreichbaren Tags relevant) und
+   `is_target_view` (FileType-Autocmd für `q`/`<Esc>`-Schließen — bleibt relevant, da noice selbst seine
+   eigenen Viewer-Buffer mit `filetype="noice"` versieht, unabhängig von debugging.nvim). `lib.nvim.window.
+   focus_helpers` hatte dagegen noch **gar keine echten Aufrufer** (geprüft über die ganze Fleet) und war
+   unvollständiger (kein `normal! G`, kein Degenerate-Fenster-Check, keine „nicht wirklich unten"-Retry-Logik).
+   Die robustere Variante nach lib.nvim portiert (neue `opts`-Tabellen-Signatur, neues `is_at_bottom()`,
+   `TESTS/focus_helpers_spec.lua` — vorher ungetestet) statt umgekehrt, `utils.lua` auf nur noch
+   `is_target_view` gekürzt, `display.lua` ruft `lib.nvim.window.focus_helpers` jetzt direkt. lib.nvim
+   `7e027a8`, debugging.nvim `101e445` (−217 Zeilen netto). Volle Testsuiten beider Repos grün.
    **Nicht Teil dieses Durchgangs** (bewusst, s. Plan): das volle Live-Chip-System (noch-Ersatz, Konzept-
-   Schritt 7) bleibt separat; `debugging.nvim/views/utils.lua` vs. `lib.nvim.window.focus_helpers`
-   (Dopplung, gefunden, nicht bereinigt) bleibt ein Folge-Cleanup.
+   Schritt 7) bleibt separat.
    Hinweis: WKDBooks hat lokale Nutzer-Änderungen (`Spickzettel/…`) — nur exakte Pfade stagen, kein
    `git pull --rebase` mit dirty tree (vorher `git fetch`, ahead/behind prüfen).
 8. ~~cascade: Aufzählungszahlen schrittweise ändern~~ — **erledigt** (cascade `236ace2`).
@@ -410,6 +421,8 @@ Config dort mit `rtp:prepend(worktree)` laden, sonst wird die alte Version getes
 | WKDBooks | `aed1fb6` | docs(tools): s8 Live-Pagination/Cheatsheet-Check, Harness-Rezept ergänzt | ✅ |
 | ui.nvim | `33f83b4` | fix(kit): message_log 'more above'-Hinweis brauchte `topfill` zum Anzeigen | ✅ (Live-TUI-Test) |
 | lib.nvim | `175831c` | fix(ui.kit): message_log-Spiegel — `topfill`-Fix | ✅ |
+| lib.nvim | `7e027a8` | feat(window): focus_helpers übernimmt debugging.nvims robustere Variante (Dedup) | ✅ |
+| debugging.nvim | `101e445` | refactor(views): Fokus-/Scroll-Dopplung entfernt, ruft lib.nvim.window.focus_helpers direkt | ✅ |
 
 ## Reviewed commits (ultracode) — nicht mehr offen
 
