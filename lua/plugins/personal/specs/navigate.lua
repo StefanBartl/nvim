@@ -1825,6 +1825,12 @@ return {
         -- despite `autosave = true`.
         -- autosave_name = true,
 
+        -- On exit ALWAYS also write the session `default_name` ("last"): what
+        -- `:LastSession` / `nvim +LastSession` loads -- the editor as you quit
+        -- it, any project/branch, no manual save needed, independent of
+        -- `autosave`. Skipped when no file buffer is open. false = off.
+        -- save_last = true,
+
         -- Write a `.{name}.json` companion file with the save context.
         -- metadata = true,
 
