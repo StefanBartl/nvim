@@ -239,6 +239,33 @@ angepasst (die Datei- und Skriptnamen `open-in-nvim.*` blieben, sie stehen in de
 5. `verify.ps1` (`?:`) und `install-context.ps1` (`"$key:"` ist in 5.1 eine ungültige Scope-Variable) parsen jetzt unter
    5.1; **alle** `*.ps1` im Repo parsen fehlerfrei. (Teil 5 hatte "parsen fehlerfrei" unter PowerShell 7 geprüft.)
 
+**Review durch ultracode (Folge-Chat 2, Commit `9eb8c7e`, 69 Prüfungen).** Geprüft wurden `28d358c`, `41c399f`,
+`a8698cb`; alles Gefundene ist behoben:
+
+| Art | Fund | Behebung |
+| --- | --- | --- |
+| Bug | `:Filetree open` per `fnameescape` scheiterte still bei `#`, `%`, `[`, `(` im Ordnernamen | Pfad als RPC-Parameter, kein Escaping |
+| Bug | **`param([string[]]$args)` bindet in Windows PowerShell 5.1 nicht** (bleibt leer): beide Launcher starteten ein neues Neovim ohne `--listen` und **ohne die Datei** (auch der Eintrag "new instance", `open-in-nvim.ps1`, den ich nicht angefasst hatte) | Parameter heißt `$launchArgs`/`$nvimArgs`; Regressionstest |
+| Bug | `cmd start`-Rückfall warf (leeres Array-Element, 5.1) | Titel als `""` |
+| Bug | `Start-Process -ArgumentList` fügt mit Leerzeichen zusammen ("My Dir" = zwei Argumente); `"C:\"` brach das Quoting; WezTerm-Aufruf blockierte die versteckte Shell bis zum Schließen | `Invoke-Spawn` in der Lib, jedes Argument nach `CommandLineToArgvW`-Regeln quotiert (gegen die echte API getestet) |
+| Bug | `%NAME%` in einem echten Pfad (Ordner `%TEMP%`) wurde expandiert | nur expandieren, wenn der Pfad so nicht existiert |
+| Bug | msgpack-Decoder entrollte leere/einelementige Arrays; `--listen` auf einen belegten Namen | `,`-Rückgabe; `--listen` nur wenn die Pipe frei ist |
+| Sicherheit | endlose Array-Verschachtelung einer Pipe, die ein fremder Prozess besetzt, hätte einen Stack-Überlauf ausgelöst | Tiefenlimit 16 |
+| Sicherheit | `<` im `--remote-send`-Text wäre als Tastennotation gelesen worden | `<lt>` |
+| Sicherheit | Instanzen anderer angemeldeter Benutzer als Kandidaten | nur die eigene Windows-Sitzung |
+| Sicherheit/Tests | `ONLY_PIDS` ließ `nvr` und den echten Pipe-Namen zu (Test hätte die echte Sitzung treffen können); Aufräumen tötete PIDs ohne Prüfung (PID-Wiederverwendung) | beides aus; nur `nvim`-Prozesse, die im Lauf gestartet wurden |
+| Performance | `nvim --server --remote` startete einen zweiten `nvim.exe` (~1,1 s) | Öffnen per RPC über die Pipe; Gesamtzeit ~1100 ms auf ~540 ms (inkl. ~190 ms PowerShell-Start) |
+| Performance | WMI-Abfrage der Kommandozeilen (~200 ms) für den Headless-Filter | stattdessen `len(nvim_list_uis())`: schneller und genauer (fängt auch `--embed` ohne `--headless`); Regex-Filter entfernt |
+| Performance | `nvr --serverlist` (Python-Skript, ~300 ms, ohne Zeitlimit) bei **jedem** Klick | nur noch als letzter Ausweg, mit Zeitlimit |
+| Stil | `tests/fixture.lua` war nicht stylua-konform (umging den Hook per Python-Schreibzugriff) | formatiert, stylua und luacheck grün |
+
+Nach dem Review mit dem **echten** Launcher gegen eine Wegwerf-Instanz mit deiner echten Config geprüft: Ordner
+`My Dir (1) #2 [x] 'q' %p & more` öffnet neo-tree mit richtigem Root, die Datei `note #1 [a].txt` landet im Buffer.
+Die echte Sitzung blieb unberührt.
+
+**Lehre (für Memory/WKDBooks):** unter Windows PowerShell 5.1 nie einen Parameter `$args` deklarieren; nie ein leeres
+Element in `-ArgumentList`; Argumente selbst quoten (`CommandLineToArgvW`-Regeln), nicht `""`-verdoppeln.
+
 **Wirkung auf die echte Sitzung:** `C:\tools\OpenInNvim` ist eine Junction auf das Repo, die Kontextmenü-Einträge
 benutzen also **ab sofort den neuen Launcher** (`origin/main` von `openinnvim`). Der echte Klick ist weiterhin nicht von
 Hand getestet; die Tests laufen nur gegen eigene Wegwerf-Instanzen und die echte Sitzung wurde nie angefasst (nur
@@ -266,9 +293,10 @@ Auftrag des Nutzers (2026-10-02):
    ab (nur bei `\\.\pipe\`-Adressen) und sendet `:silent execute 'Filetree open ' . fnameescape('<dir>')`, sonst
    Rückfall auf cd + `:edit .`. **Gegen die echte Config geprüft** (Wegwerf-Instanz mit UI-Attach, ohne die laufende
    Sitzung): aus einer Sitzung ohne Baum öffnet `:Filetree open <dir>` das neo-tree-Fenster, auf den Ordner gerichtet,
-   und das cwd folgt; Pfade mit Leerzeichen laufen mit schlichtem `fnameescape` (`inner\ dir`) und mit
-   Schrägstrich-Variante gleich. Nicht geprüft: Verhalten bei bereits offenem, anders gewurzeltem Baum (kein Fehler
-   erwartet, `go_to` ruft `set_root`).
+   und das cwd folgt. **Korrektur durch das Review (`9eb8c7e`):** die `fnameescape`-Variante schlug für Ordner mit `#`,
+   `%`, `[`, `(` im Namen **still** fehl (Befehl "erfolgreich", Baum bleibt stehen). Jetzt geht der Pfad als Parameter
+   eines Lua-Stücks per RPC (`vim.cmd.Filetree({ args = { "open", d } })`), ohne jedes Escaping. Nicht geprüft:
+   Verhalten bei bereits offenem, anders gewurzeltem Baum (kein Fehler erwartet, `go_to` ruft `set_root`).
 4. **Verteilung:** zunächst **kein** Release-Zip. Erst wenn alles fertig ist, ein **fertiger Setup-`.exe`-Installer**
    (Inno Setup, gebaut in GitHub Actions; Doppelklick, Eintrag unter "Apps", Deinstallation inklusive). Davor:
    `install.ps1`/`uninstall.ps1` (ohne Admin, nur `HKCU`, Installation nach `%LOCALAPPDATA%\OpenInNvim`, VBS finden ihr
@@ -292,8 +320,12 @@ Auftrag des Nutzers (2026-10-02):
 - [x] Prüfen, ob außerhalb von `E:\repos` etwas den Pipe-Namen oder die Variable benutzt: **nein** (Teil 5).
 - [x] openinnvim: Tests grün (42/42), `Start-Process`-Fehler (c) behoben, `:Filetree open` für Ordner mit
       Konfig-Option `FOLDER_OPENS_IN`, `verify.ps1`/`install-context.ps1` unter PS 5.1 lauffähig (Teil 5, 6).
+- [x] openinnvim: ultracode-Review der Commits dieses Chats, alle Funde behoben (siehe Tabelle in Teil 5, `9eb8c7e`).
+- [ ] openinnvim: `9eb8c7e` ist der Fix-Commit des Reviews und selbst nicht unabhängig reviewed; ein zweiter Blick
+      auf den neuen RPC-Öffnen-Pfad (`Invoke-NvimOpen`) und die Lib-Pflicht wäre sinnvoll, bevor es zum Installer geht.
 - [ ] openinnvim: VBS-Pfade relativ zur VBS (statt festem `C:\tools\OpenInNvim`), `install.ps1`/`uninstall.ps1` mit
       beiden Menüeinträgen, zuletzt Setup-`.exe` (Teil 6, Punkt 4). Das ändert den Installationsort; vorher Rückfrage.
+      Die Lib `open-in-nvim.lib.ps1` ist jetzt Pflicht und muss mit installiert werden.
 - [ ] openinnvim: Fokus des Terminalfensters nach dem Öffnen (Teil 6, Punkt 6) ist ungelöst und ungetestet.
 - [ ] openinnvim: echter Klick im Explorer durch den Nutzer (alle vier Fälle: Datei/Ordner, current/new). Hier ist der
       Launcher neu, siehe "Wirkung auf die echte Sitzung" in Teil 5.
@@ -313,14 +345,17 @@ Auftrag des Nutzers (2026-10-02):
 | nvim-config | `0d3ba109` | docs(handover): NVIM_LISTEN_ADDRESS, neotest-Listener und openinnvim |
 | openinnvim | `b5aa51d` | docs(readme): neuer Repo-Pfad, sichere Junction-Entfernung |
 | nvim-config | `e5075b1d` | docs(handover): Reparatur, PID-Pipe-Suche, Filetree-Plan (Teil 5 und 6) |
-| openinnvim | `28d358c` | feat(current): discover running instances via their default pipes (inkl. `:silent`, `(c)`, Tests) |
-| openinnvim | `41c399f` | feat(current): open folders in filetree.nvim when the instance has it |
-| openinnvim | `a8698cb` | fix(ps51): `?:` in verify.ps1 und `"$key:"` in install-context.ps1 |
-| nvim-config | (dieser Commit) | docs(handover): Folge-Chat 2, Tests grün, Filetree umgesetzt |
+| openinnvim | `28d358c` ✅ | feat(current): discover running instances via their default pipes (inkl. `:silent`, `(c)`, Tests) |
+| openinnvim | `41c399f` ✅ | feat(current): open folders in filetree.nvim (Review fand den `fnameescape`-Fehler, behoben in `9eb8c7e`) |
+| openinnvim | `a8698cb` ✅ | fix(ps51): `?:` in verify.ps1 und `"$key:"` in install-context.ps1 |
+| openinnvim | `9eb8c7e` | fix(launchers): Review-Fixes (RPC-Öffnen, verlorenes `$args`, Pfad-Escaping, Tempo); 69 Prüfungen. **Kein Haken**: das ist der Fix-Commit selbst, nicht unabhängig reviewed |
+| nvim-config | `3c01f438` ✅ | docs(handover): Tests grün, Filetree-Ordner |
+| nvim-config | (dieser Commit) ✅ | docs(handover): Review-Ergebnisse |
+
+✅ = durch den ultracode-Review (Reasoning-Stufe `ultracode`, vom Nutzer so gestellt) abgenommen oder reine Doku.
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach `E:\repos\openinnvim`;
 Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
-Review durch `ultracode`: **für die drei openinnvim-Commits nicht erfolgt** (kein Haken); die Handover-Commits sind reine Doku.
 
 ---
 
