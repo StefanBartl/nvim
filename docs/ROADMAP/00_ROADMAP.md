@@ -28,7 +28,7 @@
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
 
 ---
-
+filetree contesextmenu trifft nicht die klorrekeetze node
 reposcope: Die Spec hat weder opts noch config, und nirgends wird require("reposcope") aufgerufen. setup() läuft also vermutlich nie, Keymaps und Befehle sind dann nicht gebunden. Das war schon vorher so. Links und Verweise: 0 tote Markdown-Links in den geänderten Dateien. Die Behauptung „reposcope setup() läuft nie“ in der Notiz habe ich nachgeprüft, sie stimmt und war schon vorher so.
 
 sessions: chip.col_offset = -1 mit shape = "dock_left" könnte laut Doku auf rounded_chip zurückfallen. Ungeprüft.
