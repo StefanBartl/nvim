@@ -26,20 +26,30 @@ operating knowledge is below under *Running everything*.
 
 | Repo | Branch | HEAD | CI |
 |---|---|---|---|
-| `C:\repos\documentation.nvim` | main | `21d0a51`, tagged **`v0.1.0`** | green, 5/5 gates |
-| `E:\repos\runtime-analysis.nvim` | main | `e10c374` | green |
-| `C:\repos\docmap-desktop` | main | `d5c8cde`, tagged **`v0.5.0`** (published, see below) | green; the release workflow is tag-triggered (`v*`) and downloads the engine from `standalone-latest` before `cargo tauri build` starts. The procedure is in [`RELEASING.md`]($REPOS_DIR/docmap-desktop/docs/RELEASING.md) |
-| `C:\Users\bartl\AppData\Local\nvim` (personal config) | main | `597af5d5` | no CI |
+| `E:\repos\documentation.nvim` | main | `b39c3be` (last tag `v0.1.0`; `standalone-latest` is the rolling engine) | green |
+| `E:\repos\runtime-analysis.nvim` | main | `a450b36` | green |
+| `E:\repos\github_stats.nvim` | main | `13fb0a2` | no CI |
+| `E:\repos\docmap-desktop` | main | `4774f11` — **15 commits after `v0.5.0`** (six touch code, the rest is docs), tagged **`v0.5.0`** (published, see below) | green; the release workflow is tag-triggered (`v*`) and downloads the engine from `standalone-latest` before `cargo tauri build` starts. The procedure is in [`RELEASING.md`]($REPOS_DIR/docmap-desktop/docs/RELEASING.md) |
+| `C:\Users\bartl\AppData\Local\nvim` (personal config) | main | `85364bda` | no CI |
 
-**2026-09-25: L11 designed, nothing built.**
-[`GITHUB_STATS_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md) — `github_stats.nvim`'s
-traffic data in this app and in `documentation.nvim`, read-only and only when
-the plugin is installed; queue entry **L11** in [`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md). The first
-change is in `github_stats.nvim` (it writes a local digest), not here. Two
-things to know before starting: its history sits in the **synced** Neovim config
-on purpose (one dataset for two machines), so nothing derived may be written
-there; and `require("github_stats")` loads its dashboard and therefore
-`ui.nvim`, so a probe must target a UI-free module.
+**2026-10-02: L11 is built end to end, on `main`, unreleased.**
+`github_stats.nvim` writes a local digest (P0), the app shows a Traffic line, a
+sort order, a 30-day figure on the overview rows and a detail dialog with
+sparkline, referrers and top pages (P1, P2), and `documentation.nvim` has a
+`traffic` browse mode (P3). The last three app commits (`faf4f91` opt-out
+revert and stale chips, `409af1f` cargo fmt, `4774f11` detail dialog) lived on
+`claude/github-stats-traffic-integration-46c7c0` until today and were
+fast-forwarded onto `main`; the other three open `claude/*` branches were
+already contained in it. `node --test src/lib/*.test.js` is green (157).
+**Not run against real data:** the end-to-end check with a genuine
+`:GithubStats fetch` is **A3** in [`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md) and needs the author's token.
+The download page still serves `v0.5.0`, which has none of this; a `v0.6.0`
+(or `v0.5.1`) is a tag away, cut the way `RELEASING.md` says. Design and
+decisions: [`GITHUB_STATS_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md).
+Two things worth knowing if it is touched again: its history sits in the
+**synced** Neovim config on purpose (one dataset for two machines), so nothing
+derived may be written there; and `require("github_stats")` loads its dashboard
+and therefore `ui.nvim`, so a probe must target a UI-free module.
 
 **2026-09-21: L10 designed, four questions decided, nothing built.**
 [`RULES_AGENT_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/IDEAS/RULES_AGENT_CONCEPT.md) is the design for a Rules tab
