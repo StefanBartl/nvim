@@ -275,10 +275,20 @@ Der Fix ist wichtig: **vorher hat `:'<,'>Case translate` immer den ganzen Puffer
 | 4 | `ROADMAP/ROADMAP.md` lesen | Nur Offenes, keine erledigten Punkte | ❌ | |
 | 5 | `:help casedesk` / `CHEATSHEET.md` | Neue Befehle (`imp`, `preflight`, `jql suggest`, `image getText`, `spotlight`, `translate stream`) stehen im Cheatsheet; `doc/casedesk.txt` ist **noch nicht** nachgezogen (Lücke, ggf. eigener Punkt) | ❌ | |
 
-### A14 · `:Cases firstResponse` / `firstResponseDelay`
+### A14 · `:Cases wordings <kind>`
 
 | # | Was testen | Erwartung | Status | Notizen |
 | --- | --- | --- | --- | --- |
+| 1 | `:Cases wordings firstResponse` | `Workflow/Templates/FirstResponses/FirstResponse.md` öffnet sich; Meldung "copied FirstResponse.md" | ❌ | |
+| 2 | Direkt danach in ein anderes Fenster / Browser einfügen | Der Text ist da, unverändert, `<<customer>>` steht noch | ❌ | |
+| 3 | `:Cases wordings firstResponseDelay` | `FirstResponse_Delay.md` öffnet sich, Text in der Zwischenablage | ❌ | |
+| 4 | `:Cases wordings germanSpeaker` | `Workflow/Templates/GermanSpeaker.md` öffnet sich, Text ("I noticed that your account is located in the DACH region …") in der Zwischenablage | ❌ | |
+| 5 | `<Tab>` nach `:Cases wordings <Tab>` | Schlägt `firstResponse`, `firstResponseDelay`, `germanSpeaker` vor | ❌ | |
+| 6 | `:Cases wordings nope` | Fehler/Usage, nichts kopiert | ❌ | |
+| 7 | Die alten Namen `:Cases firstResponse` / `:Cases firstResponseDelay` | Gibt es nicht mehr (Usage statt Aktion) | ❌ | |
+| 8 | Aus einem beliebigen Buffer (kein Case) aufrufen | Funktioniert, keine Case-Auswahl nötig | ❌ | |
+| 9 | Datei kurz umbenennen, Befehl aufrufen | Warnung "wording not readable", nichts kopiert; danach zurückbenennen | ❌ | |
+--- | --- | --- | --- | --- |
 | 1 | `:Cases firstResponse` | `Workflow/Templates/FirstResponses/FirstResponse.md` öffnet sich; Meldung "copied FirstResponse.md" | ❌ | |
 | 2 | Direkt danach in ein anderes Fenster / Browser einfügen | Der Text ist da, unverändert, `<<customer>>` steht noch | ❌ | |
 | 3 | `:Cases firstResponseDelay` | `FirstResponse_Delay.md` öffnet sich, Text in der Zwischenablage | ❌ | |
@@ -386,7 +396,7 @@ Wegwerf-Case benutzen für alles, was schreibt, verschiebt oder löscht.
 | C55 | `:Cases close` | Mehrere Cases schließen (Markierungen oder Multi-Select) | ❌ | |
 | C56 | `:Cases pickers` | Menü: Anhänge, Links, Cases ohne Sidecar, Terminologie, Befehle, Lösungen | ❌ | |
 | C57 | `:Cases imp` ★ | Alle Notizen (A8) | ❌ | |
-| C57a | `:Cases firstResponse` ★ / `firstResponseDelay` ★ | Siehe A14 | ❌ | |
+| C57a | `:Cases wordings <kind>` ★ | Siehe A14 | ❌ | |
 
 ### `:Tricentis` — über den Case-Baum hinaus
 
