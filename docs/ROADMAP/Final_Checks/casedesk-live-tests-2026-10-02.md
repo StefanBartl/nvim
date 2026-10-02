@@ -295,6 +295,34 @@ Der Fix ist wichtig: **vorher hat `:'<,'>Case translate` immer den ganzen Puffer
 | 4 | `<Tab>` nach `:Cases first` | Beide Namen werden vorgeschlagen | ❌ | |
 | 5 | Aus einem beliebigen Buffer (kein Case) aufrufen | Funktioniert, keine Case-Auswahl nötig | ❌ | |
 | 6 | Datei kurz umbenennen, Befehl aufrufen | Warnung "first response template not readable", nichts kopiert; danach zurückbenennen | ❌ | |
+
+### A15 · `:Case pdf` (`26af2c7`) — braucht `pdftotext` (poppler)
+
+| # | Was testen | Erwartung | Status | Notizen |
+| --- | --- | --- | --- | --- |
+| 1 | `:checkhealth casedesk` | `pdftotext` unter den optionalen Werkzeugen, "ready" mit Pfad | ❌ | |
+| 2 | In einem Case mit PDF in `assets/`: `:Case pdf` | "reading N PDF(s)…", dann "N PDF(s) read, 0 already current"; neben jedem PDF liegt `<name>.pdf.text.md` | ❌ | |
+| 3 | `:Case pdf` gleich nochmal | "all N PDF(s) already read", nichts neu geschrieben | ❌ | |
+| 4 | `:Case pdf --force` | Liest alle erneut | ❌ | |
+| 5 | Ein Wort, das nur im PDF steht, mit `:Cases grep <wort>` suchen | Treffer in der `.pdf.text.md` | ❌ | |
+| 6 | Case ohne PDF | Warnung "no PDFs in assets/" | ❌ | |
+| 7 | Gescanntes PDF (ohne Textebene) | Meldung "without a text layer (scanned? needs OCR)", keine leere Sidecar-Datei | ❌ | |
+| 8 | `:Case similar` vor und nach `:Case pdf` | Ranking unverändert — PDF-Sidecars fließen absichtlich nicht ein | ❌ | |
+
+### A16 · Stufe 3 im Überblick (`83cdb3a`, `47dd570`, `8c97c06`, `a131d69`, `b3af13f`, `61607ae`, `07fd742`)
+
+Ausführliche Zeilen stehen noch aus; erst die Rauchprobe:
+
+| # | Was testen | Erwartung | Status | Notizen |
+| --- | --- | --- | --- | --- |
+| 1 | `:Case promote` an einem Case mit bestätigter Lösung | Dedup-Prüfung, Kundennamen ersetzt, Datei in `Cases/Solutions/` | ❌ | |
+| 2 | `:Case tag` / `:Cases tag <Tag>` | Tag nur aus dem geschlossenen Vokabular; Zeile in der Infocard; `:Case similar` hat eine Tag-Achse | ❌ | |
+| 3 | `:Case fingerprint` | Cases mit demselben Fehlerstring; dritte Achse in `:Case similar` | ❌ | |
+| 4 | `:Tricentis pto` / `pto back` | Checkliste, Mails mit Rückkehrdatum, offene Cases mit Frist im Zeitraum | ❌ | |
+| 5 | `:Case history` und `:Case info` | Git-Verlauf des Case-Ordners; die Git-Zeile in der Karte erscheint nach dem Öffnen (asynchron) | ❌ | |
+| 6 | `:Cases solutions` mit unbestätigter Lösung | Unbestätigte ranken unten und sind markiert | ❌ | |
+| 7 | Case mit `:Case imp`-Notiz im Pin-Chip | Chip trägt die Markierung | ❌ | |
+
 ---
 
 ## Teil B — aus der Vorsitzung (2026-09-30) noch ungetestet
