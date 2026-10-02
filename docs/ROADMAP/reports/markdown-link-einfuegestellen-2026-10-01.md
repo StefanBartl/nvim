@@ -1,5 +1,11 @@
 # Markdown-Link-Einfügestellen — wer fügt Links ein, wohin geht der Cursor
 
+**Status: umgesetzt und abgeschlossen (Nachprüfung 2026-10-02)** — alle Commits der Tabellen unten
+liegen auf `main` der jeweiligen Repos, die lib.nvim-Suite (inkl. `markdown_link_cursor_spec`) läuft
+grün, `link_cursor.setup({})` ist zentral in `lua/plugins/personal/specs/foundation.lua` gesetzt.
+Das Dokument ist nach `wkdbook-myplugins/ALL/Backlog/FEATURES/` einsortiert (dort liegt nur ein
+Pointer, dieses Original bleibt hier).
+
 Stand 2026-10-01. Anlass: „`:Image paste` setzt den Cursor hinter den Link — dort ist nichts mehr zu
 tun. Das gilt für jedes Usercmd, das einen Markdown-Link einfügt." Alle Repos unter `$REPOS_DIR` wurden
 nach Link-Erzeugung/-Einfügung durchsucht (`\]\(%s\)`, `[%s](`, `link_template`, `nvim_buf_set_text`/
@@ -57,8 +63,10 @@ Ohne Treffer: mdview.nvim, media.nvim, hover.nvim, gopath.nvim, recommender.nvim
 
 ## Offen / bewusst nicht getan
 
-- `link_cursor` hat keinen Konfigurationseintrag in einer zentralen Spec; es läuft über die Plugin-Optionen
-  (images/markdown/pickers/filetree) bzw. die lib-weiten Defaults (buffer-ctx, casedesk).
+- ~~`link_cursor` hat keinen Konfigurationseintrag in einer zentralen Spec~~ — **erledigt**: die nvim-Config
+  ruft `require("lib.nvim.markdown.link_cursor").setup({})` zentral in `specs/foundation.lua` auf (explizit,
+  obwohl gleich den Modul-Defaults); pro Plugin lässt sich weiterhin überschreiben (images/markdown/pickers/
+  filetree), buffer-ctx und casedesk nutzen die lib-weiten Werte.
 - Die Einfüge-Aktionen in filetree/pickers sind **neu** (vorher nur Kopieren) — wer sie nicht will, bindet
   `keymap_insert = false` bzw. `keys.markdown_link_insert = false`.
 - Ein Paste mit `p` nach `ML` kann den Cursor nicht in den Link setzen (kein Hook auf `p`); dafür gibt es jetzt
