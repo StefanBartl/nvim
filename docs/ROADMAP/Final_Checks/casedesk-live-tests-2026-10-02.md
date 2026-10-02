@@ -192,6 +192,9 @@ gewollt — nur Testnotizen dürfen nicht übrig bleiben.
 | 19 | `:Cases imp` mit mehreren Notizen | Alle gelistet, Abgelaufene markiert | ❌ | |
 | 20 | Eine Zeile in `Important.jsonl` von Hand kaputt machen (`{kaputt`) | `:Case info`/`:Case open` laufen **weiter** (Hinweis "teilweise unlesbar"); `:Case imp add` verweigert das Schreiben mit klarer Meldung; danach Zeile reparieren | ❌ | |
 | 21 | `<Tab>` nach `:Case imp <Tab>` | `add` und `done` erscheinen neben den Case-Nummern | ❌ | |
+| 21a | Eine Notiz mit Zeilenumbruch im Text (beim Eintippen `<C-v><CR>`/Einfügen mehrerer Zeilen, oder in `Important.jsonl` ein `\n` in `text` schreiben) | In `:Case info` und `:Case imp` **eine** Zeile, kein Fehler | ❌ | |
+| 21b | In `Important.jsonl` eine Zeile **ohne** `id` von Hand anlegen, dann `:Case imp done` darauf | Nur diese eine Notiz verschwindet, andere id-lose Zeilen bleiben | ❌ | |
+| 21c | `Important.jsonl.tmp` im Ordner `Cases/` nach dem Speichern | Existiert nicht (wird umbenannt) | ❌ | |
 | 22 | Git: `Important.jsonl` im Status von `WKDBook-Tricentis` | Tauchen als Änderung auf; nach `done` wieder sauber (nicht committen, solange Testzeilen drin sind) | ❌ | |
 
 ### A9 · `:Case preflight` und Hinweise (`1717d44`)
@@ -226,6 +229,7 @@ gewollt — nur Testnotizen dürfen nicht übrig bleiben.
 | 10 | `<Tab>` nach `--preset=` | `default`, `log` | ❌ | |
 | 11 | `tesseract` nicht erreichbar (nur wenn leicht machbar) | Klare Meldung mit Installationshinweis, kein Absturz | ❌ | |
 | 12 | Dasselbe Bild danach mit `:Case ocr 1201484` | Sidecar ist "current", wird übersprungen | ❌ | |
+| 13 | Viewer-Text und geschriebenes Sidecar | **Kein** `^M` am Zeilenende (Windows-CRs werden entfernt) | ❌ | |
 
 ### A11 · `:Case translate` — Fix und `stream` (`9f104ba`) — braucht `language.nvim`, Internet
 
@@ -259,6 +263,7 @@ Der Fix ist wichtig: **vorher hat `:'<,'>Case translate` immer den ganzen Puffer
 | 7 | Case ohne Stream | Warnung "`:Case activity` first" | ❌ | |
 | 8 | Stream ohne Fehlercode/KBA/Component | Info "nothing to search for", nichts geschrieben | ❌ | |
 | 9 | Plain `:Case jql 977392` | Öffnet weiterhin nur die Datei | ❌ | |
+| 10 | In `JQL.md` die Zeile `<!-- casedesk:jql:end -->` löschen, eigenen Text darunter schreiben, `:Case jql suggest` zweimal | Genau **ein** Start-Marker bleibt; der eigene Text steht nach dem zweiten Lauf noch da | ❌ | |
 
 ### A13 · Ablage und Doku
 
