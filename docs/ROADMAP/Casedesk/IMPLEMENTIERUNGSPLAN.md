@@ -1,0 +1,1 @@
+E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/IMPLEMENTIERUNGSPLAN.md
