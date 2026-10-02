@@ -51,6 +51,21 @@ Two things worth knowing if it is touched again: its history sits in the
 derived may be written there; and `require("github_stats")` loads its dashboard
 and therefore `ui.nvim`, so a probe must target a UI-free module.
 
+**2026-10-02: L10 P1 built** in `documentation.nvim` (`b90ad9d`): `rules.nvim`'s
+engine runs under the standalone `vim` shim, and the `standalone` gate runs one
+ruleset over one project in Neovim *and* under PUC Lua + shim and requires
+identical output. Details and what differed from the concept are in its D4
+under *As built*; the headline is that the **rulesets' predicates are Neovim
+code too** (`vim.fn.glob` in 10 of 14), so the shim surface is whatever the
+ruleset uses. **Found on the way: the `standalone` CI job and the `Release
+engine` workflow of `documentation.nvim` had been red since 2026-10-01** (a
+`lib.nvim` module reads `vim.log.levels` at load time and the shim had no
+`vim.log`), so `standalone-latest` — the engine this app bundles — was stale.
+Fixed in the same commit; whether the rebuilt engine is out is the thing to
+check before the next app release (`gh run list` in `documentation.nvim`, and
+`standalone-latest`'s `publishedAt`). **Next is P2:** `--api=rules` (`catalog`,
+`run`, then `plan` and `validate`) and the bundle gaining `rules.nvim`.
+
 **2026-10-02: L10 P0 built** in `rules.nvim` (`02c5952`, CI green, including the
 runaway-loop test on Linux LuaJIT): the parser keeps
 `text`, `title` and `section`, validates `agent`, and evaluates block bodies in
