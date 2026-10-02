@@ -1,6 +1,6 @@
 # Handover — docmap-desktop und das Ökosystem: nur offene Aufgaben
 
-**Stand: 2026-10-02.** Hier steht ausschließlich, was noch zu tun oder zu
+**Stand: 2026-10-02 (nach `v0.6.0`-Tag).** Hier steht ausschließlich, was noch zu tun oder zu
 entscheiden ist, und welche Commits noch auf ein Review warten. Was gebaut
 wurde und warum, steht nicht mehr hier:
 
@@ -18,7 +18,7 @@ Alle `main`, alle mit `origin` synchron.
 
 | Repo | HEAD | Anmerkung |
 |---|---|---|
-| `E:\repos\docmap-desktop` | `4774f11` | 15 Commits nach `v0.5.0`; **der Download ist noch `v0.5.0`** |
+| `E:\repos\docmap-desktop` | `07ddfea` | getaggt `v0.6.0`; **der Download bleibt `v0.5.0`, bis der Draft veröffentlicht ist** |
 | `E:\repos\documentation.nvim` | `4bd684e` | CI auf Linux, macOS und Windows grün; `standalone-latest` am 2026-10-02T18:06:23Z neu gebaut |
 | `E:\repos\rules.nvim` | `02c5952` | CI grün |
 | `E:\repos\github_stats.nvim` | `13fb0a2` | keine CI |
@@ -30,32 +30,26 @@ Alle `main`, alle mit `origin` synchron.
 
 ### Entscheidungen und Handgriffe für dich
 
-1. **Release schneiden, ja oder nein: `v0.6.0` oder `v0.5.1`.** `main` enthält
-   seit `v0.5.0` die Traffic-Features (L11) und sonst nur Doku. Die gebündelte
-   Engine ist aktuell (`standalone-latest`, 2026-10-02T18:06:23Z), und
-   `RELEASING.md` gilt wie bisher: CI auf dem Bump-Commit grün, Engine-Stand
-   prüfen, dann taggen. Ein Release ist öffentlich, deshalb deine Entscheidung.
-   Vorher noch nicht gelaufen: `cargo test` im Desktop-Repo (braucht den
-   Platzhalter-Sidecar, siehe `OPERATING_NOTES.md`) — der Merge vom 2026-10-02
-   wurde nur mit den Frontend-Tests (157 grün) geprüft.
-2. **A1 — `v0.5.0` durchklicken.** Es ist öffentlich, ohne dass jemand die App
-   geöffnet hat. Die vier Standardpunkte aus `RELEASING.md`, dazu **Add from a
-   parent folder** und **View as matrix…**. Findet es etwas, ist `v0.5.1` die
-   billige Antwort.
-3. **A3 — L11 gegen echte Daten.** Mit deinem Token `:GithubStats fetch`, dann
-   die sieben Punkte in `docs/ROADMAP/handovers/github_stats_traffic_integration.md`
-   (zwei Maschinen, Plugin fehlt, lazy-loaded, überschriebenes `digest_dir`,
-   feindlicher Digest, privates Repo mit Opt-out). Alles ist gebaut und mit
-   Fixtures getestet, aber nichts lief gegen einen echten Fetch.
+1. **Release `v0.6.0`: getaggt am 2026-10-02, Build läuft bzw. liegt als Draft.** Der
+   Bump-Commit `07ddfea` war grün (inkl. `cargo test` auf allen Plattformen), die
+   Engine war aktuell. Nach `RELEASING.md` ist der letzte Schritt, dass jemand die
+   App öffnet, bevor der Draft veröffentlicht wird (`gh release edit v0.6.0
+   --draft=false`); **das ist offen und steht in `FINAL_CHECKS.md` (A1).**
+2. **A1 und A3 sind ausgelagert** in
+   `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/FINAL_CHECKS.md`: die installierte App
+   durchklicken und L11 gegen einen echten `:GithubStats fetch` prüfen (sieben
+   Punkte, dort ausgeschrieben). Beides braucht deine Maschine bzw. deinen Token.
+3. *(frei, Nummer bleibt stabil)*
 4. **A2 — Discussions einschalten**, sobald *jemand anderes* eine echte Frage
    stellt. Ein Ereignis, keine Aufgabe.
-5. **Aufräumen, du entscheidest:** lokale Branches in `docmap-desktop`, die schon
-   in `main` stecken (`claude/agent-checklist-runner-23f139`,
-   `claude/docmap-agent-checklist-architecture-d208fd`,
-   `claude/docmap-multi-repo-import-8ec2f5`, `claude/github-stats-traffic-integration-46c7c0`
-   lokal **und** auf `origin`), dazu die Worktrees unter
-   `.claude/worktrees/` (u. a. `vigorous-swanson-d5cf1d`, `agent-checklist-runner-23f139`,
-   `docmap-multi-repo-import-8ec2f5`). Das Löschen auf `origin` ist öffentlich.
+5. **Aufräumen: nicht ausgeführt, die Berechtigung wurde verweigert.** Geprüft ist,
+   dass alles bereits in `origin/main` steckt und die Worktrees sauber sind:
+   lokale Branches `claude/agent-checklist-runner-23f139`,
+   `claude/docmap-multi-repo-import-8ec2f5`, `claude/git-feature-v5-download-fa7ddb`,
+   `claude/github-stats-traffic-integration-46c7c0` (auch auf `origin`) und
+   `claude/docmap-agent-checklist-architecture-d208fd` (hängt am aktuellen Worktree);
+   Worktrees `agent-checklist-runner-23f139`, `vigorous-swanson-d5cf1d`,
+   `docmap-multi-repo-import-8ec2f5`. Löschen auf `origin` ist öffentlich.
 
 ### Nächster Bauschritt
 
