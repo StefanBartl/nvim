@@ -27,10 +27,13 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
   Config, nicht Shell-/Terminal-Einstellungen). `rpc_pipe` exportiert sie nur, damit
   neotests Hilfsprozess nicht dieselbe Pipe belegen will. Das Kontextmenü-Tool hängt am
   **Pipe-Namen**, nicht am Export.
-- **neotest-Listener: Messung fertig, Entscheidung offen.** Den Hilfsprozess starten zu lassen
-  kostet etwa +75 bis +150 ms, bringt keinen Gewinn und schließt den Listener nicht. Empfehlung:
-  A (lassen, dokumentiert) oder D (Listener nach dem Start schließen, nach einem Test).
-  Nichts davon wurde geändert.
+- **neotest-Listener: Messung fertig, Entscheidung offen — und der Befund ist größer als die
+  Frage.** Den Hilfsprozess starten zu lassen kostet etwa +75 bis +150 ms, bringt keinen Gewinn
+  und schließt den Listener nicht. Der Laufzeittest zeigte zusätzlich: **`neotest-plenary`-Läufe
+  scheitern in dieser Config unter Windows heute alle** (vererbte `NVIM_LISTEN_ADDRESS` tötet den
+  Test-Kindprozess, 9/9 failed; danach hängt er an Backslash-Pfaden im Lua-String). Ein
+  Config-Fix im Adapter-Wrapper + `serverstop` (D) lässt alle Läufe mit 8 passed / 1 failed
+  durchlaufen. Nichts davon wurde eingebaut; Details unter "Offen".
 - **openinnvim ist fertig gebaut und im Review geprüft** (`E:\repos\openinnvim`): Instanzsuche
   über die Standard-Pipes mit UI-Prüfung, Öffnen per RPC (ohne zweiten `nvim.exe`),
   Ordner in `:Filetree open`, **kein `nvr` mehr** (keine externe Abhängigkeit), beide
@@ -64,32 +67,45 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 
 ## Offen und Nachfrage
 
-- [ ] **Entscheidung zum neotest-Listener: A oder D.** Siehe Backlog-Datei oben. Für D erst den
-      Test aus der Final-Checks-Liste (Teil K): Listener schließen, `<leader>nt*`-Lauf prüfen,
-      Ergebnisse und Signs müssen kommen. Danach die Aufgabe 1 im Startup-Handover als
-      entschieden markieren.
-      **Teilergebnis des früheren Workflows (Agent 1, nur Code gelesen, Laufzeittest nicht zustande
-      gekommen):** In neotest geht der Listener (`lib/subprocess.lua:33-37`, `serverstart("localhost:0")`)
-      ausschließlich an den Hilfsprozess, der sich per `sockconnect` zurückverbindet und darüber die Ergebnisse
-      meldet. Sonst benutzt weder neotest noch `neotest-plenary`, `nvim-nio`, `plenary.nvim`, die Config oder
-      `rpc_pipe` den Listener (`serverlist`/`serverstop`/`rpcrequest`/`sockconnect` kommen nirgends sonst vor).
-      Läuft der Hilfsprozess nicht (heute der Fall), fällt neotest auf Parsen im Hauptprozess zurück
-      (`treesitter/init.lua:176`). Einen Weg, den Listener später wieder zu öffnen, gibt es nur über den
-      erzwungenen Neustart des Benchmark-Consumers (`consumers/benchmark.lua:33`). **Also spricht der Code für
-      D, bewiesen ist es nicht.** Vorgeschlagene Form, falls D: direkt nach dem Start des neotest-Clients (in
-      `lua/plugins/neotest.lua` und auch für den BufEnter-Auto-Attach), mit `pcall`; vorher `serverlist()`
-      sichern und nur **neue** Einträge schließen, die auf `^localhost:%d+$` (oder `127.0.0.1:`) passen, und nur
-      wenn `require("neotest.lib").subprocess.enabled()` falsch ist (nie einen Listener schließen, den der
-      Hilfsprozess benutzt). Dann bleiben `\\.\pipe\nvim-<USERNAME>` und die fzf-lua-Pipe unberührt, und
-      es wird zum No-Op, falls Upstream den Hilfsprozess zum Laufen bringt. **Nicht beobachtet:** der echte
-      Lauf mit `<leader>nt*`, ob Signs/Ergebnisse nach `serverstop` kommen, ob der Listener wieder aufgeht,
-      der Fall "zwei Test-Buffer in einer Session". **Agent 2 (positiver Fall des Attach-Fixes, Aufgabe 4)
-      ist nie fertig geworden.**
-      Warum der Laufzeittest scheiterte: der Treiber verband sich mit `nvim.<jobpid>.0`, aber `jobpid` ist
-      der sichtbare UI-Client; die Pipe gehört seinem `--embed`-Kind (Server-PID per
-      `nvim_get_proc_children(jobpid)` holen), und der Treiber hatte kein Zeitlimit. Dieselbe Falle wie bei
-      openinnvim (zwei Prozesse je TUI-Sitzung unter Windows). Die Skripte (`driver.lua`, Scratch-Projekt
-      `proj/` mit 10 `it`-Blöcken, einer davon absichtlich rot) lagen im Scratchpad des Chats.
+- [ ] **neotest unter Windows: Entscheidung nötig, und sie ist größer als "Listener A oder D".**
+      Der Laufzeittest ist jetzt gelaufen (echte Config, headless-Kern, echtes neotest-plenary;
+      Werkzeug und Befund: `WKDBooks/.../TOOLS/neotest-run-probe.md`, Skripte
+      `TOOLS/scripts/neotest-run-probe/run.ps1`, Commit `3251163`). **Ergebnis: Testläufe mit
+      `neotest-plenary` scheitern in dieser Config heute alle, wegen zweier voneinander
+      unabhängiger Fehler:**
+      1. `lib.nvim` `rpc_pipe` exportiert `NVIM_LISTEN_ADDRESS`; der Test-Kindprozess erbt sie und Neovim
+         bricht in C ab (`Failed $NVIM_LISTEN_ADDRESS: address already in use`, Exit 1, keine
+         Ergebnisdatei). In neotest: **9/9 failed bei jedem Lauf** (Datei, Datei erneut, nächster Test).
+         Ohne Treiber reproduziert (Wegwerf-`nvim --listen`, Plenary-Befehl mit der Variable). Eine
+         **leere** Variable nur für den Kindprozess genügt.
+      2. Backslash-Pfade im Lua-String `-c "lua _run_tests({file = 'C:\Users\...'})"`: `\U` ist eine
+         ungültige Escape-Sequenz, der Kindprozess bleibt headless stehen (idle, nie beendet, pro Lauf ein
+         weiterer). Mit Schrägstrichen endet derselbe Befehl nach 0 s. Das zeigt sich erst, wenn 1.
+         behoben ist (Option B alleine reicht also nicht: Hilfsprozess läuft, Läufe hängen).
+      **Prototyp-Fix (nur Laufzeit, nichts im Repo geändert):** `build_spec` des Adapters umhüllen,
+      im Argument `lua _run_tests(` `\` durch `/` ersetzen und `spec.env.NVIM_LISTEN_ADDRESS = ""`
+      setzen. Ergebnis: **8 passed / 1 failed (absichtlich rot) bei allen drei Läufen**, ca. 0,5 bis 1,5 s je
+      Lauf, der neotest-Hilfsprozess bleibt aus. **Mit zusätzlichem `serverstop`** auf den `localhost:`-Listener
+      (Option D) laufen die Läufe unverändert, der Eintrag fehlt danach in `serverlist()` und **geht nicht
+      wieder auf** (nach drei Läufen geprüft); `\\.\pipe\nvim-<USERNAME>` bleibt.
+      **Zu entscheiden:** (a) nur Config-Fix im Adapter-Wrapper (`lua/plugins/neotest.lua`, lokal, berührt
+      kein anderes Plugin) + D, oder (b) zusätzlich `rpc_pipe` ändern (nicht mehr exportieren; dann startet
+      der Hilfsprozess, +75 bis +150 ms, Listener in Benutzung, D entfällt) — die Config-Variante (a)
+      ist die kleinere und deckt beide Fehler ab. Beides ändert Verhalten und wurde **nicht** eingebaut.
+      Ursache von Fehler 2 liegt im Upstream-Plugin (`neotest-plenary/adapter.lua`, `nio.fn.escape(pos.path,
+      "'")`): ein Issue/PR wäre angebracht.
+      **Nicht geprüft:** Signs nach `serverstop` (der Code spricht dafür: nur der Hilfsprozess benutzt den
+      Listener, siehe unten), ein Lauf in einer interaktiven TUI-Sitzung über which-key, mehrere
+      Test-Buffer, der positive Fall des Attach-Fixes (Aufgabe 4: Lauf in Datei A, Test-Buffer B öffnen;
+      Agent 2 ist nie fertig geworden), die Ausgabe von `neotest.output` im Fehlerfall.
+      Code-Lesung (Agent 1): der Listener (`lib/subprocess.lua:33-37`, `serverstart("localhost:0")`) geht
+      nur an den Hilfsprozess, der sich per `sockconnect` zurückverbindet; `serverlist`/`serverstop`/
+      `rpcrequest`/`sockconnect` kommen sonst nirgends in neotest, `neotest-plenary`, `nvim-nio`,
+      `plenary.nvim`, Config oder `rpc_pipe` vor. Läuft der Hilfsprozess nicht, parst neotest im Hauptprozess
+      (`treesitter/init.lua:176`). Ein Wiederöffnen gibt es nur über den erzwungenen Neustart des
+      Benchmark-Consumers (`consumers/benchmark.lua:33`). Falls D: direkt nach dem Start des Clients,
+      mit `pcall`, nur **neue** Einträge schließen, die auf `^localhost:%d+$` (oder `127.0.0.1:`) passen, und
+      nur wenn `require("neotest.lib").subprocess.enabled()` falsch ist.
 - [ ] **`install.ps1` ausführen und den echten Klick im Explorer abnehmen** (Datei/Ordner ×
       current/new, mehrere Instanzen, keine Instanz, Sonderzeichen, Deinstallation) —
       Final-Checks-Liste, erst Vorbereitung und Teil G, dann A–F.
@@ -133,7 +149,9 @@ abgenommen oder reine Doku.
 | nvim-config | `82acfb17` ✅ | docs(handover): schlank, Erledigtes ins WKDBook; Live-Test-Checkliste |
 | WKDBooks | `9cd608a` ✅ | docs(openinnvim): Installer, Fokus, zweiter Review ins Backlog; Roadmap gekürzt |
 | nvim-config | `83f73c2c` ✅ | docs(handover) und Live-Test-Checkliste: Installation per `install.ps1`, Fokus-Test |
-| nvim-config | (dieser Commit) ✅ | docs(handover): neotest-Listener, Teilergebnis des Workflows (Code gelesen, Laufzeittest offen) |
+| nvim-config | `622d9ff1` ✅ | docs(handover): neotest-Listener, Teilergebnis des Workflows (Code gelesen, Laufzeittest offen) |
+| WKDBooks | `3251163` ✅ | docs(tools): neotest-run-probe (Runner, Treiber, Rezept) mit den zwei Windows-Befunden |
+| nvim-config | (dieser Commit) ✅ | docs(handover): neotest unter Windows — Läufe scheitern, Prototyp-Fix, Entscheidung |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
