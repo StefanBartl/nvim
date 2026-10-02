@@ -3,14 +3,16 @@
 Alles, was an `openinnvim` (Explorer-Kontextmenü für Neovim, Repo
 `E:\repos\openinnvim`) und an den offenen Punkten der Handover
 `nvim-listen-address-und-openinnvim_HANDOVER.md` **von Hand im echten System** geprüft
-werden muss. Automatisiert läuft alles grün (`tests\run-tests.ps1`, 69 Prüfungen unter
+werden muss. Automatisiert läuft alles grün (`tests\run-tests.ps1`, 104 Prüfungen unter
 Windows PowerShell 5.1, gegen Wegwerf-Instanzen) — diese Liste ist für das, was Tests nicht
 zeigen: der **echte Klick im Explorer**, die echte Sitzung, die echte Config, Fokus,
 Gefühl für die Geschwindigkeit.
 
-**Wichtig:** `C:\tools\OpenInNvim` ist eine Junction auf `E:\repos\openinnvim`. Die
-Kontextmenü-Einträge benutzen deshalb **schon jetzt** den neuen Launcher. Bis zum
-Durchlauf dieser Liste ist das ungeprüft.
+**Wichtig:** Noch zeigen die Einträge über die alte Junction `C:\tools\OpenInNvim` auf das
+Repo und benutzen deshalb **schon jetzt** den neuen Launcher. Mit **Teil G** installierst du
+neu (`install.ps1`): danach laufen sie aus `%LOCALAPPDATA%\OpenInNvim`, die Junction wird
+überflüssig. **Empfohlene Reihenfolge: erst Vorbereitung und Teil G, dann A–F.** Bis zum
+Durchlauf ist alles ungeprüft.
 
 **Status:** ❌ ungetestet · 🟡 teilweise · ✅ wie erwartet · 🔴 Fehler (Notiz ausfüllen!).
 Ein gefundener Fehler gehört zusätzlich in
@@ -26,7 +28,7 @@ GitHub-Issue — nicht nur hierher.
 - [Teil D — Keine Instanz erreichbar (neue Instanz)](#teil-d--keine-instanz-erreichbar-neue-instanz)
 - [Teil E — "Open with Neovim (new instance)"](#teil-e--open-with-neovim-new-instance)
 - [Teil F — Grenzfälle der laufenden Sitzung](#teil-f--grenzfälle-der-laufenden-sitzung)
-- [Teil G — Installation, Registry, Menü](#teil-g--installation-registry-menü)
+- [Teil G — Installation, Deinstallation, Registry](#teil-g--installation-deinstallation-registry)
 - [Teil H — Diagnose-Schalter und Tests](#teil-h--diagnose-schalter-und-tests)
 - [Teil I — Default-Apps (nur wenn du es nutzt)](#teil-i--default-apps-nur-wenn-du-es-nutzt)
 - [Teil J — Doku auf GitHub](#teil-j--doku-auf-github)
@@ -43,8 +45,12 @@ starten** (der feste Pipe-Name `nvim-<USER>` kommt aus `rpc_pipe` beim Start):
 ```powershell
 git -C E:\repos\openinnvim pull
 git -C E:\repos\WKDBooks pull
-Test-Path C:\tools\OpenInNvim\open-in-nvim-current.ps1   # muss True sein
+Test-Path E:\repos\openinnvim\install.ps1   # muss True sein
 ```
+
+Dann **`install.ps1` ausführen — Teil G, G1 und G2** — und erst danach die Teile A–F. Die
+Konfiguration, die du in den Teilen A–F änderst (`INSTANCE_PICK` usw.), liegt in der
+installierten Config unter `%LOCALAPPDATA%\OpenInNvim\open-in-nvim.config.ps1`.
 
 Testdateien anlegen (einmalig, auf dem Desktop):
 
@@ -61,7 +67,7 @@ Set-Content "$t\datei mit leerzeichen.txt" 'space'
 | --- | --- | --- | --- | --- |
 | V1 | Rechtsklick auf `plain.txt` → "Weitere Optionen anzeigen" | Beide Einträge "Open with Neovim (new instance)" und "(current instance)" sind da, mit Neovim-Icon | ❌ | |
 | V2 | `:echo v:servername` in der Test-Sitzung | `\\.\pipe\nvim-<USER>` (fester Name) oder `\\.\pipe\nvim.<pid>.0` | ❌ | |
-| V3 | Dry-Run: `$env:OPEN_IN_NVIM_DRYRUN='1'; powershell -NoProfile -ExecutionPolicy Bypass -File C:\tools\OpenInNvim\open-in-nvim-current.ps1 "$env:USERPROFILE\Desktop\oin-test\einfach\plain.txt"` | Gibt `candidate:`-Zeilen aus, die Test-Sitzung steht drin, **ohne** dass etwas geöffnet wird | ❌ | |
+| V3 | Dry-Run: `$env:OPEN_IN_NVIM_DRYRUN='1'; powershell -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\OpenInNvim\open-in-nvim-current.ps1" "$env:USERPROFILE\Desktop\oin-test\einfach\plain.txt"` | Gibt `candidate:`-Zeilen aus, die Test-Sitzung steht drin, **ohne** dass etwas geöffnet wird | ❌ | |
 
 ---
 
@@ -80,6 +86,7 @@ Eine einzelne Neovim-Sitzung läuft (TUI im Terminal, wie du sie sonst benutzt).
 | A7 | Während du im **Insert-Modus** tippst, klicken | Datei öffnet; notiere, in welchem Modus du danach bist und ob der Text im Buffer unverändert ist | ❌ | |
 | A8 | Während du `:` (Kommandozeile) offen hast, klicken | Datei öffnet oder der Klick wartet kurz; Neovim friert nicht ein | ❌ | |
 | A9 | Fokus: kommt das Terminalfenster mit Neovim nach dem Klick **nach vorn**? | Offen/bekannt: unter Windows bekommt ein Hintergrundprozess keinen Fokus. Notiere, was passiert (Taskleiste blinkt?) | ❌ | |
+| A9b | `FOCUS_TERMINAL = $true` in der **installierten** Config (`%LOCALAPPDATA%\OpenInNvim\open-in-nvim.config.ps1`), ein anderes Fenster im Vordergrund, dann klicken | Das Terminalfenster der Sitzung kommt nach vorn (auch aus der Taskleiste, wenn minimiert). Notiere die Dauer (erwartet ca. 0,3-0,5 s mehr) und ob bei **mehreren Terminalfenstern** das richtige kommt (bekannte Grenze: es kann das falsche sein). Danach entscheiden: opt-in lassen oder Standard? | ❌ | |
 | A10 | Ein langer Pfad (> Fensterbreite), z. B. tief verschachtelte Datei | Öffnet ohne Hit-Enter-Prompt in Neovim (früher `:cd` mit langem Pfad → Instanz hing) | ❌ | |
 | A11 | Neovim hat ein **Terminal-Buffer** im aktiven Fenster, dann klicken | Datei öffnet in einem normalen Fenster, das Terminal läuft weiter | ❌ | |
 
@@ -160,10 +167,28 @@ Alle Neovim-Fenster **schließen**.
 
 ---
 
-## Teil G — Installation, Registry, Menü
+## Teil G — Installation, Deinstallation, Registry
 
 | # | Was testen | Erwartung | Status | Notizen |
 | --- | --- | --- | --- | --- |
+| G1 | `powershell -NoProfile -ExecutionPolicy Bypass -File E:\repos\openinnvim\install.ps1 -DryRun` | Listet Kopieren, Config, 6 `Write HKCU\...`-Zeilen und "Dry run, nothing was changed"; verändert nichts (`Get-ItemProperty -LiteralPath 'HKCU:\Software\Classes\*\shell\Open_in_Neovim_current\command'` zeigt weiter die alte Junction) | ❌ | |
+| G2 | Echte Installation: `... install.ps1` (ohne `-DryRun`) | Meldet `Neovim: <Pfad>` (richtig erkannt), kopiert nach `%LOCALAPPDATA%\OpenInNvim`, "Installed:" mit beiden Einträgen, keine Fehler. **Hinweis:** der Ordner enthält schon die alten Exe/VBS der Default-App-Variante; die VBS werden durch die neuen (relativen) ersetzt | ❌ | |
+| G3 | Inhalt von `%LOCALAPPDATA%\OpenInNvim` | `open-in-nvim.vbs`, `open-in-nvim-current.vbs`, `open-in-nvim.ps1`, `open-in-nvim-current.ps1`, `open-in-nvim.lib.ps1`, `open-in-nvim.config.ps1`, `install.manifest.txt`; in der Config steht dein `NVIM_BIN` | ❌ | |
+| G4 | `Get-ItemProperty -LiteralPath 'HKCU:\Software\Classes\*\shell\Open_in_Neovim_current\command'` | `wscript.exe //nologo "C:\Users\...\OpenInNvim\open-in-nvim-current.vbs" "%1"` (nicht mehr `C:\tools`) | ❌ | |
+| G5 | Alle **6** Schlüssel vorhanden (`*`, `Directory`, `Directory\Background` je `_new`/`_current`), Hintergrund nutzt `%V` | Siehe `docs/BINDINGS.md` | ❌ | |
+| G6 | Rechtsklick auf eine Datei: Einträge **nicht doppelt** | Je ein "new" und "current" (alte Einträge früherer Versionen wurden entfernt) | ❌ | |
+| G7 | **Danach Teile A–F durchklicken** (jetzt über die installierte Kopie) | Wie dort beschrieben | ❌ | |
+| G8 | Erneut `install.ps1` ausführen | Läuft ohne Fehler; "Config kept" — deine Änderungen an der Config bleiben | ❌ | |
+| G9 | Verschiebe/benenne `E:\repos\openinnvim` **nicht** um und klicke: läuft aus der Kopie | Klick funktioniert unabhängig vom Repo-Ort (die alte Junction wird nicht mehr gebraucht) | ❌ | |
+| G10 | `install.ps1 -InstallDir E:\repos\openinnvim` (in place, Entwicklung) | Einträge zeigen auf das Repo, die Repo-Config bleibt unverändert (`git -C E:\repos\openinnvim status` sauber). **Danach wieder `install.ps1` ohne Parameter**, damit der normale Zustand gilt | ❌ | |
+| G11 | `uninstall.ps1 -DryRun`, dann `uninstall.ps1` (nur Einträge) | Alle 6 Einträge weg, Dateien und Config bleiben; Klick im Explorer zeigt keine Neovim-Einträge mehr. **Danach `install.ps1` erneut** | ❌ | |
+| G12 | `uninstall.ps1 -RemoveFiles` (nur testen, wenn du die Default-App-Exes **nicht** brauchst, sonst überspringen: deren VBS lägen in demselben Ordner) | Löscht genau die Manifest-Dateien, Config bleibt; der Ordner bleibt, solange er nicht leer ist | ❌ | |
+| G13 | Alte Junction entfernen (nur den Link!): `[IO.Directory]::Delete('C:\tools\OpenInNvim', $false)` — **erst nach G7** | Klicks funktionieren weiter; das Repo `E:\repos\openinnvim` ist unversehrt | ❌ | |
+| G14 | `verify.ps1` aus dem **Repo** (öffnet **echte Fenster** und schickt Dateien in die laufende Sitzung): `powershell -NoProfile -ExecutionPolicy Bypass -File E:\repos\openinnvim\verify.ps1`. Es wird nicht in den Installationsordner kopiert und prüft die VBS **im Repo** (jede findet ihr `.ps1` daneben), nicht die installierte Kopie | Vier Läufe ohne Fehler (`?:` war unter 5.1 kaputt) | ❌ | |
+| G15 | Windows 11: stehen die Einträge **nur** unter "Weitere Optionen anzeigen"? | Ja — bekannte Grenze (oberste Ebene bräuchte eine Shell-Erweiterung) | ❌ | |
+| G16 | User-Variable `NVIM_VBS` (zeigt auf nicht existierendes `C:\tools\PowershellSkripte\...`) | Wird nirgends gelesen; kann gelöscht werden (`[Environment]::SetEnvironmentVariable('NVIM_VBS',$null,'User')`) | ❌ | |
+
+--- | --- | --- | --- | --- |
 | G1 | `powershell -NoProfile -ExecutionPolicy Bypass -File C:\tools\OpenInNvim\install-context.ps1` (idempotent, schreibt `HKCU`) | Läuft ohne Fehler (PS 5.1; früher Parser-Fehler in Zeile 29), meldet beide Einträge. Danach alle Teile A–E nochmal kurz anklicken | ❌ | |
 | G2 | `Get-ItemProperty -LiteralPath 'HKCU:\Software\Classes\*\shell\Open_in_Neovim_current\command'` | `wscript.exe //nologo "C:\tools\OpenInNvim\open-in-nvim-current.vbs" "%1"` | ❌ | |
 | G3 | Alle **6** Schlüssel vorhanden (`*`, `Directory`, `Directory\Background` je `_new`/`_current`) | Siehe `docs/BINDINGS.md`; Hintergrund-Einträge nutzen `%V` | ❌ | |
@@ -182,7 +207,7 @@ Alle Neovim-Fenster **schließen**.
 | H2 | `$env:OPEN_IN_NVIM_SPAWN_DRYRUN='1'` ohne laufende Instanz | Druckt **eine** `spawn:`-Zeile mit `"--listen" "\\.\pipe\nvim-<USER>"` und `"--" "<Datei>"`, startet nichts | ❌ | |
 | H3 | `$env:OPEN_IN_NVIM_NO_SPAWN='1'` ohne laufende Instanz | Meldet `no reachable instance`, Exit-Code 3, **kein** Fenster | ❌ | |
 | H4 | `$env:OPEN_IN_NVIM_ONLY_PIDS='999999'` | Keine Kandidaten außer dem Fallback-Namen im Dry-Run; echte Sitzung wird nie erreicht | ❌ | |
-| H5 | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File E:\repos\openinnvim\tests\run-tests.ps1` | `passed: 69  failed: 0`, anschließend **keine** übrigen `nvim`-Prozesse außer deinen eigenen | ❌ | |
+| H5 | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File E:\repos\openinnvim\tests\run-tests.ps1` | `passed: 104  failed: 0`, anschließend **keine** übrigen `nvim`-Prozesse außer deinen eigenen | ❌ | |
 | H6 | Während die Tests laufen: deine eigene Sitzung | Bleibt unberührt (kein neuer Buffer, kein Verzeichniswechsel) | ❌ | |
 | H7 | `stylua --check E:\repos\openinnvim\tests\fixture.lua` und `luacheck E:\repos\openinnvim\tests\fixture.lua` | Beide sauber | ❌ | |
 
@@ -198,7 +223,7 @@ du nur das Kontextmenü brauchst.
 | I1 | Doppelklick auf eine `.md`-Datei | Öffnet im gewählten Modus (new/current) | ❌ | |
 | I2 | Einstellungen → Apps → Standard-Apps: "Neovim (new instance)" / "(current instance)" | Beide mit Logo und korrektem Text (offener Bug: "Microsoft Windows Based Script Host" statt Name/Logo bei "new") | ❌ | |
 | I3 | Die read-only-Prüfbefehle aus `docs/FEATURES/DEFAULT-APPS.md` | Beide ProgIDs mit Icon, Open-Command, Capabilities | ❌ | |
-| I4 | Der Exe-Launcher ruft die VBS unter `C:\tools\OpenInNvim` auf | Funktioniert nur mit vorhandener Junction (Teil G4) | ❌ | |
+| I4 | Der Exe-Launcher ruft die VBS neben sich auf, diese das `.ps1` daneben | Funktioniert, wenn `deploy-open-in-nvim.ps1` die `.ps1`/Lib mitkopiert hat (neu): nach dem Deploy Doppelklick auf eine Datei prüfen | ❌ | |
 
 ---
 
@@ -236,6 +261,7 @@ nichts.** Hintergrund und Messwerte: WKDBooks `openinnvim/Backlog/TASKS/2026-10-
 - Alles ✅ → in der ROADMAP den Punkt "Echter Klick im Explorer" abhaken und diese Datei
   nach `WKDBooks/.../openinnvim/Backlog/TASKS/` verschieben.
 - Einstellungen, die du zum Testen geändert hast (`INSTANCE_PICK`, `PREFER_STABLE_PIPE`,
-  `FOLDER_OPENS_IN`, `NVIM_BIN`), auf den Standard zurück: `git -C E:\repos\openinnvim diff`
-  darf nichts zeigen.
+  `FOLDER_OPENS_IN`, `FOCUS_TERMINAL`, `NVIM_BIN`), auf den Standard zurück — jetzt in der
+  **installierten** Config `%LOCALAPPDATA%\OpenInNvim\open-in-nvim.config.ps1` (die Repo-Config
+  bleibt unberührt; `git -C E:\repos\openinnvim diff` darf nichts zeigen).
 - Testordner löschen: `Remove-Item "$env:USERPROFILE\Desktop\oin-test" -Recurse`.
