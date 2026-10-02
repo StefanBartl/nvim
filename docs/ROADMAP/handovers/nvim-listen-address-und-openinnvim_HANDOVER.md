@@ -1,8 +1,10 @@
 # NVIM_LISTEN_ADDRESS (rpc_pipe), neotest-Listener und openinnvim (Übergabe)
 
-Stand: 2026-10-02. Zum Weiterreichen in einen neuen Chat. Quellen: die neotest-Aufgabe aus
+Stand: 2026-10-02, aktualisiert im Folgechat (Teil 5 und 6 neu, Teil 4 und "Offen" fortgeschrieben). Zum
+Weiterreichen in einen neuen Chat. Quellen: die neotest-Aufgabe aus
 [`startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md`](../reports/startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md)
-(Aufgabe 1) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim öffnen".
+(Aufgabe 1; Aufgabe 4 und der Punkt "neotest von Hand bedienen" hängen an derselben Testanordnung) und die Suche
+nach dem Windows-Kontextmenü-Eintrag "In Neovim öffnen".
 
 ---
 
@@ -13,6 +15,8 @@ Stand: 2026-10-02. Zum Weiterreichen in einen neuen Chat. Quellen: die neotest-A
   - [Teil 2: Messung mit UI](#teil-2-messung-mit-ui)
   - [Teil 3: Optionen und Empfehlung](#teil-3-optionen-und-empfehlung)
   - [Teil 4: openinnvim und das kaputte Kontextmenü](#teil-4-openinnvim-und-das-kaputte-kontextmenu)
+  - [Teil 5: Reparatur und PID-Pipe-Suche (Folgechat)](#teil-5-reparatur-und-pid-pipe-suche-folgechat)
+  - [Teil 6: Plan fuer openinnvim (Filetree, beide Eintraege, Setup-exe)](#teil-6-plan-fuer-openinnvim-filetree-beide-eintraege-setup-exe)
   - [Offen und Nachfrage](#offen-und-nachfrage)
   - [Commits dieses Chats](#commits-dieses-chats)
   - [Messen: Wiederholung](#messen-wiederholung)
@@ -160,13 +164,111 @@ angepasst (die Datei- und Skriptnamen `open-in-nvim.*` blieben, sie stehen in de
 
 ---
 
+## Teil 5: Reparatur und PID-Pipe-Suche (Folgechat)
+
+**Reparatur (erledigt, mit Zustimmung).**
+
+- `C:\tools\OpenInNvim` war eine **Junction** (kein Symlink; braucht weder Admin noch Entwicklermodus, anders als in
+  Teil 4 angenommen) auf das entfernte `E:\repos\Configs\Windows\Contextmenu\OpenInNvim`. Sie zeigt jetzt auf
+  `E:\repos\openinnvim`. Alte Junction nur als Link gelöscht (`[IO.Directory]::Delete(pfad, $false)`).
+- **Registry geprüft, keine Änderung nötig:** alle 6 Einträge (`*\shell`, `Directory\shell`,
+  `Directory\Background\shell`, je `Open_in_Neovim_current` und `Open_in_Neovim_new`) zeigen schon auf
+  `wscript.exe //nologo "C:\tools\OpenInNvim\open-in-nvim[-current].vbs" "%1"` (`%V` im Hintergrund).
+- Skripte parsen fehlerfrei, die VBS-Zielpfade lösen über die Junction auf. **Nicht getestet:** der echte Klick
+  bzw. `verify.ps1` (öffnet vier Fenster und schickt Dateien in die laufende Sitzung `nvim-bartl`).
+- Nebenbefunde: User-Variable `NVIM_VBS=C:\tools\PowershellSkripte\open-in-nvim.vbs` zeigt auf ein nicht
+  existierendes Verzeichnis, wird nirgends gelesen (kann gelöscht werden). `verify.ps1` benutzt `?:`, das in
+  Windows PowerShell 5.1 nicht geht (README verspricht 5.1).
+- **Außerhalb von `E:\repos` gesucht** (Teil 1, offener Punkt): User-/Maschinen-Umgebungsvariablen, PowerShell- und
+  Bash-Profile, `.gitconfig` (kein `core.editor`), Windows-Terminal-Einstellungen. **Niemand benutzt
+  `NVIM_LISTEN_ADDRESS` oder den Pipe-Namen.**
+- openinnvim `b5aa51d`: README auf `E:\repos\openinnvim` umgestellt; der Deinstallationshinweis
+  `Remove-Item -Recurse` auf eine Junction ersetzt (kann in PS 5.1 den Zielordner leeren).
+
+**Befunde zum "current instance"-Ablauf (am Skript und an eigenen Wegwerf-Instanzen gemessen).**
+
+1. **Jede laufende Neovim-Sitzung hat ohne jede Konfiguration eine Pipe `\\.\pipe\nvim.<pid>.<n>`.** `nvim --server
+   <pipe> --remote <datei>` landet die Datei in genau dieser Instanz (per RPC nachgeprüft). `serverstart` in der
+   `init.lua` und `nvr` sind dafür nicht nötig; der feste Name `nvim-<USERNAME>` (`rpc_pipe`) ist nur ein
+   bequemer Zusatz.
+2. **Unter Windows sind es zwei Prozesse je TUI-Sitzung:** der sichtbare `nvim.exe` (UI-Client, **ohne** Pipe) und sein
+   Kind `nvim.exe --embed` (der Editorkern, **besitzt** die Pipe). Also nach Pipes suchen, nicht nach der PID des
+   sichtbaren Fensters. GUIs (Neovide) starten ebenfalls `--embed`; Hilfsprozesse (neotests `--embed --headless`,
+   Plugin-Jobs `--headless`, `-l`-Skripte) haben auch Pipes und müssen heraus gefiltert werden.
+3. **Fehler im bestehenden Skript, behoben:** (a) `nvim --server … --remote -- <datei>` öffnet in diesem Neovim einen
+   Buffer namens `--` (Exit 2); ohne `--` sauber. (b) `nvr --servername \\.\pipe\… --remote` **hängt unter Windows
+   endlos**, das Skript probierte `nvr` vor `nvim --remote` und das unsichtbar. (c) `Start-Process … -ArgumentList
+   @(…) + $args` wird als zwei Argumente gelesen ("kein Positionsparameter für '+'"): der Pfad "neue Instanz starten"
+   (WezTerm, Windows Terminal) war kaputt. Zu (c) siehe "Offen".
+4. Neovim-Client mit umgeleiteter Ausgabe schreibt Terminal-Escape-Müll auf stdout (`--remote-expr` ist so nicht
+   lesbar); Ergebnisse stattdessen per RPC (`sockconnect`/`nvim_eval`) holen.
+
+**Gebaut (openinnvim, noch nicht committet, Tests laufen):**
+
+- `open-in-nvim.lib.ps1` (neu): Pipe-Aufzählung, Filter (`--headless`, `-l` raus; `--embed` allein bleibt),
+  Sortierung `newest|oldest|ask`, kleiner msgpack-RPC-Client (`nvim_eval`) für das Instanz-Label, WinForms-Auswahl
+  für `ask`.
+- `open-in-nvim-current.ps1`: Reihenfolge `NVIM_SERVER` → fester Pipe-Name (falls vorhanden, `PREFER_STABLE_PIPE`) →
+  PID-Pipes nach `INSTANCE_PICK` (Standard `newest`) → `nvr --serverlist` → Fallback neue Instanz. Alle externen
+  Aufrufe mit Zeitlimit (`Invoke-Bounded`, tötet nur die eigene PID per `taskkill /T`); `nvr` nur noch als letzte
+  Möglichkeit mit `--nostart`. Haken: `OPEN_IN_NVIM_ONLY_PIDS` (nur diese PIDs), `OPEN_IN_NVIM_DRYRUN=1` (Kandidaten
+  ausgeben, nichts öffnen).
+- `tests/run-tests.ps1` + `tests/fixture.lua`: starten eigene Wegwerf-Instanzen (TUI per Pseudo-Terminal, plus je eine
+  `--headless` und `--embed --headless`), prüfen Filter, Reihenfolge, RPC-Label, Auswahlfenster, trockenen Lauf und
+  das echte Öffnen (nur in eigenen Instanzen, `USERNAME` wird für den Launcher gefälscht, damit nie die echte Pipe
+  `nvim-bartl` getroffen wird). Aufruf: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests\run-tests.ps1`.
+- Stand der Tests bei Übergabe: Filter, Reihenfolge, trockener Lauf, Auswahlfenster **grün**; das RPC-Label liefert
+  bei `--embed`-Instanzen noch `$null` (in einer `--headless`-Instanz funktioniert dieselbe Funktion; Ursache offen);
+  die echten Öffnen-Tests waren am `Start-Process`-`+`-Fehler (c) und an `nvr` gescheitert und müssen nach den
+  Korrekturen erneut laufen.
+
+---
+
+## Teil 6: Plan fuer openinnvim (Filetree, beide Eintraege, Setup-exe)
+
+Auftrag des Nutzers (2026-10-02):
+
+1. **Zwei Kontextmenü-Einträge bleiben Pflicht, nicht nur "current session":** "Open with Neovim (current instance)"
+   **und** "Open with Neovim (new instance)" müssen vom Setup angelegt werden (Datei, Ordner, Ordner-Hintergrund,
+   also die bisherigen 6 Einträge).
+2. **Ziel von "current":** eine Datei in der aktuell laufenden Sitzung öffnen. Dass diese Sitzung unter Windows ein
+   Pseudo-Terminal-/`--embed`-Konstrukt ist, ist ein Implementierungsdetail der Suche, kein Ziel.
+3. **Ordner im Filetree öffnen:** Rechtsklick auf einen Ordner soll in der laufenden Sitzung `filetree.nvim` auf
+   diesen Ordner richten. **Machbar:** `filetree.nvim` hat `:Filetree open <dir-or-file>` ("Open the tree focused on
+   a directory or file", `docs/BINDINGS/USERCOMMANDS.md`, Zeile 219), und von außen lässt sich jeder Ex-Befehl in eine
+   laufende Sitzung schicken (`--remote-send` oder, robuster und modusunabhängig, RPC `nvim_command`). Umsetzung:
+   per RPC prüfen, ob `exists(':Filetree') == 2`; wenn ja `:Filetree open <pfad>`, sonst `:edit <pfad>`. Dateien
+   weiter per `:edit`/`--remote`. Gehört als Option in die Config (z. B. `FOLDER_OPENS_IN = 'filetree' | 'edit'`).
+   Die Antwort auf "geht das, von außen einen Befehl zu senden?" ist ja; es bleibt zu testen, dass `:Filetree open`
+   auch aus einer Sitzung ohne geöffneten Baum sauber arbeitet.
+4. **Verteilung:** zunächst **kein** Release-Zip. Erst wenn alles fertig ist, ein **fertiger Setup-`.exe`-Installer**
+   (Inno Setup, gebaut in GitHub Actions; Doppelklick, Eintrag unter "Apps", Deinstallation inklusive). Davor:
+   `install.ps1`/`uninstall.ps1` (ohne Admin, nur `HKCU`, Installation nach `%LOCALAPPDATA%\OpenInNvim`, VBS finden ihr
+   `.ps1` relativ zu sich selbst statt über das feste `C:\tools\OpenInNvim`; `nvim.exe` automatisch finden und in die
+   Config schreiben; **keine** Änderung von Dateizuordnungen wie in `deploy-open-in-nvim.ps1`).
+5. **Grenze:** Einträge unter `HKCU\...\shell` erscheinen unter Windows 11 nur im klassischen Menü ("Weitere Optionen
+   anzeigen"); oberste Ebene bräuchte eine `IExplorerCommand`-Shell-Erweiterung (eigenes Projekt).
+6. **Noch nicht verifiziert:** Fokus des Terminalfensters der gewählten Sitzung nach dem Öffnen (unter Windows bekommt
+   ein Hintergrundprozess keinen Fokus; Terminalfenster gezielt aktivieren). Hinweis: im Claude-Memory liegt die Notiz
+   "Windows: Fokus, detach, .COM-Kill, winget-PATH, shell-Quoting" (`windows-foreground-and-detach.md`).
+
+---
+
 ## Offen und Nachfrage
 
-- [ ] Entscheidung zum neotest-Listener: A, D (nach Test) oder weiter beobachten. Siehe Teil 3.
-- [ ] Symlink `C:\tools\OpenInNvim` reparieren und Kontextmenü wieder eintragen (Teil 4).
-- [ ] Prüfen, ob außerhalb von `E:\repos` etwas den Pipe-Namen oder die Variable benutzt (Teil 1).
+- [ ] Entscheidung zum neotest-Listener: A, D (nach Test) oder weiter beobachten. Siehe Teil 3. **Ein Workflow testet
+      gerade, ob `serverstop` auf den Listener (Option D) einen echten `<leader>nt*`-Lauf übersteht (Agent 1) und
+      den positiven Fall des Attach-Fixes aus Aufgabe 4 (Agent 2).** Ergebnisse stehen noch aus und gehören hierher.
+- [x] Symlink `C:\tools\OpenInNvim` reparieren (Teil 5; es war eine Junction, jetzt auf `E:\repos\openinnvim`).
+      Registry war schon richtig. Der echte Klick-Test steht aus (macht der Nutzer selbst).
+- [x] Prüfen, ob außerhalb von `E:\repos` etwas den Pipe-Namen oder die Variable benutzt: **nein** (Teil 5).
+- [ ] openinnvim: Tests grün bekommen (RPC-Label bei `--embed`, `Start-Process`-`+`-Fehler (c), echte Öffnen-Tests),
+      dann committen/pushen. Danach `:Filetree open` für Ordner, Konfig-Option, beide Menüeinträge im Setup (Teil 6).
+- [ ] openinnvim: `verify.ps1` (`?:`) PS-5.1-tauglich machen, VBS-Pfade relativ, `install.ps1`/`uninstall.ps1`, zuletzt
+      Setup-`.exe`.
 - [ ] Die Messskripte (`NT_ALLOW`/`NT_DUMP`-Hilfsskript und Scratch-Projekte mit 9 bzw. 1000 Tests) bei Bedarf
-      nach `WKDBooks/.../TOOLS/` legen; sie waren Wegwerf und liegen nur im Scratchpad.
+      nach `WKDBooks/.../TOOLS/` legen; sie waren Wegwerf und liegen nur im Scratchpad. (Der Workflow baut ähnliche
+      Skripte neu; danach entscheiden, was nach `TOOLS/` gehört.)
 - [ ] Die Aufgabe 1 im Startup-Handover ist mit diesem Ergebnis beantwortet, aber nicht entschieden.
 
 ---
@@ -177,9 +279,13 @@ angepasst (die Datei- und Skriptnamen `open-in-nvim.*` blieben, sie stehen in de
 | --- | --- | --- |
 | nvim-config | `afe3cee4` | docs(roadmap): Konkurrenzanalyse abgehakt, drei Reports verlinkt |
 | Configs | `f02220f` | docs: Verweise auf das umbenannte Repo `openinnvim` |
-| nvim-config | (dieser Commit) | docs(handover): NVIM_LISTEN_ADDRESS, neotest-Listener und openinnvim |
+| nvim-config | `0d3ba109` | docs(handover): NVIM_LISTEN_ADDRESS, neotest-Listener und openinnvim |
+| openinnvim | `b5aa51d` | docs(readme): neuer Repo-Pfad, sichere Junction-Entfernung |
+| nvim-config | (dieser Commit) | docs(handover): Reparatur, PID-Pipe-Suche, Filetree-Plan (Teil 5 und 6) |
 
-Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach `E:\repos\openinnvim`.
+Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach `E:\repos\openinnvim`;
+Junction `C:\tools\OpenInNvim` umgesetzt (kein Git). In `E:\repos\openinnvim` liegt noch **ungepusht** die PID-Pipe-Suche
+samt Tests (Teil 5), erst nach grünen Tests committen.
 Review durch `ultracode`: nicht erfolgt (reine Doku).
 
 ---
