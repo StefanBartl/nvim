@@ -10,17 +10,17 @@ der volle Verlauf samt drei Reviews im Archiv
 
 ## Table of content
 
-  - [Vorgaben für den neuen Chat](#vorgaben-für-den-neuen-chat)
+  - [Vorgaben](#vorgaben)
   - [Aufgabe 1: neotest-Listener (Sicherheit)](#aufgabe-1-neotest-listener-sicherheit)
   - [Aufgabe 2: erster langsamer `<leader>`-Druck](#aufgabe-2-erster-langsamer-leader-druck)
-  - [Aufgabe 3: `sandbox.nvim`-Hover außerhalb von Dockerfile und Compose](#aufgabe-3-sandboxnvim-hover-außerhalb-von-dockerfile-und-compose)
+  - [Aufgabe 3: sandbox-Hover](#aufgabe-3-sandbox-hover)
   - [Aufgabe 4: Auto-Attach meldet ohne laufenden Test](#aufgabe-4-auto-attach-meldet-ohne-laufenden-test)
   - [Aufgabe 5: weitere offene Punkte aus dem Report](#aufgabe-5-weitere-offene-punkte-aus-dem-report)
-  - [Messen, ohne sich zu täuschen](#messen-ohne-sich-zu-täuschen)
+  - [Messen](#messen)
 
 ---
 
-## Vorgaben für den neuen Chat
+## Vorgaben
 
 - Antworten auf Deutsch, Code und Kommentare auf Englisch. Nie mehr als ein
   Agent gleichzeitig. Immer sagen, was gerade passiert.
@@ -121,7 +121,7 @@ Callbacks nicht aus, solange ein Mapping auf seine Fortsetzung wartet.
 
 ---
 
-## Aufgabe 3: `sandbox.nvim`-Hover außerhalb von Dockerfile und Compose
+## Aufgabe 3: sandbox-Hover
 
 **Stand.** `sandbox.nvim` lädt über `cmd = { "Sandbox", "Sbx" }`,
 `ft = "dockerfile"` und Compose-Dateinamen
@@ -206,7 +206,7 @@ hier nur die Stichworte:
 
 ---
 
-## Messen, ohne sich zu täuschen
+## Messen
 
 ```bash
 # Vergleichszahlen: 5 Läufe mit UI, Median / Min / Max
