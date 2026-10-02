@@ -51,8 +51,8 @@ Two things worth knowing if it is touched again: its history sits in the
 derived may be written there; and `require("github_stats")` loads its dashboard
 and therefore `ui.nvim`, so a probe must target a UI-free module.
 
-**2026-10-02: L10 P0 built** in `rules.nvim` (`02c5952`, CI green on the push
-that follows this note's commit — check `gh run list` there): the parser keeps
+**2026-10-02: L10 P0 built** in `rules.nvim` (`02c5952`, CI green, including the
+runaway-loop test on Linux LuaJIT): the parser keeps
 `text`, `title` and `section`, validates `agent`, and evaluates block bodies in
 an empty environment; `setup({ lua_predicates = false })` refuses predicates.
 Two things the concept got wrong are written into its D5 under *As built*: an
