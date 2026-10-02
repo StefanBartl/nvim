@@ -224,6 +224,7 @@ du nur das Kontextmenü brauchst.
 | I2 | Einstellungen → Apps → Standard-Apps: "Neovim (new instance)" / "(current instance)" | Beide mit Logo und korrektem Text (offener Bug: "Microsoft Windows Based Script Host" statt Name/Logo bei "new") | ❌ | |
 | I3 | Die read-only-Prüfbefehle aus `docs/FEATURES/DEFAULT-APPS.md` | Beide ProgIDs mit Icon, Open-Command, Capabilities | ❌ | |
 | I4 | Der Exe-Launcher ruft die VBS neben sich auf, diese das `.ps1` daneben | Funktioniert, wenn `deploy-open-in-nvim.ps1` die `.ps1`/Lib mitkopiert hat (neu): nach dem Deploy Doppelklick auf eine Datei prüfen | ❌ | |
+| I5 | `register-nvim-default-app.ps1` starten (nur wenn du den Weg nutzt) | Abfrage und Meldungen jetzt **englisch** und ohne Zeichensalat; die Dateitypen kommen aus `file-extensions.ps1` (eine Liste, 79 Einträge): in den Standard-Apps erscheinen sie wie zuvor | ❌ | |
 
 ---
 
