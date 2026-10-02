@@ -51,6 +51,19 @@ Two things worth knowing if it is touched again: its history sits in the
 derived may be written there; and `require("github_stats")` loads its dashboard
 and therefore `ui.nvim`, so a probe must target a UI-free module.
 
+**2026-10-02: L10 P0 built** in `rules.nvim` (`02c5952`, CI green on the push
+that follows this note's commit — check `gh run list` there): the parser keeps
+`text`, `title` and `section`, validates `agent`, and evaluates block bodies in
+an empty environment; `setup({ lua_predicates = false })` refuses predicates.
+Two things the concept got wrong are written into its D5 under *As built*: an
+empty environment alone breaks every predicate (so they are re-bound only when
+trusted), and `section` cannot be the nearest heading (that is the rule's own
+title). Verified by parsing the real corpus with the old and the new parser:
+430 rules, identical, same status for all 32 with a check. **Next is P1** — the
+engine under the standalone `vim` shim, which is a `documentation.nvim` change.
+The 2026-09-21 paragraph below is the design as decided; it is otherwise
+unchanged.
+
 **2026-09-21: L10 designed, four questions decided, nothing built.**
 [`RULES_AGENT_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/IDEAS/RULES_AGENT_CONCEPT.md) is the design for a Rules tab
 and an agent for the manual rules; the queue entry is **L10** in
