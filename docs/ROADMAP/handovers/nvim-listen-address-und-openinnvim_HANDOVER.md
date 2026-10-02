@@ -1,6 +1,7 @@
 # NVIM_LISTEN_ADDRESS (rpc_pipe), neotest-Listener und openinnvim (Übergabe)
 
-Stand: 2026-10-02, aktualisiert im Folgechat (Teil 5 und 6 neu, Teil 4 und "Offen" fortgeschrieben). Zum
+Stand: 2026-10-02, aktualisiert in zwei Folgechats (Teil 5 und 6 neu; im zweiten: Tests grün, Filetree-Ordner umgesetzt,
+"Offen" fortgeschrieben). Zum
 Weiterreichen in einen neuen Chat. Quellen: die neotest-Aufgabe aus
 [`startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md`](../reports/startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md)
 (Aufgabe 1; Aufgabe 4 und der Punkt "neotest von Hand bedienen" hängen an derselben Testanordnung) und die Suche
@@ -222,6 +223,27 @@ angepasst (die Datei- und Skriptnamen `open-in-nvim.*` blieben, sie stehen in de
   die echten Öffnen-Tests waren am `Start-Process`-`+`-Fehler (c) und an `nvr` gescheitert und müssen nach den
   Korrekturen erneut laufen.
 
+**Fortsetzung (Folge-Chat 2, 2026-10-02): Tests grün, committet und gepusht (`28d358c`, `41c399f`, `a8698cb`).**
+42 von 42 Prüfungen, unter Windows PowerShell 5.1. Gefunden und behoben:
+
+1. **Ursache "RPC-Label `$null` bei `--embed`" war nicht der Client, sondern die Fixture.** `Invoke-NvimEval` ist
+   korrekt (gegen die echte Sitzung, gegen `--headless --listen` und gegen UI-angedockte Kerne antwortet es in 1-4 ms).
+   Ein `nvim --embed`-Kern hinter einem TUI-Client auf einem **bloßen Pty** (`jobstart(..., {pty = true})`, auch mit
+   `term = true`) wurde in 77 s nie ansprechbar: sein UI-Attach läuft nicht durch. Die Fixture startet deshalb jetzt
+   `nvim --embed`-Kerne und dockt per `nvim_ui_attach` selbst an (das ist, was Neovide macht). Kein Produktfehler.
+2. **Hit-Enter-Prompt nach `:cd` (echter Fehler im Launcher).** `:cd <pfad>` gibt den Pfad aus; ist er breiter als das
+   Fenster, wartet die Instanz auf eine Taste und beantwortet kein RPC mehr, bis der nächste `--remote-send` mit
+   `<C-\><C-n>` den Prompt wegräumt. Alle Befehle aus `Build-RemoteEditCommand` laufen jetzt mit `:silent`.
+3. **`Start-Process -ArgumentList @(…) + $args` (c) behoben** (Liste vorher bauen) in WezTerm-, Windows-Terminal-Pfad.
+4. `tests/fixture.lua`: `gui1` ohne `:Filetree`, `gui2` mit Attrappe, die ihre Argumente in `g:ft_args` ablegt.
+5. `verify.ps1` (`?:`) und `install-context.ps1` (`"$key:"` ist in 5.1 eine ungültige Scope-Variable) parsen jetzt unter
+   5.1; **alle** `*.ps1` im Repo parsen fehlerfrei. (Teil 5 hatte "parsen fehlerfrei" unter PowerShell 7 geprüft.)
+
+**Wirkung auf die echte Sitzung:** `C:\tools\OpenInNvim` ist eine Junction auf das Repo, die Kontextmenü-Einträge
+benutzen also **ab sofort den neuen Launcher** (`origin/main` von `openinnvim`). Der echte Klick ist weiterhin nicht von
+Hand getestet; die Tests laufen nur gegen eigene Wegwerf-Instanzen und die echte Sitzung wurde nie angefasst (nur
+lesende `1 + 2`-Abfragen).
+
 ---
 
 ## Teil 6: Plan fuer openinnvim (Filetree, beide Eintraege, Setup-exe)
@@ -239,8 +261,14 @@ Auftrag des Nutzers (2026-10-02):
    laufende Sitzung schicken (`--remote-send` oder, robuster und modusunabhängig, RPC `nvim_command`). Umsetzung:
    per RPC prüfen, ob `exists(':Filetree') == 2`; wenn ja `:Filetree open <pfad>`, sonst `:edit <pfad>`. Dateien
    weiter per `:edit`/`--remote`. Gehört als Option in die Config (z. B. `FOLDER_OPENS_IN = 'filetree' | 'edit'`).
-   Die Antwort auf "geht das, von außen einen Befehl zu senden?" ist ja; es bleibt zu testen, dass `:Filetree open`
-   auch aus einer Sitzung ohne geöffneten Baum sauber arbeitet.
+   Die Antwort auf "geht das, von außen einen Befehl zu senden?" ist ja. **Umgesetzt und geprüft (`41c399f`):**
+   `FOLDER_OPENS_IN = 'filetree' | 'edit'` (Standard `filetree`); der Launcher fragt per RPC `exists(':Filetree') == 2`
+   ab (nur bei `\\.\pipe\`-Adressen) und sendet `:silent execute 'Filetree open ' . fnameescape('<dir>')`, sonst
+   Rückfall auf cd + `:edit .`. **Gegen die echte Config geprüft** (Wegwerf-Instanz mit UI-Attach, ohne die laufende
+   Sitzung): aus einer Sitzung ohne Baum öffnet `:Filetree open <dir>` das neo-tree-Fenster, auf den Ordner gerichtet,
+   und das cwd folgt; Pfade mit Leerzeichen laufen mit schlichtem `fnameescape` (`inner\ dir`) und mit
+   Schrägstrich-Variante gleich. Nicht geprüft: Verhalten bei bereits offenem, anders gewurzeltem Baum (kein Fehler
+   erwartet, `go_to` ruft `set_root`).
 4. **Verteilung:** zunächst **kein** Release-Zip. Erst wenn alles fertig ist, ein **fertiger Setup-`.exe`-Installer**
    (Inno Setup, gebaut in GitHub Actions; Doppelklick, Eintrag unter "Apps", Deinstallation inklusive). Davor:
    `install.ps1`/`uninstall.ps1` (ohne Admin, nur `HKCU`, Installation nach `%LOCALAPPDATA%\OpenInNvim`, VBS finden ihr
@@ -262,10 +290,13 @@ Auftrag des Nutzers (2026-10-02):
 - [x] Symlink `C:\tools\OpenInNvim` reparieren (Teil 5; es war eine Junction, jetzt auf `E:\repos\openinnvim`).
       Registry war schon richtig. Der echte Klick-Test steht aus (macht der Nutzer selbst).
 - [x] Prüfen, ob außerhalb von `E:\repos` etwas den Pipe-Namen oder die Variable benutzt: **nein** (Teil 5).
-- [ ] openinnvim: Tests grün bekommen (RPC-Label bei `--embed`, `Start-Process`-`+`-Fehler (c), echte Öffnen-Tests),
-      dann committen/pushen. Danach `:Filetree open` für Ordner, Konfig-Option, beide Menüeinträge im Setup (Teil 6).
-- [ ] openinnvim: `verify.ps1` (`?:`) PS-5.1-tauglich machen, VBS-Pfade relativ, `install.ps1`/`uninstall.ps1`, zuletzt
-      Setup-`.exe`.
+- [x] openinnvim: Tests grün (42/42), `Start-Process`-Fehler (c) behoben, `:Filetree open` für Ordner mit
+      Konfig-Option `FOLDER_OPENS_IN`, `verify.ps1`/`install-context.ps1` unter PS 5.1 lauffähig (Teil 5, 6).
+- [ ] openinnvim: VBS-Pfade relativ zur VBS (statt festem `C:\tools\OpenInNvim`), `install.ps1`/`uninstall.ps1` mit
+      beiden Menüeinträgen, zuletzt Setup-`.exe` (Teil 6, Punkt 4). Das ändert den Installationsort; vorher Rückfrage.
+- [ ] openinnvim: Fokus des Terminalfensters nach dem Öffnen (Teil 6, Punkt 6) ist ungelöst und ungetestet.
+- [ ] openinnvim: echter Klick im Explorer durch den Nutzer (alle vier Fälle: Datei/Ordner, current/new). Hier ist der
+      Launcher neu, siehe "Wirkung auf die echte Sitzung" in Teil 5.
 - [ ] Die Messskripte (`NT_ALLOW`/`NT_DUMP`-Hilfsskript und Scratch-Projekte mit 9 bzw. 1000 Tests) bei Bedarf
       nach `WKDBooks/.../TOOLS/` legen; sie waren Wegwerf und liegen nur im Scratchpad. (Der Workflow baut ähnliche
       Skripte neu; danach entscheiden, was nach `TOOLS/` gehört.)
@@ -281,12 +312,15 @@ Auftrag des Nutzers (2026-10-02):
 | Configs | `f02220f` | docs: Verweise auf das umbenannte Repo `openinnvim` |
 | nvim-config | `0d3ba109` | docs(handover): NVIM_LISTEN_ADDRESS, neotest-Listener und openinnvim |
 | openinnvim | `b5aa51d` | docs(readme): neuer Repo-Pfad, sichere Junction-Entfernung |
-| nvim-config | (dieser Commit) | docs(handover): Reparatur, PID-Pipe-Suche, Filetree-Plan (Teil 5 und 6) |
+| nvim-config | `e5075b1d` | docs(handover): Reparatur, PID-Pipe-Suche, Filetree-Plan (Teil 5 und 6) |
+| openinnvim | `28d358c` | feat(current): discover running instances via their default pipes (inkl. `:silent`, `(c)`, Tests) |
+| openinnvim | `41c399f` | feat(current): open folders in filetree.nvim when the instance has it |
+| openinnvim | `a8698cb` | fix(ps51): `?:` in verify.ps1 und `"$key:"` in install-context.ps1 |
+| nvim-config | (dieser Commit) | docs(handover): Folge-Chat 2, Tests grün, Filetree umgesetzt |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach `E:\repos\openinnvim`;
-Junction `C:\tools\OpenInNvim` umgesetzt (kein Git). In `E:\repos\openinnvim` liegt noch **ungepusht** die PID-Pipe-Suche
-samt Tests (Teil 5), erst nach grünen Tests committen.
-Review durch `ultracode`: nicht erfolgt (reine Doku).
+Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
+Review durch `ultracode`: **für die drei openinnvim-Commits nicht erfolgt** (kein Haken); die Handover-Commits sind reine Doku.
 
 ---
 
