@@ -1,372 +1,136 @@
-# Handover — open work on the desktop app and the ecosystem
+# Handover — docmap-desktop und das Ökosystem: nur offene Aufgaben
 
-What a new session needs to know about **this machine and this way of
-working**. Not a task store — there are two other files for that, and the
-split is the point:
+**Stand: 2026-10-02.** Hier steht ausschließlich, was noch zu tun oder zu
+entscheiden ist, und welche Commits noch auf ein Review warten. Was gebaut
+wurde und warum, steht nicht mehr hier:
 
-| File | Answers |
+| Wo | Was |
 |---|---|
-| [`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md) | **What is open** — for **all three repositories**, ordered by effort. The only queue since 2026-08-20 |
-| [`PLAN-DONE.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/Backlog/FEATURES/PLAN-DONE.md) | **What was built and why that way** — including the decisions that are not renegotiated |
-| [`ROADMAP.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/ROADMAP.md) per repo | **Where it is going**, in prose. Direction, not a schedule |
-| `WORKPLAN.md` · `FEATURE_LOG.md` · `FINISHED.md` | **The derivation.** Records that grow and are never trimmed |
-| this document | **How to work here**: state of the repos, installed tools, gates, pitfalls |
+| [`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md) | Die Queue (alle drei Repos, nach Aufwand). Hier nur das, was daraus als Nächstes ansteht |
+| [`PLAN-DONE.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/Backlog/FEATURES/PLAN-DONE.md) | Gebaut und begründet — zuletzt L11, L10 P0 und L10 P1 (2026-10-02) |
+| [`HANDOVER-HISTORY.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/Backlog/FEATURES/HANDOVER-HISTORY.md) | Der frühere Inhalt dieses Handovers, unverändert: Releases v0.1 bis v0.5, L10-Entwurf, L11-Stand |
+| [`OPERATING_NOTES.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/OPERATING_NOTES.md) | Betriebswissen: installierte Tools, Engine neu bauen, Gates, Arbeitsmethode, Stolperfallen |
+| [`RULES_AGENT_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/IDEAS/RULES_AGENT_CONCEPT.md) | Konzept L10, mit *As built* zu D4 und D5 |
 
-**The queue used to live in five places** — two `WORKPLAN.md`, three
-`ROADMAP.md`, an `IDEAS.md` and this plan — and the same task showed up in
-several of them in different states. Merged on 2026-08-20: the checkboxes are
-gone from the record and reasoning documents, their text stands unchanged.
+## Repos auf dem Stand dieser Übergabe
 
-Merged on 2026-08-20 out of this document and `HANDOVER-2026-08-20.md`. The
-daily handover is gone, not lost: what it carried in results is in
-`PLAN-DONE.md` and in the repos' feature records, and what it carried in
-operating knowledge is below under *Running everything*.
+Alle `main`, alle mit `origin` synchron.
 
-## State
-
-| Repo | Branch | HEAD | CI |
-|---|---|---|---|
-| `E:\repos\documentation.nvim` | main | `b39c3be` (last tag `v0.1.0`; `standalone-latest` is the rolling engine) | green |
-| `E:\repos\runtime-analysis.nvim` | main | `a450b36` | green |
-| `E:\repos\github_stats.nvim` | main | `13fb0a2` | no CI |
-| `E:\repos\docmap-desktop` | main | `4774f11` — **15 commits after `v0.5.0`** (six touch code, the rest is docs), tagged **`v0.5.0`** (published, see below) | green; the release workflow is tag-triggered (`v*`) and downloads the engine from `standalone-latest` before `cargo tauri build` starts. The procedure is in [`RELEASING.md`]($REPOS_DIR/docmap-desktop/docs/RELEASING.md) |
-| `C:\Users\bartl\AppData\Local\nvim` (personal config) | main | `85364bda` | no CI |
-
-**2026-10-02: L11 is built end to end, on `main`, unreleased.**
-`github_stats.nvim` writes a local digest (P0), the app shows a Traffic line, a
-sort order, a 30-day figure on the overview rows and a detail dialog with
-sparkline, referrers and top pages (P1, P2), and `documentation.nvim` has a
-`traffic` browse mode (P3). The last three app commits (`faf4f91` opt-out
-revert and stale chips, `409af1f` cargo fmt, `4774f11` detail dialog) lived on
-`claude/github-stats-traffic-integration-46c7c0` until today and were
-fast-forwarded onto `main`; the other three open `claude/*` branches were
-already contained in it. `node --test src/lib/*.test.js` is green (157).
-**Not run against real data:** the end-to-end check with a genuine
-`:GithubStats fetch` is **A3** in [`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md) and needs the author's token.
-The download page still serves `v0.5.0`, which has none of this; a `v0.6.0`
-(or `v0.5.1`) is a tag away, cut the way `RELEASING.md` says. Design and
-decisions: [`GITHUB_STATS_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/github_stats.nvim/ROADMAP/IDEAS/GITHUB_STATS_CONCEPT.md).
-Two things worth knowing if it is touched again: its history sits in the
-**synced** Neovim config on purpose (one dataset for two machines), so nothing
-derived may be written there; and `require("github_stats")` loads its dashboard
-and therefore `ui.nvim`, so a probe must target a UI-free module.
-
-**2026-10-02: L10 P1 built** in `documentation.nvim` (`b90ad9d`): `rules.nvim`'s
-engine runs under the standalone `vim` shim, and the `standalone` gate runs one
-ruleset over one project in Neovim *and* under PUC Lua + shim and requires
-identical output. Details and what differed from the concept are in its D4
-under *As built*; the headline is that the **rulesets' predicates are Neovim
-code too** (`vim.fn.glob` in 10 of 14), so the shim surface is whatever the
-ruleset uses. **Found on the way: the `standalone` CI job and the `Release
-engine` workflow of `documentation.nvim` had been red since 2026-10-01** (a
-`lib.nvim` module reads `vim.log.levels` at load time and the shim had no
-`vim.log`), so `standalone-latest` — the engine this app bundles — was stale.
-Fixed in the same commit and verified: CI is green on Linux, macOS and Windows
-(`4bd684e`; macOS needed a follow-up, `glob` ignores case there too), `Release
-engine` is green, and `standalone-latest` was republished at
-2026-10-02T18:06:23Z — so the engine the next app release bundles is current
-again. **Next is P2:** `--api=rules` (`catalog`,
-`run`, then `plan` and `validate`) and the bundle gaining `rules.nvim`.
-
-**2026-10-02: L10 P0 built** in `rules.nvim` (`02c5952`, CI green, including the
-runaway-loop test on Linux LuaJIT): the parser keeps
-`text`, `title` and `section`, validates `agent`, and evaluates block bodies in
-an empty environment; `setup({ lua_predicates = false })` refuses predicates.
-Two things the concept got wrong are written into its D5 under *As built*: an
-empty environment alone breaks every predicate (so they are re-bound only when
-trusted), and `section` cannot be the nearest heading (that is the rule's own
-title). Verified by parsing the real corpus with the old and the new parser:
-430 rules, identical, same status for all 32 with a check. **Next is P1** — the
-engine under the standalone `vim` shim, which is a `documentation.nvim` change.
-The 2026-09-21 paragraph below is the design as decided; it is otherwise
-unchanged.
-
-**2026-09-21: L10 designed, four questions decided, nothing built.**
-[`RULES_AGENT_CONCEPT.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/IDEAS/RULES_AGENT_CONCEPT.md) is the design for a Rules tab
-and an agent for the manual rules; the queue entry is **L10** in
-[`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md). It touches four repositories, and the first change is not
-in this one. **The four open questions were answered by taking the
-recommendation each time:**
-
-1. Project file **`.rules.json`**, not a section in `.docmap.json`.
-2. Proposals in the project, **`.rules-proposals/`**, git-ignored (the ignore
-   entry is offered on first use).
-3. **A small blocking HTTP crate** in the app, not spawning `curl`. It is needed
-   because loomAI answers 403 to any request with a foreign `Origin` header, so
-   the call cannot come from the webview.
-4. **One sidecar** — extend `docmap`. **Provisional:** it is the *first step*
-   (P1, a spike) that decides it, because what the bundle pipeline does with a
-   second Lua repository has not been measured.
-
-**What to know before starting.** Start at P0 in `rules.nvim`, not here: its
-parser drops the rule text and evaluates rule blocks with the full environment,
-and both must change first. The real corpus (`wkdbook-lua/checklists`) has 421
-rules in 13 families and **389 of them have no `check`** — so batching per scope
-and scopes per family are not optimisations, they are what makes a
-"select a family, one click" affordable. loomAI has no model-list endpoint and
-its stream sends no token usage; both are optional asks (P6), not blockers.
-
-**2026-09-21: `v0.5.0` tagged (2026-09-20) and published.** Bulk import from a
-parent folder (M15), the dependency matrix (M16), and two fixes from reviewing
-them; 21 commits since `v0.4.0`. Cut the way `RELEASING.md` says: CI green on
-the bump commit first, `standalone-latest` checked rather than rebuilt (its
-`publishedAt` 2026-09-20T05:32:48Z was already after the engine's last code
-commit), then the tag. All four platform jobs passed, nine assets.
-
-**Published without the click-through.** That was a decision made on request
-("offer the setup.exe for download"), not a step that was done: the Windows
-installer was unpacked and its bundled engine queried with `--capabilities`
-(23 grammars loaded, build not dirty), but the installed app was not opened
-and walked through, and the release notes say so. **A1 in
-[`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md) is that walk-through, after the fact.** If it finds
-something, the cheap answer is a `v0.5.1`, not withdrawing the release.
-
-**2026-08-24: `v0.1.0` and `v0.4.0` tagged, in that order.**
-`documentation.nvim` had no version scheme at all until then — only
-`standalone-latest`, the rolling pre-release. The occasion was the question
-whether to wait for further roadmap items (multilang L3 among others, all of
-them "several sessions" with no date) or to release the finished, tested state
-(project settings dialog, `.docmap.json`, three freshly fixed CI defects —
-details in [`PLAN-DONE.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/Backlog/FEATURES/PLAN-DONE.md)). Decision: release, now. There is
-never an empty roadmap, and `RELEASING.md`'s own lesson from `v0.2.0` is that
-a draft ages fast — waiting costs more than it returns.
-
-The order mattered: first have `standalone-latest` rebuilt freshly
-(`publishedAt` 2026-08-24T18:52:45Z, triggered automatically by the `lua/**`
-push on `documentation.nvim`), **then** tag `v0.4.0` — otherwise the bundled
-sidecar would have lagged behind its own fixes, exactly the mistake
-`RELEASING.md` records from `v0.2.0`.
-
-**`v0.4.0` was a draft when this was written, and has been published since**
-(it was *Latest* until `v0.5.0`). The human check is deliberately not
-automated — see `RELEASING.md`.
-
-**`v0.3.0` cut on 2026-08-21, published.** The release workflow builds the
-installers from the tag and files them as a **draft** — the last step is a
-person opening the app, and nothing automates that.
-
-**`v0.2.0` was never published.** The draft stood complete, and then 22
-desktop and 17 engine commits landed on top of it — the workspace overview,
-extension API stage 2, the bilingual dialogs, and in the engine everything
-from `opts.plugins.wrappers` to `K` in the browser. A public version nobody
-would ever have installed is not a version. The draft is deleted, the tag
-stays as a point in the history, and 0.2.0 is not reused: a tag pointing at a
-different tree than what is written about it is more expensive than a skipped
-number.
-
-**What that cut taught, and what `RELEASING.md` now says:** rebuild the engine
-first. `standalone-latest` was 58 commits behind, among them the two flags the
-project settings dialog sends. The engine build is also the only place where
-the `standalone` gate runs on a clean machine — it found three real defects in
-three attempts (`node:start()` and `vim.pesc` missing from the shim, the Swift
-grammar building a Node binding nobody reads). Verified before the tag: the
-published engine reports 23 languages, schema 5, and accepts
-`--exclude`/`--languages`.
-
-Installed, permanently:
-
-| Path | Contents |
-|---|---|
-| `C:\tools\docmap.exe` | full-fidelity engine, 1.98 MB, reads Lua + JS/TS/TSX, **now reads real telemetry data** (`--api=telemetry`/`loaded`, verified against a real 63 KB dataset) — earlier versions kept beside it as `C:\tools\docmap.exe.bak-20260812`/`.bak-20260812b` |
-| `C:\tools\docmap-grammars\` | `lua.dll`, `javascript.dll`, `typescript.dll`, `tsx.dll` |
-| `C:\tools\docmap-libs\` | `lfs.a`, `lua_tree_sitter.a` — so an engine rebuild does not have to clone three repos again |
-| `C:\Program Files (x86)\Lua\5.4\src\lua.exe` | real PUC Lua 5.4.8 — **was there the whole time**, only not on PATH and luarocks not configured against it |
-| `C:\tools\lua5.4.exe` | a copy of it, reachable on PATH — `scripts/ci.lua`'s `standalone` gate looks for `lua5.4`/`lua5.3`/`lua` by name on PATH |
-| `C:\Users\bartl\.luarocks\` | `luafilesystem`, `dkjson`, `luastatic`, `lua-tree-sitter` (all for Lua 5.4) — installed 2026-08-12 |
-| `C:\tools\lua-tree-sitter-src\` | a `--recurse-submodules` clone of `xcb-xwii/lua-tree-sitter`, with the `incdirs` fix already applied to the rockspec — kept for a future rebuild of the runtime rock, not merely of the static `lua_tree_sitter.a` that already exists |
-
-`DOCMAP_TS_DIR` is set as a **user variable**. Windows reads it at process
-start: a running Neovim or a running app only sees it after a restart.
-
-Rebuilding the engine (from `documentation.nvim`, under PUC Lua 5.4, **not**
-Neovim) — with the real paths as they are now known:
-
-```
-LUA_PATH="C:\Users\bartl\.luarocks\share\lua\5.4\?.lua;C:\Users\bartl\.luarocks\share\lua\5.4\?\init.lua;.\?.lua;.\?\init.lua"
-LUA_CPATH="C:\Users\bartl\.luarocks\lib\lua\5.4\?.dll;.\?.dll"
-LUA_INCDIR="C:/Program Files (x86)/Lua/5.4/src"
-LUA_LIBA="C:/Program Files (x86)/Lua/5.4/src/liblua.a"
-DOCMAP_STATIC_LIBS=C:\tools\docmap-libs  CC=gcc
-LUASTATIC="C:\Users\bartl\.luarocks\lib\luarocks\rocks-5.4\luastatic\0.0.12-1\bin\luastatic"
-DOCMAP_TS_DIR=C:\tools\docmap-grammars
-"C:\Program Files (x86)\Lua\5.4\src\lua.exe" scripts/package.lua --out=build --keep
-```
-
-`DOCMAP_TS_DIR` at build time is **not** optional — see
-`documentation.nvim/docs/ROADMAP/V1_EXTENSION/PORTABILITY.md`, the section on
-manifest closure: the manifest is *measured*, and it only measures what the
-measured run actually loaded. The full derivation, including the two
-`lua-tree-sitter` packaging fixes (ICU headers missing from the published
-rock, `incdirs` missing `tree-sitter/lib/src`) and what
-`--capabilities`/`checklist`/`commits`/`commit/<sha>` confirmed against real
-data: PORTABILITY.md, step 5 (2026-08-12).
+| Repo | HEAD | Anmerkung |
+|---|---|---|
+| `E:\repos\docmap-desktop` | `4774f11` | 15 Commits nach `v0.5.0`; **der Download ist noch `v0.5.0`** |
+| `E:\repos\documentation.nvim` | `4bd684e` | CI auf Linux, macOS und Windows grün; `standalone-latest` am 2026-10-02T18:06:23Z neu gebaut |
+| `E:\repos\rules.nvim` | `02c5952` | CI grün |
+| `E:\repos\github_stats.nvim` | `13fb0a2` | keine CI |
+| `E:\repos\runtime-analysis.nvim` | `a450b36` | unverändert |
 
 ---
 
-## Open work — recorded elsewhere
+## Offene Aufgaben
 
-Until 2026-08-20 this section carried the language and i18n axes together with
-their ordering. Both have been entries in [`PLAN.md`]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/ROADMAP/PLAN.md) since (L1, L2,
-L3), with the assessments and the dependencies that actually preorder them.
-The list stood here a second time, and two lists for one question are the
-drift this ecosystem fights everywhere else.
+### Entscheidungen und Handgriffe für dich
 
-**What stays from this section, because it is operating knowledge rather than
-a task:** a repo's map goes stale as soon as its documentation changes — run
-`nvim --headless -l scripts/gen_map.lua` afterwards and commit the result. And
-`DOCMAP_TS_DIR` is a **user variable**: a running Neovim or a running app only
-sees a change after a restart.
+1. **Release schneiden, ja oder nein: `v0.6.0` oder `v0.5.1`.** `main` enthält
+   seit `v0.5.0` die Traffic-Features (L11) und sonst nur Doku. Die gebündelte
+   Engine ist aktuell (`standalone-latest`, 2026-10-02T18:06:23Z), und
+   `RELEASING.md` gilt wie bisher: CI auf dem Bump-Commit grün, Engine-Stand
+   prüfen, dann taggen. Ein Release ist öffentlich, deshalb deine Entscheidung.
+   Vorher noch nicht gelaufen: `cargo test` im Desktop-Repo (braucht den
+   Platzhalter-Sidecar, siehe `OPERATING_NOTES.md`) — der Merge vom 2026-10-02
+   wurde nur mit den Frontend-Tests (157 grün) geprüft.
+2. **A1 — `v0.5.0` durchklicken.** Es ist öffentlich, ohne dass jemand die App
+   geöffnet hat. Die vier Standardpunkte aus `RELEASING.md`, dazu **Add from a
+   parent folder** und **View as matrix…**. Findet es etwas, ist `v0.5.1` die
+   billige Antwort.
+3. **A3 — L11 gegen echte Daten.** Mit deinem Token `:GithubStats fetch`, dann
+   die sieben Punkte in `docs/ROADMAP/handovers/github_stats_traffic_integration.md`
+   (zwei Maschinen, Plugin fehlt, lazy-loaded, überschriebenes `digest_dir`,
+   feindlicher Digest, privates Repo mit Opt-out). Alles ist gebaut und mit
+   Fixtures getestet, aber nichts lief gegen einen echten Fetch.
+4. **A2 — Discussions einschalten**, sobald *jemand anderes* eine echte Frage
+   stellt. Ein Ereignis, keine Aufgabe.
+5. **Aufräumen, du entscheidest:** lokale Branches in `docmap-desktop`, die schon
+   in `main` stecken (`claude/agent-checklist-runner-23f139`,
+   `claude/docmap-agent-checklist-architecture-d208fd`,
+   `claude/docmap-multi-repo-import-8ec2f5`, `claude/github-stats-traffic-integration-46c7c0`
+   lokal **und** auf `origin`), dazu die Worktrees unter
+   `.claude/worktrees/` (u. a. `vigorous-swanson-d5cf1d`, `agent-checklist-runner-23f139`,
+   `docmap-multi-repo-import-8ec2f5`). Das Löschen auf `origin` ist öffentlich.
+
+### Nächster Bauschritt
+
+6. **L10 P2 — `--api=rules` in `documentation.nvim`** (~1 Session). `catalog` und
+   `run` (mechanisch) zuerst, dann `plan` (mit Batching) und `validate`; in
+   `--capabilities` auflisten; die Vertrauensentscheidung für Prädikate pro Regel
+   durchreichen (`lua_predicates` als Funktion, D5). **Und das Bundle bekommt
+   `rules.nvim`:** `bundle_manifest.lua` wird aus einem Lauf von
+   `standalone/docmap.lua` gemessen, dieser Lauf berührt die Rules-Engine erst mit
+   `--api=rules`; `scripts/package.lua` und `release-engine.yml` brauchen den
+   Checkout von `rules.nvim` (wie für `lib.nvim`), und das ist der Teil von
+   Entscheidung 4 im Konzept (*eine* Sidecar), der noch nicht gemessen ist.
+   Anfang: `standalone/docmap.lua` (`api_route`-Zweig ab Zeile ~340),
+   `lua/documentation/core/api.lua`, und `standalone/rules_results.lua` als
+   Vorlage für den Aufruf der Engine.
+
+### Danach (Reihenfolge laut Konzept, Größen in Sessions)
+
+7. **L10 P3** (~2) Rules-Tab in dieser App, Datei/Section/Familie, Mehrfachauswahl,
+   `.rules.json`, **Trust-Store für Prädikate (Pfad + Hash)**.
+   **P4** (~2) `rules.nvim`: `agent/plan`, `agent/validate`, Verdict-Store, `:Rules agent`.
+   **P5a** (~2,5) der Lauf: Dialog, Rust-Job-Runner, loomAI-Client, Run-Fenster.
+   **P5b** (~1,5) der Chat. **P6** (~1) loomAI: `temperature`, `GET /models`,
+   `usage` im Stream (optional). **P7** (~0,5) Checklist-Items als zweiter Input.
+8. Der Rest der Queue steht in `PLAN.md`: **M11** (Endpoint-Inventar × Request-Historie)
+   und die L-Punkte **L1** bis **L9**; **L1** und **L2** sind laut Plan "nicht als
+   Nächstes", weil beides Scope-Entscheidungen sind.
+
+### Kleinere Schulden aus dieser Sitzung
+
+9. **`rules.nvim` braucht einen `ci-verified`-Branch** (das `publish-ci-verified`-Job-Muster
+   aus `documentation.nvim`s `ci.yml`). Bis dahin zieht deren CI `rules.nvim`
+   von `main`, und ein kaputter Push dort färbt `documentation.nvim` rot.
+10. **`popen_git` in `standalone/docmap.lua`** wertet Git-Fehler am Ausgabetext aus
+    (`fatal:`/`error:`/`usage:`). Unter PUC 5.4 wäre der echte Exit-Status
+    verfügbar (gemessen: 128). Umstellen ändert, was die `--api=`-Routen als
+    Fehler behandeln — eigene Entscheidung, nicht nebenbei.
+11. **Die On-Demand-Live-Fetch-Idee für L11** ist weder entschieden noch
+    bemessen (siehe `GITHUB_STATS_CONCEPT.md`, Abschnitt dazu und Entscheidung 5).
+12. **Ein Neovim-Konfig-Repo mit fremden, nicht committeten Änderungen:**
+    `docs/ROADMAP/00_ROADMAP.md`, `TASKS.md`, `TSKS_Workstation.md` und die
+    `github-stats`-Datendateien sind nicht aus dieser Arbeit. Im WKDBooks
+    ebenso `Spickzettel/spickzettel.md` und `TOOLS/scripts/tui-spike/*`.
+    Nicht anfassen, bevor klar ist, wem sie gehören.
+
+### Blockiert / nicht vergessen
+
+13. **Phase 4 (UI-Politur) in `documentation.nvim`** — die Typografie-Skala (16
+    verschiedene `font-size`-Werte gemessen) und Zebra-Streifen brauchen eine
+    visuelle Prüfung. Aus demselben Grund sind zwei fertige Dinge **nicht
+    visuell geprüft**: das eingeklappte Engine-Panel und das Kanten-Popup im
+    Aufrufgraphen. Beides ist syntaktisch und strukturell geprüft; jemand sollte
+    es in einem echten Fenster ansehen. `docmap-desktop/tools/preview/` löst das
+    nur für die Oberfläche der App (Layout wird dort gemessen), nicht für die von
+    `documentation.nvim` generierte Seite, und ein Browser ist nicht WebView2.
+14. **Phase 6 (gehostetes Web, richtig)** braucht ein Multi-Tenant-Vertrauensmodell,
+    das es nirgends gibt. Die statische Hälfte ist fertig.
 
 ---
 
-## Blocked / do not forget
+## Commits, die noch ein Review brauchen
 
-**Phase 4 (UI polish) in `documentation.nvim`** — the typography scale (16
-different `font-size` values measured) and zebra striping. Both need a visual
-check. For the same reason two already-built things are **not visually
-checked**: the collapsed engine panel and the edge popup in the calls graph.
-Both are checked syntactically and structurally — somebody should look at them
-in a real window.
+Reine Doku-Commits sind ausgenommen (kein Review nötig). Ein Review ist ein
+`ultracode`-Agent oder ein von dir gestellter Review-Lauf; Haken erst danach.
 
-**Partly superseded since 2026-08-20:** `docmap-desktop/tools/preview/` serves
-this app's real interface with a stubbed Tauri bridge, so layout can be
-**measured** there instead of asserted — that is exactly how the save button
-below the fold was found (`54f4c41`). What that does **not** solve: the
-generated page from `documentation.nvim` (typography scale, zebra striping,
-edge popup) renders itself and needs its own route, and a browser is not
-WebView2.
+| Review | Repo | Commit | Was | Worauf es sich zu schauen lohnt |
+|---|---|---|---|---|
+| ☐ | `rules.nvim` | [`02c5952`](https://github.com/StefanBartl/rules.nvim/commit/02c5952) | L10 P0: Parser (`text`/`title`/`section`/`agent`), Sandbox, `lua_predicates` | `util/sandbox.lua`: `jit.off()`/`jit.on()` und `debug.sethook` während des Parsens, Wiederherstellung von Hook und JIT bei Fehler, `rebind` über `setfenv` und über den `_ENV`-Upvalue (nur PUC getestet, per Probe), Weak-Table `created_here`. `engine/parser.lua`: Fence-Tracking mit Backtick-Länge und `outer_fence`, `place()` (Titel vs. Section), `validate_agent` (`vim.islist` bei leerem Table). Die Grenze "Fähigkeiten, nicht Ressourcen" ist dokumentiert — prüfen, ob sie reicht |
+| ☐ | `documentation.nvim` | [`b90ad9d`](https://github.com/StefanBartl/documentation.nvim/commit/b90ad9d) | L10 P1: Shim für die Engine, `vim.log`-Fix, Paritäts-Gate, Fixtures, CI-Checkout | `standalone/vim_shim.lua`: `readfile` (CR/BOM/`max`), `glob` (Algorithmus, Dotfiles, `**`, Sortierung), der `normalize`-Port gegen Neovims Quelle, `fnamemodify(":p")` (gemessene Eigenheiten), `fn.system` (Windows-Quoting mit zusätzlichem Anführungszeichen-Paar, Exit-Status, Verweigerung unter LuaJIT), `fs_scandir`/`entries()`-Prüfung per `attributes`. `scripts/ci.lua`: der neue Gate-Schritt und sein Skip/Fail-Verhalten in CI. `.github/workflows/ci.yml`: Checkout von `rules.nvim` auf `main`. `.gitattributes`: `-text` für die Fixtures. Dass ein Commit zwei Anliegen trägt (CI-Fix und P1), war dem Verwoben-Sein in `vim_shim.lua` geschuldet |
+| ☐ | `documentation.nvim` | [`4bd684e`](https://github.com/StefanBartl/documentation.nvim/commit/4bd684e) | `glob` ignoriert Groß-/Kleinschreibung auch auf macOS | `folds_case()`: Erkennung über `io.popen("uname -s")`, Zwischenspeicher, Verhalten wenn `popen` fehlschlägt (dann nicht-faltend) |
+| ☐ | `docmap-desktop` | `faf4f91`, `409af1f`, `4774f11` | Traffic: Opt-out-Fix, `cargo fmt`, Detail-Dialog (P2) — in einer früheren Sitzung entstanden, in dieser auf `main` gebracht | Reviewstatus ist in dieser Sitzung nicht bekannt. Zusammen 832 Zeilen in 15 Dateien; `4774f11` ist der Kern: `src/main.js`, die `src-tauri`-Befehle `traffic_detail`/`open_in_editor`, die Sparkline, und dass Referrer und Seitentitel nur über `textContent` ins DOM kommen |
 
-**Phase 6 (hosted web, for real)** — needs a multi-tenant trust model that
-exists nowhere. The static half is done.
+Ebenfalls auf `main` und aus der früheren Sitzung, Reviewstatus unbekannt:
+`02b84fc` und `2a8d561` (Traffic P1).
 
----
-
-## Running everything
-
-```bash
-nvim --headless -l scripts/ci.lua
-```
-
-in `documentation.nvim` — five gates. A docs change makes the map stale;
-regenerate with `scripts/gen_map.lua` and commit the result.
-
-The language specs skip when their grammar is absent, which is the normal
-local state. To run them for real, point at the built grammars:
-
-```bash
-DOCMAP_PYTHON_PARSER=C:/tools/docmap-grammars/python.dll nvim --headless -u NONE -l TESTS/run.lua
-```
-
-Every backend spec reads its own `DOCMAP_<LANG>_PARSER` — the full list is in
-`documentation.nvim/docs/LANGUAGES.md § Running the language specs`, along
-with the four backends that have no variable because Neovim ships their
-grammars. All twenty-three
-grammars are built into `C:/tools/docmap-grammars/` on this machine, and
-`scripts/build_engine_release.sh` builds them from source for a release —
-**twenty-three files for twenty-two languages**, because OCaml needs two
-(`.ml` and `.mli` are different languages to the parser) and assembly needs
-none.
-
-In `docmap-desktop`:
-
-```bash
-cd src-tauri && cargo test
-```
-
-```bash
-node --test src/lib/*.test.js
-```
-
-`cargo test` needs the placeholder sidecar first — see *Gates* above.
-
-To look at the frontend without building the app:
-
-```bash
-python tools/preview/preview.py
-```
-
-Then open `http://localhost:8731/tools/preview/preview.html`. Real markup,
-real CSS, real `main.js`; every `invoke` answered by `tools/preview/stub.js`.
-Layout only — the commands do nothing, and a browser is not WebView2.
-
----
-
-## The working method to carry on with
-
-**Measure, do not guess.** Practically every valuable finding came from that
-rather than from reading code: the crash on `.tsx` (found by running against
-real code, after the binary was already considered finished), the
-43-vs-45-vs-46 closure, the `:DocMap serve` bug, the telemetry misdiagnosis
-above.
-
-**Gates before every commit** (`nvim --headless -l scripts/ci.lua`): stylua,
-luacheck, tests, `gen_map --check`, `standalone`. Then push and wait for CI.
-
-**A grammar test proves the grammar, only a real scan proves the pipeline.**
-All four grammars passed their individual test while the pipeline for JS/TS
-was still broken.
-
-**Silent degradation is the most expensive class of failure.**
-`DOCMAP_TS_DEBUG`, the error display in the app window, the "published copy"
-message, and the `standalone` gate that now honestly skips an unusable
-interpreter instead of failing hard — all the same correction.
-
-**Backticks in commit messages**: do not pass them to `git commit -m` inside
-double quotes, bash executes them as a command. Use a message file and `-F`.
-
-**A script that has only ever run on one platform very probably has a
-platform-specific blind spot, however long it has existed.**
-`scripts/package.lua` had run only on Windows since it was written and
-contained three latent bugs, all of the same kind (an "is this already
-absolute" check that knew only the Windows spelling). WSL (here: an
-already-running Arch instance) is the pragmatic way to check something like
-that without waiting for a real CI run — but beware of cross-contamination
-from earlier sessions in `/tmp` (a `.so` built against LuaJIT instead of PUC
-Lua crashed the interpreter rather than producing a clean error) and of
-`find /` across mounted Windows drives (`/mnt/c`, `/mnt/e`) — that runs
-practically forever.
-
-**Some faults can only be found in real CI, not locally — and that is fine as
-long as you say so openly instead of claiming false confidence.**
-`documentation.nvim`'s `release-engine.yml` needed six real CI runs before
-both platforms were green, each with its own, previously unpredicted failure:
-`ubuntu-22.04`'s glibc too old for `tree-sitter-cli`'s prebuilt binary (→
-`ubuntu-latest`); a missing `-llua` equivalent when linking the dynamic `.dll`
-on Windows (`undefined reference to lua_pushstring` — Windows DLLs resolve
-imports at link time, not at load time, unlike Linux with `-Wl,-E`); the same
-fix broke Linux differently (`liblua.a` without `-fPIC` cannot be linked into
-a `-shared` target); a missing `lib.nvim` checkout (it only worked locally
-because this machine happens to have `lib.nvim` as a neighbouring repo);
-`npm install -g`'s install path was a moving target three times in a row
-(worked on `ubuntu-latest` by chance, needed `npm config get prefix` under
-MSYS2, and even that was wrong on the next run — solved by a self-chosen
-`--prefix` path rather than guessing npm's location); and finally the
-subtlest: `$work` from `mktemp -d` is an **MSYS2-internal** path (`/tmp/…`)
-under MSYS2, which `bash` and the bundled tools understand transparently, but
-a real `lua.exe` built with mingw does not — it reads environment variables as
-plain text and interprets a leading `/` as "the root of the current drive", an
-entirely different place. Solved with `cygpath -m`, but only found because a
-failing diagnostic list (`require('lfs')`) showed exactly which path origin
-(default vs. self-set) behaved differently.
-
-The lesson for next time: for a new CI workflow automating a
-toolchain-heavy build, **local verification (WSL, a second machine) finds most
-failures but not all** — some need the exact, isolated environment of a real
-runner action (`msys2/setup-msys2`, for instance), which cannot be reproduced
-cleanly locally. Push, watch CI, fix the *next* real failure, repeat — do not
-stop at the first local success and merely assert that CI is green.
-
-**"Detected but not placed" is a failure mode of its own, separate from "not
-detected at all" — and both have to be checked individually.** The small
-telemetry matter ended up needing three separate fixes, not one: `bucket()`
-did not recognise `lib.lua.*` (symptom: the module is measured but never
-staged); `staged_name()` did not know the `lib/lua/` branch even after
-`bucket()` recognised it (symptom: "measured, but nowhere to put it"); and
-`bucket()` did not know `runtime-analysis.*` **itself** at all, independently
-of its dependencies (symptom: the main module missing entirely, swallowed
-silently by `pcall`). No single fix was enough — `--api=telemetry` stayed
-`"no data"` until all three were done. The proof only came from `strings
-build/docmap.exe | grep <known identifier>`: a "successful" build can know a
-module by name (its own comments mention it) without containing its real
-source, and only grepping the compiled binary directly tells the two cases
-apart reliably.
+**Die Doku-Commits dieser Sitzung** (kein Review nötig): WKDBooks `11e11cb`,
+`8444e8a`, `8d041c9` und der Commit mit diesem Umzug; nvim-Konfig `301e213d`,
+`cf0c8e9f`, `7d1c76c5`, `d580b57a`, `44af8458` und der Commit mit diesem Handover.
