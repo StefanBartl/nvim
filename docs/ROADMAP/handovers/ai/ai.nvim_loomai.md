@@ -6,24 +6,22 @@
 > `ai.nvim` (+ `loomAI`-Anbindung) und bleibt an diesem Ort
 > (`nvim/docs/ROADMAP/handovers/ai/`), nicht im Wkdbook.
 >
-> **Erledigtes steht nicht hier**, sondern im Backlog:
+> **Hier stehen nur offene Tasks.** Alles Erledigte (inkl. Session-Logs,
+> Commit-Tabellen, Review-Ergebnisse) liegt im Wkdbook-Backlog:
 > `wkdbook-myplugins/ai.nvim/Backlog/FEATURES/FINISHED_ai_loomai.md`
-> (zuletzt ergänzt am 2026-10-01 um den Abschnitt "Erledigt seit 2026-09-21").
+> (zuletzt ergänzt 2026-10-02, Abschnitt „Session 2026-10-01/02“).
 
 ## Table of content
 
-  - [Feedback](#feedback)
   - [Regeln für diese Session](#regeln-für-diese-session)
   - [Orte](#orte)
-  - [Stand 2026-10-01](#stand-2026-10-01)
-  - [Offene Punkte](#offene-punkte)
-    - [1. ai.nvim im Alltag validieren + Live-Testing](#1-ainvim-im-alltag-validieren--live-testing)
-    - [2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release](#2-phase-10--gatesreleasemd-vor-dem-ersten-tagrelease)
-  - [Letzte Session (2026-10-01)](#letzte-session-2026-10-01)
+  - [Report: offene Tasks und Fixes](#report-offene-tasks-und-fixes)
+  - [A. Braucht den Nutzer / andere Hardware](#a-braucht-den-nutzer--andere-hardware)
+  - [B. Entscheidung nötig](#b-entscheidung-nötig)
+  - [C. Autonom machbar (Folgesession)](#c-autonom-machbar-folgesession)
+  - [D. Release](#d-release)
 
 ---
-
-## Feedback
 
 ## Regeln für diese Session
 
@@ -34,11 +32,12 @@
   Nutzerregel hat Vorrang).
 - Nach jedem fertigen Schritt: committen/pushen/pullen, main bleibt aktuell.
   Keine Pull Requests.
+- Erledigte Tasks wandern aus dieser Datei ins Wkdbook-Backlog (s. o.), hier
+  bleiben nur offene.
 - `TOOL-PLACEMENT.md` / `HEREDOC.md` beachten, falls Nebenbei-Tooling entsteht.
 - Code muss luacheck/stylua-grün sein (stylua v2.5.2, luacheck 1.2.0, siehe `ci-fleet-conventions`).
 - Plugin-Installations-Specs: `vim.fn.stdpath('config')/lua/plugins/personal/init.lua`
   (+ Policy in `plugins/personal/core/source.lua`).
-- Erledigte Tasks wandern aus dieser Datei ins Wkdbook-Backlog (s. o.).
 
 ---
 
@@ -59,96 +58,119 @@
 
 ---
 
-## Stand 2026-10-01
+## Report: offene Tasks und Fixes
 
-Alles, was ohne den Nutzer machbar ist, ist erledigt. Was bleibt, braucht
-**Nutzer-Input oder eine Umgebung, die diese Maschine nicht hat** (siehe die
-Blocker unter den offenen Punkten). `ai.nvim`: 318 Tests grün
-(`scripts/test.sh`), luacheck/stylua grün, CI auf ubuntu/windows/macos grün
-(letzter Lauf auf `e7509af`, 2026-09-28).
+Stand 2026-10-02. `ai.nvim`: 319 Tests grün (`scripts/test.sh`),
+luacheck/stylua grün, CI auf ubuntu/windows/macos grün (letzter Lauf
+`1815932`). Alles, was ohne den Nutzer machbar war, ist erledigt; die Liste
+unten ist vollständig (nichts steht woanders offen).
+
+| # | Task | Art | Blocker / Aufwand |
+|---|---|---|---|
+| A1 | Alltagsdurchlauf (Env-Vars, Live-Testing-Plan abhaken) | Validierung | Nutzer |
+| A2 | `gemini.lua` live gegen echte Gemini-API | Validierung | Nutzer: `GEMINI_API_KEY` |
+| A3 | REL-19: manuelles POSIX-Durchklicken | Release-Gate | Linux/macOS-Rechner oder WSL-Distro (keine installiert) |
+| A4 | REL-09/33: Demo-GIF, Logo, Social-Preview | Release (nice-to-have) | Nutzer (Aufnahme; Social-Preview manuell in GitHub-Settings) |
+| B1 | REL-32: Abschnitt „Literatur und Referenzen“ im öffentlichen README? | Release (nice-to-have) | Entscheidung |
+| C1 | Frische „trockene“ Abschlussrunde für den Docs-Spec | Review | klein, 1 Agent |
+| C2 | Docs-Spec vereinfachen statt weiter härten | Refactor | mittel |
+| C3 | `doc/ai.txt` automatisch gegen `docs/*.md` prüfen | Test | klein–mittel |
+| C4 | CI nach Ubuntu-26-Migration prüfen | CI | ab 2026-10-19 |
+| D1 | Tag/Release | Release | erst nach A1–A3 |
 
 ---
 
-## Offene Punkte
+## A. Braucht den Nutzer / andere Hardware
 
-### 1. ai.nvim im Alltag validieren + Live-Testing
+### A1. ai.nvim im Alltag validieren
 
-**Blocker: Nutzer.**
-
-- `ai.nvim` im Alltag benutzen (`<leader>ai{a,s,e}`, dazu `loomai`/`gemini`),
+- `ai.nvim` im Alltag benutzen (`<leader>a{a,s,r,o,O,e}`, dazu `loomai`/`gemini`),
   um v1 vor einem Tag zu validieren.
 - [Live-Testing-Plan](../../Final_Checks/ai/live-testing-plan.md) ist seit
-  2026-09-23 auf OpenAI/Anthropic/Gemini im ModelRouter und `providers/gemini.lua`
-  aktualisiert. Der eigentliche Alltagsdurchlauf (Env-Vars setzen, Schritte
-  abhaken) steht aus.
-- **`gemini.lua` wurde nie live gegen die echte Gemini-API getestet** (kein
-  `GEMINI_API_KEY`, am 2026-10-01 weiterhin nicht gesetzt). Nur die
-  loomAI-Seite (`gemini_client.cpp`) wurde mit einem bewusst ungültigen Key auf
-  dem Fehlerpfad verifiziert. Happy-Path + Streaming + Safety-Block gegen die
-  echte API nachholen.
+  2026-09-23 auf OpenAI/Anthropic/Gemini im ModelRouter und
+  `providers/gemini.lua` aktualisiert. Der eigentliche Durchlauf (Env-Vars
+  setzen, Schritte abhaken) steht aus.
+
+### A2. `gemini.lua` live testen
+
+`gemini.lua` wurde nie gegen die echte Gemini-API getestet (kein
+`GEMINI_API_KEY`, am 2026-10-02 weiterhin nicht gesetzt). Nur die loomAI-Seite
+(`gemini_client.cpp`) wurde mit einem bewusst ungültigen Key auf dem Fehlerpfad
+verifiziert. Nachholen: Happy-Path, Streaming, Safety-Block.
+
+### A3. REL-19 — manuelles POSIX-Durchklicken
+
+Die CI-Matrix (ubuntu/windows/macos) ist grün — REL-19 hat aber bewusst kein
+`check`-Feld, ein grüner CI-Lauf ist ein Indiz, kein Beweis. Offen: reale
+Workflows (`:Ai ask/stream/rewrite`, Panel, Completion, `:checkhealth ai`) auf
+einem POSIX-System einmal von Hand durchgehen. Auf dieser Maschine ist keine
+WSL-Distro installiert (`wsl -l` zeigt nur die Installations-Liste).
+
+### A4. REL-09 / REL-33 — Demo-GIF und Logo
+
+`nice-to-have`. Im README gibt es bisher nur das ASCII-Logo. GIF unter
+`/assets/` (oder MP4 per Dummy-Issue, siehe `RELEASE.md`); Social-Preview-Card
+manuell in den GitHub-Settings plus Bilddatei im Repo, per Markdown-Bild im
+README eingebunden.
 
 ---
 
-### 2. Phase 10 — `gates/RELEASE.md` vor dem ersten Tag/Release
+## B. Entscheidung nötig
 
-Bewusst noch nicht abgeschlossen: der Plan verlangt echten Alltagsgebrauch vor
-dem Tag (Punkt 1). Automatisch prüfbare `REL-*`-Punkte sind grün.
+### B1. REL-32 — Literatur und Referenzen
 
-- **REL-08 (README-Beispiele laufen tatsächlich): erledigt 2026-10-01.**
-  `TESTS/ai/docs_examples_spec.lua` (`ai.nvim@2813081`, 12 Tests) zieht die
-  Codeblöcke/Tabellen zur Laufzeit aus `docs/*.md` und führt sie aus bzw.
-  gleicht sie gegen den Code ab (vollständiger `setup()`-Block == `DEFAULTS`,
-  `register()`-/`from_file()`-/`host`-Beispiel, `:Ai`-Subcommands in beide
-  Richtungen, `BINDINGS.md`-Keymaps real gemappt, lazy.nvim-Spec,
-  `Ai.Attachment`-Felder, `net.curl`-Erweiterung). Per Mutation geprüft
-  (4 absichtlich kaputte Docs → jeweils rot). Einziger bewusst nicht
-  ausgeführter Rest: das ASCII-Logo im README und die reinen
-  Nicht-Lua-Schnipsel in `commands.md` (werden nur auf Subcommand-Namen
-  geprüft, nicht „ausgeführt“, da Ex-Befehle ohne Provider nichts bewirken).
-- **REL-19 (Windows UND POSIX getestet): teilweise.** Korrektur zum alten
-  Stand: die CI läuft **nicht** nur auf `ubuntu-latest`, sondern als Matrix auf
-  ubuntu/windows/macos (alle drei grün). Offen bleibt nur das *manuelle*
-  Durchklicken unter POSIX — **Blocker:** auf dieser Maschine ist keine
-  WSL-Distro installiert (`wsl -l` zeigt nur die Installations-Liste), ein
-  Linux-/macOS-Rechner oder eine WSL-Distro wäre nötig. REL-19 hat bewusst kein
-  `check`-Feld; ein grüner CI-Lauf auf allen drei OS ist ein Indiz, kein
-  Beweis.
-- **REL-09/33 (Demo-GIF, Logo/Social-Preview)** — `nice-to-have`, nicht
-  begonnen. **Blocker: Nutzer** (GIF-Aufnahme; Social-Preview ist manuell in
-  den GitHub-Settings). Im README gibt es bisher nur das ASCII-Logo.
-- **REL-32 (Literatur und Referenzen)** — `nice-to-have`, nicht begonnen.
-  **Entscheidung nötig:** Abschnitt „Literatur und Referenzen“ im öffentlichen
-  README anlegen (Vorschlag: `gp.nvim`, `minuet-ai.nvim`, Provider-Doku) oder
-  als „nicht angebracht“ abhaken. Der Vergleich mit Completion-Plugins liegt
-  privat in `NOTES/completion-plugin-comparison.md`.
-- Danach: Tag/Release selbst.
+`nice-to-have`, „wo angebracht“. Entweder Abschnitt `## Literatur und
+Referenzen` im öffentlichen README anlegen (Vorschlag: `gp.nvim`,
+`minuet-ai.nvim`, Provider-Doku) oder als „nicht angebracht“ abhaken. Der
+Vergleich mit Completion-Plugins liegt privat in
+`NOTES/completion-plugin-comparison.md` (nicht fürs öffentliche Repo).
 
 ---
 
-## Letzte Session (2026-10-01)
+## C. Autonom machbar (Folgesession)
 
-| Repo | Commit | Was |
-|---|---|---|
-| `ai.nvim` | `2813081` | `test(docs)`: `docs_examples_spec.lua` (REL-08) + Absatz in `TESTS/README.md` |
-| `ai.nvim` | `a0a072e` | `test(docs)`: Spec nach ultracode-Review gehärtet (vakuöse Checks, `%`-in-Temp-Pfad, Lua-5.1-Portabilität, `ask()`-Beispiele über echtes `ai.ask`) |
-| `ai.nvim` | `6bc2b0d` | `docs(vimdoc)`: `doc/ai.txt` wieder auf Stand von `docs/*.md` (ui.nvim, rewrite/append/prepend + Keymaps, structured_data/conflict) — Drift, den der Review fand |
-| `ai.nvim` | `1815932` | `test(docs)`: 2. Review-Runde (registry-unabhängiger Keymap-Scan, alle Provider gestubbt, breitere Extraktoren). CI auf ubuntu/windows/macos grün |
-| `WKDBooks` | `c377f0b` | Handover-Erledigtes („Erledigt seit 2026-09-21“ + docmap-Auslagerung `loomAI@776a830`) nach `Backlog/FEATURES/FINISHED_ai_loomai.md` verschoben |
+Alle Punkte betreffen `TESTS/ai/docs_examples_spec.lua` (REL-08-Spec,
+~690 Zeilen) bzw. `doc/ai.txt` in `$REPOS_DIR/ai.nvim`.
 
-Der `WKDBooks`-Commit wurde auf Nutzerwunsch nachträglich ohne
-`Co-Authored-By`-Trailer umgeschrieben (vorher `0eee4b8`, force-with-lease auf
-`main`).
+### C1. Frische Abschlussrunde (loop-until-dry)
 
-**Review (ultracode, nur Nicht-Doku-Commit `2813081`):** zwei streng
-sequentielle Workflow-Läufe (Review in 3 Linsen → Skeptiker pro Fund →
-Fixer → Re-Review). Gesamt 33 geprüfte Funde: 30 bestätigt (27 behoben, 3
-bewusst nicht, s. u.), 3 widerlegt. Lauf 2 endete am Rundenlimit (3), nicht „trocken“;
-die Funde der letzten Runde waren durchweg `low`/Fehlermeldungs-Qualität
-und sind noch von keinem frischen Reviewer gesehen worden (nur lokal +
-CI-Matrix grün). Bewusst nicht gefixt/akzeptiert: `register()`-Beispiel
-wird per exaktem Text gepatcht; Block-Suche per Substring; Soft-Deps in
-der `require`-Suche. Der Spec ist dabei auf ~690 Zeilen gewachsen —
-bei weiterer Härtung lieber vereinfachen als noch einen Scan ergänzen.
+Der ultracode-Review des Spec endete in der 2. Workflow-Runde am Rundenlimit
+(3), nicht „trocken“. Die Funde der letzten Runde (alle `low`/Qualität der
+Fehlermeldungen) wurden behoben (`ai.nvim@1815932`, lokal + CI-Matrix grün),
+aber von keinem frischen Reviewer mehr gesehen. Eine weitere sequentielle
+Runde (1 Agent: Review -> Skeptiker -> ggf. Fix) bis kein neuer Fund kommt.
 
-Weitere Funde: CI-Matrix-Korrektur (s. REL-19); `loomAI@776a830` stand im
-Handover noch nirgends (jetzt im Backlog nachgetragen).
+### C2. Spec vereinfachen
+
+Durch die Härtung wuchs der Spec von ~380 auf ~690 Zeilen (u. a. ein
+registry-unabhängiger `nvim_get_keymap`-Scan über alle Modi mit Selbsttest).
+Bei weiterem Bedarf lieber vereinfachen (Helfer bündeln, Scan kürzen) als noch
+einen Scan ergänzen. Bewusst akzeptiert, nicht zu fixen: `register()`-Beispiel
+wird per exaktem Text gepatcht (`...`-Stub), Blocksuche per Substring, Soft-Deps
+(`pcall(require, ...)`) fallen aus der `require`-Suche der Dependency-Prüfung.
+
+### C3. Vom Spec nicht abgedeckt (bewusst, in `TESTS/README.md` benannt)
+
+Prosa, die Spalten Action-id/Beschreibung und die Autocmds-Tabelle in
+`BINDINGS.md`, die übrigen Tabellen der Docs, das Root-`README.md` und
+`doc/ai.txt` (der `:help ai`-Text, von Hand gepflegt). Besonders `doc/ai.txt`
+war nachweislich driftanfällig (am 2026-10-01 deutlich hinter `docs/*.md`,
+nachgezogen in `ai.nvim@6bc2b0d`) — ein kleiner Test, der Konfig-Block,
+Subcommands und Keymap-Tabelle der Vimdoc gegen `docs/*.md`/`DEFAULTS`
+abgleicht, würde den nächsten Drift fangen. Zusätzlich nicht sichtbar:
+buffer-lokale Keymaps.
+
+### C4. CI nach Ubuntu-26-Migration
+
+Die CI-Annotation meldet: das Label `ubuntu-latest` wechselt ab 2026-10-19
+auf Ubuntu 26. Danach einen CI-Lauf von `ai.nvim` prüfen (luacheck-Lua-5.1-
+Setup, stylua-Action, plenary-Job) und ggf. nachziehen.
+
+---
+
+## D. Release
+
+Phase 10 (`gates/RELEASE.md`) bewusst noch nicht abgeschlossen: der Plan
+verlangt echten Alltagsgebrauch vor dem Tag. Automatisch prüfbare
+`REL-*`-Punkte sind grün (REL-08 erledigt, s. Backlog). Offen: A1–A3 (und
+optional A4/B1), danach Tag/Release selbst.
