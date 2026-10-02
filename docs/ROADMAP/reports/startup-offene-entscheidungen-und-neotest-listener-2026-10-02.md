@@ -81,6 +81,12 @@ beschreibt das schon.
 3. Empfehlung berichten und erst nach Rückfrage Verhalten ändern, das andere
    Plugins betrifft.
 
+**Ergebnis (2026-10-02, noch nicht entschieden).** Gemessen, bewertet und mit Empfehlung (A, oder D nach
+Test, nicht B) in
+[`handovers/nvim-listen-address-und-openinnvim_HANDOVER.md`](../handovers/nvim-listen-address-und-openinnvim_HANDOVER.md).
+Kurz: niemand liest die Variable, openinnvim braucht nur den Pipe-Namen, der Hilfsprozess kostet +75 bis +150 ms
+und hält den Listener offen.
+
 **Chip-Prompt** (liegt als Chip `task_863fc24d` bereit; hier zum Kopieren, falls
 er verschwunden ist):
 
