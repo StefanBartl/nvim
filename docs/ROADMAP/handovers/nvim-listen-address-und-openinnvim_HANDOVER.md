@@ -66,10 +66,30 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 
 - [ ] **Entscheidung zum neotest-Listener: A oder D.** Siehe Backlog-Datei oben. Für D erst den
       Test aus der Final-Checks-Liste (Teil K): Listener schließen, `<leader>nt*`-Lauf prüfen,
-      Ergebnisse und Signs müssen kommen. Ein früher gestarteter Workflow sollte das und den
-      positiven Fall des Attach-Fixes (Aufgabe 4) prüfen; **Ergebnisse standen nie hier** — wenn
-      sie vorliegen, hier eintragen. Danach die Aufgabe 1 im Startup-Handover als entschieden
-      markieren.
+      Ergebnisse und Signs müssen kommen. Danach die Aufgabe 1 im Startup-Handover als
+      entschieden markieren.
+      **Teilergebnis des früheren Workflows (Agent 1, nur Code gelesen, Laufzeittest nicht zustande
+      gekommen):** In neotest geht der Listener (`lib/subprocess.lua:33-37`, `serverstart("localhost:0")`)
+      ausschließlich an den Hilfsprozess, der sich per `sockconnect` zurückverbindet und darüber die Ergebnisse
+      meldet. Sonst benutzt weder neotest noch `neotest-plenary`, `nvim-nio`, `plenary.nvim`, die Config oder
+      `rpc_pipe` den Listener (`serverlist`/`serverstop`/`rpcrequest`/`sockconnect` kommen nirgends sonst vor).
+      Läuft der Hilfsprozess nicht (heute der Fall), fällt neotest auf Parsen im Hauptprozess zurück
+      (`treesitter/init.lua:176`). Einen Weg, den Listener später wieder zu öffnen, gibt es nur über den
+      erzwungenen Neustart des Benchmark-Consumers (`consumers/benchmark.lua:33`). **Also spricht der Code für
+      D, bewiesen ist es nicht.** Vorgeschlagene Form, falls D: direkt nach dem Start des neotest-Clients (in
+      `lua/plugins/neotest.lua` und auch für den BufEnter-Auto-Attach), mit `pcall`; vorher `serverlist()`
+      sichern und nur **neue** Einträge schließen, die auf `^localhost:%d+$` (oder `127.0.0.1:`) passen, und nur
+      wenn `require("neotest.lib").subprocess.enabled()` falsch ist (nie einen Listener schließen, den der
+      Hilfsprozess benutzt). Dann bleiben `\\.\pipe\nvim-<USERNAME>` und die fzf-lua-Pipe unberührt, und
+      es wird zum No-Op, falls Upstream den Hilfsprozess zum Laufen bringt. **Nicht beobachtet:** der echte
+      Lauf mit `<leader>nt*`, ob Signs/Ergebnisse nach `serverstop` kommen, ob der Listener wieder aufgeht,
+      der Fall "zwei Test-Buffer in einer Session". **Agent 2 (positiver Fall des Attach-Fixes, Aufgabe 4)
+      ist nie fertig geworden.**
+      Warum der Laufzeittest scheiterte: der Treiber verband sich mit `nvim.<jobpid>.0`, aber `jobpid` ist
+      der sichtbare UI-Client; die Pipe gehört seinem `--embed`-Kind (Server-PID per
+      `nvim_get_proc_children(jobpid)` holen), und der Treiber hatte kein Zeitlimit. Dieselbe Falle wie bei
+      openinnvim (zwei Prozesse je TUI-Sitzung unter Windows). Die Skripte (`driver.lua`, Scratch-Projekt
+      `proj/` mit 10 `it`-Blöcken, einer davon absichtlich rot) lagen im Scratchpad des Chats.
 - [ ] **`install.ps1` ausführen und den echten Klick im Explorer abnehmen** (Datei/Ordner ×
       current/new, mehrere Instanzen, keine Instanz, Sonderzeichen, Deinstallation) —
       Final-Checks-Liste, erst Vorbereitung und Teil G, dann A–F.
@@ -112,7 +132,8 @@ abgenommen oder reine Doku.
 | WKDBooks | `1767d31`, `107d316` ✅ | docs(openinnvim): neues Buch mit Backlog und Roadmap; Index-Zeile |
 | nvim-config | `82acfb17` ✅ | docs(handover): schlank, Erledigtes ins WKDBook; Live-Test-Checkliste |
 | WKDBooks | `9cd608a` ✅ | docs(openinnvim): Installer, Fokus, zweiter Review ins Backlog; Roadmap gekürzt |
-| nvim-config | (dieser Commit) ✅ | docs(handover) und Live-Test-Checkliste: Installation per `install.ps1`, Fokus-Test |
+| nvim-config | `83f73c2c` ✅ | docs(handover) und Live-Test-Checkliste: Installation per `install.ps1`, Fokus-Test |
+| nvim-config | (dieser Commit) ✅ | docs(handover): neotest-Listener, Teilergebnis des Workflows (Code gelesen, Laufzeittest offen) |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
