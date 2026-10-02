@@ -61,9 +61,11 @@ ruleset uses. **Found on the way: the `standalone` CI job and the `Release
 engine` workflow of `documentation.nvim` had been red since 2026-10-01** (a
 `lib.nvim` module reads `vim.log.levels` at load time and the shim had no
 `vim.log`), so `standalone-latest` — the engine this app bundles — was stale.
-Fixed in the same commit; whether the rebuilt engine is out is the thing to
-check before the next app release (`gh run list` in `documentation.nvim`, and
-`standalone-latest`'s `publishedAt`). **Next is P2:** `--api=rules` (`catalog`,
+Fixed in the same commit and verified: CI is green on Linux, macOS and Windows
+(`4bd684e`; macOS needed a follow-up, `glob` ignores case there too), `Release
+engine` is green, and `standalone-latest` was republished at
+2026-10-02T18:06:23Z — so the engine the next app release bundles is current
+again. **Next is P2:** `--api=rules` (`catalog`,
 `run`, then `plan` and `validate`) and the bundle gaining `rules.nvim`.
 
 **2026-10-02: L10 P0 built** in `rules.nvim` (`02c5952`, CI green, including the
