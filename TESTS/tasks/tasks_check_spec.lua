@@ -144,6 +144,12 @@ return function(H)
     remove(tasks .. "odd-line.md")
   end)
 
+  expect("a hand-written title with ' #' is reported as a warning", function()
+    H.write(tasks .. "hash-title.md", "---\ntitle: Fix bug #12 now\nstatus: parked\n---\nbody\n")
+  end, { "warn:title-comment" }, function()
+    remove(tasks .. "hash-title.md")
+  end)
+
   -- ── filename / slug ─────────────────────────────────────────────────────
   expect("bad slug in the filename", function()
     H.write(tasks .. "Bad_Slug.md", F.text(F.meta("T", "parked")))

@@ -20,6 +20,7 @@
 ---  - `duplicate-id`: an open task and a finished one share an id
 ---  - `unreadable`, `index-error`: something could not be read at all
 ---  - `frontmatter-warning` (warning): a frontmatter line was kept but not understood
+---  - `title-comment` (warning): the title has a trailing YAML comment (` #...`)
 ---
 --- Not its job: fixing anything (`index.write_area` regenerates an index).
 
@@ -127,6 +128,9 @@ function M.run(opts)
       end
       for _, w in ipairs(t.warnings) do
         add(findings, "warn", "frontmatter-warning", t, "line kept but not understood: " .. w)
+      end
+      for _, h in ipairs(t.hints or {}) do
+        add(findings, "warn", h.code, t, h.msg)
       end
       if t.status == "done" then
         add(

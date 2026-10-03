@@ -33,6 +33,7 @@
 ---@field errors string[]             # Validation problems; empty when the file is fine.
 ---@field error_codes string[]        # One stable rule code per entry of `errors` (`unknown-status`, `bad-prio`, ...).
 ---@field warnings string[]           # Lines the frontmatter reader kept verbatim without understanding.
+---@field hints { code: string, msg: string }[]  # Non-fatal remarks (`title-comment`): the file reads, but not as written.
 ---@field valid boolean               # `#errors == 0`
 
 --- Filter for `model.filter`. Every set-like field matches any of its values.

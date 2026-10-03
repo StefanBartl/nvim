@@ -408,4 +408,23 @@ return function(H)
   rejected({ prio = "<=x" }, "--prio must be 1, 2, 3")
   rejected({ stale = "abc" }, "--stale must be a whole number, got 'abc'")
   rejected({ stale = "-3" }, "--stale must be a whole number")
+
+  -- ── a hand-written title with " #" is cut at the YAML comment ───────────
+  do
+    local cut = parse("---\ntitle: Fix bug #12 and a [b] | c\nstatus: open\n---\nBody.\n")
+    eq(cut.title, "Fix bug", "the title ends at the YAML comment")
+    eq(#cut.hints, 1, "one hint")
+    eq(cut.hints[1].code, "title-comment")
+    has(cut.hints[1].msg, "#12 and a [b] | c", "the hint quotes the swallowed text")
+    eq(cut.valid, true, "the file is still a valid task")
+
+    local crlf_cut = parse(H.crlf("---\ntitle: CRLF: task # with colon\nstatus: open\n---\n"))
+    eq(crlf_cut.title, "CRLF: task", "CRLF file: same cut")
+    eq(#crlf_cut.hints, 1, "CRLF file: hint too")
+
+    local quoted_title = parse('---\ntitle: "Fix bug #12 now"\nstatus: open\n---\n')
+    eq(quoted_title.title, "Fix bug #12 now", "a quoted_title title keeps the #")
+    eq(quoted_title.hints, {}, "no hint for a quoted_title title")
+    eq(parse("---\ntitle: Fix bug#12\nstatus: open\n---\n").hints, {}, "# without a space is text")
+  end
 end
