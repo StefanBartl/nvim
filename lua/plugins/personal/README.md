@@ -221,7 +221,7 @@ overrides `repos_path`/`$REPOS_DIR`; most take `--only=<name>`.
 | `fetch` / `pull` / `update` | `git fetch --all --prune` / `git pull --ff-only` / both. |
 | `reclone` | Delete (if clean) and re-clone, after confirmation. `--dry-run` shows the safe/unsafe/missing split. |
 | `picker` | Multi-select: assign an action per plugin, then run them together. |
-| `dashboard` | reposcope.nvim's git-status dashboard for the repos root. |
+| `dashboard` | gitsuite.nvim's git-status dashboard (`:Git dashboard`) for the repos root. |
 | `mode [value]` | Show, or persistently switch, `source.lua`'s `OVERRIDE`. |
 
 ---

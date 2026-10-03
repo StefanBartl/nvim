@@ -1945,12 +1945,14 @@ return {
           -- Nudge on top of the computed placement: 0 is no change (the
           -- default is nil, equivalent), set explicitly.
           row_offset = 0,
-          -- One column to the left of the computed placement. Default: nil.
-          -- Any offset that floors to non-zero (negative too) makes sessions.nvim
-          -- swap the default shape "dock_left" for "rounded_chip" (dock_left's
-          -- blank left border is only right flush at col 0); set `shape`
-          -- explicitly to keep a specific look.
-          col_offset = -1,
+          -- Nudge in columns on top of the computed placement. Only a positive
+          -- value moves a left-anchored chip (to the right) and makes sessions.nvim
+          -- swap the default shape "dock_left" for "rounded_chip": dock_left's
+          -- blank left border is only right flush at col 0. A negative value
+          -- moves nothing (Neovim clips the float to col 0); a host terminal's
+          -- own outer padding is out of reach of any offset.
+          -- Default: nil.
+          -- col_offset = nil,
           -- A highlight-group name, a `{ fg, bg }` table or a zero-arg function
           -- returning either; here a function returning the statusline's
           -- mode-pill colours, so the chip matches the current mode.

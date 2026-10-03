@@ -458,7 +458,7 @@ local function update_all(path, only_name)
 end
 
 -- =============================================================================
--- Dashboard (delegates to reposcope.nvim's own git-status overview)
+-- Dashboard (delegates to gitsuite.nvim's `:Git dashboard`)
 -- =============================================================================
 
 local is_windows = fn.has("win32") == 1 or fn.has("win64") == 1
@@ -974,8 +974,8 @@ end
 ---@return nil
 function M.enable()
   -- Directory arg: real directory completion plus `$REPOS_DIR` offered up
-  -- front when resolvable, mirroring reposcope.nvim's own
-  -- `REPOSCOPE_DASHBOARD_DIR` type. Validation is otherwise the built-in DIR
+  -- front when resolvable, mirroring gitsuite.nvim's directory-argument
+  -- completion. Validation is otherwise the built-in DIR
   -- semantics (must expand to an existing directory).
   composer.register_type("MYPLUGINS_DIR", {
     validate = function(raw)
@@ -1156,7 +1156,7 @@ function M.enable()
       vim.list_extend(candidates, fn.getcompletion(arg_lead, "dir"))
       return candidates
     end,
-    desc = "Shorthand for :MyPlugins dashboard [dir] — opens reposcope.nvim's git-status dashboard",
+    desc = "Shorthand for :MyPlugins dashboard [dir] — opens gitsuite.nvim's git-status dashboard (:Git dashboard)",
   })
 end
 
