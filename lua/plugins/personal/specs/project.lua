@@ -269,13 +269,16 @@ return {
     -- ui.kit backs the filter/sort prompts and the favorites/help/status views,
     -- required from init.lua's own top level.
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    -- `opts` must exist (even empty): it makes lazy.nvim call
+    -- require("reposcope").setup(opts), and without that call neither the
+    -- `:Reposcope` command (registered when the module is first required) nor
+    -- the <leader>rs / <leader>rc keymaps (set in setup()) ever exist.
+    -- (The multi-repo dashboard lives in gitsuite.nvim's `:Git dashboard`;
+    -- reposcope stays scoped to search/filter/clone.)
+    opts = {},
     --
-    -- OPTION REFERENCE (comment only, nothing here is executed).
-    -- No `opts`/`config` on purpose: lazy.nvim would call
-    -- require("reposcope").setup() as soon as either exists, and this spec does
-    -- not trigger a setup() (the multi-repo dashboard lives in gitsuite.nvim's
-    -- `:Git dashboard`; reposcope stays scoped to search/filter/clone). Copy the
-    -- block into an `opts = { ... }` to switch setup() on.
+    -- OPTION REFERENCE (comment only, nothing here is executed). Copy entries
+    -- into `opts` above to change them.
     --
     -- {
     --   -- Fields shown in the prompt: "prefix" | "keywords" | "owner" | "language" | "topic" | "stars".
