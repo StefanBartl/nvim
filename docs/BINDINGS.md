@@ -366,16 +366,36 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.core.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
 | `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
+| `:MyPlugins tasks [<area>\|all] [--status=] [--prio=] [--kind=] [--tag=] [--stale=<days>] [--blocked] [--to=buffer\|clipboard\|qf\|file:<path>] [--format=md\|csv]` | Open tasks of the wkdbook vault (all areas by default) as a Markdown table in a scratch buffer, or delivered to the clipboard / quickfix / a file |
+| `:MyPlugins tasks index [<area>] [--all] [--check]` | (Re)write the generated `ROADMAP/TASKS.md`; `--check` writes nothing and reports rule findings and stale indexes |
+| `:MyPlugins task new <area> [title...] [kind=] [prio=] [effort=] [tags=] [status=]` | Create `ROADMAP/tasks/<slug>.md` and open it; asks for the title (ui.kit form) when missing |
+| `:MyPlugins task set <id> key=value ...` | Change frontmatter of an open task (`<id>` is `<area>/<slug>`); an empty value removes the key |
+| `:MyPlugins task done <id> [done_in=] [date=] [--yes]` | Finish after confirmation: moved to `Backlog/FEATURES\|TASKS/YYYY-MM-DD_<slug>.md`, Backlog README and index updated |
+| `:MyPlugins task template [--to=clipboard\|buffer\|file:<path>]` | The task file template into the `+` register |
+| `:MyPlugins task open <id>` | Open the file of a task (open, or its finished copy in `Backlog/`) |
+| `:MyPlugins open <area> [tasks\|roadmap\|backlog\|handover\|notes\|all] [--action=files\|grep\|smart] [--list] [--to=]` | pickers.nvim picker over the files of one folder of an area; `--list` delivers the file list instead |
 
 `dir` is where to look for the listed repos, never a folder to enumerate —
 contrast with `:Git dashboard update`, which does scan. `mode` requires a
 restart: `source.lua` is `require()`d once and already baked into the spec
 list lazy-loaded at startup.
 
+The last eight rows are the **task commands**: they work on the areas of the wkdbook
+vault (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`), not on the plugin list,
+and are verb-first (`:MyPlugins tasks cascade.nvim`). `<Tab>` completes areas
+(`ALL`, `nvim-config`, `docmap-desktop` included), task ids and `key=`; the lowercase
+`all` means every area, `ALL` is the area of that name. Details, flags and the engine:
+[`plugin_repos/README.md`](../lua/bindings/usrcmds/plugin_repos/README.md#task-commands-tasks-task-open).
+A collection `vault` for pickers.nvim (`:Pickers vault files|grep|smart`) searches the
+same vault.
+
 ```vim
 :MyPlugins update              " bring this machine level with what got pushed elsewhere
 :MyPlugins reclone --only=filetree.nvim  " nuke and re-clone a checkout that's misbehaving
 :MyPlugins picker               " assign different actions to different plugins, run as one batch
+:MyPlugins tasks --status=decision --to=qf   " what is waiting for my decision
+:MyPlugins task new lib.nvim Notify: unify channels kind=feature prio=2
+:MyPlugins open lib.nvim backlog             " files of that one folder, in the picker
 ```
 
 ### `:MyReposUpdate`, `:WhoLocks`, `:StripCoauthor` — moved out

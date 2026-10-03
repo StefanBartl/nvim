@@ -263,7 +263,8 @@ local function id_list(value)
 end
 
 ---Keys `set` accepts, in the order they are written when new. `updated` is
----deliberately absent: the tool sets it.
+---deliberately absent: the tool sets it. Exported as `M.SETTABLE` for front
+---ends that complete or document the keys.
 local SETTABLE = {
   "title",
   "status",
@@ -277,6 +278,9 @@ local SETTABLE = {
   "done_in",
   "created",
 }
+
+---@type string[]
+M.SETTABLE = SETTABLE
 
 ---Check and normalise a `set` patch into an ordered list of `{ key, value }`.
 ---A value of `REMOVE` deletes the key (not for `title` and `status`).

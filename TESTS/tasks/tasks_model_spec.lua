@@ -1,7 +1,7 @@
 -- TESTS/tasks/tasks_model_spec.lua -- tasks.model: reading a file, validation, ranking, filters.
 
 return function(H)
-  local eq, ok = H.eq, H.ok
+  local eq, ok, has = H.eq, H.ok, H.has
   local F = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")
   local model = require("tasks.model")
 
@@ -362,4 +362,50 @@ return function(H)
     "age is >= days: 2 days old counts at stale=2"
   )
   eq(ids(model.filter(pool, { stale = 0, today = "2026-10-03" })), ids(pool), "stale=0 keeps all")
+
+  -- ── filter_from_options: the words the CLI and the editor commands share ──
+  eq(model.split_commas(" a, b ,,c "), { "a", "b", "c" }, "split_commas trims and drops empties")
+  eq(model.split_commas(""), {}, "split_commas of nothing")
+
+  local f = assert(model.filter_from_options({}))
+  eq(f.status, nil, "no option, no criterion")
+  eq(f.blocked, nil)
+
+  f = assert(model.filter_from_options({
+    status = "doing, decision",
+    prio = "1,2",
+    kind = "bug",
+    tag = "ui,release",
+    stale = "30",
+    blocked = true,
+    today = "2026-10-03",
+  }))
+  eq(f.status, { "doing", "decision" })
+  eq(f.prio, { 1, 2 })
+  eq(f.kind, { "bug" })
+  eq(f.tag, { "ui", "release" })
+  eq(f.stale, 30, "a digit string becomes a number")
+  eq(f.blocked, true)
+  eq(f.today, "2026-10-03")
+
+  f = assert(model.filter_from_options({ prio = "<=2", stale = 7 }))
+  eq(f.prio_max, 2, "<=N is a ceiling")
+  eq(f.prio, nil)
+  eq(f.stale, 7, "a number is accepted as is")
+  f = assert(model.filter_from_options({ prio = 3 }))
+  eq(f.prio, { 3 }, "a number prio is accepted")
+
+  ---@param opt table
+  ---@param needle string
+  local function rejected(opt, needle)
+    local res, err = model.filter_from_options(opt)
+    eq(res, nil, "rejected: " .. needle)
+    has(err, needle)
+  end
+  rejected({ status = "doing,nope" }, "unknown status in --status: nope")
+  rejected({ kind = "epic" }, "unknown kind in --kind: epic")
+  rejected({ prio = "4" }, "--prio must be 1, 2, 3")
+  rejected({ prio = "<=x" }, "--prio must be 1, 2, 3")
+  rejected({ stale = "abc" }, "--stale must be a whole number, got 'abc'")
+  rejected({ stale = "-3" }, "--stale must be a whole number")
 end

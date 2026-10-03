@@ -41,12 +41,23 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 | Module | What it does | Key functions |
 |---|---|---|
 | `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names, slugs and ids before they become path segments. | `root`, `areas`, `has_area`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug` |
-| `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug. | `parse_text`, `from_file`, `sort`, `compare`, `filter`, `is_date`, `days_between` |
+| `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug. | `parse_text`, `from_file`, `sort`, `compare`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
 | `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. Nested task files are returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
 | `tasks.index` | `render` is pure and deterministic: the same tasks give the same bytes, whatever order they are found in. `write_area` writes only when the content differs (a CRLF checkout counts as equal and keeps its line endings), removes the file when no task is open, and with `check = true` only reports `stale` (`missing` / `outdated` / `orphan`). `render_global` returns the all-areas overview as text; nothing writes `ALL/TASKS.md` (decision E2: it is never committed). | `render`, `write_area`, `write_all`, `render_global` |
-| `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` counts as taken). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). All three regenerate the area index. | `template`, `new`, `set`, `done`, `slugify`, `readme_add_row` |
+| `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` counts as taken). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). All three regenerate the area index. | `template`, `new`, `set`, `done`, `slugify`, `readme_add_row`, `SETTABLE` |
 | `tasks.check` | Collects findings over one area or the vault (table below). | `run`, `format` |
 | `tasks.cli` | Parses a command line, calls the engine, prints tab-separated lines, returns an exit code, never raises. | `run` |
+
+## Front ends
+
+- **Editor:** `:MyPlugins tasks | task | open` (`lua/bindings/usrcmds/plugin_repos/tasks_routes.lua`,
+  `tasks_cmd.lua`, `tasks_view.lua`; documented in that folder's README). It adds only what an
+  editor needs on top of the engine: composer routes and `<Tab>` completion, the `--to=` delivery
+  (`lib.nvim.harvest`, `lib.nvim.ui.list`), a form for a missing title, a confirmation before
+  `done`, opening files and re-pointing buffers, a picker over one area folder. The filter words
+  (`--status=`, `--prio=<=2`, ...) are parsed by `model.filter_from_options`, shared with the CLI, and
+  the keys `task set` accepts are `mutate.SETTABLE`.
+- **Headless:** `scripts/tasks.lua` (below).
 
 ### `done` (rule R6)
 
