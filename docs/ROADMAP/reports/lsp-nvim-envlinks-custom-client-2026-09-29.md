@@ -117,7 +117,7 @@ ignorieren.
 
 ## 5. Verifikation
 
-- 79 neue Specs (`TESTS/lsp/env_links_spec.lua`): Auflösung mit und ohne
+- 115 Specs (`TESTS/lsp/env_links_spec.lua`, Stand 2026-10-03, ursprünglich 79): Auflösung mit und ohne
   gopath-Stub (inklusive Fehler und alter gopath), Link-Parser (Umlaute,
   Bilder, Referenz-Definitionen, Titel, `<…>`), Verdict, Heading-Suche,
   Diagnostics-Filter (bestehendes Verhalten bleibt), Server-Handler direkt
@@ -197,6 +197,57 @@ dann in `lsp.nvim` als Konsument.
 | lsp.nvim | `lua/lsp/servers/marksman/diagnostics_handler.lua` | Filter: prüfen statt verstecken |
 | lsp.nvim | `lua/lsp/init.lua` | Setup-Schritt `markdown env links` |
 | lsp.nvim | `lua/lsp/config/DEFAULTS.lua`, `config/init.lua`, `@types/init.lua` | Option `languages.env_links` |
-| lsp.nvim | `TESTS/lsp/env_links_spec.lua` | 79 Specs |
+| lsp.nvim | `TESTS/lsp/env_links_spec.lua` | 115 Specs |
 | lsp.nvim | `docs/configuration.md` (`languages.env_links`), `docs/FEATURES/SERVERS.md`, `doc/lsp.nvim.txt`, `servers/marksman/README.md` | Doku |
 | gopath.nvim | `lua/gopath/init.lua` (`resolve_text`), `scripts/ci/specs/resolve_selection_spec.lua`, `docs/resolution.md` | öffentliche Text-API |
+
+## 9. Nachtrag 2026-10-03: Analyse nach den Review-Runden
+
+Stand: `lsp.nvim` `1067d40` (= `main` = `origin/main`, nichts offen). Seit dem
+Report kamen 16 Commits (Review-Härtung: Scan-Limits, Referenz-Definitionen,
+`<…>`-Ziele mit Leerzeichen, Timing-Tests). Env-Links-Spec lokal im CI-Modus
+(`PlenaryBustedDirectory`): 115 Erfolge, 0 Fehler. Alle Befunde unten sind am
+echten Code bzw. an echtem marksman gemessen.
+
+### 9.1 Lücke: marksman schweigt bei jedem Link mit `#anker`
+
+Gegen echtes marksman, Fixture mit existierender Datei `target.md`:
+
+| Link | marksman meldet |
+|---|---|
+| `[x](./missing2.md)` | „Link to non-existent document“ |
+| `[x](./missing.md#a)` (Datei fehlt, mit Anker) | **nichts** |
+| `[x](./target.md#nope)` (Anker fehlt) | **nichts** |
+| `[x]($REPOS_DIR/…/missing3.md#a)` (Env, Datei fehlt, mit Anker) | **nichts** |
+| `[x](#nope)` (gleiche Datei, Anker fehlt) | **nichts** |
+
+Folge: Das „prüfen statt verstecken“ aus §2.1 greift nur für Links **ohne**
+Anker. Ein kaputter `$REPOS_DIR/…/datei.md#abschnitt`-Link bleibt in der
+Praxis unbemerkt, weil es gar keine marksman-Meldung gibt, die der Filter
+behalten oder verwerfen könnte. Der Satz in §5 „existierende Env-Links … mit
+Anker ohne Meldung“ ist deshalb zwar wahr, aber trivial wahr (er hätte auch bei
+kaputten Links gestimmt).
+
+### 9.2 Lücke: Linktext mit Klammern wird nicht erkannt
+
+`target_at` merkt sich nur das letzte offene `[`. Gemessen (Hover/`gd` auf dem
+Ziel liefert `nil`):
+
+| Eingabe | Ergebnis |
+|---|---|
+| `[a [b] c]($REPOS_DIR/x.md)` (balancierte Klammern im Text) | nicht erkannt |
+| `[![alt]($REPOS_DIR/i.png)]($REPOS_DIR/doc.md)` (Badge-Muster, äußeres Ziel) | nicht erkannt (inneres Bild-Ziel: erkannt) |
+| `[a\]b]($REPOS_DIR/x.md)` (maskiertes `]`) | nicht erkannt |
+
+Selten bei Env-Links, aber das Badge-Muster ist in READMEs üblich.
+
+### 9.3 Randbefunde ohne Handlungsbedarf
+
+- Links in Inline-Code und in Codeblöcken werden wie Links behandelt (Hover
+  erscheint dort). Kosmetisch, keine falsche Diagnostic.
+- Autolinks (`<$VAR/x>`) sind in Markdown keine Links für Pfade: korrekt `nil`.
+- Referenz-Verwendung `[x][lbl]` liefert `nil`, die Definition `[lbl]: …` wird
+  erkannt: wie vorgesehen (marksman löst die Verwendung auf die Definition auf).
+- Neovim 0.12.2 hat kein `vim.lsp.document_link`: ein `documentLink`-Provider
+  im Client würde heute von keinem Feature abgefragt. Erst wieder prüfen, wenn
+  Neovim es mitbringt (`gx` auf Env-Links).
