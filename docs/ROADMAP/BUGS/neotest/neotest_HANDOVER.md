@@ -19,7 +19,7 @@ Erledigte, die Befunde, Messungen, Belege und verworfenen Wege stehen im Archiv 
 
 - [ ] **Upstream melden.** Der fertige Report samt Kommentar für `neotest-plenary#17` und Issue-Text
       für `neotest` (unauthentifizierter `localhost`-Listener) liegt in
-      [`../BUGS/UPSTREAM-neotest-windows-plenary-and-listener.md`](../BUGS/UPSTREAM-neotest-windows-plenary-and-listener.md).
+      [`UPSTREAM-neotest-windows-plenary-and-listener.md`](./UPSTREAM-neotest-windows-plenary-and-listener.md).
       Nicht gepostet, braucht ein ausdrückliches Ja. Vorher entscheiden: Listener-Issue öffentlich
       oder als Security Advisory (Abschnitt "Severity" im Report); "Before filing" abarbeiten. Beim
       Posten Status-Log im Report ergänzen. Wenn upstream behoben ist, den lokalen Workaround
@@ -39,7 +39,7 @@ Erledigte, die Befunde, Messungen, Belege und verworfenen Wege stehen im Archiv 
 | --- | --- |
 | Der Umbau (Code) | `lua/config/neotest/init/windows_fixes.lua`, `lua/config/neotest/core/init.lua`, `lua/plugins/neotest.lua` |
 | **Archiv mit allem Erledigten:** Lazy-Load, Befund, Messungen, Belege (headless + echte TUI), verworfene Optionen A-D, Live-Tests, Commits | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` |
-| Upstream-Report mit fertigen Texten | [`../BUGS/UPSTREAM-neotest-windows-plenary-and-listener.md`](../BUGS/UPSTREAM-neotest-windows-plenary-and-listener.md) |
+| Upstream-Report mit fertigen Texten | [`UPSTREAM-neotest-windows-plenary-and-listener.md`](./UPSTREAM-neotest-windows-plenary-and-listener.md) |
 | Probe-Tool für neotest-Läufe mit der echten Config (headless Kern, `-Patch`, `-Stop`, `-Unset`) | `WKDBooks/.../TOOLS/neotest-run-probe.md`, `TOOLS/scripts/neotest-run-probe/` |
 | Messtabellen und Optionen im Detail | `WKDBooks/.../openinnvim/Backlog/TASKS/2026-10-02_neotest-listener-messung.md` |
 | `rpc_pipe`-Änderung (kein Export, Spec) | lib.nvim `47ba2fc`: `lua/lib/nvim/system/rpc_pipe.lua`, `TESTS/system_rpc_pipe_spec.lua` |
@@ -58,6 +58,10 @@ Damit niemand das Archiv öffnen muss, um den Stand zu kennen:
   `NVIM_LISTEN_ADDRESS` (Kind stirbt in C) und Backslash-Pfade im `-c`-String (Kind hängt für immer).
   Der Shim setzt `\` → `/` und `NVIM_LISTEN_ADDRESS=""` für das Kind. Ergebnis: 8 passed / 1 failed
   bei allen Läufen.
+- **Review 2026-10-03** (`a278bfa4`, `ad923e6f`): der Shim schreibt nur noch die beiden Pfadwerte um
+  (Pfade mit Apostroph, Nicht-Windows unberührt) und **warnt einmal pro Sitzung**, wenn
+  neotest-plenary sein Befehlsformat ändert und der Fix nicht mehr greift (sonst hingen die Läufe
+  wieder still). Attach läuft auf dem Hauptloop und nur für den Buffer, der es auslöste.
 - **Auto-Attach:** `run.attach` nur noch, wenn im Buffer wirklich etwas läuft; sonst stiller
   Client-Start über `get_tree_from_args` (Signs bleiben). Bekannte Grenze: läuft eine Geschwisterdatei
   unter derselben Wurzel, kann einmal "No running process found" erscheinen.
