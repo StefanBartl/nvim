@@ -88,6 +88,7 @@ finished task with the same id under another date, is refused.
 | `open-in-backlog` | a task file in `Backlog/` whose status is not `done` |
 | `duplicate-id` | an open and a finished task share an id |
 | `frontmatter-warning` (warning) | a frontmatter line was kept but not understood |
+| `title-comment` (warning) | the title has a trailing YAML comment: ` #` starts a comment, so `title: Fix bug #12` reads `Fix bug`; quote the title (`title: "Fix bug #12"`) when the `#` belongs to it. `new` and `set` quote automatically; only hand-written files are affected |
 
 Only `error` findings make a run fail.
 

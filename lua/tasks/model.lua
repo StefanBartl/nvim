@@ -261,7 +261,7 @@ end
 function M.parse_text(text, ctx)
   local location = ctx.location or "roadmap"
   local slug = ctx.slug or M.slug_of(ctx.path, location)
-  local errors, codes, warnings = {}, {}, {}
+  local errors, codes, warnings, hints = {}, {}, {}, {}
 
   ---@param code string
   ---@param msg string
@@ -286,6 +286,7 @@ function M.parse_text(text, ctx)
     errors = errors,
     error_codes = codes,
     warnings = warnings,
+    hints = hints,
     valid = false,
   }
 
@@ -328,6 +329,16 @@ function M.parse_text(text, ctx)
     local title = as_text(meta.title, "title", bad)
     if title then
       task.title = title
+      local tentry = parsed.by_key.title
+      if tentry and tentry.comment then
+        -- `title: Fix bug #12` reads "Fix bug": a ` #` starts a YAML comment.
+        hints[#hints + 1] = {
+          code = "title-comment",
+          msg = ("title ends at ' #' (the rest is a YAML comment: '%s'); quote the title if the # belongs to it"):format(
+            vim.trim(tentry.comment)
+          ),
+        }
+      end
     elseif meta.title == nil then
       bad("title-missing", "title is missing")
     else

@@ -28,7 +28,8 @@ checkout); CI lints and format-checks this folder.
 | File | Covers |
 |---|---|
 | `tasks/tasks_vault_spec.lua` | `tasks.vault`: root resolution order, area listing (skips `_Telemetry`/`TEMPLATES`/`TOOLS`/empty folders, includes the named extras), path builders, area/slug/id validators |
-| `tasks/tasks_model_spec.lua` | `tasks.model`: every field, the summary rules, each validation error code, CRLF files, the enums and date arithmetic, ranking (deterministic for any input order), every filter incl. `stale` |
+| `tasks/tasks_fsio_spec.lua` | `tasks.fsio.write_atomic`: parent created, bytes as given, no temp file left, a stale fixed-name temp file neither blocks nor is reused (the temp name is unique per process and call) |
+| `tasks/tasks_model_spec.lua` | `tasks.model`: every field, the summary rules, each validation error code, the `title-comment` hint (` #` in a hand-written title), CRLF files, the enums and date arithmetic, ranking (deterministic for any input order), every filter incl. `stale` |
 | `tasks/tasks_scan_spec.lua` | `tasks.scan`: path order, a broken file does not abort, nested files flagged, missing `tasks/` folder, TTL cache vs `refresh`, Backlog files with/without frontmatter, `find`/`find_done`/`backlog_slugs` |
 | `tasks/tasks_index_spec.lua` | `tasks.index`: the exact bytes of the per-area index and the global overview, escaping and truncation, determinism, write-only-when-different (mtime survives), `check` reasons, CRLF checkout, orphan removal, best-effort `write_all` |
 | `tasks/tasks_mutate_spec.lua` | `tasks.mutate`: template, `slugify`, `new` (collisions incl. Backlog, every rejected input creates nothing), `set` (only named keys change, no-op keeps `updated`, rejected patches, CRLF), `readme_add_row`, `done` (buckets, README, index, idempotence, resume after an interrupted run, rollback after a failing last step, CRLF, missing README) |
