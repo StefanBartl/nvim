@@ -28,20 +28,12 @@
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
 
 ---
-filetree contesextmenu trifft nicht die klorrekeetze node
-sessions: chip.col_offset = -1 mit shape = "dock_left" könnte laut Doku auf rounded_chip zurückfallen. Ungeprüft.
 
-pdfport: ollama_model = "qwen2.5-coder:7b" ist ein Coding-Modell, der Default llava ein Vision-Modell. Ist das gewollt?
-
-Doku und Defaults: Mehrere Plugins haben widersprüchliche Angaben, etwa hover play_scale, filetree smart_create, emojis checkbox.default_set (wirkungslos) und mdview click_navigate. Die Liste steht in TOOLS/spec-full-options.md.
+## Claude Tasks
 
 - Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
-
----
-
-## Claude Tasks
 
 -  -Editing-Primitive (autopairs, autotag, matchup, visual-multi, mini.ai/targets) bleiben dauerhaft extern> Anylse, wir aufwendig ist es,d iese zu erstetzen, welche vorteile? könnte man alle features der plugins zu einen zusmmenoen=
 
