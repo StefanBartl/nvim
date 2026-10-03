@@ -184,7 +184,7 @@ Build-Check, nicht zum interaktiven Durchklicken.
 
 ## T16/T17 — FightingGame-Ausbau (ab 2026-10-01)
 
-Plan und Phasenstatus: `../handovers/wkd/wkd_FightingGame_Implementierungsplan.md`.
+Plan und Phasenstatus: `../wkd/handovers/wkd_FightingGame_Implementierungsplan.md`.
 
 - [ ] **T16 Hover-Sound:** Maus über den „Fight"-Tab bewegen — kurzer Blip (erst nach dem
       ersten Klick irgendwo auf der Seite hörbar, Browser-Autoplay-Regel).
