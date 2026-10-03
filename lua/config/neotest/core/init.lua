@@ -90,7 +90,8 @@ local function setup_autocommands()
           if not ok then
             return
           end
-          require("nio").run(function()
+          local nio = require("nio")
+          nio.run(function()
             -- Asking for the file's tree starts neotest's client silently: that is what
             -- discovers the tests and places the status signs. `run.attach` does the same
             -- but always reports ("No running process found" / "No tests found") when
@@ -98,7 +99,13 @@ local function setup_autocommands()
             -- neotest's own separator, as in plugins/neotest.lua.
             local native = file:gsub("/", package.config:sub(1, 1))
             pcall(neotest.run.get_tree_from_args, { native }, false)
-            if M.has_running(neotest, bufnr) then
+            -- The wait above may resume in a libuv callback, where `vim.fn`/`vim.api` calls
+            -- (neotest's buffer state does `vim.fn.bufname`) fail; a failure inside
+            -- `has_running` would only read as "nothing running" and skip the attach.
+            nio.scheduler()
+            -- `run.attach` works on the CURRENT buffer's nearest test: skip it when the
+            -- user has already moved on.
+            if vim.api.nvim_get_current_buf() == bufnr and M.has_running(neotest, bufnr) then
               pcall(neotest.run.attach)
             end
           end)
