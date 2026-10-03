@@ -2,7 +2,7 @@
 
 Auftrag: nur testen, nichts bauen, keine Ersatz-Entscheidung. Schritt 1 des Konzepts
 `WKDBooks/Development/wkdbook-myplugins/lib.nvim/ROADMAP/messages-log-and-recent-popup.md`.
-Vorgänger-Report: `noice-feature-abdeckung-2026-10-01.md` (Feature-Matrix, ohne Messung).
+Vorgänger-Report: `NOICE_ERSATZ/noice-feature-abdeckung-2026-10-01.md` (Feature-Matrix, ohne Messung).
 
 ## Methode und Grenzen
 
