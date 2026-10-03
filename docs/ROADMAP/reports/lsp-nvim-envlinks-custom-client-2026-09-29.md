@@ -135,8 +135,9 @@ ignorieren.
   relative Pfade. Env-Pfade werden nicht vorgeschlagen.
 - **Nur einzeilige Links:** kein Markdown-Parser, über Zeilen umbrochene Links
   löst auch marksman nicht auf.
-- **Anker:** Die Existenz der Datei wird geprüft, ob die Überschrift vorhanden
-  ist, dagegen nicht (nur bei Definition: Sprung dorthin, sonst Dateianfang).
+- **Anker:** *(Stand 2026-09-29, überholt: seit 2026-10-03 prüft der Client
+  Datei und Überschrift, siehe §10.)* Damals wurde nur die Existenz der Datei
+  geprüft, nicht die Überschrift.
 - **Undefinierte Variable:** Der Link bleibt unangetastet (keine Aussage
   möglich), die alte Pauschalregel gilt weiter. Dasselbe gilt für `${VAR}text`
   ohne Trenner: In der Shell ist das der Wert mit angehängtem Text, kein
@@ -251,3 +252,61 @@ Selten bei Env-Links, aber das Badge-Muster ist in READMEs üblich.
 - Neovim 0.12.2 hat kein `vim.lsp.document_link`: ein `documentLink`-Provider
   im Client würde heute von keinem Feature abgefragt. Erst wieder prüfen, wenn
   Neovim es mitbringt (`gx` auf Env-Links).
+
+## 10. Umsetzung 2026-10-03: A (Diagnostics aus eigener Quelle) und B (Parser)
+
+Repo `lsp.nvim`, drei Commits auf `main`:
+
+| Commit | Inhalt |
+|---|---|
+| `698c312` | **B:** `target_at` mit Klammer-Stack und Backslash-Escapes; Badge `[![a](i)](t)`, `[a [b] c](t)`, `\]` funktionieren. Byte-Budget pro Aufruf, weil der Stack sonst tausende Ziel-Parses pro Zeile erlaubt (gemessen 273 ms, jetzt ca. 2 ms; Timing-Spec mit 100 ms, ohne Budget rot). |
+| `7237aab` | **A:** Der Client meldet kaputte Env-Links selbst (siehe unten). |
+| `fc667e6` | Fence-Erkennung nach Zeichen und Länge statt An/Aus-Schalter (ein `~~~`-Block mit ```` ``` ```` darin wurde sonst zu früh geschlossen). |
+
+### 10.1 Wie A funktioniert
+
+- Der In-Process-Client meldet `diagnosticProvider` und `textDocumentSync`.
+  Neovim 0.12 fragt dann nach jedem `didOpen`/`didChange` selbst
+  `textDocument/diagnostic` an (vorher in einem Prototyp mit einem Client ohne
+  Prozess geprüft). Gelesen wird aus dem Buffer, nicht aus den Notifications.
+- Gemeldet wird als Warning auf der Zielspanne (UTF-16-Spalten):
+  `missing-file` (auch mit `#anker`, die Lücke aus §9.1) und
+  `missing-heading` (nur für Markdown-Dateien).
+- **Nie gemeldet:** undefinierte Variable, Anker in Nicht-Markdown-Dateien
+  (`#L10`), Dateien über 2 MB, Links in Codeblöcken, Code-Spans, YAML-Front-
+  Matter. „Nicht entscheidbar“ ist nicht „kaputt“.
+- Anker wie bei GitHub: wiederholte Überschrift `x`, `x-1`, `x-2`; Text eines
+  Links in der Überschrift (`## [1.2.0](url)` -> `#120`); `{#id}`; HTML
+  `id`/`name`; Emoji weg (`## 🚀 Features` -> `#-features`); `_Kursiv_`.
+  Die Zusatzschlüssel (Emoji, Unterstriche) können nur zusätzliche Treffer
+  erzeugen, nie ein falsches „fehlt“.
+- **Aktualisierung ohne Edit des Dokuments:** Der Client fordert bei
+  `BufWritePost` und `FocusGained` (300 ms entprellt)
+  `workspace/diagnostic/refresh` an. Wird das Linkziel angelegt, verschwindet
+  die Warnung.
+- **marksman-Filter:** Solange der Client läuft, wird marksmans eigene Meldung
+  zu einem kaputten Env-Link verworfen (eine Diagnostic pro Spanne). Ohne
+  Client bleibt das Verhalten aus §2.1 unverändert.
+
+### 10.2 Verifikation
+
+- `env_links_spec.lua`: 186 Specs (vorher 129, ursprünglich 79). Neu u. a.
+  `links`/`scan`/`mask_code_spans`/`heading_index`, Server-Diagnostics direkt
+  und als echter Client (Pull, Fähigkeiten, Refresh nach Schreiben, `active()`),
+  Filter mit und ohne laufenden Client.
+- Mutationen, die jeweils mindestens einen Spec rot machen: Capability
+  entfernt (3), Filter-Kopplung (1), Refresh-Autocmd (1), Fence-Überspringen
+  (2), Scan-Budget (1).
+- Gesamtsuite lokal im CI-Modus: 1323 bestanden, 0 Fehler (64 Dateien);
+  stylua und luacheck über das ganze Repo sauber.
+- Echte Config (`nvim` im Config-Verzeichnis, lädt `E:/repos/lsp.nvim`):
+  Clients `lsp.nvim-envlinks` und `marksman`; kaputter Anker und fehlende Datei
+  (mit Anker) gemeldet, korrekter langer Anker, Badge und Code-Span still.
+
+### 10.3 Offen
+
+- Einrückte Codeblöcke (4 Leerzeichen) und HTML-Kommentare werden nicht als
+  Code erkannt; ein dort gezeigter Env-Link würde gemeldet. Selten, bewusst
+  nicht angefasst (Listen-Einrückung ist von Code nicht billig zu trennen).
+- Env-Pfad-Completion (§6) und `documentLink` (`gx`, braucht Neovim-Support)
+  bleiben offen.
