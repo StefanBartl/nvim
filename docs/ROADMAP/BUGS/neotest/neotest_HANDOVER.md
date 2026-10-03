@@ -41,7 +41,7 @@ Erledigte, die Befunde, Messungen, Belege und verworfenen Wege stehen im Archiv 
 | **Archiv mit allem Erledigten:** Lazy-Load, Befund, Messungen, Belege (headless + echte TUI), verworfene Optionen A-D, Live-Tests, Commits | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` |
 | Upstream-Report mit fertigen Texten | [`UPSTREAM-neotest-windows-plenary-and-listener.md`](./UPSTREAM-neotest-windows-plenary-and-listener.md) |
 | Probe-Tool für neotest-Läufe mit der echten Config (headless Kern, `-Patch`, `-Stop`, `-Unset`) | `WKDBooks/.../TOOLS/neotest-run-probe.md`, `TOOLS/scripts/neotest-run-probe/` |
-| Messtabellen und Optionen im Detail | `WKDBooks/.../openinnvim/Backlog/TASKS/2026-10-02_neotest-listener-messung.md` |
+| Messtabellen und Optionen im Detail | `WKDBooks/Development/wkdbook-openinnvim/Backlog/TASKS/2026-10-02_neotest-listener-messung.md` |
 | `rpc_pipe`-Änderung (kein Export, Spec) | lib.nvim `47ba2fc`: `lua/lib/nvim/system/rpc_pipe.lua`, `TESTS/system_rpc_pipe_spec.lua` |
 | Startup-Gesamtbild (neotest nur Verweis) | `docs/ROADMAP/reports/startup-und-config-optimierung-analyse-konzept-2026-09-26.md`, `docs/ROADMAP/reports/startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md` |
 
