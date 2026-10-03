@@ -1025,14 +1025,17 @@ return {
       extract_opts = {
         -- Pages to extract; nil = all.
         -- pages = nil, -- integer[]
-        -- Extract at most this many pages; nil = all. Equals the default.
+        -- Extract at most this many pages; nil = all (ollama and tesseract: page 1
+        -- only, reported as a partial result). Equals the default.
         max_pages = nil,
         -- Backend-specific model and prompt for the AI backends; nil = the backend's own.
         -- model = nil, -- string
         -- prompt = nil, -- string
-        -- Ceiling on one extraction, in ms (backends may raise it to 120 s).
-        -- Equals the default, set explicitly.
-        timeout_ms = 30000,
+        -- Ceiling per backend request, in ms; unset = each backend's own default
+        -- (30 s pdftotext/pdfplumber, 60 s ollama/claude/gemini/tesseract, 120 s
+        -- marker/docling). Raised here because a cold llava page (model load,
+        -- image encode, a page of tokens) takes 30-60 s; it is only a ceiling.
+        timeout_ms = 120000,
         -- Cache successful extractions across sessions (keyed by path +
         -- backend + page range, invalidated by mtime).
         -- cache = true,
@@ -1089,8 +1092,10 @@ return {
       ollama_host = "http://localhost:11434",
       -- Model the ollama backend uses. It must be a vision model (name matching
       -- llava/bakllava/moondream/vision): the backend only rasterizes pages for
-      -- those, and ollama sits behind pdftotext in the chain, so it mostly
-      -- runs on scans. Equals the default, set explicitly.
+      -- those, any other name takes the text route. "auto" walks the chain by
+      -- availability, not by result, so ollama is not reached while pdftotext
+      -- is available: pick "Markdown (Ollama AI)" explicitly for scans.
+      -- Equals the default, set explicitly.
       ollama_model = "llava",
       -- Opt-in BufReadCmd for *.pdf: `:e file.pdf` opens the mode picker.
       -- auto_open_on_read = false,

@@ -265,16 +265,28 @@ return {
   {
     "StefanBartl/reposcope.nvim",
     name = "reposcope",
-    event = "VeryLazy",
+    -- Loaded on first use, not in the VeryLazy wave: require("reposcope") pulls
+    -- in ~180 modules and setup() runs on top, 60-110 ms of blocking work in
+    -- every session for a plugin used through one command and two keys. The
+    -- stubs lazy.nvim creates for `cmd`/`keys` load the plugin on first use and
+    -- are then replaced by the plugin's own :Reposcope and keymaps.
+    -- Caveat: the hover.nvim source for `owner/repo` (registered in setup())
+    -- only exists once reposcope was used in the session; set `hover = false`
+    -- in opts if that distinction is unwanted.
+    cmd = "Reposcope",
+    keys = {
+      { "<leader>rs", desc = "Reposcope: open the UI" },
+      { "<leader>rc", desc = "Reposcope: close the UI" },
+    },
     -- ui.kit backs the filter/sort prompts and the favorites/help/status views,
     -- required from init.lua's own top level.
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
     -- `opts` must exist (even empty): it makes lazy.nvim call
-    -- require("reposcope").setup(opts), and without that call neither the
-    -- `:Reposcope` command (registered when the module is first required) nor
-    -- the <leader>rs / <leader>rc keymaps (set in setup()) ever exist.
-    -- (The multi-repo dashboard lives in gitsuite.nvim's `:Git dashboard`;
-    -- reposcope stays scoped to search/filter/clone.)
+    -- require("reposcope").setup(opts) on load, and without that call neither
+    -- the plugin's own <leader>rs / <leader>rc keymaps (set in setup()) nor
+    -- its hover source ever exist. (The multi-repo dashboard lives in
+    -- gitsuite.nvim's `:Git dashboard`; reposcope stays scoped to
+    -- search/filter/clone.)
     opts = {},
     --
     -- OPTION REFERENCE (comment only, nothing here is executed). Copy entries
