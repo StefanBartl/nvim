@@ -6,6 +6,25 @@
 
 local M = {}
 
+--- Set once the format warning below was shown: one message per session is enough.
+local warned_format = false
+
+--- The shim found nothing to rewrite: neotest-plenary builds its command differently now, so
+--- Windows paths reach the Lua string unfixed again (the test child hangs). Say so once instead
+--- of failing silently.
+local function warn_format()
+  if warned_format then
+    return
+  end
+  warned_format = true
+  vim.schedule(function()
+    require("lib.nvim.notify").create("[config.neotest.windows_fixes]").warn(
+      "neotest-plenary's run command changed: the Windows path fix no longer applies."
+        .. " Test runs may hang; see lua/config/neotest/init/windows_fixes.lua"
+    )
+  end)
+end
+
 --- Never let neotest open its parse-subprocess listener.
 ---
 --- `neotest.lib.subprocess.init()` is the only place that calls `serverstart("localhost:0")`
@@ -67,29 +86,37 @@ function M.fix_plenary_adapter(adapter)
     local function replace_plain(s, old, new)
       local from, to = s:find(old, 1, true)
       if not from then
-        return s
+        return s, false
       end
-      return s:sub(1, from - 1) .. new .. s:sub(to + 1)
+      return s:sub(1, from - 1) .. new .. s:sub(to + 1), true
     end
+    -- Every expected value was found and rewritten. Stays false when the adapter's command has
+    -- another shape than the one this shim knows.
+    local applied = false
     for i, part in ipairs(spec.command) do
       if type(part) == "string" and part:find("^lua _run_tests%(") then
+        local found_results, found_file = false, false
         if type(ctx.results_path) == "string" then
           -- The adapter splices the temp path unescaped.
-          part = replace_plain(
+          part, found_results = replace_plain(
             part,
             "results = '" .. ctx.results_path .. "'",
             "results = '" .. slashed(ctx.results_path) .. "'"
           )
         end
         if type(ctx.file) == "string" then
-          part = replace_plain(
+          part, found_file = replace_plain(
             part,
             "file = '" .. original(ctx.file) .. "'",
             "file = '" .. slashed(ctx.file) .. "'"
           )
         end
         spec.command[i] = part
+        applied = found_results and found_file
       end
+    end
+    if windows and not applied then
+      warn_format()
     end
     spec.env = vim.tbl_extend("force", spec.env or {}, { NVIM_LISTEN_ADDRESS = "" })
     return spec
