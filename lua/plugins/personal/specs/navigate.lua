@@ -1946,6 +1946,10 @@ return {
           -- default is nil, equivalent), set explicitly.
           row_offset = 0,
           -- One column to the left of the computed placement. Default: nil.
+          -- Any offset that floors to non-zero (negative too) makes sessions.nvim
+          -- swap the default shape "dock_left" for "rounded_chip" (dock_left's
+          -- blank left border is only right flush at col 0); set `shape`
+          -- explicitly to keep a specific look.
           col_offset = -1,
           -- A highlight-group name, a `{ fg, bg }` table or a zero-arg function
           -- returning either; here a function returning the statusline's
