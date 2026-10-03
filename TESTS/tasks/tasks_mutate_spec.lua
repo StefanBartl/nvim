@@ -6,6 +6,22 @@ return function(H)
   local model = require("tasks.model")
   local mutate = require("tasks.mutate")
   local scan = require("tasks.scan")
+  local fsio = require("tasks.fsio")
+
+  --- Make every write of a `TASKS.md` fail until the returned function is called.
+  ---@return fun() restore
+  local function fail_index_writes()
+    local orig = fsio.write_atomic
+    fsio.write_atomic = function(path, content)
+      if path:match("TASKS%.md$") then
+        return false, "stubbed write failure"
+      end
+      return orig(path, content)
+    end
+    return function()
+      fsio.write_atomic = orig
+    end
+  end
 
   local TODAY = F.TODAY
   local cpdir = H.tmpdir() .. "/checkpoints"
@@ -375,12 +391,12 @@ return function(H)
   )
 
   -- a failing index does not fail the set (the task file is the truth)
-  vim.fn.mkdir(root .. "/lib.nvim/ROADMAP/TASKS.md.tasks-tmp", "p")
+  local restore_writes = fail_index_writes()
   H.write(root .. "/lib.nvim/ROADMAP/TASKS.md", "stale\n")
   local soft = assert(mutate.set("lib.nvim/target", { prio = 2 }, o))
   eq(soft.changed, true)
   ok(soft.index_err, "the index failure is reported, not raised")
-  vim.fn.delete(root .. "/lib.nvim/ROADMAP/TASKS.md.tasks-tmp", "rf")
+  restore_writes()
 
   -- index = false
   H.write(root .. "/lib.nvim/ROADMAP/TASKS.md", "stale\n")
@@ -647,7 +663,7 @@ return function(H)
   eq(assert(mutate.done("lib.nvim/half-done", o)).already, true)
 
   -- ── done: rollback ──────────────────────────────────────────────────────
-  -- Make the last step (index write) fail: its temp file path is a directory.
+  -- Make the last step (index write) fail: the index write is stubbed to fail.
   local a_path = F.task(
     H,
     root,
@@ -661,7 +677,7 @@ return function(H)
   local readme_before = backlog_readme()
   local index_path = root .. "/lib.nvim/ROADMAP/TASKS.md"
   local index_before = H.read(index_path)
-  vim.fn.mkdir(index_path .. ".tasks-tmp", "p")
+  local restore_index = fail_index_writes()
   local failed, fail_err = mutate.done("lib.nvim/roll-me", o)
   eq(failed, nil, "the move fails")
   has(fail_err, "index", "the error names the failing step")
@@ -672,7 +688,7 @@ return function(H)
   )
   eq(backlog_readme(), readme_before, "the README is restored")
   eq(H.read(index_path), index_before, "the index is restored")
-  vim.fn.delete(index_path .. ".tasks-tmp", "rf")
+  restore_index()
   assert(mutate.done("lib.nvim/roll-me", o))
   ok(
     H.exists(root .. "/lib.nvim/Backlog/FEATURES/2026-10-03_roll-me.md"),

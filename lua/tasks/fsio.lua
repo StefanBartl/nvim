@@ -102,7 +102,8 @@ function M.write_atomic(path, content)
   if not ok then
     return false, perr
   end
-  local tmp = path .. ".tasks-tmp"
+  -- Unique per process and call, so concurrent writers never share a temp file.
+  local tmp = ("%s.tasks-tmp.%d.%d"):format(path, vim.uv.os_getpid(), vim.uv.hrtime())
   local f, open_err = io.open(tmp, "wb")
   if not f then
     return false, "open failed: " .. tostring(open_err or tmp)
