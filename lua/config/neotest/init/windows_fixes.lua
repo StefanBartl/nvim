@@ -14,7 +14,8 @@ local M = {}
 --- false, and `neotest.lib` reaches the module through `lazy_require`, which looks `init` up on
 --- every call, so replacing it here is enough. With it disabled neotest parses on the main thread
 --- (`lib.treesitter`, `not lib.subprocess.enabled()`), which is also what happened before: the
---- helper never started because `NVIM_LISTEN_ADDRESS` was inherited.
+--- helper never started because `NVIM_LISTEN_ADDRESS` was inherited (`lib.nvim` `rpc_pipe` used
+--- to export it; it no longer does by default).
 function M.disable_parse_subprocess()
   local ok, subprocess = pcall(require, "neotest.lib.subprocess")
   if ok and type(subprocess) == "table" and type(subprocess.init) == "function" then
@@ -25,9 +26,10 @@ end
 --- Make neotest-plenary test runs work on Windows.
 ---
 --- Two independent faults, both reproduced without any harness:
---- 1. The test child is a `nvim --headless` that inherits `NVIM_LISTEN_ADDRESS`, which
----    `lib.nvim` `rpc_pipe` exports. Neovim then tries to bind the session's pipe and dies in C
----    ("address already in use"): every run failed. An empty value for the child is enough.
+--- 1. The test child is a `nvim --headless` that inherits `NVIM_LISTEN_ADDRESS` (`lib.nvim`
+---    `rpc_pipe` used to export it). Neovim then tries to bind the session's pipe and dies in C
+---    ("address already in use"): every run failed. An empty value for the child is enough, and
+---    stays as a guard for a variable that comes from outside (a shell, a parent nvim).
 --- 2. The adapter splices Windows paths into `-c "lua _run_tests({file = 'C:\Users\...'})"`.
 ---    `\U` is an invalid escape in a Lua string, the `-c` fails and the headless child stays
 ---    alive forever. Forward slashes are valid in the string and on Windows.
