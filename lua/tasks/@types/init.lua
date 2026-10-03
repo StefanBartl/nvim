@@ -1,0 +1,83 @@
+---@meta
+---@module 'tasks.@types'
+
+--- Where a task file lives: an open task in `ROADMAP/tasks/`, a finished one in
+--- `Backlog/FEATURES|TASKS/`.
+---@alias Tasks.Location "roadmap"|"backlog"
+
+---@alias Tasks.Status "open"|"doing"|"blocked"|"decision"|"parked"|"done"
+---@alias Tasks.Kind "feature"|"task"|"bug"|"idea"|"research"
+---@alias Tasks.Bucket "FEATURES"|"TASKS"
+
+--- One task file, read. Always produced, even for a broken file: `errors` says
+--- what is wrong and `valid` is false, so one bad file never hides the others.
+---@class Tasks.Task
+---@field id string                   # `<area>/<slug>`.
+---@field area string                 # Area (plugin folder) name.
+---@field slug string                 # Filename without `.md` (and without the `YYYY-MM-DD_` prefix in `Backlog/`).
+---@field path string                 # Absolute path, forward slashes.
+---@field location Tasks.Location
+---@field title string                # Frontmatter `title`, or the slug when it is missing.
+---@field status? string              # As written; may be an unknown word (see `errors`).
+---@field kind? string
+---@field prio? integer               # 1..3; nil when absent or invalid.
+---@field effort? string
+---@field tags string[]
+---@field created? string             # `YYYY-MM-DD`
+---@field updated? string             # `YYYY-MM-DD`
+---@field blocked_by string[]         # Task ids.
+---@field refs string[]
+---@field done_in? string
+---@field summary string              # Frontmatter `summary`, else the first body paragraph; "" when neither.
+---@field meta table<string, any>     # Every frontmatter key as parsed (unknown keys included).
+---@field errors string[]             # Validation problems; empty when the file is fine.
+---@field error_codes string[]        # One stable rule code per entry of `errors` (`unknown-status`, `bad-prio`, ...).
+---@field warnings string[]           # Lines the frontmatter reader kept verbatim without understanding.
+---@field valid boolean               # `#errors == 0`
+
+--- Filter for `model.filter`. Every set-like field matches any of its values.
+---@class Tasks.Filter
+---@field status? string|string[]
+---@field prio? integer|integer[]
+---@field prio_max? integer           # Matches prio <= prio_max (a task without prio never matches).
+---@field kind? string|string[]
+---@field tag? string|string[]
+---@field area? string|string[]
+---@field blocked? boolean            # status `blocked` or a non-empty `blocked_by`.
+---@field stale? integer              # Not updated for at least this many days (undated counts as stale).
+---@field today? string               # `YYYY-MM-DD` the `stale` age is measured against (default: today).
+
+---@class Tasks.Area
+---@field name string
+---@field path string                 # Absolute path of the area folder.
+
+--- Outcome of one index operation (`index.write_area`).
+---@class Tasks.IndexResult
+---@field area string
+---@field path string                 # `<area>/ROADMAP/TASKS.md`
+---@field open integer                # Open tasks that are (or would be) listed.
+---@field action "written"|"removed"|"unchanged"|"stale"  # `stale` only in check mode: the file differs from what would be generated.
+---@field reason? string              # For `stale`: "missing", "outdated" or "orphan".
+
+---@class Tasks.Finding
+---@field code string                 # Stable rule code, e.g. `unknown-status`.
+---@field severity "error"|"warn"
+---@field area string
+---@field path string                 # Absolute path.
+---@field id? string
+---@field message string
+
+---@class Tasks.NewOpts
+---@field root? string
+---@field title string
+---@field kind? string
+---@field prio? integer
+---@field effort? string
+---@field tags? string[]
+---@field status? string
+---@field summary? string
+---@field slug? string
+---@field today? string
+---@field index? boolean              # Regenerate the area index afterwards (default true).
+
+return {}

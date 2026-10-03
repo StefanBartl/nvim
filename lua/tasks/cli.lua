@@ -1,0 +1,638 @@
+---@module 'tasks.cli'
+---@brief Command-line front end of the task engine: `list`, `index`, `new`, `set`, `done`, `check`, `template`, `areas`, `export`.
+---@description
+--- `run(argv, io)` parses one command line, calls the engine and prints plain,
+--- tab-separated lines; it returns the exit code and never raises. The
+--- headless entry `scripts/tasks.lua` is a three-line wrapper around it, so a
+--- Claude session without a running Neovim creates and finishes tasks the same
+--- way the editor commands will (rule R12).
+---
+--- Exit codes: 0 success; 1 a finding, a stale index in `--check`, or a failed
+--- operation; 2 a usage error.
+---
+--- Key responsibilities:
+---  - argument parsing (`--key=value`, `--flag`, `key=value` for `set`) with
+---    unknown options reported instead of ignored
+---  - one function per subcommand, each a thin call into `vault`/`scan`/`index`/
+---    `mutate`/`check`
+---
+--- Not its job: any logic of its own about tasks. If something here grows a
+--- rule, it belongs in the engine module it calls.
+
+local check = require("tasks.check")
+local index = require("tasks.index")
+local model = require("tasks.model")
+local mutate = require("tasks.mutate")
+local scan = require("tasks.scan")
+local vault = require("tasks.vault")
+
+local M = {}
+
+---@class Tasks.CliIO
+---@field out fun(text: string)   # Written verbatim (callers add the newline).
+---@field err fun(text: string)
+
+---@type Tasks.CliIO
+M.stdio = {
+  out = function(text)
+    io.stdout:write(text)
+  end,
+  err = function(text)
+    io.stderr:write(text)
+  end,
+}
+
+local USAGE = [[
+usage: nvim --headless -u NONE -l scripts/tasks.lua <command> [args]
+
+commands:
+  list [<area>] [--status=a,b] [--prio=1,2|<=2] [--kind=k] [--tag=t] [--stale=<days>]
+       [--blocked] [--format=tsv|ids]     open tasks, sorted; one line each
+  index [<area>] [--check]                (re)write ROADMAP/TASKS.md; --check only reports
+  new <area> <title> [--kind=k] [--prio=1..3] [--effort=XS..XL|0.5d] [--tags=a,b]
+       [--summary=text] [--slug=slug] [--status=s]     create a task file
+  set <area>/<slug> key=value ...         change frontmatter (empty value removes the key)
+  done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD]   finish: move to Backlog/
+  check [<area>]                          rule check; exit 1 on any error
+  template [--title=t] [--kind=k] [--prio=n] [--effort=e] [--tags=a,b]
+  areas                                   list the vault's areas
+  export [--top=N] [--no-links]           all-areas overview as Markdown on stdout (never written)
+
+global options: --vault=<dir> (default: $TASKS_VAULT, else $REPOS_DIR/WKDBooks/...)
+                --today=YYYY-MM-DD (for reproducible runs); --no-index on new/set/done
+]]
+
+---@class Tasks.CliSpec
+---@field value string[]   # Options that need `=value`.
+---@field flag string[]    # Options without a value.
+
+---@type table<string, Tasks.CliSpec>
+local SPECS = {
+  list = {
+    value = { "status", "prio", "kind", "tag", "stale", "format" },
+    flag = { "blocked", "all" },
+  },
+  index = { value = {}, flag = { "check", "all" } },
+  new = {
+    value = { "kind", "prio", "effort", "tags", "summary", "slug", "status", "title" },
+    flag = { "no-index" },
+  },
+  set = { value = {}, flag = { "no-index" } },
+  done = { value = { "done-in", "date" }, flag = { "no-index" } },
+  check = { value = {}, flag = { "all" } },
+  template = { value = { "title", "kind", "prio", "effort", "tags" }, flag = {} },
+  areas = { value = {}, flag = {} },
+  export = { value = { "top", "link-prefix" }, flag = { "no-links" } },
+}
+
+local GLOBAL_VALUE = { "vault", "today" }
+
+---@class Tasks.CliArgs
+---@field pos string[]
+---@field opt table<string, string|boolean>
+
+---@param argv string[]
+---@param spec Tasks.CliSpec
+---@return Tasks.CliArgs|nil args
+---@return string|nil err
+local function parse_args(argv, spec)
+  local value, flag = {}, { help = true }
+  for _, k in ipairs(spec.value) do
+    value[k] = true
+  end
+  for _, k in ipairs(GLOBAL_VALUE) do
+    value[k] = true
+  end
+  for _, k in ipairs(spec.flag) do
+    flag[k] = true
+  end
+  local pos, opt = {}, {}
+  local options_done = false
+  for _, token in ipairs(argv) do
+    if options_done or token:sub(1, 2) ~= "--" then
+      pos[#pos + 1] = token
+    elseif token == "--" then
+      options_done = true
+    else
+      local name, val = token:match("^%-%-([%w][%w-]*)=(.*)$")
+      if name then
+        if not value[name] then
+          return nil, "unknown or valueless option: --" .. name
+        end
+        opt[name] = val
+      else
+        name = token:sub(3)
+        if flag[name] then
+          opt[name] = true
+        elseif value[name] then
+          return nil, ("option needs a value: --%s=<value>"):format(name)
+        else
+          return nil, "unknown option: " .. token
+        end
+      end
+    end
+  end
+  return { pos = pos, opt = opt }, nil
+end
+
+---@param s string
+---@return string[]
+local function split_commas(s)
+  local out = {}
+  for item in s:gmatch("[^,]+") do
+    out[#out + 1] = (item:gsub("^%s+", ""):gsub("%s+$", ""))
+  end
+  return out
+end
+
+---@param value string
+---@param what string
+---@return integer|nil
+---@return string|nil err
+local function to_int(value, what)
+  if not value:match("^%d+$") then
+    return nil, ("%s must be a whole number, got '%s'"):format(what, value)
+  end
+  return tonumber(value), nil
+end
+
+---Turn the filter options into a `Tasks.Filter`.
+---@param opt table<string, string|boolean>
+---@return Tasks.Filter|nil filter
+---@return string|nil err
+local function filter_from(opt)
+  ---@type Tasks.Filter
+  local f = {
+    today = opt.today --[[@as string|nil]],
+  }
+  if opt.status then
+    f.status = split_commas(opt.status --[[@as string]])
+    for _, s in ipairs(f.status) do
+      if not model.is_status(s) then
+        return nil, "unknown status in --status: " .. s
+      end
+    end
+  end
+  if opt.prio then
+    local raw = opt.prio --[[@as string]]
+    local max = raw:match("^<=(%d)$")
+    if max then
+      f.prio_max = tonumber(max)
+    else
+      f.prio = {}
+      for _, p in ipairs(split_commas(raw)) do
+        local n = model.to_prio(p)
+        if not n then
+          return nil, "--prio must be 1, 2, 3 (comma list) or <=N, got " .. raw
+        end
+        f.prio[#f.prio + 1] = n
+      end
+    end
+  end
+  if opt.kind then
+    f.kind = split_commas(opt.kind --[[@as string]])
+    for _, k in ipairs(f.kind) do
+      if not model.is_kind(k) then
+        return nil, "unknown kind in --kind: " .. k
+      end
+    end
+  end
+  if opt.tag then
+    f.tag = split_commas(opt.tag --[[@as string]])
+  end
+  if opt.stale then
+    local days, err = to_int(opt.stale --[[@as string]], "--stale")
+    if not days then
+      return nil, err
+    end
+    f.stale = days
+  end
+  if opt.blocked then
+    f.blocked = true
+  end
+  return f, nil
+end
+
+---@param opt table<string, string|boolean>
+---@return table opts  engine options shared by every command
+local function engine_opts(opt)
+  return {
+    root = opt.vault --[[@as string|nil]],
+    today = opt.today --[[@as string|nil]],
+  }
+end
+
+---@param s any
+---@return string
+local function cellv(s)
+  if s == nil or s == "" then
+    return "-"
+  end
+  return (tostring(s):gsub("[\t\r\n]+", " "))
+end
+
+---@class Tasks.CliCtx
+---@field io Tasks.CliIO
+---@field args Tasks.CliArgs
+---@field say fun(line: string)
+---@field warn fun(line: string)
+---@field eo table
+
+---@type table<string, fun(ctx: Tasks.CliCtx): integer>
+local commands = {}
+
+function commands.list(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local filter, ferr = filter_from(args.opt)
+  if not filter then
+    ctx.warn("error: " .. ferr)
+    return 2
+  end
+  local format = args.opt.format or "tsv"
+  if format ~= "tsv" and format ~= "ids" then
+    ctx.warn("error: --format must be tsv or ids")
+    return 2
+  end
+  if #args.pos > 1 then
+    ctx.warn("error: list takes at most one area")
+    return 2
+  end
+
+  local tasks, errors
+  if args.pos[1] and not args.opt.all then
+    local root, rerr = vault.root(eo)
+    if not root then
+      ctx.warn("error: " .. tostring(rerr))
+      return 1
+    end
+    if not vault.has_area(root, args.pos[1]) then
+      ctx.warn("error: unknown area: " .. args.pos[1])
+      return 1
+    end
+    tasks, errors = scan.area(args.pos[1], eo)
+  else
+    tasks, errors = scan.all(eo)
+  end
+  if not tasks then
+    ctx.warn("error: " .. tostring(errors))
+    return 1
+  end
+
+  local open, skipped = {}, 0
+  for _, t in ipairs(tasks) do
+    if model.is_open_status(t.status) then
+      open[#open + 1] = t
+    else
+      skipped = skipped + 1
+    end
+  end
+  local shown = model.sort(model.filter(open, filter))
+  for _, t in ipairs(shown) do
+    if format == "ids" then
+      ctx.say(t.id)
+    else
+      ctx.say(table.concat({
+        t.id,
+        cellv(t.status),
+        cellv(t.prio),
+        cellv(t.effort),
+        cellv(t.kind),
+        cellv(t.updated or t.created),
+        cellv(t.title),
+      }, "\t"))
+    end
+  end
+  if skipped > 0 then
+    ctx.warn(
+      ("note: %d task file(s) not listed (missing or unknown status, or done); run `check`"):format(
+        skipped
+      )
+    )
+  end
+  if type(errors) == "table" and #errors > 0 then
+    for _, e in ipairs(errors) do
+      ctx.warn("warn: cannot read directory " .. e)
+    end
+    return 1
+  end
+  return 0
+end
+
+function commands.index(ctx)
+  local args, eo = ctx.args, ctx.eo
+  if #args.pos > 1 then
+    ctx.warn("error: index takes at most one area")
+    return 2
+  end
+  local opts = { root = eo.root, check = args.opt.check == true }
+  local results, errors
+  if args.pos[1] and not args.opt.all then
+    local res, err = index.write_area(args.pos[1], opts)
+    results, errors = res and { res } or {}, err and { args.pos[1] .. ": " .. err } or {}
+  else
+    results, errors = index.write_all(opts)
+  end
+  if not results then
+    ctx.warn("error: " .. tostring(errors[1]))
+    return 1
+  end
+
+  local counts = { written = 0, removed = 0, unchanged = 0, stale = 0 }
+  for _, r in ipairs(results) do
+    counts[r.action] = counts[r.action] + 1
+    if r.action ~= "unchanged" then
+      local reason = r.reason and (" (" .. r.reason .. ")") or ""
+      ctx.say(("%s\t%s\t%d open\t%s%s"):format(r.action, r.area, r.open, r.path, reason))
+    end
+  end
+  for _, e in ipairs(errors) do
+    ctx.warn("error: " .. e)
+  end
+  if opts.check then
+    ctx.say(
+      ("index --check: %d area(s), %d stale, %d error(s)"):format(#results, counts.stale, #errors)
+    )
+    return (counts.stale > 0 or #errors > 0) and 1 or 0
+  end
+  ctx.say(
+    ("index: %d area(s), %d written, %d removed, %d unchanged, %d error(s)"):format(
+      #results,
+      counts.written,
+      counts.removed,
+      counts.unchanged,
+      #errors
+    )
+  )
+  return #errors > 0 and 1 or 0
+end
+
+---@param ctx Tasks.CliCtx
+---@param res table
+local function report_index(ctx, res)
+  if res.index_err then
+    ctx.warn("warn: index not updated: " .. res.index_err)
+  elseif res.index and res.index.action ~= "unchanged" then
+    ctx.say(("index\t%s\t%s"):format(res.index.action, res.index.path))
+  end
+end
+
+function commands.new(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local opt = args.opt
+  local area = args.pos[1]
+  local title = args.pos[2] or opt.title
+  if not area or not title or #args.pos > 2 then
+    ctx.warn('error: usage: new <area> "<title>" [options]')
+    return 2
+  end
+  local res, err = mutate.new(area, {
+    root = eo.root,
+    today = eo.today,
+    title = title,
+    kind = opt.kind --[[@as string|nil]],
+    prio = opt.prio --[[@as string|nil]],
+    effort = opt.effort --[[@as string|nil]],
+    tags = opt.tags --[[@as string|nil]],
+    summary = opt.summary --[[@as string|nil]],
+    slug = opt.slug --[[@as string|nil]],
+    status = opt.status --[[@as string|nil]],
+    index = not opt["no-index"],
+  })
+  if not res then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  ctx.say(("created\t%s\t%s"):format(res.id, res.path))
+  report_index(ctx, res)
+  return 0
+end
+
+function commands.set(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local id = args.pos[1]
+  if not id or #args.pos < 2 then
+    ctx.warn("error: usage: set <area>/<slug> key=value [key=value ...]")
+    return 2
+  end
+  local patch = {}
+  for i = 2, #args.pos do
+    local key, value = args.pos[i]:match("^([%w_]+)=(.*)$")
+    if not key then
+      ctx.warn("error: expected key=value, got " .. args.pos[i])
+      return 2
+    end
+    patch[key] = value == "" and mutate.REMOVE or value
+  end
+  local res, err = mutate.set(id, patch, {
+    root = eo.root,
+    today = eo.today,
+    index = not args.opt["no-index"],
+  })
+  if not res then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  ctx.say(("set\t%s\t%s\t%s"):format(res.id, res.changed and "changed" or "unchanged", res.path))
+  report_index(ctx, res)
+  return 0
+end
+
+function commands.done(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local id = args.pos[1]
+  if not id or #args.pos > 1 then
+    ctx.warn("error: usage: done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD]")
+    return 2
+  end
+  local res, err = mutate.done(id, {
+    root = eo.root,
+    today = eo.today,
+    done_in = args.opt["done-in"] --[[@as string|nil]],
+    date = args.opt.date --[[@as string|nil]],
+    index = not args.opt["no-index"],
+  })
+  if not res then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  if res.already then
+    ctx.say(("already\t%s\t%s"):format(res.id, res.to))
+    return 0
+  end
+  ctx.say(("done\t%s\t%s"):format(res.id, res.to))
+  if res.readme == "missing" then
+    ctx.warn("warn: Backlog/README.md does not exist; no index row added")
+  end
+  report_index(ctx, res)
+  return 0
+end
+
+function commands.check(ctx)
+  local args, eo = ctx.args, ctx.eo
+  if #args.pos > 1 then
+    ctx.warn("error: check takes at most one area")
+    return 2
+  end
+  local area = (not args.opt.all) and args.pos[1] or nil
+  local res, err = check.run({ root = eo.root, area = area })
+  if not res then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  local root = assert(vault.root({ root = eo.root }))
+  for _, f in ipairs(res.findings) do
+    ctx.say(check.format(f, root))
+  end
+  ctx.say(
+    ("check: %d finding(s) (%d error, %d warning) in %d area(s), %d task file(s) read"):format(
+      #res.findings,
+      res.errors,
+      res.warnings,
+      res.areas,
+      res.tasks
+    )
+  )
+  return res.ok and 0 or 1
+end
+
+function commands.template(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local opt = args.opt
+  if #args.pos > 0 then
+    ctx.warn("error: template takes no positional argument (use --title=...)")
+    return 2
+  end
+  local prio
+  if opt.prio then
+    prio = model.to_prio(opt.prio)
+    if not prio then
+      ctx.warn("error: --prio must be 1, 2 or 3")
+      return 2
+    end
+  end
+  ctx.io.out(mutate.template({
+    title = opt.title --[[@as string|nil]],
+    kind = opt.kind --[[@as string|nil]],
+    prio = prio,
+    effort = opt.effort --[[@as string|nil]],
+    tags = opt.tags and split_commas(opt.tags --[[@as string]]) or nil,
+    today = eo.today,
+  }))
+  return 0
+end
+
+function commands.areas(ctx)
+  local root, err = vault.root(ctx.eo)
+  if not root then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  for _, a in ipairs(vault.areas(root)) do
+    ctx.say(a.name)
+  end
+  return 0
+end
+
+function commands.export(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local root, rerr = vault.root(eo)
+  if not root then
+    ctx.warn("error: " .. tostring(rerr))
+    return 1
+  end
+  local top
+  if args.opt.top then
+    local n, err = to_int(args.opt.top --[[@as string]], "--top")
+    if not n then
+      ctx.warn("error: " .. err)
+      return 2
+    end
+    top = n
+  end
+  local tasks, errors = scan.all({ root = root })
+  if not tasks then
+    ctx.warn("error: " .. tostring(errors))
+    return 1
+  end
+  local names = {}
+  for _, a in ipairs(vault.areas(root)) do
+    names[#names + 1] = a.name
+  end
+  local text = index.render_global(tasks, {
+    top = top,
+    areas = names,
+    links = not args.opt["no-links"],
+    link_prefix = args.opt["link-prefix"] --[[@as string|nil]],
+  })
+  ctx.io.out(text)
+  return 0
+end
+
+---Run one command line. `argv[1]` is the subcommand.
+---@param argv string[]
+---@param io? Tasks.CliIO  defaults to stdout/stderr
+---@return integer exit_code
+function M.run(argv, io)
+  io = io or M.stdio
+  local function say(line)
+    io.out(line .. "\n")
+  end
+  local function warn(line)
+    io.err(line .. "\n")
+  end
+
+  -- Global options may come before the command (`--vault=x list`): move them behind it.
+  local lead = 0
+  while
+    argv[lead + 1] and (argv[lead + 1]:match("^%-%-vault=") or argv[lead + 1]:match("^%-%-today="))
+  do
+    lead = lead + 1
+  end
+  if lead > 0 and argv[lead + 1] then
+    local moved = { argv[lead + 1] }
+    for i = lead + 2, #argv do
+      moved[#moved + 1] = argv[i]
+    end
+    for i = 1, lead do
+      moved[#moved + 1] = argv[i]
+    end
+    argv = moved
+  end
+
+  local name = argv[1]
+  if name == nil or name == "help" or name == "--help" or name == "-h" then
+    io.out(USAGE)
+    return name == nil and 2 or 0
+  end
+  local spec, handler = SPECS[name], commands[name]
+  if not spec or not handler then
+    warn("error: unknown command: " .. tostring(name))
+    io.err(USAGE)
+    return 2
+  end
+
+  local rest = {}
+  for i = 2, #argv do
+    rest[#rest + 1] = argv[i]
+  end
+  local args, perr = parse_args(rest, spec)
+  if not args then
+    warn("error: " .. perr)
+    return 2
+  end
+  if args.opt.help then
+    io.out(USAGE)
+    return 0
+  end
+
+  ---@type Tasks.CliCtx
+  local ctx = { io = io, args = args, say = say, warn = warn, eo = engine_opts(args.opt) }
+  local ok, code = pcall(handler, ctx)
+  if not ok then
+    warn("error: " .. tostring(code))
+    return 1
+  end
+  return code
+end
+
+return M

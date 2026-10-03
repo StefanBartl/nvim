@@ -1,0 +1,40 @@
+# TESTS
+
+Headless specs for the parts of this config that are plain Lua (no UI, no
+plugin needed except lib.nvim). Same shape as lib.nvim's own suite: each
+`*_spec.lua` returns `function(H)`, `H` is the shared assertion helper
+(`harness.lua`: `eq` with deep compare, `ok`, `has`, `lacks`, `tmpdir`,
+`write`, `read`, `crlf`).
+
+## Run
+
+From the config root (any directory works, the runner finds its own place):
+
+```sh
+nvim -n -i NONE --headless -u NONE -l TESTS/run.lua                 # everything
+nvim -n -i NONE --headless -u NONE -l TESTS/run.lua tasks_mutate    # specs whose path contains the argument
+```
+
+One line per spec, `CONFIG_TESTS_OK` and exit code 0 when all pass, exit code 1
+when one fails, 2 when lib.nvim cannot be found. lib.nvim is looked up in
+`$LIB_NVIM_DIR`, `$LIB_NVIM_PATH`, `$REPOS_DIR/lib.nvim`, then lazy.nvim's data
+folder (the same order `scripts/tasks.lua` uses).
+
+The specs are not part of the CI workflow yet (it would need a lib.nvim
+checkout); CI lints and format-checks this folder.
+
+## Specs
+
+| File | Covers |
+|---|---|
+| `tasks/tasks_vault_spec.lua` | `tasks.vault`: root resolution order, area listing (skips `_Telemetry`/`TEMPLATES`/`TOOLS`/empty folders, includes the named extras), path builders, area/slug/id validators |
+| `tasks/tasks_model_spec.lua` | `tasks.model`: every field, the summary rules, each validation error code, CRLF files, the enums and date arithmetic, ranking (deterministic for any input order), every filter incl. `stale` |
+| `tasks/tasks_scan_spec.lua` | `tasks.scan`: path order, a broken file does not abort, nested files flagged, missing `tasks/` folder, TTL cache vs `refresh`, Backlog files with/without frontmatter, `find`/`find_done`/`backlog_slugs` |
+| `tasks/tasks_index_spec.lua` | `tasks.index`: the exact bytes of the per-area index and the global overview, escaping and truncation, determinism, write-only-when-different (mtime survives), `check` reasons, CRLF checkout, orphan removal, best-effort `write_all` |
+| `tasks/tasks_mutate_spec.lua` | `tasks.mutate`: template, `slugify`, `new` (collisions incl. Backlog, every rejected input creates nothing), `set` (only named keys change, no-op keeps `updated`, rejected patches, CRLF), `readme_add_row`, `done` (buckets, README, index, idempotence, resume after an interrupted run, rollback after a failing last step, CRLF, missing README) |
+| `tasks/tasks_check_spec.lua` | `tasks.check`: a clean vault has no findings; each finding code is provoked and removed again; area filter, sorting, report format |
+| `tasks/tasks_cli_spec.lua` | `tasks.cli` in-process (every command, exit codes, usage errors, filters) and `scripts/tasks.lua` in a real child Neovim |
+| `tasks/fixture.lua` | helper, not a spec: builds the temporary vault |
+
+Every spec works on a fresh temp directory (`H.tmpdir()`, removed after the
+spec); none touches the real vault.
