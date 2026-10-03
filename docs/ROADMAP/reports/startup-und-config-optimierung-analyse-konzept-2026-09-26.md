@@ -93,12 +93,11 @@ ersten Analyse) ist mit UI noch nicht gemessen.
 - `neotest` und `sandbox.nvim` laden über eigene Auslöser, nicht mehr bei jedem
   Start. Wer ein Plugin von „immer geladen" auf Bedarf umstellt, braucht
   **jedes** Kommando als Auslöser, das es oder seine Dependencies anlegen
-  (`:Neotest` und die `:Test*` von vim-test fehlten zuerst, bei `sandbox.nvim`
-  der Alias `:Sbx`) und muss prüfen, was der Auslöser **beim Start** tut: lazys
-  `event` kennt kein „nach `VimEnter`", ein breiter `ft` (`yaml`) lädt bei der
-  ersten beliebigen Datei dieser Art. `neotest` wartet für eine Testdatei als
-  Argument deshalb auf `VeryLazy`, `sandbox.nvim` löst für Compose-Dateien über
-  den Dateinamen aus.
+  (bei `sandbox.nvim` fehlte zuerst der Alias `:Sbx`) und muss prüfen, was der
+  Auslöser **beim Start** tut: lazys `event` kennt kein „nach `VimEnter`", ein
+  breiter `ft` (`yaml`) lädt bei der ersten beliebigen Datei dieser Art.
+  `sandbox.nvim` löst für Compose-Dateien über den Dateinamen aus. Alles zu
+  `neotest` (Auslöser, Listener, Läufe, Attach): [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
 - `:checkhealth <plugin>` findet ein per Auslöser geladenes Plugin erst nach dem
   Laden (bei `sandbox.nvim`: vorher `:Sandbox engine get`).
 
@@ -137,10 +136,7 @@ aus einer eigenen Session.
    `devcontainer.json`) erst, wenn das Plugin geladen ist. `yaml` als Auslöser
    kostet ≈ 110 ms bei der ersten beliebigen YAML-Datei und ist deshalb raus.
    So lassen oder weitere Dateinamen ergänzen (z. B. `devcontainer.json`)?
-4. **`neotest` von Hand gegenprüfen:** die Auslöser sind automatisiert getestet,
-   nicht bedient. Auffallen würde ein `<leader>nt*`, das beim ersten Druck
-   nichts tut, oder fehlende Statuszeichen in einer Testdatei, deren Name auf
-   keines der Muster in `lua/plugins/neotest.lua` passt.
+4. **`neotest` von Hand gegenprüfen:** ausgelagert, siehe [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md) (Live-Tests).
 5. **Erster langsamer `<leader>`-Druck:** which-key lädt erst auf seinen
    Tasten. Ist `<Space>` die erste Stub-Taste der Sitzung und kommt der Druck
    langsam, löst lazys Stub erst nach `timeoutlen` aus und es erscheint **kein
@@ -149,17 +145,9 @@ aus einer eigenen Session.
    which-key-Spec (≈ 16–27 ms in der Welle, kehrt die dokumentierte
    lib.nvim-Entscheidung „lädt auf dem ersten `<leader>`" um). Option B: lassen
    und den Hänger an der Spec dokumentieren.
-6. **neotests `localhost`-Listener:** Beim Start des Clients öffnet neotest
-   selbst `serverstart("localhost:0")` ohne Zugangsschutz (ohne Option
-   abschaltbar). Das Review hat gezeigt, dass sich ein zweiter nvim ohne
-   Zugangsdaten verbindet und Lua in der Sitzung ausführt. Neotests Hilfsprozess
-   startet hier nicht (`lib.nvim` `rpc_pipe` vererbt `NVIM_LISTEN_ADDRESS` an
-   Kinder), der Listener bleibt also ungenutzt offen. Er war schon vorher offen
-   (erster Besuch eines Test-Buffers). Schließen lässt er sich nur über
-   `lib.nvim` (`rpc_pipe` darf die Variable nicht an Kinder exportieren), und
-   dann startet neotests Hilfsprozess, was 110–140 ms am Start kostet und
-   gemessen gehört. So lassen, `lib.nvim` ändern oder neotests Client-Start auf
-   Abruf (`:Neotest …`) beschränken?
+6. **neotests `localhost`-Listener:** erledigt (2026-10-03): neotest öffnet ihn nicht mehr,
+   Hilfsprozess und Listener sind abgeschaltet, Testläufe laufen unter Windows wieder. Alles in
+   [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
 
 ---
 
@@ -172,25 +160,20 @@ Details, Messreihen und Begründungen im Archiv (Pfad oben).
 | `lib.nvim`, `lsp.nvim`, `dap.nvim`, `my.nvim`, `ui.nvim` | siehe Archiv, Abschnitte 12 und 13 | Phase 1 (PATH-Index, lazy aufgelöste Executables, which-key ohne Zwangs-Load) und Phase 2 (Menü-Prewarm ohne `wkddap`/`gitsuite`) |
 | `language.nvim` | `ad355be`, `f737371` | Session-Wortlisten in einem Zug kompilieren statt ein `:spellgood!` pro Wort (1,2 s pro Start); UTF-8-Prüfung |
 | `nvim-config` | `a6d0f455` | `startup-probe` mit UI (`tui.lua`, `bench.lua`, Sonden `where`/`lazy`/`spawn`), lazy-Checker nur bei Fälligkeit (101 git-Prozesse pro Start) |
-| `nvim-config` | `1e34a249`, `190a896e` | `neotest` und `sandbox.nvim` aus der `VeryLazy`-Welle; Review-Fixes (`:Neotest`, vim-test, Sonde) |
+| `nvim-config` | `1e34a249`, `190a896e` | `sandbox.nvim` aus der `VeryLazy`-Welle; Review-Fixes (`:Neotest`, vim-test, Sonde); zu `neotest`: [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md) |
 | `WKDBooks` | `cb22850` | `PERF-94..97`, Nachtrag zur Checker-Notiz, Tool-Index |
 | `language.nvim` | `bba2adb` | Review-Fixes: Leer- und BOM-Einträge am Rand eines Stapels, kein Scan des Arbeitsverzeichnisses ohne Temp-Verzeichnis, Tests, die jetzt scheitern können |
 | `nvim-config` | `627dff8e` | Review-Fixes `startup-probe`: `where`-Zuordnung, Belegung pro Sekunde, `fs`-Rückgabewerte, Pfade mit `%`/`#`, `bench.lua`-Argumente, Exit-Codes |
-| `nvim-config` | `737a27b3` | Review-Fixes: `:Sbx`-Stub, `sandbox.nvim` ohne `yaml`-Auslöser, `neotest` für Testdatei als Argument erst nach `VeryLazy` |
-| `nvim-config` | `e80d52f6` | Neotest-Doku in `docs/NOTES/ExternPlugins/Bindings` an Code und Lazy-Stubs angepasst |
+| `nvim-config` | `737a27b3` | Review-Fixes: `:Sbx`-Stub, `sandbox.nvim` ohne `yaml`-Auslöser (zu `neotest`: siehe oben) |
 | `language.nvim` | `7b8ee9a` | Zweiter Review: Testfallen je Art und Ende, Slash-Regel abgesichert, README-Zeile |
-| `nvim-config` | `87a29e20` | Zweiter Review: `neotest` startet den Client auch für offene Test-Buffer (Session), Uhr-Härtung des Checkers zurückgenommen (sie schaltete den `git log`-Sturm ein) |
+| `nvim-config` | `87a29e20` | Zweiter Review: Uhr-Härtung des Checkers zurückgenommen (sie schaltete den `git log`-Sturm ein); zu `neotest`: siehe oben |
 | `nvim-config` | `d1087b50` | Zweiter Review: `startup-probe` behält bei fehlenden Modulen den Aufrufer, Fehlergrund im Treiber, Umleitungsrat je Shell |
 
 | `language.nvim` | `7b8ee9a` | (Review der zweiten Runde, ohne Fund) |
-| `nvim-config` | `a28ce217` | Dritter Review: `neotest` normalisiert das Trennzeichen der auslösenden Datei (0 → 4 Signs bei `edit E:/…`), Kommentar zu Reichweite, Listener und „No tests found" |
 | `nvim-config` | `e4849b68` | Dritter Review: `tui.lua` warnt bei offener stdin-Pipe und nennt die Ursachen eines Exit 2 |
 
 Die Reviews dieser Fixes (erst 25 bestätigte Funde aus 45 Agenten, 7 widerlegt;
 dann 8 aus 11 Agenten, 0 widerlegt; zuletzt 4 aus 8 Agenten, 1 widerlegt, keine
 Regression mehr) stehen im Archiv. Nicht umgesetzt: Entscheidung 5 oben (erster
-`<leader>`-Druck), der unauthentifizierte `localhost`-Listener, den neotests
-Client-Start öffnet (Entscheidung 6), und der Auto-Attach, der auch ohne
-laufenden Test „No tests found" bzw. „No running process found" meldet. Aus dem
-Review des `neotest`-Auslösers bleibt ein Zielkonflikt stehen: die
-Event-Muster entsprechen bewusst `core.is_test_file`.
+`<leader>`-Druck). Alles zu `neotest` (Listener, Auto-Attach, Zielkonflikt der Event-Muster):
+[`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).

@@ -63,15 +63,10 @@ return {
               -- project gets its signs when it is visited).
               -- `get_tree_from_args` is neotest-internal, hence the pcall: if it
               -- ever changes, the signs come with the next BufEnter again.
-              -- Two properties of the client start itself, both neotest's own:
-              -- it opens an unauthenticated `serverstart("localhost:0")` listener
-              -- for its parse subprocess (any local process can then run Lua in
-              -- this session; here the subprocess cannot start, because lib.nvim's
-              -- rpc_pipe exports NVIM_LISTEN_ADDRESS to children, so the listener
-              -- stays open unused -- it has always opened on the first visit to a
-              -- test buffer); and for 100+ test files the BufEnter attach can beat
-              -- the discovery and say "No tests found" where it used to say "No
-              -- running process found".
+              -- Known: for 100+ test files the BufEnter attach can beat the
+              -- discovery and say "No tests found" where it used to say "No
+              -- running process found". (neotest's own `serverstart("localhost:0")`
+              -- listener never opens any more: see `config` below.)
               require("nio").run(function()
                 pcall(function()
                   require("neotest").run.get_tree_from_args({ file }, false)
@@ -112,6 +107,12 @@ return {
 
     config = function()
       local neotest = require("neotest")
+
+      -- No listener, no helper process, and test runs that actually run on Windows.
+      -- docs/ROADMAP/handovers/neotest_HANDOVER.md
+      local fixes = require("config.neotest.init.windows_fixes")
+      fixes.disable_parse_subprocess()
+      fixes.fix_plenary_adapter(require("neotest-plenary"))
 
       -- CRITICAL: Use wrapped consumer to prevent initialization race
       local opts = {
