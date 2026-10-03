@@ -83,7 +83,7 @@ beschreibt das schon.
 
 **Ergebnis (2026-10-02, noch nicht entschieden).** Gemessen, bewertet und mit Empfehlung (A, oder D nach
 Test, nicht B) in
-`E:\repos\openinnvim\docs\HANDOVER.md`.
+[`handovers/neotest-listener-und-plenary_HANDOVER.md`](../handovers/neotest-listener-und-plenary_HANDOVER.md).
 Kurz: niemand liest die Variable, openinnvim braucht nur den Pipe-Namen, der Hilfsprozess kostet +75 bis +150 ms
 und hält den Listener offen.
 
