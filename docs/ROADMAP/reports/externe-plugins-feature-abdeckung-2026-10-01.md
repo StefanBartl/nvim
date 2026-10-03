@@ -3,7 +3,7 @@
 Stand 2026-10-01. Zweiter Teil des Roadmap-Punkts „noice.nvim & übrige externe Plugins auf Feature-Abdeckung
 prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? **Nur dokumentieren, keine
 Ersatz-Entscheidung**" (`00_ROADMAP.md`, Konkurrenzanalyse; Aufgabe in `TASKS.md`). Der erste Teil ist
-`noice-feature-abdeckung-2026-10-01.md` (dort auch die Pipeline-Befunde zu `nvim-notify`/`nui.nvim` unter noice).
+`NOICE_ERSATZ/noice-feature-abdeckung-2026-10-01.md` (dort auch die Pipeline-Befunde zu `nvim-notify`/`nui.nvim` unter noice).
 
 Dieser Report entscheidet **nichts**. Nichts wurde entfernt, ersetzt oder umkonfiguriert.
 Er ist die umgekehrte Richtung des Roadmap-Punkts „Feature-Scan" (Zeile 95: fremde Konkurrenz *zu meinen* Plugins):
