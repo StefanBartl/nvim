@@ -2,7 +2,7 @@
 
 Stand: 2026-10-02 (neotest-Teile am 2026-10-03 ausgelagert). Zum Weiterreichen in einen neuen Chat.
 **Alles zu neotest** (Aufgabe 1, Aufgabe 4, "neotest von Hand bedienen", die neotest-Szenarien)
-steht in [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md). Der Stand der
+steht in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`. Der Stand der
 Startup-Arbeit steht in
 [`startup-und-config-optimierung-analyse-konzept-2026-09-26.md`](./startup-und-config-optimierung-analyse-konzept-2026-09-26.md),
 der volle Verlauf samt drei Reviews im Archiv
@@ -42,7 +42,7 @@ der volle Verlauf samt drei Reviews im Archiv
 ## Aufgabe 1: neotest-Listener (Sicherheit)
 
 **Erledigt und ausgelagert (2026-10-03).** Befund, Messungen, Optionen A-D, der Umbau ("Option E":
-kein Listener, kein Hilfsprozess) und die Belege stehen in [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
+kein Listener, kein Hilfsprozess) und die Belege stehen in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.
 
 ---
 
@@ -94,7 +94,7 @@ beschreibt die Prüfung; `:checkhealth sandbox` braucht das geladene Plugin.
 
 **Erledigt und ausgelagert (2026-10-03).** Das Gate (`attach` nur bei laufendem Test, der Client
 startet weiter still) ist eingebaut und im positiven und negativen Fall geprüft; siehe
-[`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md), Abschnitte 4 und 5.
+`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`, Abschnitte 4 und 5.
 
 ---
 
@@ -120,7 +120,7 @@ hier nur die Stichworte:
 - `Keymaps-Collisions.md` (WKDBooks, `wkdbook-myplugins/ALL/`) gegen die
   richtige Reihenfolge prüfen: ein Plugin auf `VeryLazy` überschreibt ein Mapping
   der `mappings`-Phase.
-- `neotest` einmal von Hand bedienen: steht als Live-Tests in [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
+- `neotest` einmal von Hand bedienen: steht als Live-Tests in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.
 - `OHANA` (Neovim 0.11.4) mit `bench.lua 5 tui` neu messen; erst danach dort über
   die `runtimepath`-Neuberechnung entscheiden. Das kann nur der Nutzer.
 
@@ -154,4 +154,4 @@ eine Testdatei, `--clean`).
 - Testanordnungen täuschen leicht: `badd` lädt keinen Buffer, ein Root-Plugin
   wechselt das Arbeitsverzeichnis (Pfade vorher absolut machen),
   `return require(x)` ist ein Tail-Call und löscht Frames.
-- Die `neotest`-Szenarien und ihre Messskripte: [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md) (Abschnitt 3 und Probe-Tool).
+- Die `neotest`-Szenarien und ihre Messskripte: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` (Abschnitt 3 und Probe-Tool).

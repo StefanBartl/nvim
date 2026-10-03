@@ -97,7 +97,7 @@ ersten Analyse) ist mit UI noch nicht gemessen.
   Auslöser **beim Start** tut: lazys `event` kennt kein „nach `VimEnter`", ein
   breiter `ft` (`yaml`) lädt bei der ersten beliebigen Datei dieser Art.
   `sandbox.nvim` löst für Compose-Dateien über den Dateinamen aus. Alles zu
-  `neotest` (Auslöser, Listener, Läufe, Attach): [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
+  `neotest` (Auslöser, Listener, Läufe, Attach): `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.
 - `:checkhealth <plugin>` findet ein per Auslöser geladenes Plugin erst nach dem
   Laden (bei `sandbox.nvim`: vorher `:Sandbox engine get`).
 
@@ -136,7 +136,7 @@ aus einer eigenen Session.
    `devcontainer.json`) erst, wenn das Plugin geladen ist. `yaml` als Auslöser
    kostet ≈ 110 ms bei der ersten beliebigen YAML-Datei und ist deshalb raus.
    So lassen oder weitere Dateinamen ergänzen (z. B. `devcontainer.json`)?
-4. **`neotest` von Hand gegenprüfen:** ausgelagert, siehe [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md) (Live-Tests).
+4. **`neotest` von Hand gegenprüfen:** ausgelagert, siehe `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` (Live-Tests).
 5. **Erster langsamer `<leader>`-Druck:** which-key lädt erst auf seinen
    Tasten. Ist `<Space>` die erste Stub-Taste der Sitzung und kommt der Druck
    langsam, löst lazys Stub erst nach `timeoutlen` aus und es erscheint **kein
@@ -147,7 +147,7 @@ aus einer eigenen Session.
    und den Hänger an der Spec dokumentieren.
 6. **neotests `localhost`-Listener:** erledigt (2026-10-03): neotest öffnet ihn nicht mehr,
    Hilfsprozess und Listener sind abgeschaltet, Testläufe laufen unter Windows wieder. Alles in
-   [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
+   `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.
 
 ---
 
@@ -160,7 +160,7 @@ Details, Messreihen und Begründungen im Archiv (Pfad oben).
 | `lib.nvim`, `lsp.nvim`, `dap.nvim`, `my.nvim`, `ui.nvim` | siehe Archiv, Abschnitte 12 und 13 | Phase 1 (PATH-Index, lazy aufgelöste Executables, which-key ohne Zwangs-Load) und Phase 2 (Menü-Prewarm ohne `wkddap`/`gitsuite`) |
 | `language.nvim` | `ad355be`, `f737371` | Session-Wortlisten in einem Zug kompilieren statt ein `:spellgood!` pro Wort (1,2 s pro Start); UTF-8-Prüfung |
 | `nvim-config` | `a6d0f455` | `startup-probe` mit UI (`tui.lua`, `bench.lua`, Sonden `where`/`lazy`/`spawn`), lazy-Checker nur bei Fälligkeit (101 git-Prozesse pro Start) |
-| `nvim-config` | `1e34a249`, `190a896e` | `sandbox.nvim` aus der `VeryLazy`-Welle; Review-Fixes (`:Neotest`, vim-test, Sonde); zu `neotest`: [`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md) |
+| `nvim-config` | `1e34a249`, `190a896e` | `sandbox.nvim` aus der `VeryLazy`-Welle; Review-Fixes (`:Neotest`, vim-test, Sonde); zu `neotest`: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` |
 | `WKDBooks` | `cb22850` | `PERF-94..97`, Nachtrag zur Checker-Notiz, Tool-Index |
 | `language.nvim` | `bba2adb` | Review-Fixes: Leer- und BOM-Einträge am Rand eines Stapels, kein Scan des Arbeitsverzeichnisses ohne Temp-Verzeichnis, Tests, die jetzt scheitern können |
 | `nvim-config` | `627dff8e` | Review-Fixes `startup-probe`: `where`-Zuordnung, Belegung pro Sekunde, `fs`-Rückgabewerte, Pfade mit `%`/`#`, `bench.lua`-Argumente, Exit-Codes |
@@ -176,4 +176,4 @@ Die Reviews dieser Fixes (erst 25 bestätigte Funde aus 45 Agenten, 7 widerlegt;
 dann 8 aus 11 Agenten, 0 widerlegt; zuletzt 4 aus 8 Agenten, 1 widerlegt, keine
 Regression mehr) stehen im Archiv. Nicht umgesetzt: Entscheidung 5 oben (erster
 `<leader>`-Druck). Alles zu `neotest` (Listener, Auto-Attach, Zielkonflikt der Event-Muster):
-[`../handovers/neotest_HANDOVER.md`](../handovers/neotest_HANDOVER.md).
+`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.

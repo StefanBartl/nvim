@@ -109,7 +109,7 @@ return {
       local neotest = require("neotest")
 
       -- No listener, no helper process, and test runs that actually run on Windows.
-      -- docs/ROADMAP/handovers/neotest_HANDOVER.md
+      -- WKDBooks nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md
       local fixes = require("config.neotest.init.windows_fixes")
       fixes.disable_parse_subprocess()
       fixes.fix_plenary_adapter(require("neotest-plenary"))
