@@ -1,11 +1,15 @@
 ---@module 'bindings.usrcmds.plugin_repos'
 ---@brief Clone, remove, fetch, pull, update, reclone, list or switch the
----source mode of the personal plugin list — plus an interactive picker and
----a dashboard.
+---source mode of the personal plugin list — plus an interactive picker, a
+---dashboard and the wkdbook task commands.
 ---@description
 --- Registers a single `:MyPlugins {clone|remove|fetch|pull|update|reclone|
---- dashboard|mode|list|picker} [args]` command via `lib.nvim.bindings.usercmd.composer`
---- (replaces the former flat `:MyPluginsClone` / `:MyPluginsRemove`).
+--- dashboard|mode|list|picker|tasks|task|open} [args]` command via
+--- `lib.nvim.bindings.usercmd.composer` (replaces the former flat
+--- `:MyPluginsClone` / `:MyPluginsRemove`). The `tasks`, `task` and `open`
+--- routes come from `tasks_routes.lua` (handlers: `tasks_cmd.lua`, engine:
+--- `lua/tasks/`) and are not limited to the plugin list: they work on the
+--- areas of the wkdbook vault.
 ---
 --- Every subcommand except `dashboard` (which just opens gitsuite.nvim's
 --- own `:Git dashboard`) operates only on the repos `plugins.personal.core.list`
@@ -1022,9 +1026,22 @@ function M.enable()
     end,
   })
 
+  -- The task routes need `lib.nvim.markdown.frontmatter`. They are loaded
+  -- guarded so that an older lib.nvim checkout (the other machine, before its
+  -- next `:MyPlugins update`) loses only these routes, not all of `:MyPlugins`.
+  local ok_tasks, tasks_routes = pcall(require, "bindings.usrcmds.plugin_repos.tasks_routes")
+  if ok_tasks then
+    tasks_routes.register_types()
+  else
+    notify.warn(
+      ":MyPlugins tasks/task/open are unavailable (update lib.nvim): " .. tostring(tasks_routes)
+    )
+  end
+
   composer.verb("MyPlugins", {
-    desc = "Manage the personal plugin checkouts and their source mode",
-    routes = {
+    desc = "Manage the personal plugin checkouts, their source mode and the wkdbook tasks",
+    -- The task routes (tasks / task / open) are declared in tasks_routes.lua.
+    routes = vim.list_extend({
       {
         path = { "clone" },
         args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
@@ -1139,7 +1156,7 @@ function M.enable()
           list_all(ctx.args.dir)
         end,
       },
-    },
+    }, ok_tasks and tasks_routes.routes() or {}),
   })
 
   -- Flat shorthand for the subcommand used often enough to want a single

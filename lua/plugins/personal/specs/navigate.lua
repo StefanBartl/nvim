@@ -672,6 +672,21 @@ return {
             exclude = { "ALL", "TEMPLATES", "TOOLS", "_Telemetry" },
             keys = { files = "<leader>pbf", grep = "<leader>pbg", smart = "<leader>pbs" },
           },
+          {
+            -- The same vault, named for the task system: `:Pickers vault
+            -- files|grep|smart` (pick an area, then search it) is the plain-text
+            -- search over every task, roadmap and backlog file -- Phase 0 of the
+            -- task concept (wkdbook-myplugins/ALL/Task-System-Konzept.md).
+            -- `:MyPlugins open <area> <tasks|roadmap|backlog|...>` does NOT go
+            -- through this collection: it dispatches one explicit folder as the
+            -- search root (a collection can only offer "pick an area").
+            -- No `keys` on purpose: `:Pickers vault` and `:MyPlugins open` are
+            -- the entry points. exclude hides the non-area siblings by name.
+            name = "vault",
+            dir = repos .. "/WKDBooks/Development/wkdbook-myplugins",
+            prefix = "",
+            exclude = { "ALL", "TEMPLATES", "TOOLS", "_Telemetry" },
+          },
         },
 
         -- Named dir aliases for the `dir` navigation picker. Additive: merged over

@@ -26,7 +26,20 @@ those names no longer exist.
 :MyPlugins mode [auto|dir|remote|disabled]
 :MyPlugins list [dir]
 :MyPlugins picker [dir]
+
+:MyPlugins tasks [<area>|all] [--status= --prio= --kind= --tag= --stale=<days> --blocked] [--to= --format=]
+:MyPlugins tasks index [<area>|--all] [--check]
+:MyPlugins task new <area> [title...] [kind= prio= effort= tags= status=]
+:MyPlugins task set <id> key=value ...
+:MyPlugins task done <id> [done_in= date=] [--yes]
+:MyPlugins task template [--to=]
+:MyPlugins task open <id>
+:MyPlugins open <area> [tasks|roadmap|backlog|handover|notes|all] [--action=] [--list] [--to=]
 ```
+
+The last eight are the **task commands** (see
+[Task commands](#task-commands-tasks-task-open)): they work on the areas of the
+wkdbook vault, not on `plugins.personal.core.list`.
 
 `<Tab>` completes the subcommand, `dir` (real directories plus a `$REPOS_DIR`
 keyword when that env var is set), `--only`'s value (every name currently in
@@ -242,6 +255,144 @@ verbs the entire interface:
 That is why there is deliberately no sort, filter or refresh command of its
 own, and no git action bound to a row.
 
+## Task commands (`tasks`, `task`, `open`)
+
+The commands for the open work of the wkdbook vault
+(`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`): one Markdown file per task
+in `<area>/ROADMAP/tasks/`, a generated overview `<area>/ROADMAP/TASKS.md`, finished
+tasks in `<area>/Backlog/`. Format, rules R1-R12 and reasoning:
+`wkdbook-myplugins/ALL/Task-System-Konzept.md`. All rules live in the engine
+[`lua/tasks/`](../../../tasks/README.md); this layer only parses the command line,
+asks, notifies and opens windows. The same engine runs without an editor as
+`nvim --headless -u NONE -l scripts/tasks.lua <command>` (rule R12).
+
+The grammar is **verb-first** (`:MyPlugins tasks cascade.nvim`, not
+`:MyPlugins cascade.nvim tasks`): the composer routes over literal path segments and
+has no dynamic first segment. An *area* is a folder of the vault holding `ROADMAP/` or
+`Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim` -- which is
+why areas are read from the vault (argument type `TASK_AREA`) and not taken from the
+plugin list. `<Tab>` completes areas, task ids (`<area>/<slug>` of the *open* tasks,
+type `TASK_ID`), the filter and `--to=` values and, for `task set`, every settable `key=`.
+
+All mutating commands (`task new`, `task set`, `task done`, `tasks index`) regenerate
+the area's `ROADMAP/TASKS.md` through the engine; it is never written by hand (rule
+R7). The global overview `ALL/TASKS.md` is **never written** by any command:
+`tasks all --to=file:<path>` produces it on demand (decision E2, not committed).
+
+### `:MyPlugins tasks [<area>|all] [filters] [--to=] [--format=]`
+
+Lists the open tasks, sorted by status (`doing`, `decision`, `blocked`, `open`,
+`parked`), then prio, then area and slug. No area, or `all`, means every area. (The
+lowercase word `all` is the keyword; `ALL` with capitals is the area of that name.)
+
+| Flag | Meaning |
+|---|---|
+| `--status=a,b` | one or more of `doing decision blocked open parked` |
+| `--prio=1,2` / `--prio=<=2` | exact prios, or "at most" |
+| `--kind=a,b` | `feature task bug idea research` |
+| `--tag=a,b` | any of these tags |
+| `--stale=<days>` | not updated for at least that many days (no date counts as stale) |
+| `--blocked` | status `blocked`, or a non-empty `blocked_by` |
+| `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo` |
+| `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path; a `file:` target ending in `.csv` implies `csv` |
+
+```vim
+:MyPlugins tasks                                    " everything open, in a scratch buffer
+:MyPlugins tasks lib.nvim --status=doing,decision
+:MyPlugins tasks --status=decision --to=qf          " what is waiting for me, jump into the files
+:MyPlugins tasks --stale=60 --to=clipboard
+:MyPlugins tasks all --to=file:$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/TASKS.md
+```
+
+The scratch buffer is plain Markdown (yank it, `:sort` it, search it) with a heading and
+the active filter above the table. `qf` puts one entry per task into the quickfix list,
+each jumping to the task file. Rendering and delivery are `lib.nvim.harvest` (`render`,
+`emit`) and `lib.nvim.ui.list`. Nothing is delivered when no task matches; the command
+says so instead.
+
+*Dashboard seam.* Without `--to=` and `--format=` the command calls
+`require("bindings.usrcmds.plugin_repos.tasks_cmd").dashboard(view)` when that function
+is set (`view = { tasks, area, filter, root }`), instead of opening the scratch buffer.
+It is `nil` today; the dashboard step assigns it.
+
+### `:MyPlugins tasks index [<area>] [--all] [--check]`
+
+Without `--check`: (re)writes `ROADMAP/TASKS.md` of the area (all areas without an
+argument or with `--all`), only where the content changed, and removes a stale one when
+no task is open any more. With `--check`: writes nothing and runs the rule check of the
+engine -- missing or invalid frontmatter, unknown status/kind/prio/effort, dangling
+`blocked_by`, a stale or missing `TASKS.md`, a `done` task in `ROADMAP/`, an open one in
+`Backlog/`, ... -- and reports the findings (a notification, or a scratch buffer when
+there are more than ten). Errors are `ERROR` level, warnings `WARN`.
+
+### `:MyPlugins task new <area> [title...] [kind= prio= effort= tags= status=]`
+
+Creates `<area>/ROADMAP/tasks/<slug>.md` (slug from the title; a taken slug gets `-2`,
+`-3`; a slug used in `Backlog/` counts as taken), regenerates the index and opens the
+file. The words after the area are the title; one surrounding pair of `"` is dropped.
+
+```vim
+:MyPlugins task new lib.nvim Notify: unify the output channels kind=feature prio=2 tags=ui
+:MyPlugins task new cascade.nvim "Cycle: count support" effort=S
+:MyPlugins task new lib.nvim                         " asks: title, kind, prio, effort
+```
+
+Without a title it asks for it -- through `ui.kit.form` (ui.nvim) when installed, else a
+chain of `vim.ui.input` prompts. Fields already given as `key=value` are not asked again;
+`<Esc>` on an optional field leaves it out, `<Esc>` on the title cancels. Tags may not
+contain `, [ ] " ' #` (they sit in an inline list).
+
+### `:MyPlugins task set <id> key=value ...`
+
+Changes frontmatter of an *open* task and sets `updated` -- but only when something really
+changed (an identical value rewrites nothing). Settable: `title status kind prio effort tags
+summary blocked_by refs done_in created`. A value may contain spaces
+(`title=Fix the thing status=doing`: a word that does not start with a known `key=`
+continues the value before it); an empty value removes the key (`kind=`). `status=done` is
+refused: finishing moves the file, see `task done`. A buffer showing the file is reloaded
+when it has no unsaved changes.
+
+### `:MyPlugins task done <id> [done_in=...] [date=YYYY-MM-DD] [--yes]`
+
+Rule R6, after a confirmation (`--yes` skips it): `status: done`, `done_in`; the file moves
+to `Backlog/FEATURES/` (`feature`, `idea`, `research`) or `Backlog/TASKS/` (`task`, `bug`, no
+kind) as `YYYY-MM-DD_<slug>.md`; its row goes on top of that section of `Backlog/README.md`;
+the index is regenerated. On any failure the files involved are restored byte for byte.
+Windows showing the open file follow it to the new path (an unchanged buffer is replaced,
+one with unsaved changes is left alone and reported). Running it for an already finished
+task says so and changes nothing.
+
+### `:MyPlugins task template [--to=clipboard|buffer|file:<path>]`
+
+The task file template (every field, visible placeholders) into the `+` register (default)
+plus a notification. Without a working clipboard provider it opens in a buffer instead and
+says so.
+
+### `:MyPlugins task open <id>`
+
+Opens the file of an open task, or its finished copy in `Backlog/`.
+
+### `:MyPlugins open <area> [folder] [--action=files|grep|smart] [--list] [--to=]`
+
+A picker over the files of **one folder of one area**. `folder` is `tasks`
+(`ROADMAP/tasks`), `roadmap` (`ROADMAP`), `backlog` (`Backlog`), `handover` (`handovers`),
+`notes` (`NOTES`) or `all` (the whole area, the default). A folder the area does not have is
+reported and no picker opens.
+
+It calls `pickers.command.dispatch(action, { roots = { <folder> }, prompt = ... }, engine)`
+of [pickers.nvim](https://github.com/StefanBartl/pickers.nvim) -- the entry every `:Pickers`
+action goes through, so `:PickersRepeat` replays it and the configured engine (snacks here)
+is used; `--action=grep|smart` searches file contents. `--list` (or `--to=`) delivers the
+list of files, relative to the folder, instead of opening a picker.
+
+**Limitation and fallback.** A pickers.nvim *collection* cannot express "one area, one
+subfolder" (a collection offers "pick one subfolder of this directory"), so `open` does not
+use one. Without pickers.nvim it falls back to a plain `vim.ui.select` over the folder's
+`*.md` files: no content search, and `--action=grep|smart` is answered with that hint.
+Separately, `lua/plugins/personal/specs/navigate.lua` has a collection `vault`
+(`:Pickers vault files|grep|smart`: pick an area, then search it) for ad-hoc full-text
+search over the vault, the same shape as `plugins_book`.
+
 ## Safety model — why this never scans a directory
 
 `dir` is only ever a *root to look under for named entries* — every
@@ -296,8 +447,24 @@ uncommitted work permanently. Sticking to the named list is what makes
   (`pending[name]`) closed over by the picker's `format`/action callbacks,
   not in the picker's built-in multi-select machinery — cycling through six
   possible states per item doesn't map onto a binary "selected" flag.
+- The task commands are split three ways: `tasks_routes.lua` (the route table and the
+  argument types `TASK_AREA` / `TASK_ID`, both reading the vault on every call and
+  failing soft), `tasks_cmd.lua` (the handlers: prompts, notifications, opening files, the
+  dashboard seam) and `tasks_view.lua` (render a list as Markdown/CSV, deliver it).
+  `init.lua` loads `tasks_routes` guarded with `pcall`: the routes need
+  `lib.nvim.markdown.frontmatter`, so a machine whose lib.nvim is older loses only
+  `tasks`/`task`/`open` (with a warning), not the whole command.
+- `TASK_AREA` / `TASK_ID` accept only the exact spelling from the vault listing: on a
+  case-insensitive file system `all` would otherwise be taken for the folder `ALL`.
+- `task set` re-reads the raw command line (`ctx.raw.fargs`) instead of the composer's `kv`
+  values, because the composer splits at whitespace and a title has spaces; the declared
+  `kv` entries exist for completion and the usage text.
 
 ## See also
+
+- [`lua/tasks/README.md`](../../../tasks/README.md) — the engine behind `tasks`/`task`/`open`;
+  `wkdbook-myplugins/ALL/Task-System-Konzept.md` — the concept and the rules R1-R12
+- [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
 
 - [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/core/source.lua`](../../../plugins/personal/core/source.lua) — the `OVERRIDE` switch and per-repo mode table

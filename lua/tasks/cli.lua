@@ -135,15 +135,7 @@ local function parse_args(argv, spec)
   return { pos = pos, opt = opt }, nil
 end
 
----@param s string
----@return string[]
-local function split_commas(s)
-  local out = {}
-  for item in s:gmatch("[^,]+") do
-    out[#out + 1] = (item:gsub("^%s+", ""):gsub("%s+$", ""))
-  end
-  return out
-end
+local split_commas = model.split_commas
 
 ---@param value string
 ---@param what string
@@ -156,61 +148,21 @@ local function to_int(value, what)
   return tonumber(value), nil
 end
 
----Turn the filter options into a `Tasks.Filter`.
+---Turn the filter options into a `Tasks.Filter` (the parsing itself is shared
+---with the editor commands: `model.filter_from_options`).
 ---@param opt table<string, string|boolean>
 ---@return Tasks.Filter|nil filter
 ---@return string|nil err
 local function filter_from(opt)
-  ---@type Tasks.Filter
-  local f = {
+  return model.filter_from_options({
+    status = opt.status --[[@as string|nil]],
+    prio = opt.prio --[[@as string|nil]],
+    kind = opt.kind --[[@as string|nil]],
+    tag = opt.tag --[[@as string|nil]],
+    stale = opt.stale --[[@as string|nil]],
+    blocked = opt.blocked == true,
     today = opt.today --[[@as string|nil]],
-  }
-  if opt.status then
-    f.status = split_commas(opt.status --[[@as string]])
-    for _, s in ipairs(f.status) do
-      if not model.is_status(s) then
-        return nil, "unknown status in --status: " .. s
-      end
-    end
-  end
-  if opt.prio then
-    local raw = opt.prio --[[@as string]]
-    local max = raw:match("^<=(%d)$")
-    if max then
-      f.prio_max = tonumber(max)
-    else
-      f.prio = {}
-      for _, p in ipairs(split_commas(raw)) do
-        local n = model.to_prio(p)
-        if not n then
-          return nil, "--prio must be 1, 2, 3 (comma list) or <=N, got " .. raw
-        end
-        f.prio[#f.prio + 1] = n
-      end
-    end
-  end
-  if opt.kind then
-    f.kind = split_commas(opt.kind --[[@as string]])
-    for _, k in ipairs(f.kind) do
-      if not model.is_kind(k) then
-        return nil, "unknown kind in --kind: " .. k
-      end
-    end
-  end
-  if opt.tag then
-    f.tag = split_commas(opt.tag --[[@as string]])
-  end
-  if opt.stale then
-    local days, err = to_int(opt.stale --[[@as string]], "--stale")
-    if not days then
-      return nil, err
-    end
-    f.stale = days
-  end
-  if opt.blocked then
-    f.blocked = true
-  end
-  return f, nil
+  })
 end
 
 ---@param opt table<string, string|boolean>

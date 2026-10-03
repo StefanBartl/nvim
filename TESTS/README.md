@@ -34,6 +34,7 @@ checkout); CI lints and format-checks this folder.
 | `tasks/tasks_mutate_spec.lua` | `tasks.mutate`: template, `slugify`, `new` (collisions incl. Backlog, every rejected input creates nothing), `set` (only named keys change, no-op keeps `updated`, rejected patches, CRLF), `readme_add_row`, `done` (buckets, README, index, idempotence, resume after an interrupted run, rollback after a failing last step, CRLF, missing README) |
 | `tasks/tasks_check_spec.lua` | `tasks.check`: a clean vault has no findings; each finding code is provoked and removed again; area filter, sorting, report format |
 | `tasks/tasks_cli_spec.lua` | `tasks.cli` in-process (every command, exit codes, usage errors, filters) and `scripts/tasks.lua` in a real child Neovim |
+| `tasks/tasks_routes_spec.lua` | the `:MyPlugins tasks/task/open` layer (`plugin_repos/tasks_*.lua`) driven through the real composer as a test command: every route, filters, the `--to=` targets (file, csv, quickfix, buffer, dashboard hook), `tasks index [--check]`, `task new` (incl. the missing-title prompt chain), `set` (values with spaces, removal, refusals), `done` (confirmation, buffer follows the file), template, `open` (pickers.nvim dispatch stubbed, fallback), and `<Tab>` completion |
 | `tasks/fixture.lua` | helper, not a spec: builds the temporary vault |
 
 Every spec works on a fresh temp directory (`H.tmpdir()`, removed after the

@@ -708,4 +708,9 @@ return function(H)
 
   -- no checkpoint directory is left behind after successful runs
   ok(not H.exists(cpdir) or count_entries(cpdir) == 0, "checkpoints are discarded")
+
+  -- the keys `set` accepts are exported for front ends (completion, docs)
+  eq(mutate.SETTABLE[1], "title")
+  ok(vim.tbl_contains(mutate.SETTABLE, "done_in"), "done_in is settable")
+  ok(not vim.tbl_contains(mutate.SETTABLE, "updated"), "updated is the tool's, never settable")
 end

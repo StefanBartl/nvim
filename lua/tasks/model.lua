@@ -494,6 +494,79 @@ local function is_stale(task, today, days)
   return age == nil or age >= days
 end
 
+---Split a comma list (`doing, decision`) into trimmed, non-empty items.
+---@param s string
+---@return string[]
+function M.split_commas(s)
+  local out = {}
+  for item in s:gmatch("[^,]+") do
+    local t = trim(item)
+    if t ~= "" then
+      out[#out + 1] = t
+    end
+  end
+  return out
+end
+
+---Turn the textual filter options of a front end (`--status=a,b`, `--prio=<=2`,
+---`--kind`, `--tag`, `--stale=<days>`, `--blocked`) into a `Tasks.Filter`.
+---Shared by the headless CLI and the editor commands so both read the same
+---words the same way. Unknown words are an error, never silently ignored.
+---`stale` may be a number or a digit string; `today` is passed through.
+---@param opt { status?: string, prio?: string|integer, kind?: string, tag?: string, stale?: string|integer, blocked?: boolean, today?: string }
+---@return Tasks.Filter|nil filter
+---@return string|nil err
+function M.filter_from_options(opt)
+  ---@type Tasks.Filter
+  local f = { today = opt.today }
+  if opt.status then
+    f.status = M.split_commas(opt.status)
+    for _, s in ipairs(f.status) do
+      if not M.is_status(s) then
+        return nil, "unknown status in --status: " .. s
+      end
+    end
+  end
+  if opt.prio ~= nil then
+    local raw = tostring(opt.prio)
+    local max = raw:match("^<=(%d)$")
+    if max then
+      f.prio_max = tonumber(max)
+    else
+      f.prio = {}
+      for _, p in ipairs(M.split_commas(raw)) do
+        local n = M.to_prio(p)
+        if not n then
+          return nil, "--prio must be 1, 2, 3 (comma list) or <=N, got " .. raw
+        end
+        f.prio[#f.prio + 1] = n
+      end
+    end
+  end
+  if opt.kind then
+    f.kind = M.split_commas(opt.kind)
+    for _, k in ipairs(f.kind) do
+      if not M.is_kind(k) then
+        return nil, "unknown kind in --kind: " .. k
+      end
+    end
+  end
+  if opt.tag then
+    f.tag = M.split_commas(opt.tag)
+  end
+  if opt.stale ~= nil then
+    local raw = tostring(opt.stale)
+    if not raw:match("^%d+$") then
+      return nil, ("--stale must be a whole number, got '%s'"):format(raw)
+    end
+    f.stale = tonumber(raw)
+  end
+  if opt.blocked then
+    f.blocked = true
+  end
+  return f, nil
+end
+
 ---Keep the tasks matching every given criterion. Does not reorder.
 ---@param tasks Tasks.Task[]
 ---@param f? Tasks.Filter
