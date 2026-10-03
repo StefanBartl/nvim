@@ -56,6 +56,24 @@ local function is_test_file()
   return false
 end
 
+--- Is any test in this buffer running right now (so `run.attach` has something to attach to)?
+---@param neotest table  the neotest module
+---@param bufnr integer
+---@return boolean
+function M.has_running(neotest, bufnr)
+  local running = false
+  pcall(function()
+    for _, id in ipairs(neotest.state.adapter_ids() or {}) do
+      local counts = neotest.state.status_counts(id, { buffer = bufnr })
+      if counts and (counts.running or 0) > 0 then
+        running = true
+        return
+      end
+    end
+  end)
+  return running
+end
+
 --- Setup autocommands for test file detection
 local function setup_autocommands()
   local aug = Autocmd.group("NeotestCore", true)
@@ -63,11 +81,27 @@ local function setup_autocommands()
   if config.auto_attach_on_test_file then
     Autocmd.create({ "BufEnter", "BufNewFile" }, function()
       if is_test_file() then
+        -- The buffer and its file are captured now: the scheduled callback may run
+        -- after the user has moved on.
+        local bufnr = vim.api.nvim_get_current_buf()
+        local file = vim.api.nvim_buf_get_name(bufnr)
         vim.schedule(function()
           local ok, neotest = pcall(require, "neotest")
-          if ok then
-            pcall(neotest.run.attach)
+          if not ok then
+            return
           end
+          require("nio").run(function()
+            -- Asking for the file's tree starts neotest's client silently: that is what
+            -- discovers the tests and places the status signs. `run.attach` does the same
+            -- but always reports ("No running process found" / "No tests found") when
+            -- nothing is running, which was every visit to a test buffer.
+            -- neotest's own separator, as in plugins/neotest.lua.
+            local native = file:gsub("/", package.config:sub(1, 1))
+            pcall(neotest.run.get_tree_from_args, { native }, false)
+            if M.has_running(neotest, bufnr) then
+              pcall(neotest.run.attach)
+            end
+          end)
         end)
       end
     end, {
