@@ -48,9 +48,47 @@ function M.fix_plenary_adapter(adapter)
     if type(spec) ~= "table" or type(spec.command) ~= "table" then
       return spec
     end
+    local ctx = type(spec.context) == "table" and spec.context or {}
+    -- Only the two path values inside the `_run_tests` argument are rewritten, and each is
+    -- re-escaped for the single-quoted Lua string (`'` -> `\'`, what the adapter does for the
+    -- test file). A blanket `\` -> `/` over the argument would also turn that escape into
+    -- `/'`, which ends the string early for a path containing an apostrophe.
+    -- On other systems a backslash is a legal file name character: leave it alone.
+    local windows = package.config:sub(1, 1) == "\\"
+    local function slashed(p)
+      if windows then
+        p = p:gsub("\\", "/")
+      end
+      return (p:gsub("'", "\\'"))
+    end
+    local function original(p)
+      return (p:gsub("'", "\\'"))
+    end
+    local function replace_plain(s, old, new)
+      local from, to = s:find(old, 1, true)
+      if not from then
+        return s
+      end
+      return s:sub(1, from - 1) .. new .. s:sub(to + 1)
+    end
     for i, part in ipairs(spec.command) do
       if type(part) == "string" and part:find("^lua _run_tests%(") then
-        spec.command[i] = (part:gsub("\\", "/"))
+        if type(ctx.results_path) == "string" then
+          -- The adapter splices the temp path unescaped.
+          part = replace_plain(
+            part,
+            "results = '" .. ctx.results_path .. "'",
+            "results = '" .. slashed(ctx.results_path) .. "'"
+          )
+        end
+        if type(ctx.file) == "string" then
+          part = replace_plain(
+            part,
+            "file = '" .. original(ctx.file) .. "'",
+            "file = '" .. slashed(ctx.file) .. "'"
+          )
+        end
+        spec.command[i] = part
       end
     end
     spec.env = vim.tbl_extend("force", spec.env or {}, { NVIM_LISTEN_ADDRESS = "" })
