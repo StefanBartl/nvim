@@ -1087,8 +1087,11 @@ return {
       progress_style = "statusline",
       -- ollama host, handed to ai.nvim per request. Equals the default.
       ollama_host = "http://localhost:11434",
-      -- Model the ollama backend uses. Default: "llava".
-      ollama_model = "qwen2.5-coder:7b",
+      -- Model the ollama backend uses. It must be a vision model (name matching
+      -- llava/bakllava/moondream/vision): the backend only rasterizes pages for
+      -- those, and ollama sits behind pdftotext in the chain, so it mostly
+      -- runs on scans. Equals the default, set explicitly.
+      ollama_model = "llava",
       -- Opt-in BufReadCmd for *.pdf: `:e file.pdf` opens the mode picker.
       -- auto_open_on_read = false,
       -- One-off popup listing the CLI tools the plugin wants, on the first
