@@ -435,8 +435,8 @@ return {
       -- belongs to the one listed first. The default sets are disjoint; a
       -- redefined set or `order` replaces its default entirely.
       -- checkbox = {
-      --   -- Documented as "set `:Emojis toggle` uses with no argument", but no
-      --   -- code path reads it today: every set is always searched.
+      --   -- Set `:Emojis toggle` uses with no argument; "" = search every set.
+      --   -- add/remove and `cascade_groups()` ignore it.
       --   default_set = "",
       --   sets = {
       --     checkbox = { "🔲", "✅" },
