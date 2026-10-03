@@ -12,7 +12,7 @@
 ---  - `list` (`tasks`), `index`, `task_new`, `task_set`, `task_done`,
 ---    `task_template`, `task_open`, `open_area` (`open`)
 ---  - `parse_assignments`: `key=value` tokens whose values may contain spaces
----  - `M.dashboard`: the single seam the dashboard step fills in
+---  - `M.dashboard`: the seam to the interactive dashboard (`tasks_dash`)
 ---
 --- Not its job: the route table and the argument types (`tasks_routes`), the
 --- rendering (`tasks_view`), any rule about tasks (the engine).
@@ -35,10 +35,12 @@ local M = {}
 
 local is_windows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
 
----Dashboard seam. The dashboard step assigns a function here; `:MyPlugins
----tasks` calls it instead of opening the scratch buffer when neither `--to=`
----nor `--format=` was given. It receives the filtered, sorted open tasks.
----@type (fun(view: Plugin_repos.TasksView): any)|nil
+---Dashboard seam. `:MyPlugins tasks` calls it instead of delivering a table
+---when neither `--to=` nor `--format=` was given. It receives the filtered,
+---sorted open tasks. `nil` (the default) means the interactive dashboard
+---(`tasks_dash`); assign a function to replace it, or `false` for the old
+---behaviour, a scratch buffer.
+---@type (fun(view: Plugin_repos.TasksView): any)|false|nil
 M.dashboard = nil
 
 ---@class Plugin_repos.TasksView
@@ -141,6 +143,8 @@ local function refresh_buffers(path)
     end
   end
 end
+
+M.refresh_buffers = refresh_buffers
 
 ---Move windows showing `from` to `to` after a task file was moved, and drop
 ---the old buffer, so no buffer is left on a dead path (what `:File move` of
@@ -254,9 +258,17 @@ function M.list(ctx)
     )
   end
 
-  if flags.to == nil and flags.format == nil and M.dashboard then
-    M.dashboard({ tasks = shown, area = area, filter = filter, root = root })
-    return
+  if flags.to == nil and flags.format == nil then
+    local dash = M.dashboard
+    if dash == nil then
+      dash = function(v)
+        return require("bindings.usrcmds.plugin_repos.tasks_dash").open(v)
+      end
+    end
+    if dash then
+      dash({ tasks = shown, area = area, filter = filter, root = root })
+      return
+    end
   end
   if #shown == 0 then
     notify.info("no open task matches")
