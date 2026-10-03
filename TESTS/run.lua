@@ -51,6 +51,7 @@ local H = dofile(tests_dir .. "/harness.lua")
 
 local specs = {
   "tasks/tasks_vault_spec.lua",
+  "tasks/tasks_fsio_spec.lua",
   "tasks/tasks_model_spec.lua",
   "tasks/tasks_scan_spec.lua",
   "tasks/tasks_index_spec.lua",
