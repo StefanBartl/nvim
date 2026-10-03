@@ -16,11 +16,74 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 
 ## Table of content
 
+  - [Stand openinnvim (2026-10-03, maßgeblich)](#stand-openinnvim-2026-10-03-maßgeblich)
   - [Kurzfassung](#kurzfassung)
   - [Wo liegt was](#wo-liegt-was)
   - [Unterbrochene Review-Runde (2026-10-03)](#unterbrochene-review-runde-2026-10-03)
   - [Offen und Nachfrage](#offen-und-nachfrage)
   - [Commits dieses Chats](#commits-dieses-chats)
+
+---
+
+## Stand openinnvim (2026-10-03, maßgeblich)
+
+**Dieser Abschnitt gilt vor allem, was weiter unten noch die VBS + PowerShell-Kette beschreibt.**
+
+**Gemacht**
+
+- openinnvim ist jetzt **ein kompiliertes Programm** `OpenInNvim.exe` (C# 5 / .NET Framework, gebaut
+  mit dem `csc.exe` von Windows über `build.ps1`). Es bedient beide Menüeinträge
+  (`OpenInNvim.exe current "%1"` / `new "%1"`). Quelltext in `E:\repos\openinnvim\src\`.
+- Paket 1 (`b2f8b90`): Kern für `current` — rohe Kommandozeile, `open-in-nvim.ini`, Pipe-Suche mit
+  Vertrauensprüfung des Pipe-Besitzers (nvim.exe, gleiche Sitzung, gleicher Benutzer), vollständiger
+  msgpack-Decoder, RPC über Pipe und TCP, `nvim_get_mode`-Vorprüfung, Öffnen per `bufadd` statt
+  Ex-Dateiargument. Gemessen 53 ms je Klick statt 540 ms (altes `.ps1`), Maschine STEVESPC.
+- Paket 2 (`9db2279`): neue Instanz (WezTerm, Windows Terminal, Konsole; kein `cmd.exe`), Chooser
+  (`INSTANCE_PICK = ask`), Fokus (`FOCUS_TERMINAL`).
+- Paket 3 (`5dede04`): `install.ps1` baut die exe, schreibt ini und die 6 HKCU-Einträge mit absolutem
+  Pfad; `uninstall.ps1` nach Manifest; `register-nvim-default-app.ps1` zeigt auf die exe.
+  **Entfernt:** beide `.vbs`, `open-in-nvim.ps1`, `open-in-nvim-current.ps1`, `open-in-nvim.lib.ps1`,
+  `open-in-nvim.config.ps1`, `verify.ps1`, TinyLauncher (`Program.cs`, `.csproj`, `deploy-…ps1`),
+  die alte Testsuite.
+- Tests: `tests\run-tests.ps1` (Windows PowerShell 5.1), 250 Prüfungen grün, nur gegen eigene
+  Wegwerf-Instanzen.
+- Paket 4: Repo-Docs auf den neuen Stand gebracht, `docs/ROADMAP.md` neu (Setup-Dateien als
+  GitHub-Release für Windows, Linux, macOS mit Aufwandsschätzung: Windows ca. 2 Tage, alle drei mit
+  portablem Kern ca. 11–15 Tage).
+
+**Lokal auf STEVESPC geändert (kein Git)**
+
+- `install.ps1` ausgeführt: exe und ini in `%LOCALAPPDATA%\OpenInNvim`, die 6 Einträge zeigen dorthin.
+  Probelauf (`OPEN_IN_NVIM_DRYRUN=1`) fand die laufende Sitzung.
+- Die drei "Öffnen mit"-ProgIDs (`Neovim.TextFile`, `.New`, `.Current`) zeigten auf die alten
+  Launcher bzw. einen toten Pfad; jetzt auf `OpenInNvim.exe` mit `new`/`current`.
+- `tiny-launcher-*.exe` (je 68 MB) nach `%LOCALAPPDATA%\OpenInNvim\_nicht-mehr-gebraucht` verschoben.
+- Junction `C:\tools\OpenInNvim` entfernt (wird nicht mehr gebraucht).
+
+**Verworfen**
+
+- Die Fundstellen in der PowerShell-Kette zu beheben (Entscheidung des Nutzers: kompilierter Launcher).
+- Die eigene adversarielle Gegenprüfung der 31 Fundstellen (durch Tests im neuen Programm ersetzt).
+- Agentenketten je Paket (Bauen, Review, Fix, Nachprüfung): dem Nutzer zu langsam. Das Review von
+  Paket 1 wurde mittendrin gestoppt; Pakete 2 und 3 sind direkt gebaut. **Keines der drei
+  Code-Commits hat ein unabhängiges Review**, belegt sind sie nur durch die Testsuite.
+- `nvim --server … --remote` und `cmd /c start` als Wege (siehe Design-Datei).
+
+**Offen**
+
+- [ ] **Echter Klick im Explorer** (Datei, Ordner, Ordner-Hintergrund, je current/new): vom Nutzer
+      noch nicht bestätigt. Alle Tests liefen gegen `--clean`-Instanzen, nicht gegen die echte Config.
+- [ ] Unabhängiges Review über `src\` und die Installer (Paket 5).
+- [ ] Test der Explorer-Übergabe über ein Shell-Verb (`Start-Process -Verb`) fehlt.
+- [ ] Vertrauensprüfung "anderer Benutzer / andere Sitzung" ist eingebaut, aber ungetestet.
+- [ ] `docs/ROADMAP/Final_Checks/openinnvim-live-tests-2026-10-02.md` beschreibt noch die alte Kette
+      und muss für die exe neu geschrieben werden.
+- [ ] WKDBook: `openinnvim/ROADMAP/ROADMAP.md` und Backlog an den neuen Stand anpassen.
+- [ ] Optional: Benutzer-Variable `NVIM_VBS` löschen; Ordner `_nicht-mehr-gebraucht` löschen.
+- [ ] Kleinere bekannte Lücken stehen in `E:\repos\openinnvim\docs\ROADMAP.md`, Abschnitt 4
+      (Kommandozeilenfenster `q:`, Prompt zwischen Probe und Anfrage, zwei Icons, WezTerm-Fenster).
+- Neovim 0.12.2 stürzt ab (0xC0000005), wenn das Fenster eines ca. 50 ms alten Terminal-Buffers
+  geteilt wird; ohne den Launcher reproduziert, kein Launcher-Fehler, nicht gemeldet.
 
 ---
 
@@ -283,7 +346,13 @@ abgenommen oder reine Doku.
 | nvim-config | `8df382d4` ✅ | docs(handover): neotest unter Windows — Läufe scheitern, Prototyp-Fix, Entscheidung |
 | nvim-config | `e666a6c9` ✅ | docs(handover, report): Review-Runde unterbrochen; 31 ungeprüfte Fundstellen als Bericht, Option E für neotest als Plan |
 | WKDBooks | `57f3507` ✅ | docs(openinnvim): Design des nativen Launchers, Paketplan |
-| nvim-config | (dieser Commit) ✅ | docs(handover): Entscheidung für den kompilierten Launcher, Paketplan, Abbruch-Anleitung |
+| nvim-config | `a7f8fcc2` ✅ | docs(handover): Entscheidung für den kompilierten Launcher, Paketplan, Abbruch-Anleitung |
+| openinnvim | `b2f8b90` | feat(native): Kern für `current`. **Kein Haken**: Review abgebrochen |
+| openinnvim | `9db2279` | feat(native): neue Instanz, Chooser, Fokus. **Kein Haken**: ohne Review |
+| openinnvim | `5dede04` | feat(install)!: Installer baut die exe, alte Kette entfernt. **Kein Haken**: ohne Review |
+| WKDBooks | `1c04d69` ✅ | docs(openinnvim): Paketstand 1–3 |
+| openinnvim | `073f70d` ✅ | docs: Repo-Docs für den kompilierten Launcher, Roadmap |
+| nvim-config | (dieser Commit) ✅ | docs(handover): Stand nach den Paketen 1–4, Verworfenes, lokale Änderungen, Offenes |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
