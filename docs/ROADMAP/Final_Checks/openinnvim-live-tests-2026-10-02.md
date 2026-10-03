@@ -2,7 +2,7 @@
 
 Alles, was an `openinnvim` (Explorer-Kontextmenü für Neovim, Repo
 `E:\repos\openinnvim`) und an den offenen Punkten der Handover
-`nvim-listen-address-und-openinnvim_HANDOVER.md` **von Hand im echten System** geprüft
+`E:\repos\openinnvim\docs\HANDOVER.md` **von Hand im echten System** geprüft
 werden muss. Automatisiert läuft alles grün (`tests\run-tests.ps1`, 104 Prüfungen unter
 Windows PowerShell 5.1, gegen Wegwerf-Instanzen) — diese Liste ist für das, was Tests nicht
 zeigen: der **echte Klick im Explorer**, die echte Sitzung, die echte Config, Fokus,
