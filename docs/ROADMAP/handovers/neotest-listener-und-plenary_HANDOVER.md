@@ -15,6 +15,7 @@ Quelle der Aufgabe:
   - [Kurzfassung](#kurzfassung)
   - [Wo liegt was](#wo-liegt-was)
   - [Offen und Nachfrage](#offen-und-nachfrage)
+  - [Live-Tests](#live-tests)
 
 ---
 
@@ -121,3 +122,17 @@ Quelle der Aufgabe:
 - [ ] Die Messskripte (`NT_ALLOW`/`NT_DUMP`-Hilfsskript und Scratch-Projekte mit 9 bzw. 1000
       Tests) bei Bedarf nach `WKDBooks/.../TOOLS/` legen; sie waren Wegwerf und liegen nicht
       mehr. Die Wiederholung der Messung steht in der Backlog-Datei zur neotest-Messung.
+
+---
+
+## Live-Tests
+
+Von Hand in der echten Sitzung (früher Teil K der openinnvim-Checkliste). Status: ❌ ungetestet ·
+✅ wie erwartet · 🔴 Fehler.
+
+| # | Was testen | Erwartung | Status | Notizen |
+| --- | --- | --- | --- | --- |
+| K1 | Neovim starten, `:echo serverlist()` | Enthält `nvim.<pid>.0`, `localhost:<port>` (der neotest-Listener) und die fzf-lua-Pipe | ❌ | |
+| K2 | Option D probeweise: den `localhost:<port>`-Eintrag mit `:call serverstop('127.0.0.1:<port>')` schließen, dann einen Testlauf `<leader>nt*` ausführen | Ergebnisse **und** Signs kommen wie sonst. Wenn ja → D ist machbar; wenn nein → A (lassen, dokumentieren) | ❌ | |
+| K3 | Bei K2: `:echo serverlist()` danach | Der Listener-Eintrag fehlt; die Kontextmenü-Klicks (Teil A) funktionieren weiter (sie brauchen nur die Pipe) | ❌ | |
+| K4 | Entscheidung festhalten | A oder D im Handover eintragen; bei D die Änderung in `lua/plugins/neotest.lua` als eigener Task | ❌ | |
