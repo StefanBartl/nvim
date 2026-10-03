@@ -83,7 +83,7 @@ beschreibt das schon.
 
 **Ergebnis (2026-10-02, noch nicht entschieden).** Gemessen, bewertet und mit Empfehlung (A, oder D nach
 Test, nicht B) in
-[`handovers/nvim-listen-address-und-openinnvim_HANDOVER.md`](../handovers/nvim-listen-address-und-openinnvim_HANDOVER.md).
+`E:\repos\openinnvim\docs\HANDOVER.md`.
 Kurz: niemand liest die Variable, openinnvim braucht nur den Pipe-Namen, der Hilfsprozess kostet +75 bis +150 ms
 und hält den Listener offen.
 

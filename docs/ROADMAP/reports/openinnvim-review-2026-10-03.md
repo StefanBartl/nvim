@@ -10,7 +10,7 @@ S-F3 / B-F-12 / S-F8 zu `%NAME%`-Expansion; B-F-08 / P-PERF-5 zum blockierten Ed
 P-PERF-6 zum msgpack-Decoder): beim Beheben zusammen behandeln.
 
 Weiter geht es im Handover
-[`nvim-listen-address-und-openinnvim_HANDOVER.md`](../handovers/nvim-listen-address-und-openinnvim_HANDOVER.md).
+`E:\repos\openinnvim\docs\HANDOVER.md`.
 
 ---
 
