@@ -31,6 +31,9 @@
 
 ## Claude Tasks
 
+- filetree.nvim: Usrmcd, mit dem ich checken, ob und wie oft eine file referenziert wird. Wenn mehrer picker? Usecase; /assets ist voll mit screenhsot, die keiner mehr referenziert,
+  Eun ähnliches vorgehen haben wir mit symlink ja bereits implementiert.
+
 - Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
