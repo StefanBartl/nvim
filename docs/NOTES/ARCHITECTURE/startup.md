@@ -297,7 +297,7 @@ unruhigerer Maschine 699 ms und 407 ms: die Spalten vergleichen nur Läufe
 derselben Sitzung.
 
 Der längste verbleibende Stoß ist der `VeryLazy`-Stapel. Stand und offene
-Punkte: [`startup-und-config-optimierung-analyse-konzept-2026-09-26.md`](../../ROADMAP/reports/startup-und-config-optimierung-analyse-konzept-2026-09-26.md).
+Punkte: [`startup-und-config-optimierung-analyse-konzept-2026-09-26.md`](../../ROADMAP/reports/startup/startup-und-config-optimierung-analyse-konzept-2026-09-26.md).
 Herleitung und Einzelposten (der frühere Abschnitt 14) stehen im Archiv
 `wkdbook-myplugins/nvim-config/Backlog/TASKS/startup-und-config-optimierung-2026-09-26.md`.
 
