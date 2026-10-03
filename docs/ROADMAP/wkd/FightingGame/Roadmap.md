@@ -1,7 +1,7 @@
 # `wkd` - `FightingGame`
 
 > Umsetzung läuft seit 2026-10-01 als T17. Plan, Phasen und Status:
-> `../../handovers/wkd_FightingGame_Implementierungsplan.md` (Symlink auf
+> `../../handovers/wkd/wkd_FightingGame_Implementierungsplan.md` (Symlink auf
 > `$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Handover/`).
 
 - ~~Wenn man den "Fight"-Button hovert, wird ein Sound Effect ausgespielt~~ — erledigt als
