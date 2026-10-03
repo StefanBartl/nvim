@@ -1,9 +1,11 @@
 # NVIM_LISTEN_ADDRESS (rpc_pipe), neotest-Listener und openinnvim (Übergabe)
 
-Stand: 2026-10-02, nach drei Chats. **Nur noch offene Punkte.** Alles Erledigte liegt im
+Stand: 2026-10-03, nach vier Chats. **Nur noch offene Punkte.** Alles Erledigte liegt im
 Backlog des WKDBooks (siehe [Wo liegt was](#wo-liegt-was)); die Live-Tests, die du von Hand
 machen sollst, stehen in
 [`Final_Checks/openinnvim-live-tests-2026-10-02.md`](../Final_Checks/openinnvim-live-tests-2026-10-02.md).
+**Der vierte Chat wurde mitten in einer Review-Runde unterbrochen**; was davon fertig ist und wie
+es weitergeht, steht in [Unterbrochene Review-Runde](#unterbrochene-review-runde-2026-10-03).
 
 Quellen: die neotest-Aufgabe aus
 [`startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md`](../reports/startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md)
@@ -16,6 +18,7 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 
   - [Kurzfassung](#kurzfassung)
   - [Wo liegt was](#wo-liegt-was)
+  - [Unterbrochene Review-Runde (2026-10-03)](#unterbrochene-review-runde-2026-10-03)
   - [Offen und Nachfrage](#offen-und-nachfrage)
   - [Commits dieses Chats](#commits-dieses-chats)
 
@@ -61,7 +64,79 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 | Review-Funde (Bug / Sicherheit / Performance), Docs-Standardisierung, PowerShell-5.1-Lehre | `.../openinnvim/Backlog/TASKS/2026-10-02_openinnvim-review.md` |
 | Installer, relative VBS, Fokus, **zweiter** Review | `.../openinnvim/Backlog/TASKS/2026-10-02_installer-fokus-zweiter-review.md` |
 | Live-Tests für dich | `docs/ROADMAP/Final_Checks/openinnvim-live-tests-2026-10-02.md` |
+| **Review-Fundstellen vom 2026-10-03 (31 Stück, ungeprüft)** | `docs/ROADMAP/reports/openinnvim-review-2026-10-03.md` |
+| Probe-Tool für neotest-Läufe mit der echten Config | `WKDBooks/.../TOOLS/neotest-run-probe.md`, `TOOLS/scripts/neotest-run-probe/` |
 | Installierte Binaries/VBS der Exe-Variante | `C:\Users\bartl\AppData\Local\OpenInNvim` (kein Repo, nicht angefasst) |
+
+---
+
+## Unterbrochene Review-Runde (2026-10-03)
+
+Auftrag des Nutzers im vierten Chat: "Prüfe die Ergebnisse und die Commits nochmal, mach eigene
+Tests, finde die optimale Lösung mit Bug-, Sicherheits- und Tempo-Verbesserungen." Dafür lief ein
+Workflow mit sieben Agenten **nacheinander** (nie mehr als einer), vier Phasen:
+
+1. **openinnvim-Review** auf HEAD `a464fd4` aus drei Blickwinkeln (Bugs + PowerShell 5.1, Sicherheit,
+   Tempo), jeder mit Testlauf und eigenen Experimenten gegen Wegwerf-Instanzen. **Fertig.**
+2. **Adversarielle Gegenprüfung** jeder Fundstelle (ein Agent, alle 31). **Abgebrochen mitten im
+   Lauf** (Chat beendet), kein Ergebnis.
+3. **Docs gegen Code/Git/System** (openinnvim README + `docs/`, dieses Handover, Final_Checks, Report
+   Aufgabe 1/4, WKDBook-Backlog/Roadmap, `TOOLS/neotest-run-probe.md`). **Nicht gestartet.**
+4. **neotest-Lösung empirisch** mit der echten Config (Szenarien S0–S5, Attach-Fix, Vorschlagsdiffs).
+   **Nicht gestartet.**
+
+Kein Agent hat ein Repo verändert oder committet (`git status` in openinnvim, lib.nvim, Config-Worktree,
+WKDBooks nach dem Abbruch: sauber); keine Streuprozesse.
+
+**Ergebnis von Phase 1:** 31 Fundstellen (12 Bugs, 10 Sicherheit, 9 Tempo) mit Behauptung, Beleg,
+Reproduktion und Fix-Vorschlag im Bericht
+[`reports/openinnvim-review-2026-10-03.md`](../reports/openinnvim-review-2026-10-03.md) —
+**ungeprüft**, also Behauptungen je eines Reviewers. Die Testsuite lief bei zwei von drei Agenten
+**104/104 grün** (Windows PowerShell 5.1, 23 s); der dritte sah einen Abbruch bei 99/104, weil
+`Get-FileHash` fehlt, wenn PS 5.1 den `PSModulePath` eines pwsh-7-Elternprozesses erbt (B-F-06).
+Kurzfassung der Behauptungen, nach Gewicht:
+
+- **hoch:** `INSTANCE_PICK='ask'`-Chooser ist über die versteckte VBS-Kette unsichtbar und blockiert
+  endlos (B-F-01); `tiny-launcher-new.exe` startet wegen leerem `Assembly.Location` im
+  Single-File-Publish das *current*-VBS (B-F-02); ein unerreichbarer TCP-`NVIM_SERVER` kostet 5,7 s
+  und startet einen versteckten Editor mit voller Config (P-PERF-1); ein Öffnen über 3 s gilt als
+  Ablehnung, die Datei landet zusätzlich in einer zweiten Instanz (P-PERF-2); ~85 % der Klickzeit
+  sind Host-Overhead (VBS + `powershell.exe`-Start + erste Cmdlets), ein kompilierter
+  .NET-Framework-Launcher braucht 67 ms statt ~540 ms (P-PERF-3, mit gemessenem Prototyp).
+- **mittel, mehrfach unabhängig gefunden:** `%NAME%` in Datei-/Ordnernamen wird von
+  `WScript.Shell.Run` und von `cmd start` expandiert (B-F-03, S-F3, B-F-12, S-F8; Fix: Pfad per
+  Umgebungsvariable an PowerShell reichen, verifiziert); Namen mit `$NAME` oder `[...]` verändert
+  Vims Dateiargument-Expansion auch auf der RPC-Route, weil `drop`/`fnameescape` benutzt wird
+  (S-F4; Fix: `bufadd` + `nvim_win_set_buf`, verifiziert); stabile Pipe und `NVIM_SERVER` bekommen
+  keine der Prüfungen (UI, nvim.exe, Session), ein Pipe-Squatter oder headless-Besitzer erhält die
+  Datei (B-F-05, S-F1); `[int]`-Casts auf ungeprüfte Pipe-Namen/Antworten brechen unter
+  `$ErrorActionPreference='Stop'` jeden Klick (S-F2); ein blockierter Editor (hit-enter) kostet
+  0,5 s je Instanz und 3 s auf der stabilen Pipe, `nvim_get_mode` antwortet in 4 ms (B-F-08,
+  P-PERF-5); der msgpack-Decoder behandelt unbekannte Typen wie "unvollständig" und verbrennt das
+  Zeitlimit (B-F-09, S-F5, P-PERF-6); Discovery fragt alle Instanzen sequenziell, obwohl für
+  `newest` die erste reicht (P-PERF-7); `install.ps1` schreibt ein relatives `-InstallDir` relativ
+  in die Registry (B-F-07); cmdlet-freier Hot-Path spart ~240 ms (P-PERF-4).
+- **niedrig:** `Trim('"')` macht aus `C:\"` ein `C:` (B-F-10), `wscript.exe` ohne Pfad in der
+  Registry (S-F7), Fokus-Walk über veraltete PID-Tabelle (S-F9, P-PERF-8), veraltete Zeitangaben
+  in Code und Docs (P-PERF-9, B-F-11, S-F10), `uint32`/`array32` im Decoder.
+
+**So geht es weiter (neuer Chat):**
+
+1. Phase 2 nachholen: einen Agenten jede Fundstelle aus dem Bericht widerlegen lassen (Datei und
+   Zeile selbst lesen, Experiment nur gegen eigene Wegwerf-Instanzen wie `tests/fixture.lua`,
+   `USERNAME` fälschen, `OPEN_IN_NVIM_ONLY_PIDS`/`OPEN_IN_NVIM_DRYRUN`/`OPEN_IN_NVIM_NO_SPAWN`). Das
+   Workflow-Skript mit allen Prompts liegt unter
+   `C:\Users\bartl\.claude\projects\C--Users-bartl-AppData-Local-nvim--claude-worktrees-nvim-plugin-cleanup-20ecd9\be9b5351-70a2-44d9-ac54-cfb498f312b0\workflows\scripts\openinnvim-neotest-deep-check-wf_9a4bd4e6-e3e.js`
+   (Phase 1 daraus streichen, die Fundstellen aus dem Bericht einspeisen; der Resume-Cache gilt nur
+   in der alten Sitzung).
+2. Bestätigte Funde beheben, gebündelt: `%NAME%`-Expansion (VBS + cmd-Fallback), Vim-Expansion auf
+   der RPC-Route (`bufadd`), `nvim_get_mode`-Vorprüfung + kürzere Zeitlimits, Decoder-Fehlerpfade,
+   Prüfungen auch für stabile Pipe/`NVIM_SERVER`, Chooser sichtbar machen oder `ask` aus der
+   versteckten Kette heraushalten, `install.ps1` absolute Pfade, Testsuite ohne `Get-FileHash`.
+   Danach `tests/run-tests.ps1` (muss 104+ grün bleiben) und Review-Haken.
+3. Phase 3 und 4 wie im Skript beschrieben; die neotest-Lösung steht als Plan unter "Offen".
+4. Größere Entscheidung für später (Roadmap): kompilierter Launcher statt VBS + PowerShell
+   (P-PERF-3), passt zur geplanten Setup-`.exe`.
 
 ---
 
@@ -106,6 +181,38 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
       Benchmark-Consumers (`consumers/benchmark.lua:33`). Falls D: direkt nach dem Start des Clients,
       mit `pcall`, nur **neue** Einträge schließen, die auf `^localhost:%d+$` (oder `127.0.0.1:`) passen, und
       nur wenn `require("neotest.lib").subprocess.enabled()` falsch ist.
+      **Bessere Lösung, im vierten Chat am Quelltext belegt, aber noch nicht gefahren ("Option E"):**
+      `subprocess.init()` (`neotest/lib/subprocess.lua:33-37`) ist die **einzige** Stelle, die den
+      Listener öffnet und den Hilfsprozess startet, und `client/init.lua:378` ruft sie nur, wenn
+      `enabled()` falsch ist. `neotest.lib` greift per `lazy_require` (`lib/require.lua`: `__index`
+      ruft `require(module)[key]` zur Laufzeit) auf das Modul zu, also macht
+      `require("neotest.lib.subprocess").init = function() end` (nach dem Laden von neotest, vor dem
+      Client-Start) den Aufruf zum No-Op: **kein Listener je offen, kein Hilfsprozess, kein
+      `serverstop` nötig**, Parsen im Hauptprozess wie heute faktisch. Alle anderen Nutzer von
+      `subprocess.*` sind mit `enabled()` abgesichert (`client/init.lua:576`, `treesitter/init.lua:176`,
+      `watch/watcher.lua:44`); der Benchmark-Consumer (`force=true`) landet ebenfalls im No-Op.
+      Dazu: (ii) `lib.nvim` `rpc_pipe.lua` exportiert `NVIM_LISTEN_ADDRESS` nicht mehr (Option
+      `export = false` als Standard; `setup` nimmt aus `init.lua:128` schon eine Opts-Tabelle;
+      `is_active()`/`get_address()` haben **keine** Aufrufer außerhalb des Moduls und sollen den
+      gestarteten Pipe-Namen statt der Variable melden; README `lua/lib/nvim/system/README.md:116-149`
+      und `@types/init.lua:50-55` anpassen). Der Export hat null Leser und tötet jeden Kind-`nvim`
+      (`run_all_tests.sh`, `example-plugin/minimal_init.lua` und ein alter gitsigns-Patch entfernen die
+      Variable deshalb selbst). Neovim gibt Kindern von sich aus `$NVIM`, nicht
+      `NVIM_LISTEN_ADDRESS` (für `vim.fn.system` geprüft: beides leer; für `jobstart`-Kinder noch
+      nicht). (iii) Plenary-Shim in `lua/plugins/neotest.lua`: `require("neotest-plenary")` ist die
+      Adapter-Tabelle selbst (`init.lua:3`), `build_spec` darauf umhüllen, im Argument
+      `lua _run_tests(` nur `\` → `/`; mit (ii) entfällt das `spec.env`. Upstream ist unverändert
+      (`origin/HEAD`, `adapter.lua:87` mit `nio.fn.escape(pos.path, "'")`); `run_tests.lua` beendet sich
+      nur per `os.exit` **innerhalb** von `_run_tests` (Zeile 39/94), darum der Hänger. (iv) Attach-Gate
+      in `lua/config/neotest/core/init.lua:64-71`: `Client:attach` meldet "No running process found",
+      wenn `_get_running_adapters(position.id)` leer ist (`client/init.lua:133-136`), `TestRunner:attach`
+      sucht den Prozess über die Eltern der Position (`runner.lua:210-218`); der Gate über
+      `status_counts(id, { buffer = bufnr }).running > 0` passt dazu. Ein manuelles Attach-Mapping gibt
+      es in der Config nicht (nur der Autocmd). Noch zu fahren (Phase 4 des Workflows): S0 heute, S1
+      Stub + kein Export + Slash-Shim, S2 Stub + Shim mit `spec.env`, S3 nur Stub (muss 9/9 failed
+      bleiben), S4 kein Export ohne Stub (Hilfsprozess läuft), S5 Option D; Attach-Fix positiv/negativ.
+      Das Probe-Tool in WKDBooks hat noch keinen `STUB`-Schalter; der Nutzer hat eine Änderung daran im
+      vierten Chat abgelehnt — Varianten auf einer Kopie im Scratch fahren.
 - [ ] **`install.ps1` ausführen und den echten Klick im Explorer abnehmen** (Datei/Ordner ×
       current/new, mehrere Instanzen, keine Instanz, Sonderzeichen, Deinstallation) —
       Final-Checks-Liste, erst Vorbereitung und Teil G, dann A–F.
@@ -151,7 +258,8 @@ abgenommen oder reine Doku.
 | nvim-config | `83f73c2c` ✅ | docs(handover) und Live-Test-Checkliste: Installation per `install.ps1`, Fokus-Test |
 | nvim-config | `622d9ff1` ✅ | docs(handover): neotest-Listener, Teilergebnis des Workflows (Code gelesen, Laufzeittest offen) |
 | WKDBooks | `3251163` ✅ | docs(tools): neotest-run-probe (Runner, Treiber, Rezept) mit den zwei Windows-Befunden |
-| nvim-config | (dieser Commit) ✅ | docs(handover): neotest unter Windows — Läufe scheitern, Prototyp-Fix, Entscheidung |
+| nvim-config | `8df382d4` ✅ | docs(handover): neotest unter Windows — Läufe scheitern, Prototyp-Fix, Entscheidung |
+| nvim-config | (dieser Commit) ✅ | docs(handover, report): Review-Runde unterbrochen; 31 ungeprüfte Fundstellen als Bericht, Option E für neotest als Plan |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
