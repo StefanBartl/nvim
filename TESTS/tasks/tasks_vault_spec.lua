@@ -1,0 +1,110 @@
+-- TESTS/tasks/tasks_vault_spec.lua -- tasks.vault: root resolution, areas, paths, validators.
+
+return function(H)
+  local eq, ok = H.eq, H.ok
+  local F = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")
+  local vault = require("tasks.vault")
+
+  local root = F.vault(H)
+
+  -- ── root resolution ─────────────────────────────────────────────────────
+  local saved_env = vim.env.TASKS_VAULT
+  local saved_repos = vim.env.REPOS_DIR
+  vault.set_root(nil)
+  vim.env.TASKS_VAULT = nil
+
+  eq(select(1, vault.root({ root = root })), root, "explicit opts.root wins")
+  eq(select(1, vault.root({ root = root .. "/" })), root, "trailing slash stripped")
+  eq(select(1, vault.root({ root = (root:gsub("/", "\\")) })), root, "backslashes normalised")
+
+  local none, err = vault.root({ root = root .. "/does-not-exist" })
+  eq(none, nil, "missing root is an error")
+  ok(err:find("not a directory", 1, true), "error names the problem: " .. tostring(err))
+
+  vim.env.TASKS_VAULT = root
+  eq(select(1, vault.root()), root, "$TASKS_VAULT")
+
+  local other = H.tmpdir()
+  vault.set_root(other)
+  eq(select(1, vault.root()), other, "set_root beats $TASKS_VAULT")
+  eq(select(1, vault.root({ root = root })), root, "opts.root beats set_root")
+  vault.set_root(nil)
+
+  -- $REPOS_DIR/<REL_FROM_REPOS> is the default
+  vim.env.TASKS_VAULT = nil
+  local repos = H.tmpdir()
+  vim.fn.mkdir(repos .. "/" .. vault.REL_FROM_REPOS, "p")
+  vim.env.REPOS_DIR = repos
+  -- lib.nvim.system.env memoises its snapshot: recompute after changing $REPOS_DIR.
+  require("lib.nvim.system.env").get({ refresh = true })
+  eq(
+    select(1, vault.root()),
+    repos .. "/" .. vault.REL_FROM_REPOS,
+    "default below $REPOS_DIR (via lib.nvim.system.env)"
+  )
+  vim.env.REPOS_DIR = nil
+  require("lib.nvim.system.env").get({ refresh = true })
+  local nothing, no_env = vault.root()
+  eq(nothing, nil, "no root at all")
+  ok(no_env:find("REPOS_DIR", 1, true), "error says what to set")
+
+  vim.env.TASKS_VAULT = saved_env
+  vim.env.REPOS_DIR = saved_repos
+  require("lib.nvim.system.env").get({ refresh = true })
+
+  -- ── areas ───────────────────────────────────────────────────────────────
+  local names = {}
+  for _, a in ipairs(vault.areas(root)) do
+    names[#names + 1] = a.name
+    eq(a.path, root .. "/" .. a.name, "area path")
+  end
+  eq(
+    names,
+    { "ALL", "cascade.nvim", "lib.nvim", "migrate.nvim", "nvim-config" },
+    "ROADMAP/Backlog folders and the named extras, sorted; _Telemetry/TEMPLATES/TOOLS/empty skipped"
+  )
+  ok(vault.has_area(root, "lib.nvim"))
+  ok(vault.has_area(root, "ALL"))
+  ok(not vault.has_area(root, "filetreepicker.nvim"), "an empty folder is not an area")
+  ok(not vault.has_area(root, "TOOLS"))
+  ok(not vault.has_area(root, "../x"), "traversal is no area")
+
+  -- ── paths ───────────────────────────────────────────────────────────────
+  eq(vault.tasks_dir(root, "lib.nvim"), root .. "/lib.nvim/ROADMAP/tasks")
+  eq(vault.index_path(root, "lib.nvim"), root .. "/lib.nvim/ROADMAP/TASKS.md")
+  eq(vault.backlog_dir(root, "lib.nvim", "FEATURES"), root .. "/lib.nvim/Backlog/FEATURES")
+  eq(vault.backlog_readme(root, "lib.nvim"), root .. "/lib.nvim/Backlog/README.md")
+  eq(vault.task_path(root, "lib.nvim", "x-y"), root .. "/lib.nvim/ROADMAP/tasks/x-y.md")
+
+  -- ── validators ──────────────────────────────────────────────────────────
+  for _, good in ipairs({ "lib.nvim", "ALL", "nvim-config", "migrate.nvim", "a_b" }) do
+    ok(vault.valid_area(good), "valid area " .. good)
+  end
+  for _, bad in ipairs({ "", "..", ".hidden", "-x", "a/b", "a\\b", "a..b", "a b", 5 }) do
+    ok(not vault.valid_area(bad), "invalid area " .. tostring(bad))
+  end
+  for _, good in ipairs({ "a", "cycle-count", "x2", "0-first", "a-b-c" }) do
+    ok(vault.valid_slug(good), "valid slug " .. good)
+  end
+  for _, bad in ipairs({ "", "-a", "a-", "a--b", "A", "a_b", "a b", "ä", "a.md", 1 }) do
+    ok(not vault.valid_slug(bad), "invalid slug " .. tostring(bad))
+  end
+
+  local a, s = vault.parse_id("lib.nvim/cycle-count")
+  eq(a, "lib.nvim")
+  eq(s, "cycle-count")
+  a, s = vault.parse_id("lib.nvim")
+  eq(a, "lib.nvim")
+  eq(s, nil, "a bare area has no slug")
+  for _, bad in ipairs({ "", "a/b/c", "/x", "x/", "lib.nvim/Bad Slug", "../x/y" }) do
+    local pa, _, perr = vault.parse_id(bad)
+    eq(pa, nil, "bad id " .. bad)
+    ok(perr, "bad id carries an error: " .. bad)
+  end
+
+  eq(vault.BUCKET_OF_KIND.feature, "FEATURES")
+  eq(vault.BUCKET_OF_KIND.idea, "FEATURES")
+  eq(vault.BUCKET_OF_KIND.research, "FEATURES")
+  eq(vault.BUCKET_OF_KIND.task, "TASKS")
+  eq(vault.BUCKET_OF_KIND.bug, "TASKS")
+end
