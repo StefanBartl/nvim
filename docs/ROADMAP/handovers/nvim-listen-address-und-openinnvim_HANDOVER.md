@@ -79,6 +79,14 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 - [ ] `docs/ROADMAP/Final_Checks/openinnvim-live-tests-2026-10-02.md` beschreibt noch die alte Kette
       und muss für die exe neu geschrieben werden.
 - [ ] WKDBook: `openinnvim/ROADMAP/ROADMAP.md` und Backlog an den neuen Stand anpassen.
+- [ ] Beim Docs-Abgleich gefunden, noch offen: Chooser-Label ohne Startzeit; Fokus für eine reine
+      Konsole (`AttachConsole` aus dem Design fehlt); `install-icons-for-progids.ps1` ist verwaist
+      (nichts schreibt mehr das open-Kommando von `Neovim.TextFile.New`/`.Current`);
+      `uninstall.ps1` entfernt die Standard-App-Registrierung nicht; `install.ps1 -Force` übernimmt
+      die Werte einer alten `open-in-nvim.config.ps1` nicht und löscht sie trotzdem; in-place-Install
+      schreibt kein Manifest; `.gitignore` hat noch `obj/`, `publish/`, `*.user`; die exe hat kein
+      eingebettetes Icon. Behoben in `7cdc4af`: `NVIM_BIN` wurde relativ zum angeklickten Ordner
+      geprüft, Fokus lief zweimal je Klick.
 - [ ] Optional: Benutzer-Variable `NVIM_VBS` löschen; Ordner `_nicht-mehr-gebraucht` löschen.
 - [ ] Kleinere bekannte Lücken stehen in `E:\repos\openinnvim\docs\ROADMAP.md`, Abschnitt 4
       (Kommandozeilenfenster `q:`, Prompt zwischen Probe und Anfrage, zwei Icons, WezTerm-Fenster).
@@ -352,7 +360,9 @@ abgenommen oder reine Doku.
 | openinnvim | `5dede04` | feat(install)!: Installer baut die exe, alte Kette entfernt. **Kein Haken**: ohne Review |
 | WKDBooks | `1c04d69` ✅ | docs(openinnvim): Paketstand 1–3 |
 | openinnvim | `073f70d` ✅ | docs: Repo-Docs für den kompilierten Launcher, Roadmap |
-| nvim-config | (dieser Commit) ✅ | docs(handover): Stand nach den Paketen 1–4, Verworfenes, lokale Änderungen, Offenes |
+| nvim-config | `95b53c6e` ✅ | docs(handover): Stand nach den Paketen 1–4, Verworfenes, lokale Änderungen, Offenes |
+| openinnvim | `7cdc4af` | fix(native): `NVIM_BIN` nie relativ zum angeklickten Ordner, Fokus einmal je Klick. **Kein Haken**: ohne Review |
+| nvim-config | (dieser Commit) ✅ | docs(handover): Funde aus dem Docs-Abgleich |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
