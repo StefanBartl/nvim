@@ -26,6 +26,10 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 
 ## Kurzfassung
 
+- **openinnvim wird auf einen kompilierten Launcher umgebaut** (Entscheidung 2026-10-03, Design im
+  WKDBook, Paket 1 läuft). Bis Paket 3 fertig ist, gilt die Beschreibung der VBS + PowerShell-Kette
+  unten weiter; danach muss `install.ps1` neu ausgeführt werden. Details in
+  [Unterbrochene Review-Runde](#unterbrochene-review-runde-2026-10-03).
 - **Niemand liest `NVIM_LISTEN_ADDRESS`** (nicht lib.nvim, kein Repo unter `E:\repos`, nicht die
   Config, nicht Shell-/Terminal-Einstellungen). `rpc_pipe` exportiert sie nur, damit
   neotests Hilfsprozess nicht dieselbe Pipe belegen will. Das Kontextmenü-Tool hängt am
@@ -65,6 +69,7 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 | Installer, relative VBS, Fokus, **zweiter** Review | `.../openinnvim/Backlog/TASKS/2026-10-02_installer-fokus-zweiter-review.md` |
 | Live-Tests für dich | `docs/ROADMAP/Final_Checks/openinnvim-live-tests-2026-10-02.md` |
 | **Review-Fundstellen vom 2026-10-03 (31 Stück, ungeprüft)** | `docs/ROADMAP/reports/openinnvim-review-2026-10-03.md` |
+| **Design des nativen Launchers, Paketplan mit Stand** | `WKDBooks/.../openinnvim/ROADMAP/native-launcher-design.md` |
 | Probe-Tool für neotest-Läufe mit der echten Config | `WKDBooks/.../TOOLS/neotest-run-probe.md`, `TOOLS/scripts/neotest-run-probe/` |
 | Installierte Binaries/VBS der Exe-Variante | `C:\Users\bartl\AppData\Local\OpenInNvim` (kein Repo, nicht angefasst) |
 
@@ -120,23 +125,39 @@ Kurzfassung der Behauptungen, nach Gewicht:
   Registry (S-F7), Fokus-Walk über veraltete PID-Tabelle (S-F9, P-PERF-8), veraltete Zeitangaben
   in Code und Docs (P-PERF-9, B-F-11, S-F10), `uint32`/`array32` im Decoder.
 
-**So geht es weiter (neuer Chat):**
+**Entscheidung des Nutzers (2026-10-03, nach der Unterbrechung): kompilierter Launcher jetzt.**
+Die Fundstellen werden nicht mehr in der VBS + PowerShell-Kette behoben, sondern in **einem**
+C#-Programm `OpenInNvim.exe` (C# 5 / .NET Framework, gebaut mit dem `csc.exe` von Windows, kein
+SDK), das beide Menüeinträge bedient und die alte Kette ersetzt. Die eigene Gegenprüfung der 31
+Fundstellen (Phase 2) entfällt damit: was am Verhalten hängt, wird im neuen Programm per Test
+belegt. Die **verbindliche Vorgabe** (Kommandozeile, Config als `open-in-nvim.ini`, Instanzsuche,
+Vertrauensprüfung des Pipe-Besitzers, RPC-Client, Öffnen ohne Ex-Dateiargument, Start einer neuen
+Instanz, Chooser, Fokus, Build/Installation/Tests, Paketplan mit Stand) liegt im WKDBook:
+`WKDBooks/Development/wkdbook-myplugins/openinnvim/ROADMAP/native-launcher-design.md` (`57f3507`).
 
-1. Phase 2 nachholen: einen Agenten jede Fundstelle aus dem Bericht widerlegen lassen (Datei und
-   Zeile selbst lesen, Experiment nur gegen eigene Wegwerf-Instanzen wie `tests/fixture.lua`,
-   `USERNAME` fälschen, `OPEN_IN_NVIM_ONLY_PIDS`/`OPEN_IN_NVIM_DRYRUN`/`OPEN_IN_NVIM_NO_SPAWN`). Das
-   Workflow-Skript mit allen Prompts liegt unter
-   `C:\Users\bartl\.claude\projects\C--Users-bartl-AppData-Local-nvim--claude-worktrees-nvim-plugin-cleanup-20ecd9\be9b5351-70a2-44d9-ac54-cfb498f312b0\workflows\scripts\openinnvim-neotest-deep-check-wf_9a4bd4e6-e3e.js`
-   (Phase 1 daraus streichen, die Fundstellen aus dem Bericht einspeisen; der Resume-Cache gilt nur
-   in der alten Sitzung).
-2. Bestätigte Funde beheben, gebündelt: `%NAME%`-Expansion (VBS + cmd-Fallback), Vim-Expansion auf
-   der RPC-Route (`bufadd`), `nvim_get_mode`-Vorprüfung + kürzere Zeitlimits, Decoder-Fehlerpfade,
-   Prüfungen auch für stabile Pipe/`NVIM_SERVER`, Chooser sichtbar machen oder `ask` aus der
-   versteckten Kette heraushalten, `install.ps1` absolute Pfade, Testsuite ohne `Get-FileHash`.
-   Danach `tests/run-tests.ps1` (muss 104+ grün bleiben) und Review-Haken.
-3. Phase 3 und 4 wie im Skript beschrieben; die neotest-Lösung steht als Plan unter "Offen".
-4. Größere Entscheidung für später (Roadmap): kompilierter Launcher statt VBS + PowerShell
-   (P-PERF-3), passt zur geplanten Setup-`.exe`.
+**Paketplan** (je Paket: ein Agent baut, ein zweiter prüft unabhängig, bestätigte Funde werden
+behoben, dann Commit auf `main`; nie mehr als ein Agent gleichzeitig):
+
+1. Kern für `current` (`src/*.cs`, `build.ps1`, `tests/run-native-tests.ps1`); alte Kette bleibt
+   unangetastet und benutzbar.
+2. `new` und Start einer Instanz (WezTerm, Windows Terminal, Konsole ohne `cmd.exe`), Chooser, Fokus.
+3. `install.ps1`/`uninstall.ps1` neu (baut die exe, schreibt die ini und die 6 Einträge mit
+   absoluten Pfaden), Standard-App-Registrierung auf die exe, **alte Kette löschen** (VBS, die drei
+   `.ps1`, TinyLauncher), Shell-Verb-Test. **Ab hier muss der Nutzer `install.ps1` neu ausführen**:
+   seine Einträge zeigen über die Junction `C:\tools\OpenInNvim` noch auf die VBS im Repo.
+4. Repo-Docs neu, Messwerte alt/neu.
+5. Abschluss-Review über das ganze Repo; dieses Handover, die Final_Checks-Liste und die Roadmap im
+   WKDBook nachziehen.
+
+**Wenn ein Chat mitten in einem Paket abbricht:** `git -C E:\repos\openinnvim status` zeigt die
+unfertige Arbeit im Arbeitsverzeichnis (Agenten committen nicht). Stand des Pakets in der Tabelle
+am Ende der Design-Datei nachtragen. Die Workflow-Skripte mit den Prompts liegen unter
+`C:\Users\bartl\.claude\projects\C--Users-bartl-AppData-Local-nvim--claude-worktrees-nvim-plugin-cleanup-20ecd9\be9b5351-70a2-44d9-ac54-cfb498f312b0\workflows\scripts\`
+(`openinnvim-native-p1-core-*.js` usw.; der Resume-Cache gilt nur in der alten Sitzung, die Prompts
+sind aber wiederverwendbar). Die Prototypen der Reviewer (`oin-proto.cs`, `measure.ps1`, Fake-Pipe-
+Server) lagen im Scratchpad jener Sitzung und sind danach weg; der Bericht beschreibt sie.
+
+Die neotest-Lösung ("Option E") ist davon unabhängig und steht weiter als Plan unter "Offen".
 
 ---
 
@@ -213,15 +234,16 @@ Kurzfassung der Behauptungen, nach Gewicht:
       bleiben), S4 kein Export ohne Stub (Hilfsprozess läuft), S5 Option D; Attach-Fix positiv/negativ.
       Das Probe-Tool in WKDBooks hat noch keinen `STUB`-Schalter; der Nutzer hat eine Änderung daran im
       vierten Chat abgelehnt — Varianten auf einer Kopie im Scratch fahren.
-- [ ] **`install.ps1` ausführen und den echten Klick im Explorer abnehmen** (Datei/Ordner ×
-      current/new, mehrere Instanzen, keine Instanz, Sonderzeichen, Deinstallation) —
-      Final-Checks-Liste, erst Vorbereitung und Teil G, dann A–F.
-- [ ] **Fokus** (`FOCUS_TERMINAL = $true`) von Hand prüfen (Final_Checks A9b): nur der Win32-Teil
-      braucht ein echtes Fenster. Danach entscheiden: opt-in lassen oder Standard.
-- [ ] Unabhängiger Blick auf `openinnvim` `d0d1a5d` (Installer, Fokus, relative VBS). Die beiden
-      früheren Fix-Commits (`9eb8c7e`, `99946e2`) hatten ihren zweiten Blick (ein Fund, behoben).
-- [ ] openinnvim: Setup-`.exe`-Installer (Inno Setup, GitHub Actions) — baut auf `install.ps1` auf;
-      Details in der ROADMAP im WKDBook.
+- [ ] **openinnvim: nativer Launcher, Pakete 1–5** (siehe oben und die Design-Datei im WKDBook).
+- [ ] **`install.ps1` ausführen und den echten Klick im Explorer abnehmen** — **erst nach Paket 3**
+      (neue `install.ps1`, baut die exe). Die Final-Checks-Liste wird in Paket 5 auf den neuen
+      Launcher umgeschrieben; die heutige Fassung beschreibt noch die VBS + PowerShell-Kette.
+- [ ] **Fokus** (`FOCUS_TERMINAL`) von Hand prüfen, nach Paket 2: nur der Win32-Teil braucht ein
+      echtes Fenster. Danach entscheiden: opt-in lassen oder Standard.
+- [x] Unabhängiger Blick auf `openinnvim` `d0d1a5d`: durch die Review-Runde vom 2026-10-03 erledigt
+      (Bericht; die Funde fließen in den nativen Launcher).
+- [ ] openinnvim: Setup-`.exe`-Installer (Inno Setup, GitHub Actions) — nach Paket 5; liefert dann
+      die fertig gebaute `OpenInNvim.exe` mit. Details in der ROADMAP im WKDBook.
 - [ ] GitHub-Beschreibung und Topics von `openinnvim` setzen (`NEW-04`, `NEW-05`); `stylua.toml`,
       `.luacheckrc`, CI-Workflow.
 - [ ] Aufräumen (optional): User-Variable `NVIM_VBS` zeigt auf ein nicht existierendes
@@ -259,7 +281,9 @@ abgenommen oder reine Doku.
 | nvim-config | `622d9ff1` ✅ | docs(handover): neotest-Listener, Teilergebnis des Workflows (Code gelesen, Laufzeittest offen) |
 | WKDBooks | `3251163` ✅ | docs(tools): neotest-run-probe (Runner, Treiber, Rezept) mit den zwei Windows-Befunden |
 | nvim-config | `8df382d4` ✅ | docs(handover): neotest unter Windows — Läufe scheitern, Prototyp-Fix, Entscheidung |
-| nvim-config | (dieser Commit) ✅ | docs(handover, report): Review-Runde unterbrochen; 31 ungeprüfte Fundstellen als Bericht, Option E für neotest als Plan |
+| nvim-config | `e666a6c9` ✅ | docs(handover, report): Review-Runde unterbrochen; 31 ungeprüfte Fundstellen als Bericht, Option E für neotest als Plan |
+| WKDBooks | `57f3507` ✅ | docs(openinnvim): Design des nativen Launchers, Paketplan |
+| nvim-config | (dieser Commit) ✅ | docs(handover): Entscheidung für den kompilierten Launcher, Paketplan, Abbruch-Anleitung |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
