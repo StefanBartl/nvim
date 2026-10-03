@@ -45,11 +45,24 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
   **Entfernt:** beide `.vbs`, `open-in-nvim.ps1`, `open-in-nvim-current.ps1`, `open-in-nvim.lib.ps1`,
   `open-in-nvim.config.ps1`, `verify.ps1`, TinyLauncher (`Program.cs`, `.csproj`, `deploy-…ps1`),
   die alte Testsuite.
-- Tests: `tests\run-tests.ps1` (Windows PowerShell 5.1), 250 Prüfungen grün, nur gegen eigene
+- Tests: `tests\run-tests.ps1` (Windows PowerShell 5.1), 252 Prüfungen grün, nur gegen eigene
   Wegwerf-Instanzen.
 - Paket 4: Repo-Docs auf den neuen Stand gebracht, `docs/ROADMAP.md` neu (Setup-Dateien als
   GitHub-Release für Windows, Linux, macOS mit Aufwandsschätzung: Windows ca. 2 Tage, alle drei mit
   portablem Kern ca. 11–15 Tage).
+
+**Vom Nutzer im Explorer bestätigt (2026-10-03):** "current instance" und "new instance" funktionieren
+nach den drei Fixes unten.
+
+- `b752940`: `install.ps1`/`uninstall.ps1` melden dem Explorer `SHCNE_ASSOCCHANGED`. Ohne das führte
+  ein Klick direkt nach der Installation noch den alten Befehl aus (Windows Script Host:
+  `C:\tools\OpenInNvim\open-in-nvim.vbs` nicht gefunden), obwohl die Registry schon richtig war.
+- `c9976bd`: Der Launcher ergänzt den geerbten `PATH` vor dem Start einer neuen Instanz aus der
+  Registry (Maschine + Benutzer). Ursache: der Benutzer-`PATH` auf STEVESPC hat 101 Einträge und
+  4092 Zeichen, der Explorer gibt dann einen abgeschnittenen `PATH` weiter; WezTerm und Windows
+  Terminal wurden nicht gefunden (Rückfall auf die Konsole), und Neovim hatte kein `git`
+  (`gitsigns`, `lensline` meldeten Fehler). Testschalter: `OPEN_IN_NVIM_NO_PATH_REFRESH`.
+- `cbfe2be`: verstümmelte Testzeile repariert; Suite 252/252.
 
 **Lokal auf STEVESPC geändert (kein Git)**
 
@@ -71,8 +84,11 @@ Testanordnung) und die Suche nach dem Windows-Kontextmenü-Eintrag "In Neovim ö
 
 **Offen**
 
-- [ ] **Echter Klick im Explorer** (Datei, Ordner, Ordner-Hintergrund, je current/new): vom Nutzer
-      noch nicht bestätigt. Alle Tests liefen gegen `--clean`-Instanzen, nicht gegen die echte Config.
+- [x] **Echter Klick im Explorer:** Datei mit current und new vom Nutzer bestätigt. Ordner und
+      Ordner-Hintergrund sind nicht einzeln bestätigt.
+- [ ] Der Benutzer-`PATH` auf STEVESPC (101 Einträge, 4092 Zeichen) ist zu lang; alles, was der
+      Explorer startet, bekommt ihn abgeschnitten. Entrümpeln wäre die Lösung an der Wurzel (nicht
+      angefasst; der Launcher umgeht es nur für sich).
 - [ ] Unabhängiges Review über `src\` und die Installer (Paket 5).
 - [ ] Test der Explorer-Übergabe über ein Shell-Verb (`Start-Process -Verb`) fehlt.
 - [ ] Vertrauensprüfung "anderer Benutzer / andere Sitzung" ist eingebaut, aber ungetestet.
@@ -362,7 +378,11 @@ abgenommen oder reine Doku.
 | openinnvim | `073f70d` ✅ | docs: Repo-Docs für den kompilierten Launcher, Roadmap |
 | nvim-config | `95b53c6e` ✅ | docs(handover): Stand nach den Paketen 1–4, Verworfenes, lokale Änderungen, Offenes |
 | openinnvim | `7cdc4af` | fix(native): `NVIM_BIN` nie relativ zum angeklickten Ordner, Fokus einmal je Klick. **Kein Haken**: ohne Review |
-| nvim-config | (dieser Commit) ✅ | docs(handover): Funde aus dem Docs-Abgleich |
+| nvim-config | `94e73d0c` ✅ | docs(handover): Funde aus dem Docs-Abgleich |
+| openinnvim | `b752940` | fix(install): Explorer über geänderte Einträge informieren. **Kein Haken**: ohne Review |
+| openinnvim | `c9976bd` | fix(spawn): vollständiger `PATH` aus der Registry. **Kein Haken**: ohne Review |
+| openinnvim | `cbfe2be` | test: PATH-Merge-Prüfung repariert |
+| nvim-config | (dieser Commit) ✅ | docs(handover): Klick bestätigt, Explorer-Cache und abgeschnittener PATH |
 
 Zusätzlich ohne Commit: GitHub-Repo `open-in-nvim` umbenannt in `openinnvim`, Klon nach
 `E:\repos\openinnvim`; Junction `C:\tools\OpenInNvim` umgesetzt (kein Git).
