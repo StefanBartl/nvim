@@ -109,6 +109,10 @@ return function(H)
 
   local function body()
     local ok_run, err = pcall(function()
+      -- The default hook opens the interactive dashboard (tasks_dash_spec covers it);
+      -- `false` keeps these specs on the scratch buffer.
+      cmd.dashboard = false
+
       -- ── fixture ─────────────────────────────────────────────────────────
       F.task(
         H,
@@ -359,7 +363,7 @@ return function(H)
       vim.cmd("bwipeout!")
       run("tasks lib.nvim --format=csv --to=file:" .. out_dir .. "/h.csv")
       eq(#hook_calls, 2, "an explicit --format bypasses the hook")
-      cmd.dashboard = nil
+      cmd.dashboard = false
 
       -- ── tasks index ─────────────────────────────────────────────────────
       local lib_index = root .. "/lib.nvim/ROADMAP/TASKS.md"

@@ -366,7 +366,7 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins mode [auto\|dir\|remote\|disabled]` | Show, or persistently switch, `plugins.personal.core.source`'s `OVERRIDE` — writes directly into `source.lua` |
 | `:MyPlugins list [dir]` | Read-only: every listed plugin plus whether it's present in `dir` |
 | `:MyPlugins picker [dir]` | Interactive: `<Tab>` assigns clone/update/pull/fetch/remove/reclone per plugin, `<CR>` runs the whole batch |
-| `:MyPlugins tasks [<area>\|all] [--status=] [--prio=] [--kind=] [--tag=] [--stale=<days>] [--blocked] [--to=buffer\|clipboard\|qf\|file:<path>] [--format=md\|csv]` | Open tasks of the wkdbook vault (all areas by default) as a Markdown table in a scratch buffer, or delivered to the clipboard / quickfix / a file |
+| `:MyPlugins tasks [<area>\|all] [--status=] [--prio=] [--kind=] [--tag=] [--stale=<days>] [--blocked] [--to=buffer\|clipboard\|qf\|file:<path>] [--format=md\|csv]` | Open tasks of the wkdbook vault (all areas by default). Without `--to=`/`--format=` the interactive dashboard opens (keys below); with them a Markdown table / CSV goes to a scratch buffer, the clipboard, quickfix or a file |
 | `:MyPlugins tasks index [<area>] [--all] [--check]` | (Re)write the generated `ROADMAP/TASKS.md`; `--check` writes nothing and reports rule findings and stale indexes |
 | `:MyPlugins task new <area> [title...] [kind=] [prio=] [effort=] [tags=] [status=]` | Create `ROADMAP/tasks/<slug>.md` and open it; asks for the title (ui.kit form) when missing |
 | `:MyPlugins task set <id> key=value ...` | Change frontmatter of an open task (`<id>` is `<area>/<slug>`); an empty value removes the key |
@@ -386,6 +386,12 @@ and are verb-first (`:MyPlugins tasks cascade.nvim`). `<Tab>` completes areas
 (`ALL`, `nvim-config`, `docmap-desktop` included), task ids and `key=`; the lowercase
 `all` means every area, `ALL` is the area of that name. Details, flags and the engine:
 [`plugin_repos/README.md`](../lua/bindings/usrcmds/plugin_repos/README.md#task-commands-tasks-task-open).
+**Dashboard keys** (`:MyPlugins tasks`, list window; in the input window press `<Esc>` first):
+`<CR>` open file · `<Tab>`/`<S-Tab>` mark · `s` advance status of the marked (else current) tasks ·
+`p` advance prio (none → 1 → 2 → 3 → none) · `D` finish (asks once) · `f` filter chip
+(status/prio/kind/tag/blocked) · `e` export (buffer/clipboard/quickfix/file, md or csv) · `r` rescan ·
+`gb` Backlog picker / `gr` `ROADMAP/ROADMAP.md` of the area under the cursor · `g?` help.
+`s`/`p` apply as one batch with one notification; the last filter is remembered.
 A collection `vault` for pickers.nvim (`:Pickers vault files|grep|smart`) searches the
 same vault.
 

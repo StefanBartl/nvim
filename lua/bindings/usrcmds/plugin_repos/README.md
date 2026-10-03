@@ -310,10 +310,54 @@ each jumping to the task file. Rendering and delivery are `lib.nvim.harvest` (`r
 `emit`) and `lib.nvim.ui.list`. Nothing is delivered when no task matches; the command
 says so instead.
 
-*Dashboard seam.* Without `--to=` and `--format=` the command calls
-`require("bindings.usrcmds.plugin_repos.tasks_cmd").dashboard(view)` when that function
-is set (`view = { tasks, area, filter, root }`), instead of opening the scratch buffer.
-It is `nil` today; the dashboard step assigns it.
+### The dashboard (`:MyPlugins tasks [<area>|all]` without `--to=` / `--format=`)
+
+An interactive `Snacks.picker` (source `wkdbook_tasks`, the engine `picker.lua` uses):
+one line per open task -- prio, status, effort, area, title and a `<- blocker` hint --
+the task file as the preview, and a title with the counts and the active filter chips:
+
+```
+ Tasks (lib.nvim) · 41 open · 3 decision · 5 blocked  [status: open,doing] [prio: <=2]
+```
+
+| Key | Action |
+|---|---|
+| `<CR>` | open the file (all marked ones when there are marks) |
+| `<Tab>` / `<S-Tab>` | mark / unmark (snacks' own multi-select; the marks are the target of `s p D e`) |
+| `s` | advance the status of the marked (else the current) tasks: `doing` -> `decision` -> `blocked` -> `open` -> `parked` -> `doing` |
+| `p` | advance the prio: none -> 1 -> 2 -> 3 -> none (3 -> none removes the key) |
+| `D` | finish after **one** confirmation naming every task (engine `done`, moved to `Backlog/`) |
+| `f` | set a filter chip: pick `status`, `prio`, `kind`, `tag`, `blocked` or "clear all", then a value (`(any)` clears one chip) |
+| `e` | export the marked (else all shown) tasks: scratch buffer, clipboard, quickfix or a file, as Markdown or CSV -- the `--to=` sinks |
+| `r` | rescan the vault |
+| `gb` / `gr` | the Backlog picker (`:MyPlugins open <area> backlog`) / `ROADMAP/ROADMAP.md` of the area under the cursor |
+| `g?` | key help float (any key closes it) |
+
+The letters work in the list window; in the input window they work in normal mode
+(`<Esc>` first), because insert mode types the search. `s` and `p` are applied
+at once, as **one batch**: every task advances from its own value, one `tasks.mutate.set`
+per task without its own index write, then each touched area's `ROADMAP/TASKS.md` is
+regenerated **once**, and one notification reports `changed / unchanged / failed`. The
+picker stays open and rescans. `D`, `f`, `e`, `gb` and `gr` ask something, and snacks
+closes a picker whose window loses focus, so they close it first; `D` and `f` reopen it
+afterwards (the marks are gone then), `e` does not when it delivered something.
+
+The last filter is remembered between sessions (`lib.nvim.store.project`, keyed by the
+vault, key `tasks/dashboard-filter`). A filter given on the command line (`--status=...`)
+wins for that session and is not stored until it is changed with `f`. An empty result
+stays open (`show_empty`), so a filter that matches nothing can be cleared with `f`.
+
+Without snacks.nvim a `vim.ui.select` flow lists the same tasks; picking one opens a menu
+(open the file, advance status / prio, finish, filter, export the list, Backlog,
+ROADMAP.md) for **that one task** -- no marks, no batch. It never raises.
+
+Not built: ranking by `lib.nvim.frecency` (the status/prio order is what the list is for,
+and a frecency score would shuffle it) and reacting to `lib.nvim.fs.watch` (`r` rescans;
+a watch over ~40 areas was more machinery than a manual refresh is worth).
+
+*Seam.* `require("bindings.usrcmds.plugin_repos.tasks_cmd").dashboard` decides what
+happens: `nil` (the default) opens this dashboard, a function replaces it
+(`view = { tasks, area, filter, root }`), `false` gives the scratch buffer back.
 
 ### `:MyPlugins tasks index [<area>] [--all] [--check]`
 
@@ -450,7 +494,14 @@ uncommitted work permanently. Sticking to the named list is what makes
 - The task commands are split three ways: `tasks_routes.lua` (the route table and the
   argument types `TASK_AREA` / `TASK_ID`, both reading the vault on every call and
   failing soft), `tasks_cmd.lua` (the handlers: prompts, notifications, opening files, the
-  dashboard seam) and `tasks_view.lua` (render a list as Markdown/CSV, deliver it).
+  dashboard seam) and `tasks_view.lua` (render a list as Markdown/CSV, deliver it). The
+  dashboard is `tasks_dash.lua` (the window: snacks source, keys, prompts, fallback) on top
+  of `tasks_dash_core.lua` (everything that needs no window: list lines, filter chips,
+  the `s`/`p` cycles, batch planning and apply, export targets -- specced on its own).
+- The dashboard does **not** reuse `picker.lua`'s per-row `pending` table: that mechanic
+  assigns one of six actions per row and runs them on `<CR>`. Here the marks are snacks'
+  own selection and `s`/`p` act at once on whatever is marked; only the idea "cycle a
+  state with a key, apply as one batch with one summary" is shared.
   `init.lua` loads `tasks_routes` guarded with `pcall`: the routes need
   `lib.nvim.markdown.frontmatter`, so a machine whose lib.nvim is older loses only
   `tasks`/`task`/`open` (with a warning), not the whole command.
@@ -465,6 +516,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 - [`lua/tasks/README.md`](../../../tasks/README.md) — the engine behind `tasks`/`task`/`open`;
   `wkdbook-myplugins/ALL/Task-System-Konzept.md` — the concept and the rules R1-R12
 - [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
+- [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`
 
 - [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/core/source.lua`](../../../plugins/personal/core/source.lua) — the `OVERRIDE` switch and per-repo mode table
