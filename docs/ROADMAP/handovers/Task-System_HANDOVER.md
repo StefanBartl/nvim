@@ -2,9 +2,9 @@
 
 > **Stand 2026-10-04 (Zwischenstand).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
-> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim` (28 Tasks), `images.nvim` (24 Tasks, Runde 10); `spotlight.nvim` ist geprüft (keine
+> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim` (28 Tasks), `images.nvim` (24 Tasks, Runde 10), `pdfport.nvim` (7 Tasks, Runde 11); `spotlight.nvim` ist geprüft (keine
 > offene Arbeit, keine Tasks); `pickers.nvim` hat seinen ersten Task. Keine Agenten laufen mehr. Offen bleiben die übrigen
-> Plugins (Größenordnung: `pdfport`, `open`, `gitsuite`, `color_my_ascii`, `migrate`, `rules`, `media`, `ai`,
+> Plugins (Größenordnung: `open`, `gitsuite`, `color_my_ascii`, `migrate`, `rules`, `media`, `ai`,
 > `ui`, `debugging`, … und `docmap-desktop`) und die Politur (Phase 5). **Die Entscheidungen zu casedesk, markdown, documentation,
 > github_stats und filetree sind inzwischen im Vault als Commits eingetragen (`e63b4cb`, `e27b5c8`, `4584776`, `e18a512`,
 > `05e3187`); der Abschnitt „Offene Entscheidungen“ unten ist für diese Plugins veraltet und gilt nur noch für `images.nvim`.**
@@ -31,7 +31,7 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24) |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7) |
 | Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R12 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
@@ -81,6 +81,7 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `36ef7c4` | `filetree.nvim`: 28 Tasks (Runde 8) |
 | WKDBooks | `e63b4cb`, `e27b5c8`, `4584776`, `e18a512`, `05e3187` | Entscheidungen casedesk, markdown, documentation, github_stats, filetree |
 | WKDBooks | `0037ef2` | `images.nvim`: 24 Tasks (Runde 10), Roadmap-Korrekturen (Flamegraph und ASCII-Fallback sind gebaut) |
+| WKDBooks | `c04e5d5` | `pdfport.nvim`: 7 Tasks (Runde 11), Roadmap-Korrekturen |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
 geprüft (13 Befunde behoben). Die Fix-Commits `c6d274c`, `efcab018`, `80ef2946` hat Claude am 2026-10-04 selbst
@@ -103,8 +104,14 @@ Agent reviewt.
 
 ## Offene Entscheidungen (warten auf den Nutzer)
 
-Nur `images.nvim` ist offen; die älteren Punkte zu den anderen Plugins sind im Vault entschieden (siehe Commits oben).
+`images.nvim` und `pdfport.nvim` sind offen; die älteren Punkte zu den anderen Plugins sind im Vault entschieden (siehe Commits oben).
 
+- **pdfport.nvim (Runde 11):** keine Tasks für (1) benannte Fehlertypen statt Fehlerstrings (empfohlen: nein),
+  (2) `wkhtmltopdf`/eigener `typst`-Producer aus PDF_CREATE.md, nie gebaut (empfohlen: nicht bauen, PDF_CREATE.md
+  datiert korrigieren), (3) echte Tool-Läufe in CI (empfohlen: lassen, PDF_CREATE §8). Bugs prio 2:
+  `soffice-detect-install-paths` (`producers/soffice.lua:37` prüft nur PATH), `rasterize-timeout`. `openai-extraction-backend`
+  bekommt `blocked_by`, sobald `ai.nvim` einen Task „openai file-Part prüfen, `documents = true`“ hat (ai.nvim ist
+  noch nicht migriert). `window-lifecycle-helper` geparkt bis zum vierten fensterbasierten Renderer.
 - **images.nvim (Runde 10):** `image-suite-decision` (Status `decision`: dünne Suite ja/nein — empfohlen: erst die
   Einzelfunde abarbeiten); Sixel-Backend nicht angelegt (empfohlen: nein; Kitty bleibt nach `CONTRIBUTING.md` verworfen);
   Rotate/Flip nicht angelegt (empfohlen: nein); `gopath-open-action-for-images`, `docmap-graph-as-image`,
