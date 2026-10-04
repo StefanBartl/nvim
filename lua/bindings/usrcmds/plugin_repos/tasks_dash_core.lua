@@ -731,7 +731,7 @@ end
 
 ---@class Plugin_repos.TasksDashExport
 ---@field label string
----@field to "buffer"|"clipboard"|"qf"|"file"
+---@field to "buffer"|"clipboard"|"qf"|"file"|"mdview"
 ---@field format? "md"|"csv"
 ---@field ask_path? boolean
 
@@ -744,6 +744,8 @@ M.EXPORT_CHOICES = {
   { label = "File ... (Markdown)", to = "file", format = "md", ask_path = true },
   { label = "Clipboard (CSV)", to = "clipboard", format = "csv" },
   { label = "File ... (CSV)", to = "file", format = "csv", ask_path = true },
+  -- Last, so the positions the other entries have stay as they were.
+  { label = "Preview in browser (mdview)", to = "mdview", format = "md" },
 }
 
 ---Turn a menu choice (and the path the user typed, for a file) into what

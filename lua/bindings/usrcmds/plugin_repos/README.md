@@ -37,6 +37,7 @@ those names no longer exist.
 :MyPlugins task done <id> [done_in= date=] [--yes]
 :MyPlugins task template [--to=]
 :MyPlugins task open <id>
+:MyPlugins task preview <id>       " the task file rendered in the browser (mdview.nvim)
 :MyPlugins open <area> [tasks|roadmap|backlog|handover|notes|all] [--action=] [--list] [--to=]
 ```
 
@@ -301,7 +302,7 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 | `--stale=refs` | a file named in the task's `refs:` changed on a later day than `updated` (git commit date, mtime as fallback); the heading names the changed files. Details in [`lua/tasks/README.md`](../../../tasks/README.md) (section `--stale=refs`) |
 | `--blocked` | status `blocked`, or a non-empty `blocked_by` |
 | `--sort=default` / `prio-effort` / `severity` | the order: `default` is status, prio, area, slug; `prio-effort` is status, prio, then effort ascending (important and small first, no effort last of its prio); `severity` is `critical` first, then `high`, `medium`, `low`, no severity last, each group in the default order |
-| `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo` |
+| `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo`, `mdview` (Markdown written to a temp file and shown in the browser by [mdview.nvim](https://github.com/StefanBartl/mdview.nvim); see [Browser preview](#browser-preview-mdview)) |
 | `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path, severity; a `file:` target ending in `.csv` implies `csv` |
 
 ```vim
@@ -340,19 +341,20 @@ counts, the active filter chips and, when it is not the default, the sort order:
 | `D` | finish after **one** confirmation naming every task (engine `done`, moved to `Backlog/`) |
 | `f` | set a filter chip: pick `status`, `prio`, `effort` (`XS`..`XL`, `<=S`, `<=M`), `kind`, `category`, `severity`, `tag`, `blocked`, `stale-refs` (toggle: shows the chip `[stale: refs]`) or "clear all", then a value (`(any)` clears one chip) |
 | `o` | cycle the sort order: `default` -> `prio-effort` (small first within a prio) -> `severity` (critical first) -> `default`; a non-default order shows as `[sort: ...]` in the title |
-| `e` | export the marked (else all shown) tasks: scratch buffer, clipboard, quickfix or a file, as Markdown or CSV -- the `--to=` sinks |
+| `e` | export the marked (else all shown) tasks: scratch buffer, clipboard, quickfix or a file, as Markdown or CSV, or "Preview in browser (mdview)" -- the `--to=` sinks |
 | `r` | rescan the vault |
+| `gp` | preview the task file under the cursor in the browser through mdview.nvim ([Browser preview](#browser-preview-mdview)); the single-task menu of the plain fallback has "preview the file (mdview)" |
 | `gb` / `gr` | the Backlog picker (`:MyPlugins open <area> backlog`) / `ROADMAP/ROADMAP.md` of the area under the cursor |
 | `g?` | key help float (any key closes it) |
 
 The letters work in the list window. In the input window they would shadow the editing
 commands (`s`, `p`, `D`, `e` in normal mode) and the typing in insert mode, so there the same
 actions are Alt chords (normal and insert mode): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<M-o>` `<M-e>`
-`<M-r>`, `<M-b>` (backlog), `<M-m>` (roadmap), `<M-?>` (help). `s` and `p` are applied
+`<M-r>`, `<M-b>` (backlog), `<M-m>` (roadmap), `<M-v>` (preview), `<M-?>` (help). `s` and `p` are applied
 at once, as **one batch**: every task advances from its own value, one `tasks.mutate.set`
 per task without its own index write, then each touched area's `ROADMAP/TASKS.md` is
 regenerated **once**, and one notification reports `changed / unchanged / failed`. The
-picker stays open and rescans. `D`, `f`, `e`, `gb` and `gr` ask something, and snacks
+picker stays open and rescans. `D`, `f`, `e`, `gb`, `gr` and `gp` ask something or open a window, and snacks
 closes a picker whose window loses focus, so they close it first; `D` and `f` reopen it
 afterwards (the marks are gone then), `e` does not when it delivered something.
 
@@ -497,6 +499,37 @@ says so.
 
 Opens the file of an open task, or its finished copy in `Backlog/`.
 
+### `:MyPlugins task preview <id>`
+
+The same file (an open task, else its finished copy) rendered in the browser by mdview.nvim:
+see [Browser preview](#browser-preview-mdview).
+
+### Browser preview (mdview)
+
+`task preview <id>`, `tasks ... --to=mdview` and the dashboard keys (`gp`, and "Preview in
+browser" in the `e` menu) put the rendered Markdown in the browser through
+[mdview.nvim](https://github.com/StefanBartl/mdview.nvim). The wire is `tasks_preview.lua`:
+
+- **A task file** is opened as it is (`:edit`, then `:MDView start <file>`), so edits show up in
+  the preview live. Nothing is copied and nothing is written to the vault.
+- **A list export** (`--to=mdview`, `--format=md` only; `--format=csv` is refused) is rendered to
+  Markdown, written to a temp file `tasks-<scope>.md` (`-2`, `-3` on a name clash; the scope is the
+  area or `all`) in Neovim's per-session temp directory, and opened the same way. The buffer is
+  unlisted. The file is deleted when its buffer is deleted or wiped (retrying a few times, Windows
+  holds a file for a moment) and, for whatever is left, when Neovim quits; Neovim removes its
+  temp directory on exit anyway. A temp location inside the vault is refused.
+- **mdview.nvim is a soft dependency.** The check is "the `:MDView` command exists (a lazy stub
+  counts) or `require("mdview")` works"; otherwise the command says
+  `mdview.nvim is not available ...` and writes nothing. No `require` happens at load time.
+- **Frontmatter:** a task file starts with flat YAML. mdview.nvim renders a leading frontmatter
+  block as a two-column table (before that, it showed a rule plus one big heading made of the
+  metadata lines -- that needs the renderer of mdview.nvim from 2026-10-04 on, i.e. a rebuilt
+  or newly released WASM bundle). The generated `ROADMAP/TASKS.md` has no frontmatter and needs
+  nothing.
+- **Seams** (for specs and replacement): `tasks_preview.probe` (is mdview there?),
+  `tasks_preview.opener` (open + start the preview, returns `ok, err`),
+  `tasks_preview.temp_root` (temp directory).
+
 ### `:MyPlugins open <area> [folder] [--action=files|grep|smart] [--list] [--to=]`
 
 A picker over the files of **one folder of one area**. `folder` is `tasks`
@@ -581,6 +614,7 @@ uncommitted work permanently. Sticking to the named list is what makes
   dashboard is `tasks_dash.lua` (the window: snacks source, keys, prompts, fallback) on top
   of `tasks_dash_core.lua` (everything that needs no window: list lines, filter chips,
   the `s`/`p` cycles, batch planning and apply, export targets -- specced on its own).
+  `tasks_preview.lua` is the mdview.nvim wire (`task preview`, `--to=mdview`, dashboard `gp`).
 - The dashboard does **not** reuse `picker.lua`'s per-row `pending` table: that mechanic
   assigns one of six actions per row and runs them on `<CR>`. Here the marks are snacks'
   own selection and `s`/`p` act at once on whatever is marked; only the idea "cycle a

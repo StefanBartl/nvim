@@ -5,7 +5,8 @@
 --- sorted) `Tasks.Task[]` from the engine and turns it into text with
 --- `lib.nvim.harvest.render`, then hands it to the sink the user named with
 --- `--to=` through `lib.nvim.harvest` (`buffer`, `clipboard`, `file:<path>`,
---- `echo`) or `lib.nvim.ui.list` (`qf`).
+--- `echo`), `lib.nvim.ui.list` (`qf`) or `tasks_preview` (`mdview`: a temp
+--- file previewed in the browser).
 ---
 --- Key responsibilities:
 ---  - `parse_target`: validate a `--to=` token before anything is rendered
@@ -25,7 +26,7 @@ local M = {}
 
 ---The targets `--to=` accepts, for completion.
 ---@type string[]
-M.TARGETS = { "buffer", "clipboard", "qf", "file:", "echo" }
+M.TARGETS = { "buffer", "clipboard", "qf", "file:", "echo", "mdview" }
 
 local EN_DASH = "–"
 
@@ -141,7 +142,7 @@ function M.parse_target(to)
     end
     return { kind = "file", path = path }, nil
   end
-  if to == "buffer" or to == "clipboard" or to == "qf" or to == "echo" then
+  if to == "buffer" or to == "clipboard" or to == "qf" or to == "echo" or to == "mdview" then
     return { kind = to }, nil
   end
   return nil, ("unknown --to target '%s' (expected %s)"):format(to, table.concat(M.TARGETS, ", "))
@@ -252,6 +253,23 @@ function M.deliver(tasks, target, opts)
   end
 
   local format = M.resolve_format(target, opts.format)
+  if kind == "mdview" then
+    -- A browser preview renders Markdown; CSV would show as one paragraph.
+    if format == "csv" then
+      return false, "--to=mdview previews Markdown; drop --format=csv"
+    end
+    local text = M.render(tasks, {
+      format = "md",
+      heading = opts.heading,
+      note = opts.note,
+    })
+    -- The temp file is named after the last part of the title (`.../tasks/<area>`).
+    local ok, err = require("bindings.usrcmds.plugin_repos.tasks_preview").open_text(
+      text,
+      opts.title and opts.title:match("([^/]+)$") or nil
+    )
+    return ok, err
+  end
   local text = M.render(tasks, {
     format = format,
     heading = opts.heading,
