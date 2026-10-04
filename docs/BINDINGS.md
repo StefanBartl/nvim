@@ -386,14 +386,14 @@ and are verb-first (`:MyPlugins tasks cascade.nvim`). `<Tab>` completes areas
 (`ALL`, `nvim-config`, `docmap-desktop` included), task ids and `key=`; the lowercase
 `all` means every area, `ALL` is the area of that name. Details, flags and the engine:
 [`plugin_repos/README.md`](../lua/bindings/usrcmds/plugin_repos/README.md#task-commands-tasks-task-open).
-**Dashboard keys** (`:MyPlugins tasks`, list window; in the input window press `<Esc>` first):
+**Dashboard keys** (`:MyPlugins tasks`, list window; in the input window the same actions are `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<M-e>` `<M-r>` `<M-b>` (backlog) `<M-m>` (roadmap) `<M-?>`):
 `<CR>` open file · `<Tab>`/`<S-Tab>` mark · `s` advance status of the marked (else current) tasks ·
 `p` advance prio (none → 1 → 2 → 3 → none) · `D` finish (asks once) · `f` filter chip
 (status/prio/kind/tag/blocked) · `e` export (buffer/clipboard/quickfix/file, md or csv) · `r` rescan ·
 `gb` Backlog picker / `gr` `ROADMAP/ROADMAP.md` of the area under the cursor · `g?` help.
 `s`/`p` apply as one batch with one notification; the last filter is remembered.
-A collection `vault` for pickers.nvim (`:Pickers vault files|grep|smart`) searches the
-same vault.
+`:MyPlugins open <area> <tasks|roadmap|backlog|…>` searches one folder of an area (`ALL` too);
+the plain-text search over the whole vault is the `plugins_book` collection (`<leader>pbs/pbg`).
 
 ```vim
 :MyPlugins update              " bring this machine level with what got pushed elsewhere

@@ -6,7 +6,8 @@
 --- title. Without snacks.nvim a small `vim.ui.select` flow offers the same
 --- actions for one task at a time (no batch).
 ---
---- Keys (list window; the input window has the same letters in normal mode):
+--- Keys (list window; the input window has them as Alt chords, `<M-s>` `<M-p>` `<M-d>`
+--- `<M-f>` `<M-e>` `<M-r>` `<M-b>` (backlog) `<M-m>` (roadmap) `<M-?>`, in normal and insert mode):
 ---  - `<CR>` open the file(s)    `<Tab>` / `<S-Tab>` mark (snacks' own multi-select)
 ---  - `s` / `p`  advance status / prio of the marked (else the current) tasks,
 ---    ONE batch, ONE notification, each touched area's index regenerated once
@@ -350,7 +351,8 @@ M.HELP = {
   " gb / gr     Backlog picker / ROADMAP.md of the area under the cursor",
   " g?          this help",
   "",
-  " Letters work in the list; in the input window press <Esc> first.",
+  " Letters work in the list. In the input window use Alt:",
+  " <M-s> <M-p> <M-d> <M-f> <M-e> <M-r> <M-b>(backlog) <M-m>(roadmap) <M-?>",
   " (any key closes this help)",
 }
 
@@ -483,21 +485,24 @@ local function open_snacks(Snacks, state)
     end,
   }
 
+  -- Letters in the list window (nothing is typed there); Alt chords in the input
+  -- window, so its normal-mode edits (`s` `p` `D` `e` ...) and the search typing
+  -- in insert mode stay untouched.
   local letters = {
-    s = "tasks_status",
-    p = "tasks_prio",
-    D = "tasks_done",
-    f = "tasks_filter",
-    e = "tasks_export",
-    r = "tasks_rescan",
-    gb = "tasks_backlog",
-    gr = "tasks_roadmap",
-    ["g?"] = "tasks_help",
+    s = { "tasks_status", "<M-s>" },
+    p = { "tasks_prio", "<M-p>" },
+    D = { "tasks_done", "<M-d>" },
+    f = { "tasks_filter", "<M-f>" },
+    e = { "tasks_export", "<M-e>" },
+    r = { "tasks_rescan", "<M-r>" },
+    gb = { "tasks_backlog", "<M-b>" },
+    gr = { "tasks_roadmap", "<M-m>" },
+    ["g?"] = { "tasks_help", "<M-?>" },
   }
   local list_keys, input_keys = {}, {}
-  for key, action in pairs(letters) do
-    list_keys[key] = action
-    input_keys[key] = { action, mode = { "n" } }
+  for key, spec in pairs(letters) do
+    list_keys[key] = spec[1]
+    input_keys[spec[2]] = { spec[1], mode = { "n", "i" } }
   end
 
   Snacks.picker({

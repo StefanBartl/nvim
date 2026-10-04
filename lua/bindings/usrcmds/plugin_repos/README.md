@@ -333,8 +333,10 @@ the task file as the preview, and a title with the counts and the active filter 
 | `gb` / `gr` | the Backlog picker (`:MyPlugins open <area> backlog`) / `ROADMAP/ROADMAP.md` of the area under the cursor |
 | `g?` | key help float (any key closes it) |
 
-The letters work in the list window; in the input window they work in normal mode
-(`<Esc>` first), because insert mode types the search. `s` and `p` are applied
+The letters work in the list window. In the input window they would shadow the editing
+commands (`s`, `p`, `D`, `e` in normal mode) and the typing in insert mode, so there the same
+actions are Alt chords (normal and insert mode): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<M-e>`
+`<M-r>`, `<M-b>` (backlog), `<M-m>` (roadmap), `<M-?>` (help). `s` and `p` are applied
 at once, as **one batch**: every task advances from its own value, one `tasks.mutate.set`
 per task without its own index write, then each touched area's `ROADMAP/TASKS.md` is
 regenerated **once**, and one notification reports `changed / unchanged / failed`. The
@@ -433,9 +435,9 @@ list of files, relative to the folder, instead of opening a picker.
 subfolder" (a collection offers "pick one subfolder of this directory"), so `open` does not
 use one. Without pickers.nvim it falls back to a plain `vim.ui.select` over the folder's
 `*.md` files: no content search, and `--action=grep|smart` is answered with that hint.
-Separately, `lua/plugins/personal/specs/navigate.lua` has a collection `vault`
-(`:Pickers vault files|grep|smart`: pick an area, then search it) for ad-hoc full-text
-search over the vault, the same shape as `plugins_book`.
+Ad-hoc full-text search over the whole vault is the `plugins_book` collection in
+`lua/plugins/personal/specs/navigate.lua` (`:Pickers plugins_book files|grep|smart`, `<leader>pbs/pbg`);
+a second collection `vault` was removed as a duplicate (it also could not reach `ALL`).
 
 ## Safety model — why this never scans a directory
 
