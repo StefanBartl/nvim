@@ -1,9 +1,9 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (Zwischenstand, nach Runde 21).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> **Stand 2026-10-04 (Zwischenstand, nach Runde 22 und der Entscheidungsrunde).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
-> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`; `spotlight.nvim` und
+> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`; `spotlight.nvim` und
 > `migrate.nvim` sind geprüft (keine offene Arbeit, keine Tasks); `pickers.nvim`, `hover.nvim`, `language.nvim` und
 > `replacer.nvim` haben je einzelne Tasks aus fremden Runden (ihre eigene Runde steht aus). Keine Agenten laufen mehr.
 > Nach Runde 19 (`ui`) wurde auf Wunsch kurz angehalten, Runde 20 (`debugging`) lief danach; offen sind die kleinen Plugins (Liste
@@ -36,7 +36,7 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4), `my.nvim` (5); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
 | Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R14 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
@@ -117,6 +117,8 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `8fc8953` | `ai.nvim`: 15 Tasks; `pdfport.nvim/openai-extraction-backend` jetzt blockiert durch `ai.nvim/openai-documents-live-check` (Runde 18) |
 | WKDBooks | `397310c` | `ui.nvim`: 13 Tasks (Runde 19) |
 | nvim-config | `f974551d` | Kategorien und Ordner-Tasks (Engine, CLI, Routen, Dashboard, Specs, Doku) |
+| WKDBooks | `3523f02` | `my.nvim`: 5 Tasks (Runde 22) |
+| WKDBooks | `914a3ac` | Entscheidungen umgesetzt: 14 neue Tasks, ui.kit-Tasks von lib.nvim nach ui.nvim, Bereich `ALL/ROADMAP/tasks/`, rules-Agentenkette Prio 1, `insights.nvim/telemetry-subcommand-usage` verworfen |
 | WKDBooks | `da40a62` | Konzept §12, Regeln R13 und R14 |
 | WKDBooks | `932fac8` | `debugging.nvim`: 5 Tasks (Runde 20); „Offen“ der ROADMAP war das gebaute Recent-Popup, durch Verweis ersetzt (Commit trägt versehentlich einen Claude-Co-Author-Trailer, gepusht) |
 | WKDBooks | `c36036a` | `insights.nvim`: 4 Tasks (Runde 21), nur das SYNERGIE-Papier war offen; gebaute Features in FEATURES.md nachgetragen |
@@ -141,52 +143,37 @@ gegen den Code geprüft, nicht per `ultracode`.
   alles) und schnellem Ausblenden, Capture/Formatierung mit `ui.nvim`s `ui.screenkey` teilen; Marker-Umzug als eigener
   Task (`mdview.nvim/overlay-markers-migration`, parked).
 
-## Offene Entscheidungen (warten auf den Nutzer)
+## Entscheidungen der Runden 10–22 (2026-10-04, im Vault umgesetzt, `914a3ac`)
 
-Offen sind die Runden 10–19 (außer `open.nvim`, dort ist alles entschieden und im Vault eingetragen: Image-Fallback
-im Code nachziehen, benannten Browser ohne `cmd.exe` starten, kein doppelter Menüeintrag). Empfehlung jeweils in
-Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<slug>.md`.
+Der Nutzer hat die offenen Fragen durchgesprochen; was nicht genannt ist, blieb bewusst unverändert.
 
-- **images.nvim:** `image-suite-decision` (dünne Suite ja/nein — erst die Einzelfunde); Sixel-Backend (nein; Kitty bleibt
-  verworfen); Rotate/Flip (nicht anlegen); `gopath-open-action-for-images`, `docmap-graph-as-image`,
-  `github-stats-chart-as-image` in die Bereiche gopath/documentation/github_stats umziehen (ja, bei deren Runde);
-  `magick-resource-limits`, `draw-payload-cache` (prio 3, schwach belegt: behalten?). Bugs prio 2:
-  `paste-powershell-quote-escape` (nur bei Temp-Pfad mit typografischem Quote), `convert-failure-deletes-existing-target`.
-- **pdfport.nvim:** keine Tasks für benannte Fehlertypen (nein), `wkhtmltopdf`/eigenen `typst`-Producer (nicht bauen,
-  PDF_CREATE.md korrigieren), echte Tool-Läufe in CI (lassen). Bugs prio 2: `soffice-detect-install-paths`,
-  `rasterize-timeout`.
-- **gitsuite.nvim:** `own-engine-lazygit-neogit` (verwerfen oder parken, Scope schließt Staging-UI aus);
-  `terminal-spawn-helper` (zählen Split-Terminals als zweiter Konsument? ja, dann bauen); `diffview-replacement`
-  (Status quo, Fallback diff.nvim genügt); ungetriagte Ideen (`:Git conflict diff`, Hunk-Navigation `]c`/`[c`, Textobjekt
-  `ih`) nicht anlegen.
-- **color_my_ascii.nvim:** `custom-groups-dead-option` (entfernen, `overrides` reicht); `language-registry-hot-reload`
-  (verwerfen); `fence-folding` (vermutlich verwerfen, eher markdown.nvim); „Planned for 2.0.0“ aus `docs/CHANGELOG.md`
-  (verwerfen); `visible-range-highlighting` erst nach festem Messfall; `fence-user-event` bleibt geparkt, bis ein
-  Verbraucher benannt ist.
-- **rules.nvim:** Agent-Strang überhaupt angehen? (erst `agent-plan-validate` und `rules-json-project-config`, beide
-  nützen auch ohne Agent); Cross-Plugin-Ideen aus dem BACKLOG nicht anlegen; `rules.nvim/TASK-documentation.nvim.md` ist
-  erledigt und gehört nach `Backlog/TASKS/` (verschieben); `diff-ref-completion` geparkt lassen.
-- **media.nvim:** `bare-media-command`, `hub-missing-actions`, `hub-office-files` (je `decision`, Empfehlung in den
-  Task-Notes); `openai_whisper` als eigene Engine streichen; Oktanten/`chafa` gehört zu images.nvim (nicht anlegen);
-  Diarisierung unspezifisch (nicht anlegen). Prio 2: `cache-eviction`, `language.nvim/subtitle-aware-translate-filter`.
-- **ai.nvim:** `repo-instructions-and-hooks` (nur System-Prompt-Teil, erst nach `agent-presets`, keine Hooks wegen
-  Prompt-Injektion); `readme-literature-section` (anlegen, kurz); Chat-Buffer-Sessions ablehnen (Scope, bleibt loomAI);
-  `copilot-provider` (verwerfen, falls kein Bedarf); `:Ai stop` zuerst nur für Streams. `release-v1-tag` ist `blocked`
-  ohne `blocked_by`: die Voraussetzungen (Alltagsdurchlauf, Gemini-Live-Test, POSIX-Durchlauf) stehen als Akzeptanz.
-- **debugging.nvim:** `views-dead-refresh-sweep` (Status `decision`: tote Refresh-Mechanik `refresh_log_view`, WinEnter/BufWinEnter/FileType-Autocmds, `is_target_view` und die Optionen `delay_messages_ms`, `delay_noice_ms`, `capture_timeout_ms` entfernen? Empfehlung: ja, eigene Config anpassen; `setup()` warnt seit `0cde049` bei unbekannten Schlüsseln); `lib.nvim.messages` hat keinen Statusabruf für `health-recent-popup-requirements` (abwarten). Bug prio 2: `recent-fallback-multiline-crash` (ohne ui.nvim stürzt `<lt>m/n/e` bei mehrzeiligen Meldungen ab, `views/recent.lua:59`); `docs-recent-popup-catch-up` (Doku und `health.lua` „Noice views“ veraltet). `lib.nvim/tagged-scratch-window` ist veraltet (debugging.nvim nutzt `lib.nvim.window.tag`, das Popup ist der zweite Konsument) — Task nachziehen.
-- **insights.nvim:** `telemetry-subcommand-usage` (Status `decision`: selbst messen? Empfehlung: nein, nur Host-seitig); `architecture-md-todos-drift` (handgepflegt lassen, nur `todos/` ergänzen); `metrics-docmap-section` geparkt. `readme-documentation-pointer` (Verweis fehlt in beiden READMEs). Info für `filetree.nvim/insights-node-actions`: `insights.compress.compress(path, …)` nimmt einen Pfad, `tree.write_tree/count_files/copy_to_clipboard` arbeiten nur auf dem cwd.
-- **ui.nvim:** noice-Ersatz geparkt lassen; `interactive-confirm-sweep` (Status `decision`: Besitzer `ALL` mit neuem
-  `ALL/ROADMAP/tasks/` — Konzept §2 erlaubt es, der Ordner existiert noch nicht); `kit-terminal-vs-snacks` (Snacks.terminal
-  bleiben); gebündelte Ideen-Tasks `statusline-ambient-ideas`, `sticky-language-gaps` so lassen oder einzeln; `wezterm-bridge`
-  (bauen oder verwerfen); Marks-Reihenfolge „Workstation“ gehört in die nvim-config-Runde (`lua/config/marks/defaults.lua`,
-  Workstation-Satz hat 5 Einträge, die „Liste von acht Pfaden“ steht nirgends mehr); `Logo im Menü` nicht angelegt;
-  von den opt-in-Statusline-Modulen verdrahtet die nvim-config nur `search_count` und `undo_depth` — welche weiteren?
-  Bugs prio 2: `context-kotlin-when-branches` (`^struct` in `context/init.lua:168` nimmt den Kotlin-Zweig `1 -> {` weg,
-  Suite 1057 ok / 1 rot, die CI sieht es nicht), `screenkey-secret-input-protection` (security, `vim.on_key` sieht
-  `inputsecret()`), `docs-ui-subcommands-catch-up` (docs).
-- **Abgeleitete Besitzerfragen:** `lib.nvim` hat fünf Tasks mit „Ort ui.nvim oder lib.nvim?“ (`history-stack-ui-kit`,
-  `tui-dashboard-kit`, `ui-kit-playground`, `create-on-missing-dialog`, `messages-module-cut`); `ui.kit` in ui.nvim ist laut
-  PLAN maßgeblich, die Frozen-Kopie in lib.nvim ist nicht mehr feature-frei (`message_log.lua` liegt in beiden).
+- **debugging.nvim:** `views-dead-refresh-sweep` bleibt `decision` — der Nutzer entfernt den Code selbst (Liste im Task);
+  `health-recent-popup-requirements` ist `blocked` durch den neuen `lib.nvim/messages-status`.
+- **insights.nvim:** `telemetry-subcommand-usage` verworfen (nur Host-seitig messen); `architecture-md-todos-drift` handgepflegt.
+- **images.nvim:** `image-suite-decision` erst nach den Einzelfunden; neuer Task `sixel-backend-evaluation` (decision);
+  die drei Bereichs-Tasks (gopath/documentation/github_stats) ziehen bei deren Runde um; `magick-resource-limits`,
+  `draw-payload-cache` unverändert. `images.nvim/ROADMAP/TERMINALS.md` sagt noch „Sixel has no task“ (nachziehen).
+- **pdfport.nvim:** drei `decision`-Tasks (`named-error-types`, `wkhtmltopdf-typst-producers`, `real-tool-runs-in-ci`).
+- **gitsuite.nvim:** `terminal-spawn-helper` → `open` (bauen); drei geparkte Ideen (`conflict-diff-three-way`,
+  `hunk-navigation`, `hunk-textobject-ih`); `own-engine-lazygit-neogit` und `diffview-replacement` unverändert.
+- **my.nvim:** `dead-breadcrumb-config-keys` → `open` (alle fünf Schlüssel entfernen, `lua_table_root` zusammen mit
+  `lsp.nvim/lua-table-root-jump`); der Scrubber wandert nach lib.nvim (`lib.nvim/clipboard-utf8-scrubber`,
+  `my.nvim/clipboard-scrubber-spec` blockiert darauf).
+- **rules.nvim:** Agent-Strang wird angegangen (vier Tasks Prio 1; Kette `agent-plan-validate` + `rules-json-project-config`
+  → `agent-verdict-store` → `agent-commands-over-ai-nvim`); `TASK-documentation.nvim.md` nach `Backlog/TASKS/` verschoben.
+- **ai.nvim:** `copilot-provider` bleibt; `repo-instructions-and-hooks` nur System-Prompt-Teil, `blocked` durch
+  `agent-presets`; Chat-Buffer-Sessions abgelehnt („Nicht geplant“); `:Ai stop` zuerst nur für Streams.
+- **ui.nvim / lib.nvim:** `interactive-confirm-sweep` liegt jetzt in `ALL/ROADMAP/tasks/` (`ALL/interactive-confirm-sweep`);
+  `history-stack-ui-kit`, `tui-dashboard-kit`, `ui-kit-playground`, `create-on-missing-dialog`, `messages-module-cut` sind
+  `ui.nvim/<slug>` (ui.kit maßgeblich, lib.nvim-Kopie nur per Drift-Port). Übrige ui.nvim-Fragen (wezterm-bridge,
+  Snacks.terminal, Ideen-Bündel, noice) bleiben offen/unverändert.
+- **color_my_ascii.nvim, media.nvim:** keine Änderung; deren Empfehlungen stehen weiter in den Task-Notes.
+- **Prio-2-Bugs aus den Runden** (`images`: `paste-powershell-quote-escape`, `convert-failure-deletes-existing-target`;
+  `pdfport`: `soffice-detect-install-paths`, `rasterize-timeout`; `ui`: `context-kotlin-when-branches`,
+  `screenkey-secret-input-protection`, `docs-ui-subcommands-catch-up`; `debugging`: `recent-fallback-multiline-crash`) sind
+  Tasks und warten auf Abarbeitung, keine Entscheidung nötig.
+- **Neue Engine-Features (in Arbeit, eigener Worktree-Branch):** Filter `--effort=` und Sortierung `--sort=prio-effort`;
+  optionales Feld `severity` (low/medium/high/critical) für bug/security mit `--severity=`, `--sort=severity`.
 
 <details><summary>Ältere Punkte (entschieden, nur zur Historie)</summary>
 
