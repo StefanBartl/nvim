@@ -1,0 +1,65 @@
+# TEMPLATE -- belongs in the WKDBooks repo as `.github/workflows/tasks-ci.yml`
+# (the vault is a folder of that repo: Development/wkdbook-myplugins). It is kept here,
+# next to the engine it runs (`lua/tasks/ci.lua`, `scripts/tasks-ci.lua` of the nvim config
+# repo), until it is copied over.
+#
+# The gate: `tasks check` (no error finding), `tasks index --check` (no outdated
+# ROADMAP/TASKS.md) and the vault's md_lint over every generated index. It writes nothing.
+#
+# Layout it builds, so that `$REPOS_DIR/...` links in the notes and the engine's own
+# vault lookup (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`) resolve like on a dev machine:
+#
+#   deps/WKDBooks   this repo        deps/nvim      the config with lua/tasks + scripts/tasks-ci.lua
+#   deps/lib.nvim   the engine's library             deps/lsp.nvim  `lsp.core.env_links` for md_lint
+#
+# The repos below are public; for a private one pass `token: ${{ secrets.<PAT> }}` to the
+# checkout (the default GITHUB_TOKEN reaches only this repository).
+
+name: tasks-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Development/wkdbook-myplugins/**"
+  pull_request:
+    paths:
+      - "Development/wkdbook-myplugins/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vault-gate:
+    name: tasks check + index --check + md_lint
+    runs-on: ubuntu-latest
+    env:
+      REPOS_DIR: ${{ github.workspace }}/deps
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: deps/WKDBooks
+      - uses: actions/checkout@v5
+        with:
+          repository: StefanBartl/nvim
+          path: deps/nvim
+      - uses: actions/checkout@v5
+        with:
+          repository: StefanBartl/lib.nvim
+          path: deps/lib.nvim
+          ref: ci-verified
+      - uses: actions/checkout@v5
+        with:
+          repository: StefanBartl/lsp.nvim
+          path: deps/lsp.nvim
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+      - name: Vault gate
+        env:
+          LIB_NVIM_DIR: ${{ github.workspace }}/deps/lib.nvim
+        run: |
+          nvim --headless -u NONE -l deps/nvim/scripts/tasks-ci.lua \
+            --vault="$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins"

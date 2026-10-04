@@ -298,6 +298,7 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 | `--severity=a,b` | any of `low medium high critical` (the optional `severity` of a bug / security task; a task without one never matches) |
 | `--tag=a,b` | any of these tags |
 | `--stale=<days>` | not updated for at least that many days (no date counts as stale) |
+| `--stale=refs` | a file named in the task's `refs:` changed on a later day than `updated` (git commit date, mtime as fallback); the heading names the changed files. Details in [`lua/tasks/README.md`](../../../tasks/README.md) (section `--stale=refs`) |
 | `--blocked` | status `blocked`, or a non-empty `blocked_by` |
 | `--sort=default` / `prio-effort` / `severity` | the order: `default` is status, prio, area, slug; `prio-effort` is status, prio, then effort ascending (important and small first, no effort last of its prio); `severity` is `critical` first, then `high`, `medium`, `low`, no severity last, each group in the default order |
 | `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo` |
@@ -337,7 +338,7 @@ counts, the active filter chips and, when it is not the default, the sort order:
 | `s` | advance the status of the marked (else the current) tasks: `doing` -> `decision` -> `blocked` -> `open` -> `parked` -> `doing` |
 | `p` | advance the prio: none -> 1 -> 2 -> 3 -> none (3 -> none removes the key) |
 | `D` | finish after **one** confirmation naming every task (engine `done`, moved to `Backlog/`) |
-| `f` | set a filter chip: pick `status`, `prio`, `effort` (`XS`..`XL`, `<=S`, `<=M`), `kind`, `category`, `severity`, `tag`, `blocked` or "clear all", then a value (`(any)` clears one chip) |
+| `f` | set a filter chip: pick `status`, `prio`, `effort` (`XS`..`XL`, `<=S`, `<=M`), `kind`, `category`, `severity`, `tag`, `blocked`, `stale-refs` (toggle: shows the chip `[stale: refs]`) or "clear all", then a value (`(any)` clears one chip) |
 | `o` | cycle the sort order: `default` -> `prio-effort` (small first within a prio) -> `severity` (critical first) -> `default`; a non-default order shows as `[sort: ...]` in the title |
 | `e` | export the marked (else all shown) tasks: scratch buffer, clipboard, quickfix or a file, as Markdown or CSV -- the `--to=` sinks |
 | `r` | rescan the vault |

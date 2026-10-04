@@ -263,6 +263,12 @@ function M.set_filter(state, after)
       after()
       return
     end
+    if dim == "stale-refs" then
+      state.filter = core.set_dim(state.filter, "stale-refs", not state.filter.stale_refs or nil)
+      persist(state)
+      after()
+      return
+    end
     local scope = core.load({ root = state.root, area = state.area, filter = {} })
     local choices = core.dim_choices(dim, scope and scope.tasks or {})
     table.insert(choices, 1, core.CLEAR)
@@ -371,7 +377,7 @@ M.HELP = {
   " s           advance status of marked (else current) tasks",
   " p           advance prio:  none -> 1 -> 2 -> 3 -> none",
   " D           finish (asks first, moves to Backlog/)",
-  " f           set a filter chip (status prio effort kind category severity tag blocked)",
+  " f           set a filter chip (status prio effort kind category severity tag blocked stale-refs)",
   " o           cycle the sort: default -> prio-effort (small first) -> severity (critical first)",
   " e           export marked (else all shown) tasks",
   " r           rescan the vault",

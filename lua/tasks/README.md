@@ -32,9 +32,12 @@ lua/tasks/
 ├── mutate.lua    template, new, set, done
 ├── form.lua      the Markdown form of `task new` (template, parse, validate, tick rules)
 ├── check.lua     rule checker
+├── staleness.lua `--stale=refs`: referenced files changed since `updated`
+├── ci.lua        CI gate: check + index --check + md_lint
 ├── cli.lua       command-line front end
 └── @types/       LuaLS types
 scripts/tasks.lua   headless entry (nvim --headless -u NONE -l)
+scripts/tasks-ci.lua  same as `tasks.lua ci`, the one entry point for a pipeline
 TESTS/tasks/        specs (run with TESTS/run.lua)
 ```
 
@@ -49,6 +52,8 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 | `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` or as a folder counts as taken; `folder = true` makes a folder task). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). `folderize` and `attach` turn a task into a folder task and copy assets into it. All regenerate the area index. | `template`, `new`, `set`, `done`, `folderize`, `attach`, `slugify`, `readme_add_row`, `SETTABLE` |
 | `tasks.form` | The form behind `:MyPlugins task new` without arguments, with no UI: `template` builds the Markdown text (`Area:` / `Title:` / `Tags:` / `Refs:` lines and one `- [ ]` / `- [x]` bullet list per choice field, the value sets read from `tasks.model`), `parse` reads what the user left in it, `validate` checks it (area known, title present, one tick on a single-choice list) and returns `tasks.mutate.new` options, `toggle` flips one bullet and keeps a single-choice list at one tick (`category` takes several). It creates nothing: the editor layer passes the values to `mutate.new`, the same write path as the CLI. | `fields`, `template`, `parse`, `validate`, `toggle`, `normalize`, `error_lines`, `strip_errors` |
 | `tasks.check` | Collects findings over one area or the vault (table below). | `run`, `format` |
+| `tasks.staleness` | `--stale=refs`: which open tasks carry a `refs:` path that changed after their `updated` (below). `compute(tasks, opts)` returns the report, `model.filter` calls it for `Tasks.Filter.stale_refs`, `classify` reads one ref. | `compute`, `classify`, `describe`, `git_dates` |
+| `tasks.ci` | The vault gate for pipelines: `check` (errors fail; `strict` fails on warnings too), `index --check`, and the vault's `md_lint.lua` over every generated `ROADMAP/TASKS.md`. Returns exit code, step names and printed lines. | `run` |
 | `tasks.cli` | Parses a command line, calls the engine, prints tab-separated lines, returns an exit code, never raises. | `run` |
 
 ## Front ends
@@ -151,6 +156,53 @@ finished task with the same id under another date, is refused.
 
 Only `error` findings make a run fail.
 
+### `--stale=refs` -- tasks whose referenced files changed
+
+`--stale=<days>` looks only at `updated`. `--stale=refs` (or `--stale-refs`) asks the
+other question: a task with `refs: [lua/ai/config/init.lua, docs/a.md]` is stale when one of
+those files changed on a **later day** than the task's `updated` (else `created`), so the task
+needs a fresh read. The two combine (both must hold). The output names which file changed:
+`list` appends `changed: lua/a.lua (2026-10-01, git)`, `:MyPlugins tasks` puts the files under
+the heading, and the dashboard shows the chip `[stale: refs]` (toggle it with `f` > `stale-refs`).
+
+How a ref is read:
+
+| Ref | Handling |
+|---|---|
+| `lua/a.lua`, `docs/x.md`, `lua\a.lua`, `dir/` | a path: backslashes become `/`, a trailing `:42` or `#anchor` is dropped |
+| `lib.nvim@803de65`, `https://...`, `filetree.nvim:cheatsheet-paged` | skipped (a commit, a URL, an anchor: nothing on disk to date) |
+| a task id like `ui.nvim/some-slug` | found as no path, so it is only counted as "found nowhere" |
+
+A path is looked for, in order, in: the repo named like the task's area (`<repos>/<area>`, where
+`<repos>` is the folder above the vault's checkout, `$REPOS_DIR` and `$REPOS_DIR/repos`), the nvim
+config (`$NVIM_CONFIG_DIR`), the vault, and the folder above the vault. The first place where it
+exists wins. A file is dated by the commit date of the last commit touching it (a directory: the
+newest file in it); a file git does not know (untracked, or a base that is no repository) uses its
+mtime. Uncommitted edits are not seen.
+
+Cost: one `git log` per repo and 100 paths, never one per task; a file is looked up once however
+many tasks name it; at most `staleness.MAX_REFS` (1000) distinct files are checked per run (the
+rest is reported). A missing repo, file or git only produces a note on stderr / a notification,
+never an error. Against the real vault: about 600 files in ~5 s.
+
+## CI gate -- `tasks ci` / `scripts/tasks-ci.lua`
+
+```sh
+nvim --headless -u NONE -l scripts/tasks-ci.lua --vault=<wkdbooks>/Development/wkdbook-myplugins
+```
+
+Three steps, exit `0` only when all pass (`1` otherwise), a short summary at the end:
+
+1. `check` -- every `error` finding fails (`--strict`: warnings too)
+2. `index --check` -- no `ROADMAP/TASKS.md` missing, outdated or left over
+3. `md_lint` -- `<vault>/TOOLS/scripts/md_lint.lua` over every generated `TASKS.md` (relative
+   links, anchors, table columns; `$VAR/...` links when lsp.nvim is on `$REPOS_DIR` or in lazy's
+   data folder). `--no-lint` skips it; a missing script fails the run, it is never skipped silently.
+   `--md-lint=<file>` points at another copy.
+
+The GitHub Actions template for the vault repo is `docs/TEMPLATES/wkdbooks-tasks-ci.yml`
+(copy it to `WKDBooks/.github/workflows/tasks-ci.yml`).
+
 ## Headless CLI -- `scripts/tasks.lua`
 
 For sessions without a running Neovim (rule R12) and for CI. One
@@ -168,7 +220,7 @@ nvim --headless -u NONE -l scripts/tasks.lua check
 
 | Command | Effect |
 |---|---|
-| `list [area] [--status=a,b] [--prio=1,2\|<=2] [--effort=S,M\|<=M] [--kind=k] [--category=c,d] [--severity=high,critical] [--tag=t] [--stale=N] [--blocked] [--sort=default\|prio-effort\|severity] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
+| `list [area] [--status=a,b] [--prio=1,2\|<=2] [--effort=S,M\|<=M] [--kind=k] [--category=c,d] [--severity=high,critical] [--tag=t] [--stale=N|refs] [--stale-refs] [--blocked] [--sort=default\|prio-effort\|severity] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
 | `index [area] [--check]` | write / verify `ROADMAP/TASKS.md` (all areas without argument) |
 | `new <area> <title> [--kind --prio --effort --tags=a,b --category=c,d --severity=s --refs=a,b --lang=de\|en --summary --slug --status] [--folder] [--no-index]` | create a task file (`--lang` picks the language of the body headings, default `de`; `--folder` a folder task) |
 | `attach <area>/<slug> <file> [--name=n] [--no-index]` | copy a file to `<slug>/assets/` (a plain task becomes a folder task), print the Markdown link |
@@ -176,6 +228,7 @@ nvim --headless -u NONE -l scripts/tasks.lua check
 | `set <area>/<slug> key=value ... [--no-index]` | change frontmatter; an empty value removes the key |
 | `done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD] [--no-index]` | finish and move to `Backlog/` |
 | `check [area]` | rule check |
+| `ci [--strict] [--no-lint] [--md-lint=<file>]` | the CI gate: check + `index --check` + md_lint of the generated indexes (see above) |
 | `template [--title --kind --prio --effort --tags --lang=de\|en]` | print the task template |
 | `areas` | list the vault's areas |
 | `export [--top=N] [--no-links]` | all-areas overview as Markdown on stdout (never written to a file) |

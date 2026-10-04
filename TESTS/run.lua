@@ -64,6 +64,8 @@ local specs = {
   "tasks/tasks_routes_spec.lua",
   "tasks/tasks_dash_spec.lua",
   "tasks/tasks_dash_picker_spec.lua",
+  "tasks/tasks_staleness_spec.lua",
+  "tasks/tasks_ci_spec.lua",
 }
 
 -- Optional filter: only the specs whose path contains one of the arguments.
