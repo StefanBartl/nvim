@@ -29,6 +29,7 @@ those names no longer exist.
 
 :MyPlugins tasks [<area>|all] [--status= --prio= --effort= --kind= --category= --severity= --tag= --stale=<days> --blocked] [--sort=] [--to= --format=]
 :MyPlugins tasks index [<area>|--all] [--check]
+:MyPlugins task new                " no arguments: the form
 :MyPlugins task new <area> [title...] [kind= prio= effort= tags= category= severity= status=] [--folder]
 :MyPlugins task set <id> key=value ...
 :MyPlugins task attach <id> <file> [name=]
@@ -383,6 +384,62 @@ engine -- missing or invalid frontmatter, unknown status/kind/prio/effort, dangl
 `Backlog/`, ... -- and reports the findings (a notification, or a scratch buffer when
 there are more than ten). Errors are `ERROR` level, warnings `WARN`.
 
+### `:MyPlugins task new` -- the form (no arguments)
+
+`:MyPlugins task new` without an area opens a Markdown form in a split, in the manner of
+`:Case new` of casedesk.nvim:
+
+```markdown
+# New task
+Area: lib.nvim
+Title: Notify: unify the output channels
+
+## kind (one)
+- [ ] feature
+- [x] task
+...
+## category (several)
+- [ ] bug
+- [x] docs
+...
+Tags: ui, notify
+Refs: lua/lib/nvim/notify.lua
+```
+
+The choice fields `kind`, `prio`, `effort`, `category`, `severity` and `status` are bullet
+lists whose values come from the engine (`tasks.model`); `category` takes several ticks, the
+others one (ticking a bullet clears its siblings; leaving a list empty means "not set", and
+`kind` / `status` then get the engine defaults `task` / `open`). `Area:` and `Title:` are
+required; `Tags:` and `Refs:` are comma separated. `key=value` words on the command line
+(`:MyPlugins task new kind=bug category=docs,ruleset tags=a`) pre-tick the form. A hint line
+lists the areas of the vault.
+
+| Key (form buffer) | Does |
+|---|---|
+| `<Space>` / `<CR>` on a bullet | tick / untick it (`<CR>` on other lines is a plain `<CR>`) |
+| `<C-s>` (normal and insert) | submit |
+| `q` (normal) / `<C-q>` | cancel -- nothing is created |
+| `g?` | help |
+
+The tick is cascade.nvim's checkbox toggle (`require("cascade").toggle_checkbox`) when that
+plugin is installed (a soft dependency, wrapped in `pcall`), with the result normalised to
+the form's rules; without it, or when cascade does nothing on that line, the form flips the
+bullet itself on the same keys.
+
+Submitting checks the form: the problems are written at the top of the buffer as `!` lines
+(they vanish on the next submit), and nothing is lost -- the buffer stays as it is. A valid
+form asks **"Attach assets?"**: *Yes* creates a folder task (`<slug>/<slug>.md`, as
+`--folder` does), makes `assets/` and opens the file explorer on it (filetree.nvim's
+`:Filetree open` when installed, else Neovim's directory browser); *No* creates a plain task
+file. The task is written by `tasks.mutate.new`, the one write path the CLI uses as well; an
+error of the engine (a tag with a forbidden character, say) is shown in the form, which stays
+open. Afterwards the form closes and the new file opens.
+
+With an area (`task new <area> ...`) nothing changes: that is the old behaviour below.
+
+Seams for tests and other front ends: `tasks_cmd.form_open` (replaces the form buffer,
+signature of `tasks_form.open`) and `tasks_cmd.explorer_open(dir)`.
+
 ### `:MyPlugins task new <area> [title...] [kind= prio= effort= tags= status=]`
 
 Creates `<area>/ROADMAP/tasks/<slug>.md` (slug from the title; a taken slug gets `-2`,
@@ -517,7 +574,9 @@ uncommitted work permanently. Sticking to the named list is what makes
 - The task commands are split three ways: `tasks_routes.lua` (the route table and the
   argument types `TASK_AREA` / `TASK_ID`, both reading the vault on every call and
   failing soft), `tasks_cmd.lua` (the handlers: prompts, notifications, opening files, the
-  dashboard seam) and `tasks_view.lua` (render a list as Markdown/CSV, deliver it). The
+  dashboard seam, the "attach assets?" flow of the form) and `tasks_view.lua` (render a list as
+  Markdown/CSV, deliver it); `tasks_form.lua` is the thin buffer/keymap UI of the `task new`
+  form over the pure `tasks.form` (specced in `tasks_form_spec.lua` and the routes spec). The
   dashboard is `tasks_dash.lua` (the window: snacks source, keys, prompts, fallback) on top
   of `tasks_dash_core.lua` (everything that needs no window: list lines, filter chips,
   the `s`/`p` cycles, batch planning and apply, export targets -- specced on its own).

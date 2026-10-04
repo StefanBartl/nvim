@@ -9,7 +9,7 @@
 --- Grammar (verb-first, concept section 5.1):
 ---  - `tasks [<area>|all] [--status= --prio= --kind= --tag= --stale= --blocked] [--to= --format=]`
 ---  - `tasks index [<area>|--all] [--check]`
----  - `task new <area> [title...] [kind= prio= effort= tags= status=]`
+---  - `task new [<area> [title...]] [kind= prio= effort= tags= status=]` (no area: the form)
 ---  - `task set <id> key=value ...`, `task done <id> [done_in= date= --yes]`
 ---  - `task template [--to=]`, `task open <id>`
 ---  - `open <area> [tasks|roadmap|backlog|handover|notes|all] [--action= --list --to=]`
@@ -196,7 +196,7 @@ function M.routes()
 
     {
       path = { "task", "new" },
-      args = { { name = "area", type = "TASK_AREA" } },
+      args = { { name = "area", type = "TASK_AREA", optional = true } },
       kv = {
         { key = "kind", type = "STRING", values = model.KINDS },
         { key = "prio", type = "STRING", values = { "1", "2", "3" } },
@@ -207,7 +207,7 @@ function M.routes()
         { key = "status", type = "STRING", values = model.OPEN_STATUSES },
       },
       flags = { { name = "folder", bool = true } },
-      desc = "Create ROADMAP/tasks/<slug>.md in an area and open it; the words after the area are the title (asked for when missing); --folder makes a folder task that can hold assets",
+      desc = "Without arguments: a Markdown form (tick kind, prio, effort, category, severity, status; <C-s> submits) and the question whether to attach assets. With an area: create ROADMAP/tasks/<slug>.md in it and open it; the words after the area are the title (asked for when missing); --folder makes a folder task that can hold assets",
       run = function(ctx)
         cmd().task_new(ctx)
       end,
