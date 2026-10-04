@@ -333,8 +333,11 @@ Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-R
   echten Terminal (manche Terminals senden Alt anders).
 - **Vorbestehend rot:** `stylua --check` meldet einen Diff in
   `lua/bindings/usrcmds/learn_plan_viewer/init.lua` (nicht Teil dieser Arbeit).
-- **Nicht gebaut:** `fs.watch`-Refresh und Frecency im Dashboard; Statusline-Zähler; `--stale` mit
-  `refs:`-Prüfung; CI-Check für den Vault.
+- **Nicht gebaut:** `fs.watch`-Refresh und Frecency im Dashboard; Statusline-Zähler.
+- **Phase 5a (2026-10-04) gebaut:** `--stale=refs` (`lua/tasks/staleness.lua`, Konzept §15.1) und das Vault-CI
+  (`lua/tasks/ci.lua`, `scripts/tasks-ci.lua`, Vorlage `docs/TEMPLATES/wkdbooks-tasks-ci.yml`, Konzept §15.2).
+  Offen davon: die Workflow-Datei muss noch nach `WKDBooks/.github/workflows/` kopiert werden (Nutzerentscheidung);
+  uncommittete Dateiänderungen sieht `--stale=refs` nicht.
 - **Pilot-/Migrationsqualität:** ca. 40 der `lib.nvim`-Tasks tragen `needs-verification`; Prios, `parked` und
   `decision` sind in allen migrierten Plugins Interpretation der Quellen (steht jeweils in den Notes).
 - **Vorgemerkt für die Runde des jeweiligen Plugins:**

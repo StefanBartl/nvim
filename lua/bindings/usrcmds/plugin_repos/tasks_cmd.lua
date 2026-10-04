@@ -26,6 +26,7 @@ local index = require("tasks.index")
 local model = require("tasks.model")
 local mutate = require("tasks.mutate")
 local scan = require("tasks.scan")
+local staleness = require("tasks.staleness")
 local vault = require("tasks.vault")
 
 local confirm = require("bindings.usrcmds.plugin_repos.confirm")
@@ -184,7 +185,9 @@ local function filter_note(flags)
       parts[#parts + 1] = ("%s=%s"):format(name, flags[name])
     end
   end
-  if flags.stale ~= nil then
+  if flags.stale == "refs" then
+    parts[#parts + 1] = "stale=refs"
+  elseif flags.stale ~= nil then
     parts[#parts + 1] = "stale>=" .. tostring(flags.stale) .. "d"
   end
   if flags.blocked then
@@ -231,6 +234,7 @@ function M.list(ctx)
   if not root then
     return
   end
+  filter.ref_opts = { root = root }
 
   local area = ctx.args.area
   if area == "all" then
@@ -259,6 +263,32 @@ function M.list(ctx)
     end
   end
   local shown = model.sort(model.filter(open, filter), order)
+  local ref_note = nil
+  if filter.stale_refs then
+    -- `model.filter` left its report in `staleness.last`: name the files that changed.
+    local stale_report = staleness.last
+    if stale_report then
+      local lines = {}
+      for _, t in ipairs(shown) do
+        lines[#lines + 1] = ("%s: %s"):format(
+          t.id,
+          staleness.describe(stale_report.stale[t.id] or {}, 3)
+        )
+      end
+      ref_note = #lines > 0 and ("Changed since updated: " .. table.concat(lines, " | ")) or nil
+      for _, n in ipairs(stale_report.notes) do
+        notify.warn(n)
+      end
+      notify.info(
+        ("--stale=refs: %d file(s) of %d task(s) checked, %d ref(s) found nowhere, %d skipped"):format(
+          stale_report.files,
+          stale_report.tasks,
+          stale_report.unresolved,
+          stale_report.skipped
+        )
+      )
+    end
+  end
   if skipped > 0 then
     notify.warn(
       ("%d task file(s) not listed (missing or unknown status, or done); run :MyPlugins tasks index --check"):format(
@@ -288,7 +318,13 @@ function M.list(ctx)
   local ok, err = view.deliver(shown, target, {
     format = flags.format,
     heading = ("Offene Tasks — %s (%d)"):format(label, #shown),
-    note = filter_note(flags),
+    note = (function()
+      local base = filter_note(flags)
+      if ref_note then
+        return base and (base .. "\n\n" .. ref_note) or ref_note
+      end
+      return base
+    end)(),
     title = "myplugins://tasks/" .. (area or "all"),
   })
   if not ok then

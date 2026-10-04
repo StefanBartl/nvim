@@ -727,8 +727,9 @@ end
 ---`--stale=<days>`, `--blocked`) into a `Tasks.Filter`.
 ---Shared by the headless CLI and the editor commands so both read the same
 ---words the same way. Unknown words are an error, never silently ignored.
----`stale` may be a number or a digit string; `today` is passed through.
----@param opt { status?: string, prio?: string|integer, effort?: string, kind?: string, tag?: string, category?: string, severity?: string, stale?: string|integer, blocked?: boolean, today?: string }
+---`stale` may be a number, a digit string or `refs` (same as `stale_refs`: a
+---file named in `refs` changed since `updated`); `today` is passed through.
+---@param opt { status?: string, prio?: string|integer, effort?: string, kind?: string, tag?: string, category?: string, severity?: string, stale?: string|integer, stale_refs?: boolean, blocked?: boolean, today?: string }
 ---@return Tasks.Filter|nil filter
 ---@return string|nil err
 function M.filter_from_options(opt)
@@ -812,10 +813,16 @@ function M.filter_from_options(opt)
   end
   if opt.stale ~= nil then
     local raw = tostring(opt.stale)
-    if not raw:match("^%d+$") then
-      return nil, ("--stale must be a whole number, got '%s'"):format(raw)
+    if raw == "refs" then
+      f.stale_refs = true
+    elseif not raw:match("^%d+$") then
+      return nil, ("--stale must be a whole number, got '%s' (or the word refs)"):format(raw)
+    else
+      f.stale = tonumber(raw)
     end
-    f.stale = tonumber(raw)
+  end
+  if opt.stale_refs then
+    f.stale_refs = true
   end
   if opt.blocked then
     f.blocked = true
@@ -835,6 +842,16 @@ function M.filter(tasks, f)
   local effort, severity = to_set(f.effort), to_set(f.severity)
   local effort_max = f.effort_max and M.effort_days(f.effort_max) or nil
   local today = f.today or M.today()
+  -- `--stale=refs`: one batched look at the files the tasks reference. The
+  -- caller may hand in a ready map (`f.ref_stale`); `tasks.staleness.last`
+  -- keeps the report so a front end can say which file changed.
+  local ref_stale = f.ref_stale
+  if f.stale_refs and not ref_stale then
+    local ok, report = pcall(function()
+      return require("tasks.staleness").compute(tasks, f.ref_opts)
+    end)
+    ref_stale = ok and report.stale or {}
+  end
 
   local out = {}
   for _, t in ipairs(tasks) do
@@ -881,6 +898,9 @@ function M.filter(tasks, f)
       keep = false
     end
     if keep and f.stale and not is_stale(t, today, f.stale) then
+      keep = false
+    end
+    if keep and f.stale_refs and not (ref_stale and ref_stale[t.id]) then
       keep = false
     end
     if keep then
