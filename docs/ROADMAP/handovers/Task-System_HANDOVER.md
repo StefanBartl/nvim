@@ -1,6 +1,6 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (nach Runde 36: **Phase 4 abgeschlossen**, Entscheidungen zu Runde 23–28 umgesetzt, Phase 5a/5b/5c fertig, fs.watch läuft).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
+> **Stand 2026-10-04 (nach Runde 36: **Phase 4 abgeschlossen**, Entscheidungen zu Runde 23–28 umgesetzt, **Phase 5 abgeschlossen**).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
 > `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`, `cascade.nvim`, `sandbox.nvim`, `reposcope.nvim`, `sessions.nvim`, `emojis.nvim`, `diff.nvim`, `cmdlog.nvim`, `dap.nvim`, `fileops.nvim`, `recommender.nvim`, `filetreepicker.nvim`, `nvim-nexus`, `docmap-desktop` (21), `nvim-config` (26) und `ALL` (+24); `refinder` (kein Plugin, Statussatz), `spotlight.nvim` und
@@ -103,7 +103,12 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
   Vault-Konzept `3ec1c572`): `:MyPlugins task preview <id>`, Export-Ziel `--to=mdview` (nur md, Temp-Datei mit Retry-Löschung),
   Dashboard `gp` (`<M-v>`) und `e`-Eintrag "Preview in browser"; mdview ist weiche Abhängigkeit. mdview rendert Frontmatter jetzt als
   Tabelle (Rust `replace_front_matter`), **wirksam erst mit neu gebautem WASM-Bundle** (nichts gebaut/released); echter mdview-Start
-  und Browser nicht geprüft. **`fs.watch`-Refresh + Frecency im Dashboard** läuft als Agent im eigenen Worktree.
+  und Browser nicht geprüft. **`fs.watch`-Refresh + Frecency im Dashboard fertig** (`a1ca6032`, Merge `52348b9e`, Konzept §16 `c700701c`): `tasks_dash_watch.lua`
+  (Handle pro Ordner über `lib.nvim.fs.watch`, nicht rekursiv, ein Timer 250 ms, `hold` für eigene Batches, Signaturvergleich, Cursor/Marks per
+  Task-ID, sauberes Stoppen; Opt-out `config.watch = false`) und `lua/tasks/frecency.lua` (Halbwertszeit 14 Tage, max. 500, Datei
+  `stdpath("state")/tasks/frecency.json`, korrupt = leer; `--sort=frecency`, im `o`-Zyklus). 19 Specs grün. **Nicht geprüft:** echtes Terminal,
+  Linux/macOS, Dauerbetrieb, Auto-Refresh gegen den echten Vault. `lib.nvim/fs-watch-filename-normalize` (parked): zweiter Konsument existiert
+  jetzt, braucht aber die Normalisierung nicht — Neubewertung.
 
 ## Kategorien und Ordner-Tasks (Konzept §12)
 
@@ -343,7 +348,7 @@ Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-R
   echten Terminal (manche Terminals senden Alt anders).
 - **Vorbestehend rot:** `stylua --check` meldet einen Diff in
   `lua/bindings/usrcmds/learn_plan_viewer/init.lua` (nicht Teil dieser Arbeit).
-- **Nicht gebaut:** `fs.watch`-Refresh und Frecency im Dashboard; Statusline-Zähler.
+- **Nicht gebaut:** keine Phase-5-Punkte mehr; offen sind die echten Sitzungstests (Formular, Dashboard-Refresh, Statusline-Zähler, mdview).
 - **Phase 5a (2026-10-04) gebaut:** `--stale=refs` (`lua/tasks/staleness.lua`, Konzept §15.1) und das Vault-CI
   (`lua/tasks/ci.lua`, `scripts/tasks-ci.lua`, Vorlage `docs/TEMPLATES/wkdbooks-tasks-ci.yml`, Konzept §15.2).
   Offen davon: die Workflow-Datei muss noch nach `WKDBooks/.github/workflows/` kopiert werden (Nutzerentscheidung);
@@ -410,4 +415,8 @@ Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-R
    reviewt; `lsp.nvim/config-unknown-key-warning` hat im Vault ein `Backlog/FEATURES`-Protokoll, die Plugin-Docs
    (`docs/configuration.md`, `:help lsp.nvim`) beschreiben das Verhalten.
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
-4. Phase 5: Politur — 5a `--stale`/refs und Vault-CI (fertig), 5b Statusline-Zähler und 5c mdview-Vorschau (fertig); danach `fs.watch`-Refresh und Frecency im Dashboard.
+4. **Phase 5: Politur — abgeschlossen** (5a `--stale=refs` + Vault-CI, 5b Statusline-Zähler, 5c mdview-Vorschau, Live-Refresh + Frecency).
+   **Offen für den Nutzer:** (a) `docs/TEMPLATES/wkdbooks-tasks-ci.yml` in `E:epos\WKDBooks\.github\workflows\` kopieren?; (b) mdview WASM-Bundle
+   bauen/releasen (Frontmatter-Tabelle); (c) das Formular `:MyPlugins task new`, den Dashboard-Refresh, `gp` und `T:N` in einer echten Sitzung
+   ausprobieren, dann `ALL/task-new-form` schließen; (d) Entscheidungen der `decision`-Tasks (Liste: `:MyPlugins tasks --status=decision`);
+   (e) `ultracode`-Review der Phase-5-Commits (`d2d2b203`, `dc7e420f`, `a1ca6032`, ui.nvim `edf4967`, mdview `ec4092a`).
