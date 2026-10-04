@@ -301,7 +301,7 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 | `--stale=<days>` | not updated for at least that many days (no date counts as stale) |
 | `--stale=refs` | a file named in the task's `refs:` changed on a later day than `updated` (git commit date, mtime as fallback); the heading names the changed files. Details in [`lua/tasks/README.md`](../../../tasks/README.md) (section `--stale=refs`) |
 | `--blocked` | status `blocked`, or a non-empty `blocked_by` |
-| `--sort=default` / `prio-effort` / `severity` | the order: `default` is status, prio, area, slug; `prio-effort` is status, prio, then effort ascending (important and small first, no effort last of its prio); `severity` is `critical` first, then `high`, `medium`, `low`, no severity last, each group in the default order |
+| `--sort=default` / `prio-effort` / `severity` / `frecency` | the order: `default` is status, prio, area, slug; `prio-effort` is status, prio, then effort ascending (important and small first, no effort last of its prio); `severity` is `critical` first, then `high`, `medium`, `low`, no severity last, each group in the default order; `frecency` is what the dashboard opened or changed most first (see below), the rest in the default order |
 | `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo`, `mdview` (Markdown written to a temp file and shown in the browser by [mdview.nvim](https://github.com/StefanBartl/mdview.nvim); see [Browser preview](#browser-preview-mdview)) |
 | `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path, severity; a `file:` target ending in `.csv` implies `csv` |
 
@@ -340,9 +340,9 @@ counts, the active filter chips and, when it is not the default, the sort order:
 | `p` | advance the prio: none -> 1 -> 2 -> 3 -> none (3 -> none removes the key) |
 | `D` | finish after **one** confirmation naming every task (engine `done`, moved to `Backlog/`) |
 | `f` | set a filter chip: pick `status`, `prio`, `effort` (`XS`..`XL`, `<=S`, `<=M`), `kind`, `category`, `severity`, `tag`, `blocked`, `stale-refs` (toggle: shows the chip `[stale: refs]`) or "clear all", then a value (`(any)` clears one chip) |
-| `o` | cycle the sort order: `default` -> `prio-effort` (small first within a prio) -> `severity` (critical first) -> `default`; a non-default order shows as `[sort: ...]` in the title |
+| `o` | cycle the sort order: `default` -> `prio-effort` (small first within a prio) -> `severity` (critical first) -> `frecency` (most opened / changed first) -> `default`; a non-default order shows as `[sort: ...]` in the title |
 | `e` | export the marked (else all shown) tasks: scratch buffer, clipboard, quickfix or a file, as Markdown or CSV, or "Preview in browser (mdview)" -- the `--to=` sinks |
-| `r` | rescan the vault |
+| `r` | rescan the vault now (the list also refreshes by itself, see "Live refresh"); keeps the cursor task and the marks |
 | `gp` | preview the task file under the cursor in the browser through mdview.nvim ([Browser preview](#browser-preview-mdview)); the single-task menu of the plain fallback has "preview the file (mdview)" |
 | `gb` / `gr` | the Backlog picker (`:MyPlugins open <area> backlog`) / `ROADMAP/ROADMAP.md` of the area under the cursor |
 | `g?` | key help float (any key closes it) |
@@ -369,9 +369,35 @@ Without snacks.nvim a `vim.ui.select` flow lists the same tasks; picking one ope
 (open the file, advance status / prio, finish, filter, next sort order, export the list,
 Backlog, ROADMAP.md) for **that one task** -- no marks, no batch. It never raises.
 
-Not built: ranking by `lib.nvim.frecency` (the status/prio order is what the list is for,
-and a frecency score would shuffle it) and reacting to `lib.nvim.fs.watch` (`r` rescans;
-a watch over ~40 areas was more machinery than a manual refresh is worth).
+**Live refresh.** While the dashboard is open it watches the folders its list is made of
+(`tasks_dash_watch.lua`, handles from `lib.nvim.fs.watch`): `<area>/ROADMAP/tasks` and each
+folder-task folder in it, and `<area>/Backlog/FEATURES` and `Backlog/TASKS` where finished
+tasks land -- the shown area, or every area for `all`. When a file changes (this Neovim,
+another one, a Claude session, `git pull`) the list rescans by itself, after 250 ms of quiet
+(a burst of events is one rescan). Cursor and marks are found again **by task id**, so they
+stay on the same tasks even when a rescan moved rows around; filter chips and the sort order
+are not touched. A rescan that finds the same list (files in the folder that are no tasks, a
+file saved unchanged) redraws nothing. The dashboard's own batches (`s`, `p`) are not echoed:
+their file events are muted and no second scan runs. Closing the picker (any way out,
+including the `D` / `f` / `e` detours) stops every handle and timer; the reopened dashboard
+starts its own. Only direct folders are watched (libuv's `recursive` flag does nothing on
+Linux), so after every refresh (and after `r`) the handles are re-aimed: a folder task
+created while open is watched from then on. A whole new area is only noticed by `r` or by
+reopening the dashboard (the vault root itself is not watched). Off with `require("bindings.usrcmds.plugin_repos.tasks_dash").config.watch = false`
+(or per call `open(v, { watch = false })`); the debounce is `config.watch_debounce_ms`. If no
+folder can be watched (handle limit, no `lib.nvim.fs.watch`) the dashboard says so once and
+`r` stays the way to rescan. The plain `vim.ui.select` fallback has no live list.
+
+**Frecency.** Opening a task (`<CR>`, or "open the file" in the fallback menu) or changing it
+(`s` / `p`) counts as a visit: `tasks/frecency.lua` keeps a decayed counter per task id --
+each visit adds 1, the old count halves every 14 days (a task opened three times today
+outranks one opened five times last month, one left alone fades out after a couple of
+months). The file is `stdpath("state")/tasks/frecency.json` (`$TASKS_FRECENCY_FILE`
+overrides it; at most 500 entries, the lowest scores go first; a corrupt file starts empty and
+is kept as `frecency.json.bad`). `o` -> `frecency` (or `:MyPlugins tasks --sort=frecency`,
+`tasks list --sort=frecency` in the CLI) lists the tasks with a score first, highest first,
+and the rest in the default order. It is opt-in because it ignores the status/prio order the
+default list is for: a `parked` task you keep opening is above an untouched `doing` one.
 
 *Seam.* `require("bindings.usrcmds.plugin_repos.tasks_cmd").dashboard` decides what
 happens: `nil` (the default) opens this dashboard, a function replaces it
@@ -613,7 +639,10 @@ uncommitted work permanently. Sticking to the named list is what makes
   form over the pure `tasks.form` (specced in `tasks_form_spec.lua` and the routes spec). The
   dashboard is `tasks_dash.lua` (the window: snacks source, keys, prompts, fallback) on top
   of `tasks_dash_core.lua` (everything that needs no window: list lines, filter chips,
-  the `s`/`p` cycles, batch planning and apply, export targets -- specced on its own).
+  the `s`/`p` cycles, batch planning and apply, export targets, the list signature and the
+  cursor/marks relocation of a refresh -- specced on its own); `tasks_dash_watch.lua` is the
+  live-refresh watcher (folder set, one debounce, `hold` for the dashboard's own writes, clean
+  stop), specced with a fake handle factory/timer/clock and once against real `fs_event`s.
   `tasks_preview.lua` is the mdview.nvim wire (`task preview`, `--to=mdview`, dashboard `gp`).
 - The dashboard does **not** reuse `picker.lua`'s per-row `pending` table: that mechanic
   assigns one of six actions per row and runs them on `<CR>`. Here the marks are snacks'
@@ -633,7 +662,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 - [`lua/tasks/README.md`](../../../tasks/README.md) — the engine behind `tasks`/`task`/`open`;
   `wkdbook-myplugins/ALL/Task-System-Konzept.md` — the concept and the rules R1-R12
 - [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
-- [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`
+- [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`; [`tasks_dash_watch_spec.lua`](../../../../TESTS/tasks/tasks_dash_watch_spec.lua) / [`tasks_dash_refresh_spec.lua`](../../../../TESTS/tasks/tasks_dash_refresh_spec.lua) / [`tasks_frecency_spec.lua`](../../../../TESTS/tasks/tasks_frecency_spec.lua) — the watcher, the live refresh with real watchers, and frecency
 
 - [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/core/source.lua`](../../../plugins/personal/core/source.lua) — the `OVERRIDE` switch and per-repo mode table

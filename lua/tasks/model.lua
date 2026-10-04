@@ -11,7 +11,8 @@
 ---  - the enums (status, kind, prio, effort) and the date check
 ---  - `summary`: frontmatter `summary`, else the first body paragraph
 ---  - `compare` / `sort`: status rank, then prio, then area, then slug; the orders
----    `prio-effort` (small first within a prio) and `severity` (critical first)
+---    `prio-effort` (small first within a prio), `severity` (critical first) and
+---    `frecency` (what the dashboard touches most, from `tasks.frecency`)
 ---  - `filter`: status, prio, effort, kind, tag, category, severity, area, blocked, stale
 ---
 --- Not its job: finding files (`scan`), rendering (`index`), writing (`mutate`).
@@ -44,7 +45,7 @@ M.SEVERITIES = { "low", "medium", "high", "critical" }
 
 ---The listing orders `sort` knows. `default` is what the index uses.
 ---@type string[]
-M.SORTS = { "default", "prio-effort", "severity" }
+M.SORTS = { "default", "prio-effort", "severity", "frecency" }
 
 ---@type integer[]
 M.PRIOS = { 1, 2, 3 }
@@ -634,12 +635,28 @@ function M.compare_severity(a, b)
   return M.compare(a, b)
 end
 
+---`frecency` here is only the fallback (no scores known: the default order);
+---`M.sort` builds the real comparator from the scores it is given.
 ---@type table<string, fun(a: Tasks.Task, b: Tasks.Task): boolean>
 local COMPARATORS = {
   default = M.compare,
   ["prio-effort"] = M.compare_prio_effort,
   severity = M.compare_severity,
+  frecency = M.compare,
 }
+
+---Highest frecency score first; equal (or no) scores fall back to the default order.
+---@param scores table<string, number>
+---@return fun(a: Tasks.Task, b: Tasks.Task): boolean
+local function compare_frecency(scores)
+  return function(a, b)
+    local sa, sb = scores[a.id] or 0, scores[b.id] or 0
+    if sa ~= sb then
+      return sa > sb
+    end
+    return M.compare(a, b)
+  end
+end
 
 ---Check a `--sort` word; `nil` and `""` mean the default.
 ---@param name any
@@ -658,10 +675,28 @@ end
 
 ---Sort in place and return the list. `order` is one of `M.SORTS` (default:
 ---`default`); an unknown word sorts like the default.
+---
+---`frecency` ranks by `opts.scores` (task id -> score, highest first; unscored
+---tasks follow in the default order). Without `opts.scores` the scores come from
+---the frecency file (`tasks.frecency.load_scores`), so `list --sort=frecency`
+---and `:MyPlugins tasks --sort=frecency` need no extra wiring; a missing or
+---broken file just means no scores, i.e. the default order.
 ---@param tasks Tasks.Task[]
 ---@param order? string
+---@param opts? { scores?: table<string, number> }
 ---@return Tasks.Task[]
-function M.sort(tasks, order)
+function M.sort(tasks, order, opts)
+  if order == "frecency" then
+    local scores = opts and opts.scores
+    if scores == nil then
+      local ok, loaded = pcall(function()
+        return require("tasks.frecency").load_scores()
+      end)
+      scores = ok and loaded or {}
+    end
+    table.sort(tasks, compare_frecency(scores))
+    return tasks
+  end
   table.sort(tasks, COMPARATORS[order or "default"] or M.compare)
   return tasks
 end
