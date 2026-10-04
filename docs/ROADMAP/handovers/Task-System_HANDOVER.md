@@ -110,6 +110,24 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
   Linux/macOS, Dauerbetrieb, Auto-Refresh gegen den echten Vault. `lib.nvim/fs-watch-filename-normalize` (parked): zweiter Konsument existiert
   jetzt, braucht aber die Normalisierung nicht — Neubewertung.
 
+## Entscheidungsrunde der `decision`-Tasks (2026-10-04, Vault `a71671d6`)
+
+31 `decision`-Tasks durchgesprochen; **4 bleiben** `decision` (`debugging.nvim/views-dead-refresh-sweep` — der Nutzer entfernt den Code selbst,
+`images.nvim/image-suite-decision`, `images.nvim/sixel-backend-evaluation`, `runtime-analysis.nvim/mdview-theme-parity`).
+- **Jetzt `open` (umzusetzen):** `nvim-config/license-and-readme-decision` (MIT + kurze README anlegen, Agent hat nichts angelegt),
+  `nvim-config/which-key-first-leader-press` (`event = "VeryLazy"` in `lua/plugins/essentials.lua`, `loaded_wk`-Kommentar in lib.nvim,
+  Startzeit mit UI gegenmessen), `nvim-config/sandbox-hover-triggers` (nur ein Satz an der Spec), `nvim-config/upstream-neotest-reports`
+  (Nutzer postet selbst, Security-Meldung zuerst privat), `media.nvim/bare-media-command` (Variante b), `ai.nvim/readme-literature-section`,
+  `cmdlog.nvim/vestigial-accessors-and-shell-split` und `color_my_ascii.nvim/custom-groups-dead-option` und
+  `dap.nvim/unwired-state-and-registry-api` (jeweils Streichen; dap: `memory-viewer` müsste `session_active` neu anlegen),
+  `docmap-desktop/standalone-popen-git-exit-status` (nur Kommentar), `filetree.nvim/numbered-quickpick-mode` (von filetreepicker verschoben),
+  neu `pdfport.nvim/pdf-create-md-correction`.
+- **Blockiert/geparkt:** `docmap-desktop/release-v0-6-1-decision` (blocked durch die zwei Live-Tests, dann EIN Patch v0.6.1),
+  `ALL/spec-nvim-m0-falsification` (parked), `gitsuite.nvim/diffview-replacement` (parked bis diffview bricht).
+- **Verworfen (Backlog):** slots, Lazy-Checker-Trigger, media-Hub-Aktionen und Office, checkhealth-Erweiterung, Kreuzfeature-Durchgang, learn-cli,
+  nvim-nexus (No-Go), pdfport (3 Ideen), gitsuite-Eigenengine, ui.kit-Terminal (Snacks bleibt).
+- Bereiche `filetreepicker.nvim` und `nvim-nexus` haben jetzt keine offenen Tasks mehr (`.gitkeep`, Statussatz).
+
 ## Kategorien und Ordner-Tasks (Konzept §12)
 
 - **Kategorien:** optionales Feld `category: [security, docs]`, Werte `bug`, `security`, `performance`, `docs`,
@@ -416,7 +434,8 @@ Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-R
    (`docs/configuration.md`, `:help lsp.nvim`) beschreiben das Verhalten.
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
 4. **Phase 5: Politur — abgeschlossen** (5a `--stale=refs` + Vault-CI, 5b Statusline-Zähler, 5c mdview-Vorschau, Live-Refresh + Frecency).
-   **Offen für den Nutzer:** (a) `docs/TEMPLATES/wkdbooks-tasks-ci.yml` in `E:epos\WKDBooks\.github\workflows\` kopieren?; (b) mdview WASM-Bundle
+   **Offen für den Nutzer:** (a) `docs/TEMPLATES/wkdbooks-tasks-ci.yml` in `E:
+epos\WKDBooks\.github\workflows\` kopieren?; (b) mdview WASM-Bundle
    bauen/releasen (Frontmatter-Tabelle); (c) das Formular `:MyPlugins task new`, den Dashboard-Refresh, `gp` und `T:N` in einer echten Sitzung
-   ausprobieren, dann `ALL/task-new-form` schließen; (d) Entscheidungen der `decision`-Tasks (Liste: `:MyPlugins tasks --status=decision`);
+   ausprobieren, dann `ALL/task-new-form` schließen; (d) die 4 verbleibenden `decision`-Tasks (`:MyPlugins tasks --status=decision`) und die jetzt `open` gewordenen Umsetzungen (Abschnitt "Entscheidungsrunde");
    (e) `ultracode`-Review der Phase-5-Commits (`d2d2b203`, `dc7e420f`, `a1ca6032`, ui.nvim `edf4967`, mdview `ec4092a`).
