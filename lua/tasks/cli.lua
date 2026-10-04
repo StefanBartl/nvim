@@ -24,6 +24,7 @@ local index = require("tasks.index")
 local model = require("tasks.model")
 local mutate = require("tasks.mutate")
 local scan = require("tasks.scan")
+local staleness = require("tasks.staleness")
 local vault = require("tasks.vault")
 
 local M = {}
@@ -47,7 +48,7 @@ usage: nvim --headless -u NONE -l scripts/tasks.lua <command> [args]
 
 commands:
   list [<area>] [--status=a,b] [--prio=1,2|<=2] [--effort=S,M|<=M] [--kind=k] [--tag=t]
-       [--category=c,d] [--severity=high,critical] [--stale=<days>] [--blocked]
+       [--category=c,d] [--severity=high,critical] [--stale=<days>|refs] [--stale-refs] [--blocked]
        [--sort=default|prio-effort|severity] [--format=tsv|ids]   open tasks, sorted; one line each
        (categories: bug security performance docs ruleset; --category=bug also finds kind=bug;
         --sort=prio-effort: small first within a prio; --sort=severity: critical first)
@@ -64,6 +65,8 @@ commands:
   folderize <area>/<slug>                 turn a plain task file into a folder task
   check [<area>]                          rule check; exit 1 on any error
   template [--title=t] [--kind=k] [--prio=n] [--effort=e] [--tags=a,b] [--lang=de|en]
+  ci [--strict] [--no-lint] [--md-lint=<file>]   CI gate: check + index --check + md_lint of the
+                                          generated indexes; exit 0/1 (--strict: warnings fail too)
   areas                                  list the vault's areas
   export [--top=N] [--no-links]           all-areas overview as Markdown on stdout (never written)
 
@@ -90,7 +93,7 @@ local SPECS = {
       "sort",
       "format",
     },
-    flag = { "blocked", "all" },
+    flag = { "blocked", "all", "stale-refs" },
   },
   index = { value = {}, flag = { "check", "all" } },
   new = {
@@ -115,6 +118,7 @@ local SPECS = {
   attach = { value = { "name" }, flag = { "no-index" } },
   folderize = { value = {}, flag = { "no-index" } },
   check = { value = {}, flag = { "all" } },
+  ci = { value = { "md-lint" }, flag = { "strict", "no-lint" } },
   template = { value = { "title", "kind", "prio", "effort", "tags", "lang" }, flag = {} },
   areas = { value = {}, flag = {} },
   export = { value = { "top", "link-prefix" }, flag = { "no-links" } },
@@ -198,6 +202,7 @@ local function filter_from(opt)
     category = opt.category --[[@as string|nil]],
     severity = opt.severity --[[@as string|nil]],
     stale = opt.stale --[[@as string|nil]],
+    stale_refs = opt["stale-refs"] == true,
     blocked = opt.blocked == true,
     today = opt.today --[[@as string|nil]],
   })
@@ -238,6 +243,7 @@ function commands.list(ctx)
     ctx.warn("error: " .. ferr)
     return 2
   end
+  filter.ref_opts = { root = eo.root }
   local order, serr = model.parse_sort(args.opt.sort)
   if not order then
     ctx.warn("error: " .. serr)
@@ -282,11 +288,13 @@ function commands.list(ctx)
     end
   end
   local shown = model.sort(model.filter(open, filter), order)
+  -- `--stale=refs`: `model.filter` left its report in `staleness.last`.
+  local report = filter.stale_refs and staleness.last or nil
   for _, t in ipairs(shown) do
     if format == "ids" then
       ctx.say(t.id)
     else
-      ctx.say(table.concat({
+      local cells = {
         t.id,
         cellv(t.status),
         cellv(t.prio),
@@ -294,8 +302,25 @@ function commands.list(ctx)
         cellv(t.kind),
         cellv(t.updated or t.created),
         cellv(t.title),
-      }, "\t"))
+      }
+      if report then
+        cells[#cells + 1] = "changed: " .. staleness.describe(report.stale[t.id] or {}, 5)
+      end
+      ctx.say(table.concat(cells, "\t"))
     end
+  end
+  if report then
+    for _, note in ipairs(report.notes) do
+      ctx.warn("note: " .. note)
+    end
+    ctx.warn(
+      ("note: --stale=refs checked %d file(s) of %d task(s); %d ref(s) found nowhere, %d skipped (commits, anchors, undated)"):format(
+        report.files,
+        report.tasks,
+        report.unresolved,
+        report.skipped
+      )
+    )
   end
   if skipped > 0 then
     ctx.warn(
@@ -535,6 +560,21 @@ function commands.check(ctx)
     )
   )
   return res.ok and 0 or 1
+end
+
+function commands.ci(ctx)
+  if #ctx.args.pos > 0 then
+    ctx.warn("error: ci takes no positional argument")
+    return 2
+  end
+  local opt = ctx.args.opt
+  local res = require("tasks.ci").run({
+    root = ctx.eo.root,
+    strict = opt.strict == true,
+    lint = opt["no-lint"] ~= true,
+    md_lint = opt["md-lint"] --[[@as string|nil]],
+  }, ctx.say)
+  return res.code
 end
 
 function commands.template(ctx)

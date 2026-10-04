@@ -15,6 +15,8 @@
 ---  - `index`  render and write `ROADMAP/TASKS.md`, the global export text
 ---  - `mutate` template, new, set, done
 ---  - `check`  the rule checker
+---  - `staleness`  `--stale=refs`: tasks whose referenced files changed since `updated`
+---  - `ci`     the vault gate for pipelines (check + index --check + md_lint)
 ---  - `cli`    the command-line front end
 ---
 --- Not its job: prompts, pickers, notifications, key bindings.
@@ -28,6 +30,8 @@ local SUBMODULES = {
   index = true,
   mutate = true,
   check = true,
+  staleness = true,
+  ci = true,
   cli = true,
 }
 
