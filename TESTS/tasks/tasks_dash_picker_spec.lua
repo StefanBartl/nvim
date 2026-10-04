@@ -166,6 +166,7 @@ return function(H)
           "advance prio",
           "finish",
           "filter ...",
+          "next sort order",
           "export the list ...",
           "Backlog of the area",
           "ROADMAP.md of the area",
@@ -387,6 +388,71 @@ return function(H)
     flush()
     eq(#vim.api.nvim_list_wins(), wins_before, "any key closes the help")
     ok(current_picker() == p, "the picker survived the help")
+
+    -- ── o: sort order cycles, shows a chip, is remembered ─────────────────
+    reset()
+    assert(
+      require("tasks.mutate").set("cascade.nvim/delta", { severity = "high" }, { root = root })
+    )
+    close_all()
+    cmd.list({ flags = {}, args = {} })
+    p = opened(4)
+    eq(ids(p)[1], "lib.nvim/alpha", "default order first")
+    lacks(p.title, "sort:", "the default order shows no chip")
+    p:focus("list")
+    flush()
+    keys("o")
+    ok(
+      wait_for(function()
+        return p.title:find("[sort: prio-effort]", 1, true) ~= nil
+      end),
+      "o switches to prio-effort and the title says so"
+    )
+    keys("o")
+    ok(
+      wait_for(function()
+        return p.title:find("[sort: severity]", 1, true) ~= nil
+      end),
+      "o again: severity"
+    )
+    p = opened(4)
+    eq(ids(p)[1], "cascade.nvim/delta", "the high-severity task comes first")
+    has(vim.api.nvim_buf_get_lines(p.list.win.buf, 0, 1, false)[1], "[high]")
+    -- the sort is remembered like the filter: a fresh dashboard starts in it
+    close_all()
+    cmd.list({ flags = {}, args = {} })
+    p = opened(4)
+    has(p.title, "[sort: severity]")
+    eq(ids(p)[1], "cascade.nvim/delta", "a new dashboard starts in the remembered order")
+    p:focus("list")
+    flush()
+    keys("o")
+    ok(
+      wait_for(function()
+        return p.title:find("sort:", 1, true) == nil
+      end),
+      "the third press wraps around to the default"
+    )
+    p = opened(4)
+    eq(ids(p)[1], "lib.nvim/alpha")
+    -- f: the effort and severity dimensions are in the menu
+    reset()
+    select_queue = { pick("severity"), pick("high") }
+    keys("f")
+    p = opened(1)
+    has(p.title, "[severity: high]")
+    eq(ids(p), { "cascade.nvim/delta" })
+    eq(asked[1].items[3], "effort", "the f menu offers effort after prio")
+    ok(vim.tbl_contains(asked[1].items, "severity"))
+    reset()
+    select_queue = { pick("severity"), pick("(any)") }
+    p:focus("list")
+    flush()
+    keys("f")
+    p = opened(4)
+    reset_fixture()
+    p:focus("list")
+    flush()
 
     -- ── the input window: Alt chords, plain letters stay text/editing ─────
     reset()
