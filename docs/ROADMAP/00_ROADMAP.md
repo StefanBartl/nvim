@@ -33,20 +33,27 @@
 
 - filetree.nvim: Usrmcd, mit dem ich checken, ob und wie oft eine file referenziert wird. Wenn mehrer picker? Usecase; /assets ist voll mit screenhsot, die keiner mehr referenziert,
   Eun ähnliches vorgehen haben wir mit symlink ja bereits implementiert.
+  -> Task: `filetree.nvim/orphaned-asset-report` (Entscheidung 2026-10-04: filetree besitzt es; `images.nvim :Image orphans` bleibt bildspezifisch).
 
 - Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
+  -> erledigt: der Fix steht seit 2026-09-28 in lib.nvim (`e9e7b5c`, `progress/styles/kit.lua`: `vim.in_fast_event()`-Zweig, Render per `vim.schedule`); die Zeile stammt von einem älteren Stand auf der Workstation (`C:/repos/lib.nvim`). Tritt es nach einem `git pull` dort noch auf, als Bug-Task in `lib.nvim` anlegen.
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
 -  -Editing-Primitive (autopairs, autotag, matchup, visual-multi, mini.ai/targets) bleiben dauerhaft extern> Anylse, wir aufwendig ist es,d iese zu erstetzen, welche vorteile? könnte man alle features der plugins zu einen zusmmenoen=
+  -> Task: `nvim-config/external-deps-replacement-assessment`
 
 - nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
+  -> Task: `nvim-config/omarchy-look-beyond-themes`
 
 - claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
+  -> die Checks gibt es (`Final_Checks/ai/claude-account-live-testing-schlachtplan.md`); Ausführung: Task `ALL/claude-account-live-test-session`
 
 - mappings durchchecken
+  -> Tasks: `nvim-config/bindings-checklist-update`, danach `nvim-config/bindings-checklist-run`
 
 - C:/Users/Bernhard/AppData/Local/nvim/lua/bindings/usrcmds/context_open -> mal ein wenig ausprobieren, und solte es erweitert werden? seit der implementierung sind einige plugins dazu gekommen + features innerhalb der damlas schon bestehenden
+  -> Task: `nvim-config/context-open-review`
 
 ---
 
@@ -71,10 +78,13 @@
 ### Cross-Plugin
 
 - `lib.nvim` Module -> ALle Plugins nochmal checken, ob Module/Funktionen implementieren, welche die `lib.nvim` beretis bereitsetellt oder bereitstellen sollte. Das wurde vor ein/zwei Monaten schonmal gemacht, in der Zwischnezit wurde aber viel neu gemacht. Report hierher schreiebn: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
+  -> Task: `ALL/lib-nvim-adoption-sweep`
 
 - Von welchen meiner `.nvim`-Plugins ist eine CLI-Version denkbar? `reposcope.nvim`, `gitsuite.nvim`,...
+  -> Task: `ALL/cli-versions-of-plugins`
 
 - Jedes plugin ein eigener Kreuzfeature durchgang
+  -> Task: `ALL/per-plugin-cross-feature-pass` (Rückfrage: was ist gemeint?)
 
 - Alle Plugins, die ein Window mit Cheatsheet haben, sollen die gleiche Strukut / Formatzierung ders CHeatsheets aufweißen:
   - Gleiches Layout
@@ -82,12 +92,14 @@
   - Neben Usrcmds können, wenn sinnvoll und nicht zu viele, auch uscmds angegeben werden (Vorbild: `filetree.nvim`)
   - Die Bindings sollen in Kategorien eingeteilt werden, die in Pages angeordnet sind und über `Tab` erreichbar sind (Vorbild: `filetree.nvim`)
   - Einiges deutet darauf hin, dass ein `lib.nvim ui.kit`-Cheatsheet Modul hilfreich sein könnte
+  -> Task: `ALL/cheatsheet-window-unification` (Modulschnitt: `ui.nvim/messages-module-cut`)
 
 ---
 
 #### Konkurrenzanalyse
 
 - [ ] **Feature-Scan:** Bei Plugins, die meinen ähneln (z. B. gitsigns → gitsuite.nvim, 3rd/images.nvim → images.nvim, tabufline → ui.nvim, lspsaga.nvim → lspo.nvim), die Repos mit hoher bzw. mittlerer Ähnlichkeit **und** hoher Reichweite/Nutzerzahl nach Features abgrasen, die ich noch nicht implementiert habe. Gibt es bei „mittlerer Ähnlichkeit" nur wenige Treffer, nur die reichweitenstärksten davon berücksichtigen.
+  -> Task: `ALL/competitor-feature-scan`
 - [x] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: $NVIM_CONFIG_DIR/docs/ROADMAP/reports — erledigt 2026-10-01: [noice](./reports/NOICE_ERSATZ/noice-feature-abdeckung-2026-10-01.md), [übrige externe Plugins](./reports/externe-plugins-feature-abdeckung-2026-10-01.md), [ext_messages-Spike](./reports/NOICE_ERSATZ/ext-messages-tui-spike-2026-10-01.md)
 
 ---
@@ -110,12 +122,16 @@
 ### Nice-to-Have wenn Limit über ist
 
 1. ultracode auf alle plugins drüber gehen. auch mal zuerste sonnet, findet dann opus noch was und umgekehrt
+   -> Task (parked): `ALL/ultracode-pass-all-plugins`
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
+   -> Task (parked): `ALL/workflow-guide-doc`
 3. $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN
+   -> den Ordner gibt es im Baum nicht (geprüft 2026-10-04); gemeint? (siehe Task `nvim-config/docs-roadmap-pointers-catch-up`)
 4. Repos abchecken, ob
   6. Design-Patterns gezielt eingestzt werden können
     7. Auflistung, wo welche Design Patterns eingestzt wurden
   7. co-routinen langsamere implementierungen erstetzen könnten.
+   -> Tasks (parked): `ALL/design-patterns-audit`, `ALL/coroutine-audit`
 
 ---
 
@@ -126,9 +142,19 @@
   - [loom.ai + ai.nvim](./Final_Checks/ai/live-testing-plan.md)
   - [media.nvim](./Final_Checks/media/live-testing-plan.md)
 
+  Die zwei Pfade oben (`personal/All/FINISH`, `.../PLUGIN_ROADMAPS_TESTPLAN.md`) gibt es seit `729a2ff5` nicht mehr; die Listen liegen in `Final_Checks/`. Tasks dazu:
+  - `Final_Checks/Running-Tasks_Checklist.md` -> `ALL/ux-backlog-live-checklist-run`
+  - `Final_Checks/PLUGIN_ROADMAPS_TESTPLAN.md` -> `ALL/plugin-roadmaps-testplan-run` (Config-Teil: `nvim-config/live-check-structure-jump-and-bindings-check`)
+  - `Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md` -> `nvim-config/bindings-checklist-update`, `nvim-config/bindings-checklist-run`
+  - `Final_Checks/ai/` -> `ai.nvim/release-v1-tag` (Alltagsdurchlauf), `ALL/claude-account-live-test-session`
+  - `Final_Checks/media/live-testing-plan.md`: kein Task im Bereich `media.nvim` (dort fehlt einer; Abschnitt 9 des Plans steht auf "ungeprüft", obwohl der echte whisper.cpp-Lauf am 2026-09-17 stattfand, `a2adf38`)
+  - `Final_Checks/ui.nvim.md` (Sichtprüfung Sticky-Context, 9 Punkte): kein Task im Bereich `ui.nvim`
+
 ---
 
 ### Ganz zum Schluss erst erledigen - wenn alles fertig ist
+
+Tasks zu diesem ganzen Abschnitt (alle `parked`, bis alles fertig ist): `ALL/readme-final-review`, `ALL/docs-features-linked-to-bindings`, `ALL/option-optin-optout-audit`, `ALL/enduser-walkthrough-per-plugin`, `ALL/release-showcase-umbrella`; `ALL/strip-claude-coauthor-from-history` ist nicht geparkt.
 
 - [ ] Alle Plugin-Root-README.md-Dateien Abschnitt für Abschnitt durchgehen: Das ist der Einstiegspunkt für Devs, die das Plugin nutzen, aber auch für normale User. Die Sprache soll daher so sein, dass User sie gut verstehen — muss nicht low-level sein, aber die Readme soll auch nicht überladen sein, usw.
   - [ ] Reale Beispiele (bitte fixen):
