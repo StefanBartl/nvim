@@ -330,7 +330,9 @@ function M.parse_text(text, ctx)
     if title then
       task.title = title
       local tentry = parsed.by_key.title
-      if tentry and tentry.comment then
+      -- A quoted title ends at its closing quote, so a comment after it is a real comment.
+      local quoted = tentry and tentry.raw:match("^[^:]*:%s*[\"']") ~= nil
+      if tentry and tentry.comment and not quoted then
         -- `title: Fix bug #12` reads "Fix bug": a ` #` starts a YAML comment.
         hints[#hints + 1] = {
           code = "title-comment",
