@@ -426,5 +426,9 @@ return function(H)
     eq(quoted_title.title, "Fix bug #12 now", "a quoted_title title keeps the #")
     eq(quoted_title.hints, {}, "no hint for a quoted_title title")
     eq(parse("---\ntitle: Fix bug#12\nstatus: open\n---\n").hints, {}, "# without a space is text")
+    local noted = parse('---\ntitle: "Real title" # a note\nstatus: open\n---\n')
+    eq(noted.title, "Real title", "a quoted title with a trailing comment keeps its text")
+    eq(noted.hints, {}, "a real comment after a quoted title is not a hint")
+    eq(parse("---\ntitle: 'It''s' # n\nstatus: open\n---\n").hints, {}, "single-quoted too")
   end
 end
