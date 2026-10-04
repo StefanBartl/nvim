@@ -25,6 +25,7 @@
 ---@field effort? string
 ---@field tags string[]
 ---@field category string[]           # The `category` list as written (see `model.categories` for the effective set).
+---@field severity? string             # `low|medium|high|critical`, as written (meant for bug/security tasks; may be an unknown word, see `errors`).
 ---@field created? string             # `YYYY-MM-DD`
 ---@field updated? string             # `YYYY-MM-DD`
 ---@field blocked_by string[]         # Task ids.
@@ -46,6 +47,9 @@
 ---@field kind? string|string[]
 ---@field tag? string|string[]
 ---@field category? string|string[]   # Matches any effective category (`model.categories`).
+---@field effort? string|string[]      # Matches the written effort exactly (`XS`..`XL`, `0.5d`).
+---@field effort_max? string           # Matches an effort of at most this (sizes and days on one scale; no effort never matches).
+---@field severity? string|string[]    # Matches the written severity (a task without severity never matches).
 ---@field area? string|string[]
 ---@field blocked? boolean            # status `blocked` or a non-empty `blocked_by`.
 ---@field stale? integer              # Not updated for at least this many days (undated counts as stale).
@@ -79,6 +83,7 @@
 ---@field effort? string
 ---@field tags? string[]|string       # A string is split at commas.
 ---@field category? string[]|string   # Concerns (`model.CATEGORIES`); a string is split at commas.
+---@field severity? string            # `model.SEVERITIES`; meant for bug/security tasks (a warning from `check` otherwise).
 ---@field folder? boolean             # Create a folder task (`<slug>/<slug>.md`) so assets can be attached.
 ---@field refs? string[]|string       # Paths or `repo@commit`; a string is split at commas.
 ---@field lang? "de"|"en"             # Language of the body headings (default "de").

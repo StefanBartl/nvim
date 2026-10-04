@@ -7,11 +7,11 @@
 --- actions for one task at a time (no batch).
 ---
 --- Keys (list window; the input window has them as Alt chords, `<M-s>` `<M-p>` `<M-d>`
---- `<M-f>` `<M-e>` `<M-r>` `<M-b>` (backlog) `<M-m>` (roadmap) `<M-?>`, in normal and insert mode):
+--- `<M-f>` `<M-o>` `<M-e>` `<M-r>` `<M-b>` (backlog) `<M-m>` (roadmap) `<M-?>`, in normal and insert mode):
 ---  - `<CR>` open the file(s)    `<Tab>` / `<S-Tab>` mark (snacks' own multi-select)
 ---  - `s` / `p`  advance status / prio of the marked (else the current) tasks,
 ---    ONE batch, ONE notification, each touched area's index regenerated once
----  - `D` finish (asks first)   `f` set a filter chip   `e` export   `r` rescan
+---  - `D` finish (asks first)   `f` set a filter chip   `o` sort order   `e` export   `r` rescan
 ---  - `gb` / `gr` Backlog / ROADMAP.md of the area under the cursor   `g?` help
 ---
 --- Prompting keys (`D`, `f`, `e`, `gb`, `gr`) close the picker first -- snacks
@@ -38,6 +38,7 @@ local MAX_CONFIRM_LINES = 8
 ---@field root string
 ---@field area string|nil
 ---@field filter Tasks.Filter
+---@field sort string          # One of `model.SORTS` (`o` cycles it).
 ---@field shown Tasks.Task[]
 ---@field widths { area: integer, effort: integer, status: integer }
 ---@field persist boolean
@@ -73,42 +74,51 @@ local function persist(state)
     pcall(
       store.save,
       STORE_KEY,
-      { filter = core.filter_to_options(state.filter) },
+      { filter = core.filter_to_options(state.filter), sort = state.sort },
       { path = state.root }
     )
   end
 end
 
 ---@param root string
----@return Tasks.Filter
+---@return Tasks.Filter filter
+---@return string sort
 local function remembered(root)
   local ok, store = pcall(require, "lib.nvim.store.project")
   if not ok then
-    return {}
+    return {}, "default"
   end
   local ok_load, data = pcall(store.load, STORE_KEY, { path = root })
   if not ok_load or type(data) ~= "table" then
-    return {}
+    return {}, "default"
   end
-  return core.filter_from_stored(data.filter)
+  return core.filter_from_stored(data.filter), core.sort_from_stored(data.sort)
 end
 
----Dashboard state for a `Plugin_repos.TasksView`: the command's own filter if
----it carried one, else the one remembered from the last session.
+---Dashboard state for a `Plugin_repos.TasksView`: the command's own filter and
+---sort order if it carried them, else the ones remembered from the last session.
 ---@param v Plugin_repos.TasksView
 ---@param opts? Plugin_repos.TasksDashOpts
 ---@return Plugin_repos.TasksDashState
 function M.new_state(v, opts)
   opts = opts or {}
   local filter = v.filter or {}
+  local sort = (v.sort and v.sort ~= "") and v.sort or "default"
   local do_persist = opts.persist ~= false
-  if core.filter_is_empty(filter) and do_persist then
-    filter = remembered(v.root)
+  if do_persist then
+    local last_filter, last_sort = remembered(v.root)
+    if core.filter_is_empty(filter) then
+      filter = last_filter
+    end
+    if sort == "default" then
+      sort = last_sort
+    end
   end
   return {
     root = v.root,
     area = v.area,
     filter = filter,
+    sort = sort,
     shown = {},
     widths = core.widths({}),
     persist = do_persist,
@@ -119,7 +129,12 @@ end
 ---@param state Plugin_repos.TasksDashState
 ---@return Tasks.Task[]
 local function reload(state)
-  local res, err = core.load({ root = state.root, area = state.area, filter = state.filter })
+  local res, err = core.load({
+    root = state.root,
+    area = state.area,
+    filter = state.filter,
+    sort = state.sort,
+  })
   if not res then
     notify.error(("cannot read the tasks: %s"):format(tostring(err)))
     state.shown = {}
@@ -133,7 +148,7 @@ end
 ---@param state Plugin_repos.TasksDashState
 ---@return string
 local function title_of(state)
-  return core.header(state.shown, state.filter, state.area)
+  return core.header(state.shown, state.filter, state.area, state.sort)
 end
 
 ---@param tasks Tasks.Task[]
@@ -261,6 +276,13 @@ function M.set_filter(state, after)
   end)
 end
 
+---`o`: the next sort order (default -> prio-effort -> severity -> default).
+---@param state Plugin_repos.TasksDashState
+function M.cycle_sort(state)
+  state.sort = core.cycle_sort(state.sort)
+  persist(state)
+end
+
 ---`e`: ask where, deliver the tasks with the `--to=` sinks.
 ---@param state Plugin_repos.TasksDashState
 ---@param tasks Tasks.Task[]
@@ -293,6 +315,10 @@ function M.export(state, tasks, after)
         target.path = vim.fn.expand(target.path)
       end
       local chips = core.chips(state.filter)
+      local sort_chip = core.sort_chip(state.sort)
+      if sort_chip then
+        chips[#chips + 1] = sort_chip
+      end
       local ok, err = view.deliver(tasks, target, {
         format = choice.format,
         heading = ("Open tasks -- %s (%d)"):format(state.area or "all areas", #tasks),
@@ -345,14 +371,15 @@ M.HELP = {
   " s           advance status of marked (else current) tasks",
   " p           advance prio:  none -> 1 -> 2 -> 3 -> none",
   " D           finish (asks first, moves to Backlog/)",
-  " f           set a filter chip (status prio kind category tag blocked)",
+  " f           set a filter chip (status prio effort kind category severity tag blocked)",
+  " o           cycle the sort: default -> prio-effort (small first) -> severity (critical first)",
   " e           export marked (else all shown) tasks",
   " r           rescan the vault",
   " gb / gr     Backlog picker / ROADMAP.md of the area under the cursor",
   " g?          this help",
   "",
   " Letters work in the list. In the input window use Alt:",
-  " <M-s> <M-p> <M-d> <M-f> <M-e> <M-r> <M-b>(backlog) <M-m>(roadmap) <M-?>",
+  " <M-s> <M-p> <M-d> <M-f> <M-o> <M-e> <M-r> <M-b>(backlog) <M-m>(roadmap) <M-?>",
   " (any key closes this help)",
 }
 
@@ -440,6 +467,10 @@ local function open_snacks(Snacks, state)
     tasks_rescan = function(picker)
       picker:refresh()
     end,
+    tasks_sort = function(picker)
+      M.cycle_sort(state)
+      picker:refresh()
+    end,
     tasks_done = function(picker)
       local tasks = targets(picker, true)
       detour(picker, function(reopen)
@@ -493,6 +524,7 @@ local function open_snacks(Snacks, state)
     p = { "tasks_prio", "<M-p>" },
     D = { "tasks_done", "<M-d>" },
     f = { "tasks_filter", "<M-f>" },
+    o = { "tasks_sort", "<M-o>" },
     e = { "tasks_export", "<M-e>" },
     r = { "tasks_rescan", "<M-r>" },
     gb = { "tasks_backlog", "<M-b>" },
@@ -590,6 +622,13 @@ local function open_select(state)
         label = "filter ...",
         run = function()
           M.set_filter(state, again)
+        end,
+      },
+      {
+        label = "next sort order",
+        run = function()
+          M.cycle_sort(state)
+          again()
         end,
       },
       {

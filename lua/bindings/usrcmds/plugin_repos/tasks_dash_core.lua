@@ -9,7 +9,8 @@
 --- fixture vault.
 ---
 --- Key responsibilities:
----  - `load`: scan, keep the open tasks, filter, sort (same rules as `:MyPlugins tasks`)
+---  - `load`: scan, keep the open tasks, filter, sort (same rules as `:MyPlugins tasks`,
+---    including the `--sort=` orders; `cycle_sort` is the `o` key)
 ---  - `parts` / `line` / `widths`: one list line as highlighted chunks or plain text
 ---  - `header` / `chips` / `set_dim` / `dim_choices` / `filter_to_options`: filter state
 ---  - `cycle_status` / `cycle_prio` / `plan_cycle`: the `s` / `p` mechanic (the
@@ -45,7 +46,20 @@ M.PRIO_HL = { [1] = "DiagnosticError", [2] = "DiagnosticWarn", [3] = "Diagnostic
 
 ---Filter dimensions the `f` key offers, in menu order.
 ---@type string[]
-M.FILTER_DIMS = { "status", "prio", "kind", "category", "tag", "blocked" }
+M.FILTER_DIMS = { "status", "prio", "effort", "kind", "category", "severity", "tag", "blocked" }
+
+---Highlight group per severity.
+---@type table<string, string>
+M.SEVERITY_HL = {
+  low = "Comment",
+  medium = "DiagnosticHint",
+  high = "DiagnosticWarn",
+  critical = "DiagnosticError",
+}
+
+---What the `effort` entry of the `f` menu offers: the sizes, then "this or smaller".
+---@type string[]
+M.EFFORT_CHOICES = { "XS", "S", "M", "L", "XL", "<=S", "<=M" }
 
 ---The label of the menu entries that clear things.
 M.CLEAR = "(any)"
@@ -68,7 +82,7 @@ end
 ---@field errors string[]      # Directories that could not be read.
 
 ---Scan, keep the open tasks, filter and sort -- what `:MyPlugins tasks` shows.
----@param opts { root: string, area?: string|nil, filter?: Tasks.Filter }
+---@param opts { root: string, area?: string|nil, filter?: Tasks.Filter, sort?: string }
 ---@return Plugin_repos.TasksDashLoad|nil result
 ---@return string|nil err
 function M.load(opts)
@@ -90,7 +104,7 @@ function M.load(opts)
     end
   end
   return {
-    tasks = model.sort(model.filter(open, opts.filter)),
+    tasks = model.sort(model.filter(open, opts.filter), opts.sort),
     open = #open,
     skipped = skipped,
     errors = type(errors) == "table" and errors or {},
@@ -143,6 +157,9 @@ function M.parts(t, w)
     { " " },
     { t.title },
   }
+  if t.severity then
+    parts[#parts + 1] = { "  [" .. t.severity .. "]", M.SEVERITY_HL[t.severity] or "Comment" }
+  end
   local hint = M.blocked_hint(t)
   if hint then
     parts[#parts + 1] = { "  " .. hint, "Comment" }
@@ -172,6 +189,7 @@ function M.search_text(t)
     t.status or "",
     t.effort or "",
     t.kind or "",
+    t.severity or "",
     table.concat(model.categories(t), " "),
     table.concat(t.tags, " "),
     t.title,
@@ -208,6 +226,37 @@ local function joined(v)
   return tostring(v)
 end
 
+---The chip of a non-default sort order (`sort: prio-effort`), nil for the default.
+---@param sort string|nil
+---@return string|nil
+function M.sort_chip(sort)
+  if sort == nil or sort == "default" or not vim.tbl_contains(model.SORTS, sort) then
+    return nil
+  end
+  return "sort: " .. sort
+end
+
+---A stored sort word back; anything that is no longer a sort order is the default.
+---@param value any
+---@return string
+function M.sort_from_stored(value)
+  local order = model.parse_sort(value)
+  return order or "default"
+end
+
+---The next sort order after `cur`, wrapping around (`o` key); an unknown or
+---missing one counts as the default and so moves on to the second.
+---@param cur string|nil
+---@return string
+function M.cycle_sort(cur)
+  for i, s in ipairs(model.SORTS) do
+    if s == (cur or "default") then
+      return model.SORTS[i % #model.SORTS + 1]
+    end
+  end
+  return model.SORTS[2]
+end
+
 ---One chip per active filter dimension, in a fixed order.
 ---@param f Tasks.Filter|nil
 ---@return string[] chips
@@ -222,11 +271,19 @@ function M.chips(f)
   elseif f.prio and #f.prio > 0 then
     chips[#chips + 1] = "prio: " .. joined(f.prio)
   end
+  if f.effort_max then
+    chips[#chips + 1] = "effort: <=" .. f.effort_max
+  elseif f.effort and #f.effort > 0 then
+    chips[#chips + 1] = "effort: " .. joined(f.effort)
+  end
   if f.kind and #f.kind > 0 then
     chips[#chips + 1] = "kind: " .. joined(f.kind)
   end
   if f.category and #f.category > 0 then
     chips[#chips + 1] = "category: " .. joined(f.category)
+  end
+  if f.severity and #f.severity > 0 then
+    chips[#chips + 1] = "severity: " .. joined(f.severity)
   end
   if f.tag and #f.tag > 0 then
     chips[#chips + 1] = "tag: " .. joined(f.tag)
@@ -246,12 +303,13 @@ function M.filter_is_empty(f)
   return #M.chips(f) == 0
 end
 
----`Tasks (lib.nvim) · 41 open · 3 decision · 5 blocked  [status: open] [prio: <=2]`
+---`Tasks (lib.nvim) · 41 open · 3 decision · 5 blocked  [status: open] [prio: <=2] [sort: prio-effort]`
 ---@param tasks Tasks.Task[]  the shown (filtered) tasks
 ---@param f Tasks.Filter|nil
 ---@param area string|nil
+---@param sort string|nil  a non-default order adds a chip
 ---@return string
-function M.header(tasks, f, area)
+function M.header(tasks, f, area, sort)
   local c = M.counts(tasks)
   local head = ("Tasks%s \194\183 %d open \194\183 %d decision \194\183 %d blocked"):format(
     area and (" (" .. area .. ")") or "",
@@ -260,6 +318,10 @@ function M.header(tasks, f, area)
     c.blocked
   )
   local chips = M.chips(f)
+  local sort_chip = M.sort_chip(sort)
+  if sort_chip then
+    chips[#chips + 1] = sort_chip
+  end
   if #chips == 0 then
     return head
   end
@@ -271,7 +333,8 @@ function M.header(tasks, f, area)
 end
 
 ---Copy of a filter with one dimension replaced (`value == nil` clears it).
----`prio` takes `1`, `2`, `3` or `<=N`; `blocked` takes `true`/`nil`.
+---`prio` takes `1`, `2`, `3` or `<=N`, `effort` a size / day value or `<=<size>`;
+---`blocked` takes `true`/`nil`.
 ---@param f Tasks.Filter|nil
 ---@param dim string
 ---@param value string|boolean|nil
@@ -288,9 +351,25 @@ function M.set_dim(f, dim, value)
         out.prio = { model.to_prio(value) }
       end
     end
+  elseif dim == "effort" then
+    out.effort, out.effort_max = nil, nil
+    if value ~= nil then
+      local max = tostring(value):match("^<=(.+)$")
+      if max then
+        out.effort_max = max
+      else
+        out.effort = { tostring(value) }
+      end
+    end
   elseif dim == "blocked" then
     out.blocked = value and true or nil
-  elseif dim == "status" or dim == "kind" or dim == "category" or dim == "tag" then
+  elseif
+    dim == "status"
+    or dim == "kind"
+    or dim == "category"
+    or dim == "severity"
+    or dim == "tag"
+  then
     out[dim] = value ~= nil and { tostring(value) } or nil
   end
   return out
@@ -309,6 +388,10 @@ function M.dim_choices(dim, tasks)
     return vim.deepcopy(model.KINDS)
   elseif dim == "category" then
     return vim.deepcopy(model.CATEGORIES)
+  elseif dim == "effort" then
+    return vim.deepcopy(M.EFFORT_CHOICES)
+  elseif dim == "severity" then
+    return vim.deepcopy(model.SEVERITIES)
   elseif dim == "tag" then
     local seen, out = {}, {}
     for _, t in ipairs(tasks) do
@@ -340,11 +423,19 @@ function M.filter_to_options(f)
   elseif f.prio and #f.prio > 0 then
     o.prio = joined(f.prio)
   end
+  if f.effort_max then
+    o.effort = "<=" .. f.effort_max
+  elseif f.effort and #f.effort > 0 then
+    o.effort = joined(f.effort)
+  end
   if f.kind and #f.kind > 0 then
     o.kind = joined(f.kind)
   end
   if f.category and #f.category > 0 then
     o.category = joined(f.category)
+  end
+  if f.severity and #f.severity > 0 then
+    o.severity = joined(f.severity)
   end
   if f.tag and #f.tag > 0 then
     o.tag = joined(f.tag)
@@ -369,9 +460,11 @@ function M.filter_from_stored(opts)
   local f = model.filter_from_options({
     status = type(opts.status) == "string" and opts.status or nil,
     prio = (type(opts.prio) == "string" or type(opts.prio) == "number") and opts.prio or nil,
+    effort = type(opts.effort) == "string" and opts.effort or nil,
     kind = type(opts.kind) == "string" and opts.kind or nil,
     tag = type(opts.tag) == "string" and opts.tag or nil,
     category = type(opts.category) == "string" and opts.category or nil,
+    severity = type(opts.severity) == "string" and opts.severity or nil,
     stale = (type(opts.stale) == "string" or type(opts.stale) == "number") and opts.stale or nil,
     blocked = opts.blocked == true,
   })

@@ -248,7 +248,11 @@ return function(H)
       local csv_path = out_dir .. "/lib.csv"
       run("tasks lib.nvim --status=doing,decision --to=file:" .. csv_path)
       local csv = lines_of(assert(H.read(csv_path)))
-      eq(csv[1], "Task,Status,Prio,Effort,Kind,Updated,Title,Tags,Blocked by,Summary,Path")
+      eq(
+        csv[1],
+        "Task,Status,Prio,Effort,Kind,Updated,Title,Tags,Blocked by,Summary,Path,Severity",
+        "the CSV gets Severity as its last column"
+      )
       eq(#csv, 3, "header and two rows")
       has(
         csv[2],
@@ -826,6 +830,88 @@ return function(H)
       ok(vim.tbl_contains(complete("TaskT task done lib.nvim/al"), "lib.nvim/alpha"))
       ok(vim.tbl_contains(complete("TaskT task done lib.nvim/alpha "), "done_in="))
       ok(vim.tbl_contains(complete("TaskT task done lib.nvim/alpha --"), "--yes"))
+
+      -- ── effort filter, severity, --sort (concept section 12.5) ───────────
+      run("task new lib.nvim Sev crash kind=bug prio=1 effort=L severity=critical")
+      run("task new lib.nvim Sev hang kind=bug prio=1 effort=XS severity=high")
+      run("task new lib.nvim Sev leak category=security prio=2 severity=high")
+      run("task new lib.nvim Sev none kind=bug prio=1 effort=S")
+      has(
+        assert(H.read(task_path("lib.nvim", "sev-crash"))),
+        "severity: critical",
+        "task new takes severity="
+      )
+      run("task new lib.nvim Sev bad kind=bug severity=urgent")
+      has(said(), "unknown severity")
+      ok(not H.exists(task_path("lib.nvim", "sev-bad")), "nothing created for a bad severity")
+
+      eq(
+        ids_for("--severity=high,critical --sort=severity"),
+        { "lib.nvim/sev-crash", "lib.nvim/sev-hang", "lib.nvim/sev-leak" },
+        "critical first, then prio"
+      )
+      eq(
+        ids_for("--severity=high,critical --sort=prio-effort"),
+        { "lib.nvim/sev-hang", "lib.nvim/sev-crash", "lib.nvim/sev-leak" },
+        "prio first, then small before large"
+      )
+      eq(ids_for("--severity=critical"), { "lib.nvim/sev-crash" })
+      eq(ids_for("--effort=XS"), { "lib.nvim/sev-hang" })
+      local small = vim.tbl_filter(function(id)
+        return id:find("lib.nvim/sev-", 1, true) == 1
+      end, ids_for("--effort=<=S --category=bug,security --sort=prio-effort"))
+      eq(
+        small,
+        { "lib.nvim/sev-hang", "lib.nvim/sev-none" },
+        "<=S keeps the small ones; sev-leak has no effort, sev-crash is L"
+      )
+      eq(ids_for("lib.nvim --effort=xs --severity=high"), { "lib.nvim/sev-hang" }, "xs equals XS")
+      run("tasks --effort=huge --to=buffer")
+      has(said(), "unknown effort in --effort: huge")
+      ok(said_level(ERROR))
+      run("tasks --severity=urgent --to=buffer")
+      has(said(), "unknown severity in --severity: urgent")
+      run("tasks --sort=best --to=buffer")
+      ok(said_level(ERROR), "an unknown --sort is refused")
+      run("tasks lib.nvim --severity=critical --to=buffer")
+      has(
+        table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), " "),
+        "severity=critical",
+        "the table heading names the filter"
+      )
+      vim.cmd("bwipeout!")
+
+      run("task set lib.nvim/sev-none severity=medium")
+      has(assert(H.read(task_path("lib.nvim", "sev-none"))), "severity: medium")
+      run("task set lib.nvim/sev-none severity=urgent")
+      has(said(), "unknown severity")
+      run("task set lib.nvim/sev-none severity=")
+      lacks(assert(H.read(task_path("lib.nvim", "sev-none"))), "severity")
+
+      -- the dashboard hook gets the sort order and the new filter fields
+      local seen
+      cmd.dashboard = function(v)
+        seen = v
+      end
+      run("tasks lib.nvim --sort=prio-effort --effort=<=M --severity=high")
+      eq(seen.sort, "prio-effort")
+      eq(seen.filter.effort_max, "M")
+      eq(seen.filter.severity, { "high" })
+      run("tasks lib.nvim")
+      eq(seen.sort, "default", "no --sort: the default order")
+      cmd.dashboard = false
+
+      -- completion
+      eq(complete("TaskT tasks --sort="), {
+        "--sort=default",
+        "--sort=prio-effort",
+        "--sort=severity",
+      })
+      ok(vim.tbl_contains(complete("TaskT tasks --severity="), "--severity=critical"))
+      ok(vim.tbl_contains(complete("TaskT tasks --effort="), "--effort=<=M"))
+      eq(complete("TaskT task new lib.nvim Title severity=c"), { "severity=critical" })
+      ok(vim.tbl_contains(complete("TaskT task set lib.nvim/alpha severity="), "severity=high"))
+      ok(vim.tbl_contains(complete("TaskT task set lib.nvim/alpha "), "severity="))
     end)
 
     restore()

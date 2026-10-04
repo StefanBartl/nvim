@@ -42,7 +42,7 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 | Module | What it does | Key functions |
 |---|---|---|
 | `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names, slugs and ids before they become path segments. | `root`, `areas`, `has_area`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug` |
-| `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. `categories(task)` is the effective category set (below). A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug. | `parse_text`, `from_file`, `sort`, `compare`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
+| `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. `categories(task)` is the effective category set (below). A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug; `sort(tasks, order)` also knows `prio-effort` and `severity` (below). | `parse_text`, `from_file`, `sort`, `compare`, `parse_sort`, `effort_days`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
 | `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. A folder task's `<slug>/<slug>.md` is a task (`task.folder`), the other files in its folder are assets and ignored; any other nested file is returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
 | `tasks.index` | `render` is pure and deterministic: the same tasks give the same bytes, whatever order they are found in. `write_area` writes only when the content differs (a CRLF checkout counts as equal and keeps its line endings), removes the file when no task is open, and with `check = true` only reports `stale` (`missing` / `outdated` / `orphan`). `render_global` returns the all-areas overview as text; nothing writes `ALL/TASKS.md` (decision E2: it is never committed). | `render`, `write_area`, `write_all`, `render_global` |
 | `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` or as a folder counts as taken; `folder = true` makes a folder task). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). `folderize` and `attach` turn a task into a folder task and copy assets into it. All regenerate the area index. | `template`, `new`, `set`, `done`, `folderize`, `attach`, `slugify`, `readme_add_row`, `SETTABLE` |
@@ -70,6 +70,36 @@ field `rules: [LLS-45]` names the rule ids). An unknown value is `unknown-catego
 list, plus `bug` for every `kind: bug`, plus every tag spelled like a category -- so tasks
 written before the field existed are filterable without touching them. Categories narrow a
 list, they do not reorder it (the sort stays status, prio, area, slug).
+
+### Effort filter and sort orders
+
+`effort` is `XS S M L XL` or days (`0.5d`, `3d`). `--effort=S,M` keeps the tasks whose written
+effort is one of the words (size words are case-insensitive on the command line);
+`--effort=<=M` keeps "this or smaller": sizes and days sit on one scale (`XS` 0.25d, `S` 0.5d,
+`M` 1d, `L` 3d, `XL` 5d -- only used for ordering and `<=`, not a promise), and a task
+without effort never matches. `list --sort=<order>` (`model.parse_sort`, `model.sort(tasks,
+order)`) picks the order:
+
+| `--sort=` | Order |
+|---|---|
+| `default` (no flag) | status rank, prio, area, slug -- what the index uses; unchanged |
+| `prio-effort` | status rank, prio, **effort ascending**, area, slug: important and small first; a task without (valid) effort comes last of its prio |
+| `severity` | **severity** (`critical`, `high`, `medium`, `low`, none last), then the default order |
+
+Both orders keep the status rank in front on purpose, so `doing` / `decision` tasks do not
+sink below parked ones. The index (`ROADMAP/TASKS.md`) always uses the default order.
+
+### Severity
+
+`severity: high` (optional) rates a **bug or security** task: `low`, `medium`, `high`,
+`critical` (`model.SEVERITIES`). "Bug or security" means `kind: bug` or the effective category
+`bug` / `security` (see Categories). An unknown word is the error `unknown-severity`; a
+severity on any other task is the warning `severity-without-bug-or-security`. `--severity=`
+filters (a task without one never matches), `new --severity=` / `set severity=` write it, `set
+severity=` removes it. The generated index (`ROADMAP/TASKS.md`) does **not** show it: its
+format stays as it is (an extra column would make every index stale at once, and `check`
+reports that as an error); the dashboard, the CSV export and `--sort=severity` use it. The
+`list` TSV columns are unchanged as well.
 
 ### Folder tasks
 
@@ -102,7 +132,8 @@ finished task with the same id under another date, is refused.
 | Code | Meaning |
 |---|---|
 | `frontmatter-missing`, `frontmatter-invalid`, `title-missing`, `status-missing`, `field-type`, `unreadable` | the file cannot be read as a task |
-| `unknown-status`, `unknown-kind`, `unknown-category`, `bad-prio`, `bad-effort`, `bad-date` | a field has a value outside its enum / format |
+| `unknown-status`, `unknown-kind`, `unknown-category`, `unknown-severity`, `bad-prio`, `bad-effort`, `bad-date` | a field has a value outside its enum / format |
+| `severity-without-bug-or-security` (warning) | `severity` on a task that is neither `kind: bug` nor in the bug / security category |
 | `slug` | filename is not a kebab-case ASCII slug, or the file lies in a subfolder of `tasks/` other than `<slug>/<slug>.md` |
 | `slug-conflict` | the same slug exists as a file and as a folder task |
 | `asset-dangling` (warning) | a folder task links `assets/<file>` that is not there |
@@ -134,9 +165,9 @@ nvim --headless -u NONE -l scripts/tasks.lua check
 
 | Command | Effect |
 |---|---|
-| `list [area] [--status=a,b] [--prio=1,2\|<=2] [--kind=k] [--category=c,d] [--tag=t] [--stale=N] [--blocked] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
+| `list [area] [--status=a,b] [--prio=1,2\|<=2] [--effort=S,M\|<=M] [--kind=k] [--category=c,d] [--severity=high,critical] [--tag=t] [--stale=N] [--blocked] [--sort=default\|prio-effort\|severity] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
 | `index [area] [--check]` | write / verify `ROADMAP/TASKS.md` (all areas without argument) |
-| `new <area> <title> [--kind --prio --effort --tags=a,b --category=c,d --refs=a,b --lang=de\|en --summary --slug --status] [--folder] [--no-index]` | create a task file (`--lang` picks the language of the body headings, default `de`; `--folder` a folder task) |
+| `new <area> <title> [--kind --prio --effort --tags=a,b --category=c,d --severity=s --refs=a,b --lang=de\|en --summary --slug --status] [--folder] [--no-index]` | create a task file (`--lang` picks the language of the body headings, default `de`; `--folder` a folder task) |
 | `attach <area>/<slug> <file> [--name=n] [--no-index]` | copy a file to `<slug>/assets/` (a plain task becomes a folder task), print the Markdown link |
 | `folderize <area>/<slug> [--no-index]` | turn a plain task file into a folder task |
 | `set <area>/<slug> key=value ... [--no-index]` | change frontmatter; an empty value removes the key |

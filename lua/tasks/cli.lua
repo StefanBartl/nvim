@@ -46,13 +46,16 @@ local USAGE = [[
 usage: nvim --headless -u NONE -l scripts/tasks.lua <command> [args]
 
 commands:
-  list [<area>] [--status=a,b] [--prio=1,2|<=2] [--kind=k] [--tag=t] [--category=c,d]
-       [--stale=<days>] [--blocked] [--format=tsv|ids]   open tasks, sorted; one line each
-       (categories: bug security performance docs ruleset; --category=bug also finds kind=bug)
+  list [<area>] [--status=a,b] [--prio=1,2|<=2] [--effort=S,M|<=M] [--kind=k] [--tag=t]
+       [--category=c,d] [--severity=high,critical] [--stale=<days>] [--blocked]
+       [--sort=default|prio-effort|severity] [--format=tsv|ids]   open tasks, sorted; one line each
+       (categories: bug security performance docs ruleset; --category=bug also finds kind=bug;
+        --sort=prio-effort: small first within a prio; --sort=severity: critical first)
   index [<area>] [--check]                (re)write ROADMAP/TASKS.md; --check only reports
   new <area> <title> [--kind=k] [--prio=1..3] [--effort=XS..XL|0.5d] [--tags=a,b]
-       [--category=c,d] [--refs=path,repo@sha] [--summary=text] [--slug=slug] [--status=s]
-       [--lang=de|en] [--folder]               create a task file (--lang: body headings;
+       [--category=c,d] [--severity=low|medium|high|critical] [--refs=path,repo@sha]
+       [--summary=text] [--slug=slug] [--status=s]
+       [--lang=de|en] [--folder]             create a task file (--lang: body headings;
                                                --folder: a folder task that can hold assets)
   set <area>/<slug> key=value ...         change frontmatter (empty value removes the key)
   done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD]   finish: move to Backlog/
@@ -75,7 +78,18 @@ global options: --vault=<dir> (default: $TASKS_VAULT, else $REPOS_DIR/WKDBooks/.
 ---@type table<string, Tasks.CliSpec>
 local SPECS = {
   list = {
-    value = { "status", "prio", "kind", "tag", "category", "stale", "format" },
+    value = {
+      "status",
+      "prio",
+      "effort",
+      "kind",
+      "tag",
+      "category",
+      "severity",
+      "stale",
+      "sort",
+      "format",
+    },
     flag = { "blocked", "all" },
   },
   index = { value = {}, flag = { "check", "all" } },
@@ -86,6 +100,7 @@ local SPECS = {
       "effort",
       "tags",
       "category",
+      "severity",
       "refs",
       "lang",
       "summary",
@@ -177,9 +192,11 @@ local function filter_from(opt)
   return model.filter_from_options({
     status = opt.status --[[@as string|nil]],
     prio = opt.prio --[[@as string|nil]],
+    effort = opt.effort --[[@as string|nil]],
     kind = opt.kind --[[@as string|nil]],
     tag = opt.tag --[[@as string|nil]],
     category = opt.category --[[@as string|nil]],
+    severity = opt.severity --[[@as string|nil]],
     stale = opt.stale --[[@as string|nil]],
     blocked = opt.blocked == true,
     today = opt.today --[[@as string|nil]],
@@ -221,6 +238,11 @@ function commands.list(ctx)
     ctx.warn("error: " .. ferr)
     return 2
   end
+  local order, serr = model.parse_sort(args.opt.sort)
+  if not order then
+    ctx.warn("error: " .. serr)
+    return 2
+  end
   local format = args.opt.format or "tsv"
   if format ~= "tsv" and format ~= "ids" then
     ctx.warn("error: --format must be tsv or ids")
@@ -259,7 +281,7 @@ function commands.list(ctx)
       skipped = skipped + 1
     end
   end
-  local shown = model.sort(model.filter(open, filter))
+  local shown = model.sort(model.filter(open, filter), order)
   for _, t in ipairs(shown) do
     if format == "ids" then
       ctx.say(t.id)
@@ -367,6 +389,7 @@ function commands.new(ctx)
     effort = opt.effort --[[@as string|nil]],
     tags = opt.tags --[[@as string|nil]],
     category = opt.category --[[@as string|nil]],
+    severity = opt.severity --[[@as string|nil]],
     refs = opt.refs --[[@as string|nil]],
     lang = opt.lang --[[@as "de"|"en"|nil]],
     summary = opt.summary --[[@as string|nil]],
