@@ -110,10 +110,19 @@ local function open_week(n)
   map("n", "<leader>lp", function()
     open_week(n - 1)
   end, vim.tbl_extend("force", opts, { desc = "Lernplan: vorige Woche" }))
-  map("n", "<leader>lx", toggle_checkbox, vim.tbl_extend("force", opts, { desc = "Lernplan: Checkbox umschalten" }))
+  map(
+    "n",
+    "<leader>lx",
+    toggle_checkbox,
+    vim.tbl_extend("force", opts, { desc = "Lernplan: Checkbox umschalten" })
+  )
   map("n", "<leader>lb", function()
     vim.cmd("MDView start " .. vim.fn.fnameescape(path))
-  end, vim.tbl_extend("force", opts, { desc = "Lernplan: Woche im Browser öffnen (mdview.nvim)" }))
+  end, vim.tbl_extend(
+    "force",
+    opts,
+    { desc = "Lernplan: Woche im Browser öffnen (mdview.nvim)" }
+  ))
 
   vim.api.nvim_create_autocmd("BufWipeout", {
     buffer = bufnr,
