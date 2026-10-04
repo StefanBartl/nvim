@@ -10,7 +10,7 @@
 ---
 --- Key responsibilities:
 ---  - `list` (`tasks`), `index`, `task_new`, `task_set`, `task_done`,
----    `task_template`, `task_open`, `open_area` (`open`)
+---    `task_template`, `task_open`, `task_preview`, `open_area` (`open`)
 ---  - `parse_assignments`: `key=value` tokens whose values may contain spaces
 ---  - `M.dashboard`: the seam to the interactive dashboard (`tasks_dash`)
 ---
@@ -867,6 +867,24 @@ function M.task_open(ctx)
     return
   end
   open_file(task.path)
+end
+
+---`:MyPlugins task preview <id>` -- the task file (an open one, else its finished
+---copy) rendered in the browser by mdview.nvim; read-only for the vault.
+---@param ctx table
+function M.task_preview(ctx)
+  local id = ctx.args.id
+  local task = scan.find(id) or scan.find_done(id)
+  if not task then
+    notify.error("no such task: " .. id)
+    return
+  end
+  local ok, err = require("bindings.usrcmds.plugin_repos.tasks_preview").open_file(task.path)
+  if not ok then
+    notify.warn(("cannot preview %s: %s"):format(id, tostring(err)))
+    return
+  end
+  notify.info("previewing " .. id .. " in the browser")
 end
 
 -- ── open <area> <folder> ─────────────────────────────────────────────────────

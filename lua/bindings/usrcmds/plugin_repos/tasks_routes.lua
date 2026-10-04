@@ -11,7 +11,7 @@
 ---  - `tasks index [<area>|--all] [--check]`
 ---  - `task new [<area> [title...]] [kind= prio= effort= tags= status=]` (no area: the form)
 ---  - `task set <id> key=value ...`, `task done <id> [done_in= date= --yes]`
----  - `task template [--to=]`, `task open <id>`
+---  - `task template [--to=]`, `task open <id>`, `task preview <id>` (mdview)
 ---  - `open <area> [tasks|roadmap|backlog|handover|notes|all] [--action= --list --to=]`
 ---
 --- Argument types registered here (both read the vault on every call, so a
@@ -148,7 +148,11 @@ local LIST_FLAGS = {
   { name = "stale", type = "STRING", values = { "7", "30", "90", "refs" } },
   { name = "blocked", bool = true },
   { name = "sort", type = "STRING", enum = model.SORTS },
-  { name = "to", type = "STRING", values = { "buffer", "clipboard", "qf", "file:", "echo" } },
+  {
+    name = "to",
+    type = "STRING",
+    values = { "buffer", "clipboard", "qf", "file:", "echo", "mdview" },
+  },
   { name = "format", type = "STRING", enum = { "md", "csv" } },
 }
 
@@ -178,7 +182,7 @@ function M.routes()
       path = { "tasks" },
       args = { { name = "area", type = "TASK_AREA", allow_all = true, optional = true } },
       flags = LIST_FLAGS,
-      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset --severity=low|medium|high|critical --tag= --stale=<days>|refs (refs: a file named in refs: changed since updated) --blocked, order with --sort=default|prio-effort|severity, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
+      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset --severity=low|medium|high|critical --tag= --stale=<days>|refs (refs: a file named in refs: changed since updated) --blocked, order with --sort=default|prio-effort|severity, deliver with --to=buffer|clipboard|qf|file:<path>|mdview (a browser preview through mdview.nvim, Markdown only) and --format=md|csv",
       run = function(ctx)
         cmd().list(ctx)
       end,
@@ -274,6 +278,15 @@ function M.routes()
       desc = "Open the file of a task (an open one, else its finished copy in Backlog/)",
       run = function(ctx)
         cmd().task_open(ctx)
+      end,
+    },
+
+    {
+      path = { "task", "preview" },
+      args = { { name = "id", type = "TASK_ID", allow_done = true } },
+      desc = "Show the file of a task (an open one, else its finished copy in Backlog/) rendered in the browser through mdview.nvim; the file is opened as it is, nothing is written to the vault",
+      run = function(ctx)
+        cmd().task_preview(ctx)
       end,
     },
 

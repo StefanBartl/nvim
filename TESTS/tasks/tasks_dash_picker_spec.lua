@@ -162,6 +162,7 @@ return function(H)
         end, items)
         eq(labels, {
           "open the file",
+          "preview the file (mdview)",
           "advance status",
           "advance prio",
           "finish",
@@ -373,6 +374,53 @@ return function(H)
     ok(current_picker() == nil, "the picker closed")
     vim.cmd("silent! %bwipeout!")
 
+    -- ── gp previews the task file through mdview (seams: no browser) ──────
+    reset()
+    local previewed = {}
+    local preview = require("bindings.usrcmds.plugin_repos.tasks_preview")
+    preview.probe = function()
+      return true
+    end
+    preview.opener = function(path)
+      previewed[#previewed + 1] = path
+      return true
+    end
+    cmd.list({ flags = {}, args = {} })
+    p = opened(4)
+    p:focus("list")
+    flush()
+    local under_cursor = assert(p:current(), "the cursor is on an item")
+    keys("gp")
+    ok(
+      wait_for(function()
+        return #previewed == 1
+      end),
+      "gp hands the file to the mdview opener"
+    )
+    eq(previewed[1], under_cursor.task.path, "gp previews the task under the cursor")
+    ok(current_picker() == nil, "the picker closed")
+
+    -- without mdview the key says so instead of failing
+    reset()
+    previewed = {}
+    preview.probe = function()
+      return false, "mdview.nvim is not available (test)"
+    end
+    cmd.list({ flags = {}, args = {} })
+    p = opened(4)
+    p:focus("list")
+    flush()
+    keys("gp")
+    ok(
+      wait_for(function()
+        return said():find("not available", 1, true) ~= nil
+      end),
+      "a missing mdview is reported"
+    )
+    eq(#previewed, 0, "nothing was opened")
+    preview.probe, preview.opener = nil, nil
+    vim.cmd("silent! %bwipeout!")
+
     reset_fixture()
 
     -- ── g? help float closes again on any key ─────────────────────────────
@@ -582,6 +630,41 @@ return function(H)
       end,
     }
     keys("e")
+    opened(4)
+
+    -- the browser preview entry writes a temp Markdown file and hands it to mdview
+    reset()
+    local export_seen = {}
+    local export_preview = require("bindings.usrcmds.plugin_repos.tasks_preview")
+    export_preview.probe = function()
+      return true
+    end
+    export_preview.temp_root = function()
+      return H.tmpdir()
+    end
+    export_preview.opener = function(path)
+      export_seen[#export_seen + 1] = { path = path, text = H.read(path) }
+      return true
+    end
+    p = opened(4) -- still open from the cancelled export above
+    p:focus("list")
+    flush()
+    select_queue = { pick("Preview in browser (mdview)") }
+    keys("e")
+    ok(
+      wait_for(function()
+        return #export_seen == 1
+      end),
+      "the preview entry reaches the mdview opener"
+    )
+    has(export_seen[1].path, "tasks-all.md", "the temp file is named after the scope")
+    has(export_seen[1].text, "# Open tasks")
+    has(export_seen[1].text, "lib.nvim/alpha")
+    export_preview.cleanup_all()
+    export_preview.probe, export_preview.opener, export_preview.temp_root = nil, nil, nil
+    -- the next block expects an open picker
+    reset()
+    cmd.list({ flags = {}, args = {} })
     opened(4)
 
     -- ── D: confirm, finish the marked batch, picker reopens ───────────────

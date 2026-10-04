@@ -413,7 +413,7 @@ return function(H)
   end
 
   -- ── export targets ──────────────────────────────────────────────────────
-  eq(#core.EXPORT_CHOICES, 6)
+  eq(#core.EXPORT_CHOICES, 7)
   local labels = {}
   for _, c in ipairs(core.EXPORT_CHOICES) do
     ok(not labels[c.label], "labels are unique")
@@ -429,4 +429,6 @@ return function(H)
   eq(no_path, nil)
   has(perr, "no file path")
   eq(core.EXPORT_CHOICES[5].format, "csv")
+  eq(core.export_target(core.EXPORT_CHOICES[7]), { kind = "mdview" })
+  eq(core.EXPORT_CHOICES[7].format, "md", "a browser preview is Markdown")
 end
