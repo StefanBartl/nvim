@@ -30,6 +30,7 @@ lua/tasks/
 ├── scan.lua      collect task files (open and Backlog)
 ├── index.lua     render/write ROADMAP/TASKS.md, global export text
 ├── mutate.lua    template, new, set, done
+├── form.lua      the Markdown form of `task new` (template, parse, validate, tick rules)
 ├── check.lua     rule checker
 ├── cli.lua       command-line front end
 └── @types/       LuaLS types
@@ -46,6 +47,7 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 | `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. A folder task's `<slug>/<slug>.md` is a task (`task.folder`), the other files in its folder are assets and ignored; any other nested file is returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
 | `tasks.index` | `render` is pure and deterministic: the same tasks give the same bytes, whatever order they are found in. `write_area` writes only when the content differs (a CRLF checkout counts as equal and keeps its line endings), removes the file when no task is open, and with `check = true` only reports `stale` (`missing` / `outdated` / `orphan`). `render_global` returns the all-areas overview as text; nothing writes `ALL/TASKS.md` (decision E2: it is never committed). | `render`, `write_area`, `write_all`, `render_global` |
 | `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` or as a folder counts as taken; `folder = true` makes a folder task). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). `folderize` and `attach` turn a task into a folder task and copy assets into it. All regenerate the area index. | `template`, `new`, `set`, `done`, `folderize`, `attach`, `slugify`, `readme_add_row`, `SETTABLE` |
+| `tasks.form` | The form behind `:MyPlugins task new` without arguments, with no UI: `template` builds the Markdown text (`Area:` / `Title:` / `Tags:` / `Refs:` lines and one `- [ ]` / `- [x]` bullet list per choice field, the value sets read from `tasks.model`), `parse` reads what the user left in it, `validate` checks it (area known, title present, one tick on a single-choice list) and returns `tasks.mutate.new` options, `toggle` flips one bullet and keeps a single-choice list at one tick (`category` takes several). It creates nothing: the editor layer passes the values to `mutate.new`, the same write path as the CLI. | `fields`, `template`, `parse`, `validate`, `toggle`, `normalize`, `error_lines`, `strip_errors` |
 | `tasks.check` | Collects findings over one area or the vault (table below). | `run`, `format` |
 | `tasks.cli` | Parses a command line, calls the engine, prints tab-separated lines, returns an exit code, never raises. | `run` |
 
@@ -54,7 +56,8 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 - **Editor:** `:MyPlugins tasks | task | open` (`lua/bindings/usrcmds/plugin_repos/tasks_routes.lua`,
   `tasks_cmd.lua`, `tasks_view.lua`, and the dashboard `tasks_dash.lua` / `tasks_dash_core.lua`; documented in that folder's README). It adds only what an
   editor needs on top of the engine: composer routes and `<Tab>` completion, the `--to=` delivery
-  (`lib.nvim.harvest`, `lib.nvim.ui.list`), a form for a missing title, a confirmation before
+  (`lib.nvim.harvest`, `lib.nvim.ui.list`), a form for a missing title (and, for `task new` without
+  arguments, the Markdown form of `tasks.form` in `tasks_form.lua`), a confirmation before
   `done`, opening files and re-pointing buffers, a picker over one area folder. The filter words
   (`--status=`, `--prio=<=2`, ...) are parsed by `model.filter_from_options`, shared with the CLI, and
   the keys `task set` accepts are `mutate.SETTABLE`.

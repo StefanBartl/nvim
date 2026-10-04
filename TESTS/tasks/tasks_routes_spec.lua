@@ -31,6 +31,7 @@ return function(H)
     "pickers.command",
     "pickers.engines",
     "lib.nvim.ui.kit",
+    "cascade",
     "lib.nvim.cross.copy_to_clipboard",
   }
   for _, name in ipairs(STUBBED) do
@@ -48,6 +49,8 @@ return function(H)
     vim.ui.input = orig_input
     confirm.yesno = orig_yesno
     cmd.dashboard = nil
+    cmd.form_open = nil
+    cmd.explorer_open = nil
     vault.set_root(nil)
     for _, name in ipairs(STUBBED) do
       package.loaded[name] = orig_loaded[name]
@@ -900,6 +903,228 @@ return function(H)
       run("tasks lib.nvim")
       eq(seen.sort, "default", "no --sort: the default order")
       cmd.dashboard = false
+
+      -- ── task new without arguments: the form ────────────────────────────
+      -- Driven through the real buffer and its keymaps (feedkeys); the question
+      -- "attach assets?" and the explorer are injected.
+      local function fkeys(k)
+        vim.api.nvim_feedkeys(vim.keycode(k), "mx", false)
+      end
+      local function buf_text()
+        return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
+      end
+      ---@param want string  whole line
+      ---@return integer|nil
+      local function line_of(want)
+        for i, l in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+          if l == want then
+            return i
+          end
+        end
+      end
+      ---Put the cursor on the line `text` and press `key`.
+      local function press_on(want, key)
+        local n = assert(line_of(want), "no line " .. want)
+        vim.api.nvim_win_set_cursor(0, { n, 0 })
+        fkeys(key)
+      end
+      local function set_line(prefix, value)
+        local n
+        for i, l in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+          if vim.startswith(l, prefix) then
+            n = i
+            break
+          end
+        end
+        assert(n, "no line '" .. prefix .. "' in: " .. buf_text())
+        vim.api.nvim_buf_set_lines(0, n - 1, n, false, { prefix .. value })
+      end
+      local function tasks_dir_count(area)
+        return #vim.fn.readdir(root .. "/" .. area .. "/ROADMAP/tasks")
+      end
+
+      local form_asked, answer = {}, false
+      local explored
+      confirm.yesno = function(msg, _, cb)
+        form_asked[#form_asked + 1] = msg
+        cb(answer)
+      end
+      cmd.explorer_open = function(dir)
+        explored = dir
+      end
+
+      -- the form opens, the value sets are in it, the areas are listed
+      local before_buf = vim.api.nvim_get_current_buf()
+      run("task new")
+      local form_buf = vim.api.nvim_get_current_buf()
+      ok(form_buf ~= before_buf, "a form buffer opened")
+      eq(vim.bo[form_buf].filetype, "markdown")
+      has(buf_text(), "## category (several)")
+      has(buf_text(), "- [x] task")
+      has(buf_text(), "- [ ] critical")
+      has(buf_text(), "areas: ")
+      has(buf_text(), "lib.nvim")
+
+      -- <Space> ticks one-choice lists exclusively, category takes several
+      press_on("- [ ] bug", "<Space>")
+      ok(line_of("- [x] bug") and line_of("- [ ] task"), "kind moved from task to bug")
+      press_on("- [ ] S", "<CR>")
+      press_on("- [ ] docs", "<Space>")
+      press_on("- [ ] security", "<Space>")
+      press_on("- [ ] high", "<Space>")
+      press_on("- [ ] low", "<Space>")
+      ok(line_of("- [x] low") and line_of("- [ ] high"), "severity keeps one tick")
+      eq(
+        select(2, buf_text():gsub("%- %[x%] ", "")),
+        6,
+        "kind, effort, 2 categories, severity, status"
+      )
+
+      -- submit with the required fields empty: errors in the buffer, nothing lost, nothing created
+      local before_n = tasks_dir_count("lib.nvim")
+      fkeys("<C-s>")
+      has(buf_text(), "! - Area is required")
+      has(buf_text(), "! - Title is required")
+      has(buf_text(), "- [x] bug", "ticks survive a failed submit")
+      eq(vim.api.nvim_get_current_buf(), form_buf, "the form stays open")
+      eq(tasks_dir_count("lib.nvim"), before_n)
+      eq(#form_asked, 0, "no question before the form is valid")
+
+      -- an unknown area is reported too; fixing it clears the old report
+      set_line("Area: ", "nowhere")
+      set_line("Title: ", "Form made task")
+      fkeys("<C-s>")
+      has(buf_text(), "'nowhere' is not an area")
+      lacks(buf_text(), "Title is required")
+
+      -- valid, answer "no assets": a plain file task through mutate.new
+      set_line("Area: ", "lib.nvim")
+      set_line("Tags: ", "ui, form")
+      answer, explored = false, nil
+      fkeys("<C-s>")
+      flush()
+      eq(#form_asked, 1)
+      has(form_asked[1], "Attach assets")
+      local made = task_path("lib.nvim", "form-made-task")
+      ok(H.exists(made), "the task file exists")
+      local made_text = assert(H.read(made))
+      has(made_text, "title: Form made task")
+      has(made_text, "kind: bug")
+      has(made_text, "effort: S")
+      has(made_text, "category: [security, docs]")
+      has(made_text, "severity: low")
+      has(made_text, "tags: [ui, form]")
+      has(made_text, "status: open")
+      lacks(made_text, "prio:", "an unticked field is left out")
+      eq(explored, nil, "no explorer without assets")
+      eq(vim.fs.normalize(vim.api.nvim_buf_get_name(0)), made, "the new file is opened")
+      ok(not vim.api.nvim_buf_is_valid(form_buf), "the form is closed")
+      has(said(), "created lib.nvim/form-made-task")
+      has(assert(H.read(lib_index)), "Form made task", "the index is regenerated")
+
+      -- answer "yes": a folder task, assets/ exists, the explorer is pointed at it
+      run("task new")
+      set_line("Area: ", "lib.nvim")
+      set_line("Title: ", "Form with assets")
+      answer = true
+      fkeys("<C-s>")
+      flush()
+      local folder_md = root .. "/lib.nvim/ROADMAP/tasks/form-with-assets/form-with-assets.md"
+      ok(H.exists(folder_md), "a folder task")
+      eq(explored, root .. "/lib.nvim/ROADMAP/tasks/form-with-assets/assets")
+      eq(vim.fn.isdirectory(explored), 1, "assets/ was created")
+      has(
+        assert(H.read(folder_md)),
+        "kind: task",
+        "an untouched default tick is the engine default"
+      )
+
+      -- cancel: nothing is created
+      before_n = tasks_dir_count("lib.nvim")
+      run("task new")
+      form_buf = vim.api.nvim_get_current_buf()
+      set_line("Area: ", "lib.nvim")
+      set_line("Title: ", "Never made")
+      fkeys("q")
+      has(said(), "cancelled")
+      ok(not vim.api.nvim_buf_is_valid(form_buf), "cancel closes the form")
+      eq(tasks_dir_count("lib.nvim"), before_n)
+      ok(not H.exists(task_path("lib.nvim", "never-made")))
+
+      -- an engine error (a tag with a forbidden character) shows in the form, which stays
+      run("task new")
+      form_buf = vim.api.nvim_get_current_buf()
+      set_line("Area: ", "lib.nvim")
+      set_line("Title: ", "Engine refuses")
+      set_line("Tags: ", "a#b")
+      answer = false
+      fkeys("<C-s>")
+      flush()
+      eq(vim.api.nvim_get_current_buf(), form_buf, "the form survives an engine error")
+      has(buf_text(), "! - ")
+      has(buf_text(), "tags item 'a#b'", "the engine's message is shown")
+      has(buf_text(), "Title: Engine refuses", "the typed text survives")
+      ok(not H.exists(task_path("lib.nvim", "engine-refuses")), "nothing was created")
+      fkeys("q")
+
+      -- help
+      run("task new")
+      fkeys("g?")
+      flush()
+      has(said(), "Task form")
+      has(said(), "<C-s>")
+      fkeys("q")
+
+      -- kv given on the command line are pre-ticked, areas stay free
+      run("task new kind=idea category=docs,ruleset tags=a,b")
+      ok(line_of("- [x] idea") and line_of("- [ ] task"), "kind=idea pre-ticked")
+      ok(line_of("- [x] docs") and line_of("- [x] ruleset"), "category pre-ticked")
+      ok(line_of("Tags: a,b"))
+      fkeys("q")
+
+      -- with an area the old behaviour stays: no form, the prompt chain
+      local bufs_before = #vim.api.nvim_list_bufs()
+      prompts, answers = {}, { "Still prompted", "", "", "" }
+      run("task new lib.nvim")
+      eq(#prompts, 4, "area given: the prompt chain, not the form")
+      ok(H.exists(task_path("lib.nvim", "still-prompted")))
+      ok(#vim.api.nvim_list_bufs() <= bufs_before + 1, "no form buffer")
+
+      -- cascade.nvim installed: its checkbox toggle flips, the form still keeps its rules
+      local cascade_calls = 0
+      package.loaded["cascade"] = {
+        toggle_checkbox = function()
+          cascade_calls = cascade_calls + 1
+          local n = vim.api.nvim_win_get_cursor(0)[1]
+          local l = vim.api.nvim_buf_get_lines(0, n - 1, n, false)[1]
+          -- a three-state cycle: empty -> "-" (not a tick the form knows)
+          vim.api.nvim_buf_set_lines(0, n - 1, n, false, { (l:gsub("%[.%]", "[-]", 1)) })
+        end,
+      }
+      run("task new")
+      press_on("- [ ] idea", "<Space>")
+      eq(cascade_calls, 1, "the cascade toggle did the flip")
+      ok(
+        line_of("- [x] idea") and line_of("- [ ] task"),
+        "result normalised to a tick, siblings cleared"
+      )
+      press_on("- [x] idea", "<Space>")
+      ok(line_of("- [ ] idea"), "unticking works with cascade installed")
+      -- a cascade that does nothing: the fallback takes over
+      package.loaded["cascade"] = { toggle_checkbox = function() end }
+      press_on("- [ ] idea", "<Space>")
+      ok(line_of("- [x] idea"), "a no-op cascade falls back to the own toggle")
+      -- a cascade that throws
+      package.loaded["cascade"] = {
+        toggle_checkbox = function()
+          error("boom")
+        end,
+      }
+      press_on("- [ ] feature", "<Space>")
+      ok(line_of("- [x] feature") and line_of("- [ ] idea"), "a broken cascade falls back too")
+      fkeys("q")
+      package.loaded["cascade"] = orig_loaded["cascade"]
+      cmd.explorer_open = nil
 
       -- completion
       eq(complete("TaskT tasks --sort="), {

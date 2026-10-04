@@ -435,10 +435,118 @@ function M.ask_new_fields(given, cb)
   step(1)
 end
 
----`:MyPlugins task new <area> [title...] [kind= prio= effort= tags= status=]`
+---Form seam: `:MyPlugins task new` without arguments calls it instead of
+---opening the form buffer of `tasks_form`. Same signature as `tasks_form.open`.
+---@type (fun(opts: table): any)|nil
+M.form_open = nil
+
+---Explorer seam: shows a folder after a task with assets was created.
+---`nil` means filetree.nvim (`:Filetree open`), else the built-in `:edit <dir>`.
+---@type (fun(dir: string): any)|nil
+M.explorer_open = nil
+
+---Open `dir` in a file explorer: filetree.nvim when its command exists, else
+---Neovim's own directory browser.
+---@param dir string
+local function open_explorer(dir)
+  if M.explorer_open then
+    M.explorer_open(dir)
+    return
+  end
+  if vim.fn.exists(":Filetree") == 2 then
+    local ok = pcall(vim.cmd, "Filetree open " .. vim.fn.fnameescape(dir))
+    if ok then
+      return
+    end
+  end
+  pcall(vim.cmd, "edit " .. vim.fn.fnameescape(dir))
+end
+
+---The form flow of `:MyPlugins task new` without arguments: a Markdown form
+---(`tasks.form`), then the question "attach assets?", then `mutate.new` -- the
+---one write path the CLI uses too. A failure shows in the form, which stays
+---open with everything typed; cancelling creates nothing.
+---@param given table<string, string>  kv values from the command line, pre-ticked
+function M.task_new_form(given)
+  local root = vault_root()
+  if not root then
+    return
+  end
+  local areas = {}
+  for _, a in ipairs(vault.areas(root)) do
+    areas[#areas + 1] = a.name
+  end
+  local ticks = {}
+  for _, key in ipairs({ "kind", "prio", "effort", "severity", "status" }) do
+    ticks[key] = given[key]
+  end
+  if given.category then
+    ticks.category = vim.split(given.category, ",", { trimempty = true })
+  end
+
+  local ui = require("bindings.usrcmds.plugin_repos.tasks_form")
+  local open = M.form_open or ui.open
+  local busy = false
+  open({
+    areas = areas,
+    tags = given.tags,
+    ticks = ticks,
+    on_cancel = function()
+      notify.info("task new cancelled")
+    end,
+    on_submit = function(values, buf)
+      if busy then
+        return
+      end
+      busy = true
+      confirm.yesno(
+        "Attach assets (screenshots, logs) to the new task?\n\nYes makes a folder task with an assets/ folder and opens the file explorer on it.",
+        "attach assets",
+        function(with_assets)
+          busy = false
+          local opts = vim.tbl_extend("force", values.opts, { folder = with_assets })
+          local res, err = mutate.new(values.area, opts)
+          if not res then
+            if buf and vim.api.nvim_buf_is_valid(buf) then
+              ui.show_errors(buf, { tostring(err) })
+            else
+              notify.error(tostring(err))
+            end
+            return
+          end
+          if buf then
+            ui.close(buf)
+          end
+          if res.index_err then
+            notify.warn("task created, but the index was not updated: " .. res.index_err)
+          end
+          notify.info(("created %s"):format(res.id))
+          open_file(res.path)
+          if with_assets then
+            local assets = vim.fs.dirname(res.path) .. "/" .. mutate.ASSETS_DIR
+            vim.fn.mkdir(assets, "p")
+            open_explorer(assets)
+          end
+        end
+      )
+    end,
+  })
+end
+
+---`:MyPlugins task new [<area> [title...]] [kind= prio= effort= tags= status=]`
 ---@param ctx table
 function M.task_new(ctx)
   local area = ctx.args.area
+  if area == nil or area == "" then
+    local given = {}
+    for _, key in ipairs({ "kind", "prio", "effort", "tags", "category", "severity", "status" }) do
+      if ctx.kv[key] ~= nil and ctx.kv[key] ~= "" then
+        given[key] = ctx.kv[key]
+      end
+    end
+    M.task_new_form(given)
+    return
+  end
   local title = unquote(table.concat(ctx.rest, " "))
   local given = {}
   for _, key in ipairs({ "kind", "prio", "effort", "tags", "category", "severity", "status" }) do

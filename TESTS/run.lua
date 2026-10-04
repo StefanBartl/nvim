@@ -59,6 +59,7 @@ local specs = {
   "tasks/tasks_check_spec.lua",
   "tasks/tasks_folder_spec.lua",
   "tasks/tasks_effort_severity_spec.lua",
+  "tasks/tasks_form_spec.lua",
   "tasks/tasks_cli_spec.lua",
   "tasks/tasks_routes_spec.lua",
   "tasks/tasks_dash_spec.lua",
