@@ -1,11 +1,11 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (Zwischenstand, nach Runde 34: kleine Plugins und leere Bereiche erledigt).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> **Stand 2026-10-04 (nach Runde 36: **Phase 4 — Migration abgeschlossen**).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
-> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`, `cascade.nvim`, `sandbox.nvim`, `reposcope.nvim`, `sessions.nvim`, `emojis.nvim`, `diff.nvim`, `cmdlog.nvim`, `dap.nvim`, `fileops.nvim`, `recommender.nvim`, `filetreepicker.nvim`, `nvim-nexus`; `refinder` (kein Plugin, Statussatz), `spotlight.nvim` und
+> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`, `cascade.nvim`, `sandbox.nvim`, `reposcope.nvim`, `sessions.nvim`, `emojis.nvim`, `diff.nvim`, `cmdlog.nvim`, `dap.nvim`, `fileops.nvim`, `recommender.nvim`, `filetreepicker.nvim`, `nvim-nexus`, `docmap-desktop` (21), `nvim-config` (26) und `ALL` (+24); `refinder` (kein Plugin, Statussatz), `spotlight.nvim` und
 > `migrate.nvim` sind geprüft (keine offene Arbeit, keine Tasks); `pickers.nvim` hat einen einzelnen Task aus einer fremden Runde (seine eigene Runde steht aus). Keine Agenten laufen mehr.
-> Nach Runde 19 (`ui`) wurde auf Wunsch kurz angehalten, Runde 20 (`debugging`) lief danach; offen sind nur noch `docmap-desktop`, `nvim-config` und die Politur (Phase 5).
+> Nach Runde 19 (`ui`) wurde auf Wunsch kurz angehalten, Runde 20 (`debugging`) lief danach; offen ist nur noch die Politur (Phase 5) und die Entscheidungen der `decision`-Tasks.
 >
 > **Neu seit dem letzten Stand:** Kategorien (`category`, Filter `--category=`) und Ordner-Tasks mit Assets
 > (`<slug>/<slug>.md`, `task attach`/`folderize`), Konzept §12, Regeln R13 und R14 — siehe „Kategorien und Ordner-Tasks“.
@@ -148,6 +148,8 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `932fac8` | `debugging.nvim`: 5 Tasks (Runde 20); „Offen“ der ROADMAP war das gebaute Recent-Popup, durch Verweis ersetzt (Commit trägt versehentlich einen Claude-Co-Author-Trailer, gepusht) |
 | WKDBooks | `c36036a` | `insights.nvim`: 4 Tasks (Runde 21), nur das SYNERGIE-Papier war offen; gebaute Features in FEATURES.md nachgetragen |
 | WKDBooks | `a6c42b8`, `939a6e1`, `7040070`, `9cd33d0`, `6b25f83` | `cascade` (3), `sandbox` (2), `reposcope` (2), `sessions` (4), `emojis` (2) — Runden 29–33; überwiegend Checklisten-Tasks (update + run), dazu `sessions.nvim/chip-function-color-no-colorscheme-retint` (Bug) |
+| WKDBooks | `7a292d5` | `docmap-desktop`: 21 Tasks (Runde 35), L1–L8/M-Punkte nur noch als Zeiger; Agentenkette P2–P7 als Tasks (rules-*, Prio 1) |
+| WKDBooks, nvim-config | `742e111`, `b8bb6da`; `c607cf4e` | Runde 36: `nvim-config` (26) und `ALL` (24) Tasks; `00_ROADMAP.md` mit Task-Verweisen |
 | WKDBooks | `9ac2707` … `d3da674` | Runde 34, je Bereich ein Commit: `diff` (2), `cmdlog` (6), `dap` (4), `fileops` (2), `recommender` (8), `refinder` (Statussatz), `filetreepicker` (1), `nvim-nexus` (1) |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
@@ -257,6 +259,24 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 - **Vault-Hygiene:** `wkdbook-takt/` (ungetrackt) und uncommittete `language.nvim/…`-Entscheidungen liegen dort fremd; Commits immer
   mit expliziten Pfaden, nie `git add -A`.
 
+## Runde 35–36: Funde und Entscheidungen beim Nutzer
+
+- **docmap-desktop:** `release-v0-6-1-decision` (die Review-Fixes `3d0af4a`…`c3b1a9a` stecken nicht in `v0.6.0`; Empfehlung: erst
+  Live-Tests, dann ein Patch); lokaler Checkout 4 Commits hinter `origin/main`, gemergter Worktree/Branch aufzuräumen
+  (`stale-worktree-and-merged-branch-cleanup`); `--api=rules`/`popen_git`-Tasks liegen hier, könnten nach `documentation.nvim`;
+  Chat (P5b) und Checklisten-Eingabe (P7/L6) auf Prio 2 statt 1.
+- **nvim-config / ALL:** elf `decision`-Tasks, vor allem `ALL/spec-nvim-m0-falsification` (hängt `replace-plenary-test-harness` und
+  `test-nvim-neotest-extraction` dran), `nvim-config/license-and-readme-decision`, `upstream-neotest-reports` (nur nach Ja),
+  `ALL/strip-claude-coauthor-from-history` (Force-Push nur nach Ja; nvim-config 4 von 2185, WKDBooks 19 Trailer — Ursache: die
+  Attribution-Vorgabe der Umgebung widerspricht der Nutzerregel).
+- **Bug mit Prio 2:** `nvim-config/ci-stylua-red-learn-plan-viewer` (CI auf `main` seit ca. 10 Läufen rot, `stylua --check` auf
+  `learn_plan_viewer/init.lua` bestätigt).
+- **Korrekturen:** neotest-plenary-Windows-Fehler ist per Shim (`windows_fixes.lua`) behoben, offen nur das Upstream-Melden;
+  `filetree` ohne neo-tree verworfen (2026-10-04); `:BindingsRuntimeChecklist` schreibt in einen nicht mehr existierenden Ordner
+  (`bindings-checklist-update`).
+- **Offene Fragen zu `00_ROADMAP.md`:** `docs\ROADMAP\LONG_RUN` existiert nicht; spotlight-Zeile erledigt?; wkd-/Lern-/Lebensziele
+  bewusst außerhalb des Task-Systems; später auf Prosa + Task-IDs kürzen (R1/R2)?
+
 ## Offen / nicht verifiziert
 
 - **Nicht geprüft:** nur unter Windows 11 gelaufen (ubuntu/macOS ungetestet); die nvim-config-Specs laufen
@@ -317,12 +337,12 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 
 ## Nächste Schritte
 
-1. **Phase 4 — Migration** (Regel: **max. 1 Agent gleichzeitig**). Fertig bis Runde 34. Es bleiben `nvim-config` (eigener
-   Bereich, Docs/Reports/Handover, mit Vorsicht: viele Handover-Dateien liegen als Originale unter `docs/`) und `docmap-desktop`
-   (188 KB, Desktop-Programm — erst klären, ob es überhaupt in dieses System gehört; die Desktop-Seite des Agent-Konzepts
-   P2–P7 aus `rules.nvim` landet dort). Brief für Agenten: Quellen lesen, gegen den Baum nachmessen, Erledigtes nicht anlegen,
-   Bedingungen übernehmen, `--category=` wo klar, Optionen mit Doppelstrich, CLI aus dem Worktree, nichts committen; Commit mit
-   expliziten Pfaden macht die Hauptsession nach Stichprobe.
+1. **Phase 4 — Migration: abgeschlossen** (Runden 1–36, alle Bereiche geprüft). Offene Lücken in migrierten Bereichen, die
+   noch keinen Task haben: `media.nvim` (`Final_Checks/media/live-testing-plan.md`, Abschnitt 9 steht auf „ungeprüft“, obwohl der
+   whisper.cpp-Lauf am 2026-09-17 war), `ui.nvim` (`Final_Checks/ui.nvim.md`, 9 Punkte Sticky-Context), `lib.nvim`
+   (`Final_Checks/modifier-keymaps.md` §8), Badge-Modul für `nvim-config/learn-plan-viewer-statusline-badge`;
+   `gopath.nvim/fs-cache-daemon` ohne Rückverweis auf `filetree.nvim/own-tree-engine`; `filetree.nvim/system-open-via-lib-open-default`
+   weiter ungeklärt.
 2. `lib.nvim/project-scan-missing-parsers-and-tools` und `lsp.nvim/config-unknown-key-warning` bauen (wenn gewünscht).
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
 4. Phase 5: Politur (Statusline, `mdview`, `--stale`, Vault-CI).
