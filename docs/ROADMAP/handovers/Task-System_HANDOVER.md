@@ -1,8 +1,12 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04.** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**: `lib.nvim` (Pilot),
-> `lsp.nvim`, `mdview.nvim` sind migriert, `pickers.nvim` hat seinen ersten Task. Offen sind die übrigen Plugins
-> und die Politur (Phase 5).
+> **Stand 2026-10-04 (Zwischenstand).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
+> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`; `pickers.nvim` hat seinen ersten Task. **In Arbeit (Agenten
+> laufen):** `filetree.nvim`, `spotlight.nvim`. Danach ist Schluss für diese Sitzung; offen bleiben die übrigen
+> Plugins (Größenordnung: `images`, `pdfport`, `open`, `gitsuite`, `color_my_ascii`, `migrate`, `rules`, `media`, `ai`,
+> `ui`, `debugging`, … und `docmap-desktop`) und die Politur (Phase 5). **Die gesammelten Entscheidungen für den Nutzer
+> stehen im Abschnitt „Offene Entscheidungen“ unten.**
 >
 > **Konzept (Spec, Regeln R1–R12, Entscheidungen):**
 > [Task-System-Konzept.md]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Task-System-Konzept.md)
@@ -26,7 +30,8 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault: `lib.nvim/` (Pilot), `lsp.nvim/`, `mdview.nvim/`, `pickers.nvim/` jeweils unter `ROADMAP/tasks/` |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1) |
+| Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R12 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
 
@@ -66,6 +71,11 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `e9d7b9d` | `mdview.nvim`: 11 Tasks (Runde 2) |
 | WKDBooks | `7b17bf3` | `md_lint` löst Env-Links auf; `messages-module-cut` entschieden |
 | WKDBooks | `06b9584`, `1af295e` | Entscheidungen lsp.nvim (Config-Warnung, Projekt-Scan → lib.nvim) und mdview (Overlays) |
+| WKDBooks | `ce538a5` | `markdown.nvim`: 6 Tasks (Runde 5) |
+| WKDBooks | `825fc01` | `casedesk.nvim`: 28 Tasks (Runde 4) |
+| WKDBooks | `02f2083` | `documentation.nvim`: 55 Tasks (Runde 3) |
+| WKDBooks | `e23cd38` | `gopath.nvim`: 4 Tasks (Runde 7), Treesitter-Irrtum in ROADMAP/FEATURES korrigiert |
+| WKDBooks | `a9d0d2a` | `github_stats.nvim`: 5 Tasks (Runde 6) |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
 geprüft (13 Befunde behoben). Die Fix-Commits `c6d274c`, `efcab018`, `80ef2946` hat Claude am 2026-10-04 selbst
@@ -85,6 +95,30 @@ Agent reviewt.
 - mdview-Overlays: Fokus-Zoom zuerst; Keycast opt-in mit drei Scopes (nur Normal / Insert mit Schutz für Passwortfelder /
   alles) und schnellem Ausblenden, Capture/Formatierung mit `ui.nvim`s `ui.screenkey` teilen; Marker-Umzug als eigener
   Task (`mdview.nvim/overlay-markers-migration`, parked).
+
+## Offene Entscheidungen (warten auf den Nutzer)
+
+Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<slug>.md`.
+
+- **casedesk.nvim:** `unconfirmed-outcome-or-status` (Q-4: „Unbestätigt“ als Wert von `case_outcomes` oder vierter
+  Status?); `docs-language-plugin-repo` (Q-2: gilt „docs/ komplett Deutsch“ noch? 7 deutsch, Rest englisch);
+  `live-tests-run` (Checkliste als Task behalten? 234 Zeilen „ungetestet“ gezählt, der Plan nannte 81);
+  `doctor-stale-unconfirmed-live-run` (Prio 1 passt? Lauf verschiebt echte Case-Ordner, nur der Nutzer kann ihn auslösen).
+- **markdown.nvim:** `hover-config-passthrough` (`hover` ungeprüft an hover.nvim durchreichen — empfohlen — oder
+  Allowlist erweitern); `in-buffer-concealed-rendering` (parked lassen oder als verworfen ins Backlog);
+  `handler-ctx-helper`, `vim-port-markdown-vim` (parked lassen oder verwerfen).
+- **documentation.nvim:** `per-tab-pdf-export` und `root-slider-other-views` (beide aus der Git-Historie als `parked`
+  wiederhergestellt, bleiben?); `runtime-tab-grouping` (Bedingung „dritter Bewohner“ erfüllt — entparken empfohlen);
+  Call-Edges/i18n als `open` statt `decision` angelegt, Aufteilung der 18 Sprachen in 6 Tasks nach Scope-Familie
+  (passt?); `keyword-card-tab-navigation-live-check` (Task oder nur Checklistenzeile); `ideas-files-stale-entries`
+  (veraltete „not built“-Prosa in IDEAS/MULTILANG bereinigen — empfohlen, nach der Migration).
+- **github_stats.nvim:** `on-demand-live-fetch` (Status `decision`: bauen oder „no data“ bleibt die Antwort);
+  `traffic-digest-e2e-check` (Live-Test als Task oder nur Checkliste); sollen die IDEAS-Features (Thresholds, Groups,
+  Webhook, …) als `parked`-Tasks mit `kind: idea` ins Dashboard (bewusst nicht angelegt); `fetch-spawn-throttle`
+  (Freeze mit heutiger Allowlist unbekannt, `needs-verification`).
+- **gopath.nvim:** keine; optional `cache-load-from-disk-lazy` auf Prio 2, falls `startup-stall-measure` mehr Last zeigt.
+- **lsp.nvim / mdview.nvim:** beantwortet (siehe „Entscheidungen“); `live-check-lspsaga-replacements` und
+  `scroll-lag-feel-judgement` bleiben Tasks.
 
 ## Offen / nicht verifiziert
 
@@ -107,6 +141,19 @@ Agent reviewt.
     "filetree.nvim cross-check"; in `filetree.nvim/lua` kein Treffer).
   - `mdview.nvim`-Live-Tests L4, QW1, QW10 stehen als offene Checkboxen in `docs/ROADMAP/Final_Checks/PLUGIN_ROADMAPS_TESTPLAN.md`
     (bewusst keine Tasks, R10).
+  - `hover.nvim`: Zoom-Vollbild mit Maus-Markieren/Kopieren und persistenter URL-Cache (stale-while-revalidate) für
+    Tricentis-/Microsoft-Doku (Quelle: `docs/ROADMAP/Casedesk/Tasks.md`, nicht in der hover-ROADMAP).
+  - `images.nvim`: Windows-OCR-Backend `Windows.Media.Ocr` (casedesk RM-22; Vergleich in `docs/ROADMAP/Casedesk/ocr.md`).
+  - `ui.nvim`: Marks-Reihenfolge „auf der Workstation“ (casedesk-ROADMAP §10); Sweep „Cancel löst unabhängige
+    Folgeaktion aus“ (`docs/ROADMAP/Final_Checks/workflows-interactive-confirm.md`, gehört nach nvim-config oder ui.nvim).
+  - `docmap-desktop` (Desktop-Programm, nicht nvim): die Roadmap dort führt L1, L2, L3, L8, M7b, M12 doppelt, die jetzt
+    Tasks in `documentation.nvim` sind — dort Zeiger statt Kopien setzen; offene Live-Tests A1/A3, A2 (Tripwire), L6, L7,
+    L10, L11, I18N-4, Cross-Repo-Dashboard; Folge-Tasks, falls `github_stats.nvim/on-demand-live-fetch` gebaut wird.
+  - `runtime-analysis.nvim`: M11 (Endpoint-Inventar × Request-History), L4, L5 aus `documentation.nvim`.
+  - nvim-config: Save-Cursor/Fold-Bugreport (`bugreports/save-cursor-and-fold-reset.md`, Ursache offen);
+    Altkopie `docs/ROADMAP/Casedesk/HANDOVER.md` weicht um eine Tabellenzeile vom Vault-Original ab; „gopath
+    `load_from_disk` aus `setup()`“ steht noch in `startup-offene-entscheidungen-und-neotest-listener-2026-10-02.md`
+    (jetzt Task `gopath.nvim/cache-load-from-disk-lazy`).
 - **Bekannte Eigenheiten:** Titel mit ` #` werden nach YAML-Regel abgeschnitten (`check` warnt, außer der Titel ist
   gequotet); Namespace `tasks` ist generisch (bei Kollision umbenennen); `tasks index --check` im Editor führt die
   volle Regelprüfung aus, im CLI nur die Staleness; `new` hat kein `--blocked_by` (erst `new --status=blocked`, dann
@@ -116,11 +163,15 @@ Agent reviewt.
 
 ## Nächste Schritte
 
-1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (max. 1 Agent): ROADMAP/NOTES/Handover lesen, offene
-   Punkte als Task-Dateien (CLI `new`), Prosa bleibt mit Link auf `TASKS.md`. Noch offen nach Menge:
-   `documentation`, `casedesk`, `markdown`, `github_stats`, … (`lsp`, `mdview`, `lib` sind durch). Vorher `checkpoint`
-   bzw. sauberer Git-Stand im Vault. Brief für die Agenten: siehe die Runden 1 und 2 (Quellen lesen, gegen den Baum
-   nachmessen, Erledigtes nicht anlegen, nichts committen; Commit macht die Hauptsession).
+1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: max. 1 Agent gleichzeitig; in dieser Sitzung wurde
+   auf ausdrücklichen Wunsch ausnahmsweise mit 3 gearbeitet): ROADMAP/NOTES/Handover lesen, offene Punkte als
+   Task-Dateien (CLI `new … --slug= --lang=`), Prosa bleibt mit Link auf `TASKS.md`. Noch offen nach Menge (Roadmap-KB):
+   `docmap-desktop` (188, Desktop-Programm — erst klären, ob es überhaupt in dieses System gehört), `images` (50),
+   `pdfport` (43), `open` (41), `gitsuite` (37), `color_my_ascii` (31+33 NOTES), `migrate` (30), `rules` (29), `media`
+   (22+63), `ai` (21), `ui` (19), `debugging` (19), danach die kleinen. Vorher sauberer Git-Stand im Vault. Brief für die
+   Agenten: Quellen lesen, gegen den Baum nachmessen, Erledigtes nicht anlegen (veraltete „offen“-Angaben mit Beleg
+   korrigieren), Bedingungen aus Roadmap-Einträgen in den Task übernehmen, nichts committen; Commit mit expliziten
+   Pfaden macht die Hauptsession nach Stichprobe gegen den Code.
 2. `lib.nvim/project-scan-missing-parsers-and-tools` und `lsp.nvim/config-unknown-key-warning` bauen (wenn gewünscht).
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
 4. Phase 5: Politur (Statusline, `mdview`, `--stale`, Vault-CI).
