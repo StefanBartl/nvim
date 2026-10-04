@@ -46,7 +46,17 @@ M.PRIO_HL = { [1] = "DiagnosticError", [2] = "DiagnosticWarn", [3] = "Diagnostic
 
 ---Filter dimensions the `f` key offers, in menu order.
 ---@type string[]
-M.FILTER_DIMS = { "status", "prio", "effort", "kind", "category", "severity", "tag", "blocked" }
+M.FILTER_DIMS = {
+  "status",
+  "prio",
+  "effort",
+  "kind",
+  "category",
+  "severity",
+  "tag",
+  "blocked",
+  "stale-refs",
+}
 
 ---Highlight group per severity.
 ---@type table<string, string>
@@ -81,6 +91,18 @@ end
 ---@field skipped integer      # Task files not listed (done, missing or unknown status).
 ---@field errors string[]      # Directories that could not be read.
 
+---A filter whose `stale_refs` lookup knows the vault root (a copy; the stored
+---filter stays free of it).
+---@param f Tasks.Filter|nil
+---@param root string|nil
+---@return Tasks.Filter|nil
+function M.with_root(f, root)
+  if f and f.stale_refs and root then
+    return vim.tbl_extend("keep", { ref_opts = { root = root } }, f)
+  end
+  return f
+end
+
 ---Scan, keep the open tasks, filter and sort -- what `:MyPlugins tasks` shows.
 ---@param opts { root: string, area?: string|nil, filter?: Tasks.Filter, sort?: string }
 ---@return Plugin_repos.TasksDashLoad|nil result
@@ -104,7 +126,7 @@ function M.load(opts)
     end
   end
   return {
-    tasks = model.sort(model.filter(open, opts.filter), opts.sort),
+    tasks = model.sort(model.filter(open, M.with_root(opts.filter, opts.root)), opts.sort),
     open = #open,
     skipped = skipped,
     errors = type(errors) == "table" and errors or {},
@@ -291,6 +313,9 @@ function M.chips(f)
   if f.stale then
     chips[#chips + 1] = ("stale: >=%dd"):format(f.stale)
   end
+  if f.stale_refs then
+    chips[#chips + 1] = "stale: refs"
+  end
   if f.blocked then
     chips[#chips + 1] = "blocked"
   end
@@ -363,6 +388,8 @@ function M.set_dim(f, dim, value)
     end
   elseif dim == "blocked" then
     out.blocked = value and true or nil
+  elseif dim == "stale-refs" then
+    out.stale_refs = value and true or nil
   elseif
     dim == "status"
     or dim == "kind"
@@ -443,6 +470,9 @@ function M.filter_to_options(f)
   if f.stale then
     o.stale = f.stale
   end
+  if f.stale_refs then
+    o.stale_refs = true
+  end
   if f.blocked then
     o.blocked = true
   end
@@ -466,6 +496,7 @@ function M.filter_from_stored(opts)
     category = type(opts.category) == "string" and opts.category or nil,
     severity = type(opts.severity) == "string" and opts.severity or nil,
     stale = (type(opts.stale) == "string" or type(opts.stale) == "number") and opts.stale or nil,
+    stale_refs = opts.stale_refs == true,
     blocked = opts.blocked == true,
   })
   return f or {}

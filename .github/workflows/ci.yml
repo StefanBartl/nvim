@@ -26,7 +26,7 @@ jobs:
           version: v2.5.2
           # Only this config's own code. The imported third-party patch
           # snippets under docs/ are notes, not code — several do not parse.
-          args: --check lua init.lua after TESTS scripts/tasks.lua
+          args: --check lua init.lua after TESTS scripts/tasks.lua scripts/tasks-ci.lua
 
   luacheck:
     name: luacheck (lint)
@@ -42,4 +42,4 @@ jobs:
           luaVersion: "5.4"
       - uses: leafo/gh-actions-luarocks@v4
       - run: luarocks install luacheck 1.2.0
-      - run: luacheck lua init.lua after TESTS scripts/tasks.lua
+      - run: luacheck lua init.lua after TESTS scripts/tasks.lua scripts/tasks-ci.lua

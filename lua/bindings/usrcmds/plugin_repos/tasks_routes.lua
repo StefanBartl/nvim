@@ -145,7 +145,7 @@ local LIST_FLAGS = {
   { name = "category", type = "STRING", values = model.CATEGORIES },
   { name = "severity", type = "STRING", values = model.SEVERITIES },
   { name = "tag", type = "STRING" },
-  { name = "stale", type = "INT" },
+  { name = "stale", type = "STRING", values = { "7", "30", "90", "refs" } },
   { name = "blocked", bool = true },
   { name = "sort", type = "STRING", enum = model.SORTS },
   { name = "to", type = "STRING", values = { "buffer", "clipboard", "qf", "file:", "echo" } },
@@ -178,7 +178,7 @@ function M.routes()
       path = { "tasks" },
       args = { { name = "area", type = "TASK_AREA", allow_all = true, optional = true } },
       flags = LIST_FLAGS,
-      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset --severity=low|medium|high|critical --tag= --stale=<days> --blocked, order with --sort=default|prio-effort|severity, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
+      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset --severity=low|medium|high|critical --tag= --stale=<days>|refs (refs: a file named in refs: changed since updated) --blocked, order with --sort=default|prio-effort|severity, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
       run = function(ctx)
         cmd().list(ctx)
       end,
