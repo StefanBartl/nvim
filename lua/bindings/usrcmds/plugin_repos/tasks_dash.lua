@@ -18,6 +18,17 @@
 --- closes a picker whose window loses focus -- and `D` and `f` reopen it when
 --- the prompt is over. `s` / `p` refresh in place.
 ---
+--- Live refresh: while the picker is open, `tasks_dash_watch` watches the task
+--- and Backlog folders and the list rescans by itself when a file changed (not
+--- for the dashboard's own writes). Cursor and marks are found again by task id;
+--- filter and sort are untouched. `M.config.watch = false` (or `opts.watch =
+--- false`) turns it off; when no folder can be watched it says so once and `r`
+--- stays the way to rescan. The plain `vim.ui.select` fallback has no live list.
+---
+--- Frecency: opening (`<CR>`) or changing (`s` / `p`) a task counts as a visit
+--- (`tasks.frecency`); `o` also cycles to `frecency`, which lists the most-visited
+--- tasks first (opt-in: it does mix statuses and prios).
+---
 --- Not its job: the rules about a line, a filter or a cycle (`tasks_dash_core`),
 --- the delivery sinks (`tasks_view`), the rules of tasks (the engine).
 
@@ -27,6 +38,14 @@ local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.tasks_da
 local view = require("bindings.usrcmds.plugin_repos.tasks_view")
 
 local M = {}
+
+---Settings of the dashboard. Change them before opening it (`require(...).config.watch = false`).
+---`watch_opts` is merged into the `tasks_dash_watch.new` options (the seam the specs use).
+---@class Plugin_repos.TasksDashConfig
+---@field watch boolean               # Rescan on file changes while open (default true).
+---@field watch_debounce_ms integer   # Quiet period before a rescan (default 250).
+---@field watch_opts? table
+M.config = { watch = true, watch_debounce_ms = 250 }
 
 ---Key under which the last filter is remembered (`lib.nvim.store.project`).
 local STORE_KEY = "tasks/dashboard-filter"
@@ -42,10 +61,14 @@ local MAX_CONFIRM_LINES = 8
 ---@field shown Tasks.Task[]
 ---@field widths { area: integer, effort: integer, status: integer }
 ---@field persist boolean
+---@field signature? string                          # `core.signature` of `shown`.
+---@field preload? Plugin_repos.TasksDashLoad        # A load the next `reload` uses instead of scanning again.
+---@field watch? boolean                             # Live refresh for this dashboard.
 
 ---@class Plugin_repos.TasksDashOpts
 ---@field persist? boolean   # Remember the filter between sessions (default true).
 ---@field backend? "snacks"|"select"   # Force a backend (default: snacks when present).
+---@field watch? boolean     # Live refresh (default: `M.config.watch`).
 
 -- ── small helpers ────────────────────────────────────────────────────────────
 
@@ -122,19 +145,32 @@ function M.new_state(v, opts)
     shown = {},
     widths = core.widths({}),
     persist = do_persist,
+    watch = opts.watch == nil and M.config.watch or opts.watch,
   }
 end
 
----Rescan and refilter; the result is `state.shown`.
 ---@param state Plugin_repos.TasksDashState
----@return Tasks.Task[]
-local function reload(state)
-  local res, err = core.load({
+---@return Plugin_repos.TasksDashLoad|nil res
+---@return string|nil err
+local function load_state(state)
+  return core.load({
     root = state.root,
     area = state.area,
     filter = state.filter,
     sort = state.sort,
   })
+end
+
+---Rescan and refilter; the result is `state.shown`. A `state.preload` (what the
+---watcher just compared against the list) is used once instead of scanning again.
+---@param state Plugin_repos.TasksDashState
+---@return Tasks.Task[]
+local function reload(state)
+  local res, err = state.preload, nil
+  state.preload = nil
+  if not res then
+    res, err = load_state(state)
+  end
   if not res then
     notify.error(("cannot read the tasks: %s"):format(tostring(err)))
     state.shown = {}
@@ -142,7 +178,27 @@ local function reload(state)
     state.shown = res.tasks
   end
   state.widths = core.widths(state.shown)
+  state.signature = core.signature(state.shown)
   return state.shown
+end
+
+---Count a visit for each task (opened, or changed from the dashboard): what
+---`--sort=frecency` ranks by. Never raises; a file that cannot be written is
+---not worth interrupting the user for.
+---@param tasks Tasks.Task[]|{ id: string }[]
+---@return boolean recorded
+function M.touch(tasks)
+  local ids = {}
+  for _, t in ipairs(tasks) do
+    ids[#ids + 1] = t.id
+  end
+  if #ids == 0 then
+    return false
+  end
+  local ok, res = pcall(function()
+    return require("tasks.frecency").record(ids)
+  end)
+  return ok and res == true
 end
 
 ---@param state Plugin_repos.TasksDashState
@@ -191,6 +247,7 @@ function M.cycle(state, tasks, field)
   local prog = new_progress("[usrcmds.plugin_repos.tasks_dash] " .. field)
   local res = core.apply_set(core.plan_cycle(tasks, field), { root = state.root })
   refresh_buffers(res)
+  M.touch(res.changed)
   local level, text = core.describe_set(field, res)
   if prog then
     prog:finish(("%d changed, %d failed"):format(#res.changed, #res.failed))
@@ -282,7 +339,7 @@ function M.set_filter(state, after)
   end)
 end
 
----`o`: the next sort order (default -> prio-effort -> severity -> default).
+---`o`: the next sort order (default -> prio-effort -> severity -> frecency -> default).
 ---@param state Plugin_repos.TasksDashState
 function M.cycle_sort(state)
   state.sort = core.cycle_sort(state.sort)
@@ -372,15 +429,17 @@ end
 M.HELP = {
   " Task dashboard ",
   "",
-  " <CR>        open the file(s)",
+  " <CR>        open the file(s)  (counts as a visit for the frecency sort)",
   " <Tab>       mark / unmark (marked tasks are the target of s p D e)",
   " s           advance status of marked (else current) tasks",
   " p           advance prio:  none -> 1 -> 2 -> 3 -> none",
   " D           finish (asks first, moves to Backlog/)",
   " f           set a filter chip (status prio effort kind category severity tag blocked stale-refs)",
   " o           cycle the sort: default -> prio-effort (small first) -> severity (critical first)",
+  "             -> frecency (most opened / changed first, fades over ~2 weeks) -> default",
   " e           export marked (else all shown) tasks",
-  " r           rescan the vault",
+  " r           rescan the vault now (the list also refreshes by itself when a task",
+  "             or Backlog file changes; cursor and marks stay on the same tasks)",
   " gb / gr     Backlog picker / ROADMAP.md of the area under the cursor",
   " g?          this help",
   "",
@@ -425,9 +484,123 @@ end
 
 local open_state
 
+---Rebuild the list in place and put the cursor back on the task it was on
+---(found by id: the rescan may have moved or dropped rows), and with
+---`keep_marks` the marks too. `picker:refresh()` alone keeps the line number
+---and drops the marks.
+---@param picker table
+---@param keep_marks boolean
+local function refresh_keep(picker, keep_marks)
+  if picker.closed then
+    return
+  end
+  local cur = picker:current()
+  local cursor_id = cur and cur.task and cur.task.id or nil
+  local marked = {}
+  if keep_marks then
+    for _, item in ipairs(picker.list.selected) do
+      if item.task then
+        marked[#marked + 1] = item.task.id
+      end
+    end
+  end
+  picker.list:set_selected()
+  picker.list:set_target()
+  picker:find({
+    refresh = true,
+    on_done = function()
+      if picker.closed then
+        return
+      end
+      local items = picker:items()
+      local ids = {}
+      for i, item in ipairs(items) do
+        ids[i] = item.task and item.task.id or ""
+      end
+      local plan = core.relocate(ids, cursor_id, marked)
+      if #plan.marked > 0 then
+        local selected = {}
+        for _, i in ipairs(plan.marked) do
+          selected[#selected + 1] = items[i]
+        end
+        picker.list:set_selected(selected)
+      end
+      if plan.cursor then
+        picker.list:view(plan.cursor)
+      end
+    end,
+  })
+end
+
+---What the file watcher calls: rescan, and only when the result differs from
+---the list on screen redraw it. A scan that fails is not reported -- nobody
+---asked for it -- the next change or `r` tries again.
+---@param state Plugin_repos.TasksDashState
+---@param picker table
+---@return boolean refreshed
+function M.refresh_if_changed(state, picker)
+  if picker.closed then
+    return false
+  end
+  local res = load_state(state)
+  if not res or core.signature(res.tasks) == state.signature then
+    return false
+  end
+  state.preload = res
+  refresh_keep(picker, true)
+  return true
+end
+
+---Start the live refresh of a picker. Returns the watcher, or nil when it is
+---off or could not start (said once; `r` still works).
+---@param state Plugin_repos.TasksDashState
+---@param picker table
+---@return Plugin_repos.TasksDashWatcher|nil
+local function start_watch(state, picker)
+  if not state.watch then
+    return nil
+  end
+  local w = require("bindings.usrcmds.plugin_repos.tasks_dash_watch").new(vim.tbl_extend("force", {
+    root = state.root,
+    area = state.area,
+    debounce_ms = M.config.watch_debounce_ms,
+    on_refresh = function()
+      M.refresh_if_changed(state, picker)
+    end,
+  }, M.config.watch_opts or {}))
+  local ok, err = w:start()
+  if not ok then
+    notify.info(("no live refresh (%s) -- press r to rescan"):format(tostring(err)))
+    return nil
+  end
+  if w.partial then
+    notify.info(
+      ("live refresh watches %d of %d folders -- press r to rescan the rest"):format(
+        w.partial.started,
+        w.partial.wanted
+      )
+    )
+  end
+  return w
+end
+
 ---@param Snacks table
 ---@param state Plugin_repos.TasksDashState
 local function open_snacks(Snacks, state)
+  ---@type Plugin_repos.TasksDashWatcher|nil
+  local watcher
+
+  ---Run a write batch of the dashboard so its own file events do not trigger a rescan.
+  ---@generic T
+  ---@param fn fun(): T
+  ---@return T
+  local function held(fn)
+    if watcher then
+      return watcher:hold(fn)
+    end
+    return fn()
+  end
+
   ---Marked tasks, else (with `fallback`) the current one.
   ---@param picker table
   ---@param fallback boolean
@@ -461,21 +634,36 @@ local function open_snacks(Snacks, state)
 
   local actions = {
     tasks_status = function(picker)
-      if M.cycle(state, targets(picker, true), "status") then
-        picker:refresh()
+      local tasks = targets(picker, true)
+      if held(function()
+        return M.cycle(state, tasks, "status")
+      end) then
+        refresh_keep(picker, false)
       end
     end,
     tasks_prio = function(picker)
-      if M.cycle(state, targets(picker, true), "prio") then
-        picker:refresh()
+      local tasks = targets(picker, true)
+      if held(function()
+        return M.cycle(state, tasks, "prio")
+      end) then
+        refresh_keep(picker, false)
       end
     end,
     tasks_rescan = function(picker)
-      picker:refresh()
+      refresh_keep(picker, true)
+      if watcher then
+        -- also aims the watcher at areas and folders that appeared meanwhile
+        pcall(watcher.sync, watcher)
+      end
     end,
     tasks_sort = function(picker)
       M.cycle_sort(state)
-      picker:refresh()
+      refresh_keep(picker, true)
+    end,
+    ---`<CR>`: a visit for the frecency sort, then snacks' own jump.
+    tasks_open = function(picker, item, action)
+      M.touch(targets(picker, true))
+      return Snacks.picker.actions.jump(picker, item, action)
     end,
     tasks_done = function(picker)
       local tasks = targets(picker, true)
@@ -543,7 +731,7 @@ local function open_snacks(Snacks, state)
     input_keys[spec[2]] = { spec[1], mode = { "n", "i" } }
   end
 
-  Snacks.picker({
+  local picker = Snacks.picker({
     source = "wkdbook_tasks",
     title = title_of(state),
     finder = function(_, ctx)
@@ -566,13 +754,22 @@ local function open_snacks(Snacks, state)
       return core.parts(item.task, state.widths)
     end,
     preview = "file",
-    confirm = "jump",
+    confirm = "tasks_open",
     -- An empty result (a filter that matches nothing) must stay open: `f` is how
     -- the user gets out of it.
     show_empty = true,
     actions = actions,
     win = { input = { keys = input_keys }, list = { keys = list_keys } },
+    -- Every way out of the picker (jump, detour, <Esc>, focus lost) ends here:
+    -- the watcher's handles and timer go with it.
+    on_close = function()
+      if watcher then
+        watcher:stop()
+        watcher = nil
+      end
+    end,
   })
+  watcher = start_watch(state, picker)
 end
 
 -- ── fallback backend ─────────────────────────────────────────────────────────
@@ -601,6 +798,7 @@ local function open_select(state)
       {
         label = "open the file",
         run = function()
+          M.touch({ task })
           vim.cmd("edit " .. vim.fn.fnameescape(task.path))
         end,
       },

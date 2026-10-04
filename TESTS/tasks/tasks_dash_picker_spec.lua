@@ -16,6 +16,10 @@ return function(H)
 
   local root = F.vault(H)
   vault.set_root(root)
+  -- This spec drives the picker by hand and rewrites task files behind its back;
+  -- the live refresh has its own spec (tasks_dash_refresh_spec.lua).
+  local watch_was = dash.config.watch
+  dash.config.watch = false
 
   -- ── scripted prompts and captured notifications ─────────────────────────
   local orig = {
@@ -228,6 +232,7 @@ return function(H)
     confirm.yesno = orig.yesno
     cmd.dashboard = nil
     vault.set_root(nil)
+    dash.config.watch = watch_was
     local loaded, S = pcall(require, "snacks")
     if loaded and type(S) == "table" and S.picker then
       for _, picker in ipairs(S.picker.get({ source = "wkdbook_tasks" })) do
@@ -429,9 +434,16 @@ return function(H)
     keys("o")
     ok(
       wait_for(function()
+        return p.title:find("[sort: frecency]", 1, true) ~= nil
+      end),
+      "the third press goes on to frecency"
+    )
+    keys("o")
+    ok(
+      wait_for(function()
         return p.title:find("sort:", 1, true) == nil
       end),
-      "the third press wraps around to the default"
+      "the fourth press wraps around to the default"
     )
     p = opened(4)
     eq(ids(p)[1], "lib.nvim/alpha")

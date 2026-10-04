@@ -16,6 +16,7 @@
 ---  - `mutate` template, new, set, done
 ---  - `check`  the rule checker
 ---  - `staleness`  `--stale=refs`: tasks whose referenced files changed since `updated`
+---  - `frecency`  the visit score behind `--sort=frecency` (pure scoring, small state file)
 ---  - `ci`     the vault gate for pipelines (check + index --check + md_lint)
 ---  - `cli`    the command-line front end
 ---
@@ -31,6 +32,7 @@ local SUBMODULES = {
   mutate = true,
   check = true,
   staleness = true,
+  frecency = true,
   ci = true,
   cli = true,
 }

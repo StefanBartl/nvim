@@ -412,6 +412,63 @@ return function(H)
     error(err, 0)
   end
 
+  -- ── refresh: signature, finding the cursor and marks again ──────────────
+  local sig_root = F.vault(H)
+  local function sig_add(slug, status)
+    return F.task(H, sig_root, "lib.nvim", slug, meta("Task " .. slug, status, {}))
+  end
+  local sig_a, sig_b = sig_add("a", "open"), sig_add("b", "doing")
+  local function sig_load()
+    return assert(core.load({ root = sig_root })).tasks
+  end
+  local sig1 = core.signature(sig_load())
+  eq(core.signature(sig_load()), sig1, "the same files give the same signature")
+  eq(core.signature({}), "", "an empty list has an empty signature")
+  H.write(sig_b, (H.read(sig_b):gsub("status: doing", "status: open")))
+  ok(core.signature(sig_load()) ~= sig1, "a status change changes it")
+  sig1 = core.signature(sig_load())
+  H.write(sig_a, H.read(sig_a) .. "\nA new line in the body.\n")
+  vim.uv.fs_utime(sig_a, os.time() + 5, os.time() + 5) -- a clearly later mtime, whatever the clock resolution
+  ok(
+    core.signature(sig_load()) ~= sig1,
+    "a body-only edit changes it too (the preview shows the body)"
+  )
+  sig1 = core.signature(sig_load())
+  sig_add("c", "open")
+  ok(core.signature(sig_load()) ~= sig1, "a new task changes it")
+  sig1 = core.signature(sig_load())
+  os.remove(sig_a)
+  ok(core.signature(sig_load()) ~= sig1, "a deleted task changes it")
+
+  local new_ids = { "x/new", "a/one", "b/two", "c/three" }
+  eq(core.relocate(new_ids, "b/two", { "c/three", "a/one" }), { cursor = 3, marked = { 2, 4 } })
+  eq(
+    core.relocate(new_ids, "gone/task", { "a/one", "gone/too" }),
+    { cursor = nil, marked = { 2 } },
+    "a task that vanished is not restored, the rest is"
+  )
+  eq(core.relocate(new_ids, nil, {}), { cursor = nil, marked = {} }, "nothing to restore")
+  eq(core.relocate({}, "a/one", { "a/one" }), { cursor = nil, marked = {} }, "an empty list")
+
+  -- load: frecency scores order the list on request, `scores` is the test seam
+  local fr_root = F.vault(H)
+  for _, slug in ipairs({ "one", "two", "three" }) do
+    F.task(H, fr_root, "lib.nvim", slug, meta("Task " .. slug, "open", {}))
+  end
+  local function loaded_ids(o)
+    o.root = fr_root
+    return vim.tbl_map(function(t)
+      return t.id
+    end, assert(core.load(o)).tasks)
+  end
+  eq(loaded_ids({}), { "lib.nvim/one", "lib.nvim/three", "lib.nvim/two" }, "default: by slug")
+  eq(
+    loaded_ids({ sort = "frecency", scores = { ["lib.nvim/two"] = 2, ["lib.nvim/three"] = 1 } }),
+    { "lib.nvim/two", "lib.nvim/three", "lib.nvim/one" },
+    "frecency: scored tasks first"
+  )
+  eq(loaded_ids({ sort = "frecency", scores = {} }), loaded_ids({}), "no scores: the default order")
+
   -- ── export targets ──────────────────────────────────────────────────────
   eq(#core.EXPORT_CHOICES, 6)
   local labels = {}
