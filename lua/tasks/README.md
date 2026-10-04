@@ -32,6 +32,7 @@ lua/tasks/
 ├── mutate.lua    template, new, set, done
 ├── form.lua      the Markdown form of `task new` (template, parse, validate, tick rules)
 ├── check.lua     rule checker
+├── frecency.lua  visit score behind `--sort=frecency` (pure scoring + a small state file)
 ├── staleness.lua `--stale=refs`: referenced files changed since `updated`
 ├── ci.lua        CI gate: check + index --check + md_lint
 ├── cli.lua       command-line front end
@@ -53,6 +54,7 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 | `tasks.form` | The form behind `:MyPlugins task new` without arguments, with no UI: `template` builds the Markdown text (`Area:` / `Title:` / `Tags:` / `Refs:` lines and one `- [ ]` / `- [x]` bullet list per choice field, the value sets read from `tasks.model`), `parse` reads what the user left in it, `validate` checks it (area known, title present, one tick on a single-choice list) and returns `tasks.mutate.new` options, `toggle` flips one bullet and keeps a single-choice list at one tick (`category` takes several). It creates nothing: the editor layer passes the values to `mutate.new`, the same write path as the CLI. | `fields`, `template`, `parse`, `validate`, `toggle`, `normalize`, `error_lines`, `strip_errors` |
 | `tasks.check` | Collects findings over one area or the vault (table below). | `run`, `format` |
 | `tasks.staleness` | `--stale=refs`: which open tasks carry a `refs:` path that changed after their `updated` (below). `compute(tasks, opts)` returns the report, `model.filter` calls it for `Tasks.Filter.stale_refs`, `classify` reads one ref. | `compute`, `classify`, `describe`, `git_dates` |
+| `tasks.frecency` | The score behind `--sort=frecency` (below): `bump` / `decayed` / `scores` / `prune` are pure and take the time as an argument; `load` / `save` / `record` / `load_scores` touch `stdpath("state")/tasks/frecency.json` (or `$TASKS_FRECENCY_FILE`, `set_path`). Half-life 14 days, at most 500 entries, a corrupt file starts empty. | `record`, `load_scores`, `bump`, `scores` |
 | `tasks.ci` | The vault gate for pipelines: `check` (errors fail; `strict` fails on warnings too), `index --check`, and the vault's `md_lint.lua` over every generated `ROADMAP/TASKS.md`. Returns exit code, step names and printed lines. | `run` |
 | `tasks.cli` | Parses a command line, calls the engine, prints tab-separated lines, returns an exit code, never raises. | `run` |
 
@@ -94,9 +96,27 @@ order)`) picks the order:
 | `default` (no flag) | status rank, prio, area, slug -- what the index uses; unchanged |
 | `prio-effort` | status rank, prio, **effort ascending**, area, slug: important and small first; a task without (valid) effort comes last of its prio |
 | `severity` | **severity** (`critical`, `high`, `medium`, `low`, none last), then the default order |
+| `frecency` | tasks the dashboard opened or changed, **highest score first** (see below), then the default order; ignores the status rank on purpose |
 
-Both orders keep the status rank in front on purpose, so `doing` / `decision` tasks do not
-sink below parked ones. The index (`ROADMAP/TASKS.md`) always uses the default order.
+`prio-effort` and `severity` keep the status rank in front on purpose, so `doing` / `decision`
+tasks do not sink below parked ones. The index (`ROADMAP/TASKS.md`) always uses the default order.
+
+#### Frecency (`frecency.lua`)
+
+`model.sort(tasks, "frecency", { scores = <id -> number> })` ranks by a score; without `scores`
+it reads the frecency file, so `list --sort=frecency` and `:MyPlugins tasks --sort=frecency`
+need no wiring (a missing or corrupt file means the default order). The dashboard records a
+visit when a task is opened (`<CR>`) or changed (`s` / `p`). The scoring is pure and takes the
+clock as an argument (`bump`, `decayed`, `scores`, `prune`; `opts.now` in the file functions):
+an entry is `{ score, last }`, a visit adds 1 after the old score decayed to now, and the
+score halves every 14 days (`HALF_LIFE_DAYS`). Entries below `MIN_SCORE` (0.05, about two
+months of silence after one visit) are dropped and at most `MAX_ENTRIES` (500) are kept.
+The file is `stdpath("state")/tasks/frecency.json` (`$TASKS_FRECENCY_FILE` or
+`frecency.set_path` override it; the specs use a temp file), written atomically, keyed by
+task id. A corrupt file starts empty (the old bytes stay as `frecency.json.bad`); a file
+that cannot be read is never overwritten. Why not `lib.nvim.frecency`: its fixed recency
+buckets use `os.time()` directly (nothing to inject), and it has neither a half-life nor
+an entry cap.
 
 ### Severity
 

@@ -17,6 +17,8 @@
 ---    `picker.lua` Tab-cycle, with status and prio instead of git actions)
 ---  - `apply_set` / `apply_done`: run a plan through `tasks.mutate` as ONE batch,
 ---    regenerating each touched area's index once at the end
+---  - `signature` / `relocate`: refresh support -- did a rescan change the list, and where
+---    do the cursor and the marks go afterwards (found again by task id)
 ---  - `EXPORT_CHOICES` / `export_target`: the `e` key's target menu
 ---
 --- Not its job: windows, keys, prompts, notifications (`tasks_dash`), the
@@ -104,7 +106,7 @@ function M.with_root(f, root)
 end
 
 ---Scan, keep the open tasks, filter and sort -- what `:MyPlugins tasks` shows.
----@param opts { root: string, area?: string|nil, filter?: Tasks.Filter, sort?: string }
+---@param opts { root: string, area?: string|nil, filter?: Tasks.Filter, sort?: string, scores?: table<string, number> }
 ---@return Plugin_repos.TasksDashLoad|nil result
 ---@return string|nil err
 function M.load(opts)
@@ -126,12 +128,62 @@ function M.load(opts)
     end
   end
   return {
-    tasks = model.sort(model.filter(open, M.with_root(opts.filter, opts.root)), opts.sort),
+    tasks = model.sort(
+      model.filter(open, M.with_root(opts.filter, opts.root)),
+      opts.sort,
+      { scores = opts.scores }
+    ),
     open = #open,
     skipped = skipped,
     errors = type(errors) == "table" and errors or {},
   },
     nil
+end
+
+-- ── refresh: what changed, where the cursor goes ─────────────────────────────
+
+---Everything a list line shows or the matcher searches, plus the modification
+---time of the file (the preview shows its body), per task and in list order,
+---joined into one string. Two loads with the same signature render the same
+---list, so the dashboard skips the redraw (and keeps its preview) when a
+---file-watcher rescan found nothing new.
+---@param tasks Tasks.Task[]
+---@return string
+function M.signature(tasks)
+  local uv = vim.uv or vim.loop
+  local out = {}
+  for _, t in ipairs(tasks) do
+    local st = uv.fs_stat(t.path)
+    out[#out + 1] = table.concat({
+      t.path,
+      M.search_text(t),
+      M.blocked_hint(t) or "",
+      st and ("%d.%d"):format(st.mtime.sec, st.mtime.nsec) or "?",
+    }, "\t")
+  end
+  return table.concat(out, "\n")
+end
+
+---Where the cursor and the marks go after the list was rebuilt: found again by
+---task id, not by line number, so a rescan that moved or dropped rows leaves the
+---selection on the same tasks. A task that is gone is simply not restored.
+---@param ids string[]       # The ids of the new list, top to bottom.
+---@param cursor_id string|nil
+---@param marked_ids string[]
+---@return { cursor: integer|nil, marked: integer[] } plan  # 1-based positions in `ids`
+function M.relocate(ids, cursor_id, marked_ids)
+  local pos = {}
+  for i, id in ipairs(ids) do
+    pos[id] = i
+  end
+  local marked = {}
+  for _, id in ipairs(marked_ids) do
+    if pos[id] then
+      marked[#marked + 1] = pos[id]
+    end
+  end
+  table.sort(marked)
+  return { cursor = cursor_id and pos[cursor_id] or nil, marked = marked }
 end
 
 -- ── list lines ───────────────────────────────────────────────────────────────

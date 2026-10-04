@@ -46,6 +46,9 @@ vim.opt.rtp:prepend(config_root)
 vim.opt.rtp:append(lib)
 -- Specs that start a child Neovim (the CLI end-to-end spec) find lib.nvim the same way.
 vim.env.LIB_NVIM_DIR = lib
+-- The dashboard records visits for its frecency sort; no spec (nor a child Neovim
+-- it starts) may touch the real file in stdpath("state").
+vim.env.TASKS_FRECENCY_FILE = vim.fn.tempname() .. "-tasks-frecency.json"
 
 local H = dofile(tests_dir .. "/harness.lua")
 
@@ -64,6 +67,9 @@ local specs = {
   "tasks/tasks_routes_spec.lua",
   "tasks/tasks_dash_spec.lua",
   "tasks/tasks_dash_picker_spec.lua",
+  "tasks/tasks_frecency_spec.lua",
+  "tasks/tasks_dash_watch_spec.lua",
+  "tasks/tasks_dash_refresh_spec.lua",
   "tasks/tasks_staleness_spec.lua",
   "tasks/tasks_ci_spec.lua",
 }
