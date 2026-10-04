@@ -1,9 +1,9 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (Zwischenstand, nach Runde 22 und der Entscheidungsrunde).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> **Stand 2026-10-04 (Zwischenstand, nach Runde 24, Entscheidungsrunde und neuen Engine-Features).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
-> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`; `spotlight.nvim` und
+> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`; `spotlight.nvim` und
 > `migrate.nvim` sind geprüft (keine offene Arbeit, keine Tasks); `pickers.nvim`, `hover.nvim`, `language.nvim` und
 > `replacer.nvim` haben je einzelne Tasks aus fremden Runden (ihre eigene Runde steht aus). Keine Agenten laufen mehr.
 > Nach Runde 19 (`ui`) wurde auf Wunsch kurz angehalten, Runde 20 (`debugging`) lief danach; offen sind die kleinen Plugins (Liste
@@ -36,7 +36,7 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4), `my.nvim` (5); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4), `my.nvim` (5), `language.nvim` (10), `hover.nvim` (10); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
 | Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R14 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
@@ -64,7 +64,26 @@ Dashboard-Tasten (Listenfenster): `<CR>` öffnen, `<Tab>` markieren, `s`/`p` Sta
 Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<M-e>` `<M-r>` `<M-b>` (Backlog)
 `<M-m>` (ROADMAP) `<M-?>`. `<id>` = `<area>/<slug>`.
 
-## Kategorien und Ordner-Tasks (neu, Konzept §12)
+## Neu seit Runde 22 (Konzept §13, §14)
+
+- **Aufwand und Sortierung:** `--effort=S,M` bzw. `--effort=<=M`; `--sort=default|prio-effort|severity` in CLI `list` und
+  `:MyPlugins tasks`; Dashboard-Taste `o` (Suchfeld `<M-o>`) schaltet die Ordnung durch. `prio-effort` ist Status, Prio,
+  Aufwand (der Status bleibt vorn, damit `doing` nicht hinter `parked` rutscht).
+- **`severity`:** optional `low|medium|high|critical` für bug/security; Filter `--severity=`, Check `unknown-severity` und
+  Warnung `severity-without-bug-or-security`; steht NICHT im generierten Index (sonst wären alle Indizes veraltet); CSV hat
+  eine neue letzte Spalte.
+- **Formular:** `:MyPlugins task new` ohne Bereich öffnet einen Markdown-Formular-Buffer (`<Space>`/`<CR>` haken ab,
+  cascade.nvim per pcall, `<C-s>` sendet, `q` bricht ab, `g?` Hilfe), danach die Frage „Attach assets?“ (Ja → Ordner-Task und
+  Explorer auf `assets/`). Reines Modul `lua/tasks/form.lua`, UI `plugin_repos/tasks_form.lua`. **Nur headless geprüft**, nicht
+  in einem echten Terminal; Abweichungen: `Tags`/`Refs` sind Textzeilen, Tage-Aufwand nicht wählbar, Esc auf die Assets-Frage
+  zählt als Nein. Task `ALL/task-new-form` bleibt `open`, bis der Nutzer das Formular ausprobiert hat.
+- **Offene Entscheidungen (language, hover):** `language.nvim/translate-engine-failover` (Empfehlung: ja, nur zu selbst
+  eingetragenen Engines), `vocabulary-review-from-history` (parken), `translate-path-scope-unsupported` (unterstützen),
+  `health-report-ui-nvim`, `docs-vimdoc-install-catch-up` (erst `why`-Text); `hover.nvim/persistent-link-cache`
+  (Text-Abruf oder Screenshot? Default `persist=false`, leere Muster) und `hover-copy-content` (erst `:Hover copy`).
+  Bug mit Datenverlust: `language.nvim/translate-replace-stale-range` (prio 2).
+
+## Kategorien und Ordner-Tasks (Konzept §12)
 
 - **Kategorien:** optionales Feld `category: [security, docs]`, Werte `bug`, `security`, `performance`, `docs`,
   `ruleset` (`ruleset` = Regelwerk unter `wkdbook-Lua/Checklists/regeln/`, Regel-IDs im freien Feld `rules: [LLS-45]`).
@@ -119,6 +138,10 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | nvim-config | `f974551d` | Kategorien und Ordner-Tasks (Engine, CLI, Routen, Dashboard, Specs, Doku) |
 | WKDBooks | `3523f02` | `my.nvim`: 5 Tasks (Runde 22) |
 | WKDBooks | `914a3ac` | Entscheidungen umgesetzt: 14 neue Tasks, ui.kit-Tasks von lib.nvim nach ui.nvim, Bereich `ALL/ROADMAP/tasks/`, rules-Agentenkette Prio 1, `insights.nvim/telemetry-subcommand-usage` verworfen |
+| WKDBooks | `bc9743f` | `language.nvim`: 10 Tasks (Runde 23) |
+| WKDBooks | `4a45e66` | `hover.nvim`: 7 neue Tasks (Runde 24) |
+| nvim-config | `9fbf0e8f`, `98f71820` | Aufwand-Filter + Sortierungen + `severity` (Merge `77e29d05`); Markdown-Formular für `task new` |
+| WKDBooks | `112e70d`, `afce473` | Konzept §13 (Aufwand, Sort, severity, R15) und §14 (Formular, E15–E17) |
 | WKDBooks | `da40a62` | Konzept §12, Regeln R13 und R14 |
 | WKDBooks | `932fac8` | `debugging.nvim`: 5 Tasks (Runde 20); „Offen“ der ROADMAP war das gebaute Recent-Popup, durch Verweis ersetzt (Commit trägt versehentlich einen Claude-Co-Author-Trailer, gepusht) |
 | WKDBooks | `c36036a` | `insights.nvim`: 4 Tasks (Runde 21), nur das SYNERGIE-Papier war offen; gebaute Features in FEATURES.md nachgetragen |
@@ -271,8 +294,8 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 
 ## Nächste Schritte
 
-1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: **max. 1 Agent gleichzeitig**). Fertig bis Runde 20
-   (`debugging`). Noch offen: die kleinen — `my` (10), `language` (9), `hover` (9),
+1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: **max. 1 Agent gleichzeitig**). Fertig bis Runde 24
+   (`hover`). Noch offen: die kleinen —
    `buffer-ctx` (7), `runtime-analysis` (6), `data` (5), `replacer` (3), `cascade` (3), `sandbox` (2), `reposcope` (2),
    `sessions` (1), `emojis` (1) — dann die Bereiche mit leerer oder fehlender Roadmap (`diff`, `cmdlog`, `dap`, `fileops`,
    `recommender`, `refinder`, `filetreepicker`, `nvim-nexus`; kurz prüfen), zuletzt `nvim-config` und `docmap-desktop`
