@@ -1,6 +1,6 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (nach Runde 36: **Phase 4 — Migration abgeschlossen**).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> **Stand 2026-10-04 (nach Runde 36: **Phase 4 — Migration abgeschlossen**).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
 > `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`, `cascade.nvim`, `sandbox.nvim`, `reposcope.nvim`, `sessions.nvim`, `emojis.nvim`, `diff.nvim`, `cmdlog.nvim`, `dap.nvim`, `fileops.nvim`, `recommender.nvim`, `filetreepicker.nvim`, `nvim-nexus`, `docmap-desktop` (21), `nvim-config` (26) und `ALL` (+24); `refinder` (kein Plugin, Statussatz), `spotlight.nvim` und
@@ -151,12 +151,21 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `7a292d5` | `docmap-desktop`: 21 Tasks (Runde 35), L1–L8/M-Punkte nur noch als Zeiger; Agentenkette P2–P7 als Tasks (rules-*, Prio 1) |
 | WKDBooks, nvim-config | `742e111`, `b8bb6da`; `c607cf4e` | Runde 36: `nvim-config` (26) und `ALL` (24) Tasks; `00_ROADMAP.md` mit Task-Verweisen |
 | WKDBooks | `9ac2707` … `d3da674` | Runde 34, je Bereich ein Commit: `diff` (2), `cmdlog` (6), `dap` (4), `fileops` (2), `recommender` (8), `refinder` (Statussatz), `filetreepicker` (1), `nvim-nexus` (1) |
+| nvim-config | `ef1d81ee` | Stylua-Format `learn_plan_viewer/init.lua` (CI auf `main` war ca. 10 Läufe rot); Task `nvim-config/ci-stylua-red-learn-plan-viewer` erledigt (Vault `3edb024`) |
+| lsp.nvim | `7328945` | `lsp.config.unknown`: Warnung bei unbekannten Config-Schlüsseln (`lsp.nvim/config-unknown-key-warning`, Vault `695d689`) |
+| lsp.nvim | `70473ea` | Fix der Befunde des ersten Reviews: `diagnostics` Pass-through, `lspdoctor.show_*` in `DEFAULTS`, Bereinigung und Deckel der Warnungstexte (Vault `5802062`) |
+| lsp.nvim | `b9ca265` | Fix der Befunde des zweiten Reviews: eine zentrale Bereinigung aller Warnungen am Ende von `setup()`, Schlüssellisten der Projektdatei begrenzt, Servernamen mit Steuerzeichen verworfen, Projektpfad-Anzeige bereinigt (Vault `8eee2d7a`) |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
 geprüft (13 Befunde behoben). Die Fix-Commits `c6d274c`, `efcab018`, `80ef2946` hat Claude am 2026-10-04 selbst
 gelesen (ein Befund → `9ca296e9`), **nicht** per `ultracode`. `ded6d10b`, `04c2aeae` und `f974551d` (Kategorien,
-Ordner-Tasks) sind ebenfalls nicht per Agent reviewt; alle Migrationscommits der Runden 10–19 sind nur per Stichprobe
-gegen den Code geprüft, nicht per `ultracode`.
+Ordner-Tasks) sind ebenfalls nicht per Agent reviewt; alle Migrationscommits der Runden 10–36 (nur Vault-Docs) sind nur per
+Stichprobe gegen den Code geprüft, nicht per `ultracode`.
+
+**Per `ultracode` reviewt (2026-10-04, Workflows mit 5 Prüfperspektiven und je 2 Skeptikern pro Befund):** `ef1d81ee`
+(verhaltensneutral, Bytecode vor und nach der Änderung identisch), `7328945` (sechs bestätigte Befunde, Fix `70473ea`) und
+`70473ea` (fünf bestätigte Befunde, Fix `b9ca265`). **Noch nicht reviewt:** `b9ca265`. Alle Docs-/Vault-Commits brauchen keinen
+Code-Review.
 
 ## Entscheidungen (2026-10-04, alle umgesetzt)
 
@@ -164,7 +173,8 @@ gegen den Code geprüft, nicht per `ultracode`.
 - `lib.nvim/messages-module-cut`: kein Cheatsheet-Modul auf Vorrat, erst beim Bau des Popups (Task `parked`).
 - Dashboard-Tasten: Buchstaben nur in der Liste, im Suchfeld Alt-Kombinationen.
 - `md_lint`: Env-Links werden aufgelöst und auf Datei und Anker geprüft (statt übersprungen).
-- `lsp.nvim/config-unknown-key-warning`: warnen in `:checkhealth lsp` / `config.warnings()` (Task `open`, prio 2).
+- `lsp.nvim/config-unknown-key-warning`: warnen in `:checkhealth lsp` / `config.warnings()` — **gebaut und erledigt**
+  (`7328945`, Reviewfixes `70473ea` und `b9ca265`), siehe „Review-Lehren“.
 - Projekt-Scan fehlender Parser/Tools: **nicht** in lsp.nvim, sondern als Modul in lib.nvim
   (`lib.nvim/project-scan-missing-parsers-and-tools`, baut auf `lib.nvim.deps` und `treesitter.parser_policy`).
 - `lsp.nvim/live-check-lspsaga-replacements` und `mdview.nvim/scroll-lag-feel-judgement` bleiben Tasks.
@@ -277,6 +287,30 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 - **Offene Fragen zu `00_ROADMAP.md`:** `docs\ROADMAP\LONG_RUN` existiert nicht; spotlight-Zeile erledigt?; wkd-/Lern-/Lebensziele
   bewusst außerhalb des Task-Systems; später auf Prosa + Task-IDs kürzen (R1/R2)?
 
+## Review-Lehren aus `lsp.config.unknown` (2026-10-04)
+
+Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-Runden brachten ihn auf Stand. Was sich
+übertragen lässt:
+
+- **Prüfliste gegen die Konsumenten ableiten, nicht aus `DEFAULTS` allein.** Die Warnung hielt `diagnostics.*` (Pass-through zu
+  `vim.diagnostic.config()`) und `lspdoctor.show_*` (vom Modul gelesen, in `DEFAULTS` vergessen) für unbekannt. Ein Test, der
+  `DEFAULTS` gegen sich selbst scannt, kann so etwas nie finden. Seitdem: Drift-Guard gegen `lsp/lspdoctor/init.lua` und Specs
+  mit Optionen aus Sicht des Verbrauchers. Mein Abgleich gegen die echte Config fand es nicht, weil sie diese Optionen nicht setzt.
+- **Warnungstext ist Daten, wenn die Quelle fremd sein kann.** `.nvim-lsp.json` kommt aus einem geklonten Repo. Ein Newline in einem
+  Schlüssel oder Wert ließ `:Lsp status` abstürzen (`nvim_buf_set_lines`). Die richtige Stelle ist eine Engstelle, an der alle
+  Warnungen zusammenlaufen (Ende von `setup()`), nicht jede einzelne Quelle; die fremden Teile zusätzlich einzeln begrenzen, sonst
+  schneidet die Gesamtkürzung den erklärenden Satz ab.
+- **Deckel gehören auch auf die Arbeit, nicht nur auf die Ausgabe.** Vorschläge (Levenshtein) wurden für alle Findings berechnet,
+  obwohl nur 20 gedruckt werden: 100k Schlüssel kosteten 2,4–5 s.
+- **Mutationstests statt Zählen.** Jede neue Absicherung bekam eine Mutation auf einer Kopie unter `%TEMP%`; die überlebende
+  (Obergrenze der Schlüsselliste) bekam einen Test. Skript-Muster: Kopie von `lua/` und `TESTS/`, Zeile ersetzen, Spec laufen lassen.
+- **Werkzeug-Fallen:** In dieser Shell fehlt `pgrep` (ein `until ! pgrep …`-Warte-Job endet sofort — auf die Dateizahl der Ausgabe
+  warten); `stylua` formatiert Tabellenliterale je nach Version anders (CI pinnt 2.5.2, vor dem Push `stylua --check lua TESTS`);
+  Python-Skripte mit `\x…` in Textliteralen scheitern am Escape (Edit-Werkzeug nehmen, siehe `HEREDOC.md`); Specs, die `chdir`en,
+  müssen das Modul **vor** dem Wechsel laden.
+- **Nicht geprüft:** echter Neovim-Start mit sichtbarem `:checkhealth lsp`; Verzeichnisname mit Newline unter Windows (nicht anlegbar,
+  nur `sanitize()` selbst getestet); C1-Steuerzeichen und Bidi-Zeichen laufen durch die Bereinigung (Reviewer: Theorie).
+
 ## Offen / nicht verifiziert
 
 - **Nicht geprüft:** nur unter Windows 11 gelaufen (ubuntu/macOS ungetestet); die nvim-config-Specs laufen
@@ -344,6 +378,9 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
    `gopath.nvim/fs-cache-daemon` ohne Rückverweis auf `filetree.nvim/own-tree-engine`; `filetree.nvim/system-open-via-lib-open-default`
    weiter ungeklärt.
 2. `lib.nvim/project-scan-missing-parsers-and-tools` bauen (wenn gewünscht). **Erledigt 2026-10-04:** `lsp.nvim/config-unknown-key-warning`
-   (`lsp.nvim` `7328945`, Vault `695d689`) und der CI-Bug `nvim-config/ci-stylua-red-learn-plan-viewer` (`ef1d81ee`, CI grün).
+   (`lsp.nvim` `7328945`, Reviewfixes `70473ea`, `b9ca265`; Vault `695d689`, `5802062`, `8eee2d7a`) und der CI-Bug
+   `nvim-config/ci-stylua-red-learn-plan-viewer` (`ef1d81ee`, CI grün). **Offen dazu:** `b9ca265` ist noch nicht per `ultracode`
+   reviewt; `lsp.nvim/config-unknown-key-warning` hat im Vault ein `Backlog/FEATURES`-Protokoll, die Plugin-Docs
+   (`docs/configuration.md`, `:help lsp.nvim`) beschreiben das Verhalten.
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
 4. Phase 5: Politur (Statusline, `mdview`, `--stale`, Vault-CI).
