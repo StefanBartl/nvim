@@ -9,7 +9,7 @@
 > **Hier stehen nur offene Tasks.** Alles Erledigte (inkl. Session-Logs,
 > Commit-Tabellen, Review-Ergebnisse) liegt im Wkdbook-Backlog:
 > `wkdbook-myplugins/ai.nvim/Backlog/FEATURES/FINISHED_ai_loomai.md`
-> (zuletzt ergänzt 2026-10-02, Abschnitt „Session 2026-10-01/02“).
+> (zuletzt ergänzt 2026-10-04, Abschnitt „Session 2026-10-04“).
 
 ## Table of content
 
@@ -60,10 +60,11 @@
 
 ## Report: offene Tasks und Fixes
 
-Stand 2026-10-02. `ai.nvim`: 319 Tests grün (`scripts/test.sh`),
+Stand 2026-10-04. `ai.nvim`: 338 Tests grün (`scripts/test.sh`),
 luacheck/stylua grün, CI auf ubuntu/windows/macos grün (letzter Lauf
-`1815932`). Alles, was ohne den Nutzer machbar war, ist erledigt; die Liste
-unten ist vollständig (nichts steht woanders offen).
+`019469c`). Alles, was ohne den Nutzer machbar war, ist erledigt (C1–C3 sind
+ins Backlog gewandert); die Liste unten ist vollständig (nichts steht
+woanders offen).
 
 | # | Task | Art | Blocker / Aufwand |
 |---|---|---|---|
@@ -72,10 +73,8 @@ unten ist vollständig (nichts steht woanders offen).
 | A3 | REL-19: manuelles POSIX-Durchklicken | Release-Gate | Linux/macOS-Rechner oder WSL-Distro (keine installiert) |
 | A4 | REL-09/33: Demo-GIF, Logo, Social-Preview | Release (nice-to-have) | Nutzer (Aufnahme; Social-Preview manuell in GitHub-Settings) |
 | B1 | REL-32: Abschnitt „Literatur und Referenzen“ im öffentlichen README? | Release (nice-to-have) | Entscheidung |
-| C1 | Frische „trockene“ Abschlussrunde für den Docs-Spec | Review | klein, 1 Agent |
-| C2 | Docs-Spec vereinfachen statt weiter härten | Refactor | mittel |
-| C3 | `doc/ai.txt` automatisch gegen `docs/*.md` prüfen | Test | klein–mittel |
 | C4 | CI nach Ubuntu-26-Migration prüfen | CI | ab 2026-10-19 |
+| C5 | CI auch mit Neovim 0.10 (Mindestversion) fahren | CI | klein |
 | D1 | Tag/Release | Release | erst nach A1–A3 |
 
 ---
@@ -129,42 +128,25 @@ Vergleich mit Completion-Plugins liegt privat in
 
 ## C. Autonom machbar (Folgesession)
 
-Alle Punkte betreffen `TESTS/ai/docs_examples_spec.lua` (REL-08-Spec,
-~690 Zeilen) bzw. `doc/ai.txt` in `$REPOS_DIR/ai.nvim`.
-
-### C1. Frische Abschlussrunde (loop-until-dry)
-
-Der ultracode-Review des Spec endete in der 2. Workflow-Runde am Rundenlimit
-(3), nicht „trocken“. Die Funde der letzten Runde (alle `low`/Qualität der
-Fehlermeldungen) wurden behoben (`ai.nvim@1815932`, lokal + CI-Matrix grün),
-aber von keinem frischen Reviewer mehr gesehen. Eine weitere sequentielle
-Runde (1 Agent: Review -> Skeptiker -> ggf. Fix) bis kein neuer Fund kommt.
-
-### C2. Spec vereinfachen
-
-Durch die Härtung wuchs der Spec von ~380 auf ~690 Zeilen (u. a. ein
-registry-unabhängiger `nvim_get_keymap`-Scan über alle Modi mit Selbsttest).
-Bei weiterem Bedarf lieber vereinfachen (Helfer bündeln, Scan kürzen) als noch
-einen Scan ergänzen. Bewusst akzeptiert, nicht zu fixen: `register()`-Beispiel
-wird per exaktem Text gepatcht (`...`-Stub), Blocksuche per Substring, Soft-Deps
-(`pcall(require, ...)`) fallen aus der `require`-Suche der Dependency-Prüfung.
-
-### C3. Vom Spec nicht abgedeckt (bewusst, in `TESTS/README.md` benannt)
-
-Prosa, die Spalten Action-id/Beschreibung und die Autocmds-Tabelle in
-`BINDINGS.md`, die übrigen Tabellen der Docs, das Root-`README.md` und
-`doc/ai.txt` (der `:help ai`-Text, von Hand gepflegt). Besonders `doc/ai.txt`
-war nachweislich driftanfällig (am 2026-10-01 deutlich hinter `docs/*.md`,
-nachgezogen in `ai.nvim@6bc2b0d`) — ein kleiner Test, der Konfig-Block,
-Subcommands und Keymap-Tabelle der Vimdoc gegen `docs/*.md`/`DEFAULTS`
-abgleicht, würde den nächsten Drift fangen. Zusätzlich nicht sichtbar:
-buffer-lokale Keymaps.
+C1–C3 (frische Review-Runde, Docs-Spec vereinfachen, `doc/ai.txt` automatisch
+prüfen) sind erledigt und im Backlog (Abschnitt „Session 2026-10-04“).
 
 ### C4. CI nach Ubuntu-26-Migration
 
 Die CI-Annotation meldet: das Label `ubuntu-latest` wechselt ab 2026-10-19
 auf Ubuntu 26. Danach einen CI-Lauf von `ai.nvim` prüfen (luacheck-Lua-5.1-
 Setup, stylua-Action, plenary-Job) und ggf. nachziehen.
+
+### C5. Mindestversion Neovim 0.10 in der CI
+
+README, `docs/requirements.md`, `doc/ai.txt` und `:checkhealth` versprechen
+Neovim >= 0.10, die CI läuft aber nur mit `neovim: true`
+(`rhysd/action-setup-vim`, d. h. die aktuelle stabile Version). Eine
+zusätzliche Matrix-Zeile (z. B. ubuntu mit `version: v0.10.x`) würde zeigen, ob
+die Mindestversion wirklich hält — auch für die Doku-Specs (`:helptags`,
+`vim.fs.dir`, `getcompletion`), die der Review nur unter Neovim 0.12.2 prüfen
+konnte. Falls etwas bricht: Mindestversion anheben und überall nachziehen
+(die neuen Specs prüfen, dass die vier Stellen übereinstimmen).
 
 ---
 
