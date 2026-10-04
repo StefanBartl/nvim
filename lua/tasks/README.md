@@ -111,11 +111,11 @@ nvim --headless -u NONE -l scripts/tasks.lua check
 |---|---|
 | `list [area] [--status=a,b] [--prio=1,2\|<=2] [--kind=k] [--tag=t] [--stale=N] [--blocked] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
 | `index [area] [--check]` | write / verify `ROADMAP/TASKS.md` (all areas without argument) |
-| `new <area> <title> [--kind --prio --effort --tags=a,b --summary --slug --status] [--no-index]` | create a task file |
+| `new <area> <title> [--kind --prio --effort --tags=a,b --refs=a,b --lang=de\|en --summary --slug --status] [--no-index]` | create a task file (`--lang` picks the language of the body headings, default `de`) |
 | `set <area>/<slug> key=value ... [--no-index]` | change frontmatter; an empty value removes the key |
 | `done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD] [--no-index]` | finish and move to `Backlog/` |
 | `check [area]` | rule check |
-| `template [--title --kind --prio --effort --tags]` | print the task template |
+| `template [--title --kind --prio --effort --tags --lang=de\|en]` | print the task template |
 | `areas` | list the vault's areas |
 | `export [--top=N] [--no-links]` | all-areas overview as Markdown on stdout (never written to a file) |
 
