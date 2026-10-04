@@ -1,6 +1,6 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (nach Runde 36: **Phase 4 — Migration abgeschlossen**).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
+> **Stand 2026-10-04 (nach Runde 36: **Phase 4 abgeschlossen**, Entscheidungen zu Runde 23–28 umgesetzt, Phase 5a läuft).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
 > `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`, `cascade.nvim`, `sandbox.nvim`, `reposcope.nvim`, `sessions.nvim`, `emojis.nvim`, `diff.nvim`, `cmdlog.nvim`, `dap.nvim`, `fileops.nvim`, `recommender.nvim`, `filetreepicker.nvim`, `nvim-nexus`, `docmap-desktop` (21), `nvim-config` (26) und `ALL` (+24); `refinder` (kein Plugin, Statussatz), `spotlight.nvim` und
@@ -75,11 +75,25 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
   Explorer auf `assets/`). Reines Modul `lua/tasks/form.lua`, UI `plugin_repos/tasks_form.lua`. **Nur headless geprüft**, nicht
   in einem echten Terminal; Abweichungen: `Tags`/`Refs` sind Textzeilen, Tage-Aufwand nicht wählbar, Esc auf die Assets-Frage
   zählt als Nein. Task `ALL/task-new-form` bleibt `open`, bis der Nutzer das Formular ausprobiert hat.
-- **Offene Entscheidungen (language, hover):** `language.nvim/translate-engine-failover` (Empfehlung: ja, nur zu selbst
-  eingetragenen Engines), `vocabulary-review-from-history` (parken), `translate-path-scope-unsupported` (unterstützen),
-  `health-report-ui-nvim`, `docs-vimdoc-install-catch-up` (erst `why`-Text); `hover.nvim/persistent-link-cache`
-  (Text-Abruf oder Screenshot? Default `persist=false`, leere Muster) und `hover-copy-content` (erst `:Hover copy`).
-  Bug mit Datenverlust: `language.nvim/translate-replace-stale-range` (prio 2).
+- **Entscheidungen zu den Runden 23–28 (2026-10-04, im Vault umgesetzt, `3ed1a8c1`):**
+  - language.nvim: `translate-engine-failover` ja, nur zu selbst in `fallback` eingetragenen Engines (`open`);
+    `translate-path-scope-unsupported` unterstützen; `vocabulary-review-from-history` bleibt `parked`; `health-report-ui-nvim`
+    erst in der Health-Prüfung, ui.nvim nicht zur harten Abhängigkeit; `docs-vimdoc-install-catch-up` erst `why`-Text, curl `required` offen.
+  - hover.nvim: `persistent-link-cache` allgemein, Default `persist=false`, leere Muster, bedingte Anfrage (`open`); `hover-copy-content`
+    erst `:Hover copy` für Text und Pfad, kein Bild (`open`); `zoom-mouse-region-select` bleibt `parked`.
+  - buffer-ctx.nvim: `boilerplate-task-template` verworfen (Backlog, Konzept-Zeile korrigiert); `marks-persist-across-sessions` bleibt `parked`.
+  - runtime-analysis.nvim: `history-url-query-secrets` ja (Schlüsselliste, Platzhalter); `api-traffic-measurement` klein starten;
+    `mdview-theme-parity` bleibt `decision` (nur bauen, wenn `:MDView standalone` das Theme pro Aufruf annimmt).
+  - data.nvim: `ci-optional-deps-real-specs` Nachbarn mit gepinntem `ref` auschecken; vier Ideen bleiben `parked`.
+  - replacer.nvim: `tests-lint-cleanup` per Löschen von `TESTS/utf8_offsets.lua` (+ 2 stylua-Diffs in `pickers_backends.lua`);
+    `pickers-nvim-list-migration` bleibt `blocked` bis `pickers.nvim/generic-items-source`.
+  - Wichtigster Bug: `language.nvim/translate-replace-stale-range` (prio 2, Datenverlust bei `TranslateReplace`).
+- **Vorfall main (2026-10-04):** ein Push aus dem Checkout des Nutzers (`be329e60 dl`, github-stats-Daten) setzte `origin/main`
+  auf `3768a56b` zurück und entfernte so die Commits der Runden 29–36 von `main`. Sie lagen noch im Branch
+  `claude/task-system-handover-de5f7e`; `origin/main` wurde per Merge (`922efab8`, ohne Force) wiederhergestellt.
+  Vor jedem Push `git fetch` und prüfen, ob `origin/main` ein Vorfahre von `HEAD` ist.
+- **Phase 5 (läuft):** 5a `--stale` mit `refs:`-Prüfung und CI-Check für den Vault (Agent im eigenen Worktree); danach 5b
+  Statusline-Zähler (`ui.nvim`, `plugin_summary`) und 5c mdview-Vorschau von Dashboard-Export und Task-Datei.
 
 ## Kategorien und Ordner-Tasks (Konzept §12)
 
@@ -383,4 +397,4 @@ Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-R
    reviewt; `lsp.nvim/config-unknown-key-warning` hat im Vault ein `Backlog/FEATURES`-Protokoll, die Plugin-Docs
    (`docs/configuration.md`, `:help lsp.nvim`) beschreiben das Verhalten.
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
-4. Phase 5: Politur (Statusline, `mdview`, `--stale`, Vault-CI).
+4. Phase 5: Politur — 5a `--stale`/refs und Vault-CI (in Arbeit), 5b Statusline-Zähler, 5c mdview-Vorschau; danach `fs.watch`-Refresh und Frecency im Dashboard.
