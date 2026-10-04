@@ -388,6 +388,25 @@ return function(H)
     eq(#vim.api.nvim_list_wins(), wins_before, "any key closes the help")
     ok(current_picker() == p, "the picker survived the help")
 
+    -- ── the input window: Alt chords, plain letters stay text/editing ─────
+    reset()
+    p:focus("input")
+    flush()
+    keys("<M-s>")
+    eq(status_of("lib.nvim/alpha"), "decision", "<M-s> in the input window advanced the status")
+    eq(p.input:get(), "", "the Alt chord typed nothing into the search")
+    reset_fixture()
+    keys("<M-r>")
+    p = opened(4)
+    eq(status_of("lib.nvim/alpha"), "doing", "fixture restored")
+    p:focus("input")
+    flush()
+    keys("s")
+    eq(status_of("lib.nvim/alpha"), "doing", "a plain `s` in the input window is not an action")
+    p.input:set("", "")
+    p:focus("list")
+    flush()
+
     -- ── f: filter chip, picker reopens filtered, filter persists in state ─
     reset()
     select_queue = { pick("status"), pick("open") }
