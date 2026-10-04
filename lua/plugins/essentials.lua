@@ -27,13 +27,18 @@ return {
   -- which-key: the <leader> popup and its group labels. Actively wired
   -- (neotest, bindings/mappings/general.lua's :WhichKey and
   -- <leader>wK/<leader>w?) -- was previously installed only via NvChad's own
-  -- bundle. Lazy on the keys that actually trigger it, matching NvChad's own
-  -- spec: every call site that reaches for `require("which-key")` already
-  -- checks `package.loaded["which-key"]` first rather than forcing a load,
-  -- so keeping it lazy here doesn't strand anything the way a `cmd`-only
-  -- trigger would for Mason above.
+  -- bundle. Loaded on `VeryLazy` (right after the first frame), with the keys
+  -- and `:WhichKey` kept as fallback triggers: lazy loads on whichever comes
+  -- first. Keys alone left a gap -- when `<Space>` was the first stub key of
+  -- the session, which-key's own (scheduled) load never ran while the mapping
+  -- still waited for its continuation, so a slow first press showed no popup.
+  -- Every call site that reaches for `require("which-key")` already checks
+  -- `package.loaded["which-key"]` first rather than forcing a load, so
+  -- loading it later than the startup path strands nothing the way a
+  -- `cmd`-only trigger would for Mason above.
   {
     "folke/which-key.nvim",
+    event = "VeryLazy",
     keys = { "<leader>", "<c-w>", '"', "'", "`", "c", "v", "g" },
     cmd = "WhichKey",
     opts = {},
