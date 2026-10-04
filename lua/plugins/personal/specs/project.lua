@@ -42,7 +42,9 @@ return {
     -- Trade-off: the preview itself is not filetype-bound, so an image
     -- reference elsewhere (k8s or workflow YAML, devcontainer.json, a shell
     -- script, Markdown) gets it only once one of these triggers has loaded the
-    -- plugin. Likewise `:checkhealth sandbox` finds nothing until it is
+    -- plugin. `devcontainer.json`, `*.containerfile` and `docker-bake.hcl` are
+    -- deliberately no triggers either (~110 ms on the first hit each session).
+    -- Likewise `:checkhealth sandbox` finds nothing until it is
     -- loaded: run `:Sandbox engine get` first.
     cmd = { "Sandbox", "Sbx" },
     ft = "dockerfile",
