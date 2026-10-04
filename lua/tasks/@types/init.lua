@@ -15,7 +15,8 @@
 ---@field id string                   # `<area>/<slug>`.
 ---@field area string                 # Area (plugin folder) name.
 ---@field slug string                 # Filename without `.md` (and without the `YYYY-MM-DD_` prefix in `Backlog/`).
----@field path string                 # Absolute path, forward slashes.
+---@field path string                 # Absolute path of the task file, forward slashes.
+---@field folder boolean              # A folder task: the file is `<slug>/<slug>.md`, the folder may hold assets.
 ---@field location Tasks.Location
 ---@field title string                # Frontmatter `title`, or the slug when it is missing.
 ---@field status? string              # As written; may be an unknown word (see `errors`).
@@ -23,6 +24,7 @@
 ---@field prio? integer               # 1..3; nil when absent or invalid.
 ---@field effort? string
 ---@field tags string[]
+---@field category string[]           # The `category` list as written (see `model.categories` for the effective set).
 ---@field created? string             # `YYYY-MM-DD`
 ---@field updated? string             # `YYYY-MM-DD`
 ---@field blocked_by string[]         # Task ids.
@@ -43,6 +45,7 @@
 ---@field prio_max? integer           # Matches prio <= prio_max (a task without prio never matches).
 ---@field kind? string|string[]
 ---@field tag? string|string[]
+---@field category? string|string[]   # Matches any effective category (`model.categories`).
 ---@field area? string|string[]
 ---@field blocked? boolean            # status `blocked` or a non-empty `blocked_by`.
 ---@field stale? integer              # Not updated for at least this many days (undated counts as stale).
@@ -75,6 +78,8 @@
 ---@field prio? integer|string
 ---@field effort? string
 ---@field tags? string[]|string       # A string is split at commas.
+---@field category? string[]|string   # Concerns (`model.CATEGORIES`); a string is split at commas.
+---@field folder? boolean             # Create a folder task (`<slug>/<slug>.md`) so assets can be attached.
 ---@field refs? string[]|string       # Paths or `repo@commit`; a string is split at commas.
 ---@field lang? "de"|"en"             # Language of the body headings (default "de").
 ---@field status? string

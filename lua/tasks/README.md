@@ -1,7 +1,8 @@
 # `tasks` -- the wkdbook task engine
 
 Open work in the wkdbook vault is one Markdown file per task
-(`<area>/ROADMAP/tasks/<slug>.md`, flat-YAML frontmatter), with a generated
+(`<area>/ROADMAP/tasks/<slug>.md`, flat-YAML frontmatter; or a *folder task*
+`<slug>/<slug>.md` that can hold assets), with a generated
 overview per area (`<area>/ROADMAP/TASKS.md`). This namespace reads, ranks,
 indexes, creates, changes, finishes and checks those files. The format, the
 rules R1-R12 and the reasoning are in the vault:
@@ -41,10 +42,10 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 | Module | What it does | Key functions |
 |---|---|---|
 | `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names, slugs and ids before they become path segments. | `root`, `areas`, `has_area`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug` |
-| `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug. | `parse_text`, `from_file`, `sort`, `compare`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
-| `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. Nested task files are returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
+| `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. `categories(task)` is the effective category set (below). A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug. | `parse_text`, `from_file`, `sort`, `compare`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
+| `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. A folder task's `<slug>/<slug>.md` is a task (`task.folder`), the other files in its folder are assets and ignored; any other nested file is returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
 | `tasks.index` | `render` is pure and deterministic: the same tasks give the same bytes, whatever order they are found in. `write_area` writes only when the content differs (a CRLF checkout counts as equal and keeps its line endings), removes the file when no task is open, and with `check = true` only reports `stale` (`missing` / `outdated` / `orphan`). `render_global` returns the all-areas overview as text; nothing writes `ALL/TASKS.md` (decision E2: it is never committed). | `render`, `write_area`, `write_all`, `render_global` |
-| `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` counts as taken). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). All three regenerate the area index. | `template`, `new`, `set`, `done`, `slugify`, `readme_add_row`, `SETTABLE` |
+| `tasks.mutate` | `new` creates the file with `O_CREAT\|O_EXCL` (a taken slug gets `-2`, `-3`, ...; a slug used in `Backlog/` or as a folder counts as taken; `folder = true` makes a folder task). `set` validates the patch, changes only the named keys through `lib.nvim.markdown.frontmatter` and bumps `updated` only when something changed. `done` is rule R6 (below). `folderize` and `attach` turn a task into a folder task and copy assets into it. All regenerate the area index. | `template`, `new`, `set`, `done`, `folderize`, `attach`, `slugify`, `readme_add_row`, `SETTABLE` |
 | `tasks.check` | Collects findings over one area or the vault (table below). | `run`, `format` |
 | `tasks.cli` | Parses a command line, calls the engine, prints tab-separated lines, returns an exit code, never raises. | `run` |
 
@@ -58,6 +59,28 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
   (`--status=`, `--prio=<=2`, ...) are parsed by `model.filter_from_options`, shared with the CLI, and
   the keys `task set` accepts are `mutate.SETTABLE`.
 - **Headless:** `scripts/tasks.lua` (below).
+
+### Categories
+
+`category: [security, docs]` (optional, flat list) names the concern a task serves:
+`bug`, `security`, `performance`, `docs`, `ruleset` (`model.CATEGORIES`; `ruleset` = the task
+brings code in line with the Lua rules under `wkdbook-Lua/Checklists/regeln/`, optional free
+field `rules: [LLS-45]` names the rule ids). An unknown value is `unknown-category`. The
+*effective* categories (`model.categories`, what `--category=` filters on) are the written
+list, plus `bug` for every `kind: bug`, plus every tag spelled like a category -- so tasks
+written before the field existed are filterable without touching them. Categories narrow a
+list, they do not reorder it (the sort stays status, prio, area, slug).
+
+### Folder tasks
+
+A task is a file `tasks/<slug>.md` **or** a folder `tasks/<slug>/<slug>.md` (same name) that
+may hold assets, by convention under `assets/`. Both forms live side by side; the id is
+`<area>/<slug>` either way. Only `<slug>/<slug>.md` is the task; every other file in the
+folder is an asset, never read as a task. `attach <id> <file>` copies a file to
+`<slug>/assets/` (turning a plain task into a folder task first) and prints the Markdown link
+(`![]()` for images); `folderize <id>` converts without an attachment. `done` moves the
+whole folder to `Backlog/<bucket>/<date>_<slug>/<date>_<slug>.md` and puts it back when a
+later step fails. `index` links `tasks/<slug>/<slug>.md`. Reasoning: concept section 12.
 
 ### `done` (rule R6)
 
@@ -79,8 +102,10 @@ finished task with the same id under another date, is refused.
 | Code | Meaning |
 |---|---|
 | `frontmatter-missing`, `frontmatter-invalid`, `title-missing`, `status-missing`, `field-type`, `unreadable` | the file cannot be read as a task |
-| `unknown-status`, `unknown-kind`, `bad-prio`, `bad-effort`, `bad-date` | a field has a value outside its enum / format |
-| `slug` | filename is not a kebab-case ASCII slug, or the file lies in a subfolder of `tasks/` |
+| `unknown-status`, `unknown-kind`, `unknown-category`, `bad-prio`, `bad-effort`, `bad-date` | a field has a value outside its enum / format |
+| `slug` | filename is not a kebab-case ASCII slug, or the file lies in a subfolder of `tasks/` other than `<slug>/<slug>.md` |
+| `slug-conflict` | the same slug exists as a file and as a folder task |
+| `asset-dangling` (warning) | a folder task links `assets/<file>` that is not there |
 | `index-stale`, `index-error` | `ROADMAP/TASKS.md` is missing, outdated or left over / could not be checked |
 | `bad-blocked-by`, `blocked-by-self`, `blocked-by-dangling` | the blocker is malformed, the task itself, or exists nowhere |
 | `blocked-by-done` (warning) | the blocker is already finished |
@@ -109,9 +134,11 @@ nvim --headless -u NONE -l scripts/tasks.lua check
 
 | Command | Effect |
 |---|---|
-| `list [area] [--status=a,b] [--prio=1,2\|<=2] [--kind=k] [--tag=t] [--stale=N] [--blocked] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
+| `list [area] [--status=a,b] [--prio=1,2\|<=2] [--kind=k] [--category=c,d] [--tag=t] [--stale=N] [--blocked] [--format=tsv\|ids]` | open tasks, sorted; `id status prio effort kind updated title`, tab-separated |
 | `index [area] [--check]` | write / verify `ROADMAP/TASKS.md` (all areas without argument) |
-| `new <area> <title> [--kind --prio --effort --tags=a,b --refs=a,b --lang=de\|en --summary --slug --status] [--no-index]` | create a task file (`--lang` picks the language of the body headings, default `de`) |
+| `new <area> <title> [--kind --prio --effort --tags=a,b --category=c,d --refs=a,b --lang=de\|en --summary --slug --status] [--folder] [--no-index]` | create a task file (`--lang` picks the language of the body headings, default `de`; `--folder` a folder task) |
+| `attach <area>/<slug> <file> [--name=n] [--no-index]` | copy a file to `<slug>/assets/` (a plain task becomes a folder task), print the Markdown link |
+| `folderize <area>/<slug> [--no-index]` | turn a plain task file into a folder task |
 | `set <area>/<slug> key=value ... [--no-index]` | change frontmatter; an empty value removes the key |
 | `done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD] [--no-index]` | finish and move to `Backlog/` |
 | `check [area]` | rule check |

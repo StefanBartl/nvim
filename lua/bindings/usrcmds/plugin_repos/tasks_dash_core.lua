@@ -45,7 +45,7 @@ M.PRIO_HL = { [1] = "DiagnosticError", [2] = "DiagnosticWarn", [3] = "Diagnostic
 
 ---Filter dimensions the `f` key offers, in menu order.
 ---@type string[]
-M.FILTER_DIMS = { "status", "prio", "kind", "tag", "blocked" }
+M.FILTER_DIMS = { "status", "prio", "kind", "category", "tag", "blocked" }
 
 ---The label of the menu entries that clear things.
 M.CLEAR = "(any)"
@@ -172,6 +172,7 @@ function M.search_text(t)
     t.status or "",
     t.effort or "",
     t.kind or "",
+    table.concat(model.categories(t), " "),
     table.concat(t.tags, " "),
     t.title,
   }, " ")
@@ -223,6 +224,9 @@ function M.chips(f)
   end
   if f.kind and #f.kind > 0 then
     chips[#chips + 1] = "kind: " .. joined(f.kind)
+  end
+  if f.category and #f.category > 0 then
+    chips[#chips + 1] = "category: " .. joined(f.category)
   end
   if f.tag and #f.tag > 0 then
     chips[#chips + 1] = "tag: " .. joined(f.tag)
@@ -286,7 +290,7 @@ function M.set_dim(f, dim, value)
     end
   elseif dim == "blocked" then
     out.blocked = value and true or nil
-  elseif dim == "status" or dim == "kind" or dim == "tag" then
+  elseif dim == "status" or dim == "kind" or dim == "category" or dim == "tag" then
     out[dim] = value ~= nil and { tostring(value) } or nil
   end
   return out
@@ -303,6 +307,8 @@ function M.dim_choices(dim, tasks)
     return { "1", "2", "3", "<=2" }
   elseif dim == "kind" then
     return vim.deepcopy(model.KINDS)
+  elseif dim == "category" then
+    return vim.deepcopy(model.CATEGORIES)
   elseif dim == "tag" then
     local seen, out = {}, {}
     for _, t in ipairs(tasks) do
@@ -337,6 +343,9 @@ function M.filter_to_options(f)
   if f.kind and #f.kind > 0 then
     o.kind = joined(f.kind)
   end
+  if f.category and #f.category > 0 then
+    o.category = joined(f.category)
+  end
   if f.tag and #f.tag > 0 then
     o.tag = joined(f.tag)
   end
@@ -362,6 +371,7 @@ function M.filter_from_stored(opts)
     prio = (type(opts.prio) == "string" or type(opts.prio) == "number") and opts.prio or nil,
     kind = type(opts.kind) == "string" and opts.kind or nil,
     tag = type(opts.tag) == "string" and opts.tag or nil,
+    category = type(opts.category) == "string" and opts.category or nil,
     stale = (type(opts.stale) == "string" or type(opts.stale) == "number") and opts.stale or nil,
     blocked = opts.blocked == true,
   })

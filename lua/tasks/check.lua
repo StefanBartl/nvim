@@ -9,8 +9,12 @@
 --- Findings (`code`):
 ---  - `frontmatter-missing`, `frontmatter-invalid`, `title-missing`,
 ---    `status-missing`, `field-type`: the file cannot be read as a task
----  - `unknown-status`, `unknown-kind`, `bad-prio`, `bad-effort`, `bad-date`
+---  - `unknown-status`, `unknown-kind`, `unknown-category`, `bad-prio`, `bad-effort`,
+---    `bad-date`
 ---  - `slug`: the filename is not a kebab-case slug, or the file is nested
+---    anywhere but as `<slug>/<slug>.md` (a folder task)
+---  - `slug-conflict`: the same slug exists as a file and as a folder task
+---  - `asset-dangling` (warning): a folder task links `assets/<file>` that is not there
 ---  - `index-stale`: `ROADMAP/TASKS.md` is missing, outdated, or left over
 ---  - `bad-blocked-by`, `blocked-by-self`, `blocked-by-dangling`: the blocker is
 ---    malformed, the task itself, or exists nowhere; `blocked-by-done` (warning):
@@ -75,6 +79,27 @@ local function finding_less(a, b)
   return a.message < b.message
 end
 
+---Relative `assets/...` links of a folder task's body that point at no file.
+---@param task Tasks.Task
+---@return string[] missing
+local function dangling_assets(task)
+  local text = fsio.read(task.path)
+  if not text then
+    return {}
+  end
+  local dir = fsio.dirname(task.path)
+  local missing, seen = {}, {}
+  for target in text:gmatch("%]%((assets/[^)%s]+)%)") do
+    if not seen[target] then
+      seen[target] = true
+      if not fsio.is_file(dir .. "/" .. target) then
+        missing[#missing + 1] = target
+      end
+    end
+  end
+  return missing
+end
+
 ---Run the checks.
 ---@param opts? Tasks.CheckOpts
 ---@return Tasks.CheckResult|nil result
@@ -122,7 +147,23 @@ function M.run(opts)
     end
     task_count = task_count + #open + #finished
 
+    local seen_slug = {}
     for _, t in ipairs(open) do
+      if seen_slug[t.id] then
+        add(
+          findings,
+          "error",
+          "slug-conflict",
+          t,
+          "the same slug exists as a file and as a folder task: " .. seen_slug[t.id]
+        )
+      end
+      seen_slug[t.id] = t.path
+      if t.folder then
+        for _, target in ipairs(dangling_assets(t)) do
+          add(findings, "warn", "asset-dangling", t, "linked asset is missing: " .. target)
+        end
+      end
       for i, msg in ipairs(t.errors) do
         add(findings, "error", t.error_codes[i] or "frontmatter-invalid", t, msg)
       end

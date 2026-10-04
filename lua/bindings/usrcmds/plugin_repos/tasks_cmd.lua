@@ -178,7 +178,7 @@ end
 ---@return string|nil
 local function filter_note(flags)
   local parts = {}
-  for _, name in ipairs({ "status", "prio", "kind", "tag" }) do
+  for _, name in ipairs({ "status", "prio", "kind", "category", "tag" }) do
     if flags[name] ~= nil then
       parts[#parts + 1] = ("%s=%s"):format(name, flags[name])
     end
@@ -210,6 +210,7 @@ function M.list(ctx)
     status = flags.status,
     prio = flags.prio,
     kind = flags.kind,
+    category = flags.category,
     tag = flags.tag,
     stale = flags.stale,
     blocked = flags.blocked,
@@ -432,7 +433,7 @@ function M.task_new(ctx)
   local area = ctx.args.area
   local title = unquote(table.concat(ctx.rest, " "))
   local given = {}
-  for _, key in ipairs({ "kind", "prio", "effort", "tags", "status" }) do
+  for _, key in ipairs({ "kind", "prio", "effort", "tags", "category", "status" }) do
     if ctx.kv[key] ~= nil and ctx.kv[key] ~= "" then
       given[key] = ctx.kv[key]
     end
@@ -446,7 +447,9 @@ function M.task_new(ctx)
       prio = values.prio,
       effort = values.effort,
       tags = values.tags,
+      category = values.category,
       status = values.status,
+      folder = ctx.flags.folder == true,
     })
     if not res then
       notify.error(tostring(err))
@@ -572,6 +575,66 @@ local function finish_task(id, opts)
   notify.info(("done %s -> %s"):format(id, root and rel(res.to, root) or res.to))
 end
 
+---`:MyPlugins task folderize <id>`
+---@param ctx table
+function M.task_folderize(ctx)
+  if #ctx.rest > 0 then
+    notify.error("unexpected argument: " .. table.concat(ctx.rest, " "))
+    return
+  end
+  local before = scan.find(ctx.args.id)
+  local res, err = mutate.folderize(ctx.args.id)
+  if not res then
+    notify.error(tostring(err))
+    return
+  end
+  if not res.changed then
+    notify.info(("%s is already a folder task"):format(res.id))
+    return
+  end
+  if before then
+    M.retarget_buffers(before.path, res.path)
+  end
+  if res.index_err then
+    notify.warn("task moved, but the index was not updated: " .. res.index_err)
+  end
+  notify.info(("%s is now a folder task"):format(res.id))
+end
+
+---`:MyPlugins task attach <id> <file> [name=<file name>]`: copy the file into
+---`assets/`, put the Markdown link in the `+` register and say so.
+---@param ctx table
+function M.task_attach(ctx)
+  if #ctx.rest > 0 then
+    notify.error("unexpected argument: " .. table.concat(ctx.rest, " "))
+    return
+  end
+  local before = scan.find(ctx.args.id)
+  local res, err = mutate.attach(
+    ctx.args.id,
+    vim.fn.fnamemodify(vim.fn.expand(ctx.args.file), ":p"),
+    { name = ctx.kv.name ~= "" and ctx.kv.name or nil }
+  )
+  if not res then
+    notify.error(tostring(err))
+    return
+  end
+  if res.folderized and before then
+    M.retarget_buffers(before.path, res.path)
+  end
+  if res.index_err then
+    notify.warn("asset attached, but the index was not updated: " .. res.index_err)
+  end
+  local copied = pcall(vim.fn.setreg, "+", res.link)
+  notify.info(
+    ("attached %s -> %s%s"):format(
+      res.id,
+      res.rel,
+      copied and (" (link copied: " .. res.link .. ")") or (": " .. res.link)
+    )
+  )
+end
+
 ---`:MyPlugins task done <id> [done_in=...] [date=YYYY-MM-DD] [--yes]`
 ---@param ctx table
 function M.task_done(ctx)
@@ -590,12 +653,13 @@ function M.task_done(ctx)
   local bucket = vault.BUCKET_OF_KIND[task.kind or "task"] or "?"
   local date = opts.date or model.today()
   confirm.yesno(
-    ("Finish task %s?\n\n%s\n\nIt moves to Backlog/%s/%s_%s.md."):format(
+    ("Finish task %s?\n\n%s\n\nIt moves to Backlog/%s/%s_%s%s."):format(
       id,
       task.title,
       bucket,
       date,
-      task.slug
+      task.slug,
+      task.folder and " (the whole folder)" or ".md"
     ),
     "finish",
     function(accepted)

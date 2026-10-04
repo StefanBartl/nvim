@@ -1,5 +1,5 @@
 ---@module 'tasks.cli'
----@brief Command-line front end of the task engine: `list`, `index`, `new`, `set`, `done`, `check`, `template`, `areas`, `export`.
+---@brief Command-line front end of the task engine: `list`, `index`, `new`, `set`, `done`, `attach`, `folderize`, `check`, `template`, `areas`, `export`.
 ---@description
 --- `run(argv, io)` parses one command line, calls the engine and prints plain,
 --- tab-separated lines; it returns the exit code and never raises. The
@@ -46,14 +46,19 @@ local USAGE = [[
 usage: nvim --headless -u NONE -l scripts/tasks.lua <command> [args]
 
 commands:
-  list [<area>] [--status=a,b] [--prio=1,2|<=2] [--kind=k] [--tag=t] [--stale=<days>]
-       [--blocked] [--format=tsv|ids]     open tasks, sorted; one line each
+  list [<area>] [--status=a,b] [--prio=1,2|<=2] [--kind=k] [--tag=t] [--category=c,d]
+       [--stale=<days>] [--blocked] [--format=tsv|ids]   open tasks, sorted; one line each
+       (categories: bug security performance docs ruleset; --category=bug also finds kind=bug)
   index [<area>] [--check]                (re)write ROADMAP/TASKS.md; --check only reports
   new <area> <title> [--kind=k] [--prio=1..3] [--effort=XS..XL|0.5d] [--tags=a,b]
-       [--refs=path,repo@sha] [--summary=text] [--slug=slug] [--status=s]
-       [--lang=de|en]                          create a task file (--lang: body headings)
+       [--category=c,d] [--refs=path,repo@sha] [--summary=text] [--slug=slug] [--status=s]
+       [--lang=de|en] [--folder]               create a task file (--lang: body headings;
+                                               --folder: a folder task that can hold assets)
   set <area>/<slug> key=value ...         change frontmatter (empty value removes the key)
   done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD]   finish: move to Backlog/
+  attach <area>/<slug> <file> [--name=n]  copy a file to <slug>/assets/ (a plain task becomes a
+                                          folder task) and print the Markdown link
+  folderize <area>/<slug>                 turn a plain task file into a folder task
   check [<area>]                          rule check; exit 1 on any error
   template [--title=t] [--kind=k] [--prio=n] [--effort=e] [--tags=a,b] [--lang=de|en]
   areas                                  list the vault's areas
@@ -70,7 +75,7 @@ global options: --vault=<dir> (default: $TASKS_VAULT, else $REPOS_DIR/WKDBooks/.
 ---@type table<string, Tasks.CliSpec>
 local SPECS = {
   list = {
-    value = { "status", "prio", "kind", "tag", "stale", "format" },
+    value = { "status", "prio", "kind", "tag", "category", "stale", "format" },
     flag = { "blocked", "all" },
   },
   index = { value = {}, flag = { "check", "all" } },
@@ -80,6 +85,7 @@ local SPECS = {
       "prio",
       "effort",
       "tags",
+      "category",
       "refs",
       "lang",
       "summary",
@@ -87,10 +93,12 @@ local SPECS = {
       "status",
       "title",
     },
-    flag = { "no-index" },
+    flag = { "no-index", "folder" },
   },
   set = { value = {}, flag = { "no-index" } },
   done = { value = { "done-in", "date" }, flag = { "no-index" } },
+  attach = { value = { "name" }, flag = { "no-index" } },
+  folderize = { value = {}, flag = { "no-index" } },
   check = { value = {}, flag = { "all" } },
   template = { value = { "title", "kind", "prio", "effort", "tags", "lang" }, flag = {} },
   areas = { value = {}, flag = {} },
@@ -171,6 +179,7 @@ local function filter_from(opt)
     prio = opt.prio --[[@as string|nil]],
     kind = opt.kind --[[@as string|nil]],
     tag = opt.tag --[[@as string|nil]],
+    category = opt.category --[[@as string|nil]],
     stale = opt.stale --[[@as string|nil]],
     blocked = opt.blocked == true,
     today = opt.today --[[@as string|nil]],
@@ -357,11 +366,13 @@ function commands.new(ctx)
     prio = opt.prio --[[@as string|nil]],
     effort = opt.effort --[[@as string|nil]],
     tags = opt.tags --[[@as string|nil]],
+    category = opt.category --[[@as string|nil]],
     refs = opt.refs --[[@as string|nil]],
     lang = opt.lang --[[@as "de"|"en"|nil]],
     summary = opt.summary --[[@as string|nil]],
     slug = opt.slug --[[@as string|nil]],
     status = opt.status --[[@as string|nil]],
+    folder = opt.folder == true,
     index = not opt["no-index"],
   })
   if not res then
@@ -429,6 +440,48 @@ function commands.done(ctx)
   if res.readme == "missing" then
     ctx.warn("warn: Backlog/README.md does not exist; no index row added")
   end
+  report_index(ctx, res)
+  return 0
+end
+
+function commands.attach(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local id, file = args.pos[1], args.pos[2]
+  if not id or not file or #args.pos > 2 then
+    ctx.warn("error: usage: attach <area>/<slug> <file> [--name=n]")
+    return 2
+  end
+  local res, err = mutate.attach(id, file, {
+    root = eo.root,
+    today = eo.today,
+    name = args.opt.name --[[@as string|nil]],
+    index = not args.opt["no-index"],
+  })
+  if not res then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  ctx.say(("attached\t%s\t%s\t%s"):format(res.id, res.rel, res.link))
+  if res.folderized then
+    ctx.say(("folderized\t%s\t%s"):format(res.id, res.path))
+  end
+  report_index(ctx, res)
+  return 0
+end
+
+function commands.folderize(ctx)
+  local args, eo = ctx.args, ctx.eo
+  local id = args.pos[1]
+  if not id or #args.pos > 1 then
+    ctx.warn("error: usage: folderize <area>/<slug>")
+    return 2
+  end
+  local res, err = mutate.folderize(id, { root = eo.root, index = not args.opt["no-index"] })
+  if not res then
+    ctx.warn("error: " .. tostring(err))
+    return 1
+  end
+  ctx.say(("%s\t%s\t%s"):format(res.changed and "folderized" or "unchanged", res.id, res.path))
   report_index(ctx, res)
   return 0
 end

@@ -177,6 +177,43 @@ function M.task_path(root, area, slug)
   return M.tasks_dir(root, area) .. "/" .. slug .. ".md"
 end
 
+---`<area>/ROADMAP/tasks/<slug>`, the folder of a folder task.
+---@param root string
+---@param area string
+---@param slug string
+---@return string
+function M.task_dir(root, area, slug)
+  return M.tasks_dir(root, area) .. "/" .. slug
+end
+
+---`<area>/ROADMAP/tasks/<slug>/<slug>.md`, the task file of a folder task.
+---@param root string
+---@param area string
+---@param slug string
+---@return string
+function M.folder_task_path(root, area, slug)
+  return M.task_dir(root, area, slug) .. "/" .. slug .. ".md"
+end
+
+---Find an open task on disk, whichever form it has.
+---@param root string
+---@param area string
+---@param slug string
+---@return string|nil path   the task file
+---@return boolean|string folder  true for a folder task; the error text when `path` is nil
+function M.resolve_task(root, area, slug)
+  local file, folder = M.task_path(root, area, slug), M.folder_task_path(root, area, slug)
+  local has_file, has_folder = fsio.is_file(file), fsio.is_file(folder)
+  if has_file and has_folder then
+    return nil, ("task exists as file and as folder: %s/%s"):format(area, slug)
+  elseif has_file then
+    return file, false
+  elseif has_folder then
+    return folder, true
+  end
+  return nil, "no such open task: " .. area .. "/" .. slug
+end
+
 ---Whether the folder `<root>/<name>` is an area: it holds `ROADMAP/` or
 ---`Backlog/`, or is one of `EXTRA_AREAS`; hidden and `_`-prefixed folders and
 ---`SKIP` entries never are.

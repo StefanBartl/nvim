@@ -345,7 +345,7 @@ M.HELP = {
   " s           advance status of marked (else current) tasks",
   " p           advance prio:  none -> 1 -> 2 -> 3 -> none",
   " D           finish (asks first, moves to Backlog/)",
-  " f           set a filter chip (status prio kind tag blocked)",
+  " f           set a filter chip (status prio kind category tag blocked)",
   " e           export marked (else all shown) tasks",
   " r           rescan the vault",
   " gb / gr     Backlog picker / ROADMAP.md of the area under the cursor",
