@@ -128,6 +128,23 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
   nvim-nexus (No-Go), pdfport (3 Ideen), gitsuite-Eigenengine, ui.kit-Terminal (Snacks bleibt).
 - Bereiche `filetreepicker.nvim` und `nvim-nexus` haben jetzt keine offenen Tasks mehr (`.gitkeep`, Statussatz).
 
+## Abarbeitung der `open` gewordenen Entscheidungs-Tasks (2026-10-04)
+
+Alle 12 sind umgesetzt, gepusht und im Vault abgeschlossen (Vault `5c027e65`, `86e9686f`, filetree-Commit siehe unten):
+- nvim-config (`016a18a4` auf `main`): `LICENSE` (MIT, "Copyright (c) 2026 Stefan Bartl", Kopie der lib.nvim-Lizenz; **Jahr offen: 2026 oder 2024-2026**,
+  die abgeschnittene Historie reicht bis 2024-12) + englische `README.md` (öffentlich, keine privaten Pfade); which-key `event = "VeryLazy"`
+  (Messung: kein belastbarer Gesamteffekt, which-key lädt in 7-9 ms im VeryLazy-Event; der Tastendruck-Fall nicht interaktiv geprüft; lib.nvim `033e1ea`
+  Kommentar); sandbox-Spec-Satz.
+- Plugins: media.nvim `4718015` (nacktes `:Media` → Dashboard), ai.nvim `cd11718` (README Literatur, Gemini-Link fehlt wegen max. 5),
+  cmdlog.nvim `a91fe94`, color_my_ascii.nvim `bc904f4`, dap.nvim `819fbae` (Task-Annahme "kein Aufrufer in TESTS" war falsch, `registry_spec` rief
+  `registered_languages` auf), documentation.nvim `f87b412` (nur Kommentar; Parity-Gate `scripts/ci.lua standalone` lokal nicht lauffähig: lfs/dkjson fehlen),
+  `PDF_CREATE.md` im Vault korrigiert (5 Stellen mehr als verlangt).
+- **`filetree.nvim` `03830ae`: nummerierter Schnellwahlmodus** (`lua/filetree/features/nav/quickpick/`, opt-in, `<leader>;`/`<leader>:`,
+  `:Filetree quickpick`; 341 Checks grün, echtes neo-tree 22 Checks; **nicht in echter Sitzung geprüft**, Checkliste `TESTS/MANUAL.md` Abschnitt R;
+  `float`/`preview`-Modi bewusst nicht gebaut; bleibt abhängig vom Adapter-Vertrag, falls `filetree.nvim/own-tree-engine` ihn ändert).
+- Weiter beim Nutzer: `nvim-config/upstream-neotest-reports` (selbst posten), die 4 verbleibenden `decision`-Tasks, `ultracode`-Review der Phase-5-Commits
+  und dieser Commits, Vault-CI-Vorlage kopieren, mdview-WASM-Bundle bauen.
+
 ## Kategorien und Ordner-Tasks (Konzept §12)
 
 - **Kategorien:** optionales Feld `category: [security, docs]`, Werte `bug`, `security`, `performance`, `docs`,
