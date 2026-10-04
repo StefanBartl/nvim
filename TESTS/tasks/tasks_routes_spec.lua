@@ -51,6 +51,11 @@ return function(H)
     cmd.dashboard = nil
     cmd.form_open = nil
     cmd.explorer_open = nil
+    local pv = package.loaded["bindings.usrcmds.plugin_repos.tasks_preview"]
+    if pv then
+      pv.probe, pv.opener, pv.temp_root = nil, nil, nil
+      pv.cleanup_all()
+    end
     vault.set_root(nil)
     for _, name in ipairs(STUBBED) do
       package.loaded[name] = orig_loaded[name]
@@ -696,6 +701,164 @@ return function(H)
       run("task open lib.nvim/nothing-here")
       has(said(), "no such open task")
 
+      -- ── mdview preview: `task preview`, `--to=mdview`, temp-file clean-up ─
+      -- The seams stand in for mdview.nvim; the opener really `:edit`s the file, so the
+      -- buffer-deleted clean-up runs for real.
+      local preview = require("bindings.usrcmds.plugin_repos.tasks_preview")
+      local preview_dir = H.tmpdir()
+      ---@type { path: string, text: string }[]
+      local shown_in_mdview = {}
+      preview.temp_root = function()
+        return preview_dir
+      end
+      preview.probe = function()
+        return true
+      end
+      preview.opener = function(path)
+        shown_in_mdview[#shown_in_mdview + 1] = { path = path, text = H.read(path) or "" }
+        vim.cmd("silent edit " .. vim.fn.fnameescape(path))
+        return true
+      end
+      local function temp_files_in_dir()
+        return vim.fn.glob(preview_dir .. "/*", false, true)
+      end
+
+      -- a task file is opened as it is, nothing is copied or written
+      run("task preview lib.nvim/alpha")
+      eq(#shown_in_mdview, 1)
+      eq(shown_in_mdview[1].path, task_path("lib.nvim", "alpha"))
+      has(said(), "previewing lib.nvim/alpha")
+      eq(temp_files_in_dir(), {}, "a task preview makes no temp file")
+      run("task preview lib.nvim/gamma-decision")
+      eq(shown_in_mdview[2].path, gamma_done, "a finished task previews its Backlog copy")
+      run("task preview lib.nvim/nothing-here")
+      has(said(), "no such open task")
+      eq(#shown_in_mdview, 2)
+      vim.cmd("silent! %bwipeout!")
+
+      -- the list export: a temp Markdown file, named after the scope
+      run("tasks lib.nvim --to=mdview")
+      eq(#shown_in_mdview, 3)
+      local exp1 = shown_in_mdview[3]
+      eq(exp1.path, vim.fs.normalize(preview_dir) .. "/tasks-lib.nvim.md")
+      has(exp1.text, "# Offene Tasks")
+      has(exp1.text, "lib.nvim/alpha")
+      has(exp1.text, "| Task ", "the Markdown table, not CSV")
+      has(said(), "-> mdview")
+      eq(preview.pending(), { exp1.path })
+      ok(H.exists(exp1.path), "the temp file exists while its buffer is open")
+      ok(not vim.bo.buflisted, "the preview buffer stays out of the buffer list")
+      -- a second export of the same scope gets its own file, the first stays untouched
+      run("tasks lib.nvim --to=mdview --status=open")
+      eq(#shown_in_mdview, 4)
+      eq(shown_in_mdview[4].path, vim.fs.normalize(preview_dir) .. "/tasks-lib.nvim-2.md")
+      ok(H.exists(exp1.path) and H.exists(shown_in_mdview[4].path))
+      -- deleting the buffers deletes the files
+      vim.cmd("silent! %bwipeout!")
+      ok(
+        vim.wait(1000, function()
+          return #temp_files_in_dir() == 0
+        end),
+        "the temp files go with their buffers"
+      )
+      eq(preview.pending(), {})
+      -- the vault was never written
+      ok(not H.exists(root .. "/lib.nvim/tasks-lib.nvim.md"))
+
+      -- CSV makes no sense in a browser: refused before anything is written
+      run("tasks lib.nvim --to=mdview --format=csv")
+      has(said(), "drop --format=csv")
+      eq(#shown_in_mdview, 4)
+      eq(temp_files_in_dir(), {})
+
+      -- the dashboard's export choice delivers through the same sink
+      local dash_core = require("bindings.usrcmds.plugin_repos.tasks_dash_core")
+      local tsk = require("tasks.scan").all({ root = root })
+      local dash_target = assert(dash_core.export_target(dash_core.EXPORT_CHOICES[7]))
+      local delivered, derr = view.deliver(tsk, dash_target, {
+        format = "md",
+        heading = "Open tasks -- all areas",
+        title = "myplugins://tasks/all",
+      })
+      ok(delivered, derr)
+      eq(shown_in_mdview[5].path, vim.fs.normalize(preview_dir) .. "/tasks-all.md")
+      vim.cmd("silent! %bwipeout!")
+      ok(vim.wait(1000, function()
+        return #temp_files_in_dir() == 0
+      end))
+
+      -- mdview missing: one clear message, no temp file, nothing opened
+      preview.probe = function()
+        return false, nil
+      end
+      run("tasks lib.nvim --to=mdview")
+      has(said(), "mdview.nvim is not available")
+      has(said(), "cannot deliver the task list")
+      run("task preview lib.nvim/alpha")
+      has(said(), "cannot preview lib.nvim/alpha")
+      has(said(), "mdview.nvim is not available")
+      eq(#shown_in_mdview, 5, "nothing was opened")
+      eq(temp_files_in_dir(), {}, "and nothing was written")
+      -- the real probe, when this Neovim has no mdview at all
+      preview.probe = nil
+      if vim.fn.exists(":MDView") ~= 2 and not pcall(require, "mdview") then
+        run("tasks lib.nvim --to=mdview")
+        has(said(), "mdview.nvim is not available")
+      end
+      preview.probe = function()
+        return true
+      end
+
+      -- the opener failing removes the temp file again
+      local good_opener = preview.opener
+      preview.opener = function()
+        return false, "relay refused"
+      end
+      local failed_ok, failed_err = preview.open_text("# x\n", "fails")
+      eq(failed_ok, false)
+      has(failed_err, "relay refused")
+      eq(temp_files_in_dir(), {})
+      eq(preview.pending(), {})
+      preview.opener = function()
+        error("opener exploded")
+      end
+      failed_ok, failed_err = preview.open_text("# x\n", "explodes")
+      eq(failed_ok, false)
+      has(failed_err, "opener exploded")
+      eq(temp_files_in_dir(), {})
+      preview.opener = good_opener
+
+      -- the vault is refused as a temp location
+      preview.temp_root = function()
+        return root .. "/lib.nvim"
+      end
+      local in_vault, vault_err = preview.open_text("# x\n", "vault")
+      eq(in_vault, false)
+      has(vault_err, "inside the vault")
+      ok(not H.exists(root .. "/lib.nvim/tasks-vault.md"))
+      preview.temp_root = function()
+        return preview_dir
+      end
+
+      -- leaving Neovim: one sweep deletes whatever is left
+      local left = assert(preview.write_temp("# left\n", "leftover"))
+      ok(H.exists(left))
+      preview.cleanup_all()
+      ok(not H.exists(left), "cleanup_all removes tracked temp files")
+      eq(preview.pending(), {})
+
+      -- file-name-safe labels (Windows reserved characters, dots at the ends, empty)
+      eq(preview.slug("lib.nvim"), "lib.nvim")
+      eq(preview.slug("a b/c:d*e?"), "a-b-c-d-e")
+      eq(preview.slug("../x"), "x")
+      eq(preview.slug(""), "export")
+      eq(preview.slug(nil), "export")
+      eq(#preview.slug(("x"):rep(100)), 40)
+      preview.probe, preview.opener, preview.temp_root = nil, nil, nil
+
+      eq(view.parse_target("mdview"), { kind = "mdview" })
+      eq(view.resolve_format({ kind = "mdview" }, nil), "md")
+
       -- ── open <area> <folder> ────────────────────────────────────────────
       local dispatched = {}
       package.loaded["pickers.command"] = {
@@ -1135,6 +1298,8 @@ return function(H)
         "--sort=prio-effort",
         "--sort=severity",
       })
+      ok(vim.tbl_contains(complete("TaskT tasks --to="), "--to=mdview"))
+      ok(vim.tbl_contains(complete("TaskT task preview lib.nvim/al"), "lib.nvim/alpha"))
       ok(vim.tbl_contains(complete("TaskT tasks --severity="), "--severity=critical"))
       ok(vim.tbl_contains(complete("TaskT tasks --effort="), "--effort=<=M"))
       eq(complete("TaskT task new lib.nvim Title severity=c"), { "severity=critical" })

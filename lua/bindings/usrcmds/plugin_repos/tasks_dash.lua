@@ -13,8 +13,10 @@
 ---    ONE batch, ONE notification, each touched area's index regenerated once
 ---  - `D` finish (asks first)   `f` set a filter chip   `o` sort order   `e` export   `r` rescan
 ---  - `gb` / `gr` Backlog / ROADMAP.md of the area under the cursor   `g?` help
+---  - `gp` preview the task file in the browser (mdview.nvim; Alt chord `<M-v>`);
+---    `e` offers "Preview in browser" for the list as well
 ---
---- Prompting keys (`D`, `f`, `e`, `gb`, `gr`) close the picker first -- snacks
+--- Prompting keys (`D`, `f`, `e`, `gb`, `gr`, `gp`) close the picker first -- snacks
 --- closes a picker whose window loses focus -- and `D` and `f` reopen it when
 --- the prompt is over. `s` / `p` refresh in place.
 ---
@@ -347,6 +349,18 @@ function M.export(state, tasks, after)
   end)
 end
 
+---`gp`: the task file rendered in the browser (mdview.nvim, a soft dependency).
+---@param task Tasks.Task|nil
+function M.preview_task(task)
+  if not task then
+    return
+  end
+  local ok, err = require("bindings.usrcmds.plugin_repos.tasks_preview").open_file(task.path)
+  if not ok then
+    notify.warn(("cannot preview %s: %s"):format(task.id, tostring(err)))
+  end
+end
+
 ---`gb` / `gr`: the Backlog picker, or ROADMAP.md, of an area.
 ---@param state Plugin_repos.TasksDashState
 ---@param task Tasks.Task|nil
@@ -379,13 +393,14 @@ M.HELP = {
   " D           finish (asks first, moves to Backlog/)",
   " f           set a filter chip (status prio effort kind category severity tag blocked stale-refs)",
   " o           cycle the sort: default -> prio-effort (small first) -> severity (critical first)",
-  " e           export marked (else all shown) tasks",
+  " e           export marked (else all shown) tasks (also: preview in the browser)",
+  " gp          preview the task file in the browser (mdview.nvim)",
   " r           rescan the vault",
   " gb / gr     Backlog picker / ROADMAP.md of the area under the cursor",
   " g?          this help",
   "",
   " Letters work in the list. In the input window use Alt:",
-  " <M-s> <M-p> <M-d> <M-f> <M-o> <M-e> <M-r> <M-b>(backlog) <M-m>(roadmap) <M-?>",
+  " <M-s> <M-p> <M-d> <M-f> <M-o> <M-e> <M-r> <M-b>(backlog) <M-m>(roadmap) <M-v>(preview) <M-?>",
   " (any key closes this help)",
 }
 
@@ -517,6 +532,13 @@ local function open_snacks(Snacks, state)
         M.open_area_doc(state, task, "roadmap")
       end)
     end,
+    tasks_preview = function(picker)
+      local task = current_task(picker)
+      picker:close()
+      vim.schedule(function()
+        M.preview_task(task)
+      end)
+    end,
     tasks_help = function()
       M.show_help()
     end,
@@ -535,6 +557,7 @@ local function open_snacks(Snacks, state)
     r = { "tasks_rescan", "<M-r>" },
     gb = { "tasks_backlog", "<M-b>" },
     gr = { "tasks_roadmap", "<M-m>" },
+    gp = { "tasks_preview", "<M-v>" },
     ["g?"] = { "tasks_help", "<M-?>" },
   }
   local list_keys, input_keys = {}, {}
@@ -602,6 +625,12 @@ local function open_select(state)
         label = "open the file",
         run = function()
           vim.cmd("edit " .. vim.fn.fnameescape(task.path))
+        end,
+      },
+      {
+        label = "preview the file (mdview)",
+        run = function()
+          M.preview_task(task)
         end,
       },
       {
