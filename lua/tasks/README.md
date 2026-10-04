@@ -59,7 +59,8 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 ## Front ends
 
 - **Editor:** `:MyPlugins tasks | task | open` (`lua/bindings/usrcmds/plugin_repos/tasks_routes.lua`,
-  `tasks_cmd.lua`, `tasks_view.lua`, and the dashboard `tasks_dash.lua` / `tasks_dash_core.lua`; documented in that folder's README). It adds only what an
+  `tasks_cmd.lua`, `tasks_view.lua`, `tasks_preview.lua` (browser preview of a task file or an export
+  through the soft dependency mdview.nvim: `task preview <id>`, `--to=mdview`) and the dashboard `tasks_dash.lua` / `tasks_dash_core.lua`; documented in that folder's README). It adds only what an
   editor needs on top of the engine: composer routes and `<Tab>` completion, the `--to=` delivery
   (`lib.nvim.harvest`, `lib.nvim.ui.list`), a form for a missing title (and, for `task new` without
   arguments, the Markdown form of `tasks.form` in `tasks_form.lua`), a confirmation before
