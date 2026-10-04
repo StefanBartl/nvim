@@ -47,7 +47,8 @@ M.dashboard = nil
 ---@field tasks Tasks.Task[]     # Open tasks that passed the filter, sorted.
 ---@field area string|nil        # nil: every area.
 ---@field filter Tasks.Filter
----@field root string            # Vault root.
+---@field sort? string           # `model.SORTS` word the list was ordered by (default: the default order).
+---@field root string          # Vault root.
 
 ---Longest detail list put into a notification; longer ones open a buffer.
 local MAX_NOTIFY_LINES = 10
@@ -178,7 +179,7 @@ end
 ---@return string|nil
 local function filter_note(flags)
   local parts = {}
-  for _, name in ipairs({ "status", "prio", "kind", "category", "tag" }) do
+  for _, name in ipairs({ "status", "prio", "effort", "kind", "category", "severity", "tag" }) do
     if flags[name] ~= nil then
       parts[#parts + 1] = ("%s=%s"):format(name, flags[name])
     end
@@ -209,14 +210,21 @@ function M.list(ctx)
   local filter, ferr = model.filter_from_options({
     status = flags.status,
     prio = flags.prio,
+    effort = flags.effort,
     kind = flags.kind,
     category = flags.category,
+    severity = flags.severity,
     tag = flags.tag,
     stale = flags.stale,
     blocked = flags.blocked,
   })
   if not filter then
     notify.error(tostring(ferr))
+    return
+  end
+  local order, oerr = model.parse_sort(flags.sort)
+  if not order then
+    notify.error(tostring(oerr))
     return
   end
   local root = vault_root()
@@ -250,7 +258,7 @@ function M.list(ctx)
       skipped = skipped + 1
     end
   end
-  local shown = model.sort(model.filter(open, filter))
+  local shown = model.sort(model.filter(open, filter), order)
   if skipped > 0 then
     notify.warn(
       ("%d task file(s) not listed (missing or unknown status, or done); run :MyPlugins tasks index --check"):format(
@@ -267,7 +275,7 @@ function M.list(ctx)
       end
     end
     if dash then
-      dash({ tasks = shown, area = area, filter = filter, root = root })
+      dash({ tasks = shown, area = area, filter = filter, sort = order, root = root })
       return
     end
   end
@@ -433,7 +441,7 @@ function M.task_new(ctx)
   local area = ctx.args.area
   local title = unquote(table.concat(ctx.rest, " "))
   local given = {}
-  for _, key in ipairs({ "kind", "prio", "effort", "tags", "category", "status" }) do
+  for _, key in ipairs({ "kind", "prio", "effort", "tags", "category", "severity", "status" }) do
     if ctx.kv[key] ~= nil and ctx.kv[key] ~= "" then
       given[key] = ctx.kv[key]
     end
@@ -448,6 +456,7 @@ function M.task_new(ctx)
       effort = values.effort,
       tags = values.tags,
       category = values.category,
+      severity = values.severity,
       status = values.status,
       folder = ctx.flags.folder == true,
     })

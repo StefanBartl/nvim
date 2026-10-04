@@ -9,8 +9,10 @@
 --- Findings (`code`):
 ---  - `frontmatter-missing`, `frontmatter-invalid`, `title-missing`,
 ---    `status-missing`, `field-type`: the file cannot be read as a task
----  - `unknown-status`, `unknown-kind`, `unknown-category`, `bad-prio`, `bad-effort`,
----    `bad-date`
+---  - `unknown-status`, `unknown-kind`, `unknown-category`, `unknown-severity`,
+---    `bad-prio`, `bad-effort`, `bad-date`
+---  - `severity-without-bug-or-security` (warning): `severity` on a task that is
+---    neither `kind: bug` nor in the bug/security category
 ---  - `slug`: the filename is not a kebab-case slug, or the file is nested
 ---    anywhere but as `<slug>/<slug>.md` (a folder task)
 ---  - `slug-conflict`: the same slug exists as a file and as a folder task

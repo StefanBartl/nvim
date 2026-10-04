@@ -116,6 +116,14 @@ local COLUMNS = {
       return t.path
     end,
   },
+  {
+    -- Last, so a script that reads the CSV by position keeps working.
+    header = "Severity",
+    csv_only = true,
+    get = function(t)
+      return t.severity
+    end,
+  },
 }
 
 ---Split a `--to=` token into `{ kind, path }` and reject what no sink knows.
