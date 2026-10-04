@@ -72,9 +72,11 @@
 ---@field root? string
 ---@field title string
 ---@field kind? string
----@field prio? integer
+---@field prio? integer|string
 ---@field effort? string
----@field tags? string[]
+---@field tags? string[]|string       # A string is split at commas.
+---@field refs? string[]|string       # Paths or `repo@commit`; a string is split at commas.
+---@field lang? "de"|"en"             # Language of the body headings (default "de").
 ---@field status? string
 ---@field summary? string
 ---@field slug? string

@@ -50,12 +50,13 @@ commands:
        [--blocked] [--format=tsv|ids]     open tasks, sorted; one line each
   index [<area>] [--check]                (re)write ROADMAP/TASKS.md; --check only reports
   new <area> <title> [--kind=k] [--prio=1..3] [--effort=XS..XL|0.5d] [--tags=a,b]
-       [--summary=text] [--slug=slug] [--status=s]     create a task file
+       [--refs=path,repo@sha] [--summary=text] [--slug=slug] [--status=s]
+       [--lang=de|en]                          create a task file (--lang: body headings)
   set <area>/<slug> key=value ...         change frontmatter (empty value removes the key)
   done <area>/<slug> [--done-in=text] [--date=YYYY-MM-DD]   finish: move to Backlog/
   check [<area>]                          rule check; exit 1 on any error
-  template [--title=t] [--kind=k] [--prio=n] [--effort=e] [--tags=a,b]
-  areas                                   list the vault's areas
+  template [--title=t] [--kind=k] [--prio=n] [--effort=e] [--tags=a,b] [--lang=de|en]
+  areas                                  list the vault's areas
   export [--top=N] [--no-links]           all-areas overview as Markdown on stdout (never written)
 
 global options: --vault=<dir> (default: $TASKS_VAULT, else $REPOS_DIR/WKDBooks/...)
@@ -74,13 +75,24 @@ local SPECS = {
   },
   index = { value = {}, flag = { "check", "all" } },
   new = {
-    value = { "kind", "prio", "effort", "tags", "summary", "slug", "status", "title" },
+    value = {
+      "kind",
+      "prio",
+      "effort",
+      "tags",
+      "refs",
+      "lang",
+      "summary",
+      "slug",
+      "status",
+      "title",
+    },
     flag = { "no-index" },
   },
   set = { value = {}, flag = { "no-index" } },
   done = { value = { "done-in", "date" }, flag = { "no-index" } },
   check = { value = {}, flag = { "all" } },
-  template = { value = { "title", "kind", "prio", "effort", "tags" }, flag = {} },
+  template = { value = { "title", "kind", "prio", "effort", "tags", "lang" }, flag = {} },
   areas = { value = {}, flag = {} },
   export = { value = { "top", "link-prefix" }, flag = { "no-links" } },
 }
@@ -345,6 +357,8 @@ function commands.new(ctx)
     prio = opt.prio --[[@as string|nil]],
     effort = opt.effort --[[@as string|nil]],
     tags = opt.tags --[[@as string|nil]],
+    refs = opt.refs --[[@as string|nil]],
+    lang = opt.lang --[[@as "de"|"en"|nil]],
     summary = opt.summary --[[@as string|nil]],
     slug = opt.slug --[[@as string|nil]],
     status = opt.status --[[@as string|nil]],
@@ -462,7 +476,12 @@ function commands.template(ctx)
       return 2
     end
   end
+  if opt.lang ~= nil and opt.lang ~= "de" and opt.lang ~= "en" then
+    ctx.warn("error: --lang must be de or en")
+    return 2
+  end
   ctx.io.out(mutate.template({
+    lang = opt.lang --[[@as "de"|"en"|nil]],
     title = opt.title --[[@as string|nil]],
     kind = opt.kind --[[@as string|nil]],
     prio = prio,

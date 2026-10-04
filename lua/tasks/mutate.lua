@@ -105,44 +105,98 @@ end
 
 -- ── Template ─────────────────────────────────────────────────────────────────
 
+---Body languages of the template (R11: a task is written in the language of the
+---plugin's book). German is the default; the frontmatter is English either way.
+---@alias Tasks.Lang "de"|"en"
+
 ---Visible placeholders: the text to paste into an editor and fill in.
-local TEMPLATE_BODY = table.concat({
-  "",
-  "Eine Zeile Zusammenfassung — sie landet im Index.",
-  "",
-  "## Kontext",
-  "",
-  "Warum, woher kam das.",
-  "",
-  "## Akzeptanz",
-  "",
-  "- [ ] was am Ende wahr sein muss",
-  "",
-  "## Notizen",
-  "",
-  "Entscheidungen, Sackgassen, Verweise.",
-  "",
-}, "\n")
+---@type table<Tasks.Lang, string>
+local TEMPLATE_BODY = {
+  de = table.concat({
+    "",
+    "Eine Zeile Zusammenfassung — sie landet im Index.",
+    "",
+    "## Kontext",
+    "",
+    "Warum, woher kam das.",
+    "",
+    "## Akzeptanz",
+    "",
+    "- [ ] was am Ende wahr sein muss",
+    "",
+    "## Notizen",
+    "",
+    "Entscheidungen, Sackgassen, Verweise.",
+    "",
+  }, "\n"),
+  en = table.concat({
+    "",
+    "One line summary - it ends up in the index.",
+    "",
+    "## Context",
+    "",
+    "Why, where this came from.",
+    "",
+    "## Acceptance",
+    "",
+    "- [ ] what must be true at the end",
+    "",
+    "## Notes",
+    "",
+    "Decisions, dead ends, references.",
+    "",
+  }, "\n"),
+}
 
 ---Invisible placeholders (HTML comments): a task created without a summary must
 ---not get a placeholder sentence as its index summary.
-local NEW_BODY_SECTIONS = table.concat({
-  "## Kontext",
-  "",
-  "<!-- Warum, woher kam das. -->",
-  "",
-  "## Akzeptanz",
-  "",
-  "<!-- was am Ende wahr sein muss, als Checkliste -->",
-  "",
-  "## Notizen",
-  "",
-  "<!-- Entscheidungen, Sackgassen, Verweise. -->",
-  "",
-}, "\n")
+---@type table<Tasks.Lang, string>
+local NEW_BODY_SECTIONS = {
+  de = table.concat({
+    "## Kontext",
+    "",
+    "<!-- Warum, woher kam das. -->",
+    "",
+    "## Akzeptanz",
+    "",
+    "<!-- was am Ende wahr sein muss, als Checkliste -->",
+    "",
+    "## Notizen",
+    "",
+    "<!-- Entscheidungen, Sackgassen, Verweise. -->",
+    "",
+  }, "\n"),
+  en = table.concat({
+    "## Context",
+    "",
+    "<!-- Why, where this came from. -->",
+    "",
+    "## Acceptance",
+    "",
+    "<!-- what must be true at the end, as a checklist -->",
+    "",
+    "## Notes",
+    "",
+    "<!-- Decisions, dead ends, references. -->",
+    "",
+  }, "\n"),
+}
+
+---@param lang any
+---@return Tasks.Lang|nil lang
+---@return string|nil err
+local function check_lang(lang)
+  if lang == nil then
+    return "de", nil
+  end
+  if lang == "de" or lang == "en" then
+    return lang, nil
+  end
+  return nil, ("unknown lang '%s' (expected de or en)"):format(tostring(lang))
+end
 
 ---Frontmatter keys in the order concept section 3 shows them.
----@param meta { title: string, status: string, kind?: string, prio?: integer|string, effort?: string, tags?: string[], created: string, updated: string }
+---@param meta { title: string, status: string, kind?: string, prio?: integer|string, effort?: string, tags?: string[], refs?: string[], created: string, updated: string }
 ---@return table[] pairs
 local function meta_pairs(meta)
   local pairs_ = {
@@ -163,17 +217,21 @@ local function meta_pairs(meta)
   end
   pairs_[#pairs_ + 1] = { "created", meta.created }
   pairs_[#pairs_ + 1] = { "updated", meta.updated }
+  if meta.refs then
+    pairs_[#pairs_ + 1] = { "refs", meta.refs }
+  end
   return pairs_
 end
 
 ---The task template as text, with every field present and visible placeholders.
----@param opts? { title?: string, kind?: string, prio?: integer, effort?: string, tags?: string[], today?: string }
+---An unknown `lang` falls back to German (the CLI validates it before).
+---@param opts? { title?: string, kind?: string, prio?: integer, effort?: string, tags?: string[], today?: string, lang?: Tasks.Lang }
 ---@return string text
 function M.template(opts)
   opts = opts or {}
   local today = opts.today or model.today()
   local text = fm.update_text(
-    TEMPLATE_BODY,
+    TEMPLATE_BODY[opts.lang or "de"] or TEMPLATE_BODY.de,
     meta_pairs({
       title = opts.title or "Titel",
       status = "open",
@@ -209,7 +267,8 @@ local function one_line(value, what)
   return t, nil
 end
 
----A list of single-line strings. A string is split at commas.
+---A list of single-line strings. A string is split at commas; one pair of
+---brackets around the whole string (`[a, b]`, as the file shows it) is dropped.
 ---With `strict`, an item must also be safe inside an inline `[a, b]` list
 ---(tags: no comma, bracket, quote or `#`); refs and commits may contain them.
 ---@param value any
@@ -220,7 +279,8 @@ end
 local function string_list(value, what, strict)
   if type(value) == "string" then
     local out = {}
-    for item in value:gmatch("[^,]+") do
+    local inner = trim(value):match("^%[(.*)%]$")
+    for item in (inner or value):gmatch("[^,]+") do
       local t = trim(item)
       if t ~= "" then
         out[#out + 1] = t
@@ -462,6 +522,18 @@ function M.new(area, opts)
     end
     tags = #list > 0 and list or nil
   end
+  local refs
+  if opts.refs ~= nil then
+    local list, rerr2 = string_list(opts.refs, "refs")
+    if not list then
+      return nil, rerr2
+    end
+    refs = #list > 0 and list or nil
+  end
+  local lang, langerr = check_lang(opts.lang)
+  if not lang then
+    return nil, langerr
+  end
   local summary
   if opts.summary ~= nil then
     local s, serr = one_line(opts.summary, "summary")
@@ -479,7 +551,7 @@ function M.new(area, opts)
   end
 
   local lead = summary and (summary .. "\n\n") or ""
-  local body = "\n" .. lead .. NEW_BODY_SECTIONS
+  local body = "\n" .. lead .. NEW_BODY_SECTIONS[lang]
   local text, ferr = fm.update_text(
     body,
     meta_pairs({
@@ -489,6 +561,7 @@ function M.new(area, opts)
       prio = prio,
       effort = opts.effort,
       tags = tags,
+      refs = refs,
       created = today,
       updated = today,
     }),

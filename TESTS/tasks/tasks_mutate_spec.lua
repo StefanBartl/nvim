@@ -174,6 +174,35 @@ return function(H)
   local csv = assert(mutate.new("cascade.nvim", with(o, { title = "Csv tags", tags = "a, b ,c" })))
   eq(scan.find(csv.id, { root = root }).tags, { "a", "b", "c" })
 
+  -- refs: a comma string or a list, written after `updated`
+  local with_refs = assert(
+    mutate.new(
+      "cascade.nvim",
+      with(o, { title = "With refs", refs = "lua/x.lua, lib.nvim@abc1234" })
+    )
+  )
+  eq(
+    scan.find(with_refs.id, { root = root }).refs,
+    { "lua/x.lua", "lib.nvim@abc1234" },
+    "refs given to new"
+  )
+  local bad_refs = mutate.new("cascade.nvim", with(o, { title = "Bad refs", refs = 5 }))
+  eq(bad_refs, nil, "refs must be a list or a string")
+
+  -- lang: English headings on request, German by default, anything else is refused
+  local en = assert(mutate.new("cascade.nvim", with(o, { title = "English body", lang = "en" })))
+  local en_text = H.read(en.path)
+  has(en_text, "## Context")
+  has(en_text, "## Acceptance")
+  has(en_text, "## Notes")
+  ok(not en_text:find("Kontext", 1, true), "no German heading in an English body")
+  has(H.read(csv.path), "## Kontext", "German stays the default")
+  local bad_lang =
+    select(2, mutate.new("cascade.nvim", with(o, { title = "Bad lang", lang = "fr" })))
+  has(bad_lang, "unknown lang", "an unknown lang is refused")
+  has(mutate.template({ today = TODAY, lang = "en" }), "## Acceptance", "template in English")
+  has(mutate.template({ today = TODAY }), "## Akzeptanz", "template in German by default")
+
   -- slug collisions: -2, -3 ...; an existing file is never overwritten
   local first = assert(mutate.new("lib.nvim", with(o, { title = "Same title" })))
   H.write(first.path, H.read(first.path) .. "\nMARKER-first\n")
@@ -320,6 +349,16 @@ return function(H)
   -- refs and commits may hold characters a tag may not (#, commas, quotes); they round-trip
   assert(mutate.set("lib.nvim/target", { refs = { "PR #12", "a, b", 'say "x"' } }, o))
   eq(scan.find("lib.nvim/target", { root = root }).refs, { "PR #12", "a, b", 'say "x"' })
+
+  -- a bracketed string (the way the file shows a list) is the list, not "[a" and "b]"
+  assert(mutate.set("lib.nvim/target", { refs = "[lua/x.lua, lib.nvim@abc1234]" }, o))
+  eq(
+    scan.find("lib.nvim/target", { root = root }).refs,
+    { "lua/x.lua", "lib.nvim@abc1234" },
+    "outer brackets are dropped"
+  )
+  assert(mutate.set("lib.nvim/target", { tags = "[a, b]" }, o))
+  eq(scan.find("lib.nvim/target", { root = root }).tags, { "a", "b" }, "same for tags")
   assert(mutate.set("lib.nvim/target", { done_in = "see #7" }, o))
   eq(scan.find("lib.nvim/target", { root = root }).done_in, "see #7")
   local bad_tag = mutate.set("lib.nvim/target", { tags = { "a #b" } }, o)
