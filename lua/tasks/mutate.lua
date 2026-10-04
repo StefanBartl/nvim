@@ -198,7 +198,7 @@ local function check_lang(lang)
 end
 
 ---Frontmatter keys in the order concept section 3 shows them.
----@param meta { title: string, status: string, kind?: string, prio?: integer|string, effort?: string, tags?: string[], category?: string[], refs?: string[], created: string, updated: string }
+---@param meta { title: string, status: string, kind?: string, prio?: integer|string, effort?: string, tags?: string[], category?: string[], severity?: string, refs?: string[], created: string, updated: string }
 ---@return table[] pairs
 local function meta_pairs(meta)
   local pairs_ = {
@@ -219,6 +219,9 @@ local function meta_pairs(meta)
   end
   if meta.category then
     pairs_[#pairs_ + 1] = { "category", meta.category }
+  end
+  if meta.severity then
+    pairs_[#pairs_ + 1] = { "severity", meta.severity }
   end
   pairs_[#pairs_ + 1] = { "created", meta.created }
   pairs_[#pairs_ + 1] = { "updated", meta.updated }
@@ -356,6 +359,7 @@ local SETTABLE = {
   "effort",
   "tags",
   "category",
+  "severity",
   "summary",
   "blocked_by",
   "refs",
@@ -452,6 +456,15 @@ local function normalize_patch(patch, opts)
     elseif key == "created" then
       if not model.is_date(value) then
         return nil, ("created '%s' is not a date (YYYY-MM-DD)"):format(tostring(value))
+      end
+      result[#result + 1] = { key, value }
+    elseif key == "severity" then
+      if not model.is_severity(value) then
+        return nil,
+          ("unknown severity '%s' (expected %s)"):format(
+            tostring(value),
+            table.concat(model.SEVERITIES, ", ")
+          )
       end
       result[#result + 1] = { key, value }
     elseif key == "category" then
@@ -561,6 +574,13 @@ function M.new(area, opts)
     end
     category = #list > 0 and list or nil
   end
+  if opts.severity ~= nil and not model.is_severity(opts.severity) then
+    return nil,
+      ("unknown severity '%s' (expected %s)"):format(
+        tostring(opts.severity),
+        table.concat(model.SEVERITIES, ", ")
+      )
+  end
   local refs
   if opts.refs ~= nil then
     local list, rerr2 = string_list(opts.refs, "refs")
@@ -601,6 +621,7 @@ function M.new(area, opts)
       effort = opts.effort,
       tags = tags,
       category = category,
+      severity = opts.severity,
       refs = refs,
       created = today,
       updated = today,

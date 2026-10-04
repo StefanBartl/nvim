@@ -27,9 +27,9 @@ those names no longer exist.
 :MyPlugins list [dir]
 :MyPlugins picker [dir]
 
-:MyPlugins tasks [<area>|all] [--status= --prio= --kind= --category= --tag= --stale=<days> --blocked] [--to= --format=]
+:MyPlugins tasks [<area>|all] [--status= --prio= --effort= --kind= --category= --severity= --tag= --stale=<days> --blocked] [--sort=] [--to= --format=]
 :MyPlugins tasks index [<area>|--all] [--check]
-:MyPlugins task new <area> [title...] [kind= prio= effort= tags= category= status=] [--folder]
+:MyPlugins task new <area> [title...] [kind= prio= effort= tags= category= severity= status=] [--folder]
 :MyPlugins task set <id> key=value ...
 :MyPlugins task attach <id> <file> [name=]
 :MyPlugins task folderize <id>
@@ -293,17 +293,22 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 | `--prio=1,2` / `--prio=<=2` | exact prios, or "at most" |
 | `--kind=a,b` | `feature task bug idea research` |
 | `--category=a,b` | any of `bug security performance docs ruleset` (`bug` also finds every `kind: bug`; a tag spelled like a category counts) |
+| `--effort=S,M` / `--effort=<=M` | the written effort (`XS S M L XL`, or days like `0.5d`; sizes are case-insensitive), or "this or smaller" (`<=S`, `<=M`, `<=1d`; sizes and days share one scale, a task without effort never matches) |
+| `--severity=a,b` | any of `low medium high critical` (the optional `severity` of a bug / security task; a task without one never matches) |
 | `--tag=a,b` | any of these tags |
 | `--stale=<days>` | not updated for at least that many days (no date counts as stale) |
 | `--blocked` | status `blocked`, or a non-empty `blocked_by` |
+| `--sort=default` / `prio-effort` / `severity` | the order: `default` is status, prio, area, slug; `prio-effort` is status, prio, then effort ascending (important and small first, no effort last of its prio); `severity` is `critical` first, then `high`, `medium`, `low`, no severity last, each group in the default order |
 | `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo` |
-| `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path; a `file:` target ending in `.csv` implies `csv` |
+| `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path, severity; a `file:` target ending in `.csv` implies `csv` |
 
 ```vim
 :MyPlugins tasks                                    " everything open, in a scratch buffer
 :MyPlugins tasks lib.nvim --status=doing,decision
 :MyPlugins tasks --status=decision --to=qf          " what is waiting for me, jump into the files
 :MyPlugins tasks --stale=60 --to=clipboard
+:MyPlugins tasks --status=open --effort=<=M --sort=prio-effort   " important and small first
+:MyPlugins tasks --category=bug,security --sort=severity         " worst first
 :MyPlugins tasks all --to=file:$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/TASKS.md
 ```
 
@@ -316,11 +321,12 @@ says so instead.
 ### The dashboard (`:MyPlugins tasks [<area>|all]` without `--to=` / `--format=`)
 
 An interactive `Snacks.picker` (source `wkdbook_tasks`, the engine `picker.lua` uses):
-one line per open task -- prio, status, effort, area, title and a `<- blocker` hint --
-the task file as the preview, and a title with the counts and the active filter chips:
+one line per open task -- prio, status, effort, area, title, the `[severity]` of a bug /
+security task and a `<- blocker` hint -- the task file as the preview, and a title with the
+counts, the active filter chips and, when it is not the default, the sort order:
 
 ```
- Tasks (lib.nvim) · 41 open · 3 decision · 5 blocked  [status: open,doing] [prio: <=2]
+ Tasks (lib.nvim) · 41 open · 3 decision · 5 blocked  [status: open,doing] [prio: <=2] [sort: prio-effort]
 ```
 
 | Key | Action |
@@ -330,7 +336,8 @@ the task file as the preview, and a title with the counts and the active filter 
 | `s` | advance the status of the marked (else the current) tasks: `doing` -> `decision` -> `blocked` -> `open` -> `parked` -> `doing` |
 | `p` | advance the prio: none -> 1 -> 2 -> 3 -> none (3 -> none removes the key) |
 | `D` | finish after **one** confirmation naming every task (engine `done`, moved to `Backlog/`) |
-| `f` | set a filter chip: pick `status`, `prio`, `kind`, `tag`, `blocked` or "clear all", then a value (`(any)` clears one chip) |
+| `f` | set a filter chip: pick `status`, `prio`, `effort` (`XS`..`XL`, `<=S`, `<=M`), `kind`, `category`, `severity`, `tag`, `blocked` or "clear all", then a value (`(any)` clears one chip) |
+| `o` | cycle the sort order: `default` -> `prio-effort` (small first within a prio) -> `severity` (critical first) -> `default`; a non-default order shows as `[sort: ...]` in the title |
 | `e` | export the marked (else all shown) tasks: scratch buffer, clipboard, quickfix or a file, as Markdown or CSV -- the `--to=` sinks |
 | `r` | rescan the vault |
 | `gb` / `gr` | the Backlog picker (`:MyPlugins open <area> backlog`) / `ROADMAP/ROADMAP.md` of the area under the cursor |
@@ -338,7 +345,7 @@ the task file as the preview, and a title with the counts and the active filter 
 
 The letters work in the list window. In the input window they would shadow the editing
 commands (`s`, `p`, `D`, `e` in normal mode) and the typing in insert mode, so there the same
-actions are Alt chords (normal and insert mode): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<M-e>`
+actions are Alt chords (normal and insert mode): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<M-o>` `<M-e>`
 `<M-r>`, `<M-b>` (backlog), `<M-m>` (roadmap), `<M-?>` (help). `s` and `p` are applied
 at once, as **one batch**: every task advances from its own value, one `tasks.mutate.set`
 per task without its own index write, then each touched area's `ROADMAP/TASKS.md` is
@@ -347,14 +354,16 @@ picker stays open and rescans. `D`, `f`, `e`, `gb` and `gr` ask something, and s
 closes a picker whose window loses focus, so they close it first; `D` and `f` reopen it
 afterwards (the marks are gone then), `e` does not when it delivered something.
 
-The last filter is remembered between sessions (`lib.nvim.store.project`, keyed by the
-vault, key `tasks/dashboard-filter`). A filter given on the command line (`--status=...`)
-wins for that session and is not stored until it is changed with `f`. An empty result
+The last filter and sort order are remembered between sessions (`lib.nvim.store.project`,
+keyed by the vault, key `tasks/dashboard-filter`). A filter given on the command line
+(`--status=...`) wins for that session and is not stored until it is changed with `f`; the
+same goes for `--sort=` (the default order is "not given": the remembered one applies, `o`
+cycles back to it). An empty result
 stays open (`show_empty`), so a filter that matches nothing can be cleared with `f`.
 
 Without snacks.nvim a `vim.ui.select` flow lists the same tasks; picking one opens a menu
-(open the file, advance status / prio, finish, filter, export the list, Backlog,
-ROADMAP.md) for **that one task** -- no marks, no batch. It never raises.
+(open the file, advance status / prio, finish, filter, next sort order, export the list,
+Backlog, ROADMAP.md) for **that one task** -- no marks, no batch. It never raises.
 
 Not built: ranking by `lib.nvim.frecency` (the status/prio order is what the list is for,
 and a frecency score would shuffle it) and reacting to `lib.nvim.fs.watch` (`r` rescans;
@@ -362,7 +371,7 @@ a watch over ~40 areas was more machinery than a manual refresh is worth).
 
 *Seam.* `require("bindings.usrcmds.plugin_repos.tasks_cmd").dashboard` decides what
 happens: `nil` (the default) opens this dashboard, a function replaces it
-(`view = { tasks, area, filter, root }`), `false` gives the scratch buffer back.
+(`view = { tasks, area, filter, sort, root }`), `false` gives the scratch buffer back.
 
 ### `:MyPlugins tasks index [<area>] [--all] [--check]`
 
@@ -395,7 +404,7 @@ contain `, [ ] " ' #` (they sit in an inline list).
 
 Changes frontmatter of an *open* task and sets `updated` -- but only when something really
 changed (an identical value rewrites nothing). Settable: `title status kind prio effort tags
-category summary blocked_by refs rules done_in created`. A value may contain spaces
+category severity summary blocked_by refs rules done_in created`. A value may contain spaces
 (`title=Fix the thing status=doing`: a word that does not start with a known `key=`
 continues the value before it); an empty value removes the key (`kind=`). `status=done` is
 refused: finishing moves the file, see `task done`. A buffer showing the file is reloaded

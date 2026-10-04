@@ -10,8 +10,9 @@
 --- Key responsibilities:
 ---  - the enums (status, kind, prio, effort) and the date check
 ---  - `summary`: frontmatter `summary`, else the first body paragraph
----  - `compare` / `sort`: status rank, then prio, then area, then slug
----  - `filter`: status, prio, kind, tag, category, area, blocked, stale
+---  - `compare` / `sort`: status rank, then prio, then area, then slug; the orders
+---    `prio-effort` (small first within a prio) and `severity` (critical first)
+---  - `filter`: status, prio, effort, kind, tag, category, severity, area, blocked, stale
 ---
 --- Not its job: finding files (`scan`), rendering (`index`), writing (`mutate`).
 
@@ -37,6 +38,14 @@ M.KINDS = { "feature", "task", "bug", "idea", "research" }
 ---@type string[]
 M.CATEGORIES = { "bug", "security", "performance", "docs", "ruleset" }
 
+---Severity of a bug or security task, worst last. Optional, see `model.categories`.
+---@type string[]
+M.SEVERITIES = { "low", "medium", "high", "critical" }
+
+---The listing orders `sort` knows. `default` is what the index uses.
+---@type string[]
+M.SORTS = { "default", "prio-effort", "severity" }
+
 ---@type integer[]
 M.PRIOS = { 1, 2, 3 }
 
@@ -60,6 +69,17 @@ local CATEGORY_SET = {}
 for _, c in ipairs(M.CATEGORIES) do
   CATEGORY_SET[c] = true
 end
+
+---@type table<string, integer>
+local SEVERITY_RANK = {}
+for i, v in ipairs(M.SEVERITIES) do
+  SEVERITY_RANK[v] = i
+end
+
+---Day equivalents of the size words; only used to put sizes and day values
+---(`3d`) on one scale for ordering and `<=` filters, not a promise.
+---@type table<string, number>
+local EFFORT_DAYS = { XS = 0.25, S = 0.5, M = 1, L = 3, XL = 5 }
 
 ---@type table<string, boolean>
 local EFFORT_SET = {}
@@ -120,6 +140,12 @@ function M.categories(task)
   return out
 end
 
+---@param s any
+---@return boolean
+function M.is_severity(s)
+  return type(s) == "string" and SEVERITY_RANK[s] ~= nil
+end
+
 ---`XS`..`XL`, or days: `3d`, `0.5d`.
 ---@param s any
 ---@return boolean
@@ -128,6 +154,19 @@ function M.is_effort(s)
     return false
   end
   return EFFORT_SET[s] == true or s:match("^%d+d$") ~= nil or s:match("^%d*%.%d+d$") ~= nil
+end
+
+---Where an effort value sits on the common scale (see `EFFORT_DAYS`).
+---@param effort any
+---@return number|nil days  nil when `effort` is missing or not a valid effort
+function M.effort_days(effort)
+  if not M.is_effort(effort) then
+    return nil
+  end
+  if EFFORT_DAYS[effort] then
+    return EFFORT_DAYS[effort]
+  end
+  return tonumber((effort:gsub("d$", "")))
 end
 
 ---@param s any
@@ -448,6 +487,28 @@ function M.parse_text(text, ctx)
       end
     end
 
+    local severity = as_text(meta.severity, "severity", bad)
+    if severity then
+      task.severity = severity
+      if not M.is_severity(severity) then
+        bad(
+          "unknown-severity",
+          ("unknown severity '%s' (expected %s)"):format(severity, table.concat(M.SEVERITIES, ", "))
+        )
+      else
+        local cats = {}
+        for _, c in ipairs(M.categories(task)) do
+          cats[c] = true
+        end
+        if not (cats.bug or cats.security) then
+          hints[#hints + 1] = {
+            code = "severity-without-bug-or-security",
+            msg = "severity is meant for bug or security tasks (kind: bug, or category bug/security)",
+          }
+        end
+      end
+    end
+
     for _, field in ipairs({ "created", "updated" }) do
       local date = as_text(meta[field], field, bad)
       if date then
@@ -503,8 +564,22 @@ local function status_rank(task)
   return STATUS_RANK[task.status or ""] or (#M.STATUSES + 1)
 end
 
----Strict ordering: status rank, prio, area, slug, path. Total, so a sort is
+---The tie-breaks every order ends with: area, slug, path. Total, so a sort is
 ---deterministic whatever order the files were found in.
+---@param a Tasks.Task
+---@param b Tasks.Task
+---@return boolean
+local function by_name(a, b)
+  if a.area ~= b.area then
+    return a.area < b.area
+  end
+  if a.slug ~= b.slug then
+    return a.slug < b.slug
+  end
+  return a.path < b.path
+end
+
+---Default ordering: status rank, prio, area, slug, path.
 ---@param a Tasks.Task
 ---@param b Tasks.Task
 ---@return boolean
@@ -517,20 +592,77 @@ function M.compare(a, b)
   if pa ~= pb then
     return pa < pb
   end
-  if a.area ~= b.area then
-    return a.area < b.area
-  end
-  if a.slug ~= b.slug then
-    return a.slug < b.slug
-  end
-  return a.path < b.path
+  return by_name(a, b)
 end
 
----Sort in place and return the list.
+---Sorts after every real effort: a task without a (valid) effort is the last of its prio.
+local NO_EFFORT_DAYS = math.huge
+
+---Status rank, prio, effort ascending, area, slug, path: important and small
+---first. A task without a (valid) effort comes last within its prio.
+---@param a Tasks.Task
+---@param b Tasks.Task
+---@return boolean
+function M.compare_prio_effort(a, b)
+  local ra, rb = status_rank(a), status_rank(b)
+  if ra ~= rb then
+    return ra < rb
+  end
+  local pa, pb = a.prio or NO_PRIO_RANK, b.prio or NO_PRIO_RANK
+  if pa ~= pb then
+    return pa < pb
+  end
+  local ea = M.effort_days(a.effort) or NO_EFFORT_DAYS
+  local eb = M.effort_days(b.effort) or NO_EFFORT_DAYS
+  if ea ~= eb then
+    return ea < eb
+  end
+  return by_name(a, b)
+end
+
+---Severity first (critical, high, medium, low, none), then the default order.
+---@param a Tasks.Task
+---@param b Tasks.Task
+---@return boolean
+function M.compare_severity(a, b)
+  -- A missing or unknown severity ranks 0 and so comes after every real one.
+  local sa = a.severity and SEVERITY_RANK[a.severity] or 0
+  local sb = b.severity and SEVERITY_RANK[b.severity] or 0
+  if sa ~= sb then
+    return sa > sb
+  end
+  return M.compare(a, b)
+end
+
+---@type table<string, fun(a: Tasks.Task, b: Tasks.Task): boolean>
+local COMPARATORS = {
+  default = M.compare,
+  ["prio-effort"] = M.compare_prio_effort,
+  severity = M.compare_severity,
+}
+
+---Check a `--sort` word; `nil` and `""` mean the default.
+---@param name any
+---@return string|nil order
+---@return string|nil err
+function M.parse_sort(name)
+  if name == nil or name == "" then
+    return "default", nil
+  end
+  if type(name) == "string" and COMPARATORS[name] then
+    return name, nil
+  end
+  return nil,
+    ("unknown --sort '%s' (expected %s)"):format(tostring(name), table.concat(M.SORTS, ", "))
+end
+
+---Sort in place and return the list. `order` is one of `M.SORTS` (default:
+---`default`); an unknown word sorts like the default.
 ---@param tasks Tasks.Task[]
+---@param order? string
 ---@return Tasks.Task[]
-function M.sort(tasks)
-  table.sort(tasks, M.compare)
+function M.sort(tasks, order)
+  table.sort(tasks, COMPARATORS[order or "default"] or M.compare)
   return tasks
 end
 
@@ -578,12 +710,25 @@ function M.split_commas(s)
   return out
 end
 
+---An effort word as the file spells it: size words are case-insensitive here
+---(`s` -> `S`), day values stay as they are.
+---@param s string
+---@return string|nil effort  nil when it is no valid effort
+local function normalize_effort(s)
+  local t = trim(s)
+  if t:match("^%a+$") then
+    t = t:upper()
+  end
+  return M.is_effort(t) and t or nil
+end
+
 ---Turn the textual filter options of a front end (`--status=a,b`, `--prio=<=2`,
----`--kind`, `--tag`, `--stale=<days>`, `--blocked`) into a `Tasks.Filter`.
+---`--effort=S,M` / `<=M`, `--kind`, `--tag`, `--category`, `--severity`,
+---`--stale=<days>`, `--blocked`) into a `Tasks.Filter`.
 ---Shared by the headless CLI and the editor commands so both read the same
 ---words the same way. Unknown words are an error, never silently ignored.
 ---`stale` may be a number or a digit string; `today` is passed through.
----@param opt { status?: string, prio?: string|integer, kind?: string, tag?: string, category?: string, stale?: string|integer, blocked?: boolean, today?: string }
+---@param opt { status?: string, prio?: string|integer, effort?: string, kind?: string, tag?: string, category?: string, severity?: string, stale?: string|integer, blocked?: boolean, today?: string }
 ---@return Tasks.Filter|nil filter
 ---@return string|nil err
 function M.filter_from_options(opt)
@@ -632,6 +777,39 @@ function M.filter_from_options(opt)
       end
     end
   end
+  if opt.effort ~= nil then
+    local raw = tostring(opt.effort)
+    local max = raw:match("^<=(.+)$")
+    if max then
+      f.effort_max = normalize_effort(max)
+      if not f.effort_max then
+        return nil, "--effort must be XS..XL or days like 0.5d after <=, got " .. raw
+      end
+    else
+      f.effort = {}
+      for _, e in ipairs(M.split_commas(raw)) do
+        local norm = normalize_effort(e)
+        if not norm then
+          return nil, "unknown effort in --effort: " .. e
+        end
+        f.effort[#f.effort + 1] = norm
+      end
+      if #f.effort == 0 then
+        return nil, "--effort needs a value (XS..XL, days like 0.5d, or <=M)"
+      end
+    end
+  end
+  if opt.severity then
+    f.severity = M.split_commas(opt.severity)
+    if #f.severity == 0 then
+      return nil, "--severity needs a value (" .. table.concat(M.SEVERITIES, ", ") .. ")"
+    end
+    for _, v in ipairs(f.severity) do
+      if not M.is_severity(v) then
+        return nil, "unknown severity in --severity: " .. v
+      end
+    end
+  end
   if opt.stale ~= nil then
     local raw = tostring(opt.stale)
     if not raw:match("^%d+$") then
@@ -654,6 +832,8 @@ function M.filter(tasks, f)
   local status, kind, area = to_set(f.status), to_set(f.kind), to_set(f.area)
   local prio, tag = to_set(f.prio), to_set(f.tag)
   local category = to_set(f.category)
+  local effort, severity = to_set(f.effort), to_set(f.severity)
+  local effort_max = f.effort_max and M.effort_days(f.effort_max) or nil
   local today = f.today or M.today()
 
   local out = {}
@@ -686,6 +866,16 @@ function M.filter(tasks, f)
           break
         end
       end
+    end
+    if keep and effort and not (t.effort and effort[t.effort]) then
+      keep = false
+    end
+    if keep and effort_max then
+      local days = M.effort_days(t.effort)
+      keep = days ~= nil and days <= effort_max
+    end
+    if keep and severity and not (t.severity and severity[t.severity]) then
+      keep = false
     end
     if keep and f.blocked and not (t.status == "blocked" or #t.blocked_by > 0) then
       keep = false

@@ -140,11 +140,14 @@ end
 local LIST_FLAGS = {
   { name = "status", type = "STRING", values = model.OPEN_STATUSES },
   { name = "prio", type = "STRING", values = { "1", "2", "3", "<=2" } },
+  { name = "effort", type = "STRING", values = { "XS", "S", "M", "L", "XL", "<=S", "<=M" } },
   { name = "kind", type = "STRING", values = model.KINDS },
   { name = "category", type = "STRING", values = model.CATEGORIES },
+  { name = "severity", type = "STRING", values = model.SEVERITIES },
   { name = "tag", type = "STRING" },
   { name = "stale", type = "INT" },
   { name = "blocked", bool = true },
+  { name = "sort", type = "STRING", enum = model.SORTS },
   { name = "to", type = "STRING", values = { "buffer", "clipboard", "qf", "file:", "echo" } },
   { name = "format", type = "STRING", enum = { "md", "csv" } },
 }
@@ -156,6 +159,7 @@ local function set_kv()
     status = model.OPEN_STATUSES,
     kind = model.KINDS,
     category = model.CATEGORIES,
+    severity = model.SEVERITIES,
     prio = { "1", "2", "3" },
     effort = model.EFFORTS,
   }
@@ -174,7 +178,7 @@ function M.routes()
       path = { "tasks" },
       args = { { name = "area", type = "TASK_AREA", allow_all = true, optional = true } },
       flags = LIST_FLAGS,
-      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --kind= --category=bug|security|performance|docs|ruleset --tag= --stale=<days> --blocked, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
+      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset --severity=low|medium|high|critical --tag= --stale=<days> --blocked, order with --sort=default|prio-effort|severity, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
       run = function(ctx)
         cmd().list(ctx)
       end,
@@ -199,6 +203,7 @@ function M.routes()
         { key = "effort", type = "STRING", values = model.EFFORTS },
         { key = "tags", type = "STRING" },
         { key = "category", type = "STRING", values = model.CATEGORIES },
+        { key = "severity", type = "STRING", values = model.SEVERITIES },
         { key = "status", type = "STRING", values = model.OPEN_STATUSES },
       },
       flags = { { name = "folder", bool = true } },
