@@ -1,6 +1,6 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (nach Runde 36: **Phase 4 abgeschlossen**, Entscheidungen zu Runde 23–28 umgesetzt, Phase 5a/5b fertig, 5c und fs.watch laufen).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
+> **Stand 2026-10-04 (nach Runde 36: **Phase 4 abgeschlossen**, Entscheidungen zu Runde 23–28 umgesetzt, Phase 5a/5b/5c fertig, fs.watch läuft).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) ist abgeschlossen**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
 > `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`, `cascade.nvim`, `sandbox.nvim`, `reposcope.nvim`, `sessions.nvim`, `emojis.nvim`, `diff.nvim`, `cmdlog.nvim`, `dap.nvim`, `fileops.nvim`, `recommender.nvim`, `filetreepicker.nvim`, `nvim-nexus`, `docmap-desktop` (21), `nvim-config` (26) und `ALL` (+24); `refinder` (kein Plugin, Statussatz), `spotlight.nvim` und
@@ -98,9 +98,12 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
   (`check`, `index --check`, `md_lint`; Exit 0/1) plus Actions-Vorlage `docs/TEMPLATES/wkdbooks-tasks-ci.yml` (**nicht** in den Vault
   kopiert, Entscheidung beim Nutzer; nie in GitHub gelaufen, öffentlicher Checkout von lib.nvim/lsp.nvim ungeklärt). Gegen den
   echten Vault: 0 stale-Treffer (alle Tasks vom 03./04.10.). **5b fertig** (ui.nvim `edf4967`, Vault `7b08a1de`): opt-in Segment `ui.statusline.modules.tasks_counter` (`T:7`, `breakdown` → `T:7 P1:2 B:1`),
-  liest nur Vault-Dateien asynchron mit TTL-Cache, leer ohne Vault; **Verdrahtung im Host steht aus** (`lua/config/ui_statusline/variant.lua`:
-  `lazy.require`, `order`, `modules`; dazu `tasks = { areas = { nvim = "nvim-config" } }` in `require("ui").setup`); echte Statusline nicht
-  geprüft. **5c** (mdview-Vorschau, Branch `task-5c`) und **`fs.watch`-Refresh + Frecency im Dashboard** laufen als Agenten in eigenen Worktrees.
+  liest nur Vault-Dateien asynchron mit TTL-Cache, leer ohne Vault; **im Host verdrahtet** (`b1bb8522`: `lua/config/ui_statusline/variant.lua`, `init.lua`, `tasks = { breakdown = true,
+  areas = { nvim = "nvim-config" } }`); echte Statusline nicht geprüft. **5c fertig** (`dc7e420f`, Merge `b1bb8522`, mdview `ec4092a`,
+  Vault-Konzept `3ec1c572`): `:MyPlugins task preview <id>`, Export-Ziel `--to=mdview` (nur md, Temp-Datei mit Retry-Löschung),
+  Dashboard `gp` (`<M-v>`) und `e`-Eintrag "Preview in browser"; mdview ist weiche Abhängigkeit. mdview rendert Frontmatter jetzt als
+  Tabelle (Rust `replace_front_matter`), **wirksam erst mit neu gebautem WASM-Bundle** (nichts gebaut/released); echter mdview-Start
+  und Browser nicht geprüft. **`fs.watch`-Refresh + Frecency im Dashboard** läuft als Agent im eigenen Worktree.
 
 ## Kategorien und Ordner-Tasks (Konzept §12)
 
@@ -407,4 +410,4 @@ Der erste Wurf (`7328945`) war grün und trotzdem fehlerhaft; erst zwei Review-R
    reviewt; `lsp.nvim/config-unknown-key-warning` hat im Vault ein `Backlog/FEATURES`-Protokoll, die Plugin-Docs
    (`docs/configuration.md`, `:help lsp.nvim`) beschreiben das Verhalten.
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
-4. Phase 5: Politur — 5a `--stale`/refs und Vault-CI (fertig), 5b Statusline-Zähler und 5c mdview-Vorschau (in Arbeit); danach `fs.watch`-Refresh und Frecency im Dashboard.
+4. Phase 5: Politur — 5a `--stale`/refs und Vault-CI (fertig), 5b Statusline-Zähler und 5c mdview-Vorschau (fertig); danach `fs.watch`-Refresh und Frecency im Dashboard.
