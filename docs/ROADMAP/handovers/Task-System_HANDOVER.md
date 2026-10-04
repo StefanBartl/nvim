@@ -1,11 +1,10 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (Zwischenstand, nach Runde 24, Entscheidungsrunde und neuen Engine-Features).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> **Stand 2026-10-04 (Zwischenstand, nach Runde 28, Entscheidungsrunde und neuen Engine-Features; vom Nutzer angehalten).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
-> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`; `spotlight.nvim` und
-> `migrate.nvim` sind geprüft (keine offene Arbeit, keine Tasks); `pickers.nvim`, `hover.nvim`, `language.nvim` und
-> `replacer.nvim` haben je einzelne Tasks aus fremden Runden (ihre eigene Runde steht aus). Keine Agenten laufen mehr.
+> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`, `my.nvim`, `language.nvim`, `hover.nvim`, `buffer-ctx.nvim`, `runtime-analysis.nvim`, `data.nvim`, `replacer.nvim`; `spotlight.nvim` und
+> `migrate.nvim` sind geprüft (keine offene Arbeit, keine Tasks); `pickers.nvim` hat einen einzelnen Task aus einer fremden Runde (seine eigene Runde steht aus). Keine Agenten laufen mehr.
 > Nach Runde 19 (`ui`) wurde auf Wunsch kurz angehalten, Runde 20 (`debugging`) lief danach; offen sind die kleinen Plugins (Liste
 > unter „Nächste Schritte“), `docmap-desktop`, `nvim-config` und die Politur (Phase 5).
 >
@@ -36,7 +35,7 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4), `my.nvim` (5), `language.nvim` (10), `hover.nvim` (10); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4), `my.nvim` (5), `language.nvim` (10), `hover.nvim` (10), `buffer-ctx.nvim` (8), `runtime-analysis.nvim` (11), `data.nvim` (6), `replacer.nvim` (3); einzelne Tasks fremder Runden in `lib.nvim` (+2) |
 | Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R14 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
@@ -140,6 +139,10 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `914a3ac` | Entscheidungen umgesetzt: 14 neue Tasks, ui.kit-Tasks von lib.nvim nach ui.nvim, Bereich `ALL/ROADMAP/tasks/`, rules-Agentenkette Prio 1, `insights.nvim/telemetry-subcommand-usage` verworfen |
 | WKDBooks | `bc9743f` | `language.nvim`: 10 Tasks (Runde 23) |
 | WKDBooks | `4a45e66` | `hover.nvim`: 7 neue Tasks (Runde 24) |
+| WKDBooks | `76dac4a` | `buffer-ctx.nvim`: 8 Tasks (Runde 25), `anchor-stable-marks` nach Backlog |
+| WKDBooks | `f1598d8` | `runtime-analysis.nvim`: 11 Tasks (Runde 26); M11/L4/L5 liegen hier, nicht in documentation.nvim (Handover-Annahme war falsch) |
+| WKDBooks | `6b3fdb3` | `data.nvim`: 6 Tasks (Runde 27) |
+| WKDBooks | `1e505d6` | `replacer.nvim`: 3 Tasks + neue `FEATURES.md` (Runde 28) |
 | nvim-config | `9fbf0e8f`, `98f71820` | Aufwand-Filter + Sortierungen + `severity` (Merge `77e29d05`); Markdown-Formular für `task new` |
 | WKDBooks | `112e70d`, `afce473` | Konzept §13 (Aufwand, Sort, severity, R15) und §14 (Formular, E15–E17) |
 | WKDBooks | `da40a62` | Konzept §12, Regeln R13 und R14 |
@@ -294,9 +297,9 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 
 ## Nächste Schritte
 
-1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: **max. 1 Agent gleichzeitig**). Fertig bis Runde 24
-   (`hover`). Noch offen: die kleinen —
-   `buffer-ctx` (7), `runtime-analysis` (6), `data` (5), `replacer` (3), `cascade` (3), `sandbox` (2), `reposcope` (2),
+1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: **max. 1 Agent gleichzeitig**). Fertig bis Runde 28
+   (`replacer`; der Nutzer hat danach angehalten, um die offenen Fragen zu klären). Noch offen: die kleinen —
+   `cascade` (3), `sandbox` (2), `reposcope` (2),
    `sessions` (1), `emojis` (1) — dann die Bereiche mit leerer oder fehlender Roadmap (`diff`, `cmdlog`, `dap`, `fileops`,
    `recommender`, `refinder`, `filetreepicker`, `nvim-nexus`; kurz prüfen), zuletzt `nvim-config` und `docmap-desktop`
    (188 KB, Desktop-Programm — erst klären, ob es überhaupt in dieses System gehört; die Desktop-Seite des Agent-Konzepts
