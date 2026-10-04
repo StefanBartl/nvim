@@ -2,8 +2,8 @@
 
 > **Stand 2026-10-04 (Zwischenstand).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
-> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`; `pickers.nvim` hat seinen ersten Task. **In Arbeit (Agenten
-> laufen):** `filetree.nvim`, `spotlight.nvim`. Danach ist Schluss für diese Sitzung; offen bleiben die übrigen
+> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim` (28 Tasks); `spotlight.nvim` ist geprüft (keine
+> offene Arbeit, keine Tasks); `pickers.nvim` hat seinen ersten Task. Keine Agenten laufen mehr. Offen bleiben die übrigen
 > Plugins (Größenordnung: `images`, `pdfport`, `open`, `gitsuite`, `color_my_ascii`, `migrate`, `rules`, `media`, `ai`,
 > `ui`, `debugging`, … und `docmap-desktop`) und die Politur (Phase 5). **Die gesammelten Entscheidungen für den Nutzer
 > stehen im Abschnitt „Offene Entscheidungen“ unten.**
@@ -76,6 +76,8 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `02f2083` | `documentation.nvim`: 55 Tasks (Runde 3) |
 | WKDBooks | `e23cd38` | `gopath.nvim`: 4 Tasks (Runde 7), Treesitter-Irrtum in ROADMAP/FEATURES korrigiert |
 | WKDBooks | `a9d0d2a` | `github_stats.nvim`: 5 Tasks (Runde 6) |
+| WKDBooks | `e8ae2a3` | `spotlight.nvim`: keine offene Arbeit, Statussatz |
+| WKDBooks | `36ef7c4` | `filetree.nvim`: 28 Tasks (Runde 8) |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
 geprüft (13 Befunde behoben). Die Fix-Commits `c6d274c`, `efcab018`, `80ef2946` hat Claude am 2026-10-04 selbst
@@ -116,6 +118,16 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
   `traffic-digest-e2e-check` (Live-Test als Task oder nur Checkliste); sollen die IDEAS-Features (Thresholds, Groups,
   Webhook, …) als `parked`-Tasks mit `kind: idea` ins Dashboard (bewusst nicht angelegt); `fetch-spawn-throttle`
   (Freeze mit heutiger Allowlist unbekannt, `needs-verification`).
+- **filetree.nvim:** `startup-without-neo-tree` (Status `decision`: Umbau für ca. 50–70 ms Startzeit, ja/nein; Verweis
+  auch im Startup-Report der nvim-config); die Live-Test-Tasks `test-trash-batch-linux-macos`, `collapse-blink-live-check`,
+  `handle-guard-eperm-observation` (R10-Grenzfälle, behalten?); verwerfbare Ideen `spotlight-from-tree`,
+  `open-markdown-in-mdview`, `context-menu-image-pdf-group`, `insights-node-actions`; Besitzer von
+  `orphaned-asset-report` (filetree oder `images.nvim :Image orphans`). Wichtigster Fund: `powershell-quote-escape`
+  (Prio 1, Bug) — typografische Quotes U+2018–U+201B brechen aus PowerShell-Strings aus, `it’s.md` ist unter Windows
+  nicht trashbar (`trash/platform.lua`).
+- **spotlight.nvim:** Vorschlag `task-status-words-highlight` bewusst nicht angelegt (kein Anknüpfungspunkt); soll er
+  trotzdem als `parked`-Idee? Zeile „spotlight.nvim, wie mehrere hl machen, lernen!“ in `00_ROADMAP.md:39` wohl erledigt
+  — entfernen?
 - **gopath.nvim:** keine; optional `cache-load-from-disk-lazy` auf Prio 2, falls `startup-stall-measure` mehr Last zeigt.
 - **lsp.nvim / mdview.nvim:** beantwortet (siehe „Entscheidungen“); `live-check-lspsaga-replacements` und
   `scroll-lag-feel-judgement` bleiben Tasks.
@@ -141,6 +153,11 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
     "filetree.nvim cross-check"; in `filetree.nvim/lua` kein Treffer).
   - `mdview.nvim`-Live-Tests L4, QW1, QW10 stehen als offene Checkboxen in `docs/ROADMAP/Final_Checks/PLUGIN_ROADMAPS_TESTPLAN.md`
     (bewusst keine Tasks, R10).
+  - Aus der filetree-Runde: `images.nvim` hat im Clipboard-Pfad (`paste.lua`) dieselbe PowerShell-Quote-Lücke;
+    `open.nvim` `resolve_netrw_path()` überspringt netrw-Banner nicht und `images.show`-Fallback fehlt; `lib.nvim`
+    `cross.open_default` mangelt auf Windows Nicht-http-Schemes (vor `filetree.nvim/system-open-via-lib-open-default`
+    prüfen); `gopath.nvim/fs-cache-daemon` sollte einen Rückverweis auf `filetree.nvim/own-tree-engine` bekommen;
+    nvim-config `00_ROADMAP.md` („Claude Tasks“) mit den filetree-Task-IDs verlinken.
   - `hover.nvim`: Zoom-Vollbild mit Maus-Markieren/Kopieren und persistenter URL-Cache (stale-while-revalidate) für
     Tricentis-/Microsoft-Doku (Quelle: `docs/ROADMAP/Casedesk/Tasks.md`, nicht in der hover-ROADMAP).
   - `images.nvim`: Windows-OCR-Backend `Windows.Media.Ocr` (casedesk RM-22; Vergleich in `docs/ROADMAP/Casedesk/ocr.md`).
