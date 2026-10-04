@@ -141,6 +141,7 @@ local LIST_FLAGS = {
   { name = "status", type = "STRING", values = model.OPEN_STATUSES },
   { name = "prio", type = "STRING", values = { "1", "2", "3", "<=2" } },
   { name = "kind", type = "STRING", values = model.KINDS },
+  { name = "category", type = "STRING", values = model.CATEGORIES },
   { name = "tag", type = "STRING" },
   { name = "stale", type = "INT" },
   { name = "blocked", bool = true },
@@ -154,6 +155,7 @@ local function set_kv()
   local hints = {
     status = model.OPEN_STATUSES,
     kind = model.KINDS,
+    category = model.CATEGORIES,
     prio = { "1", "2", "3" },
     effort = model.EFFORTS,
   }
@@ -172,7 +174,7 @@ function M.routes()
       path = { "tasks" },
       args = { { name = "area", type = "TASK_AREA", allow_all = true, optional = true } },
       flags = LIST_FLAGS,
-      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --kind= --tag= --stale=<days> --blocked, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
+      desc = "List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --kind= --category=bug|security|performance|docs|ruleset --tag= --stale=<days> --blocked, deliver with --to=buffer|clipboard|qf|file:<path> and --format=md|csv",
       run = function(ctx)
         cmd().list(ctx)
       end,
@@ -196,9 +198,11 @@ function M.routes()
         { key = "prio", type = "STRING", values = { "1", "2", "3" } },
         { key = "effort", type = "STRING", values = model.EFFORTS },
         { key = "tags", type = "STRING" },
+        { key = "category", type = "STRING", values = model.CATEGORIES },
         { key = "status", type = "STRING", values = model.OPEN_STATUSES },
       },
-      desc = "Create ROADMAP/tasks/<slug>.md in an area and open it; the words after the area are the title (asked for when missing)",
+      flags = { { name = "folder", bool = true } },
+      desc = "Create ROADMAP/tasks/<slug>.md in an area and open it; the words after the area are the title (asked for when missing); --folder makes a folder task that can hold assets",
       run = function(ctx)
         cmd().task_new(ctx)
       end,
@@ -225,6 +229,28 @@ function M.routes()
       desc = "Finish a task after confirmation: status done, moved to Backlog/FEATURES|TASKS with a date prefix, Backlog README and index updated; --yes skips the question",
       run = function(ctx)
         cmd().task_done(ctx)
+      end,
+    },
+
+    {
+      path = { "task", "attach" },
+      args = {
+        { name = "id", type = "TASK_ID" },
+        { name = "file", type = "FILE" },
+      },
+      kv = { { key = "name", type = "STRING" } },
+      desc = "Copy a file (screenshot, log) into the task's assets/ folder, turning a plain task into a folder task, and put the Markdown link in the + register; name=<file name> renames the copy",
+      run = function(ctx)
+        cmd().task_attach(ctx)
+      end,
+    },
+
+    {
+      path = { "task", "folderize" },
+      args = { { name = "id", type = "TASK_ID" } },
+      desc = "Turn a plain task file into a folder task (<slug>/<slug>.md) so assets can be attached",
+      run = function(ctx)
+        cmd().task_folderize(ctx)
       end,
     },
 

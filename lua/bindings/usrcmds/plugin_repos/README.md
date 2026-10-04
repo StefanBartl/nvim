@@ -27,17 +27,19 @@ those names no longer exist.
 :MyPlugins list [dir]
 :MyPlugins picker [dir]
 
-:MyPlugins tasks [<area>|all] [--status= --prio= --kind= --tag= --stale=<days> --blocked] [--to= --format=]
+:MyPlugins tasks [<area>|all] [--status= --prio= --kind= --category= --tag= --stale=<days> --blocked] [--to= --format=]
 :MyPlugins tasks index [<area>|--all] [--check]
-:MyPlugins task new <area> [title...] [kind= prio= effort= tags= status=]
+:MyPlugins task new <area> [title...] [kind= prio= effort= tags= category= status=] [--folder]
 :MyPlugins task set <id> key=value ...
+:MyPlugins task attach <id> <file> [name=]
+:MyPlugins task folderize <id>
 :MyPlugins task done <id> [done_in= date=] [--yes]
 :MyPlugins task template [--to=]
 :MyPlugins task open <id>
 :MyPlugins open <area> [tasks|roadmap|backlog|handover|notes|all] [--action=] [--list] [--to=]
 ```
 
-The last eight are the **task commands** (see
+The last ten are the **task commands** (see
 [Task commands](#task-commands-tasks-task-open)): they work on the areas of the
 wkdbook vault, not on `plugins.personal.core.list`.
 
@@ -290,6 +292,7 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 | `--status=a,b` | one or more of `doing decision blocked open parked` |
 | `--prio=1,2` / `--prio=<=2` | exact prios, or "at most" |
 | `--kind=a,b` | `feature task bug idea research` |
+| `--category=a,b` | any of `bug security performance docs ruleset` (`bug` also finds every `kind: bug`; a tag spelled like a category counts) |
 | `--tag=a,b` | any of these tags |
 | `--stale=<days>` | not updated for at least that many days (no date counts as stale) |
 | `--blocked` | status `blocked`, or a non-empty `blocked_by` |
@@ -392,11 +395,20 @@ contain `, [ ] " ' #` (they sit in an inline list).
 
 Changes frontmatter of an *open* task and sets `updated` -- but only when something really
 changed (an identical value rewrites nothing). Settable: `title status kind prio effort tags
-summary blocked_by refs done_in created`. A value may contain spaces
+category summary blocked_by refs rules done_in created`. A value may contain spaces
 (`title=Fix the thing status=doing`: a word that does not start with a known `key=`
 continues the value before it); an empty value removes the key (`kind=`). `status=done` is
 refused: finishing moves the file, see `task done`. A buffer showing the file is reloaded
 when it has no unsaved changes.
+
+### `:MyPlugins task attach <id> <file> [name=<file name>]` / `task folderize <id>`
+
+A task may be a folder `tasks/<slug>/<slug>.md` that holds assets (concept section 12.2).
+`attach` copies the file into `<slug>/assets/` -- a plain task file becomes a folder task
+first -- and puts the Markdown link (`![name](assets/name)` for images) in the `+` register.
+`name=` renames the copy; an asset that already exists is never replaced. Spaces in the file
+name become hyphens. `folderize` converts a task without attaching anything. Windows showing
+the old task file follow it. `task new ... --folder` creates a folder task from the start.
 
 ### `:MyPlugins task done <id> [done_in=...] [date=YYYY-MM-DD] [--yes]`
 

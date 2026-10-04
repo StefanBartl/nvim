@@ -57,6 +57,15 @@ local function link_target(s)
   end))
 end
 
+---The link target of a task below `tasks/`: `<slug>.md`, or `<slug>/<slug>.md`
+---for a folder task.
+---@param task Tasks.Task
+---@return string
+local function task_link(task)
+  local target = link_target(task.slug)
+  return task.folder and (target .. "/" .. target .. ".md") or (target .. ".md")
+end
+
 ---@param s string
 ---@param max integer
 ---@return string
@@ -117,12 +126,12 @@ function M.render(area, tasks, opts)
     "|---|---|---|---|---|",
   }
   for _, t in ipairs(open) do
-    lines[#lines + 1] = ("| %s | %s | %s | [%s](tasks/%s.md) | %s |"):format(
+    lines[#lines + 1] = ("| %s | %s | %s | [%s](tasks/%s) | %s |"):format(
       t.status,
       t.prio and tostring(t.prio) or EN_DASH,
       t.effort and cell(t.effort) or EN_DASH,
       link_text(t.title),
-      link_target(t.slug),
+      task_link(t),
       summary_cell(t, max)
     )
   end
@@ -337,11 +346,11 @@ function M.render_global(tasks, opts)
     local t = open[i]
     local title = link_text(t.title)
     if links then
-      title = ("[%s](%s%s/ROADMAP/tasks/%s.md)"):format(
+      title = ("[%s](%s%s/ROADMAP/tasks/%s)"):format(
         title,
         prefix,
         link_target(t.area),
-        link_target(t.slug)
+        task_link(t)
       )
     end
     lines[#lines + 1] = ("| %s | %s | %s | %s | %s | %s |"):format(

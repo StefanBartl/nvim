@@ -481,6 +481,52 @@ return function(H)
         "a blank title creates nothing"
       )
 
+      -- ── categories, folder tasks, attach ────────────────────────────────
+      run("task new lib.nvim Sec folder kind=task category=security --folder")
+      local folder_file = root .. "/lib.nvim/ROADMAP/tasks/sec-folder/sec-folder.md"
+      ok(H.exists(folder_file), "task new --folder makes a folder task")
+      has(assert(H.read(folder_file)), "category: [security]")
+      run("task new lib.nvim Bad category category=nope")
+      has(said(), "unknown category")
+      ok(said_level(ERROR))
+      run("task set lib.nvim/sec-folder category=docs,performance")
+      has(assert(H.read(folder_file)), "category: [docs, performance]")
+
+      local shot = H.tmpdir() .. "/shot.png"
+      H.write(shot, "png")
+      run("task attach lib.nvim/sec-folder " .. shot)
+      ok(
+        H.exists(root .. "/lib.nvim/ROADMAP/tasks/sec-folder/assets/shot.png"),
+        "attach copies the file"
+      )
+      has(said(), "attached lib.nvim/sec-folder -> assets/shot.png")
+      run("task attach lib.nvim/sec-folder " .. shot)
+      has(said(), "asset exists")
+      run("task attach lib.nvim/sec-folder " .. shot .. " name=shot-2.png")
+      ok(
+        H.exists(root .. "/lib.nvim/ROADMAP/tasks/sec-folder/assets/shot-2.png"),
+        "name= renames the copy"
+      )
+
+      run("task folderize lib.nvim/beta-bug")
+      ok(
+        H.exists(root .. "/lib.nvim/ROADMAP/tasks/beta-bug/beta-bug.md"),
+        "folderize moves the file"
+      )
+      ok(not H.exists(task_path("lib.nvim", "beta-bug")), "the old file is gone")
+      run("task folderize lib.nvim/beta-bug")
+      has(said(), "already a folder task")
+      -- put it back as a plain file for the rest of this spec
+      vim.fn.rename(
+        root .. "/lib.nvim/ROADMAP/tasks/beta-bug/beta-bug.md",
+        task_path("lib.nvim", "beta-bug")
+      )
+      vim.fn.delete(root .. "/lib.nvim/ROADMAP/tasks/beta-bug", "d")
+      run("tasks lib.nvim --category=security --to=buffer")
+      has(table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), " "), "Sec folder")
+      run("tasks lib.nvim --category=nope --to=buffer")
+      has(said(), "unknown category")
+
       -- ── task set ────────────────────────────────────────────────────────
       local beta = task_path("lib.nvim", "beta-bug")
       run("task set lib.nvim/beta-bug title=Beta bug, renamed status=doing prio=1 tags=x,y")

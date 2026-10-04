@@ -149,6 +149,54 @@ function M.create_exclusive(path, content)
   return true, nil
 end
 
+---Rename a file or folder (one filesystem, so atomic). The target must not exist.
+---@param from string
+---@param to string
+---@return boolean ok
+---@return string|nil err
+function M.rename(from, to)
+  if uv.fs_stat(to) then
+    return false, "target exists: " .. to
+  end
+  local ok, err = uv.fs_rename(from, to)
+  if not ok then
+    return false, tostring(err)
+  end
+  return true, nil
+end
+
+---Copy a file, failing when the target exists. Creates the parent folder.
+---@param from string
+---@param to string
+---@return boolean ok
+---@return string|nil err  `"exists"` when the target was already there
+function M.copy(from, to)
+  local ok, perr = ensure_parent(to)
+  if not ok then
+    return false, perr
+  end
+  local copied, err = uv.fs_copyfile(from, to, { excl = true })
+  if not copied then
+    if tostring(err):match("^EEXIST") then
+      return false, "exists"
+    end
+    return false, tostring(err)
+  end
+  return true, nil
+end
+
+---Create a folder and its parents.
+---@param path string
+---@return boolean ok
+---@return string|nil err
+function M.mkdirp(path)
+  local ok, err = mkdirp(path)
+  if not ok then
+    return false, tostring(err)
+  end
+  return true, nil
+end
+
 ---@param path string
 ---@return boolean ok
 ---@return string|nil err

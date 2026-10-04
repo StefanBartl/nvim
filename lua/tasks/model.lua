@@ -11,7 +11,7 @@
 ---  - the enums (status, kind, prio, effort) and the date check
 ---  - `summary`: frontmatter `summary`, else the first body paragraph
 ---  - `compare` / `sort`: status rank, then prio, then area, then slug
----  - `filter`: status, prio, kind, tag, area, blocked, stale
+---  - `filter`: status, prio, kind, tag, category, area, blocked, stale
 ---
 --- Not its job: finding files (`scan`), rendering (`index`), writing (`mutate`).
 
@@ -32,6 +32,11 @@ M.OPEN_STATUSES = { "doing", "decision", "blocked", "open", "parked" }
 ---@type Tasks.Kind[]
 M.KINDS = { "feature", "task", "bug", "idea", "research" }
 
+---Concerns a task can serve (concept section 12.1). Independent of `kind`:
+---`kind: bug` implies `bug`, a tag of the same name counts as well.
+---@type string[]
+M.CATEGORIES = { "bug", "security", "performance", "docs", "ruleset" }
+
 ---@type integer[]
 M.PRIOS = { 1, 2, 3 }
 
@@ -48,6 +53,12 @@ end
 local KIND_SET = {}
 for _, k in ipairs(M.KINDS) do
   KIND_SET[k] = true
+end
+
+---@type table<string, boolean>
+local CATEGORY_SET = {}
+for _, c in ipairs(M.CATEGORIES) do
+  CATEGORY_SET[c] = true
 end
 
 ---@type table<string, boolean>
@@ -75,6 +86,38 @@ end
 ---@return boolean
 function M.is_kind(s)
   return type(s) == "string" and KIND_SET[s] == true
+end
+
+---@param s any
+---@return boolean
+function M.is_category(s)
+  return type(s) == "string" and CATEGORY_SET[s] == true
+end
+
+---The categories a task counts for: its `category` list, `bug` when `kind` is
+---`bug`, and every tag that is spelled like a category. In `CATEGORIES` order.
+---@param task { category?: string[], kind?: string, tags?: string[] }
+---@return string[]
+function M.categories(task)
+  local have = {}
+  for _, c in ipairs(task.category or {}) do
+    have[c] = true
+  end
+  if task.kind == "bug" then
+    have.bug = true
+  end
+  for _, tag in ipairs(task.tags or {}) do
+    if CATEGORY_SET[tag] then
+      have[tag] = true
+    end
+  end
+  local out = {}
+  for _, c in ipairs(M.CATEGORIES) do
+    if have[c] then
+      out[#out + 1] = c
+    end
+  end
+  return out
 end
 
 ---`XS`..`XL`, or days: `3d`, `0.5d`.
@@ -256,7 +299,7 @@ end
 ---`"roadmap"`; `ctx.slug` defaults to the one derived from the filename.
 ---Never raises on bad content.
 ---@param text string
----@param ctx { path: string, area: string, location?: Tasks.Location, slug?: string, nested?: boolean }
+---@param ctx { path: string, area: string, location?: Tasks.Location, slug?: string, nested?: boolean, folder?: boolean }
 ---@return Tasks.Task
 function M.parse_text(text, ctx)
   local location = ctx.location or "roadmap"
@@ -277,8 +320,10 @@ function M.parse_text(text, ctx)
     slug = slug,
     path = fsio.norm(ctx.path),
     location = location,
+    folder = ctx.folder == true,
     title = slug,
     tags = {},
+    category = {},
     blocked_by = {},
     refs = {},
     summary = "",
@@ -294,7 +339,10 @@ function M.parse_text(text, ctx)
     bad("slug", "filename is not a kebab-case ASCII slug: " .. slug)
   end
   if ctx.nested then
-    bad("slug", "task file must lie directly in tasks/, not in a subfolder")
+    bad(
+      "slug",
+      "task file must lie directly in tasks/ or be <slug>/<slug>.md, not in another subfolder"
+    )
   end
 
   local parsed, perr = fm.parse(text)
@@ -390,6 +438,15 @@ function M.parse_text(text, ctx)
 
     task.tags = as_list(meta.tags, "tags", bad)
     task.refs = as_list(meta.refs, "refs", bad)
+    task.category = as_list(meta.category, "category", bad)
+    for _, c in ipairs(task.category) do
+      if not M.is_category(c) then
+        bad(
+          "unknown-category",
+          ("unknown category '%s' (expected %s)"):format(c, table.concat(M.CATEGORIES, ", "))
+        )
+      end
+    end
 
     for _, field in ipairs({ "created", "updated" }) do
       local date = as_text(meta[field], field, bad)
@@ -425,7 +482,7 @@ end
 ---Read and interpret one task file. An unreadable file yields an invalid task
 ---carrying the read error, never a raise.
 ---@param path string
----@param ctx { area: string, location?: Tasks.Location, slug?: string, nested?: boolean }
+---@param ctx { area: string, location?: Tasks.Location, slug?: string, nested?: boolean, folder?: boolean }
 ---@return Tasks.Task
 function M.from_file(path, ctx)
   local full = vim.tbl_extend("force", { path = path }, ctx)
@@ -526,7 +583,7 @@ end
 ---Shared by the headless CLI and the editor commands so both read the same
 ---words the same way. Unknown words are an error, never silently ignored.
 ---`stale` may be a number or a digit string; `today` is passed through.
----@param opt { status?: string, prio?: string|integer, kind?: string, tag?: string, stale?: string|integer, blocked?: boolean, today?: string }
+---@param opt { status?: string, prio?: string|integer, kind?: string, tag?: string, category?: string, stale?: string|integer, blocked?: boolean, today?: string }
 ---@return Tasks.Filter|nil filter
 ---@return string|nil err
 function M.filter_from_options(opt)
@@ -567,6 +624,14 @@ function M.filter_from_options(opt)
   if opt.tag then
     f.tag = M.split_commas(opt.tag)
   end
+  if opt.category then
+    f.category = M.split_commas(opt.category)
+    for _, c in ipairs(f.category) do
+      if not M.is_category(c) then
+        return nil, "unknown category in --category: " .. c
+      end
+    end
+  end
   if opt.stale ~= nil then
     local raw = tostring(opt.stale)
     if not raw:match("^%d+$") then
@@ -588,6 +653,7 @@ function M.filter(tasks, f)
   f = f or {}
   local status, kind, area = to_set(f.status), to_set(f.kind), to_set(f.area)
   local prio, tag = to_set(f.prio), to_set(f.tag)
+  local category = to_set(f.category)
   local today = f.today or M.today()
 
   local out = {}
@@ -607,6 +673,15 @@ function M.filter(tasks, f)
       keep = false
       for _, name in ipairs(t.tags) do
         if tag[name] then
+          keep = true
+          break
+        end
+      end
+    end
+    if keep and category then
+      keep = false
+      for _, c in ipairs(M.categories(t)) do
+        if category[c] then
           keep = true
           break
         end

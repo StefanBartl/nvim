@@ -2,7 +2,9 @@
 ---@brief Create, change and finish tasks (the only module of the engine that writes task files).
 ---@description
 --- `new` writes a task file, `set` patches its frontmatter, `done` moves it to
---- `Backlog/` (rule R6). Each regenerates the area index afterwards.
+--- `Backlog/` (rule R6). `attach` and `folderize` turn a task into a folder task
+--- that can hold assets (concept section 12.2). Each regenerates the area index
+--- afterwards.
 ---
 --- Key responsibilities:
 ---  - `template` / `new`: the file text, a collision-safe kebab slug, `created`
@@ -196,7 +198,7 @@ local function check_lang(lang)
 end
 
 ---Frontmatter keys in the order concept section 3 shows them.
----@param meta { title: string, status: string, kind?: string, prio?: integer|string, effort?: string, tags?: string[], refs?: string[], created: string, updated: string }
+---@param meta { title: string, status: string, kind?: string, prio?: integer|string, effort?: string, tags?: string[], category?: string[], refs?: string[], created: string, updated: string }
 ---@return table[] pairs
 local function meta_pairs(meta)
   local pairs_ = {
@@ -214,6 +216,9 @@ local function meta_pairs(meta)
   end
   if meta.tags then
     pairs_[#pairs_ + 1] = { "tags", meta.tags }
+  end
+  if meta.category then
+    pairs_[#pairs_ + 1] = { "category", meta.category }
   end
   pairs_[#pairs_ + 1] = { "created", meta.created }
   pairs_[#pairs_ + 1] = { "updated", meta.updated }
@@ -322,6 +327,24 @@ local function id_list(value)
   return list, nil
 end
 
+---A list of categories (`model.CATEGORIES`), each checked.
+---@param value any
+---@return string[]|nil list
+---@return string|nil err
+local function category_list(value)
+  local list, err = string_list(value, "category", true)
+  if not list then
+    return nil, err
+  end
+  for _, c in ipairs(list) do
+    if not model.is_category(c) then
+      return nil,
+        ("unknown category '%s' (expected %s)"):format(c, table.concat(model.CATEGORIES, ", "))
+    end
+  end
+  return list, nil
+end
+
 ---Keys `set` accepts, in the order they are written when new. `updated` is
 ---deliberately absent: the tool sets it. Exported as `M.SETTABLE` for front
 ---ends that complete or document the keys.
@@ -332,9 +355,11 @@ local SETTABLE = {
   "prio",
   "effort",
   "tags",
+  "category",
   "summary",
   "blocked_by",
   "refs",
+  "rules",
   "done_in",
   "created",
 }
@@ -429,7 +454,13 @@ local function normalize_patch(patch, opts)
         return nil, ("created '%s' is not a date (YYYY-MM-DD)"):format(tostring(value))
       end
       result[#result + 1] = { key, value }
-    elseif key == "tags" or key == "refs" or key == "done_in" then
+    elseif key == "category" then
+      local list, err = category_list(value)
+      if not list then
+        return nil, err
+      end
+      result[#result + 1] = { key, #list > 0 and list or M.REMOVE }
+    elseif key == "tags" or key == "refs" or key == "rules" or key == "done_in" then
       local list, err = string_list(value, key, key == "tags")
       if not list then
         return nil, err
@@ -475,7 +506,7 @@ end
 ---`summary` are written only when given.
 ---@param area string
 ---@param opts Tasks.NewOpts
----@return { id: string, area: string, slug: string, path: string, index?: Tasks.IndexResult, index_err?: string }|nil result
+---@return { id: string, area: string, slug: string, path: string, folder: boolean, index?: Tasks.IndexResult, index_err?: string }|nil result
 ---@return string|nil err
 function M.new(area, opts)
   opts = opts or {}
@@ -522,6 +553,14 @@ function M.new(area, opts)
     end
     tags = #list > 0 and list or nil
   end
+  local category
+  if opts.category ~= nil then
+    local list, cerr = category_list(opts.category)
+    if not list then
+      return nil, cerr
+    end
+    category = #list > 0 and list or nil
+  end
   local refs
   if opts.refs ~= nil then
     local list, rerr2 = string_list(opts.refs, "refs")
@@ -561,6 +600,7 @@ function M.new(area, opts)
       prio = prio,
       effort = opts.effort,
       tags = tags,
+      category = category,
       refs = refs,
       created = today,
       updated = today,
@@ -580,12 +620,22 @@ function M.new(area, opts)
   local n = 1
   while true do
     local slug = n == 1 and base or (base .. "-" .. n)
-    if not taken[slug] then
-      local path = vault.task_path(root, area, slug)
+    -- A slug is taken by a file or a folder task of that name, in either form.
+    local in_use = fsio.is_dir(vault.task_dir(root, area, slug))
+      or fsio.is_file(vault.task_path(root, area, slug))
+    if not taken[slug] and not in_use then
+      local path = opts.folder and vault.folder_task_path(root, area, slug)
+        or vault.task_path(root, area, slug)
       local ok, err = fsio.create_exclusive(path, text)
       if ok then
         ---@type table
-        local result = { id = area .. "/" .. slug, area = area, slug = slug, path = path }
+        local result = {
+          id = area .. "/" .. slug,
+          area = area,
+          slug = slug,
+          path = path,
+          folder = opts.folder == true,
+        }
         if opts.index ~= false then
           result.index, result.index_err = index.write_area(area, { root = root })
         end
@@ -667,12 +717,14 @@ local function cell(s)
 end
 
 ---The README row of a finished task.
+---`rel` is the path below `Backlog/<bucket>/` (`<file>.md`, or `<dir>/<file>.md`
+---for a folder task); the link text is always the file name.
 ---@param bucket Tasks.Bucket
----@param filename string
+---@param rel string
 ---@param task Tasks.Task
 ---@param date string
 ---@return string
-local function readme_row(bucket, filename, task, date)
+local function readme_row(bucket, rel, task, date)
   local content = cell(task.title)
   if task.summary ~= "" and task.summary ~= task.title then
     local summary = task.summary
@@ -681,8 +733,9 @@ local function readme_row(bucket, filename, task, date)
     end
     content = content .. " — " .. cell(summary)
   end
-  -- The filename is `YYYY-MM-DD_<slug>.md` with a validated slug: nothing to escape.
-  return ("| [`%s`](./%s/%s) | %s (%s) |"):format(filename, bucket, filename, content, date)
+  -- The names are `YYYY-MM-DD_<slug>` with a validated slug: nothing to escape.
+  local filename = rel:match("([^/]*)$")
+  return ("| [`%s`](./%s/%s) | %s (%s) |"):format(filename, bucket, rel, content, date)
 end
 
 ---Add `row` to the `## <bucket> (N)` section of a `Backlog/README.md` text.
@@ -798,7 +851,8 @@ end
 ---Finish an open task (rule R6): set `status: done` and `done_in`, move the
 ---file to `Backlog/FEATURES` (feature, idea, research) or `Backlog/TASKS` (task,
 ---bug) as `YYYY-MM-DD_<slug>.md`, add its row to that `Backlog/README.md`, and
----regenerate the area index.
+---regenerate the area index. A folder task moves as a whole, to
+---`YYYY-MM-DD_<slug>/YYYY-MM-DD_<slug>.md`; a failure puts the folder back.
 ---
 ---The four files involved are snapshotted first; if any step fails they are
 ---restored byte-exact. A task that is already finished answers
@@ -861,14 +915,22 @@ function M.done(id, opts)
     return nil, "cannot update " .. task.path .. ": " .. tostring(uerr)
   end
 
-  local filename = date .. "_" .. slug .. ".md"
-  local target = vault.backlog_dir(root, area, bucket) .. "/" .. filename
+  local stem = date .. "_" .. slug
+  local filename = stem .. ".md"
+  local rel = task.folder and (stem .. "/" .. filename) or filename
+  local target = vault.backlog_dir(root, area, bucket) .. "/" .. rel
+  local src_dir = task.folder and fsio.dirname(task.path) or nil
+  local target_dir = task.folder and fsio.dirname(target) or nil
   local resume = false
   local existing = scan.find_done(id, { root = root })
   if existing and existing.path ~= target then
     return nil, ("a finished task with this id already exists: %s"):format(existing.path)
   end
-  if fsio.is_file(target) then
+  if task.folder then
+    if fsio.is_dir(target_dir) then
+      return nil, "target folder exists: " .. target_dir
+    end
+  elseif fsio.is_file(target) then
     local present = fsio.read(target)
     if present ~= new_text then
       return nil, "target exists with different content: " .. target
@@ -882,11 +944,14 @@ function M.done(id, opts)
   if readme_old then
     local changed
     readme_new, changed =
-      M.readme_add_row(readme_old, bucket, filename, readme_row(bucket, filename, task, date))
+      M.readme_add_row(readme_old, bucket, rel, readme_row(bucket, rel, task, date))
     readme_state = changed and "updated" or "unchanged"
   end
 
-  local tracked = { task.path, target, vault.index_path(root, area) }
+  local tracked = { vault.index_path(root, area) }
+  if not task.folder then
+    tracked = { task.path, target, vault.index_path(root, area) }
+  end
   if readme_old then
     tracked[#tracked + 1] = readme_path
   end
@@ -895,16 +960,38 @@ function M.done(id, opts)
     return nil, "cannot snapshot before moving: " .. tostring(cerr)
   end
 
+  local moved = false
   local function run()
-    if not resume then
-      local ok, err = fsio.create_exclusive(target, new_text)
-      if not ok then
-        return nil, "cannot create " .. target .. ": " .. tostring(err)
+    if task.folder then
+      local made, merr = fsio.mkdirp(fsio.dirname(target_dir))
+      if not made then
+        return nil, "cannot create " .. fsio.dirname(target_dir) .. ": " .. tostring(merr)
       end
-    end
-    local removed, rm_err = fsio.remove(task.path)
-    if not removed then
-      return nil, "cannot remove " .. task.path .. ": " .. tostring(rm_err)
+      local renamed, rerr2 = fsio.rename(src_dir, target_dir)
+      if not renamed then
+        return nil, "cannot move " .. src_dir .. ": " .. tostring(rerr2)
+      end
+      moved = true
+      local wrote, werr = fsio.write_atomic(target, new_text)
+      if not wrote then
+        return nil, "cannot write " .. target .. ": " .. tostring(werr)
+      end
+      local old_name = target_dir .. "/" .. slug .. ".md"
+      local removed, rm_err = fsio.remove(old_name)
+      if not removed then
+        return nil, "cannot remove " .. old_name .. ": " .. tostring(rm_err)
+      end
+    else
+      if not resume then
+        local ok, err = fsio.create_exclusive(target, new_text)
+        if not ok then
+          return nil, "cannot create " .. target .. ": " .. tostring(err)
+        end
+      end
+      local removed, rm_err = fsio.remove(task.path)
+      if not removed then
+        return nil, "cannot remove " .. task.path .. ": " .. tostring(rm_err)
+      end
     end
     if readme_old and readme_new ~= readme_old then
       local ok, err = fsio.write_atomic(readme_path, readme_new)
@@ -928,6 +1015,12 @@ function M.done(id, opts)
     res = nil
   end
   if not res then
+    if moved then
+      -- Put the folder back exactly as it was: old file name, old text.
+      pcall(fsio.remove, target)
+      pcall(fsio.write_atomic, target_dir .. "/" .. slug .. ".md", old_text)
+      pcall(fsio.rename, target_dir, src_dir)
+    end
     local restored, restore_errors = checkpoint.restore(cp)
     checkpoint.discard(cp)
     local msg = tostring(err)
@@ -953,6 +1046,159 @@ function M.done(id, opts)
     index = type(res) == "table" and res or nil,
   },
     nil
+end
+
+-- ── folder tasks: folderize and attach ───────────────────────────────────────
+
+---Image extensions an attached file gets `![]()` for.
+---@type table<string, boolean>
+local IMAGE_EXT =
+  { png = true, jpg = true, jpeg = true, gif = true, webp = true, svg = true, bmp = true }
+
+---Folder inside a folder task that `attach` puts files in.
+M.ASSETS_DIR = "assets"
+
+---Move a plain task file into its own folder: `tasks/<slug>.md` becomes
+---`tasks/<slug>/<slug>.md`.
+---@param root string
+---@param task Tasks.Task
+---@return string|nil path  the new task file
+---@return string|nil err
+local function to_folder(root, task)
+  local dir = vault.task_dir(root, task.area, task.slug)
+  if fsio.is_dir(dir) then
+    return nil, "folder already exists: " .. dir
+  end
+  local made, merr = fsio.mkdirp(dir)
+  if not made then
+    return nil, "cannot create " .. dir .. ": " .. tostring(merr)
+  end
+  local dest = vault.folder_task_path(root, task.area, task.slug)
+  local moved, rerr = fsio.rename(task.path, dest)
+  if not moved then
+    pcall((vim.uv or vim.loop).fs_rmdir, dir)
+    return nil, "cannot move " .. task.path .. ": " .. tostring(rerr)
+  end
+  return dest, nil
+end
+
+---Turn an open task into a folder task so assets can be attached. A task that
+---already is one is left alone (`changed = false`).
+---@param id string
+---@param opts? { root?: string, index?: boolean }
+---@return { id: string, path: string, changed: boolean, index?: Tasks.IndexResult, index_err?: string }|nil result
+---@return string|nil err
+function M.folderize(id, opts)
+  opts = opts or {}
+  local root, rerr = vault.root(opts)
+  if not root then
+    return nil, rerr
+  end
+  local task, ferr = scan.find(id, { root = root })
+  if not task then
+    return nil, ferr
+  end
+  if task.folder then
+    return { id = task.id, path = task.path, changed = false }, nil
+  end
+  local dest, err = to_folder(root, task)
+  if not dest then
+    return nil, err
+  end
+  local result = { id = task.id, path = dest, changed = true }
+  if opts.index ~= false then
+    result.index, result.index_err = index.write_area(task.area, { root = root })
+  end
+  return result, nil
+end
+
+---A file name that is safe inside `assets/`: spaces become hyphens; letters,
+---digits, `_`, `.`, `-` and non-ASCII bytes stay; no separators, no `..`.
+---@param name any
+---@return string|nil name
+---@return string|nil err
+local function asset_name(name)
+  if type(name) ~= "string" then
+    return nil, "asset name must be text"
+  end
+  local n = trim(name):gsub("%s+", "-")
+  if n == "" then
+    return nil, "asset name is empty"
+  end
+  if n:find("..", 1, true) or not n:match("^[%w_\128-\255][%w_.%-\128-\255]*$") then
+    return nil, "asset name may only use letters, digits, _ . - (got '" .. n .. "'; pass --name=)"
+  end
+  return n, nil
+end
+
+---Copy a file into a task's `assets/` folder and give back the Markdown to link
+---it. A plain task file becomes a folder task first. `opts.name` renames the
+---copy; an asset of that name that already exists is an error, never replaced.
+---@param id string
+---@param src string                 # The file to attach.
+---@param opts? { root?: string, today?: string, name?: string, index?: boolean }
+---@return { id: string, path: string, asset: string, rel: string, link: string, folderized: boolean, index?: Tasks.IndexResult, index_err?: string }|nil result
+---@return string|nil err
+function M.attach(id, src, opts)
+  opts = opts or {}
+  local root, rerr = vault.root(opts)
+  if not root then
+    return nil, rerr
+  end
+  if type(src) ~= "string" or src == "" then
+    return nil, "attach needs a file"
+  end
+  src = fsio.norm(src)
+  if not fsio.is_file(src) then
+    return nil, "not a file: " .. src
+  end
+  local name, nerr = asset_name(opts.name or (src:match("([^/]*)$") or src))
+  if not name then
+    return nil, nerr
+  end
+  local today = opts.today or model.today()
+  if not model.is_date(today) then
+    return nil, "today is not a date (YYYY-MM-DD): " .. tostring(today)
+  end
+  local task, ferr = scan.find(id, { root = root })
+  if not task then
+    return nil, ferr
+  end
+
+  local path, folderized = task.path, false
+  if not task.folder then
+    local dest, err = to_folder(root, task)
+    if not dest then
+      return nil, err
+    end
+    path, folderized = dest, true
+  end
+  local asset = fsio.dirname(path) .. "/" .. M.ASSETS_DIR .. "/" .. name
+  local copied, cerr = fsio.copy(src, asset)
+  if not copied then
+    local why = cerr == "exists" and ("asset exists: " .. asset .. " (pass --name=)")
+      or ("cannot copy to " .. asset .. ": " .. tostring(cerr))
+    return nil, folderized and (why .. " (the task was turned into a folder task)") or why
+  end
+
+  local rel = M.ASSETS_DIR .. "/" .. name
+  local ext = name:match("%.([%w]+)$")
+  local is_image = ext ~= nil and IMAGE_EXT[ext:lower()] == true
+  local link = (is_image and "![%s](%s)" or "[%s](%s)"):format(name, rel)
+  fm.update(path, { { "updated", today } })
+
+  local result = {
+    id = task.id,
+    path = path,
+    asset = asset,
+    rel = rel,
+    link = link,
+    folderized = folderized,
+  }
+  if opts.index ~= false then
+    result.index, result.index_err = index.write_area(task.area, { root = root })
+  end
+  return result, nil
 end
 
 return M

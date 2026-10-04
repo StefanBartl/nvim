@@ -8,8 +8,10 @@
 --- Key responsibilities:
 ---  - one `Tasks.Task` per `*.md` file, in path order; a file that cannot be
 ---    read or parsed comes back as an invalid task, it never aborts the scan
----  - nested files under `tasks/` are returned too (flagged), so `check` can
----    report them instead of them silently not existing
+---  - a folder task (`tasks/<slug>/<slug>.md`) is a task like a plain file; the
+---    other files in its folder are assets and never read as tasks
+---  - other nested files under `tasks/` are returned too (flagged), so `check`
+---    can report them instead of them silently not existing
 ---  - `Backlog/` files count as tasks only when they carry frontmatter with a
 ---    `status`: the old free-form documents there are not tasks
 ---
@@ -59,6 +61,94 @@ local function markdown_files(dir, opts)
   return out, errors or {}
 end
 
+---Sort the markdown files below `dir` into task files and the rest.
+---
+---A task file is `<name>.md` directly in `dir`, or `<name>/<name>.md` (a folder
+---task). Any other file inside a folder that holds its own `<name>.md` is an
+---asset and is dropped. What is left (a file in a folder without a matching
+---task file, or deeper) is `nested`: kept so `check` can report it.
+---@param dir string
+---@param files string[]  normalised absolute paths below `dir`
+---@return { path: string, folder: boolean, nested: boolean }[] entries
+local function classify(dir, files)
+  local has_task_file = {}
+  for _, path in ipairs(files) do
+    local name, base = path:sub(#dir + 2):match("^([^/]+)/([^/]+)%.md$")
+    if name and name == base then
+      has_task_file[name] = true
+    end
+  end
+  local out = {}
+  for _, path in ipairs(files) do
+    local rel = path:sub(#dir + 2)
+    local top = rel:match("^([^/]+)/")
+    if not top then
+      out[#out + 1] = { path = path, folder = false, nested = false }
+    elseif has_task_file[top] then
+      local name, base = rel:match("^([^/]+)/([^/]+)%.md$")
+      if name and name == base then
+        out[#out + 1] = { path = path, folder = true, nested = false }
+      end
+    else
+      out[#out + 1] = { path = path, folder = false, nested = true }
+    end
+  end
+  return out
+end
+
+---The task files among the markdown files of a `Backlog/<bucket>` folder: a
+---file directly in it, a folder task's `<name>/<name>.md`, and (as before) any
+---other nested file. The other files inside a folder task are assets.
+---@param dir string
+---@param files string[]
+---@return { path: string, folder: boolean }[] entries
+local function backlog_files(dir, files)
+  local has_task_file = {}
+  for _, path in ipairs(files) do
+    local name, base = path:sub(#dir + 2):match("^([^/]+)/([^/]+)%.md$")
+    if name and name == base then
+      has_task_file[name] = true
+    end
+  end
+  local out = {}
+  for _, path in ipairs(files) do
+    local rel = path:sub(#dir + 2)
+    local top = rel:match("^([^/]+)/")
+    if not top then
+      out[#out + 1] = { path = path, folder = false }
+    elseif has_task_file[top] then
+      local name, base = rel:match("^([^/]+)/([^/]+)%.md$")
+      if name and name == base then
+        out[#out + 1] = { path = path, folder = true }
+      end
+    else
+      out[#out + 1] = { path = path, folder = false }
+    end
+  end
+  return out
+end
+
+---Names of the folders directly inside a `Backlog/<bucket>` folder.
+---@param dir string
+---@return table<string, boolean>
+local function backlog_folder_names(dir)
+  local names = {}
+  local handle = (vim.uv or vim.loop).fs_scandir(dir)
+  if not handle then
+    return names
+  end
+  while true do
+    local name, kind = (vim.uv or vim.loop).fs_scandir_next(handle)
+    if not name then
+      break
+    end
+    if kind == "directory" then
+      names[name] = true
+    end
+  end
+  return names
+end
+
 ---@param opts? Tasks.ScanOpts
 ---@return string|nil root
 ---@return string|nil err
@@ -83,12 +173,12 @@ function M.area(area, opts)
   local dir = vault.tasks_dir(root, area)
   local files, errors = markdown_files(dir, opts)
   local tasks = {}
-  for _, path in ipairs(files) do
-    local rel = path:sub(#dir + 2)
-    tasks[#tasks + 1] = model.from_file(path, {
+  for _, entry in ipairs(classify(dir, files)) do
+    tasks[#tasks + 1] = model.from_file(entry.path, {
       area = area,
       location = "roadmap",
-      nested = rel:find("/", 1, true) ~= nil,
+      nested = entry.nested,
+      folder = entry.folder,
     })
   end
   return tasks, errors
@@ -133,15 +223,20 @@ function M.backlog(area, opts)
   end
   local tasks, all_errors = {}, {}
   for _, bucket in ipairs({ "FEATURES", "TASKS" }) do
-    local files, errors = markdown_files(vault.backlog_dir(root, area, bucket), opts)
+    local dir = vault.backlog_dir(root, area, bucket)
+    local files, errors = markdown_files(dir, opts)
     for _, e in ipairs(errors) do
       all_errors[#all_errors + 1] = e
     end
-    for _, path in ipairs(files) do
+    for _, entry in ipairs(backlog_files(dir, files)) do
+      local path = entry.path
       local text = fsio.read(path)
       -- Cheap pre-test: most old Backlog documents have no frontmatter at all.
       if text and text:match("^\239?\187?\191?%-%-%-") then
-        local task = model.parse_text(text, { path = path, area = area, location = "backlog" })
+        local task = model.parse_text(
+          text,
+          { path = path, area = area, location = "backlog", folder = entry.folder }
+        )
         if task.meta.status ~= nil then
           tasks[#tasks + 1] = task
         end
@@ -169,8 +264,14 @@ function M.backlog_slugs(area, opts)
   end
   local slugs = {}
   for _, bucket in ipairs({ "FEATURES", "TASKS" }) do
-    for _, path in ipairs((markdown_files(vault.backlog_dir(root, area, bucket), opts))) do
-      slugs[model.slug_of(path, "backlog")] = path
+    local dir = vault.backlog_dir(root, area, bucket)
+    for _, entry in ipairs(backlog_files(dir, (markdown_files(dir, opts)))) do
+      slugs[model.slug_of(entry.path, "backlog")] = entry.path
+    end
+    -- A folder in Backlog/ that is not a task folder still takes its name.
+    for name in pairs(backlog_folder_names(dir)) do
+      local slug = name:gsub("^%d%d%d%d%-%d%d%-%d%d_", "")
+      slugs[slug] = slugs[slug] or (dir .. "/" .. name)
     end
   end
   return slugs, nil
@@ -190,11 +291,15 @@ function M.find(id, opts)
   if not area or not slug then
     return nil, id_err or ("expected <area>/<slug>, got " .. tostring(id))
   end
-  local path = vault.task_path(root, area, slug)
-  if not fsio.is_file(path) then
-    return nil, "no such open task: " .. id
+  local path, folder = vault.resolve_task(root, area, slug)
+  if not path then
+    return nil, folder --[[@as string]]
   end
-  return model.from_file(path, { area = area, location = "roadmap", slug = slug }), nil
+  return model.from_file(
+    path,
+    { area = area, location = "roadmap", slug = slug, folder = folder == true }
+  ),
+    nil
 end
 
 ---The finished task `<area>/<slug>` from `Backlog/`, whatever its date prefix.
@@ -211,10 +316,14 @@ function M.find_done(id, opts)
     return nil
   end
   for _, bucket in ipairs({ "FEATURES", "TASKS" }) do
-    local files = markdown_files(vault.backlog_dir(root, area, bucket), opts or {})
-    for _, path in ipairs(files) do
-      if model.slug_of(path, "backlog") == slug then
-        return model.from_file(path, { area = area, location = "backlog" })
+    local dir = vault.backlog_dir(root, area, bucket)
+    for _, entry in ipairs(backlog_files(dir, markdown_files(dir, opts or {}))) do
+      if model.slug_of(entry.path, "backlog") == slug then
+        return model.from_file(entry.path, {
+          area = area,
+          location = "backlog",
+          folder = entry.folder,
+        })
       end
     end
   end
