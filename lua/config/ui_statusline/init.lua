@@ -95,6 +95,9 @@ function M.setup()
     require("ui").setup({
       usrcmds = true,
       keymaps = keymaps_opts,
+      -- Open-task counter segment (tasks_counter): the cwd folder `nvim` maps to
+      -- the vault area `nvim-config`. Vault found via $TASKS_VAULT / $REPOS_DIR.
+      tasks = { breakdown = true, areas = { nvim = "nvim-config" } },
       -- The sticky code context (what nvim-treesitter-context did until
       -- 2026-09-19): explicit-only in ui.setup, never under `all`, because it
       -- draws over the buffer's first rows. `max_lines` is the row cap: 3 for

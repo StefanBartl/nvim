@@ -32,6 +32,7 @@ local filetree_cwd_mode = lazy.require("ui.statusline.modules.filetree_cwd_mode"
 local casedesk = lazy.require("ui.statusline.modules.casedesk")
 local undo_depth = lazy.require("ui.statusline.modules.undo_depth")
 local search_count = lazy.require("ui.statusline.modules.search_count")
+local tasks_counter = lazy.require("ui.statusline.modules.tasks_counter")
 local matchup_offscreen = lazy.require("ui.statusline.modules.matchup_offscreen")
 
 -- ============================================================================
@@ -58,6 +59,7 @@ return {
         "lsp",
         "search_count",
         "undo_depth",
+        "tasks_counter",
         "plugin_progress",
         "plugin_summary",
         "casedesk",
@@ -75,6 +77,12 @@ return {
         -- has actually branched (an edit after an undo).
         undo_depth = function()
           return undo_depth()
+        end,
+
+        -- "T:N" open tasks of the cwd project (WKDBooks task system);
+        -- empty without a vault or a matching area.
+        tasks_counter = function()
+          return tasks_counter()
         end,
 
         -- vim-matchup's offscreen-match source line (empty unless the
