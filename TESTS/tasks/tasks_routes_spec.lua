@@ -1134,6 +1134,7 @@ return function(H)
         "--sort=default",
         "--sort=prio-effort",
         "--sort=severity",
+        "--sort=frecency",
       })
       ok(vim.tbl_contains(complete("TaskT tasks --severity="), "--severity=critical"))
       ok(vim.tbl_contains(complete("TaskT tasks --effort="), "--effort=<=M"))
