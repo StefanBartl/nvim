@@ -1,12 +1,12 @@
 # Handover — Task-System für die wkdbooks
 
-> **Stand 2026-10-04 (Zwischenstand, nach Runde 19).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
+> **Stand 2026-10-04 (Zwischenstand, nach Runde 21).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
 > `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim`, `images.nvim`, `pdfport.nvim`, `open.nvim`,
-> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`; `spotlight.nvim` und
+> `gitsuite.nvim`, `color_my_ascii.nvim`, `rules.nvim`, `media.nvim`, `ai.nvim`, `ui.nvim`, `debugging.nvim`, `insights.nvim`; `spotlight.nvim` und
 > `migrate.nvim` sind geprüft (keine offene Arbeit, keine Tasks); `pickers.nvim`, `hover.nvim`, `language.nvim` und
 > `replacer.nvim` haben je einzelne Tasks aus fremden Runden (ihre eigene Runde steht aus). Keine Agenten laufen mehr.
-> **Auf Wunsch des Nutzers wurde nach Runde 19 (`ui`) angehalten**; offen sind `debugging`, die kleinen Plugins (Liste
+> Nach Runde 19 (`ui`) wurde auf Wunsch kurz angehalten, Runde 20 (`debugging`) lief danach; offen sind die kleinen Plugins (Liste
 > unter „Nächste Schritte“), `docmap-desktop`, `nvim-config` und die Politur (Phase 5).
 >
 > **Neu seit dem letzten Stand:** Kategorien (`category`, Filter `--category=`) und Ordner-Tasks mit Assets
@@ -36,7 +36,7 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24), `pdfport.nvim` (7), `open.nvim` (8), `gitsuite.nvim` (5), `color_my_ascii.nvim` (11), `rules.nvim` (7), `media.nvim` (10), `ai.nvim` (15), `ui.nvim` (13), `debugging.nvim` (5), `insights.nvim` (4); einzelne Tasks fremder Runden in `lib.nvim` (+2), `hover.nvim` (3), `language.nvim` (1), `replacer.nvim` (1) |
 | Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R14 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
@@ -118,6 +118,8 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `397310c` | `ui.nvim`: 13 Tasks (Runde 19) |
 | nvim-config | `f974551d` | Kategorien und Ordner-Tasks (Engine, CLI, Routen, Dashboard, Specs, Doku) |
 | WKDBooks | `da40a62` | Konzept §12, Regeln R13 und R14 |
+| WKDBooks | `932fac8` | `debugging.nvim`: 5 Tasks (Runde 20); „Offen“ der ROADMAP war das gebaute Recent-Popup, durch Verweis ersetzt (Commit trägt versehentlich einen Claude-Co-Author-Trailer, gepusht) |
+| WKDBooks | `c36036a` | `insights.nvim`: 4 Tasks (Runde 21), nur das SYNERGIE-Papier war offen; gebaute Features in FEATURES.md nachgetragen |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
 geprüft (13 Befunde behoben). Die Fix-Commits `c6d274c`, `efcab018`, `80ef2946` hat Claude am 2026-10-04 selbst
@@ -171,6 +173,8 @@ Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<slug>.md`.
   Prompt-Injektion); `readme-literature-section` (anlegen, kurz); Chat-Buffer-Sessions ablehnen (Scope, bleibt loomAI);
   `copilot-provider` (verwerfen, falls kein Bedarf); `:Ai stop` zuerst nur für Streams. `release-v1-tag` ist `blocked`
   ohne `blocked_by`: die Voraussetzungen (Alltagsdurchlauf, Gemini-Live-Test, POSIX-Durchlauf) stehen als Akzeptanz.
+- **debugging.nvim:** `views-dead-refresh-sweep` (Status `decision`: tote Refresh-Mechanik `refresh_log_view`, WinEnter/BufWinEnter/FileType-Autocmds, `is_target_view` und die Optionen `delay_messages_ms`, `delay_noice_ms`, `capture_timeout_ms` entfernen? Empfehlung: ja, eigene Config anpassen; `setup()` warnt seit `0cde049` bei unbekannten Schlüsseln); `lib.nvim.messages` hat keinen Statusabruf für `health-recent-popup-requirements` (abwarten). Bug prio 2: `recent-fallback-multiline-crash` (ohne ui.nvim stürzt `<lt>m/n/e` bei mehrzeiligen Meldungen ab, `views/recent.lua:59`); `docs-recent-popup-catch-up` (Doku und `health.lua` „Noice views“ veraltet). `lib.nvim/tagged-scratch-window` ist veraltet (debugging.nvim nutzt `lib.nvim.window.tag`, das Popup ist der zweite Konsument) — Task nachziehen.
+- **insights.nvim:** `telemetry-subcommand-usage` (Status `decision`: selbst messen? Empfehlung: nein, nur Host-seitig); `architecture-md-todos-drift` (handgepflegt lassen, nur `todos/` ergänzen); `metrics-docmap-section` geparkt. `readme-documentation-pointer` (Verweis fehlt in beiden READMEs). Info für `filetree.nvim/insights-node-actions`: `insights.compress.compress(path, …)` nimmt einen Pfad, `tree.write_tree/count_files/copy_to_clipboard` arbeiten nur auf dem cwd.
 - **ui.nvim:** noice-Ersatz geparkt lassen; `interactive-confirm-sweep` (Status `decision`: Besitzer `ALL` mit neuem
   `ALL/ROADMAP/tasks/` — Konzept §2 erlaubt es, der Ordner existiert noch nicht); `kit-terminal-vs-snacks` (Snacks.terminal
   bleiben); gebündelte Ideen-Tasks `statusline-ambient-ideas`, `sticky-language-gaps` so lassen oder einzeln; `wezterm-bridge`
@@ -280,8 +284,8 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 
 ## Nächste Schritte
 
-1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: **max. 1 Agent gleichzeitig**). Angehalten nach Runde 19
-   (`ui`). Noch offen: `debugging` (19 KB), danach die kleinen — `insights` (11), `my` (10), `language` (9), `hover` (9),
+1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: **max. 1 Agent gleichzeitig**). Fertig bis Runde 20
+   (`debugging`). Noch offen: die kleinen — `my` (10), `language` (9), `hover` (9),
    `buffer-ctx` (7), `runtime-analysis` (6), `data` (5), `replacer` (3), `cascade` (3), `sandbox` (2), `reposcope` (2),
    `sessions` (1), `emojis` (1) — dann die Bereiche mit leerer oder fehlender Roadmap (`diff`, `cmdlog`, `dap`, `fileops`,
    `recommender`, `refinder`, `filetreepicker`, `nvim-nexus`; kurz prüfen), zuletzt `nvim-config` und `docmap-desktop`
