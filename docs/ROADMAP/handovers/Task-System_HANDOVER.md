@@ -2,11 +2,12 @@
 
 > **Stand 2026-10-04 (Zwischenstand).** Phasen 0–3 sind gebaut und auf `main`; **Phase 4 (Migration) läuft**:
 > migriert und committet sind `lib.nvim` (Pilot), `lsp.nvim`, `mdview.nvim`, `documentation.nvim`, `casedesk.nvim`,
-> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim` (28 Tasks); `spotlight.nvim` ist geprüft (keine
+> `markdown.nvim`, `gopath.nvim`, `github_stats.nvim`, `filetree.nvim` (28 Tasks), `images.nvim` (24 Tasks, Runde 10); `spotlight.nvim` ist geprüft (keine
 > offene Arbeit, keine Tasks); `pickers.nvim` hat seinen ersten Task. Keine Agenten laufen mehr. Offen bleiben die übrigen
-> Plugins (Größenordnung: `images`, `pdfport`, `open`, `gitsuite`, `color_my_ascii`, `migrate`, `rules`, `media`, `ai`,
-> `ui`, `debugging`, … und `docmap-desktop`) und die Politur (Phase 5). **Die gesammelten Entscheidungen für den Nutzer
-> stehen im Abschnitt „Offene Entscheidungen“ unten.**
+> Plugins (Größenordnung: `pdfport`, `open`, `gitsuite`, `color_my_ascii`, `migrate`, `rules`, `media`, `ai`,
+> `ui`, `debugging`, … und `docmap-desktop`) und die Politur (Phase 5). **Die Entscheidungen zu casedesk, markdown, documentation,
+> github_stats und filetree sind inzwischen im Vault als Commits eingetragen (`e63b4cb`, `e27b5c8`, `4584776`, `e18a512`,
+> `05e3187`); der Abschnitt „Offene Entscheidungen“ unten ist für diese Plugins veraltet und gilt nur noch für `images.nvim`.**
 >
 > **Konzept (Spec, Regeln R1–R12, Entscheidungen):**
 > [Task-System-Konzept.md]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Task-System-Konzept.md)
@@ -30,7 +31,7 @@ Die globale `ALL/TASKS.md` wird **nicht** committet, nur bei Bedarf erzeugt.
 | `:MyPlugins`-Routen | nvim-config: `lua/bindings/usrcmds/plugin_repos/` (Routen-Datei + `README.md`) |
 | Dashboard | nvim-config: neben `plugin_repos/picker.lua` (Snacks-Picker, Fallback ohne Snacks) |
 | Specs der Engine | nvim-config: `TESTS/` (Runner `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua`) |
-| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1) |
+| Migrierte Plugins | Vault, jeweils `ROADMAP/tasks/` + generierte `ROADMAP/TASKS.md`: `lib.nvim` (Pilot, 58), `documentation.nvim` (55), `casedesk.nvim` (28), `lsp.nvim` (14 offen), `mdview.nvim` (11), `markdown.nvim` (6), `github_stats.nvim` (5), `gopath.nvim` (4), `pickers.nvim` (1), `images.nvim` (24) |
 | Brief für Migrations-Agenten | `C:\Users\bartl\AppData\Local\Temp\claude\…\scratchpad\migration-brief.md` (nur in der Sitzung; Inhalt = Abschnitt „Nächste Schritte“ Punkt 1 dieser Datei) |
 | Regeln R1–R12 | Vault-`README.md`, Abschnitt "Open tasks" |
 | Env-Link-Prüfung | Vault `TOOLS/scripts/md_lint.lua` löst `$VAR/…`-Links mit `lsp.core.env_links` (lsp.nvim) auf |
@@ -78,6 +79,8 @@ Alt-Kombinationen (Normal- und Insert-Modus): `<M-s>` `<M-p>` `<M-d>` `<M-f>` `<
 | WKDBooks | `a9d0d2a` | `github_stats.nvim`: 5 Tasks (Runde 6) |
 | WKDBooks | `e8ae2a3` | `spotlight.nvim`: keine offene Arbeit, Statussatz |
 | WKDBooks | `36ef7c4` | `filetree.nvim`: 28 Tasks (Runde 8) |
+| WKDBooks | `e63b4cb`, `e27b5c8`, `4584776`, `e18a512`, `05e3187` | Entscheidungen casedesk, markdown, documentation, github_stats, filetree |
+| WKDBooks | `0037ef2` | `images.nvim`: 24 Tasks (Runde 10), Roadmap-Korrekturen (Flamegraph und ASCII-Fallback sind gebaut) |
 
 Review: Der Code von `2bc2874`, `ef8641fa`, `be270dfa`, `c61cd4f1` wurde durch einen Review-Agenten adversarial
 geprüft (13 Befunde behoben). Die Fix-Commits `c6d274c`, `efcab018`, `80ef2946` hat Claude am 2026-10-04 selbst
@@ -99,6 +102,20 @@ Agent reviewt.
   Task (`mdview.nvim/overlay-markers-migration`, parked).
 
 ## Offene Entscheidungen (warten auf den Nutzer)
+
+Nur `images.nvim` ist offen; die älteren Punkte zu den anderen Plugins sind im Vault entschieden (siehe Commits oben).
+
+- **images.nvim (Runde 10):** `image-suite-decision` (Status `decision`: dünne Suite ja/nein — empfohlen: erst die
+  Einzelfunde abarbeiten); Sixel-Backend nicht angelegt (empfohlen: nein; Kitty bleibt nach `CONTRIBUTING.md` verworfen);
+  Rotate/Flip nicht angelegt (empfohlen: nein); `gopath-open-action-for-images`, `docmap-graph-as-image`,
+  `github-stats-chart-as-image` in die Bereiche gopath/documentation/github_stats umziehen (empfohlen: ja, bei der
+  jeweiligen Plugin-Arbeit); `magick-resource-limits` und `draw-payload-cache` (prio 3, `needs-verification`) behalten?
+  Bugs mit prio 2: `paste-powershell-quote-escape` (nur bei Temp-Pfad mit typografischem Quote, deshalb nicht prio 1),
+  `convert-failure-deletes-existing-target` (`convert.lua:95` löscht bei Fehler ein vorhandenes Ziel).
+  Cross-Plugin ohne Task: `open.nvim` `resolve_netrw_path()` (`context.lua:186-197`) und `images.show`-Fallback
+  (`handlers/image.lua:25-31`, `HANDLERS.md:107-110` verspricht ihn); `hover.nvim` leerer Float ohne eigenes Backend.
+
+<details><summary>Ältere Punkte (entschieden, nur zur Historie)</summary>
 
 Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<slug>.md`.
 
@@ -131,6 +148,8 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 - **gopath.nvim:** keine; optional `cache-load-from-disk-lazy` auf Prio 2, falls `startup-stall-measure` mehr Last zeigt.
 - **lsp.nvim / mdview.nvim:** beantwortet (siehe „Entscheidungen“); `live-check-lspsaga-replacements` und
   `scroll-lag-feel-judgement` bleiben Tasks.
+
+</details>
 
 ## Offen / nicht verifiziert
 
@@ -183,7 +202,7 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
 1. **Phase 4 — Migration** weiter, pro Plugin eine Runde (Regel: max. 1 Agent gleichzeitig; in dieser Sitzung wurde
    auf ausdrücklichen Wunsch ausnahmsweise mit 3 gearbeitet): ROADMAP/NOTES/Handover lesen, offene Punkte als
    Task-Dateien (CLI `new … --slug= --lang=`), Prosa bleibt mit Link auf `TASKS.md`. Noch offen nach Menge (Roadmap-KB):
-   `docmap-desktop` (188, Desktop-Programm — erst klären, ob es überhaupt in dieses System gehört), `images` (50),
+   `docmap-desktop` (188, Desktop-Programm — erst klären, ob es überhaupt in dieses System gehört), 
    `pdfport` (43), `open` (41), `gitsuite` (37), `color_my_ascii` (31+33 NOTES), `migrate` (30), `rules` (29), `media`
    (22+63), `ai` (21), `ui` (19), `debugging` (19), danach die kleinen. Vorher sauberer Git-Stand im Vault. Brief für die
    Agenten: Quellen lesen, gegen den Baum nachmessen, Erledigtes nicht anlegen (veraltete „offen“-Angaben mit Beleg
