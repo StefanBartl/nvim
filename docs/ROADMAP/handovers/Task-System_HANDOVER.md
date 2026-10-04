@@ -343,6 +343,7 @@ Empfehlung jeweils in Klammern; die Tasks stehen unter `<plugin>/ROADMAP/tasks/<
    (`Final_Checks/modifier-keymaps.md` §8), Badge-Modul für `nvim-config/learn-plan-viewer-statusline-badge`;
    `gopath.nvim/fs-cache-daemon` ohne Rückverweis auf `filetree.nvim/own-tree-engine`; `filetree.nvim/system-open-via-lib-open-default`
    weiter ungeklärt.
-2. `lib.nvim/project-scan-missing-parsers-and-tools` und `lsp.nvim/config-unknown-key-warning` bauen (wenn gewünscht).
+2. `lib.nvim/project-scan-missing-parsers-and-tools` bauen (wenn gewünscht). **Erledigt 2026-10-04:** `lsp.nvim/config-unknown-key-warning`
+   (`lsp.nvim` `7328945`, Vault `695d689`) und der CI-Bug `nvim-config/ci-stylua-red-learn-plan-viewer` (`ef1d81ee`, CI grün).
 3. `pickers.nvim`: generische Items-Quelle (`pickers.nvim/generic-items-source`, Konzept §6) bauen.
 4. Phase 5: Politur (Statusline, `mdview`, `--stale`, Vault-CI).
