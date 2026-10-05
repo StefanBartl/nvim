@@ -102,12 +102,14 @@ end
 ---@return boolean ok
 ---@return string|nil err
 local function default_opener(path)
-  local escaped = vim.fn.fnameescape(path)
-  local ok, err = pcall(vim.cmd, "edit " .. escaped)
+  local ok, err = pcall(vim.cmd, "edit " .. vim.fn.fnameescape(path))
   if not ok then
     return false, tostring(err)
   end
-  ok, err = pcall(vim.cmd, "MDView start " .. escaped)
+  -- The path travels as ONE argument (table form). `fnameescape` is right for `:edit`, but a user
+  -- command splits its tail with `<f-args>`, which keeps the backslash `fnameescape` put before a
+  -- `#`, `%` or `'` -- `:MDView start` would then be handed `C:/Users/O\'Neil/...`.
+  ok, err = pcall(vim.cmd, { cmd = "MDView", args = { "start", path } })
   if not ok then
     return false, tostring(err)
   end
@@ -175,6 +177,17 @@ function M.slug(label)
     return "export"
   end
   return s
+end
+
+---Is `path` the folder `root` or below it? Case-insensitive on Windows (`E:/Repos` is `e:/repos`).
+---@param path string
+---@param root string
+---@return boolean
+local function inside(path, root)
+  if is_windows then
+    path, root = path:lower(), root:lower()
+  end
+  return path == root or path:sub(1, #root + 1) == root .. "/"
 end
 
 ---@return string dir
@@ -250,7 +263,7 @@ end
 function M.write_temp(text, label)
   local dir = root_dir()
   local vroot = vault.root()
-  if vroot and (dir == vroot or dir:sub(1, #vroot + 1) == vroot .. "/") then
+  if vroot and inside(dir, fsio.norm(vroot)) then
     return nil, "refusing to write a preview file inside the vault: " .. dir
   end
   local mk_ok, mk_err = fsio.mkdirp(dir)
@@ -297,7 +310,13 @@ function M.open_text(text, label)
   end
   local buf = find_buf(path)
   if buf then
-    -- A scratch-like file: keep it out of the buffer list and clean up with it.
+    -- A name that comes back (the first file went away with its buffer, the next export took its
+    -- name again) is the SAME buffer: what the earlier open left on it must go first, or its
+    -- handlers would delete this new file -- the `buflisted` line below fires `BufDelete` itself.
+    vim.api.nvim_clear_autocmds({ group = group, buffer = buf })
+    -- A scratch-like file: keep it out of the buffer list and clean up with it. `BufDelete` alone
+    -- would not do: it never fires for an unlisted buffer, so a plain `:bdelete` (or closing the
+    -- window of a buffer that is not hidden) left the file until Neovim quit.
     vim.bo[buf].buflisted = false
     vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
       group = group,
@@ -305,6 +324,19 @@ function M.open_text(text, label)
       once = true,
       callback = function()
         M.forget(path)
+      end,
+    })
+    -- `BufUnload` is where every other way of dropping the buffer's text ends up -- but `:edit!`
+    -- (a reload) fires it too, so look again once the command is over: gone, the file goes.
+    vim.api.nvim_create_autocmd("BufUnload", {
+      group = group,
+      buffer = buf,
+      callback = function()
+        vim.schedule(function()
+          if not vim.api.nvim_buf_is_loaded(buf) then
+            M.forget(path)
+          end
+        end)
       end,
     })
   end

@@ -132,6 +132,25 @@ local function unquote(s)
   return inner and vim.trim(inner) or s
 end
 
+---Refuse words a command has no use for. Ignoring them is the worse outcome: the command line
+---splits at spaces, so `--to=file:C:/my dir/x.md` arrives as `--to=file:C:/my` plus the stray
+---`dir/x.md`, and the export would be written to a file called `my`.
+---@param ctx table  composer context
+---@return boolean ok  # false: the error is reported, the command must stop
+local function no_stray_words(ctx)
+  local rest = ctx.rest
+  if rest == nil or #rest == 0 then
+    return true
+  end
+  local to = ctx.flags and ctx.flags.to
+  local hint = ""
+  if type(to) == "string" and to:sub(1, 5) == "file:" then
+    hint = " (put a backslash before each space of the --to=file: path)"
+  end
+  notify.error("unexpected argument: " .. table.concat(rest, " ") .. hint)
+  return false
+end
+
 ---Reload unchanged buffers of `path` after the file changed on disk.
 ---@param path string
 local function refresh_buffers(path)
@@ -204,6 +223,9 @@ end
 ---`:MyPlugins tasks [<area>|all] [filters] [--to=] [--format=]`
 ---@param ctx table  composer context
 function M.list(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local flags = ctx.flags
   local target, terr = view.parse_target(flags.to)
   if terr then
@@ -337,6 +359,9 @@ end
 ---`:MyPlugins tasks index [<area>] [--all] [--check]`
 ---@param ctx table
 function M.index(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local root = vault_root()
   if not root then
     return
@@ -830,6 +855,9 @@ end
 ---`:MyPlugins task template [--to=clipboard|buffer|file:<path>]`
 ---@param ctx table
 function M.task_template(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local target, terr = view.parse_target(ctx.flags.to or "clipboard")
   if terr or not target or target.kind == "qf" then
     notify.error(terr or "--to=qf makes no sense for the template")
@@ -860,6 +888,9 @@ end
 ---`:MyPlugins task open <id>` -- an open task, else its finished copy in `Backlog/`.
 ---@param ctx table
 function M.task_open(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local id = ctx.args.id
   local task = scan.find(id) or scan.find_done(id)
   if not task then
@@ -873,6 +904,9 @@ end
 ---copy) rendered in the browser by mdview.nvim; read-only for the vault.
 ---@param ctx table
 function M.task_preview(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local id = ctx.args.id
   local task = scan.find(id) or scan.find_done(id)
   if not task then
@@ -932,6 +966,9 @@ end
 ---`--list` (or `--to=`) delivers the file list instead of opening a picker.
 ---@param ctx table
 function M.open_area(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local root = vault_root()
   if not root then
     return

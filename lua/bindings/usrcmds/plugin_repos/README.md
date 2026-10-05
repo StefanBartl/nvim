@@ -315,6 +315,11 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 :MyPlugins tasks all --to=file:$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/TASKS.md
 ```
 
+The command line splits at spaces, so a `--to=file:` path with a space needs a backslash before
+each space (`--to=file:C:/my\ dir/tasks.csv`). A word a command has no use for is an error
+(`unexpected argument: ...`), not silently ignored -- otherwise the export would go to a file named
+after the part before the space.
+
 The scratch buffer is plain Markdown (yank it, `:sort` it, search it) with a heading and
 the active filter above the table. `qf` puts one entry per task into the quickfix list,
 each jumping to the task file. Rendering and delivery are `lib.nvim.harvest` (`render`,
@@ -538,12 +543,14 @@ see [Browser preview](#browser-preview-mdview).
 browser" in the `e` menu) put the rendered Markdown in the browser through
 [mdview.nvim](https://github.com/StefanBartl/mdview.nvim). The wire is `tasks_preview.lua`:
 
-- **A task file** is opened as it is (`:edit`, then `:MDView start <file>`), so edits show up in
-  the preview live. Nothing is copied and nothing is written to the vault.
+- **A task file** is opened as it is (`:edit`, then `:MDView start <file>`, the path handed over as
+  one argument, so a space, `#`, `%` or `'` in it survives), so edits show up in the preview live.
+  Nothing is copied and nothing is written to the vault.
 - **A list export** (`--to=mdview`, `--format=md` only; `--format=csv` is refused) is rendered to
   Markdown, written to a temp file `tasks-<scope>.md` (`-2`, `-3` on a name clash; the scope is the
   area or `all`) in Neovim's per-session temp directory, and opened the same way. The buffer is
-  unlisted. The file is deleted when its buffer is deleted or wiped (retrying a few times, Windows
+  unlisted. The file is deleted when its buffer is deleted, wiped or unloaded (a plain `:bdelete`
+  included; a reload with `:edit!` keeps it; retrying a few times, Windows
   holds a file for a moment) and, for whatever is left, when Neovim quits; Neovim removes its
   temp directory on exit anyway. A temp location inside the vault is refused.
 - **mdview.nvim is a soft dependency.** The check is "the `:MDView` command exists (a lazy stub
