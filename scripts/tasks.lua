@@ -19,7 +19,9 @@
 --- Like every `nvim -l` script it reads its arguments from the global `arg`
 --- (`...` is empty on current Neovim), and an empty command is a usage error.
 
-local script = debug.getinfo(1, "S").source:sub(2)
+-- Absolute: `nvim -l tasks.lua` from inside scripts/ gives a bare relative name, and a relative
+-- config root would leave `tasks.*` to be found in whatever config dir Neovim has (another checkout).
+local script = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p")
 local config_root = vim.fs.dirname(vim.fs.dirname(vim.fs.normalize(script)))
 
 ---@param dir string|nil
@@ -65,4 +67,4 @@ end
 local code = require("tasks.cli").run(argv)
 io.stdout:flush()
 io.stderr:flush()
-os.exit(code)
+os.exit(tonumber(code) or 1)

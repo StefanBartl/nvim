@@ -191,6 +191,9 @@ function M.create_exclusive(path, content)
 end
 
 ---Rename a file or folder (one filesystem, so atomic). The target must not exist.
+---Goes through `lib.nvim.cross.fs.mutate`, which retries a Windows sharing violation (an
+---indexer or virus scanner holding a handle on a freshly written asset for a moment) instead
+---of failing a whole `done` over it.
 ---@param from string
 ---@param to string
 ---@return boolean ok
@@ -199,7 +202,7 @@ function M.rename(from, to)
   if uv.fs_stat(to) then
     return false, "target exists: " .. to
   end
-  local ok, err = uv.fs_rename(from, to)
+  local ok, err = mutate.rename_file(from, to)
   if not ok then
     return false, tostring(err)
   end

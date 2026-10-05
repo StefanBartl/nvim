@@ -502,7 +502,11 @@ A task may be a folder `tasks/<slug>/<slug>.md` that holds assets (concept secti
 `attach` copies the file into `<slug>/assets/` -- a plain task file becomes a folder task
 first -- and puts the Markdown link (`![name](assets/name)` for images) in the `+` register.
 `name=` renames the copy; an asset that already exists is never replaced. Spaces in the file
-name become hyphens. `folderize` converts a task without attaching anything. Windows showing
+name become hyphens, and names Windows treats as devices (`nul`, `con`, ...) are refused. A
+file that exists under exactly the typed name is used as typed; only otherwise `~`, `$VAR` and
+wildcards are expanded (so `report[1].pdf` is that file, not `report1.pdf`). A failed copy
+leaves the task as it was (no half-made folder task). `folderize` converts a task without
+attaching anything. Windows showing
 the old task file follow it. `task new ... --folder` creates a folder task from the start.
 
 ### `:MyPlugins task done <id> [done_in=...] [date=YYYY-MM-DD] [--yes]`
