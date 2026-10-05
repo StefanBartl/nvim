@@ -79,6 +79,24 @@ function M.eol_of(s)
   return s:find("\r\n", 1, true) and "\r\n" or "\n"
 end
 
+---`s` without leading and trailing whitespace, in linear time. The usual
+---`s:match("^%s*(.-)%s*$")` retries the rest of a whitespace run from every
+---byte inside it, so one line with 40 000 spaces costs seconds (SEC-32); this
+---one walks the trailing run once.
+---@param s string
+---@return string
+function M.trim(s)
+  local first = s:find("%S")
+  if not first then
+    return ""
+  end
+  local last = #s
+  while last > first and s:find("^%s", last) do
+    last = last - 1
+  end
+  return s:sub(first, last)
+end
+
 ---@param path string
 ---@param err? string
 ---@return boolean ok
