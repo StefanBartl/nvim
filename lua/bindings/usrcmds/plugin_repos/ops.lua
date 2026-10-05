@@ -259,7 +259,7 @@ end
 ---@param args string[]
 ---@param opts? { timeout_ms?: integer, read_only?: boolean, write?: boolean }
 ---@param on_done fun(run: MyPlugins.GitRun)
----@return { stop: fun() } handle  `stop()` kills the process tree (a `write` command is left to finish); `on_done` does not run afterwards.
+---@return { stop: fun(), on_exit: fun(cb: fun()) } handle  `stop()` kills the process tree (a `write` command is left to finish); `on_done` does not run afterwards. `on_exit(cb)` runs `cb` on the main loop once the git process has really exited (at once when it already has): a stopped `write` command keeps holding its repo until then.
 function M.git_async(path, args, opts, on_done)
   opts = opts or {}
   local cmd = { "git" }
@@ -272,6 +272,9 @@ function M.git_async(path, args, opts, on_done)
 
   local finished = false
   local timed_out = false
+  local exited = false
+  ---@type fun()[]
+  local exit_waiters = {}
   ---@type uv.uv_timer_t|nil
   local timer = nil
 
@@ -302,6 +305,14 @@ function M.git_async(path, args, opts, on_done)
     cmd,
     { text = true, env = M.NO_PROMPT_ENV, detach = (not is_windows) and not opts.write },
     function(res)
+      vim.schedule(function()
+        exited = true
+        local waiters = exit_waiters
+        exit_waiters = {}
+        for _, cb in ipairs(waiters) do
+          cb()
+        end
+      end)
       finish({
         code = res.code,
         stdout = res.stdout or "",
@@ -312,7 +323,12 @@ function M.git_async(path, args, opts, on_done)
   )
   if not ok then
     finish({ code = -1, stdout = "", stderr = tostring(spawned), timed_out = false })
-    return { stop = function() end }
+    return {
+      stop = function() end,
+      on_exit = function(cb)
+        cb()
+      end,
+    }
   end
   ---@type vim.SystemObj
   local job = spawned
@@ -349,6 +365,14 @@ function M.git_async(path, args, opts, on_done)
       stop_timer()
       if not opts.write then
         kill_tree(job)
+      end
+    end,
+    on_exit = function(cb)
+      -- a killed command counts as gone: only a `write` one is left running
+      if exited or not opts.write then
+        cb()
+      else
+        exit_waiters[#exit_waiters + 1] = cb
       end
     end,
   }

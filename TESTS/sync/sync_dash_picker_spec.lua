@@ -82,16 +82,19 @@ return function(H)
   local entered, rechecked, reran, rerun_opts, decline = {}, {}, 0, nil, false
   -- `held`: the re-check does not end until the spec says so; `busy`: repo name -> reason
   local held, busy = nil, {}
+  -- the `on_stopped` callbacks of held re-checks (what a cancel / a new run triggers)
+  local held_stop = {}
   dash.go_into = function(path, how, on_close)
     entered[#entered + 1] = { path = path, how = how }
     vim.schedule(on_close)
   end
-  sync.recheck = function(_, names, cb)
+  sync.recheck = function(_, names, cb, on_stopped)
     for _, n in ipairs(names) do
       rechecked[#rechecked + 1] = n
     end
     if held then
       held[#held + 1] = cb
+      held_stop[#held_stop + 1] = on_stopped
       return { stop = function() end }
     end
     vim.schedule(cb)
@@ -425,6 +428,37 @@ return function(H)
     )
     has(said(), "2 unresolved: ", "...and it counts the result of the re-check, not the old state")
     H.lacks(notes[#notes].msg, "alpha", "alpha is no longer named in the closing line")
+
+    -- ── a re-check that is STOPPED (cancel, a new run) is no longer pending ──
+    for _, q in ipairs(Snacks.picker.get({ source = "myplugins_sync" })) do
+      pcall(q.close, q)
+    end
+    flush()
+    session.records[1] = rec("alpha", "pull_failed")
+    dash.open(session)
+    p = opened(3)
+    p:focus("list")
+    flush()
+    notes, held, held_stop, rechecked = {}, {}, {}, {}
+    keys("gg")
+    keys("r")
+    ok(
+      wait_for(function()
+        return #held == 1
+      end),
+      "a re-check is pending again"
+    )
+    eq(type(held_stop[1]), "function", "the list hears when the re-check is stopped")
+    held_stop[1]() -- :MyPlugins sync cancel: stopped, on_done never comes
+    held = nil
+    p:close()
+    flush()
+    ok(
+      wait_for(function()
+        return said():find("unresolved", 1, true) ~= nil
+      end),
+      "closing after a stopped re-check still says the closing line"
+    )
   end)
 
   restore()

@@ -231,9 +231,9 @@ an older list or a second Neovim cannot overwrite a newer result; a failed save 
 same repo at the same time (two writers collide on `index.lock`, and the later result would
 overwrite the earlier one): `r`, `L`, `t` and `A` on a row that is busy are ignored with a short
 notice, and a refused re-check/assist says why. `R` or a new `:MyPlugins sync` stops the re-checks
-that are still running (their results are dropped, nothing stale is saved); an assist is never
+that are still running (their results are dropped, nothing stale is saved; a fast-forward already in its write step is not killed, and its repo stays busy until that git has exited); an assist is never
 killed halfway, so the run asks you to try again when it is done. Closing the list while a re-check
-is still running defers the closing line until that re-check has ended, so it always states the
+is still running defers the closing line until that re-check has ended or was stopped (cancel, a new run), so it always states the
 result, and `sync issues` agrees with it.
 
 A **skip lasts for this synchronization only**: it survives closing the dashboard and a restart
