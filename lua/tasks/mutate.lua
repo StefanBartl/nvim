@@ -14,9 +14,11 @@
 ---    actually changed
 ---  - `done`: `status: done` + `done_in`, move to `Backlog/FEATURES|TASKS` with a
 ---    `YYYY-MM-DD_` prefix, add the row to that `Backlog/README.md`, regenerate
----    the index. The files involved are snapshotted with `lib.nvim.checkpoint`
----    and restored byte-exact when any step fails; a second run of an already
----    finished task changes nothing, and a run interrupted half way resumes
+---    the index. The finished copy, the README and the index are snapshotted
+---    with `lib.nvim.checkpoint` and restored byte-exact when any step fails (the
+---    task file itself is checked for changes right before it goes, and put back
+---    by hand); a second run of an already finished task changes nothing, and a
+---    run interrupted half way resumes
 ---
 --- Not its job: prompting for input, opening the file, notifying (all UI).
 
@@ -902,8 +904,12 @@ end
 ---regenerate the area index. A folder task moves as a whole, to
 ---`YYYY-MM-DD_<slug>/YYYY-MM-DD_<slug>.md`; a failure puts the folder back.
 ---
----The four files involved are snapshotted first; if any step fails they are
----restored byte-exact. A task that is already finished answers
+---The finished copy, the README and the index are snapshotted first; if any step
+---fails they are restored byte-exact. The task file is not part of the snapshot (a
+---restore would overwrite what was written to it meanwhile): when it changed since
+---it was read, `done` stops before removing it; when it was already removed it is
+---written back from the text read at the start. What cannot be undone is named in
+---the error as `rollback incomplete: <path>`. A task that is already finished answers
 ---`already = true` and changes nothing; if an earlier run died between creating
 ---the Backlog file and deleting the old one, this run completes it.
 ---@param id string
@@ -997,9 +1003,11 @@ function M.done(id, opts)
     readme_state = changed and "updated" or "unchanged"
   end
 
+  -- The task file itself is not snapshotted: restoring it from a snapshot would overwrite whatever
+  -- was written to it since. It is only ever put back by hand, and only after `done` removed it.
   local tracked = { vault.index_path(root, area) }
   if not task.folder then
-    tracked = { task.path, target, vault.index_path(root, area) }
+    tracked = { target, vault.index_path(root, area) }
   end
   if readme_old then
     tracked[#tracked + 1] = readme_path
@@ -1009,9 +1017,20 @@ function M.done(id, opts)
     return nil, "cannot snapshot before moving: " .. tostring(cerr)
   end
 
-  local moved = false
+  local moved, removed_original = false, false
+  -- Someone (the editor, another `tasks` run) may have written the task file since it was read
+  -- above; finishing would then drop that change. Looked at right before the original goes.
+  local function changed_meanwhile()
+    return fsio.read(task.path) ~= old_text
+  end
+  local changed_msg = ("%s changed while it was being finished; nothing was changed, run done again"):format(
+    task.path
+  )
   local function run()
     if task.folder then
+      if changed_meanwhile() then
+        return nil, changed_msg
+      end
       local made, merr = fsio.mkdirp(fsio.dirname(target_dir))
       if not made then
         return nil, "cannot create " .. fsio.dirname(target_dir) .. ": " .. tostring(merr)
@@ -1037,10 +1056,14 @@ function M.done(id, opts)
           return nil, "cannot create " .. target .. ": " .. tostring(err)
         end
       end
+      if changed_meanwhile() then
+        return nil, changed_msg
+      end
       local removed, rm_err = fsio.remove(task.path)
       if not removed then
         return nil, "cannot remove " .. task.path .. ": " .. tostring(rm_err)
       end
+      removed_original = true
     end
     if readme_old and readme_new ~= readme_old then
       local ok, err = fsio.write_atomic(readme_path, readme_new)
@@ -1070,7 +1093,12 @@ function M.done(id, opts)
       -- Put the folder back exactly as it was: old file name, old text. The finished copy
       -- goes only after the original is back: until then it may be the only holder of the text.
       local old_name = target_dir .. "/" .. slug .. ".md"
-      local wrote, w_err = attempt(fsio.write_atomic, old_name, old_text)
+      -- Still there (the failure came before it was removed): it holds the original, maybe newer
+      -- than `old_text` -- never overwrite it. Only a removed one is written back.
+      local wrote, w_err = true, nil
+      if not fsio.is_file(old_name) then
+        wrote, w_err = attempt(fsio.write_atomic, old_name, old_text)
+      end
       if wrote then
         attempt(fsio.remove, target)
         local back, b_err = attempt(fsio.rename, target_dir, src_dir)
@@ -1087,6 +1115,28 @@ function M.done(id, opts)
           old_name,
           tostring(w_err)
         )
+      end
+    end
+    if removed_original then
+      -- Back before the finished copy is dropped (the snapshot restore below deletes it). A file
+      -- that exists again was written by someone since: theirs stays.
+      local back, b_err = attempt(fsio.create_exclusive, task.path, old_text)
+      if not back and not fsio.is_file(task.path) then
+        stuck[#stuck + 1] = ("%s (cannot restore it: %s; the finished copy %s holds the text)"):format(
+          task.path,
+          tostring(b_err),
+          target
+        )
+        -- `target` is now the only holder of the text: the restore must not delete it.
+        for i = #cp.entries, 1, -1 do
+          local entry = cp.entries[i]
+          if entry.path == target then
+            if entry.backup then
+              pcall(os.remove, entry.backup)
+            end
+            table.remove(cp.entries, i)
+          end
+        end
       end
     end
     local _, restore_errors = checkpoint.restore(cp)
