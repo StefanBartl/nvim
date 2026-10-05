@@ -3,13 +3,15 @@
 ---source mode of the personal plugin list — plus an interactive picker, a
 ---dashboard and the wkdbook task commands.
 ---@description
---- Registers a single `:MyPlugins {clone|remove|fetch|pull|update|reclone|
+--- Registers a single `:MyPlugins {clone|remove|fetch|pull|update|sync|reclone|
 --- dashboard|mode|list|picker|tasks|task|open} [args]` command via
 --- `lib.nvim.bindings.usercmd.composer` (replaces the former flat
 --- `:MyPluginsClone` / `:MyPluginsRemove`). The `tasks`, `task` and `open`
 --- routes come from `tasks_routes.lua` (handlers: `tasks_cmd.lua`, engine:
 --- `lua/tasks/`) and are not limited to the plugin list: they work on the
 --- areas of the wkdbook vault.
+--- `sync` (routes in `sync_routes.lua`, orchestrator `sync.lua`) is the thorough
+--- `update`: fetch every listed repo, pull what is behind, triage the rest.
 ---
 --- Every subcommand except `dashboard` (which just opens gitsuite.nvim's
 --- own `:Git dashboard`) operates only on the repos `plugins.personal.core.list`
@@ -1038,125 +1040,137 @@ function M.enable()
     )
   end
 
+  -- `sync` (fetch all, pull what can be pulled, triage the rest). Guarded like the task routes.
+  local ok_sync, sync_routes = pcall(require, "bindings.usrcmds.plugin_repos.sync_routes")
+  if not ok_sync then
+    notify.warn(":MyPlugins sync is unavailable: " .. tostring(sync_routes))
+  end
+
   composer.verb("MyPlugins", {
     desc = "Manage the personal plugin checkouts, their source mode and the wkdbook tasks",
     -- The task routes (tasks / task / open) are declared in tasks_routes.lua.
-    routes = vim.list_extend({
+    routes = vim.list_extend(
       {
-        path = { "clone" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = {
-          { name = "only", type = "MYPLUGINS_NAME" },
-          { name = "dry-run", bool = true },
-        },
-        desc = "Clone every listed plugin not yet present (or just --only=<name>) into dir/$REPOS_DIR; --dry-run previews without cloning",
-        run = function(ctx)
-          clone_all(ctx.args.dir, ctx.flags.only, ctx.flags["dry-run"])
-        end,
-      },
-
-      {
-        path = { "remove" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "Remove clean (no uncommitted/unpushed work) listed plugins (or just --only=<name>), after confirmation",
-        run = function(ctx)
-          remove_all(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-
-      {
-        path = { "fetch" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "git fetch --all --prune on every present listed plugin (or just --only=<name>)",
-        run = function(ctx)
-          fetch_all(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-
-      {
-        path = { "pull" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "git pull --ff-only on every present listed plugin (or just --only=<name>)",
-        run = function(ctx)
-          pull_all(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-
-      {
-        path = { "update" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = { { name = "only", type = "MYPLUGINS_NAME" } },
-        desc = "Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits",
-        run = function(ctx)
-          update_all(ctx.args.dir, ctx.flags.only)
-        end,
-      },
-
-      {
-        path = { "dashboard" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = {
-          { name = "fetch", bool = true },
-          { name = "fetch-this", bool = true },
-        },
-        desc = "Open gitsuite.nvim's git-status dashboard (:Git dashboard) for dir/$REPOS_DIR; --fetch runs :MyPlugins fetch first, --fetch-this scopes that fetch to the plugin the current buffer/cwd belongs to",
-        run = function(ctx)
-          local fetch_mode = ctx.flags["fetch-this"] and "this"
-            or (ctx.flags.fetch and "all" or nil)
-          open_dashboard(ctx.args.dir, fetch_mode)
-        end,
-      },
-
-      {
-        path = { "reclone" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        flags = {
-          { name = "only", type = "MYPLUGINS_NAME" },
-          { name = "dry-run", bool = true },
-        },
-        desc = "Delete (if clean) and re-clone present listed plugins, or clone missing ones fresh, after confirmation; --dry-run previews the safe/unsafe/missing split without touching anything",
-        run = function(ctx)
-          reclone_all(ctx.args.dir, ctx.flags.only, ctx.flags["dry-run"])
-        end,
-      },
-
-      {
-        path = { "picker" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "Interactive multi-select: assign clone/update/pull/fetch/remove/reclone per plugin, then run them all at once",
-        run = function(ctx)
-          require("bindings.usrcmds.plugin_repos.picker").open(ctx.args.dir)
-        end,
-      },
-
-      {
-        path = { "mode" },
-        args = {
-          {
-            name = "mode",
-            type = "STRING",
-            enum = { "auto", "dir", "remote", "disabled" },
-            optional = true,
+        {
+          path = { "clone" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = {
+            { name = "only", type = "MYPLUGINS_NAME" },
+            { name = "dry-run", bool = true },
           },
+          desc = "Clone every listed plugin not yet present (or just --only=<name>) into dir/$REPOS_DIR; --dry-run previews without cloning",
+          run = function(ctx)
+            clone_all(ctx.args.dir, ctx.flags.only, ctx.flags["dry-run"])
+          end,
         },
-        desc = "Show, or persistently switch, plugins.personal.core.source's OVERRIDE (restart required to apply)",
-        run = function(ctx)
-          mode_cmd(ctx.args.mode)
-        end,
-      },
 
-      {
-        path = { "list" },
-        args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-        desc = "Render every plugin in plugins.personal.core.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)",
-        run = function(ctx)
-          list_all(ctx.args.dir)
-        end,
+        {
+          path = { "remove" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          desc = "Remove clean (no uncommitted/unpushed work) listed plugins (or just --only=<name>), after confirmation",
+          run = function(ctx)
+            remove_all(ctx.args.dir, ctx.flags.only)
+          end,
+        },
+
+        {
+          path = { "fetch" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          desc = "git fetch --all --prune on every present listed plugin (or just --only=<name>)",
+          run = function(ctx)
+            fetch_all(ctx.args.dir, ctx.flags.only)
+          end,
+        },
+
+        {
+          path = { "pull" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          desc = "git pull --ff-only on every present listed plugin (or just --only=<name>)",
+          run = function(ctx)
+            pull_all(ctx.args.dir, ctx.flags.only)
+          end,
+        },
+
+        {
+          path = { "update" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          desc = "Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits",
+          run = function(ctx)
+            update_all(ctx.args.dir, ctx.flags.only)
+          end,
+        },
+
+        {
+          path = { "dashboard" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = {
+            { name = "fetch", bool = true },
+            { name = "fetch-this", bool = true },
+          },
+          desc = "Open gitsuite.nvim's git-status dashboard (:Git dashboard) for dir/$REPOS_DIR; --fetch runs :MyPlugins fetch first, --fetch-this scopes that fetch to the plugin the current buffer/cwd belongs to",
+          run = function(ctx)
+            local fetch_mode = ctx.flags["fetch-this"] and "this"
+              or (ctx.flags.fetch and "all" or nil)
+            open_dashboard(ctx.args.dir, fetch_mode)
+          end,
+        },
+
+        {
+          path = { "reclone" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          flags = {
+            { name = "only", type = "MYPLUGINS_NAME" },
+            { name = "dry-run", bool = true },
+          },
+          desc = "Delete (if clean) and re-clone present listed plugins, or clone missing ones fresh, after confirmation; --dry-run previews the safe/unsafe/missing split without touching anything",
+          run = function(ctx)
+            reclone_all(ctx.args.dir, ctx.flags.only, ctx.flags["dry-run"])
+          end,
+        },
+
+        {
+          path = { "picker" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          desc = "Interactive multi-select: assign clone/update/pull/fetch/remove/reclone per plugin, then run them all at once",
+          run = function(ctx)
+            require("bindings.usrcmds.plugin_repos.picker").open(ctx.args.dir)
+          end,
+        },
+
+        {
+          path = { "mode" },
+          args = {
+            {
+              name = "mode",
+              type = "STRING",
+              enum = { "auto", "dir", "remote", "disabled" },
+              optional = true,
+            },
+          },
+          desc = "Show, or persistently switch, plugins.personal.core.source's OVERRIDE (restart required to apply)",
+          run = function(ctx)
+            mode_cmd(ctx.args.mode)
+          end,
+        },
+
+        {
+          path = { "list" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          desc = "Render every plugin in plugins.personal.core.list, and whether it's present in dir/$REPOS_DIR, into a scratch buffer (yank/:sort/search it; no git)",
+          run = function(ctx)
+            list_all(ctx.args.dir)
+          end,
+        },
       },
-    }, ok_tasks and tasks_routes.routes() or {}),
+      vim.list_extend(
+        ok_sync and sync_routes.routes() or {},
+        ok_tasks and tasks_routes.routes() or {}
+      )
+    ),
   })
 
   -- Flat shorthand for the subcommand used often enough to want a single

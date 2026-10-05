@@ -14,6 +14,7 @@ local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
 ---@type fun(cmd: string[], opts?: table, on_exit?: fun(out: vim.SystemCompleted)): vim.SystemObj
 local system = vim.system
 local fnamemodify = fn.fnamemodify
+local is_windows = fn.has("win32") == 1 or fn.has("win64") == 1
 local git = require("lib.nvim.git")
 
 ---@param override string|nil
@@ -173,6 +174,338 @@ function M.run_sequential(list, worker, describe, on_finish, prog)
   end
 
   run_next()
+end
+
+-- ── Sync primitives (`:MyPlugins sync`) ───────────────────────────────────────
+--
+-- Own `vim.system` calls instead of `lib.nvim.git.*_async`: sync needs what those do not
+-- offer (a per-call timeout, no credential prompt) and must keep working with an older
+-- lib.nvim on the other machine. Every call is async; nothing here blocks the editor.
+
+---Environment that makes git fail fast instead of asking: a background job has no terminal to
+---answer a credential prompt on (a private repo would hang unseen), and Git Credential Manager
+---must not open a dialog.
+---@type table<string, string>
+M.NO_PROMPT_ENV = { GIT_TERMINAL_PROMPT = "0", GCM_INTERACTIVE = "never" }
+
+---@class MyPlugins.GitRun
+---@field code integer
+---@field stdout string
+---@field stderr string
+---@field timed_out boolean
+
+---Kill a job and the processes it started. `job:kill()` reaches only the process it spawned: git
+---runs its transport (`git-remote-https`, `ssh`) as a child, and on Windows terminating the
+---parent leaves that child alive, still holding the pipes -- so a hung fetch would outlive its
+---own timeout. `taskkill /T` takes the whole tree.
+---@param job vim.SystemObj
+local function kill_tree(job)
+  local pid = job.pid
+  if is_windows and pid then
+    pcall(system, { "taskkill", "/T", "/F", "/PID", tostring(pid) }, { text = true })
+  end
+  pcall(function()
+    job:kill("sigkill")
+  end)
+end
+
+---Run `git -C <path> <args>` asynchronously.
+---`on_done` always runs on the main loop, exactly once. A spawn failure (git missing) arrives
+---as `code = -1`.
+---
+---The timeout is our own timer, not `vim.system`'s: that one reports only once the child has
+---exited AND closed its pipes, which a hung transport child prevents. On timeout the process
+---tree is killed and `on_done` runs at once with `timed_out = true`.
+---@param path string
+---@param args string[]
+---@param opts? { timeout_ms?: integer, read_only?: boolean }
+---@param on_done fun(run: MyPlugins.GitRun)
+---@return { stop: fun() } handle  `stop()` kills the process tree; `on_done` does not run afterwards.
+function M.git_async(path, args, opts, on_done)
+  opts = opts or {}
+  local cmd = { "git" }
+  if opts.read_only then
+    -- A status must not take index.lock: it would make a concurrent `git commit` of the user fail.
+    cmd[#cmd + 1] = "--no-optional-locks"
+  end
+  vim.list_extend(cmd, { "-C", path })
+  vim.list_extend(cmd, args)
+
+  local finished = false
+  ---@type uv.uv_timer_t|nil
+  local timer = nil
+
+  ---@param run MyPlugins.GitRun
+  local function finish(run)
+    if finished then
+      return
+    end
+    finished = true
+    if timer then
+      pcall(timer.stop, timer)
+      pcall(timer.close, timer)
+      timer = nil
+    end
+    vim.schedule(function()
+      on_done(run)
+    end)
+  end
+
+  local ok, spawned = pcall(system, cmd, { text = true, env = M.NO_PROMPT_ENV }, function(res)
+    finish({
+      code = res.code,
+      stdout = res.stdout or "",
+      stderr = res.stderr or "",
+      timed_out = false,
+    })
+  end)
+  if not ok then
+    finish({ code = -1, stdout = "", stderr = tostring(spawned), timed_out = false })
+    return { stop = function() end }
+  end
+  ---@type vim.SystemObj
+  local job = spawned
+
+  if opts.timeout_ms and opts.timeout_ms > 0 then
+    timer = loop.new_timer()
+    if timer then
+      timer:start(opts.timeout_ms, 0, function()
+        if finished then
+          return
+        end
+        -- fast event context: hop to the main loop before spawning taskkill
+        vim.schedule(function()
+          if finished then
+            return
+          end
+          kill_tree(job)
+          finish({ code = 124, stdout = "", stderr = "", timed_out = true })
+        end)
+      end)
+    end
+  end
+
+  return {
+    stop = function()
+      if finished then
+        return
+      end
+      finished = true
+      if timer then
+        pcall(timer.stop, timer)
+        pcall(timer.close, timer)
+        timer = nil
+      end
+      kill_tree(job)
+    end,
+  }
+end
+
+---The first non-blank line of a git error text, with a hint when it reads like a missing login.
+---Only ever shown to the user; no state is decided from it.
+---@param run MyPlugins.GitRun
+---@param what string
+---@param timeout_ms? integer
+---@return string
+function M.describe_failure(run, what, timeout_ms)
+  if run.timed_out then
+    return ("%s timed out after %d s"):format(what, math.floor((timeout_ms or 0) / 1000))
+  end
+  local first = ""
+  for line in (run.stderr .. "\n" .. run.stdout):gmatch("[^\r\n]+") do
+    if line:match("%S") then
+      first = vim.trim(line)
+      break
+    end
+  end
+  if first == "" then
+    first = ("%s failed (exit code %d)"):format(what, run.code)
+  end
+  local low = first:lower()
+  if
+    low:find("terminal prompts disabled", 1, true)
+    or low:find("could not read username", 1, true)
+    or low:find("authentication failed", 1, true)
+  then
+    first = first .. " (needs a login: run git fetch in that repo once)"
+  end
+  return first
+end
+
+---`git fetch --all --prune`.
+---@param path string
+---@param timeout_ms integer
+---@param on_done fun(ok: boolean, err: string|nil)
+---@return { stop: fun() }
+function M.sync_fetch(path, timeout_ms, on_done)
+  return M.git_async(
+    path,
+    { "fetch", "--all", "--prune" },
+    { timeout_ms = timeout_ms },
+    function(run)
+      if run.code == 0 then
+        on_done(true, nil)
+      else
+        on_done(false, M.describe_failure(run, "git fetch", timeout_ms))
+      end
+    end
+  )
+end
+
+---`git status --porcelain=v2 --branch -z`, the text `sync_classify.parse_status` reads.
+---@param path string
+---@param timeout_ms integer
+---@param on_done fun(text: string|nil, err: string|nil)
+---@return { stop: fun() }
+function M.sync_status(path, timeout_ms, on_done)
+  return M.git_async(
+    path,
+    { "status", "--porcelain=v2", "--branch", "-z" },
+    { timeout_ms = timeout_ms, read_only = true },
+    function(run)
+      if run.code == 0 then
+        on_done(run.stdout, nil)
+      else
+        on_done(nil, M.describe_failure(run, "git status", timeout_ms))
+      end
+    end
+  )
+end
+
+---`git pull --ff-only`: never a merge commit, never a rewrite.
+---@param path string
+---@param timeout_ms integer
+---@param on_done fun(ok: boolean, err: string|nil)
+---@return { stop: fun() }
+function M.sync_pull(path, timeout_ms, on_done)
+  return M.git_async(path, { "pull", "--ff-only" }, { timeout_ms = timeout_ms }, function(run)
+    if run.code == 0 then
+      on_done(true, nil)
+    else
+      on_done(false, M.describe_failure(run, "git pull", timeout_ms))
+    end
+  end)
+end
+
+---Files the incoming commits touch (`HEAD...@{u}`), the other half of "what blocks this pull".
+---@param path string
+---@param timeout_ms integer
+---@param on_done fun(files: string[]|nil)
+---@return { stop: fun() }
+function M.sync_incoming_files(path, timeout_ms, on_done)
+  return M.git_async(
+    path,
+    { "diff", "--name-only", "-z", "HEAD...@{u}" },
+    { timeout_ms = timeout_ms, read_only = true },
+    function(run)
+      if run.code ~= 0 then
+        on_done(nil)
+        return
+      end
+      local files = {}
+      for _, f in ipairs(vim.split(run.stdout, "\0", { plain = true })) do
+        if f ~= "" then
+          files[#files + 1] = f
+        end
+      end
+      on_done(files)
+    end
+  )
+end
+
+---`git log --oneline` of a revision range (for the triage preview).
+---@param path string
+---@param range string  e.g. `HEAD..@{u}`
+---@param timeout_ms integer
+---@param on_done fun(lines: string[])
+---@return { stop: fun() }
+function M.sync_log(path, range, timeout_ms, on_done)
+  return M.git_async(
+    path,
+    { "log", "--oneline", "--no-color", "--max-count=30", range },
+    { timeout_ms = timeout_ms, read_only = true },
+    function(run)
+      local lines = {}
+      if run.code == 0 then
+        for line in run.stdout:gmatch("[^\r\n]+") do
+          lines[#lines + 1] = line
+        end
+      end
+      on_done(lines)
+    end
+  )
+end
+
+---Run `worker(item, done)` over `items` with at most `jobs` in flight (unlike
+---`run_sequential`, which is strictly one at a time). `worker` returns a handle with `stop()`
+---(or nil); `done(result)` must be called once. Results come back in item order.
+---The returned controller's `stop()` kills what is running and starts nothing new; neither
+---callback fires after it.
+---@generic T, R
+---@param items T[]
+---@param jobs integer
+---@param worker fun(item: T, done: fun(result: R)): { stop: fun() }|nil
+---@param on_each fun(index: integer, item: T, result: R, finished: integer, total: integer)|nil
+---@param on_finish fun(results: R[])
+---@return { stop: fun() } controller
+function M.run_pool(items, jobs, worker, on_each, on_finish)
+  local total = #items
+  local results, handles = {}, {}
+  local next_index, running, finished, stopped = 1, 0, 0, false
+  jobs = math.max(1, math.floor(jobs or 1))
+
+  local launch
+  launch = function()
+    while not stopped and running < jobs and next_index <= total do
+      local i = next_index
+      next_index = next_index + 1
+      running = running + 1
+      local called = false
+      local handle = worker(items[i], function(result)
+        if called or stopped then
+          return
+        end
+        called = true
+        handles[i] = nil
+        results[i] = result
+        running = running - 1
+        finished = finished + 1
+        if on_each then
+          on_each(i, items[i], result, finished, total)
+        end
+        if finished == total then
+          on_finish(results)
+        else
+          launch()
+        end
+      end)
+      if not called then
+        handles[i] = handle
+      end
+    end
+  end
+
+  if total == 0 then
+    vim.schedule(function()
+      if not stopped then
+        on_finish(results)
+      end
+    end)
+  else
+    launch()
+  end
+
+  return {
+    stop = function()
+      stopped = true
+      for _, h in pairs(handles) do
+        if type(h) == "table" and h.stop then
+          h.stop()
+        end
+      end
+      handles = {}
+    end,
+  }
 end
 
 return M

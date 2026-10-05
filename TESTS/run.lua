@@ -78,6 +78,9 @@ local specs = {
   "tasks/tasks_dash_refresh_spec.lua",
   "tasks/tasks_staleness_spec.lua",
   "tasks/tasks_ci_spec.lua",
+  "sync/sync_classify_spec.lua",
+  "sync/sync_integration_spec.lua",
+  "sync/sync_routes_spec.lua",
 }
 
 -- Optional filter: only the specs whose path contains one of the arguments.
