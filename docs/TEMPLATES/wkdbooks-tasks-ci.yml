@@ -67,6 +67,10 @@ jobs:
         env:
           LIB_NVIM_DIR: ${{ github.workspace }}/deps/lib.nvim
           TASKS_NVIM_DIR: ${{ github.workspace }}/deps/tasks.nvim
+          # tasks.nvim refuses to run a vault's own md_lint.lua unless told to. This is the author's own
+          # vault repo (pushes by the author), so its script is trusted; a workflow that builds pull requests of
+          # strangers must drop this line and pass --md-lint=<a copy outside the vault> instead.
+          TASKS_TRUST_VAULT_LINT: "1"
         run: |
           nvim --headless -u NONE -l deps/nvim/scripts/tasks-ci.lua \
             --vault="$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins"
