@@ -1,6 +1,7 @@
 # Implementierungsplan: `:MyPlugins sync` — alle Plugin-Repos auf den aktuellen Stand, Problemfälle als Triage-Liste
 
-Stand: 2026-10-05. Status: **Plan, noch nichts implementiert.**
+Stand: 2026-10-05. Status: **Plan, die fünf Designfragen sind entschieden
+(Abschnitt 7), noch nichts implementiert.**
 
 ## 1. Auftrag (bereinigt)
 
@@ -48,13 +49,12 @@ Wiederverwendbar ohne neue Git-Logik: `lib.nvim.git` (`fetch_async`, `pull_async
 ### 3.1 Aufruf
 
 ```
-:MyPlugins sync [dir] [--only=<name>] [--check] [--no-fetch] [--jobs=<n>]
+:MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
 :MyPlugins sync issues            " letzte Problemliste erneut öffnen
 ```
 
-- `--check`: Trockenlauf. Fetch + Klassifizierung, **kein Pull**; zeigt, was
-  passieren würde (analog `--dry-run` bei `clone`/`reclone`; Flag-Name `dry-run`
-  beibehalten, damit es zur Umgebung passt — `--check` nur als Alias, falls gewünscht).
+- `--dry-run`: Trockenlauf. Fetch + Klassifizierung, **kein Pull**; zeigt, was
+  passieren würde (gleicher Flag-Name wie bei `clone`/`reclone`, Entscheidung Q5).
 - `--no-fetch`: nur klassifizieren und pullen mit dem, was lokal schon gefetcht ist.
 - `--jobs=<n>`: Parallelität der Fetch-Phase, Default **2** (siehe 3.5).
 - Scope wie bei allen Subcommands: nur Repos aus `plugins.personal.core.list`,
@@ -108,7 +108,7 @@ Ergebnis landet als `dirty_blocked`.
 `ahead` und `dirty` (ohne behind) sind **keine Blocker** für "alle aktuell":
 das Repo hat alles, was das Remote hat. Sie erscheinen als Hinweise im Dashboard
 (Umschalter, Default: ausgeblendet), damit man sie nicht vergisst, aber sie
-verhindern nicht das grüne Endergebnis. → offene Frage Q1.
+verhindern nicht das grüne Endergebnis (Entscheidung Q1, siehe Abschnitt 7).
 
 ### 3.4 Triage-Dashboard
 
@@ -174,7 +174,7 @@ Zustand, Detail, `skipped`, Zeitstempel). Zweck:
 - Skips überleben das Schließen des Dashboards, **aber nicht** den nächsten
   vollständigen Lauf, der sie wieder zur Prüfung stellt (ein Skip gilt für
   *diese* Synchronisation, nicht dauerhaft). Dauerhaftes Ignorieren gehört in
-  die Plugin-Liste/`modes`, nicht hierher. → offene Frage Q2.
+  die Plugin-Liste/`modes`, nicht hierher (Entscheidung Q2, siehe Abschnitt 7).
 
 Beim Schließen des Dashboards (oder wenn keine Probleme existieren) genau
 **eine** Abschluss-Notification:
@@ -226,11 +226,12 @@ Typen kommen nach `lua/@types/` bzw. neben die bestehenden `---@class`-Blöcke:
 
 **M1 — Klassifizierung (Kern, ohne UI)**
 - `sync_classify.lua` mit der Zustandstabelle aus 3.3, `ops.status_one`.
+  Alle Entscheidungen aus Abschnitt 7 sind hier schon festgelegt.
 - Unit-Tests der reinen Funktion (Tabellentests für jede Zeile der Zustandstabelle, inkl. Randfälle: kein Upstream + dirty, detached + behind).
 - Abnahme: `classify` liefert für alle Tabellenzeilen den erwarteten Zustand; keine Abhängigkeit von git-Meldungstexten.
 
 **M2 — Orchestrator + Endmeldung**
-- `sync.lua`: Phasen 0–5, Fetch-Phase mit `--jobs`, Pull nur bei `behind > 0`, Re-Klassifizierung nach Pull-Fehler, eine Abschlussmeldung, `--check`/`--no-fetch`/`--only`.
+- `sync.lua`: Phasen 0–5, Fetch-Phase mit `--jobs`, Pull nur bei `behind > 0`, Re-Klassifizierung nach Pull-Fehler, eine Abschlussmeldung, `--dry-run`/`--no-fetch`/`--only`.
 - Route `:MyPlugins sync` in `init.lua` (guarded über `sync_routes.lua`).
 - Abnahme: Lauf über die echte Liste (~45 Repos in `C:\repos`) bleibt bedienbar (UI nicht eingefroren), Summary stimmt mit `git status` je Repo überein; Fehler eines Repos stoppt den Lauf nicht.
 
@@ -261,22 +262,29 @@ Typen kommen nach `lua/@types/` bzw. neben die bestehenden `---@class`-Blöcke:
 | Doppelstart von `sync` | Laufzustand im Modul, zweiter Aufruf fragt nach (3.5) |
 | Assist-Aktionen zerstören lokale Arbeit | Standard ist lazygit; Assist nur mit Bestätigung, die den exakten Befehl zeigt, und nie `reset --hard`/`clean` |
 
-## 7. Offene Fragen an dich
+## 7. Entscheidungen (ehemals offene Fragen, am 2026-10-05 entschieden)
 
-- **Q1:** Soll `ahead` (nur lokale, ungepushte Commits) und `dirty` (nur
-  uncommittete Änderungen, nichts einzuziehen) als **Problem** gelten oder nur
-  als Hinweis? Vorschlag: Hinweis — "aktuell" heißt "hat alles, was das Remote
-  hat". Das ändert nur die Endaussage, nicht die Mechanik.
-- **Q2:** Soll ein **Skip dauerhaft** (bis du ihn aufhebst) oder nur für die
-  laufende Synchronisation gelten? Vorschlag: nur für den Lauf, beim nächsten
-  `sync` kommt das Repo wieder zur Prüfung.
-- **Q3:** Reicht lazygit als "ins Repo hineingehen", oder willst du zusätzlich
-  einen schlanken eingebauten Weg (z. B. `:Git`-Status-Buffer von gitsuite)?
-  Vorschlag: lazygit + Terminal-Split.
-- **Q4:** Fetch-Parallelität Default 2 — ok, oder lieber strikt sequentiell wie
-  `update` heute?
-- **Q5:** `--check` als eigener Flag, oder reicht `--dry-run` für Konsistenz mit
-  `clone`/`reclone`? Vorschlag: nur `--dry-run`.
+- **Q1 — `ahead`/`dirty`: nur Hinweis, kein Problem.** "Aktuell" heißt "hat alles,
+  was das Remote hat". Ein Repo mit ungepushten Commits oder offenen Änderungen,
+  bei dem nichts einzuziehen ist, erfüllt das. Würden beide als Problem zählen,
+  wäre die Liste fast nie leer und würde nur noch durchgeklickt. Die Hinweise
+  bleiben im Dashboard per `a` einblendbar. Das berührt nur die Endaussage, nicht
+  die Mechanik.
+- **Q2 — Skip gilt nur für den laufenden Sync.** Ein dauerhafter Skip wird zu
+  stiller Drift (vergessen, Repo hängt Wochen zurück). Beim nächsten vollständigen
+  `sync` kommt das Repo wieder zur Prüfung. Dauerhaft ausgeschlossene Repos
+  gehören in `plugins.modes` in `plugins/personal/core/source.lua` (z. B.
+  `"disabled"`), nicht in den Sync.
+- **Q3 — lazygit + Terminal-Split** als "ins Repo hineingehen". lazygit ist in
+  gitsuite schon angebunden; ein eigener Status-Buffer wäre ein zweiter Weg, der
+  nichts kann, was lazygit nicht kann. Der Terminal-Split deckt Fälle ab, in denen
+  lazygit zu viel Oberfläche ist (z. B. `git rebase --abort`).
+- **Q4 — Fetch-Parallelität Default 2**, einstellbar mit `--jobs=<n>` (Maximum 6;
+  `--jobs=1` auf der EDR-Maschine, falls es hakt). Strikt sequentiell wäre bei
+  ~45 Repos wegen der Netzwerk-Roundtrips spürbar langsam. Pull und Status laufen
+  sequentiell: lokal schnell, und Schreibzugriffe sollen nicht parallel laufen.
+- **Q5 — nur `--dry-run`, kein `--check`.** Gleicher Name wie bei `clone` und
+  `reclone`; ein zweiter Name für dasselbe würde nur Completion und Doku aufblähen.
 
 ## 8. Reihenfolge-Empfehlung
 
