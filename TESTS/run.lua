@@ -59,6 +59,7 @@ local specs = {
   "tasks/tasks_scan_spec.lua",
   "tasks/tasks_index_spec.lua",
   "tasks/tasks_mutate_spec.lua",
+  "tasks/tasks_mutate_safety_spec.lua",
   "tasks/tasks_check_spec.lua",
   "tasks/tasks_folder_spec.lua",
   "tasks/tasks_effort_severity_spec.lua",

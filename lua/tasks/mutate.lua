@@ -37,10 +37,12 @@ M.REMOVE = fm.REMOVE
 ---Longest slug generated from a title.
 M.MAX_SLUG = 60
 
+---Not `s:match("^%s*(.-)%s*$")`: that rescans the whole rest of the string at every space of
+---a long inner run (32 000 spaces cost 1.7 s); `vim.trim` is linear.
 ---@param s string
 ---@return string
 local function trim(s)
-  return (s:match("^%s*(.-)%s*$"))
+  return vim.trim(s)
 end
 
 -- ── Slugs ────────────────────────────────────────────────────────────────────
@@ -83,7 +85,9 @@ local FOLD = {
 
 ---A kebab-case ASCII slug from free text: umlauts folded (`ü` -> `ue`), other
 ---characters turned into hyphens, runs of hyphens collapsed, at most
----`MAX_SLUG` characters. Text with no usable character gives `"task"`.
+---`MAX_SLUG` characters. Text with no usable character gives `"task"`; a
+---result that is a Windows device name (`nul`, `con`, ...) gets `-task`
+---appended, since a folder task of that name cannot be created there.
 ---@param title string
 ---@return string
 function M.slugify(title)
@@ -102,7 +106,13 @@ function M.slugify(title)
   if #slug > M.MAX_SLUG then
     slug = slug:sub(1, M.MAX_SLUG):gsub("%-$", "")
   end
-  return slug ~= "" and slug or "task"
+  if slug == "" then
+    return "task"
+  end
+  if vault.is_reserved_name(slug) then
+    return slug .. "-task"
+  end
+  return slug
 end
 
 -- ── Template ─────────────────────────────────────────────────────────────────
@@ -608,6 +618,9 @@ function M.new(area, opts)
   if opts.slug ~= nil and not vault.valid_slug(opts.slug) then
     return nil, "invalid slug: " .. tostring(opts.slug)
   end
+  if opts.slug ~= nil and vault.is_reserved_name(opts.slug) then
+    return nil, ("slug '%s' is a reserved Windows device name"):format(opts.slug)
+  end
 
   local lead = summary and (summary .. "\n\n") or ""
   local body = "\n" .. lead .. NEW_BODY_SECTIONS[lang]
@@ -861,6 +874,20 @@ end
 
 -- ── done ─────────────────────────────────────────────────────────────────────
 
+---Call an `fsio` function the way a rollback needs it: never raise, answer
+---`ok, err`.
+---@param fn fun(...): boolean|nil, string|nil
+---@param ... any
+---@return boolean ok
+---@return string|nil err
+local function attempt(fn, ...)
+  local called, ok, err = pcall(fn, ...)
+  if not called then
+    return false, tostring(ok)
+  end
+  return ok == true, err
+end
+
 ---@class Tasks.DoneOpts
 ---@field root? string
 ---@field done_in? string|string[]   # Commit(s) that delivered the task.
@@ -894,13 +921,14 @@ function M.done(id, opts)
     return nil, id_err or ("expected <area>/<slug>, got " .. tostring(id))
   end
 
-  local task = scan.find(id, { root = root })
+  local task, find_err = scan.find(id, { root = root })
   if not task then
     local finished = scan.find_done(id, { root = root })
     if finished then
       return { id = id, already = true, to = finished.path }, nil
     end
-    return nil, "no such open task: " .. id
+    -- `find_err` is "no such open task" or the more useful "exists as file and as folder".
+    return nil, find_err or ("no such open task: " .. id)
   end
 
   local kind = task.kind or "task"
@@ -1036,21 +1064,39 @@ function M.done(id, opts)
     res = nil
   end
   if not res then
+    -- What could not be undone, named in the message (a silent half state is the worst answer).
+    local stuck = {}
     if moved then
-      -- Put the folder back exactly as it was: old file name, old text.
-      pcall(fsio.remove, target)
-      pcall(fsio.write_atomic, target_dir .. "/" .. slug .. ".md", old_text)
-      pcall(fsio.rename, target_dir, src_dir)
-    end
-    local restored, restore_errors = checkpoint.restore(cp)
-    checkpoint.discard(cp)
-    local msg = tostring(err)
-    if not restored then
-      local paths = {}
-      for _, e in ipairs(restore_errors) do
-        paths[#paths + 1] = e.path
+      -- Put the folder back exactly as it was: old file name, old text. The finished copy
+      -- goes only after the original is back: until then it may be the only holder of the text.
+      local old_name = target_dir .. "/" .. slug .. ".md"
+      local wrote, w_err = attempt(fsio.write_atomic, old_name, old_text)
+      if wrote then
+        attempt(fsio.remove, target)
+        local back, b_err = attempt(fsio.rename, target_dir, src_dir)
+        if not back then
+          stuck[#stuck + 1] = ("%s (cannot move it back to %s: %s)"):format(
+            target_dir,
+            src_dir,
+            tostring(b_err)
+          )
+        end
+      else
+        stuck[#stuck + 1] = ("%s (cannot restore %s: %s)"):format(
+          target_dir,
+          old_name,
+          tostring(w_err)
+        )
       end
-      msg = msg .. " (rollback incomplete: " .. table.concat(paths, ", ") .. ")"
+    end
+    local _, restore_errors = checkpoint.restore(cp)
+    checkpoint.discard(cp)
+    for _, e in ipairs(restore_errors) do
+      stuck[#stuck + 1] = e.path
+    end
+    local msg = tostring(err)
+    if #stuck > 0 then
+      msg = msg .. " (rollback incomplete: " .. table.concat(stuck, ", ") .. ")"
     end
     return nil, msg
   end
@@ -1103,6 +1149,30 @@ local function to_folder(root, task)
   return dest, nil
 end
 
+---Undo `to_folder` after a failed `attach`: the task file goes back to
+---`tasks/<slug>.md` and the folder `to_folder` made a moment ago is removed. The
+---half-copied `asset` and the then empty `assets/` go first; `rmdir` only takes
+---empty folders, so anything else that has appeared in there is never touched.
+---@param plain string        the path the task had before
+---@param folder_file string  the path `to_folder` gave it
+---@param asset string        the file the failed copy may have left behind
+---@return boolean ok
+---@return string|nil err
+local function undo_folder(plain, folder_file, asset)
+  local dir = fsio.dirname(folder_file)
+  local uv = vim.uv or vim.loop
+  if fsio.is_file(asset) then
+    pcall(fsio.remove, asset)
+  end
+  pcall(uv.fs_rmdir, dir .. "/" .. M.ASSETS_DIR)
+  local moved, err = fsio.rename(folder_file, plain)
+  if not moved then
+    return false, err
+  end
+  pcall(uv.fs_rmdir, dir)
+  return true, nil
+end
+
 ---Turn an open task into a folder task so assets can be attached. A task that
 ---already is one is left alone (`changed = false`).
 ---@param id string
@@ -1148,6 +1218,14 @@ local function asset_name(name)
   end
   if n:find("..", 1, true) or not n:match("^[%w_\128-\255][%w_.%-\128-\255]*$") then
     return nil, "asset name may only use letters, digits, _ . - (got '" .. n .. "'; pass --name=)"
+  end
+  -- Windows drops a trailing dot, so the link would name a file that is not there.
+  if n:sub(-1) == "." then
+    return nil, "asset name must not end with a dot (got '" .. n .. "'; pass --name=)"
+  end
+  -- `nul` and friends are devices there: the "copy" would succeed and store nothing.
+  if vault.is_reserved_name(n) then
+    return nil, ("asset name '%s' is a reserved Windows device name (pass --name=)"):format(n)
   end
   return n, nil
 end
@@ -1199,7 +1277,23 @@ function M.attach(id, src, opts)
   if not copied then
     local why = cerr == "exists" and ("asset exists: " .. asset .. " (pass --name=)")
       or ("cannot copy to " .. asset .. ": " .. tostring(cerr))
-    return nil, folderized and (why .. " (the task was turned into a folder task)") or why
+    if not folderized then
+      return nil, why
+    end
+    -- The conversion was only a means to an end: a failed attach leaves the task as it was.
+    local undone, uerr = undo_folder(task.path, path, asset)
+    if undone then
+      return nil, why
+    end
+    -- It stays a folder task, so keep the index true to what is on disk.
+    if opts.index ~= false then
+      index.write_area(task.area, { root = root })
+    end
+    return nil,
+      ("%s (the task was turned into a folder task; moving it back failed: %s)"):format(
+        why,
+        tostring(uerr)
+      )
   end
 
   local rel = M.ASSETS_DIR .. "/" .. name
