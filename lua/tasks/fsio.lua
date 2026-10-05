@@ -79,6 +79,35 @@ function M.eol_of(s)
   return s:find("\r\n", 1, true) and "\r\n" or "\n"
 end
 
+---Text that is safe to print: every control character (C0, DEL, and the C1
+---range in its UTF-8 form, which xterm-like terminals also act on) becomes a
+---space. A title, a ref or a file name is data from a file; an ESC in it would
+---otherwise reach the terminal (`list`, `check`) or the generated index as an
+---escape sequence (window title, OSC 52 clipboard write, cursor games).
+---@param s string
+---@return string
+function M.clean(s)
+  return (s:gsub("%c", " "):gsub("\194[\128-\159]", " "))
+end
+
+---`s` without leading and trailing whitespace, in linear time. The usual
+---`s:match("^%s*(.-)%s*$")` retries the rest of a whitespace run from every
+---byte inside it, so one line with 40 000 spaces costs seconds (SEC-32); this
+---one walks the trailing run once.
+---@param s string
+---@return string
+function M.trim(s)
+  local first = s:find("%S")
+  if not first then
+    return ""
+  end
+  local last = #s
+  while last > first and s:find("^%s", last) do
+    last = last - 1
+  end
+  return s:sub(first, last)
+end
+
 ---@param path string
 ---@param err? string
 ---@return boolean ok
@@ -93,6 +122,10 @@ end
 
 ---Write `content` to `path` through a temp sibling and a rename, creating the
 ---parent directory. Bytes are written as given (no newline is appended).
+---
+---The temp file is flushed to disk before the rename (a crash then leaves the old
+---or the new content, never an empty file under the new name) and takes over the
+---mode of the file it replaces (a private `0600` file does not become `0644`).
 ---@param path string
 ---@param content string
 ---@return boolean ok
@@ -103,14 +136,22 @@ function M.write_atomic(path, content)
     return false, perr
   end
   -- Unique per process and call, so concurrent writers never share a temp file.
-  local tmp = ("%s.tasks-tmp.%d.%d"):format(path, vim.uv.os_getpid(), vim.uv.hrtime())
-  local f, open_err = io.open(tmp, "wb")
-  if not f then
+  local tmp = ("%s.tasks-tmp.%d.%d"):format(path, uv.os_getpid(), uv.hrtime())
+  local fd, open_err = uv.fs_open(tmp, "wx", 420) -- 0644, less the umask
+  if not fd then
     return false, "open failed: " .. tostring(open_err or tmp)
   end
-  local wrote, write_err = f:write(content)
-  local closed, close_err = f:close()
-  if not wrote or not closed then
+  local wrote, write_err = uv.fs_write(fd, content, 0)
+  if wrote then
+    local old = uv.fs_stat(path)
+    if old then
+      pcall(uv.fs_fchmod, fd, old.mode % 4096)
+    end
+    -- Best effort: a file system that cannot sync (some network shares) still gets its bytes.
+    pcall(uv.fs_fsync, fd)
+  end
+  local closed, close_err = uv.fs_close(fd)
+  if not wrote or wrote ~= #content or not closed then
     pcall(os.remove, tmp)
     return false, "write failed: " .. tostring(write_err or close_err or tmp)
   end

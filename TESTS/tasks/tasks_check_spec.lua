@@ -360,6 +360,16 @@ return function(H)
     area = "a",
   }, root)
   eq(warn_line, "a.md  warn blocked-by-done  m")
+  -- text from a file (a status, a ref, a file name) cannot carry an escape sequence to the terminal
+  local evil_line = check.format({
+    path = root .. "/lib.nvim/ROADMAP/tasks/x\27[2J.md",
+    code = "unknown-status",
+    severity = "error",
+    message = "unknown status 'a\27]52;c;AAAA\7b'",
+    area = "lib.nvim",
+  }, root)
+  ok(not evil_line:find("%c"), "no control character in the printed line")
+  eq(evil_line, "lib.nvim/ROADMAP/tasks/x [2J.md  unknown-status  unknown status 'a ]52;c;AAAA b'")
 
   -- CRLF task files raise no finding of their own
   remove(tasks .. "prose.md")

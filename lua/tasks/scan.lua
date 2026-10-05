@@ -291,6 +291,10 @@ function M.find(id, opts)
   if not area or not slug then
     return nil, id_err or ("expected <area>/<slug>, got " .. tostring(id))
   end
+  if not vault.dir_listed(root, area) then
+    -- `LIB.NVIM/x` would find `lib.nvim/x` on a case-insensitive disk, under another id.
+    return nil, "no such open task: " .. area .. "/" .. slug
+  end
   local path, folder = vault.resolve_task(root, area, slug)
   if not path then
     return nil, folder --[[@as string]]
@@ -312,7 +316,7 @@ function M.find_done(id, opts)
     return nil
   end
   local area, slug = vault.parse_id(id)
-  if not area or not slug then
+  if not area or not slug or not vault.dir_listed(root, area) then
     return nil
   end
   for _, bucket in ipairs({ "FEATURES", "TASKS" }) do

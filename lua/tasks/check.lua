@@ -81,6 +81,21 @@ local function finding_less(a, b)
   return a.message < b.message
 end
 
+---Whether the file a link target names exists below `dir`. A target is a URL
+---part: `assets/two%20words.png` is the file `two words.png`.
+---@param dir string
+---@param target string
+---@return boolean
+local function asset_exists(dir, target)
+  if fsio.is_file(dir .. "/" .. target) then
+    return true
+  end
+  local decoded = target:gsub("%%(%x%x)", function(hex)
+    return string.char(tonumber(hex, 16))
+  end)
+  return decoded ~= target and fsio.is_file(dir .. "/" .. decoded)
+end
+
 ---Relative `assets/...` links of a folder task's body that point at no file.
 ---@param task Tasks.Task
 ---@return string[] missing
@@ -94,7 +109,7 @@ local function dangling_assets(task)
   for target in text:gmatch("%]%((assets/[^)%s]+)%)") do
     if not seen[target] then
       seen[target] = true
-      if not fsio.is_file(dir .. "/" .. target) then
+      if not asset_exists(dir, target) then
         missing[#missing + 1] = target
       end
     end
@@ -285,7 +300,9 @@ function M.format(finding, root)
     rel = rel:sub(#root + 2)
   end
   local tag = finding.severity == "warn" and "warn " or ""
-  return ("%s  %s%s  %s"):format(rel, tag, finding.code, finding.message)
+  -- The message and the path carry text from the files (a status, a ref, a file
+  -- name): a control character in them must not reach the terminal.
+  return fsio.clean(("%s  %s%s  %s"):format(rel, tag, finding.code, finding.message))
 end
 
 return M

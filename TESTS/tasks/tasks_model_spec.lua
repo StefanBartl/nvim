@@ -431,4 +431,77 @@ return function(H)
     eq(noted.hints, {}, "a real comment after a quoted title is not a hint")
     eq(parse("---\ntitle: 'It''s' # n\nstatus: open\n---\n").hints, {}, "single-quoted too")
   end
+
+  -- ── a long whitespace run is read in linear time (SEC-32) ───────────────
+  -- `s:match("^%s*(.-)%s*$")` retries the rest of a run from every byte inside
+  -- it: 100 000 spaces in a body line took ~25 s. The bound fails loudly if a
+  -- quadratic trim ever comes back; the fixed code needs a few milliseconds.
+  do
+    local run = (" "):rep(100000)
+    local text = "---\ntitle: a" .. run .. "b\nstatus: open\ntags: [x" .. run .. "y,  z  ]\n---\n\n"
+    text = text .. run .. "word" .. run .. "\n"
+    local t0 = vim.uv.hrtime()
+    local long = parse(text)
+    local ms = (vim.uv.hrtime() - t0) / 1e6
+    ok(ms < 3000, ("parsing took %.0f ms"):format(ms))
+    eq(long.title, "a" .. run .. "b", "inner run kept, nothing around it")
+    eq(long.summary, "word", "the body line is trimmed")
+    eq(long.tags[2], "z", "a list item is trimmed")
+    eq(model.split_commas("a ,  b  , " .. run .. "c" .. run), { "a", "b", "c" }, "comma list")
+    eq(require("tasks.fsio").trim("  \t x y \r\n"), "x y", "fsio.trim")
+    eq(require("tasks.fsio").trim("x"), "x", "one character")
+    eq(require("tasks.fsio").trim(run), "", "an all-whitespace string")
+    eq(require("tasks.fsio").trim(""), "", "the empty string")
+  end
+
+  -- ── control characters from a file never reach a terminal ───────────────
+  -- A raw ESC in a title (`list`, the index, the dashboard) or in a status (the
+  -- `check` message) is an escape sequence: window title, OSC 52 clipboard write.
+  do
+    local fsio = require("tasks.fsio")
+    local esc, bel, csi = "\27", "\7", "\194\155" -- ESC, BEL, the UTF-8 form of C1 CSI
+    local function clean_of(label, s)
+      ok(
+        type(s) == "string" and not s:find("%c") and not s:find(csi, 1, true),
+        label .. " is clean"
+      )
+    end
+    local text = table.concat({
+      "---",
+      "title: Evil" .. esc .. "[2J" .. esc .. "]52;c;AAAA" .. bel .. " end" .. csi .. "31m",
+      "status: op" .. esc .. "[0men",
+      "tags: [a" .. esc .. "b, plain]",
+      "refs: [lua/x" .. esc .. ".lua]",
+      "summary: sum" .. csi .. "mary",
+      "---",
+      "",
+    }, "\n")
+    local evil = parse(text)
+    clean_of("title", evil.title)
+    eq(evil.title, "Evil [2J ]52;c;AAAA  end 31m", "each control character became one space")
+    clean_of("summary", evil.summary)
+    clean_of("status", evil.status)
+    clean_of("tag", evil.tags[1])
+    eq(evil.tags[2], "plain", "other items are untouched")
+    clean_of("ref", evil.refs[1])
+    for i, msg in ipairs(evil.errors) do
+      clean_of("error " .. i, msg)
+    end
+    ok(#evil.errors > 0, "the bad status is still reported")
+    clean_of(
+      "body summary",
+      parse("---\ntitle: t\nstatus: open\n---\n\nbody " .. esc .. "[31m red\n").summary
+    )
+    eq(
+      fsio.clean("plain text, tab\tstays? no: " .. csi),
+      "plain text, tab stays? no:  ",
+      "fsio.clean"
+    )
+    eq(fsio.clean("ünïcode ✓ stays"), "ünïcode ✓ stays", "other UTF-8 is not touched")
+    eq(
+      parse("---\ntitle: \27\27\nstatus: open\n---\n").errors[1],
+      "title is empty",
+      "only controls"
+    )
+  end
 end

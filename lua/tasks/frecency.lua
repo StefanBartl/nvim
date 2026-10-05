@@ -45,6 +45,11 @@ M.MIN_SCORE = 0.05
 ---Format version written to the file.
 M.VERSION = 1
 
+---A file bigger than this is not ours: `MAX_ENTRIES` rows of at most `MAX_ID_LENGTH`
+---characters are about 120 KiB. Reading (and decoding) a runaway file on every
+---dashboard refresh would stall the editor, so it counts as corrupt (SEC-32).
+M.MAX_FILE_BYTES = 1024 * 1024
+
 local DAY_SECONDS = 86400
 
 ---@class Tasks.FrecencyEntry
@@ -255,8 +260,12 @@ end
 ---@return string|nil err
 function M.load(opts)
   local path = (opts and opts.path) or M.path()
-  if not uv.fs_stat(path) then
+  local st = uv.fs_stat(path)
+  if not st then
     return {}, "missing", nil
+  end
+  if st.type == "file" and st.size > M.MAX_FILE_BYTES then
+    return {}, "corrupt", ("file is %d bytes, more than %d"):format(st.size, M.MAX_FILE_BYTES)
   end
   local text, rerr = fsio.read(path)
   if not text then
