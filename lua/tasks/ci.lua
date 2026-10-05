@@ -38,6 +38,7 @@ M.LINT_CHUNK = 40
 ---@field lint? boolean               # Run `md_lint` (default true).
 ---@field md_lint? string             # Path of `md_lint.lua` (default: `<vault>/TOOLS/scripts/md_lint.lua`).
 ---@field nvim? string                # Neovim executable for md_lint (default: the running one).
+---@field timeout_ms? integer          # Per md_lint call before it is killed (default `LINT_TIMEOUT_MS`).
 ---@field run_lint? fun(files: string[], md_lint: string): integer, string  # Replaces the child process (specs): exit code, output.
 
 ---@class Tasks.CiResult
@@ -46,21 +47,46 @@ M.LINT_CHUNK = 40
 ---@field failed string[]   # Names of the failed steps.
 ---@field lines string[]    # What was printed.
 
+---Longest a child md_lint may run before it is killed and the step fails.
+M.LINT_TIMEOUT_MS = 120000
+
+---Turn what `vim.system():wait()` reports into the gate's exit code and output. A child that was
+---killed (a signal reads as exit code 0 on POSIX) or that ran into the timeout (`vim.system`
+---answers 124 and signal 9, with nothing printed) is a failure with a reason, never a pass.
+---@param res { code: integer, signal?: integer, stdout?: string, stderr?: string }
+---@param timeout_ms integer
+---@return integer code
+---@return string output
+---@return boolean fatal  the run did not finish on its own: the next chunk would hang or die too
+function M.interpret(res, timeout_ms)
+  local text = (res.stdout or "") .. (res.stderr or "")
+  local signal = res.signal or 0
+  if res.code == 124 and signal ~= 0 then
+    return 1, ("timed out after %d s and was killed"):format(math.floor(timeout_ms / 1000)), true
+  end
+  if signal ~= 0 then
+    return 1, ("killed by signal %d"):format(signal), true
+  end
+  return res.code, text, false
+end
+
 ---@param files string[]
 ---@param md_lint string
 ---@param nvim string
+---@param timeout_ms integer
 ---@return integer code
 ---@return string output
-local function child_lint(files, md_lint, nvim)
+---@return boolean fatal
+local function child_lint(files, md_lint, nvim, timeout_ms)
   local cmd = { nvim, "--headless", "-u", "NONE", "-l", md_lint }
   vim.list_extend(cmd, files)
   local ok, res = pcall(function()
-    return vim.system(cmd, { text = true }):wait(120000)
+    return vim.system(cmd, { text = true }):wait(timeout_ms)
   end)
   if not ok then
-    return 1, "cannot start Neovim: " .. tostring(res)
+    return 1, "cannot start Neovim: " .. tostring(res), true
   end
-  return res.code, (res.stdout or "") .. (res.stderr or "")
+  return M.interpret(res, timeout_ms)
 end
 
 ---Run the gate.
@@ -153,15 +179,21 @@ function M.run(opts, say)
     else
       local runner = opts.run_lint
         or function(files, script)
-          return child_lint(files, script, opts.nvim or vim.v.progpath)
+          return child_lint(
+            files,
+            script,
+            opts.nvim or vim.v.progpath,
+            opts.timeout_ms or M.LINT_TIMEOUT_MS
+          )
         end
-      local bad_chunks, problems = 0, {}
+      local bad_chunks, problems, linted = 0, {}, 0
       for i = 1, #indexes, M.LINT_CHUNK do
         local chunk = {}
         for j = i, math.min(i + M.LINT_CHUNK - 1, #indexes) do
           chunk[#chunk + 1] = indexes[j]
         end
-        local code, text = runner(chunk, md_lint)
+        local code, text, fatal = runner(chunk, md_lint)
+        linted = linted + #chunk
         if code ~= 0 then
           bad_chunks = bad_chunks + 1
           for line in (text or ""):gmatch("[^\r\n]+") do
@@ -170,12 +202,19 @@ function M.run(opts, say)
             end
           end
         end
+        if fatal then
+          -- A hung or killed linter: the next chunk would wait out the whole timeout again.
+          break
+        end
       end
       for _, line in ipairs(problems) do
         out("md_lint: " .. line)
       end
       if bad_chunks > 0 then
-        fail("md_lint", ("problems in the generated indexes (%d file(s) linted)"):format(#indexes))
+        fail(
+          "md_lint",
+          ("problems in the generated indexes (%d of %d file(s) linted)"):format(linted, #indexes)
+        )
       else
         out(("tasks-ci: md_lint: %d index file(s) clean -- ok"):format(#indexes))
       end

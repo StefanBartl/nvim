@@ -12,7 +12,7 @@
 --- is found as in `scripts/tasks.lua` (`$LIB_NVIM_DIR`, ...). For `$VAR/...`
 --- links in md_lint, put lsp.nvim on `$REPOS_DIR` (or lazy's data folder).
 
-local script = debug.getinfo(1, "S").source:sub(2)
+local script = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p")
 local dir = vim.fs.dirname(vim.fs.normalize(script))
 
 local argv = { "ci" }
