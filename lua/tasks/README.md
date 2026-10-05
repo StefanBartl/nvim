@@ -113,7 +113,7 @@ score halves every 14 days (`HALF_LIFE_DAYS`). Entries below `MIN_SCORE` (0.05, 
 months of silence after one visit) are dropped and at most `MAX_ENTRIES` (500) are kept.
 The file is `stdpath("state")/tasks/frecency.json` (`$TASKS_FRECENCY_FILE` or
 `frecency.set_path` override it; the specs use a temp file), written atomically, keyed by
-task id. A corrupt file starts empty (the old bytes stay as `frecency.json.bad`); a file
+task id. A corrupt file (also one over `MAX_FILE_BYTES`, 1 MiB; a real one is ~120 KiB at most) starts empty (the old bytes stay as `frecency.json.bad`); a file
 that cannot be read is never overwritten. Why not `lib.nvim.frecency`: its fixed recency
 buckets use `os.time()` directly (nothing to inject), and it has neither a half-life nor
 an entry cap.
