@@ -85,6 +85,10 @@ local repos_dir = vim.env.REPOS_DIR
 if (not vim.env.TASKS_VAULT or vim.env.TASKS_VAULT == "") and repos_dir and repos_dir ~= "" then
   vim.env.TASKS_VAULT = repos_dir .. "/WKDBooks/Development/wkdbook-myplugins"
 end
+-- This is the author's own vault: its md_lint.lua is trusted (tasks.nvim refuses to run a vault's script otherwise).
+if not vim.env.TASKS_TRUST_VAULT_LINT or vim.env.TASKS_TRUST_VAULT_LINT == "" then
+  vim.env.TASKS_TRUST_VAULT_LINT = "1"
+end
 if not vim.env.TASKS_EXTRA_AREAS or vim.env.TASKS_EXTRA_AREAS == "" then
   vim.env.TASKS_EXTRA_AREAS = "ALL,nvim-config,docmap-desktop,migrate.nvim"
 end
