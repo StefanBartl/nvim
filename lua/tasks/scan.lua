@@ -291,6 +291,10 @@ function M.find(id, opts)
   if not area or not slug then
     return nil, id_err or ("expected <area>/<slug>, got " .. tostring(id))
   end
+  -- Not an area, or one spelled in another case (the same folder on Windows, a second id).
+  if not vault.has_area(root, area) then
+    return nil, "no such open task: " .. area .. "/" .. slug
+  end
   local path, folder = vault.resolve_task(root, area, slug)
   if not path then
     return nil, folder --[[@as string]]

@@ -78,10 +78,18 @@ local function field_by_name(name)
   return nil
 end
 
+---`vim.trim` is linear; `s:gsub("%s+$", "")` rescans a long inner whitespace run once per space.
 ---@param s string
 ---@return string
 local function trim(s)
-  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+  return vim.trim(s)
+end
+
+---Drop trailing whitespace only (leading indentation marks a bullet).
+---@param s string
+---@return string
+local function rtrim(s)
+  return s:match("^(.*%S)") or ""
 end
 
 ---Heading line of a choice field, e.g. `## kind (one)`.
@@ -147,7 +155,7 @@ function M.parse(lines)
   local out = { area = "", title = "", tags = "", refs = "", ticks = {}, unknown = {} }
   local current ---@type Tasks.FormField|nil
   for _, raw in ipairs(lines) do
-    local line = raw:gsub("%s+$", "")
+    local line = rtrim(raw)
     if line:sub(1, 1) == "!" or line:sub(1, 4) == "<!--" then
       -- report or hint: not form content
     else
@@ -158,13 +166,13 @@ function M.parse(lines)
           out.ticks[current.name] = out.ticks[current.name] or {}
         end
       else
-        local key, value = line:match("^(%a+):%s*(.-)%s*$")
+        local key, value = line:match("^(%a+):%s*(.*)$")
         key = key and key:lower()
         if key == "area" or key == "title" or key == "tags" or key == "refs" then
           out[key] = value
           current = nil
         else
-          local mark, text = line:match("^%s*[-*]%s+%[(.)%]%s+(.-)%s*$")
+          local mark, text = line:match("^%s*[-*]%s+%[(.)%]%s+(.*)$")
           if current and mark and (mark == "x" or mark == "X") then
             if vim.tbl_contains(current.values, text) then
               table.insert(out.ticks[current.name], text)
