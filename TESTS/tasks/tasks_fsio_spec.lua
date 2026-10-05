@@ -3,6 +3,7 @@
 return function(H)
   local eq, ok = H.eq, H.ok
   local fsio = require("tasks.fsio")
+  local uv = vim.uv or vim.loop
 
   local dir = H.tmpdir()
   local target = dir .. "/sub/TASKS.md"
@@ -41,4 +42,30 @@ return function(H)
   end
   vim.fn.delete(target .. ".tasks-tmp")
   eq(temps(dir .. "/sub"), {}, "still no temp file left behind")
+
+  -- Binary content of some size (NUL, CR LF, high bytes, no final newline) is
+  -- written byte for byte, and an empty string writes an empty file.
+  local blob = ("a\0b\r\n\255\128"):rep(700000)
+  ok(fsio.write_atomic(target, blob), "a 5 MB blob")
+  eq(H.read(target), blob, "blob read back byte-exact")
+  ok(fsio.write_atomic(target, ""), "empty content")
+  eq(H.read(target), "", "an empty file")
+  eq(temps(dir .. "/sub"), {}, "no temp file left behind by the big writes either")
+
+  -- A failing rename (the target is a directory) reports the error and leaves no temp file.
+  vim.fn.mkdir(dir .. "/sub/is-a-dir", "p")
+  local blocked, berr = fsio.write_atomic(dir .. "/sub/is-a-dir", "x")
+  eq(blocked, false, "cannot replace a directory")
+  ok(berr and berr:find("rename failed", 1, true), "the error names the step: " .. tostring(berr))
+  eq(temps(dir .. "/sub"), {}, "the temp file of the failed write is removed")
+
+  -- The mode of the replaced file is kept (POSIX; Windows has no such modes).
+  if vim.fn.has("win32") == 0 then
+    local private = dir .. "/sub/private.md"
+    H.write(private, "old")
+    uv.fs_chmod(private, tonumber("600", 8))
+    ok(fsio.write_atomic(private, "new"))
+    eq(H.read(private), "new")
+    eq(uv.fs_stat(private).mode % 4096, tonumber("600", 8), "a 0600 file stays 0600")
+  end
 end
