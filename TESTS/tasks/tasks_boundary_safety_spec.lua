@@ -184,27 +184,4 @@ return function(H)
     eq(r.code, 0, "started from scripts/: " .. tostring(r.stderr))
     has(r.stdout, "lib.nvim")
   end
-
-  -- ── attach (editor): the typed file name is not glob-expanded first ─────
-  local tasks_cmd = require("bindings.usrcmds.plugin_repos.tasks_cmd")
-  -- both in ONE folder: the pattern `report[1].pdf` matches `report1.pdf` next to it
-  local dir = H.tmpdir() .. "/src"
-  local twin = dir .. "/report1.pdf"
-  local bracket = dir .. "/report[1].pdf"
-  H.write(twin, "ONE")
-  H.write(bracket, "BRACKET")
-  eq(
-    vim.fs.normalize(tasks_cmd.attach_source(bracket)),
-    vim.fs.normalize(bracket),
-    "report[1].pdf is that file, not the report1.pdf the character class would match"
-  )
-  eq(H.read(tasks_cmd.attach_source(bracket)), "BRACKET")
-  eq(vim.fs.normalize(tasks_cmd.attach_source(twin)), vim.fs.normalize(twin))
-  local home_probe = H.tmpdir() .. "/home"
-  H.write(home_probe .. "/in-home.txt", "H")
-  local saved_dir_var = vim.env.TASKS_SPEC_DIR
-  vim.env.TASKS_SPEC_DIR = home_probe
-  local expanded = tasks_cmd.attach_source("$TASKS_SPEC_DIR/in-home.txt")
-  vim.env.TASKS_SPEC_DIR = saved_dir_var
-  eq(H.read(expanded), "H", "a name that exists nowhere literally is still expanded ($VAR, ~)")
 end

@@ -303,7 +303,7 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 | `--blocked` | status `blocked`, or a non-empty `blocked_by` |
 | `--sort=default` / `prio-effort` / `severity` / `frecency` | the order: `default` is status, prio, area, slug; `prio-effort` is status, prio, then effort ascending (important and small first, no effort last of its prio); `severity` is `critical` first, then `high`, `medium`, `low`, no severity last, each group in the default order; `frecency` is what the dashboard opened or changed most first (see below), the rest in the default order |
 | `--to=` | where the list goes: `buffer` (default), `clipboard`, `qf`, `file:<path>`, `echo`, `mdview` (Markdown written to a temp file and shown in the browser by [mdview.nvim](https://github.com/StefanBartl/mdview.nvim); see [Browser preview](#browser-preview-mdview)) |
-| `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path, severity; a `file:` target ending in `.csv` implies `csv` |
+| `--format=md` / `--format=csv` | table (default) or CSV with the extra columns tags, blocked by, summary, path, severity; a `file:` target ending in `.csv` implies `csv`. A CSV cell that starts with `=`, `+`, `-`, `@` or a tab gets a leading `'`, so a title like `=HYPERLINK(...)` is text, not a formula, when the file is opened in a spreadsheet |
 
 ```vim
 :MyPlugins tasks                                    " everything open, in a scratch buffer
@@ -314,6 +314,11 @@ lowercase word `all` is the keyword; `ALL` with capitals is the area of that nam
 :MyPlugins tasks --category=bug,security --sort=severity         " worst first
 :MyPlugins tasks all --to=file:$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/TASKS.md
 ```
+
+The command line splits at spaces, so a `--to=file:` path with a space needs a backslash before
+each space (`--to=file:C:/my\ dir/tasks.csv`). A word a command has no use for is an error
+(`unexpected argument: ...`), not silently ignored -- otherwise the export would go to a file named
+after the part before the space.
 
 The scratch buffer is plain Markdown (yank it, `:sort` it, search it) with a heading and
 the active filter above the table. `qf` puts one entry per task into the quickfix list,
@@ -382,7 +387,9 @@ their file events are muted and no second scan runs. Closing the picker (any way
 including the `D` / `f` / `e` detours) stops every handle and timer; the reopened dashboard
 starts its own. Only direct folders are watched (libuv's `recursive` flag does nothing on
 Linux), so after every refresh (and after `r`) the handles are re-aimed: a folder task
-created while open is watched from then on. A whole new area is only noticed by `r` or by
+created while open is watched from then on. An area that has no `ROADMAP/tasks/` yet is
+watched at `ROADMAP/` until the folder appears (its first task is noticed, however the burst of
+events ends: `lib.nvim.fs.watch` reports only the last file name of a burst). A whole new area is only noticed by `r` or by
 reopening the dashboard (the vault root itself is not watched). Off with `require("bindings.usrcmds.plugin_repos.tasks_dash").config.watch = false`
 (or per call `open(v, { watch = false })`); the debounce is `config.watch_debounce_ms`. If no
 folder can be watched (handle limit, no `lib.nvim.fs.watch`) the dashboard says so once and
@@ -540,12 +547,14 @@ see [Browser preview](#browser-preview-mdview).
 browser" in the `e` menu) put the rendered Markdown in the browser through
 [mdview.nvim](https://github.com/StefanBartl/mdview.nvim). The wire is `tasks_preview.lua`:
 
-- **A task file** is opened as it is (`:edit`, then `:MDView start <file>`), so edits show up in
-  the preview live. Nothing is copied and nothing is written to the vault.
+- **A task file** is opened as it is (`:edit`, then `:MDView start <file>`, the path handed over as
+  one argument, so a space, `#`, `%` or `'` in it survives), so edits show up in the preview live.
+  Nothing is copied and nothing is written to the vault.
 - **A list export** (`--to=mdview`, `--format=md` only; `--format=csv` is refused) is rendered to
   Markdown, written to a temp file `tasks-<scope>.md` (`-2`, `-3` on a name clash; the scope is the
   area or `all`) in Neovim's per-session temp directory, and opened the same way. The buffer is
-  unlisted. The file is deleted when its buffer is deleted or wiped (retrying a few times, Windows
+  unlisted. The file is deleted when its buffer is deleted, wiped or unloaded (a plain `:bdelete`
+  included; a reload with `:edit!` keeps it; retrying a few times, Windows
   holds a file for a moment) and, for whatever is left, when Neovim quits; Neovim removes its
   temp directory on exit anyway. A temp location inside the vault is refused.
 - **mdview.nvim is a soft dependency.** The check is "the `:MDView` command exists (a lazy stub

@@ -214,6 +214,61 @@ return function(H)
     vim.cmd("silent! bwipeout!")
     dash.open = orig_open
     cmd.dashboard = nil
+
+    -- ── export: the path typed at the prompt goes as typed ───────────────
+    -- `vim.fn.expand` on it would turn the wildcard in `report[1].csv` into the existing
+    -- `report1.csv` (which the export then overwrote), run backticks through the shell, ...
+    reset()
+    local out_dir = H.tmpdir()
+    H.write(out_dir .. "/report1.csv", "precious\n")
+    local export_state = { root = root, filter = {}, sort = "default" }
+    local export_tasks = scan.all({ root = root })
+    local delivered
+    select_queue = { pick("File ... (CSV)") }
+    input_queue = { out_dir .. "/report[1].csv" }
+    dash.export(export_state, export_tasks, function(d)
+      delivered = d
+    end)
+    eq(delivered, true, "the export went through: " .. said())
+    eq(
+      H.read(out_dir .. "/report1.csv"),
+      "precious\n",
+      "the file the wildcard matches is untouched"
+    )
+    has(H.read(out_dir .. "/report[1].csv") or "", "Task,Status", "the literal name was written")
+
+    -- ── an unexpected error in a batch still ends the progress it started ──
+    -- (a statusline progress that is never finished keeps its timer running for good)
+    local core = require("bindings.usrcmds.plugin_repos.tasks_dash_core")
+    local progress = require("lib.nvim.progress")
+    local real_create, real_apply_set, real_apply_done =
+      progress.create, core.apply_set, core.apply_done
+    local finished = {}
+    progress.create = function()
+      return {
+        update = function() end,
+        finish = function(_, text)
+          finished[#finished + 1] = text
+        end,
+      }
+    end
+    core.apply_set = function()
+      error("engine exploded", 0)
+    end
+    core.apply_done = function()
+      error("engine exploded again", 0)
+    end
+    local alpha_task = assert(scan.find("lib.nvim/alpha", { root = root }))
+    local raised, raised_err = pcall(dash.cycle, export_state, { alpha_task }, "status")
+    eq(raised, false, "the error still propagates")
+    has(raised_err, "engine exploded")
+    eq(#finished, 1, "but the progress of `s` was finished")
+    yesno_answer = true
+    local fin_raised, fin_err = pcall(dash.finish, export_state, { alpha_task }, function() end)
+    eq(fin_raised, false)
+    has(fin_err, "engine exploded again")
+    eq(#finished, 2, "and the progress of `D` too")
+    progress.create, core.apply_set, core.apply_done = real_create, real_apply_set, real_apply_done
   end
 
   -- ── locate snacks ───────────────────────────────────────────────────────

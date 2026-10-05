@@ -311,6 +311,22 @@ return function(H)
   eq(sd:count(), 1)
   sd:stop()
 
+  -- lib.nvim.fs.watch debounces per handle and reports only the LAST name of a burst: the first task
+  -- of an area is `tasks`, then (a few ms later) `TASKS.md`. Waiting for tasks/ must not hang on the name.
+  H.write(fresh_root .. "/q.nvim/ROADMAP/ROADMAP.md", "# R\n")
+  local qw = world()
+  local qd = qw.new({ root = fresh_root, area = "q.nvim", backlog = false })
+  eq({ qd:start() }, { true })
+  local q_roadmap = fresh_root .. "/q.nvim/ROADMAP"
+  qw.event(q_roadmap, "TASKS.md")
+  eq(qw.pending(), 0, "no tasks/ yet: an index event arms nothing")
+  H.write(q_roadmap .. "/tasks/first.md", "x")
+  qw.event(q_roadmap, "TASKS.md")
+  eq(qw.pending(), 1, "tasks/ is there now: the burst counts although its last name was TASKS.md")
+  qw.fire()
+  ok(qw.handles[q_roadmap .. "/tasks"] ~= nil, "and the refresh aims a handle at tasks/")
+  qd:stop()
+
   -- ── start failures ──────────────────────────────────────────────────────
   local fw = world()
   fw.fail = function()
@@ -443,4 +459,44 @@ return function(H)
   end)
   eq(seen, at_end, "nothing is reported after stop")
   rw:stop()
+
+  -- ── real handles: the first task of an area that has no tasks/ yet ───────
+  -- `mutate.new` makes tasks/, the task file, then ROADMAP/TASKS.md: the burst on the ROADMAP handle
+  -- ends on `TASKS.md`. A name filter dropped it, and the dashboard never noticed the first task.
+  local first_root = F.vault(H)
+  local first_seen = 0
+  local first_w = watch.new({
+    root = first_root,
+    area = "cascade.nvim",
+    debounce_ms = 60,
+    on_refresh = function()
+      first_seen = first_seen + 1
+    end,
+  })
+  eq({ first_w:start() }, { true })
+  eq(first_w:count(), 3, "ROADMAP (waiting for tasks/) and the two Backlog buckets")
+  local made = 0
+  local noticed = vim.wait(5000, function()
+    if first_seen >= 1 then
+      return true
+    end
+    made = made + 1
+    local r, merr = require("tasks.mutate").new(
+      "cascade.nvim",
+      { title = "First task " .. made, root = first_root }
+    )
+    ok(r, merr)
+    vim.wait(250, function()
+      return first_seen >= 1
+    end, 10)
+    return first_seen >= 1
+  end, 20)
+  ok(noticed, "the watcher noticed a task created in an area without tasks/ (after " .. made .. ")")
+  ok(
+    vim.wait(1000, function()
+      return first_w.handles[first_root .. "/cascade.nvim/ROADMAP/tasks"] ~= nil
+    end, 20),
+    "and the refresh aimed a handle at the new tasks/ folder"
+  )
+  first_w:stop()
 end

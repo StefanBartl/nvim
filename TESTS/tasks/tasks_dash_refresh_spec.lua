@@ -441,6 +441,46 @@ return function(H)
     reset_fixture()
     os.remove(root .. "/lib.nvim/ROADMAP/tasks/aaa.md")
 
+    -- ── a handle factory that RAISES: the picker stays the only window ─────
+    -- (it used to take the picker down with it: the plain list opened on top of the open picker)
+    local selects = 0
+    vim.ui.select = function(_, _, cb)
+      selects = selects + 1
+      cb(nil)
+    end
+    dash.config.watch_opts = {
+      start = function()
+        error("handle factory exploded")
+      end,
+    }
+    notes = {}
+    cmd.list({ flags = {}, args = {} })
+    p = opened(4)
+    has(said(), "no live refresh")
+    has(said(), "handle factory exploded")
+    lacks(said(), "snacks picker failed")
+    eq(selects, 0, "no plain list on top of the picker")
+    eq(handles_of("fs_event"), fs_base, "nothing was left watching")
+    close_all()
+    dash.config.watch_opts = nil
+
+    -- ... and a picker that closed before the watcher was started leaves no watcher behind
+    local real_snacks = package.loaded["snacks"]
+    package.loaded["snacks"] = {
+      picker = setmetatable({}, {
+        __call = function(_, opts)
+          opts.on_close() -- closed at once: `on_close` finds no watcher to stop yet
+          return { closed = true }
+        end,
+      }),
+    }
+    dash.open({ tasks = {}, root = root, filter = {}, sort = "default" }, { persist = false })
+    package.loaded["snacks"] = real_snacks
+    eq(handles_of("fs_event"), fs_base, "a picker closed on its own leaves no handle")
+    vim.ui.select = function(_, _, cb)
+      cb(nil)
+    end
+
     -- ── frecency: opening and changing a task feeds the sort ──────────────
     dash.config.watch = false
     frecency.set_path(H.tmpdir() .. "/frecency2.json")

@@ -132,6 +132,25 @@ local function unquote(s)
   return inner and vim.trim(inner) or s
 end
 
+---Refuse words a command has no use for. Ignoring them is the worse outcome: the command line
+---splits at spaces, so `--to=file:C:/my dir/x.md` arrives as `--to=file:C:/my` plus the stray
+---`dir/x.md`, and the export would be written to a file called `my`.
+---@param ctx table  composer context
+---@return boolean ok  # false: the error is reported, the command must stop
+local function no_stray_words(ctx)
+  local rest = ctx.rest
+  if rest == nil or #rest == 0 then
+    return true
+  end
+  local to = ctx.flags and ctx.flags.to
+  local hint = ""
+  if type(to) == "string" and to:sub(1, 5) == "file:" then
+    hint = " (put a backslash before each space of the --to=file: path)"
+  end
+  notify.error("unexpected argument: " .. table.concat(rest, " ") .. hint)
+  return false
+end
+
 ---Reload unchanged buffers of `path` after the file changed on disk.
 ---@param path string
 local function refresh_buffers(path)
@@ -204,6 +223,9 @@ end
 ---`:MyPlugins tasks [<area>|all] [filters] [--to=] [--format=]`
 ---@param ctx table  composer context
 function M.list(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local flags = ctx.flags
   local target, terr = view.parse_target(flags.to)
   if terr then
@@ -337,6 +359,9 @@ end
 ---`:MyPlugins tasks index [<area>] [--all] [--check]`
 ---@param ctx table
 function M.index(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local root = vault_root()
   if not root then
     return
@@ -754,20 +779,6 @@ function M.task_folderize(ctx)
   notify.info(("%s is now a folder task"):format(res.id))
 end
 
----The absolute path of the file the user typed for `task attach`. A file that exists under
----exactly that name wins; only otherwise are `~`, `$VAR`, `%` and wildcards expanded. Expanding
----first would let a name like `report[1].pdf` (a character class to Vim) pick `report1.pdf`
----instead, and attach the wrong file without a word.
----@param file string
----@return string
-function M.attach_source(file)
-  local literal = vim.fn.fnamemodify(file, ":p")
-  if fsio.is_file(literal) then
-    return literal
-  end
-  return vim.fn.fnamemodify(vim.fn.expand(file), ":p")
-end
-
 ---`:MyPlugins task attach <id> <file> [name=<file name>]`: copy the file into
 ---`assets/`, put the Markdown link in the `+` register and say so.
 ---@param ctx table
@@ -777,9 +788,12 @@ function M.task_attach(ctx)
     return
   end
   local before = scan.find(ctx.args.id)
+  -- The composer's FILE type has resolved `~` and variables already (and checked the file is
+  -- there). A second `vim.fn.expand` would read `[1]` in `shot[1].png` as a wildcard (attaching
+  -- `shot1.png` instead) and run a backtick in a downloaded file's name through the shell.
   local res, err = mutate.attach(
     ctx.args.id,
-    M.attach_source(ctx.args.file),
+    vim.fn.fnamemodify(ctx.args.file, ":p"),
     { name = ctx.kv.name ~= "" and ctx.kv.name or nil }
   )
   if not res then
@@ -844,6 +858,9 @@ end
 ---`:MyPlugins task template [--to=clipboard|buffer|file:<path>]`
 ---@param ctx table
 function M.task_template(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local target, terr = view.parse_target(ctx.flags.to or "clipboard")
   if terr or not target or target.kind == "qf" then
     notify.error(terr or "--to=qf makes no sense for the template")
@@ -874,6 +891,9 @@ end
 ---`:MyPlugins task open <id>` -- an open task, else its finished copy in `Backlog/`.
 ---@param ctx table
 function M.task_open(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local id = ctx.args.id
   local task = scan.find(id) or scan.find_done(id)
   if not task then
@@ -887,6 +907,9 @@ end
 ---copy) rendered in the browser by mdview.nvim; read-only for the vault.
 ---@param ctx table
 function M.task_preview(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local id = ctx.args.id
   local task = scan.find(id) or scan.find_done(id)
   if not task then
@@ -946,6 +969,9 @@ end
 ---`--list` (or `--to=`) delivers the file list instead of opening a picker.
 ---@param ctx table
 function M.open_area(ctx)
+  if not no_stray_words(ctx) then
+    return
+  end
   local root = vault_root()
   if not root then
     return
