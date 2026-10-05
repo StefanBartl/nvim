@@ -16,69 +16,10 @@ return function(H)
   local classify = require("bindings.usrcmds.plugin_repos.sync_classify")
   local state = require("bindings.usrcmds.plugin_repos.sync_state")
 
-  local base = H.tmpdir() .. "/repos"
+  local fx = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")(H)
+  local base, git, commit_file, make, incoming =
+    fx.base, fx.git, fx.commit_file, fx.make, fx.incoming
   local state_path = H.tmpdir() .. "/sync-state.json"
-  vim.fn.mkdir(base, "p")
-
-  -- ── git helpers (synchronous: this is fixture code) ─────────────────────
-  local ENV = { GIT_TERMINAL_PROMPT = "0", GIT_CONFIG_NOSYSTEM = "1" }
-  local ID =
-    { "-c", "user.name=Spec", "-c", "user.email=spec@example.invalid", "-c", "core.autocrlf=false" }
-
-  ---@param dir string
-  ---@param ... string
-  ---@return string stdout
-  local function git(dir, ...)
-    local cmd = { "git", "-C", dir }
-    vim.list_extend(cmd, ID)
-    vim.list_extend(cmd, { ... })
-    local res = vim.system(cmd, { text = true, env = ENV }):wait(30000)
-    if res.code ~= 0 then
-      error(
-        ("git %s failed in %s: %s"):format(table.concat({ ... }, " "), dir, res.stderr or ""),
-        2
-      )
-    end
-    return res.stdout or ""
-  end
-
-  ---@param dir string
-  ---@param file string
-  ---@param text string
-  ---@param message string
-  local function commit_file(dir, file, text, message)
-    H.write(dir .. "/" .. file, text)
-    git(dir, "add", file)
-    git(dir, "commit", "-q", "-m", message)
-  end
-
-  ---A bare remote, a developer clone of it, and the clone under test `base/<name>`.
-  ---@param name string
-  ---@return { remote: string, dev: string, repo: string }
-  local function make(name)
-    local remote = H.tmpdir() .. "/remotes/" .. name .. ".git"
-    local dev = H.tmpdir() .. "/dev/" .. name
-    local repo = base .. "/" .. name
-    vim.fn.mkdir(vim.fs.dirname(remote), "p")
-    vim.fn.mkdir(vim.fs.dirname(dev), "p")
-    local res = vim
-      .system({ "git", "init", "-q", "--bare", "-b", "main", remote }, { env = ENV })
-      :wait(30000)
-    assert(res.code == 0, res.stderr)
-    git(vim.fs.dirname(dev), "clone", "-q", remote, dev)
-    git(dev, "checkout", "-q", "-B", "main")
-    commit_file(dev, "a.txt", "a1\n", "a")
-    commit_file(dev, "b.txt", "b1\n", "b")
-    git(dev, "push", "-q", "-u", "origin", "main")
-    git(base, "clone", "-q", remote, repo)
-    return { remote = remote, dev = dev, repo = repo }
-  end
-
-  ---Push a new commit from the developer clone (what the other machine did).
-  local function incoming(c, file, text)
-    commit_file(c.dev, file, text, "incoming " .. file)
-    git(c.dev, "push", "-q")
-  end
 
   -- ── the cases ───────────────────────────────────────────────────────────
   local cases = {}

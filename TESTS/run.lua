@@ -81,6 +81,8 @@ local specs = {
   "sync/sync_classify_spec.lua",
   "sync/sync_integration_spec.lua",
   "sync/sync_routes_spec.lua",
+  "sync/sync_dash_spec.lua",
+  "sync/sync_dash_picker_spec.lua",
 }
 
 -- Optional filter: only the specs whose path contains one of the arguments.

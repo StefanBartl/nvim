@@ -93,6 +93,10 @@ return function(H)
     ok(only:find("alpha", 1, true), "--only= completes the names: " .. only)
   end)
 
+  -- the composer reports its refusals on the next loop turn: let them land while the stub is in
+  vim.wait(100, function()
+    return false
+  end)
   restore()
   pcall(vim.api.nvim_del_user_command, "SyncT")
   if not passed then
