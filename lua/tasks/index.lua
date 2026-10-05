@@ -42,19 +42,32 @@ local function cell(s)
   return (s:gsub("[\r\n]+", " "):gsub("|", "\\|"))
 end
 
+---The text of a link `[text](target)`. Brackets are escaped so a title cannot
+---open or close a link. A backslash in front of a bracket would swallow that
+---escape (`\\[` is an escaped backslash and a live bracket), and one at the end
+---would escape the closing `]` the caller adds; such runs are doubled, so the
+---number of backslashes in front of every bracket stays odd and the text reads
+---back as written.
 ---@param s string
 ---@return string
 local function link_text(s)
-  return (cell(s):gsub("([%[%]])", "\\%1"))
+  local text = cell(s):gsub("(\\*)([%[%]])", function(slashes, bracket)
+    return slashes .. slashes .. "\\" .. bracket
+  end)
+  return (text:gsub("(\\+)$", "%1%1"))
 end
 
----Percent-encode what would end a Markdown link target early.
+---Percent-encode what would end a Markdown link target early or break the
+---table row. A valid slug (`a-z0-9-`) never needs it; a file with an odd name
+---still gets a row that parses.
 ---@param s string
 ---@return string
 local function link_target(s)
-  return (s:gsub("[ ()]", function(c)
-    return ("%%%02X"):format(c:byte())
-  end))
+  return (
+    s:gsub('[%c%s()<>|\\%[%]`"#%%]', function(c)
+      return ("%%%02X"):format(c:byte())
+    end)
+  )
 end
 
 ---The link target of a task below `tasks/`: `<slug>.md`, or `<slug>/<slug>.md`
