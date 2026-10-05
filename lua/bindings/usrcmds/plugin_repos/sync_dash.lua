@@ -311,14 +311,31 @@ local function title_of(dash)
   )
 end
 
----The options of a full re-run: the same as the run that made this list, for every repo.
+---The options of a full re-run: the same as the run that made this list (base dir, dry run), but
+---for every repo -- not only the picker's selection or the `--only` repo.
 ---@param dash MyPlugins.SyncDash
 ---@return MyPlugins.SyncOpts
 local function rerun_opts(dash)
   local opts = vim.deepcopy(dash.session.opts)
   opts.only = nil
+  opts.names = nil
+  opts.partial = nil
   opts.on_done = nil
+  opts.on_declined = nil
   return opts
+end
+
+---Run the whole sync again; the new run reports for itself. When it does not start (the user
+---declined to cancel the sync that is running) this list's closing line is still due.
+---@param dash MyPlugins.SyncDash
+local function rerun(dash)
+  dash.finished = true
+  local opts = rerun_opts(dash)
+  opts.on_declined = function()
+    dash.finished = false
+    finish(dash)
+  end
+  sync().run(opts)
 end
 
 ---@param names string[]
@@ -486,8 +503,7 @@ local function open_snacks(Snacks, dash)
     end,
     sync_rerun = function(picker)
       detour(picker, function()
-        dash.finished = true -- the new run reports for itself
-        sync().run(rerun_opts(dash))
+        rerun(dash)
       end)
     end,
     sync_assist = function(picker)
@@ -629,8 +645,7 @@ local function open_select(dash)
       {
         label = "run the whole sync again",
         run = function()
-          dash.finished = true
-          sync().run(rerun_opts(dash))
+          rerun(dash)
         end,
       },
       {

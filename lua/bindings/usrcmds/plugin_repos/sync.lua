@@ -55,6 +55,7 @@ M.DEFAULTS = {
 ---@field ui? boolean          false: never open the dashboard (specs).
 ---@field quiet? boolean       true: no notifications (specs).
 ---@field on_done? fun(records: MyPlugins.SyncRecord[], summary: MyPlugins.SyncSummary)
+---@field on_declined? fun()     The user declined to restart a running sync (nothing was started).
 
 ---@class MyPlugins.SyncSession
 ---@field dir string
@@ -308,14 +309,56 @@ function M.report(records, opts)
   say(opts, level, text)
 end
 
+---`changed` of a dashboard save: the names a re-check replaced / a skip touched.
+---@alias MyPlugins.SyncChanged table<string, "rec"|"skip">
+
+---The saved records with only the `changed` ones taken from the session: a stale session (an
+---older dashboard, a second nvim) must not write its whole snapshot over a newer result.
+---@param current MyPlugins.SyncRecord[]  What the file holds now.
+---@param session_records MyPlugins.SyncRecord[]
+---@param changed MyPlugins.SyncChanged
+---@return MyPlugins.SyncRecord[]
+local function apply_changes(current, session_records, changed)
+  local mine = {}
+  for _, r in ipairs(session_records) do
+    mine[r.name] = r
+  end
+  local out, seen = {}, {}
+  for _, f in ipairs(current) do
+    seen[f.name] = true
+    local s = mine[f.name]
+    if s and changed[f.name] == "rec" then
+      f = s
+    elseif s and changed[f.name] == "skip" and classify.is_problem(f.state) then
+      -- only the flag: the record itself may be newer than the session's copy
+      f = vim.tbl_extend("force", f, { skipped = s.skipped })
+    end
+    out[#out + 1] = f
+  end
+  for _, s in ipairs(session_records) do
+    if not seen[s.name] and changed[s.name] == "rec" then
+      out[#out + 1] = s
+    end
+  end
+  return out
+end
+
 ---Write the session's result to the state file (the records outside a partial run's scope
----are kept) and tell the statusline segment.
+---are kept) and tell the statusline segment. A dry run never replaces a real saved result,
+---and with `changed` only those records are merged into what the file holds now.
 ---@param session MyPlugins.SyncSession
+---@param changed? MyPlugins.SyncChanged
 ---@return boolean ok
 ---@return string|nil err
-local function save(session)
+local function save(session, changed)
+  local cur = state_mod.load({ path = session.opts.state_path })
+  if session.dry_run and cur and cur.dry_run ~= true then
+    return true, nil
+  end
   local records = session.records
-  if session.others and #session.others > 0 then
+  if changed and cur and cur.dir == session.dir and (cur.dry_run == true) == session.dry_run then
+    records = apply_changes(cur.records, session.records, changed)
+  elseif session.others and #session.others > 0 then
     records = classify.merge(session.others, session.records)
   end
   local ok, err = state_mod.save(session.dir, records, {
@@ -408,6 +451,15 @@ function M.run(opts)
       if yes then
         M.cancel()
         M.run(opts)
+        return
+      end
+      -- Declined: nothing runs, but whoever waits for the end (the dashboard's closing line,
+      -- the picker's "batch finished") must still hear about it.
+      if opts.on_declined then
+        opts.on_declined()
+      end
+      if opts.on_done then
+        opts.on_done({}, classify.summarize({}))
       end
     end)
     return
@@ -426,6 +478,22 @@ function M.run(opts)
       opts,
       "info",
       "Sync: no listed plugin repository in scope (remote mode, or --only names none)"
+    )
+    if opts.on_done then
+      opts.on_done({}, classify.summarize({}))
+    end
+    return
+  end
+
+  if #repos == 0 then
+    -- Every entry of the scope is absent (an empty or wrong dir, remote mode): nothing can be
+    -- synced, so there is no result to save and no assurance to give.
+    say(
+      opts,
+      "warn",
+      ("Sync: no local checkouts in scope (remote mode?) -- %d not cloned/not a repo"):format(
+        #absent
+      )
     )
     if opts.on_done then
       opts.on_done({}, classify.summarize({}))
@@ -484,7 +552,8 @@ function M.run(opts)
     local others = nil
     if opts.partial or opts.only ~= nil then
       local saved = state_mod.load({ path = opts.state_path })
-      if saved and saved.dir == base_dir then
+      -- A saved dry-run result and a real one never mix (the file has one dry_run flag).
+      if saved and saved.dir == base_dir and (saved.dry_run == true) == (opts.dry_run == true) then
         local mine = {}
         for _, n in ipairs(names) do
           mine[n] = true
@@ -575,9 +644,23 @@ end
 
 -- ── Re-check, skip, rerun (used by the dashboard) ─────────────────────────────
 
+---Minimum gap between two "could not save" warnings of the dashboard actions (ms).
+M.SAVE_WARN_INTERVAL_MS = 30000
+local last_save_warn = nil
+
 ---@param session MyPlugins.SyncSession
-local function persist(session)
-  save(session)
+---@param changed MyPlugins.SyncChanged
+local function persist(session, changed)
+  local ok, err = save(session, changed)
+  if ok then
+    return
+  end
+  local now = loop.hrtime() / 1e6
+  if last_save_warn and now - last_save_warn < M.SAVE_WARN_INTERVAL_MS then
+    return
+  end
+  last_save_warn = now
+  say(session.opts, "warn", "Sync: could not save the result: " .. tostring(err))
 end
 
 ---@param session MyPlugins.SyncSession
@@ -606,15 +689,18 @@ function M.recheck(session, names, on_done)
       items[#items + 1] = rec
     end
   end
+  ---@type MyPlugins.SyncChanged
+  local changed = {}
   ops.run_pool(items, 1, function(rec, done)
     return recheck_record(rec, session.opts, done)
   end, function(_, rec, new_rec)
     local _, i = find(session, rec.name)
     if i then
       session.records[i] = new_rec
+      changed[rec.name] = "rec"
     end
   end, function()
-    persist(session)
+    persist(session, changed)
     on_done()
   end)
 end
@@ -624,13 +710,16 @@ end
 ---@param names string[]
 ---@param skipped boolean
 function M.set_skipped(session, names, skipped)
+  ---@type MyPlugins.SyncChanged
+  local changed = {}
   for _, name in ipairs(names) do
     local rec = find(session, name)
     if rec and classify.is_problem(rec.state) then
       rec.skipped = skipped
+      changed[name] = "skip"
     end
   end
-  persist(session)
+  persist(session, changed)
 end
 
 ---Run an assist action (`sync_classify.ASSISTS`) on a record, say how it went, then re-check the
@@ -680,7 +769,11 @@ function M.issues(opts)
     dir = data.dir,
     records = data.records,
     dry_run = data.dry_run == true,
-    opts = vim.tbl_extend("force", { dry_run = data.dry_run == true }, opts),
+    -- `dir`: a re-run ("R") must use the base dir that made this list, not $REPOS_DIR.
+    opts = vim.tbl_extend("force", {
+      dry_run = data.dry_run == true,
+      dir = data.dir ~= "" and data.dir or nil,
+    }, opts),
   }
   local summary = classify.summarize(session.records)
   if #summary.unresolved + #summary.skipped == 0 then

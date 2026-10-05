@@ -312,6 +312,26 @@ return function(H)
     has(C.format_line(mess[1]), "x ", "problem mark")
   end
 
+  -- ── repos that are not there were not synced: never "up to date" ───────
+  do
+    local gone = { rec("a", "missing"), rec("b", "not_git"), rec("c", "missing") }
+    local sm = C.summarize(gone)
+    eq(sm.absent, 3, "counted separately")
+    eq(sm.current, 0, "not up to date")
+    eq(sm.hints, 0, "not a hint either")
+    local text, lvl = C.summary_line(gone)
+    has(text, "0 up to date", "nothing is up to date")
+    has(text, "3 not cloned/not a repo", "the absent ones are named as such")
+    ok(not text:find("all repositories", 1, true), "no assurance with nothing present")
+    ok(not text:find("all cloned", 1, true), "...not even a narrowed one")
+    eq(lvl, "warn", "warn level")
+    local mixed = C.summary_line({ rec("a", "current"), rec("m", "missing") })
+    has(mixed, "1 up to date", "present repos are counted")
+    has(mixed, "1 not cloned/not a repo", "absent ones too")
+    has(mixed, "all cloned repositories are up to date", "the assurance covers the present ones")
+    ok(not mixed:find("all repositories are", 1, true), "never claims all of them")
+  end
+
   -- ── one row of the list ─────────────────────────────────────────────────
   local row = C.format_line(rec("filetree.nvim", "dirty_blocked", {
     branch = "main",

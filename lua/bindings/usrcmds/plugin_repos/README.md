@@ -158,8 +158,9 @@ each (`git status --porcelain=v2 --branch`) → fast-forward the repos that are 
 touches the network and "pulled N commit(s)" is the count that was merged) → a failed pull is
 classified from a *second status* → the result is saved, one closing
 line is shown, and the triage list opens when something is left. Only repos of
-`plugins.personal.core.list` are touched (never a directory scan), and in remote mode (no local
-checkouts) it says so and ends. `:MyPlugins update` stays as it is: the quick variant without a
+`plugins.personal.core.list` are touched (never a directory scan), and when none of them is
+checked out locally (remote mode, a wrong directory) it says "no local checkouts in scope", saves
+nothing and ends. `:MyPlugins update` stays as it is: the quick variant without a
 list.
 
 **No git message is ever parsed** (they are localizable): the state comes from the structured
@@ -173,7 +174,7 @@ after it. The text of an error is shown to you, never used to decide.
 | `behind` | something to pull (only visible in a `--dry-run`) | pending |
 | `ahead` | unpushed commits, nothing to pull | hint |
 | `dirty` | local changes, nothing to pull | hint |
-| `missing` / `not_git` | listed but not cloned / the folder is no repo | hint |
+| `missing` / `not_git` | listed but not cloned / the folder is no repo; nothing was synced, so they are counted as "not cloned/not a repo", never as up to date | hint |
 | `fetch_failed` | the fetch failed (network, a login, the timeout); the repo is left alone | **yes** |
 | `status_failed` | git could not give a status | **yes** |
 | `no_upstream` | no upstream configured, or the remote branch is gone | **yes** |
@@ -183,7 +184,9 @@ after it. The text of an error is shown to you, never used to decide.
 | `dirty_blocked` | behind, the pull failed, and the incoming commits touch files that are changed locally | **yes** |
 | `pull_failed` | behind, the pull failed for any other reason (a lock, a hook, ...); the error line is the detail, also on a dirty tree | **yes** |
 
-A hint never counts against "up to date": the repo has everything the remote has. A behind repo
+An `ahead` / `dirty` hint never counts against "up to date": the repo has everything the remote has.
+(`missing` / `not_git` are different: with any of them the closing line is a warning, says "N not
+cloned/not a repo" and its assurance only covers "all cloned repositories".) A behind repo
 with a dirty tree is **tried anyway**: the fast-forward works as long as the local changes do not
 touch the incoming files. When it fails, `dirty_blocked` needs proof: the second status shows local
 changes *and* `git diff --name-only HEAD...@{u}` shares a file with them (an untracked directory
@@ -208,7 +211,7 @@ incoming commits.
 | `t` | the same with a terminal in the repo's directory |
 | `s` / `u` | skip / un-skip (marked rows, else the row) — the repo stays visible as `skipped` |
 | `r` | try the pull again (marked rows, else the row; fetches again if the fetch failed) |
-| `R` | run the whole sync again |
+| `R` | run the whole sync again (every listed repo, same base dir; a `--dry-run` list stays a dry run) |
 | `a` | show / hide the hints (`ahead`, `dirty`) |
 | `A` | assist (below) |
 | `<Tab>` | mark |
@@ -217,6 +220,12 @@ incoming commits.
 In the search window the same actions are on Alt chords (`<M-l>` `<M-t>` `<M-s>` `<M-u>`
 `<M-r>` `<M-R>` `<M-a>` `<M-A>` `<M-y>` `<M-?>`). The list closes by itself when nothing unresolved
 or skipped is left.
+
+A **dry run** (`--dry-run`, also `--only`) never replaces the saved result of a real run, so
+`sync issues` keeps showing what a real run left; it is saved only while there is no real result.
+Saving from the list (skip, re-check) merges just the touched repos into the file as it is now, so
+an older list or a second Neovim cannot overwrite a newer result; a failed save is warned about
+(at most every 30 s).
 
 A **skip lasts for this synchronization only**: it survives closing the dashboard and a restart
 (`sync issues`), but the next full run asks about that repo again. Excluding a repo for good

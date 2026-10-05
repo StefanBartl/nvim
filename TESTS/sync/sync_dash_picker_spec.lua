@@ -49,7 +49,16 @@ return function(H)
   local session = {
     dir = nowhere,
     dry_run = false,
-    opts = { state_path = state_path, quiet = false },
+    -- a run from the picker's selection: "R" must still run the WHOLE sync, in the same base dir
+    opts = {
+      state_path = state_path,
+      quiet = false,
+      dir = nowhere,
+      names = { "alpha" },
+      partial = true,
+      only = "alpha",
+      dry_run = false,
+    },
     records = {
       rec("alpha", "diverged", { ahead = 1, behind = 2 }),
       rec("beta", "dirty_blocked", { behind = 1 }),
@@ -69,7 +78,7 @@ return function(H)
   vim.notify = function(msg, level)
     notes[#notes + 1] = { msg = msg, level = level or vim.log.levels.INFO }
   end
-  local entered, rechecked, reran = {}, {}, 0
+  local entered, rechecked, reran, rerun_opts, decline = {}, {}, 0, nil, false
   dash.go_into = function(path, how, on_close)
     entered[#entered + 1] = { path = path, how = how }
     vim.schedule(on_close)
@@ -80,8 +89,12 @@ return function(H)
     end
     vim.schedule(cb)
   end
-  sync.run = function()
+  sync.run = function(o)
     reran = reran + 1
+    rerun_opts = o
+    if decline and o.on_declined then
+      o.on_declined() -- "A sync is already running": the user said no
+    end
   end
 
   local function wait_for(cond, ms)
@@ -255,6 +268,29 @@ return function(H)
       "R started a full run"
     )
     ok(not said():find("unresolved", 1, true), "...without a closing line of its own")
+    eq(rerun_opts.names, nil, "R drops the picker's selection")
+    eq(rerun_opts.partial, nil, "R drops the partial flag")
+    eq(rerun_opts.only, nil, "R drops --only")
+    eq(rerun_opts.dir, nowhere, "R keeps the base dir")
+
+    -- ── ...and declining the restart prompt must not lose the closing line ──
+    dash.open(session)
+    p = opened(3)
+    p:focus("list")
+    flush()
+    notes, decline = {}, true
+    keys("R")
+    ok(
+      wait_for(function()
+        return said():find("3 unresolved: ", 1, true) ~= nil
+      end),
+      "declined restart: the closing line is still said"
+    )
+    decline = false
+    for _, q in ipairs(Snacks.picker.get({ source = "myplugins_sync" })) do
+      pcall(q.close, q)
+    end
+    flush()
 
     -- ── closing the list says the one closing line ───────────────────────
     dash.open(session)

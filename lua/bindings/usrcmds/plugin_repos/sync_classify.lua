@@ -511,6 +511,7 @@ end
 ---@class MyPlugins.SyncSummary
 ---@field total integer
 ---@field current integer      Up to date without a pull (`current`, plus hints: nothing to fetch in).
+---@field absent integer       Listed but not on disk (`missing`/`not_git`): nothing was synced, never "up to date".
 ---@field pulled integer
 ---@field pending integer      `behind` (a dry run).
 ---@field hints integer
@@ -526,6 +527,7 @@ function M.summarize(records)
   local s = {
     total = #records,
     current = 0,
+    absent = 0,
     pulled = 0,
     pending = 0,
     hints = 0,
@@ -544,6 +546,8 @@ function M.summarize(records)
       else
         s.unresolved[#s.unresolved + 1] = r
       end
+    elseif r.state == "missing" or r.state == "not_git" then
+      s.absent = s.absent + 1
     else
       s.current = s.current + 1
       if M.is_hint(r.state) then
@@ -582,6 +586,9 @@ function M.summary_line(records, dry_run)
   if dry_run and s.pending > 0 then
     parts[#parts + 1] = ("%d would be pulled"):format(s.pending)
   end
+  if s.absent > 0 then
+    parts[#parts + 1] = ("%d not cloned/not a repo"):format(s.absent)
+  end
   if #s.skipped > 0 then
     parts[#parts + 1] = ("%d skipped: %s"):format(#s.skipped, names(s.skipped))
   end
@@ -591,13 +598,18 @@ function M.summary_line(records, dry_run)
   )
   local text = (dry_run and "Sync (dry run): " or "Sync: ") .. table.concat(parts, ", ")
   if s.all_clear and not dry_run then
-    text = text
-      .. (
-        #s.skipped > 0 and " -- all repositories are up to date except the skipped ones"
-        or " -- all repositories are up to date"
-      )
+    -- Absent repos were not looked at: the assurance covers the present ones only, and with
+    -- nothing present it must not be given at all.
+    local scope = s.absent > 0 and "all cloned repositories" or "all repositories"
+    if s.absent == 0 or s.current + s.pulled > 0 then
+      text = text
+        .. (
+          #s.skipped > 0 and (" -- %s are up to date except the skipped ones"):format(scope)
+          or (" -- %s are up to date"):format(scope)
+        )
+    end
   end
-  return text, (#s.unresolved > 0) and "warn" or "info"
+  return text, (#s.unresolved > 0 or s.absent > 0) and "warn" or "info"
 end
 
 ---Right-pad `s` with blanks to `width` display cells (never cuts).

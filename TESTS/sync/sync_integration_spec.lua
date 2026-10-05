@@ -205,6 +205,46 @@ return function(H)
   eq(kept["current"].state, "pulled", "the repo it did look at is fresh")
   eq(kept["diverged"].state, "diverged", "another repo keeps the result of the earlier run")
 
+  -- a dry run, even a partial one, must not turn the saved real result into a dry one
+  do
+    run({ dry_run = true, only = "current" })
+    local after_dry = assert(state.load({ path = state_path }))
+    eq(after_dry.dry_run, false, "a dry --only run leaves the real result real")
+    eq(#after_dry.records, #names, "...and complete")
+  end
+
+  -- declining the restart prompt still reports back (on_declined and on_done)
+  do
+    local confirm = require("bindings.usrcmds.plugin_repos.confirm")
+    local orig_yesno = confirm.yesno
+    local asked, declined, done = false, false, false
+    confirm.yesno = function(_, _, cb)
+      asked = true
+      cb(false)
+    end
+    sync.run({ dir = base, names = names, ui = false, quiet = true, state_path = state_path })
+    ok(sync.is_running(), "a run is in flight")
+    sync.run({
+      dir = base,
+      names = names,
+      ui = false,
+      quiet = true,
+      state_path = state_path,
+      on_declined = function()
+        declined = true
+      end,
+      on_done = function()
+        done = true
+      end,
+    })
+    confirm.yesno = orig_yesno
+    ok(asked, "the restart prompt was shown")
+    ok(declined, "on_declined ran")
+    ok(done, "on_done ran")
+    ok(sync.is_running(), "the first run was not cancelled")
+    sync.cancel()
+  end
+
   -- ── re-check after the user resolved a problem ─────────────────────────
   do
     local session = {
