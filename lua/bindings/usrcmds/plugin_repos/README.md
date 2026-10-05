@@ -153,8 +153,10 @@ a triage list.
 ```
 
 Phases: resolve the list and the base dir → fetch all (`git fetch --all --prune`) → status of
-each (`git status --porcelain=v2 --branch`) → pull the repos that are behind (`git pull
---ff-only`) → a failed pull is classified from a *second status* → the result is saved, one closing
+each (`git status --porcelain=v2 --branch`) → fast-forward the repos that are behind (`git merge
+--ff-only @{u}`: purely local, the fetch above is the only network step, so `--no-fetch` never
+touches the network and "pulled N commit(s)" is the count that was merged) → a failed pull is
+classified from a *second status* → the result is saved, one closing
 line is shown, and the triage list opens when something is left. Only repos of
 `plugins.personal.core.list` are touched (never a directory scan), and in remote mode (no local
 checkouts) it says so and ends. `:MyPlugins update` stays as it is: the quick variant without a
@@ -177,12 +179,14 @@ after it. The text of an error is shown to you, never used to decide.
 | `no_upstream` | no upstream configured, or the remote branch is gone | **yes** |
 | `detached` | HEAD is detached, nothing pullable | **yes** |
 | `diverged` | ahead *and* behind: no fast-forward | **yes** |
-| `dirty_blocked` | behind, and git refused the pull because of local changes | **yes** |
-| `pull_failed` | behind, the pull failed and the tree is clean (the error line is the detail) | **yes** |
+| `dirty_blocked` | behind, the pull failed, and the incoming commits touch files that are changed locally | **yes** |
+| `pull_failed` | behind, the pull failed for any other reason (a lock, a hook, ...); the error line is the detail, also on a dirty tree | **yes** |
 
 A hint never counts against "up to date": the repo has everything the remote has. A behind repo
-with a dirty tree is **tried anyway**: `pull --ff-only` works as long as the local changes do not
-touch the incoming files, and when it refuses it is `dirty_blocked`, decided by git, not by us.
+with a dirty tree is **tried anyway**: the fast-forward works as long as the local changes do not
+touch the incoming files. When it fails, `dirty_blocked` needs proof: the second status shows local
+changes *and* `git diff --name-only HEAD...@{u}` shares a file with them (an untracked directory
+counts when an incoming file lives below it). Otherwise it is `pull_failed` with git's own reason.
 
 **The closing line** (one notification, when the list closes or when nothing is left):
 
@@ -225,7 +229,7 @@ started — never `reset --hard`, never `clean`, never a force:
 |---|---|---|---|
 | `diverged` | rebase | `git rebase @{u}` | a conflict aborts the rebase |
 | `diverged` | merge | `git merge --no-edit @{u}` | a conflict aborts the merge |
-| `dirty_blocked` | stash, pull, pop | `git stash push --include-untracked`, `git pull --ff-only`, `git stash pop` | the stash is popped again if the pull fails; a pop that conflicts leaves the changes in the stash (and says so). An older stash of yours is never popped |
+| `dirty_blocked` | stash, pull, pop | `git stash push --include-untracked`, `git merge --ff-only @{u}`, `git stash pop` | the stash is popped again if the pull fails; a pop that conflicts leaves the changes in the stash (and says so). An older stash of yours is never popped |
 
 **The result** is saved in `stdpath("state")/myplugins_sync.json` (written atomically, a damaged
 file is "no result"). **The statusline** can show `sync:N` while N repos are unresolved (skipped
@@ -235,11 +239,22 @@ to its `modules` (this config does, in `lua/config/ui_statusline/variant.lua`); 
 a cached number, never a file, so it costs nothing per redraw.
 
 **Windows, a virus scanner and the network:** every git call is asynchronous (the editor stays
-usable), has its own timeout (60 s; a hung repo becomes `fetch_failed` / `pull_failed` and its
-whole process tree is killed, `taskkill /T` on Windows) and runs with `GIT_TERMINAL_PROMPT=0` and
-`GCM_INTERACTIVE=never`, so a private repo that wants a login fails fast with a hint instead of
-waiting unseen for an answer. A second `:MyPlugins sync` while one runs asks whether to cancel and
-restart. After a pull, `:checktime` reloads buffers whose file changed.
+usable) and runs with `GIT_TERMINAL_PROMPT=0` and `GCM_INTERACTIVE=never`, so a private repo that
+wants a login fails fast with a hint instead of waiting unseen for an answer.
+
+**Timeouts and killing.** Only the commands that cannot hurt a repository when interrupted --
+`fetch` (60 s), `status` (30 s), `diff`, `log` -- have a timeout, and only those are force-killed
+by it, by a cancel or by quitting Neovim (`:MyPlugins sync` again while one runs asks whether to
+cancel and restart). A hung repo becomes `fetch_failed` / `status_failed`. The kill takes the whole
+process tree: on Windows `taskkill /T /F` runs first and is waited for (so the transport child,
+`git-remote-https` / `ssh`, goes too, and the next phase starts on a repo whose git is really
+gone); elsewhere the git job leads its own process group and the group is killed. The commands
+that *write* -- the fast-forward and every assist step (rebase, merge, stash) -- run without a
+timeout and are never killed: a cancel only drops their result and git finishes by itself, and
+quitting Neovim waits up to 20 s for a running assist (it must not stop between `stash push` and
+`stash pop`). They are local, so nothing in them can hang on the network. If one is killed from the
+outside anyway, it may leave a stale `.git/index.lock`; a failure that mentions it says so and what
+to do. After a pull, `:checktime` reloads buffers whose file changed.
 
 ### `:MyPlugins reclone [dir] [--only=<name>]`
 
@@ -745,8 +760,9 @@ uncommitted work permanently. Sticking to the named list is what makes
   parser, the state table, order, summary, the assist table -- specced without git),
   `sync_state.lua` (the saved result), `sync_dash.lua` (the triage list), `sync_status.lua` (the
   statusline hint). Its git calls are `ops.git_async` and friends (own `vim.system` calls with a
-  timer-based timeout that kills the process tree, because `vim.system`'s timeout reports only
-  after the pipes close, which a hung transport child prevents) plus `ops.run_pool` (at most N in
+  timer-based timeout that kills the process tree -- `taskkill /T` first, waited for -- because
+  `vim.system`'s timeout reports only after the pipes close, which a hung transport child
+  prevents; commands marked `write` are never killed) plus `ops.run_pool` (at most N in
   flight); they do not use `lib.nvim.git`, which offers neither a timeout nor an environment, and
   so `sync` keeps working with an older lib.nvim on the other machine.
 - Two custom composer argument types, registered in `M.enable()`:

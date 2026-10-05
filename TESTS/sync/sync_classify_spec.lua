@@ -147,9 +147,14 @@ return function(H)
     eq(rec.state, "behind", "the input record is not mutated")
 
     local dirty_after = C.parse_status(track(0, 4, "1 .M N... 100644 100644 100644 a b f.lua"))
-    local blocked =
-      C.after_pull(rec, false, "error: Your local changes would be overwritten\nmore", dirty_after)
-    eq(blocked.state, "dirty_blocked", "failed pull + dirty tree")
+    local blocked = C.after_pull(
+      rec,
+      false,
+      "error: Your local changes would be overwritten\nmore",
+      dirty_after,
+      { "f.lua", "other.lua" }
+    )
+    eq(blocked.state, "dirty_blocked", "failed pull + dirty tree + the incoming files hit it")
     has(blocked.detail, "1 changed file", "how many files are in the way")
     has(blocked.detail, "Your local changes", "the first error line, shown")
     ok(not blocked.detail:find("more", 1, true), "only the first line")
@@ -164,6 +169,29 @@ return function(H)
       "no status after the failure either"
     )
     eq(C.after_pull(rec, false, "", nil).detail, "git pull --ff-only failed", "no text at all")
+
+    -- a dirty tree alone is not "blocked": the incoming files must hit the changed ones
+    local lock_err = "fatal: Unable to create index.lock"
+    local unrelated = C.after_pull(rec, false, lock_err, dirty_after, { "x.lua" })
+    eq(unrelated.state, "pull_failed", "dirty tree, but the incoming files are other ones")
+    eq(unrelated.detail, lock_err, "the real reason, not 'in the way'")
+    eq(
+      C.after_pull(rec, false, "boom", dirty_after, nil).state,
+      "pull_failed",
+      "incoming files unknown: no claim that the local changes are the cause"
+    )
+    eq(C.after_pull(rec, false, "boom", dirty_after, {}).state, "pull_failed", "nothing incoming")
+    local dir_after = C.parse_status(track(0, 4, "? newdir/"))
+    eq(
+      C.after_pull(rec, false, "e", dir_after, { "newdir/inner.txt" }).state,
+      "dirty_blocked",
+      "an untracked directory blocks when an incoming file lives below it"
+    )
+    eq(
+      C.after_pull(rec, false, "e", dir_after, { "newdir2/inner.txt" }).state,
+      "pull_failed",
+      "...but not a sibling with the same prefix"
+    )
   end
 
   -- ── problem / hint ──────────────────────────────────────────────────────

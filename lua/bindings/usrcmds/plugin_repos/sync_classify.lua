@@ -280,17 +280,51 @@ function M.classify(name, path, st, fetch_err)
   return rec
 end
 
+---The locally changed files that the incoming commits also touch -- what keeps a pull from
+---running. An untracked directory (`dir/`) blocks when anything incoming lives below it.
+---@param changed string[]|nil   `MyPlugins.SyncStatus.files`
+---@param incoming string[]|nil  `ops.sync_incoming_files`
+---@return string[]
+function M.blocking_files(changed, incoming)
+  local out = {}
+  if not changed or not incoming then
+    return out
+  end
+  local theirs = {}
+  for _, f in ipairs(incoming) do
+    theirs[f] = true
+  end
+  for _, f in ipairs(changed) do
+    local hit = theirs[f] == true
+    if not hit and f:sub(-1) == "/" then
+      for t in pairs(theirs) do
+        if t:sub(1, #f) == f then
+          hit = true
+          break
+        end
+      end
+    end
+    if hit then
+      out[#out + 1] = f
+    end
+  end
+  return out
+end
+
 ---The state of a `behind` repo after its pull.
 ---
---- Success: `pulled`. Failure: a second status decides structurally -- a dirty tree is
---- `dirty_blocked` (git refused because of the local changes), anything else
---- `pull_failed` with the error line as detail.
+--- Success: `pulled`. Failure: it is `dirty_blocked` only when the local changes really are in
+--- the way, i.e. the files the incoming commits touch intersect the files changed locally
+--- (a second status and `git diff --name-only HEAD...@{u}` decide, never the error text).
+--- Any other failure -- a lock, a hook, no incoming list at all -- is `pull_failed` with the
+--- real error line, even on a dirty tree.
 ---@param rec MyPlugins.SyncRecord       The record `classify` returned (state `behind`).
 ---@param ok boolean                     The pull's result.
 ---@param err string|nil                 Its error text (shown, never parsed).
 ---@param after MyPlugins.SyncStatus|nil Status taken after a failed pull.
+---@param incoming string[]|nil          Files the incoming commits touch (nil: not known).
 ---@return MyPlugins.SyncRecord
-function M.after_pull(rec, ok, err, after)
+function M.after_pull(rec, ok, err, after, incoming)
   local out = vim.deepcopy(rec)
   if ok then
     out.state, out.pulled, out.detail =
@@ -299,7 +333,7 @@ function M.after_pull(rec, ok, err, after)
     return out
   end
   local first = err and vim.trim((err:match("^[^\r\n]*") or "")) or ""
-  if after and is_dirty(after) then
+  if after and is_dirty(after) and #M.blocking_files(after.files, incoming) > 0 then
     out.state = "dirty_blocked"
     out.dirty = true
     out.changed = after.changed + after.untracked

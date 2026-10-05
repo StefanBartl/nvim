@@ -13,8 +13,24 @@ return function(H)
   vim.fn.mkdir(F.base, "p")
 
   local ENV = { GIT_TERMINAL_PROMPT = "0", GIT_CONFIG_NOSYSTEM = "1" }
-  local ID =
-    { "-c", "user.name=Spec", "-c", "user.email=spec@example.invalid", "-c", "core.autocrlf=false" }
+  local NO_HOOKS = H.tmpdir() .. "/no-hooks"
+  vim.fn.mkdir(NO_HOOKS, "p")
+  -- What every repo of the fixture is pinned to in its OWN config. The code under test runs git
+  -- with the machine's real global/system config (autocrlf=true is the Git for Windows default,
+  -- signing and a hooks path are common), so the clones must not inherit anything that changes
+  -- the bytes or the behaviour of a commit, merge or checkout.
+  local PINNED = {
+    { "core.autocrlf", "false" },
+    { "core.hooksPath", NO_HOOKS },
+    { "commit.gpgsign", "false" },
+    { "tag.gpgsign", "false" },
+    { "user.name", "Spec" },
+    { "user.email", "spec@example.invalid" },
+  }
+  local ID = {}
+  for _, kv in ipairs(PINNED) do
+    vim.list_extend(ID, { "-c", kv[1] .. "=" .. kv[2] })
+  end
 
   ---Run git in `dir`; raises with git's own complaint on failure.
   ---@param dir string
@@ -32,6 +48,14 @@ return function(H)
       )
     end
     return res.stdout or ""
+  end
+
+  ---Write the pinned settings into the repo's own config (a `-c` before `clone` is transient).
+  ---@param dir string
+  function F.pin(dir)
+    for _, kv in ipairs(PINNED) do
+      F.git(dir, "config", kv[1], kv[2])
+    end
   end
 
   ---@param dir string
@@ -59,11 +83,13 @@ return function(H)
       :wait(30000)
     assert(res.code == 0, res.stderr)
     F.git(vim.fs.dirname(dev), "clone", "-q", remote, dev)
+    F.pin(dev)
     F.git(dev, "checkout", "-q", "-B", "main")
     F.commit_file(dev, "a.txt", "a1\n", "a")
     F.commit_file(dev, "b.txt", "b1\n", "b")
     F.git(dev, "push", "-q", "-u", "origin", "main")
     F.git(F.base, "clone", "-q", remote, repo)
+    F.pin(repo)
     return { remote = remote, dev = dev, repo = repo }
   end
 
