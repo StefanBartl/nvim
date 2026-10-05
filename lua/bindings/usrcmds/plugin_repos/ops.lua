@@ -197,16 +197,49 @@ M.NO_PROMPT_ENV = { GIT_TERMINAL_PROMPT = "0", GCM_INTERACTIVE = "never" }
 ---Kill a job and the processes it started. `job:kill()` reaches only the process it spawned: git
 ---runs its transport (`git-remote-https`, `ssh`) as a child, and on Windows terminating the
 ---parent leaves that child alive, still holding the pipes -- so a hung fetch would outlive its
----own timeout. `taskkill /T` takes the whole tree.
+---own timeout. `taskkill /T` takes the whole tree, but only while the root is still alive (it
+---walks the parent links), so it runs FIRST and `job:kill()` is only the fallback when it
+---failed. Elsewhere the job is spawned as a process-group leader (`detach`) and the group is
+---killed.
+---
+---Only for commands that are safe to interrupt (`fetch`, `status`, `log`, `diff`): see the
+---`write` option of `git_async`.
 ---@param job vim.SystemObj
-local function kill_tree(job)
+---@param on_dead? fun()  Runs on the main loop once the kill was issued and has returned.
+local function kill_tree(job, on_dead)
   local pid = job.pid
-  if is_windows and pid then
-    pcall(system, { "taskkill", "/T", "/F", "/PID", tostring(pid) }, { text = true })
+  local function fallback()
+    pcall(function()
+      job:kill("sigkill")
+    end)
   end
-  pcall(function()
-    job:kill("sigkill")
-  end)
+  local function dead()
+    if on_dead then
+      on_dead()
+    end
+  end
+  if is_windows and pid then
+    local started = pcall(
+      system,
+      { "taskkill", "/T", "/F", "/PID", tostring(pid) },
+      { text = true },
+      function(res)
+        vim.schedule(function()
+          if res.code ~= 0 then
+            fallback()
+          end
+          dead()
+        end)
+      end
+    )
+    if started then
+      return
+    end
+  elseif pid then
+    pcall(loop.kill, -pid, "sigkill")
+  end
+  fallback()
+  dead()
 end
 
 ---Run `git -C <path> <args>` asynchronously.
@@ -215,12 +248,18 @@ end
 ---
 ---The timeout is our own timer, not `vim.system`'s: that one reports only once the child has
 ---exited AND closed its pipes, which a hung transport child prevents. On timeout the process
----tree is killed and `on_done` runs at once with `timed_out = true`.
+---tree is killed and `on_done` runs once the kill returned, with `timed_out = true`.
+---
+---`write = true` marks a command that changes the repository (`merge`, `stash`, `rebase`, ...):
+---it gets NO timeout and `stop()` does not kill it (killing git mid-checkout leaves a stale
+---`.git/index.lock` and a half-written tree); `stop()` only drops its callback and git runs to
+---its end. Such commands must be local ones -- anything that can hang on the network is a
+---`fetch`, which is the killable kind.
 ---@param path string
 ---@param args string[]
----@param opts? { timeout_ms?: integer, read_only?: boolean }
+---@param opts? { timeout_ms?: integer, read_only?: boolean, write?: boolean }
 ---@param on_done fun(run: MyPlugins.GitRun)
----@return { stop: fun() } handle  `stop()` kills the process tree; `on_done` does not run afterwards.
+---@return { stop: fun() } handle  `stop()` kills the process tree (a `write` command is left to finish); `on_done` does not run afterwards.
 function M.git_async(path, args, opts, on_done)
   opts = opts or {}
   local cmd = { "git" }
@@ -232,8 +271,17 @@ function M.git_async(path, args, opts, on_done)
   vim.list_extend(cmd, args)
 
   local finished = false
+  local timed_out = false
   ---@type uv.uv_timer_t|nil
   local timer = nil
+
+  local function stop_timer()
+    if timer then
+      pcall(timer.stop, timer)
+      pcall(timer.close, timer)
+      timer = nil
+    end
+  end
 
   ---@param run MyPlugins.GitRun
   local function finish(run)
@@ -241,24 +289,27 @@ function M.git_async(path, args, opts, on_done)
       return
     end
     finished = true
-    if timer then
-      pcall(timer.stop, timer)
-      pcall(timer.close, timer)
-      timer = nil
-    end
+    stop_timer()
     vim.schedule(function()
       on_done(run)
     end)
   end
 
-  local ok, spawned = pcall(system, cmd, { text = true, env = M.NO_PROMPT_ENV }, function(res)
-    finish({
-      code = res.code,
-      stdout = res.stdout or "",
-      stderr = res.stderr or "",
-      timed_out = false,
-    })
-  end)
+  -- On a non-Windows system the job leads its own process group, so `kill_tree` can take the
+  -- group (on Windows `detach` would open a console, and `taskkill /T` does the job).
+  local ok, spawned = pcall(
+    system,
+    cmd,
+    { text = true, env = M.NO_PROMPT_ENV, detach = (not is_windows) and not opts.write },
+    function(res)
+      finish({
+        code = res.code,
+        stdout = res.stdout or "",
+        stderr = res.stderr or "",
+        timed_out = timed_out,
+      })
+    end
+  )
   if not ok then
     finish({ code = -1, stdout = "", stderr = tostring(spawned), timed_out = false })
     return { stop = function() end }
@@ -266,7 +317,7 @@ function M.git_async(path, args, opts, on_done)
   ---@type vim.SystemObj
   local job = spawned
 
-  if opts.timeout_ms and opts.timeout_ms > 0 then
+  if opts.timeout_ms and opts.timeout_ms > 0 and not opts.write then
     timer = loop.new_timer()
     if timer then
       timer:start(opts.timeout_ms, 0, function()
@@ -275,11 +326,15 @@ function M.git_async(path, args, opts, on_done)
         end
         -- fast event context: hop to the main loop before spawning taskkill
         vim.schedule(function()
-          if finished then
+          if finished or timed_out then
             return
           end
-          kill_tree(job)
-          finish({ code = 124, stdout = "", stderr = "", timed_out = true })
+          timed_out = true
+          -- `on_done` waits for the kill: the next phase must not start on a repo whose git
+          -- (and transport child) is still dying
+          kill_tree(job, function()
+            finish({ code = 124, stdout = "", stderr = "", timed_out = true })
+          end)
         end)
       end)
     end
@@ -291,12 +346,10 @@ function M.git_async(path, args, opts, on_done)
         return
       end
       finished = true
-      if timer then
-        pcall(timer.stop, timer)
-        pcall(timer.close, timer)
-        timer = nil
+      stop_timer()
+      if not opts.write then
+        kill_tree(job)
       end
-      kill_tree(job)
     end,
   }
 end
@@ -328,6 +381,9 @@ function M.describe_failure(run, what, timeout_ms)
     or low:find("authentication failed", 1, true)
   then
     first = first .. " (needs a login: run git fetch in that repo once)"
+  elseif low:find("index.lock", 1, true) then
+    -- a git that was killed (or crashed) mid-write leaves its lock behind
+    first = first .. " (a stale .git/index.lock? remove it when no git is running in that repo)"
   end
   return first
 end
@@ -372,17 +428,20 @@ function M.sync_status(path, timeout_ms, on_done)
   )
 end
 
----`git pull --ff-only`: never a merge commit, never a rewrite.
+---Fast-forward to the upstream the fetch phase already brought in: `git merge --ff-only @{u}`.
+---Purely local -- no second fetch, so `--no-fetch` really stays off the network, the commit count
+---of the status is the one that gets merged, and a failure is a local one (changes in the way, a
+---lock, a hook), never a network error. Never a merge commit, never a rewrite. A writing command:
+---no timeout, never killed.
 ---@param path string
----@param timeout_ms integer
 ---@param on_done fun(ok: boolean, err: string|nil)
 ---@return { stop: fun() }
-function M.sync_pull(path, timeout_ms, on_done)
-  return M.git_async(path, { "pull", "--ff-only" }, { timeout_ms = timeout_ms }, function(run)
+function M.sync_pull(path, on_done)
+  return M.git_async(path, { "merge", "--ff-only", "@{u}" }, { write = true }, function(run)
     if run.code == 0 then
       on_done(true, nil)
     else
-      on_done(false, M.describe_failure(run, "git pull", timeout_ms))
+      on_done(false, M.describe_failure(run, "git merge --ff-only"))
     end
   end)
 end
@@ -514,25 +573,22 @@ end
 ---action started (the rebase/merge is aborted, the stash is popped again), so the repo is where
 ---it was unless a pop conflicts -- then the changes stay in the stash and the message says so.
 ---Never `reset --hard`, never `clean`.
+---
+---Every step that writes (rebase, merge, stash, the fast-forward) runs without a timeout and is
+---never killed, `stop()` included: killing one between `stash push` and `stash pop` would strand
+---the user's changes in the stash. `timeout_ms` only bounds the read-only `rev-parse` calls.
 ---@param path string
 ---@param id "rebase"|"merge"|"stash_pull"
 ---@param timeout_ms integer
 ---@param on_done fun(ok: boolean, err: string|nil)
----@return { stop: fun() } handle
+---@return { stop: fun() } handle  `stop()` does nothing: a started assist runs to its end.
 function M.run_assist(path, id, timeout_ms, on_done)
-  local current = nil
-  local stopped = false
   ---@param args string[]
   ---@param cb fun(run: MyPlugins.GitRun)
-  local function run(args, cb)
-    if stopped then
-      return
-    end
-    current = M.git_async(path, args, { timeout_ms = timeout_ms }, function(result)
-      if not stopped then
-        cb(result)
-      end
-    end)
+  ---@param read_only? boolean
+  local function run(args, cb, read_only)
+    local git_opts = read_only and { timeout_ms = timeout_ms, read_only = true } or { write = true }
+    M.git_async(path, args, git_opts, cb)
   end
 
   if id == "rebase" or id == "merge" then
@@ -544,10 +600,7 @@ function M.run_assist(path, id, timeout_ms, on_done)
       end
       -- a conflict must not leave the repo in the middle of a rebase/merge
       run({ id, "--abort" }, function()
-        on_done(
-          false,
-          M.describe_failure(result, "git " .. id, timeout_ms) .. " (aborted, nothing changed)"
-        )
+        on_done(false, M.describe_failure(result, "git " .. id) .. " (aborted, nothing changed)")
       end)
     end)
   elseif id == "stash_pull" then
@@ -555,21 +608,22 @@ function M.run_assist(path, id, timeout_ms, on_done)
     local function stash_ref(cb)
       run({ "rev-parse", "-q", "--verify", "refs/stash" }, function(result)
         cb(result.code == 0 and vim.trim(result.stdout) or "")
-      end)
+      end, true)
     end
     stash_ref(function(before)
       run({ "stash", "push", "--include-untracked", "-m", "myplugins sync" }, function(pushed)
         if pushed.code ~= 0 then
-          on_done(false, M.describe_failure(pushed, "git stash", timeout_ms))
+          on_done(false, M.describe_failure(pushed, "git stash"))
           return
         end
         stash_ref(function(after)
           -- "No local changes to save" exits 0 and stashes nothing: popping then would pop an
           -- older, unrelated stash of the user.
           local stashed = after ~= "" and after ~= before
-          run({ "pull", "--ff-only" }, function(pulled)
+          -- local fast-forward to what the sync fetched (see `sync_pull`)
+          run({ "merge", "--ff-only", "@{u}" }, function(pulled)
             local pull_ok = pulled.code == 0
-            local pull_err = (not pull_ok) and M.describe_failure(pulled, "git pull", timeout_ms)
+            local pull_err = (not pull_ok) and M.describe_failure(pulled, "git merge --ff-only")
               or nil
             if not stashed then
               on_done(pull_ok, pull_err)
@@ -596,14 +650,8 @@ function M.run_assist(path, id, timeout_ms, on_done)
     end)
   end
 
-  return {
-    stop = function()
-      stopped = true
-      if current then
-        current.stop()
-      end
-    end,
-  }
+  -- An assist is a sequence that must reach its end (see above), so there is nothing to stop.
+  return { stop = function() end }
 end
 
 return M

@@ -9,8 +9,9 @@
 ---   Phase 0  resolve   the list, the base dir, which folders are git repos
 ---   Phase 1  fetch     `git fetch --all --prune` of ALL repos first (`--jobs` at a time)
 ---   Phase 2  status    `git status --porcelain=v2 --branch` -> `sync_classify.classify`
----   Phase 3  pull      only repos that are behind: `git pull --ff-only`
----   Phase 4  re-check  a failed pull is classified from a second status (never from stderr)
+---   Phase 3  pull      only repos that are behind: `git merge --ff-only @{u}` (local, no second fetch)
+---   Phase 4  re-check  a failed pull is classified from a second status and the incoming files
+---                      (never from stderr)
 ---   Phase 5  result    state file, one closing line, the triage dashboard when something is left
 ---
 --- Fetching everything before the first pull is the point: only then is it known which repos
@@ -30,14 +31,14 @@ local loop = vim.uv or vim.loop
 
 local M = {}
 
----Defaults of the numeric options. The timeouts are per git call (a hung repo becomes a
----`fetch_failed`/`pull_failed`, not a hang).
+---Defaults of the numeric options. The timeouts are per git call and only for the commands that
+---may be killed (fetch, status, ...): a hung repo becomes a `fetch_failed`/`status_failed`, not a
+---hang. The pull is a local fast-forward and has no timeout (see `ops.git_async`, `write`).
 M.DEFAULTS = {
   jobs = 2,
   max_jobs = 6,
   fetch_timeout_ms = 60000,
   status_timeout_ms = 30000,
-  pull_timeout_ms = 60000,
 }
 
 ---@class MyPlugins.SyncOpts
@@ -51,7 +52,6 @@ M.DEFAULTS = {
 ---@field state_path? string   Where the result is saved (specs).
 ---@field fetch_timeout_ms? integer
 ---@field status_timeout_ms? integer
----@field pull_timeout_ms? integer
 ---@field ui? boolean          false: never open the dashboard (specs).
 ---@field quiet? boolean       true: no notifications (specs).
 ---@field on_done? fun(records: MyPlugins.SyncRecord[], summary: MyPlugins.SyncSummary)
@@ -83,7 +83,7 @@ local function new_progress(title)
 end
 
 ---@param opts MyPlugins.SyncOpts
----@param key "fetch_timeout_ms"|"status_timeout_ms"|"pull_timeout_ms"
+---@param key "fetch_timeout_ms"|"status_timeout_ms"
 ---@return integer
 local function timeout_of(opts, key)
   return tonumber(opts[key]) or M.DEFAULTS[key]
@@ -196,20 +196,30 @@ local function status_record(repo, fetch_err, opts, on_done)
   end)
 end
 
----Pull a `behind` record and classify the outcome (a failed pull from a second status).
+---Fast-forward a `behind` record to the already fetched upstream (local only, no network) and
+---classify the outcome: a failure is `dirty_blocked` only when the incoming files intersect the
+---changed ones (a second status + `diff --name-only`), else `pull_failed` with the real reason.
 ---@param rec MyPlugins.SyncRecord
 ---@param opts MyPlugins.SyncOpts
 ---@param on_done fun(record: MyPlugins.SyncRecord)
 ---@return { stop: fun() }
 local function pull_record(rec, opts, on_done)
   local handle, set = chain()
-  set(ops.sync_pull(rec.path, timeout_of(opts, "pull_timeout_ms"), function(ok, err)
+  local t = timeout_of(opts, "status_timeout_ms")
+  set(ops.sync_pull(rec.path, function(ok, err)
     if ok then
       on_done(classify.after_pull(rec, true, nil, nil))
       return
     end
-    set(ops.sync_status(rec.path, timeout_of(opts, "status_timeout_ms"), function(text)
-      on_done(classify.after_pull(rec, false, err, text and classify.parse_status(text) or nil))
+    set(ops.sync_status(rec.path, t, function(text)
+      local after = text and classify.parse_status(text) or nil
+      if not (after and (after.changed + after.untracked) > 0) then
+        on_done(classify.after_pull(rec, false, err, after))
+        return
+      end
+      set(ops.sync_incoming_files(rec.path, t, function(incoming)
+        on_done(classify.after_pull(rec, false, err, after, incoming))
+      end))
     end))
   end))
   return handle
@@ -345,7 +355,36 @@ end
 
 -- ── The run ───────────────────────────────────────────────────────────────────
 
----Stop a running sync (kills the git processes in flight).
+---Assist actions in flight (they write and are never killed, see `ops.run_assist`).
+local assists_running = 0
+
+---How long quitting Neovim waits for a running assist to reach its end (ms).
+M.EXIT_WAIT_MS = 20000
+
+local exit_hook = false
+---Once per session: quitting stops a running sync (its fetches and statuses are killed, no
+---orphaned git outlives the editor) and gives a running assist -- which must not be cut off
+---between `stash push` and `stash pop` -- a moment to finish.
+local function ensure_exit_hook()
+  if exit_hook then
+    return
+  end
+  exit_hook = true
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = vim.api.nvim_create_augroup("MyPluginsSyncExit", { clear = true }),
+    callback = function()
+      M.cancel()
+      if assists_running > 0 then
+        vim.wait(M.EXIT_WAIT_MS, function()
+          return assists_running == 0
+        end, 20)
+      end
+    end,
+  })
+end
+
+---Stop a running sync (kills the git processes in flight; a pull in its write step is left to
+---finish -- it is local and short).
 ---@return boolean was_running
 function M.cancel()
   if not active then
@@ -374,6 +413,7 @@ function M.run(opts)
     return
   end
 
+  ensure_exit_hook()
   local base_dir, repos, absent = resolve_scope(opts)
   if not base_dir then
     if opts.on_done then
@@ -606,7 +646,11 @@ function M.assist(session, name, id, on_done)
     on_done()
     return
   end
-  ops.run_assist(rec.path, id, timeout_of(session.opts, "pull_timeout_ms"), function(ok, err)
+  ensure_exit_hook()
+  assists_running = assists_running + 1
+  local t = timeout_of(session.opts, "status_timeout_ms")
+  ops.run_assist(rec.path, id, t, function(ok, err)
+    assists_running = assists_running - 1
     if ok then
       say(session.opts, "info", ("%s: %s done"):format(rec.name, info.label))
     else

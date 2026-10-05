@@ -11,6 +11,22 @@ return function(H)
     return -- nothing to test without git
   end
 
+  -- A hostile global git config (the Git for Windows defaults and a few usual extras): the
+  -- clones under test must not depend on the machine's own config. Without the pinned
+  -- settings in `fixture.lua` this makes the run fail (CRLF checkouts, signing, hooks).
+  local hostile = H.tmpdir() .. "/hostile-gitconfig"
+  vim.fn.writefile({
+    "[core]",
+    "  autocrlf = true",
+    "  hooksPath = " .. H.tmpdir() .. "/no-such-hooks",
+    "[commit]",
+    "  gpgsign = true",
+    "[tag]",
+    "  gpgsign = true",
+  }, hostile)
+  local saved_global = vim.env.GIT_CONFIG_GLOBAL
+  vim.env.GIT_CONFIG_GLOBAL = hostile
+
   local sync = require("bindings.usrcmds.plugin_repos.sync")
   local ops = require("bindings.usrcmds.plugin_repos.ops")
   local classify = require("bindings.usrcmds.plugin_repos.sync_classify")
@@ -320,28 +336,272 @@ return function(H)
     eq(started, 1, "stop() starts nothing new")
     ok(not fired, "and finishes nothing")
 
-    -- a call that outlives its timeout is killed and says so (git alias `slow` sleeps)
-    local t0 = vim.uv.hrtime()
-    local result
-    ops.git_async(
-      cases["current"].repo,
-      { "-c", "alias.slow=!sleep 10", "slow" },
-      { timeout_ms = 400 },
-      function(run_result)
-        result = run_result
-      end
-    )
-    ok(
-      vim.wait(8000, function()
-        return result ~= nil
-      end, 20),
-      "the slow call came back"
-    )
-    ok(result.timed_out, "flagged as timed out")
-    ok((vim.uv.hrtime() - t0) / 1e9 < 6, "well before the sleep ended")
-    has(ops.describe_failure(result, "git slow", 400), "timed out", "and described that way")
+    -- ── processes: a timeout, a stop and a cancel must leave NOTHING of the tree alive ──
+    local is_win = vim.fn.has("win32") == 1
+    local pid = vim.uv.os_getpid()
 
-    -- no credential prompt can block a job
-    eq(ops.NO_PROMPT_ENV.GIT_TERMINAL_PROMPT, "0", "git never asks on a terminal")
+    ---How many processes have `marker` in their command line (the sleeping child of an alias).
+    ---@param marker string
+    ---@return integer
+    local function alive(marker)
+      local cmd
+      if is_win then
+        local filter = "$_.ProcessId -ne $PID -and $_.CommandLine -like '*" .. marker .. "*'"
+        cmd = {
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          "@(Get-CimInstance Win32_Process | Where-Object { " .. filter .. " }).Count",
+        }
+      else
+        cmd = { "sh", "-c", ("ps -eo args | grep -F '%s' | grep -v grep | wc -l"):format(marker) }
+      end
+      local res = vim.system(cmd, { text = true }):wait(30000)
+      return tonumber(vim.trim(res.stdout or "")) or -1
+    end
+    ---@param marker string
+    ---@param timeout_ms integer
+    ---@return boolean gone
+    local function wait_gone(marker, timeout_ms)
+      return vim.wait(timeout_ms, function()
+        return alive(marker) == 0
+      end, 500)
+    end
+    local sleepers = 0
+    ---A git alias that announces itself in `flag`, then waits ~30 s in a CHILD of the shell (the
+    ---`;` keeps the shell alive, so the job is a tree: git -> sh -> child). On Windows the child
+    ---is `ping`, a native process: Git's msys `sleep` is forked by sh in a way that hides its
+    ---parent from `taskkill /T`, which is no model of a real transport (`ssh`, `git-remote-https`).
+    ---@param tag string
+    ---@return string marker  unique in the command line of the child
+    ---@return string flag  created when the shell started
+    ---@return string alias
+    ---@return string hold  the waiting shell command alone
+    local function sleeper(tag)
+      sleepers = sleepers + 1
+      local marker, hold
+      if is_win then
+        marker = ("127.77.%d.%d"):format(pid % 250 + 1, sleepers)
+        hold = "ping -n 31 " .. marker .. " >/dev/null"
+      else
+        marker = ("31.%d%d"):format(pid, sleepers)
+        hold = "sleep " .. marker
+      end
+      local flag = vim.fs.normalize(H.tmpdir() .. "/started-" .. tag)
+      local alias = ("!echo started > '%s'; %s; echo done"):format(flag, hold)
+      return marker, flag, alias, hold
+    end
+    local function has_started(flag)
+      return vim.wait(10000, function()
+        return H.exists(flag)
+      end, 20)
+    end
+    local function pause(ms)
+      vim.wait(ms, function()
+        return false
+      end, 20)
+    end
+
+    -- the check itself works: a live sleeper is seen, and stop() takes the whole tree
+    do
+      local marker, flag, alias = sleeper("stop")
+      local called = false
+      local handle = ops.git_async(
+        cases["current"].repo,
+        { "-c", "alias.slow=" .. alias, "slow" },
+        {},
+        function()
+          called = true
+        end
+      )
+      ok(has_started(flag), "the sleeper started")
+      pause(300)
+      ok(alive(marker) >= 1, "control: the sleeping child is visible to the check")
+      handle.stop()
+      ok(wait_gone(marker, 10000), "stop() killed the whole process tree, children included")
+      ok(not called, "and on_done does not run after stop()")
+    end
+
+    -- a call that outlives its timeout is killed (the tree too) and says so
+    do
+      local marker, flag, alias = sleeper("timeout")
+      local t0 = vim.uv.hrtime()
+      local result
+      ops.git_async(
+        cases["current"].repo,
+        { "-c", "alias.slow=" .. alias, "slow" },
+        { timeout_ms = 2500 },
+        function(run_result)
+          result = run_result
+        end
+      )
+      ok(
+        vim.wait(8000, function()
+          return result ~= nil
+        end, 20),
+        "the slow call came back"
+      )
+      ok(H.exists(flag), "the sleeper really ran")
+      ok(result.timed_out, "flagged as timed out")
+      ok((vim.uv.hrtime() - t0) / 1e9 < 6, "well before the sleep ended")
+      has(ops.describe_failure(result, "git slow", 2500), "timed out", "and described that way")
+      ok(wait_gone(marker, 10000), "the timeout killed the whole process tree, children included")
+    end
+
+    -- a hung fetch (the transport is a child process): the timeout and a cancel both end it
+    do
+      local hung = make("hang")
+      local marker, flag, _, hold = sleeper("hang")
+      local hung_state = H.tmpdir() .. "/hang-state.json"
+      git(
+        hung.repo,
+        "config",
+        "remote.origin.uploadpack",
+        ("echo started > '%s'; %s; git-upload-pack"):format(flag, hold)
+      )
+      local function hung_run(extra)
+        local o = { done = false }
+        sync.run(vim.tbl_extend("force", {
+          dir = base,
+          names = { "hang" },
+          ui = false,
+          quiet = true,
+          state_path = hung_state,
+          on_done = function(records)
+            o.done, o.records = true, records
+          end,
+        }, extra))
+        return o
+      end
+
+      local by_timeout = hung_run({ fetch_timeout_ms = 2500 })
+      ok(
+        vim.wait(15000, function()
+          return by_timeout.done
+        end, 20),
+        "a hung fetch ends by its timeout"
+      )
+      eq(by_timeout.records[1].state, "fetch_failed", "as a failed fetch")
+      has(by_timeout.records[1].detail, "timed out", "that says why")
+      ok(wait_gone(marker, 10000), "no transport child of the timed-out fetch survives")
+      os.remove(flag)
+
+      local cancelled = hung_run({ fetch_timeout_ms = 60000 })
+      ok(has_started(flag), "the second hung fetch started")
+      pause(300)
+      ok(alive(marker) >= 1, "its transport child is running")
+      ok(sync.cancel(), "cancel reports that a run was stopped")
+      ok(not sync.is_running(), "nothing is running afterwards")
+      ok(wait_gone(marker, 10000), "no transport child of the cancelled run survives")
+      pause(500)
+      ok(not cancelled.done, "a cancelled run never reports")
+
+      -- quitting Neovim stops a run in flight, so no git outlives the editor
+      os.remove(flag)
+      local quitting = hung_run({ fetch_timeout_ms = 60000 })
+      ok(has_started(flag), "the third hung fetch started")
+      pause(300)
+      ok(alive(marker) >= 1, "its transport child is running")
+      vim.api.nvim_exec_autocmds("VimLeavePre", { group = "MyPluginsSyncExit" })
+      ok(not sync.is_running(), "VimLeavePre stopped the run")
+      ok(wait_gone(marker, 10000), "no transport child survives the exit")
+      ok(not quitting.done, "and it never reports")
+    end
+
+    -- no credential prompt can block a job: the variables really reach git
+    do
+      local seen
+      ops.git_async(
+        cases["current"].repo,
+        { "-c", "alias.e=!echo $GIT_TERMINAL_PROMPT $GCM_INTERACTIVE", "e" },
+        { read_only = true },
+        function(run_result)
+          seen = run_result
+        end
+      )
+      ok(
+        vim.wait(8000, function()
+          return seen ~= nil
+        end, 20),
+        "the env probe came back"
+      )
+      eq(
+        vim.trim(seen.stdout),
+        "0 never",
+        "git sees GIT_TERMINAL_PROMPT=0 and GCM_INTERACTIVE=never"
+      )
+    end
+
+    -- a writing command is never killed: neither by a timeout nor by stop()
+    do
+      local flag = vim.fs.normalize(H.tmpdir() .. "/started-write")
+      local alias = ("!echo started > '%s'; sleep 2; echo done"):format(flag)
+      local result
+      ops.git_async(
+        cases["current"].repo,
+        { "-c", "alias.slow=" .. alias, "slow" },
+        { timeout_ms = 300, write = true },
+        function(run_result)
+          result = run_result
+        end
+      )
+      ok(has_started(flag), "the writer started")
+      ok(
+        vim.wait(15000, function()
+          return result ~= nil
+        end, 20),
+        "it ran to its end"
+      )
+      ok(not result.timed_out, "the short timeout did not apply to a writing command")
+      eq(result.code, 0, "and it finished by itself")
+      has(result.stdout, "done", "all of it ran")
+
+      local stopped_flag = vim.fs.normalize(H.tmpdir() .. "/write-stopped")
+      local called = false
+      local handle = ops.git_async(
+        cases["current"].repo,
+        { "-c", "alias.w=!sleep 1; echo x > '" .. stopped_flag .. "'", "w" },
+        { write = true },
+        function()
+          called = true
+        end
+      )
+      handle.stop()
+      ok(
+        vim.wait(8000, function()
+          return H.exists(stopped_flag)
+        end, 20),
+        "stop() did not kill a writing command: it still wrote its result"
+      )
+      pause(200)
+      ok(not called, "...but its callback was dropped")
+    end
+
+    -- ── pull: local only, accurate, honest about why it failed ───────────────
+    do
+      local off = make("offline")
+      incoming(off, "o1.txt", "o1\n")
+      incoming(off, "o2.txt", "o2\n")
+      git(off.repo, "fetch", "-q") -- the fetch phase of an earlier run
+      git(off.repo, "remote", "set-url", "origin", base .. "/no-such-remote.git")
+      local o = by_name(run({ names = { "offline" }, no_fetch = true }))
+      eq(o["offline"].state, "pulled", "--no-fetch pulls what is fetched without any network")
+      eq(o["offline"].pulled, 2, "and the count is the one of the status")
+      eq(H.read(off.repo .. "/o2.txt"), "o2\n", "the files are there")
+
+      -- a pull that fails for a reason of its own is not "blocked by your changes"
+      local lk = make("locked")
+      incoming(lk, "l1.txt", "l1\n")
+      git(lk.repo, "fetch", "-q")
+      H.write(lk.repo .. "/a.txt", "a1\nlocal edit\n") -- dirty, but not a file that comes in
+      H.write(lk.repo .. "/.git/index.lock", "")
+      local l = by_name(run({ names = { "locked" }, no_fetch = true }))
+      eq(l["locked"].state, "pull_failed", "a lock is a failed pull, not a dirty_blocked one")
+      has(l["locked"].detail, "index.lock", "with git's own reason")
+      has(l["locked"].detail, "stale", "and the hint what to do")
+      os.remove(lk.repo .. "/.git/index.lock")
+    end
   end
+  vim.env.GIT_CONFIG_GLOBAL = saved_global
 end

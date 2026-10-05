@@ -257,7 +257,8 @@ return function(H)
       ),
       false,
       "error: local changes would be overwritten",
-      classify.parse_status("1 .M N... 100644 100644 100644 a b b.txt\0")
+      classify.parse_status("1 .M N... 100644 100644 100644 a b b.txt\0"),
+      { "b.txt" }
     )
     -- fetch what the other machine pushed so `@{u}` knows it
     git(blocked.repo, "fetch", "-q")

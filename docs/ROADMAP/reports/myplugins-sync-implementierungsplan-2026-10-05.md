@@ -11,9 +11,23 @@ Abweichungen und Ergänzungen gegenüber dem Plan (alle aus dem Bauen entstanden
 - **Eigene Git-Primitive in `ops.lua`** statt `lib.nvim.git.*_async`: Timeout und
   `GIT_TERMINAL_PROMPT=0` gibt es dort nicht, und `sync` soll mit einer älteren lib.nvim auf der
   anderen Maschine laufen. Das Timeout ist ein eigener Timer, der den **Prozessbaum** tötet
-  (`taskkill /T` unter Windows): `vim.system` meldet das Ende erst, wenn auch die Pipes zu sind,
+  (`taskkill /T` unter Windows, **zuerst** und abgewartet -- erst als Rückfall `job:kill`, sonst
+  ist die Wurzel schon tot und `taskkill` findet keine Kinder mehr; anderswo wird die
+  Prozessgruppe getötet): `vim.system` meldet das Ende erst, wenn auch die Pipes zu sind,
   was ein hängendes Transport-Kindprozess (`git-remote-https`, `ssh`) verhindert -- der
-  Integrationstest hat das aufgedeckt.
+  Integrationstest hat das aufgedeckt (und ein Review die falsche Reihenfolge: der erste Stand
+  tötete die Wurzel vor `taskkill`; jetzt beweist ein Spec, dass nach Timeout, `stop()`, Cancel
+  und `VimLeavePre` kein Kindprozess überlebt).
+- **Pull = lokaler Fast-Forward** (`git merge --ff-only @{u}`) statt `git pull --ff-only`: die
+  Fetch-Phase ist der einzige Netzwerkschritt, `--no-fetch` berührt das Netz nie und "pulled N"
+  ist die gemergte Zahl. `dirty_blocked` braucht den Beweis (die eingehenden Dateien schneiden
+  die lokal geänderten), sonst `pull_failed` mit dem echten Grund. Der Assist nutzt denselben
+  Fast-Forward.
+- **Nur lesende/Netzwerk-Befehle sind killbar** (fetch, status, diff, log). Schreibende (der
+  Fast-Forward, jeder Assist-Schritt) haben kein Timeout (`pull_timeout_ms` entfällt) und werden
+  nie hart beendet: Cancel verwirft nur ihr Ergebnis; `VimLeavePre` stoppt den Lauf und wartet
+  bis zu 20 s auf einen laufenden Assist. Ein verwaister `.git/index.lock` wird in der
+  Fehlermeldung benannt.
 - **Eigener Parser** für `git status --porcelain=v2 --branch -z` (`sync_classify.parse_status`),
   rein und ohne Abhängigkeit von der lib.nvim-Version.
 - **Zusätzliche Zustände**: `status_failed` (git liefert keinen Status) und `behind` (nur im
