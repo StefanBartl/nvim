@@ -356,7 +356,14 @@ function M.report(records, opts)
   local text, level = classify.summary_line(records, opts.dry_run)
   local rows = unresolved_lines(records, 15)
   if rows ~= "" then
-    text = text .. "\n" .. rows .. "\n(:MyPlugins sync issues opens the list again)"
+    text = text .. "\n" .. rows
+    -- a dry run is only saved while there is no real result: otherwise `sync issues` shows that
+    local cur = opts.dry_run and state_mod.load({ path = opts.state_path }) or nil
+    if not opts.dry_run or (cur ~= nil and cur.dry_run == true) then
+      text = text .. "\n(:MyPlugins sync issues opens the list again)"
+    else
+      text = text .. "\n(dry run: not saved, `sync issues` still shows the last real run)"
+    end
   end
   say(opts, level, text)
 end

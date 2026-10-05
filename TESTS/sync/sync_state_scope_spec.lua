@@ -156,6 +156,23 @@ return function(H)
       sync.set_skipped(session, { "a" }, true)
       eq(#notes, 1, "...but not on every key press")
     end
+    -- ── the closing note of a dry run that was not saved ────────────────────
+    do
+      local path = H.tmpdir() .. "/dry-note-state.json"
+      local records = { rec("a", "diverged") }
+      assert(state.save("/base", records, { path = path, dry_run = true }))
+      notes = {}
+      sync.report(records, { dry_run = true, state_path = path, quiet = false })
+      has(notes[#notes].msg, "opens the list again", "only a dry result is saved: it is the list")
+      assert(state.save("/base", records, { path = path }))
+      notes = {}
+      sync.report(records, { dry_run = true, state_path = path, quiet = false })
+      ok(
+        not notes[#notes].msg:find("opens the list again", 1, true),
+        "a real result exists: the dry run does not promise to reopen"
+      )
+      has(notes[#notes].msg, "not saved", "...it says the dry run was not saved")
+    end
   end)
 
   vim.notify, dash.open, sync.SAVE_WARN_INTERVAL_MS = orig_notify, orig_open, orig_interval

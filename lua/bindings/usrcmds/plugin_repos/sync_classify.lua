@@ -351,7 +351,7 @@ function M.after_pull(rec, ok, err, after, incoming)
     )
   else
     out.state = "pull_failed"
-    out.detail = first ~= "" and first or "git pull --ff-only failed"
+    out.detail = first ~= "" and first or "git merge --ff-only @{u} failed"
   end
   return out
 end
@@ -418,7 +418,7 @@ M.ASSISTS = {
   },
   stash_pull = {
     label = "stash, pull, stash pop",
-    commands = { "git stash push --include-untracked", "git pull --ff-only", "git stash pop" },
+    commands = { "git stash push --include-untracked", "git merge --ff-only @{u}", "git stash pop" },
     safety = "the stash is popped again even when the pull fails; a pop that conflicts leaves conflict markers in the tree and the changes in the stash (resolve, then git stash drop)",
   },
 }

@@ -313,11 +313,16 @@ function M.git_async(path, args, opts, on_done)
           cb()
         end
       end)
+      -- after a timeout only `kill_tree`'s completion finishes the call: finishing here would
+      -- start the next phase while taskkill is still taking the transport children down
+      if timed_out then
+        return
+      end
       finish({
         code = res.code,
         stdout = res.stdout or "",
         stderr = res.stderr or "",
-        timed_out = timed_out,
+        timed_out = false,
       })
     end
   )
