@@ -135,6 +135,7 @@ abgeleitet, nicht aus `stderr`.
 | `no_upstream` | kein `branch.upstream` | nichts pullbar | **ja** |
 | `detached` | HEAD detached | nichts pullbar | **ja** |
 | `diverged` | ahead > 0 und behind > 0 | kein ff möglich | **ja** |
+| `conflicted` | ungemergte Einträge im Index (Merge/Rebase/`stash pop` hat Konfliktmarker hinterlassen) | bleibt in der Liste, nie "aktuell"; kein Assist | **ja** |
 | `dirty_blocked` | behind > 0, Pull scheitert, Arbeitsbaum dreckig | nicht ff-bar wegen lokaler Änderungen | **ja** |
 | `pull_failed` | behind > 0, Pull scheitert, Ursache sonst unklar | stderr als Detail | **ja** |
 | `ahead` | ahead > 0, behind = 0 | nichts zu ziehen; unpushed Commits | Hinweis |

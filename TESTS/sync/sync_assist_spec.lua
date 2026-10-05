@@ -190,7 +190,21 @@ return function(H)
   eq(vim.trim(git(sp.repo, "stash", "list")), "", "the stash was popped, nothing left in it")
 
   assist("stash-conflict", "stash_pull")
-  ok(state_of("stash-conflict") ~= "pulled", "a pop that conflicts is not reported as solved")
+  eq(
+    state_of("stash-conflict"),
+    "conflicted",
+    "a pop that conflicts is a PROBLEM (conflict markers), not a hint that drops off the list"
+  )
+  ok(
+    #classify.visible(session.records, false) > 0
+      and vim.tbl_contains(
+        vim.tbl_map(function(r)
+          return r.name
+        end, classify.visible(session.records, false)),
+        "stash-conflict"
+      ),
+    "...and it stays in the list without the hints"
+  )
   has(
     git(sc.repo, "stash", "list"),
     "myplugins sync",
@@ -222,6 +236,174 @@ return function(H)
     "the old stash of the user is still there, untouched"
   )
 
+  -- ── safety: never abort or flatten what is not ours ─────────────────────
+  ---@param repo string
+  ---@param id string
+  ---@return boolean ok, string|nil err
+  local function run_assist(repo, id)
+    local result, finished = nil, false
+    ops.run_assist(repo, id, 30000, function(o, e)
+      result, finished = { o, e }, true
+    end)
+    ok(
+      vim.wait(30000, function()
+        return finished
+      end, 20),
+      id .. " finished in " .. repo
+    )
+    return result[1], result[2]
+  end
+  ---raw git that may fail (the fixture helper raises)
+  local function git_try(dir, ...)
+    local cmd = { "git", "-C", dir, ... }
+    return vim.system(cmd, { text = true }):wait(30000)
+  end
+  ---a repo that is diverged on the same line of c.txt, upstream fetched
+  local function conflicting(name)
+    local cl = make(name)
+    commit_file(cl.dev, "c.txt", text20(), "c base")
+    git(cl.dev, "push", "-q")
+    git(cl.repo, "pull", "-q", "--ff-only")
+    incoming(cl, "c.txt", text20({ [10] = "THEIRS" }))
+    commit_file(cl.repo, "c.txt", text20({ [10] = "MINE" }), "unpushed conflicting")
+    git(cl.repo, "fetch", "-q")
+    return cl
+  end
+
+  -- #13/#16: a merge the user is resolving is refused, not aborted
+  local mip = conflicting("merge-in-progress")
+  ok(git_try(mip.repo, "merge", "--no-edit", "@{u}").code ~= 0, "setup: the merge conflicts")
+  -- (a) markers still in the tree
+  for _, id in ipairs({ "merge", "rebase" }) do
+    local o, e = run_assist(mip.repo, id)
+    eq(o, false, id .. " refused on an unresolved merge")
+    has(e or "", "already in progress", id .. ": says why")
+    has(e or "", "nothing was touched", id .. ": and that nothing was touched")
+    ok(vim.fn.filereadable(mip.repo .. "/.git/MERGE_HEAD") == 1, id .. ": the merge is still there")
+    has(H.read(mip.repo .. "/c.txt"), "<<<<<<<", id .. ": the conflict markers are untouched")
+  end
+  -- (b) resolved and staged, only MERGE_HEAD is left (the repo reads as plain `diverged`)
+  H.write(mip.repo .. "/c.txt", text20({ [10] = "RESOLVED" }))
+  git(mip.repo, "add", "c.txt")
+  local o13, e13 = run_assist(mip.repo, "merge")
+  eq(o13, false, "merge refused on a resolved but unconcluded merge")
+  has(e13 or "", "already in progress", "...says why")
+  has(
+    H.read(mip.repo .. "/c.txt"),
+    "RESOLVED",
+    "the user's resolution survives (it was aborted before)"
+  )
+  ok(vim.fn.filereadable(mip.repo .. "/.git/MERGE_HEAD") == 1, "MERGE_HEAD is still there")
+  git(mip.repo, "merge", "--abort")
+
+  -- a rebase in progress (detached, but the assist must still never touch it)
+  local rip = conflicting("rebase-in-progress")
+  ok(git_try(rip.repo, "rebase", "@{u}").code ~= 0, "setup: the rebase stops on the conflict")
+  local orb, erb = run_assist(rip.repo, "merge")
+  eq(orb, false, "merge refused in the middle of a rebase")
+  has(erb or "", "already in progress", "...says why")
+  ok(
+    vim.fn.isdirectory(rip.repo .. "/.git/rebase-merge") == 1
+      or vim.fn.isdirectory(rip.repo .. "/.git/rebase-apply") == 1,
+    "the rebase is still running (not aborted)"
+  )
+  git(rip.repo, "rebase", "--abort")
+
+  -- #14: the abort result is checked, the message names the command and the path
+  do
+    local failing = conflicting("abort-fails")
+    local real, aborts = ops.git_async, 0
+    ops.git_async = function(path, args, opts, cb)
+      if vim.tbl_contains(args, "--abort") then
+        aborts = aborts + 1
+        vim.schedule(function()
+          cb({ code = 1, stdout = "", stderr = "fatal: Unable to create index.lock\n" })
+        end)
+        return { stop = function() end }
+      end
+      return real(path, args, opts, cb)
+    end
+    local called, o, e = pcall(run_assist, failing.repo, "merge")
+    ops.git_async = real
+    ok(called, "the stubbed run finished")
+    eq(aborts, 1, "the abort was tried once")
+    eq(o, false, "a conflicting merge is a failure")
+    has(e or "", "abort failed", "the failed abort is reported as such")
+    has(e or "", "git merge --abort", "...with the command to run")
+    has(e or "", failing.repo, "...and the path to run it in")
+    ok(not (e or ""):find("nothing changed", 1, true), "...and never claims nothing changed")
+    git(failing.repo, "merge", "--abort")
+  end
+
+  -- a merge git refuses to START (local edit in the way) has nothing to abort: no --abort at all
+  do
+    local refused = make("merge-refused")
+    commit_file(refused.dev, "c.txt", text20(), "c base")
+    git(refused.dev, "push", "-q")
+    git(refused.repo, "pull", "-q", "--ff-only")
+    incoming(refused, "c.txt", text20({ [20] = "THEIRS" }))
+    commit_file(refused.repo, "other.txt", "mine\n", "unpushed")
+    git(refused.repo, "fetch", "-q")
+    H.write(refused.repo .. "/c.txt", text20({ [1] = "uncommitted edit" }))
+    local real, aborts = ops.git_async, 0
+    ops.git_async = function(path, args, opts, cb)
+      if vim.tbl_contains(args, "--abort") then
+        aborts = aborts + 1
+      end
+      return real(path, args, opts, cb)
+    end
+    local called, o, e = pcall(run_assist, refused.repo, "merge")
+    ops.git_async = real
+    ok(called, "the run finished")
+    eq(o, false, "git refuses the merge over the uncommitted edit")
+    eq(aborts, 0, "nothing was started, so nothing is aborted")
+    has(e or "", "nothing changed", "the message is true")
+    has(H.read(refused.repo .. "/c.txt"), "uncommitted edit", "the edit is intact")
+  end
+
+  -- #15: a local merge commit survives the rebase
+  do
+    local m = make("rebase-merges")
+    git(m.repo, "checkout", "-q", "-b", "feat")
+    commit_file(m.repo, "f.txt", "feature\n", "feature work")
+    git(m.repo, "checkout", "-q", "main")
+    commit_file(m.repo, "m.txt", "main work\n", "main work")
+    git(m.repo, "merge", "-q", "--no-ff", "--no-edit", "feat")
+    incoming(m, "theirs.txt", "theirs\n")
+    git(m.repo, "fetch", "-q")
+    eq(
+      vim.trim(git(m.repo, "rev-list", "--merges", "--count", "@{u}..HEAD")),
+      "1",
+      "setup: a local merge"
+    )
+    local o, e = run_assist(m.repo, "rebase")
+    ok(o, "the rebase works: " .. tostring(e))
+    eq(
+      vim.trim(git(m.repo, "rev-list", "--merges", "--count", "@{u}..HEAD")),
+      "1",
+      "the local merge commit is still a merge commit"
+    )
+    eq(H.read(m.repo .. "/f.txt"), "feature\n", "the merged branch is in")
+    eq(H.read(m.repo .. "/theirs.txt"), "theirs\n", "their commit is in")
+  end
+
+  -- #24: a conflicting pop says what the tree looks like and how to get out
+  do
+    local p = make("pop-conflict")
+    commit_file(p.dev, "c.txt", text20(), "c base")
+    git(p.dev, "push", "-q")
+    git(p.repo, "pull", "-q", "--ff-only")
+    H.write(p.repo .. "/c.txt", text20({ [10] = "local edit" }))
+    incoming(p, "c.txt", text20({ [10] = "incoming edit" }))
+    git(p.repo, "fetch", "-q")
+    local o, e = run_assist(p.repo, "stash_pull")
+    eq(o, false, "a conflicting pop is a failure")
+    has(e or "", "conflict markers", "the tree is said to hold conflict markers")
+    has(e or "", "git stash drop", "...and the way out is named")
+    has(H.read(p.repo .. "/c.txt"), "<<<<<<<", "(the markers really are there)")
+    -- a pop that fails for another reason must not claim markers
+  end
+
   -- an unknown action is refused, not run
   local refused
   ops.run_assist(keep.repo, "reset_hard", 1000, function(o, e)
@@ -238,7 +420,8 @@ return function(H)
 
   -- the summary after the actions counts what is left
   local s = classify.summarize(session.records)
-  eq(#s.unresolved, 2, "the two diverged repos are still unresolved")
+  eq(#s.unresolved, 3, "the two diverged repos and the conflicted one are unresolved")
+  ok(not s.all_clear, "so the run is not clear")
   local conflicted
   for _, r in ipairs(session.records) do
     if r.name == "stash-conflict" then

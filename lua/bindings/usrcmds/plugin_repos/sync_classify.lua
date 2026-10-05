@@ -16,7 +16,7 @@
 ---   hint        `ahead`    unpushed commits       `dirty`    local changes, nothing incoming
 ---               `not_git`  folder, no repo        `missing`  not cloned (`:MyPlugins clone`)
 ---   problem     `fetch_failed` `status_failed` `no_upstream` `detached` `diverged`
----               `dirty_blocked` `pull_failed`
+---               `conflicted` `dirty_blocked` `pull_failed`
 ---
 --- Only problems count against "everything is up to date"; a hint never does (the repo
 --- has everything the remote has), and a problem the user skipped does not either, but is
@@ -37,6 +37,7 @@ local M = {}
 ---| "no_upstream"
 ---| "detached"
 ---| "diverged"
+---| "conflicted"
 ---| "dirty_blocked"
 ---| "pull_failed"
 
@@ -71,6 +72,7 @@ local M = {}
 --- Order of the problem states in the dashboard (most blocking first).
 ---@type MyPlugins.SyncState[]
 M.PROBLEM_STATES = {
+  "conflicted",
   "diverged",
   "dirty_blocked",
   "pull_failed",
@@ -243,6 +245,15 @@ function M.classify(name, path, st, fetch_err)
     rec.state, rec.detail = "detached", "HEAD is detached"
     return rec
   end
+  if st.conflicted > 0 then
+    -- Unmerged entries: a merge/rebase/stash pop left conflict markers in the tree. Never a
+    -- hint -- the work is half done and must stay in the list until the user resolved it.
+    rec.state = "conflicted"
+    rec.detail = ("%d file(s) in conflict -- resolve them, then commit or `git stash drop`"):format(
+      st.conflicted
+    )
+    return rec
+  end
   if not st.upstream then
     rec.state = "no_upstream"
     rec.detail = (st.initial and "no commit yet" or "no upstream configured")
@@ -270,10 +281,6 @@ function M.classify(name, path, st, fetch_err)
   end
   if rec.dirty then
     rec.state, rec.detail = "dirty", ("%d changed file(s)"):format(rec.changed)
-    if st.conflicted > 0 then
-      -- still only a hint (nothing is behind), but the user must know there are conflict markers
-      rec.detail = rec.detail .. (", %d in conflict"):format(st.conflicted)
-    end
     return rec
   end
   rec.state = "current"
@@ -400,18 +407,18 @@ end
 M.ASSISTS = {
   rebase = {
     label = "rebase onto the upstream",
-    commands = { "git rebase @{u}" },
-    safety = "a conflict aborts the rebase (git rebase --abort); nothing is lost",
+    commands = { "git rebase --rebase-merges @{u}" },
+    safety = "local merge commits are kept; a conflict aborts the rebase (git rebase --abort); a merge or rebase that is already running is never touched",
   },
   merge = {
     label = "merge the upstream",
     commands = { "git merge --no-edit @{u}" },
-    safety = "a conflict aborts the merge (git merge --abort); nothing is lost",
+    safety = "a conflict aborts the merge (git merge --abort); a merge or rebase that is already running is never touched",
   },
   stash_pull = {
     label = "stash, pull, stash pop",
     commands = { "git stash push --include-untracked", "git pull --ff-only", "git stash pop" },
-    safety = "the stash is popped again even when the pull fails; a pop that conflicts leaves the changes in the stash",
+    safety = "the stash is popped again even when the pull fails; a pop that conflicts leaves conflict markers in the tree and the changes in the stash (resolve, then git stash drop)",
   },
 }
 
