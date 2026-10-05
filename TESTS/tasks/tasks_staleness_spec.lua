@@ -336,4 +336,124 @@ return function(H)
   ok(core.set_dim({}, "stale-refs", true).stale_refs)
   eq(core.set_dim({ stale_refs = true }, "stale-refs", nil).stale_refs, nil)
   ok(vim.tbl_contains(core.FILTER_DIMS, "stale-refs"))
+
+  -- ── one bad ref must not cost the dates of the others ───────────────────
+  -- git refuses a pathspec outside its work tree and fails the WHOLE call, so
+  -- `../other.nvim/lua/o.lua` used to send every file of the repo (and with
+  -- it every task) to the mtime fallback.
+  if have_git then
+    local other_repo = repos .. "/other.nvim"
+    ---@param args string[]
+    ---@param date? string
+    local function git_other(args, date)
+      local cmd = { "git", "-C", other_repo, "-c", "user.name=t", "-c", "user.email=t@example.org" }
+      vim.list_extend(cmd, args)
+      local env = date and { GIT_AUTHOR_DATE = date, GIT_COMMITTER_DATE = date } or nil
+      local res = vim.system(cmd, { text = true, env = env }):wait()
+      eq(res.code, 0, "git " .. table.concat(args, " ") .. ": " .. tostring(res.stderr))
+    end
+    vim.fn.mkdir(other_repo, "p")
+    git_other({ "init", "-q" })
+    H.write(other_repo .. "/lua/o.lua", "return 1\n")
+    git_other({ "add", "--", "lua/o.lua" })
+    git_other({ "commit", "-q", "-m", "o" }, "2026-10-02T12:00:00")
+
+    add("leaves-repo", "2026-09-15", { "../other.nvim/lua/o.lua", "lua/a.lua" })
+    add("dotdot-inside", "2026-09-15", { "lua/sub/../a.lua" })
+    local rescanned = assert(scan.area("lib.nvim", { root = root }))
+    staleness.reset_cache()
+    local report = staleness.compute(rescanned, opts)
+
+    local by_ref = {}
+    for _, change in ipairs(report.stale["lib.nvim/leaves-repo"] or {}) do
+      by_ref[change.ref] = change
+    end
+    local far = by_ref["../other.nvim/lua/o.lua"]
+    ok(far, "a ref into a sibling repo is dated")
+    eq(far.source, "git", "from that repo's git, not from the file time")
+    eq(far.date, "2026-10-02")
+    eq(far.file, other_repo .. "/lua/o.lua", "the file is named with its real path")
+    eq(by_ref["lua/a.lua"].source, "git", "the other ref of the task keeps its git date")
+    eq(
+      report.stale["lib.nvim/stale-git"][1].source,
+      "git",
+      "other tasks of the repo keep their git date"
+    )
+    local inside = report.stale["lib.nvim/dotdot-inside"]
+    ok(inside, "a ref with .. that stays in the repo is found")
+    eq(inside[1].source, "git")
+    eq(inside[1].file, lib_repo .. "/lua/a.lua", "collapsed to the file itself")
+    eq(
+      table.concat(report.notes, "\n"):find("git log failed", 1, true),
+      nil,
+      "no failed git call is reported"
+    )
+
+    -- git_dates alone: the refused path costs only its own date
+    staleness.reset_cache()
+    local dates, derr =
+      staleness.git_dates(lib_repo, { "lua/a.lua", "../other.nvim/lua/o.lua", "lua/b.lua" })
+    ok(dates, "the dates git could give are returned")
+    eq(dates["lua/a.lua"].date, "2026-10-01")
+    eq(dates["lua/b.lua"].date, "2026-09-01")
+    eq(dates["../other.nvim/lua/o.lua"], nil, "the refused path has no date")
+    has(derr, "1 path(s) not dated by git", "and is counted")
+    -- across chunk borders too: the bad path sits in the second of two chunks
+    local many = {}
+    for i = 1, staleness.GIT_CHUNK do
+      many[#many + 1] = "lua/none-" .. i .. ".lua"
+    end
+    many[#many + 1] = "../other.nvim/lua/o.lua"
+    many[#many + 1] = "lua/a.lua"
+    local dated = staleness.git_dates(lib_repo, many)
+    ok(dated and dated["lua/a.lua"], "a file next to the refused path is still dated")
+  end
+
+  -- ── the time budget ─────────────────────────────────────────────────────
+  do
+    local started = 0
+    local counting = function()
+      started = started + 1
+      return {}
+    end
+    local late = staleness.compute(
+      tasks,
+      vim.tbl_extend("force", opts, { budget_ms = 0, git_dates = counting })
+    )
+    eq(started, 0, "no git call starts once the budget is used up")
+    has(table.concat(late.notes, "\n"), "time budget", "the run says so")
+    ok(late.stale["lib.nvim/mtime-untracked"], "file times decide for the rest")
+
+    local gone, gerr = staleness.git_dates(
+      lib_repo,
+      { "lua/a.lua" },
+      { deadline = uv.hrtime() - 1 }
+    )
+    eq(gone and next(gone), nil, "git_dates starts no call after its deadline")
+    has(gerr, "time budget")
+  end
+
+  -- ── model.filter looks up only the tasks the other criteria kept ────────
+  do
+    local looked_up = {}
+    local recording = function(_, rels)
+      vim.list_extend(looked_up, rels)
+      return {}
+    end
+    local only_doing = {
+      stale_refs = true,
+      status = { "doing" },
+      ref_opts = vim.tbl_extend("force", opts, { git_dates = recording }),
+    }
+    eq(#model.filter(tasks, only_doing), 0, "no open task is doing")
+    eq(looked_up, {}, "so no ref was looked at")
+    local all_open = {
+      stale_refs = true,
+      status = { "open" },
+      ref_opts = vim.tbl_extend("force", opts, { git_dates = recording }),
+    }
+    model.filter(tasks, all_open)
+    ok(#looked_up > 0, "the open tasks are looked up")
+    ok(staleness.last and staleness.last.tasks > 0, "the report is kept for the front ends")
+  end
 end

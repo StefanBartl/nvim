@@ -203,8 +203,13 @@ mtime. Uncommitted edits are not seen.
 
 Cost: one `git log` per repo and 100 paths, never one per task; a file is looked up once however
 many tasks name it; at most `staleness.MAX_REFS` (1000) distinct files are checked per run (the
-rest is reported). A missing repo, file or git only produces a note on stderr / a notification,
-never an error. Against the real vault: about 600 files in ~5 s.
+rest is reported). All git calls of a run share a time budget (`staleness.TOTAL_BUDGET_MS`, 30 s):
+once it is used up the remaining files are dated by their mtime. A missing repo, file or git only
+produces a note on stderr / a notification, never an error; a path git refuses costs only its own
+date (the call is halved until that path stands alone). A ref with `..` that leaves its repo
+(`../lib.nvim/lua/x.lua`) is dated from the folder the file really lives in. `model.filter` looks
+up only the tasks the other criteria kept, so `--status=doing --stale=refs` checks far fewer refs
+than `--stale=refs` alone. Against the real vault: about 600 files in ~3.5 s.
 
 ## CI gate -- `tasks ci` / `scripts/tasks-ci.lua`
 

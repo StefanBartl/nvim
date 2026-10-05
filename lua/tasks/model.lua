@@ -873,16 +873,10 @@ function M.filter(tasks, f)
   local effort, severity = to_set(f.effort), to_set(f.severity)
   local effort_max = f.effort_max and M.effort_days(f.effort_max) or nil
   local today = f.today or M.today()
-  -- `--stale=refs`: one batched look at the files the tasks reference. The
-  -- caller may hand in a ready map (`f.ref_stale`); `tasks.staleness.last`
-  -- keeps the report so a front end can say which file changed.
+  -- `--stale=refs`: the caller may hand in a ready map (`f.ref_stale`); else the
+  -- files the tasks reference are looked at once, below, after every other
+  -- criterion has narrowed the list (each ref costs stats, each repo a git call).
   local ref_stale = f.ref_stale
-  if f.stale_refs and not ref_stale then
-    local ok, report = pcall(function()
-      return require("tasks.staleness").compute(tasks, f.ref_opts)
-    end)
-    ref_stale = ok and report.stale or {}
-  end
 
   local out = {}
   for _, t in ipairs(tasks) do
@@ -931,12 +925,37 @@ function M.filter(tasks, f)
     if keep and f.stale and not is_stale(t, today, f.stale) then
       keep = false
     end
-    if keep and f.stale_refs and not (ref_stale and ref_stale[t.id]) then
+    if keep and f.stale_refs and ref_stale and not ref_stale[t.id] then
       keep = false
     end
     if keep then
       out[#out + 1] = t
     end
+  end
+
+  if f.stale_refs and not ref_stale then
+    -- `tasks.staleness.last` keeps the report so a front end can say which file changed.
+    local staleness = require("tasks.staleness")
+    local ok, report = pcall(staleness.compute, out, f.ref_opts)
+    if not ok then
+      staleness.last = {
+        stale = {},
+        tasks = 0,
+        files = 0,
+        unresolved = 0,
+        skipped = 0,
+        capped = 0,
+        notes = { "refs could not be checked: " .. tostring(report) },
+      }
+      report = staleness.last
+    end
+    local dated = {}
+    for _, t in ipairs(out) do
+      if report.stale[t.id] then
+        dated[#dated + 1] = t
+      end
+    end
+    out = dated
   end
   return out
 end
