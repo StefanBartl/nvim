@@ -173,7 +173,11 @@ return function(H)
       "pull_failed",
       "no status after the failure either"
     )
-    eq(C.after_pull(rec, false, "", nil).detail, "git pull --ff-only failed", "no text at all")
+    eq(
+      C.after_pull(rec, false, "", nil).detail,
+      "git merge --ff-only @{u} failed",
+      "no text at all"
+    )
 
     -- a dirty tree alone is not "blocked": the incoming files must hit the changed ones
     local lock_err = "fatal: Unable to create index.lock"
@@ -385,7 +389,7 @@ return function(H)
     local text = C.assist_prompt(rec("filetree.nvim", "dirty_blocked"), "stash_pull")
     has(text, "filetree.nvim", "the question names the repo")
     has(text, "git stash push --include-untracked", "...and the exact commands")
-    has(text, "git pull --ff-only", "...all of them")
+    has(text, "git merge --ff-only @{u}", "...all of them")
     has(text, "git stash pop", "...in order")
     has(text, "popped again even when the pull fails", "...and what protects the work")
     has(

@@ -221,7 +221,7 @@ In the search window the same actions are on Alt chords (`<M-l>` `<M-t>` `<M-s>`
 `<M-r>` `<M-R>` `<M-a>` `<M-A>` `<M-y>` `<M-?>`). The list closes by itself when nothing unresolved
 or skipped is left.
 
-A **dry run** (`--dry-run`, also `--only`) never replaces the saved result of a real run, so
+A **dry run** (`--dry-run`) never replaces the saved result of a real run (a partial real run, `--only` or the picker's `S`, does merge its own repos into it), so
 `sync issues` keeps showing what a real run left; it is saved only while there is no real result.
 Saving from the list (skip, re-check) merges just the touched repos into the file as it is now, so
 an older list or a second Neovim cannot overwrite a newer result; a failed save is warned about
