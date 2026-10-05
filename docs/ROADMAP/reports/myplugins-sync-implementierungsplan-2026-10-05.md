@@ -97,6 +97,9 @@ Wiederverwendbar ohne neue Git-Logik: `lib.nvim.git` (`fetch_async`, `pull_async
 
 - `--dry-run`: Trockenlauf. Fetch + Klassifizierung, **kein Pull**; zeigt, was
   passieren würde (gleicher Flag-Name wie bei `clone`/`reclone`, Entscheidung Q5).
+  Ein Trockenlauf ersetzt nie ein gespeichertes echtes Ergebnis (er wird nur gespeichert, wenn
+  keines existiert). Sind alle Repos des Scopes nicht ausgecheckt (Remote-Modus, falsches Verzeichnis),
+  meldet der Lauf "no local checkouts in scope", speichert nichts und behauptet kein "up to date".
 - `--no-fetch`: nur klassifizieren und pullen mit dem, was lokal schon gefetcht ist.
 - `--jobs=<n>`: Parallelität der Fetch-Phase, Default **2** (siehe 3.5).
 - Scope wie bei allen Subcommands: nur Repos aus `plugins.personal.core.list`,
