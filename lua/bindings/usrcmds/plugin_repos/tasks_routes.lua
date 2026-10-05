@@ -4,7 +4,7 @@
 --- Declares the grammar of the task commands for
 --- `lib.nvim.bindings.usercmd.composer` -- one route tree, from which
 --- dispatch, `<Tab>` completion and the generated usage text all come. The
---- handlers live in `tasks_cmd`; the engine they call is `lua/tasks/`.
+--- handlers live in `tasks_cmd`; the engine they call is the plugin `tasks.nvim` (`tasks_nvim.*`).
 ---
 --- Grammar (verb-first, concept section 5.1):
 ---  - `tasks [<area>|all] [--status= --prio= --kind= --tag= --stale= --blocked] [--to= --format=]`
@@ -27,10 +27,10 @@
 
 local composer = require("lib.nvim.bindings.usercmd.composer")
 
-local model = require("tasks.model")
-local mutate = require("tasks.mutate")
-local scan = require("tasks.scan")
-local vault = require("tasks.vault")
+local model = require("tasks_nvim.model")
+local mutate = require("tasks_nvim.mutate")
+local scan = require("tasks_nvim.scan")
+local vault = require("tasks_nvim.vault")
 
 local M = {}
 

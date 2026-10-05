@@ -8,7 +8,7 @@
 --- `lib.nvim.bindings.usercmd.composer` (replaces the former flat
 --- `:MyPluginsClone` / `:MyPluginsRemove`). The `tasks`, `task` and `open`
 --- routes come from `tasks_routes.lua` (handlers: `tasks_cmd.lua`, engine:
---- `lua/tasks/`) and are not limited to the plugin list: they work on the
+--- `tasks.nvim`) and are not limited to the plugin list: they work on the
 --- areas of the wkdbook vault.
 --- `sync` (routes in `sync_routes.lua`, orchestrator `sync.lua`) is the thorough
 --- `update`: fetch every listed repo, pull what is behind, triage the rest.

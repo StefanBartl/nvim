@@ -12,8 +12,8 @@ return function(H)
   local core = require("bindings.usrcmds.plugin_repos.tasks_dash_core")
   local cmd = require("bindings.usrcmds.plugin_repos.tasks_cmd")
   local confirm = require("bindings.usrcmds.plugin_repos.confirm")
-  local frecency = require("tasks.frecency")
-  local vault = require("tasks.vault")
+  local frecency = require("tasks_nvim.frecency")
+  local vault = require("tasks_nvim.vault")
   local uv = vim.uv or vim.loop
 
   local root = F.vault(H)
@@ -342,7 +342,7 @@ return function(H)
     eq(asked, 0, "the watcher did not even ask")
     has(said(), "status: 1 changed")
     eq(
-      require("tasks.scan").find("lib.nvim/alpha", { root = root }).status,
+      require("tasks_nvim.scan").find("lib.nvim/alpha", { root = root }).status,
       "decision",
       "the batch itself worked"
     )
@@ -554,7 +554,7 @@ return function(H)
     end
     eq(ids(assert(current_picker()))[1], "lib.nvim/beta", "three visits: beta climbed to the top")
     eq(
-      require("tasks.scan").find("lib.nvim/alpha", { root = root }).prio,
+      require("tasks_nvim.scan").find("lib.nvim/alpha", { root = root }).prio,
       1,
       "only beta was changed"
     )
