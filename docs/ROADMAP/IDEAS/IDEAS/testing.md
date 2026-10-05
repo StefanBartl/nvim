@@ -1,5 +1,10 @@
 # Test-Strategie: `spec.nvim`, `test.nvim` und synthetische Feature-Tests
 
+> **Umsetzung läuft (2026-10-05):** als Plugin `testing.nvim`
+> (https://github.com/StefanBartl/testing.nvim, lokal `E:\repos\testing.nvim`), Lua-Modul `testing` statt `spec`.
+> Aufgaben, Plan und Handover stehen im Vault (`wkdbook-myplugins/testing.nvim/`), Einstieg:
+> `docs/ROADMAP/handovers/testing.nvim_HANDOVER.md`. Wo diese Datei `spec.nvim`/`spec` sagt, ist das Plugin gemeint.
+
 > Ersetzt `spec.nvim.md` und `test.md` (beide Stand vor 2026-09-20, Inhalt
 > hier vollständig übernommen). Zusammengeführt, weil
 > alle drei Themen eine einzige Fragestellung sind — *wie testet die eigene
