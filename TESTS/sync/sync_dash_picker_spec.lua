@@ -282,8 +282,19 @@ return function(H)
     flush()
     keys("g?")
     ok(current_picker() == p, "the picker survived the help")
-    keys("x") -- any key closes the help
+    -- any key closes the help and is discarded: `s` would otherwise skip the row under the cursor
+    local before = vim.deepcopy(session.records)
+    keys("s")
+    eq(session.records, before, "the key that closes the help does not act in the list")
     flush()
+    ok(current_picker() == p, "the picker is still open after the help closed")
+    local help_open = false
+    for _, w in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_config(w).zindex == 250 then
+        help_open = true
+      end
+    end
+    ok(not help_open, "the help window is gone")
   end)
 
   restore()

@@ -283,6 +283,9 @@ function M.show_help()
         vim.api.nvim_buf_delete(buf, { force = true })
       end
     end)
+    -- The focus stays in the list: an empty string discards the key, otherwise the key that
+    -- closes the help would also run there (`s` would skip a repo, any other one fails with E21).
+    return ""
   end, ns)
 end
 
