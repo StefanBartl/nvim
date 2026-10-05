@@ -79,6 +79,17 @@ function M.eol_of(s)
   return s:find("\r\n", 1, true) and "\r\n" or "\n"
 end
 
+---Text that is safe to print: every control character (C0, DEL, and the C1
+---range in its UTF-8 form, which xterm-like terminals also act on) becomes a
+---space. A title, a ref or a file name is data from a file; an ESC in it would
+---otherwise reach the terminal (`list`, `check`) or the generated index as an
+---escape sequence (window title, OSC 52 clipboard write, cursor games).
+---@param s string
+---@return string
+function M.clean(s)
+  return (s:gsub("%c", " "):gsub("\194[\128-\159]", " "))
+end
+
 ---`s` without leading and trailing whitespace, in linear time. The usual
 ---`s:match("^%s*(.-)%s*$")` retries the rest of a whitespace run from every
 ---byte inside it, so one line with 40 000 spaces costs seconds (SEC-32); this
