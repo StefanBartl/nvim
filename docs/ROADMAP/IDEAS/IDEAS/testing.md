@@ -1,5 +1,7 @@
 # Test-Strategie: `spec.nvim`, `test.nvim` und synthetische Feature-Tests
 
+> **Leitziel (2026-10-05):** `testing.nvim` ersetzt busted und plenary und ersetzt, erweitert und verbessert die Test-Harnesse aller eigenen Neovim-Plugins (Standard-Harness der Flotte; Tasks `fleet-standard-harness-goal`, `m1-fleet-parity`, `fleet-plenary-removal-rollout`). In B.11, D.10 und A.13 Phase 5 steht das nur verteilt.
+>
 > **Umsetzung läuft (2026-10-05):** als Plugin `testing.nvim`
 > (https://github.com/StefanBartl/testing.nvim, lokal `E:\repos\testing.nvim`), Lua-Modul `testing` statt `spec`.
 > Aufgaben, Plan und Handover stehen im Vault (`wkdbook-myplugins/testing.nvim/`), Einstieg:
