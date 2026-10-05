@@ -7,10 +7,10 @@ return function(H)
   local F = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")
 
   local core = require("bindings.usrcmds.plugin_repos.tasks_dash_core")
-  local index = require("tasks.index")
-  local model = require("tasks.model")
-  local mutate = require("tasks.mutate")
-  local scan = require("tasks.scan")
+  local index = require("tasks_nvim.index")
+  local model = require("tasks_nvim.model")
+  local mutate = require("tasks_nvim.mutate")
+  local scan = require("tasks_nvim.scan")
 
   local TODAY = F.TODAY
 

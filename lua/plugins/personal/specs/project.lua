@@ -999,6 +999,27 @@ return {
     },
   },
 
+  -- tasks.nvim: the task engine (one Markdown file per task in a vault, generated overviews, headless CLI).
+  -- Loaded on the first `require("tasks_nvim...")`, i.e. by the `:MyPlugins tasks|task|open` front ends in
+  -- lua/bindings/usrcmds/plugin_repos/tasks_*.lua (they move into the plugin in a later stage). No
+  -- built-in vault path: it is set here.
+  {
+    "StefanBartl/tasks.nvim",
+    main = "tasks_nvim",
+    lazy = true,
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- The vault folder (one folder per area). Without it $TASKS_VAULT is read.
+      -- Default: nil.
+      vault = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "")
+          and (vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-myplugins")
+        or nil,
+      -- Folders that are areas although they hold neither ROADMAP/ nor Backlog/.
+      -- Default: {}.
+      extra_areas = { "ALL", "nvim-config", "docmap-desktop", "migrate.nvim" },
+    },
+  },
+
   -- {
   -- "StefanBartl/learn-cli.nvim",
   -- lazy = false,

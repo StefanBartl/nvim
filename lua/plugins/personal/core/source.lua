@@ -138,6 +138,7 @@ plugins.modes({
   ["spotlight.nvim"] = "dir",
   ["cmdlog.nvim"] = "dir",
   ["rules.nvim"] = "dir",
+  ["tasks.nvim"] = "dir",
 
   -- project
   ["sandbox.nvim"] = "dir",

@@ -3,12 +3,12 @@
 return function(H)
   local eq, ok, has = H.eq, H.ok, H.has
   local F = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")
-  local model = require("tasks.model")
-  local mutate = require("tasks.mutate")
-  local scan = require("tasks.scan")
-  local check = require("tasks.check")
-  local index = require("tasks.index")
-  local cli = require("tasks.cli")
+  local model = require("tasks_nvim.model")
+  local mutate = require("tasks_nvim.mutate")
+  local scan = require("tasks_nvim.scan")
+  local check = require("tasks_nvim.check")
+  local index = require("tasks_nvim.index")
+  local cli = require("tasks_nvim.cli")
 
   local TODAY = F.TODAY
   local cpdir = H.tmpdir() .. "/checkpoints"
@@ -309,8 +309,8 @@ return function(H)
   eq(reuse.slug, "needs-shot-2")
 
   -- done rolls the folder back when a later step fails
-  local orig = require("tasks.fsio").write_atomic
-  local fsio = require("tasks.fsio")
+  local orig = require("tasks_nvim.fsio").write_atomic
+  local fsio = require("tasks_nvim.fsio")
   local keep =
     assert(mutate.new("lib.nvim", vim.tbl_extend("force", o, { title = "Keep me", folder = true })))
   assert(mutate.attach(keep.id, asset_file("k.txt", "keep"), o))

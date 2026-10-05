@@ -17,7 +17,7 @@
 --- Not its job: the form rules (`tasks.form`), the engine call and the
 --- follow-up questions (`tasks_cmd`).
 
-local form = require("tasks.form")
+local form = require("tasks_nvim.form")
 
 local M = {}
 

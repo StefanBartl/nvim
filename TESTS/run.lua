@@ -3,9 +3,9 @@
 -- Run from anywhere:
 --   nvim -n -i NONE --headless -u NONE -l TESTS/run.lua
 -- One spec only:
---   nvim -n -i NONE --headless -u NONE -l TESTS/run.lua tasks_model_spec.lua
+--   nvim -n -i NONE --headless -u NONE -l TESTS/run.lua tasks_dash_spec.lua
 --
--- The specs need lib.nvim; it is looked up like scripts/tasks.lua does
+-- The specs need lib.nvim and tasks.nvim ($TASKS_NVIM_DIR, $REPOS_DIR/tasks.nvim, lazy's data folder); lib.nvim is looked up like scripts/tasks.lua does
 -- ($LIB_NVIM_DIR, $LIB_NVIM_PATH, $REPOS_DIR/lib.nvim, lazy's data folder).
 -- Exits 1 when a spec fails, 2 when lib.nvim cannot be found.
 
@@ -36,14 +36,38 @@ local function find_lib()
   return nil
 end
 
+---@return string|nil
+local function find_tasks_nvim()
+  local repos = vim.env.REPOS_DIR
+  local candidates = {
+    vim.env.TASKS_NVIM_DIR,
+    (repos and repos ~= "") and (repos .. "/tasks.nvim") or "",
+    vim.fn.stdpath("data") .. "/lazy/tasks.nvim",
+  }
+  for i = 1, 3 do
+    local dir = candidates[i]
+    if dir and dir ~= "" and vim.fn.isdirectory(dir .. "/lua/tasks_nvim") == 1 then
+      return dir
+    end
+  end
+  return nil
+end
+
 local lib = find_lib()
 if not lib then
   io.stderr:write("error: lib.nvim not found (set LIB_NVIM_DIR or REPOS_DIR)\n")
   os.exit(2)
 end
 
+local tasks_nvim = find_tasks_nvim()
+if not tasks_nvim then
+  io.stderr:write("error: tasks.nvim not found (set TASKS_NVIM_DIR or REPOS_DIR)\n")
+  os.exit(2)
+end
+
 vim.opt.rtp:prepend(config_root)
 vim.opt.rtp:append(lib)
+vim.opt.rtp:append(tasks_nvim)
 -- Specs that start a child Neovim (the CLI end-to-end spec) find lib.nvim the same way.
 vim.env.LIB_NVIM_DIR = lib
 -- The dashboard records visits for its frecency sort; no spec (nor a child Neovim
@@ -57,27 +81,14 @@ vim.env.XDG_CACHE_HOME = cache_home
 local H = dofile(tests_dir .. "/harness.lua")
 
 local specs = {
-  "tasks/tasks_vault_spec.lua",
-  "tasks/tasks_fsio_spec.lua",
-  "tasks/tasks_model_spec.lua",
-  "tasks/tasks_scan_spec.lua",
-  "tasks/tasks_index_spec.lua",
-  "tasks/tasks_mutate_spec.lua",
-  "tasks/tasks_mutate_safety_spec.lua",
-  "tasks/tasks_boundary_safety_spec.lua",
-  "tasks/tasks_check_spec.lua",
   "tasks/tasks_folder_spec.lua",
   "tasks/tasks_effort_severity_spec.lua",
-  "tasks/tasks_form_spec.lua",
-  "tasks/tasks_cli_spec.lua",
   "tasks/tasks_routes_spec.lua",
   "tasks/tasks_dash_spec.lua",
   "tasks/tasks_dash_picker_spec.lua",
-  "tasks/tasks_frecency_spec.lua",
   "tasks/tasks_dash_watch_spec.lua",
   "tasks/tasks_dash_refresh_spec.lua",
   "tasks/tasks_staleness_spec.lua",
-  "tasks/tasks_ci_spec.lua",
   "plugin_repos/help_float_spec.lua",
   "sync/sync_classify_spec.lua",
   "sync/sync_state_scope_spec.lua",

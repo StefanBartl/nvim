@@ -198,7 +198,7 @@ function M.touch(tasks)
     return false
   end
   local ok, res = pcall(function()
-    return require("tasks.frecency").record(ids)
+    return require("tasks_nvim.frecency").record(ids)
   end)
   return ok and res == true
 end

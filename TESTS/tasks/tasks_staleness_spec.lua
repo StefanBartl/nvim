@@ -4,8 +4,8 @@
 return function(H)
   local eq, ok, has, lacks = H.eq, H.ok, H.has, H.lacks
   local F = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")
-  local staleness = require("tasks.staleness")
-  local model = require("tasks.model")
+  local staleness = require("tasks_nvim.staleness")
+  local model = require("tasks_nvim.model")
   local uv = vim.uv or vim.loop
 
   -- ── classify ────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ return function(H)
     end
     return m
   end
-  local scan = require("tasks.scan")
+  local scan = require("tasks_nvim.scan")
   local function add(slug, updated, refs)
     F.task(H, root, "lib.nvim", slug, meta(slug, updated, refs))
   end
@@ -282,7 +282,7 @@ return function(H)
     local old_repos, old_cfg = vim.env.REPOS_DIR, vim.env.NVIM_CONFIG_DIR
     vim.env.REPOS_DIR, vim.env.NVIM_CONFIG_DIR = repos, cfg
     staleness.reset_cache()
-    local cli = require("tasks.cli")
+    local cli = require("tasks_nvim.cli")
     local out, err = {}, {}
     local code = cli.run(
       { "list", "lib.nvim", "--stale=refs", "--vault=" .. root, "--today=" .. F.TODAY },

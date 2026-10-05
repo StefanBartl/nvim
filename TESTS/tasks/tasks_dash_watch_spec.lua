@@ -481,7 +481,7 @@ return function(H)
       return true
     end
     made = made + 1
-    local r, merr = require("tasks.mutate").new(
+    local r, merr = require("tasks_nvim.mutate").new(
       "cascade.nvim",
       { title = "First task " .. made, root = first_root }
     )

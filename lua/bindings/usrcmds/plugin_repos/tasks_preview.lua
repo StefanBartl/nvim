@@ -24,8 +24,8 @@
 --- Not its job: rendering the task list (`tasks_view`), parsing `--to=`
 --- (`tasks_view`), the `task preview` command (`tasks_cmd`).
 
-local fsio = require("tasks.fsio")
-local vault = require("tasks.vault")
+local fsio = require("tasks_nvim.fsio")
+local vault = require("tasks_nvim.vault")
 
 local M = {}
 

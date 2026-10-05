@@ -418,8 +418,8 @@ The commands for the open work of the wkdbook vault
 (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`): one Markdown file per task
 in `<area>/ROADMAP/tasks/`, a generated overview `<area>/ROADMAP/TASKS.md`, finished
 tasks in `<area>/Backlog/`. Format, rules R1-R12 and reasoning:
-`wkdbook-myplugins/ALL/Task-System-Konzept.md`. All rules live in the engine
-[`lua/tasks/`](../../../tasks/README.md); this layer only parses the command line,
+`wkdbook-myplugins/ALL/Task-System-Konzept.md`. All rules live in the engine, the plugin `tasks.nvim`
+(`docs/ENGINE.md` in its repo); this layer only parses the command line,
 asks, notifies and opens windows. The same engine runs without an editor as
 `nvim --headless -u NONE -l scripts/tasks.lua <command>` (rule R12).
 
@@ -837,7 +837,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 
 ## See also
 
-- [`lua/tasks/README.md`](../../../tasks/README.md) — the engine behind `tasks`/`task`/`open`;
+- `tasks.nvim` (`docs/ENGINE.md` in its repo) — the engine behind `tasks`/`task`/`open`;
   `wkdbook-myplugins/ALL/Task-System-Konzept.md` — the concept and the rules R1-R12
 - [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
 - [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`; [`tasks_dash_watch_spec.lua`](../../../../TESTS/tasks/tasks_dash_watch_spec.lua) / [`tasks_dash_refresh_spec.lua`](../../../../TESTS/tasks/tasks_dash_refresh_spec.lua) / [`tasks_frecency_spec.lua`](../../../../TESTS/tasks/tasks_frecency_spec.lua) — the watcher, the live refresh with real watchers, and frecency

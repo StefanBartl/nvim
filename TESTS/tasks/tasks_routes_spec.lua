@@ -12,7 +12,7 @@ return function(H)
   local cmd = require("bindings.usrcmds.plugin_repos.tasks_cmd")
   local view = require("bindings.usrcmds.plugin_repos.tasks_view")
   local confirm = require("bindings.usrcmds.plugin_repos.confirm")
-  local vault = require("tasks.vault")
+  local vault = require("tasks_nvim.vault")
 
   -- ── harness: one pinned fixture vault, captured notifications ─────────────
   local root = F.vault(H)
@@ -221,7 +221,7 @@ return function(H)
       )
       eq(
         cmd.parse_assignments({ "kind=" }, known).kind,
-        require("tasks.mutate").REMOVE,
+        require("tasks_nvim.mutate").REMOVE,
         "an empty value removes the key"
       )
       ---@param tokens string[]
@@ -848,7 +848,7 @@ return function(H)
 
       -- the dashboard's export choice delivers through the same sink
       local dash_core = require("bindings.usrcmds.plugin_repos.tasks_dash_core")
-      local tsk = require("tasks.scan").all({ root = root })
+      local tsk = require("tasks_nvim.scan").all({ root = root })
       local dash_target = assert(dash_core.export_target(dash_core.EXPORT_CHOICES[7]))
       local delivered, derr = view.deliver(tsk, dash_target, {
         format = "md",
