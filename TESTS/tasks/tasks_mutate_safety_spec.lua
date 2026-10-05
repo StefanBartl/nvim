@@ -317,4 +317,123 @@ return function(H)
   assert(mutate.new("lib.nvim", vim.tbl_extend("force", o, { title = wide, index = false })))
   local wide_s = (vim.uv.hrtime() - t_wide) / 1e9
   ok(wide_s < 1.5, ("trimming 64 000 inner spaces took %.1f s (quadratic pattern?)"):format(wide_s))
+
+  -- ── failure injection: every fsio call of done / attach / folderize, failed in turn ─────────
+  -- The k-th call of each primitive fails. A failed operation must leave the vault byte-exact as it
+  -- was, or say "rollback incomplete" and lose no task text.
+  ---@param dir string
+  ---@return table<string, string|true> files  relative path -> content (`true` for a folder)
+  local function snapshot(dir)
+    local out = {}
+    local function walk(d)
+      local handle = vim.uv.fs_scandir(d)
+      while handle do
+        local name, kind = vim.uv.fs_scandir_next(handle)
+        if not name then
+          break
+        end
+        local p = d .. "/" .. name
+        if kind == "directory" then
+          out[p:sub(#dir + 2) .. "/"] = true
+          walk(p)
+        else
+          out[p:sub(#dir + 2)] = H.read(p)
+        end
+      end
+    end
+    walk(dir)
+    return out
+  end
+
+  ---A vault with one other open task and the "Subject" task, a plain file or a folder with an asset.
+  ---@param folder boolean
+  ---@return string root
+  ---@return table opts
+  ---@return table task
+  local function inject_vault(folder)
+    local r, opts = setup()
+    assert(mutate.new("lib.nvim", vim.tbl_extend("force", opts, { title = "Other open" })))
+    local created = assert(
+      mutate.new("lib.nvim", vim.tbl_extend("force", opts, { title = "Subject", folder = folder }))
+    )
+    if folder then
+      assert(mutate.attach(created.id, asset_file("seed.bin", "seed"), opts))
+    end
+    return r, opts, created
+  end
+
+  ---@param op string  "done" | "attach" | "folderize"
+  local function run_op(op, id, opts, src)
+    if op == "done" then
+      return mutate.done(id, opts)
+    elseif op == "attach" then
+      return mutate.attach(id, src, opts)
+    end
+    return mutate.folderize(id, opts)
+  end
+
+  local PRIMS = { "create_exclusive", "remove", "rename", "write_atomic", "mkdirp", "copy" }
+  local injected = 0
+  for _, op in ipairs({ "done", "attach", "folderize" }) do
+    for _, folder in ipairs({ false, true }) do
+      -- a dry run counts how often each primitive is called
+      local counts, origs = {}, {}
+      local _, dry_opts, dry_task = inject_vault(folder)
+      for _, prim in ipairs(PRIMS) do
+        origs[prim], counts[prim] = fsio[prim], 0
+        fsio[prim] = function(...)
+          counts[prim] = counts[prim] + 1
+          return origs[prim](...)
+        end
+      end
+      local dry_ok, dry_err = pcall(run_op, op, dry_task.id, dry_opts, asset_file("dry.bin", "dry"))
+      for _, prim in ipairs(PRIMS) do
+        fsio[prim] = origs[prim]
+      end
+      if not dry_ok then
+        error(dry_err, 0)
+      end
+
+      for _, prim in ipairs(PRIMS) do
+        for k = 1, counts[prim] do
+          local r, opts, subject = inject_vault(folder)
+          local src = asset_file("late.bin", "late")
+          local before_state = snapshot(r)
+          local label = ("%s, %s#%d, %s task"):format(op, prim, k, folder and "folder" or "plain")
+          local calls, orig, res, err = 0, fsio[prim], nil, nil
+          with_stub(fsio, prim, function(...)
+            calls = calls + 1
+            if calls == k then
+              return false, "injected failure"
+            end
+            return orig(...)
+          end, function()
+            res, err = run_op(op, subject.id, opts, src)
+          end)
+          injected = injected + 1
+          if res == nil then
+            local after_state = snapshot(r)
+            if tostring(err):find("rollback incomplete", 1, true) then
+              local present = {}
+              for _, content in pairs(after_state) do
+                present[content] = true
+              end
+              for path, content in pairs(before_state) do
+                local generated = path:match("TASKS%.md$") or path:match("README%.md$")
+                if content ~= true and not generated then
+                  ok(
+                    present[content],
+                    label .. ": the content of " .. path .. " is still somewhere"
+                  )
+                end
+              end
+            else
+              eq(after_state, before_state, label .. ": a failed operation changes nothing")
+            end
+          end
+        end
+      end
+    end
+  end
+  ok(injected >= 15, ("the injection loop ran (%d failures injected)"):format(injected))
 end
