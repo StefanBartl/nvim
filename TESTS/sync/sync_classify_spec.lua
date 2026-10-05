@@ -112,11 +112,16 @@ return function(H)
     "no longer exists",
     "gone upstream says so"
   )
-  has(
-    state_of(track(0, 0, "u UU N... 100644 100644 100644 100644 a b c conflict.lua")).detail,
-    "1 in conflict",
-    "conflict markers in the tree are named in the hint"
-  )
+  do
+    local conflict = "u UU N... 100644 100644 100644 100644 a b c conflict.lua"
+    local c0 = state_of(track(0, 0, conflict))
+    eq(c0.state, "conflicted", "conflict markers in the tree are a problem, never the hint `dirty`")
+    has(c0.detail, "1 file(s) in conflict", "...and named in the row")
+    has(c0.detail, "git stash drop", "...with the way out")
+    eq(state_of(track(0, 3, conflict)).state, "conflicted", "also when behind: no pull on a mess")
+    eq(state_of(track(2, 3, conflict)).state, "conflicted", "also when diverged: no assist either")
+    eq(state_of(track(2, 0, conflict)).state, "conflicted", "also when ahead")
+  end
   eq(state_of(z(HEAD, "# branch.head (detached)")).state, "detached", "detached head")
   eq(
     state_of(z(HEAD, "# branch.head (detached)", "# branch.upstream origin/main", ab(0, 3))).state,
@@ -201,6 +206,7 @@ return function(H)
     "no_upstream",
     "detached",
     "diverged",
+    "conflicted",
     "dirty_blocked",
     "pull_failed",
   }) do
@@ -290,6 +296,22 @@ return function(H)
   ok(not dry:find("all repositories", 1, true), "no assurance in a dry run")
   ok(not C.summarize({ rec("a", "behind") }).all_clear, "a pending pull is not clear")
 
+  -- ── a conflicted repo stays on the list and is never "up to date" ──────
+  do
+    local mess = { rec("m", "conflicted", { dirty = true }), rec("ok", "current") }
+    eq(C.visible(mess, false)[1].name, "m", "conflicted is visible without the hints")
+    eq(C.sort({ rec("z", "diverged"), rec("a", "conflicted") })[1].name, "a", "and sorts first")
+    local sm = C.summarize(mess)
+    eq(#sm.unresolved, 1, "unresolved")
+    eq(sm.current, 1, "not counted as up to date")
+    ok(not sm.all_clear, "not clear")
+    local text, lvl = C.summary_line(mess)
+    has(text, "1 unresolved: m", "named in the closing line")
+    ok(not text:find("all repositories are up to date", 1, true), "no false assurance")
+    eq(lvl, "warn", "warn")
+    has(C.format_line(mess[1]), "x ", "problem mark")
+  end
+
   -- ── one row of the list ─────────────────────────────────────────────────
   local row = C.format_line(rec("filetree.nvim", "dirty_blocked", {
     branch = "main",
@@ -324,6 +346,7 @@ return function(H)
       "no_upstream",
       "detached",
       "fetch_failed",
+      "conflicted",
     }) do
       eq(#C.assists_for(rec("a", st)), 0, st .. ": no assist (lazygit is the way)")
     end
@@ -347,8 +370,13 @@ return function(H)
     has(text, "popped again even when the pull fails", "...and what protects the work")
     has(
       C.assist_prompt(rec("a", "diverged"), "rebase"),
-      "git rebase @{u}",
-      "rebase names its command"
+      "git rebase --rebase-merges @{u}",
+      "rebase names its exact command, local merge commits are kept"
+    )
+    eq(
+      C.ASSISTS.rebase.commands[1],
+      "git rebase --rebase-merges @{u}",
+      "the prompt and the command that runs are one string"
     )
     has(
       C.assist_prompt(rec("a", "diverged"), "merge"),

@@ -172,13 +172,14 @@ after it. The text of an error is shown to you, never used to decide.
 | `pulled` | was behind, fast-forwarded this run | no |
 | `behind` | something to pull (only visible in a `--dry-run`) | pending |
 | `ahead` | unpushed commits, nothing to pull | hint |
-| `dirty` | local changes, nothing to pull (conflict markers are named in the row) | hint |
+| `dirty` | local changes, nothing to pull | hint |
 | `missing` / `not_git` | listed but not cloned / the folder is no repo | hint |
 | `fetch_failed` | the fetch failed (network, a login, the timeout); the repo is left alone | **yes** |
 | `status_failed` | git could not give a status | **yes** |
 | `no_upstream` | no upstream configured, or the remote branch is gone | **yes** |
 | `detached` | HEAD is detached, nothing pullable | **yes** |
 | `diverged` | ahead *and* behind: no fast-forward | **yes** |
+| `conflicted` | the index holds unmerged entries (a merge, rebase or `stash pop` left conflict markers); checked before everything else below `detached`, so it stays in the list and never counts as up to date | **yes** |
 | `dirty_blocked` | behind, the pull failed, and the incoming commits touch files that are changed locally | **yes** |
 | `pull_failed` | behind, the pull failed for any other reason (a lock, a hook, ...); the error line is the detail, also on a dirty tree | **yes** |
 
@@ -227,9 +228,14 @@ started — never `reset --hard`, never `clean`, never a force:
 
 | For | Action | Commands | If it goes wrong |
 |---|---|---|---|
-| `diverged` | rebase | `git rebase @{u}` | a conflict aborts the rebase |
+| `diverged` | rebase | `git rebase --rebase-merges @{u}` | local merge commits are kept; a conflict aborts the rebase |
 | `diverged` | merge | `git merge --no-edit @{u}` | a conflict aborts the merge |
-| `dirty_blocked` | stash, pull, pop | `git stash push --include-untracked`, `git merge --ff-only @{u}`, `git stash pop` | the stash is popped again if the pull fails; a pop that conflicts leaves the changes in the stash (and says so). An older stash of yours is never popped |
+| `dirty_blocked` | stash, pull, pop | `git stash push --include-untracked`, `git merge --ff-only @{u}`, `git stash pop` | the stash is popped again if the pull fails; a pop that conflicts leaves conflict markers in the tree and the changes in the stash: the message says so (resolve, then `git stash drop`) and the repo shows as `conflicted`. An older stash of yours is never popped |
+
+Rebase and merge are **refused** when a merge or rebase is already running in the repo (or the
+index has unmerged files): that is yours, and `--abort` would throw your resolution away. Only a
+rebase/merge the assist itself started is aborted; if the abort fails, the message names the exact
+command to run and the directory (`git merge --abort` in `<path>`) instead of claiming nothing changed.
 
 **The result** is saved in `stdpath("state")/myplugins_sync.json` (written atomically, a damaged
 file is "no result"). **The statusline** can show `sync:N` while N repos are unresolved (skipped

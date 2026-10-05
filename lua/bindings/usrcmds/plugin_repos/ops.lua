@@ -569,9 +569,67 @@ end
 
 -- ── Assist actions (`sync_classify.ASSISTS`) ──────────────────────────────────
 
----Run one assist action in a repo. Every step is a plain git call; a failure undoes what the
----action started (the rebase/merge is aborted, the stash is popped again), so the repo is where
----it was unless a pop conflicts -- then the changes stay in the stash and the message says so.
+---@class MyPlugins.OpState
+---@field merging boolean    MERGE_HEAD exists.
+---@field rebasing boolean   `rebase-merge` / `rebase-apply` exists.
+---@field unmerged boolean   The index holds unmerged entries (conflict markers in the tree).
+
+---Is a merge or rebase running in the repo, or does the index hold unmerged entries? Read-only.
+---The paths come from `git rev-parse --git-path` (linked worktrees and `.git` files keep them
+---elsewhere), never from a guessed `.git/` layout.
+---@param path string
+---@param timeout_ms integer
+---@param cb fun(state: MyPlugins.OpState|nil, err: string|nil)  `state` nil: git could not tell.
+local function op_state(path, timeout_ms, cb)
+  local ro = { timeout_ms = timeout_ms, read_only = true }
+  M.git_async(
+    path,
+    {
+      "rev-parse",
+      "--git-path",
+      "MERGE_HEAD",
+      "--git-path",
+      "rebase-merge",
+      "--git-path",
+      "rebase-apply",
+    },
+    ro,
+    function(paths)
+      if paths.code ~= 0 then
+        cb(nil, M.describe_failure(paths, "git rev-parse", timeout_ms))
+        return
+      end
+      local list = vim.split(paths.stdout, "\r?\n", { trimempty = true })
+      ---@param rel string|nil
+      ---@return boolean
+      local function exists(rel)
+        if not rel or rel == "" then
+          return false
+        end
+        local abs = (rel:match("^%a:[/\\]") or rel:sub(1, 1) == "/") and rel or (path .. "/" .. rel)
+        return vim.uv.fs_stat(abs) ~= nil
+      end
+      M.git_async(path, { "ls-files", "--unmerged" }, ro, function(unmerged)
+        if unmerged.code ~= 0 then
+          cb(nil, M.describe_failure(unmerged, "git ls-files", timeout_ms))
+          return
+        end
+        cb({
+          merging = exists(list[1]),
+          rebasing = exists(list[2]) or exists(list[3]),
+          unmerged = vim.trim(unmerged.stdout) ~= "",
+        }, nil)
+      end)
+    end
+  )
+end
+
+---Run one assist action in a repo. Every step is a plain git call. A rebase/merge is refused
+---when one is already running (or the index has unmerged entries): it is the user's, and
+---`--abort` would throw their work away. Only a rebase/merge THIS call started is aborted on a
+---failure, and when the abort itself fails the message names the command to run by hand. A
+---failed stash pop is popped again only in the sense that the changes stay in the stash; the
+---tree then holds conflict markers (the message says so, the next check shows `conflicted`).
 ---Never `reset --hard`, never `clean`.
 ---
 ---Every step that writes (rebase, merge, stash, the fast-forward) runs without a timeout and is
@@ -592,15 +650,56 @@ function M.run_assist(path, id, timeout_ms, on_done)
   end
 
   if id == "rebase" or id == "merge" then
-    local args = id == "rebase" and { "rebase", "@{u}" } or { "merge", "--no-edit", "@{u}" }
-    run(args, function(result)
-      if result.code == 0 then
-        on_done(true, nil)
+    -- `--rebase-merges`: a plain rebase silently drops local merge commits (and what was only
+    -- resolved by hand inside them)
+    local args = id == "rebase" and { "rebase", "--rebase-merges", "@{u}" }
+      or { "merge", "--no-edit", "@{u}" }
+    local function started(state)
+      return id == "rebase" and state.rebasing or state.merging
+    end
+    op_state(path, timeout_ms, function(before, before_err)
+      if not before then
+        on_done(false, "could not check the repo state: " .. tostring(before_err))
         return
       end
-      -- a conflict must not leave the repo in the middle of a rebase/merge
-      run({ id, "--abort" }, function()
-        on_done(false, M.describe_failure(result, "git " .. id) .. " (aborted, nothing changed)")
+      if before.merging or before.rebasing or before.unmerged then
+        on_done(
+          false,
+          ("a merge or rebase is already in progress in %s (or the index has unmerged files): finish or abort it there first, nothing was touched"):format(
+            path
+          )
+        )
+        return
+      end
+      run(args, function(result)
+        if result.code == 0 then
+          on_done(true, nil)
+          return
+        end
+        local why = M.describe_failure(result, "git " .. id)
+        -- Abort only what this call started. If git refused before starting (dirty tree, ...)
+        -- there is nothing to abort -- and nothing it could not have left alone.
+        op_state(path, timeout_ms, function(after)
+          if after and not started(after) and not after.unmerged then
+            on_done(false, why .. " (nothing changed)")
+            return
+          end
+          run({ id, "--abort" }, function(aborted)
+            if aborted.code == 0 then
+              on_done(false, why .. " (aborted, nothing changed)")
+            else
+              on_done(
+                false,
+                ("%s -- and the abort failed (%s): run `git %s --abort` in %s"):format(
+                  why,
+                  M.describe_failure(aborted, "git " .. id .. " --abort"),
+                  id,
+                  path
+                )
+              )
+            end
+          end)
+        end)
       end)
     end)
   elseif id == "stash_pull" then
@@ -630,15 +729,29 @@ function M.run_assist(path, id, timeout_ms, on_done)
               return
             end
             run({ "stash", "pop" }, function(popped)
-              if popped.code ~= 0 then
-                on_done(
-                  false,
-                  (pull_err or "pulled")
-                    .. "; git stash pop failed -- your changes are still in the stash (git stash list)"
-                )
-              else
+              if popped.code == 0 then
                 on_done(pull_ok, pull_err)
+                return
               end
+              local head = pull_err or "pulled"
+              op_state(path, timeout_ms, function(now)
+                if now and now.unmerged then
+                  -- a conflicting pop keeps the stash AND leaves markers in the tree
+                  on_done(
+                    false,
+                    head
+                      .. ("; git stash pop conflicted -- the working tree now holds conflict markers: resolve them, then run `git stash drop` in %s (the changes are also still in the stash)"):format(
+                        path
+                      )
+                  )
+                else
+                  on_done(
+                    false,
+                    head
+                      .. "; git stash pop failed -- your changes are still in the stash (git stash list)"
+                  )
+                end
+              end)
             end)
           end)
         end)
