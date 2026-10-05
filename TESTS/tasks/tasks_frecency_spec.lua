@@ -193,6 +193,20 @@ return function(H)
   H.write(bad, "[1,2,3]")
   eq(select(2, fr.load({ path = bad })), "corrupt")
 
+  -- a runaway file is not read at all: corrupt, the bytes kept aside on the next record
+  local huge = H.tmpdir() .. "/huge.json"
+  local row = ('"a/x%d":{"score":1,"last":1700000000},'):format(1)
+  H.write(huge, '{"version":1,"entries":{' .. row:rep(fr.MAX_FILE_BYTES / #row + 10) .. '"z":{}}}')
+  ok(vim.uv.fs_stat(huge).size > fr.MAX_FILE_BYTES, "the fixture is over the limit")
+  local huge_entries, huge_status, huge_err = fr.load({ path = huge })
+  eq(huge_entries, {})
+  eq(huge_status, "corrupt", "over the size limit is corrupt")
+  has(huge_err, "more than")
+  eq(fr.load_scores({ path = huge }), {}, "and scores nothing")
+  eq({ fr.record("a/new", { path = huge, now = opts().now }) }, { true })
+  eq(select(2, fr.load({ path = huge })), "ok", "the next record starts a fresh file")
+  ok(vim.uv.fs_stat(huge .. ".bad").size > fr.MAX_FILE_BYTES, "the old bytes were kept aside")
+
   -- an unreadable path (a folder where the file should be) is never overwritten
   local blocked = H.tmpdir() .. "/blocked.json"
   vim.fn.mkdir(blocked, "p")

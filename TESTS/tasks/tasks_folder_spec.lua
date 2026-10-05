@@ -247,7 +247,13 @@ return function(H)
 
   -- a dangling asset link is a warning
   local tp = root .. "/lib.nvim/ROADMAP/tasks/needs-shot/needs-shot.md"
-  H.write(tp, H.read(tp) .. "\n![gone](assets/gone.png)\n![here](assets/trace.txt)\n")
+  -- (a percent-encoded link to an existing file is not dangling)
+  H.write(root .. "/lib.nvim/ROADMAP/tasks/needs-shot/assets/two words.txt", "x")
+  H.write(
+    tp,
+    H.read(tp)
+      .. "\n![gone](assets/gone.png)\n![here](assets/trace.txt)\n[spaced](assets/two%20words.txt)\n"
+  )
   assert(index.write_area("lib.nvim", { root = root }))
   res = assert(check.run({ root = root }))
   eq(codes(res), { "warn:asset-dangling" })

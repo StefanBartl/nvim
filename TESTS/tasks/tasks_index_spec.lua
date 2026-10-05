@@ -124,6 +124,88 @@ return function(H)
     "link target is percent-encoded"
   )
 
+  -- a backslash in a title must not undo the escaping of the brackets next to it:
+  -- `\\[` is an escaped backslash followed by a LIVE bracket, so a title like
+  -- `\[x\](http://evil)` used to turn into a real link in the rendered index.
+  do
+    ---@param title string  the title's text; written as a double-quoted YAML value
+    ---@return string link_text  what sits between `[` and `](tasks/esc.md)` in the row
+    local function link_text_of(title)
+      local quoted = '"' .. title:gsub("\\", "\\\\") .. '"'
+      local rendered = index.render("lib.nvim", { task("lib.nvim", "esc", F.meta(quoted, "open")) })
+      local line = rendered:match("[^\n]*esc%.md[^\n]*")
+      return line:match("%| %[(.*)%]%(tasks/esc%.md%) %|")
+    end
+
+    --- The number of backslashes directly in front of position `i` of `s`.
+    local function slashes_before(s, i)
+      local count = 0
+      while i - count - 1 >= 1 and s:sub(i - count - 1, i - count - 1) == "\\" do
+        count = count + 1
+      end
+      return count
+    end
+
+    --- A bracket is escaped (cannot open or close a link) when an odd number of
+    --- backslashes precedes it, as in CommonMark.
+    local function all_brackets_escaped(s)
+      for i = 1, #s do
+        local c = s:sub(i, i)
+        if (c == "[" or c == "]") and slashes_before(s, i) % 2 == 0 then
+          return false
+        end
+      end
+      return true
+    end
+
+    local evil = link_text_of("\\[x\\](http://evil.example)")
+    ok(all_brackets_escaped(evil), "no live bracket in: " .. evil)
+    eq(evil, "\\\\\\[x\\\\\\](http://evil.example)", "each run is doubled, then the escape")
+
+    eq(link_text_of("[WIP] a"), "\\[WIP\\] a", "a title without backslashes is escaped as before")
+    eq(link_text_of("C:\\dir\\file"), "C:\\dir\\file", "a backslash before a letter is as written")
+
+    local trailing = link_text_of("ends with a backslash \\")
+    eq(trailing, "ends with a backslash \\\\", "a trailing backslash is doubled")
+    ok(slashes_before(trailing .. "]", #trailing + 1) % 2 == 0, "the closing ] stays unescaped")
+
+    local mixed = link_text_of("a\\\\[b]\\")
+    ok(all_brackets_escaped(mixed), "runs of two backslashes too: " .. mixed)
+    ok(slashes_before(mixed .. "]", #mixed + 1) % 2 == 0, "and at the end: " .. mixed)
+
+    -- a pipe next to a backslash still leaves the row at five columns
+    local piped =
+      index.render("lib.nvim", { task("lib.nvim", "pipe", F.meta('"a\\\\| b"', "open")) })
+    local _, pipes = piped:match("[^\n]*pipe%.md[^\n]*"):gsub("\\|", ""):gsub("|", "")
+    eq(pipes, 6, "6 pipes = 5 columns")
+  end
+
+  -- a control character in any cell (a record that did not come through the
+  -- parser, or a future field) is not written into the generated file
+  do
+    local raw = task("lib.nvim", "raw", F.meta("Raw", "open"))
+    raw.title = "a\27[2Jb\r\nc|d"
+    raw.summary = "s\27]52;c;AAAA\7e"
+    raw.effort = "M\27"
+    local rendered = index.render("lib.nvim", { raw })
+    ok(not rendered:find("[\1-\9\11-\31\127]"), "no control character but the line breaks")
+    eq(
+      rendered:match("[^\n]*raw%.md[^\n]*"),
+      "| open | – | M  | [a \\[2Jb c\\|d](tasks/raw.md) | s ]52;c;AAAA e |",
+      "controls became spaces, a CR LF pair one space"
+    )
+  end
+
+  -- a file name that is no valid slug still gets a row that parses and a target
+  -- that cannot end the link early or add a column
+  do
+    local odd = task("lib.nvim", 'a|b[c](d) e<f>g`h"i#j%k', F.meta("Odd name", "open"))
+    local line = index.render("lib.nvim", { odd }):match("[^\n]*Odd name[^\n]*")
+    ok(line:find("(tasks/a%7Cb%5Bc%5D%28d%29%20e%3Cf%3Eg%60h%22i%23j%25k.md)", 1, true), line)
+    local _, pipes = line:gsub("\\|", ""):gsub("|", "")
+    eq(pipes, 6, "the pipe in the file name did not add a column")
+  end
+
   -- ── write_area / check ──────────────────────────────────────────────────
   local root = F.vault(H)
   F.task(H, root, "lib.nvim", "alpha", F.meta("Alpha", "doing", { { "prio", "1" } }), "\nFirst.\n")

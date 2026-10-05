@@ -46,7 +46,7 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 
 | Module | What it does | Key functions |
 |---|---|---|
-| `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names, slugs and ids before they become path segments. | `root`, `areas`, `has_area`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug` |
+| `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names, slugs and ids before they become path segments. An area must be spelled exactly like its folder (`has_area`, `dir_listed`; `scan.find` too): on Windows `LIB.NVIM` or `lib.nvim.` would otherwise reach the folder `lib.nvim` under a different id. | `root`, `areas`, `has_area`, `dir_listed`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug` |
 | `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. `categories(task)` is the effective category set (below). A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug; `sort(tasks, order)` also knows `prio-effort` and `severity` (below). | `parse_text`, `from_file`, `sort`, `compare`, `parse_sort`, `effort_days`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
 | `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. A folder task's `<slug>/<slug>.md` is a task (`task.folder`), the other files in its folder are assets and ignored; any other nested file is returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
 | `tasks.index` | `render` is pure and deterministic: the same tasks give the same bytes, whatever order they are found in. `write_area` writes only when the content differs (a CRLF checkout counts as equal and keeps its line endings), removes the file when no task is open, and with `check = true` only reports `stale` (`missing` / `outdated` / `orphan`). `render_global` returns the all-areas overview as text; nothing writes `ALL/TASKS.md` (decision E2: it is never committed). | `render`, `write_area`, `write_all`, `render_global` |
@@ -113,7 +113,7 @@ score halves every 14 days (`HALF_LIFE_DAYS`). Entries below `MIN_SCORE` (0.05, 
 months of silence after one visit) are dropped and at most `MAX_ENTRIES` (500) are kept.
 The file is `stdpath("state")/tasks/frecency.json` (`$TASKS_FRECENCY_FILE` or
 `frecency.set_path` override it; the specs use a temp file), written atomically, keyed by
-task id. A corrupt file starts empty (the old bytes stay as `frecency.json.bad`); a file
+task id. A corrupt file (also one over `MAX_FILE_BYTES`, 1 MiB; a real one is ~120 KiB at most) starts empty (the old bytes stay as `frecency.json.bad`); a file
 that cannot be read is never overwritten. Why not `lib.nvim.frecency`: its fixed recency
 buckets use `os.time()` directly (nothing to inject), and it has neither a half-life nor
 an entry cap.
@@ -203,8 +203,13 @@ mtime. Uncommitted edits are not seen.
 
 Cost: one `git log` per repo and 100 paths, never one per task; a file is looked up once however
 many tasks name it; at most `staleness.MAX_REFS` (1000) distinct files are checked per run (the
-rest is reported). A missing repo, file or git only produces a note on stderr / a notification,
-never an error. Against the real vault: about 600 files in ~5 s.
+rest is reported). All git calls of a run share a time budget (`staleness.TOTAL_BUDGET_MS`, 30 s):
+once it is used up the remaining files are dated by their mtime. A missing repo, file or git only
+produces a note on stderr / a notification, never an error; a path git refuses costs only its own
+date (the call is halved until that path stands alone). A ref with `..` that leaves its repo
+(`../lib.nvim/lua/x.lua`) is dated from the folder the file really lives in. `model.filter` looks
+up only the tasks the other criteria kept, so `--status=doing --stale=refs` checks far fewer refs
+than `--stale=refs` alone. Against the real vault: about 600 files in ~3.5 s.
 
 ## CI gate -- `tasks ci` / `scripts/tasks-ci.lua`
 
