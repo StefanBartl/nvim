@@ -1,0 +1,1 @@
+E:/repos/WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/ANALYSEN/casedesk-ki-provider-konzept-2026-10-05.md
