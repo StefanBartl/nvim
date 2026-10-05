@@ -41,7 +41,8 @@ Abweichungen und Ergänzungen gegenüber dem Plan (alle aus dem Bauen entstanden
   Aktion selbst etwas gestasht hat).
 - **Re-Check nach lazygit** hängt an `WinClosed` des lazygit-Fensters, weil
   `gitsuite.features.ui.lazygit` keinen Close-Hook anbietet; dort ist nichts geändert.
-- Reale Abnahme von M2 (39 Repos in `E:epos`, `--dry-run`): 16 s, der Editor blieb bedienbar
+- Reale Abnahme von M2 (39 Repos in `E:
+epos`, `--dry-run`): 16 s, der Editor blieb bedienbar
   (längste Lücke zwischen 50-ms-Timer-Ticks 65 ms), 0 Abweichungen von `git status`.
 
 
@@ -306,6 +307,7 @@ Typen kommen nach `lua/@types/` bzw. neben die bestehenden `---@class`-Blöcke:
 | Meldungs-Parsing bricht bei anderem `LANGUAGE`/Git-Version | Nur strukturelle Auswertung (Status-Record, HEAD vorher/nachher), nie `stderr`-Text |
 | Eine ältere `lib.nvim`-Version auf der anderen Maschine hat die benötigten Status-Funktionen nicht | `pcall(require)`-Guard wie bei `tasks_routes`, Fallback in `ops.status_one`, sonst klare Meldung "lib.nvim aktualisieren" (`:MyPlugins update` reicht dafür) |
 | Doppelstart von `sync` | Laufzustand im Modul, zweiter Aufruf fragt nach (3.5) |
+| Zwei Schreiber auf einem Repo (Re-Check zweimal, Re-Check + Assist, Re-Check + neuer Lauf) | Pro Repo eine Operation (`busy`-Registry in `sync.lua`): `r`/`L`/`t`/`A` auf einer belegten Zeile werden mit Hinweis ignoriert; `R`/neuer Lauf stoppt laufende Re-Checks (kein Speichern), ein Assist wird nie abgebrochen, der Lauf verweigert dann; Schließen der Liste mit laufendem Re-Check verschiebt die Schlusszeile bis zu dessen Ende |
 | Assist-Aktionen zerstören lokale Arbeit | Standard ist lazygit; Assist nur mit Bestätigung, die den exakten Befehl zeigt, und nie `reset --hard`/`clean` |
 
 ## 7. Entscheidungen (ehemals offene Fragen, am 2026-10-05 entschieden)

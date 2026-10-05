@@ -78,7 +78,8 @@ function M.render()
   if count == 0 then
     return ""
   end
-  return (" %%#DiagnosticWarn#sync:%d "):format(count)
+  -- `%*` hands the colour back: the modules after this one are plain text
+  return (" %%#DiagnosticWarn#sync:%d%%* "):format(count)
 end
 
 return M

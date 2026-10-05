@@ -185,7 +185,7 @@ return function(H)
       vim.wait(60000, function()
         return #notes > 0
       end, 20),
-      "the list closed once nothing unresolved was left"
+      "the list closed: the empty script cancels the prompt that is left (the skipped rows stay listed)"
     )
     local skipped_line = last_note()
     has(skipped_line, "2 skipped: ", "both skips are named")
@@ -275,8 +275,63 @@ return function(H)
     local text = table.concat(rec.preview or {}, "\n")
     has(text, "Coming in", "preview: incoming commits")
     has(text, "incoming b.txt", "preview: the incoming commit")
-    has(text, "Blocking the pull", "preview: the blocking section")
-    has(text, "b.txt", "preview: the file that blocks")
+    -- the BODY of the section, not just its header: b.txt is also in the commit line and in
+    -- `git status -sb`, and the header is printed for any dirty_blocked record
+    local blocking = "## Blocking the pull (changed here AND by the incoming commits)\nb.txt"
+    ok(vim.endswith(text, blocking), "preview: the section names the file that blocks: " .. text)
+    H.lacks(text, "could not be determined", "preview: the blocker was determined")
+
+    ---@param name string
+    ---@return string text
+    local function preview_of_blocked(name)
+      local r = {
+        name = name,
+        path = base .. "/" .. name,
+        state = "dirty_blocked",
+        branch = "main",
+        upstream = "origin/main",
+        skipped = false,
+      }
+      local done = false
+      dash.load_preview(r, function()
+        done = true
+      end)
+      ok(
+        vim.wait(30000, function()
+          return done
+        end, 20),
+        name .. ": the preview loaded"
+      )
+      return table.concat(r.preview or {}, "\n")
+    end
+
+    -- negative: the local edit and the incoming change touch different files
+    local apart = make("apart")
+    H.write(apart.repo .. "/a.txt", "a local edit\n")
+    incoming(apart, "b.txt", "b from elsewhere\n")
+    git(apart.repo, "fetch", "-q")
+    local apart_text = preview_of_blocked("apart")
+    has(apart_text, "## Blocking the pull", "negative: the section is there")
+    has(apart_text, "(no overlap", "negative: it says there is no overlap")
+    H.lacks(apart_text, "could not be determined", "negative: both calls succeeded")
+    ok(not vim.endswith(apart_text, "\na.txt"), "negative: the local file is no blocker")
+    ok(not vim.endswith(apart_text, "\nb.txt"), "negative: the incoming file is none either")
+
+    -- an untracked DIRECTORY blocks: status collapses it to `d/`, the incoming file is `d/f`
+    local untracked = make("untracked")
+    vim.fn.mkdir(untracked.dev .. "/d", "p")
+    incoming(untracked, "d/f", "theirs\n")
+    H.write(untracked.repo .. "/d/f", "mine, untracked\n")
+    git(untracked.repo, "fetch", "-q")
+    local untracked_text = preview_of_blocked("untracked")
+    ok(
+      vim.endswith(
+        untracked_text,
+        "## Blocking the pull (changed here AND by the incoming commits)\nd/"
+      ),
+      "untracked dir: the directory is named as the blocker: " .. untracked_text
+    )
+    H.lacks(untracked_text, "could not be determined", "untracked dir: determined")
   end)
 
   restore()

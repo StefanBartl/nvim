@@ -54,7 +54,8 @@ return function(H)
   has(text, "sync:2", "the segment shows the count")
   has(text, "DiagnosticWarn", "in a highlight group that always exists")
   ok(text:sub(1, 1) == " " and text:sub(-1) == " ", "padded like the other segments")
-  ok(not text:find("%%[^#]"), "no stray format item")
+  ok(not text:find("%%[^#*]"), "no stray format item")
+  eq(text, " %#DiagnosticWarn#sync:2%* ", "the highlight is reset, the next module keeps its own")
 
   -- a skip lowers it
   assert(state.save("/r", {

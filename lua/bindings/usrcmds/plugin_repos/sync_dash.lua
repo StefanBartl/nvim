@@ -34,6 +34,8 @@ M.PREVIEW_TIMEOUT_MS = 20000
 ---@field detour boolean       The picker was closed on purpose (lazygit, rerun ...): no closing line yet.
 ---@field finished boolean     The closing line was said.
 ---@field loading table<string, boolean>  Previews being loaded.
+---@field pending integer      Re-checks started with `r` that have not ended.
+---@field finish_when_idle boolean  The list was closed while re-checks were pending: the closing line waits for them.
 
 local function sync()
   return require("bindings.usrcmds.plugin_repos.sync")
@@ -46,6 +48,7 @@ end
 ---@field incoming string[]    `git log --oneline HEAD..@{u}`
 ---@field outgoing string[]    `git log --oneline @{u}..HEAD`
 ---@field blocking string[]    Local changes that the incoming commits also touch (dirty_blocked).
+---@field blocking_known? boolean  Both the status and the incoming files were read (an empty `blocking` is then a real "no overlap").
 
 ---The preview text of one repo. Pure.
 ---@param rec MyPlugins.SyncRecord
@@ -83,7 +86,8 @@ function M.preview_lines(rec, parts)
     section(
       "Blocking the pull (changed here AND by the incoming commits)",
       parts.blocking,
-      "(could not be determined)"
+      parts.blocking_known and "(no overlap: the pull failed for another reason, see above)"
+        or "(could not be determined)"
     )
   end
   return lines
@@ -115,6 +119,7 @@ function M.load_preview(rec, on_done)
       ops.sync_log(rec.path, "@{u}..HEAD", t, function(outgoing)
         parts.outgoing = outgoing
         local function done()
+          rec.preview_parts = parts
           rec.preview = M.preview_lines(rec, parts)
           on_done()
         end
@@ -123,23 +128,29 @@ function M.load_preview(rec, on_done)
           return
         end
         ops.sync_status(rec.path, t, function(text)
-          local mine = text and classify.parse_status(text).files or {}
+          local mine = text and classify.parse_status(text).files or nil
           ops.sync_incoming_files(rec.path, t, function(theirs)
-            local touched = {}
-            for _, f in ipairs(theirs or {}) do
-              touched[f] = true
-            end
-            for _, f in ipairs(mine) do
-              if touched[f] then
-                parts.blocking[#parts.blocking + 1] = f
-              end
-            end
+            -- the same rule as `after_pull`: an untracked directory (`d/`) blocks when anything
+            -- incoming lives below it
+            parts.blocking = classify.blocking_files(mine, theirs)
+            parts.blocking_known = mine ~= nil and theirs ~= nil
             done()
           end)
         end)
       end)
     end)
   end)
+end
+
+---The preview lines of a record, rebuilt from the loaded git output so the header (state,
+---`skipped, `) is always the record's current one.
+---@param rec MyPlugins.SyncRecord
+---@return string[]|nil
+local function preview_of(rec)
+  if rec.preview_parts then
+    return M.preview_lines(rec, rec.preview_parts)
+  end
+  return rec.preview
 end
 
 ---Load the previews the list will show that are not loaded yet; `on_done` runs after.
@@ -300,6 +311,18 @@ local function finish(dash)
   sync().finish(dash.session)
 end
 
+---A row whose repo has an operation in flight ignores r / A / L / t (with a short notice).
+---@param rec MyPlugins.SyncRecord
+---@return boolean busy
+local function ignore_busy(rec)
+  local why = sync().busy_reason(rec.path)
+  if why then
+    notify.info(("%s: %s -- ignored"):format(rec.name, why))
+    return true
+  end
+  return false
+end
+
 ---@param dash MyPlugins.SyncDash
 ---@return string
 local function title_of(dash)
@@ -396,7 +419,7 @@ local function open_snacks(Snacks, dash)
         text = ("%s %s %s"):format(r.name, r.state, r.detail or ""),
         rec = r,
         preview = {
-          text = table.concat(r.preview or { "(loading ...)" }, "\n"),
+          text = table.concat(preview_of(r) or { "(loading ...)" }, "\n"),
           loc = false,
         },
       }
@@ -464,7 +487,7 @@ local function open_snacks(Snacks, dash)
     return function(picker)
       local item = picker:current()
       local rec = item and item.rec
-      if not rec then
+      if not rec or ignore_busy(rec) then
         return
       end
       detour(picker, function()
@@ -492,12 +515,23 @@ local function open_snacks(Snacks, dash)
       refresh(picker)
     end,
     sync_retry = function(picker)
-      local names = names_of(targets(picker, true))
+      local names = {}
+      for _, r in ipairs(targets(picker, true)) do
+        if not ignore_busy(r) then
+          names[#names + 1] = r.name
+        end
+      end
       if #names == 0 then
         return
       end
       notify.info("re-checking " .. join_names(names) .. " ...")
+      dash.pending = dash.pending + 1
       sync().recheck(session, names, function()
+        dash.pending = dash.pending - 1
+        -- closed meanwhile: the closing line was waiting for this result
+        if dash.finish_when_idle and dash.pending == 0 then
+          finish(dash)
+        end
         refresh(picker)
       end)
     end,
@@ -509,7 +543,7 @@ local function open_snacks(Snacks, dash)
     sync_assist = function(picker)
       local item = picker:current()
       local rec = item and item.rec
-      if not rec then
+      if not rec or ignore_busy(rec) then
         return
       end
       local ids = classify.assists_for(rec)
@@ -586,9 +620,14 @@ local function open_snacks(Snacks, dash)
     actions = actions,
     win = { input = { keys = input_keys }, list = { keys = list_keys } },
     on_close = function()
-      if not dash.detour then
-        finish(dash)
+      if dash.detour then
+        return
       end
+      if dash.pending > 0 then
+        dash.finish_when_idle = true
+        return
+      end
+      finish(dash)
     end,
   })
 end
@@ -667,7 +706,7 @@ local function open_select(dash)
       {
         label = "show the preview",
         run = function()
-          local text = table.concat(rec.preview or { "(not loaded)" }, "\n")
+          local text = table.concat(preview_of(rec) or { "(not loaded)" }, "\n")
           notify.info(text)
           again()
         end,
@@ -735,6 +774,8 @@ function M.open(session)
     detour = false,
     finished = false,
     loading = {},
+    pending = 0,
+    finish_when_idle = false,
   }
   return show(dash)
 end
