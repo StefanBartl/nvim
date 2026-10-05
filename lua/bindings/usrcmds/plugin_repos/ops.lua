@@ -508,4 +508,102 @@ function M.run_pool(items, jobs, worker, on_each, on_finish)
   }
 end
 
+-- ── Assist actions (`sync_classify.ASSISTS`) ──────────────────────────────────
+
+---Run one assist action in a repo. Every step is a plain git call; a failure undoes what the
+---action started (the rebase/merge is aborted, the stash is popped again), so the repo is where
+---it was unless a pop conflicts -- then the changes stay in the stash and the message says so.
+---Never `reset --hard`, never `clean`.
+---@param path string
+---@param id "rebase"|"merge"|"stash_pull"
+---@param timeout_ms integer
+---@param on_done fun(ok: boolean, err: string|nil)
+---@return { stop: fun() } handle
+function M.run_assist(path, id, timeout_ms, on_done)
+  local current = nil
+  local stopped = false
+  ---@param args string[]
+  ---@param cb fun(run: MyPlugins.GitRun)
+  local function run(args, cb)
+    if stopped then
+      return
+    end
+    current = M.git_async(path, args, { timeout_ms = timeout_ms }, function(result)
+      if not stopped then
+        cb(result)
+      end
+    end)
+  end
+
+  if id == "rebase" or id == "merge" then
+    local args = id == "rebase" and { "rebase", "@{u}" } or { "merge", "--no-edit", "@{u}" }
+    run(args, function(result)
+      if result.code == 0 then
+        on_done(true, nil)
+        return
+      end
+      -- a conflict must not leave the repo in the middle of a rebase/merge
+      run({ id, "--abort" }, function()
+        on_done(
+          false,
+          M.describe_failure(result, "git " .. id, timeout_ms) .. " (aborted, nothing changed)"
+        )
+      end)
+    end)
+  elseif id == "stash_pull" then
+    ---@param cb fun(ref: string)
+    local function stash_ref(cb)
+      run({ "rev-parse", "-q", "--verify", "refs/stash" }, function(result)
+        cb(result.code == 0 and vim.trim(result.stdout) or "")
+      end)
+    end
+    stash_ref(function(before)
+      run({ "stash", "push", "--include-untracked", "-m", "myplugins sync" }, function(pushed)
+        if pushed.code ~= 0 then
+          on_done(false, M.describe_failure(pushed, "git stash", timeout_ms))
+          return
+        end
+        stash_ref(function(after)
+          -- "No local changes to save" exits 0 and stashes nothing: popping then would pop an
+          -- older, unrelated stash of the user.
+          local stashed = after ~= "" and after ~= before
+          run({ "pull", "--ff-only" }, function(pulled)
+            local pull_ok = pulled.code == 0
+            local pull_err = (not pull_ok) and M.describe_failure(pulled, "git pull", timeout_ms)
+              or nil
+            if not stashed then
+              on_done(pull_ok, pull_err)
+              return
+            end
+            run({ "stash", "pop" }, function(popped)
+              if popped.code ~= 0 then
+                on_done(
+                  false,
+                  (pull_err or "pulled")
+                    .. "; git stash pop failed -- your changes are still in the stash (git stash list)"
+                )
+              else
+                on_done(pull_ok, pull_err)
+              end
+            end)
+          end)
+        end)
+      end)
+    end)
+  else
+    vim.schedule(function()
+      on_done(false, "unknown assist action: " .. tostring(id))
+    end)
+  end
+
+  return {
+    stop = function()
+      stopped = true
+      if current then
+        current.stop()
+      end
+    end,
+  }
+end
+
 return M

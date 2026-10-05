@@ -21,6 +21,8 @@ those names no longer exist.
 :MyPlugins fetch [dir] [--only=<name>]
 :MyPlugins pull [dir] [--only=<name>]
 :MyPlugins update [dir] [--only=<name>]
+:MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
+:MyPlugins sync issues
 :MyPlugins reclone [dir] [--only=<name>]
 :MyPlugins dashboard [dir] [--fetch] [--fetch-this]
 :MyPlugins mode [auto|dir|remote|disabled]
@@ -54,7 +56,7 @@ actually registered.
 
 ## The two-machine `dir`-mode sync case
 
-`fetch`/`pull`/`update` exist for one specific workflow: every personal
+`fetch`/`pull`/`update`/`sync` exist for one specific workflow: every personal
 plugin is checked out locally in `dir`-mode (`source.lua`'s `OVERRIDE`, see
 below) on more than one machine, in-progress work happens on whichever
 machine you're at, and the *other* machine needs to catch up before it can
@@ -62,7 +64,9 @@ safely `require()` the same code — a plugin one machine has at a newer commit
 than the other is exactly the kind of drift that crashes at startup instead
 of failing loudly. `:MyPlugins update` (fetch + fast-forward pull, scoped to
 the named list) is the one command that closes that gap: run it on the
-machine you're returning to, before you start working there.
+machine you're returning to, before you start working there. `:MyPlugins sync` is the same
+sweep with a safety net: it collects the repos that could not be brought up to date instead of
+stopping, and ends with a list to work through (see [`sync`](#myplugins-sync-dir---onlyname---dry-run---no-fetch---jobsn)).
 
 It deliberately does **not** reuse `:Git dashboard update` — that command scans
 every subdirectory of a path and fetch/pulls whatever it finds, which is the
@@ -129,6 +133,114 @@ the command for the two-machine sync case described above.
 :MyPlugins update --only=cascade.nvim
 ```
 
+### `:MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]`
+
+The thorough `update`: bring **every** listed repo level with its remote in one go, never stop
+at the first problem, and end with the assurance that everything is up to date **except what you
+deliberately skipped**. Where `update` fetches and pulls repo by repo, `sync` fetches *all* repos
+first (`--jobs` at a time, default 2, at most 6), so it is known which ones have anything to pull
+before a single working tree changes; then it pulls (fast-forward only) exactly the repos that are
+behind. A repo that cannot be pulled does not stop the run: it is **classified** and collected into
+a triage list.
+
+```vim
+:MyPlugins sync                   " fetch all, pull what is behind, triage the rest
+:MyPlugins sync --dry-run         " fetch + classify, pull nothing
+:MyPlugins sync --no-fetch        " classify (and pull) with what is already fetched
+:MyPlugins sync --only=ai.nvim    " one repo (the saved result of the others is kept)
+:MyPlugins sync --jobs=1          " one fetch at a time (a machine whose scanner slows git)
+:MyPlugins sync issues            " reopen the triage list of the last run, also after a restart
+```
+
+Phases: resolve the list and the base dir → fetch all (`git fetch --all --prune`) → status of
+each (`git status --porcelain=v2 --branch`) → pull the repos that are behind (`git pull
+--ff-only`) → a failed pull is classified from a *second status* → the result is saved, one closing
+line is shown, and the triage list opens when something is left. Only repos of
+`plugins.personal.core.list` are touched (never a directory scan), and in remote mode (no local
+checkouts) it says so and ends. `:MyPlugins update` stays as it is: the quick variant without a
+list.
+
+**No git message is ever parsed** (they are localizable): the state comes from the structured
+status (head, upstream, ahead/behind, changed entries), and why a pull failed from a status taken
+after it. The text of an error is shown to you, never used to decide.
+
+| State | Meaning | Counts as a problem |
+|---|---|---|
+| `current` | nothing behind, nothing ahead, clean | no |
+| `pulled` | was behind, fast-forwarded this run | no |
+| `behind` | something to pull (only visible in a `--dry-run`) | pending |
+| `ahead` | unpushed commits, nothing to pull | hint |
+| `dirty` | local changes, nothing to pull (conflict markers are named in the row) | hint |
+| `missing` / `not_git` | listed but not cloned / the folder is no repo | hint |
+| `fetch_failed` | the fetch failed (network, a login, the timeout); the repo is left alone | **yes** |
+| `status_failed` | git could not give a status | **yes** |
+| `no_upstream` | no upstream configured, or the remote branch is gone | **yes** |
+| `detached` | HEAD is detached, nothing pullable | **yes** |
+| `diverged` | ahead *and* behind: no fast-forward | **yes** |
+| `dirty_blocked` | behind, and git refused the pull because of local changes | **yes** |
+| `pull_failed` | behind, the pull failed and the tree is clean (the error line is the detail) | **yes** |
+
+A hint never counts against "up to date": the repo has everything the remote has. A behind repo
+with a dirty tree is **tried anyway**: `pull --ff-only` works as long as the local changes do not
+touch the incoming files, and when it refuses it is `dirty_blocked`, decided by git, not by us.
+
+**The closing line** (one notification, when the list closes or when nothing is left):
+
+```
+Sync: 41 up to date (7 pulled), 2 skipped: cmdlog.nvim, ai.nvim, 0 unresolved -- all repositories are up to date except the skipped ones
+```
+
+#### The triage list
+
+Opens when something is unresolved: a Snacks picker (plain `vim.ui.select` without snacks.nvim),
+one row per problem repo, the preview shows `git status -sb`, what comes in (`HEAD..@{u}`), what
+goes out (`@{u}..HEAD`) and, for `dirty_blocked`, exactly the files changed locally *and* by the
+incoming commits.
+
+| Key | Action |
+|---|---|
+| `<CR>` / `L` | **go into the repo**: lazygit (gitsuite.nvim); when it closes the repo is checked and pulled again and a solved repo drops out of the list |
+| `t` | the same with a terminal in the repo's directory |
+| `s` / `u` | skip / un-skip (marked rows, else the row) — the repo stays visible as `skipped` |
+| `r` | try the pull again (marked rows, else the row; fetches again if the fetch failed) |
+| `R` | run the whole sync again |
+| `a` | show / hide the hints (`ahead`, `dirty`) |
+| `A` | assist (below) |
+| `<Tab>` | mark |
+| `y` / `g?` | yank the path / help |
+
+In the search window the same actions are on Alt chords (`<M-l>` `<M-t>` `<M-s>` `<M-u>`
+`<M-r>` `<M-R>` `<M-a>` `<M-A>` `<M-y>` `<M-?>`). The list closes by itself when nothing unresolved
+or skipped is left.
+
+A **skip lasts for this synchronization only**: it survives closing the dashboard and a restart
+(`sync issues`), but the next full run asks about that repo again. Excluding a repo for good
+belongs into `plugins.modes` in `plugins/personal/core/source.lua` (`"disabled"`), not here.
+
+**Assist (`A`)** is for the two situations that are almost always solved the same way; the
+default stays lazygit. It asks first and names the exact commands, and a failure undoes what it
+started — never `reset --hard`, never `clean`, never a force:
+
+| For | Action | Commands | If it goes wrong |
+|---|---|---|---|
+| `diverged` | rebase | `git rebase @{u}` | a conflict aborts the rebase |
+| `diverged` | merge | `git merge --no-edit @{u}` | a conflict aborts the merge |
+| `dirty_blocked` | stash, pull, pop | `git stash push --include-untracked`, `git pull --ff-only`, `git stash pop` | the stash is popped again if the pull fails; a pop that conflicts leaves the changes in the stash (and says so). An older stash of yours is never popped |
+
+**The result** is saved in `stdpath("state")/myplugins_sync.json` (written atomically, a damaged
+file is "no result"). **The statusline** can show `sync:N` while N repos are unresolved (skipped
+ones do not count): add `"sync_issues"` to the statusline `order` and
+`sync_issues = function() return require("bindings.usrcmds.plugin_repos.sync_status").render() end`
+to its `modules` (this config does, in `lua/config/ui_statusline/variant.lua`); the segment reads
+a cached number, never a file, so it costs nothing per redraw.
+
+**Windows, a virus scanner and the network:** every git call is asynchronous (the editor stays
+usable), has its own timeout (60 s; a hung repo becomes `fetch_failed` / `pull_failed` and its
+whole process tree is killed, `taskkill /T` on Windows) and runs with `GIT_TERMINAL_PROMPT=0` and
+`GCM_INTERACTIVE=never`, so a private repo that wants a login fails fast with a hint instead of
+waiting unseen for an answer. A second `:MyPlugins sync` while one runs asks whether to cancel and
+restart. After a pull, `:checktime` reloads buffers whose file changed.
+
 ### `:MyPlugins reclone [dir] [--only=<name>]`
 
 For present repos: runs the exact same `git status --porcelain --branch`
@@ -190,13 +302,15 @@ made visible anyway.
 
 Opens a `Snacks.picker` listing every entry in `plugins.personal.core.list`.
 `<Tab>` cycles the highlighted plugin through a per-presence action list —
-present: `update → pull → fetch → remove → reclone → (none)`; missing:
-`clone → (none)` — shown as a one-letter marker (`U`/`P`/`F`/`R`/`X`/`C`) in
+present: `update → pull → fetch → sync → remove → reclone → (none)`; missing:
+`clone → (none)` — shown as a one-letter marker (`U`/`P`/`F`/`S`/`R`/`X`/`C`) in
 front of the entry. Assign different actions to different plugins, then
 `<CR>` closes the picker and runs everything assigned in one batch: removals
 are safety-checked and confirmed exactly like the flat `remove`/`reclone`
 subcommands (one confirmation prompt naming everything that will be
-deleted), then clones, then fetch/pull/update run in sequence. See
+deleted), then clones, then fetch/pull/update run in sequence, and last the
+repos marked `S` run as **one** partial `:MyPlugins sync` (the saved result of
+the other repos is kept). See
 `picker.lua` for the implementation.
 
 ```vim
@@ -625,6 +739,16 @@ uncommitted work permanently. Sticking to the named list is what makes
   `init.lua`'s flat subcommands and `picker.lua`'s batch execution, so a
   `remove` run from the picker has exactly the same safety check and
   confirmation prompt as `:MyPlugins remove` typed by hand.
+- `sync` is split like the task commands: `sync_routes.lua` (the route table, loaded guarded by
+  `init.lua` so an older lib.nvim loses only this route), `sync.lua` (the orchestrator: phases,
+  cancel, re-check, assist, the closing line), `sync_classify.lua` (the **pure** core: status
+  parser, the state table, order, summary, the assist table -- specced without git),
+  `sync_state.lua` (the saved result), `sync_dash.lua` (the triage list), `sync_status.lua` (the
+  statusline hint). Its git calls are `ops.git_async` and friends (own `vim.system` calls with a
+  timer-based timeout that kills the process tree, because `vim.system`'s timeout reports only
+  after the pipes close, which a hung transport child prevents) plus `ops.run_pool` (at most N in
+  flight); they do not use `lib.nvim.git`, which offers neither a timeout nor an environment, and
+  so `sync` keeps working with an older lib.nvim on the other machine.
 - Two custom composer argument types, registered in `M.enable()`:
   - `MYPLUGINS_DIR` — same validation as the built-in `DIR` type (must expand
     to an existing directory), plus `$REPOS_DIR` offered as a completion
@@ -678,6 +802,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 - [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
 - [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`; [`tasks_dash_watch_spec.lua`](../../../../TESTS/tasks/tasks_dash_watch_spec.lua) / [`tasks_dash_refresh_spec.lua`](../../../../TESTS/tasks/tasks_dash_refresh_spec.lua) / [`tasks_frecency_spec.lua`](../../../../TESTS/tasks/tasks_frecency_spec.lua) — the watcher, the live refresh with real watchers, and frecency
 
+- [`TESTS/sync/`](../../../../TESTS/sync/) — `sync`: the pure core, the grammar through the real composer, the whole flow against real throwaway git repositories (every state, re-check after a fix, skip, assist incl. its failure paths, the timeout kill), the real Snacks picker, the statusline hint and the picker action
 - [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/core/source.lua`](../../../plugins/personal/core/source.lua) — the `OVERRIDE` switch and per-repo mode table
 - [`lua/plugins/personal/core/list.lua`](../../../plugins/personal/core/list.lua) — where the repo list actually comes from

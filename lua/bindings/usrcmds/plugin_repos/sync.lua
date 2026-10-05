@@ -46,7 +46,8 @@ M.DEFAULTS = {
 ---@field dry_run? boolean     Fetch and classify, pull nothing.
 ---@field no_fetch? boolean    Classify (and pull) with what is already fetched.
 ---@field jobs? integer        Fetches in flight (default 2, at most 6).
----@field names? string[]      The repo names instead of `plugins.personal.core.list` (specs).
+---@field names? string[]      The repo names instead of `plugins.personal.core.list` (the picker's selection, specs).
+---@field partial? boolean    The scope is a subset: keep the saved result of the other repos (`--only` implies it).
 ---@field state_path? string   Where the result is saved (specs).
 ---@field fetch_timeout_ms? integer
 ---@field status_timeout_ms? integer
@@ -60,6 +61,7 @@ M.DEFAULTS = {
 ---@field records MyPlugins.SyncRecord[]
 ---@field dry_run boolean
 ---@field opts MyPlugins.SyncOpts
+---@field others? MyPlugins.SyncRecord[]  Saved records of repos outside this run's scope (kept when saving).
 
 ---The run in flight (one at a time).
 ---@type { stop: fun(), prog: table|nil }|nil
@@ -296,14 +298,31 @@ function M.report(records, opts)
   say(opts, level, text)
 end
 
+---Write the session's result to the state file (the records outside a partial run's scope
+---are kept) and tell the statusline segment.
+---@param session MyPlugins.SyncSession
+---@return boolean ok
+---@return string|nil err
+local function save(session)
+  local records = session.records
+  if session.others and #session.others > 0 then
+    records = classify.merge(session.others, session.records)
+  end
+  local ok, err = state_mod.save(session.dir, records, {
+    path = session.opts.state_path,
+    dry_run = session.dry_run,
+  })
+  pcall(function()
+    require("bindings.usrcmds.plugin_repos.sync_status").refresh(session.opts.state_path)
+  end)
+  return ok, err
+end
+
 ---Save the result, report it, open the dashboard when something is left unresolved.
 ---@param session MyPlugins.SyncSession
 local function conclude(session)
   local opts = session.opts
-  local saved, serr = state_mod.save(session.dir, session.records, {
-    path = opts.state_path,
-    dry_run = session.dry_run,
-  })
+  local saved, serr = save(session)
   if not saved then
     say(opts, "warn", "Sync: could not save the result: " .. tostring(serr))
   end
@@ -421,10 +440,21 @@ function M.run(opts)
       local s = classify.summarize(records)
       prog:finish(("%d pulled, %d unresolved"):format(s.pulled, #s.unresolved))
     end
-    if (opts.only ~= nil) and not opts.names then
+    ---@type MyPlugins.SyncRecord[]|nil
+    local others = nil
+    if opts.partial or opts.only ~= nil then
       local saved = state_mod.load({ path = opts.state_path })
       if saved and saved.dir == base_dir then
-        records = classify.merge(saved.records, records)
+        local mine = {}
+        for _, n in ipairs(names) do
+          mine[n] = true
+        end
+        others = {}
+        for _, r in ipairs(saved.records) do
+          if not mine[r.name] then
+            others[#others + 1] = r
+          end
+        end
       end
     end
     if vim.iter(records):any(function(r)
@@ -433,7 +463,13 @@ function M.run(opts)
       -- A pull rewrote files a buffer may have open.
       vim.cmd("silent! checktime")
     end
-    conclude({ dir = base_dir, records = records, dry_run = opts.dry_run == true, opts = opts })
+    conclude({
+      dir = base_dir,
+      records = records,
+      others = others,
+      dry_run = opts.dry_run == true,
+      opts = opts,
+    })
   end
 
   local function phase_pull()
@@ -501,10 +537,7 @@ end
 
 ---@param session MyPlugins.SyncSession
 local function persist(session)
-  state_mod.save(session.dir, session.records, {
-    path = session.opts.state_path,
-    dry_run = session.dry_run,
-  })
+  save(session)
 end
 
 ---@param session MyPlugins.SyncSession
@@ -558,6 +591,29 @@ function M.set_skipped(session, names, skipped)
     end
   end
   persist(session)
+end
+
+---Run an assist action (`sync_classify.ASSISTS`) on a record, say how it went, then re-check the
+---record. The confirmation is the caller's job (the dashboard asks first).
+---@param session MyPlugins.SyncSession
+---@param name string
+---@param id MyPlugins.SyncAssist
+---@param on_done fun()
+function M.assist(session, name, id, on_done)
+  local rec = find(session, name)
+  local info = classify.ASSISTS[id]
+  if not rec or not info then
+    on_done()
+    return
+  end
+  ops.run_assist(rec.path, id, timeout_of(session.opts, "pull_timeout_ms"), function(ok, err)
+    if ok then
+      say(session.opts, "info", ("%s: %s done"):format(rec.name, info.label))
+    else
+      say(session.opts, "warn", ("%s: %s failed: %s"):format(rec.name, info.label, tostring(err)))
+    end
+    M.recheck(session, { name }, on_done)
+  end)
 end
 
 ---The closing line for a session (when the dashboard closes).

@@ -60,6 +60,7 @@ return {
         "search_count",
         "undo_depth",
         "tasks_counter",
+        "sync_issues",
         "plugin_progress",
         "plugin_summary",
         "casedesk",
@@ -83,6 +84,12 @@ return {
         -- empty without a vault or a matching area.
         tasks_counter = function()
           return tasks_counter()
+        end,
+
+        -- "sync:N" repos the last `:MyPlugins sync` left unresolved (skipped ones do not
+        -- count); empty when everything is clear. Reads a cached number, never a file.
+        sync_issues = function()
+          return require("bindings.usrcmds.plugin_repos.sync_status").render()
         end,
 
         -- vim-matchup's offscreen-match source line (empty unless the

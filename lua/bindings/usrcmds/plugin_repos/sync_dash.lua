@@ -13,12 +13,14 @@
 ---   `<CR>` / `L` lazygit in the repo       `t` terminal in the repo
 ---   `s` skip / `u` un-skip                 `r` try the pull again   `R` run it all again
 ---   `a` show / hide the hints (ahead, dirty)   `y` yank the path   `g?` help
+---   `A` assist: rebase / merge a diverged repo, stash-pull-pop a blocked one (asks first)
 ---   `<Tab>` marks (skip, un-skip and retry act on the marks, else on the row)
 ---
 --- Not its job: git calls for the run (`sync.lua`), the decisions (`sync_classify.lua`).
 
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 local classify = require("bindings.usrcmds.plugin_repos.sync_classify")
+local confirm = require("bindings.usrcmds.plugin_repos.confirm")
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.sync]")
 
 local M = {}
@@ -243,12 +245,13 @@ M.HELP = {
   " r          try the pull again (marked rows, else the row; fetches again if the fetch failed)",
   " R          run the whole sync again",
   " a          show / hide the hints (ahead of upstream, local changes only)",
+  " A          assist: rebase / merge (diverged), stash-pull-pop (blocked); asks first, names the commands",
   " y          yank the repo path",
   " <Tab>      mark / unmark",
   " g?         this help",
   "",
   " Letters work in the list. In the search window use Alt:",
-  " <M-l> <M-t> <M-s> <M-u> <M-r> <M-R> <M-a> <M-y> <M-?>",
+  " <M-l> <M-t> <M-s> <M-u> <M-r> <M-R> <M-a> <M-A> <M-y> <M-?>",
   " (any key closes this help)",
 }
 
@@ -322,6 +325,41 @@ local function join_names(names)
 end
 
 local show
+
+---Offer the assist actions of a repo, ask (the question names the exact commands), run the one
+---chosen and re-check the repo. `on_done` runs whatever the answer was.
+---@param dash MyPlugins.SyncDash
+---@param rec MyPlugins.SyncRecord
+---@param ids MyPlugins.SyncAssist[]
+---@param on_done fun()
+function M.assist_flow(dash, rec, ids, on_done)
+  ---@param id MyPlugins.SyncAssist
+  local function ask(id)
+    confirm.yesno(classify.assist_prompt(rec, id), classify.ASSISTS[id].label, function(yes)
+      if not yes then
+        on_done()
+        return
+      end
+      sync().assist(dash.session, rec.name, id, on_done)
+    end)
+  end
+  if #ids == 1 then
+    ask(ids[1])
+    return
+  end
+  vim.ui.select(ids, {
+    prompt = rec.name .. ": assist",
+    format_item = function(id)
+      return classify.ASSISTS[id].label
+    end,
+  }, function(id)
+    if id then
+      ask(id)
+    else
+      on_done()
+    end
+  end)
+end
 
 -- ── Snacks backend ────────────────────────────────────────────────────────────
 
@@ -449,6 +487,24 @@ local function open_snacks(Snacks, dash)
         sync().run(rerun_opts(dash))
       end)
     end,
+    sync_assist = function(picker)
+      local item = picker:current()
+      local rec = item and item.rec
+      if not rec then
+        return
+      end
+      local ids = classify.assists_for(rec)
+      if #ids == 0 then
+        notify.info(("no assist action for a %s repo -- L opens lazygit"):format(rec.state))
+        return
+      end
+      detour(picker, function()
+        M.assist_flow(dash, rec, ids, function()
+          dash.detour = false
+          show(dash)
+        end)
+      end)
+    end,
     sync_hints = function(picker)
       dash.show_hints = not dash.show_hints
       refresh(picker)
@@ -475,6 +531,7 @@ local function open_snacks(Snacks, dash)
     r = { "sync_retry", "<M-r>" },
     R = { "sync_rerun", "<M-R>" },
     a = { "sync_hints", "<M-a>" },
+    A = { "sync_assist", "<M-A>" },
     y = { "sync_yank", "<M-y>" },
     ["g?"] = { "sync_help", "<M-?>" },
   }
@@ -598,6 +655,14 @@ local function open_select(dash)
         end,
       },
     }
+    for _, id in ipairs(classify.assists_for(rec)) do
+      table.insert(menu, 3, {
+        label = "assist: " .. classify.ASSISTS[id].label,
+        run = function()
+          M.assist_flow(dash, rec, { id }, again)
+        end,
+      })
+    end
     vim.ui.select(menu, {
       prompt = rec.name .. "  " .. rec.state,
       format_item = function(m)

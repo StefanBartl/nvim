@@ -4,7 +4,7 @@
 ---@description
 --- `M.open(path)` opens a `Snacks.picker` listing every entry in
 --- `plugins.personal.core.list`. `<Tab>` cycles the highlighted plugin through a
---- per-presence action cycle (present: update → pull → fetch → remove →
+--- per-presence action cycle (present: update → pull → fetch → sync → remove →
 --- reclone → none; missing: clone → none), shown as a one-letter marker in
 --- front of the entry. `<CR>` closes the picker and runs every assigned
 --- action in one batch — the two-machine `dir`-mode sync case this whole
@@ -30,7 +30,9 @@ local loop = vim.uv or vim.loop
 
 -- Cycle order per presence state. "none" (nil in `pending`) is always the
 -- implicit first/last step, i.e. cycling past the last entry clears it.
-local PRESENT_CYCLE = { "update", "pull", "fetch", "remove", "reclone" }
+-- `sync` is the thorough variant of `update` (fetch, classify, pull, triage list): the marked
+-- repos run as one partial `:MyPlugins sync`, so the saved result of the others is kept.
+local PRESENT_CYCLE = { "update", "pull", "fetch", "sync", "remove", "reclone" }
 local MISSING_CYCLE = { "clone" }
 
 ---@type table<string, {[1]: string, [2]: string}>
@@ -38,6 +40,7 @@ local MARKER = {
   update = { "U", "DiagnosticInfo" },
   pull = { "P", "DiagnosticInfo" },
   fetch = { "F", "DiagnosticInfo" },
+  sync = { "S", "DiagnosticOk" },
   remove = { "R", "DiagnosticError" },
   reclone = { "X", "DiagnosticWarn" },
   clone = { "C", "DiagnosticOk" },
@@ -176,15 +179,35 @@ end
 ---@param fetch_items {name: string}[]
 ---@param pull_items {name: string}[]
 ---@param update_items {name: string}[]
+---@param sync_names string[]
 ---@param base_dir string
-local function run_batch(removal, direct_clone, fetch_items, pull_items, update_items, base_dir)
+local function run_batch(
+  removal,
+  direct_clone,
+  fetch_items,
+  pull_items,
+  update_items,
+  sync_names,
+  base_dir
+)
   local function after_removal(to_clone)
     vim.list_extend(to_clone, direct_clone)
     run_clone_phase(to_clone, base_dir, function()
       run_git_phase("Fetching", "fetched", ops.fetch_one, fetch_items, base_dir, function()
         run_git_phase("Pulling", "pulled", ops.pull_one, pull_items, base_dir, function()
           run_git_phase("Updating", "updated", ops.update_one, update_items, base_dir, function()
-            notify.info("MyPlugins picker: batch finished")
+            if #sync_names == 0 then
+              notify.info("MyPlugins picker: batch finished")
+              return
+            end
+            require("bindings.usrcmds.plugin_repos.sync").run({
+              dir = base_dir,
+              names = sync_names,
+              partial = true,
+              on_done = function()
+                notify.info("MyPlugins picker: batch finished")
+              end,
+            })
           end)
         end)
       end)
@@ -320,6 +343,7 @@ function M.open(path)
         picker:close()
 
         local removal, direct_clone, fetch_items, pull_items, update_items = {}, {}, {}, {}, {}
+        local sync_names = {}
         for _, item in ipairs(items) do
           local action = pending[item.name]
           if action == "remove" or action == "reclone" then
@@ -336,16 +360,28 @@ function M.open(path)
             pull_items[#pull_items + 1] = { name = item.name }
           elseif action == "update" then
             update_items[#update_items + 1] = { name = item.name }
+          elseif action == "sync" then
+            sync_names[#sync_names + 1] = item.name
           end
         end
 
-        if #removal + #direct_clone + #fetch_items + #pull_items + #update_items == 0 then
+        if
+          #removal + #direct_clone + #fetch_items + #pull_items + #update_items + #sync_names == 0
+        then
           notify.info("No actions assigned — nothing to do")
           return
         end
 
         vim.schedule(function()
-          run_batch(removal, direct_clone, fetch_items, pull_items, update_items, base_dir)
+          run_batch(
+            removal,
+            direct_clone,
+            fetch_items,
+            pull_items,
+            update_items,
+            sync_names,
+            base_dir
+          )
         end)
       end,
     },
