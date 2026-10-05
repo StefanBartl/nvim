@@ -526,14 +526,18 @@ local function open_snacks(Snacks, dash)
       end
       notify.info("re-checking " .. join_names(names) .. " ...")
       dash.pending = dash.pending + 1
-      sync().recheck(session, names, function()
+      -- ended or stopped (cancel, a new run): either way the closing line may stop waiting
+      local function settle()
         dash.pending = dash.pending - 1
         -- closed meanwhile: the closing line was waiting for this result
         if dash.finish_when_idle and dash.pending == 0 then
           finish(dash)
         end
+      end
+      sync().recheck(session, names, function()
+        settle()
         refresh(picker)
-      end)
+      end, settle)
     end,
     sync_rerun = function(picker)
       detour(picker, function()

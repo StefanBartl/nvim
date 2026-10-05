@@ -201,8 +201,9 @@ end
 
 -- ── One repo: fetch (optional), status, classify, pull, re-classify ───────────
 
----A handle whose `stop()` stops whichever git call of a chain is running right now.
----@return { stop: fun() } handle
+---A handle whose `stop()` stops whichever git call of a chain is running right now, and whose
+---`on_exit(cb)` runs `cb` once that call is really gone (a `write` call is left to finish).
+---@return { stop: fun(), on_exit: fun(cb: fun()) } handle
 ---@return fun(next: { stop: fun() }|nil) set
 local function chain()
   local current = nil
@@ -212,6 +213,13 @@ local function chain()
       stopped = true
       if current then
         current.stop()
+      end
+    end,
+    on_exit = function(cb)
+      if current and current.on_exit then
+        current.on_exit(cb)
+      else
+        cb()
       end
     end,
   }
@@ -275,7 +283,7 @@ end
 ---@param rec MyPlugins.SyncRecord
 ---@param opts MyPlugins.SyncOpts
 ---@param on_done fun(record: MyPlugins.SyncRecord)
----@return { stop: fun() }
+---@return { stop: fun(), on_exit: fun(cb: fun()) }
 local function recheck_record(rec, opts, on_done)
   local handle, set = chain()
   local repo = { name = rec.name, path = rec.path }
@@ -746,12 +754,15 @@ end
 ---fetch was what failed. Updates `session.records` in place and saves; `on_done` runs after.
 ---A repo with an operation in flight is not touched (a short notice says so). The returned
 ---controller's `stop()` cancels what is running and ends the re-check without saving and
----without `on_done` (a stopped re-check belongs to a superseded view).
+---without `on_done` (a stopped re-check belongs to a superseded view); `on_stopped` runs
+---instead, once, for a caller that counts the re-check as pending. A pull in its write step is
+---not killed: its repo stays busy until that git process has really exited.
 ---@param session MyPlugins.SyncSession
 ---@param names string[]
 ---@param on_done fun()
+---@param on_stopped? fun()
 ---@return { stop: fun() } controller
-function M.recheck(session, names, on_done)
+function M.recheck(session, names, on_done, on_stopped)
   local items = {}
   local owner = { kind = "recheck", stop = function() end }
   for _, name in ipairs(names) do
@@ -773,11 +784,17 @@ function M.recheck(session, names, on_done)
       busy[key] = nil
     end
   end
+  local ended = false
+  ---@type table<string, { stop: fun(), on_exit: fun(cb: fun()) }>
+  local chains = {}
   ---@type MyPlugins.SyncChanged
   local changed = {}
   local pool = ops.run_pool(items, 1, function(rec, done)
-    return recheck_record(rec, session.opts, done)
+    local c = recheck_record(rec, session.opts, done)
+    chains[rec.name] = c
+    return c
   end, function(_, rec, new_rec)
+    chains[rec.name] = nil
     release(rec)
     local _, i = find(session, rec.name)
     if i then
@@ -785,13 +802,29 @@ function M.recheck(session, names, on_done)
       changed[rec.name] = "rec"
     end
   end, function()
+    ended = true
     persist(session, changed)
     on_done()
   end)
   owner.stop = function()
+    if ended then
+      return
+    end
+    ended = true
     pool.stop()
     for _, rec in ipairs(items) do
-      release(rec)
+      local c = chains[rec.name]
+      if c then
+        -- the killed reads are gone at once; a pull is left to finish and keeps the repo busy
+        c.on_exit(function()
+          release(rec)
+        end)
+      else
+        release(rec)
+      end
+    end
+    if on_stopped then
+      on_stopped()
     end
   end
   return { stop = owner.stop }

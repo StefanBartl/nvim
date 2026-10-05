@@ -125,6 +125,68 @@ return function(H)
       eq(session.records[1].state, "behind", "...and never changes the record")
     end
 
+    -- ── on_stopped: once, only when a running re-check is stopped ──────────
+    do
+      local _, session, path = behind_session("onstopped")
+      local ended, stopped = 0, 0
+      local ctl = sync.recheck(session, { "onstopped" }, function()
+        ended = ended + 1
+      end, function()
+        stopped = stopped + 1
+      end)
+      ctl.stop()
+      ctl.stop()
+      eq(stopped, 1, "a stopped re-check says so, once")
+      settle()
+      eq(ended, 0, "...instead of on_done")
+      eq(sync.busy_reason(path), nil, "...and the repo is free")
+
+      local _, s2 = behind_session("onstopped-late")
+      local late = { 0, 0 }
+      local c2 = sync.recheck(s2, { "onstopped-late" }, function()
+        late[1] = late[1] + 1
+      end, function()
+        late[2] = late[2] + 1
+      end)
+      ok(
+        wait_for(function()
+          return late[1] == 1
+        end),
+        "a re-check ends by itself"
+      )
+      c2.stop()
+      eq(late[2], 0, "stopping a finished re-check is no stop")
+    end
+
+    -- ── a stopped pull is left to finish: its repo stays busy until git exited ──
+    do
+      local _, session, path = behind_session("pulling")
+      local ops = require("bindings.usrcmds.plugin_repos.ops")
+      local orig_pull = ops.sync_pull
+      local waiters, pulling = {}, false
+      ops.sync_pull = function()
+        pulling = true
+        return {
+          stop = function() end,
+          on_exit = function(cb)
+            waiters[#waiters + 1] = cb
+          end,
+        }
+      end
+      local ctl = sync.recheck(session, { "pulling" }, function() end)
+      local waited = wait_for(function()
+        return pulling
+      end)
+      ctl.stop()
+      ops.sync_pull = orig_pull
+      ok(waited, "the re-check reached its pull")
+      has(sync.busy_reason(path) or "", "re-check", "a stopped pull still holds the repo")
+      for _, cb in ipairs(waiters) do
+        cb()
+      end
+      eq(sync.busy_reason(path), nil, "the repo is free once the pull's git has exited")
+    end
+
     -- ── M.cancel stops a pending re-check ──────────────────────────────────
     do
       local _, session, path = behind_session("cancelled")
