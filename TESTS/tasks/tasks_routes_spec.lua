@@ -275,6 +275,43 @@ return function(H)
       run("tasks lib.nvim --format=md --to=file:" .. forced_md)
       has(assert(H.read(forced_md)), "| Task ", "--format=md beats the .csv extension")
 
+      -- a title is whatever a file says: a CSV cell that reads as a formula is neutralised
+      local function fake_task(title)
+        return {
+          id = "x/y",
+          status = "open",
+          title = title,
+          tags = {},
+          blocked_by = {},
+          path = "/p/y.md",
+        }
+      end
+      local csv_out = view.render({
+        fake_task('=HYPERLINK("http://evil","x")'),
+        fake_task("+1+1"),
+        fake_task("-2+3"),
+        fake_task("@SUM(1)"),
+        fake_task("\tTabbed"),
+        fake_task("Plain title"),
+        fake_task("a=b"),
+        fake_task("Fix -x flag"),
+      }, { format = "csv" })
+      has(csv_out, ',"\'=HYPERLINK(""http://evil"",""x"")",', "= is defused (and quoted as before)")
+      has(csv_out, ",'+1+1,", "+ is defused")
+      has(csv_out, ",'-2+3,", "- is defused")
+      has(csv_out, ",'@SUM(1),", "@ is defused")
+      has(csv_out, ",'\tTabbed,", "a leading tab is defused")
+      has(csv_out, ",Plain title,", "an ordinary title is left alone")
+      has(csv_out, ",a=b,", "an = inside a title is left alone")
+      has(csv_out, ",Fix -x flag,", "so is a - inside it")
+      lacks(csv_out, ",+1+1,")
+      lacks(csv_out, ',"=HYPERLINK')
+      has(
+        view.render({ fake_task("=1+1") }, { format = "md" }),
+        "| =1+1 ",
+        "the Markdown table is not CSV: untouched"
+      )
+
       -- ── filters ─────────────────────────────────────────────────────────
       ---@param flags string
       ---@return string[] ids in output order
