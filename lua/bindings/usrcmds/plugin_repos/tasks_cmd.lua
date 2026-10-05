@@ -754,6 +754,20 @@ function M.task_folderize(ctx)
   notify.info(("%s is now a folder task"):format(res.id))
 end
 
+---The absolute path of the file the user typed for `task attach`. A file that exists under
+---exactly that name wins; only otherwise are `~`, `$VAR`, `%` and wildcards expanded. Expanding
+---first would let a name like `report[1].pdf` (a character class to Vim) pick `report1.pdf`
+---instead, and attach the wrong file without a word.
+---@param file string
+---@return string
+function M.attach_source(file)
+  local literal = vim.fn.fnamemodify(file, ":p")
+  if fsio.is_file(literal) then
+    return literal
+  end
+  return vim.fn.fnamemodify(vim.fn.expand(file), ":p")
+end
+
 ---`:MyPlugins task attach <id> <file> [name=<file name>]`: copy the file into
 ---`assets/`, put the Markdown link in the `+` register and say so.
 ---@param ctx table
@@ -765,7 +779,7 @@ function M.task_attach(ctx)
   local before = scan.find(ctx.args.id)
   local res, err = mutate.attach(
     ctx.args.id,
-    vim.fn.fnamemodify(vim.fn.expand(ctx.args.file), ":p"),
+    M.attach_source(ctx.args.file),
     { name = ctx.kv.name ~= "" and ctx.kv.name or nil }
   )
   if not res then
