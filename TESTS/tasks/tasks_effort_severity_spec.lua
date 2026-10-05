@@ -4,12 +4,12 @@
 return function(H)
   local eq, ok, has = H.eq, H.ok, H.has
   local F = dofile(vim.fs.dirname(debug.getinfo(1, "S").source:sub(2)) .. "/fixture.lua")
-  local model = require("tasks.model")
-  local mutate = require("tasks.mutate")
-  local scan = require("tasks.scan")
-  local check = require("tasks.check")
-  local index = require("tasks.index")
-  local cli = require("tasks.cli")
+  local model = require("tasks_nvim.model")
+  local mutate = require("tasks_nvim.mutate")
+  local scan = require("tasks_nvim.scan")
+  local check = require("tasks_nvim.check")
+  local index = require("tasks_nvim.index")
+  local cli = require("tasks_nvim.cli")
   local dash = require("bindings.usrcmds.plugin_repos.tasks_dash_core")
 
   local TODAY = F.TODAY

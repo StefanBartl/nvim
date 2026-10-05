@@ -36,8 +36,8 @@
 --- Windows it can carry a folder prefix (`\0\x.md`, see the vault task
 --- `lib.nvim/fs-watch-filename-normalize`), so only its last component is used.
 
-local fsio = require("tasks.fsio")
-local vault = require("tasks.vault")
+local fsio = require("tasks_nvim.fsio")
+local vault = require("tasks_nvim.vault")
 
 local uv = vim.uv or vim.loop
 

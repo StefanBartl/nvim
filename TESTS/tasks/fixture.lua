@@ -1,4 +1,4 @@
--- TESTS/tasks/fixture.lua -- builds a throwaway wkdbook vault for the task-engine specs.
+-- TESTS/tasks/fixture.lua -- builds a throwaway wkdbook vault for the task front-end specs (the engine's own specs live in tasks.nvim).
 -- Never touches the real vault: every spec works on `H.tmpdir()`.
 
 local F = {}
@@ -53,6 +53,10 @@ function F.vault(H)
   mkdir(root .. "/_Telemetry/ROADMAP")
   mkdir(root .. "/TEMPLATES/ROADMAP")
   mkdir(root .. "/TOOLS/Backlog")
+  -- tasks.nvim has no built-in extras: name the ones this fixture relies on.
+  require("tasks_nvim.vault").configure({
+    extra_areas = { "ALL", "nvim-config", "docmap-desktop", "migrate.nvim" },
+  })
   return root
 end
 

@@ -24,11 +24,11 @@
 --- Not its job: windows, keys, prompts, notifications (`tasks_dash`), the
 --- delivery itself (`tasks_view`), the rules (the engine).
 
-local index = require("tasks.index")
-local model = require("tasks.model")
-local mutate = require("tasks.mutate")
-local scan = require("tasks.scan")
-local vault = require("tasks.vault")
+local index = require("tasks_nvim.index")
+local model = require("tasks_nvim.model")
+local mutate = require("tasks_nvim.mutate")
+local scan = require("tasks_nvim.scan")
+local vault = require("tasks_nvim.vault")
 
 local M = {}
 
