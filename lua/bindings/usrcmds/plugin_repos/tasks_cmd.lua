@@ -788,9 +788,12 @@ function M.task_attach(ctx)
     return
   end
   local before = scan.find(ctx.args.id)
+  -- The composer's FILE type has resolved `~` and variables already (and checked the file is
+  -- there). A second `vim.fn.expand` would read `[1]` in `shot[1].png` as a wildcard (attaching
+  -- `shot1.png` instead) and run a backtick in a downloaded file's name through the shell.
   local res, err = mutate.attach(
     ctx.args.id,
-    vim.fn.fnamemodify(vim.fn.expand(ctx.args.file), ":p"),
+    vim.fn.fnamemodify(ctx.args.file, ":p"),
     { name = ctx.kv.name ~= "" and ctx.kv.name or nil }
   )
   if not res then

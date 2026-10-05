@@ -584,6 +584,16 @@ return function(H)
         H.exists(root .. "/lib.nvim/ROADMAP/tasks/sec-folder/assets/shot-2.png"),
         "name= renames the copy"
       )
+      -- the composer has expanded the FILE argument: a second expansion read `[1]` as a wildcard
+      local wild_dir = H.tmpdir()
+      H.write(wild_dir .. "/shot1.png", "WRONG")
+      H.write(wild_dir .. "/shot[1].png", "RIGHT")
+      run("task attach lib.nvim/sec-folder " .. wild_dir .. "/shot[1].png name=wild.png")
+      eq(
+        H.read(root .. "/lib.nvim/ROADMAP/tasks/sec-folder/assets/wild.png"),
+        "RIGHT",
+        "the file that was named is the file that is attached"
+      )
 
       run("task folderize lib.nvim/beta-bug")
       ok(
