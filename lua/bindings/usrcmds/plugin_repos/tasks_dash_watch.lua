@@ -9,7 +9,8 @@
 --- Which folders (`M.dirs`, non-recursive handles only, so it behaves the same
 --- on Windows, macOS and Linux -- libuv's `recursive` flag is a no-op on Linux):
 ---  - `<area>/ROADMAP/tasks` and each folder directly inside it (folder tasks);
----    where there is no `tasks/` yet, `<area>/ROADMAP` with a filter on the name `tasks`
+---    where there is no `tasks/` yet, `<area>/ROADMAP` until `tasks/` shows up (an `only`
+---    handle: a burst of events there counts once `tasks/` exists, whatever file name it ended on)
 ---  - `<area>/Backlog/FEATURES` and `<area>/Backlog/TASKS`, where finished tasks land
 ---  - the areas: the one shown, else every area of the vault
 ---
@@ -44,7 +45,7 @@ local M = {}
 
 ---@class Plugin_repos.TasksDashWatchDir
 ---@field path string
----@field only? string   # Only an event for this entry name counts (a folder that may not exist yet).
+---@field only? string   # Waiting for this entry (a folder that may not exist yet): events count once it exists.
 
 ---@class Plugin_repos.TasksDashWatchOpts
 ---@field root string
@@ -277,14 +278,23 @@ end
 ---One raw event: filter, and (unless the dashboard is writing itself) arm the debounce.
 ---@param only string|nil
 ---@param filename string|nil
-function Watcher:on_event(only, filename)
+---@param dir? string  # The watched folder; needed to judge an `only` handle.
+function Watcher:on_event(only, filename, dir)
   if self.stopped then
     return
   end
-  if only and filename ~= nil and last_component(filename) ~= only then
-    return
-  end
-  if not M.relevant(filename) then
+  if only then
+    if dir then
+      -- `lib.nvim.fs.watch` debounces per handle and hands over only the LAST name of a burst:
+      -- creating the first task of an area is `tasks` and then `TASKS.md` within a few ms, so the
+      -- name says nothing reliable. Ask the file system whether the folder we wait for is there.
+      if not fsio.is_dir(dir .. "/" .. only) then
+        return
+      end
+    elseif filename ~= nil and last_component(filename) ~= only then
+      return
+    end
+  elseif not M.relevant(filename) then
     return
   end
   if self.held or self.opts.now() < self.mute_until then
@@ -330,8 +340,9 @@ function Watcher:sync()
   for _, d in ipairs(wanted) do
     if not self.handles[d.path] then
       local only = d.only
-      local handle, err = self.opts.start(d.path, function(_, filename)
-        self:on_event(only, filename)
+      local dir = d.path
+      local handle, err = self.opts.start(dir, function(_, filename)
+        self:on_event(only, filename, dir)
       end, { debounce_ms = self.opts.raw_debounce_ms })
       if handle then
         self.handles[d.path] = { handle = handle, only = only }
