@@ -73,6 +73,50 @@ function M.is_running()
   return active ~= nil
 end
 
+---Operations on a single repo that write to it (a re-check can pull, an assist stashes/merges),
+---one at a time per repo: two of them on one repo collide on index.lock and the later result
+---overwrites the earlier one. Keyed by normalized path; `stop` cancels the owner (a re-check
+---stops its git calls; an assist is never killed, `stop` only drops what comes after it).
+---@alias MyPlugins.SyncBusyKind "recheck"|"assist"
+---@type table<string, { kind: MyPlugins.SyncBusyKind, stop: fun() }>
+local busy = {}
+
+---@param path string
+---@return string
+local function busy_key(path)
+  return vim.fs.normalize(path)
+end
+
+---Why an operation on the repo at `path` must not start now (nil: it may). The dashboard
+---asks this to ignore a key on a busy row with a short notice.
+---@param path string
+---@return string|nil
+function M.busy_reason(path)
+  if active then
+    return "a sync is running"
+  end
+  local b = busy[busy_key(path)]
+  if b then
+    return b.kind == "assist" and "an assist is running" or "a re-check is running"
+  end
+  return nil
+end
+
+---Stop the in-flight session operations (re-checks and assists): the owner's `stop`.
+---@param kind? MyPlugins.SyncBusyKind  only this kind
+local function stop_session_ops(kind)
+  local owners, seen = {}, {}
+  for _, b in pairs(busy) do
+    if not seen[b] and (kind == nil or b.kind == kind) then
+      seen[b] = true
+      owners[#owners + 1] = b
+    end
+  end
+  for _, b in ipairs(owners) do
+    b.stop()
+  end
+end
+
 local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
 ---@param title string
 ---@return table|nil
@@ -430,6 +474,8 @@ end
 ---finish -- it is local and short).
 ---@return boolean was_running
 function M.cancel()
+  -- re-checks and assists of an open dashboard go as well (an assist only loses its follow-up)
+  stop_session_ops()
   if not active then
     return false
   end
@@ -464,6 +510,26 @@ function M.run(opts)
     end)
     return
   end
+
+  -- A full run owns every repo: a re-check of an open list is stopped (its result would be
+  -- stale), an assist is never killed halfway, so the run waits for the user to try again.
+  for path, b in pairs(busy) do
+    if b.kind == "assist" then
+      say(
+        opts,
+        "warn",
+        "Sync: an assist is still running in " .. path .. " -- try again when it is done"
+      )
+      if opts.on_declined then
+        opts.on_declined()
+      end
+      if opts.on_done then
+        opts.on_done({}, classify.summarize({}))
+      end
+      return
+    end
+  end
+  stop_session_ops("recheck")
 
   ensure_exit_hook()
   local base_dir, repos, absent = resolve_scope(opts)
@@ -678,22 +744,41 @@ end
 
 ---Re-check (and pull again) the named repos, one after the other, without a fetch unless the
 ---fetch was what failed. Updates `session.records` in place and saves; `on_done` runs after.
+---A repo with an operation in flight is not touched (a short notice says so). The returned
+---controller's `stop()` cancels what is running and ends the re-check without saving and
+---without `on_done` (a stopped re-check belongs to a superseded view).
 ---@param session MyPlugins.SyncSession
 ---@param names string[]
 ---@param on_done fun()
+---@return { stop: fun() } controller
 function M.recheck(session, names, on_done)
   local items = {}
+  local owner = { kind = "recheck", stop = function() end }
   for _, name in ipairs(names) do
     local rec = find(session, name)
     if rec then
-      items[#items + 1] = rec
+      local why = M.busy_reason(rec.path)
+      if why then
+        say(session.opts, "info", ("%s: %s -- not checked again now"):format(name, why))
+      else
+        busy[busy_key(rec.path)] = owner
+        items[#items + 1] = rec
+      end
+    end
+  end
+  ---@param rec MyPlugins.SyncRecord
+  local function release(rec)
+    local key = busy_key(rec.path)
+    if busy[key] == owner then
+      busy[key] = nil
     end
   end
   ---@type MyPlugins.SyncChanged
   local changed = {}
-  ops.run_pool(items, 1, function(rec, done)
+  local pool = ops.run_pool(items, 1, function(rec, done)
     return recheck_record(rec, session.opts, done)
   end, function(_, rec, new_rec)
+    release(rec)
     local _, i = find(session, rec.name)
     if i then
       session.records[i] = new_rec
@@ -703,6 +788,13 @@ function M.recheck(session, names, on_done)
     persist(session, changed)
     on_done()
   end)
+  owner.stop = function()
+    pool.stop()
+    for _, rec in ipairs(items) do
+      release(rec)
+    end
+  end
+  return { stop = owner.stop }
 end
 
 ---Skip (or un-skip) the named repos for this synchronization.
@@ -735,15 +827,35 @@ function M.assist(session, name, id, on_done)
     on_done()
     return
   end
+  local why = M.busy_reason(rec.path)
+  if why then
+    say(session.opts, "warn", ("%s: %s not started -- %s"):format(rec.name, info.label, why))
+    on_done()
+    return
+  end
   ensure_exit_hook()
   assists_running = assists_running + 1
+  local key = busy_key(rec.path)
+  local stopped = false
+  local owner = {
+    kind = "assist",
+    -- never kills it (see `ops.run_assist`); the follow-up re-check is what is dropped
+    stop = function()
+      stopped = true
+    end,
+  }
+  busy[key] = owner
   local t = timeout_of(session.opts, "status_timeout_ms")
   ops.run_assist(rec.path, id, t, function(ok, err)
     assists_running = assists_running - 1
+    busy[key] = nil
     if ok then
       say(session.opts, "info", ("%s: %s done"):format(rec.name, info.label))
     else
       say(session.opts, "warn", ("%s: %s failed: %s"):format(rec.name, info.label, tostring(err)))
+    end
+    if stopped then
+      return
     end
     M.recheck(session, { name }, on_done)
   end)

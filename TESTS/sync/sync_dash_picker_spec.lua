@@ -73,12 +73,15 @@ return function(H)
     go_into = dash.go_into,
     recheck = sync.recheck,
     run = sync.run,
+    busy_reason = sync.busy_reason,
   }
   local notes = {}
   vim.notify = function(msg, level)
     notes[#notes + 1] = { msg = msg, level = level or vim.log.levels.INFO }
   end
   local entered, rechecked, reran, rerun_opts, decline = {}, {}, 0, nil, false
+  -- `held`: the re-check does not end until the spec says so; `busy`: repo name -> reason
+  local held, busy = nil, {}
   dash.go_into = function(path, how, on_close)
     entered[#entered + 1] = { path = path, how = how }
     vim.schedule(on_close)
@@ -87,7 +90,15 @@ return function(H)
     for _, n in ipairs(names) do
       rechecked[#rechecked + 1] = n
     end
+    if held then
+      held[#held + 1] = cb
+      return { stop = function() end }
+    end
     vim.schedule(cb)
+    return { stop = function() end }
+  end
+  sync.busy_reason = function(path)
+    return busy[vim.fs.basename(path)]
   end
   sync.run = function(o)
     reran = reran + 1
@@ -143,8 +154,8 @@ return function(H)
   end
 
   local function restore()
-    vim.notify, dash.go_into, sync.recheck, sync.run =
-      orig.notify, orig.go_into, orig.recheck, orig.run
+    vim.notify, dash.go_into, sync.recheck, sync.run, sync.busy_reason =
+      orig.notify, orig.go_into, orig.recheck, orig.run, orig.busy_reason
     for _, p in ipairs(Snacks.picker.get({ source = "myplugins_sync" })) do
       pcall(p.close, p)
     end
@@ -177,12 +188,25 @@ return function(H)
     eq(session.records[1].skipped, true, "alpha is skipped")
     has(p.title, "2 unresolved, 1 skipped", "the title counts it")
     eq(names(p)[3], "alpha", "a skipped row sorts after the open problems")
+    local function preview_of_row(n)
+      for _, i in ipairs(p:items()) do
+        if i.rec.name == n then
+          return i.preview.text
+        end
+      end
+    end
+    has(
+      preview_of_row("alpha"),
+      "skipped, diverged",
+      "the preview header says skipped right after the skip"
+    )
     ok(vim.fn.filereadable(state_path) == 1, "the skip was saved")
     -- after a skip the next row is under the cursor (triage moves on); alpha is last now
     keys("G")
     keys("u")
     p = opened(3)
     eq(session.records[1].skipped, false, "u un-skips the row under the cursor")
+    H.lacks(preview_of_row("alpha"), "skipped, ", "...and the preview header drops it again")
 
     -- ── <Tab> marks: s acts on all of them ────────────────────────────────
     keys("<Tab>")
@@ -208,6 +232,8 @@ return function(H)
 
     -- ── r re-checks the row (no fetch) and the list refreshes ────────────
     rechecked = {}
+    p:focus("list")
+    keys("gg")
     keys("r")
     ok(
       wait_for(function()
@@ -215,7 +241,25 @@ return function(H)
       end),
       "r asked for a re-check"
     )
-    opened(3)
+    eq(rechecked, { "alpha" }, "...of the row under the cursor, and only of it")
+    p = opened(3)
+
+    -- ── a busy row ignores r / L / A / t with a notice, nothing starts ────
+    busy.alpha = "a re-check is running"
+    p:focus("list")
+    keys("gg")
+    rechecked, entered, notes = {}, {}, {}
+    keys("r")
+    keys("L")
+    keys("t")
+    keys("A")
+    flush()
+    eq(rechecked, {}, "busy: r starts no second re-check")
+    eq(entered, {}, "busy: L and t do not go into the repo")
+    ok(current_picker() == p, "busy: the list stays open (no detour)")
+    has(said(), "alpha: a re-check is running -- ignored", "busy: the notice says why")
+    busy.alpha = nil
+    p = opened(3)
 
     -- ── L goes into the repo: the list closes without a closing line ──────
     notes = {}
@@ -228,7 +272,11 @@ return function(H)
       "L went into a repo"
     )
     eq(entered[1].how, "lazygit", "L is lazygit")
-    has(entered[1].path, "/", "with the repo path")
+    eq(
+      vim.fs.normalize(entered[1].path),
+      vim.fs.normalize(nowhere .. "/alpha"),
+      "...in the repo of the row under the cursor"
+    )
     ok(
       wait_for(function()
         return current_picker() ~= nil
@@ -244,6 +292,7 @@ return function(H)
     p = opened(3)
     p:focus("list")
     flush()
+    keys("G")
     entered = {}
     keys("t")
     ok(
@@ -253,6 +302,11 @@ return function(H)
       "t went into a repo"
     )
     eq(entered[1].how, "terminal", "t is the terminal")
+    eq(
+      vim.fs.normalize(entered[1].path),
+      vim.fs.normalize(nowhere .. "/gamma"),
+      "...in the repo of the row under the cursor (the last one)"
+    )
     opened(3)
 
     -- ── R runs everything again (a detour as well) ────────────────────────
@@ -331,6 +385,46 @@ return function(H)
       end
     end
     ok(not help_open, "the help window is gone")
+    -- the key hook is really gone: the next `s` is an ordinary key again
+    keys("gg")
+    keys("s")
+    eq(session.records[1].skipped, true, "after the help closed, s skips again")
+    sync.set_skipped(session, { "alpha" }, false)
+
+    -- ── closing the list while a re-check is pending: the closing line waits ──
+    for _, q in ipairs(Snacks.picker.get({ source = "myplugins_sync" })) do
+      pcall(q.close, q)
+    end
+    flush()
+    dash.open(session)
+    p = opened(3)
+    p:focus("list")
+    flush()
+    notes, held, rechecked = {}, {}, {}
+    keys("gg")
+    keys("r")
+    ok(
+      wait_for(function()
+        return #held == 1
+      end),
+      "a re-check is pending"
+    )
+    p:close()
+    flush()
+    ok(not said():find("unresolved", 1, true), "closed while pending: no stale closing line yet")
+    -- the re-check ends: the repo is fixed in the meantime
+    session.records[1] = rec("alpha", "pulled")
+    local pending = held
+    held = nil
+    pending[1]()
+    ok(
+      wait_for(function()
+        return said():find("unresolved", 1, true) ~= nil
+      end),
+      "the closing line comes when the re-check ended"
+    )
+    has(said(), "2 unresolved: ", "...and it counts the result of the re-check, not the old state")
+    H.lacks(notes[#notes].msg, "alpha", "alpha is no longer named in the closing line")
   end)
 
   restore()

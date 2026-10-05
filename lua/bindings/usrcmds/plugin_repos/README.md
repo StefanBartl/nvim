@@ -227,6 +227,15 @@ Saving from the list (skip, re-check) merges just the touched repos into the fil
 an older list or a second Neovim cannot overwrite a newer result; a failed save is warned about
 (at most every 30 s).
 
+**One writer per repo.** A re-check (which can pull), an assist and a full run never work on the
+same repo at the same time (two writers collide on `index.lock`, and the later result would
+overwrite the earlier one): `r`, `L`, `t` and `A` on a row that is busy are ignored with a short
+notice, and a refused re-check/assist says why. `R` or a new `:MyPlugins sync` stops the re-checks
+that are still running (their results are dropped, nothing stale is saved); an assist is never
+killed halfway, so the run asks you to try again when it is done. Closing the list while a re-check
+is still running defers the closing line until that re-check has ended, so it always states the
+result, and `sync issues` agrees with it.
+
 A **skip lasts for this synchronization only**: it survives closing the dashboard and a restart
 (`sync issues`), but the next full run asks about that repo again. Excluding a repo for good
 belongs into `plugins.modes` in `plugins/personal/core/source.lua` (`"disabled"`), not here.

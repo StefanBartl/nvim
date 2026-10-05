@@ -68,6 +68,7 @@ local M = {}
 ---@field skipped boolean
 ---@field pulled integer|nil    Commits a successful pull brought in.
 ---@field preview string[]|nil  Triage preview lines (filled by the dashboard, never persisted).
+---@field preview_parts table|nil  The git output `preview` was built from (`MyPlugins.SyncPreviewParts`), kept so the header can be rebuilt after a skip; never persisted.
 
 --- Order of the problem states in the dashboard (most blocking first).
 ---@type MyPlugins.SyncState[]
