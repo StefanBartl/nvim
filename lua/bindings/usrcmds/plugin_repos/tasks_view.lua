@@ -162,6 +162,23 @@ function M.resolve_format(target, format)
   return "md"
 end
 
+---What makes a spreadsheet (Excel, LibreOffice, Sheets) read a CSV cell as a formula.
+---@type table<string, true>
+local FORMULA_LEAD =
+  { ["="] = true, ["+"] = true, ["-"] = true, ["@"] = true, ["\t"] = true, ["\r"] = true }
+
+---A task title is whatever a file says (a Claude session, a `git pull` from elsewhere): a cell
+---that starts like a formula, `=HYPERLINK(...)` say, would run when the CSV is opened. The
+---usual defence is a leading `'`, which a spreadsheet shows as text.
+---@param s string
+---@return string
+local function csv_safe(s)
+  if FORMULA_LEAD[s:sub(1, 1)] then
+    return "'" .. s
+  end
+  return s
+end
+
 ---@param tasks Tasks.Task[]
 ---@param format Plugin_repos.TasksFormat
 ---@return string[] headers
@@ -174,11 +191,13 @@ local function matrix(tasks, format)
       cols[#cols + 1] = col
     end
   end
+  local csv = format == "csv"
   local rows = {}
   for i, t in ipairs(tasks) do
     local row = {}
     for c, col in ipairs(cols) do
-      row[c] = or_empty(col.get(t), format == "csv" and "" or EN_DASH)
+      local cell = or_empty(col.get(t), csv and "" or EN_DASH)
+      row[c] = csv and csv_safe(cell) or cell
     end
     rows[i] = row
   end

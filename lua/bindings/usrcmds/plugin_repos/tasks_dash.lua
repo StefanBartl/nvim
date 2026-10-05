@@ -247,7 +247,14 @@ function M.cycle(state, tasks, field)
     return nil
   end
   local prog = new_progress("[usrcmds.plugin_repos.tasks_dash] " .. field)
-  local res = core.apply_set(core.plan_cycle(tasks, field), { root = state.root })
+  local ran, res = pcall(core.apply_set, core.plan_cycle(tasks, field), { root = state.root })
+  if not ran then
+    -- An unexpected error must not leave the statusline progress (and its timer) running for good.
+    if prog then
+      prog:finish("failed")
+    end
+    error(res, 0)
+  end
   refresh_buffers(res)
   M.touch(res.changed)
   local level, text = core.describe_set(field, res)
@@ -283,7 +290,13 @@ function M.finish(state, tasks, after)
       ids[#ids + 1] = t.id
     end
     local prog = new_progress("[usrcmds.plugin_repos.tasks_dash] done")
-    local res = core.apply_done(ids, { root = state.root })
+    local ran, res = pcall(core.apply_done, ids, { root = state.root })
+    if not ran then
+      if prog then
+        prog:finish("failed")
+      end
+      error(res, 0)
+    end
     for _, d in ipairs(res.done) do
       cmd().retarget_buffers(d.from, d.to)
     end
@@ -376,9 +389,9 @@ function M.export(state, tasks, after)
         after(false)
         return
       end
-      if target.path then
-        target.path = vim.fn.expand(target.path)
-      end
+      -- The path goes as typed: `harvest.sink.file` resolves `~` and environment variables itself.
+      -- `vim.fn.expand` here would run a backtick span through the shell, throw on `<cfile>` and
+      -- replace a wildcard by whatever file it happens to match.
       local chips = core.chips(state.filter)
       local sort_chip = core.sort_chip(state.sort)
       if sort_chip then
@@ -583,7 +596,13 @@ local function start_watch(state, picker)
       M.refresh_if_changed(state, picker)
     end,
   }, M.config.watch_opts or {}))
-  local ok, err = w:start()
+  -- A handle factory that raises must not take the open picker down with it (the caller's pcall
+  -- would open the plain list on top of it) and must not leave the handles it did start behind.
+  local ran, ok, err = pcall(w.start, w)
+  if not ran then
+    pcall(w.stop, w)
+    ok, err = false, ok
+  end
   if not ok then
     notify.info(("no live refresh (%s) -- press r to rescan"):format(tostring(err)))
     return nil
@@ -793,6 +812,11 @@ local function open_snacks(Snacks, state)
     end,
   })
   watcher = start_watch(state, picker)
+  if watcher and picker.closed then
+    -- Closed before we got here (`on_close` found no watcher to stop): nobody else will release it.
+    watcher:stop()
+    watcher = nil
+  end
 end
 
 -- ── fallback backend ─────────────────────────────────────────────────────────

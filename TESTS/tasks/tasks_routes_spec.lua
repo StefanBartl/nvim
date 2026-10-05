@@ -275,6 +275,43 @@ return function(H)
       run("tasks lib.nvim --format=md --to=file:" .. forced_md)
       has(assert(H.read(forced_md)), "| Task ", "--format=md beats the .csv extension")
 
+      -- a title is whatever a file says: a CSV cell that reads as a formula is neutralised
+      local function fake_task(title)
+        return {
+          id = "x/y",
+          status = "open",
+          title = title,
+          tags = {},
+          blocked_by = {},
+          path = "/p/y.md",
+        }
+      end
+      local csv_out = view.render({
+        fake_task('=HYPERLINK("http://evil","x")'),
+        fake_task("+1+1"),
+        fake_task("-2+3"),
+        fake_task("@SUM(1)"),
+        fake_task("\tTabbed"),
+        fake_task("Plain title"),
+        fake_task("a=b"),
+        fake_task("Fix -x flag"),
+      }, { format = "csv" })
+      has(csv_out, ',"\'=HYPERLINK(""http://evil"",""x"")",', "= is defused (and quoted as before)")
+      has(csv_out, ",'+1+1,", "+ is defused")
+      has(csv_out, ",'-2+3,", "- is defused")
+      has(csv_out, ",'@SUM(1),", "@ is defused")
+      has(csv_out, ",'\tTabbed,", "a leading tab is defused")
+      has(csv_out, ",Plain title,", "an ordinary title is left alone")
+      has(csv_out, ",a=b,", "an = inside a title is left alone")
+      has(csv_out, ",Fix -x flag,", "so is a - inside it")
+      lacks(csv_out, ",+1+1,")
+      lacks(csv_out, ',"=HYPERLINK')
+      has(
+        view.render({ fake_task("=1+1") }, { format = "md" }),
+        "| =1+1 ",
+        "the Markdown table is not CSV: untouched"
+      )
+
       -- ── filters ─────────────────────────────────────────────────────────
       ---@param flags string
       ---@return string[] ids in output order
@@ -335,6 +372,31 @@ return function(H)
       has(said(), "expected one of md|csv")
       run("tasks --to=file:")
       has(said(), "needs a path")
+
+      -- ── words a command has no use for are refused, not ignored ─────────
+      -- The command line splits at spaces: `--to=file:<dir with space>/x.md` is the path up to the
+      -- space plus a stray word, and the template used to be written to a file named after the
+      -- first half.
+      local spaced = out_dir .. "/with space"
+      run("task template --to=file:" .. spaced .. "/tpl.md")
+      has(said(), "unexpected argument: space/tpl.md")
+      has(said(), "backslash before each space")
+      ok(said_level(ERROR))
+      ok(
+        not H.exists(out_dir .. "/with") and not H.exists(spaced),
+        "nothing was written to the half path"
+      )
+      run("task template --to=file:" .. out_dir .. "/with\\ space/tpl.md")
+      ok(H.exists(spaced .. "/tpl.md"), "a backslash before the space keeps the path whole")
+      run("tasks lib.nvim stray")
+      has(said(), "unexpected argument: stray")
+      run("tasks index lib.nvim junk")
+      has(said(), "unexpected argument: junk")
+      lacks(said(), "tasks index:", "and no index run")
+      local open_before = vim.api.nvim_get_current_buf()
+      run("task open lib.nvim/alpha extra")
+      has(said(), "unexpected argument: extra")
+      eq(vim.api.nvim_get_current_buf(), open_before, "nothing was opened")
 
       -- ── :tasks -> quickfix ──────────────────────────────────────────────
       run("tasks lib.nvim --to=qf")
@@ -521,6 +583,16 @@ return function(H)
       ok(
         H.exists(root .. "/lib.nvim/ROADMAP/tasks/sec-folder/assets/shot-2.png"),
         "name= renames the copy"
+      )
+      -- the composer has expanded the FILE argument: a second expansion read `[1]` as a wildcard
+      local wild_dir = H.tmpdir()
+      H.write(wild_dir .. "/shot1.png", "WRONG")
+      H.write(wild_dir .. "/shot[1].png", "RIGHT")
+      run("task attach lib.nvim/sec-folder " .. wild_dir .. "/shot[1].png name=wild.png")
+      eq(
+        H.read(root .. "/lib.nvim/ROADMAP/tasks/sec-folder/assets/wild.png"),
+        "RIGHT",
+        "the file that was named is the file that is attached"
       )
 
       run("task folderize lib.nvim/beta-bug")
@@ -734,6 +806,9 @@ return function(H)
       run("task preview lib.nvim/nothing-here")
       has(said(), "no such open task")
       eq(#shown_in_mdview, 2)
+      run("task preview lib.nvim/alpha extra")
+      has(said(), "unexpected argument: extra")
+      eq(#shown_in_mdview, 2, "a stray word previews nothing")
       vim.cmd("silent! %bwipeout!")
 
       -- the list export: a temp Markdown file, named after the scope
@@ -854,6 +929,65 @@ return function(H)
       eq(preview.slug(""), "export")
       eq(preview.slug(nil), "export")
       eq(#preview.slug(("x"):rep(100)), 40)
+
+      -- `:bdelete` drops the temp file too (BufDelete never fires for an unlisted buffer) ...
+      run("tasks lib.nvim --to=mdview")
+      local gone_path = shown_in_mdview[#shown_in_mdview].path
+      ok(H.exists(gone_path))
+      ok(not vim.bo.buflisted, "the preview buffer is unlisted")
+      vim.cmd("silent bdelete")
+      ok(
+        vim.wait(1000, function()
+          return not H.exists(gone_path)
+        end),
+        ":bdelete removes the temp file"
+      )
+      eq(preview.pending(), {})
+      -- ... while merely reloading the buffer (`:edit!` fires BufUnload as well) does not
+      run("tasks lib.nvim --to=mdview")
+      local kept_path = shown_in_mdview[#shown_in_mdview].path
+      vim.cmd("silent edit!")
+      flush()
+      ok(H.exists(kept_path), "reloading the buffer keeps the file")
+      vim.cmd("silent bwipeout!")
+      ok(
+        vim.wait(1000, function()
+          return not H.exists(kept_path)
+        end),
+        "and wiping it removes it"
+      )
+      eq(preview.pending(), {})
+
+      -- the vault is refused as a temp location whatever the case of the spelling (Windows)
+      if vim.fn.has("win32") == 1 then
+        preview.temp_root = function()
+          return (root .. "/lib.nvim"):upper()
+        end
+        local upper_ok, upper_err = preview.open_text("# x\n", "vault")
+        eq(upper_ok, false)
+        has(upper_err, "inside the vault")
+        ok(not H.exists(root .. "/lib.nvim/tasks-vault.md"), "nothing was written into the vault")
+        preview.temp_root = function()
+          return preview_dir
+        end
+      end
+
+      -- the default opener hands `:MDView start` the path as ONE argument: a `#`, `%` or `'` in it
+      -- (or a space) must arrive as written, not with the backslash `fnameescape` adds
+      if vim.fn.exists(":MDView") == 0 then
+        local mdview_args
+        vim.api.nvim_create_user_command("MDView", function(o)
+          mdview_args = o.fargs
+        end, { nargs = "*" })
+        local odd = H.tmpdir() .. "/O'Neil #1 100% (x)/task one.md"
+        H.write(odd, "# t\n")
+        preview.opener = nil
+        local odd_ok, odd_err = preview.open_file(odd)
+        pcall(vim.api.nvim_del_user_command, "MDView")
+        ok(odd_ok, odd_err)
+        eq(mdview_args, { "start", odd }, "the path reaches :MDView intact")
+        vim.cmd("silent! %bwipeout!")
+      end
       preview.probe, preview.opener, preview.temp_root = nil, nil, nil
 
       eq(view.parse_target("mdview"), { kind = "mdview" })
@@ -877,6 +1011,9 @@ return function(H)
       eq(dispatched[1].source.roots, { root .. "/lib.nvim/ROADMAP/tasks" })
       eq(dispatched[1].source.prompt, "lib.nvim/tasks> ")
       eq(dispatched[1].engine.name, "stub")
+      run("open lib.nvim tasks stray")
+      has(said(), "unexpected argument: stray")
+      eq(#dispatched, 1, "a stray word opens no picker")
       run("open lib.nvim")
       eq(dispatched[2].source.roots, { root .. "/lib.nvim" }, "no folder means the whole area")
       run("open lib.nvim backlog --action=grep")
@@ -1231,6 +1368,28 @@ return function(H)
       has(buf_text(), "tags item 'a#b'", "the engine's message is shown")
       has(buf_text(), "Title: Engine refuses", "the typed text survives")
       ok(not H.exists(task_path("lib.nvim", "engine-refuses")), "nothing was created")
+      fkeys("q")
+
+      -- an error that arrives while focus is elsewhere (after the "attach assets?" question) moves
+      -- the cursor of the form's window, not the one of whatever window has focus
+      run("task new")
+      form_buf = vim.api.nvim_get_current_buf()
+      local form_win = vim.api.nvim_get_current_win()
+      vim.api.nvim_win_set_cursor(form_win, { 6, 0 })
+      vim.cmd("new")
+      local elsewhere = vim.api.nvim_get_current_win()
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, { "a", "b", "c" })
+      vim.api.nvim_win_set_cursor(elsewhere, { 3, 0 })
+      require("bindings.usrcmds.plugin_repos.tasks_form").show_errors(form_buf, { "late failure" })
+      eq(vim.api.nvim_win_get_cursor(elsewhere), { 3, 0 }, "the focused window keeps its cursor")
+      eq(vim.api.nvim_win_get_cursor(form_win)[1], 1, "the form shows its report from the top")
+      has(
+        table.concat(vim.api.nvim_buf_get_lines(form_buf, 0, 3, false), "\n"),
+        "late failure",
+        "and the report is there"
+      )
+      vim.cmd("silent! bwipeout!")
+      vim.api.nvim_set_current_win(form_win)
       fkeys("q")
 
       -- help

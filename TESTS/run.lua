@@ -49,6 +49,10 @@ vim.env.LIB_NVIM_DIR = lib
 -- The dashboard records visits for its frecency sort; no spec (nor a child Neovim
 -- it starts) may touch the real file in stdpath("state").
 vim.env.TASKS_FRECENCY_FILE = vim.fn.tempname() .. "-tasks-frecency.json"
+-- The dashboard remembers its filter through lib.nvim.store.project, which writes below
+-- stdpath("cache"): without this every run left one folder per temp vault in the real cache.
+local cache_home = vim.fn.tempname() .. "-cache"
+vim.env.XDG_CACHE_HOME = cache_home
 
 local H = dofile(tests_dir .. "/harness.lua")
 
@@ -102,6 +106,7 @@ for _, name in ipairs(specs) do
     local run = dofile(tests_dir .. "/" .. name)
     local ok, err = pcall(run, H)
     H.cleanup()
+    vim.fn.delete(cache_home, "rf")
     if ok then
       say(("ok    %s"):format(name))
     else

@@ -97,7 +97,12 @@ function M.show_errors(buf, errors)
   local report = form.error_lines(errors)
   vim.list_extend(report, lines)
   set_lines(buf, report)
-  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  -- The window of the form, not "the current one": a failure of the engine is reported after the
+  -- "attach assets?" question, when focus need not be back on the form.
+  local win = vim.fn.bufwinid(buf)
+  if win ~= -1 then
+    pcall(vim.api.nvim_win_set_cursor, win, { 1, 0 })
+  end
 end
 
 ---Parse and check the form of `buf`; errors are written into the buffer.
