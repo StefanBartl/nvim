@@ -291,8 +291,9 @@ function M.find(id, opts)
   if not area or not slug then
     return nil, id_err or ("expected <area>/<slug>, got " .. tostring(id))
   end
-  if not vault.dir_listed(root, area) then
-    -- `LIB.NVIM/x` would find `lib.nvim/x` on a case-insensitive disk, under another id.
+  -- Not an area, or one spelled in another case (`LIB.NVIM/x` would find `lib.nvim/x` on a
+  -- case-insensitive disk, under a second id).
+  if not vault.has_area(root, area) then
     return nil, "no such open task: " .. area .. "/" .. slug
   end
   local path, folder = vault.resolve_task(root, area, slug)

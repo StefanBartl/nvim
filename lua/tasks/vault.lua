@@ -82,8 +82,33 @@ function M.root(opts)
   return candidate, nil
 end
 
+---Names Windows treats as devices, in any case and with or without an
+---extension (`NUL`, `con.txt`). A file called like one is no file there: writing
+---it succeeds and stores nothing (`nul`), or fails with a confusing error, and
+---older Windows versions and some tools refuse the extended form too.
+---@type table<string, true>
+local DEVICE_NAMES = { con = true, prn = true, aux = true, nul = true }
+for i = 1, 9 do
+  DEVICE_NAMES["com" .. i] = true
+  DEVICE_NAMES["lpt" .. i] = true
+end
+
+---Whether `name` is (or starts, before its first dot, like) a Windows device name.
+---@param name any
+---@return boolean
+function M.is_reserved_name(name)
+  if type(name) ~= "string" then
+    return false
+  end
+  -- Windows also drops trailing spaces before the extension (`nul .txt`).
+  local stem = name:match("^([^.]*)"):gsub("%s+$", "")
+  return DEVICE_NAMES[stem:lower()] == true
+end
+
 ---An area name becomes a path segment, so it is whitelisted (SEC-42): word
----characters, dots and hyphens, not starting with a dot or hyphen.
+---characters, dots and hyphens, not starting with a dot or hyphen. A trailing
+---dot is refused as well: Windows drops it, so `lib.nvim.` would silently be
+---the folder `lib.nvim` under another id.
 ---@param name any
 ---@return boolean
 function M.valid_area(name)
@@ -91,6 +116,7 @@ function M.valid_area(name)
     and name:match("^[%w_][%w_.-]*$") ~= nil
     and name ~= ".."
     and not name:find("..", 1, true)
+    and name:sub(-1) ~= "."
 end
 
 ---A slug is kebab-case ASCII: `a-z0-9` words joined by single hyphens.
@@ -283,7 +309,9 @@ function M.dir_listed(root, name)
   end
 end
 
----Whether `area` is one of the vault's areas, spelled exactly like its folder.
+---Whether `area` is one of the vault's areas. The name must match the folder's spelling
+---exactly: an area in another case would reach the same folder on Windows, yet become a second
+---id for the same tasks, and its generated index would read as stale (`index-stale`).
 ---@param root string
 ---@param area string
 ---@return boolean

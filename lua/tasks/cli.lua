@@ -172,10 +172,30 @@ local function parse_args(argv, spec)
       end
     end
   end
+  -- An empty `--vault=` (a shell variable that was not set) must not quietly mean "the default
+  -- vault": a command meant for a scratch copy would write to the real one.
+  for _, k in ipairs(GLOBAL_VALUE) do
+    if opt[k] == "" then
+      return nil, ("option needs a value: --%s=<value>"):format(k)
+    end
+  end
   return { pos = pos, opt = opt }, nil
 end
 
 local split_commas = model.split_commas
+
+---Make a line safe to print: terminal control characters (ESC and the other C0 controls, DEL,
+---a lone CR, the 8-bit C1 controls such as the CSI `U+009B`) become `?`. A task title comes
+---from a file anyone may have edited, and it would otherwise reach the terminal verbatim.
+---Tab and newline stay: they are the output format.
+---@param text string
+---@return string
+local function clean(text)
+  text = text:gsub("\r\n", "\n")
+  text = text:gsub("[%z\1-\8\11-\31\127]", "?")
+  text = text:gsub("\194[\128-\159]", "?")
+  return text
+end
 
 ---@param value string
 ---@param what string
@@ -232,6 +252,7 @@ end
 ---@field args Tasks.CliArgs
 ---@field say fun(line: string)
 ---@field warn fun(line: string)
+---@field out fun(text: string)   # Like `io.out`, with control characters cleaned.
 ---@field eo table
 
 ---@type table<string, fun(ctx: Tasks.CliCtx): integer>
@@ -597,7 +618,7 @@ function commands.template(ctx)
     ctx.warn("error: --lang must be de or en")
     return 2
   end
-  ctx.io.out(mutate.template({
+  ctx.out(mutate.template({
     lang = opt.lang --[[@as "de"|"en"|nil]],
     title = opt.title --[[@as string|nil]],
     kind = opt.kind --[[@as string|nil]],
@@ -652,7 +673,7 @@ function commands.export(ctx)
     links = not args.opt["no-links"],
     link_prefix = args.opt["link-prefix"] --[[@as string|nil]],
   })
-  ctx.io.out(text)
+  ctx.out(text)
   return 0
 end
 
@@ -663,10 +684,13 @@ end
 function M.run(argv, io)
   io = io or M.stdio
   local function say(line)
-    io.out(line .. "\n")
+    io.out(clean(line) .. "\n")
   end
   local function warn(line)
-    io.err(line .. "\n")
+    io.err(clean(line) .. "\n")
+  end
+  local function out(text)
+    io.out(clean(text))
   end
 
   -- Global options may come before the command (`--vault=x list`): move them behind it.
@@ -714,13 +738,15 @@ function M.run(argv, io)
   end
 
   ---@type Tasks.CliCtx
-  local ctx = { io = io, args = args, say = say, warn = warn, eo = engine_opts(args.opt) }
+  local ctx =
+    { io = io, args = args, say = say, warn = warn, out = out, eo = engine_opts(args.opt) }
   local ok, code = pcall(handler, ctx)
   if not ok then
     warn("error: " .. tostring(code))
     return 1
   end
-  return code
+  -- A handler that forgot its exit code must not read as success (`os.exit(nil)` is 0).
+  return type(code) == "number" and code or 1
 end
 
 return M

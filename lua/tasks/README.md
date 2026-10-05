@@ -46,7 +46,7 @@ TESTS/tasks/        specs (run with TESTS/run.lua)
 
 | Module | What it does | Key functions |
 |---|---|---|
-| `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names, slugs and ids before they become path segments. An area must be spelled exactly like its folder (`has_area`, `dir_listed`; `scan.find` too): on Windows `LIB.NVIM` or `lib.nvim.` would otherwise reach the folder `lib.nvim` under a different id. | `root`, `areas`, `has_area`, `dir_listed`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug` |
+| `tasks.vault` | Resolves the vault root (`opts.root`, `set_root`, `$TASKS_VAULT`, then `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins` via `lib.nvim.system.env`). An *area* is a folder holding `ROADMAP/` or `Backlog/`, plus `ALL`, `nvim-config`, `docmap-desktop`, `migrate.nvim`; `_`-prefixed folders, `TEMPLATES` and `TOOLS` are skipped. Builds every path; whitelists area names (no trailing dot: Windows drops it), slugs and ids before they become path segments; `is_reserved_name` knows the Windows device names. An area must be spelled exactly like its folder (`has_area`, `dir_listed`; `scan.find` too): on Windows `LIB.NVIM` or `lib.nvim.` would otherwise reach the folder `lib.nvim` under a different id. | `root`, `areas`, `has_area`, `dir_listed`, `tasks_dir`, `index_path`, `backlog_dir`, `parse_id`, `valid_slug`, `is_reserved_name` |
 | `tasks.model` | `parse_text` / `from_file` turn a file into a `Tasks.Task`. `categories(task)` is the effective category set (below). A broken file is still returned, with `errors` / `error_codes` and `valid = false`: one bad file never hides the rest. `summary` is the frontmatter `summary`, else the first body paragraph. Sorting is status rank (`doing`, `decision`, `blocked`, `open`, `parked`), then prio, then area, then slug; `sort(tasks, order)` also knows `prio-effort` and `severity` (below). | `parse_text`, `from_file`, `sort`, `compare`, `parse_sort`, `effort_days`, `filter`, `filter_from_options`, `split_commas`, `is_date`, `days_between` |
 | `tasks.scan` | `lib.nvim.fs.collect_recursive` (or the TTL cache `scan_cached` with `ttl_seconds`) over `ROADMAP/tasks/` and `Backlog/`. A folder task's `<slug>/<slug>.md` is a task (`task.folder`), the other files in its folder are assets and ignored; any other nested file is returned, flagged. Backlog files count as tasks only with frontmatter and a `status`. | `area`, `all`, `backlog`, `find`, `find_done`, `backlog_slugs` |
 | `tasks.index` | `render` is pure and deterministic: the same tasks give the same bytes, whatever order they are found in. `write_area` writes only when the content differs (a CRLF checkout counts as equal and keeps its line endings), removes the file when no task is open, and with `check = true` only reports `stale` (`missing` / `outdated` / `orphan`). `render_global` returns the all-areas overview as text; nothing writes `ALL/TASKS.md` (decision E2: it is never committed). | `render`, `write_area`, `write_all`, `render_global` |
@@ -141,6 +141,16 @@ folder is an asset, never read as a task. `attach <id> <file>` copies a file to
 whole folder to `Backlog/<bucket>/<date>_<slug>/<date>_<slug>.md` and puts it back when a
 later step fails. `index` links `tasks/<slug>/<slug>.md`. Reasoning: concept section 12.
 
+An asset name (`--name=`, else the file's own name; spaces become `-`) may use letters,
+digits, `_`, `.`, `-` and non-ASCII; no separators, no `..`, no trailing dot, and no name
+Windows treats as a device (`nul`, `con`, `aux`, `prn`, `com1`-`com9`, `lpt1`-`lpt9`, with or
+without an extension): writing to `nul` "succeeds" and stores nothing. The same names are
+never generated as a slug (`new "Nul"` gives `nul-task`) and are refused as `--slug=`. An
+existing asset is never replaced. A failed `attach` leaves the task as it was: the folder
+conversion it started is undone (and said so in the error when that fails too). The editor
+command takes the file name literally when such a file exists; only otherwise are `~`,
+`$VAR` and wildcards expanded (`report[1].pdf` is that file, not `report1.pdf`).
+
 ### `done` (rule R6)
 
 `status: done`, `done_in`, `updated`; the file moves to `Backlog/FEATURES/`
@@ -149,8 +159,16 @@ without a kind) as `YYYY-MM-DD_<slug>.md`; the row goes on top of that
 section of `Backlog/README.md` (count recomputed, `_noch leer_` replaced by a
 table, line endings kept); the area index is regenerated.
 
-Failure safety: the four files involved are snapshotted with
-`lib.nvim.checkpoint` first and restored byte-exact when any step fails.
+Failure safety: the finished copy, the README and the index are snapshotted with
+`lib.nvim.checkpoint` first and restored byte-exact when any step fails. The task file
+itself is deliberately not part of the snapshot (a restore would overwrite whatever was
+written to it since): it is checked once more right before it is removed or moved -- when
+it changed since `done` read it (the editor saved, another run), `done` stops with
+`changed while it was being finished` and changes nothing -- and put back by hand only if
+`done` already removed it. A folder task moves with a plain rename and is moved back by
+hand-written steps (original file name and text first, the finished copy dropped only after
+that); what cannot be undone is named in the error as `rollback incomplete: <path> (...)`,
+never left silent.
 Re-running a finished task answers `already` and changes nothing; if an earlier
 run died after creating the Backlog file but before deleting the old one, the
 next run completes it. A target that exists with different content, or a
@@ -224,7 +242,9 @@ Three steps, exit `0` only when all pass (`1` otherwise), a short summary at the
 3. `md_lint` -- `<vault>/TOOLS/scripts/md_lint.lua` over every generated `TASKS.md` (relative
    links, anchors, table columns; `$VAR/...` links when lsp.nvim is on `$REPOS_DIR` or in lazy's
    data folder). `--no-lint` skips it; a missing script fails the run, it is never skipped silently.
-   `--md-lint=<file>` points at another copy.
+   `--md-lint=<file>` points at another copy. A linter that runs longer than 120 s
+   (`tasks.ci.LINT_TIMEOUT_MS`, `opts.timeout_ms`) is killed and the step fails with
+   `timed out`; one killed by a signal fails as well (a signal reads as exit code 0 on POSIX).
 
 The GitHub Actions template for the vault repo is `docs/TEMPLATES/wkdbooks-tasks-ci.yml`
 (copy it to `WKDBooks/.github/workflows/tasks-ci.yml`).
@@ -260,8 +280,12 @@ nvim --headless -u NONE -l scripts/tasks.lua check
 | `export [--top=N] [--no-links]` | all-areas overview as Markdown on stdout (never written to a file) |
 
 Global options (before or after the command): `--vault=<dir>`,
-`--today=YYYY-MM-DD`. Exit codes: `0` success, `1` a finding / stale index in
-`--check` / a failed operation, `2` a usage error. Errors go to stderr.
+`--today=YYYY-MM-DD`; both need a value (an empty `--vault=`, say from an unset shell
+variable, is a usage error, not "the default vault"). Exit codes: `0` success, `1` a finding
+/ stale index in `--check` / a failed operation, `2` a usage error. Errors go to stderr.
+Terminal control characters in what is printed (ESC, other C0 controls, DEL, a lone CR, the
+8-bit C1 range) come out as `?`: a task title is read from a file anyone may have edited.
+Tab and newline are the output format and stay.
 
 The vault is `$TASKS_VAULT`, else `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`.
 lib.nvim is looked up in `$LIB_NVIM_DIR`, `$LIB_NVIM_PATH`,
