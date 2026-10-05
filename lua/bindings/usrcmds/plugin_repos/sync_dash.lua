@@ -267,37 +267,7 @@ M.HELP = {
 }
 
 function M.show_help()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.HELP)
-  local width = 0
-  for _, l in ipairs(M.HELP) do
-    width = math.max(width, vim.fn.strdisplaywidth(l))
-  end
-  local win = vim.api.nvim_open_win(buf, false, {
-    relative = "editor",
-    row = math.max(0, math.floor((vim.o.lines - #M.HELP) / 2) - 1),
-    col = math.max(0, math.floor((vim.o.columns - width - 2) / 2)),
-    width = width + 2,
-    height = #M.HELP,
-    style = "minimal",
-    border = "rounded",
-    zindex = 250,
-  })
-  local ns = vim.api.nvim_create_namespace("sync_dash_help")
-  vim.on_key(function()
-    vim.on_key(nil, ns)
-    vim.schedule(function()
-      if vim.api.nvim_win_is_valid(win) then
-        vim.api.nvim_win_close(win, true)
-      end
-      if vim.api.nvim_buf_is_valid(buf) then
-        vim.api.nvim_buf_delete(buf, { force = true })
-      end
-    end)
-    -- The focus stays in the list: an empty string discards the key, otherwise the key that
-    -- closes the help would also run there (`s` would skip a repo, any other one fails with E21).
-    return ""
-  end, ns)
+  require("bindings.usrcmds.plugin_repos.help_float").open(M.HELP, "sync_dash_help")
 end
 
 -- ── Shared actions ────────────────────────────────────────────────────────────
