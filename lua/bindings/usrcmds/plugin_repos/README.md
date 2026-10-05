@@ -272,8 +272,7 @@ by it, by a cancel or by quitting Neovim (`:MyPlugins sync` again while one runs
 cancel and restart). A hung repo becomes `fetch_failed` / `status_failed`. The kill takes the whole
 process tree: on Windows `taskkill /T /F` runs first and is waited for (so the transport child,
 `git-remote-https` / `ssh`, goes too, and the next phase starts on a repo whose git is really
-gone); elsewhere the git job leads its own process group and the group is killed (the integration
-spec runs green on Linux too, WSL Arch; set `LIB_NVIM_DIR` and `REPOS_DIR` there). The commands
+gone); elsewhere the git job leads its own process group and the group is killed. The commands
 that *write* -- the fast-forward and every assist step (rebase, merge, stash) -- run without a
 timeout and are never killed: a cancel only drops their result and git finishes by itself, and
 quitting Neovim waits up to 20 s for a running assist (it must not stop between `stash push` and
@@ -783,7 +782,7 @@ uncommitted work permanently. Sticking to the named list is what makes
   `init.lua` so an older lib.nvim loses only this route), `sync.lua` (the orchestrator: phases,
   cancel, re-check, assist, the closing line), `sync_classify.lua` (the **pure** core: status
   parser, the state table, order, summary, the assist table -- specced without git),
-  `sync_state.lua` (the saved result), `sync_dash.lua` (the triage list), `sync_status.lua` (the
+  `sync_state.lua` (the saved result), `sync_dash.lua` (the triage list), `help_float.lua` (the key-help float shared by the triage list and the task dashboard; spec in `TESTS/plugin_repos/`), `sync_status.lua` (the
   statusline hint). Its git calls are `ops.git_async` and friends (own `vim.system` calls with a
   timer-based timeout that kills the process tree -- `taskkill /T` first, waited for -- because
   `vim.system`'s timeout reports only after the pipes close, which a hung transport child
@@ -843,7 +842,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 - [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
 - [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`; [`tasks_dash_watch_spec.lua`](../../../../TESTS/tasks/tasks_dash_watch_spec.lua) / [`tasks_dash_refresh_spec.lua`](../../../../TESTS/tasks/tasks_dash_refresh_spec.lua) / [`tasks_frecency_spec.lua`](../../../../TESTS/tasks/tasks_frecency_spec.lua) — the watcher, the live refresh with real watchers, and frecency
 
-- [`TESTS/sync/`](../../../../TESTS/sync/) — `sync`: the pure core, the grammar through the real composer, the whole flow against real throwaway git repositories (every state, re-check after a fix, skip, assist incl. its failure paths, the timeout kill), the real Snacks picker, the statusline hint and the picker action
+- [`TESTS/sync/`](../../../../TESTS/sync/) — `sync`: the pure core, the grammar through the real composer, the whole flow against real throwaway git repositories (every state, re-check after a fix, skip, assist incl. its failure paths, the timeout kill), the real Snacks picker, the statusline hint and the picker action; the process-tree kill spec was also run on Linux (WSL Arch, `LIB_NVIM_DIR` pointing at lib.nvim)
 - [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/core/source.lua`](../../../plugins/personal/core/source.lua) — the `OVERRIDE` switch and per-repo mode table
 - [`lua/plugins/personal/core/list.lua`](../../../plugins/personal/core/list.lua) — where the repo list actually comes from

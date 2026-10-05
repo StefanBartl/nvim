@@ -3,7 +3,9 @@
 ---@description
 --- The float is opened WITHOUT taking the focus: the picker keeps it, so the list stays alive
 --- behind the help. Any key closes it again, and that key is discarded -- otherwise it would also
---- run in the picker (`s` would skip a row, `x` fails with E21 in the read-only list).
+--- run in the picker (`s` would skip a row, `x` fails with E21 in the read-only list). `vim.on_key`
+--- sees keys after mapping expansion: of a mapping whose right-hand side is plain keys only the
+--- first one is discarded (Lua-function and `<Cmd>` mappings are discarded as a unit).
 
 local M = {}
 
@@ -40,7 +42,7 @@ function M.open(lines, ns_name)
         vim.api.nvim_buf_delete(buf, { force = true })
       end
     end)
-    -- an empty string discards the key (see the module description)
+    -- an empty string discards the key (see the module description for its limit)
     return ""
   end, ns)
   return win, buf
