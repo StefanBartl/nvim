@@ -182,6 +182,12 @@ return function(H)
     none = none + 1
   end
   eq(none, 1, "--only: one record")
+  -- ...but the saved result still holds every repo: a partial run must not wipe the others
+  local after_only = assert(state.load({ path = state_path }))
+  eq(#after_only.records, #names, "--only keeps the saved result of the repos it did not look at")
+  local kept = by_name(after_only.records)
+  eq(kept["current"].state, "pulled", "the repo it did look at is fresh")
+  eq(kept["diverged"].state, "diverged", "another repo keeps the result of the earlier run")
 
   -- ── re-check after the user resolved a problem ─────────────────────────
   do

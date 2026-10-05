@@ -112,6 +112,11 @@ return function(H)
     "no longer exists",
     "gone upstream says so"
   )
+  has(
+    state_of(track(0, 0, "u UU N... 100644 100644 100644 100644 a b c conflict.lua")).detail,
+    "1 in conflict",
+    "conflict markers in the tree are named in the hint"
+  )
   eq(state_of(z(HEAD, "# branch.head (detached)")).state, "detached", "detached head")
   eq(
     state_of(z(HEAD, "# branch.head (detached)", "# branch.upstream origin/main", ab(0, 3))).state,
@@ -270,4 +275,78 @@ return function(H)
   has(row, "4 changed file(s) in the way", "detail")
   has(C.format_line(rec("a", "diverged", { skipped = true })), "skipped", "a skipped row says so")
   has(C.format_line(rec("a", "diverged", { skipped = true })), ">>", "and has its own mark")
+
+  -- ── assist actions ─────────────────────────────────────────────────────
+  do
+    eq(
+      table.concat(C.assists_for(rec("a", "diverged")), ","),
+      "rebase,merge",
+      "diverged: rebase or merge"
+    )
+    eq(
+      table.concat(C.assists_for(rec("a", "dirty_blocked")), ","),
+      "stash_pull",
+      "dirty_blocked: stash, pull, pop"
+    )
+    for _, st in ipairs({
+      "current",
+      "pulled",
+      "ahead",
+      "dirty",
+      "no_upstream",
+      "detached",
+      "fetch_failed",
+    }) do
+      eq(#C.assists_for(rec("a", st)), 0, st .. ": no assist (lazygit is the way)")
+    end
+
+    -- the promise to the user: nothing here can destroy work
+    for id, info in pairs(C.ASSISTS) do
+      for _, command in ipairs(info.commands) do
+        ok(not command:find("reset", 1, true), id .. ": no reset in `" .. command .. "`")
+        ok(not command:find("clean", 1, true), id .. ": no clean in `" .. command .. "`")
+        ok(not command:find("--force", 1, true), id .. ": no force in `" .. command .. "`")
+        ok(not command:find("checkout", 1, true), id .. ": no checkout in `" .. command .. "`")
+      end
+      ok(info.safety ~= "", id .. ": says what happens when it goes wrong")
+    end
+
+    local text = C.assist_prompt(rec("filetree.nvim", "dirty_blocked"), "stash_pull")
+    has(text, "filetree.nvim", "the question names the repo")
+    has(text, "git stash push --include-untracked", "...and the exact commands")
+    has(text, "git pull --ff-only", "...all of them")
+    has(text, "git stash pop", "...in order")
+    has(text, "popped again even when the pull fails", "...and what protects the work")
+    has(
+      C.assist_prompt(rec("a", "diverged"), "rebase"),
+      "git rebase @{u}",
+      "rebase names its command"
+    )
+    has(
+      C.assist_prompt(rec("a", "diverged"), "merge"),
+      "git merge --no-edit @{u}",
+      "merge names its command"
+    )
+  end
+
+  -- ── absent, merge ───────────────────────────────────────────────────────
+  do
+    local gone = C.absent("x", "/r/x", "missing")
+    eq(gone.state, "missing", "absent: missing")
+    has(gone.detail, ":MyPlugins clone", "a missing repo points to clone")
+    eq(C.absent("y", "/r/y", "not_git").state, "not_git", "absent: not a repo")
+    local merged = C.merge(
+      { rec("a", "diverged"), rec("b", "current"), rec("c", "detached") },
+      { rec("b", "pulled"), rec("d", "ahead") }
+    )
+    local out = {}
+    for _, r in ipairs(merged) do
+      out[#out + 1] = r.name .. ":" .. r.state
+    end
+    eq(
+      table.concat(out, ","),
+      "a:diverged,b:pulled,c:detached,d:ahead",
+      "a partial run replaces its own repos, keeps the others and appends new ones"
+    )
+  end
 end

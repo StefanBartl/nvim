@@ -1,7 +1,35 @@
 # Implementierungsplan: `:MyPlugins sync` — alle Plugin-Repos auf den aktuellen Stand, Problemfälle als Triage-Liste
 
-Stand: 2026-10-05. Status: **Plan, die fünf Designfragen sind entschieden
-(Abschnitt 7), noch nichts implementiert.**
+Stand: 2026-10-05. Status: **umgesetzt (M1-M5, alle auf `main`).** Die fünf Designfragen
+(Abschnitt 7) sind wie entschieden umgesetzt. Dokumentation für Endnutzer: Abschnitt
+`:MyPlugins sync` in
+[`plugin_repos/README.md`](../../../lua/bindings/usrcmds/plugin_repos/README.md); Tests:
+[`TESTS/sync/`](../../../TESTS/sync/).
+
+Abweichungen und Ergänzungen gegenüber dem Plan (alle aus dem Bauen entstanden):
+
+- **Eigene Git-Primitive in `ops.lua`** statt `lib.nvim.git.*_async`: Timeout und
+  `GIT_TERMINAL_PROMPT=0` gibt es dort nicht, und `sync` soll mit einer älteren lib.nvim auf der
+  anderen Maschine laufen. Das Timeout ist ein eigener Timer, der den **Prozessbaum** tötet
+  (`taskkill /T` unter Windows): `vim.system` meldet das Ende erst, wenn auch die Pipes zu sind,
+  was ein hängendes Transport-Kindprozess (`git-remote-https`, `ssh`) verhindert -- der
+  Integrationstest hat das aufgedeckt.
+- **Eigener Parser** für `git status --porcelain=v2 --branch -z` (`sync_classify.parse_status`),
+  rein und ohne Abhängigkeit von der lib.nvim-Version.
+- **Zusätzliche Zustände**: `status_failed` (git liefert keinen Status) und `behind` (nur im
+  `--dry-run` sichtbar). Ein Repo mit Konfliktmarkern im Baum bleibt Hinweis `dirty`, nennt den
+  Konflikt aber in der Zeile.
+- **Teil-Läufe** (`--only`, die Picker-Aktion `S`) behalten das gespeicherte Ergebnis der anderen
+  Repos (`partial`, `session.others`); Meldung und Liste betreffen nur den Lauf.
+- **Statusline**: `sync:N` über `sync_status.lua` (zwischengespeicherte Zahl, nie IO im Redraw),
+  verdrahtet in `lua/config/ui_statusline/variant.lua`.
+- **Assist** schützt zusätzlich einen älteren Stash des Nutzers (es wird nur gepoppt, wenn die
+  Aktion selbst etwas gestasht hat).
+- **Re-Check nach lazygit** hängt an `WinClosed` des lazygit-Fensters, weil
+  `gitsuite.features.ui.lazygit` keinen Close-Hook anbietet; dort ist nichts geändert.
+- Reale Abnahme von M2 (39 Repos in `E:epos`, `--dry-run`): 16 s, der Editor blieb bedienbar
+  (längste Lücke zwischen 50-ms-Timer-Ticks 65 ms), 0 Abweichungen von `git status`.
+
 
 ## 1. Auftrag (bereinigt)
 

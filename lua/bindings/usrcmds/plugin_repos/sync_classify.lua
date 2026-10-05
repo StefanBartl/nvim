@@ -270,6 +270,10 @@ function M.classify(name, path, st, fetch_err)
   end
   if rec.dirty then
     rec.state, rec.detail = "dirty", ("%d changed file(s)"):format(rec.changed)
+    if st.conflicted > 0 then
+      -- still only a hint (nothing is behind), but the user must know there are conflict markers
+      rec.detail = rec.detail .. (", %d in conflict"):format(st.conflicted)
+    end
     return rec
   end
   rec.state = "current"
@@ -344,6 +348,64 @@ function M.merge(old, fresh)
     end
   end
   return out
+end
+
+-- ── Assist actions ────────────────────────────────────────────────────────────
+
+---@alias MyPlugins.SyncAssist "rebase"|"merge"|"stash_pull"
+
+---@class MyPlugins.SyncAssistInfo
+---@field label string       Menu entry.
+---@field commands string[]  The exact commands, in order (shown in the confirmation).
+---@field safety string      What happens when it goes wrong.
+
+---What the optional assist actions do. Standard stays lazygit (the user decides); these are
+---shortcuts for the two situations that are almost always solved the same way. Never
+---`reset --hard`, never `clean`.
+---@type table<MyPlugins.SyncAssist, MyPlugins.SyncAssistInfo>
+M.ASSISTS = {
+  rebase = {
+    label = "rebase onto the upstream",
+    commands = { "git rebase @{u}" },
+    safety = "a conflict aborts the rebase (git rebase --abort); nothing is lost",
+  },
+  merge = {
+    label = "merge the upstream",
+    commands = { "git merge --no-edit @{u}" },
+    safety = "a conflict aborts the merge (git merge --abort); nothing is lost",
+  },
+  stash_pull = {
+    label = "stash, pull, stash pop",
+    commands = { "git stash push --include-untracked", "git pull --ff-only", "git stash pop" },
+    safety = "the stash is popped again even when the pull fails; a pop that conflicts leaves the changes in the stash",
+  },
+}
+
+---The assist actions that make sense for a record, in the order they are offered.
+---@param rec MyPlugins.SyncRecord
+---@return MyPlugins.SyncAssist[]
+function M.assists_for(rec)
+  if rec.state == "diverged" then
+    return { "rebase", "merge" }
+  end
+  if rec.state == "dirty_blocked" then
+    return { "stash_pull" }
+  end
+  return {}
+end
+
+---The question of the confirmation: names the repo and the exact commands.
+---@param rec MyPlugins.SyncRecord
+---@param id MyPlugins.SyncAssist
+---@return string
+function M.assist_prompt(rec, id)
+  local info = M.ASSISTS[id]
+  return ("%s in %s?\n\n  %s\n\n%s."):format(
+    info.label,
+    rec.name,
+    table.concat(info.commands, "\n  "),
+    info.safety:sub(1, 1):upper() .. info.safety:sub(2)
+  )
 end
 
 -- ── Order, filter, summary ────────────────────────────────────────────────────
