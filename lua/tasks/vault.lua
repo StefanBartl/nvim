@@ -260,12 +260,35 @@ function M.areas(root)
   return out
 end
 
----Whether `area` is one of the vault's areas.
+---Whether `root` holds an entry named exactly `name`. A path lookup is not
+---that strict: on Windows (and macOS) `stat` finds `LIB.NVIM` and `lib.nvim.`
+---for the folder `lib.nvim`, so an id typed in the wrong case would write into
+---the right folder under a different id.
+---@param root string
+---@param name string
+---@return boolean
+function M.dir_listed(root, name)
+  local handle = uv.fs_scandir(root)
+  if not handle then
+    return false
+  end
+  while true do
+    local entry = uv.fs_scandir_next(handle)
+    if not entry then
+      return false
+    end
+    if entry == name then
+      return true
+    end
+  end
+end
+
+---Whether `area` is one of the vault's areas, spelled exactly like its folder.
 ---@param root string
 ---@param area string
 ---@return boolean
 function M.has_area(root, area)
-  return type(area) == "string" and is_area_dir(root, area)
+  return type(area) == "string" and is_area_dir(root, area) and M.dir_listed(root, area)
 end
 
 return M

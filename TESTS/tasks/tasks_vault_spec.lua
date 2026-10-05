@@ -107,4 +107,27 @@ return function(H)
   eq(vault.BUCKET_OF_KIND.research, "FEATURES")
   eq(vault.BUCKET_OF_KIND.task, "TASKS")
   eq(vault.BUCKET_OF_KIND.bug, "TASKS")
+
+  -- ── an area is spelled exactly like its folder ──────────────────────────
+  -- On Windows and macOS `stat` resolves `LIB.NVIM` and (Windows) `lib.nvim.` to the
+  -- folder `lib.nvim`, so these used to pass and a task was created under the
+  -- wrong id in the right folder (and its index named the wrong area).
+  ok(vault.has_area(root, "lib.nvim"), "the exact spelling is an area")
+  for _, alias in ipairs({ "LIB.NVIM", "Lib.Nvim", "lib.nvim." }) do
+    ok(not vault.has_area(root, alias), "not an area, whatever the file system says: " .. alias)
+    ok(not vault.dir_listed(root, alias), "not listed: " .. alias)
+  end
+  ok(vault.dir_listed(root, "lib.nvim"), "listed")
+  eq(vault.dir_listed(root .. "/does-not-exist", "lib.nvim"), false, "no folder, nothing listed")
+  F.task(H, root, "lib.nvim", "real-one", F.meta("Real", "open"))
+  local scan = require("tasks.scan")
+  local found = scan.find("lib.nvim/real-one", { root = root })
+  ok(found, "the exact id is found")
+  local wrong, werr = scan.find("LIB.NVIM/real-one", { root = root })
+  eq(wrong, nil, "an id with the area in the wrong case is not found")
+  ok(werr and werr:find("no such open task", 1, true), "and says so: " .. tostring(werr))
+  eq(scan.find_done("LIB.NVIM/real-one", { root = root }), nil)
+  local created, cerr = require("tasks.mutate").new("LIB.NVIM", { root = root, title = "Wrong" })
+  eq(created, nil, "new refuses a wrongly spelled area")
+  ok(cerr and cerr:find("unknown area", 1, true), "with the usual message: " .. tostring(cerr))
 end
