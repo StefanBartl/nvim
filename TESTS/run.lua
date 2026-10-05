@@ -78,6 +78,7 @@ local specs = {
   "tasks/tasks_dash_refresh_spec.lua",
   "tasks/tasks_staleness_spec.lua",
   "tasks/tasks_ci_spec.lua",
+  "plugin_repos/help_float_spec.lua",
   "sync/sync_classify_spec.lua",
   "sync/sync_state_scope_spec.lua",
   "sync/sync_integration_spec.lua",

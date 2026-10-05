@@ -272,7 +272,8 @@ by it, by a cancel or by quitting Neovim (`:MyPlugins sync` again while one runs
 cancel and restart). A hung repo becomes `fetch_failed` / `status_failed`. The kill takes the whole
 process tree: on Windows `taskkill /T /F` runs first and is waited for (so the transport child,
 `git-remote-https` / `ssh`, goes too, and the next phase starts on a repo whose git is really
-gone); elsewhere the git job leads its own process group and the group is killed. The commands
+gone); elsewhere the git job leads its own process group and the group is killed (the integration
+spec runs green on Linux too, WSL Arch; set `LIB_NVIM_DIR` and `REPOS_DIR` there). The commands
 that *write* -- the fast-forward and every assist step (rebase, merge, stash) -- run without a
 timeout and are never killed: a cancel only drops their result and git finishes by itself, and
 quitting Neovim waits up to 20 s for a running assist (it must not stop between `stash push` and
