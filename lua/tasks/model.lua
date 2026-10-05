@@ -270,7 +270,7 @@ function M.first_paragraph(body)
       para[#para + 1] = t
     end
   end
-  return (table.concat(para, " "):gsub("%s+", " "))
+  return (fsio.clean(table.concat(para, " ")):gsub("%s+", " "))
 end
 
 ---@param value any
@@ -285,7 +285,7 @@ local function as_text(value, field, bad)
     bad("field-type", field .. " must be text")
     return nil
   end
-  local t = trim(value)
+  local t = trim(fsio.clean(value))
   return t ~= "" and t or nil
 end
 
@@ -299,14 +299,15 @@ local function as_list(value, field, bad)
     return {}
   end
   if type(value) == "string" then
-    local t = trim(value)
+    local t = trim(fsio.clean(value))
     return t ~= "" and { t } or {}
   end
   if type(value) == "table" then
     local out = {}
     for _, item in ipairs(value) do
-      if type(item) == "string" and trim(item) ~= "" then
-        out[#out + 1] = trim(item)
+      local t = type(item) == "string" and trim(fsio.clean(item)) or ""
+      if t ~= "" then
+        out[#out + 1] = t
       end
     end
     return out
@@ -372,7 +373,7 @@ function M.parse_text(text, ctx)
   }
 
   if not vault.valid_slug(slug) then
-    bad("slug", "filename is not a kebab-case ASCII slug: " .. slug)
+    bad("slug", "filename is not a kebab-case ASCII slug: " .. fsio.clean(slug))
   end
   if ctx.nested then
     bad(

@@ -180,6 +180,22 @@ return function(H)
     eq(pipes, 6, "6 pipes = 5 columns")
   end
 
+  -- a control character in any cell (a record that did not come through the
+  -- parser, or a future field) is not written into the generated file
+  do
+    local raw = task("lib.nvim", "raw", F.meta("Raw", "open"))
+    raw.title = "a\27[2Jb\r\nc|d"
+    raw.summary = "s\27]52;c;AAAA\7e"
+    raw.effort = "M\27"
+    local rendered = index.render("lib.nvim", { raw })
+    ok(not rendered:find("[\1-\9\11-\31\127]"), "no control character but the line breaks")
+    eq(
+      rendered:match("[^\n]*raw%.md[^\n]*"),
+      "| open | – | M  | [a \\[2Jb c\\|d](tasks/raw.md) | s ]52;c;AAAA e |",
+      "controls became spaces, a CR LF pair one space"
+    )
+  end
+
   -- a file name that is no valid slug still gets a row that parses and a target
   -- that cannot end the link early or add a column
   do

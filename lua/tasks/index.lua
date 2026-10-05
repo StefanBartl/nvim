@@ -39,7 +39,7 @@ M.MAX_SUMMARY = 160
 ---@param s string
 ---@return string
 local function cell(s)
-  return (s:gsub("[\r\n]+", " "):gsub("|", "\\|"))
+  return (fsio.clean(s:gsub("[\r\n]+", " ")):gsub("|", "\\|"))
 end
 
 ---The text of a link `[text](target)`. Brackets are escaped so a title cannot

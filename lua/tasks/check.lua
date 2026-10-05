@@ -285,7 +285,9 @@ function M.format(finding, root)
     rel = rel:sub(#root + 2)
   end
   local tag = finding.severity == "warn" and "warn " or ""
-  return ("%s  %s%s  %s"):format(rel, tag, finding.code, finding.message)
+  -- The message and the path carry text from the files (a status, a ref, a file
+  -- name): a control character in them must not reach the terminal.
+  return fsio.clean(("%s  %s%s  %s"):format(rel, tag, finding.code, finding.message))
 end
 
 return M
