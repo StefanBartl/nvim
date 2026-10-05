@@ -148,8 +148,9 @@ without an extension): writing to `nul` "succeeds" and stores nothing. The same 
 never generated as a slug (`new "Nul"` gives `nul-task`) and are refused as `--slug=`. An
 existing asset is never replaced. A failed `attach` leaves the task as it was: the folder
 conversion it started is undone (and said so in the error when that fails too). The editor
-command takes the file name literally when such a file exists; only otherwise are `~`,
-`$VAR` and wildcards expanded (`report[1].pdf` is that file, not `report1.pdf`).
+command gets the file argument already resolved by the composer (`~`, `$VAR`, `%VAR%`) and
+never expands it a second time: `report[1].pdf` is that file, not `report1.pdf`, and a backtick
+in a name never reaches a shell.
 
 ### `done` (rule R6)
 
