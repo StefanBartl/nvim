@@ -219,6 +219,84 @@ return function(H)
   has(H.read(target_dir .. "/2026-10-03_keep-me.md"), "Keep me", "with the task text")
   ok(not H.exists(src_dir), "the folder was not moved back without its task file")
 
+  -- the same for a plain task file: when the original cannot be put back, the finished copy stays
+  root, o = setup()
+  assert(mutate.new("lib.nvim", vim.tbl_extend("force", o, { title = "Stays open" })))
+  local plain_keep =
+    assert(mutate.new("lib.nvim", vim.tbl_extend("force", o, { title = "Plain keep" })))
+  local plain_target = root .. "/lib.nvim/Backlog/TASKS/2026-10-03_plain-keep.md"
+  real_write = fsio.write_atomic
+  local real_create_p = fsio.create_exclusive
+  with_stub(fsio, "write_atomic", function(path, content)
+    if path:match("ROADMAP/TASKS%.md$") then
+      return false, "stubbed index failure"
+    end
+    return real_write(path, content)
+  end, function()
+    with_stub(fsio, "create_exclusive", function(path, content)
+      if path == plain_keep.path then
+        return false, "stubbed create failure"
+      end
+      return real_create_p(path, content)
+    end, function()
+      local res, err = mutate.done(plain_keep.id, o)
+      ok(res == nil and err)
+      has(err, "stubbed index failure")
+      has(err, "rollback incomplete")
+      has(err, plain_keep.path, "the original that could not be put back is named")
+    end)
+  end)
+  ok(H.exists(plain_target), "the finished copy is the only holder of the text and stays")
+  has(H.read(plain_target), "Plain keep")
+  ok(not H.exists(plain_keep.path))
+
+  -- ── done: a task file written while it is being finished is not dropped ─
+  root, o = setup()
+  readme = root .. "/lib.nvim/Backlog/README.md"
+  readme_before = H.read(readme)
+  local busy = assert(mutate.new("lib.nvim", vim.tbl_extend("force", o, { title = "Busy" })))
+  local busy_target = root .. "/lib.nvim/Backlog/TASKS/2026-10-03_busy.md"
+  local edited
+  local real_create = fsio.create_exclusive
+  with_stub(fsio, "create_exclusive", function(path, content)
+    local created, cerr = real_create(path, content)
+    -- a concurrent writer (the editor, another run) saves the task right after the copy was made
+    edited = H.read(busy.path) .. "\nAdded by someone else.\n"
+    H.write(busy.path, edited)
+    return created, cerr
+  end, function()
+    local res, err = mutate.done(busy.id, o)
+    ok(res == nil and err, "done refuses to drop a file that changed under it")
+    has(err, "changed while it was being finished")
+  end)
+  eq(H.read(busy.path), edited, "the concurrent edit is still there")
+  ok(not H.exists(busy_target), "no finished copy is left behind")
+  eq(H.read(readme), readme_before, "the README is untouched")
+  assert(mutate.done(busy.id, o))
+  has(H.read(busy_target), "Added by someone else", "the next run finishes the edited text")
+
+  local fbusy = assert(
+    mutate.new("lib.nvim", vim.tbl_extend("force", o, { title = "Folder busy", folder = true }))
+  )
+  local fbusy_dir = root .. "/lib.nvim/Backlog/TASKS/2026-10-03_folder-busy"
+  local real_is_dir = fsio.is_dir
+  local fired = false
+  with_stub(fsio, "is_dir", function(path)
+    if not fired and path == fbusy_dir then
+      fired = true
+      edited = H.read(fbusy.path) .. "\nLate edit.\n"
+      H.write(fbusy.path, edited)
+    end
+    return real_is_dir(path)
+  end, function()
+    local res, err = mutate.done(fbusy.id, o)
+    ok(res == nil and err)
+    has(err, "changed while it was being finished")
+  end)
+  ok(fired)
+  eq(H.read(fbusy.path), edited, "the folder task keeps the late edit")
+  ok(not H.exists(fbusy_dir), "nothing was moved")
+
   -- ── done: a slug that exists as a file and as a folder says so ──────────
   root, o = setup()
   F.task(H, root, "lib.nvim", "twice", F.meta("Twice", "open"))
