@@ -242,11 +242,7 @@ function M.today()
   return os.date("%Y-%m-%d") --[[@as string]]
 end
 
----@param s string
----@return string
-local function trim(s)
-  return (s:match("^%s*(.-)%s*$"))
-end
+local trim = fsio.trim
 
 ---The first paragraph of a body: consecutive text lines, skipping blank lines,
 ---headings, single-line HTML comments and fenced code. Whitespace is collapsed.

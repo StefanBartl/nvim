@@ -431,4 +431,25 @@ return function(H)
     eq(noted.hints, {}, "a real comment after a quoted title is not a hint")
     eq(parse("---\ntitle: 'It''s' # n\nstatus: open\n---\n").hints, {}, "single-quoted too")
   end
+
+  -- ── a long whitespace run is read in linear time (SEC-32) ───────────────
+  -- `s:match("^%s*(.-)%s*$")` retries the rest of a run from every byte inside
+  -- it: 100 000 spaces in a body line took ~25 s. The bound fails loudly if a
+  -- quadratic trim ever comes back; the fixed code needs a few milliseconds.
+  do
+    local run = (" "):rep(100000)
+    local text = "---\ntitle: a" .. run .. "b\nstatus: open\ntags: [x" .. run .. "y,  z  ]\n---\n\n"
+    text = text .. run .. "word" .. run .. "\n"
+    local t0 = vim.uv.hrtime()
+    local long = parse(text)
+    local ms = (vim.uv.hrtime() - t0) / 1e6
+    ok(ms < 3000, ("parsing took %.0f ms"):format(ms))
+    eq(long.title, "a" .. run .. "b", "inner run kept, nothing around it")
+    eq(long.summary, "word", "the body line is trimmed")
+    eq(long.tags[2], "z", "a list item is trimmed")
+    eq(model.split_commas("a ,  b  , " .. run .. "c" .. run), { "a", "b", "c" }, "comma list")
+    eq(require("tasks.fsio").trim("  \t x y \r\n"), "x y", "fsio.trim")
+    eq(require("tasks.fsio").trim(run), "", "an all-whitespace string")
+    eq(require("tasks.fsio").trim(""), "", "the empty string")
+  end
 end
