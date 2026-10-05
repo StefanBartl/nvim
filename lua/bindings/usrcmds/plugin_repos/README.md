@@ -382,7 +382,9 @@ their file events are muted and no second scan runs. Closing the picker (any way
 including the `D` / `f` / `e` detours) stops every handle and timer; the reopened dashboard
 starts its own. Only direct folders are watched (libuv's `recursive` flag does nothing on
 Linux), so after every refresh (and after `r`) the handles are re-aimed: a folder task
-created while open is watched from then on. A whole new area is only noticed by `r` or by
+created while open is watched from then on. An area that has no `ROADMAP/tasks/` yet is
+watched at `ROADMAP/` until the folder appears (its first task is noticed, however the burst of
+events ends: `lib.nvim.fs.watch` reports only the last file name of a burst). A whole new area is only noticed by `r` or by
 reopening the dashboard (the vault root itself is not watched). Off with `require("bindings.usrcmds.plugin_repos.tasks_dash").config.watch = false`
 (or per call `open(v, { watch = false })`); the debounce is `config.watch_debounce_ms`. If no
 folder can be watched (handle limit, no `lib.nvim.fs.watch`) the dashboard says so once and
