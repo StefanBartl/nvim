@@ -31,8 +31,8 @@ file of its category *and* into the matching group of `source.lua`'s mode table.
 | [`specs/ai.lua`](specs/ai.lua) | ai, buffer-ctx |
 | [`specs/edit.lua`](specs/edit.lua) | cascade, replacer, emojis, language, markdown, data |
 | [`specs/navigate.lua`](specs/navigate.lua) | gopath, hover, open, pickers, filetree, fileops, sessions |
-| [`specs/inspect.lua`](specs/inspect.lua) | dap, debugging, diff, lsp, insights, runtime-analysis, recommender, spotlight, cmdlog, rules |
-| [`specs/project.lua`](specs/project.lua) | sandbox, github_stats, reposcope, documentation, gitsuite, casedesk |
+| [`specs/inspect.lua`](specs/inspect.lua) | dap, debugging, diff, lsp, insights, runtime-analysis, recommender, spotlight, cmdlog, rules, testing |
+| [`specs/project.lua`](specs/project.lua) | sandbox, github_stats, reposcope, documentation, gitsuite, casedesk, tasks |
 | [`specs/view.lua`](specs/view.lua) | ui, color_my_ascii, images, mdview, media, pdfport |
 
 The website's eighth category, `desktop`, holds a standalone app and has no
