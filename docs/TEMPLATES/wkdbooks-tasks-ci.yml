@@ -1,7 +1,8 @@
 # TEMPLATE -- belongs in the WKDBooks repo as `.github/workflows/tasks-ci.yml`
 # (the vault is a folder of that repo: Development/wkdbook-myplugins). It is kept here,
-# next to the engine it runs (`lua/tasks/ci.lua`, `scripts/tasks-ci.lua` of the nvim config
-# repo), until it is copied over.
+# next to the wrapper it runs (`scripts/tasks-ci.lua` of the nvim config repo, which hands over
+# to the engine in the plugin `tasks.nvim`), until it is copied over. NOTE: the `tasks.nvim` checkout below
+# works only once that repo is published.
 #
 # The gate: `tasks check` (no error finding), `tasks index --check` (no outdated
 # ROADMAP/TASKS.md) and the vault's md_lint over every generated index. It writes nothing.
@@ -9,7 +10,8 @@
 # Layout it builds, so that `$REPOS_DIR/...` links in the notes and the engine's own
 # vault lookup (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`) resolve like on a dev machine:
 #
-#   deps/WKDBooks   this repo        deps/nvim      the config with lua/tasks + scripts/tasks-ci.lua
+#   deps/WKDBooks   this repo        deps/nvim      the config with scripts/tasks-ci.lua
+#   deps/tasks.nvim the engine
 #   deps/lib.nvim   the engine's library             deps/lsp.nvim  `lsp.core.env_links` for md_lint
 #
 # The repos below are public; for a private one pass `token: ${{ secrets.<PAT> }}` to the
@@ -46,6 +48,10 @@ jobs:
           path: deps/nvim
       - uses: actions/checkout@v5
         with:
+          repository: StefanBartl/tasks.nvim
+          path: deps/tasks.nvim
+      - uses: actions/checkout@v5
+        with:
           repository: StefanBartl/lib.nvim
           path: deps/lib.nvim
           ref: ci-verified
@@ -60,6 +66,11 @@ jobs:
       - name: Vault gate
         env:
           LIB_NVIM_DIR: ${{ github.workspace }}/deps/lib.nvim
+          TASKS_NVIM_DIR: ${{ github.workspace }}/deps/tasks.nvim
+          # tasks.nvim refuses to run a vault's own md_lint.lua unless told to. This is the author's own
+          # vault repo (pushes by the author), so its script is trusted; a workflow that builds pull requests of
+          # strangers must drop this line and pass --md-lint=<a copy outside the vault> instead.
+          TASKS_TRUST_VAULT_LINT: "1"
         run: |
           nvim --headless -u NONE -l deps/nvim/scripts/tasks-ci.lua \
             --vault="$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins"

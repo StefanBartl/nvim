@@ -28,7 +28,7 @@ example:
 | `lua/plugins/` | lazy.nvim plugin specs; `personal/` holds the own `*.nvim` plugins |
 | `lua/bindings/` | keymaps, user commands and autocmds |
 | `lua/startup/` | startup diagnostics and reporting |
-| `lua/tasks/` | the in-repo task system |
+| `lua/bindings/usrcmds/plugin_repos/tasks_*.lua` | the editor front ends of the task system (the engine is the plugin `tasks.nvim`) |
 | `after/` | Tree-sitter query overrides (textobjects) |
 | `docs/` | documentation: keybindings, installation notes, notes and roadmaps |
 | `TESTS/` | test harness and specs, run headless with `nvim -n -i NONE --headless -u NONE -l TESTS/run.lua` |

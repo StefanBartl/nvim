@@ -7,8 +7,7 @@
 --- dashboard|mode|list|picker|tasks|task|open} [args]` command via
 --- `lib.nvim.bindings.usercmd.composer` (replaces the former flat
 --- `:MyPluginsClone` / `:MyPluginsRemove`). The `tasks`, `task` and `open`
---- routes come from `tasks_routes.lua` (handlers: `tasks_cmd.lua`, engine:
---- `lua/tasks/`) and are not limited to the plugin list: they work on the
+--- routes come from `tasks_nvim.ui.routes` (the plugin `tasks.nvim`: handlers, engine) and are not limited to the plugin list: they work on the
 --- areas of the wkdbook vault.
 --- `sync` (routes in `sync_routes.lua`, orchestrator `sync.lua`) is the thorough
 --- `update`: fetch every listed repo, pull what is behind, triage the rest.
@@ -1115,15 +1114,16 @@ function M.enable()
     end,
   })
 
-  -- The task routes need `lib.nvim.markdown.frontmatter`. They are loaded
-  -- guarded so that an older lib.nvim checkout (the other machine, before its
-  -- next `:MyPlugins update`) loses only these routes, not all of `:MyPlugins`.
-  local ok_tasks, tasks_routes = pcall(require, "bindings.usrcmds.plugin_repos.tasks_routes")
+  -- The task routes come from the plugin tasks.nvim (which needs lib.nvim's `markdown.frontmatter`).
+  -- They are loaded guarded so that a machine without the checkout (or with an older lib.nvim)
+  -- loses only these routes, not all of `:MyPlugins`.
+  local ok_tasks, tasks_routes = pcall(require, "tasks_nvim.ui.routes")
   if ok_tasks then
     tasks_routes.register_types()
   else
     notify.warn(
-      ":MyPlugins tasks/task/open are unavailable (update lib.nvim): " .. tostring(tasks_routes)
+      ":MyPlugins tasks/task/open are unavailable (tasks.nvim checkout or lib.nvim missing/outdated): "
+        .. tostring(tasks_routes)
     )
   end
 
@@ -1135,7 +1135,7 @@ function M.enable()
 
   composer.verb("MyPlugins", {
     desc = "Manage the personal plugin checkouts, their source mode and the wkdbook tasks",
-    -- The task routes (tasks / task / open) are declared in tasks_routes.lua.
+    -- The task routes (tasks / task / open) are declared in tasks_nvim.ui.routes (nested grammar).
     routes = vim.list_extend(
       {
         {
