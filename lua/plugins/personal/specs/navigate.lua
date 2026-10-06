@@ -774,6 +774,10 @@ return {
           -- are all taken across this ecosystem's git keymaps (pickers.nvim,
           -- gitsuite.nvim, neogit, diff.nvim).
           git_status_filtered = { "<leader>gm" },
+          -- filegrep trial (files + `grep=<pattern>` content filter), same picker
+          -- as keymaps.cwd_filegrep (<leader>mp) in other scopes.
+          config_filegrep = { "<leader>mC", desc = "Files+grep= (nvim config)" },
+          folder_filegrep = { "<leader>mF", desc = "Files+grep= (picked folder)" },
         },
 
         -- Native picker history under stdpath("data")/pickers.nvim/history.
