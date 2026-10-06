@@ -27,6 +27,9 @@
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
 
+- $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md
+- spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
+
 ---
 
 ## Claude Tasks
@@ -34,15 +37,10 @@
 - ich möchte einen picker haben, zb leader mp; das generell nach files sucht also wioe leader ff; ich aber in der prompt sopwas wie "grep=NWBC" angen kann, also eine geamte prompt dann zb "akronyms grep=NWBC" in alle files die akronym im path haben aber nur jene die auch "NWBC" als contetn haben. ich will das eine zeit lang testen, das wird wrsch mein neuen leader leader - also haupt picker.
   Ist sowas möglich? Umsetzung idealerweiß´e mit pickers.nvim wenn das geht, wenn nur mit telescope, nur snacks oder nur fzf-lua mölgich, dann mpssen wir und waass andrees einfallen lassen
 
-
 - filetree.nvim: Usrmcd, mit dem ich checken, ob und wie oft eine file referenziert wird. Wenn mehrer picker? Usecase; /assets ist voll mit screenhsot, die keiner mehr referenziert,
   Eun ähnliches vorgehen haben wir mit symlink ja bereits implementiert.
   -> Task: `filetree.nvim/orphaned-asset-report` (Entscheidung 2026-10-04: filetree besitzt es; `images.nvim :Image orphans` bleibt bildspezifisch).
 
-- Fehler wird auf der worjstation ausgegeben;  `10:41:18 AM msg_show.echomsg [lib.nvim.progress] style #1 failed to update, disabling it for this handle: C:/repos/lib.nvim/lua/lib/nvim/progress/styles/kit.lua:39: E5560: nvim_win_is_valid must not be called in a fast event context`
-  -> erledigt: der Fix steht seit 2026-09-28 in lib.nvim (`e9e7b5c`, `progress/styles/kit.lua`: `vim.in_fast_event()`-Zweig, Render per `vim.schedule`); die Zeile stammt von einem älteren Stand auf der Workstation (`C:/repos/lib.nvim`). Tritt es nach einem `git pull` dort noch auf, als Bug-Task in `lib.nvim` anlegen.
-
-- spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
 -  -Editing-Primitive (autopairs, autotag, matchup, visual-multi, mini.ai/targets) bleiben dauerhaft extern> Anylse, wir aufwendig ist es,d iese zu erstetzen, welche vorteile? könnte man alle features der plugins zu einen zusmmenoen=
   -> Task: `nvim-config/external-deps-replacement-assessment`

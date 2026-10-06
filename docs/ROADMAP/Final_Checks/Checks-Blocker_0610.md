@@ -1,12 +1,41 @@
 # Final Checks 6. Nov: spotlight.nvim, mdview.nvim, ai.nvim, lib.nvim (Stand 2026-10-06)
 
+## Table of content
+
+  - [Intro](#intro)
+  - [A. mdview.nvim (Releases v0.4.0 bis v0.4.3, `install.version = v0.4.3`)](#a-mdviewnvim-releases-v040-bis-v043-installversion-v043)
+    - [Spotlight-Spiegelung im Browser](#spotlight-spiegelung-im-browser)
+    - [Relay / Watcher](#relay-watcher)
+    - [Bekannte offene Kleinigkeiten](#bekannte-offene-kleinigkeiten)
+  - [B. spotlight.nvim](#b-spotlightnvim)
+  - [C. ai.nvim](#c-ainvim)
+    - [Copilot-Provider (neu, `6b84085`)](#copilot-provider-neu-6b84085)
+    - [Command-Key-Quelle (`8b17769`, `eb714c3`, `82a58c7`)](#command-key-quelle-8b17769-eb714c3-82a58c7)
+    - [Sonstiges](#sonstiges)
+  - [D. lib.nvim](#d-libnvim)
+  - [E. Housekeeping](#e-housekeeping)
+  - [F. KI-Kette casedesk.nvim + ai.nvim (Review und Fixes vom 5./6.10., Stand 2026-10-06)](#f-ki-kette-casedesknvim-ainvim-review-und-fixes-vom-5610-stand-2026-10-06)
+    - [F1. BLOCKER: `claude-cli` mit echtem Account (Task `ai.nvim/review-restpunkte`)](#f1-blocker-claude-cli-mit-echtem-account-task-ainvimreview-restpunkte)
+    - [F2. Allow-List und Provider-Wahl auf der Workstation](#f2-allow-list-und-provider-wahl-auf-der-workstation)
+    - [F3. Key-Profile (`:Ai key`)](#f3-key-profile-ai-key)
+    - [F4. casedesk: Senden und Log-Analyse (nur mit freigegebenem Provider)](#f4-casedesk-senden-und-log-analyse-nur-mit-freigegebenem-provider)
+    - [F5. Bekannte Grenzen (kein Test nötig, nur wissen)](#f5-bekannte-grenzen-kein-test-ntig-nur-wissen)
+
+---
+
+## Intro
+
 Checks fuer dich aus der Umsetzung von `ROADMAP/Casedesk/NEW.md`, die **nicht
 direkt casedesk.nvim** betreffen. Die casedesk-Checks und **alle Blocker** stehen
 in `../Casedesk/Checks-und-Blocker-2026-10-06.md`.
 
+---
+
 ## A. mdview.nvim (Releases v0.4.0 bis v0.4.3, `install.version = v0.4.3`)
 
 Checkliste im Repo: `TESTS/CHECK.md`.
+
+---
 
 ### Spotlight-Spiegelung im Browser
 
@@ -27,6 +56,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
 - [ ] Ohne spotlight.nvim: kein Fehler, nichts passiert.
 - [ ] Trefferlimit pro Spotlight bei einem grossen Dokument (Performance).
 
+---
+
 ### Relay / Watcher
 
 - [ ] `:MDView standalone <datei>`: Datei in einem Editor speichern, der
@@ -38,6 +69,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
 - [ ] Mehrere Tabs gleichzeitig: Join waehrend laufender Aenderungen zeigt nie
       einen aelteren Stand nach einem frischen (atomarer Seed).
 
+---
+
 ### Bekannte offene Kleinigkeiten
 
 - Reihenfolge zweier sehr schnell aufeinanderfolgender Broadcasts an dieselbe
@@ -46,6 +79,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
   (`7b791c8`), CI prueft Prettier nicht.
 - Windows-CI: `breadcrumbs_spec` kann einmalig in ein Timeout laufen
   (Runner-Flake; `gh run rerun <id> --failed`).
+
+---
 
 ## B. spotlight.nvim
 
@@ -60,6 +95,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
       Event (bewusst; mdview hoert selbst auf ColorScheme).
 - [ ] Mit nvim 0.9: Link-only-Highlight-Gruppen loesen in `colors()` keine
       Farben auf (Fallback auf Palettenfarben).
+
+---
 
 ## C. ai.nvim
 
@@ -76,6 +113,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
       Shell die Variable entfernen.
 - [ ] Opt-in: ohne Aktivierung kein Copilot-Aufruf.
 
+---
+
 ### Command-Key-Quelle (`8b17769`, `eb714c3`, `82a58c7`)
 
 - [ ] Key per Befehl (argv-Liste, kein Shell-String): Key kommt an, taucht nie
@@ -85,6 +124,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
       `pwsh -File` abgelehnt (`fetch` und `health`).
 - [ ] Key-Datei-Rechte (group/others) werden im Health gemeldet.
 
+---
+
 ### Sonstiges
 
 - [ ] `capabilities.web = false` auf allen eingebauten Providern, keine
@@ -92,11 +133,15 @@ Checkliste im Repo: `TESTS/CHECK.md`.
 - [ ] `doc/ai.txt` und `docs/configuration.md` entsprechen `DEFAULTS`
       (Vimdoc-/Docs-Specs sind gruen).
 
+---
+
 ## D. lib.nvim
 
 - [ ] Usercmd-Composer: variadisches letztes Argument vervollstaendigt ueber
       die deklarierten Slots hinaus und zeigt `...` im Usage (`f0d76b9`);
       bestehende Befehle in anderen Plugins verhalten sich unveraendert.
+
+---
 
 ## E. Housekeeping
 
@@ -106,12 +151,16 @@ Checkliste im Repo: `TESTS/CHECK.md`.
       Aenderungen (`docs/ROADMAP/00_ROADMAP.md`, `docs/TESTING/en_test.md`);
       im WKDBooks-Repo `language.nvim/Backlog/README.md`. Nicht mitcommittet.
 
+---
+
 ## F. KI-Kette casedesk.nvim + ai.nvim (Review und Fixes vom 5./6.10., Stand 2026-10-06)
 
 Alles unten ist offline gegen Fake-CLIs und synthetische Daten geprüft; hier steht, was
 nur **live** mit echtem Account, echtem Binary oder echten Daten geht. Sicherheitsregel für
 alle Läufe: zuerst mit synthetischen Daten (`:Case ai test`), keine Kundendaten, solange
 `ki-datenfreigabe-klaeren` (Antwort der IT) offen ist.
+
+---
 
 ### F1. BLOCKER: `claude-cli` mit echtem Account (Task `ai.nvim/review-restpunkte`)
 
@@ -134,6 +183,8 @@ einem Account mit Guthaben), dann `:Ai provider claude-cli`.
 - [ ] `:checkhealth ai`: Hinweis bei `apiKeyHelper` bzw. Zugangsdaten im `env`-Block deiner
       CLI-Einstellungen (nur wenn du so etwas konfiguriert hast; zeigt nie den Wert).
 
+---
+
 ### F2. Allow-List und Provider-Wahl auf der Workstation
 
 - [ ] `CASEDESK_AI_ALLOWED=copilot,claude` setzen (setup-claude-code.ps1 oder User-Env):
@@ -145,6 +196,8 @@ einem Account mit Guthaben), dann `:Ai provider claude-cli`.
       `:checkhealth ai` meldet es, es ist **nichts** erlaubt (fail-closed).
 - [ ] Provider-Id in anderer Schreibweise (`--provider=Claude`, `Copilot`) wird erkannt.
 
+---
+
 ### F3. Key-Profile (`:Ai key`)
 
 - [ ] `keys = { claude = { active = "privat", profiles = { privat = {env=...}, firma = {file=...} } } }`
@@ -154,6 +207,8 @@ einem Account mit Guthaben), dann `:Ai provider claude-cli`.
 - [ ] Key-Datei mit BOM / als UTF-16 (PowerShell 5.1 `Out-File`) wird gelesen.
 - [ ] Ein privater Key auf der Firmen-Workstation mit Kundendaten kann gegen die
       Firmenrichtlinie verstoßen: nur `:Case ai test` mit synthetischen Daten.
+
+---
 
 ### F4. casedesk: Senden und Log-Analyse (nur mit freigegebenem Provider)
 
@@ -175,6 +230,8 @@ einem Account mit Guthaben), dann `:Ai provider claude-cli`.
       weil die Regeln bisher nur gegen synthetische Logs geprüft sind.
 - [ ] Doku-Link-Versionen, Zitate und `{facts}` im KI-Prompt wie bisher (`templates/KiPrompt.md`).
 
+---
+
 ### F5. Bekannte Grenzen (kein Test nötig, nur wissen)
 
 - Prosa ohne Komma/Semikolon/Doppelpunkt zwischen Programmpfad und relativem Slash-Pfad
@@ -182,3 +239,6 @@ einem Account mit Guthaben), dann `:Ai provider claude-cli`.
 - Zugangsdaten aus Federation-Profilen der CLI werden nicht erkannt (nur dokumentiert).
 - Der Erfolgspfad der echten CLI (F1) und der Copilot-Fehlerpfad mitten im Lauf sind
   ungeprüft.
+
+---
+
