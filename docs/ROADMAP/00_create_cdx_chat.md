@@ -97,6 +97,8 @@ runtime-analysis.nvim
 sandbox.nvim
 sessions.nvim
 spotlight.nvim
+tasks.nvim
+testing.nvim
 ui.nvim
 
 ---
