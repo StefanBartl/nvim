@@ -3,7 +3,7 @@
 -- Run from anywhere:
 --   nvim -n -i NONE --headless -u NONE -l TESTS/run.lua
 -- One spec only:
---   nvim -n -i NONE --headless -u NONE -l TESTS/run.lua tasks_model_spec.lua
+--   nvim -n -i NONE --headless -u NONE -l TESTS/run.lua help_float
 --
 -- The specs need lib.nvim; it is looked up like scripts/tasks.lua does
 -- ($LIB_NVIM_DIR, $LIB_NVIM_PATH, $REPOS_DIR/lib.nvim, lazy's data folder).
@@ -46,9 +46,6 @@ vim.opt.rtp:prepend(config_root)
 vim.opt.rtp:append(lib)
 -- Specs that start a child Neovim (the CLI end-to-end spec) find lib.nvim the same way.
 vim.env.LIB_NVIM_DIR = lib
--- The dashboard records visits for its frecency sort; no spec (nor a child Neovim
--- it starts) may touch the real file in stdpath("state").
-vim.env.TASKS_FRECENCY_FILE = vim.fn.tempname() .. "-tasks-frecency.json"
 -- The dashboard remembers its filter through lib.nvim.store.project, which writes below
 -- stdpath("cache"): without this every run left one folder per temp vault in the real cache.
 local cache_home = vim.fn.tempname() .. "-cache"
@@ -57,27 +54,6 @@ vim.env.XDG_CACHE_HOME = cache_home
 local H = dofile(tests_dir .. "/harness.lua")
 
 local specs = {
-  "tasks/tasks_vault_spec.lua",
-  "tasks/tasks_fsio_spec.lua",
-  "tasks/tasks_model_spec.lua",
-  "tasks/tasks_scan_spec.lua",
-  "tasks/tasks_index_spec.lua",
-  "tasks/tasks_mutate_spec.lua",
-  "tasks/tasks_mutate_safety_spec.lua",
-  "tasks/tasks_boundary_safety_spec.lua",
-  "tasks/tasks_check_spec.lua",
-  "tasks/tasks_folder_spec.lua",
-  "tasks/tasks_effort_severity_spec.lua",
-  "tasks/tasks_form_spec.lua",
-  "tasks/tasks_cli_spec.lua",
-  "tasks/tasks_routes_spec.lua",
-  "tasks/tasks_dash_spec.lua",
-  "tasks/tasks_dash_picker_spec.lua",
-  "tasks/tasks_frecency_spec.lua",
-  "tasks/tasks_dash_watch_spec.lua",
-  "tasks/tasks_dash_refresh_spec.lua",
-  "tasks/tasks_staleness_spec.lua",
-  "tasks/tasks_ci_spec.lua",
   "plugin_repos/help_float_spec.lua",
   "sync/sync_classify_spec.lua",
   "sync/sync_state_scope_spec.lua",

@@ -999,36 +999,28 @@ return {
     },
   },
 
+  -- tasks.nvim: the task engine and its editor front ends (one Markdown file per task in a vault, generated
+  -- overviews, dashboard, headless CLI). Loaded on `:Tasks` or on the first `require("tasks_nvim...")`, i.e.
+  -- by the `:MyPlugins tasks|task|open` routes (lua/bindings/usrcmds/plugin_repos/init.lua mounts the
+  -- plugin's route tree). No built-in vault path: it is set here.
   {
-    -- tasks.nvim: the `:Tasks` command tree over the markdown task vault.
-    --
-    -- `cmd` keeps it out of startup; `:Tasks` loads it on first use. There is
-    -- no built-in vault path: it is resolved here the way the in-config
-    -- `tasks` module does it ($TASKS_VAULT, else the myplugins vault below
-    -- $REPOS_DIR), so both read the same files.
     "StefanBartl/tasks.nvim",
-    cmd = "Tasks",
+    main = "tasks_nvim",
+    cmd = { "Tasks" },
     dependencies = { "StefanBartl/lib.nvim" },
-    opts = function()
-      local vault = vim.env.TASKS_VAULT
-      if not vault or vault == "" then
-        local repos = vim.env.REPOS_DIR
-        if repos and repos ~= "" then
-          vault = vim.fs.joinpath(repos, "WKDBooks", "Development", "wkdbook-myplugins")
-        end
-      end
-      return {
-        vault = vault,
-        -- extra_areas = { "ALL" }, -- string[]; folders that are areas without ROADMAP/ or Backlog/
-        -- dashboard = { watch = true, debounce_ms = 250, backend = "auto" }, -- backend: auto | snacks | kit | select
-        -- staleness = { git_timeout_ms = 20000, budget_ms = 30000, repo_bases = {} },
-        -- ci = { lint_timeout_ms = 120000 },
-        -- next = { popup = true, cdx_hint = true },
-        -- chain = { marker_docs = {} },
-        -- steps = { ask_finish = false },
-        -- keys = { dashboard = {}, dashboard_input = {}, form = {} }, -- false drops an action
-      }
-    end,
+    opts = {
+      -- The vault folder (one folder per area). Without it $TASKS_VAULT is read.
+      -- Default: nil.
+      vault = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "")
+          and (vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-myplugins")
+        or nil,
+      -- Folders that are areas although they hold neither ROADMAP/ nor Backlog/.
+      -- Default: {}.
+      extra_areas = { "ALL", "nvim-config", "docmap-desktop", "migrate.nvim" },
+      -- The picker behind `:Tasks list`: "auto" (snacks if installed, else kit) | "snacks" | "kit" | "select".
+      -- Default: "auto".
+      -- dashboard = { backend = "auto" },
+    },
   },
 
   -- {
