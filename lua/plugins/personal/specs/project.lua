@@ -999,6 +999,38 @@ return {
     },
   },
 
+  {
+    -- tasks.nvim: the `:Tasks` command tree over the markdown task vault.
+    --
+    -- `cmd` keeps it out of startup; `:Tasks` loads it on first use. There is
+    -- no built-in vault path: it is resolved here the way the in-config
+    -- `tasks` module does it ($TASKS_VAULT, else the myplugins vault below
+    -- $REPOS_DIR), so both read the same files.
+    "StefanBartl/tasks.nvim",
+    cmd = "Tasks",
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = function()
+      local vault = vim.env.TASKS_VAULT
+      if not vault or vault == "" then
+        local repos = vim.env.REPOS_DIR
+        if repos and repos ~= "" then
+          vault = vim.fs.joinpath(repos, "WKDBooks", "Development", "wkdbook-myplugins")
+        end
+      end
+      return {
+        vault = vault,
+        -- extra_areas = { "ALL" }, -- string[]; folders that are areas without ROADMAP/ or Backlog/
+        -- dashboard = { watch = true, debounce_ms = 250, backend = "auto" }, -- backend: auto | snacks | kit | select
+        -- staleness = { git_timeout_ms = 20000, budget_ms = 30000, repo_bases = {} },
+        -- ci = { lint_timeout_ms = 120000 },
+        -- next = { popup = true, cdx_hint = true },
+        -- chain = { marker_docs = {} },
+        -- steps = { ask_finish = false },
+        -- keys = { dashboard = {}, dashboard_input = {}, form = {} }, -- false drops an action
+      }
+    end,
+  },
+
   -- {
   -- "StefanBartl/learn-cli.nvim",
   -- lazy = false,

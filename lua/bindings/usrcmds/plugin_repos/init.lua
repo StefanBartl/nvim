@@ -881,6 +881,93 @@ local function list_all(path)
 end
 
 -- =============================================================================
+-- Unlisted (checkouts the spec does not know yet)
+-- =============================================================================
+
+local UNLISTED_SCRATCH_NAME = "myplugins://unlisted"
+
+---Every `*.nvim` checkout directly under the repos root that the personal spec
+---does not mention — the "new plugin, not wired up yet" detector. Read-only.
+---
+---The one place in `:MyPlugins` that enumerates a directory, which the safety
+---model at the bottom of README.md rules out for everything that *acts*. Here
+---it is fine because the result is only displayed: nothing is cloned, pulled or
+---removed from it, and every action command keeps iterating the spec.
+---
+---Compares against the *raw* spec (`enabled = false` entries included), not
+---`plugin_list.read()`: a repo switched off through source.lua's "disabled"
+---mode is still known to the config. A repo whose spec is commented out
+---(`learn-cli.nvim`) is not, and is reported.
+---@param path string|nil
+local function unlisted_all(path)
+  local base_dir = resolve_base_dir(path)
+  if not base_dir then
+    notify.error("no repos directory resolved; set $REPOS_DIR or pass one")
+    return
+  end
+
+  local ok, specs = pcall(require, "plugins.personal")
+  if not ok or type(specs) ~= "table" then
+    notify.error("cannot load plugins.personal: " .. tostring(specs))
+    return
+  end
+  local known = {}
+  for _, spec in ipairs(specs) do
+    if type(spec[1]) == "string" then
+      known[fn.fnamemodify(spec[1], ":t")] = true
+    end
+  end
+
+  local lines = {}
+  for name, kind in vim.fs.dir(base_dir) do
+    local dir = base_dir .. "/" .. name
+    local is_dir = kind == "directory" or (kind == "link" and fn.isdirectory(dir) == 1)
+    if is_dir and name:match("%.nvim$") and not known[name] then
+      -- A plugin checkout has Lua to load; a bare `.nvim` folder (notes,
+      -- archive) is not a candidate.
+      local has_code = fn.isdirectory(dir .. "/lua") == 1 or fn.isdirectory(dir .. "/plugin") == 1
+      -- Own repos only: a third-party clone (plenary.nvim) is never "to be
+      -- added". `.git` as a file (worktree) has no config to read; keep it.
+      local git_config = dir .. "/.git/config"
+      local own = true
+      if fn.filereadable(git_config) == 1 then
+        own = table.concat(fn.readfile(git_config), "\n"):find("StefanBartl", 1, true) ~= nil
+      end
+      if has_code and own then
+        local has_bindings = fn.filereadable(dir .. "/docs/BINDINGS.md") == 1
+        lines[#lines + 1] = ("%-24s  %s"):format(
+          name,
+          has_bindings and "BINDINGS.md" or "no BINDINGS.md"
+        )
+      end
+    end
+  end
+  table.sort(lines, function(a, b)
+    return a:lower() < b:lower()
+  end)
+
+  if #lines == 0 then
+    notify.info(("every *.nvim checkout under %s is in plugins.personal"):format(base_dir))
+    return
+  end
+
+  local bufnr, winid = open_named_scratch(UNLISTED_SCRATCH_NAME, lines, {
+    filetype = "myplugins-list",
+    split = "below",
+    modifiable = true,
+  })
+  vim.wo[winid].winbar = ("%d checkout(s) not in plugins.personal — add to specs/<category>.lua AND core/source.lua")
+    :format(#lines)
+    :gsub("%%", "%%%%")
+
+  require("lib.nvim.bindings.keymap")("n", "q", function()
+    if vim.api.nvim_win_is_valid(winid) then
+      vim.api.nvim_win_close(winid, false)
+    end
+  end, { buffer = bufnr, nowait = true, desc = "Close the :MyPlugins unlisted list" })
+end
+
+-- =============================================================================
 -- Mode (persistent dir/remote/auto/disabled switch)
 -- =============================================================================
 
@@ -1154,6 +1241,15 @@ function M.enable()
           desc = "Show, or persistently switch, plugins.personal.core.source's OVERRIDE (restart required to apply)",
           run = function(ctx)
             mode_cmd(ctx.args.mode)
+          end,
+        },
+
+        {
+          path = { "unlisted" },
+          args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
+          desc = "Show *.nvim checkouts in dir/$REPOS_DIR that plugins.personal does not list yet (read-only; the 'new plugin not wired up' check)",
+          run = function(ctx)
+            unlisted_all(ctx.args.dir)
           end,
         },
 

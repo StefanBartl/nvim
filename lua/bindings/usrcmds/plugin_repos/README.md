@@ -27,6 +27,7 @@ those names no longer exist.
 :MyPlugins dashboard [dir] [--fetch] [--fetch-this]
 :MyPlugins mode [auto|dir|remote|disabled]
 :MyPlugins list [dir]
+:MyPlugins unlisted [dir]
 :MyPlugins picker [dir]
 
 :MyPlugins tasks [<area>|all] [--status= --prio= --effort= --kind= --category= --severity= --tag= --stale=<days> --blocked] [--sort=] [--to= --format=]
@@ -412,6 +413,29 @@ verbs the entire interface:
 That is why there is deliberately no sort, filter or refresh command of its
 own, and no git action bound to a row.
 
+### `:MyPlugins unlisted [dir]`
+
+Read-only. Shows every `*.nvim` checkout directly under `dir` (default
+`$REPOS_DIR`) that has a `lua/` or `plugin/` folder but is **not** in the
+personal spec, and whether it ships a `docs/BINDINGS.md`. Entries set to
+`"disabled"` in `source.lua` count as known; a spec that is commented out
+(`learn-cli.nvim`) does not. This is the detector for the manual step of
+adding a new plugin: `:Bindings`, `:MyPlugins list`, the statusline badge and
+`clone`/`remove` all read the spec, so a plugin that is missing from it is
+invisible to all of them.
+
+It is the one command here that enumerates a directory; see the safety model
+below for why that is acceptable: the result is only displayed and feeds no
+action command.
+
+Adding what it reports:
+
+1. Add the lazy spec to `plugins/personal/specs/<category>.lua`.
+2. Add `["<name>.nvim"] = "dir"` to the matching group in `plugins/personal/core/source.lua`.
+3. Add the name to the category table in `plugins/personal/README.md`.
+4. Restart Neovim, then `:MyPlugins unlisted` should no longer name it and
+   `:Bindings browse <name>` completes it.
+
 ## Task commands (`tasks`, `task`, `open`)
 
 The commands for the open work of the wkdbook vault
@@ -750,7 +774,8 @@ a second collection `vault` was removed as a duplicate (it also could not reach 
 subcommand (`clone`, `remove`, `fetch`, `pull`, `update`, `reclone`, `list`,
 `picker`) iterates `plugins.personal.core.list` (the resolved lazy spec, so it
 can't drift from what's actually loaded) and checks each entry's own
-subfolder. None of them ever enumerate `dir`'s contents.
+subfolder. None of them ever enumerate `dir`'s contents (`unlisted` does, but
+only to display the result).
 
 That distinction matters concretely: `$REPOS_DIR` also holds `Notes`,
 `WKDBooks` and other non-plugin checkouts. Compare with

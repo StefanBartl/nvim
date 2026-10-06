@@ -1458,4 +1458,17 @@ return {
       },
     },
   },
+  {
+    -- testing.nvim: the `:Testing` test runner (specs, conformance, surface).
+    -- On demand only: `cmd` is the whole trigger, nothing registers at startup.
+    "StefanBartl/testing.nvim",
+    cmd = "Testing",
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- Prefix of every message the plugin shows.
+      -- notify_prefix = "[testing]",
+      -- Moves or drops named keymap actions; false binds no key (docs/BINDINGS.md).
+      -- keymaps = {},
+    },
+  },
 }

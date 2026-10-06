@@ -138,6 +138,7 @@ plugins.modes({
   ["spotlight.nvim"] = "dir",
   ["cmdlog.nvim"] = "dir",
   ["rules.nvim"] = "dir",
+  ["testing.nvim"] = "dir",
 
   -- project
   ["sandbox.nvim"] = "dir",
@@ -146,6 +147,7 @@ plugins.modes({
   ["documentation.nvim"] = "dir",
   ["gitsuite.nvim"] = "dir",
   ["casedesk.nvim"] = "dir",
+  ["tasks.nvim"] = "dir",
   ["learn-cli.nvim"] = "disabled", -- needed neither locally nor remotely
 
   -- view
