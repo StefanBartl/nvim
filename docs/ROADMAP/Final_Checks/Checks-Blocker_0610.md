@@ -490,12 +490,13 @@ Kein harter Blocker. Entscheidungen, die du beim Testen treffen musst:
       Default ausgegangen. Wenn es stört: kleine Änderung in `filegrep.score_path`.
 - [ ] **`<leader><leader>` auf filegrep legen?** Dort liegt aktuell `cwd_grep`
       (`navigate.lua`, `mappings`). Erst nach der Testphase umlegen.
-- [ ] **Performance auf großen Repos.** Ohne `grep=` wird die fd-Liste bei jedem
-      Tastendruck neu bewertet (Review-Messung: ca. 0,4 bis 1,2 s bei 200 000 Pfaden).
-      Wenn es zäh ist: Top-N-Auswahl statt Vollsortierung oder asynchroner `rg`.
-- [ ] **Prompt-Titel** ist fest `Files grep=> `: kein Scope-Label, kein
-      `[i/n cwd filegrep]`-Suffix in Tab-Gruppen (anders als bei `files`). Harmlos, nur
-      uneinheitlich.
+- [ ] **Performance auf großen Repos.** Stand nach den Review-Runden: warme Abfrage
+      0,2 bis 0,5 ms (Cache, einmal kleingeschriebene Pfade, nur die besten `limit`
+      Zeilen werden sortiert). Offen bleibt ein **1-Zeichen-Pfadwort** bei ~100 000 Dateien
+      (ca. 100 ms pro Taste, fast alle Pfade matchen per Subsequence). Wenn es zäh ist:
+      Prefix-Reuse (nur die Treffer des vorigen Wortes neu bewerten) oder asynchroner `rg`.
+- [x] **Prompt-Titel** zeigt jetzt das Scope-Label (`CWD grep=> `) und das Tab-Suffix wie
+      bei `files` (erledigt in der Review-Runde, `actions/filegrep.lua`).
 
 ---
 
@@ -561,8 +562,18 @@ Nach Neustart von nvim:
   aufgelistet. Dafür ist die `grep`-Action zuständig.
 - Das `grep=`-Muster ist ein ripgrep-Regex mit smart-case; `additional_args` und
   `find.exclude` der Quelle gelten auch hier.
-- `rg` und `fd` laufen synchron (Timeout `smart.timeout`, 3000 ms). Ein abgebrochener Lauf
-  wird gemeldet und nicht gecacht.
+- `rg` und `fd` laufen synchron auf dem Hauptthread (Timeout `smart.timeout`, 3000 ms; das
+  Timeout begrenzt einen Stall nur so weit, wie das OS das Beenden zustellt). Ein per
+  Timeout beendeter Lauf zeigt seine Teiltreffer plus eine Warnung (höchstens alle 10 s) und
+  wird einige Sekunden gemerkt, damit der nächste Tastendruck nicht erneut blockiert; nur ein
+  nicht startbarer Prozess wird sofort wiederholt.
+- Weitere `grep=`-Muster durchsuchen nur die Treffer des ersten (in bis zu 8 Befehlszeilen,
+  sonst ein Baum-Scan). Bricht ein Muster ab (Timeout, Regex-Fehler), werden die späteren
+  nicht mehr angewendet; die Warnung sagt es.
+- Ist `rg` ein `.cmd`/`.bat`-Shim, wird ein Muster mit `& | < > ^ % !` oder `"` abgelehnt
+  (cmd.exe würde es interpretieren); `rg.exe` verwenden. Gilt auch für die smart-Action.
+- Ein nach der Installation von fd/rg gestarteter Picker findet das Tool binnen 30 s
+  (nicht erst nach Neustart).
 - Mehrere Wurzeln (`roots`) werden nacheinander durchsucht; auf fzf-lua erscheinen Pfade aus
   Nebenwurzeln absolut (Windows-Laufwerksdoppelpunkt vs. `datei:zeile`-Format).
 - Keine neuen Engine-Adapter: filegrep nutzt die `smart`-Live-Picker mit `opts.core`.
