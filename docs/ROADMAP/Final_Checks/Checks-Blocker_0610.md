@@ -293,7 +293,7 @@ Commit-Stände stehen in den Überschriften und werden hier nachgetragen.
 
 ---
 
-### G2. mdview.nvim: `core/mirror` (alle Vorschau-Lesewege, Commit `30e4377` und Folgefixes)
+### G2. mdview.nvim: `core/mirror` (alle Vorschau-Lesewege, `30e4377`; Fixes `f184f10`, `e7b24c2`, `6255d6d`, `e1316f8`, `217f268`)
 
 Alle Stellen, die den Buffer-Text in die Vorschau geben, laufen jetzt über
 `lua/mdview/core/mirror.lua`. Das Verhalten soll **unverändert** sein; geprüft wurde nur per Spec.
@@ -315,10 +315,18 @@ Alle Stellen, die den Buffer-Text in die Vorschau geben, laufen jetzt über
 - [ ] Breadcrumbs (`core/breadcrumbs.lua`, liest nur bis zur Cursorzeile) unverändert.
 - [ ] Großes Dokument (rund 5 000 Zeilen): kein spürbarer Mehraufwand beim Tippen
       (der Session-Snapshot-Hash wird jetzt erst beim ersten Lesen berechnet, `6255d6d`).
+- [ ] `:MDView start a.md` mit einem **anderen** geladenen Buffer `sub/a.md` (und `a.md` nur auf
+      der Platte): zeigt den Inhalt von `./a.md`, nicht den des fremden Buffers
+      (`lines_for_path` vergleicht den Pfad jetzt exakt statt als Datei-Muster, `e1316f8`).
+      Dateinamen mit `[ ] { } ~ * ? % #` und Leerzeichen gehen ebenfalls. Bekannte Grenze: derselbe
+      Buffer unter anderem Basisnamen (Symlink, 8.3-Name) wird beim ersten Push nicht erkannt, dann
+      steht der Plattenstand da, bis zum nächsten Edit.
+- [ ] Datei mit ungespeicherten Änderungen in einem geladenen Buffer: `:MDView start` zeigt die
+      ungespeicherten Änderungen, nicht die Platte.
 
 ---
 
-### G3. ai.nvim: Bulk-Profil `req.bulk` (Commits `e91c376`, `336122b` und Folgefixes)
+### G3. ai.nvim: Bulk-Profil `req.bulk` (`e91c376`, `336122b`; Audit-Fixes `7785236`, `2b895c7`)
 
 Leitplanken für unbeaufsichtigte Massenanfragen (`docs/bulk.md`). Alles mit Fake-Provider
 geprüft, **nichts** gegen einen echten Provider.
@@ -347,10 +355,26 @@ geprüft, **nichts** gegen einen echten Provider.
 - [ ] Ollama lokal mit `temperature = 0`: gleiche Eingabe zweimal ergibt gleiche Ausgabe.
 - [ ] Hängender Provider: der Watchdog (`timeout_ms` plus 5 s) beendet die Anfrage mit
       `kind = "timeout"`.
+- [ ] Prompt mit NUL-Byte oder falschem Feldtyp (`system = 5`): Fehler kommt als
+      `cb(false, invalid_request)`, **keine** Exception aus `ai.ask` (`7785236`). Eine Datei mit
+      NUL-Bytes (UTF-16 ohne BOM) als Chunk-Quelle durchlaufen lassen.
+- [ ] Provider mit **Command-Key-Quelle** (`:Ai key`-Profil, Befehl statt Datei): `kill()`,
+      `cancel(label)` oder Watchdog **während** der Key-Befehl noch läuft: danach geht kein
+      Request mit dem Dokumenttext mehr raus. Schlägt der Key-Befehl fehl, läuft er einmal, nicht
+      einmal je Job (kein Passwort-Prompt-Sturm, keine Konto-Sperre). Bekannt offen: kurzer
+      Negativ-Cache außerhalb der Bulk-Queue (Task `ai.nvim/ai-keys-fehlgeschlagene-command-key-quelle-kurz-negativ-cach`).
+- [ ] Lange Queue (mehrere hundert Chunks) mit einem Provider, der sofort fehlschlägt (falscher
+      Key): alle Callbacks kommen an, kein Stack-Overflow, das Label ist danach wieder frei
+      (`usage(label)` zeigt `active = 0`).
+- [ ] `config.bulk.max_session_chars = 0`, ein String (`"500000"`), eine negative Zahl und ein
+      Tippfehler-Key unter `bulk`: jeder lehnt Bulk ab (fail-closed), warnt beim Start, steht in
+      `:checkhealth ai` und `:Ai info`.
+- [ ] `bulk.temperature = false` mit gesetztem `req.temperature`: es wird keine Temperatur
+      gesendet, `res.bulk.temperature` meldet das Gesendete.
 
 ---
 
-### G4. language.nvim: Chunking großer Eingaben (Commit `a2e0a73` und Folgefixes `dd67f2e`, `3198fac`)
+### G4. language.nvim: Chunking großer Eingaben (`a2e0a73`; Audit-Fixes `dd67f2e`, `3198fac`, Tests `e397d0f`, `8304e4b`)
 
 Große Eingaben werden zeilentreu in Blöcke zerlegt (`translate/chunk.lua`), der DeepL-Schlüssel
 und der Body gehen über stdin. Geprüft nur mit Fake-Runner und einem lokalen HTTP-Server.
@@ -377,7 +401,21 @@ und der Body gehen über stdin. Geprüft nur mit Fake-Runner und einem lokalen H
       diese eine Datei scheitert, Fortschritt und die übrigen Dateien laufen weiter.
 - [ ] Regression: Hover-Übersetzung, `:TranslateReplace --nocode`, `:Translate!` wie vorher.
 - [ ] Windows: Befehle über `.cmd`-Shims (translate-shell) mit Text, der `&`, `%` oder `^`
-      enthält, werden abgelehnt statt von `cmd.exe` interpretiert (`3198fac`).
+      enthält, werden abgelehnt statt von `cmd.exe` interpretiert (`3198fac`). Offen als Task:
+      `translate-shell-text-via-stdin` (Text per stdin statt argv, `trans` war nicht installiert).
+- [ ] Google-Anfrage geht jetzt als POST-Body über stdin (`curl --data-urlencode q@-`): eine
+      6 000-Zeichen-Zeile, eine 30 000-Zeichen-Zeile zwischen zwei anderen und eine
+      600-Zeichen-Zeile Japanisch (ohne Leerzeichen) kommen vollständig und als **eine** Zeile
+      zurück; nur ein einzelnes Token ohne jede Grenze über dem Budget scheitert mit klarer
+      Meldung.
+- [ ] Datei mit Leerzeilen, Einrückung und Listen und `translate.max_chars = 60`: Zeilenzahl und
+      Einrückung bleiben erhalten (live gegen gtx: vorher 10 Zeilen rein, 6 raus).
+- [ ] DeepL mit einer Datei über rund 2 500 Zeilen: wird mit klarer Meldung abgelehnt
+      (`max_blocks = 50`), nicht stumm abgeschnitten. `translate.custom.max_bytes` hebt das
+      Budget einer `custom`-Engine an, die den Text nicht ins argv legt.
+- [ ] Bekannt offen (Task `translate-blocks-rate-limit-and-deadline`): Pause zwischen Blöcken
+      für den keylosen Google-Endpunkt, Gesamtfrist statt `timeout_ms` je Block; auf einer sehr
+      großen Datei einmal beobachten, ob gtx mit 429 antwortet.
 
 ---
 
@@ -412,6 +450,8 @@ Noch nicht prüfbar, weil die Tasks offen sind. Die Akzeptanzliste der Live-Abna
   zeilengenau; die deutschen Token stehen im englischen Text nicht.
 - `kill()` bei `req.bulk` verwirft nur die Antwort eines schon gesendeten Requests.
 - DeepL-Latenz und KI-Qualität sind bis zur Erledigung von G1 ungemessen.
+- Der Guard in `mirror_guard_spec` erkennt nicht jeden Leseweg (zum Beispiel `pcall(io.open, ...)`);
+  Task `mdview.nvim/mirror-guard-denylist-hardening`.
 
 ---
 
