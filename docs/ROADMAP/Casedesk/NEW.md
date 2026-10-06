@@ -7,9 +7,11 @@
 > `component`, `tags`, `links`, `summary`, `solution`, `all`; mehrere Felder per Komma oder
 > Leerzeichen; Case wie bei den anderen Cmds (Nummer, `AREA/Nummer`, `.`, volle SNOW-ID, sonst
 > Case des Puffers bzw. Picker). Ohne Argument eine Mehrfachauswahl. Nur lokale Zwischenablage.
-> Beleg: `wkdbook-myplugins/casedesk.nvim/FEATURES.md`. Offen: Tab-Completion ab dem dritten Token
-> (`casedesk.nvim/clipboard-variadic-completion`, geparkt), echter TUI-Durchlauf
-> (`casedesk.nvim/clipboard-spotlight-live-check`).
+> Beleg: `wkdbook-myplugins/casedesk.nvim/FEATURES.md`.
+> **Nachtrag 2026-10-06 (Abend):** Tab-Completion ab dem dritten Token ist erledigt (lib.nvim
+> `f0d76b9`: variadischer letzter Positionsslot im Composer; casedesk `ac5623b`; Task
+> `casedesk.nvim/clipboard-variadic-completion` abgehakt). `--sep` versteht die ueblichen Escapes.
+> **Offen:** nur der echte TUI-Durchlauf (`casedesk.nvim/clipboard-spotlight-live-check`).
 
 
 spotlight: eine möglichlkeit, wie ich in casedesk.nvim mit spotlight verbinde, also markiereungen werden sozusagen persistent pro case gesetzt, die ide ist dann, ine inen case sagen z können "dies emakrierungen ghaebi chin cased x gesetz, diese incase y usw..."
@@ -24,13 +26,38 @@ spotlight: eine möglichlkeit, wie ich in casedesk.nvim mit spotlight verbinde, 
 > **Entscheidung offen (Task `casedesk.nvim/spotlight-per-case-gitignore-and-follow-default`):**
 > `.spotlight.json` in die `.gitignore` von WKDBook-Tricentis (kann Kundendaten enthalten) und ob
 > `follow = true` Default bleibt. Weitere Randpunkte: `casedesk.nvim/spotlight-per-case-open-edges`.
+> **Nachtrag 2026-10-06 (Abend):**
+> - **Origin-Filter** (casedesk `a7d3883`, `fc14240`; spotlight.nvim `8c51e68` `origin_path(origin)`):
+>   Markierungen aus Dateien ausserhalb des Case-Ordners landen nicht in der `.spotlight.json`; sie
+>   bleiben in der Liste, zaehlen aber als ungespeichert, sodass `:Case spotlight load` vor dem
+>   Ersetzen fragt. Der automatische Case-Wechsel (BufEnter) verwirft solche Markierungen nicht mehr
+>   (`7bc9ab5`): alter Case wird gesichert, Bindung geloest, Liste unveraendert, eine einmalige Info
+>   nennt `load`/`save`. Aendert sich die Projekt-Root mitten in der Session, ist das per Spec
+>   festgehalten (spotlight.nvim `bfa758c`).
+> - **Aufraeumpunkte:** git-ignore-Pruefung mit `-z` ueber stdin (`f96a741`), unlesbare Case-Datei
+>   entbindet statt in den alten Case zu schreiben (`d367711`), Waiver-Specs mit echter Assertion
+>   (`ce47723`).
+> - **Weiterhin offen (Owner-Entscheid):** `.spotlight.json` in die `.gitignore` von WKDBook-Tricentis
+>   und `follow`-Default (`spotlight-per-case-gitignore-and-follow-default`); Rand
+>   `spotlight-per-case-open-edges` (u. a. Markierungen aus Nicht-Case-Buffern landen im gebundenen
+>   Case); `clipboard-spotlight-live-check`.
 
 ---
 
 ## Task: spotlight.nvim ↔ mdview.nvim — Spotlight-Markierungen im Browser spiegeln
 
 > **Status 2026-10-06: umgesetzt, alle Abnahmekriterien im Browser-Pane einmal skriptgesteuert
-> belegt; offen ist ein Release des Relays und ein menschlicher Dauerbetrieb-Test.**
+> belegt; Relay inzwischen released (v0.4.0-v0.4.2, `install.version` gepinnt); offen ist nur der
+> menschliche Dauerbetrieb-Test.**
+> **Nachtrag 2026-10-06 (Abend):** mdview.nvim `v0.4.0` bringt die Relay-Route `/spotlight` und das
+> Browser-Rendering, `v0.4.1` (`35f1509`) den atomaren Join+Seed (`1472316`) und pinnt
+> `install.version` auf v0.4.1, `v0.4.2` (`07e6f47`) pinnt auf v0.4.2; die Hinweise "braucht ein
+> neueres Relay" sind aus den Docs entfernt, `dev.binary_path` bleibt fuer lokale Builds. Watch-
+> Stabilitaet: eine geaenderte Datei wird erst gesendet, wenn sie auf zwei Polls gleich liest
+> (`bc8e327`, ~500 ms Latenz), Review-Fix `786f406` (leerer Read zaehlt als Kandidat, kein Flackern
+> bei Truncate-dann-Write). Offen: Task `release-relay-spotlight-route` (letzter Punkt, Pruefung
+> gegen die installierte Binary, noch nicht belegt), `spotlight-mirror-live-check`,
+> `spotlight-mirror-hardening`, `spotlight.nvim/read-api-kind-and-event-edges`.
 > - spotlight.nvim (`2b5ad9a`, Fix `76ac11b`, Docs `ba09f51`): Lese-API `spotlights({whole_file})` mit
 >   `hl_group`, `line_mode`, `whole_file`, `scope`, `kind`, `ignore_case`; `colors()` aus den echten
 >   Gruppen `Spotlight1..8`; gebuendeltes `User SpotlightChanged` (Payload `reasons`, `count`,
