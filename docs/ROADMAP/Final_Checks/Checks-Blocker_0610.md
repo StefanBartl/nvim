@@ -32,6 +32,13 @@
     - [H2. Neue Bindings und Commands](#h2-neue-bindings-und-commands)
     - [H3. Checkliste](#h3-checkliste)
     - [H4. Bekannte Grenzen (kein Test nötig, nur wissen)](#h4-bekannte-grenzen-kein-test-ntig-nur-wissen)
+  - [I. hover.nvim: Pins, Auth-Token, Review-Fixes (Stand 2026-10-06)](#i-hovernvim-pins-auth-token-review-fixes-stand-2026-10-06)
+    - [I1. Blocker / offene Entscheidungen](#i1-blocker-offene-entscheidungen)
+    - [I2. Neue Optionen, Commands, Bindings](#i2-neue-optionen-commands-bindings)
+    - [I3. Live-Checkliste Pins](#i3-live-checkliste-pins)
+    - [I4. Live-Checkliste Auth (Confluence-Token)](#i4-live-checkliste-auth-confluence-token)
+    - [I5. Regression (Änderungen an bestehendem Verhalten)](#i5-regression-nderungen-an-bestehendem-verhalten)
+    - [I6. Bekannte Grenzen (kein Test nötig, nur wissen)](#i6-bekannte-grenzen-kein-test-ntig-nur-wissen)
 
 ---
 
@@ -159,6 +166,8 @@ Checkliste im Repo: `TESTS/CHECK.md`.
 
 - [ ] Worktree + Branch `claude/casedesk-roadmap-d5a22b` (komplett in `main`)
       aufraeumen, wenn nicht mehr gebraucht.
+- [ ] Worktree + Branch `claude/hover-preview-config-c75234` (hover.nvim, komplett in `main`
+      gepusht) aufräumen, wenn nicht mehr gebraucht.
 - [ ] Im nvim-Config-Repo liegen fremde, nicht von dieser Arbeit stammende
       Aenderungen (`docs/ROADMAP/00_ROADMAP.md`, `docs/TESTING/en_test.md`);
       im WKDBooks-Repo `language.nvim/Backlog/README.md`. Nicht mitcommittet.
@@ -557,3 +566,161 @@ Nach Neustart von nvim:
 - Mehrere Wurzeln (`roots`) werden nacheinander durchsucht; auf fzf-lua erscheinen Pfade aus
   Nebenwurzeln absolut (Windows-Laufwerksdoppelpunkt vs. `datei:zeile`-Format).
 - Keine neuen Engine-Adapter: filegrep nutzt die `smart`-Live-Picker mit `opts.core`.
+
+---
+
+## I. hover.nvim: Pins, Auth-Token, Review-Fixes (Stand 2026-10-06)
+
+Zwei neue Optionen für Links, die im Hover ein SSO-Login statt Inhalt zeigen (Confluence,
+Jira und andere Tricentis-Seiten): `links.pins` (Link als eigene PDF/PNG zeigen) und
+`links.auth` (Token für Fetch und PDF-Download). Persönliche Anleitung mit allen Hosts:
+`docs/NOTES/Hover_Login-Seiten_Confluence_Tricentis.md`. Repo-Doku:
+`hover.nvim/docs/WORKFLOW-LOGIN-PAGES.md`, `docs/FEATURES/PINS.md`, `AUTH.md`.
+
+Commits (hover.nvim, `main`): `de23de6` (Pins), `12d9843` (Auth), `49d809d` (Workflow-Doku),
+`311803e` (Fixes Review Runde 1), `d78ce52` (Fixes Review Runde 2). nvim-Config: `2c6badc4`
+(Notiz). Geprüft: 706 Specs grün, stylua/luacheck sauber, jeder Fix einzeln per Mutation
+gegen seinen Spec geprüft. **`d78ce52` wurde nicht mehr von einem Agenten reviewt** (auf
+deinen Wunsch keine Runde 3). **Noch nie gegen dein echtes Confluence gelaufen.**
+
+---
+
+### I1. Blocker / offene Entscheidungen
+
+- [ ] **BLOCKER Auth: deine Atlassian-Mail eintragen.** In der Notiz steht
+      `DEINE-ATLASSIAN-MAIL`; ich kenne die Mail deines Atlassian-Kontos nicht (nicht
+      zwingend `stefan.bartl.work@gmail.com`). Ohne sie gibt es kein Basic-Auth.
+- [ ] **BLOCKER Auth: Token als Umgebungsvariable.** `setx CONFLUENCE_TOKEN "<token>"`,
+      danach **Terminal und Neovim neu starten** (laufende Sitzung behält ihre alte
+      Umgebung). Den Token nie in Config, Repo oder Chat. Token läuft irgendwann ab
+      (`HTTP 401` im Float), dann neu erzeugen.
+- [ ] **BLOCKER Auth: Export-URL testen, bevor etwas konfiguriert wird.** Ungeprüft, ob euer
+      Confluence den PDF-Export mit Token liefert:
+      `curl.exe -sS -o NUL -w "%{http_code} %{content_type}\n" -u "MAIL:$env:CONFLUENCE_TOKEN" "https://tricentis.atlassian.net/wiki/spaces/flyingpdf/pdfpageexport.action?pageId=ID"`.
+      `200 application/pdf` heißt: Auth funktioniert für Exporte. Sonst bleiben nur Pins.
+- [ ] **Config eintragen.** Ich habe `navigate.lua` (Spec `StefanBartl/hover.nvim`, ab
+      Zeile ~234) **nicht** geändert. Fertiger `links`-Block steht in der Notiz.
+- [ ] **Neovim neu starten**, damit der neue Plugin-Code geladen wird (Plugin liegt lokal in
+      `E:/repos/hover.nvim`, `package.loaded` hält den alten Stand).
+- [ ] **Entscheidung: persistentes Browser-Profil (`:Hover login`)?** Nicht gebaut. Wäre der
+      Weg, um eine eingeloggte Seite als Bild im Hover zu rendern (Kosten: Sitzung läuft ab,
+      privater Seiteninhalt im Cache). Erst entscheiden, wenn Pins zu mühsam werden.
+- [ ] **Entscheidung: Export-URL automatisch ableiten?** Aus einer normalen Confluence-
+      Seiten-URL die PDF-Export-URL bauen, damit nichts umgeschrieben werden muss. Erst sinnvoll,
+      wenn der `curl.exe`-Test oben `200 application/pdf` liefert.
+- [ ] **Sicherheitsvorfall prüfen:** ein Review-Agent hat mit `taskkill /F /IM nvim.exe` **alle**
+      Neovim-Prozesse beendet. Falls du offene Sitzungen mit ungespeicherten Änderungen hattest,
+      Buffer/Swapfiles prüfen. Gegenmaßnahme steht im Memory (`review-agents-never-kill-processes`).
+- [ ] Optional: Review Runde 3 für `d78ce52` (Auth-Pfadnormalisierung, bare_url-Cap).
+
+---
+
+### I2. Neue Optionen, Commands, Bindings
+
+**Keine neuen Keybindings, keine neuen User-Commands.** Alles läuft über Config.
+
+| Eintrag | Wirkung | Wo |
+|---|---|---|
+| `links.pins = { { match = "host/pfad/*", show = "~/x.pdf" } }` | Link wird als diese Datei gezeigt (PDF blättern/zoomen, Bild croppen) | `setup()` von hover.nvim |
+| `links.auth = { { match = "tricentis.atlassian.net", user = "MAIL", token_env = "CONFLUENCE_TOKEN" } }` | Basic-Auth (mit `user`) bzw. Bearer (ohne) für Fetch und PDF-Download | `setup()` von hover.nvim |
+| `:Hover why` | nennt jetzt `pinned: ...`, und bei gelöschtem Pin den Typ, nach dem das Gate fragt | bestehend, neu |
+| `<CR>` im Hover-Float | öffnet bei einem Pin die **echte URL** (nicht die Datei) | bestehend, neu |
+| `:checkhealth hover` | meldet Pins (Anzahl, fehlende Dateien) und Auth-Regeln (Variable gesetzt ja/nein, nie der Wert) | bestehend, neu |
+| `require("hover.pins").matches(url, glob)` | Glob vorab testen (strikt; Pins nutzen intern `ignore_port`) | Lua |
+
+Voraussetzung für Auth: `links.web = true`, `links.fetch = true`, `links.pdf = { enabled = true }`
+(sonst tut `auth` nichts, Health sagt es). Pins brauchen keinen Schalter und gehen auch mit
+`links.web = false`.
+
+---
+
+### I3. Live-Checkliste Pins
+
+- [ ] Eine Confluence-Seite eingeloggt als PDF drucken (`Strg+P`), **außerhalb jedes Repos**
+      ablegen (z. B. `C:\Users\bartl\hover-pins\`), Pin eintragen, Neovim neu starten.
+- [ ] Link-URL im Markdown/Text hovern: PDF erscheint (erste Seite), `<C-Down>`/`<C-Up>`
+      blättern, `>` zoomt, `F` Vollbild.
+- [ ] Pin mit `links.web = false`: funktioniert trotzdem (nichts geht ins Netz).
+- [ ] Pin als PNG (DevTools-Screenshot): Bild wird gezeigt, `>` croppt.
+- [ ] Glob-Varianten: nur Host (`tricentis.atlassian.net`), mit Pfad (`.../pages/ID*`), Liste
+      von Globs, erster Treffer gewinnt (spezifisch vor allgemein).
+- [ ] Link mit Port (z. B. `:8090`): Pin trifft, wenn der Glob keinen Port nennt.
+- [ ] Datei umbenennen/löschen: Float sagt `pinned file not found (links.pins: ...)` (bei
+      PDF/Bild auch beim automatischen Hovern), nicht die Login-Seite;
+      `:checkhealth hover` listet den Pin.
+- [ ] `<CR>` im Pin-Float öffnet die **echte URL** im Browser (mit `$` oder `?` in der URL).
+- [ ] `:Hover why` auf dem Link: zeigt `pinned: ...`.
+- [ ] Ungepinnte URL mit `links.web = false` und konfigurierten Pins: verhält sich wie vorher
+      (keine Flicker, Positions-Previews antworten weiter).
+- [ ] `links.enabled = false` mit Pin: kein automatisches Hovern; `:Hover show` geht.
+- [ ] Pin auf `.md`/`.docx`: öffnet nur mit `:Hover show` (nur `pdf`/`image` automatisch).
+- [ ] Zweites `setup()` mit kürzerer Pin-Liste: alte Pins sind weg (Liste ersetzt, nicht gemischt).
+- [ ] UNC-Pfad als `show` (`\\\\server\\share\\x.pdf`) und `#` im Dateinamen funktionieren.
+
+---
+
+### I4. Live-Checkliste Auth (Confluence-Token)
+
+Erst nach den Blockern aus I1. **Nur mit synthetischen/öffentlichen Seiten, keine Kundendaten.**
+
+- [ ] `:checkhealth hover`: `links.auth: 1 rule(s)`, **keine** Warnung `$CONFLUENCE_TOKEN is not
+      set`, Token-Wert taucht nirgends auf.
+- [ ] Link auf einen Confluence-PDF-Export (oder Anhang-PDF) hovern: erste Seite erscheint,
+      Blättern/Zoom gehen. `HTTP 401` im Float heißt: Mail/Token/Rechte falsch.
+- [ ] **Token nicht in der Prozessliste** während des Downloads:
+      `Get-CimInstance Win32_Process -Filter "Name like 'curl%'" | Select CommandLine`
+      (darf weder Token noch `Authorization` zeigen).
+- [ ] Normale Confluence-**Seiten**-URL hovern: erwartbar weiter Login/JS-Shell (Auth macht
+      Seiten nicht lesbar, nur Dokumente). Für Seiten Pin verwenden.
+- [ ] Rule mit `*.atlassian.net` in der Config: wird **abgelehnt** (Health warnt, nichts wird
+      gesendet), nicht stillschweigend akzeptiert.
+- [ ] Token-Variable absichtlich leer/unset: es wird nichts gesendet, Health meldet `is not
+      set`.
+- [ ] Token mit Zeilenumbruch (aus Datei gelesen) wird getrimmt; mit Steuerzeichen mittendrin
+      zählt er als nicht gesetzt.
+- [ ] Link mit `[` `]` oder `{` `}` in der URL: genau ein Request (`--globoff`).
+- [ ] Zweite Regel mit **eigener** Variable für einen anderen Host; Allow der Reihenfolge
+      (erste passende Regel entscheidet, auch bei leerer Variable).
+- [ ] Heruntergeladene Auth-PDFs liegen in `stdpath("cache")/hover.nvim/webpdf` (bis zu
+      `cache_days`, Standard 7; `0` = nie aufräumen!). Bei Bedarf `cache_days = 1` setzen oder
+      Ordner löschen. Unter Windows keine 0700-Rechte (gelten nur auf Linux/macOS/CI).
+- [ ] Nach Token-Ablauf oder Widerruf: `HTTP 401`, kein Absturz.
+
+---
+
+### I5. Regression (Änderungen an bestehendem Verhalten)
+
+Im Rahmen der Review-Fixes wurde Bestehendes angefasst; bitte im Alltag beobachten:
+
+- [ ] **Bare-URL-Erkennung** (`bare_url.under_cursor`) scannt nur noch das Token unter dem
+      Cursor (Whitespace/Quotes/`<>`/`|`/Backtick begrenzen). URLs bis 8192 Bytes werden
+      gefunden, längere nicht (vorher jede Länge, aber mit Sekunden-Hängern). Bei Web an: URLs
+      in Logs, Markdown, Kommentaren, Zeilen mit Umlauten normal hovern.
+- [ ] **`classify`** wurde refaktoriert (`classify.file`, `classify.kind_for_ext`): lokale
+      Links (Dateien, Ordner, Bilder, PDF, Office, Video, Anker `#`, fehlende Datei) wie vorher.
+- [ ] **Fetch/PDF-Requests** haben jetzt immer `--globoff` (Klammern in URLs werden nicht mehr
+      von curl expandiert). Wirkt auch für Nutzer ohne Auth.
+- [ ] `:Hover why` Meldungen und der Float-Titel für gelöschte Ziele unverändert (`broken link`).
+- [ ] `:Hover links web on/fetch/pdf/shot` Schalter und `:Hover dashboard` zeigen keine neuen
+      Einträge für `pins`/`auth` als Schalter (sind Listen, keine Switches).
+- [ ] Nach Neustart: keine Fehler in `:messages`/`:checkhealth hover`, sonst Config-Block
+      prüfen (`links.pins`/`links.auth` müssen **Listen von Tabellen** sein).
+
+---
+
+### I6. Bekannte Grenzen (kein Test nötig, nur wissen)
+
+- Auth macht Confluence-/Jira-**Seiten** nicht lesbar (JavaScript-App, auch mit Token); nur
+  Links, die direkt ein Dokument liefern. `links.shot` (Browser-Render) bekommt bewusst nie
+  einen Token und zeigt weiter das Login.
+- Ein **Pin aktualisiert sich nicht**; ändert sich die Seite, Datei neu erzeugen.
+- Auth-Regeln: Port gehört zum Host (`wiki.acme.com` deckt nicht `:8090` ab; Pins ignorieren
+  einen nicht genannten Port). Pfad-Scope wird gegen den von curl gesendeten (aufgelösten)
+  Pfad geprüft. Eine Weiterleitung auf demselben Host, die im Scope **beginnt**, kann den
+  Token außerhalb des Pfad-Scopes mitnehmen (dokumentiert, nicht abgestellt).
+- Nur URLs mit Host (`scheme://host`) können gepinnt werden (`mailto:`/`tel:` nicht).
+- Cookie-Übernahme aus dem Browser, Login im Hover und OAuth-Tokens (SharePoint/M365) sind nicht
+  vorgesehen; dafür Pins oder `<CR>`.
+- Andere Tricentis-Hosts (Support-Hub, Kunden-Tenants `*.my.tricentis.com`, Horizon, SharePoint,
+  ServiceNow) haben keinen statischen Token: Pins. Tabelle in der Notiz.
+- Der Rechte-Spec für das 0700-Cache-Verzeichnis ist unter Windows `pending` (greift in CI).
