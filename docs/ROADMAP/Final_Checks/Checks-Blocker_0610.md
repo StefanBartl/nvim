@@ -27,6 +27,11 @@
     - [G4. language.nvim: Chunking großer Eingaben](#g4-languagenvim-chunking-groer-eingaben)
     - [G5. Später, wenn `display_lang` gebaut ist](#g5-spter-wenn-display_lang-gebaut-ist)
     - [G6. Bekannte Grenzen (kein Test nötig, nur wissen)](#g6-bekannte-grenzen-kein-test-ntig-nur-wissen)
+  - [H. pickers.nvim: `filegrep` (Dateien nach Pfad und Inhalt, Stand 2026-10-06)](#h-pickersnvim-filegrep-dateien-nach-pfad-und-inhalt-stand-2026-10-06)
+    - [H1. Blocker / offene Entscheidungen](#h1-blocker-offene-entscheidungen)
+    - [H2. Neue Bindings und Commands](#h2-neue-bindings-und-commands)
+    - [H3. Checkliste](#h3-checkliste)
+    - [H4. Bekannte Grenzen (kein Test nötig, nur wissen)](#h4-bekannte-grenzen-kein-test-ntig-nur-wissen)
 
 ---
 
@@ -409,3 +414,106 @@ Noch nicht prüfbar, weil die Tasks offen sind. Die Akzeptanzliste der Live-Abna
 - DeepL-Latenz und KI-Qualität sind bis zur Erledigung von G1 ungemessen.
 
 ---
+
+---
+
+## H. pickers.nvim: `filegrep` (Dateien nach Pfad und Inhalt, Stand 2026-10-06)
+
+Neue Action `filegrep`: ein Files-Picker, dessen Prompt zusätzlich `grep=<pattern>`
+versteht. `akronyms grep=NWBC` listet Dateien, deren **Pfad** `akronyms` enthält und
+deren **Inhalt** `NWBC` enthält. Mehrere `grep=` verknüpfen per UND, `grep="a b"` erlaubt
+Leerzeichen, ohne brauchbares `grep=` (unter 2 Zeichen wird ignoriert) ist es ein normaler
+Files-Picker. Soll eine Zeit lang als neuer Haupt-Picker getestet werden.
+
+Commits (pickers.nvim, `main`): `daf2b47` (Feature), `b2d09c3` (Review-Fixes),
+`4eff444` (`:FileGrep`), `351269f` (Collections, Cheatsheet). nvim-Config: `c42bbedb`,
+`0fe7a7d7`. Doku: `docs/commands.md#the-filegrep-action`. Geprüft nur headless
+(1032 Checks, echte `fd`/`rg`-Läufe gegen ein Repo), **noch nie in einem echten Picker-Fenster**.
+
+---
+
+### H1. Blocker / offene Entscheidungen
+
+Kein harter Blocker. Entscheidungen, die du beim Testen treffen musst:
+
+- [ ] **Pfad-Matching: Substring oder Fuzzy?** Aktuell: Substring zuerst, schwacher
+      Subsequence-Fallback (`pickers.smart.score.match`). Die Frage war offen, ich bin vom
+      Default ausgegangen. Wenn es stört: kleine Änderung in `filegrep.score_path`.
+- [ ] **`<leader><leader>` auf filegrep legen?** Dort liegt aktuell `cwd_grep`
+      (`navigate.lua`, `mappings`). Erst nach der Testphase umlegen.
+- [ ] **Performance auf großen Repos.** Ohne `grep=` wird die fd-Liste bei jedem
+      Tastendruck neu bewertet (Review-Messung: ca. 0,4 bis 1,2 s bei 200 000 Pfaden).
+      Wenn es zäh ist: Top-N-Auswahl statt Vollsortierung oder asynchroner `rg`.
+- [ ] **Prompt-Titel** ist fest `Files grep=> `: kein Scope-Label, kein
+      `[i/n cwd filegrep]`-Suffix in Tab-Gruppen (anders als bei `files`). Harmlos, nur
+      uneinheitlich.
+
+---
+
+### H2. Neue Bindings und Commands
+
+| Eintrag | Wirkung | Wo |
+|---|---|---|
+| `<leader>mp` | `:Pickers cwd filegrep` | `navigate.lua`, `keymaps.cwd_filegrep` |
+| `<leader>mC` | `:Pickers config filegrep` | `navigate.lua`, `mappings.config_filegrep` |
+| `<leader>mF` | `:Pickers folder filegrep` (Ordner wählen) | `navigate.lua`, `mappings.folder_filegrep` |
+| `:FileGrep [query]` | cwd, Query belegt den Prompt vor | pickers.nvim |
+| `:FileGrepConfig [query]` | nvim-Config, Query vorbelegt | pickers.nvim |
+| `:Pickers <scope> filegrep` | jeder Scope und jede Collection, mit Tab-Completion | pickers.nvim |
+| `:{Name}FileGrep [query]`, `keys.filegrep` | pro Collection (z. B. `:NotesFileGrep`) | pickers.nvim, `keys.filegrep` ist **nirgends gesetzt** |
+| `mappings.<scope>_filegrep` | deklarativ, beliebiger Scope | pickers.nvim |
+
+Hinweis: `<leader>mc` ist in den neo-tree-Keymaps als `noop` belegt, deshalb `<leader>mC`.
+`<leader>mp` ist Präfix-frei gehalten (kein `<leader>mpc`), damit nichts auf Timeout wartet.
+
+---
+
+### H3. Checkliste
+
+Nach Neustart von nvim:
+
+- [ ] `<leader>mp`: Picker öffnet mit Prompt `Files grep=> `; leerer Prompt zeigt die Dateien
+      des CWD.
+- [ ] `akronyms` (nur Pfad): Liste wird auf Pfade mit `akronyms` eingegrenzt, wie `<leader>ff`.
+- [ ] `akronyms grep=NWBC`: nur Dateien mit `akronyms` im Pfad **und** `NWBC` im Inhalt;
+      Zeilen zeigen `pfad:zeile: text`; `<CR>` öffnet an der Fundstelle.
+- [ ] `grep=NWBC grep=TODO`: nur Dateien mit **beiden** Mustern.
+- [ ] `grep="foo bar" cfg`: Leerzeichen im Muster, Pfadwort `cfg` zusätzlich.
+- [ ] `grep=N` (1 Zeichen) löst keinen `rg`-Lauf aus (Liste bleibt die Pfadliste), ab 2 Zeichen
+      greift der Filter.
+- [ ] Ungültiger Regex beim Tippen (`grep=(`): keine Fehlerflut, Liste bleibt bedienbar.
+- [ ] Eine Datei, in der das Muster mehrfach in einer Zeile steht, erscheint **einmal**
+      (Fix `b2d09c3`).
+- [ ] Pfadteil nach gesetztem `grep=` ändern: Liste aktualisiert sich sofort (Cache, kein
+      neuer `rg`-Lauf, ca. 5 s gültig).
+- [ ] Neue Datei anlegen, die das Muster enthält, und innerhalb von 5 s erneut suchen: Cache
+      kann sie noch nicht kennen (erwartet), danach erscheint sie.
+- [ ] Alle drei Engines prüfen (`engine` pro Mapping pinnbar): **snacks** (deine Standard-
+      Engine), **telescope**, **fzf-lua** (braucht fzf >= 0.45, Lua-Funktions-Live-Modus).
+- [ ] Tab-Wechsel (`tabs`) mit Ziel `cwd filegrep` in einer Gruppe: Query wandert mit.
+- [ ] `<leader>mC` und `<leader>mF` öffnen im jeweiligen Scope.
+- [ ] `:FileGrep akronyms grep=NWBC` startet mit vorbelegtem Prompt.
+- [ ] `:FileGrepConfig`, `:Pickers cwd filegrep`, `:Pickers cwd <Tab>` bietet `filegrep` an.
+- [ ] `:PickersRepeat` nach einem filegrep-Lauf öffnet ihn erneut (Scope und Action).
+- [ ] Which-Key zeigt die Einträge mit ihrer Beschreibung; `<leader>mp` kollidiert nicht mit
+      anderen `<leader>m`-Belegungen (`:verbose map <leader>m`).
+- [ ] Großes Repo (z. B. `E:\repos` als CWD): Antwortzeit pro Tastendruck erträglich?
+      Notieren, ab wann es zäh wird (siehe H1, Performance).
+- [ ] Regression: `<leader>ff`, `<leader><leader>` (cwd_grep), `cwd_smart` (`<leader>CW`)
+      verhalten sich wie vorher.
+
+---
+
+### H4. Bekannte Grenzen (kein Test nötig, nur wissen)
+
+- Ohne `grep=` rankt filegrep mit dem einfachen `smart`-Scorer, **nicht** mit dem nativen
+  Fuzzy-Matcher der Engine, und zeigt höchstens `smart.limit` (2000) Zeilen.
+- Ein Treffer pro Datei (erste Fundstelle); weitere Treffer derselben Datei werden nicht
+  aufgelistet. Dafür ist die `grep`-Action zuständig.
+- Das `grep=`-Muster ist ein ripgrep-Regex mit smart-case; `additional_args` und
+  `find.exclude` der Quelle gelten auch hier.
+- `rg` und `fd` laufen synchron (Timeout `smart.timeout`, 3000 ms). Ein abgebrochener Lauf
+  wird gemeldet und nicht gecacht.
+- Mehrere Wurzeln (`roots`) werden nacheinander durchsucht; auf fzf-lua erscheinen Pfade aus
+  Nebenwurzeln absolut (Windows-Laufwerksdoppelpunkt vs. `datei:zeile`-Format).
+- Keine neuen Engine-Adapter: filegrep nutzt die `smart`-Live-Picker mit `opts.core`.
