@@ -23,13 +23,17 @@
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:50       |    94% /346%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:40       |   100% / 47%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
 
 ---
 
 ## Claude Tasks
+
+- ich möchte einen picker haben, zb leader mp; das generell nach files sucht also wioe leader ff; ich aber in der prompt sopwas wie "grep=NWBC" angen kann, also eine geamte prompt dann zb "akronyms grep=NWBC" in alle files die akronym im path haben aber nur jene die auch "NWBC" als contetn haben. ich will das eine zeit lang testen, das wird wrsch mein neuen leader leader - also haupt picker.
+  Ist sowas möglich? Umsetzung idealerweiß´e mit pickers.nvim wenn das geht, wenn nur mit telescope, nur snacks oder nur fzf-lua mölgich, dann mpssen wir und waass andrees einfallen lassen
+
 
 - filetree.nvim: Usrmcd, mit dem ich checken, ob und wie oft eine file referenziert wird. Wenn mehrer picker? Usecase; /assets ist voll mit screenhsot, die keiner mehr referenziert,
   Eun ähnliches vorgehen haben wir mit symlink ja bereits implementiert.
