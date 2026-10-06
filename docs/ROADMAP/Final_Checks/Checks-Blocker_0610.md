@@ -182,10 +182,3 @@ einem Account mit Guthaben), dann `:Ai provider claude-cli`.
 - Zugangsdaten aus Federation-Profilen der CLI werden nicht erkannt (nur dokumentiert).
 - Der Erfolgspfad der echten CLI (F1) und der Copilot-Fehlerpfad mitten im Lauf sind
   ungeprüft.
-
-### F6. Stand-Hinweis
-
-Die Handover-Texte von casedesk (`FEATURES.md`, Konzept-Banner) nennen `copilot-provider`,
-`secret-sources` (Kommando-Quelle) und `capabilities-web` noch als offen; laut `ai.nvim`-Log
-sind sie inzwischen gebaut (`6b84085`, `8b17769`, `6eb0852`) und stehen oben unter C. Die
-Task-Dateien dazu bei Gelegenheit abhaken.
