@@ -2357,14 +2357,14 @@ Tauri-Fenster (WebView2)**.
 
 Commits, `docmap-desktop` (`main`, gepusht): `08e21d9` (Traffic-Dialog), `a2f3de8` (Chip „Karte veraltet“, Änderungsdialog, keine doppelten Zähler,
 Sortierung nur in der Übersicht), `6d45c0f` (Auto-Hide, Engine-/Neovim-Panels), `6bc7d3b` (Backend `stats.rs`/`search.rs`), `c97bc9f` (Projektleiste,
-Suche, Statistik), `642dfc1` (CSS). `documentation.nvim`: `d2be49f` (**nur lokal, Push fehlgeschlagen, siehe P1**). **Keiner dieser Commits ist
+Suche, Statistik), `642dfc1` (CSS). `documentation.nvim`: `d2be49f` (`main`, Push erst nach einem GitHub-500 durchgegangen). **Keiner dieser Commits ist
 ultracode-reviewt.**
 
 ### P1. Blocker und offene Entscheidungen
 
 | Blocker | Wirkung | Stand |
 |---|---|---|
-| **`documentation.nvim`: Push von `d2be49f` wird von GitHub abgelehnt** (`remote rejected … Internal Server Error`, dreimal; `githubstatus.com` meldet keine Störung) | Der Fix für `missing-readme`/`health` liegt nur auf diesem Rechner; andere Maschinen und die Standalone-Binary-Releases haben ihn nicht | **offen**, später erneut `git push origin HEAD:main` im Repo `documentation.nvim`; wenn es bleibt, Repo-Einstellungen/Hooks auf GitHub prüfen |
+| ~~`documentation.nvim`: Push von `d2be49f` wurde von GitHub abgelehnt~~ | war ein 500er von GitHub (dreimal); `d2be49f` ist **inzwischen auf `origin/main`** (die andere Sitzung hat darauf aufgebaut) | **erledigt** (7.10., abends, per `git branch -r --contains` geprüft) |
 | **`documentation.nvim`: eine zweite Sitzung ändert parallel dasselbe Arbeitsverzeichnis** (`bindings/usrcmds/init.lua`, `editor/registry.lua`, `standalone/vim_shim.lua`, `@types/init.lua`, `TESTS/check_policy_spec.lua`, `TESTS/shim_behavior_spec.lua`, `TESTS/setup_lazy_spec.lua`) | Die Gesamtsuite war in drei Läufen nie grün, jedes Mal mit anderen Fehlschlägen (`guard fs: modified …`); einzeln laufen sie grün | **offen**: erst committen, was die andere Sitzung fertig hat, dann `bash scripts/test.sh` einmal sauber; ich habe nur meine vier Dateien committet |
 | **Kein installierter Build mit den neuen Funktionen** | Installiert ist `v0.6.0`; alles hier liegt nur auf `main`. Ein Release `v0.6.1` ist nicht geschnitten (Task `docmap-desktop/release-v0-6-1-decision`) | zum Testen: im Repo `docmap-desktop` `cd src-tauri && cargo run` (Debug-Build, lädt `src/` direkt) |
 | **Kein Test im echten Fenster möglich** (Dateidialog mit Startordner, Auswahllisten in der Auto-Hide-Seitenleiste, Hover über dem eingebetteten iframe, Editor-Start aus der Suche) | Das sind genau die Stellen, an denen WebView2 anders sein kann als der Browser-Preview | P3 unten ist deine Liste dafür |
