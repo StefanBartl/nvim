@@ -1114,6 +1114,29 @@ function M.enable()
     end,
   })
 
+  -- `jumpTo <name>`: completed from the spec files themselves (text scan), not from
+  -- plugins.personal.core.list, so a plugin whose source mode is "disabled" and a
+  -- failing `require("plugins.personal")` do not lock the command out. Validation is
+  -- left to jump(), which warns when no spec head matches.
+  composer.register_type("MYPLUGINS_SPEC_NAME", {
+    validate = function(raw)
+      if raw == "" then
+        return false, nil, "a plugin name is required"
+      end
+      return true, raw, nil
+    end,
+    complete = function(arg_lead)
+      local out = {}
+      local lead = arg_lead:lower()
+      for _, name in ipairs(require("bindings.usrcmds.plugin_repos.jump").names()) do
+        if lead == "" or name:lower():sub(1, #lead) == lead then
+          out[#out + 1] = name
+        end
+      end
+      return out
+    end,
+  })
+
   -- The task routes come from the plugin tasks.nvim (which needs lib.nvim's `markdown.frontmatter`).
   -- They are loaded guarded so that a machine without the checkout (or with an older lib.nvim)
   -- loses only these routes, not all of `:MyPlugins`.
@@ -1255,7 +1278,7 @@ function M.enable()
 
         {
           path = { "jumpTo" },
-          args = { { name = "name", type = "MYPLUGINS_NAME" } },
+          args = { { name = "name", type = "MYPLUGINS_SPEC_NAME" } },
           desc = "Open plugins/personal/specs/* at the install spec of the given plugin",
           run = function(ctx)
             require("bindings.usrcmds.plugin_repos.jump").jump(ctx.args.name)
