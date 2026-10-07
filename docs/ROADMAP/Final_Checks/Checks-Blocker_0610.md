@@ -2211,7 +2211,7 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
 **Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
 **Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Vorschau** im Panel (Dateien und Adressen). (Tasks
-stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `dd55748`).
+stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `1e32d5d`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
@@ -2219,7 +2219,7 @@ Quellen: Design `wkdbook-myplugins/ui.nvim/Backlog/FEATURES/slots-design.md`, Pl
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
 `eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS),
 `8ec1d45` (Chip-Leiste), `35178e3` (Umbau: nicht fokussierbar, Tasten verwerfen), `85e520e` (ein flakiger Test entfernt), `4009233` (Nachbesserungen),
-`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu), `ceab9d9` (Dateivorschau), `26df9c1` (Review-Fixes dazu), `e75e89e` (URL-Vorschau), `7ff544a` (Health, Doku), `dd55748` (Review-Fixes dazu).
+`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu), `ceab9d9` (Dateivorschau), `26df9c1` (Review-Fixes dazu), `e75e89e` (URL-Vorschau), `7ff544a` (Health, Doku), `dd55748` (Review-Fixes dazu), `7a7a132` (Review-Runde 3).
 Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste, eine bei Panel und Editor, eine bei der Vorschau).
 
 ### O1. Blocker
@@ -2442,6 +2442,8 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - **Das Kontextmenü ist ein `ui.kit.select`**, nicht `ui.contextmenu`; dieselbe Optik wie die anderen Auswahllisten.
 - **Maus der Leiste, zwei Grenzen:** Eine Maustaste, die du selbst auf **mehrere** Tasten gelegt hast (z. B. `<RightMouse>` → `<LeftMouse><Cmd>popup PopUp<CR>`), verliert nur die erste an das Verwerfen, der Rest läuft; und auf Neovim 0.10 gibt es das Verwerfen gar nicht (siehe O1).
 - **Die Leiste liegt über dem Text:** Sie ist ein Float am Rand und verdeckt dort Code; `style = "minimal"` oder eine kleinere `width` macht sie schmaler.
+- **Was nur `setup()` darf (Review-Runde 3):** Eine `file:`-Adresse in einem `url`-Slot und ein Netzwerkpfad (UNC) in einem `file`-Slot werden aus der Datendatei verworfen (eine Meldung für alle verworfenen Einträge) und vom Editor und von `add()` mit Begründung abgelehnt; in `setup({ slots = ... })` gehen beide. Grund: der Systemöffner führt jede Datei aus, und ein UNC-Zugriff hält den Editor bis zu 20 s an.
+- **Die Vorschau holt eine Adresse mit Platzhaltern (`{clip}`, `{file}`, ...) nie**, auch nicht mit `preview.fetch = true`; sie zeigt Adresse und Host.
 - **Health-Check:** `:checkhealth ui` hat einen Abschnitt "Slots" (verworfene Optionen, unbekannte Platzhalter in `setup({ slots })`); Slots aus der Datendatei werden beim Laden geprüft, nicht dort.
 - **`cmd` verweigert statt zu quoten:** Werte mit `|`, Backtick oder führendem `+`/`!` werden abgelehnt; Befehle, die ihre Argumente selbst zerlegen (`:set`, `:args`), entscheiden selbst über Leerzeichen. Wer mehr braucht, nimmt einen `lua`-Slot.
 - **`mark`** öffnet im aktuellen Fenster (der `target`-Wert gilt nur für `file`); `target = "pick"` (Fensterwahl) ist nicht gebaut.
