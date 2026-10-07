@@ -27,8 +27,12 @@
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
 | **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
 
-- $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
+
+- WKDBook-Tricentis - workflow docs neu anordnen
+
+- $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md
+  All neuen features/bindings die ich live testen kann/soll + alle Blocker von tasks bitte hierhin scheriben, also als aneuen abschnitt dazu:  $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md​
 
 ---
 

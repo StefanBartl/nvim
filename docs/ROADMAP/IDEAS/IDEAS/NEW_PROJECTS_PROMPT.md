@@ -5,18 +5,15 @@
 | Konzept (Quelle dieses Plans) | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
 | Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
 | Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `$REPOS_DIR/WKDBooks\Development\wkdbook-myplugins\ai.nvim\{ROADMAP,NOTES}` |
-| Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai.nvim.md` |
-| Transport-Erweiterung | `$REPOS_DIR/lib.nvim\lua\lib\nvim\net\curl` |
-| loomAI (nativ, Referenz für späteren Provider) | `$REPOS_DIR/loomAI` |
+| Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/terminal.nvim.md` anlegen alss aymlionk aus den wkdbook |
 | Regelwerk für neue Projekte | `$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
 
-
-wir implementieren jetzt data.nvim - dazu musst du ein öffentlich gh repo stefanbartl/data.nvim anlegen und in $REPOS_DIR/ anlegen
+wir implementieren jetzt terminal.nvim - dazu musst du ein öffentlich gh repo stefanbartl/terminal.nvim anlegen und in $REPOS_DIR/ anlegen
 
 Hier die konzept:
-$NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN\IDEAS\data.nvim.md
+$NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN\IDEAS\terminal.nvim.md
 
-zu begin auch ein `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/data.nvim` anelgen - doirt komten roadmapm, notes und alles rein, was nicht in da slffentliche repo docs gehört
+zu begin auch ein `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim` anelgen - doirt komten roadmapm, notes und alles rein, was nicht in da slffentliche repo docs gehört
 
 Außérdem von anfang an eine handover file führen, diese ausnahsmweiß0e nach $NVIM_CONFIG_DIR/docs\ROADMAP\handovers schreiebn
 
@@ -26,10 +23,8 @@ Außerdem - wenn möglich - halte bitte auch die performance, security usw... ru
 
 WICHITG: lib.nvim verwenden
 
-
 hier bekommst du eine übersiucht üpber nützliche tools: $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md
 
-- never start more than 1 agents simultaneously; if more are needed, run multiple rounds of up to 1 agents each
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
 - Docs / README.md des Plugins updaten sofern es Sinn macht
