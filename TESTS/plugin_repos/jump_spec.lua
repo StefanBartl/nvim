@@ -74,6 +74,38 @@ return function(H)
   eq(jump.names(dir .. "/does-not-exist"), {}, "names() on a missing directory")
   eq(jump.find("x", dir .. "/does-not-exist"), nil, "find() on a missing directory")
 
+  -- Cache reuse and retry: an unchanged directory is not re-read; a file that could not be read
+  -- is not cached as "no heads".
+  local real_readfile = vim.fn.readfile
+  local done_cache, err_cache = pcall(function()
+    local reads = 0
+    vim.fn.readfile = function(...)
+      reads = reads + 1
+      return real_readfile(...)
+    end
+    jump.names(dir)
+    local after_first = reads
+    jump.names(dir)
+    jump.find("inline.nvim", dir)
+    eq(reads, after_first, "an unchanged directory is served from the cache")
+    local flaky = H.tmpdir()
+    H.write(flaky .. "/f.lua", '{ "Owner/flaky.nvim" }')
+    local fail = true
+    vim.fn.readfile = function(path, ...)
+      if fail and path:find("f.lua", 1, true) then
+        error("simulated sharing violation")
+      end
+      return real_readfile(path, ...)
+    end
+    eq(jump.names(flaky), {}, "an unreadable file contributes nothing")
+    fail = false
+    eq(jump.names(flaky), { "flaky.nvim" }, "...and is retried, not cached as empty")
+  end)
+  vim.fn.readfile = real_readfile
+  if not done_cache then
+    error(err_cache, 0)
+  end
+
   -- Cache: a changed file is picked up (signature = mtime + size), an unchanged one is reused.
   H.write(
     dir .. "/c.lua",
@@ -113,6 +145,26 @@ return function(H)
     ok(jump.jump("inline.nvim", dir), "jump() within the modified current file succeeds")
     eq(vim.api.nvim_win_get_cursor(0), { 3, 4 }, "...and moves the cursor to the other head")
     eq(vim.api.nvim_buf_get_lines(0, 0, 1, false), { "return { -- changed" }, "...keeping the edit")
+
+    -- Unsaved edits that shift the lines: the head is searched again in the live text.
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { "-- 1", "-- 2", "-- 3", "-- 4", "-- 5" })
+    ok(jump.jump("braced.nvim", dir), "jump() after lines were inserted above the target")
+    eq(vim.api.nvim_win_get_cursor(0), { 11, 4 }, "...lands on the shifted head, not the disk line")
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "gone" })
+    ok(
+      jump.jump("braced.nvim", dir),
+      "a head gone from the buffer falls back to the disk line, clamped"
+    )
+    eq(vim.api.nvim_win_get_cursor(0)[1], 1, "...which is the last line of the shrunk buffer")
+
+    -- The same file reached through a junction (another spelling of the path): still no re-:edit.
+    local link = H.tmpdir() .. "/lnk"
+    if vim.uv.fs_symlink(dir, link, { dir = true, junction = true }) then
+      vim.cmd("edit! " .. vim.fn.fnameescape(dir .. "/a.lua"))
+      vim.api.nvim_buf_set_lines(0, 0, 0, false, { "-- x" })
+      ok(jump.jump("inline.nvim", link), "jump() recognises the file through a junction")
+      eq(vim.api.nvim_win_get_cursor(0), { 4, 4 }, "...and finds the shifted head")
+    end
 
     -- Another file with unsaved changes and 'nohidden': a notification, not a raw error (E37).
     local old_hidden = vim.o.hidden
