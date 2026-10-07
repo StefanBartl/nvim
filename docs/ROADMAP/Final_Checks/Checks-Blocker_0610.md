@@ -2211,7 +2211,7 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
 **Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
 **Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Vorschau** im Panel (Dateien und Adressen). (Tasks
-stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `1e32d5d`).
+stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `fdc4a8a`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
@@ -2398,6 +2398,13 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] Lehnt das Speichern etwas ab, **kommt das Formular mit deinen Eingaben zurück** und nennt den Grund.
 - [ ] `<Esc>` bricht ab; nichts wird gespeichert; kommst du aus dem Panel, ist es wieder da.
 - [ ] `:UI slots edit abc` meldet "not a slot number"; `:UI slots edit 99` (leer) meldet "slot 99 is empty".
+
+**O3.14 Lange Liste** (nur wenn du Lust auf einen Belastungstest hast: `for i = 1, 3000 do require("ui.slots").add({ kind = "file", path = "/tmp/gone/f" .. i .. ".txt" }) end`)
+
+- [ ] `:UI slots open` und `:UI slots panel` öffnen in unter einer halben Sekunde, auch mit 3000 Slots; Scrollen im Panel (`G`, Mausrad) fühlt sich flüssig an.
+- [ ] Im Panel zeigt eine Zeile weit unten erst nur den Namen; sobald der Cursor oder das Mausrad sie erreicht, steht dort `✗` (Datei fehlt) und die aktuelle Datei trägt `•`.
+- [ ] `dd` im Panel zeichnet einmal neu, ohne Ruckeln; die Leiste folgt nach einer Änderung ohne Verzögerung.
+- [ ] Wieder aufräumen: `:UI slots clear all`.
 
 **O3.12 Dateivorschau** (im Panel `K`; Standard `preview.mode = "key"`, `"auto"` folgt dem Cursor, `"off"` schaltet ab)
 
