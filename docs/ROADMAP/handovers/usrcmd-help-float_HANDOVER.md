@@ -88,3 +88,17 @@ Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_sp
 - Bei `-count`-Verben liefert nvim fuer `:Verb 3 sub` `range = 1`, `line1 = Cursorzeile`, `line2 = 3`: die Zahl steckt in `line2`.
 - Hinter einem nackten `--` hoeren nur die Flags auf (`flags.split`); `key=value` wird weiter geparst (`kv.split`).
 - Die echte Config laedt lib.nvim vom `main`-Checkout: Fixes erst nach Push+Pull dort testbar.
+
+## Stand nach Review-Runde 3 (2026-10-07)
+
+- Stufe 0 (global `help.enable = true`, Taste `<M-h>`) und Stufe 1 (alle Routen von `Filetree`/`Ft`, `Debug`, `File` beschrieben) sind drin.
+- Runde 3 (lib.nvim `686f03b`, filetree `6ab56ba`, debugging `c684af4`): offenes Token nach `\ `, Kurz-Flags (`-m <wert>`),
+  `optional_value`-Flags bare einfuegbar, **UTF-8-Sanitizer** fuer jede ueber das Typeahead wiedergegebene Zeile (ein einzelnes
+  Byte 0x80 + `KA` ist `<kEnter>`), **Lazy-Stubs** (Verb eines noch nicht geladenen Plugins: lazy laedt es, dann das Float),
+  Meta-Taste ausserhalb von Help-Zeilen wird geschluckt (Alt-h wuerde sonst die Zeile abbrechen), `stopinsert` vor dem Float,
+  Kuerzen nach Zellen statt Zeichen, billigere Gruppen-Zusammenfassung.
+- Beschreibungstexte aus Doku-Tabellen sind **nicht** blind uebernehmbar: Reviewer fanden falsche/abgeschnittene/kontextgebundene Texte
+  (`messages show`, `noice *`, `neotest framework`, `backup-clean`, `filter`, `move`, ...). Neue Tests pruefen beidseitig:
+  jede Route hat einen Text, jeder Text gehoert zu einer Route.
+- Offen: Stufe 2/3 (Flag-/kv-Vokabular), Enums, `:UI`-Entscheidung; Platzhalter-Texte der Form `annotation -> :Insert` (buffer-ctx `:Insert`)
+  und aehnliche in anderen Plugins sind fachlich leer und sollten ersetzt werden.
