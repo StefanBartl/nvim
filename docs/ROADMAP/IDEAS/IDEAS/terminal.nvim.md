@@ -1,4 +1,4 @@
-# `mux.nvim` — Konzept (Arbeitstitel)
+# `terminal.nvim` — Konzept (Arbeitstitel)
 
 Angelegt 2026-10-07 aus der Notiz `TMUX_WEZTERM_USW.md`:
 
@@ -6,8 +6,10 @@ Angelegt 2026-10-07 aus der Notiz `TMUX_WEZTERM_USW.md`:
 > wezterm einbindet (z. B. Statusline), bzw. umgekehrt wezterm bindet die
 > nvim-Statusline ein. `terminal.lua` ersetzen.
 
-Status: **Konzept, kein Repo.** Name ist ein Vorschlag (`mux` = Multiplexer-
-Schicht; Alternativen: `term.nvim`, `pane.nvim`).
+Status: **in Umsetzung** (Repo `StefanBartl/terminal.nvim`, Plan und Tasks im Wkdbook `terminal.nvim/`).
+Ursprünglicher Arbeitstitel war `mux.nvim`; seit 2026-10-07 heißt es `terminal.nvim`
+(Modul `terminal`, Command `:Terminal`). Die UserVar-Namen des Protokolls behalten
+das Präfix `MUX_`.
 
 ---
 
@@ -34,7 +36,7 @@ Ein **Backend-Abstraktions-Plugin**: nvim spricht eine einheitliche
 Pane-/Tab-/Statusline-API, hinter der austauschbare Backends stehen.
 
 ```
-                 mux.nvim  (API: terminals, panes, status, navigate)
+                 terminal.nvim  (API: terminals, panes, status, navigate)
                       │
    ┌──────────────────┼───────────────────┐
  native             wezterm              tmux
@@ -59,11 +61,11 @@ Verschachtelt (tmux in WezTerm) → beide Backends aktiv, Status geht an beide.
 
 ### 3.1 Terminal-Manager (ersetzt `terminal.lua` + Snacks-Abhängigkeit)
 
-- Benannte, persistente Terminals pro Projekt: `:Mux open <name>`, Toggle,
+- Benannte, persistente Terminals pro Projekt: `:Terminal open <name>`, Toggle,
   Picker (`pickers.nvim`) über alle Terminals.
 - Layouts: float / split / vsplit / tab; Größe & Border aus Config.
 - Mappings aus `terminal.lua` wandern ins Plugin (Terminal-Mode-Esc,
-  Fensternavigation, clear) — die Datei wird zum Einzeiler `require("mux").setup()`.
+  Fensternavigation, clear) — die Datei wird zum Einzeiler `require("terminal").setup()`.
 - `send`: Zeile/Selektion/Datei/Befehl an ein Terminal (REPL-Workflow), mit
   Shell-Quoting über `lib.nvim` (Windows-Fallen siehe Abschnitt 6).
 - `run`: Kommando in benanntem Terminal ausführen → Andockpunkt für
@@ -94,19 +96,19 @@ Liegt als Gegenstück im Config-Repo (`Configs/terminals/…`), nicht im Plugin:
   UserVar `MUX_NVIM=1` (zuverlässig, unabhängig vom Prozessnamen).
 - **Seamless Navigation** (wie `vim-tmux-navigator`, aber für WezTerm):
   WezTerm-Key prüft `is_nvim`; wenn ja → Taste durchreichen, nvim wechselt
-  Fenster, und am Rand ruft `mux.nvim` `wezterm cli activate-pane-direction`.
+  Fenster, und am Rand ruft `terminal.nvim` `wezterm cli activate-pane-direction`.
   tmux-Variante analog (`tmux select-pane`).
-- **Pin to backend:** `:Mux pin` startet den Terminal-Befehl via
+- **Pin to backend:** `:Terminal pin` startet den Terminal-Befehl via
   `wezterm cli split-pane` / `tmux split-window` im Multiplexer und schließt
-  den nvim-Buffer; `:Mux adopt` holt ihn als Link-Buffer zurück (nur Anzeige,
+  den nvim-Buffer; `:Terminal adopt` holt ihn als Link-Buffer zurück (nur Anzeige,
   kein Prozess-Transfer — ehrlich dokumentieren).
 - WezTerm-Tastenkürzel können nvim ansprechen: UserVar `MUX_PIPE` trägt die
   Pipe-Adresse → `nvim --server <pipe> --remote-send/-expr`.
 
 ### 3.4 Sichtbarkeit / Menü
 
-- `ui.nvim`-Kit für Menü und Formulare (`:Mux` ohne Argument → Menü).
-- `:checkhealth mux`: welche Backends erkannt, `wezterm`/`tmux` im PATH,
+- `ui.nvim`-Kit für Menü und Formulare (`:Terminal` ohne Argument → Menü).
+- `:checkhealth terminal`: welche Backends erkannt, `wezterm`/`tmux` im PATH,
   Pipe erreichbar, OSC-1337-Durchleitung geprüft (tmux braucht
   `allow-passthrough on`!).
 
@@ -128,7 +130,7 @@ Liegt als Gegenstück im Config-Repo (`Configs/terminals/…`), nicht im Plugin:
 ## 4. Verzeichnisstruktur (hexagonal, wie die anderen Plugins)
 
 ```
-lua/mux/
+lua/terminal/
   init.lua            setup(), öffentliche API
   config/             defaults, Schema (aus Konsument ableiten)
   core/               Terminal-Registry, Layout, send/run (backend-unabhängig)
@@ -139,7 +141,7 @@ lua/mux/
     init.lua          Erkennung + Weiterleitung
   status/             Datensatz bauen, entprellt publizieren
   navigate.lua        Rand-Navigation über Backends
-  commands.lua        :Mux …
+  commands.lua        :Terminal …
   health.lua
   @types/
 ```
@@ -185,7 +187,7 @@ Backend-Interface (klein halten): `available()`, `spawn(opts)`, `send(id, text)`
 
 ## 7. Offene Entscheidungen (für dich)
 
-- [ ] **Name:** `mux.nvim` ok?
+- [ ] **Name:** `terminal.nvim` ok?
 - [ ] **Scope Phase 1:** nur `terminal.lua` ersetzen, oder gleich Backends?
   (Empfehlung: erst native + WezTerm-Export, tmux später — kein tmux hier.)
 - [ ] **Eigenes Repo vs. Modul in `ui.nvim`:** Empfehlung eigenes Repo, weil

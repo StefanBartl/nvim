@@ -3,4 +3,4 @@ nvim terminal plugin, dass aberaich gleich tmux funktonaktäten bw tmux einbinde
 tertminal.lua ersetzen
 
 
--> Ausgearbeitet in [mux.nvim.md](mux.nvim.md) (2026-10-07).
+-> Ausgearbeitet in [terminal.nvim.md](terminal.nvim.md) (2026-10-07).
