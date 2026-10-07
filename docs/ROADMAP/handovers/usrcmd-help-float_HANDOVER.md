@@ -61,13 +61,19 @@ Taste -> Float, Esc -> Zeile zurueck) wurden headless mit gestubbtem `nvim_list_
 Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_spec` (runtime-analysis fehlt),
 `git_spec` (Worktree-Branchname).
 
+## Nachtrag 2026-10-07 (spaeter)
+
+- Taste ist `<M-h>` (`<C-\>` braucht AltGr und kam im Terminal nicht an); Nutzer hat den Pilot probiert: **funktioniert**.
+- lib.nvim `70e41e2` (Review-Funde: Range/Bang, Restore, Taste durchreichen, `--flag <wert>`, `--`, Steuerzeichen) und
+  `86f6f18` (**fehlendes Pflichtargument oeffnet das Float** auf der Ebene der Route; falscher Wert behaelt die Meldung).
+- Tasks: Pilot und Stufe 2 erledigt. Offen im Plan: Entscheidung `:UI`, Beschreibungen fuer fileops/debugging.
+
 ## Offen
 
-1. **Nutzer probiert `:Clipboard`** (Task `help-float-pilot-on-clipboard-nvim-config`, Status `doing`):
-   `:Clipboard ` + `<C-\>h`, `<CR>`, Esc, bare `:Clipboard`, `:Clipboard nope`.
-2. Danach **Entscheidung Rollout** (Task `help-float-ui-usercmd-decision-migrate-or-attach`): `:UI`/`:Theme`
-   (ui.nvim, handgebaut mit eigenem Dispatcher/`complete()`) migrieren (~1 Tag) oder nur anbinden (~2 h);
-   weitere Verben (`spec.help = true`) oder global `help.enable = true`.
-3. Beschreibungs-Luecken fuellen (replacer, recommender, fileops, debugging: je 1-2 Routen) und `desc` /
-   `enum_desc` an Argumenten, wo Werte nicht selbsterklaerend sind.
-4. Stufe 2: Missing-Arg-Float.
+1. **Entscheidung Rollout** (Task `help-float-ui-usercmd-decision-migrate-or-attach`, Nutzer): `:UI`/`:Theme`
+   (ui.nvim, handgebaut mit eigenem Dispatcher/`complete()`) auf den Composer migrieren (~1 Tag) oder nur anbinden
+   (~2 h); weitere Verben mit `spec.help = true` oder global `help.enable = true`.
+2. Beschreibungen (Task `help-float-descriptions-for-fileops-and-debugging-routes`): fileops `route()` und
+   debugging-Routen haben keine `desc` (die Floats zeigen dort nur den Namen). Alle anderen Repos sind ausreichend
+   beschrieben (die frueher vermuteten Luecken in replacer/recommender waren `path = {}`-Wurzelrouten mit Verb-`desc`).
+3. Optional: `desc`/`enum_desc` an Argumenten, wo Werte nicht selbsterklaerend sind.
