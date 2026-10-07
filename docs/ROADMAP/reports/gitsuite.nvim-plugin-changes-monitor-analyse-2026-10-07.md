@@ -775,6 +775,17 @@ prüfen; sofort startbar sind **`lib-git-log-runner-primitives`** und
 | `plugins-ai-summary-hook` (4c, optional) | feature | 3 / S | Klassifikator |
 | `plugins-adopt-lib-primitives` (Folge-Task zu Frage 12) | task | 3 / S | lib-Block, `plugins-log` |
 
+**Fortschritt (2026-10-08):** der Task `lib-git-log-runner-primitives` ist erledigt —
+lib.nvim `884fe61`, 3-OS-CI grün, `ci-verified` vorgerückt. Abweichungen vom Plan:
+`map_limit` als direkter Zähler-Pool statt auf `Semaphore` (Worker ist ein Callback),
+`git log` mit NUL-Trennern statt `0x1e`/`0x1f` (eine Commit-Message kann kein NUL
+enthalten), `no_lazy_fetch` zusätzlich über `-c protocol.allow=never` (gilt auch für
+git < 2.44), `_async`-Zwillinge für `rev_parse`/`merge_base`/`is_ancestor`/`tags`. Ein
+unabhängiger Review fand vor dem Push u. a. ein quadratisches Whitespace-Trimming (ein
+feindlicher Commit hätte den Editor eingefroren) und einen per Signal getöteten git-Prozess,
+der als Erfolg zählte; beides ist behoben und per Spec festgenagelt. Nächster Task:
+`plugins-log`.
+
 Die Planberechnung des Task-Tools schätzt aus der Aufwandsskala **ca. 11,75
 Personentage** (Spanne 8–18,75 d; kritischer Pfad 8 d über 4 Tasks). Das ist eine
 andere Einheit als die „17–21 Sessions“ in Abschnitt 6 (Sessions inkl. CI-Warten,
