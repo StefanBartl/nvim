@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, Repo gebaut und live (native Backend), `terminal.lua` der Config ersetzt. Nächste Schritte: WezTerm-Export (Phase `export`).**
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, native Backend + Status-Export nach WezTerm gebaut und live geprüft, `terminal.lua` der Config ersetzt. Nächste Schritte: WezTerm-Pane-Backend (`wezterm cli`), dann Navigation (Phase `navigate`).**
 
 ## Orte
 
@@ -26,11 +26,17 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07
 
 - Name `terminal.nvim` (ursprünglich Arbeitstitel `mux.nvim`); Modul `terminal`, Command `:Terminal`; UserVar-Protokoll behält `MUX_*`.
 - Phase 1 = native + WezTerm-Export; tmux danach; kein Snacks-Fallback; Pin/Adopt bleibt im Plan (Phase `pin`).
+- `<C-l>` bleibt das Clear der Shell: `clear` und `window_right` sind per Default aus (opt-in).
+- Terminal-Backend (wo Terminals leben) und Status-Exporter (was an WezTerm/tmux gemeldet wird) sind getrennt; `backend = auto` heißt native.
 - Bares `:Terminal` schaltet um (kein Menü); `3<A-h>` = Terminal "3".
 
 ## Offen / nächster Schritt
 
 `nvim --headless -u NONE -l scripts/tasks.lua next terminal.nvim --vault=...` (aus `$REPOS_DIR/tasks.nvim`). Als Nächstes: `status-dataset` → `wezterm-backend-export` → `wezterm-config-counterpart`. Nach dem nächsten Neustart der Config: alte Tasten von Hand prüfen und Startzeit messen (Task `replace-terminal-lua`).
+
+## API für andere Plugins
+
+`require("terminal").run(argv, { direct = true, name, title, cwd, float, close, env, on_open, on_exit })` startet ein TUI/Programm als Job in einem Terminal-Fenster (gedacht u. a. für den lazygit-Fallback von gitsuite.nvim; Task im gitsuite-Bereich).
 
 ## Fallen (gemessen)
 
@@ -47,3 +53,4 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07
 
 - 2026-10-07: Konzept, Plan mit 30 Tasks, Spikes (UserVars, Pipe, tmux-Passthrough).
 - 2026-10-07: Repo angelegt und gepusht; native Backend, `:Terminal`, Bindings, Specs, Docs; Config umgestellt (Spec in `project.lua`, `terminal.lua` und `autocmds/terminals` entfernt).
+- 2026-10-07: Review-Fixes (18), `<C-l>`-Entscheidung, `run --direct`-Optionen, Status-Datensatz + WezTerm-Exporter + `Configs/.../nvim_status.lua` (Tab-Titel, Right-Status), live geprüft.
