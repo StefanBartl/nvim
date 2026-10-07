@@ -859,3 +859,102 @@ braucht (Bindings und Usercommands gibt es genau einen neuen; der Rest sind Opti
       Einheit bleibt Deutsch); in `info.failed`/Log nachsehen.
 
 ---
+
+## J. Neue Befehle und Specs aus dem Chat „:MyPlugins jumpTo“ (Stand 2026-10-07)
+
+Alles hier ist gebaut, getestet (headless) und von einem `ultracode`-Review geprüft. Live am echten
+Neovim noch nicht ausprobiert.
+
+### J1. Blocker / offene Entscheidungen
+
+- [ ] **Plugin-Stand:** `:Format cite` liegt in `buffer-ctx.nvim` (Commit `ea696ee`). Auf jeder
+      Maschine erst `:Lazy sync` (oder `git pull` im Checkout), sonst gibt es den Unterbefehl nicht.
+- [ ] **Wordings (WKDBook-Tricentis):** Die vier neuen Texte unter
+      `Workflow/Templates/Wordings/` (`AttachmentUpload`, `WebsiteNeeded`, `HAR`,
+      `VerifyContractStatus`) tauchen unter `:Cases wordings` erst auf, wenn casedesk.nvim
+      `wording_dirs` kann (läuft in einem anderen Chat) und auf `Wordings` zeigt. Bis dahin nur als
+      Dateien prüfen.
+
+### J2. `:MyPlugins jumpTo <name>`
+
+- [ ] `:MyPlugins jumpTo sessions.nvim`: öffnet `specs/navigate.lua` und setzt den Cursor auf die
+      Zeile `"stefanbartl/sessions.nvim"`, Zeile mittig.
+- [ ] Mit `<Tab>` vervollständigen: `:MyPlugins jumpTo ` zeigt alle Plugins mit Spec (41), ohne
+      spürbare Verzögerung; `:MyPlugins jumpTo ai<Tab>` ergänzt `ai.nvim`.
+- [ ] Die zwei, die zuerst nicht gingen: `jumpTo ai.nvim` und `jumpTo dap.nvim` landen auf der Zeile
+      hinter `return {` (ai.lua:42, inspect.lua:51).
+- [ ] Namen in anderer Schreibweise: `jumpTo SESSIONS.nvim` findet dieselbe Stelle.
+- [ ] Unbekannter Name: `jumpTo gibtsnicht.nvim` gibt die Warnung „No install spec …“, keinen Fehler.
+- [ ] Ein deaktiviertes Plugin (Modus `disabled` in `core/source.lua`) lässt sich anspringen und wird
+      vervollständigt.
+- [ ] Ungespeicherte Änderungen in einer Spec-Datei, dann `jumpTo` auf ein **anderes Plugin derselben
+      Datei**: der Cursor springt, die Änderung bleibt, kein E37.
+- [ ] Ungespeicherte Änderungen, Sprung in eine **andere** Datei: mit gesetztem `hidden` öffnet sie
+      sich normal; mit `:set nohidden` kommt eine Fehlermeldung als Notify, kein Lua-Stacktrace.
+- [ ] Aus einem Dateibaum-Fenster (`winfixbuf`) aufrufen: Meldung statt Fehler. Bekannt: aus einem
+      Float-Fenster würde die Datei im Float landen (nicht behandelt).
+
+### J3. `:Clipboard remove citeX`
+
+- [ ] `:Clipboard remove citeX` meldet „copied remove citeX“; in die Kommandozeile einfügen
+      (`:` tippen, dann einfügen ergibt `::%s/\[cite: \d\+\]//g`): entfernt alle `[cite: N]` im Buffer.
+- [ ] Das führende `:` stört (z. B. beim Einfügen mitten in einer Zeile)? Dann entscheiden, ob der
+      Text ohne `:` kopiert werden soll.
+- [ ] `<Tab>` nach `:Clipboard ` zeigt `remove` (neben `path`, `reports`, `handovers`); danach `citeX`.
+- [ ] Die alten Befehle gehen weiter: `:Clipboard reports`, `:Clipboard path handovers`.
+- [ ] Ohne Treffer meldet der kopierte Befehl E486 (normales Vim-Verhalten, kein Fehler im Befehl).
+      Mit gesetztem `gdefault` würde nur das erste Vorkommen pro Zeile entfernt (bekannt).
+- [ ] Eigenes Snippet in der Config: `require("bindings.usrcmds.clipboard").enable({ snippets = {
+      ["say hi"] = { text = "hi", desc = "…" } } })` ergibt `:Clipboard say hi`. Ungültige Einträge
+      (leerer Schlüssel, Schlüssel gleich einem Ziel wie `reports`) werden mit Warnung übersprungen
+      statt das Laden von `bindings.usrcmds` abzubrechen.
+
+### J4. `:Format cite` (buffer-ctx.nvim)
+
+- [ ] Buffer mit `A [cite: 3] b [cite: 12].` füllen, `:Format cite`: beide Marker weg, Meldung
+      „Removed 2 [cite: N] marker(s)“. Leerzeichen drumherum bleiben (`A  b .`).
+- [ ] Listenform `[cite: 1, 2]` und `[cite:1]` verschwinden ebenfalls; `[cite: x]`, `[other: 4]`
+      und `[CITE: 3]` bleiben stehen.
+- [ ] Mit Bereich: `:3,5Format cite` und visuell `:'<,'>Format cite` wirken nur dort.
+- [ ] Mit `:Mark` markierte Zeilen behalten ihr Zeichen (Extmarks), auch Zeilen ohne Marker.
+      `u` macht alles in einem Schritt rückgängig.
+- [ ] `<Tab>` nach `:Format ` bietet `cite` an.
+- [ ] Nicht-änderbarer Buffer (`:set nomodifiable`): Fehlermeldung als Notify.
+
+### J5. Installations-Specs (reiner Kommentar, Verhalten unverändert)
+
+- [ ] `specs/project.lua` (tasks.nvim): Neovim startet ohne Meldung, `:Tasks` lädt wie vorher.
+      Stichprobe: den Block `keys = { dashboard = { done = "X" } }` einkommentieren, `:Tasks list`
+      öffnen, `X` beendet statt `D`; danach wieder auskommentieren.
+- [ ] `specs/inspect.lua` (testing.nvim): `:Testing` lädt wie vorher; der Hinweis auf `.testing.lua`
+      steht im Kommentar.
+- [ ] Checklisten `LUA_NVIM.md` (`LUA-97`) und `NEW_PROJECT.md` (`NEW-58`) lesen: passt der Wortlaut
+      („Installations-Spec mit allen Keys, auskommentiert, kommentiert“)?
+
+### J6. sessions.nvim: Chip verschieben (nur nachschlagen)
+
+- [ ] In `specs/navigate.lua` (sessions.nvim, Block `chip`) stehen die Positions-Keys: `anchor`
+      (Zeile ~1942), `shape` (~1945), `dock` (~1948), `row_offset` (~1956), `col_offset` (~1964).
+      Ausprobieren: `col_offset = 5` einkommentieren und eine Session laden; der Chip rückt nach
+      rechts und wechselt auf `rounded_chip`. Gab es früher ein interaktives Mapping zum Verschieben,
+      meldest du dich, dann suche ich es im Git-Verlauf.
+
+### J7. WKDBook-Tricentis: neue Wording-Texte (nur lesen)
+
+- [ ] `Workflow/Templates/Wordings/AttachmentUpload.md`, `WebsiteNeeded.md`, `HAR.md`,
+      `VerifyContractStatus.md` gegenlesen: Stimmen Wortlaut und Schritte? `HAR.md` enthält einen neuen
+      Hinweis, dass HAR-Dateien Cookies/Tokens/Passwörter enthalten können.
+- [ ] `Templates/AttachmentsUploading/tsu.md`, `Templates/WebsiteNeeded.md` und
+      `Templates/VerifyContractStatus.md` sind gelöscht; die Verweise in `Workflow_CDX.md`,
+      `Workflow_DecisionTree.md` und `ConsultingEnablement_Requests.md` führen ins Leere? (Stichprobe;
+      der Hintergrund „Hybrides Modell“ und die Ticket-Notiz stehen jetzt am Ende von
+      `ConsultingEnablement_Requests.md`.)
+
+### J8. Bekannte Grenzen (kein Test nötig, nur wissen)
+
+- `:Format cite` und der kopierte `:%s`-Befehl entfernen nur den Marker, nicht die Leerzeichen davor;
+  es entstehen doppelte Leerzeichen.
+- `jumpTo` sucht nur nach dem Plugin-Namen (`sessions.nvim`), nicht nach `Owner/Name`; die erste
+  Deklaration in Dateinamen-Reihenfolge gewinnt.
+- `M.TARGETS` in `bindings.usrcmds.clipboard` prüft Schlüssel mit Leerzeichen oder Kollisionen nicht
+  (nur die Snippets werden geprüft).
