@@ -898,6 +898,9 @@ Neovim noch nicht ausprobiert.
       vervollständigt.
 - [ ] Ungespeicherte Änderungen in einer Spec-Datei, dann `jumpTo` auf ein **anderes Plugin derselben
       Datei**: der Cursor springt, die Änderung bleibt, kein E37.
+- [ ] Ungespeicherte Änderungen, die Zeilen **über** dem Ziel einfügen (z. B. 5 Zeilen am Dateianfang),
+      dann `jumpTo` auf ein anderes Plugin derselben Datei: der Cursor landet auf der verschobenen
+      Zeile des Plugins, nicht auf der alten Plattenposition.
 - [ ] Ungespeicherte Änderungen, Sprung in eine **andere** Datei: mit gesetztem `hidden` öffnet sie
       sich normal; mit `:set nohidden` kommt eine Fehlermeldung als Notify, kein Lua-Stacktrace.
 - [ ] Aus einem Dateibaum-Fenster (`winfixbuf`) aufrufen: Meldung statt Fehler. Bekannt: aus einem
