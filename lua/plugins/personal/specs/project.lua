@@ -1240,6 +1240,23 @@ return {
       --   window_up = "<C-k>",
       --   -- Default: false (sonst waere <C-l> nicht mehr das Clear der Shell). Zum Aktivieren "<C-l>".
       --   window_right = false,
+      --   -- Fensterwechsel aus dem NORMAL-Modus ueber terminal.nvim (mit Count, `3<C-h>`, und mit
+      --   -- Uebergabe an WezTerm/tmux am Rand). Alle aus (false), weil die Config <C-h/j/k/l>
+      --   -- im Normal-Modus selbst belegt; zum Aktivieren die Taste angeben, z.B. "<C-h>", und
+      --   -- die gleiche Taste dort entfernen.
+      --   nav_left = false,
+      --   nav_down = false,
+      --   nav_up = false,
+      --   nav_right = false,
+      -- },
+
+      -- Fensterwechsel ueber den Neovim-Rand hinaus: ist in der Richtung kein Fenster mehr, fokussiert
+      -- das Multiplexer-Programm das Nachbar-Pane (`wezterm cli activate-pane-direction` bzw.
+      -- `tmux select-pane`). Floats geben nie ab. Wirkt auf die Terminal-Modus-Tasten (<C-h/j/k>)
+      -- und auf nav_*.
+      -- navigate = {
+      --   -- "auto" (tmux in tmux, WezTerm in WezTerm) | "tmux" | "wezterm" | { "wezterm" } | false.
+      --   handoff = "auto",
       -- },
 
       -- Dem Terminal um Neovim herum mitteilen, was Neovim gerade tut (Modus, Datei, Branch,
