@@ -1,0 +1,73 @@
+# Handover — Usrcmd-Hilfe-Float (Cheatsheet fuer Composer-Verben)
+
+Lebendes Dokument: nach **jedem** erledigten Schritt aktualisieren.
+Plan + Tasks: tasks.nvim, Plan `lib.nvim/usrcmd-help-float-cheatsheet`
+(Vault `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`, Area `lib.nvim`;
+`:Tasks plan lib.nvim --plan=lib.nvim/usrcmd-help-float-cheatsheet`).
+
+**Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. Agent-Anzahl laut
+Nutzerregel; nach jedem Schritt auf `main` pushen (kein PR); keine Co-Author-Zeile; Edit-Tool statt
+Shell-Heredocs bei Backslashes (`HEREDOC.md`).
+
+## Wunsch
+
+1. Nur den Root-Usrcmd eingeben (`:Clipboard`, `:Ui`, ...) zeigt heute eine Notify-Textausgabe; stattdessen
+   ein **UI-Float** mit allen Optionen, je `option - kurze Beschreibung`; `<CR>` fuegt die Option in die
+   Cmdline ein.
+2. Auf **jeder Ebene** (`:Cdx prompt` unvollstaendig -> Float statt Fehler).
+3. **Cheatsheet-Taste:** in der Cmdline (`:Clipboard ` getippt) per Taste das Float oeffnen, *ohne* dass
+   etwas falsch eingegeben ist. Beschreibungen knapp, kein Doku-Aufsatz.
+4. **Opt-in**, bis der Nutzer zufrieden ist; erst **ein** Verb als Pilot.
+
+## Stand (2026-10-07): Kern fertig, Pilot aktiv
+
+| Was | Wo | Commit |
+|---|---|---|
+| Option-Float, Opt-in, Cheatsheet-Taste, `desc`/`enum_desc`, Spec, README | lib.nvim | `237825d` |
+| lange Beschreibungen auf Bildschirmbreite kuerzen | lib.nvim | `ec469be` |
+| Pilot: `:Clipboard` mit `help = true`, Taste `<C-\>h`, kuerzere Route-Descs | nvim-config | `73fcb2e1` |
+| Plan + Tasks | WKDBooks | `d5e633e2` |
+
+### Aufbau (lib.nvim `lua/lib/nvim/bindings/usercmd/composer/`)
+- `help/entries.lua` — **rein**: `compute(root, committed_tokens, lead)` -> Zeilen (Subcommands, Gruppen mit
+  Zusammenfassung ihrer Kinder, Enum-Werte mit `enum_desc`, `--flags`, `key=`-Paare, Werte von `--flag=` /
+  `key=`, Hint-Zeile fuer freie Argumente). Filter wie `<Tab>` (`available`/`check`), bereits gegebene Flags
+  fallen weg, Lead filtert per Praefix (kein Treffer -> volle Liste).
+- `help/ui.lua` — Zeilen -> `kit.select` Rich-Items (Label gedimmt-aktiv, Beschreibung `KitMuted`, Gruppen
+  mit `›`, Ueberschriften nur bei >1 Abschnitt, Beschreibung auf 80 % Bildschirmbreite gekuerzt).
+- `help/init.lua` — `parse_line` (Range/Bang/Lead), `insertion`, `open`, `from_cmdline`, `on_dispatch`,
+  `set_keymap` (Cmdline-Expr-Mapping: verlaesst die Cmdline per `<C-c>`, oeffnet das Float, **Esc stellt die
+  Zeile wieder her**), `setup`, `enabled`.
+- `parse.lua` — `M.show_usage(notify, level, text, tokens, reason)`: nutzt `notify.help(...)`, sonst Notify
+  wie bisher. Greift bei bare `:Verb`, unvollstaendiger Gruppe, unbekanntem Subcommand. `spec.default` gewinnt.
+- `init.lua` — Notifier bekommt `help`; `composer.setup({ help = { enable, keymap } })`; `composer.help` lazy.
+
+### Opt-in (Default: aus)
+Verb ist "an", wenn `spec.help == true`, oder `help.enable` gesetzt und `spec.help ~= false`. Die Taste wirkt
+nur bei angeschalteten Composer-Verben (sonst nichts). Taste: `composer.setup({ help = { keymap = "<C-\\>h" } })`
+(in `lua/bindings/usrcmds/init.lua`).
+
+### Entscheidungen / Abweichungen vom ersten Konzept
+- `kit.select` statt `kit.menu` (kein Spiegel-Drift mit ui.nvim, keine Aenderung an `menu.lua`).
+- Kein Drill-down im Float: jede Wahl wird eingefuegt, die Taste oeffnet die naechste Ebene.
+- Default-Taste `<C-\>h` (nicht `<C-\>` allein: kollidiert mit `c_CTRL-\_e`); frei konfigurierbar.
+- Fehlerpfad `missing required argument` oeffnet das Float noch nicht (Task `help-float-missing-argument-float-stage-2`);
+  die Cheatsheet-Taste deckt die Ebene aber ab.
+
+### Tests
+`TESTS/composer_help_spec.lua` (in `TESTS/run.lua` und `TESTS/README.md` eingetragen): Engine, Parsing,
+Insertion, UI-Items, Opt-in, Dispatch-Hook, Taste. Integrationslaeufe (Float, `j<CR>` -> `:Demo open `,
+Taste -> Float, Esc -> Zeile zurueck) wurden headless mit gestubbtem `nvim_list_uis` gefahren.
+Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_spec` (runtime-analysis fehlt),
+`git_spec` (Worktree-Branchname).
+
+## Offen
+
+1. **Nutzer probiert `:Clipboard`** (Task `help-float-pilot-on-clipboard-nvim-config`, Status `doing`):
+   `:Clipboard ` + `<C-\>h`, `<CR>`, Esc, bare `:Clipboard`, `:Clipboard nope`.
+2. Danach **Entscheidung Rollout** (Task `help-float-ui-usercmd-decision-migrate-or-attach`): `:UI`/`:Theme`
+   (ui.nvim, handgebaut mit eigenem Dispatcher/`complete()`) migrieren (~1 Tag) oder nur anbinden (~2 h);
+   weitere Verben (`spec.help = true`) oder global `help.enable = true`.
+3. Beschreibungs-Luecken fuellen (replacer, recommender, fileops, debugging: je 1-2 Routen) und `desc` /
+   `enum_desc` an Argumenten, wo Werte nicht selbsterklaerend sind.
+4. Stufe 2: Missing-Arg-Float.
