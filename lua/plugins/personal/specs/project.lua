@@ -1229,13 +1229,15 @@ return {
       --   toggle = "<A-h>",
       --   -- Terminal-Modus verlassen (Terminal-Normal). Default: { "<Esc>", "<C-c>" }.
       --   normal_mode = { "<Esc>", "<C-c>" },
-      --   -- Bildschirm der Shell leeren (cls / clear), nur Terminal-Modus. Default: "<A-l>".
-      --   clear = "<A-l>",
-      --   -- Fensterwechsel aus dem Terminal-Modus heraus. Defaults: <C-h> <C-j> <C-k> <C-l>.
+      --   -- Plugin tippt `cls` / `clear` ins Terminal (nur Terminal-Modus). Default: false, denn
+      --   -- <C-l> erreicht die Shell und leert dort den Bildschirm wie in jedem Terminal.
+      --   clear = false,
+      --   -- Fensterwechsel aus dem Terminal-Modus heraus. Defaults: <C-h> <C-j> <C-k>.
       --   window_left = "<C-h>",
       --   window_down = "<C-j>",
       --   window_up = "<C-k>",
-      --   window_right = "<C-l>",
+      --   -- Default: false (sonst waere <C-l> nicht mehr das Clear der Shell). Zum Aktivieren "<C-l>".
+      --   window_right = false,
       -- },
 
       -- Den Befehl `:Terminal` registrieren (toggle open hide close list send run). Default: true.
