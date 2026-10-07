@@ -4,7 +4,7 @@
 ---dashboard and the wkdbook task commands.
 ---@description
 --- Registers a single `:MyPlugins {clone|remove|fetch|pull|update|sync|reclone|
---- dashboard|mode|list|picker|tasks|task|open} [args]` command via
+--- dashboard|mode|list|jumpTo|picker|tasks|task|open} [args]` command via
 --- `lib.nvim.bindings.usercmd.composer` (replaces the former flat
 --- `:MyPluginsClone` / `:MyPluginsRemove`). The `tasks`, `task` and `open`
 --- routes come from `tasks_nvim.ui.routes` (the plugin `tasks.nvim`: handlers, engine) and are not limited to the plugin list: they work on the
@@ -1250,6 +1250,15 @@ function M.enable()
           desc = "Show *.nvim checkouts in dir/$REPOS_DIR that plugins.personal does not list yet (read-only; the 'new plugin not wired up' check)",
           run = function(ctx)
             unlisted_all(ctx.args.dir)
+          end,
+        },
+
+        {
+          path = { "jumpTo" },
+          args = { { name = "name", type = "MYPLUGINS_NAME" } },
+          desc = "Open plugins/personal/specs/* at the install spec of the given plugin",
+          run = function(ctx)
+            require("bindings.usrcmds.plugin_repos.jump").jump(ctx.args.name)
           end,
         },
 
