@@ -161,11 +161,22 @@ function M.copy(name)
   return true
 end
 
+--- The command words of a snippet key: whitespace-separated, so "a  b" and "a b" are one key.
+---@param key string
+---@return string[] words
+local function snippet_words(key)
+  local words = {}
+  for word in key:gmatch("%S+") do
+    words[#words + 1] = word
+  end
+  return words
+end
+
 --- Copy the text of snippet `key` (e.g. "remove citeX") to the clipboard.
 ---@param key string
 ---@return boolean ok
 function M.copy_snippet(key)
-  local snippet = M.SNIPPETS[key]
+  local snippet = M.SNIPPETS[table.concat(snippet_words(key), " ")]
   if not snippet then
     notify.error(("unknown snippet %q"):format(key))
     return false
@@ -200,7 +211,16 @@ function M.enable(opts)
   if type(opts.snippets) == "table" then
     for key, snippet in pairs(opts.snippets) do
       if type(key) == "string" and type(snippet) == "table" and type(snippet.text) == "string" then
-        M.SNIPPETS[key] = { text = snippet.text, desc = snippet.desc or "Copy a snippet" }
+        local words = snippet_words(key)
+        if #words == 0 then
+          -- An empty path would register a ROOT route and hijack a bare `:Clipboard`.
+          notify.warn(("ignoring snippet with an empty key (%q)"):format(key))
+        else
+          M.SNIPPETS[table.concat(words, " ")] = {
+            text = snippet.text,
+            desc = type(snippet.desc) == "string" and snippet.desc or "Copy a snippet",
+          }
+        end
       end
     end
   end
@@ -209,7 +229,12 @@ function M.enable(opts)
   end
 
   local routes = {}
+  -- Route paths already taken: composer raises on a duplicate, which would abort loading
+  -- bindings.usrcmds, so a snippet that collides with a target is skipped with a warning.
+  local taken = {}
   for _, name in ipairs(M.names()) do
+    taken[name] = true
+    taken["path " .. name] = true
     local function run()
       M.copy(name)
     end
@@ -223,13 +248,18 @@ function M.enable(opts)
   local keys = vim.tbl_keys(M.SNIPPETS)
   table.sort(keys)
   for _, key in ipairs(keys) do
-    routes[#routes + 1] = {
-      path = vim.split(key, " ", { plain = true, trimempty = true }),
-      desc = M.SNIPPETS[key].desc .. " -> clipboard",
-      run = function()
-        M.copy_snippet(key)
-      end,
-    }
+    if taken[key] then
+      notify.warn(("snippet %q collides with a target of the same name, skipped"):format(key))
+    else
+      taken[key] = true
+      routes[#routes + 1] = {
+        path = snippet_words(key),
+        desc = M.SNIPPETS[key].desc .. " -> clipboard",
+        run = function()
+          M.copy_snippet(key)
+        end,
+      }
+    end
   end
 
   composer.verb("Clipboard", {
