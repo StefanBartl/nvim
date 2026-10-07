@@ -1,1 +1,0 @@
-E:/repos/WKDBooks/Development/wkdbook-myplugins/ALL/Task-Plan-Konzept-2026-10-05.md

@@ -1458,4 +1458,19 @@ return {
       },
     },
   },
+  {
+    -- testing.nvim: the `:Testing` test runner (specs, conformance, surface).
+    -- On demand only: `cmd` is the whole trigger, nothing registers at startup.
+    -- setup() takes only the two options below. The per-project settings (roots, guards, jobs, ...)
+    -- live in `.testing.lua` in the project root (docs/CONFIG.md), not here.
+    "StefanBartl/testing.nvim",
+    cmd = "Testing",
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- Prefix of every message the plugin shows.
+      -- notify_prefix = "[testing]",
+      -- Moves or drops named keymap actions; false binds no key (docs/BINDINGS.md).
+      -- keymaps = {},
+    },
+  },
 }

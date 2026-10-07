@@ -999,6 +999,119 @@ return {
     },
   },
 
+  -- tasks.nvim: the task engine and its editor front ends (one Markdown file per task in a vault, generated
+  -- overviews, dashboard, headless CLI). Loaded on `:Tasks` or on the first `require("tasks_nvim...")`, i.e.
+  -- by the `:MyPlugins tasks|task|open` routes (lua/bindings/usrcmds/plugin_repos/init.lua mounts the
+  -- plugin's route tree). No built-in vault path: it is set here.
+  {
+    "StefanBartl/tasks.nvim",
+    main = "tasks_nvim",
+    cmd = { "Tasks" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- The vault folder (one folder per area). Without it $TASKS_VAULT is read.
+      -- Default: nil.
+      vault = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "")
+          and (vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-myplugins")
+        or nil,
+      -- Folders that are areas although they hold neither ROADMAP/ nor Backlog/.
+      -- Default: {}.
+      extra_areas = { "ALL", "nvim-config", "docmap-desktop", "migrate.nvim" },
+      -- Dashboard behind `:Tasks list`.
+      -- dashboard = {
+      --   -- Refresh the list when a task or Backlog file changes (file watchers).
+      --   -- watch = true,
+      --   -- Quiet period after a change before the list is rescanned.
+      --   -- debounce_ms = 250,
+      --   -- The picker: "auto" (snacks if installed, else kit) | "snacks" | "kit" | "select".
+      --   -- backend = "auto",
+      -- },
+      -- Staleness check (`--stale=refs`: last activity of a task read from git).
+      -- staleness = {
+      --   -- One `git log` call is killed after this many ms.
+      --   -- git_timeout_ms = 20000,
+      --   -- All git calls of one run share this budget (ms); the rest falls back to mtimes.
+      --   -- budget_ms = 30000,
+      --   -- Folders holding the repos by name (`<base>/<area>`); empty: derived from the vault and $REPOS_DIR.
+      --   -- repo_bases = {},
+      -- },
+      -- `ci` command.
+      -- ci = {
+      --   -- The vault's `md_lint.lua` is killed after this many ms.
+      --   -- lint_timeout_ms = 120000,
+      --   -- Allow `ci` to run <vault>/TOOLS/scripts/md_lint.lua (code from the vault itself).
+      --   -- trust_vault_lint = false,
+      -- },
+      -- After finishing a task.
+      -- next = {
+      --   -- Offer the next task to open in a small dialog (headless: a message).
+      --   -- popup = true,
+      --   -- Name ready tasks written `cdx` apart, never as your next task.
+      --   -- cdx_hint = true,
+      -- },
+      -- Plan chaining.
+      -- chain = {
+      --   -- Documents whose `<!-- GENERATED:plan scope=... -->` blocks are refreshed after a task is
+      --   -- finished; only these files are touched. The headless CLI reads $TASKS_MARKER_DOCS instead.
+      --   -- marker_docs = {},
+      -- },
+      -- Plan steps in a task buffer.
+      -- steps = {
+      --   -- Ask whether to finish the task when the LAST open step of `## Plan` is ticked
+      --   -- (adds an autocommand on task buffers).
+      --   -- ask_finish = false,
+      -- },
+      -- Keys: action name -> key, or false to switch that action's key off. Unnamed actions keep their default.
+      -- keys = {
+      --   -- Dashboard list window.
+      --   -- dashboard = {
+      --   --   status = "s", -- advance status of marked (else current) tasks
+      --   --   prio = "p", -- advance priority of marked (else current) tasks
+      --   --   done = "D", -- finish (asks first)
+      --   --   filter = "f", -- set a filter chip
+      --   --   sort = "o", -- cycle the sort
+      --   --   export = "e", -- export marked (else all shown) tasks
+      --   --   rescan = "r", -- rescan now
+      --   --   backlog = "gb", -- Backlog picker of the area under the cursor
+      --   --   roadmap = "gr", -- ROADMAP of the area under the cursor
+      --   --   preview = "gp", -- preview the task file in the browser
+      --   --   help = "g?", -- help
+      --   --   view = "v", -- switch between list and stage view
+      --   --   assign = "P", -- give marked (else current) tasks a plan and a stage
+      --   --   move_down = "J", -- stage view: move the task down in its stage
+      --   --   move_up = "K", -- stage view: move the task up in its stage
+      --   -- },
+      --   -- Dashboard input window (normal and insert mode).
+      --   -- dashboard_input = {
+      --   --   status = "<M-s>",
+      --   --   prio = "<M-p>",
+      --   --   done = "<M-d>",
+      --   --   filter = "<M-f>",
+      --   --   sort = "<M-o>",
+      --   --   export = "<M-e>",
+      --   --   rescan = "<M-r>",
+      --   --   backlog = "<M-b>",
+      --   --   roadmap = "<M-m>",
+      --   --   preview = "<M-v>",
+      --   --   help = "<M-?>",
+      --   --   view = "<M-g>",
+      --   --   assign = "<M-a>",
+      --   --   move_down = "<M-j>",
+      --   --   move_up = "<M-k>",
+      --   -- },
+      --   -- Buffer-local keys of the `:Tasks new` form.
+      --   -- form = {
+      --   --   tick_space = "<Space>",
+      --   --   tick_enter = "<CR>",
+      --   --   submit = "<C-s>",
+      --   --   cancel = "q",
+      --   --   cancel_ctrl = "<C-q>",
+      --   --   help = "g?",
+      --   -- },
+      -- },
+    },
+  },
+
   -- {
   -- "StefanBartl/learn-cli.nvim",
   -- lazy = false,
