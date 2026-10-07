@@ -17,7 +17,7 @@ require("bindings.autocmds.markdown_folds").setup()
 --- General
 ------------------------------------------------------
 
--- Kitty padding (autocmds.terminals, below) and last_loc (autocmds.text,
+-- Kitty padding (terminal.nvim, see "Terminals" below) and last_loc (autocmds.text,
 -- below) used to be configurable here too -- both were exact duplicates of
 -- those modules' own features (kitty was actively double-firing on every
 -- VimEnter/VimLeavePre; last_loc was disabled here and never actually ran).

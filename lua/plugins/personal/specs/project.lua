@@ -1158,7 +1158,8 @@ return {
       --   size = 0.3,
       -- },
 
-      -- Wo ein neues Terminal startet UND welchem Projekt es gehoert (Wurzel + Name = Identitaet):
+      -- Wo ein neues Terminal startet. Die Zugehoerigkeit zum Projekt (Wurzel + Name = Identitaet) ist
+      -- immer die Git-Wurzel (sonst das cwd); nur das Startverzeichnis haengt von diesem Modus ab:
       --   "project" = Git-Wurzel des aktuellen Buffers, sonst das cwd (Default)
       --   "buffer"  = Ordner des aktuellen Buffers
       --   "cwd"     = das aktuelle Arbeitsverzeichnis
