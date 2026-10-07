@@ -2454,6 +2454,8 @@ lesbare Engine-/Neovim-Panels, neue **Projektleiste** (Karte / Dateien / Statist
 **headless und im Browser-Preview mit Stub-Daten** (`tools/preview/preview.py`, `node --test` 185 grün, `cargo test` 155 grün); **nie im echten
 Tauri-Fenster (WebView2)**.
 
+**Nach dem Review (62 + 22 Befunde, zwei Runden, je zwei Skeptiker pro Befund):** Fix-Commits `docmap-desktop` `2029041` (Sicherheit/Performance Rust), `1e7b882` (Frontend-Zustände, Seitenleiste, Suche), `1ae7ffd` (Icon-Manifest, Kartenserver, Folgefixes); `documentation.nvim` `6fb48a1` (strukturelle `missing-readme`-Regel), `16e4ed3` (Test gegen Doppelzählung). Die ersten Commits stehen unten.
+
 Commits, `docmap-desktop` (`main`, gepusht): `08e21d9` (Traffic-Dialog), `a2f3de8` (Chip „Karte veraltet“, Änderungsdialog, keine doppelten Zähler,
 Sortierung nur in der Übersicht), `6d45c0f` (Auto-Hide, Engine-/Neovim-Panels), `6bc7d3b` (Backend `stats.rs`/`search.rs`), `c97bc9f` (Projektleiste,
 Suche, Statistik), `642dfc1` (CSS). `documentation.nvim`: `d2be49f` (`main`, Push erst nach einem GitHub-500 durchgegangen). **Keiner dieser Commits ist
@@ -2570,6 +2572,15 @@ Vor dem Testen: im Repo `docmap-desktop` `git pull`, dann `cd src-tauri && cargo
 - [ ] Großes Projekt: Fenster bleibt bedienbar, es steht „Zähle …“; bei Abbruch der Hinweis „Zahlen sind Untergrenzen“.
 - [ ] Projekt ohne Karte: Statistik funktioniert trotzdem.
 
+**P3.8a Datei öffnen (nach dem Review-Fix, `2029041`, `1ae7ffd`)**
+
+- [ ] **Ohne** Editor-Befehl (Settings → Editor leer): Suchtreffer in einer `.md`, `.lua`, `.json` öffnet die Datei im Standardprogramm.
+- [ ] Treffer in einer `.js`, `.py`, `.bat`, `.ps1`, `.html` oder `.exe`: öffnet **nicht**, sondern zeigt die Datei im Datei-Manager (Explorer markiert sie). Das ist Absicht (die Dateizuordnung würde sie ausführen).
+- [ ] Windows: ein Klick auf einen Treffer öffnet die richtige Datei bzw. markiert sie im Explorer (früher öffnete sich „Dokumente“ wegen `/` im Pfad). **Reveal** im Projekt-Kontextmenü öffnet den Projektordner.
+- [ ] **Mit** Editor-Befehl (z. B. `code -g {file}:{line}`): jede Dateiart öffnet im Editor, an der Zeile.
+- [ ] Ein Projekt mit `manifest.json` im Stamm, dessen `icons[].src` auf einen Pfad mit `..` oder auf einen UNC-Pfad (`\\host\share\x.png`) zeigt: das Projekt wird normal gewählt, **kein** Icon, **keine** Wartezeit (kein Zugriff auf den fremden Rechner).
+- [ ] Kartenserver: die Karte lädt weiter wie vorher; ein Symlink in `docs/map`, der aus dem Ordner hinaus zeigt, wird nicht ausgeliefert (404).
+
 **P3.8 documentation.nvim: Findings** (nach dem Push von `d2be49f` bzw. lokal)
 
 - [ ] Karte für `sessions.nvim` neu erzeugen, Reiter **Findings**: `missing-readme` nur noch für `lua/sessions` (nicht für `config`, `marks`, `bindings/*`).
@@ -2601,4 +2612,6 @@ Vor dem Testen: im Repo `docmap-desktop` `git pull`, dann `cd src-tauri && cargo
 - **„Karte veraltet“ vergleicht Änderungszeiten:** eine ohne Änderung gespeicherte Datei zählt mit, die Liste nennt höchstens 100 Dateien (mit der Gesamtzahl).
 - **Ansicht-Suche** findet nur, was in `module_map.json` steht; Funktionsrümpfe (`snippet`) sind absichtlich ausgenommen.
 - **`documentation.nvim`-Schwellen** für `missing-readme` sind fest (siehe P1), keine Option.
+- **Dateien öffnen ohne Editor-Befehl** öffnet nur Dokument- und Quelltext-Endungen (`md`, `txt`, `json`, `toml`, `yaml`, `lua`, `rs`, `go`, `css` …) über die Dateizuordnung; alles andere, auch `.js`, `.py`, `.sh`, `.bat`, `.html`, `.svg`, `.csv`, wird im Datei-Manager gezeigt. Unter Unix zählt eine ausführbare Datei, die wie ein Programm beginnt (Shebang, ELF, Mach-O, PE), nie als Dokument.
+- **Windows-Symlinks** auf einen anderen Rechner im Projekt werden vor dem Folgen abgelehnt; das Anlegen solcher Links braucht ein Recht, der zugehörige Test überspringt sich ohne.
 - **Preview-Stub:** `tools/preview/preview.html` entsteht beim Start von `preview.py` aus `src/index.html`; nach Markup-Änderungen den Server neu starten, sonst sieht man die alte Seite (Skripte und CSS lädt der Browser sonst aus dem Cache).
