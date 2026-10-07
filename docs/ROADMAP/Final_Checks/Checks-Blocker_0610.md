@@ -2205,8 +2205,8 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
 **Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
-**Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Dateivorschau** im Panel. **Noch nicht da:** die URL-Vorschau (Tasks
-stehen unten). Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `26df9c1`).
+**Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Vorschau** im Panel (Dateien und Adressen). (Tasks
+stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `e75e89e`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
@@ -2214,7 +2214,7 @@ Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nv
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
 `eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS),
 `8ec1d45` (Chip-Leiste), `35178e3` (Umbau: nicht fokussierbar, Tasten verwerfen), `85e520e` (ein flakiger Test entfernt), `4009233` (Nachbesserungen),
-`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu), `ceab9d9` (Dateivorschau), `26df9c1` (Review-Fixes dazu).
+`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu), `ceab9d9` (Dateivorschau), `26df9c1` (Review-Fixes dazu), `e75e89e` (URL-Vorschau).
 Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste, eine bei Panel und Editor, eine bei der Vorschau).
 
 ### O1. Blocker
@@ -2223,13 +2223,12 @@ Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei
 N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nvim/slots-live-check` (steht dort schon). Neu erzeugen:
 `nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` und `list --waiting` im Ordner von `tasks.nvim`, mit `TASKS_VAULT` auf den Vault.
 
-**Kette des Plans `ui.nvim/ui-slots`** (3 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
-`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`, `slots-preview-file`, `hover.nvim/preview-target-api` — hover.nvim hat jetzt `preview_target`, `b169dc6`). Nichts davon wartet auf dich, außer dem letzten Glied:
+**Kette des Plans `ui.nvim/ui-slots`** (2 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
+`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`, `slots-preview-file`, `slots-preview-url`, `hover.nvim/preview-target-api` — hover.nvim hat jetzt `preview_target`, `b169dc6`). Nichts davon wartet auf dich, außer dem letzten Glied:
 
 | Task | Status | Wartet auf | Was |
 |---|---|---|---|
-| `ui.nvim/slots-preview-url` | startbar (M) | — | URL-Vorschau über hover.nvim |
-| `ui.nvim/slots-docs-health` | blocked | `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
+| `ui.nvim/slots-docs-health` | startbar (M) | — | Health-Check, Moduldoku, `scope.md`, Mausspecs |
 | `ui.nvim/slots-live-check` | blocked, **actor=me** | `slots-docs-health` | **deine** Live-Abnahme (Optik, Alltag, Maus) — erst wenn alles andere steht |
 
 **Weitere Stolpersteine, die in dieser Sitzung aufgefallen sind (keine Tasks, nur wissen):**
@@ -2407,6 +2406,16 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] Das Fenster verschwindet mit dem Panel, auch bei `:close` im Panel oder `q`; öffnest du aus dem Panel den Editor (`a`/`e`) und kehrst zurück, ist die Vorschau wieder da, wenn sie an war.
 - [ ] `preview = { mode = "off" }`: `K` meldet "the preview is switched off".
 
+**O3.13 URL-Vorschau** (im Panel `K` auf einem `url`-Slot; braucht hover.nvim, sonst nur Adresse und Host)
+
+- [ ] `K` auf einem `https://`-Slot zeigt sofort die Adresse und "loading ...", kurz danach die Seite so, wie hover.nvim sie zeigt (Status, Titel, Text).
+- [ ] Schnell mit `j`/`k` über mehrere URL-Slots: am Ende steht nur die Seite des Slots unter dem Cursor, nie die eines vorherigen.
+- [ ] Eine nicht erreichbare Adresse zeigt den Fehler als Text ("no answer"), keine Meldung, kein Fehler im Panel.
+- [ ] `file:`- und `mailto:`-Slots zeigen nur Adresse und Host; es geht kein Request raus.
+- [ ] `preview = { fetch = false }`: URL-Slots zeigen nur Adresse und Host, kein "loading ...".
+- [ ] Ohne hover.nvim (z. B. `package.loaded.hover = nil` und aus dem Pfad nehmen): Adresse und Host, keine Fehlermeldung.
+- [ ] Die Leiste und ein bloß geöffnetes Panel lösen **keine** Anfrage aus; nur `K` (oder `preview.mode = "auto"`).
+
 ---
 
 ### O4. Regression (Änderungen an bestehendem Verhalten)
@@ -2422,7 +2431,7 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 
 ### O5. Bekannte Grenzen (kein Test nötig, nur wissen)
 
-- **Vorschau nur im Panel und nur für Dateien.** Die Leiste hat keine; URL-Slots zeigen eine Notiz, bis `slots-preview-url` fertig ist.
+- **Vorschau nur im Panel.** Die Leiste hat keine. Eine Adresse wird über hover.nvim geholt (nur Text, kein Browser, kein PDF); in `auto` löst jede Cursorbewegung auf einem URL-Slot nach `preview.delay` eine Anfrage aus.
 - **Der Editor macht nur `file`, `url`, `yank` und `mark`.** `cmd`/`lua` und feste Slots (aus `setup`) werden dort nicht angelegt oder geändert; ein Slot mit eigener Kind-Art ohne Formularfelder auch nicht.
 - **Nummern im Panel werden getippt, nicht gezählt:** `12<CR>` geht nicht (die Ziffern sind belegt); `1`, dann `2` springt auf Slot 12.
 - **Das Kontextmenü ist ein `ui.kit.select`**, nicht `ui.contextmenu`; dieselbe Optik wie die anderen Auswahllisten.
