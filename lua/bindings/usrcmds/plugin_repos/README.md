@@ -28,6 +28,7 @@ those names no longer exist.
 :MyPlugins mode [auto|dir|remote|disabled]
 :MyPlugins list [dir]
 :MyPlugins unlisted [dir]
+:MyPlugins jumpTo <name>
 :MyPlugins picker [dir]
 
 :MyPlugins tasks [<area>|all] [--status= --prio= --effort= --kind= --category= --severity= --tag= --stale=<days> --blocked] [--sort=] [--to= --format=]
@@ -412,6 +413,16 @@ verbs the entire interface:
 
 That is why there is deliberately no sort, filter or refresh command of its
 own, and no git action bound to a row.
+
+### `:MyPlugins jumpTo <name>`
+
+Opens the file in `lua/plugins/personal/specs/` that declares the install spec
+of `<name>` (completion offers every listed plugin) and puts the cursor on the
+`"owner/name"` line. Plain text scan, nothing is evaluated.
+
+```vim
+:MyPlugins jumpTo sessions.nvim
+```
 
 ### `:MyPlugins unlisted [dir]`
 
