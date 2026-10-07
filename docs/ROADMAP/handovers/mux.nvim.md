@@ -1,6 +1,6 @@
 # mux.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, Planung abgeschlossen, noch kein Repo, kein Code.**
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, Spikes erledigt, Entscheidung gefallen, noch kein Repo, kein Code.** Nächster Task: `repo-scaffold`.
 
 ## Orte
 
@@ -23,7 +23,7 @@ nvim --headless -u NONE -l scripts/tasks.lua next mux.nvim --vault=$REPOS_DIR/WK
 nvim --headless -u NONE -l scripts/tasks.lua plan mux.nvim --vault=...
 ```
 
-Erste startbare Tasks: `spike-uservars-osc1337`, `spike-pipe-roundtrip`. Die Entscheidung `decide-scope-name` (Name, Phase-1-Umfang, Repo-Form, Snacks-Fallback, Pin/Adopt) gehört dem Nutzer und blockiert `repo-scaffold`.
+Entscheidung (2026-10-07): Empfehlungen übernommen (Name `mux.nvim`, native + WezTerm zuerst, eigenes Repo, kein Snacks-Fallback, Pin/Adopt bleibt als letzte Funktionsphase). Spikes erledigt, Befund: `.../mux.nvim/NOTES/spike-uservars.md`. Offen aus den Spikes: tmux-Passthrough (braucht tmux in WSL, Freigabe nötig, Task `tmux-test-env`).
 
 ## Arbeitsregeln (aus dem Prompt)
 
@@ -36,3 +36,4 @@ Erste startbare Tasks: `spike-uservars-osc1337`, `spike-pipe-roundtrip`. Die Ent
 ## Log
 
 - 2026-10-07: Konzept geschrieben, Plan `mux-build` mit 30 Tasks im Vault angelegt (Phasen: spike, fundament, native, export, navigate, tmux, pin, family, abnahme).
+- 2026-10-07: Entscheidung `decide-scope-name` (alle Empfehlungen). Spikes UserVars + Pipe-Roundtrip gemessen (WezTerm 20240203, nvim 0.12.2): Kanal `nvim_ui_send`, kein Verlust bei 200 Updates, 64 KiB ok; Rückweg nur mit `nvim --headless --server` (~70 ms statt ~1,15 s); `update-status` sieht nur das aktive Pane. Harness unter `TOOLS/scripts/wezterm-uservar-spike/`.
