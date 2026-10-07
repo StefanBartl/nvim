@@ -27,6 +27,7 @@
     - [G4. language.nvim: Chunking großer Eingaben](#g4-languagenvim-chunking-groer-eingaben)
     - [G5. `display_lang` selbst (gebaut, live noch nicht geprüft)](#g5-display_lang-selbst-gebaut-live-noch-nicht-geprft)
     - [G6. Bekannte Grenzen (kein Test nötig, nur wissen)](#g6-bekannte-grenzen-kein-test-ntig-nur-wissen)
+    - [G7. Nachtrag: neue Befehle, Optionen, APIs und offene Tasks, die du live prüfen oder entscheiden musst](#g7-nachtrag-neue-befehle-optionen-apis-und-offene-tasks-die-du-live-prfen-oder-entscheiden-musst)
   - [H. pickers.nvim: `filegrep` (Dateien nach Pfad und Inhalt, Stand 2026-10-06)](#h-pickersnvim-filegrep-dateien-nach-pfad-und-inhalt-stand-2026-10-06)
     - [H1. Blocker / offene Entscheidungen](#h1-blocker-offene-entscheidungen)
     - [H2. Neue Bindings und Commands](#h2-neue-bindings-und-commands)
@@ -786,3 +787,83 @@ Im Rahmen der Review-Fixes wurde Bestehendes angefasst; bitte im Alltag beobacht
 - Andere Tricentis-Hosts (Support-Hub, Kunden-Tenants `*.my.tricentis.com`, Horizon, SharePoint,
   ServiceNow) haben keinen statischen Token: Pins. Tabelle in der Notiz.
 - Der Rechte-Spec für das 0700-Cache-Verzeichnis ist unter Windows `pending` (greift in CI).
+
+### G7. Nachtrag: neue Befehle, Optionen, APIs und offene Tasks, die du live prüfen oder entscheiden musst
+
+Alles, was dieser Chat neu hinzugefügt hat und das eine Tastatur-, Config- oder Live-Prüfung
+braucht (Bindings und Usercommands gibt es genau einen neuen; der Rest sind Optionen und APIs).
+
+**Neue Usercommands und Bindings**
+
+- [ ] `:MDView lang <code>|off|refresh` (mdview.nvim): Tab-Completion der Sprachcodes, Aufruf ohne
+      Argument zeigt den Zustand. Es gibt **kein** neues Keymap und keinen neuen Autocmd-Eintrag
+      für den Nutzer; `docs/BINDINGS.md` der Config hat keine MDView-Subcommand-Liste und blieb
+      unverändert. Kontrollieren, ob du ein Keymap dafür willst (zum Beispiel Umschalten
+      `en`/`off`); dann wäre das eine neue Task.
+
+**Neue Optionen (setup)**
+
+- [ ] mdview `browser`: `display_lang` (Standard aus), `display_lang_trigger` (`idle`|`save`|`manual`),
+      `display_lang_debounce_ms` (800), `display_lang_source`, `display_lang_engine`, `transform`
+      (async-Hook `function(lines, ctx, cb)`, `ctx.final` unterscheidet Patch und Endstand). Eine
+      ungültige Angabe (`display_lang = 5`, `trigger = "x"`) muss beim Setup gewarnt werden.
+- [ ] language.nvim: `translate.markdown = { concurrency, max_chars, disk_cache, cache_max_kb,
+      cache_dir, keep }`, `translate.max_chars` (senkt das Provider-Limit, hebt es nie),
+      `translate.custom.max_bytes`, `translate.ai = { provider, model, glossary, style, max_chars,
+      concurrency, max_total_chars }`. Der Plattencache liegt in
+      `stdpath("cache")/language.nvim/translate_markdown.json`: nach einem Lauf vorhanden, beim
+      Löschen der Datei kein Fehler, `translate_markdown_clear_cache({ disk = true })` leert ihn.
+- [ ] ai.nvim: `config.bulk.max_session_chars` (fail-closed), `req.bulk`, `req.temperature`
+      (claude, openai, gemini, ollama), `ai.bulk.cancel|usage|reset`, `ai.policy().bulk_granted`,
+      `policy.grant_bulk(id)`; `:Ai info` zeigt Bulk-Freigaben und Provider-Capabilities.
+
+**Neue Funktionen für andere Plugins (nur Entwickler)**
+
+- [ ] `require("language").translate_markdown(lines, opts, cb)` und `translate_markdown_clear_cache`:
+      aus einer Lua-Konsole mit einem kleinen deutschen Dokument aufrufen (`:lua`, mit
+      `opts = { target = "EN", engine = "deepl" }`): `cb(true, lines, info)`, gleiche Zeilenzahl,
+      `info.cached` beim zweiten Aufruf = `info.units`.
+- [ ] Entwicklerwerkzeug `language.nvim/scripts/markdown_oracle.{lua,mjs}`: nach jeder Änderung am
+      Segmenter über einige hundert echte Dateien laufen lassen (braucht den Checkout
+      `mdview.nvim`); steht in `TESTS/README.md`.
+
+**Offene Tasks, bei denen du etwas live tun oder entscheiden musst**
+
+- [ ] `language.nvim/translate-markdown-deepl-mit-echtem-schluessel-messen-platzh`: DeepL-Key setzen und
+      messen (Platzhalter `{n}`, Batch-Latenz, ob `tag_handling` nötig ist). Ergebnis in die Task.
+- [ ] `language.nvim/nicht-ascii-text-im-argv-unter-windows-curl-bekommt-ansi-sta` (Bug): unter Windows
+      mit einer `custom`- oder `shell`-Engine, die den Text im argv bekommt, Umlaute übersetzen
+      (`ü` kam als `%FC` an). Prüfen, ob dich das betrifft; Google und DeepL senden per stdin und
+      sind nicht betroffen.
+- [ ] `language.nvim/translate-shell-text-via-stdin`: braucht ein installiertes `trans`
+      (translate-shell), sonst nicht prüfbar. Entscheiden, ob die `shell`-Engine Text per stdin
+      senden soll.
+- [ ] `language.nvim/translate-blocks-rate-limit-and-deadline` und `translate-engine-failover`
+      (Entscheidung): Google keyless liefert inzwischen ein Captcha. Soll ein gescheiterter Aufruf
+      in der Fallback-Kette weiterlaufen, und braucht es eine Pause zwischen Blöcken und eine
+      Gesamtfrist statt `timeout_ms` je Block?
+- [ ] `ai.nvim/ai-keys-fehlgeschlagene-command-key-quelle-kurz-negativ-cach` (Entscheidung): kurzer
+      Negativ-Cache für eine fehlschlagende Command-Key-Quelle außerhalb der Bulk-Queue; Schicht
+      und Dauer wählen.
+- [ ] `mdview.nvim/ws-client-inhaltspushes-pro-raum-serialisieren-curl-reihenfo`: beobachten, ob beim
+      schnellen Tippen mit `display_lang` je ein Patch nach dem Endstand ankommt (bisher nie).
+- [ ] `language.nvim/markdown-translate-hauptthread-rechnet-grosse-dokumente-am-s`: ein sehr großes
+      Dokument (40 000 Zeilen, eine Tabelle mit 20 000 Zeilen) übersetzen und das Einfrieren
+      (ca. 1 bis 2 s) bewerten.
+- [ ] `language.nvim/markdown-translate-anker-kollisionen-nach-der-uebersetzung-m` und
+      `markdown-segmenter-restliche-abweichungen-vom-previewer-fuss`: nur beobachten (Anker mit
+      gleichem Slug nach der Übersetzung; Fußnoten-Fortsetzungen, `$$` in Listenpunkten).
+- [ ] `mdview.nvim/mirror-guard-denylist-hardening` und `language.nvim/chunk-spec-surviving-mutants`:
+      reine Testhärtung, kein Live-Test nötig.
+- [ ] `ALL/display-lang-live-check` (Plan `ALL/display-lang`, Phase `abnahme`): die eigentliche
+      Abnahme; ihre Punkte stehen in G5. Danach Plan auf `done` und nach `ALL/Backlog/FEATURES/`
+      verschieben.
+
+**Zusätzlich nach den letzten Fixes (`1f82e60`)**
+
+- [ ] Zeile mit sehr vielen Adressen (`foo@bar.com ` mal 20 000) oder vielen `<!--` in einem
+      Dokument übersetzen: kein Einfrieren von Neovim (vorher 54 s bzw. 10 s, jetzt unter 1 s).
+- [ ] Antwort einer echten KI, die `www.`-Adressen oder E-Mails neu einfügt, wird abgelehnt (die
+      Einheit bleibt Deutsch); in `info.failed`/Log nachsehen.
+
+---
