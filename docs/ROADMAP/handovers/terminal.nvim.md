@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, Spikes erledigt, Entscheidung gefallen, noch kein Repo, kein Code.** Nächster Task: `repo-scaffold`.
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, Repo gebaut und live (native Backend), `terminal.lua` der Config ersetzt. Nächste Schritte: WezTerm-Export (Phase `export`).**
 
 ## Orte
 
@@ -8,32 +8,42 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07
 |---|---|
 | Ursprungsnotiz | `nvim/docs/ROADMAP/IDEAS/IDEAS/TMUX_WEZTERM_USW.md` |
 | Konzept | `nvim/docs/ROADMAP/IDEAS/IDEAS/terminal.nvim.md` |
-| Plan (Quelle der Wahrheit für Ziel, Phasen, DoD) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim/ROADMAP/plans/terminal-build.md` |
-| Tasks (30) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim/ROADMAP/tasks/`, Übersicht `ROADMAP/TASKS.md` (generiert) |
-| Öffentliches Repo (noch anzulegen) | `github.com/StefanBartl/terminal.nvim` → `$REPOS_DIR/terminal.nvim` |
-| Privat (Roadmap/Notes) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim/{ROADMAP,NOTES,Backlog}` |
-| Gegenstücke | `$REPOS_DIR/Configs/terminals/{wezterm,tmux}` |
+| Öffentliches Repo | `github.com/StefanBartl/terminal.nvim` → `E:\repos\terminal.nvim` (STEVESPC: direkt unter `E:\repos`) |
+| Plan (Ziel, Phasen, DoD) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim/ROADMAP/plans/terminal-build.md` |
+| Tasks | `.../terminal.nvim/ROADMAP/tasks/`, Übersicht `ROADMAP/TASKS.md` (generiert) |
+| Notizen/Messungen | `.../terminal.nvim/NOTES/` (`spike-uservars.md`, `nvim-windows-terminal-findings.md`) |
+| Installations-Spec | `nvim/lua/plugins/personal/specs/project.lua` (Eintrag `StefanBartl/terminal.nvim`, alle Optionen auskommentiert, deutsch kommentiert) |
+| Gegenstücke | `$REPOS_DIR/Configs/terminals/{wezterm,tmux}` (noch nicht angefasst) |
 | Regelwerk | `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md` (+ `regeln/PRINCIPLES.md`, `LUA_NVIM.md`, `PERFORMANCE.md`) |
-| Tools | `.../wkdbook-myplugins/TOOLS/{TOOL-PLACEMENT,lua-plugin-tools}.md`, `.../HEREDOC.md` |
 
-## Wie weiterarbeiten
+## Was es kann (gebaut)
 
-```sh
-nvim --headless -u NONE -l scripts/tasks.lua next terminal.nvim --vault=$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins
-nvim --headless -u NONE -l scripts/tasks.lua plan terminal.nvim --vault=...
-```
+- `native`-Backend: benannte Terminals pro Projekt-Root (float/split/vsplit/tab), toggle/open/hide/close/list, `send` (tippen, Enter nur mit `newline`/`--exec`), `run` (String wie getippt, argv-Liste gequotet, `--direct` mit Exit-Code).
+- `:Terminal` (Composer), Keymaps als benannte Aktionen (`<A-h>` toggle, `<Esc>/<C-c>`, `<C-hjkl>`, `<A-l>`), Autocmds (Fensteroptionen, Kitty-Padding, Auto-Insert), `:checkhealth terminal`.
+- 104 Specs auf `testing.nvim` (Windows lokal + CI ubuntu/windows/macos grün), `TESTS/live/smoke.lua` für den echten UI-Pfad.
 
-Entscheidung (2026-10-07): Empfehlungen übernommen (Name `terminal.nvim`, native + WezTerm zuerst, eigenes Repo, kein Snacks-Fallback, Pin/Adopt bleibt als letzte Funktionsphase). Spikes erledigt, Befund: `.../terminal.nvim/NOTES/spike-uservars.md`. Offen aus den Spikes: tmux-Passthrough (braucht tmux in WSL, Freigabe nötig, Task `tmux-test-env`).
+## Entscheidungen
 
-## Arbeitsregeln (aus dem Prompt)
+- Name `terminal.nvim` (ursprünglich Arbeitstitel `mux.nvim`); Modul `terminal`, Command `:Terminal`; UserVar-Protokoll behält `MUX_*`.
+- Phase 1 = native + WezTerm-Export; tmux danach; kein Snacks-Fallback; Pin/Adopt bleibt im Plan (Phase `pin`).
+- Bares `:Terminal` schaltet um (kein Menü); `3<A-h>` = Terminal "3".
 
-- `lib.nvim` verwenden; Wiederverwendbares nach `lib.nvim` heben.
-- Max. 1 Agent gleichzeitig; Antworten deutsch, Code/Kommentare englisch; ausgeben, was gerade passiert.
-- Kein Co-Author; nach jeder Aufgabe `luacheck` + `stylua` grün, committen, pullen, auf `main` pushen.
-- Doku/README des Plugins mitpflegen; große/escape-haltige Literale nicht durch die Shell.
-- Performance-, Security-Regeln früh mitdenken (Architektur/Struktur zuerst richtig, `rules.nvim`-Sweep am Ende).
+## Offen / nächster Schritt
+
+`nvim --headless -u NONE -l scripts/tasks.lua next terminal.nvim --vault=...` (aus `$REPOS_DIR/tasks.nvim`). Als Nächstes: `status-dataset` → `wezterm-backend-export` → `wezterm-config-counterpart`. Nach dem nächsten Neustart der Config: alte Tasten von Hand prüfen und Startzeit messen (Task `replace-terminal-lua`).
+
+## Fallen (gemessen)
+
+- Headless Windows: stdin von Terminal-Jobs ist zu; `nvim_chan_send` hängt; Absturz 0xC0000005 beim schnellen Schließen (siehe `NOTES/nvim-windows-terminal-findings.md`). Specs: `TESTS/support/jobs.lua`.
+- `--remote-expr` nur mit `nvim --headless --server ...` (70 ms statt 1,15 s), UserVars nur per `nvim_ui_send`, unter tmux DCS-umhüllt + `allow-passthrough on` (`NOTES/spike-uservars.md`).
+- Heredoc-Falle: große Spec-Dateien nie per Shell-Heredoc schreiben (Anführungszeichen), das Write-Tool nutzen.
+
+## Arbeitsregeln
+
+- `lib.nvim` verwenden; Wiederverwendbares nach `lib.nvim` heben. Deutsch im Chat, Englisch im Code. Kein Co-Author. `luacheck` + `stylua` grün, committen, pullen, auf `main` pushen (keine PRs).
+- Commits werden mit `ultracode`-Review abgehakt; Doku-Commits gelten auch ohne.
 
 ## Log
 
-- 2026-10-07: Konzept geschrieben, Plan `terminal-build` mit 30 Tasks im Vault angelegt (Phasen: spike, fundament, native, export, navigate, tmux, pin, family, abnahme).
-- 2026-10-07: Entscheidung `decide-scope-name` (alle Empfehlungen). Spikes UserVars + Pipe-Roundtrip gemessen (WezTerm 20240203, nvim 0.12.2): Kanal `nvim_ui_send`, kein Verlust bei 200 Updates, 64 KiB ok; Rückweg nur mit `nvim --headless --server` (~70 ms statt ~1,15 s); `update-status` sieht nur das aktive Pane. Harness unter `TOOLS/scripts/wezterm-uservar-spike/`.
+- 2026-10-07: Konzept, Plan mit 30 Tasks, Spikes (UserVars, Pipe, tmux-Passthrough).
+- 2026-10-07: Repo angelegt und gepusht; native Backend, `:Terminal`, Bindings, Specs, Docs; Config umgestellt (Spec in `project.lua`, `terminal.lua` und `autocmds/terminals` entfernt).
