@@ -41,10 +41,7 @@ paraphrased, and a drift report stays meaningful only while they match.
 | `<leader>q` | n, v | `:close!` | `[Windows] Close window` | `buf_win_tab.lua` |
 | `<leader>q` | i | Leave insert for one command, then `:close` | `[Windows] Close window (insert)` | `buf_win_tab.lua` |
 | `<leader>q` | t | Leave terminal mode, then `:close` | `[Windows] Close window (terminal)` | `buf_win_tab.lua` |
-| `<C-h>` | n | `<C-w>h` | `[Window] Jump left` | `buf_win_tab.lua` |
-| `<C-l>` | n | `<C-w>l` | `[Window] Jump right` | `buf_win_tab.lua` |
-| `<C-j>` | n | `<C-w>j` | `[Window] Jump down` | `buf_win_tab.lua` |
-| `<C-k>` | n | `<C-w>k` | `[Window] Jump up` | `buf_win_tab.lua` |
+| `<C-h>` `<C-j>` `<C-k>` `<C-l>` | n | window left/down/up/right (count, hand-off to WezTerm/tmux at the edge) | terminal.nvim `nav_*` | `plugins/personal/specs/project.lua` |
 | `<S-h>` | n, t | Narrow the window by 5 columns; a count scales the step, so `3<S-h>` narrows by 15 in one redraw | `[Window] Resize narrower` | `buf_win_tab.lua` |
 | `<S-l>` | n, t | Widen by 5 columns, same count rule | `[Window] Resize wider` | `buf_win_tab.lua` |
 | `<S-k>` | n, t | Grow by 5 rows, same count rule | `[Window] Resize taller` | `buf_win_tab.lua` |

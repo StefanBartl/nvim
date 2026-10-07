@@ -1227,30 +1227,32 @@ return {
       -- Tasten als benannte Aktionen (lib.nvim.bindings.keymap.register). Ein String verschiebt
       -- eine Taste, eine Liste belegt mehrere, `false` streicht sie, `preset = false` bindet
       -- gar nichts. Ein falscher Aktionsname wird gemeldet.
-      -- keymaps = {
-      --   preset = true,
-      --   -- Terminal umschalten (n + t). Mit Count: `3<A-h>` = Terminal "3". Default: "<A-h>".
-      --   toggle = "<A-h>",
-      --   -- Terminal-Modus verlassen (Terminal-Normal). Default: { "<Esc>", "<C-c>" }.
-      --   normal_mode = { "<Esc>", "<C-c>" },
-      --   -- Plugin tippt `cls` / `clear` ins Terminal (nur Terminal-Modus). Default: false, denn
-      --   -- <C-l> erreicht die Shell und leert dort den Bildschirm wie in jedem Terminal.
-      --   clear = false,
-      --   -- Fensterwechsel aus dem Terminal-Modus heraus. Defaults: <C-h> <C-j> <C-k>.
-      --   window_left = "<C-h>",
-      --   window_down = "<C-j>",
-      --   window_up = "<C-k>",
-      --   -- Default: false (sonst waere <C-l> nicht mehr das Clear der Shell). Zum Aktivieren "<C-l>".
-      --   window_right = false,
-      --   -- Fensterwechsel aus dem NORMAL-Modus ueber terminal.nvim (mit Count, `3<C-h>`, und mit
-      --   -- Uebergabe an WezTerm/tmux am Rand). Alle aus (false), weil die Config <C-h/j/k/l>
-      --   -- im Normal-Modus selbst belegt; zum Aktivieren die Taste angeben, z.B. "<C-h>", und
-      --   -- die gleiche Taste dort entfernen.
-      --   nav_left = false,
-      --   nav_down = false,
-      --   nav_up = false,
-      --   nav_right = false,
-      -- },
+      keymaps = {
+        -- preset = true,
+        -- Terminal umschalten (n + t). Mit Count: `3<A-h>` = Terminal "3". Default: "<A-h>".
+        -- toggle = "<A-h>",
+        -- Terminal-Modus verlassen (Terminal-Normal). Default: { "<Esc>", "<C-c>" }.
+        -- normal_mode = { "<Esc>", "<C-c>" },
+        -- Plugin tippt `cls` / `clear` ins Terminal (nur Terminal-Modus). Default: false, denn
+        -- <C-l> erreicht die Shell und leert dort den Bildschirm wie in jedem Terminal.
+        -- clear = false,
+
+        -- Fensterwechsel aus dem TERMINAL-Modus heraus: hier AUS (false), gewuenscht ist der
+        -- Wechsel nur im Normal-Modus. Defaults waeren <C-h> <C-j> <C-k>; window_right ist
+        -- ohnehin aus (sonst waere <C-l> nicht mehr das Clear der Shell).
+        window_left = false,
+        window_down = false,
+        window_up = false,
+        -- window_right = false,
+
+        -- Fensterwechsel aus dem NORMAL-Modus ueber terminal.nvim (mit Count, `3<C-h>`, und mit
+        -- Uebergabe an WezTerm/tmux am Rand). AKTIV auf <C-h/j/k/l>; die frueheren Belegungen
+        -- in bindings/mappings/buf_win_tab.lua sind dafuer entfernt. Default: false.
+        nav_left = "<C-h>",
+        nav_down = "<C-j>",
+        nav_up = "<C-k>",
+        nav_right = "<C-l>",
+      },
 
       -- Fensterwechsel ueber den Neovim-Rand hinaus: ist in der Richtung kein Fenster mehr, fokussiert
       -- das Multiplexer-Programm das Nachbar-Pane (`wezterm cli activate-pane-direction` bzw.

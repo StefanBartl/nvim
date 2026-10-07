@@ -38,11 +38,8 @@ function M.setup()
   map("i", "<leader>q", "<C-o><Cmd>close<CR>", { desc = "[Windows] Close window (insert)" })
   map("t", "<leader>q", "<C-\\><C-n><Cmd>close<CR>", { desc = "[Windows] Close window (terminal)" })
 
-  -- Window movement
-  map("n", "<C-h>", "<C-w>h", { desc = "[Window] Jump left" })
-  map("n", "<C-l>", "<C-w>l", { desc = "[Window] Jump right" })
-  map("n", "<C-j>", "<C-w>j", { desc = "[Window] Jump down" })
-  map("n", "<C-k>", "<C-w>k", { desc = "[Window] Jump up" })
+  -- Window movement (<C-h/j/k/l>) is terminal.nvim's `nav_*` now (plugins/personal/specs/project.lua):
+  -- same keys, plus a count (`3<C-h>`) and a hand-off to the WezTerm/tmux pane at Neovim's edge.
 
   local resize_guarded = require("lib.nvim.buf_win_tab.resize_guarded")
   local exclude_filetypes = {
