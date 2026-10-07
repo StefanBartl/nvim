@@ -55,6 +55,23 @@ end
 ---@type table<string, { sig: string, heads: PluginRepos.Jump.Head[] }>
 local cache = {}
 
+---Spec heads of one file's lines (the on-disk file or a live buffer).
+---@param lines string[]
+---@return { repo: string, lnum: integer, col: integer }[]
+local function scan_lines(lines)
+  local heads, prev = {}, ""
+  for lnum, line in ipairs(lines) do
+    local repo = spec_head(line, prev)
+    if repo then
+      heads[#heads + 1] = { repo = repo, lnum = lnum, col = line:find("[\"']") or 1 }
+    end
+    if line:match("%S") and not line:match("^%s*%-%-") then
+      prev = line
+    end
+  end
+  return heads
+end
+
 ---Every spec head of every spec file, in file-name order.
 ---@param dir string
 ---@return PluginRepos.Jump.Head[]
@@ -87,35 +104,34 @@ local function heads_of(dir)
 
   ---@type PluginRepos.Jump.Head[]
   local heads = {}
+  local complete = true
   for _, file in ipairs(files) do
     local ok, lines = pcall(vim.fn.readfile, file)
     if ok then
-      local prev = ""
-      for lnum, line in ipairs(lines) do
-        local repo = spec_head(line, prev)
-        if repo then
-          heads[#heads + 1] =
-            { repo = repo, file = file, lnum = lnum, col = line:find("[\"']") or 1 }
-        end
-        if line:match("%S") and not line:match("^%s*%-%-") then
-          prev = line
-        end
+      for _, head in ipairs(scan_lines(lines)) do
+        heads[#heads + 1] = { repo = head.repo, file = file, lnum = head.lnum, col = head.col }
       end
+    else
+      -- Briefly unreadable (antivirus scan, another process): do not cache the gap, the
+      -- next call retries instead of hiding this file's plugins until it changes.
+      complete = false
     end
   end
-  cache[dir] = { sig = signature, heads = heads }
+  if complete then
+    cache[dir] = { sig = signature, heads = heads }
+  end
   return heads
 end
 
 ---Locate the spec declaration of a plugin (first match in file-name order).
 ---@param name string Plugin basename, e.g. "sessions.nvim"; case-insensitive
 ---@param dir? string Spec directory (default: the config's `plugins/personal/specs`)
----@return { file: string, lnum: integer, col: integer }|nil
+---@return { repo: string, file: string, lnum: integer, col: integer }|nil
 function M.find(name, dir)
   local want = name:lower()
   for _, head in ipairs(heads_of(dir or specs_dir())) do
     if head.repo:lower():match("/(.+)$") == want then
-      return { file = head.file, lnum = head.lnum, col = head.col }
+      return { repo = head.repo, file = head.file, lnum = head.lnum, col = head.col }
     end
   end
   return nil
@@ -149,7 +165,19 @@ local function is_current_file(file)
   if vim.fn.has("win32") == 1 then
     a, b = a:lower(), b:lower()
   end
-  return a == b
+  if a == b then
+    return true
+  end
+  -- A junction, symlink or 8.3 alias of the same file: :edit sees one file, so must we.
+  local ra, rb = vim.uv.fs_realpath(current), vim.uv.fs_realpath(file)
+  if ra and rb then
+    ra, rb = vim.fs.normalize(ra), vim.fs.normalize(rb)
+    if vim.fn.has("win32") == 1 then
+      ra, rb = ra:lower(), rb:lower()
+    end
+    return ra == rb
+  end
+  return false
 end
 
 ---Open the spec file of `name` at its declaration.
@@ -174,7 +202,22 @@ function M.jump(name, dir)
       return false
     end
   end
-  pcall(vim.api.nvim_win_set_cursor, 0, { hit.lnum, hit.col - 1 })
+  -- The scan read the file on disk. A buffer with unsaved edits has other line numbers, so find
+  -- the head again in the live text (the disk position stays the fallback).
+  local lnum, col = hit.lnum, hit.col
+  if vim.bo.modified then
+    for _, head in ipairs(scan_lines(vim.api.nvim_buf_get_lines(0, 0, -1, false))) do
+      if head.repo == hit.repo then
+        lnum, col = head.lnum, head.col
+        break
+      end
+    end
+  end
+  lnum = math.max(1, math.min(lnum, vim.api.nvim_buf_line_count(0)))
+  if not pcall(vim.api.nvim_win_set_cursor, 0, { lnum, col - 1 }) then
+    notify.warn(("Opened %s but could not place the cursor"):format(hit.file))
+    return false
+  end
   vim.cmd("normal! zz")
   return true
 end

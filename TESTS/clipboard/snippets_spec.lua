@@ -87,8 +87,9 @@ return function(H)
     enable({})
     vim.cmd("Clipboard say hi")
     eq(copied, "hi", "snippet route works after re-enabling")
+    copied = nil
     vim.cmd("Clipboard")
-    eq(copied, "hi", "a bare :Clipboard copies nothing (no ROOT route)")
+    eq(copied, nil, "a bare :Clipboard copies nothing (no ROOT route)")
   end)
 
   pcall(vim.api.nvim_del_user_command, "Clipboard")
