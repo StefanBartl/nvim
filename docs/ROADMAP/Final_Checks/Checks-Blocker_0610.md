@@ -106,10 +106,10 @@
     - [N2. Was auf dich wartet (Entscheidung, Live-Abnahme, Handarbeit)](#n2-was-auf-dich-wartet-entscheidung-live-abnahme-handarbeit)
     - [N3. Wurzel-Blocker: ein Task hält viele andere auf](#n3-wurzel-blocker-ein-task-hält-viele-andere-auf)
     - [N4. Blockaden, die sich selbst erledigt haben oder nicht auflösbar sind](#n4-blockaden-die-sich-selbst-erledigt-haben-oder-nicht-auflösbar-sind)
-  - [O. ui.nvim: `ui.slots` (Kern und Chip-Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#o-uinvim-uislots-kern-und-chip-leiste--live-checks-und-blocker-stand-2026-10-07-abend)
+  - [O. ui.nvim: `ui.slots` (Kern, Chip-Leiste, Panel und Editor) — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#o-uinvim-uislots-kern-chip-leiste-panel-und-editor--live-checks-und-blocker-stand-2026-10-07-abend)
     - [O1. Blocker](#o1-blocker)
     - [O2. Neue Befehle, Optionen und APIs](#o2-neue-befehle-optionen-und-apis)
-    - [O3. Live-Checkliste (Befehle, Tasten, Chip-Leiste)](#o3-live-checkliste-befehle-tasten-chip-leiste)
+    - [O3. Live-Checkliste (Befehle, Tasten, Chip-Leiste, Panel, Editor)](#o3-live-checkliste-befehle-tasten-chip-leiste-panel-editor)
     - [O4. Regression (Änderungen an bestehendem Verhalten)](#o4-regression-änderungen-an-bestehendem-verhalten)
     - [O5. Bekannte Grenzen (kein Test nötig, nur wissen)](#o5-bekannte-grenzen-kein-test-nötig-nur-wissen)
   - [P. docmap-desktop + documentation.nvim: Projektleiste, Suche, Statistik, Auto-Hide, Findings-Regeln — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#p-docmap-desktop--documentationnvim-projektleiste-suche-statistik-auto-hide-findings-regeln--live-checks-und-blocker-stand-2026-10-07-abend)
@@ -2198,20 +2198,21 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 
 ---
 
-## O. ui.nvim: `ui.slots` (Kern und Chip-Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
+## O. ui.nvim: `ui.slots` (Kern, Chip-Leiste, Panel und Editor) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
 
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
-**Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds) und die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus).
-**Noch nicht da:** Panel, Editor, Vorschau (Tasks stehen unten). Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses
-Abschnitts: `4009233`).
+**Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
+**Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). **Noch nicht da:** die Vorschau (Tasks
+stehen unten). Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `8b6a3ca`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
 
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
 `eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS),
-`8ec1d45` (Chip-Leiste), `35178e3` (Umbau: nicht fokussierbar, Tasten verwerfen), `85e520e` (ein flakiger Test entfernt), `4009233` (Nachbesserungen).
-Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste).
+`8ec1d45` (Chip-Leiste), `35178e3` (Umbau: nicht fokussierbar, Tasten verwerfen), `85e520e` (ein flakiger Test entfernt), `4009233` (Nachbesserungen),
+`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu).
+Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste, eine bei Panel und Editor).
 
 ### O1. Blocker
 
@@ -2219,16 +2220,15 @@ Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei
 N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nvim/slots-live-check` (steht dort schon). Neu erzeugen:
 `nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` und `list --waiting` im Ordner von `tasks.nvim`, mit `TASKS_VAULT` auf den Vault.
 
-**Kette des Plans `ui.nvim/ui-slots`** (6 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
-`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`). Nichts davon wartet auf dich, außer dem letzten Glied:
+**Kette des Plans `ui.nvim/ui-slots`** (5 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
+`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`). Nichts davon wartet auf dich, außer dem letzten Glied:
 
 | Task | Status | Wartet auf | Was |
 |---|---|---|---|
 | `hover.nvim/preview-target-api` | startbar (S) | — | prüfen, ob hover.nvim einen öffentlichen Einstieg für URL-Vorschauen hat; sonst dort ergänzen |
-| `ui.nvim/slots-panel-editor` | startbar (L) | — | fokussierbares Panel, Editor, Kontextmenü (weiche Kante zu `kit-sidebar-surface`) |
-| `ui.nvim/slots-preview-file` | blocked | `slots-panel-editor` | Vorschau-Renderer und Dateivorschau |
+| `ui.nvim/slots-preview-file` | startbar (M) | — | Vorschau-Renderer und Dateivorschau |
 | `ui.nvim/slots-preview-url` | blocked | `slots-preview-file`, `hover.nvim/preview-target-api` | URL-Vorschau über hover.nvim |
-| `ui.nvim/slots-docs-health` | blocked | `slots-panel-editor`, `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
+| `ui.nvim/slots-docs-health` | blocked | `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
 | `ui.nvim/slots-live-check` | blocked, **actor=me** | `slots-docs-health` | **deine** Live-Abnahme (Optik, Alltag, Maus) — erst wenn alles andere steht |
 
 **Weitere Stolpersteine, die in dieser Sitzung aufgefallen sind (keine Tasks, nur wissen):**
@@ -2256,12 +2256,13 @@ N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nv
 | `:UI slots move <a> <b>` | Slot a nach b; tauscht, wenn b belegt ist |
 | `:UI slots kinds` | `cmd, file, lua, mark, url, yank` |
 | `:UI slots toggle\|open\|close` | Chip-Leiste ein-/ausblenden (`toggle` kehrt um; steht kein Slot an, erscheint sie mit dem ersten) |
-| `:UI slots edit` | **meldet "not built yet"** (Editor fehlt) |
+| `:UI slots panel` | das Panel öffnen/schließen (ein fokussiertes Fenster, in dem man arbeitet) |
+| `:UI slots edit [n]` | ohne Nummer: einen Slot im Editor anlegen (erst die Art wählen, dann ein Formular); mit Nummer: Slot n bearbeiten |
 | `ui.setup({ slots = true })` | schaltet die Slots ein (Standardwerte bzw. frühere `slots.setup()`) |
 | `ui.setup({ slots = { enabled = true, … } })` | konfiguriert und schaltet ein; ohne `enabled = true` nur konfiguriert |
 | `require("ui.slots")` | `setup`, `enable`, `disable`, `apply`, `add`, `yank`, `clear`, `clear_all`, `move`, `list`, `get`, `register_kind`, `last_applied` |
 | Optionen der Leiste | `show = true` (öffnet sie beim Einschalten), `style` = `rounded` (Standard), `double`, `ascii`, `solid`, `minimal` (pro Slot mit `style` überschreibbar), `side` = `right` (Standard) oder `left`, `width` (Anteil ≤ 1 oder Spalten, Standard 0.25) |
-| Tasten, nur über `keys = { … }` | `apply = "<leader>%d"` (Slots 1 bis 9), `count = "<leader>S"` (`12<leader>S`), `add = "<leader>sa"`; ohne `keys` **keine einzige Taste** |
+| Tasten, nur über `keys = { … }` | `apply = "<leader>%d"` (Slots 1 bis 9), `count = "<leader>S"` (`12<leader>S`), `add = "<leader>sa"`, `panel = "<leader>sp"`; `layout = "panel"` lenkt `toggle/open/close` aufs Panel; ohne `keys` **keine einzige Taste** |
 | Daten | `stdpath("data")/ui/slots/project-<hash>.json` bzw. `global.json`; Option `data_dir` ändert den Ort |
 | Platzhalter | `{file}` `{dir}` `{root}` `{cwd}` `{line}` `{col}` `{word}` `{sel}` `{clip}` `{count}`; `{{` und `}}` sind wörtliche Klammern |
 
@@ -2270,7 +2271,7 @@ Kinds und ihre Felder: `file { path, target?, line?, col? }`, `yank { text, regi
 
 ---
 
-### O3. Live-Checkliste (Befehle, Tasten, Chip-Leiste)
+### O3. Live-Checkliste (Befehle, Tasten, Chip-Leiste, Panel, Editor)
 
 **Vorbereitung:** ui.nvim pullen, Neovim neu starten. Zum Ausprobieren reicht `:UI slots` (schaltet für die Sitzung ein). Für die Tasten
 zusätzlich in einer Testkonfiguration oder per `:lua`:
@@ -2361,6 +2362,38 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] `show = true` in der Config: die Leiste ist nach dem Start da; `:lua require("ui.slots").disable()` entfernt sie und die Tasten.
 - [ ] Kit-Menüs und andere Floats (Toasts, Auswahllisten) liegen **über** der Leiste, nicht darunter; ein Klick auf ein Menü, das über der Leiste liegt, trifft das Menü. Die Leiste lässt Tabline und Statusline frei.
 
+**O3.10 Panel** (`:UI slots panel`, am besten mit 6 und mehr Slots, einer davon eine Datei)
+
+- [ ] Das Panel öffnet sich am Rand (ein Viertel der Breite), **hat den Fokus**, zeigt eine Zeile je Slot (`Nr Icon Label`), der Cursor steht auf dem Slot der Datei, in der du bist (`•`), sonst auf dem zuletzt ausgeführten, sonst auf dem ersten.
+- [ ] `j`/`k`/`gg`/`G` bewegen; mit über 40 Slots scrollt das Fenster mit dem Cursor wie jedes andere.
+- [ ] `<CR>` führt den Slot aus **und schließt das Panel**; der Fokus ist danach im Editorfenster. Doppelklick auf eine Zeile ebenso.
+- [ ] **Nummer tippen:** `3` springt auf Slot 3; bei über 10 Slots `1` dann `2` auf Slot 12; eine Ziffer ohne Slot meldet "slot N is empty"; nach `j` oder einer anderen Bewegung beginnt die Nummer neu.
+- [ ] `dd` leert den Slot, die Liste schrumpft, der Cursor bleibt sinnvoll. Auf einem **festen** Slot (aus `setup`): Meldung, nichts passiert.
+- [ ] `y` kopiert, wofür der Slot steht (Pfad, Adresse, Text).
+- [ ] `<C-j>` / `<C-k>` verschieben den Slot nach unten/oben, **der Cursor wandert mit**; am Anfang/Ende passiert nichts; ein fester Slot wird nicht verschoben.
+- [ ] `a` öffnet den Editor (siehe O3.11) mit der Datei, aus der du kamst, als Vorgabe für den Pfad; nach Speichern oder `<Esc>` ist das Panel **wieder da**, der Cursor auf dem neuen Slot.
+- [ ] `e` bearbeitet den Slot unter dem Cursor (siehe O3.11); `e` auf einem festen oder einem `cmd`/`lua`-Slot meldet den Grund.
+- [ ] **Rechtsklick** auf eine Zeile: ein Menü des Slots mit Anwenden, Bearbeiten, Kopieren, bei Dateien *Öffnen in einem Split / VSplit / neuen Tab*, Leeren. **Nicht** Neovims eigenes Menü.
+- [ ] Anwenden und *Öffnen in …* aus dem Menü: der Slot läuft, **das Panel bleibt zu**. Bearbeiten öffnet das Formular, das Panel kommt erst zurück, wenn es zu ist. Kopieren/Leeren: das Panel ist gleich wieder da. `<Esc>` im Menü: das Panel ist wieder da.
+- [ ] Rechtsklick **außerhalb** des Panels schließt es (wie ein Linksklick).
+- [ ] Das Panel schließt, sobald der Fokus es verlässt (Klick in den Code, `<C-w>w`); `q` und `<Esc>` schließen.
+- [ ] Rechtsklick auf die **Leiste** (O3.9) zeigt dasselbe Menü wie im Panel.
+- [ ] `layout = "panel"`: `:UI slots toggle|open|close` öffnen/schließen das Panel statt der Leiste. `keys = { panel = "<leader>sp" }` öffnet es.
+- [ ] Ohne Slots steht im Panel "no slots yet -- press a to add one".
+
+**O3.11 Editor** (`:UI slots edit`, im Panel `a`/`e`)
+
+- [ ] `:UI slots edit` fragt zuerst nach der **Art** (file, url, yank, mark; **kein** cmd/lua), dann öffnet ein Formular mit den Feldern der Art plus *Label*, *Icon*, *Style*, *Number*.
+- [ ] **file:** *Path* (mit Dateivervollständigung, `~` bleibt `~`), *Open in* (current, split, vsplit, tab). **url:** *Address*; `javascript:alert(1)` wird **im Feld** abgelehnt. **yank:** *Text*, optional *Register*. **mark:** *Mark number* (positive ganze Zahl).
+- [ ] *Number* steht auf der nächsten freien Nummer; eine belegte Nummer wird im Feld abgelehnt ("slot N is taken"), die eigene beim Bearbeiten nicht; 0, 1.5, abc ebenso.
+- [ ] Speichern legt den Slot an; er erscheint sofort in Leiste und Panel. Ein langer Text über dem Limit wird im Feld abgelehnt (max. 4096 Bytes).
+- [ ] **Bearbeiten (`:UI slots edit 3`):** die Felder sind mit den Werten des Slots gefüllt; nach dem Speichern gilt die Änderung; eine andere *Number* **verschiebt** den Slot.
+- [ ] Eine bearbeitete Datei-Slot behält ihre gemerkte Cursorposition, solange der Pfad derselbe bleibt; ändert sich der Pfad, ist sie weg.
+- [ ] Ein Yank-Text mit Zeilenumbrüchen bleibt unverändert, wenn du nur das Label änderst (das Formular zeigt eine Zeile, das Speichern lässt den Original-Text in Ruhe).
+- [ ] Lehnt das Speichern etwas ab, **kommt das Formular mit deinen Eingaben zurück** und nennt den Grund.
+- [ ] `<Esc>` bricht ab; nichts wird gespeichert; kommst du aus dem Panel, ist es wieder da.
+- [ ] `:UI slots edit abc` meldet "not a slot number"; `:UI slots edit 99` (leer) meldet "slot 99 is empty".
+
 ---
 
 ### O4. Regression (Änderungen an bestehendem Verhalten)
@@ -2376,7 +2409,10 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 
 ### O5. Bekannte Grenzen (kein Test nötig, nur wissen)
 
-- **Kein Panel, kein Editor, keine Vorschau.** `:UI slots edit` meldet "not built yet"; ein Kontextmenü mit mehr als Anwenden/Kopieren/Leeren kommt mit `slots-panel-editor`, die Vorschau mit `slots-preview-*`.
+- **Keine Vorschau.** Weder im Panel noch in der Leiste; kommt mit `slots-preview-file` und `slots-preview-url`.
+- **Der Editor macht nur `file`, `url`, `yank` und `mark`.** `cmd`/`lua` und feste Slots (aus `setup`) werden dort nicht angelegt oder geändert; ein Slot mit eigener Kind-Art ohne Formularfelder auch nicht.
+- **Nummern im Panel werden getippt, nicht gezählt:** `12<CR>` geht nicht (die Ziffern sind belegt); `1`, dann `2` springt auf Slot 12.
+- **Das Kontextmenü ist ein `ui.kit.select`**, nicht `ui.contextmenu`; dieselbe Optik wie die anderen Auswahllisten.
 - **Maus der Leiste, zwei Grenzen:** Eine Maustaste, die du selbst auf **mehrere** Tasten gelegt hast (z. B. `<RightMouse>` → `<LeftMouse><Cmd>popup PopUp<CR>`), verliert nur die erste an das Verwerfen, der Rest läuft; und auf Neovim 0.10 gibt es das Verwerfen gar nicht (siehe O1).
 - **Die Leiste liegt über dem Text:** Sie ist ein Float am Rand und verdeckt dort Code; `style = "minimal"` oder eine kleinere `width` macht sie schmaler.
 - **Kein Health-Check:** `:checkhealth ui` kennt die Slots noch nicht (`slots-docs-health`); ein unbekannter Platzhalter fällt erst beim Anlegen oder Ausführen auf.
