@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.clipboard'
----@brief `:Clipboard [path] {target}` -- copy the path of a well-known directory of this config to the clipboard.
+---@brief `:Clipboard [path] {target}` / `:Clipboard {snippet}` -- copy a well-known directory path or a ready-made Ex command to the clipboard.
 ---@description
 --- The report and handover folders under `docs/ROADMAP/` are pasted into
 --- Claude Code prompts, shells and file dialogs all day, so this saves the
@@ -12,6 +12,13 @@
 --- (a file's content, a link, ...) get their own word next to it later, which
 --- is why the directory targets sit one level down. `path` itself is
 --- optional -- `:Clipboard reports` is the same as `:Clipboard path reports`.
+---
+--- Snippets are the second kind of target: a fixed text (usually an Ex command that is
+--- tedious to type) that is copied verbatim, no path involved:
+---
+---   :Clipboard remove citeX      :%s/\[cite: \d\+\]//g   (strips "[cite: 12]" markers)
+---
+--- They live in `M.SNIPPETS` (words -> text), extendable through `enable({ snippets = ... })`.
 ---
 --- Deliberately no keymap (`<leader>cf` / `cg` belong to casedesk.nvim).
 ---
@@ -42,8 +49,19 @@ M.TARGETS = {
   handovers = "docs/ROADMAP/handovers",
 }
 
+--- Built-in snippets: space-separated command words -> text copied as is. Long strings, so the
+--- backslashes stay literal.
+---@type table<string, { text: string, desc: string }>
+M.SNIPPETS = {
+  ["remove citeX"] = {
+    text = [[:%s/\[cite: \d\+\]//g]],
+    desc = 'Remove all "[cite: N]" markers from the buffer (Ex command)',
+  },
+}
+
 ---@class Bindings.Clipboard.Opts
 ---@field targets? table<string, string>  Extra/overriding targets, merged over `M.TARGETS`.
+---@field snippets? table<string, { text: string, desc?: string }>  Extra/overriding snippets, merged over `M.SNIPPETS`.
 ---@field form? "absolute"|"env"          How the path is written (default "absolute").
 
 ---@type { form: "absolute"|"env" }
@@ -143,6 +161,23 @@ function M.copy(name)
   return true
 end
 
+--- Copy the text of snippet `key` (e.g. "remove citeX") to the clipboard.
+---@param key string
+---@return boolean ok
+function M.copy_snippet(key)
+  local snippet = M.SNIPPETS[key]
+  if not snippet then
+    notify.error(("unknown snippet %q"):format(key))
+    return false
+  end
+  if not copy_to_clipboard(snippet.text) then
+    notify.warn(("no clipboard provider accepted %s"):format(shorten_for_echo(snippet.text)))
+    return false
+  end
+  notify.info(("copied %s -> %s"):format(key, shorten_for_echo(snippet.text)))
+  return true
+end
+
 --- Sorted target names.
 ---@return string[]
 function M.names()
@@ -162,6 +197,13 @@ function M.enable(opts)
       end
     end
   end
+  if type(opts.snippets) == "table" then
+    for key, snippet in pairs(opts.snippets) do
+      if type(key) == "string" and type(snippet) == "table" and type(snippet.text) == "string" then
+        M.SNIPPETS[key] = { text = snippet.text, desc = snippet.desc or "Copy a snippet" }
+      end
+    end
+  end
   if opts.form == "absolute" or opts.form == "env" then
     settings.form = opts.form
   end
@@ -178,8 +220,20 @@ function M.enable(opts)
       { path = { name }, desc = desc .. " (short for `path " .. name .. "`)", run = run }
   end
 
+  local keys = vim.tbl_keys(M.SNIPPETS)
+  table.sort(keys)
+  for _, key in ipairs(keys) do
+    routes[#routes + 1] = {
+      path = vim.split(key, " ", { plain = true, trimempty = true }),
+      desc = M.SNIPPETS[key].desc .. " -> clipboard",
+      run = function()
+        M.copy_snippet(key)
+      end,
+    }
+  end
+
   composer.verb("Clipboard", {
-    desc = "Copy the path of a well-known directory of this config to the clipboard",
+    desc = "Copy the path of a well-known directory of this config, or a ready-made snippet, to the clipboard",
     routes = routes,
   })
 end
