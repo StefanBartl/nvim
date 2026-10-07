@@ -238,11 +238,10 @@ function M.enable(opts)
     local function run()
       M.copy(name)
     end
-    local desc = ("Copy the path of %s to the clipboard"):format(M.TARGETS[name])
+    local desc = ("Copy the path of %s"):format(M.TARGETS[name])
     routes[#routes + 1] = { path = { "path", name }, desc = desc, run = run }
     -- `path` is optional: `:Clipboard reports` keeps working.
-    routes[#routes + 1] =
-      { path = { name }, desc = desc .. " (short for `path " .. name .. "`)", run = run }
+    routes[#routes + 1] = { path = { name }, desc = desc .. " (= path " .. name .. ")", run = run }
   end
 
   local keys = vim.tbl_keys(M.SNIPPETS)
@@ -264,6 +263,9 @@ function M.enable(opts)
 
   composer.verb("Clipboard", {
     desc = "Copy the path of a well-known directory of this config, or a ready-made snippet, to the clipboard",
+    -- Pilot for the composer help float (opt-in): type `:Clipboard ` and press the
+    -- cheatsheet key (see bindings/usrcmds/init.lua) to list the options.
+    help = true,
     routes = routes,
   })
 end

@@ -13,6 +13,12 @@ require("bindings.usrcmds.autocmd_docs").enable()
 require("bindings.usrcmds.bindings_audit").enable()
 require("bindings.usrcmds.learn_plan_viewer").enable()
 require("bindings.usrcmds.cdx").enable()
+
+-- Composer help float (opt-in, lib.nvim): in the command line, `:Verb ` + <C-\>h lists the
+-- options of that level with a one-line description; <CR> inserts the pick, <Esc> restores
+-- the line. Only verbs with `help = true` react -- `:Clipboard` is the pilot. Also replaces
+-- the "Usage: ..." notification for such a verb (bare `:Clipboard`, unknown subcommand).
+require("lib.nvim.bindings.usercmd.composer").setup({ help = { keymap = "<C-\\>h" } })
 require("bindings.usrcmds.clipboard").enable()
 
 -- Was `require("nvchad.mason").install_all()` in lua/nvchad/au.lua, NvChad's
