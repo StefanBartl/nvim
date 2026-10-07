@@ -48,7 +48,12 @@
     - [K5. ui.nvim: `kit.form` mit Zurück-Navigation](#k5-uinvim-kitform-mit-zurück-navigation-opt-in-back--true)
     - [K6. ui.nvim: `kit.sheet` (alle Felder in einem Fenster)](#k6-uinvim-kitsheet-alle-felder-in-einem-fenster)
     - [K7. Regression (ui.nvim-Änderungen am Bestandscode)](#k7-regression-uinvim-änderungen-am-bestandscode)
-    - [K8. Noch nicht gebaut](#k8-noch-nicht-gebaut-beschlossene-queue-wird-hier-ergänzt-sobald-committet)
+    - [K8. `:Case new [nr] [--form|--steps]`, `config.new_mode`](#k8-case-new-nr---form--steps-confignew_mode)
+    - [K9. Wording-Ordner, Log-Snippets, `startCdxChat`](#k9-wording-ordner-log-snippets-startcdxchat)
+    - [K10. `:Case insert snow-number|snow-url|sap-number|sap-incident|sap-url`](#k10-case-insert-snow-numbersnow-urlsap-numbersap-incidentsap-url)
+    - [K11. `Links.md` in jedem Case](#k11-linksmd-in-jedem-case)
+    - [K12. Erstantwort-Checkliste](#k12-erstantwort-checkliste)
+    - [K13. Noch nicht gebaut](#k13-noch-nicht-gebaut)
 
 ---
 
@@ -973,7 +978,7 @@ Neovim noch nicht ausprobiert.
 
 ## K. casedesk.nvim + ui.nvim: Clipboard, Wordings, Import, Formular-Kit (Stand 2026-10-07)
 
-Alles aus dem Chat "Clipboard-Commands" vom 7.10., soweit schon committet. Vor dem Testen
+Alles aus dem Chat "Clipboard-Commands" vom 7.10. Vor dem Testen
 **casedesk.nvim und ui.nvim auf `main` pullen** (beide gepusht). Work-Repo für die Beispiele:
 `E:/repos/WKDBook-Tricentis`. Die Fälle unten sind echte Fälle daraus:
 
@@ -983,20 +988,18 @@ Alles aus dem Chat "Clipboard-Commands" vom 7.10., soweit schon committet. Vor d
 | `1149596`, `1179538`, `1201484` | nur SNOW-Link, kein Resolve-Link |
 | `1007631` | keine Links, **kein** Kontakt (`name`) |
 
-Commits, `casedesk.nvim` (`main`): `8f7645d` (Wordings als Felder, `:Cases clipboard`), `fa935ac`
-(`snowurl`/`resolveurl`), `c101c3b` (`:Case copy` wird `:Case import`), `b721bf9` (Fix:
-Wordings überschatten nie Case-Felder, Resolve-Host exakt). `ui.nvim` (`main`): `4dae2b4`
-(`kit.form` Zurück-Navigation, `ui.kit.buttons`), `a6c10fa`, `c476e0a` (Picker-Item-Modus),
-`287eca6`, `05d4808`, `a774543` (`ui.kit.sheet`), `23be8fd` (`on_back`). **Noch kein
-Commit hat einen Review-Haken:** der Review-Workflow (`wf_afab2922-fd1`) läuft noch.
+Commits, `casedesk.nvim` (`main`): `8f7645d`, `fa935ac`, `c101c3b`, `b721bf9` (K2 bis K4), `2f49cd1`,
+`4b8d5ee`, `34a00bf`, `0fc3ad3` (K8), `f9f23e2` (K9), `e6754ec` (K10), `20bf95f` (K11), `2d8c468`
+(K12). `ui.nvim` (`main`): `4dae2b4`, `a6c10fa`, `c476e0a` (K5/K7), `287eca6`, `05d4808`, `a774543`,
+`40d3565`, `bc8da10` (K6), `23be8fd` (`on_back`). Work-Repo: `8e37bfc`, `43d717c`.
 
 ---
 
 ### K1. Blocker / offene Entscheidungen
 
-- [ ] **Noch nicht committet, daher hier nicht testbar:** `:Case new --form|--steps` und
-      `config.new_mode` (Workflow Phase 3, Teil B, liegt ungepusht im Worktree). Der Abschnitt
-      K8 wird ergänzt, sobald der Commit da ist.
+- [ ] **Review-Haken:** nur der Workflow-Review (`wf_afab2922-fd1`) hat die Clipboard-, Import-,
+      Zurück-Navigations-, Sheet- und `:Case new`-Commits geprüft (mehrere Fehler gefunden und
+      behoben). **`f9f23e2`, `e6754ec`, `20bf95f`, `2d8c468` (K9 bis K12) sind nicht ultracode-reviewt.**
 - [ ] **Entscheidung `link`:** Das alte Feld `link` bleibt unverändert (`config.snow_url_format`
       plus ID, ohne gesetzte Option eine Meldung). Der echte gespeicherte SNOW-Link ist das neue
       `snowurl`. Soll `:Case insert link` künftig auch `snowurl` bevorzugen?
@@ -1134,19 +1137,151 @@ Testen ohne casedesk, direkt im Command-Line-Modus:
 
 ---
 
-### K8. Noch nicht gebaut (beschlossene Queue, wird hier ergänzt, sobald committet)
+### K8. `:Case new [nr] [--form|--steps]`, `config.new_mode`
 
-1. Phase 3 Teil B: `:Case new [nr] [--form|--steps]`, `config.new_mode`, beide Modi gleiche
-   Anlage; im Steps-Modus Zurück-Navigation, im Form-Modus `ui.kit.sheet`.
-2. Wording-Ordner (`config.wording_dirs`), Log-Snippets (`TCSupportInfo`, `CommanderLog`,
-   `TBoxLog`, `BrowserExtensionLog`, `DexServerLog`, `DexAgentLog`, `ToscaServerLog`, je EN und
-   `_DE`) und `:Cases clipboard startCdxChat` (`StartChat.md` bis `### Activity Stream:`).
-3. `:Case insert` mit `snow-number`, `snow-url`, `sap-number`, `sap-incident`, `sap-url`.
-4. `Links.md` pro Case (Blueprint, `:Case links`, `:Case links add`, Backfill per
-   `:Case sync`).
-5. Erstantwort-Checkliste in `Research/00_Research.md` (`:Case checklist`, Clipboard-Feld
-   `ask`, Entwurf in `Replies/00_PSO.md`) und die Anpassung von `Workflow/1_Answer.md`
-   (Logs und Subset schon in der Erstantwort).
-6. Resolve-Link aus Casenummer ableiten (wartet auf die Präfix-Regel).
+Commits `casedesk.nvim`: `2f49cd1`, `4b8d5ee`, `34a00bf`, `0fc3ad3`; `ui.nvim`: `40d3565`, `bc8da10`.
+Beide Wege enden im selben Dry-Run, derselben Bestätigung und demselben Anlegen.
+
+- [ ] `:Case new --steps` (und ohne Flag, solange `new_mode = "steps"`): Nummer, dann Area (nur
+      bei mehreren Areas), dann Titel, Company, Name, SNOW-Link, Resolve-Link als Formular.
+      Titel zeigt `Title (1/5)` usw.
+- [ ] Im Formular `<BS>` auf **leerem** Feld und `<S-Tab>` gehen zurück, die alte Antwort steht
+      wieder im Feld. Vom ersten Feld aus geht es zurück zur Area, von dort zur Nummer.
+- [ ] Beim Zurückgehen eine Nummer eingeben, die es schon gibt: Hinweis, **die bis dahin
+      getippten Antworten bleiben** (fragt nur erneut), der Ablauf endet nicht.
+- [ ] `:Case new --form`: ein Fenster mit Nummer, Area (Auswahlzeile, fehlt bei nur einer Area),
+      Titel, Company, Name, SNOW-Link, Resolve-Link und `[ Create ] [ Cancel ]`.
+- [ ] Im Form-Modus: ungültige Nummer (`12`, `abc`) zeigt die rote Meldung **beim Tippen** unter
+      dem Feld; eine Nummer, die in der gewählten Area schon existiert, ebenfalls.
+- [ ] `:Case new 977130 --form`: die Nummer steht schon im Feld und ist geprüft; existiert sie
+      in der Standard-Area schon, startet das Fenster auf der Nummer mit Meldung.
+- [ ] `:Case new --form --steps` meldet einen Fehler, `new_mode = "bogus"` fällt auf `steps`
+      zurück, `:checkhealth casedesk` nennt es.
+- [ ] Beide Wege ergeben denselben Case (Ordner, `.case.json`, Dry-Run-Liste). Danach enthält
+      `Research/00_Research.md` den Checklisten-Block (K12) und der Case eine `Links.md` (K11).
+- [ ] Esc-Verhalten: im Steps-Formular **überspringt** `<Esc>` ein Feld
+      (bestehendes `kit.form`-Verhalten), im `--form`-Fenster bricht `<Esc>` alles ab.
+- [ ] Ohne `ui.kit.sheet` (ältere ui.nvim): `--form` fällt mit Hinweis auf die Schritte zurück.
+
+---
+
+### K9. Wording-Ordner, Log-Snippets, `startCdxChat`
+
+Commit `casedesk.nvim` `f9f23e2`; Work-Repo `8e37bfc` (Log-Snippets, `Logs.md`) und `43d717c`
+(Fragen der Checkliste, Hinweis in `Workflow.md`). **Die deutschen `_DE`-Texte habe ich
+geschrieben, bitte gegenlesen.** Der typische Windows-Pfad hinter `%TRICENTIS_ALLUSERS_APPDATA%`
+steht bewusst nicht in den Texten.
+
+- [ ] `:Cases clipboard TCSupportInfo`: genau `The 'TCSupportInfo' package can be generated in
+      Tosca Commander via: *Project -> About Tosca -> Support Info*`.
+- [ ] `:Cases clipboard tcsupportinfo` (kleingeschrieben) geht auch; `<Tab>` nach `:Cases clipboard `
+      zeigt `TCSupportInfo`, `CommanderLog`, `TBoxLog`, `BrowserExtensionLog`, `DexServerLog`,
+      `DexAgentLog`, `ToscaServerLog`, `HAR`, `GpResult` und deren `_DE`-Varianten sowie die
+      Fragen (`ProductComponent`, `Subset`, ...).
+- [ ] `:Cases clipboard TCSupportInfo CommanderLog --sep=blank`: beide Texte, durch eine
+      Leerzeile getrennt.
+- [ ] `:Cases clipboard CommanderLog_DE`: der deutsche Text.
+- [ ] **Neue Datei ohne Neustart:** eine Datei `Workflow/Templates/Wordings/Logs/Test.md` anlegen,
+      dann sofort `:Cases clipboard Test` und `:Cases wordings Test` (beides ohne Neustart gültig);
+      Datei wieder löschen.
+- [ ] `:Cases clipboard startCdxChat`: der Prompt aus `Workflow/CDX/StartChat.md` **bis
+      einschließlich** `### Activity Stream:`, nichts danach (kein Platzhalter, keine Templates).
+- [ ] Die Zeile `### Activity Stream:` in einer Kopie der Datei umbenennen und `startCdxChat`
+      auf die Kopie zeigen lassen: Warnung, **nichts** wird kopiert (nicht die ganze Datei).
+- [ ] `:Cases clipboard` ohne Argument: Picker nur über die Wordings (jetzt mehr als vorher).
+- [ ] `:Case clipboard TCSupportInfo 1135620`: Snippet ohne Case-Bezug, Kopie identisch.
+
+---
+
+### K10. `:Case insert snow-number|snow-url|sap-number|sap-incident|sap-url`
+
+Commit `casedesk.nvim` `e6754ec`. Cursor in einen Buffer setzen, dann:
+
+- [ ] `:Case insert sap-url 1135620`: fügt den Resolve-Link ein **und** kopiert ihn.
+- [ ] `:Case insert snow-url 1135620`: der SNOW-GUID-Link. `snow-number` ist dasselbe wie `snow`.
+- [ ] `:Case insert sap-number 1135620`: `1135620/2026`. `:Case insert sap-incident 1135620`:
+      `0020751295_1135620_2026`.
+- [ ] `:Case insert sap-url 1149596` (nur SNOW-Link): Meldung mit Grund (`no SAP Resolve link …`),
+      **nichts** eingefügt.
+- [ ] `:Case insert` ohne Argument: der Picker zeigt die fünf Zeilen mit ihren Werten (`—` wenn
+      keiner da ist); `<Tab>` nach `:Case insert ` kennt die neuen Namen.
+- [ ] Mit Visual-Auswahl (`:'<,'>Case insert sap-number`) ersetzt die Auswahl.
+- [ ] `:Case insert sap-number` in einem **CS**-Case: Meldung "area CS has no SAP incidents".
+- [ ] `:Case insert snow` und `:Case insert link` verhalten sich wie vorher.
+- [ ] `:Case clipboard sap-number,sap-incident,sap-url 1135620 --sep=blank`: dieselben Werte
+      (gleiche Felder, `sapnumber`, `sapincident`, `resolveurl`).
+
+---
+
+### K11. `Links.md` in jedem Case
+
+Commit `casedesk.nvim` `20bf95f`. Struktur: `## Tickets`, `## Docs & references`,
+`## SWARM / internal tickets`, eine Zeile `- [Label](URL) — Zweck` je Link.
+
+- [ ] Neuen Case anlegen mit SNOW- und Resolve-Link: `Links.md` liegt im Case-Ordner, öffnet sich
+      **nicht**, beide Links stehen unter *Tickets* mit Zweck (`ServiceNow case record`,
+      `SAP Resolve incident`). Ohne die Links ist die Gruppe leer.
+- [ ] Älterer Case: `:Case links open 1135620` legt die Datei an (mit seinen Links in *Tickets*)
+      und öffnet sie; ebenso `:Case sync` (listet `Links.md` als fehlend).
+- [ ] `:Case links add https://docs.tricentis.com/... was der Kunde zuerst einrichten muss`:
+      Zeile unter *Docs & references*; zweiter Link kommt **dahinter**, nicht darüber.
+- [ ] Atlassian-Jira-Link (`.../browse/SWAT-1`) landet unter *SWARM / internal tickets*,
+      `--section=swarm|docs|tickets` überschreibt, `--label=Text` setzt den Linktext.
+- [ ] Einen Link im Browser kopieren, dann `:Case links add` (nur Zweck als Text, z. B.
+      `:Case links add das SWAT-Ticket`): nimmt die URL aus der Zwischenablage, sagt es.
+- [ ] `:Case links add <url>` ohne Zweck: fragt "What is this link for?"; leere Antwort fügt
+      **nichts** hinzu.
+- [ ] Denselben Link nochmal: Meldung `already listed`, keine zweite Zeile.
+- [ ] Ein Resolve-/SNOW-Link, den du von Hand in `Links.md` einträgst, wird von
+      `:Case clipboard snowurl` / `resolveurl` / `:Case insert sap-url` gefunden, wenn
+      `.case.json` keinen hat; hat `.case.json` einen, gewinnt der.
+- [ ] `:Case links 1135620` (ohne `add`/`open`) ist weiter die Doku-Versionsprüfung.
+- [ ] `:Case doctor` und `:checkhealth casedesk` bei einem älteren Case ansehen: taucht `Links.md`
+      dort als fehlend auf? (Nicht geprüft, ob diese Prüfungen das Blueprint auswerten.)
+
+---
+
+### K12. Erstantwort-Checkliste
+
+Commit `casedesk.nvim` `2d8c468`; Fragen im Work-Repo `43d717c`. Die Checkliste steht in
+`Research/00_Research.md` zwischen `<!-- casedesk:checklist begin … -->` und `… end -->`.
+
+- [ ] Neuer Case: `Research/00_Research.md` enthält oben (unter dem `# …`) den Block mit den
+      Abschnitten *Vor der Antwort*, *Beim Kunden erfragen — Stufe 1*, *Senden und danach*; bei
+      DEX/XScan/Cloud im Titel zusätzlich *Je nach Fall* und die passenden Logs.
+- [ ] Titel mit `XScan unmapped controls Fiori`: AppType, ControlsAffected, HTML-Seite, TBox-Log,
+      Browser-Extension-Log erscheinen; Titel mit `DEX unattended`: DEX-Preflight, DEX-Agent-Log,
+      gpresult (Stufe 2).
+- [ ] `:Case checklist 1213172` in einem **echten** Case: Block wird eingefügt/aktualisiert, die
+      Datei öffnet am Block. Bei Cases mit Bild unter `assets/` steht `[x] … — gefunden: <Datei>`.
+      **Vorsicht: das schreibt in `Research/00_Research.md` des echten Cases** (nur den Block).
+- [ ] Ein Häkchen von Hand setzen (`[x]`), eins auf `[-]`, dann `:Case checklist`: beide bleiben.
+      Eine Support-Info-Datei in `assets/` legen: nächster Lauf hakt `Support Info` ab.
+- [ ] Text **außerhalb** des Blocks (Notes, eigene Zeilen) bleibt unverändert; ungespeicherte
+      Änderungen im Buffer: Meldung "save it first".
+- [ ] Die Erstreaktions-Zeile nennt die fällige Zeit (`Erstreaktion fällig 2026-… (P2, in …)`),
+      sobald der Case Priorität und Activity Stream hat (`:Case activity`).
+- [ ] `:Case clipboard ask`: höchstens 4 nummerierte englische Fragen der aktuellen Stufe, mehrzeilige
+      Texte (Browser-Extension-Log) eingerückt; Hinweis "stage 1 has N open questions, 4 asked at
+      a time". Sind alle Punkte abgehakt: "nothing left to ask".
+- [ ] `:Case checklist draft` in einem Case, dessen `Replies/00_PSO.md` noch das Gerüst
+      (`Dear {name},`) ist: Entwurf mit Anrede (Kontaktname oder `<<customer>>`), nummerierten
+      Fragen und Schluss. Hat die Datei schon Text: Entwurf nur in der Zwischenablage.
+- [ ] `config.checklist = { lang = "de" }`: Fragen kommen aus den `_DE`-Dateien.
+- [ ] `config.checklist = { skip = { "timer" } }` entfernt den Punkt, `extra = { { id =
+      "licence", block = "ask", text = "Lizenzdatei", snippet = "TCSupportInfo", keywords = {
+      "license" }, files = { "%.lic$" } } }` fügt einen eigenen hinzu.
+- [ ] Fragen prüfen: sind die Formulierungen der `Wordings/Ask/*.md` so, wie du sie schicken
+      willst? (Stufe-1-Auswahl und Reihenfolge ist meine Ableitung aus `Workflow.md`,
+      `Workflow_DecisionTree.md`, `Policies_CDX.md`, `1_Answer.md`.)
+
+---
+
+### K13. Noch nicht gebaut
+
+1. Resolve-Link aus Casenummer ableiten (wartet auf die Präfix-Regel `…294`/`…295`; Task `RM-47`
+   im wkdbook).
+2. Datenpflege: Case `0498885` (falsche Nummer, Firmenname als Link), Müll in `links[]` (`RM-48`,
+   `RM-49`).
 
 ---
