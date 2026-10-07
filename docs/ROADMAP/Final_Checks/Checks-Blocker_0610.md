@@ -2223,13 +2223,12 @@ Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei
 N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nvim/slots-live-check` (steht dort schon). Neu erzeugen:
 `nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` und `list --waiting` im Ordner von `tasks.nvim`, mit `TASKS_VAULT` auf den Vault.
 
-**Kette des Plans `ui.nvim/ui-slots`** (4 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
-`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`, `slots-preview-file`). Nichts davon wartet auf dich, außer dem letzten Glied:
+**Kette des Plans `ui.nvim/ui-slots`** (3 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
+`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`, `slots-preview-file`, `hover.nvim/preview-target-api` — hover.nvim hat jetzt `preview_target`, `b169dc6`). Nichts davon wartet auf dich, außer dem letzten Glied:
 
 | Task | Status | Wartet auf | Was |
 |---|---|---|---|
-| `hover.nvim/preview-target-api` | startbar (S) | — | prüfen, ob hover.nvim einen öffentlichen Einstieg für URL-Vorschauen hat; sonst dort ergänzen |
-| `ui.nvim/slots-preview-url` | blocked | `hover.nvim/preview-target-api` | URL-Vorschau über hover.nvim |
+| `ui.nvim/slots-preview-url` | startbar (M) | — | URL-Vorschau über hover.nvim |
 | `ui.nvim/slots-docs-health` | blocked | `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
 | `ui.nvim/slots-live-check` | blocked, **actor=me** | `slots-docs-health` | **deine** Live-Abnahme (Optik, Alltag, Maus) — erst wenn alles andere steht |
 
