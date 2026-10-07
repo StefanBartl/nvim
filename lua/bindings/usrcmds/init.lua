@@ -16,9 +16,9 @@ require("bindings.usrcmds.cdx").enable()
 
 -- Composer help float (opt-in, lib.nvim): in the command line, `:Verb ` + <M-h> lists the
 -- options of that level with a one-line description; <CR> inserts the pick, <Esc> restores
--- the line. Only verbs with `help = true` react -- `:Clipboard` is the pilot. Also replaces
+-- the line. On for every composer verb (`enable`; a verb opts out with `help = false`). Also replaces
 -- the "Usage: ..." notification for such a verb (bare `:Clipboard`, unknown subcommand).
-require("lib.nvim.bindings.usercmd.composer").setup({ help = { keymap = "<M-h>" } })
+require("lib.nvim.bindings.usercmd.composer").setup({ help = { enable = true, keymap = "<M-h>" } })
 require("bindings.usrcmds.clipboard").enable()
 
 -- Was `require("nvchad.mason").install_all()` in lua/nvchad/au.lua, NvChad's
