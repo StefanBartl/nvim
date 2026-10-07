@@ -417,7 +417,7 @@ own, and no git action bound to a row.
 ### `:MyPlugins jumpTo <name>`
 
 Opens the file in `lua/plugins/personal/specs/` that declares the install spec
-of `<name>` (completion offers every listed plugin) and puts the cursor on the
+of `<name>` (completion offers every plugin that has a spec) and puts the cursor on the
 `"owner/name"` line. Plain text scan, nothing is evaluated; completion is built from the spec
 files too, so it also works for a plugin whose source mode is `disabled`. An unknown name gives a
 warning; a failing `:edit` (e.g. `winfixbuf` window) a notification, not an error.
