@@ -3,7 +3,7 @@
 --- wrappers, and `no_name_guard_sweep` (closes stray unnamed empty buffers).
 ---
 --- Kitty-terminal detection and padding/margin control used to live here --
---- removed 2026-09-12, duplicate of bindings.autocmds.terminals' own kitty feature
+--- removed 2026-09-12, duplicate of terminal.nvim's own kitty feature
 --- (same events, same underlying `kitty @ set-spacing` command). That module
 --- is the one owner now; see its own doc comment.
 

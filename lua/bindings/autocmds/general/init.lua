@@ -18,10 +18,10 @@ function M.enable(cfg)
   cfg = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS), cfg or {})
 
   -- Kitty spacing tweaks used to live here too (VimEnter/VimLeavePre),
-  -- duplicating bindings.autocmds.terminals' own kitty feature -- same events, same
+  -- duplicating terminal.nvim's own kitty feature -- same events, same
   -- `:silent !kitty @ set-spacing ...` mechanism, both enabled at once in
   -- autocmds/init.lua, so the command ran twice on every startup/exit.
-  -- Removed 2026-09-12; bindings.autocmds.terminals is the one owner now (it already
+  -- Removed 2026-09-12; terminal.nvim is the one owner now (it already
   -- used lib.nvim.terminal.is_kitty, the shared detector, rather than this
   -- module's own hand-rolled one).
 

@@ -5,7 +5,7 @@ local AUTOCMDS_GENERAL_DEFAULTS = {
   group_name = "autocmds_general",
 
   -- Kitty padding/margin used to be configured here too -- removed
-  -- 2026-09-12, bindings.autocmds.terminals is the one owner now (see its own
+  -- 2026-09-12, terminal.nvim is the one owner now (see its own
   -- defaults.lua).
 
   cursorline = {

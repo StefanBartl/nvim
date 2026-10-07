@@ -179,30 +179,15 @@ nothing, rather than binding keys that would complain when pressed);
 | --- | --- | --- | --- | --- |
 | `<Del>` | n | On a blank line, delete the whole line through the buffer API with no register touched; otherwise delete one character into the black hole | `Smart delete (<Del>)` | `smart_del_key.lua` |
 
-### Terminal mode (`terminal.lua`)
+### Terminal mode (moved to terminal.nvim)
 
-| Key | Mode | Effect | desc | Source |
-| --- | --- | --- | --- | --- |
-| `<Esc>` | t | Leave terminal mode | `[Terminal] Exit terminal mode` | `terminal.lua` |
-| `<C-c>` | t | Leave terminal mode, second binding | `[Terminal] Exit terminal mode` | `terminal.lua` |
-| `<C-h>` | t | Window left from inside a terminal buffer | `[Terminal] Left` | `terminal.lua` |
-| `<C-l>` | t | Window right | `[Terminal] Right` | `terminal.lua` |
-| `<C-j>` | t | Window down | `[Terminal] Down` | `terminal.lua` |
-| `<C-k>` | t | Window up | `[Terminal] Up` | `terminal.lua` |
-| `<A-l>` | t | Send `clear`/`cls` to the terminal job | `[Terminal] Clear screen` | `terminal.lua` |
-| `<A-h>` | n, t | Toggle snacks.nvim's floating terminal; no-op when `snacks.terminal` is absent | `[Term] Toggle floating` | `terminal.lua` |
-
-`<C-l>` was once mapped twice in `terminal.lua` — window-right and a
-`clear`/`cls` send — eleven lines apart, and the second silently won. Only
-the window movement is left; `<A-l>` now carries the clear/cls job instead,
-terminal-mode only so it can't collide with filetree.nvim's normal-mode
-`<A-l>` explorer toggle.
-
-The `<A-h>` float also disables snacks' own buffer-local `<Esc>` handler
-(`win.keys.term_normal = false`): snacks' default requires a *double*
-`<Esc>` within 200ms to leave terminal mode, and being buffer-local it wins
-over the global `<Esc>` map above — a single `<Esc>` looked like it did
-nothing. Disabling it restores single-press `<Esc>` for this float.
+The terminal keys (`<A-h>` toggle in n/t, `<Esc>`/`<C-c>` leave terminal mode, `<C-h/j/k/l>`
+window navigation, `<A-l>` clear) used to live in `bindings/mappings/terminal.lua` and toggled
+snacks.nvim's floating terminal. Since 2026-10-07 they are registered by
+[terminal.nvim](https://github.com/StefanBartl/terminal.nvim) (its own
+[`docs/BINDINGS.md`](https://github.com/StefanBartl/terminal.nvim/blob/main/docs/BINDINGS.md)),
+configured in `plugins/personal/specs/project.lua`; `bindings.mappings.terminal` and the snacks
+toggle are gone. A count picks the terminal: `3<A-h>` opens terminal "3".
 
 ### Against NvChad's own features (`nvchad.lua`)
 
@@ -555,7 +540,6 @@ awareness of each other).
 | `general_autocmds_autocmds_general_kitty_spacing` | `VimLeavePre` | — | Kitty: restore padding on exit |
 | `git_autocmds_commit_ft` | `FileType` | `gitcommit` | Buffer options for the commit-message buffer |
 | `gitsigns_refresh` | `BufEnter`, `FocusGained` | — | Re-read gitsigns on focus/entry |
-| `numbers` | `TermOpen` | — | Terminal: disable absolute and relative line numbers locally |
 | `trim_trailing` | `BufWritePre` | `*` | Strip trailing whitespace on save, preserving cursor position |
 | `trim_blank` | `BufWritePre` | `*` | Clean fully-blank lines, preserving cursor position |
 | `last_loc` | `BufReadPost` | `*` | Restore the last cursor position after reading |
