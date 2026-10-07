@@ -1,1 +1,0 @@
-E:/repos/WKDBooks/Development/wkdbook-myplugins/wkdbook-tasks.nvim/HANDOVER.md
