@@ -1125,8 +1125,8 @@ return {
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {
       -- Welches Backend die Terminals stellt: "auto" | "native" | "wezterm" | "tmux".
-      -- "auto" nimmt das erste erkannte: $TMUX -> tmux, $WEZTERM_PANE -> wezterm, sonst native.
       -- Aktuell gibt es nur "native"; ein anderer Name faellt mit einer Warnung darauf zurueck.
+      -- "auto" = native: Terminals bleiben Neovim-Fenster, auch innerhalb von WezTerm/tmux.
       -- Default: "auto".
       -- backend = "auto",
 
@@ -1238,6 +1238,22 @@ return {
       --   window_up = "<C-k>",
       --   -- Default: false (sonst waere <C-l> nicht mehr das Clear der Shell). Zum Aktivieren "<C-l>".
       --   window_right = false,
+      -- },
+
+      -- Dem Terminal um Neovim herum mitteilen, was Neovim gerade tut (Modus, Datei, Branch,
+      -- Diagnostics, Aufnahme): WezTerm liest es aus Pane-Variablen (Tab-Titel, Right-Status;
+      -- Gegenstueck: Configs/terminals/wezterm/config/nvim_status.lua). Gesendet wird nur bei
+      -- Aenderung, entprellt, in EINEM Schreibvorgang.
+      -- status = {
+      --   -- Default: true.
+      --   enable = true,
+      --   -- "auto" (jeder Exporter, dessen Umgebungssignal da ist: $WEZTERM_PANE) | "wezterm" |
+      --   -- { "wezterm" } | false (nichts senden). Default: "auto".
+      --   export = "auto",
+      --   -- Ruhezeit nach einer Aenderung, bevor gesendet wird (ms). Default: 80.
+      --   debounce_ms = 80,
+      --   -- Groesse des Datensatzes: darueber wird gekuerzt, dann abgelehnt. Default: 1024.
+      --   max_bytes = 1024,
       -- },
 
       -- Den Befehl `:Terminal` registrieren (toggle open hide close list send run). Default: true.
