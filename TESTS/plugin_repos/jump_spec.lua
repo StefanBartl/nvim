@@ -74,20 +74,93 @@ return function(H)
   eq(jump.names(dir .. "/does-not-exist"), {}, "names() on a missing directory")
   eq(jump.find("x", dir .. "/does-not-exist"), nil, "find() on a missing directory")
 
-  -- jump(): opens the file on the head line.
-  ok(jump.jump("braced.nvim", dir), "jump() reports success")
-  eq(vim.fs.basename(vim.api.nvim_buf_get_name(0)), "a.lua", "the spec file is open")
-  eq(vim.api.nvim_win_get_cursor(0), { 6, 4 }, "cursor on the head line")
-  ok(not jump.jump("missing.nvim", dir), "jump() on an unknown plugin returns false")
+  -- Cache: a changed file is picked up (signature = mtime + size), an unchanged one is reused.
+  H.write(
+    dir .. "/c.lua",
+    [[{
+  "Owner/late.nvim",
+}
+]]
+  )
+  eq(at("late.nvim"), "c.lua:2", "a new spec file is picked up")
+  H.write(
+    dir .. "/c.lua",
+    [[{
+  "Owner/late.nvim",
+  { "Owner/later.nvim" },
+}
 
-  -- A failing :edit is a notification, not a raw error (E37 with 'nohidden' and a modified buffer).
-  local old_hidden = vim.o.hidden
-  vim.o.hidden = false
-  vim.bo.modifiable = true
-  vim.api.nvim_buf_set_lines(0, 0, 1, false, { "changed" })
-  local ok_call, res = pcall(jump.jump, "fromreturn.nvim", dir)
-  vim.o.hidden = old_hidden
+
+]]
+  )
+  eq(jump.names(dir)[#jump.names(dir)], "trailing.nvim", "names() stays sorted after a rescan")
+  ok(vim.tbl_contains(jump.names(dir), "later.nvim"), "a changed spec file is rescanned")
+  vim.fn.delete(dir .. "/c.lua")
+  eq(at("late.nvim"), nil, "a removed spec file is dropped")
+
+  -- jump(): opens the file on the head line. A fresh tab keeps the other specs' buffers alone.
+  vim.cmd("tabnew")
+  local tab = vim.api.nvim_get_current_tabpage()
+  local done, err = pcall(function()
+    ok(jump.jump("braced.nvim", dir), "jump() reports success")
+    eq(vim.fs.basename(vim.api.nvim_buf_get_name(0)), "a.lua", "the spec file is open")
+    eq(vim.api.nvim_win_get_cursor(0), { 6, 4 }, "cursor on the head line")
+    ok(not jump.jump("missing.nvim", dir), "jump() on an unknown plugin returns false")
+
+    -- Same file with unsaved changes: only the cursor moves (a re-:edit would fail with E37).
+    vim.api.nvim_buf_set_lines(0, 0, 1, false, { "return { -- changed" })
+    ok(vim.bo.modified, "the buffer has unsaved changes")
+    ok(jump.jump("inline.nvim", dir), "jump() within the modified current file succeeds")
+    eq(vim.api.nvim_win_get_cursor(0), { 3, 4 }, "...and moves the cursor to the other head")
+    eq(vim.api.nvim_buf_get_lines(0, 0, 1, false), { "return { -- changed" }, "...keeping the edit")
+
+    -- Another file with unsaved changes and 'nohidden': a notification, not a raw error (E37).
+    local old_hidden = vim.o.hidden
+    vim.o.hidden = false
+    local ok_call, res = pcall(jump.jump, "fromreturn.nvim", dir)
+    vim.o.hidden = old_hidden
+    ok(ok_call, "a failing :edit does not raise")
+    eq(res, false, "...and reports failure")
+    eq(
+      vim.fs.basename(vim.api.nvim_buf_get_name(0)),
+      "a.lua",
+      "...and stays in the modified buffer"
+    )
+  end)
   vim.bo.modified = false
-  ok(ok_call, "a failing :edit does not raise")
-  eq(res, false, "...and reports failure")
+  pcall(vim.cmd, "tabclose!")
+  pcall(vim.cmd, "silent! %bwipeout!")
+  if vim.api.nvim_tabpage_is_valid(tab) then
+    pcall(vim.cmd, "tabonly!")
+  end
+  if not done then
+    error(err, 0)
+  end
+
+  -- The path is literal: %, # and $VAR in a directory name are not expanded by :edit.
+  local odd = H.tmpdir() .. "/pct%x#y$HOME"
+  if vim.fn.mkdir(odd, "p") == 1 then
+    H.write(
+      odd .. "/s.lua",
+      [[{
+  "Owner/odd.nvim",
+}
+]]
+    )
+    vim.cmd("tabnew")
+    local ok_odd = pcall(function()
+      ok(jump.jump("odd.nvim", odd), "jump() into a directory with %, # and $")
+      eq(
+        vim.fs.normalize(vim.api.nvim_buf_get_name(0)),
+        vim.fs.normalize(odd .. "/s.lua"),
+        "literal path"
+      )
+    end)
+    pcall(vim.cmd, "tabclose!")
+    pcall(vim.cmd, "silent! %bwipeout!")
+    ok(ok_odd, "odd directory name")
+  end
+
+  -- A missing directory is silent (no E484) and empty.
+  eq(jump.names(dir .. "/missing"), {}, "names() on a missing directory")
 end

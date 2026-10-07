@@ -43,34 +43,68 @@ local function spec_head(line, prev)
   return nil
 end
 
----Visit every spec head of every spec file, in file-name order. `visit`
----returns true to stop the scan.
+---@class PluginRepos.Jump.Head
+---@field repo string "owner/name"
+---@field file string
+---@field lnum integer
+---@field col integer 1-based column of the opening quote
+
+---Scan results per spec directory, valid while the (mtime, size) signature of its files is
+---unchanged. `names()` runs on every Tab press of the completion and the spec files change
+---only on a config edit, so re-reading ~7500 lines each time (about 10 ms) is wasted work.
+---@type table<string, { sig: string, heads: PluginRepos.Jump.Head[] }>
+local cache = {}
+
+---Every spec head of every spec file, in file-name order.
 ---@param dir string
----@param visit fun(repo: string, file: string, lnum: integer, col: integer): boolean|nil
-local function each_head(dir, visit)
+---@return PluginRepos.Jump.Head[]
+local function heads_of(dir)
+  -- An explicit check: readdir() on a missing directory prints E484 instead of raising.
+  if vim.fn.isdirectory(dir) == 0 then
+    return {}
+  end
   local ok_dir, names = pcall(vim.fn.readdir, dir)
   if not ok_dir then
-    return
+    return {}
   end
   table.sort(names)
+
+  local files, sig = {}, {}
   for _, fname in ipairs(names) do
     if fname:match("%.lua$") then
       local file = vim.fs.joinpath(dir, fname)
-      local ok, lines = pcall(vim.fn.readfile, file)
-      if ok then
-        local prev = ""
-        for lnum, line in ipairs(lines) do
-          local repo = spec_head(line, prev)
-          if repo and visit(repo, file, lnum, line:find("[\"']") or 1) then
-            return
-          end
-          if line:match("%S") and not line:match("^%s*%-%-") then
-            prev = line
-          end
+      local st = vim.uv.fs_stat(file)
+      files[#files + 1] = file
+      sig[#sig + 1] = st and ("%s:%d.%d:%d"):format(fname, st.mtime.sec, st.mtime.nsec, st.size)
+        or fname
+    end
+  end
+  local signature = table.concat(sig, "|")
+  local cached = cache[dir]
+  if cached and cached.sig == signature then
+    return cached.heads
+  end
+
+  ---@type PluginRepos.Jump.Head[]
+  local heads = {}
+  for _, file in ipairs(files) do
+    local ok, lines = pcall(vim.fn.readfile, file)
+    if ok then
+      local prev = ""
+      for lnum, line in ipairs(lines) do
+        local repo = spec_head(line, prev)
+        if repo then
+          heads[#heads + 1] =
+            { repo = repo, file = file, lnum = lnum, col = line:find("[\"']") or 1 }
+        end
+        if line:match("%S") and not line:match("^%s*%-%-") then
+          prev = line
         end
       end
     end
   end
+  cache[dir] = { sig = signature, heads = heads }
+  return heads
 end
 
 ---Locate the spec declaration of a plugin (first match in file-name order).
@@ -79,14 +113,12 @@ end
 ---@return { file: string, lnum: integer, col: integer }|nil
 function M.find(name, dir)
   local want = name:lower()
-  local hit
-  each_head(dir or specs_dir(), function(repo, file, lnum, col)
-    if repo:lower():match("/(.+)$") == want then
-      hit = { file = file, lnum = lnum, col = col }
-      return true
+  for _, head in ipairs(heads_of(dir or specs_dir())) do
+    if head.repo:lower():match("/(.+)$") == want then
+      return { file = head.file, lnum = head.lnum, col = head.col }
     end
-  end)
-  return hit
+  end
+  return nil
 end
 
 ---Basenames of every plugin that has a spec head, sorted and unique.
@@ -94,15 +126,30 @@ end
 ---@return string[]
 function M.names(dir)
   local seen, out = {}, {}
-  each_head(dir or specs_dir(), function(repo)
-    local base = repo:match("/(.+)$")
+  for _, head in ipairs(heads_of(dir or specs_dir())) do
+    local base = head.repo:match("/(.+)$")
     if base and not seen[base] then
       seen[base] = true
       out[#out + 1] = base
     end
-  end)
+  end
   table.sort(out)
   return out
+end
+
+---Whether `file` is the file the current buffer shows.
+---@param file string
+---@return boolean
+local function is_current_file(file)
+  local current = vim.api.nvim_buf_get_name(0)
+  if current == "" then
+    return false
+  end
+  local a, b = vim.fs.normalize(current), vim.fs.normalize(file)
+  if vim.fn.has("win32") == 1 then
+    a, b = a:lower(), b:lower()
+  end
+  return a == b
 end
 
 ---Open the spec file of `name` at its declaration.
@@ -115,11 +162,17 @@ function M.jump(name, dir)
     notify.warn(("No install spec for '%s' found in plugins/personal/specs"):format(name))
     return false
   end
-  -- :edit can fail (E37 with 'nohidden' and a modified buffer, E1513 in a 'winfixbuf' window).
-  local ok, err = pcall(vim.cmd.edit, { args = { hit.file } })
-  if not ok then
-    notify.error(("Cannot open %s: %s"):format(hit.file, tostring(err)))
-    return false
+  -- Same file: only move the cursor. `:edit` of the current buffer fails with E37 while it has
+  -- unsaved changes, and jumping between two plugins of one (being edited) spec file is the
+  -- main use of this command.
+  if not is_current_file(hit.file) then
+    -- :edit can fail (E37 with 'nohidden' and a modified buffer, E1513 in a 'winfixbuf' window).
+    -- `magic.file = false`: the path is literal, `%`, `#` and `$VAR` are not expanded.
+    local ok, err = pcall(vim.cmd.edit, { args = { hit.file }, magic = { file = false } })
+    if not ok then
+      notify.error(("Cannot open %s: %s"):format(hit.file, tostring(err)))
+      return false
+    end
   end
   pcall(vim.api.nvim_win_set_cursor, 0, { hit.lnum, hit.col - 1 })
   vim.cmd("normal! zz")
