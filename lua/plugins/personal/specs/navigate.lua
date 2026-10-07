@@ -706,6 +706,11 @@ return {
           cwd_smart = "<leader>CW", -- smart grep+find in CWD
           config_smart = "<leader>CF", -- smart grep+find in nvim config
           -- folder_smart = nil, -- smart grep+find in a picked folder
+          -- Files picker with a content filter: "akronyms grep=NWBC" = path has
+          -- akronyms AND content matches NWBC (several grep= AND together,
+          -- grep="a b" for spaces). Without grep= it is a plain files picker.
+          -- Trial run as the main picker (2026-10-06). pickers.nvim docs/commands.md#the-filegrep-action.
+          cwd_filegrep = "<leader>mp",
           -- Forces hidden + no_ignore + follow for this one search (= `:Pickers cwd files all`).
           -- Was a direct ":Telescope find_files follow=true no_ignore=true hidden=true"
           -- call in bindings/mappings/telescope.lua; engine-agnostic here instead
@@ -769,6 +774,10 @@ return {
           -- are all taken across this ecosystem's git keymaps (pickers.nvim,
           -- gitsuite.nvim, neogit, diff.nvim).
           git_status_filtered = { "<leader>gm" },
+          -- filegrep trial (files + `grep=<pattern>` content filter), same picker
+          -- as keymaps.cwd_filegrep (<leader>mp) in other scopes.
+          config_filegrep = { "<leader>mC", desc = "Files+grep= (nvim config)" },
+          folder_filegrep = { "<leader>mF", desc = "Files+grep= (picked folder)" },
         },
 
         -- Native picker history under stdpath("data")/pickers.nvim/history.
