@@ -112,6 +112,12 @@
     - [O3. Live-Checkliste (ohne Leiste: alles per Befehl und Taste)](#o3-live-checkliste-ohne-leiste-alles-per-befehl-und-taste)
     - [O4. Regression (Änderungen an bestehendem Verhalten)](#o4-regression-änderungen-an-bestehendem-verhalten)
     - [O5. Bekannte Grenzen (kein Test nötig, nur wissen)](#o5-bekannte-grenzen-kein-test-nötig-nur-wissen)
+  - [P. docmap-desktop + documentation.nvim: Projektleiste, Suche, Statistik, Auto-Hide, Findings-Regeln — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#p-docmap-desktop--documentationnvim-projektleiste-suche-statistik-auto-hide-findings-regeln--live-checks-und-blocker-stand-2026-10-07-abend)
+    - [P1. Blocker und offene Entscheidungen](#p1-blocker-und-offene-entscheidungen)
+    - [P2. Neue Bedienelemente und Befehle](#p2-neue-bedienelemente-und-befehle)
+    - [P3. Live-Checkliste](#p3-live-checkliste)
+    - [P4. Regression (Änderungen an bestehendem Verhalten)](#p4-regression-änderungen-an-bestehendem-verhalten)
+    - [P5. Bekannte Grenzen (kein Test nötig, nur wissen)](#p5-bekannte-grenzen-kein-test-nötig-nur-wissen)
 
 ---
 
@@ -2338,3 +2344,162 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - **Pfade mit `{`/`}`** werden beim `:UI slots add` automatisch doppelt geschrieben (`{{`); wer solche Pfade von Hand in die Config schreibt, muss es selbst tun.
 - **Zwei Sitzungen im selben Projekt** schreiben dieselbe Datei; die zuletzt schreibende gewinnt (kein Merge).
 - **Projekt = Git-Wurzel:** Die Belegung gilt pro Projektwurzel; ohne `.git` zählt der Arbeitsordner selbst als Projekt.
+
+---
+
+## P. docmap-desktop + documentation.nvim: Projektleiste, Suche, Statistik, Auto-Hide, Findings-Regeln — Live-Checks und Blocker (Stand 2026-10-07, Abend)
+
+Alles aus dem Chat „gh traffic window“. **docmap-desktop**: Traffic-Dialog entschlackt, Chip „Karte veraltet“, Auto-Hide-Seitenleiste mit Pin,
+lesbare Engine-/Neovim-Panels, neue **Projektleiste** (Karte / Dateien / Statistik) mit **Suche** und **Projektstatistik**. **documentation.nvim**:
+`missing-readme` fragt nur noch Top-Level- und große Module, `<plugin>.health` ist kein „unreferenced-module“ mehr. Getestet ist alles nur
+**headless und im Browser-Preview mit Stub-Daten** (`tools/preview/preview.py`, `node --test` 185 grün, `cargo test` 155 grün); **nie im echten
+Tauri-Fenster (WebView2)**.
+
+Commits, `docmap-desktop` (`main`, gepusht): `08e21d9` (Traffic-Dialog), `a2f3de8` (Chip „Karte veraltet“, Änderungsdialog, keine doppelten Zähler,
+Sortierung nur in der Übersicht), `6d45c0f` (Auto-Hide, Engine-/Neovim-Panels), `6bc7d3b` (Backend `stats.rs`/`search.rs`), `c97bc9f` (Projektleiste,
+Suche, Statistik), `642dfc1` (CSS). `documentation.nvim`: `d2be49f` (**nur lokal, Push fehlgeschlagen, siehe P1**). **Keiner dieser Commits ist
+ultracode-reviewt.**
+
+### P1. Blocker und offene Entscheidungen
+
+| Blocker | Wirkung | Stand |
+|---|---|---|
+| **`documentation.nvim`: Push von `d2be49f` wird von GitHub abgelehnt** (`remote rejected … Internal Server Error`, dreimal; `githubstatus.com` meldet keine Störung) | Der Fix für `missing-readme`/`health` liegt nur auf diesem Rechner; andere Maschinen und die Standalone-Binary-Releases haben ihn nicht | **offen**, später erneut `git push origin HEAD:main` im Repo `documentation.nvim`; wenn es bleibt, Repo-Einstellungen/Hooks auf GitHub prüfen |
+| **`documentation.nvim`: eine zweite Sitzung ändert parallel dasselbe Arbeitsverzeichnis** (`bindings/usrcmds/init.lua`, `editor/registry.lua`, `standalone/vim_shim.lua`, `@types/init.lua`, `TESTS/check_policy_spec.lua`, `TESTS/shim_behavior_spec.lua`, `TESTS/setup_lazy_spec.lua`) | Die Gesamtsuite war in drei Läufen nie grün, jedes Mal mit anderen Fehlschlägen (`guard fs: modified …`); einzeln laufen sie grün | **offen**: erst committen, was die andere Sitzung fertig hat, dann `bash scripts/test.sh` einmal sauber; ich habe nur meine vier Dateien committet |
+| **Kein installierter Build mit den neuen Funktionen** | Installiert ist `v0.6.0`; alles hier liegt nur auf `main`. Ein Release `v0.6.1` ist nicht geschnitten (Task `docmap-desktop/release-v0-6-1-decision`) | zum Testen: im Repo `docmap-desktop` `cd src-tauri && cargo run` (Debug-Build, lädt `src/` direkt) |
+| **Kein Test im echten Fenster möglich** (Dateidialog mit Startordner, Auswahllisten in der Auto-Hide-Seitenleiste, Hover über dem eingebetteten iframe, Editor-Start aus der Suche) | Das sind genau die Stellen, an denen WebView2 anders sein kann als der Browser-Preview | P3 unten ist deine Liste dafür |
+| **Task-Blocker aus N nicht neu geprüft** | Zahlen in N1 bis N4 (Stand 7.10.) gelten unverändert; aus diesem Chat kommt **kein neuer Task** dazu | `tasks list --actor=me` neu laufen lassen, falls du aktuelle Zahlen willst |
+
+**Entscheidungen, die du beim Testen treffen musst:**
+
+- [ ] **`missing-readme`: Schwellen so lassen?** Top-Level = höchstens eine Ebene unter dem Source-Root, groß = ab 10 Quelldateien. Fest im Code
+      (`core/check.lua`, `TOP_LEVEL_DEPTH`, `BIG_MODULE_FILES`), **keine Option**. Wenn dir eine Option (`opts.readme`) lieber ist: Änderung in
+      `config`, `@types`, `docmap.schema.json`.
+- [ ] **Auto-Hide-Seitenleiste: Standard.** Aktuell **angeheftet** (wie bisher). Soll Auto-Hide der Standard werden?
+- [ ] **Suche ohne Regex.** Plain, Groß/Klein egal (Schalter „Match case“). Reicht das, oder soll ein Regex-Schalter kommen (Gefahr: ein Muster kann lange laufen)?
+- [ ] **Sprung aus der „Ansicht“-Suche:** Treffer mit Knoten gehen in der Karte auf **Index → Tree** mit diesem Modul (die Seite hat keinen Direktlink auf
+      eine Funktion); Features gehen auf den Features-Tab; Doku-Seiten öffnen die Datei. Passt das, oder soll es der Hierarchy-Tab sein?
+- [ ] **`Strg+K` funktioniert nicht, solange der Fokus im eingebetteten Kartenfenster ist** (Tastenereignisse verlassen den iframe nicht). Ein Klick in die
+      Leiste oder die Seitenleiste reicht; ein Menüeintrag mit Kürzel wäre der Ausweg (Tauri-Menü), nicht gebaut.
+- [ ] Dein Punkt **„2.“** in der letzten Nachricht ist leer angekommen — bitte nachliefern.
+
+---
+
+### P2. Neue Bedienelemente und Befehle
+
+| Was | Wie | Wo |
+|---|---|---|
+| Projektleiste | über der Karte, nur bei gewähltem Projekt: **Karte / Dateien / Statistik** links, Suchfeld in der Mitte | `index.html`, `main.js` |
+| Suche | `Strg+K` fokussiert das Feld (nicht aus dem Kartenfenster); **Enter** sucht sofort, **↓** in die Trefferliste, **↑/↓** wandern, **Esc** schließt | `main.js` (Abschnitt „Search“) |
+| Scope „Ordner“ | Pfadfeld + **Wählen …** (Dialog startet im Projekt), Modus **Text** (grep) oder **Dateinamen** (find), **Groß-/Kleinschreibung** | Backend `project_search` |
+| Scope „Ansicht“ | durchsucht, was die Karte zeigt (`module_map.json`: Namen, Pfade, Summaries, Signaturen, Parameter, Doku, Features) | Backend `view_search` |
+| Statistik | Dateien/Zeilen je Sprache; Code, Kommentare, Doku, Daten/Config, Leer; längste Quelldateien; **Neu zählen** | Backend `project_stats` |
+| **View → Statistics** | Menü, ohne Kürzel (Haken wie „Files on disk“) | `menu.rs` |
+| **View → Auto-hide sidebar** | Menü, ohne Kürzel; dasselbe wie die Pin-Taste in der Seitenleisten-Ecke | `menu.rs`, `main.js` |
+| **Pin** in der Seitenleiste | angeheftet ↔ klappt zu einem 14-px-Rand zusammen und öffnet beim Hovern/Fokus | `main.js` |
+| `Strg+B` (View → Sidebar) | blendet die Seitenleiste jetzt **wirklich** aus (vorher wirkungslos, CSS überstimmte `hidden`) | `style.css` |
+| Chip **„Karte veraltet“** | ersetzt die Zeile „Quellen sind neuer …“; Klick öffnet die Liste der geänderten Dateien, dort **Neue Karte erzeugen** | Backend `map_changes` |
+| Traffic-Details | nur noch Top-10-Seiten und der Zeitraum; Charts und Referrer sind weg | `index.html`, `main.js` |
+| `documentation.nvim` `--check` | `missing-readme` nur Top-Level/groß; `unreferenced-module` ohne `<plugin>.health` | `core/check.lua` |
+
+---
+
+### P3. Live-Checkliste
+
+Vor dem Testen: im Repo `docmap-desktop` `git pull`, dann `cd src-tauri && cargo run`. Für die Findings: `documentation.nvim` auf dem Stand mit `d2be49f`.
+
+**P3.1 Traffic-Dialog**
+
+- [ ] Projekt mit Traffic-Daten wählen, **Traffic-Details …**: keine Charts, kein Referrer-Block; **Top 10 auf GitHub** mit Zählern.
+- [ ] Die Zeile unter dem Titel lautet „Aufgezeichnet vom … bis …“ (kein Wort „Digest“); Englisch: „Recorded from … to …“.
+- [ ] Eine Seite, die eine Datei im Projekt ist: Klick öffnet sie im Editor; eine gelöschte Seite ist nicht klickbar.
+
+**P3.2 Chip „Karte veraltet“**
+
+- [ ] Ein Projekt, dessen Quellen neuer als die Karte sind: statt der langen Zeile steht **Karte veraltet** (Pille). Hover zeigt: „Die Karte ist veraltet — bitte eine neue erzeugen. Ein Klick zeigt, was sich geändert hat.“
+- [ ] Klick: Dialog „Seit der Karte geändert“ mit Dateien, neueste zuerst, „vor … danach“, bei vielen Dateien „… und N weitere“. Klick auf eine Zeile öffnet die Datei.
+- [ ] **Neue Karte erzeugen** im Dialog startet die Generierung; danach verschwindet der Chip.
+- [ ] Ein Projekt mit aktueller Karte: kein Chip.
+
+**P3.3 Seitenleiste**
+
+- [ ] Die Zeile „3 Module · 4 Namespaces · 36 Dateien · …“ unter dem Projekt ist **weg** (nur bei „noch keine Karte“ steht dort ein Satz).
+- [ ] Sortier-Auswahl: nur bei „Alle Projekte“ sichtbar, bei einem gewählten Projekt nicht.
+- [ ] **Pin** klicken: die Seitenleiste klappt auf einen Rand zusammen, die Karte nimmt die ganze Breite.
+- [ ] Mit der Maus an den linken Rand: sie öffnet als Overlay über der Karte; Maus weg: sie schließt nach ca. 0,3 s.
+- [ ] **Projekt-Auswahlliste im Auto-Hide-Modus öffnen und ein Projekt wählen (echtes Fenster!)**: die Seitenleiste darf sich beim Aufklappen der Liste **nicht** schließen und klappt nach der Wahl wieder zu.
+- [ ] Mit **Tab** in die zugeklappte Seitenleiste: sie öffnet sich.
+- [ ] **View → Auto-hide sidebar** setzt den Haken passend zur Pin-Taste (beide Richtungen).
+- [ ] **Strg+B** blendet die Seitenleiste ganz aus und wieder ein (Karte nutzt die Breite).
+- [ ] Zustand (angeheftet/Auto-Hide) bleibt nach einem Neustart.
+
+**P3.4 Engine- und Neovim-Panel**
+
+- [ ] Aufklappen: Beschriftungen **Programm / Grammatiken / Liest** (Neovim: **Programm / Konfiguration**), Pfad mit gedimmtem Ordner und hervorgehobenem Dateinamen, Tags „mitgeliefert“/„im PATH“/„Standardort“.
+- [ ] **Liest**: ein Chip pro Sprache; Sprachen ohne geladene Grammatik gestrichelt (Tooltip „Keine Grammatik geladen“).
+- [ ] Der Text hat links Abstand (kein Anliegen an den Rand mehr), lange Pfade brechen um.
+- [ ] **Settings → Engine** und **Neovim** zeigen dieselben Zeilen.
+- [ ] Ohne Engine/ohne nvim: rote Zeile „Nicht gefunden …“, das Panel klappt von selbst auf.
+
+**P3.5 Projektleiste**
+
+- [ ] Bei gewähltem Projekt: Leiste mit **Karte / Dateien / Statistik**, Suchfeld mittig. Bei „Alle Projekte“: keine Leiste.
+- [ ] **Dateien** zeigt den Dateibaum (wie View → Files on disk), **Karte** kommt ohne Neuladen zurück.
+- [ ] Projektwechsel bei offener Statistik oder offenem Dateibaum: die Ansicht zeigt das neue Projekt.
+
+**P3.6 Suche**
+
+- [ ] Ins Feld klicken: Panel mit **Bereich**-Zeile (Pfad = Projektwurzel, **Wählen …**, Auswahl Ordner/Ansicht).
+- [ ] **Text**: z. B. ein Funktionsname: Treffer mit `pfad:zeile` und hervorgehobenem Treffer; Klick öffnet den **Editor an der Zeile**.
+- [ ] **Dateinamen**: `lua init` findet `…/init.lua`; der kürzeste Namenstreffer steht oben.
+- [ ] **Wählen …**: der Dialog startet **im Projekt**, nicht bei `C:`. Einen Unterordner wählen: Suche läuft nur darin, Pfade bleiben projektrelativ.
+- [ ] Einen Ordner **außerhalb** des Projekts eintippen: Meldung „außerhalb des Projekts“, nichts wird durchsucht. `..` im Pfad: Meldung.
+- [ ] **Groß-/Kleinschreibung** an: „Needle“ findet „needle“ nicht mehr.
+- [ ] **Ansicht**: ein Modulname findet das Modul, ein Parametertext findet die Funktion; Klick springt in der Karte auf **Index → Tree** mit dem Modul markiert (Panel schließt). **Datei öffnen** öffnet die Quelle.
+- [ ] Ansicht-Suche in einem Projekt **ohne Karte**: Hinweis „noch keine Karte“.
+- [ ] Tippen löst nach kurzer Pause die Suche aus; **Enter** sofort; **↓** springt in die Liste, **Esc** zurück ins Feld/schließt.
+- [ ] Großes Projekt (z. B. ein Monorepo): Suche bricht bei 300 Treffern/wenigen Sekunden ab und **sagt es**; `node_modules`/`target`/`docs/map` tauchen nicht auf.
+- [ ] Außerhalb des Panels klicken schließt es; **Strg+K** (Fokus nicht im Kartenfenster) fokussiert das Feld.
+- [ ] Zuletzt gewählte Einstellungen (Ordner/Ansicht, Text/Dateinamen, Match case) bleiben nach Neustart.
+
+**P3.7 Statistik**
+
+- [ ] **Statistik** öffnen: Kacheln (Dateien, Zeilen, Code, Kommentare mit %-Anteil, Doku, Daten/Config, Leer), Balken mit Legende, Tabelle je Sprache, längste Quelldateien.
+- [ ] Zahlen gegen ein bekanntes Projekt prüfen (z. B. `cloc`/`tokei`): Größenordnung stimmt; Kommentarzeilen = nur-Kommentar-Zeilen, Code mit Zeilenende-Kommentar zählt als Code.
+- [ ] **Neu zählen** nach dem Anlegen einer Datei: Zahl ändert sich.
+- [ ] Ein Klick auf eine „längste Datei“ öffnet sie im Editor.
+- [ ] Großes Projekt: Fenster bleibt bedienbar, es steht „Zähle …“; bei Abbruch der Hinweis „Zahlen sind Untergrenzen“.
+- [ ] Projekt ohne Karte: Statistik funktioniert trotzdem.
+
+**P3.8 documentation.nvim: Findings** (nach dem Push von `d2be49f` bzw. lokal)
+
+- [ ] Karte für `sessions.nvim` neu erzeugen, Reiter **Findings**: `missing-readme` nur noch für `lua/sessions` (nicht für `config`, `marks`, `bindings/*`).
+- [ ] `unreferenced-module` meldet `sessions.health` **nicht** mehr; ein echtes unbenutztes Modul wird weiter gemeldet.
+- [ ] Ein Plugin mit einem Unterordner ab 10 Quelldateien ohne README: **wird** gemeldet.
+- [ ] `checks = { ["missing-readme"] = false }` schaltet die Regel weiter ganz ab.
+
+---
+
+### P4. Regression (Änderungen an bestehendem Verhalten)
+
+- [ ] **Strg+B** hatte vorher keine sichtbare Wirkung; jetzt blendet es die Seitenleiste aus.
+- [ ] Der Dateibaum (**Strg+Shift+F**) liegt jetzt **unter** der Projektleiste (nicht mehr bei y=0); Breadcrumb und Liste scrollen wie vorher.
+- [ ] Der Kontext-Hinweis über dem Kartenfenster (Telemetry/Types) sitzt unter der Leiste.
+- [ ] Die Zähler im Kartenkopf (`3 modules · 4 namespaces …`) stehen weiter in der Karte selbst; nur die Sidebar-Kopie ist weg.
+- [ ] Sortierung in **Settings → Behaviour** funktioniert weiter (auch wenn die Sidebar-Auswahl ausgeblendet ist).
+- [ ] Menü: **View** hat zwei neue Haken (Statistics, Auto-hide sidebar); alle anderen Einträge und Kürzel unverändert.
+- [ ] Generieren, Projekt hinzufügen, Workspaces, Traffic-Sortierung: wie vorher.
+
+---
+
+### P5. Bekannte Grenzen (kein Test nötig, nur wissen)
+
+- **Kopfzeile der Karte** (Projektname, „10 modules“ …) gehört zum erzeugten Dokument und lässt sich von der App nicht ändern; die Suche sitzt deshalb in einer App-Leiste **darüber**. Gewünscht in der Kartenzeile selbst: Arbeit in `documentation.nvim`.
+- **Keine Regex-Suche.** Teilstring, ohne Beachtung der Groß/Klein; bei Dateinamen müssen **alle** Wörter im Pfad vorkommen.
+- **Suche überspringt** `node_modules`, `target`, `dist` und ein Dutzend weitere Ordner (dieselbe Liste wie der Dateibaum), Nested-Checkouts, das Kartenverzeichnis, Symlinks, Binärdateien und Dateien über 1,5 MB. Pro Datei höchstens 12 Treffer, insgesamt 300.
+- **Statistik zählt nicht** Dateien über 2 MB, Binärdateien und unbekannte Endungen (nur als „weitere Dateien“); ein Python-Docstring ist Code, ein Kommentarzeichen in einem String kann täuschen (wie bei `cloc`).
+- **Statistik und Suche sind live von der Platte**, nicht aus der Karte: sie sehen auch Dateien, die in der Karte fehlen.
+- **„Karte veraltet“ vergleicht Änderungszeiten:** eine ohne Änderung gespeicherte Datei zählt mit, die Liste nennt höchstens 100 Dateien (mit der Gesamtzahl).
+- **Ansicht-Suche** findet nur, was in `module_map.json` steht; Funktionsrümpfe (`snippet`) sind absichtlich ausgenommen.
+- **`documentation.nvim`-Schwellen** für `missing-readme` sind fest (siehe P1), keine Option.
+- **Preview-Stub:** `tools/preview/preview.html` entsteht beim Start von `preview.py` aus `src/index.html`; nach Markup-Änderungen den Server neu starten, sonst sieht man die alte Seite (Skripte und CSS lädt der Browser sonst aus dem Cache).
