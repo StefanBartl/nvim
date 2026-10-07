@@ -54,6 +54,19 @@
     - [K11. `Links.md` in jedem Case](#k11-linksmd-in-jedem-case)
     - [K12. Erstantwort-Checkliste](#k12-erstantwort-checkliste)
     - [K13. Noch nicht gebaut](#k13-noch-nicht-gebaut)
+  - [L. terminal.nvim: Terminals, WezTerm/tmux, Status, Navigation (Stand 2026-10-07)](#l-terminalnvim-terminals-weztermtmux-status-navigation-stand-2026-10-07)
+    - [L1. Blocker / offene Entscheidungen](#l1-blocker-offene-entscheidungen)
+    - [L2. Native Terminals (`<A-h>` und `:Terminal`)](#l2-native-terminals-a-h-und-terminal)
+    - [L3. Text und Befehle senden (`send`, `run`)](#l3-text-und-befehle-senden-send-run)
+    - [L4. `run --direct` für andere Plugins (lazygit-Fallback)](#l4-run---direct-für-andere-plugins-lazygit-fallback)
+    - [L5. Status nach WezTerm (Tab-Titel, Right-Status)](#l5-status-nach-wezterm-tab-titel-right-status)
+    - [L6. Navigation über Pane-Grenzen](#l6-navigation-über-pane-grenzen)
+    - [L7. `backend = "wezterm"` (Terminals als WezTerm-Panes)](#l7-backend--wezterm-terminals-als-wezterm-panes)
+    - [L8. Pin und Adopt](#l8-pin-und-adopt)
+    - [L9. tmux (nur wenn Neovim in WSL/tmux läuft; sonst übersprungen)](#l9-tmux-nur-wenn-neovim-in-wsltmux-läuft-sonst-übersprungen)
+    - [L10. Live-Skripte (echte Terminals statt Fakes)](#l10-live-skripte-echte-terminals-statt-fakes)
+    - [L11. Regression (Änderungen an Bestehendem)](#l11-regression-änderungen-an-bestehendem)
+    - [L12. Bekannte Grenzen (kein Test nötig, nur wissen)](#l12-bekannte-grenzen-kein-test-nötig-nur-wissen)
   - [L. casedesk.nvim: Checks aus `NEW.md` — Clipboard, Spotlights, Übersetzer-Policy, KI-Kette (Stand 2026-10-06)](#l-casedesknvim-checks-aus-newmd--clipboard-spotlights-übersetzer-policy-ki-kette-stand-2026-10-06)
     - [L1. Checks für dich (casedesk.nvim)](#l1-checks-für-dich-casedesknvim)
       - [`:Case clipboard`](#case-clipboard)
@@ -2006,3 +2019,152 @@ Status `blocked`, aber der Blocker ist erledigt, fehlt oder es gibt keinen Task 
 | `ALL/replace-plenary-test-harness` | blockiert durch `ALL/spec-nvim-m0-falsification`, das erledigt ist bzw. fehlt |
 | `color_my_ascii.nvim/fence-highlighter-registry` | blockiert durch `color_my_ascii.nvim/fence-user-event`, das erledigt ist bzw. fehlt |
 | `ai.nvim/release-v1-tag` | `status: blocked` ohne `blocked_by`: Freitext/extern, siehe Task-Datei |
+
+## L. terminal.nvim: Terminals, WezTerm/tmux, Status, Navigation (Stand 2026-10-07)
+
+Neues Plugin `StefanBartl/terminal.nvim` (öffentlich, `E:\repos\terminal.nvim`), Plan `terminal-build` im Wkdbook (`wkdbook-myplugins/terminal.nvim/ROADMAP/`, Handover `docs/ROADMAP/handovers/terminal.nvim.md`). Es hat `bindings/mappings/terminal.lua` und `bindings/autocmds/terminals/` der Config **ersetzt** (Snacks-Terminal-Toggle entfällt). Vor dem Testen **`terminal.nvim`, `Configs` und die nvim-Config auf `main` pullen**, Neovim **0.11+** (die `termopen()`-Rückfallebene ist raus), Config neu starten. Die Gegenstücke liegen in `Configs/terminals/wezterm` (Status, Tasten) und `Configs/terminals/tmux/tmux.conf`; WezTerm-Config neu laden (`<C-S-r>` bzw. WezTerm neu starten), tmux mit `tmux source ~/.config/tmux/tmux.conf`.
+
+Commits, `terminal.nvim` (`main`): `696570c`, `8096526`, `4c592c4` (Grundstock, im ersten Review geprüft), `7c16ef6` (18 Review-Fixes), `f219097` (`<C-l>`, `run --direct`-Optionen), `6c3698d` (Status-Export), `773cfb7` (WezTerm-Pane-Backend), `a46d133` (Navigation), `164685c` (Health, Property-Specs), `f30b4a3` (tmux), `15f5790` (Konformitäts-Suite), `d418a34` (Pin/Adopt), `9551aca` (Branch-Cache), `17104ac` (Kitty als argv), `ea5c908` (Neovim 0.11). `Configs` (`main`): `e84ba47`, `6e069c7` (WezTerm), `223ddc2`, `d4a25ac` (tmux). nvim-Config: `f9e63552` (Ersatz von `terminal.lua`) und die Spec-/Doku-Commits dazu.
+
+---
+
+### L1. Blocker / offene Entscheidungen
+
+- [ ] **Review-Haken:** nur `696570c`, `8096526`, `4c592c4` und der Ersatz in der Config (`f9e63552`) wurden vom Workflow-Review geprüft (18 Befunde, alle in `7c16ef6` behoben). **Alles danach ist nicht ultracode-reviewt:** `7c16ef6`, `f219097`, `6c3698d`, `773cfb7`, `a46d133`, `164685c`, `f30b4a3`, `15f5790`, `d418a34`, `9551aca`, `17104ac`, `ea5c908` sowie `Configs` `e84ba47`, `6e069c7`, `223ddc2`, `d4a25ac`. Ein zweiter Review über `7c16ef6..HEAD` steht aus (Task `terminal.nvim/rules-nvim-sweep` gehört dazu).
+- [ ] **Entscheidung Normal-Modus-Tasten:** `nav_left/down/up/right` (Fensterwechsel mit Zähler und Hand-off an WezTerm/tmux) sind **standardmäßig aus**, weil die Config `<C-h/j/k/l>` im Normal-Modus selbst belegt. Willst du sie auf `<C-h/j/k/l>` legen (dann dort in der Config entfernen), damit die Navigation auch aus normalen Fenstern in WezTerm-/tmux-Nachbar-Panes führt?
+- [ ] **Entscheidung Shell-Panes (WezTerm):** `NAVIGATION.shell_panes = "send"` (Default: `<C-j>`/`<C-k>`/`<C-h>` behalten in der Shell ihre Bedeutung) oder `"navigate"` (wie `vim-tmux-navigator`: bewegt auch aus Shell-Panes zwischen WezTerm-Panes, kostet diese Shell-Tasten). `Configs/terminals/wezterm/config/keybindings.lua`.
+- [ ] **Task `wezterm-navigation-keys`:** offen bis zum Handtest (L6); Tastendrücke lassen sich nicht automatisieren.
+- [ ] **Task `perf-pass`:** offen, weil die A/B-Messung des Starts **mit UI** fehlt (`scripts/startup-probe/bench.lua` der Config, einmal mit und einmal ohne das Plugin; headless: `setup()` 7–10 ms, Status-Update 15 µs, `Messungen/perf-2026-10-07.md`).
+- [ ] **Task `rules-nvim-sweep`:** die automatisierten Regeln (NEW, DEP, ERR, LUA, REL, SEC, UI, 39 mit Check) bestehen alle (`DEP-02` behoben, Neovim 0.11); die **393 manuellen** Regeln (432 gesamt) sind nicht abgearbeitet. Entscheidung: nur kritische Familien (SEC, ERR, PRIN) pro Sitzung durchgehen, oder alles?
+- [ ] **Task `repo-scaffold`:** offen: `documentation.nvim` als Dev-Dependency und `scripts/gen_map.lua` (NEW-19/20), LuaLS-Nullmessung für das neue Repo, Abhaken der NEW-Gates.
+- [ ] **Task `lib-osc-detect-extraction`:** offen (nicht blockiert, ein Repo-übergreifender Umbau): OSC-1337-Erkennung/Writer aus `images.nvim`/`media.nvim` nach `lib.nvim.terminal` heben; `terminal.nvim` hat heute einen eigenen kleinen `core/osc.lua`.
+- [ ] **Tasks `integrate-sessions`, `integrate-pickers-ui`, `integrate-run-hooks`:** offen, je Plugin eine Bestandsaufnahme nötig (`sessions`: Terminal-Definitionen pro Branch speichern; `pickers`/`ui`: Picker mit Vorschau, Menü, Statusline-Segment; `testing`/`tasks`/`dap`/`cmdlog`/`sandbox`: `terminal.run`-Ziel). Keine Blocker, aber Reihenfolge ist deine Sache.
+- [ ] **Task `release-docs`:** wartet auf Review, Regel-Sweep und die Live-Abnahme (`live-check`); Release/Tag erst nach deinem Ja.
+- [ ] **Task `wezterm-config-counterpart`:** offen ist nur die Last-Messung von `update-right-status` in WezTerm (JSON-Parse eines unter 1 KiB großen Werts je Update).
+- [ ] **Task im Bereich `gitsuite.nvim`** (`eigene-git-engine-fallback-tui-float-ueber-terminal-nvim-sta`): `terminal.run(argv, { direct = true, ... })` kann den Float/`jobstart` des lazygit-Fallbacks ersetzen; wartet auf den Engine-Umbau (GS-30ff).
+- [ ] **Neovim in WSL fehlt:** `backend = "tmux"` im Alltag setzt Neovim **innerhalb** von tmux voraus (unter Windows also Neovim in WSL). In deinem WSL (`archlinux`) ist **tmux 3.7c** installiert (mit `pacman -Syu`), aber kein Neovim. Der echte tmux-Weg ist bisher nur über `TESTS/live/tmux.lua` (Windows-Neovim steuert tmux in WSL) geprüft.
+
+---
+
+### L2. Native Terminals (`<A-h>` und `:Terminal`)
+
+Du hast `<A-h>`, `<A-l>`, `<Esc>` und `<C-h/j/k/l>` schon geprüft; hier das, was neu dazugekommen ist.
+
+- [ ] `<C-l>` im Terminal leert die Shell (`clear`/`cls`), `<A-l>` im Terminal tut nichts mehr; `<A-l>` im Normal-Modus öffnet weiter filetree.
+- [ ] `3<A-h>` öffnet das Terminal "3" (eigener Job, eigener Titel), `<A-h>` ohne Zahl "main"; zweimal `<A-h>`: ausblenden, der Job läuft weiter (Prompt, Verlauf noch da), wieder `<A-h>` blendet ihn ein.
+- [ ] `:Terminal open build --layout=vsplit` / `split` / `tab` / `float`: jedes Layout öffnet im Projekt-Root (Git-Wurzel des Buffers), Größe aus `float`/`split`; `:Terminal list` zeigt die Terminals des Projekts, Auswahl öffnet es.
+- [ ] Ein anderes Projekt (anderer Git-Root) hat **eigene** Terminals: `:Terminal list` im ersten Projekt zeigt die des zweiten nicht.
+- [ ] `exit` in der Shell: Fenster und Buffer verschwinden (`on_exit = "close"`); mit `on_exit = "keep"` bleibt der Text stehen und `<A-h>` startet neu.
+- [ ] `:Terminal close` beendet die Shell; danach `<A-h>` startet eine frische.
+- [ ] Kitty (nur wenn du Kitty nutzt): Padding enger beim Start, wieder weit beim Beenden.
+- [ ] `:checkhealth terminal`: alles grün oder mit einer verständlichen Handlungsanweisung (WezTerm-Version, `wezterm cli list`, Hand-off, RPC-Adresse, Shell).
+
+---
+
+### L3. Text und Befehle senden (`send`, `run`)
+
+- [ ] `:Terminal send line` tippt die aktuelle Zeile ins Terminal "run" **ohne** Enter; `--exec` führt aus.
+- [ ] `:'<,'>Terminal send selection` mit **einer** Zeile tippt sie; mit **mehreren** Zeilen ohne `--exec` kommt die Meldung "N lines would be executed one by one" und nichts wird gesendet; mit `--exec` laufen alle Zeilen. (Vorher scheiterte der Befehl mit E481.)
+- [ ] `:Terminal send file --exec` führt den ganzen Buffer aus (nur mit einem harmlosen Testbuffer).
+- [ ] `:Terminal run echo hallo` tippt und führt aus; `:Terminal run -- git log --oneline` behält `--oneline`; `:Terminal run --direct --name=job cmd /c exit 3` startet den Job direkt (Fenster bleibt, Exit-Code 3 sichtbar).
+- [ ] Quoting in **deiner** Shell (pwsh): `:lua require("terminal").run({ "echo", "a b", "it's", "x;y" })` zeigt die Wörter unverändert (keine Ausführung von `;y`); ein Wort mit typografischem Apostroph (`’`) bleibt ein Wort.
+- [ ] `:lua require("terminal").run({ "echo", "a\nb" })` wird abgelehnt (Zeilenumbruch).
+
+---
+
+### L4. `run --direct` für andere Plugins (lazygit-Fallback)
+
+- [ ] `:lua require("terminal").run({ "lazygit" }, { direct = true, name = "lazygit", title = "lazygit", float = { width = 0.9, height = 0.9 }, close = "always", cwd = vim.fn.getcwd() })`: Float mit Titel "lazygit", beim Beenden von lazygit verschwindet das Fenster.
+- [ ] `close = "success"`: bei Exit-Code ≠ 0 bleibt das Fenster lesbar stehen.
+- [ ] `on_open = function(h) vim.keymap.set("n", "q", "<Cmd>close<CR>", { buffer = h.bufnr }) end`: `q` im Normal-Modus schließt das Fenster.
+
+---
+
+### L5. Status nach WezTerm (Tab-Titel, Right-Status)
+
+WezTerm-Config neu laden. In einem WezTerm-Tab nvim starten.
+
+- [ ] Der Tab-Titel zeigt den **Dateinamen** (`+` bei ungespeicherten Änderungen, `E2 W1` bei Diagnostics); Dateiwechsel ändert den Titel binnen ~100 ms.
+- [ ] Der Right-Status zeigt Modus-Chip (`NORMAL`/`INSERT`/`VISUAL`/`TERMINAL`), Branch (git), Diagnostics; `qa` (Makro-Aufnahme) zeigt `REC @a`.
+- [ ] nvim beenden: Titel/Right-Status fallen auf das alte Verhalten zurück; nvim **hart beenden** (Prozess killen): nach kurzer Zeit zeigt der Tab keinen alten nvim-Status mehr.
+- [ ] Zwei Tabs mit nvim: jeder Tab zeigt **seinen** Dateinamen; der Right-Status zeigt den des **fokussierten** Panes.
+- [ ] Datei mit komischem Namen (z. B. `evil<ESC>[31mx.txt` per `:file`): im Titel erscheint `?`, keine Farbänderung/Titelmanipulation im Terminal.
+- [ ] Während du tippst/scrollst: keine Ruckler im Tab-Titel (Updates werden entprellt und nur bei Änderung gesendet).
+
+---
+
+### L6. Navigation über Pane-Grenzen
+
+Zwei WezTerm-Panes nebeneinander: links nvim, rechts eine Shell. Zweite Variante: zwei nvim-Panes.
+
+- [ ] Im Terminal-Modus (z. B. `<A-h>`-Terminal, `split`-Layout): `<C-h>`/`<C-j>`/`<C-k>` wechseln erst zwischen Neovim-Fenstern; am Neovim-Rand springt der Fokus in das **Nachbar-Pane von WezTerm**.
+- [ ] Ein **Float**-Terminal (`<A-h>`): `<C-h>` geht nicht ins Nachbar-Pane (Floats haben keine Nachbarn).
+- [ ] `<C-l>` im Terminal bleibt das Clear der Shell, es wechselt **nicht** das Pane.
+- [ ] Von der Shell-Pane (rechts) nach links: `<C-h>` tut in der Shell, was die Shell damit tut (Standard `send`); wechselst du auf `shell_panes = "navigate"`, springt es nach links in das nvim-Pane.
+- [ ] Zwei nvim-Panes nebeneinander: aus dem linken über den Rand ins rechte und zurück, ohne Hänger und ohne dass die Taste im falschen Programm landet.
+- [ ] (Optional, Entscheidung L1) `keymaps = { nav_left = "<C-h>" }`: aus einem normalen Fenster am Rand ins Nachbar-Pane; `3<C-h>` springt drei Fenster.
+- [ ] `terminal.navigate("l")` per `:lua`: gibt `moved`, `edge` oder `float` zurück.
+
+---
+
+### L7. `backend = "wezterm"` (Terminals als WezTerm-Panes)
+
+In der Spec `backend = "wezterm"` setzen (nur zum Testen), nvim in WezTerm neu starten.
+
+- [ ] `<A-h>` öffnet ein **WezTerm-Pane** rechts (kein Float); `3<A-h>` ein zweites; `:Terminal open x --layout=tab` einen neuen WezTerm-Tab.
+- [ ] `:Terminal run echo hallo` schreibt im Pane; `<A-h>` beim fokussierten Pane gibt den Fokus an Neovim zurück; Pane mit der Maus schließen, dann `<A-h>`: es entsteht ein **neues** Pane.
+- [ ] Ohne WezTerm (anderes Terminal) mit `backend = "wezterm"`: eine Meldung mit dem Grund, danach native Terminals.
+- [ ] Danach wieder `backend = "auto"` setzen.
+
+---
+
+### L8. Pin und Adopt
+
+- [ ] Native Terminal öffnen (`<A-h>`), `:Terminal pin` in WezTerm: das native Fenster verschwindet, das gleiche Terminal läuft als **WezTerm-Pane** im gleichen Verzeichnis; Verlauf und Ausgabe des alten sind weg (ehrlich so dokumentiert).
+- [ ] nvim beenden: das Pane lebt weiter. Neues nvim: `:Terminal adopt` zeigt den Bildschirm des Panes **schreibgeschützt** in einem Buffer (`terminal://wezterm/<pane>/<name>`), er aktualisiert sich etwa einmal pro Sekunde, solange er sichtbar ist, und meldet, wenn das Pane weg ist. (Hinweis: `adopt` findet ein Terminal über die Registry der laufenden Sitzung, also nur eines, das **diese** nvim-Sitzung gepinnt hat.)
+- [ ] `:Terminal pin` ohne WezTerm/tmux: Meldung "no multiplexer backend is available"; `pin` für ein schon gepinntes Terminal: "already lives in ...".
+
+---
+
+### L9. tmux (nur wenn Neovim in WSL/tmux läuft; sonst übersprungen)
+
+- [ ] Neovim in WSL installieren (`pacman -S neovim`), `tmux`, dann in tmux `nvim`: der Status erscheint rechts in der tmux-Statuszeile (`@terminal_mode`, Branch, Diagnostics), die Konfig dafür steht in `tmux.conf` (`allow-passthrough on` auch für WezTerm außen).
+- [ ] `backend = "tmux"`: `<A-h>` öffnet ein tmux-Pane, `:Terminal run` tippt hinein, `:Terminal pin --backend=tmux` startet neu als tmux-Pane.
+- [ ] `<C-h>` am Neovim-Rand springt ins Nachbar-**tmux**-Pane (`tmux select-pane`).
+- [ ] `tmux source ~/.config/tmux/tmux.conf` lädt **ohne Fehler** (vorher stand `export TERM=...` darin und tmux verwarf die ganze Datei; jetzt bleiben nur Meldungen zu nicht installierten TPM-Plugins).
+- [ ] Die Live-Skripte laufen lokal: `TMUX_LIVE_WSL=archlinux nvim --headless -u NONE -l TESTS/live/tmux.lua` (Ergebnis in `terminal-tmux.txt`, letzte Zeile `RESULT ok`); das gleiche läuft in der CI als Job `tmux-live`.
+
+---
+
+### L10. Live-Skripte (echte Terminals statt Fakes)
+
+Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RESULT ok`/`RESULT failed`. Alle liefen am 2026-10-07 grün.
+
+- [ ] `TESTS/live/smoke.lua` (echtes Neovim-UI: native Terminals): `SMOKE_OUT=… nvim -u NONE -i NONE -c "luafile TESTS/live/smoke.lua"` (11 Prüfungen).
+- [ ] `TESTS/live/wezterm.lua` (in einem WezTerm-Pane): Pane öffnen, `send-text`, Text zurücklesen, schließen (9).
+- [ ] `TESTS/live/navigate.lua` (WezTerm): Hand-off nach rechts (6).
+- [ ] `TESTS/live/pin.lua` (WezTerm): Pin und Adopt (9).
+- [ ] `TESTS/live/tmux.lua` (headless, tmux in WSL): Backend und Status-Optionen (17).
+
+---
+
+### L11. Regression (Änderungen an Bestehendem)
+
+- [ ] **`<A-h>` kommt jetzt von `terminal.nvim`** (nicht mehr Snacks): das Terminal verhält sich wie vorher (Float, `rounded`, ein `<Esc>` genügt), gewinnt aber Namen/Zähler.
+- [ ] **`<C-l>` im Terminal** führt nicht mehr zum Fensterwechsel nach rechts, sondern ist das Clear der Shell; `<A-l>` im Terminal-Modus ist frei.
+- [ ] Alte Terminal-Fensteroptionen (keine Zeilennummern, `signcolumn=no` …) gelten weiter, jetzt über `window_options`.
+- [ ] Die WezTerm-`tabtitle.lua` löschte den Right-Status jede Sekunde (Ticker); er setzt jetzt den aktuellen Text neu: ein bestehender Right-Status (falls du einen hattest) bleibt stehen.
+- [ ] **Die tmux-Konfiguration** wird jetzt überhaupt geladen (vorher verwarf tmux sie wegen `export TERM=…`): alle ihre Einstellungen (Mouse, vi-Keys, Plugins, Tasten) greifen erstmals, falls du sie je erwartet hast. Prüfen, ob dir etwas dadurch auffällt.
+
+---
+
+### L12. Bekannte Grenzen (kein Test nötig, nur wissen)
+
+- Multiplexer-Backends (`wezterm`, `tmux`) haben **keine Floats** (`float` wird zum rechten Split), setzen **kein `env`** und melden das **Ende** des Befehls nicht (`on_exit` wird nie aufgerufen, `close = …` wirkt nicht).
+- `pin` ist **kein Transfer**: der Prozess startet im Multiplexer neu, Ausgabe und Verlauf des alten Terminals sind weg.
+- `send` tippt nur; mehrzeiliger Text braucht `--exec`. Quoting kann nicht verhindern, dass ein Programm ein Wort mit `-` als Option liest (dafür `--`). cmd.exe kann Wörter mit `%` nicht sicher quoten: sie werden abgelehnt.
+- Neovim 0.12 stürzt **headless unter Windows** mit `0xC0000005` ab, wenn ein Terminal kurz nach einem Resize oder dem Ende eines anderen Terminal-Jobs geschlossen wird; die Specs setzen Pausen (`jobs.settle`). Im echten UI nie gesehen, aber möglich (`NOTES/nvim-windows-terminal-findings.md`).
+- tmux-Passthrough: der WezTerm-Status aus einem Neovim **in** tmux kommt nur mit `set -g allow-passthrough on` an (in `tmux.conf` gesetzt; `:checkhealth terminal` prüft es).
+- Die tmux-Seite ist gegen **echtes** tmux nur über die Live-Skripte und die CI geprüft, nicht im Alltag (kein Neovim in deinem WSL).
+
+---
