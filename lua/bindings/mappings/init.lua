@@ -36,7 +36,8 @@ function M.setup()
   require("bindings.mappings.smart_del_key").setup()
   require("bindings.mappings.surrounding").setup()
   require("bindings.mappings.telescope").setup()
-  require("bindings.mappings.terminal").setup()
+  -- Terminal keys (<A-h> toggle, <Esc>/<C-c> leave terminal mode, <C-hjkl>, <A-l>) are owned by
+  -- terminal.nvim now (plugins/personal/specs/project.lua); bindings.mappings.terminal is gone.
   require("bindings.mappings.toggle_comment").setup()
   -- `enable = false` here drops just the two keys; switching the plugin off
   -- in `plugins/treesitter.lua`'s `modes` table drops them too, and is the

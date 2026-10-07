@@ -148,6 +148,7 @@ plugins.modes({
   ["gitsuite.nvim"] = "dir",
   ["casedesk.nvim"] = "dir",
   ["tasks.nvim"] = "dir",
+  ["terminal.nvim"] = "dir",
   ["learn-cli.nvim"] = "disabled", -- needed neither locally nor remotely
 
   -- view

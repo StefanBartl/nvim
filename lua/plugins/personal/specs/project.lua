@@ -1112,6 +1112,136 @@ return {
     },
   },
 
+  -- terminal.nvim: benannte Terminals pro Projekt (Float/Split/VSplit/Tab), Text und Befehle in
+  -- Terminals tippen (`:Terminal send|run`), Quoting fuer argv. Ersetzt bindings/mappings/terminal.lua
+  -- und den Snacks-Terminal-Toggle. Die Tasten (<A-h> usw.) sind global, darum wird beim Start
+  -- (VeryLazy) geladen; setup() registriert nur Keymaps, Autocmds und den einen Befehl `:Terminal`.
+  -- Debugging: `:checkhealth terminal`, `:lua =require("terminal").status()`,
+  -- `:lua =require("terminal").list(true)` (alle Projekte).
+  {
+    "StefanBartl/terminal.nvim",
+    event = "VeryLazy",
+    cmd = { "Terminal" },
+    dependencies = { "StefanBartl/lib.nvim" },
+    opts = {
+      -- Welches Backend die Terminals stellt: "auto" | "native" | "wezterm" | "tmux".
+      -- "auto" nimmt das erste erkannte: $TMUX -> tmux, $WEZTERM_PANE -> wezterm, sonst native.
+      -- Aktuell gibt es nur "native"; ein anderer Name faellt mit einer Warnung darauf zurueck.
+      -- Default: "auto".
+      -- backend = "auto",
+
+      -- Wie ein Terminal angezeigt wird: "float" | "split" (unten) | "vsplit" (rechts) | "tab".
+      -- Pro Aufruf ueberschreibbar: `:Terminal open --layout=vsplit`. Default: "float".
+      -- layout = "float",
+
+      -- Das schwebende Fenster (nur layout = "float").
+      -- float = {
+      --   -- Breite: Bruchteil des Editors (0 < x <= 1) oder absolute Spalten (> 1). Default: 0.8.
+      --   width = 0.8,
+      --   -- Hoehe: Bruchteil (0 < x <= 1) oder absolute Zeilen (> 1). Default: 0.8.
+      --   height = 0.8,
+      --   -- Rahmen: alles, was nvim_open_win akzeptiert ("rounded", "single", "none", {...}).
+      --   border = "rounded",
+      --   -- Namen des Terminals im Titel des Rahmens zeigen (nur mit Rahmen).
+      --   title = true,
+      --   -- Titelposition: "left" | "center" | "right".
+      --   title_pos = "center",
+      --   -- Transparenz: 0 (deckend) .. 100 (durchsichtig).
+      --   winblend = 0,
+      --   -- Stapelreihenfolge gegenueber anderen Floats.
+      --   zindex = 50,
+      -- },
+
+      -- Die Groesse fuer layout = "split" / "vsplit".
+      -- split = {
+      --   -- Bruchteil des Editors (0 < x <= 1) oder absolute Zeilen/Spalten (> 1). Default: 0.3.
+      --   size = 0.3,
+      -- },
+
+      -- Wo ein neues Terminal startet UND welchem Projekt es gehoert (Wurzel + Name = Identitaet):
+      --   "project" = Git-Wurzel des aktuellen Buffers, sonst das cwd (Default)
+      --   "buffer"  = Ordner des aktuellen Buffers
+      --   "cwd"     = das aktuelle Arbeitsverzeichnis
+      -- cwd = "project",
+
+      -- Die Shell: "" = die 'shell'-Option; sonst ein String ("pwsh") oder eine Argv-Liste
+      -- ({ "pwsh", "-NoLogo" }). Auch fuer das Quoting von `run` massgeblich. Default: "".
+      -- shell = "",
+
+      -- Zusaetzliche Umgebungsvariablen fuer jedes neue Terminal, z.B. { FOO = "1" }. Default: {}.
+      -- env = {},
+
+      -- In den Terminal-Modus wechseln, wenn ein Terminal ueber die API Fokus bekommt
+      -- (toggle/open). Default: true.
+      -- start_insert = true,
+
+      -- Was passiert, wenn der Job endet:
+      --   "close"            = Fenster und Buffer entfernen (Default)
+      --   "close_on_success" = nur bei Exit-Code 0; Fehlschlaege bleiben lesbar stehen
+      --   "keep"             = immer stehen lassen (Ausgabe bleibt, `open` startet neu)
+      -- on_exit = "close",
+
+      -- Name des Terminals, das toggle()/open() ohne Name und ohne Count nehmen. `3<A-h>` oeffnet
+      -- das Terminal "3". Default: "main".
+      -- default_name = "main",
+
+      -- Fensteroptionen, die bei TermOpen lokal auf jedes Terminal-Fenster gesetzt werden.
+      -- window_options = {
+      --   -- Aus: Terminal-Fenster unveraendert lassen. Default: true.
+      --   enable = true,
+      --   number = false,
+      --   relativenumber = false,
+      --   signcolumn = "no",
+      --   spell = false,
+      --   cursorline = false,
+      -- },
+
+      -- Nur in Kitty: beim Start engen Rand (padding/margin), beim Beenden wieder weiten Rand.
+      -- Kommt aus dem frueheren bindings.autocmds.terminals und ersetzt es.
+      -- kitty = {
+      --   enable = true,
+      --   enter_padding = 0,
+      --   enter_margin = 0,
+      --   leave_padding = 20,
+      --   leave_margin = 10,
+      -- },
+
+      -- In JEDEM Terminal-Buffer automatisch in den Insert-Modus gehen (nicht nur ueber die API).
+      -- auto_insert = {
+      --   -- Default: false.
+      --   enable = false,
+      --   -- Ausloeser; "TermEnter" waere aggressiver (Insert bei jedem Fokus). Default: { "TermOpen" }.
+      --   events = { "TermOpen" },
+      -- },
+
+      -- Das Terminal, das `:Terminal run` und `:Terminal send` ohne --name/Namen benutzen.
+      -- run = {
+      --   name = "run",
+      -- },
+
+      -- Tasten als benannte Aktionen (lib.nvim.bindings.keymap.register). Ein String verschiebt
+      -- eine Taste, eine Liste belegt mehrere, `false` streicht sie, `preset = false` bindet
+      -- gar nichts. Ein falscher Aktionsname wird gemeldet.
+      -- keymaps = {
+      --   preset = true,
+      --   -- Terminal umschalten (n + t). Mit Count: `3<A-h>` = Terminal "3". Default: "<A-h>".
+      --   toggle = "<A-h>",
+      --   -- Terminal-Modus verlassen (Terminal-Normal). Default: { "<Esc>", "<C-c>" }.
+      --   normal_mode = { "<Esc>", "<C-c>" },
+      --   -- Bildschirm der Shell leeren (cls / clear), nur Terminal-Modus. Default: "<A-l>".
+      --   clear = "<A-l>",
+      --   -- Fensterwechsel aus dem Terminal-Modus heraus. Defaults: <C-h> <C-j> <C-k> <C-l>.
+      --   window_left = "<C-h>",
+      --   window_down = "<C-j>",
+      --   window_up = "<C-k>",
+      --   window_right = "<C-l>",
+      -- },
+
+      -- Den Befehl `:Terminal` registrieren (toggle open hide close list send run). Default: true.
+      -- commands = true,
+    },
+  },
+
   -- {
   -- "StefanBartl/learn-cli.nvim",
   -- lazy = false,

@@ -48,17 +48,9 @@ end
 --- Terminals
 ------------------------------------------------------
 
-require("bindings.autocmds.terminals").enable({
-  numbers = {
-    enable = true, -- On terminal open, turns off local 'number' and 'relativenumber' to declutter terminal panes.
-  },
-  kitty = {
-    enable = true, -- In Kitty, applies compact padding/margin on VimEnter and restores defaults on VimLeavePre.
-  },
-  auto_insert = {
-    enable = false, -- Automatically enters Insert mode in terminal buffers; add "TermEnter" to events if desired.
-  },
-})
+-- Terminal window options, Kitty padding and auto-Insert are terminal.nvim's now (its
+-- `window_options`, `kitty` and `auto_insert` options, see plugins/personal/specs/project.lua);
+-- bindings.autocmds.terminals is gone.
 
 ------------------------------------------------------
 --- Text
