@@ -2,7 +2,7 @@
 
 ## Allgemeines Verhalten
 
-- Nie mehr als 1 Agent gleichzeitig starten; werden mehrere benötigt, nacheinander in mehreren Runden ausführen.
+- Nie mehr als 1 Agent gleichzeitig starten; werden mehrere benötigt, nacheinander in mehreren Runden ausführen, die nie mehr als diese Anzahl an Agents verwenden.
 - Immer auf Deutsch antworten; im Quellcode (Code, Kommentare usw.) immer Englisch verwenden.
 - Immer ausgeben, was gerade gemacht wird / ob es etwas Interessantes gab – damit ich Bescheid weiß.
 - Wenn Chip-Tasks angelegt werden, diese bitte ebenfalls auf Deutsch verfassen.
