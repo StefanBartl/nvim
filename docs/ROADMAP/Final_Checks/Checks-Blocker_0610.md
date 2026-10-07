@@ -25,7 +25,7 @@
     - [G2. mdview.nvim: `core/mirror` (alle Vorschau-Lesewege)](#g2-mdviewnvim-coremirror-alle-vorschau-lesewege)
     - [G3. ai.nvim: Bulk-Profil `req.bulk`](#g3-ainvim-bulk-profil-reqbulk)
     - [G4. language.nvim: Chunking großer Eingaben](#g4-languagenvim-chunking-groer-eingaben)
-    - [G5. Später, wenn `display_lang` gebaut ist](#g5-spter-wenn-display_lang-gebaut-ist)
+    - [G5. `display_lang` selbst (gebaut, live noch nicht geprüft)](#g5-display_lang-selbst-gebaut-live-noch-nicht-geprft)
     - [G6. Bekannte Grenzen (kein Test nötig, nur wissen)](#g6-bekannte-grenzen-kein-test-ntig-nur-wissen)
   - [H. pickers.nvim: `filegrep` (Dateien nach Pfad und Inhalt, Stand 2026-10-06)](#h-pickersnvim-filegrep-dateien-nach-pfad-und-inhalt-stand-2026-10-06)
     - [H1. Blocker / offene Entscheidungen](#h1-blocker-offene-entscheidungen)
@@ -270,9 +270,10 @@ Vorhaben: eine deutsche Datei bleibt im Buffer deutsch, mdview zeigt im Browser 
 `ROADMAP/handovers/display-lang_PLAN.md` (Original im Vault:
 `wkdbook-myplugins/ALL/ROADMAP/plans/display-lang.md`); Tasks: `list --tag=display-lang`.
 
-**Das Feature selbst (`display_lang`) ist noch nicht gebaut.** Hier stehen (G1) die Blocker, die
-nur du lösen kannst, (G2 bis G4) die schon gelandeten Bausteine, die live zu prüfen sind, und
-(G5) die Checks für später. Alle drei Bausteine sind per Spec und ultracode-Review geprüft, aber
+**Stand 2026-10-07: `display_lang` ist gebaut** (mdview `3623ba9`, Fixes `acba668`, `cf1d70c`,
+`f939466`; language.nvim `translate_markdown` ab `152aade`, Provider `ai` `15dd862`, Fixes bis
+`1f82e60`). Hier stehen (G1) die Blocker, die nur du lösen kannst, (G2 bis G4) die Bausteine, und
+(G5) die Checks für `display_lang` selbst. Alle drei Bausteine sind per Spec und ultracode-Review geprüft, aber
 noch nie in einer echten Sitzung mit echten Schlüsseln und Providern gelaufen. Ein Audit-Lauf
 über alle Code-Commits (Bugs, Security, Performance) hat weitere Fixes angestoßen; die
 Commit-Stände stehen in den Überschriften und werden hier nachgetragen.
@@ -290,7 +291,9 @@ Commit-Stände stehen in den Überschriften und werden hier nachgetragen.
       Policy der Workstation klären (`config.policy.allowed`): ohne das lässt sich G3 nicht live
       prüfen, und `language.nvim/translate-ai-provider` kann nicht abgenommen werden.
 - [ ] **Entscheidung Google keyless:** der inoffizielle Endpunkt blieb im Spike bei rund 600
-      Anfragen ohne HTTP 429, hat aber am 2026-09-03 durchgehend mit 429 geantwortet
+      Anfragen ohne HTTP 429, hat aber am 2026-09-03 durchgehend mit 429 geantwortet und lieferte
+      am 2026-10-07 nach den Spike- und Testläufen eine **Captcha-Seite** ("Sorry..."); die
+      Vorschau blieb dabei korrekt im Original ("61 paragraph(s) could not be translated").
       (`language.nvim/translate-engine-failover`). Als Standard-Engine für `display_lang`
       akzeptabel, oder nur als Fallback hinter DeepL?
 - [ ] **Datenschutz-Regel festlegen:** welche Dokumente dürfen an eine Cloud-Engine (DeepL,
@@ -385,6 +388,8 @@ geprüft, **nichts** gegen einen echten Provider.
 
 ### G4. language.nvim: Chunking großer Eingaben (`a2e0a73`; Audit-Fixes `dd67f2e`, `3198fac`, Tests `e397d0f`, `8304e4b`)
 
+(Die Markdown-API und der Provider `ai` stehen in G5.)
+
 Große Eingaben werden zeilentreu in Blöcke zerlegt (`translate/chunk.lua`), der DeepL-Schlüssel
 und der Body gehen über stdin. Geprüft nur mit Fake-Runner und einem lokalen HTTP-Server.
 
@@ -428,10 +433,47 @@ und der Body gehen über stdin. Geprüft nur mit Fake-Runner und einem lokalen H
 
 ---
 
-### G5. Später, wenn `display_lang` gebaut ist
+### G5. `display_lang` selbst (gebaut, live noch nicht geprüft)
 
-Noch nicht prüfbar, weil die Tasks offen sind. Die Akzeptanzliste der Live-Abnahme steht in
-`ALL/display-lang-live-check`; Kurzfassung:
+Alles ist per Spec, Oracle (echter comrak-Renderer), Fuzz und mehrere unabhängige Reviews geprüft,
+aber **live nur mit einer Fake-Engine** (`custom` mit Node-Wörterbuch) gesehen: weder DeepL noch
+`ai` noch der Browser-DOM. Die Akzeptanzliste der Live-Abnahme steht in
+`ALL/display-lang-live-check` (Plan `ALL/display-lang`); Kurzfassung und Ergänzungen:
+
+- [ ] **Einschalten:** `require("mdview").setup({ browser = { display_lang = "en" } })` oder
+      `:MDView lang en`. Der Hinweis beim ersten Mal nennt die Engine, die den Text wirklich
+      bekommt (Fallback-Kette beachten). Ohne die Option geht nie Text an einen Dritten.
+- [ ] Badge im Browser ("Translating to en via ...", "Translated to en", "Original, translation
+      failed"): sichtbar und lesbar; **Tab neu öffnen** nach dem letzten Status: das Badge kommt
+      erst beim nächsten fertigen Push (bekannte Lücke). Ältere Clients ignorieren die Nachricht.
+- [ ] `:MDView lang` ohne Argument zeigt Sprache, Trigger, Engine und Fortschritt; `refresh`
+      übersetzt neu (nötig bei `display_lang_trigger = "manual"`); `off` stellt das Original
+      sofort wieder her, **auch wenn der Fokus in einem Scratch-/Lua-Buffer liegt** und bei
+      mehreren Dokumenten (`new_tab`: kann zusätzliche Engine-Anfragen auslösen).
+- [ ] Trigger `idle` (800 ms), `save`, `manual`; schnelle Edits: die Übersetzung bleibt um die
+      Editstelle stehen, geänderte Zeilen zeigen das Original bis zur Pause. Edits an Fences,
+      `$`, Kommentaren, Überschriften und Front Matter laufen über einen vollen Parse
+      (Anker-Links!). Bekannt: bei mehrzeiligen Absätzen kurz gemischtsprachig.
+- [ ] **Großes Dokument** (5 000 und 20 000 Zeilen): Tippen bleibt flüssig; Wechsel/Speichern
+      blockiert ca. 0,3 s bei 20k Zeilen (Cache-Parse); 40 000+ Zeilen frieren die Aufbereitung
+      bis ca. 1 bis 2 s ein (Task `markdown-translate-hauptthread-rechnet-...`).
+- [ ] Rückwege: Text-Field-Sync ist in der Übersetzung aus (einmalige Meldung); Checkbox im
+      Browser schreibt nur den Marker in die echte Zeile; Scroll-Sync, Klick-Navigation und
+      Cursor-Marker treffen die richtige Zeile.
+- [ ] `:checkhealth mdview` (Abschnitt "display language": language.nvim gefunden bzw. zu alt,
+      Engine verfügbar, Schlüssel gesetzt) und `:checkhealth language` (Provider `ai`, Modell,
+      Allow-List, Bulk-Freigaben).
+- [ ] Engine `ai` ist konfiguriert, aber nicht nutzbar (ai.nvim fehlt, `ai.bulk` fehlt, Provider
+      nicht freigegeben): die Vorschau bleibt Original, es gibt **keinen** stillen Rückfall auf
+      Google/DeepL.
+- [ ] Anker-Links im README: `[siehe](#einrichtung)` springt nach der Übersetzung zur richtigen
+      Überschrift (Spike: 16 von 18 brachen ohne Slug-Mapping). Zwei Überschriften mit gleichem
+      Slug nach der Übersetzung: mdview kennt kein `-1` (Task `anker-kollisionen`).
+- [ ] Echte Übersetzung eines deutschen README mit DeepL **und** mit `ai` (Claude, Ollama):
+      Zeilenzahl gleich, Code byteidentisch, Tabellen und Listen intakt; Ablehnungen durch die
+      Link-/URL-Validierung treten praktisch nie auf (gemessen 0 auf 351 000 Einheiten mit
+      einer Fake-Engine): bei echter KI beobachten, ob Einheiten unübersetzt bleiben
+      (`info.skipped`/`failed` im Log).
 
 - [ ] `language.nvim/markdown-translate-api`: deutsches README (Tabelle, Fences, Inline-Code,
       Anker-Links, Front-Matter) mit **echtem DeepL**: Zeilenzahl gleich, Code byteidentisch,
@@ -459,6 +501,15 @@ Noch nicht prüfbar, weil die Tasks offen sind. Die Akzeptanzliste der Live-Abna
   zeilengenau; die deutschen Token stehen im englischen Text nicht.
 - `kill()` bei `req.bulk` verwirft nur die Antwort eines schon gesendeten Requests.
 - DeepL-Latenz und KI-Qualität sind bis zur Erledigung von G1 ungemessen.
+- `:MDView preview-tab` (in-Editor-Vorschau) und ein gepinnter Preview werden **nicht** übersetzt;
+  `:MDView standalone` verweigert den Start, solange `display_lang` oder `transform` gesetzt ist
+  (Warnen und Weitermachen wäre eine kleine Änderung in `usrcmds/standalone.lua`).
+- Ein neu geöffneter HTML-Block (`<div>`) kann beim Tippen kurz fremde Zeilen als Rohtext zeigen.
+- Inhaltspushes pro Raum sind nicht serialisiert (curl-Reihenfolge, Task angelegt); ein Patch kurz
+  vor dem Endstand könnte theoretisch vertauscht ankommen, im Live-Lauf nie beobachtet.
+- Der Bulk-Label des `ai`-Providers ist ein 5-Sekunden-Fenster (zwei Dokumente kurz hintereinander
+  teilen `max_total_chars`); der Session-Cap von `ai.nvim` ist davon nicht betroffen.
+- Ein Modellwechsel mitten im Request kann einen Cache-Eintrag unter dem neuen Modell ablegen.
 - Der Guard in `mirror_guard_spec` erkennt nicht jeden Leseweg (zum Beispiel `pcall(io.open, ...)`);
   Task `mdview.nvim/mirror-guard-denylist-hardening`.
 
