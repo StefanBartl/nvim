@@ -1216,6 +1216,7 @@ return {
       --   -- Default: false.
       --   enable = false,
       --   -- Ausloeser; "TermEnter" waere aggressiver (Insert bei jedem Fokus). Default: { "TermOpen" }.
+      --   -- Ein unbekannter Event-Name wird gemeldet und verworfen (bleibt keiner uebrig, gilt der Default).
       --   events = { "TermOpen" },
       -- },
 
@@ -1266,7 +1267,9 @@ return {
       -- Dem Terminal um Neovim herum mitteilen, was Neovim gerade tut (Modus, Datei, Branch,
       -- Diagnostics, Aufnahme): WezTerm liest es aus Pane-Variablen (Tab-Titel, Right-Status;
       -- Gegenstueck: Configs/terminals/wezterm/config/nvim_status.lua). Gesendet wird nur bei
-      -- Aenderung, entprellt, in EINEM Schreibvorgang.
+      -- Aenderung, entprellt, in EINEM Schreibvorgang. Der WezTerm-Export braucht Neovim 0.12+
+      -- (nvim_ui_send); ein headless laufendes Neovim sendet nichts, ein Neovim in einem anderen
+      -- Neovim-Terminal ($NVIM) schreibt unter "auto" nicht in die tmux-Pane des aeusseren.
       -- status = {
       --   -- Default: true.
       --   enable = true,
