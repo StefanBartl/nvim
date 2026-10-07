@@ -51,11 +51,9 @@ Dazu 23 Parser-Bumps `feat(<lang>)!: update parser and queries` (alle betroffene
 Sprachen sind bei dir installiert). Positionen 43 und 46 hat der Verifier nicht
 einzeln nachgezählt, 17 schon.
 
-**Entscheidungen, die ich von dir brauche** (alle in Abschnitt 11, hier die
-wichtigsten): Standardansicht `updated` oder `pending`? · Berichtsfenster als
-eigener Tab (empfohlen)? · Auto-Toast nach `:Lazy sync` (empfohlen: aus)? · darf
-gitsuite je fetchen (empfohlen: v1 nein)? · Eigen-Repos im Scan? ·
-Nummerierung/Ablage (GS-NN oder Task-Datei)?
+**Entscheidungen: alle 14 offenen Fragen wurden am 2026-10-07 getroffen** (Tabelle
+in Abschnitt 13); die Arbeit liegt als zehn Vault-Tasks mit Tag `plugins-monitor`
+vor, Start mit `lib-git-log-runner-primitives` und `plugins-log`.
 
 ---
 
@@ -378,8 +376,10 @@ Aufrufer** (heute hat es keinen; `architecture.md` und der Kommentar in
 - **Cache-Schlüssel** `dir@from...to`: ein SHA-Bereich ist unveränderlich, ein
   Treffer spart den Spawn für immer. Klassifikation/Digest werden beim Laden neu
   gerechnet (Regeländerung braucht keine Invalidierung).
-- Deckel: 5 Berichte, 90 Tage, 300 Commits je Plugin, Body ≤ 2 KB (JSON-Größe
-  nicht gemessen; Schätzung einige hundert KB).
+- Deckel (nach Entscheidung vom 2026-10-07, ursprünglich 5 / 90 / 300): 20 Berichte,
+  365 Tage, 1000 Commits je Plugin, Body ≤ 2 KB (JSON-Größe nicht gemessen;
+  Schätzung einige hundert KB bei ~1000 Commits, bei 20 Berichten bis einige MB →
+  Größe im Task messen, ggf. Gesamtdeckel).
 - Pro Maschine eine eigene Datei (Klone/Reflogs/Lock sind maschinenlokal; deine
   Workstation unterscheidet sich).
 - Jede Zeile trägt **Quelle und Konfidenz** sichtbar (`reflog` exakt · Snapshot ·
@@ -477,9 +477,9 @@ Fallback, erste Pufferzeile = Zusammenfassung.
 
 - Neuer Block `plugins` in `DEFAULTS.lua` (jeder Schlüssel **muss** in `KNOWN`
   stehen, sonst wird er als „unknown option“ verworfen): `sources='auto'`,
-  `roots`, `include_local=false`, `mode='updated'`, `max_commits=300`,
-  `parallel=4`, `timeout_ms=30000`, `run_window_s=300`, `keep_reports=5`,
-  `merges=false`, `breaking={keywords,collapse_repeats=5,ignore}`,
+  `roots`, `include_local=false`, `mode='updated'`, `max_commits=1000`,
+  `parallel=4`, `timeout_ms=30000`, `run_window_s=300`, `keep_reports=20`,
+  `max_age_days=365`, `seen_ttl_days=365`, `merges=false`, `breaking={keywords,collapse_repeats=5,ignore}`,
   `summarize=false`. Neue Checker nötig (`is_positive_int`, `is_one_of`,
   `is_sources`, `is_function_or_false`); @types, `configuration.md`,
   `doc/gitsuite.txt` §5, `config_spec`, Install-Spec der nvim-config
@@ -654,7 +654,7 @@ Lazy-Zeilennummern waren teils um 1–3 verrutscht (Befund unberührt).
 
 ---
 
-## 11. Offene Fragen an dich (mit Empfehlung)
+## 11. Offene Fragen an dich (mit Empfehlung) — am 2026-10-07 entschieden, siehe Abschnitt 13
 
 1. **Standardbasis:** „Was hat das letzte Update geändert“ (`updated`, Reflog,
    beantwortet den Anlass) oder „Was kommt noch“ (`pending`)? *Empfehlung:*
@@ -697,7 +697,8 @@ Lazy-Zeilennummern waren teils um 1–3 verrutscht (Befund unberührt).
 
 ## 12. Karten-Skizzen und Ablage
 
-Nur Skizzen (Format der bestehenden Karten); verbindlich ist das Task-System (Frage 8).
+Nur Skizzen (Format der bestehenden Karten); **verbindlich sind die Vault-Tasks aus
+Abschnitt 13** (Entscheidung zu Frage 8: kein GS-Zähler, Task-Dateien).
 
 | Karte (Skizze) | Slug | Art | Aufwand | Abhängigkeit |
 | --- | --- | --- | --- | --- |
@@ -723,3 +724,59 @@ Lua-Modul im Plugin) und ein Lua-Eval-Skript `TOOLS/scripts/breaking-eval.lua`
 Der vollständige Roh-Output des Workflows (alle 10 Agents mit Belegen
 `Pfad:Zeile`/Kommandos) liegt in
 `~/.claude/projects/E--repos-gitsuite-nvim--claude-worktrees-nvim-config-continuation-0338eb/<session>/subagents/workflows/wf_7aaf7123-c9f/journal.jsonl`.
+
+---
+
+## 13. Entscheidungen vom 2026-10-07 und daraus entstandene Tasks
+
+Alle 14 Fragen aus Abschnitt 11 wurden in vier Runden beantwortet; 13 davon exakt
+nach Empfehlung, **Frage 10 (Aufbewahrung) bewusst „großzügiger“**.
+
+| # | Thema | Entscheidung |
+| --- | --- | --- |
+| 1 | Standardbasis | `updated` als Default, Umschalter `t` zu `pending` (beide werden gebaut) |
+| 2 | Fensterform | Eigener Tab + Preview-Split (`--out=tab`); Float nur als `--out=popup`, `kit.picker` nur als Schnellsprung `F` |
+| 3 | Auto-Trigger nach `:Lazy sync` | **Aus**; Hook später als Opt-in (`plugins.after_sync`, Default `off`) |
+| 4 | Fetch | v1 **nie**; expliziter, bestätigter `--fetch` erst in einer späteren Stufe |
+| 5 | Umfang | Nur lazy-verwaltete Drittanbieter-Klone; Eigen-Repos per `--all` / `plugins.include_local` |
+| 6 | Mehrere Rechner / Lock | Reflog + Store je Maschine; Lockfile bleibt gitignored, kein „Restore ausstehend“ in v1 |
+| 7 | Scope-Name | `:Git plugins log\|report\|breaking\|clear`; Vorstufe ist kein eigener `:Git log` |
+| 8 | Nummerierung/Ablage | Vault-Task-Dateien, **kein** GS-Zähler; Report-Original bleibt in `reports/` |
+| 9 | KI | Nur als Config-Hook (`plugins.summarize`), später, nur auf Taste |
+| 10 | Aufbewahrung | **Großzügiger:** `keep_reports=20`, `max_age_days=365`, `max_commits=1000` je Plugin, Body ≤ 2 KB, `seen_ttl_days=365` (statt 5 / 90 / 300 / 90) |
+| 11 | Breaking-Gewichtung | „sicher“ + „wahrscheinlich“ sichtbar, „Hinweis“ eingeklappt, Parser/Bulk als eine Gruppe; Relevanz-Hebel (installierte Parser, Neovim-Floor) schon in v1 |
+| 12 | lib.nvim-Block L1 | Erst für `plugins`; Umstellung von Dashboard und `:MyPlugins sync` als Folge-Task |
+| 13 | Tasten | `p` = Preview (Abweichung zum Dashboard-Push, dokumentieren), `Q` = Quickfix-Export |
+| 14 | Browser öffnen | `lib.nvim.cross.open_default` |
+
+**Folge der Entscheidung zu Frage 10:** die Berichtsdatei kann deutlich größer
+werden als die Schätzung im Abschnitt 5.3 (einige hundert KB bei ~1000 Commits, bei
+20 Berichten bis einige MB). Der Task `plugins-report` verlangt deshalb, die
+Dateigröße zu **messen** und ggf. einen Gesamtdeckel festzulegen (neuester Bericht
+und Reviewed-Marker werden nie rotiert).
+
+### Tasks im Vault (`gitsuite.nvim/ROADMAP/tasks/`, Tag `plugins-monitor`)
+
+Reihenfolge und Kette (`blocked_by`) lassen sich mit `tasks plan gitsuite.nvim`
+prüfen; sofort startbar sind **`lib-git-log-runner-primitives`** und
+**`plugins-log`** (Letzteres wartet nur beim Push auf lib, `after` statt
+`blocked_by`).
+
+| Task (ID `gitsuite.nvim/…`) | Art | Prio / Aufwand | wartet auf |
+| --- | --- | --- | --- |
+| `lib-git-log-runner-primitives` | task | 2 / M | — |
+| `plugins-log` (Stufe 0) | feature | 2 / M | (`after` lib-Block) |
+| `plugins-report` (Stufe 1) | feature | 2 / L | `plugins-log` |
+| `plugins-breaking-classifier` (Stufe 2) | feature | 2 / M | `plugins-report` |
+| `plugins-ui-spike` | task | 2 / XS | `plugins-log` |
+| `plugins-report-ui` (Stufe 3) | feature | 2 / L | Klassifikator, Spike |
+| `plugins-lazy-sync-hook` (4a, optional) | feature | 3 / S | `plugins-report` |
+| `plugins-explicit-fetch` (4b, optional) | feature | 3 / M | `plugins-report` |
+| `plugins-ai-summary-hook` (4c, optional) | feature | 3 / S | Klassifikator |
+| `plugins-adopt-lib-primitives` (Folge-Task zu Frage 12) | task | 3 / S | lib-Block, `plugins-log` |
+
+Die Planberechnung des Task-Tools schätzt aus der Aufwandsskala **ca. 11,75
+Personentage** (Spanne 8–18,75 d; kritischer Pfad 8 d über 4 Tasks). Das ist eine
+andere Einheit als die „17–21 Sessions“ in Abschnitt 6 (Sessions inkl. CI-Warten,
+Doku und Messungen) und kein Widerspruch.
+
