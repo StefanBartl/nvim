@@ -1125,9 +1125,11 @@ return {
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {
       -- Welches Backend die Terminals stellt: "auto" | "native" | "wezterm" | "tmux".
-      -- "wezterm" oeffnet Terminals als WezTerm-Panes (`wezterm cli`; keine Floats, kein `env`, Exit
-      -- wird nicht gemeldet). "tmux" gibt es noch nicht. Ein nicht verfuegbares Backend faellt mit
-      -- einer Warnung (Grund inklusive) auf "native" zurueck.
+      -- "wezterm" oeffnet Terminals als WezTerm-Panes (`wezterm cli`) und "tmux" als tmux-Panes
+      -- (`tmux`-CLI); beide: keine Floats, kein `env`, Exit wird nicht gemeldet. `:Terminal pin`
+      -- startet ein natives Terminal als Pane neu (ueberlebt Neovim), `:Terminal adopt` zeigt ein Pane
+      -- schreibgeschuetzt. Ein nicht verfuegbares Backend faellt mit einer Warnung (Grund inklusive)
+      -- auf "native" zurueck.
       -- "auto" = native: Terminals bleiben Neovim-Fenster, auch innerhalb von WezTerm/tmux.
       -- Default: "auto".
       -- backend = "auto",
