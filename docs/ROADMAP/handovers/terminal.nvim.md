@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07: native, WezTerm- und tmux-Backend, Status-Export, Navigation, Pin/Adopt, Health, Property-Specs gebaut und live geprüft (244 Specs, 5 Live-Skripte). Offen: ultracode-Re-Review ab `7c16ef6`, `rules-nvim-sweep` (manuelle Regeln), Start-A/B mit UI, `integrate-*`, `lib-osc-detect-extraction`, `release-docs`. Live-Checks und Blocker: `docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md` Abschnitt L.**
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07: native, WezTerm- und tmux-Backend, Status-Export, Navigation, Pin/Adopt, Health, Property-Specs gebaut und live geprüft (307 Specs, 5 Live-Skripte, tmux live 32/32); drei ultracode-Review-Durchgänge sind durch und eingearbeitet (nur `e3056e4` ist nicht gegengeprüft). Offen: `rules-nvim-sweep` (manuelle Regeln), Start-A/B mit UI, `integrate-*`, `lib-osc-detect-extraction`, `release-docs`. Live-Checks und Blocker: `docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md` Abschnitt L.**
 
 ## Orte
 
@@ -57,3 +57,4 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07
 - 2026-10-07: `wezterm`-Pane-Backend (`backends/wezterm.lua`, Fake-CLI-Specs + `TESTS/live/wezterm.lua` gegen echtes WezTerm).
 - 2026-10-07: `navigate-core`: `terminal.navigate(dir, count)`, Hand-off an WezTerm/tmux am Neovim-Rand, Terminal-Modus-Tasten, opt-in `nav_*` (Spec in `specs/project.lua`), `TESTS/live/navigate.lua`.
 - 2026-10-07: tmux-Backend (+ Exporter, CI-Job), Konformitäts-Suite, Pin/Adopt, Health, Property-Specs, Perf-Messung (Branch-Cache), Neovim 0.11 als Minimum, `tmux.conf`-Ladefehler behoben; Final-Checks Abschnitt L.
+- 2026-10-07: Review-Runde 2 (52 Agenten): 42 Befunde behoben (`383380a`, Configs `d620fc1`): tmux-`;`-Escaping (`backends.tmux.word`), `pin`-Reihenfolge, „list fehlgeschlagen = unbekannt, nicht weg“, Status-Besitz in tmux (`$NVIM`, UI, `owned`), `^V`/`^S`, Tab-Titel aus `PaneInformation`, Property-Generator (xorshift32), hermetische Specs. Verifikations-Review: 11 weitere (`f51df0f`, `8322761`): `pin` beendet das alte Terminal vor dem Pane (+ `preflight`, Restore), `alive()` für `$NVIM`; dritter Durchgang: 3 kleine (`e3056e4`: TCP-Adresse, ehrliche Restore-Meldung, Kommentare).
