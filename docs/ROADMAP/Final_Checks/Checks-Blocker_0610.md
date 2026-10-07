@@ -2201,12 +2201,12 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 
 ---
 
-## O. ui.nvim: `ui.slots` (Kern, Chip-Leiste, Panel und Editor) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
+## O. ui.nvim: `ui.slots` (Kern, Chip-Leiste, Panel, Editor und Dateivorschau) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
 
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
 **Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
-**Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). **Noch nicht da:** die Vorschau (Tasks
-stehen unten). Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `8b6a3ca`).
+**Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Dateivorschau** im Panel. **Noch nicht da:** die URL-Vorschau (Tasks
+stehen unten). Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `26df9c1`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
@@ -2214,8 +2214,8 @@ Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nv
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
 `eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS),
 `8ec1d45` (Chip-Leiste), `35178e3` (Umbau: nicht fokussierbar, Tasten verwerfen), `85e520e` (ein flakiger Test entfernt), `4009233` (Nachbesserungen),
-`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu).
-Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste, eine bei Panel und Editor).
+`c95d1d1` (Panel und Editor), `8b6a3ca` (Review-Fixes dazu), `ceab9d9` (Dateivorschau), `26df9c1` (Review-Fixes dazu).
+Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste, eine bei Panel und Editor, eine bei der Vorschau).
 
 ### O1. Blocker
 
@@ -2223,14 +2223,13 @@ Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei
 N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nvim/slots-live-check` (steht dort schon). Neu erzeugen:
 `nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` und `list --waiting` im Ordner von `tasks.nvim`, mit `TASKS_VAULT` auf den Vault.
 
-**Kette des Plans `ui.nvim/ui-slots`** (5 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
-`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`). Nichts davon wartet auf dich, außer dem letzten Glied:
+**Kette des Plans `ui.nvim/ui-slots`** (4 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
+`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`, `slots-panel-editor`, `slots-preview-file`). Nichts davon wartet auf dich, außer dem letzten Glied:
 
 | Task | Status | Wartet auf | Was |
 |---|---|---|---|
 | `hover.nvim/preview-target-api` | startbar (S) | — | prüfen, ob hover.nvim einen öffentlichen Einstieg für URL-Vorschauen hat; sonst dort ergänzen |
-| `ui.nvim/slots-preview-file` | startbar (M) | — | Vorschau-Renderer und Dateivorschau |
-| `ui.nvim/slots-preview-url` | blocked | `slots-preview-file`, `hover.nvim/preview-target-api` | URL-Vorschau über hover.nvim |
+| `ui.nvim/slots-preview-url` | blocked | `hover.nvim/preview-target-api` | URL-Vorschau über hover.nvim |
 | `ui.nvim/slots-docs-health` | blocked | `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
 | `ui.nvim/slots-live-check` | blocked, **actor=me** | `slots-docs-health` | **deine** Live-Abnahme (Optik, Alltag, Maus) — erst wenn alles andere steht |
 
@@ -2397,6 +2396,18 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] `<Esc>` bricht ab; nichts wird gespeichert; kommst du aus dem Panel, ist es wieder da.
 - [ ] `:UI slots edit abc` meldet "not a slot number"; `:UI slots edit 99` (leer) meldet "slot 99 is empty".
 
+**O3.12 Dateivorschau** (im Panel `K`; Standard `preview.mode = "key"`, `"auto"` folgt dem Cursor, `"off"` schaltet ab)
+
+- [ ] `K` im Panel öffnet neben dem Panel ein Fenster "preview" mit dem Inhalt der Datei unter dem Cursor; nochmal `K` schließt es. Das Fenster nimmt keinen Fokus und lässt sich nicht ändern.
+- [ ] Mit `j`/`k` folgt die Vorschau dem Cursor (kurze Verzögerung, `preview.delay`); wer die Taste gedrückt hält, löst nicht pro Zeile einen Dateizugriff aus.
+- [ ] Eine Lua-/Markdown-Datei ist hervorgehoben; die Vorschau steht an der Stelle, an der du die Datei zuletzt verlassen hast (oder an `line` des Slots).
+- [ ] Ein Slot mit `{dir}/TODO.md` oder `{file}` zeigt die Datei **des Fensters, aus dem du kamst**, nicht die des Panels.
+- [ ] Eine Verzeichnis-Slot zeigt die Einträge; eine fehlende Datei meldet "file does not exist"; Binärdateien zeigen `^@` statt NUL; sehr große Dateien enden mit "… cut here (limit 1536 KB, 4000 lines)", eine riesige Ein-Zeilen-Datei zeigt ihren Anfang.
+- [ ] Yank-, `cmd`- und `lua`-Slots zeigen eine Notiz "(no preview for a '…' slot)" (oder ihren Text), nie den Inhalt des Slots davor.
+- [ ] Ist neben dem Panel zu wenig Platz (schmales Fenster, breites Panel), meldet `K` "no room beside the panel for a preview" und bleibt aus.
+- [ ] Das Fenster verschwindet mit dem Panel, auch bei `:close` im Panel oder `q`; öffnest du aus dem Panel den Editor (`a`/`e`) und kehrst zurück, ist die Vorschau wieder da, wenn sie an war.
+- [ ] `preview = { mode = "off" }`: `K` meldet "the preview is switched off".
+
 ---
 
 ### O4. Regression (Änderungen an bestehendem Verhalten)
@@ -2412,7 +2423,7 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 
 ### O5. Bekannte Grenzen (kein Test nötig, nur wissen)
 
-- **Keine Vorschau.** Weder im Panel noch in der Leiste; kommt mit `slots-preview-file` und `slots-preview-url`.
+- **Vorschau nur im Panel und nur für Dateien.** Die Leiste hat keine; URL-Slots zeigen eine Notiz, bis `slots-preview-url` fertig ist.
 - **Der Editor macht nur `file`, `url`, `yank` und `mark`.** `cmd`/`lua` und feste Slots (aus `setup`) werden dort nicht angelegt oder geändert; ein Slot mit eigener Kind-Art ohne Formularfelder auch nicht.
 - **Nummern im Panel werden getippt, nicht gezählt:** `12<CR>` geht nicht (die Ziffern sind belegt); `1`, dann `2` springt auf Slot 12.
 - **Das Kontextmenü ist ein `ui.kit.select`**, nicht `ui.contextmenu`; dieselbe Optik wie die anderen Auswahllisten.
