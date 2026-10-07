@@ -40,6 +40,15 @@
     - [I4. Live-Checkliste Auth (Confluence-Token)](#i4-live-checkliste-auth-confluence-token)
     - [I5. Regression (Änderungen an bestehendem Verhalten)](#i5-regression-nderungen-an-bestehendem-verhalten)
     - [I6. Bekannte Grenzen (kein Test nötig, nur wissen)](#i6-bekannte-grenzen-kein-test-ntig-nur-wissen)
+  - [K. casedesk.nvim + ui.nvim: Clipboard, Wordings, Import, Formular-Kit (Stand 2026-10-07)](#k-casedesknvim-uinvim-clipboard-wordings-import-formular-kit-stand-2026-10-07)
+    - [K1. Blocker / offene Entscheidungen](#k1-blocker-offene-entscheidungen)
+    - [K2. `:Case clipboard`: neue Felder und Wordings](#k2-case-clipboard-neue-felder-und-wordings)
+    - [K3. `:Cases clipboard` (ohne Case)](#k3-cases-clipboard-ohne-case)
+    - [K4. `:Case import` (früher `:Case copy`)](#k4-case-import-früher-case-copy)
+    - [K5. ui.nvim: `kit.form` mit Zurück-Navigation](#k5-uinvim-kitform-mit-zurück-navigation-opt-in-back--true)
+    - [K6. ui.nvim: `kit.sheet` (alle Felder in einem Fenster)](#k6-uinvim-kitsheet-alle-felder-in-einem-fenster)
+    - [K7. Regression (ui.nvim-Änderungen am Bestandscode)](#k7-regression-uinvim-änderungen-am-bestandscode)
+    - [K8. Noch nicht gebaut](#k8-noch-nicht-gebaut-beschlossene-queue-wird-hier-ergänzt-sobald-committet)
 
 ---
 
@@ -958,3 +967,183 @@ Neovim noch nicht ausprobiert.
   Deklaration in Dateinamen-Reihenfolge gewinnt.
 - `M.TARGETS` in `bindings.usrcmds.clipboard` prüft Schlüssel mit Leerzeichen oder Kollisionen nicht
   (nur die Snippets werden geprüft).
+
+## K. casedesk.nvim + ui.nvim: Clipboard, Wordings, Import, Formular-Kit (Stand 2026-10-07)
+
+Alles aus dem Chat "Clipboard-Commands" vom 7.10., soweit schon committet. Vor dem Testen
+**casedesk.nvim und ui.nvim auf `main` pullen** (beide gepusht). Work-Repo für die Beispiele:
+`E:/repos/WKDBook-Tricentis`. Die Fälle unten sind echte Fälle daraus:
+
+| Fall | taugt für |
+|---|---|
+| `1135620` (Closed), `1195796`, `1213172`, `1226959`, `1229954` | hat SNOW- **und** Resolve-Link, Kontakt (`name`) gesetzt |
+| `1149596`, `1179538`, `1201484` | nur SNOW-Link, kein Resolve-Link |
+| `1007631` | keine Links, **kein** Kontakt (`name`) |
+
+Commits, `casedesk.nvim` (`main`): `8f7645d` (Wordings als Felder, `:Cases clipboard`), `fa935ac`
+(`snowurl`/`resolveurl`), `c101c3b` (`:Case copy` wird `:Case import`), `b721bf9` (Fix:
+Wordings überschatten nie Case-Felder, Resolve-Host exakt). `ui.nvim` (`main`): `4dae2b4`
+(`kit.form` Zurück-Navigation, `ui.kit.buttons`), `a6c10fa`, `c476e0a` (Picker-Item-Modus),
+`287eca6`, `05d4808`, `a774543` (`ui.kit.sheet`), `23be8fd` (`on_back`). **Noch kein
+Commit hat einen Review-Haken:** der Review-Workflow (`wf_afab2922-fd1`) läuft noch.
+
+---
+
+### K1. Blocker / offene Entscheidungen
+
+- [ ] **Noch nicht committet, daher hier nicht testbar:** `:Case new --form|--steps` und
+      `config.new_mode` (Workflow Phase 3, Teil B, liegt ungepusht im Worktree). Der Abschnitt
+      K8 wird ergänzt, sobald der Commit da ist.
+- [ ] **Entscheidung `link`:** Das alte Feld `link` bleibt unverändert (`config.snow_url_format`
+      plus ID, ohne gesetzte Option eine Meldung). Der echte gespeicherte SNOW-Link ist das neue
+      `snowurl`. Soll `:Case insert link` künftig auch `snowurl` bevorzugen?
+- [ ] **Bekannt, nicht getestet gegen Echtbetrieb:** Resolve-Link aus Casenummer ableiten ist
+      noch nicht gebaut (Präfix `0020751294` oder `0020751295`, Regel unbekannt). Task bleibt
+      offen.
+
+---
+
+### K2. `:Case clipboard`: neue Felder und Wordings
+
+- [ ] `:Case clipboard snowurl 1135620`: Clipboard enthält den SNOW-Link
+      (`.../x_ttng2_sapresolve_case/<32 Hex>`), Meldung nennt `1135620: copied snowurl`.
+- [ ] `:Case clipboard resolveurl 1135620`: Clipboard enthält den
+      `resolve.sap.com/site#resolve-Display...Incident/0020751295_1135620_2026`-Link.
+- [ ] `:Case clipboard snowurl,resolveurl 1135620 --sep=blank`: beide Links, durch eine
+      Leerzeile getrennt. Aliase `snowlink` und `resolvelink` gehen auch.
+- [ ] `:Case clipboard resolveurl 1149596` (nur SNOW-Link): Warnung mit Grund, **Clipboard
+      bleibt unverändert** (vorher etwas anderes hineinkopieren und kontrollieren).
+- [ ] `:Case clipboard snowurl 1007631` (keine Links): Warnung, nichts kopiert.
+- [ ] `:Case clipboard link 1135620`: ohne `config.snow_url_format` die bekannte Meldung
+      (`link` ist nicht `snowurl`).
+- [ ] `:Case clipboard firstResponse 1135620`: Clipboard-Text beginnt mit dem Kontaktnamen
+      aus `.case.json`, **kein** `<<customer>>` mehr.
+- [ ] `:Case clipboard firstResponse 1007631` (ohne Kontakt): Platzhalter `<<customer>>`
+      bleibt stehen, **Warnung** sagt, dass er nicht gefüllt werden konnte.
+- [ ] Schreibweise egal: `:Case clipboard FIRSTRESPONSE 1135620` und `firstresponse` gehen;
+      Reihenfolge egal (`1135620 firstResponse`).
+- [ ] `:Case clipboard firstResponse --edit 1135620`: kopiert **und** öffnet die Datei
+      `FirstResponses/FirstResponse.md`; ohne `--edit` wird nichts geöffnet.
+- [ ] `:Case clipboard number,title --labels` in einem Case-Buffer: `Case: ...`, `Title: ...`.
+- [ ] `:Case clipboard` ohne Argument: Multi-Select mit dem Wert je Feld; `snowurl`,
+      `resolveurl`, `firstResponse`, `firstResponseDelay`, `germanSpeaker` sind dabei, ein
+      fehlender Wert steht als `—`. `<Tab>` markiert mehrere, `<CR>` kopiert.
+- [ ] Completion: `:Case clipboard <Tab>` listet Felder **und** Wordings, `snowurl` ist dabei.
+- [ ] Fehler: `:Case clipboard titel` meldet "unknown field" mit der Liste der bekannten.
+
+---
+
+### K3. `:Cases clipboard` (ohne Case)
+
+- [ ] `:Cases clipboard firstResponse`: Text unverändert, `<<customer>>` bleibt Platzhalter.
+- [ ] `:Cases clipboard firstResponse germanSpeaker --sep=blank`: beide Texte, getrennt.
+- [ ] `:Cases clipboard title`: abgelehnt mit "needs a case — use :Case clipboard",
+      Clipboard bleibt unverändert.
+- [ ] `:Cases clipboard 1135620`: ebenfalls abgelehnt (eine Casenummer braucht `:Case`).
+- [ ] `:Cases clipboard` ohne Argument: Picker, der **nur** Wordings zeigt, keine Case-Felder.
+- [ ] `:Cases clipboard <Tab>`: nur Wordings (kein `number`, `title`, ...).
+- [ ] `:Cases clipboard firstResponse --edit`: kopiert und öffnet die Datei.
+- [ ] `:Cases wordings firstResponse`: verhält sich wie vorher (Datei öffnen **und** kopieren,
+      Text unverändert).
+- [ ] Wording, dessen Datei fehlt (Pfad in `config.wordings` bewusst falsch setzen): Warnung mit
+      Grund, nichts kopiert, kein Lua-Fehler.
+
+---
+
+### K4. `:Case import` (früher `:Case copy`)
+
+- [ ] `:Case import C:\Pfad\datei.txt` im Case-Buffer: fragt den Zielordner (`Replies`,
+      `Research`, `assets`, Case-Root), kopiert, öffnet die Datei. Bytegleich prüfen:
+      `fc /b Quelle Ziel`.
+- [ ] `:Case import` ohne Pfad: fragt "Source file" mit Dateicompletion.
+- [ ] Zieldatei existiert schon: Meldung "already exists — not overwritten", nichts überschrieben,
+      die vorhandene Datei wird geöffnet.
+- [ ] `:Case copy C:\Pfad\datei.txt`: ein Hinweis auf `:Case import`, dann derselbe Ablauf.
+- [ ] Falls du ein Binding oder eine eigene Config auf `:Case copy` hast: umstellen.
+
+---
+
+### K5. ui.nvim: `kit.form` mit Zurück-Navigation (Opt-in `back = true`)
+
+Testen ohne casedesk, direkt im Command-Line-Modus:
+
+```vim
+:lua require("ui.kit").form({ back = true, fields = { { name = "a", label = "Eins" }, { name = "b", label = "Zwei" }, { name = "c", label = "Drei", required = true } }, on_submit = function(v) vim.print(v) end, on_cancel = function() print("cancel") end })
+```
+
+- [ ] Titel zeigt `Eins (1/3)`, `Zwei (2/3)` usw.; im ersten Feld **kein** `[← Back]`-Button.
+- [ ] In Feld 2 `<BS>` auf **leerem** Feld: zurück zu Feld 1, dessen Antwort steht wieder
+      im Feld (Cursor am Ende). Mit Text im Feld ist `<BS>` ein normales Löschen.
+- [ ] `<BS>` gedrückt halten auf einem leeren Feld: wandert **nicht** durch alle Felder zurück
+      (der Hold wird ignoriert), nach kurzer Pause geht es einen Schritt zurück.
+- [ ] `<S-Tab>` und `<C-p>` gehen zurück; mit offenem Completion-Popup gehören sie dem Popup.
+- [ ] Vorwärts und zurück verliert keine Eingabe; halb getippter Text bleibt erhalten.
+- [ ] `<Down>` oder `<Tab>` im Feld setzt den Fokus auf die Buttonleiste (startet bei `Next`);
+      dort `h`/`l` und Pfeile bewegen, `<CR>` drückt, `<Up>`/`k`/`i`/`a` kehrt ins Feld zurück.
+- [ ] Mausklick auf `[← Back]`, `[Skip]`, `[Next ↵]` (nach `:set mouse=a`): fokussiert **und**
+      drückt in einer Aktion. Beim letzten Feld heißt der Button `[Done ↵]`.
+- [ ] `<Esc>` überspringt ein optionales Feld (Wert wieder `default`) und bricht bei dem
+      `required`-Feld (`Drei`) ab (`cancel` wird gedruckt); `[Skip]` fehlt auf `Drei`.
+- [ ] Einfügen mit Zeilenumbruch (mehrzeilig kopierter Text): bleibt **eine** Zeile, die Buttons
+      bleiben sichtbar. Sehr langer Text, der seitwärts scrollt: Buttonleiste bleibt im Bild.
+- [ ] Regression ohne `back = true`: gleiche Form ohne die Option verhält sich wie früher (keine
+      Buttons, kein `(1/3)`, `<BS>` auf leerem Feld tut nichts). Prüfen mit den bestehenden
+      casedesk-Dialogen: `:Case imp`, `:Case tag`, `:Tricentis pto`, die Case-Infocard-Edits.
+
+---
+
+### K6. ui.nvim: `kit.sheet` (alle Felder in einem Fenster)
+
+```vim
+:lua require("ui.kit").sheet({ title = "Test", fields = { { name = "number", label = "Case number", required = true, live = true, validate = function(v) if v:match("^%d+$") then return true end return false, "nur Ziffern" end }, { name = "area", label = "Area", kind = "select", choices = { "SAP", "CS" } }, { name = "title", label = "Title" }, { name = "token", label = "Token", secret = true } }, submit_label = "Anlegen", cancel_label = "Abbruch", on_submit = function(v) vim.print(v) end, on_cancel = function() print("cancel") end })
+```
+
+- [ ] Ein Fenster zeigt alle vier Zeilen mit Label links; die Labels lassen sich nicht
+      bearbeiten und der Cursor landet nie auf einem Label.
+- [ ] `<Tab>`/`<S-Tab>` wechseln Feld und danach die beiden Buttons, umlaufend; `<Down>`/`<Up>`
+      ohne Umlauf.
+- [ ] `12x` in `number` tippen: rote Meldung "nur Ziffern" unter dem Feld (`live`), Fenster
+      wächst; beim Korrigieren verschwindet sie sofort und das Fenster schrumpft.
+- [ ] `<CR>` im letzten Feld drückt `[Anlegen]`; mit ungültigem Feld wird nicht abgeschickt
+      und der Fokus springt auf das erste ungültige.
+- [ ] `number` leer lassen und abschicken: "required".
+- [ ] Select-Feld `area`: `h`/`l` und Pfeile wechseln `SAP`/`CS`; `<CR>` oder `<Space>` öffnet
+      die Auswahl, eine Wahl springt zum nächsten Feld.
+- [ ] `token`: Eingabe erscheint als `*`, `on_submit` bekommt den echten Wert.
+- [ ] `<Esc>` aus jeder Position bricht ab (`cancel`), keine Fenster bleiben zurück
+      (`:lua print(#vim.api.nvim_list_wins())` vorher/nachher gleich).
+- [ ] Mausklick auf ein Feld setzt Fokus und Cursor; Klick auf `[Anlegen]`/`[Abbruch]` drückt.
+- [ ] Einfügen mit Zeilenumbruch in ein Feld: wird mit Leerzeichen zu einer Zeile verbunden.
+- [ ] Hell und dunkel: `KitError`-Meldung, `*`-Markierung des Pflichtfelds und der fokussierte
+      Label sind in beiden Themes lesbar.
+- [ ] Sehr schmales Fenster (`:set columns=50`): lange Werte brechen unter die Wertspalte um.
+
+---
+
+### K7. Regression (ui.nvim-Änderungen am Bestandscode)
+
+- [ ] `kit.input`: normale Eingabe (z. B. `:Case new` bis zur Nummer, ohne Buttons) verhält sich
+      wie früher; `<BS>` auf leerem Feld bleibt ohne `on_back` wirkungslos.
+- [ ] Picker (`c476e0a` hat den Item-Modus nach ui.nvim geholt): `:Tricentis links`,
+      `:Cases livegrep`, `:Case insert` öffnen ohne Fehler, Filtern, Vorschau, Auswahl wie bisher.
+- [ ] `kit.confirm` (z. B. beim Löschen eines Cases oder `:Case reopen`) sieht gleich aus, Buttons
+      per `h`/`l` und Klick bedienbar (die Buttonlogik liegt jetzt in `ui.kit.buttons`).
+
+---
+
+### K8. Noch nicht gebaut (beschlossene Queue, wird hier ergänzt, sobald committet)
+
+1. Phase 3 Teil B: `:Case new [nr] [--form|--steps]`, `config.new_mode`, beide Modi gleiche
+   Anlage; im Steps-Modus Zurück-Navigation, im Form-Modus `ui.kit.sheet`.
+2. Wording-Ordner (`config.wording_dirs`), Log-Snippets (`TCSupportInfo`, `CommanderLog`,
+   `TBoxLog`, `BrowserExtensionLog`, `DexServerLog`, `DexAgentLog`, `ToscaServerLog`, je EN und
+   `_DE`) und `:Cases clipboard startCdxChat` (`StartChat.md` bis `### Activity Stream:`).
+3. `:Case insert` mit `snow-number`, `snow-url`, `sap-number`, `sap-incident`, `sap-url`.
+4. `Links.md` pro Case (Blueprint, `:Case links`, `:Case links add`, Backfill per
+   `:Case sync`).
+5. Erstantwort-Checkliste in `Research/00_Research.md` (`:Case checklist`, Clipboard-Feld
+   `ask`, Entwurf in `Replies/00_PSO.md`) und die Anpassung von `Workflow/1_Answer.md`
+   (Logs und Subset schon in der Erstantwort).
+6. Resolve-Link aus Casenummer ableiten (wartet auf die Präfix-Regel).
+
+---
