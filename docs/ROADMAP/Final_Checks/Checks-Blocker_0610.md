@@ -106,6 +106,12 @@
     - [N2. Was auf dich wartet (Entscheidung, Live-Abnahme, Handarbeit)](#n2-was-auf-dich-wartet-entscheidung-live-abnahme-handarbeit)
     - [N3. Wurzel-Blocker: ein Task hält viele andere auf](#n3-wurzel-blocker-ein-task-hält-viele-andere-auf)
     - [N4. Blockaden, die sich selbst erledigt haben oder nicht auflösbar sind](#n4-blockaden-die-sich-selbst-erledigt-haben-oder-nicht-auflösbar-sind)
+  - [O. ui.nvim: `ui.slots` (Kern ohne Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#o-uinvim-uislots-kern-ohne-leiste--live-checks-und-blocker-stand-2026-10-07-abend)
+    - [O1. Blocker](#o1-blocker)
+    - [O2. Neue Befehle, Optionen und APIs](#o2-neue-befehle-optionen-und-apis)
+    - [O3. Live-Checkliste (ohne Leiste: alles per Befehl und Taste)](#o3-live-checkliste-ohne-leiste-alles-per-befehl-und-taste)
+    - [O4. Regression (Änderungen an bestehendem Verhalten)](#o4-regression-änderungen-an-bestehendem-verhalten)
+    - [O5. Bekannte Grenzen (kein Test nötig, nur wissen)](#o5-bekannte-grenzen-kein-test-nötig-nur-wissen)
 
 ---
 
@@ -113,7 +119,7 @@
 
 Checks fuer dich aus der Umsetzung von `ROADMAP/Casedesk/NEW.md`, die **nicht
 direkt casedesk.nvim** betreffen. Die casedesk-Checks stehen in den Abschnitten **K** (neu am 7.10.), **L** (`NEW.md`) und **M**
-(komplette Live-Test-Checkliste), **alle Blocker** in **N**.
+(komplette Live-Test-Checkliste), **alle Blocker** in **N**, die neuen `ui.slots` (Checks und Blocker, Stand 7.10. abends) in **O**.
 
 ---
 
@@ -2168,3 +2174,166 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 - Die tmux-Seite ist gegen **echtes** tmux nur über die Live-Skripte und die CI geprüft, nicht im Alltag (kein Neovim in deinem WSL).
 
 ---
+
+
+---
+
+## O. ui.nvim: `ui.slots` (Kern ohne Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
+
+Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut ist der
+**Kern**: Lua-API, `:UI slots`, Tasten, sechs Kinds. **Noch nicht da:** Leiste, Panel, Editor, Vorschau (Tasks stehen unten). Vor dem Testen
+**ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `dd89502`; CI grün auf Linux, macOS, Windows).
+
+Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
+`$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
+
+Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
+`eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS). Alle bis auf `dd89502`
+(nur Testcode, CI grün) sind ultracode-reviewt (zwei Runden bei den Kinds und der API, eine bei den Aktions-Kinds).
+
+### O1. Blocker
+
+**Zahlen gegen N geprüft (7.10., abends):** 38 Tasks mit `actor=me`, 71 mit Status `blocked`, 80 wartend — **unverändert gegenüber N2/N3**,
+N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nvim/slots-live-check` (steht dort schon). Neu erzeugen:
+`nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` und `list --waiting` im Ordner von `tasks.nvim`, mit `TASKS_VAULT` auf den Vault.
+
+**Kette des Plans `ui.nvim/ui-slots`** (7 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
+`slots-commands-api`, `slots-action-kinds`). Nichts davon wartet auf dich, außer dem letzten Glied:
+
+| Task | Status | Wartet auf | Was |
+|---|---|---|---|
+| `ui.nvim/slots-chips-bar` | startbar (L) | — | die sichtbare Leiste mit Akkordeon-Scroll |
+| `hover.nvim/preview-target-api` | startbar (S) | — | prüfen, ob hover.nvim einen öffentlichen Einstieg für URL-Vorschauen hat; sonst dort ergänzen |
+| `ui.nvim/slots-panel-editor` | blocked | `slots-chips-bar` | fokussierbares Panel, Editor, Kontextmenü (weiche Kante zu `kit-sidebar-surface`) |
+| `ui.nvim/slots-preview-file` | blocked | `slots-panel-editor` | Vorschau-Renderer und Dateivorschau |
+| `ui.nvim/slots-preview-url` | blocked | `slots-preview-file`, `hover.nvim/preview-target-api` | URL-Vorschau über hover.nvim |
+| `ui.nvim/slots-docs-health` | blocked | `slots-panel-editor`, `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
+| `ui.nvim/slots-live-check` | blocked, **actor=me** | `slots-docs-health` | **deine** Live-Abnahme (Optik, Alltag, Maus) — erst wenn alles andere steht |
+
+**Weitere Stolpersteine, die in dieser Sitzung aufgefallen sind (keine Tasks, nur wissen):**
+
+| Stolperstein | Wirkung | Stand |
+|---|---|---|
+| Der Vault-weite `tasks ci` ist rot | `mux.nvim` fehlte im Index (inzwischen: `index --check` meldet 0 veraltet); `md_lint` läuft nur mit `--trust-vault-lint`; ein fremder Task-Befund bleibt | nicht von den Slots; Lauf mit `--trust-vault-lint` und dem eigenen Befund ansehen |
+| Der nvim-config-Checkout hat uncommittete Änderungen anderer Sitzungen (`Notes.md`, `00_ROADMAP.md`, `Casedesk/…`, `IDEAS/…`) | Beim Committen nur die eigenen Dateien hinzufügen, nie `git add -A` | läuft weiter, gehört nicht zu den Slots |
+| ui.nvim-CI war auf macOS rot (`313d37a`, `4367842`) | Tests verglichen den Temp-Pfad roh, macOS meldet `/private/var` statt `/var` | **behoben** in `dd89502`, CI grün |
+| `kit_drift_spec` | Der rote Lauf `bc8da10` vor den Slots (Kit-Kopie in lib.nvim) | seither grün; die Drift-Prüfung gilt auch für die Leiste, solange sie nichts im Kit ändert |
+| Windows: `vim.ui.open` startet `cmd.exe /c start` | `&`, `|`, `^`, `%` in einer URL sind cmd-Syntax (Query abgeschnitten, Befehlsausführung möglich) | im url-Kind umgangen (`rundll32`), **echter Browserstart noch ungeprüft** — siehe O3.4 |
+
+---
+
+### O2. Neue Befehle, Optionen und APIs
+
+| Was | Wie |
+|---|---|
+| `:UI slots` / `:UI slots list` | listet die Slots (`Nr  Icon Label  (kind, fixed, missing)`) |
+| `:UI slots <n>` | führt Slot n aus |
+| `:UI slots add [n]` | aktuelle Datei in den nächsten freien (oder den freien Slot n); dieselbe Datei kein zweites Mal |
+| `:UI slots yank <n>` | kopiert, wofür der Slot steht (Pfad, Adresse, Text, Befehlszeile) |
+| `:UI slots clear <n>\|all` | leert einen Slot / alle, die nicht fest sind |
+| `:UI slots move <a> <b>` | Slot a nach b; tauscht, wenn b belegt ist |
+| `:UI slots kinds` | `cmd, file, lua, mark, url, yank` |
+| `:UI slots toggle\|open\|close\|edit` | **melden "not built yet"** (Leiste und Editor fehlen) |
+| `ui.setup({ slots = true })` | schaltet die Slots ein (Standardwerte bzw. frühere `slots.setup()`) |
+| `ui.setup({ slots = { enabled = true, … } })` | konfiguriert und schaltet ein; ohne `enabled = true` nur konfiguriert |
+| `require("ui.slots")` | `setup`, `enable`, `disable`, `apply`, `add`, `yank`, `clear`, `clear_all`, `move`, `list`, `get`, `register_kind`, `last_applied` |
+| Tasten, nur über `keys = { … }` | `apply = "<leader>%d"` (Slots 1 bis 9), `count = "<leader>S"` (`12<leader>S`), `add = "<leader>sa"`; ohne `keys` **keine einzige Taste** |
+| Daten | `stdpath("data")/ui/slots/project-<hash>.json` bzw. `global.json`; Option `data_dir` ändert den Ort |
+| Platzhalter | `{file}` `{dir}` `{root}` `{cwd}` `{line}` `{col}` `{word}` `{sel}` `{clip}` `{count}`; `{{` und `}}` sind wörtliche Klammern |
+
+Kinds und ihre Felder: `file { path, target?, line?, col? }`, `yank { text, register? }`, `url { url }` (nur http, https, file, mailto),
+`cmd { cmd, args?, bang?, raw_values? }` (nur aus Lua/`setup`), `lua { fn }` (nur aus Lua/`setup`), `mark { index }` (braucht sessions.nvim).
+
+---
+
+### O3. Live-Checkliste (ohne Leiste: alles per Befehl und Taste)
+
+**Vorbereitung:** ui.nvim pullen, Neovim neu starten. Zum Ausprobieren reicht `:UI slots` (schaltet für die Sitzung ein). Für die Tasten
+zusätzlich in einer Testkonfiguration oder per `:lua`:
+`require("ui.slots").setup({ keys = { apply = "<leader>%d", count = "<leader>S", add = "<leader>sa" } })`.
+
+**O3.1 Grundfluss**
+
+- [ ] `:UI slots` in einem frischen Projekt: Meldung "no slots yet; :UI slots add …".
+- [ ] In einer Datei `:UI slots add`: "slot 1: <Dateiname>". Nochmal: "already in slot 1", **kein** zweiter Slot.
+- [ ] In einer anderen Datei `:UI slots add 5`: landet in Slot 5. `:UI slots add 5` nochmal: "slot 5 is taken; clear it first".
+- [ ] `:UI slots`: Liste, aufsteigend, Lücken (2 bis 4) stehen **nicht** drin.
+- [ ] `:UI slots 1` aus einem anderen Buffer: öffnet die Datei. Cursor in der Datei bewegen, Buffer wechseln, `:UI slots 1`: Cursor steht wieder dort.
+- [ ] Neovim in einer Slot-Datei **beenden** (`:wqa`), neu starten, `:UI slots 1`: Cursor an der letzten Stelle (nicht an der vorletzten).
+- [ ] Eine Slot-Datei löschen/umbenennen: `:UI slots` zeigt `missing`, `:UI slots <n>` meldet "file does not exist" und **legt nichts an**.
+- [ ] `:UI slots move 1 7`, `:UI slots move 5 7` (tauscht), `:UI slots clear 7`, `:UI slots clear all`.
+- [ ] Ungültig: `:UI slots 0`, `:UI slots 0x10`, `:UI slots 99999999999`, `:UI slots clear x`, `:UI slots frobnicate`: jeweils Meldung, nie ein Fehler/Stacktrace.
+- [ ] Keine Obergrenze: `:lua for i=1,30 do require("ui.slots").add({kind="yank",text="t"..i}) end`, danach `:UI slots 12` und `:UI slots 30` gehen.
+
+**O3.2 Kopieren (`yank`)**
+
+- [ ] `:UI slots yank 1` (Datei-Slot), dann `"+p`: der Pfad. Dasselbe für einen url- und einen yank-Slot.
+- [ ] Yank-Slot mit Platzhaltern: `:lua require("ui.slots").add({kind="yank", text="{word} @ {file}:{line}"})`, Cursor auf ein Wort, `:UI slots <n>`, einfügen: Wort, Pfad, Zeile.
+- [ ] Meldung "copied N characters to …" nennt nur Register, die es wirklich gibt (ohne Clipboard-Provider **kein** `+`/`*` in der Liste).
+- [ ] Ein Slot mit `{nope}`: Warnung "unknown placeholder {nope}".
+- [ ] Datei mit Klammern im Namen (`report {line}.md`): `:UI slots add`, dann in einem anderen Buffer `:UI slots <n>`: öffnet **genau diese** Datei.
+
+**O3.3 Tasten** (mit der `keys`-Zeile aus der Vorbereitung)
+
+- [ ] `<leader>1` bis `<leader>9` führen Slot 1 bis 9 aus; `<leader>sa` fügt die aktuelle Datei hinzu.
+- [ ] `12<leader>S` führt Slot 12 aus; `<leader>S` ohne Zahl: Hinweis "give the slot number as a count".
+- [ ] Ohne `keys`: `:nmap <leader>1` zeigt **keine** Slot-Belegung (nichts wird ungefragt gemappt).
+- [ ] `:lua require("ui.slots").disable()`: die Belegungen sind weg, `:autocmd ui_slots` zeigt nichts; `enable()` bringt sie zurück, nicht doppelt.
+- [ ] Leader ändern (`:let mapleader=","`), dann `disable()`: `maparg("\\1","n")` ist leer (nichts bleibt hängen).
+
+**O3.4 URL (wichtig auf Windows)**
+
+- [ ] `:lua require("ui.slots").add({kind="url", url="https://neovim.io/doc/?a=1&b=2"})`, `:UI slots <n>`: der Browser öffnet die **vollständige** Adresse (`&b=2` kommt an). **Das ist der Praxistest für `rundll32`**, den ich nicht ausführen konnte.
+- [ ] Adresse mit Umlaut (`https://example.org/café`): öffnet korrekt.
+- [ ] `:lua print(pcall(require("ui.slots").add, {kind="url", url="javascript:alert(1)"}))` bzw. `add` meldet "scheme 'javascript' is not opened"; ebenso `ssh://…`, eine Adresse ohne Schema.
+- [ ] `{ kind="url", url="{clip}" }` mit einer https-Adresse im Clipboard öffnet sie; mit `javascript:…` im Clipboard Meldung statt Start.
+- [ ] `?q={word}` mit einem Wort wie `a&b`: im Browser steht `a%26b`.
+
+**O3.5 `cmd`, `lua`, `mark`** (nur per Lua; die Dateien dürfen sie nie enthalten)
+
+- [ ] `cmd`: `:lua require("ui.slots").add({kind="cmd", cmd="echo", args="'hi' '{word}'"})` — Ausführen zeigt die Ausgabe. Unbekannter Befehl: "no such command".
+- [ ] `cmd` verweigert Gefährliches: Wort mit `|` im Cursor, Slot `args="{word}"` → "refused, the value of {word} has a | or a backtick"; ebenso Backtick, und `{clip}` mit führendem `+`/`!`. Mit `raw_values = true` geht es durch (nur für Befehle mit `<q-args>`).
+- [ ] `lua`: `add({kind="lua", fn=function(ctx) vim.notify("n="..ctx.n.." word="..ctx.word) end})`. Ein `error(...)` in der Funktion: Meldung, Neovim läuft weiter. Ein String als `fn`: abgelehnt.
+- [ ] `mark` (nur mit sessions.nvim): `add({kind="mark", index=1})`, Ausführen öffnet Mark 1. Index über das Ende: "no mark at …". Ohne sessions.nvim: "sessions.nvim is not installed".
+- [ ] Lua-/cmd-Slots überleben einen Projektwechsel (`:cd` in ein anderes Projekt und zurück) in derselben Sitzung.
+
+**O3.6 Speicherung und Projekte**
+
+- [ ] Slots anlegen, Neovim beenden, neu starten: sie sind da. `:cd` in ein anderes Projekt: **andere** Liste (leer), `:cd` zurück: die ersten wieder da.
+- [ ] `:cd` innerhalb desselben Projekts (Unterordner): die Liste bleibt, es wird nicht neu geladen.
+- [ ] Die JSON-Datei ansehen (`stdpath("data")/ui/slots/`): enthält **keinen** cmd-/lua-Slot, auch wenn welche aktiv sind.
+- [ ] Die JSON-Datei von Hand um einen Eintrag `{"n":9,"kind":"cmd","cmd":"echo","args":"x"}` ergänzen, Neovim neu starten: der Eintrag wird **nicht** geladen, einmal gemeldet ("may not hold"), nichts läuft.
+- [ ] Eine fremde Datei an den Datenpfad legen (kein `ui.slots`-Format): Meldung "not a ui.slots data file", die Datei bleibt **unverändert**, Slots arbeiten weiter im Speicher.
+
+**O3.7 Vervollständigung**
+
+- [ ] `:UI slots <Tab>`: Unterbefehle **und** die vorhandenen Slot-Nummern, auch in einer frischen Sitzung (vor dem ersten Slot-Befehl).
+- [ ] `:UI slots clear <Tab>` bietet `all` und die Nummern; `:UI slots move <Tab>` die Nummern; `:UI slots clear all <Tab>` nichts.
+- [ ] `:UI help` zeigt die `:UI slots …`-Zeilen.
+
+**O3.8 Feste Slots aus der Config**
+
+- [ ] `require("ui").setup({ slots = { enabled = true, slots = { [3] = { kind="file", path="~/notes.md" }, [5] = { kind="cmd", cmd="Lazy" } } } })`: `:UI slots` zeigt 3 und 5 als `fixed`; `:UI slots clear 3` und `move 3 1` werden verweigert; `add` überspringt 3 und 5.
+- [ ] Ein ungültiger Wert in der Config (`layout = "tower"`, `persits = true`): Meldung beim Start mit dem Namen, Standardwert wird verwendet, Neovim startet normal.
+
+---
+
+### O4. Regression (Änderungen an bestehendem Verhalten)
+
+- [ ] `:UI` ohne Argument und `:UI help`: wie vorher, plus der `slots`-Block.
+- [ ] `:UI <Tab>` listet `slots` neben den anderen Unterbefehlen; `:UI zen <Tab>`, `:UI notify <Tab>` unverändert.
+- [ ] `ui.setup({ all = true })` schaltet die Slots **nicht** ein (explizit-only, wie `notify`).
+- [ ] `require("ui.slots")` allein erzeugt weder Befehl noch Taste noch Autocmd (`:autocmd ui_slots` leer).
+- [ ] Die vorhandenen Tabline-/Statusline-/Kit-Funktionen verhalten sich unverändert (ui.nvim ändert dort nichts).
+
+---
+
+### O5. Bekannte Grenzen (kein Test nötig, nur wissen)
+
+- **Keine Leiste, kein Panel, kein Editor, keine Vorschau.** `toggle`/`open`/`close`/`edit` melden "not built yet". Kommt mit `slots-chips-bar`, `slots-panel-editor`, `slots-preview-*`.
+- **Kein Health-Check:** `:checkhealth ui` kennt die Slots noch nicht (`slots-docs-health`); ein unbekannter Platzhalter fällt erst beim Anlegen oder Ausführen auf.
+- **`cmd` verweigert statt zu quoten:** Werte mit `|`, Backtick oder führendem `+`/`!` werden abgelehnt; Befehle, die ihre Argumente selbst zerlegen (`:set`, `:args`), entscheiden selbst über Leerzeichen. Wer mehr braucht, nimmt einen `lua`-Slot.
+- **`mark`** öffnet im aktuellen Fenster (der `target`-Wert gilt nur für `file`); `target = "pick"` (Fensterwahl) ist nicht gebaut.
+- **Pfade mit `{`/`}`** werden beim `:UI slots add` automatisch doppelt geschrieben (`{{`); wer solche Pfade von Hand in die Config schreibt, muss es selbst tun.
+- **Zwei Sitzungen im selben Projekt** schreiben dieselbe Datei; die zuletzt schreibende gewinnt (kein Merge).
+- **Projekt = Git-Wurzel:** Die Belegung gilt pro Projektwurzel; ohne `.git` zählt der Arbeitsordner selbst als Projekt.
