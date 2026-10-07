@@ -184,26 +184,18 @@ alle Läufe: zuerst mit synthetischen Daten (`:Case ai test`), keine Kundendaten
 
 ---
 
-### F1. BLOCKER: `claude-cli` mit echtem Account (Task `ai.nvim/review-restpunkte`)
+### F1. `claude-cli` mit echtem Account (Task `ai.nvim/review-restpunkte`)
 
-Der hier eingeloggte Account liefert `Credit balance is too low`; der Erfolgspfad ist nur
-gegen eine Fake-CLI geprüft. Voraussetzung: `claude auth login` mit dem Max-Account (oder
-einem Account mit Guthaben), dann `:Ai provider claude-cli`.
+Live geprüft am 2026-10-07 mit dem Max-Account (CLI 2.1.292): Antwort und Streaming,
+`@pfad` (Datei wird nicht gelesen), `/cost` (geht zum Modell), ungültiger
+`ANTHROPIC_API_KEY` in der Umgebung (wird ignoriert), `ANTHROPIC_BASE_URL`-Warnung und
+Health-Eintrag. Was bleibt, braucht die Neovim-Oberfläche:
 
-- [ ] `:Ai ask` mit "say ok": Antwort kommt, Streaming (`:Ai stream`) füllt das Panel; die
-      stream-json-Form passt (Annahme aus der Doku, nie live gesehen).
-- [ ] `@pfad`-Erwähnung im Prompt (z. B. `@C:\Windows\win.ini`): die CLI liest die Datei
-      **nicht** (Deny-Regel plus `CLAUDE_CODE_DISABLE_ATTACHMENTS`); Prompt-Anfang mit
-      `/cost` wird nicht lokal beantwortet (Label `User message:`).
-- [ ] `ANTHROPIC_API_KEY` in der Umgebung gesetzt: es wird trotzdem der eingeloggte Account
-      benutzt (Variable wird aus dem Kindprozess entfernt).
-- [ ] `ANTHROPIC_BASE_URL` gesetzt (Claude Desktop setzt sie evtl. selbst): `:checkhealth ai`
-      und `:Ai info` nennen nur den Host, Warnung nur wenn `claude` verfügbar oder
-      `claude-cli` aktiv; Anfrage geht weiter an dieses Gateway.
 - [ ] Abbruch (Antwortfenster schließen) beendet den Prozess; in casedesk steht "cancelled",
       kein Netzwerkfehler.
 - [ ] `:checkhealth ai`: Hinweis bei `apiKeyHelper` bzw. Zugangsdaten im `env`-Block deiner
-      CLI-Einstellungen (nur wenn du so etwas konfiguriert hast; zeigt nie den Wert).
+      CLI-Einstellungen (nur wenn du so etwas konfiguriert hast; hier kam keiner, also
+      nichts konfiguriert; zeigt nie den Wert).
 
 ---
 
