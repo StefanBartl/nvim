@@ -106,10 +106,10 @@
     - [N2. Was auf dich wartet (Entscheidung, Live-Abnahme, Handarbeit)](#n2-was-auf-dich-wartet-entscheidung-live-abnahme-handarbeit)
     - [N3. Wurzel-Blocker: ein Task hält viele andere auf](#n3-wurzel-blocker-ein-task-hält-viele-andere-auf)
     - [N4. Blockaden, die sich selbst erledigt haben oder nicht auflösbar sind](#n4-blockaden-die-sich-selbst-erledigt-haben-oder-nicht-auflösbar-sind)
-  - [O. ui.nvim: `ui.slots` (Kern ohne Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#o-uinvim-uislots-kern-ohne-leiste--live-checks-und-blocker-stand-2026-10-07-abend)
+  - [O. ui.nvim: `ui.slots` (Kern und Chip-Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#o-uinvim-uislots-kern-und-chip-leiste--live-checks-und-blocker-stand-2026-10-07-abend)
     - [O1. Blocker](#o1-blocker)
     - [O2. Neue Befehle, Optionen und APIs](#o2-neue-befehle-optionen-und-apis)
-    - [O3. Live-Checkliste (ohne Leiste: alles per Befehl und Taste)](#o3-live-checkliste-ohne-leiste-alles-per-befehl-und-taste)
+    - [O3. Live-Checkliste (Befehle, Tasten, Chip-Leiste)](#o3-live-checkliste-befehle-tasten-chip-leiste)
     - [O4. Regression (Änderungen an bestehendem Verhalten)](#o4-regression-änderungen-an-bestehendem-verhalten)
     - [O5. Bekannte Grenzen (kein Test nötig, nur wissen)](#o5-bekannte-grenzen-kein-test-nötig-nur-wissen)
   - [P. docmap-desktop + documentation.nvim: Projektleiste, Suche, Statistik, Auto-Hide, Findings-Regeln — Live-Checks und Blocker (Stand 2026-10-07, Abend)](#p-docmap-desktop--documentationnvim-projektleiste-suche-statistik-auto-hide-findings-regeln--live-checks-und-blocker-stand-2026-10-07-abend)
@@ -2198,18 +2198,20 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 
 ---
 
-## O. ui.nvim: `ui.slots` (Kern ohne Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
+## O. ui.nvim: `ui.slots` (Kern und Chip-Leiste) — Live-Checks und Blocker (Stand 2026-10-07, Abend)
 
-Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut ist der
-**Kern**: Lua-API, `:UI slots`, Tasten, sechs Kinds. **Noch nicht da:** Leiste, Panel, Editor, Vorschau (Tasks stehen unten). Vor dem Testen
-**ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `dd89502`; CI grün auf Linux, macOS, Windows).
+Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
+**Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds) und die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus).
+**Noch nicht da:** Panel, Editor, Vorschau (Tasks stehen unten). Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses
+Abschnitts: `4009233`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
 
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
-`eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS). Alle bis auf `dd89502`
-(nur Testcode, CI grün) sind ultracode-reviewt (zwei Runden bei den Kinds und der API, eine bei den Aktions-Kinds).
+`eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS),
+`8ec1d45` (Chip-Leiste), `35178e3` (Umbau: nicht fokussierbar, Tasten verwerfen), `85e520e` (ein flakiger Test entfernt), `4009233` (Nachbesserungen).
+Alle bis auf `dd89502` und `85e520e` (nur Testcode) sind ultracode-reviewt (zwei Runden bei Kinds/API, eine bei den Aktions-Kinds, zwei bei der Leiste).
 
 ### O1. Blocker
 
@@ -2217,14 +2219,13 @@ Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kind
 N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nvim/slots-live-check` (steht dort schon). Neu erzeugen:
 `nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` und `list --waiting` im Ordner von `tasks.nvim`, mit `TASKS_VAULT` auf den Vault.
 
-**Kette des Plans `ui.nvim/ui-slots`** (7 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
-`slots-commands-api`, `slots-action-kinds`). Nichts davon wartet auf dich, außer dem letzten Glied:
+**Kette des Plans `ui.nvim/ui-slots`** (6 von 12 Tasks offen; erledigt: `slots-entscheidungen`, `slots-store-resolve`, `slots-kinds-basic`,
+`slots-commands-api`, `slots-action-kinds`, `slots-chips-bar`). Nichts davon wartet auf dich, außer dem letzten Glied:
 
 | Task | Status | Wartet auf | Was |
 |---|---|---|---|
-| `ui.nvim/slots-chips-bar` | startbar (L) | — | die sichtbare Leiste mit Akkordeon-Scroll |
 | `hover.nvim/preview-target-api` | startbar (S) | — | prüfen, ob hover.nvim einen öffentlichen Einstieg für URL-Vorschauen hat; sonst dort ergänzen |
-| `ui.nvim/slots-panel-editor` | blocked | `slots-chips-bar` | fokussierbares Panel, Editor, Kontextmenü (weiche Kante zu `kit-sidebar-surface`) |
+| `ui.nvim/slots-panel-editor` | startbar (L) | — | fokussierbares Panel, Editor, Kontextmenü (weiche Kante zu `kit-sidebar-surface`) |
 | `ui.nvim/slots-preview-file` | blocked | `slots-panel-editor` | Vorschau-Renderer und Dateivorschau |
 | `ui.nvim/slots-preview-url` | blocked | `slots-preview-file`, `hover.nvim/preview-target-api` | URL-Vorschau über hover.nvim |
 | `ui.nvim/slots-docs-health` | blocked | `slots-panel-editor`, `slots-preview-url` | Health-Check, Moduldoku, `scope.md`, Mausspecs |
@@ -2237,7 +2238,8 @@ N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nv
 | Der Vault-weite `tasks ci` ist rot | `mux.nvim` fehlte im Index (inzwischen: `index --check` meldet 0 veraltet); `md_lint` läuft nur mit `--trust-vault-lint`; ein fremder Task-Befund bleibt | nicht von den Slots; Lauf mit `--trust-vault-lint` und dem eigenen Befund ansehen |
 | Der nvim-config-Checkout hat uncommittete Änderungen anderer Sitzungen (`Notes.md`, `00_ROADMAP.md`, `Casedesk/…`, `IDEAS/…`) | Beim Committen nur die eigenen Dateien hinzufügen, nie `git add -A` | läuft weiter, gehört nicht zu den Slots |
 | ui.nvim-CI war auf macOS rot (`313d37a`, `4367842`) | Tests verglichen den Temp-Pfad roh, macOS meldet `/private/var` statt `/var` | **behoben** in `dd89502`, CI grün |
-| `kit_drift_spec` | Der rote Lauf `bc8da10` vor den Slots (Kit-Kopie in lib.nvim) | seither grün; die Drift-Prüfung gilt auch für die Leiste, solange sie nichts im Kit ändert |
+| `kit_drift_spec` kann rot werden | Andere Sitzungen pushen Kit-Commits in ui.nvim und spiegeln sie nach lib.nvim; in der Zwischenzeit unterscheiden sich die Kopien | kein Fehler der Slots (sie ändern das Kit nicht): `git pull --rebase origin main`, erneut laufen lassen |
+| Neovim 0.10 | Das Verwerfen eines Mausklicks per `vim.on_key` gibt es erst ab 0.11: auf 0.10 bewegt ein Klick auf die Leiste auch den Cursor darunter und der Rechtsklick öffnet zusätzlich das eingebaute Menü | Hinweis beim Öffnen der Leiste, Anmerkung in `docs/requirements.md`; unter 0.11/0.12 kein Thema |
 | Windows: `vim.ui.open` startet `cmd.exe /c start` | `&`, `|`, `^`, `%` in einer URL sind cmd-Syntax (Query abgeschnitten, Befehlsausführung möglich) | im url-Kind umgangen (`rundll32`), **echter Browserstart noch ungeprüft** — siehe O3.4 |
 
 ---
@@ -2253,10 +2255,12 @@ N1 bis N4 gelten weiter. Aus diesem Chat kommt nur eine Zeile in N2 dazu, `ui.nv
 | `:UI slots clear <n>\|all` | leert einen Slot / alle, die nicht fest sind |
 | `:UI slots move <a> <b>` | Slot a nach b; tauscht, wenn b belegt ist |
 | `:UI slots kinds` | `cmd, file, lua, mark, url, yank` |
-| `:UI slots toggle\|open\|close\|edit` | **melden "not built yet"** (Leiste und Editor fehlen) |
+| `:UI slots toggle\|open\|close` | Chip-Leiste ein-/ausblenden (`toggle` kehrt um; steht kein Slot an, erscheint sie mit dem ersten) |
+| `:UI slots edit` | **meldet "not built yet"** (Editor fehlt) |
 | `ui.setup({ slots = true })` | schaltet die Slots ein (Standardwerte bzw. frühere `slots.setup()`) |
 | `ui.setup({ slots = { enabled = true, … } })` | konfiguriert und schaltet ein; ohne `enabled = true` nur konfiguriert |
 | `require("ui.slots")` | `setup`, `enable`, `disable`, `apply`, `add`, `yank`, `clear`, `clear_all`, `move`, `list`, `get`, `register_kind`, `last_applied` |
+| Optionen der Leiste | `show = true` (öffnet sie beim Einschalten), `style` = `rounded` (Standard), `double`, `ascii`, `solid`, `minimal` (pro Slot mit `style` überschreibbar), `side` = `right` (Standard) oder `left`, `width` (Anteil ≤ 1 oder Spalten, Standard 0.25) |
 | Tasten, nur über `keys = { … }` | `apply = "<leader>%d"` (Slots 1 bis 9), `count = "<leader>S"` (`12<leader>S`), `add = "<leader>sa"`; ohne `keys` **keine einzige Taste** |
 | Daten | `stdpath("data")/ui/slots/project-<hash>.json` bzw. `global.json`; Option `data_dir` ändert den Ort |
 | Platzhalter | `{file}` `{dir}` `{root}` `{cwd}` `{line}` `{col}` `{word}` `{sel}` `{clip}` `{count}`; `{{` und `}}` sind wörtliche Klammern |
@@ -2266,7 +2270,7 @@ Kinds und ihre Felder: `file { path, target?, line?, col? }`, `yank { text, regi
 
 ---
 
-### O3. Live-Checkliste (ohne Leiste: alles per Befehl und Taste)
+### O3. Live-Checkliste (Befehle, Tasten, Chip-Leiste)
 
 **Vorbereitung:** ui.nvim pullen, Neovim neu starten. Zum Ausprobieren reicht `:UI slots` (schaltet für die Sitzung ein). Für die Tasten
 zusätzlich in einer Testkonfiguration oder per `:lua`:
@@ -2336,6 +2340,27 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] `require("ui").setup({ slots = { enabled = true, slots = { [3] = { kind="file", path="~/notes.md" }, [5] = { kind="cmd", cmd="Lazy" } } } })`: `:UI slots` zeigt 3 und 5 als `fixed`; `:UI slots clear 3` und `move 3 1` werden verweigert; `add` überspringt 3 und 5.
 - [ ] Ein ungültiger Wert in der Config (`layout = "tower"`, `persits = true`): Meldung beim Start mit dem Namen, Standardwert wird verwendet, Neovim startet normal.
 
+**O3.9 Chip-Leiste** (am besten mit mindestens 6 Slots und einem zweiten Fenster)
+
+- [ ] `:UI slots toggle`: am rechten Rand erscheint ein Chip je Slot, abgerundet (`╭─╮`), mit Nummer, Icon und Label; der aktuelle Datei-Slot ist mit `•` markiert, eine Datei mit ungespeicherten Änderungen mit `+`, eine fehlende Datei mit `✗`.
+- [ ] Nochmal `:UI slots toggle`: die Leiste ist weg, nichts bleibt am Bildschirm hängen. `:UI slots open` und `close` gehen ebenso.
+- [ ] **Linksklick** auf einen Chip (auch auf dessen Rahmenzeile) führt den Slot aus. Der Cursor im Code **unter** der Leiste bewegt sich dabei nicht, und der Fokus bleibt im Editorfenster.
+- [ ] **Rechtsklick** auf einen Chip: ein kleines Menü "slot N" mit Apply, Copy, Clear. Es öffnet sich **nur dieses**, nicht zusätzlich Neovims eigenes Menü und nicht das `ui.menu` des Editors.
+- [ ] Rechtsklick im Code (nicht auf der Leiste) öffnet weiter das allgemeine Menü.
+- [ ] Ein schneller **zweiter Klick** auf denselben Chip (Doppelklick) führt den Slot ein zweites Mal aus.
+- [ ] Ziehen mit gedrückter Taste, **beginnend auf der Leiste**: keine Auswahl im Code, nichts passiert. Eine Auswahl, die im Code beginnt, funktioniert wie immer.
+- [ ] `<C-w>w` und `:windo` laufen **nie** in die Leiste (sie ist kein Fenster, das man betritt).
+- [ ] Mehr Slots als Zeilen (`:lua for i=1,30 do require("ui.slots").add({kind="yank",text="t"..i}) end`): die Leiste zeigt so viele wie passen, unten `▼ +n`; **Mausrad** über der Leiste scrollt um einen Slot (oben fällt einer weg, unten kommt der nächste dazu), dann erscheint `▲ +n`; ein Klick auf eine Zählerzeile scrollt ebenfalls um einen. Das Rad im Code scrollt den Code, nicht die Leiste.
+- [ ] Die Leiste hält den **zuletzt ausgeführten Slot** und den **Slot der aktuellen Datei** im Bild: `:UI slots 25` bringt Slot 25 in die Leiste; das Wechseln auf die Datei von Slot 3 scrollt zu ihm zurück.
+- [ ] Ein **neuer** Slot (`:UI slots add`) erscheint sofort und ist sichtbar.
+- [ ] Fenster verkleinern/vergrößern, `:set cmdheight=3`, `:set showtabline=2`: die Leiste passt Höhe und Position an (kein Überdecken von Statusline/Cmdline, ab 2 Tabs unter der Tabline).
+- [ ] Neuer Tab (`:tabnew`) und zurück: die Leiste ist in jedem Tab da, nie doppelt. `:only` und `<C-w>o`: sie kommt mit der nächsten Änderung wieder.
+- [ ] Stile: `require("ui.slots").setup({ style = "double" })` bzw. `"ascii"`, `"solid"` (gefüllte Blöcke), `"minimal"` (nur Text); ein einzelner Slot mit `style = "minimal"` zwischen runden Chips; `side = "left"`. Ein unbekannter Stil meldet einmal und nimmt `rounded`.
+- [ ] Farbschema wechseln (`:colorscheme …`): die Chips behalten lesbare Farben, auch im `solid`-Stil.
+- [ ] Ein sehr langer Slot-Name wird mit `…` gekürzt; ein Label mit Zeilenumbruch/Tab (`:lua require("ui.slots").add({kind="yank",text="x",label="a\nb"})`) macht keinen Fehler.
+- [ ] `show = true` in der Config: die Leiste ist nach dem Start da; `:lua require("ui.slots").disable()` entfernt sie und die Tasten.
+- [ ] Kit-Menüs und andere Floats (Toasts, Auswahllisten) liegen **über** der Leiste, nicht darunter; ein Klick auf ein Menü, das über der Leiste liegt, trifft das Menü. Die Leiste lässt Tabline und Statusline frei.
+
 ---
 
 ### O4. Regression (Änderungen an bestehendem Verhalten)
@@ -2345,12 +2370,15 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] `ui.setup({ all = true })` schaltet die Slots **nicht** ein (explizit-only, wie `notify`).
 - [ ] `require("ui.slots")` allein erzeugt weder Befehl noch Taste noch Autocmd (`:autocmd ui_slots` leer).
 - [ ] Die vorhandenen Tabline-/Statusline-/Kit-Funktionen verhalten sich unverändert (ui.nvim ändert dort nichts).
+- [ ] **`ui.menu` (Rechtsklick-Menü):** ändert sich nur dadurch, dass es nicht aufgeht, wenn der Zeiger auf der Slot-Leiste steht; im Code und auf Tabline/Statusline wie vorher. Ohne geladene Leiste kostet die Prüfung nichts.
 
 ---
 
 ### O5. Bekannte Grenzen (kein Test nötig, nur wissen)
 
-- **Keine Leiste, kein Panel, kein Editor, keine Vorschau.** `toggle`/`open`/`close`/`edit` melden "not built yet". Kommt mit `slots-chips-bar`, `slots-panel-editor`, `slots-preview-*`.
+- **Kein Panel, kein Editor, keine Vorschau.** `:UI slots edit` meldet "not built yet"; ein Kontextmenü mit mehr als Anwenden/Kopieren/Leeren kommt mit `slots-panel-editor`, die Vorschau mit `slots-preview-*`.
+- **Maus der Leiste, zwei Grenzen:** Eine Maustaste, die du selbst auf **mehrere** Tasten gelegt hast (z. B. `<RightMouse>` → `<LeftMouse><Cmd>popup PopUp<CR>`), verliert nur die erste an das Verwerfen, der Rest läuft; und auf Neovim 0.10 gibt es das Verwerfen gar nicht (siehe O1).
+- **Die Leiste liegt über dem Text:** Sie ist ein Float am Rand und verdeckt dort Code; `style = "minimal"` oder eine kleinere `width` macht sie schmaler.
 - **Kein Health-Check:** `:checkhealth ui` kennt die Slots noch nicht (`slots-docs-health`); ein unbekannter Platzhalter fällt erst beim Anlegen oder Ausführen auf.
 - **`cmd` verweigert statt zu quoten:** Werte mit `|`, Backtick oder führendem `+`/`!` werden abgelehnt; Befehle, die ihre Argumente selbst zerlegen (`:set`, `:args`), entscheiden selbst über Leerzeichen. Wer mehr braucht, nimmt einen `lua`-Slot.
 - **`mark`** öffnet im aktuellen Fenster (der `target`-Wert gilt nur für `file`); `target = "pick"` (Fensterwahl) ist nicht gebaut.
