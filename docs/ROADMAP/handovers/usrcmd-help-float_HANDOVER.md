@@ -77,3 +77,14 @@ Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_sp
    debugging-Routen haben keine `desc` (die Floats zeigen dort nur den Namen). Alle anderen Repos sind ausreichend
    beschrieben (die frueher vermuteten Luecken in replacer/recommender waren `path = {}`-Wurzelrouten mit Verb-`desc`).
 3. Optional: `desc`/`enum_desc` an Argumenten, wo Werte nicht selbsterklaerend sind.
+
+## Stolperfallen (aus den Reviews)
+
+- Ein Lua-`expr`-Mapping hat `replace_keycodes = true`: den Rueckgabewert **roh** liefern (`"<M-h>"`, `"<C-c>"`),
+  nicht vorher durch `nvim_replace_termcodes` jagen (sonst Muell wie `<80>ü`; in der echten Config lief das in einen Haenger).
+- `nvim_feedkeys(..., escape_ks = true)` fuer Text aus der Cmdline (ein Byte 0x80, z. B. im Gedankenstrich, ist sonst K_SPECIAL).
+- `fargs` sind schon entmaskiert (`my\ key` -> `my key`): beim Wiederaufbauen der Zeile Leerzeichen und `\` wieder maskieren;
+  Zeile aus der Cmdline mit maskierten Leerzeichen tokenisieren (`help/init.lua: split_tokens`).
+- Bei `-count`-Verben liefert nvim fuer `:Verb 3 sub` `range = 1`, `line1 = Cursorzeile`, `line2 = 3`: die Zahl steckt in `line2`.
+- Hinter einem nackten `--` hoeren nur die Flags auf (`flags.split`); `key=value` wird weiter geparst (`kv.split`).
+- Die echte Config laedt lib.nvim vom `main`-Checkout: Fixes erst nach Push+Pull dort testbar.
