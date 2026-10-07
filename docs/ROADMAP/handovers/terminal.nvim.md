@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07, native Backend + Status-Export nach WezTerm gebaut und live geprüft, `terminal.lua` der Config ersetzt. WezTerm-Pane-Backend gebaut und live geprüft. `navigate-core` gebaut und live geprüft. Nächste Schritte: `wezterm-navigation-keys` (WezTerm-Config), `health-checkhealth`, tmux-Backend.**
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07: native, WezTerm- und tmux-Backend, Status-Export, Navigation, Pin/Adopt, Health, Property-Specs gebaut und live geprüft (244 Specs, 5 Live-Skripte). Offen: ultracode-Re-Review ab `7c16ef6`, `rules-nvim-sweep` (manuelle Regeln), Start-A/B mit UI, `integrate-*`, `lib-osc-detect-extraction`, `release-docs`. Live-Checks und Blocker: `docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md` Abschnitt L.**
 
 ## Orte
 
@@ -56,3 +56,4 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-07
 - 2026-10-07: Review-Fixes (18), `<C-l>`-Entscheidung, `run --direct`-Optionen, Status-Datensatz + WezTerm-Exporter + `Configs/.../nvim_status.lua` (Tab-Titel, Right-Status), live geprüft.
 - 2026-10-07: `wezterm`-Pane-Backend (`backends/wezterm.lua`, Fake-CLI-Specs + `TESTS/live/wezterm.lua` gegen echtes WezTerm).
 - 2026-10-07: `navigate-core`: `terminal.navigate(dir, count)`, Hand-off an WezTerm/tmux am Neovim-Rand, Terminal-Modus-Tasten, opt-in `nav_*` (Spec in `specs/project.lua`), `TESTS/live/navigate.lua`.
+- 2026-10-07: tmux-Backend (+ Exporter, CI-Job), Konformitäts-Suite, Pin/Adopt, Health, Property-Specs, Perf-Messung (Branch-Cache), Neovim 0.11 als Minimum, `tmux.conf`-Ladefehler behoben; Final-Checks Abschnitt L.
