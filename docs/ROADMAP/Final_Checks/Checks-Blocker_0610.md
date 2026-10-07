@@ -117,7 +117,8 @@
 
 ## Intro
 
-Checks fuer dich aus der Umsetzung von `ROADMAP/Casedesk/NEW.md`, die **nicht
+Checks fuer dich aus der Umsetzung von `NEW.md` (die Inbox-Notiz liegt seit dem 7.10. im
+wkdbook-Backlog: `casedesk.nvim/Backlog/FEATURES/2026-10-06_inbox-new-clipboard-spotlight-mdview-mirror.md`), die **nicht
 direkt casedesk.nvim** betreffen. Die casedesk-Checks stehen in den Abschnitten **K** (neu am 7.10.), **L** (`NEW.md`) und **M**
 (komplette Live-Test-Checkliste), **alle Blocker** in **N**, die neuen `ui.slots` (Checks und Blocker, Stand 7.10. abends) in **O**.
 
@@ -1346,8 +1347,8 @@ Commit `casedesk.nvim` `2d8c468`; Fragen im Work-Repo `43d717c`. Die Checkliste 
 
 ## L. casedesk.nvim: Checks aus `NEW.md` — Clipboard, Spotlights, Übersetzer-Policy, KI-Kette (Stand 2026-10-06)
 
-Ergebnis der Umsetzung von `NEW.md` (`:Case clipboard`, Spotlights pro Case, spotlight.nvim <-> mdview.nvim)
-und der anschließenden Aufräum-Runden. Alles hier ist **von dir zu prüfen**; was **durch Externes blockiert** ist,
+Ergebnis der Umsetzung von `NEW.md` (`:Case clipboard`, Spotlights pro Case, spotlight.nvim <-> mdview.nvim; die
+Notiz ist erledigt und liegt im wkdbook-Backlog) und der anschließenden Aufräum-Runden. Alles hier ist **von dir zu prüfen**; was **durch Externes blockiert** ist,
 steht gesammelt in **N** (Blocker). Die Spotlight-/mdview-/ai-Checks, die nicht direkt casedesk betreffen, stehen in
 den Abschnitten **A**, **B**, **C** und **F** dieser Datei. Task: `casedesk.nvim/clipboard-spotlight-live-check`
 (wkdbook-myplugins). Fehler als eigene bug-Tasks anlegen.
