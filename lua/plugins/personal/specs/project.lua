@@ -686,6 +686,21 @@ return {
         -- groups = {},
       },
 
+      -- `:Git plugins log`: the newest commits of an installed plugin (or any clone).
+      -- Reads only - one `git log`, never a fetch.
+      -- plugins = {
+      --   -- Where the installed plugins come from: "auto" (the first available of
+      --   -- lazy.nvim, vim.pack, plain clones) or a list of "lazy" | "pack" | "clones".
+      --   sources = "auto",
+      --   -- Folders of clones for the "clones" source; empty = stdpath("data")/lazy
+      --   -- and stdpath("data")/site/pack/*/{start,opt}.
+      --   roots = {},
+      --   -- Commits shown when no count is given.
+      --   log_limit = 50,
+      --   -- Timeout of each git process, in milliseconds.
+      --   timeout_ms = 30000,
+      -- },
+
       -- Indicator for `:Git dashboard`/`:Git dashboard update` (both report into
       -- the shared lib.nvim.progress registry): "auto" | "notify" | "statusline" |
       -- "fidget" | "float" | "kit".
