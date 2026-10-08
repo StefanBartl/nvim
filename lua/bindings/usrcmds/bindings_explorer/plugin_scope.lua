@@ -384,6 +384,9 @@ end
 ---@return Lib.UserCmd.Composer.TypeDef
 function M.argtype()
   return {
+    -- What the option float shows for a slot of this type that has no text of its own (`check` and
+    -- `report`: one cheatsheet to report on). `search` and `browse` word theirs, the slot holds more there.
+    desc = "Cheatsheet to limit to, e.g. hover.nvim (default: all)",
     validate = function(raw)
       return true, raw, nil
     end,

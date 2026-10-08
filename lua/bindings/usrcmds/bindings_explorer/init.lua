@@ -54,6 +54,22 @@ local PLUGIN_ARG = "BINDINGS_PLUGIN"
 --- would reject every stem as a typo before the handler sees it.
 local SCOPE_VALUES = { "personal", "extern" }
 
+--- What the two corpus halves are, for the option float of the `browse` slots and `path`.
+---@type table<string, string>
+local SCOPE_VALUE_DESC = {
+  personal = "cheatsheets of the own plugins and this config",
+  extern = "cheatsheets of third-party plugins",
+}
+
+--- The optional `axis` word of `check` and `report`, and what each one adds or swaps.
+---@type table<string, string>
+local AXIS_VALUE_DESC = {
+  repo = "also check never-loaded plugins in their local checkouts",
+  extern = "only third-party commands that have no cheatsheet",
+  all = "personal and third-party results together",
+}
+local AXIS_DESC = "Which comparison to run (default: personal cheatsheets vs this session)"
+
 local M = {}
 
 ---@return table lib.nvim notify handle
@@ -407,9 +423,20 @@ end
 local function search_route(path, category, desc)
   return {
     path = path,
+    -- Either order: the first word that names a cheatsheet is the scope, the other one the query.
     args = {
-      { name = "plugin", type = PLUGIN_ARG, optional = true },
-      { name = "query", type = "STRING", optional = true },
+      {
+        name = "plugin",
+        type = PLUGIN_ARG,
+        optional = true,
+        desc = "Cheatsheet to search in (e.g. hover.nvim), else the search text",
+      },
+      {
+        name = "query",
+        type = "STRING",
+        optional = true,
+        desc = "Search text (or the cheatsheet, when the text came first)",
+      },
     },
     kv = {
       {
@@ -441,8 +468,22 @@ local function browse_route(path, category, desc)
   return {
     path = path,
     args = {
-      { name = "plugin", type = PLUGIN_ARG, values = SCOPE_VALUES, optional = true },
-      { name = "scope", type = PLUGIN_ARG, values = SCOPE_VALUES, optional = true },
+      {
+        name = "plugin",
+        type = PLUGIN_ARG,
+        values = SCOPE_VALUES,
+        optional = true,
+        desc = "Cheatsheet name (a prefix works), or personal / extern",
+        enum_desc = SCOPE_VALUE_DESC,
+      },
+      {
+        name = "scope",
+        type = PLUGIN_ARG,
+        values = SCOPE_VALUES,
+        optional = true,
+        desc = "The other of the two; the order does not matter",
+        enum_desc = SCOPE_VALUE_DESC,
+      },
     },
     kv = {
       {
@@ -460,6 +501,20 @@ local function browse_route(path, category, desc)
       end
       M.browse(category, sel)
     end,
+  }
+end
+
+--- The optional `axis` slot shared by `check` and `report`. A function, so each
+--- route gets a table of its own.
+---@return Lib.UserCmd.Composer.ArgSpec
+local function axis_arg()
+  return {
+    name = "axis",
+    type = "STRING",
+    enum = { "repo", "extern", "all" },
+    optional = true,
+    desc = AXIS_DESC,
+    enum_desc = AXIS_VALUE_DESC,
   }
 end
 
@@ -520,7 +575,17 @@ function M.enable()
       {
         path = { "path" },
         args = {
-          { name = "scope", type = "STRING", enum = { "personal", "extern" }, optional = true },
+          {
+            name = "scope",
+            type = "STRING",
+            enum = SCOPE_VALUES,
+            optional = true,
+            desc = "Which BINDINGS root to copy (default: both, one per line)",
+            enum_desc = {
+              personal = "the personal cheatsheet tree",
+              extern = "the extern cheatsheet tree",
+            },
+          },
         },
         desc = "BINDINGS-Wurzel(n) in die Zwischenablage kopieren",
         run = function(ctx)
@@ -551,7 +616,7 @@ function M.enable()
         path = { "check" },
         args = {
           { name = "plugin", type = PLUGIN_ARG, optional = true },
-          { name = "axis", type = "STRING", enum = { "repo", "extern", "all" }, optional = true },
+          axis_arg(),
         },
         -- `root=` as kv, not a third positional: a path and a plugin name are
         -- both free strings, and the composer binds positionals in order —
@@ -612,7 +677,7 @@ function M.enable()
         path = { "report" },
         args = {
           { name = "plugin", type = PLUGIN_ARG, optional = true },
-          { name = "axis", type = "STRING", enum = { "repo", "extern", "all" }, optional = true },
+          axis_arg(),
         },
         kv = { root_kv(), out_kv() },
         desc = "Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md",

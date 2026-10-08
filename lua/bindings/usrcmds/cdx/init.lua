@@ -154,7 +154,14 @@ function M.enable()
       },
       {
         path = { "prompt", "ultra_sha" },
-        args = { { name = "sha", type = "STRING", optional = true } },
+        args = {
+          {
+            name = "sha",
+            type = "STRING",
+            optional = true,
+            desc = "Commit SHA of 4 to 64 hex digits; more may follow",
+          },
+        },
         desc = "Copy PROMPT/ultra_sha.md; SHAs (space- or comma-separated) replace {SHA}, none keeps it",
         run = function(ctx)
           local tokens = {}
