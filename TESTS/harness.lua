@@ -126,8 +126,9 @@ end
 --- Check the shape of the positional-argument texts of a composer verb, as lib.nvim's option float
 --- shows them: the `desc` of the argument, else the one of its type (`register_type`); one line,
 --- no closing full stop, 12 to 80 characters. An `enum_desc` may only name values the argument has,
---- and is one line too. A built-in type (`DIR`, `PATH` ...) explains itself, so an argument with
---- neither text is skipped here -- `help.undocumented(verb, { args = true })` is what asks for one.
+--- and is one line too, at most 80 characters. A built-in type (`DIR`, `PATH` ...) explains itself,
+--- so an argument with neither text is skipped here -- `help.undocumented(verb, { args = true })`
+--- is what asks for one.
 ---@param verb string  A verb already registered with the composer
 ---@return integer seen  How many argument texts were looked at
 function H.check_arg_texts(verb)
@@ -157,8 +158,12 @@ function H.check_arg_texts(verb)
         H.ok(
           type(value_text) == "string"
             and not value_text:find("%.$")
-            and not value_text:find("[\r\n]"),
-          label .. ": enum_desc '" .. value .. "' is one line without a closing full stop"
+            and not value_text:find("[\r\n]")
+            and #value_text <= 80,
+          label
+            .. ": enum_desc '"
+            .. value
+            .. "' is one line of at most 80 characters without a closing full stop"
         )
       end
     end
