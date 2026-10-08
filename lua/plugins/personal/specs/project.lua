@@ -619,7 +619,7 @@ return {
     -- error on a session where the user never separately triggered one of
     -- diff.nvim's own commands first.
     -- ui.nvim: the multi-repo `:Git dashboard` uses `ui.kit` for its
-    -- popup/confirm dialogs.
+    -- popup/confirm dialogs, and `:Git plugins log` for its picker.
     dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim", "StefanBartl/ui.nvim" },
     keys = {
       -- Full-file blame (native `git blame --porcelain`).
