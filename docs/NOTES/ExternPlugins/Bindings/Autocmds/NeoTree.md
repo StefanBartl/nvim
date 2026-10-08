@@ -20,6 +20,7 @@ in [lua/plugins/neotree.lua](../../../../../lua/plugins/neotree.lua).
 
 | Neo-tree-Event | Quelle | Zweck | Status |
 |---|---|---|---|
+| `neo_tree_window_after_open` | [config/neotree/event_handlers/init.lua](../../../../../lua/config/neotree/event_handlers/init.lua) | Setzt im frisch geöffneten Neo-tree-Fenster (jede Position, jede Quelle) `foldmethod=manual` und `foldenable=false`, fensterlokal (`vim.wo[winid][0]`, also `:setlocal`; sonst würden später dort geöffnete Dateien und vom Baumfenster abgespaltene Fenster das Folding verlieren). Das Baumfenster wird vom Editor-Fenster abgesplittet und erbt dessen `foldmethod`/`foldexpr`; bei `expr` wertet jede Buffer-Änderung den Ausdruck pro Zeile aus, was bei großen Verzeichnissen (z. B. `%TEMP%`, ca. 5400 Einträge, ca. 35 s) Neovim einfrieren lässt. `foldenable=false` allein stoppt das Update nicht, `manual` schon. | [custom] |
 | `neo_tree_preview_buffer_enter` | [config/neotree/event_handlers/init.lua](../../../../../lua/config/neotree/event_handlers/init.lua) | Setzt den Cursor im neu geöffneten Preview-Buffer auf Zeile 1, Spalte 0 (Scroll-Position bei jedem neuen Preview zurücksetzen). | [custom] |
 
 ## Entfernte Handler (zur Einordnung, nicht mehr Teil dieser Config)
@@ -43,7 +44,8 @@ Plugin selbst (`plugin/neo-tree.lua`) registriert werden, Augroup `NeoTree`:
 |---|---|
 | `BufEnter` | Lazy-Load von Neo-tree triggern bzw. Netrw-Hijack versuchen, solange Neo-tree noch nicht aktiv „lauscht". |
 | `WinEnter` | Reihenfolge zuletzt fokussierter Fenster je Tab mitschreiben (für „intuitives" Öffnen von Dateien im richtigen Fenster). |
-| `BufWinLeave` (Pattern `neo-tree *`) | Lokale Window-Settings wiederherstellen, wenn ein `position = "current"`-Neo-tree-Fenster verlassen wird. |
+| `SessionLoadPost` | Nach dem Wiederherstellen einer Session verwaiste Neo-tree-Buffer aufräumen (`auto_clean_after_session_restore`). |
+| `WinClosed` | `close_if_last_window`: Neovim beenden, wenn nach dem Schließen nur noch ein Neo-tree-Fenster übrig bleibt. |
 
 Diese sind `[default]` und werden hier nur der Vollständigkeit halber
 erwähnt — sie werden von dieser Config nicht verändert.

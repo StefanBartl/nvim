@@ -10,7 +10,11 @@ Currently defines two handlers:
   rendering a big directory evaluates the expression once per line (opening
   `%TEMP%`, ~5400 lines, froze Neovim for ~35 s while the inherited expression
   pointed at a function that no longer exists). `'foldenable'` off alone does
-  not stop that update, `manual` does.
+  not stop that update, `manual` does. Both options are set window-local
+  (`vim.wo[winid][0]`, i.e. `:setlocal`): a plain `vim.wo[winid]` behaves like
+  `:set` and would also change the window's default, so a file opened later into
+  that window, or a window split off the focused tree, would start with folding
+  switched off.
 - **`neo_tree_preview_buffer_enter`** — resets the cursor to line 1, column 0
   whenever a new preview buffer is entered, so every previewed file starts
   scrolled to the top.

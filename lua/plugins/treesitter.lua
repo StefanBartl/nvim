@@ -155,8 +155,11 @@ plugins.add({
       -----------------------------------------------------------------------
       Autocmd.create("FileType", function(args)
         if guards.is_enabled(args.buf) then
-          vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-          vim.wo.foldmethod = "expr"
+          -- [0][0] = :setlocal. A plain vim.wo.<opt> = ... has :set semantics and
+          -- would also overwrite the default every later window inherits (see
+          -- :help vim.wo); nvim-treesitter's README and the runtime use [0][0].
+          vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+          vim.wo[0][0].foldmethod = "expr"
         end
       end, { group = ts_group, desc = "treesitter: use treesitter folding for this filetype" })
 
