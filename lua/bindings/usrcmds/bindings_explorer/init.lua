@@ -54,7 +54,8 @@ local PLUGIN_ARG = "BINDINGS_PLUGIN"
 --- would reject every stem as a typo before the handler sees it.
 local SCOPE_VALUES = { "personal", "extern" }
 
---- What the two corpus halves are, for the option float of the `browse` slots and `path`.
+--- What the two corpus halves are, for the option float of the `browse` slots.
+--- (`path` words its own texts inline: its `personal` root no longer holds any sheets.)
 ---@type table<string, string>
 local SCOPE_VALUE_DESC = {
   personal = "cheatsheets of the own plugins and this config",
@@ -62,10 +63,12 @@ local SCOPE_VALUE_DESC = {
 }
 
 --- The optional `axis` word of `check` and `report`, and what each one adds or swaps.
+--- `extern` swaps the whole corpus, not just the live-undocumented direction: the
+--- third-party cheatsheets are verified against the session too (`drift.check`).
 ---@type table<string, string>
 local AXIS_VALUE_DESC = {
   repo = "also check never-loaded plugins in their local checkouts",
-  extern = "only third-party commands that have no cheatsheet",
+  extern = "third-party cheatsheets and commands instead of the personal ones",
   all = "personal and third-party results together",
 }
 local AXIS_DESC = "Which comparison to run (default: personal cheatsheets vs this session)"
@@ -581,8 +584,10 @@ function M.enable()
             enum = SCOPE_VALUES,
             optional = true,
             desc = "Which BINDINGS root to copy (default: both, one per line)",
+            -- The personal root is gone (the sheets live in each plugin's
+            -- docs/BINDINGS.md, see `config.roots`): `personal` still copies it.
             enum_desc = {
-              personal = "the personal cheatsheet tree",
+              personal = "stale path: personal sheets live in each plugin's docs/BINDINGS.md",
               extern = "the extern cheatsheet tree",
             },
           },
@@ -654,7 +659,7 @@ function M.enable()
         path = { "check", "extern" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
         kv = { root_kv() },
-        desc = "Nur die fremden: live registrierte Commands ohne Cheatsheet, deren Plugin dieser Korpus nicht abdeckt",
+        desc = "Nur die fremden: Cheatsheets fremder Plugins gegen die Session, dazu live registrierte Commands ohne Cheatsheet, deren Plugin dieser Korpus nicht abdeckt",
         run = function(ctx)
           M.check(ctx.args.plugin, { repo_root = ctx.kv.root, scope = "extern" })
         end,
