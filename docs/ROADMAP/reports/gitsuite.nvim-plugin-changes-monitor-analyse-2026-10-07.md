@@ -794,7 +794,25 @@ gesetzt, `--count=<n>` ergänzt das positionale `n`. Der Review durch einen einf
 (kein ultracode) fand u. a. den textconv-Pfad, das vom Editor geerbte `GIT_DIR`,
 locale-abhängiges `%c` in der Textbereinigung und unvalidierte Owner/Repo-Namen in der
 Commit-URL; die macOS-CI fand danach einen Symlink-Fehler in `of_buffer`. Alles per Spec
-festgenagelt. Nächster Task: `plugins-ui-spike` und `plugins-report`.
+festgenagelt.
+
+**Fortschritt (2026-10-08, abends):** der Task `plugins-report` ist erledigt —
+gitsuite.nvim `7c85cc0` (gitfs/runs/target/semver), `643894b` (Report, Store,
+Markdown, Route, Config, Event, Doku), Fixes `e93bbbe`, `f1da1ee`, `5c37048`; 3-OS-CI
+grün. **Am Referenzfall dieser Maschine gemessen** (echte Klone, echte Lazy-Specs):
+`updated` meldet 8 Plugins im Lauf vom 2026-10-07 20:54, nvim-treesitter
+`f873ec29 → e289100f` mit 86 Commits (112 gesamt, 2,2 s, 8 Spawns), keine Install-
+Checkouts; `pending` meldet bei allen 50 Plugins 0 neue Commits ohne einen Prozess.
+Abweichungen: Lazys eigenes Semver wurde portiert statt `vim.version.range`
+(31 Range-Fälle gegen das Original: 0 Unterschiede); die Richtung kommt aus dem
+einen `git log A...B --left-right`, nicht aus `merge-base --is-ancestor`;
+Reviewed-Marker und `seen_ttl_days` gehören zu `plugins-report-ui`. Der Review
+(einfacher Agent, kein ultracode) fand u. a. einen Cache, der abgeschnittene
+Antworten wiederverwendete, einen verlorenen `.corrupt`-Hinweis, eine falsche
+Uhrzeit, die dauerhaft den „neuesten Lauf“ stellen konnte, und unnormalisierte
+gespeicherte Berichte; alles behoben und per Spec festgenagelt. Ein Bericht mit
+112 Commits ist 40 KB groß. Nächste Tasks: `plugins-ui-spike`,
+`plugins-breaking-classifier`, danach `plugins-report-ui`.
 
 Die Planberechnung des Task-Tools schätzt aus der Aufwandsskala **ca. 11,75
 Personentage** (Spanne 8–18,75 d; kritischer Pfad 8 d über 4 Tasks). Das ist eine
