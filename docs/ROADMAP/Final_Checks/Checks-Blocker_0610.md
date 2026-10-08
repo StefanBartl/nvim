@@ -2470,7 +2470,7 @@ lesbare Engine-/Neovim-Panels, neue **Projektleiste** (Karte / Dateien / Statist
 **headless und im Browser-Preview mit Stub-Daten** (`tools/preview/preview.py`, `node --test` 185 grün, `cargo test` 155 grün); **nie im echten
 Tauri-Fenster (WebView2)**.
 
-**Nach dem Review (62 + 22 Befunde, zwei Runden, je zwei Skeptiker pro Befund):** Fix-Commits `docmap-desktop` `2029041` (Sicherheit/Performance Rust), `1e7b882` (Frontend-Zustände, Seitenleiste, Suche), `1ae7ffd` (Icon-Manifest, Kartenserver, Folgefixes); `documentation.nvim` `6fb48a1` (strukturelle `missing-readme`-Regel), `16e4ed3` (Test gegen Doppelzählung); dritte und vierte Review-Runde: `1a93a1c`, `8a4d7c1` (Link-/Server-/Icon-Schutz). Die ersten Commits stehen unten.
+**Nach dem Review (62 + 22 Befunde, zwei Runden, je zwei Skeptiker pro Befund):** Fix-Commits `docmap-desktop` `2029041` (Sicherheit/Performance Rust), `1e7b882` (Frontend-Zustände, Seitenleiste, Suche), `1ae7ffd` (Icon-Manifest, Kartenserver, Folgefixes); `documentation.nvim` `6fb48a1` (strukturelle `missing-readme`-Regel), `16e4ed3` (Test gegen Doppelzählung); dritte und vierte Review-Runde: `1a93a1c`, `8a4d7c1` (Link-/Server-/Icon-Schutz); fünfte Runde (12 Befunde): `6e3d961` (Dateien in der Karte, Ordnerliste, Generieren, Performance). Die ersten Commits stehen unten.
 
 Commits, `docmap-desktop` (`main`, gepusht): `08e21d9` (Traffic-Dialog), `a2f3de8` (Chip „Karte veraltet“, Änderungsdialog, keine doppelten Zähler,
 Sortierung nur in der Übersicht), `6d45c0f` (Auto-Hide, Engine-/Neovim-Panels), `6bc7d3b` (Backend `stats.rs`/`search.rs`), `c97bc9f` (Projektleiste,
@@ -2485,6 +2485,7 @@ ultracode-reviewt.**
 | **`documentation.nvim`: eine zweite Sitzung ändert parallel dasselbe Arbeitsverzeichnis** (`bindings/usrcmds/init.lua`, `editor/registry.lua`, `standalone/vim_shim.lua`, `@types/init.lua`, `TESTS/check_policy_spec.lua`, `TESTS/shim_behavior_spec.lua`, `TESTS/setup_lazy_spec.lua`) | Die Gesamtsuite war in drei Läufen nie grün, jedes Mal mit anderen Fehlschlägen (`guard fs: modified …`); einzeln laufen sie grün | **offen**: erst committen, was die andere Sitzung fertig hat, dann `bash scripts/test.sh` einmal sauber; ich habe nur meine vier Dateien committet |
 | **Kein installierter Build mit den neuen Funktionen** | Installiert ist `v0.6.0`; alles hier liegt nur auf `main`. Ein Release `v0.6.1` ist nicht geschnitten (Task `docmap-desktop/release-v0-6-1-decision`) | zum Testen: im Repo `docmap-desktop` `cd src-tauri && cargo run` (Debug-Build, lädt `src/` direkt) |
 | **Kein Test im echten Fenster möglich** (Dateidialog mit Startordner, Auswahllisten in der Auto-Hide-Seitenleiste, Hover über dem eingebetteten iframe, Editor-Start aus der Suche) | Das sind genau die Stellen, an denen WebView2 anders sein kann als der Browser-Preview | P3 unten ist deine Liste dafür |
+| **Engine schreibt durch Links** (`documentation.nvim`, `docmap`-Binary) | Die App lehnt *Generate*/*Check* ab, wenn `docs/map` (oder ihr eigenes `out_dir`) ein Link ist. Was ein `.docmap.json` im Repository als `out_dir` setzt, und Links im Quellbaum, kennt nur die Engine: sie folgt ihnen beim Schreiben (`index.html`, `module_map.json`, `overview.md`) und beim Lesen | **offen**, Arbeit in `documentation.nvim` (jede Komponente unter dem Stamm per `lstat` prüfen, Links aus dem Stamm hinaus nicht beschreiben/lesen); die App kann es von außen nicht schließen |
 | **Task-Blocker aus N nicht neu geprüft** | Zahlen in N1 bis N4 (Stand 7.10.) gelten unverändert; aus diesem Chat kommt **kein neuer Task** dazu | `tasks list --actor=me` neu laufen lassen, falls du aktuelle Zahlen willst |
 
 **Entscheidungen, die du beim Testen treffen musst:**
@@ -2598,6 +2599,19 @@ Vor dem Testen: im Repo `docmap-desktop` `git pull`, dann `cd src-tauri && cargo
 - [ ] Kartenserver: die Karte lädt weiter wie vorher; ein Symlink in `docs/map`, der aus dem Ordner hinaus zeigt, wird nicht ausgeliefert (404).
 - [ ] **Verlinktes Kartenverzeichnis** (`8a4d7c1`): ein Projekt, dessen `docs/map` ein Symlink bzw. eine Junction ist (Windows: `mklink /J docs\map ..\irgendwo`): die Seitenleiste zeigt „noch keine Karte“, **kein** Chip „Karte veraltet“, die Suche im Scope „Ansicht“ meldet „noch keine Karte“, die Karte lädt nicht. Ein Kartenverzeichnis außerhalb des Projekts (Project settings → Map directory = `../maps`) funktioniert dagegen normal.
 - [ ] Windows: ein Suchtreffer oder Pfad mit einem Doppelpunkt im Namen (`x/C:y.txt`) wird mit „not a path inside the project“ abgelehnt, ohne Wartezeit.
+
+**P3.8b Links im Repository (fünfte Review-Runde, `6e3d961`)**
+
+Windows, Symlinks brauchen den Entwicklermodus: `mklink` ohne `/J` für Dateien/Ordner, Adressen aus dem Dokumentationsbereich (`192.0.2.x`, `198.51.100.x`), keine echten Rechner. Dass es **nicht hängt**, ist der Test; das Fenster darf nirgends ~20 s stehen.
+
+- [ ] **Datei als Link in der Karte:** in einem Projekt ist `docs\map\module_map.json` (und/oder `index.html`) ein Symlink auf `\\192.0.2.50\share\module_map.json`. Die Seitenleiste zeigt das Projekt sofort mit „noch keine Karte“, das Fenster friert beim Start und in der Übersicht nicht ein, es gibt keinen Chip „Karte veraltet“, die Suche im Scope „Ansicht“ und der Abhängigkeitsgraph (das Projekt steht unter „nicht gelesen“) hängen nicht.
+- [ ] Dasselbe mit einem Link **innerhalb** des Projekts (`docs\map\module_map.json` → `..\..\real\module_map.json`): die Karte wird normal gelesen.
+- [ ] **Generieren bei verlinktem `docs/map`** (Junction oder Symlink): *Generate* und *Check* melden „docs/map is a link, so the map is neither written to nor read from where it leads“ (unter „Engine fehlgeschlagen“) und schreiben **nichts** durch den Link. Beim *Add project* eines solchen Ordners erzeugt die App die Karte nicht automatisch.
+- [ ] **Ordner wählen** (*Add project*) mit einem Link `vendor` → `\\192.0.2.51\share` im Stamm: der Dialog erscheint ohne Wartezeit, `vendor` steht nicht in der Liste. Ein Link/eine Junction auf einen lokalen Ordner (auch auf einem anderen Laufwerk) steht weiter in der Liste, ein Git-Repository darin ist vorangehakt.
+- [ ] Ein Unterordner mit `.git` als Link auf `\\192.0.2.52\share` (so etwas liefert nur ein Archiv, nie `git clone`): Projekt hinzufügen, Sprachen zählen, Dateibaum öffnen, Suche und Statistik laufen ohne Wartezeit; der Unterordner zählt als eingebettetes Repository und wird übersprungen.
+- [ ] `manifest.json` mit einem `icons[].src` aus ~500 000 × `a/` (1 MB): das Projekt lässt sich wählen, kein Kern läuft dauerhaft auf 100 %.
+- [ ] iOS-Icon-Ordner `Assets.xcassets/AppIcon.appiconset` mit mehreren tausend `.png` (oder vielen Links): das Auswählen bleibt flüssig; ein normales Icon wird weiter gefunden.
+- [ ] Mehrere Projekte schnell nacheinander wählen und das Fenster dabei benutzen (Seitenleiste, Suche, Dateibaum): nichts blockiert, auch wenn eine Festplatte oder ein Netzlaufwerk langsam ist (diese Befehle laufen jetzt nicht mehr auf dem Hauptthread).
 
 **P3.8 documentation.nvim: Findings** (nach dem Push von `d2be49f` bzw. lokal)
 
