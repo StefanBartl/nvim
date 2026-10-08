@@ -1070,6 +1070,9 @@ function M.enable()
   -- completion. Validation is otherwise the built-in DIR
   -- semantics (must expand to an existing directory).
   composer.register_type("MYPLUGINS_DIR", {
+    -- `desc`: the line lib.nvim's option float shows for the positional argument of every route that
+    -- takes one (all mean the same: the folder the checkouts live in).
+    desc = "Folder with the plugin checkouts (default: $REPOS_DIR)",
     validate = function(raw)
       local expanded = expand_path(raw)
       if not is_dir(fnamemodify(expanded, ":p")) then
@@ -1119,6 +1122,7 @@ function M.enable()
   -- failing `require("plugins.personal")` do not lock the command out. Validation is
   -- left to jump(), which warns when no spec head matches.
   composer.register_type("MYPLUGINS_SPEC_NAME", {
+    desc = "Name of the plugin whose install spec to open (e.g. lib.nvim)",
     validate = function(raw)
       if raw == "" then
         return false, nil, "a plugin name is required"
@@ -1295,6 +1299,13 @@ function M.enable()
               type = "STRING",
               enum = { "auto", "dir", "remote", "disabled" },
               optional = true,
+              desc = "Source of all personal plugins, applied after a restart (none: show)",
+              enum_desc = {
+                auto = "machine role and the per-plugin settings decide",
+                dir = "all from the local checkouts",
+                remote = "all from GitHub",
+                disabled = "all switched off",
+              },
             },
           },
           desc = "Show, or persistently switch, plugins.personal.core.source's OVERRIDE (restart required to apply)",

@@ -123,4 +123,47 @@ function H.crlf(s)
   return (s:gsub("\n", "\r\n"))
 end
 
+--- Check the shape of the positional-argument texts of a composer verb, as lib.nvim's option float
+--- shows them: the `desc` of the argument, else the one of its type (`register_type`); one line,
+--- no closing full stop, 12 to 80 characters. An `enum_desc` may only name values the argument has,
+--- and is one line too. A built-in type (`DIR`, `PATH` ...) explains itself, so an argument with
+--- neither text is skipped here -- `help.undocumented(verb, { args = true })` is what asks for one.
+---@param verb string  A verb already registered with the composer
+---@return integer seen  How many argument texts were looked at
+function H.check_arg_texts(verb)
+  local composer = require("lib.nvim.bindings.usercmd.composer")
+  local argtypes = require("lib.nvim.bindings.usercmd.composer.argtypes")
+  local handle = composer.registry()[verb]
+  H.ok(handle ~= nil, ":" .. verb .. " is registered through the composer")
+
+  local seen = 0
+  for _, route in ipairs(handle:spec().routes or {}) do
+    for _, arg in ipairs(route.args or {}) do
+      local label = ("%s %s <%s>"):format(verb, table.concat(route.path, " "), arg.name)
+      local def = arg.type and argtypes.get(arg.type) or nil
+      local text = arg.desc or (def and def.desc)
+      if text ~= nil then
+        H.ok(type(text) == "string" and text ~= "", label .. ": the text is a string")
+        H.ok(not text:find("[\r\n]"), label .. ": the text is one line")
+        H.ok(not text:find("%.$"), label .. ": the text has no closing full stop")
+        H.ok(#text >= 12 and #text <= 80, label .. ": the text is 12 to 80 characters long")
+        seen = seen + 1
+      end
+      for value, value_text in pairs(arg.enum_desc or {}) do
+        H.ok(
+          vim.tbl_contains(arg.enum or arg.values or {}, value),
+          label .. ": enum_desc names '" .. value .. "', which is not one of its values"
+        )
+        H.ok(
+          type(value_text) == "string"
+            and not value_text:find("%.$")
+            and not value_text:find("[\r\n]"),
+          label .. ": enum_desc '" .. value .. "' is one line without a closing full stop"
+        )
+      end
+    end
+  end
+  return seen
+end
+
 return H

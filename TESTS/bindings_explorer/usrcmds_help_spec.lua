@@ -1,8 +1,11 @@
--- TESTS/bindings_explorer/usrcmds_help_spec.lua -- every key=value pair of `:Bindings` has a line in
--- lib.nvim's option float (`plugin=`, `root=`, `out=`).
+-- TESTS/bindings_explorer/usrcmds_help_spec.lua -- every key=value pair and positional argument of
+-- `:Bindings` has a line in lib.nvim's option float (`plugin=`, `root=`, `out=`; the plugin, query,
+-- scope and axis slots).
 --
--- The text comes from the `desc` of each KvSpec in bindings/usrcmds/bindings_explorer/init.lua. A
--- new pair without one shows up as a bare row in the cheatsheet, so this fails until it is described.
+-- The text comes from the `desc` of each KvSpec / ArgSpec in bindings/usrcmds/bindings_explorer/init.lua
+-- (a slot of the BINDINGS_PLUGIN type may rely on the text of the type, `plugin_scope.argtype`). A
+-- new pair or slot without one shows up as a bare row in the cheatsheet, so this fails until it is
+-- described.
 
 return function(H)
   local ok, composer = pcall(require, "lib.nvim.bindings.usercmd.composer")
@@ -18,8 +21,12 @@ return function(H)
   H.ok(composer.registry().Bindings ~= nil, ":Bindings is registered through the composer")
 
   local missing = {}
-  for _, m in ipairs(composer.help.undocumented("Bindings")) do
-    missing[#missing + 1] = ("%s %s"):format(m.route, m.name)
+  for _, m in ipairs(composer.help.undocumented("Bindings", { args = true })) do
+    missing[#missing + 1] = ("%s %s %s"):format(m.route, m.kind, m.name)
   end
   H.eq(#missing, 0, ":Bindings options without a help text: " .. table.concat(missing, ", "))
+
+  -- one line each, no closing full stop; and the check must not pass for the wrong reason
+  local seen = H.check_arg_texts("Bindings")
+  H.ok(seen >= 20, "the route tree carries the argument texts of all subcommands, saw " .. seen)
 end

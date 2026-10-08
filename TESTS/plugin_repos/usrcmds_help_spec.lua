@@ -1,9 +1,10 @@
--- TESTS/plugin_repos/usrcmds_help_spec.lua -- every flag and key=value pair of `:MyPlugins` has a
--- line in lib.nvim's option float.
+-- TESTS/plugin_repos/usrcmds_help_spec.lua -- every flag, key=value pair and positional argument of
+-- `:MyPlugins` has a line in lib.nvim's option float.
 --
 -- The verb is assembled from this config's own routes (clone, fetch, sync, dashboard ...) and from
--- tasks.nvim's task routes. A new option without a `desc` shows up as a bare row in the cheatsheet,
--- so this fails until it is described.
+-- tasks.nvim's task routes. A new option or argument without a `desc` (or, for an argument, a text
+-- of its type) shows up as a bare row in the cheatsheet, so this fails until it is described.
+-- The task routes are only there when tasks.nvim is on the runtimepath; its own spec covers them.
 
 return function(H)
   local ok, composer = pcall(require, "lib.nvim.bindings.usercmd.composer")
@@ -19,8 +20,12 @@ return function(H)
   H.ok(composer.registry().MyPlugins ~= nil, ":MyPlugins is registered through the composer")
 
   local missing = {}
-  for _, m in ipairs(composer.help.undocumented("MyPlugins")) do
+  for _, m in ipairs(composer.help.undocumented("MyPlugins", { args = true })) do
     missing[#missing + 1] = ("%s %s %s"):format(m.route, m.kind, m.name)
   end
   H.eq(#missing, 0, ":MyPlugins options without a help text: " .. table.concat(missing, ", "))
+
+  -- one line each, no closing full stop; and the check must not pass for the wrong reason
+  local seen = H.check_arg_texts("MyPlugins")
+  H.ok(seen >= 10, "the route tree carries the argument texts of all subcommands, saw " .. seen)
 end
