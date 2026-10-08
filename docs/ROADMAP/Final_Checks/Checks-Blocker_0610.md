@@ -2231,7 +2231,7 @@ Bekannte Restpunkte stehen als 13 Tasks `ruleset-*` im Wkdbook (`terminal.nvim/R
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
 **Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
 **Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Vorschau** im Panel (Dateien und Adressen). (Tasks
-stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `90d1c4c`).
+stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `f745dd3`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
@@ -2337,12 +2337,12 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] Adresse mit Umlaut (`https://example.org/café`): öffnet korrekt.
 - [ ] `:lua print(pcall(require("ui.slots").add, {kind="url", url="javascript:alert(1)"}))` bzw. `add` meldet "scheme 'javascript' is not opened"; ebenso `ssh://…`, eine Adresse ohne Schema.
 - [ ] `{ kind="url", url="{clip}" }` mit einer https-Adresse im Clipboard öffnet sie; mit `javascript:…` im Clipboard Meldung statt Start.
-- [ ] `?q={word}` mit einem Wort wie `a&b`: im Browser steht `a%26b`.
+- [ ] `?q={clip}` mit dem Text `a&b c` in der Zwischenablage (`{word}` kann kein `&` enthalten, `<cword>` hört dort auf): im Browser steht `a%26b%20c`.
 
 **O3.5 `cmd`, `lua`, `mark`** (nur per Lua; die Dateien dürfen sie nie enthalten)
 
 - [ ] `cmd`: `:lua require("ui.slots").add({kind="cmd", cmd="echo", args="'hi' '{word}'"})` — Ausführen zeigt die Ausgabe. Unbekannter Befehl: "no such command".
-- [ ] `cmd` verweigert Gefährliches: Wort mit `|` im Cursor, Slot `args="{word}"` → "refused, the value of {word} has a | or a backtick"; ebenso Backtick, und `{clip}` mit führendem `+`/`!`. Mit `raw_values = true` geht es durch (nur für Befehle mit `<q-args>`).
+- [ ] `cmd` verweigert Gefährliches: Text `a|b` in der Zwischenablage, Slot `args="{clip}"` → "refused, the value of {clip} has a | or a backtick" (`{word}` kann das nicht enthalten); ebenso Backtick, und `{clip}` mit führendem `+`/`!`. Mit `raw_values = true` geht es durch (nur für Befehle mit `<q-args>`).
 - [ ] `lua`: `add({kind="lua", fn=function(ctx) vim.notify("n="..ctx.n.." word="..ctx.word) end})`. Ein `error(...)` in der Funktion: Meldung, Neovim läuft weiter. Ein String als `fn`: abgelehnt.
 - [ ] `mark` (nur mit sessions.nvim): `add({kind="mark", index=1})`, Ausführen öffnet Mark 1. Index über das Ende: "no mark at …". Ohne sessions.nvim: "sessions.nvim is not installed".
 - [ ] Lua-/cmd-Slots überleben einen Projektwechsel (`:cd` in ein anderes Projekt und zurück) in derselben Sitzung.
@@ -2371,7 +2371,7 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - [ ] `:UI slots toggle`: am rechten Rand erscheint ein Chip je Slot, abgerundet (`╭─╮`), mit Nummer, Icon und Label; der aktuelle Datei-Slot ist mit `•` markiert, eine Datei mit ungespeicherten Änderungen mit `+`, eine fehlende Datei mit `✗`.
 - [ ] Nochmal `:UI slots toggle`: die Leiste ist weg, nichts bleibt am Bildschirm hängen. `:UI slots open` und `close` gehen ebenso.
 - [ ] **Linksklick** auf einen Chip (auch auf dessen Rahmenzeile) führt den Slot aus. Der Cursor im Code **unter** der Leiste bewegt sich dabei nicht, und der Fokus bleibt im Editorfenster.
-- [ ] **Rechtsklick** auf einen Chip: ein kleines Menü "slot N" mit Apply, Copy, Clear. Es öffnet sich **nur dieses**, nicht zusätzlich Neovims eigenes Menü und nicht das `ui.menu` des Editors.
+- [ ] **Rechtsklick** auf einen Chip: ein kleines Menü "slot N" mit Apply, Edit, Copy, Clear (bei Dateien zusätzlich *Open in split / vsplit / tab*). Es öffnet sich **nur dieses**, nicht zusätzlich Neovims eigenes Menü und nicht das `ui.menu` des Editors.
 - [ ] Rechtsklick im Code (nicht auf der Leiste) öffnet weiter das allgemeine Menü.
 - [ ] Ein schneller **zweiter Klick** auf denselben Chip (Doppelklick) führt den Slot ein zweites Mal aus.
 - [ ] Ziehen mit gedrückter Taste, **beginnend auf der Leiste**: keine Auswahl im Code, nichts passiert. Eine Auswahl, die im Code beginnt, funktioniert wie immer.
@@ -2469,7 +2469,7 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - **Das Kontextmenü ist ein `ui.kit.select`**, nicht `ui.contextmenu`; dieselbe Optik wie die anderen Auswahllisten.
 - **Maus der Leiste, zwei Grenzen:** Eine Maustaste, die du selbst auf **mehrere** Tasten gelegt hast (z. B. `<RightMouse>` → `<LeftMouse><Cmd>popup PopUp<CR>`), verliert nur die erste an das Verwerfen, der Rest läuft; und auf Neovim 0.10 gibt es das Verwerfen gar nicht (siehe O1).
 - **Die Leiste liegt über dem Text:** Sie ist ein Float am Rand und verdeckt dort Code; `style = "minimal"` oder eine kleinere `width` macht sie schmaler.
-- **Verworfene Datei-Einträge gehen nicht verloren (Review-Runde 4):** Wird beim Laden ein Eintrag verworfen (`file:`-Adresse, UNC-Pfad, unerlaubte Art), kopiert die Erweiterung die Datei vor dem nächsten Speichern nach `<Datei>.dropped-<Zeit>` und sagt es; es gibt dazu genau eine Meldung, höchstens 600 Zeichen lang.
+- **Verworfene Datei-Einträge gehen nicht verloren (Review-Runde 4):** Wird beim Laden ein Eintrag verworfen (`file:`-Adresse, UNC-Pfad, unerlaubte Art), kopiert die Erweiterung die Datei vor dem nächsten Speichern nach `<Datei>.dropped-<Zeit>-<pid>-<n>` und sagt es; es gibt dazu genau eine Meldung, höchstens 600 Zeichen lang.
 - **Dateierkennung in langen Listen:** Die Slot-Zeile der aktuellen Datei (Leiste, Panel-Startzeile, gemerkte Cursorposition) wird über den geschriebenen Pfad gefunden; ein Link auf die Datei oder ein Platzhalter im Pfad wird nur für die ersten 30 solcher Slots (beim Panel-Öffnen 200) verfolgt.
 - **Was nur `setup()` darf (Review-Runde 3):** Eine `file:`-Adresse in einem `url`-Slot und ein Netzwerkpfad (UNC) in einem `file`-Slot werden aus der Datendatei verworfen (eine Meldung für alle verworfenen Einträge) und vom Editor und von `add()` mit Begründung abgelehnt; in `setup({ slots = ... })` gehen beide. Grund: der Systemöffner führt jede Datei aus, und ein UNC-Zugriff hält den Editor bis zu 20 s an.
 - **Die Vorschau holt eine Adresse mit Platzhaltern (`{clip}`, `{file}`, ...) nie**, auch nicht mit `preview.fetch = true`; sie zeigt Adresse und Host.
