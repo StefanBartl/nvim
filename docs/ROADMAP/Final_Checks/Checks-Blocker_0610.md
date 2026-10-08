@@ -2468,7 +2468,7 @@ lesbare Engine-/Neovim-Panels, neue **Projektleiste** (Karte / Dateien / Statist
 **headless und im Browser-Preview mit Stub-Daten** (`tools/preview/preview.py`, `node --test` 185 grün, `cargo test` 155 grün); **nie im echten
 Tauri-Fenster (WebView2)**.
 
-**Nach dem Review (62 + 22 Befunde, zwei Runden, je zwei Skeptiker pro Befund):** Fix-Commits `docmap-desktop` `2029041` (Sicherheit/Performance Rust), `1e7b882` (Frontend-Zustände, Seitenleiste, Suche), `1ae7ffd` (Icon-Manifest, Kartenserver, Folgefixes); `documentation.nvim` `6fb48a1` (strukturelle `missing-readme`-Regel), `16e4ed3` (Test gegen Doppelzählung). Die ersten Commits stehen unten.
+**Nach dem Review (62 + 22 Befunde, zwei Runden, je zwei Skeptiker pro Befund):** Fix-Commits `docmap-desktop` `2029041` (Sicherheit/Performance Rust), `1e7b882` (Frontend-Zustände, Seitenleiste, Suche), `1ae7ffd` (Icon-Manifest, Kartenserver, Folgefixes); `documentation.nvim` `6fb48a1` (strukturelle `missing-readme`-Regel), `16e4ed3` (Test gegen Doppelzählung); dritte und vierte Review-Runde: `1a93a1c`, `8a4d7c1` (Link-/Server-/Icon-Schutz). Die ersten Commits stehen unten.
 
 Commits, `docmap-desktop` (`main`, gepusht): `08e21d9` (Traffic-Dialog), `a2f3de8` (Chip „Karte veraltet“, Änderungsdialog, keine doppelten Zähler,
 Sortierung nur in der Übersicht), `6d45c0f` (Auto-Hide, Engine-/Neovim-Panels), `6bc7d3b` (Backend `stats.rs`/`search.rs`), `c97bc9f` (Projektleiste,
@@ -2594,6 +2594,8 @@ Vor dem Testen: im Repo `docmap-desktop` `git pull`, dann `cd src-tauri && cargo
 - [ ] **Mit** Editor-Befehl (z. B. `code -g {file}:{line}`): jede Dateiart öffnet im Editor, an der Zeile.
 - [ ] Ein Projekt mit `manifest.json` im Stamm, dessen `icons[].src` auf einen Pfad mit `..` oder auf einen UNC-Pfad (`\\host\share\x.png`) zeigt: das Projekt wird normal gewählt, **kein** Icon, **keine** Wartezeit (kein Zugriff auf den fremden Rechner).
 - [ ] Kartenserver: die Karte lädt weiter wie vorher; ein Symlink in `docs/map`, der aus dem Ordner hinaus zeigt, wird nicht ausgeliefert (404).
+- [ ] **Verlinktes Kartenverzeichnis** (`8a4d7c1`): ein Projekt, dessen `docs/map` ein Symlink bzw. eine Junction ist (Windows: `mklink /J docs\map ..\irgendwo`): die Seitenleiste zeigt „noch keine Karte“, **kein** Chip „Karte veraltet“, die Suche im Scope „Ansicht“ meldet „noch keine Karte“, die Karte lädt nicht. Ein Kartenverzeichnis außerhalb des Projekts (Project settings → Map directory = `../maps`) funktioniert dagegen normal.
+- [ ] Windows: ein Suchtreffer oder Pfad mit einem Doppelpunkt im Namen (`x/C:y.txt`) wird mit „not a path inside the project“ abgelehnt, ohne Wartezeit.
 
 **P3.8 documentation.nvim: Findings** (nach dem Push von `d2be49f` bzw. lokal)
 
