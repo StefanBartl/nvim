@@ -117,3 +117,25 @@ Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_sp
   `mode`-Werte bei `:Image paste`; die `:UI`-Entscheidung; Vorbehalte der Agenten (alle Zweifelsfaelle stehen in ihren Commits/Specs).
 - Hinweise: casedesk-Docs nennen `:Cases find ... year=`, das es nicht gibt; replacer-Docs sagen "jedes Flag hat ein --no-"
   (stimmt nicht fuer alle 41).
+
+## Positionsargumente (2026-10-08)
+
+- Mechanismus (lib.nvim `d1a8874`): `desc` am ArgSpec, **Typ-Text** (`register_type(name, { desc = ... })`, einmal pro geteiltem Typ),
+  Enum mit `desc` zeigt eine inerte Zeile ueber den Werten (+ `enum_desc` je Wert), eingebaute Typen zeigen ihren Namen;
+  `help.undocumented(verb?, { args = true })` listet, was noch nichts sagt.
+- Ergebnis in einer echten Sitzung (alle Plugins geladen): `undocumented(nil, { args = true })` ueber alle **69 Verben = 0**.
+  Jedes Repo hat einen Spec, der Flags, kv **und** Argumente erzwingt (ueberspringt sich bei aelterem lib.nvim).
+- Texte: casedesk `971af62`, sandbox `1d9ab9c`, pdfport `06751fe`, media `c0c7824`, images `68b010f`, terminal `2c891ce`/`9b1775d`,
+  pickers `fc780b1`, lsp `516466d`, hover `d27de3e`, spotlight `4f7bb1f`, reposcope `8a148f8`, emojis `ee8764b`, insights `f329e76`,
+  github_stats `bf5827f`/`f3b47fe`, buffer-ctx `44713a7`, sessions `a551393`, mdview `b4941e6`, my `a75f525`/`6a2bc33`,
+  runtime-analysis `789285a`, tasks `773a23b`, debugging `e267ce7`, fileops `509e27c`, nvim-config `6a7bf62a`,
+  replacer `5180871`, open `b4de920`, gitsuite `921571b`/`bfb8e38`, ai `bff2ebb`, cascade `f3b15c5`, lib `55b01d0`, rules `51f377c`,
+  gopath `c184732`/`08e8939`, language `bc67f28`, recommender `9e39ae1`, color_my_ascii `ef44fb9`, filetree `965788a`,
+  testing `6c44baf`, data `8d69f08`, diff `32eecc7`, markdown `e304f36`.
+- **Verhalten geaendert:** debugging.nvim (29 Platzhalter-Slots `arg` entfernt, Slots heissen jetzt wie in der Doku), buffer-ctx
+  (`linecount`/`bufnr`/`:Format clear|trim|cite|squeeze` ohne Argument-Slot). Ein zusaetzlich getipptes Token landet weiter in `ctx.rest`.
+- Gefundene Fehler (als Tasks angelegt): `:Case clean path=` unerreichbar, `:My set` 1/0 als Boolean, `:Insights imports unused` /
+  `compress outdir`, `:GithubStats diff` Presets, `:Debug inspect buffer` Namen vs. Zahl, `:Markdown format` fehlt in
+  SUBCOMMAND_NAMES, haengende Config-Tests (`sync_*`).
+- Offen: emojis `insert`/`first` bieten ein ignoriertes Scope-Argument an; reposcope-Slot heisst `a1`; gitsuite `bfb8e38` ist redundant
+  (`git revert` moeglich); die `:UI`-Entscheidung.
