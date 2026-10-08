@@ -102,3 +102,18 @@ Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_sp
   jede Route hat einen Text, jeder Text gehoert zu einer Route.
 - Offen: Stufe 2/3 (Flag-/kv-Vokabular), Enums, `:UI`-Entscheidung; Platzhalter-Texte der Form `annotation -> :Insert` (buffer-ctx `:Insert`)
   und aehnliche in anderen Plugins sind fachlich leer und sollten ersetzt werden.
+
+## Stufe 2 und 3 (2026-10-08): Flag- und kv-Texte
+
+- Mechanismus (lib.nvim `327131c`, `93745f9`): `--no-x` ohne eigenen Text zeigt `Off: <Text von --x>`;
+  `composer.help.undocumented(verb?)` listet Flags/kv ohne Text; Flags mit `values` zeigen ihre Werte wie ein Enum.
+- Ergebnis in einer echten Sitzung: `undocumented()` ueber alle 69 Verben = **0**. Jedes Repo hat einen Spec, der das erzwingt
+  (er ueberspringt sich, wenn lib.nvim aelter ist als `help.undocumented`).
+- Texte stehen an den Spec-Definitionen der Plugins: replacer `1af89ed`, insights `04efcb8`, terminal `83b10a3`, data `5e25c60`,
+  rules `39c779a`, casedesk `17ff0d2`, tasks `880938b`, testing `5a11d84`, media `e61ee80`, diff `dd302e9`, open `51372b8`,
+  sessions `94e09a7`, gitsuite `834ab0e`, images `fffc82e`, language `193d639`, recommender `0e97e91`, sandbox `c32743f`,
+  mdview `61c5fb7`, pdfport `c782e3e`, buffer-ctx `7d45c84`, nvim-config `afef77e7` (:Bindings), `988ddf08` (:MyPlugins).
+- Noch ohne Text: **Positionsargumente** (z. B. `old`/`new`/`scope` bei :Replace, `path:MEDIA_PATH` zeigt nur den Typnamen),
+  `mode`-Werte bei `:Image paste`; die `:UI`-Entscheidung; Vorbehalte der Agenten (alle Zweifelsfaelle stehen in ihren Commits/Specs).
+- Hinweise: casedesk-Docs nennen `:Cases find ... year=`, das es nicht gibt; replacer-Docs sagen "jedes Flag hat ein --no-"
+  (stimmt nicht fuer alle 41).
