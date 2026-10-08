@@ -2211,7 +2211,7 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, Ex-Befehl, Lua-Funktion, Mark). Gebaut sind der
 **Kern** (Lua-API, `:UI slots`, Tasten, sechs Kinds), die **Chip-Leiste** (ein Chip je Slot am Rand, Akkordeon-Scroll, Maus) und das
 **Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Vorschau** im Panel (Dateien und Adressen). (Tasks
-stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `fdc4a8a`).
+stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `90d1c4c`).
 
 Quellen: Design `wkdbook-myplugins/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
@@ -2449,6 +2449,8 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 - **Das Kontextmenü ist ein `ui.kit.select`**, nicht `ui.contextmenu`; dieselbe Optik wie die anderen Auswahllisten.
 - **Maus der Leiste, zwei Grenzen:** Eine Maustaste, die du selbst auf **mehrere** Tasten gelegt hast (z. B. `<RightMouse>` → `<LeftMouse><Cmd>popup PopUp<CR>`), verliert nur die erste an das Verwerfen, der Rest läuft; und auf Neovim 0.10 gibt es das Verwerfen gar nicht (siehe O1).
 - **Die Leiste liegt über dem Text:** Sie ist ein Float am Rand und verdeckt dort Code; `style = "minimal"` oder eine kleinere `width` macht sie schmaler.
+- **Verworfene Datei-Einträge gehen nicht verloren (Review-Runde 4):** Wird beim Laden ein Eintrag verworfen (`file:`-Adresse, UNC-Pfad, unerlaubte Art), kopiert die Erweiterung die Datei vor dem nächsten Speichern nach `<Datei>.dropped-<Zeit>` und sagt es; es gibt dazu genau eine Meldung, höchstens 600 Zeichen lang.
+- **Dateierkennung in langen Listen:** Die Slot-Zeile der aktuellen Datei (Leiste, Panel-Startzeile, gemerkte Cursorposition) wird über den geschriebenen Pfad gefunden; ein Link auf die Datei oder ein Platzhalter im Pfad wird nur für die ersten 30 solcher Slots (beim Panel-Öffnen 200) verfolgt.
 - **Was nur `setup()` darf (Review-Runde 3):** Eine `file:`-Adresse in einem `url`-Slot und ein Netzwerkpfad (UNC) in einem `file`-Slot werden aus der Datendatei verworfen (eine Meldung für alle verworfenen Einträge) und vom Editor und von `add()` mit Begründung abgelehnt; in `setup({ slots = ... })` gehen beide. Grund: der Systemöffner führt jede Datei aus, und ein UNC-Zugriff hält den Editor bis zu 20 s an.
 - **Die Vorschau holt eine Adresse mit Platzhaltern (`{clip}`, `{file}`, ...) nie**, auch nicht mit `preview.fetch = true`; sie zeigt Adresse und Host.
 - **Health-Check:** `:checkhealth ui` hat einen Abschnitt "Slots" (verworfene Optionen, unbekannte Platzhalter in `setup({ slots })`); Slots aus der Datendatei werden beim Laden geprüft, nicht dort.
