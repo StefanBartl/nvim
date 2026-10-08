@@ -139,3 +139,25 @@ Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_sp
   SUBCOMMAND_NAMES, haengende Config-Tests (`sync_*`).
 - Offen: emojis `insert`/`first` bieten ein ignoriertes Scope-Argument an; reposcope-Slot heisst `a1`; gitsuite `bfb8e38` ist redundant
   (`git revert` moeglich); die `:UI`-Entscheidung.
+
+## Review-Runde 4 (2026-10-09): alle uebrigen Code-Commits
+
+117 Agenten (max. 5 gleichzeitig): 13 Repo-Gruppen x (Text-Genauigkeit, Code/Tests) + lib-Security/Perf, jeder Fund mit Skeptiker;
+47 bestaetigt (22 falsche/irrefuehrende Texte, 9 Bugs, 15 Risiken, 1 Security), 23 widerlegt. Alle bestaetigten Funde sind behoben:
+
+- **lib.nvim:** `e9076d3` (eine Ebene nur mit freiem Argument oeffnet das Float statt die Zeile still zurueckzugeben; `entries.compute` im pcall;
+  Tokens wie fargs), `863952e` (Float-Titel mit Steuerzeichen werden ausgeschrieben, nicht roh gezeichnet), `ca0df56` (**`spec.quotes`**:
+  Tab und Float zaehlen einen gequoteten Lauf als ein Token; neues Modul `composer.tokens`), `f013cce`/`28b0d6f` (git_sync-Specs).
+- **replacer** `32d5851` (E1513 im argtypes-Spec), `400048a` (abstuerzende Suites lassen CI jetzt scheitern: `TESTS/ci_guard.lua`),
+  `af9dfc3` (`quotes = true` an Replace/Replacer/Surround/Wrap).
+- **markdown** `b9a0c4c`/`d29b2ab` (Disk-Pfad von `:Markdown format` und link_sanitize behalten BOM/CRLF/Schluss-Newline: `util/disk_lines.lua`),
+  `354d592`, `20ed40f` (`:Markdown export pdf <datei>` exportierte bei modifiziertem Buffer den falschen Inhalt).
+- **debugging** `321c72e` (Typ `DBG_BUFNR`: Tab bietet Nummern, `inspect buffer` akzeptiert nur Zahlen), `6084759`; **filetree** `593f6e8`;
+  **fileops** `54b2c4a`, `f390c00`; **casedesk** `6f7adc5`; **media** `1965f81` (`:Media window screen=` wurde nie weitergereicht);
+  **pdfport** `2fd5444` (`pages=` bei pdftotext liefert exakt die gelisteten Seiten), `1d8995f`; **tasks** `1267b95`; **testing** `5976ecb`
+  (`:Testing list` bietet `--cached`/`--reporter` nicht mehr an); **sandbox** `5623a06`; **recommender** `8648a78`; **language** `c659fe7`;
+  **terminal** `2651d3d`; **reposcope** `e2fca0c`; **lsp** `0fb3a23`; **nvim-config** `bc0b554b` (lokal) = `b7d18bab` (origin).
+- **Neue Tasks (Entscheidungen, die die Agenten nicht trafen):** pdfport `pages=` bei claude/gemini ignoriert; casedesk `:Case clean path=`;
+  lib: weitere Verben mit `spec.quotes`.
+- Hinweis: lokales nvim-config-`main` hat `bc0b554b` noch als Duplikat von `b7d18bab`; `git pull --rebase` verwirft es von selbst,
+  sobald die fremde Arbeit (`docs/ROADMAP/new.md`, github-stats-Daten) committed ist.
