@@ -452,7 +452,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Bindings report all` -- Eigene und fremde zusammen, als Markdown-Datei
 - [ ] `:Bindings report` -- Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md
 - [ ] `:Bindings check all` -- Eigene und fremde zusammen — das Verhalten vor der Scope-Trennung
-- [ ] `:Bindings check extern` -- Nur die fremden: live registrierte Commands ohne Cheatsheet, deren Plugin dieser Korpus nicht abdeckt
+- [ ] `:Bindings check extern` -- Nur die fremden: Cheatsheets fremder Plugins gegen die Session, dazu live registrierte Commands ohne Cheatsheet, deren Plugin dieser Korpus nicht abdeckt
 - [ ] `:Bindings report repo` -- Drift-Bericht mit der Checkout-Achse, als Markdown-Datei
 - [ ] `:Bindings audit prefixes` -- Command names that are a strict prefix of another live command (<Tab>/abbreviation collisions)
 - [ ] `:Bindings status` -- Dashboard: Korpus-, Live- und Plugin-Zahlen plus die Routenliste
