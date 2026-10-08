@@ -686,8 +686,10 @@ return {
         -- groups = {},
       },
 
-      -- `:Git plugins log`: the newest commits of an installed plugin (or any clone).
-      -- Reads only - one `git log`, never a fetch.
+      -- `:Git plugins log` (the newest commits of an installed plugin or any clone)
+      -- and `:Git plugins report` (what the last update changed / what the next one
+      -- would bring). Both read local state only - no fetch, no install, no change
+      -- to any clone.
       -- plugins = {
       --   -- Where the installed plugins come from: "auto" (the first available of
       --   -- lazy.nvim, vim.pack, plain clones) or a list of "lazy" | "pack" | "clones".
@@ -695,10 +697,27 @@ return {
       --   -- Folders of clones for the "clones" source; empty = stdpath("data")/lazy
       --   -- and stdpath("data")/site/pack/*/{start,opt}.
       --   roots = {},
-      --   -- Commits shown when no count is given.
+      --   -- Commits `:Git plugins log` shows when no count is given.
       --   log_limit = 50,
       --   -- Timeout of each git process, in milliseconds.
       --   timeout_ms = 30000,
+      --   -- `:Git plugins report`: also take dir-mode plugins (your own repos).
+      --   include_local = false,
+      --   -- "updated" = what the last update changed (from each clone's reflog),
+      --   -- "pending" = what the next update would bring (as of the last fetch).
+      --   mode = "updated",
+      --   -- Commits kept per plugin in a report; more are cut and marked.
+      --   max_commits = 1000,
+      --   -- git processes at once while a report is built (fewer with a virus scanner).
+      --   parallel = 4,
+      --   -- Plugins updated within this many seconds of each other are one run.
+      --   run_window_s = 300,
+      --   -- Keep merge commits in the commit lists.
+      --   merges = false,
+      --   -- Stored reports (stdpath("state")/gitsuite/plugins_reports.json): how many
+      --   -- and for how many days. The newest report is never dropped.
+      --   keep_reports = 20,
+      --   max_age_days = 365,
       -- },
 
       -- Indicator for `:Git dashboard`/`:Git dashboard update` (both report into
