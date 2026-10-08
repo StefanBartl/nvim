@@ -29,6 +29,7 @@ The specs of the task system (engine, CLI, editor front ends) moved with it into
 
 | File | Covers |
 |---|---|
+| `neotree/event_handlers_spec.lua` | the `neo_tree_window_after_open` handler: the tree window gets `foldmethod=manual` / `foldenable` off window-locally (no leak into buffers shown there later or windows split off the editor), also when the tree window is not the current one; hostile arguments do not throw |
 
 Every spec works on a fresh temp directory (`H.tmpdir()`, removed after the
 spec); none touches the real vault.

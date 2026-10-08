@@ -16,7 +16,7 @@ kein eigener Augroup) und teilen sich dieselbe Guard-Bedingung
 | Event | Quelle | Zweck |
 |---|---|---|
 | `FileType` | treesitter.lua | `parser_policy.ensure(lang, {...})` (s.u.) dann `vim.treesitter.start(args.buf)` — aktiviert Treesitter-Highlighting für den Buffer. |
-| `FileType` | treesitter.lua | Setzt `vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"` und `vim.wo.foldmethod = "expr"` — Treesitter-basiertes Folding. |
+| `FileType` | treesitter.lua | Setzt `vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"` und `vim.wo[0][0].foldmethod = "expr"` (`[0][0]` = `:setlocal`; ein einfaches `vim.wo.<opt>` wäre `:set` und würde auch den Default für später erzeugte Fenster überschreiben) — Treesitter-basiertes Folding. |
 | `FileType` | treesitter.lua | Setzt `vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"` — experimentelle Treesitter-Indentation. |
 
 ## Parser-Install-Policy (2026-08-01)

@@ -24,12 +24,19 @@ return {
     -- "manual" renders the same tree in under 2 s.) 'foldenable' goes off too,
     -- so zc/zM cannot fold the tree by hand. The window is open but not yet
     -- rendered when this fires.
+    --
+    -- [0] = :setlocal, on purpose: a plain vim.wo[win].<opt> has :set semantics
+    -- (these options are not global-local) and would also rewrite the window's
+    -- default value. Everything first shown in that window afterwards (a file
+    -- opened into a `position = "current"` tree window) and every window split
+    -- off the focused tree (:tabnew, :new, :vsplit) would then start with
+    -- manual folding and 'foldenable' off -- treesitter files lose their folds.
     event = "neo_tree_window_after_open",
     handler = function(args)
       local win = args and args.winid
       if win and vim.api.nvim_win_is_valid(win) then
-        vim.wo[win].foldmethod = "manual"
-        vim.wo[win].foldenable = false
+        vim.wo[win][0].foldmethod = "manual"
+        vim.wo[win][0].foldenable = false
       end
     end,
   },

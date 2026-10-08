@@ -61,6 +61,7 @@ local specs = {
   "cdx/usrcmds_help_spec.lua",
   "clipboard/snippets_spec.lua",
   "clipboard/usrcmds_help_spec.lua",
+  "neotree/event_handlers_spec.lua",
   "sync/sync_classify_spec.lua",
   "sync/sync_state_scope_spec.lua",
   "sync/sync_integration_spec.lua",
