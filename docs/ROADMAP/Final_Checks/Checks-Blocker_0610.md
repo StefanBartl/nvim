@@ -67,6 +67,7 @@
     - [L10. Live-Skripte (echte Terminals statt Fakes)](#l10-live-skripte-echte-terminals-statt-fakes)
     - [L11. Regression (Änderungen an Bestehendem)](#l11-regression-änderungen-an-bestehendem)
     - [L12. Bekannte Grenzen (kein Test nötig, nur wissen)](#l12-bekannte-grenzen-kein-test-nötig-nur-wissen)
+    - [L13. Änderungen aus dem rules.nvim-Durchlauf (Stand 2026-10-08)](#l13-änderungen-aus-dem-rulesnvim-durchlauf-stand-2026-10-08)
   - [L. casedesk.nvim: Checks aus `NEW.md` — Clipboard, Spotlights, Übersetzer-Policy, KI-Kette (Stand 2026-10-06)](#l-casedesknvim-checks-aus-newmd--clipboard-spotlights-übersetzer-policy-ki-kette-stand-2026-10-06)
     - [L1. Checks für dich (casedesk.nvim)](#l1-checks-für-dich-casedesknvim)
       - [`:Case clipboard`](#case-clipboard)
@@ -2048,7 +2049,7 @@ Commits, `terminal.nvim` (`main`): `696570c`, `8096526`, `4c592c4` (Grundstock, 
 - [x] **Entscheidung Shell-Panes (gefallen):** `NAVIGATION.shell_panes = "send"` (Empfehlung): `<C-j>`/`<C-k>`/`<C-h>` behalten in der Shell ihre Bedeutung. `Configs/terminals/wezterm/config/keybindings.lua`.
 - [ ] **Task `wezterm-navigation-keys`:** offen bis zum Handtest (L6); Tastendrücke lassen sich nicht automatisieren.
 - [ ] **Task `perf-pass`:** offen, weil die A/B-Messung des Starts **mit UI** fehlt (`scripts/startup-probe/bench.lua` der Config, einmal mit und einmal ohne das Plugin; headless: `setup()` 7–10 ms, Status-Update 15 µs, `Messungen/perf-2026-10-07.md`).
-- [ ] **Task `rules-nvim-sweep`:** die automatisierten Regeln (NEW, DEP, ERR, LUA, REL, SEC, UI, 39 mit Check) bestehen alle (`DEP-02` behoben, Neovim 0.11); die **393 manuellen** Regeln (432 gesamt) sind nicht abgearbeitet. Entscheidung: nur kritische Familien (SEC, ERR, PRIN) pro Sitzung durchgehen, oder alles?
+- [x] **Task `rules-nvim-sweep`:** erledigt (2026-10-08): alle 432 Regeln beurteilt, 106 bestätigte Befunde behoben, verworfen oder als 13 Tasks `ruleset-*` angelegt; LuaLS 0 in `lua/` und `TESTS/`, 485 Specs grün, alle sechs Live-Skripte `RESULT ok`; Ergebnisliste `wkdbook-myplugins/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`. Handtest der Änderungen: L13.
 - [ ] **Task `repo-scaffold`:** offen: `documentation.nvim` als Dev-Dependency und `scripts/gen_map.lua` (NEW-19/20), LuaLS-Nullmessung für das neue Repo, Abhaken der NEW-Gates.
 - [ ] **Task `lib-osc-detect-extraction`:** offen (nicht blockiert, ein Repo-übergreifender Umbau): OSC-1337-Erkennung/Writer aus `images.nvim`/`media.nvim` nach `lib.nvim.terminal` heben; `terminal.nvim` hat heute einen eigenen kleinen `core/osc.lua`.
 - [ ] **Tasks `integrate-sessions`, `integrate-pickers-ui`, `integrate-run-hooks`:** offen, je Plugin eine Bestandsaufnahme nötig (`sessions`: Terminal-Definitionen pro Branch speichern; `pickers`/`ui`: Picker mit Vorschau, Menü, Statusline-Segment; `testing`/`tasks`/`dap`/`cmdlog`/`sandbox`: `terminal.run`-Ziel). Keine Blocker, aber Reihenfolge ist deine Sache.
@@ -2200,6 +2201,25 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 - Der WezTerm-Statusexport braucht **Neovim 0.12+** (`nvim_ui_send`); unter 0.11 bleibt er aus, `:checkhealth terminal` sagt es. Das `tmux`-Backend braucht tmux 3.1+ für prozentuale Größen (ältere bekommen `-p`).
 - Ein Neovim **in einem anderen Neovim-Terminal** (`$NVIM` gesetzt **und** der äußere Neovim läuft, auch bei `--listen host:port`) schreibt unter `export = "auto"` nicht in die tmux-Pane des äußeren; ein tmux-Server, der **aus** einem laufenden Neovim-Terminal gestartet wurde, reicht dessen `$NVIM` an alle Panes weiter: in deiner `tmux.conf` entfernt `set-environment -gu NVIM` das, sonst `status.export = "tmux"` setzen.
 - `run` mit Liste in einem Multiplexer-Pane ohne `shell` in der Config akzeptiert nur Wörter aus `[A-Za-z0-9._/:-]` (Quoting für eine unbekannte Shell gibt es nicht); `shell = "pwsh"` o. ä. setzen, dann wird dafür gequotet.
+
+### L13. Änderungen aus dem rules.nvim-Durchlauf (Stand 2026-10-08)
+
+Der Durchlauf über alle 432 Regeln hat vier Blöcke und einen ultracode-Review (30 bestätigte Befunde) hinterlassen; viele Änderungen sind Verhalten, das du von Hand sehen kannst. Vor dem Testen **`terminal.nvim` auf `main` pullen**. Ergebnisliste: `wkdbook-myplugins/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`.
+
+- [ ] **`:Terminal close ghost`** und **`:Terminal hide ghost`** (es gibt kein Terminal "ghost"): eine Meldung `[terminal] no terminal 'ghost' in this project`, kein Fehler.
+- [ ] **Tab-Vervollständigung der Namen:** `:Terminal close <Tab>` bietet nur die offenen Terminals an; `:Terminal toggle <Tab>` zusätzlich `main`, `run` und `1`..`9`; `:Terminal run --name=<Tab>` ebenso.
+- [ ] **Zeichenweise Auswahl:** in einer Zeile `echo hello world` das Wort `hello` mit `viw` markieren, `:` drücken (die Zeile beginnt mit `'<,'>`), `Terminal send selection` ausführen: im Terminal erscheint nur `hello`, nicht die Zeile. Mit `V` oder einem eingetippten Bereich (`:2,3Terminal send selection --exec`) werden ganze Zeilen gesendet, auch wenn der Bereich eine ältere Auswahl überdeckt.
+- [ ] **`clear`-Taste** (nur wenn du `keymaps.clear` gebunden hast): in Git Bash oder WSL tippt sie `clear`, in `cmd.exe` und PowerShell `cls`.
+- [ ] **Float offen, Terminal einziges Fenster:** `:Terminal hide` und `:Terminal close` werfen kein E444 mehr; der Puffer zeigt danach die Datei, die du vorher bearbeitet hast, keinen leeren Puffer.
+- [ ] **`:checkhealth terminal`:** in WezTerm ohne tmux keine Warnung wegen tmux oder `allow-passthrough`; unter tmux ohne WezTerm-Export keine Warnung wegen `nvim_ui_send`; mit einer absichtlich falschen Option (`float = { width = -1 }`) steht `config: config key 'float.width' ...` im Bericht.
+- [ ] **Tippfehler in der Config:** `setup({ navigate = { handof = "tmux" } })` meldet den Fehler einmal, Navigation und Statusexport laufen weiter.
+- [ ] **Pin mit falschem Layout:** `:lua require("terminal").pin({ name = "main" }, { layout = "bogus" })` meldet `unknown layout`, **das native Terminal bleibt unverändert** (früher wurde es beendet).
+- [ ] **tmux-Startverzeichnis mit `#`:** ein Projekt-Ordner wie `C#` oder `a##b` öffnet das tmux-Pane im richtigen Ordner (früher im Home-Verzeichnis).
+- [ ] **PowerShell-Quoting:** `:lua require("terminal").run({ "echo", 'say "hi"' })` mit `shell = "pwsh"` wird abgelehnt (Hinweis auf `direct = true`); ein Wort mit Leerzeichen und abschließendem Backslash (`C:\my dir\`) ebenso. Gewöhnliche Wörter (`a b`, `it's`) gehen wie vorher.
+- [ ] **Branch im Status:** in einem Repo `git switch` auf einen anderen Branch: Tab-Titel bzw. `@terminal_branch` zeigen ihn sofort (kein Warten auf einen Timer); ein Terminal-Puffer zeigt nach `:cd` in ein anderes Repo dessen Branch.
+- [ ] **GitHub-Beschreibung (Nutzeraktion, nicht ausgeführt):** der Befehl steht im Task `terminal.nvim/ruleset-github-metadata`; ausführen oder verwerfen.
+
+Bekannte Restpunkte stehen als 13 Tasks `ruleset-*` im Wkdbook (`terminal.nvim/ROADMAP/tasks/`): lib.nvim-Module, asynchroner Statuspublish, strukturierte Fehlertypen, die Entscheidung zum verschachtelten Neovim (fail-open oder fail-closed), Modulkopplung, `@types` je Ebene, Werkzeuge, Zeitgrenzen als Optionen, zentrales Cleanup, Startmessung mit UI, Plattform-Matrix, Demo-GIF/Logo, GitHub-Beschreibung.
 
 ---
 
