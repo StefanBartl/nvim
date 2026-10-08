@@ -20,10 +20,18 @@ function M.routes()
       path = { "sync" },
       args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
       flags = {
-        { name = "only", type = "MYPLUGINS_NAME" },
-        { name = "dry-run", bool = true },
-        { name = "no-fetch", bool = true },
-        { name = "jobs", type = "INT" },
+        {
+          name = "only",
+          type = "MYPLUGINS_NAME",
+          desc = "Limit the run to this one listed plugin",
+        },
+        { name = "dry-run", bool = true, desc = "Classify what would be pulled, pull nothing" },
+        {
+          name = "no-fetch",
+          bool = true,
+          desc = "Skip the fetch, work from what is already known",
+        },
+        { name = "jobs", type = "INT", desc = "Parallel fetches (default 2, at most 6)" },
       },
       desc = "Fetch ALL listed plugin repos first, then pull every one that is behind (fast-forward only); the ones that cannot be pulled (dirty, diverged, no upstream, unreachable ...) are collected into a triage list instead of stopping the run. --dry-run classifies without pulling, --no-fetch skips the fetch, --jobs=<n> sets the parallel fetches (default 2, max 6), --only=<name> syncs one repo",
       run = function(ctx)
