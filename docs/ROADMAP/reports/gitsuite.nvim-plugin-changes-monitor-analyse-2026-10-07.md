@@ -783,8 +783,18 @@ enthalten), `no_lazy_fetch` zusätzlich über `-c protocol.allow=never` (gilt au
 git < 2.44), `_async`-Zwillinge für `rev_parse`/`merge_base`/`is_ancestor`/`tags`. Ein
 unabhängiger Review fand vor dem Push u. a. ein quadratisches Whitespace-Trimming (ein
 feindlicher Commit hätte den Editor eingefroren) und einen per Signal getöteten git-Prozess,
-der als Erfolg zählte; beides ist behoben und per Spec festgenagelt. Nächster Task:
-`plugins-log`.
+der als Erfolg zählte; beides ist behoben und per Spec festgenagelt.
+
+**Fortschritt (2026-10-08, später):** der Task `plugins-log` ist erledigt —
+gitsuite.nvim `2fba945`, Fixes `32aec20` und `4cb86fa`, 3-OS-CI grün. Abweichungen:
+die lazygit-Taste im Picker entfällt (lazygit kann den Klon ändern, das Feature liest nur),
+Patch-/Stat-Optionen sind verboten und `log`/`diff-tree` bekommen zusätzlich
+`--no-textconv --no-ext-diff`, `GIT_DIR`/`GIT_WORK_TREE` werden pro Aufruf auf den Klon
+gesetzt, `--count=<n>` ergänzt das positionale `n`. Der Review durch einen einfachen Agenten
+(kein ultracode) fand u. a. den textconv-Pfad, das vom Editor geerbte `GIT_DIR`,
+locale-abhängiges `%c` in der Textbereinigung und unvalidierte Owner/Repo-Namen in der
+Commit-URL; die macOS-CI fand danach einen Symlink-Fehler in `of_buffer`. Alles per Spec
+festgenagelt. Nächster Task: `plugins-ui-spike` und `plugins-report`.
 
 Die Planberechnung des Task-Tools schätzt aus der Aufwandsskala **ca. 11,75
 Personentage** (Spanne 8–18,75 d; kritischer Pfad 8 d über 4 Tasks). Das ist eine
