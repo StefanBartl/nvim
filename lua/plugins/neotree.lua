@@ -172,7 +172,21 @@ return {
             leave_dirs_open = false,
           },
           group_empty_dirs = true,
-          use_libuv_file_watcher = true,
+          -- false (2026-10-08): neo-tree's own libuv watcher re-scans the WHOLE
+          -- directory on every (debounced) fs event and does not guard against
+          -- overlapping scans. On a busy directory with thousands of entries
+          -- (%TEMP%) that starts ~1.7-3 full scans per second, none of which
+          -- finishes, so the tree never re-renders while it burns CPU (measured:
+          -- 5 events/s on 2000 entries -> 35 scans in 20 s, 20-29% of a core, 0
+          -- re-renders; watcher off -> 0 scans, ~10%). The same flag also arms
+          -- neo-tree's .git watcher. filetree.nvim's `file_watcher` feature
+          -- (on by default, recursive, 500 ms trailing debounce) refreshes the
+          -- tree on external changes instead: measured with this config, an
+          -- external file / `git add` / edit shows up 1-2 s later than with
+          -- the neo-tree watcher (git status colours included). With the flag
+          -- off neo-tree additionally refreshes once per buffer write
+          -- (`enable_refresh_on_write`, default true).
+          use_libuv_file_watcher = false,
           window = {
             mappings = FILESYSTEM,
             position = DEFAULT_POSITION,

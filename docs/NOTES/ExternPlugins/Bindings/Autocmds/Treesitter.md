@@ -17,7 +17,7 @@ kein eigener Augroup) und teilen sich dieselbe Guard-Bedingung
 |---|---|---|
 | `FileType` | treesitter.lua | `parser_policy.ensure(lang, {...})` (s.u.) dann `vim.treesitter.start(args.buf)` — aktiviert Treesitter-Highlighting für den Buffer. |
 | `FileType` | treesitter.lua | Setzt `vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"` und `vim.wo[0][0].foldmethod = "expr"` (`[0][0]` = `:setlocal`; ein einfaches `vim.wo.<opt>` wäre `:set` und würde auch den Default für später erzeugte Fenster überschreiben) — Treesitter-basiertes Folding. |
-| `FileType` | treesitter.lua | Setzt `vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"` — experimentelle Treesitter-Indentation. |
+| `FileType` | treesitter.lua | Setzt `vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"` — experimentelle Treesitter-Indentation, **nur für Buffer bis `INDENT_MAX_LINES` (2000) Zeilen**: die Indent-Query läuft nach jeder Änderung über den ganzen Baum (gemessen +12 ms pro Enter bei 1,6k Zeilen Lua, +130 ms bei 20k Zeilen JSON). Größere Buffer behalten das Indent-Skript der Runtime (`GetLuaIndent()`, `GetJSONIndent()`, …). Geprüft wird einmal beim `FileType`. |
 
 ## Parser-Install-Policy (2026-08-01)
 

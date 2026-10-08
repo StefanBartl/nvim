@@ -13,6 +13,17 @@ local notify = require("lib.nvim.notify").create("[plugins.treesitter]")
 -- was never installed (see docs/ROADMAP/personal/lsp.md, 2026-07-26).
 local INJECTION_PARSERS = { "luadoc", "vimdoc" }
 
+-- Largest buffer (in lines) that still gets the treesitter indentexpr.
+-- nvim-treesitter memoizes its whole-tree "indents" capture map by root:id(),
+-- which changes on every edit + reparse, so the first Enter / o / O / == after
+-- any edit re-runs the query over the ENTIRE tree (O(file size)). Measured on
+-- this machine: +12 ms per Enter at 1.6k lines of Lua, +25..50 ms at 2-5k lines,
+-- +130 ms at 20k lines of JSON. Above the limit the runtime's own indent script
+-- (GetLuaIndent(), GetJSONIndent(), ...) stays in charge; it costs the same as no
+-- indentexpr at all. The real fix (a range-limited iter_captures) belongs
+-- upstream. Checked once, at FileType time.
+local INDENT_MAX_LINES = 2000
+
 local plugins = require("plugins.control.mode").new()
 
 -- Disable repos centrally here (basename -> "disabled"), instead of setting
@@ -167,12 +178,16 @@ plugins.add({
       -- Indentation (experimental)
       -----------------------------------------------------------------------
       Autocmd.create("FileType", function(args)
-        if guards.is_enabled(args.buf) then
+        -- Skipping (not clearing) leaves whatever the runtime indent script set.
+        if
+          guards.is_enabled(args.buf)
+          and vim.api.nvim_buf_line_count(args.buf) <= INDENT_MAX_LINES
+        then
           vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end
       end, {
         group = ts_group,
-        desc = "treesitter: use treesitter indentation for this filetype",
+        desc = "treesitter: use treesitter indentation for this filetype (small buffers only)",
       })
     end,
   },
