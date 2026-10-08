@@ -411,7 +411,13 @@ local function search_route(path, category, desc)
       { name = "plugin", type = PLUGIN_ARG, optional = true },
       { name = "query", type = "STRING", optional = true },
     },
-    kv = { { key = "plugin", type = PLUGIN_ARG } },
+    kv = {
+      {
+        key = "plugin",
+        type = PLUGIN_ARG,
+        desc = "Limit the search to one plugin's cheatsheet (prefix is enough)",
+      },
+    },
     desc = desc,
     run = function(ctx)
       local sel, err = search_selection(ctx, category)
@@ -438,7 +444,13 @@ local function browse_route(path, category, desc)
       { name = "plugin", type = PLUGIN_ARG, values = SCOPE_VALUES, optional = true },
       { name = "scope", type = PLUGIN_ARG, values = SCOPE_VALUES, optional = true },
     },
-    kv = { { key = "plugin", type = PLUGIN_ARG } },
+    kv = {
+      {
+        key = "plugin",
+        type = PLUGIN_ARG,
+        desc = "Limit the view to one plugin's cheatsheet (prefix is enough)",
+      },
+    },
     desc = desc,
     run = function(ctx)
       local sel, err = browse_selection(ctx, category)
@@ -448,6 +460,27 @@ local function browse_route(path, category, desc)
       end
       M.browse(category, sel)
     end,
+  }
+end
+
+--- The `root=` pair shared by every `check` and `report` route. A function, so
+--- each route gets a table of its own.
+---@return Lib.UserCmd.Composer.KvSpec
+local function root_kv()
+  return {
+    key = "root",
+    type = "DIR",
+    desc = "Directory of Lua projects to scan; turns the repo axis on",
+  }
+end
+
+--- The `out=` pair shared by every `report` route.
+---@return Lib.UserCmd.Composer.KvSpec
+local function out_kv()
+  return {
+    key = "out",
+    type = "PATH",
+    desc = "Report file or directory; default: docs/ROADMAP/personal/All",
   }
 end
 
@@ -525,7 +558,7 @@ function M.enable()
         -- `:Bindings check C:/repos` would silently bind the path as the plugin
         -- name. With the key in front the mapping is position-independent, and
         -- `<Tab>` after `root=` completes directories (`type = "DIR"`).
-        kv = { { key = "root", type = "DIR" } },
+        kv = { root_kv() },
         desc = "Drift-Bericht: dokumentiert-aber-nicht-live / live-aber-undokumentiert (Personal, read-only)",
         run = function(ctx)
           M.check(ctx.args.plugin, {
@@ -543,7 +576,7 @@ function M.enable()
       {
         path = { "check", "repo" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
-        kv = { { key = "root", type = "DIR" } },
+        kv = { root_kv() },
         desc = "Drift-Bericht mit der Checkout-Achse: dokumentierte Bindings ungeladener Plugins gegen deren lokalen Quellbaum; `root=<dir>` nimmt jedes Lua-Projekt unter einem Sammelverzeichnis statt der Lazy-Spec-Auflösung",
         run = function(ctx)
           M.check(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root })
@@ -555,7 +588,7 @@ function M.enable()
       {
         path = { "check", "extern" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
-        kv = { { key = "root", type = "DIR" } },
+        kv = { root_kv() },
         desc = "Nur die fremden: live registrierte Commands ohne Cheatsheet, deren Plugin dieser Korpus nicht abdeckt",
         run = function(ctx)
           M.check(ctx.args.plugin, { repo_root = ctx.kv.root, scope = "extern" })
@@ -564,7 +597,7 @@ function M.enable()
       {
         path = { "check", "all" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
-        kv = { { key = "root", type = "DIR" } },
+        kv = { root_kv() },
         desc = "Eigene und fremde zusammen — das Verhalten vor der Scope-Trennung",
         run = function(ctx)
           M.check(ctx.args.plugin, { repo_root = ctx.kv.root, scope = "all" })
@@ -581,7 +614,7 @@ function M.enable()
           { name = "plugin", type = PLUGIN_ARG, optional = true },
           { name = "axis", type = "STRING", enum = { "repo", "extern", "all" }, optional = true },
         },
-        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        kv = { root_kv(), out_kv() },
         desc = "Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md",
         run = function(ctx)
           M.report(ctx.args.plugin, {
@@ -596,7 +629,7 @@ function M.enable()
       {
         path = { "report", "extern" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
-        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        kv = { root_kv(), out_kv() },
         desc = "Nur die fremden, als Markdown-Datei",
         run = function(ctx)
           M.report(ctx.args.plugin, { repo_root = ctx.kv.root, out = ctx.kv.out, scope = "extern" })
@@ -605,7 +638,7 @@ function M.enable()
       {
         path = { "report", "all" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
-        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        kv = { root_kv(), out_kv() },
         desc = "Eigene und fremde zusammen, als Markdown-Datei",
         run = function(ctx)
           M.report(ctx.args.plugin, { repo_root = ctx.kv.root, out = ctx.kv.out, scope = "all" })
@@ -614,7 +647,7 @@ function M.enable()
       {
         path = { "report", "repo" },
         args = { { name = "plugin", type = PLUGIN_ARG, optional = true } },
-        kv = { { key = "root", type = "DIR" }, { key = "out", type = "PATH" } },
+        kv = { root_kv(), out_kv() },
         desc = "Drift-Bericht mit der Checkout-Achse, als Markdown-Datei",
         run = function(ctx)
           M.report(ctx.args.plugin, { repo = true, repo_root = ctx.kv.root, out = ctx.kv.out })
