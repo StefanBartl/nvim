@@ -56,6 +56,7 @@ local H = dofile(tests_dir .. "/harness.lua")
 local specs = {
   "plugin_repos/help_float_spec.lua",
   "plugin_repos/jump_spec.lua",
+  "plugin_repos/usrcmds_help_spec.lua",
   "bindings_explorer/usrcmds_help_spec.lua",
   "clipboard/snippets_spec.lua",
   "sync/sync_classify_spec.lua",

@@ -1165,8 +1165,12 @@ function M.enable()
           path = { "clone" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
           flags = {
-            { name = "only", type = "MYPLUGINS_NAME" },
-            { name = "dry-run", bool = true },
+            {
+              name = "only",
+              type = "MYPLUGINS_NAME",
+              desc = "Limit the run to this one listed plugin",
+            },
+            { name = "dry-run", bool = true, desc = "Preview what would happen, change nothing" },
           },
           desc = "Clone every listed plugin not yet present (or just --only=<name>) into dir/$REPOS_DIR; --dry-run previews without cloning",
           run = function(ctx)
@@ -1177,7 +1181,13 @@ function M.enable()
         {
           path = { "remove" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          flags = {
+            {
+              name = "only",
+              type = "MYPLUGINS_NAME",
+              desc = "Limit the run to this one listed plugin",
+            },
+          },
           desc = "Remove clean (no uncommitted/unpushed work) listed plugins (or just --only=<name>), after confirmation",
           run = function(ctx)
             remove_all(ctx.args.dir, ctx.flags.only)
@@ -1187,7 +1197,13 @@ function M.enable()
         {
           path = { "fetch" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          flags = {
+            {
+              name = "only",
+              type = "MYPLUGINS_NAME",
+              desc = "Limit the run to this one listed plugin",
+            },
+          },
           desc = "git fetch --all --prune on every present listed plugin (or just --only=<name>)",
           run = function(ctx)
             fetch_all(ctx.args.dir, ctx.flags.only)
@@ -1197,7 +1213,13 @@ function M.enable()
         {
           path = { "pull" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          flags = {
+            {
+              name = "only",
+              type = "MYPLUGINS_NAME",
+              desc = "Limit the run to this one listed plugin",
+            },
+          },
           desc = "git pull --ff-only on every present listed plugin (or just --only=<name>)",
           run = function(ctx)
             pull_all(ctx.args.dir, ctx.flags.only)
@@ -1207,7 +1229,13 @@ function M.enable()
         {
           path = { "update" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
-          flags = { { name = "only", type = "MYPLUGINS_NAME" } },
+          flags = {
+            {
+              name = "only",
+              type = "MYPLUGINS_NAME",
+              desc = "Limit the run to this one listed plugin",
+            },
+          },
           desc = "Fetch + fast-forward pull every present listed plugin (or just --only=<name>) — brings this machine level with another machine's pushed commits",
           run = function(ctx)
             update_all(ctx.args.dir, ctx.flags.only)
@@ -1218,8 +1246,12 @@ function M.enable()
           path = { "dashboard" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
           flags = {
-            { name = "fetch", bool = true },
-            { name = "fetch-this", bool = true },
+            { name = "fetch", bool = true, desc = "Run :MyPlugins fetch before opening" },
+            {
+              name = "fetch-this",
+              bool = true,
+              desc = "Fetch only the plugin the current buffer belongs to",
+            },
           },
           desc = "Open gitsuite.nvim's git-status dashboard (:Git dashboard) for dir/$REPOS_DIR; --fetch runs :MyPlugins fetch first, --fetch-this scopes that fetch to the plugin the current buffer/cwd belongs to",
           run = function(ctx)
@@ -1233,8 +1265,12 @@ function M.enable()
           path = { "reclone" },
           args = { { name = "dir", type = "MYPLUGINS_DIR", optional = true } },
           flags = {
-            { name = "only", type = "MYPLUGINS_NAME" },
-            { name = "dry-run", bool = true },
+            {
+              name = "only",
+              type = "MYPLUGINS_NAME",
+              desc = "Limit the run to this one listed plugin",
+            },
+            { name = "dry-run", bool = true, desc = "Preview what would happen, change nothing" },
           },
           desc = "Delete (if clean) and re-clone present listed plugins, or clone missing ones fresh, after confirmation; --dry-run previews the safe/unsafe/missing split without touching anything",
           run = function(ctx)
