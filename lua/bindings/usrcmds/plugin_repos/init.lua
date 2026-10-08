@@ -920,8 +920,8 @@ local function unlisted_all(path)
   local lines = {}
   for name, kind in vim.fs.dir(base_dir) do
     local dir = base_dir .. "/" .. name
-    local is_dir = kind == "directory" or (kind == "link" and fn.isdirectory(dir) == 1)
-    if is_dir and name:match("%.nvim$") and not known[name] then
+    local is_folder = kind == "directory" or (kind == "link" and fn.isdirectory(dir) == 1)
+    if is_folder and name:match("%.nvim$") and not known[name] then
       -- A plugin checkout has Lua to load; a bare `.nvim` folder (notes,
       -- archive) is not a candidate.
       local has_code = fn.isdirectory(dir .. "/lua") == 1 or fn.isdirectory(dir .. "/plugin") == 1
@@ -1302,8 +1302,10 @@ function M.enable()
               desc = "Source of all personal plugins, applied after a restart (none: show)",
               enum_desc = {
                 auto = "machine role and the per-plugin settings decide",
-                dir = "all from the local checkouts",
-                remote = "all from GitHub",
+                -- A repo set to "disabled" stays off in both (source.lua `resolve`);
+                -- `dir` also falls back to GitHub where the checkout is missing.
+                dir = "all from local checkouts (GitHub if missing); disabled ones stay off",
+                remote = "all from GitHub; disabled ones stay off",
                 disabled = "all switched off",
               },
             },

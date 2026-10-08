@@ -28,4 +28,19 @@ return function(H)
   -- one line each, no closing full stop; and the check must not pass for the wrong reason
   local seen = H.check_arg_texts("MyPlugins")
   H.ok(seen >= 10, "the route tree carries the argument texts of all subcommands, saw " .. seen)
+
+  -- `mode dir|remote` force one source for the personal plugins, but a repo set to "disabled" in
+  -- plugins/personal/core/source.lua stays off (its `resolve` lets the repo's own disable win),
+  -- so "all" alone would promise too much
+  local mode_arg
+  for _, route in ipairs(composer.registry().MyPlugins:spec().routes or {}) do
+    if table.concat(route.path, " ") == "mode" then
+      mode_arg = (route.args or {})[1]
+    end
+  end
+  H.ok(mode_arg ~= nil and mode_arg.enum_desc ~= nil, "mode: the slot has value texts")
+  for _, value in ipairs({ "dir", "remote" }) do
+    local text = mode_arg and mode_arg.enum_desc and mode_arg.enum_desc[value] or ""
+    H.has(text, "disabled", "mode " .. value .. ": names the repos that stay off")
+  end
 end
