@@ -34,6 +34,8 @@
 - $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md
   All neuen features/bindings die ich live testen kann/soll + alle Blocker von tasks bitte hierhin scheriben, also als aneuen abschnitt dazu:  $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md​
 
+- `:Clipboard remove` - den `remove` parameter auf `usrcmds` ändern -> Hier kommt alles hinein, das als usrcmds gedacht ist
+
 ---
 
 ## Claude Tasks

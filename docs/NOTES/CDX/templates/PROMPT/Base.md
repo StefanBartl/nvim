@@ -7,6 +7,10 @@
 - Immer ausgeben, was gerade gemacht wird / ob es etwas Interessantes gab – damit ich Bescheid weiß.
 - Wenn Chip-Tasks angelegt werden, diese bitte ebenfalls auf Deutsch verfassen.
 
+## Tasks (tasks.nvim)
+
+- Steht in einer Aufgabe eine ID wie `casedesk.nvim/ki-datenfreigabe-klaeren` oder ein Pfad `…\<plugin>\ROADMAP\tasks\<slug>.md`, ist das eine tasks.nvim-Task. Sie liegt im Vault `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/` (Frontmatter mit status, prio, effort, value; Body mit Kontext, Akzeptanz, Notizen). Lies sie vor dem Start komplett, setze sie mit `:Tasks set <id> status=doing` auf doing, und schließe sie nach dem Commit mit `:Tasks done <id> done_in=<repo>@<commit>` ab (nie `status=done` von Hand).
+
 ## Git-Workflow
 
 - Wenn eine Aufgabe fertig ist: sofort committen / pushen / pullen im main-Branch, sodass ich es gleich verwenden kann - explizit keine Pull Requests (PR)!
