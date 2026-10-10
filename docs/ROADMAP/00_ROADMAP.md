@@ -75,6 +75,8 @@
 
 ### Cross-Plugin
 
+$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Zentral-App-Report-Inventur-2026-10-08.md
+
 - `lib.nvim` Module -> ALle Plugins nochmal checken, ob Module/Funktionen implementieren, welche die `lib.nvim` beretis bereitsetellt oder bereitstellen sollte. Das wurde vor ein/zwei Monaten schonmal gemacht, in der Zwischnezit wurde aber viel neu gemacht. Report hierher schreiebn: $NVIM_CONFIG_DIR/docs/ROADMAP/reports
   -> Task: `ALL/lib-nvim-adoption-sweep`
 
