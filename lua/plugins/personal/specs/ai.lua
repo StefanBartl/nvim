@@ -62,7 +62,7 @@ return {
         -- provider_order = { "claude", "ollama", "openai", "gemini", "loomai" },
         -- Default model per provider id, e.g. { claude = "claude-opus-4-5" };
         -- empty = each provider's own built-in default.
-        model = { claude = "claude-sonnet-5-5" },
+        model = { claude = "claude-sonnet-5-5", loomai = "claude-haiku-5-5" },
         -- Request timeout in ms.
         -- timeout_ms = 60000,
 
