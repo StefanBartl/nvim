@@ -80,7 +80,7 @@ return {
       -- enable`/`disable` to keep that attach decision current -- see
       -- lib.nvim.messages' own module doc for why that can't be detected any
       -- other way).
-      -- Default: { ring_size = 1000, kinds = {}, renderer_override = nil }.
+      -- Default: { ring_size = 1000, kinds = { shell_out = true, shell_err = true, shell_ret = true }, renderer_override = nil }.
       require("lib.nvim.messages").setup({})
 
       require("lib.nvim.notify.popup").setup({
