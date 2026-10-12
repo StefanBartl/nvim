@@ -1,0 +1,71 @@
+Jetzt die Übergabe-Datei, die Umbrella-Task, der Plan und das Memory.
+
+Memory aktualisieren:
+
+Alles ist aktualisiert und gepusht. Die komplette Übergabe für den neuen Chat steht in der Datei `E:\repos\tasks-vault\wkdbook-tasks.nvim\handovers\tasks-desktop-stand-2026-10-12_HANDOVER.md` (`tasks-vault@966a493`).
+
+## Was ich aktualisiert habe
+
+| Stelle | Änderung |
+|---|---|
+| **Tasks** `tasks-app-hub-kern-und-lese-ui`, `tasks-app-body-suche`, `tasks-engine-persistenter-host` | Auf **done** gesetzt, mit der CLI-Funktion `done` und den Review-Commits als `done_in`. Sie liegen jetzt im Backlog. |
+| **Umbrella** `webui-und-native-app` | Auf `doing`, mit Stand und Verweis auf die Übergabe. |
+| **Plan** `tasks-app` | Abschnitt „Stand 2026-10-12“. |
+| **Übergabe** | Neu: was gebaut ist, wie man baut und testet, was offen ist. |
+| **Memory** | Das Projekt-Memory verweist auf die Übergabe. |
+| **Bereits früher eingetragen** | `tasks-app-schreib-ui-und-board`, `tasks-app-plan-schaetzung-check-inbox`, `tasks-erinnerung-nach-implementierung`, `tasks-app-p2-nutzungs-review`, `tasks-app-datenklassen-opt-in-pruefen`, `tasks-app-tauri-huelle`. |
+
+## Was für den neuen Chat wichtig ist
+
+**Orte:**
+- **App:** `E:\repos\tasks-desktop`.
+- **Engine:** `E:\repos\tasks.nvim` (Arbeitsbaum `.claude\worktrees\nvim-ui-native-app-tasks-0c7b3d`, Push auf `main`).
+- **Vault:** `E:\repos\tasks-vault`, ein eigenes Repo (nicht mehr WKDBooks).
+- **Konzept:** `ALL/Tasks-App-Konzept-WebUI-und-Native-2026-10-10.md` im Vault.
+
+**Regeln und Fallen:**
+- **Kein `install`/`start`/`autostart` aus einer Claude-Sitzung.** Die Claude-App ist MSIX und leitet AppData und Registry um. Das macht der Nutzer in seiner PowerShell: `…\target\release\tasks-hub.exe install --autostart --shortcut`, dann `start --open`.
+- **Vor jedem Build den Hub stoppen**, sonst „Zugriff verweigert“.
+- **Dateien mit Backslashes nicht per Shell-Heredoc patchen.** Ein Skript mit dem Write-Tool schreiben und ausführen.
+- **Nach jedem Abschluss:** committen und pushen, Reviews mit „ultracode“ auf Zuruf. Die Liste aller Commits des Chats gehört ans Ende jeder Ausgabe.
+
+**Test-Befehle:**
+- **Rust:** `cargo test --locked --workspace`.
+- **UI:** `cd ui; pnpm check; pnpm test; pnpm e2e`.
+- **Engine:** `scripts/test.sh` mit `LIB_NVIM_DIR` und `TESTING_NVIM_DIR`, dazu `contract/check.mjs`.
+
+## Was noch offen ist
+
+1. **Reviews (ultracode):**
+   - Plan-Ansicht `tasks-desktop@57a98ff`.
+   - MSIX-Warnung `d40772f`.
+   - Formular-Vorschlag `tasks.nvim@499eeac`.
+2. **Kill-Kriterium-Review nach P2:** Zwei Wochen nutzen, `tasks-hub usage`, dann entscheiden (Task `tasks-app-p2-nutzungs-review`).
+3. **Entscheidung** `tasks-app-datenklassen-opt-in-pruefen`: nach einigen Wochen, ob die Einordnung nötig ist oder Opt-in.
+4. **Schreib-UI, Rest:**
+   - Board mit Drag-and-Drop (`reorder`).
+   - Bulk als ein Batch.
+   - Formular für Aufwand, Tags, Plan.
+   - Optimistische Anzeige (heute rund 0,4 s bis zur Antwort).
+   - Konfliktzentrum und Palette.
+5. **Erinnerung, Rest:**
+   - Neovim-Dashboard-Abschnitt und Start-Hinweis.
+   - `next` zeigt Fälliges noch nicht.
+   - Konzept 13.5 nachtragen.
+   - Tray-Badge (mit P7).
+6. **Plan, Rest** (`tasks-app-plan-schaetzung-check-inbox`): Wizard, Schätzungsmatrix, `check` als Hintergrundjob, Inbox, Teilgraph.
+7. **Native App P7:** Tauri-Hülle, Menüleiste, Hub eingebettet, Start, Stopp, Neustart und Vault-Wechsel ohne CLI, Updater-Schlüssel vorher.
+8. **Leistung:** Der Engine-Snapshot liegt warm bei rund 370 bis 420 ms (Ziel 300), der erste Blick auf einen Task bei rund 300 ms.
+9. **Sonstiges:** CI ist nie auf GitHub gelaufen. pnpm 10.29 → 11 ist offen. Ein einzelner Flake in `real_engine` (14 Läufe danach sauber) ist ungeklärt, und die Tests wählen freie Ports, die danach wieder freigegeben werden.
+10. **Eigene Tasks für später:**
+    - `ALL/.../externe-dateitypen-ausserhalb-von-neovim-oeffnen` (`.msg` extern öffnen).
+    - `hover.nvim/hover-zoom-mit-dem-mausrad…`.
+
+## Commits (neu)
+
+| Repo | Commit | Beschreibung | Review |
+|---|---|---|---|
+| tasks-desktop | `57a98ff` | Plan-Ansicht | ⬜ |
+| tasks-vault | `00af09e`, `966a493` | Task-Stand Plan, Übergabe, Umbrella und Plan, drei Tasks auf done | ✅ (Doku) |
+
+Frühere Commits stehen in der Übergabe-Datei und in den Tasks.
