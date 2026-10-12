@@ -553,7 +553,7 @@ uncommitted work permanently. Sticking to the named list is what makes
 ## See also
 
 - `tasks.nvim` (`docs/ENGINE.md` in its repo) — the engine behind `tasks`/`task`/`open`;
-  `wkdbook-myplugins/ALL/Task-System-Konzept.md` — the concept and the rules R1-R12
+  `tasks-vault/ALL/Task-System-Konzept.md` — the concept and the rules R1-R12
 - [`TESTS/tasks/tasks_routes_spec.lua`](../../../../TESTS/tasks/tasks_routes_spec.lua) — drives these routes through the real composer
 - [`TESTS/tasks/tasks_dash_spec.lua`](../../../../TESTS/tasks/tasks_dash_spec.lua) / [`tasks_dash_picker_spec.lua`](../../../../TESTS/tasks/tasks_dash_picker_spec.lua) — the dashboard's pure part, and the real picker driven with `nvim_feedkeys`; [`tasks_dash_watch_spec.lua`](../../../../TESTS/tasks/tasks_dash_watch_spec.lua) / [`tasks_dash_refresh_spec.lua`](../../../../TESTS/tasks/tasks_dash_refresh_spec.lua) / [`tasks_frecency_spec.lua`](../../../../TESTS/tasks/tasks_frecency_spec.lua) — the watcher, the live refresh with real watchers, and frecency
 

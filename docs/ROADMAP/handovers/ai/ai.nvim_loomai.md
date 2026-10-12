@@ -1,14 +1,14 @@
 # ai.nvim — Handover (nur offene Punkte)
 
 > Ausnahme-Standort: normalerweise leben Plugin-Roadmaps im Wkdbook
-> (`wkdbook-myplugins/<plugin>/ROADMAP/ROADMAP.md`, siehe `NEW-14`). Diese
+> (`tasks-vault/<plugin>/ROADMAP/ROADMAP.md`, siehe `NEW-14`). Diese
 > Datei hier ist explizit angefordert als laufende Handover-Akte für
 > `ai.nvim` (+ `loomAI`-Anbindung) und bleibt an diesem Ort
 > (`nvim/docs/ROADMAP/handovers/ai/`), nicht im Wkdbook.
 >
 > **Hier stehen nur offene Tasks.** Alles Erledigte (inkl. Session-Logs,
 > Commit-Tabellen, Review-Ergebnisse) liegt im Wkdbook-Backlog:
-> `wkdbook-myplugins/ai.nvim/Backlog/FEATURES/FINISHED_ai_loomai.md`
+> `tasks-vault/ai.nvim/Backlog/FEATURES/FINISHED_ai_loomai.md`
 > (zuletzt ergänzt 2026-10-04, Abschnitt „Session 2026-10-04“).
 
 ## Table of content
@@ -47,7 +47,7 @@
 |---|---|
 | Konzept | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
 | Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
-| Privat (Roadmap/Notes/Backlog, nicht fürs öffentliche Repo) | `$REPOS_DIR/WKDBooks\Development\wkdbook-myplugins\ai.nvim\{ROADMAP,NOTES,Backlog}` |
+| Privat (Roadmap/Notes/Backlog, nicht fürs öffentliche Repo) | `$REPOS_DIR/tasks-vault\ai.nvim\{ROADMAP,NOTES,Backlog}` |
 | Erledigt-Archiv | `...\ai.nvim\Backlog\FEATURES\FINISHED_ai_loomai.md` |
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai/ai.nvim_loomai.md` |
 | Transport-Erweiterung | `$REPOS_DIR/lib.nvim\lua\lib\nvim\net\curl` |

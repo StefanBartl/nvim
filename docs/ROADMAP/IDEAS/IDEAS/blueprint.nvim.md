@@ -615,7 +615,7 @@ waren also nie an `:Insert` oder einen Picker angebunden.
   `wkdbook-C++/Entwurfsmuster/DesignPattern.md`,
   `wkdbook-Nodejs/…/00_ReactorDesignPattern.md`.
 - Projekt-/Dokument-Vorlagen an anderen Orten: `casedesk.nvim/lua/casedesk/templates`
-  (Case-Antworten), `WKDBooks/Development/wkdbook-myplugins/TEMPLATES`,
+  (Case-Antworten), `tasks-vault/TEMPLATES`,
   `WKDBook-Tricentis/Workflow/Templates`, `WKDBook-Tricentis/MyDomains/Tosca/HTML_TEMPLATES`,
   `filetree.nvim` (`create_from_template`, Datei-Vorlagen beim Anlegen).
 - Alte Config-Spuren: `lua/custom/mynotes/specs/*` (Spickzettel-Specs, keine

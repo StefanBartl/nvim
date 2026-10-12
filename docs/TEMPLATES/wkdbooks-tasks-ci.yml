@@ -1,5 +1,5 @@
-# TEMPLATE -- belongs in the WKDBooks repo as `.github/workflows/tasks-ci.yml`
-# (the vault is a folder of that repo: Development/wkdbook-myplugins). It is kept here,
+# TEMPLATE -- belongs in the tasks-vault repo as `.github/workflows/tasks-ci.yml`
+# (the vault is that repo's root; it moved out of WKDBooks on 2026-10-12). It is kept here,
 # next to the wrapper it runs (`scripts/tasks-ci.lua` of the nvim config repo, which hands over
 # to the engine in the plugin `tasks.nvim`), until it is copied over. NOTE: the `tasks.nvim` checkout below
 # works only once that repo is published.
@@ -8,25 +8,21 @@
 # ROADMAP/TASKS.md) and the vault's md_lint over every generated index. It writes nothing.
 #
 # Layout it builds, so that `$REPOS_DIR/...` links in the notes and the engine's own
-# vault lookup (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`) resolve like on a dev machine:
+# vault lookup (`$REPOS_DIR/tasks-vault`) resolve like on a dev machine:
 #
-#   deps/WKDBooks   this repo        deps/nvim      the config with scripts/tasks-ci.lua
+#   deps/tasks-vault this repo       deps/nvim      the config with scripts/tasks-ci.lua
 #   deps/tasks.nvim the engine
 #   deps/lib.nvim   the engine's library             deps/lsp.nvim  `lsp.core.env_links` for md_lint
 #
-# The repos below are public; for a private one pass `token: ${{ secrets.<PAT> }}` to the
-# checkout (the default GITHUB_TOKEN reaches only this repository).
+# The tasks-vault repo is private, and so may be others below; for a private one pass
+# `token: ${{ secrets.<PAT> }}` to its checkout (the default GITHUB_TOKEN reaches only this repository).
 
 name: tasks-ci
 
 on:
   push:
     branches: [main]
-    paths:
-      - "Development/wkdbook-myplugins/**"
   pull_request:
-    paths:
-      - "Development/wkdbook-myplugins/**"
   workflow_dispatch:
 
 permissions:
@@ -41,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          path: deps/WKDBooks
+          path: deps/tasks-vault
       - uses: actions/checkout@v5
         with:
           repository: StefanBartl/nvim
@@ -73,4 +69,4 @@ jobs:
           TASKS_TRUST_VAULT_LINT: "1"
         run: |
           nvim --headless -u NONE -l deps/nvim/scripts/tasks-ci.lua \
-            --vault="$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins"
+            --vault="$REPOS_DIR/tasks-vault"
