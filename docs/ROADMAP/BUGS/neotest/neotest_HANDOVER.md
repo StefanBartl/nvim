@@ -38,7 +38,7 @@ Erledigte, die Befunde, Messungen, Belege und verworfenen Wege stehen im Archiv 
 | Was | Ort |
 | --- | --- |
 | Der Umbau (Code) | `lua/config/neotest/init/windows_fixes.lua`, `lua/config/neotest/core/init.lua`, `lua/plugins/neotest.lua` |
-| **Archiv mit allem Erledigten:** Lazy-Load, Befund, Messungen, Belege (headless + echte TUI), verworfene Optionen A-D, Live-Tests, Commits | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` |
+| **Archiv mit allem Erledigten:** Lazy-Load, Befund, Messungen, Belege (headless + echte TUI), verworfene Optionen A-D, Live-Tests, Commits | `$REPOS_DIR/tasks-vault/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md` |
 | Upstream-Report mit fertigen Texten | [`UPSTREAM-neotest-windows-plenary-and-listener.md`](./UPSTREAM-neotest-windows-plenary-and-listener.md) |
 | Probe-Tool für neotest-Läufe mit der echten Config (headless Kern, `-Patch`, `-Stop`, `-Unset`) | `WKDBooks/.../TOOLS/neotest-run-probe.md`, `TOOLS/scripts/neotest-run-probe/` |
 | Messtabellen und Optionen im Detail | `WKDBooks/Development/wkdbook-openinnvim/Backlog/TASKS/2026-10-02_neotest-listener-messung.md` |

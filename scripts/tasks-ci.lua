@@ -3,12 +3,12 @@
 --- Same as `scripts/tasks.lua ci`: this file only puts `ci` in front of the
 --- arguments, so a pipeline has one obvious entry point.
 ---
----     nvim --headless -u NONE -l scripts/tasks-ci.lua --vault=<wkdbooks>/Development/wkdbook-myplugins
+---     nvim --headless -u NONE -l scripts/tasks-ci.lua --vault=<repos>/tasks-vault
 ---     nvim --headless -u NONE -l scripts/tasks-ci.lua --strict          # warnings fail too
 ---     nvim --headless -u NONE -l scripts/tasks-ci.lua --no-lint         # skip md_lint
 ---
 --- Exit code: 0 all steps passed, 1 a step failed, 2 a usage error. The vault
---- is `--vault=`, else `$TASKS_VAULT`, else `$REPOS_DIR/WKDBooks/...`; lib.nvim
+--- is `--vault=`, else `$TASKS_VAULT`, else `$REPOS_DIR/tasks-vault`; lib.nvim
 --- is found as in `scripts/tasks.lua` (`$LIB_NVIM_DIR`, ...). For `$VAR/...`
 --- links in md_lint, put lsp.nvim on `$REPOS_DIR` (or lazy's data folder).
 

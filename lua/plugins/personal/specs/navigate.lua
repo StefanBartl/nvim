@@ -667,7 +667,7 @@ return {
             -- the generic Files/Grep compat commands with an [plugin]-arg +
             -- tab-completion variant; :PluginsBookSmart stays generic.
             name = "plugins_book",
-            dir = repos .. "/WKDBooks/Development/wkdbook-myplugins",
+            dir = repos .. "/tasks-vault",
             prefix = "",
             exclude = { "ALL", "TEMPLATES", "TOOLS", "_Telemetry" },
             keys = { files = "<leader>pbf", grep = "<leader>pbg", smart = "<leader>pbs" },
@@ -1015,7 +1015,7 @@ return {
           -- it holds to asset files (screenshots etc.) under assets/ and offer to
           -- delete those too, once nothing else still references them. Opt-in
           -- upstream; enabled here to exercise it. See
-          -- wkdbook-myplugins/filetree.nvim/ROADMAP/IDEAS/Cascade_Delete_Assets.md.
+          -- tasks-vault/filetree.nvim/ROADMAP/IDEAS/Cascade_Delete_Assets.md.
           outgoing_assets = {
             -- Default: false.
             enabled = true,

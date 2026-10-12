@@ -9,7 +9,7 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). Stand: **2026-10-08
 | Ursprungsnotiz | `nvim/docs/ROADMAP/IDEAS/IDEAS/TMUX_WEZTERM_USW.md` |
 | Konzept | `nvim/docs/ROADMAP/IDEAS/IDEAS/terminal.nvim.md` |
 | Öffentliches Repo | `github.com/StefanBartl/terminal.nvim` → `E:\repos\terminal.nvim` (STEVESPC: direkt unter `E:\repos`) |
-| Plan (Ziel, Phasen, DoD) | `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim/ROADMAP/plans/terminal-build.md` |
+| Plan (Ziel, Phasen, DoD) | `$REPOS_DIR/tasks-vault/terminal.nvim/ROADMAP/plans/terminal-build.md` |
 | Tasks | `.../terminal.nvim/ROADMAP/tasks/`, Übersicht `ROADMAP/TASKS.md` (generiert) |
 | Notizen/Messungen | `.../terminal.nvim/NOTES/` (`spike-uservars.md`, `nvim-windows-terminal-findings.md`) |
 | Installations-Spec | `nvim/lua/plugins/personal/specs/project.lua` (Eintrag `StefanBartl/terminal.nvim`, alle Optionen auskommentiert, deutsch kommentiert) |

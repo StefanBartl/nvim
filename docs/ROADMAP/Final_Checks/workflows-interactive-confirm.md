@@ -16,7 +16,7 @@ Die beiden konkreten Beispiele (fileops.nvim `:File delete`, `:MyPlugins`
 Confirm-Dialog) sind inzwischen umgesetzt und archiviert — Einzel-Befunde und
 Umsetzungsdetails siehe `fileops.nvim/Backlog/FEATURES/delete-confirm-
 instead-of-refuse.md` bzw. `nvim-config/Backlog/FEATURES/myplugins-confirm-
-dialog.md` in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`. Der
+dialog.md` in `$REPOS_DIR/tasks-vault/`. Der
 ursprüngliche Sammel-Report (`ecosystem-small-tasks-2026-09.md`) ist nach
 Abschluss aller 14 Punkte per Plugin dorthin aufgeteilt und gelöscht worden.
 Diese Datei hier ist der übergreifende Rahmen für den noch offenen

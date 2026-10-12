@@ -8,7 +8,7 @@
 - Code muss luacheck- und stylua-clean sein, bevor er als fertig gilt (wird
   zusätzlich per globalem Hook `check-hook.js` erzwungen).
 - Neue Features nach Möglichkeit im plugin-eigenen `/TESTS/`-Ordner testen.
-- Lua-Tools: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
+- Lua-Tools: `$REPOS_DIR/tasks-vault/TOOLS/lua-plugin-tools.md`
 - Performance: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 - Lua-Projekte für Neovim: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
 

@@ -10,7 +10,7 @@
 ---     nvim --headless -u NONE -l scripts/tasks.lua done lib.nvim/notify-unify-channels --done-in=lib.nvim@abc1234
 ---     nvim --headless -u NONE -l scripts/tasks.lua check
 ---
---- The vault is `--vault=<dir>`, else `$TASKS_VAULT`, else `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`.
+--- The vault is `--vault=<dir>`, else `$TASKS_VAULT`, else `$REPOS_DIR/tasks-vault`.
 --- lib.nvim is found through `$LIB_NVIM_DIR`, `$LIB_NVIM_PATH`, `$REPOS_DIR/lib.nvim`, then lazy.nvim's data
 --- folder; tasks.nvim through `$TASKS_NVIM_DIR`, `$REPOS_DIR/tasks.nvim`, then lazy.nvim's data folder.
 ---
@@ -83,7 +83,7 @@ end
 -- This author's vault layout, as defaults only: an exported variable wins.
 local repos_dir = vim.env.REPOS_DIR
 if (not vim.env.TASKS_VAULT or vim.env.TASKS_VAULT == "") and repos_dir and repos_dir ~= "" then
-  vim.env.TASKS_VAULT = repos_dir .. "/WKDBooks/Development/wkdbook-myplugins"
+  vim.env.TASKS_VAULT = repos_dir .. "/tasks-vault"
 end
 -- This is the author's own vault: its md_lint.lua is trusted (tasks.nvim refuses to run a vault's script otherwise).
 if not vim.env.TASKS_TRUST_VAULT_LINT or vim.env.TASKS_TRUST_VAULT_LINT == "" then

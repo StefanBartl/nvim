@@ -1,7 +1,7 @@
 # Spike-Report: `ext_messages`-Logger neben noice / ui2 in echter TUI (2026-10-01)
 
 Auftrag: nur testen, nichts bauen, keine Ersatz-Entscheidung. Schritt 1 des Konzepts
-`WKDBooks/Development/wkdbook-myplugins/lib.nvim/ROADMAP/messages-log-and-recent-popup.md`.
+`tasks-vault/lib.nvim/ROADMAP/messages-log-and-recent-popup.md`.
 Vorgänger-Report: `NOICE_ERSATZ/noice-feature-abdeckung-2026-10-01.md` (Feature-Matrix, ohne Messung).
 
 ## Methode und Grenzen

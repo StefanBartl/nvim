@@ -341,7 +341,7 @@ Health-Eintrag. Was bleibt, braucht die Neovim-Oberfläche:
 Vorhaben: eine deutsche Datei bleibt im Buffer deutsch, mdview zeigt im Browser die
 übersetzte Fassung (ohne KI über DeepL/Google, mit KI über ai.nvim). Plan und Handover:
 `ROADMAP/handovers/display-lang_PLAN.md` (Original im Vault:
-`wkdbook-myplugins/ALL/ROADMAP/plans/display-lang.md`); Tasks: `list --tag=display-lang`.
+`tasks-vault/ALL/ROADMAP/plans/display-lang.md`); Tasks: `list --tag=display-lang`.
 
 **Stand 2026-10-07: `display_lang` ist gebaut** (mdview `3623ba9`, Fixes `acba668`, `cf1d70c`,
 `f939466`; language.nvim `translate_markdown` ab `152aade`, Provider `ai` `15dd862`, Fixes bis
@@ -359,7 +359,7 @@ Commit-Stände stehen in den Überschriften und werden hier nachgetragen.
       DeepL-Latenz messen (nur Google keyless und ein Fake). Danach messen: Kaltstart eines
       deutschen README (Spike: Google 8 bis 18 s bei 4 parallelen Anfragen, seriell 48 s für 105
       Einheiten) und eine Ein-Absatz-Änderung (Spike: 0,25 bis 0,8 s). Notiz:
-      `wkdbook-myplugins/mdview.nvim/Backlog/FEATURES/2026-10-06_display-lang-spike.md`.
+      `tasks-vault/mdview.nvim/Backlog/FEATURES/2026-10-06_display-lang-spike.md`.
 - [ ] **Echter KI-Provider für `ai.nvim`** bereitstellen (Claude-Key oder Ollama lokal) und die
       Policy der Workstation klären (`config.policy.allowed`): ohne das lässt sich G3 nicht live
       prüfen, und `language.nvim/translate-ai-provider` kann nicht abgenommen werden.
@@ -1358,13 +1358,13 @@ Ergebnis der Umsetzung von `NEW.md` (`:Case clipboard`, Spotlights pro Case, spo
 Notiz ist erledigt und liegt im wkdbook-Backlog) und der anschließenden Aufräum-Runden. Alles hier ist **von dir zu prüfen**; was **durch Externes blockiert** ist,
 steht gesammelt in **N** (Blocker). Die Spotlight-/mdview-/ai-Checks, die nicht direkt casedesk betreffen, stehen in
 den Abschnitten **A**, **B**, **C** und **F** dieser Datei. Task: `casedesk.nvim/clipboard-spotlight-live-check`
-(wkdbook-myplugins). Fehler als eigene bug-Tasks anlegen.
+(tasks-vault). Fehler als eigene bug-Tasks anlegen.
 
 ---
 
 ### L1. Checks für dich (casedesk.nvim)
 
-Task: `casedesk.nvim/clipboard-spotlight-live-check` (wkdbook-myplugins). Fehler
+Task: `casedesk.nvim/clipboard-spotlight-live-check` (tasks-vault). Fehler
 als eigene bug-Tasks anlegen.
 
 #### `:Case clipboard`
@@ -1466,7 +1466,7 @@ auffallen.
 
 **Status:** ❌ ungetestet · 🟡 teilweise · ✅ wie erwartet · 🔴 Fehler (Notiz
 ausfüllen!). Ein gefundener Fehler gehört zusätzlich als `RM-nn` in
-`WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/ROADMAP/ROADMAP.md` oder
+`tasks-vault/casedesk.nvim/ROADMAP/ROADMAP.md` oder
 als GitHub-Issue — nicht nur hierher.
 
 ### Vorbereitung
@@ -1715,7 +1715,7 @@ Der Fix ist wichtig: **vorher hat `:'<,'>Case translate` immer den ganzen Puffer
 | --- | --- | --- | --- | --- |
 | 1 | `docs/ROADMAP/Casedesk/` in der nvim-Config | Nur `IMPLEMENTIERUNGSPLAN.md` und `Tasks.md` | ❌ | |
 | 2 | `IMPLEMENTIERUNGSPLAN.md` dort öffnen | Auf dieser Maschine nur eine Textzeile mit dem Zielpfad (`E:/…`) — **echten Symlink anlegen** (erhöhte PowerShell, Befehl in §6 des Plans); danach zeigt die Datei den Plan | ❌ | |
-| 3 | Plan lesen: `WKDBooks/Development/wkdbook-myplugins/casedesk.nvim/IMPLEMENTIERUNGSPLAN.md` | Stand, Stufen, was offen ist, stimmt mit dem überein, was du erlebst | ❌ | |
+| 3 | Plan lesen: `tasks-vault/casedesk.nvim/IMPLEMENTIERUNGSPLAN.md` | Stand, Stufen, was offen ist, stimmt mit dem überein, was du erlebst | ❌ | |
 | 4 | `ROADMAP/ROADMAP.md` lesen | Nur Offenes, keine erledigten Punkte | ❌ | |
 | 5 | `:help casedesk` / `CHEATSHEET.md` | Neue Befehle (`imp`, `preflight`, `jql suggest`, `image getText`, `spotlight`, `translate stream`) stehen im Cheatsheet; `doc/casedesk.txt` ist **noch nicht** nachgezogen (Lücke, ggf. eigener Punkt) | ❌ | |
 
@@ -1765,7 +1765,7 @@ Ausführliche Zeilen stehen noch aus; erst die Rauchprobe:
 ### Teil B — aus der Vorsitzung (2026-09-30) noch ungetestet
 
 Die ausführlichen Zeilen mit Erwartungen stehen in
-`WKDBooks/Development/wkdbook-myplugins/ALL/manual-test-checklists/casedesk-neu-2026-09-30.md`
+`tasks-vault/ALL/manual-test-checklists/casedesk-neu-2026-09-30.md`
 (dort 51 Zeilen offen) — hier nur die Blöcke und was bei jedem **zuerst**
 zu prüfen ist. Status bitte in **dieser** Datei führen und in der anderen
 nachziehen, wenn du magst.
@@ -1911,7 +1911,7 @@ _Seit dem 2026-10-07 neu oder geändert, Details in K: `:Case new --form|--steps
 ## N. Blocker aller Tasks (Stand 2026-10-07)
 
 Drei Arten von Blockern, getrennt: was von **außen** kommt (N1), was **auf dich** wartet (N2) und was **Tasks gegenseitig**
-aufhält (N3, N4). N2 bis N4 sind aus dem Task-Vault `wkdbook-myplugins` erzeugt (`ROADMAP/tasks/*.md`, Feld `status`,
+aufhält (N3, N4). N2 bis N4 sind aus dem Task-Vault `tasks-vault` erzeugt (`ROADMAP/tasks/*.md`, Feld `status`,
 `blocked_by`, `actor`); neu erzeugen mit `nvim --headless -u NONE -l scripts/tasks.lua list --actor=me` bzw. `list --waiting`.
 
 ### N1. Externe Blocker (kein Task kann sie lösen)
@@ -1923,7 +1923,7 @@ aufhält (N3, N4). N2 bis N4 sind aus dem Task-Vault `wkdbook-myplugins` erzeugt
 | Claude: Websuche | ai.nvim `capabilities-web` | Guthaben + Aktivierung im Konto + Datenschutzentscheidung (Websuche schickt Anfragetext an Dritte). Kein Provider setzt `web = true`, bevor der Such-Parameter an der echten API geprüft ist. Task kann auch verworfen werden. | ai.nvim/ROADMAP/tasks/capabilities-web |
 | Copilot: Fehlerform | ai.nvim `copilot-fehlerereignis-mitten-im-lauf-aufzeichnen` | ein Konto, das gerade scheitert (Guthaben alle, Rate-Limit, kein Login), um die Fehlerereignisse aufzuzeichnen. Bis dahin als "unverifiziert" markiert; der Provider fällt auf Exit-Code/stderr zurück und liefert nie eine halbe Antwort. | ai.nvim/ROADMAP/tasks |
 | Copilot "auto" | Datenschutzfrage | Entscheidung, ob `model` fest gepinnt wird (`auto` routet über Modelle mehrerer Anbieter). | ai.nvim `copilot`-Provider |
-| SAP-Resolve-Link aus der Case-Nummer | `casedesk.nvim/resolve-link-from-case-number` (RM-47) | die Regel für den 10-stelligen Präfix `0020751294` / `0020751295` (nicht aus Firma, GUID oder Jahr ableitbar): Messreihe über die nächsten Cases (Kunde, Produkt, SAP-Komponente) führen. Erst dann baut sich der Generator. | wkdbook-myplugins/casedesk.nvim/ROADMAP/tasks |
+| SAP-Resolve-Link aus der Case-Nummer | `casedesk.nvim/resolve-link-from-case-number` (RM-47) | die Regel für den 10-stelligen Präfix `0020751294` / `0020751295` (nicht aus Firma, GUID oder Jahr ableitbar): Messreihe über die nächsten Cases (Kunde, Produkt, SAP-Komponente) führen. Erst dann baut sich der Generator. | tasks-vault/casedesk.nvim/ROADMAP/tasks |
 | Case-Daten im Arbeits-Repo | `casedesk.nvim/case-0498885-wrong-number-and-link` (RM-49) | Reparatur durch dich: `.case.json` von `Cases/CS/Open/0498885` trägt die Nummer `049885` und einen Firmennamen als Link. Die Daten wurden bewusst nicht angefasst. | WKDBook-Tricentis |
 | CI-Reihenfolge ui.nvim/lib.nvim | ui.nvim-CI (`kit_drift_spec`) | ui.nvims CI liest den Branch `ci-verified` von lib.nvim; bis lib.nvims CI nach den Kit-Spiegel-Commits (zuletzt `d9c6cdb`) vorgerückt ist, kann der Drift-Check dort rot sein (lokal grün). | lib.nvim CI |
 
@@ -2036,7 +2036,7 @@ Status `blocked`, aber der Blocker ist erledigt, fehlt oder es gibt keinen Task 
 
 ## L. terminal.nvim: Terminals, WezTerm/tmux, Status, Navigation (Stand 2026-10-07)
 
-Neues Plugin `StefanBartl/terminal.nvim` (öffentlich, `E:\repos\terminal.nvim`), Plan `terminal-build` im Wkdbook (`wkdbook-myplugins/terminal.nvim/ROADMAP/`, Handover `docs/ROADMAP/handovers/terminal.nvim.md`). Es hat `bindings/mappings/terminal.lua` und `bindings/autocmds/terminals/` der Config **ersetzt** (Snacks-Terminal-Toggle entfällt). Vor dem Testen **`terminal.nvim`, `Configs` und die nvim-Config auf `main` pullen**, Neovim **0.11+** (die `termopen()`-Rückfallebene ist raus), Config neu starten. Die Gegenstücke liegen in `Configs/terminals/wezterm` (Status, Tasten) und `Configs/terminals/tmux/tmux.conf`; WezTerm-Config neu laden (`<C-S-r>` bzw. WezTerm neu starten), tmux mit `tmux source ~/.config/tmux/tmux.conf`.
+Neues Plugin `StefanBartl/terminal.nvim` (öffentlich, `E:\repos\terminal.nvim`), Plan `terminal-build` im Wkdbook (`tasks-vault/terminal.nvim/ROADMAP/`, Handover `docs/ROADMAP/handovers/terminal.nvim.md`). Es hat `bindings/mappings/terminal.lua` und `bindings/autocmds/terminals/` der Config **ersetzt** (Snacks-Terminal-Toggle entfällt). Vor dem Testen **`terminal.nvim`, `Configs` und die nvim-Config auf `main` pullen**, Neovim **0.11+** (die `termopen()`-Rückfallebene ist raus), Config neu starten. Die Gegenstücke liegen in `Configs/terminals/wezterm` (Status, Tasten) und `Configs/terminals/tmux/tmux.conf`; WezTerm-Config neu laden (`<C-S-r>` bzw. WezTerm neu starten), tmux mit `tmux source ~/.config/tmux/tmux.conf`.
 
 Commits, `terminal.nvim` (`main`): `696570c`, `8096526`, `4c592c4` (Grundstock, im ersten Review geprüft), `7c16ef6` (18 Review-Fixes), `f219097` (`<C-l>`, `run --direct`-Optionen), `6c3698d` (Status-Export), `773cfb7` (WezTerm-Pane-Backend), `a46d133` (Navigation), `164685c` (Health, Property-Specs), `f30b4a3` (tmux), `15f5790` (Konformitäts-Suite), `d418a34` (Pin/Adopt), `9551aca` (Branch-Cache), `17104ac` (Kitty als argv), `ea5c908` (Neovim 0.11), `383380a` (Review-Runde 2: 42 bestätigte Befunde, Code/Specs/Live-Skripte), `311a05b` (Doku dazu), `f51df0f` (Nachbesserungen aus dem Verifikations-Review), `e3056e4` (dritter Durchgang, klein), `de58d89` (Review-Schleife geschlossen), `b6102ef` (vierter Durchgang), `9d01f13` (Doku), `696e631` (fünfter Durchgang). `Configs` (`main`): `e84ba47`, `6e069c7` (WezTerm), `223ddc2`, `d4a25ac` (tmux), `d620fc1` (Review-Runde 2: Tab-Titel, `^V`-Modus, tmux-Statuszeile, TPM), `8322761` (Nachbesserungen), `39fae23`, `a4a196f` (Check-Skripte für `tmux.conf`/Tasten, theme-feste Statuszeile), `009d20d` (Doku), `e599545` (fünfter Durchgang). nvim-Config: `f9e63552` (Ersatz von `terminal.lua`) und die Spec-/Doku-Commits dazu.
 
@@ -2049,7 +2049,7 @@ Commits, `terminal.nvim` (`main`): `696570c`, `8096526`, `4c592c4` (Grundstock, 
 - [x] **Entscheidung Shell-Panes (gefallen):** `NAVIGATION.shell_panes = "send"` (Empfehlung): `<C-j>`/`<C-k>`/`<C-h>` behalten in der Shell ihre Bedeutung. `Configs/terminals/wezterm/config/keybindings.lua`.
 - [ ] **Task `wezterm-navigation-keys`:** offen bis zum Handtest (L6); Tastendrücke lassen sich nicht automatisieren.
 - [ ] **Task `perf-pass`:** offen, weil die A/B-Messung des Starts **mit UI** fehlt (`scripts/startup-probe/bench.lua` der Config, einmal mit und einmal ohne das Plugin; headless: `setup()` 7–10 ms, Status-Update 15 µs, `Messungen/perf-2026-10-07.md`).
-- [x] **Task `rules-nvim-sweep`:** erledigt (2026-10-08): alle 432 Regeln beurteilt, 106 bestätigte Befunde behoben, verworfen oder als 13 Tasks `ruleset-*` angelegt; LuaLS 0 in `lua/` und `TESTS/`, 529 Specs grün unter Windows und 531 unter Linux, alle sechs Live-Skripte `RESULT ok` (terminal.nvim `86c1d9c`); Ergebnisliste `wkdbook-myplugins/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`. Handtest der Änderungen: L13.
+- [x] **Task `rules-nvim-sweep`:** erledigt (2026-10-08): alle 432 Regeln beurteilt, 106 bestätigte Befunde behoben, verworfen oder als 13 Tasks `ruleset-*` angelegt; LuaLS 0 in `lua/` und `TESTS/`, 529 Specs grün unter Windows und 531 unter Linux, alle sechs Live-Skripte `RESULT ok` (terminal.nvim `86c1d9c`); Ergebnisliste `tasks-vault/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`. Handtest der Änderungen: L13.
 - [ ] **Task `repo-scaffold`:** offen: `documentation.nvim` als Dev-Dependency und `scripts/gen_map.lua` (NEW-19/20), LuaLS-Nullmessung für das neue Repo, Abhaken der NEW-Gates.
 - [ ] **Task `lib-osc-detect-extraction`:** offen (nicht blockiert, ein Repo-übergreifender Umbau): OSC-1337-Erkennung/Writer aus `images.nvim`/`media.nvim` nach `lib.nvim.terminal` heben; `terminal.nvim` hat heute einen eigenen kleinen `core/osc.lua`.
 - [ ] **Tasks `integrate-sessions`, `integrate-pickers-ui`, `integrate-run-hooks`:** offen, je Plugin eine Bestandsaufnahme nötig (`sessions`: Terminal-Definitionen pro Branch speichern; `pickers`/`ui`: Picker mit Vorschau, Menü, Statusline-Segment; `testing`/`tasks`/`dap`/`cmdlog`/`sandbox`: `terminal.run`-Ziel). Keine Blocker, aber Reihenfolge ist deine Sache.
@@ -2204,7 +2204,7 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 
 ### L13. Änderungen aus dem rules.nvim-Durchlauf (Stand 2026-10-08)
 
-Der Durchlauf über alle 432 Regeln hat vier Blöcke und drei ultracode-Review-Runden (30, 25 und 27 bestätigte Befunde) hinterlassen; viele Änderungen sind Verhalten, das du von Hand sehen kannst. Vor dem Testen **`terminal.nvim` auf `main` pullen**. Ergebnisliste: `wkdbook-myplugins/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`.
+Der Durchlauf über alle 432 Regeln hat vier Blöcke und drei ultracode-Review-Runden (30, 25 und 27 bestätigte Befunde) hinterlassen; viele Änderungen sind Verhalten, das du von Hand sehen kannst. Vor dem Testen **`terminal.nvim` auf `main` pullen**. Ergebnisliste: `tasks-vault/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`.
 
 - [ ] **`:Terminal close ghost`** und **`:Terminal hide ghost`** (es gibt kein Terminal "ghost"): eine Meldung `[terminal] no terminal 'ghost' in this project`, kein Fehler.
 - [ ] **Tab-Vervollständigung der Namen:** `:Terminal close <Tab>` bietet nur die offenen Terminals an; `:Terminal toggle <Tab>` zusätzlich `main`, `run` und `1`..`9`; `:Terminal run --name=<Tab>` ebenso.
@@ -2238,7 +2238,7 @@ Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, 
 **Panel mit Editor** (Slots arbeiten: ausführen, hinzufügen, bearbeiten, löschen, verschieben). Dazu die **Vorschau** im Panel (Dateien und Adressen). (Tasks
 stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `f745dd3`).
 
-Quellen: Design `wkdbook-myplugins/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
+Quellen: Design `tasks-vault/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
 `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/ui.slots_HANDOVER.md`.
 
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
