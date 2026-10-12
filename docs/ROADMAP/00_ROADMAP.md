@@ -29,6 +29,7 @@
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
+-  rtasks-vault: Andere Rechner: tasks-vault klonen, git pull in nvim-Config und WKDBooks, dann das Setup-Skript laufen lassen.
 - WKDBook-Tricentis - workflow docs neu anordnen
 
 - $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md
