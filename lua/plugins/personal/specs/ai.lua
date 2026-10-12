@@ -131,9 +131,13 @@ return {
           -- Lines of buffer context sent before/after the cursor.
           -- max_context_lines = 60,
           -- string; overrides `provider` for completion requests only (false = unset).
-          -- provider = false,
+          -- Pinned together with `model` below: a claude-* id must never be
+          -- sent to another provider that "auto" happens to resolve.
+          provider = "claude",
           -- string; overrides the provider's default model for completion requests only (false = unset).
-          -- model = false,
+          -- A small, cheap model for a latency-sensitive feature; without it
+          -- completion would inherit `model.claude` above (claude-sonnet-5-5).
+          model = "claude-haiku-5-5",
           -- keymap = {
           --   -- Insert mode: request a suggestion (manual mode only).
           --   trigger = "<C-\\><C-a>",
