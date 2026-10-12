@@ -414,6 +414,23 @@ ausgeführt: `rules.nvim` mit Agent-Bewertung (nur die Engine headless:
 | Fehlerpfad `loomAI` | OK: `anthropic: invalid x-api-key` (`/health` meldet nur das Vorhandensein eines Keys) |
 | `ai.nvim` über `loomai`-Provider | OK, sobald `model = { loomai = "claude-haiku-5-5" }` gesetzt ist; ohne Modell leitet loomAI an Ollama weiter ("Could not establish connection") |
 
+### 11.1 `rules.nvim`: Agent-Bewertung der manuellen ERR-Regeln
+
+`rules.nvim` wurde headless gegen `ai.nvim` gefahren (`DEP`: 6 pass / 1 manual,
+`ERR`: 1 pass / 34 manual, Exit 0). Die 15 `critical`-Regeln mit Status
+`manual` (`ERR-01/02/03/10/11/20/22/30/31/33/50/51/53/54/60`) bewertete ein
+Agent (Claude Code, kein API-Guthaben) lesend gegen `lua/ai`: **15 von 15
+bestanden**, keine echten Verstoesse. Nicht bewertet sind die 19
+`recommended`/`nice-to-have`-Regeln und alle anderen Familien. Der Agent hat
+gezielt gegrept und im Kontext gelesen, das ist kein Vollbeweis ueber das ganze
+Repo.
+
+Hinweise ohne Verstoss, als Tasks erfasst:
+
+- `ai.nvim/rewrite-aktion-nvim-buf-set-lines-ohne-pcall-bei-nomodifiabl` (ERR-01, niedrig): `actions.lua:203/215/227`.
+- `ai.nvim/config-issues-gibt-die-interne-liste-ohne-kopie-heraus` (ERR-54, niedrig): `config/init.lua:440`.
+- ERR-22 (Auslegung): `policy`/`bulk` schliessen bei ungueltigen Werten (fail-closed) statt auf den Default zu fallen; begruendet, ob die Regel diese Ausnahme zulaesst, ist offen.
+
 Stolpersteine: Eine PowerShell-Sitzung behielt den Test-Key
 (`$env:ANTHROPIC_API_KEY`) und gab ihn an Neovim und den Server weiter.
 Ungültige Keys deshalb nur mit `:lua vim.env.ANTHROPIC_API_KEY = "x"` testen.
