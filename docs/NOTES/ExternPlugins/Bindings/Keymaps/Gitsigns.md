@@ -6,7 +6,7 @@
 `lua/bindings/mappings/git.lua`, das mit der Migration entfernt wurde.
 `gh` kam früher aus my.nvim's `hl_config/features/diff_peek.lua`; das Feature
 ist seit `my.nvim@1c147de`/`diff.nvim@03b6359` ersatzlos entfernt (siehe
-[my.nvim FEATURES.md]($REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/my.nvim/FEATURES.md),
+[my.nvim FEATURES.md]($REPOS_DIR/tasks-vault/my.nvim/FEATURES.md),
 Eintrag F2). `gh` selbst bleibt bestehen, kommt jetzt aber aus
 [diff.nvim's features/gitsigns_peek.lua]($REPOS_DIR/diff.nvim/lua/diff/features/gitsigns_peek.lua)
 (Feature-Toggle `features.gitsigns_peek`, Default an).

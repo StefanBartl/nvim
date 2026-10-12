@@ -20,7 +20,7 @@ function M.setup()
   --     the opposite. Headless there is no UIEnter and VeryLazy never fires,
   --     so nothing contradicted it.)
   --   * `keys`/`cmd`/`ft`: the plugin maps when it loads, i.e. later still.
-  -- Check Keymaps-Collisions.md (WKDBooks wkdbook-myplugins/ALL/) whenever a
+  -- Check Keymaps-Collisions.md (WKDBooks tasks-vault/ALL/) whenever a
   -- key "does nothing", and before adding a key here a plugin might already
   -- own.
 

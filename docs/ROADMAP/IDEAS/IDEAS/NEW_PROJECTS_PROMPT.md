@@ -4,7 +4,7 @@
 |---|---|
 | Konzept (Quelle dieses Plans) | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
 | Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
-| Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `$REPOS_DIR/WKDBooks\Development\wkdbook-myplugins\ai.nvim\{ROADMAP,NOTES}` |
+| Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `$REPOS_DIR/tasks-vault\ai.nvim\{ROADMAP,NOTES}` |
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/terminal.nvim.md` anlegen alss aymlionk aus den wkdbook |
 | Regelwerk für neue Projekte | `$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
 
@@ -13,7 +13,7 @@ wir implementieren jetzt terminal.nvim - dazu musst du ein öffentlich gh repo s
 Hier die konzept:
 $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN\IDEAS\terminal.nvim.md
 
-zu begin auch ein `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/terminal.nvim` anelgen - doirt komten roadmapm, notes und alles rein, was nicht in da slffentliche repo docs gehört
+zu begin auch ein `$REPOS_DIR/tasks-vault/terminal.nvim` anelgen - doirt komten roadmapm, notes und alles rein, was nicht in da slffentliche repo docs gehört
 
 Außérdem von anfang an eine handover file führen, diese ausnahsmweiß0e nach $NVIM_CONFIG_DIR/docs\ROADMAP\handovers schreiebn
 
@@ -23,7 +23,7 @@ Außerdem - wenn möglich - halte bitte auch die performance, security usw... ru
 
 WICHITG: lib.nvim verwenden
 
-hier bekommst du eine übersiucht üpber nützliche tools: $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md
+hier bekommst du eine übersiucht üpber nützliche tools: $REPOS_DIR/tasks-vault/TOOLS/lua-plugin-tools.md
 
 - antwortet immer auf Deutsch; im Quellcode (Code und Kommentare usw.) immer Englisch verwenden
 - Gib immer aus was du gerade machst / ob es interessante unde gab - damit ich Bescheuid weiß.
@@ -33,6 +33,6 @@ hier bekommst du eine übersiucht üpber nützliche tools: $REPOS_DIR/WKDBooks/D
 - code der implementiert wurde muss luacheck / stylua grün sein
 - Die Installations-Specs meiner Pluigns findest du in: vim.fn.stdpath('config') .. /lua/plugins/personal/init.lua
 - Wenn nötig: Alle meine `.nvim` Plugins findest du unter `$REPOS_DIR\repos`
-- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit) und `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
-- Beachte `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
+- Beachte `$REPOS_DIR/tasks-vault/TOOLS/TOOL-PLACEMENT.md` (Tool bauen vs. Wegwerf-Skript, wohin damit) und `$REPOS_DIR/tasks-vault/TOOLS/lua-plugin-tools.md`
+- Beachte `$REPOS_DIR/tasks-vault/HEREDOC.md` (keine großen/escapehaltigen Literale durch die Shell)
 

@@ -6,7 +6,7 @@ Angelegt 2026-08-08 aus `$REPOS_DIR/Notes/MyPlugin-Notes/slots/`
 > **Entschieden 2026-10-07: kein eigenes Plugin, sondern `ui.slots` in
 > `ui.nvim`.** Zuschnitt, Abgrenzung zu `sessions.marks`/`hover.nvim`/
 > `pickers.nvim` und Phasenplan:
-> `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ui.nvim/ROADMAP/slots-design.md`.
+> `$REPOS_DIR/tasks-vault/ui.nvim/ROADMAP/slots-design.md`.
 > Erweitert gegenüber dem Konzept unten: Slots sind konfigurierbare Aktionen
 > (Datei, URL, Clipboard, Ex-Befehl, Lua), mit Vorschau und Kit-Styles.
 

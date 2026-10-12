@@ -14,7 +14,7 @@
 --- `setup({ enable = false })` in `bindings/mappings/init.lua` (just these keys).
 ---
 --- Key choice `[u`/`]u`: `[b`/`]b` is a Neovim 0.12 default. See the bracket-
---- pair inventory in Keymaps-Collisions.md (WKDBooks wkdbook-myplugins/ALL/).
+--- pair inventory in Keymaps-Collisions.md (WKDBooks tasks-vault/ALL/).
 ---
 ---@see plugins.treesitter
 

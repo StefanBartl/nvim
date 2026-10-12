@@ -1,4 +1,4 @@
-Sortiert nach Plugin, neu durchnummeriert, mit Pfad. Alle Pfade beginnen mit `B:\repos\WKDBooks\Development\wkdbook-myplugins\`, als `…\` abgekürzt, weil die Tabelle sonst unlesbar breit wird.
+Sortiert nach Plugin, neu durchnummeriert, mit Pfad. Alle Pfade beginnen mit `B:\repos\tasks-vault\`, als `…\` abgekürzt, weil die Tabelle sonst unlesbar breit wird.
 
 | # | Aufwand | Value | Task | Titel | Pfad |
 |---|---|---|---|---|---|

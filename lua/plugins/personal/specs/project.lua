@@ -1046,7 +1046,7 @@ return {
       -- The vault folder (one folder per area). Without it $TASKS_VAULT is read.
       -- Default: nil.
       vault = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "")
-          and (vim.env.REPOS_DIR .. "/WKDBooks/Development/wkdbook-myplugins")
+          and (vim.env.REPOS_DIR .. "/tasks-vault")
         or nil,
       -- Folders that are areas although they hold neither ROADMAP/ nor Backlog/.
       -- Default: {}.

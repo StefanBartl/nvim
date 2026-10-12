@@ -14,9 +14,9 @@
 ---
 --- Both were real lib.nvim modules with **no wired command anywhere** before
 --- this file existed — see
---- `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/ALL/Backlog/TASKS/roadmap-tools-analysis.md`
+--- `$REPOS_DIR/tasks-vault/ALL/Backlog/TASKS/roadmap-tools-analysis.md`
 --- (Nachtrag 2026-09-05) for `bindings.audit`'s history of exactly that gap,
---- and `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/CDX-bindings-runtime-check.md`
+--- and `$REPOS_DIR/tasks-vault/nvim-config/Backlog/TASKS/CDX-bindings-runtime-check.md`
 --- for why `bindings.keymap.conflicts()` had the same problem.
 ---
 --- **What these can and cannot see**, same caveat as autocmd_docs: a

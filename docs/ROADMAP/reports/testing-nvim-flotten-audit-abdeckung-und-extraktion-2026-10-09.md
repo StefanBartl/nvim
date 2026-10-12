@@ -756,7 +756,7 @@ Reihenfolge nach „offene Zeilen × Kernlogik-Anteil", nicht nach Prozent: zehn
 
 ## 8. Reproduktion und Werkzeuge
 
-Alle Werkzeuge liegen in `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/scripts/fleet-test-audit/` (README dort). Gesamtablauf, die Befehle sind
+Alle Werkzeuge liegen in `$REPOS_DIR/tasks-vault/TOOLS/scripts/fleet-test-audit/` (README dort). Gesamtablauf, die Befehle sind
 die der Messung (Bash unter Windows, Verzeichnisse Beispiele):
 
 ```bash

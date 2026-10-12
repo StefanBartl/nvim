@@ -7,7 +7,7 @@ GUI oder deinen GitHub-Token. Checkbox-Konvention: `- [ ]` offen, `- [x]` verifi
 Punkt eine Zeile `Notiz:` für Beobachtungen. Findet sich etwas, ist `v0.6.1` die billige Antwort.
 
 Hintergrund: Plan und Entscheidungen in
-`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/docmap-desktop/` (`ROADMAP/PLAN.md`,
+`$REPOS_DIR/tasks-vault/docmap-desktop/` (`ROADMAP/PLAN.md`,
 `Backlog/TASKS/docmap-desktop_HANDOVER.md`); Bau-Protokoll der Traffic-Integration in
 `ALL/Backlog/FEATURES/github-stats-traffic-integration*.md`.
 

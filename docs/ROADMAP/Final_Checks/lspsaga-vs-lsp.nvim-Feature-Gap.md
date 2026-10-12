@@ -90,7 +90,7 @@ Plugin-Roadmap markiert), **die Type-Hierarchy-Messung**, **die vier behobenen R
 **Rang 2/3 (gopls-Meldung, ui.nvim-Statuszeile)**, **die Selbstrekursions-Entscheidung, die
 `UiSticky.md`-Korrektur, das Hunk-Spannen-Caching, rust-analyzer gemessen, die `.d.ts`/`node_modules`-
 Ausnahme und Call Hierarchy für Lua** liegen archiviert in
-`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
+`$REPOS_DIR/tasks-vault/lsp.nvim/Backlog/FEATURES/lspsaga-vs-lsp.nvim-Feature-Gap_ERLEDIGT.md`
 (dort „Nachtrag“ bis „Nachtrag 9“). Hier steht nur noch Rang 1, deine eigene Terminal-Prüfung.
 
 **Skalen:** Aufwand XS ≤ 30 min · S 30 min–2 h · M 2 h–1 Tag. Nutzen 1–5 (5 = täglich, spart

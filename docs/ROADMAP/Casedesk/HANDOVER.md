@@ -19,7 +19,7 @@ Messungen und Fehlschläge, die sonst jede Sitzung neu bezahlt. Wer etwas
 misst, das die nächste Sitzung wissen sollte, trägt es dort ein.
 
 **Wo diese Datei liegt und warum.** Hier, in
-`wkdbook-myplugins/casedesk.nvim/handovers/` — nicht im Plugin-Repo. Das ist
+`tasks-vault/casedesk.nvim/handovers/` — nicht im Plugin-Repo. Das ist
 DOC-16: Handover-Material ist Sitzungs-Werkstatt und gehört nicht in ein
 öffentliches Plugin-Repo. Die Datei war am 2026-09-07 vorübergehend nach
 `casedesk.nvim/docs/HANDOVER.md` zurückgeholt und ist noch am selben Tag wieder
@@ -268,13 +268,13 @@ LIB_NVIM_DIR=../lib.nvim PLENARY_DIR=<plenary> nvim --clean --headless \
 
 | Frage | Datei |
 |---|---|
-| Was ist offen? | `wkdbook-myplugins/casedesk.nvim/ROADMAP/ROADMAP.md` — Ideen, keine Zusagen; Reihenfolge in `IMPLEMENTIERUNGSPLAN.md` |
+| Was ist offen? | `tasks-vault/casedesk.nvim/ROADMAP/ROADMAP.md` — Ideen, keine Zusagen; Reihenfolge in `IMPLEMENTIERUNGSPLAN.md` |
 | Warum ist etwas so gebaut? | `docs/CONCEPT.md`, `docs/EXTRACTION.md`, `docs/SLA.md`, `docs/SESSIONS.md` |
 | Was wurde nach dem Erstbau fertig? | `docs/FEATURES.md` |
 | Welche Befehle gibt es? | `docs/commands.md` (generiert), `CHEATSHEET.md` |
 | Wie ist das Repo aufgebaut, wie kommt eine Route dazu? | `docs/CONTRIBUTING.md` |
-| Unfertige Konzepte, Analysen | `wkdbook-myplugins/casedesk.nvim/ROADMAP/` (`PTO.md`, `ANALYSEN/`) |
-| Erledigtes, Audits, Messungen | `wkdbook-myplugins/casedesk.nvim/Backlog/` |
+| Unfertige Konzepte, Analysen | `tasks-vault/casedesk.nvim/ROADMAP/` (`PTO.md`, `ANALYSEN/`) |
+| Erledigtes, Audits, Messungen | `tasks-vault/casedesk.nvim/Backlog/` |
 
 ---
 
