@@ -114,6 +114,16 @@ function M.setup()
         style = "chips",
         chips = { layout = "stack" }, -- trial: one chip per line instead of one shared row; shape = "rounded" stays the default
       },
+      -- Numbered action slots (ui.slots, lua/ui/slots/README.md in ui.nvim):
+      -- explicit-only. Bar stays hidden until toggled with `_` (mapped below);
+      -- `<leader>1`..`0` belong to buffer_jump, `<leader>h*` to the marks and
+      -- `<leader>s*` to the pickers, hence the `<leader>_` family -- which
+      -- shares no prefix with the bare `_` toggle.
+      slots = {
+        enabled = true,
+        show = false,
+        keys = { apply = "<leader>_%d", add = "<leader>_a", panel = "<leader>_p" },
+      },
       -- The right-click menu (ui.menu, lua/ui/menu/README.md in ui.nvim). Sister
       -- plugins show up when installed; switch one off with
       -- `integrations = { lsp = false }` (or in that plugin's own setup).
@@ -137,6 +147,8 @@ function M.setup()
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))
     local assembled = require("ui.config").setup({ variant = "personal" })
     require("ui.bindings.keymaps.tabufline.state").setup()
+    -- `_` (normal mode only, so `d_`/`y_` keep working) toggles the slot bar.
+    vim.keymap.set("n", "_", "<cmd>UI slots toggle<cr>", { desc = "[Slots] Toggle slot bar" })
     require("ui.statusline.render").enable(assembled.ui.statusline)
     require("ui.tabline.render").enable(assembled.ui.tabline)
   end)
