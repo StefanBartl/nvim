@@ -2,7 +2,7 @@
 
 Lebendes Dokument: nach **jedem** erledigten Schritt aktualisieren.
 Plan + Tasks: tasks.nvim, Plan `lib.nvim/usrcmd-help-float-cheatsheet`
-(Vault `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`, Area `lib.nvim`;
+(Vault `$REPOS_DIR/tasks-vault`, Area `lib.nvim`;
 `:Tasks plan lib.nvim --plan=lib.nvim/usrcmd-help-float-cheatsheet`).
 
 **Arbeitsweise (global):** Antworten deutsch, Code/Kommentare englisch; max. Agent-Anzahl laut

@@ -375,8 +375,8 @@ end
 --- commands call, exposed here too so `:Bindings <Tab>` finds them without
 --- needing the flat name — same verb-plus-alias shape as `:AllDrives` →
 --- `:Pickers drives files` (`Usercmds-Overview.md`, "Shape: verb vs. flat"
---- — moved 2026-09-07 to WKDBooks' `wkdbook-myplugins/ALL/`). See
---- `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/CDX-bindings-runtime-check.md`
+--- — moved 2026-09-07 to tasks-vault's `ALL/`). See
+--- `$REPOS_DIR/tasks-vault/nvim-config/Backlog/TASKS/CDX-bindings-runtime-check.md`
 --- for why these exist as a separate lib.nvim module rather than inside
 --- `drift.lua`.
 ---@param kind "actions"|"gaps"|"keys"|"prefixes"|"naming"|"checklist"

@@ -25,7 +25,7 @@
 - Docs / README.md aktualisieren, sofern es Sinn ergibt.
 - Wird ein Binding aktualisiert, ggf. auch `vim.fn.stdpath('config') .. /docs/NOTES/BINDINGS` aktualisieren.
 - Reports sowie Original-Handover-Files kommen nach `$NVIM_CONFIG_DIR/docs`; in den wkdbooks liegen dann nur Symlinks darauf.
-- Feature-/Backlog-/Roadmap-Notizen (alles, was Endnutzer nicht betrifft) gehören nach `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/`.
+- Feature-/Backlog-/Roadmap-Notizen (alles, was Endnutzer nicht betrifft) gehören nach `$REPOS_DIR/tasks-vault/`.
 - Die Plugin-Repo-Docs (README, Feature-Beschreibungen für Endnutzer usw.) bleiben für die echte Endnutzer-Dokumentation reserviert. Im Zweifelsfall nachfragen – es sind aber bereits genug Dateien vorhanden, um Ableitungen zu treffen.
 
 ### Pfade
@@ -35,9 +35,9 @@
 
 ### Regeln
 
-- Tool bauen vs. Wegwerf-Skript, Ablageort: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md` und `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/lua-plugin-tools.md`
+- Tool bauen vs. Wegwerf-Skript, Ablageort: `$REPOS_DIR/tasks-vault/TOOLS/TOOL-PLACEMENT.md` und `$REPOS_DIR/tasks-vault/TOOLS/lua-plugin-tools.md`
   - Wird im Zuge einer Task ein Tool gebaut, das für künftige User/Devs/Agents interessant sein könnte: an geeigneter Stelle im `TOOLS/`-Ordner sichern.
-- Keine großen/escapehaltigen Literale durch die Shell schleusen: `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md`
+- Keine großen/escapehaltigen Literale durch die Shell schleusen: `$REPOS_DIR/tasks-vault/HEREDOC.md`
 - Performance-Optimierungen: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
 - Lua-Projekte für Neovim: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
 

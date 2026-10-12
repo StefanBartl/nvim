@@ -6,7 +6,7 @@ GitHub account) and needs an explicit yes. Check for existing issues first (see
 
 **Found:** 2026-10-02/03, while measuring neotest's startup cost and then actually running tests
 with the real config. Full investigation, measurements and the local workaround:
-`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.
+`$REPOS_DIR/tasks-vault/nvim-config/Backlog/TASKS/neotest-listener-und-windows-laeufe-2026-10-03.md`.
 
 Checked against: neotest `27bf921` (2026-08-16), neotest-plenary `3523adc` (2024-09-15, still
 `master`), Neovim 0.12.2, Windows 11. Line numbers re-checked against upstream `master` on 2026-10-03.

@@ -38,17 +38,17 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
 
 - Repo-Docs (README, Feature-Docs) -> für Endnutzer, im jeweiligen Repo.
 - `$NVIM_CONFIG_DIR/docs` -> Reports, Handover-Files (Originale).
-- `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/**` bzw.
+- `$REPOS_DIR/tasks-vault/**` bzw.
   `.../Development/**` -> Backlogs, interne Notizen, Roadmaps, Features -
   alles was Endnutzer nicht betrifft. In den wkdbooks liegen dann Symlinks
   auf die Originale aus `$NVIM_CONFIG_DIR/docs`.
 - Im Zweifelsfall nachfragen, es sind aber idR genug Files vorhanden, um
   Ableitungen zu treffen.
-- `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/TOOLS/TOOL-PLACEMENT.md`
+- `$REPOS_DIR/tasks-vault/TOOLS/TOOL-PLACEMENT.md`
   beachten (Tool bauen vs. Wegwerf-Skript, wohin damit). Entsteht im Zuge
   einer Task ein wiederverwendbares Tool, an geeigneter Stelle in `TOOLS/`
   ablegen.
-- `$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/HEREDOC.md` beachten:
+- `$REPOS_DIR/tasks-vault/HEREDOC.md` beachten:
   keine großen/escape-haltigen Literale durch die Shell jagen.
 
 ## Docs/README-Pflege

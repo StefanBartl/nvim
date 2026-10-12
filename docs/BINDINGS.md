@@ -248,7 +248,7 @@ prefixes therefore comes from whichever plugin registered it, not from here.
   is deliberate: normal-mode window jump (`buf_win_tab.lua`), terminal-mode
   window jump (`terminal.lua`), insert-mode cursor move (`nvchad.lua`).
 
-See `Keymaps-Collisions.md` in WKDBooks' `wkdbook-myplugins/ALL/` (moved
+See `Keymaps-Collisions.md` in tasks-vault's `ALL/` (moved
 there 2026-09-07 from this repo's `docs/NOTES/CrossPlugin/` — no single
 plugin repo owns a cross-plugin finding, and this ecosystem's durable
 non-code knowledge belongs in WKDBooks) for how these interact with every
@@ -294,7 +294,7 @@ directory that never existed — the two trees were
 `docs/NOTES/ExternPlugins/Bindings`. Removed 2026-09-04; `<leader>BI` now
 runs `:Bindings path`, which knows both roots. (The cross-plugin analyses
 that used to sit alongside this file under `docs/NOTES/CrossPlugin/` moved
-to WKDBooks' `wkdbook-myplugins/ALL/` on 2026-09-07 — see the two `See ...`
+to tasks-vault's `ALL/` on 2026-09-07 — see the two `See ...`
 pointers below in this file.)
 
 ### Startup instrumentation
@@ -365,7 +365,7 @@ restart: `source.lua` is `require()`d once and already baked into the spec
 list lazy-loaded at startup.
 
 The last eight rows are the **task commands**: they work on the areas of the wkdbook
-vault (`$REPOS_DIR/WKDBooks/Development/wkdbook-myplugins`), not on the plugin list,
+vault (`$REPOS_DIR/tasks-vault`), not on the plugin list,
 and are verb-first (`:MyPlugins tasks cascade.nvim`). `<Tab>` completes areas
 (`ALL`, `nvim-config`, `docmap-desktop` included), task ids and `key=`; the lowercase
 `all` means every area, `ALL` is the area of that name. Details, flags and the engine:
@@ -474,7 +474,7 @@ resolved local directory; a remote-mode entry with no local checkout is
 filtered out rather than passed through with a directory a caller would have
 to remember to check for `nil`.
 
-See `Usercmds-Overview.md` in WKDBooks' `wkdbook-myplugins/ALL/` (moved
+See `Usercmds-Overview.md` in tasks-vault's `ALL/` (moved
 there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for how
 these command names interact with every personal plugin's own commands —
 including the one real cross-plugin interaction found so far (`:Lsp`
@@ -524,7 +524,7 @@ Read the `WkdExplorerSingleton` pair together: `WinEnter` displaces,
 `WinClosed` restores. "Once, then forget" is why it is two call sites rather
 than one handler on both events — the second holds state the first sets.
 See "WinEnter/WinClosed: the explorer singleton is this config's own code"
-in `Autocmds-Observations.md`, WKDBooks' `wkdbook-myplugins/ALL/` (moved
+in `Autocmds-Observations.md`, tasks-vault's `ALL/` (moved
 there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for why
 this exists (neo-tree and snacks.picker's `explorer` source have no
 awareness of each other).
@@ -641,6 +641,6 @@ registrar can run a second time.
   cosmetic, but it splits every grep in two.
 - **The doubled Kitty-augroup prefix** (see above).
 
-See `Autocmds-Observations.md` in WKDBooks' `wkdbook-myplugins/ALL/` (moved
+See `Autocmds-Observations.md` in tasks-vault's `ALL/` (moved
 there 2026-09-07, same reasoning as `Keymaps-Collisions.md` above) for how
 these interact with every personal plugin's own autocmds.

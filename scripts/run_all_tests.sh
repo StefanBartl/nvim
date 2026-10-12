@@ -6,7 +6,7 @@
 # it assumes THIS machine's checkout layout (thirty sibling repos under
 # E:/repos), which is exactly what no published plugin should ship. So it
 # stays a script, in the folder for scripts rather than the one for open
-# questions. See $REPOS_DIR/WKDBooks/Development/wkdbook-myplugins/
+# questions. See $REPOS_DIR/tasks-vault/
 # ALL/Backlog/TASKS/roadmap-tools-analysis.md for the other seven.
 #
 # The point is the "no runner found" case: during the keymap migration I called
