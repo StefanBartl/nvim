@@ -18,16 +18,22 @@
 
 ---
 
+- Docmap-desktop soll tasks.nvim vsuklt gut sanzigen könnn, zwar bleibt tasks-excplorer der main dafür, trotzdem soll amn eine möglsicht idente anzeige view zusammenbeingen. tasks erstellen oder so aber nicht, nur biew wenn man einen vault als projekt verwendet
+- Das `:Tasks open` soll suchen können, also wenmn man dan `:Tasks open block-edit-review-reste` statt `:Tasks open mdview.nvim/block-edit-review-reste` eingbt, dann sollte dieser auch gefunden werden
+
+---
+
 ## Cdx
 
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     14:40       |   100% / 47%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     18:40       |    99% / 14%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     18:20       |    00% / 74%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     20:00       |    92% / 13%     |
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
+
 
 -  rtasks-vault: Andere Rechner: tasks-vault klonen, git pull in nvim-Config und WKDBooks, dann das Setup-Skript laufen lassen.
 - WKDBook-Tricentis - workflow docs neu anordnen
@@ -105,7 +111,6 @@ $REPOS_DIR/tasks-vault/ALL/Zentral-App-Report-Inventur-2026-10-08.md
 
 - [ ] **Feature-Scan:** Bei Plugins, die meinen ähneln (z. B. gitsigns → gitsuite.nvim, 3rd/images.nvim → images.nvim, tabufline → ui.nvim, lspsaga.nvim → lspo.nvim), die Repos mit hoher bzw. mittlerer Ähnlichkeit **und** hoher Reichweite/Nutzerzahl nach Features abgrasen, die ich noch nicht implementiert habe. Gibt es bei „mittlerer Ähnlichkeit" nur wenige Treffer, nur die reichweitenstärksten davon berücksichtigen.
   -> Task: `ALL/competitor-feature-scan`
-- [x] **Analyse (geklärt: nur Feature-Check, kein aktiver Ersatz geplant):** noice.nvim & übrige externe Plugins auf Feature-Abdeckung prüfen — was ist durch eigene Plugins schon abgedeckt, was fehlt noch? Nur dokumentieren, keine Ersatz-Entscheidung treffen. Diesn reportanalyse hierhin schreiben: $NVIM_CONFIG_DIR/docs/ROADMAP/reports — erledigt 2026-10-01: [noice](./reports/NOICE_ERSATZ/noice-feature-abdeckung-2026-10-01.md), [übrige externe Plugins](./reports/externe-plugins-feature-abdeckung-2026-10-01.md), [ext_messages-Spike](./reports/NOICE_ERSATZ/ext-messages-tui-spike-2026-10-01.md)
 
 ---
 
