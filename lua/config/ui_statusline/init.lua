@@ -69,6 +69,14 @@
 --- `"rect"` (flat block, no caps) -- trial, easy to flip back. See
 --- `ui.nvim/docs/configuration.md`, Context section.
 ---
+--- `slots = {...}` switches on `ui.slots` (numbered action slots: file, url,
+--- yank, mark, cmd, lua; `lua/ui/slots/README.md` in ui.nvim). Explicit-only
+--- as well. The bar stays hidden at startup (`show = false`); `_` toggles it
+--- (bindings/mappings/slots.lua), `<leader>_1`..`<leader>_9` run a slot,
+--- `<leader>_a` puts the current file into the next free one, `<leader>_p`
+--- opens the panel. `<leader>1`..`0` are buffer_jump's and `<leader>h*` the
+--- marks' (sessions.nvim), hence the `<leader>_` family.
+---
 --- `ui.bindings.keymaps.tabufline.state.setup()` is still called directly,
 --- unconditionally, regardless of `opts.keymaps`: the tabline renderer needs
 --- `vim.t.bufs` maintained even when a host turns ui.nvim's own keymaps off
@@ -118,7 +126,7 @@ function M.setup()
       -- explicit-only. Bar stays hidden until toggled with `_` (mapped below);
       -- `<leader>1`..`0` belong to buffer_jump, `<leader>h*` to the marks and
       -- `<leader>s*` to the pickers, hence the `<leader>_` family -- which
-      -- shares no prefix with the bare `_` toggle.
+      -- shares no prefix with the bare `_` toggle (bindings/mappings/slots.lua).
       slots = {
         enabled = true,
         show = false,
@@ -147,8 +155,6 @@ function M.setup()
     require("ui.config.variants").register("personal", require("config.ui_statusline.variant"))
     local assembled = require("ui.config").setup({ variant = "personal" })
     require("ui.bindings.keymaps.tabufline.state").setup()
-    -- `_` (normal mode only, so `d_`/`y_` keep working) toggles the slot bar.
-    vim.keymap.set("n", "_", "<cmd>UI slots toggle<cr>", { desc = "[Slots] Toggle slot bar" })
     require("ui.statusline.render").enable(assembled.ui.statusline)
     require("ui.tabline.render").enable(assembled.ui.tabline)
   end)
