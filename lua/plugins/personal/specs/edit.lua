@@ -799,7 +799,19 @@ return {
       --   fold_toggle = { lhs = "<F2>" },
       -- },
 
-      -- `:Markdown table format` defaults (explicit command args override per call).
+      -- Table cells wider than `max` columns are shown cut with `…` (display only,
+      -- the file text is untouched) and a popup with the full text opens on
+      -- CursorHold in a cut cell. Off by default in the plugin, on here.
+      -- `:Markdown table truncate [on|off|toggle|show]`, `<leader>mtu` toggles,
+      -- `<leader>mtp` shows the popup for the cell under the cursor.
+      table = {
+        truncate = { enabled = true, max = 40, marker = "…", popup = true },
+      },
+
+      -- `:Markdown table format` defaults (explicit command args override per call;
+      -- `max=N|wrap|nowrap|auto|reflow` cap the column width). The commented block
+      -- below is the full `table` option set; the active `table` above sets only
+      -- `truncate`, so merge any of these into it.
       -- table = {
       --   header_align = "center", -- "left" | "center" | "right"
       --   entry_align = "center",
