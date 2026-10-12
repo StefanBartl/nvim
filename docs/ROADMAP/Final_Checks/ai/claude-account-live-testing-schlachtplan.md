@@ -431,6 +431,28 @@ Hinweise ohne Verstoss, als Tasks erfasst:
 - `ai.nvim/config-issues-gibt-die-interne-liste-ohne-kopie-heraus` (ERR-54, niedrig): `config/init.lua:440`.
 - ERR-22 (Auslegung): `policy`/`bulk` schliessen bei ungueltigen Werten (fail-closed) statt auf den Default zu fallen; begruendet, ob die Regel diese Ausnahme zulaesst, ist offen.
 
+### 11.2 `documentation.nvim`: MCP-Server gegen Claude Code
+
+Registriert mit `claude mcp add documentation --scope local -e
+LIB_NVIM_DIR=E:/repos/lib.nvim -- nvim --headless -l scripts/mcp_server.lua`,
+gestartet aus dem Repo-Verzeichnis (der Server nimmt das Arbeitsverzeichnis als
+Repo-Wurzel; aus einem anderen Verzeichnis bricht er mit `source directory not
+found` bzw. `lib.nvim not found` ab).
+
+- Erster Versuch: `CONNECT_TIMEOUT` nach 30 s. Ursache: `io.stdout:setvbuf("line")`
+  wirkt unter Windows wie Vollpufferung, die Antworten blieben im Puffer bis zum
+  Schliessen von stdin. Behoben in `documentation.nvim@60dda39` (explizites
+  `flush()` nach jeder Antwort). Das Logfile steht unter
+  `%LOCALAPPDATA%\claude-cli-nodejs\Cache\<projekt>\mcp-logs-<server>\`.
+- Danach: Server verbunden, die Tools werden aufgerufen. Ohne ausdruecklichen
+  Hinweis griff Claude bei einer einfachen Frage zuerst zu `Glob` und `Read`
+  statt zu `docmap_modules` (Verbindung war damals noch gestoert, nicht erneut
+  ohne Hinweis geprueft).
+- Knoten-IDs sind Pfade (`lua/documentation/hover.lua`), nicht Modulnamen mit
+  Punkten; ein Prefix wie `documentation.mcp` liefert 0 Treffer.
+- Nicht geprueft: Konsistenz mit `docmap-desktop` (Abschnitt 6), `docmap_rescan`
+  nach einer Dateiaenderung und die Bedienung ohne ausdrueckliche Tool-Nennung.
+
 Stolpersteine: Eine PowerShell-Sitzung behielt den Test-Key
 (`$env:ANTHROPIC_API_KEY`) und gab ihn an Neovim und den Server weiter.
 Ungültige Keys deshalb nur mit `:lua vim.env.ANTHROPIC_API_KEY = "x"` testen.
