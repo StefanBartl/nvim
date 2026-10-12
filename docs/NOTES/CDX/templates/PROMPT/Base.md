@@ -9,7 +9,7 @@
 
 ## Tasks (tasks.nvim)
 
-- Steht in einer Aufgabe eine ID wie `casedesk.nvim/ki-datenfreigabe-klaeren` oder ein Pfad `…\<plugin>\ROADMAP\tasks\<slug>.md`, ist das eine tasks.nvim-Task. Sie liegt im Vault `$REPOS_DIR/tasks-vault/` (Frontmatter mit status, prio, effort, value; Body mit Kontext, Akzeptanz, Notizen). Lies sie vor dem Start komplett, setze sie mit `:Tasks set <id> status=doing` auf doing, und schließe sie nach dem Commit mit `:Tasks done <id> done_in=<repo>@<commit>` bzw.: `:Tasks done` bewirkt headless nichts, deshalb `done_flow.run` aus `tasks.nvim` direkt aufgerufen. (nie `status=done` von Hand).
+- Steht in einer Aufgabe eine ID wie `casedesk.nvim/ki-datenfreigabe-klaeren` oder ein Pfad `…\<plugin>\ROADMAP\tasks\<slug>.md`, ist das eine tasks.nvim-Task. Sie liegt im Vault `$REPOS_DIR/tasks-vault/` (Frontmatter mit status, prio, effort, value; Body mit Kontext, Akzeptanz, Notizen). Lies sie vor dem Start komplett. Headless (ohne Editor) über die CLI der Engine, mit `--vault` auf den Vault: `nvim --headless -u NONE -l $REPOS_DIR/tasks.nvim/scripts/tasks.lua <befehl> … --vault=$REPOS_DIR/tasks-vault` (lib.nvim über `LIB_NVIM_DIR` oder `$REPOS_DIR/lib.nvim`). Lesen: `show <id>`, `list --status=doing --format=ids`, `check`. Setzen: `set <id> status=doing`. Schließen nach dem Commit: `done <id> --done-in=<repo>@<commit>` (nie `status=done` von Hand; das ist derselbe Weg wie `:Tasks done` im Editor). Änderungen am Vault sind Commits im Repo `tasks-vault` (nicht in WKDBooks): dort committen und pushen. Nicht aus einer Claude-Sitzung: `tasks-hub install|start|autostart` (die Claude-App leitet AppData und HKCU um, der Nutzer sieht nichts davon).
 
 ## Git-Workflow
 
