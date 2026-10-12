@@ -1,0 +1,1 @@
+E:/repos/tasks-vault/mdview.nvim/handovers/HANDOVER_2026-10-12_block-edit-review.md
