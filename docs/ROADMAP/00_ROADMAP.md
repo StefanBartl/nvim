@@ -18,6 +18,8 @@
 
 ---
 
+:Cdx prompt soll alle files in dem ordner auta5isch als ooraramter akeotieren und auh autocompoeltion haben
+
 - Docmap-desktop soll tasks.nvim vsuklt gut sanzigen könnn, zwar bleibt tasks-excplorer der main dafür, trotzdem soll amn eine möglsicht idente anzeige view zusammenbeingen. tasks erstellen oder so aber nicht, nur biew wenn man einen vault als projekt verwendet
 - Das `:Tasks open` soll suchen können, also wenmn man dan `:Tasks open block-edit-review-reste` statt `:Tasks open mdview.nvim/block-edit-review-reste` eingbt, dann sollte dieser auch gefunden werden
 
