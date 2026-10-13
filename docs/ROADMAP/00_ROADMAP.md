@@ -18,6 +18,8 @@
 
 ---
 
+![tabline farbe chip]($NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1791898201.png)
+
 :Cdx prompt soll alle files in dem ordner auta5isch als ooraramter akeotieren und auh autocompoeltion haben
 
 - Docmap-desktop soll tasks.nvim vsuklt gut sanzigen könnn, zwar bleibt tasks-excplorer der main dafür, trotzdem soll amn eine möglsicht idente anzeige view zusammenbeingen. tasks erstellen oder so aber nicht, nur biew wenn man einen vault als projekt verwendet
